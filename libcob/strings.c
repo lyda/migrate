@@ -299,7 +299,7 @@ cob_inspect_replacing (struct fld_desc *fvar, char *svar, ...)
  |                                                                        |
 \*------------------------------------------------------------------------*/
 
-void
+int
 cob_unstring (struct fld_desc *fvar, char *svar, ...)
 {
   struct fld_desc *fptr, *ftally;
@@ -443,10 +443,12 @@ cob_unstring (struct fld_desc *fvar, char *svar, ...)
       free (p);
       va_end (args);
       cob_status = COB_STATUS_OVERFLOW;
-      return;
+      return cob_status;
     }
   free (p);
   va_end (args);
+  cob_status = COB_STATUS_SUCCESS;
+  return cob_status;
 }
 
 /*------------------------------------------------------------------------*\

@@ -59,7 +59,7 @@
 
 #define bcounter	 5
 
-#define RETURN_STATUS(x)	do { cob_status = (x); return; } while (0)
+#define RETURN_STATUS(x)  do { cob_status = (x); return (x); } while (0)
 
 /*------------------------------------------------------------------------*\
  |                                                                        |
@@ -120,7 +120,6 @@ cob_check_varying (struct file_desc *f,
     }
 
   return 0;
-
 }
 
 
@@ -158,7 +157,7 @@ cob_open (struct file_desc *f, char *record, char *fname, int mode)
       fprintf (stderr, "You need to recompile your program\n");
       fprintf (stderr, "Version mismatch; structure %x, RTL %x\n",
 	       f->vers_id, RTL_FILE_VERSION);
-      return 99;
+      RETURN_STATUS (99);
     }
 /*
 	BEWARE: 
@@ -231,7 +230,7 @@ cob_open (struct file_desc *f, char *record, char *fname, int mode)
   /* Check to see if the file is already open. If so return
      File Status 91 in according to the Ansi 74 Standard. */
   if (f->dbp != NULL)
-    return 91;
+    RETURN_STATUS (91);
 
   switch (mode)
     {
@@ -243,7 +242,7 @@ cob_open (struct file_desc *f, char *record, char *fname, int mode)
       if (f->organization == ORG_LINESEQUENTIAL)
 	{
 	  /* Line Sequential does not Support Mode IO */
-	  return 92;
+	  RETURN_STATUS (92);
 	}
       break;
     case FMOD_OUTPUT:
@@ -287,15 +286,15 @@ cob_open (struct file_desc *f, char *record, char *fname, int mode)
 	      if (errno == EINVAL)
 		{
 		  f->dbp = NULL;
-		  return 37;
+		  RETURN_STATUS (37);
 		}
 	      if (errno == ENOENT)
 		{
 		  f->dbp = NULL;
-		  return 35;
+		  RETURN_STATUS (35);
 		}
 	      f->dbp = NULL;
-	      return 91;
+	      RETURN_STATUS (91);
 	    }
 	  alt_key_no++;
 	}
@@ -323,24 +322,24 @@ cob_open (struct file_desc *f, char *record, char *fname, int mode)
 	  f->dbp = NULL;
 	  f->file_missing = 1;
 	  f->open_mode = mode;
-	  return 0;
+	  RETURN_STATUS (0);
 	}
       if (errno == EINVAL)
 	{
 	  f->dbp = NULL;
-	  return 37;
+	  RETURN_STATUS (37);
 	}
       if (errno == ENOENT)
 	{
 	  f->dbp = NULL;
-	  return 35;
+	  RETURN_STATUS (35);
 	}
       f->dbp = NULL;
-      return 91;
+      RETURN_STATUS (91);
     }
   /* save mode to check later (read,write,start,...) */
   f->open_mode = mode;
-  return 0;
+  RETURN_STATUS (0);
 }
 
 /*------------------------------------------------------------------------*\
@@ -358,8 +357,8 @@ cob_close (struct file_desc *f, char *record)
   if (f->dbp == NULL)
     {
       if (f->optional && f->file_missing)
-	return 0;
-      return 91;
+	RETURN_STATUS (0);
+      RETURN_STATUS (91);
     }
 
   /* If there is a start not yet used delete it */
@@ -394,7 +393,7 @@ cob_close (struct file_desc *f, char *record)
 	close ((int) f->dbp);
     }
   f->dbp = NULL;
-  return 0;
+  RETURN_STATUS (0);
 }
 
 /*------------------------------------------------------------------------*\
@@ -421,7 +420,7 @@ cob_file_init (struct file_desc *f, char *record)
  |                                                                        |
 \*------------------------------------------------------------------------*/
 
-void
+int
 cob_read (struct file_desc *f, char *record, ...)
 {
   int result;
@@ -624,7 +623,7 @@ cob_read (struct file_desc *f, char *record, ...)
  |                                                                        |
 \*------------------------------------------------------------------------*/
 
-void
+int
 cob_read_next (struct file_desc *f, char *record, ...)
 {
   int result;
@@ -717,7 +716,7 @@ cob_read_next (struct file_desc *f, char *record, ...)
  |                                                                        |
 \*------------------------------------------------------------------------*/
 
-void
+int
 cob_read_prev (struct file_desc *f, char *record, ...)
 {
   int result;
@@ -843,17 +842,17 @@ cob_write (struct file_desc *f, char *record, ...)
      In accordance with the Cobol 74 Standard. */
 
   if (f->dbp == NULL)
-    return 92;
+    RETURN_STATUS (92);
 
   /* Check to see that the record length is valid */
   if (f->reclen == -1)
-    return 99;
+    RETURN_STATUS (99);
 
   /* Check the mode the file is opened in to make sure that write
      is Allowed */
   if (((f->open_mode != FMOD_OUTPUT) && (f->open_mode != FMOD_IO)
        && (f->open_mode != FMOD_EXTEND)))
-    return 92;
+    RETURN_STATUS (92);
 
   /* check if reclen was given */
   va_start (args, record);
@@ -870,9 +869,9 @@ cob_write (struct file_desc *f, char *record, ...)
       key.size = f->ixd_desc->len;
       result = f->dbp->put (f->dbp, &key, &data, R_NOOVERWRITE);
       if (result == 1)
-	return 22;
+	RETURN_STATUS (22);
       else if (result)
-	return 99;
+	RETURN_STATUS (99);
       /* If the main write was successfull then we proceed to
          write out the alternate keys. Any Failure will mean that 
          we have to delete the writes we have just done.
@@ -897,11 +896,11 @@ cob_write (struct file_desc *f, char *record, ...)
       recno = va_arg (args, recno_t);
       va_end (args);
       if (recno < 1)
-	return 23;
+	RETURN_STATUS (23);
       file_pos = lseek ((int) f->dbp, ((recno) * ((f->reclen))), SEEK_SET);
       result = write ((int) f->dbp, record, f->reclen);
       if (!result)
-	return 99;		/* what errors should I return? */
+	RETURN_STATUS (99);		/* what errors should I return? */
       break;
     case ORG_LINESEQUENTIAL:
       tmpbuf = malloc (f->reclen + 1);
@@ -913,7 +912,7 @@ cob_write (struct file_desc *f, char *record, ...)
 	{
 	  result = write ((int) f->dbp, tmpbuf, f->reclen + 1);
 	  if (!result)
-	    return 99;		/* what errors should I return? */
+	    RETURN_STATUS (99);		/* what errors should I return? */
 	}
       else
 	{
@@ -927,7 +926,7 @@ cob_write (struct file_desc *f, char *record, ...)
 		  if (!result)
 		    {
 		      free (tmpbuf);
-		      return 99;	/* what errors should I return? */
+		      RETURN_STATUS (99);	/* what errors should I return? */
 		    }
 		  break;
 
@@ -939,7 +938,7 @@ cob_write (struct file_desc *f, char *record, ...)
 		  if (!result)
 		    {
 		      free (tmpbuf);
-		      return 99;	/* what errors should I return? */
+		      RETURN_STATUS (99);	/* what errors should I return? */
 		    }
 		}
 	    }
@@ -964,10 +963,10 @@ cob_write (struct file_desc *f, char *record, ...)
 	  result = write ((int) f->dbp, record, f->reclen);
 	}
       if (!result)
-	return 99;		/* what errors should I return? */
+	RETURN_STATUS (99);		/* what errors should I return? */
       break;
     }
-  return 0;
+  RETURN_STATUS (0);
 }
 
 /*------------------------------------------------------------------------*\
@@ -990,17 +989,17 @@ cob_delete (struct file_desc *f, char *record, ...)
      In accordance with the Cobol 74 Standard. */
 
   if (f->dbp == NULL)
-    return 92;
+    RETURN_STATUS (92);
 
   /* Check to see that the record length is valid */
   if (f->reclen == -1)
-    return 99;
+    RETURN_STATUS (99);
 
 
   /* Check the mode the file is opened in to make sure that delete
      is Allowed */
   if (f->open_mode != FMOD_IO)
-    return 92;
+    RETURN_STATUS (92);
 
 
   switch (f->organization)
@@ -1019,25 +1018,25 @@ cob_delete (struct file_desc *f, char *record, ...)
       key.size = f->ixd_desc->len;
       result = f->dbp->del (f->dbp, &key, flags);
       if (result != 0)
-	return 23;
+	RETURN_STATUS (23);
       break;
     case ORG_RELATIVE:
       va_start (args, record);
       recno = va_arg (args, recno_t);
       va_end (args);
       if (recno < 1)
-	return 23;
+	RETURN_STATUS (23);
 /*		recno = recno - 1; */
       file_pos = lseek ((int) f->dbp, ((recno) * ((f->reclen))), SEEK_SET);
       memset (record, 0, f->reclen);
       result = write ((int) f->dbp, record, f->reclen);
       if (!result)
-	return 99;		/* what errors should I return? */
+	RETURN_STATUS (99);		/* what errors should I return? */
       break;
     default:
-      return 37;
+      RETURN_STATUS (37);
     }
-  return 0;
+  RETURN_STATUS (0);
 }
 
 /*------------------------------------------------------------------------*\
@@ -1064,16 +1063,16 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
      In accordance with the Cobol 74 Standard. */
 
   if (f->dbp == NULL)
-    return 92;
+    RETURN_STATUS (92);
 
   /* Check to see that the record length is valid */
   if (f->reclen == -1)
-    return 99;
+    RETURN_STATUS (99);
 
   /* Check the mode the file is opened in to make sure that start
      is Allowed */
   if (((f->open_mode != FMOD_INPUT) && (f->open_mode != FMOD_IO)))
-    return 92;
+    RETURN_STATUS (92);
 
   switch (f->organization)
     {
@@ -1090,19 +1089,19 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 	    {
 	      result = read ((int) f->dbp, new_record, f->reclen);
 	      if (new_record[0] == '\0')
-		return 23;
+		RETURN_STATUS (23);
 	      if (result == f->reclen)
 		{
 		  f->start_record = malloc (f->reclen);
 		  memmove (f->start_record, new_record, f->reclen);
-		  return 0;
+		  RETURN_STATUS (0);
 		}
 	    }
 	  break;
 	case 2:		/* Less Than */
 	  recno = recno - 1;
 	  if (recno < 0)
-	    return 23;
+	    RETURN_STATUS (23);
 	  file_pos =
 	    lseek ((int) f->dbp, ((recno) * ((f->reclen))), SEEK_SET);
 	  if (file_pos > 0)
@@ -1121,13 +1120,13 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 		      result = read ((int) f->dbp, new_record, f->reclen);
 		    }
 		  if (result <= 0)
-		    return 23;
+		    RETURN_STATUS (23);
 		}
 	      if (result == f->reclen)
 		{
 		  f->start_record = malloc (f->reclen);
 		  memmove (f->start_record, new_record, f->reclen);
-		  return 0;
+		  RETURN_STATUS (0);
 		}
 	    }
 	  break;
@@ -1150,13 +1149,13 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 		      result = read ((int) f->dbp, new_record, f->reclen);
 		    }
 		  if (result <= 0)
-		    return 23;
+		    RETURN_STATUS (23);
 		}
 	      if (result == f->reclen)
 		{
 		  f->start_record = malloc (f->reclen);
 		  memmove (f->start_record, new_record, f->reclen);
-		  return 0;
+		  RETURN_STATUS (0);
 		}
 	    }
 	  break;
@@ -1177,13 +1176,13 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 		      recno++;
 		    }
 		  if (result <= 0)
-		    return 23;
+		    RETURN_STATUS (23);
 		}
 	      if (result == f->reclen)
 		{
 		  f->start_record = malloc (f->reclen);
 		  memmove (f->start_record, new_record, f->reclen);
-		  return 0;
+		  RETURN_STATUS (0);
 		}
 	    }
 	  break;
@@ -1203,21 +1202,21 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 		      recno++;
 		    }
 		  if (result <= 0)
-		    return 23;
+		    RETURN_STATUS (23);
 		}
 	      if (result == f->reclen)
 		{
 		  f->start_record = malloc (f->reclen);
 		  memmove (f->start_record, new_record, f->reclen);
-		  return 0;
+		  RETURN_STATUS (0);
 		}
 	    }
 	  break;
 	case 6:
 	default:
-	  return 99;
+	  RETURN_STATUS (99);
 	}
-      return 23;
+      RETURN_STATUS (23);
     case ORG_INDEXED:
       {
 	struct altkey_desc *akd;
@@ -1244,17 +1243,17 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 		key.size = akd->descriptor->len;
 		result = akd->alt_dbp->seq (akd->alt_dbp, &key, &data, flags);
 		if (result)
-		  return 23;
+		  RETURN_STATUS (23);
 		if (memcmp (key.data, key_ptr, key.size) != 0)
-		  return 23;
+		  RETURN_STATUS (23);
 		key.data = data.data;
 		key.size = f->ixd_desc->len;
 		flags = 0;
 		result = f->dbp->get (f->dbp, &key, &data, flags);
 		if (result)
-		  return 23;
+		  RETURN_STATUS (23);
 		if (data.size < f->reclen)
-		  return 23;
+		  RETURN_STATUS (23);
 		memmove (new_record, data.data, f->reclen);
 	      }
 	    else
@@ -1263,13 +1262,13 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 		key.size = f->ixd_desc->len;
 		result = f->dbp->seq (f->dbp, &key, &data, flags);
 		if (result)
-		  return 23;	/* should have a better error info here */
+		  RETURN_STATUS (23);	/* should have a better error info here */
 		if (data.size < f->reclen)
-		  return 23;
+		  RETURN_STATUS (23);
 		memmove (new_record, data.data, f->reclen);
 		if (memcmp (key.data, new_record + f->rec_index, key.size) !=
 		    0)
-		  return 23;
+		  RETURN_STATUS (23);
 	      }
 	    f->start_record = malloc (f->reclen);
 	    memmove (f->start_record, new_record, f->reclen);
@@ -1286,7 +1285,7 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 		    result =
 		      akd->alt_dbp->seq (akd->alt_dbp, &key, &data, flags);
 		    if (result)
-		      return 23;
+		      RETURN_STATUS (23);
 		  }
 		/* If result greater than or equal Key read prev record */
 		if (memcmp (key.data, key_ptr, key.size) > -1)
@@ -1295,16 +1294,16 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 		    result =
 		      akd->alt_dbp->seq (akd->alt_dbp, &key, &data, flags);
 		    if (result)
-		      return 23;
+		      RETURN_STATUS (23);
 		  }
 		key.data = data.data;
 		key.size = f->ixd_desc->len;
 		flags = 0;
 		result = f->dbp->get (f->dbp, &key, &data, flags);
 		if (result)
-		  return 23;
+		  RETURN_STATUS (23);
 		if (data.size < f->reclen)
-		  return 23;
+		  RETURN_STATUS (23);
 		memmove (new_record, data.data, f->reclen);
 	      }
 	    else
@@ -1317,10 +1316,10 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 		    flags = R_LAST;
 		    result = f->dbp->seq (f->dbp, &key, &data, flags);
 		    if (result)
-		      return 23;	/* should have a better error info here */
+		      RETURN_STATUS (23);	/* should have a better error info here */
 		  }
 		if (data.size < f->reclen)
-		  return 23;
+		  RETURN_STATUS (23);
 		memmove (new_record, data.data, f->reclen);
 		/* If result greater than or equal key read prev record */
 		if (memcmp (key.data, new_record + f->rec_index, key.size) >
@@ -1329,9 +1328,9 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 		    flags = R_PREV;
 		    result = f->dbp->seq (f->dbp, &key, &data, flags);
 		    if (result)
-		      return 23;	/* should have a better error info here */
+		      RETURN_STATUS (23);	/* should have a better error info here */
 		    if (data.size < f->reclen)
-		      return 23;
+		      RETURN_STATUS (23);
 		    memmove (new_record, data.data, f->reclen);
 		  }
 	      }
@@ -1350,7 +1349,7 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 		    result =
 		      akd->alt_dbp->seq (akd->alt_dbp, &key, &data, flags);
 		    if (result)
-		      return 23;
+		      RETURN_STATUS (23);
 		  }
 		/* If result greater than Key read prev record */
 		if (memcmp (key.data, key_ptr, key.size) > 0)
@@ -1359,16 +1358,16 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 		    result =
 		      akd->alt_dbp->seq (akd->alt_dbp, &key, &data, flags);
 		    if (result)
-		      return 23;
+		      RETURN_STATUS (23);
 		  }
 		key.data = data.data;
 		key.size = f->ixd_desc->len;
 		flags = 0;
 		result = f->dbp->get (f->dbp, &key, &data, flags);
 		if (result)
-		  return 23;
+		  RETURN_STATUS (23);
 		if (data.size < f->reclen)
-		  return 23;
+		  RETURN_STATUS (23);
 		memmove (new_record, data.data, f->reclen);
 	      }
 	    else
@@ -1381,10 +1380,10 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 		    flags = R_LAST;
 		    result = f->dbp->seq (f->dbp, &key, &data, flags);
 		    if (result)
-		      return 23;	/* should have a better error info here */
+		      RETURN_STATUS (23);	/* should have a better error info here */
 		  }
 		if (data.size < f->reclen)
-		  return 23;
+		  RETURN_STATUS (23);
 		memmove (new_record, data.data, f->reclen);
 		/* If result greater than key read prev record */
 		if (memcmp (key.data, new_record + f->rec_index, key.size) >
@@ -1393,9 +1392,9 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 		    flags = R_PREV;
 		    result = f->dbp->seq (f->dbp, &key, &data, flags);
 		    if (result)
-		      return 23;	/* should have a better error info here */
+		      RETURN_STATUS (23);	/* should have a better error info here */
 		    if (data.size < f->reclen)
-		      return 23;
+		      RETURN_STATUS (23);
 		    memmove (new_record, data.data, f->reclen);
 		  }
 	      }
@@ -1409,7 +1408,7 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 		key.size = akd->descriptor->len;
 		result = akd->alt_dbp->seq (akd->alt_dbp, &key, &data, flags);
 		if (result)
-		  return 23;
+		  RETURN_STATUS (23);
 		/* If result equals Key read next record */
 //                              if(memcmp(data.data,key_ptr,akd->descriptor->len)==0)
 		if (memcmp (key.data, key_ptr, key.size) == 0)
@@ -1418,16 +1417,16 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 		    result =
 		      akd->alt_dbp->seq (akd->alt_dbp, &key, &data, flags);
 		    if (result)
-		      return 23;
+		      RETURN_STATUS (23);
 		  }
 		key.data = data.data;
 		key.size = f->ixd_desc->len;
 		flags = 0;
 		result = f->dbp->get (f->dbp, &key, &data, flags);
 		if (result)
-		  return 23;
+		  RETURN_STATUS (23);
 		if (data.size < f->reclen)
-		  return 23;
+		  RETURN_STATUS (23);
 		memmove (new_record, data.data, f->reclen);
 	      }
 	    else
@@ -1436,9 +1435,9 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 		key.size = f->ixd_desc->len;
 		result = f->dbp->seq (f->dbp, &key, &data, flags);
 		if (result)
-		  return 23;	/* should have a better error info here */
+		  RETURN_STATUS (23);	/* should have a better error info here */
 		if (data.size < f->reclen)
-		  return 23;
+		  RETURN_STATUS (23);
 		memmove (new_record, data.data, f->reclen);
 		/* If result equals key read next record */
 		if (memcmp (key.data, new_record + f->rec_index, key.size) ==
@@ -1447,9 +1446,9 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 		    flags = R_NEXT;
 		    result = f->dbp->seq (f->dbp, &key, &data, flags);
 		    if (result)
-		      return 23;	/* should have a better error info here */
+		      RETURN_STATUS (23);	/* should have a better error info here */
 		    if (data.size < f->reclen)
-		      return 23;
+		      RETURN_STATUS (23);
 		    memmove (new_record, data.data, f->reclen);
 		  }
 	      }
@@ -1463,15 +1462,15 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 		key.size = akd->descriptor->len;
 		result = akd->alt_dbp->seq (akd->alt_dbp, &key, &data, flags);
 		if (result)
-		  return 23;
+		  RETURN_STATUS (23);
 		key.data = data.data;
 		key.size = f->ixd_desc->len;
 		flags = 0;
 		result = f->dbp->get (f->dbp, &key, &data, flags);
 		if (result)
-		  return 23;
+		  RETURN_STATUS (23);
 		if (data.size < f->reclen)
-		  return 23;
+		  RETURN_STATUS (23);
 		memmove (new_record, data.data, f->reclen);
 	      }
 	    else
@@ -1480,9 +1479,9 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 		key.size = f->ixd_desc->len;
 		result = f->dbp->seq (f->dbp, &key, &data, flags);
 		if (result)
-		  return 23;	/* should have a better error info here */
+		  RETURN_STATUS (23);	/* should have a better error info here */
 		if (data.size < f->reclen)
-		  return 23;
+		  RETURN_STATUS (23);
 		memmove (new_record, data.data, f->reclen);
 	      }
 	    f->start_record = malloc (f->reclen);
@@ -1490,12 +1489,12 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 	    break;
 	  case 6:
 	  default:
-	    return 99;
+	    RETURN_STATUS (99);
 	  }
-	return 0;
+	RETURN_STATUS (0);
       }
     default:			/* sequential files */
-      return 0;
+      RETURN_STATUS (0);
     }
 }
 
@@ -1506,18 +1505,11 @@ cob_start (struct file_desc *f, char *record, int cond, ...)
 \*------------------------------------------------------------------------*/
 
 int
-cob_save_status (char *status, int rt)
-{
-  status[0] = rt / 10 + '0';
-  status[1] = rt % 10 + '0';
-  return rt;
-}
-
-void
-cob_set_status (char *status)
+cob_save_status (char *status)
 {
   status[0] = cob_status / 10 + '0';
   status[1] = cob_status % 10 + '0';
+  return cob_status;
 }
 
 /*------------------------------------------------------------------------*\
@@ -1545,16 +1537,16 @@ cob_rewrite (struct file_desc *f, char *record, ...)
      In accordance with the Cobol 74 Standard. */
 
   if (f->dbp == NULL)
-    return 92;
+    RETURN_STATUS (92);
 
   /* Check to see that the record length is valid */
   if (f->reclen == -1)
-    return 99;
+    RETURN_STATUS (99);
 
   /* Check the mode the file is opened in to make sure that rewrite
      is Allowed */
   if (f->open_mode != FMOD_IO)
-    return 92;
+    RETURN_STATUS (92);
 
   /* check if reclen was given */
   va_start (args, record);
@@ -1571,14 +1563,14 @@ cob_rewrite (struct file_desc *f, char *record, ...)
       break;
     case ORG_SEQUENTIAL:
       /* Rewrite No longer supported on Line Sequential files */
-      return 92;
+      RETURN_STATUS (92);
 //              file_pos = lseek((int)f->dbp, ((f->reclen)* -1), SEEK_CUR);
 //              break;
     case ORG_LINESEQUENTIAL:
       file_pos = lseek ((int) f->dbp, (((f->reclen + 1)) * -1), SEEK_CUR);
       break;
     default:
-      return 30;
+      RETURN_STATUS (30);
     }
 
   data.data = record;
@@ -1596,7 +1588,7 @@ cob_rewrite (struct file_desc *f, char *record, ...)
       result = f->dbp->get (f->dbp, &key, &data, flags);
       memmove (record, data.data, f->reclen);
       if (result)
-	return 23;
+	RETURN_STATUS (23);
       {
 	struct altkey_desc *akd;
 	for (akd = (struct altkey_desc *) (f + 1); akd->offset != -1; akd++)
@@ -1614,7 +1606,7 @@ cob_rewrite (struct file_desc *f, char *record, ...)
       /* Rewrite the Main Record */
       result = f->dbp->put (f->dbp, &key, &data, flags);
       if (result)
-	return 99;		/* ? error code to be determined */
+	RETURN_STATUS (99);		/* ? error code to be determined */
       {
 	/* Rewrite the Alternate Keys */
 	struct altkey_desc *akd;
@@ -1635,23 +1627,23 @@ cob_rewrite (struct file_desc *f, char *record, ...)
       file_pos = lseek ((int) f->dbp, ((recno) * ((f->reclen))), SEEK_SET);
       result = write ((int) f->dbp, record, f->reclen);
       if (!result)
-	return 99;		/* what errors should I return? */
+	RETURN_STATUS (99);		/* what errors should I return? */
       break;
     case ORG_LINESEQUENTIAL:
       result = write ((int) f->dbp, record, f->reclen);
       if (!result)
-	return 99;		/* what errors should I return? */
+	RETURN_STATUS (99);		/* what errors should I return? */
       result = write ((int) f->dbp, NL, 1);
       if (!result)
-	return 99;		/* what errors should I return? */
+	RETURN_STATUS (99);		/* what errors should I return? */
       break;
     default:
       result = write ((int) f->dbp, record, f->reclen);
       if (!result)
-	return 99;		/* what errors should I return? */
+	RETURN_STATUS (99);		/* what errors should I return? */
       break;
     }
-  return 0;
+  RETURN_STATUS (0);
 }
 
 /*------------------------------------------------------------------------*\
@@ -1675,13 +1667,13 @@ cob_write_adv (struct file_desc *f, char *record, int opt, ...)
      In accordance with the Cobol 74 Standard. */
 
   if (f->dbp == NULL)
-    return 92;
+    RETURN_STATUS (92);
 
   /* Check the mode the file is opened in to make sure that write
      is Allowed */
   if (((f->open_mode != FMOD_OUTPUT) && (f->open_mode != FMOD_IO)
        && (f->open_mode != FMOD_EXTEND)))
-    return 92;
+    RETURN_STATUS (92);
 
   /* check if reclen was given */
   va_start (args, opt);
@@ -1727,8 +1719,8 @@ cob_write_adv (struct file_desc *f, char *record, int opt, ...)
 //              write( (int)f->dbp, "\x0a", 1 );
     }
   if (result == f->reclen)
-    return 0;
-  return result;
+    RETURN_STATUS (0);
+  RETURN_STATUS (result);
 }
 
 /*------------------------------------------------------------------------*\
@@ -1774,10 +1766,10 @@ sort_open (struct file_desc *f, char *record, char *fname)
   if (!f->dbp)
     {
       if (errno == EINVAL)
-	return 37;
-      return 30;
+	RETURN_STATUS (37);
+      RETURN_STATUS (30);
     }
-  return 0;
+  RETURN_STATUS (0);
 }
 
 /*------------------------------------------------------------------------*\
@@ -1833,9 +1825,9 @@ sort_release (struct file_desc *f, char *record, char *sd, ...)
   key.size = key_size;
   result = f->dbp->put (f->dbp, &key, &data, flags);
   if (!result)
-    return 0;
+    RETURN_STATUS (0);
   else
-    return 99;
+    RETURN_STATUS (99);
 }
 
 /*------------------------------------------------------------------------*\
@@ -1853,11 +1845,11 @@ sort_return (struct file_desc *f, char *record)
 
   result = f->dbp->seq (f->dbp, &key, &data, flags);
   if (result)
-    return 10;
+    RETURN_STATUS (10);
   if (data.size < f->reclen)
-    return 10;
+    RETURN_STATUS (10);
   memmove (record, data.data, f->reclen);
-  return 0;
+  RETURN_STATUS (0);
 
 }
 
@@ -1942,15 +1934,15 @@ cob_sort_using (struct file_desc *f1, char *fname1, ...)
 	  if (errno == EINVAL)
 	    {
 	      f[cnt]->dbp = NULL;
-	      return 37;
+	      RETURN_STATUS (37);
 	    }
 	  if (errno == ENOENT)
 	    {
 	      f[cnt]->dbp = NULL;
-	      return 35;
+	      RETURN_STATUS (35);
 	    }
 	  f[cnt]->dbp = NULL;
-	  return 91;
+	  RETURN_STATUS (91);
 	}
       result = 0;
       while (result == 0)
@@ -1971,7 +1963,7 @@ cob_sort_using (struct file_desc *f1, char *fname1, ...)
 	      close ((int) f[cnt]->dbp);
 	      f[cnt]->dbp = NULL;
 	      result = 99;
-	      return 30;
+	      RETURN_STATUS (30);
 	    }
 	  data.data = record;
 	  data.size = f[cnt]->reclen;
@@ -2004,10 +1996,10 @@ cob_sort_using (struct file_desc *f1, char *fname1, ...)
 	  key.size = key_size;
 	  result = sort_file->dbp->put (sort_file->dbp, &key, &data, flags);
 	  if (result)
-	    return 99;
+	    RETURN_STATUS (99);
 	}
     }
-  return 0;
+  RETURN_STATUS (0);
 }
 
 /*------------------------------------------------------------------------*\
@@ -2075,15 +2067,15 @@ cob_sort_giving (struct file_desc *f1, char *fname1, ...)
 	  if (errno == EINVAL)
 	    {
 	      f[cnt]->dbp = NULL;
-	      return 37;
+	      RETURN_STATUS (37);
 	    }
 	  if (errno == ENOENT)
 	    {
 	      f[cnt]->dbp = NULL;
-	      return 35;
+	      RETURN_STATUS (35);
 	    }
 	  f[cnt]->dbp = NULL;
-	  return 91;
+	  RETURN_STATUS (91);
 	}
       result = 0;
     }
@@ -2106,19 +2098,19 @@ cob_sort_giving (struct file_desc *f1, char *fname1, ...)
 	{
 	  result = write ((int) f[cnt]->dbp, record, f[cnt]->reclen);
 	  if (!result)
-	    return 99;
+	    RETURN_STATUS (99);
 	  else
 	    result = 0;
 	}
     }
   if (result != 10)
-    return 99;
+    RETURN_STATUS (99);
   for (cnt = 0; cnt <= file_num; cnt++)
     {
       close ((int) f[cnt]->dbp);
       f[cnt]->dbp = NULL;
     }
-  return 0;
+  RETURN_STATUS (0);
 }
 
 /* EOF fileio.c */
