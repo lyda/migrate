@@ -1256,15 +1256,19 @@ compute_size (struct cb_field *p)
 	{
 	case CB_USAGE_BINARY:
 	  {
-	    int len = p->pic->size;
-	    if (len <= 2)
-	      p->size = 1;
-	    else if (len <= 4)
-	      p->size = 2;
-	    else if (len <= 9)
-	      p->size = 4;
-	    else
-	      p->size = 8;
+	    int size = p->pic->size;
+	    switch (cb_binary_rep)
+	      {
+	      case CB_BINARY_REP_1_2_4_8:
+		p->size = ((size <= 2) ? 1 :
+			   (size <= 4) ? 2 :
+			   (size <= 9) ? 4 : 8);
+		break;
+	      case CB_BINARY_REP_2_4_8:
+		p->size = ((size <= 4) ? 2 :
+			   (size <= 9) ? 4 : 8);
+		break;
+	      }
 	    break;
 	  }
 	case CB_USAGE_DISPLAY:
@@ -2089,7 +2093,7 @@ decimal_expand (cb_tree s, cb_tree d, cb_tree x)
 	struct cb_field *f = field (x);
 
 	/* check numeric */
-	if (cb_flag_check_numeric)
+	if (CB_EXCEPTION_ENABLE (COB_EC_DATA_INCOMPATIBLE))
 	  if (f->usage == CB_USAGE_DISPLAY)
 	    add_stmt (s, make_funcall_2 ("cob_check_numeric",
 					 x, make_string (f->name)));

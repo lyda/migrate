@@ -51,6 +51,10 @@
 
 #define make_handler(v,a,b)	make_funcall_4 ("@handler", (void *) v, a, b, 0)
 
+#define push_file_handler(file,handler)			\
+  if (handler || CB_EXCEPTION_ENABLE (COB_EC_I_O))	\
+    push (build_file_handler (file, handler));
+
 #define push_sequence_with_handler(x,h)			\
   {							\
     cb_tree __x = (x);					\
@@ -1820,7 +1824,7 @@ close_list:
       {
 	cb_tree file = cb_ref ($2);
 	push_funcall_2 ("cob_close", file, make_integer ($<ival>3));
-	push (build_file_handler (file, NULL));
+	push_file_handler (file, NULL);
       }
   }
 ;
@@ -1868,7 +1872,7 @@ delete_statement:
   {
     cb_tree file = cb_ref ($3);
     push_funcall_1 ("cob_delete", file);
-    push (build_file_handler (file, $5));
+    push_file_handler (file, $5);
 
     SET_TERMINATOR ($2, $5);
   }
@@ -2395,7 +2399,7 @@ open_list:
       {
 	cb_tree file = cb_ref (l->item);
 	push_funcall_2 ("cob_open", file, make_integer ($<ival>2));
-	push (build_file_handler (file, NULL));
+	push_file_handler (file, NULL);
       }
   }
 ;
@@ -2514,7 +2518,7 @@ read_statement:
       }
     if ($<tree>6)
       push (build_move (CB_TREE (CB_FILE (file)->record), $<tree>6));
-    push (build_file_handler (file, $<tree>8));
+    push_file_handler (file, $<tree>8);
 
     SET_TERMINATOR ($2, $<tree>8);
   }
@@ -2566,7 +2570,7 @@ return_statement:
     push_funcall_2 ("cob_read", file, cb_int0);
     if ($<tree>5)
       push (build_move (CB_TREE (CB_FILE (file)->record), $<tree>5));
-    push (build_file_handler (file, $6));
+    push_file_handler (file, $6);
 
     SET_TERMINATOR ($2, $6);
   }
@@ -2590,7 +2594,7 @@ rewrite_statement:
     if ($4)
       push (build_move ($4, $3));
     push_funcall_2 ("cob_rewrite", file, $3);
-    push (build_file_handler (file, $5));
+    push_file_handler (file, $5);
 
     SET_TERMINATOR ($2, $5);
   }
@@ -2793,7 +2797,7 @@ start_statement:
     if ($<tree>5 == NULL)
       $<tree>5 = CB_FILE (file)->key;
     push_funcall_3 ("cob_start", file, make_integer ($<ival>4), $<tree>5);
-    push (build_file_handler (file, $6));
+    push_file_handler (file, $6);
 
     SET_TERMINATOR ($2, $6);
   }
@@ -2991,6 +2995,7 @@ use_statement:
   {
     current_section->need_begin = 1;
     current_section->need_return = 1;
+    CB_EXCEPTION_ENABLE (COB_EC_I_O) = 1;
   }
 ;
 use_target:
@@ -3034,7 +3039,7 @@ write_statement:
     if ($4)
       push (build_move ($4, $3));
     push_funcall_2 ("cob_write", file, $3);
-    push (build_file_handler (file, $<tree>6));
+    push_file_handler (file, $<tree>6);
 
     /* BEFORE ADVANCING */
     if (p && p->type == CB_BEFORE)

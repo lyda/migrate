@@ -42,6 +42,31 @@
 #endif
 
 
+/* COBOL standard */
+extern enum cb_standard {
+  CB_STANDARD_COBOL85,
+  CB_STANDARD_COBOL2002,
+  CB_STANDARD_MVS,
+} cb_standard;
+
+extern const char *cb_standard_name;
+
+/* Binary representation */
+extern enum cb_binary_rep {
+  CB_BINARY_REP_1_2_4_8,	/* 1,2,4,8 bytes */
+  CB_BINARY_REP_2_4_8,		/* 2,4,8 bytes */
+} cb_binary_rep;
+
+extern struct cb_exception {
+  int code;			/* exception code */
+  const char *name;		/* exception name */
+  int enable;			/* if turn on */
+} cb_exception_table[];
+
+#define CB_EXCEPTION_CODE(id)	cb_exception_table[id].code
+#define CB_EXCEPTION_NAME(id)	cb_exception_table[id].name
+#define CB_EXCEPTION_ENABLE(id)	cb_exception_table[id].enable
+
 /* CALL statements are static */
 extern int cb_flag_call_static;
 

@@ -547,7 +547,7 @@ output_param (cb_tree x, int id)
 	output ("({");
 
 	/* subscript check */
-	if (cb_flag_check_subscript && r->subs)
+	if (CB_EXCEPTION_ENABLE (COB_EC_BOUND_SUBSCRIPT) && r->subs)
 	  {
 	    struct cb_field *p;
 	    struct cb_list *l = r->subs = list_reverse (r->subs);
@@ -588,7 +588,7 @@ output_param (cb_tree x, int id)
 	  }
 
 	/* reference modifier check */
-	if (cb_flag_check_ref_mod && r->offset)
+	if (CB_EXCEPTION_ENABLE (COB_EC_BOUND_REF_MOD) && r->offset)
 	  {
 	    if (!CB_LITERAL_P (r->offset)
 		|| (r->length && !CB_LITERAL_P (r->length)))
@@ -821,14 +821,15 @@ output_recursive (void (*func) (struct cb_field *), struct cb_field *f)
 static void output_perform_call (struct cb_label *lb, struct cb_label *le);
 
 static void
-output_handler (int ec, cb_tree st1, cb_tree st2, struct cb_label *l)
+output_handler (int id, cb_tree st1, cb_tree st2, struct cb_label *l)
 {
+  int code = CB_EXCEPTION_CODE (id);
   if (st1)
     {
-      if ((ec & 0x00ff) == 0)
-	output_line ("if ((cob_exception_code & 0xff00) == 0x%04x)", ec);
+      if ((code & 0x00ff) == 0)
+	output_line ("if ((cob_exception_code & 0xff00) == 0x%04x)", code);
       else
-	output_line ("if (cob_exception_code == 0x%04x)", ec);
+	output_line ("if (cob_exception_code == 0x%04x)", code);
       output_stmt (st1);
       if (st2 || l)
 	output_line ("else");

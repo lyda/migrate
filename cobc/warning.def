@@ -21,6 +21,9 @@
 
 /* CB_WARNING (sig, var, name, doc) */
 
+CB_WARNING (1, cb_warn_obsolete, "obsolete",
+	    N_("Warn if obsolete features are used"))
+
 CB_WARNING (2, cb_warn_archaic, "archaic",
 	    N_("Warn if archaic features are used"))
 

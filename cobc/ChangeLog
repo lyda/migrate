@@ -1,3 +1,19 @@
+2003-05-06  Keisuke Nishida  <knishida@netlab.jp>
+
+	* flag.def (cb_flag_check_numeric): Removed.
+	(cb_flag_check_subscript): Removed.
+	(cb_flag_check_ref_mod): Removed.
+	* warning.def (cb_warn_obsolete): New variable.
+	* cobc.h (cb_standard, cb_binary_rep): New variables.
+	(cb_exception_table): New varialbe.
+	(CB_EXCEPTION_CODE, CB_EXCEPTION_NAME, CB_EXCEPTION_ENABLE): New macro.
+	* cobc.c (long_options): New option -std and -debug.
+	(short_options): Remove -T.
+	(process_command_line): Handle new/old options.
+	(cb_obsolete, cb_unconformable): New functions.
+	* tree.c (compute_size): Compute size depending on cb_binary_rep.
+	* parser.y (push_file_handler): New macro.
+
 2003-05-04  Keisuke Nishida  <knishida@netlab.jp>
 
 	* flag.def: New file.

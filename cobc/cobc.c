@@ -43,6 +43,19 @@
  * Global variables
  */
 
+enum cb_standard cb_standard = CB_STANDARD_COBOL2002;
+const char *cb_standard_name = "COBOL 2002";
+
+enum cb_binary_rep cb_binary_rep = CB_BINARY_REP_1_2_4_8;
+
+struct cb_exception cb_exception_table[] = {
+  {0, 0, 0},		/* CB_EC_ZERO */
+#undef COB_EXCEPTION
+#define COB_EXCEPTION(code,tag,name,critical) {0x##code, name, 0},
+#include <libcob/exception.def>
+  {0, 0, 0}		/* CB_EC_MAX */
+};
+
 int cb_flag_call_static = 0;
 int cb_flag_debugging_line = 0;
 int cb_flag_line_directive = 0;
@@ -95,7 +108,7 @@ static enum {
   stage_assemble,
   stage_module,
   stage_executable
-} compile_level;
+} compile_level = stage_executable;
 
 static struct filename {
   int need_preprocess;
@@ -162,13 +175,15 @@ terminate (const char *str)
  * Command line
  */
 
-static char short_options[] = "h?VvEPCScmgo:I:T:";
+static char short_options[] = "h?VvEPCScmgo:I:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'V'},
   {"verbose", no_argument, 0, 'v'},
   {"save-temps", no_argument, &save_temps, 1},
+  {"std", required_argument, 0, 's'},
+  {"debug", no_argument, 0, 'd'},
   {"static", no_argument, &cb_flag_call_static, 1},
   {"dynamic", no_argument, &cb_flag_call_static, 0},
   {"free", no_argument, &cb_source_format, CB_FORMAT_FREE},
@@ -212,16 +227,24 @@ print_usage ()
   -m                    Build a dynamic-linking module\n\
   -g                    Produce debugging information in the output\n\
   -o <file>             Place the output into <file>\n\
+  -I <directory>        Add copybook include path\n\
   -MT <target>          Set target file used in dependency list\n\
-  -MF <file>            Place dependency list into <file>\n"));
+  -MF <file>            Place dependency list into <file>\n\
+"));
+  puts (_("COBOL standard:\n\
+  -std=<standard>       Specify the standard to use:\n\
+    cobol2002             COBOL 2002 (default)\n\
+    cobol85               COBOL 85\n\
+    mvs                   IBM COBOL for MVS\n\
+"));
   puts (_("COBOL options:\n\
   -free                 Use free source format\n\
   -fixed                Use fixed source format\n\
-  -column <n>           Set text area column to <n> (default: 72)\n\
   -static               Use static link for subprogram calls if possible\n\
   -dynamic              Use dynamic link for subprogram calls (default)\n\
-  -T <n>                Set tab width to <n> (default: 8)\n\
-  -I <path>             Add copybook include path\n"));
+  -debug                Enable all run-time error check\n\
+  -column <n>           Set text area column to <n> (default: 72)\n\
+"));
   puts (_("Warning options:\n\
   -Wall                 Enable all warnings"));
 #undef CB_WARNING
@@ -242,14 +265,6 @@ process_command_line (int argc, char *argv[])
 {
   int c, index;
 
-  /* Default options */
-  compile_level = stage_executable;
-
-  cb_flag_check_numeric = 1;
-  cb_flag_check_subscript = 1;
-  cb_flag_check_ref_mod = 1;
-
-  /* Parse the options */
   while ((c = getopt_long_only (argc, argv, short_options,
 				long_options, &index)) >= 0)
     {
@@ -273,6 +288,39 @@ process_command_line (int argc, char *argv[])
 	  cb_flag_line_directive = 1;
 	  strcat (cob_cflags, " -g");
 	  break;
+
+	case 's': /* -std */
+	  if (strcmp (optarg, "cobol85") == 0)
+	    {
+	      cb_standard = CB_STANDARD_COBOL85;
+	      cb_standard_name = "COBOL 85";
+	    }
+	  else if (strcmp (optarg, "cobol2002") == 0)
+	    {
+	      cb_standard = CB_STANDARD_COBOL2002;
+	      cb_standard_name = "COBOL 2002";
+	    }
+	  else if (strcmp (optarg, "mvs") == 0)
+	    {
+	      cb_standard = CB_STANDARD_MVS;
+	      cb_standard_name = "IBM COBOL for MVS";
+	      cb_binary_rep = CB_BINARY_REP_2_4_8;
+	    }
+	  else
+	    {
+	      fprintf (stderr, _("Invalid option -std=%s\n"), optarg);
+	      exit (1);
+	    }
+	  break;
+
+	case 'd': /* -debug */
+	  {
+	    /* Turn on all exception conditions */
+	    enum cob_exception_id i;
+	    for (i = 1; i < COB_EC_MAX; i++)
+	      CB_EXCEPTION_ENABLE (i) = 1;
+	    break;
+	  }
 
 	case '%': /* -MT */
 	  cb_depend_target = strdup (optarg);
@@ -304,10 +352,6 @@ process_command_line (int argc, char *argv[])
 
 	case '*': /* -column */
 	  cb_text_column = atoi (optarg);
-	  break;
-
-	case 'T':
-	  cb_tab_width = atoi (optarg);
 	  break;
 
 	case 'W':
@@ -784,19 +828,36 @@ void
 cb_archaic (const char *feature)
 {
   if (cb_warn_archaic)
-    cb_warning (_("%s is archaic"), feature);
+    cb_warning (_("%s is archaic in %s"), feature, cb_standard_name);
+}
+
+void
+cb_obsolete (const char *feature)
+{
+  if (cb_warn_obsolete)
+    cb_warning (_("%s is obsolete in %s"), feature, cb_standard_name);
+}
+
+void
+cb_unconformable (const char *feature)
+{
+  cb_error (_("%s not conform to %s"), feature, cb_standard_name);
 }
 
 void
 cb_obsolete_85 (const char *feature)
 {
-  cb_warning (_("%s is obsolete"), feature);
+  if (cb_standard == CB_STANDARD_COBOL85)
+    cb_obsolete (feature);
+  else
+    cb_unconformable (feature);
 }
 
 void
 cb_obsolete_2002 (const char *feature)
 {
-  cb_obsolete_85 (feature);
+  if (cb_standard == CB_STANDARD_COBOL2002)
+    cb_obsolete (feature);
 }
 
 

@@ -23,12 +23,3 @@
 
 CB_FLAG (cb_flag_main, "main",
 	 N_("Include a main function in the output"))
-
-CB_FLAG (cb_flag_check_numeric, "check-numeric",
-	 N_("Check the value of numeric data at run time"))
-
-CB_FLAG (cb_flag_check_subscript, "check-subscript",
-	 N_("Check the value of subscript at run time"))
-
-CB_FLAG (cb_flag_check_ref_mod, "check-ref-mod",
-	 N_("Check the range of reference modification at run time"))
