@@ -29,6 +29,8 @@
 #include "cobc.h"
 #include "tree.h"
 
+static int param_id = 0;
+
 static void output_stmt (cb_tree x);
 static void output_data (cb_tree x);
 static void output_integer (cb_tree x);
@@ -508,6 +510,7 @@ output_param (cb_tree x, int id)
 {
   char fname[5];
   sprintf (fname, "f[%d]", id);
+  param_id = id;
 
   if (x == NULL)
     {
@@ -657,7 +660,7 @@ static void
 output_func_1 (const char *name, cb_tree a1)
 {
   output ("%s (", name);
-  output_param (a1, 0);
+  output_param (a1, param_id);
   output (")");
 }
 
