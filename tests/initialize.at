@@ -95,3 +95,25 @@ AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0], [ 000])
 
 AT_CLEANUP
+
+AT_SETUP([INITIALIZE with REDEFINES])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 G1.
+         02 X           PIC X.
+         02 Y           REDEFINES X PIC 9.
+         02 Z           PIC 9.
+       PROCEDURE        DIVISION.
+           INITIALIZE G1.
+           DISPLAY G1 NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [ 0])
+
+AT_CLEANUP
