@@ -99,6 +99,7 @@ typedef struct __cob_module {
   unsigned char decimal_point;
   unsigned char currency_symbol;
   unsigned char numeric_separator;
+  unsigned char *collating_sequence;
   struct __cob_module *next;
 } cob_module;
 

@@ -365,6 +365,12 @@ cob_set_switch (int n, int flag)
  * Comparison
  */
 
+#define CMP(x,y)					\
+  (cob_current_module->collating_sequence		\
+   ? (cob_current_module->collating_sequence[x]		\
+      - cob_current_module->collating_sequence[y])	\
+   : ((x) - (y)))
+
 static int
 cmp_char (cob_field *f, unsigned char c)
 {
@@ -374,7 +380,7 @@ cmp_char (cob_field *f, unsigned char c)
 
   for (i = 0; i < f->size; i++)
     {
-      ret = f->data[i] - c;
+      ret = CMP (f->data[i], c);
       if (ret != 0)
 	break;
     }
@@ -395,7 +401,7 @@ cmp_all (cob_field *f1, cob_field *f2)
     {
       if (i % f2->size == 0)
 	s = f2->data;
-      ret = f1->data[i] - *s++;
+      ret = CMP (f1->data[i], *s++);
       if (ret != 0)
 	break;
     }
@@ -417,7 +423,7 @@ cmp_alnum (cob_field *f1, cob_field *f2)
   /* compare common substring */
   for (i = 0; i < min; i++)
     {
-      ret = f1->data[i] - f2->data[i];
+      ret = CMP (f1->data[i], f2->data[i]);
       if (ret != 0)
 	goto end;
     }
@@ -426,9 +432,9 @@ cmp_alnum (cob_field *f1, cob_field *f2)
   for (; i < max; i++)
     {
       if (f1->size > f2->size)
-	ret = f1->data[i] - ' ';
+	ret = CMP (f1->data[i], ' ');
       else
-	ret = ' ' - f2->data[i];
+	ret = CMP (' ', f2->data[i]);
       if (ret != 0)
 	goto end;
     }
