@@ -690,8 +690,8 @@ flag_duplicates:
  */
 
 i_o_control:
-| I_O_CONTROL dot
-  same_statement_list
+| I_O_CONTROL '.'
+  same_statement_list dot
   {
     yywarn ("I-O-CONTROL is not implemented yet");
   }
@@ -700,7 +700,7 @@ same_statement_list:
 | same_statement_list same_statement
 ;
 same_statement:
-  SAME same_option _area _for file_name_list '.'
+  SAME same_option _area _for file_name_list
 ;
 same_option:
 | RECORD
