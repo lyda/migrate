@@ -50,7 +50,7 @@ of obsolete options `-finline-move' and `-finline-get-int'.
 
 ** SHARING clause has been implemented.
 
-** LENGTH OF phrase has been implemented.
+** LENGTH OF operator has been implemented.
 
 ** Many bug fixes.
 
