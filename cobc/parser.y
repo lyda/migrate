@@ -194,6 +194,7 @@ static void ambiguous_error (struct cobc_word *p);
 %type <list> tallying_list,replacing_list,inspect_before_after_list
 %type <list> unstring_delimited,unstring_delimited_list,unstring_into
 %type <list> unstring_delimited_item,unstring_into_item
+%type <list> predefined_name_list
 %type <list> file_name_list,math_name_list,math_edited_name_list
 %type <list> call_item_list,call_using
 %type <list> initialize_replacing,initialize_replacing_list
@@ -1001,9 +1002,11 @@ occurs_indexed:
 occurs_key_list:
   /* nothing */			{ $$ = NULL; }
 | occurs_key_list
-  ASCENDING _key _is WORD	{ $$ = NULL; }
+  ASCENDING _key _is
+  predefined_name_list		{ $$ = NULL; }
 | occurs_key_list
-  DESCENDING _key _is WORD	{ $$ = NULL; }
+  DESCENDING _key _is
+  predefined_name_list		{ $$ = NULL; }
 ;
 occurs_index_list:
   occurs_index			 { $$ = list ($1); }
@@ -2893,6 +2896,11 @@ in_of: IN | OF ;
  * Predefined name
  */
 
+predefined_name_list:
+  predefined_name		{ $$ = list ($1); }
+| predefined_name_list
+  predefined_name		{ $$ = list_add ($1, $2); }
+;
 predefined_name:
   qualified_predefined_word	{ $$ = make_predefined ($1); }
 ;
