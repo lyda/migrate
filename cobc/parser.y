@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 584
+%expect 589
 
 %{
 #define yydebug		cob_trace_parser
@@ -3102,6 +3102,7 @@ unqualified_var:
 
 dot:
   '.'
+| error
 | /* nothing */
   {
     yywarn ("`.' is expected after `%s'", last_text);
