@@ -1035,6 +1035,9 @@ cob_write (struct cob_file_desc *f, struct cob_field rec)
   else
     f->record_size = COB_FIELD_SIZE (rec);
 
+  if (f->record_size < f->record_min || f->record_max < f->record_size)
+    RETURN_STATUS (44);
+
   ret = fileio_funcs[f->organization]->write (f, rec);
 
   RETURN_STATUS (ret);
