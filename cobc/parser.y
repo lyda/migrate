@@ -1395,7 +1395,7 @@ statement:
 | search_statement
 | set_statement
 | start_statement
-| stoprun_statement
+| stop_statement
 | string_statement
 | subtract_statement
 | unstring_statement
@@ -2291,10 +2291,10 @@ _end_start: | END_START ;
 
 
 /*
- * STOP RUN statement
+ * STOP statement
  */
 
-stoprun_statement:
+stop_statement:
   STOP RUN			{ push_call_0 (COBC_STOP_RUN); }
 | STOP NONNUMERIC_LITERAL	{ yywarn ("STOP literal is obsolete"); }
 ;
