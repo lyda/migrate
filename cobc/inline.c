@@ -128,9 +128,6 @@ output_move_num (cobc_tree x, int high)
     case COBC_USAGE_INDEX:
       output_native_assign (x, high ? -1 : 0);
       break;
-    case COBC_USAGE_PACKED:
-      printf ("%s: not implemented\n", __FUNCTION__);
-      abort ();
     }
 }
 

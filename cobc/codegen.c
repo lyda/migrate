@@ -369,7 +369,6 @@ output_index (cobc_tree x)
 	switch (p->usage)
 	  {
 	  case COBC_USAGE_DISPLAY:
-	  case COBC_USAGE_PACKED:
 	    output_func_1 ("cob_to_int", x);
 	    break;
 	  case COBC_USAGE_BINARY:
@@ -831,8 +830,6 @@ get_type (struct cobc_field *p)
     case COBC_USAGE_BINARY:
     case COBC_USAGE_INDEX:
       return COB_BINARY;
-    case COBC_USAGE_PACKED:
-      return COB_PACKED;
     default:
       return p->category;
     }

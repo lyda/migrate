@@ -190,7 +190,7 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %token DEPENDING,CORRESPONDING,CONVERTING,FUNCTION_NAME,OPTIONAL,RETURNING
 %token IDENTIFICATION,ENVIRONMENT,DATA,PROCEDURE,TRUE,FALSE,ANY
 %token AUTHOR,DATE_WRITTEN,DATE_COMPILED,INSTALLATION,SECURITY
-%token COMMON,NEXT,PACKED_DECIMAL,INPUT,I_O,OUTPUT,EXTEND,BINARY
+%token COMMON,NEXT,INPUT,I_O,OUTPUT,EXTEND,BINARY
 %token ALPHANUMERIC,ALPHANUMERIC_EDITED,NUMERIC_EDITED,NATIONAL,NATIONAL_EDITED
 
 %type <gene> call_item,write_option
@@ -1003,10 +1003,6 @@ usage:
 | BINARY /* or COMP */
   {
     current_field->usage = COBC_USAGE_BINARY;
-  }
-| PACKED_DECIMAL /* or COMP-3 */
-  {
-    current_field->usage = COBC_USAGE_PACKED;
   }
 | INDEX
   {
@@ -3901,7 +3897,6 @@ validate_field_tree (struct cobc_field *p)
 	case COBC_USAGE_DISPLAY:
 	  break;
 	case COBC_USAGE_BINARY:
-	case COBC_USAGE_PACKED:
 	  if (p->category != COB_NUMERIC)
 	    yywarn (_("field must be numeric"));
 	  break;

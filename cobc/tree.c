@@ -600,11 +600,6 @@ compute_size (struct cobc_field *p)
 	      p->size = 8;
 	  }
 	  break;
-	case COBC_USAGE_PACKED:
-	  {
-	    p->size = p->pic->size / 2 + 1;
-	    break;
-	  }
 	}
       return p->size;
     }
