@@ -22,6 +22,7 @@ AT_INIT([COBOL 2002 Run Tests])
 AT_TESTED([cobc])
 
 m4_include([fundamental.at])
+m4_include([copy.at])
 
 m4_include([subscripts.at])	# 8.4.1.2 Subscripts
 m4_include([ref-mod.at])	# 8.4.2.3 Reference-modification

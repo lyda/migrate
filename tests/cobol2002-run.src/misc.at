@@ -26,24 +26,6 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 
 AT_CLEANUP
 
-AT_SETUP([Copy file not found])
-
-AT_DATA([prog.cob], [
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       COPY "copy.inc".
-       PROCEDURE        DIVISION.
-           STOP RUN.
-])
-
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:6: copy.inc: No such file or directory
-])
-
-AT_CLEANUP
-
 
 AT_SETUP([Comma separator without space])
 

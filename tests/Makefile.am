@@ -19,6 +19,7 @@ cobol2002_syntax_DEPENDENCIES = \
 
 cobol2002_run_DEPENDENCIES = \
 	cobol2002-run.src/fundamental.at \
+	cobol2002-run.src/copy.at \
 	cobol2002-run.src/initialize.at \
 	cobol2002-run.src/misc.at \
 	cobol2002-run.src/ref-mod.at \
