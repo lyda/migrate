@@ -54,6 +54,7 @@
 #include "move.h"
 #include "numeric.h"
 #include "fileio.h"
+#include "gettext.h"
 
 #define FILE_PERMISSION 0644
 
@@ -1090,9 +1091,62 @@ cob_delete (struct cob_file_desc *f)
 void
 cob_default_error_handle (struct cob_file_desc *f)
 {
-  int status = f->file_status[0] * 10 + f->file_status[1];
-  if (status != 35)
-    cob_runtime_error ("file I/O exited with status %02", status);
+  const char *msg = NULL;
+  int status = (f->file_status[0] - '0') * 10 + (f->file_status[1] - '0');
+  switch (status)
+    {
+    case COB_FILE_END_OF_FILE:
+      msg = N_("end of file");
+      break;
+    case COB_FILE_KEY_INVALID:
+      msg = N_("key order not ascending");
+      break;
+    case COB_FILE_KEY_EXISTS:
+      msg = N_("record key already exists");
+      break;
+    case COB_FILE_KEY_NOT_EXISTS:
+      msg = N_("record key not exists");
+      break;
+    case COB_FILE_PERMANENT_ERROR:
+      msg = N_("permanent file error");
+      break;
+    case COB_FILE_NOT_EXISTS:
+      /* no message */
+      break;
+    case COB_FILE_PERMISSION_DENIED:
+      msg = N_("permission denied");
+      break;
+    case COB_FILE_ALREADY_OPEN:
+      msg = N_("file already open");
+      break;
+    case COB_FILE_NOT_OPEN:
+      msg = N_("file not open");
+      break;
+    case COB_FILE_READ_NOT_DONE:
+      msg = N_("READ must be executed first");
+      break;
+    case COB_FILE_RECORD_OVERFLOW:
+      msg = N_("record overflow");
+      break;
+    case COB_FILE_READ_ERROR:
+      msg = N_("failed to read");
+      break;
+    case COB_FILE_INPUT_DENIED:
+      msg = N_("READ and START not allowed");
+      break;
+    case COB_FILE_OUTPUT_DENIED:
+      msg = N_("WRITE not allowed");
+      break;
+    case COB_FILE_I_O_DENIED:
+      msg = N_("DELETE and REWRITE not allowed");
+      break;
+    default:
+      msg = N_("unknown file error");
+      break;
+    }
+
+  if (msg)
+    cob_runtime_error ("%s (STATUS=%02d)", gettext (msg), status);
 }
 
 
