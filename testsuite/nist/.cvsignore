@@ -1,4 +1,8 @@
 *.tar.gz
+*.txt
+*.fix
+*.old
+copy
 CM
 DB
 IC
@@ -14,7 +18,4 @@ SQ
 ST
 EXEC85
 EXEC85.cob
-copy
 newcob.val
-report.log
-report.old

@@ -29,9 +29,14 @@ my $total_deleted = 0;
 my $total_inspect = 0;
 my $total_ok = 0;
 
-open (LOG, "> summary.txt") || die;
+open (LOG, "> report.log") or die;
 print LOG "Filename    total pass fail deleted inspect\n";
 print LOG "--------    ----- ---- ---- ------- -------\n";
+
+foreach $in (glob("lib/*.CBL")) {
+  print "cobc -m -I ../copy $in\n";
+  system ("cobc -m -I ../copy $in");
+}
 
 foreach $in (glob("*.CBL")) {
   my $exe = $in;
@@ -49,8 +54,8 @@ foreach $in (glob("*.CBL")) {
     $test_skipped++;
     print LOG "  ----- test skipped -----\n";
   } else {
-    print "cobc $in && $cmd\n";
-    if (system ("cobc $in") != 0) {
+    print "cobc -I ../copy $in && $cmd\n";
+    if (system ("cobc -I ../copy $in") != 0) {
       $compile_error++;
       print LOG "  ===== compile error =====\n";
     } else {
