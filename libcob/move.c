@@ -491,7 +491,7 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
       /* put zero after the decimal point if necessary */
       if (decimal_point)
 	for (dst = decimal_point + 1; dst < end; dst++)
-	  if (!isdigit (*dst) && !strchr (",+-/", *dst))
+	  if (!isdigit (*dst) && !strchr (",+-/B", *dst))
 	    *dst = '0';
 
       /* put sign or currency symbol at the beginning */
