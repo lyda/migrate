@@ -44,6 +44,7 @@
  */
 
 enum cb_compile_level cb_compile_level = CB_LEVEL_EXECUTABLE;
+enum cb_source_format cb_source_format = CB_FORMAT_FIXED;
 
 struct cb_exception cb_exception_table[] = {
   {0, 0, 0},		/* CB_EC_ZERO */

@@ -46,6 +46,12 @@ extern enum cb_compile_level {
   CB_LEVEL_EXECUTABLE
 } cb_compile_level;
 
+extern enum cb_source_format {
+  CB_FORMAT_AUTO,
+  CB_FORMAT_FREE,
+  CB_FORMAT_FIXED,
+} cb_source_format;
+
 extern struct cb_exception {
   int code;			/* exception code */
   const char *name;		/* exception name */
@@ -99,12 +105,6 @@ extern struct cb_name_list *cb_name_list_add (struct cb_name_list *list, const c
 
 
 /* config.c */
-
-enum cb_source_format {
-  CB_FORMAT_AUTO,
-  CB_FORMAT_FREE,
-  CB_FORMAT_FIXED,
-};
 
 enum cb_assign_identifier {
   CB_ASSIGN_DEVICE,
