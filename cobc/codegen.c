@@ -905,34 +905,11 @@ static void
 output_file_name (struct cobc_file_name *f)
 {
   int nkeys = 1;
-  char pic[BUFSIZ];
-  struct cobc_field *p, *record;
-
-  /* compute the record size */
-  if (f->record_min == 0)
-    f->record_min = f->record->size;
-  for (p = f->record; p; p = p->sister)
-    {
-      if (p->size < f->record_min)
-	f->record_min = p->size;
-      if (p->size > f->record_max)
-	f->record_max = p->size;
-    }
-
-  /* create record */
-  sprintf (pic, "X(%d)", f->record_max);
-  record = COBC_FIELD (make_field_3 (f->word, pic, COBC_USAGE_DISPLAY));
-  record->category = COB_ALPHANUMERIC;
-  record->f.used = 1;
-  finalize_field_tree (record);
+  struct cobc_field *p;
 
   /* output record definition */
-  output_field_definition (record, record, 0);
   for (p = f->record; p; p = p->sister)
-    {
-      p->redefines = record;
-      output_field_definition (p, p, 0);
-    }
+    output_field_definition (p, p, 0);
 
   /* output ALTERNATE RECORD KEY's */
   if (f->organization == COB_ORG_INDEXED)
@@ -963,7 +940,7 @@ output_file_name (struct cobc_file_name *f)
     output ("cob_dummy_status");
   output (", ");
   /* record_size, record_data */
-  output ("%d, f_%s_data, ", record->size, record->cname);
+  output ("%d, f_%s_data, ", f->record->size, f->record->cname);
   /* record_min, record_max */
   output ("%d, %d, ", f->record_min, f->record_max);
   /* record_depending */

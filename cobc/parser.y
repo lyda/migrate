@@ -113,6 +113,7 @@ static void init_field (int level, cobc_tree field);
 static void validate_field (struct cobc_field *p);
 static void validate_field_tree (struct cobc_field *p);
 static void validate_file_name (struct cobc_file_name *p);
+static void finalize_file_name (struct cobc_file_name *f, struct cobc_field *records);
 static void validate_label_name (struct cobc_label_name *p);
 
 static void field_set_used (struct cobc_field *p);
@@ -193,7 +194,7 @@ static void ambiguous_error (struct cobc_word *p);
 %type <inum> flag_not,flag_next,flag_rounded,flag_separate
 %type <inum> sign,integer,level_number,operator,display_upon,usage
 %type <inum> before_or_after,perform_test,replacing_option,close_option
-%type <inum> select_organization,select_access_mode,open_mode
+%type <inum> select_organization,select_access_mode,open_mode,same_option
 %type <inum> ascending_or_descending,opt_from_integer,opt_to_integer
 %type <list> occurs_key_list,occurs_index_list,value_item_list
 %type <list> data_name_list,condition_name_list,opt_value_list
@@ -717,20 +718,26 @@ flag_duplicates:
 i_o_control:
 | I_O_CONTROL '.'
   same_statement_list dot
-  {
-    yywarn ("I-O-CONTROL is not implemented yet");
-  }
 ;
 same_statement_list:
 | same_statement_list same_statement
 ;
 same_statement:
   SAME same_option _area _for file_name_list
+  {
+    switch ($2)
+      {
+      case 0:
+	yywarn ("SAME not implemented");
+	break;
+      case 1:
+	yywarn ("SAME RECORD not implemented");
+      }
+  }
 ;
 same_option:
-| RECORD
-| SORT
-| SORT_MERGE
+  /* nothing */			{ $$ = 0; }
+| RECORD			{ $$ = 1; }
 ;
 
 
@@ -760,21 +767,7 @@ file_description_sequence:
   file_options '.'
   field_description_list
   {
-    struct cobc_field *p = COBC_FIELD ($7);
-    current_file_name->record = p;
-    for (; p; p = p->sister)
-      {
-	p->file = current_file_name;
-	field_set_used (p);
-
-	/* check the record size */
-	if (current_file_name->record_min > 0)
-	  if (p->size < current_file_name->record_min)
-	    yyerror ("record size too small `%s'", p->word->name);
-	if (current_file_name->record_max > 0)
-	  if (p->size > current_file_name->record_max)
-	    yyerror ("record size too large `%s'", p->word->name);
-      }
+    finalize_file_name (current_file_name, COBC_FIELD ($7));
   }
 ;
 file_options:
@@ -3537,6 +3530,51 @@ validate_file_name (struct cobc_file_name *p)
     l->key = resolve_predefined_name (l->key);
   if (p->record_depending)
     p->record_depending = resolve_predefined_name (p->record_depending);
+}
+
+static void
+finalize_file_name (struct cobc_file_name *f, struct cobc_field *records)
+{
+  char pic[BUFSIZ];
+  struct cobc_field *p;
+
+  for (p = records; p; p = p->sister)
+    {
+      /* check the record size */
+      if (f->record_min > 0)
+	if (p->size < f->record_min)
+	  yyerror ("record size too small `%s'", p->word->name);
+      if (f->record_max > 0)
+	if (p->size > f->record_max)
+	  yyerror ("record size too large `%s'", p->word->name);
+    }
+
+  /* compute the record size */
+  if (f->record_min == 0)
+    f->record_min = records->size;
+  for (p = records; p; p = p->sister)
+    {
+      if (p->size < f->record_min)
+	f->record_min = p->size;
+      if (p->size > f->record_max)
+	f->record_max = p->size;
+    }
+
+  /* create record */
+  sprintf (pic, "X(%d)", f->record_max);
+  f->record = COBC_FIELD (make_field_3 (f->word, pic, COBC_USAGE_DISPLAY));
+  field_set_used (f->record);
+  validate_field (f->record);
+  finalize_field_tree (f->record);
+  f->record->sister = records;
+  f->word->count--;
+
+  for (p = records; p; p = p->sister)
+    {
+      p->file = f;
+      p->redefines = f->record;
+      field_set_used (p);
+    }
 }
 
 static const char *
