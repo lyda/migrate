@@ -45,6 +45,22 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 AT_CLEANUP
 
 
+AT_SETUP([Comma separator without space])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       PROCEDURE        DIVISION.
+           DISPLAY 1,1,1 NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [111])
+
+AT_CLEANUP
+
+
 AT_SETUP([LOCAL-STORAGE])
 
 AT_DATA([callee.cob], [
