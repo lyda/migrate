@@ -159,7 +159,7 @@ terminate (const char *str)
  * Command line
  */
 
-static char short_options[] = "h?VvECScmgo:I:";
+static char short_options[] = "h?VvECScmgo:I:T:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
@@ -170,6 +170,7 @@ static struct option long_options[] = {
   {"dynamic", no_argument, &cobc_flag_call_static, 0},
   {"free", no_argument, 0, 'F'},
   {"fixed", no_argument, 0, 'X'},
+  {"column", required_argument, 0, '*'},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
   {"fmain", no_argument, &cobc_flag_main, 1},
@@ -218,8 +219,10 @@ print_usage ()
 COBOL options:\n\
   -free                 Use free source format\n\
   -fixed                Use fixed source format\n\
+  -column <n>           Set text area column to <n> (default: 72)\n\
   -static               Use static link for subprogram calls if possible\n\
   -dynamic              Use dynamic link for subprogram calls (default)\n\
+  -T <n>                Set tab width to <n> (default: 8)\n\
   -I <path>             Add copybook include path\n\
   -fmain                Include a main function in the output\n\
   -fdebugging-line      Enable debugging lines\n\
@@ -286,6 +289,16 @@ process_command_line (int argc, char *argv[])
 
 	case 'I':
 	  strcat (cobpp_flags, " -I ");
+	  strcat (cobpp_flags, optarg);
+	  break;
+
+	case '*': /* -column */
+	  strcat (cobpp_flags, " -C ");
+	  strcat (cobpp_flags, optarg);
+	  break;
+
+	case 'T':
+	  strcat (cobpp_flags, " -T ");
 	  strcat (cobpp_flags, optarg);
 	  break;
 
