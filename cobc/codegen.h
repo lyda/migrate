@@ -49,6 +49,6 @@ extern void output_initialize_replacing (cobc_tree x, struct cobc_list *l);
 extern void output_display (cobc_tree x, cobc_tree fd);
 extern void output_search (cobc_tree table, cobc_tree var, cobc_tree sentence, cobc_tree whens);
 extern void output_search_all (cobc_tree table, cobc_tree sentence, cobc_tree when);
-extern void output_call_statement (cobc_tree name, struct cobc_list *args);
+extern void output_call_statement (cobc_tree name, struct cobc_list *args, cobc_tree st1, cobc_tree st2);
 
 #endif /* _CODEGEN_H_ */

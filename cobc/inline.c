@@ -720,17 +720,18 @@ output_search_all (cobc_tree table, cobc_tree sentence, cobc_tree when)
  */
 
 void
-output_call_statement (cobc_tree name, struct cobc_list *args)
+output_call_statement (cobc_tree name, struct cobc_list *args,
+		       cobc_tree st1, cobc_tree st2)
 {
-  int static_link = 0;
+  int dynamic_link = 1;
   struct cobc_list *l;
 
   if (cobc_link_style == LINK_STATIC && COBC_LITERAL_P (name))
-    static_link = 1;
+    dynamic_link = 0;
 
   /* local variables */
   output_indent ("{", 2);
-  if (!static_link)
+  if (dynamic_link)
     output_line ("int (*func)();");
 
   /* setup arguments */
@@ -761,7 +762,7 @@ output_call_statement (cobc_tree name, struct cobc_list *args)
 
   /* function name */
   output_prefix ();
-  if (static_link)
+  if (!dynamic_link)
     {
       /* static link */
       output ("cob_return_code = %s", COBC_LITERAL (name)->str);
@@ -770,11 +771,22 @@ output_call_statement (cobc_tree name, struct cobc_list *args)
     {
       /* dynamic link */
       output ("func = ");
-      output_func_1 ("cob_call_resolve", name);
+      if (COBC_LITERAL_P (name))
+	output ("cob_resolve (\"%s\")", COBC_LITERAL (name)->str);
+      else
+	output_func_1 ("cob_call_resolve", name);
       output (";\n");
-      output_line ("if (func)");
+      output_line ("if (func == NULL)");
+      output_indent_level += 2;
+      if (st1)
+	output_tree (st1);
+      else
+	output_call_0 ("cob_call_error");
+      output_indent_level -= 2;
+      output_line ("else");
+      output_indent ("  {", 4);
       output_prefix ();
-      output ("  cob_return_code = func");
+      output ("cob_return_code = func");
     }
 
   /* arguments */
@@ -821,5 +833,9 @@ output_call_statement (cobc_tree name, struct cobc_list *args)
     }
   output (");\n");
   output_line ("init_environment ();");
+  if (st2)
+    output_tree (st2);
+  if (dynamic_link)
+    output_indent ("  }", -4);
   output_indent ("}", -2);
 }

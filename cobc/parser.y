@@ -115,8 +115,8 @@ struct program_spec program_spec;
 static struct cobc_field *current_field;
 static struct cobc_file_name *current_file_name;
 static struct cobc_label_name *current_section, *current_paragraph;
-static int current_call_mode;
 
+static int call_mode;
 static int inspect_mode;
 static cobc_tree inspect_name;
 static struct cobc_list *inspect_list;
@@ -201,7 +201,7 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %token COMMON,NEXT,INPUT,I_O,OUTPUT,EXTEND,BINARY
 %token ALPHANUMERIC,ALPHANUMERIC_EDITED,NUMERIC_EDITED,NATIONAL,NATIONAL_EDITED
 
-%type <gene> call_item,write_option
+%type <gene> call_param,write_option
 %type <inum> flag_all,flag_duplicates,flag_optional,flag_global
 %type <inum> flag_not,flag_next,flag_rounded,flag_separate
 %type <inum> integer,level_number,start_operator,display_upon
@@ -218,7 +218,7 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %type <list> unstring_delimited_item,unstring_into_item
 %type <list> predefined_name_list,qualified_predefined_word,mnemonic_name_list
 %type <list> file_name_list,math_name_list,math_edited_name_list
-%type <list> call_item_list,call_using,expr_item_list
+%type <list> call_param_list,call_using,expr_item_list
 %type <list> initialize_replacing,initialize_replacing_list
 %type <list> special_name_class_item_list
 %type <tree> special_name_class_item,special_name_class_literal
@@ -236,7 +236,7 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %type <tree> at_end_sentence,not_at_end_sentence
 %type <tree> invalid_key_sentence,not_invalid_key_sentence
 %type <tree> opt_on_overflow_sentence,opt_not_on_overflow_sentence
-%type <tree> opt_on_exception_sentence,opt_not_on_exception_sentence
+%type <tree> call_returning,call_on_exception,call_not_on_exception
 %type <tree> opt_on_size_error_sentence,opt_not_on_size_error_sentence
 %type <tree> numeric_name,numeric_edited_name,group_name,table_name,class_name
 %type <tree> program_name,condition_name,qualified_cond_name,data_name
@@ -1512,40 +1512,46 @@ _proceed_to: | PROCEED TO ;
  */
 
 call_statement:
-  CALL program_name		{ current_call_mode = COBC_CALL_BY_REFERENCE; }
-  call_using
+  CALL program_name		{ call_mode = COBC_CALL_BY_REFERENCE; }
+  call_using call_returning call_on_exception call_not_on_exception
   {
     cobc_location = @1;
-    push_inline_2 (output_call_statement, $2, $4);
+    push_inline_4 (output_call_statement, $2, $4, $6, $7);
+    if ($5)
+      push_move (cobc_return_code, $5);
   }
-  call_returning
-  opt_on_exception
   _end_call
 ;
 call_using:
   /* nothing */			{ $$ = NULL; }
-| USING call_item_list		{ $$ = $2; }
+| USING call_param_list		{ $$ = $2; }
 ;
-call_item_list:
-  call_item			{ $$ = list ($1); }
-| call_item_list
-  call_item			{ $$ = list_add ($1, $2); }
+call_param_list:
+  call_param			{ $$ = list ($1); }
+| call_param_list
+  call_param			{ $$ = list_add ($1, $2); }
 ;
-call_item:
-  value				{ $$ = make_generic_1 (current_call_mode, $1);}
-| _by call_mode value		{ $$ = make_generic_1 (current_call_mode, $3);}
+call_param:
+  value				{ $$ = make_generic_1 (call_mode, $1);}
+| _by call_mode value		{ $$ = make_generic_1 (call_mode, $3);}
 ;
 call_mode:
-  REFERENCE			{ current_call_mode = COBC_CALL_BY_REFERENCE; }
-| CONTENT			{ current_call_mode = COBC_CALL_BY_CONTENT; }
-| VALUE				{ current_call_mode = COBC_CALL_BY_VALUE; }
+  REFERENCE			{ call_mode = COBC_CALL_BY_REFERENCE; }
+| CONTENT			{ call_mode = COBC_CALL_BY_CONTENT; }
+| VALUE				{ call_mode = COBC_CALL_BY_VALUE; }
 ;
 call_returning:
-| RETURNING data_name
-  {
-    cobc_location = @1;
-    push_move (cobc_return_code, $2);
-  }
+  /* nothing */			{ $$ = NULL; }
+| RETURNING data_name		{ $$ = $2; }
+;
+call_on_exception:
+  /* nothing */				{ $$ = NULL; }
+| _on OVERFLOW imperative_statement	{ $$ = $3; }
+| _on EXCEPTION imperative_statement	{ $$ = $3; }
+;
+call_not_on_exception:
+  /* nothing */				 { $$ = NULL; }
+| NOT _on EXCEPTION imperative_statement { $$ = $4; }
 ;
 _end_call: | END_CALL ;
 
@@ -2681,30 +2687,6 @@ opt_on_overflow_sentence:
 opt_not_on_overflow_sentence:
   /* nothing */				{ $$ = NULL; }
 | NOT _on OVERFLOW imperative_statement	{ $$ = $4; }
-;
-
-
-/*
- * ON EXCEPTION
- */
-
-opt_on_exception:
-  opt_on_exception_sentence
-  opt_not_on_exception_sentence
-  {
-    if ($1 == NULL)
-      $1 = make_call_0 ("cob_call_error");
-    push_status_handler (cobc_int0, $2, $1);
-  }
-;
-opt_on_exception_sentence:
-  /* nothing */				{ $$ = NULL; }
-| _on OVERFLOW imperative_statement	{ $$ = $3; }
-| _on EXCEPTION imperative_statement	{ $$ = $3; }
-;
-opt_not_on_exception_sentence:
-  /* nothing */				 { $$ = NULL; }
-| NOT _on EXCEPTION imperative_statement { $$ = $4; }
 ;
 
 
