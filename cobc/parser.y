@@ -79,7 +79,7 @@ static void assert_numeric_sy (cob_tree sy);
     struct perform_info *pfvals;
     struct sortfile_node *snval;
     struct selsubject *ssbjval;
-    struct list *lstval;        /* generic container list */
+    struct list *list;        /* generic container list */
     struct math_var *mval;      /* math variables container list */
     struct math_ose *mose;      /* math ON SIZE ERROR variables container */
     struct ginfo    *gic;       /* generic container */
@@ -159,7 +159,7 @@ static void assert_numeric_sy (cob_tree sy);
 %type <ival> screen_attribs,screen_attrib,screen_sign,opt_separate
 %type <ival> sentence_or_nothing,when_case_list,opt_read_next,usage
 %type <ival> procedure_using,sort_direction,write_options
-%type <lstval> goto_label_list
+%type <list> goto_label_list
 %type <mose> opt_on_size_error,on_size_error,error_sentence
 %type <mval> var_list_name, var_list_gname
 %type <pair> parameters
@@ -179,7 +179,7 @@ static void assert_numeric_sy (cob_tree sy);
 %type <tree> opt_read_into,opt_write_from,field_name,expr,opt_expr
 %type <tree> opt_unstring_count,opt_unstring_delim,unstring_tallying
 %type <tree> qualified_var,unqualified_var
-%type <tree> returning_options,screen_to_name, opt_goto_depending_on
+%type <tree> call_returning,screen_to_name, opt_goto_depending_on
 %type <tree> set_variable,set_variable_or_nlit,set_target,opt_add_to
 %type <tree> sort_keys,opt_perform_thru,procedure_section
 %type <tree> var_or_nliteral,opt_read_key,file_name,string_with_pointer
@@ -200,11 +200,7 @@ static void assert_numeric_sy (cob_tree sy);
  *****************************************************************************/
 
 top:
-  program_sequence
-  {
-    if (error_count)
-      YYABORT;
-  }
+  program_sequence		{ if (error_count) YYABORT; }
 ;
 program_sequence:
   program
@@ -257,7 +253,7 @@ opt_program: | PROGRAM ;
  *****************************************************************************/
 
 environment_division:
-| ENVIRONMENT DIVISION dot { curr_division = CDIV_ENVIR; }
+| ENVIRONMENT DIVISION dot	{ curr_division = CDIV_ENVIR; }
   configuration_section
   input_output_section
 ;
@@ -559,7 +555,7 @@ field_description_list:
 ;
 field_description:
   integer field_name	{ define_field ($1, $2); }
-  field_options '.'
+  field_options dot
   {
     update_field ();
     $$ = $2;
@@ -606,8 +602,8 @@ redefines_clause:
     curr_field->redefines = lookup_for_redefines ($3);
   }
 redefines_var:
-  VARIABLE		{ $$ = $1; }
-| SUBSCVAR		{ $$ = $1; }
+  VARIABLE			{ $$ = $1; }
+| SUBSCVAR			{ $$ = $1; }
 ;
 
 
@@ -616,7 +612,7 @@ redefines_var:
  */
 
 external_clause:
-  opt_is EXTERNAL	{ save_named_sect (curr_field); }
+  opt_is EXTERNAL		{ save_named_sect (curr_field); }
 ;
 
 
@@ -625,7 +621,7 @@ external_clause:
  */
 
 global_clause:
-  opt_is GLOBAL		{ yywarn ("GLOBAL is not supported"); }
+  opt_is GLOBAL			{ yywarn ("GLOBAL is not supported"); }
 ;
 
 
@@ -778,7 +774,7 @@ left_or_right:
  */
 
 blank_clause:
-  BLANK opt_when ZEROS	{ curr_field->flags.blank=1; }
+  BLANK opt_when ZEROS		{ curr_field->flags.blank=1; }
 ;
 
 
@@ -791,11 +787,11 @@ value_clause:
 ;
 value_list:
   value
-| value_list opt_sep value
+| value_list ',' value
 ;
 value:
-  gliteral                  { set_variable_values($1,$1); }
-| gliteral THRU gliteral    { set_variable_values($1,$3); }
+  gliteral			{ set_variable_values($1,$1); }
+| gliteral THRU gliteral	{ set_variable_values($1,$3); }
 ;
 
 
@@ -917,7 +913,7 @@ screen_item_list:
 | screen_item_list screen_item
 ;
 screen_item:
-  integer opt_def_name { define_field ($1, $2); }
+  integer opt_def_name		{ define_field ($1, $2); }
   screen_clauses '.'
   {
     update_screen_field($2,$4);
@@ -973,28 +969,28 @@ screen_to_name:
   | TO name { $$ = $2; }
 ;
 screen_attribs:
-  /* nothing */                  { $$ = 1; }
-| screen_attribs screen_attrib { $$ = $1 | $2; }
+  /* nothing */			{ $$ = 1; }
+| screen_attribs screen_attrib	{ $$ = $1 | $2; }
 ;
 screen_attrib:
-  BLANK SCREEN                  { $$ = SCR_BLANK_SCREEN; }
-| BLANK LINE                    { $$ = SCR_BLANK_LINE; }
-| BELL                          { $$ = SCR_BELL; }
-| FULL                          { $$ = SCR_FULL; }
-| REQUIRED                      { $$ = SCR_REQUIRED; }
-| SECURE                        { $$ = SCR_SECURE; }
-| AUTO                          { $$ = SCR_AUTO; }
-| JUSTIFIED RIGHT               { $$ = SCR_JUST_RIGHT; }
-| JUSTIFIED LEFT                { $$ = SCR_JUST_LEFT; }
-| BLINK                         { $$ = SCR_BLINK; }
-| REVERSE_VIDEO                  { $$ = SCR_REVERSE_VIDEO; }
-| UNDERLINE                     { $$ = SCR_UNDERLINE; }
-| LOWLIGHT                      { $$ = SCR_LOWLIGHT; }
-| HIGHLIGHT                     { $$ = SCR_HIGHLIGHT; }
-| BLANK opt_when ZEROS        { $$ = SCR_BLANK_WHEN_ZERO; }
-| NOECHO                        { $$ = SCR_NOECHO; }
-| UPDATE                        { $$ = SCR_UPDATE; }
-| screen_sign                   { $$ = $1; }
+  BLANK SCREEN			{ $$ = SCR_BLANK_SCREEN; }
+| BLANK LINE			{ $$ = SCR_BLANK_LINE; }
+| BELL				{ $$ = SCR_BELL; }
+| FULL				{ $$ = SCR_FULL; }
+| REQUIRED			{ $$ = SCR_REQUIRED; }
+| SECURE			{ $$ = SCR_SECURE; }
+| AUTO				{ $$ = SCR_AUTO; }
+| JUSTIFIED RIGHT		{ $$ = SCR_JUST_RIGHT; }
+| JUSTIFIED LEFT		{ $$ = SCR_JUST_LEFT; }
+| BLINK				{ $$ = SCR_BLINK; }
+| REVERSE_VIDEO			{ $$ = SCR_REVERSE_VIDEO; }
+| UNDERLINE			{ $$ = SCR_UNDERLINE; }
+| LOWLIGHT			{ $$ = SCR_LOWLIGHT; }
+| HIGHLIGHT			{ $$ = SCR_HIGHLIGHT; }
+| BLANK opt_when ZEROS		{ $$ = SCR_BLANK_WHEN_ZERO; }
+| NOECHO			{ $$ = SCR_NOECHO; }
+| UPDATE			{ $$ = SCR_UPDATE; }
+| screen_sign			{ $$ = $1; }
 ;
 screen_sign:
   SIGN opt_is LEADING opt_separate
@@ -1007,13 +1003,13 @@ screen_sign:
   }
 ;
 opt_separate:
-  SEPARATE opt_character  { $$ = SCR_SIGN_SEPARATE; }
-| /* nothing */           { $$ = 0; }
+  SEPARATE opt_character	{ $$ = SCR_SIGN_SEPARATE; }
+| /* nothing */			{ $$ = 0; }
 ;
 opt_plus_minus:
-  /* nothing */ { $$ = 0; }
-| PLUS          { $$ = 1; }
-| MINUS         { $$ = -1; }
+  /* nothing */			{ $$ = 0; }
+| PLUS				{ $$ = 1; }
+| MINUS				{ $$ = -1; }
 ;
 opt_character: | CHARACTER ;
 opt_number_is: | NUMBER opt_is ;
@@ -1050,8 +1046,8 @@ procedure_list:
 | procedure_list procedure
 ;
 procedure:
-  procedure_section { close_section(); open_section($1); }
-| paragraph { close_paragr(); open_paragr($1); }
+  procedure_section		{ close_section(); open_section($1); }
+| paragraph			{ close_paragr(); open_paragr($1); }
 | statement_list dot
 | error '.'
 | '.'
@@ -1214,8 +1210,8 @@ end_add: | END_ADD ;
  */
 
 call_statement:
-    CALL  { curr_call_mode=CM_REF; }
-    gname call_using returning_options
+    CALL		{ curr_call_mode = CALL_BY_REFERENCE; }
+    gname call_using call_returning
     { $<ival>$ = loc_label++; /* exception check */ }
     { $<ival>$ = loc_label++; /* not exception check */ }
     {
@@ -1260,32 +1256,30 @@ call_parameter:
   }
 ;
 call_mode:
-  REFERENCE		{ $$ = CM_REF; }
-| CONTENT		{ $$ = CM_CONT; }
-| VALUE			{ $$ = CM_VAL; }
+  REFERENCE			{ $$ = CALL_BY_REFERENCE; }
+| CONTENT			{ $$ = CALL_BY_CONTENT; }
+| VALUE				{ $$ = CALL_BY_VALUE; }
 ;
-returning_options:
-    /* nothing */   { $$=0; }
-    | RETURNING variable { $$=$2; }
-    | GIVING variable { $$=$2; }
-    ;
+call_returning:
+  /* nothing */			{ $$ = NULL; }
+| RETURNING variable		{ $$ = $2; }
+| GIVING variable		{ $$ = $2; }
+;
 on_exception_or_overflow:
-    /* nothing */ { $$ = 0; }
-    | ON exception_or_overflow { $<ival>$ = begin_on_except(); }
-      statement_list            { gen_jmplabel($<dval>0); $$=$<ival>3; }
-    ;
+  /* nothing */			{ $$ = 0; }
+| ON exception_or_overflow	{ $<ival>$ = begin_on_except(); }
+  statement_list		{ gen_jmplabel($<dval>0); $$=$<ival>3; }
+;
 exception_or_overflow:
-      EXCEPTION
-    | OVERFLOW
-    ;
+  EXCEPTION
+| OVERFLOW
+;
 on_not_exception:
-    NOT ON EXCEPTION { $<ival>$ = begin_on_except(); }
-        statement_list            { gen_jmplabel($<dval>-1); $$=$<ival>4; }
-    | /* nothing */ { $$ = 0; }
-    ;
-opt_end_call:
-    | END_CALL
-    ;
+  /* nothing */			{ $$ = 0; }
+| NOT ON EXCEPTION		{ $<ival>$ = begin_on_except(); }
+  statement_list		{ gen_jmplabel($<dval>-1); $$=$<ival>4; }
+;
+opt_end_call: | END_CALL ;
 
 
 /*
@@ -1293,7 +1287,7 @@ opt_end_call:
  */
 
 cancel_statement:
-    CANCEL gname { gen_cancel ($2); }
+  CANCEL gname { gen_cancel ($2); }
 ;
 
 
@@ -1302,15 +1296,15 @@ cancel_statement:
  */
 
 close_statement:
-    CLOSE close_files
-    ;
+  CLOSE close_files
+;
 close_files:
-      close_file
-    | close_files opt_sep close_file
-    ;
+  close_file
+| close_files opt_sep close_file
+;
 close_file:
-    name { gen_close($1); }
-    ;
+  name { gen_close($1); }
+;
 
 
 /*
@@ -1318,15 +1312,12 @@ close_file:
  */
 
 compute_statement:
-    COMPUTE var_list_name '=' expr opt_on_size_error opt_end_compute
-    {
-      gen_compute($2, $4, $5);
-    }
-  ;
-opt_end_compute:
-    /* nothing */
-  | END_COMPUTE
-  ;
+  COMPUTE var_list_name '=' expr opt_on_size_error opt_end_compute
+  {
+    gen_compute($2, $4, $5);
+  }
+;
+opt_end_compute: | END_COMPUTE ;
 
 
 /*
@@ -1334,14 +1325,11 @@ opt_end_compute:
  */
 
 delete_statement:
-    DELETE name opt_record { gen_delete($2); }
-    opt_invalid_key
-    opt_end_delete
-    ;
-opt_end_delete:
-    /* nothing */
-    | END_DELETE
-    ;
+  DELETE name opt_record { gen_delete($2); }
+  opt_invalid_key
+  opt_end_delete
+;
+opt_end_delete: | END_DELETE ;
 
 
 /*
@@ -1349,48 +1337,43 @@ opt_end_delete:
  */
 
 display_statement:
-    DISPLAY
-    display_varlist
-    opt_upon
-    display_upon
-    display_options
-    opt_line_pos
-    { gen_display($4, $5); }
-    ;
+  DISPLAY display_varlist opt_upon display_upon display_options opt_line_pos
+  {
+    gen_display ($4, $5);
+  }
+  ;
 display_varlist:
-    /* nothing */
-    | display_varlist opt_sep gname { put_disp_list($3); }
-    ;
+| display_varlist opt_sep gname { put_disp_list($3); }
+;
 display_upon:
-    /* nothing */   { $$ = 1; }  /* default is CONSOLE (STD_OUTPUT) */
-    | CONSOLE       { $$ = 1; }
-    | STD_OUTPUT    { $$ = 1; }
-    | STD_ERROR     { $$ = 2; }
-    ;
+  /* nothing */			{ $$ = 1; }
+| CONSOLE			{ $$ = 1; }
+| STD_OUTPUT			{ $$ = 1; }
+| STD_ERROR			{ $$ = 2; }
+;
 display_options:
-    /* nothing */                           { $$ = 0; }
-    | display_options opt_with NO ADVANCING { $$ = $1 | 1; }
-    | display_options ERASE                 { $$ = $1 | 2; }
-    | display_options ERASE EOS         { $$ = $1 | 2; }
-    | display_options ERASE EOL         { $$ = $1 | 4; }
-    ;
+  /* nothing */			{ $$ = 0; }
+| display_options opt_with NO ADVANCING { $$ = $1 | 1; }
+| display_options ERASE		{ $$ = $1 | 2; }
+| display_options ERASE EOS	{ $$ = $1 | 2; }
+| display_options ERASE EOL	{ $$ = $1 | 4; }
+;
 opt_line_pos:
-    /* nothing */
-    | LINE expr POSITION expr
-     {
-      screen_io_enable++;
-      push_expr($2);
-      push_expr($4);
-      gen_gotoxy_expr();
-     }
-    | LINE expr COLUMN expr
-     {
-      screen_io_enable++;
-      push_expr($2);
-      push_expr($4);
-      gen_gotoxy_expr();
-     }
-    ;
+| LINE expr POSITION expr
+  {
+    screen_io_enable++;
+    push_expr($2);
+    push_expr($4);
+    gen_gotoxy_expr();
+  }
+| LINE expr COLUMN expr
+  {
+    screen_io_enable++;
+    push_expr($2);
+    push_expr($4);
+    gen_gotoxy_expr();
+  }
+;
 
 
 /*
@@ -1398,50 +1381,47 @@ opt_line_pos:
  */
 
 divide_statement:
-    DIVIDE divide_body opt_end_divide
-    ;
+  DIVIDE divide_body opt_end_divide
+;
 divide_body:
-      numeric_value BY numeric_value GIVING var_list_name opt_on_size_error
-      {
-        gen_divide2($5, $1, $3, $6);
-      }
-    | numeric_value BY numeric_value GIVING name flag_rounded REMAINDER name
-      {
-        assert_numeric_sy($5);
-        gen_divide($1, $3, $5, $8, $6);
-      }
-    | numeric_value INTO numeric_value GIVING name flag_rounded REMAINDER name
-      {
-        assert_numeric_sy($5);
-        gen_divide($3, $1, $5, $8, $6);
-      }
-    | numeric_value BY numeric_value GIVING name flag_rounded REMAINDER name on_size_error
-      {
-        assert_numeric_sy($5);
-        gen_dstlabel($9->lbl4); /* generate bypass jump */
-        gen_divide($1, $3, $5, $8, $6);
-        math_on_size_error3($9);
-      }
-    | numeric_value INTO numeric_value GIVING name flag_rounded REMAINDER name on_size_error
-      {
-        assert_numeric_sy($5);
-        gen_dstlabel($9->lbl4); /* generate bypass jump */
-        gen_divide($3, $1, $5, $8, $6);
-        math_on_size_error3($9);
-      }
-    | numeric_value INTO numeric_value GIVING var_list_name opt_on_size_error
-      {
-        gen_divide2($5, $3, $1, $6);
-      }
-    | numeric_value INTO var_list_name opt_on_size_error
-      {
-        gen_divide1($3, $1, $4);
-      }
-    ;
-opt_end_divide:
-    /* nothing */
-    | END_DIVIDE
-    ;
+  numeric_value BY numeric_value GIVING var_list_name opt_on_size_error
+  {
+    gen_divide2($5, $1, $3, $6);
+  }
+| numeric_value BY numeric_value GIVING name flag_rounded REMAINDER name
+  {
+    assert_numeric_sy($5);
+    gen_divide($1, $3, $5, $8, $6);
+  }
+| numeric_value INTO numeric_value GIVING name flag_rounded REMAINDER name
+  {
+    assert_numeric_sy($5);
+    gen_divide($3, $1, $5, $8, $6);
+  }
+| numeric_value BY numeric_value GIVING name flag_rounded REMAINDER name on_size_error
+  {
+    assert_numeric_sy($5);
+    gen_dstlabel($9->lbl4); /* generate bypass jump */
+    gen_divide($1, $3, $5, $8, $6);
+    math_on_size_error3($9);
+  }
+| numeric_value INTO numeric_value GIVING name flag_rounded REMAINDER name on_size_error
+  {
+    assert_numeric_sy($5);
+    gen_dstlabel($9->lbl4); /* generate bypass jump */
+    gen_divide($3, $1, $5, $8, $6);
+    math_on_size_error3($9);
+  }
+| numeric_value INTO numeric_value GIVING var_list_name opt_on_size_error
+  {
+    gen_divide2($5, $3, $1, $6);
+  }
+| numeric_value INTO var_list_name opt_on_size_error
+  {
+    gen_divide1($3, $1, $4);
+  }
+;
+opt_end_divide: | END_DIVIDE ;
 
 
 /*
@@ -1449,90 +1429,98 @@ opt_end_divide:
  */
 
 evaluate_statement:
-    EVALUATE { $<ival>$ = gen_evaluate_start(); }
-                selection_subject_set { }
-                when_case_list
-                END_EVALUATE { release_sel_subject($<ival>2,$3); }
-    ;
+  EVALUATE			{ $<ival>$ = gen_evaluate_start(); }
+  selection_subject_set		{ }
+  when_case_list
+  END_EVALUATE			{ release_sel_subject($<ival>2,$3); }
+;
 selection_subject_set:
-          selection_subject { $$=save_sel_subject(NULL,$1); }
-        | selection_subject_set ALSO
-	    selection_subject { $$=save_sel_subject($1,$3); }
-        ;
+  selection_subject		{ $$=save_sel_subject(NULL,$1); }
+| selection_subject_set ALSO
+  selection_subject		{ $$=save_sel_subject($1,$3); }
+;
 selection_subject:
-    expr
-    {
-      if (push_expr($1))
-	$$=SSUBJ_EXPR;
-      else
-	{
-	  push_field ($1);
-	  $$=SSUBJ_STR;
-	}
-    }
-  | condition	{ push_condition(); $$ = SSUBJ_BOOLEAN; }
-  | TOK_TRUE	{ push_boolean (1); $$ = SSUBJ_BOOLEAN; }
-  | TOK_FALSE	{ push_boolean (0); $$ = SSUBJ_BOOLEAN; }
-  ;
+  expr
+  {
+    if (push_expr($1))
+      $$=SSUBJ_EXPR;
+    else
+      {
+	push_field ($1);
+	$$=SSUBJ_STR;
+      }
+  }
+| condition			{ push_condition(); $$ = SSUBJ_BOOLEAN; }
+| TOK_TRUE			{ push_boolean (1); $$ = SSUBJ_BOOLEAN; }
+| TOK_FALSE			{ push_boolean (0); $$ = SSUBJ_BOOLEAN; }
+;
 when_case_list:
-        WHEN { $<ival>$ = loc_label++; /* mark end of "when" case */ }
-                { $<ssbjval>$=$<ssbjval>-1; /* store inherited subject set */ }
-                when_case
-                sentence_or_nothing
-                { $$=gen_end_when($<ival>-2,$<ival>2,$5); }
-        | when_case_list WHEN { $<ival>$ = loc_label++; }
-                { $<ssbjval>$=$<ssbjval>-1; }
-                when_case
-                { gen_bypass_when_case($1); }
-                sentence_or_nothing
-                { $$=gen_end_when($<ival>-2,$<ival>3,$7); }
-        ;
+  WHEN				{ $<ival>$ = loc_label++; }
+  {
+    /* store inherited subject set */
+    $<ssbjval>$=$<ssbjval>-1;
+  }
+  when_case sentence_or_nothing
+  {
+    $$=gen_end_when($<ival>-2,$<ival>2,$5);
+  }
+| when_case_list
+  WHEN				{ $<ival>$ = loc_label++; }
+  {
+    $<ssbjval>$=$<ssbjval>-1;
+  }
+  when_case			{ gen_bypass_when_case($1); }
+  sentence_or_nothing
+  {
+    $$=gen_end_when($<ival>-2,$<ival>3,$7);
+  }
+;
 when_case:
-          selection_object
-          {
-	    $$ = 0;
-	    gen_when_check($$,$<ssbjval>0,$1,$<ival>-1);
-	  }
-        | when_case ALSO selection_object
-          {
-	    $$ = $1 + 1;
-	    gen_when_check($$,$<ssbjval>0,$3,$<ival>-1);
-	  }
-        | OTHER { $$=-1; }
-        ;
+  selection_object
+  {
+    $$ = 0;
+    gen_when_check($$,$<ssbjval>0,$1,$<ival>-1);
+  }
+| when_case ALSO selection_object
+  {
+    $$ = $1 + 1;
+    gen_when_check($$,$<ssbjval>0,$3,$<ival>-1);
+  }
+| OTHER { $$=-1; }
+;
 selection_object:
-    ANY			{ $$ = SOBJ_ANY; }
-  | TOK_TRUE		{ push_boolean (1); $$ = SOBJ_BOOLEAN; }
-  | TOK_FALSE		{ push_boolean (0); $$ = SOBJ_BOOLEAN; }
-  | flag_not condition	{ push_condition (); $$ = SOBJ_BOOLEAN | $1; }
-  | flag_not expr
-    {
-      if ($2 == spe_lit_ZE)
-	$$ = SOBJ_ZERO | $1;
-      else if (push_expr($2))
-	$$ = SOBJ_EXPR | $1;
-      else
-	{
-	  push_field ($2);
-	  $$ = SOBJ_STR | $1;
-	}
-    }
-  | flag_not expr THRU expr
-    {
-      if (push_expr($2) && push_expr($4))
+  ANY			{ $$ = SOBJ_ANY; }
+| TOK_TRUE		{ push_boolean (1); $$ = SOBJ_BOOLEAN; }
+| TOK_FALSE		{ push_boolean (0); $$ = SOBJ_BOOLEAN; }
+| flag_not condition	{ push_condition (); $$ = SOBJ_BOOLEAN | $1; }
+| flag_not expr
+  {
+    if ($2 == spe_lit_ZE)
+      $$ = SOBJ_ZERO | $1;
+    else if (push_expr($2))
+      $$ = SOBJ_EXPR | $1;
+    else
+      {
+	push_field ($2);
+	$$ = SOBJ_STR | $1;
+      }
+  }
+| flag_not expr THRU expr
+  {
+    if (push_expr($2) && push_expr($4))
+      $$ = SOBJ_RANGE | $1;
+    else
+      {
+	push_field ($2);
+	push_field ($4);
 	$$ = SOBJ_RANGE | $1;
-      else
-	{
-	  push_field ($2);
-	  push_field ($4);
-	  $$ = SOBJ_RANGE | $1;
-	}
-    }
-  ;
+      }
+  }
+;
 sentence_or_nothing:
-    /* nothing */               { $$ = 0; }
-    | conditional_statement_list     { $$ = 1; }
-    ;
+  /* nothing */			{ $$ = 0; }
+| conditional_statement_list	{ $$ = 1; }
+;
 
 
 /*
@@ -1540,9 +1528,9 @@ sentence_or_nothing:
  */
 
 exit_statement:
-      EXIT          { gen_exit(0); }
-    | EXIT PROGRAM  { gen_exit(1); }
-    ;
+  EXIT				{ gen_exit (0); }
+| EXIT PROGRAM			{ gen_exit (1); }
+;
 
 
 /*
@@ -1550,23 +1538,23 @@ exit_statement:
  */
 
 goto_statement:
-    GO opt_to goto_label_list opt_goto_depending_on
-    {
-      if ($4 == NULL)
-        gen_goto($3);
-      else
-        gen_goto_depending($3, $4);
-    }
-    ;
+  GO opt_to goto_label_list opt_goto_depending_on
+  {
+    if ($4 == NULL)
+      gen_goto($3);
+    else
+      gen_goto_depending($3, $4);
+  }
+;
 goto_label_list:
-      label                     { $$ = insert_list(NULL, $1); }
-    | goto_label_list label     { $$ = insert_list($1, $2); }
-    | goto_label_list ',' label { $$ = insert_list($1, $3); }
-    ;
+  label				{ $$ = insert_list(NULL, $1); }
+| goto_label_list label		{ $$ = insert_list($1, $2); }
+| goto_label_list ',' label	{ $$ = insert_list($1, $3); }
+;
 opt_goto_depending_on:
-    /* nothing */               { $$ = NULL; }
-    | DEPENDING opt_on variable { $$ = $3; }
-    ;
+  /* nothing */			{ $$ = NULL; }
+| DEPENDING opt_on variable	{ $$ = $3; }
+;
 
 
 /*
@@ -1574,20 +1562,20 @@ opt_goto_depending_on:
  */
 
 if_statement:
-    if_then { gen_dstlabel($1); } opt_end_if
-  | if_then ELSE {
-      $<dval>$=gen_passlabel();
-      gen_dstlabel($1);
-    }
-    conditional_statement_list {
-      gen_dstlabel($<dval>3);
-    }
-    opt_end_if
-  | IF error END_IF
+  if_then { gen_dstlabel($1); } opt_end_if
+| if_then ELSE {
+    $<dval>$=gen_passlabel();
+    gen_dstlabel($1);
+  }
+  conditional_statement_list {
+    gen_dstlabel($<dval>3);
+  }
+  opt_end_if
+| IF error END_IF
 ;
 if_then:
-    IF condition { $<dval>$ = gen_testif(); } opt_then
-       conditional_statement_list { $$ = $<dval>3; }
+  IF condition { $<dval>$ = gen_testif(); }
+  opt_then conditional_statement_list { $$ = $<dval>3; }
 ;
 opt_end_if: | END_IF ;
 
@@ -1612,74 +1600,83 @@ initialize_vars:
 inspect_statement:
   INSPECT name tallying_clause { gen_inspect($2,(void *)$3,0); }
   replacing_clause { gen_inspect($2,(void *)$5,1); }
-  | INSPECT name converting_clause { gen_inspect($2,(void *)$3,2); }
-  ;
+| INSPECT name converting_clause { gen_inspect($2,(void *)$3,2); }
+;
 converting_clause:
-        CONVERTING
-        noallname TO noallname inspect_before_after {
-            $$ = alloc_converting_struct($2,$4,$5);
-                }
-        ;
+  CONVERTING noallname TO noallname inspect_before_after
+  {
+    $$ = alloc_converting_struct($2,$4,$5);
+  }
+;
 tallying_clause:
-    TALLYING tallying_list { $$=$2; }
-    | /* nothing */        { $$=NULL; }
-    ;
+  /* nothing */			{ $$=NULL; }
+| TALLYING tallying_list	{ $$=$2; }
+;
 tallying_list:
-    tallying_list
-        name FOR tallying_for_list  {
-            $$ = alloc_tallying_list($1,$2,$4); }
-    | /* nothing */     { $$ = NULL; }
-    ;
+  /* nothing */			{ $$ = NULL; }
+| tallying_list
+  name FOR tallying_for_list	{ $$ = alloc_tallying_list($1,$2,$4); }
+;
 tallying_for_list:
-    tallying_for_list
-        CHARACTERS inspect_before_after {
-            $$ = alloc_tallying_for_list($1,INSPECT_CHARACTERS,NULL,$3); }
-    | tallying_for_list
-        ALL noallname inspect_before_after {
-            $$ = alloc_tallying_for_list($1,INSPECT_ALL,$3,$4); }
-    | tallying_for_list
-        LEADING noallname inspect_before_after {
-            $$ = alloc_tallying_for_list($1,INSPECT_LEADING,$3,$4); }
-    | /* nothing */     { $$ = NULL; }
-    ;
+  tallying_for_list
+    CHARACTERS inspect_before_after {
+        $$ = alloc_tallying_for_list($1,INSPECT_CHARACTERS,NULL,$3); }
+| tallying_for_list
+    ALL noallname inspect_before_after {
+        $$ = alloc_tallying_for_list($1,INSPECT_ALL,$3,$4); }
+| tallying_for_list
+    LEADING noallname inspect_before_after {
+        $$ = alloc_tallying_for_list($1,INSPECT_LEADING,$3,$4); }
+| /* nothing */     { $$ = NULL; }
+;
 replacing_clause:
-    REPLACING
-        replacing_list      { $$ = $2; }
-    | /* nothing */         { $$ = NULL; }
-    ;
+  /* nothing */			{ $$ = NULL; }
+| REPLACING replacing_list	{ $$ = $2; }
+;
 replacing_list:
-    replacing_list
-        CHARACTERS BY noallname inspect_before_after {
-            $$ = alloc_replacing_list($1,INSPECT_CHARACTERS,NULL,$4,$5); }
-    | replacing_list
-        replacing_kind replacing_by_list {
-            $$ = alloc_replacing_list($1,$2,$3,NULL,NULL); }
-    | /* nothing */     { $$ = NULL; }
-    ;
+  /* nothing */			{ $$ = NULL; }
+| replacing_list
+  CHARACTERS BY noallname inspect_before_after
+  {
+    $$ = alloc_replacing_list($1,INSPECT_CHARACTERS,NULL,$4,$5);
+  }
+| replacing_list
+  replacing_kind replacing_by_list
+  {
+    $$ = alloc_replacing_list($1,$2,$3,NULL,NULL);
+  }
+;
 replacing_by_list:
-    replacing_by_list
-        noallname BY noallname inspect_before_after {
-            $$ = alloc_replacing_by_list($1,$2,$4,$5); }
-    | /* nothing */         { $$ = NULL; }
-    ;
+  /* nothing */			{ $$ = NULL; }
+| replacing_by_list
+  noallname BY noallname inspect_before_after
+  {
+    $$ = alloc_replacing_by_list($1,$2,$4,$5);
+  }
+;
 replacing_kind:
-    ALL         { $$ = INSPECT_ALL; }
-    | LEADING   { $$ = INSPECT_LEADING; }
-    | FIRST  { $$ = INSPECT_FIRST; }
-    ;
+  ALL				{ $$ = INSPECT_ALL; }
+| LEADING			{ $$ = INSPECT_LEADING; }
+| FIRST				{ $$ = INSPECT_FIRST; }
+;
 inspect_before_after:
-    inspect_before_after
-        BEFORE opt_initial noallname
-            { $$ = alloc_inspect_before_after($1,1,$4); }
-    | inspect_before_after
-        AFTER opt_initial noallname
-            { $$ = alloc_inspect_before_after($1,2,$4); }
-    | /* nothing */  { $$ = alloc_inspect_before_after(NULL,0,NULL); }
-    ;
+  /* nothing */
+  {
+    $$ = alloc_inspect_before_after(NULL,0,NULL);
+  }
+| inspect_before_after BEFORE opt_initial noallname
+  {
+    $$ = alloc_inspect_before_after($1,1,$4);
+  }
+| inspect_before_after AFTER opt_initial noallname
+  {
+    $$ = alloc_inspect_before_after($1,2,$4);
+  }
+;
 noallname:
-    name      { $$ = $1; }
-    | without_all_literal { $$ = (cob_tree)$1; }
-    ;
+  name				{ $$ = $1; }
+| without_all_literal		{ $$ = (cob_tree)$1; }
+;
 opt_initial: | TOK_INITIAL ;
 
 
@@ -1702,22 +1699,19 @@ move_vars:
  */
 
 multiply_statement:
-    MULTIPLY multiply_body opt_end_multiply
-    ;
+  MULTIPLY multiply_body opt_end_multiply
+;
 multiply_body:
-      numeric_value BY var_list_name opt_on_size_error
-      {
-        gen_multiply1($3, $1, $4);
-      }
-    | numeric_value BY numeric_value GIVING var_list_name opt_on_size_error
-      {
-        gen_multiply2($5, $1, $3, $6);
-      }
-    ;
-opt_end_multiply:
-    /* nothing */
-    | END_MULTIPLY
-    ;
+  numeric_value BY var_list_name opt_on_size_error
+  {
+    gen_multiply1($3, $1, $4);
+  }
+| numeric_value BY numeric_value GIVING var_list_name opt_on_size_error
+  {
+    gen_multiply2($5, $1, $3, $6);
+  }
+;
+opt_end_multiply: | END_MULTIPLY ;
 
 
 /*
@@ -1955,7 +1949,7 @@ perform_options:
     ;
 
 opt_perform_thru:
-    /* nothing */ { $$ = NULL; }
+      /* nothing */ { $$ = NULL; }
     | THRU label { $$ = $2;}
     ;
 
@@ -2176,19 +2170,16 @@ opt_end_return: | END_RETURN ;
  */
 
 rewrite_statement:
-    REWRITE name opt_write_from
-    {
-      if ($2->level != 1)
-        yyerror("variable %s could not be used for REWRITE", $2->name);
-      gen_rewrite($2, $3);
-    }
-    opt_invalid_key
-    opt_end_rewrite
-    ;
-opt_end_rewrite:
-    /* nothing */
-    | END_REWRITE
-    ;
+  REWRITE name opt_write_from
+  {
+    if ($2->level != 1)
+      yyerror("variable %s could not be used for REWRITE", $2->name);
+    gen_rewrite($2, $3);
+  }
+  opt_invalid_key
+  opt_end_rewrite
+;
+opt_end_rewrite: | END_REWRITE ;
 
 
 /*
@@ -2196,126 +2187,126 @@ opt_end_rewrite:
  */
 
 search_statement:
-      SEARCH search_body opt_end_search
-    | SEARCH ALL search_all_body opt_end_search
+  SEARCH search_body opt_end_search
+| SEARCH ALL search_all_body opt_end_search
 search_body:
-      variable_indexed
-      {
-        $<dval>$=loc_label++; /* determine END label name */
-        gen_marklabel();
+  variable_indexed
+  {
+    $<dval>$=loc_label++; /* determine END label name */
+    gen_marklabel();
+  }
+  search_opt_varying
+  {
+    $<dval>$=loc_label++; /* determine search loop start label */
+    if ($3 == NULL) {
+      $3=determine_table_index_name($1);
+      if ($3 == NULL) {
+         yyerror("Unable to determine search index for table '%s'", $1->name);
       }
-      search_opt_varying
-      {
-        $<dval>$=loc_label++; /* determine search loop start label */
-        if ($3 == NULL) {
-          $3=determine_table_index_name($1);
-          if ($3 == NULL) {
-             yyerror("Unable to determine search index for table '%s'", $1->name);
-          }
-        }
-        gen_jmplabel($<dval>$); /* generate GOTO search loop start  */
-      }
-      search_opt_at_end
-      {
-        gen_jmplabel($<dval>2); /* generate GOTO END  */
-        gen_dstlabel($<dval>4); /* generate search loop start label */
-        $$ = $<dval>2;
-      }
-      search_when_list
-      {
-        /* increment loop index, check for end */
-        gen_SearchLoopCheck($5, $3, $1);
+    }
+    gen_jmplabel($<dval>$); /* generate GOTO search loop start  */
+  }
+  search_opt_at_end
+  {
+    gen_jmplabel($<dval>2); /* generate GOTO END  */
+    gen_dstlabel($<dval>4); /* generate search loop start label */
+    $$ = $<dval>2;
+  }
+  search_when_list
+  {
+    /* increment loop index, check for end */
+    gen_SearchLoopCheck($5, $3, $1);
 
-        gen_jmplabel($<dval>4); /* generate goto search loop start label */
-        gen_dstlabel($<dval>2); /* generate END label */
-      }
-    ;
+    gen_jmplabel($<dval>4); /* generate goto search loop start label */
+    gen_dstlabel($<dval>2); /* generate END label */
+  }
+;
 search_all_body:
-     variable_indexed
-     {
-        lbend=loc_label++; /* determine END label name */
-        gen_marklabel();
+  variable_indexed
+  {
+     lbend=loc_label++; /* determine END label name */
+     gen_marklabel();
 
-        lbstart=loc_label++; /* determine search_all loop start label */
+     lbstart=loc_label++; /* determine search_all loop start label */
 
-        $<tree>$=determine_table_index_name($1);
-        if ($<tree>$ == NULL) {
-           yyerror("Unable to determine search index for table '%s'", $1->name);
-        }
-        else {
-          /* Initilize and store search table index boundaries */
-          Initialize_SearchAll_Boundaries($1, $<tree>$);
-        }
+     $<tree>$=determine_table_index_name($1);
+     if ($<tree>$ == NULL) {
+        yyerror("Unable to determine search index for table '%s'", $1->name);
+     }
+     else {
+       /* Initilize and store search table index boundaries */
+       Initialize_SearchAll_Boundaries($1, $<tree>$);
+     }
 
-        gen_jmplabel(lbstart); /* generate GOTO search_all loop start  */
-     }
-     search_opt_at_end
-     {
-        gen_jmplabel(lbend); /* generate GOTO END  */
-        gen_dstlabel(lbstart); /* generate search loop start label */
-     }
-     search_all_when_list
-     {
-        /* adjust loop index, check for end */
-        gen_SearchAllLoopCheck($3, $<tree>2, $1, curr_field, lbstart, lbend);
-     }
-    ;
+     gen_jmplabel(lbstart); /* generate GOTO search_all loop start  */
+  }
+  search_opt_at_end
+  {
+     gen_jmplabel(lbend); /* generate GOTO END  */
+     gen_dstlabel(lbstart); /* generate search loop start label */
+  }
+  search_all_when_list
+  {
+     /* adjust loop index, check for end */
+     gen_SearchAllLoopCheck($3, $<tree>2, $1, curr_field, lbstart, lbend);
+  }
+;
 search_opt_varying:
-    VARYING variable {  $$=$2; }
-    | { $$=NULL; }
-    ;
+  /* nothing */			{ $$ = NULL; }
+| VARYING variable		{ $$ = $2; }
+;
 search_opt_at_end:
-     opt_at END
-     {
-       $<dval>$=loc_label++; /* determine ATEND label name */
-       gen_dstlabel($<dval>$); /* determine ATEND label name */
-     }
-     statement_list
-     {
-       $<dval>$=$<dval>3;
-     }
-    |
-     {
-       $<dval>$=loc_label++; /* determine ATEND label name */
-       gen_dstlabel($<dval>$); /* determine ATEND label name */
-     }
-    ;
+  /* nothing */
+  {
+    $<dval>$=loc_label++; /* determine ATEND label name */
+    gen_dstlabel($<dval>$); /* determine ATEND label name */
+  }
+| opt_at END
+  {
+    $<dval>$=loc_label++; /* determine ATEND label name */
+    gen_dstlabel($<dval>$); /* determine ATEND label name */
+  }
+  statement_list
+  {
+    $<dval>$=$<dval>3;
+  }
+;
 search_when_list:
-     search_when { $$=$1; }
-     | search_when_list search_when { $$=$1; }
-     ;
+  search_when			{ $$=$1; }
+| search_when_list search_when	{ $$=$1; }
+;
 search_when:
-     WHEN
-     search_when_conditional
-     { $<dval>$=gen_testif(); }
-     conditional_statement_list
-     {
-        $$ = $<dval>0;
-        gen_jmplabel($$); /* generate GOTO END  */
-        gen_dstlabel($<dval>3);
-     }
-     ;
+  WHEN
+  search_when_conditional
+  { $<dval>$=gen_testif(); }
+  conditional_statement_list
+  {
+     $$ = $<dval>0;
+     gen_jmplabel($$); /* generate GOTO END  */
+     gen_dstlabel($<dval>3);
+  }
+;
 search_when_conditional:
-    name cond_op name { gen_compare($1,$2,$3); }
-    | name cond_op nliteral { gen_compare($1,$2,(cob_tree)$3); }
-    | nliteral cond_op name { gen_compare((cob_tree)$1,$2,$3); }
-    | nliteral cond_op nliteral {
-                gen_compare((cob_tree)$1,$2,(struct sym*)$3); }
-    ;
+  name cond_op name { gen_compare($1,$2,$3); }
+| name cond_op nliteral { gen_compare($1,$2,(cob_tree)$3); }
+| nliteral cond_op name { gen_compare((cob_tree)$1,$2,$3); }
+| nliteral cond_op nliteral {
+            gen_compare((cob_tree)$1,$2,(struct sym*)$3); }
+;
 search_all_when_list:
-     search_all_when
-     | search_all_when_list search_all_when
-     ;
+  search_all_when
+| search_all_when_list search_all_when
+;
 search_all_when:
-     WHEN { curr_field = NULL; }
-     search_all_when_conditional
-     { $<dval>$=gen_testif(); }
-     conditional_statement_list
-     {
-        gen_jmplabel(lbend); /* generate GOTO END  */
-        gen_dstlabel($<dval>4);
-     }
-    ;
+  WHEN { curr_field = NULL; }
+  search_all_when_conditional
+  { $<dval>$=gen_testif(); }
+  conditional_statement_list
+  {
+     gen_jmplabel(lbend); /* generate GOTO END  */
+     gen_dstlabel($<dval>4);
+  }
+;
 search_all_when_conditional:
   variable opt_is equal_to variable
   {
@@ -2343,39 +2334,43 @@ opt_end_search:
  */
 
 set_statement:
-   SET set_list
-   ;
+  SET set_list
+;
 set_list:
-   set_target TO opt_address_of set_variable_or_nlit
-   { gen_set($1,SET_TO,$4,0,$3); }
-  | variable UP BY var_or_nliteral
-   { gen_set($1,SET_UP_BY,$4,0,0); }
-  | variable DOWN BY var_or_nliteral
-   { gen_set($1,SET_DOWN_BY,$4,0,0); }
-  | opt_address_of variable TO opt_address_of set_variable
-   { gen_set($2,SET_TO,$5,$1,$4); }
-  ;
+  set_target TO opt_address_of set_variable_or_nlit
+  {
+    gen_set($1,SET_TO,$4,0,$3);
+  }
+| variable UP BY var_or_nliteral
+  {
+    gen_set($1,SET_UP_BY,$4,0,0);
+  }
+| variable DOWN BY var_or_nliteral
+  {
+    gen_set($1,SET_DOWN_BY,$4,0,0);
+  }
+| opt_address_of variable TO opt_address_of set_variable
+  {
+    gen_set($2,SET_TO,$5,$1,$4);
+  }
+;
 set_target:
-    variable  { $$ = $1; }
-  | VARCOND   { $$ = $1; }
-  ;
+  variable			{ $$ = $1; }
+| VARCOND			{ $$ = $1; }
+;
 set_variable:
-   variable	   { $$ = $1; }
-  | TOK_NULL	   { $$ = NULL; }
-  ;
+  variable			{ $$ = $1; }
+| TOK_NULL			{ $$ = NULL; }
+;
 opt_address_of:
-  /* nothing */ { $$ = 0; }
-  | ADDRESS opt_of { $$ = 1; }
-  ;
+  /* nothing */			{ $$ = 0; }
+| ADDRESS opt_of		{ $$ = 1; }
+;
 set_variable_or_nlit:
-  name_or_lit	  { $$ = $1; }
-  | TOK_NULL	  { $$ = NULL; }
-  | TOK_TRUE
-    {
-      $$ = (cob_tree)1;
-      /* no (cob_tree) may have this value! */
-    }
-  ;
+  name_or_lit			{ $$ = $1; }
+| TOK_NULL			{ $$ = (cob_tree) 0; }
+| TOK_TRUE			{ $$ = (cob_tree) 1; }
+;
 
 
 /*
@@ -2383,44 +2378,42 @@ set_variable_or_nlit:
  */
 
 sort_statement:
-    SORT name sort_keys   { gen_sort($2); }
-    sort_input sort_output { /*gen_close_sort($2);*/ }
+  SORT name sort_keys   { gen_sort($2); }
+  sort_input sort_output { /*gen_close_sort($2);*/ }
 sort_keys:
-    /* nothing */   { $$ = NULL; }
-    | sort_keys sort_direction KEY name
-        {
-            $4->direction = $2;
-            (cob_tree)$4->sort_data =
-                (cob_tree)($<tree>0->sort_data);
-            (cob_tree)($<tree>0->sort_data) = $4;
-            $$ = $4;
-        }
-    ;
+  /* nothing */   { $$ = NULL; }
+| sort_keys sort_direction KEY name
+    {
+        $4->direction = $2;
+        (cob_tree)$4->sort_data =
+            (cob_tree)($<tree>0->sort_data);
+        (cob_tree)($<tree>0->sort_data) = $4;
+        $$ = $4;
+    }
+;
 sort_direction:
   ASCENDING			{ $$ = 1; }
 | DESCENDING			{ $$ = 2; }
 ;
 sort_input:
-    INPUT PROCEDURE opt_is sort_range { $$=NULL; }
-    | USING sort_file_list { gen_sort_using($<tree>-2,$2); $$=$2; }
-    ;
+  INPUT PROCEDURE opt_is sort_range { $$=NULL; }
+| USING sort_file_list { gen_sort_using($<tree>-2,$2); $$=$2; }
+;
 sort_output:
-    OUTPUT PROCEDURE opt_is sort_range { $$=NULL; }
-    | GIVING sort_file_list { gen_sort_giving($<tree>-3,$2); $$=$2; }
-    ;
+  OUTPUT PROCEDURE opt_is sort_range { $$=NULL; }
+| GIVING sort_file_list { gen_sort_giving($<tree>-3,$2); $$=$2; }
+;
 sort_file_list:
-  name { $$ = alloc_sortfile_node($1);  }
-  | sort_file_list name
-   {
-    $1->next = alloc_sortfile_node($2); $$=$1;
-   }
-  ;
-sort_range: label opt_perform_thru
-      {
-        gen_perform_thru($1,$2);
-                $$ = ($2 == NULL) ? $1 : $2;
-      }
-    ;
+  name				{ $$ = alloc_sortfile_node($1); }
+| sort_file_list name		{ $1->next = alloc_sortfile_node($2); $$=$1; }
+;
+sort_range:
+  label opt_perform_thru
+  {
+    gen_perform_thru($1,$2);
+    $$ = ($2 == NULL) ? $1 : $2;
+  }
+;
 
 
 /*
@@ -2428,18 +2421,13 @@ sort_range: label opt_perform_thru
  */
 
 start_statement:
-    START start_body
-    opt_invalid_key
-    opt_end_start
-    ;
+  START start_body opt_invalid_key opt_end_start
+;
 start_body:
-      name { gen_start($1,0,NULL); }
-    | name KEY opt_is cond_op name { gen_start($1,$4,$5); }
-    ;
-opt_end_start:
-    /* nothing */
-    | END_START
-    ;
+  name				{ gen_start($1,0,NULL); }
+| name KEY opt_is cond_op name	{ gen_start($1,$4,$5); }
+;
+opt_end_start: | END_START ;
 
 
 /*
@@ -2447,8 +2435,8 @@ opt_end_start:
  */
 
 stoprun_statement:
-    STOP RUN { gen_stoprun(); }
-    ;
+  STOP RUN { gen_stoprun(); }
+;
 
 
 /*
@@ -2456,16 +2444,43 @@ stoprun_statement:
  */
 
 string_statement:
-  STRING string_from_list
-  INTO name string_with_pointer {
+  STRING string_from_list INTO name string_with_pointer
+  {
     gen_string( $2, $4, $5 );
   }
   opt_on_overflow
   opt_end_string
-  ;
-opt_end_string:
-    | END_STRING
-    ;
+;
+string_from_list:
+  string_from			{ $$ = $1; }
+| string_from_list opt_sep
+  string_from			{ $3->next = $1; $$ = $3; }
+| error				{ yyerror("variable expected"); }
+;
+string_from:
+  gname				{ $$ = alloc_string_from( $1, NULL ); }
+| gname DELIMITED opt_by delimited_by { $$ = alloc_string_from( $1, $4 ); }
+;
+delimited_by:
+  SIZE				{ $$ = NULL; }
+| gname				{ $$ = $1; }
+;
+string_with_pointer:
+  /* nothing */			{ $$ = NULL; }
+| opt_with POINTER name		{ $$ = $3; }
+;
+opt_on_overflow:
+  on_overflow on_not_overflow
+;
+on_overflow:
+| ON OVERFLOW			{ $<dval>$ = gen_at_end(-1); }
+  statement_list		{ gen_dstlabel($<dval>3); }
+;
+on_not_overflow:
+| NOT ON OVERFLOW		{ $<dval>$ = gen_at_end(0); }
+  statement_list		{ gen_dstlabel($<dval>4); }
+;
+opt_end_string: | END_STRING ;
 
 
 /*
@@ -2473,25 +2488,23 @@ opt_end_string:
  */
 
 subtract_statement:
-    SUBTRACT subtract_body opt_end_subtract
-    ;
+  SUBTRACT subtract_body opt_end_subtract
+;
 subtract_body:
-      var_list_gname FROM var_list_name opt_on_size_error
-      {
-        gen_subtract1($1, $3, $4);
-      }
-    | var_list_gname FROM numeric_value GIVING var_list_name opt_on_size_error
-      {
-        gen_subtract2($1, $5, $3, $6);
-      }
-    | CORRESPONDING gname FROM name flag_rounded
-      {
-        gen_subtractcorr($2, $4, $5);
-      }
-    ;
-opt_end_subtract:
-    | END_SUBTRACT
-    ;
+  var_list_gname FROM var_list_name opt_on_size_error
+  {
+    gen_subtract1($1, $3, $4);
+  }
+| var_list_gname FROM numeric_value GIVING var_list_name opt_on_size_error
+  {
+    gen_subtract2($1, $5, $3, $6);
+  }
+| CORRESPONDING gname FROM name flag_rounded
+  {
+    gen_subtractcorr($2, $4, $5);
+  }
+;
+opt_end_subtract: | END_SUBTRACT ;
 
 
 /*
@@ -2499,71 +2512,53 @@ opt_end_subtract:
  */
 
 unstring_statement:
-    UNSTRING name
-    unstring_delimited
-    INTO unstring_destinations
-    string_with_pointer
-    unstring_tallying {
-	gen_unstring( $2, $3, $5, $6, $7 );
-    }
-    opt_on_overflow
-    opt_end_unstring
-    ;
+  UNSTRING name unstring_delimited
+  INTO unstring_destinations string_with_pointer unstring_tallying
+  {
+    gen_unstring( $2, $3, $5, $6, $7 );
+  }
+  opt_on_overflow opt_end_unstring
+;
 unstring_delimited:
-    DELIMITED opt_by unstring_delimited_vars { $$=$3; }
-    | /* nothing */                          { $$=NULL; }
-    ;
+  /* nothing */			{ $$=NULL; }
+| DELIMITED opt_by unstring_delimited_vars { $$=$3; }
+;
 unstring_delimited_vars:
-    flag_all gname       { $$=alloc_unstring_delimited($1,$2); }
-    | unstring_delimited_vars OR flag_all gname {
-      struct unstring_delimited *ud;
-      ud=alloc_unstring_delimited($3,$4);
-      ud->next = $1;
-      $$=ud;
-    }
-    ;
+  flag_all gname       { $$=alloc_unstring_delimited($1,$2); }
+| unstring_delimited_vars OR flag_all gname {
+  struct unstring_delimited *ud;
+  ud=alloc_unstring_delimited($3,$4);
+  ud->next = $1;
+  $$=ud;
+}
+;
 unstring_destinations:
-    unstring_dest_var       { $$=$1; }
-    | unstring_destinations opt_sep
-        unstring_dest_var   {
-            $3->next = $1;
-            $$ = $3;
-        }
-    ;
+  unstring_dest_var       { $$=$1; }
+| unstring_destinations opt_sep
+    unstring_dest_var   {
+        $3->next = $1;
+        $$ = $3;
+    }
+;
 unstring_dest_var:
-    name opt_unstring_delim opt_unstring_count {
-            $$ = alloc_unstring_dest( $1, $2, $3 );
-        }
-    ;
+  name opt_unstring_delim opt_unstring_count
+  {
+    $$ = alloc_unstring_dest( $1, $2, $3 );
+  }
+;
 opt_unstring_delim:
-    /* nothing */           { $$=NULL; }
-    | DELIMITER opt_in name { $$=$3; }
-    ;
+  /* nothing */			{ $$=NULL; }
+| DELIMITER opt_in name		{ $$=$3; }
+;
 opt_unstring_count:
-    /* nothing */           { $$=NULL; }
-    | COUNT opt_in name   { $$=$3; }
-    ;
+  /* nothing */			{ $$=NULL; }
+| COUNT opt_in name		{ $$=$3; }
+;
 unstring_tallying:
-    /* nothing */           { $$=NULL; }
-    | TALLYING opt_in name  { $$=$3; }
-    ;
-opt_on_overflow:
-    on_overflow
-    on_not_overflow
-    ;
-on_overflow:
-    ON OVERFLOW          { $<dval>$ = gen_at_end(-1); }
-        statement_list            { gen_dstlabel($<dval>3); }
-    | /* nothing */
-    ;
-on_not_overflow:
-    NOT ON OVERFLOW { $<dval>$ = gen_at_end(0); }
-        statement_list            { gen_dstlabel($<dval>4); }
-    | /* nothing */
-    ;
-opt_end_unstring:
-    | END_UNSTRING
-    ;
+  /* nothing */			{ $$=NULL; }
+| TALLYING opt_in name		{ $$=$3; }
+;
+opt_end_unstring: | END_UNSTRING ;
 
 
 /*
@@ -2571,31 +2566,26 @@ opt_end_unstring:
  */
 
 write_statement:
-    WRITE name opt_write_from write_options
-    {
-      if ($2->level != 1)
-        yyerror("variable %s could not be used for WRITE", $2->name);
-      gen_write($2, $4, $3);
-    }
-    opt_invalid_key
-    opt_end_write
-    ;
+  WRITE name opt_write_from write_options
+  {
+    if ($2->level != 1)
+      yyerror("variable %s could not be used for WRITE", $2->name);
+    gen_write($2, $4, $3);
+  }
+  opt_invalid_key
+  opt_end_write
+;
 opt_write_from:
-    /* nothing */       { $$ = NULL; }
-    | FROM gname        { $$ = $2; }
-    ;
+  /* nothing */			{ $$ = NULL; }
+| FROM gname			{ $$ = $2; }
+;
 write_options:
-    /* nothing */       { $$ = 0; }
-    | before_after opt_advancing gname opt_line
-                        { gen_loadvar($3); $$ = $1; }
-    | before_after opt_advancing PAGE
-                        { $$ = -$1; }
-    ;
-opt_end_write:
-    /* nothing */
-    | END_WRITE
-    ;
+  /* nothing */			{ $$ = 0; }
+| before_after opt_advancing gname opt_line { gen_loadvar($3); $$ = $1; }
+| before_after opt_advancing PAGE { $$ = -$1; }
+;
 opt_advancing: | ADVANCING ;
+opt_end_write: | END_WRITE ;
 
 
 /*******************
@@ -2608,14 +2598,14 @@ opt_advancing: | ADVANCING ;
  */
 
 expr:
-      gname            { $$ = $1; }
-    | '(' expr ')'     { $$ = $2; }
-    | expr '+' expr    { $$ = make_expr ($1, '+', $3); }
-    | expr '-' expr    { $$ = make_expr ($1, '-', $3); }
-    | expr '*' expr    { $$ = make_expr ($1, '*', $3); }
-    | expr '/' expr    { $$ = make_expr ($1, '/', $3); }
-    | expr '^' expr    { $$ = make_expr ($1, '^', $3); }
-    ;
+  gname				{ $$ = $1; }
+| '(' expr ')'			{ $$ = $2; }
+| expr '+' expr			{ $$ = make_expr ($1, '+', $3); }
+| expr '-' expr			{ $$ = make_expr ($1, '-', $3); }
+| expr '*' expr			{ $$ = make_expr ($1, '*', $3); }
+| expr '/' expr			{ $$ = make_expr ($1, '/', $3); }
+| expr '^' expr			{ $$ = make_expr ($1, '^', $3); }
+;
 /* opt_expr will be NULL or a (cob_tree) pointer if the expression
    was given, otherwise it will be valued -1 */
 opt_expr:
@@ -2628,26 +2618,16 @@ opt_expr:
  * Common rules
  *******************/
 
-var_list_name: name flag_rounded opt_sep
-     {
-      $$ = create_mathvar_info(NULL, $1, $2);
-     }
-    | var_list_name name flag_rounded opt_sep
-     {
-      $$ = create_mathvar_info($1, $2, $3);
-     }
-    ;
-
 var_list_gname:
-    gname
-    {
-      $$ = create_mathvar_info(NULL, $1, 0);
-    }
-    | var_list_gname opt_sep gname
-      {
-	$$ = create_mathvar_info($1, $3, 0);
-      }
-    ;
+  gname				{ $$ = create_mathvar_info (NULL, $1, 0); }
+| var_list_gname opt_sep
+  gname				{ $$ = create_mathvar_info ($1, $3, 0); }
+;
+var_list_name:
+  name flag_rounded opt_sep	{ $$ = create_mathvar_info (NULL, $1, $2); }
+| var_list_name
+  name flag_rounded opt_sep	{ $$ = create_mathvar_info ($1, $2, $3); }
+;
 
 
 /*
@@ -2655,9 +2635,9 @@ var_list_gname:
  */
 
 opt_on_size_error:
-    /* nothing */	{ $$ = NULL; }
-  | on_size_error	{ $$ = $1; }
-  ;
+  /* nothing */			{ $$ = NULL; }
+| on_size_error			{ $$ = $1; }
+;
 on_size_error:
   NOT opt_on SIZE error_sentence
   {
@@ -2679,61 +2659,39 @@ on_size_error:
   }
 ;
 error_sentence:
-     ERROR
-     {
-       if ( tmose == NULL ) {
-         tmose = math_on_size_error0();
-         $$ = math_on_size_error1(tmose);
-       } else {
-	 $$ = math_on_size_error1(tmose);
-       }
-     }
-     statement_list
-     {
-      math_on_size_error2();
-      $$=$<mose>2;
-     }
-    ;
+  ERROR
+  {
+    if ( tmose == NULL ) {
+      tmose = math_on_size_error0();
+      $$ = math_on_size_error1(tmose);
+    } else {
+      $$ = math_on_size_error1(tmose);
+    }
+  }
+  statement_list
+  {
+    math_on_size_error2();
+    $$=$<mose>2;
+  }
+;
+
+
+/*
+ * INVALID KEY
+ */
 
 opt_invalid_key:
-    opt_invalid_key_sentence
-    opt_not_invalid_key_sentence
-    ;
+  opt_invalid_key_sentence
+  opt_not_invalid_key_sentence
+;
 opt_invalid_key_sentence:
-    INVALID opt_key             { $<dval>$ = gen_at_end(23); }
-    statement_list                    { gen_dstlabel($<dval>3); }
-    | /* nothing */
-    ;
+| INVALID opt_key		{ $<dval>$ = gen_at_end(23); }
+  statement_list		{ gen_dstlabel($<dval>3); }
+;
 opt_not_invalid_key_sentence:
-    NOT INVALID opt_key    { $<dval>$ = gen_at_end(0); }
-    statement_list                    { gen_dstlabel($<dval>4); }
-    | /* nothing */
-    ;
-string_with_pointer:
-    opt_with POINTER name  { $$ = $3; }
-    | /* nothing */        { $$ = NULL; }
-    ;
-string_from_list:
-    string_from             { $$ = $1; }
-    | string_from_list opt_sep string_from  {
-            $3->next = $1;
-            $$ = $3;
-        }
-    | error { yyerror("variable expected"); }
-    ;
-string_from:
-    gname   {
-                $$ = alloc_string_from( $1, NULL );
-            }
-    | gname DELIMITED opt_by delimited_by {
-                $$ = alloc_string_from( $1, $4 );
-            }
-    ;
-delimited_by:
-    gname     { $$=$1; }
-    | SIZE          { $$=NULL; }
-    | error { yyerror("SIZE or identifier expected"); }
-    ;
+| NOT INVALID opt_key		{ $<dval>$ = gen_at_end(0); }
+  statement_list		{ gen_dstlabel($<dval>4); }
+;
 
 
 /*
@@ -2741,89 +2699,92 @@ delimited_by:
  */
 
 condition:
-    simple_condition
-    | NOT  condition    { gen_not(); $$=$2; }
-    | condition AND     { $<dval>$=gen_andstart(); }
-                implied_op_condition { gen_dstlabel($<dval>3); $$=$4; }
-    | condition OR      { $<dval>$=gen_orstart(); }
-        implied_op_condition { gen_dstlabel($<dval>3); $$=$4; }
-    | '(' condition ')' { $$ = $2; }
-    | VARCOND {
-      gen_condition($1);
-      $$.sy=NULL;
-      $$.oper=0;
-    }
-    ;
+  simple_condition
+| NOT  condition    { gen_not(); $$=$2; }
+| condition AND     { $<dval>$=gen_andstart(); }
+            implied_op_condition { gen_dstlabel($<dval>3); $$=$4; }
+| condition OR      { $<dval>$=gen_orstart(); }
+    implied_op_condition { gen_dstlabel($<dval>3); $$=$4; }
+| '(' condition ')' { $$ = $2; }
+| VARCOND {
+  gen_condition($1);
+  $$.sy=NULL;
+  $$.oper=0;
+}
+;
 simple_condition:
-    expr extended_cond_op
-    {
-      if ($2 & COND_UNARY)
-	{
-	  if ($2 & COND_CLASS)
-	    gen_class_check ($1, $2);
-	  else
-	    gen_compare ($1, $2 & ~COND_UNARY, spe_lit_ZE);
-	}
-    }
-    opt_expr
-    {
-      if ($2 & COND_UNARY)
-	{
-	  if ((int) $4 != -1)
-	    yyerror ("class or sign conditions are unary");
-	}
-      else
-	{
-	  if ((int) $4 == -1)
-	    yyerror ("expression expected in a binary condition");
-	  else
-	    gen_compare ($1, $2, $4);
-	}
-      $$.sy = $1;			/* for implied operands */
-      $$.oper = $2;
-    }
-    ;
+  expr extended_cond_op
+  {
+    if ($2 & COND_UNARY)
+      {
+	if ($2 & COND_CLASS)
+	  gen_class_check ($1, $2);
+	else
+	  gen_compare ($1, $2 & ~COND_UNARY, spe_lit_ZE);
+      }
+  }
+  opt_expr
+  {
+    if ($2 & COND_UNARY)
+      {
+	if ((int) $4 != -1)
+	  yyerror ("class or sign conditions are unary");
+      }
+    else
+      {
+	if ((int) $4 == -1)
+	  yyerror ("expression expected in a binary condition");
+	else
+	  gen_compare ($1, $2, $4);
+      }
+    $$.sy = $1;			/* for implied operands */
+    $$.oper = $2;
+  }
+;
 
 implied_op_condition:
-        condition               { $$ = $1; }
-        | cond_op expr  {
-	  if ($<condval>-2.sy == NULL) {
-	    yyerror("invalid implied condition");
-	  } else {
-	    gen_compare($<condval>-2.sy,$1,$2);
-	  }
-	  $$.sy = $<condval>-2.sy;
-	  $$.oper = $1;
-	}
-        | expr          { /* implied both the first operand and the operator */
-	  if (($<condval>-2.sy == NULL)||
-	      ($<condval>-2.oper & COND_UNARY)) {
-	    yyerror("invalid implied condition");
-	  } else {
-	    gen_compare($<condval>-2.sy,$<condval>-2.oper,$1);
-	  }
-	  $$.sy = $<condval>-2.sy;
-	  $$.oper = $<condval>-2.oper;
-	}
-        ;
+  condition               { $$ = $1; }
+| cond_op expr
+  {
+    if ($<condval>-2.sy == NULL) {
+      yyerror("invalid implied condition");
+    } else {
+      gen_compare($<condval>-2.sy,$1,$2);
+    }
+    $$.sy = $<condval>-2.sy;
+    $$.oper = $1;
+  }
+| expr
+  {
+    /* implied both the first operand and the operator */
+    if (($<condval>-2.sy == NULL)||
+	($<condval>-2.oper & COND_UNARY)) {
+      yyerror("invalid implied condition");
+    } else {
+      gen_compare($<condval>-2.sy,$<condval>-2.oper,$1);
+    }
+    $$.sy = $<condval>-2.sy;
+    $$.oper = $<condval>-2.oper;
+  }
+;
 extended_cond_op:
-    IS ext_cond                 { $$ = $2; }
-    | IS NOT ext_cond           { $$ = $3 ^ 7; }
-    | IS ext_cond OR ext_cond   { $$ = $2 | $4; }
-    | ext_cond                  { $$ = $1; }
-    | NOT opt_is ext_cond       { $$ = $3 ^ 7; }
-    | ext_cond OR ext_cond      { $$ = $1 | $3; }
-    ;
+  IS ext_cond			{ $$ = $2; }
+| IS NOT ext_cond		{ $$ = $3 ^ 7; }
+| IS ext_cond OR ext_cond	{ $$ = $2 | $4; }
+| ext_cond			{ $$ = $1; }
+| NOT opt_is ext_cond		{ $$ = $3 ^ 7; }
+| ext_cond OR ext_cond		{ $$ = $1 | $3; }
+;
 ext_cond:
-    conditional                 { $$ = $1; }
-    | class_condition           { $$ = $1 | COND_UNARY | COND_CLASS; }
-    | sign_condition            { $$ = $1; }
-    ;
+  conditional			{ $$ = $1; }
+| class_condition		{ $$ = $1 | COND_UNARY | COND_CLASS; }
+| sign_condition		{ $$ = $1; }
+;
 cond_op:
-      conditional               { $$ = $1; }
-    | NOT conditional           { $$ = $2 ^ 7; }
-    | conditional OR conditional { $$ = $1 | $3; }
-    ;
+  conditional			{ $$ = $1; }
+| NOT conditional		{ $$ = $2 ^ 7; }
+| conditional OR conditional	{ $$ = $1 | $3; }
+;
 equal_to:
   EQUAL opt_to			{ $$ = RELATION_EQ; }
 | '=' opt_to			{ $$ = RELATION_EQ; }
@@ -2864,148 +2825,150 @@ sign_condition:
  *
  */
 
-opt_gname:
-    /* nothing */ { $$ = NULL; }
-    | gname       { $$ = $1; }
-    ;
-gname:  name    { $$ = $1; }
-    | gliteral      { $$ = (cob_tree)$1;}
-    | function_call
-    ;
-function_call:
-    FUNCTION idstring '(' parameters ')'
-    {
-      yyerror ("function call is not supported yet");
-      YYABORT;
-    }
-    ;
-numeric_value:
-    gname
-    {
-      if (!is_numeric_sy ($1))
-	yyerror ("non-numeric value: %s", $1->name);
-      $$ = $1;
-    }
-  ;
-parameters:
-      gname			{ $$ = cons ($1, NULL); }
-    | parameters opt_sep gname	{ $$ = cons ($3, $1); }
-    ;
 idstring:
-    { start_condition = START_ID; } IDSTRING { $$ = $2; }
-    ;
-
+  { start_condition = START_ID; } IDSTRING { $$ = $2; }
+;
+opt_gname:
+  /* nothing */			{ $$ = NULL; }
+| gname				{ $$ = $1; }
+;
+gname:
+  name
+| gliteral
+| function_call
+;
+function_call:
+  FUNCTION idstring '(' parameters ')'
+  {
+    yyerror ("function call is not supported yet");
+    YYABORT;
+  }
+;
+numeric_value:
+  gname
+  {
+    if (!is_numeric_sy ($1))
+      yyerror ("non-numeric value: %s", $1->name);
+    $$ = $1;
+  }
+;
+parameters:
+  gname				{ $$ = cons ($1, NULL); }
+| parameters opt_sep gname	{ $$ = cons ($3, $1); }
+;
 name_or_lit:
-    name      { $$ = $1; }
-    | literal { $$ = (cob_tree)$1; }
-    ;
+  name
+| literal
+;
 gliteral:
-    without_all_literal
-    | all_literal
-    ;
+  without_all_literal
+| all_literal
+;
 without_all_literal:
-    literal             { $$=$1; }
-    | special_literal   { $$ = $1; }
-    ;
+  literal
+| special_literal
+;
 all_literal:
-    ALL literal { LITERAL ($2)->all=1; $$=$2; }
-    | ALL special_literal { $$=$2; }
-    ;
+  ALL literal			{ LITERAL ($2)->all=1; $$=$2; }
+| ALL special_literal		{ $$=$2; }
+;
 special_literal:
-  SPACES        { $$=spe_lit_SP; }
-| ZEROS         { $$=spe_lit_ZE; }
-| QUOTES        { $$=spe_lit_QU; }
-| HIGH_VALUES   { $$=spe_lit_HV; }
-| LOW_VALUES    { $$=spe_lit_LV; }
+  SPACES			{ $$ = spe_lit_SP; }
+| ZEROS				{ $$ = spe_lit_ZE; }
+| QUOTES			{ $$ = spe_lit_QU; }
+| HIGH_VALUES			{ $$ = spe_lit_HV; }
+| LOW_VALUES			{ $$ = spe_lit_LV; }
 ;
 var_or_nliteral:
-    variable        { $$ = $1; }
-    | nliteral      { $$ = (cob_tree)$1; }
-    ;
+  variable
+| nliteral
+;
 literal:
-    nliteral		{ $$=$1; }
-    | CLITERAL		{ save_literal($1,'X'); LITERAL ($1)->all=0; $$=$1; }
-    ;
+  nliteral		{ $$=$1; }
+| CLITERAL		{ save_literal($1,'X'); LITERAL ($1)->all=0; $$=$1; }
+;
 nliteral:
-  signed_nliteral {
-      if (strchr (FIELD_NAME ($1), decimal_comma ? '.' : ','))
-	yyerror ("wrong decimal point character in numeric literal");
-      save_literal($1,'9');
-      LITERAL ($1)->all = 0;
-      $$=$1;
+  signed_nliteral
+  {
+    save_literal($1,'9');
+    LITERAL ($1)->all = 0;
+    $$=$1;
+  }
+;
+signed_nliteral:
+      INTEGER_TOK		{ $$ = $1; }
+| '+' INTEGER_TOK		{ $$ = $2; }
+| '-' INTEGER_TOK		{ $$ = invert_literal_sign($2); }
+|     NLITERAL			{ $$ = $1; }
+| '+' NLITERAL			{ $$ = $2; }
+| '-' NLITERAL			{ $$ = invert_literal_sign($2); }
+;
+opt_def_name:
+  /* nothing */			{ $$ = make_filler(); }
+| def_name			{ $$ = $1; }
+;
+def_name:
+  FILLER    { $<tree>$=make_filler(); }
+| SYMBOL
+  {
+    if ($1->defined)
+      yyerror("variable redefined, %s",$1->name);
+    $1->defined=1;
+    $$=$1;
+  }
+;
+variable_indexed:
+  SUBSCVAR
+  {
+    if ($1->times == 1)
+       yyerror("\"%s\" is not an indexed variable ", $1->name);
+    $$=$1;
+  }
+;
+filename:
+  SYMBOL
+| literal
+;
+name:
+  variable
+| variable '(' gname ':' opt_gname ')'
+  {
+    $$ = (cob_tree) create_refmoded_var($1, $3, $5);
   }
   ;
-signed_nliteral:
-        INTEGER_TOK  { $$ = $1; }
-  | '+' INTEGER_TOK  { $$ = $2; }
-  | '-' INTEGER_TOK  { $$ = invert_literal_sign($2); }
-  |     NLITERAL  { $$ = $1; }
-  | '+' NLITERAL  { $$ = $2; }
-  | '-' NLITERAL  { $$ = invert_literal_sign($2); }
-  ;
-opt_def_name:
-    def_name        { $$ = $1; }
-    | /* nothing */ { $$ = make_filler(); }
-    ;
-def_name:
-    SYMBOL  { if ($1->defined)
-                yyerror("variable redefined, %s",$1->name);
-              $1->defined=1;
-              $$=$1;
-            }
-    | FILLER    { $<tree>$=make_filler(); }
-    ;
-variable_indexed:
-    SUBSCVAR
-    {
-      if ($1->times == 1)
-         yyerror("\"%s\" is not an indexed variable ", $1->name);
-      $$=$1;
-    }
-    ;
-
-filename:
-    literal { $$=(cob_tree)$1; }
-    | SYMBOL {$$=$1; }
-    ;
-name:
-    variable '(' gname ':' opt_gname ')'
-    {
-      $$ = (cob_tree) create_refmoded_var($1, $3, $5);
-    }
-    | variable
-    ;
 variable:
-    qualified_var {
-      $$=$1;
-      if (need_subscripts) {
-	yyerror("this variable \'%s\' must be subscripted or indexed", $1->name);
-	need_subscripts=0;
-      }
+  subscripted_variable
+| qualified_var
+  {
+    $$=$1;
+    if (need_subscripts) {
+      yyerror("variable `%s' must be subscripted or indexed", $1->name);
+      need_subscripts=0;
     }
-    | subscripted_variable
-    ;
+  }
+;
 subscripted_variable:
-  qualified_var LPAR subscript_list ')' {
-      $$ = (cob_tree)make_subref( $1, $3 );
-      }
+  qualified_var LPAR subscript_list ')'
+  {
+    $$ = (cob_tree)make_subref( $1, $3 );
+  }
 subscript_list:
-      subscript                         { $$ = $1; }
-    | subscript_list opt_sep subscript  { $$ = add_subscript($1, $3); }
-    ;
+  subscript                         { $$ = $1; }
+| subscript_list opt_sep subscript  { $$ = add_subscript($1, $3); }
+;
 subscript:
-      gname                     { $$ = create_subscript( $1 ); }
-    | subscript '+' gname       { $$ = add_subscript_item( $1, '+', $3 ); }
-    | subscript '-' gname       { $$ = add_subscript_item( $1, '-', $3 ); }
-    ;
+  gname                     { $$ = create_subscript( $1 ); }
+| subscript '+' gname       { $$ = add_subscript_item( $1, '+', $3 ); }
+| subscript '-' gname       { $$ = add_subscript_item( $1, '-', $3 ); }
+;
 qualified_var:
-    unqualified_var         { $$=$1; }
-    | qualified_var in_of unqualified_var { $$=lookup_variable($1,$3); }
-    ;
+  unqualified_var         { $$=$1; }
+| qualified_var in_of unqualified_var { $$=lookup_variable($1,$3); }
+;
 unqualified_var:
-    VARIABLE        { $$=$1; }
-    | SUBSCVAR      { need_subscripts=1; $$=$1; }
-    ;
+  VARIABLE        { $$=$1; }
+| SUBSCVAR      { need_subscripts=1; $$=$1; }
+;
 integer:
   INTEGER_TOK
   {

@@ -5610,7 +5610,7 @@ gen_call (cob_tree v, int exceplabel, int notexceplabel)
       cob_tree cp = list->var;
       if (!LITERAL_P (cp))
 	{
-	  if (cp->call_mode == CM_CONT)
+	  if (cp->call_mode == CALL_BY_CONTENT)
 	    {
 	      len = symlen (cp);	// should we round to 4?
 	      totlen += len;
@@ -5637,13 +5637,13 @@ gen_call (cob_tree v, int exceplabel, int notexceplabel)
 #endif
       switch (mode)
 	{
-	case CM_REF:
+	case CALL_BY_REFERENCE:
 	  gen_loadloc (list->var);
 	  break;
-	case CM_VAL:
+	case CALL_BY_VALUE:
 	  gen_pushval (list->var);
 	  break;
-	case CM_CONT:
+	case CALL_BY_CONTENT:
 	  fprintf (o_src, "\tleal\t-%d(%%ebp), %%eax\n", list->location);
 	  push_eax ();
 	  break;

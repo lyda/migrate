@@ -120,6 +120,8 @@ X\"[^\"\n]\" {
   /* numeric literal */
   SAVE_YYTEXT;
   yylval.tree = install_literal (yytext);
+  if (strchr (yytext, decimal_comma ? '.' : ','))
+    yyerror ("wrong decimal point character in numeric literal");
   return NLITERAL;
 }
 
