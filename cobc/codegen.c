@@ -1830,7 +1830,7 @@ output_alphabet_name_definition (struct cb_alphabet_name *p)
       table[i] = n++;
 
   /* output the table */
-  output ("static unsigned char s_%s[256] = {\n", p->cname);
+  output ("static const unsigned char s_%s[256] = {\n", p->cname);
   for (i = 0; i < 256; i++)
     {
       output (" %d,", table[i]);

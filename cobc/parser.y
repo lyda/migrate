@@ -2743,12 +2743,15 @@ sort_body:
   {
     cb_tree l;
     cb_tree file = cb_ref ($1);
-    push_funcall_2 ("cob_sort_init", file, cb_int (list_length ($2)));
+    push_funcall_3 ("cob_sort_init", file, cb_int (list_length ($2)), $4);
     for (l = $2; l; l = CB_CHAIN (l))
       push_funcall_3 ("cob_sort_init_key", file, CB_PURPOSE (l), CB_VALUE (l));
     $$ = file; /* used in sort_input, sort_output */
   }
   sort_input sort_output
+  {
+    push_funcall_1 ("cob_sort_finish", cb_ref ($1));
+  }
 ;
 sort_key_list:
   /* empty */			{ $$ = NULL; }
@@ -2765,7 +2768,8 @@ sort_duplicates:
 | _with DUPLICATES _in _order	{ PENDING ("DUPLICATES"); }
 ;
 sort_collating:
-| collating_sequence_clause	{ PENDING ("COLLATING SEQUENCE"); }
+  /* empty */				{ $$ = cb_int0; }
+| _collating SEQUENCE _is reference	{ $$ = cb_ref ($4); }
 ;
 
 sort_input:
