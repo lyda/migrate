@@ -131,7 +131,7 @@ X\"[^\"\n]*\" {
   return NUMBER_TOK;
 }
 
-[A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)? {
+[A-Z0-9]([A-Z0-9$-]*[A-Z0-9]+)? {
   /* symbol or label */
   SAVE_YYTEXT;
   return scan_word (yytext);

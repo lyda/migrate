@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 589
+%expect 569
 
 %{
 #define yydebug		cob_trace_parser
@@ -124,12 +124,11 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %token RETURNING,TRUE,FALSE,ANY,SUBSCVAR,FUNCTION,OPTIONAL
 %token REPORT,RD,CONTROL,LIMIT,FINAL,HEADING,FOOTING,LAST,DETAIL,SUM
 %token POSITION,FILE_ID,DEPENDING,TYPE,SOURCE,CORRESPONDING,CONVERTING
-%token INITIATE,GENERATE,TERMINATE,NOECHO,LPAR
+%token INITIATE,GENERATE,TERMINATE,NOECHO,LPAR,BUILTIN_TOK
 %token IDENTIFICATION,ENVIRONMENT,DATA,PROCEDURE
 %token AUTHOR,DATE_WRITTEN,DATE_COMPILED,INSTALLATION,SECURITY
 %token COMMON,RETURN,END_RETURN,PREVIOUS,NEXT,PACKED_DECIMAL
 %token INPUT,I_O,OUTPUT,EXTEND,EOL,EOS,BINARY,FLOAT_SHORT,FLOAT_LONG
-%token SW1,SW2,SW3,SW4,SW5,SW6,SW7,SW8
 
 %type <baval> inspect_before_after
 %type <ival> if_then,search_body,search_all_body,class
@@ -319,11 +318,12 @@ special_name:
 ;
 
 
-/* SW1, ..., SW8 */
+/* Buildin name */
 
 special_name_builtin:
-  sw opt_is SYMBOL_TOK on_off_names { COB_FIELD_TYPE ($3) = '!'; }
-| sw on_off_names
+  BUILTIN_TOK opt_is SYMBOL_TOK
+| BUILTIN_TOK opt_is SYMBOL_TOK on_off_names { COB_FIELD_TYPE ($3) = '!'; }
+| BUILTIN_TOK on_off_names
 ;
 on_off_names:
   on_status_is_name
@@ -337,7 +337,6 @@ on_status_is_name:
 off_status_is_name:
   OFF opt_status opt_is SYMBOL_TOK	{ COB_FIELD_TYPE ($4) = '8'; }
 ;
-sw: SW1 | SW2 | SW3 | SW4 | SW5 | SW6 | SW7 | SW8 ;
 
 
 /* ALPHABET */
@@ -1390,6 +1389,7 @@ accept_options:
     save_literal($3, 'X');
     gen_accept_env_var($<tree>-1, $3);
   }
+| FROM VARIABLE			{ yywarn ("not supported"); }
 ;
 
 
@@ -1573,6 +1573,7 @@ display_upon:
 | CONSOLE			{ $$ = 1; }
 | STD_OUTPUT			{ $$ = 1; }
 | STD_ERROR			{ $$ = 2; }
+| VARIABLE			{ $$ = 2; yywarn ("not supported"); }
 ;
 display_options:
   /* nothing */			{ $$ = 0; }

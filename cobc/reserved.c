@@ -27,13 +27,35 @@
 
 #define HASH_SIZE 133
 
-struct reserved_word {
+struct word {
   const char *name;
   int token;
-  struct reserved_word *next;
+  struct word *next;
 } *reserved_table[HASH_SIZE];
 
-static struct reserved_word reserved_words[] = {
+static struct word builtin_words[] = {
+  {"COB$INPUT",		BUILTIN_TOK},
+  {"COB$DISPLAY",	BUILTIN_TOK},
+  {"SW1",		BUILTIN_TOK},
+  {"SW2",		BUILTIN_TOK},
+  {"SW3", 	       	BUILTIN_TOK},
+  {"SW4",		BUILTIN_TOK},
+  {"SW5",		BUILTIN_TOK},
+  {"SW6",		BUILTIN_TOK},
+  {"SW7",		BUILTIN_TOK},
+  {"SW8",		BUILTIN_TOK},
+  {"SWITCH-1",		BUILTIN_TOK},
+  {"SWITCH-2",		BUILTIN_TOK},
+  {"SWITCH-3", 	       	BUILTIN_TOK},
+  {"SWITCH-4",		BUILTIN_TOK},
+  {"SWITCH-5",		BUILTIN_TOK},
+  {"SWITCH-6",		BUILTIN_TOK},
+  {"SWITCH-7",		BUILTIN_TOK},
+  {"SWITCH-8",		BUILTIN_TOK},
+  {0, 0}
+};
+
+static struct word reserved_words[] = {
   {"ACCEPT",		ACCEPT},
   {"ACCESS",		ACCESS},
   {"ADD",		ADD},
@@ -318,22 +340,6 @@ static struct reserved_word reserved_words[] = {
   {"SUM",		SUM},
   {"SYNC",		SYNCHRONIZED},
   {"SYNCHRONIZED",      SYNCHRONIZED},
-  {"SW1",		SW1},
-  {"SW2",		SW2},
-  {"SW3", 	       	SW3},
-  {"SW4",		SW4},
-  {"SW5",		SW5},
-  {"SW6",		SW6},
-  {"SW7",		SW7},
-  {"SW8",		SW8},
-  {"SWITCH-1",		SW1},
-  {"SWITCH-2",		SW2},
-  {"SWITCH-3", 	       	SW3},
-  {"SWITCH-4",		SW4},
-  {"SWITCH-5",		SW5},
-  {"SWITCH-6",		SW6},
-  {"SWITCH-7",		SW7},
-  {"SWITCH-8",		SW8},
   {"TALLYING",	    	TALLYING},
   {"TERMINATE",	    	TERMINATE},
   {"TEST",	    	TEST},
@@ -381,7 +387,7 @@ hash (const char *s)
 int
 lookup_reserved_word (const char *name)
 {
-  struct reserved_word *p;
+  struct word *p;
   for (p = reserved_table[hash (name)]; p; p = p->next)
     if (strcasecmp (name, p->name) == 0)
       return p->token;
@@ -395,6 +401,15 @@ init_reserved_words (void)
   for (i = 0; i < HASH_SIZE; i++)
     reserved_table[i] = NULL;
 
+  /* install builtin words */
+  for (i = 0; builtin_words[i].name != 0; i++)
+    {
+      int val = hash (builtin_words[i].name);
+      builtin_words[i].next = reserved_table[val];
+      reserved_table[val] = &builtin_words[i];
+    }
+
+  /* install reserved words */
   for (i = 0; reserved_words[i].name != 0; i++)
     {
       int val = hash (reserved_words[i].name);
