@@ -31,6 +31,7 @@
 #include "codegen.h"
 #include "reserved.h"
 #include "defaults.h"
+#include "libcob.h"
 
 /* from parser.c */
 extern int yyparse (void);
@@ -152,6 +153,7 @@ static struct option long_options[] = {
   {"static", no_argument, &cobc_link_style, LINK_STATIC},
   {"dynamic", no_argument, &cobc_link_style, LINK_DYNAMIC},
   {"save-temps", no_argument, &save_temps_flag, 1},
+  {"fdynamic-reloading", no_argument, &cob_reloading_flag, 1},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
 #ifdef COB_DEBUG
