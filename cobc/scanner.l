@@ -326,7 +326,7 @@ scan_picture (char *text)
   for (p = text; *p; p++)
     {
       int n = 1;
-      char c = *p;
+      unsigned char c = *p;
 
     repeat:
       /* count the number of repeated chars */
