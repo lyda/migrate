@@ -34,15 +34,15 @@ AT_DATA([prog.cob], [
        PROGRAM-ID.      prog.
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
-       01  G1.
-         02  G2         OCCURS 2.
-           03  X1       PIC X.
-           03  X2       PIC 9.
+       01 G1.
+         02 G2          OCCURS 2.
+           03 X1        PIC X.
+           03 X2        PIC 9.
        PROCEDURE        DIVISION.
-         MOVE SPACE TO G1.
-         INITIALIZE G2 (2).
-         DISPLAY G1 NO ADVANCING.
-         STOP RUN.
+           MOVE SPACE TO G1.
+           INITIALIZE G2 (2).
+           DISPLAY G1 NO ADVANCING.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
@@ -62,9 +62,9 @@ AT_DATA([prog.cob], [
          02 G2          OCCURS 5.
            03 X         PIC Z9.
        PROCEDURE        DIVISION.
-         INITIALIZE G1.
-         DISPLAY G1 NO ADVANCING.
-         STOP RUN.
+           INITIALIZE G1.
+           DISPLAY G1 NO ADVANCING.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
@@ -86,9 +86,9 @@ AT_DATA([prog.cob], [
            03 Y         PIC 9.
          02 Z           PIC 9.
        PROCEDURE        DIVISION.
-         INITIALIZE G1.
-         DISPLAY G1 NO ADVANCING.
-         STOP RUN.
+           INITIALIZE G1.
+           DISPLAY G1 NO ADVANCING.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])

@@ -30,8 +30,8 @@ AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
        PROGRAM-ID.      prog.
        PROCEDURE        DIVISION.
-         DISPLAY X.
-         STOP RUN.
+           DISPLAY X.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -49,8 +49,8 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01 X             PIC X.
        PROCEDURE        DIVISION.
-         DISPLAY X IN G.
-         STOP RUN.
+           DISPLAY X IN G.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -70,8 +70,8 @@ AT_DATA([prog.cob], [
          02 X           PIC X.
        01 Y             PIC X.
        PROCEDURE        DIVISION.
-         DISPLAY Y IN G.
-         STOP RUN.
+           DISPLAY Y IN G.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -89,8 +89,8 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01 X             PIC X.
        PROCEDURE        DIVISION.
-         DISPLAY X IN X.
-         STOP RUN.
+           DISPLAY X IN X.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -188,8 +188,8 @@ AT_DATA([prog.cob], [
        01 G2.
          02 X           PIC X.
        PROCEDURE        DIVISION.
-         DISPLAY X.
-         STOP RUN.
+           DISPLAY X.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -211,8 +211,8 @@ AT_DATA([prog.cob], [
          02 X.
            03 X         PIC X.
        PROCEDURE        DIVISION.
-         DISPLAY X.
-         STOP RUN.
+           DISPLAY X.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -277,8 +277,8 @@ AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
        PROGRAM-ID.      prog.
        PROCEDURE        DIVISION.
-         GO TO END-OF-PROGRAM.
-         STOP RUN.
+           GO TO END-OF-PROGRAM.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -298,7 +298,7 @@ AT_DATA([prog.cob], [
        PROCEDURE        DIVISION.
        L SECTION.
        L SECTION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -317,7 +317,7 @@ AT_DATA([prog.cob], [
        PROCEDURE        DIVISION.
        L SECTION.
        L.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -336,7 +336,7 @@ AT_DATA([prog.cob], [
        PROCEDURE        DIVISION.
        L.
        L.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -358,8 +358,8 @@ AT_DATA([prog.cob], [
        S-2 SECTION.
        L.
        S-3 SECTION.
-         GO TO L.
-         STOP RUN.
+           GO TO L.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,

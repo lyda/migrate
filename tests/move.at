@@ -43,9 +43,9 @@ AT_DATA([prog.cob], [
        01 X             PIC 9.
        01 Y             PIC 09.
        PROCEDURE        DIVISION.
-         MOVE SPACE TO X.
-         MOVE SPACE TO Y.
-         STOP RUN.
+           MOVE SPACE TO X.
+           MOVE SPACE TO Y.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -67,8 +67,8 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01 A             PIC A.
        PROCEDURE        DIVISION.
-         MOVE ZERO TO A.
-         STOP RUN.
+           MOVE ZERO TO A.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -97,12 +97,12 @@ AT_DATA([prog.cob], [
        01 Y-9           PIC 9.
        01 Y-09          PIC 09.
        PROCEDURE        DIVISION.
-         MOVE X TO Y-A.
-         MOVE X TO Y-X.
-         MOVE X TO Y-BX.
-         MOVE X TO Y-9.
-         MOVE X TO Y-09.
-         STOP RUN.
+           MOVE X TO Y-A.
+           MOVE X TO Y-X.
+           MOVE X TO Y-BX.
+           MOVE X TO Y-9.
+           MOVE X TO Y-09.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -126,12 +126,12 @@ AT_DATA([prog.cob], [
        01 Y-9           PIC 9.
        01 Y-09          PIC 09.
        PROCEDURE        DIVISION.
-         MOVE X TO Y-A.
-         MOVE X TO Y-X.
-         MOVE X TO Y-BX.
-         MOVE X TO Y-9.
-         MOVE X TO Y-09.
-         STOP RUN.
+           MOVE X TO Y-A.
+           MOVE X TO Y-X.
+           MOVE X TO Y-BX.
+           MOVE X TO Y-9.
+           MOVE X TO Y-09.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
@@ -152,12 +152,12 @@ AT_DATA([prog.cob], [
        01 Y-9           PIC 9.
        01 Y-09          PIC 09.
        PROCEDURE        DIVISION.
-         MOVE X TO Y-A.
-         MOVE X TO Y-X.
-         MOVE X TO Y-BX.
-         MOVE X TO Y-9.
-         MOVE X TO Y-09.
-         STOP RUN.
+           MOVE X TO Y-A.
+           MOVE X TO Y-X.
+           MOVE X TO Y-BX.
+           MOVE X TO Y-9.
+           MOVE X TO Y-09.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -181,12 +181,12 @@ AT_DATA([prog.cob], [
        01 Y-9           PIC 9.
        01 Y-09          PIC 09.
        PROCEDURE        DIVISION.
-         MOVE X TO Y-A.
-         MOVE X TO Y-X.
-         MOVE X TO Y-BX.
-         MOVE X TO Y-9.
-         MOVE X TO Y-09.
-         STOP RUN.
+           MOVE X TO Y-A.
+           MOVE X TO Y-X.
+           MOVE X TO Y-BX.
+           MOVE X TO Y-9.
+           MOVE X TO Y-09.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -209,12 +209,12 @@ AT_DATA([prog.cob], [
        01 Y-9           PIC 9.
        01 Y-09          PIC 09.
        PROCEDURE        DIVISION.
-         MOVE X TO Y-A.
-         MOVE X TO Y-X.
-         MOVE X TO Y-BX.
-         MOVE X TO Y-9.
-         MOVE X TO Y-09.
-         STOP RUN.
+           MOVE X TO Y-A.
+           MOVE X TO Y-X.
+           MOVE X TO Y-BX.
+           MOVE X TO Y-9.
+           MOVE X TO Y-09.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -239,12 +239,12 @@ AT_DATA([prog.cob], [
        01 Y-9           PIC 9.
        01 Y-09          PIC 09.
        PROCEDURE        DIVISION.
-         MOVE X TO Y-A.
-         MOVE X TO Y-X.
-         MOVE X TO Y-BX.
-         MOVE X TO Y-9.
-         MOVE X TO Y-09.
-         STOP RUN.
+           MOVE X TO Y-A.
+           MOVE X TO Y-X.
+           MOVE X TO Y-BX.
+           MOVE X TO Y-9.
+           MOVE X TO Y-09.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -271,11 +271,11 @@ AT_DATA([prog.cob], [
        01 G-2.
          02 Y           PIC X.
        PROCEDURE        DIVISION.
-         MOVE CORR X TO G-1.
-         MOVE CORR G-1 TO X.
-         MOVE CORR G-1(1:1) TO G-2.
-         MOVE CORR G-1 TO G-2(1:1).
-         STOP RUN.
+           MOVE CORR X TO G-1.
+           MOVE CORR G-1 TO X.
+           MOVE CORR G-1(1:1) TO G-2.
+           MOVE CORR G-1 TO G-2(1:1).
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,

@@ -29,9 +29,9 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01 X             PIC 9(4) VALUE 0.
        PROCEDURE        DIVISION.
-         MOVE "1" TO X(1:1).
-         DISPLAY X NO ADVANCING.
-         STOP RUN.
+           MOVE "1" TO X(1:1).
+           DISPLAY X NO ADVANCING.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
@@ -49,9 +49,9 @@ AT_DATA([prog.cob], [
        01 G.
          02 X           PIC 9999 VALUE 1234.
        PROCEDURE        DIVISION.
-         MOVE "99" TO G(3:2).
-         DISPLAY G NO ADVANCING.
-         STOP RUN.
+           MOVE "99" TO G(3:2).
+           DISPLAY G NO ADVANCING.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
@@ -69,10 +69,10 @@ AT_DATA([prog.cob], [
        01 G.
          02 X           PIC X OCCURS 10 INDEXED I.
        PROCEDURE        DIVISION.
-         SET I TO ZERO.
-         MOVE I TO X(1).
-         DISPLAY X(1) NO ADVANCING.
-         STOP RUN.
+           SET I TO ZERO.
+           MOVE I TO X(1).
+           DISPLAY X(1) NO ADVANCING.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
@@ -99,9 +99,9 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01 X             PIC XXX.
        PROCEDURE        DIVISION.
-         MOVE X"000102" TO X.
-         CALL "dump" USING X.
-         STOP RUN.
+           MOVE X"000102" TO X.
+           CALL "dump" USING X.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
@@ -121,7 +121,7 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01 X             PIC X OCCURS 10.
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -139,10 +139,10 @@ AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
        PROGRAM-ID.      prog.
        PROCEDURE        DIVISION.
-         IF 3 = 1 AND 2 OR 3
-           DISPLAY "OK"
-         END-IF.
-         STOP RUN.
+           IF 3 = 1 AND 2 OR 3
+               DISPLAY "OK"
+           END-IF.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
@@ -157,10 +157,10 @@ AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
        PROGRAM-ID.      prog.
        PROCEDURE        DIVISION.
-         IF 3 = 1 OR 2 AND 3
-           DISPLAY "NO"
-         END-IF.
-         STOP RUN.
+           IF 3 = 1 OR 2 AND 3
+               DISPLAY "NO"
+           END-IF.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
@@ -178,10 +178,10 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01 X             PIC X(6) VALUE "123   ".
        PROCEDURE        DIVISION.
-         IF X(1:3) NUMERIC
-           DISPLAY "OK" NO ADVANCING
-         END-IF.
-         STOP RUN.
+           IF X(1:3) NUMERIC
+               DISPLAY "OK" NO ADVANCING
+           END-IF.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
@@ -201,8 +201,8 @@ AT_DATA([m1.cob], [
        WORKING-STORAGE  SECTION.
        01 X             PIC 9(4).
        PROCEDURE        DIVISION.
-         COMPUTE X = 1 + 2.
-         DISPLAY X.
+           COMPUTE X = 1 + 2.
+           DISPLAY X.
 ])
 
 AT_DATA([m2.cob], [
@@ -212,18 +212,18 @@ AT_DATA([m2.cob], [
        WORKING-STORAGE  SECTION.
        01 X             PIC 9(4).
        PROCEDURE        DIVISION.
-         COMPUTE X = 3 + 4.
-         DISPLAY X.
+           COMPUTE X = 3 + 4.
+           DISPLAY X.
 ])
 
 AT_DATA([caller.cob], [
        IDENTIFICATION   DIVISION.
        PROGRAM-ID.      caller.
        PROCEDURE        DIVISION.
-         CALL "m1".
-         CALL "m2".
-         CALL "m1".
-         STOP RUN.
+           CALL "m1".
+           CALL "m2".
+           CALL "m1".
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_MODULE} m1.cob])
@@ -247,9 +247,9 @@ AT_DATA([caller.cob], [
        WORKING-STORAGE  SECTION.
        01 X             PIC X(4).
        PROCEDURE        DIVISION.
-         MOVE "abcd" TO X.
-         CALL "callee" USING X BY CONTENT LENGTH OF X.
-         STOP RUN.
+           MOVE "abcd" TO X.
+           CALL "callee" USING X BY CONTENT LENGTH OF X.
+           STOP RUN.
 ])
 
 AT_DATA([callee.c], [
@@ -276,13 +276,13 @@ AT_DATA([prog.cob], [
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
        01 FILLER        PIC X.
-         88 X           VALUE "X".
+           88 X           VALUE "X".
        PROCEDURE        DIVISION.
-         SET X TO TRUE.
-         IF X
-           DISPLAY "OK" NO ADVANCING
-         END-IF.
-         STOP RUN.
+           SET X TO TRUE.
+           IF X
+               DISPLAY "OK" NO ADVANCING
+           END-IF.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
@@ -300,10 +300,10 @@ AT_DATA([prog.cob], [
        01 X             PIC 9(2) VALUE 0.
        01 Y             PIC 9(2) VALUE 0.
        PROCEDURE        DIVISION.
-         COMPUTE X = 100.
-         COMPUTE Y = 99.
-         DISPLAY Y NO ADVANCING.
-         STOP RUN.
+           COMPUTE X = 100.
+           COMPUTE Y = 99.
+           DISPLAY Y NO ADVANCING.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
@@ -322,9 +322,9 @@ AT_DATA([prog.cob], [
        01 G.
          02 X           PIC X(3) OCCURS 3.
        PROCEDURE        DIVISION.
-         STRING "abc" INTO X(1).
-         DISPLAY X(1) NO ADVANCING.
-         STOP RUN.
+           STRING "abc" INTO X(1).
+           DISPLAY X(1) NO ADVANCING.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
@@ -350,15 +350,15 @@ AT_DATA([prog.cob], [
        FD TEST-FILE.
        01 TEST-KEY      PIC X(10).
        PROCEDURE        DIVISION.
-         OPEN  OUTPUT TEST-FILE.
-         CLOSE TEST-FILE.
-         OPEN  INPUT  TEST-FILE.
-         READ  TEST-FILE
-           AT END
-             DISPLAY "OK" NO ADVANCING
-	 END-READ.
-         CLOSE TEST-FILE.
-         STOP RUN.
+           OPEN  OUTPUT TEST-FILE.
+           CLOSE TEST-FILE.
+           OPEN  INPUT  TEST-FILE.
+           READ  TEST-FILE
+               AT END
+                   DISPLAY "OK" NO ADVANCING
+           END-READ.
+           CLOSE TEST-FILE.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])

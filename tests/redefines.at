@@ -38,7 +38,7 @@ AT_DATA([prog.cob], [
          02 X           PIC X.
        01 Y             REDEFINES X PIC 9.
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -59,7 +59,7 @@ AT_DATA([prog.cob], [
            03 X         PIC X.
          02 Y           REDEFINES X PIC 9.
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -77,10 +77,10 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01 G.
          02 X           PIC X.
-         66 A           RENAMES X.
-         66 B           REDEFINES A PIC 9.
+           66 A           RENAMES X.
+           66 B           REDEFINES A PIC 9.
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -97,10 +97,10 @@ AT_DATA([prog.cob], [
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
        01 X             PIC X.
-         88 A           VALUE "A".
-         88 B           REDEFINES A VALUE "B".
+           88 A           VALUE "A".
+           88 B           REDEFINES A VALUE "B".
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -130,7 +130,7 @@ AT_DATA([prog.cob], [
          02 G3.
            03 A         REDEFINES X PIC 9.
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -158,7 +158,7 @@ AT_DATA([prog.cob], [
          02 X           PIC X.
          02 A           REDEFINES X IN G1.
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -182,7 +182,7 @@ AT_DATA([prog.cob], [
          02 A           REDEFINES X PIC 9.
          02 B           REDEFINES X PIC 9.
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
@@ -203,7 +203,7 @@ AT_DATA([prog.cob], [
          02 X           PIC X.
          02 A           REDEFINES X PIC 99.
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -223,7 +223,7 @@ AT_DATA([prog.cob], [
          02 X           PIC X.
          02 A           REDEFINES X PIC 9 OCCURS 2.
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -242,7 +242,7 @@ AT_DATA([prog.cob], [
        01 X             PIC X EXTERNAL.
        01 A             REDEFINES X PIC 99.
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -261,7 +261,7 @@ AT_DATA([prog.cob], [
        01 X             PIC X.
        01 A             REDEFINES X PIC 99.
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
@@ -281,7 +281,7 @@ AT_DATA([prog.cob], [
        01 X             PIC X.
        01 A             REDEFINES X PIC X VALUE "A".
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -301,7 +301,7 @@ AT_DATA([prog.cob], [
        01 G             REDEFINES X.
          02 A           PIC X VALUE "A".
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -319,9 +319,9 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01 X             PIC X.
        01 Y             REDEFINES X PIC X.
-         88 A           VALUE "A".
+           88 A           VALUE "A".
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
@@ -342,7 +342,7 @@ AT_DATA([prog.cob], [
        01 Y             PIC X.
        01 A             REDEFINES X PIC X.
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -363,7 +363,7 @@ AT_DATA([prog.cob], [
          02 Y           PIC X.
          02 A           REDEFINES X PIC X.
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -387,7 +387,7 @@ AT_DATA([prog.cob], [
          02 A           PIC X.
          02 B           REDEFINES A PIC 9.
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0])

@@ -118,13 +118,13 @@ AT_DATA([prog.cob], [
          02 X-S999      PIC S999 USAGE PACKED-DECIMAL.
          02 FILLER      PIC X(4) VALUE "0123".
        PROCEDURE        DIVISION.
-         MOVE    0 TO X-99.   CALL "dump" USING G-99.
-         MOVE   99 TO X-99.   CALL "dump" USING G-99.
-         MOVE    0 TO X-S99.  CALL "dump" USING G-S99.
-         MOVE   -1 TO X-S99.  CALL "dump" USING G-S99.
-         MOVE  123 TO X-999.  CALL "dump" USING G-999.
-         MOVE -123 TO X-S999. CALL "dump" USING G-S999.
-         STOP RUN.
+           MOVE    0 TO X-99.   CALL "dump" USING G-99.
+           MOVE   99 TO X-99.   CALL "dump" USING G-99.
+           MOVE    0 TO X-S99.  CALL "dump" USING G-S99.
+           MOVE   -1 TO X-S99.  CALL "dump" USING G-S99.
+           MOVE  123 TO X-999.  CALL "dump" USING G-999.
+           MOVE -123 TO X-S999. CALL "dump" USING G-S999.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} prog.cob])
@@ -152,15 +152,15 @@ AT_DATA([prog.cob], [
        01 X-999         PIC 999  USAGE PACKED-DECIMAL.
        01 X-S999        PIC S999 USAGE PACKED-DECIMAL.
        PROCEDURE        DIVISION.
-         MOVE    0 TO X-99.   DISPLAY X-99.
-         MOVE   99 TO X-99.   DISPLAY X-99.
-         MOVE    0 TO X-S99.  DISPLAY X-S99.
-         MOVE   -1 TO X-S99.  DISPLAY X-S99.
-         MOVE    0 TO X-999.  DISPLAY X-999.
-         MOVE  123 TO X-999.  DISPLAY X-999.
-         MOVE    0 TO X-S999. DISPLAY X-S999.
-         MOVE -123 TO X-S999. DISPLAY X-S999.
-         STOP RUN.
+           MOVE    0 TO X-99.   DISPLAY X-99.
+           MOVE   99 TO X-99.   DISPLAY X-99.
+           MOVE    0 TO X-S99.  DISPLAY X-S99.
+           MOVE   -1 TO X-S99.  DISPLAY X-S99.
+           MOVE    0 TO X-999.  DISPLAY X-999.
+           MOVE  123 TO X-999.  DISPLAY X-999.
+           MOVE    0 TO X-S999. DISPLAY X-S999.
+           MOVE -123 TO X-S999. DISPLAY X-S999.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} prog.cob])
@@ -188,10 +188,10 @@ AT_DATA([prog.cob], [
        01 X             PIC 99 USAGE PACKED-DECIMAL VALUE 0.
        01 Y             PIC 99 USAGE PACKED-DECIMAL VALUE 9.
        PROCEDURE        DIVISION.
-         COMPUTE X = 1.     DISPLAY X.
-         COMPUTE X = Y.     DISPLAY X.
-         COMPUTE X = X + Y. DISPLAY X.
-         STOP RUN.
+           COMPUTE X = 1.     DISPLAY X.
+           COMPUTE X = Y.     DISPLAY X.
+           COMPUTE X = X + Y. DISPLAY X.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} prog.cob])

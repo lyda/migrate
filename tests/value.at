@@ -53,7 +53,7 @@ AT_DATA([prog.cob], [
        01 X-123         PIC 999 VALUE 123.
        01 X-1234        PIC 999 VALUE 1234.
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -77,7 +77,7 @@ AT_DATA([prog.cob], [
        01 X-12-3        PIC 99V9 VALUE 12.3.
        01 X-12-34       PIC 99V9 VALUE 12.34.
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -103,7 +103,7 @@ AT_DATA([prog.cob], [
        01 X-PP99--0123  PIC PP99 VALUE .0123.
        01 X-PP99--00001 PIC PP99 VALUE .00001.
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -130,7 +130,7 @@ AT_DATA([prog.cob], [
        01 X-S9P         PIC S9 VALUE +1.
        01 X-S9N         PIC S9 VALUE -1.
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -156,7 +156,7 @@ AT_DATA([prog.cob], [
        01 X-ABC         PIC AAA VALUE "abc".
        01 X-ABCD        PIC AAA VALUE "abcd".
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -179,7 +179,7 @@ AT_DATA([prog.cob], [
        01 X-ABC         PIC XXX VALUE "abc".
        01 X-ABCD        PIC XXX VALUE "abcd".
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -203,7 +203,7 @@ AT_DATA([prog.cob], [
        01 G-3           VALUE "abcd".
          02 X           PIC XXX.
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -235,7 +235,7 @@ AT_DATA([prog.cob], [
        01 X-MATCH       PIC **99.00 VALUE "*123.00".
        01 X-OVERFLOW    PIC **99.00 VALUE "*123.000".
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -257,7 +257,7 @@ AT_DATA([prog.cob], [
        01 X-MATCH       PIC BXX VALUE " ab".
        01 X-OVERFLOW    PIC BXX VALUE " abc".
        PROCEDURE        DIVISION.
-         STOP RUN.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
