@@ -28,7 +28,7 @@
 #include <libcob.h>
 
 #ifdef __MINGW32__
-#include <windows.h>		/* for GetTempPath */
+#include <windows.h>		/* for GetTempPath, GetTempFileName */
 #endif /* __MINGW32__ */
 
 #include "cobc.h"
@@ -346,14 +346,16 @@ static void
 temp_name (char *buff, const char *ext)
 {
 #ifdef __MINGW32__
-  GetTempPath (FILENAME_MAX, buff);
-#else
-  strcpy (buff, "/tmp/");
-#endif
-  strcat (buff, "cobXXXXXX");
+  char temp[MAX_PATH];
+  GetTempPath (MAX_PATH, temp);
+  GetTempFileName (temp, "cob", 1, buff);
+  strcpy (buff + strlen (buff) - 4, ext); /* replace ".tmp" by EXT */
+#else /* not __MINGW32__ */
+  strcpy (buff, "/tmp/cobXXXXXX");
   close (mkstemp (buff));
   unlink (buff);
   strcat (buff, ext);
+#endif /* not __MINGW32__ */
 }
 
 static struct filename *
