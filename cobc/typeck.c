@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2003 Keisuke Nishida
+ * Copyright (C) 2001-2004 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,116 @@
 #include "cobc.h"
 #include "tree.h"
 
+#define cb_emit(x) \
+  current_statement->body = cb_list_add (current_statement->body, x)
+#define cb_emit_list(l) \
+  current_statement->body = cb_list_append (current_statement->body, l)
+
+
+cb_tree
+cb_check_group_name (cb_tree x)
+{
+  if (x == cb_error_node)
+    return cb_error_node;
+
+  if (CB_REFERENCE_P (x)
+      && CB_FIELD_P (cb_ref (x))
+      && CB_FIELD (cb_ref (x))->children != NULL
+      && CB_REFERENCE (x)->offset == NULL)
+    return x;
+
+  cb_error_x (x, _("`%s' is not group name"), cb_name (x));
+  return cb_error_node;
+}
+
+cb_tree
+cb_check_numeric_name (cb_tree x)
+{
+  if (x == cb_error_node)
+    return cb_error_node;
+
+  if (CB_REFERENCE_P (x)
+      && CB_FIELD_P (cb_ref (x))
+      && CB_TREE_CATEGORY (x) == CB_CATEGORY_NUMERIC)
+    return x;
+
+  cb_error_x (x, _("`%s' is not numeric name"), cb_name (x));
+  return cb_error_node;
+}
+
+cb_tree
+cb_check_numeric_edited_name (cb_tree x)
+{
+  if (x == cb_error_node)
+    return cb_error_node;
+
+  if (CB_REFERENCE_P (x)
+      && CB_FIELD_P (cb_ref (x))
+      && (CB_TREE_CATEGORY (x) == CB_CATEGORY_NUMERIC
+	  || CB_TREE_CATEGORY (x) == CB_CATEGORY_NUMERIC_EDITED))
+    return x;
+
+  cb_error_x (x, _("`%s' is not numeric or numeric-edited name"), cb_name (x));
+  return cb_error_node;
+}
+
+cb_tree
+cb_check_numeric_value (cb_tree x)
+{
+  if (x == cb_error_node)
+    return cb_error_node;
+
+  if (CB_TREE_CATEGORY (x) == CB_CATEGORY_NUMERIC)
+    return x;
+
+  cb_error_x (x, _("`%s' is not numeric value"), cb_name (x));
+  return cb_error_node;
+}
+
+cb_tree
+cb_check_integer_value (cb_tree x)
+{
+  if (x == cb_error_node)
+    return cb_error_node;
+
+  if (CB_TREE_CATEGORY (x) != CB_CATEGORY_NUMERIC)
+    goto invalid;
+
+  switch (CB_TREE_TAG (x))
+    {
+    case CB_TAG_CONST:
+      {
+	if (x != cb_zero)
+	  goto invalid;
+	return x;
+      }
+    case CB_TAG_LITERAL:
+      {
+	struct cb_literal *l = CB_LITERAL (x);
+	if (l->sign < 0 || l->scale > 0)
+	  goto invalid;
+	return x;
+      }
+    case CB_TAG_REFERENCE:
+      {
+	struct cb_field *f = CB_FIELD (cb_ref (x));
+	if (f->pic->scale > 0)
+	  goto invalid;
+	return x;
+      }
+    case CB_TAG_BINARY_OP:
+      {
+	/* TODO: need to check */
+	return x;
+      }
+    default:
+    invalid:
+      cb_error_x (x, _("`%s' is not integer value"), cb_name (x));
+      return cb_error_node;
+    }
+}
+
+
 int
 cb_get_int (cb_tree x)
 {
@@ -123,28 +233,34 @@ cb_build_identifier (cb_tree x)
   /* check if it is a data name */
   if (!CB_FIELD_P (v))
     {
-      cb_error_x (x, _("`%s' not data name"), name);
-      return cb_error_node;
+      if (r->subs)
+	{
+	  cb_error_x (x, _("`%s' cannot be subscripted"), name);
+	  return cb_error_node;
+	}
+      if (r->offset)
+	{
+	  cb_error_x (x, _("`%s' cannot be reference modified"), name);
+	  return cb_error_node;
+	}
+      return x;
     }
   f = CB_FIELD (v);
 
   /* check the number of subscripts */
   if (cb_list_length (r->subs) != f->indexes)
-    {
-      switch (f->indexes)
-	{
-	case 0:
-	  cb_error_x (x, _("`%s' cannot be subscripted"), name);
-	  break;
-	case 1:
-	  cb_error_x (x, _("`%s' requires 1 subscript"), name);
-	  break;
-	default:
-	  cb_error_x (x, _("`%s' requires %d subscripts"), name, f->indexes);
-	  break;
-	}
-      return cb_error_node;
-    }
+    switch (f->indexes)
+      {
+      case 0:
+	cb_error_x (x, _("`%s' cannot be subscripted"), name);
+	return cb_error_node;
+      case 1:
+	cb_error_x (x, _("`%s' requires 1 subscript"), name);
+	return cb_error_node;
+      default:
+	cb_error_x (x, _("`%s' requires %d subscripts"), name, f->indexes);
+	return cb_error_node;
+      }
 
   /* subscript check */
   if (r->subs)
@@ -154,7 +270,11 @@ cb_build_identifier (cb_tree x)
       for (p = f; p; p = p->parent)
 	if (p->flag_occurs)
 	  {
-	    cb_tree sub = CB_VALUE (l);
+	    cb_tree sub = cb_check_integer_value (CB_VALUE (l));
+	    l = CB_CHAIN (l);
+
+	    if (sub == cb_error_node)
+	      continue;
 
 	    /* compile-time check */
 	    if (CB_LITERAL_P (sub))
@@ -204,8 +324,6 @@ cb_build_identifier (cb_tree x)
 		      }
 		  }
 	      }
-
-	    l = CB_CHAIN (l);
 	  }
     }
 
@@ -254,8 +372,11 @@ cb_build_identifier (cb_tree x)
 cb_tree
 cb_build_length (cb_tree x)
 {
-  if (!CB_REFERENCE_P (x))
-    return x;
+  unsigned char buff[20];
+
+  if (x == cb_error_node
+      || cb_ref (x) == cb_error_node)
+    return cb_error_node;
 
   /* X(I:L) */
   if (CB_REFERENCE (x)->length)
@@ -267,11 +388,8 @@ cb_build_length (cb_tree x)
 			       CB_REFERENCE (x)->offset);
 
   /* X */
-  {
-    unsigned char buff[20];
-    sprintf (buff, "%d", cb_field_size (x));
-    return cb_build_numeric_literal (0, buff, 0);
-  }
+  sprintf (buff, "%d", cb_field_size (x));
+  return cb_build_numeric_literal (0, buff, 0);
 }
 
 cb_tree
@@ -291,6 +409,96 @@ cb_build_using_list (cb_tree list)
 	}
       }
   return list;
+}
+
+
+/* validate program */
+
+void
+cb_validate_program_environment (struct cb_program *prog)
+{
+  /* resolve the program collating sequence */
+  if (prog->collating_sequence)
+    {
+      cb_tree x = cb_ref (prog->collating_sequence);
+      if (x == cb_error_node)
+	{
+	  prog->collating_sequence = NULL;
+	  return;
+	}
+
+      if (!CB_ALPHABET_NAME_P (x))
+	{
+	  cb_error_x (prog->collating_sequence, _("`%s' not alphabet name"),
+		      cb_name (prog->collating_sequence));
+	  prog->collating_sequence = NULL;
+	  return;
+	}
+
+      if (CB_ALPHABET_NAME (x)->type == CB_ALPHABET_CUSTOM)
+	{
+	  x = CB_VALUE (CB_ALPHABET_NAME (x)->custom_list);
+	  if (CB_PAIR_P (x) && CB_PAIR_X (x))
+	    cb_low = CB_PAIR_X (x);
+	  else if (CB_LIST_P (x))
+	    cb_low = CB_VALUE (x);
+	  else
+	    cb_low = cb_build_alphanumeric_literal (CB_LITERAL (x)->data, 1);
+	}
+    }
+}
+
+void
+cb_validate_program_data (struct cb_program *prog)
+{
+  cb_tree l;
+
+  /* build undeclared assign name */
+  if (cb_assign_identifier == CB_ASSIGN_DATA)
+    for (l = current_program->file_list; l; l = CB_CHAIN (l))
+      {
+	cb_tree assign = CB_FILE (CB_VALUE (l))->assign;
+	if (CB_REFERENCE_P (assign) && CB_REFERENCE (assign)->word->count == 0)
+	  {
+	    cb_tree x = cb_build_implicit_field (assign, FILENAME_MAX);
+	    struct cb_field *p = current_program->working_storage;
+	    if (p)
+	      {
+		while (p->sister)
+		  p = p->sister;
+		p->sister = CB_FIELD (x);
+	      }
+	    else
+	      current_program->working_storage = CB_FIELD (x);
+	  }
+      }
+
+  /* resolve all references so far */
+  for (l = cb_list_reverse (prog->reference_list); l; l = CB_CHAIN (l))
+    cb_ref (CB_VALUE (l));
+}
+
+void
+cb_validate_program_body (struct cb_program *prog)
+{
+  /* resolve all labels */
+  cb_tree l;
+  for (l = cb_list_reverse (prog->label_list); l; l = CB_CHAIN (l))
+    {
+      cb_tree x = CB_VALUE (l);
+      cb_tree v = cb_ref (x);
+      if (CB_LABEL_P (v))
+	{
+	  CB_LABEL (v)->need_begin = 1;
+	  if (CB_REFERENCE (x)->length)
+	    CB_LABEL (v)->need_return = 1;
+	}
+      else if (v != cb_error_node)
+	cb_error_x (x, _("`%s' not procedure name"), cb_name (x));
+    }
+
+  prog->file_list = cb_list_reverse (prog->file_list);
+  prog->exec_list = cb_list_reverse (prog->exec_list);
 }
 
 
@@ -776,17 +984,22 @@ build_decimal_assign (cb_tree vars, char op, cb_tree val)
   return s1;
 }
 
-cb_tree
-cb_build_arithmetic (cb_tree vars, char op, cb_tree val)
+void
+cb_emit_arithmetic (cb_tree vars, char op, cb_tree val)
 {
   cb_tree l;
 
-  for (l = vars; l; l = CB_CHAIN (l))
-    if (CB_VALUE (l) == cb_error_node)
-      return cb_error_node;
+  val = cb_check_numeric_value (val);
+  if (op)
+    cb_list_map (cb_check_numeric_name, vars);
+  else
+    cb_list_map (cb_check_numeric_edited_name, vars);
 
   if (val == cb_error_node)
-    return cb_error_node;
+    return;
+  for (l = vars; l; l = CB_CHAIN (l))
+    if (CB_VALUE (l) == cb_error_node)
+      return;
 
   if (!CB_BINARY_OP_P (val))
     if (op == '+' || op == '-')
@@ -798,10 +1011,754 @@ cb_build_arithmetic (cb_tree vars, char op, cb_tree val)
 	    else
 	      CB_VALUE (l) = cb_build_sub (CB_VALUE (l), val, CB_PURPOSE (l));
 	  }
-	return vars;
+	cb_emit_list (vars);
+	return;
       }
 
-  return build_decimal_assign (vars, op, val);
+  cb_emit (build_decimal_assign (vars, op, val));
+}
+
+
+/*
+ * Condition
+ */
+
+static cb_tree
+build_cond_88 (cb_tree x)
+{
+  struct cb_field *f = cb_field (x);
+  cb_tree l;
+  cb_tree c1 = NULL;
+
+  /* refer to parent's data storage */
+  x = cb_build_field_reference (f->parent, x);
+
+  /* build condition */
+  for (l = f->values; l; l = CB_CHAIN (l))
+    {
+      cb_tree t = CB_VALUE (l);
+      cb_tree c2;
+      if (CB_PAIR_P (t))
+	{
+	  /* VALUE THRU VALUE */
+	  c2 = cb_build_binary_op (cb_build_binary_op (CB_PAIR_X (t), '[', x),
+				   '&',
+				   cb_build_binary_op (x, '[', CB_PAIR_Y (t)));
+	}
+      else
+	{
+	  /* VALUE */
+	  c2 = cb_build_binary_op (x, '=', t);
+	}
+      if (c1 == NULL)
+	c1 = c2;
+      else
+	c1 = cb_build_binary_op (c1, '|', c2);
+    }
+  return c1;
+}
+
+cb_tree
+cb_build_cond (cb_tree x)
+{
+  switch (CB_TREE_TAG (x))
+    {
+    case CB_TAG_CONST:
+    case CB_TAG_FUNCALL:
+      return x;
+    case CB_TAG_REFERENCE:
+      {
+	struct cb_field *f;
+
+	if (!CB_FIELD_P (cb_ref (x)))
+	  return cb_build_cond (cb_ref (x));
+
+	f = cb_field (x);
+
+	/* level 88 condition */
+	if (f->level == 88)
+	  {
+	    /* We need to build a 88 condition at every occurrence
+	       instead of once at the beginning because a 88 item
+	       may be subscripted (i.e., it is not a constant tree). */
+	    return cb_build_cond (build_cond_88 (x));
+	  }
+
+	ABORT ();
+      }
+    case CB_TAG_BINARY_OP:
+      {
+	struct cb_binary_op *p = CB_BINARY_OP (x);
+	switch (p->op)
+	  {
+	  case '@':
+	    return cb_build_cond (p->x);
+	  case '!':
+	    return cb_build_binary_op (cb_build_cond (p->x), '!', 0);
+	  case '&': case '|':
+	    return cb_build_binary_op (cb_build_cond (p->x), p->op,
+				       cb_build_cond (p->y));
+	  default:
+	    if (CB_INDEX_P (p->x) || CB_INDEX_P (p->y))
+	      {
+		x = cb_build_binary_op (p->x, '-', p->y);
+	      }
+	    else if (CB_BINARY_OP_P (p->x) || CB_BINARY_OP_P (p->y))
+	      {
+		/* decimal comparison */
+		cb_tree d1 = decimal_alloc ();
+		cb_tree d2 = decimal_alloc ();
+		decimal_expand (d1, p->x);
+		decimal_expand (d2, p->y);
+		dpush (cb_build_funcall_2 ("cob_decimal_cmp", d1, d2));
+		decimal_free ();
+		decimal_free ();
+		x = cb_list_reverse (decimal_stack);
+		decimal_stack = NULL;
+	      }
+	    else
+	      {
+		if (cb_flag_runtime_inlining)
+		  {
+		    if (CB_LITERAL_P (p->y))
+		      {
+#if 0
+			struct cb_literal *l = CB_LITERAL (p->y);
+			int size = cb_field_size (p->x);
+#endif
+
+			if (CB_TREE_CLASS (p->x) == CB_CLASS_NUMERIC
+			    && CB_TREE_CLASS (p->y) == CB_CLASS_NUMERIC
+			    && cb_fits_int (p->y))
+			  {
+			    x = cb_build_funcall_2 ("cob_cmp_int",
+						    p->x, cb_build_cast_integer (p->y));
+			    break;
+			  }
+#if 0
+			if (size > 0 && size >= l->size && !l->all)
+			  {
+			    x = cb_build_funcall_2 ("@memcmp", p->x, p->y);
+			    break;
+			  }
+#endif
+		      }
+		  }
+
+		/* field comparison */
+		x = cb_build_funcall_2 ("cob_cmp", p->x, p->y);
+	      }
+	  }
+	return cb_build_binary_op (x, p->op, p->y);
+      }
+    default:
+      ABORT ();
+    }
+}
+
+
+/*
+ * ADD/SUBTRACT CORRESPONDING
+ */
+
+cb_tree
+cb_build_add (cb_tree v, cb_tree n, cb_tree round)
+{
+  if (CB_INDEX_P (v))
+    return cb_build_move (cb_build_binary_op (v, '+', n), v);
+
+  if (round == cb_int0 && cb_fits_int (n))
+    return cb_build_funcall_2 ("cob_add_int", v, cb_build_cast_integer (n));
+  if (round == cb_int1)
+    return cb_build_funcall_2 ("cob_add_round", v, n);
+  else
+    return cb_build_funcall_2 ("cob_add", v, n);
+}
+
+cb_tree
+cb_build_sub (cb_tree v, cb_tree n, cb_tree round)
+{
+  if (CB_INDEX_P (v))
+    return cb_build_move (cb_build_binary_op (v, '-', n), v);
+
+  if (round == cb_int0 && cb_fits_int (n))
+    return cb_build_funcall_2 ("cob_sub_int", v, cb_build_cast_integer (n));
+  if (round == cb_int1)
+    return cb_build_funcall_2 ("cob_sub_round", v, n);
+  else
+    return cb_build_funcall_2 ("cob_sub", v, n);
+}
+
+static void
+emit_corresponding (cb_tree (*func)(), cb_tree x1, cb_tree x2, cb_tree opt)
+{
+  struct cb_field *f1, *f2;
+  for (f1 = cb_field (x1)->children; f1; f1 = f1->sister)
+    if (!f1->redefines && !f1->flag_occurs)
+      for (f2 = cb_field (x2)->children; f2; f2 = f2->sister)
+	if (!f2->redefines && !f2->flag_occurs)
+	  if (strcmp (f1->name, f2->name) == 0)
+	    {
+	      cb_tree t1 = cb_build_field_reference (f1, x1);
+	      cb_tree t2 = cb_build_field_reference (f2, x2);
+	      if (f1->children && f2->children)
+		emit_corresponding (func, t1, t2, opt);
+	      else
+		cb_emit (func (t1, t2, opt));
+	    }
+}
+
+void
+cb_emit_corresponding (cb_tree (*func)(), cb_tree x1, cb_tree x2, cb_tree opt)
+{
+  x1 = cb_check_group_name (x1);
+  x2 = cb_check_group_name (x2);
+  if (x1 == cb_error_node || x2 == cb_error_node)
+    return;
+
+  emit_corresponding (func, x1, x2, opt);
+}
+
+
+/*
+ * ACCEPT statement
+ */
+
+void
+cb_emit_accept (cb_tree var, cb_tree pos)
+{
+  if (current_program->flag_screen)
+    {
+      if (CB_FIELD (var)->storage == CB_STORAGE_SCREEN)
+	{
+	  cb_tree line = CB_PAIR_X (pos);
+	  cb_tree column = CB_PAIR_Y (pos);
+	  cb_emit (cb_build_funcall_3 ("cob_screen_accept", var, line, column));
+	}
+      else
+	cb_error_x (var, "`%s' not defined in SCREEN SECTION", cb_name (var));
+    }
+  else
+    {
+      cb_emit (cb_build_funcall_1 ("cob_accept", var));
+    }
+}
+
+void
+cb_emit_accept_date (cb_tree var)
+{
+  cb_emit (cb_build_funcall_1 ("cob_accept_date", var));
+}
+
+void
+cb_emit_accept_day (cb_tree var)
+{
+  cb_emit (cb_build_funcall_1 ("cob_accept_day", var));
+}
+
+void
+cb_emit_accept_day_of_week (cb_tree var)
+{
+  cb_emit (cb_build_funcall_1 ("cob_accept_day_of_week", var));
+}
+
+void
+cb_emit_accept_time (cb_tree var)
+{
+  cb_emit (cb_build_funcall_1 ("cob_accept_time", var));
+}
+
+void
+cb_emit_accept_command_line (cb_tree var)
+{
+  cb_emit (cb_build_funcall_1 ("cob_accept_command_line", var));
+}
+
+void
+cb_emit_accept_environment (cb_tree var)
+{
+  cb_emit (cb_build_funcall_1 ("cob_accept_environment", var));
+}
+
+void
+cb_emit_accept_mnemonic (cb_tree var, cb_tree mnemonic)
+{
+  switch (CB_SYSTEM_NAME (cb_ref (mnemonic))->token)
+    {
+    case CB_DEVICE_CONSOLE:
+    case CB_DEVICE_SYSIN:
+      cb_emit (cb_build_funcall_1 ("cob_accept", var));
+      break;
+    default:
+      cb_error_x (mnemonic, _("invalid input stream `%s'"),
+		  cb_name (mnemonic));
+      break;
+    }
+}
+
+void
+cb_emit_accept_name (cb_tree var, cb_tree name)
+{
+  if (CB_REFERENCE (name)->word->count == 0)
+    {
+      cb_tree sys = lookup_system_name (CB_NAME (name));
+      if (sys != cb_error_node)
+	{
+	  switch (CB_SYSTEM_NAME (sys)->token)
+	    {
+	    case CB_DEVICE_CONSOLE:
+	    case CB_DEVICE_SYSIN:
+	      cb_warning_x (name, _("`%s' undefined in SPECIAL-NAMES"),
+			    CB_NAME (name));
+	      cb_emit (cb_build_funcall_1 ("cob_accept", var));
+	      return;
+	    default:
+	      break;
+	    }
+	}
+    }
+
+  cb_error_x (name, _("`%s' undefined in SPECIAL-NAMES"), CB_NAME (name));
+}
+
+
+/*
+ * CALL statement
+ */
+
+void
+cb_emit_call (cb_tree prog, cb_tree using, cb_tree returning,
+	      cb_tree on_exception, cb_tree not_on_exception)
+{
+  cb_emit (cb_build_call (prog, using, on_exception, not_on_exception));
+  if (returning)
+    cb_emit (cb_build_move (cb_return_code, returning));
+}
+
+
+/*
+ * CANCEL statement
+ */
+
+void
+cb_emit_cancel (cb_tree prog)
+{
+  cb_emit (cb_build_funcall_1 ("cob_cancel", prog));
+}
+
+
+/*
+ * CLOSE statement
+ */
+
+void
+cb_emit_close (cb_tree file, cb_tree opt)
+{
+  file = cb_ref (file);
+  current_statement->file = file;
+  cb_emit (cb_build_funcall_2 ("cob_close", file, opt));
+}
+
+
+/*
+ * DELETE statement
+ */
+
+void
+cb_emit_delete (cb_tree file)
+{
+  file = cb_ref (file);
+  current_statement->file = file;
+  cb_emit (cb_build_funcall_1 ("cob_delete", file));
+}
+
+
+/*
+ * DISPLAY statement
+ */
+
+void
+cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
+{
+  cb_tree l;
+
+  if (current_program->flag_screen)
+    {
+      /* screen mode */
+      for (l = values; l; l = CB_CHAIN (l))
+	{
+	  cb_tree x = CB_VALUE (l);
+	  if (CB_FIELD_P (cb_ref (x))
+	      && CB_FIELD (cb_ref (x))->storage == CB_STORAGE_SCREEN)
+	    {
+	      cb_tree line = CB_PAIR_X (pos);
+	      cb_tree column = CB_PAIR_Y (pos);
+	      cb_emit (cb_build_funcall_3 ("cob_screen_display", x, line, column));
+	    }
+	  else
+	    {
+	      cb_error_x (x, "`%s' not defined in SCREEN SECTION",
+			  cb_name (x));
+	    }
+	}
+    }
+  else if (upon == cb_true)
+    {
+      /* DISPLAY x UPON ENVIRONMENT-NAME */
+      if (cb_list_length (values) != 1)
+	{
+	  cb_error (_("wrong number of data items"));
+	  return;
+	}
+      cb_emit (cb_build_funcall_1 ("cob_display_environment", CB_VALUE (values)));
+    }
+  else
+    {
+      /* DISPLAY x ... [UPON device-name] */
+      int is_stdout = (upon == cb_int1);
+      const char *display = is_stdout ? "cob_display" : "cob_display_error";
+      const char *newline = is_stdout ? "cob_newline" : "cob_newline_error";
+      for (l = values; l; l = CB_CHAIN (l))
+	cb_emit (cb_build_funcall_1 (display, CB_VALUE (l)));
+      if (no_adv == cb_int0)
+	cb_emit (cb_build_funcall_0 (newline));
+    }
+}
+
+cb_tree
+cb_build_display_upon (cb_tree x)
+{
+  if (x == cb_error_node)
+    return cb_error_node;
+
+  switch (CB_SYSTEM_NAME (cb_ref (x))->token)
+    {
+    case CB_DEVICE_CONSOLE:
+    case CB_DEVICE_SYSOUT:
+      return cb_int1;
+    case CB_DEVICE_SYSERR:
+      return cb_int2;
+    default:
+      cb_error_x (x, _("invalid output stream"));
+      return cb_error_node;
+    }
+}
+
+cb_tree
+cb_build_display_upon_direct (cb_tree x)
+{
+  const char *name = CB_NAME (x);
+
+  if (CB_REFERENCE (x)->word->count == 0)
+    {
+      cb_tree sys = lookup_system_name (CB_NAME (x));
+      if (sys != cb_error_node)
+	{
+	  switch (CB_SYSTEM_NAME (sys)->token)
+	    {
+	    case CB_DEVICE_CONSOLE:
+	    case CB_DEVICE_SYSOUT:
+	      cb_warning_x (x, _("`%s' undefined in SPECIAL-NAMES"), name);
+	      return cb_int1;
+	    case CB_DEVICE_SYSERR:
+	      cb_warning_x (x, _("`%s' undefined in SPECIAL-NAMES"), name);
+	      return cb_int2;
+	    default:
+	      break;
+	    }
+	}
+    }
+
+  cb_error_x (x, _("`%s' undefined in SPECIAL-NAMES"), name);
+  return cb_error_node;
+}
+
+
+/*
+ * DIVIDE statement
+ */
+
+void
+cb_emit_divide (cb_tree dividend, cb_tree divisor,
+		cb_tree quotient, cb_tree remainder)
+{
+  CB_VALUE (quotient) = cb_check_numeric_edited_name (CB_VALUE (quotient));
+  CB_VALUE (remainder) = cb_check_numeric_edited_name (CB_VALUE (remainder));
+  if (CB_VALUE (quotient) == cb_error_node
+      || CB_VALUE (remainder) == cb_error_node)
+    return;
+
+  cb_emit (cb_build_funcall_4 ("cob_div_quotient", dividend, divisor,
+			       CB_VALUE (quotient), CB_PURPOSE (quotient)));
+  cb_emit (cb_build_funcall_1 ("cob_div_remainder", CB_VALUE (remainder)));
+}
+
+
+/*
+ * EVALUATE statement
+ */
+
+static cb_tree
+evaluate_test (cb_tree s, cb_tree o)
+{
+  int flag;
+  cb_tree x, y;
+
+  /* ANY is always true */
+  if (o == cb_any)
+    return cb_true;
+
+  /* object TRUE or FALSE */
+  if (o == cb_true)
+    return s;
+  if (o == cb_false)
+    return cb_build_negation (s);
+
+  flag = CB_PURPOSE_INT (o);
+  x = CB_PAIR_X (CB_VALUE (o));
+  y = CB_PAIR_Y (CB_VALUE (o));
+
+  /* subject TRUE or FALSE */
+  if (s == cb_true)
+    return flag ? cb_build_negation (x) : x;
+  if (s == cb_false)
+    return flag ? x : cb_build_negation (x);
+
+  /* x THRU y */
+  if (y)
+    {
+      cb_tree t = cb_build_binary_op (cb_build_binary_op (x, '[', s),
+				      '&',
+				      cb_build_binary_op (s, '[', y));
+      return flag ? cb_build_negation (t) : t;
+    }
+
+  /* regular comparison */
+  if (flag)
+    return cb_build_binary_op (s, '~', x);
+  else
+    return cb_build_binary_op (s, '=', x);
+}
+
+static cb_tree
+build_evaluate (cb_tree subject_list, cb_tree case_list)
+{
+  cb_tree stmt;
+  cb_tree c1 = NULL;
+  cb_tree subjs, whens, objs;
+
+  if (case_list == NULL)
+    return NULL;
+
+  whens = CB_VALUE (case_list);
+  stmt = CB_VALUE (whens);
+  whens = CB_CHAIN (whens);
+
+  /* for each WHEN sequence */
+  for (; whens; whens = CB_CHAIN (whens))
+    {
+      cb_tree c2 = NULL;
+      /* single WHEN test */
+      for (subjs = subject_list, objs = CB_VALUE (whens);
+	   subjs && objs;
+	   subjs = CB_CHAIN (subjs), objs = CB_CHAIN (objs))
+	{
+	  cb_tree c3 = evaluate_test (CB_VALUE (subjs), CB_VALUE (objs));
+	  if (c2 == NULL)
+	    c2 = c3;
+	  else
+	    c2 = cb_build_binary_op (c2, '&', c3);
+	}
+      if (subjs || objs)
+	cb_error (_("wrong number of WHEN parameters"));
+      /* connect multiple WHEN's */
+      if (c1 == NULL)
+	c1 = c2;
+      else
+	c1 = cb_build_binary_op (c1, '|', c2);
+    }
+
+  if (c1 == NULL)
+    return stmt;
+  else
+    return cb_build_if (cb_build_cond (c1), stmt,
+			build_evaluate (subject_list,
+					CB_CHAIN (case_list)));
+}
+
+void
+cb_emit_evaluate (cb_tree subject_list, cb_tree case_list)
+{
+  cb_emit (build_evaluate (subject_list, case_list));
+}
+
+
+/*
+ * GO TO statement
+ */
+
+void
+cb_emit_goto (cb_tree target, cb_tree depending)
+{
+  if (depending)
+    {
+      /* GO TO procedure-name ... DEPENDING ON identifier */
+      cb_emit (cb_build_goto (target, depending));
+    }
+  else
+    {
+      /* GO TO procedure-name */
+      if (target == NULL)
+	cb_verify (cb_goto_statement_without_name,
+		   "GO TO without procedure-name");
+      else if (CB_CHAIN (target))
+	cb_error (_("GO TO with multiple procesure-name"));
+      else
+	cb_emit (cb_build_goto (CB_VALUE (target), 0));
+    }
+}
+
+void
+cb_emit_exit (void)
+{
+  cb_emit (cb_build_goto (0, 0));
+}
+
+
+/*
+ * IF statement
+ */
+
+void
+cb_emit_if (cb_tree cond, cb_tree stmt1, cb_tree stmt2)
+{
+  cb_emit (cb_build_if (cond, stmt1, stmt2));
+}
+
+
+/*
+ * INITIALIZE statement
+ */
+
+void
+cb_emit_initialize (cb_tree vars, cb_tree value, cb_tree replacing, cb_tree def)
+{
+  cb_tree l;
+  if (value == NULL && replacing == NULL)
+    def = cb_true;
+  for (l = vars; l; l = CB_CHAIN (l))
+    cb_emit (cb_build_initialize (CB_VALUE (l), value, replacing, def));
+}
+
+
+/*
+ * INSPECT statement
+ */
+
+static const char *inspect_func;
+static cb_tree inspect_data;
+
+void
+cb_emit_inspect (cb_tree var, cb_tree body, cb_tree replacing)
+{
+  cb_emit (cb_build_funcall_2 ("cob_inspect_init", var, replacing));
+  cb_emit_list (body);
+  cb_emit (cb_build_funcall_0 ("cob_inspect_finish"));
+}
+
+void
+cb_init_tarrying (void)
+{
+  inspect_func = NULL;
+  inspect_data = NULL;
+}
+
+cb_tree
+cb_build_tarrying_data (cb_tree x)
+{
+  inspect_data = x;
+  return NULL;
+}
+
+cb_tree
+cb_build_tarrying_characters (cb_tree l)
+{
+  if (inspect_data == NULL)
+      cb_error (_("data name expected before CHARACTERS"));
+  inspect_func = NULL;
+  return  cb_list_add (l, cb_build_funcall_1 ("cob_inspect_characters",
+					      inspect_data));
+}
+
+cb_tree
+cb_build_tarrying_all (void)
+{
+  if (inspect_data == NULL)
+    cb_error (_("data name expected before ALL"));
+  inspect_func = "cob_inspect_all";
+  return NULL;
+}
+
+cb_tree
+cb_build_tarrying_leading (void)
+{
+  if (inspect_data == NULL)
+    cb_error (_("data name expected before LEADING"));
+  inspect_func = "cob_inspect_leading";
+  return NULL;
+}
+
+cb_tree
+cb_build_tarrying_value (cb_tree x, cb_tree l)
+{
+  if (inspect_func == NULL)
+    cb_error_x (x, _("ALL or LEADING expected before `%s'"), cb_name (x));
+  return cb_list_add (l, cb_build_funcall_2 (inspect_func, inspect_data, x));
+}
+
+cb_tree
+cb_build_replacing_characters (cb_tree x, cb_tree l)
+{
+  return cb_list_add (l, cb_build_funcall_1 ("cob_inspect_characters", x));
+}
+
+cb_tree
+cb_build_replacing_all (cb_tree x, cb_tree y, cb_tree l)
+{
+  return cb_list_add (l, cb_build_funcall_2 ("cob_inspect_all", y, x));
+}
+
+cb_tree
+cb_build_replacing_leading (cb_tree x, cb_tree y, cb_tree l)
+{
+  return cb_list_add (l, cb_build_funcall_2 ("cob_inspect_leading", y, x));
+}
+
+cb_tree
+cb_build_replacing_first (cb_tree x, cb_tree y, cb_tree l)
+{
+  return cb_list_add (l, cb_build_funcall_2 ("cob_inspect_first", y, x));
+}
+
+cb_tree
+cb_build_converting (cb_tree x, cb_tree y, cb_tree l)
+{
+  return cb_list_add (l, cb_build_funcall_2 ("cob_inspect_converting", x, y));
+}
+
+cb_tree
+cb_build_inspect_region_start (void)
+{
+  return cb_list (cb_build_funcall_0 ("cob_inspect_start"));
+}
+
+cb_tree
+cb_build_inspect_region (cb_tree l, cb_tree pos, cb_tree x)
+{
+  if (pos == CB_BEFORE)
+    return cb_list_add (l, cb_build_funcall_1 ("cob_inspect_before", x));
+  else
+    return cb_list_add (l, cb_build_funcall_1 ("cob_inspect_after", x));
 }
 
 
@@ -850,7 +1807,7 @@ move_error (cb_tree src, cb_tree dst, int value_flag, int flag, const char *msg)
 }
 
 int
-validate_move (cb_tree src, cb_tree dst, int value_flag)
+validate_move (cb_tree src, cb_tree dst, int is_value)
 {
   struct cb_field *f = cb_field (dst);
   cb_tree loc = src->source_line ? src : dst;
@@ -907,7 +1864,7 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 	      case CB_CATEGORY_ALPHANUMERIC:
 	      case CB_CATEGORY_ALPHANUMERIC_EDITED:
 		{
-		  if (value_flag)
+		  if (is_value)
 		    goto expect_alphanumeric;
 
 		  if (l->scale == 0)
@@ -933,14 +1890,14 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 		}
 	      case CB_CATEGORY_NUMERIC_EDITED:
 		{
-		  if (value_flag)
+		  if (is_value)
 		    goto expect_alphanumeric;
 
 		  /* TODO */
 		  break;
 		}
 	      default:
-		if (value_flag)
+		if (is_value)
 		  goto expect_alphanumeric;
 		goto invalid;
 	      }
@@ -948,7 +1905,7 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 	    /* sign check */
 	    if (l->sign != 0 && !f->pic->have_sign)
 	      {
-		if (value_flag)
+		if (is_value)
 		  {
 		    cb_error_x (loc, _("data item not signed"));
 		    return -1;
@@ -984,7 +1941,7 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 	      case CB_CATEGORY_NUMERIC:
 		goto expect_numeric;
 	      case CB_CATEGORY_NUMERIC_EDITED:
-		if (!value_flag)
+		if (!is_value)
 		  goto expect_numeric;
 
 		/* TODO: validate the value */
@@ -1055,26 +2012,26 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
   return 0;
 
  invalid:
-  if (value_flag)
+  if (is_value)
     cb_error_x (loc, _("invalid VALUE clause"));
   else
     cb_error_x (loc, _("invalid MOVE statement"));
   return -1;
 
  expect_numeric:
-  return move_error (src, dst, value_flag, cb_warn_strict_typing,
+  return move_error (src, dst, is_value, cb_warn_strict_typing,
 		     _("numeric value is expected"));
 
  expect_alphanumeric:
-  return move_error (src, dst, value_flag, cb_warn_strict_typing,
+  return move_error (src, dst, is_value, cb_warn_strict_typing,
 		     _("alphanumeric value is expected"));
 
  value_mismatch:
-  return move_error (src, dst, value_flag, cb_warn_constant,
+  return move_error (src, dst, is_value, cb_warn_constant,
 		     _("value does not fit the picture string"));
 
  size_overflow:
-  return move_error (src, dst, value_flag, cb_warn_constant,
+  return move_error (src, dst, is_value, cb_warn_constant,
 		     _("value size exceeds data size"));
 }
 
@@ -1390,469 +2347,147 @@ cb_build_move (cb_tree src, cb_tree dst)
   return cb_build_move_call (src, dst);
 }
 
-
-/*
- * ADD/SUBTRACT CORRESPONDING
- */
-
-cb_tree
-cb_build_add (cb_tree v, cb_tree n, cb_tree round)
-{
-  if (CB_INDEX_P (v))
-    return cb_build_move (cb_build_binary_op (v, '+', n), v);
-
-  if (round == cb_int0 && cb_fits_int (n))
-    return cb_build_funcall_2 ("cob_add_int", v, cb_build_cast_integer (n));
-  if (round == cb_int1)
-    return cb_build_funcall_2 ("cob_add_round", v, n);
-  else
-    return cb_build_funcall_2 ("cob_add", v, n);
-}
-
-cb_tree
-cb_build_sub (cb_tree v, cb_tree n, cb_tree round)
-{
-  if (CB_INDEX_P (v))
-    return cb_build_move (cb_build_binary_op (v, '-', n), v);
-
-  if (round == cb_int0 && cb_fits_int (n))
-    return cb_build_funcall_2 ("cob_sub_int", v, cb_build_cast_integer (n));
-  if (round == cb_int1)
-    return cb_build_funcall_2 ("cob_sub_round", v, n);
-  else
-    return cb_build_funcall_2 ("cob_sub", v, n);
-}
-
-static cb_tree
-build_corr_1 (cb_tree (*func)(), cb_tree x1, cb_tree x2, cb_tree opt, cb_tree l)
-{
-  struct cb_field *f1, *f2;
-  for (f1 = cb_field (x1)->children; f1; f1 = f1->sister)
-    if (!f1->redefines && !f1->flag_occurs)
-      for (f2 = cb_field (x2)->children; f2; f2 = f2->sister)
-	if (!f2->redefines && !f2->flag_occurs)
-	  if (strcmp (f1->name, f2->name) == 0)
-	    {
-	      cb_tree t1 = cb_build_field_reference (f1, x1);
-	      cb_tree t2 = cb_build_field_reference (f2, x2);
-	      if (f1->children && f2->children)
-		l = build_corr_1 (func, t1, t2, opt, l);
-	      else
-		l = cb_cons (func (t1, t2, opt), l);
-	    }
-  return l;
-}
-
-cb_tree
-cb_build_corr (cb_tree (*func)(), cb_tree x1, cb_tree x2, cb_tree opt)
-{
-  return build_corr_1 (func, x1, x2, opt, NULL);
-}
-
-
-/*
- * DIVIDE
- */
-
-cb_tree
-cb_build_divide (cb_tree dividend, cb_tree divisor,
-		 cb_tree quotient, cb_tree remainder)
-{
-  cb_tree l = NULL;
-  l = cb_list_add (l, cb_build_funcall_4 ("cob_div_quotient",
-					  dividend, divisor, CB_VALUE (quotient),
-					  CB_PURPOSE_INT (quotient) ? cb_int1 : cb_int0));
-  l = cb_list_add (l, cb_build_funcall_1 ("cob_div_remainder", CB_VALUE (remainder)));
-  return l;
-}
-
-
-/*
- * Condition
- */
-
-static cb_tree
-build_cond_88 (cb_tree x)
-{
-  struct cb_field *f = cb_field (x);
-  cb_tree l;
-  cb_tree c1 = NULL;
-
-  /* refer to parent's data storage */
-  x = cb_build_field_reference (f->parent, x);
-
-  /* build condition */
-  for (l = f->values; l; l = CB_CHAIN (l))
-    {
-      cb_tree t = CB_VALUE (l);
-      cb_tree c2;
-      if (CB_PAIR_P (t))
-	{
-	  /* VALUE THRU VALUE */
-	  c2 = cb_build_binary_op (cb_build_binary_op (CB_PAIR_X (t), '[', x),
-				   '&',
-				   cb_build_binary_op (x, '[', CB_PAIR_Y (t)));
-	}
-      else
-	{
-	  /* VALUE */
-	  c2 = cb_build_binary_op (x, '=', t);
-	}
-      if (c1 == NULL)
-	c1 = c2;
-      else
-	c1 = cb_build_binary_op (c1, '|', c2);
-    }
-  return c1;
-}
-
-cb_tree
-cb_build_cond (cb_tree x)
-{
-  switch (CB_TREE_TAG (x))
-    {
-    case CB_TAG_CONST:
-    case CB_TAG_FUNCALL:
-      return x;
-    case CB_TAG_REFERENCE:
-      {
-	struct cb_field *f = cb_field (x);
-
-	/* level 88 condition */
-	if (f->level == 88)
-	  {
-	    /* We need to build a 88 condition at every occurrence
-	       instead of once at the beginning because a 88 item
-	       may be subscripted (i.e., it is not a constant tree). */
-	    return cb_build_cond (build_cond_88 (x));
-	  }
-
-	ABORT ();
-      }
-    case CB_TAG_BINARY_OP:
-      {
-	struct cb_binary_op *p = CB_BINARY_OP (x);
-	switch (p->op)
-	  {
-	  case '@':
-	    return cb_build_cond (p->x);
-	  case '!':
-	    return cb_build_binary_op (cb_build_cond (p->x), '!', 0);
-	  case '&': case '|':
-	    return cb_build_binary_op (cb_build_cond (p->x), p->op,
-				       cb_build_cond (p->y));
-	  default:
-	    if (CB_INDEX_P (p->x) || CB_INDEX_P (p->y))
-	      {
-		x = cb_build_binary_op (p->x, '-', p->y);
-	      }
-	    else if (CB_BINARY_OP_P (p->x) || CB_BINARY_OP_P (p->y))
-	      {
-		/* decimal comparison */
-		cb_tree d1 = decimal_alloc ();
-		cb_tree d2 = decimal_alloc ();
-		decimal_expand (d1, p->x);
-		decimal_expand (d2, p->y);
-		dpush (cb_build_funcall_2 ("cob_decimal_cmp", d1, d2));
-		decimal_free ();
-		decimal_free ();
-		x = cb_list_reverse (decimal_stack);
-		decimal_stack = NULL;
-	      }
-	    else
-	      {
-		if (cb_flag_runtime_inlining)
-		  {
-		    if (CB_LITERAL_P (p->y))
-		      {
-#if 0
-			struct cb_literal *l = CB_LITERAL (p->y);
-			int size = cb_field_size (p->x);
-#endif
-
-			if (CB_TREE_CLASS (p->x) == CB_CLASS_NUMERIC
-			    && CB_TREE_CLASS (p->y) == CB_CLASS_NUMERIC
-			    && cb_fits_int (p->y))
-			  {
-			    x = cb_build_funcall_2 ("cob_cmp_int",
-						    p->x, cb_build_cast_integer (p->y));
-			    break;
-			  }
-#if 0
-			if (size > 0 && size >= l->size && !l->all)
-			  {
-			    x = cb_build_funcall_2 ("@memcmp", p->x, p->y);
-			    break;
-			  }
-#endif
-		      }
-		  }
-
-		/* field comparison */
-		x = cb_build_funcall_2 ("cob_cmp", p->x, p->y);
-	      }
-	  }
-	return cb_build_binary_op (x, p->op, p->y);
-      }
-    default:
-      ABORT ();
-    }
-}
-
-
-/*
- * ACCEPT
- */
-
-cb_tree
-cb_build_accept_from (cb_tree x)
-{
-  switch (CB_SYSTEM_NAME (cb_ref (x))->token)
-    {
-    case CB_DEVICE_CONSOLE:
-    case CB_DEVICE_SYSIN:
-      return cb_int0;
-    default:
-      cb_error_x (x, _("invalid input stream `%s'"), cb_name (x));
-      return cb_error_node;
-    }
-}
-
-cb_tree
-cb_build_accept_from_direct (cb_tree x)
-{
-  const char *name = CB_NAME (x);
-
-  if (CB_REFERENCE (x)->word->count == 0)
-    {
-      cb_tree sys = lookup_system_name (CB_NAME (x));
-      if (sys != cb_error_node)
-	{
-	  switch (CB_SYSTEM_NAME (sys)->token)
-	    {
-	    case CB_DEVICE_CONSOLE:
-	    case CB_DEVICE_SYSIN:
-	      cb_warning_x (x, _("`%s' undefined in SPECIAL-NAMES"), name);
-	      return cb_int0;
-	    default:
-	      break;
-	    }
-	}
-    }
-
-  cb_error_x (x, _("`%s' undefined in SPECIAL-NAMES"), name);
-  return cb_error_node;
-}
-
-
-/*
- * DISPLAY
- */
-
-cb_tree
-cb_build_display_statement (cb_tree values, cb_tree upon, cb_tree no_adv,
-			    cb_tree pos)
+void
+cb_emit_move (cb_tree src, cb_tree dsts)
 {
   cb_tree l;
+  for (l = dsts; l; l = CB_CHAIN (l))
+    cb_emit (cb_build_move (src, CB_VALUE (l)));
+}
 
-  /* screen mode */
-  if (current_program->flag_screen)
-    {
-      for (l = values; l; l = CB_CHAIN (l))
-	{
-	  cb_tree x = CB_VALUE (l);
-	  if (CB_FIELD_P (cb_ref (x))
-	      && CB_FIELD (cb_ref (x))->storage == CB_STORAGE_SCREEN)
-	    {
-	      cb_tree line = CB_PAIR_X (pos);
-	      cb_tree column = CB_PAIR_Y (pos);
-	      CB_VALUE (l) =
-		cb_build_funcall_3 ("cob_screen_display", x, line, column);
-	    }
-	  else
-	    {
-	      cb_error_x (x, "`%s' not defined in SCREEN SECTION",
-			  cb_name (x));
-	      return cb_error_node;
-	    }
-	}
-      return values;
-    }
+
+/*
+ * OPEN statement
+ */
 
-  /* DISPLAY x UPON ENVIRONMENT-NAME */
-  if (upon == cb_true)
-    {
-      if (cb_list_length (values) != 1)
-	{
-	  cb_error (_("wrong number of data items"));
-	  return cb_error_node;
-	}
-      return cb_build_funcall_1 ("cob_display_environment", CB_VALUE (values));
-    }
+void
+cb_emit_open (cb_tree file, cb_tree mode, cb_tree sharing)
+{
+  file = cb_ref (file);
+  current_statement->file = file;
 
-  /* DISPLAY x ... [UPON device-name] */
-  {
-    int is_stdout = (upon == cb_int1);
-    const char *display = is_stdout ? "cob_display" : "cob_display_error";
-    const char *newline = is_stdout ? "cob_newline" : "cob_newline_error";
-    for (l = values; l; l = CB_CHAIN (l))
-      CB_VALUE (l) = cb_build_funcall_1 (display, CB_VALUE (l));
-    if (no_adv == cb_int0)
-      values = cb_list_add (values, cb_build_funcall_0 (newline));
-    return values;
-  }
+  if (sharing == NULL)
+    sharing = CB_FILE (file)->sharing ? CB_FILE (file)->sharing : cb_int0;
+
+  if (sharing == cb_int0 /* READ ONLY */
+      && CB_INTEGER (mode)->val != COB_OPEN_INPUT)
+    sharing = cb_int1;
+
+  cb_emit (cb_build_funcall_3 ("cob_open", file, mode, sharing));
+}
+
+
+/*
+ * PERFORM statement
+ */
+
+void
+cb_emit_perform (cb_tree perform, cb_tree body)
+{
+  CB_PERFORM (perform)->body = body;
+  cb_emit (perform);
 }
 
 cb_tree
-cb_build_display_upon (cb_tree x)
+cb_build_perform_once (cb_tree body)
 {
-  if (x == cb_error_node)
+  cb_tree x = cb_build_perform (CB_PERFORM_ONCE);
+  CB_PERFORM (x)->body = body;
+  return x;
+}
+
+cb_tree
+cb_build_perform_times (cb_tree times)
+{
+  cb_tree x;
+
+  if (cb_check_integer_value (times) == cb_error_node)
     return cb_error_node;
 
-  switch (CB_SYSTEM_NAME (cb_ref (x))->token)
-    {
-    case CB_DEVICE_CONSOLE:
-    case CB_DEVICE_SYSOUT:
-      return cb_int1;
-    case CB_DEVICE_SYSERR:
-      return cb_int2;
-    default:
-      cb_error_x (x, _("invalid output stream"));
-      return cb_error_node;
-    }
+  x = cb_build_perform (CB_PERFORM_TIMES);
+  CB_PERFORM (x)->data = times;
+  return x;
 }
 
 cb_tree
-cb_build_display_upon_direct (cb_tree x)
+cb_build_perform_until (cb_tree condition, cb_tree varying)
 {
-  const char *name = CB_NAME (x);
+  cb_tree x = cb_build_perform (CB_PERFORM_UNTIL);
+  CB_PERFORM (x)->test = condition;
+  CB_PERFORM (x)->varying = varying;
+  return x;
+}
 
-  if (CB_REFERENCE (x)->word->count == 0)
-    {
-      cb_tree sys = lookup_system_name (CB_NAME (x));
-      if (sys != cb_error_node)
-	{
-	  switch (CB_SYSTEM_NAME (sys)->token)
-	    {
-	    case CB_DEVICE_CONSOLE:
-	    case CB_DEVICE_SYSOUT:
-	      cb_warning_x (x, _("`%s' undefined in SPECIAL-NAMES"), name);
-	      return cb_int1;
-	    case CB_DEVICE_SYSERR:
-	      cb_warning_x (x, _("`%s' undefined in SPECIAL-NAMES"), name);
-	      return cb_int2;
-	    default:
-	      break;
-	    }
-	}
-    }
-
-  cb_error_x (x, _("`%s' undefined in SPECIAL-NAMES"), name);
-  return cb_error_node;
+cb_tree
+cb_build_perform_exit (struct cb_label *label)
+{
+  cb_tree x = cb_build_perform (CB_PERFORM_EXIT);
+  CB_PERFORM (x)->data = CB_TREE (label);
+  return x;
 }
 
 
 /*
- * EVALUATE
+ * READ statement
  */
 
-static cb_tree
-evaluate_test (cb_tree s, cb_tree o)
+void
+cb_emit_read (cb_tree ref, cb_tree next, cb_tree into, cb_tree key)
 {
-  int flag;
-  cb_tree x, y;
-
-  /* ANY is always true */
-  if (o == cb_any)
-    return cb_true;
-
-  /* object TRUE or FALSE */
-  if (o == cb_true)
-    return s;
-  if (o == cb_false)
-    return cb_build_negation (s);
-
-  flag = CB_PURPOSE_INT (o);
-  x = CB_PAIR_X (CB_VALUE (o));
-  y = CB_PAIR_Y (CB_VALUE (o));
-
-  /* subject TRUE or FALSE */
-  if (s == cb_true)
-    return flag ? cb_build_negation (x) : x;
-  if (s == cb_false)
-    return flag ? x : cb_build_negation (x);
-
-  /* x THRU y */
-  if (y)
+  cb_tree file = cb_ref (ref);
+  cb_tree rec = cb_build_field_reference (CB_FILE (file)->record, ref);
+  if (next == cb_int1 || CB_FILE (file)->access_mode == COB_ACCESS_SEQUENTIAL)
     {
-      cb_tree t = cb_build_binary_op (cb_build_binary_op (x, '[', s),
-				      '&',
-				      cb_build_binary_op (s, '[', y));
-      return flag ? cb_build_negation (t) : t;
+      /* READ NEXT */
+      if (key)
+	cb_warning (_("KEY ignored with sequential READ"));
+      cb_emit (cb_build_funcall_2 ("cob_read", file, cb_int0));
     }
-
-  /* regular comparison */
-  if (flag)
-    return cb_build_binary_op (s, '~', x);
   else
-    return cb_build_binary_op (s, '=', x);
-}
-
-static cb_tree
-evaluate_internal (cb_tree subject_list, cb_tree case_list)
-{
-  cb_tree stmt;
-  cb_tree c1 = NULL;
-  cb_tree subjs, whens, objs;
-
-  if (case_list == NULL)
-    return NULL;
-
-  whens = CB_VALUE (case_list);
-  stmt = CB_VALUE (whens);
-  whens = CB_CHAIN (whens);
-
-  /* for each WHEN sequence */
-  for (; whens; whens = CB_CHAIN (whens))
     {
-      cb_tree c2 = NULL;
-      /* single WHEN test */
-      for (subjs = subject_list, objs = CB_VALUE (whens);
-	   subjs && objs;
-	   subjs = CB_CHAIN (subjs), objs = CB_CHAIN (objs))
-	{
-	  cb_tree c3 = evaluate_test (CB_VALUE (subjs), CB_VALUE (objs));
-	  if (c2 == NULL)
-	    c2 = c3;
-	  else
-	    c2 = cb_build_binary_op (c2, '&', c3);
-	}
-      if (subjs || objs)
-	cb_error (_("wrong number of WHEN parameters"));
-      /* connect multiple WHEN's */
-      if (c1 == NULL)
-	c1 = c2;
-      else
-	c1 = cb_build_binary_op (c1, '|', c2);
+      /* READ */
+      cb_emit (cb_build_funcall_2 ("cob_read", file,
+				   key ? key : CB_FILE (file)->key));
     }
-
-  if (c1 == NULL)
-    return stmt;
-  else
-    return cb_build_if (cb_build_cond (c1), stmt,
-			evaluate_internal (subject_list,
-					   CB_CHAIN (case_list)));
-}
-
-cb_tree
-cb_build_evaluate (cb_tree subject_list, cb_tree case_list)
-{
-  return evaluate_internal (subject_list, case_list);
+  if (into)
+    cb_emit (cb_build_move (rec, into));
+  current_statement->file = file;
 }
 
 
 /*
- * SEARCH ALL
+ * REWRITE statement
+ */
+
+void
+cb_emit_rewrite (cb_tree record, cb_tree from)
+{
+  cb_tree file = CB_TREE (CB_FIELD (cb_ref (record))->file);
+  current_statement->file = file;
+  if (from)
+    cb_emit (cb_build_move (from, record));
+  cb_emit (cb_build_funcall_2 ("cob_rewrite", file, record));
+}
+
+
+/*
+ * RETURN statement
+ */
+
+void
+cb_emit_return (cb_tree ref, cb_tree into)
+{
+  cb_tree file = cb_ref (ref);
+  cb_tree rec = cb_build_field_reference (CB_FILE (file)->record, ref);
+  cb_emit (cb_build_funcall_2 ("cob_read", file, cb_int0));
+  if (into)
+    cb_emit (cb_build_move (rec, into));
+  current_statement->file = file;
+}
+
+
+/*
+ * SEARCH statement
  */
 
 static void
@@ -1890,7 +2525,7 @@ search_set_keys (struct cb_field *f, cb_tree x)
     }
 }
 
-cb_tree
+static cb_tree
 cb_build_search_all (cb_tree table, cb_tree cond)
 {
   int i;
@@ -1920,92 +2555,275 @@ cb_build_search_all (cb_tree table, cb_tree cond)
   return cb_build_cond (c1);
 }
 
-
-/* validate program */
+void
+cb_emit_search (cb_tree table, cb_tree varying, cb_tree at_end, cb_tree whens)
+{
+  cb_emit (cb_build_search (0, table, varying, at_end, whens));
+}
 
 void
-cb_validate_program_environment (struct cb_program *prog)
+cb_emit_search_all (cb_tree table, cb_tree at_end, cb_tree when, cb_tree stmts)
 {
-  /* resolve the program collating sequence */
-  if (prog->collating_sequence)
+  cb_emit (cb_build_search (1, table, NULL, at_end,
+			    cb_build_if (cb_build_search_all (table, when),
+					 stmts, NULL)));
+}
+
+
+/*
+ * SET statement
+ */
+
+void
+cb_emit_set_to (cb_tree l, cb_tree x)
+{
+  for (; l; l = CB_CHAIN (l))
+    cb_emit (cb_build_move (x, CB_VALUE (l)));
+}
+
+void
+cb_emit_set_up_down (cb_tree l, cb_tree flag, cb_tree x)
+{
+  for (; l; l = CB_CHAIN (l))
+    if (flag == cb_int0)
+      cb_emit (cb_build_add (CB_VALUE (l), x, cb_int0));
+    else
+      cb_emit (cb_build_sub (CB_VALUE (l), x, cb_int0));
+}
+
+void
+cb_emit_set_on_off (cb_tree l, cb_tree flag)
+{
+  for (; l; l = CB_CHAIN (l))
     {
-      cb_tree x = cb_ref (prog->collating_sequence);
-      if (x == cb_error_node)
-	{
-	  prog->collating_sequence = NULL;
-	  return;
-	}
-
-      if (!CB_ALPHABET_NAME_P (x))
-	{
-	  cb_error_x (prog->collating_sequence, _("`%s' not alphabet name"),
-		      cb_name (prog->collating_sequence));
-	  prog->collating_sequence = NULL;
-	  return;
-	}
-
-      if (CB_ALPHABET_NAME (x)->type == CB_ALPHABET_CUSTOM)
-	{
-	  x = CB_VALUE (CB_ALPHABET_NAME (x)->custom_list);
-	  if (CB_PAIR_P (x) && CB_PAIR_X (x))
-	    cb_low = CB_PAIR_X (x);
-	  else if (CB_LIST_P (x))
-	    cb_low = CB_VALUE (x);
-	  else
-	    cb_low = cb_build_alphanumeric_literal (CB_LITERAL (x)->data, 1);
-	}
+      struct cb_system_name *s = CB_SYSTEM_NAME (cb_ref (CB_VALUE (l)));
+      cb_emit (cb_build_funcall_2 ("cob_set_switch", cb_int (s->token), flag));
     }
 }
 
 void
-cb_validate_program_data (struct cb_program *prog)
+cb_emit_set_true (cb_tree l)
 {
-  cb_tree l;
-
-  /* build undeclared assign name */
-  if (cb_assign_identifier == CB_ASSIGN_DATA)
-    for (l = current_program->file_list; l; l = CB_CHAIN (l))
-      {
-	cb_tree assign = CB_FILE (CB_VALUE (l))->assign;
-	if (CB_REFERENCE_P (assign) && CB_REFERENCE (assign)->word->count == 0)
-	  {
-	    cb_tree x = cb_build_implicit_field (assign, FILENAME_MAX);
-	    struct cb_field *p = current_program->working_storage;
-	    if (p)
-	      {
-		while (p->sister)
-		  p = p->sister;
-		p->sister = CB_FIELD (x);
-	      }
-	    else
-	      current_program->working_storage = CB_FIELD (x);
-	  }
-      }
-
-  /* resolve all references so far */
-  for (l = cb_list_reverse (prog->reference_list); l; l = CB_CHAIN (l))
-    cb_ref (CB_VALUE (l));
-}
-
-void
-cb_validate_program_body (struct cb_program *prog)
-{
-  /* resolve all labels */
-  cb_tree l;
-  for (l = cb_list_reverse (prog->label_list); l; l = CB_CHAIN (l))
+  for (; l; l = CB_CHAIN (l))
     {
       cb_tree x = CB_VALUE (l);
-      cb_tree v = cb_ref (x);
-      if (CB_LABEL_P (v))
-	{
-	  CB_LABEL (v)->need_begin = 1;
-	  if (CB_REFERENCE (x)->length)
-	    CB_LABEL (v)->need_return = 1;
-	}
-      else if (v != cb_error_node)
-	cb_error_x (x, _("`%s' not procedure name"), cb_name (x));
+      struct cb_field *f = cb_field (x);
+      cb_tree ref = cb_build_field_reference (f->parent, x);
+      cb_tree val = CB_VALUE (f->values);
+      if (CB_PAIR_P (val))
+	val = CB_PAIR_X (val);
+      cb_emit (cb_build_move (val, ref));
     }
+}
 
-  prog->file_list = cb_list_reverse (prog->file_list);
-  prog->exec_list = cb_list_reverse (prog->exec_list);
+
+/*
+ * SORT statement
+ */
+
+void
+cb_emit_sort_init (cb_tree file, cb_tree keys, cb_tree col)
+{
+  cb_tree l;
+  file = cb_ref (file);
+  cb_emit (cb_build_funcall_3 ("cob_sort_init", file,
+			       cb_int (cb_list_length (keys)), col));
+  for (l = keys; l; l = CB_CHAIN (l))
+    cb_emit (cb_build_funcall_3 ("cob_sort_init_key",
+				 file, CB_PURPOSE (l), CB_VALUE (l)));
+}
+
+void
+cb_emit_sort_using (cb_tree file, cb_tree l)
+{
+  cb_emit (cb_build_funcall_3 ("cob_open", cb_ref (file),
+			       cb_int (COB_OPEN_OUTPUT), cb_int0));
+  for (; l; l = CB_CHAIN (l))
+    cb_emit (cb_build_funcall_2 ("cob_sort_using", cb_ref (file),
+				 cb_ref (CB_VALUE (l))));
+  cb_emit (cb_build_funcall_2 ("cob_close", cb_ref (file),
+			       cb_int (COB_CLOSE_NORMAL)));
+}
+
+void
+cb_emit_sort_input (cb_tree file, cb_tree proc)
+{
+  cb_emit (cb_build_funcall_3 ("cob_open", cb_ref (file),
+			       cb_int (COB_OPEN_OUTPUT), cb_int0));
+  cb_emit (cb_build_perform_once (proc));
+  cb_emit (cb_build_funcall_2 ("cob_close", cb_ref (file),
+			       cb_int (COB_CLOSE_NORMAL)));
+}
+
+void
+cb_emit_sort_giving (cb_tree file, cb_tree l)
+{
+  for (; l; l = CB_CHAIN (l))
+    {
+      cb_emit (cb_build_funcall_3 ("cob_open", cb_ref (file),
+				   cb_int (COB_OPEN_INPUT), cb_int0));
+      cb_emit (cb_build_funcall_2 ("cob_sort_giving", cb_ref (file),
+				   cb_ref (CB_VALUE (l))));
+      cb_emit (cb_build_funcall_2 ("cob_close", cb_ref (file),
+				   cb_int (COB_CLOSE_NORMAL)));
+    }
+}
+
+void
+cb_emit_sort_output (cb_tree file, cb_tree proc)
+{
+  cb_emit (cb_build_funcall_3 ("cob_open", cb_ref (file),
+			       cb_int (COB_OPEN_INPUT), cb_int0));
+  cb_emit (cb_build_perform_once (proc));
+  cb_emit (cb_build_funcall_2 ("cob_close", cb_ref (file),
+			       cb_int (COB_CLOSE_NORMAL)));
+}
+
+void
+cb_emit_sort_finish (cb_tree file)
+{
+  cb_emit (cb_build_funcall_1 ("cob_sort_finish", cb_ref (file)));
+}
+
+
+/*
+ * START statement
+ */
+
+void
+cb_emit_start (cb_tree file, cb_tree op, cb_tree key)
+{
+  current_statement->file = cb_ref (file);
+  cb_emit (cb_build_funcall_3 ("cob_start", cb_ref (file), op,
+			       key ? key : CB_FILE (cb_ref (file))->key));
+}
+
+
+/*
+ * STOP statement
+ */
+
+void
+cb_emit_stop_run (void)
+{
+  cb_emit (cb_build_funcall_1 ("cob_stop_run",
+			       cb_build_cast_integer (cb_return_code)));
+}
+
+
+/*
+ * STRING statement
+ */
+
+void
+cb_emit_string (cb_tree items, cb_tree into, cb_tree pointer)
+{
+  cb_tree start = items;
+  cb_emit (cb_build_funcall_2 ("cob_string_init", into, pointer));
+  while (start)
+    {
+      cb_tree l, end;
+      cb_tree dlm;
+
+      /* find DELIMITED item */
+      for (end = start; end; end = CB_CHAIN (end))
+	if (CB_PAIR_P (CB_VALUE (end)))
+	  break;
+
+      /* cob_string_delimited */
+      dlm = end ? CB_PAIR_X (CB_VALUE (end)) : cb_int0;
+      cb_emit (cb_build_funcall_1 ("cob_string_delimited", dlm));
+
+      /* cob_string_append */
+      for (l = start; l != end; l = CB_CHAIN (l))
+	cb_emit (cb_build_funcall_1 ("cob_string_append", CB_VALUE (l)));
+
+      start = end ? CB_CHAIN (end) : NULL;
+    }
+  cb_emit (cb_build_funcall_0 ("cob_string_finish"));
+}
+
+
+/*
+ * UNSTRING statement
+ */
+
+void
+cb_emit_unstring (cb_tree name, cb_tree delimited, cb_tree into,
+		  cb_tree pointer, cb_tree tallying)
+{
+  cb_emit (cb_build_funcall_2 ("cob_unstring_init", name, pointer));
+  cb_emit_list (delimited);
+  cb_emit_list (into);
+  if (tallying)
+    cb_emit (cb_build_funcall_1 ("cob_unstring_tallying", tallying));
+  cb_emit (cb_build_funcall_0 ("cob_unstring_finish"));
+}
+
+cb_tree
+cb_build_unstring_delimited (cb_tree all, cb_tree value)
+{
+  return cb_build_funcall_2 ("cob_unstring_delimited", value, all);
+}
+
+cb_tree
+cb_build_unstring_into (cb_tree name, cb_tree delimiter, cb_tree count)
+{
+  if (delimiter == NULL)
+    delimiter = cb_int0;
+
+  if (count == NULL)
+    count = cb_int0;
+
+  return cb_build_funcall_3 ("cob_unstring_into", name, delimiter, count);
+}
+
+
+/*
+ * WRITE statement
+ */
+
+void
+cb_emit_write (cb_tree record, cb_tree from, cb_tree opt)
+{
+  struct cb_field *f = CB_FIELD (cb_ref (record));
+  cb_tree file = CB_TREE (f->file);
+  current_statement->file = file;
+
+  if (from)
+    cb_emit (cb_build_move (from, record));
+  cb_emit (cb_build_funcall_3 ("cob_write", file, record, opt));
+}
+
+cb_tree
+cb_build_write_advancing_lines (cb_tree pos, cb_tree lines)
+{
+  int opt = (pos == CB_BEFORE) ? COB_WRITE_BEFORE : COB_WRITE_AFTER;
+  cb_tree e = cb_build_binary_op (cb_int (opt | COB_WRITE_LINES), '+', lines);
+  return cb_build_cast_integer (e);
+}
+
+cb_tree
+cb_build_write_advancing_mnemonic (cb_tree pos, cb_tree mnemonic)
+{
+  switch (CB_SYSTEM_NAME (cb_ref (mnemonic))->token)
+    {
+    case CB_FEATURE_FORMFEED:
+      {
+	int opt = (pos == CB_BEFORE) ? COB_WRITE_BEFORE : COB_WRITE_AFTER;
+	return cb_int (opt | COB_WRITE_PAGE);
+      }
+    default:
+      {
+	cb_error_x (mnemonic, _("invalid mnemonic name"));
+	return cb_error_node;
+      }
+    }
+}
+
+cb_tree
+cb_build_write_advancing_page (cb_tree pos)
+{
+  int opt = (pos == CB_BEFORE) ? COB_WRITE_BEFORE : COB_WRITE_AFTER;
+  return cb_int (opt | COB_WRITE_PAGE);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2003 Keisuke Nishida
+ * Copyright (C) 2001-2004 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,6 +64,7 @@ enum cb_tag {
   CB_TAG_PERFORM,		/* PERFORM statement */
   CB_TAG_STATEMENT,		/* general statement */
   /* miscellaneous */
+  CB_TAG_PERFORM_VARYING,	/* PERFORM VARYING parameter */
   CB_TAG_PICTURE,
   CB_TAG_LIST,
 };
@@ -437,8 +438,8 @@ struct cb_field {
   /* screen parameters */
   cb_tree screen_line;
   cb_tree screen_column;
-  struct cb_field *screen_from;
-  struct cb_field *screen_to;
+  cb_tree screen_from;
+  cb_tree screen_to;
   long screen_flag;		/* flags used in SCREEN SECTION */
 };
 
@@ -545,10 +546,10 @@ extern cb_tree cb_ref (cb_tree x);
   '['	x <= y
   ']'	x >= y
   '~'	x != y
-  '@'	( x )
   '!'	not x
   '&'	x and y
   '|'	x or y
+  '@'	( x )
 */
 
 struct cb_binary_op {
@@ -565,7 +566,7 @@ struct cb_binary_op {
 #define cb_build_negation(x)	cb_build_binary_op (x, '!', 0)
 
 extern cb_tree cb_build_binary_op (cb_tree x, char op, cb_tree y);
-extern cb_tree cb_build_connective_op (cb_tree list, char op);
+extern cb_tree cb_build_binary_list (cb_tree l, char op);
 
 
 /*
@@ -750,33 +751,37 @@ extern cb_tree cb_build_if (cb_tree test, cb_tree stmt1, cb_tree stmt2);
  * PERFORM
  */
 
-#define CB_PERFORM_EXIT		0
-#define CB_PERFORM_ONCE		1
-#define CB_PERFORM_TIMES	2
-#define CB_PERFORM_UNTIL	3
+enum cb_perform_type {
+  CB_PERFORM_EXIT,
+  CB_PERFORM_ONCE,
+  CB_PERFORM_TIMES,
+  CB_PERFORM_UNTIL
+};
+
+struct cb_perform_varying {
+  struct cb_tree_common common;
+  cb_tree name;
+  cb_tree from;
+  cb_tree step;
+  cb_tree until;
+};
 
 struct cb_perform {
   struct cb_tree_common common;
-  int type;
+  enum cb_perform_type type;
   cb_tree test;
   cb_tree body;
   cb_tree data;
-  struct cb_perform_varying {
-    cb_tree name;
-    cb_tree from;
-    cb_tree step;
-    cb_tree until;
-    struct cb_perform_varying *next;
-  } *varying;
+  cb_tree varying;
 };
+
+#define CB_PERFORM_VARYING(x)	(CB_TREE_CAST (CB_TAG_PERFORM_VARYING, struct cb_perform_varying, x))
 
 #define CB_PERFORM(x)		(CB_TREE_CAST (CB_TAG_PERFORM, struct cb_perform, x))
 #define CB_PERFORM_P(x)		(CB_TREE_TAG (x) == CB_TAG_PERFORM)
 
 extern cb_tree cb_build_perform (int type);
-extern cb_tree cb_build_perform_once (cb_tree body);
-extern cb_tree cb_build_perform_exit (struct cb_label *label);
-extern void cb_add_perform_varying (struct cb_perform *perf, cb_tree name, cb_tree from, cb_tree step, cb_tree until);
+extern cb_tree cb_build_perform_varying (cb_tree name, cb_tree from, cb_tree step, cb_tree until);
 
 /*
  * Statement
@@ -827,7 +832,6 @@ extern int cb_list_length (cb_tree l);
 
 #define cb_list(x)		cb_build_list (0, x, 0)
 #define cb_cons(x,l)		cb_build_list (0, x, l)
-#define cb_build_int_list(n,x)	cb_build_list (cb_int (n), x, 0)
 
 /* Pair */
 
@@ -891,6 +895,7 @@ extern cb_tree lookup_system_name (const char *name);
 extern int lookup_reserved_word (const char *name);
 extern void cb_list_reserved (void);
 extern void cb_init_reserved (void);
+extern void cb_list_map (cb_tree (*func) (cb_tree x), cb_tree l);
 
 /* error.c */
 extern void cb_warning_x (cb_tree x, const char *fmt, ...);
@@ -912,7 +917,11 @@ extern void cb_validate_field (struct cb_field *p);
 extern void cb_validate_88_item (struct cb_field *p);
 
 /* typeck.c */
-extern int validate_move (cb_tree src, cb_tree dst, int value_flag);
+extern cb_tree cb_check_group_name (cb_tree x);
+extern cb_tree cb_check_numeric_name (cb_tree x);
+extern cb_tree cb_check_numeric_edited_name (cb_tree x);
+extern cb_tree cb_check_numeric_value (cb_tree x);
+extern cb_tree cb_check_integer_value (cb_tree x);
 
 extern int cb_get_int (cb_tree x);
 extern const char *cb_build_program_id (cb_tree name, cb_tree alt_name);
@@ -922,30 +931,117 @@ extern cb_tree cb_build_identifier (cb_tree x);
 extern cb_tree cb_build_length (cb_tree x);
 extern cb_tree cb_build_using_list (cb_tree list);
 
+extern void cb_validate_program_environment (struct cb_program *prog);
+extern void cb_validate_program_data (struct cb_program *prog);
+extern void cb_validate_program_body (struct cb_program *prog);
+
 extern void cb_expr_init (void);
 extern void cb_expr_shift (int token, cb_tree value);
 extern void cb_expr_shift_class (const char *name);
 extern void cb_expr_shift_sign (char op);
 extern cb_tree cb_expr_finish (void);
+extern cb_tree cb_build_cond (cb_tree x);
 
-extern cb_tree cb_build_arithmetic (cb_tree vars, char op, cb_tree val);
+extern void cb_emit_arithmetic (cb_tree vars, char op, cb_tree val);
 extern cb_tree cb_build_add (cb_tree v, cb_tree n, cb_tree round);
 extern cb_tree cb_build_sub (cb_tree v, cb_tree n, cb_tree round);
-extern cb_tree cb_build_move (cb_tree src, cb_tree dst);
-extern cb_tree cb_build_corr (cb_tree (*func)(), cb_tree x1, cb_tree x2, cb_tree opt);
-extern cb_tree cb_build_divide (cb_tree dividend, cb_tree divisor, cb_tree quotient, cb_tree remainder);
-extern cb_tree cb_build_cond (cb_tree x);
-extern cb_tree cb_build_accept_from (cb_tree x);
-extern cb_tree cb_build_accept_from_direct (cb_tree x);
-extern cb_tree cb_build_display_statement (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos);
+extern void cb_emit_corresponding (cb_tree (*func) (), cb_tree x1, cb_tree x2, cb_tree opt);
+
+extern void cb_emit_accept (cb_tree var, cb_tree pos);
+extern void cb_emit_accept_date (cb_tree var);
+extern void cb_emit_accept_day (cb_tree var);
+extern void cb_emit_accept_day_of_week (cb_tree var);
+extern void cb_emit_accept_time (cb_tree var);
+extern void cb_emit_accept_command_line (cb_tree var);
+extern void cb_emit_accept_environment (cb_tree var);
+extern void cb_emit_accept_mnemonic (cb_tree var, cb_tree mnemonic);
+extern void cb_emit_accept_name (cb_tree var, cb_tree name);
+
+extern void cb_emit_call (cb_tree prog, cb_tree using, cb_tree returning, cb_tree on_exception, cb_tree not_on_exception);
+
+extern void cb_emit_cancel (cb_tree prog);
+
+extern void cb_emit_close (cb_tree file, cb_tree opt);
+
+extern void cb_emit_delete (cb_tree file);
+
+extern void cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos);
 extern cb_tree cb_build_display_upon (cb_tree x);
 extern cb_tree cb_build_display_upon_direct (cb_tree x);
-extern cb_tree cb_build_evaluate (cb_tree subject_list, cb_tree case_list);
-extern cb_tree cb_build_search_all (cb_tree table, cb_tree when);
 
-extern void cb_validate_program_environment (struct cb_program *prog);
-extern void cb_validate_program_data (struct cb_program *prog);
-extern void cb_validate_program_body (struct cb_program *prog);
+extern void cb_emit_divide (cb_tree dividend, cb_tree divisor, cb_tree quotient, cb_tree remainder);
+
+extern void cb_emit_evaluate (cb_tree subject_list, cb_tree case_list);
+
+extern void cb_emit_goto (cb_tree target, cb_tree depending);
+extern void cb_emit_exit (void);
+
+extern void cb_emit_if (cb_tree cond, cb_tree stmt1, cb_tree stmt2);
+
+extern void cb_emit_initialize (cb_tree vars, cb_tree value, cb_tree replacing, cb_tree def);
+
+extern void cb_emit_inspect (cb_tree var, cb_tree body, cb_tree replacing);
+extern void cb_init_tarrying (void);
+extern cb_tree cb_build_tarrying_data (cb_tree x);
+extern cb_tree cb_build_tarrying_characters (cb_tree l);
+extern cb_tree cb_build_tarrying_all (void);
+extern cb_tree cb_build_tarrying_leading (void);
+extern cb_tree cb_build_tarrying_value (cb_tree x, cb_tree l);
+extern cb_tree cb_build_replacing_characters (cb_tree x, cb_tree l);
+extern cb_tree cb_build_replacing_all (cb_tree x, cb_tree y, cb_tree l);
+extern cb_tree cb_build_replacing_leading (cb_tree x, cb_tree y, cb_tree l);
+extern cb_tree cb_build_replacing_first (cb_tree x, cb_tree y, cb_tree l);
+extern cb_tree cb_build_converting (cb_tree x, cb_tree y, cb_tree l);
+extern cb_tree cb_build_inspect_region_start (void);
+extern cb_tree cb_build_inspect_region (cb_tree l, cb_tree pos, cb_tree x);
+
+extern int validate_move (cb_tree src, cb_tree dst, int is_value);
+extern cb_tree cb_build_move (cb_tree src, cb_tree dst);
+extern void cb_emit_move (cb_tree src, cb_tree dsts);
+
+extern void cb_emit_open (cb_tree file, cb_tree mode, cb_tree sharing);
+
+extern void cb_emit_perform (cb_tree perform, cb_tree body);
+extern cb_tree cb_build_perform_once (cb_tree body);
+extern cb_tree cb_build_perform_times (cb_tree count);
+extern cb_tree cb_build_perform_until (cb_tree condition, cb_tree varying);
+extern cb_tree cb_build_perform_exit (struct cb_label *label);
+
+extern void cb_emit_read (cb_tree ref, cb_tree next, cb_tree into, cb_tree key);
+
+extern void cb_emit_rewrite (cb_tree record, cb_tree from);
+
+extern void cb_emit_return (cb_tree ref, cb_tree into);
+
+extern void cb_emit_search (cb_tree table, cb_tree varying, cb_tree at_end, cb_tree whens);
+extern void cb_emit_search_all (cb_tree table, cb_tree at_end, cb_tree when, cb_tree stmts);
+
+extern void cb_emit_set_to (cb_tree l, cb_tree x);
+extern void cb_emit_set_up_down (cb_tree l, cb_tree flag, cb_tree x);
+extern void cb_emit_set_on_off (cb_tree l, cb_tree flag);
+extern void cb_emit_set_true (cb_tree l);
+
+extern void cb_emit_sort_init (cb_tree file, cb_tree keys, cb_tree col);
+extern void cb_emit_sort_using (cb_tree file, cb_tree l);
+extern void cb_emit_sort_input (cb_tree file, cb_tree proc);
+extern void cb_emit_sort_giving (cb_tree file, cb_tree l);
+extern void cb_emit_sort_output (cb_tree file, cb_tree proc);
+extern void cb_emit_sort_finish (cb_tree file);
+
+extern void cb_emit_start (cb_tree file, cb_tree op, cb_tree key);
+
+extern void cb_emit_stop_run (void);
+
+extern void cb_emit_string (cb_tree items, cb_tree into, cb_tree pointer);
+
+extern void cb_emit_unstring (cb_tree name, cb_tree delimited, cb_tree into, cb_tree pointer, cb_tree tallying);
+extern cb_tree cb_build_unstring_delimited (cb_tree all, cb_tree value);
+extern cb_tree cb_build_unstring_into (cb_tree name, cb_tree delimiter, cb_tree count);
+
+extern void cb_emit_write (cb_tree record, cb_tree from, cb_tree opt);
+extern cb_tree cb_build_write_advancing_lines (cb_tree pos, cb_tree lines);
+extern cb_tree cb_build_write_advancing_mnemonic (cb_tree pos, cb_tree mnemonic);
+extern cb_tree cb_build_write_advancing_page (cb_tree pos);
 
 /* bytegen.c */
 extern void bytegen (struct cb_program *prog);

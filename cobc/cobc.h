@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2003 Keisuke Nishida
+ * Copyright (C) 2001-2004 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -99,6 +99,7 @@ extern struct cb_name_list *cb_include_list;
 extern struct cb_name_list *cb_extension_list;
 
 extern struct cb_program *current_program;
+extern struct cb_statement *current_statement;
 extern struct cb_label *current_section, *current_paragraph;
 
 extern struct cb_name_list *cb_name_list_add (struct cb_name_list *list, const char *name);

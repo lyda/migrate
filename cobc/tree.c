@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2003 Keisuke Nishida
+ * Copyright (C) 2001-2004 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1180,41 +1180,38 @@ cb_ref (cb_tree x)
  */
 
 cb_tree
-cb_build_binary_op (cb_tree left, char op, cb_tree right)
+cb_build_binary_op (cb_tree x, char op, cb_tree y)
 {
   struct cb_binary_op *p;
   enum cb_category category;
 
-  if (left == cb_error_node || right == cb_error_node)
-    return cb_error_node;
-
-  /* validate operators */
   switch (op)
     {
     case '+': case '-': case '*': case '/': case '^':
-      /* numeric expression */
-      if (CB_TREE_CLASS (left) != CB_CLASS_NUMERIC
-	  || CB_TREE_CLASS (right) != CB_CLASS_NUMERIC)
-	ABORT ();
+      /* arithmetic operators */
+      x = cb_check_numeric_value (x);
+      y = cb_check_numeric_value (y);
+      if (x == cb_error_node || y == cb_error_node)
+	return cb_error_node;
       category = CB_CATEGORY_NUMERIC;
       break;
 
     case '=': case '~': case '<': case '>': case '[': case ']':
-      /* comparison conditional */
+      /* relational operators */
       category = CB_CATEGORY_BOOLEAN;
       break;
 
     case '!': case '&': case '|':
-      /* compound conditional */
-      if (CB_TREE_CLASS (left) != CB_CLASS_BOOLEAN
-	  || (right && CB_TREE_CLASS (right) != CB_CLASS_BOOLEAN))
+      /* logical operators */
+      if (CB_TREE_CLASS (x) != CB_CLASS_BOOLEAN
+	  || (y && CB_TREE_CLASS (y) != CB_CLASS_BOOLEAN))
 	ABORT ();
       category = CB_CATEGORY_BOOLEAN;
       break;
 
     case '@':
       /* parentheses */
-      category = CB_TREE_CATEGORY (left);
+      category = CB_TREE_CATEGORY (x);
       break;
 
     default:
@@ -1223,17 +1220,17 @@ cb_build_binary_op (cb_tree left, char op, cb_tree right)
 
   p = make_tree (CB_TAG_BINARY_OP, category, sizeof (struct cb_binary_op));
   p->op = op;
-  p->x = left;
-  p->y = right;
+  p->x = x;
+  p->y = y;
   return CB_TREE (p);
 }
 
 cb_tree
-cb_build_connective_op (cb_tree list, char op)
+cb_build_binary_list (cb_tree l, char op)
 {
-  cb_tree e = CB_VALUE (list);
-  for (list = CB_CHAIN (list); list; list = CB_CHAIN (list))
-    e = cb_build_binary_op (e, op, CB_VALUE (list));
+  cb_tree e = CB_VALUE (l);
+  for (l = CB_CHAIN (l); l; l = CB_CHAIN (l))
+    e = cb_build_binary_op (e, op, CB_VALUE (l));
   return e;
 }
 
@@ -1411,41 +1408,15 @@ cb_build_perform (int type)
 }
 
 cb_tree
-cb_build_perform_once (cb_tree body)
-{
-  cb_tree x = cb_build_perform (CB_PERFORM_ONCE);
-  CB_PERFORM (x)->body = body;
-  return x;
-}
-
-cb_tree
-cb_build_perform_exit (struct cb_label *label)
-{
-  cb_tree x = cb_build_perform (CB_PERFORM_EXIT);
-  CB_PERFORM (x)->data = CB_TREE (label);
-  return x;
-}
-
-void
-cb_add_perform_varying (struct cb_perform *perf, cb_tree name,
-			cb_tree from, cb_tree step, cb_tree until)
+cb_build_perform_varying (cb_tree name, cb_tree from, cb_tree by, cb_tree until)
 {
   struct cb_perform_varying *p =
-    malloc (sizeof (struct cb_perform_varying));
+    make_tree (CB_TAG_PERFORM_VARYING, CB_CATEGORY_UNKNOWN, sizeof (struct cb_perform_varying));
   p->name = name;
   p->from = from;
-  p->step = step;
+  p->step = name ? cb_build_add (name, by, cb_int0) : NULL;
   p->until = until;
-  p->next = NULL;
-  if (perf->varying == NULL)
-    perf->varying = p;
-  else
-    {
-      struct cb_perform_varying *l = perf->varying;
-      while (l->next)
-	l = l->next;
-      l->next = p;
-    }
+  return CB_TREE (p);
 }
 
 
@@ -1459,8 +1430,6 @@ cb_build_statement (const char *name)
   struct cb_statement *p =
     make_tree (CB_TAG_STATEMENT, CB_CATEGORY_UNKNOWN, sizeof (struct cb_statement));
   p->name = name;
-  CB_TREE (p)->source_file = cb_source_file;
-  CB_TREE (p)->source_line = cb_source_line;
   return p;
 }
 
@@ -1523,6 +1492,13 @@ cb_list_length (cb_tree l)
   for (; l; l = CB_CHAIN (l))
     n++;
   return n;
+}
+
+void
+cb_list_map (cb_tree (*func) (cb_tree x), cb_tree l)
+{
+  for (; l; l = CB_CHAIN (l))
+    CB_VALUE (l) = func (CB_VALUE (l));
 }
 
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2003 Keisuke Nishida
+ * Copyright (C) 2001-2004 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,6 +78,7 @@ struct cb_name_list *cb_include_list = NULL;
 struct cb_name_list *cb_extension_list = NULL;
 
 struct cb_program *current_program = NULL;
+struct cb_statement *current_statement = NULL;
 struct cb_label *current_section = NULL, *current_paragraph = NULL;
 
 
@@ -221,7 +222,7 @@ static void
 print_version (void)
 {
   puts ("cobc (" PACKAGE_NAME ") " PACKAGE_VERSION);
-  puts ("Copyright (C) 2001-2003 Keisuke Nishida");
+  puts ("Copyright (C) 2001-2004 Keisuke Nishida");
 }
 
 static void

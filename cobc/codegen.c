@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2003 Keisuke Nishida
+ * Copyright (C) 2002-2004 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1447,23 +1447,30 @@ output_perform_once (struct cb_perform *p)
 }
 
 static void
-output_perform_until (struct cb_perform *p, struct cb_perform_varying *v)
+output_perform_until (struct cb_perform *p, cb_tree l)
 {
-  if (!v)
+  struct cb_perform_varying *v;
+  cb_tree next;
+
+  if (l == NULL)
     {
       /* perform body at the end */
       output_perform_once (p);
       return;
     }
 
+  v = CB_PERFORM_VARYING (CB_VALUE (l));
+  next = CB_CHAIN (l);
+
   output_line ("while (1)");
   output_indent ("  {");
 
-  if (v->next && v->next->name)
-    output_move (v->next->from, v->next->name);
+  if (next && CB_PERFORM_VARYING (CB_VALUE (next))->name)
+    output_move (CB_PERFORM_VARYING (CB_VALUE (next))->from,
+		 CB_PERFORM_VARYING (CB_VALUE (next))->name);
 
   if (p->test == CB_AFTER)
-    output_perform_until (p, v->next);
+    output_perform_until (p, next);
 
   output_prefix ();
   output ("if (");
@@ -1472,7 +1479,7 @@ output_perform_until (struct cb_perform *p, struct cb_perform_varying *v)
   output_line ("  break;");
 
   if (p->test == CB_BEFORE)
-    output_perform_until (p, v->next);
+    output_perform_until (p, next);
 
   if (v->step)
     output_stmt (v->step);
@@ -1505,10 +1512,14 @@ output_perform (struct cb_perform *p)
       output_indent ("  }");
       break;
     case CB_PERFORM_UNTIL:
-      if (p->varying->name)
-	output_move (p->varying->from, p->varying->name);
-      output_perform_until (p, p->varying);
-      break;
+      {
+	struct cb_perform_varying *v =
+	  CB_PERFORM_VARYING (CB_VALUE (p->varying));
+	if (v->name)
+	  output_move (v->from, v->name);
+	output_perform_until (p, p->varying);
+	break;
+      }
     }
 }
 
@@ -1533,7 +1544,13 @@ output_stmt (cb_tree x)
 	static int last_line = 0;
 	struct cb_statement *p = CB_STATEMENT (x);
 
-	output_line ("/* %s */", p->name);
+	/* output source location as a comment */
+	if (p->name)
+	  {
+	    output_line ("/* %s:%d: %s */",
+			 x->source_file, x->source_line, p->name);
+	  }
+	/* output source location as a code */
 	if (x->source_file && last_line != x->source_line)
 	  {
 	    if (cb_flag_line_directive)
@@ -1784,11 +1801,11 @@ output_screen_definition (struct cb_field *p)
   else
     output ("0, ");
   if (p->screen_from)
-    output ("&f_%s, ", p->screen_from->cname);
+    output ("&f_%s, ", cb_field (p->screen_from)->cname);
   else
     output ("0, ");
   if (p->screen_to)
-    output ("&f_%s, ", p->screen_to->cname);
+    output ("&f_%s, ", cb_field (p->screen_to)->cname);
   else
     output ("0, ");
   output_integer (p->screen_line);
