@@ -34,7 +34,6 @@
 #define CDIV_COMMENT 	5
 #define CDIV_FD 	6
 #define CDIV_REDEF 	7
-#define CDIV_SUBSCRIPTS 8
 #define CDIV_COPY 	9
 #define CDIV_COPYFILE 	10
 #define CDIV_EXCEPTION 	11

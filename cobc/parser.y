@@ -1276,6 +1276,63 @@ unstring_statement:
     opt_on_overflow
     opt_end_unstring
     ;
+unstring_delimited:
+    DELIMITED opt_by unstring_delimited_vars { $$=$3; }
+    | /* nothing */                          { $$=NULL; }
+    ;
+unstring_delimited_vars:
+    opt_all gname       { $$=alloc_unstring_delimited($1,$2); }
+    | unstring_delimited_vars OR opt_all gname {
+            struct unstring_delimited *ud;
+            ud=alloc_unstring_delimited($3,$4);
+            ud->next = $1;
+            $$=ud;
+        }
+    ;
+unstring_destinations:
+    unstring_dest_var       { $$=$1; }
+    | unstring_destinations opt_sep
+        unstring_dest_var   {
+            $3->next = $1;
+            $$ = $3;
+        }
+    ;
+unstring_dest_var:
+    name opt_unstring_delim opt_unstring_count {
+            $$ = alloc_unstring_dest( $1, $2, $3 );
+        }
+    ;
+opt_unstring_delim:
+    /* nothing */           { $$=NULL; }
+    | DELIMITER opt_in name { $$=$3; }
+    ;
+opt_unstring_count:
+    /* nothing */           { $$=NULL; }
+    | COUNT opt_in name   { $$=$3; }
+    ;
+unstring_tallying:
+    /* nothing */           { $$=NULL; }
+    | TALLYING opt_in name  { $$=$3; }
+    ;
+opt_on_overflow:
+    { curr_division = CDIV_EXCEPTION; }
+    on_overflow
+    on_not_overflow
+    { curr_division = CDIV_PROC; }
+    ;
+on_overflow:
+    ONTOK OVERFLOWTK          { $<dval>$ = gen_at_end(-1); }
+        statement_list            { gen_dstlabel($<dval>3); }
+    | /* nothing */
+    ;
+on_not_overflow:
+    NOT ONTOK OVERFLOWTK { $<dval>$ = gen_at_end(0); }
+        statement_list            { gen_dstlabel($<dval>4); }
+    | /* nothing */
+    ;
+opt_end_unstring:
+    | END_UNSTRING
+    ;
 
 
 /* PERFORM statement */
@@ -1650,6 +1707,9 @@ string_statement:
   opt_on_overflow
   opt_end_stringcmd
   ;
+opt_end_stringcmd:
+    | END_STRINGCMD
+    ;
 
 
 /* SORT statement */
@@ -2737,74 +2797,14 @@ error_sentence:
 opt_in_size:
         | IN SIZE
         ;
-opt_end_stringcmd:
-    | END_STRINGCMD
-    ;
-opt_end_unstring:
-    | END_UNSTRING
-    ;
-unstring_delimited:
-    DELIMITED opt_by unstring_delimited_vars { $$=$3; }
-    | /* nothing */                          { $$=NULL; }
-    ;
-unstring_delimited_vars:
-    opt_all gname       { $$=alloc_unstring_delimited($1,$2); }
-    | unstring_delimited_vars OR opt_all gname {
-            struct unstring_delimited *ud;
-            ud=alloc_unstring_delimited($3,$4);
-            ud->next = $1;
-            $$=ud;
-        }
-    ;
-unstring_destinations:
-    unstring_dest_var       { $$=$1; }
-    | unstring_destinations opt_sep
-        unstring_dest_var   {
-            $3->next = $1;
-            $$ = $3;
-        }
-    ;
-unstring_dest_var:
-    name opt_unstring_delim opt_unstring_count {
-            $$ = alloc_unstring_dest( $1, $2, $3 );
-        }
-    ;
-opt_unstring_delim:
-    /* nothing */           { $$=NULL; }
-    | DELIMITER opt_in name { $$=$3; }
-    ;
-opt_unstring_count:
-    /* nothing */           { $$=NULL; }
-    | COUNT opt_in name   { $$=$3; }
-    ;
-unstring_tallying:
-    /* nothing */           { $$=NULL; }
-    | TALLYING opt_in name  { $$=$3; }
-    ;
 opt_all:
     /* nothing */           { $$=0; }
     | ALL                   { $$=1; }
-    ;
-opt_on_overflow:
-    { curr_division = CDIV_EXCEPTION; }
-    on_overflow
-    on_not_overflow
-    { curr_division = CDIV_PROC; }
     ;
 on_not_exception:
     NOT ONTOK EXCEPTION { $<ival>$ = begin_on_except(); } 
         statement_list            { gen_jmplabel($<dval>-1); $$=$<ival>4; }
     | /* nothing */ { $$ = 0; }
-    ;
-on_overflow:
-    ONTOK OVERFLOWTK          { $<dval>$ = gen_at_end(-1); }
-        statement_list            { gen_dstlabel($<dval>3); }
-    | /* nothing */
-    ;
-on_not_overflow:
-    NOT ONTOK OVERFLOWTK { $<dval>$ = gen_at_end(0); }
-        statement_list            { gen_dstlabel($<dval>4); }
-    | /* nothing */
     ;
 opt_invalid_key:
     { curr_division = CDIV_EXCEPTION; }
@@ -3096,11 +3096,8 @@ opt_gname:
     ;
 opt_to: /* nothing */
     | TO { }
-gname:  name    {       
-                  /*if (!is_variable($1)) {
-                                yyerror("The symbol \"%s\" is not an allowed argument here", $1->name);
-                     }*/
-                        $$ = $1; }
+    ;
+gname:  name    { $$ = $1; }
     | gliteral      { $$ = (struct sym *)$1;}
     | FUNCTION LABELSTR '(' {
                                 $2->type = 'f'; /* function type */
@@ -3181,14 +3178,10 @@ filename:
     | STRING {$$=$1; }
     ;
 cond_name:
-    VARCOND '('
-    {
-      curr_division = CDIV_SUBSCRIPTS;
-    }
-    subscript_list  ')'
+    VARCOND '(' subscript_list  ')'
     {
       curr_division = CDIV_PROC;
-      $$ = (struct sym *)make_subref( $1, $4 );
+      $$ = (struct sym *)make_subref( $1, $3 );
       /*check_subscripts($$);*/
     }
     | VARCOND  { $<sval>$=$1; }
@@ -3209,10 +3202,9 @@ variable:
 	need_subscripts=0;
       }
     }
-    | qualified_var LPAR { curr_division = CDIV_SUBSCRIPTS; }
-      subscript_list ')' {
+    | qualified_var LPAR subscript_list ')' {
       curr_division = CDIV_PROC;
-      $$ = (struct sym *)make_subref( $1, $4 );
+      $$ = (struct sym *)make_subref( $1, $3 );
       check_subscripts($$);
       }
     ;

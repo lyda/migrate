@@ -46,13 +46,6 @@ extern int picix,piccnt,sign,v_flag;
 #define MAX_CPYNAME_LEN         65
 #define MAXLINEBUF              256
 
-#ifdef COB_DEBUG
-static void trace_print (char *fmt, ...);
-#define TRACE_PRINT(args)	trace_print args
-#else
-#define TRACE_PRINT(args)
-#endif
-
 extern FILE *o_lst;
 static int lex_fgets (char *buf, int maxsize);
 
@@ -80,7 +73,7 @@ any [!-~]
 word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
 
 %x IDENT_ST ENVIR_ST DATA_ST COMMENT_ST FD_ST REDEF_ST
-%x SUBSCRIPTS_ST EXCEPTION_ST PIC_ST
+%x EXCEPTION_ST PIC_ST
 
 %%
 
@@ -90,48 +83,34 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
 
         switch (curr_division) {
         case CDIV_IDENT:
-                TRACE_PRINT (("-> IDENT_ST\n"));
                 BEGIN IDENT_ST;
                 break;
         case CDIV_ENVIR:
-                TRACE_PRINT (("-> ENVIR_ST\n"));
                 BEGIN ENVIR_ST;
                 break;
         case CDIV_DATA:
-                TRACE_PRINT (("-> DATA_ST\n"));
                 BEGIN DATA_ST;
                 break;
         case CDIV_PROC:
                 //stabs_started=1;
-                TRACE_PRINT (("-> INITIAL\n"));
                 BEGIN INITIAL;
                 break;
         case CDIV_COMMENT:
-                TRACE_PRINT (("-> COMMENT_ST\n"));
                 BEGIN COMMENT_ST;
                 break;
         case CDIV_FD:
-                TRACE_PRINT (("-> FD_ST\n"));
                 BEGIN FD_ST;
                 break;
         case CDIV_REDEF:
-                TRACE_PRINT (("-> REDEF_ST\n"));
                 BEGIN REDEF_ST;
                 break;
-        case CDIV_SUBSCRIPTS:
-                TRACE_PRINT (("-> SUBSCRIPTS_ST\n"));
-                BEGIN SUBSCRIPTS_ST;
-                break;
         case CDIV_EXCEPTION:
-                TRACE_PRINT (("-> EXCEPTION_ST\n"));
                 BEGIN EXCEPTION_ST;
                 break;
         case CDIV_PIC:
-                TRACE_PRINT (("-> PIC_ST\n"));
                 BEGIN PIC_ST;
                 break;
         case CINITIAL:
-                TRACE_PRINT (("-> INITIAL\n"));
                 BEGIN INITIAL;
                 break;
         }
@@ -147,20 +126,12 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   strrchr (cob_orig_filename, '"')[0] = '\0';
 }
 
-<*>^"D ".* {
-  if (cob_debug_flag)
-    yyless(2);
-  else
-    TRACE_PRINT (("<comment>: %s:\n", yytext));
-}
-
 "," {
   return ',';
 }
 
 "(" {
   if (need_subscripts) {
-    TRACE_PRINT (("<LPAR>:\n"));
     need_subscripts=0;
     return (LPAR);
   }
@@ -170,7 +141,7 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
 
 {white}+ { /* ignore */ }
 
-<INITIAL,SUBSCRIPTS_ST>{word} {
+<INITIAL,EXCEPTION_ST>{word} {
   struct sym *symbol;
   int tok = scan_word (yytext);
   if (tok)
@@ -182,7 +153,6 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
       yylval.sval = symbol;
       if (symbol->type == '8')
 	{
-	  TRACE_PRINT (("<VARCOND>: %s\n", yytext));
 	  update_xreflist (yylval.sval);
 	  return (VARCOND);
 	}
@@ -190,10 +160,8 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
 	{
 	  if (is_subscripted (symbol))
 	    {
-	      TRACE_PRINT (("<SUBSCVAR>: %s\n", yytext));
 	      return (SUBSCVAR);
 	    }
-	  TRACE_PRINT (("<VARIABLE>: %s\n", yytext));
 	  update_xreflist (yylval.sval);
 	  return (VARIABLE);
 	}
@@ -202,7 +170,6 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   else
     {
       yylval.sval = install_label (yytext);
-      TRACE_PRINT (("<LABELSTR>: %s\n", yytext));
       return (LABELSTR);
     }
 }
@@ -212,44 +179,9 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   if (tok)
     return tok;
 
-  TRACE_PRINT (("<STRING>: %s\n", yytext));
   yylval.sval = install (yytext, SYTB_VAR, 0);
   return (STRING);
 }
-
-<EXCEPTION_ST>{word} {
-  struct sym *symbol;
-  int tok = scan_word (yytext);
-  if (tok)
-    return tok;
-
-  /* if symbol was defined at the data division */
-  if ((symbol = lookup_symbol (yytext)) != NULL)
-    {
-      yylval.sval = symbol;
-      if (symbol->type == '8')
-	{
-	  TRACE_PRINT (("<VARCOND>: %s\n", yytext));
-	  update_xreflist (yylval.sval);
-	  return (VARCOND);
-	}
-      else
-	{
-	  TRACE_PRINT (("<VARIABLE>: %s\n", yytext));
-	  update_xreflist (yylval.sval);
-	  return (VARIABLE);
-	}
-
-    }
-  /* otherwise, it should be a label */
-  else
-    {
-      yylval.sval = install_label (yytext);
-      TRACE_PRINT (("<LABELSTR>: %s\n", yytext));
-      return (LABELSTR);
-    }
-}
-
 
 <FD_ST>{
   {word} {
@@ -257,7 +189,6 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
     if (tok)
       return tok;
 
-    TRACE_PRINT (("<STRING>: %s\n", yytext));
     if ((yylval.sval = lookup_symbol (yytext)) == NULL)
       yyerror ("undefined %s at FD/SD", yytext);
     return (STRING);
@@ -271,7 +202,6 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   if (tok)
     return tok;
 
-  TRACE_PRINT (("<STRING>: %s\n", yytext));
   /* don't clone redefined var */
   yylval.sval = install (yytext, SYTB_VAR, 0);
   update_xreflist (yylval.sval);
@@ -283,25 +213,15 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   if (tok)
     return tok;
 
-  TRACE_PRINT (("<STRING>: %s\n", yytext));
   /* install w/clone if neccessary */
   yylval.sval = install (yytext, SYTB_VAR, 1);
   update_xreflist (yylval.sval);
   return (STRING);
 }
 
-<SUBSCRIPTS_ST>{
-  {any}   {
-    TRACE_PRINT (("<0: any>: %s\n", yytext));
-    return(yytext[0]); 
-  }
-  {white}+ { }
-}
-
 <IDENT_ST>{
   [ \t]* { }
   "."/[ \t\n] { 
-    TRACE_PRINT (("<EOS>:\n"));
     return(EOS); 
   }
 
@@ -310,13 +230,11 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
     if (tok)
       return tok;
 
-    TRACE_PRINT ((" <IDSTRING>: %s\n", yytext));
     yylval.str = strdup (yytext);
     return IDSTRING;
   }
 
   {any}   {
-    TRACE_PRINT (("<0: any>: %s\n", yytext));
     return(yytext[0]); 
   }
 
@@ -326,7 +244,6 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
 <INITIAL,ENVIR_ST,DATA_ST,REDEF_ST,EXCEPTION_ST>{
 
   "."/[ \t\n] { 
-		  TRACE_PRINT (("<EOS>:\n"));
 		  return(EOS); 
 	  }
 
@@ -336,7 +253,6 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   X{sdelim}       { return read_literal_x ('\"'); }
 
   [0-9]*[.,]?[0-9]+ {
-    TRACE_PRINT (("<NLITERAL>: %s\n", yytext));
     yylval.lval = install_literal (yytext);
     return(NLITERAL);
   }
@@ -352,24 +268,19 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   }
 
   "(" {
-    TRACE_PRINT (("<0: lpar>: %s\n", yytext));
     return(yytext[0]); 
   }
   "**" {
-    TRACE_PRINT (("<0: POW_OP>: %s\n", yytext));
     return(POW_OP); 
   }
   {any} {
-    TRACE_PRINT (("<0: any>: %s\n", yytext));
     return(yytext[0]); 
   }
 
-} /* end of <INITIAL,DATA_ST,ENVIR_ST> */
+}
 
 <COMMENT_ST>{
-  .*      { 
-	   TRACE_PRINT ((" <COMMENT_ST>: %s\n", yytext));
-	  }
+  .*      {}
   "\n"   { BEGIN INITIAL; }
 } /* end of COMMENT_ST */
 
@@ -405,7 +316,6 @@ read_literal (char mark)
 	yyerror ("too large literal");
     }
   *p = 0;
-  TRACE_PRINT (("<CLITERAL>: %s\n", buff));
   yylval.lval = install_literal (buff);
   return CLITERAL;
 }
@@ -424,7 +334,6 @@ read_literal_x (char mark)
 	  yyerror ("scanner error: token too large");
 	  while (input () != mark);
 	  *tp = 0;
-	  TRACE_PRINT (("<CLITERAL>: %s\n", toktext));
 	  yylval.lval = install_literal (toktext);
 	  return (CLITERAL);
 	}
@@ -441,7 +350,6 @@ read_literal_x (char mark)
     buff[s - hnum] = '\0';
     yylval.lval = install_literal (buff);
   }
-  TRACE_PRINT (("<CLITERAL>: %s\n", toktext));
   return CLITERAL;
 }
 
@@ -509,13 +417,11 @@ scan_word (char *text)
   if (is_integer_token (text))
     {
       yylval.lval = install_literal (text);
-      TRACE_PRINT (("<NLITERAL>: %s\n", text));
       return (NLITERAL);
     }
   else if (!is_valid_identifier (text))
     {
       yylval.sval = install_label (text);
-      TRACE_PRINT (("<LABELSTR>: %s\n", text));
       return (LABELSTR);
     }
   else if ((token = scan_reserved_word (text)) != 0)
@@ -534,7 +440,6 @@ scan_reserved_word (char *s)
   struct reserved_word *p = lookup_reserved_word (s);
   if (!p)
     return 0;
-  TRACE_PRINT ((" <reserved>: %s\n", p->name));
   yylval.ival = p->minor;
   return p->token;
 }
@@ -548,21 +453,6 @@ lex_fgets (char *buf, int maxsize)
   cob_orig_lineno++;
   return strlen (buf);
 }
-
-#ifdef COB_DEBUG
-static void
-trace_print (char *fmt, ...)
-{
-  if (cob_trace_scanner)
-    {
-      va_list args;
-      va_start (args, fmt);
-      fprintf (stderr, "SCAN(%4d):", cob_orig_lineno);
-      vfprintf (stderr, fmt, args);
-      va_end (args);
-    }
-}
-#endif
 
 void
 dummy ()
