@@ -1,5 +1,9 @@
 2002-05-29  Keisuke Nishida  <knishida@netlab.jp>
 
+	* termio.c (cob_init_termio): #include <string.h>
+
+2002-05-29  Keisuke Nishida  <knishida@netlab.jp>
+
 	* Support run-time config file: libcob.conf.
 	* common.c (config_load, config_insert, cob_config_lookup):
 	New functions.
