@@ -69,15 +69,26 @@
     push_tree (p);					\
   } while (0)
 
-#define push_assign(val,lst)			\
-  do {						\
-    struct cobc_list *l;			\
-    for (l = (lst); l; l = l->next)		\
-      {						\
-	struct cobc_assign *p = l->item;	\
-	p->value = (val);			\
-      }						\
-    push_tree (make_status_sequence (lst));	\
+#define push_assign(lst,op,val)				\
+  do {							\
+    cobc_tree v = (val);				\
+    struct cobc_list *l;				\
+    /* save temporary value for multiple targets */	\
+    if (lst->next)					\
+      {							\
+	push_tree (make_assign (cobc_dt, v, 0));	\
+	v = cobc_dt;					\
+      }							\
+    /* set value of the assignment */			\
+    for (l = lst; l; l = l->next)			\
+      {							\
+	struct cobc_assign *p = l->item;		\
+	if (op)						\
+	  p->value = make_expr (p->field, op, v);	\
+	else						\
+	  p->value = v;					\
+      }							\
+    push_tree (make_status_sequence (lst));		\
   } while (0)
 
 #define push_corr(func,g1,g2,opt) \
@@ -1354,7 +1365,7 @@ add_body:
     cobc_tree e = $1->item;
     for (l = $1->next; l; l = l->next)
       e = make_expr (e, '+', l->item);
-    push_assign (make_expr (p->field, '+', e), $3);
+    push_assign ($3, '+', e);
   }
 | number_list add_to GIVING math_edited_name_list
   {
@@ -1366,7 +1377,7 @@ add_body:
       e = make_expr (e, '+', l->item);
     if ($2)
       e = make_expr (e, '+', $2);
-    push_assign (e, $4);
+    push_assign ($4, 0, e);
   }
 | CORRESPONDING group_name _to group_name flag_rounded
   {
@@ -1566,15 +1577,15 @@ divide_statement:
 divide_body:
   number INTO math_name_list
   {
-    push_assign (make_expr (p->field, '/', $1), $3);
+    push_assign ($3, '/', $1);
   }
 | number INTO number GIVING math_edited_name_list
   {
-    push_assign (make_expr ($3, '/', $1), $5);
+    push_assign ($5, 0, make_expr ($3, '/', $1));
   }
 | number BY number GIVING math_edited_name_list
   {
-    push_assign (make_expr ($1, '/', $3), $5);
+    push_assign ($5, 0, make_expr ($1, '/', $3));
   }
 | number INTO number GIVING numeric_edited_name flag_rounded REMAINDER numeric_edited_name
   {
@@ -1889,11 +1900,11 @@ multiply_statement:
 multiply_body:
   number BY math_name_list
   {
-    push_assign (make_expr (p->field, '*', $1), $3);
+    push_assign ($3, '*', $1);
   }
 | number BY number GIVING math_edited_name_list
   {
-    push_assign (make_expr ($1, '*', $3), $5);
+    push_assign ($5, 0, make_expr ($1, '*', $3));
   }
 ;
 _end_multiply: | END_MULTIPLY ;
@@ -2247,7 +2258,7 @@ subtract_body:
     cobc_tree e = $1->item;
     for (l = $1->next; l; l = l->next)
       e = make_expr (e, '+', l->item);
-    push_assign (make_expr (p->field, '-', e), $3);
+    push_assign ($3, '-', e);
   }
 | number_list FROM number GIVING math_edited_name_list
   {
@@ -2258,7 +2269,7 @@ subtract_body:
     for (l = $1->next; l; l = l->next)
       e = make_expr (e, '+', l->item);
     e = make_expr ($3, '-', e);
-    push_assign (e, $5);
+    push_assign ($5, 0, e);
   }
 | CORRESPONDING group_name FROM group_name flag_rounded
   {
@@ -3394,12 +3405,9 @@ lookup_label (struct cobc_word *w, struct cobc_label_name *section)
     if (w->item
 	&& COBC_LABEL_NAME_P (w->item)
 	&& section == COBC_LABEL_NAME (w->item)->section)
-      {
-	/* found */
-	return COBC_LABEL_NAME (w->item)->cname;
-      }
-  yyerror ("`%s' not defined in section `%s'",
-	   w->name, section->word->name);
+      return COBC_LABEL_NAME (w->item)->cname;
+
+  yyerror ("`%s' undefined in section `%s'", w->name, section->word->name);
   return NULL;
 }
 

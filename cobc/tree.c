@@ -255,6 +255,7 @@ cobc_tree cobc_low;
 cobc_tree cobc_high;
 cobc_tree cobc_quote;
 cobc_tree cobc_param;
+cobc_tree cobc_dt;
 cobc_tree cobc_status;
 cobc_tree cobc_switch[8];
 cobc_tree cobc_int0;
@@ -285,6 +286,7 @@ init_constants (void)
   cobc_true      = make_constant (COB_BOOLEAN, "1");
   cobc_false     = make_constant (COB_BOOLEAN, "0");
   cobc_param     = make_constant (COB_NUMERIC, "x");
+  cobc_dt        = make_constant (COB_NUMERIC, "cob_dt");
   cobc_status    = make_constant (COB_NUMERIC, "cob_status");
   cobc_zero      = make_constant (COB_NUMERIC, "cob_zero");
   cobc_space     = make_constant (COB_ALPHANUMERIC, "cob_space");

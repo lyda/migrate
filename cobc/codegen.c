@@ -413,7 +413,8 @@ output_expr (cobc_tree x, int id)
       {
 	struct cobc_expr *p = COBC_EXPR (x);
 	output_expr (p->left, id);
-	output_expr (p->right, id + 1);
+	if (p->right != cobc_dt)
+	  output_expr (p->right, id + 1);
 	output_prefix ();
 	switch (p->op)
 	  {
@@ -423,7 +424,10 @@ output_expr (cobc_tree x, int id)
 	  case '/': output ("cob_decimal_div"); break;
 	  case '^': output ("cob_decimal_pow"); break;
 	  }
-	output (" (cob_d%d, cob_d%d);\n", id, id + 1);
+	if (p->right == cobc_dt)
+	  output (" (cob_d%d, cob_dt);\n", id);
+	else
+	  output (" (cob_d%d, cob_d%d);\n", id, id + 1);
 	break;
       }
     case cobc_tag_integer:
@@ -461,7 +465,11 @@ output_expr (cobc_tree x, int id)
 	    if (cobc_failsafe_flag && !COBC_CONST_P (x))
 	      output_call_1 ("cob_check_numeric", x);
 	    output_prefix ();
-	    output ("cob_decimal_set_field (cob_d%d, ", id);
+	    if (x == cobc_dt)
+	      output ("cob_decimal_set", id);
+	    else
+	      output ("cob_decimal_set_field", id);
+	    output (" (cob_d%d, ", id);
 	    output_tree (x);
 	    output (");\n");
 	  }
@@ -485,6 +493,13 @@ output_native_assign (cobc_tree x, long long val)
 static void
 output_assign (struct cobc_assign *p)
 {
+  if (p->field == cobc_dt)
+    {
+      output_expr (p->value, 1);
+      output_line ("cob_decimal_set (cob_dt, cob_d1);");
+      return;
+    }
+
   if (COBC_FIELD (p->field)->usage == USAGE_INDEX)
     {
       /* Index */
@@ -501,7 +516,8 @@ output_assign (struct cobc_assign *p)
       struct cobc_expr *e = COBC_EXPR (p->value);
       if (e->left == p->field
 	  && (e->op == '+' || e->op == '-')
-	  && !COBC_EXPR_P (e->right))
+	  && !COBC_EXPR_P (e->right)
+	  && e->right != cobc_dt)
 	{
 	  /* X = X +/- Y */
 	  cobc_tree rounded = p->rounded ? cobc_int1 : cobc_int0;
@@ -1319,7 +1335,7 @@ output_tree (cobc_tree x)
 	      {p->size, COBC_TREE_CLASS (p), p->size, p->decimals};
 	    struct cob_field src_fld = {&src_desc, p->str};
 	    src_desc.have_sign = 1;
-	    put_sign (src_fld, (p->sign < 0) ? 1 : 0);
+	    cob_put_sign (src_fld, (p->sign < 0) ? 1 : 0);
 	  }
 	output ("({ struct cob_field_desc desc = {%d, '%c', %d, %d, %d}; ",
 		p->size, COBC_TREE_CLASS (p),

@@ -214,14 +214,6 @@ extern int cob_reloading_flag;
 extern long cob_exp10[10];
 extern long long cob_exp10LL[19];
 
-/* input/output stream */
-
-#define COB_STDIN	0
-#define COB_STDOUT	1
-#define COB_STDERR	2
-
-extern FILE *cob_stream[];
-
 /* constants */
 
 extern struct cob_field cob_zero;
@@ -252,8 +244,8 @@ extern void cob_init (int argc, char **argv);
 extern void cob_stop_run (void);
 extern void cob_runtime_error (char *fmt, ...);
 
-extern int get_sign (struct cob_field f);
-extern void put_sign (struct cob_field f, int sign);
+extern int cob_get_sign (struct cob_field f);
+extern void cob_put_sign (struct cob_field f, int sign);
 extern char *cob_field_to_string (struct cob_field f, char *s);
 
 extern int cob_index (int i, int max);
@@ -279,8 +271,9 @@ extern void cob_set_int (struct cob_field f, int n);
 
 /* math.c */
 
-extern cob_decimal cob_d1, cob_d2, cob_d3, cob_d4;
+extern cob_decimal cob_d1, cob_d2, cob_d3, cob_d4, cob_dt;
 
+extern void cob_init_math (void);
 extern void cob_decimal_init (cob_decimal d);
 extern void cob_decimal_print (cob_decimal d);
 extern void cob_decimal_add (cob_decimal d1, cob_decimal d2);
@@ -308,6 +301,13 @@ extern void cob_div_reminder (struct cob_field remainder);
 
 /* basicio.c */
 
+#define COB_STDIN	0
+#define COB_STDOUT	1
+#define COB_STDERR	2
+
+extern FILE *cob_stream[];
+
+extern void cob_init_basicio (void);
 extern void cob_display (struct cob_field f, int fd);
 extern void cob_newline (int fd);
 extern void cob_debug_print (struct cob_field f);

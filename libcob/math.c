@@ -30,12 +30,23 @@ static struct cob_decimal cob_d1_data;
 static struct cob_decimal cob_d2_data;
 static struct cob_decimal cob_d3_data;
 static struct cob_decimal cob_d4_data;
+static struct cob_decimal cob_dt_data;
 
 cob_decimal cob_d1 = &cob_d1_data;
 cob_decimal cob_d2 = &cob_d2_data;
 cob_decimal cob_d3 = &cob_d3_data;
 cob_decimal cob_d4 = &cob_d4_data;
+cob_decimal cob_dt = &cob_dt_data;
 
+void
+cob_init_math (void)
+{
+  cob_decimal_init (cob_d1);
+  cob_decimal_init (cob_d2);
+  cob_decimal_init (cob_d3);
+  cob_decimal_init (cob_d4);
+  cob_decimal_init (cob_dt);
+}
 
 /*
  * Decimal number
@@ -197,7 +208,7 @@ cob_decimal_set_int64 (cob_decimal d, long long n, int decimals)
 void
 cob_decimal_set_display (cob_decimal d, struct cob_field f)
 {
-  int sign = get_sign (f);
+  int sign = cob_get_sign (f);
   int len = FIELD_LENGTH (f);
   unsigned char *base = FIELD_BASE (f);
   unsigned char buff[len + 1];
@@ -207,7 +218,7 @@ cob_decimal_set_display (cob_decimal d, struct cob_field f)
   if (sign == 1) /* negative */
     mpz_neg (d->number, d->number);
   d->decimals = f.desc->decimals;
-  put_sign (f, sign);
+  cob_put_sign (f, sign);
 }
 
 void
@@ -323,7 +334,7 @@ cob_decimal_get (cob_decimal d, struct cob_field f)
 		memset (base, '0', pre);
 		memcpy (base + pre, p, size);
 	      }
-	    put_sign (f, sign);
+	    cob_put_sign (f, sign);
 	  }
 	else
 	  {
@@ -332,7 +343,7 @@ cob_decimal_get (cob_decimal d, struct cob_field f)
 	    struct cob_field temp = {&desc, buff};
 	    if (f.desc->digits < size)
 	      goto overflow;
-	    put_sign (temp, sign);
+	    cob_put_sign (temp, sign);
 	    cob_move (temp, f);
 	  }
 	return;

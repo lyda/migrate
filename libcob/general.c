@@ -101,29 +101,15 @@ struct cob_field cob_switch[8] = {
 int cob_return_code_value = 0;
 struct cob_field cob_return_code = {&b_desc, (char *)&cob_return_code_value};
 
-FILE *cob_stream[3];
-
 int
-get_sign (struct cob_field f)
+cob_get_sign (struct cob_field f)
 {
-  int digit;
-
-  switch (FIELD_TYPE (f))
+  if (FIELD_TYPE (f) == '9' && f.desc->have_sign)
     {
-    case 'C':
-      digit = f.desc->size / 2;
-      return (f.desc->size & 1) ?	/* odd number of digits? */
-	(((f.data[digit] & 0x0f) == 0x0d) ? 1 : 0) :
-	(((f.data[digit] & 0xf0) == 0xd0) ? 1 : 0);
-    case '9':
-      if (!f.desc->have_sign)
-	return 0;
       if (f.desc->separate_sign)
 	{
 	  char *p = f.desc->leading_sign ? f.data : f.data + f.desc->size - 1;
-	  int sign = (*p == '+') ? 0 : 1;
-	  *p = '0';
-	  return sign;
+	  return (*p == '+') ? 0 : 1;
 	}
       else
 	{
@@ -138,20 +124,10 @@ get_sign (struct cob_field f)
 }
 
 void
-put_sign (struct cob_field f, int sign)
+cob_put_sign (struct cob_field f, int sign)
 {
-  int digit;
-
-  switch (FIELD_TYPE (f))
+  if (FIELD_TYPE (f) == '9' && f.desc->have_sign)
     {
-    case 'C':
-      digit = f.desc->size / 2;
-      f.data[digit] = (f.desc->size & 1) ?	/* odd number of digits */
-	((f.data[digit] & 0xf0) | (sign ? 0x0d : 0x0c)) : (sign ? 0xd0 : 0xc0);
-      return;
-    case '9':
-      if (!f.desc->have_sign)
-	return;
       if (f.desc->separate_sign)
 	{
 	  char *p = f.desc->leading_sign ? f.data : f.data + f.desc->size - 1;
@@ -186,14 +162,8 @@ cob_init (int argc, char **argv)
   cob_source_file = 0;
   cob_source_line = 0;
 
-  cob_decimal_init (cob_d1);
-  cob_decimal_init (cob_d2);
-  cob_decimal_init (cob_d3);
-  cob_decimal_init (cob_d4);
-
-  cob_stream[COB_STDIN]  = stdin;
-  cob_stream[COB_STDOUT] = stdout;
-  cob_stream[COB_STDERR] = stderr;
+  cob_init_math ();
+  cob_init_basicio ();
 }
 
 void
@@ -238,8 +208,8 @@ cob_str_cmp (struct cob_field f1, struct cob_field f2)
   int len1 = f1.desc->size;
   int len2 = f2.desc->size;
   int min = (len1 < len2) ? len1 : len2;
-  int sign1 = get_sign (f1);
-  int sign2 = get_sign (f1);
+  int sign1 = cob_get_sign (f1);
+  int sign2 = cob_get_sign (f1);
 
   /* compare common substring */
   for (i = 0; i < min; i++)
@@ -265,8 +235,8 @@ cob_str_cmp (struct cob_field f1, struct cob_field f2)
     }
 
  end:
-  put_sign (f1, sign1);
-  put_sign (f2, sign2);
+  cob_put_sign (f1, sign1);
+  cob_put_sign (f2, sign2);
   return ret;
 }
 
@@ -276,7 +246,7 @@ cob_cmp_str (struct cob_field f1, unsigned char *data2, int len2)
   int i, ret = 0;
   int len1 = f1.desc->size;
   int min = (len1 < len2) ? len1 : len2;
-  int sign1 = get_sign (f1);
+  int sign1 = cob_get_sign (f1);
 
   /* compare common substring */
   for (i = 0; i < min; i++)
@@ -302,7 +272,7 @@ cob_cmp_str (struct cob_field f1, unsigned char *data2, int len2)
     }
 
  end:
-  put_sign (f1, sign1);
+  cob_put_sign (f1, sign1);
   return ret;
 }
 
@@ -330,14 +300,14 @@ cob_is_numeric (struct cob_field f)
       int ret = 1;
       int size = FIELD_LENGTH (f);
       unsigned char *data = FIELD_BASE (f);
-      sign = get_sign (f);
+      sign = cob_get_sign (f);
       for (i = 0; i < size; i++)
 	if (!isdigit (data[i]))
 	  {
 	    ret = 0;
 	    break;
 	  }
-      put_sign (f, sign);
+      cob_put_sign (f, sign);
       return ret;
     }
   else

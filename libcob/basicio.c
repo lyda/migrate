@@ -34,6 +34,16 @@
 #include <readline/history.h>
 #endif
 
+FILE *cob_stream[3];
+
+void
+cob_init_basicio (void)
+{
+  cob_stream[COB_STDIN]  = stdin;
+  cob_stream[COB_STDOUT] = stdout;
+  cob_stream[COB_STDERR] = stderr;
+}
+
 
 /*
  * DISPLAY
