@@ -1655,7 +1655,9 @@ codegen (struct program_spec *spec)
   output_line ("struct cob_frame frame_stack[24];");
   output_newline ();
 
-  if (!cobc_module_flag)
+  if (cobc_module_flag)
+    output_line ("cob_module_init ();");
+  else
     output_line ("cob_init (argc, argv);");
   output_line ("init_environment ();");
   output_newline ();

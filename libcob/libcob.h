@@ -119,6 +119,8 @@ struct cob_frame {
 
 /* common.c */
 
+extern int cob_initialized;
+
 /* command line arguments */
 
 extern int cob_argc;
@@ -157,6 +159,7 @@ extern long cob_exp10[10];
 extern long long cob_exp10LL[19];
 
 extern void cob_init (int argc, char **argv);
+extern void cob_module_init (void);
 extern void cob_stop_run (void);
 extern int cob_index (int i, int max);
 extern int cob_index_depending (int i, int min, int max, int dep);

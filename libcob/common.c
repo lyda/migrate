@@ -27,6 +27,8 @@
 
 #include "libcob.h"
 
+int cob_initialized = 0;
+
 int cob_argc = 0;
 char **cob_argv = NULL;
 
@@ -102,6 +104,18 @@ cob_init (int argc, char **argv)
   cob_init_math ();
   cob_init_basicio ();
   cob_init_call ();
+
+  cob_initialized = 1;
+}
+
+void
+cob_module_init (void)
+{
+  if (!cob_initialized)
+    {
+      fputs ("warning: cob_init expected in the main program\n", stderr);
+      cob_init (0, NULL);
+    }
 }
 
 void

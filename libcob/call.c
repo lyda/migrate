@@ -158,6 +158,8 @@ cob_resolve (const char *name)
   lt_ptr func;
   lt_dlhandle handle;
 
+  cob_module_init ();
+
   /* search from the cache */
   func = lookup (name);
   if (func)
@@ -179,12 +181,12 @@ cob_resolve (const char *name)
 	      resolve_error = NULL;
 	      return func;
 	    }
-	  strcpy (resolve_error_buff, lt_dlerror ());
+	  sprintf (resolve_error_buff, "libcob: %s", lt_dlerror ());
 	  resolve_error = resolve_error_buff;
 	  return NULL;
 	}
     }
-  sprintf (resolve_error_buff, "cannot find module `%s'", name);
+  sprintf (resolve_error_buff, "libcob: cannot find module `%s'", name);
   resolve_error = resolve_error_buff;
   return NULL;
 }
