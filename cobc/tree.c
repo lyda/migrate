@@ -1799,6 +1799,21 @@ cb_build_assign (cb_tree var, cb_tree val)
 
 
 /*
+ * GO TO
+ */
+
+cb_tree
+cb_build_goto (cb_tree target, cb_tree depending)
+{
+  struct cb_goto *p =
+    make_tree (CB_TAG_GOTO, CB_CATEGORY_UNKNOWN, sizeof (struct cb_goto));
+  p->target = target;
+  p->depending = depending;
+  return CB_TREE (p);
+}
+
+
+/*
  * IF
  */
 

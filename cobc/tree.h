@@ -50,6 +50,7 @@ enum cb_tag {
   /* statements */
   CB_TAG_LABEL,			/* label statement */
   CB_TAG_ASSIGN,		/* assignment statement */
+  CB_TAG_GOTO,			/* GO TO statement */
   CB_TAG_IF,			/* IF statement */
   CB_TAG_PERFORM,		/* PERFORM statement */
   CB_TAG_SEQUENCE,		/* multiple statements */
@@ -627,6 +628,22 @@ struct cb_assign {
 #define CB_ASSIGN_P(x)		(CB_TREE_TAG (x) == CB_TAG_ASSIGN)
 
 extern cb_tree cb_build_assign (cb_tree var, cb_tree val);
+
+
+/*
+ * GO TO statement
+ */
+
+struct cb_goto {
+  struct cb_tree_common common;
+  cb_tree target;
+  cb_tree depending;
+};
+
+#define CB_GOTO(x)		(CB_TREE_CAST (CB_TAG_GOTO, struct cb_goto, x))
+#define CB_GOTO_P(x)		(CB_TREE_TAG (x) == CB_TAG_GOTO)
+
+extern cb_tree cb_build_goto (cb_tree target, cb_tree depending);
 
 
 /*

@@ -2009,7 +2009,7 @@ exit_statement:
 ;
 exit_body:
   /* empty */			{ /* nothing */ }
-| PROGRAM			{ push_funcall_0 ("@exit-program"); }
+| PROGRAM			{ push (cb_build_goto (0, 0)); }
 ;
 
 
@@ -2024,7 +2024,7 @@ goto_statement:
     if ($5)
       {
 	/* GO TO procedure-name ... DEPENDING ON identifier */
-	push_funcall_2 ("@goto-depending", $4, $5);
+	push (cb_build_goto ($4, $5));
       }
     else
       {
@@ -2034,7 +2034,7 @@ goto_statement:
 	else if (CB_CHAIN ($4))
 	  cb_error (_("GO TO with multiple procesure-name"));
 	else
-	  push_funcall_1 ("@goto", CB_VALUE ($4));
+	  push (cb_build_goto (CB_VALUE ($4), 0));
       }
   }
 ;
@@ -2051,7 +2051,7 @@ goto_depending:
 goback_statement:
   GOBACK			{ BEGIN_STATEMENT ("GOBACK"); }
   {
-    push_funcall_0 ("@exit-program");
+    push (cb_build_goto (0, 0));
   }
 ;
 

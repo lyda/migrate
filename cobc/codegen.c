@@ -910,43 +910,6 @@ output_recursive (void (*func) (struct cb_field *), struct cb_field *f)
 
 
 /*
- * GO TO
- */
-
-static void
-output_goto (cb_tree x)
-{
-  output_line ("goto lb_%s;", CB_LABEL (cb_ref (x))->cname);
-}
-
-static void
-output_goto_depending (cb_tree labels, cb_tree index)
-{
-  int i = 1;
-  cb_tree l;
-  output_prefix ();
-  output ("switch (");
-  output_integer (index);
-  output (")\n");
-  output_indent ("  {");
-  for (l = labels; l; l = CB_CHAIN (l))
-    {
-      output_indent_level -= 2;
-      output_line ("case %d:", i++);
-      output_indent_level += 2;
-      output_goto (CB_VALUE (l));
-    }
-  output_indent ("  }");
-}
-
-static void
-output_exit_program (void)
-{
-  output_line ("goto exit_program;");
-}
-
-
-/*
  * INITIALIZE
  */
 
@@ -1419,9 +1382,6 @@ static struct inline_func {
   const char *name;
   void (*func) ();
 } inline_table[] = {
-  {"@goto", output_goto},
-  {"@goto-depending", output_goto_depending},
-  {"@exit-program", output_exit_program},
   {"@initialize", output_initialize},
   {"@search", output_search},
   {"@search-all", output_search_all},
@@ -1465,6 +1425,44 @@ output_funcall (struct cb_funcall *p)
 	}
       output (")");
     }
+}
+
+
+/*
+ * GO TO
+ */
+
+static void
+output_goto_1 (cb_tree x)
+{
+  output_line ("goto lb_%s;", CB_LABEL (cb_ref (x))->cname);
+}
+
+static void
+output_goto (struct cb_goto *p)
+{
+  if (p->depending)
+    {
+      int i = 1;
+      cb_tree l;
+      output_prefix ();
+      output ("switch (");
+      output_integer (p->depending);
+      output (")\n");
+      output_indent ("  {");
+      for (l = p->target; l; l = CB_CHAIN (l))
+	{
+	  output_indent_level -= 2;
+	  output_line ("case %d:", i++);
+	  output_indent_level += 2;
+	  output_goto_1 (CB_VALUE (l));
+	}
+      output_indent ("  }");
+    }
+  else if (p->target == NULL)
+    output_line ("goto exit_program;");
+  else
+    output_goto_1 (p->target);
 }
 
 
@@ -1663,6 +1661,11 @@ output_stmt (cb_tree x)
 	output (" = ");
 	output_integer (p->val);
 	output (";\n");
+	break;
+      }
+    case CB_TAG_GOTO:
+      {
+	output_goto (CB_GOTO (x));
 	break;
       }
     case CB_TAG_IF:
