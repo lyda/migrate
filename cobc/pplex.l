@@ -307,8 +307,11 @@ ppinput_1 (char *buff, int size)
 	if (cb_source_format == CB_FORMAT_FREE)
 	  buff[n++] = c;
 	else
-	  while ((n + 1) % cb_tab_width != 0)
+	  {
 	    buff[n++] = ' ';
+	    while (n % cb_tab_width != 0)
+	      buff[n++] = ' ';
+	  }
 	break;
 
       case '\r':
