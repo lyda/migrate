@@ -28,6 +28,8 @@
 #include "_libcob.h"
 
 int cob_status;
+int decimal_comma = 0;
+char cCurrencySymbol = '$';
 
 void
 cob_init (int argc, char **argv)

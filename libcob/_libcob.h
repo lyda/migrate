@@ -164,6 +164,9 @@ struct cob_field {
 };
 #pragma pack()
 
+extern int decimal_comma;
+extern char cCurrencySymbol;
+
 extern int extract_sign (struct fld_desc *f, char *s);
 extern void put_sign (struct fld_desc *f, char *s, int sign);
 extern int get_index (struct fld_desc *f, char *s);

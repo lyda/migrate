@@ -32,9 +32,6 @@
 static struct fld_desc zero_fld  = { 1, '9', 0, 1, 0, 0, 0, 0, "9\001"};
 static struct fld_desc space_fld = { 1, 'X', 0, 1, 0, 0, 0, 0, "X\001"};
 
-int decimal_comma = 0;
-char cCurrencySymbol = '$';
-
 static unsigned long long _iIntValues_[18] = {
   100000000000000000,
   10000000000000000,
@@ -54,18 +51,6 @@ static unsigned long long _iIntValues_[18] = {
   100,
   10,
   1
-};
-
-static int _iRtErrorNbr[] = {
-  RTERR_INVALID_DATA,
-  RTERR_INVALID_PIC,
-  -1
-};
-
-static char *_szRtErrorDesc[] = {
-  "Invalid Data Content",
-  "Invalid Picture Structure",
-  (char *) 0
 };
 
 static void move_edited (struct fld_desc *pSrcFld, char *pSrcData,
@@ -118,7 +103,6 @@ void
 cob_move (struct fld_desc *pfldDesc1, char *caData1,
 	  struct fld_desc *pfldDesc2, char *caData2)
 {
-  extern int decimal_comma;
   int i;
   int iPadLength;
   int iSrcLength, iDestLength;
@@ -1705,12 +1689,22 @@ pic_expand (struct fld_desc *pfldDesc)
  |                                                                        |
 \*------------------------------------------------------------------------*/
 
+static int _iRtErrorNbr[] = {
+  RTERR_INVALID_DATA,
+  RTERR_INVALID_PIC,
+  -1
+};
+
+static char *_szRtErrorDesc[] = {
+  "Invalid Data Content",
+  "Invalid Picture Structure",
+  (char *) 0
+};
+
 void
 runtime_error (int iErrorNum, struct fld_desc *pField, void *pData)
 {
   int i, j;
-  extern int _iRtErrorNbr[];
-  extern char *_szRtErrorDesc[];
 
   for (i = 0; _iRtErrorNbr[i] != -1; ++i)
     if (iErrorNum == _iRtErrorNbr[i])
@@ -1782,7 +1776,6 @@ move_edited (struct fld_desc *pSrcFld, char *pSrcData,
   int bInFraction;
   int bIsAlphaEdited;
   int bIsBlankWhenZero;
-  extern int decimal_comma;
 
   char *caWorkData;
   char *pPic;
@@ -1792,7 +1785,6 @@ move_edited (struct fld_desc *pSrcFld, char *pSrcData,
   char cFillChar;
   char cDecimalPoint;
   char cComma;
-  extern char cCurrencySymbol;
 
   struct fld_desc FldWrk;
 

@@ -41,14 +41,13 @@ int picCompLength (struct fld_desc *f);
 #define COBKEY_FORWARD 12
 #define COBKEY_HOMECLR 24
 
-extern int decimal_comma;
-int _scrio_init_ = 0;
-int _decimal_char_ = '.';
-struct ScrFld *_Fields_ = (struct ScrFld *) 0;
-struct Colors *_colors_ = (struct Colors *) 0;
-attr_t _iDefAttr_ = 0;
-short _iDefPair_ = 0;
-char *rlbuff = NULL;
+static int _scrio_init_ = 0;
+static int _decimal_char_ = '.';
+static struct ScrFld *_Fields_ = (struct ScrFld *) 0;
+static struct Colors *_colors_ = (struct Colors *) 0;
+static attr_t _iDefAttr_ = 0;
+static short _iDefPair_ = 0;
+static char *rlbuff = NULL;
 
 static void cob_init_screen (void);
 
@@ -354,7 +353,6 @@ cob_accept_screen ()
   char cWk;
   struct ScrFld *pFld;
   struct ScrFld *pFldWk;
-  extern struct ScrFld *_Fields_;
 
   cob_init_screen ();
 
@@ -666,7 +664,6 @@ void
 cob_display_screen ()
 {
   struct ScrFld *pFld;
-  extern struct ScrFld *_Fields_;
 
   cob_init_screen ();
 
@@ -716,8 +713,6 @@ cob_scr_process (int iAttr, int iLine, int iColumn,
   int iDecCnt;
   struct ScrFld *pFld;
   void *pWk;
-  extern int _decimal_char_;
-  extern struct ScrFld *_Fields_;
 
   pFld = (struct ScrFld *) &_Fields_;
   for (i = 0; pFld->pNext; i++)
@@ -941,8 +936,6 @@ static void
 cob_init_screen (void)
 {
   int i, j;
-  extern attr_t _iDefAttr_;
-  extern short _iDefPair_;
 
   if (_scrio_init_)
     return;
@@ -1285,8 +1278,6 @@ _DisplayField (struct ScrFld *pFld)
 {
   int i;
   attr_t iAttr;
-  extern attr_t _iDefAttr_;
-  extern short _iDefPair_;
 
   iAttr = _GetAttributes (pFld);
   attron (iAttr);
@@ -1374,8 +1365,6 @@ _GetColor (struct ScrFld *pFld)
   int i;
   short int iFgColor;
   short int iBgColor;
-  extern struct Colors *_colors_;
-  extern short _iDefPair_;
 
   if ((pFld->iFgColor != 0) || (pFld->iBgColor != 0))
     {

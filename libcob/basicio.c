@@ -1,5 +1,4 @@
-/* Accept/Display basic I/O functions
- *
+/*
  * Copyright (C) 2000  Rildo Pragana, Alan Cox, Andrew Cameron,
  *		      David Essex, Glen Colbert, Jim Noeth.
  * Copyright (C) 1999  Rildo Pragana, Alan Cox, Andrew Cameron, David Essex.
@@ -36,8 +35,7 @@
 #include <readline/history.h>
 #endif
 
-char *rlbuf = NULL;
-extern int decimal_comma;
+static char *rlbuf = NULL;
 
 #define port(dupon) ((dupon == 1) ? stdout : stderr)
 
@@ -106,7 +104,7 @@ display (struct fld_desc *f, char *s, int dupon)
 	  ++ftmp.len;
 	  ++len;
 	}
-      if (decimals)
+      if (decimals > 0)
 	len++;			/* accounts for the decimal point */
       cob_move (f, s, &ftmp, buffer);
       moved++;
@@ -127,98 +125,51 @@ display (struct fld_desc *f, char *s, int dupon)
 void
 display_erase (int dupon)
 {
-  putc ('\f', port (dupon));
+  fputc ('\f', port (dupon));
+  fflush (port(dupon));
 }
-
-/*-------------------------------------------------------------------------*\
- |                                                                         |
- |                          accept_time                                    |
- |  Accepts the current time in the form 'HHMMSScc'.                       |
- |    HH is the hour (0-23), MM is the minute, SS is the second,           |
- |    cc is hundredths of a second (currently just 00)                     |
- |                                                                         |
-\*-------------------------------------------------------------------------*/
 
 int
 accept_time (char *buffer)
 {
-  time_t tnow;
-  struct tm *timep;
   char s[9];
-  time (&tnow);
-  timep = localtime (&tnow);
-  sprintf (s, "%02d%02d%02d%02d", timep->tm_hour, timep->tm_min,
-	   timep->tm_sec, 0);
-  memmove (buffer, s, 8);
+  time_t t = time (NULL);
+  struct tm *tm = localtime (&t);
+  sprintf (s, "%02d%02d%02d%02d", tm->tm_hour, tm->tm_min, tm->tm_sec, 0);
+  memcpy (buffer, s, 8);
   return 0;
 }
-
-
-/*-------------------------------------------------------------------------*\
- |                                                                         |
- |                          accept_date                                    |
- |  Accepts the current date in the form 'YYMMDD'.                         |
- |    YY is the year, MM is the month (January=1),  DD is the day.         |
- |                                                                         |
-\*-------------------------------------------------------------------------*/
 
 int
 accept_date (char *buffer)
 {
-  time_t tnow;
-  struct tm *timep;
   char s[7];
-  time (&tnow);
-  timep = localtime (&tnow);
-  sprintf (s, "%02d%02d%02d", (timep->tm_year) % 100, (timep->tm_mon) + 1,
-	   timep->tm_mday);
-  memmove (buffer, s, 6);
+  time_t t = time (NULL);
+  struct tm *tm = localtime (&t);
+  sprintf (s, "%02d%02d%02d", tm->tm_year % 100, tm->tm_mon + 1, tm->tm_mday);
+  memcpy (buffer, s, 6);
   return 0;
 }
-
-
-/*-------------------------------------------------------------------------*\
- |                                                                         |
- |                          accept_day                                     |
- |  Accepts the current day of the year in the form 'YYDDD'.               |
- |    YY is the year, DDD is the day of the year.                          |
- |                                                                         |
-\*-------------------------------------------------------------------------*/
 
 int
 accept_day (char *buffer)
 {
-  time_t tnow;
-  struct tm *timep;
   char s[6];
-  time (&tnow);
-  timep = localtime (&tnow);
-  sprintf (s, "%02d%03d", (timep->tm_year) % 100, (timep->tm_yday) + 1);
-  memmove (buffer, s, 5);
+  time_t t = time (NULL);
+  struct tm *tm = localtime (&t);
+  sprintf (s, "%02d%03d", tm->tm_year % 100, tm->tm_yday + 1);
+  memcpy (buffer, s, 5);
   return 0;
 }
-
-
-/*-------------------------------------------------------------------------*\
- |                                                                         |
- |                          accept_day_of_week                             |
- |  Accepts the day of the week into a single character.                   |
- |  The reason for the odd calculation is that C's representation of       |
- |    Sunday is 0, while in COBOL it is 7.  The rest of the week is the    |
- |    same in both languages (Monday=1 ... Saturday=6).                    |
- |                                                                         |
-\*-------------------------------------------------------------------------*/
 
 int
 accept_day_of_week (char *buffer)
 {
-  time_t tnow;
-  struct tm *timep;
   char s[2];
-  time (&tnow);
-  timep = localtime (&tnow);
-  sprintf (s, "%01d", (((timep->tm_wday) + 6) % 7) + 1);
-  memmove (buffer, s, 1);
+  time_t t = time (NULL);
+  struct tm *tm = localtime (&t);
+  sprintf (s, "%01d", ((tm->tm_wday + 6) % 7) + 1);
+  memcpy (buffer, s, 1);
   return 0;
 }
 
@@ -304,9 +255,7 @@ accept_cmd_line1 (int ac, char **av, struct fld_desc *f, char *buffer)
   // Test actual buffer length(f->len) is less than min.
   if (f->len < 21)
     {
-      fprintf (stderr,
-	       "run time error: basic.c @ accept_cmd_line: unacceptable length(%d<21) in command line parms\n",
-	       (int) f->len);
+      fprintf (stderr, "accept_cmd_line: unacceptable length(%d<21) in command line parms\n", (int) f->len);
       return -1;
     }
 
@@ -318,9 +267,7 @@ accept_cmd_line1 (int ac, char **av, struct fld_desc *f, char *buffer)
 
   if (f->len != len)
     {
-      fprintf (stderr,
-	       "run time error: basic.c @ accept_cmd_line: actual length=%d not equal expected length=%d, in command line parms\n",
-	       (int) f->len, len);
+      fprintf (stderr, "accept_cmd_line: actual length=%d not equal expected length=%d, in command line parms\n", (int) f->len, len);
       sprintf (buffer, "%04d %04d %04d %04d", 1, cmdac, cmdmaxnum, cmdmaxlen);
       return -1;
     }
@@ -329,9 +276,7 @@ accept_cmd_line1 (int ac, char **av, struct fld_desc *f, char *buffer)
   // Test if number if input parms exceeds copybook expected max.
   if (ac > cmdmaxnum)
     {
-      fprintf (stderr,
-	       "run time error: basic.c @ accept_cmd_line: command line arguments overflow, max=%d actual=%d\n",
-	       ac, cmdmaxnum);
+      fprintf (stderr, "accept_cmd_line: command line arguments overflow, max=%d actual=%d\n", ac, cmdmaxnum);
       sprintf (buffer, "%04d %04d %04d %04d", 1, cmdac, cmdmaxnum, cmdmaxlen);
       return -1;
     }
@@ -350,24 +295,19 @@ accept_cmd_line1 (int ac, char **av, struct fld_desc *f, char *buffer)
 	  sprintf (pt, "%s", av[i]);
 	  pt = pt + len;
 	  for (j = len; j < cmdmaxlen; j++, pt++)
-	    {
-	      *pt = ' ';
-	    }
+	    *pt = ' ';
 	}
       else
 	{
 	  pt1 = av[i];
 	  for (j = 0; j < cmdmaxlen; j++, pt++, pt1++)
-	    {
-	      *pt = *pt1;
-	    }
+	    *pt = *pt1;
 	  cmderr = 1;
 	}
     }
 
   cmdac = ac;
-  sprintf (buffer, "%04d %04d %04d %04d", cmderr, cmdac, cmdmaxnum,
-	   cmdmaxlen);
+  sprintf (buffer, "%04d %04d %04d %04d", cmderr, cmdac, cmdmaxnum, cmdmaxlen);
   pt = buffer + 19;
   *pt = ' ';
 
@@ -385,9 +325,7 @@ accept_env_var1 (struct fld_desc *f, char *buffer)
   // Test actual buffer length(f->len) is less than min.
   if (f->len < 16)
     {
-      fprintf (stderr,
-	       "run time error: basicio.c @ accept_env_var: unacceptable length(%d<16) in get environment parms\n",
-	       (int) f->len);
+      fprintf (stderr, "accept_env_var: unacceptable length(%d<16) in get environment parms\n", (int) f->len);
       return -1;
     }
 
@@ -399,11 +337,8 @@ accept_env_var1 (struct fld_desc *f, char *buffer)
 
   if (f->len != len)
     {
-      fprintf (stderr,
-	       "run time error: basicio.c @ accept_env_var: actual length=%d not equal expected length=%d, in get environment parms\n",
-	       (int) f->len, len);
-      sprintf (buffer, "%04d %04d %04d ", 100, env_name_maxlen,
-	       env_var_maxlen);
+      fprintf (stderr, "accept_env_var: actual length=%d not equal expected length=%d, in get environment parms\n", (int) f->len, len);
+      sprintf (buffer, "%04d %04d %04d ", 100, env_name_maxlen, env_var_maxlen);
       return -1;
     }
 
@@ -417,14 +352,7 @@ accept_env_var1 (struct fld_desc *f, char *buffer)
       if (*pt == ' ')
 	{
 	  j = i;
-	  if ((envpt = malloc (j)) == NULL)
-	    {
-	      fprintf (stderr,
-		       "run time error: basicio.c @ accept_env_var: memory allocation error, in get environment parms\n");
-	      sprintf (buffer, "%04d %04d %04d ", 100, env_name_maxlen,
-		       env_var_maxlen);
-	      return -1;
-	    }
+	  envpt = malloc (j);
 	  i = env_name_maxlen + 1;
 	}
     }
