@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# echo "Running libtoolize..."
-# libtoolize --automake --force --copy --ltdl
+echo "Running libtoolize..."
+libtoolize --automake --force
 
 echo "Running aclocal..."
 aclocal -I .
