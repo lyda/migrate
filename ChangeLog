@@ -1,3 +1,10 @@
+2005-01-13  Roger While <simrw@sim-basis.de>
+
+	* configure.ac, configure, config.h.in
+	* Generate compiler/linker options in config.h
+	  for exporting symbols and PIC code.
+	  Will eventually be used by cobc.c.
+
 2004-11-29  Roger While <simrw@sim-basis.de>
 
 	* New directory bin for cobcrun driver program

@@ -33,6 +33,8 @@ AM_MAINTAINER_MODE
 AH_TEMPLATE([WITH_DB],   [Compile with the Berkeley DB library])
 AH_TEMPLATE([WITH_LFS64], [Compile with large file system 64])
 AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
+AH_TEMPLATE([COB_EXPORT_DYN], [Compile option for exporting symbols])
+AH_TEMPLATE([COB_PIC_FLAGS], [Compile option for PIC code])
 
 # enable debug mode by default for now
 AC_DEFINE(COB_DEBUG)
@@ -169,8 +171,11 @@ COB_CONFIG_DIR="$datadir/$PACKAGE_TARNAME/config"
 COB_LIBRARY_PATH=".:$libdir/$PACKAGE_TARNAME"
 COB_MODULE_EXT=`echo "$shlibext" | sed 's/dll\.a/dll/'`
 LIBS="$save_libs"
-COB_EXPORT_DYN=`eval echo $export_dynamic_flag_spec`
+COB_EXPORT_DYN="`eval echo $export_dynamic_flag_spec`"
+COB_PIC_FLAGS="$lt_prog_compiler_pic"
 
+AC_DEFINE_UNQUOTED(COB_EXPORT_DYN, "$COB_EXPORT_DYN")
+AC_DEFINE_UNQUOTED(COB_PIC_FLAGS, "$COB_PIC_FLAGS")
 AC_SUBST(COB_CC)
 AC_SUBST(COB_CFLAGS)
 AC_SUBST(COB_LIBS)

@@ -3,6 +3,12 @@
 /* Enable debugging features in the compiler */
 #undef COB_DEBUG
 
+/* Compile option for exporting symbols */
+#undef COB_EXPORT_DYN
+
+/* Compile option for PIC code */
+#undef COB_PIC_FLAGS
+
 /* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
    systems. This function is required for `alloca.c' support on those systems.
    */
