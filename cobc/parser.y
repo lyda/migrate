@@ -793,7 +793,7 @@ record_clause:
 ;
 opt_from_integer:
   /* nothing */			{ $$ = NULL; }
-| FROM INTEGER_LITERAL		{ $$ = $2; }
+| _from INTEGER_LITERAL		{ $$ = $2; }
 ;
 opt_to_integer:
   /* nothing */			{ $$ = NULL; }
@@ -3180,6 +3180,7 @@ _at: | AT ;
 _by: | BY ;
 _file: | TOK_FILE ;
 _for: | FOR ;
+_from: | FROM ;
 _in: | IN ;
 _is: | IS ;
 _is_are: | IS | ARE ;

@@ -949,7 +949,7 @@ output_file_name (struct cobc_file_name *f)
   /* flags */
   output ("{%d, 0, 0, 0, 0}, ", f->optional);
   /* relative_key */
-  if (f->organization == COB_ORG_RELATIVE)
+  if (f->organization == COB_ORG_RELATIVE && f->key != NULL)
     output_tree (f->key);
   else
     output ("{0, 0}, ");
