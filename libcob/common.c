@@ -259,69 +259,59 @@ cob_index_depending (int i, int min, int max, int dep, const char *name, const c
  * Comparison
  */
 
-int
-cob_cmp_field (struct cob_field f1, struct cob_field f2)
+static int
+cmp_internal (unsigned char *data1, size_t size1,
+	      unsigned char *data2, size_t size2)
 {
-  int i, ret = 0;
-  int min = (f1.size < f2.size) ? f1.size : f2.size;
-  int max = (f1.size > f2.size) ? f1.size : f2.size;
-  int sign1 = cob_get_sign (f1);
-  int sign2 = cob_get_sign (f1);
+  int i, ret;
+  int min = (size1 < size2) ? size1 : size2;
+  int max = (size1 > size2) ? size1 : size2;
 
   /* compare common substring */
   for (i = 0; i < min; i++)
     {
-      ret = f1.data[i] - f2.data[i];
+      ret = data1[i] - data2[i];
       if (ret != 0)
-	goto end;
+	return ret;
     }
 
   /* compare the rest (if any) with spaces */
   for (; i < max; i++)
     {
-      if (f1.size > f2.size)
-	ret = f1.data[i] - ' ';
+      if (size1 > size2)
+	ret = data1[i] - ' ';
       else
-	ret = ' ' - f2.data[i];
+	ret = ' ' - data2[i];
       if (ret != 0)
-	goto end;
+	return ret;
     }
 
- end:
+  return 0;
+}
+
+int
+cob_cmp_field (struct cob_field f1, struct cob_field f2)
+{
+  int ret = 0;
+  int sign1 = cob_get_sign (f1);
+  int sign2 = cob_get_sign (f2);
+
+  ret = cmp_internal (f1.data, f1.size, f2.data, f2.size);
+
   cob_put_sign (f1, sign1);
   cob_put_sign (f2, sign2);
   return ret;
 }
 
 int
-cob_cmp_str (struct cob_field f1, unsigned char *data2, size_t size2)
+cob_cmp_str (struct cob_field f1, unsigned char *str)
 {
-  int i, ret = 0;
-  int min = (f1.size < size2) ? f1.size : size2;
-  int max = (f1.size > size2) ? f1.size : size2;
-  int sign = cob_get_sign (f1);
+  int ret = 0;
+  int sign1 = cob_get_sign (f1);
 
-  /* compare common substring */
-  for (i = 0; i < min; i++)
-    {
-      ret = f1.data[i] - data2[i];
-      if (ret != 0)
-	goto end;
-    }
+  ret = cmp_internal (f1.data, f1.size, str, strlen (str));
 
-  /* compare the rest (if any) with spaces */
-  for (; i < max; i++)
-    {
-      if (f1.size > size2)
-	ret = f1.data[i] - ' ';
-      else
-	ret = ' ' - data2[i];
-      if (ret != 0)
-	goto end;
-    }
-
- end:
-  cob_put_sign (f1, sign);
+  cob_put_sign (f1, sign1);
   return ret;
 }
 

@@ -114,7 +114,7 @@ extern int cob_index (int i, int max, const char *name);
 extern int cob_index_depending (int i, int min, int max, int dep, const char *name, const char *depname);
 
 extern int cob_cmp_field (struct cob_field f1, struct cob_field f2);
-extern int cob_cmp_str (struct cob_field f1, unsigned char *data2, size_t size2);
+extern int cob_cmp_str (struct cob_field f1, unsigned char *str);
 extern int cob_cmp_all (struct cob_field f1, unsigned char *str);
 
 extern void cob_check_numeric (struct cob_field f, const char *name);
