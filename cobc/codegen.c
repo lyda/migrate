@@ -855,7 +855,9 @@ output_cond (cb_tree x)
       }
     case CB_TAG_FUNCALL:
       {
+	output ("({");
 	output_funcall (CB_FUNCALL (x));
+	output (";})");
 	break;
       }
     case CB_TAG_SEQUENCE:
