@@ -179,6 +179,7 @@ static struct reserved reserved_words[] = {
   {"GIVING",		GIVING, 0},
   {"GLOBAL",		GLOBAL, 0},
   {"GO",		GO, 0},
+  {"GOBACK",		GOBACK, 0},
   {"GREATER",		GREATER, 0},
   {"HIGH-VALUE",	HIGH_VALUE, 0},
   {"HIGH-VALUES",	HIGH_VALUE, 0},

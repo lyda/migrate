@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 122
+%expect 123
 
 %{
 #include "config.h"
@@ -147,7 +147,7 @@ static void ambiguous_error (cobc_tree x);
 %token END_DISPLAY END_DIVIDE END_EVALUATE END_IF END_MULTIPLY END_PERFORM
 %token END_READ END_RETURN END_REWRITE END_SEARCH END_START END_STRING
 %token END_SUBTRACT END_UNSTRING END_WRITE ENVIRONMENT ENVIRONMENT_VARIABLE
-%token EOL EOS EQUAL ERASE ERROR EXCEPTION EXIT EXTEND EXTERNAL FD
+%token EOL EOS EQUAL ERASE ERROR EXCEPTION EXIT EXTEND EXTERNAL FD GOBACK
 %token FILE_CONTROL FILLER FIRST FOR FOREGROUND_COLOR FROM FULL GE GIVING
 %token GLOBAL GO GREATER HIGHLIGHT HIGH_VALUE IDENTIFICATION IN INDEX INDEXED
 %token INPUT INPUT_OUTPUT INTO INVALID IS I_O I_O_CONTROL JUSTIFIED KEY LABEL
@@ -1513,6 +1513,7 @@ statement:
 | evaluate_statement
 | exit_statement
 | goto_statement
+| goback_statement
 | if_statement
 | initialize_statement
 | inspect_statement
@@ -1998,6 +1999,18 @@ goto_statement:
 | GO _to label_list DEPENDING _on numeric_name
   {
     push_funcall_2 ("@goto-depending", $3, $6);
+  }
+;
+
+
+/*
+ * GOBACK statement
+ */
+
+goback_statement:
+  GOBACK
+  {
+    push_funcall_0 ("@exit-program");
   }
 ;
 
