@@ -158,6 +158,10 @@ output_base (struct cb_field *f)
     {
       output ("%s", f01->cname);
     }
+  else if (f->usage == CB_USAGE_INDEX && f->level == 0)
+    {
+      output ("((unsigned char *) &i_%s)", f->cname);
+    }
   else
     {
       if (!f01->flag_base)
@@ -1242,7 +1246,7 @@ output_call (struct cb_call *p)
   if (!dynamic_link)
     {
       /* static link */
-      output ("cob_return_code = %s", CB_LITERAL (p->name)->data);
+      output ("i_RETURN_CODE = %s", CB_LITERAL (p->name)->data);
     }
   else
     {
@@ -1260,7 +1264,7 @@ output_call (struct cb_call *p)
       output_line ("else");
       output_indent ("  {");
       output_prefix ();
-      output ("cob_return_code = func");
+      output ("i_RETURN_CODE = func");
     }
 
   /* arguments */
@@ -1990,7 +1994,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 
   output_line ("exit_program:");
   output_line ("cob_module_leave (&module);");
-  output_line ("return cob_return_code;");
+  output_line ("return i_RETURN_CODE;");
   output_indent ("}");
   output_newline ();
 }
@@ -2043,13 +2047,14 @@ output_main_function (struct cb_program *prog)
   output_line ("int");
   output_line ("main (int argc, char **argv)");
   output_indent ("{");
+  output_line ("int ret;");
   output_line ("cob_init (argc, argv);");
   if (prog->flag_screen)
     output_line ("cob_screen_init ();");
-  output_line ("%s ();", prog->program_id);
+  output_line ("ret = %s ();", prog->program_id);
   if (prog->flag_screen)
     output_line ("cob_screen_clear ();");
-  output_line ("return cob_return_code;");
+  output_line ("return ret;");
   output_indent ("}");
 }
 
@@ -2073,7 +2078,6 @@ codegen (struct cb_program *prog)
 
   /* fields */
   output ("/* Fields */\n\n");
-  output ("#define i_RETURN_CODE    cob_return_code\n");
   output ("#define i_LINAGE_COUNTER cob_linage_counter\n\n");
   for (l = prog->index_list; l; l = CB_CHAIN (l))
     output ("static int i_%s;\n", CB_FIELD (CB_VALUE (l))->cname);

@@ -278,6 +278,7 @@ cb_tree_type (cb_tree x)
 	  return COB_TYPE_NUMERIC_DISPLAY;
 	case CB_USAGE_BINARY:
 	case CB_USAGE_NATIVE:
+	case CB_USAGE_INDEX:
 	  return COB_TYPE_NUMERIC_BINARY;
 	case CB_USAGE_PACKED:
 	  return COB_TYPE_NUMERIC_PACKED;
