@@ -546,7 +546,7 @@ compute_size (struct cobc_field *p)
 	case COBC_USAGE_DISPLAY:
 	  {
 	    p->size = p->pic->size;
-	    if (p->f.sign_separate)
+	    if (p->pic->category == COB_NUMERIC && p->f.sign_separate)
 	      p->size++;
 	    break;
 	  }
