@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002 Keisuke Nishida
+ * Copyright (C) 2002-2003 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1466,7 +1466,6 @@ output_call (cobc_tree name, struct cobc_list *args,
 	output (", ");
     }
   output (");\n");
-  output_line ("cob_env = &env;");
   if (st2)
     output_stmt (st2);
   if (dynamic_link)
@@ -2190,15 +2189,16 @@ codegen (struct cobc_program_spec *spec)
   output_indent ("{");
 
   /* local variables */
-  output_line ("static int initialized = 0;\n");
+  output_line ("static int initialized = 0;");
+  output_line ("static cob_decimal d[%d];", spec->decimal_index_max);
+  output_line ("static cob_environment env;");
+  output_newline ();
   output_line ("int i;");
   output_line ("int n[%d];", spec->loop_counter);
   output_line ("int frame_index;");
   output_line ("struct { int perform_through; void *return_address; } "
 	       "frame_stack[24];");
   output_line ("cob_field f[4];");
-  output_line ("cob_decimal d[%d];", spec->decimal_index_max);
-  output_line ("cob_environment env;");
   output_newline ();
   for (p = spec->linkage_storage; p; p = p->sister)
     output_field_definition (p, p, 0, 0);
@@ -2230,7 +2230,7 @@ codegen (struct cobc_program_spec *spec)
   output_line ("frame_stack[0].perform_through = -1;");
   output_newline ();
   output_line ("/* initialize %s */", spec->program_id);
-  output_line ("cob_env = &env;");
+  output_line ("cob_push_environment (&env);");
   if (spec->initial_program)
     output_init_values (spec->working_storage);
   output_newline ();
@@ -2265,6 +2265,7 @@ codegen (struct cobc_program_spec *spec)
   output_newline ();
 
   output_line ("exit_program:");
+  output_line ("cob_pop_environment ();");
   output_line ("return cob_return_code;");
   output_indent ("}");
   output_newline ();
