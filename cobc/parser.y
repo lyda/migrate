@@ -969,9 +969,11 @@ record_description_list_1:
   }
 ;
 record_description_list_2:
-  data_description		{ $$ = $1; }
+  data_description '.'		{ $$ = $1; }
 | record_description_list_2
-  data_description		{ $$ = $1; }
+  data_description '.'		{ $$ = $1; }
+| record_description_list_2 '.' { $$ = $1; }
+| error '.'
 ;
 data_description:
   level_number entry_name
@@ -982,7 +984,7 @@ data_description:
     else
       current_field = CB_FIELD (x);
   }
-  data_description_clause_sequence '.'
+  data_description_clause_sequence
   {
     if (current_field->level == 88)
       cb_validate_88_item (current_field);
