@@ -1,7 +1,7 @@
 #!/bin/sh
 
 echo "Running libtoolize..."
-libtoolize --automake --force
+libtoolize --automake --force --copy
 
 echo "Running aclocal..."
 aclocal -I .
