@@ -85,6 +85,17 @@ static void switch_to_buffer (int lineno, char *filename, struct cb_replacement 
     }
 }
 
+"EJECT" |
+"SKIP1" |
+"SKIP2" |
+"SKIP3" {
+  /* these words are treated as comments */
+  if (cb_verify (cb_eject_statement, yytext))
+    {
+      /* do nothing for now */
+    }
+}
+
 <DIRECTIVE_STATE>{
   \n			{ BEGIN INITIAL; unput ('\n'); }
   "SOURCE"		{ return SOURCE; }
