@@ -36,6 +36,7 @@ int yylineno;
 const char *yyfilename;
 static struct replacement *yyreplacing = NULL;
 
+static int display_line = 0;
 static const char *copybook_name = NULL;
 static struct replacement *copybook_replacing = NULL;
 
@@ -60,9 +61,16 @@ static void set_buffer (int lineno, const char *filename,
 %%
 
 <*>^[*/D].* {
+  /* Comment */
   if (yytext[0] == 'D' && cob_debug_flag)
     /* Activate debugging code */
     yyless(1);
+}
+
+<*>\n-[ \t]*[\"\']? {
+  /* Line connection */
+  yylineno++;
+  display_line = 1;
 }
 
 <*>\n {
@@ -73,6 +81,11 @@ static void set_buffer (int lineno, const char *filename,
     {
       open_buffer (copybook_name, copybook_replacing);
       copybook_name = NULL;
+    }
+  else if (display_line)
+    {
+      fprintf (yyout, "# %d \"%s\"\n", yylineno, yyfilename);
+      display_line = 0;
     }
 }
 
@@ -132,7 +145,7 @@ set_buffer (int lineno, const char *filename,
   yyfilename = filename;
   yyreplacing = replacing;
   yy_switch_to_buffer (buffer);
-  fprintf (yyout, "# %d \"%s\"\n", lineno, filename);
+  fprintf (yyout, "# %d \"%s\"\n", yylineno, yyfilename);
 }
 
 void
