@@ -77,6 +77,7 @@ int cb_source_line = 0;
 FILE *cb_storage_file;
 char *cb_storage_file_name;
 
+FILE *cb_listing_file = NULL;
 FILE *cb_depend_file = NULL;
 char *cb_depend_target = NULL;
 struct cb_text_list *cb_depend_list = NULL;
@@ -191,7 +192,7 @@ terminate (const char *str)
  * Command line
  */
 
-static char short_options[] = "hVvECScmOgwo:I:L:l:";
+static char short_options[] = "hVvECScmOgwo:t:I:L:l:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
@@ -250,6 +251,7 @@ print_usage (void)
 "  -g                    Produce debugging information in the output\n"
 "  -debug                Enable all run-time error checking\n"
 "  -o <file>             Place the output into <file>\n"
+"  -t <file>             Place the listing into <file>\n"
 "  -I <directory>        Add <directory> to copybook search path\n"
 "  -L <directory>        Add <directory> to library search path\n"
 "  -l <lib>              Search for library <lib>\n"
@@ -340,6 +342,12 @@ process_command_line (int argc, char *argv[])
 	    cb_flag_source_location = 1;
 	    break;
 	  }
+
+	case 't':
+	  cb_listing_file = fopen (optarg, "w");
+	  if (!cb_listing_file)
+	    perror (optarg);
+	  break;
 
 	case '%': /* -MT */
 	  cb_depend_target = strdup (optarg);

@@ -92,6 +92,7 @@ extern char cob_config_dir[];
 extern FILE *cb_storage_file;
 extern char *cb_storage_file_name;
 
+extern FILE *cb_listing_file;
 extern FILE *cb_depend_file;
 extern char *cb_depend_target;
 extern struct cb_text_list *cb_depend_list;

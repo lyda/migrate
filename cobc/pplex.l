@@ -316,6 +316,10 @@ ppinput (char *buff, int max_size)
       return strlen (buff);
     }
 
+  /* output listing */
+  if (cb_listing_file)
+    fputs (line, cb_listing_file);
+
   /* normalize and copy the line into the buffer */
   n = 0;
   for (i = 0; line[i]; i++)
