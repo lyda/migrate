@@ -1,0 +1,8 @@
+AT_INIT([Definition Tests])
+
+AT_TESTED([cobc])
+
+m4_include([definition.at])
+m4_include([reference.at])
+m4_include([redefines.at])
+m4_include([misc.at])

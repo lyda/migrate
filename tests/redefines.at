@@ -1,10 +1,5 @@
-## ISO+IEC+1989-2002 13.16.42
+## ISO+IEC+1989-2002 13.16.42 - REDEFINES clause
 
-AT_INIT([REDEFINES clause])
-
-AT_TESTED([cobc])
-
-
 ## 13.16.42.2-1
 
 # TO BE TESTED

@@ -4,8 +4,5 @@ Makefile
 Makefile.in
 atconfig
 atlocal
-definition
-misc
 package.m4
-redefines
-reference
+testsuite

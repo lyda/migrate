@@ -1,22 +1,13 @@
 SUBDIRS = cobol85
 
-TESTSUITE =			\
-	$(srcdir)/definition	\
-	$(srcdir)/redefines	\
-	$(srcdir)/reference	\
-	$(srcdir)/misc
+TESTS =	$(srcdir)/testsuite
 
-EXTRA_DIST = $(TESTSUITE:=.at) $(TESTSUITE)
+EXTRA_DIST = $(TESTS:=.at) $(TESTS)
 
 DISTCLEANFILES = atconfig
 
-check-local: atconfig atlocal $(TESTSUITE)
-	@for x in $(TESTSUITE); do \
-	  $(SHELL) $${x}; \
-	done
-
 clean-local:
-	@for x in $(TESTSUITE); do \
+	@for x in $(TESTS); do \
 	  test -e $${x} && $(SHELL) $${x} -c; true; \
 	done
 
@@ -33,3 +24,4 @@ $(srcdir)/package.m4: $(top_srcdir)/configure.ac
 
 $(srcdir)/%: $(srcdir)/%.at $(srcdir)/package.m4
 	autom4te --language=autotest -I $(srcdir) $< -o $@
+	chmod +x $@
