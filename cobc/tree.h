@@ -41,7 +41,7 @@ struct cob_tree_common {
 typedef struct sym *cob_tree;
 
 #define COB_TREE(x)		((struct sym *) (x))
-#define COB_TREE_TYPE(x)	(((struct cob_tree_common *) (x))->litflag)
+#define COB_TREE_TAG(x)		(((struct cob_tree_common *) (x))->litflag)
 
 extern void print_tree (cob_tree x, FILE *fp);
 
@@ -74,7 +74,9 @@ struct cob_field {
 				   G=group;
 				   F=file; 
 				   R=record; 
-				   S=screen */
+				   S=screen;
+				   W=report (RD)
+				*/
 };
 
 #define COB_FIELD(x)		((struct cob_field *) (x))
@@ -102,7 +104,7 @@ struct lit
 };
 
 #define LITERAL(x)		((struct lit *) (x))
-#define LITERAL_P(x)		(COB_TREE_TYPE (x) == cob_tag_literal)
+#define LITERAL_P(x)		(COB_TREE_TAG (x) == cob_tag_literal)
 
 extern cob_tree make_literal (char *name);
 
@@ -191,10 +193,29 @@ struct sym
 };
 
 #define SYMBOL(x)		((struct sym *) (x))
-#define SYMBOL_P(x)		(COB_TREE_TYPE (x) == cob_tag_symbol)
+#define SYMBOL_P(x)		(COB_TREE_TAG (x) == cob_tag_symbol)
 
 extern cob_tree make_symbol (char *name);
 extern cob_tree make_filler (void);
+
+
+/*
+ * Report variable
+ */
+
+/* this (struct rd) is aliased with (struct sym), so tail data is garbage! */
+struct rd
+{
+  struct cob_field field;	/* rd is a field */
+  cob_tree file;		/* file for writing this report */
+  struct list *controls;	/* list of controls (listing breaks) */
+  struct list *items;		/* list of all report items */
+  int page_limit;
+  int heading;
+  int footing;
+  int first_detail;
+  int last_detail;
+};
 
 
 /*
@@ -209,7 +230,7 @@ struct subref
 };
 
 #define SUBREF(x)	((struct subref *) (x))
-#define SUBREF_P(x)	(COB_TREE_TYPE (x) == cob_tag_subref)
+#define SUBREF_P(x)	(COB_TREE_TAG (x) == cob_tag_subref)
 #define SUBREF_SUBS(x)	(SUBREF (x)->subs)
 #define SUBREF_SYM(x)	(SUBREF (x)->sym)
 
@@ -230,7 +251,7 @@ struct substring
 };
 
 #define SUBSTRING(x)		((struct substring *) (x))
-#define SUBSTRING_P(x)		(COB_TREE_TYPE (x) == cob_tag_substring)
+#define SUBSTRING_P(x)		(COB_TREE_TAG (x) == cob_tag_substring)
 #define SUBSTRING_VAR(x)	(SUBSTRING (x)->sym)
 #define SUBSTRING_OFFSET(x)	(SUBSTRING (x)->off)
 #define SUBSTRING_LENGTH(x)	(SUBSTRING (x)->len)
@@ -252,7 +273,7 @@ struct expr
 };
 
 #define EXPR(x)		((struct expr *) (x))
-#define EXPR_P(x)	(COB_TREE_TYPE (x) == cob_tag_expr)
+#define EXPR_P(x)	(COB_TREE_TAG (x) == cob_tag_expr)
 #define EXPR_OP(x)	(EXPR (x)->op)
 #define EXPR_LEFT(x)	(EXPR (x)->left)
 #define EXPR_RIGHT(x)	(EXPR (x)->right)
@@ -293,7 +314,7 @@ struct cond
 };
 
 #define COND(x)		((struct cond *) (x))
-#define COND_P(x)	(COB_TREE_TYPE (x) == cob_tag_cond)
+#define COND_P(x)	(COB_TREE_TAG (x) == cob_tag_cond)
 #define COND_TYPE(c)	(COND (c)->type)
 #define COND_X(c)	(COND (c)->x)
 #define COND_Y(c)	(COND (c)->y)
@@ -324,23 +345,6 @@ struct named_sect
   struct named_sect *next;	/* pointer to next named section */
   short sec_no;			/* key: section id */
   char *os_name;		/* name of 01 or 77 data as known by OS */
-};
-
-/* this (struct rd) is aliased with (struct sym), so tail data is garbage! */
-struct rd
-{
-  char litflag;
-  struct rd *next;
-  char *name;
-  char type;			/* 'W' for report (RD) */
-  cob_tree file;		/* file for writing this report */
-  struct list *controls;	/* list of controls (listing breaks) */
-  struct list *items;		/* list of all report items */
-  int page_limit;
-  int heading;
-  int footing;
-  int first_detail;
-  int last_detail;
 };
 
 /* additional information for report items */

@@ -4037,17 +4037,20 @@ void
 save_report (cob_tree rep, cob_tree file)
 {
   struct rd *rd = (struct rd *) rep;
-  struct list *item = malloc (sizeof (struct list));
-  item->var = rd;
-  item->next = report_list;
-  report_list = item;
+  COB_FIELD_TYPE (rd) = 'W';
   rd->file = file;
-  rd->type = 'W';
   rd->controls = rd->items = NULL;
   rd->page_limit = 66;
   rd->heading = 1;
   rd->footing = 66;
   rd->first_detail = rd->last_detail = 1;
+
+  {
+    struct list *item = malloc (sizeof (struct list));
+    item->var = rd;
+    item->next = report_list;
+    report_list = item;
+  }
 }
 
 void

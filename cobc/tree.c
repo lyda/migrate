@@ -44,7 +44,7 @@ cob_tree
 make_literal (char *name)
 {
   struct lit *p = malloc (sizeof (struct lit));
-  COB_TREE_TYPE (p) = cob_tag_literal;
+  COB_TREE_TAG (p) = cob_tag_literal;
   COB_FIELD_NEXT (p) = NULL;
   COB_FIELD_NAME (p) = name;
   COB_FIELD_TYPE (p) = 0;
@@ -63,7 +63,7 @@ cob_tree
 make_symbol (char *name)
 {
   struct sym *p = malloc (sizeof (struct sym));
-  COB_TREE_TYPE (p) = cob_tag_symbol;
+  COB_TREE_TAG (p) = cob_tag_symbol;
   COB_FIELD_NEXT (p) = NULL;
   COB_FIELD_NAME (p) = name;
   COB_FIELD_TYPE (p) = 0;
@@ -113,7 +113,7 @@ cob_tree
 make_subref (cob_tree sy, cob_tree_list subs)
 {
   struct subref *p = malloc (sizeof (struct subref));
-  COB_TREE_TYPE (p) = cob_tag_subref;
+  COB_TREE_TAG (p) = cob_tag_subref;
   p->sym     = sy;
   p->subs    = subs;
   /* FIXME: error check here!! */
@@ -129,7 +129,7 @@ cob_tree
 make_substring (cob_tree var, cob_tree offset, cob_tree len)
 {
   struct substring *p = malloc (sizeof (struct substring));
-  COB_TREE_TYPE (p) = cob_tag_substring;
+  COB_TREE_TAG (p) = cob_tag_substring;
   p->sym = var;
   p->off = offset;
   p->len = len;
@@ -146,7 +146,7 @@ cob_tree
 make_expr (cob_tree left, char op, cob_tree right)
 {
   struct expr *p = malloc (sizeof (struct expr));
-  COB_TREE_TYPE (p) = cob_tag_expr;
+  COB_TREE_TAG (p) = cob_tag_expr;
   p->op = op;
   p->left = left;
   p->right = right;
@@ -162,7 +162,7 @@ cob_tree
 make_cond (cob_tree x, enum cond_type type, cob_tree y)
 {
   struct cond *p = malloc (sizeof (struct cond));
-  COB_TREE_TYPE (p) = cob_tag_cond;
+  COB_TREE_TAG (p) = cob_tag_cond;
   p->type    = type;
   p->x       = x;
   p->y       = y;
