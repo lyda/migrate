@@ -2273,8 +2273,8 @@ search_statement:
       {
 	if (COBC_COND (next)->type == COBC_COND_AND)
 	  {
-	    this = COBC_COND (next)->left;
-	    next = COBC_COND (next)->right;
+	    this = COBC_COND (next)->right;
+	    next = COBC_COND (next)->left;
 	  }
 	else
 	  {
