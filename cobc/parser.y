@@ -2501,9 +2501,9 @@ sort_statement:
   sort_body
 ;
 sort_body:
-  file_name sort_key_list sort_duplicates sort_collating
+  qualified_word sort_key_list sort_duplicates sort_collating
   {
-    cb_emit_sort_init ($1, $2, $4);
+    cb_emit_sort_init ($1, $2, $3, $4);
     $$ = $1; /* used in sort_input/sort_output */
   }
   sort_input sort_output
@@ -2514,13 +2514,19 @@ sort_body:
 sort_key_list:
   /* empty */			{ $$ = NULL; }
 | sort_key_list
-  _on ascending_or_descending _key x_list
+  _on ascending_or_descending _key opt_key_list
   {
     cb_tree l;
+    if ($5 == NULL)
+      $5 = cb_list (NULL);
     for (l = $5; l; l = CB_CHAIN (l))
       CB_PURPOSE (l) = $3;
     $$ = cb_list_append ($1, $5);
   }
+;
+opt_key_list:
+  /* empty */			{ $$ = NULL; }
+| opt_key_list qualified_word	{ $$ = cb_list_add ($1, $2); }
 ;
 sort_duplicates:
 | _with DUPLICATES _in _order		{ PENDING ("DUPLICATES"); }
@@ -2531,7 +2537,7 @@ sort_collating:
 ;
 
 sort_input:
-  USING file_name_list
+| USING file_name_list
   {
     cb_emit_sort_using ($0, $2);
   }
@@ -2542,7 +2548,7 @@ sort_input:
 ;
 
 sort_output:
-  GIVING file_name_list
+| GIVING file_name_list
   {
     cb_emit_sort_giving ($-1, $2);
   }

@@ -1028,7 +1028,7 @@ extern void cb_emit_set_up_down (cb_tree l, cb_tree flag, cb_tree x);
 extern void cb_emit_set_on_off (cb_tree l, cb_tree flag);
 extern void cb_emit_set_true (cb_tree l);
 
-extern void cb_emit_sort_init (cb_tree file, cb_tree keys, cb_tree col);
+extern void cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree dup, cb_tree col);
 extern void cb_emit_sort_using (cb_tree file, cb_tree l);
 extern void cb_emit_sort_input (cb_tree file, cb_tree proc);
 extern void cb_emit_sort_giving (cb_tree file, cb_tree l);

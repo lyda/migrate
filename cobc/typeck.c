@@ -2839,15 +2839,39 @@ cb_emit_set_true (cb_tree l)
  */
 
 void
-cb_emit_sort_init (cb_tree file, cb_tree keys, cb_tree col)
+cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree dup, cb_tree col)
 {
   cb_tree l;
-  file = cb_ref (file);
-  cb_emit (cb_build_funcall_3 ("cob_sort_init", file,
-			       cb_int (cb_list_length (keys)), col));
   for (l = keys; l; l = CB_CHAIN (l))
-    cb_emit (cb_build_funcall_3 ("cob_sort_init_key",
-				 file, CB_PURPOSE (l), CB_VALUE (l)));
+    {
+      if (CB_VALUE (l) == NULL)
+	CB_VALUE (l) = name;
+      cb_ref (CB_VALUE (l));
+    }
+
+  if (CB_FILE_P (cb_ref (name)))
+    {
+      cb_emit (cb_build_funcall_3 ("cob_sort_init", cb_ref (name),
+				   cb_int (cb_list_length (keys)), col));
+      for (l = keys; l; l = CB_CHAIN (l))
+	cb_emit (cb_build_funcall_3 ("cob_sort_init_key", cb_ref (name),
+				     CB_PURPOSE (l), CB_VALUE (l)));
+    }
+  else
+    {
+      struct cb_field *f = CB_FIELD (cb_ref (name));
+      if (keys == NULL)
+	cb_error_x (name, "table sort without keys not implemented yet");
+      cb_emit (cb_build_funcall_1 ("cob_table_sort_init",
+				   cb_int (cb_list_length (keys))));
+      for (l = keys; l; l = CB_CHAIN (l))
+	cb_emit (cb_build_funcall_2 ("cob_table_sort_init_key",
+				     CB_PURPOSE (l), CB_VALUE (l)));
+      cb_emit (cb_build_funcall_2 ("cob_table_sort", name,
+				   (f->occurs_depending
+				    ? cb_build_cast_integer (f->occurs_depending)
+				    : cb_int (f->occurs_max))));
+    }
 }
 
 void
@@ -2899,7 +2923,8 @@ cb_emit_sort_output (cb_tree file, cb_tree proc)
 void
 cb_emit_sort_finish (cb_tree file)
 {
-  cb_emit (cb_build_funcall_1 ("cob_sort_finish", cb_ref (file)));
+  if (CB_FILE_P (cb_ref (file)))
+    cb_emit (cb_build_funcall_1 ("cob_sort_finish", cb_ref (file)));
 }
 
 
