@@ -20,4 +20,4 @@ defaults.h: Makefile.am $(top_builddir)/config.status
 	@echo "#define COB_CC           \"@COB_CC@\""     >> defaults.h
 	@echo "#define COB_COBPP        \"@COB_COBPP@\""  >> defaults.h
 	@echo "#define COB_CFLAGS       \"@COB_CFLAGS@\"" >> defaults.h
-	@echo "#define COB_LIBADD       \"@COB_LIBADD@\"" >> defaults.h
+	@echo "#define COB_LIBS         \"@COB_LIBS@\""   >> defaults.h

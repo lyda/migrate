@@ -4,8 +4,8 @@ How to build OpenCOBOL
 Required tools
 --------------
 
- - Autoconf 2.52
- - Automake 1.5
+ - Autoconf 2.53
+ - Automake 1.6
  - Libtool  1.4.2
  - Bison 1.28
  - Flex  2.5.4

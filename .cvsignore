@@ -1,3 +1,4 @@
+*.cache
 *.rpm
 *.tar.gz
 Makefile
@@ -13,6 +14,7 @@ libtool
 ltmain.sh
 missing
 mkinstalldirs
-stamp-h*
-test*
-utils
+libltdl
+stamp-h1
+depcomp
+INSTALL

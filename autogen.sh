@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# echo "Running libtoolize..."
-# libtoolize --automake --force --ltdl
+echo "Running libtoolize..."
+libtoolize --automake --force --copy --ltdl
 
 echo "Running aclocal..."
 aclocal -I .
@@ -10,7 +10,7 @@ echo "Running autoheader..."
 autoheader
 
 echo "Running automake..."
-automake -a
+automake -a -c
 
 echo "Running autoconf..."
 autoconf

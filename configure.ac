@@ -1,13 +1,10 @@
 # Process this file with autoconf to produce a configure script.
-AC_PREREQ(2.50)
-
-AC_INIT
+AC_INIT(open-cobol, 0.9.3)
 AC_CONFIG_SRCDIR(cobc/cobc.c)
-. $srcdir/VERSION
-AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
-AM_MAINTAINER_MODE
+AC_CONFIG_SUBDIRS(libltdl)
 AM_CONFIG_HEADER(config.h)
-AC_SUBST(RELEASE)
+AM_INIT_AUTOMAKE
+AM_MAINTAINER_MODE
 
 # enable debug mode by default for now
 AC_DEFINE(COB_DEBUG)
@@ -30,6 +27,8 @@ AM_PROG_LEX
 AC_PROG_YACC
 AC_PROG_LN_S
 AC_PROG_INSTALL
+AC_LIBLTDL_INSTALLABLE
+AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 
@@ -38,11 +37,6 @@ AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([alloca.h errno.h fcntl.h limits.h malloc.h stdlib.h \
 		  string.h sys/param.h sys/time.h termios.h unistd.h])
-
-# Checks for dl.
-LIBDL=""
-AC_CHECK_HEADERS([dlfcn.h], , AC_MSG_ERROR(dlfcn.h is required))
-AC_CHECK_LIB([dl], [dlopen], LIBDL="-ldl")
 
 # Checks for db.
 LIBDB="-ldb1"
@@ -74,22 +68,25 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([atexit memmove memset strcasecmp strchr strdup \
 		strerror strrchr strstr strtol])
 
+# Autoheader templates
+AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
+
 COB_CC="cc"
 COB_COBPP="cobpp"
 COB_CFLAGS="-I$includedir"
-COB_LIBADD="-L$libdir -lcob"
+COB_LIBS="-L$libdir -lcob"
 COB_LIBRARY_PATH=".:$libdir/$PACKAGE"
-LIBCOB_CFLAGS=""
-LIBCOB_LIBADD="${LIBDL} ${LIBDB} ${LIBGMP} ${LIBRL}"
+LIBCOB_CFLAGS="${INCLTDL}"
+LIBCOB_LIBS="${LIBLTDL} ${LIBDB} ${LIBGMP} ${LIBRL}"
 LIBS="$save_libs"
 
 AC_SUBST(COB_CC)
 AC_SUBST(COB_COBPP)
 AC_SUBST(COB_CFLAGS)
-AC_SUBST(COB_LIBADD)
+AC_SUBST(COB_LIBS)
 AC_SUBST(COB_LIBRARY_PATH)
 AC_SUBST(LIBCOB_CFLAGS)
-AC_SUBST(LIBCOB_LIBADD)
+AC_SUBST(LIBCOB_LIBS)
 
 AC_CONFIG_FILES([Makefile libcob/Makefile cobpp/Makefile cobc/Makefile
 		texi/Makefile cob-config])

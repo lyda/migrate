@@ -3,12 +3,12 @@ bin_SCRIPTS=cob-config
 aclocaldir = $(datadir)/aclocal
 aclocal_DATA = cob.m4
 
-SUBDIRS = libcob cobpp cobc texi
+SUBDIRS = libcob cobpp cobc texi libltdl
 EXTRA_DIST = VERSION cob.m4 redhat debian
 
-MAINTAINERCLEANFILES = config.guess config.sub config.log \
+MAINTAINERCLEANFILES = config.guess config.sub config.status config.log \
 	Makefile.in aclocal.m4 config.h.in stamp-h.in depcomp ltmain.sh \
-	INSTALL configure missing mkinstalldirs install-sh texinfo.tex
+	INSTALL configure missing mkinstalldirs install-sh
 
 rpmdir = /home/knishida/redhat
 
