@@ -678,18 +678,16 @@ output_compare (cobc_tree x, cobc_tree s1, cobc_tree s2)
       /* non-numeric figurative comparison */
       cobc_tree x = COBC_CONST_P (s2) ? s1 : s2;
       cobc_tree y = COBC_CONST_P (s2) ? s2 : s1;
-      unsigned char c = ((y == cobc_zero) ? '0' :
-			 (y == cobc_space) ? ' ' :
-			 (y == cobc_low) ? '\0' :
-			 (y == cobc_high) ? '\xff' :
-			 (y == cobc_quote) ? '\"' : 0);
+      unsigned char *str = ((y == cobc_zero) ? "0" :
+			    (y == cobc_space) ? " " :
+			    (y == cobc_low) ? "\\0" :
+			    (y == cobc_high) ? "\\xff" :
+			    (y == cobc_quote) ? "\\\"" : 0);
       if (COBC_CONST_P (s1))
 	output ("-");
       output ("cob_cmp_all (");
-      output_location (x);
-      output (", %d, ", c);
-      output_length (x);
-      output (")");
+      output_tree (x);
+      output (", \"%s\")", str);
     }
   else if (COBC_LITERAL_P (s1) || COBC_LITERAL_P (s2))
     {
@@ -700,24 +698,11 @@ output_compare (cobc_tree x, cobc_tree s1, cobc_tree s2)
 	output ("-");
       if (COBC_LITERAL (y)->all)
 	{
-	  if (COBC_LITERAL (y)->size == 1)
-	    {
-	      output ("cob_cmp_all (");
-	      output_location (x);
-	      output (", %d, ", COBC_LITERAL (y)->str[0]);
-	      output_length (x);
-	      output (")");
-	    }
-	  else
-	    {
-	      output ("cob_cmp_all_str (");
-	      output_location (x);
-	      output (", ");
-	      output_location (y);
-	      output (", ");
-	      output_length (x);
-	      output (")");
-	    }
+	  output ("cob_cmp_all (");
+	  output_tree (x);
+	  output (", ");
+	  output_location (y);
+	  output (")");
 	}
       else
 	{
