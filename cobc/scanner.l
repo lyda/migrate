@@ -64,10 +64,7 @@ static int scan_reserved_word (char *text);
 %}
 
 digit [0-9]
-relop [<>=]
 white [\r\t ]
-sdelim \"
-ldelim \'
 any [!-~]
 
 word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
@@ -156,12 +153,12 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
 	  update_xreflist (yylval.sval);
 	  return (VARCOND);
 	}
+      else if (is_subscripted (symbol))
+	{
+	  return (SUBSCVAR);
+	}
       else
 	{
-	  if (is_subscripted (symbol))
-	    {
-	      return (SUBSCVAR);
-	    }
 	  update_xreflist (yylval.sval);
 	  return (VARIABLE);
 	}
@@ -220,7 +217,7 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
 }
 
 <IDENT_ST>{
-  [ \t]* { }
+  [ \t\n]* { }
   "."/[ \t\n] { 
     return(EOS); 
   }
@@ -237,57 +234,45 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   {any}   {
     return(yytext[0]); 
   }
-
-  "\n" { }
-} /* end of <IDENT_ST> */
+}
 
 <INITIAL,ENVIR_ST,DATA_ST,REDEF_ST,EXCEPTION_ST>{
 
-  "."/[ \t\n] { 
-		  return(EOS); 
-	  }
+  "."/[ \t\n]	{ return EOS; }
 
-  {ldelim}        { return read_literal ('\''); }
-  {sdelim}        { return read_literal ('\"'); }
-  X{ldelim}       { return read_literal_x ('\''); }
-  X{sdelim}       { return read_literal_x ('\"'); }
+  {white}+ { }
+  "\n"   { }
+
+  \'		{ return read_literal ('\''); }
+  \"		{ return read_literal ('\"'); }
+  X\'		{ return read_literal_x ('\''); }
+  X\"		{ return read_literal_x ('\"'); }
 
   [0-9]*[.,]?[0-9]+ {
     yylval.lval = install_literal (yytext);
     return(NLITERAL);
   }
 
-  {white}+ { }
-  "\n"   { }
-
-  {relop}{relop}? {
+  [<>=][>=]? {
     int token;
     if ((token = scan_reserved_word (yytext)) != 0)
       return token;
     yyerror("unknown operator: `%s'", yytext);
   }
 
-  "(" {
-    return(yytext[0]); 
-  }
-  "**" {
-    return(POW_OP); 
-  }
-  {any} {
-    return(yytext[0]); 
-  }
-
+  "**"		{ return POW_OP; }
+  {any}		{ return yytext[0]; }
 }
-
-<COMMENT_ST>{
-  .*      {}
-  "\n"   { BEGIN INITIAL; }
-} /* end of COMMENT_ST */
 
 <PIC_ST>{
   "IS"		{ /* ignore */ }
   [ \t\r\n]+	{ /* ignore */ }
   [^ \t\r\n]+	{ BEGIN DATA_ST; return read_picture (yytext); }
+}
+
+<COMMENT_ST>{
+  .*		{ /* ignore */ }
+  "\n"		{ BEGIN INITIAL; }
 }
 
 <<EOF>> {
@@ -457,6 +442,6 @@ lex_fgets (char *buf, int maxsize)
 void
 dummy ()
 {
-  /* This is to avoid warnings */
+  /* This avoids warnings */
   yy_flex_realloc (0, 0);
 }

@@ -3180,9 +3180,8 @@ filename:
 cond_name:
     VARCOND '(' subscript_list  ')'
     {
-      curr_division = CDIV_PROC;
       $$ = (struct sym *)make_subref( $1, $3 );
-      /*check_subscripts($$);*/
+      check_subscripts($$);
     }
     | VARCOND  { $<sval>$=$1; }
     ;
@@ -3203,7 +3202,6 @@ variable:
       }
     }
     | qualified_var LPAR subscript_list ')' {
-      curr_division = CDIV_PROC;
       $$ = (struct sym *)make_subref( $1, $3 );
       check_subscripts($$);
       }
