@@ -36,26 +36,6 @@
 #define match(s1,s2,size) \
   ((*(s1) == *(s2)) && ((size) == 1 || memcmp ((s1), (s2), (size)) == 0))
 
-static void
-set_int (struct cob_field f, int n)
-{
-  int saved_status = cob_status;
-  cob_status = COB_STATUS_SUCCESS;
-  cob_set_int (f, n);
-  cob_status = saved_status;
-}
-
-static void
-add_int (struct cob_field f, int n)
-{
-  int saved_status;
-  if (n == 0) return;
-  saved_status = cob_status;
-  cob_status = COB_STATUS_SUCCESS;
-  cob_add_int (f, n, 0, 0);
-  cob_status = saved_status;
-}
-
 
 /*
  * INSPECT
@@ -134,7 +114,7 @@ cob_inspect (struct cob_field var, ...)
 		      mark[i] = 1;
 		  }
 	      if (!replacing)
-		add_int (f1, n);
+		cob_add_int (f1, n, 0, 0);
 	    }
 	  break;
 	}
@@ -178,7 +158,7 @@ cob_inspect (struct cob_field var, ...)
 		    break;
 		}
 	      if (!replacing)
-		add_int (f1, n);
+		cob_add_int (f1, n, 0, 0);
 	    }
 	  break;
 	}
@@ -276,7 +256,7 @@ cob_string (struct cob_field dst, ...)
  end:
   va_end (ap);
   if (COB_FIELD_IS_VALID (ptr))
-    set_int (ptr, offset + 1);
+    cob_set_int (ptr, offset + 1);
 }
 
 
@@ -397,14 +377,14 @@ cob_unstring (struct cob_field src, ...)
       case COB_UNSTRING_COUNT:
 	{
 	  struct cob_field f = va_arg (ap, struct cob_field);
-	  set_int (f, match_size);
+	  cob_set_int (f, match_size);
 	  break;
 	}
 
       case COB_UNSTRING_TALLYING:
 	{
 	  struct cob_field f = va_arg (ap, struct cob_field);
-	  add_int (f, count);
+	  cob_add_int (f, count, 0, 0);
 	  break;
 	}
       }
@@ -423,5 +403,5 @@ cob_unstring (struct cob_field src, ...)
   if (reg_inited)
     regfree (&reg);
   if (COB_FIELD_IS_VALID (ptr))
-    set_int (ptr, offset + 1);
+    cob_set_int (ptr, offset + 1);
 }
