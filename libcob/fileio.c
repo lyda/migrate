@@ -46,6 +46,12 @@
 #include "fileio.h"
 #include "lib/gettext.h"
 
+#ifdef __MINGW32__
+#define INITIAL_FLAGS	O_BINARY
+#else
+#define INITIAL_FLAGS	0
+#endif
+
 cob_file *cob_error_file;
 
 static cob_fileio_funcs *fileio_funcs[COB_ORG_MAX];
@@ -63,28 +69,24 @@ static int
 sequential_open (cob_file *f, char *filename, int mode)
 {
   int fd;
-  int flags = 0;
+  int flags = INITIAL_FLAGS;
   struct sequential_file *p;
 
   switch (mode)
     {
     case COB_OPEN_INPUT:
-      flags = O_RDONLY;
+      flags |= O_RDONLY;
       break;
     case COB_OPEN_OUTPUT:
-      flags = O_RDWR | O_CREAT | O_TRUNC;
+      flags |= O_RDWR | O_CREAT | O_TRUNC;
       break;
     case COB_OPEN_I_O:
-      flags = O_RDWR;
+      flags |= O_RDWR;
       break;
     case COB_OPEN_EXTEND:
-      flags = O_RDWR | O_APPEND | (f->flag_optional ? O_CREAT : 0);
+      flags |= O_RDWR | O_APPEND | (f->flag_optional ? O_CREAT : 0);
       break;
     }
-
-#ifdef __MINGW32__
-  flags |= O_BINARY;
-#endif
 
   fd = open (filename, flags, COB_FILE_MODE);
   if (fd == -1)
@@ -496,28 +498,24 @@ static int
 indexed_open (cob_file *f, char *filename, int mode)
 {
   int i, j;
-  int flags = 0;
+  int flags = INITIAL_FLAGS;
   struct indexed_file *p;
 
   switch (mode)
     {
     case COB_OPEN_INPUT:
-      flags = O_RDONLY;
+      flags |= O_RDONLY;
       break;
     case COB_OPEN_OUTPUT:
-      flags = O_RDWR | O_CREAT | O_TRUNC;
+      flags |= O_RDWR | O_CREAT | O_TRUNC;
       break;
     case COB_OPEN_I_O:
-      flags = O_RDWR | O_CREAT;
+      flags |= O_RDWR | O_CREAT;
       break;
     case COB_OPEN_EXTEND:
-      flags = O_RDWR | (f->flag_optional ? O_CREAT : 0);
+      flags |= O_RDWR | (f->flag_optional ? O_CREAT : 0);
       break;
     }
-
-#ifdef __MINGW32__
-  flags |= O_BINARY;
-#endif
 
   p = malloc (sizeof (struct indexed_file));
   p->db = malloc (sizeof (DB *) * f->nkeys);
@@ -833,21 +831,17 @@ sort_open (cob_file *f, char *filename, int mode)
 {
   BTREEINFO info;
   struct sort_file *p = f->file;
-  int flags = 0;
+  int flags = INITIAL_FLAGS;
 
   switch (mode)
     {
     case COB_OPEN_INPUT:
-      flags = O_RDONLY;
+      flags |= O_RDONLY;
       break;
     case COB_OPEN_OUTPUT:
-      flags = O_RDWR | O_CREAT | O_TRUNC;
+      flags |= O_RDWR | O_CREAT | O_TRUNC;
       break;
     }
-
-#ifdef __MINGW32__
-  flags |= O_BINARY;
-#endif
 
   /* open db */
   memset (&info, 0, sizeof (info));
