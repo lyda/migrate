@@ -92,6 +92,7 @@ LIBCOB_LIBS="$LIBCOB_LIBS -lltdl"
 # Checks for gettext
 ALL_LINGUAS="ja"
 AM_GNU_GETTEXT([external])
+AM_GNU_GETTEXT_VERSION(0.11.5)
 if test "x$LTLIBINTL" != "x"; then
   LIBCOB_LIBS="$LIBCOB_LIBS $LTLIBINTL"
 fi
