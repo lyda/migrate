@@ -288,7 +288,7 @@ cob_move_display_to_binary (struct cob_field f1, struct cob_field f2)
       val = val * 10;
   if (sign && FIELD_SIGNED_P (f2))
     val = -val;
-  val %= cob_exp10[(int) f2.desc->digits];
+  val %= cob_exp10LL[(int) f2.desc->digits];
 
   /* store */
   switch (len2)

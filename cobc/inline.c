@@ -224,7 +224,7 @@ output_move_literal (cobc_tree src, cobc_tree dst)
       char src_pic[5];
       struct cobc_literal *l = COBC_LITERAL (src);
       struct cob_field_desc src_desc =
-	{l->size, COBC_TREE_CLASS (l), l->decimals};
+	{l->size, COBC_TREE_CLASS (l), l->size, l->decimals};
       struct cob_field src_fld = {&src_desc, l->str};
       src_desc.pic = src_pic;
       src_pic[0] = COBC_TREE_CLASS (l);

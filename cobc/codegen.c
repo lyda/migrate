@@ -276,14 +276,6 @@ output_memcpy (cobc_tree x, char *s)
   output (", %d);\n", strlen (s));
 }
 
-static void
-output_native_assign (cobc_tree x, long long val)
-{
-  output_prefix ();
-  output_index (x);
-  output (" = %lldLL;\n", val);
-}
-
 
 /*
  * Function calls
@@ -403,6 +395,41 @@ output_expr (cobc_tree x)
       }
     default:
       output_call_1 ("cob_push_decimal", x);
+    }
+}
+
+
+/*
+ * Assignment
+ */
+
+static void
+output_native_assign (cobc_tree x, long long val)
+{
+  output_prefix ();
+  output_index (x);
+  output (" = %lldLL;\n", val);
+}
+
+static void
+output_assign (struct cobc_assign *p)
+{
+  if (COBC_FIELD (p->field)->usage == USAGE_INDEX
+      && COBC_EXPR_P (p->value)
+      && COBC_EXPR (p->value)->left == p->field)
+    {
+      output_prefix ();
+      output_index (p->field);
+      output (" = ");
+      output_index (p->value);
+      output (";\n");
+    }
+  else
+    {
+      output_tree (p->value);
+      if (p->rounded)
+	output_call_1 ("cob_round", p->field);
+      output_call_1 ("cob_set", p->field);
     }
 }
 
@@ -1213,11 +1240,7 @@ output_tree (cobc_tree x)
       }
     case cobc_tag_assign:
       {
-	struct cobc_assign *p = COBC_ASSIGN (x);
-	output_tree (p->value);
-	if (p->rounded)
-	  output_call_1 ("cob_round", p->field);
-	output_call_1 ("cob_set", p->field);
+	output_assign (COBC_ASSIGN (x));
 	break;
       }
     case cobc_tag_call:
