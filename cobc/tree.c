@@ -305,6 +305,40 @@ tree_category (cb_tree x)
     }
 }
 
+int
+cb_fits_int (cb_tree x)
+{
+  switch (CB_TREE_TAG (x))
+    {
+    case cb_tag_literal:
+      {
+	struct cb_literal *l = CB_LITERAL (x);
+	return (l->size < 10 && l->expt == 0);
+      }
+    case cb_tag_field:
+      {
+	struct cb_field *f = CB_FIELD (x);
+	if (f->usage == cb_usage_index)
+	  return 1;
+	if (f->usage == cb_usage_binary
+	    && f->size <= sizeof (int)
+	    && f->pic->expt >= 0)
+	  return 1;
+	if (f->usage == cb_usage_display
+	    && f->size < 10
+	    && f->pic->expt >= 0)
+	  return 1;
+	return 0;
+      }
+    case cb_tag_reference:
+      {
+	return cb_fits_int (CB_REFERENCE (x)->value);
+      }
+    default:
+      return 0;
+    }
+}
+
 
 /*
  * Constants
@@ -326,6 +360,12 @@ cb_tree cb_int2;
 cb_tree cb_error_node;
 
 struct cb_label *cb_standard_error_handler;
+
+#undef CB_USAGE
+#define CB_USAGE(var,type,size)				\
+ static struct cb_usage var##_data = {type, size};	\
+ struct cb_usage *var = &var##_data;
+#include "usage.def"
 
 static cb_tree
 make_constant (char class, char *val)
@@ -368,7 +408,7 @@ init_constants (void)
     {
       char buff[16];
       sprintf (buff, "switch[%d]", i);
-      cb_switch[i] = make_field_x (buff, "9", CB_USAGE_INDEX);
+      cb_switch[i] = make_field_3 (make_reference (buff), "9", cb_usage_index);
     }
 
   cb_standard_error_handler = make_constant_label ("standard_error_handler");
@@ -713,19 +753,13 @@ make_field (cb_tree name)
 }
 
 cb_tree
-make_field_3 (cb_tree name, const char *pic, int usage)
+make_field_3 (cb_tree name, const char *pic, struct cb_usage *usage)
 {
   cb_tree x = make_field (name);
   CB_FIELD (x)->pic = parse_picture (pic);
   CB_FIELD (x)->usage = usage;
   finalize_field (CB_FIELD (x));
   return x;
-}
-
-cb_tree
-make_field_x (const char *name, const char *pic, int usage)
-{
-  return make_field_3 (make_reference (name), pic, usage);
 }
 
 struct cb_field *
@@ -820,7 +854,7 @@ build_field (int level, cb_tree name, struct cb_field *last_field,
   /* build the field */
   f = CB_FIELD (make_field (name));
   f->level = level;
-  f->usage = CB_USAGE_DISPLAY;
+  f->usage = cb_usage_display;
   f->occurs = 1;
   f->storage = storage;
 
@@ -981,28 +1015,20 @@ validate_field_1 (struct cb_field *f)
   else
     {
       /* validate PICTURE */
-      if (!f->pic)
-	if (f->usage != CB_USAGE_INDEX)
-	  {
-	    cb_error_x (x, _("PICTURE clause required for `%s'"), name);
-	    return -1; /* cannot continue */
-	  }
+      if (f->pic == NULL && f->usage->size == 0)
+	{
+	  cb_error_x (x, _("PICTURE clause required for `%s'"), name);
+	  return -1; /* cannot continue */
+	}
+      if (f->pic != NULL && f->usage->size != 0)
+	{
+	  cb_error_x (x, _("`%s' cannot have PICTURE clause"), name);
+	}
 
       /* validate USAGE */
-      switch (f->usage)
-	{
-	case CB_USAGE_DISPLAY:
-	  break;
-	case CB_USAGE_BINARY:
-	case CB_USAGE_PACKED:
-	  if (f->pic->category != COB_TYPE_NUMERIC)
-	    cb_warning_x (x, _("`%s' not numeric item"), name);
-	  break;
-	case CB_USAGE_INDEX:
-	  break;
-	default:
-	  abort ();
-	}
+      if (f->usage == cb_usage_binary || f->usage == cb_usage_packed)
+	if (f->pic->category != COB_TYPE_NUMERIC)
+	  cb_warning_x (x, _("`%s' not numeric item"), name);
 
       /* validate SIGN */
 
@@ -1025,12 +1051,6 @@ validate_field_1 (struct cb_field *f)
 	  }
 
       /* validate SYNCHRONIZED */
-      if (f->flag_synchronized)
-	if (f->usage != CB_USAGE_BINARY)
-	  {
-	    // cb_warning ("SYNCHRONIZED here has no effect");
-	    f->flag_synchronized = 0;
-	  }
 
       /* validate BLANK ZERO */
       if (f->flag_blank_zero)
@@ -1145,7 +1165,7 @@ setup_parameters (struct cb_field *p)
   else
     {
       /* regular field */
-      if (p->usage == CB_USAGE_INDEX)
+      if (p->usage == cb_usage_index)
 	p->pic = parse_picture ("S9(9)");
 
       /* set class */
@@ -1172,14 +1192,11 @@ setup_parameters (struct cb_field *p)
 	}
 
       /* set type */
-      switch (p->usage)
+      switch (p->usage->type)
 	{
-	case CB_USAGE_BINARY:
-	case CB_USAGE_INDEX:
-	  CB_TREE_TYPE (p) = COB_TYPE_NUMERIC_BINARY;
-	  break;
-	case CB_USAGE_PACKED:
-	  CB_TREE_TYPE (p) = COB_TYPE_NUMERIC_PACKED;
+	case COB_TYPE_NUMERIC_BINARY:
+	case COB_TYPE_NUMERIC_PACKED:
+	  CB_TREE_TYPE (p) = p->usage->type;
 	  break;
 	default:
 	  CB_TREE_TYPE (p) = p->pic->category;
@@ -1236,10 +1253,10 @@ compute_size (struct cb_field *p)
     }
   else
     {
-      /* terminals */
-      switch (p->usage)
+      /* elementary item */
+      switch (p->usage->type)
 	{
-	case CB_USAGE_BINARY:
+	case COB_TYPE_NUMERIC_BINARY:
 	  {
 	    int size = p->pic->size;
 	    switch (cb_binary_rep)
@@ -1256,19 +1273,14 @@ compute_size (struct cb_field *p)
 	      }
 	    break;
 	  }
-	case CB_USAGE_DISPLAY:
+	case COB_TYPE_NUMERIC_DISPLAY:
 	  {
 	    p->size = p->pic->size;
 	    if (p->pic->category == COB_TYPE_NUMERIC && p->flag_sign_separate)
 	      p->size++;
 	    break;
 	  }
-	case CB_USAGE_INDEX:
-	  {
-	    p->size = sizeof (int);
-	    break;
-	  }
-	case CB_USAGE_PACKED:
+	case COB_TYPE_NUMERIC_PACKED:
 	  {
 	    p->size = p->pic->size / 2;
 	    if (p->pic->size % 2 || p->pic->have_sign)
@@ -1276,7 +1288,10 @@ compute_size (struct cb_field *p)
 	    break;
 	  }
 	default:
-	  abort ();
+	  if (p->usage->size > 0)
+	    p->size = p->usage->size;
+	  else
+	    abort ();
 	}
     }
 
@@ -1375,7 +1390,8 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 
   /* create record */
   sprintf (pic, "X(%d)", f->record_max);
-  f->record = CB_FIELD (make_field_x (f->name, pic, CB_USAGE_DISPLAY));
+  f->record = CB_FIELD (make_field_3 (make_reference (f->name),
+				      pic, cb_usage_display));
   f->record->sister = records;
 
   for (p = records; p; p = p->sister)
@@ -2095,11 +2111,11 @@ decimal_expand (cb_tree s, cb_tree d, cb_tree x)
 
 	/* check numeric */
 	if (CB_EXCEPTION_ENABLE (COB_EC_DATA_INCOMPATIBLE))
-	  if (f->usage == CB_USAGE_DISPLAY)
+	  if (f->usage == cb_usage_display)
 	    add_stmt (s, make_funcall_2 ("cob_check_numeric",
 					 x, make_string (f->name)));
 
-	if (f->usage == CB_USAGE_INDEX)
+	if (cb_fits_int (x))
 	  add_stmt (s, make_funcall_2 ("cob_decimal_set_int",
 				       d, make_cast_int32 (x)));
 	else
@@ -2215,55 +2231,29 @@ build_assign (struct cb_list *vars, char op, cb_tree val)
 cb_tree
 build_add (cb_tree v, cb_tree n, int round)
 {
-  struct cb_field *f = field (v);
-
-  if (f->usage == CB_USAGE_INDEX)
+  if (field (v)->usage == cb_usage_index)
     return build_move (make_binary_op (v, '+', n), v);
 
-  switch (CB_TREE_TAG (n))
-    {
-    case cb_tag_literal:
-      {
-	struct cb_literal *l = CB_LITERAL (n);
-	if (l->size < 10 && l->expt == 0 && round == 0)
-	  return make_funcall_2 ("cob_add_int", v, make_cast_int32 (n));
-	/* fall through */
-      }
-    default:
-      {
-	if (round)
-	  return make_funcall_2 ("cob_add_r", v, n);
-	else
-	  return make_funcall_2 ("cob_add", v, n);
-      }
-    }
+  if (round == 0 && cb_fits_int (n))
+    return make_funcall_2 ("cob_add_int", v, make_cast_int32 (n));
+  if (round)
+    return make_funcall_2 ("cob_add_r", v, n);
+  else
+    return make_funcall_2 ("cob_add", v, n);
 }
 
 cb_tree
 build_sub (cb_tree v, cb_tree n, int round)
 {
-  struct cb_field *f = field (v);
-
-  if (f->usage == CB_USAGE_INDEX)
+  if (field (v)->usage == cb_usage_index)
     return build_move (make_binary_op (v, '-', n), v);
 
-  switch (CB_TREE_TAG (n))
-    {
-    case cb_tag_literal:
-      {
-	struct cb_literal *l = CB_LITERAL (n);
-	if (l->size < 10 && l->expt == 0 && round == 0)
-	  return make_funcall_2 ("cob_sub_int", v, make_cast_int32 (n));
-	/* fall through */
-      }
-    default:
-      {
-	if (round)
-	  return make_funcall_2 ("cob_sub_r", v, n);
-	else
-	  return make_funcall_2 ("cob_sub", v, n);
-      }
-    }
+  if (round == 0 && cb_fits_int (n))
+    return make_funcall_2 ("cob_sub_int", v, make_cast_int32 (n));
+  if (round)
+    return make_funcall_2 ("cob_sub_r", v, n);
+  else
+    return make_funcall_2 ("cob_sub", v, n);
 }
 
 static void
@@ -2661,13 +2651,8 @@ build_cond (cb_tree x)
 	    p->y = build_cond (p->y);
 	    break;
 	  default:
-	    if ((CB_REFERENCE_P (p->x)
-		 && field (p->x)->usage == CB_USAGE_INDEX)
-		|| (CB_REFERENCE_P (p->y)
-		    && field (p->y)->usage == CB_USAGE_INDEX))
-	      {
-		return x;
-	      }
+	    if (CB_INDEX_P (p->x) || CB_INDEX_P (p->y))
+	      return x;
 	    else if (CB_BINARY_OP_P (p->x) || CB_BINARY_OP_P (p->y))
 	      {
 		/* decimal comparison */

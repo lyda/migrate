@@ -230,7 +230,7 @@ program_id_paragraph:
   PROGRAM_ID '.'
   {
     current_program = build_program ();
-    make_field_3 (make_reference ("RETURN-CODE"), "S9(9)", CB_USAGE_INDEX);
+    make_index (make_reference ("RETURN-CODE"));
   }
   program_name as_literal program_type '.'
   {
@@ -917,7 +917,7 @@ linage_clause:
   LINAGE _is integer_value _lines
   linage_footing linage_top linage_bottom
   {
-    make_field_3 (make_reference ("LINAGE-COUNTER"), "S9(9)", CB_USAGE_INDEX);
+    make_index (make_reference ("LINAGE-COUNTER"));
 
     cb_error ("LINAGE not implemented");
   }
@@ -1075,10 +1075,10 @@ usage_clause:
 | USAGE _is usage
 ;
 usage:
-  DISPLAY			{ current_field->usage = CB_USAGE_DISPLAY; }
-| BINARY /* or COMP */		{ current_field->usage = CB_USAGE_BINARY; }
-| PACKED_DECIMAL /* or COMP-3 */{ current_field->usage = CB_USAGE_PACKED; }
-| INDEX				{ current_field->usage = CB_USAGE_INDEX; }
+  BINARY /* or COMP[-4|-5] */	{ current_field->usage = cb_usage_binary; }
+| DISPLAY			{ current_field->usage = cb_usage_display; }
+| INDEX				{ current_field->usage = cb_usage_index; }
+| PACKED_DECIMAL /* or COMP-3 */{ current_field->usage = cb_usage_packed; }
 ;
 
 
@@ -1174,7 +1174,7 @@ occurs_index_list:
 occurs_index:
   undefined_word
   {
-    $<tree>$ = make_field_3 ($1, "S9(9)", CB_USAGE_INDEX);
+    $<tree>$ = make_index ($1);
     current_program->index_list =
       list_add (current_program->index_list, $<tree>$);
   }

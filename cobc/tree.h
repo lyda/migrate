@@ -125,6 +125,7 @@ typedef struct cb_tree_common *cb_tree;
 
 extern char *tree_name (cb_tree x);
 extern int tree_category (cb_tree x);
+extern int cb_fits_int (cb_tree x);
 
 
 /*
@@ -147,6 +148,10 @@ extern cb_tree cb_int2;
 extern cb_tree cb_error_node;
 
 extern struct cb_label *cb_standard_error_handler;
+
+#undef CB_USAGE
+#define CB_USAGE(var,type,size) extern struct cb_usage *var;
+#include "usage.def"
 
 struct cb_const {
   struct cb_tree_common common;
@@ -246,24 +251,16 @@ extern struct cb_picture *parse_picture (const char *str);
  * Field
  */
 
-enum cb_usage {
-  CB_USAGE_BINARY,
-  CB_USAGE_BIT,			/* not supported yet */
-  CB_USAGE_DISPLAY,
-  CB_USAGE_FLOAT,		/* not supported yet */
-  CB_USAGE_INDEX,
-  CB_USAGE_NATIONAL,		/* not supported yet */
-  CB_USAGE_OBJECT,		/* not supported yet */
-  CB_USAGE_PACKED,		/* not supported yet */
-  CB_USAGE_POINTER,		/* not supported yet */
-  CB_USAGE_PROGRAM		/* not supported yet */
-};
-
 enum cb_storage {
   CB_STORAGE_FILE,		/* FILE SECTION */
   CB_STORAGE_WORKING,		/* WORKING-STORAGE SECTION */
   CB_STORAGE_LINKAGE,		/* LINKAGE SECTION */
   CB_STORAGE_SCREEN		/* SCREEN SECTION */
+};
+
+struct cb_usage {
+  char type;
+  int size;
 };
 
 struct cb_field {
@@ -278,8 +275,8 @@ struct cb_field {
   const char *name;		/* the original name */
   char *cname;			/* the name used in C */
   cb_tree occurs_depending;	/* OCCURS ... DEPENDING ON */
-  enum cb_usage usage;		/* USAGE */
   enum cb_storage storage;
+  struct cb_usage *usage;	/* USAGE */
   struct cb_list *values;	/* VALUE */
   struct cb_list *index_list;	/* INDEXED BY */
   struct cb_field *parent;	/* upper level field (NULL for 01 fields) */
@@ -317,9 +314,14 @@ struct cb_field {
 #define CB_FIELD(x)		(CB_TREE_CAST (cb_tag_field, struct cb_field, x))
 #define CB_FIELD_P(x)		(CB_TREE_TAG (x) == cb_tag_field)
 
+#define CB_INDEX_P(x)				\
+  ((CB_FIELD_P (x) || CB_REFERENCE_P (x))	\
+   && field (x)->usage == cb_usage_index)
+
+#define make_index(name)	make_field_3 (name, "S9(9)", cb_usage_index)
+
 extern cb_tree make_field (cb_tree name);
-extern cb_tree make_field_3 (cb_tree name, const char *pic, int usage);
-extern cb_tree make_field_x (const char *name, const char *pic, int usage);
+extern cb_tree make_field_3 (cb_tree name, const char *pic, struct cb_usage *usage);
 extern struct cb_field *field (cb_tree x);
 extern int field_size (cb_tree x);
 extern struct cb_field *field_founder (struct cb_field *p);

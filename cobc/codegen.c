@@ -655,7 +655,7 @@ output_int32 (cb_tree x)
     default:
       {
 	struct cb_field *f = field (x);
-	if (f->usage == CB_USAGE_INDEX)
+	if (f->usage == cb_usage_index)
 	  {
 	    if (f->level == 0)
 	      {
@@ -767,10 +767,7 @@ output_cond (cb_tree x)
 
 	  case '=': case '<': case '[': case '>': case ']': case '~':
 	    output ("(");
-	    if ((CB_REFERENCE_P (p->x)
-		 && field (p->x)->usage == CB_USAGE_INDEX)
-		|| (CB_REFERENCE_P (p->y)
-		    && field (p->y)->usage == CB_USAGE_INDEX))
+	    if (CB_INDEX_P (p->x) || CB_INDEX_P (p->y))
 	      {
 		output_int32 (p->x);
 		switch (p->op)
@@ -992,21 +989,14 @@ output_exit_program (void)
 static void
 output_move_num (cb_tree x, int high)
 {
-  switch (field (x)->usage)
-    {
-    case CB_USAGE_DISPLAY:
-      output_memset (x, high ? '9' : '0');
-      break;
-    case CB_USAGE_PACKED:
-      output_memset (x, high ? 0x99 : 0x00);
-      break;
-    case CB_USAGE_BINARY:
-    case CB_USAGE_INDEX:
-      output_native_assign (x, high ? -1 : 0);
-      break;
-    default:
-      abort ();
-    }
+  if (field (x)->usage == cb_usage_display)
+    output_memset (x, high ? '9' : '0');
+  else if (field (x)->usage == cb_usage_packed)
+    output_memset (x, high ? 0x99 : 0x00);
+  else if (field (x)->usage == cb_usage_binary)
+    output_native_assign (x, high ? -1 : 0);
+  else
+    abort ();
 }
 
 static void
@@ -1117,7 +1107,7 @@ output_move_literal (struct cb_literal *l, cb_tree dst)
 	buff[i] = l->data[i % l->size];
       output_memcpy (dst, buff);
     }
-  else if (f->usage == CB_USAGE_BINARY || f->usage == CB_USAGE_INDEX)
+  else if (f->usage == cb_usage_binary || f->usage == cb_usage_index)
     {
       long long val = literal_to_int (l);
       int n = f->pic->expt - l->expt;
@@ -1144,11 +1134,10 @@ output_move_index (cb_tree src, cb_tree dst)
 static void
 output_move (cb_tree src, cb_tree dst)
 {
-  if (field (dst)->usage == CB_USAGE_INDEX)
+  if (CB_INDEX_P (dst))
     return output_move_index (src, dst);
 
-  if ((CB_FIELD_P (src) || CB_REFERENCE_P (src))
-      && field (src)->usage == CB_USAGE_INDEX)
+  if (CB_INDEX_P (src))
     return output_stmt (make_funcall_2 ("cob_set_int", dst,
 					make_cast_int32 (src)));
 
@@ -1663,21 +1652,20 @@ output_call (cb_tree name, struct cb_list *args,
 	    {
 	    case cb_tag_literal:
 	      if (CB_TREE_CLASS (x) == COB_TYPE_NUMERIC)
-		output ("%" PRId64, literal_to_int (CB_LITERAL (x)));
+		output ("%d", (int) literal_to_int (CB_LITERAL (x)));
 	      else
 		output ("%d", CB_LITERAL (x)->data[0]);
 	      break;
 	    default:
-	      switch (CB_FIELD (x)->usage)
+	      if (field (x)->usage == cb_usage_binary
+		  || field (x)->usage == cb_usage_index)
 		{
-		case CB_USAGE_BINARY:
-		case CB_USAGE_INDEX:
 		  output_int32 (x);
-		  break;
-		default:
+		}
+	      else
+		{
 		  output ("*");
 		  output_data (x);
-		  break;
 		}
 	      break;
 	    }
