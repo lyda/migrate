@@ -17,7 +17,12 @@
  * Suite 330, Boston, MA 02111-1307 USA
  */
 
-/* Exported functions */
+#ifndef _LIBCOB_H_
+#define _LIBCOB_H_
+
+extern int cob_status;
 
 extern void *cob_resolve (const char *name);
 extern const char *cob_resolve_error (void);
+
+#endif /* _LIBCOB_H_ */

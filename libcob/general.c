@@ -23,6 +23,8 @@
 
 #include "_libcob.h"
 
+int cob_status;
+
 char
 sign_to_char (int digit)
 {

@@ -23,13 +23,6 @@
 
 
 /*
- * Global variables
- */
-
-int cob_size_error_flag;
-
-
-/*
  * Objects
  */
 
@@ -415,23 +408,23 @@ cob_set (struct fld_desc *f, char *s, int round)
 	  {
 	    int val;
 	    if (!mpz_fits_sint_p (d->number))
-	      cob_size_error_flag = 1;
+	      cob_status = 1;
 	    val = mpz_get_si (d->number);
 	    switch (f->len)
 	      {
 	      case 1:
 		if (val < -99 || val > 99)
-		  cob_size_error_flag = 1;
+		  cob_status = 1;
 		*((signed char *) s) = val;
 		break;
 	      case 2:
 		if (val < -9999 || val > 9999)
-		  cob_size_error_flag = 1;
+		  cob_status = 1;
 		*((signed short *) s) = val;
 		break;
 	      case 4:
 		if (val < -99999999 || val > 99999999)
-		  cob_size_error_flag = 1;
+		  cob_status = 1;
 		*((signed long *) s) = val;
 		break;
 	      }
@@ -446,13 +439,13 @@ cob_set (struct fld_desc *f, char *s, int round)
 	    if (!mpz_fits_sint_p (d->number))
 	      {
 		mpz_clear (r);
-		cob_size_error_flag = 1;
+		cob_status = 1;
 	      }
 	    val = mpz_get_si (d->number);
 	    val = (val << 32) + mpz_get_ui (r);
 	    mpz_clear (r);
 	    if (val < -999999999999999999 || val > 999999999999999999)
-	      cob_size_error_flag = 1;
+	      cob_status = 1;
 	    *((signed long long *) s) = val;
 	    break;
 	  }
@@ -489,7 +482,7 @@ cob_set (struct fld_desc *f, char *s, int round)
 	else
 	  {
 	    /* Overflow */
-	    cob_size_error_flag = 1;
+	    cob_status = 1;
 	    memcpy (s, p + size - f->len, f->len);
 	  }
 
