@@ -512,6 +512,7 @@ indexed_open (struct cob_file_desc *f, char *filename, int mode)
     }
 
   f->file.db = f->keys[0].db;
+  f->last_key = NULL;
   return 0;
 }
 
@@ -529,6 +530,9 @@ indexed_close (struct cob_file_desc *f, int opt)
   for (i = 0; i < f->nkeys; i++)
     DB_CLOSE (f->keys[i].db);
   f->file.db = NULL;
+
+  if (f->last_key)
+    free (f->last_key);
 
   return 00;
 }
@@ -656,35 +660,28 @@ indexed_write (struct cob_file_desc *f)
   memset (&key, 0, sizeof (DBT));
   memset (&data, 0, sizeof (DBT));
 
+  /* check record key */
+  DBT_SET (key, f->record_data, 0);
+  if (!f->last_key)
+    f->last_key = malloc (key.size);
+  else if (memcmp (f->last_key, key.data, key.size) > 0)
+    return 21;
+  memcpy (f->last_key, key.data, key.size);
+
   /* write data */
   data.data = f->record_data;
   data.size = f->record_size;
-  DBT_SET (key, f->record_data, 0);
-  switch (DB_PUT (f->keys[0].db, &key, &data, DB_NOOVERWRITE))
-    {
-    case 0:
-      break;
-    case DB_KEYEXIST: 
-      return 21;
-    default:
-      return 99;
-    }
+  if (DB_PUT (f->keys[0].db, &key, &data, DB_NOOVERWRITE) != 0)
+    return 22;
 
   /* write secondary keys */
   data = key;
   for (i = 1; i < f->nkeys; i++)
     {
       DBT_SET (key, f->record_data, i);
-      switch (DB_PUT (f->keys[i].db, &key, &data,
-		      f->keys[i].duplicates ? 0 : DB_NOOVERWRITE))
-	{
-	case 0:
-	  break;
-	case DB_KEYEXIST: 
-	  return 21;
-	default:
-	  return 99;
-	}
+      if (DB_PUT (f->keys[i].db, &key, &data,
+		  f->keys[i].duplicates ? 0 : DB_NOOVERWRITE) != 0)
+	return 22;
     }
 
   return 00;
@@ -747,11 +744,34 @@ indexed_delete (struct cob_file_desc *f)
 static int
 indexed_rewrite (struct cob_file_desc *f)
 {
-  int ret = indexed_delete (f);
-  if (ret == 00)
-    return indexed_write (f);
-  else
+  int i, ret;
+  DBT key, data;
+
+  memset (&key, 0, sizeof (DBT));
+  memset (&data, 0, sizeof (DBT));
+
+  /* delete the current record */
+  if ((ret = indexed_delete (f)) != 00)
     return ret;
+
+  /* write data */
+  DBT_SET (key, f->record_data, 0);
+  data.data = f->record_data;
+  data.size = f->record_size;
+  if (DB_PUT (f->keys[0].db, &key, &data, DB_NOOVERWRITE) != 0)
+    return 22;
+
+  /* write secondary keys */
+  data = key;
+  for (i = 1; i < f->nkeys; i++)
+    {
+      DBT_SET (key, f->record_data, i);
+      if (DB_PUT (f->keys[i].db, &key, &data,
+		  f->keys[i].duplicates ? 0 : DB_NOOVERWRITE) != 0)
+	return 22;
+    }
+
+  return 00;
 }
 
 static struct cob_fileio_funcs indexed_funcs = {

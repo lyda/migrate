@@ -953,9 +953,9 @@ output_file_name (struct cobc_file_name *f)
     output_tree (f->key);
   else
     output ("{0, 0}, ");
-  /* cursor, keys, nkeys */
+  /* cursor, keys, nkeys, last_key */
   if (f->organization == COB_ORG_INDEXED)
-    output ("0, %s_keys, %d", f->cname, nkeys);
+    output ("0, %s_keys, %d, 0", f->cname, nkeys);
   output ("};\n\n");
 }
 

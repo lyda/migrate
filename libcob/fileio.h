@@ -84,6 +84,7 @@ struct cob_file_desc {
     DB *db;			/* database handler */
   } *keys;
   int nkeys;			/* the number of keys */
+  unsigned char *last_key;	/* the last key written */
 };
 
 struct cob_fileio_funcs {
