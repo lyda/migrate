@@ -32,6 +32,42 @@
 static struct fld_desc zero_fld  = { 1, '9', 0, 1, 0, 0, 0, 0, "9\001"};
 static struct fld_desc space_fld = { 1, 'X', 0, 1, 0, 0, 0, 0, "X\001"};
 
+int decimal_comma = 0;
+char cCurrencySymbol = '$';
+
+static unsigned long long _iIntValues_[18] = {
+  100000000000000000,
+  10000000000000000,
+  1000000000000000,
+  100000000000000,
+  10000000000000,
+  1000000000000,
+  100000000000,
+  10000000000,
+  1000000000,
+  100000000,
+  10000000,
+  1000000,
+  100000,
+  10000,
+  1000,
+  100,
+  10,
+  1
+};
+
+static int _iRtErrorNbr[] = {
+  RTERR_INVALID_DATA,
+  RTERR_INVALID_PIC,
+  -1
+};
+
+static char *_szRtErrorDesc[] = {
+  "Invalid Data Content",
+  "Invalid Picture Structure",
+  (char *) 0
+};
+
 static void move_edited (struct fld_desc *pSrcFld, char *pSrcData,
 			 struct fld_desc *pDstFld, char *pDstData);
 static void float2all (struct fld_desc *pSrcFld, char *pSrcData,
@@ -83,7 +119,6 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 	  struct fld_desc *pfldDesc2, char *caData2)
 {
   extern int decimal_comma;
-  extern long long _iIntValues_[18];
   int i;
   int iPadLength;
   int iSrcLength, iDestLength;
@@ -96,15 +131,6 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
   struct fld_desc *pSrcFld, *pDstFld;
   struct fld_desc FldWrk;
 
-
-  if (_iIntValues_[0] == (long long) -1)
-    {				/* first time move is called */
-      _iIntValues_[17] = (long long) 1;
-      for (i = 17; i > 0; --i)
-	_iIntValues_[i - 1] = _iIntValues_[i] * (long long) 10;
-    }
-  /*iSrcLength = pfldDesc1->len;
-     iDestLength = pfldDesc2->len; */
   iSrcLength = fldLength (pfldDesc1);
   iDestLength = fldLength (pfldDesc2);
   iSrcDecimals = pfldDesc1->decimals;
@@ -1578,7 +1604,6 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 	long long iWork;
 	int j, k;
 	int bIsNegative;
-	extern long long _iIntValues_[18];
 	char caWork[19];
 
 	switch (binFldSize (pSrcFld))
@@ -2336,20 +2361,6 @@ move_edited (struct fld_desc *pSrcFld, char *pSrcData,
 }
 
 
-
-
-int _iRtErrorNbr[] = {
-  RTERR_INVALID_DATA,
-  RTERR_INVALID_PIC,
-  -1
-};
-
-char *_szRtErrorDesc[] = {
-  "Invalid Data Content",
-  "Invalid Picture Structure",
-  (char *) 0
-};
-
 /*------------------------------------------------------------------------*\
  |                                                                        |
  |                          _DUMP_                                        |
@@ -2385,30 +2396,6 @@ _DUMP_ (unsigned char *caData, char *szCount, char *caOut)
     }
 }
 
-
-int decimal_comma = 0;
-int decimal_char = '.';
-char cCurrencySymbol = '$';
-long long _iIntValues_[18] = {
-  (long long) -1,
-  (long long) -1,
-  (long long) -1,
-  (long long) -1,
-  (long long) -1,
-  (long long) -1,
-  (long long) -1,
-  (long long) -1,
-  (long long) -1,
-  (long long) -1,
-  (long long) -1,
-  (long long) -1,
-  (long long) -1,
-  (long long) -1,
-  (long long) -1,
-  (long long) -1,
-  (long long) -1,
-  (long long) -1
-};
 
 /*------------------------------------------------------------------------*\
  |                                                                        |
