@@ -97,7 +97,13 @@ X\"[^\"\n]\" {
   return scan_x (yytext);
 }
 
-[0-9]*[.,]?[0-9]+ {
+[0-9]+ {
+  /* integer literal */
+  yylval.lval = install_literal (yytext);
+  return INTEGER_TOK;
+}
+
+[0-9]*[.,][0-9]+ {
   /* numeric literal */
   yylval.lval = install_literal (yytext);
   return NLITERAL;

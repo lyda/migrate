@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 633
+%expect 632
 
 %{
 #define yydebug		cob_trace_parser
@@ -133,7 +133,7 @@ static void check_decimal_point (struct lit *lit);
 
 %token <str>  IDSTRING
 %token <sval> SYMBOL,VARIABLE,VARCOND,SUBSCVAR,LABELSTR,PICTURE_TOK
-%token <lval> NLITERAL,CLITERAL
+%token <lval> INTEGER_TOK,NLITERAL,CLITERAL
 
 %token EQUAL,GREATER,LESS,TOK_GE,TOK_LE,COMMAND_LINE,ENVIRONMENT_VARIABLE
 %token DATE,DAY,DAY_OF_WEEK,TIME,INKEY,READ,WRITE,OBJECT_COMPUTER,INPUT_OUTPUT
@@ -2965,7 +2965,10 @@ nliteral:
   }
   ;
 signed_nliteral:
-        NLITERAL  { $$ = $1; }
+        INTEGER_TOK  { $$ = $1; }
+  | '+' INTEGER_TOK  { $$ = $2; }
+  | '-' INTEGER_TOK  { $$ = invert_literal_sign($2); }
+  |     NLITERAL  { $$ = $1; }
   | '+' NLITERAL  { $$ = $2; }
   | '-' NLITERAL  { $$ = invert_literal_sign($2); }
   ;
@@ -3031,16 +3034,14 @@ subscript:
     | subscript '-' gname       { $$ = add_subscript_item( $1, '-', $3 ); }
     ;
 integer:
-    nliteral {
-      char *s;
-      $$=0;
-      s=$1->name;
-      while (isdigit(*s))
-	$$ = $$ * 10 + *s++ - '0';
-      if (*s)
-	yyerror("only integers accepted here");
-    }
-    ;
+  INTEGER_TOK
+  {
+    char *s = $1->name;
+    $$ = 0;
+    while (*s)
+      $$ = $$ * 10 + *s++ - '0';
+  }
+;
 label:
   LABELSTR in_of LABELSTR
   {
@@ -3050,7 +3051,7 @@ label:
 	lab->defined = 2;
 	lab->parent = $3;
       }
-    else if ((lab = lookup_label ($1, $3)) == NULL)
+    else if ((lab = lookup_label (lab, $3)) == NULL)
       {
 	lab = install ($1->name, SYTB_LAB, 2);
 	lab->defined = 2;
