@@ -233,7 +233,8 @@ extern cb_tree make_decimal (char id);
 
 struct cb_picture {
   int size;			/* byte size */
-  char *str;			/* picture string */
+  char *orig;			/* original picture string */
+  char *str;			/* packed picture string */
   char category;		/* field category */
   char digits;			/* the number of digit places */
   char expt;			/* 10 ^ expt */

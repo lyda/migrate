@@ -20,6 +20,19 @@
 ### ISO+IEC+1989-2002 13.16.61 VALUE clause
 
 
+## 13.16.61.1 General format
+
+# Format 1 (data-item): DONE
+
+# Format 2 (table): TODO
+
+# Format 3 (condition-name): TODO
+
+# Format 4 (report-section): TODO
+
+# Format 5 (content-validation-entry): TODO
+
+
 ## 13.16.61.2 Syntax rules
 
 # 1) TODO
@@ -27,89 +40,175 @@
 
 # 2) TODO
 
-AT_SETUP([Numeric value tests])
+AT_SETUP([Numeric item (integer)])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
        PROGRAM-ID.      prog.
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
-       01 X-1           PIC 999 VALUE "abc".
-       01 X-2           PIC 999 VALUE SPACE.
-       01 X-3           PIC 999 VALUE -1.
-       01 X-4           PIC 999 VALUE 12.3.
-       01 X-5           PIC 999 VALUE 1234.
-       01 X-6           PIC 99V9 VALUE 123.
-       01 X-7           PIC 99V9 VALUE 12.34.
-       01 X-8           PIC 99PP VALUE 0.
-       01 X-9           PIC 99PP VALUE 1.
-       01 X-10          PIC 99PP VALUE 1234.
-       01 X-11          PIC PP99 VALUE .1234.
-       PROCEDURE        DIVISION.
-         STOP RUN.
-])
-
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:6: warning: type mismatch
-prog.cob:7: invalid VALUE clause
-prog.cob:8: warning: ignoring negative sign
-prog.cob:9: warning: constant size overflow
-prog.cob:10: warning: constant size overflow
-prog.cob:11: warning: constant size overflow
-prog.cob:12: warning: constant size overflow
-prog.cob:14: warning: constant value mismatch
-prog.cob:15: warning: constant value mismatch
-prog.cob:16: warning: constant value mismatch
-])
-
-AT_CLEANUP
-
-
-# 3) TODO
-
-
-# 4) TODO
-
-AT_SETUP([Alphabetic value tests])
-
-AT_DATA([prog.cob], [
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 X-1           PIC AAA VALUE 123.
-       01 X-2           PIC AAA VALUE ZERO.
-       01 X-3           PIC AAA VALUE "ab1".
-       01 X-4           PIC AAA VALUE "abcd".
+       01 X-SPACE       PIC 999 VALUE SPACE.
+       01 X-ABC         PIC 999 VALUE "abc".
+       01 X-12-3        PIC 999 VALUE 12.3.
+       01 X-123         PIC 999 VALUE 123.
+       01 X-1234        PIC 999 VALUE 1234.
        PROCEDURE        DIVISION.
          STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:6: invalid VALUE clause
-prog.cob:7: invalid VALUE clause
-prog.cob:8: warning: constant value mismatch
-prog.cob:9: warning: constant size overflow
+prog.cob:7: numeric value is expected
+prog.cob:8: value size exceeds data size
+prog.cob:10: value size exceeds data size
 ])
 
 AT_CLEANUP
 
-AT_SETUP([Alphanumeric value tests])
+AT_SETUP([Numeric item (non-integer)])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
        PROGRAM-ID.      prog.
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
-       01 X-1           PIC XXX VALUE 123.
-       01 X-2           PIC XXX VALUE "abcd".
+       01 X-12          PIC 99V9 VALUE 12.
+       01 X-123         PIC 99V9 VALUE 123.
+       01 X-12-3        PIC 99V9 VALUE 12.3.
+       01 X-12-34       PIC 99V9 VALUE 12.34.
        PROCEDURE        DIVISION.
          STOP RUN.
 ])
 
-AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:6: warning: type mismatch
-prog.cob:7: warning: constant size overflow
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:7: value size exceeds data size
+prog.cob:9: value size exceeds data size
+])
+
+AT_CLEANUP
+
+AT_SETUP([Numeric item with picture P])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X-99PP-0      PIC 99PP VALUE 0.
+       01 X-99PP-1200   PIC 99PP VALUE 1200.
+       01 X-99PP-1230   PIC 99PP VALUE 1230.
+       01 X-99PP-10000  PIC 99PP VALUE 10000.
+       01 X-PP99--0     PIC PP99 VALUE .0.
+       01 X-PP99--0012  PIC PP99 VALUE .0012.
+       01 X-PP99--0123  PIC PP99 VALUE .0123.
+       01 X-PP99--00001 PIC PP99 VALUE .00001.
+       PROCEDURE        DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:8: value does not fit the picture string
+prog.cob:9: value size exceeds data size
+prog.cob:12: value does not fit the picture string
+prog.cob:13: value size exceeds data size
+])
+
+AT_CLEANUP
+
+
+# 3) DONE
+
+AT_SETUP([Signed numeric literal])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X-9P          PIC 9  VALUE +1.
+       01 X-9N          PIC 9  VALUE -1.
+       01 X-S9P         PIC S9 VALUE +1.
+       01 X-S9N         PIC S9 VALUE -1.
+       PROCEDURE        DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:6: data item not signed
+prog.cob:7: data item not signed
+])
+
+AT_CLEANUP
+
+
+# 4) DONE
+
+AT_SETUP([Alphabetic item])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X-123         PIC AAA VALUE 123.
+       01 X-ZERO        PIC AAA VALUE ZERO.
+       01 X-AB1         PIC AAA VALUE "ab1".
+       01 X-ABC         PIC AAA VALUE "abc".
+       01 X-ABCD        PIC AAA VALUE "abcd".
+       PROCEDURE        DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:6: alphanumeric value is expected
+prog.cob:7: invalid VALUE clause
+prog.cob:8: value does not fit the picture string
+prog.cob:10: value size exceeds data size
+])
+
+AT_CLEANUP
+
+AT_SETUP([Alphanumeric item])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X-123         PIC XXX VALUE 123.
+       01 X-ABC         PIC XXX VALUE "abc".
+       01 X-ABCD        PIC XXX VALUE "abcd".
+       PROCEDURE        DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:6: alphanumeric value is expected
+prog.cob:8: value size exceeds data size
+])
+
+AT_CLEANUP
+
+AT_SETUP([Alphanumeric group item])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 G-1           VALUE 123.
+         02 X           PIC XXX.
+       01 G-2           VALUE "abc".
+         02 X           PIC XXX.
+       01 G-3           VALUE "abcd".
+         02 X           PIC XXX.
+       PROCEDURE        DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:6: alphanumeric value is expected
+prog.cob:10: value size exceeds data size
 ])
 
 AT_CLEANUP
@@ -121,11 +220,57 @@ AT_CLEANUP
 
 # 7) DONE
 
-# 8) TODO
+
+# 8) DONE
 
+AT_SETUP([Numeric-edited item])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X-123         PIC **99.00 VALUE 123.
+       01 X-ABC         PIC **99.00 VALUE "abc".
+       01 X-MATCH       PIC **99.00 VALUE "*123.00".
+       01 X-OVERFLOW    PIC **99.00 VALUE "*123.000".
+       PROCEDURE        DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:6: alphanumeric value is expected
+prog.cob:9: value size exceeds data size
+])
+
+AT_CLEANUP
+
+AT_SETUP([Alphanumeric-edited item])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X-123         PIC BXX VALUE 123.
+       01 X-ABC         PIC BXX VALUE "abc".
+       01 X-MATCH       PIC BXX VALUE " ab".
+       01 X-OVERFLOW    PIC BXX VALUE " abc".
+       PROCEDURE        DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:6: alphanumeric value is expected
+prog.cob:9: value size exceeds data size
+])
+
+AT_CLEANUP
+
+
 # 9) TODO
 
-# 10) TODO
+# 10) DONE (tested in redefines.at)
 
 # 11) TODO
 
@@ -145,7 +290,7 @@ AT_CLEANUP
 
 # 19) TODO
 
-# 20) TODO
+# 20) DONE
 
 # 21) TODO
 
@@ -215,5 +360,3 @@ AT_CLEANUP
 # 23) TODO
 
 # 24) TODO
-
-

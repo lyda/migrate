@@ -670,6 +670,7 @@ parse_picture (const char *str)
   buff[idx] = 0;
 
   /* set picture */
+  pic->orig = strdup (str);
   pic->size = size;
   pic->digits = digits;
   pic->expt = - decimals;
@@ -958,6 +959,12 @@ validate_redefines (struct cb_field *field, cb_tree redefines)
   return f;
 }
 
+static void
+group_error (cb_tree x, const char *name, const char *clause)
+{
+  yyerror_x (x, _("group item `%s' cannot have %s"), name, clause);
+}
+
 static int
 validate_field_1 (struct cb_field *f)
 {
@@ -968,10 +975,11 @@ validate_field_1 (struct cb_field *f)
     {
       /* group */
       if (f->pic)
-	yyerror_x (x, _("group name `%s' may not have PICTURE"), name);
-
+	group_error (x, name, "PICTURE");
       if (f->flag_justified)
-	yyerror_x (x, _("group name `%s' may not have JUSTIFIED RIGHT"), name);
+	group_error (x, name, "JUSTIFIED RIGHT");
+      if (f->flag_blank_zero)
+	group_error (x, name, "BLANK WHEN ZERO");
 
       for (f = f->children; f; f = f->sister)
 	validate_field_1 (f);
@@ -981,9 +989,9 @@ validate_field_1 (struct cb_field *f)
     }
   else if (f->level == 88)
     {
-      /* conditional variable */
+      /* conditional name */
       if (f->pic)
-	yyerror_x (x, _("level 88 field `%s' may not have PICTURE"), name);
+	yyerror_x (x, _("level 88 item `%s' may not have PICTURE"), name);
     }
   else
     {
@@ -1003,7 +1011,7 @@ validate_field_1 (struct cb_field *f)
 	case CB_USAGE_BINARY:
 	case CB_USAGE_PACKED:
 	  if (f->pic->category != COB_TYPE_NUMERIC)
-	    yywarn (_("field must be numeric"));
+	    yywarn_x (x, _("`%s' not numeric item"), name);
 	  break;
 	case CB_USAGE_INDEX:
 	  break;
@@ -1025,7 +1033,6 @@ validate_field_1 (struct cb_field *f)
 	  {
 	  case COB_TYPE_ALPHABETIC:
 	  case COB_TYPE_ALPHANUMERIC:
-	  case COB_TYPE_NATIONAL:
 	    break;
 	  default:
 	    yyerror_x (x, _("`%s' cannot have JUSTIFIED RIGHT"), name);
@@ -1041,6 +1048,32 @@ validate_field_1 (struct cb_field *f)
 	  }
 
       /* validate BLANK ZERO */
+      if (f->flag_blank_zero)
+	switch (f->pic->category)
+	  {
+	  case COB_TYPE_NUMERIC:
+	    /* reconstruct the picture string */
+	    if (f->pic->expt < 0)
+	      {
+		f->pic->str = malloc (7);
+		sprintf (f->pic->str, "9%cV%c9%c",
+			 f->pic->digits + f->pic->expt, 1,
+			 - f->pic->expt);
+		f->pic->size++;
+	      }
+	    else
+	      {
+		f->pic->str = malloc (3);
+		sprintf (f->pic->str, "9%c", f->pic->digits);
+	      }
+	    f->pic->category = COB_TYPE_NUMERIC_EDITED;
+	    break;
+	  case COB_TYPE_NUMERIC_EDITED:
+	    break;
+	  default:
+	    yyerror_x (x, _("`%s' cannot have BLANK WHEN ZERO"), name);
+	    break;
+	  }
 
       /* validate VALUE */
       if (f->values)
@@ -2207,43 +2240,31 @@ warning_destination (cb_tree x)
     return;
 
   if (f->pic)
-    {
-      char str[256];
-
-      /* reconstruct the PICTURE string */
-      if (f->pic->str)
-	{
-	  char *s = str;
-	  char *p = f->pic->str;
-	  while (*p)
-	    {
-	      int c = *p++;
-	      int n = *p++;
-	      if (n == 1)
-		*s++ = c;
-	      else
-		s += sprintf (s, "%c(%d)", c, n);
-	    }
-	  *s = 0;
-	}
-      else
-	{
-	  int c = ((f->pic->category == COB_TYPE_ALPHABETIC) ? 'A' :
-		   (f->pic->category == COB_TYPE_ALPHANUMERIC) ? 'X' :
-		   (f->pic->category == COB_TYPE_NUMERIC) ? '9' : '?');
-	  if (f->pic->size == 1)
-	    sprintf (str, "%c", c);
-	  else
-	    sprintf (str, "%c(%d)", c, f->pic->size);
-	}
-
-      yywarn_x (loc, _("`%s' defined here as PIC %s"), f->name, str);
-    }
+    yywarn_x (loc, _("`%s' defined here as PIC %s"), f->name, f->pic->orig);
   else
+    yywarn_x (loc, _("`%s' defined here as a group of length %d"),
+	      f->name, f->size);
+}
+
+static int
+move_error (cb_tree src, cb_tree dst, int value_flag, int flag, const char *msg)
+{
+  cb_tree loc = src->source_line ? src : dst;
+
+  /* for VALUE clause */
+  if (value_flag)
     {
-      yywarn_x (loc, _("`%s' defined here as a group of length %d"),
-		f->name, f->size);
+      yyerror_x (loc, msg);
+      return -1;
     }
+
+  /* for MOVE statement */
+  if (flag)
+    {
+      yywarn_x (loc, msg);
+      warning_destination (dst);
+    }
+  return 0;
 }
 
 static int
@@ -2280,6 +2301,23 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 	if (CB_TREE_CLASS (src) == COB_TYPE_NUMERIC)
 	  {
 	    /* Numeric literal */
+	    int i;
+	    int most_significant = -999;
+	    int least_significant = 999;
+
+	    /* compute the most significant figure place */
+	    for (i = 0; i < l->size; i++)
+	      if (l->data[i] != '0')
+		break;
+	    if (i != l->size)
+	      most_significant = l->size + l->expt - i - 1;
+
+	    /* compute the least significant figure place */
+	    for (i = 0; i < l->size; i++)
+	      if (l->data[l->size - i - 1] != '0')
+		break;
+	    if (i != l->size)
+	      least_significant = l->expt + i;
 
 	    /* value check */
 	    switch (tree_category (dst))
@@ -2287,8 +2325,11 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 	      case COB_TYPE_ALPHANUMERIC:
 	      case COB_TYPE_ALPHANUMERIC_EDITED:
 		{
+		  if (value_flag)
+		    goto expect_alphanumeric;
+
 		  if (l->expt == 0)
-		    goto type_mismatch;
+		    goto expect_alphanumeric;
 		  else
 		    goto invalid;
 		}
@@ -2296,50 +2337,51 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 		{
 		  if (f->pic->expt > 0)
 		    {
-		      /* check for PIC 9..P.. */
-		      int i = 0;
-		      if (l->expt != 0)
+		      /* check for PIC 9(n)P(m) */
+		      if (least_significant < f->pic->expt)
 			goto value_mismatch;
-		      if (l->size > f->pic->expt)
-			i = l->size - f->pic->expt;
-		      for (; i < l->size; i++)
-			if (l->data[i] != '0')
-			  goto value_mismatch;
 		    }
-		  else if (f->pic->expt == - f->pic->digits
-			   && f->pic->size < f->pic->digits)
+		  else if (f->pic->expt < - f->pic->size)
 		    {
-		      /* check for PIC P..9.. */
-		      int i;
-		      int limit = - f->pic->digits - f->pic->size;
-		      if (l->size != - l->expt)
+		      /* check for PIC P(n)9(m) */
+		      if (most_significant >= f->pic->expt + f->pic->size)
 			goto value_mismatch;
-		      if (limit > l->size)
-			limit = l->size;
-		      for (i = 0; i < limit; i++)
-			if (l->data[i] != '0')
-			  goto value_mismatch;
 		    }
 		  break;
 		}
 	      case COB_TYPE_NUMERIC_EDITED:
 		{
+		  if (value_flag)
+		    goto expect_alphanumeric;
+
 		  /* TODO */
 		  break;
 		}
 	      default:
+		if (value_flag)
+		  goto expect_alphanumeric;
 		goto invalid;
 	      }
 
 	    /* sign check */
-	    if (cb_warn_constant)
-	      if (l->sign < 0 && !f->pic->have_sign)
-		yywarn_x (src, _("ignoring negative sign"));
+	    if (l->sign != 0 && !f->pic->have_sign)
+	      {
+		if (value_flag)
+		  {
+		    yyerror_x (loc, _("data item not signed"));
+		    return -1;
+		  }
+		if (cb_warn_constant)
+		  {
+		    yywarn_x (loc, _("ignoring negative sign"));
+		  }
+	      }
 
 	    /* size check */
-	    if (l->expt < 0 && l->expt < f->pic->expt)
+	    if (least_significant < f->pic->expt)
 	      goto size_overflow;
-	    if (l->size + l->expt > f->pic->digits + f->pic->expt)
+	    if (most_significant >= (f->pic->digits
+				     + (f->pic->expt < 0 ? f->pic->expt : 0)))
 	      goto size_overflow;
 	  }
 	else
@@ -2353,13 +2395,18 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 		{
 		  int i;
 		  for (i = 0; i < l->size; i++)
-		    if (!isalpha(l->data[i]))
+		    if (!isalpha (l->data[i]) && !isspace (l->data[i]))
 		      goto value_mismatch;
 		  break;
 		}
 	      case COB_TYPE_NUMERIC:
+		goto expect_numeric;
 	      case COB_TYPE_NUMERIC_EDITED:
-		goto type_mismatch;
+		if (!value_flag)
+		  goto expect_numeric;
+
+		/* TODO: validate the value */
+		break;
 	      default:
 		break;
 	      }
@@ -2376,7 +2423,7 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
     case cb_tag_field:
     case cb_tag_reference:
       {
-	/* non-elementary move (ISO+IEC+1989-2002 14.8.24.3-2) */
+	/* non-elementary move */
 	if (CB_TREE_TYPE (src) == COB_TYPE_GROUP
 	    || CB_TREE_TYPE (dst) == COB_TYPE_GROUP)
 	  break;
@@ -2426,32 +2473,21 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
     yyerror_x (loc, _("invalid MOVE statement"));
   return -1;
 
- type_mismatch:
-  if (cb_warn_strict_typing)
-    {
-      yywarn_x (loc, _("type mismatch"));
-      if (!value_flag)
-	warning_destination (dst);
-    }
-  return 0;
+ expect_numeric:
+  return move_error (src, dst, value_flag, cb_warn_strict_typing,
+		     _("numeric value is expected"));
+
+ expect_alphanumeric:
+  return move_error (src, dst, value_flag, cb_warn_strict_typing,
+		     _("alphanumeric value is expected"));
 
  value_mismatch:
-  if (cb_warn_constant)
-    {
-      yywarn_x (loc, _("constant value mismatch"));
-      if (!value_flag)
-	warning_destination (dst);
-    }
-  return 0;
+  return move_error (src, dst, value_flag, cb_warn_constant,
+		     _("value does not fit the picture string"));
 
  size_overflow:
-  if (cb_warn_constant)
-    {
-      yywarn_x (loc, _("constant size overflow"));
-      if (!value_flag)
-	warning_destination (dst);
-    }
-  return 0;
+  return move_error (src, dst, value_flag, cb_warn_constant,
+		     _("value size exceeds data size"));
 }
 
 cb_tree
