@@ -25,12 +25,7 @@
 %{
 #include "config.h"
 
-#include <stdio.h>
-#include <stdarg.h>
 #include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <time.h>
 #include <libcob.h>
 
 #include "cobc.h"
@@ -133,7 +128,6 @@ start:
 
 program_definition:
   identification_division
-  program_id_paragraph
   environment_division	{ cb_validate_program_environment (current_program); }
   data_division		{ cb_validate_program_data (current_program); }
   procedure_division
@@ -143,33 +137,20 @@ end_program:
 | END PROGRAM program_name '.'
 ;
 
-identification_division:
-| IDENTIFICATION DIVISION '.'
-;
-
 
-/*
- * PROGRAM-ID paragraph
- */
+/*****************************************************************************
+ * Environment division
+ *****************************************************************************/
 
-program_id_paragraph:
-  PROGRAM_ID '.'
+identification_division:
+  IDENTIFICATION DIVISION '.'
   {
     current_program = cb_build_program ();
-    /* WHEN-COMPILED */
-    {
-      char buff[17];
-      time_t t = time (NULL);
-      strftime (buff, 17, "%m/%d/%y%H.%M.%S", localtime (&t));
-      cb_build_constant (cb_build_reference ("WHEN-COMPILED"),
-			 cb_build_alphanumeric_literal (buff, 16));
-    }
-    /* RETURN-CODE */
-    cb_return_code = cb_build_index (cb_build_reference ("RETURN-CODE"));
+    cb_build_registers ();
   }
-  program_name as_literal program_type '.'
+  PROGRAM_ID '.' program_name as_literal program_type '.'
   {
-    current_program->program_id = cb_build_program_id ($4, $5);
+    current_program->program_id = cb_build_program_id ($7, $8);
   }
 ;
 program_name:

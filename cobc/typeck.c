@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
 #include <libcob.h>
 
 #include "cobc.h"
@@ -138,6 +139,35 @@ cb_check_integer_value (cb_tree x)
 }
 
 
+void
+cb_build_registers (void)
+{
+  /* RETURN-CODE */
+  cb_return_code = cb_build_index (cb_build_reference ("RETURN-CODE"));
+
+  /* TALLY */
+  {
+    /* 01 TALLY GLOBAL PICTURE 9(5) USAGE BINARY VALUE ZERO. */
+    cb_tree x = cb_build_field (cb_build_reference ("TALLY"));
+    CB_FIELD (x)->pic = CB_PICTURE (cb_build_picture ("9(5)"));
+    CB_FIELD (x)->usage = CB_USAGE_BINARY;
+    CB_FIELD (x)->values = cb_list (cb_zero);
+    cb_validate_field (CB_FIELD (x));
+
+    current_program->working_storage =
+      cb_field_add (current_program->working_storage, CB_FIELD (x));
+  }
+
+  /* WHEN-COMPILED */
+  {
+    char buff[17];
+    time_t t = time (NULL);
+    strftime (buff, 17, "%m/%d/%y%H.%M.%S", localtime (&t));
+    cb_build_constant (cb_build_reference ("WHEN-COMPILED"),
+		       cb_build_alphanumeric_literal (buff, 16));
+  }
+}
+
 char *
 cb_encode_program_id (const char *name)
 {
