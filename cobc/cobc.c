@@ -571,7 +571,7 @@ main (int argc, char *argv[])
 	  goto cleanup;
 
       /* Build module */
-      if (cobc_module_flag == 1)
+      if (compile_level >= stage_link && cobc_module_flag == 1)
 	if (process_module (fn) != 0)
 	  goto cleanup;
     }
