@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(open-cobol, 0.9.5.5)
+AC_INIT(open-cobol, 0.9.5.6)
 AC_CONFIG_SRCDIR(cobc/cobc.c)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -11,17 +11,12 @@ AC_DEFINE(COB_DEBUG)
 # Configure options.
 COB_CC="gcc"
 AC_ARG_WITH(cc,
-  [  --with-cc=<gcc>          specify C compiler],
+  [  --with-cc=<gcc>         specify C compiler],
   [ COB_CC=$withval ])
 
 AC_ARG_ENABLE(debug,
-  [  --enable-debug           enable debugging options],
+  [  --enable-debug          enable debugging options],
   [ AC_DEFINE(COB_DEBUG) ])
-
-AC_ARG_ENABLE(maintainer-mode,
-  [  --enable-maintainer-mode enable maintainer mode],
-  [ AC_DEFINE(COB_DEBUG)
-    AC_CONFIG_FILES([redhat/open-cobol.spec])])
 
 # Autoheader templates
 AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
@@ -117,7 +112,7 @@ AC_SUBST(COMPUTED_GOTO)
 # OpenCOBOL Configuration
 
 LIBCOB_CFLAGS=""
-LIBCOB_LIBS="${LIBDB} ${LIBGMP} ${LIBLTDL} ${LIBINTL} ${LIBRL}"
+LIBCOB_LIBS="-lm ${LIBDB} ${LIBGMP} ${LIBLTDL} ${LIBINTL} ${LIBRL}"
 COB_COBPP="cobpp"
 COB_CFLAGS="-I$includedir"
 COB_LIBS="-L$libdir -lcob ${LIBCOB_LIBS}"
@@ -137,6 +132,7 @@ AC_SUBST(LIBCOB_LIBS)
 AC_CONFIG_FILES([cob-config libcob/cobconfig.h
 		Makefile lib/Makefile libcob/Makefile
 		cobpp/Makefile cobc/Makefile po/Makefile.in texi/Makefile])
+AC_CONFIG_FILES([redhat/open-cobol.spec])
 AC_OUTPUT
 
 echo ""
