@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libcob.la
-libcob_la_SOURCES = libcob.h general.c call.c math.c move.c string.c \
-	basicio.c fileio.c
+libcob_la_SOURCES = libcob.h common.c move.c math.c basicio.c fileio.c \
+	string.c call.c
 libcob_la_LDFLAGS = -version-info 0:0:0
 libcob_la_LIBADD = $(LIBCOB_LIBS)
 include_HEADERS = libcob.h
