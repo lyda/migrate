@@ -693,7 +693,8 @@ usage:
 | INDEX
   {
     COB_FIELD_TYPE (curr_field) = 'B';
-    curr_field->len = 4;
+    curr_field->len      = 4;
+    curr_field->decimals = 0;
   }
 | DISPLAY
   {
