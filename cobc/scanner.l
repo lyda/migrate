@@ -62,7 +62,7 @@ any [!-~]
 
 word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
 
-%x ENVIR_ST DATA_ST FD_ST REDEF_ST EXCEPTION_ST
+%x ENVIR_ST DATA_ST FD_ST
 %x ID_STATE COMMENT_STATE PICTURE_STATE
 
 %%
@@ -78,17 +78,8 @@ word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
   case CDIV_DATA:
     BEGIN DATA_ST;
     break;
-  case CDIV_PROC:
-    BEGIN INITIAL;
-    break;
   case CDIV_FD:
     BEGIN FD_ST;
-    break;
-  case CDIV_REDEF:
-    BEGIN REDEF_ST;
-    break;
-  case CDIV_EXCEPTION:
-    BEGIN EXCEPTION_ST;
     break;
   case CINITIAL:
     BEGIN INITIAL;
@@ -120,7 +111,6 @@ word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
   int tok = scan_word (yytext);
   if (tok)
     return tok;
-
   yylval.sval = install (yytext, SYTB_VAR, 0);
   return (STRING);
 }
@@ -129,13 +119,20 @@ word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
   int tok = scan_word (yytext);
   if (tok)
     return tok;
-
-  /* install w/clone if neccessary */
   yylval.sval = install (yytext, SYTB_VAR, 1);
   return (STRING);
 }
 
-<INITIAL,EXCEPTION_ST>{word} {
+<FD_ST>{word} {
+  int tok = scan_word (yytext);
+  if (tok)
+    return tok;
+  if ((yylval.sval = lookup_symbol (yytext)) == NULL)
+    yyerror ("undefined %s at FD/SD", yytext);
+  return (STRING);
+}
+
+<INITIAL>{word} {
   struct sym *symbol;
   int tok = scan_word (yytext);
   if (tok)
@@ -160,31 +157,7 @@ word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
     }
 }
 
-<FD_ST>{
-  {word} {
-    int tok = scan_word (yytext);
-    if (tok)
-      return tok;
-
-    if ((yylval.sval = lookup_symbol (yytext)) == NULL)
-      yyerror ("undefined %s at FD/SD", yytext);
-    return (STRING);
-  }
-  . { }
-}
-
-<REDEF_ST>{word} {
-  int tok = scan_word (yytext);
-  if (tok)
-    return tok;
-
-  /* don't clone redefined var */
-  yylval.sval = install (yytext, SYTB_VAR, 0);
-  return (STRING);
-}
-
-<INITIAL,ENVIR_ST,DATA_ST,REDEF_ST,EXCEPTION_ST>{
-
+<INITIAL,ENVIR_ST,DATA_ST,FD_ST>{
   "."/[ \t\n]	{ return '.'; }
 
   {white}+ { }
@@ -243,7 +216,7 @@ word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
   }
 }
 
-<<EOF>> {
+<*><<EOF>> {
   yyterminate();
 }
 

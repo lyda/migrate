@@ -560,7 +560,7 @@ opt_linkage_section:
     ;
 report_section:
         report_section TOKRD { /*curr_division = CDIV_FD;*/ }
-                STRING { $4->type='W'; curr_division = CDIV_PROC; }
+                STRING { $4->type='W'; curr_division = CINITIAL; }
                 report_controls { curr_division = CDIV_DATA; }
                 report_description
         | /* nothing */
@@ -620,11 +620,11 @@ report_item:
 report_clauses:
         /* nothing */
         | report_clauses TOK_TYPE opt_is report_type
-                report_position { curr_division = CDIV_PROC; }
+                report_position { curr_division = CINITIAL; }
                 opt_report_name
         | report_clauses report_line
         | report_clauses opt_report_column
-                opt_report_pic { curr_division = CDIV_PROC; }
+                opt_report_pic { curr_division = CINITIAL; }
                 report_value
         ;
 opt_report_name:
@@ -709,13 +709,13 @@ screen_clauses:
     | /* nothing */             { $$ = alloc_scr_info(); }
     ;
 screen_source_destination:
-    USING                   { curr_division = CDIV_PROC; }
+    USING                   { curr_division = CINITIAL; }
     name_or_lit
     {
       curr_division = CDIV_DATA;
       $<sival>0->from = $<sival>0->to = $3;
     }
-    | FROM                  { curr_division = CDIV_PROC; }
+    | FROM                  { curr_division = CINITIAL; }
       name_or_lit
       screen_to_name
       {
@@ -725,7 +725,7 @@ screen_source_destination:
       }
     | TO
       {
-	curr_division = CDIV_PROC;
+	curr_division = CINITIAL;
       }
       name
       {
@@ -846,7 +846,7 @@ field_description:
 redefines_clause:
     REDEFINES
     {
-      curr_division = CDIV_PROC; /* parsing variable */
+      curr_division = CINITIAL; /* parsing variable */
     }
     redefines_var
     {       
@@ -894,7 +894,7 @@ array_options:  OCCURS integer opt_TIMES
        opt_indexed_by
      | OCCURS integer TO integer opt_TIMES DEPENDING opt_on
        {
-	 curr_division = CDIV_PROC; /* needed for parsing variable */
+	 curr_division = CINITIAL; /* needed for parsing variable */
        }
        gname
        {       
@@ -1108,7 +1108,7 @@ linkage_section:
 procedure_division:
      PROCEDURE_TOK DIVISION 
     { 
-     curr_division = CDIV_PROC; 
+     curr_division = CINITIAL; 
     }
      using_parameters '.'
     { 
@@ -1304,10 +1304,8 @@ unstring_tallying:
     | TALLYING opt_in name  { $$=$3; }
     ;
 opt_on_overflow:
-    { curr_division = CDIV_EXCEPTION; }
     on_overflow
     on_not_overflow
-    { curr_division = CDIV_PROC; }
     ;
 on_overflow:
     ONTOK OVERFLOWTK          { $<dval>$ = gen_at_end(-1); }
@@ -2662,10 +2660,8 @@ on_not_exception:
     | /* nothing */ { $$ = 0; }
     ;
 opt_invalid_key:
-    { curr_division = CDIV_EXCEPTION; }
     opt_invalid_key_sentence
     opt_not_invalid_key_sentence
-    { curr_division = CDIV_PROC; }
     ;
 opt_invalid_key_sentence:
     INVALID opt_key             { $<dval>$ = gen_at_end(23); }
