@@ -54,6 +54,9 @@ extern int cb_flag_debugging_line;
 /* output line directives */
 extern int cb_flag_line_directive;
 
+/* exit after error check */
+extern int cb_flag_parse_only;
+
 #undef CB_WARNING
 #define CB_WARNING(sig,var,name,doc) extern int var;
 #include "warning.def"

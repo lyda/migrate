@@ -203,7 +203,8 @@ program:
     current_program->exec_list = list_reverse (current_program->exec_list);
     if (errorcount > 0)
       YYABORT;
-    codegen (current_program);
+    if (!cb_flag_parse_only)
+      codegen (current_program);
   }
 ;
 end_program:

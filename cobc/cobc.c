@@ -47,6 +47,7 @@ int cb_flag_main = 0;
 int cb_flag_call_static = 0;
 int cb_flag_debugging_line = 0;
 int cb_flag_line_directive = 0;
+int cb_flag_parse_only = 0;
 
 #undef CB_WARNING
 #define CB_WARNING(sig,var,name,doc) int var = 0;
@@ -158,7 +159,7 @@ terminate (const char *str)
  * Command line
  */
 
-static char short_options[] = "h?VvECScmgo:I:T:";
+static char short_options[] = "h?VvEPCScmgo:I:T:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
@@ -248,6 +249,7 @@ process_command_line (int argc, char *argv[])
 	case 'V': print_version (); exit (0);
 
 	case 'E': compile_level = stage_preprocess; break;
+	case 'P': cb_flag_parse_only = 1; /* fall through */
 	case 'C': compile_level = stage_translate; break;
 	case 'S': compile_level = stage_compile; break;
 	case 'c': compile_level = stage_assemble; break;
@@ -501,9 +503,12 @@ process_translate (struct filename *fn)
   if (!yyin)
     terminate (fn->preprocess);
 
-  yyout = fopen (fn->translate, "w");
-  if (!yyout)
-    terminate (fn->translate);
+  if (!cb_flag_parse_only)
+    {
+      yyout = fopen (fn->translate, "w");
+      if (!yyout)
+	terminate (fn->translate);
+    }
 
   cb_source_file = NULL;
   cb_source_line = 0;
@@ -516,7 +521,8 @@ process_translate (struct filename *fn)
 	     fn->preprocess, fn->translate);
   ret = yyparse ();
 
-  fclose (yyout);
+  if (!cb_flag_parse_only)
+    fclose (yyout);
   fclose (yyin);
 
   return ret;
