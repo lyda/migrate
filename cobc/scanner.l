@@ -266,7 +266,7 @@ scan_word (char *text)
       /* if symbol was defined at the data division */
       if ((yylval.tree = lookup_symbol (yytext)) != NULL)
 	{
-	  if (yylval.tree->type == '8')
+	  if (COB_FIELD_TYPE (yylval.tree) == '8')
 	    return VARCOND;
 	  else if (is_subscripted (yylval.tree))
 	    return SUBSCVAR;

@@ -284,9 +284,9 @@ save_special_literal (char *val, char picc, char *nick)
 {
   cob_tree lit = install_literal (nick);
   struct lit *p = LITERAL (lit);
-  if (p->type)
+  if (COB_FIELD_TYPE (lit))
     return NULL;		/* already saved */
-  p->type = picc;
+  COB_FIELD_TYPE (p) = picc;
   p->nick = val;
   p->all = 1;
   save_field_in_list (lit);
@@ -310,7 +310,7 @@ define_special_fields ()
   spe_lit_QU = save_special_literal ("\"", 'X', "%QUOTES%");
 
   sy = install (SVAR_RCODE, SYTB_VAR, 0);
-  sy->type = 'B';		/* assume numeric "usage is comp" item */
+  COB_FIELD_TYPE (sy) = 'B';	/* assume numeric "usage is comp" item */
   sy->len = 4;
   sy->decimals = 0;
   sy->level = 1;
@@ -441,7 +441,7 @@ int
 is_variable (cob_tree sy)
 {
   if (SYMBOL_P (sy))
-    switch (sy->type)
+    switch (COB_FIELD_TYPE (sy))
       {
       case '8':		/* 88 field */
       case '9':		/* numeric */
@@ -829,7 +829,7 @@ value_to_eax (cob_tree sy)
       if ((value2 = value >> 32) != 0)
 	fprintf (o_src, "\tmovl\t$%d,%%edx\n", (int) value2);
     }
-  else if (sy->type == 'B' || sy->type == 'U')
+  else if (COB_FIELD_TYPE (sy) == 'B' || COB_FIELD_TYPE (sy) == 'U')
     {
       /* load binary (comp) value directly */
       /* %eax doesn't hold greater than 4 bytes binary types
@@ -1256,7 +1256,7 @@ gen_store_fnres (cob_tree sy)
 {
   if (sy == NULL)
     return;
-  switch (sy->type)
+  switch (COB_FIELD_TYPE (sy))
     {
     case 'B':
       switch (symlen (sy))
@@ -1281,7 +1281,7 @@ is_numeric_sy (cob_tree sy)
   if (SUBREF_P (sy))
     sy = SUBREF_SYM (sy);
 
-  type = sy->type;
+  type = COB_FIELD_TYPE (sy);
   if ((type == '9') || (type == 'B') || (type == 'C') || (type == 'U'))
     return 1;
   return 0;
@@ -1292,8 +1292,9 @@ static int
 get_nb_fields (cob_tree sy, int times, int sw_val)
 {
   int nb_fields = 0;
+  int type = COB_FIELD_TYPE (sy);
 
-  if (sy->type == 'G')
+  if (type == 'G')
     {
       cob_tree tmp;
       for (tmp = sy->son; tmp != NULL; tmp = tmp->brother)
@@ -1308,13 +1309,13 @@ get_nb_fields (cob_tree sy, int times, int sw_val)
       // A type C is considered for the moment as
       // non homogenous
       nb_fields = 1;
-      if (sy->type == 'C')
+      if (type == 'C')
 	init_ctype = '&';
-      else if (sy->type == '9' && sy->picstr[0] == 'S')
+      else if (type == '9' && sy->picstr[0] == 'S')
 	init_ctype = '&';
       else if (init_ctype == ' ')
-	init_ctype = sy->type;
-      else if (init_ctype != sy->type)
+	init_ctype = type;
+      else if (init_ctype != type)
 	init_ctype = '&';
       if (sw_val == 1)
 	{
@@ -1325,7 +1326,7 @@ get_nb_fields (cob_tree sy, int times, int sw_val)
 		     (sy->value == spe_lit_HV) ? 5 : 1);
 	  if (init_val == -1)
 	    init_val = val;
-	  if (sy->type == init_ctype && val != init_val)
+	  if (type == init_ctype && val != init_val)
 	    init_ctype = '&';
 	}
     }
@@ -1351,7 +1352,7 @@ initialize_values_1 (cob_tree sy, unsigned int loc)
 {
   int i;
 
-  if (sy->type == 'G')
+  if (COB_FIELD_TYPE (sy) == 'G')
     {
       cob_tree p;
       for (i = 0; i < sy->times; i++)
@@ -1379,40 +1380,38 @@ initialize_values_1 (cob_tree sy, unsigned int loc)
 static void
 initialize_values (void)
 {
-  cob_tree sy, sy1, v;
+  cob_tree sy, sy1;
   int i;
   int nb_fields;
 
   for (i = 0; i < HASHLEN; i++)
     for (sy1 = vartab[i]; sy1; sy1 = COB_FIELD_NEXT (sy1))
       for (sy = sy1; sy != NULL; sy = sy->clone)
-	if (sy->type != 'F' && sy->type != '8' &&
-	    sy->type != 'K' && sy->type != 'J')
-	  {
-	    v = sy;
-	    if (v->type == 'F' || v->type == 'R' || v->type == 'K'
-		|| v->type == 'J' || v->type == '8')
+	{
+	  int type = COB_FIELD_TYPE (sy);
+	  if (type == 'F' || type == 'R' || type == 'K'
+	      || type == 'J' || type == '8')
+	    continue;
+	  if (sy->level != 1 && sy->level != 77)
+	    continue;
+	  // for the time being spec_value will be true if any value encountered;
+	  // later on it will contain only non standard values
+	  if (!sy->flags.value)
+	    continue;
+	  if (sy->level == 77 || (sy->level == 1 && sy->son == NULL))
+	    {
+	      if (sy->value)
+		gen_move (sy->value, sy);
 	      continue;
-	    if (v->level != 1 && v->level != 77)
-	      continue;
-	    // for the time being spec_value will be true if any value encountered;
-	    // later on it will contain only non standard values
-	    if (!v->flags.value)
-	      continue;
-	    if (v->level == 77 || (v->level == 1 && v->son == NULL))
-	      {
-		if (v->value)
-		  gen_move (v->value, v);
-		continue;
-	      }
-	    init_ctype = ' ';
-	    init_val = -1;
-	    nb_fields = get_nb_fields (v, v->times, 1);
-	    if (init_ctype != '&' && init_val != 1)
-	      gen_move (get_init_symbol (init_ctype), v);
-	    else
-	      initialize_values_1 (v, v->location);
-	  }
+	    }
+	  init_ctype = ' ';
+	  init_val = -1;
+	  nb_fields = get_nb_fields (sy, sy->times, 1);
+	  if (init_ctype != '&' && init_val != 1)
+	    gen_move (get_init_symbol (init_ctype), sy);
+	  else
+	    initialize_values_1 (sy, sy->location);
+	}
 }
 
 static void
@@ -1434,7 +1433,7 @@ dump_working ()
 	continue;
       if (v->sec_no == SEC_STACK)
 	continue;
-      if (v->type == 'F' || v->type == 'R')
+      if (COB_FIELD_TYPE (v) == 'F' || COB_FIELD_TYPE (v) == 'R')
 	continue;
       fld_len = set_field_length (v, 1);
       if (v->sec_no != cur_sec_no && v->sec_no >= SEC_FIRST_NAMED)
@@ -1448,41 +1447,44 @@ dump_working ()
 	}
 #ifdef COB_DEBUG
       fprintf (o_src, "# FIELD %s, Data Loc: %d(hex: %x) %c\n",
-	       COB_FIELD_NAME (v), v->location, v->location, v->type);
+	       COB_FIELD_NAME (v), v->location, v->location,
+	       COB_FIELD_TYPE (v));
 #endif
       if (cob_stabs_flag)
-	{
-	  if (sy->type == 'B')
-	    {
-	      switch (symlen (sy))
-		{
-		case 1:
-		  stabs_type = '6';
-		  break;
-		case 2:
-		  stabs_type = '5';
-		  break;
-		case 4:
-		  stabs_type = '3';
-		  break;
-		case 8:
-		  stabs_type = '7';
-		  break;
-		}
-	      fprintf (o_src, ".stabs\t\"%s:S%c\",38,0,0,w_base%d+%d\n",
-		       COB_FIELD_NAME (sy), stabs_type, pgm_segment,
-		       sy->location);
-	    }
-	  else if (sy->type == 'C')
-	    fprintf (o_src,
-		     ".stabs\t\"%s:S(1,%d)=ar3;1;%d;4\",38,0,0,w_base%d+%d\n",
+	switch (COB_FIELD_TYPE (sy))
+	  {
+	  case 'B':
+	    switch (symlen (sy))
+	      {
+	      case 1:
+		stabs_type = '6';
+		break;
+	      case 2:
+		stabs_type = '5';
+		break;
+	      case 4:
+		stabs_type = '3';
+		break;
+	      case 8:
+		stabs_type = '7';
+		break;
+	      }
+	    fprintf (o_src, ".stabs\t\"%s:S%c\",38,0,0,w_base%d+%d\n",
+		     COB_FIELD_NAME (sy), stabs_type, pgm_segment,
+		     sy->location);
+	    break;
+
+	  case 'C':
+	    fprintf (o_src, ".stabs\t\"%s:S(1,%d)=ar3;1;%d;4\",38,0,0,w_base%d+%d\n",
 		     COB_FIELD_NAME (sy), sy->len, sy->len, pgm_segment, 0);
-	  else
-	    fprintf (o_src,
-		     ".stabs\t\"%s:S(1,%d)=ar3;1;%d;2\",38,0,0,w_base%d+%d\n",
+	    break;
+
+	  default:
+	    fprintf (o_src, ".stabs\t\"%s:S(1,%d)=ar3;1;%d;2\",38,0,0,w_base%d+%d\n",
 		     COB_FIELD_NAME (sy), sy->len, sy->len, pgm_segment,
 		     sy->location);
-	}
+	    break;
+	  }
 
       if (v->parent)
 	continue;
@@ -1575,7 +1577,7 @@ proc_header (int using)
       for (sy1 = vartab[i]; sy1; sy1 = COB_FIELD_NEXT (sy1))
 	for (sy = sy1; sy; sy = sy->clone)
 	  if (sy->sec_no == SEC_STACK)
-	    switch (sy->type)
+	    switch (COB_FIELD_TYPE (sy))
 	      {
 	      case '8': case 'F': case 'K': case 'J':
 		/* do nothing */
@@ -1658,12 +1660,12 @@ dump_fdesc ()
 	  yyerror ("No file name assigned to %s.\n", COB_FIELD_NAME (f));
 	  continue;
 	}
-      if (f->type == 'K')
+      if (COB_FIELD_TYPE (f) == 'K')
 	{
 	  fprintf (o_src, "\t.extern\t_%s:far\n", COB_FIELD_NAME (f));
 	  continue;
 	}
-      if (f->type == 'J')
+      if (COB_FIELD_TYPE (f) == 'J')
 	{
 	  fprintf (o_src, "\tpublic\t_%s\n", COB_FIELD_NAME (f));
 	  fprintf (o_src, "_%s\tlabel\tbyte\n", COB_FIELD_NAME (f));
@@ -1765,7 +1767,7 @@ proc_trail (int using)
   /**************** generate data for fields *****************/
   for (list = fields_list; list != NULL; list = list->next)
     {
-      if (SYMBOL (list->var)->type == 'F')
+      if (COB_FIELD_TYPE (list->var) == 'F')
 	{			/* sort files */
 	  char sl[21];		/* para inverter a lista */
 	  char *s;
@@ -1838,7 +1840,8 @@ proc_trail (int using)
 	      fprintf (o_src, "0\n");
 	    }
 	  fprintf (o_src, "\t.long\t%d\n", (v->decimals) ? len - 1 : len);
-	  fprintf (o_src, "\t.byte\t'%c',%d,%d\n", v->type, v->decimals, v->all);
+	  fprintf (o_src, "\t.byte\t'%c',%d,%d\n",
+		   COB_FIELD_TYPE (v), v->decimals, v->all);
 	  fprintf (o_src, "\t.long\tc_base%d+%d", pgm_segment, v->descriptor + 11);	/* pointer to the picture */
 #ifdef COB_DEBUG
 	  fprintf (o_src, "\t# c_base%d+%x(hex)",
@@ -1855,7 +1858,8 @@ proc_trail (int using)
 		fprintf (o_src, "\t.byte\t'9',%d,'V',1,'9',%d,0\n",
 			 len - v->decimals - 1, v->decimals);
 	    }
-	  else if ((v->type == '9') && (COB_FIELD_NAME (v)[v->len - 1] > '9'))
+	  else if ((COB_FIELD_TYPE (v) == '9')
+		   && (COB_FIELD_NAME (v)[v->len - 1] > '9'))
 	    {
 	      /* this is a signed literal, so reflect into its picture too */
 	      fprintf (o_src, "\t.byte\t'S',1,'9',%d,0\n", len);
@@ -1865,10 +1869,12 @@ proc_trail (int using)
 	      tmplen = len;
 	      while (tmplen > 255)
 		{
-		  fprintf (o_src, "\t.byte\t\'%c\',%d\n", v->type, 255);
+		  fprintf (o_src, "\t.byte\t\'%c\',%d\n",
+			   COB_FIELD_TYPE (v), 255);
 		  tmplen -= 255;
 		}
-	      fprintf (o_src, "\t.byte\t\'%c\',%d,0\n", v->type, tmplen);
+	      fprintf (o_src, "\t.byte\t\'%c\',%d,0\n",
+		       COB_FIELD_TYPE (v), tmplen);
 
 	    }
 	}
@@ -1890,8 +1896,8 @@ proc_trail (int using)
 	  flag |= (sy->flags.separate_sign ? 4 : 0);
 	  flag |= (sy->flags.leading_sign ? 8 : 0);
 	  fprintf (o_src, "\t.byte\t'%c',%d,%d\n",
-		   sy->type, sy->decimals, flag);
-	  if (sy->type != 'G')
+		   COB_FIELD_TYPE (sy), sy->decimals, flag);
+	  if (COB_FIELD_TYPE (sy) != 'G')
 	    {
 #ifdef COB_DEBUG
 	      fprintf (o_src, "\t.long\tc_base%d+%d\t# c_base%d+%x(hex)\n",
@@ -1956,7 +1962,7 @@ save_literal (cob_tree x, int type)
     v->decimals = 0;
   if (type == 'X' && v->len > 255)
     piclen += (v->len / 255) * 2;
-  v->type = type;
+  COB_FIELD_TYPE (v) = type;
 	/****** save literal in fields list for later *******/
   save_field_in_list (x);
 	/******** save address of const string ************/
@@ -1994,7 +2000,7 @@ put_disp_list (cob_tree sy)
 int
 symlen (cob_tree x)
 {
-  if (x->type == 'C')
+  if (COB_FIELD_TYPE (x) == 'C')
     return x->len / 2 + 1;
   else if (LITERAL_P (x))
     return LITERAL (x)->len;
@@ -3045,7 +3051,7 @@ gen_move_corresponding (cob_tree sy1, cob_tree sy2)
 	if (!t2->redefines && t2->times == 1)
 	  if (strcmp (COB_FIELD_NAME (t1), COB_FIELD_NAME (t2)) == 0)
 	    {
-	      if ((t1->type != 'G') || (t2->type != 'G'))
+	      if (COB_FIELD_TYPE (t1) != 'G' || COB_FIELD_TYPE (t2) != 'G')
 		gen_move (t1, t2);
 	      else
 		gen_move_corresponding (t1, t2);
@@ -3062,7 +3068,7 @@ gen_initialize_1 (cob_tree sy)
 {
   if (!sy->flags.in_redefinition)
     {
-      if (sy->type == 'G')
+      if (COB_FIELD_TYPE (sy) == 'G')
 	{
 	  int lab = 0;
 	  cob_tree p;
@@ -3092,7 +3098,7 @@ gen_initialize_1 (cob_tree sy)
 	  for (i = 0; i < sy->times; i++)
 	    {
 	      gen_loaddesc (sy);
-	      gen_move_1 (get_init_symbol (sy->type));
+	      gen_move_1 (get_init_symbol (COB_FIELD_TYPE (sy)));
 	      fprintf (o_src, "\taddl\t$%d, 0(%%esp)\n", symlen (sy));
 	    }
 	}
@@ -3108,7 +3114,7 @@ gen_initialize (cob_tree sy)
 
 #ifdef COB_DEBUG
   fprintf (o_src, "# INITIALIZE %s, type %c\n",
-	   COB_FIELD_NAME (sy), sy->type);
+	   COB_FIELD_NAME (sy), COB_FIELD_TYPE (sy));
 #endif
   init_ctype = ' ';
   get_nb_fields (sy1, sy1->times, 0);
@@ -3138,7 +3144,7 @@ gen_set (cob_tree idx, enum set_mode mode, cob_tree var,
   else if (SUBREF_P (idx))
     sy = SUBREF_SYM (idx);
 
-  if (sy->type == '8')
+  if (COB_FIELD_TYPE (sy) == '8')
     {				/* conditional? */
       if ((sy->refmod_redef.vr != NULL) || (sy->value2 != sy->value))
 	{
@@ -3191,7 +3197,7 @@ gen_set (cob_tree idx, enum set_mode mode, cob_tree var,
       return;
     }
 	/******** it is not a pointer, so must be an index ********/
-  if (idx->type != 'B')
+  if (COB_FIELD_TYPE (idx) != 'B')
     {
       yyerror ("only usage comp variables can be used as indices");
       return;
@@ -3531,21 +3537,22 @@ save_pic_char (char c, int n)
     {
     case 'A':
       piccnt += n;
-      if (curr_field->type != 'X' && curr_field->type != 'E')
-	curr_field->type = 'A';
+      if (COB_FIELD_TYPE (curr_field) != 'X'
+	  && COB_FIELD_TYPE (curr_field) != 'E')
+	COB_FIELD_TYPE (curr_field) = 'A';
       break;
     case 'N':
       piccnt += n * 2;
-      if (curr_field->type == '9')
-	curr_field->type = 'X';
+      if (COB_FIELD_TYPE (curr_field) == '9')
+	COB_FIELD_TYPE (curr_field) = 'X';
       break;
     case 'X':
       piccnt += n;
-      if (curr_field->type == '9')
-	curr_field->type = 'X';
+      if (COB_FIELD_TYPE (curr_field) == '9')
+	COB_FIELD_TYPE (curr_field) = 'X';
       break;
     case 'Z':
-      curr_field->type = 'E';
+      COB_FIELD_TYPE (curr_field) = 'E';
     case '9':
       piccnt += n;
       if (v_flag)
@@ -3583,13 +3590,13 @@ save_pic_char (char c, int n)
     case 'R':
     case 'D':
       piccnt += n;
-      curr_field->type = 'E';
+      COB_FIELD_TYPE (curr_field) = 'E';
       break;
     default:
       if (c == currency_symbol)
 	{
 	  piccnt += n;
-	  curr_field->type = 'E';
+	  COB_FIELD_TYPE (curr_field) = 'E';
 	  break;
 	}
 
@@ -3812,10 +3819,10 @@ define_implicit_field (cob_tree sy, cob_tree sykey, int idxlen)
   cob_tree tmp = NULL;
   struct index_to_table_list *i2t;
 
+  COB_FIELD_TYPE (sy) = 'B';	/* assume numeric "usage is comp" item */
   sy->len = 4;
   sy->decimals = 0;	/* suppose no decimals yet */
   sy->level = 1;
-  sy->type = 'B';	/* assume numeric "usage is comp" item */
   sy->redefines = NULL;
   sy->linkage_flg = 0;	/* should not go in the linkage section, never! */
   sy->sec_no = SEC_STACK;
@@ -3922,7 +3929,7 @@ define_field (int level, cob_tree sy)
 
   if (level == 88)
     {
-      sy->type = '8';
+      COB_FIELD_TYPE (sy) = '8';
       sy->defined = 1;
       sy->len = 0;
       sy->decimals = 0;
@@ -3946,10 +3953,10 @@ define_field (int level, cob_tree sy)
     }
   if (level == 1 || level == 77)
     curr_sec_no = SEC_DATA;
+  COB_FIELD_TYPE (sy) = '9';		/* assume numeric (elementary) item */
   sy->len = 0;
   sy->decimals = -1;		/* suppose no decimals yet */
   sy->level = level;
-  sy->type = '9';		/* assume numeric (elementary) item */
   sy->redefines = NULL;
   sy->linkage_flg = at_linkage;
   sy->sec_no = (at_linkage ? SEC_ARGS : curr_sec_no);
@@ -4034,7 +4041,7 @@ check_fields (cob_tree sy)
 	  check_fields (tmp);
 	}
     }
-  if (sy->type == '9' && sy->len > 31)
+  if (COB_FIELD_TYPE (sy) == '9' && sy->len > 31)
     yyerror ("Elementary numeric item %s > 31 digits", COB_FIELD_NAME (sy));
   return 0;
 }
@@ -4077,7 +4084,7 @@ set_field_length (cob_tree sy, int times)
   if (sy->son != NULL)
     {
       len = 0;
-      sy->type = 'G';
+      COB_FIELD_TYPE (sy) = 'G';
       for (tmp = sy->son; tmp != NULL; tmp = tmp->brother)
 	{
 	  tmplen = tmp->times * set_field_length (tmp, times);
@@ -4098,7 +4105,7 @@ field_alignment (cob_tree sy, unsigned location)
 
   if (sy->flags.sync == 0)
     return 0;
-  switch (sy->type)
+  switch (COB_FIELD_TYPE (sy))
     {
     case 'B':
       mod_loc = (location - curr_01_location) % symlen (sy);
@@ -4117,14 +4124,13 @@ set_field_location (cob_tree sy, unsigned location)
 {
   cob_tree tmp;
 
-  //fprintf(stderr,"set_field_location: %s -> %d\n",sy->name,location);
   if (sy->level == 1)
     curr_01_location = location;
-	/********* allocate field descriptor *************/
+  /********* allocate field descriptor *************/
   sy->descriptor = literal_offset;
-  literal_offset += (sy->type == 'G' ? 7 : 11);
-	/********* generate picture for field ************/
-  if (sy->type != 'G')
+  literal_offset += (COB_FIELD_TYPE (sy) == 'G' ? 7 : 11);
+  /********* generate picture for field ************/
+  if (COB_FIELD_TYPE (sy) != 'G')
     {
       sy->pic = literal_offset;
       literal_offset += (strlen (sy->picstr) + 1);
@@ -4224,7 +4230,7 @@ void
 update_report_field (cob_tree sy)
 {
   update_field ();
-  sy->type = 'Q';
+  COB_FIELD_TYPE (sy) = 'Q';
 }
 
 void
@@ -4232,7 +4238,7 @@ update_screen_field (cob_tree sy, struct scr_info *si)
 {
   cob_tree tmp;
   update_field ();
-  sy->type = 'D';
+  COB_FIELD_TYPE (sy) = 'D';
   sy->scr = si;
   si->label = screen_label++;
   /* if picture is empty (implicit filler), and there is a
@@ -4300,17 +4306,17 @@ void
 update_field (void)
 {
   if (curr_field->level != 88)
-    if (curr_field->type != 'G')
+    if (COB_FIELD_TYPE (curr_field) != 'G')
       curr_field->picstr = strdup (picture);
 
-  if ((curr_field->type != 'B') && (curr_field->type != 'U'))
+  if (COB_FIELD_TYPE (curr_field) != 'B' && COB_FIELD_TYPE (curr_field) != 'U')
     {
       curr_field->len = piccnt;
       if (curr_field->flags.separate_sign)
 	curr_field->len++;
     }
   /* update COMP field length (but not BINARY-<something>) */
-  if (curr_field->len == 0 && curr_field->type == 'B')
+  if (curr_field->len == 0 && COB_FIELD_TYPE (curr_field) == 'B')
     curr_field->len = query_comp_len (curr_field);
 }
 
@@ -4368,7 +4374,7 @@ resolve_labels ()
     {
       for (sy = labtab[i]; sy; sy = COB_FIELD_NEXT (sy))
 	{
-	  if (sy->type == 'f')
+	  if (COB_FIELD_TYPE (sy) == 'f')
 	    continue;
 	  sy1 = sy;
 	  while (sy1)
@@ -4415,7 +4421,7 @@ resolve_labels ()
 void
 open_section (cob_tree sect)
 {
-  sect->type = 'S';
+  COB_FIELD_TYPE (sect) = 'S';
   fprintf (o_src, ".LB_%s:\n", label_name (sect));
   curr_section = sect;
 }
@@ -4476,7 +4482,7 @@ close_paragr (void)
 void
 open_paragr (cob_tree paragr)
 {
-  paragr->type = 'P';
+  COB_FIELD_TYPE (paragr) = 'P';
   curr_paragr = paragr;
   fprintf (o_src, ".LB_%s:\n", label_name (paragr));
 }
@@ -4559,7 +4565,7 @@ gen_save_filevar (cob_tree f, cob_tree buf)
       fprintf (o_src, "\tmovl\t%s, %%eax\n", memref (f->recordsym));
       push_eax ();
     }
-  if (f->type == 'K')
+  if (COB_FIELD_TYPE (f) == 'K')
     fprintf (o_src, "\tmovl\t$_%s, %%eax\n", COB_FIELD_NAME (f));
   else
 #ifdef COB_DEBUG
@@ -4573,7 +4579,7 @@ gen_save_filevar (cob_tree f, cob_tree buf)
 void
 gen_save_filedesc (cob_tree f)
 {
-  if (f->type == 'K')
+  if (COB_FIELD_TYPE (f) == 'K')
     fprintf (o_src, "\tmovl\t$_%s, %%eax\n", COB_FIELD_NAME (f));
   else
 #ifdef COB_DEBUG
@@ -4683,7 +4689,7 @@ struct sortfile_node *
 alloc_sortfile_node (cob_tree sy)
 {
   struct sortfile_node *sn;
-  if (sy->type != 'F')
+  if (COB_FIELD_TYPE (sy) != 'F')
     {
       yyerror ("only files can be found here");
       return NULL;
@@ -4700,9 +4706,9 @@ create_status_register (char *name)
   cob_tree sy;
   char pic[] = { '9', 2, 0 };
   sy = install (name, SYTB_VAR, 0);
-  if (sy->type)
+  if (COB_FIELD_TYPE (sy))
     return NULL;		/* it already exists */
-  sy->type = '9';
+  COB_FIELD_TYPE (sy) = '9';
   sy->picstr = malloc (strlen (pic) + 1);
   strcpy (sy->picstr, pic);
   sy->times = 1;

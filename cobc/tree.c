@@ -47,7 +47,7 @@ make_literal (char *name)
   COB_TREE_TYPE (p) = cob_tag_literal;
   COB_FIELD_NEXT (p) = NULL;
   COB_FIELD_NAME (p) = name;
-  p->type = 0;
+  COB_FIELD_TYPE (p) = 0;
   p->all = 0;
   p->nick = NULL;
   p->len = strlen (COB_FIELD_NAME (p));
@@ -66,8 +66,8 @@ make_symbol (char *name)
   COB_TREE_TYPE (p) = cob_tag_symbol;
   COB_FIELD_NEXT (p) = NULL;
   COB_FIELD_NAME (p) = name;
+  COB_FIELD_TYPE (p) = 0;
   p->times = 0;
-  p->type = 0;
   p->slack = 0;
   p->level = 0;
   p->defined = 0;
@@ -196,8 +196,10 @@ print_tree (cob_tree x)
 {
   if (x == spe_lit_ZE)
     printf ("ZERO");
-  else if (SYMBOL_P (x) || LITERAL_P (x))
-    printf (COB_FIELD_NAME (x));
+  else if (LITERAL_P (x))
+    printf ("\"%s\"", COB_FIELD_NAME (x));
+  else if (SYMBOL_P (x))
+    printf ("%s", COB_FIELD_NAME (x));
   else if (SUBREF_P (x))
     {
       cob_tree_list ls;

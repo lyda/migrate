@@ -299,7 +299,7 @@ select_statement_list:
 select_statement:
   SELECT opt_optional def_name ASSIGN opt_to
   {
-    $3->type='F';   /* mark as file variable */
+    COB_FIELD_TYPE ($3)='F';   /* mark as file variable */
     curr_file=$3;
     $3->pic=0;  /* suppose not indexed yet */
     $3->defined=1;
@@ -478,8 +478,8 @@ file_description:
 ;
 file_attrib:
 | file_attrib REPORT opt_is SYMBOL_TOK { save_report( $4,$<tree>0 ); }
-| file_attrib opt_is GLOBAL     { $<tree>0->type = 'J'; }
-| file_attrib opt_is EXTERNAL   { $<tree>0->type = 'K'; }
+| file_attrib opt_is GLOBAL     { COB_FIELD_TYPE ($<tree>0) = 'J'; }
+| file_attrib opt_is EXTERNAL   { COB_FIELD_TYPE ($<tree>0) = 'K'; }
 | file_attrib LABEL rec_or_recs opt_is_are std_or_omitt
 | file_attrib BLOCK opt_contains integer opt_to_integer chars_or_recs
 | file_attrib DATA rec_or_recs  opt_is_are var_strings
@@ -636,7 +636,7 @@ usage_clause:
 usage:
   BINARY /* or COMP, COMP-5, INDEX */
   {
-    curr_field->type = 'B';
+    COB_FIELD_TYPE (curr_field) = 'B';
     curr_field->len  =  0;
   }
 | DISPLAY
@@ -645,7 +645,7 @@ usage:
   }
 | FLOAT_SHORT /* or COMP-1 */
   {
-    curr_field->type     = 'U';
+    COB_FIELD_TYPE (curr_field) = 'U';
     curr_field->len      =  4;
     curr_field->decimals =  7;
     curr_field->sign     =  1;
@@ -654,7 +654,7 @@ usage:
   }
 | FLOAT_LONG /* or COMP-2 */
   {
-    curr_field->type     = 'U';
+    COB_FIELD_TYPE (curr_field) = 'U';
     curr_field->len      =  8;
     curr_field->decimals = 15;
     curr_field->sign     =  1;
@@ -663,11 +663,11 @@ usage:
   }
 | PACKED_DECIMAL /* or COMP-3 */
   {
-    curr_field->type = 'C';
+    COB_FIELD_TYPE (curr_field) = 'C';
   }
 | POINTER
   {
-    curr_field->type     = 'B';
+    COB_FIELD_TYPE (curr_field) = 'B';
     curr_field->len      =  4;
     curr_field->decimals =  0;
     curr_field->flags.is_pointer = 1;
@@ -809,7 +809,7 @@ rd_statement_list:
 | rd_statement_list rd_statement
 ;
 rd_statement:
-  RD SYMBOL_TOK { $2->type='W'; curr_division = CDIV_INITIAL; }
+  RD SYMBOL_TOK { COB_FIELD_TYPE ($2) = 'W'; curr_division = CDIV_INITIAL; }
   report_controls { curr_division = CDIV_DATA; }
   report_description
 ;
@@ -2556,7 +2556,7 @@ number:
 file:
   name
   {
-    if ($1->type != 'F')
+    if (COB_FIELD_TYPE ($1) != 'F')
       yyerror ("file name is expected: %s", COB_FIELD_NAME ($1));
     $$ = $1;
   }
