@@ -5061,9 +5061,6 @@ gen_condition (struct sym *sy)
 {
   struct vrange *vr;
   struct sym *sy1 = sy;
-  /*fprintf(o_src,"# 88 condition (top): (%s , %s)\n",
-     sy->value->name,sy->value2->name); */
-  /* is this an indexed condition ? */
   if (SUBREF_P (sy))
     sy1 = SUBREF_SYM (sy);
   gen_loadvar ((struct sym *) NULL);
@@ -5072,8 +5069,6 @@ gen_condition (struct sym *sy)
   vr = sy1->refmod_redef.vr;
   while (vr)
     {
-      /*fprintf(o_src,"# 88 condition: (%s , %s)\n",
-         vr->value->name,vr->value2->name); */
       gen_loadvar ((struct sym *) vr->value2);
       gen_loadvar ((struct sym *) vr->value);
       vr = vr->next;

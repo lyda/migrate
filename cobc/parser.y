@@ -143,7 +143,7 @@ static void check_decimal_point (struct lit *lit);
 %token TOK_SOURCE_COMPUTER, TOK_OBJECT_COMPUTER,INPUT_OUTPUT
 %token BEFORE,AFTER,SCREEN,REVERSEVIDEO,NUMBERTOK,PLUS,MINUS,SEPARATE
 %token FOREGROUNDCOLOR,BACKGROUNDCOLOR,UNDERLINE,HIGHLIGHT,LOWLIGHT
-%token RIGHT,AUTO,REQUIRED,FULL,JUST,BLINK,SECURE,BELL,COLUMN,SYNC
+%token RIGHT,AUTO,REQUIRED,FULL,JUSTIFIED,BLINK,SECURE,BELL,COLUMN,SYNCHRONIZED
 %token INITIALTOK,FIRSTTOK,ALL,LEADING,OF,IN,BY,STRINGCMD,UNSTRING
 %token START,DELETE,DATE_TIME,PROGRAM,GLOBAL,EXTERNAL,SIZE,DELIMITED
 %token GIVING,ERASE,INSPECT,TALLYING,REPLACING,ONTOK,POINTER,OVERFLOWTK
@@ -598,7 +598,6 @@ sort_attrib:
 ;
 rec_or_recs: RECORD | RECORDS ;
 std_or_omitt: STANDARD | OMITTED ;
-opt_when: | WHEN ;
 opt_is: | IS ;
 opt_mode: | MODE ;
 opt_is_are: | IS | ARE ;
@@ -648,10 +647,10 @@ field_option:
 | usage_clause
 | sign_clause
 | occurs_clause
-| JUST RIGHT			{ curr_field->flags.just_r=1; }
-| SYNC sync_options		{ curr_field->flags.sync=1; }
-| BLANK opt_when ZERONUM	{ curr_field->flags.blank=1; }
-| value_option
+| justified_clause
+| synchronized_clause
+| blank_clause
+| value_clause
 ;
 
 
@@ -820,13 +819,46 @@ index_name_list:
 opt_times: | TIMES ;
 
 
-sync_options:
+/*
+ * JUSTIFIED clause
+ */
+
+justified_clause:
+  JUSTIFIED opt_right		{ curr_field->flags.just_r = 1; }
+;
+opt_right: | RIGHT ;
+
+
+/*
+ * SYNCHRONIZED clause
+ */
+
+synchronized_clause:
+  SYNCHRONIZED left_or_right	{ curr_field->flags.sync = 1; }
+;
+left_or_right:
 | LEFT
 | RIGHT
 ;
 
-value_option: VALUE opt_is_are value_list ;
+
+/*
+ * BLANK clause
+ */
 
+blank_clause:
+  BLANK opt_when ZERONUM	{ curr_field->flags.blank=1; }
+;
+opt_when: | WHEN ;
+
+
+/*
+ * VALUE clause
+ */
+
+value_clause:
+  VALUE opt_is_are value_list
+;
 value_list:
   value
 | value_list opt_sep value
@@ -1025,8 +1057,8 @@ screen_attrib:
 | REQUIRED                      { $$ = SCR_REQUIRED; }
 | SECURE                        { $$ = SCR_SECURE; }
 | AUTO                          { $$ = SCR_AUTO; }
-| JUST RIGHT                    { $$ = SCR_JUST_RIGHT; }
-| JUST LEFT                     { $$ = SCR_JUST_LEFT; }
+| JUSTIFIED RIGHT               { $$ = SCR_JUST_RIGHT; }
+| JUSTIFIED LEFT                { $$ = SCR_JUST_LEFT; }
 | BLINK                         { $$ = SCR_BLINK; }
 | REVERSEVIDEO                  { $$ = SCR_REVERSE_VIDEO; }
 | UNDERLINE                     { $$ = SCR_UNDERLINE; }
