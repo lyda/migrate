@@ -1491,9 +1491,19 @@ output_call (struct cb_call *p)
 		case CB_USAGE_COMP_5:
 		case CB_USAGE_COMP_X:
 		case CB_USAGE_INDEX:
-		case CB_USAGE_LENGTH:
 		  output_integer (x);
 		  break;
+		case CB_USAGE_LENGTH:
+#ifndef WORDS_BIGENDIAN
+			if (cb_binary_byteorder == CB_BYTEORDER_BIG_ENDIAN)
+				output ("COB_BSWAP_32 (");
+#endif
+			output_integer (x);
+#ifndef WORDS_BIGENDIAN
+			if (cb_binary_byteorder == CB_BYTEORDER_BIG_ENDIAN)
+				output (")");
+#endif
+			break;
 		default:
 		  output ("*");
 		  output_data (x);
