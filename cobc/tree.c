@@ -164,8 +164,24 @@ print_tree (cob_tree x)
 {
   if (x == spe_lit_ZE)
     printf ("ZERO");
+  else if (SYMBOL_P (x))
+    printf (SYMBOL (x)->name);
   else if (LITERAL_P (x))
     printf (LITERAL (x)->name);
+  else if (SUBREF_P (x))
+    {
+      cob_tree_list ls;
+      print_tree (SUBREF_SYM (x));
+      printf ("(");
+      for (ls = SUBREF_SUBS (x); ls; ls = ls->next)
+	{
+	  print_tree (ls->tree);
+	  if (ls->next)
+	    printf (", ");
+	  else
+	    printf (")");
+	}
+    }
   else if (COND_P (x))
     {
       cob_tree l = COND_X (x);
