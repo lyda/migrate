@@ -30,7 +30,7 @@ while (<IN>) {
 	$name = "$subr.SUB";
       } elsif ($subt eq "SUBRTN") {
 	$name = "lib/$subr.CBL";
-	mkdir "$module/lib" unless (-e "$module/lib");
+	mkdir "$module/lib",0755 unless (-e "$module/lib");
       }
     } elsif ($type eq "COBOL") {
       $name = "$prog.CBL";
@@ -41,7 +41,7 @@ while (<IN>) {
       $name = "$prog";
     }
     if ($name) {
-      mkdir $module unless (-e $module);
+      mkdir $module,0755 unless (-e $module);
       open (OUT, "> $module/$name") or die;
       while (<IN>) {
 	last if /^      \*END/;
