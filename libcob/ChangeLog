@@ -1,3 +1,8 @@
+2003-05-29  Keisuke Nishida  <knishida@netlab.jp>
+
+	* common.h (cob_switch): Removed.
+	* common.c (cob_set_switch, cob_get_switch): New function.
+
 2003-05-27  Keisuke Nishida  <knishida@netlab.jp>
 
 	* common.h (cob_module): Renamed from cob_environment.

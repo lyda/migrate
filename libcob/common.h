@@ -160,8 +160,6 @@ extern cob_field cob_high;		/* HIGH-VALUE */
 extern cob_field cob_low;		/* LOW-VALUE */
 extern cob_field cob_quote;		/* QUOTE */
 
-extern int cob_switch[];
-
 extern long cob_exp10[];
 extern long long cob_exp10LL[];
 
@@ -197,6 +195,11 @@ extern void cob_stop_run (void);
 extern int cob_real_get_sign (cob_field *f);
 extern void cob_real_put_sign (cob_field *f, int sign);
 extern char *cob_field_to_string (cob_field *f, char *s);
+
+/* Switch */
+
+extern int cob_get_switch (int n);
+extern void cob_set_switch (int n, int flag);
 
 /* Comparison */
 

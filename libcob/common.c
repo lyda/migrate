@@ -55,8 +55,6 @@ cob_field cob_high =  {1, "\xff", &cob_all_attr};
 cob_field cob_low =   {1, "\0",   &cob_all_attr};
 cob_field cob_quote = {1, "\"",   &cob_all_attr};
 
-int cob_switch[8] = {1, 0, 1, 1, 1, 1, 1, 1};
-
 long cob_exp10[10] = {
   1,
   10,
@@ -341,6 +339,25 @@ cob_field_to_string (cob_field *f, char *s)
       break;
   s[i + 1] = '\0';
   return s;
+}
+
+
+/*
+ * Switch
+ */
+
+static int cob_switch[8] = {1, 0, 1, 1, 1, 1, 1, 1};
+
+int
+cob_get_switch (int n)
+{
+  return cob_switch[n];
+}
+
+void
+cob_set_switch (int n, int flag)
+{
+  cob_switch[n] = flag;
 }
 
 
