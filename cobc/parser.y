@@ -123,132 +123,110 @@ static void check_decimal_point (struct lit *lit);
     struct pair *pair;
 }
 
-%left   '+','-'
-%left   '*','/'
-%left   '^'
-
+%left  '+', '-'
+%left  '*', '/'
+%left  '^'
 %left  OR
 %left  AND
 %right NOT
 %right OF
 
 %token <str>  IDSTRING
-%token <sval> SYMBOL,VARIABLE,VARCOND,SUBSCVAR
-%token <sval> LABELSTR,COMMAND_LINE,ENVIRONMENT_VARIABLE,PICTURE
+%token <sval> SYMBOL,VARIABLE,VARCOND,SUBSCVAR,LABELSTR,PICTURE
 %token <lval> NLITERAL,CLITERAL
 %token <ival> PORTNUM
 
-%token EQUAL,GREATER,LESS,TOK_GE,TOK_LE
-%token DATE,DAY,DAY_OF_WEEK,TIME,INKEY,READ,WRITE
+%token EQUAL,GREATER,LESS,TOK_GE,TOK_LE,COMMAND_LINE,ENVIRONMENT_VARIABLE
+%token DATE,DAY,DAY_OF_WEEK,TIME,INKEY,READ,WRITE,OBJECT_COMPUTER,INPUT_OUTPUT
 %token TO,FOR,IS,ARE,THRU,THAN,NO,CANCEL,ASCENDING,DESCENDING,ZEROS
-%token SOURCE_COMPUTER, OBJECT_COMPUTER,INPUT_OUTPUT
-%token BEFORE,AFTER,SCREEN,REVERSEVIDEO,NUMBER,PLUS,MINUS,SEPARATE
-%token FOREGROUNDCOLOR,BACKGROUNDCOLOR,UNDERLINE,HIGHLIGHT,LOWLIGHT
+%token SOURCE_COMPUTER,BEFORE,AFTER,SCREEN,REVERSEVIDEO,NUMBER,PLUS,MINUS
+%token FOREGROUNDCOLOR,BACKGROUNDCOLOR,UNDERLINE,HIGHLIGHT,LOWLIGHT,SEPARATE
 %token RIGHT,AUTO,REQUIRED,FULL,JUSTIFIED,BLINK,SECURE,BELL,COLUMN,SYNCHRONIZED
 %token TOK_INITIAL,FIRST,ALL,LEADING,OF,IN,BY,STRING,UNSTRING
 %token START,DELETE,PROGRAM,GLOBAL,EXTERNAL,SIZE,DELIMITED
 %token GIVING,ERASE,INSPECT,TALLYING,REPLACING,ON,POINTER,OVERFLOWTK
-%token DELIMITER,COUNT,LEFT,TRAILING,CHARACTER
+%token DELIMITER,COUNT,LEFT,TRAILING,CHARACTER,FILLER,OCCURS,TIMES
 %token ADD,SUBTRACT,MULTIPLY,DIVIDE,ROUNDED,REMAINDER,ERROR,SIZE
-%token FD,SD,REDEFINES,PICTURE,FILLER,OCCURS,TIMES
+%token FD,SD,REDEFINES,PICTURE,FILEN,USAGE,BLANK,SIGN,VALUE,MOVE,LABEL
 %token PROGRAM_ID,DIVISION,CONFIGURATION,SPECIAL_NAMES
-%token FILE_CONTROL,I_O_CONTROL
-%token SAME,AREA,EXCEPTION
-%token FROM,UPDATE
-%token WORKING_STORAGE,LINKAGE,DECIMAL_POINT,COMMA
-%token FILEN,USAGE,BLANK
-%token SIGN,VALUE,MOVE,LABEL
-%token RECORD,OMITTED,STANDARD,RECORDS,BLOCK
-%token CONTAINS,CHARACTERS,COMPUTE,GO,STOP,RUN
-%token ACCEPT,PERFORM,VARYING,UNTIL,EXIT
-%token IF,ELSE,SENTENCE,LINE,PAGE
-%token OPEN,CLOSE,REWRITE
+%token FILE_CONTROL,I_O_CONTROL,FROM,UPDATE,SAME,AREA,EXCEPTION
+%token WORKING_STORAGE,LINKAGE,DECIMAL_POINT,COMMA,DUPLICATES,WITH
+%token RECORD,OMITTED,STANDARD,RECORDS,BLOCK,VARYING,UNTIL,EXIT
+%token CONTAINS,CHARACTERS,COMPUTE,GO,STOP,RUN,ACCEPT,PERFORM
+%token IF,ELSE,SENTENCE,LINE,PAGE,OPEN,CLOSE,REWRITE,SECTION
 %token ADVANCING,INTO,AT,END,NEGATIVE,POSITIVE,SPACES,NOT
-%token CALL,USING,INVALID,CONTENT
+%token CALL,USING,INVALID,CONTENT,QUOTES,LOW_VALUES,HIGH_VALUES
 %token SELECT,ASSIGN,DISPLAY,UPON,CONSOLE,STD_OUTPUT,STD_ERROR
-%token ORGANIZATION,ACCESS,MODE,KEY,STATUS,ALTERNATE
+%token ORGANIZATION,ACCESS,MODE,KEY,STATUS,ALTERNATE,SORT,SORT_MERGE
 %token SEQUENTIAL,INDEXED,DYNAMIC,RANDOM,RELATIVE,RELEASE
-%token SECTION,SORT,SORT_MERGE,DUPLICATES,WITH
-%token QUOTES,LOW_VALUES,HIGH_VALUES
 %token SET,UP,DOWN,TRACE,READY,RESET,SEARCH,WHEN,TEST
 %token END_ADD,END_CALL,END_COMPUTE,END_DELETE,END_DIVIDE,END_EVALUATE
 %token END_IF,END_MULTIPLY,END_PERFORM,END_READ,END_REWRITE,END_SEARCH
 %token END_START,END_STRING,END_SUBTRACT,END_UNSTRING,END_WRITE
 %token THEN,EVALUATE,OTHER,ALSO,CONTINUE,CURRENCY,REFERENCE,INITIALIZE
 %token NUMERIC,ALPHABETIC,ALPHABETIC_LOWER,ALPHABETIC_UPPER
-%token RETURNING,TOK_TRUE,TOK_FALSE,ANY,SUBSCVAR,FUNCTION
-%token REPORT,RD,CONTROL,LIMIT,FINAL
-%token HEADING,FOOTING,LAST,DETAIL,SUM
-%token POSITION,FILE_ID,DEPENDING,TYPE,SOURCE
+%token RETURNING,TOK_TRUE,TOK_FALSE,ANY,SUBSCVAR,FUNCTION,OPTIONAL
+%token REPORT,RD,CONTROL,LIMIT,FINAL,HEADING,FOOTING,LAST,DETAIL,SUM
+%token POSITION,FILE_ID,DEPENDING,TYPE,SOURCE,CORRESPONDING,CONVERTING
 %token INITIATE,GENERATE,TERMINATE,TOK_NULL,ADDRESS,NOECHO,LPAR
-%token CORRESPONDING,CONVERTING,OPTIONAL
 %token IDENTIFICATION,ENVIRONMENT,DATA,PROCEDURE
 %token AUTHOR,DATE_WRITTEN,DATE_COMPILED,INSTALLATION,SECURITY
-%token COMMON,RETURN,END_RETURN,PREVIOUS,NEXT
+%token COMMON,RETURN,END_RETURN,PREVIOUS,NEXT,PACKED_DECIMAL
 %token INPUT,I_O,OUTPUT,EXTEND,EOL,EOS,BINARY,FLOAT_SHORT,FLOAT_LONG
-%token PACKED_DECIMAL
 
-%type <str> idstring
-%type <ival> organization_options,access_options,open_mode,equal_to
+%type <baval> inspect_before_after
+%type <condval> condition,simple_condition,implied_op_condition
+%type <cvval> converting_clause
+%type <dval> if_then,search_body,search_all_body
+%type <dval> search_when,search_when_list,search_opt_at_end
+%type <gic>  on_end,opt_read_at_end
+%type <ike>  read_invalid_key ,read_not_invalid_key
+%type <iks>  opt_read_invalid_key
+%type <ival> ext_cond,extended_cond_op
 %type <ival> integer,cond_op,conditional,before_after,greater_than,less_than
-%type <ival> usage,write_options,opt_read_next
-%type <ival> using_options,procedure_using,sort_direction
-%type <dval> if_then
-%type <sval> name,gname,numeric_value,opt_gname,opt_def_name,def_name
-%type <sval> field_description,label,filename,noallname,paragraph,assign_clause
+%type <ival> on_exception_or_overflow,on_not_exception
+%type <ival> opt_address_of,display_upon,display_options
+%type <ival> opt_all,with_duplicates,opt_with_test,opt_optional
+%type <ival> opt_not,selection_subject,selection_object,when_case
+%type <ival> opt_rounded,opt_sign_separate,opt_plus_minus
+%type <ival> organization_options,access_options,open_mode,equal_to
+%type <ival> parm_type,sign_condition,class_condition,replacing_kind
+%type <ival> screen_attribs,screen_attrib,screen_sign,opt_separate
+%type <ival> sentence_or_nothing,when_case_list,opt_read_next,usage
+%type <ival> using_options,procedure_using,sort_direction,write_options
+%type <lstval> goto_label_list
+%type <lval> from_rec_varying,to_rec_varying
 %type <lval> literal,gliteral,without_all_literal,all_literal,special_literal
 %type <lval> nliteral,signed_nliteral
-%type <sval> sort_keys,opt_perform_thru,procedure_section
-%type <sval> opt_read_into,opt_write_from,field_name
-%type <sval> variable,sort_range,perform_options,name_or_lit,delimited_by
-%type <sval> string_with_pointer
-%type <ival> opt_all,with_duplicates,opt_with_test,opt_optional
-%type <rval> subscript,subscript_list
-%type <sfval> string_from_list,string_from
-%type <sval> opt_unstring_count,opt_unstring_delim,unstring_tallying
-%type <udval> unstring_delimited_vars,unstring_delimited
-%type <udstval> unstring_destinations,unstring_dest_var
-%type <baval> inspect_before_after
-%type <tlval> tallying_list, tallying_clause
-%type <tfval> tallying_for_list
-%type <ival> replacing_kind,opt_plus_minus
-%type <repval> replacing_list, replacing_clause
-%type <rbval> replacing_by_list
-%type <cvval> converting_clause
-%type <sval> var_or_nliteral,opt_read_key,file_name
-%type <sival> screen_clauses
-%type <ival> screen_attribs,screen_attrib,screen_sign,opt_separate
-%type <sval> variable_indexed,search_opt_varying,opt_key_is
-%type <dval> search_body,search_all_body
-%type <dval> search_when,search_when_list,search_opt_at_end
-%type <ival> parm_type,sign_condition,class_condition
-%type <sval> function_call
+%type <mose> opt_on_size_error,on_size_error,error_sentence
+%type <mval> var_list_name, var_list_gname
 %type <pair> parameters
-%type <sval> parm_list,parameter,expr,opt_expr
-%type <sval> cond_name
 %type <pfval> perform_after
 %type <pfvals> opt_perform_after
-%type <ival> ext_cond,extended_cond_op
-%type <sval> returning_options
+%type <rbval> replacing_by_list
+%type <repval> replacing_list, replacing_clause
+%type <rval> subscript,subscript_list
+%type <sfval> string_from_list,string_from
+%type <sival> screen_clauses
 %type <snval> sort_file_list,sort_input,sort_output
-%type <ival> opt_not,selection_subject,selection_object,when_case
 %type <ssbjval> selection_subject_set
-%type <sval> screen_to_name, opt_goto_depending_on
-%type <lstval> goto_label_list
-%type <ival> sentence_or_nothing,when_case_list
-%type <ival> opt_rounded,opt_sign_separate
-%type <mval> var_list_name, var_list_gname
-%type <mose> opt_on_size_error,on_size_error,error_sentence
-%type <ival> opt_address_of,display_upon,display_options
+%type <str> idstring
+%type <sval> field_description,label,filename,noallname,paragraph,assign_clause
+%type <sval> file_description,redefines_var,cond_name,function_call
+%type <sval> name,gname,numeric_value,opt_gname,opt_def_name,def_name
+%type <sval> opt_read_into,opt_write_from,field_name,expr,opt_expr
+%type <sval> opt_unstring_count,opt_unstring_delim,unstring_tallying
+%type <sval> parm_list,parameter,qualified_var,unqualified_var
+%type <sval> returning_options,screen_to_name, opt_goto_depending_on
 %type <sval> set_variable,set_variable_or_nlit,set_target,opt_add_to
-%type <condval> condition,simple_condition,implied_op_condition
-%type <sval> qualified_var,unqualified_var
-%type <lval> from_rec_varying,to_rec_varying
-%type <sval> file_description,redefines_var
-%type <ival> on_exception_or_overflow,on_not_exception
-%type <gic>  on_end,opt_read_at_end
-%type <iks>  opt_read_invalid_key
-%type <ike>  read_invalid_key ,read_not_invalid_key
+%type <sval> sort_keys,opt_perform_thru,procedure_section
+%type <sval> var_or_nliteral,opt_read_key,file_name,string_with_pointer
+%type <sval> variable,sort_range,perform_options,name_or_lit,delimited_by
+%type <sval> variable_indexed,search_opt_varying,opt_key_is
+%type <tfval> tallying_for_list
+%type <tlval> tallying_list, tallying_clause
+%type <udstval> unstring_destinations,unstring_dest_var
+%type <udval> unstring_delimited_vars,unstring_delimited
 
 
 %%
