@@ -295,6 +295,316 @@ cb_build_using_list (cb_tree list)
 
 
 /*
+ * Expressions
+ */
+
+struct expr_node {
+  /* The token of this node.
+   *  'x'                          - values (cb_tree)
+   *  '+', '-', '*', '/', '^'      - arithmetic operators
+   *  '=', '~', '<', '>', '[', ']' - conditional operators
+   *  '!', '&', '|'                - logical operators
+   *  '(', ')'                     - parentheses
+   */
+  int token;
+  /* The value itself if this node is a value */
+  cb_tree value;
+};
+
+static int expr_op;			/* last operator */
+static cb_tree expr_lh;			/* last left hand */
+
+static int expr_index;			/* stack index */
+static int expr_stack_size;		/* stack max size */
+static struct expr_node *expr_stack;	/* expr node stack */
+
+static char expr_prio[128];
+
+#define TOKEN(offset)	(expr_stack[expr_index + offset].token)
+#define VALUE(offset)	(expr_stack[expr_index + offset].value)
+
+void
+cb_expr_init (void)
+{
+  static int initialized = 0;
+  if (initialized == 0)
+    {
+      /* init priority talble */
+      expr_prio['x'] = 0;
+      expr_prio['^'] = 1;
+      expr_prio['*'] = 2;
+      expr_prio['/'] = 2;
+      expr_prio['+'] = 3;
+      expr_prio['-'] = 3;
+      expr_prio['='] = 4;
+      expr_prio['~'] = 4;
+      expr_prio['<'] = 4;
+      expr_prio['>'] = 4;
+      expr_prio['['] = 4;
+      expr_prio[']'] = 4;
+      expr_prio['!'] = 5;
+      expr_prio['&'] = 6;
+      expr_prio['|'] = 7;
+      expr_prio[')'] = 8;
+      expr_prio['('] = 9;
+      expr_prio[0] = 10;
+      /* init stack */
+      expr_stack_size = 8;
+      expr_stack = malloc (sizeof (struct expr_node) * expr_stack_size);
+      initialized = 1;
+    }
+
+  expr_op = 0;
+  expr_lh = NULL;
+  expr_index = 0;
+}
+
+static int
+expr_reduce (int token)
+{
+  /* Example:
+   * index: -3  -2  -1   0
+   * token: 'x' '*' 'x' '+' ...
+   */
+  while (expr_index >= 2
+	 && expr_prio[TOKEN (-2)] > 0
+	 && expr_prio[TOKEN (-2)] <= expr_prio[token])
+    {
+      /* Reduce the expression depending on the last operator */
+      int op = TOKEN (-2);
+      switch (op)
+	{
+	case '+': case '-': case '*': case '/': case '^':
+	  /* Arithmetic operators: 'x' op 'x' */
+	  if (expr_index < 3 || TOKEN (-1) != 'x' || TOKEN (-3) != 'x')
+	    return -1;
+	  TOKEN (-3) = 'x';
+	  VALUE (-3) = cb_build_binary_op (VALUE (-3), op, VALUE (-1));
+	  expr_index -= 2;
+	  break;
+
+	case '!':
+	  /* Negation: '!' 'x' */
+	  if (TOKEN (-1) != 'x')
+	    return -1;
+	  /* 'x' '=' 'x' '|' '!' 'x' */
+	  if (CB_TREE_CLASS (VALUE (-1)) != CB_CLASS_BOOLEAN)
+	    VALUE (-1) = cb_build_binary_op (expr_lh, expr_op, VALUE (-1));
+	  TOKEN (-2) = 'x';
+	  VALUE (-2) = cb_build_negation (VALUE (-1));
+	  expr_index -= 1;
+	  break;
+
+	case '&': case '|':
+	  /* Logical AND/OR: 'x' op 'x' */
+	  if (expr_index < 3 || TOKEN (-1) != 'x' || TOKEN (-3) != 'x')
+	    return -1;
+	  /* 'x' '=' 'x' '|' 'x' */
+	  if (CB_TREE_CLASS (VALUE (-1)) != CB_CLASS_BOOLEAN)
+	    VALUE (-1) = cb_build_binary_op (expr_lh, expr_op, VALUE (-1));
+	  /* warning for complex expressions without explicit parentheses
+	     (i.e., "a OR b AND c" or "a AND b OR c") */
+	  if (cb_warn_parentheses && op == '|')
+	    if ((CB_BINARY_OP_P (VALUE (-3))
+		 && CB_BINARY_OP (VALUE (-3))->op == '&')
+		|| (CB_BINARY_OP_P (VALUE (-1))
+		    && CB_BINARY_OP (VALUE (-1))->op == '&'))
+	      cb_warning (_("suggest parentheses around AND within OR"));
+	  TOKEN (-3) = 'x';
+	  VALUE (-3) = cb_build_binary_op (VALUE (-3), op, VALUE (-1));
+	  expr_index -= 2;
+	  break;
+
+	case '(': case ')':
+	  return 0;
+
+	default:
+	  /* Conditional operators */
+	  if (expr_index < 3 || TOKEN (-1) != 'x')
+	    return -1;
+	  switch (TOKEN (-3))
+	    {
+	    case 'x':
+	      /* Simple condition: 'x' op 'x' */
+	      expr_lh = VALUE (-3);
+	      expr_op = op;
+	      TOKEN (-3) = 'x';
+	      VALUE (-3) = cb_build_binary_op (expr_lh, op, VALUE (-1));
+	      expr_index -= 2;
+	      break;
+	    case '&':
+	    case '|':
+	      /* Complex condition: 'x' '=' 'x' '|' op 'x' */
+	      expr_op = op;
+	      TOKEN (-2) = 'x';
+	      VALUE (-2) = cb_build_binary_op (expr_lh, op, VALUE (-1));
+	      expr_index -= 1;
+	      break;
+	    default:
+	      return -1;
+	    }
+	  break;
+	}
+    }
+
+  /* handle special case "op OR x AND" */
+  if (token == '&'
+      && expr_index >= 2
+      && TOKEN (-2) == '|'
+      && CB_TREE_CLASS (VALUE (-1)) != CB_CLASS_BOOLEAN)
+    {
+      TOKEN (-1) = 'x';
+      VALUE (-1) = cb_build_binary_op (expr_lh, expr_op, VALUE (-1));
+    }
+
+  return 0;
+}
+
+void
+cb_expr_shift (int token, cb_tree value)
+{
+ start:
+  if (token == 'x')
+    {
+      /* sign ZERO condition */
+      if (value == cb_zero)
+	if (TOKEN (-1) == 'x' || TOKEN (-1) == '!')
+	  {
+	    cb_expr_shift_sign ('=');
+	    return;
+	  }
+
+      /* class condition */
+      if (CB_CLASS_NAME_P (value))
+	{
+	  cb_expr_shift_class (CB_CLASS_NAME (value)->cname);
+	  return;
+	}
+
+      /* unary sign */
+      if (expr_index > 0 && (TOKEN (-1) == '+' || TOKEN (-1) == '-'))
+	if (expr_index == 1 || TOKEN (-2) != 'x')
+	  {
+	    if (TOKEN (-1) == '-')
+	      value = cb_build_binary_op (cb_zero, '-', value);
+	    expr_index--;
+	  }
+    }
+  else
+    {
+      /* '<' '|' '=' --> '[' */
+      /* '>' '|' '=' --> ']' */
+      if (expr_index >= 2 && token == '=' && TOKEN (-1) == '|'
+	  && (TOKEN (-2) == '<' || TOKEN (-2) == '>'))
+	{
+	  token = (TOKEN (-2) == '<') ? '[' : ']';
+	  expr_index -= 2;
+	}
+
+      /* '!' '=' --> '~', etc. */
+      if (expr_index >= 1 && TOKEN (-1) == '!')
+	switch (token)
+	  {
+	  case '=': token = '~'; expr_index--; break;
+	  case '~': token = '='; expr_index--; break;
+	  case '<': token = ']'; expr_index--; break;
+	  case '>': token = '['; expr_index--; break;
+	  case '[': token = '>'; expr_index--; break;
+	  case ']': token = '<'; expr_index--; break;
+	  }
+
+#if 0
+      switch (token)
+	{
+	case '=': case '~': case '<': case '>': case '[': case ']':
+	  expr_lh = VALUE (-1);
+	  expr_op = token;
+	}
+#endif
+    }
+
+  /* reduce */
+  expr_reduce (token);
+
+  if (token == ')')
+    {
+      if (expr_index >= 2 && TOKEN (-2) == '(')
+	{
+	  token = 'x';
+	  value = cb_build_parenthesis (VALUE (-1));
+	  expr_index -= 2;
+	  goto start;
+	}
+    }
+  else
+    {
+      /* allocate sufficient stack memory */
+      if (expr_index >= expr_stack_size)
+	{
+	  expr_stack_size *= 2;
+	  expr_stack = realloc (expr_stack,
+				sizeof (struct expr_node) * expr_stack_size);
+	}
+
+      /* put on the stack */
+      expr_stack[expr_index].token = token;
+      expr_stack[expr_index].value = value;
+      expr_index++;
+    }
+}
+
+void
+cb_expr_shift_class (const char *name)
+{
+  int have_not = 0;
+  if (expr_index > 0 && TOKEN (-1) == '!')
+    {
+      have_not = 1;
+      expr_index--;
+    }
+  expr_reduce ('=');
+  if (expr_index > 0 && TOKEN (-1) == 'x')
+    {
+      VALUE (-1) = cb_build_funcall_1 (name, VALUE (-1));
+      if (have_not)
+	VALUE (-1) = cb_build_negation (VALUE (-1));
+    }
+}
+
+void
+cb_expr_shift_sign (char op)
+{
+  int have_not = 0;
+  if (expr_index > 0 && TOKEN (-1) == '!')
+    {
+      have_not = 1;
+      expr_index--;
+    }
+  expr_reduce ('=');
+  if (expr_index > 0 && TOKEN (-1) == 'x')
+    {
+      VALUE (-1) = cb_build_binary_op (VALUE (-1), op, cb_zero);
+      if (have_not)
+	VALUE (-1) = cb_build_negation (VALUE (-1));
+    }
+}
+
+cb_tree
+cb_expr_finish (void)
+{
+  expr_reduce (0); /* reduce all */
+
+  if (expr_index != 1)
+    {
+      cb_error (_("invalid expression"));
+      return cb_error_node;
+    }
+
+  return expr_stack[0].value;
+}
+
+
+/*
  * Numerical operation
  */
 

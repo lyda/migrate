@@ -561,7 +561,7 @@ struct cb_binary_op {
 #define CB_BINARY_OP(x)		(CB_TREE_CAST (CB_TAG_BINARY_OP, struct cb_binary_op, x))
 #define CB_BINARY_OP_P(x)	(CB_TREE_TAG (x) == CB_TAG_BINARY_OP)
 
-#define cb_build_parenthesize(x) cb_build_binary_op (x, '@', 0)
+#define cb_build_parenthesis(x) cb_build_binary_op (x, '@', 0)
 #define cb_build_negation(x)	cb_build_binary_op (x, '!', 0)
 
 extern cb_tree cb_build_binary_op (cb_tree x, char op, cb_tree y);
@@ -921,6 +921,12 @@ extern cb_tree cb_build_section_name (cb_tree name);
 extern cb_tree cb_build_identifier (cb_tree x);
 extern cb_tree cb_build_length (cb_tree x);
 extern cb_tree cb_build_using_list (cb_tree list);
+
+extern void cb_expr_init (void);
+extern void cb_expr_shift (int token, cb_tree value);
+extern void cb_expr_shift_class (const char *name);
+extern void cb_expr_shift_sign (char op);
+extern cb_tree cb_expr_finish (void);
 
 extern cb_tree cb_build_arithmetic (cb_tree vars, char op, cb_tree val);
 extern cb_tree cb_build_add (cb_tree v, cb_tree n, cb_tree round);

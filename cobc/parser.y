@@ -99,9 +99,6 @@ static cb_tree current_inspect_data;
 static int next_label_id = 0;
 static cb_tree next_label_list = NULL;
 
-static int last_operator;
-static cb_tree last_lefthand;
-
 static void push_entry (const char *name, cb_tree using_list);
 static void terminator_warning (void);
 static void terminator_error (void);
@@ -2855,11 +2852,11 @@ start_key:
 | KEY _is start_op data_name	{ $0 = $3; $$ = $4; }
 ;
 start_op:
-  flag_not equal		{ $$ = cb_int (($1 == cb_int1) ? COB_NE : COB_EQ); }
-| flag_not greater		{ $$ = cb_int (($1 == cb_int1) ? COB_LE : COB_GT); }
-| flag_not less			{ $$ = cb_int (($1 == cb_int1) ? COB_GE : COB_LT); }
-| flag_not greater_or_equal	{ $$ = cb_int (($1 == cb_int1) ? COB_LT : COB_GE); }
-| flag_not less_or_equal	{ $$ = cb_int (($1 == cb_int1) ? COB_GT : COB_LE); }
+  flag_not eq		{ $$ = cb_int (($1 == cb_int1) ? COB_NE : COB_EQ); }
+| flag_not gt		{ $$ = cb_int (($1 == cb_int1) ? COB_LE : COB_GT); }
+| flag_not lt		{ $$ = cb_int (($1 == cb_int1) ? COB_GE : COB_LT); }
+| flag_not ge		{ $$ = cb_int (($1 == cb_int1) ? COB_LT : COB_GE); }
+| flag_not le		{ $$ = cb_int (($1 == cb_int1) ? COB_GT : COB_LE); }
 ;
 end_start:
   /* empty */			{ terminator_warning (); }
@@ -3299,336 +3296,57 @@ numeric_expr:
 
 expr:
   {
-    last_operator = 0;
-    last_lefthand = NULL;
+    cb_expr_init ();
   }
-  expr_1			{ $$ = $2; }
-;
-expr_1:
-  expr_item_list
+  expr_tokens
   {
-    int i;
-    const char *class_func = NULL;
-    cb_tree l;
-    struct stack_item {
-      int prio;
-      int token;
-      cb_tree value;
-    } stack[list_length ($1)];
-
-    static int reduce (int prio)
-      {
-	while (i >= 2 && stack[i-2].token != VALUE && stack[i-2].prio <= prio)
-	  {
-	    int token = stack[i-2].token;
-	    if (stack[i-1].token != VALUE
-		&& stack[i-1].token != '&'
-		&& stack[i-1].token != '|')
-	      return -1;
-	    switch (token)
-	      {
-	      case '+': case '-': case '*': case '/': case '^':
-		if (i < 3 || stack[i-3].token != VALUE)
-		  return -1;
-		stack[i-3].token = VALUE;
-		stack[i-3].value =
-		  cb_build_binary_op (stack[i-3].value, token, stack[i-1].value);
-		i -= 2;
-		break;
-	      case '!':
-		if (CB_TREE_CLASS (stack[i-1].value) != CB_CLASS_BOOLEAN)
-		  stack[i-1].value =
-		    cb_build_binary_op (last_lefthand, last_operator, stack[i-1].value);
-		stack[i-2].token = VALUE;
-		stack[i-2].value = cb_build_negation (stack[i-1].value);
-		i -= 1;
-		break;
-	      case '&':
-	      case '|':
-		if (i < 3 || stack[i-3].token != VALUE)
-		  return -1;
-		if (CB_TREE_CLASS (stack[i-1].value) != CB_CLASS_BOOLEAN)
-		  {
-		    if (last_operator)
-		      stack[i-1].value =
-			cb_build_binary_op (last_lefthand, last_operator, stack[i-1].value);
-		    else
-		      {
-			cb_error (_("invalid expression"));
-			return -1;
-		      }
-		  }
-		if (cb_warn_parentheses
-		    && token == '|'
-		    && ((CB_BINARY_OP_P (stack[i-3].value)
-			 && CB_BINARY_OP (stack[i-3].value)->op == '&')
-			|| (CB_BINARY_OP_P (stack[i-1].value)
-			    && CB_BINARY_OP (stack[i-1].value)->op == '&')))
-		  cb_warning (_("suggest parentheses around AND within OR"));
-		stack[i-3].token = VALUE;
-		stack[i-3].value =
-		  cb_build_binary_op (stack[i-3].value, token, stack[i-1].value);
-		i -= 2;
-		break;
-	      default:
-		if (stack[i-3].token == '&' || stack[i-3].token == '|')
-		  {
-		    last_operator = token;
-		    stack[i-2].token = VALUE;
-		    stack[i-2].value =
-		      cb_build_binary_op (last_lefthand, token, stack[i-1].value);
-		    i -= 1;
-		  }
-		else
-		  {
-		    last_lefthand = stack[i-3].value;
-		    last_operator = token;
-		    stack[i-3].token = VALUE;
-		    stack[i-3].value =
-		      cb_build_binary_op (last_lefthand, token, stack[i-1].value);
-		    i -= 2;
-		  }
-		break;
-	      }
-	  }
-
-	/* handle special case "cmp OR x AND" */
-	if (i >= 2
-	    && prio == 7
-	    && stack[i-2].token == '|'
-	    && CB_TREE_CLASS (stack[i-1].value) != CB_CLASS_BOOLEAN)
-	  {
-	    stack[i-1].token = VALUE;
-	    stack[i-1].value =
-	      cb_build_binary_op (last_lefthand, last_operator, stack[i-1].value);
-	  }
-	return 0;
-      }
-
-    static int shift (int prio, int token, cb_tree value)
-      {
-	if (prio > 0)
-	  if (reduce (prio) == -1)
-	    return -1;
-	stack[i].prio  = prio;
-	stack[i].token = token;
-	stack[i].value = value;
-	i++;
-	return 0;
-      }
-
-    i = 0;
-    for (l = $1; l; l = CB_CHAIN (l))
-      {
-#define SHIFT(prio,token,value) \
-        if (shift (prio, token, value) == -1) goto error
-#define look_ahead(l) \
-        ((l && CB_INTEGER_P (CB_VALUE (l))) ? CB_INTEGER (CB_VALUE (l))->val : 0)
-
-	int token = 0;
-	cb_tree x = CB_VALUE (l);
-	switch (CB_TREE_TAG (x))
-	  {
-	  case CB_TAG_CLASS_NAME:
-	    class_func = CB_CLASS_NAME (x)->cname;
-	    goto unary_cond;
-	  case CB_TAG_INTEGER:
-	    {
-	      token = CB_INTEGER (x)->val;
-	      switch (token)
-		{
-		  /* arithmetic operator */
-		case '^':
-		  SHIFT (2, token, 0);
-		  break;
-		case '*':
-		case '/':
-		  SHIFT (3, token, 0);
-		  break;
-		case '-':
-		  if (i == 0 || stack[i-1].token != VALUE)
-		    {
-		      /* unary negative */
-		      CB_VALUE (CB_CHAIN (l)) =
-			cb_build_binary_op (cb_zero, '-',
-					    CB_VALUE (CB_CHAIN (l)));
-		      break;
-		    }
-		  /* fall through */
-		case '+':
-		  SHIFT (4, token, 0);
-		  break;
-
-		  /* conditional operator */
-		case '=':
-		case '~':
-		case '[':
-		case ']':
-		  SHIFT (5, token, 0);
-		  break;
-		case '<':
-		  if (look_ahead (CB_CHAIN (l)) == OR)
-		    {
-		      if (look_ahead (CB_CHAIN (CB_CHAIN (l))) != '=')
-			goto error;
-		      SHIFT (5, '[', 0);
-		      l = CB_CHAIN (CB_CHAIN (l));
-		    }
-		  else
-		    SHIFT (5, '<', 0);
-		  break;
-		case '>':
-		  if (look_ahead (CB_CHAIN (l)) == OR)
-		    {
-		      if (look_ahead (CB_CHAIN (CB_CHAIN (l))) != '=')
-			goto error;
-		      SHIFT (5, ']', 0);
-		      l = CB_CHAIN (CB_CHAIN (l));
-		    }
-		  else
-		    SHIFT (5, '>', 0);
-		  break;
-
-		  /* class condition */
-		case NUMERIC:
-		  class_func = "cob_is_numeric";
-		  goto unary_cond;
-		case ALPHABETIC:
-		  class_func = "cob_is_alpha";
-		  goto unary_cond;
-		case ALPHABETIC_LOWER:
-		  class_func = "cob_is_lower";
-		  goto unary_cond;
-		case ALPHABETIC_UPPER:
-		  class_func = "cob_is_upper";
-		  goto unary_cond;
-
-		  /* sign condition */
-		case POSITIVE:
-		case NEGATIVE:
-		  goto unary_cond;
-
-		unary_cond:
-		  {
-		    int not_flag = 0;
-		    if (i > 0 && stack[i-1].token == '!')
-		      {
-			not_flag = 1;
-			i--;
-		      }
-		    reduce (5);
-		    if (i > 0 && stack[i-1].token == VALUE)
-		      {
-			int op;
-			switch (token)
-			  {
-			  case ZERO:
-			  case POSITIVE:
-			  case NEGATIVE:
-			    op = ((token == POSITIVE) ? '>' :
-				  (token == NEGATIVE) ? '<' : '=');
-			    stack[i-1].value =
-			      cb_build_binary_op (stack[i-1].value, op, cb_zero);
-			    break;
-			  default:
-			    stack[i-1].value =
-			      cb_build_funcall_1 (class_func, stack[i-1].value);
-			    break;
-			  }
-			if (not_flag)
-			  stack[i-1].value = cb_build_negation (stack[i-1].value);
-			break;
-		      }
-		    goto error;
-		  }
-
-		  /* logical operator */
-		case NOT:
-		  switch (look_ahead (CB_CHAIN (l)))
-		    {
-		    case '=': SHIFT (5, '~', 0); l = CB_CHAIN (l); break;
-		    case '<': SHIFT (5, ']', 0); l = CB_CHAIN (l); break;
-		    case '>': SHIFT (5, '[', 0); l = CB_CHAIN (l); break;
-		    case '[':  SHIFT (5, '>', 0); l = CB_CHAIN (l); break;
-		    case ']':  SHIFT (5, '<', 0); l = CB_CHAIN (l); break;
-		    case '~':  SHIFT (5, '=', 0); l = CB_CHAIN (l); break;
-		    default:  SHIFT (6, '!', 0); break;
-		    }
-		  break;
-		case AND: SHIFT (7, '&', 0); break;
-		case OR:  SHIFT (8, '|', 0); break;
-		}
-	      break;
-	    }
-	  default:
-	    if (x == cb_zero)
-	      if (stack[i-1].token == VALUE
-		  || stack[i-1].token == '!')
-	      {
-		token = ZERO;
-		goto unary_cond;
-	      }
-	    SHIFT (0, VALUE, x);
-	  }
-      }
-    reduce (9); /* reduce all */
-
-    /*
-     * At end
-     */
-    if (i != 1)
-      {
-      error:
-	cb_error_x (CB_VALUE ($1), _("invalid expression"));
-	YYERROR;
-      }
-
-    $$ = stack[0].value;
+    $$ = cb_expr_finish ();
   }
 ;
-
-expr_item_list:
-  expr_item			{ $$ = list ($1); }
-| expr_item_list IS		{ $$ = $1; }
-| expr_item_list expr_item	{ $$ = list_add ($1, $2); }
+expr_tokens:
+  expr_token
+| expr_tokens IS
+| expr_tokens expr_token
 ;
-expr_item:
-  value				{ $$ = $1; }
-| '(' expr_1 ')'		{ $$ = cb_build_parenthesize ($2); }
-/* arithmetic operator */
-| '+'				{ $$ = cb_int ('+'); }
-| '-'				{ $$ = cb_int ('-'); }
-| '*'				{ $$ = cb_int ('*'); }
-| '/'				{ $$ = cb_int ('/'); }
-| '^'				{ $$ = cb_int ('^'); }
-/* conditional operator */
-| equal				{ $$ = cb_int ('='); }
-| greater			{ $$ = cb_int ('>'); }
-| less				{ $$ = cb_int ('<'); }
-| GE				{ $$ = cb_int (']'); }
-| LE				{ $$ = cb_int ('['); }
-| NE				{ $$ = cb_int ('~'); }
+expr_token:
+  value				{ cb_expr_shift ('x', $1); }
+/* parenthesis */
+| '('				{ cb_expr_shift ('(', 0); }
+| ')'				{ cb_expr_shift (')', 0); }
+/* arithmetic operators */
+| '+'				{ cb_expr_shift ('+', 0); }
+| '-'				{ cb_expr_shift ('-', 0); }
+| '*'				{ cb_expr_shift ('*', 0); }
+| '/'				{ cb_expr_shift ('/', 0); }
+| '^'				{ cb_expr_shift ('^', 0); }
+/* conditional operators */
+| eq				{ cb_expr_shift ('=', 0); }
+| gt				{ cb_expr_shift ('>', 0); }
+| lt				{ cb_expr_shift ('<', 0); }
+| GE				{ cb_expr_shift (']', 0); }
+| LE				{ cb_expr_shift ('[', 0); }
+| NE				{ cb_expr_shift ('~', 0); }
+/* logical operators */
+| NOT				{ cb_expr_shift ('!', 0); }
+| AND				{ cb_expr_shift ('&', 0); }
+| OR				{ cb_expr_shift ('|', 0); }
 /* class condition */
-| NUMERIC			{ $$ = cb_int (NUMERIC); }
-| ALPHABETIC			{ $$ = cb_int (ALPHABETIC); }
-| ALPHABETIC_LOWER		{ $$ = cb_int (ALPHABETIC_LOWER); }
-| ALPHABETIC_UPPER		{ $$ = cb_int (ALPHABETIC_UPPER); }
-| CLASS_NAME			{ $$ = cb_ref ($1); }
+| NUMERIC			{ cb_expr_shift_class ("cob_is_numeric"); }
+| ALPHABETIC			{ cb_expr_shift_class ("cob_is_alpha"); }
+| ALPHABETIC_LOWER		{ cb_expr_shift_class ("cob_is_lower"); }
+| ALPHABETIC_UPPER		{ cb_expr_shift_class ("cob_is_upper"); }
+| CLASS_NAME			{ cb_expr_shift ('x', cb_ref ($1)); }
 /* sign condition */
   /* ZERO is defined in `value' */
-| POSITIVE			{ $$ = cb_int (POSITIVE); }
-| NEGATIVE			{ $$ = cb_int (NEGATIVE); }
-/* logical operator */
-| NOT				{ $$ = cb_int (NOT); }
-| AND				{ $$ = cb_int (AND); }
-| OR				{ $$ = cb_int (OR); }
+| POSITIVE			{ cb_expr_shift_sign ('>'); }
+| NEGATIVE			{ cb_expr_shift_sign ('<'); }
 ;
 
-equal: '=' | EQUAL _to ;
-greater: '>' | GREATER _than ;
-less: '<' | LESS _than ;
-greater_or_equal: GE | GREATER _than OR EQUAL _to ;
-less_or_equal: LE | LESS _than OR EQUAL _to ;
+eq: '=' | EQUAL _to ;
+gt: '>' | GREATER _than ;
+lt: '<' | LESS _than ;
+ge: GE | GREATER _than OR EQUAL _to ;
+le: LE | LESS _than OR EQUAL _to ;
 
 
 /*******************
