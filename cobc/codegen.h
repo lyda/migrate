@@ -105,8 +105,6 @@ extern cob_tree lookup_for_redefines (cob_tree sy);
 extern void init_program (const char *id);
 extern void gen_loadvar (cob_tree sy);
 extern cob_tree invert_literal_sign (cob_tree x);
-extern int is_variable (cob_tree sy);
-extern int is_subscripted (cob_tree sy);
 extern void stabs_line (void);
 extern void data_trail (void);
 extern int adjust_linkage_vars (int start_offset);

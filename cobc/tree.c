@@ -153,38 +153,6 @@ make_expr (cob_tree left, char op, cob_tree right)
   return COB_TREE (p);
 }
 
-int
-is_numeric (cob_tree x)
-{
-  if (SUBSTRING_P (x))
-    x = SUBSTRING_VAR (x);
-
-  if (SUBREF_P (x))
-    x = SUBREF_SYM (x);
-
-  if (COB_FIELD_P (x))
-    {
-      char type = COB_FIELD_TYPE (x);
-      if ((type == '9') || (type == 'B') || (type == 'C') || (type == 'U'))
-	return 1;
-    }
-
-  return 0;
-}
-
-int
-is_valid_expr (cob_tree x)
-{
-  if (EXPR_P (x))
-    if (is_valid_expr (EXPR_LEFT (x)) && is_valid_expr (EXPR_RIGHT (x)))
-      return 1;
-
-  if (is_numeric (x))
-    return 1;
-
-  return 0;
-}
-
 
 /*
  * Condition
@@ -219,6 +187,74 @@ make_parameter (cob_tree var, int mode)
   p->sec_no = 0;
   p->next = NULL;
   return p;
+}
+
+
+/*
+ * Type test
+ */
+
+int
+is_variable (cob_tree sy)
+{
+  if (SYMBOL_P (sy))
+    switch (COB_FIELD_TYPE (sy))
+      {
+      case '8':		/* 88 field */
+      case '9':		/* numeric */
+      case 'A':		/* alpha */
+      case 'B':		/* binary (comp/computational) */
+      case 'C':		/* compacted (comp-3/comptational-3) */
+      case 'D':		/* screen data */
+      case 'E':		/* edited */
+      case 'G':		/* group */
+      case 'U':		/* float(comp-1 4 bytes) / double(comp-2 8 bytes) */
+      case 'X':		/* alphanum */
+	return 1;
+      }
+
+  return 0;
+}
+
+int
+is_subscripted (cob_tree sy)
+{
+  for (; sy; sy = sy->parent)
+    if (sy->times > 1)
+      return 1;
+  return 0;
+}
+
+int
+is_numeric (cob_tree x)
+{
+  if (SUBSTRING_P (x))
+    x = SUBSTRING_VAR (x);
+
+  if (SUBREF_P (x))
+    x = SUBREF_SYM (x);
+
+  if (COB_FIELD_P (x))
+    {
+      char type = COB_FIELD_TYPE (x);
+      if ((type == '9') || (type == 'B') || (type == 'C') || (type == 'U'))
+	return 1;
+    }
+
+  return 0;
+}
+
+int
+is_valid_expr (cob_tree x)
+{
+  if (EXPR_P (x))
+    if (is_valid_expr (EXPR_LEFT (x)) && is_valid_expr (EXPR_RIGHT (x)))
+      return 1;
+
+  if (is_numeric (x))
+    return 1;
+
+  return 0;
 }
 
 

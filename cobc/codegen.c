@@ -429,37 +429,6 @@ invert_literal_sign (cob_tree x)
   return x;
 }
 
-int
-is_variable (cob_tree sy)
-{
-  if (SYMBOL_P (sy))
-    switch (COB_FIELD_TYPE (sy))
-      {
-      case '8':		/* 88 field */
-      case '9':		/* numeric */
-      case 'A':		/* alpha */
-      case 'B':		/* binary (comp/computational) */
-      case 'C':		/* compacted (comp-3/comptational-3) */
-      case 'D':		/* screen data */
-      case 'E':		/* edited */
-      case 'G':		/* group */
-      case 'U':		/* float(comp-1 4 bytes) / double(comp-2 8 bytes) */
-      case 'X':		/* alphanum */
-	return 1;
-      }
-
-  return 0;
-}
-
-int
-is_subscripted (cob_tree sy)
-{
-  for (; sy; sy = sy->parent)
-    if (sy->times > 1)
-      return 1;
-  return 0;
-}
-
 
 /*
  * Local functions

@@ -261,9 +261,6 @@ struct expr
 
 extern cob_tree make_expr (cob_tree left, char op, cob_tree right);
 
-extern int is_numeric (cob_tree sy);
-extern int is_valid_expr (cob_tree x);
-
 
 /*
  * Condition
@@ -514,5 +511,15 @@ struct index_to_table_list
   char *keyname;
   char seq;		/* '0' = none, '1' = ASCENDING, '2' = DESCENDING */
 };
+
+
+/*
+ * Type test
+ */
+
+extern int is_variable (cob_tree sy);
+extern int is_subscripted (cob_tree sy);
+extern int is_numeric (cob_tree sy);
+extern int is_valid_expr (cob_tree x);
 
 #endif /* _TREE_H_ */
