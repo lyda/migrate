@@ -258,16 +258,8 @@ scan_word (char *text)
   switch (curr_division)
     {
     case CDIV_ENVIR:
-      yylval.tree = install (yytext, SYTB_VAR, 0);
-      return SYMBOL_TOK;
-
     case CDIV_DATA:
       yylval.tree = install (yytext, SYTB_VAR, 1);
-      return SYMBOL_TOK;
-
-    case CDIV_FD:
-      if ((yylval.tree = lookup_symbol (yytext)) == NULL)
-	yyerror ("undefined %s at FD/SD", yytext);
       return SYMBOL_TOK;
 
     default:
@@ -288,8 +280,8 @@ scan_word (char *text)
       /* otherwise, it should be a label */
       else
 	{
-	  yylval.str = strdup (yytext);
-	  return ID_TOK;
+	  yylval.tree = install_label (yytext);
+	  return SYMBOL_TOK;
 	}
     }
 }

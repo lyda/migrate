@@ -89,8 +89,8 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %right OF
 
 %token <str>  ID_TOK
-%token <tree> SYMBOL_TOK,SPECIAL_TOK,CLASS_TOK,VARIABLE,VARCOND,SUBSCVAR
-%token <tree> PICTURE_TOK,INTEGER_TOK,NUMBER_TOK,STRING_TOK
+%token <tree> INTEGER_TOK,NUMBER_TOK,STRING_TOK,SYMBOL_TOK,PICTURE_TOK
+%token <tree> SPECIAL_TOK,CLASS_TOK,VARIABLE,VARCOND,SUBSCVAR
 
 %token EQUAL,GREATER,LESS,GE,LE,COMMAND_LINE,ENVIRONMENT_VARIABLE,ALPHABET
 %token DATE,DAY,DAY_OF_WEEK,TIME,INKEY,READ,WRITE,OBJECT_COMPUTER,INPUT_OUTPUT
@@ -600,8 +600,8 @@ fd_list:
   }
 ;
 file_name:
-  { curr_division = CDIV_FD; }
-  SYMBOL_TOK
+  { curr_division = CDIV_INITIAL; }
+  file
   { curr_division = CDIV_DATA; $$ = $2; }
 ;
 file_description:
@@ -1291,7 +1291,7 @@ label:
 ;
 label_name:
   INTEGER_TOK		{ $$ = install_label (COB_FIELD_NAME ($1)); }
-| ID_TOK		{ $$ = install_label ($1); }
+| SYMBOL_TOK		{ $$ = $1; }
 ;
 in_of: IN | OF ;
 
@@ -2949,7 +2949,7 @@ group_variable:
 /* Filename */
 
 file:
-  variable
+  VARIABLE
   {
     if (COB_FIELD_TYPE ($1) != 'F')
       yyerror ("file name is expected: %s", COB_FIELD_NAME ($1));

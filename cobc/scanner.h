@@ -29,7 +29,6 @@
 #define CDIV_INITIAL 	1
 #define CDIV_ENVIR 	2
 #define CDIV_DATA 	3
-#define CDIV_FD 	4
 
 extern cob_tree curr_file;
 extern int curr_division;
