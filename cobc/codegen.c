@@ -1183,16 +1183,17 @@ output_picture (unsigned char *pic)
 void
 stabs_line ()
 {
-  static int label = 1;
-  static char *last_filename = NULL;
-
-  if (last_filename != cob_orig_filename)
-    output (".stabs\t\"%s\",132,0,0,.LM%d\n", cob_orig_filename, label);
-  output (".stabn\t68,0,%d,.LM%d-Ltext_%s\n", cob_orig_lineno, label, pgm_label);
-  output (".LM%d:\n", label++);
+  if (cob_stabs_flag)
+    {
+      static int label = 1;
+      static char *last_filename = NULL;
+      if (last_filename != cob_orig_filename)
+	output (".stabs\t\"%s\",132,0,0,.LM%d\n", cob_orig_filename, label);
+      output (".stabn\t68,0,%d,.LM%d-Ltext_%s\n", cob_orig_lineno, label, pgm_label);
+      output (".LM%d:\n", label++);
+      last_filename = cob_orig_filename;
+    }
   output ("\tmovl\t$%d, cob_source_line\n", cob_orig_lineno);
-
-  last_filename = cob_orig_filename;
 }
 
 void
@@ -1531,8 +1532,7 @@ proc_header (cob_tree_list using)
 
   if (currency_symbol != '$')
     output ("\tmovb\t$%d,cob_currency_symbol\n", currency_symbol);
-  if (cob_stabs_flag)
-    output ("\tmovl\t$.LCsource, cob_source_file\n");
+  output ("\tmovl\t$.LCsource, cob_source_file\n");
 
   /*  
      Extra 16 bytes holds search all temporary data 
@@ -1628,11 +1628,8 @@ proc_trail (cob_tree_list using)
 
   /********** generate data for literals & fields ************/
   output (".data\n\t.align 4\n");
-  if (cob_stabs_flag)
-    {
-      output (".LCsource:\n");
-      output ("\t.string\t\"%s\"\n", cob_source_filename);
-    }
+  output (".LCsource:\n");
+  output ("\t.string\t\"%s\"\n", cob_source_filename);
 
   /* generate static working storage */
   dump_working ();
@@ -3780,6 +3777,7 @@ gen_call (cob_tree v, struct call_parameter *parameter_list)
     }
   if (totlen != 0)
     output ("\taddl\t$%d, %%esp\n", totlen);
+  output ("\tmovl\t$.LCsource, cob_source_file\n");
   stack_offset = saved_stack_offset;
 }
 

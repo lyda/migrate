@@ -80,7 +80,7 @@ static int scan_picture (char *text);
 
 <*>\n {
   cob_orig_lineno++;
-  if (cob_stabs_flag && in_procedure)
+  if (in_procedure)
     stabs_line ();
 }
 
