@@ -1,3 +1,7 @@
+2003-08-19  Keisuke Nishida  <knishida@netlab.jp>
+
+	* termio.c (cob_accept_command_line): Omit the program name (argv[0]).
+
 2003-08-17  Keisuke Nishida  <knishida@netlab.jp>
 
 	* termio.h, termio.c (cob_display_environment): New function.

@@ -144,9 +144,9 @@ void
 cob_accept_command_line (cob_field *f)
 {
   int i, size = 0;
-  char buff[FILENAME_MAX];
+  char buff[FILENAME_MAX] = "";
 
-  for (i = 0; i < cob_argc; i++)
+  for (i = 1; i < cob_argc; i++)
     {
       int len = strlen (cob_argv[i]);
       if (size + len >= FILENAME_MAX)
