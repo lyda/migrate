@@ -263,6 +263,16 @@ extern int cob_str_cmp (struct cob_field f1, struct cob_field f2);
 /* move.c */
 
 extern void cob_move (struct cob_field src, struct cob_field dst);
+extern void cob_move_alphanum_to_display (struct cob_field f1, struct cob_field f2);
+extern void cob_move_display_to_display (struct cob_field f1, struct cob_field f2);
+extern void cob_move_display_to_alphanum (struct cob_field f1, struct cob_field f2);
+extern void cob_move_alphanum_to_alphanum (struct cob_field f1, struct cob_field f2);
+extern void cob_move_display_to_packed (struct cob_field f1, struct cob_field f2);
+extern void cob_move_packed_to_display (struct cob_field f1, struct cob_field f2);
+extern void cob_move_display_to_binary (struct cob_field f1, struct cob_field f2);
+extern void cob_move_binary_to_display (struct cob_field f1, struct cob_field f2);
+extern void cob_move_display_to_edited (struct cob_field f1, struct cob_field f2);
+extern void cob_move_alphanum_to_edited (struct cob_field f1, struct cob_field f2);
 extern void cob_mem_move (struct cob_field dst, unsigned char *src, int len);
 extern int cob_to_int (struct cob_field f);
 extern void cob_set_int (struct cob_field f, int n);

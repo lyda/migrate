@@ -97,23 +97,28 @@ cob_debug_print (struct cob_field f)
 void
 cob_accept (struct cob_field f)
 {
+  int size;
+  char buff[BUFSIZ];
+  struct cob_field_desc fld = {0, 'X'};
+
 #ifdef HAVE_LIBREADLINE
   if (isatty (fileno (stdin)))
     {
       char *p = readline ("");
       add_history (p);
-      cob_mem_move (f, p, strlen (p));
+      size = strlen (p);
+      memcpy (buff, p, size);
       free (p);
-      return;
     }
   else
 #endif
     {
-      char buff[BUFSIZ];
       fgets (buff, BUFSIZ, stdin);
-      cob_mem_move (f, buff, strlen (buff) - 1);
+      size = strlen (buff) - 1;
     }
 
+  fld.size = size;
+  cob_move_alphanum_to_alphanum ((struct cob_field) {&fld, buff}, f);
 }
 
 void
