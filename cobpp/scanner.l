@@ -36,8 +36,6 @@
 #include "scanner.h"
 #include "lib/gettext.h"
 
-#define YY_NO_UNPUT
-
 int yylineno;
 const char *yyfilename;
 static struct replacement *yyreplacing = NULL;
@@ -69,26 +67,40 @@ static void process_eol (void);
 
 <*>\n			{ process_eol (); }
 
-<*>[ \t]*\n-[ \t]*[\"\']? {
-  if (cob_file_format == COB_FORMAT_FIXED)
-    {
-      /* Line concatenation */
-      yylineno++;
-      display_line = 1;
-      if (yytext[yyleng - 1] == '"' || yytext[yyleng - 1] == '\'')
-	{
-	  int i;
-	  for (i = 0; yytext[i] != '\n'; i++)
-	    fputc (' ', yyout);
-	}
-    }
-  else
-    process_eol ();
-}
-
 "COPY"			{ BEGIN COPY_STATE; return COPY; }
 "INCLUDE"		{ BEGIN COPY_STATE; return COPY; }
 "REPLACE"		{ BEGIN COPY_STATE; return REPLACE; }
+
+"AUTHOR." |
+"DATE_WRITTEN." |
+"DATE_COMPILED." |
+"INSTALLATION." |
+"SECURITY." {
+  if (cob_file_format == COB_FORMAT_FREE)
+    yyerror ("obsolete");
+  else
+    {
+      while (input () != '\n');
+      fputs ("\n", yyout);
+      while (1)
+	{
+	  int i, c;
+	  for (i = 0; i < 7; i++)
+	    input ();
+	  if ((c = input ()) == ' ')
+	    {
+	      while (input () != '\n');
+	      fputs ("       \n", yyout);
+	    }
+	  else
+	    {
+	      fputs ("       ", yyout);
+	      unput (c);
+	      break;
+	    }
+	}
+    }
+}
 
 . |
 [ \t]* |
@@ -278,97 +290,137 @@ remove_replacements (void)
   yyreplacing = NULL;
 }
 
+
+/*
+ * Read line
+ */
+
 static int
-yyinput (char *buf, int max_size)
+read_line (char *buff, int size)
 {
   int len;
+
+  /* Read a line */
+  if (fgets (buff, size, yyin) == NULL)
+    return 0;
+
+  /* Regularize the end-of-line to LF */
+  len = strlen (buff);
+  switch (buff[len - 1])
+    {
+    case '\n':
+      if (buff[len - 2] != '\r')
+	break;
+      buff[--len] = '\0';
+      /* fall throw */
+    case '\r':
+      buff[len - 1] = '\n';
+      break;
+    default:
+      buff[len++] = '\n';
+      buff[len] = '\0';
+      break;
+    }
+
+  /* Nothing to be done for free format */
+  if (cob_file_format == COB_FORMAT_FREE)
+    return len;
+
+  /* Tab expansion */
+  if (strchr (buff, '\t') != NULL)
+    {
+      int i, column = 0;
+      char *p = buff;
+      char copy[len + 1];
+      memcpy (copy, buff, len + 1);
+      for (i = 0; i <= len; i++)
+	if (copy[i] != '\t')
+	  {
+	    *p++ = copy[i];
+	    column++;
+	  }
+	else
+	  do {
+	    *p++ = ' ';
+	    column++;
+	  } while (column % cob_tab_width != 0);
+    }
+
+  /* clear the first 6 letters */
+  memset (buff, ' ', 6);
+  if (len < 6)
+    strcpy (buff + 6, " \n");
+
+  /* Remove the letters after column 72  */
+  len = strlen (buff);
+  if (cob_file_format != COB_FORMAT_SEMI_FIXED && len > 73)
+    strcpy (buff + 72, "\n");
+
+  switch (buff[6])
+    {
+    case 'D':
+      /* Debug line */
+      if (cob_debug_flag)
+	{
+	  buff[6] = ' ';
+	  break;
+	}
+      /* fall through */
+    case '*':
+    case '/':
+      /* Remove comments */
+      strcpy (buff + 6, " \n");
+      break;
+    }
+
+  return strlen (buff);
+}
+
+static int
+yyinput (char *buff, int max_size)
+{
   struct replacement *ls;
 
   /* Read a line */
-  if (fgets (buf, max_size, yyin) == NULL)
+  if (read_line (buff, max_size) == 0)
     return YY_NULL;
 
-  /* Check the length of the line */
-  len = strlen (buf);
-  if (len >= max_size / cob_tab_width)
-    {
-    too_long:
-      yyerror (_("source line too long"));
-      exit (1);
-    }
-
-  /* Regularize the end of line (i.e. \n) to LF */
-  switch (buf[len - 1])
-    {
-    case '\n':
-      if (buf[len - 2] != '\r')
-	break;
-      buf[--len] = '\0';
-      /* fall throw */
-    case '\r':
-      buf[len - 1] = '\n';
-      break;
-    default:
-      buf[len++] = '\n';
-      buf[len] = '\0';
-      break;
-    }
-
-  /* If fixed format... */
+  /* Line concatenation */
   if (cob_file_format == COB_FORMAT_FIXED
       || cob_file_format == COB_FORMAT_SEMI_FIXED)
     {
-      /* Tab expansion */
-      int i, column = 0;
-      char *p = buf;
-      static char buf_copy[YY_READ_BUF_SIZE];
-      memcpy (buf_copy, buf, len + 1);
-      for (i = 0; i <= len; i++)
-	if (buf_copy[i] != '\t')
-	  {
-	    *p++ = buf_copy[i]; column++;
-	  }
-	else
-	  {
-	    *p++ = ' '; column++;
-	    while (column % cob_tab_width != 0)
-	      {
-		*p++ = ' '; column++;
-	      }
-	  }
-
-      /* Remove the letters after column 72  */
-      len = strlen (buf);
-      if (cob_file_format != COB_FORMAT_SEMI_FIXED && len > 73)
-	strcpy (buf + 72, "\n");
-
-      /* Remove the first 6 letters */
-      if (len > 6)
-	strcpy (buf, buf + 6);
-      else
-	strcpy (buf, "\n");
-
-      switch (buf[0])
+      while (1)
 	{
-	case '*':
-	case '/':
-	  /* Remove comments */
-	  strcpy (buf, " \n");
-	  break;
-	case 'D':
-	  /* Debug line */
-	  if (cob_debug_flag)
-	    buf[0] = ' ';
-	  break;
-	}
+	  int i;
+	  size_t size;
+	  char lookahead[7];
 
-      len = strlen (buf);
+	  /* look ahead the following line */
+	  size = fread (lookahead, 1, 7, yyin);
+	  fseek (yyin, - size, SEEK_CUR);
+	  if (size != 7 || lookahead[6] != '-')
+	    break;
+
+	  /* concatenate lines */
+	  size = strlen (buff) - 1;
+	  read_line (buff + size, max_size - size);
+	  for (i = size + 7; buff[i] == ' '; i++);
+	  if (buff[i] == '"')
+	    i++;
+	  else
+	    for (; buff[size - 1] == ' '; size--);
+	  strcpy (buff + size, buff + i);
+
+	  yylineno++;
+	  display_line = 1;
+	}
     }
 
   /* Do replacement */
   for (ls = yyreplacing; ls; ls = ls->next)
     {
-      char *p = buf;
+      char *p = buff;
+      int len = strlen (buff);
       while ((p = strstr (p, ls->old_text)) != NULL)
 	{
 	  int old_len = strlen (ls->old_text);
@@ -379,7 +431,8 @@ yyinput (char *buf, int max_size)
 	    }
 	  else if (len - old_len + new_len >= max_size)
 	    {
-	      goto too_long;
+	      yyerror (_("source line too long"));
+	      exit (1);
 	    }
 	  else
 	    {
@@ -391,5 +444,5 @@ yyinput (char *buf, int max_size)
 	}
     }
 
-  return len;
+  return strlen (buff);
 }
