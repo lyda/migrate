@@ -90,8 +90,12 @@ sequential_open (struct cob_file *f, char *filename, int mode)
     }
 
   f->file.fd = open (filename, flags, FILE_MODE);
-
-  return (f->file.fd > 0) ? 0 : errno;
+  if (f->file.fd == -1)
+    {
+      f->file.fd = 0;
+      return errno;
+    }
+  return 0;
 }
 
 static int

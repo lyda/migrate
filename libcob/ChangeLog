@@ -1,3 +1,7 @@
+2002-09-12  Keisuke Nishida  <knishida@netlab.jp>
+
+	* fileio.c (sequential_open): Set f->file.fd to 0 on error.
+
 2002-09-06  Keisuke Nishida  <knishida@netlab.jp>
 
 	* fileio.h, fileio.c: INDEXED files has been reimplemented using db1.
