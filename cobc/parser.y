@@ -139,7 +139,7 @@ static void check_decimal_point (struct lit *lit);
 %token <ival> PORTNUM
 
 %token DATE,DAY,DAY_OF_WEEK,TIME,INKEY,READ,WRITE
-%token TO,FOR,IS,ARE,THRU,THAN,NO,CANCEL,ASCENDING,DESCENDING,ZERO
+%token TO,FOR,IS,ARE,THRU,THAN,NO,CANCEL,ASCENDING,DESCENDING,ZEROS
 %token TOK_SOURCE_COMPUTER, TOK_OBJECT_COMPUTER,INPUT_OUTPUT
 %token BEFORE,AFTER,SCREEN,REVERSEVIDEO,NUMBERTOK,PLUS,MINUS,SEPARATE
 %token FOREGROUNDCOLOR,BACKGROUNDCOLOR,UNDERLINE,HIGHLIGHT,LOWLIGHT
@@ -160,7 +160,7 @@ static void check_decimal_point (struct lit *lit);
 %token RECORD,OMITTED,STANDARD,RECORDS,BLOCK
 %token CONTAINS,CHARACTERS,COMPUTE,GO,STOP,RUN
 %token ACCEPT,PERFORM,VARYING,UNTIL,EXIT
-%token IF,ELSE,SENTENCE,LINE,PAGETOK
+%token IF,ELSE,SENTENCE,LINE,PAGE
 %token OPEN,CLOSE,REWRITE
 %token ADVANCING,INTO,AT,END,NEGATIVE,POSITIVE,SPACES,NOT
 %token CALL,USING,INVALID,CONTENT
@@ -168,7 +168,7 @@ static void check_decimal_point (struct lit *lit);
 %token ORGANIZATION,ACCESS,MODE,KEY,STATUS,ALTERNATE
 %token SEQUENTIAL,INDEXED,DYNAMIC,RANDOM,RELATIVE,RELEASE
 %token SECTION,SORT,SORT_MERGE,DUPLICATES,WITH
-%token QUOTES,LOWVALUES,HIGHVALUES
+%token QUOTES,LOW_VALUES,HIGH_VALUES
 %token SET,UP,DOWN,TRACE,READY,RESET,SEARCH,WHEN,TEST
 %token END_ADD,END_CALL,END_COMPUTE,END_DELETE,END_DIVIDE,END_EVALUATE
 %token END_IF,END_MULTIPLY,END_PERFORM,END_READ,END_REWRITE,END_SEARCH
@@ -177,9 +177,9 @@ static void check_decimal_point (struct lit *lit);
 %token NUMERIC,ALPHABETIC,ALPHABETIC_LOWER,ALPHABETIC_UPPER
 %token RETURNING,TOK_TRUE,TOK_FALSE,ANY,SUBSCVAR,FUNCTION
 %token REPORT,RD,CONTROL,LIMIT,FINAL
-%token HEADING,FOOTING,TOKLAST,DETAIL,TOKSUM
+%token HEADING,FOOTING,TOKLAST,DETAIL,SUM
 %token POSITION,FILE_ID,DEPENDING,TOK_TYPE,TOKSOURCE
-%token INITIATE,GENERATE,TERMINATE,NULLTOK,ADDRESS,NOECHO,LPAR
+%token INITIATE,GENERATE,TERMINATE,TOK_NULL,ADDRESS,NOECHO,LPAR
 %token CORRESPONDING,TOKDUMMY,CONVERTING,OPTIONAL
 %token IDENTIFICATION_TOK,ENVIRONMENT_TOK,DATA,PROCEDURE_TOK
 %token AUTHOR,DATE_WRITTEN,DATE_COMPILED,INSTALLATION,SECURITY
@@ -838,7 +838,7 @@ left_or_right:
  */
 
 blank_clause:
-  BLANK opt_when ZERO	{ curr_field->flags.blank=1; }
+  BLANK opt_when ZEROS	{ curr_field->flags.blank=1; }
 ;
 opt_when: | WHEN ;
 
@@ -887,7 +887,7 @@ rd_statement:
 ;
 report_controls:
 | report_controls CONTROL opt_is_are opt_final report_break_list
-| report_controls PAGETOK opt_limit_is integer opt_line
+| report_controls PAGE opt_limit_is integer opt_line
 | report_controls
         HEADING opt_is integer
         opt_first_detail opt_last_detail
@@ -928,7 +928,7 @@ opt_report_name:
 report_value:
 | VALUE opt_is gname
 | TOKSOURCE opt_is gname
-| TOKSUM opt_of name
+| SUM opt_of name
 ;
 opt_report_column:
   COLUMN opt_number integer
@@ -947,7 +947,7 @@ report_position:
 | /* nothing */
 ;
 report_type:
-  PAGETOK
+  PAGE
 | CONTROL
 | DETAIL
 ;
@@ -1055,7 +1055,7 @@ screen_attrib:
 | UNDERLINE                     { $$ = SCR_UNDERLINE; }
 | LOWLIGHT                      { $$ = SCR_LOWLIGHT; }
 | HIGHLIGHT                     { $$ = SCR_HIGHLIGHT; }
-| BLANK opt_when ZERO        { $$ = SCR_BLANK_WHEN_ZERO; }
+| BLANK opt_when ZEROS        { $$ = SCR_BLANK_WHEN_ZERO; }
 | NOECHO                        { $$ = SCR_NOECHO; }
 | UPDATE                        { $$ = SCR_UPDATE; }
 | screen_sign                   { $$ = $1; }
@@ -2462,7 +2462,7 @@ set_target:
   ;
 set_variable:
    variable	   { $$ = $1; }
-  | NULLTOK	   { $$ = NULL; }
+  | TOK_NULL	   { $$ = NULL; }
   ;
 opt_address_of:
   /* nothing */ { $$ = 0; }
@@ -2470,8 +2470,8 @@ opt_address_of:
   ;
 set_variable_or_nlit:
   name_or_lit	  { $$ = $1; }
-  | NULLTOK	  { $$ = NULL; }
-  | TOK_TRUE	  
+  | TOK_NULL	  { $$ = NULL; }
+  | TOK_TRUE
     { 
       $$ = (struct sym *)1;
       /* no (struct sym *) may have this value! */ 
@@ -2689,7 +2689,7 @@ write_options:
     /* nothing */       { $$ = 0; }
     | before_after opt_advancing gname opt_line
                         { gen_loadvar($3); $$ = $1; }
-    | before_after opt_advancing PAGETOK
+    | before_after opt_advancing PAGE
                         { $$ = -$1; }
     ;
 opt_end_write:
@@ -2945,7 +2945,7 @@ implied_op_condition:
 sign_condition:
     POSITIVE        { $$=GREATER; }
     | NEGATIVE      { $$=LESS; }
-    | ZERO       { $$=EQUAL; }
+    | ZEROS       { $$=EQUAL; }
     ;
 class_condition:
     NUMERIC                     { $$=CLASS_NUMERIC; }
@@ -3050,11 +3050,11 @@ all_literal:
     | ALL special_literal { $$=$2; }
     ;
 special_literal:
-    SPACES          { $$=spe_lit_SP; }
-    | ZERO       { $$=spe_lit_ZE; }
+      SPACES        { $$=spe_lit_SP; }
+    | ZEROS         { $$=spe_lit_ZE; }
     | QUOTES        { $$=spe_lit_QU; }
-    | HIGHVALUES    { $$=spe_lit_HV; }
-    | LOWVALUES     { $$=spe_lit_LV; }
+    | HIGH_VALUES   { $$=spe_lit_HV; }
+    | LOW_VALUES    { $$=spe_lit_LV; }
     ;
 var_or_nliteral:
     variable        { $$ = $1; }
