@@ -1,5 +1,10 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Version 0.9.3 での変更点
+
+** 主にバグ修正。NIST テストの合格率は 83.16%
+
+
 * Version 0.9.2 での変更点
 
 ** 主にバグ修正。NIST テストの合格率は 69.47%
