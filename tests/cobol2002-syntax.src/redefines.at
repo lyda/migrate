@@ -80,7 +80,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:9: level number of REDEFINES entries must be identical
+[prog.cob:9: `X' undefined in `G1'
 ])
 
 AT_CLEANUP

@@ -54,7 +54,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: `G' undefined
+[prog.cob:8: `X' in `G' undefined
 ])
 
 AT_CLEANUP
@@ -75,7 +75,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:10: `Y' undefined in `G'
+[prog.cob:10: `Y' in `G' undefined
 ])
 
 AT_CLEANUP
@@ -94,7 +94,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: `X' not a group
+[prog.cob:8: `X' in `X' undefined
 ])
 
 AT_CLEANUP
@@ -256,6 +256,56 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 prog.cob:7: `X' in `G' defined here
 prog.cob:8: `X' in `X' in `G' defined here
 ])
+
+AT_CLEANUP
+
+AT_SETUP([Ambigous qualified definition])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 G1.
+         02 X.
+           03 Y         PIC X.
+       01 G2.
+         02 X.
+           03 Y         PIC X.
+       PROCEDURE        DIVISION.
+           DISPLAY Y OF X.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:13: `Y' in `X' ambiguous; need qualification
+prog.cob:8: `Y' in `X' in `G1' defined here
+prog.cob:11: `Y' in `X' in `G2' defined here
+])
+
+AT_CLEANUP
+
+
+
+AT_SETUP([Unique reference with ambiguous qualifiers])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 G1.
+         02 X.
+           03 Y         PIC X VALUE "Y".
+       01 G2.
+         02 X.
+           03 Z         PIC X VALUE "Z".
+       PROCEDURE        DIVISION.
+           DISPLAY Z OF X NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
 
 AT_CLEANUP
 
