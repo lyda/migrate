@@ -522,9 +522,9 @@ output_integer (cb_tree x)
 	    return;
 
 	  case CB_USAGE_POINTER:
-	    output ("((int) ");
+	    output ("((int) (");
 	    output_data (x);
-	    output (")");
+	    output ("))");
 	    return;
 
 	  case CB_USAGE_DISPLAY:
@@ -670,7 +670,7 @@ output_param (cb_tree x, int id)
 	    output_size (p->val);
 	    break;
 	  case CB_CAST_DEREFERENCE:
-	    output ("(*(void **)(");
+	    output ("(*(void **) (");
 	    output_data (p->val);
 	    output ("))");
 	  }
