@@ -1,13 +1,13 @@
 AT_SETUP([Level 01 subscripts])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 X            PIC X OCCURS 10.
-PROCEDURE       DIVISION.
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X OCCURS 10.
+       PROCEDURE       DIVISION.
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
@@ -20,15 +20,15 @@ AT_CLEANUP
 AT_SETUP([1 subscripts (too few)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 G.
-  02 X          PIC X OCCURS 10.
-PROCEDURE       DIVISION.
-  MOVE "X" TO X.
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G.
+         02 X          PIC X OCCURS 10.
+       PROCEDURE       DIVISION.
+         MOVE "X" TO X.
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
@@ -41,15 +41,15 @@ AT_CLEANUP
 AT_SETUP([1 subscripts (too many)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 G.
-  02 X          PIC X OCCURS 10.
-PROCEDURE       DIVISION.
-  MOVE "X" TO X (1, 2).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G.
+         02 X          PIC X OCCURS 10.
+       PROCEDURE       DIVISION.
+         MOVE "X" TO X (1, 2).
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
@@ -62,16 +62,16 @@ AT_CLEANUP
 AT_SETUP([2 subscripts (too few)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 G1.
-  02 G2         OCCURS 10.
-    03 X        PIC X OCCURS 10.
-PROCEDURE       DIVISION.
-  MOVE "X" TO X (1).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G1.
+         02 G2         OCCURS 10.
+           03 X        PIC X OCCURS 10.
+       PROCEDURE       DIVISION.
+         MOVE "X" TO X (1).
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
@@ -84,16 +84,16 @@ AT_CLEANUP
 AT_SETUP([2 subscripts (too many)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 G1.
-  02 G2         OCCURS 10.
-    03 X        PIC X OCCURS 10.
-PROCEDURE       DIVISION.
-  MOVE "X" TO X (1, 2, 3).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G1.
+         02 G2         OCCURS 10.
+           03 X        PIC X OCCURS 10.
+       PROCEDURE       DIVISION.
+         MOVE "X" TO X (1, 2, 3).
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
@@ -106,15 +106,15 @@ AT_CLEANUP
 AT_SETUP([Subscript out of bounds (1)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 G.
-  02 X          PIC X OCCURS 3.
-PROCEDURE       DIVISION.
-  MOVE "X" TO X (5).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G.
+         02 X          PIC X OCCURS 3.
+       PROCEDURE       DIVISION.
+         MOVE "X" TO X (5).
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
@@ -127,16 +127,16 @@ AT_CLEANUP
 AT_SETUP([Subscript out of bounds (2)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 G1.
-  02 G2         OCCURS 10.
-    03 X        PIC X OCCURS 10.
-PROCEDURE       DIVISION.
-  MOVE "X" TO X (10, 20).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G1.
+         02 G2         OCCURS 10.
+           03 X        PIC X OCCURS 10.
+       PROCEDURE       DIVISION.
+         MOVE "X" TO X (10, 20).
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
@@ -149,16 +149,16 @@ AT_CLEANUP
 AT_SETUP([non-numeric subscript])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 G1.
-  02 X          PIC X OCCURS 10.
-01 I            PIC X.
-PROCEDURE       DIVISION.
-  MOVE "X" TO X (I).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G1.
+         02 X          PIC X OCCURS 10.
+       01 I            PIC X.
+       PROCEDURE       DIVISION.
+         MOVE "X" TO X (I).
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
@@ -171,16 +171,16 @@ AT_CLEANUP
 AT_SETUP([non-numeric subscript with addition])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 G1.
-  02 X          PIC X OCCURS 10.
-01 I            PIC X.
-PROCEDURE       DIVISION.
-  MOVE "X" TO X (I + 1).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G1.
+         02 X          PIC X OCCURS 10.
+       01 I            PIC X.
+       PROCEDURE       DIVISION.
+         MOVE "X" TO X (I + 1).
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
@@ -193,19 +193,19 @@ AT_CLEANUP
 AT_SETUP([Subscript out of bounds at run-time (1)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 G.
-  02 X          PIC X OCCURS 10.
-01 I            PIC 9 VALUE 0.
-PROCEDURE       DIVISION.
-  DISPLAY X(I).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G.
+         02 X          PIC X OCCURS 10.
+       01 I            PIC 9 VALUE 0.
+       PROCEDURE       DIVISION.
+         DISPLAY X(I).
+         STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([cobc -main prog.cob])
 AT_CHECK([./prog], [1], ,
 [prog.cob:10: libcob: subscript of `X' out of bounds: 0
 ])
@@ -216,19 +216,19 @@ AT_CLEANUP
 AT_SETUP([Subscript out of bounds at runtime (2)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 G.
-  02 X          PIC X OCCURS 10.
-01 I            PIC 99 VALUE 11.
-PROCEDURE       DIVISION.
-  DISPLAY X(I).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G.
+         02 X          PIC X OCCURS 10.
+       01 I            PIC 99 VALUE 11.
+       PROCEDURE       DIVISION.
+         DISPLAY X(I).
+         STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([cobc -main prog.cob])
 AT_CHECK([./prog], [1], ,
 [prog.cob:10: libcob: subscript of `X' out of bounds: 11
 ])
@@ -239,19 +239,19 @@ AT_CLEANUP
 AT_SETUP([Value of DEPENDING ON N out of bounds (lower)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 G.
-  02 X          PIC X OCCURS 4 TO 6 DEPENDING ON N.
-01 N            PIC 9 VALUE 3.
-PROCEDURE       DIVISION.
-  DISPLAY X(5).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G.
+         02 X          PIC X OCCURS 4 TO 6 DEPENDING ON N.
+       01 N            PIC 9 VALUE 3.
+       PROCEDURE       DIVISION.
+         DISPLAY X(5).
+         STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([cobc -main prog.cob])
 AT_CHECK([./prog], [1], ,
 [prog.cob:10: libcob: OCCURS DEPENDING ON `N' out of bounds: 3
 ])
@@ -262,19 +262,19 @@ AT_CLEANUP
 AT_SETUP([Value of DEPENDING ON N out of bounds (upper)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 G.
-  02 X          PIC X OCCURS 4 TO 6 DEPENDING ON N.
-01 N            PIC 9 VALUE 7.
-PROCEDURE       DIVISION.
-  DISPLAY X(5).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G.
+         02 X          PIC X OCCURS 4 TO 6 DEPENDING ON N.
+       01 N            PIC 9 VALUE 7.
+       PROCEDURE       DIVISION.
+         DISPLAY X(5).
+         STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([cobc -main prog.cob])
 AT_CHECK([./prog], [1], ,
 [prog.cob:10: libcob: OCCURS DEPENDING ON `N' out of bounds: 7
 ])
@@ -285,19 +285,19 @@ AT_CLEANUP
 AT_SETUP([Index exceeds DEPENDING ON N])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 G.
-  02 X          PIC X OCCURS 4 TO 6 DEPENDING ON N.
-01 N            PIC 9 VALUE 4.
-PROCEDURE       DIVISION.
-  DISPLAY X(5).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G.
+         02 X          PIC X OCCURS 4 TO 6 DEPENDING ON N.
+       01 N            PIC 9 VALUE 4.
+       PROCEDURE       DIVISION.
+         DISPLAY X(5).
+         STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([cobc -main prog.cob])
 AT_CHECK([./prog], [1], ,
 [prog.cob:10: libcob: subscript of `X' out of bounds: 5
 ])
@@ -308,16 +308,16 @@ AT_CLEANUP
 AT_SETUP([Subscript out of bounds with OCCURS DEPENDING ON (lower)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 G.
-  02 X          PIC X OCCURS 4 TO 6 DEPENDING ON N.
-01 N            PIC 9 VALUE 4.
-PROCEDURE       DIVISION.
-  DISPLAY X(3).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G.
+         02 X          PIC X OCCURS 4 TO 6 DEPENDING ON N.
+       01 N            PIC 9 VALUE 4.
+       PROCEDURE       DIVISION.
+         DISPLAY X(3).
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -main prog.cob], [1], ,
@@ -330,16 +330,16 @@ AT_CLEANUP
 AT_SETUP([Subscript out of bounds with OCCURS DEPENDING ON (upper)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 G.
-  02 X          PIC X OCCURS 4 TO 6 DEPENDING ON N.
-01 N            PIC 9 VALUE 4.
-PROCEDURE       DIVISION.
-  DISPLAY X(7).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G.
+         02 X          PIC X OCCURS 4 TO 6 DEPENDING ON N.
+       01 N            PIC 9 VALUE 4.
+       PROCEDURE       DIVISION.
+         DISPLAY X(7).
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -main prog.cob], [1], ,
@@ -352,19 +352,19 @@ AT_CLEANUP
 AT_SETUP([Subscript out of bounds with OCCURS DEPENDING ON (run-time)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 G.
-  02 X          PIC X OCCURS 4 TO 6 DEPENDING ON N.
-01 N            PIC 9 VALUE 4.
-PROCEDURE       DIVISION.
-  DISPLAY X(5).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G.
+         02 X          PIC X OCCURS 4 TO 6 DEPENDING ON N.
+       01 N            PIC 9 VALUE 4.
+       PROCEDURE       DIVISION.
+         DISPLAY X(5).
+         STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([cobc -main prog.cob])
 AT_CHECK([./prog], [1], ,
 [prog.cob:10: libcob: subscript of `X' out of bounds: 5
 ])
@@ -375,14 +375,14 @@ AT_CLEANUP
 AT_SETUP([Offset out of bounds (1)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 X            PIC X(4).
-PROCEDURE       DIVISION.
-  DISPLAY X(0:1).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X(4).
+       PROCEDURE       DIVISION.
+         DISPLAY X(0:1).
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
@@ -395,14 +395,14 @@ AT_CLEANUP
 AT_SETUP([Offset out of bounds (2)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 X            PIC X(4).
-PROCEDURE       DIVISION.
-  DISPLAY X(5:1).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X(4).
+       PROCEDURE       DIVISION.
+         DISPLAY X(5:1).
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
@@ -415,14 +415,14 @@ AT_CLEANUP
 AT_SETUP([Length out of bounds (too long)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 X            PIC X(4).
-PROCEDURE       DIVISION.
-  DISPLAY X(2:4).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X(4).
+       PROCEDURE       DIVISION.
+         DISPLAY X(2:4).
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
@@ -435,18 +435,18 @@ AT_CLEANUP
 AT_SETUP([Offset out of bounds at runtime (1)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 X            PIC X(4).
-01 I            PIC 9 VALUE 0.
-PROCEDURE       DIVISION.
-  DISPLAY X(I:1).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X(4).
+       01 I            PIC 9 VALUE 0.
+       PROCEDURE       DIVISION.
+         DISPLAY X(I:1).
+         STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([cobc -main prog.cob])
 AT_CHECK([./prog], [1], ,
 [prog.cob:9: libcob: offset of `X' out of bounds: 0
 ])
@@ -457,18 +457,18 @@ AT_CLEANUP
 AT_SETUP([Offset out of bounds at runtime (2)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 X            PIC X(4).
-01 I            PIC 9 VALUE 5.
-PROCEDURE       DIVISION.
-  DISPLAY X(I:1).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X(4).
+       01 I            PIC 9 VALUE 5.
+       PROCEDURE       DIVISION.
+         DISPLAY X(I:1).
+         STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([cobc -main prog.cob])
 AT_CHECK([./prog], [1], ,
 [prog.cob:9: libcob: offset of `X' out of bounds: 5
 ])
@@ -479,18 +479,18 @@ AT_CLEANUP
 AT_SETUP([Length out of bounds at runtime (too long)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 X            PIC X(4).
-01 I            PIC 9 VALUE 5.
-PROCEDURE       DIVISION.
-  DISPLAY X(2:I).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X(4).
+       01 I            PIC 9 VALUE 5.
+       PROCEDURE       DIVISION.
+         DISPLAY X(2:I).
+         STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([cobc -main prog.cob])
 AT_CHECK([./prog], [1], ,
 [prog.cob:9: libcob: length of `X' out of bounds: 5
 ])

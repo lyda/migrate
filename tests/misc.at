@@ -1,18 +1,18 @@
 AT_SETUP([MOVE with refmod])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 X            PIC 9(4) VALUE 0.
-PROCEDURE       DIVISION.
-  MOVE "1" TO X(1:1).
-  DISPLAY X.
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 9(4) VALUE 0.
+       PROCEDURE       DIVISION.
+         MOVE "1" TO X(1:1).
+         DISPLAY X.
+         STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([cobc -main prog.cob])
 AT_CHECK([./prog], [0],
 [1000
 ])
@@ -23,13 +23,13 @@ AT_CLEANUP
 AT_SETUP([Ambiguous AND/OR (1)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-PROCEDURE       DIVISION.
-  IF 3 = 1 AND 2 OR 3
-    DISPLAY "OK"
-  END-IF.
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       PROCEDURE       DIVISION.
+         IF 3 = 1 AND 2 OR 3
+           DISPLAY "OK"
+         END-IF.
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [0], ,
@@ -42,13 +42,13 @@ AT_CLEANUP
 AT_SETUP([Ambiguous AND/OR (2)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-PROCEDURE       DIVISION.
-  IF 3 = 1 OR 2 AND 3
-    DISPLAY "NO"
-  END-IF.
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       PROCEDURE       DIVISION.
+         IF 3 = 1 OR 2 AND 3
+           DISPLAY "NO"
+         END-IF.
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [0], ,
@@ -61,40 +61,40 @@ AT_CLEANUP
 AT_SETUP([CALL m1. CALL m2. CALL m1.])
 
 AT_DATA([m1.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     m1.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 X            PIC 9(4).
-PROCEDURE       DIVISION.
-  COMPUTE X = 1 + 2.
-  DISPLAY X.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     m1.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 9(4).
+       PROCEDURE       DIVISION.
+         COMPUTE X = 1 + 2.
+         DISPLAY X.
 ])
 
 AT_DATA([m2.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     m2.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 X            PIC 9(4).
-PROCEDURE       DIVISION.
-  COMPUTE X = 3 + 4.
-  DISPLAY X.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     m2.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 9(4).
+       PROCEDURE       DIVISION.
+         COMPUTE X = 3 + 4.
+         DISPLAY X.
 ])
 
 AT_DATA([caller.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     caller.
-PROCEDURE       DIVISION.
-  CALL "m1".
-  CALL "m2".
-  CALL "m1".
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     caller.
+       PROCEDURE       DIVISION.
+         CALL "m1".
+         CALL "m2".
+         CALL "m1".
+         STOP RUN.
 ])
 
-AT_CHECK([cobc -m m1.cob], [0])
-AT_CHECK([cobc -m m2.cob], [0])
-AT_CHECK([cobc -main caller.cob], [0])
+AT_CHECK([cobc -m m1.cob])
+AT_CHECK([cobc -m m2.cob])
+AT_CHECK([cobc -main caller.cob])
 
 AT_CHECK([./caller], [0],
 [0003
@@ -108,15 +108,15 @@ AT_CLEANUP
 AT_SETUP([CALL BY CONTENT LENGTH])
 
 AT_DATA([caller.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     caller.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 X            PIC X(4).
-PROCEDURE       DIVISION.
-  MOVE "abcd" TO X.
-  CALL "callee" USING X BY CONTENT LENGTH OF X.
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     caller.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X(4).
+       PROCEDURE       DIVISION.
+         MOVE "abcd" TO X.
+         CALL "callee" USING X BY CONTENT LENGTH OF X.
+         STOP RUN.
 ])
 
 # callee.c
@@ -130,9 +130,9 @@ int callee (char *str, int *len)
 ])
 
 # compile
-cobc -c -static -main caller.cob
-cc -c callee.c
-cobc caller.o callee.o
+AT_CHECK([cobc -c -static -main caller.cob])
+AT_CHECK([cc -c callee.c])
+AT_CHECK([cobc caller.o callee.o])
 
 # check
 AT_CHECK([./caller], [0], [abcd])
@@ -143,22 +143,22 @@ AT_CLEANUP
 AT_SETUP([INITIALIZE complex group])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 G1.
-  02 X          PIC X.
-  02 G2         OCCURS 2.
-    03 Y        PIC 9.
-  02 Z          PIC 9.
-PROCEDURE DIVISION.
-  INITIALIZE G1.
-  DISPLAY G1.
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G1.
+         02 X          PIC X.
+         02 G2         OCCURS 2.
+           03 Y        PIC 9.
+         02 Z          PIC 9.
+       PROCEDURE DIVISION.
+         INITIALIZE G1.
+         DISPLAY G1.
+         STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([cobc -main prog.cob])
 AT_CHECK([./prog], [0],
 [ 000
 ])
@@ -169,22 +169,22 @@ AT_CLEANUP
 AT_SETUP([INITIALIZE group entry with OCCURS])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01  G1.
-  02  G2        OCCURS 2.
-    03  X1      PIC X.
-    03  X2      PIC 9.
-PROCEDURE       DIVISION.
-  MOVE SPACE TO G1.
-  INITIALIZE G2 (2).
-  DISPLAY G1.
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01  G1.
+         02  G2        OCCURS 2.
+           03  X1      PIC X.
+           03  X2      PIC 9.
+       PROCEDURE       DIVISION.
+         MOVE SPACE TO G1.
+         INITIALIZE G2 (2).
+         DISPLAY G1.
+         STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([cobc -main prog.cob])
 AT_CHECK([./prog], [0],
 [   0
 ])
@@ -195,20 +195,20 @@ AT_CLEANUP
 AT_SETUP([INITIALIZE OCCURS with numeric edited])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 G1.
-  02 G2         OCCURS 5.
-    03 X        PIC Z9.
-PROCEDURE       DIVISION.
-  INITIALIZE G1.
-  DISPLAY G1.
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G1.
+         02 G2         OCCURS 5.
+           03 X        PIC Z9.
+       PROCEDURE       DIVISION.
+         INITIALIZE G1.
+         DISPLAY G1.
+         STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([cobc -main prog.cob])
 AT_CHECK([./prog], [0],
 [ 0 0 0 0 0
 ])
@@ -219,20 +219,20 @@ AT_CLEANUP
 AT_SETUP([non-overflow after overflow])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 X            PIC 9(2) VALUE 0.
-01 Y            PIC 9(2) VALUE 0.
-PROCEDURE       DIVISION.
-  COMPUTE X = 100.
-  COMPUTE Y = 99.
-  DISPLAY Y.
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 9(2) VALUE 0.
+       01 Y            PIC 9(2) VALUE 0.
+       PROCEDURE       DIVISION.
+         COMPUTE X = 100.
+         COMPUTE Y = 99.
+         DISPLAY Y.
+         STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([cobc -main prog.cob])
 AT_CHECK([./prog], [0],
 [99
 ])
@@ -243,19 +243,19 @@ AT_CLEANUP
 AT_SETUP([Class check with reference modification])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 X            PIC X(6) VALUE "123   ".
-PROCEDURE       DIVISION.
-  IF X(1:3) NUMERIC
-    DISPLAY "OK"
-  END-IF.
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X(6) VALUE "123   ".
+       PROCEDURE       DIVISION.
+         IF X(1:3) NUMERIC
+           DISPLAY "OK"
+         END-IF.
+         STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([cobc -main prog.cob])
 AT_CHECK([./prog], [0],
 [OK
 ])
@@ -266,19 +266,19 @@ AT_CLEANUP
 AT_SETUP([STRING with subscript reference])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 G.
-02 X            PIC X(3) OCCURS 3.
-PROCEDURE       DIVISION.
-  STRING "abc" INTO X(1).
-  DISPLAY X(1).
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G.
+       02 X            PIC X(3) OCCURS 3.
+       PROCEDURE       DIVISION.
+         STRING "abc" INTO X(1).
+         DISPLAY X(1).
+         STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([cobc -main prog.cob])
 AT_CHECK([./prog], [0],
 [abc
 ])
@@ -289,29 +289,29 @@ AT_CLEANUP
 AT_SETUP([First READ on an empty SEQUENTIAL INDEXED file])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-ENVIRONMENT     DIVISION.
-INPUT-OUTPUT    SECTION.
-FILE-CONTROL.
-SELECT TEST-FILE ASSIGN       "./TEST-FILE"
-                 ORGANIZATION IS  INDEXED
-                 ACCESS MODE  IS  SEQUENTIAL
-                 RECORD KEY   IS  TEST-KEY.
-DATA            DIVISION.
-FILE            SECTION.
-FD  TEST-FILE.
-01  TEST-KEY        PIC X(10).
-PROCEDURE       DIVISION.
-  OPEN  OUTPUT TEST-FILE.
-  CLOSE TEST-FILE.
-  OPEN  INPUT  TEST-FILE.
-  READ  TEST-FILE AT END DISPLAY "OK" END-READ.
-  CLOSE TEST-FILE.
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       ENVIRONMENT     DIVISION.
+       INPUT-OUTPUT    SECTION.
+       FILE-CONTROL.
+       SELECT TEST-FILE ASSIGN       "./TEST-FILE"
+                        ORGANIZATION IS  INDEXED
+                        ACCESS MODE  IS  SEQUENTIAL
+                        RECORD KEY   IS  TEST-KEY.
+       DATA            DIVISION.
+       FILE            SECTION.
+       FD  TEST-FILE.
+       01  TEST-KEY        PIC X(10).
+       PROCEDURE       DIVISION.
+         OPEN  OUTPUT TEST-FILE.
+         CLOSE TEST-FILE.
+         OPEN  INPUT  TEST-FILE.
+         READ  TEST-FILE AT END DISPLAY "OK" END-READ.
+         CLOSE TEST-FILE.
+         STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([cobc -main prog.cob])
 AT_CHECK([./prog], [0],
 [OK
 ])

@@ -1,11 +1,11 @@
 AT_SETUP([Undefined entry])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-PROCEDURE       DIVISION.
-  DISPLAY X.
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       PROCEDURE       DIVISION.
+         DISPLAY X.
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
@@ -18,14 +18,14 @@ AT_CLEANUP
 AT_SETUP([Redefinition of 01 entries (1)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 X            PIC X.
-01 X            PIC X.
-PROCEDURE       DIVISION.
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X.
+       01 X            PIC X.
+       PROCEDURE       DIVISION.
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
@@ -39,15 +39,15 @@ AT_CLEANUP
 AT_SETUP([Redefinition of 01 entries (2)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 X            PIC X.
-01 Y            PIC X.
-01 X            PIC X.
-PROCEDURE       DIVISION.
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X.
+       01 Y            PIC X.
+       01 X            PIC X.
+       PROCEDURE       DIVISION.
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
@@ -61,14 +61,14 @@ AT_CLEANUP
 AT_SETUP([Redefinition of 01 and 02 entries])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 X.
-  02 X          PIC X.
-PROCEDURE       DIVISION.
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X.
+         02 X          PIC X.
+       PROCEDURE       DIVISION.
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
@@ -82,15 +82,15 @@ AT_CLEANUP
 AT_SETUP([Redefinition of 02 entries (same group)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 G.
-  02 X          PIC X.
-  02 X          PIC X.
-PROCEDURE       DIVISION.
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G.
+         02 X          PIC X.
+         02 X          PIC X.
+       PROCEDURE       DIVISION.
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
@@ -104,17 +104,17 @@ AT_CLEANUP
 AT_SETUP([Redefinition of 02 entries (different groups with reference)])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 G1.
-  02 X          PIC X.
-01 G2.
-  02 X          PIC X.
-PROCEDURE       DIVISION.
-  DISPLAY X.
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G1.
+         02 X          PIC X.
+       01 G2.
+         02 X          PIC X.
+       PROCEDURE       DIVISION.
+         DISPLAY X.
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
@@ -129,14 +129,14 @@ AT_CLEANUP
 AT_SETUP([Redefinition of 77 entries])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-77 X            PIC X.
-77 X            PIC X.
-PROCEDURE       DIVISION.
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       77 X            PIC X.
+       77 X            PIC X.
+       PROCEDURE       DIVISION.
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
@@ -150,14 +150,14 @@ AT_CLEANUP
 AT_SETUP([Redefinition of 01 and 77 entries])
 
 AT_DATA([prog.cob], [
-IDENTIFICATION  DIVISION.
-PROGRAM-ID.     prog.
-DATA            DIVISION.
-WORKING-STORAGE SECTION.
-01 X            PIC X.
-77 X            PIC X.
-PROCEDURE       DIVISION.
-  STOP RUN.
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X.
+       77 X            PIC X.
+       PROCEDURE       DIVISION.
+         STOP RUN.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
