@@ -1348,7 +1348,7 @@ procedure_using:
       {
 	struct cobc_field *f = COBC_FIELD (cobc_ref (l->item));
 	if (f->level != 01 && f->level != 77)
-	  yyerror (_("`%s' not level 01 or 77"), f->name);
+	  yyerror_x (l->item, _("`%s' not level 01 or 77"), f->name);
 	l->item = cobc_ref (l->item);
       }
     current_program->using_list = $2;
@@ -1840,14 +1840,14 @@ display_upon:
       case BUILTIN_SYSOUT:  $$ = COB_SYSOUT; break;
       case BUILTIN_SYSERR:  $$ = COB_SYSERR; break;
       default:
-	yyerror (_("invalid UPON item"));
+	yyerror_x ($2, _("invalid UPON item"));
 	$$ = COB_SYSOUT;
 	break;
       }
   }
 | UPON NAME
   {
-    yywarn (_("`%s' undefined in SPECIAL-NAMES"), COBC_NAME ($2));
+    yywarn_x ($2, _("`%s' undefined in SPECIAL-NAMES"), COBC_NAME ($2));
     $$ = COB_SYSOUT;
   }
 ;
@@ -1975,7 +1975,7 @@ goto_statement:
     if ($3 == NULL)
       OBSOLETE ("GO TO without label");
     else if ($3->next)
-      yyerror (_("too many labels with GO TO"));
+      yyerror_x ($3->next->item, _("too many labels with GO TO"));
     else
       push_funcall_1 ("@goto", $3->item);
   }
@@ -2121,7 +2121,7 @@ tallying_item:
 | text_value inspect_before_after_list
   {
     if (current_inspect_func == NULL)
-      yyerror (_("ALL or LEADING expected before `%s'"), tree_name ($1));
+      yyerror_x ($1, _("ALL or LEADING expected before `%s'"), tree_name ($1));
     $<list>$ = list_add ($2, make_funcall_2 (current_inspect_func, current_inspect_data, $1));
   }
 ;
@@ -2975,7 +2975,7 @@ numeric_expr:
   {
     if (COBC_TREE_CLASS ($1) != COB_TYPE_NUMERIC)
       {
-	yyerror (_("invalid expression"));
+	yyerror_x ($1, _("invalid expression `%s'"), tree_name ($1));
 	YYERROR;
       }
     $$ = $1;
