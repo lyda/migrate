@@ -115,7 +115,7 @@ typedef struct {
   size_t record_min;		/* record min size */
   size_t record_max;		/* record max size */
   int nkeys;			/* the number of keys */
-  cob_file_key *keys;		/* RELATIVE/RECORD keys */
+  cob_file_key *keys;		/* RELATIVE/RECORD/SORT keys */
   char last_open_mode;		/* open mode given by OPEN */
   char flag_nonexistent;	/* nonexistent file */
   char flag_end_of_file;	/* reached the end of file */

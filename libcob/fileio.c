@@ -743,7 +743,6 @@ static cob_fileio_funcs indexed_funcs = {
 
 struct sort_file {
   DB *db;
-  cob_file_key *sort_keys;
   DBT key, data;
 };
 
@@ -755,16 +754,15 @@ sort_compare (const DBT *k1, const DBT *k2)
   int cmp;
   unsigned int i;
   cob_file *f = current_sort_file;
-  struct sort_file *p = f->file;
   for (i = 0; i < f->nkeys; i++)
     {
-      cob_field f1 = *(p->sort_keys[i].field);
-      cob_field f2 = *(p->sort_keys[i].field);
+      cob_field f1 = *(f->keys[i].field);
+      cob_field f2 = *(f->keys[i].field);
       f1.data += ((unsigned char *) k1->data) - f->record->data;
       f2.data += ((unsigned char *) k2->data) - f->record->data;
       cmp = cob_cmp (&f1, &f2);
       if (cmp != 0)
-	return (p->sort_keys[i].flag == COB_ASCENDING) ? cmp : - cmp;
+	return (f->keys[i].flag == COB_ASCENDING) ? cmp : - cmp;
     }
   return 0;
 }
@@ -1166,10 +1164,9 @@ cob_delete (cob_file *f)
 void
 cob_sort_init (cob_file *sort_file, int nkeys, cob_file_key *keys)
 {
-  struct sort_file *p = malloc (sizeof (struct sort_file));
-  sort_file->file = p;
+  sort_file->file = malloc (sizeof (struct sort_file));
+  sort_file->keys = keys;
   sort_file->nkeys = nkeys;
-  p->sort_keys = keys;
 }
 
 void
