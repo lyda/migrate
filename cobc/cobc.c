@@ -45,7 +45,6 @@ int cob_link_style = LINK_DYNAMIC;
 
 int cob_trace_scanner = 0;
 int cob_trace_parser = 0;
-int cob_trace_codegen = 0;
 
 int cob_orig_lineno = 0;
 char *cob_orig_filename = NULL;
@@ -163,7 +162,6 @@ static struct option long_options[] = {
   {"ta", no_argument, 0, 'a'},
   {"ts", no_argument, &cob_trace_scanner, 1},
   {"tp", no_argument, &cob_trace_parser, 1},
-  {"tc", no_argument, &cob_trace_codegen, 1},
 #endif
   {0, 0, 0, 0}
 };
@@ -258,7 +256,6 @@ process_command_line (int argc, char *argv[])
 	case 'a':
 	  cob_trace_scanner = 1;
 	  cob_trace_parser = 1;
-	  cob_trace_codegen = 1;
 	  break;
 #endif
 
