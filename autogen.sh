@@ -1,14 +1,13 @@
 #!/bin/sh
 
-if test ! -e config.rpath; then
-  echo "Running gettextize..."
-  gettextize --force --no-changelog
-fi
-
 if test ! -e ltmain.sh; then
   echo "Running libtoolize..."
   libtoolize --force --automake
 fi
+
+echo "Running autopoint..."
+autopoint --force
+rm mkinstalldirs~
 
 echo "Running aclocal..."
 aclocal

@@ -6,7 +6,7 @@ We use the following extra packages to build OpenCOBOL:
   o Autoconf 2.53
   o Automake 1.6.1
   o Libtool 1.4.2
-  o gettext 0.11.2
+  o gettext 0.11.5
   o Bison 1.28
   o Flex 2.5.4
 
@@ -15,8 +15,8 @@ script `autogen.sh', which is in the CVS repository.  This
 script executes the following commands one after another and
 set up the configure script:
 
-  % gettextize --no-changelog
   % libtoolize
+  % autopoint
   % aclocal
   % autoheader
   % automake -a
