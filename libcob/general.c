@@ -63,31 +63,6 @@ long long cob_exp10[19] = {
   1000000000000000000
 };
 
-char
-sign_to_char (int digit)
-{
-  if (!digit)
-    return '{';
-  if (digit == 0x80)
-    return '}';
-  if (digit > 0)
-    return 'A' + (char) (digit - 1);
-  digit = -digit;
-  return 'J' + (char) (digit - 1);
-}
-
-int
-char_to_sign (char ch)
-{
-  if (ch == '{')
-    return 0;
-  if (ch == '}')
-    return 0x80;
-  if (ch < 'J')
-    return (int) (ch - 'A' + 1);
-  return (-(int) (ch - 'J' + 1));
-}
-
 int
 get_sign (struct cob_field f)
 {
@@ -113,16 +88,9 @@ get_sign (struct cob_field f)
       else
 	{
 	  char *p = f.desc->leading_sign ? f.data : f.data + f.desc->len - 1;
-	  digit = char_to_sign (*p);
-	  if (digit == 0x80)
-	    *p = '0';
-	  else if (digit < 0)
-	    *p = '0' - digit;
-	  else
-	    {
-	      *p = '0' + digit;
-	      return 0;
-	    }
+	  if (*p <= '9')
+	    return 0;
+	  *p -= 0x10;
 	  return 1;
 	}
     }
@@ -149,13 +117,10 @@ put_sign (struct cob_field f, int sign)
 	  char *p = f.desc->leading_sign ? f.data : f.data + f.desc->len - 1;
 	  *p = sign ? '-' : '+';
 	}
-      else
+      else if (sign)
 	{
 	  char *p = f.desc->leading_sign ? f.data : f.data + f.desc->len - 1;
-	  digit = *p - '0';
-	  if (sign)
-	    digit = -digit;
-	  *p = sign_to_char ((sign && digit == 0) ? 0x80 : digit);
+	  *p += 0x10;
 	}
     }
 }
