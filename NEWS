@@ -1,5 +1,22 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Changes in OpenCOBOL 0.23
+
+** Installation changes
+
+*** We use the GNU MP library again.
+
+** Run-time library changes
+
+*** `cob_resolve' now search the main program for the module name.
+
+** Bug fixes
+
+*** Duplicate use of intermediate field variables.
+
+*** fseek issues on the MinGW environment.
+
+
 * Changes in OpenCOBOL 0.22
 
 ** Installation changes
