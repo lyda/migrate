@@ -804,7 +804,7 @@ record_clause:
     yywarn ("RECORD CONTAINS is not implemented");
   }
 | RECORD _is VARYING _in _size opt_from_integer opt_to_integer _characters
-  DEPENDING _on predefined_name
+  record_depending
   {
     yywarn ("RECORD VARYING is not implemented");
   }
@@ -816,6 +816,9 @@ opt_from_integer:
 opt_to_integer:
   /* nothing */			{ $$ = NULL; }
 | TO INTEGER_LITERAL		{ $$ = $2; }
+;
+record_depending:
+| DEPENDING _on predefined_name
 ;
 
 
