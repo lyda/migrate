@@ -31,6 +31,7 @@ data_rep_DEPENDENCIES = \
 	data-rep.src/binary.at \
 	data-rep.src/display.at \
 	data-rep.src/packed.at \
+	data-rep.src/pointer.at \
 	data-rep.src/numeric-dump.cob \
 	data-rep.src/numeric-display.cob
 

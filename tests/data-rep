@@ -303,7 +303,7 @@ at_times_file=$at_suite_dir/at-times
 # List of the tested programs.
 at_tested='cobc'
 # List of the all the test groups.
-at_groups_all=' 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15'
+at_groups_all=' 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16'
 # As many dots as there are digits in the last test group number.
 # Used to normalize the test group numbers so that `ls' lists them in
 # numerical order.
@@ -324,6 +324,7 @@ at_help_all='1;binary.at:23;BINARY: 2-4-8 big-endian;;
 13;packed.at:237;PACKED-DECIMAL arithmetic;;
 14;packed.at:268;PACKED-DECIMAL arithmetic;;
 15;packed.at:295;PACKED-DECIMAL numeric test;;
+16;pointer.at:21;POINTER: display;;
 '
 
 at_keywords=
@@ -3782,6 +3783,90 @@ case $at_status in
             exit 77;;
    0) ;;
    *) echo "packed.at:347: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  16 ) # 16. pointer.at:21: POINTER: display
+    at_setup_line='pointer.at:21'
+    at_desc='POINTER: display'
+    $at_quiet $ECHO_N " 16: POINTER: display                             $ECHO_C"
+    at_xfail=no
+    (
+      echo "16. pointer.at:21: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 PTR           USAGE POINTER VALUE NULL.
+       PROCEDURE        DIVISION.
+           DISPLAY PTR.
+           SET PTR UP BY 1
+           DISPLAY PTR.
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "pointer.at:36: \${COMPILE} -o prog prog.cob"
+echo pointer.at:36 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "pointer.at:36: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "pointer.at:40: ./prog"
+echo pointer.at:40 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "0000000000
+0000000001
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "pointer.at:40: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
