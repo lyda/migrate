@@ -208,7 +208,7 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %type <gene> call_param write_option
 %type <inum> flag_all flag_duplicates flag_optional flag_global
 %type <inum> flag_not flag_next flag_rounded flag_separate
-%type <inum> integer level_number start_operator display_upon
+%type <inum> integer level_number start_operator display_upon screen_plus_minus
 %type <inum> before_or_after perform_test replacing_option close_option
 %type <inum> select_organization select_access_mode open_mode same_option
 %type <inum> ascending_or_descending opt_from_integer opt_to_integer usage
@@ -1275,15 +1275,17 @@ screen_option:
 | SECURE	{ current_field->screen_flag |= COB_SCREEN_SECURE; }
 | REQUIRED	{ current_field->screen_flag |= COB_SCREEN_REQUIRED; }
 | FULL		{ current_field->screen_flag |= COB_SCREEN_FULL; }
-| LINE _number _is _plus_minus integer_value
+| LINE _number _is screen_plus_minus integer_value
   {
     current_field->screen_line = $5;
-    current_field->screen_flag |= COB_SCREEN_LINE_CONST;
+    if (COBC_LITERAL_P ($5))
+      current_field->screen_flag |= COB_SCREEN_LINE_CONST;
   }
-| COLUMN _number _is _plus_minus integer_value
+| COLUMN _number _is screen_plus_minus integer_value
   {
     current_field->screen_column = $5;
-    current_field->screen_flag |= COB_SCREEN_COLUMN_CONST;
+    if (COBC_LITERAL_P ($5))
+      current_field->screen_flag |= COB_SCREEN_LINE_CONST;
   }
 | FOREGROUND_COLOR _is integer
   {
@@ -1345,10 +1347,22 @@ screen_option:
     current_field->screen_to = COBC_FIELD ($2);
   }
 ;
-
-_plus_minus:
+screen_plus_minus:
+  /* empty */
+  {
+    current_field->screen_flag &= ~COB_SCREEN_COLUMN_MASK;
+    current_field->screen_flag |= ~COB_SCREEN_COLUMN_ABS;
+  }
 | PLUS
+  {
+    current_field->screen_flag &= ~COB_SCREEN_COLUMN_MASK;
+    current_field->screen_flag |= ~COB_SCREEN_COLUMN_PLUS;
+  }
 | MINUS
+  {
+    current_field->screen_flag &= ~COB_SCREEN_COLUMN_MASK;
+    current_field->screen_flag |= ~COB_SCREEN_COLUMN_MINUS;
+  }
 ;
 
 
