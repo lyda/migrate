@@ -1,5 +1,11 @@
 2004-03-06  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
 
+	* codegen.c (output_base): Always align the 01 items.
+	* field.c (compute_size): No alignment for now.
+	* tree.c, tree.h (cb_field_need_aligned): Removed.
+
+2004-03-06  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
+
 	* reserved.c (system_table): Add "SYSLST".
 
 2004-03-06  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
