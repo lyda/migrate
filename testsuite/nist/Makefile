@@ -15,7 +15,6 @@ check:
 	for m in $(MODULES); do \
 	  (cd $$m && make check) \
 	done
-	perl summary.pl $(MODULES) > summary.txt
 
 summary:
 	perl summary.pl $(MODULES) > summary.txt
@@ -46,6 +45,7 @@ $(MODULES): newcob.val EXEC85 EXEC85.conf.in
 	@rm -f newcob.tmp EXEC85.conf
 	@echo "check:"              > $@/Makefile
 	@echo "	perl ../report.pl" >> $@/Makefile
+	@echo
 
 EXEC85: EXEC85.cob
 	cobc EXEC85.cob

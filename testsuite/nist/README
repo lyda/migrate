@@ -1,5 +1,5 @@
-Hot To Test NIST CCVS85 Test Suite
-==================================
+Hot To Run NIST CCVS85 Test Suite
+=================================
 
 1. Download the test archive `newcob.val.Z' from
 
@@ -9,9 +9,18 @@ Hot To Test NIST CCVS85 Test Suite
 
   % uncompress newcob.val.Z
 
-3. Try "make check"
+3. Setup the test modules
 
-4. Test summary will be stored in "summary.txt"
+  % make
+
+Make Options
+------------
+
+- make check    run test suite
+- make summary  store test summary in "summary.txt"
+- make snap     copy test logs in *.old
+- make diff     show diff from *.old
+- make clean    remove built files
 
 Test Modules
 ------------
