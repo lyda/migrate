@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 422
+%expect 459
 
 %{
 #define yydebug		cob_trace_parser
@@ -142,6 +142,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <ival> sentence_or_nothing,when_case_list,opt_read_next,usage
 %type <ival> procedure_using,sort_direction,write_options
 %type <ival> opt_on_size_error_sentence,opt_on_overflow_sentence
+%type <ival> on_xxx_statement_list
 %type <ival> at_end_sentence,invalid_key_sentence
 %type <list> label_list,subscript_list,number_list,varcond_list,variable_list
 %type <para> call_using,call_parameter,call_parameter_list
@@ -2528,7 +2529,14 @@ opt_end_write: | END_WRITE ;
  * Common rules
  *******************/
 
-target_sentence:
+on_xxx_statement_list:
+  statement_list
+  {
+    $$ = gen_passlabel ();
+    gen_dstlabel ($<ival>0);
+  }
+;
+not_on_xxx_statement_list:
   statement_list		{ gen_dstlabel ($<ival>0); }
 ;
 
@@ -2544,12 +2552,12 @@ opt_on_size_error:
 opt_on_size_error_sentence:
   /* nothing */	    { $$ = 0; }
 | opt_on SIZE ERROR { $<ival>$ = gen_status_branch (COB_STATUS_OVERFLOW, 0); }
-  target_sentence   { $$ = gen_passlabel (); }
+  on_xxx_statement_list		{ $$ = $5; }
 ;
 opt_not_on_size_error_sentence:
 | NOT opt_on SIZE ERROR
   { $<ival>$ = gen_status_branch (COB_STATUS_OVERFLOW, 1); }
-  target_sentence
+  not_on_xxx_statement_list
 ;
 
 
@@ -2564,12 +2572,12 @@ opt_on_overflow:
 opt_on_overflow_sentence:
   /* nothing */   { $$ = 0; }
 | opt_on OVERFLOW { $<ival>$ = gen_status_branch (COB_STATUS_OVERFLOW, 0); }
-  target_sentence { $$ = gen_passlabel (); }
+  on_xxx_statement_list		{ $$ = $4; }
 ;
 opt_not_on_overflow_sentence:
 | NOT opt_on OVERFLOW
   { $<ival>$ = gen_status_branch (COB_STATUS_OVERFLOW, 1); }
-  target_sentence
+  not_on_xxx_statement_list
 ;
 
 
@@ -2587,13 +2595,13 @@ at_end:
 ;
 at_end_sentence:
   END		  { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 1); }
-  target_sentence { $$ = gen_passlabel (); }
+  on_xxx_statement_list		{ $$ = $3; }
 | AT END	  { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 1); }
-  target_sentence { $$ = gen_passlabel (); }
+  on_xxx_statement_list		{ $$ = $4; }
 ;
 not_at_end_sentence:
   NOT opt_at END  { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 0); }
-  target_sentence
+  not_on_xxx_statement_list
 ;
 
 
@@ -2611,11 +2619,11 @@ invalid_key:
 ;
 invalid_key_sentence:
   INVALID opt_key		{ $<ival>$ = gen_status_branch (23, 0); }
-  target_sentence		{ $$ = gen_passlabel (); }
+  on_xxx_statement_list		{ $$ = $4; }
 ;
 not_invalid_key_sentence:
   NOT INVALID opt_key		{ $<ival>$ = gen_status_branch (0, 0); }
-  target_sentence
+  not_on_xxx_statement_list
 ;
 
 
