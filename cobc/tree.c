@@ -398,11 +398,14 @@ cb_build_string (const unsigned char *str)
  */
 
 cb_tree
-cb_define_alphabet_name (cb_tree name, enum cb_alphabet_name_type type)
+cb_build_alphabet_name (cb_tree name, enum cb_alphabet_name_type type)
 {
+  char buff[CB_MAX_CNAME];
   struct cb_alphabet_name *p =
     make_tree (CB_TAG_ALPHABET_NAME, CB_CATEGORY_UNKNOWN, sizeof (struct cb_alphabet_name));
-  cb_define (name, CB_TREE (p));
+  p->name = cb_define (name, CB_TREE (p));
+  sprintf (buff, "table_%s", to_cname (p->name));
+  p->cname = strdup (buff);
   p->type = type;
   return CB_TREE (p);
 }
@@ -413,7 +416,7 @@ cb_define_alphabet_name (cb_tree name, enum cb_alphabet_name_type type)
  */
 
 cb_tree
-cb_define_class_name (cb_tree name, cb_tree list)
+cb_build_class_name (cb_tree name, cb_tree list)
 {
   char buff[CB_MAX_CNAME];
   struct cb_class_name *p =

@@ -182,7 +182,7 @@ start:
 program_definition:
   identification_division
   program_id_paragraph
-  environment_division
+  environment_division	{ cb_validate_program_environment (current_program); }
   data_division		{ cb_validate_program_data (current_program); }
   procedure_division
   end_program		{ cb_validate_program_body (current_program); }
@@ -348,22 +348,15 @@ alphabet_name_clause:
   ALPHABET undefined_word _is alphabet_definition
 ;
 alphabet_definition:
-  NATIVE
-  {
-    $$ = cb_define_alphabet_name ($-1, CB_ALPHABET_NATIVE);
-  }
-| STANDARD_1
-  {
-    $$ = cb_define_alphabet_name ($-1, CB_ALPHABET_STANDARD_1);
-  }
-| STANDARD_2
-  {
-    $$ = cb_define_alphabet_name ($-1, CB_ALPHABET_STANDARD_2);
-  }
+  NATIVE	{ cb_build_alphabet_name ($-1, CB_ALPHABET_NATIVE); }
+| STANDARD_1	{ cb_build_alphabet_name ($-1, CB_ALPHABET_STANDARD_1); }
+| STANDARD_2	{ cb_build_alphabet_name ($-1, CB_ALPHABET_STANDARD_2); }
 | alphabet_literal_list
   {
-    $$ = cb_define_alphabet_name ($-1, CB_ALPHABET_CUSTOM);
-    CB_ALPHABET_NAME ($$)->custom_list = $1;
+    cb_tree x = cb_build_alphabet_name ($-1, CB_ALPHABET_CUSTOM);
+    CB_ALPHABET_NAME (x)->custom_list = $1;
+    current_program->alphabet_name_list =
+      list_add (current_program->alphabet_name_list, x);
   }
 ;
 alphabet_literal_list:
@@ -372,13 +365,23 @@ alphabet_literal_list:
   alphabet_literal		{ $$ = list_add ($1, $2); }
 ;
 alphabet_literal:
-  literal			{ $$ = $1; }
-| literal THRU literal		{ $$ = cb_build_pair ($1, $3); }
-| literal alphabet_literal_also	{ $$ = cb_error_node; }
+  LITERAL			{ $$ = $1; }
+| LITERAL THRU LITERAL		{ $$ = cb_build_pair ($1, $3); }
+| LITERAL ALSO			{ $$ = list ($1); }
+  alphabet_also_sequence	{ $$ = $3; }
 ;
-alphabet_literal_also:
-  ALSO literal
-| alphabet_literal_also ALSO literal
+alphabet_also_sequence:
+  alphabet_also_literal
+| alphabet_also_sequence ALSO	{ $$ = $0; }
+  alphabet_also_literal
+;
+alphabet_also_literal:
+  LITERAL			{ list_add ($0, $1); }
+| SPACE				{ /* ignore */ }
+| ZERO				{ /* ignore */ }
+| QUOTE				{ /* ignore */ }
+| HIGH_VALUE			{ cb_high = CB_VALUE ($0); }
+| LOW_VALUE			{ cb_low = CB_VALUE ($0); }
 ;
 
 
@@ -414,7 +417,7 @@ class_name_clause:
   {
     current_program->class_name_list =
       list_add (current_program->class_name_list,
-		cb_define_class_name ($2, $4));
+		cb_build_class_name ($2, $4));
   }
 ;
 class_item_list:

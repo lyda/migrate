@@ -263,6 +263,8 @@ extern cb_tree cb_build_string (const unsigned char *str);
 
 struct cb_alphabet_name {
   struct cb_tree_common common;
+  const char *name;
+  char *cname;
   enum cb_alphabet_name_type type;
   cb_tree custom_list;
 };
@@ -270,7 +272,7 @@ struct cb_alphabet_name {
 #define CB_ALPHABET_NAME(x)	(CB_TREE_CAST (CB_TAG_ALPHABET_NAME, struct cb_alphabet_name, x))
 #define CB_ALPHABET_NAME_P(x)	(CB_TREE_TAG (x) == CB_TAG_ALPHABET_NAME)
 
-extern cb_tree cb_define_alphabet_name (cb_tree name, enum cb_alphabet_name_type type);
+extern cb_tree cb_build_alphabet_name (cb_tree name, enum cb_alphabet_name_type type);
 
 
 /*
@@ -287,7 +289,7 @@ struct cb_class_name {
 #define CB_CLASS_NAME(x)	(CB_TREE_CAST (CB_TAG_CLASS_NAME, struct cb_class_name, x))
 #define CB_CLASS_NAME_P(x)	(CB_TREE_TAG (x) == CB_TAG_CLASS_NAME)
 
-extern cb_tree cb_define_class_name (cb_tree name, cb_tree list);
+extern cb_tree cb_build_class_name (cb_tree name, cb_tree list);
 
 
 /*
@@ -746,6 +748,7 @@ struct cb_program {
   cb_tree exec_list;
   cb_tree label_list;
   cb_tree reference_list;
+  cb_tree alphabet_name_list;
   cb_tree class_name_list;
   struct cb_field *working_storage;
   struct cb_field *local_storage;
@@ -800,6 +803,7 @@ extern cb_tree cb_build_cond (cb_tree x);
 extern cb_tree cb_build_evaluate (cb_tree subject_list, cb_tree case_list);
 extern cb_tree cb_build_search_all (cb_tree table, cb_tree when);
 
+extern void cb_validate_program_environment (struct cb_program *prog);
 extern void cb_validate_program_data (struct cb_program *prog);
 extern void cb_validate_program_body (struct cb_program *prog);
 

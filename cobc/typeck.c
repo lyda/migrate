@@ -1048,13 +1048,8 @@ cb_build_search_all (cb_tree table, cb_tree cond)
 /* validate program */
 
 void
-cb_validate_program_data (struct cb_program *prog)
+cb_validate_program_environment (struct cb_program *prog)
 {
-  /* resolve all references so far */
-  cb_tree l = list_reverse (prog->reference_list);
-  for (; l; l = CB_CHAIN (l))
-    cb_ref (CB_VALUE (l));
-
   /* resolve the program collating sequence */
   if (prog->collating_sequence)
     {
@@ -1062,7 +1057,31 @@ cb_validate_program_data (struct cb_program *prog)
       if (v != cb_error_node && !CB_ALPHABET_NAME_P (v))
 	cb_error_x (prog->collating_sequence, _("`%s' not alphabet name"),
 		    cb_name (prog->collating_sequence));
+
+      if (CB_ALPHABET_NAME (v)->custom_list)
+	{
+	  v = CB_VALUE (CB_ALPHABET_NAME (v)->custom_list);
+	  if (CB_PAIR_P (v) && CB_PAIR_X (v))
+	    cb_low = CB_PAIR_X (v);
+	  else if (CB_LIST_P (v))
+	    cb_low = CB_VALUE (v);
+	  else
+	    cb_low = cb_build_alphanumeric_literal (1, CB_LITERAL (v)->data);
+	}
+      else
+	{
+	  prog->collating_sequence = NULL;
+	}
     }
+}
+
+void
+cb_validate_program_data (struct cb_program *prog)
+{
+  /* resolve all references so far */
+  cb_tree l = list_reverse (prog->reference_list);
+  for (; l; l = CB_CHAIN (l))
+    cb_ref (CB_VALUE (l));
 }
 
 void

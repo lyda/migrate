@@ -2115,6 +2115,81 @@ output_screen_definition (struct cb_field *p)
 
 
 /*
+ * Alphabet-name
+ */
+
+static int
+literal_value (cb_tree x)
+{
+  if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC)
+    return cb_literal_to_int (CB_LITERAL (x));
+  else
+    return CB_LITERAL (x)->data[0];
+}
+
+static void
+output_alphabet_name_definition (struct cb_alphabet_name *p)
+{
+  int i, n = 0;
+  int table[256];
+  cb_tree l;
+
+  /* reset by -1 */
+  for (i = 0; i < 256; i++)
+    table[i] = -1;
+
+  for (l = p->custom_list; l; l = CB_CHAIN (l))
+    {
+      cb_tree x = CB_VALUE (l);
+      if (CB_PAIR_P (x) && CB_PAIR_X (x))
+	{
+	  /* X THRU Y */
+	  int lower = literal_value (CB_PAIR_X (x));
+	  int upper = literal_value (CB_PAIR_Y (x));
+	  for (i = lower; i <= upper; i++)
+	    table[i] = n++;
+	}
+      else if (CB_LIST_P (x))
+	{
+	  /* X ALSO Y ... */
+	  cb_tree ls;
+	  for (ls = x; ls; ls = CB_CHAIN (ls))
+	    table[literal_value (CB_VALUE (ls))] = n;
+	  n++;
+	}
+      else
+	{
+	  /* literal */
+	  if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC)
+	    table[cb_literal_to_int (CB_LITERAL (x))] = n++;
+	  else
+	    {
+	      size_t size = CB_LITERAL (x)->size;
+	      unsigned char *data = CB_LITERAL (x)->data;
+	      for (i = 0; i < size; i++)
+		table[data[i]] = n++;
+	    }
+	}
+    }
+
+  /* fill the rest of characters */
+  for (i = 0; i < 256; i++)
+    if (table[i] == -1)
+      table[i] = n++;
+
+  /* output the table */
+  output ("static unsigned char %s[256] = {\n", p->cname);
+  for (i = 0; i < 256; i++)
+    {
+      output (" %d,", table[i]);
+      if (i % 16 == 15)
+	output_newline ();
+    }
+  output ("};\n\n");
+}
+
+
+/*
  * Class definition
  */
 
@@ -2245,10 +2320,13 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   /* local variables */
   output_line ("static int initialized = 0;");
   output_line ("static cob_decimal d[%d];", prog->decimal_index_max);
-  output_line ("static cob_module module = {'%c', '%c', '%c', 0};",
+  output_line ("static cob_module module = {'%c', '%c', '%c', %s, 0};",
 	       prog->decimal_point,
 	       prog->currency_symbol,
-	       prog->numeric_separator);
+	       prog->numeric_separator,
+	       (prog->collating_sequence
+		? CB_ALPHABET_NAME (cb_ref (prog->collating_sequence))->cname
+		: "0"));
   output_newline ();
   output_line ("int i;");
   output_line ("int n[%d];", prog->loop_counter);
@@ -2440,6 +2518,10 @@ codegen (struct cb_program *prog)
     if (CB_LABEL_P (CB_VALUE (l)) && CB_LABEL (CB_VALUE (l))->need_return)
       output ("  le_%s,\n", CB_LABEL (CB_VALUE (l))->cname);
   output ("};\n\n");
+
+  /* alphabet-names */
+  for (l = prog->alphabet_name_list; l; l = CB_CHAIN (l))
+    output_alphabet_name_definition (CB_ALPHABET_NAME (CB_VALUE (l)));
 
   /* class-names */
   for (l = prog->class_name_list; l; l = CB_CHAIN (l))
