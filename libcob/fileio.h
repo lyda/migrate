@@ -125,12 +125,15 @@ typedef struct {
   size_t record_max;		/* record max size */
   int nkeys;			/* the number of keys */
   cob_file_key *keys;		/* RELATIVE/RECORD/SORT keys */
+  void *file;			/* file type specific data pointer */
   char last_open_mode;		/* open mode given by OPEN */
   char flag_nonexistent;	/* nonexistent file */
   char flag_end_of_file;	/* reached the end of file */
   char flag_first_read;		/* first READ after OPEN or START */
   char flag_read_done;		/* last READ successfully done */
-  void *file;			/* file type specific data pointer */
+  char flag_has_status;		/* has FILE STATUS clause */
+  char flag_spare_byte7;	/* spare byte */
+  char flag_spare_byte8;	/* spare byte */
 } cob_file;
 
 /* File I-O functions */

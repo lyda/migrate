@@ -282,6 +282,9 @@ process_command_line (int argc, char *argv[])
   cb_extension_list = cb_text_list_add (cb_extension_list, ".cbl");
   cb_extension_list = cb_text_list_add (cb_extension_list, ".cob");
 
+  /* Enable default I/O exceptions */
+  CB_EXCEPTION_ENABLE (COB_EC_I_O) = 1;
+
   while ((c = getopt_long_only (argc, argv, short_options,
 				long_options, &idx)) >= 0)
     {

@@ -1836,10 +1836,17 @@ output_file_definition (struct cb_file *f)
     output ("%d, %s%s, ", nkeys, CB_PREFIX_KEYS, f->cname);
   else
     output ("0, 0, ");
+  /* file */
+    output ("0, ");
   /* flags */
   output ("0, 0, 0, 0, 0, ");
-  /* file */
-  output ("0};\n\n");
+  /* has file status flag */
+  if (f->file_status)
+    output ("1, ");
+  else
+    output ("0, ");
+  /* spare bytes */
+  output ("0, 0};\n\n");
 }
 
 
@@ -2152,10 +2159,17 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_line ("  case %d:", i);
 	output ("    ");
 	output_perform_call (prog->file_handler[i], prog->file_handler[i]);
+        output_line ("    if ( !cob_error_file->flag_has_status ) {");
+        output_line ("        cob_default_error_handle ();");
+        output_line ("        exit(1);");
+        output_line ("    }");
 	output_line ("    break;");
       }
   output_line ("  default:");
-  output_line ("    cob_default_error_handle ();");
+  output_line ("    if ( !cob_error_file->flag_has_status ) {");
+  output_line ("        cob_default_error_handle ();");
+  output_line ("        exit(1);");
+  output_line ("    }");
   output_line ("    break;");
   output_line ("  }");
   output_perform_exit (CB_LABEL (cb_standard_error_handler));
