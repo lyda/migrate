@@ -302,7 +302,7 @@ lookup_attr (char type, char digits, char scale, char flags, unsigned char *pic)
       return l->id;
 
   /* output new attribute */
-  output_storage ("static const cob_field_attr a_%d = ", ++id);
+  output_storage ("static cob_field_attr a_%d = ", ++id);
   output_storage ("{%d, %d, %d, %d, ", type, digits, scale, flags);
   if (pic)
     {
@@ -452,7 +452,7 @@ lookup_literal (cb_tree x)
   output_field (x);
 
   output_target = cb_storage_file;
-  output ("static const cob_field c_%d = ", ++id);
+  output ("static cob_field c_%d = ", ++id);
   output_field (x);
   output (";\n");
   output_target = yyout;
@@ -1950,7 +1950,7 @@ output_internal_function (struct cb_program *prog, int single,
   output ("static cob_module module = {'%c', '%c', '%c', ",
 	  prog->decimal_point, prog->currency_symbol, prog->numeric_separator);
   if (prog->collating_sequence)
-    output ("s_%s", CB_ALPHABET_NAME (cb_ref (prog->collating_sequence))->cname);
+    output_param (cb_ref (prog->collating_sequence), -1);
   else
     output ("0");
   output (", %d, %d, %d, %d, 0};\n",

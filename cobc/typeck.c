@@ -951,7 +951,13 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 				 cb_build_string (buff, f->size),
 				 cb_build_cast_length (dst));
     }
-  else if (f->usage == CB_USAGE_BINARY_NATIVE && cb_fits_int (src))
+  else if (cb_fits_int (src) && cb_literal_to_int (l) == 0)
+    {
+      return cb_build_move_zero (dst);
+    }
+  else if (cb_fits_int (src)
+	   && f->usage == CB_USAGE_BINARY_NATIVE
+	   && (f->size == 1 || f->size == 2 || f->size == 4 || f->size == 8))
     {
       int val = cb_literal_to_int (l);
       int n = f->pic->scale - l->scale;
@@ -1029,7 +1035,7 @@ cb_build_move (cb_tree src, cb_tree dst)
 
   if (cb_flag_runtime_inlining)
     {
-      if (cb_field (dst)->usage == CB_USAGE_BINARY_SWAP)
+      if (cb_field (dst)->usage == CB_USAGE_PACKED)
 	return cb_build_move_call (src, dst);
       else if (src == cb_zero)
 	return cb_build_move_zero (dst);
@@ -1607,10 +1613,6 @@ cb_validate_program_environment (struct cb_program *prog)
 	    cb_low = CB_VALUE (v);
 	  else
 	    cb_low = cb_build_alphanumeric_literal (CB_LITERAL (v)->data, 1);
-	}
-      else
-	{
-	  prog->collating_sequence = NULL;
 	}
     }
 }
