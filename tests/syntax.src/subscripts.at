@@ -43,8 +43,8 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:9: `G' cannot be subscripted
-prog.cob:10: `X' cannot be subscripted
+[prog.cob:9: 'G' cannot be subscripted
+prog.cob:10: 'X' cannot be subscripted
 ])
 
 AT_CLEANUP
@@ -73,10 +73,10 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:10: `X' requires 1 subscript
-prog.cob:12: `X' requires 1 subscript
-prog.cob:13: `Y' requires 2 subscripts
-prog.cob:15: `Y' requires 2 subscripts
+[prog.cob:10: 'X' requires 1 subscript
+prog.cob:12: 'X' requires 1 subscript
+prog.cob:13: 'Y' requires 2 subscripts
+prog.cob:15: 'Y' requires 2 subscripts
 ])
 
 AT_CLEANUP

@@ -41,8 +41,8 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:10: `I' is not integer value
-prog.cob:11: `I' is not numeric value
+[prog.cob:10: 'I' is not integer value
+prog.cob:11: 'I' is not numeric value
 ])
 
 AT_CLEANUP
@@ -73,10 +73,10 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:10: subscript of `X' out of bounds: 0
-prog.cob:13: subscript of `X' out of bounds: 3
-prog.cob:14: subscript of `Y' out of bounds: 0
-prog.cob:17: subscript of `Y' out of bounds: 4
+[prog.cob:10: subscript of 'X' out of bounds: 0
+prog.cob:13: subscript of 'X' out of bounds: 3
+prog.cob:14: subscript of 'Y' out of bounds: 0
+prog.cob:17: subscript of 'Y' out of bounds: 4
 ])
 
 AT_CLEANUP
@@ -99,7 +99,7 @@ AT_DATA([prog.cob], [
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [1], ,
-[prog.cob:10: libcob: subscript of `X' out of bounds: 0
+[prog.cob:10: libcob: subscript of 'X' out of bounds: 0
 ])
 
 AT_CLEANUP
@@ -122,7 +122,7 @@ AT_DATA([prog.cob], [
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [1], ,
-[prog.cob:10: libcob: subscript of `X' out of bounds: 11
+[prog.cob:10: libcob: subscript of 'X' out of bounds: 11
 ])
 
 AT_CLEANUP
@@ -145,7 +145,7 @@ AT_DATA([prog.cob], [
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [1], ,
-[prog.cob:10: libcob: OCCURS DEPENDING ON `N' out of bounds: 3
+[prog.cob:10: libcob: OCCURS DEPENDING ON 'N' out of bounds: 3
 ])
 
 AT_CLEANUP
@@ -168,7 +168,7 @@ AT_DATA([prog.cob], [
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [1], ,
-[prog.cob:10: libcob: OCCURS DEPENDING ON `N' out of bounds: 7
+[prog.cob:10: libcob: OCCURS DEPENDING ON 'N' out of bounds: 7
 ])
 
 AT_CLEANUP
@@ -190,7 +190,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob], [1], ,
-[prog.cob:10: subscript of `X' out of bounds: 3
+[prog.cob:10: subscript of 'X' out of bounds: 3
 ])
 
 AT_CLEANUP
@@ -212,7 +212,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob], [1], ,
-[prog.cob:10: subscript of `X' out of bounds: 7
+[prog.cob:10: subscript of 'X' out of bounds: 7
 ])
 
 AT_CLEANUP
@@ -235,7 +235,7 @@ AT_DATA([prog.cob], [
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [1], ,
-[prog.cob:10: libcob: subscript of `X' out of bounds: 5
+[prog.cob:10: libcob: subscript of 'X' out of bounds: 5
 ])
 
 AT_CLEANUP

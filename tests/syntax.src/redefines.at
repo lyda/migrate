@@ -83,7 +83,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:9: `X' undefined in `G1'
+[prog.cob:9: 'X' undefined in 'G1'
 ])
 
 AT_CLEANUP
@@ -157,7 +157,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:10: `X' undefined in `G3'
+[prog.cob:10: 'X' undefined in 'G3'
 ])
 
 AT_CLEANUP
@@ -181,7 +181,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:8: warning: the original definition `X' should not have OCCURS
+[prog.cob:8: warning: the original definition 'X' should not have OCCURS
 ])
 
 AT_CLEANUP
@@ -203,7 +203,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:9: `X' cannot be subscripted here
+[prog.cob:9: 'X' cannot be subscripted here
 ])
 
 AT_CLEANUP
@@ -233,9 +233,9 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: `Y' cannot be variable length
-prog.cob:11: `Y' cannot be variable length
-prog.cob:16: the original definition `X' cannot be variable length
+[prog.cob:8: 'Y' cannot be variable length
+prog.cob:11: 'Y' cannot be variable length
+prog.cob:16: the original definition 'X' cannot be variable length
 ])
 
 AT_CLEANUP
@@ -261,7 +261,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:10: `X' cannot be qualified here
+[prog.cob:10: 'X' cannot be qualified here
 ])
 
 AT_CLEANUP
@@ -287,7 +287,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:10: `B' not the original definition
+[prog.cob:10: 'B' not the original definition
 ])
 
 AT_CHECK([${COMPILE_ONLY} -std=mvs prog.cob], [0])
@@ -320,9 +320,9 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: size of `A' larger than size of `X'
-prog.cob:11: size of `A' larger than size of `X'
-prog.cob:15: size of `EXT-X-REDEF' larger than size of `EXT-X'
+[prog.cob:8: size of 'A' larger than size of 'X'
+prog.cob:11: size of 'A' larger than size of 'X'
+prog.cob:15: size of 'EXT-X-REDEF' larger than size of 'EXT-X'
 ])
 
 AT_CLEANUP

@@ -35,7 +35,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:5: `X' undefined
+[prog.cob:5: 'X' undefined
 ])
 
 AT_CLEANUP
@@ -54,7 +54,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: `X' in `G' undefined
+[prog.cob:8: 'X' in 'G' undefined
 ])
 
 AT_CLEANUP
@@ -75,7 +75,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:10: `Y' in `G' undefined
+[prog.cob:10: 'Y' in 'G' undefined
 ])
 
 AT_CLEANUP
@@ -94,7 +94,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: `X' in `X' undefined
+[prog.cob:8: 'X' in 'X' undefined
 ])
 
 AT_CLEANUP
@@ -113,7 +113,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:6: PICTURE clause required for `X'
+[prog.cob:6: PICTURE clause required for 'X'
 ])
 
 AT_CLEANUP
@@ -133,8 +133,8 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: warning: redefinition of `X'
-prog.cob:6: warning: `X' previously defined here
+[prog.cob:7: warning: redefinition of 'X'
+prog.cob:6: warning: 'X' previously defined here
 ])
 
 AT_CLEANUP
@@ -151,8 +151,8 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: warning: redefinition of `X'
-prog.cob:6: warning: `X' previously defined here
+[prog.cob:7: warning: redefinition of 'X'
+prog.cob:6: warning: 'X' previously defined here
 ])
 
 AT_CLEANUP
@@ -170,8 +170,8 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:8: warning: redefinition of `X'
-prog.cob:7: warning: `X' previously defined here
+[prog.cob:8: warning: redefinition of 'X'
+prog.cob:7: warning: 'X' previously defined here
 ])
 
 AT_CLEANUP
@@ -188,8 +188,8 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: warning: redefinition of `X'
-prog.cob:6: warning: `X' previously defined here
+[prog.cob:7: warning: redefinition of 'X'
+prog.cob:6: warning: 'X' previously defined here
 ])
 
 AT_CLEANUP
@@ -206,8 +206,8 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: warning: redefinition of `X'
-prog.cob:6: warning: `X' previously defined here
+[prog.cob:7: warning: redefinition of 'X'
+prog.cob:6: warning: 'X' previously defined here
 ])
 
 AT_CLEANUP
@@ -225,8 +225,8 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:8: warning: redefinition of `A'
-prog.cob:7: warning: `A' previously defined here
+[prog.cob:8: warning: redefinition of 'A'
+prog.cob:7: warning: 'A' previously defined here
 ])
 
 AT_CLEANUP
@@ -248,9 +248,9 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:11: `X' ambiguous; need qualification
-prog.cob:7: `X' in `G1' defined here
-prog.cob:9: `X' in `G2' defined here
+[prog.cob:11: 'X' ambiguous; need qualification
+prog.cob:7: 'X' in 'G1' defined here
+prog.cob:9: 'X' in 'G2' defined here
 ])
 
 AT_CLEANUP
@@ -271,9 +271,9 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:10: `X' ambiguous; need qualification
-prog.cob:7: `X' in `G' defined here
-prog.cob:8: `X' in `X' in `G' defined here
+[prog.cob:10: 'X' ambiguous; need qualification
+prog.cob:7: 'X' in 'G' defined here
+prog.cob:8: 'X' in 'X' in 'G' defined here
 ])
 
 AT_CLEANUP
@@ -297,9 +297,9 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:13: `Y' in `X' ambiguous; need qualification
-prog.cob:8: `Y' in `X' in `G1' defined here
-prog.cob:11: `Y' in `X' in `G2' defined here
+[prog.cob:13: 'Y' in 'X' ambiguous; need qualification
+prog.cob:8: 'Y' in 'X' in 'G1' defined here
+prog.cob:11: 'Y' in 'X' in 'G2' defined here
 ])
 
 AT_CLEANUP
@@ -351,7 +351,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:5: `END-OF-PROGRAM' undefined
+[prog.cob:5: 'END-OF-PROGRAM' undefined
 ])
 
 AT_CLEANUP
@@ -371,9 +371,9 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob: In section `L':
-prog.cob:6: redefinition of `L'
-prog.cob:5: `L' previously defined here
+[prog.cob: In section 'L':
+prog.cob:6: redefinition of 'L'
+prog.cob:5: 'L' previously defined here
 ])
 
 AT_CLEANUP
@@ -390,9 +390,9 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob: In section `L':
-prog.cob:6: redefinition of `L'
-prog.cob:5: `L' previously defined here
+[prog.cob: In section 'L':
+prog.cob:6: redefinition of 'L'
+prog.cob:5: 'L' previously defined here
 ])
 
 AT_CLEANUP
@@ -409,9 +409,9 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob: In paragraph `L':
-prog.cob:6: redefinition of `L'
-prog.cob:5: `L' previously defined here
+[prog.cob: In paragraph 'L':
+prog.cob:6: redefinition of 'L'
+prog.cob:5: 'L' previously defined here
 ])
 
 AT_CLEANUP
@@ -432,10 +432,10 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob: In section `S-3':
-prog.cob:10: `L' ambiguous; need qualification
-prog.cob:6: `L' in `S-1' defined here
-prog.cob:8: `L' in `S-2' defined here
+[prog.cob: In section 'S-3':
+prog.cob:10: 'L' ambiguous; need qualification
+prog.cob:6: 'L' in 'S-1' defined here
+prog.cob:8: 'L' in 'S-2' defined here
 ])
 
 AT_CLEANUP

@@ -1382,8 +1382,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:10: \`I' is not integer value
-prog.cob:11: \`I' is not numeric value
+echo >>$at_stderr; echo "prog.cob:10: 'I' is not integer value
+prog.cob:11: 'I' is not numeric value
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1448,10 +1448,10 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:10: subscript of \`X' out of bounds: 0
-prog.cob:13: subscript of \`X' out of bounds: 3
-prog.cob:14: subscript of \`Y' out of bounds: 0
-prog.cob:17: subscript of \`Y' out of bounds: 4
+echo >>$at_stderr; echo "prog.cob:10: subscript of 'X' out of bounds: 0
+prog.cob:13: subscript of 'X' out of bounds: 3
+prog.cob:14: subscript of 'Y' out of bounds: 0
+prog.cob:17: subscript of 'Y' out of bounds: 4
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1534,7 +1534,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:10: libcob: subscript of \`X' out of bounds: 0
+echo >>$at_stderr; echo "prog.cob:10: libcob: subscript of 'X' out of bounds: 0
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1617,7 +1617,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:10: libcob: subscript of \`X' out of bounds: 11
+echo >>$at_stderr; echo "prog.cob:10: libcob: subscript of 'X' out of bounds: 11
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1700,7 +1700,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:10: libcob: OCCURS DEPENDING ON \`N' out of bounds: 3
+echo >>$at_stderr; echo "prog.cob:10: libcob: OCCURS DEPENDING ON 'N' out of bounds: 3
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1783,7 +1783,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:10: libcob: OCCURS DEPENDING ON \`N' out of bounds: 7
+echo >>$at_stderr; echo "prog.cob:10: libcob: OCCURS DEPENDING ON 'N' out of bounds: 7
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1841,7 +1841,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:10: subscript of \`X' out of bounds: 3
+echo >>$at_stderr; echo "prog.cob:10: subscript of 'X' out of bounds: 3
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1899,7 +1899,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:10: subscript of \`X' out of bounds: 7
+echo >>$at_stderr; echo "prog.cob:10: subscript of 'X' out of bounds: 7
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1982,7 +1982,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:10: libcob: subscript of \`X' out of bounds: 5
+echo >>$at_stderr; echo "prog.cob:10: libcob: subscript of 'X' out of bounds: 5
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -2380,10 +2380,10 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:8: offset of \`X' out of bounds: 0
-prog.cob:9: offset of \`X' out of bounds: 5
-prog.cob:10: length of \`X' out of bounds: 0
-prog.cob:11: length of \`X' out of bounds: 5
+echo >>$at_stderr; echo "prog.cob:8: offset of 'X' out of bounds: 0
+prog.cob:9: offset of 'X' out of bounds: 5
+prog.cob:10: length of 'X' out of bounds: 0
+prog.cob:11: length of 'X' out of bounds: 5
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -2465,7 +2465,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:9: libcob: offset of \`X' out of bounds: 0
+echo >>$at_stderr; echo "prog.cob:9: libcob: offset of 'X' out of bounds: 0
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -2547,7 +2547,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:9: libcob: offset of \`X' out of bounds: 5
+echo >>$at_stderr; echo "prog.cob:9: libcob: offset of 'X' out of bounds: 5
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -2629,7 +2629,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:9: libcob: length of \`X' out of bounds: 0
+echo >>$at_stderr; echo "prog.cob:9: libcob: length of 'X' out of bounds: 0
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -2711,7 +2711,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:9: libcob: length of \`X' out of bounds: 5
+echo >>$at_stderr; echo "prog.cob:9: libcob: length of 'X' out of bounds: 5
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -4179,7 +4179,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:6: level 01 item \`X' cannot have OCCURS clause
+echo >>$at_stderr; echo "prog.cob:6: level 01 item 'X' cannot have OCCURS clause
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -6934,17 +6934,17 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob: In paragraph \`S-03':
+echo >>$at_stderr; echo "prog.cob: In paragraph 'S-03':
 prog.cob:35: warning: move non-integer to alphanumeric
-prog.cob: In paragraph \`S-10':
+prog.cob: In paragraph 'S-10':
 prog.cob:39: warning: move non-integer to alphanumeric
-prog.cob: In paragraph \`S-20':
+prog.cob: In paragraph 'S-20':
 prog.cob:43: warning: move non-integer to alphanumeric
-prog.cob: In paragraph \`S-30':
+prog.cob: In paragraph 'S-30':
 prog.cob:47: warning: move non-integer to alphanumeric
-prog.cob: In paragraph \`S-40':
+prog.cob: In paragraph 'S-40':
 prog.cob:51: warning: move non-integer to alphanumeric
-prog.cob: In paragraph \`S-50':
+prog.cob: In paragraph 'S-50':
 prog.cob:55: warning: move non-integer to alphanumeric
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
