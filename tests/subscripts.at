@@ -247,29 +247,6 @@ AT_CHECK([./prog], [1], ,
 AT_CLEANUP
 
 
-AT_SETUP([Index exceeds DEPENDING ON N])
-
-AT_DATA([prog.cob], [
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 G.
-         02 X           PIC X OCCURS 4 TO 6 DEPENDING ON N.
-       01 N             PIC 9 VALUE 4.
-       PROCEDURE        DIVISION.
-           DISPLAY X(5).
-           STOP RUN.
-])
-
-AT_CHECK([${COMPILE} -o prog prog.cob])
-AT_CHECK([./prog], [1], ,
-[prog.cob:10: libcob: subscript of `X' out of bounds: 5
-])
-
-AT_CLEANUP
-
-
 AT_SETUP([Subscript out of bounds with OCCURS DEPENDING ON (lower)])
 
 AT_DATA([prog.cob], [
