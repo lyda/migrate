@@ -363,7 +363,7 @@ cob_push_decimal (struct cob_field f)
     default:
       {
 	char *p, buff[32];
-	int sign = extract_sign (f);
+	int sign = get_sign (f);
 	int len = FIELD_LENGTH (f);
 	unsigned char *base = FIELD_BASE (f);
 
@@ -371,7 +371,6 @@ cob_push_decimal (struct cob_field f)
 	memcpy (p, base, len);
 	p[len] = 0;
 	mpz_set_str (d->number, p, 10);
-
 	if (sign == 1) /* negative */
 	  mpz_neg (d->number, d->number);
 
@@ -389,7 +388,7 @@ cob_set (struct cob_field f, int round)
   int decimals = (f.desc->type != 'E') ?
     f.desc->decimals : picCompDecimals (f.desc->pic);
 
-  /* Just return if something happened */
+  /* Just return if something has happened */
   if (cob_status == COB_STATUS_OVERFLOW)
     return;
 
@@ -602,8 +601,8 @@ cob_compare (struct cob_field f1, struct cob_field f2)
       return cob_cmp ();
     }
 
-  sign1 = extract_sign (f1);
-  sign2 = extract_sign (f2);
+  sign1 = get_sign (f1);
+  sign2 = get_sign (f2);
 
   if (f1.desc->all || f2.desc->all)
     {

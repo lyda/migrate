@@ -505,7 +505,7 @@ cob_accept_screen ()
 	    }
 	  else
 	    {
-	      iSign = extract_sign (&pFld->fldWk, pFld->caWk);
+	      iSign = get_sign ((struct cob_field) {&pFld->fldWk, pFld->caWk});
 	      k = pFld->iFldPos;
 	      for (i = k; i > 0; --i)
 		{
@@ -529,7 +529,7 @@ cob_accept_screen ()
 	    }
 	  else
 	    {
-	      iSign = extract_sign (&pFld->fldWk, pFld->caWk);
+	      iSign = get_sign ((struct cob_field) {&pFld->fldWk, pFld->caWk});
 	      k = pFld->iFldPos;
 	      for (i = 0; i < k; ++i)
 		{
@@ -567,13 +567,13 @@ cob_accept_screen ()
 		    {
 		      if (iKey == '-')
 			{
-			  extract_sign (&pFld->fldWk, pFld->caWk);
+			  get_sign ((struct cob_field) {&pFld->fldWk, pFld->caWk});
 			  put_sign ((struct cob_field) {&pFld->fldWk, pFld->caWk}, 1);
 			  _DisplayField (pFld);
 			}
 		      else if (iKey == '+')
 			{
-			  extract_sign (&pFld->fldWk, pFld->caWk);
+			  get_sign ((struct cob_field) {&pFld->fldWk, pFld->caWk});
 			  put_sign ((struct cob_field) {&pFld->fldWk, pFld->caWk}, 0);
 			  _DisplayField (pFld);
 			}
@@ -582,7 +582,7 @@ cob_accept_screen ()
 		    }
 		  else
 		    {
-		      iSign = extract_sign (&pFld->fldWk, pFld->caWk);
+		      iSign = get_sign ((struct cob_field) {&pFld->fldWk, pFld->caWk});
 		      pFld->caWk[pFld->iFldPos] = (char) iKey;
 		      put_sign ((struct cob_field) {&pFld->fldWk, pFld->caWk}, iSign);
 		      _DisplayField (pFld);
@@ -1281,7 +1281,7 @@ _DisplayField (struct ScrFld *pFld)
       else
 	{
 	  move (pFld->iLine, pFld->iCol);
-	  i = extract_sign (&pFld->fldWk, pFld->caWk);
+	  i = get_sign ((struct cob_field) {&pFld->fldWk, pFld->caWk});
 	  for (i = 0; i < pFld->fldWk.len; ++i)
 	    {
 	      if (pFld->caWk[i] != '0')

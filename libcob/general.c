@@ -84,7 +84,7 @@ char_to_sign (char ch)
 }
 
 int
-extract_sign (struct cob_field f)
+get_sign (struct cob_field f)
 {
   int digit;
 
