@@ -29,9 +29,6 @@
 
 #define binFldSize(f) (f->len)
 
-static struct fld_desc zero_fld  = { 1, '9', 0, 1, 0, 0, 0, 0, "9\001"};
-static struct fld_desc space_fld = { 1, 'X', 0, 1, 0, 0, 0, 0, "X\001"};
-
 static unsigned long long _iIntValues_[18] = {
   100000000000000000,
   10000000000000000,
@@ -61,13 +58,36 @@ static void float2all (struct fld_desc *pSrcFld, char *pSrcData,
 void
 cob_move_zero (struct fld_desc *f, char *s)
 {
-  cob_move (&zero_fld, "0", f, s);
+  switch (f->type)
+    {
+    case 'B':
+      switch (f->len)
+	{
+	case 1: *((char *) s) = 0; return;
+	case 2: *((short *) s) = 0; return;
+	case 4: *((long *) s) = 0; return;
+	default: *((long long *) s) = 0; return;
+	}
+
+    case '9':
+      memset (s, '0', f->len);
+      put_sign (f, s, 0);
+      return;
+
+    default:
+      {
+	static struct fld_desc fld  = { 1, '9', 0, 1, 0, 0, 0, 0, "9\001"};
+	cob_move (&fld, "0", f, s);
+	return;
+      }
+    }
 }
 
 void
 cob_move_space (struct fld_desc *f, char *s)
 {
-  cob_move (&space_fld, " ", f, s);
+  static struct fld_desc fld = { 1, 'X', 0, 1, 0, 0, 0, 0, "X\001"};
+  cob_move (&fld, " ", f, s);
 }
 
 /*--------------------------------------------------------------------------*\
