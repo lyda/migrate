@@ -77,8 +77,16 @@ static cob_fileio_funcs *fileio_funcs[COB_ORG_MAX];
  * Regular file
  */
 
+#define FILE_WRITE_AFTER(f,opt)			\
+  if (opt & COB_WRITE_AFTER)			\
+    file_write_opt (f, opt);
+
+#define FILE_WRITE_BEFORE(f,opt)		\
+  if (opt & COB_WRITE_BEFORE)			\
+    file_write_opt (f, opt);
+
 static int
-file_open (cob_file *f, char *filename, int mode, int flag)
+file_open (cob_file *f, char *filename, int mode, int opt)
 {
   FILE *fp = NULL;
 
@@ -101,7 +109,7 @@ file_open (cob_file *f, char *filename, int mode, int flag)
   if (fp == NULL)
     return errno;
 
-  if (flock (fileno (fp), (flag ? LOCK_EX : LOCK_SH) | LOCK_NB) < 0)
+  if (flock (fileno (fp), (opt ? LOCK_EX : LOCK_SH) | LOCK_NB) < 0)
     {
       fclose (fp);
       return errno;
@@ -129,6 +137,21 @@ file_close (cob_file *f, int opt)
     }
 }
 
+static void
+file_write_opt (cob_file *f, int opt)
+{
+  if (opt & COB_WRITE_PAGE)
+    {
+      fputc ('\f', f->file);
+    }
+  else if (opt & COB_WRITE_LINES)
+    {
+      int i;
+      for (i = opt & COB_WRITE_MASK; i > 0; i--)
+	fputc ('\n', f->file);
+    }
+}
+
 
 /*
  * SEQUENTIAL
@@ -152,9 +175,11 @@ sequential_read (cob_file *f)
 }
 
 static int
-sequential_write (cob_file *f)
+sequential_write (cob_file *f, int opt)
 {
   SEEK_INIT (f);
+
+  FILE_WRITE_AFTER (f, opt);
 
   /* write the record size */
   if (f->record_min != f->record_max)
@@ -162,6 +187,9 @@ sequential_write (cob_file *f)
 
   /* write the record */
   fwrite (f->record->data, f->record->size, 1, f->file);
+
+  FILE_WRITE_BEFORE (f, opt);
+
   return COB_STATUS_00_SUCCESS;
 }
 
@@ -223,9 +251,12 @@ lineseq_read (cob_file *f)
 }
 
 static int
-lineseq_write (cob_file *f)
+lineseq_write (cob_file *f, int opt)
 {
   int i, size;
+
+  if (opt == 0)
+    opt = COB_WRITE_BEFORE | COB_WRITE_LINES | 1;
 
   /* determine the size to be written */
   for (i = f->record->size - 1; i >= 0; i--)
@@ -233,9 +264,13 @@ lineseq_write (cob_file *f)
       break;
   size = i + 1;
 
+  FILE_WRITE_AFTER (f, opt);
+
   /* write to the file */
   for (i = 0; i < size; i++)
-    putc (f->record->data[i], f->file);
+    fputc (f->record->data[i], f->file);
+
+  FILE_WRITE_BEFORE (f, opt);
 
   return COB_STATUS_00_SUCCESS;
 }
@@ -354,7 +389,7 @@ relative_read_next (cob_file *f)
 }
 
 static int
-relative_write (cob_file *f)
+relative_write (cob_file *f, int opt)
 {
   size_t size;
   FILE *fp = f->file;
@@ -651,7 +686,7 @@ indexed_write_internal (cob_file *f)
 }
 
 static int
-indexed_write (cob_file *f)
+indexed_write (cob_file *f, int opt)
 {
   struct indexed_file *p = f->file;
 
@@ -828,7 +863,7 @@ sort_read (cob_file *f)
 }
 
 static int
-sort_write (cob_file *f)
+sort_write (cob_file *f, int opt)
 {
   struct sort_file *p = f->file;
   current_sort_file = f;
@@ -1066,7 +1101,7 @@ cob_read (cob_file *f, cob_field *key)
 }
 
 void
-cob_write (cob_file *f, cob_field *rec)
+cob_write (cob_file *f, cob_field *rec, int opt)
 {
   int ret;
 
@@ -1095,34 +1130,9 @@ cob_write (cob_file *f, cob_field *rec)
   if (f->record->size < f->record_min || f->record_max < f->record->size)
     RETURN_STATUS (COB_STATUS_44_RECORD_OVERFLOW);
 
-  ret = fileio_funcs[(int) f->organization]->write (f);
+  ret = fileio_funcs[(int) f->organization]->write (f, opt);
 
   RETURN_STATUS (ret);
-}
-
-void
-cob_write_page (cob_file *f)
-{
-  if (f->open_mode == COB_OPEN_CLOSED
-      || f->open_mode == COB_OPEN_INPUT
-      || f->open_mode == COB_OPEN_I_O)
-    return;
-
-  fputc ('\f', f->file);
-}
-
-void
-cob_write_lines (cob_file *f, int lines)
-{
-  int i;
-
-  if (f->open_mode == COB_OPEN_CLOSED
-      || f->open_mode == COB_OPEN_INPUT
-      || f->open_mode == COB_OPEN_I_O)
-    return;
-
-  for (i = 0; i < lines; i++)
-    fputs ("\n", f->file);
 }
 
 void
@@ -1192,7 +1202,6 @@ cob_sort_init_key (cob_file *f, int flag, cob_field *field)
 void
 cob_sort_using (cob_file *sort_file, cob_file *data_file)
 {
-  cob_field temp = {0, 0, 0};
   cob_open (data_file, COB_OPEN_INPUT, 0);
   while (1)
     {
@@ -1201,9 +1210,7 @@ cob_sort_using (cob_file *sort_file, cob_file *data_file)
 	break;
       memcpy (sort_file->record->data, data_file->record->data,
 	      sort_file->record->size);
-      temp.size = sort_file->record->size;
-      temp.data = sort_file->record->data;
-      cob_write (sort_file, &temp);
+      cob_write (sort_file, sort_file->record, 0);
     };
   cob_close (data_file, COB_CLOSE_NORMAL);
 }
@@ -1211,7 +1218,6 @@ cob_sort_using (cob_file *sort_file, cob_file *data_file)
 void
 cob_sort_giving (cob_file *sort_file, cob_file *data_file)
 {
-  cob_field temp = {0, 0, 0};
   cob_open (data_file, COB_OPEN_OUTPUT, 0);
   while (1)
     {
@@ -1221,9 +1227,7 @@ cob_sort_giving (cob_file *sort_file, cob_file *data_file)
       memcpy (data_file->record->data,
 	      sort_file->record->data,
 	      data_file->record->size);
-      temp.size = data_file->record->size;
-      temp.data = data_file->record->data;
-      cob_write (data_file, &temp);
+      cob_write (data_file, data_file->record, 0);
     };
   cob_close (data_file, COB_CLOSE_NORMAL);
 }

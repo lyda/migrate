@@ -1,3 +1,12 @@
+2003-08-05  Keisuke Nishida  <knishida@netlab.jp>
+
+	* fileio.h (COB_WRITE_MASK, COB_WRITE_LINES, COB_WRITE_PAGE)
+	(COB_WRITE_AFTER, COB_WRITE_BEFORE): New macros.
+	* fileio.h, fileio.c (cob_write_page, cob_write_lines): Removed.
+	(cob_write): Take third argument.
+	* fileio.c (file_write_opt): New function.
+	(FILE_WRITE_AFTER, FILE_WRITE_BEFORE): New macros.
+
 2003-07-28  Keisuke Nishida  <knishida@netlab.jp>
 
 	* common.h, common.c (cob_exception): Removed.

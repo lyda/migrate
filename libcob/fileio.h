@@ -66,6 +66,14 @@
 #define COB_CLOSE_UNIT		3
 #define COB_CLOSE_UNIT_REMOVAL	4
 
+/* Write options */
+
+#define COB_WRITE_MASK		0x0000ffff
+#define COB_WRITE_LINES		0x00010000
+#define COB_WRITE_PAGE		0x00020000
+#define COB_WRITE_AFTER		0x00100000
+#define COB_WRITE_BEFORE	0x00200000
+
 /* I-O status */
 
 #define COB_STATUS_00_SUCCESS			00
@@ -128,12 +136,12 @@ typedef struct {
 /* File I-O functions */
 
 typedef struct {
-  int (*open) (cob_file *f, char *filename, int mode, int flag);
+  int (*open) (cob_file *f, char *filename, int mode, int opt);
   int (*close) (cob_file *f, int opt);
   int (*start) (cob_file *f, int cond, cob_field *key);
   int (*read) (cob_file *f, cob_field *key);
   int (*read_next) (cob_file *f);
-  int (*write) (cob_file *f);
+  int (*write) (cob_file *f, int opt);
   int (*rewrite) (cob_file *f);
   int (*delete) (cob_file *f);
 } cob_fileio_funcs;
@@ -142,12 +150,10 @@ extern cob_file *cob_error_file;
 
 extern void cob_init_fileio (void);
 extern void cob_default_error_handle (void);
-extern void cob_open (cob_file *f, int mode, int flag);
+extern void cob_open (cob_file *f, int mode, int opt);
 extern void cob_close (cob_file *f, int opt);
 extern void cob_read (cob_file *f, cob_field *key);
-extern void cob_write (cob_file *f, cob_field *rec);
-extern void cob_write_page (cob_file *f);
-extern void cob_write_lines (cob_file *f, int lines);
+extern void cob_write (cob_file *f, cob_field *rec, int opt);
 extern void cob_rewrite (cob_file *f, cob_field *rec);
 extern void cob_delete (cob_file *f);
 extern void cob_start (cob_file *f, int cond, cob_field *key);
