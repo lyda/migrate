@@ -114,8 +114,6 @@ extern void save_field_in_list (cob_tree sy);
 extern void save_literal (cob_tree x, int type);
 extern void save_named_sect (cob_tree sy);
 extern void put_disp_list (cob_tree sy);
-extern int symlen (cob_tree sy);
-extern int varsize_ch (cob_tree sy);
 extern void add_alternate_key (cob_tree sy, int duplicates);
 extern struct scr_info *alloc_scr_info (void);
 extern struct inspect_before_after *alloc_inspect_before_after (struct inspect_before_after *ba, int before_after, cob_tree var);
