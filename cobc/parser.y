@@ -1522,7 +1522,7 @@ selection_subject:
 	push_expr ($1);
 	$$ = SSUBJ_EXPR;
       }
-    else if (COB_FIELD_P ($1))
+    else if (!EXPR_P ($1))
       {
 	push_field ($1);
 	$$ = SSUBJ_STR;
@@ -1585,10 +1585,15 @@ selection_object:
 	push_expr ($2);
 	$$ = SOBJ_EXPR | $1;
       }
-    else
+    else if (!EXPR_P ($2))
       {
 	push_field ($2);
 	$$ = SOBJ_STR | $1;
+      }
+    else
+      {
+	yyerror ("invalid selection object");
+	$$ = SOBJ_BOOLEAN; /* error recovery */
       }
   }
 | flag_not unsafe_expr THRU unsafe_expr
