@@ -83,10 +83,14 @@ enum cb_system_name_category {
 };
 
 enum cb_device_name {
-  CB_SYSIN,
-  CB_SYSOUT,
-  CB_SYSERR,
-  CB_CONSOLE
+  CB_DEVICE_SYSIN,
+  CB_DEVICE_SYSOUT,
+  CB_DEVICE_SYSERR,
+  CB_DEVICE_CONSOLE,
+};
+
+enum cb_feature_name {
+  CB_FEATURE_FORMFEED,
 };
 
 enum cb_switch_name {
@@ -97,7 +101,7 @@ enum cb_switch_name {
   CB_SWITCH_5,
   CB_SWITCH_6,
   CB_SWITCH_7,
-  CB_SWITCH_8
+  CB_SWITCH_8,
 };
 
 enum cb_class {

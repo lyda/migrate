@@ -1624,8 +1624,8 @@ accept_body:
   {
     switch (CB_SYSTEM_NAME (cb_ref ($3))->token)
       {
-      case CB_CONSOLE:
-      case CB_SYSIN:
+      case CB_DEVICE_CONSOLE:
+      case CB_DEVICE_SYSIN:
 	push_funcall_1 ("cob_accept", $1);
 	break;
       default:
@@ -1889,11 +1889,11 @@ display_upon:
   {
     switch (CB_SYSTEM_NAME (cb_ref ($2))->token)
       {
-      case CB_CONSOLE:
-      case CB_SYSOUT:
+      case CB_DEVICE_CONSOLE:
+      case CB_DEVICE_SYSOUT:
 	$$ = cb_int (COB_SYSOUT);
 	break;
-      case CB_SYSERR:
+      case CB_DEVICE_SYSERR:
 	$$ = cb_int (COB_SYSERR);
 	break;
       default:
@@ -3082,6 +3082,24 @@ write_option:
     int opt = ($1 == CB_BEFORE) ? COB_WRITE_BEFORE : COB_WRITE_AFTER;
     cb_tree e = cb_build_binary_op (cb_int (opt | COB_WRITE_LINES), '+', $3);
     $$ = cb_build_cast_integer (e);
+  }
+| before_or_after _advancing mnemonic_name
+  {
+    switch (CB_SYSTEM_NAME (cb_ref ($3))->token)
+      {
+      case CB_FEATURE_FORMFEED:
+	{
+	  int opt = ($1 == CB_BEFORE) ? COB_WRITE_BEFORE : COB_WRITE_AFTER;
+	  $$ = cb_int (opt | COB_WRITE_PAGE);
+	  break;
+	}
+      default:
+	{
+	  cb_error_x ($3, _("invalid mnemonic name"));
+	  $$ = cb_error_node;
+	  break;
+	}
+      }
   }
 | before_or_after _advancing PAGE
   {
