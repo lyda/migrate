@@ -37,6 +37,9 @@
 #define COB_PACKED		'3'
 #define COB_DISPLAY		'9'
 
+#define COB_ASCENDING		1
+#define COB_DESCENDING		2
+
 struct cob_field {
   size_t size;
   unsigned char *data;
