@@ -30,9 +30,9 @@
 
 #define DECIMAL_NAN	-128
 #define DECIMAL_CHECK(d1,d2) \
-  if (d1->expt == DECIMAL_NAN || d2->expt == DECIMAL_NAN) \
+  if (d1->scale == DECIMAL_NAN || d2->scale == DECIMAL_NAN) \
     { \
-      d1->expt = DECIMAL_NAN; \
+      d1->scale = DECIMAL_NAN; \
       return; \
     }
 
@@ -49,28 +49,26 @@ static cob_decimal cob_d4;
 void
 cob_decimal_init (cob_decimal *d)
 {
-  mpz_init (d->data);
-  d->expt = 0;
+  mpz_init (d->value);
+  d->scale = 0;
 }
 
 void
 cob_decimal_clear (cob_decimal *d)
 {
-  mpz_clear (d->data);
+  mpz_clear (d->value);
 }
 
-#ifdef COB_DEBUG
 void
 cob_decimal_print (cob_decimal *d)
 {
-  mpz_out_str (stdout, 10, d->data);
-  if (d->expt)
-    fprintf (stdout, " * 10^%d", d->expt);
+  mpz_out_str (stdout, 10, d->value);
+  if (d->scale)
+    fprintf (stdout, " * 10^%d", -d->scale);
   fputs ("\n", stdout);
 }
-#endif
 
-/* d->data *= 10^n, d->expt -= n */
+/* d->value *= 10^n, d->scale += n */
 static void
 shift_decimal (cob_decimal *d, int n)
 {
@@ -78,14 +76,14 @@ shift_decimal (cob_decimal *d, int n)
     {
       if (n < 10)
 	/* 0 < n < 10 */
-	mpz_mul_ui (d->data, d->data, cob_exp10[n]);
+	mpz_mul_ui (d->value, d->value, cob_exp10[n]);
       else
 	{
 	  /* n >= 10 */
 	  mpz_t m;
 	  mpz_init (m);
 	  mpz_ui_pow_ui (m, 10, n);
-	  mpz_mul (d->data, d->data, m);
+	  mpz_mul (d->value, d->value, m);
 	  mpz_clear (m);
 	}
     }
@@ -93,27 +91,27 @@ shift_decimal (cob_decimal *d, int n)
     {
       if (n > -10)
 	/* -10 < n < 0 */
-	mpz_tdiv_q_ui (d->data, d->data, cob_exp10[-n]);
+	mpz_tdiv_q_ui (d->value, d->value, cob_exp10[-n]);
       else
 	{
 	  /* n <= -10 */
 	  mpz_t m;
 	  mpz_init (m);
 	  mpz_ui_pow_ui (m, 10, -n);
-	  mpz_tdiv_q (d->data, d->data, m);
+	  mpz_tdiv_q (d->value, d->value, m);
 	  mpz_clear (m);
 	}
     }
-  d->expt -= n;
+  d->scale += n;
 }
 
 static void
 align_decimal (cob_decimal *d1, cob_decimal *d2)
 {
-  if (d1->expt > d2->expt)
-    shift_decimal (d1, d1->expt - d2->expt);
-  else if (d1->expt < d2->expt)
-    shift_decimal (d2, d2->expt - d1->expt);
+  if (d1->scale < d2->scale)
+    shift_decimal (d1, d2->scale - d1->scale);
+  else if (d1->scale > d2->scale)
+    shift_decimal (d2, d1->scale - d2->scale);
 }
 
 
@@ -124,8 +122,8 @@ align_decimal (cob_decimal *d1, cob_decimal *d2)
 void
 cob_decimal_set (cob_decimal *dst, cob_decimal *src)
 {
-  mpz_set (dst->data, src->data);
-  dst->expt = src->expt;
+  mpz_set (dst->value, src->value);
+  dst->scale = src->scale;
 }
 
 /* int */
@@ -133,16 +131,16 @@ cob_decimal_set (cob_decimal *dst, cob_decimal *src)
 void
 cob_decimal_set_int (cob_decimal *d, int n)
 {
-  mpz_set_si (d->data, n);
-  d->expt = 0;
+  mpz_set_si (d->value, n);
+  d->scale = 0;
 }
 
 int
 cob_decimal_get_int (cob_decimal *d)
 {
   cob_decimal_set (&cob_d1, d);
-  shift_decimal (&cob_d1, cob_d1.expt);
-  return mpz_get_si (cob_d1.data);
+  shift_decimal (&cob_d1, -cob_d1.scale);
+  return mpz_get_si (cob_d1.value);
 }
 
 /* double */
@@ -150,15 +148,15 @@ cob_decimal_get_int (cob_decimal *d)
 void
 cob_decimal_set_double (cob_decimal *d, double v)
 {
-  mpz_set_d (d->data, v * 10000000000000000.0);
-  d->expt = -16;
+  mpz_set_d (d->value, v * 1.0e18);
+  d->scale = 18;
 }
 
 double
 cob_decimal_get_double (cob_decimal *d)
 {
-  int n = d->expt;
-  double v = mpz_get_d (d->data);
+  int n = d->scale;
+  double v = mpz_get_d (d->value);
   for (; n > 0; n--) v *= 10;
   for (; n < 0; n++) v /= 10;
   return v;
@@ -166,7 +164,7 @@ cob_decimal_get_double (cob_decimal *d)
 
 /* DISPLAY */
 
-void
+static void
 cob_decimal_set_display (cob_decimal *d, cob_field *f)
 {
   int sign = cob_get_sign (f);
@@ -187,37 +185,37 @@ cob_decimal_set_display (cob_decimal *d, cob_field *f)
       int n = cob_d2i (*data++);
       while (data < endp)
 	n = n * 10 + cob_d2i (*data++);
-      mpz_set_si (d->data, n);
+      mpz_set_si (d->value, n);
     }
   else
     {
       unsigned char buff[size + 1];
       memcpy (buff, data, size);
       buff[size] = 0;
-      mpz_set_str (d->data, buff, 10);
+      mpz_set_str (d->value, buff, 10);
     }
 
-  /* set sign and expt */
+  /* set sign and scale */
   if (sign < 0)
-    mpz_neg (d->data, d->data);
-  d->expt = f->attr->expt;
+    mpz_neg (d->value, d->value);
+  d->scale = -f->attr->expt;
   cob_put_sign (f, sign);
 }
 
-void
+static void
 cob_decimal_get_display (cob_decimal *d, cob_field *f)
 {
   int diff;
   size_t size;
   char *p, buff[32];
-  int sign = mpz_sgn (d->data);
+  int sign = mpz_sgn (d->value);
   unsigned char *data = COB_FIELD_DATA (f);
 
   /* build string */
-  mpz_abs (d->data, d->data);
-  size = mpz_sizeinbase (d->data, 10);
+  mpz_abs (d->value, d->value);
+  size = mpz_sizeinbase (d->value, 10);
   p = (size < 32) ? buff : alloca (size + 1);
-  mpz_get_str (p, 10, d->data);
+  mpz_get_str (p, 10, d->value);
   size = strlen (p);
 
   /* check overflow */
@@ -236,7 +234,7 @@ cob_decimal_get_display (cob_decimal *d, cob_field *f)
 
 /* BINARY */
 
-void
+static void
 cob_decimal_set_binary (cob_decimal *d, cob_field *f)
 {
   switch (f->size)
@@ -247,25 +245,25 @@ cob_decimal_set_binary (cob_decimal *d, cob_field *f)
     case 8:
       {
 	long long val = *(long long *) f->data;
-	mpz_set_si (d->data, val >> 32);
-	mpz_mul_2exp (d->data, d->data, 32);
-	mpz_add_ui (d->data, d->data, val & 0xffffffff);
+	mpz_set_si (d->value, val >> 32);
+	mpz_mul_2exp (d->value, d->value, 32);
+	mpz_add_ui (d->value, d->value, val & 0xffffffff);
 	break;
       }
     }
-  d->expt = f->attr->expt;
+  d->scale = -f->attr->expt;
 }
 
-void
+static void
 cob_decimal_get_binary (cob_decimal *d, cob_field *f)
 {
   int digits = f->attr->digits;
   if (f->size <= 4)
     {
       int val;
-      if (!mpz_fits_sint_p (d->data))
+      if (!mpz_fits_sint_p (d->value))
 	goto overflow;
-      val = mpz_get_si (d->data);
+      val = mpz_get_si (d->value);
       if (val <= -cob_exp10[digits] || val >= cob_exp10[digits])
 	goto overflow;
       if (!COB_FIELD_HAVE_SIGN (f) && val < 0)
@@ -282,14 +280,14 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f)
       long long val;
       mpz_t r;
       mpz_init (r);
-      mpz_fdiv_r_2exp (r, d->data, 32);
-      mpz_fdiv_q_2exp (d->data, d->data, 32);
-      if (!mpz_fits_sint_p (d->data))
+      mpz_fdiv_r_2exp (r, d->value, 32);
+      mpz_fdiv_q_2exp (d->value, d->value, 32);
+      if (!mpz_fits_sint_p (d->value))
 	{
 	  mpz_clear (r);
 	  goto overflow;
 	}
-      val = mpz_get_si (d->data);
+      val = mpz_get_si (d->value);
       val = (val << 32) + mpz_get_ui (r);
       mpz_clear (r);
       if (val <= -cob_exp10LL[digits] || val >= cob_exp10LL[digits])
@@ -306,30 +304,30 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f)
 
 /* PACKED-DECIMAL */
 
-void
+static void
 cob_decimal_set_packed (cob_decimal *d, cob_field *f)
 {
   int sign = cob_get_sign (f);
   int digits = f->attr->digits;
   unsigned char *p = f->data;
 
-  mpz_set_si (d->data, 0);
+  mpz_set_si (d->value, 0);
   while (digits > 1)
     {
-      mpz_mul_ui (d->data, d->data, 100);
-      mpz_add_ui (d->data, d->data, (*p >> 4) * 10 + (*p & 0x0f));
+      mpz_mul_ui (d->value, d->value, 100);
+      mpz_add_ui (d->value, d->value, (*p >> 4) * 10 + (*p & 0x0f));
       digits -= 2;
       p++;
     }
   if (digits > 0)
     {
-      mpz_mul_ui (d->data, d->data, 10);
-      mpz_add_ui (d->data, d->data, (*p >> 4));
+      mpz_mul_ui (d->value, d->value, 10);
+      mpz_add_ui (d->value, d->value, (*p >> 4));
     }
 
   if (sign < 0)
-    mpz_neg (d->data, d->data);
-  d->expt = f->attr->expt;
+    mpz_neg (d->value, d->value);
+  d->scale = -f->attr->expt;
 }
 
 /* General field */
@@ -354,7 +352,7 @@ cob_decimal_set_field (cob_decimal *d, cob_field *f)
 void
 cob_decimal_get_field (cob_decimal *d, cob_field *f)
 {
-  if (d->expt == DECIMAL_NAN)
+  if (d->scale == DECIMAL_NAN)
     {
       COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
       return;
@@ -370,7 +368,7 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f)
     }
 
   /* append or truncate decimal digits */
-  shift_decimal (d, d->expt - f->attr->expt);
+  shift_decimal (d, -d->scale - f->attr->expt);
 
   /* store number */
   switch (COB_FIELD_TYPE (f))
@@ -400,11 +398,11 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f)
 }
 
 void
-cob_decimal_get_field_r (cob_decimal *d, cob_field *f)
+cob_decimal_get_field_round (cob_decimal *d, cob_field *f)
 {
-  if (f->attr->expt > d->expt)
+  if (f->attr->expt > -d->scale)
     {
-      int sign = mpz_sgn (d->data);
+      int sign = mpz_sgn (d->value);
       if (sign != 0)
 	{
 	  /* work copy */
@@ -412,11 +410,11 @@ cob_decimal_get_field_r (cob_decimal *d, cob_field *f)
 	  d = &cob_d1;
 
 	  /* rounding */
-	  shift_decimal (d, d->expt - f->attr->expt + 1);
+	  shift_decimal (d, -d->scale - f->attr->expt + 1);
 	  if (sign > 0)
-	    mpz_add_ui (d->data, d->data, 5);
+	    mpz_add_ui (d->value, d->value, 5);
 	  else
-	    mpz_sub_ui (d->data, d->data, 5);
+	    mpz_sub_ui (d->value, d->value, 5);
 	}
     }
   cob_decimal_get_field (d, f);
@@ -432,7 +430,7 @@ cob_decimal_add (cob_decimal *d1, cob_decimal *d2)
 {
   DECIMAL_CHECK (d1, d2);
   align_decimal (d1, d2);
-  mpz_add (d1->data, d1->data, d2->data);
+  mpz_add (d1->value, d1->value, d2->value);
 }
 
 void
@@ -440,15 +438,15 @@ cob_decimal_sub (cob_decimal *d1, cob_decimal *d2)
 {
   DECIMAL_CHECK (d1, d2);
   align_decimal (d1, d2);
-  mpz_sub (d1->data, d1->data, d2->data);
+  mpz_sub (d1->value, d1->value, d2->value);
 }
 
 void
 cob_decimal_mul (cob_decimal *d1, cob_decimal *d2)
 {
   DECIMAL_CHECK (d1, d2);
-  d1->expt += d2->expt;
-  mpz_mul (d1->data, d1->data, d2->data);
+  d1->scale += d2->scale;
+  mpz_mul (d1->value, d1->value, d2->value);
 }
 
 void
@@ -457,15 +455,15 @@ cob_decimal_div (cob_decimal *d1, cob_decimal *d2)
   DECIMAL_CHECK (d1, d2);
 
   /* check for division by zero */
-  if (mpz_sgn (d2->data) == 0)
+  if (mpz_sgn (d2->value) == 0)
     {
-      d1->expt = DECIMAL_NAN;
+      d1->scale = DECIMAL_NAN;
       return;
     }
 
-  d1->expt -= d2->expt;
-  shift_decimal (d1, 19 + ((d1->expt > 0) ? d1->expt : 0));
-  mpz_tdiv_q (d1->data, d1->data, d2->data);
+  d1->scale -= d2->scale;
+  shift_decimal (d1, 19 + ((d1->scale < 0) ? -d1->scale : 0));
+  mpz_tdiv_q (d1->value, d1->value, d2->value);
 }
 
 void
@@ -473,11 +471,11 @@ cob_decimal_pow (cob_decimal *d1, cob_decimal *d2)
 {
   DECIMAL_CHECK (d1, d2);
 
-  if (d2->expt == 0 && mpz_fits_ulong_p (d2->data))
+  if (d2->scale == 0 && mpz_fits_ulong_p (d2->value))
     {
-      unsigned int n = mpz_get_ui (d2->data);
-      mpz_pow_ui (d1->data, d1->data, n);
-      d1->expt *= n;
+      unsigned int n = mpz_get_ui (d2->value);
+      mpz_pow_ui (d1->value, d1->value, n);
+      d1->scale *= n;
     }
   else
     {
@@ -490,7 +488,7 @@ int
 cob_decimal_cmp (cob_decimal *d1, cob_decimal *d2)
 {
   align_decimal (d1, d2);
-  return mpz_cmp (d1->data, d2->data);
+  return mpz_cmp (d1->value, d2->value);
 }
 
 
@@ -694,21 +692,21 @@ cob_sub (cob_field *f1, cob_field *f2)
 }
 
 void
-cob_add_r (cob_field *f1, cob_field *f2)
+cob_add_round (cob_field *f1, cob_field *f2)
 {
   cob_decimal_set_field (&cob_d1, f1);
   cob_decimal_set_field (&cob_d2, f2);
   cob_decimal_add (&cob_d1, &cob_d2);
-  cob_decimal_get_field_r (&cob_d1, f1);
+  cob_decimal_get_field_round (&cob_d1, f1);
 }
 
 void
-cob_sub_r (cob_field *f1, cob_field *f2)
+cob_sub_round (cob_field *f1, cob_field *f2)
 {
   cob_decimal_set_field (&cob_d1, f1);
   cob_decimal_set_field (&cob_d2, f2);
   cob_decimal_sub (&cob_d1, &cob_d2);
-  cob_decimal_get_field_r (&cob_d1, f1);
+  cob_decimal_get_field_round (&cob_d1, f1);
 }
 
 void
@@ -746,21 +744,21 @@ cob_div_quotient (cob_field *dividend, cob_field *divisor,
 
   /* compute quotient */
   cob_decimal_div (&cob_d1, &cob_d2);
-  if (cob_d1.expt == DECIMAL_NAN)
+  if (cob_d1.scale == DECIMAL_NAN)
     {
-      cob_d3.expt = DECIMAL_NAN;
+      cob_d3.scale = DECIMAL_NAN;
       return;
     }
 
   /* set quotient */
   cob_decimal_set (&cob_d4, &cob_d1);
   if (round)
-    cob_decimal_get_field_r (&cob_d1, quotient);
+    cob_decimal_get_field_round (&cob_d1, quotient);
   else
     cob_decimal_get_field (&cob_d1, quotient);
 
   /* truncate digits from the quotient */
-  shift_decimal (&cob_d4, cob_d4.expt - quotient->attr->expt);
+  shift_decimal (&cob_d4, -cob_d4.scale - quotient->attr->expt);
 
   /* compute remainder */
   cob_decimal_mul (&cob_d4, &cob_d2);

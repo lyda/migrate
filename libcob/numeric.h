@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002 Keisuke Nishida
+ * Copyright (C) 2002-2003 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -26,11 +26,11 @@
 /*
  * Internal representation of decimal numbers.
  *
- *   n = data * 10^expt
+ *   n = value / 10^scale
  */
 typedef struct {
-  mpz_t data;		/* multi-byte binary integer */
-  char expt;		/* exponent */
+  mpz_t value;
+  char scale;
 } cob_decimal;
 
 extern void cob_decimal_init (cob_decimal *d);
@@ -41,14 +41,9 @@ extern void cob_decimal_set_int (cob_decimal *d, int n);
 extern int cob_decimal_get_int (cob_decimal *d);
 extern void cob_decimal_set_double (cob_decimal *d, double v);
 extern double cob_decimal_get_double (cob_decimal *d);
-extern void cob_decimal_set_display (cob_decimal *d, cob_field *f);
-extern void cob_decimal_get_display (cob_decimal *d, cob_field *f);
-extern void cob_decimal_set_binary (cob_decimal *d, cob_field *f);
-extern void cob_decimal_get_binary (cob_decimal *d, cob_field *f);
-extern void cob_decimal_set_packed (cob_decimal *d, cob_field *f);
 extern void cob_decimal_set_field (cob_decimal *d, cob_field *f);
 extern void cob_decimal_get_field (cob_decimal *d, cob_field *f);
-extern void cob_decimal_get_field_r (cob_decimal *d, cob_field *f);
+extern void cob_decimal_get_field_round (cob_decimal *d, cob_field *f);
 extern void cob_decimal_add (cob_decimal *d1, cob_decimal *d2);
 extern void cob_decimal_sub (cob_decimal *d1, cob_decimal *d2);
 extern void cob_decimal_mul (cob_decimal *d1, cob_decimal *d2);
@@ -58,8 +53,8 @@ extern int cob_decimal_cmp (cob_decimal *d1, cob_decimal *d2);
 
 extern void cob_add (cob_field *f1, cob_field *f2);
 extern void cob_sub (cob_field *f1, cob_field *f2);
-extern void cob_add_r (cob_field *f1, cob_field *f2);
-extern void cob_sub_r (cob_field *f1, cob_field *f2);
+extern void cob_add_round (cob_field *f1, cob_field *f2);
+extern void cob_sub_round (cob_field *f1, cob_field *f2);
 extern void cob_add_int (cob_field *f, int n);
 extern void cob_sub_int (cob_field *f, int n);
 extern void cob_div_quotient (cob_field *dividend, cob_field *divisor, cob_field *quotient, int round);

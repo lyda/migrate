@@ -307,9 +307,10 @@ decimal_expand (cb_tree s, cb_tree d, cb_tree x)
 static void
 decimal_assign (cb_tree s, cb_tree x, cb_tree d, int round)
 {
-  const char *func =
-    round ? "cob_decimal_get_field_r" : "cob_decimal_get_field";
-  add_stmt (s, cb_build_funcall_2 (func, d, x));
+  if (round)
+    add_stmt (s, cb_build_funcall_2 ("cob_decimal_get_field_round", d, x));
+  else
+    add_stmt (s, cb_build_funcall_2 ("cob_decimal_get_field", d, x));
 }
 
 static cb_tree
@@ -399,7 +400,7 @@ cb_build_add (cb_tree v, cb_tree n, cb_tree round)
   if (round == cb_int0 && cb_fits_int (n))
     return cb_build_funcall_2 ("cob_add_int", v, cb_build_cast_integer (n));
   if (round == cb_int1)
-    return cb_build_funcall_2 ("cob_add_r", v, n);
+    return cb_build_funcall_2 ("cob_add_round", v, n);
   else
     return cb_build_funcall_2 ("cob_add", v, n);
 }
@@ -413,7 +414,7 @@ cb_build_sub (cb_tree v, cb_tree n, cb_tree round)
   if (round == cb_int0 && cb_fits_int (n))
     return cb_build_funcall_2 ("cob_sub_int", v, cb_build_cast_integer (n));
   if (round == cb_int1)
-    return cb_build_funcall_2 ("cob_sub_r", v, n);
+    return cb_build_funcall_2 ("cob_sub_round", v, n);
   else
     return cb_build_funcall_2 ("cob_sub", v, n);
 }
