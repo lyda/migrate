@@ -3,6 +3,8 @@
 # cobc
 cobc/cobc.c
 cobc/tree.c
+cobc/error.c
+cobc/typeck.c
 cobc/pplex.l
 cobc/ppparse.y
 cobc/parser.y
