@@ -1,3 +1,9 @@
+2004-05-21  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* move.c (cob_binary_get_int64): Reimplemented using memcpy.
+	(cob_binary_get_int): Call cob_binary_get_int64.
+	(cob_binary_set_int): Call cob_binary_set_int64.
+
 2004-05-16  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* common.c (cob_cmp): Compare non-display numeric and alphanumeric

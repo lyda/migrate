@@ -728,109 +728,64 @@ cob_display_get_int (cob_field *f)
 int
 cob_binary_get_int (cob_field *f)
 {
-  int n;
-  switch (f->size)
-    {
-    case 1:
-      n = *(unsigned char *) f->data;
-      if (COB_FIELD_HAVE_SIGN (f))
-	n = (char) n;
-      return n;
-    case 2:
-      n = *(unsigned short *) f->data;
-      if (COB_FIELD_BINARY_SWAP (f))
-	n = COB_BSWAP_16 (n);
-      if (COB_FIELD_HAVE_SIGN (f))
-	n = (short) n;
-      return n;
-    case 3:
-      n = (((unsigned long) *(unsigned short *) f->data)
-	   | ((unsigned long) f->data[2] << 16));
-      if (COB_FIELD_BINARY_SWAP (f))
-	n = COB_BSWAP_32 (n) >> 8;
-      if (COB_FIELD_HAVE_SIGN (f) && (n & 0x00800000))
-	n |= 0xff000000;
-      return n;
-    case 4:
-      n = *(unsigned long *) f->data;
-      if (COB_FIELD_BINARY_SWAP (f))
-	n = COB_BSWAP_32 (n);
-      return n;
-    default:
-      return cob_binary_get_int64 (f);
-    }
+  return cob_binary_get_int64 (f);
 }
 
 long long
 cob_binary_get_int64 (cob_field *f)
 {
-  long long n;
-  switch (f->size)
+  long long n = 0;
+#ifndef WORDS_BIGENDIAN
+  if (COB_FIELD_BINARY_SWAP (f))
     {
-    case 1: case 2: case 3:
-      return cob_binary_get_int (f);
-    case 4:
-      n = (unsigned int) cob_binary_get_int (f);
       if (COB_FIELD_HAVE_SIGN (f))
-	n = (int) n;
-      return n;
-    case 5:
-      n = (((unsigned long long) *(unsigned long *) f->data)
-	   | ((unsigned long long) f->data[4] << 32));
-      if (COB_FIELD_BINARY_SWAP (f))
-	n = COB_BSWAP_64 (n) >> 24;
-      if (COB_FIELD_HAVE_SIGN (f) && (n & 0x0000008000000000LL))
-	n |= 0xffffff0000000000LL;
-      return n;
-    case 6:
-      n = (((unsigned long long) *(unsigned long *) f->data)
-	   | ((unsigned long long) (*(unsigned short *) (f->data + 4)) << 32));
-      if (COB_FIELD_BINARY_SWAP (f))
-	n = COB_BSWAP_64 (n) >> 16;
-      if (COB_FIELD_HAVE_SIGN (f) && (n & 0x0000800000000000LL))
-	n |= 0xffff000000000000LL;
-      return n;
-    case 7:
-      n = (((unsigned long long) *(unsigned long *) f->data)
-	   | ((unsigned long long) (*(unsigned short *) (f->data + 4)) << 32)
-	   | ((unsigned long long) f->data[6] << 48));
-      if (COB_FIELD_BINARY_SWAP (f))
-	n = COB_BSWAP_64 (n) >> 8;
-      if (COB_FIELD_HAVE_SIGN (f) && (n & 0x0080000000000000LL))
-	n |= 0xff00000000000000LL;
-      return n;
-    default:
-      n = *(unsigned long long *) f->data;
-      if (COB_FIELD_BINARY_SWAP (f))
-	n = COB_BSWAP_64 (n);
-      return n;
+	{
+	  memcpy (&n, f->data, f->size);
+	  n = COB_BSWAP_64 (n);
+	  n >>= 8 * (8 - f->size); /* shift with sign */
+	}
+      else
+	{
+	  memcpy (((unsigned char *) &n) + 8 - f->size, f->data, f->size);
+	  n = COB_BSWAP_64 (n);
+	}
     }
+  else
+    {
+      if (COB_FIELD_HAVE_SIGN (f))
+	{
+	  memcpy (((unsigned char *) &n) + 8 - f->size, f->data, f->size);
+	  n >>= 8 * (8 - f->size); /* shift with sign */
+	}
+      else
+	{
+	  memcpy (&n, f->data, f->size);
+	}
+    }
+#else /* WORDS_BIGENDIAN */
+  if (COB_FIELD_HAVE_SIGN (f))
+    {
+      memcpy (&n, f->data, f->size);
+      n >>= 8 * (8 - f->size); /* shift with sign */
+    }
+  else
+    {
+      memcpy (((unsigned char *) &n) + 8 - f->size, f->data, f->size);
+    }
+#endif /* WORDS_BIGENDIAN */
+  return n;
 }
 
 void
 cob_binary_set_int (cob_field *f, int n)
 {
-  if (f->size <= 4)
-    {
-      if (COB_FIELD_BINARY_SWAP (f))
-	{
-	  n = COB_BSWAP_32 (n);
-	  memcpy (f->data, ((unsigned char *) &n) + 4 - f->size, f->size);
-	}
-      else
-	{
-	  memcpy (f->data, &n, f->size);
-	}
-    }
-  else
-    {
-      cob_binary_set_int64 (f, n);
-    }
+  cob_binary_set_int64 (f, n);
 }
 
 void
 cob_binary_set_int64 (cob_field *f, long long n)
 {
+#ifndef WORDS_BIGENDIAN
   if (COB_FIELD_BINARY_SWAP (f))
     {
       n = COB_BSWAP_64 (n);
@@ -840,14 +795,9 @@ cob_binary_set_int64 (cob_field *f, long long n)
     {
       memcpy (f->data, &n, f->size);
     }
-}
-
-void
-cob_memcpy (cob_field *dst, unsigned char *src, int size)
-{
-  cob_field_attr attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, 0};
-  cob_field temp = {size, src, &attr};
-  cob_move (&temp , dst);
+#else /* WORDS_BIGENDIAN */
+  memcpy (f->data, ((unsigned char *) &n) + 8 - f->size, f->size);
+#endif /* WORDS_BIGENDIAN */
 }
 
 void
@@ -877,4 +827,12 @@ cob_get_int (cob_field *f)
 	return n;
       }
     }
+}
+
+void
+cob_memcpy (cob_field *dst, unsigned char *src, int size)
+{
+  cob_field_attr attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, 0};
+  cob_field temp = {size, src, &attr};
+  cob_move (&temp , dst);
 }
