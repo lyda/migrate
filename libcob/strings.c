@@ -244,7 +244,7 @@ cob_string_init (cob_field *dst, cob_field *ptr)
 
   if (string_ptr)
     {
-      string_offset = cob_to_int (string_ptr) - 1;
+      string_offset = cob_get_int (string_ptr) - 1;
       if (string_offset < 0 || string_offset >= string_dst->size)
 	cob_exception_code = COB_EC_OVERFLOW_STRING;
     }
@@ -327,7 +327,7 @@ cob_unstring_init (cob_field *src, cob_field *ptr)
 
   if (unstring_ptr)
     {
-      unstring_offset = cob_to_int (unstring_ptr) - 1;
+      unstring_offset = cob_get_int (unstring_ptr) - 1;
       if (unstring_offset < 0 || unstring_offset >= unstring_src->size)
 	cob_exception_code = COB_EC_OVERFLOW_UNSTRING;
     }

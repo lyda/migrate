@@ -28,9 +28,9 @@
 #include "screenio.h"
 
 #define SCREEN_LINE_POS(s) \
-  ((COB_SCREEN_LINE_CONST ? s->line.val : cob_to_int (s->line.ptr)) - 1)
+  ((COB_SCREEN_LINE_CONST ? s->line.val : cob_get_int (s->line.ptr)) - 1)
 #define SCREEN_COLUMN_POS(s) \
-  ((COB_SCREEN_COLUMN_CONST ? s->column.val : cob_to_int (s->column.ptr)) - 1)
+  ((COB_SCREEN_COLUMN_CONST ? s->column.val : cob_get_int (s->column.ptr)) - 1)
 
 #if HAVE_LIBNCURSES
 static int screen_initialized = 0;

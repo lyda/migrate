@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002 Keisuke Nishida
+ * Copyright (C) 2002-2003 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -669,18 +669,18 @@ cob_memcpy (cob_field *dst, unsigned char *src, int size)
   cob_move (&temp , dst);
 }
 
-int
-cob_to_int (cob_field *f)
-{
-  int n;
-  cob_field temp = {4, (unsigned char *) &n, &cob_sbin_attr[9]};
-  cob_move (f, &temp);
-  return n;
-}
-
 void
 cob_set_int (cob_field *f, int n)
 {
   cob_field temp = {4, (unsigned char *) &n, &cob_sbin_attr[9]};
   cob_move (&temp, f);
+}
+
+int
+cob_get_int (cob_field *f)
+{
+  int n;
+  cob_field temp = {4, (unsigned char *) &n, &cob_sbin_attr[9]};
+  cob_move (f, &temp);
+  return n;
 }

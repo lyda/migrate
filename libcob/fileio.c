@@ -153,7 +153,7 @@ sequential_rewrite (cob_file *f, cob_field *rec)
     return COB_FILE_RECORD_OVERFLOW;
 
   if (f->record_size)
-    if (f->record->size != cob_to_int (f->record_size))
+    if (f->record->size != cob_get_int (f->record_size))
       return COB_FILE_RECORD_OVERFLOW;
 
   lseek (p->fd, - f->record->size, SEEK_CUR);
@@ -320,7 +320,7 @@ relative_start (cob_file *f, int cond, cob_field *k)
   struct sequential_file *p = f->file;
 
   /* get the index */
-  int index = cob_to_int (k) - 1;
+  int index = cob_get_int (k) - 1;
   if (cond == COB_LT)
     index--;
   else if (cond == COB_GT)
@@ -360,7 +360,7 @@ relative_read (cob_file *f, cob_field *k)
 {
   struct sequential_file *p = f->file;
 
-  RELATIVE_SEEK (f, p->fd, cob_to_int (k) - 1);
+  RELATIVE_SEEK (f, p->fd, cob_get_int (k) - 1);
 
   if (f->record->size == 0)
     return COB_FILE_KEY_NOT_EXISTS;
@@ -416,7 +416,7 @@ relative_write (cob_file *f)
 
   if (f->access_mode != COB_ACCESS_SEQUENTIAL)
     {
-      int index = cob_to_int (f->keys[0].field) - 1;
+      int index = cob_get_int (f->keys[0].field) - 1;
       lseek (p->fd, RELATIVE_SIZE (f) * index, SEEK_SET);
     }
 
@@ -453,7 +453,7 @@ relative_delete (cob_file *f)
 {
   struct sequential_file *p = f->file;
 
-  RELATIVE_SEEK (f, p->fd, cob_to_int (f->keys[0].field) - 1);
+  RELATIVE_SEEK (f, p->fd, cob_get_int (f->keys[0].field) - 1);
 
   f->record->size = 0;
   write (p->fd, &f->record->size, sizeof (f->record->size));
@@ -1104,7 +1104,7 @@ cob_write (cob_file *f, cob_field *rec)
     }
 
   if (f->record_size)
-    f->record->size = cob_to_int (f->record_size);
+    f->record->size = cob_get_int (f->record_size);
   else
     f->record->size = rec->size;
 
