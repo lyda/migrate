@@ -172,6 +172,265 @@ struct refmod
 
 
 /*
+ * compile-time list for value ranges of 88-level variables.
+ * the first range is stored at the "struct sym", with sym->vr
+ * being a pointer to the remaining "struct vrange" nodes.
+ */
+struct vrange
+{
+  struct vrange *next;		/* pointer to next range of values (88 var) */
+  struct lit *value;		/* pointer to literal with initial value */
+  struct lit *value2;		/* pointer to first/next key (sort files) */
+};
+
+/*
+ * Node for external data (named sections).
+ */
+struct named_sect
+{
+  struct named_sect *next;	/* pointer to next named section */
+  short sec_no;			/* key: section id */
+  char *os_name;		/* name of 01 or 77 data as known by OS */
+};
+
+/* this (struct rd) is aliased with (struct sym), so tail data is garbage! */
+struct rd
+{
+  char litflag;
+  struct rd *next;
+  char *name;
+  char type;			/* 'W' for report (RD) */
+  struct sym *file;		/* file for writing this report */
+  struct list *controls;	/* list of controls (listing breaks) */
+  struct list *items;		/* list of all report items */
+  int page_limit;
+  int heading;
+  int footing;
+  int first_detail;
+  int last_detail;
+};
+
+/* additional information for report items */
+struct report_info
+{
+  int line;
+  int line_offset;		/* PLUS <offset> given */
+  int column;
+  int value_source;		/* SUM, SOURCE (from a variable), literal */
+  /* the actual source symbol is in (struct sym *)->value */
+};
+
+/* varying record range and actual size */
+struct rec_varying
+{
+  struct lit *lmin;
+  struct lit *lmax;
+  struct sym *reclen;
+};
+
+/* selection subject set (evaluate statement) */
+struct selsubject
+{
+  struct selsubject *next;
+  int type;
+};
+
+/* sort file list for using/giving clauses*/
+struct sortfile_node
+{
+  struct sortfile_node *next;
+  struct sym *sy;
+};
+
+/* information required by the 'perform ... varying ... after' statements */
+struct perf_info
+{
+  struct sym *pname1;		/* symbol name */
+  struct sym *pname2;		/* symbol name */
+  unsigned long ljmp;		/* jump label  */
+  unsigned long lend;		/* end  label  */
+};
+
+struct perform_info
+{
+  struct perf_info *pf[4];
+};
+
+/* information required by the math verbs statements */
+struct math_var
+{
+  struct sym *sname;		/* symbol name */
+  unsigned int rounded;		/* rounded option: 0=false, 1=true */
+  struct math_var *next;
+};
+
+/* information required by the math ON SIZE ERROR statement */
+struct math_ose
+{
+  unsigned long ose;		/* 1=on_size, 2=not_on_size, 3=both */
+  unsigned long lbl1;		/* call label name 1 - on_size */
+  unsigned long lbl2;		/* call label name 2 - not_on_size */
+  unsigned long lbl4;		/* bypass label name  */
+};
+
+/* generic information container used by the [NOT] AT END cluases */
+struct ginfo
+{
+  unsigned long sel;		/* 1=true, 2=not true, 3=both */
+  unsigned long lbl1;		/* call label name 1 - true */
+  unsigned long lbl2;		/* call label name 2 - not true */
+  unsigned long lbl3;		/* retrun 1 label name  */
+  unsigned long lbl4;		/* retrun 2 label name  */
+  unsigned long lbl5;		/* test bypass label name  */
+};
+
+/* information required by [NOT] INVALID KEY clauses */
+struct invalid_key_element
+{
+  unsigned long lbl1;		/* skip label */
+  unsigned long lbl2;		/* start label */
+  unsigned long lbl3;		/* finish label */
+};
+
+struct invalid_keys
+{
+  struct invalid_key_element *invalid_key;
+  struct invalid_key_element *not_invalid_key;
+};
+
+/******* supplemental information for screen items **********/
+/* this is linked at the sym->index (aliased scrinfo) */
+struct scr_info
+{
+  int attr;
+  int line;
+  int column;
+  short int foreground;
+  short int background;
+  struct sym *from;
+  struct sym *to;
+  int label;
+};
+
+struct converting_struct
+{
+  struct sym *fromvar;
+  struct sym *tovar;
+  struct inspect_before_after *before_after;
+};
+
+struct tallying_list
+{
+  struct tallying_list *next;
+  struct tallying_for_list *tflist;
+  struct sym *count;
+};
+
+struct tallying_for_list
+{
+  struct tallying_for_list *next;
+  int options;
+  struct sym *forvar;
+  struct inspect_before_after *before_after;
+};
+
+struct replacing_list
+{
+  struct replacing_list *next;
+  int options;
+  struct sym *byvar;
+  struct replacing_by_list *replbylist;
+  struct inspect_before_after *before_after;
+};
+
+struct replacing_by_list
+{
+  struct replacing_by_list *next;
+  struct sym *replvar;
+  struct sym *byvar;
+  struct inspect_before_after *before_after;
+};
+
+struct inspect_before_after
+{
+  struct sym *before;
+  struct sym *after;
+};
+
+
+struct alternate_list
+{
+  struct alternate_list *next;
+  struct sym *key;
+  int duplicates;
+};
+
+struct unstring_delimited
+{
+  struct unstring_delimited *next;
+  short int all;
+  struct sym *var;
+};
+
+struct unstring_destinations
+{
+  struct unstring_destinations *next;
+  struct sym *var;
+  struct sym *delim;
+  struct sym *count;
+};
+
+struct string_from
+{
+  struct string_from *next;
+  struct sym *var;
+  struct sym *delim;
+};
+
+struct list
+{
+  struct list *next;
+  void *var;
+};
+
+struct parm_list
+{
+  struct parm_list *next;
+  void *var;
+  unsigned location;
+  short sec_no;
+};
+
+struct coord_pair
+{
+  int lin;
+  int col;
+};
+
+struct index_to_table_list
+{
+  struct index_to_table_list *next;
+  char *idxname;
+  char *tablename;
+  char *keyname;
+  char seq;		/* '0' = none, '1' = ASCENDING, '2' = DESCENDING */
+};
+
+struct condition
+{
+  struct sym *sy;		/* implied first operand */
+  int oper;			/* operator */
+};
+
+/* OCCURS ... DEPENDING ON info */
+struct occurs
+{
+  struct sym *depend;
+  int min, max;
+};
+
+
+/*
  * Pair
  */
 

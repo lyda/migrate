@@ -135,11 +135,11 @@ static void check_decimal_point (struct lit *lit);
 %token <sval> STRING,VARIABLE,VARCOND,SUBSCVAR
 %token <sval> LABELSTR,CMD_LINE,ENVIRONMENT_VARIABLE,PICTURE
 %token <ival> USAGENUM,ZERONUM,CONDITIONAL
-%token <ival> DIRECTION,READ,WRITE
+%token <ival> READ,WRITE
 %token <lval> NLITERAL,CLITERAL
 %token <ival> PORTNUM,DATE_TIME
 
-%token TO,FOR,IS,ARE,THRU,THAN,NO,CANCEL
+%token TO,FOR,IS,ARE,THRU,THAN,NO,CANCEL,ASCENDING,DESCENDING
 %token TOK_SOURCE_COMPUTER, TOK_OBJECT_COMPUTER,INPUT_OUTPUT
 %token BEFORE,AFTER,SCREEN,REVERSEVIDEO,NUMBERTOK,PLUS,MINUS,SEPARATE
 %token FOREGROUNDCOLOR,BACKGROUNDCOLOR,UNDERLINE,HIGHLIGHT,LOWLIGHT
@@ -191,7 +191,7 @@ static void check_decimal_point (struct lit *lit);
 %type <ival> organization_options,access_options,open_mode
 %type <ival> integer,cond_op,conditional,before_after
 %type <ival> IF,ELSE,usage,write_options,opt_read_next
-%type <ival> using_options,procedure_using
+%type <ival> using_options,procedure_using,sort_direction
 %type <dval> if_then
 %type <sval> name,gname,numeric_value,opt_gname,opt_def_name,def_name
 %type <sval> field_description,label,filename,noallname,paragraph,assign_clause
@@ -798,18 +798,9 @@ opt_indexed_by:
 | opt_key_is INDEXED opt_by index_name_list { }
 ;
 opt_key_is:
-  /* nothing */		{ $$ = NULL; }
-| DIRECTION opt_key opt_is STRING
-  {
-    $4->level=0;
-    if ($1 == ASCENDING) {
-      $4->level=-1;
-    }
-    if ($1 == DESCENDING) {
-      $4->level=-2;
-    }
-    $$=$4;
-  }
+  /* nothing */				{ $$ = NULL; }
+| ASCENDING opt_key opt_is STRING	{ $4->level = -1; $$ = $4; }
+| DESCENDING opt_key opt_is STRING	{ $4->level = -2; $$ = $4; }
 ;
 index_name_list:
   def_name { define_implicit_field ($1, $<sval>-2, curr_field->times); }
@@ -2478,7 +2469,7 @@ sort_statement:
     sort_input sort_output { /*gen_close_sort($2);*/ }
 sort_keys:
     /* nothing */   { $$ = NULL; }
-    | sort_keys DIRECTION KEY name
+    | sort_keys sort_direction KEY name
         {
             $4->direction = $2;
             (struct sym *)$4->sort_data =
@@ -2487,6 +2478,10 @@ sort_keys:
             $$ = $4;
         }
     ;
+sort_direction:
+  ASCENDING			{ $$ = 1; }
+| DESCENDING			{ $$ = 2; }
+;
 sort_input:
     INPUT PROCEDURE_TOK opt_is sort_range { $$=NULL; }
     | USING sort_file_list { gen_sort_using($<sval>-2,$2); $$=$2; }
