@@ -115,7 +115,6 @@ extern void data_trail (void);
 extern int adjust_linkage_vars (int start_offset);
 extern void proc_header (int using);
 extern void proc_trail (int using);
-extern void dump_working (void);
 extern void save_field_in_list (struct sym *sy);
 extern void save_literal (struct lit *v, int type);
 extern void save_named_sect (struct sym *sy);
