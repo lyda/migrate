@@ -1869,6 +1869,35 @@ gen_status_branch (int status, int flag)
 }
 
 
+/*
+ * Labels
+ */
+
+static char *
+label_name (cob_tree lab)
+{
+  if (lab->parent)
+    sprintf (name_buf, "%s__%s_%d",
+	     COB_FIELD_NAME (lab), COB_FIELD_NAME (lab->parent), pgm_segment);
+  else
+    sprintf (name_buf, "%s_%d", COB_FIELD_NAME (lab), pgm_segment);
+  return chg_underline (name_buf);
+}
+
+void
+gen_begin_label (cob_tree label)
+{
+  output (".LB_%s:\n", label_name (label));
+}
+
+void
+gen_end_label (cob_tree label)
+{
+  output (".LE_%s:\n", label_name (label));
+  gen_exit (label);
+}
+
+
 struct scr_info *
 alloc_scr_info ()
 {
@@ -3787,75 +3816,6 @@ resolve_labels ()
 }
 
 void
-open_section (cob_tree sect)
-{
-  COB_FIELD_TYPE (sect) = 'S';
-  output (".LB_%s:\n", label_name (sect));
-  curr_section = sect;
-}
-
-void
-close_section (void)
-{
-  close_paragr ();
-  if (curr_section)
-    {
-      output (".LE_%s:\n", label_name (curr_section));
-      gen_exit ();
-    }
-}
-
-char *
-label_name (cob_tree lab)
-{
-  if (lab->parent)
-    sprintf (name_buf, "%s__%s_%d",
-	     COB_FIELD_NAME (lab), COB_FIELD_NAME (lab->parent), pgm_segment);
-  else
-    sprintf (name_buf, "%s_%d", COB_FIELD_NAME (lab), pgm_segment);
-  return chg_underline (name_buf);
-}
-
-char *
-var_name (cob_tree sy)
-{
-  int n;
-  n = MAXNAMEBUF;
-  strcpy (name_buf, "");
-  while (n > strlen (COB_FIELD_NAME (sy)) + 4)
-    {
-      if (n < MAXNAMEBUF)
-	strcat (name_buf, " OF ");
-      strcat (name_buf, COB_FIELD_NAME (sy));
-      n -= strlen (COB_FIELD_NAME (sy)) + 4;
-      if ((lookup_symbol (COB_FIELD_NAME (sy))->clone == NULL)
-	  || (sy->parent == NULL))
-	break;
-      sy = sy->parent;
-    }
-  return name_buf;
-}
-
-void
-close_paragr (void)
-{
-  if (curr_paragr)
-    {
-      output (".LE_%s:\n", label_name (curr_paragr));
-      gen_exit ();
-      curr_paragr = NULL;
-    }
-}
-
-void
-open_paragr (cob_tree paragr)
-{
-  COB_FIELD_TYPE (paragr) = 'P';
-  curr_paragr = paragr;
-  output (".LB_%s:\n", label_name (paragr));
-}
-
-void
 gen_stoprun (void)
 {
   output ("\tleal\t.Lend_pgm_%s, %%eax\n", pgm_label);
@@ -3864,17 +3824,14 @@ gen_stoprun (void)
 }
 
 void
-gen_exit (void)
+gen_exit (cob_tree label)
 {
   int l1 = loc_label++;
   int l2 = loc_label++;
 #ifdef COB_DEBUG
   output ("# EXIT\n");
 #endif
-  if (curr_paragr != NULL)
-    output ("\tleal\t.LE_%s, %%eax\n", label_name (curr_paragr));
-  else
-    output ("\tleal\t.LE_%s, %%eax\n", label_name (curr_section));
+  output ("\tleal\t.LE_%s, %%eax\n", label_name (label));
   output ("\tcmpl\t4(%%esp), %%eax\n");
   output ("\tjb\t\t.L%d\n", l1);
   output ("\tcmpl\t0(%%esp), %%eax\n");

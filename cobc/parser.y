@@ -50,6 +50,8 @@
 static unsigned long lbend, lbstart;
 static unsigned int perform_after_sw;
 
+static cob_tree current_section, current_paragraph;
+
 static int warning_count = 0;
 static int error_count = 0;
 
@@ -215,6 +217,8 @@ identification_division:
   PROGRAM_ID '.' idstring opt_program_parameter dot
   identification_division_options
   {
+    current_section = NULL;
+    current_paragraph = NULL;
     init_program ($6);
   }
 ;
@@ -1144,10 +1148,10 @@ procedure_division:
   procedure_list
   {
     /* close procedure_list sections & paragraphs */
-    if (curr_paragr)
-      gen_end_label (curr_paragr);
-    if (curr_section)
-      gen_end_label (curr_section);
+    if (current_paragraph)
+      gen_end_label (current_paragraph);
+    if (current_section)
+      gen_end_label (current_section);
     resolve_labels ();
     proc_trail ($4);
     in_procedure = 0;
@@ -1181,13 +1185,13 @@ procedure_section:
     label->defined = 1;
 
     /* Begin a new section */
-    if (curr_paragr)
-      gen_end_label (curr_paragr);
-    if (curr_section)
-      gen_end_label (curr_section);
-    curr_paragr = NULL;
-    curr_section = label;
-    gen_begin_label (curr_section);
+    if (current_paragraph)
+      gen_end_label (current_paragraph);
+    if (current_section)
+      gen_end_label (current_section);
+    current_paragraph = NULL;
+    current_section = label;
+    gen_begin_label (current_section);
   }
 ;
 procedure_paragraph:
@@ -1195,17 +1199,17 @@ procedure_paragraph:
   {
     cob_tree lab=$1;
     if (lab->defined != 0)
-      if ((lab=lookup_label(lab,curr_section))==NULL)
+      if ((lab=lookup_label(lab,current_section))==NULL)
 	lab = install(COB_FIELD_NAME ($1),SYTB_LAB,2);
     COB_FIELD_TYPE (lab) = 'P';
-    lab->parent = curr_section;
+    lab->parent = current_section;
     lab->defined=1;
 
     /* Begin a new paragraph */
-    if (curr_paragr)
-      gen_end_label (curr_paragr);
-    curr_paragr = lab;
-    gen_begin_label (curr_paragr);
+    if (current_paragraph)
+      gen_end_label (current_paragraph);
+    current_paragraph = lab;
+    gen_begin_label (current_paragraph);
   }
 ;
 
@@ -1642,10 +1646,10 @@ opt_end_evaluate: | END_EVALUATE ;
 exit_statement:
   EXIT
   {
-    if (curr_paragr)
-      gen_exit (curr_paragr);
-    else if (curr_section)
-      gen_exit (curr_section);
+    if (current_paragraph)
+      gen_exit (current_paragraph);
+    else if (current_section)
+      gen_exit (current_section);
     else
       yywarn ("EXIT statement here has no effect");
   }
@@ -3036,13 +3040,13 @@ label:
     if (lab->defined == 0)
       {
 	lab->defined = 2;
-	lab->parent = curr_section;
+	lab->parent = current_section;
       }
-    else if ((lab = lookup_label (lab, curr_section)) == NULL)
+    else if ((lab = lookup_label (lab, current_section)) == NULL)
       {
 	lab = install (COB_FIELD_NAME ($1), SYTB_LAB, 2);
 	lab->defined = 2;
-	lab->parent = curr_section;
+	lab->parent = current_section;
       }
     $$ = lab;
   }
@@ -3052,13 +3056,13 @@ label:
     if (lab->defined == 0)
       {
 	lab->defined = 2;
-	lab->parent = curr_section;
+	lab->parent = current_section;
       }
-    else if ((lab = lookup_label (lab, curr_section)) == NULL)
+    else if ((lab = lookup_label (lab, current_section)) == NULL)
       {
 	lab = install (COB_FIELD_NAME ($1), SYTB_LAB, 2);
 	lab->defined = 2;
-	lab->parent = curr_section;
+	lab->parent = current_section;
       }
     $$ = lab;
   }
