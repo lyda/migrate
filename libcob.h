@@ -21,14 +21,14 @@
 #define COB_LIBCOB_H
 
 #include <libcob/cobconfig.h>
+#include <libcob/call.h>
 #include <libcob/common.h>
+#include <libcob/fileio.h>
 #include <libcob/move.h>
 #include <libcob/numeric.h>
-#include <libcob/strings.h>
-#include <libcob/termio.h>
-#include <libcob/fileio.h>
 #include <libcob/screenio.h>
-#include <libcob/call.h>
+#include <libcob/strings.h>
 #include <libcob/support.h>
+#include <libcob/termio.h>
 
 #endif /* COB_LIBCOB_H_ */
