@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
 #include <libcob.h>
 
 #include "cobc.h"
@@ -184,6 +185,15 @@ program_id_paragraph:
   PROGRAM_ID '.'
   {
     current_program = cb_build_program ();
+    /* WHEN-COMPILED */
+    {
+      char buff[17];
+      time_t t = time (NULL);
+      strftime (buff, 17, "%m/%d/%y%H.%M.%S", localtime (&t));
+      cb_build_constant (make_reference ("WHEN-COMPILED"),
+			 cb_build_alphanumeric_literal (buff, 16));
+    }
+    /* RETURN-CODE */
     cb_return_code = make_reference ("RETURN-CODE");
     current_program->index_list =
       list_add (current_program->index_list, cb_build_index (cb_return_code));
