@@ -360,13 +360,33 @@ cb_init_constants (void)
  * Integer
  */
 
+#define INT_NODE_TABLE_SIZE	13
+
+static struct int_node {
+  int n;
+  cb_tree node;
+  struct int_node *next;
+} *int_node_table[INT_NODE_TABLE_SIZE];
+
 cb_tree
-cb_build_integer (int val)
+cb_int (int n)
 {
-  struct cb_integer *p =
-    make_tree (CB_TAG_INTEGER, CB_CATEGORY_NUMERIC, sizeof (struct cb_integer));
-  p->val = val;
-  return CB_TREE (p);
+  struct cb_integer *x;
+  struct int_node *p;
+
+  for (p = int_node_table[n % INT_NODE_TABLE_SIZE]; p; p = p->next)
+    if (p->n == n)
+      return p->node;
+
+  x = make_tree (CB_TAG_INTEGER, CB_CATEGORY_NUMERIC, sizeof (struct cb_integer));
+  x->val = n;
+
+  p = malloc (sizeof (struct int_node));
+  p->n = n;
+  p->node = CB_TREE (x);
+  p->next = int_node_table[n % INT_NODE_TABLE_SIZE];
+  int_node_table[n % INT_NODE_TABLE_SIZE] = p;
+  return p->node;
 }
 
 

@@ -239,9 +239,7 @@ struct cb_integer {
 #define CB_INTEGER(x)	(CB_TREE_CAST (CB_TAG_INTEGER, struct cb_integer, x))
 #define CB_INTEGER_P(x)	(CB_TREE_TAG (x) == CB_TAG_INTEGER)
 
-extern cb_tree cb_build_integer (int val);
-
-#define cb_int(n)	cb_build_integer (n)
+extern cb_tree cb_int (int n);
 
 
 /*
