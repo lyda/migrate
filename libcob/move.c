@@ -567,11 +567,11 @@ indirect_move (void (*move_func) (struct cob_field src, struct cob_field dst),
 void
 cob_move (struct cob_field src, struct cob_field dst)
 {
+  if (COB_FIELD_TYPE (src) == COB_GROUP || COB_FIELD_TYPE (dst) == COB_GROUP)
+    return cob_move_alphanum_to_alphanum (src, dst);
+
   switch (COB_FIELD_TYPE (src))
     {
-    case COB_GROUP:
-      return cob_move_alphanum_to_alphanum (src, dst);
-
     case COB_NUMERIC:
       switch (COB_FIELD_TYPE (dst))
 	{
