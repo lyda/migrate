@@ -212,6 +212,56 @@ cb_build_section_name (cb_tree name)
 }
 
 cb_tree
+cb_build_assignment_name (cb_tree name)
+{
+  if (name == cb_error_node)
+    return cb_error_node;
+
+  switch (CB_TREE_TAG (name))
+    {
+    case CB_TAG_LITERAL:
+      return name;
+
+    case CB_TAG_REFERENCE:
+      switch (cb_assign_clause)
+	{
+	case CB_ASSIGN_COBOL2002:
+	  /* TODO */
+	  return cb_error_node;
+
+	case CB_ASSIGN_MF:
+	  current_program->reference_list =
+	    cb_list_add (current_program->reference_list, name);
+	  return name;
+
+	case CB_ASSIGN_IBM:
+	  {
+	    const char *s = CB_REFERENCE (name)->word->name;
+	    const char *p;
+	    /* check organization */
+	    if (strncmp (s, "S-", 2) == 0 || strncmp (s, "AS-", 3) == 0)
+	      goto org;
+	    /* skip the device label if exists */
+	    if ((p = strchr (s, '-')) != NULL)
+	      s = p + 1;
+	    /* check organization again */
+	    if (strncmp (s, "S-", 2) == 0 || strncmp (s, "AS-", 3) == 0)
+	      {
+	      org:
+		/* skip it for now */
+		s = strchr (s, '-') + 1;
+	      }
+	    /* convert the name into literal */
+	    return cb_build_alphanumeric_literal (s, strlen (s));
+	  }
+	}
+
+    default:
+      ABORT ();
+    }
+}
+
+cb_tree
 cb_build_identifier (cb_tree x)
 {
   struct cb_reference *r;
@@ -453,8 +503,8 @@ cb_validate_program_data (struct cb_program *prog)
 {
   cb_tree l;
 
-  /* build undeclared assign name */
-  if (cb_assign_identifier == CB_ASSIGN_DATA)
+  /* build undeclared assignment name now */
+  if (cb_assign_clause == CB_ASSIGN_MF)
     for (l = current_program->file_list; l; l = CB_CHAIN (l))
       {
 	cb_tree assign = CB_FILE (CB_VALUE (l))->assign;

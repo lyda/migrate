@@ -107,10 +107,10 @@ extern struct cb_name_list *cb_name_list_add (struct cb_name_list *list, const c
 
 /* config.c */
 
-enum cb_assign_identifier {
-  CB_ASSIGN_DEVICE,
-  CB_ASSIGN_DATA,
-  CB_ASSIGN_LITERAL,
+enum cb_assign_clause {
+  CB_ASSIGN_COBOL2002,		/* COBOL 2002 standard */
+  CB_ASSIGN_MF,			/* Micro Focus COBOL compatibility */
+  CB_ASSIGN_IBM,		/* IBM COBOL compatibility */
 };
 
 enum cb_binary_byteorder {

@@ -178,14 +178,14 @@ cb_load_conf (const char *fname, int check_nodef)
 		else
 		  goto invalid_value;
 	      }
-	    else if (strcmp (name, "assign-identifier") == 0)
+	    else if (strcmp (name, "assign-clause") == 0)
 	      {
-		if (strcmp (val, "device-name") == 0)
+		if (strcmp (val, "cobol2002") == 0)
 		  goto unsupported_value;
-		else if (strcmp (val, "data-name") == 0)
-		  cb_assign_identifier = CB_ASSIGN_DATA;
-		else if (strcmp (val, "literal") == 0)
-		  cb_assign_identifier = CB_ASSIGN_LITERAL;
+		else if (strcmp (val, "mf") == 0)
+		  cb_assign_clause = CB_ASSIGN_MF;
+		else if (strcmp (val, "ibm") == 0)
+		  cb_assign_clause = CB_ASSIGN_IBM;
 		else
 		  goto invalid_value;
 	      }

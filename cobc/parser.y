@@ -510,24 +510,14 @@ select_clause:
 /* ASSIGN clause */
 
 assign_clause:
-  ASSIGN _to LITERAL
+  ASSIGN _to assignment_name
   {
-    current_file->assign = $3;
+    current_file->assign = cb_build_assignment_name ($3);
   }
-| ASSIGN _to WORD
-  {
-    if (cb_assign_identifier == CB_ASSIGN_LITERAL)
-      /* convert identifier to literal */
-      current_file->assign =
-	cb_build_alphanumeric_literal (CB_REFERENCE ($3)->word->name,
-				       strlen (CB_REFERENCE ($3)->word->name));
-    else
-      {
-	current_file->assign = $3;
-	current_program->reference_list =
-	  cb_list_add (current_program->reference_list, $3);
-      }
-  }
+;
+assignment_name:
+  LITERAL
+| WORD
 ;
 
 
