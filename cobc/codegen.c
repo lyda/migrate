@@ -1487,11 +1487,19 @@ dump_working ()
 }
 
 void
-proc_header (int using)
+proc_header (cob_tree_list using)
 {
   cob_tree sy, sy1;
   int i;
   int stabs_type = '3';
+  cob_tree_list l;
+
+  for (l = using; l; l = l->next)
+    {
+      cob_tree sy = l->item;
+      sy->linkage_flg = using_offset;
+      using_offset += 4;
+    }
 
   if (using || cob_module_flag)
     pgm_label = chg_underline (program_id);
@@ -1610,7 +1618,7 @@ proc_header (int using)
 }
 
 void
-proc_trail (int using)
+proc_trail (cob_tree_list using)
 {
   struct list *list;
   cob_tree sy;
@@ -3751,13 +3759,6 @@ set_rec_varying_info (cob_tree f, cob_tree lmin, cob_tree lmax,
   rv->lmin = lmin;
   rv->lmax = lmax;
   rv->reclen = reclen;
-}
-
-void
-gen_save_using (cob_tree sy)
-{
-  sy->linkage_flg = using_offset;
-  using_offset += 4;
 }
 
 void

@@ -21,7 +21,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 468
+%expect 465
 
 %{
 #define yydebug		cob_trace_parser
@@ -134,22 +134,22 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <ival> flag_rounded,opt_sign_separate
 %type <ival> organization_options,access_options,open_mode,call_mode
 %type <ival> opt_read_next,usage
-%type <ival> procedure_using,sort_direction,write_options
+%type <ival> sort_direction,write_options
 %type <ival> opt_on_size_error_sentence,opt_on_overflow_sentence
 %type <ival> on_xxx_statement_list
 %type <ival> at_end_sentence,invalid_key_sentence
 %type <list> label_list,subscript_list,number_list,variable_list
-%type <list> conditional_variable_list
+%type <list> conditional_variable_list,name_list
 %type <list> evaluate_subject_list,evaluate_when_list,evaluate_object_list
 %type <para> call_using,call_parameter,call_parameter_list
 %type <mval> numeric_variable_list,numeric_edited_variable_list
 %type <pfval> perform_after
 %type <pfvals> opt_perform_after
-%type <list> sort_file_list,display_list
+%type <list> sort_file_list,display_list,procedure_using
 %type <str> idstring
 %type <tree> field_description,label,label_name,filename
 %type <tree> file_description,redefines_var,function_call,subscript
-%type <tree> name,gname,number,file,level1_variable,opt_def_name,def_name
+%type <tree> name,value,number,file,level1_variable,opt_def_name,def_name
 %type <tree> opt_read_into,opt_write_from,field_name,expr,unsafe_expr
 %type <tree> opt_unstring_count,opt_unstring_delimiter,opt_unstring_tallying
 %type <tree> numeric_variable,group_variable,numeric_edited_variable
@@ -856,7 +856,7 @@ occurs_clause:
   opt_indexed_by
 | OCCURS integer TO integer opt_times DEPENDING opt_on
   { curr_division = CDIV_INITIAL; }
-  gname
+  value
   {
     curr_division = CDIV_DATA;
     curr_field->times = $4;
@@ -1004,8 +1004,8 @@ opt_report_name:
 | /* NOTHING */
 ;
 report_value:
-| VALUE opt_is gname
-| SOURCE opt_is gname
+| VALUE opt_is value
+| SOURCE opt_is value
 | SUM opt_of name
 ;
 opt_report_column:
@@ -1065,12 +1065,8 @@ procedure_division:
 /* USING clause */
 
 procedure_using:
-  /* nothing */			{ $$ = 0; }
-| USING using_vars		{ $$ = 1; }
-;
-using_vars:
-  gname				{ gen_save_using ($1); }
-| using_vars gname		{ gen_save_using ($2); }
+  /* nothing */			{ $$ = NULL; }
+| USING name_list		{ $$ = $2; }
 ;
 
 /* Procedures */
@@ -1256,7 +1252,7 @@ accept_statement:
 | ACCEPT name FROM DAY_OF_WEEK	{ asm_call_1 ("cob_accept_day_of_week", $2); }
 | ACCEPT name FROM TIME		{ asm_call_1 ("cob_accept_time", $2); }
 | ACCEPT name FROM COMMAND_LINE	{ asm_call_1 ("cob_accept_command_line", $2); }
-| ACCEPT name FROM ENVIRONMENT_VARIABLE gname
+| ACCEPT name FROM ENVIRONMENT_VARIABLE value
   {
     asm_call_2 ("cob_accept_environment", $2, $5)
   }
@@ -1287,7 +1283,7 @@ add_body:
 ;
 opt_add_to:
   /* nothing */			{ $$ = NULL; }
-| TO gname			{ $$ = $2; }
+| TO value			{ $$ = $2; }
 ;
 end_add: | END_ADD ;
 
@@ -1314,7 +1310,7 @@ alter_option:
  */
 
 call_statement:
-  CALL gname			{ current_call_mode = CALL_BY_REFERENCE; }
+  CALL value			{ current_call_mode = CALL_BY_REFERENCE; }
   call_using call_returning
   {
     gen_call ($2, $4);
@@ -1333,11 +1329,11 @@ call_parameter_list:
   call_parameter		{ $2->next = $1; $$ = $2; }
 ;
 call_parameter:
-  gname
+  value
   {
     $$ = make_parameter ($1, current_call_mode);
   }
-| BY call_mode gname
+| BY call_mode value
   {
     current_call_mode = $2;
     $$ = make_parameter ($3, current_call_mode);
@@ -1382,7 +1378,7 @@ opt_end_call: | END_CALL ;
  */
 
 cancel_statement:
-  CANCEL gname { gen_cancel ($2); }
+  CANCEL value			{ gen_cancel ($2); }
 ;
 
 
@@ -1443,7 +1439,7 @@ display_statement:
   ;
 display_list:
   /* nothing */			{ $$ = NULL; }
-| display_list gname		{ $$ = list_add ($1, $2); }
+| display_list value		{ $$ = list_add ($1, $2); }
 ;
 display_upon:
 | CONSOLE
@@ -1643,11 +1639,12 @@ opt_end_if: | END_IF ;
  */
 
 initialize_statement:
-  INITIALIZE initialize_variables opt_initialize_replacing
-;
-initialize_variables:
-  gname				{ gen_initialize ($1); }
-| initialize_variables gname	{ gen_initialize ($2); }
+  INITIALIZE name_list opt_initialize_replacing
+  {
+    cob_tree_list l;
+    for (l = $2; l; l = l->next)
+      gen_initialize (l->item);
+  }
 ;
 opt_initialize_replacing:
 | REPLACING initialize_replacing_list
@@ -1774,15 +1771,16 @@ opt_initial: | TOK_INITIAL ;
  */
 
 move_statement:
-  MOVE gname TO move_vars
+  MOVE value TO name_list
+  {
+    cob_tree_list l;
+    for (l = $4; l; l = l->next)
+      gen_move ($2, l->item);
+  }
 | MOVE CORRESPONDING group_variable TO group_variable
   {
     gen_corresponding (gen_move, $3, $5, 0);
   }
-;
-move_vars:
-  gname				{ gen_move ($<tree>-1, $1); }
-| move_vars gname		{ gen_move ($<tree>-1, $2); }
 ;
 
 
@@ -1839,7 +1837,7 @@ perform_statement:
   ;
 perform_options:
   conditional_statement_list END_PERFORM
-| gname TIMES
+| value TIMES
   {
     gen_push_int($1);
     $<ival>$=gen_marklabel();
@@ -1881,7 +1879,7 @@ perform_options:
       }
   }
   END_PERFORM
-| opt_with_test VARYING name FROM gname opt_by gname UNTIL
+| opt_with_test VARYING name FROM value opt_by value UNTIL
   {
     gen_move($5,$3);
     /* BEFORE=1 AFTER=2 */
@@ -1966,7 +1964,7 @@ perform_options:
     gen_jmplabel($<ival>5);
     gen_dstlabel(lbl);
   }
-| label opt_perform_thru gname TIMES
+| label opt_perform_thru value TIMES
   {
     unsigned long lbl;
     gen_push_int($3);
@@ -1976,7 +1974,7 @@ perform_options:
     gen_perform_times(lbl);
   }
 | label opt_perform_thru opt_with_test VARYING name
-  FROM gname opt_by gname UNTIL
+  FROM value opt_by value UNTIL
   {
     gen_move($7,$5);
     if ($3 == 2)
@@ -2085,7 +2083,7 @@ opt_perform_after:
   }
 ;
 perform_after:
-  AFTER name FROM gname BY gname UNTIL
+  AFTER name FROM value BY value UNTIL
   {
     gen_move ($4, $2);
     /* BEFORE=1 AFTER=2 */
@@ -2444,7 +2442,7 @@ string_delimited_list:
   {
     $$ = $1;
   }
-| string_name_list DELIMITED opt_by gname
+| string_name_list DELIMITED opt_by value
   {
     $$ = cons (make_string_item (STRING_DELIMITED_NAME, $4), $1);
   }
@@ -2454,11 +2452,11 @@ string_delimited_list:
   }
 ;
 string_name_list:
-  gname
+  value
   {
     $$ = make_list (make_string_item (STRING_CONCATENATE, $1));
   }
-| string_name_list gname
+| string_name_list value
   {
     $$ = list_add ($1, make_string_item (STRING_CONCATENATE, $2));
   }
@@ -2523,7 +2521,7 @@ unstring_delimited_list:
   unstring_delimited_item	{ $$ = list_append ($1, $3); }
 ;
 unstring_delimited_item:
-  flag_all gname
+  flag_all value
   {
     int type = $1 ? UNSTRING_DELIMITED_ALL : UNSTRING_DELIMITED_BY;
     $$ = make_list (make_string_item (type, $2));
@@ -2575,11 +2573,11 @@ write_statement:
 ;
 opt_write_from:
   /* nothing */			{ $$ = NULL; }
-| FROM gname			{ $$ = $2; }
+| FROM value			{ $$ = $2; }
 ;
 write_options:
   /* nothing */			{ $$ = 0; }
-| before_after opt_advancing gname opt_line { gen_loadvar($3); $$ = $1; }
+| before_after opt_advancing value opt_line { gen_loadvar($3); $$ = $1; }
 | before_after opt_advancing PAGE { $$ = -$1; }
 ;
 opt_advancing: | ADVANCING ;
@@ -2797,7 +2795,7 @@ expr:
   }
 ;
 unsafe_expr:
-  gname				{ $$ = $1; }
+  value				{ $$ = $1; }
 | '(' unsafe_expr ')'		{ $$ = $2; }
 | unsafe_expr '+' unsafe_expr	{ $$ = make_expr ($1, '+', $3); }
 | unsafe_expr '-' unsafe_expr	{ $$ = make_expr ($1, '-', $3); }
@@ -2900,7 +2898,7 @@ number_list:
 | number_list number		{ $$ = list_add ($1, $2); }
 ;
 number:
-  gname
+  value
   {
     if (!is_numeric ($1))
       yyerror ("numeric value is expected: %s", COB_FIELD_NAME ($1));
@@ -2924,7 +2922,7 @@ idstring:
 ;
 
 
-gname:
+value:
   name
 | gliteral
 | function_call
@@ -2937,8 +2935,8 @@ function_call:
   }
 ;
 function_args:
-  gname { }
-| function_args gname
+  value { }
+| function_args value
 ;
 name_or_literal:
   name
@@ -3020,6 +3018,10 @@ variable_list:
   variable			{ $$ = make_list ($1); }
 | variable_list variable	{ $$ = list_add ($1, $2); }
 ;
+name_list:
+  name				{ $$ = make_list ($1); }
+| name_list name		{ $$ = list_add ($1, $2); }
+;
 name:
   variable
 | variable '(' subscript ':' ')'	   { $$ = make_substring ($1, $3, 0); }
@@ -3055,9 +3057,9 @@ subscript_list:
 | subscript_list subscript	{ $$ = cons ($2, $1); }
 ;
 subscript:
-  gname				{ $$ = $1; }
-| subscript '+' gname		{ $$ = make_expr ($1, '+', $3); }
-| subscript '-' gname		{ $$ = make_expr ($1, '-', $3); }
+  value				{ $$ = $1; }
+| subscript '+' value		{ $$ = make_expr ($1, '+', $3); }
+| subscript '-' value		{ $$ = make_expr ($1, '-', $3); }
 ;
 qualified_var:
   unqualified_var		{ $$ = $1; }
