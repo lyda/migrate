@@ -70,6 +70,8 @@ static void process_eol (void);
 
 <*>^"D ".*		{ if (cob_debug_flag) yyless(2); }
 
+<*>[,;]			{ fputc (' ', yyout); }
+
 <*>\n			{ process_eol (); }
 
 <*>\n-[ \t]*[\"\']? {
@@ -89,8 +91,6 @@ static void process_eol (void);
 "INCLUDE"		{ BEGIN COPY_STATE; return COPY; }
 "REPLACE"		{ BEGIN COPY_STATE; return REPLACE; }
 
-[,;]			{ fputc (' ', yyout); }
-
 . |
 [ \t]* |
 [0-9A-Z_-]+ |
@@ -101,7 +101,7 @@ static void process_eol (void);
 <PIC_STATE>{
   [ \t]* |
   "IS"			{ ECHO; }
-  .*			{ ECHO; BEGIN INITIAL; }
+  [^;\n]*		{ ECHO; BEGIN INITIAL; }
 }
 
 <COPY_STATE>{
