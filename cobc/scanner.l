@@ -148,7 +148,6 @@ X?[\'\"] {
     return '(';
 }
 
-"."/[ \t\n]	{ return '.'; }
 "**"		{ return '^'; }
 .		{ return yytext[0]; }
 

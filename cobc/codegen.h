@@ -398,26 +398,12 @@ struct occurs
 #define DAY 3
 #define DAY_OF_WEEK 4
 
-/* OPENMD */
-/*
-#define INPUT 	1
-#define I_O 	2
-#define OUTPUT 	3
-#define EXTEND  4
-*/
 /* ZERONUM */
 
 #define ZERO 0
 #define ZEROS 1
 #define ZEROES 2
 
-/* DIVISNUM */
-/*
-#define IDENTIFICATION 0
-#define ENVIRONMENT 1
-#define DATA 2
-#define PROCEDURE 3
-*/
 /* CONDITIONAL */
 
 #define EQUAL 	1
