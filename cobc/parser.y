@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 83
+%expect 81
 
 %defines
 %verbose
@@ -2943,7 +2943,7 @@ unstring_delimited_list:
   unstring_delimited_item	{ $$ = list_add ($1, $3); }
 ;
 unstring_delimited_item:
-  flag_all value
+  flag_all non_all_value
   {
     $$ = cb_build_funcall_2 ("cob_unstring_delimited", $2, $1);
   }
