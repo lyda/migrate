@@ -48,16 +48,22 @@ make_list (void *x)
 }
 
 cob_tree_list
-list_append (cob_tree_list l, void *x)
+list_add (cob_tree_list l, void *x)
 {
-  if (l == NULL)
-    return make_list (x);
+  return list_append (l, make_list (x));
+}
+
+cob_tree_list
+list_append (cob_tree_list l1, cob_tree_list l2)
+{
+  if (l1 == NULL)
+    return l2;
   else
     {
       cob_tree_list p;
-      for (p = l; p->next != NULL; p = p->next);
-      p->next = cons (x, NULL);
-      return l;
+      for (p = l1; p->next != NULL; p = p->next);
+      p->next = l2;
+      return l1;
     }
 }
 

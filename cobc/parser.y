@@ -50,6 +50,7 @@ static unsigned long lbend, lbstart;
 static unsigned int perform_after_sw;
 
 static cob_tree current_section, current_paragraph;
+static cob_tree inspect_name;
 
 static int warning_count = 0;
 static int error_count = 0;
@@ -172,7 +173,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <tree> search_all_when_conditional
 %type <list> inspect_tallying,inspect_replacing,inspect_converting
 %type <list> tallying_list,replacing_list,inspect_before_after_list
-%type <insp> tallying_item,tallying_option,replacing_item,inspect_before_after
+%type <insp> tallying_item,replacing_item,inspect_before_after
 %type <udstval> unstring_destinations,unstring_dest_var
 %type <udval> unstring_delimited_vars,unstring_delimited
 
@@ -1423,7 +1424,7 @@ add_body:
   }
 | number_list opt_add_to GIVING numeric_edited_variable_list
   {
-    gen_add_giving ($2 ? list_append ($1, $2) : $1, $4);
+    gen_add_giving ($2 ? list_add ($1, $2) : $1, $4);
   }
 | CORRESPONDING group_variable opt_to group_variable flag_rounded
   {
@@ -1662,7 +1663,7 @@ evaluate_statement:
 evaluate_subject_list:
   evaluate_subject		{ $$ = make_list ($1); }
 | evaluate_subject_list ALSO
-  evaluate_subject		{ $$ = list_append ($1, $3); }
+  evaluate_subject		{ $$ = list_add ($1, $3); }
 ;
 evaluate_subject:
   unsafe_expr opt_is		{ $$ = $1; }
@@ -1694,12 +1695,12 @@ evaluate_body:
 evaluate_when_list:
   WHEN evaluate_object_list	{ $$ = make_list ((cob_tree) $2); }
 | evaluate_when_list
-  WHEN evaluate_object_list	{ $$ = list_append ($1, (cob_tree) $3); }
+  WHEN evaluate_object_list	{ $$ = list_add ($1, (cob_tree) $3); }
 ;
 evaluate_object_list:
   evaluate_object		{ $$ = make_list ($1); }
 | evaluate_object_list ALSO
-  evaluate_object		{ $$ = list_append ($1, $3); }
+  evaluate_object		{ $$ = list_add ($1, $3); }
 ;
 evaluate_object:
   flag_not evaluate_object_1
@@ -1767,7 +1768,7 @@ goto_statement:
 ;
 label_list:
   label				{ $$ = make_list ($1); }
-| label_list label		{ $$ = list_append ($1, $2); }
+| label_list label		{ $$ = list_add ($1, $2); }
 ;
 
 
@@ -1828,26 +1829,25 @@ inspect_tallying:
   TALLYING tallying_list	{ $$ = $2; }
 ;
 tallying_list:
-  tallying_item			{ $$ = cons ($1, NULL); }
+  name FOR			{ inspect_name = $1; }
+  tallying_item			{ $$ = cons ($4, NULL); }
+| tallying_list name FOR	{ inspect_name = $2; }
+  tallying_item			{ $$ = cons ($5, $1); }
 | tallying_list tallying_item	{ $$ = cons ($2, $1); }
 ;
 tallying_item:
-  name FOR tallying_option	{ $$ = $3; }
-;
-tallying_option:
   CHARACTERS inspect_before_after_list
   {
-    $$ = make_inspect_item (INSPECT_CHARACTERS, $<tree>-1, NULL, $2);
+    $$ = make_inspect_item (INSPECT_CHARACTERS, inspect_name, 0, $2);
   }
 | ALL name_or_literal inspect_before_after_list
   {
-    $$ = make_inspect_item (INSPECT_ALL, $<tree>-1, $2, $3);
+    $$ = make_inspect_item (INSPECT_ALL, inspect_name, $2, $3);
   }
 | LEADING name_or_literal inspect_before_after_list
   {
-    $$ = make_inspect_item (INSPECT_LEADING, $<tree>-1, $2, $3);
+    $$ = make_inspect_item (INSPECT_LEADING, inspect_name, $2, $3);
   }
-;
 
 /* INSPECT REPLACING */
 
@@ -1888,7 +1888,7 @@ inspect_converting:
 
 inspect_before_after_list:
   /* nothing */					 { $$ = NULL; }
-| inspect_before_after_list inspect_before_after { $$ = list_append ($1, $2); }
+| inspect_before_after_list inspect_before_after { $$ = list_add ($1, $2); }
 ;
 inspect_before_after:
   BEFORE opt_initial name_or_literal
@@ -2998,7 +2998,7 @@ file:
 
 number_list:
   number			{ $$ = make_list ($1); }
-| number_list number		{ $$ = list_append ($1, $2); }
+| number_list number		{ $$ = list_add ($1, $2); }
 ;
 number:
   gname
@@ -3113,11 +3113,11 @@ filename:
 ;
 varcond_list:
   VARCOND			{ $$ = make_list ($1); }
-| varcond_list VARCOND		{ $$ = list_append ($1, $2); }
+| varcond_list VARCOND		{ $$ = list_add ($1, $2); }
 ;
 variable_list:
   variable			{ $$ = make_list ($1); }
-| variable_list variable	{ $$ = list_append ($1, $2); }
+| variable_list variable	{ $$ = list_add ($1, $2); }
 ;
 name:
   variable
