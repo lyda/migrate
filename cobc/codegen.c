@@ -1755,6 +1755,17 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
 	  else
 	    attr = "cob_alnum_attr";
 	}
+      else if (type == COB_TYPE_NUMERIC
+	       && p->pic->decimals == 0
+	       && p->f.sign_separate == 0
+	       && p->f.sign_leading == 0
+	       && p->f.blank_zero == 0)
+	{
+	  if (p->pic->have_sign)
+	    sprintf (attr_buff, "cob_sint_attr[%d]", p->pic->digits);
+	  else
+	    sprintf (attr_buff, "cob_uint_attr[%d]", p->pic->digits);
+	}
       else
 	{
 	  sprintf (attr_buff, "%s_attr", fname);
