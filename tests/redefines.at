@@ -22,7 +22,24 @@
 
 ## 13.16.42.2 Syntax rules
 
-# 1) TODO
+# 1) DONE
+
+AT_SETUP([REDEFINES not following entry-name])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X.
+       01 Y             PIC 9 REDEFINES X.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:7: REDEFINES clause must follow entry-name
+])
+
+AT_CLEANUP
 
 
 # 2) DONE

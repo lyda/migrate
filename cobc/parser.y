@@ -120,6 +120,8 @@ static int current_call_mode;
 static const char *current_inspect_func;
 static cb_tree current_inspect_data;
 
+static int initial_clause;
+
 static int last_operator;
 static cb_tree last_lefthand;
 
@@ -1019,7 +1021,7 @@ data_description:
     if (current_field == NULL)
       YYERROR;
   }
-  field_options '.'
+  data_description_clause_sequence '.'
   {
     $<tree>$ = CB_TREE (current_field);
   }
@@ -1049,10 +1051,12 @@ entry_name:
 | WORD				{ $$ = $1; }
 ;
 
-field_options:
-| field_options field_option
+data_description_clause_sequence:
+				{ initial_clause = 1; }
+| data_description_clause_sequence
+  data_description_clause	{ initial_clause = 0; }
 ;
-field_option:
+data_description_clause:
   redefines_clause
 | external_clause
 | global_clause
@@ -1073,9 +1077,14 @@ field_option:
 redefines_clause:
   REDEFINES qualified_word
   {
-    current_field->redefines = validate_redefines (current_field, $2);
-    if (current_field->redefines == NULL)
-      YYERROR;
+    if (initial_clause)
+      {
+	current_field->redefines = validate_redefines (current_field, $2);
+	if (current_field->redefines == NULL)
+	  YYERROR;
+      }
+    else
+      cb_error_x ($2, _("REDEFINES clause must follow entry-name"))
   }
 ;
 
