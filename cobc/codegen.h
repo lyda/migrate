@@ -23,6 +23,7 @@
 struct cobc_program_spec {
   char *program_id;
   int initial_program;
+  int loop_counter;
   int enable_screen;
   struct cobc_list *class_list;
   struct cobc_list *index_list;

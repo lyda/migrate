@@ -35,61 +35,45 @@
 
 static void output_tree (cobc_tree x);
 
-static int loop_counter, loop_counter_max;
-static int global_label;
-
 
 /*
  * Output routine
  */
 
-static int output_switch = 0;
 static int output_indent_level = 0;
 
 static void
 output (char *fmt, ...)
 {
-  if (output_switch)
-    {
-      va_list ap;
-      va_start (ap, fmt);
-      vfprintf (cobc_out, fmt, ap);
-      va_end (ap);
-    }
+  va_list ap;
+  va_start (ap, fmt);
+  vfprintf (cobc_out, fmt, ap);
+  va_end (ap);
 }
 
 static void
 output_newline (void)
 {
-  if (output_switch)
-    {
-      fputs ("\n", cobc_out);
-    }
+  fputs ("\n", cobc_out);
 }
 
 static void
 output_prefix (void)
 {
-  if (output_switch)
-    {
-      int i;
-      for (i = 0; i < output_indent_level; i++)
-	fputc (' ', cobc_out);
-    }
+  int i;
+  for (i = 0; i < output_indent_level; i++)
+    fputc (' ', cobc_out);
 }
 
 static void
 output_line (char *fmt, ...)
 {
-  if (output_switch)
-    {
-      va_list ap;
-      va_start (ap, fmt);
-      output_prefix ();
-      vfprintf (cobc_out, fmt, ap);
-      fputc ('\n', cobc_out);
-      va_end (ap);
-    }
+  va_list ap;
+  va_start (ap, fmt);
+  output_prefix ();
+  vfprintf (cobc_out, fmt, ap);
+  fputc ('\n', cobc_out);
+  va_end (ap);
 }
 
 static void
@@ -1159,8 +1143,8 @@ output_class (struct cobc_class *p)
 static void
 output_perform_call (struct cobc_label *lb, struct cobc_label *le)
 {
-  output_line ("cob_perform (%d, lb_%s, le_%s);",
-	       global_label++, lb->cname, le->cname);
+  static int id = COB_INITIAL_PERFORM_ID;
+  output_line ("cob_perform (%d, lb_%s, le_%s);", id++, lb->cname, le->cname);
 }
 
 static void
@@ -1233,6 +1217,8 @@ output_perform_after (struct cobc_perform *p, struct cobc_perform_varying *v)
 static void
 output_perform (struct cobc_perform *p)
 {
+  static int loop_counter = 0;
+
   switch (p->type)
     {
     case COBC_PERFORM_EXIT:
@@ -1549,8 +1535,8 @@ output_tree (cobc_tree x)
 }
 
 
-static void
-codegen_1 (struct cobc_program_spec *spec)
+void
+codegen (struct cobc_program_spec *spec)
 {
   struct cobc_list *l;
   struct cobc_field *p;
@@ -1666,7 +1652,7 @@ codegen_1 (struct cobc_program_spec *spec)
     output_line ("static int initialized = 0;\n");
   output_line ("int frame_index;");
   output_line ("struct cob_frame frame_stack[24];");
-  output_line ("int n[%d];", loop_counter_max);
+  output_line ("int n[%d];", spec->loop_counter);
   output_newline ();
 
   /* initialization */
@@ -1727,19 +1713,4 @@ codegen_1 (struct cobc_program_spec *spec)
       output_line ("return cob_return_code;");
       output_indent ("}", -2);
     }
-}
-
-void
-codegen (struct cobc_program_spec *spec)
-{
-  output_switch = 0;
-  loop_counter = 0;
-  global_label = COB_INITIAL_PERFORM_ID;
-  codegen_1 (spec);
-  loop_counter_max = loop_counter;
-
-  output_switch = 1;
-  loop_counter = 0;
-  global_label = COB_INITIAL_PERFORM_ID;
-  codegen_1 (spec);
 }

@@ -1,3 +1,13 @@
+2002-10-08  Keisuke Nishida  <knishida@netlab.jp>
+
+	* codegen.h (cobc_program_spec): New member `loop_counter'.
+	* parser.y (perform_option): Increment loop_counter.
+	* codegen.c (loop_counter, loop_counter_max): Removed.
+	(output_perform): Declare loop_counter as a local variable.
+	(global_label, output_switch): Removed.
+	(output_perform_call): Don't use global_label.
+	(codegen): Merge codegen_1.  Traverse the tree only once.
+
 2002-10-06  Keisuke Nishida  <knishida@netlab.jp>
 
 	* Integrate numeric expressions and conditional expressions.

@@ -2375,6 +2375,7 @@ perform_option:
     cobc_location = @1;
     $$ = make_perform (COBC_PERFORM_TIMES);
     COBC_PERFORM ($$)->data = $1;
+    program_spec.loop_counter++;
   }
 | perform_test UNTIL condition
   {
