@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 419
+%expect 422
 
 %{
 #define yydebug		cob_trace_parser
@@ -91,14 +91,14 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %token RIGHT,AUTO,REQUIRED,FULL,JUSTIFIED,BLINK,SECURE,BELL,COLUMN,SYNCHRONIZED
 %token TOK_INITIAL,FIRST,ALL,LEADING,OF,IN,BY,STRING,UNSTRING,DEBUGGING
 %token START,DELETE,PROGRAM,GLOBAL,EXTERNAL,SIZE,DELIMITED,COLLATING,SEQUENCE
-%token GIVING,ERASE,INSPECT,TALLYING,REPLACING,ON,POINTER,OVERFLOW,NATIVE
+%token GIVING,ERASE,INSPECT,TALLYING,REPLACING,ON,OFF,POINTER,OVERFLOW,NATIVE
 %token DELIMITER,COUNT,LEFT,TRAILING,CHARACTER,FILLER,OCCURS,TIMES
 %token ADD,SUBTRACT,MULTIPLY,DIVIDE,ROUNDED,REMAINDER,ERROR,SIZE,INDEX
 %token FD,SD,REDEFINES,PICTURE,FILEN,USAGE,BLANK,SIGN,VALUE,MOVE,LABEL
 %token PROGRAM_ID,DIVISION,CONFIGURATION,SPECIAL_NAMES
-%token FILE_CONTROL,I_O_CONTROL,FROM,UPDATE,SAME,AREA,EXCEPTION
-%token WORKING_STORAGE,LINKAGE,DECIMAL_POINT,COMMA,DUPLICATES,WITH
-%token RECORD,OMITTED,STANDARD,RECORDS,BLOCK,VARYING,UNTIL,EXIT
+%token FILE_CONTROL,I_O_CONTROL,FROM,UPDATE,SAME,AREA,EXCEPTION,UNTIL
+%token WORKING_STORAGE,LINKAGE,DECIMAL_POINT,COMMA,DUPLICATES,WITH,EXIT
+%token RECORD,OMITTED,STANDARD,STANDARD_1,STANDARD_2,RECORDS,BLOCK,VARYING
 %token CONTAINS,CHARACTERS,COMPUTE,GO,STOP,RUN,ACCEPT,PERFORM
 %token IF,ELSE,SENTENCE,LINE,PAGE,OPEN,CLOSE,REWRITE,SECTION
 %token ADVANCING,INTO,AT,END,NEGATIVE,POSITIVE,SPACES,NOT
@@ -115,7 +115,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %token RETURNING,TRUE,FALSE,ANY,SUBSCVAR,FUNCTION,OPTIONAL
 %token REPORT,RD,CONTROL,LIMIT,FINAL,HEADING,FOOTING,LAST,DETAIL,SUM
 %token POSITION,FILE_ID,DEPENDING,TYPE,SOURCE,CORRESPONDING,CONVERTING
-%token INITIATE,GENERATE,TERMINATE,TOK_NULL,ADDRESS,NOECHO,LPAR
+%token INITIATE,GENERATE,TERMINATE,NOECHO,LPAR
 %token IDENTIFICATION,ENVIRONMENT,DATA,PROCEDURE
 %token AUTHOR,DATE_WRITTEN,DATE_COMPILED,INSTALLATION,SECURITY
 %token COMMON,RETURN,END_RETURN,PREVIOUS,NEXT,PACKED_DECIMAL
@@ -293,18 +293,67 @@ special_names:
 | special_names special_name
 ;
 special_name:
-  special_name_alphabet
+  special_name_defined
+| special_name_alphabet
 | special_name_currency
 | special_name_decimal_point
 | special_name_console
 ;
 
+
+/* User defined name */
+
+special_name_defined:
+  SYMBOL_TOK opt_is SYMBOL_TOK { }
+| SYMBOL_TOK opt_is SYMBOL_TOK on_off_names { }
+| SYMBOL_TOK on_off_names { }
+;
+on_off_names:
+  on_status_is_name
+| on_status_is_name off_status_is_name
+| off_status_is_name
+| off_status_is_name on_status_is_name
+;
+on_status_is_name:
+  ON opt_status opt_is SYMBOL_TOK
+;
+off_status_is_name:
+  OFF opt_status opt_is SYMBOL_TOK
+;
+
+
 /* ALPHABET */
 
 special_name_alphabet:
-  ALPHABET idstring opt_is NATIVE { yywarn ("ALPHABET name is ignored"); }
+  ALPHABET idstring opt_is alphabet_name
+  {
+    yywarn ("ALPHABET name is ignored");
+  }
+;
+alphabet_name:
+  STANDARD_1
+| STANDARD_2
+| NATIVE
+| SYMBOL_TOK { }
+| alphabet_literal_list
+;
+alphabet_literal_list:
+  alphabet_literal
+| alphabet_literal_list alphabet_literal
+;
+alphabet_literal:
+  literal alphabet_literal_option { }
+;
+alphabet_literal_option:
+  THRU literal
+| also_literal_list
+;
+also_literal_list:
+  ALSO literal
+| also_literal_list ALSO literal
 ;
 
+
 /* CURRENCY */
 
 special_name_currency:
@@ -314,13 +363,16 @@ special_name_currency:
   }
 ;
 
+
 /* DECIMAL_POINT */
 
 special_name_decimal_point:
   DECIMAL_POINT opt_is COMMA	{ decimal_comma = 1; }
 ;
 
+
 /* CONSOLE */
+
 special_name_console:
   CONSOLE opt_is CONSOLE	{ yywarn ("CONSOLE name is ignored"); }
 ;
@@ -2928,6 +2980,7 @@ opt_line: | LINE ;
 opt_final: | FINAL ;
 opt_of: | OF ;
 opt_program: | PROGRAM ;
+opt_status: | STATUS ;
 opt_to: | TO ;
 opt_upon: | UPON ;
 opt_with: | WITH ;
