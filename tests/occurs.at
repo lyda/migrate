@@ -129,8 +129,39 @@ AT_CLEANUP
 
 # 19) TODO
 
-# 20) TODO
+
+# 20) DONE
 
+AT_SETUP([OCCURS DEPENDING followed by another field])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 G-1.
+         02 X           PIC X OCCURS 1 TO 3 DEPENDING ON I.
+         02 Y           PIC X.
+       01 G-2.
+         02 G-3         OCCURS 1 TO 3 DEPENDING ON I.
+           03 X         PIC X.
+         02 Y           PIC X.
+       01 G-4.
+         02 G-5.
+           03 X         PIC X OCCURS 1 TO 3 DEPENDING ON I.
+         02 Y           PIC X.
+       01 I             PIC 9.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:7: `X' cannot have OCCURS DEPENDING
+prog.cob:10: `G-3' cannot have OCCURS DEPENDING
+prog.cob:15: `X' cannot have OCCURS DEPENDING
+])
+
+AT_CLEANUP
+
+
 # 21) TODO
 
 # 22) TODO
