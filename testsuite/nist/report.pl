@@ -34,8 +34,8 @@ print LOG "Filename    total pass fail deleted inspect\n";
 print LOG "--------    ----- ---- ---- ------- -------\n";
 
 foreach $in (glob("lib/*.CBL")) {
-  print "cobc -m -I ../copy $in\n";
-  system ("cobc -m -I ../copy $in");
+  print "cobc -m $in\n";
+  system ("cobc -m $in");
 }
 
 foreach $in (sort (glob("*.{CBL,SUB}"))) {
@@ -53,8 +53,9 @@ foreach $in (sort (glob("*.{CBL,SUB}"))) {
     $test_skipped++;
     print LOG "  ----- test skipped -----\n";
   } else {
-    print "cobc -I ../copy $in && $cmd\n";
-    if (system ("cobc -I ../copy $in") != 0) {
+    $copy = ($exe =~ /^SM/) ? "-I ../copy " : "";
+    print "cobc $copy$in && $cmd\n";
+    if (system ("cobc $copy$in") != 0) {
       $compile_error++;
       print LOG "  ===== compile error =====\n";
     } else {
