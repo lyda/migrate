@@ -41,6 +41,32 @@
 
 #define PENDING(x)	cb_warning (_("`%s' not implemented"), x)
 
+#define VALIDATE(v,x,msg,cond)			\
+  {						\
+    if ((x) == cb_error_node)			\
+      v = cb_error_node;			\
+    else if (!(cond))				\
+      {						\
+	cb_error_x (x, msg, tree_name (x));	\
+	v = cb_error_node;			\
+      }						\
+    else					\
+      v = x;					\
+  }
+
+#define VALIDATE_2(v,x,flag,msg,cond)		\
+  {						\
+    if ((x) == cb_error_node)			\
+      v = cb_error_node;			\
+    else if (!(cond))				\
+      {						\
+	cb_error_x (x, msg, tree_name (x));	\
+	v = cb_error_node;			\
+      }						\
+    else					\
+      v = make_parameter_1 (flag, x);		\
+  }
+
 #define cb_ref(x)	(CB_REFERENCE (x)->value)
 
 #define push(x)	\
@@ -96,14 +122,6 @@ static int last_operator;
 static cb_tree last_lefthand;
 
 static int builtin_switch_id (cb_tree x);
-static cb_tree validate_data_name (cb_tree x);
-static cb_tree validate_group_name (cb_tree x);
-static cb_tree validate_record_name (cb_tree x);
-static cb_tree validate_numeric_name (cb_tree x, int rounded);
-static cb_tree validate_numeric_edited_name (cb_tree x, int rounded);
-static cb_tree validate_integer_name (cb_tree x);
-static cb_tree validate_alphanumeric_value (cb_tree x);
-static cb_tree validate_numeric_value (cb_tree x);
 
 static cb_tree build_file_handler (cb_tree file, cb_tree handler);
 static cb_tree build_connective_op (struct cb_list *l, char op);
@@ -3643,13 +3661,22 @@ less_or_equal: LE | LESS _than OR EQUAL _to ;
 /* Group name */
 
 group_name:
-  data_name			{ $$ = validate_group_name ($1); }
+  data_name
+  {
+    VALIDATE ($$, $1, _("group identifier is expected `%s'"),
+	      (field ($1)->children
+	       && CB_REFERENCE ($1)->offset == NULL));
+  }
 ;
 
 /* Record name */
 
 record_name:
-  data_name			{ $$ = validate_record_name ($1); }
+  data_name
+  {
+    VALIDATE ($$, $1, _("record name is expected `%s'"),
+	      field ($1)->file != NULL);
+  }
 ;
 
 /* Numeric name (with ROUNDED) */
@@ -3660,7 +3687,11 @@ numeric_name_list:
   numeric_name			{ $$ = list_add ($1, $2); }
 ;
 numeric_name:
-  data_name flag_rounded	{ $$ = validate_numeric_name ($1, $2); }
+  data_name flag_rounded
+  {
+    VALIDATE_2 ($$, $1, $2, _("numeric identifier is expected `%s'"),
+		(CB_TREE_CLASS ($1) == CB_CLASS_NUMERIC));
+  }
 ;
 
 /* Numeric-edited name (with ROUNDED) */
@@ -3671,13 +3702,23 @@ numeric_edited_name_list:
   numeric_edited_name		{ $$ = list_add ($1, $2); }
 ;
 numeric_edited_name:
-  data_name flag_rounded	{ $$ = validate_numeric_edited_name ($1, $2); }
+  data_name flag_rounded
+  {
+    VALIDATE_2 ($$, $1, $2, _("numeric or numeric-edited identifier is expected `%s'"),
+		CB_TREE_CATEGORY ($1) == CB_CATEGORY_NUMERIC
+		|| CB_TREE_CATEGORY ($1) == CB_CATEGORY_NUMERIC_EDITED);
+  }
 ;
 
 /* Integer name */
 
 integer_name:
-  data_name			{ $$ = validate_integer_name ($1); }
+  data_name
+  {
+    VALIDATE ($$, $1, _("integer identifier is expected `%s'"),
+	      CB_TREE_CLASS ($1) == CB_CLASS_NUMERIC
+	      && field ($1)->pic->expt >= 0);
+  }
 ;
 
 /* Data name */
@@ -3687,7 +3728,12 @@ data_name_list:
 | data_name_list data_name	{ $$ = list_add ($1, $2); }
 ;
 data_name:
-  value				{ $$ = validate_data_name ($1); }
+  value
+  {
+    VALIDATE ($$, $1, _("identifier is expected `%s'"),
+	      (CB_REFERENCE_P ($1)
+	       && CB_FIELD_P (CB_REFERENCE ($1)->value)));
+  }
 ;
 
 /* Table name */
@@ -3806,7 +3852,12 @@ undefined_word:
 /* Alphanumeric value */
 
 alphanumeric_value:
-  value				{ $$ = validate_alphanumeric_value ($1); }
+  value
+  {
+    VALIDATE ($$, $1, _("alphanumeric value is expected `%s'"),
+	      CB_TREE_CLASS ($1) == CB_CLASS_ALPHABETIC
+	      || CB_TREE_CLASS ($1) == CB_CLASS_ALPHANUMERIC);
+  }
 ;
 
 /* Numeric value */
@@ -3817,7 +3868,11 @@ numeric_value_list:
   numeric_value			{ $$ = list_add ($1, $2); }
 ;
 numeric_value:
-  value				{ $$ = validate_numeric_value ($1); }
+  value
+  {
+    VALIDATE ($$, $1, _("numeric value is expected `%s'"),
+	      CB_TREE_CLASS ($1) == CB_CLASS_NUMERIC);
+  }
 ;
 
 /* Integer value */
@@ -4093,132 +4148,6 @@ builtin_switch_id (cb_tree x)
       cb_error (_("not switch name"));
       return -1;
     }
-}
-
-
-static cb_tree
-validate_data_name (cb_tree x)
-{
-  if (x == cb_error_node)
-    return cb_error_node;
-
-  if (!CB_REFERENCE_P (x)
-      || !CB_FIELD_P (CB_REFERENCE (x)->value))
-    {
-      cb_error_x (x, _("`%s' not identifier"), tree_name (x));
-      return cb_error_node;
-    }
-
-  return x;
-}
-
-static cb_tree
-validate_group_name (cb_tree x)
-{
-  if (x == cb_error_node)
-    return cb_error_node;
-
-  if (CB_FIELD (cb_ref (x))->children == NULL
-      || CB_REFERENCE (x)->offset != NULL)
-    {
-      cb_error_x (x, _("`%s' not a group"), tree_name (x));
-      return cb_error_node;
-    }
-
-  return x;
-}
-
-static cb_tree
-validate_record_name (cb_tree x)
-{
-  if (x == cb_error_node)
-    return cb_error_node;
-
-  if (CB_FIELD (cb_ref (x))->file == NULL)
-    {
-      cb_error_x (x, _("`%s' not record name"), tree_name (x));
-      return cb_error_node;
-    }
-
-  return x;
-}
-
-static cb_tree
-validate_numeric_name (cb_tree x, int rounded)
-{
-  if (x == cb_error_node)
-    return cb_error_node;
-
-  if (CB_TREE_CLASS (x) != CB_CLASS_NUMERIC)
-    {
-      cb_error_x (x, _("`%s' not numeric"), tree_name (x));
-      return cb_error_node;
-    }
-
-  return make_parameter_1 (rounded, x);
-}
-
-static cb_tree
-validate_numeric_edited_name (cb_tree x, int rounded)
-{
-  if (x == cb_error_node)
-    return cb_error_node;
-
-  if (CB_TREE_CATEGORY (x) != CB_CATEGORY_NUMERIC
-      && CB_TREE_CATEGORY (x) != CB_CATEGORY_NUMERIC_EDITED)
-    {
-      cb_error_x (x, _("`%s' not numeric or numeric edited"), tree_name (x));
-      return cb_error_node;
-    }
-
-  return make_parameter_1 (rounded, x);
-}
-
-static cb_tree
-validate_integer_name (cb_tree x)
-{
-  if (x == cb_error_node)
-    return cb_error_node;
-
-  if (CB_TREE_CLASS (x) != CB_CLASS_NUMERIC
-      || CB_FIELD (cb_ref (x))->pic->expt < 0)
-    {
-      cb_error_x (x, _("`%s' not integer"), tree_name (x));
-      return cb_error_node;
-    }
-
-  return x;
-}
-
-static cb_tree
-validate_alphanumeric_value (cb_tree x)
-{
-  if (x == cb_error_node)
-    return cb_error_node;
-
-  if (CB_TREE_CLASS (x) != CB_CLASS_ALPHABETIC
-      && CB_TREE_CLASS (x) != CB_CLASS_ALPHANUMERIC)
-    {
-      cb_error_x (x, _("alphanumeric value is expected `%s'"), tree_name (x));
-      return cb_error_node;
-    }
-
-  return x;
-}
-
-static cb_tree
-validate_numeric_value (cb_tree x)
-{
-  if (x == cb_error_node)
-    return cb_error_node;
-
-  if (CB_TREE_CLASS (x) != CB_CLASS_NUMERIC)
-    {
-      cb_error_x (x, _("numeric value is expected `%s'"), tree_name (x));
-      return cb_error_node;
-    }
-
-  return x;
 }
 
 
