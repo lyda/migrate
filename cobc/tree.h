@@ -444,7 +444,7 @@ struct cb_reference {
   struct cb_list *subs;
   cb_tree offset;
   cb_tree length;
-  struct cb_reference *next;
+  cb_tree chain;
 };
 
 #define CB_REFERENCE(x)		(CB_TREE_CAST (CB_TAG_REFERENCE, struct cb_reference, x))
@@ -459,13 +459,9 @@ extern const char *associate (cb_tree name, cb_tree val);
 
 extern cb_tree make_filler (void);
 
-extern cb_tree resolve_data_name (cb_tree x);
-extern cb_tree resolve_label (cb_tree x);
-extern cb_tree resolve_file_name (cb_tree x);
-extern cb_tree resolve_class_name (cb_tree x);
-extern cb_tree resolve_mnemonic_name (cb_tree x);
+extern cb_tree cb_ref (cb_tree x);
 
-extern int validate_identifier (cb_tree x);
+extern cb_tree validate_identifier (cb_tree x);
 
 
 /*

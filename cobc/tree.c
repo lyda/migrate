@@ -974,7 +974,7 @@ cb_resolve_redefines (struct cb_field *field, cb_tree redefines)
   cb_tree x = CB_TREE (field);
 
   /* check qualification */
-  if (r->next)
+  if (r->chain)
     {
       cb_error_x (x, _("`%s' cannot be qualified"), CB_NAME (redefines));
       return NULL;
@@ -984,9 +984,9 @@ cb_resolve_redefines (struct cb_field *field, cb_tree redefines)
   if (field->parent)
     {
       cb_tree parent = CB_TREE (field->parent);
-      r->next = CB_REFERENCE (copy_reference (redefines, parent));
+      r->chain = copy_reference (redefines, parent);
     }
-  if (resolve_data_name (redefines) == cb_error_node)
+  if (cb_ref (redefines) == cb_error_node)
     return NULL;
   f = CB_FIELD (r->value);
 
@@ -1056,7 +1056,7 @@ validate_field_1 (struct cb_field *f)
 	  return -1;
 	}
 
-      if (f->pic || f->flag_occurs)
+      if (f->flag_occurs)
 	level_except_error (x, "RENAMES");
       return 0;
     }
@@ -1068,14 +1068,18 @@ validate_field_1 (struct cb_field *f)
 
   /* validate OCCURS DEPENDING */
   if (f->occurs_depending)
-    for (p = f->parent; p; p = p->parent)
-      if (p->flag_occurs)
-	{
-	  cb_error_x (CB_TREE (p),
-		      _("`%s' cannot have the OCCURS clause due to `%s'"),
-		      p->name, cb_name (x));
-	  break;
-	}
+    {
+      /* the data item that contains the OCCURS DEPENDING clause shall not
+	 be subordinate to a data item that has the OCCURS clause */
+      for (p = f->parent; p; p = p->parent)
+	if (p->flag_occurs)
+	  {
+	    cb_error_x (CB_TREE (p),
+			_("`%s' cannot have the OCCURS clause due to `%s'"),
+			p->name, cb_name (x));
+	    break;
+	  }
+    }
 
   if (f->children)
     {
@@ -1478,12 +1482,12 @@ validate_file (struct cb_file *f, cb_tree name)
 void
 finalize_file (struct cb_file *f, struct cb_field *records)
 {
-  char pic[BUFSIZ];
+  char buff[BUFSIZ];
   struct cb_field *p;
 
+  /* check the record size if it is limited */
   for (p = records; p; p = p->sister)
     {
-      /* check the record size */
       if (f->record_min > 0)
 	if (p->size < f->record_min)
 	  cb_error (_("record size too small `%s'"), p->name);
@@ -1504,10 +1508,11 @@ finalize_file (struct cb_file *f, struct cb_field *records)
     }
 
   /* create record */
-  sprintf (pic, "X(%d)", f->record_max);
-  f->record = CB_FIELD (make_field (make_reference (f->name)));
+  sprintf (buff, "%s$record", f->name);
+  f->record = CB_FIELD (make_field (make_reference (buff)));
   f->record->usage = CB_USAGE_DISPLAY;
-  f->record->pic = cb_parse_picture (pic);
+  sprintf (buff, "X(%d)", f->record_max);
+  f->record->pic = cb_parse_picture (buff);
   f->record->sister = records;
   cb_validate_field (f->record);
 
@@ -1571,95 +1576,125 @@ associate (cb_tree name, cb_tree val)
   return w->name;
 }
 
-/* resolve data name */
+static cb_tree
+resolve_label (const char *name, struct cb_label *section)
+{
+  struct cb_list *l;
+  for (l = section->children; l; l = l->next)
+    if (strcasecmp (name, CB_LABEL (l->item)->name) == 0)
+      return l->item;
+  return cb_error_node;
+}
 
 cb_tree
-resolve_data_name (cb_tree x)
+cb_ref (cb_tree x)
 {
   struct cb_reference *r = CB_REFERENCE (x);
-  struct cb_field *f;
-  cb_tree v = NULL;
-  
-  if (r->value)
-    return x;
+  cb_tree pv;
 
-  /* resolve reference */
-  if (r->next == NULL)
+  if (r->value)
+    return r->value;
+
+  if (r->chain == NULL)
     {
-      /* NAME */
       switch (r->word->count)
 	{
 	case 0:
 	  undefined_error (x);
 	  goto error;
 	case 1:
-	  v = r->word->items->item;
-	  break;
+	  r->value = r->word->items->item;
+	  return r->value;
 	default:
+	  if (r->offset && CB_LABEL_P (r->offset))
+	    {
+	      cb_tree v = resolve_label (r->word->name, CB_LABEL (r->offset));
+	      if (v != cb_error_node)
+		{
+		  r->value = v;
+		  return r->value;
+		}
+	    }
 	  ambiguous_error (x);
 	  goto error;
 	}
     }
-  else
+
+  pv = cb_ref (r->chain);
+  if (pv == cb_error_node)
+    goto error;
+
+  switch (CB_TREE_TAG (pv))
     {
-      /* NAME IN <parent> */
-      struct cb_list *l;
-      struct cb_field *p, *pp;
+    case CB_TAG_FIELD:
+      {
+	struct cb_list *l;
+	struct cb_field *p, *pp;
+	cb_tree v = NULL;
 
-      /* resolve the parent */
-      cb_tree px = CB_TREE (r->next);
-      if (resolve_data_name (px) == cb_error_node)
-	goto error;
-
-      /* find the definition in the parent */
-      pp = CB_FIELD (r->next->value);
-      for (l = r->word->items; l; l = l->next)
-	if (CB_FIELD_P (l->item))
-	  for (p = CB_FIELD (l->item)->parent; p; p = p->parent)
-	    if (p == pp)
-	      {
-		if (v)
-		  {
-		    ambiguous_error (x);
-		    goto error;
-		  }
-		v = l->item;
-	      }
-      if (v == NULL)
-	{
-	  if (pp->children == NULL)
-	    cb_error_x (px, _("`%s' not a group"), pp->name);
-	  else
+	/* find the definition in the parent */
+	pp = CB_FIELD (pv);
+	for (l = r->word->items; l; l = l->next)
+	  if (CB_FIELD_P (l->item))
+	    for (p = CB_FIELD (l->item)->parent; p; p = p->parent)
+	      if (p == pp)
+		{
+		  if (v)
+		    {
+		      ambiguous_error (x);
+		      goto error;
+		    }
+		  v = l->item;
+		}
+	if (v == NULL)
+	  {
+	    if (pp->children == NULL)
+	      cb_error_x (r->chain, _("`%s' not a group"), pp->name);
+	    else
+	      undefined_error (x);
+	    goto error;
+	  }
+	r->value = v;
+	return r->value;
+      }
+    case CB_TAG_LABEL:
+      {
+	cb_tree v = resolve_label (r->word->name, CB_LABEL (pv));
+	if (v == cb_error_node)
+	  {
 	    undefined_error (x);
-	  goto error;
-	}
-    }
-
-  /* validate data name */
-  if (!CB_FIELD_P (v))
-    {
-      cb_error_x (x, _("`%s' not data name"), r->word->name);
+	    goto error;
+	  }
+	r->value = v;
+	return r->value;
+      }
+    default:
       abort ();
-      goto error;
     }
-
-  f = CB_FIELD (v);
-
-  set_value (x, v);
-
-  return x;
 
  error:
   r->value = cb_error_node;
   return cb_error_node;
 }
 
-int
+cb_tree
 validate_identifier (cb_tree x)
 {
   struct cb_reference *r = CB_REFERENCE (x);
-  struct cb_field *f = CB_FIELD (r->value);
+  struct cb_field *f;
   const char *name = r->word->name;
+  cb_tree v = cb_ref (x);
+
+  if (v == cb_error_node)
+    return cb_error_node;
+
+  if (!CB_FIELD_P (v))
+    {
+      cb_error_x (x, _("`%s' not data name"), name);
+      return cb_error_node;
+    }
+
+  f = CB_FIELD (v);
 
   /* check the number of subscripts */
   if (list_length (r->subs) != f->indexes)
@@ -1676,7 +1711,7 @@ validate_identifier (cb_tree x)
 	  cb_error_x (x, _("`%s' requires %d subscripts"), name, f->indexes);
 	  break;
 	}
-      return -1;
+      return cb_error_node;
     }
 
   /* check the range of constant subscripts */
@@ -1716,168 +1751,7 @@ validate_identifier (cb_tree x)
 	}
     }
 
-  return 0;
-}
-
-/* resolve label name */
-
-static cb_tree
-resolve_label_in (const char *name, struct cb_label *section)
-{
-  struct cb_list *l;
-  for (l = section->children; l; l = l->next)
-    if (strcasecmp (name, CB_LABEL (l->item)->name) == 0)
-      return l->item;
-  return cb_error_node;
-}
-
-cb_tree
-resolve_label (cb_tree x)
-{
-  struct cb_reference *r = CB_REFERENCE (x);
-  cb_tree v;
-
-  if (r->next == NULL)
-    {
-      /* LABEL */
-      switch (r->word->count)
-	{
-	case 0:
-	  undefined_error (x);
-	  goto error;
-	case 1:
-	  v = r->word->items->item;
-	  break;
-	default:
-	  v = resolve_label_in (r->word->name, CB_LABEL (r->offset));
-	  if (v == cb_error_node)
-	    if (CB_LABEL_P (r->word->items->item))
-	      {
-		ambiguous_error (x);
-		goto error;
-	      }
-	  break;
-	}
-    }
-  else
-    {
-      /* LABEL IN LABEL*/
-      struct cb_reference *sr = r->next;
-      cb_tree sx = CB_TREE (sr);
-
-      switch (sr->word->count)
-	{
-	case 0:
-	  undefined_error (sx);
-	  goto error;
-	case 1:
-	  v = resolve_label_in (r->word->name, sr->word->items->item);
-	  if (v == cb_error_node)
-	    {
-	      undefined_error (x);
-	      goto error;
-	    }
-	  break;
-	default:
-	  cb_error_x (sx, _("`%s' not section name"), sr->word->name);
-	  goto error;
-	}
-    }
-
-  if (!CB_LABEL_P (v))
-    {
-      cb_error_x (x, _("`%s' not label name"), r->word->name);
-      goto error;
-    }
-
-  CB_LABEL (v)->need_begin = 1;
-  if (r->length)
-    CB_LABEL (v)->need_return = 1;
-
-  r->value = v;
-  return v;
-
- error:
-  r->value = cb_error_node;
-  return cb_error_node;
-}
-
-/* resolve file name */
-
-cb_tree
-resolve_file_name (cb_tree x)
-{
-  struct cb_reference *r = CB_REFERENCE (x);
-
-  switch (r->word->count)
-    {
-    case 0:
-      undefined_error (x);
-      break;
-    default:
-      if (CB_FILE_P (r->word->items->item))
-	{
-	  r->value = r->word->items->item;
-	  return r->value;
-	}
-      cb_error_x (x, _("`%s' not file name"), r->word->name);
-      break;
-    }
-
-  r->value = cb_error_node;
-  return cb_error_node;
-}
-
-/* resolve class name */
-
-cb_tree
-resolve_class_name (cb_tree x)
-{
-  struct cb_reference *r = CB_REFERENCE (x);
-
-  switch (r->word->count)
-    {
-    case 0:
-      undefined_error (x);
-      break;
-    default:
-      if (CB_PROPOSITION_P (r->word->items->item))
-	{
-	  r->value = r->word->items->item;
-	  return r->value;
-	}
-      cb_error_x (x, _("`%s' not class name"), r->word->name);
-      break;
-    }
-
-  r->value = cb_error_node;
-  return cb_error_node;
-}
-
-/* resolve mnemonic-name */
-
-cb_tree
-resolve_mnemonic_name (cb_tree x)
-{
-  struct cb_reference *r = CB_REFERENCE (x);
-
-  switch (r->word->count)
-    {
-    case 0:
-      undefined_error (x);
-      break;
-    default:
-      if (CB_SYSTEM_NAME_P (r->word->items->item))
-	{
-	  r->value = r->word->items->item;
-	  return x;
-	}
-      cb_error_x (x, _("`%s' not mnemonic name"), r->word->name);
-      break;
-    }
-
-  r->value = cb_error_node;
-  return cb_error_node;
+  return x;
 }
 
 

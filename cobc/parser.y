@@ -69,8 +69,6 @@
       v = cb_build_parameter_1 (flag, x);	\
   }
 
-#define cb_ref(x)	(CB_REFERENCE (x)->value)
-
 #define push(x)	\
   current_program->exec_list = cons (x, current_program->exec_list)
 
@@ -226,14 +224,27 @@ program_definition:
     /* resolve all references so far */
     struct cb_list *l;
     for (l = list_reverse (current_program->reference_list); l; l = l->next)
-      resolve_data_name (l->item);
+      cb_ref (l->item);
   }
   procedure_division
   end_program
   {
+    /* resolve all labels */
     struct cb_list *l;
     for (l = list_reverse (current_program->label_list); l; l = l->next)
-      resolve_label (l->item);
+      {
+	cb_tree v = cb_ref (l->item);
+	if (CB_LABEL_P (v))
+	  {
+	    CB_LABEL (v)->need_begin = 1;
+	    if (CB_REFERENCE (l->item)->length)
+	      CB_LABEL (v)->need_return = 1;
+	  }
+	else if (v != cb_error_node)
+	  cb_error_x (l->item, _("`%s' not procedure name"),
+		      cb_name (l->item));
+      }
+
     current_program->file_list = list_reverse (current_program->file_list);
     current_program->exec_list = list_reverse (current_program->exec_list);
   }
@@ -1274,7 +1285,7 @@ value_item:
 renames_clause:
   RENAMES qualified_word
   {
-    if (resolve_data_name ($2) != cb_error_node)
+    if (cb_ref ($2) != cb_error_node)
       {
 	current_field->redefines = CB_FIELD (cb_ref ($2));
 	current_field->pic = current_field->redefines->pic;
@@ -1282,8 +1293,7 @@ renames_clause:
   }
 | RENAMES qualified_word THRU qualified_word
   {
-    if (resolve_data_name ($2) != cb_error_node
-	&& resolve_data_name ($4) != cb_error_node)
+    if (cb_ref ($2) != cb_error_node && cb_ref ($4) != cb_error_node)
       {
 	current_field->redefines = CB_FIELD (cb_ref ($2));
 	current_field->rename_thru = CB_FIELD (cb_ref ($4));
@@ -3670,7 +3680,7 @@ expr_item:
 | ALPHABETIC			{ $$ = cb_build_integer (ALPHABETIC); }
 | ALPHABETIC_LOWER		{ $$ = cb_build_integer (ALPHABETIC_LOWER); }
 | ALPHABETIC_UPPER		{ $$ = cb_build_integer (ALPHABETIC_UPPER); }
-| CLASS_NAME			{ $$ = resolve_class_name ($1); }
+| CLASS_NAME			{ $$ = cb_ref ($1); }
 /* sign condition */
   /* ZERO is defined in `value' */
 | POSITIVE			{ $$ = cb_build_integer (POSITIVE); }
@@ -3775,7 +3785,7 @@ data_name:
 table_name:
   qualified_word
   {
-    if (resolve_data_name ($1) == cb_error_node)
+    if (cb_ref ($1) == cb_error_node)
       YYERROR;
     else
       {
@@ -3800,8 +3810,13 @@ file_name_list:
 file_name:
   qualified_word
   {
-    resolve_file_name ($1);
-    $$ = $1;
+    if (CB_FILE_P (cb_ref ($1)))
+      $$ = $1;
+    else
+      {
+	cb_error_x ($1, _("`%s' not file name"), CB_NAME ($1));
+	$$ = cb_error_node;
+      }
   }
 ;
 
@@ -3813,7 +3828,7 @@ mnemonic_name_list:
   mnemonic_name			{ $$ = list_add ($1, $2); }
 ;
 mnemonic_name:
-  MNEMONIC_NAME			{ $$ = resolve_mnemonic_name ($1); }
+  MNEMONIC_NAME			{ $$ = $1; }
 ;
 
 /* Label name */
@@ -3992,12 +4007,7 @@ non_all_value:
  */
 
 identifier:
-  identifier_1
-  {
-    $$ = resolve_data_name ($<tree>1);
-    if ($$ != cb_error_node)
-      validate_identifier ($$);
-  }
+  identifier_1			{ $$ = validate_identifier ($<tree>1); }
 ;
 identifier_1:
   qualified_word		{ $<tree>$ = $1; }
@@ -4010,7 +4020,7 @@ qualified_word:
 | WORD in_of qualified_word
   {
     $$ = $1;
-    CB_REFERENCE ($1)->next = CB_REFERENCE ($3);
+    CB_REFERENCE ($1)->chain = $3;
   }
 ;
 subref:

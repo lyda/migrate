@@ -152,9 +152,9 @@ void
 undefined_error (cb_tree x)
 {
   struct cb_reference *r = CB_REFERENCE (x);
-  if (r->next)
+  if (r->chain)
     cb_error_x (x, _("`%s' undefined in `%s'"),
-	       r->word->name, r->next->word->name);
+		r->word->name, CB_REFERENCE (r->chain)->word->name);
   else
     cb_error_x (x, _("`%s' undefined"), r->word->name);
 }
