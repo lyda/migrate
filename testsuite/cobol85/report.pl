@@ -17,6 +17,9 @@
 # the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
 # Boston, MA 02111-1307 USA
 
+my $compile = 'cobc -main';
+my $compile_module = 'cobc -m';
+
 my $num_progs = 0;
 my $test_skipped = 0;
 my $compile_error = 0;
@@ -34,8 +37,8 @@ print LOG "Filename    total pass fail deleted inspect\n";
 print LOG "--------    ----- ---- ---- ------- -------\n";
 
 foreach $in (glob("lib/*.CBL")) {
-  print "cobc -m $in\n";
-  system ("cobc -m $in");
+  print "$compile_module $in\n";
+  system ("$compile_module $in");
 }
 
 foreach $in (sort (glob("*.{CBL,SUB}"))) {
@@ -54,8 +57,8 @@ foreach $in (sort (glob("*.{CBL,SUB}"))) {
     print LOG "  ----- test skipped -----\n";
   } else {
     $copy = ($exe =~ /^SM/) ? "-I ../copy " : "";
-    print "cobc -main $copy$in && $cmd\n";
-    if (system ("cobc -main $copy$in") != 0) {
+    print "$compile $copy$in && $cmd\n";
+    if (system ("$compile $copy$in") != 0) {
       $compile_error++;
       print LOG "  ===== compile error =====\n";
     } else {
