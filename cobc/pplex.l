@@ -39,8 +39,11 @@
 #include "ppparse.h"
 
 static int within_comment = 0;
+static int newline_count = 0;
 
 static struct cb_replace_list *current_replace_list = NULL;
+
+static struct cb_text_list *text_queue = NULL;
 
 static struct copy_info {
   int line;
@@ -133,12 +136,11 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
     {
       /* skip comments until the end of line */
       int c;
+      within_comment = 1;
       while ((c = input ()) != EOF)
 	if (c == '\n')
 	  break;
       unput (c);
-
-      within_comment = 1;
     }
 }
 
@@ -206,6 +208,9 @@ switch_to_buffer (int line, char *file, YY_BUFFER_STATE buffer)
 int
 ppopen (char *name, struct cb_replace_list *replace_list)
 {
+  for (; newline_count > 0; newline_count--)
+    ungetc ('\n', ppin);
+
   /* Open the copy file */
   ppin = fopen (name, "rb");
   if (!ppin)
@@ -289,234 +294,224 @@ ppcopy (char *name, const char *lib, struct cb_replace_list *replace_list)
  */
 
 static int
-ppinput_1 (char *buff, int size)
+ppinput (char *buff, int max_size)
 {
-  int c;
-  int n = 0;
+  static int quotation_mark;
+  static int consecutive_quotation;
 
-  /* FIXME: check buffer overflow */
+  int i, n;
+  int continuation = 0;
+  char *bp;
+  char line[BUFSIZ];
 
-  /* read characters until the end of line */
-  while ((c = getc (ppin)) != EOF)
-    switch (c)
+ start:
+  /* read a line */
+  if (fgets (line, BUFSIZ, ppin) == NULL)
+    {
+      if (newline_count == 0)
+	return 0;
+      memset (buff, '\n', newline_count);
+      buff[newline_count] = 0;
+      newline_count = 0;
+      return strlen (buff);
+    }
+
+  /* normalize and copy the line into the buffer */
+  n = 0;
+  for (i = 0; line[i]; i++)
+    switch (line[i])
       {
       case '\t':
 	/* tab expansion */
-	if (cb_source_format == CB_FORMAT_FREE)
-	  buff[n++] = c;
-	else
-	  {
-	    buff[n++] = ' ';
-	    while (n % cb_tab_width != 0)
-	      buff[n++] = ' ';
-	  }
+	buff[n++] = ' ';
+	while (n % cb_tab_width != 0)
+	  buff[n++] = ' ';
 	break;
 
       case '\r':
 	/* end-of-line */
-	c = getc (ppin);
-	if (c != '\n')
-	  ungetc (c, ppin);
+	if (line[i + 1] == '\n')
+	  i++;
 	/* fall through */
       case '\n':
 	buff[n++] = '\n';
-	goto end;
+	break;
 
       default:
-	buff[n++] = c;
+	buff[n++] = line[i];
 	break;
       }
- end:
-  if (n > 0 && buff[n - 1] != '\n')
+  if (i < BUFSIZ - 1 && buff[n - 1] != '\n')
     {
       cb_warning (_("file unterminated by a newline"));
       buff[n++] = '\n';
     }
   buff[n] = '\0';
-  if (n == 0)
-    return 0;
 
-  /* compiler directives are reserved */
-  if (memcmp (buff, ">>", 2) == 0)
+  /* nothing to do anymore with free format */
+  if (cb_source_format != CB_FORMAT_FIXED)
     return n;
 
-  /* nothing to do for free format */
-  if (cb_source_format == CB_FORMAT_FREE)
-    return n;
-
-  /* clear the first 6 letters */
-  memset (buff, ' ', 6);
+  /* line too short */
   if (n < 8)
-    strcpy (buff + 6, " \n");
+    {
+    skip:
+      newline_count++;
+      goto start;
+    }
 
   /* check the indicator (column 7) */
   switch (buff[6])
     {
     case ' ':
+      bp = buff + 7;
+      break;
     case '-':
+      continuation = 1;
+      bp = buff + 7;
       break;
     case 'd':
     case 'D':
-      if (cb_flag_debugging_line)
-	{
-	  /* activate debugging line */
-	  buff[6] = ' ';
-	  break;
-	}
-      /* fall through */
+      /* debugging line */
+      goto skip;
+#if 0
+      bp = buff + 3;
+      memcpy (bp, ">>D ", 4);
+      break;
+#endif
     case '*':
     case '/':
-      /* remove comments */
-      memset (buff + 6, ' ', n - 7);
-      break;
+      /* comment line */
+      goto skip;
     default:
       {
+	/* invalid indicator */
 	static int last_line = -1;
 	if (last_line < cb_source_line - 1)
 	  cb_warning (_("invalid indicator `%c' at column 7"), buff[6]);
 	last_line = cb_source_line;
+	bp = buff + 6;
+	break;
       }
-      break;
     }
 
-  /* skip comments following AUTHORS, etc. */
+  /* skip comments that follow after AUTHORS, etc. */
   if (within_comment)
     {
       if (buff[7] == ' ')
-	memset (buff + 6, ' ', n - 7);
-      else
-	within_comment = 0;
+	goto skip;
+      within_comment = 0;
     }
 
-  /* check the text after cb_text_column */
+  /* check the text that is longer than cb_text_column */
   if (n > cb_text_column + 1)
     {
+      int i;
       static int last_line = -1;
+
+      /* show warning if it is not whitespaces */
       if (cb_warn_column_overflow && last_line < cb_source_line - 1)
-	{
-	  int i;
-	  for (i = cb_text_column; i < n; i++)
-	    if (buff[i] != ' ' && buff[i] != '\n')
-	      {
-		/* show warning if it is not whitespaces */
-		cb_warning (_("source text after column %d"), cb_text_column);
-		break;
-	      }
-	}
+	for (i = cb_text_column; i < n; i++)
+	  if (buff[i] != ' ' && buff[i] != '\n')
+	    {
+	      cb_warning (_("source text after column %d"), cb_text_column);
+	      break;
+	    }
+
       /* remove it */
       strcpy (buff + cb_text_column, "\n");
       last_line = cb_source_line;
+      n = cb_text_column + 1;
     }
 
-  return strlen (buff);
-}
+  /* skip blank lines */
+  for (i = 7; buff[i] == ' '; i++);
+  if (buff[i] == '\n')
+    goto skip;
 
-static int
-ppinput (char *buff, int max_size)
-{
-  /* Read a line */
-  if (ppinput_1 (buff, max_size) == 0)
-    return YY_NULL;
-
-  /* Line concatenation */
-  if (cb_source_format != CB_FORMAT_FREE)
+  if (continuation)
     {
-      char *p;
-      int lines = 0;
-      while (1)
+      /* line continuation */
+      for (; *bp == ' '; bp++);
+
+      /* validate concatenation */
+      if (consecutive_quotation)
 	{
-	  int i;
-	  int mark = 0;
-	  int consecutive = 0;
-	  size_t size;
-	  char *bp, *np;
-	  char lookahead[7];
-
-	  /* look ahead the next line */
-	  size = fread (lookahead, 1, 7, ppin);
-	  fseek (ppin, -size, SEEK_CUR);
-	  for (i = 0; i < size; i++)
-	    if (lookahead[i] == '\t')
-	      goto finish;
-	  if (size != 7 || lookahead[6] != '-')
-	    goto finish;
-
-	  /* check if string literal is to be continued */
-	  size = strlen (buff);
-	  for (i = 0; i < size; i++)
-	    if (buff[i] == '\'' || buff[i] == '\"')
-	      {
-		if (mark == 0)
-		  {
-		    /* literal start */
-		    mark = buff[i];
-		  }
-		else if (mark == buff[i])
-		  {
-		    if (i == cb_text_column - 1)
-		      /* consecutive quotation */
-		      consecutive = 1;
-		    else
-		      /* litaral end */
-		      mark = 0;
-		  }
-	      }
-
-	  /* read the next line */
-	  cb_source_line++;
-	  bp = buff + strlen (buff) - 1;
-	  ppinput_1 (bp, max_size - (bp - buff));
-	  for (np = bp + 7; *np == ' '; np++);
-
-	  /* validate concatenation */
-	  if (consecutive)
-	    {
-	      if (np[0] == mark && np[1] == mark)
-		np++;
-	      else
-		{
-		invalid:
-		  cb_error (_("invalid line concatenation"));
-		  return YY_NULL;
-		}
-	    }
-	  else if (mark)
-	    {
-	      /* literal concatenation */
-	      if (*np == mark)
-		np++;
-	      else
-		goto invalid;
-	    }
-	  else if (*np == '\'' || *np == '\"')
-	    {
-	      /* separate literals */
-	      *bp++;
-	    }
+	  if (bp[0] == quotation_mark && bp[1] == quotation_mark)
+	    bp++;
 	  else
 	    {
-	      /* word concatenation */
-	      for (; bp[-1] == ' '; bp--);
+	    invalid:
+	      cb_error (_("invalid line continuation"));
+	      return YY_NULL;
 	    }
-
-	  strcpy (bp, np);
-	  lines++;
+	  quotation_mark = 0;
+	  consecutive_quotation = 0;
 	}
-    finish:
-      cb_source_line -= lines;
+      else if (quotation_mark)
+	{
+	  /* literal concatenation */
+	  if (*bp == quotation_mark)
+	    bp++;
+	  else
+	    goto invalid;
+	}
+    }
+  else
+    {
+      /* normal line */
+      quotation_mark = 0;
+      consecutive_quotation = 0;
+    }
 
-      /* append LF's */
-      p = buff + strlen (buff);
-      while (lines-- > 0)
-	*p++ = '\n';
-      *p = '\0';
+  /* check if string literal is to be continued */
+  for (i = bp - buff; buff[i] != '\n'; i++)
+    if (buff[i] == '\'' || buff[i] == '\"')
+      {
+	if (quotation_mark == 0)
+	  {
+	    /* literal start */
+	    quotation_mark = buff[i];
+	  }
+	else if (quotation_mark == buff[i])
+	  {
+	    if (i == cb_text_column - 1)
+	      /* consecutive quotation */
+	      consecutive_quotation = 1;
+	    else
+	      /* litaral end */
+	      quotation_mark = 0;
+	  }
+      }
+
+  /* truncate trailing spaces, including the newline */
+  if (quotation_mark)
+    buff[i] = 0;
+  else
+    {
+      for (i--; buff[i] == ' '; i--);
+      if (buff[i] == '\'' || buff[i] == '\"')
+	buff[++i] = ' ';
+      buff[i + 1] = 0;
+    }
+
+  if (continuation)
+    {
+      strcpy (buff, bp);
+      newline_count++;
+    }
+  else
+    {
+      /* insert newlines at the begging of the buffer */
+      memmove (buff + newline_count, bp, strlen (bp) + 1);
+      memset (buff, '\n', newline_count);
+      newline_count = 1;
     }
 
   return strlen (buff);
 }
 
-static struct cb_text_list *text_queue = NULL;
-
+
 static void
 ppecho (const char *text)
 {
