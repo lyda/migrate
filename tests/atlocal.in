@@ -3,9 +3,9 @@ PATH="$AUTOTEST_PATH:$PATH"
 
 CC="@CC@"
 
-COMPILE="cobc -Wall"
-COMPILE_ONLY="cobc -P -Wall"
-COMPILE_MODULE="cobc -m -Wall"
+COMPILE="cobc -debug -Wall"
+COMPILE_ONLY="cobc -P -debug -Wall"
+COMPILE_MODULE="cobc -m -debug -Wall"
 
 export COB_CFLAGS="-I${abs_top_srcdir}"
 export COB_LIBS="-L${abs_top_builddir}/libcob/.libs -lcob"

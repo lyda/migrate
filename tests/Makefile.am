@@ -4,6 +4,7 @@ TESTS =	$(srcdir)/testsuite
 
 TESTSUITE_AT = \
 	testsuite.at \
+	fundamental.at \
 	subscripts.at \
 	ref-mod.at \
 	redefines.at \
@@ -15,7 +16,7 @@ TESTSUITE_AT = \
 	entry.at \
 	misc.at
 
-EXTRA_DIST = $(TESTS) $(TESTSUITE_AT)
+EXTRA_DIST = $(srcdir)/package.m4 $(TESTS) $(TESTSUITE_AT)
 
 DISTCLEANFILES = atconfig
 
@@ -35,7 +36,7 @@ $(srcdir)/package.m4: $(top_srcdir)/configure.ac
 	  echo 'm4_define([AT_PACKAGE_BUGREPORT], [@PACKAGE_BUGREPORT@])'; \
 	} > $(srcdir)/package.m4
 
-$(srcdir)/%: $(srcdir)/%.at $(srcdir)/package.m4
+$(srcdir)/%: $(srcdir)/%.at $(srcdir)/package.m4 atlocal.in
 	autom4te --language=autotest -I $(srcdir) $< -o $@
 	chmod +x $@
 

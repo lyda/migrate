@@ -17,8 +17,8 @@
 # the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
 # Boston, MA 02111-1307 USA
 
-my $compile = 'cobc';
-my $compile_module = 'cobc -m';
+my $compile = 'cobc -std=cobol85';
+my $compile_module = 'cobc -std=cobol85 -m';
 
 my $num_progs = 0;
 my $test_skipped = 0;
