@@ -3315,8 +3315,16 @@ expr_1:
 		if (i < 3 || stack[i-3].token != VALUE)
 		  return -1;
 		if (CB_TREE_CLASS (stack[i-1].value) != CB_CLASS_BOOLEAN)
-		  stack[i-1].value =
-		    cb_build_binary_op (last_lefthand, last_operator, stack[i-1].value);
+		  {
+		    if (last_operator)
+		      stack[i-1].value =
+			cb_build_binary_op (last_lefthand, last_operator, stack[i-1].value);
+		    else
+		      {
+			cb_error (_("invalid expression"));
+			return -1;
+		      }
+		  }
 		if (cb_warn_parentheses
 		    && token == '|'
 		    && ((CB_BINARY_OP_P (stack[i-3].value)
