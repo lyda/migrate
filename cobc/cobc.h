@@ -34,17 +34,23 @@ extern int cobc_flag_main;
 /* CALL statements are static */
 extern int cobc_flag_call_static;
 
+/* enable debugging lines */
+extern int cobc_flag_debugging_line;
+
 /* output line directives */
 extern int cobc_flag_line_directive;
 
-/* warn of lacks of parentheses around AND within OR */
-extern int cobc_warn_parentheses;
+/* warn any text after cobpp_text_column */
+extern int cobc_warn_column_overflow;
 
-/* warn of lacks of END-EVALUATE */
+/* warn lacks of END-EVALUATE */
 extern int cobc_warn_end_evaluate;
 
-/* warn of lacks of END-IF */
+/* warn lacks of END-IF */
 extern int cobc_warn_end_if;
+
+/* warn lacks of parentheses around AND within OR */
+extern int cobc_warn_parentheses;
 
 extern FILE *yyin;
 extern FILE *cobc_out;

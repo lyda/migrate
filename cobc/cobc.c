@@ -55,11 +55,13 @@ extern int yy_bison_debug;
 
 int cobc_flag_main = 0;
 int cobc_flag_call_static = 0;
+int cobc_flag_debugging_line = 0;
 int cobc_flag_line_directive = 0;
 
-int cobc_warn_parentheses = 1;
-int cobc_warn_end_if = 0;
+int cobc_warn_column_overflow = 0;
 int cobc_warn_end_evaluate = 0;
+int cobc_warn_end_if = 0;
+int cobc_warn_parentheses = 0;
 
 FILE *cobc_out;
 
@@ -99,13 +101,6 @@ static struct filename {
   char object[FILENAME_MAX];			/* foo.o */
   struct filename *next;
 } *file_list;
-
-static int source_format;
-
-#define FORMAT_UNSPECIFIED	0
-#define FORMAT_FREE		1
-#define FORMAT_FIXED		2
-#define FORMAT_SEMI_FIXED	3
 
 
 /*
@@ -164,22 +159,26 @@ terminate (const char *str)
  * Command line
  */
 
-static char short_options[] = "h?VvECScmgOo:I:";
+static char short_options[] = "h?VvECScmgo:I:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'V'},
   {"verbose", no_argument, 0, 'v'},
   {"main", no_argument, &cobc_flag_main, 1},
-  {"debug", no_argument, 0, 'D'},
-  {"free", no_argument, &source_format, FORMAT_FREE},
-  {"fixed", no_argument, &source_format, FORMAT_FIXED},
-  {"semi-fixed", no_argument, &source_format, FORMAT_SEMI_FIXED},
+  {"free", no_argument, 0, 'F'},
+  {"fixed", no_argument, 0, 'X'},
   {"static", no_argument, &cobc_flag_call_static, 1},
   {"dynamic", no_argument, &cobc_flag_call_static, 0},
   {"save-temps", no_argument, &save_temps, 1},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
+  {"fdebugging-line", no_argument, &cobc_flag_debugging_line, 1},
+  {"Wall", no_argument, 0, 'W'},
+  {"Wcolumn-overflow", no_argument, &cobc_warn_column_overflow, 1},
+  {"Wend-evaluate", no_argument, &cobc_warn_end_evaluate, 1},
+  {"Wend-if", no_argument, &cobc_warn_end_if, 1},
+  {"Wparentheses", no_argument, &cobc_warn_parentheses, 1},
 #ifdef COB_DEBUG
   {"ts", no_argument, &yy_flex_debug, 1},
   {"tp", no_argument, &yy_bison_debug, 1},
@@ -197,39 +196,41 @@ static void
 print_usage ()
 {
   printf ("Usage: %s [options] file...\n\n", program_name);
-  puts (_("General options:\n"
-	  "  --help        Display this message\n"
-	  "  --version     Display compiler version\n"
-	  "  -v, --verbose Display the programs invoked by the compiler\n"
-	  "  -save-temps   Do not delete intermediate files\n"
-	  "  -E            Preprocess only; do not compile, assemble or link\n"
-	  "  -C            Translation only; convert COBOL to C\n"
-	  "  -S            Compile only; output assembly file\n"
-	  "  -c            Compile and assemble, but do not link\n"
-	  "  -m            Build a dynamic-linking module\n"
-	  "  -g            Produce debugging information in the output\n"
-	  "  -O            Optimize speed; minimize run-time error checking\n"
-	  "  -o <file>     Place the output into <file>\n"
-	  "  -MT <target>  Set target file used in dependency list\n"
-	  "  -MF <file>    Place dependency list into <file>\n"
-	  "\n"
-	  "COBOL options:\n"
-	  "  -main         Include a main function in the output\n"
-	  "  -free         Use free source format\n"
-	  "  -fixed        Use fixed source format\n"
-	  "  -semi-fixed   Use semi-fixed source format\n"
-	  "  -static       Use static link for subprogram calls if possible\n"
-	  "  -dynamic      Use dynamic link for subprogram calls (default)\n"
-	  "  -debug        Enable debugging lines\n"
-	  "  -I <path>     Add copybook include path\n"
-	  "\n"
-	  "Warning options:\n"
-	  "  -Wtrailing-line  Source line after column 72"));
+  puts (_("General options:\n\
+  --help                Display this message\n\
+  --version             Display compiler version\n\
+  -v, --verbose         Display the programs invoked by the compiler\n\
+  -save-temps           Do not delete intermediate files\n\
+  -E                    Preprocess only; do not compile, assemble or link\n\
+  -C                    Translation only; convert COBOL to C\n\
+  -S                    Compile only; output assembly file\n\
+  -c                    Compile and assemble, but do not link\n\
+  -m                    Build a dynamic-linking module\n\
+  -g                    Produce debugging information in the output\n\
+  -o <file>             Place the output into <file>\n\
+  -MT <target>          Set target file used in dependency list\n\
+  -MF <file>            Place dependency list into <file>\n\
+\n\
+COBOL options:\n\
+  -main                 Include a main function in the output\n\
+  -free                 Use free source format\n\
+  -fixed                Use fixed source format\n\
+  -static               Use static link for subprogram calls if possible\n\
+  -dynamic              Use dynamic link for subprogram calls (default)\n\
+  -I <path>             Add copybook include path\n\
+  -fdebugging-line      Enable debugging lines\n\
+\n\
+Warning options:\n\
+  -Wall                 Enable all warnings\n\
+  -Wcolumn-overflow     Warn any text after column 72\n\
+  -Wend-evaluate        Warn lacks of END-EVALUATE\n\
+  -Wend-if              Warn lacks of END-IF\n\
+  -Wparentheses         warn lacks of parentheses around AND within OR\n\
+"));
 #ifdef COB_DEBUG
-  puts (_("\n"
-	  "Debugging options:\n"
+  puts (_("Debugging options:\n"
 	  "  -ts           Trace scanner\n"
-	  "  -tp           Trace parser"));
+	  "  -tp           Trace parser\n"));
 #endif
 }
 
@@ -239,7 +240,6 @@ process_command_line (int argc, char *argv[])
   int c, index;
 
   /* Default options */
-  source_format = FORMAT_UNSPECIFIED;
   compile_level = stage_executable;
 #ifdef COB_DEBUG
   yy_flex_debug = 0;
@@ -270,9 +270,6 @@ process_command_line (int argc, char *argv[])
 	  strcat (cob_cflags, " -g");
 	  break;
 
-	case 'O':
-	  break;
-
 	case '%': /* -MT */
 	  strcat (cobpp_flags, " -MT ");
 	  strcat (cobpp_flags, optarg);
@@ -288,8 +285,14 @@ process_command_line (int argc, char *argv[])
 	  strcat (cobpp_flags, optarg);
 	  break;
 
-	case 'D':
-	  strcat (cobpp_flags, " -D");
+	case 'F': strcat (cobpp_flags, " -FF"); break;
+	case 'X': strcat (cobpp_flags, " -FX"); break;
+
+	case 'W':
+	  cobc_warn_column_overflow = 1;
+	  cobc_warn_end_evaluate = 1;
+	  cobc_warn_end_if = 1;
+	  cobc_warn_parentheses = 1;
 	  break;
 
 	default:
@@ -298,15 +301,10 @@ process_command_line (int argc, char *argv[])
 	}
     }
 
-  switch (source_format)
-    {
-    case FORMAT_FREE:
-      strcat (cobpp_flags, " -FF");
-      break;
-    case FORMAT_FIXED:
-      strcat (cobpp_flags, " -FX");
-      break;
-    }
+  if (cobc_flag_debugging_line)
+    strcat (cobpp_flags, " -fdebugging-line");
+  if (cobc_warn_column_overflow)
+    strcat (cobpp_flags, " -Wcolumn-overflow");
 
   return optind;
 }
