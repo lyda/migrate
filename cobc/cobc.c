@@ -683,7 +683,7 @@ process_assemble (struct filename *fn)
 	       cob_cc, fn->object, cob_cflags, fn->translate);
       break;
     case CB_TARGET_CLASS:
-      sprintf (buff, "java Assemble %s", fn->translate);
+      sprintf (buff, "java cobol.util.Assembler %s", fn->translate);
       break;
     }
   return process (buff);
