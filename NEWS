@@ -1,5 +1,17 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Changes in OpenCOBOL 0.9.6
+
+** Use gettext for international messages.
+
+** Run-time configuration file: libcob.conf
+
+The environment variable `COB_CONFIG_FILE' specifies the file path
+(default to "${prefix}/share/open-cobol/libcob.conf").
+
+** Bug fixes and improvements.
+
+
 * Changes in OpenCOBOL 0.9.5
 
 ** Support Berkeley DB 2.0.
