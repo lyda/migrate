@@ -16,6 +16,7 @@ TESTSUITE_AT = \
 	multiply.at \
 	definition.at \
 	extension.at \
+	binary.at \
 	entry.at \
 	misc.at
 

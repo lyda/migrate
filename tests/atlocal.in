@@ -10,5 +10,5 @@ COMPILE_MODULE="cobc -m ${FLAGS} ${COBOL_FLAGS}"
 
 export COB_CFLAGS="-I${abs_top_srcdir}"
 export COB_LIBS="-L${abs_top_builddir}/libcob/.libs -lcob @LIBCOB_LIBS@"
-export COB_SPECS_DIR="${abs_top_srcdir}/specs"
+export COB_CONFIG_DIR="${abs_top_srcdir}/config"
 export LD_LIBRARY_PATH="${abs_top_builddir}/libcob/.libs"
