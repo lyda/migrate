@@ -194,6 +194,7 @@ static struct reserved reserved_words[] = {
   {"HIGHLIGHT",		HIGHLIGHT, 0},
   {"I-O",		I_O, 0},
   {"I-O-CONTROL",	I_O_CONTROL, 0},
+  {"ID",		IDENTIFICATION, 0},
   {"IDENTIFICATION",	IDENTIFICATION, 0},
   {"IF",		IF, 0},
   {"IN",		IN, 0},
