@@ -1256,6 +1256,51 @@ cb_build_cond (cb_tree x)
 
 
 /*
+ * ACCEPT
+ */
+
+cb_tree
+cb_build_accept_from (cb_tree x)
+{
+  switch (CB_SYSTEM_NAME (cb_ref (x))->token)
+    {
+    case CB_DEVICE_CONSOLE:
+    case CB_DEVICE_SYSIN:
+      return cb_true;
+    default:
+      cb_error_x (x, _("invalid input stream `%s'"), cb_name (x));
+      return cb_error_node;
+    }
+}
+
+cb_tree
+cb_build_accept_from_direct (cb_tree x)
+{
+  const char *name = CB_NAME (x);
+
+  if (CB_REFERENCE (x)->word->count == 0)
+    {
+      cb_tree sys = lookup_system_name (CB_NAME (x));
+      if (sys != cb_error_node)
+	{
+	  switch (CB_SYSTEM_NAME (sys)->token)
+	    {
+	    case CB_DEVICE_CONSOLE:
+	    case CB_DEVICE_SYSIN:
+	      cb_warning_x (x, _("`%s' undefined in SPECIAL-NAMES"), name);
+	      return cb_int (COB_SYSIN);
+	    default:
+	      break;
+	    }
+	}
+    }
+
+  cb_error_x (x, _("`%s' undefined in SPECIAL-NAMES"), name);
+  return cb_error_node;
+}
+
+
+/*
  * DISPLAY
  */
 
@@ -1321,7 +1366,7 @@ cb_build_display_upon (cb_tree x)
     case CB_DEVICE_SYSERR:
       return cb_int (COB_SYSERR);
     default:
-      cb_error_x (x, _("invalid UPON item"));
+      cb_error_x (x, _("invalid output stream"));
       return cb_error_node;
     }
 }

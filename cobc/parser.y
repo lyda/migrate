@@ -1630,16 +1630,13 @@ accept_body:
   }
 | data_name FROM mnemonic_name
   {
-    switch (CB_SYSTEM_NAME (cb_ref ($3))->token)
-      {
-      case CB_DEVICE_CONSOLE:
-      case CB_DEVICE_SYSIN:
-	push_funcall_1 ("cob_accept", $1);
-	break;
-      default:
-	cb_error_x ($3, _("invalid input stream `%s'"), cb_name ($3));
-	break;
-      }
+    if (cb_build_accept_from ($3) != cb_error_node)
+      push_funcall_1 ("cob_accept", $1);
+  }
+| data_name FROM WORD
+  {
+    if (cb_build_accept_from_direct ($3) != cb_error_node)
+      push_funcall_1 ("cob_accept", $1);
   }
 ;
 end_accept:
