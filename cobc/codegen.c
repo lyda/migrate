@@ -935,7 +935,14 @@ output_file_name (struct cobc_file_name *f)
     output ("cob_dummy_status");
   output (", ");
   /* record_size, record_data */
-  output ("%d, f_%s_data, ", f->record->size, f->record->cname);
+  {
+    int max_size = 0;
+    struct cobc_field *p;
+    for (p = f->record; p; p = p->sister)
+      if (max_size < p->size)
+	max_size = p->size;
+    output ("%d, f_%s_data, ", max_size, f->record->cname);
+  }
   /* file */
   output ("0, ");
   /* flags */
