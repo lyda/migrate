@@ -109,11 +109,13 @@ file_open (cob_file *f, char *filename, int mode, int opt)
   if (fp == NULL)
     return errno;
 
+#ifndef _WIN32
   if (flock (fileno (fp), (opt ? LOCK_EX : LOCK_SH) | LOCK_NB) < 0)
     {
       fclose (fp);
       return errno;
     }
+#endif
 
   f->file = fp;
   return 0;
@@ -122,14 +124,18 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 static int
 file_close (cob_file *f, int opt)
 {
+#ifndef _WIN32
   struct flock lock;
+#endif
 
   switch (opt)
     {
     case COB_CLOSE_NORMAL:
     case COB_CLOSE_LOCK:
+#ifndef _WIN32
       lock.l_type = F_UNLCK;
       flock (fileno (f->file), LOCK_UN);
+#endif
       fclose (f->file);
       return COB_STATUS_00_SUCCESS;
     default:
