@@ -294,77 +294,70 @@ remove_replacements (void)
 static int
 read_line (char *buff, int size)
 {
-  int len;
+  int c;
+  int n = 0;
 
-  /* Read a line */
-  if (fgets (buff, size, yyin) == NULL)
+  /* FIXME: check buffer overflow */
+
+  /* read characters until the end of line */
+  while ((c = getc (yyin)) != EOF)
+    switch (c)
+      {
+      case '\t':
+	/* tab expansion */
+	if (cob_file_format == COB_FORMAT_FREE)
+	  buff[n++] = c;
+	else
+	  while ((n + 1) % cob_tab_width != 0)
+	    buff[n++] = c;
+	break;
+
+      case '\r':
+	/* end-of-line */
+	c = getc (yyin);
+	if (c != '\n')
+	  ungetc (c, yyin);
+	c = '\n';
+	/* fall through */
+      case '\n':
+	buff[n++] = c;
+	goto end;
+
+      default:
+	buff[n++] = c;
+	break;
+      }
+ end:
+  buff[n] = '\0';
+  if (c == EOF)
     return 0;
 
-  /* Regularize the end-of-line to LF */
-  len = strlen (buff);
-  switch (buff[len - 1])
-    {
-    case '\n':
-      if (buff[len - 2] != '\r')
-	break;
-      buff[--len] = '\0';
-      /* fall throw */
-    case '\r':
-      buff[len - 1] = '\n';
-      break;
-    default:
-      buff[len++] = '\n';
-      buff[len] = '\0';
-      break;
-    }
-
-  /* Nothing to be done for free format */
+  /* nothing to be done for free format */
   if (cob_file_format == COB_FORMAT_FREE)
-    return len;
-
-  /* Tab expansion */
-  if (strchr (buff, '\t') != NULL)
-    {
-      int i, column = 0;
-      char *p = buff;
-      char copy[len + 1];
-      memcpy (copy, buff, len + 1);
-      for (i = 0; i <= len; i++)
-	if (copy[i] != '\t')
-	  {
-	    *p++ = copy[i];
-	    column++;
-	  }
-	else
-	  do {
-	    *p++ = ' ';
-	    column++;
-	  } while (column % cob_tab_width != 0);
-    }
+    return n;
 
   /* clear the first 6 letters */
   memset (buff, ' ', 6);
-  if (len < 6)
+  if (n < 6)
     strcpy (buff + 6, " \n");
 
-  /* Remove the letters after column 72  */
-  len = strlen (buff);
-  if (cob_file_format != COB_FORMAT_SEMI_FIXED && len > 73)
+  /* remove letters after column 72 */
+  if (cob_file_format != COB_FORMAT_SEMI_FIXED && n > 73)
     strcpy (buff + 72, "\n");
 
   switch (buff[6])
     {
     case 'D':
-      /* Debug line */
       if (cob_debug_flag)
 	{
+	  /* activate debugging line */
 	  buff[6] = ' ';
 	  break;
 	}
       /* fall through */
     case '*':
     case '/':
-      /* Remove comments */
+      /* remove comments */
       strcpy (buff + 6, " \n");
       break;
     }
@@ -382,35 +375,32 @@ yyinput (char *buff, int max_size)
     return YY_NULL;
 
   /* Line concatenation */
-  if (cob_file_format == COB_FORMAT_FIXED
-      || cob_file_format == COB_FORMAT_SEMI_FIXED)
-    {
-      while (1)
-	{
-	  int i;
-	  size_t size;
-	  char lookahead[7];
+  if (cob_file_format != COB_FORMAT_FREE)
+    while (1)
+      {
+	int i;
+	size_t size;
+	char lookahead[7];
 
-	  /* look ahead the following line */
-	  size = fread (lookahead, 1, 7, yyin);
-	  fseek (yyin, - size, SEEK_CUR);
-	  if (size != 7 || lookahead[6] != '-')
-	    break;
+	/* look ahead the following line */
+	size = fread (lookahead, 1, 7, yyin);
+	fseek (yyin, - size, SEEK_CUR);
+	if (size != 7 || lookahead[6] != '-')
+	  break;
 
-	  /* concatenate lines */
-	  size = strlen (buff) - 1;
-	  read_line (buff + size, max_size - size);
-	  for (i = size + 7; buff[i] == ' '; i++);
-	  if (buff[i] == '"')
-	    i++;
-	  else
-	    for (; buff[size - 1] == ' '; size--);
-	  strcpy (buff + size, buff + i);
+	/* concatenate lines */
+	size = strlen (buff) - 1;
+	read_line (buff + size, max_size - size);
+	for (i = size + 7; buff[i] == ' '; i++);
+	if (buff[i] == '"')
+	  i++;
+	else
+	  for (; buff[size - 1] == ' '; size--);
+	strcpy (buff + size, buff + i);
 
-	  yylineno++;
-	  display_line = 1;
-	}
-    }
+	yylineno++;
+	display_line = 1;
+      }
 
   /* Do replacement */
   for (ls = yyreplacing; ls; ls = ls->next)
