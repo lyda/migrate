@@ -4056,7 +4056,7 @@ push_entry (const char *name, cb_tree using_list)
 static void
 terminator_warning (void)
 {
-  if (cb_warn_implicit_terminator && current_statement->need_terminator)
+  if (cb_warn_terminator && current_statement->need_terminator)
     cb_warning_x (CB_TREE (current_statement),
 		  _("%s statement not terminated by END-%s"),
 		  current_statement->name, current_statement->name);

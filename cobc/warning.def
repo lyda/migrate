@@ -36,7 +36,7 @@ CB_WARNING (2, cb_warn_constant, "constant",
 CB_WARNING (2, cb_warn_parentheses, "parentheses",
 	    N_("Warn lacks of parentheses around AND within OR"))
 
-CB_WARNING (3, cb_warn_implicit_terminator, "implicit-terminator",
+CB_WARNING (3, cb_warn_terminator, "terminator",
 	    N_("Warn lacks of scope terminator (END-XXX)"))
 
 CB_WARNING (3, cb_warn_strict_typing, "strict-typing",
