@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002 Keisuke Nishida
+ * Copyright (C) 2002-2004 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -29,7 +29,9 @@ extern void cob_newline_error (void);
 extern void cob_field_print (cob_field *f);
 extern void cob_accept (cob_field *f);
 extern void cob_accept_date (cob_field *f);
+extern void cob_accept_date_yyyymmdd (cob_field *f);
 extern void cob_accept_day (cob_field *f);
+extern void cob_accept_day_yyyyddd (cob_field *f);
 extern void cob_accept_day_of_week (cob_field *f);
 extern void cob_accept_time (cob_field *f);
 extern void cob_accept_command_line (cob_field *f);

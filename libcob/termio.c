@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2002 Keisuke Nishida
+ * Copyright (C) 2001-2004 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -154,9 +154,17 @@ cob_accept_date (cob_field *f)
 {
   char s[7];
   time_t t = time (NULL);
-  struct tm *tm = localtime (&t);
-  sprintf (s, "%02d%02d%02d", tm->tm_year % 100, tm->tm_mon + 1, tm->tm_mday);
+  strftime (s, 7, "%y%m%d", localtime (&t));
   cob_memcpy (f, s, 6);
+}
+
+void
+cob_accept_date_yyyymmdd (cob_field *f)
+{
+  char s[9];
+  time_t t = time (NULL);
+  strftime (s, 9, "%Y%m%d", localtime (&t));
+  cob_memcpy (f, s, 8);
 }
 
 void
@@ -164,9 +172,17 @@ cob_accept_day (cob_field *f)
 {
   char s[6];
   time_t t = time (NULL);
-  struct tm *tm = localtime (&t);
-  sprintf (s, "%02d%03d", tm->tm_year % 100, tm->tm_yday + 1);
+  strftime (s, 6, "%y%j", localtime (&t));
   cob_memcpy (f, s, 5);
+}
+
+void
+cob_accept_day_yyyyddd (cob_field *f)
+{
+  char s[8];
+  time_t t = time (NULL);
+  strftime (s, 8, "%Y%j", localtime (&t));
+  cob_memcpy (f, s, 7);
 }
 
 void
@@ -174,8 +190,7 @@ cob_accept_day_of_week (cob_field *f)
 {
   char s[2];
   time_t t = time (NULL);
-  struct tm *tm = localtime (&t);
-  sprintf (s, "%01d", ((tm->tm_wday + 6) % 7) + 1);
+  strftime (s, 2, "%u", localtime (&t));
   cob_memcpy (f, s, 1);
 }
 
@@ -184,8 +199,7 @@ cob_accept_time (cob_field *f)
 {
   char s[9];
   time_t t = time (NULL);
-  struct tm *tm = localtime (&t);
-  sprintf (s, "%02d%02d%02d%02d", tm->tm_hour, tm->tm_min, tm->tm_sec, 0);
+  strftime (s, 9, "%H%M%S00", localtime (&t));
   cob_memcpy (f, s, 8);
 }
 
