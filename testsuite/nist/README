@@ -1,5 +1,5 @@
 Hot To Test NIST CCVS85 Test Suite
-----------------------------------
+==================================
 
 1. Download the test archive `newcob.val.Z' from
 
@@ -11,4 +11,29 @@ Hot To Test NIST CCVS85 Test Suite
 
 3. Try "make check"
 
-4. Test report summary is stored in "report.log"
+4. Test summary will be stored in "summary.txt"
+
+Test Modules
+------------
+
+Core tests:
+
+  NC - COBOL core tests
+  SM - COPY sentence tests
+  IC - CALL sentence tests
+
+File I-O tests:
+
+  SQ - Sequential file I-O tests
+  RL - Relative file I-O tests
+  IX - Indexed file I-O tests
+  ST - SORT sentence tests
+
+Advanced features:
+
+  RW - REPORT SECTION tests
+  CM - COMMUNICATION SECTION tests
+  IF - Intrinsic Function tests
+  SG - Segment tests
+  DB - Debugging feature tests
+  OB - Obsolete feature tests
