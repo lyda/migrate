@@ -58,7 +58,7 @@ extern unsigned global_offset;  /* offset das variaveis globais (DATA) */
 extern int paragr_num;
 extern int loc_label;
 extern char picture[];
-extern int picix,piccnt,decimals,sign,v_flag,z_flag;
+extern int picix,piccnt,decimals,sign,v_flag;
 extern int at_linkage,stack_plus;
 extern char *toktext;
 extern int yylex(void);

@@ -101,7 +101,7 @@ int line_label = 0;
 int paragr_num = 1;
 int loc_label = 1;
 unsigned char picture[1024];
-int picix, piccnt, decimals, sign, v_flag, z_flag, n_flag, digits;
+int picix, piccnt, decimals, sign, v_flag, n_flag, digits;
 int active[37];
 int at_linkage = 0;
 int stackframe_cnt = 0;
