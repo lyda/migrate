@@ -89,5 +89,5 @@ AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBS)
 
 AC_CONFIG_FILES([Makefile libcob/Makefile cobpp/Makefile cobc/Makefile
-		cob-config])
+		texi/Makefile cob-config])
 AC_OUTPUT
