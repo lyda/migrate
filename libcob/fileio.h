@@ -82,7 +82,7 @@ struct cob_file {
   char *file_status;		/* FILE STATUS */
   size_t record_size;		/* record size */
   unsigned char *record_data;	/* record data address */
-  int record_min, record_max;	/* record min/max size */
+  size_t record_min, record_max; /* record min/max size */
   struct cob_field record_depending; /* record size depending on */
   union {
     int fd;
@@ -109,7 +109,7 @@ struct cob_file {
   int nkeys;			/* the number of keys */
   unsigned char *last_key;	/* the last key written */
   /* fields used in SORT files */
-  int sort_nkeys;
+  unsigned int sort_nkeys;
   struct cob_sort_key {
     int dir;
     struct cob_field field;

@@ -202,7 +202,7 @@ lineseq_close (struct cob_file *f, int opt)
 static int
 lineseq_read (struct cob_file *f)
 {
-  int i;
+  size_t i;
   char buff[f->record_size + 1];
 
   /* read the file */
@@ -739,7 +739,8 @@ static struct cob_file *current_sort_file;
 static int
 sort_compare (const DBT *k1, const DBT *k2)
 {
-  int i, cmp;
+  int cmp;
+  unsigned int i;
   struct cob_file *f = current_sort_file;
   for (i = 0; i < f->sort_nkeys; i++)
     {

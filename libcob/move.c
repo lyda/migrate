@@ -216,7 +216,7 @@ cob_move_alphanum_to_alphanum (struct cob_field f1, struct cob_field f2)
 void
 cob_move_display_to_packed (struct cob_field f1, struct cob_field f2)
 {
-  int i;
+  size_t i;
   int sign = cob_get_sign (f1);
   size_t len1 = COB_FIELD_LENGTH (f1);
   size_t len2 = f2.size;
@@ -244,19 +244,18 @@ cob_move_display_to_packed (struct cob_field f1, struct cob_field f2)
 void
 cob_move_packed_to_display (struct cob_field f1, struct cob_field f2)
 {
-  int i;
+  size_t i;
   int sign = cob_get_sign (f1);
-  size_t len = f1.size;
   unsigned char *base = f1.data;
-  unsigned char buff[len];
+  unsigned char buff[f1.size];
 
   /* unpack string */
-  for (i = 0; i < len; i++)
+  for (i = 0; i < f1.size; i++)
     buff[i] = ((i % 2 == 0) ? (base[i/2] >> 4) : (base[i/2] & 0x0f)) + '0';
 
   /* store */
   memset (f2.data, '0', f2.size);
-  COPY_COMMON_REGION (buff, len, f1.desc->decimals,
+  COPY_COMMON_REGION (buff, f1.size, f1.desc->decimals,
 		      COB_FIELD_BASE (f2), COB_FIELD_LENGTH (f2),
 		      COB_FIELD_DECIMALS (f2));
 
@@ -273,7 +272,7 @@ cob_move_packed_to_display (struct cob_field f1, struct cob_field f2)
 void
 cob_move_display_to_binary (struct cob_field f1, struct cob_field f2)
 {
-  int i, len;
+  size_t i, len;
   long long val = 0;
   int sign = cob_get_sign (f1);
   size_t len1 = COB_FIELD_LENGTH (f1);

@@ -76,25 +76,25 @@ long cob_exp10[10] = {
 };
 
 long long cob_exp10LL[19] = {
-  1,
-  10,
-  100,
-  1000,
-  10000,
-  100000,
-  1000000,
-  10000000,
-  100000000,
-  1000000000,
-  10000000000,
-  100000000000,
-  1000000000000,
-  10000000000000,
-  100000000000000,
-  1000000000000000,
-  10000000000000000,
-  100000000000000000,
-  1000000000000000000
+  1LL,
+  10LL,
+  100LL,
+  1000LL,
+  10000LL,
+  100000LL,
+  1000000LL,
+  10000000LL,
+  100000000LL,
+  1000000000LL,
+  10000000000LL,
+  100000000000LL,
+  1000000000000LL,
+  10000000000000LL,
+  100000000000000LL,
+  1000000000000000LL,
+  10000000000000000LL,
+  100000000000000000LL,
+  1000000000000000000LL
 };
 
 static int ding_on_error = 0;
@@ -318,7 +318,8 @@ cob_cmp_str (struct cob_field f1, unsigned char *str)
 int
 cob_cmp_all (struct cob_field f1, unsigned char *str)
 {
-  int i, ret = 0;
+  size_t i;
+  int ret = 0;
   unsigned char *s = str;
   int sign = cob_get_sign (f1);
 
@@ -346,12 +347,11 @@ cob_check_numeric (struct cob_field f, const char *name)
 {
   if (!cob_is_numeric (f))
     {
-      int i;
-      size_t size = f.size;
+      size_t i;
       unsigned char *data = f.data;
-      char buff[size * 4 + 1];
+      char buff[f.size * 4 + 1];
       char *p = buff;
-      for (i = 0; i < size; i++)
+      for (i = 0; i < f.size; i++)
 	if (isprint (data[i]))
 	  *p++ = data[i];
 	else
@@ -386,7 +386,7 @@ cob_is_numeric (struct cob_field f)
       }
     default:
       {
-	int i;
+	size_t i;
 	for (i = 0; i < f.size; i++)
 	  if (!isdigit (f.data[i]))
 	    return 0;
@@ -398,7 +398,7 @@ cob_is_numeric (struct cob_field f)
 int
 cob_is_alpha (struct cob_field f)
 {
-  int i;
+  size_t i;
   for (i = 0; i < f.size; i++)
     if (!isspace (f.data[i]) && !isalpha (f.data[i]))
       return 0;
@@ -408,7 +408,7 @@ cob_is_alpha (struct cob_field f)
 int
 cob_is_upper (struct cob_field f)
 {
-  int i;
+  size_t i;
   for (i = 0; i < f.size; i++)
     if (!isspace (f.data[i]) && !isupper (f.data[i]))
       return 0;
@@ -418,7 +418,7 @@ cob_is_upper (struct cob_field f)
 int
 cob_is_lower (struct cob_field f)
 {
-  int i;
+  size_t i;
   for (i = 0; i < f.size; i++)
     if (!isspace (f.data[i]) && !islower (f.data[i]))
       return 0;
@@ -478,7 +478,7 @@ cob_put_sign (struct cob_field f, int sign)
 char *
 cob_field_to_string (struct cob_field f, char *s)
 {
-  int i;
+  size_t i;
   memcpy (s, f.data, f.size);
   for (i = 0; i < f.size; i++)
     if (s[i] == ' ')

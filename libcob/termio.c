@@ -82,7 +82,7 @@ cob_display (struct cob_field f, int fd)
       break;
     default:
       {
-	int i;
+	size_t i;
 	for (i = 0; i < f.size; i++)
 	  fputc (f.data[i], cob_stream[fd]);
       }
@@ -113,7 +113,7 @@ cob_debug_print (struct cob_field f)
 void
 cob_accept (struct cob_field f, int fd)
 {
-  int size;
+  size_t size;
   char buff[BUFSIZ];
 
 #ifdef HAVE_LIBREADLINE
