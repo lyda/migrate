@@ -23,7 +23,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
-#include <termios.h>
 
 #include "libcob.h"
 
