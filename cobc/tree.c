@@ -303,7 +303,7 @@ cb_tree_type (cb_tree x)
     case CB_CATEGORY_OBJECT_REFERENCE:
     case CB_CATEGORY_DATA_POINTER:
     case CB_CATEGORY_PROGRAM_POINTER:
-      return COB_TYPE_POINTER;
+      return COB_TYPE_NUMERIC_BINARY;
     default:
       ABORT ();
     }

@@ -985,7 +985,6 @@ initialize_uniform_char (struct cb_field *f)
       switch (cb_tree_type (CB_TREE (f)))
 	{
 	case COB_TYPE_NUMERIC_BINARY:
-	case COB_TYPE_POINTER:
 	  return 0;
 	case COB_TYPE_NUMERIC_DISPLAY:
 	  return '0';

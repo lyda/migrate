@@ -462,6 +462,10 @@ setup_parameters (struct cb_field *f)
 	  f->pic = CB_PICTURE (cb_build_picture ("S9(9)"));
 	  break;
 
+	case CB_USAGE_POINTER:
+	  f->pic = CB_PICTURE (cb_build_picture ("9(10)"));
+	  break;
+
 	case CB_USAGE_COMP_5:
 	case CB_USAGE_COMP_X:
 	  if (f->pic->category == CB_CATEGORY_ALPHANUMERIC)
