@@ -1914,12 +1914,12 @@ output_internal_function (struct cb_program *prog, int single,
   if (single)
     output ("int\n%s (", prog->program_id);
   else
-    output ("static int\n%s_ (int entry, ", prog->program_id);
+    output ("static int\n%s_ (int entry", prog->program_id);
   for (l = parameter_list; l; l = CB_CHAIN (l))
     {
-      output ("unsigned char *b_%s", cb_field (CB_VALUE (l))->cname);
-      if (CB_CHAIN (l))
+      if (!single || l != parameter_list)
 	output (", ");
+      output ("unsigned char *b_%s", cb_field (CB_VALUE (l))->cname);
     }
   output (")\n");
   output_indent ("{");
