@@ -1,3 +1,7 @@
+2002-06-18  Keisuke Nishida  <knishida@netlab.jp>
+
+	* Makefile.am (cobc_LDADD): Add LIBCOB_LIBS.
+
 2002-06-17  Keisuke Nishida  <knishida@netlab.jp>
 
 	* inline.c, inline.h (output_call_statement): Take st1 and st2.
