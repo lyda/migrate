@@ -20,6 +20,7 @@
 #ifndef COB_NUMERIC_H
 #define COB_NUMERIC_H
 
+#include <gmp.h>
 #include <libcob/common.h>
 
 /*
@@ -28,10 +29,12 @@
  *   n = data * 10^expt
  */
 typedef struct {
-  long long data;	/* 64-bit binary integer */
+  mpz_t data;		/* multi-byte binary integer */
   char expt;		/* exponent */
 } cob_decimal;
 
+extern void cob_decimal_init (cob_decimal *d);
+extern void cob_decimal_clear (cob_decimal *d);
 extern void cob_decimal_print (cob_decimal *d);
 extern void cob_decimal_set (cob_decimal *dst, cob_decimal *src);
 extern void cob_decimal_set_int (cob_decimal *d, int n);

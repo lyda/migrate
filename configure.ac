@@ -107,6 +107,11 @@ AC_CHECK_FUNCS([dbopen], ,
       [LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
       [AC_MSG_ERROR(libdb1 is required)])])])
 
+# Checks for gmp.
+AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp.h is required))
+AC_CHECK_LIB([gmp], [__gmp_rand], , AC_MSG_ERROR(GMP 3 or later is required))
+LIBCOB_LIBS="$LIBCOB_LIBS -lgmp"
+
 # Checks for ltdl.
 AC_CHECK_HEADERS([ltdl.h], , AC_MSG_ERROR(ltdl.h is required))
 AC_CHECK_LIB([ltdl], [lt_dlopen], , AC_MSG_ERROR(libltdl is required))
