@@ -254,9 +254,13 @@ cob_cmp_all (unsigned char *data, unsigned char c, int len)
 void
 cob_check_numeric (struct cob_field f)
 {
-  char s[BUFSIZ];
   if (!cob_is_numeric (f))
-    cob_runtime_error ("non-numeric value `%s'", cob_field_to_string (f, s));
+    {
+      char buff[COB_FIELD_SIZE (f) + 1];
+      memcpy (buff, COB_FIELD_DATA (f), COB_FIELD_SIZE (f));
+      buff[COB_FIELD_SIZE (f)] = '\0';
+      cob_runtime_error ("non-numeric value `%s'", buff);
+    }
 }
 
 int
