@@ -250,7 +250,9 @@ static void check_decimal_point (struct lit *lit);
 
 
 %%
-/*****************************************************************************/
+/*****************************************************************************
+ * COBOL program sequence
+ *****************************************************************************/
 
 program_sequence:
   program
@@ -264,7 +266,6 @@ program:
   opt_end_program
 ;
 opt_end_program:
-  /* nothing */
 | END PROGRAM idstring
 ;
 
@@ -282,30 +283,20 @@ identification_division:
   }
 ;
 opt_program_parameter:
-    /* nothing */
-  | opt_is program_parameter opt_program
-    {
-      yywarn ("program parameters are not supported yet");
-    }
-;
-program_parameter:
-    INITIALTOK
-  | COMMONTOK
+| opt_is INITIALTOK opt_program { yywarn ("INITIAL is not supported yet"); }
+| opt_is COMMONTOK opt_program  { yywarn ("COMMON is not supported yet"); }
 ;
 identification_division_options:
-    /* nothing */
-  | identification_division_options identification_division_option
+| identification_division_options identification_division_option
 ;
 identification_division_option:
-    AUTHOR_TOK '.' comment
-  | DATE_WRITTEN_TOK '.' comment
-  | DATE_COMPILED_TOK '.' comment
-  | INSTALLATION_TOK '.' comment
-  | SECURITY_TOK '.' comment
+  AUTHOR_TOK '.' comment
+| DATE_WRITTEN_TOK '.' comment
+| DATE_COMPILED_TOK '.' comment
+| INSTALLATION_TOK '.' comment
+| SECURITY_TOK '.' comment
 ;
-
 opt_program: | PROGRAM ;
-
 comment: { start_condition = START_COMMENT; };
 
 
@@ -314,17 +305,10 @@ comment: { start_condition = START_COMMENT; };
  *****************************************************************************/
 
 environment_division:
-    /* nothing */
-  | ENVIRONMENT_TOK DIVISION '.'
-    {
-      curr_division = CDIV_ENVIR;
-    }
-    configuration_section
-    input_output_section
-    {
-      curr_division = CDIV_INITIAL; 
-    }
-  ;
+| ENVIRONMENT_TOK DIVISION '.'	{ curr_division = CDIV_ENVIR; }
+  configuration_section
+  input_output_section
+;
 
 
 /*******************
@@ -332,28 +316,24 @@ environment_division:
  *******************/
 
 configuration_section:
-    /* nothing */
-  | CONFIGURATION SECTION '.' configuration_list
-  ;
+| CONFIGURATION SECTION '.' configuration_list
+;
 configuration_list:
-    /* nothing */
-  | configuration_list configuration
-  ;
+| configuration_list configuration
+;
 configuration:
-    TOK_SOURCE_COMPUTER '.' comment
-  | TOK_OBJECT_COMPUTER '.' comment
-  | SPECIAL_NAMES '.' special_names opt_dot
-  ;
+  TOK_SOURCE_COMPUTER '.' comment
+| TOK_OBJECT_COMPUTER '.' comment
+| SPECIAL_NAMES '.' special_names opt_dot
+;
 special_names:
-    /* nothing */
-  | special_names special_name
-  ;
+| special_names special_name
+;
 special_name:
-    CURRENCY opt_sign opt_is CLITERAL { currency_symbol = $4->name[0]; }
-  | DECIMAL_POINT opt_is COMMA { decimal_comma = 1; }
-  | CONSOLE opt_is CONSOLE { yywarn ("ignoring setting CONSOLE"); }
-  ;
-
+  CURRENCY opt_sign opt_is CLITERAL { currency_symbol = $4->name[0]; }
+| DECIMAL_POINT opt_is COMMA	{ decimal_comma = 1; }
+| CONSOLE opt_is CONSOLE	{ yywarn ("CONSOLE name is ignored"); }
+;
 opt_dot: | '.' ;
 opt_sign: | SIGN ;
 
@@ -363,17 +343,15 @@ opt_sign: | SIGN ;
  *******************/
 
 input_output_section:
-    /* nothing */
-  | INPUT_OUTPUT SECTION '.' input_output_list
-  ;
+| INPUT_OUTPUT SECTION '.' input_output_list
+;
 input_output_list:
-    /* nothing */
-  | input_output_list input_output
-  ;
+| input_output_list input_output
+;
 input_output:
-    FILE_CONTROL '.' file_control_list
-  | I_O_CONTROL '.' i_o_control_list
-  ;
+  FILE_CONTROL '.' file_control_list
+| I_O_CONTROL '.' i_o_control_list
+;
 
 
 /*
@@ -381,90 +359,88 @@ input_output:
  */
 
 file_control_list:
-    /* nothing */
-  | file_control_list file_control
-  ;
+| file_control_list file_control
+;
 
 file_control:
-    SELECT opt_optional def_name ASSIGN opt_to {
-            $3->type='F';   /* mark as file variable */
-            curr_file=$3;
-            $3->pic=0;  /* suppose not indexed yet */
-            $3->defined=1;
-            $3->parent=NULL; /* assume no STATUS yet
-                            this is "file status" var in files */
-            $3->organization = 2;
-            $3->access_mode = 1;
-            $3->times=-1;
-             /*$3->filenamevar=$6;*/ /* this is the variable w/filename */
-            $3->alternate=NULL; /* reset alternate key list */
-            $3->flags.optional=$2; /* according to keyword */
-         }
-      assign_clause {
-            $3->filenamevar=$7; /* this is the variable w/filename */
-      }
-      select_clauses '.' {
-                        if ((curr_file->organization==ORG_INDEXED) &&
-                                !(curr_file->ix_desc)) {
-                                yyerror("indexed file must have a record key");
-                                YYABORT;
-                        }
-                }
-    ;
+  SELECT opt_optional def_name ASSIGN opt_to
+  {
+    $3->type='F';   /* mark as file variable */
+    curr_file=$3;
+    $3->pic=0;  /* suppose not indexed yet */
+    $3->defined=1;
+    $3->parent=NULL; /* assume no STATUS yet
+			this is "file status" var in files */
+    $3->organization = 2;
+    $3->access_mode = 1;
+    $3->times=-1;
+    /*$3->filenamevar=$6;*/ /* this is the variable w/filename */
+    $3->alternate=NULL; /* reset alternate key list */
+    $3->flags.optional=$2; /* according to keyword */
+  }
+  assign_clause
+  {
+    $3->filenamevar=$7; /* this is the variable w/filename */
+  }
+  select_clauses '.'
+  {
+    if ((curr_file->organization==ORG_INDEXED) && !(curr_file->ix_desc)) {
+      yyerror("indexed file must have a record key");
+      YYABORT;
+    }
+  }
+;
 assign_clause: PORTNUM { $$=NULL; }
-    | filename { $$=$1; }
-    | PORTNUM filename { $$=$2; }
-    | EXTERNAL filename 
-     { 
-      curr_file->access_mode = curr_file->access_mode + 5; 
-      $$=$2; 
-     }
-    | error  { yyerror("Invalid ASSIGN clause in SELECT statement"); }
-    ;
+| filename { $$=$1; }
+| PORTNUM filename { $$=$2; }
+| EXTERNAL filename 
+  { 
+    curr_file->access_mode = curr_file->access_mode + 5; 
+    $$=$2; 
+  }
+| error  { yyerror("Invalid ASSIGN clause in SELECT statement"); }
+;
 select_clauses:
-    select_clauses select_clause
-    | /* nothing */
-    ;
+| select_clauses select_clause
+;
 select_clause:
-    ORGANIZATION opt_is organization_options
-                { curr_file->organization=$3; }
-    | ACCESS opt_mode opt_is access_options
-     { 
-      /*{ curr_file->access_mode=$4; }*/
-      if (curr_file->access_mode < 5) {
-         curr_file->access_mode=$4; 
-      }
-      else {
-         curr_file->access_mode = $4 + 5; 
-      }
-     }
-    | FILEN STATUS opt_is STRING
-                { curr_file->parent=$4; }
-    | RECORD KEY opt_is STRING { curr_file->ix_desc=$4; }
-    | RELATIVE KEY opt_is STRING { curr_file->ix_desc=$4; }
-    | ALTERNATE RECORD KEY opt_is STRING
-        with_duplicates { add_alternate_key($5,$6); }
-    | error         { yyerror("invalid clause in select"); }
-    ;
+  ORGANIZATION opt_is organization_options { curr_file->organization=$3; }
+| ACCESS opt_mode opt_is access_options
+  { 
+    /*{ curr_file->access_mode=$4; }*/
+    if (curr_file->access_mode < 5) {
+      curr_file->access_mode=$4; 
+    }
+    else {
+      curr_file->access_mode = $4 + 5; 
+    }
+  }
+| FILEN STATUS opt_is STRING { curr_file->parent=$4; }
+| RECORD KEY opt_is STRING { curr_file->ix_desc=$4; }
+| RELATIVE KEY opt_is STRING { curr_file->ix_desc=$4; }
+| ALTERNATE RECORD KEY opt_is STRING with_duplicates
+  { add_alternate_key($5,$6); }
+| error         { yyerror("invalid clause in select"); }
+;
 with_duplicates:
-    WITH DUPLICATES     { $$=1; }
-    | /* nothing */     { $$=0; }
-    ;
+  /* nothing */			{ $$=0; }
+| WITH DUPLICATES		{ $$=1; }
+;
 opt_optional:
-    OPTIONAL            { $$=1; }
-    | /* nothing */     { $$=0; }
-    ;
+  /* nothing */			{ $$=0; }
+| OPTIONAL			{ $$=1; }
+;
 organization_options:
-      INDEXED		{ $$ = 1; }
-    | SEQUENTIAL	{ $$ = 2; }
-    | RELATIVE		{ $$ = 3; }
-    | LINE SEQUENTIAL	{ $$ = 4; }
-    ;
+  INDEXED			{ $$ = 1; }
+| SEQUENTIAL			{ $$ = 2; }
+| RELATIVE			{ $$ = 3; }
+| LINE SEQUENTIAL		{ $$ = 4; }
+;
 access_options:
-      SEQUENTIAL	{ $$ = 1; }
-    | DYNAMIC		{ $$ = 2; }
-    | RANDOM		{ $$ = 3; }
-    ;
+  SEQUENTIAL			{ $$ = 1; }
+| DYNAMIC			{ $$ = 2; }
+| RANDOM			{ $$ = 3; }
+;
 
 
 /*
@@ -472,25 +448,23 @@ access_options:
  */
 
 i_o_control_list:
-    /* nothing */
-  | i_o_control_list i_o_control
-  ;
+| i_o_control_list i_o_control
+;
 i_o_control:
-    SAME i_o_control_param opt_area opt_for filename_list '.'
-    {
-      yywarn ("I-O-CONTROL is not supported yet");
-    }
-  ;
+  SAME i_o_control_param opt_area opt_for filename_list '.'
+  {
+    yywarn ("I-O-CONTROL is not supported yet");
+  }
+;
 i_o_control_param:
-    RECORD
-  | SORT
-  | SORT_MERGE
-  ;
+  RECORD
+| SORT
+| SORT_MERGE
+;
 filename_list:
-    variable { }
-  | filename_list variable { }
-  ;
-
+  variable { }
+| filename_list variable { }
+;
 opt_area: | AREA ;
 opt_for: | FOR ;
 
@@ -500,38 +474,35 @@ opt_for: | FOR ;
  *****************************************************************************/
 
 data_division:
-    DATA_TOK DIVISION '.' 
-    {
-     curr_division = CDIV_DATA;
-    }
-    opt_file_section
-    opt_working_storage
-    opt_linkage_section
-    opt_screen_section
-    opt_record_section
-    {
-      data_trail();
-    }
-    | /* nothing */
-    ;
+| DATA_TOK DIVISION '.' { curr_division = CDIV_DATA; }
+  opt_file_section
+  opt_working_storage
+  opt_linkage_section
+  opt_screen_section
+  opt_record_section
+  {
+    data_trail();
+  }
+;
 opt_record_section:
-    REPORT SECTION '.' report_section
-    | /* nothing */
-    ;
+| REPORT SECTION '.' report_section
+;
 opt_screen_section:
-    SCREEN SECTION '.' {
-      screen_io_enable++;
-      curr_field=NULL;
-      scr_line = scr_column = 1;
-    }
-    screen_section      { close_fields(); }
-    | /* nothing */
-    ;
+| SCREEN SECTION '.'
+  {
+    screen_io_enable++;
+    curr_field=NULL;
+    scr_line = scr_column = 1;
+  }
+  screen_section
+  {
+    close_fields();
+  }
+;
 opt_file_section:
-    FILEN SECTION '.'  { curr_field=NULL; }
-    file_section   { close_fields();  }
-    | /* nothing */
-    ;
+| FILEN SECTION '.'  { curr_field=NULL; }
+  file_section   { close_fields(); }
+;
 opt_working_storage:
     WORKING_STORAGE SECTION '.'     { curr_field=NULL; }
     field_description_list         { close_fields(); }
