@@ -212,75 +212,74 @@ install (char *name, int tab, int cloning)
   struct sym *as;
   int val;
 
-  if (tab == SYTB_LIT)
+  name = upcase (name, sbuf);
+  if ((as = lookup (name, tab)) == NULL)
     {
-      abort ();
+      as = malloc (sizeof (struct sym));
+      as->name = strdup (name);
+      val = hash (as->name);
+      if (tab == SYTB_VAR)
+	{
+	  as->next = vartab[val];
+	  vartab[val] = as;
+	}
+      else
+	{
+	  as->next = labtab[val];
+	  labtab[val] = as;
+	}
+      as->type = 0;
+      as->flags.is_pointer = 0;
+      as->flags.just_r = 0;
+      as->flags.separate_sign = 0;
+      as->flags.leading_sign = 0;
+      as->flags.blank = 0;
+      as->flags.sync = 0;
+      as->slack = 0;
+      as->defined = 0;
+      as->value = as->sort_data = NULL;
+      as->linkage_flg = 0;
+      as->litflag = 0;
+      as->scr = NULL;
+      as->clone = as->parent = NULL;
+      as->son = NULL;
+      as->occurs = NULL;
+      as->xrefs.size = 1;
+      as->xrefs.pos = 0;
+      as->xrefs.lineno = malloc (sizeof (int));
+      as->xrefs.lineno[0] = 0;
     }
-  else
+  else if ((cloning && (as->defined == 1)) || (cloning == 2))
     {
-      name = upcase (name, sbuf);
-      if ((as = lookup (name, tab)) == NULL)
-	{
-	  as = malloc (sizeof (struct sym));
-	  as->name = strdup (name);
-	  val = hash (as->name);
-	  if (tab == SYTB_VAR)
-	    {
-	      as->next = vartab[val];
-	      vartab[val] = as;
-	    }
-	  else
-	    {
-	      as->next = labtab[val];
-	      labtab[val] = as;
-	    }
-	  as->type = 0;
-	  as->flags.is_pointer = 0;
-	  as->flags.just_r = 0;
-	  as->flags.separate_sign = 0;
-	  as->flags.leading_sign = 0;
-	  as->flags.blank = 0;
-	  as->flags.sync = 0;
-	  as->slack = 0;
-	  as->defined = 0;
-	  as->value = as->sort_data = NULL;
-	  as->linkage_flg = 0;
-	  as->litflag = 0;
-	  as->scr = NULL;
-	  as->clone = as->parent = NULL;
-	  as->son = NULL;
-	  as->occurs = NULL;
-	  as->xrefs.size = 1;
-	  as->xrefs.pos = 0;
-	  as->xrefs.lineno = malloc (sizeof (int));
-	  as->xrefs.lineno[0] = 0;
-	}
-      else if ((cloning && (as->defined == 1)) || (cloning == 2))
-	{
-	  /* install clone (cloning==2 -> force) */
-	  clone = malloc (sizeof (struct sym));
-	  clone->name = as->name;
-	  clone->type = 0;
-	  clone->flags.is_pointer = 0;
-	  clone->flags.just_r = 0;
-	  clone->flags.separate_sign = 0;
-	  clone->flags.leading_sign = 0;
-	  clone->flags.blank = 0;
-	  clone->flags.sync = 0;
-	  clone->slack = 0;
-	  clone->defined = 0;
-	  clone->value = as->sort_data = NULL;
-	  clone->linkage_flg = 0;
-	  clone->litflag = 0;
-	  clone->scr = NULL;
-	  clone->parent = NULL;
-	  clone->occurs = NULL;
-	  clone->clone = as->clone;
-	  as->clone = clone;
-	  as = clone;
-	}
-      return (as);
+      /* install clone (cloning==2 -> force) */
+      clone = malloc (sizeof (struct sym));
+      clone->name = as->name;
+      clone->type = 0;
+      clone->flags.is_pointer = 0;
+      clone->flags.just_r = 0;
+      clone->flags.separate_sign = 0;
+      clone->flags.leading_sign = 0;
+      clone->flags.blank = 0;
+      clone->flags.sync = 0;
+      clone->slack = 0;
+      clone->defined = 0;
+      clone->value = as->sort_data = NULL;
+      clone->linkage_flg = 0;
+      clone->litflag = 0;
+      clone->scr = NULL;
+      clone->parent = NULL;
+      clone->occurs = NULL;
+      clone->clone = as->clone;
+      as->clone = clone;
+      as = clone;
     }
+  return (as);
+}
+
+struct sym *
+install_label (char *name)
+{
+  return install (name, SYTB_LAB, 0);
 }
 
 struct lit *
@@ -298,12 +297,6 @@ install_literal (const char *name)
   al->next = littab[val];
   littab[val] = al;
   return al;
-}
-
-struct sym *
-install_label (char *name)
-{
-  return install (name, SYTB_LAB, 0);
 }
 
 struct sym *

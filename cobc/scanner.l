@@ -62,21 +62,12 @@ static int scan_word (char *text);
 static int scan_reserved_word (char *text);
 %}
 
-letters [A-Za-z]
-alphanum [A-Za-z0-9]
-exletter {letters}|-
 digit [0-9]
-pic_ch [9XVSBZAP.,-+*/$]
 relop [<>=]
 white [\r\t ]
-lpar \(
-rpar \)
 sdelim \"
 ldelim \'
 any [!-~]
-int {digit}({digit})*
-decdelim [.,]
-sign [+-]
 
 word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
 
@@ -160,7 +151,7 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   return ',';
 }
 
-{lpar} {
+"(" {
   if (need_subscripts) {
     TRACE_PRINT (("<LPAR>:\n"));
     need_subscripts=0;
@@ -337,38 +328,34 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   X{ldelim}       { return read_literal_x ('\''); }
   X{sdelim}       { return read_literal_x ('\"'); }
 
-  {digit}*{decdelim}?{int}+       {
-		  TRACE_PRINT (("<NLITERAL>: %s\n", yytext));
-		  yylval.lval = install_literal (yytext);
-		  return(NLITERAL);
-	  }
+  [0-9]*[.,]?[0-9]+ {
+    TRACE_PRINT (("<NLITERAL>: %s\n", yytext));
+    yylval.lval = install_literal (yytext);
+    return(NLITERAL);
+  }
 
   {white}+ { }
-
+  "\n"   { }
 
   {relop}{relop}? {
-		  int token;
-		  if ((token = scan_reserved_word (yytext)) != 0) {
-			  TRACE_PRINT ((" <reserved>: %s\n", yytext));
-			  return token;
-		  }
-		  yyerror("relational operator unknown");
-	  }
+    int token;
+    if ((token = scan_reserved_word (yytext)) != 0)
+      return token;
+    yyerror("unknown operator: `%s'", yytext);
+  }
 
-  {lpar}  {
-		  TRACE_PRINT (("<0: lpar>: %s\n", yytext));
-		  return(yytext[0]); 
-	  }
-  "**"    {
-		  TRACE_PRINT (("<0: POW_OP>: %s\n", yytext));
-		  return(POW_OP); 
-	  }
-  {any}   {
-		  TRACE_PRINT (("<0: any>: %s\n", yytext));
-		  return(yytext[0]); 
-	  }
-
-  "\n"   { }      
+  "(" {
+    TRACE_PRINT (("<0: lpar>: %s\n", yytext));
+    return(yytext[0]); 
+  }
+  "**" {
+    TRACE_PRINT (("<0: POW_OP>: %s\n", yytext));
+    return(POW_OP); 
+  }
+  {any} {
+    TRACE_PRINT (("<0: any>: %s\n", yytext));
+    return(yytext[0]); 
+  }
 
 } /* end of <INITIAL,DATA_ST,ENVIR_ST> */
 
@@ -397,7 +384,7 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
 }
 
 <PIC_ST,PIC_ST2>{
-  {lpar}{digit}+{rpar} {
+  "("[0-9]+")" {
     {
       char *p; 
       int val = 0;
@@ -412,7 +399,6 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
     int token;
     if ((token = scan_reserved_word (yytext)) != 0) 
       {
-	TRACE_PRINT ((" <reserved>: %s\n", yytext));
 	BEGIN PIC_ST;
 	TRACE_PRINT (("<PIC_ST2-> PIC_ST>:\n"));
 	return token;
@@ -530,10 +516,7 @@ scan_word (char *text)
       return (LABELSTR);
     }
   else if ((token = scan_reserved_word (text)) != 0)
-    {
-      TRACE_PRINT ((" <reserved>: %s\n", yytext));
-      return token;
-    }
+    return token;
   else
     return 0;
 }
@@ -541,11 +524,12 @@ scan_word (char *text)
 static int
 scan_reserved_word (char *s)
 {
-  struct reserved_word *word = lookup_reserved_word (s);
-  if (!word)
+  struct reserved_word *p = lookup_reserved_word (s);
+  if (!p)
     return 0;
-  yylval.ival = word->minor;
-  return word->token;
+  TRACE_PRINT ((" <reserved>: %s\n", p->name));
+  yylval.ival = p->minor;
+  return p->token;
 }
 
 static int
