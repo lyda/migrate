@@ -1046,6 +1046,7 @@ validate_field_1 (struct cb_field *f)
 {
   cb_tree x = CB_TREE (f);
   char *name = cb_name (x);
+  struct cb_field *p;
 
   if (f->level == 66)
     {
@@ -1064,6 +1065,17 @@ validate_field_1 (struct cb_field *f)
   if (f->flag_occurs)
     if (f->level < 2 || f->level > 49)
       level_redundant_error (x, "OCCURS");
+
+  /* validate OCCURS DEPENDING */
+  if (f->occurs_depending)
+    for (p = f->parent; p; p = p->parent)
+      if (p->flag_occurs)
+	{
+	  cb_error_x (CB_TREE (p),
+		      _("`%s' cannot have the OCCURS clause due to `%s'"),
+		      p->name, cb_name (x));
+	  break;
+	}
 
   if (f->children)
     {
