@@ -123,8 +123,10 @@ typedef struct cobc_tree_common *cobc_tree;
     cobc_tree _x = (x);							\
     if (!_x || COBC_TREE_TAG (_x) != tg)				\
       {									\
-	fprintf (stderr, "%s:%d: invalid type cast from `%s'\n",	\
-		__FILE__, __LINE__, _x ? tree_to_string (_x) : "null");	\
+	fprintf (stderr,						\
+		 "%s:%d: invalid type cast from `%s' at %d in %s\n",	\
+		 __FILE__, __LINE__, _x ? tree_to_string (_x) : "null",	\
+		 cobc_source_line, cobc_source_file);			\
 	abort ();							\
       }									\
     ((ty *) (_x));							\
