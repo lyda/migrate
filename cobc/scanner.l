@@ -206,7 +206,7 @@ read_literal (char mark)
 	}
     }
   buff[i] = 0;
-  yylval = cb_build_alphanumeric_literal (i, buff);
+  yylval = cb_build_alphanumeric_literal (buff, i);
   SET_LOCATION (yylval);
   return LITERAL;
 }
@@ -239,7 +239,7 @@ scan_x (char *text)
 
   if (high)
     {
-      yylval = cb_build_alphanumeric_literal (dst - buff, buff);
+      yylval = cb_build_alphanumeric_literal (buff, dst - buff);
       SET_LOCATION (yylval);
       return LITERAL;
     }

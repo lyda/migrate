@@ -505,31 +505,31 @@ cb_build_system_name (enum cb_system_name_category category, int token)
  */
 
 static struct cb_literal *
-build_literal (enum cb_category category, size_t size, unsigned char *data)
+build_literal (enum cb_category category, const unsigned char *data, size_t size)
 {
   struct cb_literal *p =
     make_tree (CB_TAG_LITERAL, category, sizeof (struct cb_literal));
-  p->size = size;
   p->data = malloc (size + 1);
+  p->size = size;
   memcpy (p->data, data, size);
   p->data[size] = 0;
   return p;
 }
 
 cb_tree
-cb_build_numeric_literal (int sign, unsigned char *data, int expt)
+cb_build_numeric_literal (int sign, const unsigned char *data, int expt)
 {
   struct cb_literal *p =
-    build_literal (CB_CATEGORY_NUMERIC, strlen (data), data);
+    build_literal (CB_CATEGORY_NUMERIC, data, strlen (data));
   p->sign = sign;
   p->expt = expt;
   return CB_TREE (p);
 }
 
 cb_tree
-cb_build_alphanumeric_literal (size_t size, unsigned char *data)
+cb_build_alphanumeric_literal (const unsigned char *data, size_t size)
 {
-  return CB_TREE (build_literal (CB_CATEGORY_ALPHANUMERIC, size, data));
+  return CB_TREE (build_literal (CB_CATEGORY_ALPHANUMERIC, data, size));
 }
 
 int
@@ -822,6 +822,18 @@ make_field (cb_tree name)
     make_tree (CB_TAG_FIELD, CB_CATEGORY_UNKNOWN, sizeof (struct cb_field));
   p->name = cb_define (name, CB_TREE (p));
   return CB_TREE (p);
+}
+
+cb_tree
+cb_build_implicit_field (cb_tree name, int len)
+{
+  char pic[256];
+  cb_tree x = make_field (name);
+  sprintf (pic, "X(%d)", len);
+  CB_FIELD (x)->pic = CB_PICTURE (cb_build_picture (pic));
+  CB_FIELD (x)->usage = CB_USAGE_DISPLAY;
+  cb_validate_field (CB_FIELD (x));
+  return x;
 }
 
 cb_tree

@@ -171,9 +171,20 @@ cb_load_conf (const char *fname, int check_nodef)
 		if (strcmp (val, "auto") == 0)
 		  goto unsupported_value;
 		else if (strcmp (val, "free") == 0)
-		  cb_binary_size = CB_FORMAT_FREE;
+		  cb_source_format = CB_FORMAT_FREE;
 		else if (strcmp (val, "fixed") == 0)
-		  cb_binary_size = CB_FORMAT_FIXED;
+		  cb_source_format = CB_FORMAT_FIXED;
+		else
+		  goto invalid_value;
+	      }
+	    else if (strcmp (name, "assign-identifier") == 0)
+	      {
+		if (strcmp (val, "device-name") == 0)
+		  goto unsupported_value;
+		else if (strcmp (val, "data-name") == 0)
+		  cb_assign_identifier = CB_ASSIGN_DATA;
+		else if (strcmp (val, "literal") == 0)
+		  cb_assign_identifier = CB_ASSIGN_LITERAL;
 		else
 		  goto invalid_value;
 	      }

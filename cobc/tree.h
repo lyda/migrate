@@ -347,8 +347,8 @@ struct cb_literal {
 #define CB_NUMERIC_LITERAL_P(x) \
   (CB_LITERAL_P (x) && CB_TREE_CATEGORY (x) == CB_CATEGORY_NUMERIC)
 
-extern cb_tree cb_build_numeric_literal (int sign, unsigned char *data, int expt);
-extern cb_tree cb_build_alphanumeric_literal (size_t size, unsigned char *data);
+extern cb_tree cb_build_numeric_literal (int sign, const unsigned char *data, int expt);
+extern cb_tree cb_build_alphanumeric_literal (const unsigned char *data, size_t size);
 extern int cb_literal_to_int (struct cb_literal *l);
 
 
@@ -444,6 +444,7 @@ struct cb_field {
 #define CB_FIELD(x)		(CB_TREE_CAST (CB_TAG_FIELD, struct cb_field, x))
 #define CB_FIELD_P(x)		(CB_TREE_TAG (x) == CB_TAG_FIELD)
 
+extern cb_tree cb_build_implicit_field (cb_tree name, int len);
 extern cb_tree cb_build_index (cb_tree name);
 extern cb_tree cb_build_constant (cb_tree name, cb_tree value);
 extern cb_tree cb_build_field (cb_tree level, cb_tree name, struct cb_field *last_field, enum cb_storage storage);

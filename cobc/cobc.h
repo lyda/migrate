@@ -100,6 +100,12 @@ enum cb_source_format {
   CB_FORMAT_FIXED,
 };
 
+enum cb_assign_identifier {
+  CB_ASSIGN_DEVICE,
+  CB_ASSIGN_DATA,
+  CB_ASSIGN_LITERAL,
+};
+
 enum cb_binary_byteorder {
   CB_BYTEORDER_NATIVE,
   CB_BYTEORDER_BIG_ENDIAN,

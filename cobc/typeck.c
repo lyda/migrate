@@ -1604,7 +1604,7 @@ cb_validate_program_environment (struct cb_program *prog)
 	  else if (CB_LIST_P (v))
 	    cb_low = CB_VALUE (v);
 	  else
-	    cb_low = cb_build_alphanumeric_literal (1, CB_LITERAL (v)->data);
+	    cb_low = cb_build_alphanumeric_literal (CB_LITERAL (v)->data, 1);
 	}
       else
 	{
@@ -1616,9 +1616,30 @@ cb_validate_program_environment (struct cb_program *prog)
 void
 cb_validate_program_data (struct cb_program *prog)
 {
+  cb_tree l;
+
+  /* build undeclared assign name */
+  if (cb_assign_identifier == CB_ASSIGN_DATA)
+    for (l = current_program->file_list; l; l = CB_CHAIN (l))
+      {
+	cb_tree assign = CB_FILE (CB_VALUE (l))->assign;
+	if (CB_REFERENCE_P (assign) && CB_REFERENCE (assign)->word->count == 0)
+	  {
+	    cb_tree x = cb_build_implicit_field (assign, FILENAME_MAX);
+	    struct cb_field *p = current_program->working_storage;
+	    if (p)
+	      {
+		while (p->sister)
+		  p = p->sister;
+		p->sister = CB_FIELD (x);
+	      }
+	    else
+	      current_program->working_storage = CB_FIELD (x);
+	  }
+      }
+
   /* resolve all references so far */
-  cb_tree l = list_reverse (prog->reference_list);
-  for (; l; l = CB_CHAIN (l))
+  for (l = list_reverse (prog->reference_list); l; l = CB_CHAIN (l))
     cb_ref (CB_VALUE (l));
 }
 

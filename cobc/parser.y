@@ -523,7 +523,20 @@ select_clause:
 /* ASSIGN clause */
 
 assign_clause:
-  ASSIGN _to reference_or_literal { current_file->assign = $3; }
+  ASSIGN _to LITERAL
+  {
+    current_file->assign = $3;
+  }
+| ASSIGN _to WORD
+  {
+    if (cb_assign_identifier == CB_ASSIGN_LITERAL)
+      /* convert identifier to literal */
+      current_file->assign =
+	cb_build_alphanumeric_literal (CB_REFERENCE ($3)->word->name,
+				       strlen (CB_REFERENCE ($3)->word->name));
+    else
+      current_file->assign = $3;
+  }
 ;
 
 
