@@ -13,7 +13,8 @@ set -e
 #        * <deconfigured's-postinst> `abort-deconfigure' `in-favour'
 #          <failed-install-package> <version> `removing'
 #          <conflicting-package> <version>
-# for details, see /usr/doc/packaging-manual/
+# for details, see http://www.debian.org/doc/debian-policy/ or
+# the debian-policy package
 #
 # quoting from the policy:
 #     Any necessary prompting should almost always be confined to the
@@ -23,14 +24,17 @@ set -e
 #     `abort-remove' or `abort-deconfigure'.
 
 case "$1" in
-    configure|abort-upgrade|abort-remove|abort-deconfigure)
-	ldconfig
-	mkdir -p /usr/lib/open-cobol
+    configure)
+
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+
     ;;
 
     *)
         echo "postinst called with unknown argument \`$1'" >&2
-        exit 0
+        exit 1
     ;;
 esac
 

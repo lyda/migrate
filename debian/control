@@ -1,12 +1,29 @@
 Source: open-cobol
-Section: devel
 Priority: optional
-Maintainer: Noboru Saitou <noborus@netlab.jp>
-Standards-Version: 3.0.1
+Maintainer: Keisuke Nishida <knishida@coboler.com>
+Build-Depends: debhelper (>> 3.0.0)
+Standards-Version: 3.5.2
 
-Package: open-cobol
+Package: cobc
+Section: devel
 Architecture: any
-Depends: gcc, libdb2-dev, libgmp3-dev, libltdl0-dev
-Description: A COBOL compiler
+Depends: ${shlibs:Depends}, libcob-dev (= ${Source-Version})
+Description: COBOL Compiler
+ OpenCOBOL is an open-source COBOL compiler, which translates COBOL
+ programs to C code and compiles it using GCC.
+
+Package: libcob-dev
+Section: devel
+Architecture: any
+Depends: libcob0 (= ${Source-Version}), libdb3-dev, libgmp3-dev, libltdl3-dev, libncurses5-dev
+Description: COBOL Development files
+ OpenCOBOL is an open-source COBOL compiler, which translates COBOL
+ programs to C code and compiles it using GCC.
+
+Package: libcob0
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: COBOL Run-time Library
  OpenCOBOL is an open-source COBOL compiler, which translates COBOL
  programs to C code and compiles it using GCC.

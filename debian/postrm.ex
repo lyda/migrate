@@ -14,19 +14,19 @@ set -e
 #        * <new-postrm> `abort-install' <old-version>
 #        * <new-postrm> `abort-upgrade' <old-version>
 #        * <disappearer's-postrm> `disappear' <r>overwrit>r> <new-version>
-# for details, see /usr/doc/packaging-manual/
+# for details, see http://www.debian.org/doc/debian-policy/ or
+# the debian-policy package
+
 
 case "$1" in
        purge|remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
 
-                                # update the menu system
-#        if [ -x /usr/bin/update-menus ]; then update-menus; fi
 
         ;;
 
     *)
         echo "postrm called with unknown argument \`$1'" >&2
-        exit 0
+        exit 1
 
 esac
 
@@ -35,4 +35,4 @@ esac
 
 #DEBHELPER#
 
-
+exit 0

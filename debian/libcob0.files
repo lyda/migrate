@@ -1,0 +1,3 @@
+usr/lib/lib*.so.*
+usr/share/locale/ja/LC_MESSAGES/open-cobol.mo
+etc/open-cobol/libcob.conf

@@ -1,9 +1,6 @@
-open-cobol (0.9-1) unstable; urgency=low
+open-cobol (0.9.6.4-1) unstable; urgency=low
 
-  * New release.
+  * Initial Release.
 
- -- Keisuke Nishida <knishida@coboler.com>  Sat, 25 Jan 2002 07:01:28 +0900
+ -- Keisuke Nishida <knishida@coboler.com>  Mon, 29 Jul 2002 08:03:11 +0900
 
-Local variables:
-mode: debian-changelog
-End:

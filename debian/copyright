@@ -1,19 +1,19 @@
-This package was debianized by Noboru Saitou <noborus@netlab.jp> on
-Wed, 26 Dec 2001 17:34:51 +0900.
+This package was debianized by Keisuke Nishida <knishida@coboler.com> on
+Mon, 29 Jul 2002 08:03:11 +0900.
 
-It was downloaded from http://open-cobol.sourceforge.net/
+It was downloaded from http://www.open-cobol.net/
 
-Upstream Author(s): Keisuke Nishida <knishida@coboler.com>
+Upstream Author: Keisuke Nishida <knishida@coboler.com>
 
 Copyright:
 
 Copyright (C) 2001-2002 Keisuke Nishida
 
-The Open COBOL compiler is licensed under the GNU General Public License.
+The OpenCOBOL compiler is licensed under the GNU General Public License.
 On Debian systems, the complete text of the GNU General Public
 License can be found in /usr/share/common-licenses/GPL file
 
-The Open COBOL compiler run time library is licensed under the GNU Library 
-General Public License.
-On Debian systems, the complete text of the GNU Library General Public
+The OpenCOBOL run-time library is licensed under the GNU Lessor General
+Public License.
+On Debian systems, the complete text of the GNU Lessor General Public
 License can be found in /usr/share/common-licenses/LGPL file

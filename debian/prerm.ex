@@ -13,18 +13,19 @@ set -e
 #        * <deconfigured's-prerm> `deconfigure' `in-favour'
 #          <package-being-installed> <version> `removing'
 #          <conflicting-package> <version>
-# for details, see /usr/doc/packaging-manual/
+# for details, see http://www.debian.org/doc/debian-policy/ or
+# the debian-policy package
+
 
 case "$1" in
     remove|upgrade|deconfigure)
 #       install-info --quiet --remove /usr/info/open-cobol.info.gz
-	rmdir /usr/lib/open-cobol 2>/dev/null || true
         ;;
     failed-upgrade)
         ;;
     *)
         echo "prerm called with unknown argument \`$1'" >&2
-        exit 0
+        exit 1
     ;;
 esac
 
