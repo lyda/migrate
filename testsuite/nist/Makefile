@@ -1,4 +1,4 @@
-VERSION = 0.1
+VERSION = 0.2
 
 distdir = open-cobol-testsuite-$(VERSION)
 DISTFILES = README Makefile nc_exec85.pl nc_extr.pl report.pl \
