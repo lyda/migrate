@@ -67,6 +67,7 @@ enum cb_class {
 };
 
 enum cb_category {
+  CB_CATEGORY_UNKNOWN,
   CB_CATEGORY_ALPHABETIC,
   CB_CATEGORY_ALPHANUMERIC,
   CB_CATEGORY_ALPHANUMERIC_EDITED,
@@ -140,7 +141,7 @@ struct cb_word {
 
 struct cb_tree_common {
   enum cb_tag tag;
-  enum cb_class class;
+  enum cb_category category;
   unsigned char *source_file;
   int source_line;
 };
@@ -149,8 +150,8 @@ typedef struct cb_tree_common *cb_tree;
 
 #define CB_TREE(x)		((struct cb_tree_common *) (x))
 #define CB_TREE_TAG(x)		(CB_TREE (x)->tag)
-#define CB_TREE_CLASS(x)	(CB_TREE (x)->class)
-#define CB_TREE_CATEGORY(x)	cb_tree_category (x)
+#define CB_TREE_CLASS(x)	cb_tree_class (CB_TREE (x))
+#define CB_TREE_CATEGORY(x)	cb_tree_category (CB_TREE (x))
 
 #ifdef COB_DEBUG
 #define CB_TREE_CAST(tg,ty,x)						\
@@ -171,6 +172,7 @@ typedef struct cb_tree_common *cb_tree;
 #endif
 
 extern char *cb_name (cb_tree x);
+extern enum cb_class cb_tree_class (cb_tree x);
 extern enum cb_category cb_tree_category (cb_tree x);
 extern int cb_fits_int (cb_tree x);
 

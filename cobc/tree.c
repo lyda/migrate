@@ -155,12 +155,12 @@ make_word_table (void)
  */
 
 static void *
-make_tree (int tag, enum cb_class class, int size)
+make_tree (int tag, enum cb_category category, int size)
 {
   cb_tree x = malloc (size);
   memset (x, 0, size);
   x->tag = tag;
-  x->class = class;
+  x->category = category;
   return x;
 }
 
@@ -290,38 +290,75 @@ cb_name (cb_tree x)
   return buff;
 }
 
+enum cb_class
+cb_tree_class (cb_tree x)
+{
+  static enum cb_class category_to_class_table[] = {
+    CB_CLASS_UNKNOWN,		/* CB_CATEGORY_UNKNOWN */
+    CB_CLASS_ALPHABETIC,	/* CB_CATEGORY_ALPHABETIC */
+    CB_CLASS_ALPHANUMERIC,	/* CB_CATEGORY_ALPHANUMERIC */
+    CB_CLASS_ALPHANUMERIC,	/* CB_CATEGORY_ALPHANUMERIC_EDITED */
+    CB_CLASS_BOOLEAN,		/* CB_CATEGORY_BOOLEAN */
+    CB_CLASS_INDEX,		/* CB_CATEGORY_INDEX */
+    CB_CLASS_NATIONAL,		/* CB_CATEGORY_NATIONAL */
+    CB_CLASS_NATIONAL,		/* CB_CATEGORY_NATIONAL_EDITED */
+    CB_CLASS_NUMERIC,		/* CB_CATEGORY_NUMERIC */
+    CB_CLASS_ALPHANUMERIC,	/* CB_CATEGORY_NUMERIC_EDITED */
+    CB_CLASS_OBJECT,		/* CB_CATEGORY_OBJECT_REFERENCE */
+    CB_CLASS_POINTER,		/* CB_CATEGORY_DATA_POINTER */
+    CB_CLASS_POINTER,		/* CB_CATEGORY_PROGRAM_POINTER */
+  };
+
+  return category_to_class_table[CB_TREE_CATEGORY (x)];
+}
+
 enum cb_category
 cb_tree_category (cb_tree x)
 {
+  if (x->category != CB_CATEGORY_UNKNOWN)
+    return x->category;
+
   switch (CB_TREE_TAG (x))
     {
     case CB_TAG_REFERENCE:
       {
 	struct cb_reference *r = CB_REFERENCE (x);
 	if (r->offset)
-	  return CB_CATEGORY_ALPHANUMERIC;
+	  x->category = CB_CATEGORY_ALPHANUMERIC;
 	else
-	  return cb_tree_category (r->value);
+	  x->category = cb_tree_category (r->value);
+	break;
       }
     case CB_TAG_FIELD:
       {
 	struct cb_field *f = CB_FIELD (x);
 	if (f->children)
-	  return CB_CATEGORY_ALPHANUMERIC;
-
-	if (f->level == 66)
-	  {
-	    if (f->rename_thru)
-	      return CB_CATEGORY_ALPHANUMERIC;
-	    else
-	      return cb_tree_category (CB_TREE (f->redefines));
-	  }
-
-	return f->pic->category;
+	  x->category = CB_CATEGORY_ALPHANUMERIC;
+	else if (f->usage == CB_USAGE_POINTER)
+	  x->category = CB_CATEGORY_DATA_POINTER;
+	else
+	  switch (f->level)
+	    {
+	    case 66:
+	      if (f->rename_thru)
+		x->category = CB_CATEGORY_ALPHANUMERIC;
+	      else
+		x->category = cb_tree_category (CB_TREE (f->redefines));
+	      break;
+	    case 88:
+	      x->category = CB_CATEGORY_BOOLEAN;
+	      break;
+	    default:
+	      x->category = f->pic->category;
+	      break;
+	    }
+	break;
       }
     default:
       abort ();
     }
+
+  return x->category;
 }
 
 int
@@ -387,10 +424,10 @@ cb_tree cb_error_node;
 struct cb_label *cb_standard_error_handler;
 
 static cb_tree
-make_constant (enum cb_class class, const char *val)
+make_constant (enum cb_category category, const char *val)
 {
   struct cb_const *p =
-    make_tree (CB_TAG_CONST, class, sizeof (struct cb_const));
+    make_tree (CB_TAG_CONST, category, sizeof (struct cb_const));
   p->val = val;
   return CB_TREE (p);
 }
@@ -409,16 +446,16 @@ void
 cb_init_constants (void)
 {
   int i;
-  cb_error_node  = make_constant (CB_CLASS_UNKNOWN, 0);
-  cb_any         = make_constant (CB_CLASS_UNKNOWN, 0);
-  cb_true        = make_constant (CB_CLASS_BOOLEAN, "1");
-  cb_false       = make_constant (CB_CLASS_BOOLEAN, "0");
-  cb_return_code = make_constant (CB_CLASS_NUMERIC, "cob_return_code");
-  cb_zero        = make_constant (CB_CLASS_NUMERIC, "&cob_zero");
-  cb_space       = make_constant (CB_CLASS_ALPHANUMERIC, "&cob_space");
-  cb_low         = make_constant (CB_CLASS_ALPHANUMERIC, "&cob_low");
-  cb_high        = make_constant (CB_CLASS_ALPHANUMERIC, "&cob_high");
-  cb_quote       = make_constant (CB_CLASS_ALPHANUMERIC, "&cob_quote");
+  cb_error_node  = make_constant (CB_CATEGORY_UNKNOWN, 0);
+  cb_any         = make_constant (CB_CATEGORY_UNKNOWN, 0);
+  cb_true        = make_constant (CB_CATEGORY_BOOLEAN, "1");
+  cb_false       = make_constant (CB_CATEGORY_BOOLEAN, "0");
+  cb_return_code = make_constant (CB_CATEGORY_NUMERIC, "cob_return_code");
+  cb_zero        = make_constant (CB_CATEGORY_NUMERIC, "&cob_zero");
+  cb_space       = make_constant (CB_CATEGORY_ALPHANUMERIC, "&cob_space");
+  cb_low         = make_constant (CB_CATEGORY_ALPHANUMERIC, "&cob_low");
+  cb_high        = make_constant (CB_CATEGORY_ALPHANUMERIC, "&cob_high");
+  cb_quote       = make_constant (CB_CATEGORY_ALPHANUMERIC, "&cob_quote");
   cb_int0        = cb_build_integer (0);
   cb_int1        = cb_build_integer (1);
   cb_int2        = cb_build_integer (2);
@@ -441,7 +478,7 @@ cb_tree
 cb_build_integer (int val)
 {
   struct cb_integer *p =
-    make_tree (CB_TAG_INTEGER, CB_CLASS_NUMERIC, sizeof (struct cb_integer));
+    make_tree (CB_TAG_INTEGER, CB_CATEGORY_NUMERIC, sizeof (struct cb_integer));
   p->val = val;
   return CB_TREE (p);
 }
@@ -455,7 +492,7 @@ cb_tree
 cb_build_string (const unsigned char *str)
 {
   struct cb_string *p =
-    make_tree (CB_TAG_STRING, CB_CLASS_NUMERIC, sizeof (struct cb_string));
+    make_tree (CB_TAG_STRING, CB_CATEGORY_ALPHANUMERIC, sizeof (struct cb_string));
   p->str = str;
   return CB_TREE (p);
 }
@@ -466,10 +503,10 @@ cb_build_string (const unsigned char *str)
  */
 
 static struct cb_literal *
-build_literal (int class, size_t size, unsigned char *data)
+build_literal (enum cb_category category, size_t size, unsigned char *data)
 {
   struct cb_literal *p =
-    make_tree (CB_TAG_LITERAL, class, sizeof (struct cb_literal));
+    make_tree (CB_TAG_LITERAL, category, sizeof (struct cb_literal));
   p->size = size;
   p->data = malloc (size + 1);
   memcpy (p->data, data, size);
@@ -481,7 +518,7 @@ cb_tree
 cb_build_numeric_literal (int sign, unsigned char *data, int expt)
 {
   struct cb_literal *p =
-    build_literal (CB_CLASS_NUMERIC, strlen (data), data);
+    build_literal (CB_CATEGORY_NUMERIC, strlen (data), data);
   p->sign = sign;
   p->expt = expt;
   return CB_TREE (p);
@@ -490,7 +527,7 @@ cb_build_numeric_literal (int sign, unsigned char *data, int expt)
 cb_tree
 cb_build_alphanumeric_literal (size_t size, unsigned char *data)
 {
-  return CB_TREE (build_literal (CB_CLASS_ALPHANUMERIC, size, data));
+  return CB_TREE (build_literal (CB_CATEGORY_ALPHANUMERIC, size, data));
 }
 
 int
@@ -522,7 +559,7 @@ cb_tree
 cb_build_decimal (int id)
 {
   struct cb_decimal *p =
-    make_tree (CB_TAG_DECIMAL, CB_CLASS_NUMERIC, sizeof (struct cb_decimal));
+    make_tree (CB_TAG_DECIMAL, CB_CATEGORY_NUMERIC, sizeof (struct cb_decimal));
   p->id = id;
   return CB_TREE (p);
 }
@@ -777,7 +814,7 @@ cb_tree
 make_field (cb_tree name)
 {
   struct cb_field *p =
-    make_tree (CB_TAG_FIELD, CB_CLASS_ALPHANUMERIC, sizeof (struct cb_field));
+    make_tree (CB_TAG_FIELD, CB_CATEGORY_UNKNOWN, sizeof (struct cb_field));
   p->name = associate (name, CB_TREE (p));
   return CB_TREE (p);
 }
@@ -914,7 +951,6 @@ build_field (int level, cb_tree name, struct cb_field *last_field,
 	f->parent = last_field->parent;
       else
 	f->parent = last_field;
-      CB_TREE_CLASS (f) = CB_CLASS_BOOLEAN;
     }
   else if (f->level > last_field->level)
     {
@@ -1186,51 +1222,19 @@ setup_parameters (struct cb_field *f)
   /* determine the class */
   if (f->children)
     {
-      int flag_local = f->flag_local;
-
       /* group field */
-      CB_TREE_CLASS (f) = CB_CLASS_ALPHANUMERIC;
-
+      int flag_local = f->flag_local;
       for (f = f->children; f; f = f->sister)
 	{
 	  f->flag_local = flag_local;
 	  setup_parameters (f);
 	}
     }
-  else if (f->level == 66)
-    {
-      CB_TREE_CLASS (f) = CB_TREE_CLASS (f->redefines);
-    }
   else
     {
       /* regular field */
       if (f->usage == CB_USAGE_INDEX)
 	f->pic = cb_parse_picture ("S9(9)");
-
-      /* set class */
-      switch (f->pic->category)
-	{
-	case CB_CATEGORY_ALPHABETIC:
-	  CB_TREE_CLASS (f) = CB_CLASS_ALPHABETIC;
-	  break;
-	case CB_CATEGORY_NUMERIC:
-	  CB_TREE_CLASS (f) = CB_CLASS_NUMERIC;
-	  break;
-	case CB_CATEGORY_NUMERIC_EDITED:
-	case CB_CATEGORY_ALPHANUMERIC:
-	case CB_CATEGORY_ALPHANUMERIC_EDITED:
-	  CB_TREE_CLASS (f) = CB_CLASS_ALPHANUMERIC;
-	  break;
-	case CB_CATEGORY_NATIONAL:
-	case CB_CATEGORY_NATIONAL_EDITED:
-	  CB_TREE_CLASS (f) = CB_CLASS_NATIONAL;
-	  break;
-	case CB_CATEGORY_BOOLEAN:
-	  CB_TREE_CLASS (f) = CB_CLASS_BOOLEAN;
-	  break;
-	default:
-	  abort ();
-	}
     }
 }
 
@@ -1372,7 +1376,7 @@ struct cb_file *
 build_file (cb_tree name)
 {
   struct cb_file *p =
-    make_tree (CB_TAG_FILE, CB_CLASS_UNKNOWN, sizeof (struct cb_file));
+    make_tree (CB_TAG_FILE, CB_CATEGORY_UNKNOWN, sizeof (struct cb_file));
   p->name = associate (name, CB_TREE (p));
   p->cname = to_cname (p->name);
 
@@ -1456,7 +1460,7 @@ cb_tree
 make_reference (const char *name)
 {
   struct cb_reference *p =
-    make_tree (CB_TAG_REFERENCE, CB_CLASS_UNKNOWN, sizeof (struct cb_reference));
+    make_tree (CB_TAG_REFERENCE, CB_CATEGORY_UNKNOWN, sizeof (struct cb_reference));
   p->word = lookup_word (name);
   return CB_TREE (p);
 }
@@ -1475,11 +1479,8 @@ copy_reference (cb_tree ref, cb_tree value)
 void
 set_value (cb_tree ref, cb_tree value)
 {
+  ref->category = CB_CATEGORY_UNKNOWN;
   CB_REFERENCE (ref)->value = value;
-  if (CB_REFERENCE (ref)->offset)
-    CB_TREE_CLASS (ref) = CB_CLASS_ALPHANUMERIC;
-  else
-    CB_TREE_CLASS (ref) = CB_TREE_CLASS (value);
 }
 
 cb_tree
@@ -1495,11 +1496,11 @@ const char *
 associate (cb_tree name, cb_tree val)
 {
   struct cb_word *w = CB_REFERENCE (name)->word;
-  CB_TREE_CLASS (name) = CB_TREE_CLASS (val);
   w->items = list_add (w->items, val);
   w->count++;
   val->source_file = name->source_file;
   val->source_line = name->source_line;
+  CB_REFERENCE (name)->value = val;
   return w->name;
 }
 
@@ -1821,40 +1822,38 @@ cb_tree
 cb_build_binary_op (cb_tree left, char op, cb_tree right)
 {
   struct cb_binary_op *p;
+  enum cb_category category;
 
   if (left == cb_error_node || right == cb_error_node)
     return cb_error_node;
 
-  p = make_tree (CB_TAG_BINARY_OP, CB_CLASS_UNKNOWN, sizeof (struct cb_binary_op));
-  p->op = op;
-  p->x = left;
-  p->y = right;
+  /* validate operators */
   switch (op)
     {
     case '+': case '-': case '*': case '/': case '^':
       /* numeric expression */
-      CB_TREE_CLASS (p) = CB_CLASS_NUMERIC;
       if (CB_TREE_CLASS (left) != CB_CLASS_NUMERIC
 	  || CB_TREE_CLASS (right) != CB_CLASS_NUMERIC)
 	goto invalid;
+      category = CB_CATEGORY_NUMERIC;
       break;
 
     case '=': case '~': case '<': case '>': case '[': case ']':
       /* comparison conditional */
-      CB_TREE_CLASS (p) = CB_CLASS_BOOLEAN;
+      category = CB_CATEGORY_BOOLEAN;
       break;
 
     case '!': case '&': case '|':
       /* compound conditional */
-      CB_TREE_CLASS (p) = CB_CLASS_BOOLEAN;
       if (CB_TREE_CLASS (left) != CB_CLASS_BOOLEAN
 	  || (right && CB_TREE_CLASS (right) != CB_CLASS_BOOLEAN))
 	goto invalid;
+      category = CB_CATEGORY_BOOLEAN;
       break;
 
     case '@':
       /* parentheses */
-      CB_TREE_CLASS (p) = CB_TREE_CLASS (left);
+      category = CB_TREE_CATEGORY (left);
       break;
 
     default:
@@ -1862,6 +1861,11 @@ cb_build_binary_op (cb_tree left, char op, cb_tree right)
       cb_error ("invalid binary-op: %s", cb_name (CB_TREE (p)));
       abort ();
     }
+
+  p = make_tree (CB_TAG_BINARY_OP, category, sizeof (struct cb_binary_op));
+  p->op = op;
+  p->x = left;
+  p->y = right;
   return CB_TREE (p);
 }
 
@@ -1884,7 +1888,7 @@ cb_build_funcall (const char *name, int argc,
 	      void *a1, void *a2, void *a3, void *a4)
 {
   struct cb_funcall *p =
-    make_tree (CB_TAG_FUNCALL, CB_CLASS_UNKNOWN, sizeof (struct cb_funcall));
+    make_tree (CB_TAG_FUNCALL, CB_CATEGORY_BOOLEAN, sizeof (struct cb_funcall));
   p->name = name;
   p->argc = argc;
   p->argv[0] = a1;
@@ -1903,7 +1907,7 @@ cb_tree
 cb_build_cast_integer (cb_tree val)
 {
   struct cb_cast_integer *p =
-    make_tree (CB_TAG_CAST_INTEGER, CB_CLASS_NUMERIC, sizeof (struct cb_cast_integer));
+    make_tree (CB_TAG_CAST_INTEGER, CB_CATEGORY_NUMERIC, sizeof (struct cb_cast_integer));
   p->val = val;
   return CB_TREE (p);
 }
@@ -1918,7 +1922,7 @@ cb_build_label (cb_tree name, struct cb_label *section)
 {
   char buff[BUFSIZ];
   struct cb_label *p =
-    make_tree (CB_TAG_LABEL, CB_CLASS_UNKNOWN, sizeof (struct cb_label));
+    make_tree (CB_TAG_LABEL, CB_CATEGORY_UNKNOWN, sizeof (struct cb_label));
   p->name = associate (name, CB_TREE (p));
   p->section = section;
   if (section)
@@ -1938,7 +1942,7 @@ cb_tree
 cb_build_if (cb_tree test, cb_tree stmt1, cb_tree stmt2)
 {
   struct cb_if *p =
-    make_tree (CB_TAG_IF, CB_CLASS_UNKNOWN, sizeof (struct cb_if));
+    make_tree (CB_TAG_IF, CB_CATEGORY_UNKNOWN, sizeof (struct cb_if));
   p->test  = test;
   p->stmt1 = stmt1;
   p->stmt2 = stmt2;
@@ -1954,7 +1958,7 @@ cb_tree
 cb_build_perform (int type)
 {
   struct cb_perform *p =
-    make_tree (CB_TAG_PERFORM, CB_CLASS_UNKNOWN, sizeof (struct cb_perform));
+    make_tree (CB_TAG_PERFORM, CB_CATEGORY_UNKNOWN, sizeof (struct cb_perform));
   p->type = type;
   return CB_TREE (p);
 }
@@ -2006,7 +2010,7 @@ cb_tree
 make_sequence (struct cb_list *list)
 {
   struct cb_sequence *p =
-    make_tree (CB_TAG_SEQUENCE, CB_CLASS_UNKNOWN, sizeof (struct cb_sequence));
+    make_tree (CB_TAG_SEQUENCE, CB_CATEGORY_UNKNOWN, sizeof (struct cb_sequence));
   p->list = list;
   return CB_TREE (p);
 }
@@ -2020,7 +2024,7 @@ struct cb_statement *
 cb_build_statement (const char *name)
 {
   struct cb_statement *p =
-    make_tree (CB_TAG_STATEMENT, CB_CLASS_UNKNOWN, sizeof (struct cb_statement));
+    make_tree (CB_TAG_STATEMENT, CB_CATEGORY_UNKNOWN, sizeof (struct cb_statement));
   p->name = name;
   CB_TREE (p)->source_file = cb_source_file;
   CB_TREE (p)->source_line = cb_source_line;
@@ -2037,7 +2041,7 @@ cb_build_proposition (cb_tree name, struct cb_list *list)
 {
   char buff[BUFSIZ];
   struct cb_proposition *p =
-    make_tree (CB_TAG_PROPOSITION, CB_CLASS_NUMERIC, sizeof (struct cb_proposition));
+    make_tree (CB_TAG_PROPOSITION, CB_CATEGORY_BOOLEAN, sizeof (struct cb_proposition));
   p->name = associate (name, CB_TREE (p));
   sprintf (buff, "is_%s", to_cname (p->name));
   p->cname = strdup (buff);
@@ -2054,7 +2058,7 @@ cb_tree
 make_builtin (int id)
 {
   struct cb_builtin *p =
-    make_tree (CB_TAG_BUILTIN, CB_CLASS_NUMERIC, sizeof (struct cb_builtin));
+    make_tree (CB_TAG_BUILTIN, CB_CATEGORY_UNKNOWN, sizeof (struct cb_builtin));
   p->id = id;
   return CB_TREE (p);
 }
@@ -2068,7 +2072,7 @@ cb_tree
 cb_build_parameter (int type, cb_tree x, cb_tree y)
 {
   struct cb_parameter *p =
-    make_tree (CB_TAG_PARAMETER, CB_CLASS_UNKNOWN, sizeof (struct cb_parameter));
+    make_tree (CB_TAG_PARAMETER, CB_CATEGORY_UNKNOWN, sizeof (struct cb_parameter));
   p->type = type;
   p->x = x;
   p->y = y;

@@ -546,7 +546,8 @@ cob_runtime_error (const char *fmt, ...)
   va_list ap;
 
   /* prefix */
-  fprintf (stderr, "%s:%d: ", cob_source_file, cob_source_line);
+  if (cob_source_file)
+    fprintf (stderr, "%s:%d: ", cob_source_file, cob_source_line);
   fputs ("libcob: ", stderr);
 
   /* body */

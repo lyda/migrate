@@ -414,7 +414,6 @@ special_name_mnemonic_on_off:
 	CB_FIELD (x)->level = 88;
 	CB_FIELD (x)->parent = CB_FIELD (cb_switch[id]);
 	CB_FIELD (x)->values = list ($2);
-	CB_TREE_CLASS (x) = CB_CLASS_BOOLEAN;
       }
   }
 ;
@@ -3571,7 +3570,6 @@ expr_1:
 			  default:
 			    stack[i-1].value =
 			      cb_build_funcall_1 (class_func, stack[i-1].value);
-			    CB_TREE_CLASS (stack[i-1].value) = CB_CLASS_BOOLEAN;
 			    break;
 			  }
 			if (not_flag)
