@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 124
+%expect 128
 
 %{
 #include "config.h"
@@ -39,6 +39,7 @@
 #define YYDEBUG		COB_DEBUG
 #define YYERROR_VERBOSE 1
 
+#define IGNORE(x)	/* ignored */
 #define OBSOLETE(x)	yywarn ("keyword `%s' is obsolete", x)
 
 #define push_tree(x)							\
@@ -211,7 +212,7 @@ static void ambiguous_error (struct cobc_word *p);
 %token EQUAL,GREATER,LESS,GE,LE,COMMAND_LINE,ENVIRONMENT_VARIABLE,ALPHABET
 %token DATE,DAY,DAY_OF_WEEK,TIME,READ,WRITE,OBJECT_COMPUTER,INPUT_OUTPUT
 %token TO,FOR,IS,ARE,THRU,THAN,NO,CANCEL,ASCENDING,DESCENDING,ZERO
-%token SOURCE_COMPUTER,BEFORE,AFTER,RESERVE
+%token SOURCE_COMPUTER,BEFORE,AFTER,RESERVE,DECLARATIVES,USE
 %token RIGHT,JUSTIFIED,SYNCHRONIZED,SEPARATE,BLOCK
 %token TOK_INITIAL,FIRST,ALL,LEADING,OF,IN,BY,STRING,UNSTRING,DEBUGGING
 %token START,DELETE,PROGRAM,GLOBAL,EXTERNAL,SIZE,DELIMITED,COLLATING,SEQUENCE
@@ -244,7 +245,7 @@ static void ambiguous_error (struct cobc_word *p);
 %type <str> class
 %type <gene> tallying_item,replacing_item,inspect_before_after
 %type <gene> call_item,write_option
-%type <inum> flag_all,flag_duplicates,flag_optional
+%type <inum> flag_all,flag_duplicates,flag_optional,flag_global
 %type <inum> flag_not,flag_next,flag_rounded,flag_separate
 %type <inum> sign,integer,level_number,operator,display_upon,usage
 %type <inum> before_or_after,perform_test,replacing_option
@@ -828,7 +829,9 @@ file_option:
 
 block_clause:
   BLOCK _contains integer opt_to_integer _records_or_characters
-  { /* ignored */ }
+  {
+    IGNORE ("BLOCK");
+  }
 ;
 _contains: | CONTAINS ;
 _records_or_characters: | RECORDS | CHARACTERS ;
@@ -869,8 +872,8 @@ _characters: | CHARACTERS ;
  */
 
 label_clause:
-  LABEL record_or_records STANDARD { OBSOLETE ("LABEL RECORD"); }
-| LABEL record_or_records OMITTED  { OBSOLETE ("LABEL RECORD"); }
+  LABEL record_or_records STANDARD { IGNORE ("LABEL RECORD"); }
+| LABEL record_or_records OMITTED  { IGNORE ("LABEL RECORD"); }
 ;
 record_or_records:
   RECORD _is
@@ -1239,6 +1242,7 @@ procedure_division:
     current_paragraph = NULL;
     cobc_in_procedure = 1;
   }
+  procedure_declaratives
   procedure_list
   {
     if (current_paragraph)
@@ -1247,6 +1251,7 @@ procedure_division:
       push_exit_section (current_section);
   }
 ;
+
 procedure_using:
 | USING data_name_list
   {
@@ -1259,6 +1264,41 @@ procedure_using:
     program_spec.using_list = $2;
   }
 ;
+
+procedure_declaratives:
+| DECLARATIVES dot
+  use_sentences
+  END DECLARATIVES
+  {
+    program_spec.exec_list = NULL;
+  }
+;
+use_sentences:
+| use_sentences
+  procedure_section
+  USE flag_global AFTER _standard exception_or_error PROCEDURE _on use_target
+  use_procedure_list
+;
+use_procedure_list:
+| use_procedure_list
+  use_procedure
+;
+use_procedure:
+  procedure_paragraph
+| statement
+| error '.'
+| '.'
+;
+use_target:
+  file_name_list { }
+| INPUT
+| OUTPUT
+| I_O
+| EXTEND
+;
+_standard: | STANDARD ;
+exception_or_error: EXCEPTION | ERROR ;
+
 procedure_list:
 | procedure_list		{ last_exec_list = program_spec.exec_list; }
   procedure
@@ -3191,6 +3231,10 @@ flag_not:
 flag_next:
   /* nothing */			{ $$ = 0; }
 | NEXT				{ $$ = 1; }
+;
+flag_global:
+  /* nothing */			{ $$ = 0; }
+| GLOBAL			{ $$ = 1; }
 ;
 flag_rounded:
   /* nothing */			{ $$ = 0; }
