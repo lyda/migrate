@@ -175,7 +175,7 @@ terminate (const char *str)
  * Command line
  */
 
-static char short_options[] = "h?VvEPCScmgo:I:";
+static char short_options[] = "h?VvEPCScmOgo:I:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
@@ -225,6 +225,7 @@ print_usage ()
   -S                    Compile only; output assembly file\n\
   -c                    Compile and assemble, but do not link\n\
   -m                    Build a dynamic-linking module\n\
+  -O                    Enable optimization\n\
   -g                    Produce debugging information in the output\n\
   -o <file>             Place the output into <file>\n\
   -I <directory>        Add copybook include path\n\
@@ -283,6 +284,11 @@ process_command_line (int argc, char *argv[])
 	case 'm': compile_level = stage_module; break;
 	case 'v': verbose_output = 1; break;
 	case 'o': output_name = strdup (optarg); break;
+
+	case 'O':
+	  cb_flag_inline_get_int = 1;
+	  cb_flag_inline_move = 1;
+	  break;
 
 	case 'g':
 	  cb_flag_line_directive = 1;

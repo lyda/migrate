@@ -655,33 +655,69 @@ output_int32 (cb_tree x)
     default:
       {
 	struct cb_field *f = field (x);
-	switch (f->usage)
+	if (f->usage == CB_USAGE_INDEX)
 	  {
-	  case CB_USAGE_BINARY:
-	  case CB_USAGE_INDEX:
 	    if (f->level == 0)
 	      {
 		output ("i_%s", f->cname);
 	      }
 	    else
 	      {
-		output ("(*(");
-		switch (f->size)
-		  {
-		  case 1: output ("char"); break;
-		  case 2: output ("short"); break;
-		  case 4: output ("long"); break;
-		  case 8: output ("long long"); break;
-		  }
-		output (" *) (");
+		output ("(*(int *) (");
 		output_data (x);
 		output ("))");
 	      }
 	    break;
-	  default:
-	    output_func_1 ("cob_get_int", x);
-	    break;
 	  }
+
+	if (cb_flag_inline_get_int)
+	  {
+	    switch (CB_TREE_TYPE (x))
+	      {
+	      case COB_TYPE_NUMERIC_DISPLAY:
+		if (f->pic->expt <= 0
+		    && f->size + f->pic->expt <= 4
+		    && f->pic->have_sign == 0)
+		  {
+		    int i, j;
+		    int size = f->size + f->pic->expt;
+		    output ("(");
+		    for (i = 0; i < size - 1; i++)
+		      {
+			output ("((");
+			output_data (x);
+			output (")");
+			output ("[%d] - '0') * 1", i);
+			for (j = 1; j < size - i; j++)
+			  output ("0");
+			output (" + ");
+		      }
+		    output ("((");
+		    output_data (x);
+		    output (")");
+		    output ("[%d] - '0'))", i);
+		    return;
+		  }
+		break;
+	      case COB_TYPE_NUMERIC_BINARY:
+		{
+		  output ("(*(");
+		  switch (f->size)
+		    {
+		    case 1: output ("char"); break;
+		    case 2: output ("short"); break;
+		    case 4: output ("long"); break;
+		    case 8: output ("long long"); break;
+		    }
+		  output (" *) (");
+		  output_data (x);
+		  output ("))");
+		  return;
+		}
+	      }
+	  }
+
+	output_func_1 ("cob_get_int", x);
 	break;
       }
     }
@@ -1107,26 +1143,81 @@ output_move_index (cb_tree src, cb_tree dst)
 static void
 output_move (cb_tree src, cb_tree dst)
 {
-  if (field (dst)->usage == CB_USAGE_INDEX)
-    output_move_index (src, dst);
-  else if (src == cb_zero)
-    output_move_zero (dst);
-  else if (src == cb_space)
-    output_move_space (dst);
-  else if (src == cb_high)
-    output_move_high (dst);
-  else if (src == cb_low)
-    output_move_low (dst);
-  else if (src == cb_quote)
-    output_move_quote (dst);
-  else if (src == cb_true || src == cb_false)
-    output_move_index (src, dst);
-  else if (CB_LITERAL_P (src))
-    output_move_literal (CB_LITERAL (src), dst);
-  else if (field (src)->usage == CB_USAGE_INDEX)
-    output_stmt (make_funcall_2 ("cob_set_int", dst, make_cast_int32 (src)));
-  else
-    output_stmt (make_funcall_2 ("cob_move", src, dst));
+  if (field (dst)->usage == CB_USAGE_INDEX
+      || (src == cb_true || src == cb_false))
+    return output_move_index (src, dst);
+
+  if ((CB_FIELD_P (src) || CB_REFERENCE_P (src))
+      && field (src)->usage == CB_USAGE_INDEX)
+    return output_stmt (make_funcall_2 ("cob_set_int", dst,
+					make_cast_int32 (src)));
+
+  if (cb_flag_inline_move)
+    {
+      if (src == cb_zero)
+	return output_move_zero (dst);
+      else if (src == cb_space)
+	return output_move_space (dst);
+      else if (src == cb_high)
+	return output_move_high (dst);
+      else if (src == cb_low)
+	return output_move_low (dst);
+      else if (src == cb_quote)
+	return output_move_quote (dst);
+      else if (CB_LITERAL_P (src))
+	return output_move_literal (CB_LITERAL (src), dst);
+      else
+	{
+	  int simple_copy = 0;
+	  int src_size = field_size (src);
+	  int dst_size = field_size (dst);
+	  struct cb_field *src_f = field (src);
+	  struct cb_field *dst_f = field (dst);
+
+	  if (src_size > 0 && dst_size > 0 && src_size >= dst_size)
+	    switch (CB_TREE_TYPE (src))
+	      {
+	      case COB_TYPE_ALPHABETIC:
+		if (CB_TREE_TYPE (dst) == COB_TYPE_ALPHABETIC
+		    || CB_TREE_TYPE (dst) == COB_TYPE_ALPHANUMERIC)
+		  if (dst_f->flag_justified == 0)
+		    simple_copy = 1;
+		break;
+	      case COB_TYPE_ALPHANUMERIC:
+		if (CB_TREE_TYPE (dst) == COB_TYPE_ALPHANUMERIC)
+		  if (dst_f->flag_justified == 0)
+		    simple_copy = 1;
+		break;
+	      case COB_TYPE_NUMERIC_DISPLAY:
+		if (CB_TREE_TYPE (dst) == COB_TYPE_NUMERIC_DISPLAY
+		    && src_f->pic->size == dst_f->pic->size
+		    && src_f->pic->digits == dst_f->pic->digits
+		    && src_f->pic->expt == dst_f->pic->expt
+		    && src_f->pic->have_sign == dst_f->pic->have_sign
+		    && src_f->flag_sign_leading == dst_f->flag_sign_leading
+		    && src_f->flag_sign_separate == dst_f->flag_sign_separate)
+		  simple_copy = 1;
+		else if (CB_TREE_TYPE (dst) == COB_TYPE_ALPHANUMERIC
+			 && src_f->pic->have_sign == 0)
+		  simple_copy = 1;
+		break;
+	      }
+	  if (simple_copy)
+	    {
+	      output_prefix ();
+	      output ("memcpy (");
+	      output_data (dst);
+	      output (", ");
+	      output_data (src);
+	      output (", ");
+	      output_size (dst);
+	      output (");\n");
+	      return;
+	    }
+	}
+    }
+
+  return output_stmt (make_funcall_2 ("cob_move", src, dst));
 }
 
 

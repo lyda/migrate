@@ -1,3 +1,10 @@
+2003-05-18  Keisuke Nishida  <knishida@netlab.jp>
+
+	* cobc.c (short_options): New option `-O'
+	* flag.def (cb_flag_inline_get_int, cb_flag_inline_move): New flags.
+	* codegen.c (output_int32): Inlining cob_get_int.
+	(output_move): Inlining cob_move.
+
 2003-05-06  Keisuke Nishida  <knishida@netlab.jp>
 
 	* flag.def (cb_flag_check_numeric): Removed.
