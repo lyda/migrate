@@ -3526,6 +3526,9 @@ gen_initialize_1 (struct sym *sy)
 	  if (sy->times != 1)
 	    {
 	      lab = loc_label++;
+	      fprintf (o_src, "\tpopl\t%%eax\n");
+	      fprintf (o_src, "\tpushl\t%%ebx\n");
+	      fprintf (o_src, "\tpushl\t%%eax\n");
 	      fprintf (o_src, "\tmovl\t$%d, %%ebx\n", sy->times);
 	      fprintf (o_src, ".L%d:\n", lab);
 	    }
@@ -3535,6 +3538,9 @@ gen_initialize_1 (struct sym *sy)
 	    {
 	      fprintf (o_src, "\tdecl\t%%ebx\n");
 	      fprintf (o_src, "\tjnz\t.L%d\n", lab);
+	      fprintf (o_src, "\tpopl\t%%eax\n");
+	      fprintf (o_src, "\tpopl\t%%ebx\n");
+	      fprintf (o_src, "\tpushl\t%%eax\n");
 	    }
 	}
       else
