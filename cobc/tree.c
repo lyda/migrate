@@ -27,6 +27,7 @@
 
 #include "tree.h"
 #include "scanner.h"
+#include "lib/gettext.h"
 
 
 /*
@@ -646,7 +647,8 @@ compute_size (struct cobc_field *p)
 	p->size = p->redefines->size;
       return p->size;
     }
-  else if (p->children)
+
+  if (p->children)
     {
       /* groups */
       int size = 0;
@@ -677,7 +679,6 @@ compute_size (struct cobc_field *p)
 	    }
 	}
       p->size = size;
-      return size;
     }
   else
     {
@@ -706,8 +707,15 @@ compute_size (struct cobc_field *p)
 	  }
 	  break;
 	}
-      return p->size;
     }
+
+  /* ISO+IEC+1989-2002: 13.16.42.2-9 */
+  if (p->redefines && p->size > p->redefines->size)
+    if (p->redefines->level != 01 || p->redefines->f.external)
+      yyerror_x (COBC_TREE (p), _("size of `%s' larger than size of `%s'"),
+		 p->name, p->redefines->name);
+
+  return p->size;
 }
 
 void

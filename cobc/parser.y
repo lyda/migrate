@@ -100,6 +100,7 @@ static cobc_tree resolve_field (cobc_tree x);
 static cobc_tree resolve_label (cobc_tree x);
 
 static struct cobc_field *build_field (cobc_tree level, cobc_tree name, struct cobc_field *last_field);
+static struct cobc_field *validate_redefines (struct cobc_field *field, cobc_tree redefines);
 static void validate_field_tree (struct cobc_field *p);
 static void finalize_file (struct cobc_file *f, struct cobc_field *records);
 
@@ -923,14 +924,12 @@ field_option:
 /* REDEFINES */
 
 redefines_clause:
-  REDEFINES NAME
+  REDEFINES qualified_name
   {
-    if (current_field->parent)
-      {
-	cobc_tree x = COBC_TREE (current_field->parent);
-	COBC_REFERENCE ($2)->next = COBC_REFERENCE (copy_reference ($2, x));
-      }
-    current_field->redefines = COBC_FIELD (cobc_ref ($2));
+    current_field->redefines = validate_redefines (current_field, $2);
+    current_field->f.in_redefines = 1;
+    if (current_field->redefines == NULL)
+      YYERROR;
   }
 ;
 
@@ -4119,8 +4118,58 @@ build_field (cobc_tree level, cobc_tree name, struct cobc_field *last_field)
     {
       f->usage = f->parent->usage;
       f->indexes = f->parent->indexes;
+      f->f.in_redefines = f->parent->f.in_redefines;
       f->f.sign_leading = f->parent->f.sign_leading;
       f->f.sign_separate = f->parent->f.sign_separate;
+    }
+
+  return f;
+}
+
+static struct cobc_field *
+validate_redefines (struct cobc_field *field, cobc_tree redefines)
+{
+  struct cobc_field *f, *p;
+  struct cobc_reference *r = COBC_REFERENCE (redefines);
+  cobc_tree x = COBC_TREE (field);
+
+  /* ISO+IEC+1989-2002: 13.16.42.2-7 */
+  if (r->next)
+    {
+      yyerror_x (x, _("`%s' cannot be qualified"), COBC_NAME (redefines));
+      return NULL;
+    }
+
+  /* resolve the name in the current group (if any) */
+  if (field->parent)
+    {
+      cobc_tree parent = COBC_TREE (field->parent);
+      r->next = COBC_REFERENCE (copy_reference (redefines, parent));
+    }
+  redefines = resolve_name (redefines);
+  if (redefines == NULL)
+    return NULL;
+
+  f = COBC_FIELD (cobc_ref (redefines));
+
+  /* ISO+IEC+1989-2002: 13.16.42.2-2 */
+  if (f->level != field->level)
+    {
+      yyerror_x (x, _("level number of REDEFINES entries must be identical"));
+      return NULL;
+    }
+  if (f->level == 66 || f->level == 88)
+    {
+      yyerror_x (x, _("level number of REDEFINES entry cannot be 66 or 88"));
+      return NULL;
+    }
+
+  /* ISO+IEC+1989-2002: 13.16.42.2-11 */
+  for (p = f->sister; p && p->redefines; p = p->sister);
+  if (p != field)
+    {
+      yyerror_x (x, _("REDEFINES must follow the original definition"));
+      return NULL;
     }
 
   return f;
@@ -4207,18 +4256,13 @@ validate_field_tree (struct cobc_field *p)
 
       /* validate BLANK ZERO */
 
-      /* validate REDEFINES */
-      if (p->parent)
-	p->f.in_redefines = p->parent->f.in_redefines;
-      if (p->redefines)
-	p->f.in_redefines = 1;
-
       /* validate VALUE */
       if (p->value)
 	{
 	  if (p->f.in_redefines)
 	    {
-	      yyerror_x (x, _("VALUE clause not allowed under REDEFINES"));
+	      /* ISO+IEC+1989-2002: 13.16.42.2-10 */
+	      yyerror_x (x, _("entries under REDEFINES cannot have VALUE clause"));
 	    }
 	  else if (p->value == cobc_zero)
 	    {
