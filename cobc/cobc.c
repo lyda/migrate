@@ -238,8 +238,8 @@ process_command_line (int argc, char *argv[])
 	case 'o': output_name = strdup (optarg); break;
 
 	case 'g':
-	  cobc_debug_flag = 1;
-	  strcat (cob_cflags, " -g");
+	  // cobc_debug_flag = 1;
+	  // strcat (cob_cflags, " -g");
 	  break;
 
 	case 'O':

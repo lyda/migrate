@@ -714,7 +714,8 @@ indexed_write (struct cob_file_desc *f, struct cob_field rec)
   DBT_SET (key, f->keys[0].field);
   if (!f->last_key)
     f->last_key = malloc (key.size);
-  else if (memcmp (f->last_key, key.data, key.size) > 0)
+  else if (f->access_mode == COB_ACCESS_SEQUENTIAL
+	   && memcmp (f->last_key, key.data, key.size) > 0)
     return 21;
   memcpy (f->last_key, key.data, key.size);
 
