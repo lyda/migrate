@@ -1,3 +1,9 @@
+2003-08-21  Keisuke Nishida  <kxn30@yahoo.co.jp>
+
+	* common.h (cob_display_sign): New enum.
+	(cob_module): New entry `display_sign'.
+	* common.c (cob_real_get_sign, cob_real_put_sign): Check display_sign.
+
 2003-08-19  Keisuke Nishida  <knishida@netlab.jp>
 
 	* termio.c (cob_accept_command_line): Omit the program name (argv[0]).

@@ -99,11 +99,19 @@ typedef struct {
  * Module
  */
 
+enum cob_display_sign {
+  COB_DISPLAY_SIGN_ASCII,
+  COB_DISPLAY_SIGN_EBCDIC,
+  COB_DISPLAY_SIGN_ASCII10,
+  COB_DISPLAY_SIGN_ASCII20,
+};
+
 typedef struct __cob_module {
   unsigned char decimal_point;
   unsigned char currency_symbol;
   unsigned char numeric_separator;
   unsigned char *collating_sequence;
+  enum cob_display_sign display_sign;
   struct __cob_module *next;
 } cob_module;
 

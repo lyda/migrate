@@ -239,13 +239,24 @@ cob_stop_run (int status)
 
 
 /*
- * Utilities
+ * Sign
  */
 
-/* {SIGN}
+/* SIGN */
+
+/*
+ * positive: 0123456789
+ * negative: pqrstuvwxy
+ */
+#define GET_SIGN_ASCII(x) x -= 0x40
+#define PUT_SIGN_ASCII(x) x += 0x40
+
+/*
  * positive: 0123456789
  * negative: @ABCDEFGHI
  */
+#define GET_SIGN_ASCII10(x) x -= 0x10
+#define PUT_SIGN_ASCII10(x) x += 0x10
 
 int
 cob_real_get_sign (cob_field *f)
@@ -271,7 +282,12 @@ cob_real_get_sign (cob_field *f)
 	  {
 	    if (*p <= '9')
 	      return 1;
-	    *p -= 0x10;
+	    switch (cob_current_module->display_sign)
+	      {
+	      case COB_DISPLAY_SIGN_ASCII: GET_SIGN_ASCII (*p); break;
+	      case COB_DISPLAY_SIGN_ASCII10: GET_SIGN_ASCII10 (*p); break;
+	      default: abort ();
+	      }
 	    return -1;
 	  }
       }
@@ -309,7 +325,12 @@ cob_real_put_sign (cob_field *f, int sign)
 	  }
 	else if (sign < 0)
 	  {
-	    *p += 0x10;
+	    switch (cob_current_module->display_sign)
+	      {
+	      case COB_DISPLAY_SIGN_ASCII: PUT_SIGN_ASCII (*p); break;
+	      case COB_DISPLAY_SIGN_ASCII10: PUT_SIGN_ASCII10 (*p); break;
+	      default: abort ();
+	      }
 	  }
 	return;
       }
@@ -327,6 +348,7 @@ cob_real_put_sign (cob_field *f, int sign)
     }
 }
 
+
 char *
 cob_field_to_string (cob_field *f, char *s)
 {
