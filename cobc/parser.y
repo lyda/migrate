@@ -4010,7 +4010,7 @@ non_all_value:
  */
 
 identifier:
-  identifier_1			{ $$ = validate_identifier ($<tree>1); }
+  identifier_1			{ $$ = cb_build_identifier ($<tree>1); }
 ;
 identifier_1:
   qualified_word		{ $<tree>$ = $1; }

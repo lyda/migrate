@@ -1680,83 +1680,6 @@ cb_ref (cb_tree x)
   return cb_error_node;
 }
 
-cb_tree
-validate_identifier (cb_tree x)
-{
-  struct cb_reference *r = CB_REFERENCE (x);
-  struct cb_field *f;
-  const char *name = r->word->name;
-  cb_tree v = cb_ref (x);
-
-  if (v == cb_error_node)
-    return cb_error_node;
-
-  if (!CB_FIELD_P (v))
-    {
-      cb_error_x (x, _("`%s' not data name"), name);
-      return cb_error_node;
-    }
-
-  f = CB_FIELD (v);
-
-  /* check the number of subscripts */
-  if (list_length (r->subs) != f->indexes)
-    {
-      switch (f->indexes)
-	{
-	case 0:
-	  cb_error_x (x, _("`%s' cannot be subscripted"), name);
-	  break;
-	case 1:
-	  cb_error_x (x, _("`%s' requires 1 subscript"), name);
-	  break;
-	default:
-	  cb_error_x (x, _("`%s' requires %d subscripts"), name, f->indexes);
-	  break;
-	}
-      return cb_error_node;
-    }
-
-  /* check the range of constant subscripts */
-  if (r->subs)
-    {
-      struct cb_field *p;
-      struct cb_list *l = r->subs = list_reverse (r->subs);
-
-      for (p = f; p; p = p->parent)
-	if (p->flag_occurs)
-	  {
-	    cb_tree sub = l->item;
-	    if (CB_LITERAL_P (sub))
-	      {
-		int n = cb_literal_to_int (CB_LITERAL (sub));
-		if (n < p->occurs_min || n > p->occurs_max)
-		  cb_error_x (x, _("subscript of `%s' out of bounds: %d"),
-			     name, n);
-	      }
-	    l = l->next;
-	  }
-
-      r->subs = list_reverse (r->subs);
-    }
-
-  /* check the range of constant reference modification */
-  if (r->offset && CB_LITERAL_P (r->offset))
-    {
-      int offset = cb_literal_to_int (CB_LITERAL (r->offset));
-      if (offset < 1 || offset > f->size)
-	cb_error_x (x, _("offset of `%s' out of bounds: %d"), name, offset);
-      else if (r->length && CB_LITERAL_P (r->length))
-	{
-	  int length = cb_literal_to_int (CB_LITERAL (r->length));
-	  if (length < 1 || length > f->size - offset + 1)
-	    cb_error_x (x, _("length of `%s' out of bounds: %d"), name, length);
-	}
-    }
-
-  return x;
-}
-
 
 /*
  * Expression
@@ -2024,6 +1947,83 @@ cb_build_program (void)
   p->numeric_separator = ',';
   p->word_table = make_word_table ();
   return p;
+}
+
+
+cb_tree
+cb_build_identifier (cb_tree x)
+{
+  struct cb_reference *r = CB_REFERENCE (x);
+  struct cb_field *f;
+  const char *name = r->word->name;
+  cb_tree v = cb_ref (x);
+
+  if (v == cb_error_node)
+    return cb_error_node;
+
+  /* check if it is a data name */
+  if (!CB_FIELD_P (v))
+    {
+      cb_error_x (x, _("`%s' not data name"), name);
+      return cb_error_node;
+    }
+  f = CB_FIELD (v);
+
+  /* check the number of subscripts */
+  if (list_length (r->subs) != f->indexes)
+    {
+      switch (f->indexes)
+	{
+	case 0:
+	  cb_error_x (x, _("`%s' cannot be subscripted"), name);
+	  break;
+	case 1:
+	  cb_error_x (x, _("`%s' requires 1 subscript"), name);
+	  break;
+	default:
+	  cb_error_x (x, _("`%s' requires %d subscripts"), name, f->indexes);
+	  break;
+	}
+      return cb_error_node;
+    }
+
+  /* check the range of constant subscripts */
+  if (r->subs)
+    {
+      struct cb_field *p;
+      struct cb_list *l = r->subs = list_reverse (r->subs);
+
+      for (p = f; p; p = p->parent)
+	if (p->flag_occurs)
+	  {
+	    if (CB_LITERAL_P (l->item))
+	      {
+		int n = cb_literal_to_int (CB_LITERAL (l->item));
+		if (n < p->occurs_min || n > p->occurs_max)
+		  cb_error_x (x, _("subscript of `%s' out of bounds: %d"),
+			     name, n);
+	      }
+	    l = l->next;
+	  }
+
+      r->subs = list_reverse (r->subs);
+    }
+
+  /* check the range of constant reference modification */
+  if (r->offset && CB_LITERAL_P (r->offset))
+    {
+      int offset = cb_literal_to_int (CB_LITERAL (r->offset));
+      if (offset < 1 || offset > f->size)
+	cb_error_x (x, _("offset of `%s' out of bounds: %d"), name, offset);
+      else if (r->length && CB_LITERAL_P (r->length))
+	{
+	  int len = cb_literal_to_int (CB_LITERAL (r->length));
+	  if (len < 1 || len > f->size - offset + 1)
+	    cb_error_x (x, _("length of `%s' out of bounds: %d"), name, len);
+	}
+    }
+
+  return x;
 }
 
 

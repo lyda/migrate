@@ -461,8 +461,6 @@ extern cb_tree make_filler (void);
 
 extern cb_tree cb_ref (cb_tree x);
 
-extern cb_tree validate_identifier (cb_tree x);
-
 
 /*
  * Binary operation
@@ -714,6 +712,7 @@ struct cb_program {
 
 extern struct cb_program *cb_build_program (void);
 
+extern cb_tree cb_build_identifier (cb_tree x);
 extern cb_tree cb_build_assign (struct cb_list *vars, char op, cb_tree val);
 extern cb_tree cb_build_add (cb_tree v, cb_tree n, int round);
 extern cb_tree cb_build_sub (cb_tree v, cb_tree n, int round);
