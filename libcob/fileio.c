@@ -910,7 +910,9 @@ sort_read (cob_file *f)
   if (DB_SEQ (p->db, f->flag_first_read ? R_FIRST : R_NEXT) != 0)
     return COB_STATUS_10_END_OF_FILE;
 
+  f->record->size = p->key.size;
   memcpy (f->record->data, p->key.data, p->key.size);
+  memset (f->record->data + p->key.size, ' ', f->record_max - p->key.size);
   return COB_STATUS_00_SUCCESS;
 }
 

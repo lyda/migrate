@@ -1,3 +1,8 @@
+2004-07-05  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* fileio.c (sort_read): Set field size for varying records.
+	(Thanks to Roger While!)
+
 2004-06-12  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* termio.c (display): Display full digits of binary item
