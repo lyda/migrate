@@ -39,17 +39,20 @@ AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([alloca.h errno.h fcntl.h limits.h malloc.h stdlib.h \
 		  string.h sys/param.h sys/time.h termios.h unistd.h])
 
-# Checks for dl
+# Checks for dl.
+LIBDL=""
 AC_CHECK_HEADERS([dlfcn.h], , AC_MSG_ERROR(dlfcn.h is required))
-AC_CHECK_LIB([dl], [dlopen], , AC_MSG_ERROR(dl is required))
+AC_CHECK_LIB([dl], [dlopen], LIBDL="-ldl")
 
 # Checks for db.
-AC_CHECK_HEADERS([db1/db.h], , AC_MSG_ERROR(db1 is required))
-AC_CHECK_LIB([db1], [dbopen], , AC_MSG_ERROR(db1 is required))
+LIBDB="-ldb1"
+AC_CHECK_HEADERS([db1/db.h], , AC_MSG_ERROR(db1/db.h is required))
+AC_CHECK_LIB([db1], [dbopen], , AC_MSG_ERROR(libdb1 is required))
 
 # Checks for gmp.
-AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp is required))
-AC_CHECK_LIB([gmp], [__gmp_rand], , AC_MSG_ERROR(gmp v3 or higher is required))
+LIBGMP="-lgmp"
+AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp.h is required))
+AC_CHECK_LIB([gmp], [__gmp_rand], , AC_MSG_ERROR(gmp3 or higher is required))
 
 # Checks for readline.
 LIBRL=""
@@ -77,7 +80,7 @@ COB_CFLAGS="-I$includedir"
 COB_LIBADD="-L$libdir -lcob"
 COB_LIBRARY_PATH=".:$libdir/$PACKAGE"
 LIBCOB_CFLAGS="${INCLTDL}"
-LIBCOB_LIBADD="-ldl -ldb1 -lgmp ${LIBRL}"
+LIBCOB_LIBADD="${LIBDL} ${LIBDB} ${LIBGMP} ${LIBRL}"
 LIBS="$save_libs"
 
 AC_SUBST(COB_CC)
