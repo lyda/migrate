@@ -33,34 +33,18 @@
 
 #define decimal_char() (decimal_comma ? ',' : '.')
 
-int pgm_segment = -1;
 int screen_io_enable = 0;
 int scr_line, scr_column;
 int decimal_comma = 0;
 char currency_symbol = '$';
-char sch_convert_buf[512];
-
-extern struct lextab literal;
-extern cob_tree curr_file;
-
 cob_tree curr_paragr = NULL, curr_section = NULL;
 cob_tree curr_field;
-short curr_call_mode = 0;
-unsigned stack_offset = 0;	/* offset for variables on the stack */
-int stack_plus = 0;
-unsigned global_offset = 4;	/* offset for global variables (DATA) */
-unsigned literal_offset = 0;
-unsigned data_offset = 0;
-unsigned linkage_offset = 0;
-unsigned using_offset = 8;
-/* tmpvar_offset: for storage of temporary variables, 
-with space reclaimed after the current instruction*/
-unsigned tmpvar_offset = 0;
-unsigned tmpvar_max = 0;
-
-unsigned last_lineno = 0;
-short at_procedure = 0;
-short refmod_slots = 0;
+int curr_call_mode = 0;
+int at_procedure = 0;
+int at_linkage = 0;
+int loc_label = 1;
+unsigned char picture[4096];
+int picix, piccnt, sign, v_flag, n_flag;
 
 cob_tree spe_lit_ZE = NULL;
 cob_tree spe_lit_SP = NULL;
@@ -68,29 +52,36 @@ cob_tree spe_lit_LV = NULL;
 cob_tree spe_lit_HV = NULL;
 cob_tree spe_lit_QU = NULL;
 
-struct list *files_list = NULL;
-struct list *disp_list = NULL;
-struct parm_list *parameter_list = NULL;
-struct list *fields_list = NULL;
-struct list *last_field = NULL;
-struct index_to_table_list *index2table = NULL;
-struct named_sect *named_sect_list = NULL;
-int next_available_sec_no = SEC_FIRST_NAMED;
-int curr_sec_no = SEC_DATA;
+static int pgm_segment = -1;
+static char sch_convert_buf[512];
+static unsigned stack_offset = 0;	/* offset for variables on the stack */
+static unsigned global_offset = 4; /* offset for global variables (DATA) */
+static unsigned literal_offset = 0;
+static unsigned data_offset = 0;
+static unsigned linkage_offset = 0;
+static unsigned using_offset = 8;
+/* tmpvar_offset: for storage of temporary variables, 
+with space reclaimed after the current instruction*/
+static unsigned tmpvar_offset = 0;
+static unsigned tmpvar_max = 0;
+static short refmod_slots = 0;
 
-int screen_label = 0;
-int para_label = 0;
-int block_label = 0;
-int paragr_num = 1;
-int loc_label = 1;
-unsigned char picture[4096];
-int picix, piccnt, sign, v_flag, n_flag;
-int active[37];
-int at_linkage = 0;
-int stackframe_cnt = 0;
-char program_id[120] = "main";
-char *pgm_label = "main";
-struct list *report_list = NULL;
+static struct list *files_list = NULL;
+static struct list *disp_list = NULL;
+static struct parm_list *parameter_list = NULL;
+static struct list *fields_list = NULL;
+static struct list *last_field = NULL;
+static struct index_to_table_list *index2table = NULL;
+static struct named_sect *named_sect_list = NULL;
+static int next_available_sec_no = SEC_FIRST_NAMED;
+static int curr_sec_no = SEC_DATA;
+
+static int screen_label = 0;
+static int active[37];
+static int stackframe_cnt = 0;
+static char program_id[120] = "main";
+static char *pgm_label = "main";
+static struct list *report_list = NULL;
 
 static int need_desc_length_cleanup = 0;
 static char name_buf[MAXNAMEBUF];
@@ -98,7 +89,7 @@ static char init_ctype;		// hold homogenous type
 static short init_val;		// hold homogenous value
 static unsigned curr_01_location;	// hold current root father when set_field_location
 
-
+
 /*
 **	Symbol table management routines
 */

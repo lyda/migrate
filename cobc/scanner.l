@@ -39,6 +39,19 @@ int start_condition = 0;
 int need_subscripts = 0;
 int in_procedure = 0;
 
+/* save the last yytext */
+int last_lineno;
+char last_text[YY_BUF_SIZE];
+static int this_lineno = 0;
+static char this_text[YY_BUF_SIZE] = "";
+#define SAVE_YYTEXT				\
+{						\
+  last_lineno = this_lineno;			\
+  this_lineno = cob_orig_lineno;		\
+  strcpy (last_text, this_text);		\
+  strcpy (this_text, yytext);			\
+}
+
 static int read_literal (char mark);
 static int scan_x (char *text);
 static int scan_word (char *text);
@@ -85,29 +98,34 @@ static int scan_picture (char *text);
 
 [\'\"] {
   /* string literal */
+  SAVE_YYTEXT;
   return read_literal (yytext[0]);
 }
 
 X\'[^\'\n]\' |
 X\"[^\"\n]\" {
   /* X string literal */
+  SAVE_YYTEXT;
   return scan_x (yytext);
 }
 
 [0-9]+ {
   /* integer literal */
+  SAVE_YYTEXT;
   yylval.tree = install_literal (yytext);
   return INTEGER_TOK;
 }
 
 [0-9]*[.,][0-9]+ {
   /* numeric literal */
+  SAVE_YYTEXT;
   yylval.tree = install_literal (yytext);
   return NLITERAL;
 }
 
 [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)? {
   /* symbol or label */
+  SAVE_YYTEXT;
   return scan_word (yytext);
 }
 
@@ -128,6 +146,7 @@ X\"[^\"\n]\" {
 <ID_STATE>{
   [A-Z0-9_-]+ {
     BEGIN INITIAL;
+    SAVE_YYTEXT;
     yylval.str = strdup (yytext);
     return IDSTRING;
   }
@@ -142,11 +161,13 @@ X\"[^\"\n]\" {
   "IS"		{ /* ignore */ }
   [^ \t\n]+	{
     BEGIN INITIAL;
+    SAVE_YYTEXT;
     return scan_picture (yytext);
   }
 }
 
 <<EOF>> {
+  SAVE_YYTEXT;
   yyterminate();
 }
 

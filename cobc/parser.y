@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 632
+%expect 677
 
 %{
 #define yydebug		cob_trace_parser
@@ -187,7 +187,7 @@ static void assert_numeric_sy (cob_tree sy);
 %type <tree> variable_indexed,search_opt_varying,opt_key_is
 %type <tree> from_rec_varying,to_rec_varying
 %type <tree> literal,gliteral,without_all_literal,all_literal,special_literal
-%type <tree> nliteral,signed_nliteral
+%type <tree> nliteral,signed_nliteral,subscripted_variable
 %type <tfval> tallying_for_list
 %type <tlval> tallying_list, tallying_clause
 %type <udstval> unstring_destinations,unstring_dest_var
@@ -227,8 +227,8 @@ opt_end_program:
  *****************************************************************************/
 
 identification_division:
-  IDENTIFICATION DIVISION '.'
-  PROGRAM_ID '.' idstring opt_program_parameter '.'
+  IDENTIFICATION DIVISION dot
+  PROGRAM_ID '.' idstring opt_program_parameter dot
   identification_division_options
   {
     init_program ($6);
@@ -257,7 +257,7 @@ opt_program: | PROGRAM ;
  *****************************************************************************/
 
 environment_division:
-| ENVIRONMENT DIVISION '.' { curr_division = CDIV_ENVIR; }
+| ENVIRONMENT DIVISION dot { curr_division = CDIV_ENVIR; }
   configuration_section
   input_output_section
 ;
@@ -268,7 +268,7 @@ environment_division:
  *******************/
 
 configuration_section:
-| CONFIGURATION SECTION '.' configuration_list
+| CONFIGURATION SECTION dot configuration_list
 ;
 configuration_list:
 | configuration_list configuration
@@ -276,9 +276,13 @@ configuration_list:
 configuration:
   SOURCE_COMPUTER '.' comment
 | OBJECT_COMPUTER '.' comment
-| SPECIAL_NAMES '.' special_names opt_dot
+| SPECIAL_NAMES '.' opt_special_names
+;
+opt_special_names:
+| special_names dot
 ;
 special_names:
+  special_name
 | special_names special_name
 ;
 special_name:
@@ -293,7 +297,7 @@ special_name:
  *******************/
 
 input_output_section:
-| INPUT_OUTPUT SECTION '.'
+| INPUT_OUTPUT SECTION dot
   file_control
   i_o_control
 ;
@@ -304,7 +308,7 @@ input_output_section:
  */
 
 file_control:
-| FILE_CONTROL '.' select_statement_list
+| FILE_CONTROL dot select_statement_list
 ;
 select_statement_list:
 | select_statement_list select_statement
@@ -395,7 +399,7 @@ access_options:
  */
 
 i_o_control:
-| I_O_CONTROL '.' same_statement_list
+| I_O_CONTROL dot same_statement_list
 ;
 same_statement_list:
 | same_statement_list same_statement
@@ -422,7 +426,7 @@ filename_list:
  *****************************************************************************/
 
 data_division:
-| DATA DIVISION '.' { curr_division = CDIV_DATA; }
+| DATA DIVISION dot { curr_division = CDIV_DATA; }
   file_section
   working_storage_section
   linkage_section
@@ -439,7 +443,7 @@ data_division:
  *******************/
 
 file_section:
-| FILEN SECTION '.'	{ curr_field=NULL; }
+| FILEN SECTION dot	{ curr_field=NULL; }
   fd_list		{ close_fields(); }
 ;
 fd_list:
@@ -547,7 +551,7 @@ chars_or_recs: CHARACTERS | RECORDS ;
  *******************/
 
 working_storage_section:
-| WORKING_STORAGE SECTION '.'	{ curr_field = NULL; }
+| WORKING_STORAGE SECTION dot	{ curr_field = NULL; }
   field_description_list	{ close_fields (); }
 ;
 field_description_list:
@@ -800,7 +804,7 @@ value:
  *******************/
 
 linkage_section:
-| LINKAGE SECTION '.'		{ at_linkage=1; curr_field=NULL; }
+| LINKAGE SECTION dot		{ at_linkage=1; curr_field=NULL; }
   field_description_list	{ close_fields(); at_linkage=0; }
 ;
 
@@ -810,7 +814,7 @@ linkage_section:
  *******************/
 
 report_section:
-| REPORT SECTION '.' rd_statement_list
+| REPORT SECTION dot rd_statement_list
 ;
 rd_statement_list:
 | rd_statement_list rd_statement
@@ -898,7 +902,7 @@ opt_first_detail: | FIRST DETAIL opt_is integer ;
  *******************/
 
 screen_section:
-| SCREEN SECTION '.'
+| SCREEN SECTION dot
   {
     screen_io_enable++;
     curr_field=NULL;
@@ -1021,7 +1025,7 @@ opt_number_is: | NUMBER opt_is ;
 
 procedure_division:
 | PROCEDURE DIVISION { in_procedure = 1; curr_division = CDIV_INITIAL; }
-  procedure_using '.'
+  procedure_using dot
   {
     proc_header ($4);
   }
@@ -1048,12 +1052,12 @@ procedure_list:
 procedure:
   procedure_section { close_section(); open_section($1); }
 | paragraph { close_paragr(); open_paragr($1); }
-| statement_list '.'
+| statement_list dot
 | error '.'
 | '.'
 ;
 procedure_section:
-  LABELSTR SECTION '.'
+  LABELSTR SECTION dot
   {
     cob_tree lab=$1;
     if (lab->defined != 0) {
@@ -1064,7 +1068,7 @@ procedure_section:
   }
 ;
 paragraph:
-  LABELSTR '.'
+  LABELSTR dot
   {
     cob_tree lab=$1;
     if (lab->defined != 0) {
@@ -2967,7 +2971,7 @@ filename:
 name:
     variable '(' gname ':' opt_gname ')'
     {
-      $$ = create_refmoded_var($1, $3, $5);
+      $$ = (cob_tree) create_refmoded_var($1, $3, $5);
     }
     | variable
     ;
@@ -2979,18 +2983,12 @@ variable:
 	need_subscripts=0;
       }
     }
-    | qualified_var LPAR subscript_list ')' {
+    | subscripted_variable
+    ;
+subscripted_variable:
+  qualified_var LPAR subscript_list ')' {
       $$ = (cob_tree)make_subref( $1, $3 );
       }
-    ;
-qualified_var:
-    unqualified_var         { $$=$1; }
-    | qualified_var in_of unqualified_var { $$=lookup_variable($1,$3); }
-    ;
-unqualified_var:
-    VARIABLE        { $$=$1; }
-    | SUBSCVAR      { need_subscripts=1; $$=$1; }
-    ;
 subscript_list:
       subscript                         { $$ = $1; }
     | subscript_list opt_sep subscript  { $$ = add_subscript($1, $3); }
@@ -2999,6 +2997,14 @@ subscript:
       gname                     { $$ = create_subscript( $1 ); }
     | subscript '+' gname       { $$ = add_subscript_item( $1, '+', $3 ); }
     | subscript '-' gname       { $$ = add_subscript_item( $1, '-', $3 ); }
+    ;
+qualified_var:
+    unqualified_var         { $$=$1; }
+    | qualified_var in_of unqualified_var { $$=lookup_variable($1,$3); }
+    ;
+unqualified_var:
+    VARIABLE        { $$=$1; }
+    | SUBSCVAR      { need_subscripts=1; $$=$1; }
     ;
 integer:
   INTEGER_TOK
@@ -3045,6 +3051,17 @@ label:
 ;
 in_of: IN | OF ;
 
+dot:
+  '.'
+| /* nothing */
+  {
+    int save_lineno = cob_orig_lineno;
+    cob_orig_lineno = last_lineno;
+    yywarn ("`.' is expected after `%s'", last_text);
+    cob_orig_lineno = save_lineno;
+  }
+;
+
 
 /*
  * Common flags
@@ -3069,7 +3086,6 @@ flag_rounded:
  */
 
 opt_is_are: | IS | ARE ;
-opt_dot: | '.' ;
 opt_sign: | SIGN ;
 opt_area: | AREA ;
 opt_for: | FOR ;

@@ -95,7 +95,7 @@ extern FILE *lexin;
 extern FILE *o_src;
 extern cob_tree curr_paragr, curr_section;
 extern cob_tree curr_field;
-extern short curr_call_mode;
+extern int curr_call_mode;
 extern cob_tree pgm_id;
 extern unsigned stack_offset;   /* offset das variaveis na pilha */
 extern unsigned global_offset;  /* offset das variaveis globais (DATA) */

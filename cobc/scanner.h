@@ -36,5 +36,7 @@ extern int curr_division;
 extern int start_condition;
 extern int need_subscripts;
 extern int in_procedure;
+extern int last_lineno;
+extern char last_text[];
 
 #endif /* _SCANNER_H_ */
