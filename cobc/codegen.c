@@ -2315,7 +2315,7 @@ gen_corresponding (void (*func)(), cob_tree g1, cob_tree g2, int opt)
  */
 
 static void
-gen_initialize_1 (cob_tree sy)
+gen_initialize_1 (cob_tree sy, int len)
 {
   if (!sy->flags.in_redefinition)
     {
@@ -2323,7 +2323,7 @@ gen_initialize_1 (cob_tree sy)
 	{
 	  int lab = 0;
 	  cob_tree p;
-	  if (sy->times != 1)
+	  if (sy->times != 1 && len <= 0)
 	    {
 	      lab = loc_label++;
 	      output ("\tpopl\t%%eax\n");
@@ -2333,8 +2333,8 @@ gen_initialize_1 (cob_tree sy)
 	      gen_dstlabel (lab);
 	    }
 	  for (p = sy->son; p; p = p->brother)
-	    gen_initialize_1 (p);
-	  if (sy->times != 1)
+	    gen_initialize_1 (p, len - 1);
+	  if (sy->times != 1 && len <= 0)
 	    {
 	      output ("\tdecl\t%%ebx\n");
 	      gen_branch_false (lab);
@@ -2346,7 +2346,7 @@ gen_initialize_1 (cob_tree sy)
       else
 	{
 	  int i;
-	  for (i = 0; i < sy->times; i++)
+	  for (i = 0; i < ((len <= 0) ? sy->times : 1); i++)
 	    {
 	      gen_loaddesc (sy);
 	      gen_move_1 (get_init_symbol (COB_FIELD_TYPE (sy)));
@@ -2369,9 +2369,16 @@ gen_initialize (cob_tree sy)
     gen_move (get_init_symbol (init_ctype), sy);
   else
     {
+      int len = 0;
       loadloc_to_eax (sy);
       output ("\tpushl\t%%eax\n");
-      gen_initialize_1 (sy1);
+      if (SUBREF_P (sy))
+	{
+	  cob_tree_list l;
+	  for (l = SUBREF_SUBS (sy); l; l = l->next)
+	    len++;
+	}
+      gen_initialize_1 (sy1, len);
       output ("\tpopl\t%%eax\n");
     }
 }
