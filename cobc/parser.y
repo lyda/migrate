@@ -225,9 +225,10 @@ static void ambiguous_error (struct cobc_word *p);
 %type <tree> read_into,read_key,write_from,field_name,expr
 %type <tree> file_name,opt_with_pointer,occurs_index,evaluate_subject
 %type <tree> unstring_delimiter,unstring_count,unstring_tallying
-%type <tree> opt_on_exception_sentence,at_end_sentence,not_at_end_sentence
+%type <tree> at_end_sentence,not_at_end_sentence
 %type <tree> invalid_key_sentence,not_invalid_key_sentence
 %type <tree> opt_on_overflow_sentence,opt_not_on_overflow_sentence
+%type <tree> opt_on_exception_sentence,opt_not_on_exception_sentence
 %type <tree> opt_on_size_error_sentence,opt_not_on_size_error_sentence
 %type <tree> numeric_name,numeric_edited_name,group_name,table_name,class_name
 %type <tree> program_name,condition_name,qualified_cond_name,data_name
@@ -1495,7 +1496,7 @@ call_statement:
   {
     push_call_3 (COBC_CALL, $2, $4, $5);
   }
-  opt_on_exception_or_overflow
+  opt_on_exception
   _end_call
 ;
 call_using:
@@ -1520,24 +1521,6 @@ call_returning:
   /* nothing */			{ $$ = NULL; }
 | RETURNING data_name		{ $$ = $2; }
 ;
-
-opt_on_exception_or_overflow:
-  opt_on_exception_sentence
-  opt_not_on_overflow_sentence
-  {
-    push_status_handler (cobc_int0, $2, $1);
-  }
-;
-opt_on_exception_sentence:
-  /* nothing */			{ $$ = make_call_0 (COBC_CALL_ERROR); }
-| _on exception_or_overflow
-  imperative_statement		{ $$ = $3; }
-;
-exception_or_overflow:
-  EXCEPTION
-| OVERFLOW
-;
-
 _end_call: | END_CALL ;
 
 
@@ -2554,6 +2537,30 @@ opt_on_overflow_sentence:
 opt_not_on_overflow_sentence:
   /* nothing */				{ $$ = NULL; }
 | NOT _on OVERFLOW imperative_statement	{ $$ = $4; }
+;
+
+
+/*
+ * ON EXCEPTION
+ */
+
+opt_on_exception:
+  opt_on_exception_sentence
+  opt_not_on_exception_sentence
+  {
+    if ($1 == NULL)
+      $1 = make_call_0 (COBC_CALL_ERROR);
+    push_status_handler (cobc_int0, $2, $1);
+  }
+;
+opt_on_exception_sentence:
+  /* nothing */				{ $$ = NULL; }
+| _on OVERFLOW imperative_statement	{ $$ = $3; }
+| _on EXCEPTION imperative_statement	{ $$ = $3; }
+;
+opt_not_on_exception_sentence:
+  /* nothing */				 { $$ = NULL; }
+| NOT _on EXCEPTION imperative_statement { $$ = $4; }
 ;
 
 
