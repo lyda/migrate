@@ -4867,13 +4867,11 @@ gen_reads (cob_tree f, cob_tree buf, cob_tree key, int next_prev, int sel)
 void
 gen_release (cob_tree r, cob_tree buf)
 {
-  cob_tree f;
-  f = r->ix_desc;
   if (buf != NULL)
     gen_move (buf, r);
-  gen_save_sort_fields (f, buf);
+  gen_save_sort_fields (r->ix_desc, buf);
   asm_call ("sort_release");
-  gen_status (f);
+  gen_status (r->ix_desc);
 }
 
 void

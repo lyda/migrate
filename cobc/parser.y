@@ -2082,7 +2082,7 @@ opt_end_read: | END_READ ;
 release_statement:
   RELEASE level1 opt_write_from
   {
-    gen_release($2, $3);
+    gen_release ($2, $3);
   }
 ;
 
@@ -2120,7 +2120,7 @@ opt_end_return: | END_RETURN ;
 rewrite_statement:
   REWRITE level1 opt_write_from
   {
-    gen_rewrite($2, $3);
+    gen_rewrite ($2, $3);
   }
   opt_invalid_key
   opt_end_rewrite
@@ -2456,25 +2456,22 @@ unstring_statement:
   opt_on_overflow opt_end_unstring
 ;
 unstring_delimited:
-  /* nothing */			{ $$=NULL; }
-| DELIMITED opt_by unstring_delimited_vars { $$=$3; }
+  /* nothing */				   { $$ = NULL; }
+| DELIMITED opt_by unstring_delimited_vars { $$ = $3; }
 ;
 unstring_delimited_vars:
-  flag_all gname       { $$=alloc_unstring_delimited($1,$2); }
-| unstring_delimited_vars OR flag_all gname {
-  struct unstring_delimited *ud;
-  ud=alloc_unstring_delimited($3,$4);
-  ud->next = $1;
-  $$=ud;
-}
+  flag_all gname		{ $$ = alloc_unstring_delimited ($1,$2); }
+| unstring_delimited_vars OR flag_all gname
+  {
+    struct unstring_delimited *ud;
+    ud=alloc_unstring_delimited($3,$4);
+    ud->next = $1;
+    $$=ud;
+  }
 ;
 unstring_destinations:
-  unstring_dest_var       { $$=$1; }
-| unstring_destinations opt_sep
-    unstring_dest_var   {
-        $3->next = $1;
-        $$ = $3;
-    }
+  unstring_dest_var				  { $$ = $1; }
+| unstring_destinations opt_sep unstring_dest_var { $3->next = $1; $$ = $3; }
 ;
 unstring_dest_var:
   name opt_unstring_delim opt_unstring_count
@@ -2504,7 +2501,7 @@ opt_end_unstring: | END_UNSTRING ;
 write_statement:
   WRITE level1 opt_write_from write_options
   {
-    gen_write($2, $4, $3);
+    gen_write ($2, $4, $3);
   }
   opt_invalid_key
   opt_end_write
