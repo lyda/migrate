@@ -1,5 +1,10 @@
 2002-06-26  Keisuke Nishida  <knishida@netlab.jp>
 
+	* tree.c (compute_size): Handle SIGN SEPARATE only for numeric fields.
+	* parser.y (validate_field): Don't throw error for multiple redefines.
+
+2002-06-26  Keisuke Nishida  <knishida@netlab.jp>
+
 	* cobc.c, cobc.h (cobc_flags): New variable.
 	(LINK_STATIC, LINK_DYNAMIC): Removed.
 	(cobc_main_flag, cobc_debug_flag, cobc_verbose_flag)
