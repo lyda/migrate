@@ -847,23 +847,29 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
   /* descriptor */
   if (have_desc && p->f.used && !COBC_FILLER_P (COBC_TREE (p)))
     {
-      output ("static struct cob_field_desc f_%s_desc = ", p->cname);
-      output ("{'%c', %d, %d, %d, %d, %d, %d, %d, ",
-	      get_type (p), p->pic->digits, p->pic->decimals,
-	      p->pic->have_sign, p->f.sign_separate, p->f.sign_leading,
-	      p->f.blank_zero, p->f.justified);
-      if (p->category == COB_NUMERIC_EDITED
-	  || p->category == COB_ALPHANUMERIC_EDITED)
-	{
-	  char *s;
-	  output ("\"");
-	  for (s = p->pic->str; *s; s += 2)
-	    output ("%c\\%03o", s[0], s[1]);
-	  output ("\"");
-	}
+      char type = get_type (p);
+      if (type == COB_ALPHANUMERIC && p->f.justified == 0)
+	output ("#define f_%s_desc cob_alnum_desc\n", p->cname);
       else
-	output ("0");
-      output ("};\n");
+	{
+	  output ("static struct cob_field_desc f_%s_desc = ", p->cname);
+	  output ("{'%c', %d, %d, %d, %d, %d, %d, %d, ",
+		  type, p->pic->digits, p->pic->decimals,
+		  p->pic->have_sign, p->f.sign_separate, p->f.sign_leading,
+		  p->f.blank_zero, p->f.justified);
+	  if (p->category == COB_NUMERIC_EDITED
+	      || p->category == COB_ALPHANUMERIC_EDITED)
+	    {
+	      char *s;
+	      output ("\"");
+	      for (s = p->pic->str; *s; s += 2)
+		output ("%c\\%03o", s[0], s[1]);
+	      output ("\"");
+	    }
+	  else
+	    output ("0");
+	  output ("};\n");
+	}
     }
 
   /* data */

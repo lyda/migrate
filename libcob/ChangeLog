@@ -1,5 +1,11 @@
 2002-06-11  Keisuke Nishida  <knishida@netlab.jp>
 
+	* common.c, common.h (cob_alnum_desc): New variable.
+	* common.c (cob_zero, cob_space, cob_high, cob_low, cob_quote): Use it.
+	* move.c (cob_mem_move): Use it.
+
+2002-06-11  Keisuke Nishida  <knishida@netlab.jp>
+
 	* Allow cob_field.desc to be NULL.
 	* common.h, common.c, move.c, numeric.c: Updated.
 

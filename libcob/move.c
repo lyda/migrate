@@ -637,8 +637,7 @@ cob_move (struct cob_field src, struct cob_field dst)
 void
 cob_mem_move (struct cob_field dst, unsigned char *src, int len)
 {
-  struct cob_field_desc fld = {COB_ALPHANUMERIC};
-  cob_move ((struct cob_field) {len, src, &fld}, dst);
+  cob_move ((struct cob_field) {len, src, &cob_alnum_desc}, dst);
 }
 
 int

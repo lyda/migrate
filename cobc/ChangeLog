@@ -1,5 +1,9 @@
 2002-06-11  Keisuke Nishida  <knishida@netlab.jp>
 
+	* codegen.c: Use `cob_alnum_desc' where appropriate.
+
+2002-06-11  Keisuke Nishida  <knishida@netlab.jp>
+
 	* codegen.c (output_field_definition): Output NULL for
 	cob_field.desc when it is a group.
 

@@ -90,6 +90,8 @@ extern int cob_return_code;
 
 /* constants */
 
+extern struct cob_field_desc cob_alnum_desc;
+
 extern struct cob_field cob_zero;
 extern struct cob_field cob_space;
 extern struct cob_field cob_high;

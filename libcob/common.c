@@ -51,11 +51,13 @@ int cob_return_code = 0;
 
 /* ZERO,SPACE,HIGH-VALUE,LOW-VALUE,QUOTE */
 
-struct cob_field cob_zero =  {1, "0", 0};
-struct cob_field cob_space = {1, " ", 0};
-struct cob_field cob_high =  {1, "\xff", 0};
-struct cob_field cob_low =   {1, "\0", 0};
-struct cob_field cob_quote = {1, "\"", 0};
+struct cob_field_desc cob_alnum_desc = {'X'};
+
+struct cob_field cob_zero =  {1, "0",    &cob_alnum_desc};
+struct cob_field cob_space = {1, " ",    &cob_alnum_desc};
+struct cob_field cob_high =  {1, "\xff", &cob_alnum_desc};
+struct cob_field cob_low =   {1, "\0",   &cob_alnum_desc};
+struct cob_field cob_quote = {1, "\"",   &cob_alnum_desc};
 
 /* SWITCH-1/2/3/4/5/6/7/8 */
 
