@@ -562,7 +562,7 @@ select_options:
 | select_options select_option
 ;
 select_option:
-  ASSIGN _to value
+  ASSIGN _to reference_or_literal
   {
     current_file->assign = $3;
   }
