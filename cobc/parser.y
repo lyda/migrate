@@ -1116,6 +1116,7 @@ occurs_index:
     finalize_field_tree (COBC_FIELD ($$));
     program_spec.index_list = list_add (program_spec.index_list, $$);
   }
+;
 
 _times: | TIMES ;
 
@@ -2143,7 +2144,7 @@ perform_procedure:
 perform_option:
   /* nothing */
   {
-    cobc_location = @1;
+    cobc_location = @0;
     $$ = make_perform (COBC_PERFORM_ONCE);
   }
 | integer_value TIMES
@@ -3536,6 +3537,7 @@ function:
     PENDING ("FUNCTION");
     YYABORT;
   }
+;
 
 
 /*
