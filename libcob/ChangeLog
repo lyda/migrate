@@ -1,3 +1,9 @@
+2004-03-10  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
+
+	* fileio.c (cob_sort_init): Use temporary sort file.
+	(cob_sort_finish): Delete sort file.
+	(cob_open): No filename mapping for SORT files.
+
 2004-03-09  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
 
 	* move.c (cob_binary_set_int, cob_binary_set_int64): Reimplemented.

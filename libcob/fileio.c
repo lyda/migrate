@@ -36,7 +36,12 @@
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
+#include <unistd.h>
 #include <sys/stat.h>
+
+#ifdef _WIN32
+#include <windows.h>		/* for GetTempPath, GetTempFileName */
+#endif
 
 #if HAVE_FCNTL_H
 #include <fcntl.h>
@@ -987,7 +992,8 @@ cob_open (cob_file *f, int mode, int opt)
 
   /* obtain the file name */
   cob_field_to_string (f->assign, filename);
-  if (cob_current_module->flag_filename_mapping)
+  if (cob_current_module->flag_filename_mapping
+      && f->organization != COB_ORG_SORT)
     {
       char buff[FILENAME_MAX];
       char *p;
@@ -1292,6 +1298,35 @@ static const unsigned char *old_sequence;
 void
 cob_sort_init (cob_file *f, int nkeys, const unsigned char *collating_sequence)
 {
+  char *s;
+  char tmpdir[FILENAME_MAX];
+  char filename[FILENAME_MAX];
+
+  /* get temporary directory */
+  if ((s = getenv("TMPDIR")) != NULL
+      || (s = getenv("TMP")) != NULL)
+    strcpy (tmpdir, s);
+  else
+    {
+#ifdef _WIN32
+      GetTempPath (FILENAME_MAX, tmpdir);
+#else
+      strcpy (tmpdir, "/tmp");
+#endif
+    }
+
+  /* get temporary file name */
+#ifdef _WIN32
+  GetTempFileName (tmpdir, "cob", 0, filename);
+  DeleteFile (filename);
+#else
+  sprintf (filename, "%s/cobXXXXXX", tmpdir);
+  close (mkstemp (filename));
+  unlink (filename);
+#endif
+
+  f->assign->size = strlen (filename);
+  f->assign->data = strdup (filename);
   f->file = malloc (sizeof (struct sort_file));
   f->keys = malloc (sizeof (cob_file_key) * nkeys);
   f->nkeys = 0;
@@ -1304,6 +1339,8 @@ cob_sort_init (cob_file *f, int nkeys, const unsigned char *collating_sequence)
 void
 cob_sort_finish (cob_file *f)
 {
+  unlink (f->assign->data);
+  free (f->assign->data);
   free (f->file);
   free (f->keys);
   cob_current_module->collating_sequence = old_sequence;
