@@ -97,13 +97,11 @@ AC_CHECK_FUNC([getopt_long_only], ,
 AC_CHECK_LIB([regex], [regcomp], [LIBCOB_LIBS="$LIBCOB_LIBS -lregex"])
 
 # Checks for db.
-AC_CHECK_HEADERS([db1/db.h db_185.h db.h])
 AC_CHECK_FUNCS([dbopen], ,
-  [AC_CHECK_LIB([db1], [dbopen],
-    [LIBCOB_LIBS="$LIBCOB_LIBS -ldb1"],
-    [AC_CHECK_LIB([db], [__db_dbopen],
-      [LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
-      [AC_MSG_ERROR(libdb1 is required)])])])
+  [AC_CHECK_HEADERS([db_185.h db3/db_185.h])
+   AC_CHECK_LIB([db], [__db_dbopen],
+    [LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
+    [AC_MSG_ERROR(libdb is required)])])
 
 # Checks for gmp.
 AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp.h is required))

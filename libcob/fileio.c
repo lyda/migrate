@@ -44,14 +44,14 @@
 #include <sys/file.h>
 #include <sys/stat.h>
 
-#if HAVE_DB1_DB_H
-#include <db1/db.h>
+#if HAVE_DBOPEN
+#include <db.h>
 #else
 #if HAVE_DB_185_H
 #include <db_185.h>
 #else
-#if HAVE_DB_H
-#include <db.h>
+#if HAVE_DB3_DB_185_H
+#include <db3/db_185.h>
 #endif
 #endif
 #endif
@@ -768,9 +768,6 @@ indexed_rewrite (cob_file *f)
   /* write data */
   DBT_SET (p->key, f->keys[0].field);
   ret = indexed_write_internal (f);
-
-  /* set cursor to the next */
-  DB_SEQ (p->db[p->key_index], R_NEXT);
 
   return ret;
 }
