@@ -1,5 +1,10 @@
 2002-07-22  Keisuke Nishida  <knishida@netlab.jp>
 
+	* parser.y (FUNCTION_NAME): Defined as the string type.
+	* scanner.l (FUNCTION_STATE): Set value for FUNCTION_NAME.
+
+2002-07-22  Keisuke Nishida  <knishida@netlab.jp>
+
 	* parser.y (display_with_no_advancing): Fixed port number.
 
 2002-07-08  Keisuke Nishida  <knishida@netlab.jp>

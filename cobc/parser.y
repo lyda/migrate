@@ -155,6 +155,7 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 
 %union {
   int inum;
+  char *str;
   cobc_tree tree;
   struct cobc_word *word;
   struct cobc_list *list;
@@ -162,6 +163,7 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
   struct cobc_generic *gene;
 }
 
+%token <str>  FUNCTION_NAME
 %token <pict> PICTURE_TOK
 %token <tree> INTEGER_LITERAL NUMERIC_LITERAL NONNUMERIC_LITERAL
 %token <tree> CLASS_NAME CONDITION_NAME MNEMONIC_NAME
@@ -196,7 +198,7 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %token END_WRITE
 %token THEN EVALUATE OTHER ALSO CONTINUE CURRENCY REFERENCE INITIALIZE
 %token NUMERIC ALPHABETIC ALPHABETIC_LOWER ALPHABETIC_UPPER
-%token DEPENDING CORRESPONDING CONVERTING FUNCTION_NAME OPTIONAL RETURNING
+%token DEPENDING CORRESPONDING CONVERTING OPTIONAL RETURNING
 %token IDENTIFICATION ENVIRONMENT DATA PROCEDURE TRUE FALSE ANY
 %token AUTHOR DATE_WRITTEN DATE_COMPILED INSTALLATION SECURITY
 %token COMMON NEXT INPUT I_O OUTPUT EXTEND BINARY

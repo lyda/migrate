@@ -177,11 +177,13 @@ X\"[^\"\n]*\" {
 }
 
 <FUNCTION_STATE>{
-  [^ \t\n;]+	{
+  [a-z0-9-]+	{
     BEGIN INITIAL;
     SAVE_YYTEXT;
+    yylval.str = strdup (yytext);
     return FUNCTION_NAME;
   }
+  .		{ return yytext[0]; }
 }
 
 <<EOF>> {
