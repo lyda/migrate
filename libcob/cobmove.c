@@ -23,10 +23,7 @@
 
 #include "_libcob.h"
 
-static int binFldSize (struct fld_desc *f);
-
-//#define DEBUG_RTS 0 
-//#define DEBUG_MOVE_RTS 1 
+#define binFldSize(f) (f->len)
 
 /*--------------------------------------------------------------------------*\
  |                                                                           |
@@ -440,10 +437,6 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 	    int bIsNegative, i, k;
 	    char caWork[32], caWork1[2];
 
-#ifdef DEBUG_MOVE_RTS
-	    fprintf (stderr, "debug: move 21: pSrcData=%s;\n", pSrcData);
-#endif
-
 	    FldWrk.len = picCompLength (pDstFld);
 	    FldWrk.decimals = pDstFld->decimals;
 	    if (pSrcFld->decimals != 0)
@@ -458,18 +451,7 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 	    cob_move (pSrcFld, pSrcData, &FldWrk, caWork);
 	    caWork[FldWrk.len] = '\0';
 
-#ifdef DEBUG_MOVE_RTS
-	    fprintf (stderr, "debug: move 22: pSrcData=%s, caWork=%s;\n",
-		     pSrcData, caWork);
-#endif
-
 	    bIsNegative = extract_sign (&FldWrk, caWork);
-
-#ifdef DEBUG_MOVE_RTS
-	    fprintf (stderr,
-		     "debug: move 23: pSrcData=%s, caWork=%s, bIsNegative=%d;\n",
-		     pSrcData, caWork, bIsNegative);
-#endif
 
 	    // Add the decimal point
 	    if (FldWrk.decimals != 0)
@@ -498,13 +480,6 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 		if (bIsNegative)
 		  fWork *= -1;
 		*(float *) pDstData = fWork;
-
-#ifdef DEBUG_MOVE_RTS
-		fprintf (stderr,
-			 "debug: move 25: pSrcData=%s, fWork=%f, caWork=%s\n",
-			 pSrcData, fWork, caWork);
-#endif
-
 	      }
 	    else
 	      {
@@ -512,13 +487,6 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 		if (bIsNegative)
 		  dWork *= -1;
 		*(double *) pDstData = dWork;
-
-#ifdef DEBUG_MOVE_RTS
-		fprintf (stderr,
-			 "debug: move 25: pSrcData=%s, dWork=%f, caWork=%s\n",
-			 pSrcData, dWork, caWork);
-#endif
-
 	      }
 
 	    break;
@@ -1003,10 +971,6 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 	    int bIsNegative, i, k;
 	    char caWork[32], caWork1[2];
 
-#ifdef DEBUG_MOVE_RTS
-	    fprintf (stderr, "debug: move 31: pSrcData=%s;\n", pSrcData);
-#endif
-
 	    FldWrk.len = picCompLength (pDstFld);
 	    FldWrk.decimals = pDstFld->decimals;
 	    if (pDstFld->decimals != 0)
@@ -1021,18 +985,7 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 	    cob_move (pSrcFld, pSrcData, &FldWrk, caWork);
 	    caWork[FldWrk.len] = '\0';
 
-#ifdef DEBUG_MOVE_RTS
-	    fprintf (stderr, "debug: move 32: pSrcData=%s, caWork=%s;\n",
-		     pSrcData, caWork);
-#endif
-
 	    bIsNegative = extract_sign (&FldWrk, caWork);
-
-#ifdef DEBUG_MOVE_RTS
-	    fprintf (stderr,
-		     "debug: move 33: pSrcData=%s, caWork=%s, bIsNegative=%d;\n",
-		     pSrcData, caWork, bIsNegative);
-#endif
 
 	    // Add the decimal point
 	    if (FldWrk.decimals != 0)
@@ -1055,24 +1008,12 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 		caWork[i] = '\0';
 	      }
 
-#ifdef DEBUG_MOVE_RTS
-	    fprintf (stderr,
-		     "debug: move 34: pSrcData=%s, dWork=%f, caWork=%s\n",
-		     pSrcData, dWork, caWork);
-#endif
 	    if (pDstFld->len == 4)
 	      {
 		sscanf (caWork, "%f", &fWork);
 		if (bIsNegative)
 		  fWork *= -1;
 		*(float *) pDstData = fWork;
-
-#ifdef DEBUG_MOVE_RTS
-		fprintf (stderr,
-			 "debug: move 35: pSrcData=%s, fWork=%f, caWork=%s\n",
-			 pSrcData, fWork, caWork);
-#endif
-
 	      }
 	    else
 	      {
@@ -1080,13 +1021,6 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 		if (bIsNegative)
 		  dWork *= -1;
 		*(double *) pDstData = dWork;
-
-#ifdef DEBUG_MOVE_RTS
-		fprintf (stderr,
-			 "debug: move 35: pSrcData=%s, dWork=%f, caWork=%s\n",
-			 pSrcData, dWork, caWork);
-#endif
-
 	      }
 
 	    break;
@@ -1498,10 +1432,6 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 	    int bIsNegative, i, k;
 	    char caWork[32], caWork1[2];
 
-#ifdef DEBUG_MOVE_RTS
-	    fprintf (stderr, "debug: move 41: pSrcData=%s;\n", pSrcData);
-#endif
-
 	    FldWrk.len = picCompLength (pDstFld);
 	    FldWrk.decimals = pDstFld->decimals;
 	    if (pDstFld->decimals != 0)
@@ -1515,18 +1445,7 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 	    strcpy (FldWrk.pic, pDstFld->pic);
 	    cob_move (pSrcFld, pSrcData, &FldWrk, caWork);
 	    caWork[FldWrk.len] = '\0';
-
-#ifdef DEBUG_MOVE_RTS
-	    fprintf (stderr, "debug: move 42: pSrcData=%s, caWork=%s;\n",
-		     pSrcData, caWork);
-#endif
 	    bIsNegative = extract_sign (&FldWrk, caWork);
-
-#ifdef DEBUG_MOVE_RTS
-	    fprintf (stderr,
-		     "debug: move 43: pSrcData=%s, caWork=%s, bIsNegative=%d;\n",
-		     pSrcData, caWork, bIsNegative);
-#endif
 
 	    // Add the decimal point
 	    if (FldWrk.decimals != 0)
@@ -1555,13 +1474,6 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 		if (bIsNegative)
 		  fWork *= -1;
 		*(float *) pDstData = fWork;
-
-#ifdef DEBUG_MOVE_RTS
-		fprintf (stderr,
-			 "debug: move 45: pSrcData=%s, fWork=%f, caWork=%s\n",
-			 pSrcData, fWork, caWork);
-#endif
-
 	      }
 	    else
 	      {
@@ -1569,12 +1481,6 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 		if (bIsNegative)
 		  dWork *= -1;
 		*(double *) pDstData = dWork;
-
-#ifdef DEBUG_MOVE_RTS
-		fprintf (stderr,
-			 "debug: move 45: pSrcData=%s, dWork=%f, caWork=%s\n",
-			 pSrcData, dWork, caWork);
-#endif
 	      }
 	    break;
 	  }
@@ -1723,42 +1629,6 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 	cob_move (&FldWrk, caWork, pDstFld, pDstData);
       }
     }
-#ifdef DEBUG_RTS
-  fprintf (stderr, "Source field: ");
-  fprintf (stderr,
-	   "len = %ld, type = %c, decimals = %d, all = %d, just = %d, pic[0] %c\n",
-	   pfldDesc1->len, pfldDesc1->type, (char) pfldDesc1->decimals,
-	   pfldDesc1->all, pfldDesc1->just_r, pfldDesc1->pic[0]);
-  for (i = 0; i < pfldDesc1->len; ++i)
-    fprintf (stderr, "%02X ", (unsigned char) caData1[i]);
-  fprintf (stderr, "\n");
-  for (i = 0; i < pfldDesc1->len; ++i)
-    {
-      if ((caData1[i] >= ' ') && (caData1[i] < 0x7f))
-	fprintf (stderr, " %c ", caData1[i]);
-      else
-	fprintf (stderr, "   ");
-    }
-  fprintf (stderr, "\n");
-
-  fprintf (stderr, "Destination field: ");
-  fprintf (stderr,
-	   "len = %ld, type = %c, decimals = %d, all = %d, just = %d, pic[0] %c\n",
-	   pfldDesc2->len, pfldDesc2->type, (char) pfldDesc2->decimals,
-	   pfldDesc2->all, pfldDesc2->just_r, pfldDesc2->pic[0]);
-  for (i = 0; i < pfldDesc2->len; ++i)
-    fprintf (stderr, "%02X ", (unsigned char) caData2[i]);
-  fprintf (stderr, "\n");
-  for (i = 0; i < pfldDesc2->len; ++i)
-    {
-      if ((caData2[i] >= ' ') && (caData2[i] < 0x7f))
-	fprintf (stderr, " %c ", caData2[i]);
-      else
-	fprintf (stderr, "   ");
-    }
-  fprintf (stderr, "\n\n");
-  fflush (stderr);
-#endif
   return;
 }
 
@@ -2492,23 +2362,6 @@ _DUMP_ (unsigned char *caData, char *szCount, char *caOut)
 }
 
 
-/*------------------------------------------------------------------------*\
- |                                                                        |
- |                          binFldSize                                    |
- |                                                                        |
-\*------------------------------------------------------------------------*/
-
-static int
-binFldSize (struct fld_desc *f)
-{
-/*	int len=f->len;
-	if (len<=2) return 1;
-	if (len<=4) return 2;
-	if (len<=9) return 4;
-	return 8; */
-  return f->len;
-}
-
 int decimal_comma = 0;
 int decimal_char = '.';
 char cCurrencySymbol = '$';
@@ -2551,15 +2404,10 @@ float2all (struct fld_desc *pSrcFld, char *pSrcData, struct fld_desc *pDstFld,
   double dWork;
   int j, k, i, typesw, slen;
   int bIsNegative;
-  char caWork[19], defWork[9], caPic[16];
+  char caWork[19], caPic[16];
   struct fld_desc FldWrk;
 
   FldWrk.pic = caPic;
-
-// #ifdef DEBUG_MOVE_RTS
-//         fprintf(stderr, "debug: move 70: typesw=%d, pSrcData=%f, pDstData=%f\n", 
-//                        typesw, *pSrcData, *pDstData);
-// #endif
 
   if (pDstFld->type == DTYPE_FLOAT)
     {
@@ -2579,29 +2427,15 @@ float2all (struct fld_desc *pSrcFld, char *pSrcData, struct fld_desc *pDstFld,
 	  *(double *) pDstData = *(double *) pSrcData;
 	  break;
 	}
-#ifdef DEBUG_MOVE_RTS
-      fprintf (stderr, "debug: move 75: dWork = %f, typesw=%d, defWork=%s;\n",
-	       dWork, typesw, defWork);
-#endif
     }
   else
     {
       typesw = binFldSize (pSrcFld);
 
       if (typesw == 4)
-	{
-	  dWork = (double) *((float *) pSrcData);
-	}
+	dWork = (double) *((float *) pSrcData);
       else
-	{
-	  dWork = (double) *((double *) pSrcData);
-	}
-      sprintf (defWork, "%%f");
-
-#ifdef DEBUG_MOVE_RTS
-      fprintf (stderr, "debug: move 76: dWork = %f, typesw=%d, defWork=%s;\n",
-	       dWork, typesw, defWork);
-#endif
+	dWork = (double) *((double *) pSrcData);
 
       if (dWork < 0)
 	{
@@ -2612,29 +2446,16 @@ float2all (struct fld_desc *pSrcFld, char *pSrcData, struct fld_desc *pDstFld,
 	{
 	  bIsNegative = 0;
 	}
-//         sprintf(caWork, defWork, dWork);
       sprintf (caWork, "%f", dWork);
-
-
-#ifdef DEBUG_MOVE_RTS
-      fprintf (stderr,
-	       "debug: move 77: dWork = %f, caWork=%s, typesw=%d, defWork=%s;\n",
-	       dWork, caWork, typesw, defWork);
-#endif
-
 
       // Remove padding zeros after decimal point
       slen = strlen (caWork);
       for (i = slen - 1; i >= 0; i--)
 	{
 	  if (caWork[i] == '0')
-	    {
-	      caWork[i] = '\0';
-	    }
+	    caWork[i] = '\0';
 	  else
-	    {
-	      i = -1;
-	    }
+	    i = -1;
 	}
 
       j = 0;			// Location of decimal point 
@@ -2657,37 +2478,16 @@ float2all (struct fld_desc *pSrcFld, char *pSrcData, struct fld_desc *pDstFld,
 	    }
 	}
       if (k != 0)
-	{
-	  caWork[i - 1] = '\0';
-	}
-
-#ifdef DEBUG_MOVE_RTS
-      fprintf (stderr,
-	       "debug: move 78: dWork = %f, caWork=%s, bIsNegative=%d, pDstFld->pic=%s;\n",
-	       dWork, caWork, bIsNegative, pDstFld->pic);
-#endif
-
+	caWork[i - 1] = '\0';
 
       slen = strlen (caWork);
       FldWrk.len = slen;
       if (j == 0)
-	{
-	  FldWrk.decimals = 0;
-	}
+	FldWrk.decimals = 0;
       else
-	{
-	  FldWrk.decimals = slen - j;
-	}
+	FldWrk.decimals = slen - j;
       FldWrk.type = DTYPE_DISPLAY;
       FldWrk.all = 0;
-
-
-#ifdef DEBUG_MOVE_RTS
-      fprintf (stderr,
-	       "debug: move 790: dWork = %f, caWork=%s, bIsNegative=%d, pDstFld->pic=%s;\n",
-	       dWork, caWork, bIsNegative, pDstFld->pic);
-
-#endif
 
       strcpy (FldWrk.pic, pSrcFld->pic);
       if (FldWrk.pic[0] == 'S')

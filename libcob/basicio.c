@@ -32,16 +32,8 @@
 #include <readline/history.h>
 #endif
 
-int picCompLength (struct fld_desc *f);
-
 char *rlbuf = NULL;
 extern int decimal_comma;
-
-/*-------------------------------------------------------------------------*\
- |                                                                         |
- |                          newline                                        |
- |                                                                         |
-\*-------------------------------------------------------------------------*/
 
 #define port(dupon) ((dupon == 1) ? stdout : stderr)
 
@@ -51,12 +43,6 @@ newline (int dupon)
   fputc ('\n', port(dupon));
   fflush (port(dupon));
 }
-
-/*-------------------------------------------------------------------------*\
- |                                                                         |
- |                          display                                        |
- |                                                                         |
-\*-------------------------------------------------------------------------*/
 
 void
 display (struct fld_desc *f, char *s, int dupon)
@@ -70,14 +56,10 @@ display (struct fld_desc *f, char *s, int dupon)
   char decimals;
   int decimal_char;
 
-//      if ((f->type == '9') || (f->type == 'C') || (f->type == 'B')) {
   if ((f->type == '9') || (f->type == 'C') || (f->type == 'B')
       || (f->type == 'U'))
     {
       len = picCompLength (f);
-      /*printf("display: type=%c, len=%d, decimals=%d\n",
-         f->type, f->len, f->decimals);
-       */
       if ((f->pic[0] == 'S') || (f->pic[0] == 's'))
 	{
 	  szSigned[0] = '-';
@@ -138,19 +120,11 @@ display (struct fld_desc *f, char *s, int dupon)
     free (buffer);
 }
 
-
-/*-------------------------------------------------------------------------*\
- |                                                                         |
- |                          display_erase                                  |
- |                                                                         |
-\*-------------------------------------------------------------------------*/
-
 void
 display_erase (int dupon)
 {
   putc ('\f', port (dupon));
 }
-
 
 /*-------------------------------------------------------------------------*\
  |                                                                         |
@@ -244,13 +218,6 @@ accept_day_of_week (char *buffer)
   return 0;
 }
 
-
-/*-------------------------------------------------------------------------*\
- |                                                                         |
- |                          accept_std                                     |
- |                                                                         |
-\*-------------------------------------------------------------------------*/
-
 int
 accept_std (char *buffer, struct fld_desc *f, int flags)
 {
@@ -322,12 +289,6 @@ accept_std (char *buffer, struct fld_desc *f, int flags)
 
 }
 
-/*-------------------------------------------------------------------------*\
- |                                                                         |
- |                     accept_cmd_line - Old version                       |
- |                                                                         |
-\*-------------------------------------------------------------------------*/
-
 int
 accept_cmd_line1 (int ac, char **av, struct fld_desc *f, char *buffer)
 {
@@ -335,10 +296,6 @@ accept_cmd_line1 (int ac, char **av, struct fld_desc *f, char *buffer)
   int len = 0, cmderr, cmdac, cmdmaxlen, cmdmaxnum;
   int i, j, r = 0;
   char *pt, *pt1;
-
-//  test only
-//  fprintf(stderr, "accept_cmd_line : ac=%d;\n", ac);
-//  fprintf(stderr, "accept_cmd_line : f.type=%c, f.len=%d\n", f->type, f->len);
 
   // Test actual buffer length(f->len) is less than min.
   if (f->len < 21)
@@ -351,15 +308,9 @@ accept_cmd_line1 (int ac, char **av, struct fld_desc *f, char *buffer)
 
   sscanf (buffer, "%04d %04d %04d %04d", &cmderr, &cmdac, &cmdmaxnum,
 	  &cmdmaxlen);
-// test only
-//  fprintf(stderr, "cmderr=%04d, cmdac=%04d, cmdmaxnum=%04d, cmdmaxlen=%04d;\n", cmderr, cmdac, cmdmaxnum, cmdmaxlen);
-
 
   // Test actual buffer length(f->len) and expected length from copybook are equal.
   len = (cmdmaxlen * cmdmaxnum) + 20;
-
-//  test only
-//  fprintf(stderr, "expected len=%d, actual len=%d\n", len, f->len);
 
   if (f->len != len)
     {
@@ -408,8 +359,6 @@ accept_cmd_line1 (int ac, char **av, struct fld_desc *f, char *buffer)
 	    }
 	  cmderr = 1;
 	}
-//      test only
-//      fprintf(stderr, "accept_cmd_line : av[%d]=%s;\n", i, av[i]);
     }
 
   cmdac = ac;
@@ -421,12 +370,6 @@ accept_cmd_line1 (int ac, char **av, struct fld_desc *f, char *buffer)
   return r;
 }
 
-/*-------------------------------------------------------------------------*\
- |                                                                         |
- |                     accept_env_var - Old version                        |
- |                                                                         |
-\*-------------------------------------------------------------------------*/
-
 int
 accept_env_var1 (struct fld_desc *f, char *buffer)
 {
@@ -434,10 +377,6 @@ accept_env_var1 (struct fld_desc *f, char *buffer)
   int len = 0, env_err, env_name_maxlen, env_var_maxlen;
   int i, j, r = 0;
   char *pt, *pt1, *envpt;
-// const char *envpt;
-
-//  test only
-//  fprintf(stderr, "accept_env_var : f.type=%c, f.len=%d\n", f->type, f->len);
 
   // Test actual buffer length(f->len) is less than min.
   if (f->len < 16)
@@ -450,16 +389,9 @@ accept_env_var1 (struct fld_desc *f, char *buffer)
 
   sscanf (buffer, "%04d %04d %04d ", &env_err, &env_name_maxlen,
 	  &env_var_maxlen);
-// test only
-//  fprintf(stderr, "env_err=%04d, env_name_maxlen=%04d, env_var_maxlen=%04d\n", 
-//          env_err, env_name_maxlen, env_var_maxlen);
-
 
   // Test actual buffer length(f->len) and expected length from copybook are equal.
   len = env_name_maxlen + env_var_maxlen + 15;
-
-//  test only
-//  fprintf(stderr, "expected len=%d, actual f->len=%d\n", len, f->len);
 
   if (f->len != len)
     {
@@ -470,7 +402,6 @@ accept_env_var1 (struct fld_desc *f, char *buffer)
 	       env_var_maxlen);
       return -1;
     }
-
 
   // Process input parms 
   // Determine variable name length and allocate memory
@@ -494,9 +425,6 @@ accept_env_var1 (struct fld_desc *f, char *buffer)
 	}
     }
 
-//  test only
-//  fprintf(stderr, "environment variable(string) length=%d;\n", j);
-
   // Copy to envpt(null terminated string)
   pt = buffer + 15;
   pt1 = envpt;
@@ -505,10 +433,6 @@ accept_env_var1 (struct fld_desc *f, char *buffer)
       *pt1 = *pt;
     }
   *pt1 = '\0';
-
-//  test only
-//  fprintf(stderr, "environment variable(string)=%s, length=%d;\n", envpt, j);
-
 
   // Get environment variable, if it exists
   if ((pt = getenv (envpt)) == NULL)
@@ -552,38 +476,21 @@ accept_env_var1 (struct fld_desc *f, char *buffer)
   return r;
 }
 
-/*-------------------------------------------------------------------------*\
- |                                                                         |
- |                          accept_cmd_line                                |
- |                                                                         |
-\*-------------------------------------------------------------------------*/
-
 int
 accept_cmd_line (int ac, char **av, struct fld_desc *f, char *buffer)
 {
   int len = 0, i, j, totlen, r = 0;
 
-// test only
-// fprintf(stderr, "debug: accept_cmd_line : f.type=%c, f.len=%d\n", f->type, f->len);
-
   // Padd variable with blanks 
   memset (buffer, ' ', f->len);
-
-// return r;
 
   // Process input parms 
   j = 0;
   totlen = 0;
-// test only
-// fprintf(stderr, "debug: accept_cmd_line 1: ac=%d\n", ac);
   for (i = 0; i < ac; i++)
     {
-//   test only
-//   fprintf(stderr, "debug: accept_cmd_line 2: av[%d]=%s;\n", i, av[i]);
       len = strlen (av[i]);
       j += len;
-//   test only
-//   fprintf(stderr, "debug: accept_cmd_line 3: len=%d; j=%d;\n", len, j);
       if (f->len >= j)
 	{
 	  memmove (&buffer[totlen], av[i], len);
@@ -594,8 +501,6 @@ accept_cmd_line (int ac, char **av, struct fld_desc *f, char *buffer)
 	}
       else
 	{
-//      test only
-//      fprintf(stderr, "debug: accept_cmd_line 4: len=%d; j=%d;\n", len, j);
 	  i = ac;
 	  r = 1;
 	}
@@ -604,34 +509,21 @@ accept_cmd_line (int ac, char **av, struct fld_desc *f, char *buffer)
   return r;
 }
 
-/*-------------------------------------------------------------------------*\
- |                                                                         |
- |                          accept_env_var                                 |
- |                                                                         |
-\*-------------------------------------------------------------------------*/
-
 int
 accept_env_var (struct fld_desc *f, char *buffer, char *ptevname)
 {
   int len, r = 0;
   char *pt1;
 
-//  test only
-// fprintf(stderr, "debug: accept_env_var 0: f.type=%c, f.len=%d, ptevname=%s;\n", 
-//            f->type, f->len, ptevname);
-
   // Padd variable with blanks 
   memset (buffer, ' ', f->len);
 
-// Get environment variable, if it exists
+  // Get environment variable, if it exists
   if ((pt1 = getenv (ptevname)) == NULL)
     r = 1;
   else
     {
       len = strlen (pt1);
-//  test only
-//  fprintf(stderr, "debug: accept_env_var 1: f.len=%d, evlen=%d;\n", 
-//            f->len, len);
       if (f->len < len)
 	{
 	  len = f->len;
@@ -642,5 +534,3 @@ accept_env_var (struct fld_desc *f, char *buffer, char *ptevname)
 
   return r;
 }
-
-/* end of basicio.c */
