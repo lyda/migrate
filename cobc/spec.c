@@ -44,6 +44,7 @@ struct cb_spec_entry {
   {CB_SPEC_STRING,  "include", 0},
   {CB_SPEC_STRING,  "name", &cb_spec.name},
   {CB_SPEC_BOOLEAN, "binary-bigendian", &cb_flag_binary_bigendian},
+  {CB_SPEC_BOOLEAN, "redefines-occurs", &cb_spec.flag_redefines_occurs},
   {CB_SPEC_ANY,     "binary-size", 0},
   {CB_SPEC_ERROR,   "invalid-value", &cb_spec.flag_value_error},
   {CB_SPEC_SUPPORT, "author-paragraph", &cb_spec.author_paragraph},

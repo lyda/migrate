@@ -90,6 +90,7 @@ extern struct cb_spec {
     CB_BINARY_REP_2_4_8,	/* 2,4,8 bytes */
   } binary_rep;
   int flag_value_error;
+  int flag_redefines_occurs;
   enum cb_support memory_size;
   enum cb_support multiple_file_tape;
   enum cb_support label_records;

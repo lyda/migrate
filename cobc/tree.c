@@ -1073,12 +1073,10 @@ validate_field_1 (struct cb_field *f)
   if (f->redefines)
     {
       /* check OCCURS */
-      if (f->redefines->flag_occurs)
-	{
+      if (!cb_spec.flag_redefines_occurs)
+	if (f->redefines->flag_occurs)
 	  cb_error_x (x, _("the original definition `%s' cannot have OCCURS"),
 		      f->redefines->name);
-	  return -1;
-	}
 
       /* check definition */
       for (p = f->redefines->sister; p && p != f; p = p->sister)
@@ -1320,10 +1318,12 @@ compute_size (struct cb_field *f)
     }
 
   /* ISO+IEC+1989-2002: 13.16.42.2-9 */
-  if (f->redefines && f->size * f->occurs_max > f->redefines->size)
-    if (f->redefines->level != 01 || f->redefines->flag_external)
-      cb_error_x (CB_TREE (f), _("size of `%s' larger than size of `%s'"),
-		 f->name, f->redefines->name);
+  if (f->redefines
+      && (f->size * f->occurs_max
+	  > f->redefines->size * f->redefines->occurs_max)
+      && (f->redefines->level != 01 || f->redefines->flag_external))
+    cb_error_x (CB_TREE (f), _("size of `%s' larger than size of `%s'"),
+		f->name, f->redefines->name);
 
   return f->size;
 }
