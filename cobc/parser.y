@@ -163,88 +163,94 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 }
 
 %token <pict> PICTURE_TOK
-%token <tree> INTEGER_LITERAL,NUMERIC_LITERAL,NONNUMERIC_LITERAL
-%token <tree> CLASS_NAME,CONDITION_NAME,MNEMONIC_NAME
-%token <word> WORD,LABEL_WORD
+%token <tree> INTEGER_LITERAL NUMERIC_LITERAL NONNUMERIC_LITERAL
+%token <tree> CLASS_NAME CONDITION_NAME MNEMONIC_NAME
+%token <word> WORD LABEL_WORD
 
-%token EQUAL,GREATER,LESS,GE,LE,COMMAND_LINE,ENVIRONMENT_VARIABLE,ALPHABET
-%token DATE,DAY,DAY_OF_WEEK,TIME,READ,WRITE,OBJECT_COMPUTER,INPUT_OUTPUT
-%token TO,FOR,IS,ARE,THRU,THAN,NO,CANCEL,ASCENDING,DESCENDING,ZERO
-%token SOURCE_COMPUTER,BEFORE,AFTER,RESERVE,DECLARATIVES,USE,AND,OR,NOT
-%token RIGHT,JUSTIFIED,SYNCHRONIZED,SEPARATE,BLOCK,CODE_SET
-%token TOK_INITIAL,FIRST,ALL,LEADING,OF,IN,BY,STRING,UNSTRING,DEBUGGING
-%token START,DELETE,PROGRAM,GLOBAL,EXTERNAL,SIZE,DELIMITED,COLLATING,SEQUENCE
-%token GIVING,INSPECT,TALLYING,REPLACING,ON,OFF,POINTER,OVERFLOW,NATIVE
-%token DELIMITER,COUNT,LEFT,TRAILING,CHARACTER,FILLER,OCCURS,TIMES,CLASS
-%token ADD,SUBTRACT,MULTIPLY,DIVIDE,ROUNDED,REMAINDER,ERROR,SIZE,INDEX
-%token REEL,UNIT,REMOVAL,REWIND,LOCK,PADDING
-%token FD,REDEFINES,TOK_FILE,USAGE,BLANK,SIGN,VALUE,MOVE
-%token PROGRAM_ID,DIVISION,CONFIGURATION,SPECIAL_NAMES,MEMORY,ALTER
-%token FILE_CONTROL,I_O_CONTROL,FROM,SAME,AREA,EXCEPTION,UNTIL
-%token WORKING_STORAGE,LINKAGE,DECIMAL_POINT,COMMA,DUPLICATES,WITH,EXIT
-%token LABEL,RECORD,RECORDS,STANDARD,STANDARD_1,STANDARD_2,VARYING,OMITTED
-%token CONTAINS,CHARACTERS,COMPUTE,GO,STOP,RUN,ACCEPT,PERFORM,RENAMES
-%token IF,ELSE,SENTENCE,LINE,LINES,PAGE,OPEN,CLOSE,REWRITE,SECTION,SYMBOLIC
-%token ADVANCING,INTO,AT,END,NEGATIVE,POSITIVE,SPACE,NOT
-%token CALL,USING,INVALID,CONTENT,QUOTE,LOW_VALUE,HIGH_VALUE
-%token SELECT,ASSIGN,DISPLAY,UPON,SET,UP,DOWN,SEARCH
-%token ORGANIZATION,ACCESS,MODE,KEY,STATUS,ALTERNATE,SORT,SORT_MERGE
-%token SEQUENTIAL,INDEXED,DYNAMIC,RANDOM,RELATIVE,WHEN,TEST,PROCEED
-%token END_ADD,END_CALL,END_COMPUTE,END_DELETE,END_DIVIDE,END_EVALUATE
-%token END_IF,END_MULTIPLY,END_PERFORM,END_READ,END_REWRITE,END_SEARCH
-%token END_START,END_STRING,END_SUBTRACT,END_UNSTRING,END_WRITE
-%token THEN,EVALUATE,OTHER,ALSO,CONTINUE,CURRENCY,REFERENCE,INITIALIZE
-%token NUMERIC,ALPHABETIC,ALPHABETIC_LOWER,ALPHABETIC_UPPER
-%token DEPENDING,CORRESPONDING,CONVERTING,FUNCTION_NAME,OPTIONAL,RETURNING
-%token IDENTIFICATION,ENVIRONMENT,DATA,PROCEDURE,TRUE,FALSE,ANY
-%token AUTHOR,DATE_WRITTEN,DATE_COMPILED,INSTALLATION,SECURITY
-%token COMMON,NEXT,INPUT,I_O,OUTPUT,EXTEND,BINARY
-%token ALPHANUMERIC,ALPHANUMERIC_EDITED,NUMERIC_EDITED,NATIONAL,NATIONAL_EDITED
+%token EQUAL GREATER LESS GE LE COMMAND_LINE ENVIRONMENT_VARIABLE ALPHABET
+%token DATE DAY DAY_OF_WEEK TIME READ WRITE OBJECT_COMPUTER INPUT_OUTPUT
+%token TO FOR IS ARE THRU THAN NO CANCEL ASCENDING DESCENDING ZERO
+%token SOURCE_COMPUTER BEFORE AFTER RESERVE DECLARATIVES USE AND OR NOT
+%token RIGHT JUSTIFIED SYNCHRONIZED SEPARATE BLOCK CODE_SET
+%token TOK_INITIAL FIRST ALL LEADING OF IN BY STRING UNSTRING DEBUGGING
+%token START DELETE PROGRAM GLOBAL EXTERNAL SIZE DELIMITED COLLATING SEQUENCE
+%token GIVING INSPECT TALLYING REPLACING ON OFF POINTER OVERFLOW NATIVE
+%token DELIMITER COUNT LEFT TRAILING CHARACTER FILLER OCCURS TIMES CLASS
+%token ADD SUBTRACT MULTIPLY DIVIDE ROUNDED REMAINDER ERROR SIZE INDEX
+%token REEL UNIT REMOVAL REWIND LOCK PADDING CRT CURSOR
+%token FD REDEFINES TOK_FILE USAGE BLANK SIGN VALUE MOVE
+%token PROGRAM_ID DIVISION CONFIGURATION SPECIAL_NAMES MEMORY ALTER
+%token FILE_CONTROL I_O_CONTROL FROM SAME AREA EXCEPTION UNTIL
+%token WORKING_STORAGE LINKAGE DECIMAL_POINT COMMA DUPLICATES WITH EXIT
+%token LABEL RECORD RECORDS STANDARD STANDARD_1 STANDARD_2 VARYING OMITTED
+%token CONTAINS CHARACTERS COMPUTE GO STOP RUN ACCEPT PERFORM RENAMES
+%token IF ELSE SENTENCE LINE LINES PAGE OPEN CLOSE REWRITE SECTION SYMBOLIC
+%token ADVANCING INTO AT END NEGATIVE POSITIVE SPACE NOT
+%token CALL USING INVALID CONTENT QUOTE LOW_VALUE HIGH_VALUE
+%token SELECT ASSIGN DISPLAY UPON SET UP DOWN SEARCH
+%token ORGANIZATION ACCESS MODE KEY STATUS ALTERNATE SORT SORT_MERGE
+%token SEQUENTIAL INDEXED DYNAMIC RANDOM RELATIVE WHEN TEST PROCEED
+%token END_ACCEPT END_ADD END_CALL END_COMPUTE END_DELETE END_DISPLAY
+%token END_DIVIDE END_EVALUATE END_IF END_MULTIPLY END_PERFORM END_READ
+%token END_REWRITE END_SEARCH END_START END_STRING END_SUBTRACT END_UNSTRING
+%token END_WRITE
+%token THEN EVALUATE OTHER ALSO CONTINUE CURRENCY REFERENCE INITIALIZE
+%token NUMERIC ALPHABETIC ALPHABETIC_LOWER ALPHABETIC_UPPER
+%token DEPENDING CORRESPONDING CONVERTING FUNCTION_NAME OPTIONAL RETURNING
+%token IDENTIFICATION ENVIRONMENT DATA PROCEDURE TRUE FALSE ANY
+%token AUTHOR DATE_WRITTEN DATE_COMPILED INSTALLATION SECURITY
+%token COMMON NEXT INPUT I_O OUTPUT EXTEND BINARY
+%token ALPHANUMERIC ALPHANUMERIC_EDITED NUMERIC_EDITED NATIONAL NATIONAL_EDITED
+%token SCREEN BELL BLINK ERASE EOL EOS HIGHLIGHT LOWLIGHT
+%token REVERSE_VIDEO UNDERLINE COLUMN FOREGROUND_COLOR BACKGROUND_COLOR AUTO
+%token SECURE REQUIRED FULL NUMBER PLUS MINUS
 
-%type <gene> call_param,write_option
-%type <inum> flag_all,flag_duplicates,flag_optional,flag_global
-%type <inum> flag_not,flag_next,flag_rounded,flag_separate
-%type <inum> integer,level_number,start_operator,display_upon
-%type <inum> before_or_after,perform_test,replacing_option,close_option
-%type <inum> select_organization,select_access_mode,open_mode,same_option
-%type <inum> ascending_or_descending,opt_from_integer,opt_to_integer,usage
-%type <list> occurs_key_list,occurs_index_list,value_item_list
-%type <list> data_name_list,condition_name_list,opt_value_list
-%type <list> evaluate_subject_list,evaluate_case,evaluate_case_list
-%type <list> evaluate_when_list,evaluate_object_list
-%type <list> label_name_list,subscript_list,number_list
-%type <list> string_list,string_delimited_list,string_name_list
-%type <list> unstring_delimited,unstring_delimited_list,unstring_into
-%type <list> unstring_delimited_item,unstring_into_item
-%type <list> predefined_name_list,qualified_predefined_word,mnemonic_name_list
-%type <list> file_name_list,math_name_list,math_edited_name_list
-%type <list> call_param_list,call_using,expr_item_list
-%type <list> initialize_replacing,initialize_replacing_list
+%type <gene> call_param write_option
+%type <inum> flag_all flag_duplicates flag_optional flag_global
+%type <inum> flag_not flag_next flag_rounded flag_separate
+%type <inum> integer level_number start_operator display_upon
+%type <inum> before_or_after perform_test replacing_option close_option
+%type <inum> select_organization select_access_mode open_mode same_option
+%type <inum> ascending_or_descending opt_from_integer opt_to_integer usage
+%type <list> occurs_key_list occurs_index_list value_item_list
+%type <list> data_name_list condition_name_list opt_value_list
+%type <list> evaluate_subject_list evaluate_case evaluate_case_list
+%type <list> evaluate_when_list evaluate_object_list
+%type <list> label_name_list subscript_list number_list
+%type <list> string_list string_delimited_list string_name_list
+%type <list> unstring_delimited unstring_delimited_list unstring_into
+%type <list> unstring_delimited_item unstring_into_item
+%type <list> predefined_name_list qualified_predefined_word mnemonic_name_list
+%type <list> file_name_list math_name_list math_edited_name_list
+%type <list> call_param_list call_using expr_item_list
+%type <list> initialize_replacing initialize_replacing_list
 %type <list> special_name_class_item_list
-%type <tree> special_name_class_item,special_name_class_literal
-%type <tree> on_or_off,record_depending
-%type <tree> add_to,field_description_list,value_item
-%type <tree> field_description_list_1,field_description_list_2
-%type <tree> condition,imperative_statement,field_description
-%type <tree> evaluate_object,evaluate_object_1
-%type <tree> function,subscript,subref,refmod
-%type <tree> search_varying,search_at_end,search_whens,search_when
-%type <tree> perform_procedure,perform_sentence,perform_option,start_key
-%type <tree> read_into,read_key,write_from,field_name,expr,expr_1,expr_item
-%type <tree> file_name,opt_with_pointer,occurs_index,evaluate_subject
-%type <tree> unstring_delimiter,unstring_count,unstring_tallying
-%type <tree> at_end_sentence,not_at_end_sentence
-%type <tree> invalid_key_sentence,not_invalid_key_sentence
-%type <tree> opt_on_overflow_sentence,opt_not_on_overflow_sentence
-%type <tree> call_returning,call_on_exception,call_not_on_exception
-%type <tree> opt_on_size_error_sentence,opt_not_on_size_error_sentence
-%type <tree> numeric_name,numeric_edited_name,group_name,table_name,class_name
-%type <tree> program_name,condition_name,qualified_cond_name,data_name
-%type <tree> file_name,record_name,label_name,mnemonic_name,section_name,name
-%type <tree> qualified_name,predefined_name
-%type <tree> integer_value,text_value,value,number
-%type <tree> literal_or_predefined,literal,basic_literal,figurative_constant
-%type <word> qualified_word,label_word,undefined_word
+%type <tree> special_name_class_item special_name_class_literal
+%type <tree> on_or_off record_depending
+%type <tree> add_to value_item field_description field_description_list
+%type <tree> field_description_list_1 field_description_list_2
+%type <tree> opt_screen_description_list screen_description_list
+%type <tree> screen_description condition imperative_statement
+%type <tree> evaluate_object evaluate_object_1
+%type <tree> function subscript subref refmod
+%type <tree> search_varying search_at_end search_whens search_when
+%type <tree> perform_procedure perform_sentence perform_option start_key
+%type <tree> read_into read_key write_from field_name expr expr_1 expr_item
+%type <tree> file_name opt_with_pointer occurs_index evaluate_subject
+%type <tree> unstring_delimiter unstring_count unstring_tallying
+%type <tree> at_end_sentence not_at_end_sentence
+%type <tree> invalid_key_sentence not_invalid_key_sentence
+%type <tree> opt_on_overflow_sentence opt_not_on_overflow_sentence
+%type <tree> call_returning call_on_exception call_not_on_exception
+%type <tree> opt_on_size_error_sentence opt_not_on_size_error_sentence
+%type <tree> numeric_name numeric_edited_name group_name table_name class_name
+%type <tree> program_name condition_name qualified_cond_name data_name
+%type <tree> file_name record_name label_name mnemonic_name section_name name
+%type <tree> qualified_name predefined_name
+%type <tree> integer_value text_value value number
+%type <tree> literal_or_predefined literal basic_literal figurative_constant
+%type <tree> at_line_column line_number column_number
+%type <word> qualified_word label_word undefined_word
 
 
 %%
@@ -264,6 +270,7 @@ program:
     /* init program spec */
     program_spec.program_id = NULL;
     program_spec.initial_program = 0;
+    program_spec.enable_screen = 0;
     program_spec.class_list = NULL;
     program_spec.index_list = NULL;
     program_spec.file_name_list = NULL;
@@ -432,6 +439,8 @@ special_name:
 | special_name_class
 | special_name_currency
 | special_name_decimal_point
+| CURSOR _is predefined_name { PENDING ("CURSOR"); }
+| CRT STATUS _is predefined_name { PENDING ("CRT STATUS"); }
 ;
 
 
@@ -760,6 +769,7 @@ data_division:
   file_section
   working_storage_section
   linkage_section
+  screen_section
 ;
 
 
@@ -1209,6 +1219,143 @@ linkage_section:
 ;
 
 
+/*******************
+ * SCREEN SECTION
+ *******************/
+
+screen_section:
+| SCREEN SECTION dot
+  {
+    current_field = NULL;
+  }
+  opt_screen_description_list
+  {
+    struct cobc_field *p;
+    for (p = COBC_FIELD ($5); p; p = p->sister)
+      finalize_field_tree (p);
+    program_spec.screen_storage = COBC_FIELD ($5);
+    program_spec.enable_screen = 1;
+  }
+;
+
+opt_screen_description_list:
+  /* nothing */			{ $$ = NULL; }
+| screen_description_list	{ $$ = $1; }
+;
+screen_description_list:
+  screen_description		{ $$ = $1; }
+| screen_description_list
+  screen_description		{ $$ = $1; }
+;
+screen_description:
+  level_number field_name
+  {
+    $2->loc = @2;
+    init_field ($1, $2);
+    current_field->f.screen = 1;
+    current_field->screen_flag |= COB_SCREEN_FG_NONE;
+    current_field->screen_flag |= COB_SCREEN_BG_NONE;
+  }
+  screen_options dot
+  {
+    $$ = COBC_TREE (current_field);
+  }
+;
+screen_options:
+| screen_options screen_option
+;
+screen_option:
+  BLANK LINE	{ current_field->screen_flag |= COB_SCREEN_BLANK_LINE; }
+| BLANK SCREEN	{ current_field->screen_flag |= COB_SCREEN_BLANK_SCREEN; }
+| BELL		{ current_field->screen_flag |= COB_SCREEN_BELL; }
+| BLINK		{ current_field->screen_flag |= COB_SCREEN_BLINK; }
+| ERASE EOL	{ current_field->screen_flag |= COB_SCREEN_ERASE_EOL; }
+| ERASE EOS	{ current_field->screen_flag |= COB_SCREEN_ERASE_EOS; }
+| HIGHLIGHT	{ current_field->screen_flag |= COB_SCREEN_HIGHLIGHT; }
+| LOWLIGHT	{ current_field->screen_flag |= COB_SCREEN_LOWLIGHT; }
+| REVERSE_VIDEO	{ current_field->screen_flag |= COB_SCREEN_REVERSE; }
+| UNDERLINE	{ current_field->screen_flag |= COB_SCREEN_UNDERLINE; }
+| AUTO		{ current_field->screen_flag |= COB_SCREEN_AUTO; }
+| SECURE	{ current_field->screen_flag |= COB_SCREEN_SECURE; }
+| REQUIRED	{ current_field->screen_flag |= COB_SCREEN_REQUIRED; }
+| FULL		{ current_field->screen_flag |= COB_SCREEN_FULL; }
+| LINE _number _is _plus_minus integer_value
+  {
+    current_field->screen_line = $5;
+    current_field->screen_flag |= COB_SCREEN_LINE_CONST;
+  }
+| COLUMN _number _is _plus_minus integer_value
+  {
+    current_field->screen_column = $5;
+    current_field->screen_flag |= COB_SCREEN_COLUMN_CONST;
+  }
+| FOREGROUND_COLOR _is integer
+  {
+    current_field->screen_flag &= ~COB_SCREEN_FG_MASK;
+    switch ($3)
+      {
+      case 0: current_field->screen_flag |= COB_SCREEN_FG_BLACK; break;
+      case 1: current_field->screen_flag |= COB_SCREEN_FG_BLUE; break;
+      case 2: current_field->screen_flag |= COB_SCREEN_FG_GREEN; break;
+      case 3: current_field->screen_flag |= COB_SCREEN_FG_SKYBLUE; break;
+      case 4: current_field->screen_flag |= COB_SCREEN_FG_RED; break;
+      case 5: current_field->screen_flag |= COB_SCREEN_FG_PURPLE; break;
+      case 6: current_field->screen_flag |= COB_SCREEN_FG_YELLOW; break;
+      case 7: current_field->screen_flag |= COB_SCREEN_FG_WHITE; break;
+      default:
+	yyerror_loc (&@3, _("invalid color `%d'"), $3);
+      }
+  }
+| BACKGROUND_COLOR _is integer
+  {
+    current_field->screen_flag &= ~COB_SCREEN_BG_MASK;
+    switch ($3)
+      {
+      case 0: current_field->screen_flag |= COB_SCREEN_BG_BLACK; break;
+      case 1: current_field->screen_flag |= COB_SCREEN_BG_BLUE; break;
+      case 2: current_field->screen_flag |= COB_SCREEN_BG_GREEN; break;
+      case 3: current_field->screen_flag |= COB_SCREEN_BG_SKYBLUE; break;
+      case 4: current_field->screen_flag |= COB_SCREEN_BG_RED; break;
+      case 5: current_field->screen_flag |= COB_SCREEN_BG_PURPLE; break;
+      case 6: current_field->screen_flag |= COB_SCREEN_BG_YELLOW; break;
+      case 7: current_field->screen_flag |= COB_SCREEN_BG_WHITE; break;
+      default:
+	yyerror_loc (&@3, _("invalid color `%d'"), $3);
+      }
+  }
+| usage_clause
+| blank_clause
+| justified_clause
+| sign_clause
+| value_clause
+  {
+    current_field->pic = yylex_picture ("X(0)");
+  }
+| picture_clause
+  {
+    field_set_used (current_field);
+  }
+| USING data_name
+  {
+    current_field->screen_from = COBC_FIELD ($2);
+    current_field->screen_to = COBC_FIELD ($2);
+  }
+| FROM data_name
+  {
+    current_field->screen_from = COBC_FIELD ($2);
+  }
+| TO data_name
+  {
+    current_field->screen_to = COBC_FIELD ($2);
+  }
+;
+
+_plus_minus:
+| PLUS
+| MINUS
+;
+
+
 /*****************************************************************************
  * PROCEDURE DIVISION
  *****************************************************************************/
@@ -1401,11 +1548,27 @@ statement:
  */
 
 accept_statement:
-  ACCEPT data_name
+  ACCEPT data_name at_line_column
   {
     cobc_location = @1;
-    push_call_2 ("cob_accept", $2, make_integer (COB_SYSIN));
+    if (program_spec.enable_screen)
+      {
+	if (COBC_FIELD ($2)->f.screen)
+	  {
+	    cobc_tree line = $3 ? make_index (COBC_PAIR ($3)->x) : cobc_int1;
+	    cobc_tree column = $3 ? make_index (COBC_PAIR ($3)->y) : cobc_int1;
+	    push_call_3 ("cob_screen_accept", $2, line, column);
+	  }
+	else
+	  yyerror_loc (&@2, "`%s' not defined in SCREEN SECTION",
+		       tree_to_string ($2));
+      }
+    else
+      {
+	push_call_2 ("cob_accept", $2, make_integer (COB_SYSIN));
+      }
   }
+  _end_accept
 | ACCEPT data_name FROM DATE
   {
     cobc_location = @1;
@@ -1446,6 +1609,20 @@ accept_statement:
       yyerror_tree ($4, _("invalid input stream"));
   }
 ;
+_end_accept: | END_ACCEPT ;
+
+at_line_column:
+  /* nothing */			{ $$ = NULL; }
+| _at line_number column_number { $$ = make_pair ($2, $3); }
+| _at column_number line_number { $$ = make_pair ($3, $2); }
+;
+line_number:
+  LINE _number integer_value	{ $$ = $3; }
+;
+column_number:
+  COLUMN _number integer_value	{ $$ = $3; }
+;
+
 
 
 /*
@@ -1649,14 +1826,32 @@ _end_delete: | END_DELETE ;
  */
 
 display_statement:
-  DISPLAY opt_value_list display_upon
+  DISPLAY opt_value_list display_upon at_line_column
   {
     struct cobc_list *l;
     cobc_location = @1;
-    for (l = $2; l; l = l->next)
-      push_inline_2 (output_display, l->item, make_integer ($3));
+    if (program_spec.enable_screen)
+      {
+	for (l = $2; l; l = l->next)
+	  if (COBC_FIELD (l->item)->f.screen)
+	    {
+	      cobc_tree line = $4 ? make_index (COBC_PAIR ($4)->x) : cobc_int1;
+	      cobc_tree column = $4 ? make_index (COBC_PAIR ($4)->y) : cobc_int1;
+	      push_call_3 ("cob_screen_display", l->item, line, column);
+	    }
+	  else
+	    yyerror_loc (&@2, "`%s' not defined in SCREEN SECTION",
+			 tree_to_string (l->item));
+      }
+    else
+      {
+	cobc_tree fd = make_integer ($3);
+	for (l = $2; l; l = l->next)
+	  push_inline_2 (output_display, l->item, fd);
+      }
   }
   display_with_no_advancing
+  _end_display
   ;
 display_upon:
   /* nothing */			{ $$ = COB_SYSOUT; }
@@ -1680,9 +1875,14 @@ display_upon:
   }
 ;
 display_with_no_advancing:
-  /* nothing */ { push_call_1 ("cob_newline", make_integer ($<inum>-1)); }
+  /* nothing */
+  {
+    if (!program_spec.enable_screen)
+      push_call_1 ("cob_newline", make_integer ($<inum>-1));
+  }
 | _with NO ADVANCING { /* nothing */ }
 ;
+_end_display: | END_DISPLAY ;
 
 
 /*
@@ -3621,6 +3821,7 @@ _is: | IS ;
 _is_are: | IS | ARE ;
 _key: | KEY ;
 _mode: | MODE ;
+_number: | NUMBER ;
 _on: | ON ;
 _program: | PROGRAM ;
 _record: | RECORD ;
@@ -3780,6 +3981,7 @@ init_field (int level, cobc_tree field)
       current_field->f.sign_leading = current_field->parent->f.sign_leading;
       current_field->f.sign_separate = current_field->parent->f.sign_separate;
       current_field->f.in_redefines = current_field->parent->f.in_redefines;
+      current_field->screen_flag |= current_field->parent->screen_flag;
     }
 }
 

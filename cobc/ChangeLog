@@ -1,3 +1,17 @@
+2002-07-01  Keisuke Nishida  <knishida@netlab.jp>
+
+	* tree.h (cobc_field): New members: f.screen, screen_line,
+	screen_column, screen_from, screen_to, and screen_flag.
+	* codegen.h (screen_storage): New members: enable_screen and
+	screen_storage.
+	* codegen.c (output_screen_definition): New function.
+	(output_tree): Output screen data.
+	(codegen): Output screen definition.
+	* parser.y (special_name): Add CURSOR and CRT STATUS.
+	(screen_section): New rules.
+	(accept_statement, display_statement): Support screen data.
+	* reserved.c (reserved_words): Add related tokens.
+
 2002-06-26  Keisuke Nishida  <knishida@netlab.jp>
 
 	* tree.c (compute_size): Handle SIGN SEPARATE only for numeric fields.

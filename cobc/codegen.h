@@ -23,6 +23,7 @@
 struct program_spec {
   char *program_id;
   int initial_program;
+  int enable_screen;
   struct cobc_list *class_list;
   struct cobc_list *index_list;
   struct cobc_list *file_name_list;
@@ -30,6 +31,7 @@ struct program_spec {
   struct cobc_list *exec_list;
   struct cobc_field *working_storage;
   struct cobc_field *linkage_storage;
+  struct cobc_field *screen_storage;
   struct cobc_label_name *input_handler;
   struct cobc_label_name *output_handler;
   struct cobc_label_name *i_o_handler;

@@ -294,7 +294,14 @@ struct cobc_field {
     int in_redefines  : 1;	/* if any parent has REDEFINES clause */
     int used          : 1;	/* if used more than once */
     int referenced    : 1;	/* if any reference modification exists */
+    int screen        : 1;	/* if defined in SCREEN SECTION */
   } f;
+  /* screen parameters */
+  cobc_tree screen_line;
+  cobc_tree screen_column;
+  struct cobc_field *screen_from;
+  struct cobc_field *screen_to;
+  long screen_flag;		/* flags used in SCREEN SECTION */
 };
 
 #ifdef COB_DEBUG

@@ -1,3 +1,8 @@
+2002-07-01  Keisuke Nishida  <knishida@netlab.jp>
+
+	* screenio.c, screenio.h: New files.
+	* Makefile.am: Add them.
+
 2002-06-17  Keisuke Nishida  <knishida@netlab.jp>
 
 	* call.c (cob_call_resolve): Don't set cob_status.

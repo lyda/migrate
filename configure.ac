@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(open-cobol, 0.9.6.1)
+AC_INIT(open-cobol, 0.9.6.2)
 AC_CONFIG_SRCDIR(cobc/cobc.c)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -93,6 +93,13 @@ AC_ARG_WITH(readline,
 		[AC_MSG_ERROR(libreadline is required)])
   ])
 
+# Checks for ncurses.
+LIBNCURSES=""
+USE_NCURSES="no"
+AC_CHECK_HEADERS([curses.h])
+AC_CHECK_LIB([ncurses], [initscr],
+             [LIBNCURSES="-lncurses"; USE_NCURSES="yes"])
+
 # Checks for GCC's computed-goto extension
 AC_CACHE_CHECK([for computed-goto], [ac_computed_goto],
 [AC_TRY_COMPILE([], [
@@ -117,7 +124,7 @@ AC_SUBST(COMPUTED_GOTO)
 # OpenCOBOL Configuration
 
 LIBCOB_CFLAGS=""
-LIBCOB_LIBS="-lm ${LIBDB} ${LIBGMP} ${LIBLTDL} ${LIBINTL} ${LIBRL}"
+LIBCOB_LIBS="-lm ${LIBDB} ${LIBGMP} ${LIBLTDL} ${LIBINTL} ${LIBNCURSES} ${LIBRL}"
 COB_COBPP="$bindir/cobpp"
 COB_CFLAGS="-I$includedir"
 COB_LIBS="-L$libdir -lcob ${LIBCOB_LIBS}"
@@ -157,6 +164,7 @@ echo "  COB_LIBRARY_PATH     ${COB_LIBRARY_PATH}"
 echo "  COB_MODULE_EXT       ${COB_MODULE_EXT}"
 echo ""
 echo "  Use gettext for international messages:      ${USE_NLS}"
+echo "  Use ncurses for screen I/O:                  ${USE_NCURSES}"
 echo "  Use readline for terminal input:             ${USE_READLINE}"
 echo "  Use computed-goto to implement PERFORM:      ${ac_computed_goto}"
 echo ""

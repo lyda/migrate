@@ -27,6 +27,7 @@
 #include <libcob/strings.h>
 #include <libcob/termio.h>
 #include <libcob/fileio.h>
+#include <libcob/screenio.h>
 #include <libcob/call.h>
 #include <libcob/support.h>
 

@@ -1034,6 +1034,65 @@ output_file_name (struct cobc_file_name *f)
 
 
 /*
+ * Screen definition
+ */
+
+static void
+output_screen_definition (struct cobc_field *p)
+{
+  int type = (p->children ? COB_SCREEN_TYPE_GROUP :
+	      p->value    ? COB_SCREEN_TYPE_VALUE : COB_SCREEN_TYPE_FIELD);
+
+  if (p->sister)
+    output_screen_definition (p->sister);
+  if (p->children)
+    output_screen_definition (p->children);
+
+  output ("struct cob_screen s_%s = {%d, ", p->cname, type);
+
+  output ("(union cob_screen_data) ");
+  switch (type)
+    {
+    case COB_SCREEN_TYPE_GROUP:
+      output ("&s_%s", p->children->cname);
+      break;
+    case COB_SCREEN_TYPE_VALUE:
+      output_quoted_string (COBC_LITERAL (p->value)->str,
+			    COBC_LITERAL (p->value)->size);
+      break;
+      break;
+    case COB_SCREEN_TYPE_FIELD:
+      output ("&f_%s", p->cname);
+      break;
+    }
+  output (", ");
+
+  if (p->sister)
+    output ("&s_%s, ", p->sister->cname);
+  else
+    output ("0, ");
+  if (p->screen_from)
+    output ("&f_%s, ", p->screen_from->cname);
+  else
+    output ("0, ");
+  if (p->screen_to)
+    output ("&f_%s, ", p->screen_to->cname);
+  else
+    output ("0, ");
+  if (p->screen_line)
+    output_index (p->screen_line);
+  else
+    output ("0");
+  output (", ");
+  if (p->screen_column)
+    output_index (p->screen_column);
+  else
+    output ("0");
+  output (", %d};\n", p->screen_flag);
+}
+
+
+/*
  * Class
  */
 
@@ -1379,42 +1438,31 @@ output_value (struct cobc_field *p)
 
   if (p->value)
     {
-      switch (COBC_TREE_TAG (p->value))
+      if (COBC_CONST_P (p->value)
+	  || COBC_TREE_CLASS (p->value) == COB_NUMERIC
+	  || COBC_LITERAL (p->value)->all)
 	{
-	case cobc_tag_const:
-	  {
-	    output_move (p->value, COBC_TREE (p));
-	    break;
-	  }
-	case cobc_tag_literal:
-	  {
-	    if (COBC_TREE_CLASS (p->value) == COB_NUMERIC
-		|| COBC_LITERAL (p->value)->all)
-	      {
-		/* numeric literal or ALL literal */
-		output_move (p->value, COBC_TREE (p));
-	      }
-	    else
-	      {
-		/* non-numeric literal */
-		/* We do not use output_move here because
-		   we do not want the value to be edited. */
-		char buff[p->size];
-		char *str = COBC_LITERAL (p->value)->str;
-		int size = COBC_LITERAL (p->value)->size;
-		if (size >= p->size)
-		  {
-		    memcpy (buff, str, p->size);
-		  }
-		else
-		  {
-		    memcpy (buff, str, size);
-		    memset (buff + size, ' ', p->size - size);
-		  }
-		output_memcpy (COBC_TREE (p), buff, p->size);
-	      }
-	    break;
-	  }
+	  /* figurative literal, numeric literal, or ALL literal */
+	  output_move (p->value, COBC_TREE (p));
+	}
+      else
+	{
+	  /* non-numeric literal */
+	  /* We do not use output_move here because
+	     we do not want the value to be edited. */
+	  char buff[p->size];
+	  char *str = COBC_LITERAL (p->value)->str;
+	  int size = COBC_LITERAL (p->value)->size;
+	  if (size >= p->size)
+	    {
+	      memcpy (buff, str, p->size);
+	    }
+	  else
+	    {
+	      memcpy (buff, str, size);
+	      memset (buff + size, ' ', p->size - size);
+	    }
+	  output_memcpy (COBC_TREE (p), buff, p->size);
 	}
     }
   else
@@ -1470,7 +1518,10 @@ output_tree (cobc_tree x)
       }
     case cobc_tag_field:
       {
-	output ("f_%s", COBC_FIELD (x)->cname);
+	if (COBC_FIELD (x)->f.screen)
+	  output ("&s_%s", COBC_FIELD (x)->cname);
+	else
+	  output ("f_%s", COBC_FIELD (x)->cname);
 	break;
       }
     case cobc_tag_subref:
@@ -1651,9 +1702,23 @@ codegen (struct program_spec *spec)
 
   /* files */
   if (spec->file_name_list)
-    output ("/* Files */\n\n");
-  for (l = spec->file_name_list; l; l = l->next)
-    output_file_name (l->item);
+    {
+      output ("/* Files */\n\n");
+      for (l = spec->file_name_list; l; l = l->next)
+	output_file_name (l->item);
+    }
+
+  /* screens */
+  if (spec->screen_storage)
+    {
+      output ("/* Screens */\n\n");
+      for (p = spec->screen_storage; p; p = p->sister)
+	{
+	  output_field_definition (p, p, 0);
+	  output_screen_definition (p);
+	}
+      output_newline ();
+    }
 
   /* error handlers */
   output ("/* Standard error handlers */\n\n");
@@ -1787,7 +1852,11 @@ codegen (struct program_spec *spec)
       output_line ("main (int argc, char **argv)");
       output_indent ("{", 2);
       output_line ("cob_init (argc, argv);");
+      if (spec->enable_screen)
+	output_line ("cob_screen_init ();");
       output_line ("%s ();", spec->program_id);
+      if (spec->enable_screen)
+	output_line ("cob_screen_clear ();");
       output_indent ("}", -2);
     }
 }
