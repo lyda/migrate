@@ -31,6 +31,7 @@ enum cob_format {
 
 extern int cob_tab_width;
 extern int cob_debug_flag;
+extern int cob_exit_status;
 extern enum cob_format cob_file_format;
 
 extern struct cob_include_dir {

@@ -38,6 +38,7 @@ extern int yyparse (void);
 
 int cob_tab_width = 8;
 int cob_debug_flag = 0;
+int cob_exit_status = 0;
 enum cob_format cob_file_format = COB_FORMAT_FREE;
 struct cob_include_dir *cob_include_path = NULL;
 
@@ -178,5 +179,5 @@ main (int argc, char *argv[])
 
   yyparse ();
 
-  return 0;
+  return cob_exit_status;
 }

@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "cobpp.h"
 #include "scanner.h"
 
 static void yyerror (char *msg);
@@ -64,4 +65,5 @@ yyerror (char *msg)
 {
   fprintf (stderr, "%s:%d: %s before `%s'\n",
 	   yyfilename ? yyfilename : "<stdin>", yylineno, msg, yytext);
+  cob_exit_status = 1;
 }

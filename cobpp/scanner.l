@@ -180,6 +180,7 @@ open_buffer (const char *name, struct replacement *replacing)
 	    {
 	      fprintf (stderr, "%s:%d: %s: Failed to find file\n",
 		       yyfilename ? yyfilename : "<stdin>", yylineno, name);
+	      cob_exit_status = 1;
 	      return;
 	    }
 	}
@@ -191,6 +192,7 @@ open_buffer (const char *name, struct replacement *replacing)
 	  fprintf (stderr, "%s:%d: ",
 		   yyfilename ? yyfilename : "<stdin>", yylineno);
 	  perror (name);
+	  cob_exit_status = 1;
 	  return;
 	}
       yyin = fp;
