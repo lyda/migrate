@@ -37,7 +37,7 @@ EXTRA_DIST = $(srcdir)/package.m4 $(TESTS) \
 	$(run_DEPENDENCIES) \
 	$(data_rep_DEPENDENCIES)
 
-DISTCLEANFILES = atconfig $(TESTS)
+DISTCLEANFILES = atconfig
 
 all: $(TESTS)
 

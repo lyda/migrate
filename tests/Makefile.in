@@ -199,7 +199,7 @@ EXTRA_DIST = $(srcdir)/package.m4 $(TESTS) \
 	$(data_rep_DEPENDENCIES)
 
 
-DISTCLEANFILES = atconfig $(TESTS)
+DISTCLEANFILES = atconfig
 subdir = tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
