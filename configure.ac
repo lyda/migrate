@@ -74,7 +74,7 @@ AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
 COB_CC="gcc"
 COB_COBPP="cobpp"
 COB_CFLAGS="-I$includedir"
-COB_LIBS="-L$libdir -lcob"
+COB_LIBS="-L$libdir -lcob ${LIBDB} ${LIBGMP} ${LIBRL}"
 COB_LIBRARY_PATH=".:$libdir/$PACKAGE"
 LIBCOB_CFLAGS="${INCLTDL}"
 LIBCOB_LIBS="${LIBLTDL} ${LIBDB} ${LIBGMP} ${LIBRL}"
