@@ -322,10 +322,9 @@ read_line (char *buff, int size)
 	c = getc (yyin);
 	if (c != '\n')
 	  ungetc (c, yyin);
-	c = '\n';
 	/* fall through */
       case '\n':
-	buff[n++] = c;
+	buff[n++] = '\n';
 	goto end;
 
       default:
