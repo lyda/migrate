@@ -83,9 +83,6 @@ AC_STRUCT_TM
 
 # Checks for library functions.
 AC_FUNC_ALLOCA
-AC_FUNC_MALLOC
-AC_FUNC_MEMCMP
-AC_FUNC_REALLOC
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([memmove memset regcomp pow setlocale strerror \
 		strcasecmp strchr strrchr strdup strstr strtol])
