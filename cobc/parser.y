@@ -1859,11 +1859,11 @@ display_statement:
   opt_value_list display_upon display_no_advancing at_line_column
   end_display
   {
-    current_statement->body = cb_build_display_statement ($3, $4, $5, $6);
+    push (cb_build_display_statement ($3, $4, $5, $6));
   }
   ;
 display_upon:
-  /* empty */			{ $$ = cb_int (COB_SYSOUT); }
+  /* empty */			{ $$ = cb_int1; }
 | _upon mnemonic_name		{ $$ = cb_build_display_upon ($2); }
 | UPON WORD			{ $$ = cb_build_display_upon_direct ($2); }
 | _upon ENVIRONMENT_NAME	{ $$ = cb_true; }

@@ -1266,7 +1266,7 @@ cb_build_accept_from (cb_tree x)
     {
     case CB_DEVICE_CONSOLE:
     case CB_DEVICE_SYSIN:
-      return cb_true;
+      return cb_int0;
     default:
       cb_error_x (x, _("invalid input stream `%s'"), cb_name (x));
       return cb_error_node;
@@ -1288,7 +1288,7 @@ cb_build_accept_from_direct (cb_tree x)
 	    case CB_DEVICE_CONSOLE:
 	    case CB_DEVICE_SYSIN:
 	      cb_warning_x (x, _("`%s' undefined in SPECIAL-NAMES"), name);
-	      return cb_int (COB_SYSIN);
+	      return cb_int0;
 	    default:
 	      break;
 	    }
@@ -1345,11 +1345,17 @@ cb_build_display_statement (cb_tree values, cb_tree upon, cb_tree no_adv,
       return cb_build_funcall_1 ("cob_display_environment", CB_VALUE (values));
     }
 
-  for (l = values; l; l = CB_CHAIN (l))
-    CB_VALUE (l) = cb_build_funcall_2 ("cob_display", CB_VALUE (l), upon);
-  if (no_adv == cb_int0)
-    values = list_add (values, cb_build_funcall_1 ("cob_newline", upon));
-  return values;
+  /* DISPLAY x ... [UPON device-name] */
+  {
+    int is_stdout = (upon == cb_int1);
+    const char *display = is_stdout ? "cob_display" : "cob_display_error";
+    const char *newline = is_stdout ? "cob_newline" : "cob_newline_error";
+    for (l = values; l; l = CB_CHAIN (l))
+      CB_VALUE (l) = cb_build_funcall_1 (display, CB_VALUE (l));
+    if (no_adv == cb_int0)
+      values = list_add (values, cb_build_funcall_0 (newline));
+    return values;
+  }
 }
 
 cb_tree
@@ -1362,9 +1368,9 @@ cb_build_display_upon (cb_tree x)
     {
     case CB_DEVICE_CONSOLE:
     case CB_DEVICE_SYSOUT:
-      return cb_int (COB_SYSOUT);
+      return cb_int1;
     case CB_DEVICE_SYSERR:
-      return cb_int (COB_SYSERR);
+      return cb_int2;
     default:
       cb_error_x (x, _("invalid output stream"));
       return cb_error_node;
@@ -1386,10 +1392,10 @@ cb_build_display_upon_direct (cb_tree x)
 	    case CB_DEVICE_CONSOLE:
 	    case CB_DEVICE_SYSOUT:
 	      cb_warning_x (x, _("`%s' undefined in SPECIAL-NAMES"), name);
-	      return cb_int (COB_SYSOUT);
+	      return cb_int1;
 	    case CB_DEVICE_SYSERR:
 	      cb_warning_x (x, _("`%s' undefined in SPECIAL-NAMES"), name);
-	      return cb_int (COB_SYSERR);
+	      return cb_int2;
 	    default:
 	      break;
 	    }
