@@ -3497,8 +3497,7 @@ expr_1:
     if (i != 1)
       {
       error:
-	cb_error_x (CB_VALUE ($1), _("invalid expression `%s'"),
-		    cb_name (CB_VALUE ($1)));
+	cb_error_x (CB_VALUE ($1), _("invalid expression"));
 	YYERROR;
       }
 
