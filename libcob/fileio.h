@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002 Keisuke Nishida
+ * Copyright (C) 2002-2003 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -44,18 +44,18 @@
 #define COB_ACCESS_DYNAMIC	2
 #define COB_ACCESS_RANDOM	3
 
+#define COB_OPEN_NONE		0
 #define COB_OPEN_INPUT 		1
 #define COB_OPEN_OUTPUT		2
 #define COB_OPEN_I_O 		3
 #define COB_OPEN_EXTEND		4
+#define COB_OPEN_LOCKED		5
 
 #define COB_CLOSE_NORMAL	0
-#define COB_CLOSE_REEL		1
-#define COB_CLOSE_REEL_REMOVAL	2
+#define COB_CLOSE_LOCK		1
+#define COB_CLOSE_NO_REWIND	2
 #define COB_CLOSE_UNIT		3
 #define COB_CLOSE_UNIT_REMOVAL	4
-#define COB_CLOSE_NO_REWIND	5
-#define COB_CLOSE_LOCK		6
 
 #define COB_FILE_MODE		0644
 
@@ -70,6 +70,7 @@
 #define COB_FILE_PERMANENT_ERROR	30
 #define COB_FILE_NOT_EXISTS		35
 #define COB_FILE_PERMISSION_DENIED	37
+#define COB_FILE_CLOSED_WITH_LOCK	38
 #define COB_FILE_ALREADY_OPEN		41
 #define COB_FILE_NOT_OPEN		42
 #define COB_FILE_READ_NOT_DONE		43

@@ -1,5 +1,14 @@
 2003-05-03  Keisuke Nishida  <knishida@netlab.jp>
 
+	* fileio.h (COB_OPEN_NONE, COB_OPEN_LOCKED): New macros.
+	(COB_CLOSE_REEL, COB_CLOSE_REEL_REMOVAL): Removed.
+	(COB_FILE_CLOSED_WITH_LOCK): New macro.
+	* fileio.c (sequential_close): Close with lock.
+	(sequential_open): Seek to the end for extend file.
+	(cob_open): Return COB_FILE_CLOSED_WITH_LOCK when file is locked.
+
+2003-05-03  Keisuke Nishida  <knishida@netlab.jp>
+
 	* common.h, common.c (cob_linage_counter): New variable.
 
 2003-04-26  Keisuke Nishida  <knishida@netlab.jp>

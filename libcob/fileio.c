@@ -92,6 +92,9 @@ sequential_open (cob_file *f, char *filename, int mode)
   if (fd == -1)
     return errno;
 
+  if (mode == COB_OPEN_EXTEND)
+    lseek (fd, 0, SEEK_END);
+
   p = malloc (sizeof (struct sequential_file));
   p->fd = fd;
   f->file = p;
@@ -105,8 +108,10 @@ sequential_close (cob_file *f, int opt)
 
   switch (opt)
     {
-    case COB_CLOSE_NORMAL:
     case COB_CLOSE_LOCK:
+      f->open_mode = COB_OPEN_LOCKED;
+      /* fall through */
+    case COB_CLOSE_NORMAL:
       close (p->fd);
       free (p);
       return COB_FILE_SUCCEED;
@@ -945,6 +950,10 @@ cob_open (cob_file *f, int mode)
   /* check if the file is already open */
   if (f->flag_opened)
     RETURN_STATUS (COB_FILE_ALREADY_OPEN);
+
+  /* file was previously closed with lock */
+  if (f->open_mode == COB_OPEN_LOCKED)
+    RETURN_STATUS (COB_FILE_CLOSED_WITH_LOCK);
 
   cob_field_to_string (f->assign, filename);
   if ((mode == COB_OPEN_I_O || mode == COB_OPEN_EXTEND)
