@@ -1471,6 +1471,9 @@ finalize_file (struct cb_file *f, struct cb_field *records)
     f->record_min = records->size;
   for (p = records; p; p = p->sister)
     {
+      struct cb_field *v = cb_field_varying (p);
+      if (v && v->offset + v->size * v->occurs_min < f->record_min)
+	f->record_min = v->offset + v->size * v->occurs_min;
       if (p->size < f->record_min)
 	f->record_min = p->size;
       if (p->size > f->record_max)
