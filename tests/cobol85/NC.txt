@@ -92,16 +92,11 @@ NC251A.CBL     59   59    0       0       0 OK
 NC252A.CBL     75   75    0       0       0 OK
 NC253A.CBL     61   61    0       0       0 OK
 NC254A.CBL      9    9    0       0       0 OK
-NC302M.CBL    ----- test skipped -----
-NC303M.CBL    ----- test skipped -----
-NC401M.CBL    ----- test skipped -----
 --------    ----- ---- ---- ------- -------
 Total        4380 4361    2       6      11
 %           100.0 99.6  0.0     0.1     0.3
 
-Number of programs:    95
-Successfully tested:   92 (96.84%)
-Successfully executed: 91 (95.79%)
-Test skipped:           3 ( 3.16%)
+Number of programs:    92
+Successfully executed: 91 (98.91%)
 Compile error:          0 ( 0.00%)
 Execute error:          0 ( 0.00%)

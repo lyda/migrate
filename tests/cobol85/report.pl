@@ -21,7 +21,6 @@ my $compile = 'cobc -std=cobol85';
 my $compile_module = 'cobc -std=cobol85 -m';
 
 my $num_progs = 0;
-my $test_skipped = 0;
 my $compile_error = 0;
 my $execute_error = 0;
 
@@ -53,10 +52,7 @@ foreach $in (sort (glob("*.{CBL,SUB}"))) {
   next if $exe =~ /^..[34]0/;
   $num_progs++;
   printf LOG "%-12s", $in;
-  if ($skip{$exe}) {
-    $test_skipped++;
-    print LOG "  ----- test skipped -----\n";
-  } else {
+  {
     $copy = ($exe =~ /^SM/) ? "-I ../copy " : "";
     print "$compile $copy$in && $cmd\n";
     if (system ("$compile $copy$in") != 0) {
@@ -118,14 +114,9 @@ printf LOG ("%%           100.0 %4.1f %4.1f    %4.1f    %4.1f\n\n",
 	    100 * $total_deleted / $total_all,
 	    100 * $total_inspect / $total_all) if $total_all;
 
-$num_tested = $num_progs - $test_skipped - $compile_error - $execute_error;
 printf LOG ("Number of programs:    %2s\n", $num_progs);
-printf LOG ("Successfully tested:   %2s (%5.2f%%)\n",
-	    $num_tested, 100 * $num_tested / $num_progs);
 printf LOG ("Successfully executed: %2s (%5.2f%%)\n",
 	    $total_ok, 100 * $total_ok / $num_progs);
-printf LOG ("Test skipped:          %2s (%5.2f%%)\n",
-	    $test_skipped, 100 * $test_skipped / $num_progs);
 printf LOG ("Compile error:         %2s (%5.2f%%)\n",
 	    $compile_error, 100 * $compile_error / $num_progs);
 printf LOG ("Execute error:         %2s (%5.2f%%)\n",

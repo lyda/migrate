@@ -32,16 +32,11 @@ RL210A.CBL      1    1    0       0       0 OK
 RL211A.CBL    479  457   22       0       0 
 RL212A.CBL      1    1    0       0       0 OK
 RL213A.SUB    521  521    0       0       0 OK
-RL301M.CBL    ----- test skipped -----
-RL302M.CBL    ----- test skipped -----
-RL401M.CBL    ----- test skipped -----
 --------    ----- ---- ---- ------- -------
 Total        1810 1783   22       5       0
 %           100.0 98.5  1.2     0.3     0.0
 
-Number of programs:    35
-Successfully tested:   32 (91.43%)
-Successfully executed: 31 (88.57%)
-Test skipped:           3 ( 8.57%)
+Number of programs:    32
+Successfully executed: 31 (96.88%)
 Compile error:          0 ( 0.00%)
 Execute error:          0 ( 0.00%)

@@ -82,16 +82,11 @@ SQ227A.CBL     16   16    0       0       0 OK
 SQ228A.CBL      1    1    0       0       0 OK
 SQ229A.CBL      1    1    0       0       0 OK
 SQ230A.CBL      1    1    0       0       0 OK
-SQ302M.CBL    ----- test skipped -----
-SQ303M.CBL    ----- test skipped -----
-SQ401M.CBL    ----- test skipped -----
 --------    ----- ---- ---- ------- -------
 Total         563  500    0       6      57
 %           100.0 88.8  0.0     1.1    10.1
 
-Number of programs:    85
-Successfully tested:   77 (90.59%)
-Successfully executed: 77 (90.59%)
-Test skipped:           3 ( 3.53%)
-Compile error:          5 ( 5.88%)
+Number of programs:    82
+Successfully executed: 77 (93.90%)
+Compile error:          5 ( 6.10%)
 Execute error:          0 ( 0.00%)

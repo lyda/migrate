@@ -24,14 +24,11 @@ IC233A.CBL    ===== compile error =====
 IC234A.CBL    ===== compile error =====
 IC235A.CBL    ===== compile error =====
 IC237A.CBL    ===== compile error =====
-IC401M.CBL    ----- test skipped -----
 --------    ----- ---- ---- ------- -------
 Total          97   97    0       0       0
 %           100.0 100.0  0.0     0.0     0.0
 
-Number of programs:    25
-Successfully tested:   13 (52.00%)
-Successfully executed: 13 (52.00%)
-Test skipped:           1 ( 4.00%)
-Compile error:         11 (44.00%)
+Number of programs:    24
+Successfully executed: 13 (54.17%)
+Compile error:         11 (45.83%)
 Execute error:          0 ( 0.00%)

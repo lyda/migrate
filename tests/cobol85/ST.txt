@@ -39,14 +39,11 @@ ST140A.CBL     11   11    0       0       0 OK
 ST144A.CBL     11   11    0       0       0 OK
 ST146A.CBL      4    4    0       0       0 OK
 ST147A.CBL     26   26    0       0       0 OK
-ST301M.CBL    ----- test skipped -----
 --------    ----- ---- ---- ------- -------
 Total         278  261   17       0       0
 %           100.0 93.9  6.1     0.0     0.0
 
-Number of programs:    40
-Successfully tested:   39 (97.50%)
-Successfully executed: 36 (90.00%)
-Test skipped:           1 ( 2.50%)
+Number of programs:    39
+Successfully executed: 36 (92.31%)
 Compile error:          0 ( 0.00%)
 Execute error:          0 ( 0.00%)
