@@ -1,6 +1,7 @@
 2002-07-14  Keisuke Nishida  <knishida@netlab.jp>
 
 	* move.c (cob_set_int): Moved from numeric.c.
+	Reimplemented using `cob_move'.
 
 2002-07-13  Keisuke Nishida  <knishida@netlab.jp>
 
