@@ -25,7 +25,7 @@ CB_FLAG (cb_flag_main, "main",
 	 N_("Include a main function in the output"))
 
 CB_FLAG (cb_flag_syntax_only, "syntax-only",
-	 N_("Check the code for syntax errors, but don't emit any output"))
+	 N_("Syntax error checking only; don't emit any output"))
 
 CB_FLAG (cb_flag_debugging_line, "debugging-line",
 	 N_("Activate debugging lines"))
