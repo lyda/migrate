@@ -20,7 +20,6 @@
 #ifndef COB_FILEIO_H
 #define COB_FILEIO_H
 
-#include <stdio.h>
 #include <libcob/common.h>
 
 #define COB_EQ	1 	/* x == y */
@@ -33,6 +32,10 @@
 #define COB_ASCENDING		1
 #define COB_DESCENDING		2
 
+#define COB_FILE_MODE		0644
+
+/* Organization */
+
 #define COB_ORG_SEQUENTIAL	0
 #define COB_ORG_LINE_SEQUENTIAL	1
 #define COB_ORG_RELATIVE	2
@@ -40,16 +43,22 @@
 #define COB_ORG_SORT		4
 #define COB_ORG_MAX		5
 
+/* Access mode */
+
 #define COB_ACCESS_SEQUENTIAL	1
 #define COB_ACCESS_DYNAMIC	2
 #define COB_ACCESS_RANDOM	3
 
-#define COB_OPEN_NONE		0
+/* Open mode */
+
+#define COB_OPEN_CLOSED		0
 #define COB_OPEN_INPUT 		1
 #define COB_OPEN_OUTPUT		2
 #define COB_OPEN_I_O 		3
 #define COB_OPEN_EXTEND		4
 #define COB_OPEN_LOCKED		5
+
+/* Close options */
 
 #define COB_CLOSE_NORMAL	0
 #define COB_CLOSE_LOCK		1
@@ -57,7 +66,7 @@
 #define COB_CLOSE_UNIT		3
 #define COB_CLOSE_UNIT_REMOVAL	4
 
-#define COB_FILE_MODE		0644
+/* I-O status */
 
 #define COB_STATUS_00_SUCCESS			00
 #define COB_STATUS_02_SUCCESS_DUPLICATE		02
@@ -85,6 +94,9 @@
 #define COB_STATUS_48_OUTPUT_DENIED		48
 #define COB_STATUS_49_I_O_DENIED		49
 
+
+/* File connector */
+
 typedef struct {
   cob_field *field;		/* key field */
   int flag;			/* WITH DUPLICATES (for RELATIVE/INDEXED) */
@@ -104,13 +116,15 @@ typedef struct {
   size_t record_max;		/* record max size */
   int nkeys;			/* the number of keys */
   cob_file_key *keys;		/* RELATIVE/RECORD keys */
-  char flag_opened;		/* successfully opened */
+  char last_open_mode;		/* open mode given by OPEN */
   char flag_nonexistent;	/* nonexistent file */
   char flag_end_of_file;	/* reached the end of file */
   char flag_first_read;		/* first READ after OPEN or START */
   char flag_read_done;		/* last READ successfully done */
   void *file;			/* file type specific data pointer */
 } cob_file;
+
+/* File I-O functions */
 
 typedef struct {
   int (*open) (cob_file *f, char *filename, int mode);
@@ -119,7 +133,7 @@ typedef struct {
   int (*read) (cob_file *f, cob_field *key);
   int (*read_next) (cob_file *f);
   int (*write) (cob_file *f);
-  int (*rewrite) (cob_file *f, cob_field *rec);
+  int (*rewrite) (cob_file *f);
   int (*delete) (cob_file *f);
 } cob_fileio_funcs;
 

@@ -2171,7 +2171,7 @@ output_internal_function (struct cb_program *prog,
   /* error handlers */
   output_line ("/* error handlers */");
   output_stmt (CB_TREE (cb_standard_error_handler));
-  output_line ("switch (cob_error_file->open_mode)");
+  output_line ("switch (cob_error_file->last_open_mode)");
   output_line ("  {");
   for (i = COB_OPEN_INPUT; i <= COB_OPEN_EXTEND; i++)
     if (prog->file_handler[i])
