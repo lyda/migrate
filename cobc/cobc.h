@@ -30,6 +30,7 @@
 
 #define ABORT()								      \
   do {									      \
+    fprintf (stderr, "Aborting compile of %s at line %d\n", cb_source_file, cb_source_line); \
     fprintf (stderr, "%s:%d: internal compiler error\n", __FILE__, __LINE__); \
     abort ();								      \
   } while (0)
