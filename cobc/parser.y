@@ -170,7 +170,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <tree> indexed_variable,search_opt_varying,opt_key_is
 %type <tree> from_rec_varying,to_rec_varying
 %type <tree> literal,gliteral,without_all_literal,all_literal,special_literal
-%type <tree> nliteral,subscripted_variable
+%type <tree> nliteral
 %type <tree> condition_1,condition_2,comparative_condition,class_condition
 %type <tree> search_all_when_conditional
 %type <tfval> tallying_for_list
@@ -2914,11 +2914,6 @@ filename:
   SYMBOL_TOK
 | literal
 ;
-name:
-  variable
-| variable '(' subscript ':' ')'	   { $$ = make_substring ($1, $3, 0); }
-| variable '(' subscript ':' subscript ')' { $$ = make_substring ($1, $3, $5); }
-;
 varcond_list:
   VARCOND			{ $$ = make_list ($1); }
 | varcond_list VARCOND		{ $$ = list_append ($1, $2); }
@@ -2927,9 +2922,13 @@ variable_list:
   variable			{ $$ = make_list ($1); }
 | variable_list variable	{ $$ = list_append ($1, $2); }
 ;
+name:
+  variable
+| variable '(' subscript ':' ')'	   { $$ = make_substring ($1, $3, 0); }
+| variable '(' subscript ':' subscript ')' { $$ = make_substring ($1, $3, $5); }
+;
 variable:
-  subscripted_variable
-| qualified_var
+  qualified_var
   {
     $$ = $1;
     if (need_subscripts) {
@@ -2938,16 +2937,14 @@ variable:
       need_subscripts=0;
     }
   }
-;
-subscripted_variable:
-  qualified_var LPAR subscript_list ')'
+| qualified_var LPAR subscript_list ')'
   {
     int required = count_subscripted ($1);
     int given = list_length ($3);
     if (given != required)
       {
 	if (required == 1)
-	  yyerror ("variable `%s' requires a subscript",
+	  yyerror ("variable `%s' requires one subscript",
 		   COB_FIELD_NAME ($1));
 	else
 	  yyerror ("variable `%s' requires %d subscripts",
