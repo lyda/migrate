@@ -635,6 +635,7 @@ extern cobc_tree make_status_sequence (struct cobc_list *list);
 struct cobc_word {
   char *name;			/* word name */
   int count;			/* the number of words with the same name */
+  int error;			/* set to 1 if error displayed */
   cobc_tree item;		/* tree item associated with this word */
   struct cobc_word *link;	/* next word with the same name */
   struct cobc_word *next;	/* next word with the same hash value */

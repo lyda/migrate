@@ -4134,7 +4134,12 @@ undefined_error (struct cobc_location *loc, struct cobc_word *w, cobc_tree paren
 static void
 ambiguous_error (struct cobc_location *loc, struct cobc_word *w)
 {
-  yyerror_loc (loc, "`%s' ambiguous; need qualification", w->name);
+  if (w->error == 0)
+    {
+      /* on first time */
+      yyerror_loc (loc, "`%s' ambiguous; need qualification", w->name);
+      w->error = 1;
+    }
 }
 
 

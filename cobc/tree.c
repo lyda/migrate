@@ -1010,11 +1010,12 @@ struct cobc_word *
 make_word (char *name)
 {
   struct cobc_word *p = malloc (sizeof (struct cobc_word));
-  p->name     = name;
-  p->count    = 0;
-  p->item     = NULL;
-  p->link     = NULL;
-  p->next     = NULL;
+  p->name  = name;
+  p->count = 0;
+  p->error = 0;
+  p->item  = NULL;
+  p->link  = NULL;
+  p->next  = NULL;
   return p;
 }
 
