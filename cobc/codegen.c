@@ -140,7 +140,7 @@ output_storage (const char *fmt, ...)
 static void
 output_base (struct cb_field *f)
 {
-  struct cb_field *f01 = field_founder (f);
+  struct cb_field *f01 = cb_field_founder (f);
 
   if (f01->redefines)
     f01 = f01->redefines;
@@ -924,7 +924,7 @@ output_handler (int id, cb_tree st1, cb_tree st2, struct cb_label *l)
 static void
 output_memcmp (cb_tree x, cb_tree y)
 {
-  size_t size = field_size (x);
+  size_t size = cb_field_size (x);
   unsigned char buff[size];
   struct cb_literal *l = CB_LITERAL (y);
 
@@ -1196,8 +1196,8 @@ output_move (cb_tree src, cb_tree dst)
       else
 	{
 	  int simple_copy = 0;
-	  int src_size = field_size (src);
-	  int dst_size = field_size (dst);
+	  int src_size = cb_field_size (src);
+	  int dst_size = cb_field_size (dst);
 	  struct cb_field *src_f = cb_field (src);
 	  struct cb_field *dst_f = cb_field (dst);
 

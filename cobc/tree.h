@@ -381,13 +381,13 @@ struct cb_field {
 
 extern cb_tree cb_build_index (cb_tree name);
 extern cb_tree cb_build_constant (cb_tree name, cb_tree value);
-extern struct cb_field *cb_field (cb_tree x);
-extern int field_size (cb_tree x);
-extern struct cb_field *field_founder (struct cb_field *p);
+extern cb_tree cb_build_field (int level, cb_tree name, struct cb_field *last_field, enum cb_storage storage);
+extern struct cb_field *cb_resolve_redefines (struct cb_field *field, cb_tree redefines);
+extern void cb_validate_field (struct cb_field *p);
 
-extern struct cb_field *build_field (int level, cb_tree name, struct cb_field *last_field, enum cb_storage storage);
-extern struct cb_field *validate_redefines (struct cb_field *field, cb_tree redefines);
-extern int validate_field (struct cb_field *p);
+extern struct cb_field *cb_field (cb_tree x);
+extern int cb_field_size (cb_tree x);
+extern struct cb_field *cb_field_founder (struct cb_field *p);
 
 /* Index */
 

@@ -1006,7 +1006,7 @@ record_description_list_1:
   {
     struct cb_field *p;
     for (p = CB_FIELD ($<tree>2); p; p = p->sister)
-      validate_field (p);
+      cb_validate_field (p);
     $<tree>$ = $<tree>2;
   }
 ;
@@ -1018,9 +1018,11 @@ record_description_list_2:
 data_description:
   level_number entry_name
   {
-    current_field = build_field ($1, $2, current_field, current_storage);
-    if (current_field == NULL)
+    cb_tree x = cb_build_field ($1, $2, current_field, current_storage);
+    if (x == cb_error_node)
       YYERROR;
+    else
+      current_field = CB_FIELD (x);
   }
   data_description_clause_sequence '.'
   {
@@ -1080,7 +1082,7 @@ redefines_clause:
   {
     if (initial_clause)
       {
-	current_field->redefines = validate_redefines (current_field, $2);
+	current_field->redefines = cb_resolve_redefines (current_field, $2);
 	if (current_field->redefines == NULL)
 	  YYERROR;
       }
@@ -1331,7 +1333,7 @@ screen_section:
   {
     struct cb_field *p;
     for (p = CB_FIELD ($6); p; p = p->sister)
-      validate_field (p);
+      cb_validate_field (p);
     current_program->screen_storage = CB_FIELD ($6);
     current_program->flag_screen = 1;
   }
@@ -1349,10 +1351,11 @@ screen_description_list:
 screen_description:
   level_number entry_name
   {
-    current_field = build_field ($1, $2, current_field, current_storage);
-    if (current_field == NULL)
+    cb_tree x = cb_build_field ($1, $2, current_field, current_storage);
+    if (x == cb_error_node)
       YYERROR;
 
+    current_field = CB_FIELD (x);
     current_field->screen_flag |= COB_SCREEN_FG_NONE;
     current_field->screen_flag |= COB_SCREEN_BG_NONE;
     if (current_field->parent)

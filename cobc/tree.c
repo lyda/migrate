@@ -844,7 +844,7 @@ cb_build_index (cb_tree name)
 {
   cb_tree x = make_field (name);
   CB_FIELD (x)->usage = CB_USAGE_INDEX;
-  validate_field (CB_FIELD (x));
+  cb_validate_field (CB_FIELD (x));
   return x;
 }
 
@@ -858,69 +858,9 @@ cb_build_constant (cb_tree name, cb_tree value)
   return x;
 }
 
-struct cb_field *
-cb_field (cb_tree x)
-{
-  if (CB_REFERENCE_P (x))
-    return CB_FIELD (CB_REFERENCE (x)->value);
-  else
-    return CB_FIELD (x);
-}
-
-int
-field_size (cb_tree x)
-{
-  switch (CB_TREE_TAG (x))
-    {
-    case CB_TAG_LITERAL:
-      {
-	return CB_LITERAL (x)->size;
-      }
-    case CB_TAG_FIELD:
-      {
-	return CB_FIELD (x)->size;
-      }
-    case CB_TAG_REFERENCE:
-      {
-	struct cb_reference *r = CB_REFERENCE (x);
-	struct cb_field *f = CB_FIELD (r->value);
-	if (r->length)
-	  {
-	    if (CB_LITERAL_P (r->length))
-	      return cb_literal_to_int (CB_LITERAL (r->length));
-	    else
-	      return -1;
-	  }
-	else if (r->offset)
-	  {
-	    if (CB_LITERAL_P (r->offset))
-	      return f->size - cb_literal_to_int (CB_LITERAL (r->offset)) + 1;
-	    else
-	      return -1;
-	  }
-	else
-	  {
-	    return f->size;
-	  }
-      }
-    default:
-      abort ();
-    }
-}
-
-struct cb_field *
-field_founder (struct cb_field *p)
-{
-  while (p->parent)
-    p = p->parent;
-  return p;
-}
-
-/* build */
-
-struct cb_field *
-build_field (int level, cb_tree name, struct cb_field *last_field,
-	     enum cb_storage storage)
+cb_tree
+cb_build_field (int level, cb_tree name, struct cb_field *last_field,
+		enum cb_storage storage)
 {
   struct cb_field *f;
   struct cb_reference *r = CB_REFERENCE (name);
@@ -931,7 +871,7 @@ build_field (int level, cb_tree name, struct cb_field *last_field,
       if (r->word->count > 0)
 	{
 	  redefinition_error (name);
-	  return NULL;
+	  return cb_error_node;
 	}
     }
   else
@@ -943,7 +883,7 @@ build_field (int level, cb_tree name, struct cb_field *last_field,
 	    || CB_FIELD (l->item)->level == 77)
 	  {
 	    redefinition_error (name);
-	    return NULL;
+	    return cb_error_node;
 	  }
     }
 
@@ -960,17 +900,17 @@ build_field (int level, cb_tree name, struct cb_field *last_field,
   if (f->level == 01 || f->level == 77)
     {
       if (last_field)
-	field_founder (last_field)->sister = f;
+	cb_field_founder (last_field)->sister = f;
     }
   else if (!last_field)
     {
       cb_error_x (name, _("level number must begin with 01 or 77"));
-      return NULL;
+      return cb_error_node;
     }
   else if (f->level == 66)
     {
       struct cb_field *p;
-      f->parent = field_founder (last_field);
+      f->parent = cb_field_founder (last_field);
       for (p = f->parent->children; p->sister; p = p->sister);
       p->sister = f;
     }
@@ -1011,7 +951,7 @@ build_field (int level, cb_tree name, struct cb_field *last_field,
 	    goto sister;
 	  }
       cb_error_x (name, _("field hierarchy broken"));
-      return NULL;
+      return cb_error_node;
     }
 
   /* inherit parent's properties */
@@ -1023,17 +963,17 @@ build_field (int level, cb_tree name, struct cb_field *last_field,
       f->flag_sign_separate = f->parent->flag_sign_separate;
     }
 
-  return f;
+  return CB_TREE (f);
 }
 
 struct cb_field *
-validate_redefines (struct cb_field *field, cb_tree redefines)
+cb_resolve_redefines (struct cb_field *field, cb_tree redefines)
 {
   struct cb_field *f, *p;
   struct cb_reference *r = CB_REFERENCE (redefines);
   cb_tree x = CB_TREE (field);
 
-  /* ISO+IEC+1989-2002: 13.16.42.2-7 */
+  /* check qualification */
   if (r->next)
     {
       cb_error_x (x, _("`%s' cannot be qualified"), CB_NAME (redefines));
@@ -1050,7 +990,7 @@ validate_redefines (struct cb_field *field, cb_tree redefines)
     return NULL;
   f = CB_FIELD (r->value);
 
-  /* ISO+IEC+1989-2002: 13.16.42.2-2 */
+  /* check level number */
   if (f->level != field->level)
     {
       cb_error_x (x, _("level number of REDEFINES entries must be identical"));
@@ -1062,7 +1002,7 @@ validate_redefines (struct cb_field *field, cb_tree redefines)
       return NULL;
     }
 
-  /* ISO+IEC+1989-2002: 13.16.42.2-11 */
+  /* check definition */
   for (p = f->sister; p && p->redefines; p = p->sister);
   if (p != field)
     {
@@ -1081,9 +1021,16 @@ group_error (cb_tree x, const char *clause)
 }
 
 static void
-level_error (cb_tree x, const char *clause)
+level_redundant_error (cb_tree x, const char *clause)
 {
-  cb_error_x (x, _("level %02d item `%s' cannot have %s"),
+  cb_error_x (x, _("level %02d item `%s' cannot have %s clause"),
+	      cb_field (x)->level, cb_name (x), clause);
+}
+
+static void
+level_require_error (cb_tree x, const char *clause)
+{
+  cb_error_x (x, _("level %02d item `%s' requires %s clause"),
 	      cb_field (x)->level, cb_name (x), clause);
 }
 
@@ -1093,14 +1040,36 @@ validate_field_1 (struct cb_field *f)
   cb_tree x = CB_TREE (f);
   char *name = cb_name (x);
 
+  if (f->level == 66)
+    {
+      if (!f->redefines)
+	{
+	  level_require_error (x, "RENAMES");
+	  return -1;
+	}
+      return 0;
+    }
+
+  if (f->level == 88)
+    {
+      if (!f->values)
+	level_require_error (x, "VALUE");
+
+      if (f->pic || f->flag_occurs)
+	cb_error_x (x, _("level 88 item cannot have other than VALUE clause"));
+
+      return 0;
+    }
+
   /* validate OCCURS */
   if (f->flag_occurs)
     if (f->level < 2 || f->level > 49)
-      level_error (x, "OCCURS");
+      level_redundant_error (x, "OCCURS");
 
   if (f->children)
     {
-      /* group */
+      /* group item */
+
       if (f->pic)
 	group_error (x, "PICTURE");
       if (f->flag_justified)
@@ -1109,19 +1078,13 @@ validate_field_1 (struct cb_field *f)
 	group_error (x, "BLANK WHEN ZERO");
 
       for (f = f->children; f; f = f->sister)
-	validate_field_1 (f);
-    }
-  else if (f->level == 66)
-    {
-    }
-  else if (f->level == 88)
-    {
-      /* conditional name */
-      if (f->pic)
-	cb_error_x (x, _("level 88 item `%s' may not have PICTURE"), name);
+	if (validate_field_1 (f) != 0)
+	  return -1;
     }
   else
     {
+      /* elementary item */
+
       /* validate PICTURE */
       {
 	int need_picture = 1;
@@ -1207,8 +1170,6 @@ validate_field_1 (struct cb_field *f)
 
   return 0;
 }
-
-/* finalize */
 
 static char *
 to_cname (const char *s)
@@ -1381,14 +1342,71 @@ validate_field_value (struct cb_field *f)
   return 0;
 }
 
-int
-validate_field (struct cb_field *f)
+void
+cb_validate_field (struct cb_field *f)
 {
   if (validate_field_1 (f) != 0)
-    return -1;
+    return;
   finalize_field (f);
   validate_field_value (f);
-  return 0;
+}
+
+struct cb_field *
+cb_field (cb_tree x)
+{
+  if (CB_REFERENCE_P (x))
+    return CB_FIELD (CB_REFERENCE (x)->value);
+  else
+    return CB_FIELD (x);
+}
+
+int
+cb_field_size (cb_tree x)
+{
+  switch (CB_TREE_TAG (x))
+    {
+    case CB_TAG_LITERAL:
+      {
+	return CB_LITERAL (x)->size;
+      }
+    case CB_TAG_FIELD:
+      {
+	return CB_FIELD (x)->size;
+      }
+    case CB_TAG_REFERENCE:
+      {
+	struct cb_reference *r = CB_REFERENCE (x);
+	struct cb_field *f = CB_FIELD (r->value);
+	if (r->length)
+	  {
+	    if (CB_LITERAL_P (r->length))
+	      return cb_literal_to_int (CB_LITERAL (r->length));
+	    else
+	      return -1;
+	  }
+	else if (r->offset)
+	  {
+	    if (CB_LITERAL_P (r->offset))
+	      return f->size - cb_literal_to_int (CB_LITERAL (r->offset)) + 1;
+	    else
+	      return -1;
+	  }
+	else
+	  {
+	    return f->size;
+	  }
+      }
+    default:
+      abort ();
+    }
+}
+
+struct cb_field *
+cb_field_founder (struct cb_field *p)
+{
+  while (p->parent)
+    p = p->parent;
+  return p;
 }
 
 
@@ -1468,7 +1486,7 @@ finalize_file (struct cb_file *f, struct cb_field *records)
   f->record->usage = CB_USAGE_DISPLAY;
   f->record->pic = cb_parse_picture (pic);
   f->record->sister = records;
-  validate_field (f->record);
+  cb_validate_field (f->record);
 
   for (p = records; p; p = p->sister)
     {
@@ -2525,7 +2543,7 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 
 	    /* size check */
 	    {
-	      int size = field_size (dst);
+	      int size = cb_field_size (dst);
 	      if (size >= 0 && l->size > size)
 		goto size_overflow;
 	    }
@@ -2764,7 +2782,7 @@ cb_build_cond (cb_tree x)
 	    else if (CB_LITERAL_P (p->y))
 	      {
 		struct cb_literal *l = CB_LITERAL (p->y);
-		int size = field_size (p->x);
+		int size = cb_field_size (p->x);
 
 		if (CB_TREE_CLASS (p->x) == CB_CLASS_NUMERIC
 		    && CB_TREE_CLASS (p->y) == CB_CLASS_NUMERIC)
