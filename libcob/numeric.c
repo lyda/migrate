@@ -156,8 +156,8 @@ cob_decimal_set_int64 (cob_decimal d, long long n, int decimals)
 void
 cob_decimal_set_double (cob_decimal d, double v)
 {
-  mpz_set_d (d->number, v);
-  d->decimals = 0;
+  mpz_set_d (d->number, v * cob_exp10[9]);
+  d->decimals = 9;
 }
 
 void
@@ -488,11 +488,4 @@ void
 cob_div_remainder (struct cob_field remainder)
 {
   decimal_get (cob_d3, remainder, 0);
-}
-
-void
-cob_set_int (struct cob_field f, int n)
-{
-  cob_decimal_set_int (cob_d1, n, 0);
-  cob_decimal_get (cob_d1, f);
 }

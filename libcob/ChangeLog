@@ -1,6 +1,11 @@
+2002-07-14  Keisuke Nishida  <knishida@netlab.jp>
+
+	* move.c (cob_set_int): Moved from numeric.c.
+
 2002-07-13  Keisuke Nishida  <knishida@netlab.jp>
 
 	* numeric.c (cob_decimal_get_double): Bug fix in calculation.
+	(cob_decimal_set_double): Take effect of decimal figures.
 
 2002-07-08  Keisuke Nishida  <knishida@netlab.jp>
 

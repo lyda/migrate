@@ -651,3 +651,10 @@ cob_to_int (struct cob_field f)
   cob_move (f, temp);
   return val;
 }
+
+void
+cob_set_int (struct cob_field f, int n)
+{
+  cob_decimal_set_int (cob_d1, n, 0);
+  cob_decimal_get (cob_d1, f);
+}
