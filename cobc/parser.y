@@ -2450,6 +2450,10 @@ perform_body:
     CB_PERFORM ($1)->body = $2;
     push ($1);
   }
+| perform_option END_PERFORM
+  {
+    push ($1);
+  }
 ;
 end_perform:
   /* empty */			{ terminator_error (); }
