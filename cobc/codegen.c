@@ -1139,7 +1139,20 @@ output_string (char *s, int len)
       else if (isprint (c))
 	output ("%c", c);
       else
-	output ("\\%o", (unsigned char) c);
+	output ("\\%03o", (unsigned char) c);
+    }
+  output ("\"\n");
+}
+
+static void
+output_picture (unsigned char *pic)
+{
+  unsigned char *p;
+  output ("\t.string\t\"");
+  for (p = pic; *p; p += 2)
+    {
+      output ("%c", p[0]);
+      output ("\\%03o", p[1]);
     }
   output ("\"\n");
 }
@@ -1552,7 +1565,6 @@ proc_header (int using)
 void
 proc_trail (int using)
 {
-  int i;
   struct list *list;
   cob_tree sy;
   char *pgm_label = "main";
@@ -1697,8 +1709,7 @@ proc_trail (int using)
 	      int tmplen = len;
 	      while (tmplen > 255)
 		{
-		  output ("\t.byte\t\'%c\',%d\n",
-			   COB_FIELD_TYPE (v), 255);
+		  output ("\t.byte\t\'%c\',%d\n", COB_FIELD_TYPE (v), 255);
 		  tmplen -= 255;
 		}
 	      output ("\t.byte\t\'%c\',%d,0\n", COB_FIELD_TYPE (v), tmplen);
@@ -1726,11 +1737,7 @@ proc_trail (int using)
 	  if (COB_FIELD_TYPE (sy) != 'G')
 	    {
 	      output ("\t.long\tc_base%d+%d\n", pgm_segment, sy->pic);
-	      for (i = 0; i < strlen (sy->picstr); i += 2)
-		output ("\t.byte\t\'%c\',%d\n",
-			 *(sy->picstr + i),
-			 *((unsigned char *) sy->picstr + i + 1));
-	      output ("\t.byte\t0\n");
+	      output_picture (sy->picstr);
 	    }
 	}
     }
