@@ -103,6 +103,12 @@ cob_inspect_converting (struct fld_desc *fvar, char *svar,
 {
   /* will receive optional before/after variables, like other
      inpect statements */
+
+  int i, j;
+  for (i = 0; i < fvar->len; i++)
+    for (j = 0; j < ffrom->len; j++)
+      if (svar[i] == sfrom[j])
+	svar[i] = sto[j];
   return 0;
 }
 
