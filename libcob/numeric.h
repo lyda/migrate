@@ -25,7 +25,7 @@
 
 #define COB_STORE_ROUND			0x01
 #define COB_STORE_KEEP_ON_OVERFLOW	0x02
-#define COB_STORE_TRUNC_ON_OVERFLOW	0x03
+#define COB_STORE_TRUNC_ON_OVERFLOW	0x04
 
 /*
  * Internal representation of decimal numbers.
