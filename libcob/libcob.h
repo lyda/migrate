@@ -214,13 +214,15 @@ extern int cob_reloading_flag;
 extern long cob_exp10[10];
 extern long long cob_exp10LL[19];
 
-/* figurative constants */
+/* constants */
 
 extern struct cob_field cob_zero;
 extern struct cob_field cob_space;
 extern struct cob_field cob_high;
 extern struct cob_field cob_low;
 extern struct cob_field cob_quote;
+extern struct cob_field cob_switch[];
+extern struct cob_field cob_return_code;
 
 /* functional macros */
 

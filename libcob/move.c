@@ -466,7 +466,7 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 		}
 
 	      *dst = '?';
-	      fprintf (stderr, "cob_move: invalid PIC char: `%c'\n", c);
+	      cob_runtime_error ("invalid PIC char `%c'", c);
 	    }
 	}
     }
@@ -535,7 +535,7 @@ cob_move_alphanum_to_edited (struct cob_field f1, struct cob_field f2)
 
 	    default:
 	      *dst = '?';
-	      fprintf (stderr, "invalid PIC char: `%c'\n", c);
+	      cob_runtime_error ("invalid PIC char `%c'", c);
 	    }
 	}
     }

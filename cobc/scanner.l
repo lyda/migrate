@@ -139,7 +139,7 @@ X\"[^\"\n]*\" {
 	{
 	  return LABEL_WORD;
 	}
-      if (COBC_INTEGER_P (yylval.word->item))
+      if (COBC_BUILTIN_P (yylval.word->item))
 	{
 	  yylval.tree = yylval.word->item;
 	  return MNEMONIC_NAME;

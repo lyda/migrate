@@ -254,6 +254,7 @@ cobc_tree cobc_param;
 cobc_tree cobc_status;
 cobc_tree cobc_int0;
 cobc_tree cobc_int1;
+cobc_tree cobc_switch[8];
 
 static cobc_tree
 make_constant (char class, char *val)
@@ -264,21 +265,38 @@ make_constant (char class, char *val)
   return COBC_TREE (p);
 }
 
+cobc_tree
+make_builtin (int id)
+{
+  struct cobc_builtin *p =
+    make_tree (cobc_tag_builtin, COB_NUMERIC, sizeof (struct cobc_builtin));
+  p->id = id;
+  return COBC_TREE (p);
+}
+
 void
 init_constants (void)
 {
-  cobc_any    = make_constant (COB_VOID, 0);
-  cobc_true   = make_constant (COB_BOOLEAN, "1");
-  cobc_false  = make_constant (COB_BOOLEAN, "0");
-  cobc_param  = make_constant (COB_NUMERIC, "x");
-  cobc_status = make_constant (COB_NUMERIC, "cob_status");
-  cobc_zero   = make_constant (COB_NUMERIC, "cob_zero");
-  cobc_space  = make_constant (COB_ALPHANUMERIC, "cob_space");
-  cobc_low    = make_constant (COB_ALPHANUMERIC, "cob_low");
-  cobc_high   = make_constant (COB_ALPHANUMERIC, "cob_high");
-  cobc_quote  = make_constant (COB_ALPHANUMERIC, "cob_quote");
-  cobc_int0   = make_integer (0);
-  cobc_int1   = make_integer (1);
+  cobc_any       = make_constant (COB_VOID, 0);
+  cobc_true      = make_constant (COB_BOOLEAN, "1");
+  cobc_false     = make_constant (COB_BOOLEAN, "0");
+  cobc_param     = make_constant (COB_NUMERIC, "x");
+  cobc_status    = make_constant (COB_NUMERIC, "cob_status");
+  cobc_zero      = make_constant (COB_NUMERIC, "cob_zero");
+  cobc_space     = make_constant (COB_ALPHANUMERIC, "cob_space");
+  cobc_low       = make_constant (COB_ALPHANUMERIC, "cob_low");
+  cobc_high      = make_constant (COB_ALPHANUMERIC, "cob_high");
+  cobc_quote     = make_constant (COB_ALPHANUMERIC, "cob_quote");
+  cobc_switch[0] = make_constant (COB_BOOLEAN, "cob_switch[0]");
+  cobc_switch[1] = make_constant (COB_BOOLEAN, "cob_switch[1]");
+  cobc_switch[2] = make_constant (COB_BOOLEAN, "cob_switch[2]");
+  cobc_switch[3] = make_constant (COB_BOOLEAN, "cob_switch[3]");
+  cobc_switch[4] = make_constant (COB_BOOLEAN, "cob_switch[4]");
+  cobc_switch[5] = make_constant (COB_BOOLEAN, "cob_switch[5]");
+  cobc_switch[6] = make_constant (COB_BOOLEAN, "cob_switch[6]");
+  cobc_switch[7] = make_constant (COB_BOOLEAN, "cob_switch[7]");
+  cobc_int0      = make_integer (0);
+  cobc_int1      = make_integer (1);
 }
 
 
@@ -372,7 +390,7 @@ make_picture (void)
   return p;
 }
 
-cobc_tree 
+cobc_tree
 make_field (struct cobc_word *word)
 {
   struct cobc_field *p =
@@ -387,8 +405,8 @@ make_field (struct cobc_word *word)
   p->cname = NULL;
   p->file = NULL;
   p->value = NULL;
-  p->cond = NULL;
   p->word = set_word_item (word, COBC_TREE (p));
+  p->values = NULL;
   p->index_list = NULL;
   p->parent = NULL;
   p->children = NULL;
@@ -408,7 +426,7 @@ make_field (struct cobc_word *word)
   return COBC_TREE (p);
 }
 
-cobc_tree 
+cobc_tree
 make_filler (void)
 {
   static int id = 1;

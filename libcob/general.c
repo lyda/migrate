@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001, 2000, 1999,  Rildo Pragana, Jim Noeth, 
+ * Copyright (C) 2001, 2000, 1999,  Rildo Pragana, Jim Noeth,
  *               Andrew Cameron, David Essex.
  * Copyright (C) 1993, 1991  Rildo Pragana.
  *
@@ -7,12 +7,12 @@
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1,
  * or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; see the file COPYING.LIB.  If
  * not, write to the Free Software Foundation, Inc., 59 Temple Place,
@@ -76,13 +76,26 @@ long long cob_exp10LL[19] = {
   1000000000000000000
 };
 
-static struct cob_field_desc fig_desc = {1, 'X'};
+static struct cob_field_desc x_desc = {1, 'X'};
+static struct cob_field_desc b_desc = {1, 'B', 1, 0};
 
-struct cob_field cob_zero =  {&fig_desc, "0"};
-struct cob_field cob_space = {&fig_desc, " "};
-struct cob_field cob_high =  {&fig_desc, "\xff"};
-struct cob_field cob_low =   {&fig_desc, "\0"};
-struct cob_field cob_quote = {&fig_desc, "\""};
+struct cob_field cob_zero =  {&x_desc, "0"};
+struct cob_field cob_space = {&x_desc, " "};
+struct cob_field cob_high =  {&x_desc, "\xff"};
+struct cob_field cob_low =   {&x_desc, "\0"};
+struct cob_field cob_quote = {&x_desc, "\""};
+
+static char switch_data[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+struct cob_field cob_switch[8] = {
+  {&b_desc, &switch_data[0]},
+  {&b_desc, &switch_data[1]},
+  {&b_desc, &switch_data[2]},
+  {&b_desc, &switch_data[3]},
+  {&b_desc, &switch_data[4]},
+  {&b_desc, &switch_data[5]},
+  {&b_desc, &switch_data[6]},
+  {&b_desc, &switch_data[7]}
+};
 
 int
 get_sign (struct cob_field f)
@@ -159,7 +172,6 @@ cob_field_to_string (struct cob_field f, char *s)
 }
 
 
-
 void
 cob_init (int argc, char **argv)
 {
@@ -202,22 +214,6 @@ cob_index (int i, int max)
       return 0;
     }
   return i - 1;
-}
-
-void
-cob_check_numeric (struct cob_field f)
-{
-  int i;
-  int sign = get_sign (f);
-  int len = FIELD_LENGTH (f);
-  unsigned char *s = FIELD_BASE (f);
-  for (i = 0; i < len; i++)
-    if (!isdigit (s[i]))
-      {
-	cob_runtime_error ("non-numeric value `%s'", s);
-	break;
-      }
-  put_sign (f, sign);
 }
 
 
@@ -344,6 +340,13 @@ cob_is_numeric (struct cob_field f)
 	  return 0;
       return 1;
     }
+}
+
+void
+cob_check_numeric (struct cob_field f)
+{
+  if (!cob_is_numeric (f))
+    cob_runtime_error ("non-numeric value `%s'", FIELD_BASE (f));
 }
 
 int

@@ -32,6 +32,7 @@
 #include "tree.h"
 #include "scanner.h"
 #include "codegen.h"
+#include "reserved.h"
 #include "libcob.h"
 
 #define yydebug		yy_bison_debug
@@ -115,7 +116,10 @@ static cobc_tree make_sub (cobc_tree f1, cobc_tree f2, int round);
 static cobc_tree make_move (cobc_tree f1, cobc_tree f2, int round);
 static struct cobc_list *make_corr (cobc_tree (*func)(), cobc_tree g1, cobc_tree g2, int opt, struct cobc_list *l);
 static cobc_tree make_opt_cond (cobc_tree last, int type, cobc_tree this);
+static cobc_tree make_cond_name (cobc_tree x);
+
 static void redefinition_error (cobc_tree x);
+static void undefined_error (struct cobc_word *w, cobc_tree parent);
 static void ambiguous_error (struct cobc_word *p);
 %}
 
@@ -179,9 +183,9 @@ static void ambiguous_error (struct cobc_word *p);
 %type <str> class
 %type <call> call_item
 %type <insi> tallying_item,replacing_item,inspect_before_after
-%type <inum> flag_all,flag_duplicates,flag_optional,flag_with_no_advancing
+%type <inum> flag_all,flag_duplicates,flag_optional
 %type <inum> flag_not,flag_next,flag_rounded,flag_separate
-%type <inum> sign,integer,level_number,operator,on_or_off
+%type <inum> sign,integer,level_number,operator
 %type <inum> usage,before_or_after,perform_test,replacing_option
 %type <inum> select_organization,select_access_mode,open_mode
 %type <list> occurs_key_list,occurs_index_list,value_item_list
@@ -199,7 +203,7 @@ static void ambiguous_error (struct cobc_word *p);
 %type <list> call_item_list,call_using
 %type <list> initialize_replacing,initialize_replacing_list
 %type <tree> special_name_class_condition,special_name_class_condition_1
-%type <tree> special_name_class_literal,select_file_name
+%type <tree> special_name_class_literal,on_or_off,select_file_name
 %type <tree> call_returning,add_to,field_description_list,value_item
 %type <tree> field_description_list_1,field_description_list_2
 %type <tree> condition,condition_2,comparative_condition,class_condition
@@ -218,9 +222,9 @@ static void ambiguous_error (struct cobc_word *p);
 %type <tree> opt_on_overflow_sentence,opt_not_on_overflow_sentence
 %type <tree> opt_on_size_error_sentence,opt_not_on_size_error_sentence
 %type <tree> numeric_name,numeric_edited_name,group_name,table_name,class_name
-%type <tree> condition_name,data_name,file_name,record_name,label_name
-%type <tree> mnemonic_name,section_name,name,qualified_name
-%type <tree> predefined_name
+%type <tree> condition_name,qualified_cond_name,data_name,file_name
+%type <tree> record_name,label_name,mnemonic_name,section_name,name
+%type <tree> qualified_name,predefined_name
 %type <list> qualified_predefined_word
 %type <tree> integer_value,value,number
 %type <tree> literal,basic_literal,figurative_constant
@@ -404,13 +408,19 @@ special_name:
 
 special_name_mnemonic:
   WORD
-  special_name_mnemonic_name
-  special_name_mnemonic_on_off	{ }
+  {
+    int n = lookup_builtin_word ($1->name);
+    if (n == 0)
+      yyerror ("unknown name `%s'", $1->name);
+    $<tree>$ = make_builtin (n);
+  }
+  special_name_mnemonic_define
+  special_name_mnemonic_on_off
 ;
-special_name_mnemonic_name:
+special_name_mnemonic_define:
 | IS undefined_word
   {
-    set_word_item ($2, make_integer ($<inum>0));
+    set_word_item ($2, $<tree>0);
   }
 ;
 special_name_mnemonic_on_off:
@@ -419,12 +429,26 @@ special_name_mnemonic_on_off:
   {
     struct cobc_field *p = COBC_FIELD (make_field ($5));
     p->level = 88;
-    p->cond = make_cond (cobc_int0, COBC_COND_EQ, cobc_int0);
+#if 0
+    cobc_tree x = $<tree>-1;
+    if (COBC_BUILTIN_SWITCH_P (x))
+      {
+	struct cobc_field *p = COBC_FIELD (make_field ($5));
+	p->level = 88;
+	p->parent = cobc_switch[0];
+	p->value = $2;
+	p->values = list (p->value);
+      }
+    else
+      {
+	yyerror ("`%s' not switch name", $<word>-2->name);
+      }
+#endif
   }
 ;
 on_or_off:
-  ON				{ $$ = 1; }
-| OFF				{ $$ = 2; }
+  ON				{ $$ = cobc_true; }
+| OFF				{ $$ = cobc_false; }
 ;
 
 
@@ -893,7 +917,7 @@ redefines_clause:
     switch ($2->count)
       {
       case 0:
-	yyerror ("`%s' undefined", $2->name);
+	undefined_error ($2, 0);
 	break;
       case 1:
 	current_field->redefines = COBC_FIELD ($2->item);
@@ -1058,43 +1082,22 @@ blank_clause:
 value_clause:
   VALUE _is_are value_item_list
   {
-    if (current_field->level != 88)
+    if (current_field->level == 88)
       {
-	if ($3->next != NULL || COBC_PAIR_P ($3))
-	  yyerror ("only level 88 item may have multiple values");
+	/* 88 condition */
+	current_field->values = $3;
+	if (COBC_PAIR_P ($3->item))
+	  current_field->value = COBC_PAIR ($3->item)->x;
 	else
 	  current_field->value = $3->item;
       }
     else
       {
-	struct cobc_list *l;
-	cobc_tree cond = NULL;
-	cobc_tree parent = COBC_TREE (current_field->parent);
-	for (l = $3; l; l = l->next)
-	  {
-	    cobc_tree c;
-	    if (COBC_PAIR_P (l->item))
-	      {
-		/* VALUE THRU VALUE */
-		struct cobc_pair *p = COBC_PAIR (l->item);
-		c = make_cond (make_cond (p->x, COBC_COND_LE, parent),
-			       COBC_COND_AND,
-			       make_cond (parent, COBC_COND_LE, p->y));
-	      }
-	    else
-	      {
-		/* VALUE */
-		c = make_cond (parent, COBC_COND_EQ, l->item);
-	      }
-	    if (cond)
-	      cond = make_cond (cond, COBC_COND_OR, c);
-	    else
-	      cond = c;
-	  }
-	current_field->cond = cond;
-	current_field->value = $3->item;
-	if (COBC_PAIR_P (current_field->value))
-	  current_field->value = COBC_PAIR (current_field->value)->x;
+	/* single VALUE */
+	if ($3->next != NULL || COBC_PAIR_P ($3->item))
+	  yyerror ("only level 88 item may have multiple values");
+	else
+	  current_field->value = $3->item;
       }
   }
 ;
@@ -1317,7 +1320,10 @@ accept_statement:
   }
 | ACCEPT data_name FROM mnemonic_name
   {
-    yywarn ("ACCEPT FROM name is not implemented");
+    if (COBC_BUILTIN ($4)->id == BUILTIN_STDIN)
+      push_call_1 (COB_ACCEPT, $2);
+    else
+      yyerror ("ACCEPT FROM is allowed only from STDIN");
   }
 ;
 
@@ -1511,20 +1517,20 @@ _end_delete: | END_DELETE ;
  */
 
 display_statement:
-  DISPLAY opt_value_list display_upon flag_with_no_advancing
+  DISPLAY opt_value_list display_upon
   {
     struct cobc_list *l;
     for (l = $2; l; l = l->next)
       push_call_1 (COB_DISPLAY, l->item);
-    push_call_0 (COB_NEWLINE);
   }
+  display_with_no_advancing
   ;
 display_upon:
 | _upon mnemonic_name		{ /* ignored */ }
 ;
-flag_with_no_advancing:
-  /* nothing */			{ $$ = 0; }
-| _with NO ADVANCING		{ $$ = 1; }
+display_with_no_advancing:
+  /* nothing */			{ push_call_0 (COB_NEWLINE); }
+| _with NO ADVANCING		{ /* nothing */ }
 ;
 
 
@@ -2481,7 +2487,7 @@ not_invalid_key_sentence:
  *******************/
 
 condition:
-  condition_name		{ $$ = COBC_FIELD ($1)->cond; }
+  condition_name		{ $$ = make_cond_name ($1); }
 | comparative_condition		{ $$ = $1; }
 | class_condition		{ $$ = $1; }
 | sign_condition		{ $$ = $1; }
@@ -2572,6 +2578,7 @@ sign:
 expr:
   value				{ $$ = $1; }
 | '(' expr ')'			{ $$ = $2; }
+| '-' expr			{ $$ = make_expr (cobc_zero, '-', $2); }
 | expr '+' expr			{ $$ = make_expr ($1, '+', $3); }
 | expr '-' expr			{ $$ = make_expr ($1, '-', $3); }
 | expr '*' expr			{ $$ = make_expr ($1, '*', $3); }
@@ -2678,7 +2685,26 @@ condition_name_list:
   condition_name		{ $$ = list_add ($1, $2); }
 ;
 condition_name:
-  CONDITION_NAME		{ $$ = $1; }
+  qualified_cond_name		{ $$ = $1; }
+| qualified_cond_name subref	{ $$ = $2; }
+;
+qualified_cond_name:
+  CONDITION_NAME
+  {
+    if (COBC_FIELD ($1)->word->count > 1)
+      ambiguous_error (COBC_FIELD ($1)->word);
+    $$ = $1;
+  }
+| CONDITION_NAME in_of qualified_name
+  {
+    struct cobc_word *w = COBC_FIELD ($1)->word;
+    struct cobc_word *qw = lookup_qualified_word (w, COBC_FIELD ($3));
+    $$ = $1;
+    if (qw)
+      $$ = qw->item;
+    else
+      undefined_error (w, $3);
+  }
 ;
 
 /* Data name */
@@ -2798,10 +2824,11 @@ qualified_name:
     $$ = $1->item;
     if (!$$)
       {
-	yyerror ("`%s' undefined", $1->name);
+	undefined_error ($1, 0);
 	$$ = make_filler ();
       }
   }
+;
 qualified_word:
   WORD
   {
@@ -2814,7 +2841,7 @@ qualified_word:
     $$ = lookup_qualified_word ($1, COBC_FIELD ($3));
     if (!$$)
       {
-	yyerror ("`%s' undefined in `%s'", $1->name, tree_to_string ($3));
+	undefined_error ($1, $3);
 	$$ = $1;
       }
   }
@@ -3153,11 +3180,7 @@ init_field (int level, cobc_tree field)
 static void
 validate_field (struct cobc_field *p)
 {
-  if (p->level == 66)
-    {
-      /* REDEFINES */
-    }
-  else if (p->level == 88)
+  if (p->level == 88)
     {
       /* conditional variable */
       COBC_TREE_CLASS (p) = COB_BOOLEAN;
@@ -3219,6 +3242,13 @@ validate_field (struct cobc_field *p)
 	  yyerror ("OCCURS cannot be used with level %02d field", p->level);
 
       /* validate JUSTIFIED RIGHT */
+      if (p->f.justified)
+	{
+	  char c = p->category;
+	  if (!(c == 'A' || c == 'X' || c == 'N'))
+	    yyerror ("`%s' cannot have JUSTIFIED RIGHT",
+		     tree_to_string (COBC_TREE (p)));
+	}
 
       /* validate SYNCHRONIZED */
       if (p->f.synchronized)
@@ -3252,20 +3282,13 @@ validate_field (struct cobc_field *p)
 	    }
 	}
 
-      if (p->f.justified)
-	{
-	  char c = p->category;
-	  if (!(c == 'A' || c == 'X' || c == 'N'))
-	    yyerror ("`%s' cannot have JUSTIFIED RIGHT",
-		     tree_to_string (COBC_TREE (p)));
-	}
-
-      /* count the number of indexes needed */
-      if (p->parent)
-	p->indexes = p->parent->indexes;
-      if (p->f.have_occurs)
-	p->indexes++;
     }
+
+  /* count the number of indexes needed */
+  if (p->parent)
+    p->indexes = p->parent->indexes;
+  if (p->f.have_occurs)
+    p->indexes++;
 }
 
 static void
@@ -3317,7 +3340,7 @@ resolve_predefined_name (cobc_tree x)
       p = lookup_qualified_word (w, COBC_FIELD (name));
       if (!p)
 	{
-	  yyerror ("`%s' undefined in `%s'", w->name, tree_to_string (name));
+	  undefined_error (w, name);
 	  return NULL;
 	}
       name = p->item;
@@ -3455,12 +3478,55 @@ make_opt_cond (cobc_tree last, int type, cobc_tree this)
   return make_cond (COND_LEFT (last), type, this);
 }
 
+static cobc_tree
+make_cond_name (cobc_tree x)
+{
+  struct cobc_list *l;
+  cobc_tree cond = NULL;
+  cobc_tree parent = COBC_TREE (COBC_FIELD (x)->parent);
+  if (COBC_SUBREF_P (x))
+    parent = make_subref (parent, COBC_SUBREF (x)->subs);
+  for (l = COBC_FIELD (x)->values; l; l = l->next)
+    {
+      cobc_tree c;
+      if (COBC_PAIR_P (l->item))
+	{
+	  /* VALUE THRU VALUE */
+	  struct cobc_pair *p = COBC_PAIR (l->item);
+	  c = make_cond (make_cond (p->x, COBC_COND_LE, parent),
+			 COBC_COND_AND,
+			 make_cond (parent, COBC_COND_LE, p->y));
+	}
+      else
+	{
+	  /* VALUE */
+	  c = make_cond (parent, COBC_COND_EQ, l->item);
+	}
+      if (!cond)
+	cond = c;
+      else
+	cond = make_cond (cond, COBC_COND_OR, c);
+    }
+  if (!cond)
+    cond = make_cond (cobc_int0, COBC_COND_EQ, cobc_int0);
+  return cond;
+}
+
 static void
 redefinition_error (cobc_tree x)
 {
   struct cobc_field *p = COBC_FIELD (x);
   yyerror ("redefinition of `%s'", p->word->name);
   yyerror_loc (&x->loc, "`%s' previously defined here", p->word->name);
+}
+
+static void
+undefined_error (struct cobc_word *w, cobc_tree parent)
+{
+  if (parent)
+    yyerror ("`%s' undefined in `%s'", w->name, tree_to_string (parent));
+  else
+    yyerror ("`%s' undefined", w->name);
 }
 
 static void

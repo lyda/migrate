@@ -20,27 +20,30 @@
 #ifndef _TREE_H_
 #define _TREE_H_
 
-#define cobc_tag_const		0
-#define cobc_tag_integer	1
-#define cobc_tag_index		2
-#define cobc_tag_literal	8
-#define cobc_tag_field		9
-#define cobc_tag_subref		10
-#define cobc_tag_refmod		11
-#define cobc_tag_expr		12
-#define cobc_tag_cond		13
-#define cobc_tag_pair		14
-#define cobc_tag_file_name	15
-#define cobc_tag_label_name	16
-#define cobc_tag_call		17
-#define cobc_tag_sequence	18
-#define cobc_tag_perform	19
-#define cobc_tag_assign		20
-#define cobc_tag_register	21
-#define cobc_tag_if		22
-#define cobc_tag_evaluate	23
-#define cobc_tag_predefined	24
-#define cobc_tag_class		25
+enum cobc_tag {
+  cobc_tag_const,
+  cobc_tag_integer,
+  cobc_tag_index,
+  cobc_tag_literal,
+  cobc_tag_field,
+  cobc_tag_subref,
+  cobc_tag_refmod,
+  cobc_tag_expr,
+  cobc_tag_cond,
+  cobc_tag_pair,
+  cobc_tag_file_name,
+  cobc_tag_label_name,
+  cobc_tag_call,
+  cobc_tag_sequence,
+  cobc_tag_perform,
+  cobc_tag_assign,
+  cobc_tag_register,
+  cobc_tag_if,
+  cobc_tag_evaluate,
+  cobc_tag_predefined,
+  cobc_tag_class,
+  cobc_tag_builtin,
+};
 
 #define USAGE_DISPLAY	'9'
 #define USAGE_BINARY	'B'
@@ -130,6 +133,7 @@ extern cobc_tree cobc_param;
 extern cobc_tree cobc_status;
 extern cobc_tree cobc_int0;
 extern cobc_tree cobc_int1;
+extern cobc_tree cobc_switch[];
 
 struct cobc_const {
   struct cobc_tree_common common;
@@ -140,6 +144,21 @@ struct cobc_const {
 #define COBC_CONST_P(x)		(COBC_TREE_TAG (x) == cobc_tag_const)
 
 extern void init_constants (void);
+
+
+/*
+ * Builtin
+ */
+
+struct cobc_builtin {
+  struct cobc_tree_common common;
+  int id;
+};
+
+#define COBC_BUILTIN(x)		(COBC_TREE_CAST (cobc_tag_builtin, struct cobc_builtin, x))
+#define COBC_BUILTIN_P(x)	(COBC_TREE_TAG (x) == cobc_tag_builtin)
+
+extern cobc_tree make_builtin (int id);
 
 
 /*
@@ -225,8 +244,8 @@ struct cobc_field {
   char *cname;			/* the name used in C files */
   cobc_tree file;		/* file name associated in FD section */
   cobc_tree value;		/* VALUE */
-  cobc_tree cond;		/* condition for level 88 item */
   struct cobc_word *word;	/* the word of this field */
+  struct cobc_list *values;	/* VALUES used by level 88 item */
   struct cobc_list *index_list;	/* INDEXED BY */
   struct cobc_field *parent;	/* upper level field (NULL for 01 fields) */
   struct cobc_field *children;	/* top of lower level fields */
