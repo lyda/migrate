@@ -2417,6 +2417,13 @@ gen_add (cob_tree n1, cob_tree n2, int rnd)
   assign_expr (n2, rnd);
 }
 
+void
+gen_add_int (cob_tree x, int n)
+{
+  push_immed (n);
+  asm_call_1 ("cob_add_int", x);
+}
+
 static void
 gen_add_to_1 (cob_tree var, cob_tree_list nums)
 {
@@ -3011,14 +3018,10 @@ gen_SearchLoopCheck (unsigned long lbl5, cob_tree syidx, cob_tree sytbl)
   cob_tree x, idx;
   char tblmax[21];
 
-  strcpy (tblmax, "1");
-  x = install_literal (tblmax);
-  save_literal (x, '9');
-
   idx = determine_table_index_name (sytbl);
-  gen_add (x, idx, 0);
+  gen_add_int (idx, 1);
   if (syidx && syidx != idx)
-    gen_add (x, syidx, 0);
+    gen_add_int (syidx, 1);
 
   sprintf (tblmax, "%d", sytbl->times);
   x = install_literal (tblmax);
