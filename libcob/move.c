@@ -488,20 +488,6 @@ cob_move_alphanum_to_edited (struct cob_field f1, struct cob_field f2)
 }
 
 
-static int
-picCompDecimals (char *pic)
-{
-  int decimals = -1;
-  for (; *pic; pic += 2)
-    {
-      if (*pic == 'V' || *pic == '.')
-	decimals = 0;
-      else if (decimals >= 0)
-	decimals += pic[1];
-    }
-  return (decimals < 0) ? 0 : decimals;
-}
-
 static void
 indirect_move (void (*move_func) (struct cob_field f1, struct cob_field f2),
 	       struct cob_field f1, struct cob_field f2, char *pic)

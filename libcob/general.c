@@ -277,6 +277,20 @@ picCompLength (const char *pic)
   return len;
 }
 
+int
+picCompDecimals (const char *pic)
+{
+  int decimals = -1;
+  for (; *pic; pic += 2)
+    {
+      if (*pic == 'V' || *pic == '.')
+	decimals = 0;
+      else if (decimals >= 0)
+	decimals += pic[1];
+    }
+  return (decimals < 0) ? 0 : decimals;
+}
+
 
 void
 _DUMP_ (unsigned char *caData, char *szCount, char *caOut)

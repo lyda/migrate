@@ -384,15 +384,17 @@ void
 cob_set (struct cob_field f, int round)
 {
   decimal d = COB_DECIMAL (POP ());
+  int decimals = (f.desc->type != 'E') ?
+    f.desc->decimals : picCompDecimals (f.desc->pic);
 
   /* Append or truncate decimal digits */
-  if (round && f.desc->decimals < d->decimals)
+  if (round && decimals < d->decimals)
     {
       /* with rounding */
       int sign = mpz_sgn (d->number);
       if (sign != 0)
 	{
-	  shift_decimal (d, f.desc->decimals - d->decimals + 1);
+	  shift_decimal (d, decimals - d->decimals + 1);
 	  if (sign > 0)
 	    mpz_add_ui (d->number, d->number, 5);
 	  else
@@ -403,7 +405,7 @@ cob_set (struct cob_field f, int round)
   else
     {
       /* without rounding */
-      shift_decimal (d, f.desc->decimals - d->decimals);
+      shift_decimal (d, decimals - d->decimals);
     }
 
   /* Store number */
@@ -459,31 +461,45 @@ cob_set (struct cob_field f, int round)
 	char *p, buff[32];
 	int size;
 	int sign = (mpz_sgn (d->number) >= 0) ? 0 : 1;
-	mpz_abs (d->number, d->number);
 
 	/* Build string */
+	mpz_abs (d->number, d->number);
 	size = mpz_sizeinbase (d->number, 10);
 	p = (size < 32) ? buff : alloca (size + 1);
 	mpz_get_str (p, 10, d->number);
 	size = strlen (p);
 
-	/* Copy string */
-	if (f.desc->len == size)
-	  memcpy (f.data, p, size);
-	else if (f.desc->len > size)
+	if (f.desc->type == '9')
 	  {
-	    int pre = f.desc->len - size;
-	    memset (f.data, '0', pre);
-	    memcpy (f.data + pre, p, size);
+	    if (f.desc->len == size)
+	      memcpy (f.data, p, size);
+	    else if (f.desc->len > size)
+	      {
+		int pre = f.desc->len - size;
+		memset (f.data, '0', pre);
+		memcpy (f.data + pre, p, size);
+	      }
+	    else
+	      goto overflow;
+
+	    put_sign (f.desc, f.data, sign);
 	  }
 	else
-	  goto overflow;
-
-	put_sign (f.desc, f.data, sign);
+	  {
+	    struct fld_desc desc = {size, '9', decimals, 0, 0, 0, 0, 0, 0};
+	    unsigned char pic[10];
+	    if (decimals > 0)
+	      sprintf (pic, "S\0019%cV\0019%c",
+		       (char) (size - decimals), (char) decimals);
+	    else
+	      sprintf (pic, "S\0019%c", (char) size);
+	    desc.pic = pic;
+	    put_sign (&desc, buff, sign);
+	    cob_move ((struct cob_field) {&desc, buff}, f);
+	  }
 	return;
       }
     }
-  return;
 
  overflow:
   cob_status = COB_STATUS_OVERFLOW;

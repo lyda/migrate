@@ -169,6 +169,7 @@ extern long long cob_exp10[19];
 extern int extract_sign (struct fld_desc *f, char *s);
 extern void put_sign (struct fld_desc *f, char *s, int sign);
 extern int picCompLength (const char *pic);
+extern int picCompDecimals (const char *pic);
 
 extern void cob_move (struct cob_field f1, struct cob_field f2);
 extern void cob_move_2 (struct fld_desc *f1, char *s1, struct fld_desc *f2, char *s2);
