@@ -166,9 +166,9 @@ extern int yyparse (void);
 
 /* error.c */
 extern void cb_warning (const char *fmt, ...)
-     __attribute__ ((format (printf, 1, 2)));
+     __attribute__ ((__format__ (__printf__, 1, 2)));
 extern void cb_error (const char *fmt, ...)
-     __attribute__ ((format (printf, 1, 2)));
+     __attribute__ ((__format__ (__printf__, 1, 2)));
 extern int cb_verify (enum cb_support tag, const char *feature);
 
 #endif /* CB_COBC_H */

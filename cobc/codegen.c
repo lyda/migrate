@@ -32,11 +32,11 @@
 static int param_id = 0;
 
 static void output (const char *fmt, ...)
-     __attribute__ ((format (printf, 1, 2)));
+     __attribute__ ((__format__ (__printf__, 1, 2)));
 static void output_line (const char *fmt, ...)
-     __attribute__ ((format (printf, 1, 2)));
+     __attribute__ ((__format__ (__printf__, 1, 2)));
 static void output_storage (const char *fmt, ...)
-     __attribute__ ((format (printf, 1, 2)));
+     __attribute__ ((__format__ (__printf__, 1, 2)));
 
 static void output_stmt (cb_tree x);
 static void output_integer (cb_tree x);
@@ -168,7 +168,7 @@ output_base (struct cb_field *f)
       output_storage ("unsigned char %s%s[%d]",
 		      CB_PREFIX_BASE, f01->cname, f01->memory_size);
       if (cb_field_need_aligned (f01))
-	output_storage (" __attribute__ ((aligned))");
+	output_storage (" __attribute__ ((__aligned__))");
       output_storage (";\n");
       f01->flag_base = 1;
     }
