@@ -87,21 +87,6 @@ field_name (cobc_tree x)
   return name;
 }
 
-static char
-get_type (struct cobc_field *p)
-{
-  switch (p->usage)
-    {
-    case COBC_USAGE_BINARY:
-    case COBC_USAGE_INDEX:
-      return COB_TYPE_NUMERIC_BINARY;
-    case COBC_USAGE_PACKED:
-      return COB_TYPE_NUMERIC_PACKED;
-    default:
-      return p->pic->category;
-    }
-}
-
 
 /*
  * Output routine
@@ -815,15 +800,6 @@ output_exit_program (void)
  * MOVE
  */
 
-static int
-category (cobc_tree x)
-{
-  if (field (x)->pic)
-    return field (x)->pic->category;
-  else
-    return COB_TYPE_ALPHANUMERIC;
-}
-
 static void
 output_advance_move (cob_field *f, cobc_tree dst)
 {
@@ -832,21 +808,12 @@ output_advance_move (cob_field *f, cobc_tree dst)
   unsigned char data[p->size];
   cob_field fld = {p->size, data, &attr};
 
-  if (p->children || p->rename_thru
-      || (p->level == 66 && p->redefines->children))
+  attr.type = COBC_TREE_TYPE (dst);
+  attr.flags = 0;
+  if (attr.type != COB_TYPE_GROUP)
     {
-      attr.type = COB_TYPE_GROUP;
-      attr.flags = 0;
-    }
-  else
-    {
-      if (COBC_REFERENCE_P (dst) && COBC_REFERENCE (dst)->offset)
-	attr.type = COB_TYPE_ALPHANUMERIC;
-      else
-	attr.type = get_type (p);
       attr.digits = p->pic->digits;
       attr.expt = p->pic->expt;
-      attr.flags = 0;
       if (p->pic->have_sign)
 	attr.flags |= COB_FLAG_HAVE_SIGN;
       if (p->flag_sign_separate)
@@ -897,7 +864,7 @@ output_move_all (cobc_tree x, char c)
 static void
 output_move_space (cobc_tree x)
 {
-  switch (category (x))
+  switch (COBC_TREE_TYPE (x))
     {
     case COB_TYPE_NUMERIC:
     case COB_TYPE_ALPHABETIC:
@@ -913,7 +880,7 @@ output_move_space (cobc_tree x)
 static void
 output_move_zero (cobc_tree x)
 {
-  switch (category (x))
+  switch (COBC_TREE_TYPE (x))
     {
     case COB_TYPE_NUMERIC:
       if (field (x)->flag_blank_zero)
@@ -934,7 +901,7 @@ output_move_zero (cobc_tree x)
 static void
 output_move_high (cobc_tree x)
 {
-  switch (category (x))
+  switch (COBC_TREE_TYPE (x))
     {
     case COB_TYPE_NUMERIC:
       output_move_num (x, 9);
@@ -952,7 +919,7 @@ output_move_high (cobc_tree x)
 static void
 output_move_low (cobc_tree x)
 {
-  switch (category (x))
+  switch (COBC_TREE_TYPE (x))
     {
     case COB_TYPE_NUMERIC:
       output_move_num (x, 0);
@@ -970,7 +937,7 @@ output_move_low (cobc_tree x)
 static void
 output_move_quote (cobc_tree x)
 {
-  switch (category (x))
+  switch (COBC_TREE_TYPE (x))
     {
     case COB_TYPE_NUMERIC:
     case COB_TYPE_ALPHABETIC:
@@ -1078,19 +1045,11 @@ field_uniform_class (struct cobc_field *f)
     }
   else
     {
-      switch (f->pic->category)
+      switch (COBC_TREE_TYPE (f))
 	{
 	case COB_TYPE_NUMERIC:
-	  switch (f->usage)
-	    {
-	    case COBC_USAGE_DISPLAY:
-	      return COB_TYPE_NUMERIC;
-	    case COBC_USAGE_BINARY:
-	    case COBC_USAGE_INDEX:
-	      return COB_TYPE_NUMERIC_BINARY;
-	    default:
-	      return COB_TYPE_UNKNOWN;
-	    }
+	case COB_TYPE_NUMERIC_BINARY:
+	  return COBC_TREE_TYPE (f);
 	case COB_TYPE_ALPHABETIC:
 	case COB_TYPE_ALPHANUMERIC:
 	  return COB_TYPE_ALPHANUMERIC;
@@ -1137,7 +1096,7 @@ static void
 output_initialize_compound (struct cobc_field *f)
 {
   cobc_tree x = COBC_TREE (f);
-  switch (category (x))
+  switch (COBC_TREE_TYPE (x))
     {
     case COB_TYPE_NUMERIC_EDITED:
       output_move_zero (x);
@@ -1166,8 +1125,8 @@ output_initialize_internal (struct cobc_field *f)
       int class = field_uniform_class (p);
       if (class == COB_TYPE_UNKNOWN || class != last_class)
 	{
-	  /* if not, or if this child is in a different category,
-	     initialize the last uniform sequence */
+	  /* if not, or if this child's category is different from
+	     the previous one, initialize the last uniform sequence */
 	  if (first_field && last_class != COB_TYPE_ALPHANUMERIC)
 	    output_initialize_uniform (first_field, last_class,
 				       p->offset - first_field->offset, 1);
@@ -1805,14 +1764,13 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
     gen_filler = !COBC_FILLER_P (COBC_TREE (p));
 
   /* attribute */
-  if (p->children || p->rename_thru
-      || (p->level == 66 && p->redefines->children))
+  if (COBC_TREE_TYPE (p) == COB_TYPE_GROUP)
     {
       attr = "cob_group_attr";
     }
   else if (p->flag_used && gen_filler)
     {
-      char type = get_type (p);
+      char type = COBC_TREE_TYPE (p);
       if (type == COB_TYPE_ALPHANUMERIC)
 	{
 	  if (p->flag_justified)

@@ -95,8 +95,9 @@ enum cobc_tag {
 
 struct cobc_tree_common {
   enum cobc_tag tag;
-  char class;			/* A,9,X,N,1 */
-  char *source_file;
+  char class;
+  char type;
+  unsigned char *source_file;
   int source_line;
 };
 
@@ -105,6 +106,7 @@ typedef struct cobc_tree_common *cobc_tree;
 #define COBC_TREE(x)		((struct cobc_tree_common *) (x))
 #define COBC_TREE_TAG(x)	(COBC_TREE (x)->tag)
 #define COBC_TREE_CLASS(x)	(COBC_TREE (x)->class)
+#define COBC_TREE_TYPE(x)	(COBC_TREE (x)->type)
 
 #ifdef COB_DEBUG
 #define COBC_TREE_CAST(tg,ty,x)						\

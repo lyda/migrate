@@ -603,6 +603,7 @@ setup_parameters (struct cobc_field *p)
     {
       /* group field */
       COBC_TREE_CLASS (p) = COB_TYPE_ALPHANUMERIC;
+      COBC_TREE_TYPE (p) = COB_TYPE_GROUP;
 
       for (p = p->children; p; p = p->sister)
 	setup_parameters (p);
@@ -610,37 +611,53 @@ setup_parameters (struct cobc_field *p)
   else if (p->level == 66)
     {
       COBC_TREE_CLASS (p) = COBC_TREE_CLASS (p->redefines);
+      COBC_TREE_TYPE (p) = COBC_TREE_TYPE (p->redefines);
+      if (p->rename_thru)
+	COBC_TREE_TYPE (p) = COB_TYPE_GROUP;
     }
   else
     {
       /* regular field */
       if (p->usage == COBC_USAGE_INDEX)
+	p->pic = yylex_picture ("S9(9)");
+
+      /* set class */
+      switch (p->pic->category)
 	{
+	case COB_TYPE_ALPHABETIC:
+	  COBC_TREE_CLASS (p) = COB_TYPE_ALPHABETIC;
+	  break;
+	case COB_TYPE_NUMERIC:
 	  COBC_TREE_CLASS (p) = COB_TYPE_NUMERIC;
-	  p->pic = yylex_picture ("S9(9)");
+	  break;
+	case COB_TYPE_NUMERIC_EDITED:
+	case COB_TYPE_ALPHANUMERIC:
+	case COB_TYPE_ALPHANUMERIC_EDITED:
+	  COBC_TREE_CLASS (p) = COB_TYPE_ALPHANUMERIC;
+	  break;
+	case COB_TYPE_NATIONAL:
+	case COB_TYPE_NATIONAL_EDITED:
+	  COBC_TREE_CLASS (p) = COB_TYPE_NATIONAL;
+	  break;
+	case COB_TYPE_BOOLEAN:
+	  COBC_TREE_CLASS (p) = COB_TYPE_BOOLEAN;
+	  break;
 	}
-      else
-	switch (p->pic->category)
-	  {
-	  case COB_TYPE_ALPHABETIC:
-	    COBC_TREE_CLASS (p) = COB_TYPE_ALPHABETIC;
-	    break;
-	  case COB_TYPE_NUMERIC:
-	    COBC_TREE_CLASS (p) = COB_TYPE_NUMERIC;
-	    break;
-	  case COB_TYPE_NUMERIC_EDITED:
-	  case COB_TYPE_ALPHANUMERIC:
-	  case COB_TYPE_ALPHANUMERIC_EDITED:
-	    COBC_TREE_CLASS (p) = COB_TYPE_ALPHANUMERIC;
-	    break;
-	  case COB_TYPE_NATIONAL:
-	  case COB_TYPE_NATIONAL_EDITED:
-	    COBC_TREE_CLASS (p) = COB_TYPE_NATIONAL;
-	    break;
-	  case COB_TYPE_BOOLEAN:
-	    COBC_TREE_CLASS (p) = COB_TYPE_BOOLEAN;
-	    break;
-	  }
+
+      /* set type */
+      switch (p->usage)
+	{
+	case COBC_USAGE_BINARY:
+	case COBC_USAGE_INDEX:
+	  COBC_TREE_TYPE (p) = COB_TYPE_NUMERIC_BINARY;
+	  break;
+	case COBC_USAGE_PACKED:
+	  COBC_TREE_TYPE (p) = COB_TYPE_NUMERIC_PACKED;
+	  break;
+	default:
+	  COBC_TREE_TYPE (p) = p->pic->category;
+	  break;
+	}
     }
 }
 
@@ -797,7 +814,17 @@ void
 set_value (cobc_tree ref, cobc_tree value)
 {
   COBC_REFERENCE (ref)->value = value;
-  COBC_TREE_CLASS (ref) = COBC_TREE_CLASS (value);
+  if (COBC_REFERENCE (ref)->offset
+      && COBC_TREE_CLASS (value) != COB_TYPE_NUMERIC)
+    {
+      COBC_TREE_CLASS (ref) = COB_TYPE_ALPHANUMERIC;
+      COBC_TREE_TYPE (ref) = COB_TYPE_ALPHANUMERIC;
+    }
+  else
+    {
+      COBC_TREE_CLASS (ref) = COBC_TREE_CLASS (value);
+      COBC_TREE_TYPE (ref) = COBC_TREE_TYPE (value);
+    }
 }
 
 cobc_tree
