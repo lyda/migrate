@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 533
+%expect 532
 
 %{
 #define yydebug		cob_trace_parser
@@ -635,7 +635,7 @@ opt_of:
         ;
 opt_report_pic:
         /* nothing */
-        | pictures
+        | picture_clause
         ;
 opt_report_column:
         COLUMN opt_number integer
@@ -696,7 +696,7 @@ screen_clauses:
         screen_source_destination
     | screen_clauses
         VALUE opt_is gliteral   { curr_field->value = $4; $$=$1; }
-    | screen_clauses pictures
+    | screen_clauses picture_clause
     | /* nothing */             { $$ = alloc_scr_info(); }
     ;
 screen_source_destination:
@@ -861,7 +861,7 @@ data_clauses:
 
 data_clause:
     array_options
-    | pictures
+    | picture_clause
     | usage_option
     | sign_clause       { set_sign_flags($1); }
     | value_option
@@ -943,71 +943,82 @@ index_name_list:
           define_implicit_field($2,$<sval>-2,curr_field->times);
          }  
         ;
-pictures :  PIC { 
-            curr_division = CDIV_PIC;
-            /* first pic char found */
-            picix=piccnt=v_flag=decimals=0;
-            picture[picix]=0;
-         }
-        opt_is picture {
-            /* finish picture */
-            picture[picix+2]=0;
-            curr_field->decimals=decimals;
-         }
+picture_clause:
+    PIC {
+      curr_division = CDIV_PIC;
+      picix=piccnt=v_flag=decimals=0;
+      picture[picix]=0;
+    }
+    opt_is picture_spec {
+      picture[picix+2]=0;
+      curr_field->decimals=decimals;
+    }
+    ;
+picture_spec:
+    picture_element
+    | picture_spec picture_element
+    ;
+picture_element:
+      CHAR              { if (!save_pic_char ($1, 1)) YYERROR; }
+    | CHAR MULTIPLIER   { if (!save_pic_char ($1, $2)) YYERROR; }
     ;
 
 usage_option :
-    opt_USAGE opt_is usage {
-            switch ($3) {
-                case USAGE_COMP1:
-                        curr_field->len = 4;
-                        curr_field->decimals=7;
-                        curr_field->type='U';
-                        curr_field->sign=1;
-                        strcpy(picture,"S\x01\x39\x07\x56\x01\x39\x07"); /* default picture is 14 (max=7->7.7) digits */
-                        break;
-                case USAGE_COMP2:
-                        curr_field->len = 8;
-                        curr_field->decimals=15;
-                        curr_field->type='U';
-                        curr_field->sign=1;
-                        strcpy(picture,"S\x01\x39\x0f\x56\x01\x39\x0f"); /* default picture is 30 (max=15->15.15) digits*/
-                        break;
-                case COMP3:
-                        /*curr_field->len = (piccnt/2)+1;*/
-                        curr_field->type='C';
-                        break;
-                case COMP: 
-                        /* field length computed by query_comp_length() */
-                        curr_field->len = 0;
-                        curr_field->type='B'; /* binary field */
-                        break;
-                /*case 10: POINTER*/ 
-                case USAGE_POINTER: /*POINTER*/ 
-                        curr_field->len=4;
-                        curr_field->decimals=0;
-                        curr_field->type='B'; /* pointers are binary fields */
-                        strcpy(picture,"9\xa"); /* pointer default picture */
-                        curr_field->flags.is_pointer=1;
-                        break;
-                case USAGE_BINARY_CHAR:
-                        curr_field->len = 1;
-                        curr_field->type='B'; 
-                        break; 
-                case USAGE_BINARY_SHORT:
-                        curr_field->len = 2;
-                        curr_field->type='B'; 
-                        break; 
-                case USAGE_BINARY_LONG:
-                        curr_field->len = 4;
-                        curr_field->type='B'; 
-                        break; 
-                case USAGE_BINARY_DOUBLE:
-                        curr_field->len = 8;
-                        curr_field->type='B'; 
-                        break; 
-            }
-        }
+    opt_USAGE opt_is usage
+    {
+      switch ($3)
+	{
+	case USAGE_COMP1:
+	  curr_field->len = 4;
+	  curr_field->decimals=7;
+	  curr_field->type='U';
+	  curr_field->sign=1;
+	  /* default picture is 14 (max=7->7.7) digits */
+	  strcpy(picture,"S\x01\x39\x07\x56\x01\x39\x07");
+	  break;
+	case USAGE_COMP2:
+	  curr_field->len = 8;
+	  curr_field->decimals=15;
+	  curr_field->type='U';
+	  curr_field->sign=1;
+	  /* default picture is 30 (max=15->15.15) digits*/
+	  strcpy(picture,"S\x01\x39\x0f\x56\x01\x39\x0f");
+	  break;
+	case COMP3:
+	  /*curr_field->len = (piccnt/2)+1;*/
+	  curr_field->type='C';
+	  break;
+	case COMP: 
+	  /* field length computed by query_comp_length() */
+	  curr_field->len = 0;
+	  curr_field->type='B'; /* binary field */
+	  break;
+	  /*case 10: POINTER*/ 
+	case USAGE_POINTER: /*POINTER*/ 
+	  curr_field->len=4;
+	  curr_field->decimals=0;
+	  curr_field->type='B'; /* pointers are binary fields */
+	  strcpy(picture,"9\xa"); /* pointer default picture */
+	  curr_field->flags.is_pointer=1;
+	  break;
+	case USAGE_BINARY_CHAR:
+	  curr_field->len = 1;
+	  curr_field->type='B'; 
+	  break; 
+	case USAGE_BINARY_SHORT:
+	  curr_field->len = 2;
+	  curr_field->type='B'; 
+	  break; 
+	case USAGE_BINARY_LONG:
+	  curr_field->len = 4;
+	  curr_field->type='B'; 
+	  break; 
+	case USAGE_BINARY_DOUBLE:
+	  curr_field->len = 8;
+	  curr_field->type='B'; 
+	  break; 
+	}
+    }
     ;
 
 value_option:  VALUE opt_is_are value_list
@@ -1020,14 +1031,6 @@ value_list:
 value:
     gliteral                    { set_variable_values($1,$1); }
     | gliteral THRU gliteral    { set_variable_values($1,$3); }
-    ;
-picture:
-    /* nothing */
-    | picture pic_elem 
-    ;
-pic_elem:
-      CHAR              { if (!save_pic_char ($1, 1)) YYERROR; }
-    | CHAR MULTIPLIER   { if (!save_pic_char ($1, $2)) YYERROR; }
     ;
 
 file_attrib:
