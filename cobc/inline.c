@@ -287,6 +287,16 @@ output_move_literal (cobc_tree src, cobc_tree dst)
 }
 
 static void
+output_move_index (cobc_tree src, cobc_tree dst)
+{
+  output_prefix ();
+  output_index (dst);
+  output (" = ");
+  output_index (src);
+  output (";\n");
+}
+
+static void
 output_move (cobc_tree src, cobc_tree dst)
 {
   if (src == cobc_zero)
@@ -299,6 +309,10 @@ output_move (cobc_tree src, cobc_tree dst)
     output_move_low (dst);
   else if (src == cobc_quote)
     output_move_quote (dst);
+  else if (src == cobc_return_code)
+    output_call_2 ("cob_set_int", dst, src);
+  else if (src == cobc_true || src == cobc_false)
+    output_move_index (src, dst);
   else if (COBC_LITERAL_P (src))
     {
       if (COBC_LITERAL (src)->all)
@@ -306,34 +320,16 @@ output_move (cobc_tree src, cobc_tree dst)
       else
 	output_move_literal (src, dst);
     }
-  else if (src == cobc_true || src == cobc_false)
-    {
-      output_prefix ();
-      output_index (dst);
-      output (" = ");
-      output_index (src);
-      output (";\n");
-    }
   else
     {
       struct cobc_field *srcp = COBC_FIELD (src);
       struct cobc_field *dstp = COBC_FIELD (dst);
       if (dstp->usage == COBC_USAGE_INDEX)
-	{
-	  output_prefix ();
-	  output_index (dst);
-	  output (" = ");
-	  output_index (src);
-	  output (";\n");
-	}
+	output_move_index (src, dst);
       else if (srcp->usage == COBC_USAGE_INDEX)
-	{
-	  output_call_2 ("cob_set_int", dst, make_index (src));
-	}
+	output_call_2 ("cob_set_int", dst, make_index (src));
       else
-	{
-	  output_call_2 ("cob_move", src, dst);
-	}
+	output_call_2 ("cob_move", src, dst);
     }
 }
 
@@ -731,7 +727,7 @@ output_search_all (cobc_tree table, cobc_tree sentence, cobc_tree when)
  */
 
 static void
-output_call_statement (cobc_tree name, struct cobc_list *args, cobc_tree ret)
+output_call_statement (cobc_tree name, struct cobc_list *args)
 {
   int static_link = 0;
   struct cobc_list *l;
@@ -832,15 +828,5 @@ output_call_statement (cobc_tree name, struct cobc_list *args, cobc_tree ret)
     }
   output (");\n");
   output_line ("init_environment ();");
-
-  /* return value */
-  if (ret)
-    {
-      output_prefix ();
-      output ("cob_set_int (");
-      output_tree (ret);
-      output (", cob_return_code);\n");
-    }
-
   output_indent ("}", -2);
 }

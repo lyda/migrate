@@ -259,6 +259,7 @@ cobc_tree cobc_high;
 cobc_tree cobc_quote;
 cobc_tree cobc_dt;
 cobc_tree cobc_status;
+cobc_tree cobc_return_code;
 cobc_tree cobc_switch[8];
 cobc_tree cobc_int0;
 cobc_tree cobc_int1;
@@ -289,19 +290,20 @@ void
 init_constants (void)
 {
   int i;
-  cobc_any       = make_constant (COB_VOID, 0);
-  cobc_true      = make_constant (COB_BOOLEAN, "1");
-  cobc_false     = make_constant (COB_BOOLEAN, "0");
-  cobc_dt        = make_constant (COB_NUMERIC, "cob_dt");
-  cobc_status    = make_constant (COB_NUMERIC, "cob_status");
-  cobc_zero      = make_constant (COB_NUMERIC, "cob_zero");
-  cobc_space     = make_constant (COB_ALPHANUMERIC, "cob_space");
-  cobc_low       = make_constant (COB_ALPHANUMERIC, "cob_low");
-  cobc_high      = make_constant (COB_ALPHANUMERIC, "cob_high");
-  cobc_quote     = make_constant (COB_ALPHANUMERIC, "cob_quote");
-  cobc_int0      = make_integer (0);
-  cobc_int1      = make_integer (1);
-  cobc_int2      = make_integer (2);
+  cobc_any         = make_constant (COB_VOID, 0);
+  cobc_true        = make_constant (COB_BOOLEAN, "1");
+  cobc_false       = make_constant (COB_BOOLEAN, "0");
+  cobc_dt          = make_constant (COB_NUMERIC, "cob_dt");
+  cobc_status      = make_constant (COB_NUMERIC, "cob_status");
+  cobc_return_code = make_constant (COB_NUMERIC, "cob_retrun_code");
+  cobc_zero        = make_constant (COB_NUMERIC, "cob_zero");
+  cobc_space       = make_constant (COB_ALPHANUMERIC, "cob_space");
+  cobc_low         = make_constant (COB_ALPHANUMERIC, "cob_low");
+  cobc_high        = make_constant (COB_ALPHANUMERIC, "cob_high");
+  cobc_quote       = make_constant (COB_ALPHANUMERIC, "cob_quote");
+  cobc_int0        = make_integer (0);
+  cobc_int1        = make_integer (1);
+  cobc_int2        = make_integer (2);
   for (i = 0; i < 8; i++)
     {
       char buff[16];

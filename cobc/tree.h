@@ -136,6 +136,7 @@ extern cobc_tree cobc_high;
 extern cobc_tree cobc_quote;
 extern cobc_tree cobc_dt;
 extern cobc_tree cobc_status;
+extern cobc_tree cobc_return_code;
 extern cobc_tree cobc_switch[];
 extern cobc_tree cobc_int0;
 extern cobc_tree cobc_int1;

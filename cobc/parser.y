@@ -215,7 +215,7 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %type <list> special_name_class_item_list
 %type <tree> special_name_class_item,special_name_class_literal
 %type <tree> on_or_off,record_depending
-%type <tree> call_returning,add_to,field_description_list,value_item
+%type <tree> add_to,field_description_list,value_item
 %type <tree> field_description_list_1,field_description_list_2
 %type <tree> condition,imperative_statement,field_description
 %type <tree> evaluate_object,evaluate_object_1
@@ -1510,11 +1510,12 @@ _proceed_to: | PROCEED TO ;
 
 call_statement:
   CALL program_name		{ current_call_mode = COBC_CALL_BY_REFERENCE; }
-  call_using call_returning
+  call_using
   {
     cobc_location = @1;
-    push_call_3 (COBC_CALL, $2, $4, $5);
+    push_call_2 (COBC_CALL, $2, $4);
   }
+  call_returning
   opt_on_exception
   _end_call
 ;
@@ -1537,8 +1538,11 @@ call_mode:
 | VALUE				{ current_call_mode = COBC_CALL_BY_VALUE; }
 ;
 call_returning:
-  /* nothing */			{ $$ = NULL; }
-| RETURNING data_name		{ $$ = $2; }
+| RETURNING data_name
+  {
+    cobc_location = @1;
+    push_move (cobc_return_code, $2);
+  }
 ;
 _end_call: | END_CALL ;
 

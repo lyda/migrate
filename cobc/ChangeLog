@@ -1,5 +1,12 @@
 2002-05-31  Keisuke Nishida  <knishida@netlab.jp>
 
+	* tree.c, tree.h (cobc_return_code): New variable.
+	* parser.y (call_returning): Move RETURN-CODE to RETURNING field.
+	* inline.c (output_move_index): New function.
+	(output_call_statement): Don't take ret.
+
+2002-05-31  Keisuke Nishida  <knishida@netlab.jp>
+
 	* codegen.c (output_expr): Give field name to cob_check_numeric.
 	(output_field_definition): No longer output field name.
 
