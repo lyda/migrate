@@ -196,6 +196,7 @@ static struct option long_options[] = {
   {"verbose", no_argument, 0, 'v'},
   {"save-temps", no_argument, &save_temps, 1},
   {"std", required_argument, 0, '$'},
+  {"spec", required_argument, 0, '&'},
   {"target", required_argument, 0, 't'},
   {"debug", no_argument, 0, 'd'},
   {"ext", required_argument, 0, 'e'},
@@ -313,6 +314,14 @@ process_command_line (int argc, char *argv[])
 	  if (cb_load_std (optarg) != 0)
 	    {
 	      fprintf (stderr, _("Invalid option -std=%s\n"), optarg);
+	      exit (1);
+	    }
+	  break;
+
+	case '&': /* -spec */
+	  if (cb_load_spec (optarg) != 0)
+	    {
+	      perror (optarg);
 	      exit (1);
 	    }
 	  break;
