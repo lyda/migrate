@@ -36,6 +36,8 @@
 #include "cobc.h"
 #include "ppparse.h"
 
+static int within_comment = 0;
+
 static struct cb_replacement *current_replacement = NULL;
 
 static struct copy_info {
@@ -87,22 +89,7 @@ static void switch_to_buffer (int lineno, char *filename, struct cb_replacement 
 	  break;
       fputs ("\n", yyout);
 
-      /* skip comments on the following lines */
-      while (1)
-	{
-	  int i;
-	  for (i = 0; i < 7; i++)
-	    fputc (input (), yyout);
-	  if ((c = input ()) != ' ')
-	    {
-	      unput (c);
-	      break;
-	    }
-	  while ((c = input ()) != '\n')
-	    if (c == '\n')
-	      break;
-	  fputs ("\n", yyout);
-	}
+      within_comment = 1;
     }
 }
 
@@ -375,6 +362,15 @@ ppinput_1 (char *buff, int size)
 	last_line = cb_source_line;
       }
       break;
+    }
+
+  /* skip comments following AUTHORS, etc. */
+  if (within_comment)
+    {
+      if (buff[7] == ' ')
+	memset (buff + 6, ' ', n - 7);
+      else
+	within_comment = 0;
     }
 
   /* check the text after cb_text_column */
