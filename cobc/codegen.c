@@ -1607,7 +1607,6 @@ output_tree (cobc_tree x)
       {
 	struct cobc_sequence *p = COBC_SEQUENCE (x);
 	struct cobc_list *l = p->list;
-	output_line_directive (x);
 	output_indent ("{", 2);
 	if (!l)
 	  {
