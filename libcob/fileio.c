@@ -942,7 +942,28 @@ cob_open (cob_file *f, int mode, int flag)
   f->flag_end_of_file = 0;
   f->flag_first_read = 1;
 
+  /* obtain the file name */
   cob_field_to_string (f->assign, filename);
+  if (cob_current_module->flag_filename_mapping)
+    {
+      int i;
+      char *env;
+      char name[FILENAME_MAX];
+      char *prefix[] = {"DD_", "dd_", "", 0};
+
+      /* check environment variables */
+      for (i = 0; prefix[i]; i++)
+	{
+	  sprintf (name, "%s%s", prefix[i], filename);
+	  if ((env = getenv (name)) != NULL)
+	    {
+	      strcpy (filename, env);
+	      break;
+	    }
+	}
+    }
+
+  /* check if the file exists */
   if (stat (filename, &st) == -1 && errno == ENOENT)
     {
       was_not_exist = 1;
@@ -950,6 +971,7 @@ cob_open (cob_file *f, int mode, int flag)
 	RETURN_STATUS (COB_STATUS_35_NOT_EXISTS);
     }
 
+  /* open the file */
   switch (fileio_funcs[(int) f->organization]->open (f, filename, mode, flag))
     {
     case 0:
