@@ -3656,6 +3656,15 @@ data_name_list:
 ;
 data_name:
   value
+  {
+    if (CB_REFERENCE_P ($1) && CB_FIELD_P (CB_REFERENCE ($1)->value))
+      $$ = $1;
+    else
+      {
+	cb_error_x ($1, _("`%s' not identifier"), tree_name ($1));
+	$$ = cb_error_node;
+      }
+  }
 ;
 
 /* Table name */
