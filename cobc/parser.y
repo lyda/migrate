@@ -315,10 +315,20 @@ _end_program:
 identification_division:
   IDENTIFICATION DIVISION dot
   PROGRAM_ID '.' WORD opt_program_parameter dot
-  identification_division_options
   {
+    char *s;
+    int converted = 0;
+    for (s = $6->name; *s; s++)
+      if (*s == '-')
+	{
+	  converted = 1;
+	  *s = '_';
+	}
+    if (converted)
+      yywarn ("PROGRAM-ID is converted to `%s'", $6->name);
     program_spec.program_id = $6->name;
   }
+  identification_division_options
 ;
 opt_program_parameter:
 | _is TOK_INITIAL _program	{ program_spec.initial_program = 1; }
