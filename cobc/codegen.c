@@ -812,12 +812,13 @@ output_perform_once (struct cobc_perform *p)
     {
       output_tree (p->body);
     }
-  else if (cobc_optimize_flag)
+  else
     {
       static int perform_label = 1;
       struct cobc_pair *pair = COBC_PAIR (p->body);
-      struct cobc_label_name *from = COBC_PAIR (pair->x)->x;
-      struct cobc_label_name *until = pair->y ? COBC_PAIR (pair->y)->x : from;
+      struct cobc_label_name *from = COBC_LABEL_NAME (pair->x);
+      struct cobc_label_name *until =
+	pair->y ? COBC_LABEL_NAME (pair->y) : from;
       output_line ("cob_perform (lp%d, lb_%s, le_%s);",
 		   perform_label++, from->cname, until->cname);
     }
@@ -829,19 +830,8 @@ output_perform (struct cobc_perform *p)
   switch (p->type)
     {
     case COBC_PERFORM_EXIT:
-      if (cobc_optimize_flag)
-	{
-	  output_line ("cob_exit_section (le_%s);",
-		       COBC_LABEL_NAME (p->cond)->cname);
-	}
-      else
-	{
-	  if (COBC_LABEL_NAME (p->cond)->parent)
-	    {
-	      output_line ("return 0;");
-	      output_indent ("}\n", -2);
-	    }
-	}
+      output_line ("cob_exit_section (le_%s);",
+		   COBC_LABEL_NAME (p->cond)->cname);
       break;
     case COBC_PERFORM_ONCE:
       output_perform_once (p);
@@ -1107,30 +1097,8 @@ output_tree (cobc_tree x)
     case cobc_tag_label_name:
       {
 	struct cobc_label_name *p = COBC_LABEL_NAME (x);
-	if (cobc_optimize_flag)
-	  {
-	    output_newline ();
-	    output_line ("lb_%s:", p->cname);
-	  }
-	else
-	  {
-	    static int section_init = 0;
-	    if (!p->parent)
-	      {
-		section_init = 1;
-	      }
-	    else if (section_init)
-	      {
-		output_line ("return 0;");
-		output_indent ("}", -2);
-		output_newline ();
-		section_init = 0;
-	      }
-
-	    output_line ("static int");
-	    output_line ("s_%s (void)", p->cname);
-	    output_indent ("{", 2);
-	  }
+	output_newline ();
+	output_line ("lb_%s:", p->cname);
 	break;
       }
     case cobc_tag_expr:
@@ -1292,11 +1260,6 @@ codegen (struct program_spec *spec)
   output_indent ("}", -2);
   output_newline ();
 
-  /* section functions */
-  if (!cobc_optimize_flag)
-    for (l = spec->exec_list; l; l = l->next)
-      output_tree (l->item);
-
   /* main function */
   if (cobc_module_flag)
     {
@@ -1350,13 +1313,10 @@ codegen (struct program_spec *spec)
   output_line ("frame_stack[0].perform_through = COB_INITIAL_LABEL;");
   output_newline ();
 
-  if (cobc_optimize_flag)
-    {
-      output_line ("/* PROCEDURE DIVISION */");
-      for (l = spec->exec_list; l; l = l->next)
-	output_tree (l->item);
-      output_newline ();
-    }
+  output_line ("/* PROCEDURE DIVISION */");
+  for (l = spec->exec_list; l; l = l->next)
+    output_tree (l->item);
+  output_newline ();
 
   output_line ("return 0;");
   output_indent ("}", -2);

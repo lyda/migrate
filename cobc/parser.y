@@ -106,13 +106,14 @@ static void init_field (int level, cobc_tree field);
 static void validate_field (struct cobc_field *p);
 static void validate_field_tree (struct cobc_field *p);
 static void validate_file_name (struct cobc_file_name *p);
-static void validate_label_name (struct cobc_pair *p);
+static void validate_label_name (struct cobc_label_name *p);
 
 static cobc_tree make_add (cobc_tree f1, cobc_tree f2, int round);
 static cobc_tree make_sub (cobc_tree f1, cobc_tree f2, int round);
 static cobc_tree make_move (cobc_tree f1, cobc_tree f2, int round);
 static struct cobc_list *make_corr (cobc_tree (*func)(), struct cobc_field *g1, struct cobc_field *g2, int opt, struct cobc_list *l);
 static cobc_tree make_opt_cond (cobc_tree last, int type, cobc_tree this);
+static void redefinition_error (cobc_tree x);
 %}
 
 %union {
@@ -1210,7 +1211,7 @@ procedure_paragraph:
 
     /* Begin a new paragraph */
     current_paragraph = COBC_LABEL_NAME ($1);
-    current_paragraph->parent = current_section;
+    current_paragraph->section = current_section;
     if (current_section)
       current_section->children =
 	cons (current_paragraph, current_section->children);
@@ -2733,6 +2734,7 @@ mnemonic_name:
 ;
 
 /* Section name */
+
 section_name:
   label_word
   {
@@ -2740,12 +2742,11 @@ section_name:
 	&& (/* used as a non-label name */
 	    !COBC_LABEL_NAME_P ($1->item)
 	    /* used as a section name */
-	    || COBC_LABEL_NAME ($1->item)->parent == NULL
+	    || COBC_LABEL_NAME ($1->item)->section == NULL
 	    /* used as the same paragraph name in the same section */
-	    || COBC_LABEL_NAME ($1->item)->parent == current_section))
+	    || COBC_LABEL_NAME ($1->item)->section == current_section))
       {
-	yyerror ("redefinition of `%s'", $1->name);
-	//yyerror_loc (&$1->loc, "`%s' previously defined here", $1->name);
+	redefinition_error ($1->item);
 	$$ = $1->item;
       }
     else
@@ -2851,12 +2852,13 @@ label_list:
 label_name:
   label_word
   {
-    $$ = make_pair ($1, 0);
+    $$ = make_label_name_nodef ($1, 0);
+    COBC_LABEL_NAME ($$)->section = current_section;
     label_check_list = cons ($$, label_check_list);
   }
 | label_word in_of label_word
   {
-    $$ = make_pair ($1, $3);
+    $$ = make_label_name_nodef ($1, $3);
     label_check_list = cons ($$, label_check_list);
   }
 ;
@@ -2879,10 +2881,7 @@ undefined_word:
   WORD
   {
     if ($1->item)
-      {
-	yyerror ("redefinition of `%s'", $1->name);
-	//yyerror_loc (&$1->loc, "`%s' previously defined here", $1->name);
-      }
+      redefinition_error ($1->item);
     $$ = $1;
   }
 ;
@@ -3097,13 +3096,7 @@ init_field (int level, cobc_tree field)
 	  struct cobc_field *p = last_field->parent;
 	  for (p = p->children; p; p = p->sister)
 	    if (strcasecmp (current_field->word->name, p->word->name) == 0)
-	      {
-		cobc_tree x = COBC_TREE (p);
-		yyerror ("redefinition of `%s' in the same level",
-			 p->word->name);
-		yyerror_loc (&x->loc, "`%s' previously defined here",
-			     p->word->name);
-	      }
+	      redefinition_error (COBC_TREE (p));
 	}
       last_field->sister = current_field;
       current_field->parent = last_field->parent;
@@ -3309,43 +3302,44 @@ validate_file_name (struct cobc_file_name *p)
     l->key = lookup_predefined_word ((struct cobc_list *) l->key);
 }
 
-static void
-validate_label_name (struct cobc_pair *p)
+static const char *
+lookup_label (struct cobc_word *w, struct cobc_label_name *section)
 {
-  if (p->y)
+  for (; w; w = w->link)
+    if (w->item
+	&& COBC_LABEL_NAME_P (w->item)
+	&& section == COBC_LABEL_NAME (w->item)->section)
+      {
+	/* found */
+	return COBC_LABEL_NAME (w->item)->cname;
+      }
+  yyerror ("`%s' not defined in section `%s'",
+	   w->name, section->word->name);
+  return NULL;
+}
+
+static void
+validate_label_name (struct cobc_label_name *p)
+{
+  if (p->in_word)
     {
       /* LABEL IN LABEL */
-      struct cobc_word *w = p->y;
-      if (w->count == 0)
-	yyerror ("no such section `%s'", w->name);
-      else if (!COBC_LABEL_NAME_P (w->item))
-	yyerror ("invalid section name `%s'", w->name);
+      if (p->in_word->count == 0)
+	yyerror ("no such section `%s'", p->in_word->name);
+      else if (!COBC_LABEL_NAME_P (p->in_word->item))
+	yyerror ("invalid section name `%s'", p->in_word->name);
       else
-	{
-	  struct cobc_label_name *parent = COBC_LABEL_NAME (w->item);
-	  for (w = p->x; w; w = w->link)
-	    if (w->item
-		&& COBC_LABEL_NAME_P (w->item)
-		&& parent == COBC_LABEL_NAME (w->item)->parent)
-	      {
-		/* found */
-		p->x = w->item;
-		return;
-	      }
-	  yyerror ("`%s' not defined in section `%s'",
-		   w->name, parent->word->name);
-	}
+	p->cname = lookup_label (p->word, COBC_LABEL_NAME (p->in_word->item));
     }
   else
     {
       /* LABEL */
-      struct cobc_word *w = p->x;
-      if (w->count == 1 && COBC_LABEL_NAME_P (w->item))
-	{
-	  p->x = w->item;
-	  return;
-	}
-      yyerror ("no such section `%s'", w->name);
+      if (p->word->count == 1 && COBC_LABEL_NAME_P (p->word->item))
+	p->cname = COBC_LABEL_NAME (p->word->item)->cname;
+      else if (p->word->count > 0 && p->section)
+	p->cname = lookup_label (p->word, p->section);
+      else
+	yyerror ("no such section `%s'", p->word->name);
     }
 }
 
@@ -3411,6 +3405,14 @@ make_opt_cond (cobc_tree last, int type, cobc_tree this)
   if (type == -1)
     type = COND_TYPE (last);
   return make_cond (COND_LEFT (last), type, this);
+}
+
+static void
+redefinition_error (cobc_tree x)
+{
+  struct cobc_field *p = COBC_FIELD (x);
+  yyerror ("redefinition of `%s'", p->word->name);
+  yyerror_loc (&x->loc, "`%s' previously defined here", p->word->name);
 }
 
 static void

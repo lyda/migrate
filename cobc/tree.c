@@ -529,28 +529,34 @@ make_file_name (struct cobc_word *word)
  */
 
 cobc_tree
-make_label_name (struct cobc_word *word)
+make_label_name_nodef (struct cobc_word *word, struct cobc_word *in_word)
 {
   struct cobc_label_name *p =
     make_tree (cobc_tag_label_name, COB_VOID, sizeof (struct cobc_label_name));
-  p->id = 0;
   p->cname = NULL;
-  p->word = set_word_item (word, COBC_TREE (p));
-  p->parent = NULL;
+  p->word = word;
+  p->in_word = in_word;
+  p->section = NULL;
   p->children = NULL;
   return COBC_TREE (p);
+}
+
+cobc_tree
+make_label_name (struct cobc_word *word)
+{
+  cobc_tree x = make_label_name_nodef (NULL, NULL);
+  COBC_LABEL_NAME (x)->word = set_word_item (word, x);
+  return x;
 }
 
 void
 finalize_label_name (struct cobc_label_name *p)
 {
-  static int label_name_id = 1;
   char name[BUFSIZ] = "";
-  if (p->parent)
-    sprintf (name, "%s$", p->parent->cname);
+  if (p->section)
+    sprintf (name, "%s$", p->section->cname);
   strcat (name, p->word->name);
   p->cname = to_cname (name);
-  p->id = label_name_id++;
 }
 
 

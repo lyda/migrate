@@ -45,7 +45,7 @@ extern int yy_bison_debug;
  */
 
 int cobc_module_flag = 0;
-int cobc_optimize_flag = 1;
+int cobc_optimize_flag = 0;
 int cobc_link_style = LINK_DYNAMIC;
 
 FILE *cobc_out;

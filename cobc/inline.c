@@ -25,12 +25,8 @@
 static void
 output_goto (cobc_tree label)
 {
-  const char *name = COBC_LABEL_NAME (COBC_PAIR (label)->x)->cname;
-  if (cobc_optimize_flag)
-    output_line ("goto lb_%s;", name);
-  else
-    //output_line ("return l_%s;", name);
-    ;
+  const char *name = COBC_LABEL_NAME (label)->cname;
+  output_line ("goto lb_%s;", name);
 }
 
 static void
