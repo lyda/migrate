@@ -462,18 +462,19 @@ static struct cob_fileio_funcs relative_funcs = {
  * INDEXED
  */
 
-#define DB_OPEN(db,name,dbname,flags)				\
-  db->open (db, name, dbname, DB_BTREE, flags, FILE_PERMISSION)
-#define DB_CLOSE(db)						\
-  db->close (db, 0)
 #define DB_PUT(db,key,data,flags)				\
   db->put (db, NULL, key, data, flags)
 #define DB_GET(db,key,data,flags)				\
   db->get (db, NULL, key, data, flags)
 #define DB_DEL(db,key,flags)					\
   db->del (db, NULL, key, flags)
+#if DB_VERSION_MAJOR == 2
+#define DB_CURSOR(db,cur)					\
+  db->cursor (db, NULL, cur)
+#else
 #define DB_CURSOR(db,cur)					\
   db->cursor (db, NULL, cur, 0)
+#endif
 #define DBC_GET(cur,key,data,flags)			\
   ({							\
     int ret = cur->c_get (cur, key, data, flags);	\
@@ -522,13 +523,29 @@ indexed_open (struct cob_file_desc *f, char *filename, int mode)
 	strcpy (dbname, filename);
       else
 	sprintf (dbname, "%s.%d", filename, i);
-      db_create (&f->keys[i].db, dbenv, 0);
-      if (f->keys[i].duplicates)
-	f->keys[i].db->set_flags (f->keys[i].db, DB_DUP);
-      if ((ret = DB_OPEN (f->keys[i].db, dbname, NULL, flags)) != 0)
+#if DB_VERSION_MAJOR == 2
+      {
+	DB_INFO info;
+	memset (&info, 0, sizeof (info));
+	if (f->keys[i].duplicates)
+	  info.flags = DB_DUP;
+	ret = db_open (dbname, DB_BTREE, flags, FILE_PERMISSION,
+		       dbenv, &info, &f->keys[i].db);
+      }
+#else
+      {
+	DB *dbp;
+	db_create (&f->keys[i].db, dbenv, 0);
+	dbp = f->keys[i].db;
+	if (f->keys[i].duplicates)
+	  dbp->set_flags (dbp, DB_DUP);
+	ret = dbp->open (dbp, dbname, NULL, DB_BTREE, flags, FILE_PERMISSION);
+      }
+#endif
+      if (ret != 0)
 	{
-	  for (j = 0; j <= i; j++)
-	    DB_CLOSE (f->keys[j].db);
+	  for (j = 0; j < i; j++)
+	    f->keys[j].db->close (f->keys[j].db, 0);
 	  return ret;
 	}
     }
@@ -550,7 +567,7 @@ indexed_close (struct cob_file_desc *f, int opt)
 
   /* close DB's */
   for (i = 0; i < f->nkeys; i++)
-    DB_CLOSE (f->keys[i].db);
+    f->keys[i].db->close (f->keys[i].db, 0);
   f->file.db = NULL;
 
   if (f->last_key)
@@ -610,14 +627,14 @@ indexed_start (struct cob_file_desc *f, int cond, struct cob_field k)
 	ret = f->cursor->c_get (f->cursor, &key, &data, DB_LAST);
       else if (cond == COB_LT
 	       || memcmp (key.data, k.data, COB_FIELD_SIZE (k)) != 0)
-	ret = f->cursor->c_get (f->cursor, &key, &data, DB_PREV_NODUP);
+	ret = f->cursor->c_get (f->cursor, &key, &data, DB_PREV);
       break;
     case COB_GT:
     case COB_GE:
       ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET_RANGE);
       if (cond == COB_GT)
 	while (ret == 0 && memcmp (key.data, k.data, COB_FIELD_SIZE (k)) == 0)
-	  ret = f->cursor->c_get (f->cursor, &key, &data, DB_NEXT_NODUP);
+	  ret = f->cursor->c_get (f->cursor, &key, &data, DB_NEXT);
       break;
   }
 
@@ -746,8 +763,9 @@ indexed_delete (struct cob_file_desc *f)
   /* delete the secondary keys */
   for (i = 1; i < f->nkeys; i++)
     {
-      DBT skey;
+      DBT skey, dkey;
       memset (&skey, 0, sizeof (DBT));
+      memset (&dkey, 0, sizeof (DBT));
       DBT_SET (skey, f->keys[i].field);
       skey.data += data.data - (void *) f->record_data;
       if (f->keys[i].duplicates)
@@ -759,7 +777,14 @@ indexed_delete (struct cob_file_desc *f)
 	  do {
 	    if (memcmp (data.data, key.data, key.size) == 0)
 	      cursor->c_del (cursor, 0);
-	  } while (cursor->c_get (cursor, &skey, &data, DB_NEXT_DUP) == 0);
+	  }
+#if DB_VERSION_MAJOR == 2
+	  while (cursor->c_get (cursor, &dkey, &data, DB_NEXT) == 0
+		 && skey.size == dkey.size
+		 && memcmp (dkey.data, skey.data, skey.size) == 0);
+#else
+	  while (cursor->c_get (cursor, &dkey, &data, DB_NEXT_DUP) == 0);
+#endif
 	  cursor->c_close (cursor);
 	}
       else

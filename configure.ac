@@ -63,7 +63,7 @@ AM_CONDITIONAL(HAVE_GETOPT_LONG_ONLY, test x$getopt = xtrue)
 # Checks for db.
 LIBDB="-ldb"
 AC_CHECK_HEADERS([db.h], , AC_MSG_ERROR(db.h is required))
-AC_CHECK_LIB([db], [db_create], , AC_MSG_ERROR(DB 3.0 or later is required))
+AC_CHECK_LIB([db], [db_version], , AC_MSG_ERROR(DB 2.0 or later is required))
 
 # Checks for gmp.
 LIBGMP="-lgmp"
