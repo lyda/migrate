@@ -21,7 +21,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 465
+%expect 464
 
 %{
 #define yydebug		cob_trace_parser
@@ -83,7 +83,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %token <str>  ID_TOK
 %token <pic>  PICTURE_TOK
 %token <tree> INTEGER_LITERAL,NUMERIC_LITERAL,NONNUMERIC_LITERAL,SYMBOL_TOK
-%token <tree> SPECIAL_TOK,CLASS_TOK,VARIABLE,VARCOND,SUBSCVAR
+%token <tree> SPECIAL_TOK,CLASS_TOK,VARIABLE,VARCOND
 
 %token EQUAL,GREATER,LESS,GE,LE,COMMAND_LINE,ENVIRONMENT_VARIABLE,ALPHABET
 %token DATE,DAY,DAY_OF_WEEK,TIME,READ,WRITE,OBJECT_COMPUTER,INPUT_OUTPUT
@@ -113,10 +113,10 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %token END_START,END_STRING,END_SUBTRACT,END_UNSTRING,END_WRITE
 %token THEN,EVALUATE,OTHER,ALSO,CONTINUE,CURRENCY,REFERENCE,INITIALIZE
 %token NUMERIC,ALPHABETIC,ALPHABETIC_LOWER,ALPHABETIC_UPPER
-%token RETURNING,TRUE,FALSE,ANY,SUBSCVAR,FUNCTION,OPTIONAL
+%token RETURNING,TRUE,FALSE,ANY,FUNCTION,OPTIONAL
 %token REPORT,RD,CONTROL,LIMIT,FINAL,HEADING,FOOTING,LAST,DETAIL,SUM
 %token FILE_ID,DEPENDING,TYPE,SOURCE,CORRESPONDING,CONVERTING
-%token INITIATE,GENERATE,TERMINATE,LPAR,BUILTIN_TOK
+%token INITIATE,GENERATE,TERMINATE,BUILTIN_TOK
 %token IDENTIFICATION,ENVIRONMENT,DATA,PROCEDURE
 %token AUTHOR,DATE_WRITTEN,DATE_COMPILED,INSTALLATION,SECURITY
 %token COMMON,RETURN,END_RETURN,PREVIOUS,NEXT,PACKED_DECIMAL
@@ -147,18 +147,17 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <list> sort_file_list,procedure_using
 %type <str> idstring
 %type <tree> field_description,label,label_name,filename
-%type <tree> file_description,redefines_var,function_call,subscript
+%type <tree> file_description,function_call,subscript
 %type <tree> name,value,number,file,level1_name,opt_def_name,def_name
 %type <tree> opt_read_into,opt_write_from,field_name,expr,unsafe_expr
 %type <tree> opt_unstring_count,opt_unstring_delimiter,opt_unstring_tallying
 %type <tree> numeric_name,group_name,numeric_edited_name
-%type <tree> qualified_var,unqualified_var,evaluate_subject
+%type <tree> qualified_var,evaluate_subject
 %type <tree> evaluate_object,evaluate_object_1,assign_clause
-%type <tree> call_returning,var_or_lit,opt_add_to
-%type <tree> opt_perform_thru
-%type <tree> opt_read_key,file_name,opt_with_pointer
-%type <tree> variable,sort_range
-%type <tree> indexed_variable,search_opt_varying,opt_key_is
+%type <tree> call_returning,opt_add_to
+%type <tree> opt_perform_thru,subscvar,substring
+%type <tree> opt_read_key,file_name,opt_with_pointer,sort_range
+%type <tree> indexed_name,search_opt_varying,opt_key_is
 %type <tree> from_rec_varying,to_rec_varying
 %type <tree> literal,gliteral,without_all_literal,all_literal,special_literal
 %type <tree> nliteral,conditional_name
@@ -739,15 +738,11 @@ field_option:
 
 redefines_clause:
   REDEFINES			{ curr_division = CDIV_INITIAL; }
-  redefines_var
+  VARIABLE
   {
     curr_division = CDIV_DATA;
     curr_field->redefines = lookup_for_redefines ($3);
   }
-redefines_var:
-  VARIABLE			{ $$ = $1; }
-| SUBSCVAR			{ $$ = $1; }
-;
 
 
 /* EXTERNAL */
@@ -927,13 +922,13 @@ value_item:
 
 renames_clause:
   RENAMES			{ curr_division = CDIV_INITIAL; }
-  variable opt_renames_thru	{ curr_division = CDIV_DATA; }
+  name opt_renames_thru	{ curr_division = CDIV_DATA; }
   {
     yywarn ("RENAMES is not supported yet");
   }
 ;
 opt_renames_thru:
-| THRU variable
+| THRU name
 ;
 
 
@@ -1344,8 +1339,8 @@ call_mode:
 ;
 call_returning:
   /* nothing */			{ $$ = NULL; }
-| RETURNING variable		{ $$ = $2; }
-| GIVING variable		{ $$ = $2; }
+| RETURNING name		{ $$ = $2; }
+| GIVING name			{ $$ = $2; }
 ;
 
 opt_on_exception_or_overflow:
@@ -1597,7 +1592,7 @@ goto_statement:
       yyerror ("too many labels with GO TO");
     gen_goto ($3, NULL);
   }
-| GO opt_to label_list DEPENDING opt_on variable { gen_goto ($3, $6); }
+| GO opt_to label_list DEPENDING opt_on name { gen_goto ($3, $6); }
 | GO opt_to { yywarn ("GO TO without label is obsolete"); }
 ;
 label_list:
@@ -2195,7 +2190,7 @@ search_statement:
 | SEARCH ALL search_all_body opt_end_search
 ;
 search_body:
-  indexed_variable
+  indexed_name
   {
     $<ival>$=loc_label++; /* determine END label name */
     gen_marklabel();
@@ -2221,7 +2216,7 @@ search_body:
   }
 ;
 search_all_body:
-  indexed_variable
+  indexed_name
   {
      lbend=loc_label++; /* determine END label name */
      gen_marklabel();
@@ -2246,7 +2241,7 @@ search_all_body:
 ;
 search_opt_varying:
   /* nothing */			{ $$ = NULL; }
-| VARYING variable		{ $$ = $2; }
+| VARYING name			{ $$ = $2; }
 ;
 search_opt_at_end:
   /* nothing */
@@ -2295,7 +2290,7 @@ search_all_when:
   }
 ;
 search_all_when_conditional:
-  variable opt_is equal_to var_or_lit
+  name opt_is equal_to value
   {
     if (curr_field == NULL)
       curr_field = $1;
@@ -2306,7 +2301,6 @@ search_all_when_conditional:
     $$ = make_cond ($1, COND_AND, $3);
   }
 ;
-var_or_lit: variable | literal ;
 equal_to: EQUAL opt_to | '=' opt_to ;
 opt_end_search: | END_SEARCH ;
 
@@ -2966,8 +2960,8 @@ nliteral:
 
 
 
-indexed_variable:
-  SUBSCVAR
+indexed_name:
+  qualified_var
   {
     if ($1->times == 1)
       yyerror ("variable `%s' not OCCURS", COB_FIELD_NAME ($1));
@@ -3007,35 +3001,38 @@ name_list:
 | name_list name		{ $$ = list_add ($1, $2); }
 ;
 name:
-  variable
-| variable '(' subscript ':' ')'	   { $$ = make_substring ($1, $3, 0); }
-| variable '(' subscript ':' subscript ')' { $$ = make_substring ($1, $3, $5); }
+  qualified_var			{ $$ = $1; }
+| qualified_var subscvar	{ $$ = $2; }
+| qualified_var substring	{ $$ = $2; }
+| qualified_var subscvar substring{ $$ = $3; }
 ;
-variable:
-  qualified_var
+subscvar:
+ '(' subscript_list ')'
   {
-    $$ = $1;
-    if (need_subscripts) {
-      yyerror("variable `%s' must be subscripted or indexed",
-	      COB_FIELD_NAME ($1));
-      need_subscripts=0;
-    }
-  }
-| qualified_var LPAR subscript_list ')'
-  {
-    int required = count_subscripted ($1);
-    int given = list_length ($3);
+    int required = count_subscripted ($<tree>0);
+    int given = list_length ($2);
     if (given != required)
       {
 	if (required == 1)
 	  yyerror ("variable `%s' requires one subscript",
-		   COB_FIELD_NAME ($1));
+		   COB_FIELD_NAME ($<tree>0));
 	else
 	  yyerror ("variable `%s' requires %d subscripts",
-		   COB_FIELD_NAME ($1), required);
+		   COB_FIELD_NAME ($<tree>0), required);
       }
-    $$ = make_subref ($1, $3);
+    $$ = make_subref ($<tree>0, $2);
   }
+;
+substring:
+ '(' subscript ':' ')'
+  {
+    $$ = make_substring ($<tree>0, $2, 0);
+  }
+| '(' subscript ':' subscript ')'
+  {
+    $$ = make_substring ($<tree>0, $2, $4);
+  }
+;
 subscript_list:
   subscript			{ $$ = cons ($1, NULL); }
 | subscript_list subscript	{ $$ = cons ($2, $1); }
@@ -3046,12 +3043,8 @@ subscript:
 | subscript '-' value		{ $$ = make_expr ($1, '-', $3); }
 ;
 qualified_var:
-  unqualified_var		{ $$ = $1; }
-| qualified_var in_of unqualified_var { $$ = lookup_variable($1,$3); }
-;
-unqualified_var:
   VARIABLE			{ $$ = $1; }
-| SUBSCVAR			{ $$ = $1; need_subscripts = 1; }
+| qualified_var in_of VARIABLE	{ $$ = lookup_variable($1,$3); }
 ;
 
 dot:

@@ -37,7 +37,6 @@
 cob_tree curr_file;
 int curr_division = 0;
 int start_condition = 0;
-int need_subscripts = 0;
 int in_procedure = 0;
 
 /* save the last yytext */
@@ -136,15 +135,6 @@ X\"[^\"\n]*\" {
   /* symbol or label */
   SAVE_YYTEXT;
   return scan_word (yytext);
-}
-
-"(" {
-  if (need_subscripts) {
-    need_subscripts=0;
-    return LPAR;
-  }
-  else
-    return '(';
 }
 
 "<="		{ return LE; }
@@ -271,8 +261,6 @@ scan_word (char *text)
 	    return SPECIAL_TOK;
 	  else if (COB_FIELD_TYPE (yylval.tree) == '@')
 	    return CLASS_TOK;
-	  else if (is_subscripted (yylval.tree))
-	    return SUBSCVAR;
 	  else
 	    return VARIABLE;
 	}
