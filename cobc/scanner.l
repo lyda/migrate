@@ -223,7 +223,7 @@ scan_x (char *text)
 {
   int high = 1;
   char *src = text;
-  char *dst = alloca (strlen (text));
+  char dst[strlen (text)];
   char *p = dst;
   while (isalnum (*src))
     {
