@@ -451,6 +451,7 @@ process_compile (struct filename *fn)
   if (!o_src)
     cob_error ("cannot open file: %s\n", fn->assembly);
 
+  init_tree ();
   init_reserved_words ();
 
   cob_source_filename = fn->source;

@@ -121,12 +121,6 @@ static struct cob_object cob_stack[STACK_SIZE];
 #define REF(n)	(&cob_stack[stack_index - (n)])
 #define DROP(n)	(stack_index -= (n))
 
-void
-cob_stack_clear (void)
-{
-  stack_index = -1;
-}
-
 static cob_object
 grab_object (int type)
 {
@@ -156,7 +150,8 @@ void
 cob_push_field (struct cob_field fld)
 {
   struct cob_field *p = COB_FIELD (grab_object (COB_TYPE_FIELD));
-  *p = fld;
+  p->desc = fld.desc;
+  p->data = fld.data;
 }
 
 void
@@ -312,8 +307,8 @@ cob_cmp (void)
 int
 cob_between (void)
 {
-  decimal value = COB_DECIMAL (POP ());
   decimal upper = COB_DECIMAL (POP ());
+  decimal value = COB_DECIMAL (POP ());
   decimal lower = COB_DECIMAL (POP ());
   arrange_decimal (lower, value);
   if (mpz_cmp (lower->number, value->number) <= 0)
@@ -755,14 +750,9 @@ cob_is_equal ()
 }
 
 int
-cob_in_range ()
+cob_in_range (struct cob_field low, struct cob_field val, struct cob_field up)
 {
-  cob_object value = POP ();
-  cob_object upper = POP ();
-  cob_object lower = POP ();
-
-  if (cob_compare (*COB_FIELD (lower), *COB_FIELD (value)) <= 0
-      && cob_compare (*COB_FIELD (value), *COB_FIELD (upper)) <= 0)
+  if (cob_compare (low, val) <= 0 && cob_compare (val, up) <= 0)
     return 1;
   return 0;
 }

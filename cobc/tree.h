@@ -27,12 +27,16 @@
  * Tree
  */
 
+#define cob_tag_any		10
+#define cob_tag_true		11
+#define cob_tag_false		12
 #define cob_tag_literal		1
 #define cob_tag_symbol		0
 #define cob_tag_subref		2
 #define cob_tag_substring	4
 #define cob_tag_expr		5
 #define cob_tag_cond		8
+#define cob_tag_range		9
 
 struct cob_tree_common {
   char litflag;
@@ -43,7 +47,12 @@ typedef struct sym *cob_tree;
 #define COB_TREE(x)		((struct sym *) (x))
 #define COB_TREE_TAG(x)		(((struct cob_tree_common *) (x))->litflag)
 
+extern cob_tree cob_any;
+extern cob_tree cob_true;
+extern cob_tree cob_false;
+
 extern void print_tree (cob_tree x, FILE *fp);
+extern void init_tree (void);
 
 
 /*
@@ -58,6 +67,7 @@ struct cob_tree_list {
 typedef struct cob_tree_list *cob_tree_list;
 
 extern cob_tree_list cons (cob_tree x, cob_tree_list l);
+extern cob_tree_list make_list (cob_tree x);
 extern cob_tree_list list_append (cob_tree_list l, cob_tree x);
 extern int list_length (cob_tree_list l);
 
@@ -309,6 +319,24 @@ extern cob_tree make_unary_cond (cob_tree x, enum cond_type type);
 
 
 /*
+ * Range
+ */
+
+struct cob_range {
+  struct cob_tree_common common;
+  cob_tree lower;
+  cob_tree upper;
+};
+
+#define RANGE(x)	((struct cob_range *) (x))
+#define RANGE_P(x)	(COB_TREE_TAG (x) == cob_tag_range)
+#define RANGE_LOWER(x)	(RANGE (x)->lower)
+#define RANGE_UPPER(x)	(RANGE (x)->upper)
+
+extern cob_tree make_range (cob_tree lower, cob_tree upper);
+
+
+/*
  * compile-time list for value ranges of 88-level variables.
  * the first range is stored at the "struct sym", with sym->vr
  * being a pointer to the remaining "struct vrange" nodes.
@@ -346,13 +374,6 @@ struct rec_varying
   cob_tree lmin;
   cob_tree lmax;
   cob_tree reclen;
-};
-
-/* selection subject set (evaluate statement) */
-struct selsubject
-{
-  struct selsubject *next;
-  int type;
 };
 
 /* sort file list for using/giving clauses*/

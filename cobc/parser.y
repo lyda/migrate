@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 455
+%expect 536
 
 %{
 #define yydebug		cob_trace_parser
@@ -73,7 +73,6 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
   struct perf_info *pfval;
   struct perform_info *pfvals;
   struct sortfile_node *snval;
-  struct selsubject *ssbjval;
   struct math_var *mval;      /* math variables container list */
 }
 
@@ -134,17 +133,18 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <ival> on_exception_or_overflow,on_not_exception
 %type <ival> display_upon,display_options
 %type <ival> flag_all,opt_with_duplicates,opt_with_test,opt_optional
-%type <ival> flag_not,selection_subject,selection_object,when_case
+%type <ival> flag_not
 %type <ival> flag_rounded,opt_sign_separate,opt_plus_minus
 %type <ival> organization_options,access_options,open_mode
 %type <ival> call_mode,replacing_kind
 %type <ival> screen_attribs,screen_attrib,screen_sign,opt_separate
-%type <ival> sentence_or_nothing,when_case_list,opt_read_next,usage
+%type <ival> opt_read_next,usage
 %type <ival> procedure_using,sort_direction,write_options
 %type <ival> opt_on_size_error_sentence,opt_on_overflow_sentence
 %type <ival> on_xxx_statement_list
 %type <ival> at_end_sentence,invalid_key_sentence
 %type <list> label_list,subscript_list,number_list,varcond_list,variable_list
+%type <list> evaluate_subject_list,evaluate_when_list,evaluate_object_list
 %type <para> call_using,call_parameter,call_parameter_list
 %type <mval> numeric_variable_list,numeric_edited_variable_list
 %type <pfval> perform_after
@@ -154,7 +154,6 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <sfval> string_from_list,string_from
 %type <sival> screen_clauses
 %type <snval> sort_file_list,sort_input,sort_output
-%type <ssbjval> selection_subject_set
 %type <str> idstring
 %type <tree> field_description,label,filename,noallname,paragraph,assign_clause
 %type <tree> file_description,redefines_var,function_call,subscript
@@ -162,7 +161,8 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <tree> opt_read_into,opt_write_from,field_name,expr,unsafe_expr
 %type <tree> opt_unstring_count,opt_unstring_delim,unstring_tallying
 %type <tree> numeric_variable,group_variable,numeric_edited_variable
-%type <tree> qualified_var,unqualified_var
+%type <tree> qualified_var,unqualified_var,evaluate_subject
+%type <tree> evaluate_object,evaluate_object_1
 %type <tree> call_returning,screen_to_name,var_or_lit,opt_add_to
 %type <tree> sort_keys,opt_perform_thru,procedure_section
 %type <tree> opt_read_key,file_name,string_with_pointer
@@ -1505,117 +1505,87 @@ opt_end_divide: | END_DIVIDE ;
  */
 
 evaluate_statement:
-  EVALUATE			{ $<ival>$ = gen_evaluate_start(); }
-  selection_subject_set		{ }
-  when_case_list
-  opt_end_evaluate		{ release_sel_subject($<ival>2,$3); }
-;
-selection_subject_set:
-  selection_subject		{ $$=save_sel_subject(NULL,$1); }
-| selection_subject_set ALSO
-  selection_subject		{ $$=save_sel_subject($1,$3); }
-;
-selection_subject:
-  unsafe_expr
+  EVALUATE evaluate_subject_list
   {
-    if (is_valid_expr ($1))
+    $<ival>$ = loc_label++; /* end of EVALUATE */
+  }
+  evaluate_body_list
+  opt_end_evaluate
+  {
+    gen_dstlabel ($<ival>3); /* end of EVALUATE */
+  }
+;
+
+evaluate_subject_list:
+  evaluate_subject		{ $$ = make_list ($1); }
+| evaluate_subject_list ALSO
+  evaluate_subject		{ $$ = list_append ($1, $3); }
+;
+evaluate_subject:
+  unsafe_expr opt_is		{ $$ = $1; }
+| condition_1			{ $$ = $1; }
+| TRUE				{ $$ = cob_true; }
+| FALSE				{ $$ = cob_false; }
+;
+
+evaluate_body_list:
+| evaluate_body_list evaluate_body
+;
+evaluate_body:
+  evaluate_when_list
+  {
+    $<ival>$ = loc_label++; /* before next WHEN */
+    gen_evaluate_when ($<list>-2, $1, $<ival>$);
+  }
+  conditional_statement_list
+  {
+    gen_jmplabel ($<ival>-1); /* end of EVALUATE */
+    gen_dstlabel ($<ival>2); /* before next WHEN */
+  }
+| WHEN OTHER
+  conditional_statement_list
+  {
+    gen_jmplabel ($<ival>-1); /* end of EVALUATE */
+  }
+;
+evaluate_when_list:
+  WHEN evaluate_object_list	{ $$ = make_list ((cob_tree) $2); }
+| evaluate_when_list
+  WHEN evaluate_object_list	{ $$ = list_append ($1, (cob_tree) $3); }
+;
+evaluate_object_list:
+  evaluate_object		{ $$ = make_list ($1); }
+| evaluate_object_list ALSO
+  evaluate_object		{ $$ = list_append ($1, $3); }
+;
+evaluate_object:
+  flag_not evaluate_object_1
+  {
+    if ($1)
       {
-	push_expr ($1);
-	$$ = SSUBJ_EXPR;
-      }
-    else if (!EXPR_P ($1))
-      {
-	push_field ($1);
-	$$ = SSUBJ_STR;
+	if ($2 == cob_any || $2 == cob_true || $2 == cob_false)
+	  {
+	    yyerror ("cannot use NOT with TRUE, FALSE, or ANY");
+	    $$ = cob_any;
+	  }
+	else
+	  {
+	    /* NOTE: $2 is not necessarily a condition, but
+	     * use COND_NOT to store it here.  BE CAREFUL. */
+	    $$ = make_unary_cond ($2, COND_NOT);
+	  }
       }
     else
-      {
-	yyerror ("invalid selection subject");
-	$$ = SSUBJ_BOOLEAN; /* error recovery */
-      }
-  }
-| condition			{ push_condition(); $$ = SSUBJ_BOOLEAN; }
-| TRUE				{ push_boolean (1); $$ = SSUBJ_BOOLEAN; }
-| FALSE				{ push_boolean (0); $$ = SSUBJ_BOOLEAN; }
-;
-when_case_list:
-  WHEN				{ $<ival>$ = loc_label++; }
-  {
-    /* store inherited subject set */
-    $<ssbjval>$=$<ssbjval>-1;
-  }
-  when_case sentence_or_nothing
-  {
-    $$=gen_end_when($<ival>-2,$<ival>2,$5);
-  }
-| when_case_list
-  WHEN				{ $<ival>$ = loc_label++; }
-  {
-    $<ssbjval>$=$<ssbjval>-1;
-  }
-  when_case			{ gen_bypass_when_case($1); }
-  sentence_or_nothing
-  {
-    $$=gen_end_when($<ival>-2,$<ival>3,$7);
+      $$ = $2;
   }
 ;
-when_case:
-  selection_object
-  {
-    $$ = 0;
-    gen_when_check($$,$<ssbjval>0,$1,$<ival>-1);
-  }
-| when_case ALSO selection_object
-  {
-    $$ = $1 + 1;
-    gen_when_check($$,$<ssbjval>0,$3,$<ival>-1);
-  }
-| OTHER { $$=-1; }
-;
-selection_object:
-  ANY			{ $$ = SOBJ_ANY; }
-| TRUE			{ push_boolean (1); $$ = SOBJ_BOOLEAN; }
-| FALSE			{ push_boolean (0); $$ = SOBJ_BOOLEAN; }
-| flag_not condition	{ push_condition (); $$ = SOBJ_BOOLEAN | $1; }
-| flag_not unsafe_expr
-  {
-    if ($2 == spe_lit_ZE)
-      $$ = SOBJ_ZERO | $1;
-    else if (is_valid_expr ($2))
-      {
-	push_expr ($2);
-	$$ = SOBJ_EXPR | $1;
-      }
-    else if (!EXPR_P ($2))
-      {
-	push_field ($2);
-	$$ = SOBJ_STR | $1;
-      }
-    else
-      {
-	yyerror ("invalid selection object");
-	$$ = SOBJ_BOOLEAN; /* error recovery */
-      }
-  }
-| flag_not unsafe_expr THRU unsafe_expr
-  {
-    if (is_valid_expr ($2) && is_valid_expr ($4))
-      {
-	push_expr ($2);
-	push_expr ($4);
-	$$ = SOBJ_RANGE | $1;
-      }
-    else
-      {
-	push_field ($2);
-	push_field ($4);
-	$$ = SOBJ_STRRANGE | $1;
-      }
-  }
-;
-sentence_or_nothing:
-  /* nothing */			{ $$ = 0; }
-| conditional_statement_list	{ $$ = 1; }
+evaluate_object_1:
+  ANY				{ $$ = cob_any; }
+| TRUE				{ $$ = cob_true; }
+| FALSE				{ $$ = cob_false; }
+| condition_1			{ $$ = $1; }
+| unsafe_expr			{ $$ = $1; }
+| unsafe_expr THRU unsafe_expr	{ $$ = make_range ($1, $3); }
 ;
 opt_end_evaluate: | END_EVALUATE ;
 
@@ -1639,7 +1609,7 @@ goto_statement:
 | GO opt_to label_list DEPENDING opt_on variable { gen_goto ($3, $6); }
 ;
 label_list:
-  label				{ $$ = cons ($1, NULL); }
+  label				{ $$ = make_list ($1); }
 | label_list label		{ $$ = list_append ($1, $2); }
 | label_list ',' label		{ $$ = list_append ($1, $3); }
 ;
@@ -2551,7 +2521,10 @@ on_xxx_statement_list:
   }
 ;
 not_on_xxx_statement_list:
-  statement_list		{ gen_dstlabel ($<ival>0); }
+  statement_list
+  {
+    gen_dstlabel ($<ival>0);
+  }
 ;
 
 
@@ -2833,7 +2806,7 @@ file:
 /* Number */
 
 number_list:
-  number			{ $$ = cons ($1, NULL); }
+  number			{ $$ = make_list ($1); }
 | number_list number		{ $$ = list_append ($1, $2); }
 ;
 number:
@@ -2928,11 +2901,11 @@ name:
 | variable '(' subscript ':' subscript ')' { $$ = make_substring ($1, $3, $5); }
 ;
 varcond_list:
-  VARCOND			{ $$ = cons ($1, NULL); }
+  VARCOND			{ $$ = make_list ($1); }
 | varcond_list VARCOND		{ $$ = list_append ($1, $2); }
 ;
 variable_list:
-  variable			{ $$ = cons ($1, NULL); }
+  variable			{ $$ = make_list ($1); }
 | variable_list variable	{ $$ = list_append ($1, $2); }
 ;
 variable:

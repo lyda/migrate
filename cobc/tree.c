@@ -12,6 +12,21 @@
  * Tree
  */
 
+cob_tree cob_any;
+cob_tree cob_true;
+cob_tree cob_false;
+
+void
+init_tree (void)
+{
+  cob_any = malloc (sizeof (struct cob_tree_list));
+  cob_true = malloc (sizeof (struct cob_tree_list));
+  cob_false = malloc (sizeof (struct cob_tree_list));
+  COB_TREE_TAG (cob_any) = cob_tag_any;
+  COB_TREE_TAG (cob_true) = cob_tag_true;
+  COB_TREE_TAG (cob_false) = cob_tag_false;
+}
+
 
 /*
  * Tree list
@@ -24,6 +39,12 @@ cons (cob_tree x, cob_tree_list l)
   p->tree = x;
   p->next = l;
   return p;
+}
+
+cob_tree_list
+make_list (cob_tree x)
+{
+  return cons (x, NULL);
 }
 
 cob_tree_list
@@ -203,6 +224,21 @@ cob_tree
 make_unary_cond (cob_tree x, enum cond_type type)
 {
   return make_cond (x, type, 0);
+}
+
+
+/*
+ * Range
+ */
+
+cob_tree
+make_range (cob_tree lower, cob_tree upper)
+{
+  struct cob_range *p = malloc (sizeof (struct cob_range));
+  COB_TREE_TAG (p) = cob_tag_range;
+  p->lower = lower;
+  p->upper = upper;
+  return COB_TREE (p);
 }
 
 

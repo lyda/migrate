@@ -45,21 +45,6 @@
 #define SEC_ARGS 5
 #define SEC_FIRST_NAMED 7
 
-/* selection subject types (evaluate statement) */
-#define SSUBJ_BOOLEAN	0
-#define SSUBJ_EXPR	2
-#define SSUBJ_STR	4
-
-/* selection object types (evaluate statement) */
-#define SOBJ_ANY	0x00
-#define SOBJ_ZERO	0x10
-#define SOBJ_EXPR	0x20
-#define SOBJ_RANGE	0x30
-#define SOBJ_STR	0x40
-#define SOBJ_BOOLEAN	0x50
-#define SOBJ_STRRANGE	0x60
-#define SOBJ_TYPE_MASK	0xf0
-
 /* SPECIAL VARIABLES  */
 
 #define SVAR_RCODE  	"RETURN-CODE"
@@ -160,16 +145,8 @@ extern void gen_move (cob_tree sy_src, cob_tree sy_dst);
 extern void gen_move_corresponding (cob_tree sy1, cob_tree sy2);
 extern void gen_set (cob_tree_list l, int mode, cob_tree v);
 extern void gen_set_true (cob_tree_list l);
-extern int gen_evaluate_start (void);
-extern int push_selection_subject_copy (int level, struct selsubject *ssbj, int stkadd, int objtype);
-extern int selection_subject_type (int level, struct selsubject *ssbj);
-extern void gen_when_check (int level, struct selsubject *ssbj, int type, int endcase);
-extern void gen_bypass_when_case (int bypass);
-extern int gen_end_when (int n, int endcase, int sentence);
-extern void push_boolean (int flag);
-extern void push_condition (void);
-extern void push_field (cob_tree x);
 extern void gen_goto (cob_tree_list l, cob_tree x);
+extern void gen_evaluate_when (cob_tree_list subs, cob_tree_list whens, int next_lbl);
 extern int gen_check_zero (void);
 extern int gen_testif (void);
 extern int gen_orstart (void);
@@ -189,8 +166,6 @@ extern void define_implicit_field (cob_tree sy, cob_tree sykey);
 extern void Initialize_SearchAll_Boundaries (cob_tree sy, cob_tree syidx);
 extern cob_tree determine_table_index_name (cob_tree sy);
 extern void define_field (int level, cob_tree sy);
-extern struct selsubject *save_sel_subject (struct selsubject *ssubj, int type);
-extern void release_sel_subject (int label, struct selsubject *ssbj);
 extern int set_field_value_sw (cob_tree sy, int times);
 extern int set_field_length (cob_tree sy, int times);
 extern unsigned field_alignment (cob_tree sy, unsigned location);

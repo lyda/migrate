@@ -2783,151 +2783,124 @@ gen_set_true (cob_tree_list l)
  * EVALUATE statement
  */
 
-void
-push_boolean (int flag)
+static void
+push_tree (cob_tree x)
 {
-  push_immed (flag ? 0 : 1);
-  asm_call ("cob_push_boolean");
-}
-
-void
-push_condition (void)
-{
-  push_eax ();
-  asm_call ("cob_push_boolean");
-}
-
-void
-push_field (cob_tree x)
-{
-  asm_call_1 ("cob_push_field", x);
-}
-
-int
-gen_evaluate_start ()
-{
-  int i = loc_label++;
-  output ("# EVALUATE statement\n");
-  asm_call ("cob_stack_clear");
-  return i;
-}
-
-int
-push_selection_subject_copy (int level, struct selsubject *ssbj,
-			     int stkadd, int objtype)
-{
-  struct selsubject *p;
-
-  /* find the target subject */
-  while (level--)
-    ssbj = ssbj->next;
-
-  /* calculate the subject address */
-  for (p = ssbj->next; p; p = p->next)
-    stkadd++;
-
-  /* push expressions to the stack */
-  push_immed (stkadd);
-  asm_call ("cob_push_copy");
-  return 0;
-}
-
-int
-selection_subject_type (int level, struct selsubject *ssbj)
-{
-  while (level--)
-    ssbj = ssbj->next;
-  return ssbj->type;
-}
-
-void
-gen_when_check (int level, struct selsubject *ssbj, int type, int endcase)
-{
-  int real_type;
-
-#ifdef COB_DEBUG
-  output ("# WHEN check: level=%d, subject->type=%d, object type=%d\n",
-	  level, ssbj->type, type);
-#endif
-
-  if (type == SOBJ_ANY)
-    return;
-
-  /* check if compatible subject/object found */
-  real_type = type & SOBJ_TYPE_MASK;
-  switch (selection_subject_type (level, ssbj))
+  switch (COB_TREE_TAG (x))
     {
-    case SSUBJ_STR:
-      if (real_type != SOBJ_STR
-	  && real_type != SOBJ_STRRANGE
-	  && real_type != SOBJ_ZERO)
-	yyerror ("incompatible selection object");
+    case cob_tag_true:
+      push_immed (0);
+      asm_call ("cob_push_boolean");
       break;
-    case SSUBJ_EXPR:
-      if (real_type == SOBJ_STR)
+
+    case cob_tag_false:
+      push_immed (1);
+      asm_call ("cob_push_boolean");
+      break;
+
+    case cob_tag_expr:
+      push_expr (x);
+      break;
+
+    case cob_tag_cond:
+      gen_condition (x);
+      push_eax ();
+      asm_call ("cob_push_boolean");
+      break;
+
+    default:
+      asm_call_1 ("cob_push_field", x);
+      break;
+    }
+}
+
+void
+gen_evaluate_when (cob_tree_list subs, cob_tree_list whens, int next_lbl)
+{
+  
+  int before_sentences_lbl = whens->next ? loc_label++ : 0;
+  cob_tree_list all_subs = subs;
+
+  for (; whens; whens = whens->next)
+    {
+      cob_tree_list subs, objs;
+      /* label of the next WHEN to test */
+      int next_when_lbl = whens->next ? loc_label++ : next_lbl;
+
+      for (subs = all_subs, objs = (cob_tree_list) whens->tree;
+	   subs && objs;
+	   subs = subs->next, objs = objs->next)
 	{
-	  yywarn ("expression expected");
-	  type = SOBJ_EXPR | (type & 1);
+	  int not_flag = 0;
+	  cob_tree s = subs->tree;
+	  cob_tree o = objs->tree;
+
+	  /* unpack NOT option */
+	  if (COND_P (o)
+	      && COND_TYPE (o) == COND_NOT
+	      && !COND_P (COND_LEFT (o)))
+	    {
+	      o = COND_LEFT (o);
+	      not_flag = 1;
+	    }
+
+	  /* just accept if ANY */
+	  if (o == cob_any)
+	    continue;
+
+	  if (o == spe_lit_ZE)
+	    {
+	      push_tree (s);
+	      asm_call ("cob_is_zero");
+	    }
+	  else if (RANGE_P (o))
+	    {
+	      cob_tree l = RANGE_LOWER (o);
+	      cob_tree u = RANGE_UPPER (o);
+	      if (is_valid_expr (s) && is_valid_expr (l) && is_valid_expr (u))
+		{
+		  push_expr (l);
+		  push_expr (s);
+		  push_expr (u);
+		  asm_call ("cob_between");
+		}
+	      else
+		{
+		  asm_call_3 ("cob_in_range", l, s, u);
+		}
+	    }
+	  else if (is_valid_expr (s) && is_valid_expr (o))
+	    {
+	      push_expr (o);
+	      push_expr (s);
+	      asm_call ("cob_is_equal");
+	    }
+	  else
+	    {
+	      push_tree (o);
+	      push_tree (s);
+	      asm_call ("cob_is_equal");
+	    }
+
+	  output ("\tand\t%%eax,%%eax\n");
+	  if (not_flag)
+	    output ("\tjnz\t.L%d\n", next_when_lbl);
+	  else
+	    output ("\tjz\t.L%d\n", next_when_lbl);
 	}
-      break;
-    case SSUBJ_BOOLEAN:
-      if (real_type != SOBJ_BOOLEAN)
-	yyerror ("incompatible selection object");
-      break;
+      if (subs || objs)
+	yyerror ("wrong number of WHEN parameters");
+
+      /* accept this case */
+      if (whens->next)
+	{
+	  gen_jmplabel (before_sentences_lbl);
+	  gen_dstlabel (next_when_lbl);
+	}
     }
 
-  /* perform the actual tests */
-  switch (real_type)
-    {
-    case SOBJ_ZERO:
-      push_selection_subject_copy (level, ssbj, 0, type);
-      asm_call ("cob_is_zero");
-      break;
-    case SOBJ_STR:
-    case SOBJ_EXPR:
-    case SOBJ_BOOLEAN:
-      push_selection_subject_copy (level, ssbj, 1, type);
-      asm_call ("cob_is_equal");
-      break;
-    case SOBJ_RANGE:
-      push_selection_subject_copy (level, ssbj, 2, type);
-      asm_call ("cob_between");
-      break;
-    case SOBJ_STRRANGE:
-      push_selection_subject_copy (level, ssbj, 2, type);
-      asm_call ("cob_in_range");
-      break;
-    }
-  output ("\tand\t%%eax,%%eax\n");
-  if (type & 1)
-    output ("\tjnz\t.L%d\n", endcase);
-  else
-    output ("\tjz\t.L%d\n", endcase);
-}
-
-void
-gen_bypass_when_case (int bypass)
-{
-  if (bypass)
-    output (".L%d:\n", bypass);
-}
-
-int
-gen_end_when (int n, int endcase, int sentence)
-{
-  int lab;
-  if (sentence)
-    {
-      output ("\tjmp\t.L%d\t# end WHEN\n", n);
-      lab = 0;
-    }
-  else
-    {
-      lab = loc_label++;
-      output ("\tjmp\t.L%d\t# bypass WHEN test\n", lab);
-    }
-  output (".L%d:\n", endcase);
-  return lab;
+  if (before_sentences_lbl)
+    gen_dstlabel (before_sentences_lbl);
 }
 
 
@@ -3446,31 +3419,6 @@ define_field (int level, cob_tree sy)
 	}
     }
   curr_field = sy;
-}
-
-struct selsubject *
-save_sel_subject (struct selsubject *ssubj, int type)
-{
-  struct selsubject *tmp = malloc (sizeof (struct selsubject));
-  struct selsubject *tmp1;
-  tmp->type = type;
-  tmp->next = NULL;
-  if (ssubj != NULL)
-    {
-      tmp1 = ssubj;
-      while (tmp1->next)
-	tmp1 = tmp1->next;
-      tmp1->next = tmp;
-      return ssubj;
-    }
-  return tmp;
-}
-
-void
-release_sel_subject (int label, struct selsubject *ssbj)
-{
-  asm_call ("cob_stack_clear");
-  output (".L%d:\t# EVALUATE end\n", label);
 }
 
 int
