@@ -1,3 +1,3 @@
-EXTRA_DIST = c-cobol.txt
+EXTRA_DIST = compile.txt c-cobol.txt
 
 MAINTAINERCLEANFILES = Makefile.in
