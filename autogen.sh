@@ -10,7 +10,7 @@ echo "Running autoheader..."
 autoheader
 
 echo "Running automake..."
-automake --add-missing --force-missing
+automake --copy --add-missing --force-missing
 
 echo "Running autoconf..."
 autoconf
