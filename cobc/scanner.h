@@ -27,7 +27,6 @@ extern int cobc_source_line;
 extern int cobc_last_line;
 extern char cobc_last_text[];
 
-extern int cobc_skip_comment;
 extern int cobc_in_procedure;
 
 extern struct cobc_location yylloc;

@@ -201,7 +201,6 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %token NUMERIC ALPHABETIC ALPHABETIC_LOWER ALPHABETIC_UPPER
 %token DEPENDING CORRESPONDING CONVERTING OPTIONAL RETURNING
 %token IDENTIFICATION ENVIRONMENT DATA PROCEDURE TRUE FALSE ANY
-%token AUTHOR DATE_WRITTEN DATE_COMPILED INSTALLATION SECURITY
 %token COMMON NEXT INPUT I_O OUTPUT EXTEND BINARY
 %token ALPHANUMERIC ALPHANUMERIC_EDITED NUMERIC_EDITED NATIONAL NATIONAL_EDITED
 %token SCREEN BELL BLINK ERASE EOL EOS HIGHLIGHT LOWLIGHT
@@ -329,23 +328,11 @@ identification_division:
       yywarn (_("PROGRAM-ID is converted to `%s'"), $6->name);
     program_spec.program_id = $6->name;
   }
-  identification_division_options
 ;
 opt_program_parameter:
 | _is TOK_INITIAL _program	{ program_spec.initial_program = 1; }
 | _is COMMON _program		{ PENDING ("COMMON"); }
 ;
-identification_division_options:
-| identification_division_options identification_division_option
-;
-identification_division_option:
-  AUTHOR '.' comment		{ IGNORE ("AUTHOR"); }
-| DATE_WRITTEN '.' comment	{ IGNORE ("DATE-WRITTEN"); }
-| DATE_COMPILED '.' comment	{ IGNORE ("DATE-COMPILED"); }
-| INSTALLATION '.' comment	{ IGNORE ("INSTALLATION"); }
-| SECURITY '.' comment		{ IGNORE ("SECURITY"); }
-;
-comment: { cobc_skip_comment = 1; };
 
 
 /*****************************************************************************

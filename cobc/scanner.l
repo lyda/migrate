@@ -39,7 +39,6 @@
 #include "reserved.h"
 #include "lib/gettext.h"
 
-int cobc_skip_comment = 0;
 int cobc_in_procedure = 0;
 
 char *cobc_source_file = NULL;
@@ -67,20 +66,6 @@ static int scan_picture (char *text);
 %x PICTURE_STATE FUNCTION_STATE
 
 %%
-
-%{
-  if (cobc_skip_comment)
-    {
-      int c;
-      do {
-	while ((c = input ()) != '\n');
-	if ((c = input ()) != '\n')
-	  c = input ();
-      } while (c == ' ');
-      unput (c);
-      cobc_skip_comment = 0;
-    }
-%}
 
 <*>[ \t,;]+ { /* ignore */ }
 
