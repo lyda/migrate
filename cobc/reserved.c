@@ -92,6 +92,7 @@ static struct reserved reserved_words[] = {
   {"ASSIGN",		ASSIGN, 0},			/* 2002 */
   {"AT",		AT, 0},				/* 2002 */
   {"AUTO",		AUTO, 0},			/* 2002 (C/S) */
+  {"AUTOMATIC",		AUTOMATIC, 0},			/* extension */
   {"B-AND",		-1, 0},				/* 2002 */
   {"B-NOT",		-1, 0},				/* 2002 */
   {"B-OR",		-1, 0},				/* 2002 */
@@ -232,6 +233,7 @@ static struct reserved reserved_words[] = {
   {"EVALUATE",		EVALUATE, 0},			/* 2002 */
   {"EXCEPTION",		EXCEPTION, 0},			/* 2002 */
   {"EXCEPTION-OBJECT",	-1, 0},				/* 2002 */
+  {"EXCLUSIVE",		EXCLUSIVE, 0},			/* extension */
   {"EXIT",		EXIT, 0},			/* 2002 */
   {"EXTEND",		EXTEND, 0},			/* 2002 */
   {"EXTERNAL",		EXTERNAL, 0},			/* 2002 */
@@ -313,6 +315,7 @@ static struct reserved reserved_words[] = {
   {"LOW-VALUE",		LOW_VALUE, 0},			/* 2002 */
   {"LOW-VALUES",	LOW_VALUE, 0},			/* 2002 */
   {"LOWLIGHT",		LOWLIGHT, 0},			/* 2002 (C/S) */
+  {"MANUAL",		MANUAL, 0},			/* extension */
   {"MEMORY",		MEMORY, 0},			/* 85 */
   {"MERGE",		MERGE, 0},			/* 2002 */
   {"MESSAGE",		-1, 0},				/* 2002 */
@@ -418,6 +421,7 @@ static struct reserved reserved_words[] = {
   {"RF",		-1, 0},				/* 2002 */
   {"RH",		-1, 0},				/* 2002 */
   {"RIGHT",		RIGHT, 0},			/* 2002 */
+  {"ROLLBACK",		ROLLBACK, 0},			/* extension */
   {"ROUNDED",		ROUNDED, 0},			/* 2002 */
   {"RUN",		RUN, 0},			/* 2002 */
   {"SAME",		SAME, 0},			/* 2002 */
@@ -506,8 +510,8 @@ static struct reserved reserved_words[] = {
   {"WITH",		WITH, 0},			/* 2002 */
   {"WORKING-STORAGE",	WORKING_STORAGE, 0},		/* 2002 */
   {"WRITE",		WRITE, 0},			/* 2002 */
-  {"YYYYMMDD",		YYYYMMDD, 0},			/* 2002 (C/S) */
   {"YYYYDDD",		YYYYDDD, 0},			/* 2002 (C/S) */
+  {"YYYYMMDD",		YYYYMMDD, 0},			/* 2002 (C/S) */
   {"ZERO",		ZERO, 0},			/* 2002 */
   {"ZEROES",		ZERO, 0},			/* 2002 */
   {"ZEROS",		ZERO, 0},			/* 2002 */

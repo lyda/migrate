@@ -1,5 +1,10 @@
 2004-03-10  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
 
+	* parser.y (lock_mode_clause): Full parse without codegen.
+	* reserved.c (AUTOMATIC, EXCLUSIVE, MANUAL, ROLLBACK): New words.
+
+2004-03-10  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
+
 	* codegen.c (output_call): Byte swap for literals.
 
 2004-03-10  Keisuke Nishida  <knishida@wind.sannet.ne.jp>

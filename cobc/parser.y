@@ -105,6 +105,7 @@ static void terminator_error (void);
 %token STATUS STOP SYMBOLIC SYNCHRONIZED TALLYING TAPE TEST THAN THEN THRU
 %token TIME TIMES TO TOK_FILE TOK_INITIAL TOK_TRUE TOK_FALSE TOK_NULL TRAILING
 %token UNDERLINE UNIT UNTIL UP UPON USAGE USE USING VALUE VARYING WHEN WITH
+%token MANUAL AUTOMATIC EXCLUSIVE ROLLBACK
 %token COMP COMP_1 COMP_2 COMP_3 COMP_4 COMP_5 COMP_X
 
 %left '+' '-'
@@ -566,7 +567,16 @@ file_status_clause:
 /* LOCK MODE clause */
 
 lock_mode_clause:
-  LOCK _mode _is		{ PENDING ("LOCK MODE"); }
+  LOCK _mode _is lock_mode	{ PENDING ("LOCK MODE"); }
+;
+lock_mode:
+  MANUAL lock_with
+| AUTOMATIC lock_with
+| EXCLUSIVE
+;
+lock_with:
+| WITH LOCK ON _multiple records
+| WITH ROLLBACK
 ;
 
 
@@ -3342,6 +3352,7 @@ _key:		| KEY ;
 _line_or_lines:	| LINE | LINES ;
 _lines:		| LINES ;
 _mode:		| MODE ;
+_multiple:	| MULTIPLE ;
 _number:	| NUMBER ;
 _of:		| OF ;
 _on:		| ON ;
