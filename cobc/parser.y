@@ -1175,10 +1175,7 @@ procedure_list:
     struct cobc_list *l;
     for (l = program_spec.exec_list; l; l = l->next)
       if (l->next == last_exec_list)
-	{
-	  COBC_TREE (l->item)->loc.file = @3.text;
-	  COBC_TREE (l->item)->loc.line = @3.first_line;
-	}
+	COBC_TREE (l->item)->loc = @3;
   }
 ;
 procedure:
@@ -1635,8 +1632,7 @@ evaluate_object:
     else
       {
 	$$ = $2;
-	COBC_TREE ($$)->loc.file = @2.text;
-	COBC_TREE ($$)->loc.line = @2.first_line;
+	COBC_TREE ($$)->loc = @2;
       }
   }
 ;
@@ -2048,8 +2044,7 @@ search_statement:
     if ($4)
       push_call_2 (COB_SEARCH_AT_END, $2, $4);
   }
-| SEARCH ALL table_name search_at_end
-  WHEN condition imperative_statement _end_search
+| SEARCH ALL table_name search_at_end search_when _end_search
   {
     // push_call_3 (COB_SEARCH, $2, $3, $5);
     if ($4)
@@ -3004,8 +2999,7 @@ dot:
 | error
 | /* nothing */
   {
-    struct cobc_location loc = {cobc_source_file, cobc_last_line};
-    yywarn_loc (&loc, "`.' is expected after `%s'", cobc_last_text);
+    yywarn ("`.' is expected after `%s'", cobc_last_text);
   }
 ;
 
@@ -3478,22 +3472,22 @@ yyerror (char *fmt, ...)
 }
 
 void
-yywarn_loc (struct cobc_location *loc, char *fmt, ...)
+yywarn_loc (YYLTYPE *loc, char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  yyprintf (loc->file, loc->line, "warning: ", fmt, ap);
+  yyprintf (loc->text, loc->first_line, "warning: ", fmt, ap);
   va_end (ap);
 
   warning_count++;
 }
 
 void
-yyerror_loc (struct cobc_location *loc, char *fmt, ...)
+yyerror_loc (YYLTYPE *loc, char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  yyprintf (loc->file, loc->line, "", fmt, ap);
+  yyprintf (loc->text, loc->first_line, "", fmt, ap);
   va_end (ap);
 
   error_count++;

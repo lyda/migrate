@@ -104,11 +104,11 @@ output_quoted_string (char *s)
 static void
 output_line_directive (cobc_tree x)
 {
-//  if (x->loc.file)
-//    {
-//      output ("#line %d \"%s\"\n", x->loc.line, x->loc.file);
-//      output_line ("cob_source_line = %d;", x->loc.line);
-//    }
+  if (x->loc.text)
+    {
+      //output ("#line %d \"%s\"\n", x->loc.first_line, x->loc.text);
+      output_line ("cob_source_line = %d;", x->loc.first_line);
+    }
 }
 
 

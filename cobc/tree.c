@@ -101,8 +101,11 @@ make_tree (int tag, char class, int size)
   cobc_tree x = malloc (size);
   x->tag = tag;
   x->class = class;
-  x->loc.file = 0;
-  x->loc.line = 0;
+  x->loc.first_line = 0;
+  x->loc.first_column = 0;
+  x->loc.last_line = 0;
+  x->loc.last_column = 0;
+  x->loc.text = 0;
   return x;
 }
 

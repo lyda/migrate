@@ -133,30 +133,29 @@ X\"[^\"\n]*\" {
 
   /* user word */
   yylval.word = lookup_user_word (yytext);
-  if (cobc_in_procedure
-      && (!yylval.word->item || COBC_LABEL_NAME_P (yylval.word->item)))
-    return LABEL_WORD;
-  else if (yylval.word->item && COBC_FIELD_P (yylval.word->item))
+  if (cobc_in_procedure)
     {
-      switch (COBC_FIELD (yylval.word->item)->level)
+      if (!yylval.word->item || COBC_LABEL_NAME_P (yylval.word->item))
+	return LABEL_WORD;
+      else if (yylval.word->item && COBC_FIELD_P (yylval.word->item))
 	{
-	case 88:
+	  switch (COBC_FIELD (yylval.word->item)->level)
+	    {
+	    case 88:
+	      yylval.tree = yylval.word->item;
+	      return CONDITION_NAME;
+	    case 99:
+	      yylval.tree = yylval.word->item;
+	      return CLASS_NAME;
+	    }
+	}
+      else if (yylval.word->item && COBC_INTEGER_P (yylval.word->item))
+	{
 	  yylval.tree = yylval.word->item;
-	  return CONDITION_NAME;
-	case 99:
-	  yylval.tree = yylval.word->item;
-	  return CLASS_NAME;
-	default:
-	  return WORD;
+	  return MNEMONIC_NAME;
 	}
     }
-  else if (yylval.word->item && COBC_INTEGER_P (yylval.word->item))
-    {
-      yylval.tree = yylval.word->item;
-      return MNEMONIC_NAME;
-    }
-  else
-    return WORD;
+  return WORD;
 }
 
 "<="		{ return LE; }

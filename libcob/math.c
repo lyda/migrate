@@ -289,7 +289,9 @@ cob_dis_check (struct cob_field f)
   for (i = 0; i < len; i++)
     if (!isdigit (p[i]))
       {
-	fprintf (stderr, "\007ERROR: non-numeric value: `%s'\n", p);
+	if (cob_source_line)
+	  fprintf (stderr, "%s:%d: ", cob_source_file, cob_source_line);
+	fprintf (stderr, "\aerror: non-numeric value `%s'\n", p);
 	break;
       }
   put_sign (f, sign);

@@ -34,7 +34,7 @@ extern int yylex (void);
 
 extern void yywarn (char *fmt, ...);
 extern void yyerror (char *fmt, ...);
-extern void yywarn_loc (struct cobc_location *loc, char *fmt, ...);
-extern void yyerror_loc (struct cobc_location *loc, char *fmt, ...);
+extern void yywarn_loc (YYLTYPE *loc, char *fmt, ...);
+extern void yyerror_loc (YYLTYPE *loc, char *fmt, ...);
 
 #endif /* _SCANNER_H_ */

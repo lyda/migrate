@@ -50,12 +50,6 @@
 #define COBC_BEFORE		0
 #define COBC_AFTER		1
 
-/* source location */
-struct cobc_location {
-  char *file;
-  int line;
-};
-
 
 /*
  * List
@@ -78,10 +72,20 @@ extern int list_length (struct cobc_list *l);
  * Tree
  */
 
+struct cobc_location {
+  int first_line;
+  int first_column;
+  int last_line;
+  int last_column;
+  char *text;
+};
+
+#define YYLTYPE struct cobc_location
+
 struct cobc_tree_common {
   char tag;
   char class;			/* A,9,X,N,1 */
-  struct cobc_location loc;	/* source location */
+  YYLTYPE loc;			/* source location */
 };
 
 typedef struct cobc_tree_common *cobc_tree;
