@@ -1,5 +1,11 @@
 2002-05-31  Keisuke Nishida  <knishida@netlab.jp>
 
+	* common.c, common.h (cob_index, cob_index_depending): Take `name'.
+	Display index name with the error message.
+	* support.h (COB_INDEX, COB_INDEX_DEPENDING): Take `name'.
+
+2002-05-31  Keisuke Nishida  <knishida@netlab.jp>
+
 	* Makefile.am (libcob_la_DEPENDENCIES): Removed.
 
 2002-05-30  Keisuke Nishida  <knishida@netlab.jp>

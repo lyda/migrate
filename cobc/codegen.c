@@ -281,7 +281,7 @@ output_refmod_offset (cobc_tree x)
 {
   output ("%s (", cobc_index_func);
   output_index (COBC_REFMOD (x)->offset);
-  output (", %d)", COBC_FIELD (x)->size);
+  output (", %d, \"%s\")", COBC_FIELD (x)->size, COBC_FIELD (x)->word->name);
 }
 
 static void
@@ -319,7 +319,7 @@ output_length (cobc_tree x)
 	  output_index (COBC_REFMOD (x)->length);
 	  output (", %d - ", COBC_FIELD (x)->size);
 	  output_refmod_offset (x);
-	  output (") + 1");
+	  output (", \"%s\") + 1", COBC_FIELD (x)->word->name);
 	}
       else
 	{
@@ -514,9 +514,7 @@ output_expr (cobc_tree x, int id)
 		output_prefix ();
 		output ("cob_check_numeric (");
 		output_tree (x);
-		output (", ");
-		output_quoted_string (p->word->name, strlen (p->word->name));
-		output (");\n");
+		output (", \"%s\");\n", p->word->name);
 	      }
 	    output_prefix ();
 	    if (x == cobc_dt)
@@ -911,16 +909,16 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
 	  {
 	    if (f->occurs_depending)
 	      {
-		output (" + %s (i%d, %d, %d, ",
-			cobc_index_depending_func, i--,
-			f->occurs_min, f->occurs);
+		output (" + %s (i%d, %d, %d, ", cobc_index_depending_func,
+			i--, f->occurs_min, f->occurs);
 		output_index (f->occurs_depending);
-		output (") * %d", f->size);
+		output (", \"%s\", \"%s\") * %d", f->word->name,
+			COBC_FIELD (f->occurs_depending)->word->name, f->size);
 	      }
 	    else
 	      {
-		output (" + %s (i%d, %d) * %d",
-			cobc_index_func, i--, f->occurs, f->size);
+		output (" + %s (i%d, %d, \"%s\") * %d", cobc_index_func,
+			i--, f->occurs, f->word->name, f->size);
 	      }
 	  }
       output (")\n");

@@ -1,5 +1,11 @@
 2002-05-31  Keisuke Nishida  <knishida@netlab.jp>
 
+	* Display index name with the error message.
+	* codegen.c (output_refmod_offset, output_length)
+	(output_field_definition): Updated.
+
+2002-05-31  Keisuke Nishida  <knishida@netlab.jp>
+
 	* tree.c, tree.h (cobc_return_code): New variable.
 	* parser.y (call_returning): Move RETURN-CODE to RETURNING field.
 	* inline.c (output_move_index): New function.

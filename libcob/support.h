@@ -92,8 +92,8 @@ struct cob_frame {
 
 #define COB_INITIAL_PERFORM_ID	5
 
-#define COB_INDEX(i,max) ((i) - 1)
-#define COB_INDEX_DEPENDING(i,min,max,dep) ((i) - 1)
+#define COB_INDEX(i,max,name) ((i) - 1)
+#define COB_INDEX_DEPENDING(i,min,max,dep,name,depname) ((i) - 1)
 
 #define cob_cmp(x,y) ((x) - (y))
 
