@@ -133,7 +133,7 @@ X?[\'\"] {
 
 <PICTURE_STATE>{
   "IS"		{ /* ignore */ }
-  [^ \t\r\n]+	{
+  [^ \t\n]+	{
     BEGIN INITIAL;
     return scan_picture (yytext);
   }
