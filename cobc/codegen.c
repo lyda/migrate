@@ -158,7 +158,7 @@ output_base (struct cb_field *f)
     {
       if (!f01->flag_base)
 	{
-	  output_storage ("extern unsigned char %s[%d];\n",
+	  output_storage ("unsigned char %s[%d];\n",
 			  f01->cname, f01->memory_size);
 	  f01->flag_base = 1;
 	}
@@ -689,7 +689,8 @@ output_param (cb_tree x, int id)
 	      output_stmt (CB_VALUE (l));
 	  }
 
-	if (!r->subs && !r->offset && !cb_field_varying (f) && f->count > 0)
+	if (!r->subs && !r->offset
+	    && !f->flag_local && !cb_field_varying (f) && f->count > 0)
 	  {
 	    if (!f->flag_field)
 	      {
@@ -697,9 +698,7 @@ output_param (cb_tree x, int id)
 		output_field (x);
 
 		output_target = cb_storage_file;
-		if (!f->flag_external && !f->flag_local)
-		  output ("static ");
-		output ("cob_field %s%s = ", CB_PREFIX_FIELD, f->cname);
+		output ("static cob_field %s%s = ", CB_PREFIX_FIELD, f->cname);
 		output_field (x);
 		output (";\n");
 
@@ -1923,10 +1922,11 @@ output_initial_values (struct cb_field *p)
 {
   cb_tree def = cb_auto_initialize ? cb_true : NULL;
   for (; p; p = p->sister)
-    {
-      cb_tree x = cb_build_field_reference (p, 0);
-      output_stmt (cb_build_initialize (x, cb_true, NULL, def));
-    }
+    if (!p->flag_external)
+      {
+	cb_tree x = cb_build_field_reference (p, 0);
+	output_stmt (cb_build_initialize (x, cb_true, NULL, def));
+      }
 }
 
 static void
@@ -1972,8 +1972,6 @@ output_internal_function (struct cb_program *prog, int single,
 	       "frame_stack[254];");
   output_line ("cob_field f[4];");
   output_newline ();
-
-  output ("#include \"%s\"\n\n", cb_storage_file_name);
 
   /* files */
   if (prog->file_list)
@@ -2156,6 +2154,8 @@ codegen (struct cb_program *prog)
     output ("static int %s%s = 1;\n", CB_PREFIX_INDEX,
 	    CB_FIELD (CB_VALUE (l))->cname);
   output_newline ();
+
+  output ("#include \"%s\"\n\n", cb_storage_file_name);
 
   /* alphabet-names */
   for (l = prog->alphabet_name_list; l; l = CB_CHAIN (l))
