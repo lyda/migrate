@@ -70,6 +70,8 @@ though it does not work.
 
 *** New compiler option `-L' and `-l', which are passed to the C compiler.
 
+*** New compiler option `-ftrace', which display section names at run time.
+
 *** New compiler option `-fsyntax-only', which does syntax error check
 only without any output.
 
