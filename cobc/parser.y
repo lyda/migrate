@@ -34,7 +34,7 @@
 #include "scanner.h"
 #include "codegen.h"
 #include "reserved.h"
-#include "gettext.h"
+#include "lib/gettext.h"
 
 #define yydebug		yy_bison_debug
 #define YYDEBUG		COB_DEBUG

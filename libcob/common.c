@@ -28,7 +28,7 @@
 
 #include "common.h"
 #include "call.h"
-#include "gettext.h"
+#include "lib/gettext.h"
 
 extern void cob_init_numeric (void);
 extern void cob_init_termio (void);

@@ -54,7 +54,7 @@
 #include "move.h"
 #include "numeric.h"
 #include "fileio.h"
-#include "gettext.h"
+#include "lib/gettext.h"
 
 #define FILE_PERMISSION 0644
 

@@ -29,10 +29,10 @@
 
 #include "cobc.h"
 #include "tree.h"
-#include "getopt.h"
-#include "gettext.h"
 #include "codegen.h"
 #include "reserved.h"
+#include "lib/getopt.h"
+#include "lib/gettext.h"
 
 /* from parser.c */
 extern int yyparse (void);

@@ -1,3 +1,8 @@
+2002-06-04  Keisuke Nishida  <knishida@netlab.jp>
+
+	* Makefile.am (cobc_CFLAGS): -I$(top_srcdir), not -I$(top_srcdir)/lib.
+	* cobc.c, parser.y, scanner.l: Updated.
+
 2002-06-03  Keisuke Nishida  <knishida@netlab.jp>
 
 	* cobc.c (init_environment): Recognize COB_LDADD.

@@ -37,7 +37,7 @@
 #include "scanner.h"
 #include "codegen.h"
 #include "reserved.h"
-#include "gettext.h"
+#include "lib/gettext.h"
 
 int cobc_skip_comment = 0;
 int cobc_in_procedure = 0;

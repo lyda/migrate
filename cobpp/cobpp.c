@@ -28,8 +28,8 @@
 
 #include "cobpp.h"
 #include "scanner.h"
-#include "getopt.h"
-#include "gettext.h"
+#include "lib/getopt.h"
+#include "lib/gettext.h"
 
 extern int yyparse (void);
 

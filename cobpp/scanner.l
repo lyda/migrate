@@ -34,7 +34,7 @@
 #include "cobpp.h"
 #include "parser.h"
 #include "scanner.h"
-#include "gettext.h"
+#include "lib/gettext.h"
 
 #define YY_NO_UNPUT
 

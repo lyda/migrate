@@ -30,7 +30,7 @@
 #include <ltdl.h>
 
 #include "call.h"
-#include "gettext.h"
+#include "lib/gettext.h"
 
 static int dynamic_reloading = 0;
 
