@@ -1144,7 +1144,10 @@ procedure_division:
   procedure_list
   {
     /* close procedure_list sections & paragraphs */
-    close_section (); /* this also closes paragraph */
+    if (curr_paragr)
+      gen_end_label (curr_paragr);
+    if (curr_section)
+      gen_end_label (curr_section);
     resolve_labels ();
     proc_trail ($4);
     in_procedure = 0;
@@ -1171,29 +1174,38 @@ procedure:
 procedure_section:
   LABELSTR SECTION dot
   {
-    cob_tree lab=$1;
-    if (lab->defined != 0) {
-      lab = install(COB_FIELD_NAME (lab), SYTB_LAB, 2);
-    }
-    lab->defined = 1;
+    cob_tree label = $1;
+    if (label->defined != 0)
+      label = install(COB_FIELD_NAME (label), SYTB_LAB, 2);
+    COB_FIELD_TYPE (label) = 'S';
+    label->defined = 1;
 
-    close_section ();
-    open_section(lab);
+    /* Begin a new section */
+    if (curr_paragr)
+      gen_end_label (curr_paragr);
+    if (curr_section)
+      gen_end_label (curr_section);
+    curr_paragr = NULL;
+    curr_section = label;
+    gen_begin_label (curr_section);
   }
 ;
 procedure_paragraph:
   LABELSTR dot
   {
     cob_tree lab=$1;
-    if (lab->defined != 0) {
-      if ((lab=lookup_label(lab,curr_section))==NULL) {
+    if (lab->defined != 0)
+      if ((lab=lookup_label(lab,curr_section))==NULL)
 	lab = install(COB_FIELD_NAME ($1),SYTB_LAB,2);
-      }
-    }
+    COB_FIELD_TYPE (lab) = 'P';
     lab->parent = curr_section;
     lab->defined=1;
-    close_paragr();
-    open_paragr(lab);
+
+    /* Begin a new paragraph */
+    if (curr_paragr)
+      gen_end_label (curr_paragr);
+    curr_paragr = lab;
+    gen_begin_label (curr_paragr);
   }
 ;
 
@@ -1628,7 +1640,15 @@ opt_end_evaluate: | END_EVALUATE ;
  */
 
 exit_statement:
-  EXIT				{ gen_exit (); }
+  EXIT
+  {
+    if (curr_paragr)
+      gen_exit (curr_paragr);
+    else if (curr_section)
+      gen_exit (curr_section);
+    else
+      yywarn ("EXIT statement here has no effect");
+  }
 | EXIT PROGRAM			{ gen_exit_program (); }
 ;
 
