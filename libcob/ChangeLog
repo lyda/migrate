@@ -1,5 +1,16 @@
 2003-05-04  Keisuke Nishida  <knishida@netlab.jp>
 
+	* numeric.c: Optimized cob_add_int/cob_sub_int for DISPLAY.
+	(digit_table): New variable.
+	(init_digit_table): New function.
+	(display_add_int, display_sub_int): New functions.
+	(cob_add_int_to_display): New function.
+	(cob_add_int): Call `cob_add_int_to_display'.
+	(cob_sub_int): Call `cob_add_int'.
+	(Thanks to David Korn <dgk@research.att.com>)
+
+2003-05-04  Keisuke Nishida  <knishida@netlab.jp>
+
 	* common.h (cob_get_sign, cob_put_sign): Redefined as macros.
 	* common.c (cob_real_get_sign, cob_real_put_sign): Called from
 	the above macros.
