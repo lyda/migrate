@@ -1318,14 +1318,42 @@ finalize_field (struct cb_field *p)
  * File
  */
 
-cb_tree
-make_file (cb_tree name)
+struct cb_file *
+build_file (cb_tree name)
 {
   struct cb_file *p =
     make_tree (cb_tag_file, COB_TYPE_UNKNOWN, sizeof (struct cb_file));
   p->name = associate (name, CB_TREE (p));
   p->cname = to_cname (p->name);
-  return CB_TREE (p);
+
+  p->organization = COB_ORG_SEQUENTIAL;
+  p->access_mode = COB_ACCESS_SEQUENTIAL;
+  p->handler = cb_standard_error_handler;
+  return p;
+}
+
+static void
+file_error (cb_tree name, const char *clause)
+{
+  cb_error_x (name, _("%s clause is required for file `%s'"),
+	      clause, CB_NAME (name));
+}
+
+void
+validate_file (struct cb_file *f, cb_tree name)
+{
+  /* check RECORD/RELATIVE KEY clause */
+  switch (f->organization)
+    {
+    case COB_ORG_INDEXED:
+      if (f->key == NULL)
+	file_error (name, "RECORD KEY");
+      break;
+    case COB_ORG_RELATIVE:
+      if (f->key == NULL && f->access_mode != COB_ACCESS_SEQUENTIAL)
+	file_error (name, "RELATIVE KEY");
+      break;
+    }
 }
 
 void

@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 90
+%expect 92
 
 %{
 #include "config.h"
@@ -101,14 +101,14 @@ static void terminator_warning (const char *name);
 %}
 
 %union {
-  int inum;
-  char *str;
+  int ival;
+  char *sval;
   cb_tree tree;
   struct cb_list *list;
   struct cb_picture *pict;
 }
 
-%token <str>  FUNCTION_NAME
+%token <sval>  FUNCTION_NAME
 %token <pict> PICTURE
 %token <tree> WORD LITERAL CLASS_NAME MNEMONIC_NAME
 
@@ -116,6 +116,7 @@ static void terminator_warning (const char *name);
 %token EVALUATE IF INITIALIZE INSPECT MERGE MOVE MULTIPLY OPEN PERFORM
 %token READ RELEASE RETURN REWRITE SEARCH SET SORT START STRING
 %token SUBTRACT UNSTRING WRITE WORKING_STORAGE ZERO PACKED_DECIMAL RECURSIVE
+%token LINAGE FOOTING TOP BOTTOM SHARING ONLY
 %token ACCESS ADVANCING AFTER ALL ALPHABET ALPHABETIC ALPHABETIC_LOWER AS
 %token ALPHABETIC_UPPER ALPHANUMERIC ALPHANUMERIC_EDITED ALSO ALTER ALTERNATE
 %token AND ANY ARE AREA ASCENDING ASSIGN AT AUTO BACKGROUND_COLOR BEFORE BELL
@@ -128,7 +129,7 @@ static void terminator_warning (const char *name);
 %token END_DISPLAY END_DIVIDE END_EVALUATE END_IF END_MULTIPLY END_PERFORM
 %token END_READ END_RETURN END_REWRITE END_SEARCH END_START END_STRING
 %token END_SUBTRACT END_UNSTRING END_WRITE ENVIRONMENT ENVIRONMENT_VARIABLE
-%token EOL EOS EQUAL ERASE ERROR EXCEPTION EXIT EXTEND EXTERNAL FD GOBACK
+%token EOL EOS EOP EQUAL ERASE ERROR EXCEPTION EXIT EXTEND EXTERNAL FD GOBACK
 %token FILE_CONTROL FILLER FIRST FOR FOREGROUND_COLOR FROM FULL GE GIVING
 %token GLOBAL GO GREATER HIGHLIGHT HIGH_VALUE IDENTIFICATION IN INDEX INDEXED
 %token INPUT INPUT_OUTPUT INTO INVALID IS I_O I_O_CONTROL JUSTIFIED KEY LABEL
@@ -146,24 +147,23 @@ static void terminator_warning (const char *name);
 %token TIME TIMES TO TOK_FILE TOK_INITIAL TOK_TRUE TOK_FALSE TRAILING
 %token UNDERLINE UNIT UNTIL UP UPON USAGE USE USING VALUE VARYING WHEN WITH
 
-%type <inum> flag_all flag_duplicates flag_optional flag_global
-%type <inum> flag_not flag_next flag_rounded flag_separate
-%type <inum> integer display_upon screen_plus_minus level_number
-%type <inum> before_or_after perform_test replacing_option
-%type <inum> select_organization select_access_mode same_option
-%type <inum> ascending_or_descending opt_from_integer opt_to_integer
+%type <ival> flag_all flag_duplicates flag_optional flag_global
+%type <ival> flag_not flag_next flag_rounded flag_separate
+%type <ival> integer display_upon screen_plus_minus level_number
+%type <ival> before_or_after perform_test replacing_option
+%type <ival> ascending_or_descending opt_from_integer opt_to_integer
 %type <list> occurs_key_list data_name_list value_list opt_value_list
 %type <list> numeric_value_list inspect_before_after_list
 %type <list> reference_list mnemonic_name_list file_name_list using_phrase
 %type <list> expr_item_list numeric_name_list numeric_edited_name_list
 %type <list> procedure_name_list
 %type <tree> at_line_column column_number condition expr expr_1
-%type <tree> expr_item field_description_list label line_number literal
+%type <tree> expr_item record_description_list label line_number literal
 %type <tree> field_name integer_label reference_or_literal basic_literal
 %type <tree> integer_value numeric_value numeric_expr save_location
-%type <tree> on_or_off opt_screen_description_list
+%type <tree> on_or_off opt_screen_description_list as_literal
 %type <tree> opt_with_pointer perform_option perform_procedure
-%type <tree> reference screen_description screen_description_list
+%type <tree> reference screen_description screen_description_list at_eop
 %type <tree> section_name statement_list non_all_value value write_from
 %type <tree> on_size_error on_overflow at_end opt_invalid_key invalid_key
 %type <tree> group_name record_name numeric_name numeric_edited_name
@@ -227,7 +227,7 @@ program_id_paragraph:
     current_program = build_program ();
     make_field_3 (make_reference ("RETURN-CODE"), "S9(9)", CB_USAGE_INDEX);
   }
-  program_name program_as program_type '.'
+  program_name as_literal program_type '.'
   {
     if ($<tree>5)
       current_program->program_id = CB_LITERAL ($<tree>5)->data;
@@ -250,10 +250,6 @@ program_id_paragraph:
 program_name:
   WORD
 ;
-program_as:
-  /* empty */			{ $<tree>$ = NULL; }
-| AS LITERAL			{ $<tree>$ = $2; }
-;
 program_type:
 | _is COMMON _program		{ current_program->flag_common = 1; }
 | _is TOK_INITIAL _program	{ current_program->flag_initial = 1; }
@@ -262,7 +258,7 @@ program_type:
 
 
 /*****************************************************************************
- * 12 Environment division
+ * Environment division
  *****************************************************************************/
 
 environment_division:
@@ -273,7 +269,7 @@ environment_division:
 
 
 /*******************
- * 12.2 Conficuration section
+ * Conficuration section
  *******************/
 
 configuration_section:
@@ -285,27 +281,33 @@ configuration_section:
 
 
 /*
- * 12.2.4 SOURCE-COMPUTER paragraph
+ * SOURCE-COMPUTER paragraph
  */
 
 source_computer_paragraph:
-| SOURCE_COMPUTER '.' opt_computer_name with_debugging_mode '.'
+| SOURCE_COMPUTER '.' source_computer_entry
+;
+source_computer_entry:
+| '.'
+| computer_name '.'
+| computer_name with_debugging_mode '.'
+| with_debugging_mode '.'
 ;
 with_debugging_mode:
-| _with DEBUGGING MODE		{ cb_obsolete_2002 ("DEBUGGING MODE"); }
+  _with DEBUGGING MODE		{ cb_obsolete_2002 ("DEBUGGING MODE"); }
 ;
 
-opt_computer_name:
-| WORD { }
+computer_name:
+  WORD { }
 ;
 
 
 /*
- * 12.2.5 OBJECT-COMPUTER paragraph
+ * OBJECT-COMPUTER paragraph
  */
 
 object_computer_paragraph:
-| OBJECT_COMPUTER '.' opt_computer_name object_computer_options '.'
+| OBJECT_COMPUTER '.' computer_name object_computer_options '.'
 ;
 object_computer_options:
 | object_computer_options object_computer_option
@@ -329,7 +331,7 @@ alphabet_name:
 
 
 /*
- * 12.2.6 SPECIAL-NAMES paragraph
+ * SPECIAL-NAMES paragraph
  */
 
 special_names_paragraph:
@@ -515,7 +517,7 @@ crt_status_clause:
 
 
 /*******************
- * 12.3 INPUT-OUTPUT SECTION
+ * INPUT-OUTPUT SECTION
  *******************/
 
 input_output_section:
@@ -526,91 +528,77 @@ input_output_section:
 
 
 /*
- * 12.3.3 FILE-CONTROL paragraph
+ * FILE-CONTROL paragraph
  */
 
 file_control_paragraph:
-| FILE_CONTROL '.' select_sequence
+| FILE_CONTROL '.' file_control_sequence
 ;
-select_sequence:
-| select_sequence
+file_control_sequence:
+| file_control_sequence file_control_entry
+;
+file_control_entry:
   SELECT flag_optional undefined_word
   {
-    current_file = CB_FILE (make_file ($4));
-    current_file->organization = COB_ORG_SEQUENTIAL;
-    current_file->access_mode = COB_ACCESS_SEQUENTIAL;
-    current_file->optional = $3;
-    current_file->handler = cb_standard_error_handler;
-    current_program->file_list = cons (current_file, current_program->file_list);
+    if ($3 == cb_error_node)
+      YYERROR;
+
+    /* build new file */
+    current_file = build_file ($3);
+    current_file->optional = $2;
+
+    /* register the file */
+    current_program->file_list =
+      cons (current_file, current_program->file_list);
   }
-  select_options '.'
+  select_clause_sequence '.'
   {
-    const char *name = CB_NAME ($4);
-
-    /* check ASSIGN clause */
-    if (current_file->assign == NULL)
-      cb_error_x ($4, _("ASSIGN required for file `%s'"), name);
-
-    /* check KEY clause */
-    switch (current_file->organization)
-      {
-      case COB_ORG_INDEXED:
-	if (current_file->key == NULL)
-	  cb_error_x ($4, _("RECORD KEY required for file `%s'"), name);
-	break;
-      case COB_ORG_RELATIVE:
-	if (current_file->key == NULL
-	    && current_file->access_mode != COB_ACCESS_SEQUENTIAL)
-	  cb_error_x ($4, _("RELATIVE KEY required for file `%s'"), name);
-	break;
-      }
+    validate_file (current_file, $3);
   }
 ;
-select_options:
-| select_options select_option
+select_clause_sequence:
+| select_clause_sequence select_clause
 ;
-select_option:
-  ASSIGN _to reference_or_literal
-  {
-    current_file->assign = $3;
-  }
-| RESERVE integer _area
-  {
-    /* ignored */
-  }
-| select_organization
-  {
-    current_file->organization = $1;
-  }
-| ORGANIZATION _is select_organization
-  {
-    current_file->organization = $3;
-  }
-| ACCESS _mode _is select_access_mode
-  {
-    current_file->access_mode = $4;
-  }
-| _file STATUS _is reference
-  {
-    current_file->file_status = $4;
-  }
-| PADDING _character _is reference_or_literal
-  {
-    cb_obsolete_2002 ("PADDING CHARACTER");
-  }
-| RECORD DELIMITER _is STANDARD_1
-  {
-    PENDING ("RECORD DELIMITER");
-  }
-| RELATIVE _key _is reference
-  {
-    current_file->key = $4;
-  }
-| RECORD _key _is reference
-  {
-    current_file->key = $4;
-  }
-| ALTERNATE RECORD _key _is reference flag_duplicates
+select_clause:
+  assign_clause
+| access_mode_clause
+| alternative_record_key_clause
+| collating_sequence_clause
+| file_status_clause
+| lock_mode_clause
+| organization_clause
+| padding_character_clause
+| record_delimiter_clause
+| record_key_clause
+| relative_key_clause
+| reserve_clause
+| sharing_clause
+;
+
+
+/* ASSIGN clause */
+
+assign_clause:
+  ASSIGN _to reference_or_literal { current_file->assign = $3; }
+;
+
+
+/* ACCESS MODE clause */
+
+access_mode_clause:
+  ACCESS _mode _is access_mode	{ current_file->access_mode = $<ival>4; }
+;
+access_mode:
+  SEQUENTIAL			{ $<ival>$ = COB_ACCESS_SEQUENTIAL; }
+| DYNAMIC			{ $<ival>$ = COB_ACCESS_DYNAMIC; }
+| RANDOM			{ $<ival>$ = COB_ACCESS_RANDOM; }
+;
+
+
+/* ALTERNATIVE RECORD KEY clause */
+
+alternative_record_key_clause:
+  ALTERNATE RECORD _key _is reference flag_duplicates
   {
     struct cb_alt_key *p = malloc (sizeof (struct cb_alt_key));
     p->key = $5;
@@ -628,21 +616,95 @@ select_option:
       }
   }
 ;
-select_organization:
-  INDEXED			{ $$ = COB_ORG_INDEXED; }
-| SEQUENTIAL			{ $$ = COB_ORG_SEQUENTIAL; }
-| RELATIVE			{ $$ = COB_ORG_RELATIVE; }
-| LINE SEQUENTIAL		{ $$ = COB_ORG_LINE_SEQUENTIAL; }
+
+
+/* COLLATING SEQUENCE clause */
+
+collating_sequence_clause:
+  collating_sequence
 ;
-select_access_mode:
-  SEQUENTIAL			{ $$ = COB_ACCESS_SEQUENTIAL; }
-| DYNAMIC			{ $$ = COB_ACCESS_DYNAMIC; }
-| RANDOM			{ $$ = COB_ACCESS_RANDOM; }
+
+
+/* FILE STATUS clause */
+
+file_status_clause:
+  _file STATUS _is reference	{ current_file->file_status = $4; }
+;
+
+
+/* LOCK MODE clause */
+
+lock_mode_clause:
+  LOCK _mode _is		{ PENDING ("LOCK MODE"); }
+;
+
+
+/* ORGANIZATION clause */
+
+organization_clause:
+  ORGANIZATION _is organization	{ current_file->organization = $<ival>3; }
+| organization			{ current_file->organization = $<ival>1; }
+;
+organization:
+  INDEXED			{ $<ival>$ = COB_ORG_INDEXED; }
+| SEQUENTIAL			{ $<ival>$ = COB_ORG_SEQUENTIAL; }
+| RELATIVE			{ $<ival>$ = COB_ORG_RELATIVE; }
+| LINE SEQUENTIAL		{ $<ival>$ = COB_ORG_LINE_SEQUENTIAL; }
+;
+
+
+/* PADDING CHARACTER clause */
+
+padding_character_clause:
+  PADDING _character _is reference_or_literal
+  {
+    cb_obsolete_2002 ("PADDING CHARACTER");
+  }
+;
+
+
+/* RECORD DELIMITER clause */
+
+record_delimiter_clause:
+  RECORD DELIMITER _is STANDARD_1	{ PENDING ("RECORD DELIMITER"); }
+;
+
+
+/* RECORD KEY clause */
+
+record_key_clause:
+  RECORD _key _is reference	{ current_file->key = $4; }
+;
+
+
+/* RELATIVE KEY clause */
+
+relative_key_clause:
+  RELATIVE _key _is reference	{ current_file->key = $4; }
+;
+
+
+/* RESERVE clause */
+
+reserve_clause:
+  RESERVE integer _area		{ /* ignored */ }
+;
+
+
+/* SHARING clause */
+
+sharing_clause:
+  SHARING _with sharing_option	{ PENDING ("SHARING"); }
+;
+sharing_option:
+  ALL _other
+| NO _other
+| READ ONLY
 ;
 
 
 /*
- * 12.3.5 I-O-CONTROL paragraph
+ * I-O-CONTROL paragraph
  */
 
 i_o_control_paragraph:
@@ -660,23 +722,32 @@ i_o_control_clause:
 | multiple_file_tape_clause
 ;
 
-
-/* 12.3.6 SAME clause */
+/* SAME clause */
 
 same_clause:
   SAME same_option _area _for file_name_list
   {
-    PENDING ("SAME");
+    switch ($<ival>2)
+      {
+      case 0:
+	/* SAME AREA */
+	break;
+      case 1:
+	/* SAME RECORD */
+	break;
+      case 2:
+	/* SAME sort-MERGE */
+	break;
+      }
   }
 ;
 same_option:
-  /* empty */			{ $$ = 0; }
-| RECORD			{ $$ = 1; }
-| SORT				{ $$ = 2; }
-| SORT_MERGE			{ $$ = 3; }
+  /* empty */			{ $<ival>$ = 0; }
+| RECORD			{ $<ival>$ = 1; }
+| SORT				{ $<ival>$ = 2; }
+| SORT_MERGE			{ $<ival>$ = 2; }
 ;
 
-
 /* MULTIPLE FILE TAPE clause */
 
 multiple_file_tape_clause:
@@ -688,7 +759,10 @@ multiple_file_list:
 | multiple_file_list multiple_file
 ;
 multiple_file:
-  file_name POSITION integer { }
+  file_name multiple_file_position { }
+;
+multiple_file_position:
+| POSITION integer
 ;
 
 
@@ -711,37 +785,53 @@ data_division:
 
 file_section:
 | TOK_FILE SECTION '.'
-  file_description_sequence
+  file_descriptions
 ;
-file_description_sequence:
-| file_description_sequence
+file_descriptions:
+| file_descriptions file_description
+;
+file_description:
+  file_description_entry
+  record_description_list
+  {
+    finalize_file (current_file, CB_FIELD ($2));
+  }
+;
+
+
+/*
+ * File description entry
+ */
+
+file_description_entry:
   file_type file_name
   {
-    current_file = CB_FILE (cb_ref ($3));
-    if ($<inum>2 != 0)
-      current_file->organization = $<inum>2;
+    if ($2 == cb_error_node)
+      YYERROR;
+
+    current_file = CB_FILE (cb_ref ($2));
+    if ($<ival>1 != 0)
+      current_file->organization = $<ival>1;
   }
-  file_options '.'
-  field_description_list
-  {
-    finalize_file (current_file, CB_FIELD ($7));
-  }
+  file_description_clause_sequence '.'
 ;
 file_type:
-  FD				{ $<inum>$ = 0; }
-| SD				{ $<inum>$ = COB_ORG_SORT; }
+  FD				{ $<ival>$ = 0; }
+| SD				{ $<ival>$ = COB_ORG_SORT; }
 ;
-file_options:
-| file_options file_option
+file_description_clause_sequence:
+| file_description_clause_sequence file_description_clause
 ;
-file_option:
-  _is GLOBAL			{ PENDING ("GLOBAL"); }
-| _is EXTERNAL			{ PENDING ("EXTERNAL"); }
+file_description_clause:
+  _is EXTERNAL			{ PENDING ("EXTERNAL"); }
+| _is GLOBAL			{ PENDING ("GLOBAL"); }
 | block_contains_clause
 | record_clause
+| linage_clause
+| code_set_clause
 | label_records_clause
+| value_of_clause
 | data_records_clause
-| codeset_clause
 ;
 
 
@@ -790,6 +880,37 @@ opt_to_integer:
 ;
 
 
+/* LINAGE clause */
+
+linage_clause:
+  LINAGE _is integer_value _lines
+  linage_footing linage_top linage_bottom
+  {
+    make_field_3 (make_reference ("LINAGE-COUNTER"), "S9(9)", CB_USAGE_INDEX);
+
+    cb_error ("LINAGE not implemented");
+  }
+;
+linage_footing:
+  _with FOOTING _at integer_value
+;
+
+linage_top:
+  _lines _at TOP integer_value
+;
+
+linage_bottom:
+  _lines _at BOTTOM integer_value
+;
+
+
+/* CODE-SET clause */
+
+code_set_clause:
+  CODE_SET _is WORD		{ PENDING ("CODE-SET"); }
+;
+
+
 /* LABEL RECORDS clause */
 
 label_records_clause:
@@ -801,17 +922,17 @@ label_option:
 ;
 
 
+/* VALUE OF clause */
+
+value_of_clause:
+  WORD _is WORD			{ cb_obsolete_85 ("VALUE OF"); }
+;
+
+
 /* DATA RECORDS clause */
 
 data_records_clause:
   DATA records reference_list	{ cb_obsolete_85 ("DATA RECORDS"); }
-;
-
-
-/* CODE-SET clause */
-
-codeset_clause:
-  CODE_SET _is WORD		{ PENDING ("CODE-SET"); }
 ;
 
 
@@ -821,21 +942,21 @@ codeset_clause:
 
 working_storage_section:
 | WORKING_STORAGE SECTION '.'
-  field_description_list
+  record_description_list
   {
     if ($4)
       current_program->working_storage = CB_FIELD ($4);
   }
 ;
-field_description_list:
+record_description_list:
   /* empty */			{ $$ = NULL; }
-| field_description_list_1	{ $$ = $<tree>1; }
+| record_description_list_1	{ $$ = $<tree>1; }
 ;
-field_description_list_1:
+record_description_list_1:
   {
     current_field = NULL;
   }
-  field_description_list_2
+  record_description_list_2
   {
     struct cb_field *p;
     for (p = CB_FIELD ($<tree>2); p; p = p->sister)
@@ -843,9 +964,9 @@ field_description_list_1:
     $<tree>$ = $<tree>2;
   }
 ;
-field_description_list_2:
+record_description_list_2:
   field_description		{ $<tree>$ = $<tree>1; }
-| field_description_list_2
+| record_description_list_2
   field_description		{ $<tree>$ = $<tree>1; }
 ;
 field_description:
@@ -1119,7 +1240,7 @@ renames_clause:
 
 linkage_section:
 | LINKAGE SECTION '.'
-  field_description_list
+  record_description_list
   {
     if ($4)
       current_program->linkage_storage = CB_FIELD ($4);
@@ -1695,20 +1816,22 @@ close_statement:
 close_list:
 | close_list file_name close_option
   {
-    cb_tree file = cb_ref ($2);
-    push_funcall_2 ("cob_close", file, make_integer ($<inum>3));
-    push (build_file_handler (file, NULL));
+    if ($2 != cb_error_node)
+      {
+	cb_tree file = cb_ref ($2);
+	push_funcall_2 ("cob_close", file, make_integer ($<ival>3));
+	push (build_file_handler (file, NULL));
+      }
   }
 ;
 close_option:
-  /* empty */			{ $<inum>$ = COB_CLOSE_NORMAL; }
-| REEL				{ $<inum>$ = COB_CLOSE_REEL; }
-| REEL _for REMOVAL		{ $<inum>$ = COB_CLOSE_REEL_REMOVAL; }
-| UNIT				{ $<inum>$ = COB_CLOSE_UNIT; }
-| UNIT _for REMOVAL		{ $<inum>$ = COB_CLOSE_UNIT_REMOVAL; }
-| _with NO REWIND		{ $<inum>$ = COB_CLOSE_NO_REWIND; }
-| _with LOCK			{ $<inum>$ = COB_CLOSE_LOCK; }
+  /* empty */			{ $<ival>$ = COB_CLOSE_NORMAL; }
+| reel_or_unit			{ $<ival>$ = COB_CLOSE_UNIT; }
+| reel_or_unit _for REMOVAL	{ $<ival>$ = COB_CLOSE_UNIT_REMOVAL; }
+| _with NO REWIND		{ $<ival>$ = COB_CLOSE_NO_REWIND; }
+| _with LOCK			{ $<ival>$ = COB_CLOSE_LOCK; }
 ;
+reel_or_unit: REEL | UNIT ;
 
 
 /*
@@ -1813,7 +1936,7 @@ display_with_no_advancing:
   /* empty */
   {
     if (!current_program->flag_screen)
-      push_funcall_1 ("cob_newline", make_integer ($<inum>-2));
+      push_funcall_1 ("cob_newline", make_integer ($<ival>-2));
   }
 | _with NO ADVANCING { /* nothing */ }
 ;
@@ -2271,16 +2394,16 @@ open_list:
     for (l = $3; l; l = l->next)
       {
 	cb_tree file = cb_ref (l->item);
-	push_funcall_2 ("cob_open", file, make_integer ($<inum>2));
+	push_funcall_2 ("cob_open", file, make_integer ($<ival>2));
 	push (build_file_handler (file, NULL));
       }
   }
 ;
 open_mode:
-  INPUT				{ $<inum>$ = COB_OPEN_INPUT; }
-| OUTPUT			{ $<inum>$ = COB_OPEN_OUTPUT; }
-| I_O				{ $<inum>$ = COB_OPEN_I_O; }
-| EXTEND			{ $<inum>$ = COB_OPEN_EXTEND; }
+  INPUT				{ $<ival>$ = COB_OPEN_INPUT; }
+| OUTPUT			{ $<ival>$ = COB_OPEN_OUTPUT; }
+| I_O				{ $<ival>$ = COB_OPEN_I_O; }
+| EXTEND			{ $<ival>$ = COB_OPEN_EXTEND; }
 ;
 
 
@@ -2663,13 +2786,13 @@ sort_output:
  */
 
 start_statement:
-  START save_location file_name	{ $<inum>$ = COB_EQ; }
+  START save_location file_name	{ $<ival>$ = COB_EQ; }
   start_key opt_invalid_key
   {
     cb_tree file = cb_ref ($3);
     if ($<tree>5 == NULL)
       $<tree>5 = CB_FILE (file)->key;
-    push_funcall_3 ("cob_start", file, make_integer ($<inum>4), $<tree>5);
+    push_funcall_3 ("cob_start", file, make_integer ($<ival>4), $<tree>5);
     push (build_file_handler (file, $6));
 
     SET_TERMINATOR ($2, $6);
@@ -2678,14 +2801,14 @@ start_statement:
 ;
 start_key:
   /* empty */			{ $<tree>$ = NULL; }
-| KEY _is start_op data_name	{ $<inum>0 = $<inum>3; $<tree>$ = $4; }
+| KEY _is start_op data_name	{ $<ival>0 = $<ival>3; $<tree>$ = $4; }
 ;
 start_op:
-  flag_not equal		{ $<inum>$ = $1 ? COB_NE : COB_EQ; }
-| flag_not greater		{ $<inum>$ = $1 ? COB_LE : COB_GT; }
-| flag_not less			{ $<inum>$ = $1 ? COB_GE : COB_LT; }
-| flag_not greater_or_equal	{ $<inum>$ = $1 ? COB_LT : COB_GE; }
-| flag_not less_or_equal	{ $<inum>$ = $1 ? COB_GT : COB_LE; }
+  flag_not equal		{ $<ival>$ = $1 ? COB_NE : COB_EQ; }
+| flag_not greater		{ $<ival>$ = $1 ? COB_LE : COB_GT; }
+| flag_not less			{ $<ival>$ = $1 ? COB_GE : COB_LT; }
+| flag_not greater_or_equal	{ $<ival>$ = $1 ? COB_LT : COB_GE; }
+| flag_not less_or_equal	{ $<ival>$ = $1 ? COB_GT : COB_LE; }
 ;
 end_start:
   /* empty */			{ terminator_warning ("START"); }
@@ -2892,7 +3015,7 @@ exception_or_error: EXCEPTION | ERROR ;
 
 write_statement:
   WRITE save_location
-  record_name write_from write_option opt_invalid_key
+  record_name write_from write_option write_exception
   {
     struct cb_field *f = CB_FIELD (cb_ref ($3));
     struct cb_parameter *p = $<tree>5 ? CB_PARAMETER ($<tree>5) : 0;
@@ -2911,7 +3034,7 @@ write_statement:
     if ($4)
       push (build_move ($4, $3));
     push_funcall_2 ("cob_write", file, $3);
-    push (build_file_handler (file, $6));
+    push (build_file_handler (file, $<tree>6));
 
     /* BEFORE ADVANCING */
     if (p && p->type == CB_BEFORE)
@@ -2922,7 +3045,7 @@ write_statement:
 	  push_funcall_1 ("cob_write_page", file);
       }
 
-    SET_TERMINATOR ($2, $6);
+    SET_TERMINATOR ($2, $<tree>6);
   }
   end_write
 ;
@@ -2947,6 +3070,11 @@ write_option:
 before_or_after:
   BEFORE			{ $$ = CB_BEFORE; }
 | AFTER				{ $$ = CB_AFTER; }
+;
+write_exception:
+  /* empty */			{ $<tree>$ = NULL; }
+| at_eop			{ $<tree>$ = $1; }
+| invalid_key			{ $<tree>$ = $1; }
 ;
 end_write:
   /* empty */			{ terminator_warning ("WRITE"); }
@@ -3030,6 +3158,32 @@ at_end_sentence:
 ;
 not_at_end_sentence:
   NOT _at END statement_list	{ $<tree>$ = $4; }
+;
+
+
+/*
+ * AT EOP
+ */
+
+at_eop:
+  at_eop_sentence
+  {
+    $$ = make_handler (COB_EC_I_O_EOP, $<tree>1, 0);
+  }
+| not_at_eop_sentence
+  {
+    $$ = make_handler (COB_EC_I_O_EOP, 0, $<tree>1);
+  }
+| at_eop_sentence not_at_eop_sentence
+  {
+    $$ = make_handler (COB_EC_I_O_EOP, $<tree>1, $<tree>2);
+  }
+;
+at_eop_sentence:
+  _at EOP statement_list		{ $<tree>$ = $3; }
+;
+not_at_eop_sentence:
+  NOT _at EOP statement_list		{ $<tree>$ = $4; }
 ;
 
 
@@ -3648,6 +3802,10 @@ integer_value:
   }
 ;
 
+as_literal:
+  /* empty */			{ $$ = NULL; }
+| AS LITERAL			{ $$ = $2; }
+;
 
 /*******************
  * Primitive elements
@@ -3837,12 +3995,14 @@ _in:		| IN ;
 _is:		| IS ;
 _is_are:	| IS | ARE ;
 _key:		| KEY ;
+_lines:		| LINES ;
 _line_or_lines:	| LINE | LINES ;
 _mode:		| MODE ;
 _number:	| NUMBER ;
 _of:		| OF ;
 _on:		| ON ;
 _order:		| ORDER ;
+_other:		| OTHER ;
 _program:	| PROGRAM ;
 _record:	| RECORD ;
 _sign:		| SIGN ;

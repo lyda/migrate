@@ -2280,8 +2280,9 @@ codegen (struct cb_program *prog)
 
   /* fields */
   output ("/* Fields */\n\n");
-  output ("#define i_SWITCH      cob_switch\n");
-  output ("#define i_RETURN_CODE cob_return_code\n\n");
+  output ("#define i_SWITCH         cob_switch\n");
+  output ("#define i_RETURN_CODE    cob_return_code\n");
+  output ("#define i_LINAGE_COUNTER cob_linage_counter\n\n");
   for (l = prog->index_list; l; l = l->next)
     output ("static int i_%s;\n", CB_FIELD (l->item)->cname);
   output_newline ();

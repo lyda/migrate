@@ -363,7 +363,8 @@ struct cb_file {
 #define CB_FILE(x)	(CB_TREE_CAST (cb_tag_file, struct cb_file, x))
 #define CB_FILE_P(x)	(CB_TREE_TAG (x) == cb_tag_file)
 
-extern cb_tree make_file (cb_tree name);
+extern struct cb_file *build_file (cb_tree name);
+extern void validate_file (struct cb_file *f, cb_tree name);
 extern void finalize_file (struct cb_file *f, struct cb_field *records);
 
 

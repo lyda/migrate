@@ -155,7 +155,7 @@ X\"[^\"\n]*\" {
 <FUNCTION_STATE>{
   [a-z0-9-]+	{
     BEGIN INITIAL;
-    yylval.str = strdup (yytext);
+    yylval.sval = strdup (yytext);
     return FUNCTION_NAME;
   }
   .		{ return yytext[0]; }
