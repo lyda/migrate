@@ -2377,7 +2377,11 @@ cb_build_move (cb_tree src, cb_tree dst)
   if (CB_REFERENCE_P (dst))
     CB_REFERENCE (dst)->type = CB_RECEIVING_OPERAND;
 
-  if (CB_BINARY_OP_P (src))
+  if (CB_INDEX_P (dst))
+    return cb_build_assign (cb_build_cast_integer (dst),
+			    cb_build_cast_integer (src));
+
+  if (CB_INDEX_P (src) || CB_BINARY_OP_P (src))
     return cb_build_funcall_2 ("cob_set_int", dst,
 			       cb_build_cast_integer (src));
 
