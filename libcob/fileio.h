@@ -119,10 +119,11 @@ struct cob_fileio_funcs {
   int (*delete) (struct cob_file_desc *f);
 };
 
-extern int cob_file_status;
+extern struct cob_file_desc *cob_last_file;
 extern char cob_dummy_status[];
 
 extern void cob_init_fileio (void);
+extern void cob_default_error_handle (struct cob_file_desc *f);
 extern void cob_open (struct cob_file_desc *f, struct cob_field name, int mode);
 extern void cob_close (struct cob_file_desc *f, int opt);
 extern void cob_read (struct cob_file_desc *f, struct cob_field key);

@@ -143,6 +143,9 @@ extern cobc_tree cobc_int0;
 extern cobc_tree cobc_int1;
 extern cobc_tree cobc_int2;
 
+extern struct cobc_label_name *cobc_default_error_handler;
+extern struct cobc_label_name *cobc_standard_error_handler;
+
 struct cobc_const {
   struct cobc_tree_common common;
   char *val;

@@ -70,29 +70,32 @@ struct cob_frame {
 
 #endif /* !COB_HAVE_COMPUTED_GOTO */
 
-#define cob_exit_program()				\
-  return cob_return_code;
+#define COB_DEFAULT_ERROR_HANDLE				\
+  cob_default_error_handle (cob_last_file);
 
-#define cob_standard_error_handle(id1,id2,id3,id4,f)			\
-  if (f.open_mode == COB_OPEN_INPUT)					\
-    {									\
-      cob_perform (id1, lb_input_handler, le_input_handler);		\
-    }									\
-  else if (f.open_mode == COB_OPEN_OUTPUT)				\
-    {									\
-      cob_perform (id2, lb_output_handler, le_output_handler);		\
-    }									\
-  else if (f.open_mode == COB_OPEN_I_O)					\
-    {									\
-      cob_perform (id3, lb_i_o_handler, le_i_o_handler);		\
-    }									\
-  else if (f.open_mode == COB_OPEN_EXTEND)				\
-    {									\
-      cob_perform (id4, lb_extend_handler, le_extend_handler);		\
+#define COB_STANDARD_ERROR_HANDLE				\
+  switch (cob_last_file->open_mode)				\
+    {								\
+    case COB_OPEN_INPUT:					\
+      cob_perform (1, lb_input_handler, le_input_handler);	\
+      break;							\
+    case COB_OPEN_OUTPUT:					\
+      cob_perform (2, lb_output_handler, le_output_handler);	\
+      break;							\
+    case COB_OPEN_I_O:						\
+      cob_perform (3, lb_i_o_handler, le_i_o_handler);		\
+      break;							\
+    case COB_OPEN_EXTEND:					\
+      cob_perform (4, lb_extend_handler, le_extend_handler);	\
+      break;							\
     }
+
+#define COB_INITIAL_PERFORM_ID	5
 
 #define COB_INDEX(i,max) ((i) - 1)
 #define COB_INDEX_DEPENDING(i,min,max,dep) ((i) - 1)
+
+#define cob_cmp(x,y) ((x) - (y))
 
 #define cob_ref(var,off,len) \
   ({ int cob_ref_off = (off) - 1, cob_ref_len = (len); var; })
@@ -100,6 +103,6 @@ struct cob_frame {
 #define cob_ref_rest(var,off,siz) \
   ({ int cob_ref_off = (off) - 1, cob_ref_len = (siz) - cob_ref_off; var; })
 
-#define cob_cmp(x,y) ((x) - (y))
+#define cob_exit_program() return cob_return_code;
 
 #endif /* COB_SUPPORT_H_ */

@@ -264,6 +264,9 @@ cobc_tree cobc_int0;
 cobc_tree cobc_int1;
 cobc_tree cobc_int2;
 
+struct cobc_label_name *cobc_default_error_handler;
+struct cobc_label_name *cobc_standard_error_handler;
+
 static cobc_tree
 make_constant (char class, char *val)
 {
@@ -306,6 +309,11 @@ init_constants (void)
       cobc_switch[i] =
 	make_field_3 (make_word (strdup (buff)), "9", COBC_USAGE_BINARY);
     }
+
+  cobc_default_error_handler = COBC_LABEL_NAME (make_label_name_nodef (0, 0));
+  cobc_default_error_handler->cname = "default_error_handler";
+  cobc_standard_error_handler = COBC_LABEL_NAME (make_label_name_nodef (0, 0));
+  cobc_standard_error_handler->cname = "standard_error_handler";
 }
 
 

@@ -35,7 +35,7 @@
 
 static void output_tree (cobc_tree x);
 
-static int global_label = 1;
+static int global_label = COB_INITIAL_PERFORM_ID;
 
 /*
  * Output routine
@@ -1656,8 +1656,8 @@ output_tree (cobc_tree x)
     }									\
   else									\
     {									\
-      output ("#define lb_"#handler" lb_default_handler\n");		\
-      output ("#define le_"#handler" le_default_handler\n");		\
+      output ("#define lb_"#handler" lb_default_error_handler\n");	\
+      output ("#define le_"#handler" le_default_error_handler\n");	\
     }
 
 void
@@ -1707,7 +1707,8 @@ codegen (struct program_spec *spec)
   /* labels */
   output ("/* Labels */\n\n");
   output ("enum {\n");
-  output ("  le_default_handler,\n");
+  output ("  le_default_error_handler,\n");
+  output ("  le_standard_error_handler,\n");
   for (l = spec->exec_list; l; l = l->next)
     if (COBC_LABEL_NAME_P (l->item)
 	&& COBC_LABEL_NAME (l->item)->need_return)
@@ -1728,7 +1729,7 @@ codegen (struct program_spec *spec)
   output_indent ("}", -2);
   output_newline ();
 
-  /* initial values */
+  /* initialize values */
   output_line ("static void");
   output_line ("init_values (void)");
   output_indent ("{", 2);
@@ -1772,8 +1773,8 @@ codegen (struct program_spec *spec)
   output_line ("init_environment ();");
   output_newline ();
 
-  /* initial values */
-  output_line ("/* initial values */");
+  /* initialize values */
+  output_line ("/* initialize values */");
   if (!spec->initial_program)
     {
       output_line ("if (!initialized)");
@@ -1794,14 +1795,19 @@ codegen (struct program_spec *spec)
   output_line ("goto lb_$MAIN$;");
   output_newline ();
 
-  output_line ("/* PROCEDURE DIVISION */");
-  output_line ("lb_default_handler:");
-  output_line ("if (cob_file_status != 35)");
-  output_line ("  cob_runtime_error (\"file I/O exited with status %%02d\", "
-	       "cob_file_status);");
-  output_line ("cob_exit (le_default_handler);");
+  /* error handlers */
+  output_line ("/* error handlers */");
+  output_line ("lb_default_error_handler:");
+  output_line ("COB_DEFAULT_ERROR_HANDLE;");
+  output_line ("cob_exit (le_default_error_handler);");
+  output_newline ();
+  output_line ("lb_standard_error_handler:");
+  output_line ("COB_STANDARD_ERROR_HANDLE;");
+  output_line ("cob_exit (le_standard_error_handler);");
+  output_newline ();
 
-  /* PROCEDURE */
+  /* PROCEDURE DIVISION */
+  output_line ("/* PROCEDURE DIVISION */");
   for (l = spec->exec_list; l; l = l->next)
     output_tree (l->item);
   output_newline ();

@@ -261,10 +261,10 @@ program:
     program_spec.file_name_list = NULL;
     program_spec.using_list = NULL;
     program_spec.exec_list = NULL;
-    program_spec.input_handler = NULL;
-    program_spec.output_handler = NULL;
-    program_spec.i_o_handler = NULL;
-    program_spec.extend_handler = NULL;
+    program_spec.input_handler = cobc_default_error_handler;
+    program_spec.output_handler = cobc_default_error_handler;
+    program_spec.i_o_handler = cobc_default_error_handler;
+    program_spec.extend_handler = cobc_default_error_handler;
     label_check_list = NULL;
     /* init environment */
     cobc_in_procedure = 0;
@@ -596,6 +596,7 @@ select_sequence:
     current_file_name->organization = COB_ORG_SEQUENTIAL;
     current_file_name->access_mode = COB_ACCESS_SEQUENTIAL;
     current_file_name->optional = $3;
+    current_file_name->handler = cobc_standard_error_handler;
     COBC_TREE_LOC (current_file_name) = @4;
     program_spec.file_name_list =
       cons (current_file_name, program_spec.file_name_list);

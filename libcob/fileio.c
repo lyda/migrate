@@ -57,7 +57,7 @@
 
 #define FILE_PERMISSION 0644
 
-int cob_file_status;
+struct cob_file_desc *cob_last_file;
 char cob_dummy_status[2];
 
 static struct cob_fileio_funcs *fileio_funcs[4];
@@ -845,9 +845,9 @@ static struct cob_fileio_funcs indexed_funcs = {
 
 #define RETURN_STATUS(x)			\
   do {						\
-    cob_file_status = x;			\
     f->file_status[0] = x / 10 + '0';		\
     f->file_status[1] = x % 10 + '0';		\
+    cob_last_file = f;				\
     return;					\
   } while (0)
 
@@ -1085,6 +1085,14 @@ cob_delete (struct cob_file_desc *f)
   ret = fileio_funcs[f->organization]->delete (f);
 
   RETURN_STATUS (ret);
+}
+
+void
+cob_default_error_handle (struct cob_file_desc *f)
+{
+  int status = f->file_status[0] * 10 + f->file_status[1];
+  if (status != 35)
+    cob_runtime_error ("file I/O exited with status %02", status);
 }
 
 
