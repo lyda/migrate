@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 114
+%expect 113
 
 %{
 #include "config.h"
@@ -32,7 +32,6 @@
 #include "cobc.h"
 #include "reserved.h"
 
-#define yydebug		yy_bison_debug
 #define YYDEBUG		COB_DEBUG
 #define YYERROR_VERBOSE 1
 
@@ -57,6 +56,7 @@
   {								\
     cobc_tree __f = (f);					\
     cobc_tree __h = (h);					\
+    __h = __h ? __h : make_handler (0, 0, 0);			\
     COBC_FUNCALL (__h)->argv[3] = COBC_FILE (__f)->handler;	\
     push (__h);							\
   }
@@ -70,7 +70,16 @@
     if (__h) push (__h);				\
   }
 
-extern int yylex (void);
+#define SET_TERMINATOR(loc,cond)			\
+  statement_location = (cond) ? (loc) : NULL
+
+#define YYWARN_TERMINATOR(name)						\
+  if (cobc_warn_implicit_terminator && statement_location)		\
+    yywarn_x (statement_location,					\
+	      _("%s statement not terminated by END-%s"), name, name)
+
+static cobc_tree statement_location;
+
 extern void codegen (struct cobc_program *prog);
 
 static struct cobc_field *current_field;
@@ -150,7 +159,7 @@ static cobc_tree validate_integer_name (cobc_tree x);
 %type <tree> at_line_column column_number condition  expr expr_1
 %type <tree> expr_item field_description_list label line_number literal
 %type <tree> field_name integer_label reference_or_literal basic_literal
-%type <tree> integer_value numeric_value numeric_expr
+%type <tree> integer_value numeric_value numeric_expr save_location
 %type <tree> on_or_off opt_screen_description_list
 %type <tree> opt_with_pointer perform_option perform_procedure
 %type <tree> reference screen_description screen_description_list
@@ -185,20 +194,19 @@ program:
       resolve_data_name (l->item);
   }
   procedure_division
-  _end_program
+  end_program
   {
     struct cobc_list *l;
     for (l = list_reverse (current_program->label_list); l; l = l->next)
       resolve_label (l->item);
     current_program->file_list = list_reverse (current_program->file_list);
     current_program->exec_list = list_reverse (current_program->exec_list);
-    if (errorcount == 0)
-      codegen (current_program);
-    else
+    if (errorcount > 0)
       YYABORT;
+    codegen (current_program);
   }
 ;
-_end_program:
+end_program:
 | END PROGRAM WORD '.'
 ;
 
@@ -811,12 +819,7 @@ field_description_list_1:
   {
     struct cobc_field *p;
     for (p = COBC_FIELD ($<tree>2); p; p = p->sister)
-      {
-	if (validate_field (p) != 0)
-	  YYERROR;
-	finalize_field (p);
-	validate_field_value (p);
-      }
+      validate_field (p);
     $<tree>$ = $<tree>2;
   }
 ;
@@ -1469,7 +1472,7 @@ statement:
  */
 
 accept_statement:
-  ACCEPT save_location accept_body
+  ACCEPT save_location accept_body end_accept
 ;
 accept_body:
   data_name at_line_column
@@ -1490,7 +1493,6 @@ accept_body:
 	push_funcall_2 ("cob_accept", $1, make_integer (COB_SYSIN));
       }
   }
-  _end_accept
 | data_name FROM DATE
   {
     push_funcall_1 ("cob_accept_date", $1);
@@ -1529,7 +1531,9 @@ accept_body:
       }
   }
 ;
-_end_accept: | END_ACCEPT ;
+end_accept:
+| END_ACCEPT
+;
 
 at_line_column:
   /* empty */			{ $$ = make_pair (cobc_int1, cobc_int1); }
@@ -1549,10 +1553,13 @@ column_number:
  */
 
 add_statement:
-  ADD save_location add_body on_size_error _end_add
+  ADD save_location add_body on_size_error
   {
     push_sequence_with_handler ($<tree>3, $4);
+
+    SET_TERMINATOR ($2, $4);
   }
+  end_add
 ;
 add_body:
   numeric_value_list TO numeric_name_list
@@ -1584,7 +1591,10 @@ add_to:
   /* empty */			{ $<tree>$ = NULL; }
 | TO value			{ $<tree>$ = $2; }
 ;
-_end_add: | END_ADD ;
+end_add:
+  /* empty */			{ YYWARN_TERMINATOR ("ADD"); }
+| END_ADD
+;
 
 
 /*
@@ -1609,12 +1619,15 @@ call_statement:
   CALL save_location
   data_name call_using call_returning
   call_on_exception call_not_on_exception
-  _end_call
   {
-    push_funcall_4 ("@call", $3, $<list>4, $<tree>6, $<tree>7);
+    cobc_tree x = $<tree>6 ? $<tree>6 : make_funcall_0 ("cob_call_error");
+    push_funcall_4 ("@call", $3, $<list>4, x, $<tree>7);
     if ($<tree>5)
       push (build_move (cobc_return_code, $<tree>5));
+
+    SET_TERMINATOR ($2, $<tree>6 || $<tree>7);
   }
+  end_call
 ;
 call_using:
   /* empty */		{ $<list>$ = NULL; }
@@ -1641,7 +1654,7 @@ call_returning:
 | RETURNING data_name	{ $<tree>$ = $2; }
 ;
 call_on_exception:
-  /* empty */		{ $<tree>$ = make_funcall_0 ("cob_call_error"); }
+  /* empty */		{ $<tree>$ = NULL; }
 | _on OVERFLOW
   statement_list	{ $<tree>$ = $3; }
 | _on EXCEPTION
@@ -1652,7 +1665,10 @@ call_not_on_exception:
 | NOT _on EXCEPTION
   statement_list	{ $<tree>$ = $4; }
 ;
-_end_call: | END_CALL ;
+end_call:
+  /* empty */			{ YYWARN_TERMINATOR ("CALL"); }
+| END_CALL
+;
 
 
 /*
@@ -1682,7 +1698,7 @@ close_list:
   {
     cobc_tree file = cobc_ref ($2);
     push_funcall_2 ("cob_close", file, make_integer ($<inum>3));
-    push_file_handler (file, make_handler (0, 0, 0));
+    push_file_handler (file, NULL);
   }
 ;
 close_option:
@@ -1701,10 +1717,13 @@ close_option:
  */
 
 compute_statement:
-  COMPUTE save_location compute_body on_size_error _end_compute
+  COMPUTE save_location compute_body on_size_error
   {
     push_sequence_with_handler ($<tree>3, $4);
+
+    SET_TERMINATOR ($2, $4);
   }
+  end_compute
 ;
 compute_body:
   numeric_edited_name_list '=' numeric_expr
@@ -1712,7 +1731,10 @@ compute_body:
     $<tree>$ = build_assign ($1, 0, $3);
   }
 ;
-_end_compute: | END_COMPUTE ;
+end_compute:
+  /* empty */			{ YYWARN_TERMINATOR ("COMPUTE"); }
+| END_COMPUTE
+;
 
 
 /*
@@ -1720,14 +1742,20 @@ _end_compute: | END_COMPUTE ;
  */
 
 delete_statement:
-  DELETE save_location file_name _record opt_invalid_key _end_delete
+  DELETE save_location file_name _record opt_invalid_key
   {
     cobc_tree file = cobc_ref ($3);
     push_funcall_1 ("cob_delete", file);
     push_file_handler (file, $5);
+
+    SET_TERMINATOR ($2, $5);
   }
+  end_delete
 ;
-_end_delete: | END_DELETE ;
+end_delete:
+  /* empty */			{ YYWARN_TERMINATOR ("DELETE"); }
+| END_DELETE
+;
 
 
 /*
@@ -1759,7 +1787,7 @@ display_statement:
       }
   }
   display_with_no_advancing
-  _end_display
+  end_display
   ;
 display_upon:
   /* empty */			{ $$ = COB_SYSOUT; }
@@ -1790,7 +1818,9 @@ display_with_no_advancing:
   }
 | _with NO ADVANCING { /* nothing */ }
 ;
-_end_display: | END_DISPLAY ;
+end_display:
+| END_DISPLAY
+;
 
 
 /*
@@ -1798,10 +1828,13 @@ _end_display: | END_DISPLAY ;
  */
 
 divide_statement:
-  DIVIDE save_location divide_body on_size_error _end_divide
+  DIVIDE save_location divide_body on_size_error
   {
     push_sequence_with_handler ($<tree>3, $4);
+
+    SET_TERMINATOR ($2, $4);
   }
+  end_divide
 ;
 divide_body:
   numeric_value INTO numeric_name_list
@@ -1827,7 +1860,10 @@ divide_body:
     $<tree>$ = build_divide ($1, $3, $5, $7);
   }
 ;
-_end_divide: | END_DIVIDE ;
+end_divide:
+  /* empty */			{ YYWARN_TERMINATOR ("DIVIDE"); }
+| END_DIVIDE
+;
 
 
 /*
@@ -1835,10 +1871,13 @@ _end_divide: | END_DIVIDE ;
  */
 
 evaluate_statement:
-  EVALUATE save_location evaluate_subject_list evaluate_case_list _end_evaluate
+  EVALUATE save_location evaluate_subject_list evaluate_case_list
   {
     push (build_evaluate ($<list>3, $<list>4));
+
+    SET_TERMINATOR ($2, 1);
   }
+  end_evaluate
 ;
 
 evaluate_subject_list:
@@ -1880,12 +1919,8 @@ evaluate_object:
 | TOK_TRUE			{ $<tree>$ = cobc_true; }
 | TOK_FALSE			{ $<tree>$ = cobc_false; }
 ;
-_end_evaluate:
-  /* empty */
-  {
-    if (cobc_warn_end_evaluate)
-      yywarn (_("END-EVALUATE is expected here"));
-  }
+end_evaluate:
+  /* empty */			{ YYWARN_TERMINATOR ("EVALUATE"); }
 | END_EVALUATE
 ;
 
@@ -1941,25 +1976,21 @@ goback_statement:
  */
 
 if_statement:
-  IF save_location if_body
+  IF save_location condition _then statement_list if_else_sentence
+  {
+    push (make_if ($3, $5, $<tree>6));
+
+    SET_TERMINATOR ($2, 1);
+  }
+  end_if
+| IF error END_IF
 ;
-if_body:
-  condition _then statement_list _end_if
-  {
-    push (make_if ($1, $3, NULL));
-  }
-| condition _then statement_list ELSE statement_list _end_if
-  {
-    push (make_if ($1, $3, $5));
-  }
-| error END_IF
+if_else_sentence:
+  /* empty */			{ $<tree>$ = NULL; }
+| ELSE statement_list		{ $<tree>$ = $2; }
 ;
-_end_if:
-  /* empty */
-  {
-    if (cobc_warn_end_if)
-      yywarn (_("END-IF is expected here"));
-  }
+end_if:
+  /* empty */			{ YYWARN_TERMINATOR ("IF"); }
 | END_IF
 ;
 
@@ -2182,10 +2213,13 @@ move_statement:
  */
 
 multiply_statement:
-  MULTIPLY save_location multiply_body on_size_error _end_multiply
+  MULTIPLY save_location multiply_body on_size_error
   {
     push_sequence_with_handler ($<tree>3, $4);
+
+    SET_TERMINATOR ($2, $4);
   }
+  end_multiply
 ;
 multiply_body:
   numeric_value BY numeric_name_list
@@ -2197,7 +2231,10 @@ multiply_body:
     $<tree>$ = build_assign ($5, 0, make_binary_op ($1, '*', $3));
   }
 ;
-_end_multiply: | END_MULTIPLY ;
+end_multiply:
+  /* empty */			{ YYWARN_TERMINATOR ("MULTIPLY"); }
+| END_MULTIPLY
+;
 
 
 /*
@@ -2215,7 +2252,7 @@ open_list:
       {
 	cobc_tree file = cobc_ref (l->item);
 	push_funcall_2 ("cob_open", file, make_integer ($<inum>2));
-	push_file_handler (file, make_handler (0, 0, 0));
+	push_file_handler (file, NULL);
       }
   }
 ;
@@ -2237,16 +2274,17 @@ perform_statement:
     COBC_PERFORM ($4)->body = $3;
     push ($4);
   }
-| PERFORM save_location perform_option statement_list _end_perform
+| PERFORM save_location perform_option statement_list end_perform
   {
     COBC_PERFORM ($3)->body = $4;
     push ($3);
   }
 ;
-_end_perform:
+end_perform:
   /* empty */
   {
-    yyerror (_("END-PERFORM is expected here"));
+    yyerror_x ($<tree>-2, _("%s statement not terminated by END-%s"),
+	       "PERFORM", "PERFORM");
   }
 | END_PERFORM
 ;
@@ -2315,7 +2353,7 @@ perform_varying:
 
 read_statement:
   READ save_location
-  file_name flag_next _record read_into read_key read_handler _end_read
+  file_name flag_next _record read_into read_key read_handler
   {
     cobc_tree file = cobc_ref ($3);
     cobc_tree key = $<tree>7;
@@ -2334,22 +2372,28 @@ read_statement:
     if ($<tree>6)
       push (build_move (COBC_TREE (COBC_FILE (file)->record), $<tree>6));
     push_file_handler (file, $<tree>8);
+
+    SET_TERMINATOR ($2, $<tree>8);
   }
+  end_read
 ;
 read_into:
   /* empty */			{ $<tree>$ = NULL; }
-| INTO data_name			{ $<tree>$ = $2; }
+| INTO data_name		{ $<tree>$ = $2; }
 ;
 read_key:
   /* empty */			{ $<tree>$ = NULL; }
 | KEY _is data_name		{ $<tree>$ = $3; }
 ;
 read_handler:
-  /* empty */			{ $<tree>$ = make_handler (0, 0, 0); }
+  /* empty */			{ $<tree>$ = NULL; }
 | at_end			{ $<tree>$ = $1; }
 | invalid_key			{ $<tree>$ = $1; }
 ;
-_end_read: | END_READ ;
+end_read:
+  /* empty */			{ YYWARN_TERMINATOR ("READ"); }
+| END_READ
+;
 
 
 /*
@@ -2373,16 +2417,22 @@ release_statement:
  */
 
 return_statement:
-  RETURN save_location file_name _record read_into at_end _end_return
+  RETURN save_location file_name _record read_into at_end
   {
     cobc_tree file = cobc_ref ($3);
     push_funcall_2 ("cob_read", file, cobc_int0);
     if ($<tree>5)
       push (build_move (COBC_TREE (COBC_FILE (file)->record), $<tree>5));
     push_file_handler (file, $6);
+
+    SET_TERMINATOR ($2, $6);
   }
+  end_return
 ;
-_end_return: | END_RETURN ;
+end_return:
+  /* empty */			{ YYWARN_TERMINATOR ("RETURN"); }
+| END_RETURN
+;
 
 
 /*
@@ -2391,16 +2441,22 @@ _end_return: | END_RETURN ;
 
 rewrite_statement:
   REWRITE save_location
-  record_name write_from opt_invalid_key _end_rewrite
+  record_name write_from opt_invalid_key
   {
     cobc_tree file = COBC_TREE (COBC_FIELD (cobc_ref ($3))->file);
     if ($4)
       push (build_move ($4, $3));
     push_funcall_2 ("cob_rewrite", file, $3);
     push_file_handler (file, $5);
+
+    SET_TERMINATOR ($2, $5);
   }
+  end_rewrite
 ;
-_end_rewrite: | END_REWRITE ;
+end_rewrite:
+  /* empty */			{ YYWARN_TERMINATOR ("REWRITE"); }
+| END_REWRITE
+;
 
 
 /*
@@ -2408,7 +2464,11 @@ _end_rewrite: | END_REWRITE ;
  */
 
 search_statement:
-  SEARCH save_location search_body _end_search
+  SEARCH save_location search_body
+  {
+    SET_TERMINATOR ($2, 1);
+  }
+  end_search
 ;
 search_body:
   table_name search_varying search_at_end search_whens
@@ -2445,12 +2505,8 @@ search_all_when:
     $<tree>$ = make_if (build_search_all ($<tree>-1, $2), $3, 0);
   }
 ;
-_end_search:
-  /* empty */
-  {
-    if (cobc_warn_end_search)
-      yywarn (_("END-SEARCH is expected here"));
-  }
+end_search:
+  /* empty */			{ YYWARN_TERMINATOR ("SEARCH"); }
 | END_SEARCH
 ;
 
@@ -2588,14 +2644,17 @@ sort_output:
 
 start_statement:
   START save_location file_name	{ $<inum>$ = COB_EQ; }
-  start_key opt_invalid_key _end_start
+  start_key opt_invalid_key
   {
     cobc_tree file = cobc_ref ($3);
     if ($<tree>5 == NULL)
       $<tree>5 = COBC_FILE (file)->key;
     push_funcall_3 ("cob_start", file, make_integer ($<inum>4), $<tree>5);
     push_file_handler (file, $6);
+
+    SET_TERMINATOR ($2, $6);
   }
+  end_start
 ;
 start_key:
   /* empty */			{ $<tree>$ = NULL; }
@@ -2608,7 +2667,10 @@ start_op:
 | flag_not greater_or_equal	{ $<inum>$ = $1 ? COB_LT : COB_GE; }
 | flag_not less_or_equal	{ $<inum>$ = $1 ? COB_GT : COB_LE; }
 ;
-_end_start: | END_START ;
+end_start:
+  /* empty */			{ YYWARN_TERMINATOR ("START"); }
+| END_START
+;
 
 
 /*
@@ -2633,13 +2695,16 @@ stop_statement:
 
 string_statement:
   STRING save_location
-  string_list INTO data_name opt_with_pointer on_overflow _end_string
+  string_list INTO data_name opt_with_pointer on_overflow
   {
     struct cobc_list *l = $<list>3;
     l = cons (make_funcall_2 ("cob_string_init", $5, $6), l);
     l = list_add (l, make_funcall_0 ("cob_string_finish"));
     push_sequence_with_handler (make_sequence (l), $7);
+
+    SET_TERMINATOR ($2, $7);
   }
+  end_string
 ;
 string_list:
   string_list_1			{ $<list>$ = $<list>1; }
@@ -2665,7 +2730,10 @@ opt_with_pointer:
 | _with POINTER data_name	{ $$ = $3; }
 ;
 
-_end_string: | END_STRING ;
+end_string:
+  /* empty */			{ YYWARN_TERMINATOR ("STRING"); }
+| END_STRING
+;
 
 
 /*
@@ -2673,10 +2741,13 @@ _end_string: | END_STRING ;
  */
 
 subtract_statement:
-  SUBTRACT save_location subtract_body on_size_error _end_subtract
+  SUBTRACT save_location subtract_body on_size_error
   {
     push_sequence_with_handler ($<tree>3, $4);
+
+    SET_TERMINATOR ($2, $4);
   }
+  end_subtract
 ;
 subtract_body:
   numeric_value_list FROM numeric_name_list
@@ -2702,7 +2773,10 @@ subtract_body:
     $<tree>$ = build_corresponding (build_sub, $4, $2, $5);
   }
 ;
-_end_subtract: | END_SUBTRACT ;
+end_subtract:
+  /* empty */			{ YYWARN_TERMINATOR ("SUBTRACT"); }
+| END_SUBTRACT
+;
 
 
 /*
@@ -2712,7 +2786,7 @@ _end_subtract: | END_SUBTRACT ;
 unstring_statement:
   UNSTRING save_location
   data_name unstring_delimited INTO unstring_into
-  opt_with_pointer unstring_tallying on_overflow _end_unstring
+  opt_with_pointer unstring_tallying on_overflow
   {
     struct cobc_list *l = $<list>4;
     l = cons (make_funcall_2 ("cob_unstring_init", $3, $7), l);
@@ -2721,7 +2795,10 @@ unstring_statement:
       l = list_add (l, make_funcall_1 ("cob_unstring_tallying", $<tree>8));
     l = list_add (l, make_funcall_0 ("cob_unstring_finish"));
     push_sequence_with_handler (make_sequence (l), $9);
+
+    SET_TERMINATOR ($2, $9);
   }
+  end_unstring
 ;
 
 unstring_delimited:
@@ -2767,7 +2844,10 @@ unstring_tallying:
 | TALLYING _in data_name	{ $<tree>$ = $3; }
 ;
 
-_end_unstring: | END_UNSTRING ;
+end_unstring:
+  /* empty */			{ YYWARN_TERMINATOR ("UNSTRING"); }
+| END_UNSTRING
+;
 
 
 /*
@@ -2776,7 +2856,7 @@ _end_unstring: | END_UNSTRING ;
 
 write_statement:
   WRITE save_location
-  record_name write_from write_option opt_invalid_key _end_write
+  record_name write_from write_option opt_invalid_key
   {
     struct cobc_field *f = COBC_FIELD (cobc_ref ($3));
     struct cobc_parameter *p = $<tree>5 ? COBC_PARAMETER ($<tree>5) : 0;
@@ -2805,7 +2885,10 @@ write_statement:
 	else
 	  push_funcall_1 ("cob_write_page", file);
       }
+
+    SET_TERMINATOR ($2, $6);
   }
+  end_write
 ;
 write_from:
   /* empty */			{ $$ = NULL; }
@@ -2829,7 +2912,10 @@ before_or_after:
   BEFORE			{ $$ = COBC_BEFORE; }
 | AFTER				{ $$ = COBC_AFTER; }
 ;
-_end_write: | END_WRITE ;
+end_write:
+  /* empty */			{ YYWARN_TERMINATOR ("WRITE"); }
+| END_WRITE
+;
 
 
 /*******************
@@ -2916,10 +3002,7 @@ not_at_end_sentence:
  */
 
 opt_invalid_key:
-  /* empty */
-  {
-    $$ = make_handler (0, 0, 0);
-  }
+  /* empty */			{ $$ = NULL; }
 | invalid_key
 ;
 invalid_key:
@@ -3653,7 +3736,8 @@ function:
 
 save_location:
   {
-    push (make_location (cobc_source_file, cobc_source_line));
+    $$ = make_location (cobc_source_file, cobc_source_line);
+    push ($$);
   }
 ;
 

@@ -329,7 +329,6 @@ extern void field_set_used (struct cobc_field *p);
 extern struct cobc_field *build_field (cobc_tree level, cobc_tree name, struct cobc_field *last_field);
 extern struct cobc_field *validate_redefines (struct cobc_field *field, cobc_tree redefines);
 extern int validate_field (struct cobc_field *p);
-extern int validate_field_value (struct cobc_field *f);
 extern void finalize_field (struct cobc_field *p);
 
 

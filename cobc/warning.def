@@ -33,14 +33,8 @@ COBC_WARNING (2, cobc_warn_parentheses, "parentheses",
 COBC_WARNING (3, cobc_warn_next_sentence, "next-sentence",
 	      N_("Warn uses of NEXT SENTENCE"))
 
-COBC_WARNING (3, cobc_warn_end_evaluate, "end-evaluate",
-	      N_("Warn lacks of END-EVALUATE"))
-
-COBC_WARNING (3, cobc_warn_end_if, "end-if",
-	      N_("Warn lacks of END-IF"))
-
-COBC_WARNING (3, cobc_warn_end_search, "end-search",
-	      N_("Warn lacks of END-SEARCH"))
+COBC_WARNING (3, cobc_warn_implicit_terminator, "implicit-terminator",
+	      N_("Warn lacks of scope terminator (END-XXX)"))
 
 COBC_WARNING (3, cobc_warn_strict_typing, "strict-typing",
 	      N_("Warn type mismatch strictly"))

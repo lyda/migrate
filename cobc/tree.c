@@ -1000,8 +1000,8 @@ validate_redefines (struct cobc_field *field, cobc_tree redefines)
   return f;
 }
 
-int
-validate_field (struct cobc_field *f)
+static int
+validate_field_1 (struct cobc_field *f)
 {
   cobc_tree x = COBC_TREE (f);
   char *name = tree_name (x);
@@ -1016,7 +1016,7 @@ validate_field (struct cobc_field *f)
 	yyerror_x (x, _("group name `%s' may not have JUSTIFIED RIGHT"), name);
 
       for (f = f->children; f; f = f->sister)
-	validate_field (f);
+	validate_field_1 (f);
     }
   else if (f->level == 66)
     {
@@ -1104,7 +1104,7 @@ validate_field (struct cobc_field *f)
 
 static int validate_move (cobc_tree src, cobc_tree dst, int value_flag);
 
-int
+static int
 validate_field_value (struct cobc_field *f)
 {
   if (f->values)
@@ -1114,6 +1114,16 @@ validate_field_value (struct cobc_field *f)
     for (f = f->children; f; f = f->sister)
       validate_field_value (f);
 
+  return 0;
+}
+
+int
+validate_field (struct cobc_field *f)
+{
+  if (validate_field_1 (f) != 0)
+    return -1;
+  finalize_field (f);
+  validate_field_value (f);
   return 0;
 }
 
