@@ -47,7 +47,6 @@
 #include "lib/gettext.h"
 
 cob_file *cob_error_file;
-char cob_dummy_status[2];
 
 static cob_fileio_funcs *fileio_funcs[COB_ORG_MAX];
 
@@ -79,7 +78,7 @@ sequential_open (cob_file *f, char *filename, int mode)
       flags = O_RDWR;
       break;
     case COB_OPEN_EXTEND:
-      flags = O_RDWR | O_APPEND | (f->f.optional ? O_CREAT : 0);
+      flags = O_RDWR | O_APPEND | (f->flag_optional ? O_CREAT : 0);
       break;
     }
 
@@ -377,10 +376,10 @@ relative_read_next (cob_file *f)
 
       if (f->keys[0].field)
 	{
-	  if (f->f.first_read)
+	  if (f->flag_first_read)
 	    {
 	      cob_set_int (f->keys[0].field, 1);
-	      f->f.first_read = 0;
+	      f->flag_first_read = 0;
 	    }
 	  else
 	    {
@@ -508,7 +507,7 @@ indexed_open (cob_file *f, char *filename, int mode)
       flags = O_RDWR | O_CREAT;
       break;
     case COB_OPEN_EXTEND:
-      flags = O_RDWR | (f->f.optional ? O_CREAT : 0);
+      flags = O_RDWR | (f->flag_optional ? O_CREAT : 0);
       break;
     }
 
@@ -644,7 +643,7 @@ indexed_read_next (cob_file *f)
 {
   struct indexed_file *p = f->file;
 
-  if (!f->f.first_read)
+  if (f->flag_first_read == 0)
     {
       if (DB_SEQ (p->db[p->key_index], R_NEXT) != 0)
 	return COB_FILE_END_OF_FILE;
@@ -858,7 +857,7 @@ static int
 sort_read (cob_file *f)
 {
   struct sort_file *p = f->file;
-  if (!f->f.first_read)
+  if (f->flag_first_read == 0)
     if (DB_SEQ (p->db, R_NEXT) != 0)
       return COB_FILE_END_OF_FILE;
 
@@ -899,6 +898,7 @@ static cob_fileio_funcs sort_funcs = {
 static void
 save_status (cob_file *f, int status)
 {
+  static char dummy_status[2];
   static int error_code[] = {
     0,				/* 0x */
     COB_EC_I_O_AT_END,		/* 1x */
@@ -911,6 +911,9 @@ save_status (cob_file *f, int status)
     COB_EC_I_O,			/* unused */
     COB_EC_I_O_IMP		/* 9x */
   };
+
+  if (f->file_status == 0)
+    f->file_status = dummy_status;
 
   f->file_status[0] = status / 10 + '0';
   f->file_status[1] = status % 10 + '0';
@@ -925,38 +928,38 @@ cob_open (cob_file *f, int mode)
   char filename[FILENAME_MAX];
   struct stat st;
 
-  f->f.read_done = 0;
+  f->flag_read_done = 0;
 
   /* check if the file is already open */
-  if (f->f.opened)
+  if (f->flag_opened)
     RETURN_STATUS (COB_FILE_ALREADY_OPEN);
 
   cob_field_to_string (f->assign, filename);
   if ((mode == COB_OPEN_I_O || mode == COB_OPEN_EXTEND)
-      && f->f.optional != 0
+      && f->flag_optional != 0
       && stat (filename, &st) == -1)
     was_not_exist = 1;
 
   f->open_mode = mode;
-  f->f.opened = 0;
-  f->f.nonexistent = 0;
-  f->f.end_of_file = 0;
-  f->f.first_read = 1;
+  f->flag_opened = 0;
+  f->flag_nonexistent = 0;
+  f->flag_end_of_file = 0;
+  f->flag_first_read = 1;
 
-  switch (fileio_funcs[f->organization]->open (f, filename, mode))
+  switch (fileio_funcs[(int) f->organization]->open (f, filename, mode))
     {
     case 0:
-      f->f.opened = 1;
+      f->flag_opened = 1;
       if (was_not_exist)
 	RETURN_STATUS (COB_FILE_SUCCEED_OPTIONAL);
       else
 	RETURN_STATUS (COB_FILE_SUCCEED);
     case ENOENT:
-      if (f->f.optional)
+      if (f->flag_optional)
 	{
-	  f->f.opened = 1;
-	  f->f.nonexistent = 1;
-	  f->f.end_of_file = 1;
+	  f->flag_opened = 1;
+	  f->flag_nonexistent = 1;
+	  f->flag_end_of_file = 1;
 	  RETURN_STATUS (COB_FILE_SUCCEED_OPTIONAL);
 	}
       else
@@ -977,20 +980,20 @@ cob_close (cob_file *f, int opt)
 {
   int ret;
 
-  f->f.read_done = 0;
+  f->flag_read_done = 0;
 
-  if (!f->f.opened)
+  if (f->flag_opened == 0)
     RETURN_STATUS (COB_FILE_NOT_OPEN);
 
-  if (f->f.nonexistent)
+  if (f->flag_nonexistent)
     {
-      f->f.opened = 0;
+      f->flag_opened = 0;
       RETURN_STATUS (COB_FILE_SUCCEED);
     }
 
-  ret = fileio_funcs[f->organization]->close (f, opt);
+  ret = fileio_funcs[(int) f->organization]->close (f, opt);
   if (ret == COB_FILE_SUCCEED)
-    f->f.opened = 0;
+    f->flag_opened = 0;
 
   RETURN_STATUS (ret);
 }
@@ -1000,23 +1003,23 @@ cob_start (cob_file *f, int cond, cob_field *key)
 {
   int ret;
 
-  f->f.read_done = 0;
-  f->f.first_read = 0;
+  f->flag_read_done = 0;
+  f->flag_first_read = 0;
 
-  if (f->f.nonexistent)
+  if (f->flag_nonexistent)
     RETURN_STATUS (COB_FILE_KEY_NOT_EXISTS);
 
-  if (!f->f.opened
+  if (f->flag_opened == 0
       || f->open_mode == COB_OPEN_OUTPUT
       || f->open_mode == COB_OPEN_EXTEND
       || f->access_mode == COB_ACCESS_RANDOM)
     RETURN_STATUS (COB_FILE_INPUT_DENIED);
 
-  ret = fileio_funcs[f->organization]->start (f, cond, key);
+  ret = fileio_funcs[(int) f->organization]->start (f, cond, key);
   if (ret == COB_FILE_SUCCEED)
     {
-      f->f.end_of_file = 0;
-      f->f.first_read = 1;
+      f->flag_end_of_file = 0;
+      f->flag_first_read = 1;
     }
 
   RETURN_STATUS (ret);
@@ -1027,39 +1030,39 @@ cob_read (cob_file *f, cob_field *key)
 {
   int ret;
 
-  f->f.read_done = 0;
+  f->flag_read_done = 0;
 
-  if (f->f.nonexistent)
+  if (f->flag_nonexistent)
     {
-      if (!f->f.first_read)
+      if (f->flag_first_read == 0)
 	RETURN_STATUS (COB_FILE_KEY_NOT_EXISTS);
-      f->f.first_read = 0;
+      f->flag_first_read = 0;
       RETURN_STATUS (COB_FILE_END_OF_FILE);
     }
 
-  if (f->f.end_of_file)
+  if (f->flag_end_of_file)
     RETURN_STATUS (COB_FILE_READ_ERROR);
 
-  if (!f->f.opened
+  if (f->flag_opened == 0
       || f->open_mode == COB_OPEN_OUTPUT
       || f->open_mode == COB_OPEN_EXTEND)
     RETURN_STATUS (COB_FILE_INPUT_DENIED);
 
   if (key)
-    ret = fileio_funcs[f->organization]->read (f, key);
+    ret = fileio_funcs[(int) f->organization]->read (f, key);
   else
-    ret = fileio_funcs[f->organization]->read_next (f);
+    ret = fileio_funcs[(int) f->organization]->read_next (f);
 
   switch (ret)
     {
     case COB_FILE_SUCCEED:
-      f->f.first_read = 0;
-      f->f.read_done = 1;
+      f->flag_first_read = 0;
+      f->flag_read_done = 1;
       if (f->record_size)
 	cob_set_int (f->record_size, f->record->size);
       break;
     case COB_FILE_END_OF_FILE:
-      f->f.end_of_file = 1;
+      f->flag_end_of_file = 1;
       break;
     }
 
@@ -1071,18 +1074,18 @@ cob_write (cob_file *f, cob_field *rec)
 {
   int ret;
 
-  f->f.read_done = 0;
+  f->flag_read_done = 0;
 
   if (f->access_mode == COB_ACCESS_SEQUENTIAL)
     {
-      if (!f->f.opened
+      if (f->flag_opened == 0
 	  || f->open_mode == COB_OPEN_INPUT
 	  || f->open_mode == COB_OPEN_I_O)
 	RETURN_STATUS (COB_FILE_OUTPUT_DENIED);
     }
   else
     {
-      if (!f->f.opened
+      if (f->flag_opened == 0
 	  || f->open_mode == COB_OPEN_INPUT
 	  || f->open_mode == COB_OPEN_EXTEND)
 	RETURN_STATUS (COB_FILE_OUTPUT_DENIED);
@@ -1096,7 +1099,7 @@ cob_write (cob_file *f, cob_field *rec)
   if (f->record->size < f->record_min || f->record_max < f->record->size)
     RETURN_STATUS (COB_FILE_RECORD_OVERFLOW);
 
-  ret = fileio_funcs[f->organization]->write (f);
+  ret = fileio_funcs[(int) f->organization]->write (f);
 
   RETURN_STATUS (ret);
 }
@@ -1106,7 +1109,7 @@ cob_write_page (cob_file *f)
 {
   struct sequential_file *p = f->file;
 
-  if (!f->f.opened
+  if (f->flag_opened == 0
       || f->open_mode == COB_OPEN_INPUT
       || f->open_mode == COB_OPEN_I_O)
     return;
@@ -1120,7 +1123,7 @@ cob_write_lines (cob_file *f, int lines)
   int i;
   struct sequential_file *p = f->file;
 
-  if (!f->f.opened
+  if (f->flag_opened == 0
       || f->open_mode == COB_OPEN_INPUT
       || f->open_mode == COB_OPEN_I_O)
     return;
@@ -1133,18 +1136,18 @@ void
 cob_rewrite (cob_file *f, cob_field *rec)
 {
   int ret;
-  int read_done = f->f.read_done;
+  int read_done = f->flag_read_done;
 
-  f->f.read_done = 0;
+  f->flag_read_done = 0;
 
-  if (!f->f.opened || f->open_mode != COB_OPEN_I_O)
+  if (f->flag_opened == 0 || f->open_mode != COB_OPEN_I_O)
     RETURN_STATUS (COB_FILE_I_O_DENIED);
 
   if (f->access_mode == COB_ACCESS_SEQUENTIAL)
     if (!read_done)
       RETURN_STATUS (COB_FILE_READ_NOT_DONE);
 
-  ret = fileio_funcs[f->organization]->rewrite (f, rec);
+  ret = fileio_funcs[(int) f->organization]->rewrite (f, rec);
 
   RETURN_STATUS (ret);
 }
@@ -1153,18 +1156,18 @@ void
 cob_delete (cob_file *f)
 {
   int ret;
-  int read_done = f->f.read_done;
+  int read_done = f->flag_read_done;
 
-  f->f.read_done = 0;
+  f->flag_read_done = 0;
 
-  if (!f->f.opened || f->open_mode != COB_OPEN_I_O)
+  if (f->flag_opened == 0 || f->open_mode != COB_OPEN_I_O)
     RETURN_STATUS (COB_FILE_I_O_DENIED);
 
   if (f->access_mode == COB_ACCESS_SEQUENTIAL)
     if (!read_done)
       RETURN_STATUS (COB_FILE_READ_NOT_DONE);
 
-  ret = fileio_funcs[f->organization]->delete (f);
+  ret = fileio_funcs[(int) f->organization]->delete (f);
 
   RETURN_STATUS (ret);
 }

@@ -1,3 +1,11 @@
+2003-01-23  Keisuke Nishida  <knishida@netlab.jp>
+
+	* fileio.h (cob_file): Break out flags.
+	* fileio.c: Updated.
+
+	* fileio.h, fileio.c (cob_dummy_status): Removed.
+	* fileio.c (save_status): Check file_status before setting status.
+
 2003-01-20  Keisuke Nishida  <knishida@netlab.jp>
 
 	* common.h (COB_FLAG_HAVE_SIGN): New macro.

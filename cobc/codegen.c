@@ -1887,13 +1887,13 @@ output_file_definition (struct cobc_file *f)
 
   /* output the file descriptor */
   output ("static cob_file %s = {", f->cname);
-  /* organization, access_mode, open_mode */
-  output ("%d, %d, 0, ", f->organization, f->access_mode);
+  /* organization, access_mode, open_mode, flag_optional */
+  output ("%d, %d, 0, %d, ", f->organization, f->access_mode, f->optional);
   /* file_status */
   if (f->file_status)
     output_base (field (f->file_status));
   else
-    output ("cob_dummy_status");
+    output ("0");
   output (", ");
   /* assign */
   if (COBC_LITERAL_P (f->assign))
@@ -1909,14 +1909,14 @@ output_file_definition (struct cobc_file *f)
   output (", ");
   /* record_min, record_max */
   output ("%d, %d, ", f->record_min, f->record_max);
-  /* flags */
-  output ("{%d, 0, 0, 0, 0, 0}, ", f->optional);
   /* nkeys, keys */
   if (f->organization == COB_ORG_RELATIVE
       || f->organization == COB_ORG_INDEXED)
     output ("%d, %s_keys, ", nkeys, f->cname);
   else
     output ("0, 0, ");
+  /* flags */
+  output ("0, 0, 0, 0, 0, ");
   /* file */
   output ("0};\n\n");
 }

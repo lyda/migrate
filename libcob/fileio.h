@@ -86,25 +86,23 @@ typedef struct {
 } cob_file_key;
 
 typedef struct {
-  int organization;		/* ORGANIZATION */
+  char organization;		/* ORGANIZATION */
   char access_mode;		/* ACCESS MODE */
   char open_mode;		/* OPEN MODE */
+  char flag_optional;		/* OPTIONAL */
   char *file_status;		/* FILE STATUS */
   cob_field *assign;		/* ASSIGN TO */
   cob_field *record;		/* record area */
   cob_field *record_size;	/* record size depending on */
   size_t record_min;		/* record min size */
   size_t record_max;		/* record max size */
-  struct {
-    char optional    : 1;	/* OPTIONAL */
-    char opened      : 1;	/* successfully opened */
-    char nonexistent : 1;	/* nonexistent file */
-    char end_of_file : 1;	/* reached the end of file */
-    char first_read  : 1;	/* first READ after OPEN or START */
-    char read_done   : 1;	/* last READ successfully done */
-  } f;
   int nkeys;			/* the number of keys */
   cob_file_key *keys;		/* RELATIVE/RECORD keys */
+  char flag_opened;		/* successfully opened */
+  char flag_nonexistent;	/* nonexistent file */
+  char flag_end_of_file;	/* reached the end of file */
+  char flag_first_read;		/* first READ after OPEN or START */
+  char flag_read_done;		/* last READ successfully done */
   void *file;			/* file type specific data pointer */
 } cob_file;
 
@@ -120,7 +118,6 @@ typedef struct {
 } cob_fileio_funcs;
 
 extern cob_file *cob_error_file;
-extern char cob_dummy_status[];
 
 extern void cob_init_fileio (void);
 extern void cob_default_error_handle (cob_file *f);
