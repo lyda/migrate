@@ -184,13 +184,37 @@ cob_decimal_to_fld (struct fld_desc *f, char *s, int round, union numeric_type v
   switch (f->type)
     {
     case 'B':
-      switch (f->len)
-	{
-	case 1: *((signed char *) s) = mpz_get_si (d->number); break;
-	case 2: *((signed short *) s) = mpz_get_si (d->number); break;
-	case 4: *((signed long *) s) = mpz_get_si (d->number); break;
-	case 8: *((signed long long *) s) = mpz_get_si (d->number); break;
-	}
+      {
+	int val;
+	if (!mpz_fits_sint_p (d->number))
+	  goto size_error;
+	val = mpz_get_si (d->number);
+	switch (f->len)
+	  {
+	  case 1:
+	    if (val < -99 || val > 99)
+	      goto size_error;
+	    *((signed char *) s) = val;
+	    break;
+	  case 2:
+	    if (val < -9999 || val > 9999)
+	      goto size_error;
+	    *((signed short *) s) = val;
+	    break;
+	  case 4:
+	    if (val < -99999999 || val > 99999999)
+	      goto size_error;
+	    *((signed long *) s) = val;
+	    break;
+	  case 8:
+	    /* FIXME: val should be long long, and
+	     * FIXME: this should allow 18 digits */
+	    if (val < -99999999 || val > 99999999)
+	      goto size_error;
+	    *((signed long long *) s) = val;
+	    break;
+	  }
+      }
       break;
 
     case 'C':
@@ -214,7 +238,8 @@ cob_decimal_to_fld (struct fld_desc *f, char *s, int round, union numeric_type v
 	/* Check for overflow */
 	if (f->len < size)
 	  {
-	    puts ("cob_decimal_to_fld: overflow");
+	  size_error:
+	    puts ("warning: size error in numeric operation");
 	    cob_size_error_flag = 1;
 	    goto end;
 	  }
