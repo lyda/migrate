@@ -306,12 +306,10 @@ process_command_line (int argc, char *argv[])
 	case 'X': strcat (cobpp_flags, " -FX"); break;
 
 	case 'W':
-	  cobc_warn_class_mismatch = 1;
 	  cobc_warn_column_overflow = 1;
 	  cobc_warn_end_evaluate = 1;
 	  cobc_warn_end_if = 1;
 	  cobc_warn_parentheses = 1;
-	  cobc_warn_size_overflow = 1;
 	  break;
 
 	default:
@@ -325,7 +323,7 @@ process_command_line (int argc, char *argv[])
   if (cobc_warn_column_overflow)
     strcat (cobpp_flags, " -Wcolumn-overflow");
 
-  if (compile_level)
+  if (compile_level == stage_executable)
     cobc_flag_main = 1;
 
   return optind;
