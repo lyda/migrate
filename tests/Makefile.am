@@ -12,6 +12,7 @@ TESTSUITE_AT = \
 	value.at \
 	initialize.at \
 	move.at \
+	multiply.at \
 	definition.at \
 	extension.at \
 	entry.at \

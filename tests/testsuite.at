@@ -34,6 +34,7 @@ m4_include([value.at])		# 13.16.61 VALUE clause
 
 m4_include([initialize.at])	# 14.8.19 INITIALIZE statement
 m4_include([move.at])		# 14.8.24 MOVE statement
+m4_include([multiply.at])	# 14.8.25 MULTIPLY statement
 
 # Other tests
 m4_include([definition.at])
