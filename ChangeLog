@@ -1,3 +1,7 @@
+2002-09-06  Keisuke Nishida  <knishida@netlab.jp>
+
+	* configure.ac: Check for db1 instead of db2/db3.
+
 2002-09-05  Keisuke Nishida  <knishida@netlab.jp>
 
 	* Use pkg-config scheme.

@@ -56,7 +56,7 @@
 #include "fileio.h"
 #include "lib/gettext.h"
 
-#define FILE_PERMISSION 0644
+#define FILE_MODE 0644
 
 struct cob_file *cob_last_file;
 char cob_dummy_status[2];
@@ -79,19 +79,17 @@ sequential_open (struct cob_file *f, char *filename, int mode)
       flags = O_RDONLY;
       break;
     case COB_OPEN_OUTPUT:
-      flags = O_CREAT | O_RDWR | O_TRUNC;
+      flags = O_RDWR | O_CREAT | O_TRUNC;
       break;
     case COB_OPEN_I_O:
       flags = O_RDWR;
       break;
     case COB_OPEN_EXTEND:
-      flags = O_RDWR | O_APPEND;
-      if (f->f.optional)
-	flags |= O_CREAT;
+      flags = O_RDWR | O_APPEND | (f->f.optional ? O_CREAT : 0);
       break;
     }
 
-  f->file.fd = open (filename, flags, FILE_PERMISSION);
+  f->file.fd = open (filename, flags, FILE_MODE);
 
   return (f->file.fd > 0) ? 0 : errno;
 }
@@ -357,7 +355,9 @@ relative_read_next (struct cob_file *f)
 	      f->f.first_read = 0;
 	    }
 	  else
-	    cob_add_int (f->relative_key, 1, 0, 0);
+	    {
+	      cob_add_int (f->relative_key, 1, 0, 0);
+	    }
 	  if (cob_status != 0)
 	    {
 	      lseek (f->file.fd, - sizeof (f->record_size), SEEK_CUR);
@@ -440,96 +440,72 @@ static struct cob_fileio_funcs relative_funcs = {
  * INDEXED
  */
 
-#define DB_PUT(db,key,data,flags)				\
-  db->put (db, NULL, key, data, flags)
-#define DB_GET(db,key,data,flags)				\
-  db->get (db, NULL, key, data, flags)
-#define DB_DEL(db,key,flags)					\
-  db->del (db, NULL, key, flags)
-#if DB_VERSION_MAJOR == 2
-#define DB_CURSOR(db,cur)					\
-  db->cursor (db, NULL, cur)
-#else
-#define DB_CURSOR(db,cur)					\
-  db->cursor (db, NULL, cur, 0)
-#endif
-#define DBC_GET(cur,key,data,flags)			\
-  ({							\
-    int ret = cur->c_get (cur, key, data, flags);	\
-    if (ret == 0 && f->f.secondary)			\
-      {							\
-	*key = *data;					\
-	ret = DB_GET (f->file.db, key, data, 0);	\
-      }							\
-    ret;						\
-  })
+#define DB_PUT(db,flags)	db->put (db, &f->key, &f->data, flags)
+#define DB_GET(db,flags)	db->get (db, &f->key, &f->data, flags)
+#define DB_SEQ(db,flags)	db->seq (db, &f->key, &f->data, flags)
+#define DB_DEL(db,key,flags)	db->del (db, key, flags)
+#define DB_CLOSE(db)		db->close (db)
 
-#define DBT_SET(k,fld)				\
-  k.data = fld.data;				\
-  k.size = fld.size;
-
-static DB_ENV *dbenv = NULL;
+#define DBT_SET(key,fld)			\
+  key.data = fld.data;				\
+  key.size = fld.size;
 
 static int
 indexed_open (struct cob_file *f, char *filename, int mode)
 {
-  int i, j, ret;
+  int i, j;
   int flags = 0;
 
   switch (mode)
     {
     case COB_OPEN_INPUT:
-      flags = DB_RDONLY;
+      flags = O_RDONLY;
       break;
     case COB_OPEN_OUTPUT:
-      flags = DB_CREATE | DB_TRUNCATE;
+      flags = O_RDWR | O_CREAT | O_TRUNC;
       break;
     case COB_OPEN_I_O:
-      flags = DB_CREATE;
+      flags = O_RDWR | O_CREAT;
       break;
     case COB_OPEN_EXTEND:
-      flags = 0;
-      if (f->f.optional)
-	flags = DB_CREATE;
+      flags = O_RDWR | (f->f.optional ? O_CREAT : 0);
       break;
     }
 
   for (i = 0; i < f->nkeys; i++)
     {
-      char dbname[BUFSIZ];
+      BTREEINFO info;
+      char name[BUFSIZ];
+
+      /* file name */
       if (i == 0)
-	strcpy (dbname, filename);
+	strcpy (name, filename);
       else
-	sprintf (dbname, "%s.%d", filename, i);
-#if DB_VERSION_MAJOR == 2
-      {
-	DB_INFO info;
-	memset (&info, 0, sizeof (info));
-	if (f->keys[i].duplicates)
-	  info.flags = DB_DUP;
-	ret = db_open (dbname, DB_BTREE, flags, FILE_PERMISSION,
-		       dbenv, &info, &f->keys[i].db);
-      }
-#else
-      {
-	DB *dbp;
-	db_create (&f->keys[i].db, dbenv, 0);
-	dbp = f->keys[i].db;
-	if (f->keys[i].duplicates)
-	  dbp->set_flags (dbp, DB_DUP);
-	ret = dbp->open (dbp, dbname, NULL, DB_BTREE, flags, FILE_PERMISSION);
-      }
-#endif
-      if (ret != 0)
+	sprintf (name, "%s.%d", filename, i);
+
+      /* btree info */
+      memset (&info, 0, sizeof (info));
+      if (f->keys[i].duplicates)
+	info.flags = R_DUP;
+
+      /* open db */
+      f->keys[i].db = dbopen (name, flags, FILE_MODE, DB_BTREE, &info);
+      if (f->keys[i].db == 0)
 	{
 	  for (j = 0; j < i; j++)
-	    f->keys[j].db->close (f->keys[j].db, 0);
-	  return ret;
+	    DB_CLOSE (f->keys[j].db);
+	  return errno;
 	}
     }
 
   f->file.db = f->keys[0].db;
+  f->key_index = 0;
   f->last_key = NULL;
+
+  memset (&f->key, 0, sizeof (DBT));
+  memset (&f->data, 0, sizeof (DBT));
+  DB_SEQ (f->keys[f->key_index].db, R_FIRST);
+
   return 0;
 }
 
@@ -538,14 +514,9 @@ indexed_close (struct cob_file *f, int opt)
 {
   int i;
 
-  /* close the cursor */
-  if (f->cursor)
-    f->cursor->c_close (f->cursor);
-  f->cursor = NULL;
-
   /* close DB's */
   for (i = 0; i < f->nkeys; i++)
-    f->keys[i].db->close (f->keys[i].db, 0);
+    DB_CLOSE (f->keys[i].db);
   f->file.db = NULL;
 
   if (f->last_key)
@@ -555,20 +526,16 @@ indexed_close (struct cob_file *f, int opt)
 }
 
 static int
-indexed_start (struct cob_file *f, int cond, struct cob_field k)
+indexed_start (struct cob_file *f, int cond, struct cob_field key)
 {
-  int i, ret;
-  DBT key, data;
-
-  memset (&key, 0, sizeof (DBT));
-  memset (&data, 0, sizeof (DBT));
+  int ret;
 
   /* look up for the key */
-  for (i = 0; i < f->nkeys; i++)
-    if (f->keys[i].field.data == k.data)
+  for (f->key_index = 0; f->key_index < f->nkeys; f->key_index++)
+    if (f->keys[f->key_index].field.data == key.data)
       break;
 #if COB_DEBUG
-  if (i == f->nkeys)
+  if (f->key_index == f->nkeys)
     {
       cob_runtime_error ("cob_start_indexed: key not found "
 			 "(should have been detected by cobc)");
@@ -576,66 +543,49 @@ indexed_start (struct cob_file *f, int cond, struct cob_field k)
     }
 #endif
 
-  /* close the current cursor */
-  if (f->cursor)
-    f->cursor->c_close (f->cursor);
-
-  /* create a new cursor */
-  DB_CURSOR (f->keys[i].db, &f->cursor);
-  f->f.secondary = (i > 0);
-
   /* search */
-  DBT_SET (key, k);
+  DBT_SET (f->key, key);
+  ret = DB_SEQ (f->keys[f->key_index].db, R_CURSOR);
   switch (cond)
     {
     case COB_EQ:
-      if (k.size == f->keys[i].field.size)
-	ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET);
-      else
-	{
-	  ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET_RANGE);
-	  if (ret == 0)
-	    ret = memcmp (key.data, k.data, k.size);
-	}
+      if (ret == 0)
+	ret = memcmp (f->key.data, key.data, key.size);
       break;
     case COB_LT:
     case COB_LE:
-      ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET_RANGE);
       if (ret != 0)
-	ret = f->cursor->c_get (f->cursor, &key, &data, DB_LAST);
+	ret = DB_SEQ (f->keys[f->key_index].db, R_LAST);
       else if (cond == COB_LT
-	       || memcmp (key.data, k.data, k.size) != 0)
-	ret = f->cursor->c_get (f->cursor, &key, &data, DB_PREV);
+	       || memcmp (key.data, key.data, key.size) != 0)
+	ret = DB_SEQ (f->keys[f->key_index].db, R_PREV);
       break;
     case COB_GT:
-    case COB_GE:
-      ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET_RANGE);
-      if (cond == COB_GT)
-	while (ret == 0 && memcmp (key.data, k.data, k.size) == 0)
-	  ret = f->cursor->c_get (f->cursor, &key, &data, DB_NEXT);
+      while (ret == 0 && memcmp (f->key.data, key.data, key.size) == 0)
+	ret = DB_SEQ (f->keys[f->key_index].db, R_NEXT);
       break;
-  }
+    case COB_GE:
+      /* nothing */
+      break;
+    }
+  if (ret == 0 && f->key_index > 0)
+    {
+      f->key = f->data;
+      ret = DB_GET (f->file.db, 0);
+    }
 
   return (ret == 0) ? COB_FILE_SUCCEED : COB_FILE_KEY_NOT_EXISTS;
 }
 
 static int
-indexed_read (struct cob_file *f, struct cob_field k)
+indexed_read (struct cob_file *f, struct cob_field key)
 {
-  int ret;
-  DBT key, data;
-
-  memset (&key, 0, sizeof (DBT));
-  memset (&data, 0, sizeof (DBT));
-
-  if ((ret = indexed_start (f, COB_EQ, k)) != COB_FILE_SUCCEED)
+  int ret = indexed_start (f, COB_EQ, key);
+  if (ret != COB_FILE_SUCCEED)
     return ret;
 
-  if (DBC_GET (f->cursor, &key, &data, DB_CURRENT) != 0)
-    return COB_FILE_KEY_NOT_EXISTS;
-
-  f->record_size = data.size;
-  memcpy (f->record_data, data.data, data.size);
+  f->record_size = f->data.size;
+  memcpy (f->record_data, f->data.data, f->data.size);
 
   return COB_FILE_SUCCEED;
 }
@@ -643,61 +593,42 @@ indexed_read (struct cob_file *f, struct cob_field k)
 static int
 indexed_read_next (struct cob_file *f)
 {
-  int ret;
-  DBT key, data;
-
-  memset (&key, 0, sizeof (DBT));
-  memset (&data, 0, sizeof (DBT));
-
   if (!f->f.first_read)
     {
-      ret = DBC_GET (f->cursor, &key, &data, DB_NEXT);
-    }
-  else if (f->cursor)
-    {
-      ret = DBC_GET (f->cursor, &key, &data, DB_CURRENT);
-    }
-  else
-    {
-      DB_CURSOR (f->keys[0].db, &f->cursor);
-      f->f.secondary = 0;
-      ret = DBC_GET (f->cursor, &key, &data, DB_FIRST);
+      if (DB_SEQ (f->keys[f->key_index].db, R_NEXT) != 0)
+	return COB_FILE_END_OF_FILE;
+      if (f->key_index > 0)
+	{
+	  f->key = f->data;
+	  if (DB_GET (f->file.db, 0) != 0)
+	    return COB_FILE_KEY_NOT_EXISTS;
+	}
     }
 
-  switch (ret)
-    {
-    case 0:
-      f->record_size = data.size;
-      memcpy (f->record_data, data.data, data.size);
-      return COB_FILE_SUCCEED;
-    case DB_NOTFOUND:
-      return COB_FILE_END_OF_FILE;
-    default:
-      return 99;
-    }
+  f->record_size = f->data.size;
+  memcpy (f->record_data, f->data.data, f->data.size);
+
+  return COB_FILE_SUCCEED;
 }
 
 static int
-indexed_write_internal (struct cob_file *f, DBT key)
+indexed_write_internal (struct cob_file *f)
 {
   int i;
-  DBT data;
-
-  memset (&data, 0, sizeof (DBT));
 
   /* write data */
-  data.data = f->record_data;
-  data.size = f->record_size;
-  if (DB_PUT (f->keys[0].db, &key, &data, DB_NOOVERWRITE) != 0)
+  f->data.data = f->record_data;
+  f->data.size = f->record_size;
+  if (DB_PUT (f->keys[0].db, R_NOOVERWRITE) != 0)
     return COB_FILE_KEY_EXISTS;
 
   /* write secondary keys */
-  data = key;
+  f->data = f->key;
   for (i = 1; i < f->nkeys; i++)
     {
-      DBT_SET (key, f->keys[i].field);
-      if (DB_PUT (f->keys[i].db, &key, &data,
-		  f->keys[i].duplicates ? 0 : DB_NOOVERWRITE) != 0)
+      int flags = f->keys[i].duplicates ? 0 : R_NOOVERWRITE;
+      DBT_SET (f->key, f->keys[i].field);
+      if (DB_PUT (f->keys[i].db, flags) != 0)
 	return COB_FILE_KEY_EXISTS;
     }
 
@@ -707,84 +638,60 @@ indexed_write_internal (struct cob_file *f, DBT key)
 static int
 indexed_write (struct cob_file *f)
 {
-  DBT key;
-
-  memset (&key, 0, sizeof (DBT));
-
   /* check record key */
-  DBT_SET (key, f->keys[0].field);
+  DBT_SET (f->key, f->keys[0].field);
   if (!f->last_key)
-    f->last_key = malloc (key.size);
+    f->last_key = malloc (f->key.size);
   else if (f->access_mode == COB_ACCESS_SEQUENTIAL
-	   && memcmp (f->last_key, key.data, key.size) > 0)
+	   && memcmp (f->last_key, f->key.data, f->key.size) > 0)
     return COB_FILE_KEY_INVALID;
-  memcpy (f->last_key, key.data, key.size);
+  memcpy (f->last_key, f->key.data, f->key.size);
 
-  return indexed_write_internal (f, key);
+  return indexed_write_internal (f);
 }
 
 static int
 indexed_delete (struct cob_file *f)
 {
   int i, offset;
-  DBT key, data;
-
-  memset (&key, 0, sizeof (DBT));
-  memset (&data, 0, sizeof (DBT));
+  DBT prim_key;
 
   /* find the primary key */
-  switch (f->access_mode)
+  if (f->access_mode != COB_ACCESS_SEQUENTIAL)
     {
-    case COB_ACCESS_SEQUENTIAL:
-      if (DBC_GET (f->cursor, &key, &data, DB_CURRENT) != 0)
-	return COB_FILE_READ_NOT_DONE;
-      break;
-    case COB_ACCESS_RANDOM:
-    case COB_ACCESS_DYNAMIC:
-      DBT_SET (key, f->keys[0].field);
-      if (DB_GET (f->file.db, &key, &data, 0) != 0)
+      DBT_SET (f->key, f->keys[0].field);
+      if (DB_GET (f->file.db, 0) != 0)
 	return COB_FILE_KEY_NOT_EXISTS;
-      break;
     }
+  prim_key = f->key;
 
   /* delete the secondary keys */
-  offset = data.data - (void *) f->record_data;
+  offset = f->data.data - (void *) f->record_data;
   for (i = 1; i < f->nkeys; i++)
     {
-      DBT skey, dkey, pkey;
-      memset (&skey, 0, sizeof (DBT));
-      memset (&dkey, 0, sizeof (DBT));
-      memset (&pkey, 0, sizeof (DBT));
-      DBT_SET (skey, f->keys[i].field);
-      skey.data += offset;
-      if (f->keys[i].duplicates)
+      DBT_SET (f->key, f->keys[i].field);
+      f->key.data += offset;
+      if (!f->keys[i].duplicates)
 	{
-	  DBC *cursor;
-	  DB_CURSOR (f->keys[i].db, &cursor);
-	  if (cursor->c_get (cursor, &skey, &pkey, DB_SET) == 0)
-	    {
-	      do {
-		if (memcmp (pkey.data, key.data, key.size) == 0)
-		  cursor->c_del (cursor, 0);
-	      }
-#if DB_VERSION_MAJOR == 2
-	      while (cursor->c_get (cursor, &dkey, &pkey, DB_NEXT) == 0
-		     && skey.size == dkey.size
-		     && memcmp (dkey.data, skey.data, skey.size) == 0);
-#else
-	      while (cursor->c_get (cursor, &dkey, &pkey, DB_NEXT_DUP) == 0);
-#endif
-	    }
-	  cursor->c_close (cursor);
+	  DB_DEL (f->keys[i].db, &f->key, 0);
 	}
       else
 	{
-	  DB_DEL (f->keys[i].db, &skey, 0);
+	  DBT sec_key = f->key;
+	  if (DB_SEQ (f->keys[i].db, R_CURSOR) == 0)
+	    while (sec_key.size == f->key.size
+		   && memcmp (f->key.data, sec_key.data, sec_key.size) == 0)
+	      {
+		if (memcmp (f->data.data, prim_key.data, prim_key.size) == 0)
+		  DB_DEL (f->keys[i].db, &f->key, R_CURSOR);
+		if (DB_SEQ (f->keys[i].db, R_NEXT) != 0)
+		  break;
+	      }
 	}
     }
 
   /* delete the record */
-  DB_DEL (f->file.db, &key, 0);
+  DB_DEL (f->file.db, &prim_key, 0);
 
   return COB_FILE_SUCCEED;
 }
@@ -792,18 +699,19 @@ indexed_delete (struct cob_file *f)
 static int
 indexed_rewrite (struct cob_file *f, struct cob_field rec)
 {
-  int ret;
-  DBT key;
-
-  memset (&key, 0, sizeof (DBT));
-
   /* delete the current record */
-  if ((ret = indexed_delete (f)) != COB_FILE_SUCCEED)
+  int ret = indexed_delete (f);
+  if (ret != COB_FILE_SUCCEED)
     return ret;
 
   /* write data */
-  DBT_SET (key, f->keys[0].field);
-  return indexed_write_internal (f, key);
+  DBT_SET (f->key, f->keys[0].field);
+  ret = indexed_write_internal (f);
+
+  /* set cursor to the next */
+  DB_SEQ (f->keys[f->key_index].db, R_NEXT);
+
+  return ret;
 }
 
 static struct cob_fileio_funcs indexed_funcs = {
@@ -822,17 +730,13 @@ static struct cob_fileio_funcs indexed_funcs = {
  * SORT
  */
 
-static struct cob_file *sort_file;
+static struct cob_file *current_sort_file;
 
 static int
-#if (DB_VERSION_MAJOR == 3 && DB_VERSION_MINOR > 2)
-sort_compare (DB *db, const DBT *k1, const DBT *k2)
-#else
 sort_compare (const DBT *k1, const DBT *k2)
-#endif
 {
   int i, cmp;
-  struct cob_file *f = sort_file;
+  struct cob_file *f = current_sort_file;
   for (i = 0; i < f->sort_nkeys; i++)
     {
       struct cob_field f1 = f->sort_keys[i].field;
@@ -858,32 +762,37 @@ static int
 sort_open (struct cob_file *f, char *filename, int mode)
 {
   int flags = 0;
-  DB *dbp;
+  BTREEINFO info;
 
   switch (mode)
     {
     case COB_OPEN_INPUT:
-      flags = DB_RDONLY;
+      flags = O_RDONLY;
       break;
     case COB_OPEN_OUTPUT:
-      flags = DB_CREATE | DB_TRUNCATE;
+      flags = O_RDWR | O_CREAT | O_TRUNC;
       break;
-    case COB_OPEN_I_O:
-    case COB_OPEN_EXTEND:
-      abort ();
     }
 
-  db_create (&f->file.db, dbenv, 0);
-  dbp = f->file.db;
-  dbp->set_flags (dbp, DB_DUP);
-  dbp->set_bt_compare (dbp, sort_compare);
-  return dbp->open (dbp, filename, NULL, DB_BTREE, flags, FILE_PERMISSION);
+  /* open db */
+  memset (&info, 0, sizeof (info));
+  info.flags = R_DUP;
+  info.compare = sort_compare;
+  f->file.db = dbopen (filename, flags, FILE_MODE, DB_BTREE, &info);
+  if (f->file.db == 0)
+    return errno;
+
+  memset (&f->key, 0, sizeof (DBT));
+  memset (&f->data, 0, sizeof (DBT));
+  DB_SEQ (f->file.db, R_FIRST);
+
+  return 0;
 }
 
 static int
 sort_close (struct cob_file *f, int opt)
 {
-  f->file.db->close (f->file.db, 0);
+  DB_CLOSE (f->file.db);
   f->file.db = NULL;
 
   return COB_FILE_SUCCEED;
@@ -892,46 +801,21 @@ sort_close (struct cob_file *f, int opt)
 static int
 sort_read (struct cob_file *f)
 {
-  int ret;
-  DBT key, data;
-
-  memset (&key, 0, sizeof (DBT));
-  memset (&data, 0, sizeof (DBT));
-
-  if (f->f.first_read)
-    {
-      DB_CURSOR (f->file.db, &f->cursor);
-      ret = DBC_GET (f->cursor, &key, &data, DB_FIRST);
-    }
-  else
-    {
-      ret = DBC_GET (f->cursor, &key, &data, DB_NEXT);
-    }
-
-  switch (ret)
-    {
-    case 0:
-      memcpy (f->record_data, key.data, key.size);
-      return COB_FILE_SUCCEED;
-    case DB_NOTFOUND:
+  if (!f->f.first_read)
+    if (DB_SEQ (f->file.db, R_NEXT) != 0)
       return COB_FILE_END_OF_FILE;
-    default:
-      return 99;
-    }
+
+  memcpy (f->record_data, f->key.data, f->key.size);
+  return COB_FILE_SUCCEED;
 }
 
 static int
 sort_write (struct cob_file *f)
 {
-  DBT key, data;
-
-  memset (&key, 0, sizeof (DBT));
-  memset (&data, 0, sizeof (DBT));
-
-  sort_file = f;
-  key.data = f->record_data;
-  key.size = f->record_size;
-  DB_PUT (f->file.db, &key, &data, 0);
+  current_sort_file = f;
+  f->key.data = f->record_data;
+  f->key.size = f->record_size;
+  DB_PUT (f->file.db, 0);
 
   return COB_FILE_SUCCEED;
 }
@@ -1187,8 +1071,9 @@ cob_rewrite (struct cob_file *f, struct cob_field rec)
   if (!FILE_OPENED (f) || f->open_mode != COB_OPEN_I_O)
     RETURN_STATUS (COB_FILE_I_O_DENIED);
 
-  if (!read_done)
-    RETURN_STATUS (COB_FILE_READ_NOT_DONE);
+  if (f->access_mode == COB_ACCESS_SEQUENTIAL)
+    if (!read_done)
+      RETURN_STATUS (COB_FILE_READ_NOT_DONE);
 
   ret = fileio_funcs[f->organization]->rewrite (f, rec);
 
@@ -1199,11 +1084,16 @@ void
 cob_delete (struct cob_file *f)
 {
   int ret;
+  int read_done = f->f.read_done;
 
   f->f.read_done = 0;
 
   if (!FILE_OPENED (f) || f->open_mode != COB_OPEN_I_O)
     RETURN_STATUS (COB_FILE_I_O_DENIED);
+
+  if (f->access_mode == COB_ACCESS_SEQUENTIAL)
+    if (!read_done)
+      RETURN_STATUS (COB_FILE_READ_NOT_DONE);
 
   ret = fileio_funcs[f->organization]->delete (f);
 
@@ -1335,11 +1225,4 @@ cob_init_fileio (void)
   fileio_funcs[COB_ORG_RELATIVE] = &relative_funcs;
   fileio_funcs[COB_ORG_INDEXED] = &indexed_funcs;
   fileio_funcs[COB_ORG_SORT] = &sort_funcs;
-
-#if 0
-  db_env_create (&dbenv, 0);
-  dbenv->set_errpfx (dbenv, "DB");
-  dbenv->set_errfile (dbenv, stderr);
-  dbenv->open (dbenv, NULL, DB_CREATE | DB_INIT_MPOOL, 0);
-#endif
 }

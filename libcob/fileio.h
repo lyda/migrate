@@ -21,7 +21,7 @@
 #define COB_FILEIO_H
 
 #include <stdio.h>
-#include <db.h>
+#include <db1/db.h>
 #include <libcob/common.h>
 
 #define COB_EQ	1 	/* x == y */
@@ -96,12 +96,11 @@ struct cob_file {
     char end_of_file : 1;	/* reached the end of file */
     char first_read  : 1;	/* first READ after OPEN or START */
     char read_done   : 1;	/* last READ successfully done */
-    char secondary   : 1;	/* alternative key is in use (INDEXED files) */
   } f;
   /* fields used in RELATIVE files */
   struct cob_field relative_key; /* RELATIVE KEY */
   /* fields used in INDEXED files */
-  DBC *cursor;
+  int key_index;
   struct cob_key {
     struct cob_field field;	/* key field */
     int duplicates;		/* WITH DUPLICATES */
@@ -109,11 +108,13 @@ struct cob_file {
   } *keys;
   int nkeys;			/* the number of keys */
   unsigned char *last_key;	/* the last key written */
+  /* fields used in SORT files */
   int sort_nkeys;
   struct cob_sort_key {
     int dir;
     struct cob_field field;
   } *sort_keys;
+  DBT key, data;
 };
 
 struct cob_fileio_funcs {

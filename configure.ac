@@ -73,9 +73,12 @@ AC_CHECK_FUNC([getopt_long_only], ,
    AC_LIBSOURCE(getopt.h)])
 
 # Checks for db.
-AC_CHECK_HEADERS([db.h], , AC_MSG_ERROR(db.h is required))
-AC_CHECK_LIB([db], [db_version], , AC_MSG_ERROR(DB 2.0 or later is required))
-LIBCOB_LIBS="$LIBCOB_LIBS -ldb"
+AC_CHECK_HEADERS([db1/db.h], , AC_MSG_ERROR(db1/db.h is required))
+AC_CHECK_FUNCS([dbopen])
+if test "x$ac_cv_func_dbopen" != "xyes"; then
+  AC_CHECK_LIB([db1], [dbopen], , AC_MSG_ERROR(libdb1 is required))
+  LIBCOB_LIBS="$LIBCOB_LIBS -ldb1"
+fi
 
 # Checks for gmp.
 AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp.h is required))
@@ -94,6 +97,15 @@ if test "x$LTLIBINTL" != "x"; then
   LIBCOB_LIBS="$LIBCOB_LIBS $LTLIBINTL"
 fi
 
+# Checks for ncurses.
+USE_NCURSES="no"
+AC_CHECK_HEADERS([curses.h])
+AC_CHECK_LIB([ncurses], [initscr])
+if test "x$ac_cv_lib_ncurses_initscr" = "xyes"; then
+  USE_NCURSES="yes"
+  LIBCOB_LIBS="$LIBCOB_LIBS -lncurses"
+fi
+
 # Checks for readline.
 USE_READLINE="no"
 AC_ARG_WITH(readline,
@@ -103,15 +115,6 @@ AC_ARG_WITH(readline,
 if test "x$ac_cv_lib_readline_readline" = "xyes"; then
   USE_READLINE="yes"
   LIBCOB_LIBS="$LIBCOB_LIBS -lreadline"
-fi
-
-# Checks for ncurses.
-USE_NCURSES="no"
-AC_CHECK_HEADERS([curses.h])
-AC_CHECK_LIB([ncurses], [initscr])
-if test "x$ac_cv_lib_ncurses_initscr" = "xyes"; then
-  USE_NCURSES="yes"
-  LIBCOB_LIBS="$LIBCOB_LIBS -lncurses"
 fi
 
 # Checks for GCC's computed-goto extension
