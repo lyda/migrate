@@ -3818,9 +3818,8 @@ _with: | WITH ;
 static cobc_tree
 cobc_ref (cobc_tree x)
 {
-  x = resolve_name (x);
   if (x && COBC_REFERENCE_P (x))
-    return COBC_REFERENCE (x)->value;
+    return COBC_REFERENCE (resolve_name (x))->value;
   else
     return x;
 }
