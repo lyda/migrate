@@ -288,7 +288,7 @@ void
 cob_unstring (struct cob_field src, ...)
 {
   int i, type, offset = 0, count = 0, delms = 0;
-  struct cob_field ptr = {0, 0};
+  struct cob_field ptr = {0};
   int delm_size;
   unsigned char *delm_data;
   regex_t reg;
@@ -423,6 +423,6 @@ cob_unstring (struct cob_field src, ...)
   va_end (ap);
   if (reg_inited)
     regfree (&reg);
-  if (ptr.data)
+  if (COB_FIELD_IS_VALID (ptr))
     set_int (ptr, offset + 1);
 }
