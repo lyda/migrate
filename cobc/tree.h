@@ -20,6 +20,8 @@
 #ifndef _TREE_H_
 #define _TREE_H_
 
+#include <stdio.h>
+
 
 /*
  * Tree
@@ -41,8 +43,9 @@ typedef struct sym *cob_tree;
 #define COB_TREE(x)		((struct sym *) (x))
 #define COB_TREE_TYPE(x)	(((struct cob_tree_common *) (x))->litflag)
 
-extern void print_tree (cob_tree x);
+extern void print_tree (cob_tree x, FILE *fp);
 
+
 /*
  * Tree list
  */
@@ -80,8 +83,9 @@ struct cob_field {
 #define COB_FIELD_NAME(x)	(COB_FIELD (x)->name)
 #define COB_FIELD_TYPE(x)	(COB_FIELD (x)->type)
 
+
 /*
- * Literals
+ * Literal
  */
 
 struct lit
@@ -179,13 +183,11 @@ struct sym
   }
   flags;
   unsigned char slack;		/* slack bytes inserted */
-  struct occurs *occurs;	/* for DEPENDING ON or null if fixed table */
-};
-
-struct occurs
-{
-  cob_tree depend;
-  int min, max;
+  struct occurs
+  {
+    cob_tree depend;
+    int min, max;
+  } *occurs;			/* for DEPENDING ON or null if fixed table */
 };
 
 #define SYMBOL(x)		((struct sym *) (x))

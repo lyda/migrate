@@ -192,26 +192,26 @@ make_parameter (cob_tree var, int mode)
 
 
 void
-print_tree (cob_tree x)
+print_tree (cob_tree x, FILE *fp)
 {
   if (x == spe_lit_ZE)
-    printf ("ZERO");
+    fputs ("ZERO", fp);
   else if (LITERAL_P (x))
-    printf ("\"%s\"", COB_FIELD_NAME (x));
+    fprintf (fp, "\"%s\"", COB_FIELD_NAME (x));
   else if (SYMBOL_P (x))
-    printf ("%s", COB_FIELD_NAME (x));
+    fputs (COB_FIELD_NAME (x), fp);
   else if (SUBREF_P (x))
     {
       cob_tree_list ls;
-      print_tree (SUBREF_SYM (x));
-      printf ("(");
+      print_tree (SUBREF_SYM (x), fp);
+      fputs ("(", fp);
       for (ls = SUBREF_SUBS (x); ls; ls = ls->next)
 	{
-	  print_tree (ls->tree);
+	  print_tree (ls->tree, fp);
 	  if (ls->next)
-	    printf (", ");
+	    fputs (", ", fp);
 	  else
-	    printf (")");
+	    fputs (")", fp);
 	}
     }
   else if (COND_P (x))
@@ -223,32 +223,32 @@ print_tree (cob_tree x)
       switch (type)
 	{
 	case COND_EQ:
-	  printf ("(= ");
-	  print_tree (l);
-	  printf (" ");
-	  print_tree (r);
-	  printf (")");
+	  fputs ("(= ", fp);
+	  print_tree (l, fp);
+	  fputs (" ", fp);
+	  print_tree (r, fp);
+	  fputs (")", fp);
 	  break;
 
 	case COND_AND:
-	  printf ("(and ");
-	  print_tree (l);
-	  printf (" ");
-	  print_tree (r);
-	  printf (")");
+	  fputs ("(and ", fp);
+	  print_tree (l, fp);
+	  fputs (" ", fp);
+	  print_tree (r, fp);
+	  fputs (")", fp);
 	  break;
 
 	default:
-	  printf ("(cond %d ", type);
-	  print_tree (l);
+	  fprintf (fp, "(cond %d ", type);
+	  print_tree (l, fp);
 	  if (r)
 	    {
-	      printf (" ");
-	      print_tree (r);
+	      fputs (" ", fp);
+	      print_tree (r, fp);
 	    }
-	  printf (")");
+	  fputs (")", fp);
 	}
     }
   else
-    printf ("tree(%p)", x);
+    fprintf (fp, "tree(%p)", x);
 }
