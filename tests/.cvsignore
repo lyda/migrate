@@ -6,4 +6,5 @@ atconfig
 atlocal
 package.m4
 redef
+runtime
 subref

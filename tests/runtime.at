@@ -1,0 +1,91 @@
+AT_INIT([Run-time Error Tests])
+
+
+AT_SETUP([Index out of range (1)])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G.
+  02 X          PIC X OCCURS 10.
+PROCEDURE       DIVISION.
+  DISPLAY X(0).
+  STOP RUN.
+])
+
+AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([./prog], [1], ,
+[prog.cob:9: libcob: index of `X' out of range: 0
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([Index out of range (2)])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G.
+  02 X          PIC X OCCURS 10.
+PROCEDURE       DIVISION.
+  DISPLAY X(11).
+  STOP RUN.
+])
+
+AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([./prog], [1], ,
+[prog.cob:9: libcob: index of `X' out of range: 11
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([Value of DEPENDING ON N out of range])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G.
+  02 X          PIC X OCCURS 1 TO 10 DEPENDING ON N.
+01 N            PIC 9 VALUE 0.
+PROCEDURE       DIVISION.
+  DISPLAY X(5).
+  STOP RUN.
+])
+
+AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([./prog], [1], ,
+[prog.cob:10: libcob: value of `N' out of range: 0
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([Index exceeds DEPENDING ON N])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G.
+  02 X          PIC X OCCURS 1 TO 10 DEPENDING ON N.
+01 N            PIC 9 VALUE 3.
+PROCEDURE       DIVISION.
+  DISPLAY X(5).
+  STOP RUN.
+])
+
+AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([./prog], [1], ,
+[prog.cob:10: libcob: index of `X' out of range: 5
+])
+
+AT_CLEANUP

@@ -1,6 +1,6 @@
 SUBDIRS = cobol85
 
-TESTSUITE = $(srcdir)/redef $(srcdir)/subref
+TESTSUITE = $(srcdir)/redef $(srcdir)/subref $(srcdir)/runtime
 
 EXTRA_DIST = $(TESTSUITE:=.at) $(TESTSUITE)
 
@@ -12,6 +12,7 @@ check-local: atconfig atlocal $(TESTSUITE)
 distclean-local:
 	rm -f atconfig
 	rm -rf redef.dir redef.log
+	rm -rf runtime.dir runtime.log
 	rm -rf subref.dir subref.log
 
 $(srcdir)/package.m4: $(top_srcdir)/configure.ac
@@ -26,5 +27,4 @@ $(srcdir)/package.m4: $(top_srcdir)/configure.ac
 	} > $(srcdir)/package.m4
 
 $(srcdir)/%: $(srcdir)/%.at $(srcdir)/package.m4
-	autom4te --language=autotest -I $(srcdir) $< -o $@.tmp
-	mv $@.tmp $@
+	autom4te --language=autotest -I $(srcdir) $< -o $@
