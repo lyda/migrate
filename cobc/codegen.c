@@ -3334,18 +3334,22 @@ gen_initialize_1 (cob_tree sy)
 void
 gen_initialize (cob_tree sy)
 {
+  cob_tree sy1 = sy;
+  if (SUBREF_P (sy))
+    sy1 = SUBREF_SYM (sy);
+
 #ifdef COB_DEBUG
   fprintf (o_src, "# INITIALIZE %s, type %c\n", sy->name, sy->type);
 #endif
   init_ctype = ' ';
-  get_nb_fields (sy, sy->times, 0);
+  get_nb_fields (sy1, sy1->times, 0);
   if (init_ctype != '&')
     gen_move (get_init_symbol (init_ctype), sy);
   else
     {
       loadloc_to_eax (sy);
       fprintf (o_src, "\tpushl\t%%eax\n");
-      gen_initialize_1 (sy);
+      gen_initialize_1 (sy1);
       fprintf (o_src, "\tpopl\t%%eax\n");
     }
 }
