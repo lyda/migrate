@@ -1,3 +1,7 @@
+2003-04-02  Keisuke Nishida  <knishida@netlab.jp>
+
+	* parser.y, scanner.l: Support SOURCE FORMAT compiler directive.
+
 2003-03-26  Keisuke Nishida  <knishida@netlab.jp>
 
 	* cobpp.h (COBPP_DEFAULT_TAB_WIDTH): New macro.

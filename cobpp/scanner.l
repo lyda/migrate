@@ -65,6 +65,13 @@ static void set_buffer (int lineno, const char *filename, struct replacement *re
 
 <*>\n			{ ECHO; yylineno++; }
 
+">>"			{ return DIRECTIVE; }
+"SOURCE"		{ return SOURCE; }
+"FORMAT"		{ return FORMAT; }
+"IS"			{ return IS; }
+"FIXED"			{ return FIXED; }
+"FREE"			{ return FREE; }
+
 "COPY"			{ BEGIN COPY_STATE; return COPY; }
 "INCLUDE"		{ BEGIN COPY_STATE; return COPY; }
 "REPLACE"		{ BEGIN COPY_STATE; return REPLACE; }
@@ -329,6 +336,10 @@ read_line (char *buff, int size)
   if (n == 0)
     return 0;
 
+  /* compiler directives are reserved */
+  if (memcmp (buff, ">>", 2) == 0)
+    return n;
+
   /* nothing to do for free format */
   if (cobpp_source_format == COBPP_FORMAT_FREE)
     return n;
@@ -361,7 +372,7 @@ read_line (char *buff, int size)
       break;
     default:
       yyerror (_("invalid indicator: `%c'"), buff[6]);
-      break;
+      exit (1);
     }
 
   /* check the text after cobpp_text_column */

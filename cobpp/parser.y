@@ -31,6 +31,7 @@
   struct replacement *r;
 }
 
+%token DIRECTIVE SOURCE FORMAT IS FIXED FREE
 %token COPY, REPLACE, REPLACING, OFF, IN, BY
 %token <s> NAME, TEXT
 %type <s> text,copy_in
@@ -39,7 +40,21 @@
 %%
 
 statement_list: | statement_list statement ;
-statement: copy_statement | replace_statement ;
+statement: directive | copy_statement | replace_statement ;
+
+directive:
+  DIRECTIVE source_format
+;
+
+source_format:
+  SOURCE _format _is format
+;
+format:
+  FIXED				{ cobpp_source_format = COBPP_FORMAT_FIXED; }
+| FREE				{ cobpp_source_format = COBPP_FORMAT_FREE; }
+;
+_format: | FORMAT ;
+_is: | IS ;
 
 copy_statement:
   COPY NAME copy_in
