@@ -1228,7 +1228,7 @@ output_call (struct cb_call *p)
   int dynamic_link = 1;
   cb_tree l;
 
-  if (cb_flag_call_static && CB_LITERAL_P (p->name))
+  if (cb_flag_static_call && CB_LITERAL_P (p->name))
     dynamic_link = 0;
 
   /* local variables */

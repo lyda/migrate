@@ -79,15 +79,6 @@ extern struct cb_exception {
 #define CB_EXCEPTION_NAME(id)	cb_exception_table[id].name
 #define CB_EXCEPTION_ENABLE(id)	cb_exception_table[id].enable
 
-/* CALL statements are static */
-extern int cb_flag_call_static;
-
-/* enable debugging lines */
-extern int cb_flag_debugging_line;
-
-/* output line directives */
-extern int cb_flag_line_directive;
-
 #undef CB_FLAG
 #define CB_FLAG(var,name,doc) extern int var;
 #include "flag.def"

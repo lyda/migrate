@@ -58,10 +58,6 @@ struct cb_exception cb_exception_table[] = {
   {0, 0, 0}		/* CB_EC_MAX */
 };
 
-int cb_flag_call_static = 0;
-int cb_flag_debugging_line = 0;
-int cb_flag_line_directive = 0;
-
 #undef CB_FLAG
 #define CB_FLAG(var,name,doc) int var = 0;
 #include "flag.def"
@@ -182,8 +178,6 @@ static struct option long_options[] = {
   {"std", required_argument, 0, '$'},
   {"target", required_argument, 0, 't'},
   {"debug", no_argument, 0, 'd'},
-  {"static", no_argument, &cb_flag_call_static, 1},
-  {"dynamic", no_argument, &cb_flag_call_static, 0},
   {"free", no_argument, &cb_source_format, CB_FORMAT_FREE},
   {"fixed", no_argument, &cb_source_format, CB_FORMAT_FIXED},
   {"column", required_argument, 0, '*'},
