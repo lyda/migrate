@@ -1,3 +1,0 @@
-#!/bin/sh 
-
-COBOL_FLAGS='-fruntime-inlining' ./cobol2002-run
