@@ -39,6 +39,7 @@
 #define cobc_tag_register	21
 #define cobc_tag_if		22
 #define cobc_tag_evaluate	23
+#define cobc_tag_predefined	24
 
 #define USAGE_DISPLAY	'9'
 #define USAGE_BINARY	'B'
@@ -250,6 +251,8 @@ struct cobc_field {
 #define COBC_FIELD(x)		((struct cobc_field *) (x))
 #endif
 #define COBC_FIELD_P(x)		(COBC_TREE_TAG (x) == cobc_tag_field)
+#define COBC_FILLER_P(x) \
+  (COBC_FIELD_P (x) && COBC_FIELD (x)->cname[0] == '$')
 #define COBC_INDEX_NAME_P(x) \
   (COBC_FIELD_P (x) && COBC_FIELD (x)->usage == USAGE_INDEX)
 
@@ -294,6 +297,21 @@ extern cobc_tree make_refmod (cobc_tree field, cobc_tree offset, cobc_tree lengt
 
 
 /*
+ * Predefined name
+ */
+
+struct cobc_predefined {
+  struct cobc_tree_common common;
+  struct cobc_list *words;
+};
+
+#define COBC_PREDEFINED(x)	(COBC_TREE_CAST (cobc_tag_predefined, struct cobc_predefined, x))
+#define COBC_PREDEFINED_P(x)	(COBC_TREE_TAG (x) == cobc_tag_predefined)
+
+extern cobc_tree make_predefined (struct cobc_list *words);
+
+
+/*
  * File name
  */
 
@@ -302,14 +320,14 @@ struct cobc_file_name {
   struct cobc_word *word;
   char *cname;
   struct cobc_field *record;	/* record descriptor */
-  char *assign;			/* ASSIGN */
+  cobc_tree assign;		/* ASSIGN */
   int optional;			/* OPTIONAL */
   int organization;		/* ORGANIZATION */
   int access_mode;		/* ACCESS MODE */
-  struct cobc_field *status;	/* FILE STATUS */
-  struct cobc_field *key;	/* RELATIVE/RECORD KEY */
+  cobc_tree status;		/* FILE STATUS */
+  cobc_tree key;		/* RELATIVE/RECORD KEY */
   struct cobc_alt_key {
-    struct cobc_field *key;
+    cobc_tree key;
     int duplicates;
     struct cobc_alt_key *next;
   } *alt_key_list;		/* ALTERNATE RECORD KEY list */

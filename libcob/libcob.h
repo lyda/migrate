@@ -122,7 +122,8 @@ struct cob_field {
 
 struct cob_file_desc
 {
-  char *filename;
+  struct cob_field_desc *filename_desc;
+  unsigned char *filename_data;
   signed long reclen;		/* length of record */
   char *record;
   unsigned char organization;
@@ -211,7 +212,7 @@ extern long long cob_exp10[19];
 
 /* functional macros */
 
-#define cob_cmp(x,y) ({int _i = (x) - (y); (_i < 0) ? -1 : _i ? 1 : 0; })
+#define cob_cmp(x,y) ((x) - (y))
 
 #define cob_stop_run() exit (0)
 

@@ -79,7 +79,7 @@ COB_COBPP="cobpp"
 COB_CFLAGS="-I$includedir"
 COB_LIBADD="-L$libdir -lcob"
 COB_LIBRARY_PATH=".:$libdir/$PACKAGE"
-LIBCOB_CFLAGS="${INCLTDL}"
+LIBCOB_CFLAGS=""
 LIBCOB_LIBADD="${LIBDL} ${LIBDB} ${LIBGMP} ${LIBRL}"
 LIBS="$save_libs"
 

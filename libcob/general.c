@@ -309,6 +309,16 @@ cob_is_lower (struct cob_field f)
   return 1;
 }
 
+int
+cob_cmp_zero (unsigned char *data, int len)
+{
+  int i;
+  for (i = 0; i < len; i++)
+    if (data[i] != '0')
+      return data[i] - '0';
+  return 0;
+}
+
 
 void
 _DUMP_ (unsigned char *caData, char *szCount, char *caOut)

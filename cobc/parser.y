@@ -192,7 +192,7 @@ static void redefinition_error (cobc_tree x);
 %type <list> file_name_list,math_name_list,math_edited_name_list
 %type <list> call_item_list,call_using
 %type <tree> special_name_class_options,special_name_class_option
-%type <tree> special_name_class_literal
+%type <tree> special_name_class_literal,select_file_name
 %type <tree> call_returning,add_to,field_description_list,value_item
 %type <tree> field_description_list_1,field_description_list_2
 %type <tree> condition,condition_2,comparative_condition,class_condition
@@ -212,10 +212,11 @@ static void redefinition_error (cobc_tree x);
 %type <tree> numeric_name,numeric_edited_name,group_name,table_name,class_name
 %type <tree> condition_name,data_name,file_name,record_name,label_name
 %type <tree> mnemonic_name,section_name,name,qualified_name
+%type <tree> qualified_predefined_name
+%type <list> qualified_predefined_word
 %type <tree> integer_value,value,number
 %type <tree> literal,basic_literal,figurative_constant
 %type <word> qualified_word,label_word,undefined_word
-%type <list> qualified_predefined_word
 %type <wrop> write_option
 
 
@@ -550,10 +551,10 @@ file_control:
 ;
 select_sequence:
 | select_sequence
-  SELECT flag_optional undefined_word ASSIGN _to NONNUMERIC_LITERAL
+  SELECT flag_optional undefined_word ASSIGN _to select_file_name
   {
     current_file_name = COBC_FILE_NAME (make_file_name ($4));
-    current_file_name->assign = COBC_LITERAL ($7)->str;
+    current_file_name->assign = $7;
     current_file_name->optional = $3;
     program_spec.file_name_list =
       cons (current_file_name, program_spec.file_name_list);
@@ -564,21 +565,19 @@ select_sequence:
       {
       case COB_ORG_INDEXED:
 	if (!current_file_name->key)
-	  {
-	    yyerror ("RECORD KEY is required for file `%s'", $4->name);
-	    current_file_name->key = COBC_FIELD (make_filler ());
-	  }
+	  yyerror ("RECORD KEY is required for file `%s'", $4->name);
 	break;
       case COB_ORG_RELATIVE:
 	if (current_file_name->access_mode != COB_ACCESS_SEQUENTIAL
 	    && !current_file_name->key)
-	  {
-	    yyerror ("RELATIVE KEY is required for file `%s'", $4->name);
-	    current_file_name->key = COBC_FIELD (make_filler ());
-	  }
+	  yyerror ("RELATIVE KEY is required for file `%s'", $4->name);
 	break;
       }
   }
+;
+select_file_name:
+  NONNUMERIC_LITERAL
+| qualified_predefined_name
 ;
 select_options:
 | select_options select_option
@@ -596,28 +595,28 @@ select_option:
   {
     current_file_name->access_mode = $4;
   }
-| RELATIVE _key _is qualified_predefined_word
+| RELATIVE _key _is qualified_predefined_name
   {
     if (current_file_name->organization != COB_ORG_RELATIVE)
       yyerror ("only relative files may have RELATIVE KEY");
     else
-      current_file_name->key = (struct cobc_field *) $4;
+      current_file_name->key = $4;
   }
-| RECORD _key _is qualified_predefined_word
+| RECORD _key _is qualified_predefined_name
   {
     if (current_file_name->organization != COB_ORG_INDEXED)
       yyerror ("only indexed files may have RECORD KEY");
     else
-      current_file_name->key = (struct cobc_field *) $4;
+      current_file_name->key = $4;
   }
-| ALTERNATE RECORD _key _is qualified_predefined_word flag_duplicates
+| ALTERNATE RECORD _key _is qualified_predefined_name flag_duplicates
   {
     if (current_file_name->organization != COB_ORG_INDEXED)
       yyerror ("only indexed files may have ALTERNATE RECORD KEY");
     else
       {
 	struct cobc_alt_key *p = malloc (sizeof (struct cobc_alt_key));
-	p->key = (struct cobc_field *) $5;
+	p->key = $5;
 	p->duplicates = $6;
 	p->next = NULL;
 
@@ -632,9 +631,9 @@ select_option:
 	  }
       }
   }
-| _file STATUS _is qualified_predefined_word
+| _file STATUS _is qualified_predefined_name
   {
-    current_file_name->status = (struct cobc_field *) $4;
+    current_file_name->status = $4;
   }
 | RESERVE integer _area		{ /* ignored */ }
 ;
@@ -2875,6 +2874,20 @@ in_of: IN | OF ;
 
 
 /*
+ * Predefined name
+ */
+
+qualified_predefined_name:
+  qualified_predefined_word	{ $$ = make_predefined ($1); }
+;
+qualified_predefined_word:
+  WORD				{ $$ = cons ($1, NULL); }
+| qualified_predefined_word in_of
+  WORD				{ $$ = cons ($3, $1); }
+;
+
+
+/*
  * Undefined word
  */
 
@@ -2889,17 +2902,6 @@ undefined_word:
       redefinition_error ($1->item);
     $$ = $1;
   }
-;
-
-
-/*
- * Predefined words
- */
-
-qualified_predefined_word:
-  WORD				{ $$ = cons ($1, NULL); }
-| qualified_predefined_word in_of
-  WORD				{ $$ = cons ($3, $1); }
 ;
 
 
@@ -3271,10 +3273,11 @@ validate_field_tree (struct cobc_field *p)
     }
 }
 
-static struct cobc_field *
-lookup_predefined_word (struct cobc_list *l)
+static cobc_tree
+resolve_predefined_name (cobc_tree x)
 {
-  cobc_tree x;
+  cobc_tree name;
+  struct cobc_list *l = COBC_PREDEFINED (x)->words;
   struct cobc_word *p = l->item;
   if (p->count == 0)
     {
@@ -3284,31 +3287,33 @@ lookup_predefined_word (struct cobc_list *l)
   else if (p->count > 1)
     yywarn ("`%s' ambiguous; need qualification", p->name);
 
-  x = p->item;
+  name = p->item;
   for (l = l->next; l; l = l->next)
     {
       struct cobc_word *w = l->item;
-      p = lookup_qualified_word (w, COBC_FIELD (x));
+      p = lookup_qualified_word (w, COBC_FIELD (name));
       if (!p)
 	{
-	  yyerror ("`%s' undefined in `%s'", w->name, tree_to_string (x));
+	  yyerror ("`%s' undefined in `%s'", w->name, tree_to_string (name));
 	  return NULL;
 	}
-      x = p->item;
+      name = p->item;
     }
-  return COBC_FIELD (x);
+  return name;
 }
 
 static void
 validate_file_name (struct cobc_file_name *p)
 {
   struct cobc_alt_key *l;
+  if (COBC_PREDEFINED_P (p->assign))
+    p->assign = resolve_predefined_name (p->assign);
   if (p->key)
-    p->key = lookup_predefined_word ((struct cobc_list *) p->key);
+    p->key = resolve_predefined_name (p->key);
   if (p->status)
-    p->status = lookup_predefined_word ((struct cobc_list *) p->status);
+    p->status = resolve_predefined_name (p->status);
   for (l = p->alt_key_list; l; l = l->next)
-    l->key = lookup_predefined_word ((struct cobc_list *) l->key);
+    l->key = resolve_predefined_name (l->key);
 }
 
 static const char *

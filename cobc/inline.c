@@ -55,34 +55,6 @@ output_goto_depending (cobc_tree labels, cobc_tree index)
  */
 
 static void
-output_memset (cobc_tree x, char c)
-{
-  output_prefix ();
-  output ("memset (");
-  output_location (x);
-  output (", %d, %d);\n", c, COBC_FIELD (x)->size);
-}
-
-static void
-output_memcpy (cobc_tree x, char *s, int len)
-{
-  output_prefix ();
-  output ("memcpy (");
-  output_location (x);
-  output (", ");
-  output_quoted_string (s);
-  output (", %d);\n", len);
-}
-
-static void
-output_native_assign (cobc_tree x, long long val)
-{
-  output_prefix ();
-  output_index (x);
-  output (" = %lldLL;\n", val);
-}
-
-static void
 output_advance_move (struct cob_field f, cobc_tree dst)
 {
   struct cobc_field *p = COBC_FIELD (dst);
@@ -109,7 +81,7 @@ output_advance_move (struct cob_field f, cobc_tree dst)
 
   cob_move (f, dst_fld);
   dst_data[p->size] = 0;
-  output_memcpy (dst, dst_data, p->size);
+  output_memcpy (dst, dst_data);
 }
 
 static void
@@ -228,7 +200,7 @@ output_move_all_literal (cobc_tree src, cobc_tree dst)
   for (i = 0; i < dst_p->size; i++)
     dst_data[i] = src_data[i % src_len];
   dst_data[i] = 0;
-  output_memcpy (dst, dst_data, dst_p->size);
+  output_memcpy (dst, dst_data);
 }
 
 static void
@@ -246,7 +218,7 @@ output_move_literal (cobc_tree src, cobc_tree dst)
 	val /= cob_exp10[p->decimals - decs];
       output_native_assign (dst, val);
     }
-  else
+  else if (COBC_FIELD_P (dst))
     {
       char src_pic[5];
       struct cobc_literal *l = COBC_LITERAL (src);
@@ -263,6 +235,10 @@ output_move_literal (cobc_tree src, cobc_tree dst)
 	  put_sign (src_fld, (l->sign < 0) ? 1 : 0);
 	}
       output_advance_move (src_fld, dst);
+    }
+  else
+    {
+      output_call_2 ("cob_move", src, dst);
     }
 }
 
@@ -331,40 +307,46 @@ output_set_true (cobc_tree x)
 static int
 field_uniform_class (struct cobc_field *p)
 {
-  int class;
-
   if (!p->children)
     {
-      class = COBC_TREE_CLASS (p);
-      return (class == COB_NUMERIC) ? COB_NUMERIC : COB_ALPHANUMERIC;
+      if (COBC_TREE_CLASS (p) == COB_NUMERIC)
+	return COB_NUMERIC;
+      else
+	return COB_ALPHANUMERIC;
     }
-
-  class = field_uniform_class (p->children);
-  for (p = p->children->sister; p; p = p->sister)
-    if (class != field_uniform_class (p))
-      return COB_VOID;
-  return class;
+  else
+    {
+      int class = field_uniform_class (p->children);
+      for (p = p->children->sister; p; p = p->sister)
+	if (class != field_uniform_class (p))
+	  return COB_VOID;
+      return class;
+    }
 }
 
-static int
+static void
 output_initialize_internal (struct cobc_field *p)
 {
-  if (p->cname)
-    switch (field_uniform_class (p))
+  switch (field_uniform_class (p))
+    {
+    case COB_ALPHANUMERIC:
+      break;
+    case COB_NUMERIC:
+      output_move_zero (COBC_TREE (p));
+      break;
+    default:
       {
-      case COB_ALPHANUMERIC:
-	output_move_space (COBC_TREE (p));
-	return 0;
-      case COB_NUMERIC:
-	output_move_zero (COBC_TREE (p));
-	return 0;
+	struct cobc_field *c;
+	for (c = p->children; c; c = c->sister)
+	  output_recursive (output_initialize_internal, COBC_TREE (c));
       }
-  return 1;
+    }
 }
 
 static void
 output_initialize (cobc_tree x)
 {
+  output_memset (x, ' ');
   output_recursive (output_initialize_internal, x);
 }
 

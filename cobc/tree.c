@@ -528,6 +528,20 @@ finalize_field_tree (struct cobc_field *p)
 
 
 /*
+ * Predefined name
+ */
+
+cobc_tree
+make_predefined (struct cobc_list *words)
+{
+  struct cobc_predefined *p =
+    make_tree (cobc_tag_predefined, COB_VOID, sizeof (struct cobc_predefined));
+  p->words = words;
+  return COBC_TREE (p);
+}
+
+
+/*
  * File name
  */
 

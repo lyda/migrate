@@ -88,6 +88,7 @@ cob_open (struct cob_file_desc *f, int mode)
   int sflags = S_IRUSR | S_IWUSR;
   int oflags = 0;
   char alt_filename[128];
+  char filename[128];
   int alt_key_no;
 
   BTREEINFO alt_key;
@@ -99,6 +100,9 @@ cob_open (struct cob_file_desc *f, int mode)
   alt_key.compare = NULL;
   alt_key.prefix = NULL;
   alt_key.lorder = 0;
+
+  cob_field_to_string ((struct cob_field) {f->filename_desc, f->filename_data},
+		       filename);
 
   /* Check to see if the file is already open. If so return
      File Status 91 in according to the Ansi 74 Standard. */
@@ -149,7 +153,7 @@ cob_open (struct cob_file_desc *f, int mode)
 	    {
 	      alt_key.flags = 0;
 	    }
-	  sprintf (alt_filename, "%s%d", f->filename, alt_key_no);
+	  sprintf (alt_filename, "%s%d", filename, alt_key_no);
 	  akd->alt_dbp =
 	    dbopen (alt_filename, oflags, sflags, type, &alt_key);
 	  if (!akd->alt_dbp)
@@ -169,14 +173,14 @@ cob_open (struct cob_file_desc *f, int mode)
 	    }
 	  alt_key_no++;
 	}
-      f->dbp = dbopen (f->filename, oflags, sflags, type, infop);
+      f->dbp = dbopen (filename, oflags, sflags, type, infop);
     }
   /* otherwise it is sequential or relative, save its file handle, converted */
   else if ((f->organization == COB_ORG_LINE_SEQUENTIAL) && (mode == FMOD_INPUT))
-    f->dbp = (void *) fopen (f->filename, "r");
+    f->dbp = (void *) fopen (filename, "r");
   else
     {
-      f->dbp = (void *) open (f->filename, oflags, sflags);
+      f->dbp = (void *) open (filename, oflags, sflags);
       if ((int) f->dbp == -1)
 	f->dbp = 0;
     }
@@ -274,10 +278,6 @@ cob_read (struct cob_file_desc *f, ...)
 	RETURN_STATUS (10);
       RETURN_STATUS (92);
     }
-
-  /* Check to see that the record length is valid */
-  if (f->reclen == -1)
-    RETURN_STATUS (99);
 
   /* Check the mode the file is opened in to make sure that read
      is Allowed */
@@ -484,10 +484,6 @@ cob_write (struct cob_file_desc *f, ...)
   if (f->dbp == NULL)
     RETURN_STATUS (92);
 
-  /* Check to see that the record length is valid */
-  if (f->reclen == -1)
-    RETURN_STATUS (99);
-
   /* Check the mode the file is opened in to make sure that write
      is Allowed */
   if (((f->open_mode != FMOD_OUTPUT) && (f->open_mode != FMOD_IO)
@@ -531,7 +527,7 @@ cob_write (struct cob_file_desc *f, ...)
       va_end (args);
       if (recno < 1)
 	RETURN_STATUS (23);
-      file_pos = lseek ((int) f->dbp, ((recno) * ((f->reclen))), SEEK_SET);
+      file_pos = lseek ((int) f->dbp, recno * f->reclen, SEEK_SET);
       result = write ((int) f->dbp, f->record, f->reclen);
       if (!result)
 	RETURN_STATUS (99);		/* what errors should I return? */
@@ -639,10 +635,6 @@ cob_start (struct cob_file_desc *f, int cond, ...)
   if (f->dbp == NULL)
     RETURN_STATUS (92);
 
-  /* Check to see that the record length is valid */
-  if (f->reclen == -1)
-    RETURN_STATUS (99);
-
   /* Check the mode the file is opened in to make sure that start
      is Allowed */
   if (((f->open_mode != FMOD_INPUT) && (f->open_mode != FMOD_IO)))
@@ -658,7 +650,7 @@ cob_start (struct cob_file_desc *f, int cond, ...)
 	{
 	case 1:		/* Equal to */
 	  file_pos =
-	    lseek ((int) f->dbp, ((recno) * ((f->reclen))), SEEK_SET);
+	    lseek ((int) f->dbp, recno * f->reclen, SEEK_SET);
 	  if (file_pos > 0)
 	    {
 	      result = read ((int) f->dbp, new_record, f->reclen);
@@ -677,7 +669,7 @@ cob_start (struct cob_file_desc *f, int cond, ...)
 	  if (recno < 0)
 	    RETURN_STATUS (23);
 	  file_pos =
-	    lseek ((int) f->dbp, ((recno) * ((f->reclen))), SEEK_SET);
+	    lseek ((int) f->dbp, recno * f->reclen, SEEK_SET);
 	  if (file_pos > 0)
 	    {
 	      result = read ((int) f->dbp, new_record, f->reclen);
@@ -689,8 +681,7 @@ cob_start (struct cob_file_desc *f, int cond, ...)
 		    {
 		      recno--;
 		      file_pos =
-			lseek ((int) f->dbp, ((recno) * ((f->reclen))),
-			       SEEK_SET);
+			lseek ((int) f->dbp, recno * f->reclen, SEEK_SET);
 		      result = read ((int) f->dbp, new_record, f->reclen);
 		    }
 		  if (result <= 0)
@@ -706,7 +697,7 @@ cob_start (struct cob_file_desc *f, int cond, ...)
 	  break;
 	case 5:		/* Less than or equal to */
 	  file_pos =
-	    lseek ((int) f->dbp, ((recno) * ((f->reclen))), SEEK_SET);
+	    lseek ((int) f->dbp, recno * f->reclen, SEEK_SET);
 	  if (file_pos > 0)
 	    {
 	      result = read ((int) f->dbp, new_record, f->reclen);
@@ -718,8 +709,7 @@ cob_start (struct cob_file_desc *f, int cond, ...)
 		    {
 		      recno--;
 		      file_pos =
-			lseek ((int) f->dbp, ((recno) * ((f->reclen))),
-			       SEEK_SET);
+			lseek ((int) f->dbp, recno * f->reclen, SEEK_SET);
 		      result = read ((int) f->dbp, new_record, f->reclen);
 		    }
 		  if (result <= 0)
@@ -736,7 +726,7 @@ cob_start (struct cob_file_desc *f, int cond, ...)
 	case 2:		/* Greater Than */
 	  recno++;
 	  file_pos =
-	    lseek ((int) f->dbp, ((recno) * ((f->reclen))), SEEK_SET);
+	    lseek ((int) f->dbp, recno * f->reclen, SEEK_SET);
 	  if (file_pos > 0)
 	    {
 	      result = read ((int) f->dbp, new_record, f->reclen);
@@ -762,7 +752,7 @@ cob_start (struct cob_file_desc *f, int cond, ...)
 	  break;
 	case 4:		/* Greater than or Equal to */
 	  file_pos =
-	    lseek ((int) f->dbp, ((recno) * ((f->reclen))), SEEK_SET);
+	    lseek ((int) f->dbp, recno * f->reclen, SEEK_SET);
 	  if (file_pos > 0)
 	    {
 	      result = read ((int) f->dbp, new_record, f->reclen);
@@ -1089,10 +1079,6 @@ cob_rewrite (struct cob_file_desc *f, ...)
   if (f->dbp == NULL)
     RETURN_STATUS (92);
 
-  /* Check to see that the record length is valid */
-  if (f->reclen == -1)
-    RETURN_STATUS (99);
-
   /* Check the mode the file is opened in to make sure that rewrite
      is Allowed */
   if (f->open_mode != FMOD_IO)
@@ -1108,7 +1094,7 @@ cob_rewrite (struct cob_file_desc *f, ...)
       /* Rewrite No longer supported on Line Sequential files */
       RETURN_STATUS (92);
     case COB_ORG_LINE_SEQUENTIAL:
-      file_pos = lseek ((int) f->dbp, (((f->reclen + 1)) * -1), SEEK_CUR);
+      file_pos = lseek ((int) f->dbp, - (f->reclen + 1), SEEK_CUR);
       break;
     default:
       RETURN_STATUS (30);
@@ -1167,7 +1153,7 @@ cob_rewrite (struct cob_file_desc *f, ...)
       va_start (args, f);
       recno = va_arg (args, recno_t);
       va_end (args);
-      file_pos = lseek ((int) f->dbp, ((recno) * ((f->reclen))), SEEK_SET);
+      file_pos = lseek ((int) f->dbp, recno * f->reclen, SEEK_SET);
       result = write ((int) f->dbp, f->record, f->reclen);
       if (!result)
 	RETURN_STATUS (99);		/* what errors should I return? */
@@ -1205,16 +1191,10 @@ cob_delete (struct cob_file_desc *f, ...)
   if (f->dbp == NULL)
     RETURN_STATUS (92);
 
-  /* Check to see that the record length is valid */
-  if (f->reclen == -1)
-    RETURN_STATUS (99);
-
-
   /* Check the mode the file is opened in to make sure that delete
      is Allowed */
   if (f->open_mode != FMOD_IO)
     RETURN_STATUS (92);
-
 
   switch (f->organization)
     {
@@ -1240,7 +1220,7 @@ cob_delete (struct cob_file_desc *f, ...)
       va_end (args);
       if (recno < 1)
 	RETURN_STATUS (23);
-      file_pos = lseek ((int) f->dbp, ((recno) * ((f->reclen))), SEEK_SET);
+      file_pos = lseek ((int) f->dbp, recno * f->reclen, SEEK_SET);
       memset (f->record, 0, f->reclen);
       result = write ((int) f->dbp, f->record, f->reclen);
       if (!result)
