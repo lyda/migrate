@@ -184,6 +184,7 @@ extern int cb_fits_int (cb_tree x);
 extern cb_tree cb_any;
 extern cb_tree cb_true;
 extern cb_tree cb_false;
+extern cb_tree cb_null;
 extern cb_tree cb_zero;
 extern cb_tree cb_space;
 extern cb_tree cb_low;

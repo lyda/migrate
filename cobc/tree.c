@@ -178,6 +178,8 @@ cb_name_1 (char *s, cb_tree x)
 	strcpy (s, "TRUE");
       else if (x == cb_false)
 	strcpy (s, "FALSE");
+      else if (x == cb_null)
+	strcpy (s, "NULL");
       else if (x == cb_zero)
 	strcpy (s, "ZERO");
       else if (x == cb_space)
@@ -409,6 +411,7 @@ cb_fits_int (cb_tree x)
 cb_tree cb_any;
 cb_tree cb_true;
 cb_tree cb_false;
+cb_tree cb_null;
 cb_tree cb_zero;
 cb_tree cb_space;
 cb_tree cb_low;
@@ -450,6 +453,7 @@ cb_init_constants (void)
   cb_any         = make_constant (CB_CATEGORY_UNKNOWN, 0);
   cb_true        = make_constant (CB_CATEGORY_BOOLEAN, "1");
   cb_false       = make_constant (CB_CATEGORY_BOOLEAN, "0");
+  cb_null        = make_constant (CB_CATEGORY_DATA_POINTER, "0");
   cb_return_code = make_constant (CB_CATEGORY_NUMERIC, "cob_return_code");
   cb_zero        = make_constant (CB_CATEGORY_NUMERIC, "&cob_zero");
   cb_space       = make_constant (CB_CATEGORY_ALPHANUMERIC, "&cob_space");
