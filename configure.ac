@@ -19,6 +19,8 @@ AC_ARG_ENABLE(maintainer-mode,
 	[ AC_DEFINE(COB_DEBUG)
           AC_CONFIG_FILES([rpm/open-cobol.spec]) ])
 
+save_libs="$LIBS"
+
 # Checks for programs.
 AC_PROG_CC
 AM_PROG_LEX
@@ -69,6 +71,7 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([atexit memmove memset strcasecmp strchr strdup \
 		strerror strrchr strstr strtol])
 
+LIBS="$save_libs"
 COB_LDADD="-L\${libdir} -lcob -lncurses -ldl -lm -lgmp $DB_LIBS"
 COB_CFLAGS="-I\${includedir}"
 
