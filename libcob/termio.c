@@ -37,27 +37,58 @@ display (cob_field *f, FILE *fp)
 {
   if (COB_FIELD_IS_NUMERIC (f))
     {
-      int i;
-      int digits = COB_FIELD_DIGITS (f);
-      int scale = COB_FIELD_SCALE (f);
-      int size = (digits
-		  + (COB_FIELD_HAVE_SIGN (f) ? 1 : 0)
-		  + (scale > 0 ? 1 : 0));
-      unsigned char pic[9], *p = pic;
-      unsigned char data[size];
-      cob_field_attr attr = {COB_TYPE_NUMERIC_EDITED, digits, scale};
-      cob_field temp = {size, data, &attr};
-      attr.pic = pic;
-      if (COB_FIELD_HAVE_SIGN (f))
-	p += sprintf (p, "+\001");
-      if (scale > 0)
-	sprintf (p, "9%c%c%c9%c",
-		 digits - scale, cob_current_module->decimal_point, 1, scale);
+      if (cob_current_module->flag_pretty_display)
+	{
+	  int i;
+	  int digits = COB_FIELD_DIGITS (f);
+	  int scale = COB_FIELD_SCALE (f);
+	  int size = (digits
+		      + (COB_FIELD_HAVE_SIGN (f) ? 1 : 0)
+		      + (scale > 0 ? 1 : 0));
+	  unsigned char pic[9], *p = pic;
+	  unsigned char data[size];
+	  cob_field_attr attr = {COB_TYPE_NUMERIC_EDITED, digits, scale};
+	  cob_field temp = {size, data, &attr};
+	  attr.pic = pic;
+
+	  if (COB_FIELD_HAVE_SIGN (f))
+	    p += sprintf (p, "+\001");
+	  if (scale > 0)
+	    {
+	      p += sprintf (p, "9%c", digits - scale);
+	      p += sprintf (p, "%c%c", cob_current_module->decimal_point, 1);
+	      p += sprintf (p, "9%c", scale);
+	    }
+	  else
+	    {
+	      p += sprintf (p, "9%c", digits);
+	    }
+
+	  cob_move (f, &temp);
+	  for (i = 0; i < size; i++)
+	    fputc (data[i], fp);
+	}
       else
-	sprintf (p, "9%c", digits);
-      cob_move (f, &temp);
-      for (i = 0; i < size; i++)
-	fputc (data[i], fp);
+	{
+	  int i;
+	  int digits = COB_FIELD_DIGITS (f);
+	  int scale = COB_FIELD_SCALE (f);
+	  int size = digits + (COB_FIELD_HAVE_SIGN (f) ? 1 : 0);
+	  unsigned char data[size];
+	  cob_field_attr attr = {COB_TYPE_NUMERIC_DISPLAY, digits, scale};
+	  cob_field temp = {size, data, &attr};
+
+	  if (COB_FIELD_HAVE_SIGN (f))
+	    {
+	      attr.flags = COB_FLAG_HAVE_SIGN | COB_FLAG_SIGN_SEPARATE;
+	      if (COB_FIELD_SIGN_LEADING (f))
+		attr.flags |= COB_FLAG_SIGN_LEADING;
+	    }
+
+	  cob_move (f, &temp);
+	  for (i = 0; i < size; i++)
+	    fputc (data[i], fp);
+	}
     }
   else
     {

@@ -1,3 +1,8 @@
+2003-10-01  Keisuke Nishida  <kxn30@yahoo.co.jp>
+
+	* common.h (cob_module): New member `flag_pretty_display'.
+	* termio.c (display): Updated.
+
 2003-09-29  Keisuke Nishida  <kxn30@yahoo.co.jp>
 
 	* common.c (cob_is_numeric): Test packed decimal.

@@ -114,6 +114,7 @@ typedef struct __cob_module {
   enum cob_display_sign display_sign;
   unsigned long flag_filename_mapping : 1;
   unsigned long flag_binary_truncate : 1;
+  unsigned long flag_pretty_display : 1;
   struct __cob_module *next;
 } cob_module;
 
