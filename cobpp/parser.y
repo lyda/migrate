@@ -32,54 +32,31 @@ static void yyerror (char *msg);
   struct replacement *r;
 }
 
-%token TOK_COPY, TOK_REPLACE, TOK_REPLACING, TOK_OFF, TOK_BY, DOT, COMMA
+%token COPY, REPLACE, REPLACING, OFF, BY
 %token <s> NAME, TEXT
 %type <s> text
 %type <r> replacing_list
 
 %%
 
-statements:
-    /* nothing */
-  | statements statement
-  ;
-
-statement: 
-    copy_statement
-  | replace_statement
-  ;
-
-/* COPY */
+statement_list: | statement_list statement ;
+statement: copy_statement | replace_statement ;
 
 copy_statement:
-    TOK_COPY NAME DOT
-    {
-      include_copybook ($2, NULL);
-    }
-  | 
-    TOK_COPY NAME TOK_REPLACING replacing_list DOT
-    {
-      include_copybook ($2, $4);
-    }
-  ;
-
-/* REPLACE */
-
+    COPY NAME '.'                          { include_copybook ($2, NULL); }
+  | COPY NAME REPLACING replacing_list '.' { include_copybook ($2, $4); }
+;
 replace_statement:
-    TOK_REPLACE replacing_list DOT
-  | TOK_REPLACE TOK_OFF DOT
-  ;
-
+    REPLACE replacing_list '.'
+  | REPLACE OFF '.'
+;
 replacing_list:
-    text TOK_BY text { $$ = add_replacement (NULL, $1, $3); }
+    text BY text { $$ = add_replacement (NULL, $1, $3); }
   | replacing_list opt_comma
-    text TOK_BY text { $$ = add_replacement ($1, $3, $5); }
-
-text:
-    NAME	{ $$ = $1; }
-  | TEXT	{ $$ = $1; }
-
-opt_comma: | COMMA ;
+    text BY text { $$ = add_replacement ($1, $3, $5); }
+;
+text: NAME | TEXT ;
+opt_comma: | ',' ;
 
 %%
 

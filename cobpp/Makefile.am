@@ -6,3 +6,4 @@ MAINTAINERCLEANFILES = Makefile.in
 
 AM_CFLAGS = -Wall
 AM_YFLAGS = -d
+AM_LFLAGS = -s

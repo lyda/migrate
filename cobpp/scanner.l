@@ -30,9 +30,11 @@
 #include "parser.h"
 #include "scanner.h"
 
+#define YY_NO_UNPUT
+
 int yylineno;
 const char *yyfilename;
-struct replacement *yyreplacing = NULL;
+static struct replacement *yyreplacing = NULL;
 
 static const char *copybook_name = NULL;
 static struct replacement *copybook_replacing = NULL;
@@ -49,48 +51,47 @@ static struct copybook {
 static int yyinput (char *buf, int max_size);
 
 static char *substring (const char *s, int size);
-
 static void set_buffer (int lineno, const char *filename,
 			struct replacement *replacing, YY_BUFFER_STATE buffer);
-
 %}
 
 %x COPY_STATE
 
 %%
 
-<*>^[*/D] {
+<*>^[*/D].* {
   if (yytext[0] == 'D' && cob_debug_flag)
+    /* Activate debugging code */
+    yyless(1);
+}
+
+<*>\n {
+  ECHO;
+  yylineno++;
+
+  if (copybook_name)
     {
-      /* Activate debugging code */
-      yyless(1);
-    }
-  else
-    {
-      /* Remove comments */
-      int c = input ();
-      while (c != '\n' && c != '\r' && c != EOF)
-	c = input ();
-      if (c != EOF)
-	unput (c);
+      open_buffer (copybook_name, copybook_replacing);
+      copybook_name = NULL;
     }
 }
 
-\'[^\"\n]*\' |
+. |
+\'[^\'\n]*\' |
 \"[^\"\n]*\" { ECHO; }
 
-"COPY"    { BEGIN COPY_STATE; return TOK_COPY; }
-"REPLACE" { BEGIN COPY_STATE; return TOK_REPLACE; }
+"COPY"    { BEGIN COPY_STATE; return COPY; }
+"REPLACE" { BEGIN COPY_STATE; return REPLACE; }
 
-<COPY_STATE>"." { BEGIN INITIAL; return DOT; }
-<COPY_STATE>"," { return COMMA; }
-<COPY_STATE>[ \t] { }
+<COPY_STATE>","		{ return ','; }
+<COPY_STATE>"."		{ BEGIN INITIAL; return '.'; }
+<COPY_STATE>"BY"	{ return BY; }
+<COPY_STATE>"OFF"	{ return OFF; }
+<COPY_STATE>"REPLACING"	{ return REPLACING; }
+<COPY_STATE>[0-9A-Z_-]+ { yylval.s = strdup (yytext); return NAME; }
+<COPY_STATE>.		{ }
 
-<COPY_STATE>\'[^\"\n]*\' {
-  yylval.s = substring (yytext, 1);
-  return NAME;
-}
-
+<COPY_STATE>\'[^\'\n]*\' |
 <COPY_STATE>\"[^\"\n]*\" {
   yylval.s = substring (yytext, 1);
   return NAME;
@@ -101,38 +102,7 @@ static void set_buffer (int lineno, const char *filename,
   return TEXT;
 }
 
-<COPY_STATE>[0-9A-Z_-]+ {
-  int i;
-  static struct {
-    char *name;
-    unsigned int token;
-  } tokens[] = {
-    {"REPLACING", TOK_REPLACING}, 
-    {"OFF", TOK_OFF},
-    {"BY", TOK_BY},
-    {NULL, 0}
-  };
-
-  for (i = 0; tokens[i].name; i++)
-    if (strcasecmp (yytext, tokens[i].name) == 0)
-      return tokens[i].token;
-
-  yylval.s = strdup (yytext);
-  return NAME;
-}
-
-<*>("\r"|"\n"|"\r\n") {
-  fputc ('\n', yyout);
-  yylineno++;
-
-  if (copybook_name)
-    {
-      open_buffer (copybook_name, copybook_replacing);
-      copybook_name = NULL;
-    }
-}
-
-<*><<EOF>> {
+<<EOF>> {
   yy_delete_buffer (YY_CURRENT_BUFFER);
 
   /* Terminate at the end of all input */
@@ -148,7 +118,6 @@ static void set_buffer (int lineno, const char *filename,
 }
 
 %%
-
 /*
  * Public functions
  */
@@ -234,14 +203,33 @@ yyinput (char *buf, int max_size)
   int len;
   struct replacement *ls;
 
+  /* Read a line */
   if (fgets (buf, max_size, yyin) == NULL)
     return YY_NULL;
 
+  /* Check the length of the line */
   len = strlen (buf);
   if (len >= max_size / cob_tab_width)
     {
       fprintf (stderr, "%s:%d: source line too long\n", yyfilename, yylineno);
       exit (1);
+    }
+
+  /* Regularize the end of line (i.e. \n) */
+  switch (buf[len - 1])
+    {
+    case '\n':
+      if (buf[len - 2] != '\r')
+	break;
+      buf[--len] = '\0';
+      /* fall throw */
+    case '\r':
+      buf[len - 1] = '\n';
+      break;
+    default:
+      buf[len++] = '\n';
+      buf[len] = '\0';
+      break;
     }
 
   /* If fixed format... */
@@ -269,10 +257,7 @@ yyinput (char *buf, int max_size)
       /* Remove the letters after column 72  */
       len = strlen (buf);
       if (len > 73)
-	{
-	  buf[72] = '\n';
-	  buf[73] = '\0';
-	}
+	strcpy (buf + 72, "\n");
 
       /* Remove the first 6 letters */
       if (len > 6)
@@ -284,8 +269,8 @@ yyinput (char *buf, int max_size)
   /* Do replacement */
   for (ls = yyreplacing; ls; ls = ls->next)
     {
-      char *p;
-      while ((p = strstr (buf, ls->old_text)) != NULL)
+      char *p = buf;
+      while ((p = strstr (p, ls->old_text)) != NULL)
 	{
 	  int old_len = strlen (ls->old_text);
 	  int new_len = strlen (ls->new_text);
@@ -306,6 +291,7 @@ yyinput (char *buf, int max_size)
 	      strcpy (p + new_len, s);
 	      free (s);
 	    }
+	  p += new_len;
 	}
     }
 
