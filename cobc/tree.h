@@ -200,25 +200,6 @@ extern cob_tree make_filler (void);
 
 
 /*
- * Report variable
- */
-
-/* this (struct rd) is aliased with (struct sym), so tail data is garbage! */
-struct rd
-{
-  struct cob_field field;	/* rd is a field */
-  cob_tree file;		/* file for writing this report */
-  struct list *controls;	/* list of controls (listing breaks) */
-  struct list *items;		/* list of all report items */
-  int page_limit;
-  int heading;
-  int footing;
-  int first_detail;
-  int last_detail;
-};
-
-
-/*
  * Subscripted variable
  */
 

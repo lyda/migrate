@@ -78,7 +78,6 @@ static int screen_label = 0;
 static int stackframe_cnt = 0;
 static char program_id[120] = "main";
 static char *pgm_label = "main";
-static struct list *report_list = NULL;
 
 static int need_desc_length_cleanup = 0;
 static char name_buf[MAXNAMEBUF];
@@ -3978,26 +3977,6 @@ scr_set_line (struct scr_info *si, int val, int plus_minus)
 }
 
 /*************** report section ******************/
-
-void
-save_report (cob_tree rep, cob_tree file)
-{
-  struct rd *rd = (struct rd *) rep;
-  COB_FIELD_TYPE (rd) = 'W';
-  rd->file = file;
-  rd->controls = rd->items = NULL;
-  rd->page_limit = 66;
-  rd->heading = 1;
-  rd->footing = 66;
-  rd->first_detail = rd->last_detail = 1;
-
-  {
-    struct list *item = malloc (sizeof (struct list));
-    item->var = rd;
-    item->next = report_list;
-    report_list = item;
-  }
-}
 
 void
 update_report_field (cob_tree sy)

@@ -471,7 +471,7 @@ file_description:
   }
 ;
 file_attrib:
-| file_attrib REPORT opt_is SYMBOL_TOK { save_report( $4,$<tree>0 ); }
+| file_attrib REPORT opt_is SYMBOL_TOK { yyerror ("REPORT is not supported"); }
 | file_attrib opt_is GLOBAL     { COB_FIELD_TYPE ($<tree>0) = 'J'; }
 | file_attrib opt_is EXTERNAL   { COB_FIELD_TYPE ($<tree>0) = 'K'; }
 | file_attrib LABEL rec_or_recs opt_is_are std_or_omitt

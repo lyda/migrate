@@ -202,7 +202,6 @@ extern unsigned field_alignment (cob_tree sy, unsigned location);
 extern void set_field_location (cob_tree sy, unsigned location);
 extern void scr_set_column (struct scr_info *si, int val, int plus_minus);
 extern void scr_set_line (struct scr_info *si, int val, int plus_minus);
-extern void save_report (cob_tree rep, cob_tree file);
 extern void update_report_field (cob_tree sy);
 extern void update_screen_field (cob_tree sy, struct scr_info *si);
 extern void update_field (void);
