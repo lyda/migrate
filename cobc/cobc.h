@@ -30,6 +30,7 @@
 
 extern int cob_stabs_flag;
 extern int cob_debug_flag;
+extern int cob_dynamic_flag;
 extern int cob_verbose_flag;
 
 extern int cob_trace_scanner;

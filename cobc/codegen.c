@@ -6329,7 +6329,7 @@ gen_call (struct lit *v, int stack_size, int exceplabel, int notexceplabel)
       free (tmp);
     }
   parameter_list = NULL;
-  if (v->litflag == 1)
+  if (v->litflag == 1 && cob_dynamic_flag == 0)
     {
       /* call literal (static) routine */
       asm_call (v->name);

@@ -39,6 +39,8 @@
 
 int cob_stabs_flag = 0;
 int cob_debug_flag = 0;
+int cob_dynamic_flag = 0;
+int cob_verbose_flag = 0;
 
 int cob_trace_scanner = 0;
 int cob_trace_parser = 0;
@@ -158,6 +160,7 @@ static char short_options[] = "hvEScmxgo:FXDI:T:";
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'v'},
+  {"dynamic", no_argument, &cob_dynamic_flag, 1},
   {"save-temps", no_argument, &save_temps_flag, 1},
 #if COB_DEBUG
   {"ta", no_argument, 0, 'a'},
@@ -184,6 +187,7 @@ print_usage ()
   puts ("  --help        Display this information");
   puts ("  --version     Display compiler version");
   puts ("  -save-temps   Do not delete intermediate files");
+  puts ("  -dynamic      Use dynamic link for all subprogram calls");
   puts ("  -E            Preprocess only; do not compile, assemble or link");
   puts ("  -S            Compile only; do not assemble or link");
   puts ("  -c            Compile and assemble, but do not link");
