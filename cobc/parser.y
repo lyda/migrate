@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 125
+%expect 104
 
 %{
 #include "config.h"
@@ -417,14 +417,14 @@ _collating: | COLLATING ;
  */
 
 special_names:
-  SPECIAL_NAMES '.' _special_names
+  SPECIAL_NAMES '.' opt_special_names
 ;
-_special_names:
-| special_names dot
+opt_special_names:
+| special_name_list dot
 ;
-special_names:
+special_name_list:
   special_name
-| special_names special_name
+| special_name_list special_name
 ;
 special_name:
   special_name_mnemonic
