@@ -62,41 +62,35 @@ static cob_fileio_funcs *fileio_funcs[COB_ORG_MAX];
  */
 
 struct sequential_file {
-  int fd;
+  FILE *fp;
 };
 
 static int
 sequential_open (cob_file *f, char *filename, int mode)
 {
-  int fd;
-  int flags = INITIAL_FLAGS;
+  FILE *fp = NULL;
   struct sequential_file *p;
 
   switch (mode)
     {
     case COB_OPEN_INPUT:
-      flags |= O_RDONLY;
+      fp = fopen (filename, "r");
       break;
     case COB_OPEN_OUTPUT:
-      flags |= O_RDWR | O_CREAT | O_TRUNC;
+      fp = fopen (filename, "w");
       break;
     case COB_OPEN_I_O:
-      flags |= O_RDWR;
+      fp = fopen (filename, "r+");
       break;
     case COB_OPEN_EXTEND:
-      flags |= O_RDWR | O_APPEND | (f->flag_optional ? O_CREAT : 0);
+      fp = fopen (filename, "a+");
       break;
     }
-
-  fd = open (filename, flags, COB_FILE_MODE);
-  if (fd == -1)
+  if (fp == NULL)
     return errno;
 
-  if (mode == COB_OPEN_EXTEND)
-    lseek (fd, 0, SEEK_END);
-
   p = malloc (sizeof (struct sequential_file));
-  p->fd = fd;
+  p->fp = fp;
   f->file = p;
   return 0;
 }
@@ -112,11 +106,11 @@ sequential_close (cob_file *f, int opt)
       f->open_mode = COB_OPEN_LOCKED;
       /* fall through */
     case COB_CLOSE_NORMAL:
-      close (p->fd);
+      fclose (p->fp);
       free (p);
-      return COB_FILE_SUCCEED;
+      return COB_STATUS_00_SUCCESS;
     default:
-      return COB_FILE_SUCCEED_NO_REEL;
+      return COB_STATUS_07_SUCCESS_NO_UNIT;
     }
 }
 
@@ -125,16 +119,16 @@ sequential_read (cob_file *f)
 {
   struct sequential_file *p = f->file;
 
+  /* read the record size */
   if (f->record_min != f->record_max)
-    {
-      if (read (p->fd, &f->record->size, sizeof (f->record->size)) <= 0)
-	return COB_FILE_END_OF_FILE;
-    }
+    if (fread (&f->record->size, sizeof (f->record->size), 1, p->fp) == 0)
+      return COB_STATUS_10_END_OF_FILE;
 
-  if (read (p->fd, f->record->data, f->record->size) <= 0)
-    return COB_FILE_END_OF_FILE;
+  /* read the record */
+  if (fread (f->record->data, f->record->size, 1, p->fp) == 0)
+    return COB_STATUS_10_END_OF_FILE;
 
-  return COB_FILE_SUCCEED;
+  return COB_STATUS_00_SUCCESS;
 }
 
 static int
@@ -142,11 +136,13 @@ sequential_write (cob_file *f)
 {
   struct sequential_file *p = f->file;
 
+  /* write the record size */
   if (f->record_min != f->record_max)
-    write (p->fd, &f->record->size, sizeof (f->record->size));
+    fwrite (&f->record->size, sizeof (f->record->size), 1, p->fp);
 
-  write (p->fd, f->record->data, f->record->size);
-  return COB_FILE_SUCCEED;
+  /* write the record */
+  fwrite (f->record->data, f->record->size, 1, p->fp);
+  return COB_STATUS_00_SUCCESS;
 }
 
 static int
@@ -155,15 +151,15 @@ sequential_rewrite (cob_file *f, cob_field *rec)
   struct sequential_file *p = f->file;
 
   if (rec->size != f->record->size)
-    return COB_FILE_RECORD_OVERFLOW;
+    return COB_STATUS_44_RECORD_OVERFLOW;
 
   if (f->record_size)
     if (f->record->size != cob_get_int (f->record_size))
-      return COB_FILE_RECORD_OVERFLOW;
+      return COB_STATUS_44_RECORD_OVERFLOW;
 
-  lseek (p->fd, - f->record->size, SEEK_CUR);
-  write (p->fd, f->record->data, f->record->size);
-  return COB_FILE_SUCCEED;
+  fseek (p->fp, - f->record->size, SEEK_CUR);
+  fwrite (f->record->data, f->record->size, 1, p->fp);
+  return COB_STATUS_00_SUCCESS;
 }
 
 static cob_fileio_funcs sequential_funcs = {
@@ -222,7 +218,7 @@ lineseq_close (cob_file *f, int opt)
   struct lineseq_file *p = f->file;
   fclose (p->fp);
   free (p);
-  return COB_FILE_SUCCEED;
+  return COB_STATUS_00_SUCCESS;
 }
 
 static int
@@ -234,7 +230,7 @@ lineseq_read (cob_file *f)
 
   /* read the file */
   if (fgets (buff, f->record->size + 1, p->fp) == NULL)
-    return COB_FILE_END_OF_FILE;
+    return COB_STATUS_10_END_OF_FILE;
 
   /* remove the newline */
   for (i = 0; i < f->record->size; i++)
@@ -260,7 +256,7 @@ lineseq_read (cob_file *f)
 
   memcpy (f->record->data, buff, f->record->size);
 
-  return COB_FILE_SUCCEED;
+  return COB_STATUS_00_SUCCESS;
 }
 
 static int
@@ -280,7 +276,7 @@ lineseq_write (cob_file *f)
     putc (f->record->data[i], p->fp);
   putc ('\n', p->fp);
 
-  return COB_FILE_SUCCEED;
+  return COB_STATUS_00_SUCCESS;
 }
 
 static cob_fileio_funcs lineseq_funcs = {
@@ -304,25 +300,72 @@ static cob_fileio_funcs lineseq_funcs = {
 #define RELATIVE_SEEK(f,fd,i)						\
   if (lseek (fd, RELATIVE_SIZE (f) * (i), SEEK_SET) == -1		\
       || read (fd, &f->record->size, sizeof (f->record->size)) <= 0)	\
-    return COB_FILE_KEY_NOT_EXISTS;					\
+    return COB_STATUS_23_KEY_NOT_EXISTS;				\
   lseek (fd, - sizeof (f->record->size), SEEK_CUR);
+
+struct relative_file {
+  int fd;
+};
 
 static int
 relative_open (cob_file *f, char *filename, int mode)
 {
-  return sequential_open (f, filename, mode);
+  int fd;
+  int flags = INITIAL_FLAGS;
+  struct relative_file *p;
+
+  switch (mode)
+    {
+    case COB_OPEN_INPUT:
+      flags |= O_RDONLY;
+      break;
+    case COB_OPEN_OUTPUT:
+      flags |= O_RDWR | O_CREAT | O_TRUNC;
+      break;
+    case COB_OPEN_I_O:
+      flags |= O_RDWR | O_CREAT;
+      break;
+    case COB_OPEN_EXTEND:
+      flags |= O_RDWR | O_CREAT | O_APPEND;
+      break;
+    }
+
+  fd = open (filename, flags, COB_FILE_MODE);
+  if (fd == -1)
+    return errno;
+
+  if (mode == COB_OPEN_EXTEND)
+    lseek (fd, 0, SEEK_END);
+
+  p = malloc (sizeof (struct relative_file));
+  p->fd = fd;
+  f->file = p;
+  return 0;
 }
 
 static int
 relative_close (cob_file *f, int opt)
 {
-  return sequential_close (f, opt);
+  struct relative_file *p = f->file;
+
+  switch (opt)
+    {
+    case COB_CLOSE_LOCK:
+      f->open_mode = COB_OPEN_LOCKED;
+      /* fall through */
+    case COB_CLOSE_NORMAL:
+      close (p->fd);
+      free (p);
+      return COB_STATUS_00_SUCCESS;
+    default:
+      return COB_STATUS_07_SUCCESS_NO_UNIT;
+    }
 }
 
 static int
 relative_start (cob_file *f, int cond, cob_field *k)
 {
-  struct sequential_file *p = f->file;
+  struct relative_file *p = f->file;
 
   /* get the index */
   int index = cob_get_int (k) - 1;
@@ -340,14 +383,14 @@ relative_start (cob_file *f, int cond, cob_field *k)
       if (f->record->size > 0)
 	{
 	  cob_set_int (k, index + 1);
-	  return COB_FILE_SUCCEED;
+	  return COB_STATUS_00_SUCCESS;
 	}
 
       /* continue */
       switch (cond)
 	{
 	case COB_EQ:
-	  return COB_FILE_KEY_NOT_EXISTS;
+	  return COB_STATUS_23_KEY_NOT_EXISTS;
 	case COB_LT:
 	case COB_LE:
 	  index--;
@@ -363,27 +406,27 @@ relative_start (cob_file *f, int cond, cob_field *k)
 static int
 relative_read (cob_file *f, cob_field *k)
 {
-  struct sequential_file *p = f->file;
+  struct relative_file *p = f->file;
 
   RELATIVE_SEEK (f, p->fd, cob_get_int (k) - 1);
 
   if (f->record->size == 0)
-    return COB_FILE_KEY_NOT_EXISTS;
+    return COB_STATUS_23_KEY_NOT_EXISTS;
 
   lseek (p->fd, sizeof (f->record->size), SEEK_CUR);
   read (p->fd, f->record->data, f->record_max);
-  return COB_FILE_SUCCEED;
+  return COB_STATUS_00_SUCCESS;
 }
 
 static int
 relative_read_next (cob_file *f)
 {
-  struct sequential_file *p = f->file;
+  struct relative_file *p = f->file;
 
   while (1)
     {
       if (read (p->fd, &f->record->size, sizeof (f->record->size)) <= 0)
-	return COB_FILE_END_OF_FILE;
+	return COB_STATUS_10_END_OF_FILE;
 
       if (f->keys[0].field)
 	{
@@ -398,7 +441,7 @@ relative_read_next (cob_file *f)
 	      if (cob_exception_code)
 		{
 		  lseek (p->fd, - sizeof (f->record->size), SEEK_CUR);
-		  return COB_FILE_OUT_OF_KEY_RANGE;
+		  return COB_STATUS_14_OUT_OF_KEY_RANGE;
 		}
 	    }
 	}
@@ -406,7 +449,7 @@ relative_read_next (cob_file *f)
       if (f->record->size > 0)
 	{
 	  read (p->fd, f->record->data, f->record_max);
-	  return COB_FILE_SUCCEED;
+	  return COB_STATUS_00_SUCCESS;
 	}
 
       lseek (p->fd, f->record_max, SEEK_CUR);
@@ -417,7 +460,7 @@ static int
 relative_write (cob_file *f)
 {
   size_t size;
-  struct sequential_file *p = f->file;
+  struct relative_file *p = f->file;
 
   if (f->access_mode != COB_ACCESS_SEQUENTIAL)
     {
@@ -429,7 +472,7 @@ relative_write (cob_file *f)
     {
       lseek (p->fd, - sizeof (size), SEEK_CUR);
       if (size > 0)
-	return COB_FILE_KEY_EXISTS;
+	return COB_STATUS_22_KEY_EXISTS;
     }
 
   write (p->fd, &f->record->size, sizeof (f->record->size));
@@ -441,29 +484,29 @@ relative_write (cob_file *f)
       cob_set_int (f->keys[0].field,
 		   lseek (p->fd, 0, SEEK_CUR) / RELATIVE_SIZE (f));
 
-  return COB_FILE_SUCCEED;
+  return COB_STATUS_00_SUCCESS;
 }
 
 static int
 relative_rewrite (cob_file *f, cob_field *rec)
 {
-  struct sequential_file *p = f->file;
+  struct relative_file *p = f->file;
   lseek (p->fd, - f->record_max, SEEK_CUR);
   write (p->fd, f->record->data, f->record_max);
-  return COB_FILE_SUCCEED;
+  return COB_STATUS_00_SUCCESS;
 }
 
 static int
 relative_delete (cob_file *f)
 {
-  struct sequential_file *p = f->file;
+  struct relative_file *p = f->file;
 
   RELATIVE_SEEK (f, p->fd, cob_get_int (f->keys[0].field) - 1);
 
   f->record->size = 0;
   write (p->fd, &f->record->size, sizeof (f->record->size));
   lseek (p->fd, f->record_max, SEEK_CUR);
-  return COB_FILE_SUCCEED;
+  return COB_STATUS_00_SUCCESS;
 }
 
 static cob_fileio_funcs relative_funcs = {
@@ -515,10 +558,8 @@ indexed_open (cob_file *f, char *filename, int mode)
       flags |= O_RDWR | O_CREAT | O_TRUNC;
       break;
     case COB_OPEN_I_O:
-      flags |= O_RDWR | O_CREAT;
-      break;
     case COB_OPEN_EXTEND:
-      flags |= O_RDWR | (f->flag_optional ? O_CREAT : 0);
+      flags |= O_RDWR | O_CREAT;
       break;
     }
 
@@ -578,7 +619,7 @@ indexed_close (cob_file *f, int opt)
   free (p->db);
   free (p);
 
-  return COB_FILE_SUCCEED;
+  return COB_STATUS_00_SUCCESS;
 }
 
 static int
@@ -631,7 +672,7 @@ indexed_start (cob_file *f, int cond, cob_field *key)
       ret = DB_GET (p->db[0], 0);
     }
 
-  return (ret == 0) ? COB_FILE_SUCCEED : COB_FILE_KEY_NOT_EXISTS;
+  return (ret == 0) ? COB_STATUS_00_SUCCESS : COB_STATUS_23_KEY_NOT_EXISTS;
 }
 
 static int
@@ -640,13 +681,13 @@ indexed_read (cob_file *f, cob_field *key)
   struct indexed_file *p = f->file;
 
   int ret = indexed_start (f, COB_EQ, key);
-  if (ret != COB_FILE_SUCCEED)
+  if (ret != COB_STATUS_00_SUCCESS)
     return ret;
 
   f->record->size = p->data.size;
   memcpy (f->record->data, p->data.data, p->data.size);
 
-  return COB_FILE_SUCCEED;
+  return COB_STATUS_00_SUCCESS;
 }
 
 static int
@@ -658,24 +699,24 @@ indexed_read_next (cob_file *f)
     {
       /* data is read in indexed_open or indexed_start */
       if (p->data.data == 0)
-	return COB_FILE_END_OF_FILE;
+	return COB_STATUS_10_END_OF_FILE;
     }
   else
     {
       if (DB_SEQ (p->db[p->key_index], R_NEXT) != 0)
-	return COB_FILE_END_OF_FILE;
+	return COB_STATUS_10_END_OF_FILE;
       if (p->key_index > 0)
 	{
 	  p->key = p->data;
 	  if (DB_GET (p->db[0], 0) != 0)
-	    return COB_FILE_KEY_NOT_EXISTS;
+	    return COB_STATUS_23_KEY_NOT_EXISTS;
 	}
     }
 
   f->record->size = p->data.size;
   memcpy (f->record->data, p->data.data, p->data.size);
 
-  return COB_FILE_SUCCEED;
+  return COB_STATUS_00_SUCCESS;
 }
 
 static int
@@ -688,7 +729,7 @@ indexed_write_internal (cob_file *f)
   p->data.data = f->record->data;
   p->data.size = f->record->size;
   if (DB_PUT (p->db[0], R_NOOVERWRITE) != 0)
-    return COB_FILE_KEY_EXISTS;
+    return COB_STATUS_22_KEY_EXISTS;
 
   /* write secondary keys */
   p->data = p->key;
@@ -697,10 +738,10 @@ indexed_write_internal (cob_file *f)
       int flags = f->keys[i].flag ? 0 : R_NOOVERWRITE;
       DBT_SET (p->key, f->keys[i].field);
       if (DB_PUT (p->db[i], flags) != 0)
-	return COB_FILE_KEY_EXISTS;
+	return COB_STATUS_22_KEY_EXISTS;
     }
 
-  return COB_FILE_SUCCEED;
+  return COB_STATUS_00_SUCCESS;
 }
 
 static int
@@ -714,7 +755,7 @@ indexed_write (cob_file *f)
     p->last_key = malloc (p->key.size);
   else if (f->access_mode == COB_ACCESS_SEQUENTIAL
 	   && memcmp (p->last_key, p->key.data, p->key.size) > 0)
-    return COB_FILE_KEY_INVALID;
+    return COB_STATUS_21_KEY_INVALID;
   memcpy (p->last_key, p->key.data, p->key.size);
 
   return indexed_write_internal (f);
@@ -732,7 +773,7 @@ indexed_delete (cob_file *f)
     {
       DBT_SET (p->key, f->keys[0].field);
       if (DB_GET (p->db[0], 0) != 0)
-	return COB_FILE_KEY_NOT_EXISTS;
+	return COB_STATUS_23_KEY_NOT_EXISTS;
     }
   prim_key = p->key;
 
@@ -764,7 +805,7 @@ indexed_delete (cob_file *f)
   /* delete the record */
   DB_DEL (p->db[0], &prim_key, 0);
 
-  return COB_FILE_SUCCEED;
+  return COB_STATUS_00_SUCCESS;
 }
 
 static int
@@ -774,7 +815,7 @@ indexed_rewrite (cob_file *f, cob_field *rec)
 
   /* delete the current record */
   int ret = indexed_delete (f);
-  if (ret != COB_FILE_SUCCEED)
+  if (ret != COB_STATUS_00_SUCCESS)
     return ret;
 
   /* write data */
@@ -867,7 +908,7 @@ sort_close (cob_file *f, int opt)
 {
   struct sort_file *p = f->file;
   DB_CLOSE (p->db);
-  return COB_FILE_SUCCEED;
+  return COB_STATUS_00_SUCCESS;
 }
 
 static int
@@ -876,10 +917,10 @@ sort_read (cob_file *f)
   struct sort_file *p = f->file;
   if (f->flag_first_read == 0)
     if (DB_SEQ (p->db, R_NEXT) != 0)
-      return COB_FILE_END_OF_FILE;
+      return COB_STATUS_10_END_OF_FILE;
 
   memcpy (f->record->data, p->key.data, p->key.size);
-  return COB_FILE_SUCCEED;
+  return COB_STATUS_00_SUCCESS;
 }
 
 static int
@@ -891,7 +932,7 @@ sort_write (cob_file *f)
   p->key.size = f->record->size;
   DB_PUT (p->db, 0);
 
-  return COB_FILE_SUCCEED;
+  return COB_STATUS_00_SUCCESS;
 }
 
 static cob_fileio_funcs sort_funcs = {
@@ -949,17 +990,11 @@ cob_open (cob_file *f, int mode)
 
   /* check if the file is already open */
   if (f->flag_opened)
-    RETURN_STATUS (COB_FILE_ALREADY_OPEN);
+    RETURN_STATUS (COB_STATUS_41_ALREADY_OPEN);
 
   /* file was previously closed with lock */
   if (f->open_mode == COB_OPEN_LOCKED)
-    RETURN_STATUS (COB_FILE_CLOSED_WITH_LOCK);
-
-  cob_field_to_string (f->assign, filename);
-  if ((mode == COB_OPEN_I_O || mode == COB_OPEN_EXTEND)
-      && f->flag_optional != 0
-      && stat (filename, &st) == -1)
-    was_not_exist = 1;
+    RETURN_STATUS (COB_STATUS_38_CLOSED_WITH_LOCK);
 
   f->open_mode = mode;
   f->flag_opened = 0;
@@ -967,32 +1002,40 @@ cob_open (cob_file *f, int mode)
   f->flag_end_of_file = 0;
   f->flag_first_read = 1;
 
+  cob_field_to_string (f->assign, filename);
+  if (stat (filename, &st) == -1)
+    {
+      was_not_exist = 1;
+      if (mode != COB_OPEN_OUTPUT && f->flag_optional == 0)
+	RETURN_STATUS (COB_STATUS_35_NOT_EXISTS);
+    }
+
   switch (fileio_funcs[(int) f->organization]->open (f, filename, mode))
     {
     case 0:
       f->flag_opened = 1;
-      if (was_not_exist)
-	RETURN_STATUS (COB_FILE_SUCCEED_OPTIONAL);
+      if (f->flag_optional && was_not_exist)
+	RETURN_STATUS (COB_STATUS_05_SUCCESS_OPTIONAL);
       else
-	RETURN_STATUS (COB_FILE_SUCCEED);
+	RETURN_STATUS (COB_STATUS_00_SUCCESS);
     case ENOENT:
       if (f->flag_optional)
 	{
 	  f->flag_opened = 1;
 	  f->flag_nonexistent = 1;
 	  f->flag_end_of_file = 1;
-	  RETURN_STATUS (COB_FILE_SUCCEED_OPTIONAL);
+	  RETURN_STATUS (COB_STATUS_05_SUCCESS_OPTIONAL);
 	}
       else
 	{
-	  RETURN_STATUS (COB_FILE_NOT_EXISTS);
+	  RETURN_STATUS (COB_STATUS_35_NOT_EXISTS);
 	}
     case EACCES:
     case EISDIR:
     case EROFS:
-      RETURN_STATUS (COB_FILE_PERMISSION_DENIED);
+      RETURN_STATUS (COB_STATUS_37_PERMISSION_DENIED);
     default:
-      RETURN_STATUS (COB_FILE_PERMANENT_ERROR);
+      RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
     }
 }
 
@@ -1004,16 +1047,16 @@ cob_close (cob_file *f, int opt)
   f->flag_read_done = 0;
 
   if (f->flag_opened == 0)
-    RETURN_STATUS (COB_FILE_NOT_OPEN);
+    RETURN_STATUS (COB_STATUS_42_NOT_OPEN);
 
   if (f->flag_nonexistent)
     {
       f->flag_opened = 0;
-      RETURN_STATUS (COB_FILE_SUCCEED);
+      RETURN_STATUS (COB_STATUS_00_SUCCESS);
     }
 
   ret = fileio_funcs[(int) f->organization]->close (f, opt);
-  if (ret == COB_FILE_SUCCEED)
+  if (ret == COB_STATUS_00_SUCCESS)
     f->flag_opened = 0;
 
   RETURN_STATUS (ret);
@@ -1028,16 +1071,16 @@ cob_start (cob_file *f, int cond, cob_field *key)
   f->flag_first_read = 0;
 
   if (f->flag_nonexistent)
-    RETURN_STATUS (COB_FILE_KEY_NOT_EXISTS);
+    RETURN_STATUS (COB_STATUS_23_KEY_NOT_EXISTS);
 
   if (f->flag_opened == 0
       || f->open_mode == COB_OPEN_OUTPUT
       || f->open_mode == COB_OPEN_EXTEND
       || f->access_mode == COB_ACCESS_RANDOM)
-    RETURN_STATUS (COB_FILE_INPUT_DENIED);
+    RETURN_STATUS (COB_STATUS_47_INPUT_DENIED);
 
   ret = fileio_funcs[(int) f->organization]->start (f, cond, key);
-  if (ret == COB_FILE_SUCCEED)
+  if (ret == COB_STATUS_00_SUCCESS)
     {
       f->flag_end_of_file = 0;
       f->flag_first_read = 1;
@@ -1056,18 +1099,18 @@ cob_read (cob_file *f, cob_field *key)
   if (f->flag_nonexistent)
     {
       if (f->flag_first_read == 0)
-	RETURN_STATUS (COB_FILE_KEY_NOT_EXISTS);
+	RETURN_STATUS (COB_STATUS_23_KEY_NOT_EXISTS);
       f->flag_first_read = 0;
-      RETURN_STATUS (COB_FILE_END_OF_FILE);
+      RETURN_STATUS (COB_STATUS_10_END_OF_FILE);
     }
 
   if (f->flag_end_of_file)
-    RETURN_STATUS (COB_FILE_READ_ERROR);
+    RETURN_STATUS (COB_STATUS_46_READ_ERROR);
 
   if (f->flag_opened == 0
       || f->open_mode == COB_OPEN_OUTPUT
       || f->open_mode == COB_OPEN_EXTEND)
-    RETURN_STATUS (COB_FILE_INPUT_DENIED);
+    RETURN_STATUS (COB_STATUS_47_INPUT_DENIED);
 
   if (key)
     ret = fileio_funcs[(int) f->organization]->read (f, key);
@@ -1076,13 +1119,13 @@ cob_read (cob_file *f, cob_field *key)
 
   switch (ret)
     {
-    case COB_FILE_SUCCEED:
+    case COB_STATUS_00_SUCCESS:
       f->flag_first_read = 0;
       f->flag_read_done = 1;
       if (f->record_size)
 	cob_set_int (f->record_size, f->record->size);
       break;
-    case COB_FILE_END_OF_FILE:
+    case COB_STATUS_10_END_OF_FILE:
       f->flag_end_of_file = 1;
       break;
     }
@@ -1102,14 +1145,14 @@ cob_write (cob_file *f, cob_field *rec)
       if (f->flag_opened == 0
 	  || f->open_mode == COB_OPEN_INPUT
 	  || f->open_mode == COB_OPEN_I_O)
-	RETURN_STATUS (COB_FILE_OUTPUT_DENIED);
+	RETURN_STATUS (COB_STATUS_48_OUTPUT_DENIED);
     }
   else
     {
       if (f->flag_opened == 0
 	  || f->open_mode == COB_OPEN_INPUT
 	  || f->open_mode == COB_OPEN_EXTEND)
-	RETURN_STATUS (COB_FILE_OUTPUT_DENIED);
+	RETURN_STATUS (COB_STATUS_48_OUTPUT_DENIED);
     }
 
   if (f->record_size)
@@ -1118,7 +1161,7 @@ cob_write (cob_file *f, cob_field *rec)
     f->record->size = rec->size;
 
   if (f->record->size < f->record_min || f->record_max < f->record->size)
-    RETURN_STATUS (COB_FILE_RECORD_OVERFLOW);
+    RETURN_STATUS (COB_STATUS_44_RECORD_OVERFLOW);
 
   ret = fileio_funcs[(int) f->organization]->write (f);
 
@@ -1135,7 +1178,7 @@ cob_write_page (cob_file *f)
       || f->open_mode == COB_OPEN_I_O)
     return;
 
-  write (p->fd, "\f", 1);
+  fputc ('\f', p->fp);
 }
 
 void
@@ -1150,7 +1193,7 @@ cob_write_lines (cob_file *f, int lines)
     return;
 
   for (i = 0; i < lines; i++)
-    write (p->fd, "\n", 1);
+    fputc ('\n', p->fp);
 }
 
 void
@@ -1162,11 +1205,11 @@ cob_rewrite (cob_file *f, cob_field *rec)
   f->flag_read_done = 0;
 
   if (f->flag_opened == 0 || f->open_mode != COB_OPEN_I_O)
-    RETURN_STATUS (COB_FILE_I_O_DENIED);
+    RETURN_STATUS (COB_STATUS_49_I_O_DENIED);
 
   if (f->access_mode == COB_ACCESS_SEQUENTIAL)
     if (!read_done)
-      RETURN_STATUS (COB_FILE_READ_NOT_DONE);
+      RETURN_STATUS (COB_STATUS_43_READ_NOT_DONE);
 
   ret = fileio_funcs[(int) f->organization]->rewrite (f, rec);
 
@@ -1182,11 +1225,11 @@ cob_delete (cob_file *f)
   f->flag_read_done = 0;
 
   if (f->flag_opened == 0 || f->open_mode != COB_OPEN_I_O)
-    RETURN_STATUS (COB_FILE_I_O_DENIED);
+    RETURN_STATUS (COB_STATUS_49_I_O_DENIED);
 
   if (f->access_mode == COB_ACCESS_SEQUENTIAL)
     if (!read_done)
-      RETURN_STATUS (COB_FILE_READ_NOT_DONE);
+      RETURN_STATUS (COB_STATUS_43_READ_NOT_DONE);
 
   ret = fileio_funcs[(int) f->organization]->delete (f);
 
@@ -1250,52 +1293,52 @@ cob_default_error_handle (void)
 
   switch (status)
     {
-    case COB_FILE_END_OF_FILE:
+    case COB_STATUS_10_END_OF_FILE:
       msg = N_("end of file");
       break;
-    case COB_FILE_OUT_OF_KEY_RANGE:
+    case COB_STATUS_14_OUT_OF_KEY_RANGE:
       msg = N_("out of key range");
       break;
-    case COB_FILE_KEY_INVALID:
+    case COB_STATUS_21_KEY_INVALID:
       msg = N_("key order not ascending");
       break;
-    case COB_FILE_KEY_EXISTS:
+    case COB_STATUS_22_KEY_EXISTS:
       msg = N_("record key already exists");
       break;
-    case COB_FILE_KEY_NOT_EXISTS:
+    case COB_STATUS_23_KEY_NOT_EXISTS:
       msg = N_("record key not exists");
       break;
-    case COB_FILE_PERMANENT_ERROR:
+    case COB_STATUS_30_PERMANENT_ERROR:
       msg = N_("permanent file error");
       break;
-    case COB_FILE_NOT_EXISTS:
+    case COB_STATUS_35_NOT_EXISTS:
       /* no message */
       break;
-    case COB_FILE_PERMISSION_DENIED:
+    case COB_STATUS_37_PERMISSION_DENIED:
       msg = N_("permission denied");
       break;
-    case COB_FILE_ALREADY_OPEN:
+    case COB_STATUS_41_ALREADY_OPEN:
       msg = N_("file already open");
       break;
-    case COB_FILE_NOT_OPEN:
+    case COB_STATUS_42_NOT_OPEN:
       msg = N_("file not open");
       break;
-    case COB_FILE_READ_NOT_DONE:
+    case COB_STATUS_43_READ_NOT_DONE:
       msg = N_("READ must be executed first");
       break;
-    case COB_FILE_RECORD_OVERFLOW:
+    case COB_STATUS_44_RECORD_OVERFLOW:
       msg = N_("record overflow");
       break;
-    case COB_FILE_READ_ERROR:
+    case COB_STATUS_46_READ_ERROR:
       msg = N_("failed to read");
       break;
-    case COB_FILE_INPUT_DENIED:
+    case COB_STATUS_47_INPUT_DENIED:
       msg = N_("READ and START not allowed");
       break;
-    case COB_FILE_OUTPUT_DENIED:
+    case COB_STATUS_48_OUTPUT_DENIED:
       msg = N_("WRITE not allowed");
       break;
-    case COB_FILE_I_O_DENIED:
+    case COB_STATUS_49_I_O_DENIED:
       msg = N_("DELETE and REWRITE not allowed");
       break;
     default:
