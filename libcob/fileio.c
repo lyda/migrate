@@ -844,7 +844,6 @@ sort_open (cob_file *f, char *filename, int mode, int flag)
 
   memset (&p->key, 0, sizeof (DBT));
   memset (&p->data, 0, sizeof (DBT));
-  DB_SEQ (p->db, R_FIRST);
   return 0;
 }
 
@@ -860,9 +859,8 @@ static int
 sort_read (cob_file *f)
 {
   struct sort_file *p = f->file;
-  if (f->flag_first_read == 0)
-    if (DB_SEQ (p->db, R_NEXT) != 0)
-      return COB_STATUS_10_END_OF_FILE;
+  if (DB_SEQ (p->db, f->flag_first_read ? R_FIRST : R_NEXT) != 0)
+    return COB_STATUS_10_END_OF_FILE;
 
   memcpy (f->record->data, p->key.data, p->key.size);
   return COB_STATUS_00_SUCCESS;
@@ -876,7 +874,6 @@ sort_write (cob_file *f, int opt)
   p->key.data = f->record->data;
   p->key.size = f->record->size;
   DB_PUT (p->db, 0);
-
   return COB_STATUS_00_SUCCESS;
 }
 
@@ -901,7 +898,6 @@ static cob_fileio_funcs sort_funcs = {
 static void
 save_status (cob_file *f, int status)
 {
-  static char dummy_status[2];
   static int exception[] = {
     0,				/* 0x */
     COB_EC_I_O_AT_END,		/* 1x */
@@ -916,7 +912,7 @@ save_status (cob_file *f, int status)
   };
 
   if (f->file_status == 0)
-    f->file_status = dummy_status;
+    f->file_status = malloc (2);
 
   f->file_status[0] = cob_i2d (status / 10);
   f->file_status[1] = cob_i2d (status % 10);
