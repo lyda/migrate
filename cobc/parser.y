@@ -688,38 +688,27 @@ select_option:
   }
 | RELATIVE _key _is predefined_name
   {
-    if (current_file_name->organization != COB_ORG_RELATIVE)
-      yyerror ("only relative files may have RELATIVE KEY");
-    else
-      current_file_name->key = $4;
+    current_file_name->key = $4;
   }
 | RECORD _key _is predefined_name
   {
-    if (current_file_name->organization != COB_ORG_INDEXED)
-      yyerror ("only indexed files may have RECORD KEY");
-    else
-      current_file_name->key = $4;
+    current_file_name->key = $4;
   }
 | ALTERNATE RECORD _key _is predefined_name flag_duplicates
   {
-    if (current_file_name->organization != COB_ORG_INDEXED)
-      yyerror ("only indexed files may have ALTERNATE RECORD KEY");
+    struct cobc_alt_key *p = malloc (sizeof (struct cobc_alt_key));
+    p->key = $5;
+    p->duplicates = $6;
+    p->next = NULL;
+
+    /* add to the end of list */
+    if (current_file_name->alt_key_list == NULL)
+      current_file_name->alt_key_list = p;
     else
       {
-	struct cobc_alt_key *p = malloc (sizeof (struct cobc_alt_key));
-	p->key = $5;
-	p->duplicates = $6;
-	p->next = NULL;
-
-	/* add to the end of list */
-	if (current_file_name->alt_key_list == NULL)
-	  current_file_name->alt_key_list = p;
-	else
-	  {
-	    struct cobc_alt_key *l = current_file_name->alt_key_list;
-	    for (; l->next; l = l->next);
-	    l->next = p;
-	  }
+	struct cobc_alt_key *l = current_file_name->alt_key_list;
+	for (; l->next; l = l->next);
+	l->next = p;
       }
   }
 | _file STATUS _is predefined_name
