@@ -3730,7 +3730,8 @@ void
 gen_loadval (struct sym *sy)
 {
   unsigned base, locoff;
-  struct sym *var, *tmp;
+  struct sym *var;
+  struct sym *tmp = NULL;
 
 #ifdef COB_DEBUG
   fprintf (o_src, "#gen_loadval\n");
@@ -5458,7 +5459,8 @@ determine_table_index_name (struct sym *sy)
 void
 define_field (int level, struct sym *sy)
 {
-  struct sym *tmp, *tmp1;
+  struct sym *tmp;
+  struct sym *tmp1 = NULL;
 
   if (sy == NULL)
     {

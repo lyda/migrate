@@ -1,17 +1,23 @@
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.50)
+
 AC_INIT
-AM_INIT_AUTOMAKE(open-cobol, 0.7.1)
 AC_CONFIG_SRCDIR(cobc/cobc.c)
+. $srcdir/VERSION
+AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
+AM_MAINTAINER_MODE
 AM_CONFIG_HEADER(config.h)
+AC_SUBST(RELEASE)
 
 # Configure options.
-AC_ARG_ENABLE(debug, [  --enable-debug           enable debug features],
+AC_ARG_ENABLE(debug,
+        [  --enable-debug           enable debug features],
 	[ AC_DEFINE(COB_DEBUG) ])
 
 AC_ARG_ENABLE(maintainer-mode,
         [  --enable-maintainer-mode enable maintainer mode],
-	[ AC_DEFINE(COB_DEBUG) ])
+	[ AC_DEFINE(COB_DEBUG)
+          AC_CONFIG_FILES([open-cobol.spec]) ])
 
 # Checks for programs.
 AC_PROG_CC

@@ -324,7 +324,7 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
         curr_division=0; /* avoid new state switch */
 %}
 
-^"#".* {
+<*>^"#".* {
   char *endp;
   cob_orig_lineno = strtol (yytext + 2, &endp, 10) - 1;
   if (cob_orig_filename)
@@ -914,7 +914,7 @@ va_list __builtin_va_alist;
 static void
 trace_print (char *fmt, ...)
 {
-  if (cob_trace_flag)
+  if (cob_trace_scanner)
     {
       va_list args;
       va_start (args, fmt);
@@ -928,6 +928,6 @@ trace_print (char *fmt, ...)
 void
 dummy ()
 {
-  /* Dummy code to avoid warnings */
+  /* This avoids warnings */
   yy_flex_realloc (0, 0);
 }

@@ -35,9 +35,11 @@
  */
 
 int cob_stabs_flag = 0;
-int cob_trace_flag = 0;
 int cob_debug_flag = 0;
 int cob_verbose_flag = 0;
+
+int cob_trace_scanner = 0;
+int cob_trace_parser = 0;
 
 int cob_warning_count = 0;
 int cob_error_count = 0;
@@ -152,6 +154,8 @@ static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'v'},
   {"save-temps", no_argument, &save_temps_flag, 1},
+  {"ts", no_argument, &cob_trace_scanner, 1},
+  {"tp", no_argument, &cob_trace_parser, 1},
   {0, 0, 0, 0}
 };
 
@@ -187,7 +191,8 @@ print_usage ()
 #ifdef COB_DEBUG
   puts ("");
   puts ("Debug options:");
-  puts ("  -t            Trace scanner");
+  puts ("  -ts           Trace scanner");
+  puts ("  -tp           Trace parser");
 #endif
 }
 
@@ -239,8 +244,6 @@ process_command_line (int argc, char *argv[])
 	case 'F': source_format = format_fixed; break;
 	case 'D': cob_debug_flag = 1; break;
 	case 'T': tab_width = atoi (optarg); break;
-
-	case 't': cob_trace_flag = 1; break;
 
 	default: print_usage (); exit (1);
 	}

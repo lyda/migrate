@@ -37,9 +37,11 @@
   "Copyright (C) 1999-2001 Rildo Pragana et. al.\n"
 
 extern int cob_stabs_flag;
-extern int cob_trace_flag;
 extern int cob_debug_flag;
 extern int cob_verbose_flag;
+
+extern int cob_trace_scanner;
+extern int cob_trace_parser;
 
 extern int cob_error_count;
 extern int cob_warning_count;

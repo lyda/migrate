@@ -286,7 +286,8 @@ comma_delimiter_opt: TOK_COMMA
 
 void yyerror(char *s)
 {
-  fprintf(stderr, "yyerror (%lu, %lu): %s :%s:\n", lineCount, columnCount, s, yytext);
+  fprintf (stderr, "yyerror:%lu:%lu: %s before `%s'\n",
+	   lineCount, columnCount, s, yytext);
 
   /* return 0; */
 }

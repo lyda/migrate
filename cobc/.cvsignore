@@ -6,3 +6,4 @@ cobc
 parser.c
 parser.h
 scanner.c
+defaults.h

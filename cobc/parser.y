@@ -25,8 +25,10 @@
 %expect 533
 
 %{
-#define YYDEBUG 1
-#define YYMAXDEPTH 1000
+#define YYDEBUG		COB_DEBUG
+#define YYMAXDEPTH	1000
+
+#define yydebug		cob_trace_parser
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -3379,18 +3381,19 @@ yywarn (char *s, ...)
 }
 
 void
-yyerror (char *s, ...)
+yyerror (char *fmt, ...)
 {
   va_list argptr;
-  char buff[BUFSIZ];
 
-  /* Build error message */
-  va_start (argptr, s);
-  vsprintf (buff, s, argptr);
+  /* Print error line */
+  printf ("%s:%d: ", cob_orig_filename, cob_orig_lineno);
+
+  /* Print error body */
+  va_start (argptr, fmt);
+  vprintf (fmt, argptr);
+  putchar ('\n');
   va_end (argptr);
 
-  /* Display error */
-  printf ("%s:%d: error: %s before `%s'\n",
-	  cob_orig_filename, cob_orig_lineno, buff, yytext);
+  /* Count error */
   cob_error_count++;
 }
