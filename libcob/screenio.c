@@ -20,8 +20,13 @@
 #include "config.h"
 
 #include <string.h>
+
+#if HAVE_NCURSES_H
+#include <ncurses.h>
+#else
 #if HAVE_CURSES_H
 #include <curses.h>
+#endif
 #endif
 
 #include "move.h"
