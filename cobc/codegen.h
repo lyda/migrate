@@ -67,8 +67,8 @@
 /* standard field classes */
 #define CLASS_NUMERIC 0
 #define CLASS_ALPHABETIC 1
-#define CLASS_ALPHABETICLOWER 2
-#define CLASS_ALPHABETICUPPER 3
+#define CLASS_ALPHABETIC_LOWER 2
+#define CLASS_ALPHABETIC_UPPER 3
 
 /* extended condition flags */
 #define COND_UNARY 0x10
@@ -82,12 +82,6 @@
 #define INKEY 2
 #define DAY 3
 #define DAY_OF_WEEK 4
-
-/* ZERONUM */
-
-#define ZERO 0
-#define ZEROS 1
-#define ZEROES 2
 
 /* CONDITIONAL */
 

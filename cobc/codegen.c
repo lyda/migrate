@@ -3330,10 +3330,10 @@ gen_class_check (struct sym *sy, int class)
 	case CLASS_ALPHABETIC:
 	  asm_call_1 ("cob_check_alphabetic", sy);
 	  break;
-	case CLASS_ALPHABETICUPPER:
+	case CLASS_ALPHABETIC_UPPER:
 	  asm_call_1 ("cob_check_upper", sy);
 	  break;
-	case CLASS_ALPHABETICLOWER:
+	case CLASS_ALPHABETIC_LOWER:
 	  asm_call_1 ("cob_check_lower", sy);
 	  break;
 	default:

@@ -133,13 +133,13 @@ static void check_decimal_point (struct lit *lit);
 
 %token <str>  IDSTRING
 %token <sval> STRING,VARIABLE,VARCOND,SUBSCVAR
-%token <sval> LABELSTR,CMD_LINE,ENVIRONMENT_VARIABLE,PICTURE
-%token <ival> USAGENUM,ZERONUM,CONDITIONAL
+%token <sval> LABELSTR,COMMAND_LINE,ENVIRONMENT_VARIABLE,PICTURE
+%token <ival> USAGENUM,CONDITIONAL
 %token <ival> READ,WRITE
 %token <lval> NLITERAL,CLITERAL
 %token <ival> PORTNUM,DATE_TIME
 
-%token TO,FOR,IS,ARE,THRU,THAN,NO,CANCEL,ASCENDING,DESCENDING
+%token TO,FOR,IS,ARE,THRU,THAN,NO,CANCEL,ASCENDING,DESCENDING,ZERO
 %token TOK_SOURCE_COMPUTER, TOK_OBJECT_COMPUTER,INPUT_OUTPUT
 %token BEFORE,AFTER,SCREEN,REVERSEVIDEO,NUMBERTOK,PLUS,MINUS,SEPARATE
 %token FOREGROUNDCOLOR,BACKGROUNDCOLOR,UNDERLINE,HIGHLIGHT,LOWLIGHT
@@ -174,16 +174,16 @@ static void check_decimal_point (struct lit *lit);
 %token END_IF,END_MULTIPLY,END_PERFORM,END_READ,END_REWRITE,END_SEARCH
 %token END_START,END_STRINGCMD,END_SUBTRACT,END_UNSTRING,END_WRITE
 %token THEN,EVALUATE,OTHER,ALSO,CONTINUE,CURRENCY,REFERENCE,INITIALIZE
-%token NUMERIC,ALPHABETICTOK,ALPHABETICLOWER,ALPHABETICUPPER
+%token NUMERIC,ALPHABETIC,ALPHABETIC_LOWER,ALPHABETIC_UPPER
 %token RETURNING,TOK_TRUE,TOK_FALSE,ANY,SUBSCVAR,FUNCTION
-%token REPORT,TOKRD,CONTROL,LIMIT,FINAL
+%token REPORT,RD,CONTROL,LIMIT,FINAL
 %token HEADING,FOOTING,TOKLAST,DETAIL,TOKSUM
-%token TOKPOSITION,FILE_ID,DEPENDING,TOK_TYPE,TOKSOURCE
+%token POSITION,FILE_ID,DEPENDING,TOK_TYPE,TOKSOURCE
 %token INITIATE,GENERATE,TERMINATE,NULLTOK,ADDRESS,NOECHO,LPAR
 %token CORRESPONDING,TOKDUMMY,CONVERTING,OPTIONAL
 %token IDENTIFICATION_TOK,ENVIRONMENT_TOK,DATA,PROCEDURE_TOK
-%token AUTHOR_TOK,DATE_WRITTEN_TOK,DATE_COMPILED_TOK,INSTALLATION_TOK
-%token SECURITY_TOK,COMMONTOK,RETURN_TOK,END_RETURN,PREVIOUS,NEXT
+%token AUTHOR,DATE_WRITTEN,DATE_COMPILED,INSTALLATION,SECURITY
+%token COMMON,RETURN_TOK,END_RETURN,PREVIOUS,NEXT
 %token INPUT,I_O,OUTPUT,EXTEND,EOL_TOK,EOS_TOK,BINARY,FLOAT_SHORT,FLOAT_LONG
 %token PACKED_DECIMAL
 
@@ -292,17 +292,17 @@ identification_division:
 ;
 opt_program_parameter:
 | opt_is INITIALTOK opt_program { yywarn ("INITIAL is not supported yet"); }
-| opt_is COMMONTOK opt_program  { yywarn ("COMMON is not supported yet"); }
+| opt_is COMMON opt_program  { yywarn ("COMMON is not supported yet"); }
 ;
 identification_division_options:
 | identification_division_options identification_division_option
 ;
 identification_division_option:
-  AUTHOR_TOK '.' comment
-| DATE_WRITTEN_TOK '.' comment
-| DATE_COMPILED_TOK '.' comment
-| INSTALLATION_TOK '.' comment
-| SECURITY_TOK '.' comment
+  AUTHOR '.' comment
+| DATE_WRITTEN '.' comment
+| DATE_COMPILED '.' comment
+| INSTALLATION '.' comment
+| SECURITY '.' comment
 ;
 opt_program: | PROGRAM ;
 comment: { start_condition = START_COMMENT; };
@@ -838,7 +838,7 @@ left_or_right:
  */
 
 blank_clause:
-  BLANK opt_when ZERONUM	{ curr_field->flags.blank=1; }
+  BLANK opt_when ZERO	{ curr_field->flags.blank=1; }
 ;
 opt_when: | WHEN ;
 
@@ -881,7 +881,7 @@ rd_statement_list:
 | rd_statement_list rd_statement
 ;
 rd_statement:
-  TOKRD STRING { $2->type='W'; curr_division = CDIV_INITIAL; }
+  RD STRING { $2->type='W'; curr_division = CDIV_INITIAL; }
   report_controls { curr_division = CDIV_DATA; }
   report_description
 ;
@@ -1055,7 +1055,7 @@ screen_attrib:
 | UNDERLINE                     { $$ = SCR_UNDERLINE; }
 | LOWLIGHT                      { $$ = SCR_LOWLIGHT; }
 | HIGHLIGHT                     { $$ = SCR_HIGHLIGHT; }
-| BLANK opt_when ZERONUM        { $$ = SCR_BLANK_WHEN_ZERO; }
+| BLANK opt_when ZERO        { $$ = SCR_BLANK_WHEN_ZERO; }
 | NOECHO                        { $$ = SCR_NOECHO; }
 | UPDATE                        { $$ = SCR_UPDATE; }
 | screen_sign                   { $$ = $1; }
@@ -1229,7 +1229,7 @@ accept_options:
                               gen_accept_from_time($<sval>-1);
                           else if ($2 == INKEY)
                               gen_accept_from_inkey($<sval>-1); }
-    | FROM CMD_LINE     { gen_accept_from_cmdline($<sval>-1); }
+    | FROM COMMAND_LINE    { gen_accept_from_cmdline($<sval>-1); }
     | FROM ENVIRONMENT_VARIABLE CLITERAL 
      { 
        save_literal($3,'X');
@@ -1439,7 +1439,7 @@ display_options:
     ;
 opt_line_pos:
     /* nothing */
-    | LINE expr TOKPOSITION expr 
+    | LINE expr POSITION expr 
      {
       screen_io_enable++;
       push_expr($2);
@@ -2929,13 +2929,13 @@ implied_op_condition:
 sign_condition:
     POSITIVE        { $$=GREATER; }
     | NEGATIVE      { $$=LESS; }
-    | ZERONUM       { $$=EQUAL; }
+    | ZERO       { $$=EQUAL; }
     ;
 class_condition:
     NUMERIC                     { $$=CLASS_NUMERIC; }
-    | ALPHABETICTOK             { $$=CLASS_ALPHABETIC; }
-    | ALPHABETICLOWER           { $$=CLASS_ALPHABETICLOWER; }
-    | ALPHABETICUPPER           { $$=CLASS_ALPHABETICUPPER; }
+    | ALPHABETIC             { $$=CLASS_ALPHABETIC; }
+    | ALPHABETIC_LOWER          { $$=CLASS_ALPHABETIC_LOWER; }
+    | ALPHABETIC_UPPER          { $$=CLASS_ALPHABETIC_UPPER; }
     ;       
 extended_cond_op:
     IS ext_cond                 { $$ = $2; }
@@ -3035,7 +3035,7 @@ all_literal:
     ;
 special_literal:
     SPACES          { $$=spe_lit_SP; }
-    | ZERONUM       { $$=spe_lit_ZE; }
+    | ZERO       { $$=spe_lit_ZE; }
     | QUOTES        { $$=spe_lit_QU; }
     | HIGHVALUES    { $$=spe_lit_HV; }
     | LOWVALUES     { $$=spe_lit_LV; }
