@@ -250,12 +250,12 @@ print_usage (void)
 "  -t <file>             Place the listing into <file>\n"
 "  -I <directory>        Add <directory> to copybook search path\n"
 "  -L <directory>        Add <directory> to library search path\n"
-"  -l <lib>              Search for library <lib>\n"
+"  -l <lib>              Link the library <lib>\n"
 "  -MT <target>          Set target file used in dependency list\n"
 "  -MF <file>            Place dependency list into <file>\n"
 "  -free                 Use free source format\n"
 "  -fixed                Use fixed source format\n"
-"  -ext=<extension>      Add file extension\n"
+"  -ext <extension>      Add default file extension\n"
 "\n"
 "  -Wall                 Enable all warnings"));
 #undef CB_WARNING
