@@ -31,6 +31,14 @@
 #include "scanner.h"
 #include "codegen.h"
 
+#ifndef PRId64
+#ifdef __MINGW32__
+#define PRId64 "I64d"
+#else
+#define PRId64 "lld"
+#endif
+#endif /* !PRId64 */
+
 static void output_stmt (cobc_tree x);
 static void output_data (cobc_tree x);
 static void output_func_1 (const char *name, cobc_tree a1);
@@ -437,7 +445,7 @@ output_native_assign (cobc_tree x, long long val)
 {
   output_prefix ();
   output_int32 (x);
-  output (" = %lldLL;\n", val);
+  output (" = %" PRId64 "LL;\n", val);
 }
 
 
@@ -465,7 +473,7 @@ output_field (cobc_tree x, int id)
 	    output_indent ("{");
 	    output_line ("static cob_field_attr attr = {%d, %d, %d, 1};",
 			 COB_TYPE_NUMERIC_BINARY, l->size, l->decimals);
-	    output_line ("static long long n = %lldLL;", literal_to_int (l));
+	    output_line ("static long long n = %" PRId64 "LL;", literal_to_int (l));
 	    output_line ("%s = (cob_field) {8, (void *) &n, &attr};", fname);
 	    output_indent ("}");
 	  }
@@ -1442,7 +1450,7 @@ output_call (cobc_tree name, struct cobc_list *args,
 	    {
 	    case cobc_tag_literal:
 	      if (COBC_TREE_CLASS (x) == COB_TYPE_NUMERIC)
-		output ("%lld", literal_to_int (COBC_LITERAL (x)));
+		output ("%" PRId64, literal_to_int (COBC_LITERAL (x)));
 	      else
 		output ("%d", COBC_LITERAL (x)->data[0]);
 	      break;
