@@ -2097,7 +2097,6 @@ opt_end_search:
 move_statement:
       MOVE gname TO { $<ival>$ = MOVE; } var_list
     | MOVE CORRESPONDING gname TO gname { gen_movecorr($3, $5); }
-    | MOVE LENGTH OF gname TO name { gen_movelength($4, $6); }
     | INITIALIZE { $<ival>$ = INITIALIZE; } var_list
 
 

@@ -637,7 +637,6 @@ extern int is_numeric_sy (struct sym *sy);
 extern void gen_class_check (struct sym *sy, int class);
 extern void gen_inspect (struct sym *var, void *list, int operation);
 extern void gen_move (struct sym *sy_src, struct sym *sy_dst);
-extern void gen_movelength (struct sym *sy1, struct sym *sy2);
 extern void init_field_val (struct sym *sy);
 extern void def_field_storage (struct sym *sy, int fld_len);
 extern void gen_movecorr (struct sym *sy1, struct sym *sy2);

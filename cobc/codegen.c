@@ -3744,17 +3744,6 @@ gen_move (struct sym *sy_src, struct sym *sy_dst)
   asm_call ("cob_move");
 }
 
-void
-gen_movelength (struct sym *sy1, struct sym *sy2)
-{
-  if (sy1->litflag == 1)
-    push_immed (((struct lit *) sy1)->len);
-  else
-    push_immed (sy1->len);
-  gen_loadvar (sy2);
-  asm_call ("cob_assign_int");
-}
-
 /* The following functions will be activated when we change from
    defining the outermost group to define each elementary item. */
 void
