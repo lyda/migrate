@@ -20,7 +20,7 @@
 open (IN, shift) or die;
 
 while (<IN>) {
-  chomp;
+  s/\x0d\x0a|\x0d|\x0a//g;
   if (/^      \*HEADER,([^,]*),([^, ]*)(,([^,]*),([^, ]*))?/) {
     my ($type, $prog, $subt, $subr) = ($1, $2, $4, $5);
     my $module = substr($prog, 0, 2);
@@ -45,7 +45,7 @@ while (<IN>) {
       open (OUT, "> $module/$name") or die;
       while (<IN>) {
 	last if /^      \*END/;
-	chomp if ($type eq "DATA*" and length >= 80);
+	s/\x0d\x0a|\x0d|\x0a//g if ($type eq "DATA*" and length >= 80);
 	s/REC-FILLER/FILLER    /;
 	print OUT;
       }
