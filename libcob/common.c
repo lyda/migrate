@@ -104,8 +104,6 @@ struct cob_exception cob_exception_table[] = {
   {0, 0, 0}		/* COB_EC_MAX */
 };
 
-static int ding_on_error = 0;
-
 static int cob_initialized = 0;
 
 
@@ -190,8 +188,6 @@ static void
 cob_init_config (void)
 {
   config_load ();
-
-  ding_on_error = cob_config_compare ("ding-on-error", "yes");
 }
 
 
@@ -559,8 +555,6 @@ cob_runtime_error (const char *fmt, ...)
   va_end (ap);
 
   /* postfix */
-  if (ding_on_error)
-    fputs ("\a", stderr);
   fputs ("\n", stderr);
 }
 

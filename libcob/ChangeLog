@@ -1,5 +1,9 @@
 2003-05-18  Keisuke Nishida  <knishida@netlab.jp>
 
+	* common.c (ding_on_error): Removed.
+
+2003-05-18  Keisuke Nishida  <knishida@netlab.jp>
+
 	* fileio.c: Large file system support.
 	(_LFS64_LARGEFILE) [WITH_LFS64]: Defined.
 	(_LFS64_STDIO) [WITH_LFS64]: Defined.
