@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 127
+%expect 125
 
 %{
 #include "config.h"
@@ -1795,7 +1795,9 @@ goto_statement:
   GO _to label_list
   {
     cobc_location = @1;
-    if ($3->next)
+    if ($3 == NULL)
+      OBSOLETE ("GO TO without label");
+    else if ($3->next)
       yyerror ("too many labels with GO TO");
     else
       push_call_1 (COBC_GOTO, $3->item);
@@ -1805,7 +1807,6 @@ goto_statement:
     cobc_location = @1;
     push_call_2 (COBC_GOTO_DEPENDING, $3, $6);
   }
-| GO _to { OBSOLETE ("GO TO without label"); }
 ;
 
 
