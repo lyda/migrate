@@ -1,3 +1,7 @@
+2002-07-03  Keisuke Nishida  <knishida@netlab.jp>
+
+	* parser.y (program_sequence): Removed.
+
 2002-07-01  Keisuke Nishida  <knishida@netlab.jp>
 
 	* tree.h (cobc_field): New members: f.screen, screen_line,
