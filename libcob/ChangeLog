@@ -1,5 +1,9 @@
 2002-06-04  Keisuke Nishida  <knishida@netlab.jp>
 
+	* support.h (cob_perform): Enclosed by do ... while (0).
+
+2002-06-04  Keisuke Nishida  <knishida@netlab.jp>
+
 	* Makefile.am (libcob_la_CFLAGS): -I$(top_srcdir).
 	* call.c, common.c, fileio.c, move.c: Updated.
 
