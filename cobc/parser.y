@@ -192,7 +192,7 @@ program:
   opt_end_program
 ;
 opt_end_program:
-| END PROGRAM idstring
+| END PROGRAM idstring dot
 ;
 
 
