@@ -1,5 +1,10 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Version 0.9.1 での変更点
+
+** 主にバグ修正。NIST テストの合格率は 52.63%
+
+
 * Version 0.9 での変更点
 
 ** コンパイラがアセンブリではなく C コードを生成
