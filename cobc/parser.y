@@ -633,14 +633,14 @@ field_option:
   redefines_clause
 | external_clause
 | global_clause
-| occurs_clause
 | picture_clause
-| usage_option
+| usage_clause
 | sign_clause       { set_sign_flags($1); }
-| value_option
-| SYNC sync_options {curr_field->flags.sync=1;}
+| occurs_clause
 | JUST RIGHT {curr_field->flags.just_r=1;}
+| SYNC sync_options {curr_field->flags.sync=1;}
 | BLANK opt_when ZERONUM { curr_field->flags.blank=1; }
+| value_option
 ;
 
 
@@ -679,47 +679,6 @@ global_clause:
 
 
 /*
- * OCCURS clause
- */
-
-occurs_clause:
-  OCCURS integer opt_times { curr_field->times = $2; }
-  opt_indexed_by
-| OCCURS integer TO integer opt_times DEPENDING opt_on
-  { curr_division = CDIV_INITIAL; }
-  gname
-  {       
-    curr_division = CDIV_DATA;
-    create_occurs_info($2,$4,$9);
-  }
-  opt_indexed_by
-;
-opt_indexed_by: 
-| opt_key_is INDEXED opt_by index_name_list { }
-;
-opt_key_is:
-  /* nothing */		{ $$ = NULL; }
-| DIRECTION opt_key opt_is STRING
-  {
-    $4->level=0;
-    if ($1 == ASCENDING) {
-      $4->level=-1;
-    }
-    if ($1 == DESCENDING) {
-      $4->level=-2;
-    }
-    $$=$4;
-  }
-;
-index_name_list:
-  def_name { define_implicit_field ($1, $<sval>-2, curr_field->times); }
-| index_name_list
-  def_name { define_implicit_field ($2, $<sval>-2, curr_field->times); }
-;
-opt_times: | TIMES ;
-
-
-/*
  * PICTURE clause
  */
 
@@ -728,12 +687,11 @@ picture_clause:
 ;
 
 
-sync_options:
-| LEFT
-| RIGHT
-;
+/*
+ * USAGE clause
+ */
 
-usage_option:
+usage_clause:
   opt_usage opt_is usage
   {
     switch ($3)
@@ -796,6 +754,53 @@ usage:
 | COMP2     { $$=USAGE_COMP2; }
 ;
 opt_usage: | USAGE ;
+
+
+/*
+ * OCCURS clause
+ */
+
+occurs_clause:
+  OCCURS integer opt_times { curr_field->times = $2; }
+  opt_indexed_by
+| OCCURS integer TO integer opt_times DEPENDING opt_on
+  { curr_division = CDIV_INITIAL; }
+  gname
+  {       
+    curr_division = CDIV_DATA;
+    create_occurs_info($2,$4,$9);
+  }
+  opt_indexed_by
+;
+opt_indexed_by: 
+| opt_key_is INDEXED opt_by index_name_list { }
+;
+opt_key_is:
+  /* nothing */		{ $$ = NULL; }
+| DIRECTION opt_key opt_is STRING
+  {
+    $4->level=0;
+    if ($1 == ASCENDING) {
+      $4->level=-1;
+    }
+    if ($1 == DESCENDING) {
+      $4->level=-2;
+    }
+    $$=$4;
+  }
+;
+index_name_list:
+  def_name { define_implicit_field ($1, $<sval>-2, curr_field->times); }
+| index_name_list
+  def_name { define_implicit_field ($2, $<sval>-2, curr_field->times); }
+;
+opt_times: | TIMES ;
+
+
+sync_options:
+| LEFT
+| RIGHT
+;
 
 value_option: VALUE opt_is_are value_list ;
 
