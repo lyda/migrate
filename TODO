@@ -20,11 +20,6 @@ compilers do?
 
 Need to implement binary truncation and maybe something other.
 
-** Temporary SORT file and TMPDIR
-
-SORT should be done by using a temporary file in the directory
-specified by the environment variable TMPDIR.
-
 ** Table sort
 
 ** The default action of file exception
