@@ -48,6 +48,38 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
+AT_SETUP([Hexadecimal literal])
+
+AT_DATA([dump.c], [
+int dump (unsigned char *data)
+{
+  int i;
+  for (i = 0; i < 4; i++)
+    printf ("%02x", data[[i]]);
+  puts ("");
+  return 0;
+}
+])
+
+AT_CHECK([${CC} -shared -o dump.so dump.c])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       PROCEDURE        DIVISION.
+           DISPLAY X"313233".
+           CALL "dump" USING X"000102".
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0],
+[123
+00010200
+])
+
+AT_CLEANUP
+
 AT_SETUP([DISPLAY data items with VALUE clause])
 
 AT_DATA([prog.cob], [
