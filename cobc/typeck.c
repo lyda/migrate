@@ -782,8 +782,7 @@ cb_build_move_num (cb_tree x, int high)
 {
   switch (cb_field (x)->usage)
     {
-    case CB_USAGE_BINARY_SWAP:
-    case CB_USAGE_BINARY_NATIVE:
+    case CB_USAGE_BINARY:
       return cb_build_assign (x, cb_int (high ? -1 : 0));
     case CB_USAGE_DISPLAY:
       return cb_build_memset (x, high ? '9' : '0');
@@ -955,7 +954,7 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 				 cb_build_cast_length (dst));
     }
   else if (cb_fits_int (src)
-	   && f->usage == CB_USAGE_BINARY_NATIVE
+	   && (f->usage == CB_USAGE_BINARY && !f->flag_binary_swap)
 	   && (f->size == 1 || f->size == 2 || f->size == 4 || f->size == 8))
     {
       int val = cb_literal_to_int (l);
@@ -1041,7 +1040,7 @@ cb_build_move (cb_tree src, cb_tree dst)
 	src = cb_zero;
 
       /* no optimization for binary swap and packed decimal for now */
-      if (cb_field (dst)->usage == CB_USAGE_BINARY_SWAP
+      if (cb_field (dst)->flag_binary_swap
 	  || cb_field (dst)->usage == CB_USAGE_PACKED)
 	return cb_build_move_call (src, dst);
 

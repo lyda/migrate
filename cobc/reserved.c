@@ -136,12 +136,14 @@ static struct reserved reserved_words[] = {
   {"COMP-3",		COMP_3, 0},			/* extension */
   {"COMP-4",		COMP_4, 0},			/* extension */
   {"COMP-5",		COMP_5, 0},			/* extension */
+  {"COMP-X",		COMP_X, 0},			/* extension */
   {"COMPUTATIONAL",	COMP, 0},			/* 2002 */
   {"COMPUTATIONAL-1",	COMP_1, 0},			/* extension */
   {"COMPUTATIONAL-2",	COMP_2, 0},			/* extension */
   {"COMPUTATIONAL-3",	COMP_3, 0},			/* extension */
   {"COMPUTATIONAL-4",	COMP_4, 0},			/* extension */
   {"COMPUTATIONAL-5",	COMP_5, 0},			/* extension */
+  {"COMPUTATIONAL-X",	COMP_X, 0},			/* extension */
   {"COMPUTE",		COMPUTE, 0},			/* 2002 */
   {"CONFIGURATION",	CONFIGURATION, 0},		/* 2002 */
   {"CONSTANT",		-1, 0},				/* 2002 */

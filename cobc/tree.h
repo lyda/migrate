@@ -149,9 +149,10 @@ enum cb_storage {
 };
 
 enum cb_usage {
-  CB_USAGE_BINARY_SWAP,
-  CB_USAGE_BINARY_NATIVE,
+  CB_USAGE_BINARY,
   CB_USAGE_BIT,
+  CB_USAGE_COMP_5,
+  CB_USAGE_COMP_X,
   CB_USAGE_DISPLAY,
   CB_USAGE_FLOAT,
   CB_USAGE_INDEX,
@@ -161,14 +162,6 @@ enum cb_usage {
   CB_USAGE_POINTER,
   CB_USAGE_PROGRAM,
 };
-
-#ifdef WORDS_BIGENDIAN
-#define CB_USAGE_BINARY		CB_USAGE_BINARY_NATIVE
-#else
-#define CB_USAGE_BINARY					\
-  ((cb_binary_byteorder == CB_BYTEORDER_BIG_ENDIAN)	\
-   ? CB_USAGE_BINARY_SWAP : CB_USAGE_BINARY_NATIVE)
-#endif
 
 enum cb_operand_type {
   CB_SENDING_OPERAND,
@@ -437,6 +430,7 @@ struct cb_field {
   long flag_sign_separate : 1;	/* SIGN IS SEPARATE */
   long flag_synchronized  : 1;	/* SYNCHRONIZED */
   long flag_occurs        : 1;	/* OCCURS */
+  long flag_binary_swap   : 1;	/* binary byteswap */
   long flag_local         : 1;	/* has local scope */
   long flag_base          : 1;
   long flag_field         : 1;

@@ -396,7 +396,7 @@ output_attr (cb_tree x)
 		  flags |= COB_FLAG_BLANK_ZERO;
 		if (f->flag_justified)
 		  flags |= COB_FLAG_JUSTIFIED;
-		if (f->usage == CB_USAGE_BINARY_SWAP)
+		if (f->flag_binary_swap)
 		  flags |= COB_FLAG_BINARY_SWAP;
 
 		id = lookup_attr (type, f->pic->digits, f->pic->scale,
@@ -552,19 +552,25 @@ output_integer (cb_tree x)
 		  }
 		break;
 
-	      case CB_USAGE_BINARY_NATIVE:
-		output ("(*(");
-		switch (f->size)
+	      case CB_USAGE_BINARY:
+		if (!f->flag_binary_swap
+		    && (f->size == 1 || f->size == 2
+			|| f->size == 4 || f->size == 8))
 		  {
-		  case 1: output ("char"); break;
-		  case 2: output ("short"); break;
-		  case 4: output ("long"); break;
-		  case 8: output ("long long"); break;
+		    output ("(*(");
+		    switch (f->size)
+		      {
+		      case 1: output ("char"); break;
+		      case 2: output ("short"); break;
+		      case 4: output ("long"); break;
+		      case 8: output ("long long"); break;
+		      }
+		    output (" *) (");
+		    output_data (x);
+		    output ("))");
+		    return;
 		  }
-		output (" *) (");
-		output_data (x);
-		output ("))");
-		return;
+		break;
 
 	      default:
 		break;
@@ -1344,8 +1350,7 @@ output_call (struct cb_call *p)
 	    default:
 	      switch (cb_field (x)->usage)
 		{
-		case CB_USAGE_BINARY_SWAP:
-		case CB_USAGE_BINARY_NATIVE:
+		case CB_USAGE_BINARY:
 		case CB_USAGE_INDEX:
 		  output_integer (x);
 		  break;

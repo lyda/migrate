@@ -275,8 +275,7 @@ cb_tree_type (cb_tree x)
 	{
 	case CB_USAGE_DISPLAY:
 	  return COB_TYPE_NUMERIC_DISPLAY;
-	case CB_USAGE_BINARY_SWAP:
-	case CB_USAGE_BINARY_NATIVE:
+	case CB_USAGE_BINARY:
 	case CB_USAGE_INDEX:
 	  return COB_TYPE_NUMERIC_BINARY;
 	case CB_USAGE_PACKED:
@@ -310,8 +309,7 @@ cb_fits_int (cb_tree x)
 	  {
 	  case CB_USAGE_INDEX:
 	    return 1;
-	  case CB_USAGE_BINARY_SWAP:
-	  case CB_USAGE_BINARY_NATIVE:
+	  case CB_USAGE_BINARY:
 	    if (f->pic->scale <= 0 && f->size <= sizeof (int))
 	      return 1;
 	    return 0;
@@ -1162,11 +1160,19 @@ validate_field_1 (struct cb_field *f)
       }
 
       /* validate USAGE */
-      if (f->usage == CB_USAGE_BINARY_SWAP
-	  || f->usage == CB_USAGE_BINARY_NATIVE
-	  || f->usage == CB_USAGE_PACKED)
-	if (f->pic->category != CB_CATEGORY_NUMERIC)
-	  cb_warning_x (x, _("`%s' not numeric item"), name);
+      switch (f->usage)
+	{
+	case CB_USAGE_BINARY:
+	case CB_USAGE_PACKED:
+	  if (f->pic->category != CB_CATEGORY_NUMERIC)
+	    cb_warning_x (x, _("`%s' not numeric item"), name);
+	  break;
+	case CB_USAGE_COMP_5:
+	case CB_USAGE_COMP_X:
+	  break;
+	default:
+	  break;
+	}
 
       /* validate SIGN */
 
@@ -1257,8 +1263,39 @@ setup_parameters (struct cb_field *f)
   else
     {
       /* regular field */
-      if (f->usage == CB_USAGE_INDEX)
-	f->pic = CB_PICTURE (cb_build_picture ("S9(9)"));
+      switch (f->usage)
+	{
+	case CB_USAGE_BINARY:
+#ifndef WORDS_BIGENDIAN
+	  if (cb_binary_byteorder == CB_BYTEORDER_BIG_ENDIAN)
+	    f->flag_binary_swap = 1;
+#endif
+	  break;
+
+	case CB_USAGE_INDEX:
+	  f->pic = CB_PICTURE (cb_build_picture ("S9(9)"));
+	  break;
+
+	case CB_USAGE_COMP_5:
+	case CB_USAGE_COMP_X:
+	  if (f->pic->category == CB_CATEGORY_ALPHANUMERIC)
+	    {
+	      char pic[6];
+	      static int digits[] = {2, 4, 7, 9, 12, 14, 16, 18};
+	      sprintf (pic, "9(%d)", digits[f->pic->size - 1]);
+	      f->pic = CB_PICTURE (cb_build_picture (pic));
+	    }
+	  f->usage = CB_USAGE_BINARY;
+	  
+#ifndef WORDS_BIGENDIAN
+	  if (f->usage == CB_USAGE_COMP_X)
+	    f->flag_binary_swap = 1;
+#endif
+	  break;
+
+	default:
+	  break;
+	}
     }
 }
 
@@ -1301,8 +1338,7 @@ compute_size (struct cb_field *f)
       /* elementary item */
       switch (f->usage)
 	{
-	case CB_USAGE_BINARY_SWAP:
-	case CB_USAGE_BINARY_NATIVE:
+	case CB_USAGE_BINARY:
 	  {
 	    int size = f->pic->size;
 	    switch (cb_binary_size)
@@ -1369,35 +1405,17 @@ compute_size (struct cb_field *f)
 	}
     }
 
-  /* ISO+IEC+1989-2002: 13.16.42.2-9 */
+  /* the size of redefining field should not be larger than
+     the size of redefined field unless the redefined filed
+     is level 01 and non-external */
   if (f->redefines
+      && (f->redefines->level != 01 || f->redefines->flag_external)
       && (f->size * f->occurs_max
-	  > f->redefines->size * f->redefines->occurs_max)
-      && (f->redefines->level != 01 || f->redefines->flag_external))
+	  > f->redefines->size * f->redefines->occurs_max))
     cb_error_x (CB_TREE (f), _("size of `%s' larger than size of `%s'"),
 		f->name, f->redefines->name);
 
   return f->size;
-}
-
-static void
-finalize_field (struct cb_field *f)
-{
-  if (f->storage == CB_STORAGE_LOCAL
-      || f->storage == CB_STORAGE_LINKAGE)
-    f->flag_local = 1;
-
-  if (f->storage == CB_STORAGE_LINKAGE)
-    f->flag_base = 1;
-
-  setup_parameters (f);
-
-  /* compute size */
-  compute_size (f);
-  if (!f->redefines)
-    f->memory_size = f->size;
-  else if (f->redefines->memory_size < f->size)
-    f->redefines->memory_size = f->size;
 }
 
 static int
@@ -1418,7 +1436,22 @@ cb_validate_field (struct cb_field *f)
 {
   if (validate_field_1 (f) != 0)
     return;
-  finalize_field (f);
+
+  /* setup parameters */
+  if (f->storage == CB_STORAGE_LOCAL
+      || f->storage == CB_STORAGE_LINKAGE)
+    f->flag_local = 1;
+  if (f->storage == CB_STORAGE_LINKAGE)
+    f->flag_base = 1;
+  setup_parameters (f);
+
+  /* compute size */
+  compute_size (f);
+  if (!f->redefines)
+    f->memory_size = f->size;
+  else if (f->redefines->memory_size < f->size)
+    f->redefines->memory_size = f->size;
+
   validate_field_value (f);
 }
 

@@ -144,7 +144,7 @@ static void terminator_error (void);
 %token STATUS STOP SYMBOLIC SYNCHRONIZED TALLYING TAPE TEST THAN THEN THRU
 %token TIME TIMES TO TOK_FILE TOK_INITIAL TOK_TRUE TOK_FALSE TRAILING
 %token UNDERLINE UNIT UNTIL UP UPON USAGE USE USING VALUE VARYING WHEN WITH
-%token COMP COMP_1 COMP_2 COMP_3 COMP_4 COMP_5
+%token COMP COMP_1 COMP_2 COMP_3 COMP_4 COMP_5 COMP_X
 
 
 %%
@@ -1065,16 +1065,17 @@ usage_clause:
 | USAGE _is usage
 ;
 usage:
-  BINARY		{ current_field->usage = CB_USAGE_BINARY; }
-| COMP			{ current_field->usage = CB_USAGE_BINARY; }
-| COMP_1		{ current_field->usage = CB_USAGE_FLOAT; }
-| COMP_2		{ current_field->usage = CB_USAGE_FLOAT; }
-| COMP_3		{ current_field->usage = CB_USAGE_PACKED; }
-| COMP_4		{ current_field->usage = CB_USAGE_BINARY; }
-| COMP_5		{ current_field->usage = CB_USAGE_BINARY_NATIVE; }
-| DISPLAY		{ current_field->usage = CB_USAGE_DISPLAY; }
-| INDEX			{ current_field->usage = CB_USAGE_INDEX; }
-| PACKED_DECIMAL	{ current_field->usage = CB_USAGE_PACKED; }
+  BINARY			{ current_field->usage = CB_USAGE_BINARY; }
+| COMP				{ current_field->usage = CB_USAGE_BINARY; }
+| COMP_1			{ current_field->usage = CB_USAGE_FLOAT; }
+| COMP_2			{ current_field->usage = CB_USAGE_FLOAT; }
+| COMP_3			{ current_field->usage = CB_USAGE_PACKED; }
+| COMP_4			{ current_field->usage = CB_USAGE_BINARY; }
+| COMP_5			{ current_field->usage = CB_USAGE_COMP_5; }
+| COMP_X			{ current_field->usage = CB_USAGE_COMP_X; }
+| DISPLAY			{ current_field->usage = CB_USAGE_DISPLAY; }
+| INDEX				{ current_field->usage = CB_USAGE_INDEX; }
+| PACKED_DECIMAL		{ current_field->usage = CB_USAGE_PACKED; }
 ;
 
 
