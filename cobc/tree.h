@@ -261,6 +261,9 @@ struct expr
 
 extern cob_tree make_expr (cob_tree left, char op, cob_tree right);
 
+extern int is_numeric_value (cob_tree sy);
+extern int is_valid_expr (cob_tree x);
+
 
 /*
  * Condition

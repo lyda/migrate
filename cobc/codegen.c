@@ -970,6 +970,12 @@ adjust_desc_length (cob_tree sy)
 int
 push_expr (cob_tree sy)
 {
+  if (!is_valid_expr (sy))
+    {
+      puts ("type error");
+      abort ();
+    }
+
   if (EXPR_P (sy))
     {
       push_expr (EXPR_LEFT (sy));
@@ -984,9 +990,6 @@ push_expr (cob_tree sy)
 	}
       return 1;
     }
-
-  if (!is_numeric_sy (sy))
-    return 0;
 
   asm_call_1 ("cob_push_decimal", sy);
   return 1;
@@ -1235,19 +1238,6 @@ gen_store_fnres (cob_tree sy)
     default:
       break;
     };
-}
-
-int
-is_numeric_sy (cob_tree sy)
-{
-  char type;
-  if (SUBREF_P (sy))
-    sy = SUBREF_SYM (sy);
-
-  type = COB_FIELD_TYPE (sy);
-  if ((type == '9') || (type == 'B') || (type == 'C') || (type == 'U'))
-    return 1;
-  return 0;
 }
 
 

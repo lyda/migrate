@@ -153,6 +153,38 @@ make_expr (cob_tree left, char op, cob_tree right)
   return COB_TREE (p);
 }
 
+int
+is_numeric_value (cob_tree x)
+{
+  if (SUBSTRING_P (x))
+    x = SUBSTRING_VAR (x);
+
+  if (SUBREF_P (x))
+    x = SUBREF_SYM (x);
+
+  if (COB_FIELD_P (x))
+    {
+      char type = COB_FIELD_TYPE (x);
+      if ((type == '9') || (type == 'B') || (type == 'C') || (type == 'U'))
+	return 1;
+    }
+
+  return 0;
+}
+
+int
+is_valid_expr (cob_tree x)
+{
+  if (EXPR_P (x))
+    if (is_valid_expr (EXPR_LEFT (x)) && is_valid_expr (EXPR_RIGHT (x)))
+      return 1;
+
+  if (is_numeric_value (x))
+    return 1;
+
+  return 0;
+}
+
 
 /*
  * Condition

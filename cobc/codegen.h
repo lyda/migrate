@@ -159,7 +159,6 @@ extern void gen_divide_into (cob_tree divisor, struct math_var *list);
 extern void gen_divide_giving (cob_tree divisor, cob_tree dividend, struct math_var *list);
 extern void gen_divide_giving_remainder (cob_tree divisor, cob_tree dividend, cob_tree quotient, cob_tree remainder, int rnd);
 extern void gen_store_fnres (cob_tree sy);
-extern int is_numeric_sy (cob_tree sy);
 extern void gen_class_check (cob_tree sy, int class);
 extern void gen_inspect (cob_tree var, void *list, int operation);
 extern void gen_move (cob_tree sy_src, cob_tree sy_dst);

@@ -39,6 +39,12 @@
 #include "codegen.h"
 #include "_libcob.h"
 
+#define ASSERT_VALID_EXPR(x)			\
+  do {						\
+    if (!is_valid_expr (x))			\
+      yyerror ("invalid expr");			\
+  } while (0);
+
 static unsigned long lbend, lbstart;
 static unsigned int perform_after_sw;
 
@@ -152,7 +158,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <tree> field_description,label,filename,noallname,paragraph,assign_clause
 %type <tree> file_description,redefines_var,function_call,subscript
 %type <tree> name,gname,number,file,level1,opt_def_name,def_name
-%type <tree> opt_read_into,opt_write_from,field_name,expr
+%type <tree> opt_read_into,opt_write_from,field_name,expr,unsafe_expr
 %type <tree> opt_unstring_count,opt_unstring_delim,unstring_tallying
 %type <tree> qualified_var,unqualified_var
 %type <tree> call_returning,screen_to_name,var_or_lit,opt_add_to
@@ -1508,14 +1514,22 @@ selection_subject_set:
   selection_subject		{ $$=save_sel_subject($1,$3); }
 ;
 selection_subject:
-  expr
+  unsafe_expr
   {
-    if (push_expr($1))
-      $$=SSUBJ_EXPR;
-    else
+    if (is_valid_expr ($1))
+      {
+	push_expr ($1);
+	$$ = SSUBJ_EXPR;
+      }
+    else if (COB_FIELD_P ($1))
       {
 	push_field ($1);
-	$$=SSUBJ_STR;
+	$$ = SSUBJ_STR;
+      }
+    else
+      {
+	yyerror ("invalid selection subject");
+	$$ = SSUBJ_BOOLEAN; /* error recovery */
       }
   }
 | condition			{ push_condition(); $$ = SSUBJ_BOOLEAN; }
@@ -2624,8 +2638,8 @@ condition_1:
 ;
 condition_2:
   condition_1			{ $$ = $1; }
-| expr opt_is			{ $$ = make_opt_cond ($<tree>-1, -1, $1); }
-| operator expr			{ $$ = make_opt_cond ($<tree>-1, $1, $2); }
+| unsafe_expr opt_is		{ $$ = make_opt_cond ($<tree>-1, -1, $1); }
+| operator unsafe_expr		{ $$ = make_opt_cond ($<tree>-1, $1, $2); }
 ;
 
 
@@ -2634,7 +2648,15 @@ condition_2:
  */
 
 comparative_condition:
-  expr opt_is operator expr	{ $$ = make_cond ($1, $3, $4); }
+  unsafe_expr opt_is operator unsafe_expr
+  {
+    if (EXPR_P ($1) || EXPR_P ($4))
+      {
+	ASSERT_VALID_EXPR ($1);
+	ASSERT_VALID_EXPR ($4);
+      }
+    $$ = make_cond ($1, $3, $4);
+  }
 ;
 operator:
   flag_not equal		{ $$ = $1 ? COND_NE : COND_EQ; }
@@ -2655,9 +2677,12 @@ less_or_equal: LE | LESS opt_than OR EQUAL opt_to ;
  */
 
 class_condition:
-  expr opt_is flag_not class
+  unsafe_expr opt_is flag_not class
   {
-    /* TODO: do static class check here */
+    if (EXPR_P ($1))
+      yyerror ("expression is always NUMERIC");
+
+    /* TODO: do more static class check here */
 
     $$ = make_unary_cond ($1, $4);
     if ($3)
@@ -2680,13 +2705,20 @@ class:
  *******************/
 
 expr:
+  unsafe_expr
+  {
+    ASSERT_VALID_EXPR ($1);
+    $$ = $1;
+  }
+;
+unsafe_expr:
   gname				{ $$ = $1; }
-| '(' expr ')'			{ $$ = $2; }
-| expr '+' expr			{ $$ = make_expr ($1, '+', $3); }
-| expr '-' expr			{ $$ = make_expr ($1, '-', $3); }
-| expr '*' expr			{ $$ = make_expr ($1, '*', $3); }
-| expr '/' expr			{ $$ = make_expr ($1, '/', $3); }
-| expr '^' expr			{ $$ = make_expr ($1, '^', $3); }
+| '(' unsafe_expr ')'		{ $$ = $2; }
+| unsafe_expr '+' unsafe_expr	{ $$ = make_expr ($1, '+', $3); }
+| unsafe_expr '-' unsafe_expr	{ $$ = make_expr ($1, '-', $3); }
+| unsafe_expr '*' unsafe_expr	{ $$ = make_expr ($1, '*', $3); }
+| unsafe_expr '/' unsafe_expr	{ $$ = make_expr ($1, '/', $3); }
+| unsafe_expr '^' unsafe_expr	{ $$ = make_expr ($1, '^', $3); }
 ;
 
 
@@ -2714,7 +2746,7 @@ number_list:
 number:
   gname
   {
-    if (!is_numeric_sy ($1))
+    if (!is_numeric_value ($1))
       yyerror ("numeric value is expected: %s", COB_FIELD_NAME ($1));
     $$ = $1;
   }
