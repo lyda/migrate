@@ -339,6 +339,8 @@ static int
 relative_open (struct cob_file_desc *f, char *filename, int mode)
 {
   f->relative_index = 0;
+  if (f->relative_key.desc)
+    cob_set_int (f->relative_key, 1);
   return sequential_open (f, filename, mode);
 }
 
@@ -374,7 +376,8 @@ relative_start (struct cob_file_desc *f, int cond, struct cob_field k)
   /* check if a valid record */
   if (c != '\0')
     {
-      cob_set_int (k, f->relative_index);
+      cob_set_int (k, f->relative_index + 1);
+      lseek (f->file.fd, -1, SEEK_CUR);
       RETURN_STATUS (00);
     }
 
@@ -411,17 +414,24 @@ relative_read (struct cob_file_desc *f, struct cob_field k)
 static void
 relative_read_next (struct cob_file_desc *f)
 {
-  do {
-    switch (read (f->file.fd, f->record_data, f->record_size))
-      {
-      case 0:
-	RETURN_STATUS (10);
-      case -1:
-	RETURN_STATUS (30);
-      }
-  } while (f->record_data[0] == '\0');
-
-  RETURN_STATUS (00);
+  while (1)
+    {
+      switch (read (f->file.fd, f->record_data, f->record_size))
+	{
+	case 0:
+	  RETURN_STATUS (10);
+	case -1:
+	  RETURN_STATUS (99);
+	}
+  
+      if (f->record_data[0] != '\0')
+	{
+	  if (f->relative_index > 0 && f->relative_key.desc)
+	    cob_add_int (f->relative_key, 1, 0, 0);
+	  f->relative_index++;
+	  RETURN_STATUS (00);
+	}
+    }
 }
 
 static void
@@ -442,28 +452,22 @@ relative_write (struct cob_file_desc *f)
 static void
 relative_rewrite (struct cob_file_desc *f)
 {
-  char buff[1];
-
   if (lseek (f->file.fd, f->record_size * f->relative_index, SEEK_SET) == -1
-      || read (f->file.fd, buff, 1) == -1
-      || buff[0] == '\0')
-    RETURN_STATUS (23);
+      || write (f->file.fd, f->record_data, f->record_size) == -1)
+    RETURN_STATUS (99);
 
-  relative_write (f);
+  RETURN_STATUS (00);
 }
 
 static void
 relative_delete (struct cob_file_desc *f)
 {
   char buff[f->record_size];
+  memset (buff, 0, f->record_size);
 
   if (lseek (f->file.fd, f->record_size * f->relative_index, SEEK_SET) == -1
-      || read (f->file.fd, buff, 1) == -1
-      || buff[0] == '\0')
-    RETURN_STATUS (23);
-
-  memset (buff, 0, f->record_size);
-  write (f->file.fd, buff, f->record_size);
+      || write (f->file.fd, buff, f->record_size) == -1)
+    RETURN_STATUS (99);
 
   RETURN_STATUS (00);
 }
