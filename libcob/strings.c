@@ -324,7 +324,7 @@ cob_inspect_converting (struct cob_field var, ...)
       int offset, len;
       switch (type)
 	{
-	case INSPECT_CHARACTERS:
+	case INSPECT_CONVERTING:
 	  {
 	    struct cob_field old = va_arg (ap, struct cob_field);
 	    struct cob_field new = va_arg (ap, struct cob_field);
@@ -337,8 +337,8 @@ cob_inspect_converting (struct cob_field var, ...)
 		int i, j;
 		for (i = 0; i < len; i++)
 		  for (j = 0; j < size; j++)
-		    if (var_data[offset + i + j] == old_data[i + j])
-		      var_data[offset + i + j] = new_data[i + j];
+		    if (var_data[offset + i] == old_data[j])
+		      var_data[offset + i] = new_data[j];
 	      }
 	    break;
 	  }
