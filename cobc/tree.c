@@ -12,7 +12,7 @@
  * Literals
  */
 
-struct lit *
+cob_tree
 make_literal (char *name)
 {
   struct lit *p = malloc (sizeof (struct lit));
@@ -23,7 +23,7 @@ make_literal (char *name)
   p->nick = NULL;
   p->len = strlen (p->name);
   p->next = NULL;
-  return p;
+  return (cob_tree) p;
 }
 
 

@@ -20,6 +20,8 @@
 #ifndef _SCANNER_H_
 #define _SCANNER_H_
 
+#include "tree.h"
+
 #define START_ID 	1
 #define START_COMMENT	2
 #define START_PICTURE	3
@@ -28,5 +30,11 @@
 #define CDIV_ENVIR 	2
 #define CDIV_DATA 	3
 #define CDIV_FD 	4
+
+extern cob_tree curr_file;
+extern int curr_division;
+extern int start_condition;
+extern int need_subscripts;
+extern int in_procedure;
 
 #endif /* _SCANNER_H_ */

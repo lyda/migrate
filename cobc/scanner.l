@@ -33,14 +33,11 @@
 #include "reserved.h"
 #include "_libcob.h"
 
-extern FILE *o_lst;
-extern char picture[];
-extern cob_tree curr_field;
-extern int picix,piccnt,sign,v_flag;
-extern int curr_division;
-extern int start_condition;
-extern int need_subscripts;
-extern int in_procedure;
+cob_tree curr_file;
+int curr_division = 0;
+int start_condition = 0;
+int need_subscripts = 0;
+int in_procedure = 0;
 
 static int read_literal (char mark);
 static int scan_x (char *text);
@@ -99,13 +96,13 @@ X\"[^\"\n]\" {
 
 [0-9]+ {
   /* integer literal */
-  yylval.lval = install_literal (yytext);
+  yylval.tree = install_literal (yytext);
   return INTEGER_TOK;
 }
 
 [0-9]*[.,][0-9]+ {
   /* numeric literal */
-  yylval.lval = install_literal (yytext);
+  yylval.tree = install_literal (yytext);
   return NLITERAL;
 }
 
@@ -175,7 +172,7 @@ read_literal (char mark)
 	yyerror ("too large literal");
     }
   *p = 0;
-  yylval.lval = install_literal (buff);
+  yylval.tree = install_literal (buff);
   return CLITERAL;
 }
 
@@ -207,14 +204,14 @@ scan_x (char *text)
 
   if (high)
     {
-      yylval.lval = install_literal (dst);
+      yylval.tree = install_literal (dst);
       return CLITERAL;
     }
   else
     {
     error:
       yyerror ("invalid X literal: %s", text);
-      yylval.lval = install_literal (dst);
+      yylval.tree = install_literal (dst);
       return CLITERAL;
     }
 }
@@ -229,25 +226,25 @@ scan_word (char *text)
   switch (curr_division)
     {
     case CDIV_ENVIR:
-      yylval.sval = install (yytext, SYTB_VAR, 0);
+      yylval.tree = install (yytext, SYTB_VAR, 0);
       return SYMBOL;
 
     case CDIV_DATA:
-      yylval.sval = install (yytext, SYTB_VAR, 1);
+      yylval.tree = install (yytext, SYTB_VAR, 1);
       return SYMBOL;
 
     case CDIV_FD:
-      if ((yylval.sval = lookup_symbol (yytext)) == NULL)
+      if ((yylval.tree = lookup_symbol (yytext)) == NULL)
 	yyerror ("undefined %s at FD/SD", yytext);
       return SYMBOL;
 
     default:
       /* if symbol was defined at the data division */
-      if ((yylval.sval = lookup_symbol (yytext)) != NULL)
+      if ((yylval.tree = lookup_symbol (yytext)) != NULL)
 	{
-	  if (yylval.sval->type == '8')
+	  if (yylval.tree->type == '8')
 	    return VARCOND;
-	  else if (is_subscripted (yylval.sval))
+	  else if (is_subscripted (yylval.tree))
 	    return SUBSCVAR;
 	  else
 	    return VARIABLE;
@@ -255,7 +252,7 @@ scan_word (char *text)
       /* otherwise, it should be a label */
       else
 	{
-	  yylval.sval = install_label (yytext);
+	  yylval.tree = install_label (yytext);
 	  return (LABELSTR);
 	}
     }

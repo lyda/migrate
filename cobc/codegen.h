@@ -88,32 +88,60 @@
 
 #include "tree.h"
 
+extern int screen_io_enable,scr_line,scr_column;
+extern int decimal_comma;
+extern char currency_symbol;
+extern FILE *lexin;
+extern FILE *o_src;
+extern cob_tree curr_paragr, curr_section;
+extern cob_tree curr_field;
+extern short curr_call_mode;
+extern cob_tree pgm_id;
+extern unsigned stack_offset;   /* offset das variaveis na pilha */
+extern unsigned global_offset;  /* offset das variaveis globais (DATA) */
+extern int paragr_num;
+extern int loc_label;
+extern unsigned char picture[];
+extern int picix,piccnt,v_flag;
+extern int at_linkage, stack_plus;
+extern char *toktext;
+extern int yylex(void);
+extern struct index_to_table_list *index2table;
+extern int pgm_segment;
+extern char *yytext;
+
+extern cob_tree spe_lit_ZE;
+extern cob_tree spe_lit_SP;
+extern cob_tree spe_lit_LV;
+extern cob_tree spe_lit_HV;
+extern cob_tree spe_lit_QU;
+
 /* htcobgen.c */
 extern cob_tree lookup_symbol (char *s);
 extern cob_tree lookup (char *s, int tab);
 extern cob_tree install (char *name, int tab, int cloning);
 extern cob_tree install_label (char *name);
-extern struct lit *install_literal (const char *name);
+extern cob_tree install_literal (const char *name);
 extern cob_tree lookup_label (cob_tree sy, cob_tree parent);
 extern cob_tree lookup_variable (cob_tree sy, cob_tree parent);
 extern cob_tree lookup_for_redefines (cob_tree sy);
 extern void init_program (const char *id);
 extern void gen_loadvar (cob_tree sy);
 extern char sign_to_char (int digit);
-extern struct lit *invert_literal_sign (struct lit *sy);
+extern cob_tree invert_literal_sign (cob_tree x);
 extern char *sch_convert (char *s);
 extern int is_variable (cob_tree sy);
 extern int is_subscripted (cob_tree sy);
 extern void emit_lit (char *s, int len);
 extern void emit_lit_fill (int c, int len);
-extern void gen_init_value (struct lit *sy, int var_len);
+extern void gen_init_value (cob_tree x, int var_len);
 extern void stabs_line (void);
 extern void data_trail (void);
 extern int adjust_linkage_vars (int start_offset);
 extern void proc_header (int using);
 extern void proc_trail (int using);
 extern void save_field_in_list (cob_tree sy);
-extern void save_literal (struct lit *v, int type);
+extern void save_literal (cob_tree x, int type);
 extern void save_named_sect (cob_tree sy);
 extern void put_disp_list (cob_tree sy);
 extern int symlen (cob_tree sy);
@@ -142,7 +170,7 @@ extern void gen_accept_from_day (cob_tree sy);
 extern void gen_accept_from_day_of_week (cob_tree sy);
 extern void gen_accept_from_inkey (cob_tree sy);
 extern void gen_accept_from_cmdline (cob_tree sy);
-extern void gen_accept_env_var (cob_tree sy, struct lit *v);
+extern void gen_accept_env_var (cob_tree sy, cob_tree v);
 extern struct perf_info *create_perf_info (cob_tree sy1, cob_tree sy2, unsigned long lj, unsigned long le);
 extern struct perform_info *create_perform_info (void);
 extern char *check_perform_variables (cob_tree sy1, struct perform_info *pi1);
@@ -239,7 +267,7 @@ extern void close_paragr (void);
 extern void open_paragr (cob_tree paragr);
 extern void gen_stoprun (void);
 extern void gen_exit (int code);
-extern void set_variable_values (struct lit *v1, struct lit *v2);
+extern void set_variable_values (cob_tree v1, cob_tree v2);
 extern void gen_condition (cob_tree sy);
 extern void gen_compare_exp (int value);
 extern void gen_compare (cob_tree s1, int value, cob_tree s2);
@@ -268,11 +296,11 @@ extern void gen_write (cob_tree r, int opt, cob_tree buf);
 extern void gen_rewrite (cob_tree r, cob_tree buf);
 extern void gen_start (cob_tree f, int cond, cob_tree key);
 extern void gen_delete (cob_tree f);
-extern void set_rec_varying_info (cob_tree f, struct lit *lmin, struct lit *lmax, cob_tree reclen);
+extern void set_rec_varying_info (cob_tree f, cob_tree lmin, cob_tree lmax, cob_tree reclen);
 extern void gen_check_varying (cob_tree f);
 extern void gen_push_using (cob_tree sy);
 extern void gen_save_using (cob_tree sy);
-extern unsigned long int gen_call (struct lit *v, int exceplabel, int notexceplabel);
+extern unsigned long int gen_call (cob_tree v, int exceplabel, int notexceplabel);
 extern int begin_on_except (void);
 extern void check_call_except (int excep, int notexcep, int exceplabel, int notexceplabel, int endlabel);
 extern void gen_initialize (cob_tree sy_start);

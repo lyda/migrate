@@ -44,57 +44,23 @@ va_list __builtin_va_alist;
 #include "codegen.h"
 #include "_libcob.h"
 
-extern int screen_io_enable,scr_line,scr_column;
-extern int decimal_comma;
-extern char currency_symbol;
-extern FILE *lexin;
-extern FILE *o_src;
-extern cob_tree curr_paragr, curr_section;
-extern cob_tree curr_field;
-extern short curr_call_mode;
-extern cob_tree pgm_id;
-extern unsigned stack_offset;   /* offset das variaveis na pilha */
-extern unsigned global_offset;  /* offset das variaveis globais (DATA) */
-extern int paragr_num;
-extern int loc_label;
-extern char picture[];
-extern int at_linkage,stack_plus;
-extern char *toktext;
-extern int yylex(void);
-extern struct index_to_table_list *index2table;
-extern int pgm_segment;
-extern struct lit *spe_lit_ZE;
-extern struct lit *spe_lit_SP;
-extern struct lit *spe_lit_LV;
-extern struct lit *spe_lit_HV;
-extern struct lit *spe_lit_QU;
-
-cob_tree curr_file;
-int start_condition=0;
-int curr_division=0;
-int need_subscripts=0;
-int in_procedure = 0;
-extern char *yytext;
-
-unsigned long lbend, lbstart;
-unsigned int perform_after_sw;
+static unsigned long lbend, lbstart;
+static unsigned int perform_after_sw;
 
 /* struct math_var *vl1, *vl2; */
-struct math_ose *tmose=NULL;
-struct ginfo    *gic=NULL;
+static struct math_ose *tmose=NULL;
+static struct ginfo    *gic=NULL;
 
 static int warning_count = 0;
 static int error_count = 0;
 
 static void assert_numeric_sy (cob_tree sy);
-static void check_decimal_point (struct lit *lit);
 %}
 
 %union {
-    cob_tree sval;       /* symbol */
+    cob_tree tree;
     int ival;               /* int */
     struct coord_pair pval; /* lin,col */
-    struct lit *lval;       /* literal */
     unsigned long dval;     /* label definition, compacted */
     char *str;
     struct subref *rval;      /* variable reference (with subscripts) */
@@ -132,8 +98,8 @@ static void check_decimal_point (struct lit *lit);
 %right OF
 
 %token <str>  IDSTRING
-%token <sval> SYMBOL,VARIABLE,VARCOND,SUBSCVAR,LABELSTR,PICTURE_TOK
-%token <lval> INTEGER_TOK,NLITERAL,CLITERAL
+%token <tree> SYMBOL,VARIABLE,VARCOND,SUBSCVAR,LABELSTR,PICTURE_TOK
+%token <tree> INTEGER_TOK,NLITERAL,CLITERAL
 
 %token EQUAL,GREATER,LESS,TOK_GE,TOK_LE,COMMAND_LINE,ENVIRONMENT_VARIABLE
 %token DATE,DAY,DAY_OF_WEEK,TIME,INKEY,READ,WRITE,OBJECT_COMPUTER,INPUT_OUTPUT
@@ -194,9 +160,6 @@ static void check_decimal_point (struct lit *lit);
 %type <ival> sentence_or_nothing,when_case_list,opt_read_next,usage
 %type <ival> procedure_using,sort_direction,write_options
 %type <lstval> goto_label_list
-%type <lval> from_rec_varying,to_rec_varying
-%type <lval> literal,gliteral,without_all_literal,all_literal,special_literal
-%type <lval> nliteral,signed_nliteral
 %type <mose> opt_on_size_error,on_size_error,error_sentence
 %type <mval> var_list_name, var_list_gname
 %type <pair> parameters
@@ -210,18 +173,21 @@ static void check_decimal_point (struct lit *lit);
 %type <snval> sort_file_list,sort_input,sort_output
 %type <ssbjval> selection_subject_set
 %type <str> idstring
-%type <sval> field_description,label,filename,noallname,paragraph,assign_clause
-%type <sval> file_description,redefines_var,function_call
-%type <sval> name,gname,numeric_value,opt_gname,opt_def_name,def_name
-%type <sval> opt_read_into,opt_write_from,field_name,expr,opt_expr
-%type <sval> opt_unstring_count,opt_unstring_delim,unstring_tallying
-%type <sval> qualified_var,unqualified_var
-%type <sval> returning_options,screen_to_name, opt_goto_depending_on
-%type <sval> set_variable,set_variable_or_nlit,set_target,opt_add_to
-%type <sval> sort_keys,opt_perform_thru,procedure_section
-%type <sval> var_or_nliteral,opt_read_key,file_name,string_with_pointer
-%type <sval> variable,sort_range,perform_options,name_or_lit,delimited_by
-%type <sval> variable_indexed,search_opt_varying,opt_key_is
+%type <tree> field_description,label,filename,noallname,paragraph,assign_clause
+%type <tree> file_description,redefines_var,function_call
+%type <tree> name,gname,numeric_value,opt_gname,opt_def_name,def_name
+%type <tree> opt_read_into,opt_write_from,field_name,expr,opt_expr
+%type <tree> opt_unstring_count,opt_unstring_delim,unstring_tallying
+%type <tree> qualified_var,unqualified_var
+%type <tree> returning_options,screen_to_name, opt_goto_depending_on
+%type <tree> set_variable,set_variable_or_nlit,set_target,opt_add_to
+%type <tree> sort_keys,opt_perform_thru,procedure_section
+%type <tree> var_or_nliteral,opt_read_key,file_name,string_with_pointer
+%type <tree> variable,sort_range,perform_options,name_or_lit,delimited_by
+%type <tree> variable_indexed,search_opt_varying,opt_key_is
+%type <tree> from_rec_varying,to_rec_varying
+%type <tree> literal,gliteral,without_all_literal,all_literal,special_literal
+%type <tree> nliteral,signed_nliteral
 %type <tfval> tallying_for_list
 %type <tlval> tallying_list, tallying_clause
 %type <udstval> unstring_destinations,unstring_dest_var
@@ -523,26 +489,26 @@ file_description:
   }
 ;
 file_attrib:
-| file_attrib REPORT opt_is SYMBOL { save_report( $4,$<sval>0 ); }
-| file_attrib opt_is GLOBAL     { $<sval>0->type = 'J'; }
-| file_attrib opt_is EXTERNAL   { $<sval>0->type = 'K'; }
+| file_attrib REPORT opt_is SYMBOL { save_report( $4,$<tree>0 ); }
+| file_attrib opt_is GLOBAL     { $<tree>0->type = 'J'; }
+| file_attrib opt_is EXTERNAL   { $<tree>0->type = 'K'; }
 | file_attrib LABEL rec_or_recs opt_is_are std_or_omitt
 | file_attrib BLOCK opt_contains integer opt_to_integer chars_or_recs
 | file_attrib DATA rec_or_recs  opt_is_are var_strings
 | file_attrib VALUE OF FILE_ID opt_is filename
   {
-    if ($<sval>-1->filenamevar != NULL) {
+    if ($<tree>-1->filenamevar != NULL) {
       yyerror("Re-defining file name defined in SELECT statement");
     }
     else {
-      $<sval>-1->filenamevar = $<sval>6;
+      $<tree>-1->filenamevar = $<tree>6;
     }
   }
 | file_attrib RECORD opt_is VARYING opt_in_size
   from_rec_varying to_rec_varying opt_characters
   DEPENDING opt_on SYMBOL
   {
-    set_rec_varying_info ($<sval>-1, $6, $7, $11);
+    set_rec_varying_info ($<tree>-1, $6, $7, $11);
   }
 ;
 var_strings:
@@ -566,7 +532,7 @@ sort_attrib:
   from_rec_varying to_rec_varying opt_characters
   DEPENDING opt_on SYMBOL
   {
-    set_rec_varying_info( $<sval>-1,$6,$7,$11 );
+    set_rec_varying_info( $<tree>-1,$6,$7,$11 );
   }
 ;
 rec_or_recs: RECORD | RECORDS ;
@@ -773,9 +739,9 @@ opt_key_is:
 | DESCENDING opt_key opt_is SYMBOL	{ $4->level = -2; $$ = $4; }
 ;
 index_name_list:
-  def_name { define_implicit_field ($1, $<sval>-2, curr_field->times); }
+  def_name { define_implicit_field ($1, $<tree>-2, curr_field->times); }
 | index_name_list
-  def_name { define_implicit_field ($2, $<sval>-2, curr_field->times); }
+  def_name { define_implicit_field ($2, $<tree>-2, curr_field->times); }
 ;
 opt_times: | TIMES ;
 
@@ -972,7 +938,7 @@ screen_clauses:
 | screen_clauses
     screen_source_destination
 | screen_clauses
-    VALUE opt_is gliteral   { curr_field->value = $4; $$=$1; }
+    VALUE opt_is gliteral   { curr_field->value = (cob_tree) $4; $$=$1; }
 | screen_clauses picture_clause
 ;
 screen_source_destination:
@@ -1181,11 +1147,11 @@ accept_statement:
     ACCEPT name opt_line_pos accept_options
     ;
 accept_options:
-  screen_attribs		{ gen_accept($<sval>-1, $1, 1); }
+  screen_attribs		{ gen_accept($<tree>-1, $1, 1); }
 | screen_attribs ON EXCEPTION
   {
     screen_io_enable++;
-    gen_accept($<sval>-1, $1, 1);
+    gen_accept($<tree>-1, $1, 1);
   }
   variable
   {
@@ -1196,17 +1162,17 @@ accept_options:
   {
     gen_dstlabel($<dval>6);
   }
-| FROM DATE			{ gen_accept_from_date($<sval>-1); }
-| FROM DAY			{ gen_accept_from_day($<sval>-1); }
-| FROM DAY_OF_WEEK		{ gen_accept_from_day_of_week($<sval>-1); }
-| FROM TIME			{ gen_accept_from_time($<sval>-1); }
-| FROM INKEY			{ gen_accept_from_inkey($<sval>-1); }
-| FROM COMMAND_LINE		{ gen_accept_from_cmdline($<sval>-1); }
+| FROM DATE			{ gen_accept_from_date($<tree>-1); }
+| FROM DAY			{ gen_accept_from_day($<tree>-1); }
+| FROM DAY_OF_WEEK		{ gen_accept_from_day_of_week($<tree>-1); }
+| FROM TIME			{ gen_accept_from_time($<tree>-1); }
+| FROM INKEY			{ gen_accept_from_inkey($<tree>-1); }
+| FROM COMMAND_LINE		{ gen_accept_from_cmdline($<tree>-1); }
 | FROM ENVIRONMENT_VARIABLE CLITERAL
   {
-    save_literal($3,'X');
-    $3->all=0;
-    gen_accept_env_var($<sval>-1, $3);
+    save_literal($3, 'X');
+    LITERAL ($3)->all=0;
+    gen_accept_env_var($<tree>-1, $3);
   }
 ;
 
@@ -1249,7 +1215,7 @@ call_statement:
     { $<ival>$ = loc_label++; /* exception check */ }
     { $<ival>$ = loc_label++; /* not exception check */ }
     {
-      $<ival>$ = gen_call((struct lit *)$3,$<ival>6,$<ival>7);
+      $<ival>$ = gen_call($3,$<ival>6,$<ival>7);
       gen_store_fnres($5);
     }
     on_exception_or_overflow
@@ -1722,8 +1688,8 @@ move_statement:
 | MOVE CORRESPONDING gname TO gname { gen_movecorr($3, $5); }
 ;
 move_vars:
-  gname				{ gen_move ($<sval>-1, $1); }
-| move_vars opt_sep gname	{ gen_move ($<sval>-1, $3); }
+  gname				{ gen_move ($<tree>-1, $1); }
+| move_vars opt_sep gname	{ gen_move ($<tree>-1, $3); }
 ;
 
 
@@ -1769,8 +1735,8 @@ open_mode:
 | error  { yyerror("invalid OPEN mode"); }
 ;
 open_varlist:
-  name { gen_open($<ival>0, $<sval>1); }
-| open_varlist opt_sep name { gen_open($<ival>0, $<sval>3); }
+  name { gen_open($<ival>0, $<tree>1); }
+| open_varlist opt_sep name { gen_open($<ival>0, $<tree>3); }
 ;
 
 
@@ -2268,13 +2234,13 @@ search_all_body:
 
         lbstart=loc_label++; /* determine search_all loop start label */
 
-        $<sval>$=determine_table_index_name($1);
-        if ($<sval>$ == NULL) {
+        $<tree>$=determine_table_index_name($1);
+        if ($<tree>$ == NULL) {
            yyerror("Unable to determine search index for table '%s'", $1->name);
         }
         else {
           /* Initilize and store search table index boundaries */
-          Initialize_SearchAll_Boundaries($1, $<sval>$);
+          Initialize_SearchAll_Boundaries($1, $<tree>$);
         }
 
         gen_jmplabel(lbstart); /* generate GOTO search_all loop start  */
@@ -2287,7 +2253,7 @@ search_all_body:
      search_all_when_list
      {
         /* adjust loop index, check for end */
-        gen_SearchAllLoopCheck($3, $<sval>2, $1, curr_field, lbstart, lbend);
+        gen_SearchAllLoopCheck($3, $<tree>2, $1, curr_field, lbstart, lbend);
      }
     ;
 search_opt_varying:
@@ -2421,8 +2387,8 @@ sort_keys:
         {
             $4->direction = $2;
             (cob_tree)$4->sort_data =
-                (cob_tree)($<sval>0->sort_data);
-            (cob_tree)($<sval>0->sort_data) = $4;
+                (cob_tree)($<tree>0->sort_data);
+            (cob_tree)($<tree>0->sort_data) = $4;
             $$ = $4;
         }
     ;
@@ -2432,11 +2398,11 @@ sort_direction:
 ;
 sort_input:
     INPUT PROCEDURE opt_is sort_range { $$=NULL; }
-    | USING sort_file_list { gen_sort_using($<sval>-2,$2); $$=$2; }
+    | USING sort_file_list { gen_sort_using($<tree>-2,$2); $$=$2; }
     ;
 sort_output:
     OUTPUT PROCEDURE opt_is sort_range { $$=NULL; }
-    | GIVING sort_file_list { gen_sort_giving($<sval>-3,$2); $$=$2; }
+    | GIVING sort_file_list { gen_sort_giving($<tree>-3,$2); $$=$2; }
     ;
 sort_file_list:
   name { $$ = alloc_sortfile_node($1);  }
@@ -2938,7 +2904,7 @@ without_all_literal:
     | special_literal   { $$ = $1; }
     ;
 all_literal:
-    ALL literal { $2->all=1; $$=$2; }
+    ALL literal { LITERAL ($2)->all=1; $$=$2; }
     | ALL special_literal { $$=$2; }
     ;
 special_literal:
@@ -2954,13 +2920,14 @@ var_or_nliteral:
     ;
 literal:
     nliteral		{ $$=$1; }
-    | CLITERAL		{ save_literal($1,'X'); $1->all=0; $$=$1; }
+    | CLITERAL		{ save_literal($1,'X'); LITERAL ($1)->all=0; $$=$1; }
     ;
 nliteral:
   signed_nliteral {
-      check_decimal_point($1);
+      if (strchr (FIELD_NAME ($1), decimal_comma ? '.' : ','))
+	yyerror ("wrong decimal point character in numeric literal");
       save_literal($1,'9');
-      $1->all = 0;
+      LITERAL ($1)->all = 0;
       $$=$1;
   }
   ;
@@ -2982,7 +2949,7 @@ def_name:
               $1->defined=1;
               $$=$1;
             }
-    | FILLER    { $<sval>$=make_filler(); }
+    | FILLER    { $<tree>$=make_filler(); }
     ;
 variable_indexed:
     SUBSCVAR
@@ -3134,13 +3101,6 @@ assert_numeric_sy (cob_tree sy)
 {
   if (!is_numeric_sy (sy))
     yyerror ("non numeric variable: %s", sy->name);
-}
-
-static void
-check_decimal_point (struct lit *lit)
-{
-  if (strchr (lit->name, decimal_comma ? '.' : ','))
-    yyerror ("wrong decimal point character in numeric literal");
 }
 
 void

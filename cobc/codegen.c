@@ -47,7 +47,7 @@ cob_tree curr_paragr = NULL, curr_section = NULL;
 cob_tree curr_field;
 short curr_call_mode = 0;
 unsigned stack_offset = 0;	/* offset for variables on the stack */
-unsigned stack_plus = 0;
+int stack_plus = 0;
 unsigned global_offset = 4;	/* offset for global variables (DATA) */
 unsigned literal_offset = 0;
 unsigned data_offset = 0;
@@ -62,11 +62,11 @@ unsigned last_lineno = 0;
 short at_procedure = 0;
 short refmod_slots = 0;
 
-struct lit *spe_lit_ZE = NULL;
-struct lit *spe_lit_SP = NULL;
-struct lit *spe_lit_LV = NULL;
-struct lit *spe_lit_HV = NULL;
-struct lit *spe_lit_QU = NULL;
+cob_tree spe_lit_ZE = NULL;
+cob_tree spe_lit_SP = NULL;
+cob_tree spe_lit_LV = NULL;
+cob_tree spe_lit_HV = NULL;
+cob_tree spe_lit_QU = NULL;
 
 struct list *files_list = NULL;
 struct list *disp_list = NULL;
@@ -106,7 +106,7 @@ static unsigned curr_01_location;	// hold current root father when set_field_loc
 #define HASHLEN 100
 static cob_tree vartab[HASHLEN] = { NULL };
 static cob_tree labtab[HASHLEN] = { NULL };
-static struct lit *littab[HASHLEN] = { NULL };
+static cob_tree littab[HASHLEN] = { NULL };
 
 static int
 hash (char *s)
@@ -146,11 +146,11 @@ lookup (char *s, int tab)
   char sbuf[SYMBUF_SIZE];
   if (tab == SYTB_LIT)
     {				/* literals tab */
-      struct lit *as;
-      for (as = littab[hash (s)]; as != NULL; as = as->next)
-	if (strcmp (s, as->name) == 0)
-	  return ((cob_tree) as);
-      return (NULL);
+      cob_tree x;
+      for (x = littab[hash (s)]; x != NULL; x = x->next)
+	if (strcmp (s, x->name) == 0)
+	  return x;
+      return NULL;
     }
   else
     {
@@ -214,10 +214,10 @@ install_label (char *name)
   return install (name, SYTB_LAB, 0);
 }
 
-struct lit *
+cob_tree
 install_literal (const char *name)
 {
-  struct lit *p = make_literal (strdup (name));
+  cob_tree p = make_literal (strdup (name));
   int val = hash (p->name);
   p->next = littab[val];
   littab[val] = p;
@@ -306,23 +306,23 @@ clear_offsets ()
   tmpvar_max = 0;
 }
 
-static struct lit *
+static cob_tree
 save_special_literal (char *val, char picc, char *nick)
 {
-  struct lit *v;
-  v = install_literal (nick);
-  if (v->type)
+  cob_tree p = install_literal (nick);
+  struct lit *lit = LITERAL (p);
+  if (lit->type)
     return NULL;		/* already saved */
-  v->type = picc;
-  v->nick = val;
-  v->all = 1;
-  save_field_in_list ((cob_tree) v);
-  v->location = literal_offset;
-  v->sec_no = SEC_CONST;
+  lit->type = picc;
+  lit->nick = val;
+  lit->all = 1;
+  save_field_in_list (p);
+  lit->location = literal_offset;
+  lit->sec_no = SEC_CONST;
   literal_offset += 2;		/* we have only 1-char special literals */
-  v->descriptor = literal_offset;
+  lit->descriptor = literal_offset;
   literal_offset += 14;
-  return v;
+  return p;
 }
 
 static void
@@ -435,14 +435,13 @@ sign_to_char (int digit)
   return 'J' + (char) (digit - 1);
 }
 
-struct lit *
-invert_literal_sign (struct lit *sy)
+cob_tree
+invert_literal_sign (cob_tree x)
 {
-  char *s;
-  s = sy->name;
+  char *s = FIELD_NAME (x);
   s += strlen (s) - 1;
   *s = sign_to_char (-(*s - 0x30));
-  return sy;
+  return x;
 }
 
 /* convert control characters to don't corrupt the assembly output */
@@ -1036,12 +1035,13 @@ emit_lit_fill (int c, int len)
 }
 
 void
-gen_init_value (struct lit *sy, int var_len)
+gen_init_value (cob_tree x, int var_len)
 {
   int bcnt = 0;
   int len, start_len;
   char *s;
   char pad;
+  struct lit *sy = LITERAL (x);
 
   if (sy->nick)
     {
@@ -1707,11 +1707,12 @@ save_field_in_list (cob_tree sy)
 }
 
 void
-save_literal (struct lit *v, int type)
+save_literal (cob_tree x, int type)
 {
   char *s;
   char *dp;
   int piclen;
+  struct lit *v = LITERAL (x);
   s = v->name;
   piclen = 3;			/* assume 'X'-only literal */
   if ((type == '9') && (*(v->name + v->len - 1) > '9'))
@@ -2227,9 +2228,8 @@ gen_accept_from_cmdline (cob_tree sy)
 }
 
 void
-gen_accept_env_var (cob_tree sy, struct lit *v)
+gen_accept_env_var (cob_tree sy, cob_tree v)
 {
-
   cob_tree sy2;
 
   gen_loadloc ((cob_tree) v);
@@ -3966,21 +3966,21 @@ save_pic_char (char c, int n)
 void
 gen_SearchLoopCheck (unsigned long lbl5, cob_tree syidx, cob_tree sytbl)
 {
-  struct lit *v;
+  cob_tree x;
   char tblmax[21];
   /*int len, i; */
 
   strcpy (tblmax, "1");
-  v = install_literal (tblmax);
-  save_literal (v, '9');
+  x = install_literal (tblmax);
+  save_literal (x, '9');
 
-  gen_add ((cob_tree) v, syidx, 0);
+  gen_add (x, syidx, 0);
 
   sprintf (tblmax, "%d", sytbl->times);
-  v = install_literal (tblmax);
-  save_literal (v, '9');
+  x = install_literal (tblmax);
+  save_literal (x, '9');
 
-  gen_compare (syidx, RELATION_GT, (cob_tree) v);
+  gen_compare (syidx, RELATION_GT, x);
   fprintf (o_src, "\tjz\t.L%ld\n", lbl5);
 }
 
@@ -4194,38 +4194,21 @@ void
 Initialize_SearchAll_Boundaries (cob_tree sy, cob_tree syidx)
 {
   int i;
-  struct lit *v;
+  cob_tree x;
   char tblmax[21];
   struct index_to_table_list *i2t1, *i2t2;
 
   i = sy->times / 2;
 
   sprintf (tblmax, "%d", i);
-  v = install_literal (tblmax);
-#ifdef COB_DEBUG
-  if (v->type)
-    {				/* not already saved */
-      fprintf (stderr,
-	       "Initialize_SearchAll_Boundaries: literal is saved: %s\n",
-	       tblmax);
-    }
-  else
-    {
-      fprintf (stderr,
-	       "Initialize_SearchAll_Boundaries: literal not saved: %s\n",
-	       tblmax);
-    }
-#endif
-
-  save_literal (v, '9');
-  gen_move ((cob_tree) v, syidx);
+  x = install_literal (tblmax);
+  save_literal (x, '9');
+  gen_move (x, syidx);
 
   fprintf (o_src, "\tmovl\t$0, %%eax\n");
   fprintf (o_src, "\tmovl\t%%eax,-%d(%%ebp)\n", stack_offset - 4);
-
   fprintf (o_src, "\tmovl\t$1, %%eax\n");
   fprintf (o_src, "\tmovl\t%%eax,-%d(%%ebp)\n", stack_offset - 8);
-
   fprintf (o_src, "\tmovl\t$%d, %%eax\n", sy->times);
   fprintf (o_src, "\tmovl\t%%eax,-%d(%%ebp)\n", stack_offset - 12);
 
@@ -4236,9 +4219,7 @@ Initialize_SearchAll_Boundaries (cob_tree sy, cob_tree syidx)
       if (strcmp (i2t1->tablename, sy->name) == 0)
 	{
 	  if (i2t1->seq != '0')
-	    {
-	      i2t2 = i2t1;
-	    }
+	    i2t2 = i2t1;
 	  i2t1 = NULL;
 	}
       else
@@ -4900,14 +4881,14 @@ gen_exit (int code)
 
 /* save variable values, including 88-var range/values list */
 void
-set_variable_values (struct lit *v1, struct lit *v2)
+set_variable_values (cob_tree v1, cob_tree v2)
 {
   struct vrange *new;
   if (curr_field->value == NULL)
     {
       curr_field->refmod_redef.vr = NULL;
-      curr_field->value = v1;
-      curr_field->value2 = v2;
+      curr_field->value = (cob_tree) v1;
+      curr_field->value2 = (cob_tree) v2;
       curr_field->flags.value = 1;
       curr_field->flags.spec_value = 1;
     }
@@ -5591,8 +5572,8 @@ gen_delete (cob_tree f)
 }
 
 void
-set_rec_varying_info (cob_tree f, struct lit *lmin,
-		      struct lit *lmax, cob_tree reclen)
+set_rec_varying_info (cob_tree f, cob_tree lmin, cob_tree lmax,
+		      cob_tree reclen)
 {
   struct rec_varying *rv = malloc (sizeof (struct rec_varying));
   f->rec_varying = (char *) rv;
@@ -5636,7 +5617,7 @@ gen_save_using (cob_tree sy)
 
 
 unsigned long int
-gen_call (struct lit *v, int exceplabel, int notexceplabel)
+gen_call (cob_tree v, int exceplabel, int notexceplabel)
 {
   struct parm_list *list, *tmp;
   cob_tree cp;

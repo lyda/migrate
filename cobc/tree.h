@@ -1,4 +1,19 @@
+#ifndef _TREE_H_
+#define _TREE_H_
+
 typedef struct sym *cob_tree;
+
+struct cob_field {
+  char litflag;
+  struct cob_field *next;
+  char *name;
+  char type;
+  int decimals;
+};
+
+#define FIELD(x)		((struct cob_field *) (x))
+#define FIELD_NAME(x)		(FIELD (x)->name)
+#define FIELD_TYPE(x)		(FIELD (x)->type)
 
 /*
  * Literals
@@ -23,7 +38,7 @@ struct lit
 #define LITERAL(x)		((struct lit *) (x))
 #define LITERAL_P(x)		(LITERAL (x)->litflag == 1)
 
-extern struct lit *make_literal (char *name);
+extern cob_tree make_literal (char *name);
 
 
 /*
@@ -75,8 +90,8 @@ struct sym
 				   pointer to fdesc (in record) */
   struct scr_info *scr;		/*  screen info in screen items */
   struct report_info *ri;	/*  report info in report items */
-  struct lit *value;		/* pointer to literal with initial value */
-  struct lit *value2;		/* pointer to first/next key (sort files) */
+  struct sym *value;		/* pointer to literal with initial value */
+  struct sym *value2;		/* pointer to first/next key (sort files) */
   union
   {
     struct vrange *vr;		/* pointer to next range of values (88 var) */
@@ -186,8 +201,8 @@ struct refmod
 struct vrange
 {
   struct vrange *next;		/* pointer to next range of values (88 var) */
-  struct lit *value;		/* pointer to literal with initial value */
-  struct lit *value2;		/* pointer to first/next key (sort files) */
+  cob_tree value;		/* pointer to literal with initial value */
+  cob_tree value2;		/* pointer to first/next key (sort files) */
 };
 
 /*
@@ -230,8 +245,8 @@ struct report_info
 /* varying record range and actual size */
 struct rec_varying
 {
-  struct lit *lmin;
-  struct lit *lmax;
+  cob_tree lmin;
+  cob_tree lmax;
   cob_tree reclen;
 };
 
@@ -450,3 +465,5 @@ struct pair {
 #define CDR(x)		((x)->cdr)
 
 extern struct pair *cons (void *car, struct pair *cdr);
+
+#endif /* _TREE_H_ */
