@@ -1,3 +1,8 @@
+2002-08-20  Keisuke Nishida  <knishida@netlab.jp>
+
+	* scanner.l: Better implementation of line connection.
+	Comments in IDENTIFICATION DIVISION are skipped here.
+
 2002-08-12  Keisuke Nishida  <knishida@netlab.jp>
 
 	* cobpp.h (COB_FORMAT_SEMI_FIXED): New macro.
