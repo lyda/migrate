@@ -85,7 +85,7 @@ static void set_buffer (int lineno, const char *filename, struct replacement *re
 "DATE-COMPILED." |
 "INSTALLATION." |
 "SECURITY." {
-  if (cob_file_format == COB_FORMAT_FREE)
+  if (cobpp_source_format == COBPP_FORMAT_FREE)
     yyerror ("obsolete");
   else
     {
@@ -202,8 +202,8 @@ open_buffer (const char *name, struct replacement *replacing)
       /* Find the copy file */
       if (name[0] != '/' && stat (name, &st) == -1)
 	{
-	  struct cob_path *p;
-	  for (p = cob_include_path; p; p = p->next)
+	  struct cobpp_path *p;
+	  for (p = cobpp_include_path; p; p = p->next)
 	    {
 	      sprintf (buff, "%s/%s", p->dir, name);
 	      if (stat (buff, &st) == 0)
@@ -220,17 +220,17 @@ open_buffer (const char *name, struct replacement *replacing)
 	}
 
       /* Add to dependency list */
-      if (cob_depend_file)
+      if (cobpp_depend_file)
 	{
-	  struct cob_path *p = malloc (sizeof (struct cob_path));
+	  struct cobpp_path *p = malloc (sizeof (struct cobpp_path));
 	  p->dir = strdup (name);
 	  p->next = NULL;
-	  if (!cob_depend_list)
-	    cob_depend_list = p;
+	  if (!cobpp_depend_list)
+	    cobpp_depend_list = p;
 	  else
 	    {
-	      struct cob_path *l;
-	      for (l = cob_depend_list; l->next; l = l->next);
+	      struct cobpp_path *l;
+	      for (l = cobpp_depend_list; l->next; l = l->next);
 	      l->next = p;
 	    }
 	}
@@ -310,10 +310,10 @@ read_line (char *buff, int size)
       {
       case '\t':
 	/* tab expansion */
-	if (cob_file_format == COB_FORMAT_FREE)
+	if (cobpp_source_format == COBPP_FORMAT_FREE)
 	  buff[n++] = c;
 	else
-	  while ((n + 1) % cob_tab_width != 0)
+	  while ((n + 1) % cobpp_tab_width != 0)
 	    buff[n++] = c;
 	break;
 
@@ -337,7 +337,7 @@ read_line (char *buff, int size)
     return 0;
 
   /* nothing to be done for free format */
-  if (cob_file_format == COB_FORMAT_FREE)
+  if (cobpp_source_format == COBPP_FORMAT_FREE)
     return n;
 
   /* clear the first 6 letters */
@@ -346,13 +346,13 @@ read_line (char *buff, int size)
     strcpy (buff + 6, " \n");
 
   /* remove letters after column 72 */
-  if (cob_file_format != COB_FORMAT_SEMI_FIXED && n > 73)
+  if (cobpp_source_format == COBPP_FORMAT_FIXED && n > 73)
     strcpy (buff + 72, "\n");
 
   switch (buff[6])
     {
     case 'D':
-      if (cob_debug_flag)
+      if (cobpp_debug_flag)
 	{
 	  /* activate debugging line */
 	  buff[6] = ' ';
@@ -379,7 +379,7 @@ yyinput (char *buff, int max_size)
     return YY_NULL;
 
   /* Line concatenation */
-  if (cob_file_format != COB_FORMAT_FREE)
+  if (cobpp_source_format != COBPP_FORMAT_FREE)
     while (1)
       {
 	int i;

@@ -1,3 +1,7 @@
+2002-09-17  Keisuke Nishida  <knishida@netlab.jp>
+
+	* Rename all `cob_*' to `cobpp_*'.
+
 2002-09-09  Keisuke Nishida  <knishida@netlab.jp>
 
 	* scanner.l (read_line): Don't use fgets.

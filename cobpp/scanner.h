@@ -17,8 +17,8 @@
  * Boston, MA 02111-1307 USA
  */
 
-#ifndef _SCANNER_H_
-#define _SCANNER_H_
+#ifndef COBPP_SCANNER_H
+#define COBPP_SCANNER_H
 
 #include <stdio.h>
 
@@ -40,4 +40,4 @@ extern void include_copybook (const char *name, const char *lib, struct replacem
 extern struct replacement *add_replacement (struct replacement *replacing, const char *old_text, const char *new_text);
 extern void remove_replacements (void);
 
-#endif /* _SCANNER_H_ */
+#endif /* COBPP_SCANNER_H */

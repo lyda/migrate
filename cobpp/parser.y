@@ -75,5 +75,5 @@ yyerror (const char *fmt, ...)
   vfprintf (stderr, fmt, ap);
   fputs ("\n", stderr);
   va_end (ap);
-  cob_exit_status = 1;
+  cobpp_exit_status = 1;
 }

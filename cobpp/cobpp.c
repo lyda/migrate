@@ -38,14 +38,14 @@ extern int yyparse (void);
  * Global variables
  */
 
-int cob_tab_width = 8;
-int cob_debug_flag = 0;
-int cob_exit_status = 0;
-int cob_file_format = COB_FORMAT_FREE;
-struct cob_path *cob_include_path = NULL;
-struct cob_path *cob_depend_list = NULL;
-FILE *cob_depend_file = NULL;
-char *cob_depend_target = NULL;
+int cobpp_tab_width = 8;
+int cobpp_debug_flag = 0;
+int cobpp_exit_status = 0;
+int cobpp_source_format = COBPP_FORMAT_FREE;
+struct cobpp_path *cobpp_include_path = NULL;
+struct cobpp_path *cobpp_depend_list = NULL;
+FILE *cobpp_depend_file = NULL;
+char *cobpp_depend_target = NULL;
 
 
 /*
@@ -65,9 +65,9 @@ static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'v'},
   {"debug", no_argument, 0, 'D'},
-  {"free", no_argument, &cob_file_format, COB_FORMAT_FREE},
-  {"fixed", no_argument, &cob_file_format, COB_FORMAT_FIXED},
-  {"semi-fixed", no_argument, &cob_file_format, COB_FORMAT_SEMI_FIXED},
+  {"free", no_argument, &cobpp_source_format, COBPP_FORMAT_FREE},
+  {"fixed", no_argument, &cobpp_source_format, COBPP_FORMAT_FIXED},
+  {"semi-fixed", no_argument, &cobpp_source_format, COBPP_FORMAT_SEMI_FIXED},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
   {0, 0, 0, 0}
@@ -76,7 +76,7 @@ static struct option long_options[] = {
 static void
 print_version ()
 {
-  printf ("%s %s\n%s", COB_PACKAGE, COB_VERSION, COB_COPYRIGHT);
+  printf ("%s %s\n%s", COBPP_PACKAGE, COBPP_VERSION, COBPP_COPYRIGHT);
 }
 
 static void
@@ -126,36 +126,36 @@ process_command_line (int argc, char *argv[])
 	  break;
 
 	case '%': /* -MT */
-	  cob_depend_target = strdup (optarg);
+	  cobpp_depend_target = strdup (optarg);
 	  break;
 
 	case '@': /* -MF */
-	  cob_depend_file = fopen (optarg, "w");
-	  if (!cob_depend_file)
+	  cobpp_depend_file = fopen (optarg, "w");
+	  if (!cobpp_depend_file)
 	    perror (optarg);
 	  break;
 
 	case 'I':
 	  {
-	    struct cob_path *path =
-	      malloc (sizeof (struct cob_path));
+	    struct cobpp_path *path =
+	      malloc (sizeof (struct cobpp_path));
 	    path->dir = strdup (optarg);
 	    path->next = NULL;
 
 	    /* Append at the end */
-	    if (!cob_include_path)
-	      cob_include_path = path;
+	    if (!cobpp_include_path)
+	      cobpp_include_path = path;
 	    else
 	      {
-		struct cob_path *p;
-		for (p = cob_include_path; p->next; p = p->next);
+		struct cobpp_path *p;
+		for (p = cobpp_include_path; p->next; p = p->next);
 		p->next = path;
 	      }
 	  }
 	  break;
 
-	case 'D': cob_debug_flag = 1; break;
-	case 'T': cob_tab_width = atoi (optarg); break;
+	case 'D': cobpp_debug_flag = 1; break;
+	case 'T': cobpp_tab_width = atoi (optarg); break;
 
 	default: print_usage (); exit (1);
 	}
@@ -205,21 +205,21 @@ main (int argc, char *argv[])
   yyparse ();
 
   /* Output dependency list */
-  if (cob_depend_file)
+  if (cobpp_depend_file)
     {
-      struct cob_path *l;
-      if (!cob_depend_target)
+      struct cobpp_path *l;
+      if (!cobpp_depend_target)
 	{
 	  fputs (_("-MT must be given to specify target file\n"), stderr);
 	  exit (1);
 	}
-      fprintf (cob_depend_file, "%s: \\\n", cob_depend_target);
-      for (l = cob_depend_list; l; l = l->next)
-	fprintf (cob_depend_file, " %s%s\n", l->dir, l->next ? " \\" : "");
-      for (l = cob_depend_list; l; l = l->next)
-	fprintf (cob_depend_file, "%s:\n", l->dir);
-      fclose (cob_depend_file);
+      fprintf (cobpp_depend_file, "%s: \\\n", cobpp_depend_target);
+      for (l = cobpp_depend_list; l; l = l->next)
+	fprintf (cobpp_depend_file, " %s%s\n", l->dir, l->next ? " \\" : "");
+      for (l = cobpp_depend_list; l; l = l->next)
+	fprintf (cobpp_depend_file, "%s:\n", l->dir);
+      fclose (cobpp_depend_file);
     }
 
-  return cob_exit_status;
+  return cobpp_exit_status;
 }

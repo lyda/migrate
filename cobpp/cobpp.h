@@ -17,30 +17,30 @@
  * Boston, MA 02111-1307 USA
  */
 
-#ifndef _COBPP_H_
-#define _COBPP_H_
+#ifndef COBPP_H
+#define COBPP_H
 
 #include <stdio.h>
 
-#define COB_PACKAGE	"cobpp (OpenCOBOL)"
-#define COB_VERSION	PACKAGE_VERSION
-#define COB_COPYRIGHT	"Copyright (C) 2001-2002 Keisuke Nishida\n"
+#define COBPP_PACKAGE	"cobpp (OpenCOBOL)"
+#define COBPP_VERSION	PACKAGE_VERSION
+#define COBPP_COPYRIGHT	"Copyright (C) 2001-2002 Keisuke Nishida\n"
 
-#define COB_FORMAT_FREE		0
-#define COB_FORMAT_FIXED	1
-#define COB_FORMAT_SEMI_FIXED	2
+#define COBPP_FORMAT_FREE		0
+#define COBPP_FORMAT_FIXED	1
+#define COBPP_FORMAT_SEMI_FIXED	2
 
-struct cob_path {
+struct cobpp_path {
   const char *dir;
-  struct cob_path *next;
+  struct cobpp_path *next;
 };
 
-extern int cob_tab_width;
-extern int cob_debug_flag;
-extern int cob_exit_status;
-extern int cob_file_format;
-extern struct cob_path *cob_include_path;
-extern struct cob_path *cob_depend_list;
-extern FILE *cob_depend_file;
+extern int cobpp_tab_width;
+extern int cobpp_debug_flag;
+extern int cobpp_exit_status;
+extern int cobpp_source_format;
+extern struct cobpp_path *cobpp_include_path;
+extern struct cobpp_path *cobpp_depend_list;
+extern FILE *cobpp_depend_file;
 
-#endif /* _COBPP_H_ */
+#endif /* COBPP_H */
