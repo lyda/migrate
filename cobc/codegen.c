@@ -688,7 +688,7 @@ output_int32 (cb_tree x)
 			output_data (x);
 			output (")");
 			output ("[%d] - '0')", i);
-			if (i + 1 == size)
+			if (i + 1 < size)
 			  {
 			    output (" * 1");
 			    for (j = 1; j < size - i; j++)
