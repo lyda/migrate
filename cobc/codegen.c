@@ -432,7 +432,7 @@ output_expr (cobc_tree x, int id)
 #ifdef COB_DEBUG
   if (!is_numeric (x))
     {
-      yyerror_tree (x, "invalid expr\n", tree_to_string (x));
+      yyerror_tree (x, "invalid expr\n");
       abort ();
     }
 #endif
@@ -1557,7 +1557,6 @@ output_tree (cobc_tree x)
     case cobc_tag_if:
       {
 	struct cobc_if *p = COBC_IF (x);
-	output_line_directive (x);
 	output_prefix ();
 	output ("if (");
 	output_tree (p->test);
@@ -1796,7 +1795,8 @@ codegen (struct program_spec *spec)
 
   output_line ("/* PROCEDURE DIVISION */");
   output_line ("lb_default_handler:");
-  output_line ("cob_runtime_error (\"file I/O exited with status %%02d\", "
+  output_line ("if (cob_file_status != 35)");
+  output_line ("  cob_runtime_error (\"file I/O exited with status %%02d\", "
 	       "cob_file_status);");
   output_line ("cob_exit (le_default_handler);");
 

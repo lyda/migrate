@@ -111,7 +111,7 @@ typedef struct cobc_tree_common *cobc_tree;
     cobc_tree _x = (x);							\
     if (!_x || COBC_TREE_TAG (_x) != tg)				\
       {									\
-	printf ("%s:%d: invalid type cast from `%s'\n",			\
+	fprintf (strerr, "%s:%d: invalid type cast from `%s'\n",	\
 		__FILE__, __LINE__, tree_to_string (_x));		\
 	abort ();							\
       }									\
