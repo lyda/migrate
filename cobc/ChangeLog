@@ -1,0 +1,11 @@
+2002-05-29  Keisuke Nishida  <knishida@netlab.jp>
+
+	* cobc.c: Rename `COB_LDADD' to `COB_LIBS'
+
+2002-05-29  Keisuke Nishida  <knishida@netlab.jp>
+
+	* cobc.c (cobc_verbose_flag): New variable.
+	(short_options, long_options): New option -v and --verbose.
+	(process_command_line): Handle -v option.
+	* cobc.h (cobc_verbose_flag): Declared.
+

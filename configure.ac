@@ -113,7 +113,7 @@ AC_SUBST(COMPUTED_GOTO)
 
 COB_COBPP="cobpp"
 COB_CFLAGS="-I$includedir"
-COB_LDADD="-L$libdir -lcob ${LIBDB} ${LIBGMP} ${LIBLTDL} ${LIBRL}"
+COB_LIBS="-L$libdir -lcob ${LIBDB} ${LIBGMP} ${LIBLTDL} ${LIBRL}"
 COB_LIBRARY_PATH=".:$libdir/$PACKAGE"
 LIBCOB_CFLAGS=""
 LIBCOB_LIBS="${LIBDB} ${LIBGMP} ${LIBLTDL} ${LIBRL}"
@@ -122,7 +122,7 @@ LIBS="$save_libs"
 AC_SUBST(COB_CC)
 AC_SUBST(COB_COBPP)
 AC_SUBST(COB_CFLAGS)
-AC_SUBST(COB_LDADD)
+AC_SUBST(COB_LIBS)
 AC_SUBST(COB_LIBRARY_PATH)
 AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBS)
@@ -138,7 +138,7 @@ echo ""
 echo "  COB_CC               ${COB_CC}"
 echo "  COB_COBPP            ${COB_COBPP}"
 echo "  COB_CFLAGS           ${COB_CFLAGS}"
-echo "  COB_LDADD            ${COB_LDADD}"
+echo "  COB_LIBS             ${COB_LIBS}"
 echo "  COB_LIBRARY_PATH     ${COB_LIBRARY_PATH}"
 echo ""
 echo "  Use gettext for I17n:                        ${USE_NLS}"

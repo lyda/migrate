@@ -1,3 +1,7 @@
+2002-05-29  Keisuke Nishida  <knishida@netlab.jp>
+
+	* configure.ac, Makefile.am: Rename `COB_LDADD' to `COB_LIBS'
+
 2002-05-19  Keisuke Nishida  <knishida@netlab.jp>
 
 	* Version 0.9.5 released.
@@ -21,63 +25,3 @@
 2002-01-25  Keisuke Nishida  <knishida@coboler.com>
 
 	* Version 0.9 released.
-
-2002-01-20  Keisuke Nishida  <knishida@coboler.com>
-
-	* Version 0.8.8 released.
-
-2002-01-05  Keisuke Nishida  <knishida@coboler.com>
-
-	* Version 0.8.7 released.
-
-2001-12-30  Keisuke Nishida  <knishida@coboler.com>
-
-	* Version 0.8.6 released.
-
-2001-12-27  Keisuke Nishida  <knishida@coboler.com>
-
-	* Version 0.8.5 released.
-
-2001-12-23  Keisuke Nishida  <knishida@coboler.com>
-
-	* Version 0.8.4 released.
-
-2001-12-21  Keisuke Nishida  <knishida@coboler.com>
-
-	* Version 0.8.3 released.
-
-2001-12-10  Keisuke Nishida  <knishida@coboler.com>
-
-	* Version 0.8.2 released.
-
-2001-12-07  Keisuke Nishida  <knishida@coboler.com>
-
-	* Version 0.8.1 released.
-
-2001-12-04  Keisuke Nishida  <knishida@coboler.com>
-
-	* Version 0.8 released.
-
-2001-11-24  Keisuke Nishida  <knishida@coboler.com>
-
-	* Version 0.7.3 released.
-
-2001-11-21  Keisuke Nishida  <knishida@coboler.com>
-
-	* Version 0.7.2 released.
-
-2001-11-17  Keisuke Nishida  <knishida@coboler.com>
-
-	* Version 0.7.1 released.
-
-2001-09-16  Keisuke Nishida  <knishida@coboler.com>
-
-	* Version 0.7 released.
-
-2001-09-02  Keisuke Nishida  <knishida@coboler.com>
-
-	* Version 0.6 released.
-
-2001-08-28  Keisuke Nishida  <knishida@coboler.com>
-
-	* Branched from Tiny COBOL 0.54.
