@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 407
+%expect 421
 
 %{
 #define yydebug		cob_trace_parser
@@ -83,15 +83,15 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %token <tree> SYMBOL_TOK,VARIABLE,VARCOND,SUBSCVAR,LABELSTR,PICTURE_TOK
 %token <tree> INTEGER_TOK,NLITERAL,CLITERAL
 
-%token EQUAL,GREATER,LESS,GE,LE,COMMAND_LINE,ENVIRONMENT_VARIABLE
+%token EQUAL,GREATER,LESS,GE,LE,COMMAND_LINE,ENVIRONMENT_VARIABLE,ALPHABET
 %token DATE,DAY,DAY_OF_WEEK,TIME,INKEY,READ,WRITE,OBJECT_COMPUTER,INPUT_OUTPUT
 %token TO,FOR,IS,ARE,THRU,THAN,NO,CANCEL,ASCENDING,DESCENDING,ZEROS,PORT
 %token SOURCE_COMPUTER,BEFORE,AFTER,SCREEN,REVERSE_VIDEO,NUMBER,PLUS,MINUS
 %token FOREGROUND_COLOR,BACKGROUND_COLOR,UNDERLINE,HIGHLIGHT,LOWLIGHT,SEPARATE
 %token RIGHT,AUTO,REQUIRED,FULL,JUSTIFIED,BLINK,SECURE,BELL,COLUMN,SYNCHRONIZED
-%token TOK_INITIAL,FIRST,ALL,LEADING,OF,IN,BY,STRING,UNSTRING
-%token START,DELETE,PROGRAM,GLOBAL,EXTERNAL,SIZE,DELIMITED
-%token GIVING,ERASE,INSPECT,TALLYING,REPLACING,ON,POINTER,OVERFLOW
+%token TOK_INITIAL,FIRST,ALL,LEADING,OF,IN,BY,STRING,UNSTRING,DEBUGGING
+%token START,DELETE,PROGRAM,GLOBAL,EXTERNAL,SIZE,DELIMITED,COLLATING,SEQUENCE
+%token GIVING,ERASE,INSPECT,TALLYING,REPLACING,ON,POINTER,OVERFLOW,NATIVE
 %token DELIMITER,COUNT,LEFT,TRAILING,CHARACTER,FILLER,OCCURS,TIMES
 %token ADD,SUBTRACT,MULTIPLY,DIVIDE,ROUNDED,REMAINDER,ERROR,SIZE
 %token FD,SD,REDEFINES,PICTURE,FILEN,USAGE,BLANK,SIGN,VALUE,MOVE,LABEL
@@ -223,7 +223,6 @@ identification_division_option:
 | SECURITY '.' comment
 ;
 comment: { start_condition = START_COMMENT; };
-opt_program: | PROGRAM ;
 
 
 /*****************************************************************************
@@ -242,15 +241,50 @@ environment_division:
  *******************/
 
 configuration_section:
-| CONFIGURATION SECTION dot configuration_list
+| CONFIGURATION SECTION dot
+  configuration_list
 ;
 configuration_list:
 | configuration_list configuration
 ;
 configuration:
-  SOURCE_COMPUTER '.' comment
-| OBJECT_COMPUTER '.' comment
-| SPECIAL_NAMES '.' opt_special_names
+  source_computer
+| object_computer
+| special_names
+;
+
+
+/*
+ * SOURCE COMPUTER
+ */
+
+source_computer:
+  SOURCE_COMPUTER '.' idstring opt_with_debugging_mode dot
+;
+opt_with_debugging_mode:
+| opt_with DEBUGGING MODE	{ yywarn ("DEBUGGING MODE is ignored"); }
+;
+
+
+/*
+ * OBJECT COMPUTER
+ */
+
+object_computer:
+  OBJECT_COMPUTER '.' idstring opt_collating_sequence dot
+;
+opt_collating_sequence:
+| opt_program opt_collating SEQUENCE opt_is idstring
+;
+opt_collating: | COLLATING ;
+
+
+/*
+ * SPECIAL-NAMES
+ */
+
+special_names:
+  SPECIAL_NAMES '.' opt_special_names
 ;
 opt_special_names:
 | special_names dot
@@ -260,12 +294,36 @@ special_names:
 | special_names special_name
 ;
 special_name:
+  special_name_alphabet
+| special_name_currency
+| special_name_decimal_point
+| special_name_console
+;
+
+/* ALPHABET */
+
+special_name_alphabet:
+  ALPHABET idstring opt_is NATIVE { yywarn ("ALPHABET name is ignored"); }
+;
+
+/* CURRENCY */
+
+special_name_currency:
   CURRENCY opt_sign opt_is CLITERAL
   {
     currency_symbol = COB_FIELD_NAME ($4)[0];
   }
-| DECIMAL_POINT opt_is COMMA	{ decimal_comma = 1; }
-| CONSOLE opt_is CONSOLE	{ yywarn ("CONSOLE name is ignored"); }
+;
+
+/* DECIMAL_POINT */
+
+special_name_decimal_point:
+  DECIMAL_POINT opt_is COMMA	{ decimal_comma = 1; }
+;
+
+/* CONSOLE */
+special_name_console:
+  CONSOLE opt_is CONSOLE	{ yywarn ("CONSOLE name is ignored"); }
 ;
 
 
@@ -2903,6 +2961,7 @@ opt_then: | THEN ;
 opt_line: | LINE ;
 opt_final: | FINAL ;
 opt_of: | OF ;
+opt_program: | PROGRAM ;
 opt_to: | TO ;
 opt_upon: | UPON ;
 opt_with: | WITH ;

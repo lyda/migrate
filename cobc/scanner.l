@@ -277,7 +277,7 @@ scan_word (char *text)
       else
 	{
 	  yylval.tree = install_label (yytext);
-	  return (LABELSTR);
+	  return LABELSTR;
 	}
     }
 }
