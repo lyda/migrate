@@ -814,8 +814,7 @@ void
 set_value (cobc_tree ref, cobc_tree value)
 {
   COBC_REFERENCE (ref)->value = value;
-  if (COBC_REFERENCE (ref)->offset
-      && COBC_TREE_CLASS (value) != COB_TYPE_NUMERIC)
+  if (COBC_REFERENCE (ref)->offset)
     {
       COBC_TREE_CLASS (ref) = COB_TYPE_ALPHANUMERIC;
       COBC_TREE_TYPE (ref) = COB_TYPE_ALPHANUMERIC;

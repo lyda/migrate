@@ -326,10 +326,6 @@ cob_decimal_set_field (cob_decimal *d, cob_field *f)
 {
   switch (COB_FIELD_TYPE (f))
     {
-    case COB_TYPE_GROUP:
-    case COB_TYPE_NUMERIC_DISPLAY:
-      cob_decimal_set_display (d, f);
-      break;
     case COB_TYPE_NUMERIC_BINARY:
       cob_decimal_set_binary (d, f);
       break;
@@ -337,7 +333,8 @@ cob_decimal_set_field (cob_decimal *d, cob_field *f)
       cob_decimal_set_packed (d, f);
       break;
     default:
-      abort ();
+      cob_decimal_set_display (d, f);
+      break;
     }
 }
 
