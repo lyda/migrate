@@ -1,3 +1,5 @@
+bin_SCRIPTS=cob-config
+
 include_HEADERS = libcob.h
 
 pkgconfigdir = $(libdir)/pkgconfig
