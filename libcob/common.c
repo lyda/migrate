@@ -51,97 +51,97 @@ cob_environment *cob_env = NULL;
 
 /* ZERO,SPACE,HIGH-VALUE,LOW-VALUE,QUOTE */
 
-cob_field_attr cob_group_attr = {COB_TYPE_GROUP, 0, 0, 0, 0, 0, 0, 0, NULL};
-cob_field_attr cob_alnum_attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, 0, 0, 0, 0, NULL};
-cob_field_attr cob_just_attr  = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, 0, 0, 0, 1, NULL};
-cob_field_attr cob_all_attr   = {COB_TYPE_ALPHANUMERIC_ALL, 0, 0, 0, 0, 0, 0, 0, NULL};
+cob_field_attr cob_group_attr = {COB_TYPE_GROUP, 0, 0, 0, NULL};
+cob_field_attr cob_alnum_attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
+cob_field_attr cob_just_attr  = {COB_TYPE_ALPHANUMERIC, 0, 0, COB_FLAG_JUSTFIED, NULL};
+cob_field_attr cob_all_attr   = {COB_TYPE_ALPHANUMERIC_ALL, 0, 0, 0, NULL};
 
 cob_field_attr cob_uint_attr[] = {
-  {COB_TYPE_NUMERIC_DISPLAY,  0, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY,  1, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY,  2, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY,  3, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY,  4, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY,  5, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY,  6, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY,  7, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY,  8, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY,  9, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY, 10, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY, 11, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY, 12, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY, 13, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY, 14, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY, 15, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY, 16, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY, 17, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY, 18, 0, 0, 0, 0, 0, 0, NULL}
+  {COB_TYPE_NUMERIC_DISPLAY,  0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  1, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  2, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  3, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  4, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  5, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  6, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  7, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  8, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  9, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 10, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 11, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 12, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 13, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 14, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 15, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 16, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 17, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 18, 0, 0, NULL}
 };
 
 cob_field_attr cob_sint_attr[] = {
-  {COB_TYPE_NUMERIC_DISPLAY,  0, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY,  1, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY,  2, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY,  3, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY,  4, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY,  5, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY,  6, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY,  7, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY,  8, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY,  9, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY, 10, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY, 11, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY, 12, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY, 13, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY, 14, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY, 15, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY, 16, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY, 17, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_DISPLAY, 18, 0, 1, 0, 0, 0, 0, NULL}
+  {COB_TYPE_NUMERIC_DISPLAY,  0, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  1, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  2, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  3, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  4, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  5, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  6, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  7, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  8, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  9, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 10, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 11, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 12, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 13, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 14, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 15, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 16, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 17, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 18, 0, COB_FLAG_HAVE_SIGN, NULL}
 };
 
 cob_field_attr cob_ubin_attr[] = {
-  {COB_TYPE_NUMERIC_BINARY,  0, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY,  1, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY,  2, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY,  3, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY,  4, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY,  5, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY,  6, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY,  7, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY,  8, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY,  9, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY, 10, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY, 11, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY, 12, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY, 13, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY, 14, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY, 15, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY, 16, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY, 17, 0, 0, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY, 18, 0, 0, 0, 0, 0, 0, NULL}
+  {COB_TYPE_NUMERIC_BINARY,  0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  1, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  2, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  3, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  4, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  5, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  6, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  7, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  8, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  9, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 10, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 11, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 12, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 13, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 14, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 15, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 16, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 17, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 18, 0, 0, NULL}
 };
 
 cob_field_attr cob_sbin_attr[] = {
-  {COB_TYPE_NUMERIC_BINARY,  0, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY,  1, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY,  2, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY,  3, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY,  4, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY,  5, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY,  6, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY,  7, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY,  8, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY,  9, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY, 10, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY, 11, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY, 12, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY, 13, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY, 14, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY, 15, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY, 16, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY, 17, 0, 1, 0, 0, 0, 0, NULL},
-  {COB_TYPE_NUMERIC_BINARY, 18, 0, 1, 0, 0, 0, 0, NULL}
+  {COB_TYPE_NUMERIC_BINARY,  0, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  1, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  2, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  3, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  4, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  5, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  6, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  7, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  8, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  9, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 10, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 11, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 12, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 13, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 14, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 15, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 16, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 17, 0, COB_FLAG_HAVE_SIGN, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL}
 };
 
 cob_field cob_zero =  {1, "0",    &cob_all_attr};
@@ -459,7 +459,7 @@ cob_cmp (cob_field *f1, cob_field *f2)
 int
 cob_cmp_int (cob_field *f1, int n)
 {
-  cob_field_attr attr = {COB_TYPE_NUMERIC_BINARY, 9, 0, 1};
+  cob_field_attr attr = {COB_TYPE_NUMERIC_BINARY, 9, 0, COB_FLAG_HAVE_SIGN};
   cob_field temp = {sizeof (int), (unsigned char *) &n, &attr};
   cob_cmp_result = cob_numeric_cmp (f1, &temp);
   return cob_cmp_result;
@@ -566,16 +566,23 @@ cob_is_lower (cob_field *f)
 int
 cob_get_sign (cob_field *f)
 {
-  if (f->attr->have_sign)
+  if (COB_FIELD_HAVE_SIGN (f))
     {
-      if (f->attr->sign_separate)
+      char *p;
+
+      /* locate sign */
+      if (COB_FIELD_SIGN_LEADING (f))
+	p = f->data;
+      else
+	p = f->data + f->size - 1;
+
+      /* get sign */
+      if (COB_FIELD_SIGN_SEPARATE (f))
 	{
-	  char *p = f->attr->sign_leading ? f->data : f->data + f->size - 1;
 	  return (*p == '+') ? 1 : -1;
 	}
       else
 	{
-	  char *p = f->attr->sign_leading ? f->data : f->data + f->size - 1;
 	  if (*p <= '9')
 	    return 1;
 	  *p -= 0x10;
@@ -588,18 +595,21 @@ cob_get_sign (cob_field *f)
 void
 cob_put_sign (cob_field *f, int sign)
 {
-  if (f->attr->have_sign)
+  if (COB_FIELD_HAVE_SIGN (f))
     {
-      if (f->attr->sign_separate)
-	{
-	  char *p = f->attr->sign_leading ? f->data : f->data + f->size - 1;
-	  *p = (sign < 0) ? '-' : '+';
-	}
+      char *p;
+
+      /* locate sign */
+      if (COB_FIELD_SIGN_LEADING (f))
+	p = f->data;
+      else
+	p = f->data + f->size - 1;
+
+      /* put sign */
+      if (COB_FIELD_SIGN_SEPARATE (f))
+	*p = (sign < 0) ? '-' : '+';
       else if (sign < 0)
-	{
-	  char *p = f->attr->sign_leading ? f->data : f->data + f->size - 1;
-	  *p += 0x10;
-	}
+	*p += 0x10;
     }
 }
 

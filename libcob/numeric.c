@@ -221,7 +221,7 @@ cob_decimal_get (cob_decimal *d, cob_field *f)
 	    val = mpz_get_si (d->data);
 	    if (val <= -cob_exp10[digits] || val >= cob_exp10[digits])
 	      goto overflow;
-	    if (!f->attr->have_sign && val < 0)
+	    if (!COB_FIELD_HAVE_SIGN (f) && val < 0)
 	      val = -val;
 	    switch (f->size)
 	      {
@@ -247,7 +247,7 @@ cob_decimal_get (cob_decimal *d, cob_field *f)
 	    mpz_clear (r);
 	    if (val <= -cob_exp10LL[digits] || val >= cob_exp10LL[digits])
 	      goto overflow;
-	    if (!f->attr->have_sign && val < 0)
+	    if (!COB_FIELD_HAVE_SIGN (f) && val < 0)
 	      val = -val;
 	    *(long long *) f->data = val;
 	  }
@@ -285,8 +285,12 @@ cob_decimal_get (cob_decimal *d, cob_field *f)
 	  }
 	else
 	  {
-	    cob_field_attr attr =
-	      {COB_TYPE_NUMERIC_DISPLAY, f->attr->digits, f->attr->decimals, 1};
+	    cob_field_attr attr = {
+	      COB_TYPE_NUMERIC_DISPLAY,
+	      f->attr->digits,
+	      f->attr->decimals,
+	      COB_FLAG_HAVE_SIGN
+	    };
 	    cob_field temp = {size, buff, &attr};
 	    if (f->attr->digits < size)
 	      goto overflow;

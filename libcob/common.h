@@ -152,6 +152,8 @@
  * Field
  */
 
+/* field types */
+
 #define COB_TYPE_UNKNOWN		0x00
 #define COB_TYPE_GROUP			0x01
 #define COB_TYPE_BOOLEAN		0x02
@@ -170,17 +172,31 @@
 #define COB_TYPE_NATIONAL		0x40
 #define COB_TYPE_NATIONAL_EDITED	0x41
 
+/* field flags */
+
+#define COB_FLAG_HAVE_SIGN		0x01
+#define COB_FLAG_SIGN_SEPARATE		0x02
+#define COB_FLAG_SIGN_LEADING		0x04
+#define COB_FLAG_BLANK_ZERO		0x08
+#define COB_FLAG_JUSTFIED		0x10
+
+#define COB_FIELD_HAVE_SIGN(f)	    ((f)->attr->flags & COB_FLAG_HAVE_SIGN)
+#define COB_FIELD_SIGN_SEPARATE(f)  ((f)->attr->flags & COB_FLAG_SIGN_SEPARATE)
+#define COB_FIELD_SIGN_LEADING(f)   ((f)->attr->flags & COB_FLAG_SIGN_LEADING)
+#define COB_FIELD_BLANK_ZERO(f)	    ((f)->attr->flags & COB_FLAG_BLANK_ZERO)
+#define COB_FIELD_JUSTIFIED(f)	    ((f)->attr->flags & COB_FLAG_JUSTFIED)
+
+/* field attributes */
+
 typedef struct {
   char type;
   char digits;
   char decimals;
-  char have_sign     : 1;
-  char sign_separate : 1;
-  char sign_leading  : 1;
-  char blank_zero    : 1;
-  char justified     : 1;
+  char flags;
   char *pic;
 } cob_field_attr;
+
+/* field structure */
 
 typedef struct {
   size_t size;
@@ -191,10 +207,11 @@ typedef struct {
 #define COB_FIELD_TYPE(f)	((f)->attr->type)
 #define COB_FIELD_DIGITS(f)	((f)->attr->digits)
 #define COB_FIELD_DECIMALS(f)	((f)->attr->decimals)
-#define COB_FIELD_DATA(f) \
-  ((f)->data + (((f)->attr->sign_separate && (f)->attr->sign_leading) ? 1 : 0))
-#define COB_FIELD_SIZE(f) \
-  ((f)->size - ((f)->attr->sign_separate ? 1 : 0))
+#define COB_FIELD_DATA(f)						  \
+  ((f)->data +								  \
+   ((COB_FIELD_SIGN_SEPARATE (f) && COB_FIELD_SIGN_LEADING (f)) ? 1 : 0))
+#define COB_FIELD_SIZE(f)						\
+  ((f)->size - (COB_FIELD_SIGN_SEPARATE (f) ? 1 : 0))
 
 #define COB_FIELD_IS_NUMERIC(f)	(COB_FIELD_TYPE (f) & COB_TYPE_NUMERIC)
 

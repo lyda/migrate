@@ -55,22 +55,22 @@ cob_display (cob_field *f, int fd)
   if (COB_FIELD_IS_NUMERIC (f))
     {
       int i;
-      int size = (f->attr->digits
-		  + (f->attr->have_sign ? 1 : 0)
-		  + (f->attr->decimals > 0 ? 1 : 0));
+      int digits = COB_FIELD_DIGITS (f);
+      int decimals = COB_FIELD_DECIMALS (f);
+      int size = (digits
+		  + (COB_FIELD_HAVE_SIGN (f) ? 1 : 0)
+		  + (decimals > 0 ? 1 : 0));
       unsigned char pic[9], *p = pic;
       unsigned char data[size];
-      cob_field_attr attr =
-	{COB_TYPE_NUMERIC_EDITED, f->attr->digits, f->attr->decimals};
+      cob_field_attr attr = {COB_TYPE_NUMERIC_EDITED, digits, decimals};
       cob_field temp = {size, data, &attr};
       attr.pic = pic;
-      if (f->attr->have_sign)
+      if (COB_FIELD_HAVE_SIGN (f))
 	p += sprintf (p, "+\001");
-      if (f->attr->decimals > 0)
-	sprintf (p, "9%c.%c9%c", f->attr->digits - f->attr->decimals,
-		 1, f->attr->decimals);
+      if (decimals > 0)
+	sprintf (p, "9%c.%c9%c", digits - decimals, 1, decimals);
       else
-	sprintf (p, "9%c", f->attr->digits);
+	sprintf (p, "9%c", digits);
       cob_move (f, &temp);
       for (i = 0; i < size; i++)
 	fputc (data[i], cob_stream[fd]);

@@ -1,5 +1,21 @@
 2003-01-20  Keisuke Nishida  <knishida@netlab.jp>
 
+	* common.h (COB_FLAG_HAVE_SIGN): New macro.
+	(COB_FLAG_SIGN_SEPARATE): New macro.
+	(COB_FLAG_SIGN_LEADING): New macro.
+	(COB_FLAG_BLANK_ZERO): New macro.
+	(COB_FLAG_JUSTFIED): New macro.
+	(COB_FIELD_HAVE_SIGN): New macro.
+	(COB_FIELD_SIGN_SEPARATE): New macro.
+	(COB_FIELD_SIGN_LEADING): New macro.
+	(COB_FIELD_BLANK_ZERO): New macro.
+	(COB_FIELD_JUSTIFIED): New macro.
+	(cob_field_attr): Remove members `have_sign', `sign_separate',
+	`sign_leading', `blank_zero', and `justified'.  New member
+	`flags'.  All files updated.
+
+2003-01-20  Keisuke Nishida  <knishida@netlab.jp>
+
 	* numeric.h (cob_decimal): Rename `number' to `data'.
 
 2003-01-15  Keisuke Nishida  <knishida@netlab.jp>

@@ -53,7 +53,7 @@
 static void
 finalize_display (cob_field *f)
 {
-  if (f->attr->blank_zero)
+  if (COB_FIELD_BLANK_ZERO (f))
     {
       int i, len = COB_FIELD_SIZE (f);
       unsigned char *base = COB_FIELD_DATA (f);
@@ -187,7 +187,7 @@ cob_move_alphanum_to_alphanum (cob_field *f1, cob_field *f2)
   if (size1 >= size2)
     {
       /* move string with truncation */
-      if (f2->attr->justified)
+      if (COB_FIELD_JUSTIFIED (f2))
 	memcpy (base2, base1 + size1 - size2, size2);
       else
 	memcpy (base2, base1, size2);
@@ -195,7 +195,7 @@ cob_move_alphanum_to_alphanum (cob_field *f1, cob_field *f2)
   else
     {
       /* move string with padding */
-      if (f2->attr->justified)
+      if (COB_FIELD_JUSTIFIED (f2))
 	{
 	  memset (base2, ' ', size2 - size1);
 	  memcpy (base2 + size2 - size1, base1, size1);
@@ -287,7 +287,7 @@ cob_move_display_to_binary (cob_field *f1, cob_field *f2)
       val = val * 10 + base1[i] - '0';
     else
       val = val * 10;
-  if (sign < 0 && f2->attr->have_sign)
+  if (sign < 0 && COB_FIELD_HAVE_SIGN (f2))
     val = -val;
   val %= cob_exp10LL[(int) f2->attr->digits];
 
@@ -476,10 +476,10 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 	}
     }
 
-  if (suppress_zero || (is_zero && f2->attr->blank_zero))
+  if (suppress_zero || (is_zero && COB_FIELD_BLANK_ZERO (f2)))
     {
       /* all digits are zeros */
-      if (pad == ' ' || f2->attr->blank_zero)
+      if (pad == ' ' || COB_FIELD_BLANK_ZERO (f2))
 	memset (f2->data, ' ', f2->size);
       else
 	for (dst = f2->data; dst < f2->data + f2->size; dst++)
@@ -554,7 +554,8 @@ indirect_move (void (*func) (cob_field *src, cob_field *dst),
 	       unsigned int size, char decimals)
 {
   unsigned char data[size];
-  cob_field_attr attr = {COB_TYPE_NUMERIC_DISPLAY, size, decimals, 1};
+  cob_field_attr attr =
+    {COB_TYPE_NUMERIC_DISPLAY, size, decimals, COB_FLAG_HAVE_SIGN};
   cob_field temp = {size, data, &attr};
   func (src, &temp);
   cob_move (&temp, dst);
