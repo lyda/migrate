@@ -286,14 +286,12 @@ static struct cob_fileio_funcs lineseq_funcs = {
 static int
 relative_open (struct cob_file_desc *f, char *filename, int mode)
 {
-  f->relative_index = 0;
   return sequential_open (f, filename, mode);
 }
 
 static int
 relative_close (struct cob_file_desc *f, int opt)
 {
-  f->relative_index = -1;
   return sequential_close (f, opt);
 }
 
@@ -361,9 +359,6 @@ static int
 relative_read_next (struct cob_file_desc *f)
 {
   do {
-    if (!f->f.first_read)
-      f->relative_index++;
-
     switch (read (f->file.fd, f->record_data, f->record_size))
       {
       case 0:
@@ -373,7 +368,12 @@ relative_read_next (struct cob_file_desc *f)
       }
 
     if (f->relative_key.desc)
-      cob_set_int (f->relative_key, f->relative_index + 1);
+      {
+	if (f->f.first_read)
+	  cob_set_int (f->relative_key, 1);
+	else
+	  cob_add_int (f->relative_key, 1, 0, 0);
+      }
   } while (f->record_data[0] == '\0');
 
   return 00;
