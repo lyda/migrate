@@ -42,14 +42,18 @@ static char resolve_error_buff[FILENAME_MAX];
 void
 cob_init_call (void)
 {
-  const char *path = getenv ("COB_LIBRARY_PATH");
-  if (path == NULL)
-    path = COB_LIBRARY_PATH;
+  const char *s;
 
   lt_dlinit ();
-  cob_set_library_path (path);
 
-  dynamic_reloading = cob_config_compare ("dynamic-reloading", "yes");
+  s = getenv ("COB_LIBRARY_PATH");
+  if (s == NULL)
+    s = COB_LIBRARY_PATH;
+  cob_set_library_path (s);
+
+  s = getenv ("COB_DYNAMIC_RELOADING");
+  if (s != NULL && strcmp (s, "yes") == 0)
+    dynamic_reloading = 1;
 }
 
 

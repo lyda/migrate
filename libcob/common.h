@@ -182,11 +182,6 @@ extern long long cob_exp10LL[];
  * Function declaration
  */
 
-/* Config file */
-
-extern const char *cob_config_lookup (const char *key);
-extern int cob_config_compare (const char *key, const char *val);
-
 /* General functions */
 
 extern void cob_init (int argc, char **argv);

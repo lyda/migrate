@@ -101,90 +101,6 @@ int cob_initialized = 0;
 
 
 /*
- * Config file
- */
-
-static struct config
-{
-  const char *key;
-  const char *val;
-  struct config *next;
-} *config_list = NULL;
-
-static void
-config_insert (const char *key, const char *val)
-{
-  struct config *p = malloc (sizeof (struct config));
-  p->key = strdup (key);
-  p->val = strdup (val);
-  p->next = config_list;
-  config_list = p;
-}
-
-const char *
-cob_config_lookup (const char *key)
-{
-  struct config *l;
-  for (l = config_list; l; l = l->next)
-    if (strcmp (key, l->key) == 0)
-      return l->val;
-  return NULL;
-}
-
-int
-cob_config_compare (const char *key, const char *val)
-{
-  const char *tmp = cob_config_lookup (key);
-  if (tmp != NULL && strcmp (tmp, val) == 0)
-    return 1;
-  return 0;
-}
-
-static void
-config_load (void)
-{
-  FILE *fp;
-  char buff[256];
-  const char *filename = getenv ("COB_CONFIG_FILE");
-  if (!filename)
-    filename = COB_CONFIG_FILE;
-
-  fp = fopen (filename, "r");
-  if (fp == NULL)
-    return;
-
-  while (fgets (buff, 256, fp) > 0)
-    {
-      char *key, *val;
-
-      /* skip comment/blank lines */
-      if (buff[0] == '#' || buff[0] == '\n')
-	continue;
-
-      /* get the key */
-      key = strtok (buff, ": \t");
-      if (key == NULL)
-	continue;
-
-      /* get the value */
-      val = strtok (NULL, " \t\n");
-      if (val == NULL)
-	continue;
-
-      config_insert (key, val);
-    }
-
-  fclose (fp);
-}
-
-static void
-cob_init_config (void)
-{
-  config_load ();
-}
-
-
-/*
  * General functions
  */
 
@@ -202,7 +118,6 @@ cob_init (int argc, char **argv)
       textdomain (PACKAGE);
 #endif
 
-      cob_init_config ();
       cob_init_numeric ();
       cob_init_termio ();
       cob_init_fileio ();

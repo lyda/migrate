@@ -1,3 +1,9 @@
+2003-08-22  Keisuke Nishida  <kxn30@yahoo.co.jp>
+
+	* Don't use run-time config file.
+	* common.h, common.c (cob_config_lookup, cob_config_compare): Removed.
+	* call.c (cob_init_call): Handle env "COB_DYNAMIC_RELOADING".
+
 2003-08-21  Keisuke Nishida  <kxn30@yahoo.co.jp>
 
 	* common.h (cob_module): New member `flag_binary_print_full'.
