@@ -72,7 +72,6 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
   struct scr_info *sival;
   struct perf_info *pfval;
   struct perform_info *pfvals;
-  struct sortfile_node *snval;
   struct math_var *mval;      /* math variables container list */
 }
 
@@ -151,7 +150,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <pfval> perform_after
 %type <pfvals> opt_perform_after
 %type <sival> screen_clauses
-%type <snval> sort_file_list,sort_input,sort_output
+%type <list> sort_file_list
 %type <str> idstring
 %type <tree> field_description,label,label_name,filename
 %type <tree> file_description,redefines_var,function_call,subscript
@@ -162,7 +161,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <tree> qualified_var,unqualified_var,evaluate_subject
 %type <tree> evaluate_object,evaluate_object_1,assign_clause
 %type <tree> call_returning,screen_to_name,var_or_lit,opt_add_to
-%type <tree> sort_keys,opt_perform_thru
+%type <tree> opt_perform_thru
 %type <tree> opt_read_key,file_name,string_pointer
 %type <tree> variable,sort_range,name_or_lit,name_or_literal
 %type <tree> indexed_variable,search_opt_varying,opt_key_is
@@ -2512,33 +2511,39 @@ set_name_list:
  */
 
 sort_statement:
-  SORT name sort_keys   { gen_sort($2); }
-  sort_input sort_output { /*gen_close_sort($2);*/ }
+  SORT name sort_keys		{ gen_sort ($2); }
+  sort_input
+  sort_output
+;
 sort_keys:
-  /* nothing */   { $$ = NULL; }
 | sort_keys sort_direction KEY name
-    {
-        $4->direction = $2;
-        $4->sort_data = $<tree>0->sort_data;
-        $<tree>0->sort_data = $4;
-        $$ = $4;
-    }
+  {
+    $4->direction = $2;
+    $4->sort_data = $<tree>0->sort_data;
+    $<tree>0->sort_data = $4;
+  }
 ;
 sort_direction:
   ASCENDING			{ $$ = 1; }
 | DESCENDING			{ $$ = 2; }
 ;
 sort_input:
-  INPUT PROCEDURE opt_is sort_range { $$=NULL; }
-| USING sort_file_list { gen_sort_using($<tree>-2,$2); $$=$2; }
+  INPUT PROCEDURE opt_is sort_range
+| USING sort_file_list
+  {
+    gen_sort_using ($<tree>-2, $2);
+  }
 ;
 sort_output:
-  OUTPUT PROCEDURE opt_is sort_range { $$=NULL; }
-| GIVING sort_file_list { gen_sort_giving($<tree>-3,$2); $$=$2; }
+  OUTPUT PROCEDURE opt_is sort_range
+| GIVING sort_file_list
+  {
+    gen_sort_giving ($<tree>-3, $2);
+  }
 ;
 sort_file_list:
-  name				{ $$ = alloc_sortfile_node($1); }
-| sort_file_list name		{ $1->next = alloc_sortfile_node($2); $$=$1; }
+  file				{ $$ = make_list ($1); }
+| sort_file_list file		{ $$ = list_add ($1, $2); }
 ;
 sort_range:
   label opt_perform_thru

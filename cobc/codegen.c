@@ -3861,22 +3861,6 @@ gen_fdesc (cob_tree f, cob_tree r)
   global_offset += len;
 }
 
-/****** sort statement related functions *******/
-struct sortfile_node *
-alloc_sortfile_node (cob_tree sy)
-{
-  struct sortfile_node *sn;
-  if (COB_FIELD_TYPE (sy) != 'F')
-    {
-      yyerror ("only files can be found here");
-      return NULL;
-    }
-  sn = malloc (sizeof (struct sortfile_node));
-  sn->next = NULL;
-  sn->sy = sy;
-  return sn;
-}
-
 cob_tree 
 create_status_register (char *name)
 {
@@ -3902,16 +3886,39 @@ create_status_register (char *name)
 }
 
 void
-gen_sort_using (cob_tree f, struct sortfile_node *sn)
+gen_sort (cob_tree f)
+{
+  gen_loadloc (f->filenamevar);
+  gen_save_filevar (f, NULL);
+  asm_call ("sort_open");
+  gen_save_status (f);
+
+  {
+    cob_tree sortf;
+    /********** allocate memory for SORT descriptor ***********/
+    save_field_in_list (f);
+    f->descriptor = literal_offset;
+    sortf = f->sort_data;
+    while (sortf != NULL)
+      {
+	literal_offset += 2;
+	sortf = (sortf->sort_data);
+      }
+    literal_offset++;
+  }
+}
+
+void
+gen_sort_using (cob_tree f, cob_tree_list l)
 {
   cob_tree vstatus = create_status_register ("SORT-RETURN");
   gen_save_sort_fields (f, NULL);
   push_immed (0);
-  while (sn)
+  for (; l; l = l->next)
     {
-      gen_loadloc (sn->sy->filenamevar);
-      gen_save_filedesc (sn->sy);
-      sn = sn->next;
+      cob_tree sy = l->item;
+      gen_loadloc (sy->filenamevar);
+      gen_save_filedesc (sy);
     }
   asm_call ("cob_sort_using");
   /* save status returned by operation */
@@ -3921,32 +3928,22 @@ gen_sort_using (cob_tree f, struct sortfile_node *sn)
 }
 
 void
-gen_sort_giving (cob_tree f, struct sortfile_node *sn)
+gen_sort_giving (cob_tree f, cob_tree_list l)
 {
   cob_tree vstatus = create_status_register ("SORT-RETURN");
   gen_save_sort_fields (f, NULL);
   push_immed (0);
-  while (sn)
+  for (; l; l = l->next)
     {
-      gen_loadloc (sn->sy->filenamevar);
-      gen_save_filedesc (sn->sy);
-      sn = sn->next;
+      cob_tree sy = l->item;
+      gen_loadloc (sy->filenamevar);
+      gen_save_filedesc (sy);
     }
   asm_call ("cob_sort_giving");
   /* save status returned by operation */
   push_eax ();
   gen_loadloc (vstatus);
   asm_call ("cob_save_status");
-}
-
-void
-gen_sort (cob_tree f)
-{
-  gen_loadloc (f->filenamevar);
-  gen_save_filevar (f, NULL);
-  asm_call ("sort_open");
-  gen_save_status (f);
-  gen_close_sort (f);
 }
 
 void
@@ -3957,22 +3954,6 @@ gen_open (int mode, cob_tree f)
   gen_save_filevar (f, NULL);
   asm_call ("cob_open");
   gen_save_status (f);
-}
-
-void
-gen_close_sort (cob_tree f)
-{
-  cob_tree sortf;
-	/********** allocate memory for SORT descriptor ***********/
-  save_field_in_list (f);
-  f->descriptor = literal_offset;
-  sortf = (f->sort_data);
-  while (sortf != NULL)
-    {
-      literal_offset += 2;
-      sortf = (sortf->sort_data);
-    }
-  literal_offset++;
 }
 
 void
