@@ -2409,15 +2409,15 @@ opt_not_on_overflow_sentence:
 at_end:
   at_end_sentence
   {
-    push_status_handler (cobc_int0, $1, 0);
+    push_status_handler (cobc_int0, 0, $1);
   }
 | not_at_end_sentence
   {
-    push_status_handler (cobc_int0, 0, $1);
+    push_status_handler (cobc_int0, $1, 0);
   }
 | at_end_sentence not_at_end_sentence
   {
-    push_status_handler (cobc_int0, $1, $2);
+    push_status_handler (cobc_int0, $2, $1);
   }
 ;
 at_end_sentence:
