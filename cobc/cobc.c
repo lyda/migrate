@@ -357,7 +357,7 @@ static enum format
 probe_source_format (const char *filename)
 {
   FILE *fp = fopen (filename, "r");
-  char buff[8];
+  char buff[7];
 
   if (!fp)
     {
@@ -365,9 +365,9 @@ probe_source_format (const char *filename)
       exit (1);
     }
 
-  if (fgets (buff, 8, fp))
+  if (fgets (buff, 7, fp))
     if (('0' <= buff[0] && buff[0] <= '9')
-	|| (strncmp (buff, "      *", 7) == 0))
+	|| (strncmp (buff, "      ", 6) == 0))
       return format_fixed;
 
   /* Assume to be free format by default */
