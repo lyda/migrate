@@ -4040,7 +4040,7 @@ gen_SearchLoopCheck (unsigned long lbl5, struct sym *syidx, struct sym *sytbl)
   v = install_literal (tblmax);
   save_literal (v, '9');
 
-  gen_compare (syidx, GREATER, (struct sym *) v);
+  gen_compare (syidx, RELATION_GT, (struct sym *) v);
   fprintf (o_src, "\tjz\t.L%ld\n", lbl5);
 }
 
@@ -4100,12 +4100,12 @@ gen_SearchAllLoopCheck (unsigned long lbl3, struct sym *syidx,
 //    if (itbl1 > in) { /* '2' = DESCENDING */
   if (it2->seq == '2')
     {
-      gen_compare (sy1, GREATER, syvar);
+      gen_compare (sy1, RELATION_GT, syvar);
       fprintf (o_src, "\tjnz\t.L%ld\n", l2);
     }
   else
     {
-      gen_compare (sy1, LESS, syvar);
+      gen_compare (sy1, RELATION_LT, syvar);
       fprintf (o_src, "\tjnz\t.L%ld\n", l2);
     }
   fprintf (o_src, "\t.align 16\n");
@@ -4150,13 +4150,13 @@ gen_SearchAllLoopCheck (unsigned long lbl3, struct sym *syidx,
   if (it2->seq == '2')
     {
 //       if (itbl1 > in) {
-      gen_compare (sy1, GREATER, syvar);
+      gen_compare (sy1, RELATION_GT, syvar);
       fprintf (o_src, "\tjnz\t.L%ld\n", l4);
     }
   else
     {
 //       if (itbl1 < in) {
-      gen_compare (sy1, LESS, syvar);
+      gen_compare (sy1, RELATION_LT, syvar);
       fprintf (o_src, "\tjnz\t.L%ld\n", l4);
     }
   fprintf (o_src, "\t.align 16\n");
@@ -5025,20 +5025,20 @@ gen_compare_exp (int value)
     case 0:
       fprintf (o_src, "\txor\t%%eax,%%eax\n\tinc\t%%eax\n");	/* false */
       break;
-    case 1:
+    case RELATION_EQ:
       fprintf (o_src, "\tand\t%%eax,%%eax\n");	/* equal */
       break;
-    case 2:
+    case RELATION_LT:
       fprintf (o_src, "\tinc\t%%eax\n");	/* less */
       break;
-    case 3:
+    case RELATION_LE:
       fprintf (o_src, "\tdec\t%%eax\n");	/* less or equal */
       gen_not ();
       break;
-    case 4:
+    case RELATION_GT:
       fprintf (o_src, "\tdec\t%%eax\n");	/* greater */
       break;
-    case 5:
+    case RELATION_GE:
       fprintf (o_src, "\tinc\t%%eax\n");	/* greater or equal */
       gen_not ();
       break;
@@ -5053,7 +5053,7 @@ gen_compare_exp (int value)
 }
 
 void
-gen_compare (struct sym *s1, int value, struct sym *s2)
+gen_compare (struct sym *s1, int op, struct sym *s2)
 {
   /* if any of sy1 or sy2 is an expression, we must 
      compare full expressions */
@@ -5061,12 +5061,12 @@ gen_compare (struct sym *s1, int value, struct sym *s2)
     {
       push_expr (s2);
       push_expr (s1);
-      gen_compare_exp (value);
+      gen_compare_exp (op);
     }
   else
     {
       asm_call_2 ("compare", s1, s2);
-      switch (value)
+      switch (op)
 	{
 	case 0:
 	  fprintf (o_src, "\txor\t%%eax,%%eax\n");	/* false */

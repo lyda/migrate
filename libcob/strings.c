@@ -195,7 +195,7 @@ cob_inspect_tallying (struct fld_desc *fvar, char *svar, ...)
     }
   tscnt = malloc (clen + 1);
   sprintf (tscnt, "%0*d", clen, cnt);
-  move_bytes (scnt, tscnt, clen);
+  memmove (scnt, tscnt, clen);
   free (tscnt);
   free (comparands);
   return 0;

@@ -39,10 +39,6 @@
 
 #define min(x,y) ((x)<(y) ? (x) : (y))
 
-#ifdef WANT_DYNAMIC_LIBS
-#include <dlfcn.h>
-#endif
-
 #define RTL_FILE_VERSION	3
 
 #define KEY_RETURN		10
@@ -71,8 +67,6 @@
 #define MAX_DECIMALS            18                          
 
 #define RLBUF_SIZE              8192
-
-#define move_bytes 		memmove
 
 #define ORG_INDEXED		1
 #define ORG_SEQUENTIAL 		2
@@ -133,15 +127,6 @@
 #define RTERR_INVALID_PIC       2
 #define RTERR_NO_MEM            3
 #define RTERR_DBG_TRACE		4
-
-/* CONDITIONAL */
-
-#define EQUAL   1
-#define LESS    2
-#define GREATER 4
-#define GEQ     5
-#define LEQ     3
-#define NEQ     6
 
 #pragma pack(1)
 struct fld_desc

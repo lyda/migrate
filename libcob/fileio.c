@@ -1783,7 +1783,7 @@ sort_release (struct file_desc *f, char *record, char *sd, ...)
     {
       fld = va_arg (args, char *);
       key_size = key_size + sd[i];
-      move_bytes (&fld_new, fld, sd[i]);
+      memmove (&fld_new, fld, sd[i]);
       if (sort_direction == 2)
 	{
 	  /* If the key is descending then for each character we
@@ -1797,7 +1797,7 @@ sort_release (struct file_desc *f, char *record, char *sd, ...)
 	      fld_new[counter] = 255 - fld_new[counter];
 	    }
 	}
-      move_bytes (&key1[key_ptr], fld_new, sd[i]);
+      memmove (&key1[key_ptr], fld_new, sd[i]);
       sort_direction = sd[i + 1];
       key_ptr += sd[i++];
     }
@@ -1828,7 +1828,7 @@ sort_return (struct file_desc *f, char *record)
     return 10;
   if (data.size < f->reclen)
     return 10;
-  move_bytes (record, data.data, f->reclen);
+  memmove (record, data.data, f->reclen);
   return 0;
 
 }
@@ -1952,7 +1952,7 @@ cob_sort_using (struct file_desc *f1, char *fname1, ...)
 	  while (sd[i++])
 	    {
 	      key_size = key_size + sd[i];
-	      move_bytes (&fld_new, fld[fcnt], sd[i]);
+	      memmove (&fld_new, fld[fcnt], sd[i]);
 	      if (sort_direction == 2)
 		{
 		  /* If the key is descending then for each 
@@ -1967,7 +1967,7 @@ cob_sort_using (struct file_desc *f1, char *fname1, ...)
 		      fld_new[counter] = 255 - fld_new[counter];
 		    }
 		}
-	      move_bytes (&key1[key_ptr], fld_new, sd[i]);
+	      memmove (&key1[key_ptr], fld_new, sd[i]);
 	      sort_direction = sd[i + 1];
 	      key_ptr += sd[i++];
 	      fcnt++;

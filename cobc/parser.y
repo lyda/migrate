@@ -135,10 +135,10 @@ static void check_decimal_point (struct lit *lit);
 %token <str>  IDSTRING
 %token <sval> SYMBOL,VARIABLE,VARCOND,SUBSCVAR
 %token <sval> LABELSTR,COMMAND_LINE,ENVIRONMENT_VARIABLE,PICTURE
-%token <ival> USAGENUM,CONDITIONAL
 %token <lval> NLITERAL,CLITERAL
 %token <ival> PORTNUM
 
+%token EQUAL,GREATER,LESS,TOK_GE,TOK_LE
 %token DATE,DAY,DAY_OF_WEEK,TIME,INKEY,READ,WRITE
 %token TO,FOR,IS,ARE,THRU,THAN,NO,CANCEL,ASCENDING,DESCENDING,ZEROS
 %token TOK_SOURCE_COMPUTER, TOK_OBJECT_COMPUTER,INPUT_OUTPUT
@@ -156,7 +156,7 @@ static void check_decimal_point (struct lit *lit);
 %token SAME,AREA,EXCEPTION
 %token FROM,UPDATE
 %token WORKING_STORAGE,LINKAGE,DECIMAL_POINT,COMMA
-%token FILEN,USAGE,BLANK,COMP1,COMP2
+%token FILEN,USAGE,BLANK
 %token SIGN,VALUE,MOVE,LABEL
 %token RECORD,OMITTED,STANDARD,RECORDS,BLOCK
 %token CONTAINS,CHARACTERS,COMPUTE,GO,STOP,RUN
@@ -181,7 +181,7 @@ static void check_decimal_point (struct lit *lit);
 %token HEADING,FOOTING,TOKLAST,DETAIL,SUM
 %token POSITION,FILE_ID,DEPENDING,TOK_TYPE,TOKSOURCE
 %token INITIATE,GENERATE,TERMINATE,TOK_NULL,ADDRESS,NOECHO,LPAR
-%token CORRESPONDING,TOKDUMMY,CONVERTING,OPTIONAL
+%token CORRESPONDING,CONVERTING,OPTIONAL
 %token IDENTIFICATION_TOK,ENVIRONMENT_TOK,DATA,PROCEDURE_TOK
 %token AUTHOR,DATE_WRITTEN,DATE_COMPILED,INSTALLATION,SECURITY
 %token COMMON,RETURN_TOK,END_RETURN,PREVIOUS,NEXT
@@ -189,7 +189,7 @@ static void check_decimal_point (struct lit *lit);
 %token PACKED_DECIMAL
 
 %type <str> idstring
-%type <ival> organization_options,access_options,open_mode
+%type <ival> organization_options,access_options,open_mode,equal_to
 %type <ival> integer,cond_op,conditional,before_after
 %type <ival> IF,ELSE,usage,write_options,opt_read_next
 %type <ival> using_options,procedure_using,sort_direction
@@ -1380,12 +1380,9 @@ close_file:
  */
 
 compute_statement:
-    COMPUTE var_list_name CONDITIONAL expr opt_on_size_error opt_end_compute
+    COMPUTE var_list_name '=' expr opt_on_size_error opt_end_compute
     {
-      if ($3 != EQUAL)
-	yyerror("= expected");
-      else
-	gen_compute($2, $4, $5);
+      gen_compute($2, $4, $5);
     }
   ;
 opt_end_compute:
@@ -2411,25 +2408,21 @@ search_all_when:
      }
     ;
 search_all_when_conditional:
-     variable opt_is CONDITIONAL opt_to variable 
-        {
-          if ($3 != EQUAL)
-             yyerror("Only = conditional allowed in search all statement");
-          if (curr_field == NULL)
-             curr_field = $1;
-          gen_compare($1,$3,$5);
-        }
-     | variable opt_is CONDITIONAL opt_to literal
-        {
-          if ($3 != EQUAL)
-             yyerror("Only = conditional allowed in search all statement");
-          if (curr_field == NULL)
-             curr_field = $1;
-          gen_compare($1,$3,(struct sym *)$5);
-        }
-    | search_all_when_conditional AND { $<dval>$=gen_andstart(); }
-      search_all_when_conditional  { gen_dstlabel($<dval>3); }
-    ;
+  variable opt_is equal_to variable 
+  {
+    if (curr_field == NULL)
+      curr_field = $1;
+    gen_compare($1,$3,$4);
+  }
+| variable opt_is equal_to literal
+  {
+    if (curr_field == NULL)
+      curr_field = $1;
+    gen_compare($1,$3,(struct sym *)$4);
+  }
+| search_all_when_conditional AND { $<dval>$=gen_andstart(); }
+  search_all_when_conditional  { gen_dstlabel($<dval>3); }
+;
 opt_end_search:
     /* nothing */
     | END_SEARCH
@@ -2938,17 +2931,6 @@ implied_op_condition:
 	  $$.oper = $<condval>-2.oper;
 	}
         ;
-sign_condition:
-    POSITIVE        { $$=GREATER; }
-    | NEGATIVE      { $$=LESS; }
-    | ZEROS       { $$=EQUAL; }
-    ;
-class_condition:
-    NUMERIC                     { $$=CLASS_NUMERIC; }
-    | ALPHABETIC             { $$=CLASS_ALPHABETIC; }
-    | ALPHABETIC_LOWER          { $$=CLASS_ALPHABETIC_LOWER; }
-    | ALPHABETIC_UPPER          { $$=CLASS_ALPHABETIC_UPPER; }
-    ;       
 extended_cond_op:
     IS ext_cond                 { $$ = $2; }
     | IS NOT ext_cond           { $$ = $3 ^ 7; }
@@ -2960,16 +2942,35 @@ extended_cond_op:
 ext_cond:
     conditional                 { $$ = $1; }
     | class_condition           { $$ = $1 | COND_UNARY | COND_CLASS; }
-    | sign_condition            { $$ = $1 | COND_UNARY; }
+    | sign_condition            { $$ = $1; }
     ;
 cond_op:
       conditional               { $$ = $1; }
     | NOT conditional           { $$ = $2 ^ 7; }
     | conditional OR conditional { $$ = $1 | $3; }
     ;
+equal_to:
+  EQUAL opt_to			{ $$ = 0x01; }
+| '=' opt_to			{ $$ = 0x01; }
+;
 conditional:
-    CONDITIONAL opt_than_to     { $$ = $1; }
-    ;
+  equal_to			{ $$ = $1; }
+| GREATER opt_than		{ $$ = RELATION_GT; }
+| LESS opt_than			{ $$ = RELATION_LT; }
+| TOK_GE			{ $$ = RELATION_GE; }
+| TOK_LE			{ $$ = RELATION_LE; }
+;
+class_condition:
+  NUMERIC			{ $$ = CLASS_NUMERIC; }
+| ALPHABETIC			{ $$ = CLASS_ALPHABETIC; }
+| ALPHABETIC_LOWER		{ $$ = CLASS_ALPHABETIC_LOWER; }
+| ALPHABETIC_UPPER		{ $$ = CLASS_ALPHABETIC_UPPER; }
+;
+sign_condition:
+  POSITIVE			{ $$ = RELATION_GT | COND_UNARY; }
+| NEGATIVE			{ $$ = RELATION_LT | COND_UNARY; }
+| ZEROS				{ $$ = RELATION_EQ | COND_UNARY; }
+;
 opt_sep: | ',' ;
 opt_eos: | '.' ;
 opt_not:
@@ -2978,11 +2979,7 @@ opt_not:
     ;
 opt_key: | KEY ;
 opt_advancing: | ADVANCING ;
-opt_than_to:
-    /* nothing */
-    | TO { }
-    | THAN { }
-    ;
+opt_than: | THAN ;
 opt_record: | RECORD ;
 opt_at: | AT ;
 opt_in: | IN ;

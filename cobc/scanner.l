@@ -114,13 +114,11 @@ X?[\'\"] {
     return '(';
 }
 
-"<"		{ yylval.ival = LESS;	return CONDITIONAL; }
-"<="		{ yylval.ival = LEQ;	return CONDITIONAL; }
-"<>"		{ yylval.ival = NEQ;	return CONDITIONAL; }
-"="		{ yylval.ival = EQUAL;	return CONDITIONAL; }
-">"		{ yylval.ival = GREATER;return CONDITIONAL; }
-">="		{ yylval.ival = GEQ;	return CONDITIONAL; }
-
+"<"		{ return LESS; }
+"<="		{ return TOK_LE; }
+"="		{ return '='; }
+">"		{ return GREATER; }
+">="		{ return TOK_GE; }
 "**"		{ return '^'; }
 .		{ return yytext[0]; }
 

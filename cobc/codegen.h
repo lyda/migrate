@@ -64,26 +64,23 @@
 #define SOBJ_BOOLEAN	0x50
 #define SOBJ_TYPE_MASK	0xf0
 
-/* standard field classes */
-#define CLASS_NUMERIC 0
-#define CLASS_ALPHABETIC 1
-#define CLASS_ALPHABETIC_LOWER 2
-#define CLASS_ALPHABETIC_UPPER 3
-
 /* extended condition flags */
-#define COND_UNARY 0x10
-#define COND_CLASS 0x20
+#define COND_UNARY	0x10
+#define COND_CLASS	0x20
 
-/* minor token numbers */
+/* standard field classes */
+#define CLASS_NUMERIC		0
+#define CLASS_ALPHABETIC	1
+#define CLASS_ALPHABETIC_LOWER	2
+#define CLASS_ALPHABETIC_UPPER	3
 
-/* CONDITIONAL */
+/* relation */
 
-#define EQUAL 	1
-#define LESS  	2
-#define GREATER	4
-#define GEQ 	5
-#define LEQ 	3
-#define NEQ 	6
+#define RELATION_EQ	0x01
+#define RELATION_LT	0x02
+#define RELATION_GT	0x04
+#define RELATION_LE	(RELATION_EQ | RELATION_LT)
+#define RELATION_GE	(RELATION_EQ | RELATION_GT)
 
 /* SPECIAL VARIABLES  */
 
