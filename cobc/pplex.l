@@ -365,7 +365,7 @@ ppinput_1 (char *buff, int size)
     case '*':
     case '/':
       /* remove comments */
-      memset (buff + 6, ' ', n - 1);
+      memset (buff + 6, ' ', n - 7);
       break;
     default:
       {
