@@ -218,18 +218,11 @@ install_label (char *name)
 struct lit *
 install_literal (const char *name)
 {
-  int val;
-  struct lit *al = malloc (sizeof (struct lit));
-  al->name = strdup (name);
-  al->type = 0;
-  al->all = 0;
-  al->litflag = 1;
-  al->nick = NULL;
-  al->len = strlen (name);
-  val = hash (al->name);
-  al->next = littab[val];
-  littab[val] = al;
-  return al;
+  struct lit *p = make_literal (strdup (name));
+  int val = hash (p->name);
+  p->next = littab[val];
+  littab[val] = p;
+  return p;
 }
 
 struct sym *
@@ -317,18 +310,15 @@ clear_offsets ()
 }
 
 static struct lit *
-save_special_literal (char val, char picc, char *nick)
+save_special_literal (char *val, char picc, char *nick)
 {
   struct lit *v;
   v = install_literal (nick);
   if (v->type)
     return NULL;		/* already saved */
-  v->decimals = 0;
   v->type = picc;
-  v->nick = (char *) malloc (2);
-  v->nick[0] = val;
-  v->nick[1] = 0;
-  v->all = 0;
+  v->nick = val;
+  v->all = 1;
   save_field_in_list ((struct sym *) v);
   v->location = literal_offset;
   v->sec_no = SEC_CONST;
@@ -343,16 +333,11 @@ define_special_fields ()
 {
   struct sym *sy, *tmp;
 
-  spe_lit_SP = save_special_literal (' ', 'X', "%SPACES%");
-  spe_lit_LV = save_special_literal ('\0', 'X', "%LOW-VALUES%");
-  spe_lit_HV = save_special_literal ('\xff', 'X', "%HIGH-VALUES%");
-  spe_lit_ZE = save_special_literal ('0', '9', "%ZEROS%");
-  spe_lit_QU = save_special_literal ('"', 'X', "%QUOTES%");
-  spe_lit_SP->all = 1;
-  spe_lit_LV->all = 1;
-  spe_lit_HV->all = 1;
-  spe_lit_ZE->all = 1;
-  spe_lit_QU->all = 1;
+  spe_lit_SP = save_special_literal (" ", 'X', "%SPACES%");
+  spe_lit_LV = save_special_literal ("\0", 'X', "%LOW-VALUES%");
+  spe_lit_HV = save_special_literal ("\xff", 'X', "%HIGH-VALUES%");
+  spe_lit_ZE = save_special_literal ("0", '9', "%ZEROS%");
+  spe_lit_QU = save_special_literal ("\"", 'X', "%QUOTES%");
 
   sy = install (SVAR_RCODE, SYTB_VAR, 0);
   sy->type = 'B';		/* assume numeric "usage is comp" item */
@@ -1587,7 +1572,6 @@ proc_trail (int using)
 	  /***** it is a literal *****/
 	  int len, tmplen;
 	  v = (struct lit *) list->var;
-	  //len = v->nick ? 1 : strlen(v->name);
 	  len = v->nick ? 1 : v->len;
 #ifdef COB_DEBUG
 	  fprintf (o_src,

@@ -9,6 +9,25 @@
 
 
 /*
+ * Literals
+ */
+
+struct lit *
+make_literal (char *name)
+{
+  struct lit *p = malloc (sizeof (struct lit));
+  p->litflag = 1;
+  p->name = name;
+  p->type = 0;
+  p->all = 0;
+  p->nick = NULL;
+  p->len = strlen (p->name);
+  p->next = NULL;
+  return p;
+}
+
+
+/*
  * Symbols
  */
 
@@ -16,6 +35,7 @@ struct sym *
 make_symbol (char *name)
 {
   struct sym *sy = malloc (sizeof (struct sym));
+  sy->litflag = 0;
   sy->name = name;
   sy->next = NULL;
   sy->times = 0;
@@ -28,7 +48,6 @@ make_symbol (char *name)
   sy->value = NULL;
   sy->sort_data = NULL;
   sy->linkage_flg = 0;
-  sy->litflag = 0;
   sy->scr = NULL;
   sy->clone = NULL;
   sy->parent = NULL;

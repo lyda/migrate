@@ -21,6 +21,8 @@ struct lit
 #define LITERAL(x)		((struct lit *) (x))
 #define LITERAL_P(x)		(LITERAL (x)->litflag == 1)
 
+extern struct lit *make_literal (char *name);
+
 
 /*
  * Symbols
