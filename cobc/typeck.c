@@ -476,7 +476,7 @@ move_error (cb_tree src, cb_tree dst, int value_flag, int flag, const char *msg)
   /* for VALUE clause */
   if (value_flag)
     {
-      if (cb_standard == CB_STANDARD_COBOL2002)
+      if (cb_spec->flag_value_error)
 	{
 	  cb_error_x (loc, msg);
 	  return -1;

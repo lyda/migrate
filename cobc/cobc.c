@@ -39,16 +39,88 @@
 #include "lib/getopt.h"
 
 
+/* specs */
+
+static struct cb_spec cb_spec_list[] = {
+  {
+    "gnu", "GNU COBOL",
+    CB_BINARY_REP_1_2_4_8,
+    0,
+    CB_OBSOLETE,		/* MEMORY SIZE clause */
+    CB_OBSOLETE,		/* MULTIPLE FILE TAPE clause */
+    CB_OBSOLETE,		/* LABEL RECORDS clause */
+    CB_OBSOLETE,		/* VALUE OF clause */
+    CB_OBSOLETE,		/* DATA RECORDS clause */
+    CB_OBSOLETE,		/* ALTER statement */
+    CB_OBSOLETE,		/* GO TO statement without procedure-name */
+    CB_OBSOLETE,		/* STOP literal statement */
+    CB_OBSOLETE,		/* AUTHER, DATA-WRITTEN, etc. */
+    CB_OK,			/* DEBUGGING MODE clause */
+    CB_OK,			/* PADDING CHARACTER clause */
+    CB_ARCHAIC,			/* NEXT SENTENCE statement */
+  },
+  {
+    "cobol85", "COBOL 85",
+    CB_BINARY_REP_1_2_4_8,
+    0,
+    CB_OBSOLETE,		/* MEMORY SIZE clause */
+    CB_OBSOLETE,		/* MULTIPLE FILE TAPE clause */
+    CB_OBSOLETE,		/* LABEL RECORDS clause */
+    CB_OBSOLETE,		/* VALUE OF clause */
+    CB_OBSOLETE,		/* DATA RECORDS clause */
+    CB_OBSOLETE,		/* ALTER statement */
+    CB_OBSOLETE,		/* GO TO statement without procedure-name */
+    CB_OBSOLETE,		/* STOP literal statement */
+    CB_OBSOLETE,		/* AUTHER, DATA-WRITTEN, etc. */
+    CB_OK,			/* DEBUGGING MODE clause */
+    CB_OK,			/* PADDING CHARACTER clause */
+    CB_ARCHAIC,			/* NEXT SENTENCE statement */
+  },
+  {
+    "cobol2002", "COBOL 2002",
+    CB_BINARY_REP_1_2_4_8,
+    1,
+    CB_UNCONFORMABLE,		/* MEMORY SIZE clause */
+    CB_UNCONFORMABLE,		/* MULTIPLE FILE TAPE clause */
+    CB_UNCONFORMABLE,		/* LABEL RECORDS clause */
+    CB_UNCONFORMABLE,		/* VALUE OF clause */
+    CB_UNCONFORMABLE,		/* DATA RECORDS clause */
+    CB_UNCONFORMABLE,		/* ALTER statement */
+    CB_UNCONFORMABLE,		/* GO TO statement without procedure-name */
+    CB_UNCONFORMABLE,		/* STOP literal statement */
+    CB_UNCONFORMABLE,		/* AUTHER, DATA-WRITTEN, etc. */
+    CB_OBSOLETE,		/* DEBUGGING MODE clause */
+    CB_OBSOLETE,		/* PADDING CHARACTER clause */
+    CB_ARCHAIC,			/* NEXT SENTENCE statement */
+  },
+  {
+    "mvs", "IBM COBOL for MVS & VM",
+    CB_BINARY_REP_2_4_8,
+    0,
+    CB_OBSOLETE,		/* MEMORY SIZE clause */
+    CB_OBSOLETE,		/* MULTIPLE FILE TAPE clause */
+    CB_OBSOLETE,		/* LABEL RECORDS clause */
+    CB_OBSOLETE,		/* VALUE OF clause */
+    CB_OBSOLETE,		/* DATA RECORDS clause */
+    CB_OBSOLETE,		/* ALTER statement */
+    CB_OBSOLETE,		/* GO TO statement without procedure-name */
+    CB_OBSOLETE,		/* STOP literal statement */
+    CB_OBSOLETE,		/* AUTHER, DATA-WRITTEN, etc. */
+    CB_OK,			/* DEBUGGING MODE clause */
+    CB_OK,			/* PADDING CHARACTER clause */
+    CB_ARCHAIC,			/* NEXT SENTENCE statement */
+  },
+  {0}
+};
+
+
 /*
  * Global variables
  */
 
-enum cb_standard cb_standard = CB_STANDARD_GNU;
-const char *cb_standard_name = "GNU COBOL";
-
 enum cb_compile_level cb_compile_level = CB_LEVEL_EXECUTABLE;
 enum cb_compile_target cb_compile_target = CB_TARGET_NATIVE;
-enum cb_binary_rep cb_binary_rep = CB_BINARY_REP_1_2_4_8;
+struct cb_spec *cb_spec = &cb_spec_list[0];
 
 struct cb_exception cb_exception_table[] = {
   {0, 0, 0},		/* CB_EC_ZERO */
@@ -283,33 +355,21 @@ process_command_line (int argc, char *argv[])
 	  break;
 
 	case '$': /* -std */
-	  if (strcmp (optarg, "gnu") == 0)
-	    {
-	      cb_standard = CB_STANDARD_GNU;
-	      cb_standard_name = "GNU COBOL";
-	    }
-	  else if (strcmp (optarg, "cobol85") == 0)
-	    {
-	      cb_standard = CB_STANDARD_COBOL85;
-	      cb_standard_name = "COBOL 85";
-	    }
-	  else if (strcmp (optarg, "cobol2002") == 0)
-	    {
-	      cb_standard = CB_STANDARD_COBOL2002;
-	      cb_standard_name = "COBOL 2002";
-	    }
-	  else if (strcmp (optarg, "mvs") == 0)
-	    {
-	      cb_standard = CB_STANDARD_MVS;
-	      cb_standard_name = "IBM COBOL for MVS & VM";
-	      cb_binary_rep = CB_BINARY_REP_2_4_8;
-	    }
-	  else
-	    {
-	      fprintf (stderr, _("Invalid option -std=%s\n"), optarg);
-	      exit (1);
-	    }
-	  break;
+	  {
+	    int i;
+	    for (i = 0; cb_spec_list[i].name; i++)
+	      if (strcmp (optarg, cb_spec_list[i].name) == 0)
+		{
+		  cb_spec = &cb_spec_list[i];
+		  break;
+		}
+	    if (!cb_spec_list[i].name)
+	      {
+		fprintf (stderr, _("Invalid option -std=%s\n"), optarg);
+		exit (1);
+	      }
+	    break;
+	  }
 
 	case 't': /* -target */
 	  if (strcmp (optarg, "native") == 0)

@@ -36,16 +36,6 @@
 #define CB_MAX_CNAME		8096
 
 
-/* COBOL standard */
-extern enum cb_standard {
-  CB_STANDARD_GNU,
-  CB_STANDARD_COBOL85,
-  CB_STANDARD_COBOL2002,
-  CB_STANDARD_MVS,
-} cb_standard;
-
-extern const char *cb_standard_name;
-
 /* Compile level */
 extern enum cb_compile_level {
   CB_LEVEL_PREPROCESS,
@@ -62,12 +52,6 @@ extern enum cb_compile_target {
   CB_TARGET_NATIVE,
   CB_TARGET_CLASS,
 } cb_compile_target;
-
-/* Binary representation */
-extern enum cb_binary_rep {
-  CB_BINARY_REP_1_2_4_8,	/* 1,2,4,8 bytes */
-  CB_BINARY_REP_2_4_8,		/* 2,4,8 bytes */
-} cb_binary_rep;
 
 extern struct cb_exception {
   int code;			/* exception code */
@@ -86,6 +70,38 @@ extern struct cb_exception {
 #undef CB_WARNING
 #define CB_WARNING(sig,var,name,doc) extern int var;
 #include "warning.def"
+
+
+/* spec */
+
+enum cb_support {
+  CB_OK,
+  CB_ARCHAIC,
+  CB_OBSOLETE,
+  CB_UNCONFORMABLE,
+};
+
+extern struct cb_spec {
+  const char *name;
+  const char *fullname;
+  enum {
+    CB_BINARY_REP_1_2_4_8,	/* 1,2,4,8 bytes */
+    CB_BINARY_REP_2_4_8,	/* 2,4,8 bytes */
+  } binary_rep;
+  int flag_value_error;
+  enum cb_support memory_size;
+  enum cb_support multiple_file_tape;
+  enum cb_support label_records;
+  enum cb_support value_of;
+  enum cb_support data_records;
+  enum cb_support alter;
+  enum cb_support goto_without_name;
+  enum cb_support stop_literal;
+  enum cb_support comment_id;
+  enum cb_support debugging_mode;
+  enum cb_support padding_character;
+  enum cb_support next_sentence;
+} *cb_spec;
 
 
 struct cb_name_list {
@@ -137,8 +153,6 @@ extern int yyparse (void);
 /* error.c */
 extern void cb_warning (const char *fmt, ...);
 extern void cb_error (const char *fmt, ...);
-extern void cb_archaic (const char *feature);
-extern void cb_obsolete_85 (const char *feature);
-extern void cb_obsolete_2002 (const char *feature);
+extern int cb_verify (enum cb_support tag, const char *feature);
 
 #endif /* CB_COBC_H */

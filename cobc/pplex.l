@@ -79,7 +79,7 @@ static void switch_to_buffer (int lineno, char *filename, struct cb_replacement 
       int c;
 
       /* These words are obsolete in COBOL 85 */
-      cb_obsolete_85 (yytext);
+      cb_verify (cb_spec->comment_id, yytext);
 
       /* skip comments until the end of line */
       while ((c = input ()) != EOF)

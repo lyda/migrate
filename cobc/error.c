@@ -100,40 +100,27 @@ cb_error_x (cb_tree x, const char *fmt, ...)
   errorcount++;
 }
 
-void
-cb_archaic (const char *feature)
+int
+cb_verify (enum cb_support tag, const char *feature)
 {
-  if (cb_warn_archaic)
-    cb_warning (_("%s is archaic in %s"), feature, cb_standard_name);
-}
-
-static void
-cb_obsolete (const char *feature)
-{
-  if (cb_warn_obsolete)
-    cb_warning (_("%s is obsolete in %s"), feature, cb_standard_name);
-}
-
-static void
-cb_unconformable (const char *feature)
-{
-  cb_error (_("%s not conform to %s"), feature, cb_standard_name);
-}
-
-void
-cb_obsolete_85 (const char *feature)
-{
-  if (cb_standard == CB_STANDARD_COBOL2002)
-    cb_unconformable (feature);
-  else if (cb_standard == CB_STANDARD_COBOL85)
-    cb_obsolete (feature);
-}
-
-void
-cb_obsolete_2002 (const char *feature)
-{
-  if (cb_standard == CB_STANDARD_COBOL2002)
-    cb_obsolete (feature);
+  switch (tag)
+    {
+    case CB_OK:
+      return 1;
+    case CB_ARCHAIC:
+      if (cb_warn_archaic)
+	cb_warning (_("%s is archaic in %s"), feature, cb_spec->fullname);
+      return 1;
+    case CB_OBSOLETE:
+      if (cb_warn_obsolete)
+	cb_warning (_("%s is obsolete in %s"), feature, cb_spec->fullname);
+      return 1;
+    case CB_UNCONFORMABLE:
+      cb_error (_("%s not conform to %s"), feature, cb_spec->fullname);
+      return 0;
+    default:
+      abort ();
+    }
 }
 
 
