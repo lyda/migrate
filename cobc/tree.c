@@ -291,6 +291,8 @@ cb_tree_type (cb_tree x)
 	case CB_USAGE_DISPLAY:
 	  return COB_TYPE_NUMERIC_DISPLAY;
 	case CB_USAGE_BINARY:
+	case CB_USAGE_COMP_5:
+	case CB_USAGE_COMP_X:
 	case CB_USAGE_INDEX:
 	  return COB_TYPE_NUMERIC_BINARY;
 	case CB_USAGE_PACKED:
@@ -329,6 +331,8 @@ cb_fits_int (cb_tree x)
 	  case CB_USAGE_INDEX:
 	    return 1;
 	  case CB_USAGE_BINARY:
+	  case CB_USAGE_COMP_5:
+	  case CB_USAGE_COMP_X:
 	    if (f->pic->scale <= 0 && f->size <= sizeof (int))
 	      return 1;
 	    return 0;

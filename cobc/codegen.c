@@ -614,6 +614,8 @@ output_integer (cb_tree x)
 	    break;
 
 	  case CB_USAGE_BINARY:
+	  case CB_USAGE_COMP_5:
+	  case CB_USAGE_COMP_X:
 	    if (cb_flag_runtime_inlining
 		&& !f->flag_binary_swap
 		&& (f->size == 1 || f->size == 2
@@ -1434,6 +1436,8 @@ output_call (struct cb_call *p)
 	      switch (cb_field (x)->usage)
 		{
 		case CB_USAGE_BINARY:
+		case CB_USAGE_COMP_5:
+		case CB_USAGE_COMP_X:
 		case CB_USAGE_INDEX:
 		  output_integer (x);
 		  break;

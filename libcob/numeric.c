@@ -276,23 +276,35 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, int opt)
 	  long val;
 	  if (!mpz_fits_sint_p (d->value))
 	    {
-	      /* overflow */
-	      overflow = 1;
-	      if (opt & COB_STORE_KEEP_ON_OVERFLOW)
-		goto overflow;
-	      if (opt & COB_STORE_TRUNC_ON_OVERFLOW)
-		mpz_tdiv_r_ui (d->value, d->value, cob_exp10[digits]);
+	      if ( cob_current_module->flag_binary_truncate ) {
+		      /* overflow */
+		      overflow = 1;
+		      if (opt & COB_STORE_KEEP_ON_OVERFLOW)
+			goto overflow;
+		      if (opt & COB_STORE_TRUNC_ON_OVERFLOW)
+			mpz_tdiv_r_ui (d->value, d->value, cob_exp10[digits]);
+		        val = mpz_get_si (d->value);
+	      } else {
+		overflow = 1;
+		if (opt & COB_STORE_KEEP_ON_OVERFLOW)
+			goto overflow;
+		val = mpz_get_ui (d->value);
+	      }
+	    } else {
+		val = mpz_get_si (d->value);
 	    }
-	  val = mpz_get_si (d->value);
-	  if (val <= -cob_exp10[digits] || val >= cob_exp10[digits])
-	    {
-	      /* overflow */
-	      overflow = 1;
-	      if (opt & COB_STORE_KEEP_ON_OVERFLOW)
-		goto overflow;
-	      if (opt & COB_STORE_TRUNC_ON_OVERFLOW)
-		val %= cob_exp10[digits];
-	    }
+	    
+	  if ( cob_current_module->flag_binary_truncate ) {
+		  if (val <= -cob_exp10[digits] || val >= cob_exp10[digits])
+		    {
+		      /* overflow */
+		      overflow = 1;
+		      if (opt & COB_STORE_KEEP_ON_OVERFLOW)
+			goto overflow;
+		      if (opt & COB_STORE_TRUNC_ON_OVERFLOW)
+			val %= cob_exp10[digits];
+		    }
+	  }
 	  cob_binary_set_int (f, val);
 	}
       else
@@ -302,23 +314,31 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, int opt)
 	    mpz_abs (d->value, d->value);
 	  if (!mpz_fits_uint_p (d->value))
 	    {
-	      /* overflow */
-	      overflow = 1;
-	      if (opt & COB_STORE_KEEP_ON_OVERFLOW)
-		goto overflow;
-	      if (opt & COB_STORE_TRUNC_ON_OVERFLOW)
-		mpz_tdiv_r_ui (d->value, d->value, cob_exp10[digits]);
+	      if ( cob_current_module->flag_binary_truncate ) {
+		      /* overflow */
+		      overflow = 1;
+		      if (opt & COB_STORE_KEEP_ON_OVERFLOW)
+			goto overflow;
+		      if (opt & COB_STORE_TRUNC_ON_OVERFLOW)
+			mpz_tdiv_r_ui (d->value, d->value, cob_exp10[digits]);
+	      } else {
+		      overflow = 1;
+		      if (opt & COB_STORE_KEEP_ON_OVERFLOW)
+			goto overflow;
+	      }
 	    }
 	  val = mpz_get_ui (d->value);
-	  if (val >= cob_exp10[digits])
-	    {
-	      /* overflow */
-	      overflow = 1;
-	      if (opt & COB_STORE_KEEP_ON_OVERFLOW)
-		goto overflow;
-	      if (opt & COB_STORE_TRUNC_ON_OVERFLOW)
-		val %= cob_exp10[digits];
-	    }
+	  if ( cob_current_module->flag_binary_truncate ) {
+		  if (val >= cob_exp10[digits])
+		    {
+		      /* overflow */
+		      overflow = 1;
+		      if (opt & COB_STORE_KEEP_ON_OVERFLOW)
+			goto overflow;
+		      if (opt & COB_STORE_TRUNC_ON_OVERFLOW)
+			val %= cob_exp10[digits];
+		    }
+	  }
 	  cob_binary_set_int (f, val);
 	}
     }
@@ -343,15 +363,17 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, int opt)
 	    }
 	  val = mpz_get_si (d->value);
 	  val = (val << 32) | lo;
-	  if (val <= -cob_exp10LL[digits] || val >= cob_exp10LL[digits])
-	    {
-	      /* overflow */
-	      overflow = 1;
-	      if (opt & COB_STORE_KEEP_ON_OVERFLOW)
-		goto overflow;
-	      if (opt & COB_STORE_TRUNC_ON_OVERFLOW)
-		val %= cob_exp10LL[digits];
-	    }
+	  if ( cob_current_module->flag_binary_truncate ) {
+		  if (val <= -cob_exp10LL[digits] || val >= cob_exp10LL[digits])
+		    {
+		      /* overflow */
+		      overflow = 1;
+		      if (opt & COB_STORE_KEEP_ON_OVERFLOW)
+			goto overflow;
+		      if (opt & COB_STORE_TRUNC_ON_OVERFLOW)
+			val %= cob_exp10LL[digits];
+		    }
+	  }
 	  cob_binary_set_int64 (f, val);
 	}
       else
@@ -370,15 +392,17 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, int opt)
 	    }
 	  val = mpz_get_ui (d->value);
 	  val = (val << 32) | lo;
-	  if (val >= cob_exp10LL[digits])
-	    {
-	      /* overflow */
-	      overflow = 1;
-	      if (opt & COB_STORE_KEEP_ON_OVERFLOW)
-		goto overflow;
-	      if (opt & COB_STORE_TRUNC_ON_OVERFLOW)
-		val %= cob_exp10LL[digits];
-	    }
+	  if ( cob_current_module->flag_binary_truncate ) {
+		  if (val >= cob_exp10LL[digits])
+		    {
+		      /* overflow */
+		      overflow = 1;
+		      if (opt & COB_STORE_KEEP_ON_OVERFLOW)
+			goto overflow;
+		      if (opt & COB_STORE_TRUNC_ON_OVERFLOW)
+			val %= cob_exp10LL[digits];
+		    }
+	  }
 	  cob_binary_set_int64 (f, val);
 	}
     }
@@ -615,6 +639,8 @@ display_add_int (unsigned char *data, size_t size, unsigned int n)
 	  /* check for overflow */
 	  if (--sp < data)
 	    {
+		if ( ! cob_current_module->flag_binary_truncate )
+			return 0;
 	      for (; i >= 0; i--)
 		carry += dp[i];
 	      return carry;
@@ -637,6 +663,8 @@ display_add_int (unsigned char *data, size_t size, unsigned int n)
 	return 0;
       *sp = '0';
     }
+  if ( ! cob_current_module->flag_binary_truncate )
+	return 0;
   return 1;
 }
 
@@ -660,6 +688,8 @@ display_sub_int (unsigned char *data, size_t size, unsigned int n)
 	  /* check for overflow */
 	  if (--sp < data)
 	    {
+		if ( ! cob_current_module->flag_binary_truncate )
+			return 0;
 	      for (; i >= 0; i--)
 		carry += dp[i];
 	      return carry;
@@ -682,6 +712,8 @@ display_sub_int (unsigned char *data, size_t size, unsigned int n)
 	return 0;
       *sp = '9';
     }
+  if ( ! cob_current_module->flag_binary_truncate )
+	return 0;
   return 1;
 }
 

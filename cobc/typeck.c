@@ -1001,10 +1001,17 @@ build_store_option (cb_tree x, cb_tree round)
     {
     case CB_USAGE_COMP_5:
     case CB_USAGE_COMP_X:
-      if (current_statement->handler_id)
-	opt |= COB_STORE_TRUNC_ON_OVERFLOW;
+      if (current_statement->handler1)
+	opt |= COB_STORE_KEEP_ON_OVERFLOW;
       break;
     default:
+      if ( !cb_binary_truncate ) {
+		if ( current_statement->handler1 ) {
+			opt |= COB_STORE_KEEP_ON_OVERFLOW;
+		}
+		break;
+      }
+		
       if (current_statement->handler_id)
 	opt |= COB_STORE_KEEP_ON_OVERFLOW;
       else if (cb_binary_truncate)
@@ -2263,6 +2270,8 @@ cb_build_move_num (cb_tree x, int high)
   switch (cb_field (x)->usage)
     {
     case CB_USAGE_BINARY:
+    case CB_USAGE_COMP_5:
+    case CB_USAGE_COMP_X:
       return cb_build_assign (x, cb_int (high ? -1 : 0));
     case CB_USAGE_DISPLAY:
       return cb_build_memset (x, high ? '9' : '0');
@@ -2431,7 +2440,9 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 				 cb_build_string (buff, f->size),
 				 cb_build_cast_length (dst));
     }
-  else if (cb_fits_int (src) && f->usage == CB_USAGE_BINARY)
+  else if (cb_fits_int (src) && 
+	( f->usage == CB_USAGE_BINARY || f->usage == CB_USAGE_COMP_5 ||
+	  f->usage == CB_USAGE_COMP_X ) )
     {
       int val = cb_get_int (src);
       int n = f->pic->scale - l->scale;
@@ -2520,7 +2531,9 @@ cb_build_move (cb_tree src, cb_tree dst)
       /* no optimization for binary swap and packed decimal for now */
       if (f->flag_binary_swap
 	  || f->usage == CB_USAGE_PACKED
-	  || (f->usage == CB_USAGE_BINARY
+	  || ( (f->usage == CB_USAGE_BINARY ||
+		f->usage == CB_USAGE_COMP_5 ||
+		f->usage == CB_USAGE_COMP_X)
 	      && (f->size == 3 || f->size == 5
 		  || f->size == 6 || f->size == 7)))
 	return cb_build_move_call (src, dst);

@@ -475,7 +475,6 @@ setup_parameters (struct cb_field *f)
 	      sprintf (pic, "9(%d)", digits[f->pic->size - 1]);
 	      f->pic = CB_PICTURE (cb_build_picture (pic));
 	    }
-	  f->usage = CB_USAGE_BINARY;
 	  
 #ifndef WORDS_BIGENDIAN
 	  if (f->usage == CB_USAGE_COMP_X)
@@ -562,6 +561,8 @@ compute_size (struct cb_field *f)
       switch (f->usage)
 	{
 	case CB_USAGE_BINARY:
+	case CB_USAGE_COMP_5:
+	case CB_USAGE_COMP_X:
 	  {
 	    int size = f->pic->size;
 	    switch (cb_binary_size)
