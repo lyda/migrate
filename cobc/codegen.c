@@ -3405,12 +3405,10 @@ define_field (int level, cob_tree sy)
   sy->flags.leading_sign = 0;
   sy->son = sy->brother = NULL;
   tmp = curr_field;
-  if (tmp && ((level == 1) || (level == 77)))
+  if (tmp && (level == 1 || level > 50))
     close_fields ();
-  if (!tmp && (level > 1) && (level < 49))
-    {
-      yyerror ("data field hierarchy broken");
-    }
+  else if (!tmp && (level > 1) && (level < 49))
+    yyerror ("data field hierarchy broken");
   if (level < 50)
     {
       while (tmp != NULL && tmp->level > level)
@@ -3726,7 +3724,7 @@ close_fields (void)
 
   /********** locate level 01 field   **************/
   for (sy = curr_field; sy->parent != NULL; sy = sy->parent);
-  if (sy->level != 1 && sy->level != 77)
+  if (sy->level != 1 && sy->level < 50)
     yyerror ("field not subordinate to any other: %s", COB_FIELD_NAME (sy));
 
   /********** propagate value flags  *************/
