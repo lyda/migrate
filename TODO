@@ -98,6 +98,8 @@ for thier database.
  - Any alternative to BerkeleyDB?
  - Use DB (PostgreSQM, MySQL, etc.) as backends
 
+** Floating points (USAGE COMP-1, COMP-2, FLOAT-SHORT, etc.)
+
 * Improvement of compiler internals
 
 ** Error checking
