@@ -900,8 +900,10 @@ extern void cb_init_reserved (void);
 extern void cb_list_map (cb_tree (*func) (cb_tree x), cb_tree l);
 
 /* error.c */
-extern void cb_warning_x (cb_tree x, const char *fmt, ...);
-extern void cb_error_x (cb_tree x, const char *fmt, ...);
+extern void cb_warning_x (cb_tree x, const char *fmt, ...)
+     __attribute__ ((format (printf, 2, 3)));
+extern void cb_error_x (cb_tree x, const char *fmt, ...)
+     __attribute__ ((format (printf, 2, 3)));
 
 extern void redefinition_error (cb_tree x);
 extern void redefinition_warning (cb_tree x);

@@ -31,6 +31,13 @@
 
 static int param_id = 0;
 
+static void output (const char *fmt, ...)
+     __attribute__ ((format (printf, 1, 2)));
+static void output_line (const char *fmt, ...)
+     __attribute__ ((format (printf, 1, 2)));
+static void output_storage (const char *fmt, ...)
+     __attribute__ ((format (printf, 1, 2)));
+
 static void output_stmt (cb_tree x);
 static void output_integer (cb_tree x);
 static void output_index (cb_tree x);
@@ -502,7 +509,7 @@ output_integer (cb_tree x)
 	  {
 	    output ("(int) pow (");
 	    output_integer (p->x);
-	    output (", ", p->op);
+	    output (", ");
 	    output_integer (p->y);
 	    output (")");
 	  }
@@ -1850,7 +1857,7 @@ output_screen_definition (struct cb_field *p)
   output_integer (p->screen_line);
   output (", ");
   output_integer (p->screen_column);
-  output (", %d};\n", p->screen_flag);
+  output (", %ld};\n", p->screen_flag);
 }
 
 
