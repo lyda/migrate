@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 126
+%expect 127
 
 %{
 #include "config.h"
@@ -133,20 +133,12 @@ static void ambiguous_error (struct cobc_word *w);
 
 %union {
   int inum;
-  char *str;
   cobc_tree tree;
   struct cobc_word *word;
   struct cobc_list *list;
   struct cobc_picture *pict;
   struct cobc_generic *gene;
 }
-
-%left  '+', '-'
-%left  '*', '/'
-%left  '^'
-%left  OR
-%left  AND
-%right NOT
 
 %token <pict> PICTURE_TOK
 %token <tree> INTEGER_LITERAL,NUMERIC_LITERAL,NONNUMERIC_LITERAL
@@ -156,7 +148,7 @@ static void ambiguous_error (struct cobc_word *w);
 %token EQUAL,GREATER,LESS,GE,LE,COMMAND_LINE,ENVIRONMENT_VARIABLE,ALPHABET
 %token DATE,DAY,DAY_OF_WEEK,TIME,READ,WRITE,OBJECT_COMPUTER,INPUT_OUTPUT
 %token TO,FOR,IS,ARE,THRU,THAN,NO,CANCEL,ASCENDING,DESCENDING,ZERO
-%token SOURCE_COMPUTER,BEFORE,AFTER,RESERVE,DECLARATIVES,USE
+%token SOURCE_COMPUTER,BEFORE,AFTER,RESERVE,DECLARATIVES,USE,AND,OR,NOT
 %token RIGHT,JUSTIFIED,SYNCHRONIZED,SEPARATE,BLOCK,CODE_SET
 %token TOK_INITIAL,FIRST,ALL,LEADING,OF,IN,BY,STRING,UNSTRING,DEBUGGING
 %token START,DELETE,PROGRAM,GLOBAL,EXTERNAL,SIZE,DELIMITED,COLLATING,SEQUENCE
@@ -187,15 +179,14 @@ static void ambiguous_error (struct cobc_word *w);
 %token COMMON,NEXT,PACKED_DECIMAL,INPUT,I_O,OUTPUT,EXTEND,BINARY,BIGENDIAN
 %token ALPHANUMERIC,ALPHANUMERIC_EDITED,NUMERIC_EDITED,NATIONAL,NATIONAL_EDITED
 
-%type <str> class
 %type <gene> tallying_item,replacing_item,inspect_before_after
 %type <gene> call_item,write_option
 %type <inum> flag_all,flag_duplicates,flag_optional,flag_global
 %type <inum> flag_not,flag_next,flag_rounded,flag_separate
-%type <inum> sign,integer,level_number,operator,display_upon,usage
+%type <inum> integer,level_number,start_operator,display_upon
 %type <inum> before_or_after,perform_test,replacing_option,close_option
 %type <inum> select_organization,select_access_mode,open_mode,same_option
-%type <inum> ascending_or_descending,opt_from_integer,opt_to_integer
+%type <inum> ascending_or_descending,opt_from_integer,opt_to_integer,usage
 %type <list> occurs_key_list,occurs_index_list,value_item_list
 %type <list> data_name_list,condition_name_list,opt_value_list
 %type <list> evaluate_subject_list,evaluate_case,evaluate_case_list
@@ -208,17 +199,15 @@ static void ambiguous_error (struct cobc_word *w);
 %type <list> unstring_delimited_item,unstring_into_item
 %type <list> predefined_name_list,mnemonic_name_list
 %type <list> file_name_list,math_name_list,math_edited_name_list
-%type <list> call_item_list,call_using
+%type <list> call_item_list,call_using,expr_item_list
 %type <list> initialize_replacing,initialize_replacing_list
 %type <list> special_name_class_item_list
 %type <tree> special_name_class_item,special_name_class_literal
 %type <tree> on_or_off,select_file_name,record_depending
 %type <tree> call_returning,add_to,field_description_list,value_item
 %type <tree> field_description_list_1,field_description_list_2
-%type <tree> condition,condition_2,comparative_condition,class_condition
-%type <tree> sign_condition
-%type <tree> imperative_statement,field_description
-%type <tree> evaluate_object,evaluate_object_1
+%type <tree> condition,imperative_statement,field_description
+%type <tree> evaluate_object,evaluate_object_1,expr_item
 %type <tree> function,subscript,subref,refmod
 %type <tree> search_varying,search_at_end,search_whens,search_when
 %type <tree> perform_procedure,perform_sentence,perform_option
@@ -1716,8 +1705,7 @@ evaluate_subject_list:
   evaluate_subject		{ $$ = list_add ($1, $3); }
 ;
 evaluate_subject:
-  expr _is			{ $$ = $1; }
-| condition			{ $$ = $1; }
+  condition			{ $$ = $1; }
 | TRUE				{ $$ = cobc_true; }
 | FALSE				{ $$ = cobc_false; }
 ;
@@ -1758,7 +1746,7 @@ evaluate_object:
 	    /* NOTE: $2 is not necessarily a condition, but
 	     * we use COBC_COND_NOT here to store it, which
 	     * is later expanded in output_evaluate_test. */
-	    $$ = make_unary_cond ($2, COBC_COND_NOT);
+	    $$ = make_negate_cond ($2);
 	  }
       }
     else
@@ -1773,7 +1761,6 @@ evaluate_object_1:
 | TRUE				{ $$ = cobc_true; }
 | FALSE				{ $$ = cobc_false; }
 | condition			{ $$ = $1; }
-| expr				{ $$ = $1; }
 | expr THRU expr		{ $$ = make_pair ($1, $3); }
 ;
 _end_evaluate: | END_EVALUATE ;
@@ -2268,7 +2255,7 @@ start_body:
     current_file_name = COBC_FILE_NAME ($1);
     push_call_3 (COBC_START, $1, make_integer (COB_EQ), current_file_name->key);
   }
-| file_name KEY _is operator data_name
+| file_name KEY _is start_operator data_name
   {
     int cond = 0;
     current_file_name = COBC_FILE_NAME ($1);
@@ -2283,6 +2270,13 @@ start_body:
       }
     push_call_3 (COBC_START, $1, make_integer (cond), $5);
   }
+;
+start_operator:
+  flag_not equal		{ $$ = $1 ? COBC_COND_NE : COBC_COND_EQ; }
+| flag_not greater		{ $$ = $1 ? COBC_COND_LE : COBC_COND_GT; }
+| flag_not less			{ $$ = $1 ? COBC_COND_GE : COBC_COND_LT; }
+| flag_not greater_or_equal	{ $$ = $1 ? COBC_COND_LT : COBC_COND_GE; }
+| flag_not less_or_equal	{ $$ = $1 ? COBC_COND_GT : COBC_COND_LE; }
 ;
 _end_start: | END_START ;
 
@@ -2642,108 +2636,346 @@ not_invalid_key_sentence:
 
 
 /*******************
- * Condition
+ * Expressions
  *******************/
 
-condition:
-  condition_name		{ $$ = make_cond_name ($1); }
-| comparative_condition		{ $$ = $1; }
-| class_condition		{ $$ = $1; }
-| sign_condition		{ $$ = $1; }
-| '(' condition ')'		{ $$ = $2; }
-| NOT condition			{ $$ = make_unary_cond ($2, COBC_COND_NOT); }
-| condition AND condition_2	{ $$ = make_cond ($1, COBC_COND_AND, $3); }
-| condition OR condition_2	{ $$ = make_cond ($1, COBC_COND_OR, $3); }
-;
-condition_2:
-  condition			{ $$ = $1; }
-| expr _is			{ $$ = make_opt_cond ($<tree>-1, -1, $1); }
-| NOT expr _is			{ $$ = make_opt_cond ($<tree>-1, -1, $2); }
-| operator expr			{ $$ = make_opt_cond ($<tree>-1, $1, $2); }
-;
-
-
-/*
- * Comparative condition
+/* We parse arithmetic/conditional expressions with our own parser
+ * because COBOL's expression is not LALR(1).
  */
 
-comparative_condition:
-  expr _is operator expr
+condition:
+  expr
+;
+
+expr:
+  expr_item_list
   {
-    if (COBC_EXPR_P ($1) || COBC_EXPR_P ($4))
-      if (COBC_TREE_CLASS ($1) != COBC_TREE_CLASS ($4))
-	yyerror ("expression can only be compared with numeric value");
-    $$ = make_cond ($1, $3, $4);
+    int i, token;
+    int last_operator = 0;
+    cobc_tree last_lefthand = NULL;
+    char *class_func = NULL;
+    struct cobc_list *l;
+    struct stack_item {
+      int prio;
+      int token;
+      cobc_tree value;
+    } stack[list_length ($1)];
+
+    int reduce (int prio)
+      {
+	while (i >= 2 && stack[i-2].token != VALUE && stack[i-2].prio <= prio)
+	  {
+	    int token = stack[i-2].token;
+	    if (stack[i-1].token != VALUE
+		&& stack[i-1].token != COBC_COND_AND
+		&& stack[i-1].token != COBC_COND_OR)
+	      {
+		yyerror ("error 1");
+		return -1;
+	      }
+	    switch (token)
+	      {
+	      case '+': case '-': case '*': case '/': case '^':
+		if (i < 3 || stack[i-3].token != VALUE)
+		  {
+		    yyerror ("error 2");
+		    return -1;
+		  }
+		stack[i-3].token = VALUE;
+		stack[i-3].value =
+		  make_expr (stack[i-3].value, token, stack[i-1].value);
+		i -= 2;
+		break;
+	      case COBC_COND_NOT:
+		if (!COBC_COND_P (stack[i-1].value))
+		  stack[i-1].value =
+		    make_cond (last_lefthand, last_operator, stack[i-1].value);
+		stack[i-2].token = VALUE;
+		stack[i-2].value =
+		  make_negate_cond (stack[i-1].value);
+		i -= 1;
+		break;
+	      case COBC_COND_AND:
+	      case COBC_COND_OR:
+		if (i < 3 || stack[i-3].token != VALUE)
+		  {
+		    yyerror ("error 3");
+		    return -1;
+		  }
+		if (!COBC_COND_P (stack[i-1].value))
+		  stack[i-1].value =
+		    make_cond (last_lefthand, last_operator, stack[i-1].value);
+		stack[i-3].token = VALUE;
+		stack[i-3].value =
+		  make_cond (stack[i-3].value, token, stack[i-1].value);
+		i -= 2;
+		break;
+	      default:
+		if (stack[i-3].token == COBC_COND_AND
+		    || stack[i-3].token == COBC_COND_OR)
+		  {
+		    last_operator = token;
+		    stack[i-2].token = VALUE;
+		    stack[i-2].value =
+		      make_cond (last_lefthand, token, stack[i-1].value);
+		    i -= 1;
+		  }
+		else
+		  {
+		    last_lefthand = stack[i-3].value;
+		    last_operator = token;
+		    stack[i-3].token = VALUE;
+		    stack[i-3].value =
+		      make_cond (last_lefthand, token, stack[i-1].value);
+		    i -= 2;
+		  }
+		break;
+	      }
+	  }
+
+	/* handle special case "cmp OR x AND" */
+	if (i >= 2
+	    && prio == 7
+	    && stack[i-2].token == COBC_COND_OR
+	    && !COBC_COND_P (stack[i-1].value))
+	  {
+	    stack[i-1].token = VALUE;
+	    stack[i-1].value =
+	      make_cond (last_lefthand, last_operator, stack[i-1].value);
+	  }
+	return 0;
+      }
+
+    int shift (int prio, int token, cobc_tree value)
+      {
+	if (prio > 0)
+	  if (reduce (prio) == -1)
+	    return -1;
+	stack[i].prio  = prio;
+	stack[i].token = token;
+	stack[i].value = value;
+	i++;
+	return 0;
+      }
+
+    i = 0;
+    for (l = $1; l; l = l->next)
+      {
+#define look_ahead(l) \
+        ((l && COBC_INTEGER_P (l->item)) ? COBC_INTEGER (l->item)->val : 0)
+
+	cobc_tree x = l->item;
+	switch (COBC_TREE_TAG (x))
+	  {
+	  case cobc_tag_class:
+	    class_func = COBC_CLASS (x)->cname;
+	    goto unary_cond;
+	  case cobc_tag_integer:
+	    {
+	      token = COBC_INTEGER (x)->val;
+	      switch (token)
+		{
+		  /* arithmetic operator */
+		case '^':
+		  shift (2, token, 0);
+		  break;
+		case '*':
+		case '/':
+		  shift (3, token, 0);
+		  break;
+		case '-':
+		  if (i == 0 || stack[i-1].token != VALUE)
+		    {
+		      /* unary negative */
+		      l->next->item =
+			make_expr (cobc_zero, '-', l->next->item);
+		      break;
+		    }
+		  /* fall through */
+		case '+':
+		  shift (4, token, 0);
+		  break;
+
+		  /* conditional operator */
+		case '=':
+		  shift (5, COBC_COND_EQ, 0);
+		  break;
+		case '<':
+		  if (look_ahead (l->next) == OR)
+		    {
+		      if (look_ahead (l->next->next) != '=')
+			goto error;
+		      shift (5, COBC_COND_LE, 0);
+		      l = l->next->next;
+		    }
+		  else
+		    shift (5, COBC_COND_LT, 0);
+		  break;
+		case '>':
+		  if (look_ahead (l->next) == OR)
+		    {
+		      if (look_ahead (l->next->next) != '=')
+			goto error;
+		      shift (5, COBC_COND_GE, 0);
+		      l = l->next->next;
+		    }
+		  else
+		    shift (5, COBC_COND_GT, 0);
+		  break;
+		case LE:
+		  shift (5, COBC_COND_LE, 0);
+		  break;
+		case GE:
+		  shift (5, COBC_COND_GE, 0);
+		  break;
+
+		  /* class condition */
+		case NUMERIC:
+		  class_func = "cob_is_numeric";
+		  goto unary_cond;
+		case ALPHABETIC:
+		  class_func = "cob_is_alpha";
+		  goto unary_cond;
+		case ALPHABETIC_LOWER:
+		  class_func = "cob_is_lower";
+		  goto unary_cond;
+		case ALPHABETIC_UPPER:
+		  class_func = "cob_is_upper";
+		  goto unary_cond;
+
+		  /* sign condition */
+		case POSITIVE:
+		case NEGATIVE:
+		  goto unary_cond;
+
+		unary_cond:
+		  {
+		    int not_flag = 0;
+		    if (i > 0 && stack[i-1].token == COBC_COND_NOT)
+		      {
+			not_flag = 1;
+			i--;
+		      }
+		    reduce (5);
+		    if (i > 0 && stack[i-1].token == VALUE)
+		      {
+			int cond;
+			cobc_tree val;
+			switch (token)
+			  {
+			  case ZERO:
+			    cond = COBC_COND_EQ;
+			    val = cobc_zero;
+			    break;
+			  case POSITIVE:
+			    cond = COBC_COND_GT;
+			    val = cobc_zero;
+			    break;
+			  case NEGATIVE:
+			    cond = COBC_COND_LT;
+			    val = cobc_zero;
+			    break;
+			  default:
+			    cond = COBC_COND_CLASS;
+			    val = COBC_TREE (class_func);
+			    break;
+			  }
+			stack[i-1].value =
+			  make_cond (stack[i-1].value, cond, val);
+			if (not_flag)
+			  stack[i-1].value =
+			    make_negate_cond (stack[i-1].value);
+			break;
+		      }
+		    goto error;
+		  }
+
+		  /* logical operator */
+		case NOT:
+		  switch (look_ahead (l->next))
+		    {
+		    case '=': shift (5, COBC_COND_NE, 0); l = l->next; break;
+		    case '<': shift (5, COBC_COND_GE, 0); l = l->next; break;
+		    case '>': shift (5, COBC_COND_LE, 0); l = l->next; break;
+		    case LE:  shift (5, COBC_COND_GT, 0); l = l->next; break;
+		    case GE:  shift (5, COBC_COND_LT, 0); l = l->next; break;
+		    default:  shift (6, COBC_COND_NOT, 0); break;
+		    }
+		  break;
+		case AND: shift (7, COBC_COND_AND, 0); break;
+		case OR:  shift (8, COBC_COND_OR, 0); break;
+		}
+	      break;
+	    }
+	  default:
+	    if (x == cobc_zero)
+	      if (stack[i-1].token == VALUE
+		  || stack[i-1].token == COBC_COND_NOT)
+	      {
+		token = ZERO;
+		goto unary_cond;
+	      }
+	    shift (0, VALUE, x);
+	  }
+      }
+    reduce (9); /* reduce all */
+
+    /*
+     * At end
+     */
+    if (i != 1)
+      {
+      error:
+	yyerror_loc (&COBC_TREE ($1->item)->loc, "invalid expression");
+	YYERROR;
+      }
+
+    $$ = stack[0].value;
   }
 ;
-operator:
-  flag_not equal		{ $$ = $1 ? COBC_COND_NE : COBC_COND_EQ; }
-| flag_not greater		{ $$ = $1 ? COBC_COND_LE : COBC_COND_GT; }
-| flag_not less			{ $$ = $1 ? COBC_COND_GE : COBC_COND_LT; }
-| flag_not greater_or_equal	{ $$ = $1 ? COBC_COND_LT : COBC_COND_GE; }
-| flag_not less_or_equal	{ $$ = $1 ? COBC_COND_GT : COBC_COND_LE; }
+
+expr_item_list:
+  expr_item			{ $1->loc = @1; $$ = list ($1); }
+| expr_item_list IS		{ $$ = $1; }
+| expr_item_list expr_item	{ $2->loc = @2; $$ = list_add ($1, $2); }
 ;
+expr_item:
+  value				{ $$ = $1; }
+| '(' expr ')'			{ $$ = $2; }
+| condition_name		{ $$ = make_cond_name ($1); }
+/* arithmetic operator */
+| '+'				{ $$ = make_integer ('+'); }
+| '-'				{ $$ = make_integer ('-'); }
+| '*'				{ $$ = make_integer ('*'); }
+| '/'				{ $$ = make_integer ('/'); }
+| '^'				{ $$ = make_integer ('^'); }
+/* conditional operator */
+| equal				{ $$ = make_integer ('='); }
+| greater			{ $$ = make_integer ('>'); }
+| less				{ $$ = make_integer ('<'); }
+| GE				{ $$ = make_integer (GE); }
+| LE				{ $$ = make_integer (LE); }
+/* class condition */
+| NUMERIC			{ $$ = make_integer (NUMERIC); }
+| ALPHABETIC			{ $$ = make_integer (ALPHABETIC); }
+| ALPHABETIC_LOWER		{ $$ = make_integer (ALPHABETIC_LOWER); }
+| ALPHABETIC_UPPER		{ $$ = make_integer (ALPHABETIC_UPPER); }
+| class_name			{ $$ = $1; }
+/* sign condition */
+  /* ZERO is defined in `value' */
+| POSITIVE			{ $$ = make_integer (POSITIVE); }
+| NEGATIVE			{ $$ = make_integer (NEGATIVE); }
+/* logical operator */
+| NOT				{ $$ = make_integer (NOT); }
+| AND				{ $$ = make_integer (AND); }
+| OR				{ $$ = make_integer (OR); }
+;
+
 equal: '=' | EQUAL _to ;
 greater: '>' | GREATER _than ;
 less: '<' | LESS _than ;
 greater_or_equal: GE | GREATER _than OR EQUAL _to ;
 less_or_equal: LE | LESS _than OR EQUAL _to ;
-
-
-/*
- * Class condition
- */
-
-class_condition:
-  expr _is flag_not class
-  {
-    $$ = make_cond ($1, COBC_COND_CLASS, COBC_TREE ($4));
-    if ($3)
-      $$ = make_unary_cond ($$, COBC_COND_NOT);
-  }
-;
-class:
-  NUMERIC			{ $$ = "cob_is_numeric"; }
-| ALPHABETIC			{ $$ = "cob_is_alpha"; }
-| ALPHABETIC_LOWER		{ $$ = "cob_is_lower"; }
-| ALPHABETIC_UPPER		{ $$ = "cob_is_upper"; }
-| class_name			{ $$ = COBC_CLASS ($1)->cname; }
-;
-
-
-/*
- * Sign condition
- */
-
-sign_condition:
-  expr _is flag_not sign
-  {
-    $$ = make_cond ($1, $4, cobc_zero);
-    if ($3)
-      $$ = make_unary_cond ($$, COBC_COND_NOT);
-  }
-;
-sign:
-  ZERO				{ $$ = COBC_COND_EQ; }
-| POSITIVE			{ $$ = COBC_COND_GT; }
-| NEGATIVE			{ $$ = COBC_COND_LT; }
-;
-
-
-/*******************
- * Expression
- *******************/
-
-expr:
-  value				{ $$ = $1; }
-| '(' expr ')'			{ $$ = $2; }
-| '-' expr			{ $$ = make_expr (cobc_zero, '-', $2); }
-| expr '+' expr			{ $$ = make_expr ($1, '+', $3); }
-| expr '-' expr			{ $$ = make_expr ($1, '-', $3); }
-| expr '*' expr			{ $$ = make_expr ($1, '*', $3); }
-| expr '/' expr			{ $$ = make_expr ($1, '/', $3); }
-| expr '^' expr			{ $$ = make_expr ($1, '^', $3); }
-;
 
 
 /*****************************************************************************

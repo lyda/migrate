@@ -203,34 +203,31 @@ tree_to_string_1 (char *s, cobc_tree x)
 	cobc_tree l = COBC_COND (x)->left;
 	cobc_tree r = COBC_COND (x)->right;
 
+	if (COBC_COND (x)->type == COBC_COND_NOT)
+	  {
+	    s += sprintf (s, "!");
+	    s += tree_to_string_1 (s, l);
+	    break;
+	  }
+
+	s += sprintf (s, "(");
+	s += tree_to_string_1 (s, l);
 	switch (COBC_COND (x)->type)
 	  {
-	  case COBC_COND_EQ:
-	    s += sprintf (s, "(= ");
-	    s += tree_to_string_1 (s, l);
-	    s += sprintf (s, " ");
-	    s += tree_to_string_1 (s, r);
-	    strcpy (s, ")");
-	    break;
-
-	  case COBC_COND_AND:
-	    s += sprintf (s, "(and ");
-	    s += tree_to_string_1 (s, l);
-	    s += sprintf (s, " ");
-	    s += tree_to_string_1 (s, r);
-	    strcpy (s, ")");
-	    break;
-
+	  case COBC_COND_EQ: s += sprintf (s, " = "); break;
+	  case COBC_COND_LT: s += sprintf (s, " < "); break;
+	  case COBC_COND_GT: s += sprintf (s, " > "); break;
+	  case COBC_COND_LE: s += sprintf (s, " <= "); break;
+	  case COBC_COND_GE: s += sprintf (s, " >= "); break;
+	  case COBC_COND_AND: s += sprintf (s, " && "); break;
+	  case COBC_COND_OR: s += sprintf (s, " || "); break;
 	  default:
-	    s += sprintf (s, "(cond %d ", COBC_COND (x)->type);
-	    s += tree_to_string_1 (s, l);
-	    if (r)
-	      {
-		s += sprintf (s, " ");
-		s += tree_to_string_1 (s, r);
-	      }
-	    strcpy (s, ")");
+	    s += sprintf (s, " %d ", COBC_COND (x)->type);
+	    break;
 	  }
+	if (r)
+	  s += tree_to_string_1 (s, r);
+	strcpy (s, ")");
 	break;
       }
 
@@ -771,6 +768,7 @@ make_expr (cobc_tree left, char op, cobc_tree right)
   p->op = op;
   p->left = left;
   p->right = right;
+  COBC_TREE (p)->loc = left->loc;
   return COBC_TREE (p);
 }
 
@@ -819,13 +817,14 @@ make_cond (cobc_tree x, enum cobc_cond_type type, cobc_tree y)
   p->type  = type;
   p->left  = x;
   p->right = y;
+  COBC_TREE (p)->loc = x->loc;
   return COBC_TREE (p);
 }
 
 cobc_tree
-make_unary_cond (cobc_tree x, enum cobc_cond_type type)
+make_negate_cond (cobc_tree x)
 {
-  return make_cond (x, type, 0);
+  return make_cond (x, COBC_COND_NOT, 0);
 }
 
 
