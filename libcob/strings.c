@@ -64,7 +64,7 @@ cob_inspect_init (cob_field *var, int replacing)
   inspect_mark = malloc (inspect_size);
   memset (inspect_mark, 0, inspect_size);
 
-  cob_exception_code = 0;
+  COB_SET_EXCEPTION (COB_EC_ZERO);
 }
 
 void
@@ -139,7 +139,7 @@ inspect_common (cob_field *f1, cob_field *f2, int type)
 
   if (inspect_replacing && f1->size != f2->size)
     {
-      cob_exception_code = COB_EC_RANGE_INSPECT_SIZE;
+      COB_SET_EXCEPTION (COB_EC_RANGE_INSPECT_SIZE);
       return;
     }
 
@@ -240,13 +240,13 @@ cob_string_init (cob_field *dst, cob_field *ptr)
     }
   string_offset = 0;
 
-  cob_exception_code = 0;
+  COB_SET_EXCEPTION (COB_EC_ZERO);
 
   if (string_ptr)
     {
       string_offset = cob_get_int (string_ptr) - 1;
       if (string_offset < 0 || string_offset >= string_dst->size)
-	cob_exception_code = COB_EC_OVERFLOW_STRING;
+	COB_SET_EXCEPTION (COB_EC_OVERFLOW_STRING);
     }
 }
 
@@ -280,7 +280,7 @@ cob_string_append (cob_field *src, cob_field *dlm)
       int size = string_dst->size - string_offset;
       memcpy (string_dst->data + string_offset, src->data, size);
       string_offset += size;
-      cob_exception_code = COB_EC_OVERFLOW_STRING;
+      COB_SET_EXCEPTION (COB_EC_OVERFLOW_STRING);
     }
 }
 
@@ -323,13 +323,13 @@ cob_unstring_init (cob_field *src, cob_field *ptr)
   unstring_reg_inited = 0;
   unstring_regexp[0] = 0;
 
-  cob_exception_code = 0;
+  COB_SET_EXCEPTION (COB_EC_ZERO);
 
   if (unstring_ptr)
     {
       unstring_offset = cob_get_int (unstring_ptr) - 1;
       if (unstring_offset < 0 || unstring_offset >= unstring_src->size)
-	cob_exception_code = COB_EC_OVERFLOW_UNSTRING;
+	COB_SET_EXCEPTION (COB_EC_OVERFLOW_UNSTRING);
     }
 }
 
@@ -443,7 +443,7 @@ void
 cob_unstring_finish (void)
 {
   if (unstring_offset < unstring_src->size)
-    cob_exception_code = COB_EC_OVERFLOW_UNSTRING;
+    COB_SET_EXCEPTION (COB_EC_OVERFLOW_UNSTRING);
 
   if (unstring_reg_inited)
     regfree (&unstring_reg);

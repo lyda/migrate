@@ -824,7 +824,7 @@ static void
 save_status (cob_file *f, int status)
 {
   static char dummy_status[2];
-  static int code[] = {
+  static int exception[] = {
     0,				/* 0x */
     COB_EC_I_O_AT_END,		/* 1x */
     COB_EC_I_O_INVALID_KEY,	/* 2x */
@@ -843,7 +843,7 @@ save_status (cob_file *f, int status)
   f->file_status[0] = status / 10 + '0';
   f->file_status[1] = status % 10 + '0';
   cob_error_file = f;
-  cob_exception_code = code[status / 10];
+  COB_SET_EXCEPTION (exception[status / 10]);
 }
 
 void

@@ -214,10 +214,10 @@ cob_call_resolve (cob_field *f)
   char buff[f->size];
   void *ptr = cob_resolve (cob_field_to_string (f, buff));
 
-  cob_exception_code = 0;
+  COB_SET_EXCEPTION (COB_EC_ZERO);
 
   if (!ptr)
-    cob_exception_code = COB_EC_PROGRAM_NOT_FOUND;
+    COB_SET_EXCEPTION (COB_EC_PROGRAM_NOT_FOUND);
 
   return ptr;
 }

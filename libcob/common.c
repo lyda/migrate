@@ -96,15 +96,12 @@ cob_environment *cob_env = NULL;
 
 int cob_exception_code;
 
-static struct exception {
-  enum cob_exception_code code;
-  const char *name;
-  int critical;
-} exception_table[] = {
+struct cob_exception cob_exception_table[] = {
+  {0, 0, 0},		/* COB_EC_ZERO */
 #undef COB_EXCEPTION
-#define COB_EXCEPTION(CODE,TAG,NAME,CRITICAL) { TAG, NAME, CRITICAL },
+#define COB_EXCEPTION(CODE,TAG,NAME,CRITICAL) { 0x##CODE, NAME, CRITICAL },
 #include "exception.def"
-  {0, 0, 0}
+  {0, 0, 0}		/* COB_EC_MAX */
 };
 
 static int ding_on_error = 0;
@@ -571,11 +568,11 @@ void
 cob_exception (void)
 {
   int i;
-  for (i = 0; exception_table[i].code != 0; i++)
-    if (cob_exception_code == exception_table[i].code)
+  for (i = 1; i < COB_EC_MAX; i++)
+    if (cob_exception_code == cob_exception_table[i].code)
       {
-	cob_runtime_error (exception_table[i].name);
-	if (exception_table[i].critical)
+	cob_runtime_error (cob_exception_table[i].name);
+	if (cob_exception_table[i].critical)
 	  exit (1);
       }
 }
@@ -609,12 +606,12 @@ cob_check_subscript (int i, int max, const char *name)
 void
 cob_check_subscript_depending (int i, int min, int max, int dep, const char *name, const char *depname)
 {
-  cob_exception_code = 0;
+  COB_SET_EXCEPTION (COB_EC_ZERO);
 
   /* check the OCCURS DEPENDING ON item */
   if (dep < min || max < dep)
     {
-      cob_exception_code = COB_EC_BOUND_ODO;
+      COB_SET_EXCEPTION (COB_EC_BOUND_ODO);
       cob_runtime_error (_("OCCURS DEPENDING ON `%s' out of bounds: %d"),
 			 depname, dep);
       exit (1);
@@ -623,7 +620,7 @@ cob_check_subscript_depending (int i, int min, int max, int dep, const char *nam
   /* check the subscript */
   if (i < min || dep < i)
     {
-      cob_exception_code = COB_EC_BOUND_SUBSCRIPT;
+      COB_SET_EXCEPTION (COB_EC_BOUND_SUBSCRIPT);
       cob_runtime_error (_("subscript of `%s' out of bounds: %d"), name, i);
       exit (1);
     }
@@ -632,12 +629,12 @@ cob_check_subscript_depending (int i, int min, int max, int dep, const char *nam
 void
 cob_check_ref_mod (int offset, int length, int size, const char *name)
 {
-  cob_exception_code = 0;
+  COB_SET_EXCEPTION (COB_EC_ZERO);
 
   /* check the offset */
   if (offset < 1 || offset > size)
     {
-      cob_exception_code = COB_EC_BOUND_REF_MOD;
+      COB_SET_EXCEPTION (COB_EC_BOUND_REF_MOD);
       cob_runtime_error (_("offset of `%s' out of bounds: %d"),
 			 name, offset);
       exit (1);
@@ -646,7 +643,7 @@ cob_check_ref_mod (int offset, int length, int size, const char *name)
   /* check the length */
   if (length < 1 || offset + length - 1 > size)
     {
-      cob_exception_code = COB_EC_BOUND_REF_MOD;
+      COB_SET_EXCEPTION (COB_EC_BOUND_REF_MOD);
       cob_runtime_error (_("length of `%s' out of bounds: %d"),
 			 name, length);
       exit (1);

@@ -202,7 +202,7 @@ cob_decimal_get_display (cob_decimal *d, cob_field *f)
   diff = COB_FIELD_SIZE (f) - size;
   if (diff < 0)
     {
-      cob_exception_code = COB_EC_SIZE_OVERFLOW;
+      COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
       return;
     }
 
@@ -279,7 +279,7 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f)
   return;
 
  overflow:
-  cob_exception_code = COB_EC_SIZE_OVERFLOW;
+  COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
 }
 
 /* PACKED-DECIMAL */
@@ -334,11 +334,11 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f)
 {
   if (d->expt == DECIMAL_NAN)
     {
-      cob_exception_code = COB_EC_SIZE_OVERFLOW;
+      COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
       return;
     }
 
-  cob_exception_code = 0;
+  COB_SET_EXCEPTION (COB_EC_ZERO);
 
   /* work copy */
   if (d != &cob_d1)
@@ -594,7 +594,7 @@ cob_add_int_to_display (cob_field *f, int n)
   size_t size = COB_FIELD_SIZE (f);
   int expt = COB_FIELD_EXPT (f);
 
-  cob_exception_code = 0;
+  COB_SET_EXCEPTION (COB_EC_ZERO);
 
   /* -x + n = -(x - n) */
   if (sign < 0)
@@ -644,7 +644,7 @@ cob_add_int_to_display (cob_field *f, int n)
   return;
 
  overflow:
-  cob_exception_code = COB_EC_SIZE_OVERFLOW;
+  COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
   cob_put_sign (f, sign);
 }
 

@@ -107,11 +107,25 @@ extern cob_environment *cob_env;
  * Exception
  */
 
-enum cob_exception_code {
+/* Exception identifier */
+enum cob_exception_id {
+  COB_EC_ZERO,
 #undef COB_EXCEPTION
-#define COB_EXCEPTION(CODE,TAG,NAME,CRITICAL) TAG = 0x##CODE,
+#define COB_EXCEPTION(CODE,TAG,NAME,CRITICAL) TAG,
 #include <libcob/exception.def>
+  COB_EC_MAX
 };
+
+/* Exception data table */
+extern struct cob_exception {
+  int code;
+  const char *name;
+  int critical;
+} cob_exception_table[];
+
+/* Set cob_exception_code from an exception id */
+#define COB_SET_EXCEPTION(id) \
+  cob_exception_code = cob_exception_table[id].code
 
 extern int cob_exception_code;
 

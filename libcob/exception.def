@@ -19,6 +19,9 @@
 
 /* COB_EXCEPTION (code, tag, name, critical) */
 
+/* All exception */
+COB_EXCEPTION (FFFF, COB_EC_ALL, "EC-ALL", 0)
+
 /* Argument error */
 COB_EXCEPTION (0100, COB_EC_ARGUMENT, "EC-ARGUMENT", 0)
 /* Function argument error */

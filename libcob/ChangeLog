@@ -1,3 +1,11 @@
+2003-05-06  Keisuke Nishida  <knishida@netlab.jp>
+
+	* exception.def (COB_EC_ALL): Added.
+	* common.h (COB_SET_EXCEPTION): New macro.
+	(cob_exception_table): New variable.
+	(cob_exception_id): New enum.
+	(cob_exception_code): Removed.
+
 2003-05-04  Keisuke Nishida  <knishida@netlab.jp>
 
 	* numeric.c: Optimized cob_add_int/cob_sub_int for DISPLAY.
