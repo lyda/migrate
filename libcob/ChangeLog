@@ -1,3 +1,10 @@
+2003-05-13  Keisuke Nishida  <knishida@netlab.jp>
+
+	* fileio.c (INITIAL_FLAGS): Set to O_BINARY when _WIN32 is defined
+	rather than __MINGW32__.
+	(file_open): Open in binary mode.
+	(cob_open): Make sure that errno == ENOENT after stat.
+
 2003-05-06  Keisuke Nishida  <knishida@netlab.jp>
 
 	* exception.def (COB_EC_ALL): Added.

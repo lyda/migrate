@@ -44,7 +44,7 @@
 #include "fileio.h"
 #include "lib/gettext.h"
 
-#ifdef __MINGW32__
+#ifdef _WIN32
 #define INITIAL_FLAGS	O_BINARY
 #else
 #define INITIAL_FLAGS	0
@@ -68,16 +68,16 @@ file_open (cob_file *f, char *filename, int mode)
   switch (mode)
     {
     case COB_OPEN_INPUT:
-      fp = fopen (filename, "r");
+      fp = fopen (filename, "rb");
       break;
     case COB_OPEN_OUTPUT:
-      fp = fopen (filename, "w+");
+      fp = fopen (filename, "wb+");
       break;
     case COB_OPEN_I_O:
-      fp = fopen (filename, "r+");
+      fp = fopen (filename, "rb+");
       break;
     case COB_OPEN_EXTEND:
-      fp = fopen (filename, "a+");
+      fp = fopen (filename, "ab+");
       break;
     }
   if (fp == NULL)
@@ -869,7 +869,7 @@ cob_open (cob_file *f, int mode)
   f->flag_first_read = 1;
 
   cob_field_to_string (f->assign, filename);
-  if (stat (filename, &st) == -1)
+  if (stat (filename, &st) == -1 && errno == ENOENT)
     {
       was_not_exist = 1;
       if (mode != COB_OPEN_OUTPUT && f->flag_optional == 0)
