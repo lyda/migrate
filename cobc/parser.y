@@ -3585,6 +3585,12 @@ integer_value:
 
     switch (COBC_TREE_TAG ($1))
       {
+      case cobc_tag_const:
+	{
+	  if ($1 != cobc_zero)
+	    goto invalid;
+	  break;
+	}
       case cobc_tag_literal:
 	{
 	  struct cobc_literal *l = COBC_LITERAL ($1);
