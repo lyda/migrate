@@ -174,7 +174,7 @@ This chapter describes how to compile COBOL programs using OpenCOBOL.
 @node Source Format, Dynamic Linking, Compile, Compile
 @section Source Format
 
-OpenCOBOL is able to handle two source format: the traditional
+OpenCOBOL supports two source format: the traditional
 @samp{fixed format} and the new @samp{free format}.
 
 There are three methods of specifying a format:
