@@ -142,7 +142,7 @@ init_environment (int argc, char *argv[])
 }
 
 static void
-error (const char *str)
+terminate (const char *str)
 {
   fprintf (stderr, "%s: ", program_name);
   perror (str);
@@ -424,7 +424,7 @@ probe_source_format (const char *filename)
   char buff[7];
 
   if (!fp)
-    error (filename);
+    terminate (filename);
 
   if (fgets (buff, 7, fp))
     if (('0' <= buff[0] && buff[0] <= '9')
@@ -473,11 +473,11 @@ process_translate (struct filename *fn)
 
   yyin = fopen (fn->preprocess, "r");
   if (!yyin)
-    error (fn->preprocess);
+    terminate (fn->preprocess);
 
   cobc_out = fopen (fn->translate, "w");
   if (!cobc_out)
-    error (fn->translate);
+    terminate (fn->translate);
 
   init_constants ();
   init_reserved_words ();
