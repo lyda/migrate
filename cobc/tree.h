@@ -87,7 +87,6 @@ struct cob_tree_field {
 				   G=group;
 				   F=file; 
 				   R=record; 
-				   S=screen;
 				   W=report (RD)
 				*/
 };
@@ -162,7 +161,6 @@ struct sym
 				   alternate key list pointer (for indexed files) */
   cob_tree ix_desc;		/* key variable (in file descriptor)
 				   pointer to fdesc (in record) */
-  struct scr_info *scr;		/*  screen info in screen items */
   struct report_info *ri;	/*  report info in report items */
   struct sym *value;		/* pointer to literal with initial value */
   struct sym *value2;		/* pointer to first/next key (sort files) */
@@ -405,20 +403,6 @@ struct math_var
   cob_tree sname;		/* symbol name */
   unsigned int rounded;		/* rounded option: 0=false, 1=true */
   struct math_var *next;
-};
-
-/******* supplemental information for screen items **********/
-/* this is linked at the sym->index (aliased scrinfo) */
-struct scr_info
-{
-  int attr;
-  int line;
-  int column;
-  int foreground;
-  int background;
-  cob_tree from;
-  cob_tree to;
-  int label;
 };
 
 struct inspect_item

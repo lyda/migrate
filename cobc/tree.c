@@ -152,7 +152,6 @@ make_symbol (char *name)
   p->value = NULL;
   p->sort_data = NULL;
   p->linkage_flg = 0;
-  p->scr = NULL;
   p->clone = NULL;
   p->parent = NULL;
   p->son = NULL;

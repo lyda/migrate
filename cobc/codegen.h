@@ -39,7 +39,6 @@
 #define SET_UP		1
 #define SET_DOWN	2
 
-extern int screen_io_enable,scr_line,scr_column;
 extern int decimal_comma;
 extern char currency_symbol;
 extern FILE *lexin;
@@ -84,12 +83,9 @@ extern cob_tree save_literal (cob_tree x, int type);
 extern void save_named_sect (cob_tree sy);
 extern void put_disp_list (cob_tree sy);
 extern void add_alternate_key (cob_tree sy, int duplicates);
-extern struct scr_info *alloc_scr_info (void);
 extern void gen_string (cob_tree x, cob_tree_list l);
 extern void gen_unstring (cob_tree x, cob_tree_list l);
-extern void gen_display_screen (cob_tree sy, int main);
 extern void gen_display (int dupon, int nl);
-extern void gen_gotoxy_expr (cob_tree x, cob_tree y);
 extern void gen_accept (cob_tree sy, int echo, int main);
 extern void gen_accept_from_time (cob_tree sy);
 extern void gen_accept_from_date (cob_tree sy);
@@ -144,10 +140,7 @@ extern void Initialize_SearchAll_Boundaries (cob_tree sy);
 extern cob_tree determine_table_index_name (cob_tree sy);
 extern void define_field (int level, cob_tree sy);
 extern void define_implicit_field (cob_tree sy, cob_tree sykey);
-extern void scr_set_column (struct scr_info *si, int val, int plus_minus);
-extern void scr_set_line (struct scr_info *si, int val, int plus_minus);
 extern void update_report_field (cob_tree sy);
-extern void update_screen_field (cob_tree sy, struct scr_info *si);
 extern void update_field (void);
 extern void close_fields (void);
 extern void resolve_labels (void);

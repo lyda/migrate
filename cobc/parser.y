@@ -21,7 +21,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 507
+%expect 468
 
 %{
 #define yydebug		cob_trace_parser
@@ -68,7 +68,6 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
   struct inspect_item *insi;
   struct call_parameter *para;
   struct coord_pair pval; /* lin,col */
-  struct scr_info *sival;
   struct perf_info *pfval;
   struct perform_info *pfvals;
   struct math_var *mval;      /* math variables container list */
@@ -133,9 +132,8 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <ival> display_upon,display_options
 %type <ival> flag_all,opt_with_duplicates,opt_with_test,opt_optional
 %type <ival> flag_not
-%type <ival> flag_rounded,opt_sign_separate,opt_plus_minus
+%type <ival> flag_rounded,opt_sign_separate
 %type <ival> organization_options,access_options,open_mode,call_mode
-%type <ival> screen_attribs,screen_attrib,screen_sign,opt_separate
 %type <ival> opt_read_next,usage
 %type <ival> procedure_using,sort_direction,write_options
 %type <ival> opt_on_size_error_sentence,opt_on_overflow_sentence
@@ -148,7 +146,6 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <mval> numeric_variable_list,numeric_edited_variable_list
 %type <pfval> perform_after
 %type <pfvals> opt_perform_after
-%type <sival> screen_clauses
 %type <list> sort_file_list
 %type <str> idstring
 %type <tree> field_description,label,label_name,filename
@@ -159,10 +156,10 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <tree> numeric_variable,group_variable,numeric_edited_variable
 %type <tree> qualified_var,unqualified_var,evaluate_subject
 %type <tree> evaluate_object,evaluate_object_1,assign_clause
-%type <tree> call_returning,screen_to_name,var_or_lit,opt_add_to
+%type <tree> call_returning,var_or_lit,opt_add_to
 %type <tree> opt_perform_thru
 %type <tree> opt_read_key,file_name,opt_with_pointer
-%type <tree> variable,sort_range,name_or_lit,name_or_literal
+%type <tree> variable,sort_range,name_or_literal
 %type <tree> indexed_variable,search_opt_varying,opt_key_is
 %type <tree> from_rec_varying,to_rec_varying
 %type <tree> literal,gliteral,without_all_literal,all_literal,special_literal
@@ -572,7 +569,6 @@ data_division:
   working_storage_section
   linkage_section
   report_section
-  screen_section
   {
     data_trail();
   }
@@ -851,6 +847,7 @@ opt_sign_separate:
   /* nothing */			{ $$ = 0; }
 | SEPARATE opt_character	{ $$ = 1; }
 ;
+opt_character: | CHARACTER ;
 
 
 /* OCCURS */
@@ -1038,128 +1035,6 @@ opt_limit_is: | LIMIT opt_is ;
 opt_footing: | FOOTING opt_is integer ;
 opt_last_detail: | LAST DETAIL opt_is integer ;
 opt_first_detail: | FIRST DETAIL opt_is integer ;
-
-
-/*******************
- * SCREEN SECTION
- *******************/
-
-screen_section:
-| SCREEN SECTION dot
-  {
-    screen_io_enable++;
-    curr_field=NULL;
-    scr_line = scr_column = 1;
-  }
-  screen_item_list
-  {
-    close_fields();
-  }
-;
-screen_item_list:
-| screen_item_list screen_item
-;
-screen_item:
-  integer opt_def_name		{ define_field ($1, $2); }
-  screen_clauses '.'
-  {
-    update_screen_field($2,$4);
-  }
-;
-screen_clauses:
-  /* nothing */             { $$ = alloc_scr_info(); }
-| screen_clauses LINE
-    opt_number_is
-    opt_plus_minus
-    integer                 { scr_set_line($1,$5,$4); $$=$1; }
-| screen_clauses COLUMN
-    opt_number_is
-    opt_plus_minus
-    integer                 { scr_set_column($1,$5,$4); $$=$1; }
-| screen_clauses
-    screen_attrib           { $1->attr |= $2; $$=$1; }
-| screen_clauses FOREGROUND_COLOR
-    integer                 { $1->foreground = $3; $$=$1; }
-| screen_clauses BACKGROUND_COLOR
-    integer                 { $1->background = $3; $$=$1; }
-| screen_clauses
-    screen_source_destination
-| screen_clauses
-    VALUE opt_is gliteral   { curr_field->value = $4; $$=$1; }
-| screen_clauses picture_clause
-;
-screen_source_destination:
-  USING { curr_division = CDIV_INITIAL; }
-  name_or_lit
-  {
-    curr_division = CDIV_DATA;
-    $<sival>0->from = $<sival>0->to = $3;
-  }
-| FROM { curr_division = CDIV_INITIAL; }
-  name_or_lit
-  screen_to_name
-  {
-	curr_division = CDIV_DATA;
-	$<sival>0->from = $3;
-	$<sival>0->to = $4;
-  }
-| TO { curr_division = CDIV_INITIAL; }
-  name
-  {
-	curr_division = CDIV_DATA;
-	$<sival>0->from = NULL;
-	$<sival>0->to = $3;
-  }
-;
-screen_to_name:
-  /* nothing */ { $$=NULL; }
-  | TO name { $$ = $2; }
-;
-screen_attribs:
-  /* nothing */			{ $$ = 1; }
-| screen_attribs screen_attrib	{ $$ = $1 | $2; }
-;
-screen_attrib:
-  BLANK SCREEN			{ $$ = SCR_BLANK_SCREEN; }
-| BLANK LINE			{ $$ = SCR_BLANK_LINE; }
-| BELL				{ $$ = SCR_BELL; }
-| FULL				{ $$ = SCR_FULL; }
-| REQUIRED			{ $$ = SCR_REQUIRED; }
-| SECURE			{ $$ = SCR_SECURE; }
-| AUTO				{ $$ = SCR_AUTO; }
-| JUSTIFIED RIGHT		{ $$ = SCR_JUST_RIGHT; }
-| JUSTIFIED LEFT		{ $$ = SCR_JUST_LEFT; }
-| BLINK				{ $$ = SCR_BLINK; }
-| REVERSE_VIDEO			{ $$ = SCR_REVERSE_VIDEO; }
-| UNDERLINE			{ $$ = SCR_UNDERLINE; }
-| LOWLIGHT			{ $$ = SCR_LOWLIGHT; }
-| HIGHLIGHT			{ $$ = SCR_HIGHLIGHT; }
-| BLANK opt_when ZEROS		{ $$ = SCR_BLANK_WHEN_ZERO; }
-| NOECHO			{ $$ = SCR_NOECHO; }
-| UPDATE			{ $$ = SCR_UPDATE; }
-| screen_sign			{ $$ = $1; }
-;
-screen_sign:
-  SIGN opt_is LEADING opt_separate
-  {
-    $$ = SCR_SIGN_LEADING | SCR_SIGN_PRESENT | $4;
-  }
-| SIGN opt_is TRAILING opt_separate
-  {
-    $$ = SCR_SIGN_PRESENT | $4;
-  }
-;
-opt_separate:
-  SEPARATE opt_character	{ $$ = SCR_SIGN_SEPARATE; }
-| /* nothing */			{ $$ = 0; }
-;
-opt_plus_minus:
-  /* nothing */			{ $$ = 0; }
-| PLUS				{ $$ = 1; }
-| MINUS				{ $$ = -1; }
-;
-opt_character: | CHARACTER ;
-opt_number_is: | NUMBER opt_is ;
 
 
 /*****************************************************************************
@@ -1376,33 +1251,18 @@ conditional_statement:
  */
 
 accept_statement:
-    ACCEPT name opt_line_pos accept_options
-    ;
+  ACCEPT name accept_options
+;
 accept_options:
-  screen_attribs		{ gen_accept($<tree>-1, $1, 1); }
-| screen_attribs ON EXCEPTION
-  {
-    screen_io_enable++;
-    gen_accept($<tree>-1, $1, 1);
-  }
-  variable
-  {
-    gen_store_fnres($5);
-    $<ival>$ = gen_check_zero();
-  }
-  statement_list
-  {
-    gen_dstlabel($<ival>6);
-  }
-| FROM DATE			{ gen_accept_from_date($<tree>-1); }
-| FROM DAY			{ gen_accept_from_day($<tree>-1); }
-| FROM DAY_OF_WEEK		{ gen_accept_from_day_of_week($<tree>-1); }
-| FROM TIME			{ gen_accept_from_time($<tree>-1); }
-| FROM COMMAND_LINE		{ gen_accept_from_cmdline($<tree>-1); }
+| FROM DATE			{ gen_accept_from_date($<tree>0); }
+| FROM DAY			{ gen_accept_from_day($<tree>0); }
+| FROM DAY_OF_WEEK		{ gen_accept_from_day_of_week($<tree>0); }
+| FROM TIME			{ gen_accept_from_time($<tree>0); }
+| FROM COMMAND_LINE		{ gen_accept_from_cmdline($<tree>0); }
 | FROM ENVIRONMENT_VARIABLE NONNUMERIC_LITERAL
   {
     save_literal($3, 'X');
-    gen_accept_env_var($<tree>-1, $3);
+    gen_accept_env_var($<tree>0, $3);
   }
 | FROM VARIABLE			{ yywarn ("not supported"); }
 ;
@@ -1576,7 +1436,7 @@ opt_end_delete: | END_DELETE ;
  */
 
 display_statement:
-  DISPLAY display_varlist opt_upon display_upon display_options opt_line_pos
+  DISPLAY display_varlist opt_upon display_upon display_options
   {
     gen_display ($4, $5);
   }
@@ -1597,18 +1457,6 @@ display_options:
 | display_options ERASE		{ $$ = $1 | 2; }
 | display_options ERASE EOS	{ $$ = $1 | 2; }
 | display_options ERASE EOL	{ $$ = $1 | 4; }
-;
-opt_line_pos:
-| LINE expr POSITION expr
-  {
-    screen_io_enable++;
-    gen_gotoxy_expr ($2, $4);
-  }
-| LINE expr COLUMN expr
-  {
-    screen_io_enable++;
-    gen_gotoxy_expr ($2, $4);
-  }
 ;
 
 
@@ -3096,10 +2944,6 @@ function_call:
 function_args:
   gname { }
 | function_args gname
-;
-name_or_lit:
-  name
-| literal
 ;
 name_or_literal:
   name

@@ -47,8 +47,6 @@
 
 #define SVAR_RCODE  	"RETURN-CODE"
 
-int screen_io_enable = 0;
-int scr_line, scr_column;
 int decimal_comma = 0;
 char currency_symbol = '$';
 cob_tree curr_field;
@@ -81,7 +79,6 @@ static struct named_sect *named_sect_list = NULL;
 static int next_available_sec_no = SEC_FIRST_NAMED;
 static int curr_sec_no = SEC_DATA;
 
-static int screen_label = 0;
 static int stackframe_cnt = 0;
 static char program_id[120] = "main";
 static char *pgm_label = "main";
@@ -1659,10 +1656,6 @@ proc_trail (int using)
     }
   output (".Lend_pgm_%s:\n", pgm_label);
 
-  //      Screen section io cleanup (curses library).
-  if (screen_io_enable != 0)
-    asm_call ("do_scrio_finish");
-
   asm_call ("cob_exit");
 
 //      Program return code is stored in register %eax
@@ -2016,22 +2009,6 @@ gen_end_label (cob_tree label)
   gen_exit (label);
 }
 
-
-struct scr_info *
-alloc_scr_info ()
-{
-  struct scr_info *new;
-  new = malloc (sizeof (struct scr_info));
-  new->attr = 0;
-  new->line = 1;
-  new->column = 1;
-  new->foreground = 0;
-  new->background = 7;
-  new->from = NULL;
-  new->to = NULL;
-  return new;
-}
-
 void
 gen_string (cob_tree x, cob_tree_list l)
 {
@@ -2063,146 +2040,42 @@ gen_unstring (cob_tree x, cob_tree_list l)
 }
 
 void
-gen_display_screen (cob_tree sy, int main)
-{
-  cob_tree tmp;
-  if (main)
-    output ("# Screen Section: %s\n", COB_FIELD_NAME (sy));
-  if (sy->son == NULL)
-    {
-      output ("# Screen Field: %s\n", COB_FIELD_NAME (sy));
-      gen_loadvar (sy->scr->to);
-      gen_loadvar (sy->scr->from);
-      gen_loadvar (sy);
-      push_immed (sy->scr->background);
-      push_immed (sy->scr->foreground);
-      push_immed (sy->scr->column);
-      push_immed (sy->scr->line);
-      push_immed (sy->scr->attr);
-      asm_call ("cob_scr_process");
-    }
-  else
-    {
-      for (tmp = sy->son; tmp != NULL; tmp = tmp->brother)
-	gen_display_screen (tmp, 0);
-    }
-  if (main)
-    {
-      asm_call ("cob_display_screen");
-      if (disp_list->next)
-	yyerror ("we do not handle more than one screen");
-      disp_list = disp_list->next;
-    }
-}
-
-void
 gen_display (int dupon, int nl)
 {
-  int dspflags;
-  int first = 1;
   cob_tree sy;
 
   if (disp_list)
     {
-      /* separate screen displays from display of regular variables */
       sy = disp_list->var;
-      if (disp_list && !LITERAL_P (sy))
-	if (!SUBSTRING_P (sy) && !SUBREF_P (sy) && sy->scr)
-	  {
-	    gen_display_screen (disp_list->var, 1);
-	    return;
-	  }
-      /* continue w/a regular variable display */
       if (nl & 2)
-	if (screen_io_enable == 0)
-	  {
-	    push_immed (dupon);
-	    asm_call ("cob_erase");
-	  }
+	{
+	  push_immed (dupon);
+	  asm_call ("cob_erase");
+	}
     }
   while (disp_list)
     {
       sy = disp_list->var;
-
-      if (screen_io_enable == 0)
-	{
-	  push_immed (dupon);
-	  gen_loadvar (sy);
-	  asm_call ("cob_display");
-	}
-      else
-	{
-	  dspflags = nl;
-	  if (first)
-	    first = 0;
-	  else
-	    dspflags &= ~2;	/* avoid erasing from now on */
-	  if (disp_list->next != NULL)
-	    dspflags |= 1;	/* allow newline only at the last item */
-	  push_immed (dspflags);
-	  gen_loadvar (sy);
-	  asm_call ("cob_display_curses");
-	}
+      push_immed (dupon);
+      gen_loadvar (sy);
+      asm_call ("cob_display");
       disp_list = disp_list->next;
     }
   if (!(nl & 1))
-    if (screen_io_enable == 0)
-      {
-	push_immed (dupon);
-	asm_call ("cob_newline");
-      }
-}
-
-void
-gen_gotoxy_expr (cob_tree x, cob_tree y)
-{
-  push_expr (x);
-  push_expr (y);
-  asm_call ("cob_screen_move");
+    {
+      push_immed (dupon);
+      asm_call ("cob_newline");
+    }
 }
 
 void
 gen_accept (cob_tree sy, int echo, int main)
 {
-  cob_tree tmp;
-  if (sy->scr)
-    {				/* screen or screen-item accept */
-      if (main)
-	output ("# Screen Section: %s\n", COB_FIELD_NAME (sy));
-      if (sy->son == NULL)
-	{
-	  output ("# Screen Field: %s\n", COB_FIELD_NAME (sy));
-	  gen_loadvar (sy->scr->to);
-	  gen_loadvar (sy->scr->from);
-	  gen_loadvar (sy);
-	  push_immed (sy->scr->background);
-	  push_immed (sy->scr->foreground);
-	  push_immed (sy->scr->column);
-	  push_immed (sy->scr->line);
-	  push_immed (sy->scr->attr);
-	  asm_call ("cob_scr_process");
-	}
-      else
-	{
-	  for (tmp = sy->son; tmp != NULL; tmp = tmp->brother)
-	    {
-	      gen_accept (tmp, echo, 0);
-	    }
-	}
-      if (main)
-	asm_call ("cob_screen_accept");
-    }
-  else
-    {
-      push_immed (echo);
-      output ("\tmovl\t$c_base%d+%u, %%eax\n", pgm_segment, sy->descriptor);
-      push_eax ();
-      gen_loadloc (sy);
-      if (screen_io_enable == 0)
-	asm_call ("cob_accept_console");
-      else
-	asm_call ("cob_accept_curses");
-    }
+  push_immed (echo);
+  output ("\tmovl\t$c_base%d+%u, %%eax\n", pgm_segment, sy->descriptor);
+  push_eax ();
+  gen_loadloc (sy);
+  asm_call ("cob_accept_console");
 }
 
 void
@@ -3462,42 +3335,6 @@ set_field_location (cob_tree sy, unsigned location)
     }
 }
 
-void
-scr_set_column (struct scr_info *si, int val, int plus_minus)
-{
-  switch (plus_minus)
-    {
-    case -1:
-      scr_column -= val;
-      break;
-    case 1:
-      scr_column += val;
-      break;
-    case 0:
-      scr_column = val;
-      break;
-    }
-  si->column = scr_column;
-}
-
-void
-scr_set_line (struct scr_info *si, int val, int plus_minus)
-{
-  switch (plus_minus)
-    {
-    case -1:
-      scr_line -= val;
-      break;
-    case 1:
-      scr_line += val;
-      break;
-    case 0:
-      scr_line = val;
-      break;
-    }
-  si->line = scr_line;
-}
-
 /*************** report section ******************/
 
 void
@@ -3505,27 +3342,6 @@ update_report_field (cob_tree sy)
 {
   update_field ();
   COB_FIELD_TYPE (sy) = 'Q';
-}
-
-void
-update_screen_field (cob_tree sy, struct scr_info *si)
-{
-  cob_tree tmp;
-  update_field ();
-  COB_FIELD_TYPE (sy) = 'D';
-  sy->scr = si;
-  si->label = screen_label++;
-  /* if picture is empty (implicit filler), and there is a
-     value declared, create its picture from value literal. */
-  if (*(sy->picstr) == 0 && sy->value != NULL)
-    {
-      tmp = sy->value;
-      sy->len = strlen (COB_FIELD_NAME (tmp));
-      sy->picstr = malloc (3);
-      sy->picstr[0] = 'X';
-      sy->picstr[1] = sy->len;
-      sy->picstr[2] = 0;
-    }
 }
 
 void
