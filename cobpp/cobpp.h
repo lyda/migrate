@@ -22,7 +22,7 @@
 
 #define COB_PACKAGE	"cobpp"
 #define COB_VERSION	VERSION
-#define COB_COPYRIGHT	"Copyright (C) 2001 Keisuke Nishida\n"
+#define COB_COPYRIGHT	"Copyright (C) 2001-2002 Keisuke Nishida\n"
 
 enum cob_format {
   COB_FORMAT_FREE,

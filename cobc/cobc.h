@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001  Keisuke Nishida
+ * Copyright (C) 2001-2002  Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 #define COB_PACKAGE	"OpenCOBOL"
 #define COB_VERSION	VERSION
 #define COB_COPYRIGHT					\
-  "Copyright (C) 2001 Keisuke Nishida\n"		\
+  "Copyright (C) 2001-2002 Keisuke Nishida\n"		\
   "Copyright (C) 1999-2001 Rildo Pragana et. al.\n"
 
 extern int cob_stabs_flag;
