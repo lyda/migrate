@@ -4198,32 +4198,10 @@ gen_SearchAllLoopCheck (unsigned long lbl3, struct sym *syidx,
     }
 
   if (it2 == NULL)
-    {
-      return;
-    }
+    return;
 
   if ((it2->seq != '1') && (it2->seq != '2'))
-    {
-      return;
-    }
-
-#ifdef COB_DEBUG
-  if (it2->seq == '1')
-    {
-      fprintf (stderr,
-	       "gen_SearchAllLoopCheck: sequence for table %s is %c=ASCENDING\n",
-	       sytbl->name, it2->seq);
-    }
-  if (it2->seq == '2')
-    {
-      fprintf (stderr,
-	       "gen_SearchAllLoopCheck: sequence for table %s is %c=DESCENDING\n",
-	       sytbl->name, it2->seq);
-    }
-  fprintf (stderr,
-	   "gen_SearchAllLoopCheck: l1=L%lu, l2=L%lu, l3=L%lu, l4=L%lu, l5=L%lu, l6=L%lu\n",
-	   l1, l2, l3, l4, l5, l6);
-#endif
+    return;
 
   vr1 = create_subscript (syidx);
   sy1 = (struct sym *) make_subref (sytbl, vr1);
@@ -4495,7 +4473,6 @@ determine_table_index_name (struct sym *sy)
   return rsy;
 }
 
-
 void
 define_field (int level, struct sym *sy)
 {
@@ -4582,19 +4559,6 @@ define_field (int level, struct sym *sy)
 	}
     }
   curr_field = sy;
-}
-
-struct sym *
-alloc_filler (void)
-{
-  static int filler_num = 1;
-
-  char s[15];
-  struct sym *sy;
-  sprintf (s, "FIL$%05d", filler_num++);
-  sy = install (s, SYTB_VAR, 0);
-  sy->defined = 1;
-  return sy;
 }
 
 struct selsubject *

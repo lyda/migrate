@@ -113,6 +113,7 @@ struct sym
 #define SYMBOL_P(x)		(SYMBOL (x)->litflag == 0)
 
 extern struct sym *make_symbol (char *name);
+extern struct sym *make_filler (void);
 
 
 /*

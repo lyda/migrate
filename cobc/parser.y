@@ -70,7 +70,6 @@ extern struct lit *spe_lit_HV;
 extern struct lit *spe_lit_QU;
 
 struct sym *curr_file;
-struct sym *alloc_filler( void );
 int start_condition=0;
 int curr_division=0;
 int need_subscripts=0;
@@ -180,7 +179,7 @@ static void check_decimal_point (struct lit *lit);
 %token TOKPOSITION,FILE_ID,DEPENDING,TOK_TYPE,TOKSOURCE
 %token INITIATE,GENERATE,TERMINATE,NULLTOK,ADDRESS,NOECHO,LPAR
 %token CORRESPONDING,TOKDUMMY,CONVERTING,OPTIONAL
-%token IDENTIFICATION_TOK,ENVIRONMENT_TOK,DATA_TOK,PROCEDURE_TOK
+%token IDENTIFICATION_TOK,ENVIRONMENT_TOK,DATA,PROCEDURE_TOK
 %token AUTHOR_TOK,DATE_WRITTEN_TOK,DATE_COMPILED_TOK,INSTALLATION_TOK
 %token SECURITY_TOK,COMMONTOK,RETURN_TOK,END_RETURN,PREVIOUS,NEXT
 %token INPUT,I_O,OUTPUT,EXTEND,EOL_TOK,EOS_TOK
@@ -196,7 +195,7 @@ static void check_decimal_point (struct lit *lit);
 %type <lval> literal,gliteral,without_all_literal,all_literal,special_literal
 %type <lval> nliteral,signed_nliteral
 %type <sval> sort_keys,opt_perform_thru,procedure_section
-%type <sval> opt_read_into,opt_write_from
+%type <sval> opt_read_into,opt_write_from,field_name
 %type <sval> variable,sort_range,perform_options,name_or_lit,delimited_by
 %type <sval> string_with_pointer
 %type <ival> opt_all,with_duplicates,opt_with_test,opt_optional
@@ -474,7 +473,7 @@ opt_for: | FOR ;
  *****************************************************************************/
 
 data_division:
-| DATA_TOK DIVISION '.' { curr_division = CDIV_DATA; }
+| DATA DIVISION '.' { curr_division = CDIV_DATA; }
   file_section
   working_storage_section
   linkage_section
@@ -545,7 +544,7 @@ file_attrib:
 | file_attrib opt_is EXTERNAL   { $<sval>0->type = 'K'; }
 | file_attrib LABEL rec_or_recs opt_is_are std_or_omitt
 | file_attrib BLOCK opt_contains integer opt_to_integer chars_or_recs
-| file_attrib DATA_TOK rec_or_recs  opt_is_are var_strings { }
+| file_attrib DATA rec_or_recs  opt_is_are var_strings { }
 | file_attrib VALUE OF FILE_ID opt_is filename
   {
     if ($<sval>-1->filenamevar != NULL) {
@@ -578,7 +577,7 @@ to_rec_varying:
 | TO nliteral   { $$ = $2; }
 ;
 sort_attrib:
-| sort_attrib  DATA_TOK rec_or_recs  opt_is_are var_strings { }  
+| sort_attrib DATA rec_or_recs  opt_is_are var_strings { }  
 | sort_attrib RECORD opt_is VARYING opt_in_size
   from_rec_varying to_rec_varying opt_characters
   DEPENDING opt_on STRING
@@ -590,9 +589,9 @@ rec_or_recs: RECORD | RECORDS ;
 std_or_omitt: STANDARD | OMITTED ;
 opt_TIMES: | TIMES ;
 opt_when: | WHEN ;
-opt_is: | IS { } ;
+opt_is: | IS ;
 opt_mode: | MODE ;
-opt_is_are: | IS { } | ARE { } ;
+opt_is_are: | IS | ARE ;
 opt_contains: | CONTAINS ;
 opt_characters: | CHARACTERS ;
 chars_or_recs: CHARACTERS | RECORDS ;
@@ -606,19 +605,32 @@ working_storage_section:
 | WORKING_STORAGE SECTION '.'     { curr_field=NULL; }
   field_description_list         { close_fields(); }
 ;
+
+/*
+ * Field description
+ */
+
 field_description_list:
 | field_description_list field_description
 ;
 field_description:
-  integer opt_def_name
-  {
-    define_field($1,$2);
-  }
+  integer field_name { define_field ($1, $2); }
   redefines_clause
   data_clauses '.'
   {
     $$ = $2;
     update_field();
+  }
+;
+field_name:
+  /* nothing */		{ $$ = make_filler (); }
+| FILLER		{ $$ = make_filler (); }
+| STRING
+  {
+    if ($1->defined)
+      yyerror("variable redefined, %s",$1->name);
+    $1->defined=1;
+    $$=$1;
   }
 ;
 redefines_clause:
@@ -674,6 +686,9 @@ array_options:
   }
   opt_indexed_by
 ;
+opt_indexed_by: 
+| opt_key_is INDEXED opt_by index_name_list { }
+;
 opt_key_is:
   /* nothing */		{ $$ = NULL; }
 | DIRECTION opt_key opt_is STRING
@@ -687,9 +702,6 @@ opt_key_is:
     }
     $$=$4;
   }
-;
-opt_indexed_by: 
-| opt_key_is INDEXED opt_by index_name_list { }
 ;
 index_name_list:
   def_name { define_implicit_field ($1, $<sval>-2, curr_field->times); }
@@ -2974,7 +2986,7 @@ signed_nliteral:
   ;
 opt_def_name:
     def_name        { $$ = $1; }
-    | /* nothing */ { $$ = alloc_filler(); }
+    | /* nothing */ { $$ = make_filler(); }
     ;
 def_name:
     STRING  { if ($1->defined)
@@ -2982,7 +2994,7 @@ def_name:
               $1->defined=1;
               $$=$1;
             }
-    | FILLER    { $<sval>$=alloc_filler(); }
+    | FILLER    { $<sval>$=make_filler(); }
     ;
 variable_indexed:
     SUBSCVAR

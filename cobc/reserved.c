@@ -108,7 +108,7 @@ static struct reserved_word reserved_words[] = {
   {"CORRESPONDING", CORRESPONDING, 0},
   {"COUNT", COUNT, 0},
   {"CURRENCY", CURRENCY, 0},
-  {"DATA", DATA_TOK, 0},
+  {"DATA", DATA, 0},
   {"DATE", DATE_TIME, DATE},
   {"DATE-COMPILED", DATE_COMPILED_TOK, 0},
   {"DATE-WRITTEN", DATE_WRITTEN_TOK, 0},

@@ -44,6 +44,19 @@ make_symbol (char *name)
   return sy;
 }
 
+struct sym *
+make_filler (void)
+{
+  static int filler_num = 1;
+
+  char s[15];
+  struct sym *sy;
+  sprintf (s, "FIL$%05d", filler_num++);
+  sy = install (s, SYTB_VAR, 0);
+  sy->defined = 1;
+  return sy;
+}
+
 
 /*
  * Subscript references

@@ -584,7 +584,6 @@ extern void Initialize_SearchAll_Boundaries (struct sym *sy,
 					     struct sym *syidx);
 extern struct sym *determine_table_index_name (struct sym *sy);
 extern void define_field (int level, struct sym *sy);
-extern struct sym *alloc_filler (void);
 extern struct selsubject *save_sel_subject (struct selsubject *ssubj, int type);
 extern void release_sel_subject (int label, struct selsubject *ssbj);
 extern int set_field_value_sw (struct sym *sy, int times);
