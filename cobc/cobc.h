@@ -26,7 +26,7 @@
 
 #define COBC_PACKAGE	"cobc (" PACKAGE_NAME ")"
 #define COBC_VERSION	PACKAGE_VERSION
-#define COBC_COPYRIGHT	"Copyright (C) 2001-2002 Keisuke Nishida\n"
+#define COBC_COPYRIGHT	"Copyright (C) 2001-2003 Keisuke Nishida\n"
 
 extern struct cobc_flags {
   int main;		/* a main function */

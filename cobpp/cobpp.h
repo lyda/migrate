@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2002 Keisuke Nishida
+ * Copyright (C) 2001-2003 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 
 #define COBPP_PACKAGE	"cobpp (" PACKAGE_NAME ")"
 #define COBPP_VERSION	PACKAGE_VERSION
-#define COBPP_COPYRIGHT	"Copyright (C) 2001-2002 Keisuke Nishida\n"
+#define COBPP_COPYRIGHT	"Copyright (C) 2001-2003 Keisuke Nishida\n"
 
 #define COBPP_FORMAT_UNKNOWN	0
 #define COBPP_FORMAT_FREE	1

@@ -579,7 +579,13 @@ cob_move (cob_field *src, cob_field *dst)
 {
   if (COB_FIELD_TYPE (src) == COB_TYPE_GROUP
       || COB_FIELD_TYPE (dst) == COB_TYPE_GROUP)
-    return cob_move_alphanum_to_alphanum (src, dst);
+    {
+      if (COB_FIELD_TYPE (src) == COB_TYPE_NUMERIC_BINARY)
+	return indirect_move (cob_move_binary_to_display, src, dst,
+			      src->attr->digits, src->attr->decimals);
+      else
+	return cob_move_alphanum_to_alphanum (src, dst);
+    }
 
   switch (COB_FIELD_TYPE (src))
     {
