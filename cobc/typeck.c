@@ -2748,7 +2748,9 @@ void
 cb_emit_set_to (cb_tree vars, cb_tree x)
 {
   cb_tree l;
+#if 0
   enum cb_class class = CB_CLASS_UNKNOWN;
+#endif
 
   VALIDATE (x);
   VALIDATE_LIST (vars);
