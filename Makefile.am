@@ -20,6 +20,12 @@ rpm: dist
 
 deb:
 	dpkg-buildpackage -rfakeroot -us -uc
+	cp ../$(PACKAGE)_$(VERSION)-$(RELEASE).tar.gz .
+	cp ../$(PACKAGE)_$(VERSION)-$(RELEASE)_i386.deb .
+
+upload:
+	ncftpput upload.sourceforge.net /incoming \
+	  open-cobol*.tar.gz open-cobol*.rpm *.open-cobol*.deb
 
 test:
 	@(cd testsuite && $(MAKE))
