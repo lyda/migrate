@@ -419,19 +419,19 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
 
 
 <FD_ST>{
-{word} {
-  int tok = scan_word (yytext);
-  if (tok)
-    return tok;
+  {word} {
+    int tok = scan_word (yytext);
+    if (tok)
+      return tok;
 
-  TRACE_PRINT (("<STRING>: %s\n", yytext));
-  /* install w/clone if neccessary */
-  if ((yylval.sval = lookup_symbol (yytext)) == NULL)
-    yyerror ("undefined %s at FD/SD", yytext);
-  return (STRING);
-}
+    TRACE_PRINT (("<STRING>: %s\n", yytext));
+    /* install w/clone if neccessary */
+    if ((yylval.sval = lookup_symbol (yytext)) == NULL)
+      yyerror ("undefined %s at FD/SD", yytext);
+    return (STRING);
+  }
 
-[ \t]* { }
+  [ \t]* { }
 }
 
 <REDEF_ST>{word} {
@@ -459,90 +459,86 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
 }
 
 <SUBSCRIPTS_ST>{
-{any}   {
-  TRACE_PRINT (("<0: any>: %s\n", yytext));
-  return(yytext[0]); 
-}
-{white}+ { }
+  {any}   {
+    TRACE_PRINT (("<0: any>: %s\n", yytext));
+    return(yytext[0]); 
+  }
+  {white}+ { }
 }
 
 <IDENT_ST>{
-[ \t]* { }
-"."/[ \t\n] { 
-  TRACE_PRINT (("<EOS>:\n"));
-  return(EOS); 
-}
+  [ \t]* { }
+  "."/[ \t\n] { 
+    TRACE_PRINT (("<EOS>:\n"));
+    return(EOS); 
+  }
 
-{word} {
-  int tok = scan_word (yytext);
-  if (tok)
-    return tok;
+  {word} {
+    TRACE_PRINT ((" <IDSTRING>: %s\n", yytext));
+    yylval.str = strdup (yytext);
+    return IDSTRING;
+  }
 
-  TRACE_PRINT ((" <IDSTRING>: %s\n", yytext));
-  yylval.str = strdup (yytext);
-  return IDSTRING;
-}
+  {any}   {
+    TRACE_PRINT (("<0: any>: %s\n", yytext));
+    return(yytext[0]); 
+  }
 
-{any}   {
-  TRACE_PRINT (("<0: any>: %s\n", yytext));
-  return(yytext[0]); 
-}
-
-"\n" { }
+  "\n" { }
 } /* end of <IDENT_ST> */
 
 <INITIAL,ENVIR_ST,DATA_ST,REDEF_ST,EXCEPTION_ST>{
 
-"."/[ \t\n] { 
-                TRACE_PRINT (("<EOS>:\n"));
-                return(EOS); 
-        }
+  "."/[ \t\n] { 
+		  TRACE_PRINT (("<EOS>:\n"));
+		  return(EOS); 
+	  }
 
-{ldelim}        { return read_literal ('\''); }
-{sdelim}        { return read_literal ('\"'); }
-X{ldelim}       { return read_literal_x ('\''); }
-X{sdelim}       { return read_literal_x ('\"'); }
+  {ldelim}        { return read_literal ('\''); }
+  {sdelim}        { return read_literal ('\"'); }
+  X{ldelim}       { return read_literal_x ('\''); }
+  X{sdelim}       { return read_literal_x ('\"'); }
 
-{digit}*{decdelim}?{int}+       {
-                TRACE_PRINT (("<NLITERAL>: %s\n", yytext));
-                yylval.lval = install_literal (yytext);
-                return(NLITERAL);
-        }
+  {digit}*{decdelim}?{int}+       {
+		  TRACE_PRINT (("<NLITERAL>: %s\n", yytext));
+		  yylval.lval = install_literal (yytext);
+		  return(NLITERAL);
+	  }
 
-{white}+ { }
+  {white}+ { }
 
 
-{relop}{relop}? {
-		int token;
-                if ((token = scan_reserved_word (yytext)) != 0) {
-                        TRACE_PRINT ((" <reserved>: %s\n", yytext));
-                        return token;
-                }
-                yyerror("relational operator unknown");
-        }
+  {relop}{relop}? {
+		  int token;
+		  if ((token = scan_reserved_word (yytext)) != 0) {
+			  TRACE_PRINT ((" <reserved>: %s\n", yytext));
+			  return token;
+		  }
+		  yyerror("relational operator unknown");
+	  }
 
-{lpar}  {
-                TRACE_PRINT (("<0: lpar>: %s\n", yytext));
-                return(yytext[0]); 
-        }
-"**"    {
-                TRACE_PRINT (("<0: POW_OP>: %s\n", yytext));
-                return(POW_OP); 
-        }
-{any}   {
-                TRACE_PRINT (("<0: any>: %s\n", yytext));
-                return(yytext[0]); 
-        }
+  {lpar}  {
+		  TRACE_PRINT (("<0: lpar>: %s\n", yytext));
+		  return(yytext[0]); 
+	  }
+  "**"    {
+		  TRACE_PRINT (("<0: POW_OP>: %s\n", yytext));
+		  return(POW_OP); 
+	  }
+  {any}   {
+		  TRACE_PRINT (("<0: any>: %s\n", yytext));
+		  return(yytext[0]); 
+	  }
 
-"\n"   { }      
+  "\n"   { }      
 
 } /* end of <INITIAL,DATA_ST,ENVIR_ST> */
 
 <COMMENT_ST>{
-.*      { 
-         TRACE_PRINT ((" <COMMENT_ST>: %s\n", yytext));
-        }
-"\n"   { BEGIN INITIAL; }
+  .*      { 
+	   TRACE_PRINT ((" <COMMENT_ST>: %s\n", yytext));
+	  }
+  "\n"   { BEGIN INITIAL; }
 } /* end of COMMENT_ST */
 
 <PIC_ST>{white}* { 
@@ -551,15 +547,15 @@ X{sdelim}       { return read_literal_x ('\"'); }
         }
 
 <PIC_ST2>{
-{white}* { 
-                BEGIN DATA_ST;
-                TRACE_PRINT (("<PICS -> DATA_ST>:\n"));
-        }
-"."/[ \t\n] { 
-                BEGIN DATA_ST;
-                TRACE_PRINT (("<PICS -> DATA_ST>: EOS\n"));
-                return EOS;
-        }
+  {white}* { 
+		  BEGIN DATA_ST;
+		  TRACE_PRINT (("<PICS -> DATA_ST>:\n"));
+	  }
+  "."/[ \t\n] { 
+		  BEGIN DATA_ST;
+		  TRACE_PRINT (("<PICS -> DATA_ST>: EOS\n"));
+		  return EOS;
+	  }
 }
 
 <PIC_ST,PIC_ST2>{
