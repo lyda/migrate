@@ -5,21 +5,23 @@ Hot To Run NIST CCVS85 Test Suite
 
   http://www.itl.nist.gov/div897/ctg/cobol_form.htm
 
-2. Uncompress it
+2. Uncompress it:
 
   % uncompress newcob.val.Z
 
-3. Setup the test modules
+3. Run the test suite:
 
-  % make
+  % make check summary
+
+4. Test report summary will be put in summary.log.
 
 Make Options
 ------------
 
 - make check    run test suite
-- make summary  store test summary in "summary.txt"
-- make snap     copy test logs in *.old
-- make diff     show diff from *.old
+- make summary  store the test summary in "summary.log"
+- make snap     copy test logs in *.txt
+- make diff     show diff from *.txt
 - make clean    remove built files
 
 Test Modules

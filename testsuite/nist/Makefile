@@ -11,7 +11,7 @@ all: $(MODULES)
 clean:
 	rm -rf $(MODULES) copy EXEC85 EXEC85.cob
 
-check:
+check: all
 	for m in $(MODULES); do \
 	  (cd $$m && make check) \
 	done

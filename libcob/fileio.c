@@ -503,18 +503,25 @@ indexed_open (struct cob_file_desc *f, char *filename, int mode)
       break;
     }
 
-  DB_OPEN (f->file.db, filename, "primary", flags);
-  f->file.db->set_errfile (f->file.db, stderr);
-  f->keys[0].db = f->file.db;
-  f->cursor = NULL;
+  switch (DB_OPEN (f->file.db, filename, "primary", flags))
+    {
+    case 0:
+      f->keys[0].db = f->file.db;
+      f->file.db->set_errfile (f->file.db, stderr);
+      break;
+    case ENOENT:
+      f->file.db->close (f->file.db, 0);
+      f->file.db = NULL;
+      errno = ENOENT;
+      return;
+    }
 
   if (FILE_OPENED (f))
     for (i = 1; i < f->nkeys; i++)
       {
 	char dbname[BUFSIZ];
 	sprintf (dbname, "secondary%d", i);
-	if (DB_OPEN (f->keys[i].db, filename, dbname, flags) != 0)
-	  RETURN_STATUS (99);
+	DB_OPEN (f->keys[i].db, filename, dbname, flags);
 	if (f->keys[i].duplicates)
 	  f->keys[i].db->set_flags (f->keys[i].db, DB_DUP);
       }
@@ -532,7 +539,9 @@ indexed_close (struct cob_file_desc *f)
   /* close DB's */
   for (i = 0; i < f->nkeys; i++)
     f->keys[i].db->close (f->keys[i].db, 0);
+
   f->file.db = NULL;
+  f->cursor = NULL;
 
   RETURN_STATUS (00);
 }
@@ -901,8 +910,10 @@ cob_delete (struct cob_file_desc *f)
 void
 cob_start (struct cob_file_desc *f, int cond, struct cob_field key)
 {
-  if (f->access_mode == COB_ACCESS_RANDOM
-      || (!FILE_OPENED (f) || !FILE_READABLE (f)))
+  if (f->access_mode == COB_ACCESS_RANDOM)
+    RETURN_STATUS (47);
+
+  if (!FILE_OPENED (f) || !FILE_READABLE (f))
     RETURN_STATUS (47);
 
   fileio_funcs[f->organization]->start (f, cond, key);
