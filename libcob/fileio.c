@@ -378,7 +378,10 @@ relative_read_next (struct cob_file_desc *f)
       if (f->relative_key.desc)
 	{
 	  if (f->f.first_read)
-	    cob_set_int (f->relative_key, 1);
+	    {
+	      cob_set_int (f->relative_key, 1);
+	      f->f.first_read = 0;
+	    }
 	  else
 	    cob_add_int (f->relative_key, 1, 0, 0);
 	  if (cob_status != 0)
