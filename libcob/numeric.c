@@ -24,7 +24,8 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "libcob.h"
+#include "move.h"
+#include "numeric.h"
 
 static struct cob_decimal cob_d1_data;
 static struct cob_decimal cob_d2_data;
@@ -39,7 +40,7 @@ cob_decimal cob_d4 = &cob_d4_data;
 cob_decimal cob_dt = &cob_dt_data;
 
 void
-cob_init_math (void)
+cob_init_numeric (void)
 {
   cob_decimal_init (cob_d1);
   cob_decimal_init (cob_d2);
@@ -389,6 +390,15 @@ decimal_get (cob_decimal d, struct cob_field f, int round)
 }
 
 void
+cob_add (struct cob_field f1, struct cob_field f2, int round)
+{
+  cob_decimal_set_field (cob_d1, f1);
+  cob_decimal_set_field (cob_d2, f2);
+  cob_decimal_add (cob_d1, cob_d2);
+  decimal_get (cob_d1, f1, round);
+}
+
+void
 cob_add_int (struct cob_field f, int n, int decimals, int round)
 {
   cob_decimal_set_field (cob_d1, f);
@@ -407,11 +417,11 @@ cob_add_int64 (struct cob_field f, long long n, int decimals, int round)
 }
 
 void
-cob_add (struct cob_field f1, struct cob_field f2, int round)
+cob_sub (struct cob_field f1, struct cob_field f2, int round)
 {
   cob_decimal_set_field (cob_d1, f1);
   cob_decimal_set_field (cob_d2, f2);
-  cob_decimal_add (cob_d1, cob_d2);
+  cob_decimal_sub (cob_d1, cob_d2);
   decimal_get (cob_d1, f1, round);
 }
 
@@ -434,17 +444,8 @@ cob_sub_int64 (struct cob_field f, long long n, int decimals, int round)
 }
 
 void
-cob_sub (struct cob_field f1, struct cob_field f2, int round)
-{
-  cob_decimal_set_field (cob_d1, f1);
-  cob_decimal_set_field (cob_d2, f2);
-  cob_decimal_sub (cob_d1, cob_d2);
-  decimal_get (cob_d1, f1, round);
-}
-
-void
-cob_div (struct cob_field dividend, struct cob_field divisor,
-	 struct cob_field quotient, int round)
+cob_div_quotient (struct cob_field dividend, struct cob_field divisor,
+		  struct cob_field quotient, int round)
 {
   cob_decimal_set_field (cob_d1, dividend);
   cob_decimal_set_field (cob_d2, divisor);

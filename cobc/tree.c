@@ -23,10 +23,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <libcob.h>
 
 #include "tree.h"
 #include "scanner.h"
-#include "libcob.h"
 
 
 /*

@@ -24,7 +24,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "libcob.h"
+#include "move.h"
 
 #define MIN(x,y) ({int _x = (x), _y = (y); (_x < _y) ? _x : _y; })
 #define MAX(x,y) ({int _x = (x), _y = (y); (_x > _y) ? _x : _y; })

@@ -827,12 +827,16 @@ static struct cob_fileio_funcs indexed_funcs = {
  * Public interface
  */
 
-static struct cob_fileio_funcs *fileio_funcs[] = {
-  &sequential_funcs,		/* COB_ORG_SEQUENTIAL */
-  &lineseq_funcs,		/* COB_ORG_LINE_SEQUENTIAL */
-  &relative_funcs,		/* COB_ORG_RELATIVE */
-  &indexed_funcs		/* COB_ORG_INDEXED */
-};
+static struct cob_fileio_funcs *fileio_funcs[4];
+
+void
+cob_init_fileio (void)
+{
+  fileio_funcs[COB_ORG_SEQUENTIAL] = &sequential_funcs;
+  fileio_funcs[COB_ORG_LINE_SEQUENTIAL] = &lineseq_funcs;
+  fileio_funcs[COB_ORG_RELATIVE] = &relative_funcs;
+  fileio_funcs[COB_ORG_INDEXED] = &indexed_funcs;
+}
 
 void
 cob_open (struct cob_file_desc *f, struct cob_field name, int mode)

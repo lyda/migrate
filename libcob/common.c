@@ -25,7 +25,11 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "libcob.h"
+#include "common.h"
+#include "numeric.h"
+#include "termio.h"
+#include "fileio.h"
+#include "call.h"
 
 int cob_initialized = 0;
 
@@ -101,8 +105,9 @@ cob_init (int argc, char **argv)
   cob_argc = argc;
   cob_argv = argv;
 
-  cob_init_math ();
-  cob_init_basicio ();
+  cob_init_numeric ();
+  cob_init_termio ();
+  cob_init_fileio ();
   cob_init_call ();
 
   cob_initialized = 1;

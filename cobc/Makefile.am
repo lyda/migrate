@@ -14,7 +14,6 @@ EXTRA_DIST = inline.c getopt.c getopt1.c getopt.h
 CLEANFILES = parser.c parser.h scanner.c y.output
 DISTCLEANFILES = defaults.h
 MAINTAINERCLEANFILES = Makefile.in
-INCLUDES = -I$(top_srcdir)/libcob
 
 AM_CFLAGS = -Wall
 AM_YFLAGS = -d -v

@@ -18,6 +18,7 @@
  */
 
 #include "config.h"
+#include "defaults.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,7 +29,6 @@
 #include <ltdl.h>
 
 #include "libcob.h"
-#include "defaults.h"
 
 int cob_dynamic_reloading = 0;
 

@@ -24,12 +24,12 @@
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
+#include <libcob.h>
 
 #include "cobc.h"
 #include "tree.h"
 #include "scanner.h"
 #include "codegen.h"
-#include "libcob.h"
 
 #define SWAP(x,y) { typeof (x) t = y; y = x; x = t; }
 

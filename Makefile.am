@@ -3,6 +3,8 @@ bin_SCRIPTS=cob-config
 aclocaldir = $(datadir)/aclocal
 aclocal_DATA = cob.m4
 
+include_HEADERS = libcob.h
+
 SUBDIRS = libcob cobpp cobc texi
 EXTRA_DIST = cob.m4 redhat debian
 

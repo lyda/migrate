@@ -24,6 +24,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <unistd.h>
+#include <libcob.h>
 
 #include "cobc.h"
 #include "tree.h"
@@ -31,7 +32,6 @@
 #include "codegen.h"
 #include "reserved.h"
 #include "defaults.h"
-#include "libcob.h"
 
 /* from parser.c */
 extern int yyparse (void);

@@ -1,9 +1,13 @@
 lib_LTLIBRARIES = libcob.la
-libcob_la_SOURCES = libcob.h common.c move.c math.c basicio.c fileio.c \
-	string.c call.c
+libcob_la_SOURCES = common.c move.c numeric.c termio.c fileio.c strings.c \
+	call.c
 libcob_la_LDFLAGS = -version-info 0:0:0
 libcob_la_LIBADD = $(LIBCOB_LIBS)
-include_HEADERS = libcob.h
+
+pkgincludedir = $(includedir)/libcob
+pkginclude_HEADERS = common.h move.h numeric.h termio.h fileio.h strings.h \
+	call.h support.h
+
 BUILT_SOURCES = defaults.h
 DISTCLEANFILES = defaults.h
 MAINTAINERCLEANFILES = Makefile.in

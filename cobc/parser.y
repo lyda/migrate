@@ -27,13 +27,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <libcob.h>
 
 #include "cobc.h"
 #include "tree.h"
 #include "scanner.h"
 #include "codegen.h"
 #include "reserved.h"
-#include "libcob.h"
 
 #define yydebug		yy_bison_debug
 #define YYDEBUG		COB_DEBUG
@@ -1637,12 +1637,12 @@ divide_body:
   }
 | number INTO number GIVING numeric_edited_name flag_rounded REMAINDER numeric_edited_name
   {
-    push_call_4 (COB_DIVIDE, $3, $1, $5, make_integer ($6));
+    push_call_4 (COB_DIVIDE_QUOTIENT, $3, $1, $5, make_integer ($6));
     push_call_1 (COB_DIVIDE_REMAINDER, $8);
   }
 | number BY number GIVING numeric_edited_name flag_rounded REMAINDER numeric_edited_name
   {
-    push_call_4 (COB_DIVIDE, $1, $3, $5, make_integer ($6));
+    push_call_4 (COB_DIVIDE_QUOTIENT, $1, $3, $5, make_integer ($6));
     push_call_1 (COB_DIVIDE_REMAINDER, $8);
   }
 ;
