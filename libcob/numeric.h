@@ -24,8 +24,8 @@
 #include <libcob/common.h>
 
 struct cob_decimal {
+  char exp;
   mpz_t number;
-  int decimals;
 };
 
 extern struct cob_decimal *cob_d1, *cob_d2, *cob_d3, *cob_d4, *cob_dt;
