@@ -24,14 +24,6 @@
 #include <libcob/cobconfig.h>
 #include <libcob/common.h>
 
-#if HAVE_DB1_DB_H
-#include <db1/db.h>
-#else
-#if HAVE_DB_H
-#include <db.h>
-#endif
-#endif
-
 #define COB_EQ	1 	/* x == y */
 #define COB_LT	2 	/* x <  y */
 #define COB_LE	3 	/* x <= y */
@@ -63,6 +55,8 @@
 #define COB_CLOSE_NO_REWIND	5
 #define COB_CLOSE_LOCK		6
 
+#define COB_FILE_MODE		0644
+
 #define COB_FILE_SUCCEED		00
 #define COB_FILE_SUCCEED_OPTIONAL	05
 #define COB_FILE_SUCCEED_NO_REEL	07
@@ -92,37 +86,21 @@ struct cob_file {
   unsigned char *record_data;	/* record data address */
   size_t record_min, record_max; /* record min/max size */
   struct cob_field record_depending; /* record size depending on */
-  union {
-    int fd;
-    FILE *fp;
-    DB *db;
-  } file;			/* file data pointer */
-  /* flags */
   struct {
+    char opened      : 1;	/* successfully opened */
     char optional    : 1;	/* OPTIONAL */
     char nonexistent : 1;	/* nonexistent file */
     char end_of_file : 1;	/* reached the end of file */
     char first_read  : 1;	/* first READ after OPEN or START */
     char read_done   : 1;	/* last READ successfully done */
   } f;
-  /* fields used in RELATIVE files */
-  struct cob_field relative_key; /* RELATIVE KEY */
-  /* fields used in INDEXED files */
-  int key_index;
-  struct cob_key {
+  void *file;			/* file type specific data pointer */
+  /* for INDEXED files */
+  struct cob_file_key {
     struct cob_field field;	/* key field */
     int duplicates;		/* WITH DUPLICATES */
-    DB *db;			/* database handler */
   } *keys;
-  int nkeys;			/* the number of keys */
-  unsigned char *last_key;	/* the last key written */
-  /* fields used in SORT files */
-  unsigned int sort_nkeys;
-  struct cob_sort_key {
-    int dir;
-    struct cob_field field;
-  } *sort_keys;
-  DBT key, data;
+  int nkeys;
 };
 
 struct cob_fileio_funcs {
@@ -152,7 +130,7 @@ extern void cob_rewrite (struct cob_file *f, struct cob_field rec);
 extern void cob_delete (struct cob_file *f);
 extern void cob_start (struct cob_file *f, int cond, struct cob_field key);
 
-extern void cob_sort_keys (struct cob_file *f, ...);
+extern void cob_sort_init (struct cob_file *sort_file, ...);
 extern void cob_sort_using (struct cob_file *sort_file, struct cob_file *data_file);
 extern void cob_sort_giving (struct cob_file *sort_file, struct cob_file *data_file);
 

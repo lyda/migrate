@@ -20,10 +20,4 @@
 #ifndef COB_CONFIG_H
 #define COB_CONFIG_H
 
-/* Define to 1 if you have the <db1/db.h> header file. */
-#undef HAVE_DB1_DB_H
-
-/* Define to 1 if you have the <db.h> header file. */
-#undef HAVE_DB_H
-
 #endif /* COB_CONFIG_H_ */

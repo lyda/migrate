@@ -1,3 +1,10 @@
+2002-09-29  Keisuke Nishida  <knishida@netlab.jp>
+
+	* fileio.h (cob_file): Restructured.
+	* fileio.c: Updated for new cob_file scheme.
+	* fileio.h, fileio.c (cob_sort_init): Renamed from cob_sort_keys.
+	* cobconfig.h.in (HAVE_DB1_DB_H, HAVE_DB_H): Removed.
+
 2002-09-24  Keisuke Nishida  <knishida@netlab.jp>
 
 	* support.h: Do not support non-computed-goto jump.
