@@ -233,30 +233,25 @@ cob_decimal_get_display (cob_decimal *d, cob_field *f)
   return 0;
 }
 
-/* NATIVE */
+/* BINARY */
 
 static void
-cob_decimal_set_native (cob_decimal *d, cob_field *f)
+cob_decimal_set_binary (cob_decimal *d, cob_field *f)
 {
-  switch (f->size)
+  if (f->size <= 4)
+    cob_decimal_set_int (d, cob_binary_get_int (f));
+  else
     {
-    case 1: cob_decimal_set_int (d, *(char *) f->data); break;
-    case 2: cob_decimal_set_int (d, *(short *) f->data); break;
-    case 4: cob_decimal_set_int (d, *(long *) f->data); break;
-    case 8:
-      {
-	long long val = *(long long *) f->data;
-	mpz_set_si (d->value, val >> 32);
-	mpz_mul_2exp (d->value, d->value, 32);
-	mpz_add_ui (d->value, d->value, val & 0xffffffff);
-	break;
-      }
+      long long val = cob_binary_get_int64 (f);
+      mpz_set_si (d->value, val >> 32);
+      mpz_mul_2exp (d->value, d->value, 32);
+      mpz_add_ui (d->value, d->value, val & 0xffffffff);
     }
   d->scale = f->attr->scale;
 }
 
 static int
-cob_decimal_get_native (cob_decimal *d, cob_field *f)
+cob_decimal_get_binary (cob_decimal *d, cob_field *f)
 {
   int digits = f->attr->digits;
   if (f->size <= 4)
@@ -269,12 +264,7 @@ cob_decimal_get_native (cob_decimal *d, cob_field *f)
 	goto overflow;
       if (!COB_FIELD_HAVE_SIGN (f) && val < 0)
 	val = -val;
-      switch (f->size)
-	{
-	case 1: *(char *) f->data = val; break;
-	case 2: *(short *) f->data = val; break;
-	case 4: *(long *) f->data = val; break;
-	}
+      cob_binary_set_int (f, val);
     }
   else
     {
@@ -295,32 +285,13 @@ cob_decimal_get_native (cob_decimal *d, cob_field *f)
 	goto overflow;
       if (!COB_FIELD_HAVE_SIGN (f) && val < 0)
 	val = -val;
-      *(long long *) f->data = val;
+      cob_binary_set_int64 (f, val);
     }
   return 0;
 
  overflow:
   COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
   return cob_exception_code;
-}
-
-/* BINARY */
-
-static void
-cob_decimal_set_binary (cob_decimal *d, cob_field *f)
-{
-  cob_binary_convert (f);
-  cob_decimal_set_native (d, f);
-  cob_binary_convert (f);
-}
-
-static int
-cob_decimal_get_binary (cob_decimal *d, cob_field *f)
-{
-  int ret = cob_decimal_get_native (d, f);
-  if (ret == 0)
-    cob_binary_convert (f);
-  return ret;
 }
 
 /* PACKED-DECIMAL */
@@ -361,9 +332,6 @@ cob_decimal_set_field (cob_decimal *d, cob_field *f)
     case COB_TYPE_NUMERIC_BINARY:
       cob_decimal_set_binary (d, f);
       break;
-    case COB_TYPE_NUMERIC_NATIVE:
-      cob_decimal_set_native (d, f);
-      break;
     case COB_TYPE_NUMERIC_PACKED:
       cob_decimal_set_packed (d, f);
       break;
@@ -399,8 +367,6 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f)
       return cob_decimal_get_display (d, f);
     case COB_TYPE_NUMERIC_BINARY:
       return cob_decimal_get_binary (d, f);
-    case COB_TYPE_NUMERIC_NATIVE:
-      return cob_decimal_get_native (d, f);
     default:
       {
 	cob_field_attr attr = {
@@ -736,7 +702,6 @@ cob_add_int (cob_field *f, int n)
   switch (COB_FIELD_TYPE (f))
     {
     case COB_TYPE_NUMERIC_BINARY:
-    case COB_TYPE_NUMERIC_NATIVE:
     case COB_TYPE_NUMERIC_PACKED:
       /* not optimized */
       cob_decimal_set_field (&cob_d1, f);

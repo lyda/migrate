@@ -26,5 +26,9 @@ extern void cob_move (cob_field *src, cob_field *dst);
 extern void cob_memcpy (cob_field *dst, unsigned char *src, int size);
 extern void cob_set_int (cob_field *f, int n);
 extern int cob_get_int (cob_field *f);
+extern int cob_binary_get_int (cob_field *f);
+extern long long cob_binary_get_int64 (cob_field *f);
+extern void cob_binary_set_int (cob_field *f, int n);
+extern void cob_binary_set_int64 (cob_field *f, long long n);
 
 #endif /* COB_MOVE_H_ */

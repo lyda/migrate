@@ -39,7 +39,6 @@
 #define COB_TYPE_NUMERIC_BINARY		0x11
 #define COB_TYPE_NUMERIC_PACKED		0x12
 #define COB_TYPE_NUMERIC_FLOAT		0x13
-#define COB_TYPE_NUMERIC_NATIVE		0x14
 #define COB_TYPE_NUMERIC_EDITED		0x24
 
 #define COB_TYPE_ALPHABETIC		0x20
@@ -57,12 +56,14 @@
 #define COB_FLAG_SIGN_LEADING		0x04
 #define COB_FLAG_BLANK_ZERO		0x08
 #define COB_FLAG_JUSTIFIED		0x10
+#define COB_FLAG_BINARY_SWAP		0x20
 
 #define COB_FIELD_HAVE_SIGN(f)	    ((f)->attr->flags & COB_FLAG_HAVE_SIGN)
 #define COB_FIELD_SIGN_SEPARATE(f)  ((f)->attr->flags & COB_FLAG_SIGN_SEPARATE)
 #define COB_FIELD_SIGN_LEADING(f)   ((f)->attr->flags & COB_FLAG_SIGN_LEADING)
 #define COB_FIELD_BLANK_ZERO(f)	    ((f)->attr->flags & COB_FLAG_BLANK_ZERO)
 #define COB_FIELD_JUSTIFIED(f)	    ((f)->attr->flags & COB_FLAG_JUSTIFIED)
+#define COB_FIELD_BINARY_SWAP(f)    ((f)->attr->flags & COB_FLAG_BINARY_SWAP)
 
 /* field attributes */
 
@@ -192,7 +193,6 @@ extern void cob_stop_run (void);
 
 extern int cob_real_get_sign (cob_field *f);
 extern void cob_real_put_sign (cob_field *f, int sign);
-extern void cob_binary_convert (cob_field *f);
 extern char *cob_field_to_string (cob_field *f, char *s);
 
 /* Switch */

@@ -1,3 +1,17 @@
+2003-08-10  Keisuke Nishida  <knishida@netlab.jp>
+
+	* common.h (COB_FLAG_BINARY_SWAP): New macro.
+	* move.h, move.c (cob_binary_get_int): New function.
+	(cob_binary_get_int64): New function.
+	(cob_binary_set_int): New function.
+	(cob_binary_set_int64): New function.
+	* common.h (COB_TYPE_NUMERIC_NATIVE): Removed.
+	* common.h, common.c (cob_binary_convert): Removed.
+	* move.c (cob_move_display_to_native): Removed.
+	(cob_move_native_to_display): Removed.
+	* numeric.c (cob_decimal_set_native): Removed.
+	(cob_decimal_get_native): Removed.
+
 2003-08-09  Keisuke Nishida  <knishida@netlab.jp>
 
 	* call.c (cob_call_error): Exit with status 1.

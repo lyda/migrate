@@ -25,6 +25,7 @@
 #include <ctype.h>
 
 #include "move.h"
+#include "byteorder.h"
 #include "lib/gettext.h"
 
 #define MIN(x,y) ({int _x = (x), _y = (y); (_x < _y) ? _x : _y; })
@@ -247,19 +248,17 @@ cob_move_packed_to_display (cob_field *f1, cob_field *f2)
 
 
 /*
- * Native integer
+ * Binary integer
  */
 
 static void
-cob_move_display_to_native (cob_field *f1, cob_field *f2)
+cob_move_display_to_binary (cob_field *f1, cob_field *f2)
 {
   size_t i, size;
   long long val = 0;
   int sign = cob_get_sign (f1);
   size_t size1 = COB_FIELD_SIZE (f1);
-  size_t size2 = f2->size;
   unsigned char *data1 = COB_FIELD_DATA (f1);
-  unsigned char *data2 = f2->data;
 
   /* get value */
   size = size1 - f1->attr->scale + f2->attr->scale;
@@ -273,34 +272,20 @@ cob_move_display_to_native (cob_field *f1, cob_field *f2)
   val %= cob_exp10LL[(int) f2->attr->digits];
 
   /* store */
-  switch (size2)
-    {
-    case 1: *(char *) data2 = val; break;
-    case 2: *(short *) data2 = val; break;
-    case 4: *(long *) data2 = val; break;
-    case 8: *(long long *) data2 = val; break;
-    }
+  cob_binary_set_int64 (f2, val);
 
   cob_put_sign (f1, sign);
 }
 
 static void
-cob_move_native_to_display (cob_field *f1, cob_field *f2)
+cob_move_binary_to_display (cob_field *f1, cob_field *f2)
 {
   int i, sign;
   long long val = 0;
   char buff[20]; /* long long is at most 20 digits */
 
   /* get value */
-  switch (f1->size)
-    {
-    case 1: val = *(char *) f1->data; break;
-    case 2: val = *(short *) f1->data; break;
-    case 4: val = *(long *) f1->data; break;
-    case 8: val = *(long long *) f1->data; break;
-    }
-
-  /* get sign */
+  val = cob_binary_get_int64 (f1);
   sign = 1;
   if (val < 0)
     {
@@ -320,26 +305,6 @@ cob_move_native_to_display (cob_field *f1, cob_field *f2)
   store_common_region (f2, buff + i, 20 - i, f1->attr->scale);
 
   cob_put_sign (f2, sign);
-}
-
-
-/*
- * Binary integer
- */
-
-static void
-cob_move_display_to_binary (cob_field *f1, cob_field *f2)
-{
-  cob_move_display_to_native (f1, f2);
-  cob_binary_convert (f2);
-}
-
-static void
-cob_move_binary_to_display (cob_field *f1, cob_field *f2)
-{
-  cob_binary_convert (f1);
-  cob_move_native_to_display (f1, f2);
-  cob_binary_convert (f1);
 }
 
 
@@ -635,8 +600,6 @@ cob_move (cob_field *src, cob_field *dst)
 	  return cob_move_display_to_packed (src, dst);
 	case COB_TYPE_NUMERIC_BINARY:
 	  return cob_move_display_to_binary (src, dst);
-	case COB_TYPE_NUMERIC_NATIVE:
-	  return cob_move_display_to_native (src, dst);
 	case COB_TYPE_NUMERIC_EDITED:
 	  return cob_move_display_to_edited (src, dst);
 	case COB_TYPE_ALPHANUMERIC_EDITED:
@@ -672,16 +635,6 @@ cob_move (cob_field *src, cob_field *dst)
 				src->attr->digits, src->attr->scale);
 	}
 
-    case COB_TYPE_NUMERIC_NATIVE:
-      switch (COB_FIELD_TYPE (dst))
-	{
-	case COB_TYPE_NUMERIC_DISPLAY:
-	  return cob_move_native_to_display (src, dst);
-	default:
-	  return indirect_move (cob_move_native_to_display, src, dst,
-				src->attr->digits, src->attr->scale);
-	}
-
     case COB_TYPE_NUMERIC_EDITED:
       switch (COB_FIELD_TYPE (dst))
 	{
@@ -689,7 +642,6 @@ cob_move (cob_field *src, cob_field *dst)
 	  return cob_move_edited_to_display (src, dst);
 	case COB_TYPE_NUMERIC_PACKED:
 	case COB_TYPE_NUMERIC_BINARY:
-	case COB_TYPE_NUMERIC_NATIVE:
 	case COB_TYPE_NUMERIC_EDITED:
 	  return indirect_move (cob_move_edited_to_display,
 				src, dst, 36, 18);
@@ -706,7 +658,6 @@ cob_move (cob_field *src, cob_field *dst)
 	  return cob_move_alphanum_to_display (src, dst);
 	case COB_TYPE_NUMERIC_PACKED:
 	case COB_TYPE_NUMERIC_BINARY:
-	case COB_TYPE_NUMERIC_NATIVE:
 	case COB_TYPE_NUMERIC_EDITED:
 	  return indirect_move (cob_move_alphanum_to_display,
 				src, dst, 36, 18);
@@ -723,24 +674,8 @@ cob_move (cob_field *src, cob_field *dst)
  * Convenience functions
  */
 
-void
-cob_memcpy (cob_field *dst, unsigned char *src, int size)
-{
-  cob_field_attr attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, 0};
-  cob_field temp = {size, src, &attr};
-  cob_move (&temp , dst);
-}
-
-void
-cob_set_int (cob_field *f, int n)
-{
-  cob_field_attr attr = {COB_TYPE_NUMERIC_NATIVE, 9, 0, COB_FLAG_HAVE_SIGN, 0};
-  cob_field temp = {4, (unsigned char *) &n, &attr};
-  cob_move (&temp, f);
-}
-
-static void
-cob_display_to_int (cob_field *f, int *n)
+static int
+cob_display_get_int (cob_field *f)
 {
   size_t i;
   int val = 0;
@@ -768,41 +703,172 @@ cob_display_to_int (cob_field *f, int *n)
     }
   if (sign < 0)
     val = -val;
-  *n = val;
 
   cob_put_sign (f, sign);
+  return val;
 }
 
-static void
-cob_native_to_int (cob_field *f, int *n)
+int
+cob_binary_get_int (cob_field *f)
 {
   switch (f->size)
     {
-    case 1: *n = *(char *) f->data; break;
-    case 2: *n = *(short *) f->data; break;
-    default: *n = *(long *) f->data; break;
+    case 1:
+      return *(char *) f->data;
+    case 2:
+      if (COB_FIELD_BINARY_SWAP (f))
+	return (short) COB_UINT16_SWAP_LE_BE (*(short *) f->data);
+      else
+	return *(short *) f->data;
+    case 3:
+      {
+	long n = (((long) *(unsigned short *) f->data)
+		  | ((long) ((char) f->data[2]) << 16));
+	if (COB_FIELD_BINARY_SWAP (f))
+	  n = (long) COB_UINT32_SWAP_LE_BE (n) >> 8;
+	return n;
+      }
+    default:
+      if (COB_FIELD_BINARY_SWAP (f))
+	return (long) COB_UINT32_SWAP_LE_BE (*(long *) f->data);
+      else
+	return *(long *) f->data;
     }
+}
+
+long long
+cob_binary_get_int64 (cob_field *f)
+{
+  long long n;
+  switch (f->size)
+    {
+    case 1: case 2: case 3: case 4:
+      return cob_binary_get_int (f);
+    case 5:
+      n = (((long long) *(unsigned long *) f->data)
+	   | ((long long) ((char) f->data[4]) << 32));
+      if (COB_FIELD_BINARY_SWAP (f))
+	n = (long long) COB_UINT64_SWAP_LE_BE (n) >> 24;
+      return n;
+    case 6:
+      n = (((long long) *(unsigned long *) f->data)
+	   | ((long long) (*(short *) (f->data + 4)) << 32));
+      if (COB_FIELD_BINARY_SWAP (f))
+	n = (long long) COB_UINT64_SWAP_LE_BE (n) >> 16;
+      return n;
+    case 7:
+      n = (((long long) *(unsigned long *) f->data)
+	   | ((long long) (*(unsigned short *) (f->data + 4)) << 32)
+	   | ((long long) ((char) f->data[6]) << 48));
+      if (COB_FIELD_BINARY_SWAP (f))
+	n = (long long) COB_UINT64_SWAP_LE_BE (n) >> 8;
+      return n;
+    default:
+      if (COB_FIELD_BINARY_SWAP (f))
+	return (long long) COB_UINT64_SWAP_LE_BE (*(long long *) f->data);
+      else
+	return *(long long *) f->data;
+    }
+}
+
+void
+cob_binary_set_int (cob_field *f, int n)
+{
+  switch (f->size)
+    {
+    case 1:
+      *(char *) f->data = (char) n;
+      break;
+    case 2:
+      if (COB_FIELD_BINARY_SWAP (f))
+	*(short *) f->data = COB_UINT16_SWAP_LE_BE (n);
+      else
+	*(short *) f->data = (short) n;
+      break;
+    case 3:
+      if (COB_FIELD_BINARY_SWAP (f))
+	n = COB_UINT32_SWAP_LE_BE (n << 8);
+      *(short *) f->data = (short) n;
+      *(char *) (f->data + 2) = (char) (n >> 16);
+      break;
+    default:
+      if (COB_FIELD_BINARY_SWAP (f))
+	*(long *) f->data = COB_UINT32_SWAP_LE_BE (n);
+      else
+	*(long *) f->data = (long) n;
+      break;
+    }
+}
+
+void
+cob_binary_set_int64 (cob_field *f, long long n)
+{
+  switch (f->size)
+    {
+    case 1: case 2: case 3: case 4:
+      cob_binary_set_int (f, n);
+      break;
+    case 5:
+      if (COB_FIELD_BINARY_SWAP (f))
+	n = COB_UINT64_SWAP_LE_BE (n << 24);
+      *(long *) f->data = (long) n;
+      *(char *) (f->data + 4) = (char) (n >> 32);
+      break;
+    case 6:
+      if (COB_FIELD_BINARY_SWAP (f))
+	n = COB_UINT64_SWAP_LE_BE (n << 16);
+      *(long *) f->data = (long) n;
+      *(short *) (f->data + 4) = (short) (n >> 32);
+      break;
+    case 7:
+      if (COB_FIELD_BINARY_SWAP (f))
+	n = COB_UINT64_SWAP_LE_BE (n << 8);
+      *(long *) f->data = (long) n;
+      *(short *) (f->data + 4) = (short) (n >> 32);
+      *(char *) (f->data + 6) = (char) (n >> 48);
+      break;
+    default:
+      if (COB_FIELD_BINARY_SWAP (f))
+	*(long long *) f->data = COB_UINT64_SWAP_LE_BE (n);
+      else
+	*(long long *) f->data = n;
+      break;
+    }
+}
+
+void
+cob_memcpy (cob_field *dst, unsigned char *src, int size)
+{
+  cob_field_attr attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, 0};
+  cob_field temp = {size, src, &attr};
+  cob_move (&temp , dst);
+}
+
+void
+cob_set_int (cob_field *f, int n)
+{
+  cob_field_attr attr = {COB_TYPE_NUMERIC_BINARY, 9, 0, COB_FLAG_HAVE_SIGN, 0};
+  cob_field temp = {4, (unsigned char *) &n, &attr};
+  cob_move (&temp, f);
 }
 
 int
 cob_get_int (cob_field *f)
 {
-  int n;
   switch (COB_FIELD_TYPE (f))
     {
     case COB_TYPE_NUMERIC_DISPLAY:
-      cob_display_to_int (f, &n);
-      break;
-    case COB_TYPE_NUMERIC_NATIVE:
-      cob_native_to_int (f, &n);
-      break;
+      return cob_display_get_int (f);
+    case COB_TYPE_NUMERIC_BINARY:
+      return cob_binary_get_int (f);
     default:
       {
+	int n;
 	cob_field_attr attr =
-	  {COB_TYPE_NUMERIC_NATIVE, 9, 0, COB_FLAG_HAVE_SIGN, 0};
+	  {COB_TYPE_NUMERIC_BINARY, 9, 0, COB_FLAG_HAVE_SIGN, 0};
 	cob_field temp = {4, (unsigned char *) &n, &attr};
 	cob_move (f, &temp);
+	return n;
       }
     }
-  return n;
 }
