@@ -1,26 +1,27 @@
 #!/usr/local/bin/perl -w
 #
-# Copyright (C) 2001 David Essex
+#  Copyright (C) 2001 David Essex
 # 
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public License
-# as published by the Free Software Foundation; either version 2.1,
-# or (at your option) any later version.
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2, or (at your option)
+#  any later version.
 # 
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
 # 
-# You should have received a copy of the GNU Lesser General Public
-# License along with this library; see the file COPYING.LIB.  If
-# not, write to the Free Software Foundation, Inc., 59 Temple Place,
-# Suite 330, Boston, MA 02111-1307 USA
+#  You should have received a copy of the GNU General Public License
+#  along with this software; see the file COPYING.  If not, write to
+#  the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+#  Boston, MA 02111-1307 USA
+#
 
 ###########################################################################
 #                                                                         #
-# Perl script to separate NIST test suite into separate files             #
-#      and create a Makefile for the NIST test suite COBOL programs       #
+# Perl script to separate NIST test suite into separate files             #                               #
+#      and create a Makefile for the NIST test suite COBOL programs       #                               #
 #                                                                         #
 ###########################################################################
 
@@ -70,7 +71,7 @@ my @PrgmList_SQ;
 my @PrgmList_ST;
 #
 my @ExtentionStringArray1 =  ("COBOL", "SUBRTN", "SUBPRG", "CLBRY", "DATA*");
-# Replace values with preffered output extention
+# Replace values with preffered output extention (suffix)
 my @ExtentionStringArray2 =  ("CBL", "SUBRTN", "SUBPRG", "CLBRY", "DATA");
 my @ExtentionStringArrayCntr =  (0, 0, 0, 0, 0);
 #

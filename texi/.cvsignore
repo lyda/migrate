@@ -1,4 +1,5 @@
+*.info*
 Makefile
 Makefile.in
+mdate-sh
 texinfo.tex
-*.info*
