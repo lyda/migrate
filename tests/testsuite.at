@@ -28,6 +28,7 @@ m4_include([fundamental.at])
 m4_include([subscripts.at])	# 8.4.1.2 Subscripts
 m4_include([ref-mod.at])	# 8.4.2.3 Reference-modification
 
+m4_include([occurs.at])		# 13.16.36 OCCURS clause
 m4_include([redefines.at])	# 13.16.42 REDEFINES clause
 m4_include([usage.at])		# 13.16.58 USAGE clause
 m4_include([value.at])		# 13.16.61 VALUE clause

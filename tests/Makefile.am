@@ -7,6 +7,7 @@ TESTSUITE_AT = \
 	fundamental.at \
 	subscripts.at \
 	ref-mod.at \
+	occurs.at \
 	redefines.at \
 	usage.at \
 	value.at \
