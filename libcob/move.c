@@ -89,7 +89,7 @@ cob_move_alphanum_to_display (cob_field *f1, cob_field *f2)
 
   /* count the number of digits before decimal point */
   count = 0;
-  for (p = s1; p < e1 && *p != cob_decimal_point; p++)
+  for (p = s1; p < e1 && *p != cob_env->decimal_point; p++)
     if (isdigit (*p))
       count++;
 
@@ -108,12 +108,12 @@ cob_move_alphanum_to_display (cob_field *f1, cob_field *f2)
       unsigned char c = *s1;
       if (isdigit (c))
 	*s2++ = c;
-      else if (c == cob_decimal_point)
+      else if (c == cob_env->decimal_point)
 	{
 	  if (count++ > 0)
 	    goto error;
 	}
-      else if (!(isspace (c) || c == cob_numeric_separator))
+      else if (!(isspace (c) || c == cob_env->numeric_separator))
 	goto error;
     }
 
@@ -379,11 +379,11 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
     {
       unsigned char c = p[0];
       if (c == '9' || c == 'P' || c == 'Z' || c == '*' ||
-	  c == cob_currency_symbol)
+	  c == cob_env->currency_symbol)
 	count += p[1], count_sign = 0;
       else if (count_sign && (c == '+' || c == '-'))
 	count += p[1];
-      else if (p[0] == 'V' || p[0] == cob_decimal_point)
+      else if (p[0] == 'V' || p[0] == cob_env->decimal_point)
 	break;
     }
 
@@ -414,9 +414,9 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 	    case 'V':
 	    case '.':
 	    case ',':
-	      if (c == 'V' || c == cob_decimal_point)
+	      if (c == 'V' || c == cob_env->decimal_point)
 		{
-		  *dst = cob_decimal_point;
+		  *dst = cob_env->decimal_point;
 		  decimal_point = dst;
 		  break;
 		}
@@ -461,11 +461,11 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 	      }
 
 	    default:
-	      if (c == cob_currency_symbol)
+	      if (c == cob_env->currency_symbol)
 		{
 		  char x = get ();
 		  if (dst == f2->data || suppress_zero)
-		    *dst = pad, sign_symbol = cob_currency_symbol;
+		    *dst = pad, sign_symbol = cob_env->currency_symbol;
 		  else
 		    *dst = x;
 		  break;
@@ -483,7 +483,7 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 	memset (f2->data, ' ', f2->size);
       else
 	for (dst = f2->data; dst < f2->data + f2->size; dst++)
-	  if (*dst != cob_decimal_point)
+	  if (*dst != cob_env->decimal_point)
 	    *dst = pad;
     }
   else

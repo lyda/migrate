@@ -47,8 +47,7 @@ char **cob_argv = NULL;
 char *cob_source_file = NULL;
 int cob_source_line = 0;
 
-unsigned char cob_decimal_point = '.';
-unsigned char cob_currency_symbol = '$';
+cob_environment *cob_env = NULL;
 
 /* ZERO,SPACE,HIGH-VALUE,LOW-VALUE,QUOTE */
 

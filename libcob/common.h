@@ -218,9 +218,13 @@ extern int cob_source_line;
 
 /* environment variables */
 
-extern unsigned char cob_decimal_point;
-extern unsigned char cob_currency_symbol;
-#define cob_numeric_separator ((cob_decimal_point == '.') ? ',' : '.')
+typedef struct {
+  unsigned char decimal_point;
+  unsigned char currency_symbol;
+  unsigned char numeric_separator;
+} cob_environment;
+
+extern cob_environment *cob_env;
 
 /* constants */
 

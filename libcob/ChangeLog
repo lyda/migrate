@@ -1,3 +1,10 @@
+2002-12-10  Keisuke Nishida  <knishida@netlab.jp>
+
+	* common.h (cob_environment, cob_env): New.
+	(cob_decimal_point, cob_currency_symbol, cob_numeric_separator):
+	Replaced by cob_env.  All files updated.
+	* common.c (cob_decimal_point, cob_currency_symbol): Removed.
+
 2002-12-05  Keisuke Nishida  <knishida@netlab.jp>
 
 	* common.c (cob_index, cob_index_depending): Exit when index is
