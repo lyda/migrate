@@ -359,7 +359,7 @@ build_decimal_assign (cb_tree vars, char op, cb_tree val)
 }
 
 cb_tree
-cb_build_arithmetic_assign (cb_tree vars, char op, cb_tree val)
+cb_build_arithmetic (cb_tree vars, char op, cb_tree val)
 {
   cb_tree l;
 

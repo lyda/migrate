@@ -1659,11 +1659,11 @@ add_statement:
 add_body:
   numeric_value_list TO numeric_name_list
   {
-    $$ = cb_build_arithmetic_assign ($3, '+', cb_build_connective_op ($1, '+'));
+    $$ = cb_build_arithmetic ($3, '+', cb_build_connective_op ($1, '+'));
   }
 | numeric_value_list add_to GIVING numeric_edited_name_list
   {
-    $$ = cb_build_arithmetic_assign ($4, 0, cb_build_connective_op ($1, '+'));
+    $$ = cb_build_arithmetic ($4, 0, cb_build_connective_op ($1, '+'));
   }
 | CORRESPONDING group_name _to group_name flag_rounded
   {
@@ -1811,7 +1811,7 @@ compute_statement:
 compute_body:
   numeric_edited_name_list '=' numeric_expr
   {
-    $$ = cb_build_arithmetic_assign ($1, 0, $3);
+    $$ = cb_build_arithmetic ($1, 0, $3);
   }
 ;
 end_compute:
@@ -1921,15 +1921,15 @@ divide_statement:
 divide_body:
   numeric_value INTO numeric_name_list
   {
-    $$ = cb_build_arithmetic_assign ($3, '/', $1);
+    $$ = cb_build_arithmetic ($3, '/', $1);
   }
 | numeric_value INTO numeric_value GIVING numeric_edited_name_list
   {
-    $$ = cb_build_arithmetic_assign ($5, 0, cb_build_binary_op ($3, '/', $1));
+    $$ = cb_build_arithmetic ($5, 0, cb_build_binary_op ($3, '/', $1));
   }
 | numeric_value BY numeric_value GIVING numeric_edited_name_list
   {
-    $$ = cb_build_arithmetic_assign ($5, 0, cb_build_binary_op ($1, '/', $3));
+    $$ = cb_build_arithmetic ($5, 0, cb_build_binary_op ($1, '/', $3));
   }
 | numeric_value INTO numeric_value GIVING numeric_edited_name
   REMAINDER numeric_edited_name
@@ -2334,11 +2334,11 @@ multiply_statement:
 multiply_body:
   numeric_value BY numeric_name_list
   {
-    $$ = cb_build_arithmetic_assign ($3, '*', $1);
+    $$ = cb_build_arithmetic ($3, '*', $1);
   }
 | numeric_value BY numeric_value GIVING numeric_edited_name_list
   {
-    $$ = cb_build_arithmetic_assign ($5, 0, cb_build_binary_op ($1, '*', $3));
+    $$ = cb_build_arithmetic ($5, 0, cb_build_binary_op ($1, '*', $3));
   }
 ;
 end_multiply:
@@ -2896,11 +2896,11 @@ subtract_statement:
 subtract_body:
   numeric_value_list FROM numeric_name_list
   {
-    $$ = cb_build_arithmetic_assign ($3, '-', cb_build_connective_op ($1, '+'));
+    $$ = cb_build_arithmetic ($3, '-', cb_build_connective_op ($1, '+'));
   }
 | numeric_value_list FROM numeric_value GIVING numeric_edited_name_list
   {
-    $$ = cb_build_arithmetic_assign ($5, 0, cb_build_connective_op (cons ($3, $1), '-'));
+    $$ = cb_build_arithmetic ($5, 0, cb_build_connective_op (cons ($3, $1), '-'));
   }
 | CORRESPONDING group_name FROM group_name flag_rounded
   {

@@ -820,7 +820,7 @@ extern cb_tree cb_build_section_name (cb_tree name);
 extern cb_tree cb_build_identifier (cb_tree x);
 extern cb_tree cb_build_using_list (cb_tree list);
 
-extern cb_tree cb_build_arithmetic_assign (cb_tree vars, char op, cb_tree val);
+extern cb_tree cb_build_arithmetic (cb_tree vars, char op, cb_tree val);
 extern cb_tree cb_build_add (cb_tree v, cb_tree n, cb_tree round);
 extern cb_tree cb_build_sub (cb_tree v, cb_tree n, cb_tree round);
 extern cb_tree cb_build_move (cb_tree src, cb_tree dst);
