@@ -713,7 +713,7 @@ process_link (struct filename *l)
     strcpy (name, output_name);
 
 #if (defined __CYGWIN__ || defined __MINGW32__)
-  sprintf (buff, "%s -Wl,--export-dynamic -Wl,--enable-auto-import %s -o %s %s %s",
+  sprintf (buff, "%s -Wl,--export-all-symbols -Wl,--enable-auto-import %s -o %s %s %s",
 	   cob_cc, cob_ldflags, name, objs, cob_libs);
 #else
   sprintf (buff, "%s -rdynamic %s -o %s %s %s",
