@@ -147,6 +147,7 @@ static struct reserved reserved_words[] = {
   {"DOWN",		DOWN, 0},
   {"DUPLICATES",	DUPLICATES, 0},
   {"DYNAMIC",		DYNAMIC, 0},
+  {"EBCDIC",		EBCDIC, 0},
   {"ELSE",		ELSE, 0},
   {"END",		END, 0},
   {"END-ACCEPT",	END_ACCEPT, 0},

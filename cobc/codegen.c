@@ -629,6 +629,9 @@ output_param (cb_tree x, int id)
 	  case CB_ALPHABET_STANDARD_2:
 	    output ("0");
 	    break;
+	  case CB_ALPHABET_EBCDIC:
+	    output ("cob_a2e");
+	    break;
 	  case CB_ALPHABET_CUSTOM:
 	    output ("s_%s", p->cname);
 	    break;
