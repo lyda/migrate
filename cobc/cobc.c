@@ -553,7 +553,8 @@ main (int argc, char *argv[])
 
   /* Link */
   if (compile_level >= stage_link)
-    process_link (file_list);
+    if (process_link (file_list) > 0)
+      goto cleanup;
 
   /* We successfully completed */
   status = 0;
