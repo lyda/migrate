@@ -20,8 +20,6 @@
 #ifndef COB_SUPPORT_H
 #define COB_SUPPORT_H
 
-#include <libcob/cobconfig.h>
-
 /*
  * Frame stack
  */

@@ -21,7 +21,6 @@
 #define COB_FILEIO_H
 
 #include <stdio.h>
-#include <libcob/cobconfig.h>
 #include <libcob/common.h>
 
 #define COB_EQ	1 	/* x == y */
