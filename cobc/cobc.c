@@ -46,6 +46,7 @@ extern int yy_bison_debug;
  */
 
 int cobc_module_flag = 0;
+int cobc_debug_flag = 0;
 int cobc_optimize_flag = 0;
 int cobc_failsafe_flag = 1;
 int cobc_link_style = LINK_DYNAMIC;
@@ -60,7 +61,6 @@ FILE *cobc_out;
  * Local variables
  */
 
-static int debug_flag = 0;
 static int save_temps_flag = 0;
 
 static char *program_name;
@@ -238,6 +238,7 @@ process_command_line (int argc, char *argv[])
 	case 'o': output_name = strdup (optarg); break;
 
 	case 'g':
+	  cobc_debug_flag = 1;
 	  strcat (cob_cflags, " -g");
 	  break;
 
@@ -262,7 +263,9 @@ process_command_line (int argc, char *argv[])
 	  strcat (cobpp_flags, optarg);
 	  break;
 
-	case 'D': debug_flag = 1; break;
+	case 'D':
+	  strcat (cobpp_flags, " -D");
+	  break;
 
 	default:
 	  print_usage ();
