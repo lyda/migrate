@@ -241,7 +241,6 @@ static void check_decimal_point (struct lit *lit);
 %type <condval> condition,simple_condition,implied_op_condition
 %type <sval> qualified_var,unqualified_var
 %type <lval> from_rec_varying,to_rec_varying
-%type <sval> depend_rec_varying
 %type <sval> file_description,redefines_var
 %type <ival> on_exception_or_overflow,on_not_exception
 %type <gic>  on_end,opt_read_at_end
@@ -492,96 +491,101 @@ data_division:
  *******************/
 
 file_section:
-| FILEN SECTION '.'  { curr_field=NULL; }
-  file_description_list   { close_fields(); }
+| FILEN SECTION '.'	{ curr_field=NULL; }
+  fd_list		{ close_fields(); }
 ;
-file_description_list:
-| file_description_list FD     { curr_division = CDIV_FD; }
-  STRING              { curr_division = CDIV_DATA; }
+fd_list:
+| fd_list
+  FD			{ curr_division = CDIV_FD; }
+  STRING		{ curr_division = CDIV_DATA; }
   file_attrib '.'
   {
     curr_field=NULL;
     if ($4->filenamevar == NULL)
 	yyerror("External file name not defined for file %s", $4->name);
   }
-  file_description        {
-              close_fields();
-              alloc_file_entry($4);
-              gen_fdesc($4,$9);
-          }
-| file_description_list SD { curr_division = CDIV_FD; }
-       STRING { curr_division = CDIV_DATA; }
-       sort_attrib '.'
-          {
-              $4->organization=2;
-              curr_field=NULL;
-          }
-  file_description    {
-              close_fields();
-              alloc_file_entry($4);
-              gen_fdesc($4,$9);
-          }
+  file_description
+  {
+    close_fields();
+    alloc_file_entry($4);
+    gen_fdesc($4,$9);
+  }
+| fd_list
+  SD			{ curr_division = CDIV_FD; }
+  STRING		{ curr_division = CDIV_DATA; }
+  sort_attrib '.'
+  {
+    $4->organization=2;
+    curr_field=NULL;
+  }
+  file_description
+  {
+    close_fields();
+    alloc_file_entry($4);
+    gen_fdesc($4,$9);
+  }
 ;
 file_description:
-      field_description       { $$=$1; }
-    | file_description field_description
+  field_description       { $$=$1; }
+| file_description field_description
+  {
+    if (($2 != NULL) && ($2->level == 1))
       {
-	if (($2 != NULL) && ($2->level == 1)) {
-	  /* multiple 01 records (for a file descriptor) */
-	  $2->redefines=$1;
-	  $$=$2;
-	}
-	else
-	  $$=$1;
+	/* multiple 01 records (for a file descriptor) */
+	$2->redefines=$1;
+	$$=$2;
       }
-    ;
+    else
+      $$=$1;
+  }
+;
 file_attrib:
-    /* nothing */
-    | file_attrib REPORT opt_is STRING { save_report( $4,$<sval>0 ); }
-    | file_attrib opt_is GLOBAL     { $<sval>0->type = 'J'; }
-    | file_attrib opt_is EXTERNAL   { $<sval>0->type = 'K'; }
-    | file_attrib LABEL rec_or_recs opt_is_are std_or_omitt
-    | file_attrib BLOCK opt_contains integer opt_to_integer chars_or_recs
-    | file_attrib DATA_TOK rec_or_recs  opt_is_are var_strings { }
-    | file_attrib VALUE OF FILE_ID opt_is filename
-     {
-      if ($<sval>-1->filenamevar != NULL) {
-         yyerror("Re-defining file name defined in SELECT statement");
-      }
-      else {
-         $<sval>-1->filenamevar = $<sval>6;
-      }
-     }
-    | file_attrib RECORD opt_is VARYING opt_in_size
-      from_rec_varying to_rec_varying opt_characters
-      depend_rec_varying 
-      { set_rec_varying_info( $<sval>-1,$6,$7,$9 ); }
-    ;
-var_strings: STRING { }
-    | var_strings STRING { }
-    ; 
-opt_to_integer: /* nothing */
-    | TO integer { }
-    ;
-depend_rec_varying:
-        DEPENDING opt_on STRING { $$ = $3; }
-        ;
+| file_attrib REPORT opt_is STRING { save_report( $4,$<sval>0 ); }
+| file_attrib opt_is GLOBAL     { $<sval>0->type = 'J'; }
+| file_attrib opt_is EXTERNAL   { $<sval>0->type = 'K'; }
+| file_attrib LABEL rec_or_recs opt_is_are std_or_omitt
+| file_attrib BLOCK opt_contains integer opt_to_integer chars_or_recs
+| file_attrib DATA_TOK rec_or_recs  opt_is_are var_strings { }
+| file_attrib VALUE OF FILE_ID opt_is filename
+  {
+    if ($<sval>-1->filenamevar != NULL) {
+      yyerror("Re-defining file name defined in SELECT statement");
+    }
+    else {
+      $<sval>-1->filenamevar = $<sval>6;
+    }
+  }
+| file_attrib RECORD opt_is VARYING opt_in_size
+  from_rec_varying to_rec_varying opt_characters
+  DEPENDING opt_on STRING
+  {
+    set_rec_varying_info ($<sval>-1, $6, $7, $11);
+  }
+;
+var_strings:
+  STRING { }
+| var_strings STRING { }
+; 
+opt_to_integer:
+| TO integer { }
+;
 from_rec_varying:
-        /* nothing */ { $$ = NULL; }
-        | FROM nliteral { $$ = $2; }
-        ;
+  /* nothing */ { $$ = NULL; }
+| FROM nliteral { $$ = $2; }
+;
 to_rec_varying:
-        /* nothing */ { $$ = NULL; }
-        | TO nliteral { $$ = $2; }
-        ;
+  /* nothing */ { $$ = NULL; }
+| TO nliteral   { $$ = $2; }
+;
 sort_attrib:
-    /* nothing */
-    | sort_attrib  DATA_TOK rec_or_recs  opt_is_are var_strings { }  
-    | sort_attrib RECORD opt_is VARYING opt_in_size
-      from_rec_varying to_rec_varying opt_characters
-      depend_rec_varying 
-      { set_rec_varying_info( $<sval>-1,$6,$7,$9 ); }
-    ;
+| sort_attrib  DATA_TOK rec_or_recs  opt_is_are var_strings { }  
+| sort_attrib RECORD opt_is VARYING opt_in_size
+  from_rec_varying to_rec_varying opt_characters
+  DEPENDING opt_on STRING
+  {
+    set_rec_varying_info( $<sval>-1,$6,$7,$11 );
+  }
+;
 rec_or_recs: RECORD | RECORDS ;
 std_or_omitt: STANDARD | OMITTED ;
 opt_TIMES: | TIMES ;
@@ -603,176 +607,173 @@ working_storage_section:
   field_description_list         { close_fields(); }
 ;
 field_description_list:
-    | field_description_list field_description
+| field_description_list field_description
 ;
 field_description:
-    integer opt_def_name
-    {
-      define_field($1,$2);
-    }
-    redefines_clause
-    data_clauses '.'
-    {
-      $$ = $2;
-      update_field();
-    }
-    ;
+  integer opt_def_name
+  {
+    define_field($1,$2);
+  }
+  redefines_clause
+  data_clauses '.'
+  {
+    $$ = $2;
+    update_field();
+  }
+;
 redefines_clause:
-    REDEFINES { curr_division = CDIV_INITIAL; }
-    redefines_var
-    {       
-      curr_division = CDIV_DATA;
-      if ($<sval>-1 != NULL)
+| REDEFINES { curr_division = CDIV_INITIAL; }
+  redefines_var
+  {       
+    curr_division = CDIV_DATA;
+    if ($<sval>-1 != NULL)
 	$<sval>-1->redefines = lookup_for_redefines($3);
-      else
+    else
 	yyerror("cannot redefine an unnamed field");
-    }
-    |  /* nothing */
-    ;
+  }
+;
 redefines_var:
-    VARIABLE    { $$=$1; }
-    | SUBSCVAR  { $$=$1; }
-    ;
+  VARIABLE  { $$=$1; }
+| SUBSCVAR  { $$=$1; }
+;
 data_clauses:
-    /* nothing */
-    | data_clauses data_clause
-    ;
+| data_clauses data_clause
+;
 data_clause:
-      array_options
-    | picture_clause
-    | usage_option
-    | sign_clause       { set_sign_flags($1); }
-    | value_option
-    | SYNC sync_options {curr_field->flags.sync=1;}
-    | JUST RIGHT {curr_field->flags.just_r=1;}
-    | EXTERNAL {save_named_sect(curr_field);}
-    | BLANK opt_when ZERONUM { curr_field->flags.blank=1; }
-    ;
+  array_options
+| picture_clause
+| usage_option
+| sign_clause       { set_sign_flags($1); }
+| value_option
+| SYNC sync_options {curr_field->flags.sync=1;}
+| JUST RIGHT {curr_field->flags.just_r=1;}
+| EXTERNAL {save_named_sect(curr_field);}
+| BLANK opt_when ZERONUM { curr_field->flags.blank=1; }
+;
 sync_options:
-    /* nothing */
-    | LEFT
-    | RIGHT
-    ;
-array_options:  OCCURS integer opt_TIMES
-       {
-	 if ($2 < 1)
-	   {
-	     yyerror ("occurs number must be positive integer");
-	     $2 = 1;
-	   }
-	 curr_field->times = $2;
-       }
-       opt_indexed_by
-     | OCCURS integer TO integer opt_TIMES DEPENDING opt_on
-       { curr_division = CDIV_INITIAL; } gname
-       {       
-	 curr_division = CDIV_DATA;
-	 create_occurs_info($2,$4,$9);
-       }
-       opt_indexed_by
-     ;
+| LEFT
+| RIGHT
+;
+array_options:
+  OCCURS integer opt_TIMES
+  {
+    if ($2 < 1)
+      {
+	yyerror ("occurs number must be positive integer");
+	$2 = 1;
+      }
+    curr_field->times = $2;
+  }
+  opt_indexed_by
+| OCCURS integer TO integer opt_TIMES DEPENDING opt_on
+  { curr_division = CDIV_INITIAL; }
+  gname
+  {       
+    curr_division = CDIV_DATA;
+    create_occurs_info($2,$4,$9);
+  }
+  opt_indexed_by
+;
 opt_key_is:
-      DIRECTION opt_key opt_is STRING
-     {
-       $4->level=0;
-       if ($1 == ASCENDING) {
-          $4->level=-1;
-       }
-       if ($1 == DESCENDING) {
-          $4->level=-2;
-       }
-       $$=$4;
-     }
-     | { $$=NULL; }
-     ;
-
+  /* nothing */		{ $$ = NULL; }
+| DIRECTION opt_key opt_is STRING
+  {
+    $4->level=0;
+    if ($1 == ASCENDING) {
+      $4->level=-1;
+    }
+    if ($1 == DESCENDING) {
+      $4->level=-2;
+    }
+    $$=$4;
+  }
+;
 opt_indexed_by: 
-    /* nothing */
-  | opt_key_is INDEXED opt_by index_name_list { }
+| opt_key_is INDEXED opt_by index_name_list { }
 ;
 index_name_list:
-    def_name { define_implicit_field ($1, $<sval>-2, curr_field->times); }
-  | index_name_list
-    def_name { define_implicit_field ($2, $<sval>-2, curr_field->times); }
+  def_name { define_implicit_field ($1, $<sval>-2, curr_field->times); }
+| index_name_list
+  def_name { define_implicit_field ($2, $<sval>-2, curr_field->times); }
 ;
 
 picture_clause: PIC { start_condition = START_PICTURE; } PICTURE ;
 opt_picture_clause: | picture_clause ;
 
-usage_option :
-    opt_usage opt_is usage
-    {
-      switch ($3)
-	{
-	case USAGE_COMP1:
-	  curr_field->len = 4;
-	  curr_field->decimals=7;
-	  curr_field->type='U';
-	  curr_field->sign=1;
-	  /* default picture is 14 (max=7->7.7) digits */
-	  strcpy(picture,"S\x01\x39\x07\x56\x01\x39\x07");
-	  break;
-	case USAGE_COMP2:
-	  curr_field->len = 8;
-	  curr_field->decimals=15;
-	  curr_field->type='U';
-	  curr_field->sign=1;
-	  /* default picture is 30 (max=15->15.15) digits*/
-	  strcpy(picture,"S\x01\x39\x0f\x56\x01\x39\x0f");
-	  break;
-	case COMP3:
-	  curr_field->type='C';
-	  break;
-	case COMP: 
-	  /* field length computed by query_comp_length() */
-	  curr_field->len = 0;
-	  curr_field->type='B'; /* binary field */
-	  break;
-	case USAGE_POINTER:
-	  curr_field->len=4;
-	  curr_field->decimals=0;
-	  curr_field->type='B'; /* pointers are binary fields */
-	  strcpy(picture,"9\xa"); /* pointer default picture */
-	  curr_field->flags.is_pointer=1;
-	  break;
-	case USAGE_BINARY_CHAR:
-	  curr_field->len = 1;
-	  curr_field->type='B'; 
-	  break; 
-	case USAGE_BINARY_SHORT:
-	  curr_field->len = 2;
-	  curr_field->type='B'; 
-	  break; 
-	case USAGE_BINARY_LONG:
-	  curr_field->len = 4;
-	  curr_field->type='B'; 
-	  break; 
-	case USAGE_BINARY_DOUBLE:
-	  curr_field->len = 8;
-	  curr_field->type='B'; 
-	  break; 
-	}
-    }
-    ;
+usage_option:
+  opt_usage opt_is usage
+  {
+    switch ($3)
+      {
+      case USAGE_COMP1:
+	curr_field->len = 4;
+	curr_field->decimals=7;
+	curr_field->type='U';
+	curr_field->sign=1;
+	/* default picture is 14 (max=7->7.7) digits */
+	strcpy(picture,"S\x01\x39\x07\x56\x01\x39\x07");
+	break;
+      case USAGE_COMP2:
+	curr_field->len = 8;
+	curr_field->decimals=15;
+	curr_field->type='U';
+	curr_field->sign=1;
+	/* default picture is 30 (max=15->15.15) digits*/
+	strcpy(picture,"S\x01\x39\x0f\x56\x01\x39\x0f");
+	break;
+      case COMP3:
+	curr_field->type='C';
+	break;
+      case COMP: 
+	/* field length computed by query_comp_length() */
+	curr_field->len = 0;
+	curr_field->type='B'; /* binary field */
+	break;
+      case USAGE_POINTER:
+	curr_field->len=4;
+	curr_field->decimals=0;
+	curr_field->type='B'; /* pointers are binary fields */
+	strcpy(picture,"9\xa"); /* pointer default picture */
+	curr_field->flags.is_pointer=1;
+	break;
+      case USAGE_BINARY_CHAR:
+	curr_field->len = 1;
+	curr_field->type='B'; 
+	break; 
+      case USAGE_BINARY_SHORT:
+	curr_field->len = 2;
+	curr_field->type='B'; 
+	break; 
+      case USAGE_BINARY_LONG:
+	curr_field->len = 4;
+	curr_field->type='B'; 
+	break; 
+      case USAGE_BINARY_DOUBLE:
+	curr_field->len = 8;
+	curr_field->type='B'; 
+	break; 
+      }
+  }
+;
 usage:
-      USAGENUM  { $$=$1; }
-    | DISPLAY   { $$=USAGE_DISPLAY; }
-    | POINTER   { $$=USAGE_POINTER; }
-    | COMP1     { $$=USAGE_COMP1; }
-    | COMP2     { $$=USAGE_COMP2; }
-    ;
+  USAGENUM  { $$=$1; }
+| DISPLAY   { $$=USAGE_DISPLAY; }
+| POINTER   { $$=USAGE_POINTER; }
+| COMP1     { $$=USAGE_COMP1; }
+| COMP2     { $$=USAGE_COMP2; }
+;
 opt_usage: | USAGE ;
 
 value_option: VALUE opt_is_are value_list ;
 
 value_list:
-        value                           
-        | value_list opt_sep value
-        ;
+  value
+| value_list opt_sep value
+;
 value:
-    gliteral                    { set_variable_values($1,$1); }
-    | gliteral THRU gliteral    { set_variable_values($1,$3); }
-    ;
+  gliteral                  { set_variable_values($1,$1); }
+| gliteral THRU gliteral    { set_variable_values($1,$3); }
+;
 
 
 /*******************
@@ -780,10 +781,9 @@ value:
  *******************/
 
 linkage_section:
-    LINKAGE SECTION '.'     { at_linkage=1; curr_field=NULL; }
-    field_description_list         { close_fields(); at_linkage=0; }
-    | /* nothing */
-    ;
+| LINKAGE SECTION '.'		{ at_linkage=1; curr_field=NULL; }
+  field_description_list	{ close_fields(); at_linkage=0; }
+;
 
 
 /*******************
@@ -1003,122 +1003,125 @@ opt_number_is: | NUMBERTOK opt_is ;
  *****************************************************************************/
 
 procedure_division:
-    /* nothing */
-  | PROCEDURE_TOK DIVISION { curr_division = CDIV_INITIAL; }
-    procedure_using '.'
-    {
-      proc_header ($4);
-    }
-    procedure_list
-    {
-      /* close procedure_list sections & paragraphs */
-      close_section (); /* this also closes paragraph */
-      resolve_labels ();
-      proc_trail ($4); 
-    }
+| PROCEDURE_TOK DIVISION { curr_division = CDIV_INITIAL; }
+  procedure_using '.'
+  {
+    proc_header ($4);
+  }
+  procedure_list
+  {
+    /* close procedure_list sections & paragraphs */
+    close_section (); /* this also closes paragraph */
+    resolve_labels ();
+    proc_trail ($4); 
+  }
 ;
 procedure_using:
-    /* nothing */                        { $$ = 0; }
-  | USING { $<ival>$ = USING; } var_list { $$ = 1; }
+  /* nothing */                        { $$ = 0; }
+| USING { $<ival>$ = USING; } var_list { $$ = 1; }
 ;
 procedure_list:
-    | procedure_list procedure_decl
-    ;
+| procedure_list procedure_decl
+;
 procedure_decl:
-    procedure_section { close_section(); open_section($1); }
-    | paragraph { close_paragr(); open_paragr($1); }
-    | {free_expr_list(); stabs_line();} statement_list opt_eos
-    | error '.'
-    | '.'
-    ;
+  procedure_section { close_section(); open_section($1); }
+| paragraph { close_paragr(); open_paragr($1); }
+| {free_expr_list(); stabs_line();} statement_list opt_eos
+| error '.'
+| '.'
+;
 procedure_section:
-     LABELSTR SECTION '.' {
-       struct sym *lab=$1;
-       if (lab->defined != 0) {
-	 lab = install(lab->name,SYTB_LAB,2);
-       }
-       lab->defined = 1;
-       $$=lab;
-     }
-    ;
-paragraph:
-    LABELSTR '.' {
-       struct sym *lab=$1;
-       if (lab->defined != 0) {
-	 if ((lab=lookup_label(lab,curr_section))==NULL) {
-	   lab = install($1->name,SYTB_LAB,2);
-	 }
-       }
-       lab->parent = curr_section;
-       lab->defined=1;
-       $$=lab;
+  LABELSTR SECTION '.'
+  {
+    struct sym *lab=$1;
+    if (lab->defined != 0) {
+      lab = install(lab->name,SYTB_LAB,2);
     }
-    ;
+    lab->defined = 1;
+    $$=lab;
+  }
+;
+paragraph:
+  LABELSTR '.'
+  {
+    struct sym *lab=$1;
+    if (lab->defined != 0) {
+      if ((lab=lookup_label(lab,curr_section))==NULL) {
+	lab = install($1->name,SYTB_LAB,2);
+      }
+    }
+    lab->parent = curr_section;
+    lab->defined=1;
+    $$=lab;
+  }
+;
+
 
-/*
+/*******************
  * Statements
- */
+ *******************/
 
 statement_list:
-    statement _look_ahead_ {stabs_line();}
-    | statement_list statement _look_ahead_ {stabs_line();}
-    ;
+  statement _look_ahead_ {stabs_line();}
+| statement_list statement _look_ahead_ {stabs_line();}
+;
 conditional_statement_list:
-    statement_list opt_continue
-    | CONTINUE {stabs_line();}
-    | NEXT SENTENCE {stabs_line();}
-    ;
+  statement_list opt_continue
+| CONTINUE {stabs_line();}
+| NEXT SENTENCE {stabs_line();}
+;
 opt_continue:
-    /* nothing */
-    | CONTINUE {stabs_line();}
-    | NEXT SENTENCE {stabs_line();}
-    ;
+| CONTINUE {stabs_line();}
+| NEXT SENTENCE {stabs_line();}
+;
 /* this token doesn't really exists, but forces look ahead 
    to keep line numbers synchronized with our position
    because we need to generate correct debug stabs */
 _look_ahead_: | TOKDUMMY ;
 
 statement:
-      accept_statement
-    | add_statement
-    | call_statement
-    | cancel_statement
-    | close_statement
-    | compute_statement
-    | delete_statement
-    | display_statement
-    | divide_statement
-    | evaluate_statement
-    | exit_statement
-    | goto_statement
-    | if_statement
-    | initialize_statement
-    | inspect_statement
-    | move_statement
-    | multiply_statement
-    | open_statement
-    | perform_statement
-    | read_statement
-    | return_statement
-    | rewrite_statement
-    | search_statement
-    | set_statement
-    | sort_statement
-    | start_statement
-    | stoprun_statement
-    | string_statement
-    | subtract_statement
-    | unstring_statement
-    | write_statement
-    | INITIATE name     { yyerror ("INITIATE is not implemented yet"); }
-    | GENERATE name     { yyerror ("GENERATE is not implemented yet"); }
-    | TERMINATE name    { yyerror ("TERMINATE is not implemented yet"); }
-    | READY TRACE       { yyerror ("TRACE is not implemented yet"); }
-    | RESET TRACE       { yyerror ("TRACE is not implemented yet"); }
-    ;
+  accept_statement
+| add_statement
+| call_statement
+| cancel_statement
+| close_statement
+| compute_statement
+| delete_statement
+| display_statement
+| divide_statement
+| evaluate_statement
+| exit_statement
+| goto_statement
+| if_statement
+| initialize_statement
+| inspect_statement
+| move_statement
+| multiply_statement
+| open_statement
+| perform_statement
+| read_statement
+| return_statement
+| rewrite_statement
+| search_statement
+| set_statement
+| sort_statement
+| start_statement
+| stoprun_statement
+| string_statement
+| subtract_statement
+| unstring_statement
+| write_statement
+| INITIATE name     { yyerror ("INITIATE is not implemented yet"); }
+| GENERATE name     { yyerror ("GENERATE is not implemented yet"); }
+| TERMINATE name    { yyerror ("TERMINATE is not implemented yet"); }
+| READY TRACE       { yyerror ("TRACE is not implemented yet"); }
+| RESET TRACE       { yyerror ("TRACE is not implemented yet"); }
+;
 
 
-/* ACCEPT statement */
+/*
+ * ACCEPT statement
+ */
 
 accept_statement:
     ACCEPT name opt_line_pos accept_options
@@ -1151,84 +1154,569 @@ accept_options:
     ;
 
 
-/* CANCEL statement */
+/*
+ * ADD statement
+ */
+
+add_statement:
+    ADD add_body end_add
+    ;
+add_body:
+      var_list_gname TO var_list_name opt_on_size_error
+      {
+        gen_add1($1, $3, $4);
+      }
+    | var_list_gname opt_add_to GIVING var_list_name opt_on_size_error
+      {
+        gen_add2($1, $4, $2, $5);
+      }
+    | CORRESPONDING gname opt_to name opt_rounded
+      {
+        gen_addcorr($2, $4, $5);
+      }
+    ;
+opt_add_to:
+    /* nothing */ { $$ = NULL; }
+    | TO gname    { $$ = $2; }
+    ;
+end_add: | END_ADD ;
+
+
+/*
+ * CALL statement
+ */
+
+call_statement:
+    CALL  { curr_call_mode=CM_REF; }
+    gname
+    using_options       
+    returning_options 
+    { $<ival>$ = loc_label++; /* exception check */ }
+    { $<ival>$ = loc_label++; /* not exception check */ } 
+    { 
+      $<ival>$ = gen_call((struct lit *)$3,$4,$<ival>6,$<ival>7); 
+      gen_store_fnres($5); 
+    }
+    on_exception_or_overflow 
+    on_not_exception { 
+      check_call_except($9,$10,$<ival>6,$<ival>7,$<ival>8); }
+    opt_end_call
+    ;
+using_options:
+    /* nothing */   { $$=0; }
+    | USING     { $<ival>$=0; /* to save how many parameters */ }
+      dummy     { $<ival>$=CALL; }
+      parm_list  { $$=$<ival>2; } /* modified to signal calling pgm */
+    ;
+parm_list:
+    parm_list opt_sep parameter
+        {   if ($<ival>0 == USING)
+                gen_save_using($<sval>3);
+            else if ($<ival>0 == CALL) {
+                gen_push_using($<sval>3);
+            }
+        }
+        | parameter
+        {   if ($<ival>0 == USING)
+                gen_save_using($<sval>1);
+            else if ($<ival>0 == CALL) {
+                gen_push_using($<sval>1);
+            }
+        }
+    ;
+parameter:
+    gname {$$=$1;
+            if ($$->litflag==1) {
+               struct lit *lp=(struct lit *)$$;
+               lp->call_mode=curr_call_mode;
+               }
+            else
+               $$->call_mode=curr_call_mode;
+        }
+    | BY parm_type gname
+        {   $$=$3;
+            curr_call_mode=$<ival>2;
+            if ($$->litflag==1) {
+               struct lit *lp=(struct lit *)$$;
+               lp->call_mode=curr_call_mode;
+               }
+            else
+               $$->call_mode=curr_call_mode;
+        }
+    ;
+parm_type:
+    REFERENCE	{ $$ = CM_REF; }
+  | CONTENT	{ $$ = CM_CONT; }
+  | VALUE	{ $$ = CM_VAL; }
+;
+on_exception_or_overflow:
+    /* nothing */ { $$ = 0; }
+    | ONTOK exception_or_overflow { $<ival>$ = begin_on_except(); } 
+      statement_list            { gen_jmplabel($<dval>0); $$=$<ival>3; }
+    ;
+exception_or_overflow:
+      EXCEPTION
+    | OVERFLOWTK
+    ;
+opt_end_call:
+    | END_CALL
+    ;
+
+
+/*
+ * CANCEL statement
+ */
 
 cancel_statement:
     CANCEL gname { gen_cancel ($2); }
 ;
 
 
-/* UNSTRING statement */
+/*
+ * CLOSE statement
+ */
 
-unstring_statement:
-    UNSTRING name
-    unstring_delimited
-    INTO unstring_destinations
-    string_with_pointer
-    unstring_tallying {
-	gen_unstring( $2, $3, $5, $6, $7 );
-    }
-    opt_on_overflow
-    opt_end_unstring
+close_statement:
+    CLOSE close_files
     ;
-unstring_delimited:
-    DELIMITED opt_by unstring_delimited_vars { $$=$3; }
-    | /* nothing */                          { $$=NULL; }
+close_files:
+      close_file
+    | close_files opt_sep close_file
     ;
-unstring_delimited_vars:
-    opt_all gname       { $$=alloc_unstring_delimited($1,$2); }
-    | unstring_delimited_vars OR opt_all gname {
-      struct unstring_delimited *ud;
-      ud=alloc_unstring_delimited($3,$4);
-      ud->next = $1;
-      $$=ud;
-    }
-    ;
-unstring_destinations:
-    unstring_dest_var       { $$=$1; }
-    | unstring_destinations opt_sep
-        unstring_dest_var   {
-            $3->next = $1;
-            $$ = $3;
-        }
-    ;
-unstring_dest_var:
-    name opt_unstring_delim opt_unstring_count {
-            $$ = alloc_unstring_dest( $1, $2, $3 );
-        }
-    ;
-opt_unstring_delim:
-    /* nothing */           { $$=NULL; }
-    | DELIMITER opt_in name { $$=$3; }
-    ;
-opt_unstring_count:
-    /* nothing */           { $$=NULL; }
-    | COUNT opt_in name   { $$=$3; }
-    ;
-unstring_tallying:
-    /* nothing */           { $$=NULL; }
-    | TALLYING opt_in name  { $$=$3; }
-    ;
-opt_on_overflow:
-    on_overflow
-    on_not_overflow
-    ;
-on_overflow:
-    ONTOK OVERFLOWTK          { $<dval>$ = gen_at_end(-1); }
-        statement_list            { gen_dstlabel($<dval>3); }
-    | /* nothing */
-    ;
-on_not_overflow:
-    NOT ONTOK OVERFLOWTK { $<dval>$ = gen_at_end(0); }
-        statement_list            { gen_dstlabel($<dval>4); }
-    | /* nothing */
-    ;
-opt_end_unstring:
-    | END_UNSTRING
+close_file:
+    name { gen_close($1); }
     ;
 
 
-/* PERFORM statement */
+/*
+ * COMPUTE statement
+ */
+
+compute_statement:
+    COMPUTE var_list_name CONDITIONAL expr opt_on_size_error opt_end_compute
+    {
+      if ($3 != EQUAL)
+	yyerror("= expected");
+      else
+	gen_compute($2, $4, $5);
+    }
+  ;
+opt_end_compute:
+    /* nothing */
+  | END_COMPUTE
+  ;
+
+
+/*
+ * DELETE statement
+ */
+
+delete_statement:
+    DELETE name opt_record { gen_delete($2); }
+    opt_invalid_key
+    opt_end_delete
+    ;
+opt_end_delete:
+    /* nothing */
+    | END_DELETE
+    ;
+
+
+/*
+ * DISPLAY statement
+ */
+
+display_statement:
+    DISPLAY
+    display_varlist
+    opt_upon
+    display_upon
+    display_options
+    opt_line_pos
+    { gen_display($4, $5); }
+    ;
+display_varlist:
+    /* nothing */
+    | display_varlist opt_sep gname { put_disp_list($3); }
+    ;
+display_upon:
+    /* nothing */   { $$ = 1; }  /* default is CONSOLE (STD_OUTPUT) */
+    | CONSOLE       { $$ = 1; }
+    | STD_OUTPUT    { $$ = 1; }
+    | STD_ERROR     { $$ = 2; }
+    ;
+display_options:
+    /* nothing */                           { $$ = 0; }
+    | display_options opt_with NO ADVANCING { $$ = $1 | 1; }
+    | display_options ERASE                 { $$ = $1 | 2; }
+    | display_options ERASE EOS_TOK         { $$ = $1 | 2; }
+    | display_options ERASE EOL_TOK         { $$ = $1 | 4; }
+    ;
+opt_line_pos:
+    /* nothing */
+    | LINE expr TOKPOSITION expr 
+     {
+      screen_io_enable++;
+      push_expr($2);
+      push_expr($4);
+      gen_gotoxy_expr();
+     }
+    | LINE expr COLUMN expr 
+     {
+      screen_io_enable++;
+      push_expr($2);
+      push_expr($4);
+      gen_gotoxy_expr();
+     } 
+    ;
+
+
+/*
+ * DIVIDE statement
+ */
+
+divide_statement:
+    DIVIDE divide_body opt_end_divide
+    ;
+divide_body:
+      numeric_value BY numeric_value GIVING var_list_name opt_on_size_error
+      {
+        gen_divide2($5, $1, $3, $6);
+      }
+    | numeric_value BY numeric_value GIVING name opt_rounded REMAINDER name
+      {
+        assert_numeric_sy($5);
+        gen_divide($1, $3, $5, $8, $6);
+      }
+    | numeric_value INTO numeric_value GIVING name opt_rounded REMAINDER name
+      {
+        assert_numeric_sy($5);
+        gen_divide($3, $1, $5, $8, $6);
+      }
+    | numeric_value BY numeric_value GIVING name opt_rounded REMAINDER name on_size_error
+      {
+        assert_numeric_sy($5);
+        gen_dstlabel($9->lbl4); /* generate bypass jump */
+        gen_divide($1, $3, $5, $8, $6);
+        math_on_size_error3($9);
+      }
+    | numeric_value INTO numeric_value GIVING name opt_rounded REMAINDER name on_size_error
+      {
+        assert_numeric_sy($5);
+        gen_dstlabel($9->lbl4); /* generate bypass jump */
+        gen_divide($3, $1, $5, $8, $6);
+        math_on_size_error3($9);
+      }
+    | numeric_value INTO numeric_value GIVING var_list_name opt_on_size_error
+      {
+        gen_divide2($5, $3, $1, $6);
+      }
+    | numeric_value INTO var_list_name opt_on_size_error
+      {
+        gen_divide1($3, $1, $4);
+      }
+    ;
+opt_end_divide:
+    /* nothing */
+    | END_DIVIDE
+    ;
+
+
+/*
+ * EVALUATE statement
+ */
+
+evaluate_statement:
+    EVALUATE { $<ival>$ = gen_evaluate_start(); }
+                selection_subject_set { }
+                when_case_list
+                END_EVALUATE { release_sel_subject($<ival>2,$3); }
+    ;
+selection_subject_set:
+          selection_subject { $$=save_sel_subject(NULL,$1); }
+        | selection_subject_set ALSO
+	    selection_subject { $$=save_sel_subject($1,$3); }
+        ;
+selection_subject:
+    expr
+    {
+      if (push_expr($1))
+	$$=SSUBJ_EXPR;
+      else
+	{
+	  push_field ($1);
+	  $$=SSUBJ_STR;
+	}
+    }
+  | condition	{ push_condition(); $$ = SSUBJ_BOOLEAN; }
+  | TOK_TRUE	{ push_boolean (1); $$ = SSUBJ_BOOLEAN; }
+  | TOK_FALSE	{ push_boolean (0); $$ = SSUBJ_BOOLEAN; }
+  ;
+when_case_list:
+        WHEN { $<ival>$ = loc_label++; /* mark end of "when" case */ }
+                { $<ssbjval>$=$<ssbjval>-1; /* store inherited subject set */ }
+                when_case
+                sentence_or_nothing
+                { $$=gen_end_when($<ival>-2,$<ival>2,$5); }
+        | when_case_list WHEN { $<ival>$ = loc_label++; }
+                { $<ssbjval>$=$<ssbjval>-1; }
+                when_case
+                { gen_bypass_when_case($1); }
+                sentence_or_nothing
+                { $$=gen_end_when($<ival>-2,$<ival>3,$7); }
+        ;
+when_case:
+          selection_object
+          {
+	    $$ = 0;
+	    gen_when_check($$,$<ssbjval>0,$1,$<ival>-1);
+	  }
+        | when_case ALSO selection_object
+          {
+	    $$ = $1 + 1;
+	    gen_when_check($$,$<ssbjval>0,$3,$<ival>-1);
+	  }
+        | OTHER { $$=-1; }
+        ;
+selection_object:
+    ANY			{ $$ = SOBJ_ANY; }
+  | TOK_TRUE		{ push_boolean (1); $$ = SOBJ_BOOLEAN; }
+  | TOK_FALSE		{ push_boolean (0); $$ = SOBJ_BOOLEAN; }
+  | opt_not condition	{ push_condition (); $$ = SOBJ_BOOLEAN | $1; }
+  | opt_not expr
+    {
+      if ($2 == (struct sym *) spe_lit_ZE)
+	$$ = SOBJ_ZERO | $1;
+      else if (push_expr($2))
+	$$ = SOBJ_EXPR | $1;
+      else
+	{
+	  push_field ($2);
+	  $$ = SOBJ_STR | $1;
+	}
+    }
+  | opt_not expr THRU expr
+    {
+      if (push_expr($2) && push_expr($4))
+	$$ = SOBJ_RANGE | $1;
+      else
+	{
+	  push_field ($2);
+	  push_field ($4);
+	  $$ = SOBJ_RANGE | $1;
+	}
+    }
+  ;
+sentence_or_nothing:
+    /* nothing */               { $$ = 0; }
+    | conditional_statement_list     { $$ = 1; }
+    ;
+
+
+/*
+ * EXIT statement
+ */
+
+exit_statement:
+      EXIT          { gen_exit(0); }
+    | EXIT PROGRAM  { gen_exit(1); }
+    ;
+
+
+/*
+ * GO TO statement
+ */
+
+goto_statement:
+    GO opt_to goto_label_list opt_goto_depending_on
+    {
+      if ($4 == NULL)
+        gen_goto($3);
+      else
+        gen_goto_depending($3, $4);
+    }
+    ;
+goto_label_list:
+      label                     { $$ = insert_list(NULL, $1); }
+    | goto_label_list label     { $$ = insert_list($1, $2); }
+    | goto_label_list ',' label { $$ = insert_list($1, $3); }
+    ;
+opt_goto_depending_on:
+    /* nothing */               { $$ = NULL; }
+    | DEPENDING opt_on variable { $$ = $3; }
+    ;
+
+
+/*
+ * IF statement
+ */
+
+if_statement:
+    if_then { gen_dstlabel($1); } opt_end_if 
+  | if_then ELSE {
+      $<dval>$=gen_passlabel();
+      gen_dstlabel($1);
+    }
+    conditional_statement_list {
+      gen_dstlabel($<dval>3);
+    }
+    opt_end_if
+  | IF error END_IF { }
+;
+if_then:
+    IF condition { $<dval>$ = gen_testif(); } opt_then
+       conditional_statement_list { $$ = $<dval>3; }
+;
+opt_then: | THEN ;
+opt_end_if: | END_IF ;
+
+
+/*
+ * INITILIZE statement
+ */
+
+initialize_statement:
+    INITIALIZE { $<ival>$ = INITIALIZE; } var_list
+    ;
+
+
+/*
+ * INSPECT statement
+ */
+
+inspect_statement:
+  INSPECT name tallying_clause { gen_inspect($2,(void *)$3,0); }
+  replacing_clause { gen_inspect($2,(void *)$5,1); }
+  | INSPECT name converting_clause { gen_inspect($2,(void *)$3,2); }
+  ;
+converting_clause:
+        CONVERTING 
+        noallname TO noallname inspect_before_after {
+            $$ = alloc_converting_struct($2,$4,$5); 
+                }
+        ;
+tallying_clause:
+    TALLYING tallying_list { $$=$2; }
+    | /* nothing */        { $$=NULL; }
+    ;
+tallying_list:
+    tallying_list
+        name FOR tallying_for_list  {
+            $$ = alloc_tallying_list($1,$2,$4); }
+    | /* nothing */     { $$ = NULL; }
+    ;
+tallying_for_list:
+    tallying_for_list
+        CHARACTERS inspect_before_after {
+            $$ = alloc_tallying_for_list($1,INSPECT_CHARACTERS,NULL,$3); }
+    | tallying_for_list
+        ALL noallname inspect_before_after {
+            $$ = alloc_tallying_for_list($1,INSPECT_ALL,$3,$4); }
+    | tallying_for_list
+        LEADING noallname inspect_before_after {
+            $$ = alloc_tallying_for_list($1,INSPECT_LEADING,$3,$4); }
+    | /* nothing */     { $$ = NULL; }
+    ;
+replacing_clause:
+    REPLACING
+        replacing_list      { $$ = $2; }
+    | /* nothing */         { $$ = NULL; }
+    ;
+replacing_list:
+    replacing_list
+        CHARACTERS BY noallname inspect_before_after {
+            $$ = alloc_replacing_list($1,INSPECT_CHARACTERS,NULL,$4,$5); }
+    | replacing_list
+        replacing_kind replacing_by_list {
+            $$ = alloc_replacing_list($1,$2,$3,NULL,NULL); }
+    | /* nothing */     { $$ = NULL; }
+    ;
+replacing_by_list:
+    replacing_by_list
+        noallname BY noallname inspect_before_after {
+            $$ = alloc_replacing_by_list($1,$2,$4,$5); }
+    | /* nothing */         { $$ = NULL; }
+    ;
+replacing_kind:
+    ALL         { $$ = INSPECT_ALL; }
+    | LEADING   { $$ = INSPECT_LEADING; }
+    | FIRSTTOK  { $$ = INSPECT_FIRST; }
+    ;
+inspect_before_after:
+    inspect_before_after
+        BEFORE opt_initial noallname
+            { $$ = alloc_inspect_before_after($1,1,$4); }
+    | inspect_before_after
+        AFTER opt_initial noallname
+            { $$ = alloc_inspect_before_after($1,2,$4); }
+    | /* nothing */  { $$ = alloc_inspect_before_after(NULL,0,NULL); }
+    ;
+opt_initial:
+    INITIALTOK
+    | /* nothing */
+    ;
+
+
+/*
+ * MOVE statement
+ */
+
+move_statement:
+      MOVE gname TO { $<ival>$ = MOVE; } var_list
+    | MOVE CORRESPONDING gname TO gname { gen_movecorr($3, $5); }
+    ;
+
+
+/*
+ * MULTIPLY statement
+ */
+
+multiply_statement:
+    MULTIPLY multiply_body opt_end_multiply
+    ;
+multiply_body:
+      numeric_value BY var_list_name opt_on_size_error
+      {
+        gen_multiply1($3, $1, $4);
+      }
+    | numeric_value BY numeric_value GIVING var_list_name opt_on_size_error
+      {
+        gen_multiply2($5, $1, $3, $6);
+      }
+    ;
+opt_end_multiply:
+    /* nothing */
+    | END_MULTIPLY
+    ;
+
+
+/*
+ * OPEN statement
+ */
+
+open_statement:
+    OPEN open_options
+    ;
+open_options:
+      open_mode open_varlist { }
+    | open_options open_mode open_varlist { }
+    ;
+open_mode:
+    INPUT    { $$=1; }
+    | I_O    { $$=2; }
+    | OUTPUT { $$=3; }
+    | EXTEND { $$=4; }
+    | error  { yyerror("invalid OPEN mode"); }
+    ;
+open_varlist:
+      name { gen_open($<ival>0, $<sval>1); }
+    | open_varlist opt_sep name { gen_open($<ival>0, $<sval>3); }
+    ;
+
+
+/*
+ * PERFORM statement
+ */
 
 perform_statement:
   PERFORM perform_options
@@ -1515,364 +2003,190 @@ before_after:
     ;
 
 
-/* INSPECT statement */
+/*
+ * READ statements
+ */
 
-inspect_statement:
-  INSPECT name tallying_clause { gen_inspect($2,(void *)$3,0); }
-  replacing_clause { gen_inspect($2,(void *)$5,1); }
-  | INSPECT name converting_clause { gen_inspect($2,(void *)$3,2); }
-  ;
-converting_clause:
-        CONVERTING 
-        noallname TO noallname inspect_before_after {
-            $$ = alloc_converting_struct($2,$4,$5); 
-                }
-        ;
-tallying_clause:
-    TALLYING tallying_list { $$=$2; }
-    | /* nothing */        { $$=NULL; }
+read_statement: READ read_body opt_end_read { }
     ;
-tallying_list:
-    tallying_list
-        name FOR tallying_for_list  {
-            $$ = alloc_tallying_list($1,$2,$4); }
-    | /* nothing */     { $$ = NULL; }
+read_body: 
+    name
+    opt_read_next
+    opt_record
+    opt_read_into
+    opt_read_key
+    {
+      if (gen_reads($1, $4, $5, $2, 0) != 0)
+        YYABORT;
+    }
+    | name
+    opt_read_next
+    opt_record
+    opt_read_into
+    opt_read_key
+    opt_read_at_end
+    {    
+     if (gen_reads($1, $4, $5, $2, 1) != 0)
+       YYABORT;
+     else
+       {
+	 ginfo_container4($6);
+	 gic = NULL;
+       }
+    }
+   | name
+    opt_read_next
+    opt_record 
+    opt_read_into
+    opt_read_key
+    opt_read_invalid_key 
+    {    
+     if (gen_reads($1, $4, $5, $2, 2) != 0)
+       YYABORT;
+     else
+       gen_test_invalid_keys ($6);
+    }
     ;
-tallying_for_list:
-    tallying_for_list
-        CHARACTERS inspect_before_after {
-            $$ = alloc_tallying_for_list($1,INSPECT_CHARACTERS,NULL,$3); }
-    | tallying_for_list
-        ALL noallname inspect_before_after {
-            $$ = alloc_tallying_for_list($1,INSPECT_ALL,$3,$4); }
-    | tallying_for_list
-        LEADING noallname inspect_before_after {
-            $$ = alloc_tallying_for_list($1,INSPECT_LEADING,$3,$4); }
-    | /* nothing */     { $$ = NULL; }
+opt_read_next:
+    /* nothing */       { $$ = 0; }
+    | NEXT              { $$ = 1; }  
+    | PREVIOUS          { $$ = 2; }  
     ;
-replacing_clause:
-    REPLACING
-        replacing_list      { $$ = $2; }
-    | /* nothing */         { $$ = NULL; }
+opt_read_into:
+    /* nothing */       { $$ = NULL; }
+    | INTO name         { $$ = $2; }
     ;
-replacing_list:
-    replacing_list
-        CHARACTERS BY noallname inspect_before_after {
-            $$ = alloc_replacing_list($1,INSPECT_CHARACTERS,NULL,$4,$5); }
-    | replacing_list
-        replacing_kind replacing_by_list {
-            $$ = alloc_replacing_list($1,$2,$3,NULL,NULL); }
-    | /* nothing */     { $$ = NULL; }
+opt_read_key:
+    /* nothing */       { $$ = NULL; }
+    | KEY opt_is name   { $$ = $3; }
     ;
-replacing_by_list:
-    replacing_by_list
-        noallname BY noallname inspect_before_after {
-            $$ = alloc_replacing_by_list($1,$2,$4,$5); }
-    | /* nothing */         { $$ = NULL; }
+opt_read_at_end:
+    NOT opt_at on_end       
+     {
+      ginfo_container2($3, 2);
+      $$=ginfo_container3($3, 2);
+     }
+    | AT on_end 
+     {
+      ginfo_container2($2, 1);
+      $$=ginfo_container3($2, 1);
+     }
+    | on_end
+     {
+      ginfo_container2($1, 1);
+      $$=ginfo_container3($1, 1);
+     }
+    | AT on_end NOT opt_at 
+     { 
+      ginfo_container2($2, 1);
+     } 
+     on_end 
+     { 
+      ginfo_container2($6, 2);
+      $$=ginfo_container3($6, 3);
+     }
+    | on_end NOT opt_at 
+     { 
+      ginfo_container2($1, 1);
+     } 
+     on_end 
+     { 
+      ginfo_container2($5, 2);
+      $$=ginfo_container3($5, 3);
+     }
     ;
-replacing_kind:
-    ALL         { $$ = INSPECT_ALL; }
-    | LEADING   { $$ = INSPECT_LEADING; }
-    | FIRSTTOK  { $$ = INSPECT_FIRST; }
-    ;
-inspect_before_after:
-    inspect_before_after
-        BEFORE opt_initial noallname
-            { $$ = alloc_inspect_before_after($1,1,$4); }
-    | inspect_before_after
-        AFTER opt_initial noallname
-            { $$ = alloc_inspect_before_after($1,2,$4); }
-    | /* nothing */  { $$ = alloc_inspect_before_after(NULL,0,NULL); }
-    ;
-opt_initial:
-    INITIALTOK
-    | /* nothing */
-    ;
-
-
-/* STRING statement */
-
-string_statement:
-  STRINGCMD string_from_list
-  INTO name string_with_pointer {
-    gen_stringcmd( $2, $4, $5 );
-  }
-  opt_on_overflow
-  opt_end_stringcmd
-  ;
-opt_end_stringcmd:
-    | END_STRINGCMD
-    ;
-
-
-/* SORT statement */
-
-sort_statement:
-    SORT name sort_keys   { gen_sort($2); }
-    sort_input sort_output { /*gen_close_sort($2);*/ }
-sort_keys:
-    /* nothing */   { $$ = NULL; }
-    | sort_keys DIRECTION KEY name
-        {
-            $4->direction = $2;
-            (struct sym *)$4->sort_data =
-                (struct sym *)($<sval>0->sort_data);
-            (struct sym *)($<sval>0->sort_data) = $4;
-            $$ = $4;
-        }
-    ;
-sort_input:
-    INPUT PROCEDURE_TOK opt_is sort_range { $$=NULL; }
-    | USING sort_file_list { gen_sort_using($<sval>-2,$2); $$=$2; }
-    ;       
-sort_output:
-    OUTPUT PROCEDURE_TOK opt_is sort_range { $$=NULL; }
-    | GIVING sort_file_list { gen_sort_giving($<sval>-3,$2); $$=$2; }
-    ;
-sort_file_list:
-  name { $$ = alloc_sortfile_node($1);  }
-  | sort_file_list name 
-   {
-    $1->next = alloc_sortfile_node($2); $$=$1;
-   }
-  ;
-sort_range: label opt_perform_thru
-      {
-        gen_perform_thru($1,$2);
-                $$ = ($2 == NULL) ? $1 : $2;
+on_end:
+    END
+    { 
+      if ( gic == NULL ) {
+         gic=ginfo_container0();
       }
-    ;
-
-
-/* SET statement */
-
-set_statement:
-   SET set_list
-   ;
-set_list:
-   set_target TO opt_address_of set_variable_or_nlit  
-   { gen_set($1,SET_TO,$4,0,$3); }
-  | variable UP BY var_or_nliteral   
-   { gen_set($1,SET_UP_BY,$4,0,0); }
-  | variable DOWN BY var_or_nliteral 
-   { gen_set($1,SET_DOWN_BY,$4,0,0); }
-  | opt_address_of variable TO opt_address_of set_variable 
-   { gen_set($2,SET_TO,$5,$1,$4); }
-  ;
-set_target:
-    variable  { $$ = $1; }
-  | cond_name { $$ = $1; }
-  ;
-set_variable:
-   variable	   { $$ = $1; }
-  | NULLTOK	   { $$ = NULL; }
-  ;
-opt_address_of:
-  /* nothing */ { $$ = 0; }
-  | ADDRESS opt_of { $$ = 1; }
-  ;
-set_variable_or_nlit:
-  name_or_lit	  { $$ = $1; }
-  | NULLTOK	  { $$ = NULL; }
-  | TOK_TRUE	  
+      $$=ginfo_container1(gic);
+      stabs_line();
+    }
+    statement_list
     { 
-      $$ = (struct sym *)1;
-      /* no (struct sym *) may have this value! */ 
+      $$=$<gic>2;
     }
-  ;
+    ;
+opt_read_invalid_key:
+    read_invalid_key { $$ = gen_invalid_keys ($1, NULL); }
+    | read_not_invalid_key { $$ = gen_invalid_keys (NULL, $1); }
+    | read_invalid_key read_not_invalid_key { $$ = gen_invalid_keys ($1, $2); }
+    ;
+read_invalid_key:
+    INVALID opt_key     { $<ike>$ = gen_before_invalid_key (); }
+    statement_list      { $$ = gen_after_invalid_key ($<ike>3); }
+    ;
+read_not_invalid_key:
+    NOT INVALID opt_key { $<ike>$ = gen_before_invalid_key (); }
+    statement_list      { $$ = gen_after_invalid_key ($<ike>4); }
+    ;
+opt_end_read:
+    /* nothing */
+    | END_READ
+    ;
+opt_end_return:
+    /* nothing */
+    | END_RETURN
+    ;
 
 
-/* EVALUATE statement */
+/*
+ * RETURN statements
+ */
 
-evaluate_statement:
-    EVALUATE { $<ival>$ = gen_evaluate_start(); }
-                selection_subject_set { }
-                when_case_list
-                END_EVALUATE { release_sel_subject($<ival>2,$3); }
+return_statement:
+    RETURN_TOK return_body opt_end_return
     ;
-selection_subject_set:
-          selection_subject { $$=save_sel_subject(NULL,$1); }
-        | selection_subject_set ALSO
-	    selection_subject { $$=save_sel_subject($1,$3); }
-        ;
-selection_subject:
-    expr
+return_body:
+    name
+    opt_record
+    opt_read_into
+    {    
+     if (gen_reads($1, $3, NULL, 1, 4) != 0) {
+        YYABORT;
+     }
+    }
+    | name
+    opt_record
+    opt_read_into
+    opt_read_at_end
+    {    
+     if (gen_reads($1, $3, NULL, 1, 5) != 0) {
+        YYABORT;
+     }
+     else {
+        ginfo_container4($4);
+        gic = NULL;
+     }
+    }
+    ;
+
+
+/*
+ * REWRITE statement
+ */
+
+rewrite_statement:
+    REWRITE name opt_write_from
     {
-      if (push_expr($1))
-	$$=SSUBJ_EXPR;
-      else
-	{
-	  push_field ($1);
-	  $$=SSUBJ_STR;
-	}
+      if ($2->level != 1)
+        yyerror("variable %s could not be used for REWRITE", $2->name);
+      gen_rewrite($2, $3);
     }
-  | condition	{ push_condition(); $$ = SSUBJ_BOOLEAN; }
-  | TOK_TRUE	{ push_boolean (1); $$ = SSUBJ_BOOLEAN; }
-  | TOK_FALSE	{ push_boolean (0); $$ = SSUBJ_BOOLEAN; }
-  ;
-when_case_list:
-        WHEN { $<ival>$ = loc_label++; /* mark end of "when" case */ }
-                { $<ssbjval>$=$<ssbjval>-1; /* store inherited subject set */ }
-                when_case
-                sentence_or_nothing
-                { $$=gen_end_when($<ival>-2,$<ival>2,$5); }
-        | when_case_list WHEN { $<ival>$ = loc_label++; }
-                { $<ssbjval>$=$<ssbjval>-1; }
-                when_case
-                { gen_bypass_when_case($1); }
-                sentence_or_nothing
-                { $$=gen_end_when($<ival>-2,$<ival>3,$7); }
-        ;
-when_case:
-          selection_object
-          {
-	    $$ = 0;
-	    gen_when_check($$,$<ssbjval>0,$1,$<ival>-1);
-	  }
-        | when_case ALSO selection_object
-          {
-	    $$ = $1 + 1;
-	    gen_when_check($$,$<ssbjval>0,$3,$<ival>-1);
-	  }
-        | OTHER { $$=-1; }
-        ;
-selection_object:
-    ANY			{ $$ = SOBJ_ANY; }
-  | TOK_TRUE		{ push_boolean (1); $$ = SOBJ_BOOLEAN; }
-  | TOK_FALSE		{ push_boolean (0); $$ = SOBJ_BOOLEAN; }
-  | opt_not condition	{ push_condition (); $$ = SOBJ_BOOLEAN | $1; }
-  | opt_not expr
-    {
-      if ($2 == (struct sym *) spe_lit_ZE)
-	$$ = SOBJ_ZERO | $1;
-      else if (push_expr($2))
-	$$ = SOBJ_EXPR | $1;
-      else
-	{
-	  push_field ($2);
-	  $$ = SOBJ_STR | $1;
-	}
-    }
-  | opt_not expr THRU expr
-    {
-      if (push_expr($2) && push_expr($4))
-	$$ = SOBJ_RANGE | $1;
-      else
-	{
-	  push_field ($2);
-	  push_field ($4);
-	  $$ = SOBJ_RANGE | $1;
-	}
-    }
-  ;
-sentence_or_nothing:
-    /* nothing */               { $$ = 0; }
-    | conditional_statement_list     { $$ = 1; }
+    opt_invalid_key
+    opt_end_rewrite
+    ;
+opt_end_rewrite:
+    /* nothing */
+    | END_REWRITE
     ;
 
 
-/* CALL statement */
-
-call_statement:
-    CALL  { curr_call_mode=CM_REF; }
-    gname
-    using_options       
-    returning_options 
-    { $<ival>$ = loc_label++; /* exception check */ }
-    { $<ival>$ = loc_label++; /* not exception check */ } 
-    { 
-      $<ival>$ = gen_call((struct lit *)$3,$4,$<ival>6,$<ival>7); 
-      gen_store_fnres($5); 
-    }
-    on_exception_or_overflow 
-    on_not_exception { 
-      check_call_except($9,$10,$<ival>6,$<ival>7,$<ival>8); }
-    opt_end_call
-    ;
-using_options:
-    /* nothing */   { $$=0; }
-    | USING     { $<ival>$=0; /* to save how many parameters */ }
-      dummy     { $<ival>$=CALL; }
-      parm_list  { $$=$<ival>2; } /* modified to signal calling pgm */
-    ;
-parm_list:
-    parm_list opt_sep parameter
-        {   if ($<ival>0 == USING)
-                gen_save_using($<sval>3);
-            else if ($<ival>0 == CALL) {
-                gen_push_using($<sval>3);
-            }
-        }
-        | parameter
-        {   if ($<ival>0 == USING)
-                gen_save_using($<sval>1);
-            else if ($<ival>0 == CALL) {
-                gen_push_using($<sval>1);
-            }
-        }
-    ;
-parameter:
-    gname {$$=$1;
-            if ($$->litflag==1) {
-               struct lit *lp=(struct lit *)$$;
-               lp->call_mode=curr_call_mode;
-               }
-            else
-               $$->call_mode=curr_call_mode;
-        }
-    | BY parm_type gname
-        {   $$=$3;
-            curr_call_mode=$<ival>2;
-            if ($$->litflag==1) {
-               struct lit *lp=(struct lit *)$$;
-               lp->call_mode=curr_call_mode;
-               }
-            else
-               $$->call_mode=curr_call_mode;
-        }
-    ;
-parm_type:
-    REFERENCE	{ $$ = CM_REF; }
-  | CONTENT	{ $$ = CM_CONT; }
-  | VALUE	{ $$ = CM_VAL; }
-;
-on_exception_or_overflow:
-    /* nothing */ { $$ = 0; }
-    | ONTOK exception_or_overflow { $<ival>$ = begin_on_except(); } 
-      statement_list            { gen_jmplabel($<dval>0); $$=$<ival>3; }
-    ;
-exception_or_overflow:
-      EXCEPTION
-    | OVERFLOWTK
-    ;
-opt_end_call:
-    | END_CALL
-    ;
-
-
-/* IF statement */
-
-if_statement:
-    if_then { gen_dstlabel($1); } opt_end_if 
-  | if_then ELSE {
-      $<dval>$=gen_passlabel();
-      gen_dstlabel($1);
-    }
-    conditional_statement_list {
-      gen_dstlabel($<dval>3);
-    }
-    opt_end_if
-  | IF error END_IF { }
-;
-if_then:
-    IF condition { $<dval>$ = gen_testif(); } opt_then
-       conditional_statement_list { $$ = $<dval>3; }
-;
-opt_then: | THEN ;
-opt_end_if: | END_IF ;
-
-
-/* SEARCH statement */
+/*
+ * SEARCH statement
+ */
 
 search_statement:
       SEARCH search_body opt_end_search 
@@ -2019,66 +2333,137 @@ opt_end_search:
     /* nothing */
     | END_SEARCH
     ;
-
-/* MOVE statement */
-
-move_statement:
-      MOVE gname TO { $<ival>$ = MOVE; } var_list
-    | MOVE CORRESPONDING gname TO gname { gen_movecorr($3, $5); }
-    ;
 
 
-/* INITILIZE statement */
+/*
+ * SET statement
+ */
 
-initialize_statement:
-    INITIALIZE { $<ival>$ = INITIALIZE; } var_list
-    ;
-
-
-/* COMPUTE statement */
-
-compute_statement:
-    COMPUTE var_list_name CONDITIONAL expr opt_on_size_error opt_end_compute
-    {
-      if ($3 != EQUAL)
-	yyerror("= expected");
-      else
-	gen_compute($2, $4, $5);
+set_statement:
+   SET set_list
+   ;
+set_list:
+   set_target TO opt_address_of set_variable_or_nlit  
+   { gen_set($1,SET_TO,$4,0,$3); }
+  | variable UP BY var_or_nliteral   
+   { gen_set($1,SET_UP_BY,$4,0,0); }
+  | variable DOWN BY var_or_nliteral 
+   { gen_set($1,SET_DOWN_BY,$4,0,0); }
+  | opt_address_of variable TO opt_address_of set_variable 
+   { gen_set($2,SET_TO,$5,$1,$4); }
+  ;
+set_target:
+    variable  { $$ = $1; }
+  | cond_name { $$ = $1; }
+  ;
+set_variable:
+   variable	   { $$ = $1; }
+  | NULLTOK	   { $$ = NULL; }
+  ;
+opt_address_of:
+  /* nothing */ { $$ = 0; }
+  | ADDRESS opt_of { $$ = 1; }
+  ;
+set_variable_or_nlit:
+  name_or_lit	  { $$ = $1; }
+  | NULLTOK	  { $$ = NULL; }
+  | TOK_TRUE	  
+    { 
+      $$ = (struct sym *)1;
+      /* no (struct sym *) may have this value! */ 
     }
   ;
-opt_end_compute:
-    /* nothing */
-  | END_COMPUTE
+
+
+/*
+ * SORT statement
+ */
+
+sort_statement:
+    SORT name sort_keys   { gen_sort($2); }
+    sort_input sort_output { /*gen_close_sort($2);*/ }
+sort_keys:
+    /* nothing */   { $$ = NULL; }
+    | sort_keys DIRECTION KEY name
+        {
+            $4->direction = $2;
+            (struct sym *)$4->sort_data =
+                (struct sym *)($<sval>0->sort_data);
+            (struct sym *)($<sval>0->sort_data) = $4;
+            $$ = $4;
+        }
+    ;
+sort_input:
+    INPUT PROCEDURE_TOK opt_is sort_range { $$=NULL; }
+    | USING sort_file_list { gen_sort_using($<sval>-2,$2); $$=$2; }
+    ;       
+sort_output:
+    OUTPUT PROCEDURE_TOK opt_is sort_range { $$=NULL; }
+    | GIVING sort_file_list { gen_sort_giving($<sval>-3,$2); $$=$2; }
+    ;
+sort_file_list:
+  name { $$ = alloc_sortfile_node($1);  }
+  | sort_file_list name 
+   {
+    $1->next = alloc_sortfile_node($2); $$=$1;
+   }
   ;
+sort_range: label opt_perform_thru
+      {
+        gen_perform_thru($1,$2);
+                $$ = ($2 == NULL) ? $1 : $2;
+      }
+    ;
 
 
-/* ADD statement */
+/*
+ * START statement
+ */
 
-add_statement:
-    ADD add_body end_add
+start_statement:
+    START start_body
+    opt_invalid_key
+    opt_end_start
     ;
-add_body:
-      var_list_gname TO var_list_name opt_on_size_error
-      {
-        gen_add1($1, $3, $4);
-      }
-    | var_list_gname opt_add_to GIVING var_list_name opt_on_size_error
-      {
-        gen_add2($1, $4, $2, $5);
-      }
-    | CORRESPONDING gname opt_to name opt_rounded
-      {
-        gen_addcorr($2, $4, $5);
-      }
+start_body:
+      name { gen_start($1,0,NULL); }
+    | name KEY opt_is cond_op name { gen_start($1,$4,$5); }
     ;
-opt_add_to:
-    /* nothing */ { $$ = NULL; }
-    | TO gname    { $$ = $2; }
+opt_end_start:
+    /* nothing */
+    | END_START
     ;
-end_add: | END_ADD ;
 
 
-/* SUBTRACT statement */
+/*
+ * STOP RUN statement
+ */
+
+stoprun_statement:
+    STOP RUN { gen_stoprun(); }
+    ;
+
+
+/*
+ * STRING statement
+ */
+
+string_statement:
+  STRINGCMD string_from_list
+  INTO name string_with_pointer {
+    gen_stringcmd( $2, $4, $5 );
+  }
+  opt_on_overflow
+  opt_end_stringcmd
+  ;
+opt_end_stringcmd:
+    | END_STRINGCMD
+    ;
+
+
+/*
+ * SUBTRACT statement
+ */
 
 subtract_statement:
     SUBTRACT subtract_body opt_end_subtract
@@ -2102,317 +2487,81 @@ opt_end_subtract:
     ;
 
 
-/* MULTIPLY statement */
+/*
+ * UNSTRING statement
+ */
 
-multiply_statement:
-    MULTIPLY multiply_body opt_end_multiply
+unstring_statement:
+    UNSTRING name
+    unstring_delimited
+    INTO unstring_destinations
+    string_with_pointer
+    unstring_tallying {
+	gen_unstring( $2, $3, $5, $6, $7 );
+    }
+    opt_on_overflow
+    opt_end_unstring
     ;
-multiply_body:
-      numeric_value BY var_list_name opt_on_size_error
-      {
-        gen_multiply1($3, $1, $4);
-      }
-    | numeric_value BY numeric_value GIVING var_list_name opt_on_size_error
-      {
-        gen_multiply2($5, $1, $3, $6);
-      }
+unstring_delimited:
+    DELIMITED opt_by unstring_delimited_vars { $$=$3; }
+    | /* nothing */                          { $$=NULL; }
     ;
-opt_end_multiply:
-    /* nothing */
-    | END_MULTIPLY
+unstring_delimited_vars:
+    opt_all gname       { $$=alloc_unstring_delimited($1,$2); }
+    | unstring_delimited_vars OR opt_all gname {
+      struct unstring_delimited *ud;
+      ud=alloc_unstring_delimited($3,$4);
+      ud->next = $1;
+      $$=ud;
+    }
+    ;
+unstring_destinations:
+    unstring_dest_var       { $$=$1; }
+    | unstring_destinations opt_sep
+        unstring_dest_var   {
+            $3->next = $1;
+            $$ = $3;
+        }
+    ;
+unstring_dest_var:
+    name opt_unstring_delim opt_unstring_count {
+            $$ = alloc_unstring_dest( $1, $2, $3 );
+        }
+    ;
+opt_unstring_delim:
+    /* nothing */           { $$=NULL; }
+    | DELIMITER opt_in name { $$=$3; }
+    ;
+opt_unstring_count:
+    /* nothing */           { $$=NULL; }
+    | COUNT opt_in name   { $$=$3; }
+    ;
+unstring_tallying:
+    /* nothing */           { $$=NULL; }
+    | TALLYING opt_in name  { $$=$3; }
+    ;
+opt_on_overflow:
+    on_overflow
+    on_not_overflow
+    ;
+on_overflow:
+    ONTOK OVERFLOWTK          { $<dval>$ = gen_at_end(-1); }
+        statement_list            { gen_dstlabel($<dval>3); }
+    | /* nothing */
+    ;
+on_not_overflow:
+    NOT ONTOK OVERFLOWTK { $<dval>$ = gen_at_end(0); }
+        statement_list            { gen_dstlabel($<dval>4); }
+    | /* nothing */
+    ;
+opt_end_unstring:
+    | END_UNSTRING
     ;
 
 
-/* DIVIDE statement */
-
-divide_statement:
-    DIVIDE divide_body opt_end_divide
-    ;
-divide_body:
-      numeric_value BY numeric_value GIVING var_list_name opt_on_size_error
-      {
-        gen_divide2($5, $1, $3, $6);
-      }
-    | numeric_value BY numeric_value GIVING name opt_rounded REMAINDER name
-      {
-        assert_numeric_sy($5);
-        gen_divide($1, $3, $5, $8, $6);
-      }
-    | numeric_value INTO numeric_value GIVING name opt_rounded REMAINDER name
-      {
-        assert_numeric_sy($5);
-        gen_divide($3, $1, $5, $8, $6);
-      }
-    | numeric_value BY numeric_value GIVING name opt_rounded REMAINDER name on_size_error
-      {
-        assert_numeric_sy($5);
-        gen_dstlabel($9->lbl4); /* generate bypass jump */
-        gen_divide($1, $3, $5, $8, $6);
-        math_on_size_error3($9);
-      }
-    | numeric_value INTO numeric_value GIVING name opt_rounded REMAINDER name on_size_error
-      {
-        assert_numeric_sy($5);
-        gen_dstlabel($9->lbl4); /* generate bypass jump */
-        gen_divide($3, $1, $5, $8, $6);
-        math_on_size_error3($9);
-      }
-    | numeric_value INTO numeric_value GIVING var_list_name opt_on_size_error
-      {
-        gen_divide2($5, $3, $1, $6);
-      }
-    | numeric_value INTO var_list_name opt_on_size_error
-      {
-        gen_divide1($3, $1, $4);
-      }
-    ;
-opt_end_divide:
-    /* nothing */
-    | END_DIVIDE
-    ;
-
-
-/* DISPLAY statement */
-
-display_statement:
-    DISPLAY
-    display_varlist
-    opt_upon
-    display_upon
-    display_options
-    opt_line_pos
-    { gen_display($4, $5); }
-    ;
-display_varlist:
-    /* nothing */
-    | display_varlist opt_sep gname { put_disp_list($3); }
-    ;
-display_upon:
-    /* nothing */   { $$ = 1; }  /* default is CONSOLE (STD_OUTPUT) */
-    | CONSOLE       { $$ = 1; }
-    | STD_OUTPUT    { $$ = 1; }
-    | STD_ERROR     { $$ = 2; }
-    ;
-display_options:
-    /* nothing */                           { $$ = 0; }
-    | display_options opt_with NO ADVANCING { $$ = $1 | 1; }
-    | display_options ERASE                 { $$ = $1 | 2; }
-    | display_options ERASE EOS_TOK         { $$ = $1 | 2; }
-    | display_options ERASE EOL_TOK         { $$ = $1 | 4; }
-    ;
-opt_line_pos:
-    /* nothing */
-    | LINE expr TOKPOSITION expr 
-     {
-      screen_io_enable++;
-      push_expr($2);
-      push_expr($4);
-      gen_gotoxy_expr();
-     }
-    | LINE expr COLUMN expr 
-     {
-      screen_io_enable++;
-      push_expr($2);
-      push_expr($4);
-      gen_gotoxy_expr();
-     } 
-    ;
-
-
-/* OPEN statement */
-
-open_statement:
-    OPEN open_options
-    ;
-open_options:
-      open_mode open_varlist { }
-    | open_options open_mode open_varlist { }
-    ;
-open_mode:
-    INPUT    { $$=1; }
-    | I_O    { $$=2; }
-    | OUTPUT { $$=3; }
-    | EXTEND { $$=4; }
-    | error  { yyerror("invalid OPEN mode"); }
-    ;
-open_varlist:
-      name { gen_open($<ival>0, $<sval>1); }
-    | open_varlist opt_sep name { gen_open($<ival>0, $<sval>3); }
-    ;
-
-
-/* CLOSE statement */
-
-close_statement:
-    CLOSE close_files
-    ;
-close_files:
-      close_file
-    | close_files opt_sep close_file
-    ;
-close_file:
-    name { gen_close($1); }
-    ;
-
-
-/* RETURN statements */
-
-return_statement:
-    RETURN_TOK return_body opt_end_return
-    ;
-return_body:
-    name
-    opt_record
-    opt_read_into
-    {    
-     if (gen_reads($1, $3, NULL, 1, 4) != 0) {
-        YYABORT;
-     }
-    }
-    | name
-    opt_record
-    opt_read_into
-    opt_read_at_end
-    {    
-     if (gen_reads($1, $3, NULL, 1, 5) != 0) {
-        YYABORT;
-     }
-     else {
-        ginfo_container4($4);
-        gic = NULL;
-     }
-    }
-    ;
-
-
-/* READ statements */
-
-read_statement: READ read_body opt_end_read { }
-    ;
-read_body: 
-    name
-    opt_read_next
-    opt_record
-    opt_read_into
-    opt_read_key
-    {
-      if (gen_reads($1, $4, $5, $2, 0) != 0)
-        YYABORT;
-    }
-    | name
-    opt_read_next
-    opt_record
-    opt_read_into
-    opt_read_key
-    opt_read_at_end
-    {    
-     if (gen_reads($1, $4, $5, $2, 1) != 0)
-       YYABORT;
-     else
-       {
-	 ginfo_container4($6);
-	 gic = NULL;
-       }
-    }
-   | name
-    opt_read_next
-    opt_record 
-    opt_read_into
-    opt_read_key
-    opt_read_invalid_key 
-    {    
-     if (gen_reads($1, $4, $5, $2, 2) != 0)
-       YYABORT;
-     else
-       gen_test_invalid_keys ($6);
-    }
-    ;
-opt_read_next:
-    /* nothing */       { $$ = 0; }
-    | NEXT              { $$ = 1; }  
-    | PREVIOUS          { $$ = 2; }  
-    ;
-opt_read_into:
-    /* nothing */       { $$ = NULL; }
-    | INTO name         { $$ = $2; }
-    ;
-opt_read_key:
-    /* nothing */       { $$ = NULL; }
-    | KEY opt_is name   { $$ = $3; }
-    ;
-opt_read_at_end:
-    NOT opt_at on_end       
-     {
-      ginfo_container2($3, 2);
-      $$=ginfo_container3($3, 2);
-     }
-    | AT on_end 
-     {
-      ginfo_container2($2, 1);
-      $$=ginfo_container3($2, 1);
-     }
-    | on_end
-     {
-      ginfo_container2($1, 1);
-      $$=ginfo_container3($1, 1);
-     }
-    | AT on_end NOT opt_at 
-     { 
-      ginfo_container2($2, 1);
-     } 
-     on_end 
-     { 
-      ginfo_container2($6, 2);
-      $$=ginfo_container3($6, 3);
-     }
-    | on_end NOT opt_at 
-     { 
-      ginfo_container2($1, 1);
-     } 
-     on_end 
-     { 
-      ginfo_container2($5, 2);
-      $$=ginfo_container3($5, 3);
-     }
-    ;
-on_end:
-    END
-    { 
-      if ( gic == NULL ) {
-         gic=ginfo_container0();
-      }
-      $$=ginfo_container1(gic);
-      stabs_line();
-    }
-    statement_list
-    { 
-      $$=$<gic>2;
-    }
-    ;
-opt_read_invalid_key:
-    read_invalid_key { $$ = gen_invalid_keys ($1, NULL); }
-    | read_not_invalid_key { $$ = gen_invalid_keys (NULL, $1); }
-    | read_invalid_key read_not_invalid_key { $$ = gen_invalid_keys ($1, $2); }
-    ;
-read_invalid_key:
-    INVALID opt_key     { $<ike>$ = gen_before_invalid_key (); }
-    statement_list      { $$ = gen_after_invalid_key ($<ike>3); }
-    ;
-read_not_invalid_key:
-    NOT INVALID opt_key { $<ike>$ = gen_before_invalid_key (); }
-    statement_list      { $$ = gen_after_invalid_key ($<ike>4); }
-    ;
-opt_end_read:
-    /* nothing */
-    | END_READ
-    ;
-opt_end_return:
-    /* nothing */
-    | END_RETURN
-    ;
-
-
-/* WRITE statement */
+/*
+ * WRITE statement
+ */
 
 write_statement:
     WRITE name opt_write_from write_options
@@ -2444,94 +2593,9 @@ opt_end_write:
     ;
 
 
-/* REWRITE statement */
-
-rewrite_statement:
-    REWRITE name opt_write_from
-    {
-      if ($2->level != 1)
-        yyerror("variable %s could not be used for REWRITE", $2->name);
-      gen_rewrite($2, $3);
-    }
-    opt_invalid_key
-    opt_end_rewrite
-    ;
-opt_end_rewrite:
-    /* nothing */
-    | END_REWRITE
-    ;
-
-
-/* DELETE statement */
-
-delete_statement:
-    DELETE name opt_record { gen_delete($2); }
-    opt_invalid_key
-    opt_end_delete
-    ;
-opt_end_delete:
-    /* nothing */
-    | END_DELETE
-    ;
-
-
-/* START statement */
-
-start_statement:
-    START start_body
-    opt_invalid_key
-    opt_end_start
-    ;
-start_body:
-      name { gen_start($1,0,NULL); }
-    | name KEY opt_is cond_op name { gen_start($1,$4,$5); }
-    ;
-opt_end_start:
-    /* nothing */
-    | END_START
-    ;
-
-
-/* GO TO statement */
-
-goto_statement:
-    GO opt_to goto_label_list opt_goto_depending_on
-    {
-      if ($4 == NULL)
-        gen_goto($3);
-      else
-        gen_goto_depending($3, $4);
-    }
-    ;
-goto_label_list:
-      label                     { $$ = insert_list(NULL, $1); }
-    | goto_label_list label     { $$ = insert_list($1, $2); }
-    | goto_label_list ',' label { $$ = insert_list($1, $3); }
-    ;
-opt_goto_depending_on:
-    /* nothing */               { $$ = NULL; }
-    | DEPENDING opt_on variable { $$ = $3; }
-    ;
-
-
-/* EXIT statement */
-
-exit_statement:
-      EXIT          { gen_exit(0); }
-    | EXIT PROGRAM  { gen_exit(1); }
-    ;
-
-
-/* STOP RUN statement */
-
-stoprun_statement:
-    STOP RUN { gen_stoprun(); }
-    ;
-
-
-/*
+/*******************
  * Common rules
- */
+ *******************/
 
 var_list_name: name opt_rounded opt_sep
      {
