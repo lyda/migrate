@@ -155,7 +155,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <str> idstring
 %type <tree> field_description,label,filename,noallname,paragraph,assign_clause
 %type <tree> file_description,redefines_var,function_call,subscript
-%type <tree> name,gname,number,opt_gname,opt_def_name,def_name
+%type <tree> name,gname,number,file,opt_gname,opt_def_name,def_name
 %type <tree> opt_read_into,opt_write_from,field_name,expr
 %type <tree> opt_unstring_count,opt_unstring_delim,unstring_tallying
 %type <tree> qualified_var,unqualified_var
@@ -1990,18 +1990,17 @@ read_statement:
   READ read_body opt_end_read
 ;
 read_body:
-  name opt_read_next opt_record opt_read_into opt_read_key
+  file opt_read_next opt_record opt_read_into opt_read_key
   {
-    if (gen_reads($1, $4, $5, $2, 0) != 0)
-      YYABORT;
+    gen_reads($1, $4, $5, $2, 0);
   }
-| name opt_read_next opt_record opt_read_into opt_read_key opt_read_at_end
+| file opt_read_next opt_record opt_read_into opt_read_key opt_read_at_end
   {
     gen_reads($1, $4, $5, $2, 1);
     ginfo_container4($6);
     gic = NULL;
   }
-| name opt_read_next opt_record opt_read_into opt_read_key opt_read_invalid_key
+| file opt_read_next opt_record opt_read_into opt_read_key opt_read_invalid_key
   {
     gen_reads($1, $4, $5, $2, 2);
     gen_test_invalid_keys ($6);
@@ -2553,7 +2552,16 @@ number:
   gname
   {
     if (!is_numeric_sy ($1))
-      yyerror ("non-numeric value: %s", $1->name);
+      yyerror ("numeric value is expected: %s", $1->name);
+    $$ = $1;
+  }
+;
+
+file:
+  name
+  {
+    if ($1->type != 'F')
+      yyerror ("file name is expected: %s", $1->name);
     $$ = $1;
   }
 ;

@@ -1015,14 +1015,6 @@ adjust_desc_length (cob_tree sy)
  * Expression
  */
 
-void
-assign_expr (cob_tree sy, int rnd)
-{
-  push_immed (rnd);
-  gen_loadvar (sy);
-  asm_call ("cob_set");
-}
-
 int
 push_expr (cob_tree sy)
 {
@@ -1049,6 +1041,14 @@ push_expr (cob_tree sy)
 #endif
   asm_call_1 ("cob_push_decimal", sy);
   return 1;
+}
+
+void
+assign_expr (cob_tree sy, int rnd)
+{
+  push_immed (rnd);
+  gen_loadvar (sy);
+  asm_call ("cob_set");
 }
 
 
@@ -4857,19 +4857,43 @@ gen_return (cob_tree f, cob_tree buf)
   gen_status (f);
 }
 
-int
-gen_reads (cob_tree f, cob_tree buf, cob_tree key, int next_prev,
-	   int sel)
+static void
+gen_read (cob_tree f, cob_tree buf, cob_tree key)
 {
-// NOTE: 
-// While this is functional, it requires to be updated to trap more syntax errors
+  struct rec_varying *rv = (struct rec_varying *) f->rec_varying;
+  if (f->organization == ORG_RELATIVE)
+    push_index (f->ix_desc);
+  if (f->organization == ORG_INDEXED)
+    gen_loadvar (key);
+  /* pass the desc/address of reclen, if VARYING ... */
+  if (rv != NULL)
+    gen_loadvar (rv->reclen);
+  else
+    gen_loadvar (NULL);
+  gen_save_filevar (f, buf);
+  asm_call ("cob_read");
+  gen_status (f);
+}
 
-  if (f->type != 'F')
-    {
-      yyerror ("invalid variable \'%s\', file name expected", f->name);
-      return 1;
-    }
+static void
+gen_read_next (cob_tree f, cob_tree buf, int next_prev)
+{
+  struct rec_varying *rv = (struct rec_varying *) f->rec_varying;
+  if (rv != NULL)
+    gen_loadvar (rv->reclen);
+  else
+    gen_loadvar (NULL);
+  gen_save_filevar (f, buf);
+  if (next_prev == 1)
+    asm_call ("cob_read_next");
+  else
+    asm_call ("cob_read_prev");
+  gen_status (f);
+}
 
+int
+gen_reads (cob_tree f, cob_tree buf, cob_tree key, int next_prev, int sel)
+{
   if ((sel > -1) && (sel < 4))
     {
       if (next_prev > 0
@@ -4889,42 +4913,6 @@ gen_reads (cob_tree f, cob_tree buf, cob_tree key, int next_prev,
 	gen_return (f, buf);
     }
   return 0;
-}
-
-void
-gen_read (cob_tree f, cob_tree buf, cob_tree key)
-{
-  struct rec_varying *rv = (struct rec_varying *) f->rec_varying;
-  if (f->organization == ORG_RELATIVE)
-    push_index (f->ix_desc);
-  if (f->organization == ORG_INDEXED)
-    {
-      gen_loadvar (key);
-    }
-  /* pass the desc/address of reclen, if VARYING ... */
-  if (rv != NULL)
-    gen_loadvar (rv->reclen);
-  else
-    gen_loadvar (NULL);
-  gen_save_filevar (f, buf);
-  asm_call ("cob_read");
-  gen_status (f);
-}
-
-void
-gen_read_next (cob_tree f, cob_tree buf, int next_prev)
-{
-  struct rec_varying *rv = (struct rec_varying *) f->rec_varying;
-  if (rv != NULL)
-    gen_loadvar (rv->reclen);
-  else
-    gen_loadvar (NULL);
-  gen_save_filevar (f, buf);
-  if (next_prev == 1)
-    asm_call ("cob_read_next");
-  else
-    asm_call ("cob_read_prev");
-  gen_status (f);
 }
 
 void
