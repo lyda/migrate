@@ -102,24 +102,37 @@ file_open (cob_file *f, char *filename, int mode, int opt)
   switch (mode)
     {
     case COB_OPEN_INPUT:
-      fp = fopen (filename, "rb");
+      if (f->organization == COB_ORG_LINE_SEQUENTIAL)
+	fp = fopen (filename, "r");
+      else
+	fp = fopen (filename, "rb");
       break;
     case COB_OPEN_OUTPUT:
       if (f->organization == COB_ORG_RELATIVE)
 	fp = fopen (filename, "wb+");
+      else if (f->organization == COB_ORG_LINE_SEQUENTIAL)
+	fp = fopen (filename, "w");
       else
 	fp = fopen (filename, "wb");
       break;
     case COB_OPEN_I_O:
-      fp = fopen (filename, "rb+");
+      if (f->organization == COB_ORG_LINE_SEQUENTIAL)
+	fp = fopen (filename, "r+");
+      else
+	fp = fopen (filename, "rb+");
       break;
     case COB_OPEN_EXTEND:
-      fp = fopen (filename, "ab+");
-      fseek (fp, 0, SEEK_END);
+      if (f->organization == COB_ORG_LINE_SEQUENTIAL)
+	fp = fopen (filename, "a+");
+      else
+	fp = fopen (filename, "ab+");
       break;
     }
   if (fp == NULL)
     return errno;
+
+  if (mode == COB_OPEN_EXTEND)
+    fseek (fp, 0, SEEK_END);
 
 #if HAVE_FCNTL
   /* lock the file */
