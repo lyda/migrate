@@ -457,7 +457,7 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
   if (have_digits && sign_symbol)
     {
       for (dst = end - 1; dst > f2.data; dst--)
-	if (*dst == ' ' || *dst == '*')
+	if (*dst == ' ')
 	  break;
       *dst = sign_symbol;
     }
