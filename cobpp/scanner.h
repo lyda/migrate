@@ -36,7 +36,7 @@ extern const char *yyfilename;
 extern int yylex (void);
 extern void yyerror (const char *fmt, ...);
 extern void open_buffer (const char *name, struct replacement *replacing);
-extern void include_copybook (const char *name, struct replacement *replacing);
+extern void include_copybook (const char *name, const char *lib, struct replacement *replacing);
 extern struct replacement *add_replacement (struct replacement *replacing, const char *old_text, const char *new_text);
 extern void remove_replacements (void);
 

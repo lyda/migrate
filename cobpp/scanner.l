@@ -103,6 +103,8 @@ static void process_eol (void);
 <COPY_STATE>{
   "."			{ BEGIN INITIAL; return '.'; }
   "BY"			{ return BY; }
+  "IN"			{ return IN; }
+  "OF"			{ return IN; }
   "OFF"			{ return OFF; }
   "REPLACING"		{ return REPLACING; }
   [0-9A-Z_-]+		{ yylval.s = strdup (yytext); return NAME; }
@@ -237,8 +239,15 @@ open_buffer (const char *name, struct replacement *replacing)
 }
 
 void
-include_copybook (const char *name, struct replacement *replacing)
+include_copybook (const char *name, const char *lib,
+		  struct replacement *replacing)
 {
+  if (lib)
+    {
+      char *s = malloc (strlen (name) + strlen (lib) + 2);
+      sprintf (s, "%s/%s", lib, name);
+      name = s;
+    }
   fputc ('\n', yyout);
   open_buffer (name, replacing);
 }

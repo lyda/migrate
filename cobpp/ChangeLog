@@ -1,3 +1,9 @@
+2002-06-07  Keisuke Nishida  <knishida@netlab.jp>
+
+	* parser.y (copy_statement, copy_in, copy_replacing):
+	Support "COPY ... IN/OF ..." syntax.
+	* scanner.l, scanner.h (include_copybook): Take a library name.
+
 2002-06-04  Keisuke Nishida  <knishida@netlab.jp>
 
 	* Makefile.am (cobpp_CFLAGS): -I$(top_srcdir), not -I$(top_srcdir)/lib.

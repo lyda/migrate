@@ -31,10 +31,10 @@
   struct replacement *r;
 }
 
-%token COPY, REPLACE, REPLACING, OFF, BY
+%token COPY, REPLACE, REPLACING, OFF, IN, BY
 %token <s> NAME, TEXT
-%type <s> text
-%type <r> replacing_list
+%type <s> text,copy_in
+%type <r> copy_replacing,replacing_list
 
 %%
 
@@ -42,8 +42,16 @@ statement_list: | statement_list statement ;
 statement: copy_statement | replace_statement ;
 
 copy_statement:
-  COPY NAME '.'                          { include_copybook ($2, NULL); }
-| COPY NAME REPLACING replacing_list '.' { include_copybook ($2, $4); }
+  COPY NAME copy_in
+  copy_replacing '.'		{ include_copybook ($2, $3, $4); }
+;
+copy_in:
+  /* nothing */			{ $$ = NULL; }
+| IN text			{ $$ = $2; }
+;
+copy_replacing:
+  /* nothing */			{ $$ = NULL; }
+| REPLACING replacing_list	{ $$ = $2; }
 ;
 replace_statement:
   REPLACE replacing_list '.'
