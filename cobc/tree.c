@@ -973,6 +973,8 @@ cb_field_align_size (struct cb_field *f)
 {
   switch (f->usage)
     {
+#if 0
+      /* FIXME: Use this only with SYNC */
     case CB_USAGE_BINARY:
     case CB_USAGE_COMP_5:
     case CB_USAGE_COMP_X:
@@ -981,6 +983,7 @@ cb_field_align_size (struct cb_field *f)
 	return f->size;
       else
 	return 1;
+#endif
     case CB_USAGE_INDEX:
       return sizeof (int);
     case CB_USAGE_OBJECT:
