@@ -57,6 +57,7 @@ static int read_literal (char mark);
 static int scan_x (char *text);
 static int scan_word (char *text);
 static int scan_picture (char *text);
+
 %}
 
 %x ID_STATE COMMENT_STATE PICTURE_STATE
@@ -180,7 +181,7 @@ X\"[^\"\n]*\" {
 }
 
 %%
-
+
 static int
 read_literal (char mark)
 {
@@ -283,6 +284,11 @@ scan_word (char *text)
 	}
     }
 }
+
+
+/*
+ * Picture scanner
+ */
 
 #define PIC_ALPHABETIC		0x01
 #define PIC_NUMERIC		0x02

@@ -148,10 +148,10 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <str> idstring
 %type <tree> field_description,label,label_name,filename
 %type <tree> file_description,redefines_var,function_call,subscript
-%type <tree> name,value,number,file,level1_variable,opt_def_name,def_name
+%type <tree> name,value,number,file,level1_name,opt_def_name,def_name
 %type <tree> opt_read_into,opt_write_from,field_name,expr,unsafe_expr
 %type <tree> opt_unstring_count,opt_unstring_delimiter,opt_unstring_tallying
-%type <tree> numeric_name,group_variable,numeric_edited_name
+%type <tree> numeric_name,group_name,numeric_edited_name
 %type <tree> qualified_var,unqualified_var,evaluate_subject
 %type <tree> evaluate_object,evaluate_object_1,assign_clause
 %type <tree> call_returning,var_or_lit,opt_add_to
@@ -552,8 +552,8 @@ i_o_control_param:
 | SORT_MERGE
 ;
 filename_list:
-  variable { }
-| filename_list variable { }
+  name { }
+| filename_list name { }
 ;
 
 
@@ -1275,7 +1275,7 @@ add_body:
   {
     gen_add_giving ($2 ? list_add ($1, $2) : $1, $4);
   }
-| CORRESPONDING group_variable opt_to group_variable flag_rounded
+| CORRESPONDING group_name opt_to group_name flag_rounded
   {
     gen_corresponding (gen_add, $2, $4, $5);
   }
@@ -1772,7 +1772,7 @@ move_statement:
     for (l = $4; l; l = l->next)
       gen_move ($2, l->item);
   }
-| MOVE CORRESPONDING group_variable TO group_variable
+| MOVE CORRESPONDING group_name TO group_name
   {
     gen_corresponding (gen_move, $3, $5, 0);
   }
@@ -2144,7 +2144,7 @@ opt_end_read: | END_READ ;
  */
 
 release_statement:
-  RELEASE level1_variable opt_write_from
+  RELEASE level1_name opt_write_from
   {
     gen_release ($2, $3);
   }
@@ -2176,7 +2176,7 @@ opt_end_return: | END_RETURN ;
  */
 
 rewrite_statement:
-  REWRITE level1_variable opt_write_from
+  REWRITE level1_name opt_write_from
   {
     gen_rewrite ($2, $3);
   }
@@ -2479,7 +2479,7 @@ subtract_body:
   {
     gen_subtract_giving ($1, $3, $5);
   }
-| CORRESPONDING group_variable FROM group_variable flag_rounded
+| CORRESPONDING group_name FROM group_name flag_rounded
   {
     gen_corresponding (gen_sub, $2, $4, $5);
   }
@@ -2559,7 +2559,7 @@ opt_end_unstring: | END_UNSTRING ;
  */
 
 write_statement:
-  WRITE level1_variable opt_write_from write_options
+  WRITE level1_name opt_write_from write_options
   {
     gen_write ($2, $4, $3);
   }
@@ -2809,9 +2809,9 @@ unsafe_expr:
  *******************/
 
 
-/* Level 1 variable */
+/* Level 1 name */
 
-level1_variable:
+level1_name:
   name
   {
     if ($1->level != 1)
@@ -2821,7 +2821,7 @@ level1_variable:
 ;
 
 
-/* Numeric variable */
+/* Numeric name */
 
 numeric_name_list:
   numeric_name flag_rounded	{ $$ = create_mathvar_info (NULL, $1, $2); }
@@ -2838,7 +2838,7 @@ numeric_name:
 ;
 
 
-/* Numeric edited variable */
+/* Numeric edited name */
 
 numeric_edited_name_list:
   numeric_edited_name flag_rounded { $$ = create_mathvar_info (NULL, $1, $2); }
@@ -2855,10 +2855,10 @@ numeric_edited_name:
 ;
 
 
-/* Group variable */
+/* Group name */
 
-group_variable:
-  variable
+group_name:
+  name
   {
     if (SUBREF_P ($1))
       $1 = SUBREF_SYM ($1);
@@ -2869,12 +2869,12 @@ group_variable:
 ;
 
 
-/* Filename */
+/* File name */
 
 file:
-  VARIABLE
+  name
   {
-    if (COB_FIELD_TYPE ($1) != 'F')
+    if (COB_FIELD_P ($1) && COB_FIELD_TYPE ($1) != 'F')
       yyerror ("file name is expected: %s", COB_FIELD_NAME ($1));
     $$ = $1;
   }
@@ -2911,12 +2911,10 @@ integer:
   }
 ;
 
-
 idstring:
   { start_condition = START_ID; } ID_TOK { $$ = $2; }
 ;
 
-
 opt_value_list:
   /* nothing */			{ $$ = NULL; }
 | opt_value_list value		{ $$ = list_add ($1, $2); }
