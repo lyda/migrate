@@ -28,14 +28,6 @@
 
 #include "cobc.h"
 
-#ifndef PRId64
-#ifdef __MINGW32__
-#define PRId64 "I64d"
-#else
-#define PRId64 "lld"
-#endif
-#endif /* !PRId64 */
-
 FILE *storage_file;
 char *storage_file_name;
 
@@ -594,7 +586,7 @@ output_param (cb_tree x, int id)
 		    {
 		      int n = p->occurs;
 		      if (CB_LITERAL_P (l->item))
-			n = literal_to_int (CB_LITERAL (l->item));
+			n = cb_literal_to_int (CB_LITERAL (l->item));
 		      if (p->occurs_min <= n && n <= p->occurs)
 			{
 			  output_prefix ();
@@ -677,7 +669,7 @@ output_integer (cb_tree x)
       output ("%d", CB_INTEGER (x)->val);
       break;
     case CB_TAG_LITERAL:
-      output ("%d", (int) literal_to_int (CB_LITERAL (x)));
+      output ("%d", cb_literal_to_int (CB_LITERAL (x)));
       break;
     case CB_TAG_BINARY_OP:
       {
@@ -972,11 +964,11 @@ output_memcpy (cb_tree x, char *s)
 }
 
 static void
-output_native_assign (cb_tree x, long long val)
+output_native_assign (cb_tree x, int val)
 {
   output_prefix ();
   output_integer (x);
-  output (" = %" PRId64 "LL;\n", val);
+  output (" = %d;\n", val);
 }
 
 
@@ -1151,12 +1143,12 @@ output_move_literal (cb_tree src, cb_tree dst)
 	buff[i] = l->data[i % l->size];
       output_memcpy (dst, buff);
     }
-  else if (f->usage == CB_USAGE_BINARY || f->usage == CB_USAGE_INDEX)
+  else if (f->usage == CB_USAGE_BINARY && cb_fits_int (src))
     {
-      long long val = literal_to_int (l);
-      int n = f->pic->expt - l->expt;
-      for (; n > 0; n--) val /= 10;
-      for (; n < 0; n++) val *= 10;
+      int val = cb_literal_to_int (l);
+      int n = l->expt - f->pic->expt;
+      for (; n > 0; n--) val *= 10;
+      for (; n < 0; n++) val /= 10;
       output_native_assign (dst, val);
     }
   else
@@ -1700,7 +1692,7 @@ output_call (cb_tree name, struct cb_list *args,
 	    {
 	    case CB_TAG_LITERAL:
 	      if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC)
-		output ("%d", (int) literal_to_int (CB_LITERAL (x)));
+		output ("%d", cb_literal_to_int (CB_LITERAL (x)));
 	      else
 		output ("%d", CB_LITERAL (x)->data[0]);
 	      break;

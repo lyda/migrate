@@ -478,10 +478,10 @@ build_literal (int class, size_t size, unsigned char *data)
 }
 
 cb_tree
-cb_build_numeric_literal (int sign, unsigned char *digits, int expt)
+cb_build_numeric_literal (int sign, unsigned char *data, int expt)
 {
   struct cb_literal *p =
-    build_literal (CB_CLASS_NUMERIC, strlen (digits), digits);
+    build_literal (CB_CLASS_NUMERIC, strlen (data), data);
   p->sign = sign;
   p->expt = expt;
   return CB_TREE (p);
@@ -493,13 +493,21 @@ cb_build_alphanumeric_literal (size_t size, unsigned char *data)
   return CB_TREE (build_literal (CB_CLASS_ALPHANUMERIC, size, data));
 }
 
-long long
-literal_to_int (struct cb_literal *l)
+int
+cb_literal_to_int (struct cb_literal *l)
 {
-  long long val = 0;
-  unsigned char *s = l->data;
-  while (*s)
-    val = val * 10 + *s++ - '0';
+  int i;
+  int val = 0;
+
+  for (i = 0; i < l->size; i++)
+    if (l->data[i] != '0')
+      break;
+
+  if (l->size - i >= 10)
+    abort ();
+
+  for (; i < l->size; i++)
+    val = val * 10 + l->data[i] - '0';
   if (l->sign < 0)
     val = -val;
   return val;
@@ -813,14 +821,14 @@ field_size (cb_tree x)
 	if (r->length)
 	  {
 	    if (CB_LITERAL_P (r->length))
-	      return literal_to_int (CB_LITERAL (r->length));
+	      return cb_literal_to_int (CB_LITERAL (r->length));
 	    else
 	      return -1;
 	  }
 	else if (r->offset)
 	  {
 	    if (CB_LITERAL_P (r->offset))
-	      return f->size - literal_to_int (CB_LITERAL (r->offset)) + 1;
+	      return f->size - cb_literal_to_int (CB_LITERAL (r->offset)) + 1;
 	    else
 	      return -1;
 	  }
@@ -1603,7 +1611,7 @@ validate_identifier (cb_tree x)
 	    cb_tree sub = l->item;
 	    if (CB_LITERAL_P (sub))
 	      {
-		int n = literal_to_int (CB_LITERAL (sub));
+		int n = cb_literal_to_int (CB_LITERAL (sub));
 		if (n < p->occurs_min || n > p->occurs)
 		  cb_error_x (x, _("subscript of `%s' out of bounds: %d"),
 			     name, n);
@@ -1617,12 +1625,12 @@ validate_identifier (cb_tree x)
   /* check the range of constant reference modification */
   if (r->offset && CB_LITERAL_P (r->offset))
     {
-      int offset = literal_to_int (CB_LITERAL (r->offset));
+      int offset = cb_literal_to_int (CB_LITERAL (r->offset));
       if (offset < 1 || offset > f->size)
 	cb_error_x (x, _("offset of `%s' out of bounds: %d"), name, offset);
       else if (r->length && CB_LITERAL_P (r->length))
 	{
-	  int length = literal_to_int (CB_LITERAL (r->length));
+	  int length = cb_literal_to_int (CB_LITERAL (r->length));
 	  if (length < 1 || length > f->size - offset + 1)
 	    cb_error_x (x, _("length of `%s' out of bounds: %d"), name, length);
 	}
@@ -1798,7 +1806,7 @@ resolve_mnemonic_name (cb_tree x)
  */
 
 cb_tree
-make_binary_op (cb_tree left, char op, cb_tree right)
+cb_build_binary_op (cb_tree left, char op, cb_tree right)
 {
   struct cb_binary_op *p;
 
@@ -2004,7 +2012,7 @@ build_statement (const char *name)
  */
 
 cb_tree
-make_proposition (cb_tree name, struct cb_list *list)
+cb_build_proposition (cb_tree name, struct cb_list *list)
 {
   char buff[BUFSIZ];
   struct cb_proposition *p =
@@ -2036,7 +2044,7 @@ make_builtin (int id)
  */
 
 cb_tree
-make_parameter (int type, cb_tree x, cb_tree y)
+cb_build_parameter (int type, cb_tree x, cb_tree y)
 {
   struct cb_parameter *p =
     make_tree (CB_TAG_PARAMETER, CB_CLASS_UNKNOWN, sizeof (struct cb_parameter));
@@ -2052,7 +2060,7 @@ make_parameter (int type, cb_tree x, cb_tree y)
  */
 
 struct cb_program *
-build_program (void)
+cb_build_program (void)
 {
   struct cb_program *p = malloc (sizeof (struct cb_program));
   memset (p, 0, sizeof (struct cb_program));
@@ -2227,7 +2235,7 @@ build_decimal_assign (struct cb_list *vars, char op, cb_tree val)
 }
 
 cb_tree
-build_assign (struct cb_list *vars, char op, cb_tree val)
+cb_build_assign (struct cb_list *vars, char op, cb_tree val)
 {
   struct cb_list *l;
 
@@ -2245,9 +2253,9 @@ build_assign (struct cb_list *vars, char op, cb_tree val)
 	  {
 	    struct cb_parameter *p = CB_PARAMETER (l->item);
 	    if (op == '+')
-	      l->item = build_add (p->x, val, p->type);
+	      l->item = cb_build_add (p->x, val, p->type);
 	    else
-	      l->item = build_sub (p->x, val, p->type);
+	      l->item = cb_build_sub (p->x, val, p->type);
 	  }
 	return make_sequence (vars);
       }
@@ -2261,10 +2269,10 @@ build_assign (struct cb_list *vars, char op, cb_tree val)
  */
 
 cb_tree
-build_add (cb_tree v, cb_tree n, int round)
+cb_build_add (cb_tree v, cb_tree n, int round)
 {
   if (cb_field (v)->usage == CB_USAGE_INDEX)
-    return build_move (make_binary_op (v, '+', n), v);
+    return cb_build_move (cb_build_binary_op (v, '+', n), v);
 
   if (round == 0 && cb_fits_int (n))
     return make_funcall_2 ("cob_add_int", v, make_cast_integer (n));
@@ -2275,10 +2283,10 @@ build_add (cb_tree v, cb_tree n, int round)
 }
 
 cb_tree
-build_sub (cb_tree v, cb_tree n, int round)
+cb_build_sub (cb_tree v, cb_tree n, int round)
 {
   if (cb_field (v)->usage == CB_USAGE_INDEX)
-    return build_move (make_binary_op (v, '-', n), v);
+    return cb_build_move (cb_build_binary_op (v, '-', n), v);
 
   if (round == 0 && cb_fits_int (n))
     return make_funcall_2 ("cob_sub_int", v, make_cast_integer (n));
@@ -2562,15 +2570,15 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 }
 
 cb_tree
-build_move (cb_tree src, cb_tree dst)
+cb_build_move (cb_tree src, cb_tree dst)
 {
   validate_move (src, dst, 0);
   return make_funcall_2 ("@move", src, dst);
 }
 
 static struct cb_list *
-build_corresponding_1 (cb_tree (*func)(), cb_tree x1, cb_tree x2,
-		       int opt, struct cb_list *l)
+build_corr_1 (cb_tree (*func)(), cb_tree x1, cb_tree x2,
+	      int opt, struct cb_list *l)
 {
   struct cb_field *f1, *f2;
   for (f1 = cb_field (x1)->children; f1; f1 = f1->sister)
@@ -2582,7 +2590,7 @@ build_corresponding_1 (cb_tree (*func)(), cb_tree x1, cb_tree x2,
 	      cb_tree t1 = copy_reference (x1, CB_TREE (f1));
 	      cb_tree t2 = copy_reference (x2, CB_TREE (f2));
 	      if (f1->children && f2->children)
-		l = build_corresponding_1 (func, t1, t2, opt, l);
+		l = build_corr_1 (func, t1, t2, opt, l);
 	      else
 		{
 		  if (opt < 0)
@@ -2595,9 +2603,9 @@ build_corresponding_1 (cb_tree (*func)(), cb_tree x1, cb_tree x2,
 }
 
 cb_tree
-build_corresponding (cb_tree (*func)(), cb_tree x1, cb_tree x2, int opt)
+cb_build_corr (cb_tree (*func)(), cb_tree x1, cb_tree x2, int opt)
 {
-  return make_sequence (build_corresponding_1 (func, x1, x2, opt, NULL));
+  return make_sequence (build_corr_1 (func, x1, x2, opt, NULL));
 }
 
 
@@ -2606,8 +2614,8 @@ build_corresponding (cb_tree (*func)(), cb_tree x1, cb_tree x2, int opt)
  */
 
 cb_tree
-build_divide (cb_tree dividend, cb_tree divisor,
-	      cb_tree quotient, cb_tree remainder)
+cb_build_divide (cb_tree dividend, cb_tree divisor,
+		 cb_tree quotient, cb_tree remainder)
 {
   struct cb_list *l = NULL;
   struct cb_parameter *pq = CB_PARAMETER (quotient);
@@ -2642,25 +2650,25 @@ build_cond_88 (cb_tree x)
 	{
 	  /* VALUE THRU VALUE */
 	  struct cb_parameter *p = CB_PARAMETER (l->item);
-	  c2 = make_binary_op (make_binary_op (p->x, '[', x),
-			       '&',
-			       make_binary_op (x, '[', p->y));
+	  c2 = cb_build_binary_op (cb_build_binary_op (p->x, '[', x),
+				  '&',
+				  cb_build_binary_op (x, '[', p->y));
 	}
       else
 	{
 	  /* VALUE */
-	  c2 = make_binary_op (x, '=', l->item);
+	  c2 = cb_build_binary_op (x, '=', l->item);
 	}
       if (c1 == NULL)
 	c1 = c2;
       else
-	c1 = make_binary_op (c1, '|', c2);
+	c1 = cb_build_binary_op (c1, '|', c2);
     }
   return c1;
 }
 
 cb_tree
-build_cond (cb_tree x)
+cb_build_cond (cb_tree x)
 {
   switch (CB_TREE_TAG (x))
     {
@@ -2675,7 +2683,7 @@ build_cond (cb_tree x)
 	    /* We need to build a 88 condition at every occurrence
 	       instead of once at the beginning, because a 88 item
 	       may be subscripted (i.e., not a constant tree). */
-	    return build_cond (build_cond_88 (x));
+	    return cb_build_cond (build_cond_88 (x));
 	  }
 
 	abort ();
@@ -2686,13 +2694,13 @@ build_cond (cb_tree x)
 	switch (p->op)
 	  {
 	  case '@':
-	    return build_cond (p->x);
+	    return cb_build_cond (p->x);
 	  case '!':
-	    p->x = build_cond (p->x);
+	    p->x = cb_build_cond (p->x);
 	    break;
 	  case '&': case '|':
-	    p->x = build_cond (p->x);
-	    p->y = build_cond (p->y);
+	    p->x = cb_build_cond (p->x);
+	    p->y = cb_build_cond (p->y);
 	    break;
 	  default:
 	    if (CB_INDEX_P (p->x) || CB_INDEX_P (p->y))
@@ -2749,7 +2757,7 @@ build_cond (cb_tree x)
  */
 
 static cb_tree
-build_evaluate_test (cb_tree s, cb_tree o)
+evaluate_test (cb_tree s, cb_tree o)
 {
   struct cb_parameter *p;
 
@@ -2761,34 +2769,34 @@ build_evaluate_test (cb_tree s, cb_tree o)
   if (o == cb_true)
     return s;
   if (o == cb_false)
-    return make_negative (s);
+    return cb_build_negation (s);
 
   p = CB_PARAMETER (o);
 
   /* subject TRUE or FALSE */
   if (s == cb_true)
-    return p->type ? make_negative (p->x) : p->x;
+    return p->type ? cb_build_negation (p->x) : p->x;
   if (s == cb_false)
-    return p->type ? p->x : make_negative (p->x);
+    return p->type ? p->x : cb_build_negation (p->x);
 
   /* x THRU y */
   if (p->y)
     {
-      cb_tree x = make_binary_op (make_binary_op (p->x, '[', s),
-				    '&',
-				    make_binary_op (s, '[', p->y));
-      return p->type ? make_negative (x) : x;
+      cb_tree x = cb_build_binary_op (cb_build_binary_op (p->x, '[', s),
+				     '&',
+				     cb_build_binary_op (s, '[', p->y));
+      return p->type ? cb_build_negation (x) : x;
     }
 
   /* regular comparison */
   if (p->type)
-    return make_binary_op (s, '~', p->x);
+    return cb_build_binary_op (s, '~', p->x);
   else
-    return make_binary_op (s, '=', p->x);
+    return cb_build_binary_op (s, '=', p->x);
 }
 
 static cb_tree
-build_evaluate_internal (struct cb_list *subject_list, struct cb_list *case_list)
+evaluate_internal (struct cb_list *subject_list, struct cb_list *case_list)
 {
   cb_tree stmt;
   cb_tree c1 = NULL;
@@ -2810,11 +2818,11 @@ build_evaluate_internal (struct cb_list *subject_list, struct cb_list *case_list
 	   subjs && objs;
 	   subjs = subjs->next, objs = objs->next)
 	{
-	  cb_tree c3 = build_evaluate_test (subjs->item, objs->item);
+	  cb_tree c3 = evaluate_test (subjs->item, objs->item);
 	  if (c2 == NULL)
 	    c2 = c3;
 	  else
-	    c2 = make_binary_op (c2, '&', c3);
+	    c2 = cb_build_binary_op (c2, '&', c3);
 	}
       if (subjs || objs)
 	cb_error (_("wrong number of WHEN parameters"));
@@ -2822,20 +2830,20 @@ build_evaluate_internal (struct cb_list *subject_list, struct cb_list *case_list
       if (c1 == NULL)
 	c1 = c2;
       else
-	c1 = make_binary_op (c1, '|', c2);
+	c1 = cb_build_binary_op (c1, '|', c2);
     }
 
   if (c1 == NULL)
     return stmt;
   else
-    return make_if (build_cond (c1), stmt,
-		    build_evaluate_internal (subject_list, case_list->next));
+    return make_if (cb_build_cond (c1), stmt,
+		    evaluate_internal (subject_list, case_list->next));
 }
 
 cb_tree
-build_evaluate (struct cb_list *subject_list, struct cb_list *case_list)
+cb_build_evaluate (struct cb_list *subject_list, struct cb_list *case_list)
 {
-  return build_evaluate_internal (subject_list, case_list);
+  return evaluate_internal (subject_list, case_list);
 }
 
 
@@ -2879,7 +2887,7 @@ search_set_keys (struct cb_field *f, cb_tree x)
 }
 
 cb_tree
-build_search_all (cb_tree table, cb_tree cond)
+cb_build_search_all (cb_tree table, cb_tree cond)
 {
   int i;
   struct cb_field *f = cb_field (table);
@@ -2896,14 +2904,14 @@ build_search_all (cb_tree table, cb_tree cond)
       {
 	cb_tree c2;
 	if (f->keys[i].dir == COB_ASCENDING)
-	  c2 = make_binary_op (f->keys[i].ref, '=', f->keys[i].val);
+	  c2 = cb_build_binary_op (f->keys[i].ref, '=', f->keys[i].val);
 	else
-	  c2 = make_binary_op (f->keys[i].val, '=', f->keys[i].ref);
+	  c2 = cb_build_binary_op (f->keys[i].val, '=', f->keys[i].ref);
 	if (c1 == NULL)
 	  c1 = c2;
 	else
-	  c1 = make_binary_op (c1, '&', c2);
+	  c1 = cb_build_binary_op (c1, '&', c2);
       }
 
-  return build_cond (c1);
+  return cb_build_cond (c1);
 }

@@ -64,7 +64,7 @@
 	v = cb_error_node;			\
       }						\
     else					\
-      v = make_parameter_1 (flag, x);		\
+      v = cb_build_parameter_1 (flag, x);	\
   }
 
 #define cb_ref(x)	(CB_REFERENCE (x)->value)
@@ -101,7 +101,7 @@
 								\
     current_program->entry_list =				\
       list_add (current_program->entry_list,			\
-		make_pair (label, CB_TREE (using_list)));	\
+		cb_build_pair (label, CB_TREE (using_list)));	\
   }
 
 #define BEGIN_STATEMENT(name)			\
@@ -253,7 +253,7 @@ identification_division:
 program_id_paragraph:
   PROGRAM_ID '.'
   {
-    current_program = build_program ();
+    current_program = cb_build_program ();
     cb_build_index (make_reference ("RETURN-CODE"));
   }
   program_name as_literal program_type '.'
@@ -488,7 +488,8 @@ class_name_clause:
   CLASS undefined_word _is class_item_list
   {
     current_program->proposition_list =
-      list_add (current_program->proposition_list, make_proposition ($2, $<list>4));
+      list_add (current_program->proposition_list,
+		cb_build_proposition ($2, $<list>4));
   }
 ;
 class_item_list:
@@ -500,9 +501,9 @@ class_item:
 | literal THRU literal
   {
     if (CB_LITERAL ($1)->data[0] < CB_LITERAL ($3)->data[0])
-      $<tree>$ = make_pair ($1, $3);
+      $<tree>$ = cb_build_pair ($1, $3);
     else
-      $<tree>$ = make_pair ($3, $1);
+      $<tree>$ = cb_build_pair ($3, $1);
   }
 ;
 
@@ -1175,7 +1176,7 @@ occurs_key_list:
   {
     struct cb_list *l;
     for (l = $5; l; l = l->next)
-      l->item = make_parameter_1 ($2, l->item);
+      l->item = cb_build_parameter_1 ($2, l->item);
     $$ = list_append ($1, $5);
   }
 ;
@@ -1244,7 +1245,7 @@ value_item_list:
 ;
 value_item:
   literal			{ $<tree>$ = $1; }
-| literal THRU literal		{ $<tree>$ = make_pair ($1, $3); }
+| literal THRU literal		{ $<tree>$ = cb_build_pair ($1, $3); }
 ;
 
 
@@ -1713,9 +1714,9 @@ end_accept:
 ;
 
 at_line_column:
-  /* empty */			{ $$ = make_pair (cb_int1, cb_int1); }
-| _at line_number column_number { $$ = make_pair ($2, $3); }
-| _at column_number line_number { $$ = make_pair ($3, $2); }
+  /* empty */			{ $$ = cb_build_pair (cb_int1, cb_int1); }
+| _at line_number column_number { $$ = cb_build_pair ($2, $3); }
+| _at column_number line_number { $$ = cb_build_pair ($3, $2); }
 ;
 line_number:
   LINE _number integer_value	{ $$ = make_cast_integer ($3); }
@@ -1740,15 +1741,15 @@ add_statement:
 add_body:
   numeric_value_list TO numeric_name_list
   {
-    $<tree>$ = build_assign ($3, '+', build_connective_op ($1, '+'));
+    $<tree>$ = cb_build_assign ($3, '+', build_connective_op ($1, '+'));
   }
 | numeric_value_list add_to GIVING numeric_edited_name_list
   {
-    $<tree>$ = build_assign ($4, 0, build_connective_op ($1, '+'));
+    $<tree>$ = cb_build_assign ($4, 0, build_connective_op ($1, '+'));
   }
 | CORRESPONDING group_name _to group_name flag_rounded
   {
-    $<tree>$ = build_corresponding (build_add, $4, $2, $5);
+    $<tree>$ = cb_build_corr (cb_build_add, $4, $2, $5);
   }
 ;
 add_to:
@@ -1787,7 +1788,7 @@ call_statement:
     cb_tree x = $<tree>6 ? $<tree>6 : make_funcall_0 ("cob_call_error");
     push_funcall_4 ("@call", $3, $<list>4, x, $<tree>7);
     if ($<tree>5)
-      push (build_move (cb_return_code, $<tree>5));
+      push (cb_build_move (cb_return_code, $<tree>5));
   }
 ;
 call_using:
@@ -1801,8 +1802,8 @@ call_param_list:
   call_param		{ $<list>$ = list_add ($<list>1, $<tree>2); }
 ;
 call_param:
-  value			{ $<tree>$ = make_parameter_1 (current_call_mode, $1);}
-| _by call_mode value	{ $<tree>$ = make_parameter_1 (current_call_mode, $3);}
+  value			{ $<tree>$ = cb_build_parameter_1 (current_call_mode, $1);}
+| _by call_mode value	{ $<tree>$ = cb_build_parameter_1 (current_call_mode, $3);}
 ;
 call_mode:
   REFERENCE		{ current_call_mode = CB_CALL_BY_REFERENCE; }
@@ -1892,7 +1893,7 @@ compute_statement:
 compute_body:
   numeric_edited_name_list '=' numeric_expr
   {
-    $<tree>$ = build_assign ($1, 0, $3);
+    $<tree>$ = cb_build_assign ($1, 0, $3);
   }
 ;
 end_compute:
@@ -2002,25 +2003,25 @@ divide_statement:
 divide_body:
   numeric_value INTO numeric_name_list
   {
-    $<tree>$ = build_assign ($3, '/', $1);
+    $<tree>$ = cb_build_assign ($3, '/', $1);
   }
 | numeric_value INTO numeric_value GIVING numeric_edited_name_list
   {
-    $<tree>$ = build_assign ($5, 0, make_binary_op ($3, '/', $1));
+    $<tree>$ = cb_build_assign ($5, 0, cb_build_binary_op ($3, '/', $1));
   }
 | numeric_value BY numeric_value GIVING numeric_edited_name_list
   {
-    $<tree>$ = build_assign ($5, 0, make_binary_op ($1, '/', $3));
+    $<tree>$ = cb_build_assign ($5, 0, cb_build_binary_op ($1, '/', $3));
   }
 | numeric_value INTO numeric_value GIVING numeric_edited_name
   REMAINDER numeric_edited_name
   {
-    $<tree>$ = build_divide ($3, $1, $5, $7);
+    $<tree>$ = cb_build_divide ($3, $1, $5, $7);
   }
 | numeric_value BY numeric_value GIVING numeric_edited_name
   REMAINDER numeric_edited_name
   {
-    $<tree>$ = build_divide ($1, $3, $5, $7);
+    $<tree>$ = cb_build_divide ($1, $3, $5, $7);
   }
 ;
 end_divide:
@@ -2051,7 +2052,7 @@ evaluate_statement:
   evaluate_subject_list evaluate_case_list
   end_evaluate
   {
-    push (build_evaluate ($<list>3, $<list>4));
+    push (cb_build_evaluate ($<list>3, $<list>4));
   }
 ;
 
@@ -2088,8 +2089,8 @@ evaluate_object_list:
   evaluate_object		{ $<list>$ = list_add ($<list>1, $<tree>3); }
 ;
 evaluate_object:
-  flag_not expr			{ $<tree>$ = make_parameter ($1, $2, 0); }
-| flag_not expr THRU expr	{ $<tree>$ = make_parameter ($1, $2, $4); }
+  flag_not expr			{ $<tree>$ = cb_build_parameter ($1, $2, 0); }
+| flag_not expr THRU expr	{ $<tree>$ = cb_build_parameter ($1, $2, $4); }
 | ANY				{ $<tree>$ = cb_any; }
 | TOK_TRUE			{ $<tree>$ = cb_true; }
 | TOK_FALSE			{ $<tree>$ = cb_false; }
@@ -2202,7 +2203,7 @@ initialize_replacing_list:
 | initialize_replacing_list
   replacing_option _data BY value
   {
-    $<list>$ = list_add ($<list>1, make_parameter_1 ($2, $5));
+    $<list>$ = list_add ($<list>1, cb_build_parameter_1 ($2, $5));
   }
 ;
 replacing_option:
@@ -2390,12 +2391,12 @@ move_body:
   {
     struct cb_list *l;
     for (l = $3; l; l = l->next)
-      push (build_move ($1, l->item));
+      push (cb_build_move ($1, l->item));
   }
 | CORRESPONDING group_name TO group_name
   {
     if ($2 != cb_error_node && $4 != cb_error_node)
-      push (build_corresponding (build_move, $2, $4, -1));
+      push (cb_build_corr (cb_build_move, $2, $4, -1));
   }
 ;
 
@@ -2415,11 +2416,11 @@ multiply_statement:
 multiply_body:
   numeric_value BY numeric_name_list
   {
-    $<tree>$ = build_assign ($3, '*', $1);
+    $<tree>$ = cb_build_assign ($3, '*', $1);
   }
 | numeric_value BY numeric_value GIVING numeric_edited_name_list
   {
-    $<tree>$ = build_assign ($5, 0, make_binary_op ($1, '*', $3));
+    $<tree>$ = cb_build_assign ($5, 0, cb_build_binary_op ($1, '*', $3));
   }
 ;
 end_multiply:
@@ -2489,12 +2490,12 @@ perform_procedure:
   label
   {
     CB_REFERENCE ($1)->length = cb_true; /* return from $1 */
-    $$ = make_pair ($1, $1);
+    $$ = cb_build_pair ($1, $1);
   }
 | label THRU label
   {
     CB_REFERENCE ($3)->length = cb_true; /* return from $3 */
-    $$ = make_pair ($1, $3);
+    $$ = cb_build_pair ($1, $3);
   }
 ;
 
@@ -2537,7 +2538,7 @@ perform_varying_list:
 perform_varying:
   data_name FROM value BY value UNTIL condition
   {
-    cb_tree step = build_add ($1, $5, 0);
+    cb_tree step = cb_build_add ($1, $5, 0);
     add_perform_varying (CB_PERFORM ($<tree>0), $1, $3, step, $7);
   }
 ;
@@ -2567,7 +2568,7 @@ read_statement:
 	push_funcall_2 ("cob_read", file, key ? key : CB_FILE (file)->key);
       }
     if ($<tree>6)
-      push (build_move (CB_TREE (CB_FILE (file)->record), $<tree>6));
+      push (cb_build_move (CB_TREE (CB_FILE (file)->record), $<tree>6));
     push_file_handler (file, $<tree>8);
   }
 ;
@@ -2600,7 +2601,7 @@ release_statement:
   {
     cb_tree file = CB_TREE (CB_FIELD (cb_ref ($3))->file);
     if ($4)
-      push (build_move ($4, $3));
+      push (cb_build_move ($4, $3));
     push_funcall_2 ("cob_write", file, $3);
   }
 ;
@@ -2618,7 +2619,7 @@ return_statement:
     cb_tree file = cb_ref ($3);
     push_funcall_2 ("cob_read", file, cb_int0);
     if ($<tree>5)
-      push (build_move (CB_TREE (CB_FILE (file)->record), $<tree>5));
+      push (cb_build_move (CB_TREE (CB_FILE (file)->record), $<tree>5));
     push_file_handler (file, $6);
   }
 ;
@@ -2639,7 +2640,7 @@ rewrite_statement:
   {
     cb_tree file = CB_TREE (CB_FIELD (cb_ref ($3))->file);
     if ($4)
-      push (build_move ($4, $3));
+      push (cb_build_move ($4, $3));
     push_funcall_2 ("cob_rewrite", file, $3);
     push_file_handler (file, $5);
   }
@@ -2691,7 +2692,7 @@ search_when:
 search_all_when:
   WHEN expr statement_list
   {
-    $<tree>$ = make_if (build_search_all ($<tree>-1, $2), $3, 0);
+    $<tree>$ = make_if (cb_build_search_all ($<tree>-1, $2), $3, 0);
   }
 ;
 end_search:
@@ -2722,7 +2723,7 @@ set_to:
   {
     struct cb_list *l;
     for (l = $1; l; l = l->next)
-      push (build_move ($3, l->item));
+      push (cb_build_move ($3, l->item));
   }
 ;
 
@@ -2734,9 +2735,9 @@ set_up_down:
     struct cb_list *l;
     for (l = $1; l; l = l->next)
       if ($<ival>2 == 0)
-	push (build_add (l->item, $4, 0));
+	push (cb_build_add (l->item, $4, 0));
       else
-	push (build_sub (l->item, $4, 0));
+	push (cb_build_sub (l->item, $4, 0));
   }
 ;
 up_or_down:
@@ -2758,7 +2759,7 @@ set_to_on_off_1:
       {
 	int id = builtin_switch_id (cb_ref (l->item));
 	if (id != -1)
-	  push (build_move ($3, cb_switch[id]));
+	  push (cb_build_move ($3, cb_switch[id]));
       }
   }
 ;
@@ -2779,9 +2780,9 @@ set_to_true_false_1:
 	cb_tree value = f->values->item;
 	set_value (l->item, CB_TREE (f->parent));
 	if (CB_PARAMETER_P (value))
-	  push (build_move (CB_PARAMETER (value)->x, l->item));
+	  push (cb_build_move (CB_PARAMETER (value)->x, l->item));
 	else
-	  push (build_move (value, l->item));
+	  push (cb_build_move (value, l->item));
       }
   }
 ;
@@ -2807,7 +2808,7 @@ sort_key_list:
   {
     struct cb_list *l;
     for (l = $5; l; l = l->next)
-      l->item = make_parameter_1 ($3, l->item);
+      l->item = cb_build_parameter_1 ($3, l->item);
     $<list>$ = list_append ($<list>1, $5);
   }
 ;
@@ -2950,8 +2951,8 @@ string_item_list:
 ;
 string_item:
   value				{ $<tree>$ = $1; }
-| DELIMITED _by SIZE		{ $<tree>$ = make_parameter_1 (0, cb_int0); }
-| DELIMITED _by value		{ $<tree>$ = make_parameter_1 (0, $3); }
+| DELIMITED _by SIZE		{ $<tree>$ = cb_build_parameter_1 (0, cb_int0); }
+| DELIMITED _by value		{ $<tree>$ = cb_build_parameter_1 (0, $3); }
 ;
 opt_with_pointer:
   /* empty */			{ $$ = cb_int0; }
@@ -2978,15 +2979,15 @@ subtract_statement:
 subtract_body:
   numeric_value_list FROM numeric_name_list
   {
-    $<tree>$ = build_assign ($3, '-', build_connective_op ($1, '+'));
+    $<tree>$ = cb_build_assign ($3, '-', build_connective_op ($1, '+'));
   }
 | numeric_value_list FROM numeric_value GIVING numeric_edited_name_list
   {
-    $<tree>$ = build_assign ($5, 0, build_connective_op (cons ($3, $1), '-'));
+    $<tree>$ = cb_build_assign ($5, 0, build_connective_op (cons ($3, $1), '-'));
   }
 | CORRESPONDING group_name FROM group_name flag_rounded
   {
-    $<tree>$ = build_corresponding (build_sub, $4, $2, $5);
+    $<tree>$ = cb_build_corr (cb_build_sub, $4, $2, $5);
   }
 ;
 end_subtract:
@@ -3115,7 +3116,7 @@ write_statement:
 
     /* WRITE */
     if ($4)
-      push (build_move ($4, $3));
+      push (cb_build_move ($4, $3));
     push_funcall_2 ("cob_write", file, $3);
     push_file_handler (file, $<tree>6);
 
@@ -3140,11 +3141,11 @@ write_option:
   }
 | before_or_after _advancing integer_value _line_or_lines
   {
-    $<tree>$ = make_parameter_1 ($1, make_cast_integer ($3));
+    $<tree>$ = cb_build_parameter_1 ($1, make_cast_integer ($3));
   }
 | before_or_after _advancing PAGE
   {
-    $<tree>$ = make_parameter_1 ($1, 0);
+    $<tree>$ = cb_build_parameter_1 ($1, 0);
   }
 ;
 before_or_after:
@@ -3310,7 +3311,7 @@ not_invalid_key_sentence:
 condition:
   expr
   {
-    $$ = build_cond ($1);
+    $$ = cb_build_cond ($1);
   }
 ;
 
@@ -3361,15 +3362,15 @@ expr_1:
 		  return -1;
 		stack[i-3].token = VALUE;
 		stack[i-3].value =
-		  make_binary_op (stack[i-3].value, token, stack[i-1].value);
+		  cb_build_binary_op (stack[i-3].value, token, stack[i-1].value);
 		i -= 2;
 		break;
 	      case '!':
 		if (CB_TREE_CLASS (stack[i-1].value) != CB_CLASS_BOOLEAN)
 		  stack[i-1].value =
-		    make_binary_op (last_lefthand, last_operator, stack[i-1].value);
+		    cb_build_binary_op (last_lefthand, last_operator, stack[i-1].value);
 		stack[i-2].token = VALUE;
-		stack[i-2].value = make_negative (stack[i-1].value);
+		stack[i-2].value = cb_build_negation (stack[i-1].value);
 		i -= 1;
 		break;
 	      case '&':
@@ -3378,7 +3379,7 @@ expr_1:
 		  return -1;
 		if (CB_TREE_CLASS (stack[i-1].value) != CB_CLASS_BOOLEAN)
 		  stack[i-1].value =
-		    make_binary_op (last_lefthand, last_operator, stack[i-1].value);
+		    cb_build_binary_op (last_lefthand, last_operator, stack[i-1].value);
 		if (cb_warn_parentheses
 		    && token == '|'
 		    && ((CB_BINARY_OP_P (stack[i-3].value)
@@ -3388,7 +3389,7 @@ expr_1:
 		  cb_warning (_("suggest parentheses around AND within OR"));
 		stack[i-3].token = VALUE;
 		stack[i-3].value =
-		  make_binary_op (stack[i-3].value, token, stack[i-1].value);
+		  cb_build_binary_op (stack[i-3].value, token, stack[i-1].value);
 		i -= 2;
 		break;
 	      default:
@@ -3397,7 +3398,7 @@ expr_1:
 		    last_operator = token;
 		    stack[i-2].token = VALUE;
 		    stack[i-2].value =
-		      make_binary_op (last_lefthand, token, stack[i-1].value);
+		      cb_build_binary_op (last_lefthand, token, stack[i-1].value);
 		    i -= 1;
 		  }
 		else
@@ -3406,7 +3407,7 @@ expr_1:
 		    last_operator = token;
 		    stack[i-3].token = VALUE;
 		    stack[i-3].value =
-		      make_binary_op (last_lefthand, token, stack[i-1].value);
+		      cb_build_binary_op (last_lefthand, token, stack[i-1].value);
 		    i -= 2;
 		  }
 		break;
@@ -3421,7 +3422,7 @@ expr_1:
 	  {
 	    stack[i-1].token = VALUE;
 	    stack[i-1].value =
-	      make_binary_op (last_lefthand, last_operator, stack[i-1].value);
+	      cb_build_binary_op (last_lefthand, last_operator, stack[i-1].value);
 	  }
 	return 0;
       }
@@ -3471,7 +3472,7 @@ expr_1:
 		    {
 		      /* unary negative */
 		      l->next->item =
-			make_binary_op (cb_zero, '-', l->next->item);
+			cb_build_binary_op (cb_zero, '-', l->next->item);
 		      break;
 		    }
 		  /* fall through */
@@ -3551,7 +3552,7 @@ expr_1:
 			    op = ((token == POSITIVE) ? '>' :
 				  (token == NEGATIVE) ? '<' : '=');
 			    stack[i-1].value =
-			      make_binary_op (stack[i-1].value, op, cb_zero);
+			      cb_build_binary_op (stack[i-1].value, op, cb_zero);
 			    break;
 			  default:
 			    stack[i-1].value =
@@ -3560,7 +3561,7 @@ expr_1:
 			    break;
 			  }
 			if (not_flag)
-			  stack[i-1].value = make_negative (stack[i-1].value);
+			  stack[i-1].value = cb_build_negation (stack[i-1].value);
 			break;
 		      }
 		    goto error;
@@ -3618,7 +3619,7 @@ expr_item_list:
 ;
 expr_item:
   value				{ $$ = $1; }
-| '(' expr_1 ')'		{ $$ = make_parenthesize ($2); }
+| '(' expr_1 ')'		{ $$ = cb_build_parenthesize ($2); }
 /* arithmetic operator */
 | '+'				{ $$ = cb_build_integer ('+'); }
 | '-'				{ $$ = cb_build_integer ('-'); }
@@ -3880,7 +3881,7 @@ numeric_value:
 integer:
   LITERAL
   {
-    $$ = literal_to_int (CB_LITERAL ($1));
+    $$ = cb_literal_to_int (CB_LITERAL ($1));
   }
 ;
 
@@ -4003,8 +4004,8 @@ subscript_list:
 ;
 subscript:
   integer_value			{ $$ = $1; }
-| subscript '+' integer_value	{ $$ = make_binary_op ($1, '+', $3); }
-| subscript '-' integer_value	{ $$ = make_binary_op ($1, '-', $3); }
+| subscript '+' integer_value	{ $$ = cb_build_binary_op ($1, '+', $3); }
+| subscript '-' integer_value	{ $$ = cb_build_binary_op ($1, '-', $3); }
 ;
 
 /*
@@ -4165,7 +4166,7 @@ build_connective_op (struct cb_list *l, char op)
 {
   cb_tree e = l->item;
   for (l = l->next; l; l = l->next)
-    e = make_binary_op (e, op, l->item);
+    e = cb_build_binary_op (e, op, l->item);
   return e;
 }
 

@@ -200,8 +200,8 @@ struct cb_const {
   const char *val;
 };
 
-#define CB_CONST(x)		(CB_TREE_CAST (CB_TAG_CONST, struct cb_const, x))
-#define CB_CONST_P(x)		(CB_TREE_TAG (x) == CB_TAG_CONST)
+#define CB_CONST(x)	(CB_TREE_CAST (CB_TAG_CONST, struct cb_const, x))
+#define CB_CONST_P(x)	(CB_TREE_TAG (x) == CB_TAG_CONST)
 
 extern void cb_init_constants (void);
 
@@ -215,8 +215,8 @@ struct cb_integer {
   int val;
 };
 
-#define CB_INTEGER(x)		(CB_TREE_CAST (CB_TAG_INTEGER, struct cb_integer, x))
-#define CB_INTEGER_P(x)		(CB_TREE_TAG (x) == CB_TAG_INTEGER)
+#define CB_INTEGER(x)	(CB_TREE_CAST (CB_TAG_INTEGER, struct cb_integer, x))
+#define CB_INTEGER_P(x)	(CB_TREE_TAG (x) == CB_TAG_INTEGER)
 
 extern cb_tree cb_build_integer (int val);
 
@@ -230,8 +230,8 @@ struct cb_string {
   const unsigned char *str;
 };
 
-#define CB_STRING(x)		(CB_TREE_CAST (CB_TAG_STRING, struct cb_string, x))
-#define CB_STRING_P(x)		(CB_TREE_TAG (x) == CB_TAG_STRING)
+#define CB_STRING(x)	(CB_TREE_CAST (CB_TAG_STRING, struct cb_string, x))
+#define CB_STRING_P(x)	(CB_TREE_TAG (x) == CB_TAG_STRING)
 
 extern cb_tree cb_build_string (const unsigned char *str);
 
@@ -252,9 +252,9 @@ struct cb_literal {
 #define CB_LITERAL(x)	(CB_TREE_CAST (CB_TAG_LITERAL, struct cb_literal, x))
 #define CB_LITERAL_P(x)	(CB_TREE_TAG (x) == CB_TAG_LITERAL)
 
-extern cb_tree cb_build_numeric_literal (int sign, unsigned char *digits, int expt);
+extern cb_tree cb_build_numeric_literal (int sign, unsigned char *data, int expt);
 extern cb_tree cb_build_alphanumeric_literal (size_t size, unsigned char *data);
-extern long long literal_to_int (struct cb_literal *l);
+extern int cb_literal_to_int (struct cb_literal *l);
 
 
 /*
@@ -467,10 +467,10 @@ struct cb_binary_op {
 #define CB_BINARY_OP(x)		(CB_TREE_CAST (CB_TAG_BINARY_OP, struct cb_binary_op, x))
 #define CB_BINARY_OP_P(x)	(CB_TREE_TAG (x) == CB_TAG_BINARY_OP)
 
-#define make_parenthesize(x)	make_binary_op (x, '@', 0)
-#define make_negative(x)	make_binary_op (x, '!', 0)
+#define cb_build_parenthesize(x) cb_build_binary_op (x, '@', 0)
+#define cb_build_negation(x)	cb_build_binary_op (x, '!', 0)
 
-extern cb_tree make_binary_op (cb_tree x, char op, cb_tree y);
+extern cb_tree cb_build_binary_op (cb_tree x, char op, cb_tree y);
 
 
 /*
@@ -627,7 +627,7 @@ struct cb_proposition {
 #define CB_PROPOSITION(x)	(CB_TREE_CAST (CB_TAG_PROPOSITION, struct cb_proposition, x))
 #define CB_PROPOSITION_P(x)	(CB_TREE_TAG (x) == CB_TAG_PROPOSITION)
 
-extern cb_tree make_proposition (cb_tree name, struct cb_list *list);
+extern cb_tree cb_build_proposition (cb_tree name, struct cb_list *list);
 
 
 /*
@@ -659,9 +659,9 @@ struct cb_parameter {
 #define CB_PARAMETER(x)		(CB_TREE_CAST (CB_TAG_PARAMETER, struct cb_parameter, x))
 #define CB_PARAMETER_P(x)	(CB_TREE_TAG (x) == CB_TAG_PARAMETER)
 
-extern cb_tree make_parameter (int type, cb_tree x, cb_tree y);
-#define make_parameter_1(type,x) make_parameter (type, x, 0)
-#define make_pair(x,y)		 make_parameter (0, x, y)
+extern cb_tree cb_build_parameter (int type, cb_tree x, cb_tree y);
+#define cb_build_parameter_1(type,x) cb_build_parameter (type, x, 0)
+#define cb_build_pair(x,y)	 cb_build_parameter (0, x, y)
 
 
 /*
@@ -696,16 +696,16 @@ struct cb_program {
   struct cb_word **word_table;
 };
 
-extern struct cb_program *build_program (void);
+extern struct cb_program *cb_build_program (void);
 
-extern cb_tree build_assign (struct cb_list *vars, char op, cb_tree val);
-extern cb_tree build_add (cb_tree v, cb_tree n, int round);
-extern cb_tree build_sub (cb_tree v, cb_tree n, int round);
-extern cb_tree build_move (cb_tree src, cb_tree dst);
-extern cb_tree build_corresponding (cb_tree (*func)(), cb_tree x1, cb_tree x2, int opt);
-extern cb_tree build_divide (cb_tree dividend, cb_tree divisor, cb_tree quotient, cb_tree remainder);
-extern cb_tree build_cond (cb_tree x);
-extern cb_tree build_evaluate (struct cb_list *subject_list, struct cb_list *case_list);
-extern cb_tree build_search_all (cb_tree table, cb_tree when);
+extern cb_tree cb_build_assign (struct cb_list *vars, char op, cb_tree val);
+extern cb_tree cb_build_add (cb_tree v, cb_tree n, int round);
+extern cb_tree cb_build_sub (cb_tree v, cb_tree n, int round);
+extern cb_tree cb_build_move (cb_tree src, cb_tree dst);
+extern cb_tree cb_build_corr (cb_tree (*func)(), cb_tree x1, cb_tree x2, int opt);
+extern cb_tree cb_build_divide (cb_tree dividend, cb_tree divisor, cb_tree quotient, cb_tree remainder);
+extern cb_tree cb_build_cond (cb_tree x);
+extern cb_tree cb_build_evaluate (struct cb_list *subject_list, struct cb_list *case_list);
+extern cb_tree cb_build_search_all (cb_tree table, cb_tree when);
 
 #endif /* _TREE_H_ */
