@@ -990,8 +990,7 @@ usage:
 | INDEX
   {
     current_field->usage = COBC_USAGE_INDEX;
-    current_field->pic = make_picture ();
-    current_field->pic->digits = 9;
+    current_field->pic = yylex_picture ("9(9)");
   }
 | PACKED_DECIMAL /* or COMP-3 */
   {

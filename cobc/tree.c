@@ -592,6 +592,7 @@ compute_size (struct cobc_field *p)
 	    break;
 	  }
 	case COBC_USAGE_BINARY:
+	case COBC_USAGE_INDEX:
 	  {
 	    int len = p->pic->size;
 	    if (len <= 2)
@@ -604,11 +605,6 @@ compute_size (struct cobc_field *p)
 	      p->size = 8;
 	  }
 	  break;
-	case COBC_USAGE_INDEX:
-	  {
-	    p->size = sizeof (unsigned int);
-	    break;
-	  }
 	case COBC_USAGE_PACKED:
 	  {
 	    p->size = p->pic->size / 2 + 1;
