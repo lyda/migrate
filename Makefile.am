@@ -3,7 +3,6 @@ bin_SCRIPTS=cob-config
 SUBDIRS = cobpp cobc libcob doc
 EXTRA_DIST = VERSION
 
-DISTCLEANFILES = defaults.h
 MAINTAINERCLEANFILES = config.guess config.sub config.log \
 	Makefile.in aclocal.m4 config.h.in stamp-h.in depcomp ltmain.sh \
 	INSTALL configure missing mkinstalldirs install-sh texinfo.tex
