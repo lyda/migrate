@@ -108,7 +108,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %token FILE_CONTROL,I_O_CONTROL,FROM,UPDATE,SAME,AREA,EXCEPTION,UNTIL
 %token WORKING_STORAGE,LINKAGE,DECIMAL_POINT,COMMA,DUPLICATES,WITH,EXIT
 %token RECORD,OMITTED,STANDARD,STANDARD_1,STANDARD_2,RECORDS,BLOCK,VARYING
-%token CONTAINS,CHARACTERS,COMPUTE,GO,STOP,RUN,ACCEPT,PERFORM
+%token CONTAINS,CHARACTERS,COMPUTE,GO,STOP,RUN,ACCEPT,PERFORM,RENAMES
 %token IF,ELSE,SENTENCE,LINE,PAGE,OPEN,CLOSE,REWRITE,SECTION
 %token ADVANCING,INTO,AT,END,NEGATIVE,POSITIVE,SPACES,NOT
 %token CALL,USING,INVALID,CONTENT,QUOTES,LOW_VALUES,HIGH_VALUES
@@ -720,12 +720,11 @@ field_option:
 | synchronized_clause
 | blank_clause
 | value_clause
+| renames_clause
 ;
 
 
-/*
- * REDEFINES clause
- */
+/* REDEFINES */
 
 redefines_clause:
   REDEFINES			{ curr_division = CDIV_INITIAL; }
@@ -740,36 +739,28 @@ redefines_var:
 ;
 
 
-/*
- * EXTERNAL clause
- */
+/* EXTERNAL */
 
 external_clause:
   opt_is EXTERNAL		{ save_named_sect (curr_field); }
 ;
 
 
-/*
- * GLOBAL clause
- */
+/* GLOBAL */
 
 global_clause:
   opt_is GLOBAL			{ yywarn ("GLOBAL is not supported"); }
 ;
 
 
-/*
- * PICTURE clause
- */
+/* PICTURE */
 
 picture_clause:
   PICTURE { start_condition = START_PICTURE; } PICTURE_TOK
 ;
 
 
-/*
- * USAGE clause
- */
+/* USAGE */
 
 usage_clause:
   opt_usage opt_is usage
@@ -817,9 +808,7 @@ usage:
 opt_usage: | USAGE ;
 
 
-/*
- * SIGN clause
- */
+/* SIGN */
 
 sign_clause:
   opt_sign_is LEADING opt_sign_separate
@@ -842,9 +831,7 @@ opt_sign_separate:
 ;
 
 
-/*
- * OCCURS clause
- */
+/* OCCURS */
 
 occurs_clause:
   OCCURS integer opt_times { curr_field->times = $2; }
@@ -878,9 +865,7 @@ index_name_list:
 opt_times: | TIMES ;
 
 
-/*
- * JUSTIFIED clause
- */
+/* JUSTIFIED */
 
 justified_clause:
   JUSTIFIED opt_right		{ curr_field->flags.just_r = 1; }
@@ -888,9 +873,7 @@ justified_clause:
 opt_right: | RIGHT ;
 
 
-/*
- * SYNCHRONIZED clause
- */
+/* SYNCHRONIZED */
 
 synchronized_clause:
   SYNCHRONIZED left_or_right	{ curr_field->flags.sync = 1; }
@@ -901,18 +884,14 @@ left_or_right:
 ;
 
 
-/*
- * BLANK clause
- */
+/* BLANK */
 
 blank_clause:
   BLANK opt_when ZEROS		{ curr_field->flags.blank=1; }
 ;
 
 
-/*
- * VALUE clause
- */
+/* VALUE */
 
 value_clause:
   VALUE opt_is_are value_list
@@ -924,6 +903,20 @@ value_list:
 value_item:
   gliteral			{ set_variable_values($1,$1); }
 | gliteral THRU gliteral	{ set_variable_values($1,$3); }
+;
+
+
+/* RENAMES */
+
+renames_clause:
+  RENAMES			{ curr_division = CDIV_INITIAL; }
+  variable opt_renames_thru	{ curr_division = CDIV_DATA; }
+  {
+    yywarn ("RENAMES is not supported yet");
+  }
+;
+opt_renames_thru:
+| THRU variable
 ;
 
 
@@ -2940,6 +2933,8 @@ numeric_edited_variable:
 group_variable:
   variable
   {
+    if (SUBREF_P ($1))
+      $1 = SUBREF_SYM ($1);
     if (!SYMBOL_P ($1) || COB_FIELD_TYPE ($1) != 'G')
       yyerror ("variable `%s' must be group", COB_FIELD_NAME ($1));
     $$ = $1;

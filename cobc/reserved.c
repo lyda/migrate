@@ -294,6 +294,7 @@ static struct word reserved_words[] = {
   {"RELATIVE",		RELATIVE},
   {"RELEASE",		RELEASE},
   {"REMAINDER",		REMAINDER},
+  {"RENAMES",		RENAMES},
   {"REPLACING",		REPLACING},
   {"REPORT",		REPORT},
   {"REQUIRED",		REQUIRED},
