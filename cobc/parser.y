@@ -196,7 +196,7 @@ static void assert_numeric_sy (struct sym *sy);
 %type <ival> organization_options,access_options,open_mode
 %type <ival> integer,cond_op,conditional,before_after
 %type <ival> IF,ELSE,usage,write_options,opt_read_next
-%type <ival> pic_char,using_options,using_parameters
+%type <ival> using_options,using_parameters
 %type <dval> if_part
 %type <sval> anystring,name,gname,opt_gname,opt_def_name,def_name,procedure_section
 %type <sval> field_description,label,filename,noallname,paragraph,assign_clause
@@ -946,7 +946,7 @@ index_name_list:
 pictures :  PIC { 
             curr_division = CDIV_PIC;
             /* first pic char found */
-            picix=piccnt=v_flag=z_flag=decimals=0;
+            picix=piccnt=v_flag=decimals=0;
             picture[picix]=0;
          }
         opt_is picture {
@@ -1018,42 +1018,18 @@ value_list:
         | value_list opt_sep value
         ;
 value:
-    gliteral    { set_variable_values($1,$1); }
-    | gliteral THRU gliteral {
-                set_variable_values($1,$3);
-                }
+    gliteral                    { set_variable_values($1,$1); }
+    | gliteral THRU gliteral    { set_variable_values($1,$3); }
     ;
-picture: /* nothing */
+picture:
+    /* nothing */
     | picture pic_elem 
     ;
 pic_elem:
-    pic_char { }
-    | pic_char MULTIPLIER {
-        int n = picture[picix+1] + $2-1;
-        piccnt += $2-1;
-        if (z_flag) {
-                piccnt += $2-1;
-                z_flag = 0;
-        }
-        if (v_flag) {
-                decimals += $2-1;
-        }
-        while (n > 255) {
-                picture[picix+1] = 255;
-                picture[picix+2] = picture[picix];
-                picix += 2;
-                n -= 255;
-        }
-        picture[picix+1] = n;
-      }
+      CHAR              { if (!save_pic_char ($1, 1)) YYERROR; }
+    | CHAR MULTIPLIER   { if (!save_pic_char ($1, $2)) YYERROR; }
     ;
-pic_char: CHAR {
-            if (!save_pic_char ( $1 )) {
-                yyerror("invalid char in picture");
-                YYERROR;
-            }
-        }
-    ;
+
 file_attrib:
     /* nothing */
     | file_attrib REPORT opt_is STRING { save_report( $4,$<sval>0 ); }

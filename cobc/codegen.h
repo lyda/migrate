@@ -846,8 +846,7 @@ extern void gen_perform_test_counter (unsigned long lbl);
 extern void gen_perform_times (unsigned long lbl);
 extern void gen_perform_thru (struct sym *s1, struct sym *s2);
 extern void gen_perform (struct sym *sy);
-extern void gen_picture (void);
-extern int save_pic_char (char c);
+extern int save_pic_char (char c, int n);
 extern void gen_SearchLoopCheck (unsigned long lbl5, struct sym *syidx,
 				 struct sym *sytbl);
 extern void gen_SearchAllLoopCheck (unsigned long lbl3, struct sym *syidx,

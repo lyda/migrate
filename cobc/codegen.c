@@ -52,7 +52,6 @@ unsigned stack_plus = 0;
 unsigned global_offset = 4;	/* offset for global variables (DATA) */
 //unsigned file_offset=0;
 unsigned literal_offset = 0;
-#undef SEC_WORKING
 #define SEC_WORKING SEC_DATA
 #define SEC_RETURN_CODE SEC_DATA
 unsigned data_offset = 0;
@@ -1193,13 +1192,9 @@ proc_trail (int using)
 		}
 	      emit_lit (s, i);
 	      if (i)
-		{
-		  fprintf (o_src, ",0\n");
-		}
+		fprintf (o_src, ",0\n");
 	      else
-		{		/* null string? */
-		  fprintf (o_src, "\t.byte\t0\n");
-		}
+		fprintf (o_src, "\t.byte\t0\n");	/* null string? */
 	    }
 	  else
 	    {
@@ -1214,9 +1209,7 @@ proc_trail (int using)
 	      fprintf (o_src, "0\n");
 	    }
 	  fprintf (o_src, "\t.long\t%d\n", (v->decimals) ? len - 1 : len);
-	  fprintf (o_src, "\t.byte\t'%c',%d,%d\n",
-		   v->type, v->decimals, v->all);
-
+	  fprintf (o_src, "\t.byte\t'%c',%d,%d\n", v->type, v->decimals, v->all);
 	  fprintf (o_src, "\t.long\tc_base%d+%d", pgm_segment, v->descriptor + 11);	/* pointer to the picture */
 #ifdef COB_DEBUG
 	  fprintf (o_src, "\t# c_base%d+%x(hex)",
@@ -1300,13 +1293,11 @@ dump_working ()
 {
 
   struct sym *v, *sy;
-  struct list *list /*,*visited */ ;
+  struct list *list;
   int fld_len;
   int stabs_type = '3';
   short cur_sec_no = SEC_WORKING;
 
-  //fprintf(o_src,".data\n\t.align 4\n");
-//      fprintf(o_src,"w_base:\t.long\t0\n");
   fprintf (o_src, "w_base%d:\n", pgm_segment);
   for (list = fields_list; list != NULL; list = list->next)
     {
@@ -1322,14 +1313,10 @@ dump_working ()
       if (v->sec_no != cur_sec_no && v->sec_no >= SEC_FIRST_NAMED)
 	{			// switch of sections
 	  if (v->sec_no >= SEC_FIRST_NAMED)
-	    {
-	      fprintf (o_src, "\t.comm\t%s,%d,4\n", sec_name (v->sec_no),
-		       fld_len);
-	    }
+	    fprintf (o_src, "\t.comm\t%s,%d,4\n",
+		     sec_name (v->sec_no), fld_len);
 	  else
-	    {
-	      fprintf (o_src, ".text\n");
-	    }
+	    fprintf (o_src, ".text\n");
 	  cur_sec_no = v->sec_no;
 	}
 #ifdef COB_DEBUG
@@ -1377,9 +1364,7 @@ dump_working ()
 	  //fprintf(o_src,"\t.space\t%d\n",fld_len);
 	}
       if (fld_len == 0)
-	{
-	  yyerror ("Invalid picture in %s", v->name);
-	}
+	yyerror ("Invalid picture in %s", v->name);
       /*      
          if (v->son) continue;                // no space reserved for groups
          if (v->value != NULL) {
@@ -4813,64 +4798,51 @@ gen_perform (struct sym *sy)
   gen_perform_thru (sy, sy);
 }
 
-void
-gen_picture (void)
-{
-  if (curr_field->type != 'G')
-    {
-      curr_field->picstr = (char *) malloc (strlen (picture) + 1);
-      strcpy (curr_field->picstr, picture);
-    }
-}
-
 int
-save_pic_char (char c)
+save_pic_char (char c, int n)
 {
-
   int c1 = toupper (c);
-
-  if (picture[picix] == 0)
-    {				/* first char? */
-      picture[picix] = c1;
-      picture[picix + 1] = 0;
-    }
-
   switch (c1)
     {
     case 'A':
-      piccnt++;
+      piccnt += n;
       if (curr_field->type != 'X' && curr_field->type != 'E')
 	curr_field->type = 'A';
       break;
     case 'N':
-      piccnt++;
-      z_flag = 1;
-      /* fall through */
+      piccnt += n * 2;
+      if (curr_field->type == '9')
+	curr_field->type = 'X';
+      break;
     case 'X':
-      piccnt++;
+      piccnt += n;
       if (curr_field->type == '9')
 	curr_field->type = 'X';
       break;
     case 'Z':
       curr_field->type = 'E';
     case '9':
-      piccnt++;
+      piccnt += n;
       if (v_flag)
-	decimals++;
+	decimals += n;
       n_flag = 1;
       break;
     case 'V':
       if (v_flag)
-	yyerror ("invalid picture: V already given");
+	{
+	  yyerror ("too many `V's in picture");
+	  return 0;
+	}
       v_flag = 1;
       break;
     case 'P':
       if (!n_flag)
 	v_flag = 1;		/* implicit V just before the first P */
       if (v_flag)
-	decimals++;
+	decimals += n;
       else
-	decimals--;
+	decimals -= n;
+      break;
     case 'S':
       sign = 1;
       break;
@@ -4882,42 +4854,42 @@ save_pic_char (char c)
     case '+':
     case '-':
     case '*':
-/*	case '$': handled in the default case by comparison against currency_symbol */
     case 'C':
     case 'R':
     case 'D':
+      piccnt += n;
       curr_field->type = 'E';
-      piccnt++;
       break;
     default:
       if (c == currency_symbol)
 	{
+	  piccnt += n;
 	  curr_field->type = 'E';
-	  piccnt++;
 	  break;
 	}
-      else
-	return 0;
+
+      /* error */
+      yyerror ("invalid char in picture: `%c'", c);
+      return 0;
     }
-  if ((int) picture[picix] == c1)
+
+  if (picture[picix] == 0 || picture[picix] != c1)
     {
-      if (picture[picix + 1] < 255)
-	{
-	  picture[picix + 1]++;
-	}
-      else
-	{			/* overflow of counter, start new compressed entry */
-	  picix += 2;
-	  picture[picix] = c1;
-	  picture[picix + 1] = 1;
-	}
-    }
-  else
-    {
-      picix += 2;
+      if (picture[picix] != 0)
+	picix += 2;
       picture[picix] = c1;
-      picture[picix + 1] = 1;
+      picture[picix + 1] = 0;
     }
+
+  n += picture[picix + 1];
+  while (n > 255)
+    {
+      picture[picix + 1] = 255;
+      picture[picix + 2] = c1;
+      picix += 2;
+      n -= 255;
+    }
+  picture[picix + 1] = n;
   return 1;
 }
 
@@ -5840,7 +5812,6 @@ void
 update_screen_field (struct sym *sy, struct scr_info *si)
 {
   struct sym *tmp;
-  char *pic;
   update_field ();
   sy->type = 'D';
   sy->scr = si;
@@ -5850,11 +5821,11 @@ update_screen_field (struct sym *sy, struct scr_info *si)
   if (*(sy->picstr) == 0 && sy->value != NULL)
     {
       tmp = (struct sym *) sy->value;
-      pic = sy->picstr = malloc (3);
-      *pic++ = 'X';
-      *pic++ = strlen (tmp->name);
-      *pic = 0;
       sy->len = strlen (tmp->name);
+      sy->picstr = malloc (3);
+      sy->picstr[0] = 'X';
+      sy->picstr[1] = sy->len;
+      sy->picstr[2] = 0;
     }
 }
 
@@ -5862,10 +5833,9 @@ void
 update_field (void)
 {
   if (curr_field->level != 88)
-    {
-      gen_picture ();
-    }
-//      if (curr_field->type != 'B')
+    if (curr_field->type != 'G')
+      curr_field->picstr = strdup (picture);
+
   if ((curr_field->type != 'B') && (curr_field->type != 'U'))
     {
       curr_field->len = piccnt;
