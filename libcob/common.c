@@ -18,6 +18,7 @@
  */
 
 #include "config.h"
+#include "defaults.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,12 +27,12 @@
 #include <ctype.h>
 
 #include "common.h"
-#include "numeric.h"
-#include "termio.h"
-#include "fileio.h"
-#include "call.h"
 #include "gettext.h"
-#include "defaults.h"
+
+extern void cob_init_numeric (void);
+extern void cob_init_termio (void);
+extern void cob_init_fileio (void);
+extern void cob_init_call (void);
 
 int cob_initialized = 0;
 

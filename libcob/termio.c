@@ -24,7 +24,8 @@
 #include <unistd.h>
 #include <time.h>
 
-#include "libcob.h"
+#include "move.h"
+#include "termio.h"
 
 #ifdef HAVE_READLINE_READLINE_H
 #include <readline/readline.h>

@@ -20,6 +20,8 @@
 #ifndef COB_CALL_H
 #define COB_CALL_H
 
+#include <libcob/common.h>
+
 extern void cob_init_call (void);
 extern void cob_set_library_path (const char *path);
 extern void *cob_resolve (const char *name);

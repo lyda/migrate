@@ -18,6 +18,7 @@
  */
 
 #include "config.h"
+#include "defaults.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,9 +29,8 @@
 #define LT_NON_POSIX_NAMESPACE 1
 #include <ltdl.h>
 
-#include "libcob.h"
+#include "call.h"
 #include "gettext.h"
-#include "defaults.h"
 
 int cob_dynamic_reloading = 0;
 
