@@ -2452,6 +2452,7 @@ read_statement:
   end_read
   {
     cb_tree file = cb_ref ($3);
+    cb_tree rec = cb_build_field_reference (CB_FILE (file)->record, $3);
     cb_tree key = $7;
     cb_tree e;
     if ($4 == cb_int1 || CB_FILE (file)->access_mode == COB_ACCESS_SEQUENTIAL)
@@ -2470,7 +2471,7 @@ read_statement:
     current_statement->file = file;
     current_statement->body = e;
     if ($6)
-      push (cb_build_move (CB_TREE (CB_FILE (file)->record), $6));
+      push (cb_build_move (rec, $6));
   }
 ;
 read_into:
@@ -2517,10 +2518,11 @@ return_statement:
   end_return
   {
     cb_tree file = cb_ref ($3);
+    cb_tree rec = cb_build_field_reference (CB_FILE (file)->record, $3);
     current_statement->file = file;
     current_statement->body = cb_build_funcall_2 ("cob_read", file, cb_int0);
     if ($5)
-      push (cb_build_move (CB_TREE (CB_FILE (file)->record), $5));
+      push (cb_build_move (rec, $5));
   }
 ;
 end_return:

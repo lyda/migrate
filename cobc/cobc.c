@@ -286,14 +286,18 @@ process_command_line (int argc, char *argv[])
 	case 'v': verbose_output = 1; break;
 	case 'o': output_name = strdup (optarg); break;
 
-	case '2': /* -O2 */
-	  strcat (cob_cflags, " -O2");
-	  /* fall through */
-
 	case 'O':
 	  cb_flag_inline_cmp = 1;
 	  cb_flag_inline_get_int = 1;
 	  cb_flag_inline_move = 1;
+	  strcat (cob_cflags, " -O");
+	  break;
+
+	case '2': /* -O2 */
+	  cb_flag_inline_cmp = 1;
+	  cb_flag_inline_get_int = 1;
+	  cb_flag_inline_move = 1;
+	  strcat (cob_cflags, " -O2");
 	  break;
 
 	case 'g':
