@@ -369,7 +369,7 @@ ppinput_1 (char *buff, int size)
       n = 7;
       break;
     default:
-      cb_error (_("invalid indicator: `%c'"), buff[6]);
+      cb_error (_("invalid indicator `%c' at column 7"), buff[6]);
       exit (1);
     }
 
