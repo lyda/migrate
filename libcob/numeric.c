@@ -46,16 +46,6 @@ static cob_decimal cob_d4;
  * Decimal number
  */
 
-void
-cob_decimal_init (cob_decimal *d)
-{
-}
-
-void
-cob_decimal_clear (cob_decimal *d)
-{
-}
-
 #ifdef COB_DEBUG
 void
 cob_decimal_print (cob_decimal *d)
@@ -822,10 +812,5 @@ cob_numeric_cmp (cob_field *f1, cob_field *f2)
 void
 cob_init_numeric (void)
 {
-  cob_decimal_init (&cob_d1);
-  cob_decimal_init (&cob_d2);
-  cob_decimal_init (&cob_d3);
-  cob_decimal_init (&cob_d4);
-
   init_digit_table ();
 }

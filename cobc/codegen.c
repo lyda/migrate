@@ -2363,10 +2363,6 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   /* initialization */
   output_line ("if (!initialized)");
   output_indent ("  {");
-  output_line ("/* initialize decimal numbers */");
-  output_line ("for (i = 0; i < %d; i++)", prog->decimal_index_max);
-  output_line ("  cob_decimal_init (&d[i]);");
-  output_newline ();
   if (!prog->flag_initial)
     output_init_values (prog->working_storage);
   output_line ("initialized = 1;");

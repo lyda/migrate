@@ -1,6 +1,7 @@
 2003-06-07  Keisuke Nishida  <knishida@netlab.jp>
 
 	* numeric.c, numeric.h: No longer use gmp.
+	(cob_decimal_init, cob_decimal_clear): Removed.
 
 2003-06-07  Keisuke Nishida  <knishida@netlab.jp>
 
