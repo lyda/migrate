@@ -35,7 +35,6 @@ save_libs="$LIBS"
 
 # Checks for programs.
 AC_PROG_CC
-AC_PROG_CXX
 AM_PROG_LEX
 AC_PROG_YACC
 AC_PROG_LN_S
