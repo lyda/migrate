@@ -283,7 +283,11 @@ scan_h (char *text)
       val = (val << 4) + c;
     }
 
+#ifdef __MINGW32__
+  sprintf (buff, "%I64d", val);
+#else
   sprintf (buff, "%lld", val);
+#endif
   yylval = cb_build_numeric_literal (0, buff, 0);
   SET_LOCATION (yylval);
   return LITERAL;

@@ -26,7 +26,7 @@
 #include <string.h>
 #include <libcob.h>
 
-#ifndef _WIN32
+#if !(defined __CYGWIN__ || defined __MINGW32__)
 #include <unistd.h>
 #endif
 
@@ -38,7 +38,7 @@
 #include "tree.h"
 #include "lib/getopt.h"
 
-#ifdef _WIN32
+#if (defined __CYGWIN__ || defined __MINGW32__)
 #define EXEC_LDFLAGS	"-Wl,--export-dynamic -Wl,--enable-auto-import"
 #define MODULE_LDFLAGS	"-Wl,--enable-auto-import"
 #else
