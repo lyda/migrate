@@ -1,5 +1,12 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Changes in OpenCOBOL 0.11
+
+** Part of run-time library interface has been redesigned.
+
+** Bug fixes.
+
+
 * Changes in OpenCOBOL 0.10
 
 ** Autoconf 2.57, Automake 1.7.2, Libtool 1.4.3, and Gettext 0.11.5
