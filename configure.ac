@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(open-cobol, 0.9.6)
+AC_INIT(open-cobol, 0.9.6.1)
 AC_CONFIG_SRCDIR(cobc/cobc.c)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -123,7 +123,7 @@ COB_CFLAGS="-I$includedir"
 COB_LIBS="-L$libdir -lcob ${LIBCOB_LIBS}"
 COB_CONFIG_FILE="$datadir/$PACKAGE/libcob.conf"
 COB_LIBRARY_PATH=".:$libdir/$PACKAGE"
-COB_MODULE_EXT="$shlibext"
+COB_MODULE_EXT=`echo "$shlibext" | sed 's/dll\.a/dll/'`
 LIBS="$save_libs"
 
 AC_SUBST(COB_CC)
