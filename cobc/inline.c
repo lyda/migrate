@@ -292,6 +292,7 @@ output_move (cobc_tree src, cobc_tree dst)
     }
   else
     {
+      struct cobc_field *srcp = COBC_FIELD (src);
       struct cobc_field *dstp = COBC_FIELD (dst);
       if (dstp->usage == USAGE_INDEX)
 	{
@@ -300,6 +301,10 @@ output_move (cobc_tree src, cobc_tree dst)
 	  output (" = ");
 	  output_index (src);
 	  output (";\n");
+	}
+      else if (srcp->usage == USAGE_INDEX)
+	{
+	  output_call_2 ("cob_set_int", dst, make_index (src));
 	}
       else
 	{

@@ -2036,13 +2036,15 @@ search_statement:
   SEARCH table_name search_varying search_at_end search_whens _end_search
   {
     push_call_3 (COB_SEARCH, $2, $3, $5);
-    push_call_2 (COB_SEARCH_AT_END, $2, $4);
+    if ($4)
+      push_call_2 (COB_SEARCH_AT_END, $2, $4);
   }
 | SEARCH ALL table_name search_at_end
   WHEN condition imperative_statement _end_search
   {
     // push_call_3 (COB_SEARCH, $2, $3, $5);
-    push_call_2 (COB_SEARCH_AT_END, $3, $4);
+    if ($4)
+      push_call_2 (COB_SEARCH_AT_END, $3, $4);
   }
 ;
 search_varying:

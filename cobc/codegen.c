@@ -363,6 +363,28 @@ output_expr (cobc_tree x)
  */
 
 static void
+output_compare_zero (cobc_tree s1, cobc_tree s2)
+{
+  cobc_tree x = (s1 == cobc_zero) ? s2 : s1;
+  int size = COBC_FIELD (x)->size;
+  char zero[size + 1];
+  memset (zero, '0', size);
+  zero[size] = 0;
+  output_prefix ();
+  output ("memcmp (");
+  if (s1 == cobc_zero)
+    output ("\"%s\"", zero);
+  else
+    output_location (s1);
+  output (", ");
+  if (s2 == cobc_zero)
+    output ("\"%s\"", zero);
+  else
+    output_location (s2);
+  output (", %d)", size);
+}
+
+static void
 output_compare (cobc_tree s1, int op, cobc_tree s2)
 {
   output ("(");
@@ -379,6 +401,10 @@ output_compare (cobc_tree s1, int op, cobc_tree s2)
       output_expr (s2);
       output_call_0 ("cob_num_cmp");
       output ("})");
+    }
+  else if (s1 == cobc_zero || s2 == cobc_zero)
+    {
+      output_compare_zero (s1, s2);
     }
   else
     {
@@ -1215,6 +1241,9 @@ codegen (struct program_spec *spec)
 
   output ("/* Generated from %s by OpenCOBOL %s */\n\n",
 	  cobc_source_file, COBC_VERSION);
+  output ("#include <stdio.h>\n\n");
+  output ("#include <stdlib.h>\n\n");
+  output ("#include <string.h>\n\n");
   output ("#include <libcob.h>\n\n");
 
   if (!cobc_module_flag)
