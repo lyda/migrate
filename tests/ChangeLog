@@ -1,3 +1,7 @@
+2003-08-21  Keisuke Nishida  <kxn30@yahoo.co.jp>
+
+	* display.at, packed.at: New files.
+
 2003-08-10  Keisuke Nishida  <knishida@netlab.jp>
 
 	* binary.at: New file.

@@ -10,13 +10,15 @@ TESTSUITE_AT = \
 	occurs.at \
 	redefines.at \
 	usage.at \
+	binary.at \
+	display.at \
+	packed.at \
 	value.at \
 	initialize.at \
 	move.at \
 	multiply.at \
 	definition.at \
 	extension.at \
-	binary.at \
 	entry.at \
 	misc.at
 
