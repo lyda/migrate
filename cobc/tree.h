@@ -31,7 +31,8 @@
 enum cb_tag {
   /* primitives */
   CB_TAG_CONST,			/* constant value */
-  CB_TAG_SYSTEM_NAME,		/* system-name identifiers */
+  CB_TAG_ALPHABET_NAME,		/* alphabet-name identifier */
+  CB_TAG_SYSTEM_NAME,		/* system-name identifier */
   CB_TAG_INTEGER,		/* integer constant */
   CB_TAG_STRING,		/* string constant */
   CB_TAG_LITERAL,		/* numeric/alphanumeric literal */
@@ -52,6 +53,13 @@ enum cb_tag {
   /* miscellaneous */
   CB_TAG_PROPOSITION,		/* CLASS definition */
   CB_TAG_PARAMETER,
+};
+
+enum cb_alphabet_name_type {
+  CB_ALPHABET_NATIVE,
+  CB_ALPHABET_STANDARD_1,
+  CB_ALPHABET_STANDARD_2,
+  CB_ALPHABET_CUSTOM,
 };
 
 enum cb_system_name_category {
@@ -222,6 +230,22 @@ struct cb_const {
 #define CB_CONST_P(x)	(CB_TREE_TAG (x) == CB_TAG_CONST)
 
 extern void cb_init_constants (void);
+
+
+/*
+ * Alphabet-name
+ */
+
+struct cb_alphabet_name {
+  struct cb_tree_common common;
+  enum cb_alphabet_name_type type;
+  struct cb_list *custom_list;
+};
+
+#define CB_ALPHABET_NAME(x)	(CB_TREE_CAST (CB_TAG_ALPHABET_NAME, struct cb_alphabet_name, x))
+#define CB_ALPHABET_NAME_P(x)	(CB_TREE_TAG (x) == CB_TAG_ALPHABET_NAME)
+
+extern cb_tree cb_build_alphabet_name (enum cb_alphabet_name_type type);
 
 
 /*
@@ -452,13 +476,10 @@ struct cb_reference {
 
 #define CB_NAME(x)		(CB_REFERENCE (x)->word->name)
 
+extern cb_tree make_filler (void);
 extern cb_tree make_reference (const char *name);
 extern cb_tree copy_reference (cb_tree ref, cb_tree value);
-extern void set_value (cb_tree ref, cb_tree value);
-extern const char *associate (cb_tree name, cb_tree val);
-
-extern cb_tree make_filler (void);
-
+extern const char *cb_define (cb_tree name, cb_tree val);
 extern cb_tree cb_ref (cb_tree x);
 
 
@@ -699,6 +720,7 @@ struct cb_program {
   struct cb_field *linkage_storage;
   struct cb_field *screen_storage;
   struct cb_label *file_handler[5];
+  cb_tree collating_sequence;
   long flag_common      : 1;		/* COMMON PROGRAM */
   long flag_initial     : 1;		/* INITIAL PROGRAM */
   long flag_recursive   : 1;		/* RECURSIVE PROGRAM */

@@ -476,6 +476,20 @@ cb_init_constants (void)
 
 
 /*
+ * Alphabet-name
+ */
+
+cb_tree
+cb_build_alphabet_name (enum cb_alphabet_name_type type)
+{
+  struct cb_alphabet_name *p =
+    make_tree (CB_TAG_ALPHABET_NAME, CB_CATEGORY_UNKNOWN, sizeof (struct cb_alphabet_name));
+  p->type = type;
+  return CB_TREE (p);
+}
+
+
+/*
  * System-name
  */
 
@@ -835,7 +849,7 @@ make_field (cb_tree name)
 {
   struct cb_field *p =
     make_tree (CB_TAG_FIELD, CB_CATEGORY_UNKNOWN, sizeof (struct cb_field));
-  p->name = associate (name, CB_TREE (p));
+  p->name = cb_define (name, CB_TREE (p));
   return CB_TREE (p);
 }
 
@@ -1453,7 +1467,7 @@ build_file (cb_tree name)
 {
   struct cb_file *p =
     make_tree (CB_TAG_FILE, CB_CATEGORY_UNKNOWN, sizeof (struct cb_file));
-  p->name = associate (name, CB_TREE (p));
+  p->name = cb_define (name, CB_TREE (p));
   p->cname = to_cname (p->name);
 
   p->organization = COB_ORG_SEQUENTIAL;
@@ -1536,6 +1550,15 @@ finalize_file (struct cb_file *f, struct cb_field *records)
  */
 
 cb_tree
+make_filler (void)
+{
+  static int id = 1;
+  char name[256];
+  sprintf (name, "$%d", id++);
+  return make_reference (name);
+}
+
+cb_tree
 make_reference (const char *name)
 {
   struct cb_reference *p =
@@ -1550,29 +1573,14 @@ copy_reference (cb_tree ref, cb_tree value)
   cb_tree x = make_reference (CB_FIELD (value)->name);
   struct cb_word *word = CB_REFERENCE (x)->word;
   memcpy (x, ref, sizeof (struct cb_reference));
+  x->category = CB_CATEGORY_UNKNOWN;
   CB_REFERENCE (x)->word = word;
-  set_value (x, value);
+  CB_REFERENCE (x)->value = value;
   return x;
 }
 
-void
-set_value (cb_tree ref, cb_tree value)
-{
-  ref->category = CB_CATEGORY_UNKNOWN;
-  CB_REFERENCE (ref)->value = value;
-}
-
-cb_tree
-make_filler (void)
-{
-  static int id = 1;
-  char name[256];
-  sprintf (name, "$%d", id++);
-  return make_reference (name);
-}
-
 const char *
-associate (cb_tree name, cb_tree val)
+cb_define (cb_tree name, cb_tree val)
 {
   struct cb_word *w = CB_REFERENCE (name)->word;
   w->items = list_add (w->items, val);
@@ -1797,7 +1805,7 @@ cb_build_label (cb_tree name, struct cb_label *section)
   char buff[BUFSIZ];
   struct cb_label *p =
     make_tree (CB_TAG_LABEL, CB_CATEGORY_UNKNOWN, sizeof (struct cb_label));
-  p->name = associate (name, CB_TREE (p));
+  p->name = cb_define (name, CB_TREE (p));
   p->section = section;
   if (section)
     sprintf (buff, "%s$%s", section->cname, p->name);
@@ -1916,7 +1924,7 @@ cb_build_proposition (cb_tree name, struct cb_list *list)
   char buff[BUFSIZ];
   struct cb_proposition *p =
     make_tree (CB_TAG_PROPOSITION, CB_CATEGORY_BOOLEAN, sizeof (struct cb_proposition));
-  p->name = associate (name, CB_TREE (p));
+  p->name = cb_define (name, CB_TREE (p));
   sprintf (buff, "is_%s", to_cname (p->name));
   p->cname = strdup (buff);
   p->list = list;

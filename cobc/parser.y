@@ -225,6 +225,13 @@ program_definition:
     struct cb_list *l;
     for (l = list_reverse (current_program->reference_list); l; l = l->next)
       cb_ref (l->item);
+
+    /* resolve the program collating sequence */
+    if (current_program->collating_sequence)
+      if (!CB_ALPHABET_NAME_P (cb_ref (current_program->collating_sequence)))
+	cb_error_x (current_program->collating_sequence,
+		    _("`%s' not alphabet name"),
+		    cb_name (current_program->collating_sequence));
   }
   procedure_division
   end_program
@@ -348,26 +355,20 @@ computer_name:
  */
 
 object_computer_paragraph:
-| OBJECT_COMPUTER '.' computer_name object_computer_options '.'
+| OBJECT_COMPUTER '.' computer_name object_computer_phrase_sequence '.'
 ;
-object_computer_options:
-| object_computer_options object_computer_option
+object_computer_phrase_sequence:
+| object_computer_phrase_sequence object_computer_phrase
 ;
-object_computer_option:
-  _program collating_sequence
-| MEMORY SIZE _is integer CHARACTERS	{ cb_obsolete_85 ("MEMORY SIZE"); }
-;
-
-/* COLLATING SEQUENCE */
-
-collating_sequence:
-  _collating SEQUENCE _is alphabet_name
+object_computer_phrase:
+  _program _collating SEQUENCE _is reference
   {
-    PENDING ("COLLATING SEQUENCE");
+    current_program->collating_sequence = $5;
   }
-;
-alphabet_name:
-  WORD { }
+| MEMORY SIZE _is integer CHARACTERS
+  {
+    cb_obsolete_85 ("MEMORY SIZE");
+  }
 ;
 
 
@@ -412,7 +413,7 @@ mnemonic_name_clause:
 special_name_mnemonic_define:
 | IS undefined_word
   {
-    associate ($2, $<tree>0);
+    cb_define ($2, $<tree>0);
   }
 ;
 special_name_mnemonic_on_off:
@@ -446,32 +447,40 @@ on_or_off:
 /* Alphabet name clause */
 
 alphabet_name_clause:
-  ALPHABET WORD _is alphabet_group
+  ALPHABET undefined_word _is alphabet_definition
   {
-    PENDING ("ALPHABET");
+    cb_define ($2, $<tree>4);
   }
 ;
-alphabet_group:
-  STANDARD_1
-| STANDARD_2
-| NATIVE
-| WORD { }
+alphabet_definition:
+  alphabet_symbol
+  {
+    $<tree>$ = cb_build_alphabet_name ($<ival>1);
+  }
 | alphabet_literal_list
+  {
+    $<tree>$ = cb_build_alphabet_name (CB_ALPHABET_CUSTOM);
+    CB_ALPHABET_NAME ($<tree>$)->custom_list = $<list>1;
+  }
+;
+alphabet_symbol:
+  NATIVE			{ $<ival>$ = CB_ALPHABET_NATIVE; }
+| STANDARD_1			{ $<ival>$ = CB_ALPHABET_STANDARD_1; }
+| STANDARD_2			{ $<ival>$ = CB_ALPHABET_STANDARD_2; }
 ;
 alphabet_literal_list:
-  alphabet_literal
-| alphabet_literal_list alphabet_literal
+  alphabet_literal		{ $<list>$ = list ($<tree>1); }
+| alphabet_literal_list
+  alphabet_literal		{ $<list>$ = list_add ($<list>1, $<tree>2); }
 ;
 alphabet_literal:
-  literal alphabet_literal_option { }
+  literal			{ $<tree>$ = $1; }
+| literal THRU literal		{ $<tree>$ = cb_build_pair ($1, $3); }
+| literal alphabet_literal_also	{ $<tree>$ = cb_error_node; }
 ;
-alphabet_literal_option:
-| THRU literal
-| also_literal_list
-;
-also_literal_list:
+alphabet_literal_also:
   ALSO literal
-| also_literal_list ALSO literal
+| alphabet_literal_also ALSO literal
 ;
 
 
@@ -669,7 +678,10 @@ alternative_record_key_clause:
 /* COLLATING SEQUENCE clause */
 
 collating_sequence_clause:
-  collating_sequence
+  _collating SEQUENCE _is WORD
+  {
+    PENDING ("COLLATING SEQUENCE");
+  }
 ;
 
 
@@ -2821,12 +2833,12 @@ set_to_true_false:
     for (l = $1; l; l = l->next)
       {
 	struct cb_field *f = cb_field (l->item);
+	cb_tree name = copy_reference (l->item, CB_TREE (f->parent));
 	cb_tree value = f->values->item;
-	set_value (l->item, CB_TREE (f->parent));
 	if (CB_PARAMETER_P (value))
-	  push (cb_build_move (CB_PARAMETER (value)->x, l->item));
+	  push (cb_build_move (CB_PARAMETER (value)->x, name));
 	else
-	  push (cb_build_move (value, l->item));
+	  push (cb_build_move (value, name));
       }
   }
 ;
@@ -2860,7 +2872,7 @@ sort_duplicates:
 | _with DUPLICATES _in _order	{ PENDING ("DUPLICATES"); }
 ;
 sort_collating:
-| collating_sequence		{ PENDING ("COLLATING SEQUENCE"); }
+| collating_sequence_clause	{ PENDING ("COLLATING SEQUENCE"); }
 ;
 
 sort_input:
