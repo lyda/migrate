@@ -4416,7 +4416,7 @@ decimal_expand (cobc_tree s, cobc_tree d, cobc_tree x)
       {
 	cobc_tree e;
 	if (x == cobc_zero)
-	  e = make_funcall_3 ("cob_decimal_set_int", d, cobc_int0, cobc_int0);
+	  e = make_funcall_2 ("cob_decimal_set_int", d, cobc_int0);
 	else
 	  abort ();
 	add_stmt (s, e);
@@ -4426,10 +4426,9 @@ decimal_expand (cobc_tree s, cobc_tree d, cobc_tree x)
       {
 	/* set d, N */
 	struct cobc_literal *l = COBC_LITERAL (x);
-	if (l->size < 10)
-	  add_stmt (s, make_funcall_3 ("cob_decimal_set_int",
-				       d, make_cast_int32 (x),
-				       make_integer (l->decimals)));
+	if (l->size < 10 && l->decimals == 0)
+	  add_stmt (s, make_funcall_2 ("cob_decimal_set_int",
+				       d, make_cast_int32 (x)));
 	else
 	  add_stmt (s, make_funcall_2 ("cob_decimal_set_field", d, x));
 	break;
@@ -4442,8 +4441,8 @@ decimal_expand (cobc_tree s, cobc_tree d, cobc_tree x)
 	  add_stmt (s, make_funcall_2 ("cob_check_numeric",
 				       x, make_string (f->name)));
 	if (f->usage == COBC_USAGE_INDEX)
-	  add_stmt (s, make_funcall_3 ("cob_decimal_set_int",
-				       d, make_cast_int32 (x), cobc_int0));
+	  add_stmt (s, make_funcall_2 ("cob_decimal_set_int",
+				       d, make_cast_int32 (x)));
 	else
 	  add_stmt (s, make_funcall_2 ("cob_decimal_set_field", d, x));
 	break;
