@@ -1,19 +1,24 @@
 bin_PROGRAMS = cobc
+if HAVE_GETOPT_LONG_ONLY
+getopt_SOURCES = 
+else
+getopt_SOURCES = getopt.c getopt1.c getopt.h
+endif
 cobc_SOURCES = cobc.c cobc.h tree.c tree.h codegen.c codegen.h functions.h \
 	reserved.c reserved.h parser.y parser.h scanner.l scanner.h \
-	getopt.c getopt1.c getopt.h
+	$(getopt_SOURCES)
 cobc_DEPENDENCIES = defaults.h
 cobc_LDADD = -L$(top_srcdir)/libcob -lcob
 BUILT_SOURCES = parser.c parser.h scanner.c defaults.h
-EXTRA_DIST = inline.c
+EXTRA_DIST = inline.c getopt.c getopt1.c getopt.h
 CLEANFILES = parser.c parser.h scanner.c y.output
 DISTCLEANFILES = defaults.h
 MAINTAINERCLEANFILES = Makefile.in
 INCLUDES = -I$(top_srcdir)/libcob
 
 AM_CFLAGS = -Wall
-AM_YFLAGS = -v -d
-AM_LFLAGS = -s -d
+AM_YFLAGS = -d -v
+AM_LFLAGS = -d -s
 
 defaults.h: Makefile.am $(top_builddir)/config.status
 	@echo "Creating defaults.h..."

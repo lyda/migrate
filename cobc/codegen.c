@@ -332,7 +332,10 @@ output_index (cobc_tree x)
   switch (COBC_TREE_TAG (x))
     {
     case cobc_tag_const:
-      output ("%s", COBC_CONST (x)->val);
+      if (x == cobc_zero)
+	output ("0");
+      else
+	output ("%s", COBC_CONST (x)->val);
       break;
     case cobc_tag_integer:
       output ("%d", COBC_INTEGER (x)->val);
@@ -895,40 +898,53 @@ static void
 output_file_name (struct cobc_file_name *f)
 {
   struct cobc_field *p;
+  int nkeys = 1;
 
   for (p = f->record; p; p = p->sister)
     output_field_definition (p, p, 0);
 
   if (f->organization == COB_ORG_INDEXED)
     {
-      struct cobc_alt_key *p;
-      output ("static struct altkey_desc %s_altkey_descs[] = {\n", f->cname);
-      for (p = f->alt_key_list; p; p = p->next)
-	output ("  {%d, &f_%s_desc, %d, 0},\n",
-		COBC_FIELD (p->key)->offset - f->record->offset,
-		COBC_FIELD (p->key)->cname, p->duplicates);
-      output ("  {-1, 0, 0, 0}\n");
+      struct cobc_alt_key *l;
+      output ("static struct cob_key %s_keys[] = {\n", f->cname);
+      output ("  {");
+      output_tree (f->key);
+      output (", 0, 0},\n");
+      for (l = f->alt_key_list; l; l = l->next)
+	{
+	  nkeys++;
+	  output ("  {");
+	  output_tree (l->key);
+	  output (", %d, 0},\n", l->duplicates);
+	}
       output ("};\n");
     }
-  if (COBC_LITERAL_P (f->assign))
-    {
-      output ("static struct cob_field_desc fn_%s_desc = {%d, 'X'};\n",
-	      f->cname, COBC_LITERAL (f->assign)->size);
-    }
+
+  //if (COBC_LITERAL_P (f->assign))
+  //  {
+  //    output ("static struct cob_field_desc fn_%s_desc = {%d, 'X'};\n",
+  //	      f->cname, COBC_LITERAL (f->assign)->size);
+  //  }
   output ("static struct cob_file_desc %s_desc = {", f->cname);
-  output ("%d, f_%s_data, %d, %d, ",
-	  f->record->size, f->record->cname, f->organization, f->access_mode);
-  if (f->status)
-    output_location (f->status);
+  /* organization, access_mode, open_mode */
+  output ("%d, %d, 0, ", f->organization, f->access_mode);
+  /* file_status */
+  if (f->file_status)
+    output_location (f->file_status);
   else
     output ("cob_dummy_status");
-  output (", 0, 0, 0, %d, 0", f->optional);
+  output (", ");
+  /* record_size, record_data */
+  output ("%d, f_%s_data, ", f->record->size, f->record->cname);
+  /* file */
+  output ("0, ");
+  /* flags */
+  output ("{%d, 0, 0, 0, 0}, ", f->optional);
+  /* relative_index */
+  output ("0, ");
+  /* cursor, keys, nkeys */
   if (f->organization == COB_ORG_INDEXED)
-    {
-      output (", %d, &f_%s_desc, 0, %s_altkey_descs",
-	      COBC_FIELD (f->key)->offset, COBC_FIELD (f->key)->cname,
-	      f->cname);
-    }
+    output ("0, %s_keys, %d", f->cname, nkeys);
   output ("};\n\n");
 }
 
@@ -1371,9 +1387,13 @@ output_tree (cobc_tree x)
   switch (COBC_TREE_TAG (x))
     {
     case cobc_tag_const:
+      {
+	output ("%s", COBC_CONST (x)->val);
+	break;
+      }
     case cobc_tag_integer:
       {
-	output_index (x);
+	output ("%d", COBC_INTEGER (x)->val);
 	break;
       }
     case cobc_tag_index:

@@ -377,7 +377,7 @@ struct cobc_file_name {
   int optional;			/* OPTIONAL */
   int organization;		/* ORGANIZATION */
   int access_mode;		/* ACCESS MODE */
-  cobc_tree status;		/* FILE STATUS */
+  cobc_tree file_status;	/* FILE STATUS */
   cobc_tree key;		/* RELATIVE/RECORD KEY */
   struct cobc_alt_key {
     cobc_tree key;

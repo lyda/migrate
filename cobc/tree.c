@@ -661,7 +661,7 @@ make_file_name (struct cobc_word *word)
   p->optional = 0;
   p->organization = 0;
   p->access_mode = 0;
-  p->status = NULL;
+  p->file_status = NULL;
   p->key = NULL;
   p->alt_key_list = NULL;
   return COBC_TREE (p);

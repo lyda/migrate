@@ -22,8 +22,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <db1/db.h>
 #include <gmp.h>
+#include <db.h>
+
+#define COB_EQ	1 	/* x == y */
+#define COB_LT	2 	/* x <  y */
+#define COB_LE	3 	/* x <= y */
+#define COB_GT	4 	/* x >  y */
+#define COB_GE	5 	/* x >= y */
+#define COB_NE	6 	/* x != y */
 
 
 /*
@@ -259,10 +266,10 @@ extern void cob_accept_environment (struct cob_field f, struct cob_field env);
 
 /* fileio.c */
 
-#define COB_ORG_INDEXED		1
-#define COB_ORG_SEQUENTIAL	2
-#define COB_ORG_RELATIVE	3
-#define COB_ORG_LINE_SEQUENTIAL	4
+#define COB_ORG_SEQUENTIAL	0
+#define COB_ORG_LINE_SEQUENTIAL	1
+#define COB_ORG_RELATIVE	2
+#define COB_ORG_INDEXED		3
 
 #define COB_ACCESS_SEQUENTIAL	1
 #define COB_ACCESS_DYNAMIC	2
@@ -276,27 +283,59 @@ extern void cob_accept_environment (struct cob_field f, struct cob_field env);
 extern char cob_dummy_status[];
 
 struct cob_file_desc {
-  signed long reclen;		/* length of record */
-  char *record;
-  unsigned char organization;
-  unsigned char access_mode;
-  char *status;
-  int open_mode;
-  DB *dbp;			/* pointer for libdb operations */
-  char *start_record;		/* record for start verb control (Andrew Cameron) */
-  int optional:1;
-  int file_missing:1;
-	/******* from now on, only present for indexed files *********/
-  short unsigned rec_index;	/* offset of index field in record */
-  struct cob_field_desc *ixd_desc;	/* offset (DGROUP) index field descriptor */
-  struct altkey_desc *key_in_use;
-  struct altkey_desc {
-    short int offset;		/* offset of alternate key field in record */
-    struct cob_field_desc *descriptor;	/* descriptor for this field */
-    short int duplicates;		/* = 1 if duplicates allowed */
-    DB *alt_dbp;			/* handle for the alternate key file */
-  } *altkeys;
+  char organization;		/* ORGANIZATION */
+  char access_mode;		/* ACCESS MODE */
+  char open_mode;		/* OPEN MODE */
+  char *file_status;		/* FILE STATUS */
+  int record_size;		/* record size */
+  unsigned char *record_data;	/* record data address */
+  union {
+    int fd;
+    FILE *fp;
+    DB *db;
+  } file;			/* file data pointer */
+  /* flags */
+  struct {
+    char optional    : 1;	/* OPTIONAL */
+    char nonexistent : 1;	/* nonexistent file */
+    char end_of_file : 1;	/* reached the end of file */
+    char read_done   : 1;	/* last READ successfully done */
+    char secondary   : 1;	/* alternative key is in use (INDEXED files) */
+  } f;
+  /* fields used in RELATIVE files */
+  int relative_index;		/* relative index */
+  /* fields used in INDEXED files */
+  DBC *cursor;
+  struct cob_key {
+    struct cob_field field;	/* key field */
+    int duplicates;		/* WITH DUPLICATES */
+    DB *db;			/* database handler */
+  } *keys;
+  int nkeys;			/* the number of keys */
 };
+
+extern void cob_open_sequential (struct cob_file_desc *f, struct cob_field name, int mode);
+extern void cob_close_sequential (struct cob_file_desc *f);
+extern void cob_read_sequential (struct cob_file_desc *p);
+extern void cob_write_sequential (struct cob_file_desc *f);
+extern void cob_write_lines (struct cob_file_desc *f, int lines);
+extern void cob_write_page (struct cob_file_desc *f);
+extern void cob_rewrite_sequential (struct cob_file_desc *f);
+
+extern void cob_open_lineseq (struct cob_file_desc *f, struct cob_field name, int mode);
+extern void cob_close_lineseq (struct cob_file_desc *f);
+extern void cob_read_lineseq (struct cob_file_desc *p);
+extern void cob_write_lineseq (struct cob_file_desc *f);
+
+
+extern void cob_open_indexed (struct cob_file_desc *f, struct cob_field name, int mode);
+extern void cob_close_indexed (struct cob_file_desc *f);
+extern void cob_read_indexed (struct cob_file_desc *f, struct cob_field k);
+extern void cob_read_next_indexed (struct cob_file_desc *f);
+extern void cob_write_indexed (struct cob_file_desc *f);
+extern void cob_rewrite_indexed (struct cob_file_desc *f);
+extern void cob_delete_indexed (struct cob_file_desc *f);
+extern void cob_start_indexed (struct cob_file_desc *f, int cond, struct cob_field k);
 
 
 /* string.c */

@@ -65,14 +65,20 @@ static int scan_picture (char *text);
 
 %}
 
-%x COMMENT_STATE PICTURE_STATE FUNCTION_STATE
+%x PICTURE_STATE FUNCTION_STATE
 
 %%
 
 %{
   if (cobc_skip_comment)
     {
-      BEGIN COMMENT_STATE;
+      int c;
+      do {
+	while ((c = input ()) != '\n');
+	if ((c = input ()) != '\n')
+	  c = input ();
+      } while (c == ' ');
+      unput (c);
       cobc_skip_comment = 0;
     }
 %}
@@ -163,10 +169,6 @@ X\"[^\"\n]*\" {
 ">="		{ return GE; }
 "**"		{ return '^'; }
 .		{ return yytext[0]; }
-
-<COMMENT_STATE>{
-  .*		{ BEGIN INITIAL; }
-}
 
 <PICTURE_STATE>{
   "IS"		{ /* ignore */ }

@@ -42,9 +42,7 @@
 #define OBSOLETE(x)	yywarn ("keyword `%s' is obsolete", x)
 
 #define push_tree(x)							\
-  do {									\
-    program_spec.exec_list = cons ((x), program_spec.exec_list);	\
-  } while (0)
+  program_spec.exec_list = cons (x, program_spec.exec_list)
 
 #define push_call_0(t)		 push_tree (make_call_0 (t))
 #define push_call_1(t,a)	 push_tree (make_call_1 (t, a))
@@ -53,7 +51,7 @@
 #define push_call_4(t,a,b,c,d)	 push_tree (make_call_4 (t, a, b, c, d))
 #define push_call_5(t,a,b,c,d,e) push_tree (make_call_5 (t, a, b, c, d, e))
 
-#define push_move(x,y)		 push_call_2 (COB_MOVE, (x), (y))
+#define push_move(x,y)		 push_call_2 (COB_MOVE, x, y)
 
 #define push_label(x)							\
   do {									\
@@ -96,6 +94,62 @@
 
 #define push_status_handler(val,st1,st2) \
   push_tree (make_if (make_cond (cobc_status, COBC_COND_EQ, val), st1, st2))
+
+struct fileio_tag {
+  int open;
+  int close;
+  int read;
+  int read_next;
+  int write;
+  int rewrite;
+  int delete;
+  int start;
+} fileio_tags[] = {
+  /* ORGANIZATION IS SEQUENTIAL */
+  {
+    COB_OPEN_SEQUENTIAL,
+    COB_CLOSE_SEQUENTIAL,
+    COB_READ_SEQUENTIAL,
+    COB_READ_SEQUENTIAL,
+    COB_WRITE_SEQUENTIAL,
+    COB_REWRITE_SEQUENTIAL,
+    0,
+    0
+  },
+  /* ORGANIZATION IS LINE SEQUENTIAL */
+  {
+    COB_OPEN_LINESEQ,
+    COB_CLOSE_LINESEQ,
+    COB_READ_LINESEQ,
+    COB_READ_LINESEQ,
+    COB_WRITE_LINESEQ,
+    0,
+    0,
+    0
+  },
+  /* ORGANIZATION IS RELATIVE */
+  {
+    COB_OPEN_RELATIVE,
+    COB_CLOSE_RELATIVE,
+    COB_READ_RELATIVE,
+    COB_READ_NEXT_RELATIVE,
+    COB_WRITE_RELATIVE,
+    COB_REWRITE_RELATIVE,
+    COB_DELETE_RELATIVE,
+    COB_START_RELATIVE,
+  },
+  /* ORGANIZATION IS INDEXED */
+  {
+    COB_OPEN_INDEXED,
+    COB_CLOSE_INDEXED,
+    COB_READ_INDEXED,
+    COB_READ_NEXT_INDEXED,
+    COB_WRITE_INDEXED,
+    COB_REWRITE_INDEXED,
+    COB_DELETE_INDEXED,
+    COB_START_INDEXED,
+  }
+};
 
 struct program_spec program_spec;
 
@@ -583,10 +637,9 @@ file_control:
 ;
 select_sequence:
 | select_sequence
-  SELECT flag_optional undefined_word ASSIGN _to select_file_name
+  SELECT flag_optional undefined_word
   {
     current_file_name = COBC_FILE_NAME (make_file_name ($4));
-    current_file_name->assign = $7;
     current_file_name->optional = $3;
     program_spec.file_name_list =
       cons (current_file_name, program_spec.file_name_list);
@@ -615,7 +668,11 @@ select_options:
 | select_options select_option
 ;
 select_option:
-  select_organization
+  ASSIGN _to select_file_name
+  {
+    current_file_name->assign = $3;
+  }
+| select_organization
   {
     current_file_name->organization = $1;
   }
@@ -665,7 +722,7 @@ select_option:
   }
 | _file STATUS _is predefined_name
   {
-    current_file_name->status = $4;
+    current_file_name->file_status = $4;
   }
 | RESERVE integer _area		{ /* ignored */ }
 ;
@@ -1491,7 +1548,10 @@ close_statement:
   {
     struct cobc_list *l;
     for (l = $2; l; l = l->next)
-      push_call_1 (COB_CLOSE, l->item);
+      {
+	struct cobc_file_name *p = l->item;
+	push_call_1 (fileio_tags[p->organization].close, l->item);
+      }
   }
 ;
 
@@ -1531,10 +1591,7 @@ delete_statement:
   DELETE file_name _record
   {
     struct cobc_file_name *p = COBC_FILE_NAME ($2);
-    if (p->organization == COB_ORG_RELATIVE)
-      push_call_2 (COB_DELETE, $2, make_index (COBC_TREE (p->key)));
-    else
-      push_call_2 (COB_DELETE, $2, cobc_int0);
+    push_call_1 (fileio_tags[p->organization].delete, $2);
   }
   opt_invalid_key
   _end_delete
@@ -1937,8 +1994,8 @@ open_option:
     for (l = $2; l; l = l->next)
       {
 	struct cobc_file_name *p = l->item;
-	push_call_3 (COB_OPEN, COBC_TREE (p), COBC_TREE (p->assign),
-		     make_integer ($1));
+	push_call_3 (fileio_tags[p->organization].open, l->item,
+		     COBC_TREE (p->assign), make_integer ($1));
       }
   }
 ;
@@ -2024,20 +2081,28 @@ read_statement:
   READ file_name flag_next _record read_into read_key
   {
     struct cobc_file_name *p = COBC_FILE_NAME ($2);
-    if ($3 == 0)
+    if ($3)
       {
-	/* READ */
-	if ($6)
-	  push_call_2 (COB_READ, $2, $6);
-	else if (p->organization == COB_ORG_RELATIVE)
-	  push_call_2 (COB_READ, $2, make_index (COBC_TREE (p->key)));
+	/* READ NEXT */
+	int tag = fileio_tags[p->organization].read_next;
+	if ($6 && p->organization != COB_ORG_INDEXED)
+	  yyerror ("KEY can be specified only with INDEXED files");
 	else
-	  push_call_2 (COB_READ, $2, cobc_int0);
+	  push_call_1 (tag, $2);
       }
     else
       {
-	/* READ NEXT */
-	push_call_1 (COB_READ_NEXT, $2);
+	/* READ */
+	int tag = fileio_tags[p->organization].read;
+	if (p->organization == COB_ORG_INDEXED)
+	  {
+	    if ($6)
+	      push_call_2 (tag, $2, $6);
+	    else
+	      push_call_2 (tag, $2, p->key);
+	  }
+	else
+	  push_call_1 (tag, $2);
       }
     if ($5)
       push_move (COBC_TREE (p->record), $5);
@@ -2073,10 +2138,7 @@ rewrite_statement:
 	struct cobc_file_name *p = COBC_FILE_NAME (file);
 	if ($3)
 	  push_move ($3, $2);
-	if (p->organization == COB_ORG_RELATIVE)
-	  push_call_2 (COB_REWRITE, file, make_index (COBC_TREE (p->key)));
-	else
-	  push_call_2 (COB_REWRITE, file, cobc_int0);
+	push_call_1 (fileio_tags[p->organization].rewrite, file);
       }
   }
   opt_invalid_key
@@ -2183,14 +2245,32 @@ start_body:
   file_name
   {
     struct cobc_file_name *p = COBC_FILE_NAME ($1);
-    if (p->organization == COB_ORG_RELATIVE)
-      push_call_3 (COB_START, $1, cobc_int0, make_index (COBC_TREE (p->key)));
+    int tag = fileio_tags[p->organization].start;
+    if (p->organization != COB_ORG_INDEXED)
+      push_call_1 (tag, $1);
     else
-      push_call_3 (COB_START, $1, cobc_int0, cobc_int0);
+      push_call_3 (tag, $1, make_integer (COB_EQ), p->key);
   }
 | file_name KEY _is operator data_name
   {
-    push_call_3 (COB_START, $1, make_integer ($4), $5);
+    struct cobc_file_name *p = COBC_FILE_NAME ($1);
+    int tag = fileio_tags[p->organization].start;
+    if (p->organization != COB_ORG_INDEXED)
+      yyerror ("KEY can be specified only with INDEXED files");
+    else
+      {
+	int cond = 0;
+	switch ($4)
+	  {
+	  case COBC_COND_EQ: cond = COB_EQ; break;
+	  case COBC_COND_LT: cond = COB_LT; break;
+	  case COBC_COND_LE: cond = COB_LE; break;
+	  case COBC_COND_GT: cond = COB_GT; break;
+	  case COBC_COND_GE: cond = COB_GE; break;
+	  case COBC_COND_NE: cond = COB_NE; break;
+	  }
+	push_call_3 (tag, $1, make_integer (cond), $5);
+      }
   }
 ;
 _end_start: | END_START ;
@@ -2368,30 +2448,27 @@ write_statement:
   {
     if ($2)
       {
-	cobc_tree f = COBC_FIELD ($2)->file;
-	struct cobc_file_name *p = COBC_FILE_NAME (f);
+	cobc_tree file = COBC_FIELD ($2)->file;
+	struct cobc_file_name *p = COBC_FILE_NAME (file);
 	/* AFTER ADVANCING */
 	if ($4 && $4->type == COBC_AFTER)
 	  {
 	    if ($4->x)
-	      push_call_2 (COB_WRITE_LINES, f, make_index ($4->x));
+	      push_call_2 (COB_WRITE_LINES, file, make_index ($4->x));
 	    else
-	      push_call_1 (COB_WRITE_PAGE, f);
+	      push_call_1 (COB_WRITE_PAGE, file);
 	  }
 	/* WRITE */
 	if ($3)
 	  push_move ($3, $2);
-	if (p->organization == COB_ORG_RELATIVE)
-	  push_call_2 (COB_WRITE, f, make_index (COBC_TREE (p->key)));
-	else
-	  push_call_2 (COB_WRITE, f, cobc_int0);
+	push_call_1 (fileio_tags[p->organization].write, file);
 	/* BEFORE ADVANCING */
 	if ($4 && $4->type == COBC_BEFORE)
 	  {
 	    if ($4->x)
-	      push_call_2 (COB_WRITE_LINES, f, make_index ($4->x));
+	      push_call_2 (COB_WRITE_LINES, file, make_index ($4->x));
 	    else
-	      push_call_1 (COB_WRITE_PAGE, f);
+	      push_call_1 (COB_WRITE_PAGE, file);
 	  }
       }
   }
@@ -2798,7 +2875,7 @@ file_name:
 record_name:
   name
   {
-    if (!COBC_FIELD ($1)->file)
+    if (!COBC_FIELD_P ($1) || !COBC_FIELD ($1)->file)
       yyerror ("`%s' not record name", tree_to_string ($1));
     $$ = $1;
   }
@@ -3407,8 +3484,8 @@ validate_file_name (struct cobc_file_name *p)
     p->assign = resolve_predefined_name (p->assign);
   if (p->key)
     p->key = resolve_predefined_name (p->key);
-  if (p->status)
-    p->status = resolve_predefined_name (p->status);
+  if (p->file_status)
+    p->file_status = resolve_predefined_name (p->file_status);
   for (l = p->alt_key_list; l; l = l->next)
     l->key = resolve_predefined_name (l->key);
 }
