@@ -2680,7 +2680,7 @@ cat >test.conf <<'_ATEOF'
 
 include "cobol2002.conf"
 binary-size: 1--8
-binary-truncate: no
+pretty-display: no
 _ATEOF
 
 

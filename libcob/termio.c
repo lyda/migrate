@@ -102,17 +102,14 @@ static void
 display (cob_field *f, FILE *fp)
 {
   if (f->attr->type == COB_TYPE_NUMERIC_BINARY
-      && !cob_current_module->flag_binary_truncate)
+      && !cob_current_module->flag_pretty_display)
     {
       static int digits[] = {1, 3, 5, 7, 10, 12, 15, 17, 19};
       cob_field_attr attr = *f->attr;
       cob_field temp = *f;
       attr.digits = digits[f->size];
       temp.attr = &attr;
-      if (cob_current_module->flag_pretty_display)
-	pretty_display_numeric (&temp, fp);
-      else
-	display_numeric (&temp, fp);
+      display_numeric (&temp, fp);
     }
   else if (COB_FIELD_IS_NUMERIC (f))
     {

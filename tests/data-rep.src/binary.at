@@ -1117,7 +1117,7 @@ AT_SETUP([BINARY: full-print])
 AT_DATA([test.conf], [
 include "cobol2002.conf"
 binary-size: 1--8
-binary-truncate: no
+pretty-display: no
 ])
 
 sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-display.cob > prog.cob
