@@ -30,7 +30,7 @@
 
 #include "cobc.h"
 
-#define yyerror cb_error
+#define pperror cb_error
 %}
 
 %union {
