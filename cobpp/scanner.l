@@ -57,20 +57,11 @@ static void set_buffer (int lineno, const char *filename, struct replacement *re
 
 %}
 
-%x COPY_STATE
+%x DIRECTIVE_STATE COPY_STATE
 
 %%
 
-<*>"*>".*		{ /* comment */ }
-
-<*>\n			{ ECHO; yylineno++; }
-
-">>"			{ return DIRECTIVE; }
-"SOURCE"		{ return SOURCE; }
-"FORMAT"		{ return FORMAT; }
-"IS"			{ return IS; }
-"FIXED"			{ return FIXED; }
-"FREE"			{ return FREE; }
+">>"			{ BEGIN DIRECTIVE_STATE; return DIRECTIVE; }
 
 "COPY"			{ BEGIN COPY_STATE; return COPY; }
 "INCLUDE"		{ BEGIN COPY_STATE; return COPY; }
@@ -112,10 +103,15 @@ static void set_buffer (int lineno, const char *filename, struct replacement *re
     }
 }
 
-. |
-[0-9A-Z_-]+ |
-\'[^\'\n]*\' |
-\"[^\"\n]*\"		{ ECHO; }
+<DIRECTIVE_STATE>{
+  \n			{ BEGIN INITIAL; unput ('\n'); }
+  "SOURCE"		{ return SOURCE; }
+  "FORMAT"		{ return FORMAT; }
+  "IS"			{ return IS; }
+  "FIXED"		{ return FIXED; }
+  "FREE"		{ return FREE; }
+  .			{ }
+}
 
 <COPY_STATE>{
   "."			{ BEGIN INITIAL; return '.'; }
@@ -138,6 +134,15 @@ static void set_buffer (int lineno, const char *filename, struct replacement *re
     return TEXT;
   }
 }
+
+<*>"*>".*		{ /* comment */ }
+
+<*>\n			{ ECHO; yylineno++; }
+
+. |
+[0-9A-Z_-]+ |
+\'[^\'\n]*\' |
+\"[^\"\n]*\"		{ ECHO; }
 
 <<EOF>> {
   yy_delete_buffer (YY_CURRENT_BUFFER);
