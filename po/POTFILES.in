@@ -12,7 +12,7 @@ cobpp/parser.y
 cobpp/scanner.l
 
 # libcob
-libcob/common.c
-libcob/move.c
-libcob/fileio.c
 libcob/call.c
+libcob/common.c
+libcob/fileio.c
+libcob/move.c
