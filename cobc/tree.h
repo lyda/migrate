@@ -150,6 +150,7 @@ struct sym
   cob_tree clone;		/* NULL if this symbol is unique
 				   otherwise, it must be further qualified */
   int times;			/* occurs times */
+  int have_occurs;
   char *picstr;			/* pointer to picture string saved or 
 				   pointer to rec_varying (files) */
   cob_tree parent;		/* pointer to parent node (level)

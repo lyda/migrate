@@ -605,7 +605,7 @@ gen_subscripted (cob_tree ref)
       output ("\tdecl\t%%eax\n");	/* subscript start at 1 */
 
       /* find the first parent var that needs subscripting */
-      while (sy->times == 1)
+      while (!sy->have_occurs)
 	sy = sy->parent;
       if (sy->len > 1)
 	{

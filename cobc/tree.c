@@ -144,6 +144,7 @@ make_symbol (char *name)
   COB_FIELD_NAME (p) = name;
   COB_FIELD_TYPE (p) = 0;
   p->times = 0;
+  p->have_occurs = 0;
   p->slack = 0;
   p->level = 0;
   p->defined = 0;
@@ -329,7 +330,7 @@ int
 is_subscripted (cob_tree x)
 {
   for (; x; x = x->parent)
-    if (x->times > 1)
+    if (x->have_occurs)
       return 1;
   return 0;
 }
@@ -339,7 +340,7 @@ count_subscripted (cob_tree x)
 {
   int n = 0;
   for (; x; x = x->parent)
-    if (x->times > 1)
+    if (x->have_occurs)
       n++;
   return n;
 }

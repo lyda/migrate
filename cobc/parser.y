@@ -845,7 +845,11 @@ opt_character: | CHARACTER ;
 /* OCCURS */
 
 occurs_clause:
-  OCCURS integer opt_times { curr_field->times = $2; }
+  OCCURS integer opt_times
+  {
+    curr_field->times = $2;
+    curr_field->have_occurs = 1;
+  }
   opt_indexed_by
 | OCCURS integer TO integer opt_times DEPENDING opt_on
   { curr_division = CDIV_INITIAL; }
@@ -853,6 +857,7 @@ occurs_clause:
   {
     curr_division = CDIV_DATA;
     curr_field->times = $4;
+    curr_field->have_occurs = 1;
     curr_field->occurs = malloc (sizeof (struct occurs));
     curr_field->occurs->min = $2;
     curr_field->occurs->max = $4;
