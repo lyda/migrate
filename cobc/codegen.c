@@ -838,44 +838,61 @@ output_move (cb_tree src, cb_tree dst)
  * INITIALIZE
  */
 
+#define INITIALIZE_NONE		0
+#define INITIALIZE_ONE		1
+#define INITIALIZE_DEFAULT	2
+#define INITIALIZE_COMPOUND	3
+
 static int
-initialize_any (struct cb_initialize *p, struct cb_field *f)
+initialize_type (struct cb_initialize *p, struct cb_field *f)
 {
   if (f->redefines)
-    return 0;
-
-  if (p->def)
-    return 1;
+    return INITIALIZE_NONE;
 
   if (p->val && f->values)
-    return 1;
+    return INITIALIZE_ONE;
 
   if (f->children)
     {
-      for (f = f->children; f; f = f->sister)
-	if (initialize_any (p, f))
-	  return 1;
+      int type = initialize_type (p, f->children);
+      if (type == INITIALIZE_ONE)
+	return INITIALIZE_COMPOUND;
+      for (f = f->children->sister; f; f = f->sister)
+	if (type != initialize_type (p, f))
+	  return INITIALIZE_COMPOUND;
+      return type;
     }
   else
     {
       cb_tree l;
       for (l = p->rep; l; l = CB_CHAIN (l))
 	if (CB_PURPOSE_INT (l) == CB_TREE_CATEGORY (f))
-	  return 1;
+	  return INITIALIZE_ONE;
     }
 
-  return 0;
+  if (p->def)
+    switch (CB_TREE_CATEGORY (f))
+      {
+      case CB_CATEGORY_NUMERIC_EDITED:
+      case CB_CATEGORY_ALPHANUMERIC_EDITED:
+      case CB_CATEGORY_NATIONAL_EDITED:
+	return INITIALIZE_ONE;
+      default:
+	return INITIALIZE_DEFAULT;
+      }
+
+  return INITIALIZE_NONE;
 }
 
 static int
-field_uniform_char (struct cb_field *f)
+initialize_uniform_char (struct cb_field *f)
 {
   if (f->children)
     {
-      int c = field_uniform_char (f->children);
+      int c = initialize_uniform_char (f->children);
       for (f = f->children->sister; f; f = f->sister)
 	if (!f->redefines)
-	  if (c != field_uniform_char (f))
+	  if (c != initialize_uniform_char (f))
 	    return -1;
       return c;
     }
@@ -907,45 +924,6 @@ output_initialize_uniform (cb_tree x, int c, int size)
 }
 
 static void
-output_initialize_value (cb_tree x)
-{
-  struct cb_field *f = cb_field (x);
-  cb_tree value = CB_VALUE (f->values);
-
-  if (CB_CONST_P (value)
-      || CB_TREE_CLASS (value) == CB_CLASS_NUMERIC
-      || CB_LITERAL (value)->all)
-    {
-      /* figurative literal, numeric literal, or ALL literal */
-      output_move (value, x);
-    }
-  else
-    {
-      /* alphanumeric literal */
-      /* We do not use output_move here because
-	 we do not want to have the value be edited. */
-      char buff[f->size];
-      char *str = CB_LITERAL (value)->data;
-      int size = CB_LITERAL (value)->size;
-      if (size >= f->size)
-	{
-	  memcpy (buff, str, f->size);
-	}
-      else
-	{
-	  memcpy (buff, str, size);
-	  memset (buff + size, ' ', f->size - size);
-	}
-      output_prefix ();
-      output ("memcpy (");
-      output_data (x);
-      output (", ");
-      output_string (buff, f->size);
-      output (", %d);\n", f->size);
-    }
-}
-
-static int
 output_initialize_one (struct cb_initialize *p, cb_tree x)
 {
   struct cb_field *f = cb_field (x);
@@ -954,8 +932,40 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
   /* initialize by value */
   if (p->val && f->values)
     {
-      output_initialize_value (x);
-      return 0;
+      struct cb_field *f = cb_field (x);
+      cb_tree value = CB_VALUE (f->values);
+
+      if (CB_CONST_P (value)
+	  || CB_TREE_CLASS (value) == CB_CLASS_NUMERIC
+	  || CB_LITERAL (value)->all)
+	{
+	  /* figurative literal, numeric literal, or ALL literal */
+	  output_move (value, x);
+	}
+      else
+	{
+	  /* alphanumeric literal */
+	  /* We do not use output_move here because
+	     we do not want to have the value be edited. */
+	  char buff[f->size];
+	  struct cb_literal *l = CB_LITERAL (value);
+	  if (l->size >= f->size)
+	    {
+	      memcpy (buff, l->data, f->size);
+	    }
+	  else
+	    {
+	      memcpy (buff, l->data, l->size);
+	      memset (buff + l->size, ' ', f->size - l->size);
+	    }
+	  output_prefix ();
+	  output ("memcpy (");
+	  output_data (x);
+	  output (", ");
+	  output_string (buff, f->size);
+	  output (", %d);\n", f->size);
+	}
+      return;
     }
 
   /* initialize replacing */
@@ -964,7 +974,7 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
       if (CB_PURPOSE_INT (l) == CB_TREE_CATEGORY (x))
 	{
 	  output_move (CB_VALUE (l), x);
-	  return 0;
+	  return;
 	}
 
   /* initialize by defualt */
@@ -973,64 +983,108 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
       {
       case CB_CATEGORY_NUMERIC_EDITED:
 	output_move (cb_zero, x);
-	return 0;
+	break;
       case CB_CATEGORY_ALPHANUMERIC_EDITED:
       case CB_CATEGORY_NATIONAL_EDITED:
 	output_move (cb_space, x);
-	return 0;
+	break;
       default:
-	{
-	  int c = field_uniform_char (f);
-	  if (c != -1)
-	    {
-	      output_initialize_uniform (x, c, f->size * f->occurs_max);
-	      return 0;
-	    }
-	  return -1;
-	}
+	break;
       }
-
-  return f->children ? -1 : 0;
 }
 
 static void
 output_initialize_compound (struct cb_initialize *p, cb_tree x)
 {
-  struct cb_field *f = cb_field (x);
+  struct cb_field *ff = cb_field (x);
+  struct cb_field *f;
 
-  for (f = f->children; f; f = f->sister)
-    if (initialize_any (p, f))
-      {
-	cb_tree c = cb_build_field_reference (f, x);
-
-	if (f->flag_occurs)
+  for (f = ff->children; f; f = f->sister)
+    {
+      int type = initialize_type (p, f);
+      cb_tree c = cb_build_field_reference (f, x);
+      switch (type)
+	{
+	case INITIALIZE_NONE:
+	  break;
+	case INITIALIZE_DEFAULT:
 	  {
-	    /* begin occurs loop */
-	    int i = f->indexes;
-	    output_line ("for (i%d = 1; i%d <= %d; i%d++)",
-			 i, i, f->occurs_max, i);
-	    output_indent ("  {");
-	    CB_REFERENCE (c)->subs = cons (cb_i[i], CB_REFERENCE (c)->subs);
-	  }
+	    struct cb_field *last_field = f;
+	    int last_char = initialize_uniform_char (f);
+	    if (last_char != -1)
+	      {
+		size_t size;
 
-	/* process output */
-	if (output_initialize_one (p, c) != 0)
-	  output_initialize_compound (p, c);
+		for (; f->sister; f = f->sister)
+		  if (!f->sister->redefines)
+		    if (initialize_type (p, f->sister) != INITIALIZE_DEFAULT
+			|| initialize_uniform_char (f->sister) != last_char)
+		      break;
 
-	if (f->flag_occurs)
-	  {
-	    /* close loop */
-	    CB_REFERENCE (c)->subs = CB_CHAIN (CB_REFERENCE (c)->subs);
-	    output_indent ("  }");
+		if (f->sister)
+		  size = f->sister->offset - last_field->offset;
+		else
+		  size = ff->offset + ff->size - last_field->offset;
+
+		if (f->flag_occurs)
+		  CB_REFERENCE (c)->subs =
+		    cons (cb_int1, CB_REFERENCE (c)->subs);
+		output_initialize_uniform (c, last_char, size);
+		break;
+	      }
+	    /* fall through */
 	  }
-      }
+	default:
+	  if (f->flag_occurs)
+	    {
+	      /* begin occurs loop */
+	      int i = f->indexes;
+	      output_line ("for (i%d = 1; i%d <= %d; i%d++)",
+			   i, i, f->occurs_max, i);
+	      output_indent ("  {");
+	      CB_REFERENCE (c)->subs = cons (cb_i[i], CB_REFERENCE (c)->subs);
+	    }
+
+	  if (type == INITIALIZE_ONE)
+	    output_initialize_one (p, c);
+	  else
+	    output_initialize_compound (p, c);
+
+	  if (f->flag_occurs)
+	    {
+	      /* close loop */
+	      CB_REFERENCE (c)->subs = CB_CHAIN (CB_REFERENCE (c)->subs);
+	      output_indent ("  }");
+	    }
+	}
+    }
 }
 
 static void
 output_initialize (struct cb_initialize *p)
 {
-  if (output_initialize_one (p, p->var) != 0)
-    output_initialize_compound (p, p->var);
+  struct cb_field *f = cb_field (p->var);
+  switch (initialize_type (p, f))
+    {
+    case INITIALIZE_NONE:
+      break;
+    case INITIALIZE_ONE:
+      output_initialize_one (p, p->var);
+      break;
+    case INITIALIZE_DEFAULT:
+      {
+	int c = initialize_uniform_char (f);
+	if (c != -1)
+	  {
+	    output_initialize_uniform (p->var, c, f->size);
+	    break;
+	  }
+	/* fall through */
+      }
+    case INITIALIZE_COMPOUND:
+      output_initialize_compound (p, p->var);
+      break;
+    }
 }
 
 
