@@ -179,7 +179,7 @@ cb_name_1 (char *s, cb_tree x)
 char *
 cb_name (cb_tree x)
 {
-  static char buff[CB_MAX_LITERAL_SIZE * 2];
+  static char buff[CB_MAX_CNAME];
   cb_name_1 (buff, x);
   return buff;
 }

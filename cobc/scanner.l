@@ -181,24 +181,32 @@ H\"[^\"\n]*\" {
 static int
 read_literal (char mark)
 {
+  static size_t size = 64;
+  static char *buff = NULL;
+
   int c;
-  char buff[CB_MAX_LITERAL_SIZE + 1];
-  char *p = buff;
+  int i = 0;
+
+  if (!buff)
+    buff = malloc (size);
 
   while ((c = input ()) != EOF)
     {
-      *p++ = c;
+      buff[i++] = c;
       if (c == mark && (c = input ()) != mark)
 	{
-	  p--;
+	  i--;
 	  unput (c);
 	  break;
 	}
-      if (p - buff > CB_MAX_LITERAL_SIZE)
-	cb_error (_("too large literal"));
+      if (i >= size)
+	{
+	  size *= 2;
+	  buff = realloc (buff, size);
+	}
     }
-  *p = 0;
-  yylval = cb_build_alphanumeric_literal (strlen (buff), buff);
+  buff[i] = 0;
+  yylval = cb_build_alphanumeric_literal (i, buff);
   SET_LOCATION (yylval);
   return LITERAL;
 }
