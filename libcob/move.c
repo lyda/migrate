@@ -387,7 +387,15 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 	    case ',':
 	      if (c == 'V' || c == cob_current_module->decimal_point)
 		{
-		  *dst = cob_current_module->decimal_point;
+		  if (c == 'V' && (*p == '.' || *p == ','))
+		    {
+		      /* When "V," or "V." is specified,
+			 enforce to use it as decimal point */
+		      *dst = *p;
+		      p += 2;
+		    }
+		  else
+		    *dst = cob_current_module->decimal_point;
 		  decimal_point = dst;
 		  break;
 		}
