@@ -85,7 +85,7 @@ NC243A.CBL     16   16    0       0       0 OK
 NC244A.CBL      6    6    0       0       0 OK
 NC245A.CBL     28   28    0       0       0 OK
 NC246A.CBL     49   49    0       0       0 OK
-NC247A.CBL     21   12    7       2       0 
+NC247A.CBL     21   20    0       1       0 OK
 NC248A.CBL     11   11    0       0       0 OK
 NC250A.CBL    115  115    0       0       0 OK
 NC251A.CBL     59   59    0       0       0 OK
@@ -96,12 +96,12 @@ NC302M.CBL    ----- test skipped -----
 NC303M.CBL    ----- test skipped -----
 NC401M.CBL    ----- test skipped -----
 --------    ----- ---- ---- ------- -------
-Total        4380 4346   16       7      11
-%           100.0 99.2  0.4     0.2     0.3
+Total        4380 4354    9       6      11
+%           100.0 99.4  0.2     0.1     0.3
 
 Number of programs:    95
 Successfully tested:   92 (96.84%)
-Successfully executed: 88 (92.63%)
+Successfully executed: 89 (93.68%)
 Test skipped:           3 ( 3.16%)
 Compile error:          0 ( 0.00%)
 Execute error:          0 ( 0.00%)

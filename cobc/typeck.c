@@ -652,6 +652,10 @@ cb_tree
 cb_build_move (cb_tree src, cb_tree dst)
 {
   validate_move (src, dst, 0);
+  if (CB_REFERENCE_P (src))
+    CB_REFERENCE (src)->type = CB_SENDING_OPERAND;
+  if (CB_REFERENCE_P (dst))
+    CB_REFERENCE (dst)->type = CB_RECEIVING_OPERAND;
   return cb_build_funcall_2 ("@move", src, dst);
 }
 

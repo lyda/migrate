@@ -1373,11 +1373,34 @@ cb_field_size (cb_tree x)
 }
 
 struct cb_field *
-cb_field_founder (struct cb_field *p)
+cb_field_founder (struct cb_field *f)
 {
-  while (p->parent)
-    p = p->parent;
-  return p;
+  while (f->parent)
+    f = f->parent;
+  return f;
+}
+
+struct cb_field *
+cb_field_varying (struct cb_field *f)
+{
+  struct cb_field *p;
+  if (f->occurs_depending)
+    return f;
+  for (f = f->children; f; f = f->sister)
+    if ((p = cb_field_varying (f)) != NULL)
+      return p;
+  return NULL;
+}
+
+/* Return 1 if P is subordinate to F */
+
+int
+cb_field_subordinate (struct cb_field *p, struct cb_field *f)
+{
+  for (p = p->parent; p; p = p->parent)
+    if (p == f)
+      return 1;
+  return 0;
 }
 
 

@@ -146,6 +146,11 @@ enum cb_usage {
   CB_USAGE_PROGRAM,
 };
 
+enum cb_operand_type {
+  CB_SENDING_OPERAND,
+  CB_RECEIVING_OPERAND
+};
+
 
 /*
  * Tree
@@ -423,7 +428,9 @@ extern void cb_validate_88_item (struct cb_field *p);
 
 extern struct cb_field *cb_field (cb_tree x);
 extern int cb_field_size (cb_tree x);
-extern struct cb_field *cb_field_founder (struct cb_field *p);
+extern struct cb_field *cb_field_founder (struct cb_field *f);
+extern struct cb_field *cb_field_varying (struct cb_field *f);
+extern int cb_field_subordinate (struct cb_field *p, struct cb_field *f);
 
 /* Index */
 
@@ -475,6 +482,7 @@ extern void finalize_file (struct cb_file *f, struct cb_field *records);
 struct cb_reference {
   struct cb_tree_common common;
   struct cb_word *word;
+  enum cb_operand_type type;
   cb_tree value;
   cb_tree subs;
   cb_tree offset;

@@ -264,7 +264,15 @@ output_size (cb_tree x)
 	  }
 	else
 	  {
-	    output ("%d", f->size);
+	    struct cb_field *p = cb_field_varying (f);
+	    if (p && (r->type == CB_SENDING_OPERAND
+		      || !cb_field_subordinate (cb_field (p->occurs_depending), f)))
+	      {
+		output ("%d + %d * ", p->offset - f->offset, p->size);
+		output_integer (p->occurs_depending);
+	      }
+	    else
+	      output ("%d", f->size);
 	  }
 	break;
       }
@@ -565,7 +573,8 @@ output_param (cb_tree x, int id)
 	struct cb_reference *r = CB_REFERENCE (x);
 	struct cb_field *f;
 
-	if (!CB_FIELD_P (r->value) || (!r->subs && !r->offset))
+	if (!CB_FIELD_P (r->value)
+	    || (!r->subs && !r->offset && !cb_field_varying (cb_field (x))))
 	  {
 	    output_param (r->value, id);
 	    return;
