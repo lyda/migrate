@@ -269,10 +269,9 @@ program_sequence:
 opt_end_program:                
         /* nothing */ { $$=0; }
         | END PROGRAM
-        { clear_symtab(); clear_offsets();
-                curr_division= CDIV_IDENT; }
-        IDSTRING
-        { curr_division = CDIV_COMMENT; $$=1; }
+        { clear_symtab(); clear_offsets(); }
+        idstring
+        { $$=1; }
         ;
 program: identification_division 
          environment_division_opt 
@@ -280,13 +279,9 @@ program: identification_division
          procedure_division_opt
         ;
 identification_division: IDENTIFICATION_TOK DIVISION '.'
+    PROGRAM_ID '.' idstring programid_opts_opt '.' 
     {
-     curr_division = CDIV_IDENT;
-    }
-    PROGRAM_ID '.' IDSTRING programid_opts_opt '.' 
-    {
-     curr_division = CINITIAL; 
-     pgm_header($7); 
+     pgm_header($6); 
      define_special_fields();
     }
     identification_division_options_opt

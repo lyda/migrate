@@ -60,7 +60,7 @@ any [!-~]
 
 word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
 
-%x IDENT_ST ENVIR_ST DATA_ST COMMENT_ST FD_ST REDEF_ST
+%x ENVIR_ST DATA_ST COMMENT_ST FD_ST REDEF_ST
 %x EXCEPTION_ST PIC_ST ID_STATE
 
 %%
@@ -70,9 +70,6 @@ word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
   extern int need_subscripts;
 
   switch (curr_division) {
-  case CDIV_IDENT:
-    BEGIN IDENT_ST;
-    break;
   case CDIV_ENVIR:
     BEGIN ENVIR_ST;
     break;
@@ -121,26 +118,6 @@ word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
     return IDSTRING;
   }
   . { /* ignore */ }
-}
-
-<IDENT_ST>{
-  [ \t\n]* { }
-  "."/[ \t\n] { 
-    return '.'; 
-  }
-
-  {word} {
-    int tok = scan_word (yytext);
-    if (tok)
-      return tok;
-
-    yylval.str = strdup (yytext);
-    return IDSTRING;
-  }
-
-  {any}   {
-    return(yytext[0]); 
-  }
 }
 
 <INITIAL,EXCEPTION_ST>{word} {

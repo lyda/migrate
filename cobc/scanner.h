@@ -22,7 +22,6 @@
 
 #include <stdio.h>
 
-#define CDIV_IDENT 	1
 #define CDIV_ENVIR 	2
 #define CDIV_DATA 	3
 #define CDIV_PROC 	4
