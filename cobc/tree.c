@@ -222,8 +222,28 @@ print_tree (cob_tree x, FILE *fp)
       }
       break;
 
-      //case cob_tag_substring:
-      //case cob_tag_expr:
+    case cob_tag_substring:
+      {
+	print_tree (SUBSTRING_VAR (x), fp);
+	fputs ("(", fp);
+	print_tree (SUBSTRING_OFFSET (x), fp);
+	fputs (":", fp);
+	if (SUBSTRING_LENGTH (x))
+	  print_tree (SUBSTRING_LENGTH (x), fp);
+	fputs (")", fp);
+      }
+      break;
+
+    case cob_tag_expr:
+      {
+	fprintf (fp, "(%c ", EXPR_OP (x));
+	print_tree (EXPR_LEFT (x), fp);
+	fputs (" ", fp);
+	print_tree (EXPR_RIGHT (x), fp);
+	fputs (")", fp);
+      }
+      break;
+
     case cob_tag_cond:
       {
 	cob_tree l = COND_LEFT (x);
