@@ -212,9 +212,6 @@ output_int32 (cobc_tree x)
 	struct cobc_field *f = field (x);
 	switch (f->usage)
 	  {
-	  case COBC_USAGE_DISPLAY:
-	    output_func_1 ("cob_to_int", x);
-	    break;
 	  case COBC_USAGE_BINARY:
 	  case COBC_USAGE_INDEX:
 	    if (f->level == 0)
@@ -237,7 +234,8 @@ output_int32 (cobc_tree x)
 	      }
 	    break;
 	  default:
-	    abort ();
+	    output_func_1 ("cob_get_int", x);
+	    break;
 	  }
 	break;
       }

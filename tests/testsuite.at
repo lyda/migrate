@@ -1,4 +1,4 @@
-AT_INIT([Definition Tests])
+AT_INIT([Standard tests])
 
 AT_TESTED([cobc])
 
