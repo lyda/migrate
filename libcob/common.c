@@ -290,7 +290,7 @@ cob_real_get_sign (cob_field *f)
     case COB_TYPE_NUMERIC_PACKED:
       {
 	unsigned char *p = f->data + f->attr->digits / 2;
-	return (*p & 0x0f) ? -1 : 1;
+	return (*p & 0x01) ? -1 : 1;
       }
     default:
       return 0;
@@ -329,9 +329,9 @@ cob_real_put_sign (cob_field *f, int sign)
       {
 	unsigned char *p = f->data + f->attr->digits / 2;
 	if (sign < 0)
-	  *p |= 0x01;
+	  *p = (*p & 0xf0) | 0x0d;
 	else
-	  *p &= 0xf0;
+	  *p = (*p & 0xf0) | 0x0c;
 	return;
       }
     default:

@@ -1,3 +1,11 @@
+2003-05-15  Keisuke Nishida  <knishida@netlab.jp>
+
+	* move.c (COPY_COMMON_REGION): Removed.
+	(store_common_region): New function.
+	(cob_display_to_int): New function.
+	(cob_binary_to_int): New function.
+	(cob_get_int): Optimized.
+
 2003-05-13  Keisuke Nishida  <knishida@netlab.jp>
 
 	* fileio.c (INITIAL_FLAGS): Set to O_BINARY when _WIN32 is defined

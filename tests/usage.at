@@ -84,8 +84,8 @@
 
 # 10) DONE
 
-# PACKED-DECIMAL dump tests
-AT_SETUP([PACKED-DECIMAL dump tests])
+# PACKED-DECIMAL dump
+AT_SETUP([PACKED-DECIMAL dump])
 
 AT_DATA([dump.c], [
 int dump (unsigned char *data)
@@ -131,16 +131,16 @@ AT_CHECK([${COMPILE} prog.cob])
 AT_CHECK([./prog], [0],
 [00303132
 99303132
-00003031
-01013031
+000c3031
+010d3031
 12303031
-12313031
+123d3031
 ])
 
 AT_CLEANUP
 
-# PACKED-DECIMAL display tests
-AT_SETUP([PACKED-DECIMAL display tests])
+# PACKED-DECIMAL display
+AT_SETUP([PACKED-DECIMAL display])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -177,8 +177,48 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
-# PACKED-DECIMAL arithmetic tests
-AT_SETUP([PACKED-DECIMAL arithmetic tests])
+# PACKED-DECIMAL move
+AT_SETUP([PACKED-DECIMAL move])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X-99          PIC 99   USAGE PACKED-DECIMAL.
+       01 X-S99         PIC S99  USAGE PACKED-DECIMAL.
+       01 X-999         PIC 999  USAGE PACKED-DECIMAL.
+       01 X-S999        PIC S999 USAGE PACKED-DECIMAL.
+       01 C-P1234       PIC 9999  VALUE 1234.
+       01 C-N1234       PIC S9999 VALUE -1234.
+       PROCEDURE        DIVISION.
+           MOVE C-P1234 TO X-99.   DISPLAY X-99.
+           MOVE C-P1234 TO X-S99.  DISPLAY X-S99.
+           MOVE C-P1234 TO X-999.  DISPLAY X-999.
+           MOVE C-P1234 TO X-S999. DISPLAY X-S999.
+           MOVE C-N1234 TO X-99.   DISPLAY X-99.
+           MOVE C-N1234 TO X-S99.  DISPLAY X-S99.
+           MOVE C-N1234 TO X-999.  DISPLAY X-999.
+           MOVE C-N1234 TO X-S999. DISPLAY X-S999.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0],
+[34
++34
+234
++234
+34
+-34
+234
+-234
+])
+
+AT_CLEANUP
+
+# PACKED-DECIMAL arithmetic
+AT_SETUP([PACKED-DECIMAL arithmetic])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.

@@ -938,7 +938,7 @@ linage_bottom:
 /* RECORDING MODE clause */
 
 recording_mode_clause:
-  RECORDING _mode WORD		{ /* ignore */ }
+  RECORDING _mode _is WORD	{ /* ignore */ }
 ;
 
 
