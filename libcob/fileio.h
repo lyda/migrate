@@ -76,6 +76,7 @@ struct cob_file {
   int organization;		/* ORGANIZATION */
   char access_mode;		/* ACCESS MODE */
   char open_mode;		/* OPEN MODE */
+  struct cob_field assign;	/* ASSIGN */
   char *file_status;		/* FILE STATUS */
   size_t record_size;		/* record size */
   unsigned char *record_data;	/* record data address */
@@ -124,7 +125,7 @@ extern char cob_dummy_status[];
 
 extern void cob_init_fileio (void);
 extern void cob_default_error_handle (struct cob_file *f);
-extern void cob_open (struct cob_file *f, struct cob_field name, int mode);
+extern void cob_open (struct cob_file *f, int mode);
 extern void cob_close (struct cob_file *f, int opt);
 extern void cob_read (struct cob_file *f, struct cob_field key);
 extern void cob_read_next (struct cob_file *f);

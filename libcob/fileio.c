@@ -853,7 +853,7 @@ static struct cob_fileio_funcs indexed_funcs = {
   } while (0)
 
 void
-cob_open (struct cob_file *f, struct cob_field name, int mode)
+cob_open (struct cob_file *f, int mode)
 {
   int was_not_exist = 0;
   char filename[FILENAME_MAX];
@@ -865,7 +865,7 @@ cob_open (struct cob_file *f, struct cob_field name, int mode)
   if (FILE_OPENED (f))
     RETURN_STATUS (COB_FILE_ALREADY_OPEN);
 
-  cob_field_to_string (name, filename);
+  cob_field_to_string (f->assign, filename);
   if ((mode == COB_OPEN_I_O || mode == COB_OPEN_EXTEND)
       && f->f.optional != 0
       && stat (filename, &st) == -1)

@@ -1,3 +1,8 @@
+2002-07-08  Keisuke Nishida  <knishida@netlab.jp>
+
+	* fileio.h (cob_file): New field `assign'.
+	* fileio.c, fileio.h (cob_open): Do not take file name.  Use `assign'.
+
 2002-07-05  Keisuke Nishida  <knishida@netlab.jp>
 
 	* screenio.c, screenio.h (cob_screen_attr): New function.
