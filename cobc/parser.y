@@ -1886,15 +1886,15 @@ replacing_item:
   }
 | ALL name_or_literal BY name_or_literal inspect_before_after_list
   {
-    $$ = make_inspect_item (INSPECT_ALL, $2, $4, $5);
+    $$ = make_inspect_item (INSPECT_ALL, $4, $2, $5);
   }
 | LEADING name_or_literal BY name_or_literal inspect_before_after_list
   {
-    $$ = make_inspect_item (INSPECT_LEADING, $2, $4, $5);
+    $$ = make_inspect_item (INSPECT_LEADING, $4, $2, $5);
   }
 | FIRST name_or_literal BY name_or_literal inspect_before_after_list
   {
-    $$ = make_inspect_item (INSPECT_FIRST, $2, $4, $5);
+    $$ = make_inspect_item (INSPECT_FIRST, $4, $2, $5);
   }
 
 /* INSPECT CONVERTING */
