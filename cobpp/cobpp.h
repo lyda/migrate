@@ -20,6 +20,8 @@
 #ifndef _COBPP_H_
 #define _COBPP_H_
 
+#include <stdio.h>
+
 #define COB_PACKAGE	"cobpp"
 #define COB_VERSION	VERSION
 #define COB_COPYRIGHT	"Copyright (C) 2001-2002 Keisuke Nishida\n"
@@ -29,14 +31,17 @@ enum cob_format {
   COB_FORMAT_FIXED
 };
 
+struct cob_path {
+  const char *dir;
+  struct cob_path *next;
+};
+
 extern int cob_tab_width;
 extern int cob_debug_flag;
 extern int cob_exit_status;
 extern enum cob_format cob_file_format;
-
-extern struct cob_include_dir {
-  const char *dir;
-  struct cob_include_dir *next;
-} *cob_include_path;
+extern struct cob_path *cob_include_path;
+extern struct cob_path *cob_depend_list;
+extern FILE *cob_depend_file;
 
 #endif /* _COBPP_H_ */

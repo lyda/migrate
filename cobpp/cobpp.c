@@ -40,7 +40,9 @@ int cob_tab_width = 8;
 int cob_debug_flag = 0;
 int cob_exit_status = 0;
 enum cob_format cob_file_format = COB_FORMAT_FREE;
-struct cob_include_dir *cob_include_path = NULL;
+struct cob_path *cob_include_path = NULL;
+struct cob_path *cob_depend_list = NULL;
+FILE *cob_depend_file = NULL;
 
 
 /*
@@ -54,7 +56,7 @@ static const char *program_name;
  * Command line
  */
 
-static char short_options[] = "hvo:FXDT:I:";
+static char short_options[] = "hvo:FXDT:I:M:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
@@ -84,6 +86,7 @@ print_usage ()
   puts ("  -D            Compile debug lines (i.e., \"D\" lines)");
   puts ("  -T <n>        Tab width (default 8)");
   puts ("  -I <path>     Add include path");
+  puts ("  -M <file>     Place dependency list into <file>");
 }
 
 static int
@@ -115,8 +118,8 @@ process_command_line (int argc, char *argv[])
 
 	case 'I':
 	  {
-	    struct cob_include_dir *path =
-	      malloc (sizeof (struct cob_include_dir));
+	    struct cob_path *path =
+	      malloc (sizeof (struct cob_path));
 	    path->dir = strdup (optarg);
 	    path->next = NULL;
 
@@ -125,7 +128,7 @@ process_command_line (int argc, char *argv[])
 	      cob_include_path = path;
 	    else
 	      {
-		struct cob_include_dir *p;
+		struct cob_path *p;
 		for (p = cob_include_path; p->next; p = p->next);
 		p->next = path;
 	      }
@@ -136,6 +139,10 @@ process_command_line (int argc, char *argv[])
 	case 'F': cob_file_format = COB_FORMAT_FIXED; break;
 	case 'D': cob_debug_flag = 1; break;
 	case 'T': cob_tab_width = atoi (optarg); break;
+	case 'M': cob_depend_file = fopen (optarg, "w");
+	  if (!cob_depend_file)
+	    perror (optarg);
+	  break;
 
 	default: print_usage (); exit (1);
 	}
@@ -176,8 +183,18 @@ main (int argc, char *argv[])
 		 argv[index]);
       open_buffer (argv[index], NULL);
     }
-
   yyparse ();
+
+  /* Output dependency list */
+  if (cob_depend_file)
+    {
+      struct cob_path *l;
+      for (l = cob_depend_list; l; l = l->next)
+	fprintf (cob_depend_file, " %s%s\n", l->dir, l->next ? " \\" : "");
+      for (l = cob_depend_list; l; l = l->next)
+	fprintf (cob_depend_file, "%s:\n", l->dir);
+      fclose (cob_depend_file);
+    }
 
   return cob_exit_status;
 }

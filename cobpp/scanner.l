@@ -173,7 +173,7 @@ open_buffer (const char *name, struct replacement *replacing)
       /* Find the copy file */
       if (name[0] != '/' && stat (name, &st) == -1)
 	{
-	  struct cob_include_dir *p;
+	  struct cob_path *p;
 	  for (p = cob_include_path; p; p = p->next)
 	    {
 	      sprintf (buff, "%s/%s", p->dir, name);
@@ -189,6 +189,22 @@ open_buffer (const char *name, struct replacement *replacing)
 		       yyfilename ? yyfilename : "<stdin>", yylineno, name);
 	      cob_exit_status = 1;
 	      return;
+	    }
+	}
+
+      /* Add to dependency list */
+      if (cob_depend_file)
+	{
+	  struct cob_path *p = malloc (sizeof (struct cob_path));
+	  p->dir = strdup (name);
+	  p->next = NULL;
+	  if (!cob_depend_list)
+	    cob_depend_list = p;
+	  else
+	    {
+	      struct cob_path *l;
+	      for (l = cob_depend_list; l->next; l = l->next);
+	      l->next = p;
 	    }
 	}
 

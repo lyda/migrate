@@ -65,7 +65,7 @@ static char cob_cc[FILENAME_MAX];		/* cc */
 static char cob_cobpp[FILENAME_MAX];		/* cobpp */
 static char cob_cflags[FILENAME_MAX];		/* -I... */
 static char cob_libadd[FILENAME_MAX];		/* -lcob */
-static char include_path[FILENAME_MAX];
+static char cobpp_flags[FILENAME_MAX];
 
 static enum format {
   format_unspecified,
@@ -111,8 +111,6 @@ init_var (char *var, const char *env, const char *def)
 static void
 init_environment (int argc, char *argv[])
 {
-  strcpy (include_path, "");
-
   /* Initialize program_name */
   program_name = strrchr (argv[0], '/');
   if (program_name)
@@ -126,6 +124,7 @@ init_environment (int argc, char *argv[])
   init_var (cob_cobpp,   "COB_COBPP",   COB_COBPP);
   init_var (cob_cflags,  "COB_CFLAGS",  COB_CFLAGS);
   init_var (cob_libadd,  "COB_LIBADD",  COB_LIBADD);
+  strcpy (cobpp_flags, "");
 }
 
 static void
@@ -144,7 +143,7 @@ cob_error (char *s, ...)
  * Command line
  */
 
-static char short_options[] = "hvECScmxgOo:FXDI:T:";
+static char short_options[] = "hvECScmxgOo:FXDT:I:M:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
@@ -190,6 +189,7 @@ print_usage ()
   puts ("  -X            Use X/Open free format");
   puts ("  -D            Compile debug lines (i.e., \"D\" lines)");
   puts ("  -I <path>     Add include (copybooks) search path");
+  puts ("  -M <file>     Place dependency list into <file>");
 #ifdef COB_DEBUG
   puts ("");
   puts ("Debug options:");
@@ -232,19 +232,13 @@ process_command_line (int argc, char *argv[])
 	case 'o': output_name = strdup (optarg); break;
 
 	case 'I':
-	  {
-	    static int first = 1;
-	    if (first)
-	      {
-		strcpy (include_path, optarg);
-		first = 0;
-	      }
-	    else
-	      {
-		strcat (include_path, ":");
-		strcat (include_path, optarg);
-	      }
-	  }
+	  strcat (cobpp_flags, " -I ");
+	  strcat (cobpp_flags, optarg);
+	  break;
+
+	case 'M':
+	  strcat (cobpp_flags, " -M ");
+	  strcat (cobpp_flags, optarg);
 	  break;
 
 	case 'X': source_format = format_free; break;
@@ -399,27 +393,19 @@ static int
 preprocess (struct filename *fn)
 {
   char buff[BUFSIZ];
-
-  sprintf (buff, "%s ", cob_cobpp);
-
-  if (strlen (include_path) > 0)
-    {
-      strcat (buff, "-I ");
-      strcat (buff, include_path);
-      strcat (buff, " ");
-    }
+  sprintf (buff, "%s%s", cob_cobpp, cobpp_flags);
 
   if (output_name || compile_level > stage_preprocess)
     {
-      strcat (buff, "-o ");
+      strcat (buff, " -o ");
       strcat (buff, fn->preprocess);
-      strcat (buff, " ");
     }
 
   if (source_format == format_unspecified)
     source_format = probe_source_format (fn->source);
 
-  strcat (buff, (source_format == format_fixed) ? "-F " : "-X ");
+  strcat (buff, (source_format == format_fixed) ? " -F" : " -X");
+  strcat (buff, " ");
   strcat (buff, fn->source);
   return system (buff);
 }
