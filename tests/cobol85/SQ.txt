@@ -58,7 +58,6 @@ SQ203A.SUB      4    4    0       0       0 OK
 SQ204A.CBL      2    2    0       0       0 OK
 SQ205A.CBL      2    2    0       0       0 OK
 SQ206A.CBL      4    4    0       0       0 OK
-SQ207M.CBL    ===== compile error =====
 SQ208M.CBL    ===== compile error =====
 SQ209M.CBL    ===== compile error =====
 SQ210M.CBL    ===== compile error =====
@@ -86,7 +85,7 @@ SQ230A.CBL      1    1    0       0       0 OK
 Total         563  500    0       6      57
 %           100.0 88.8  0.0     1.1    10.1
 
-Number of programs:    82
-Successfully executed: 77 (93.90%)
-Compile error:          5 ( 6.10%)
+Number of programs:    81
+Successfully executed: 77 (95.06%)
+Compile error:          4 ( 4.94%)
 Execute error:          0 ( 0.00%)
