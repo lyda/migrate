@@ -38,12 +38,6 @@ static struct reserved_item {
 } *reserved_table[HASH_SIZE];
 
 static struct reserved_word reserved_words[] = {
-  {"<", CONDITIONAL, LESS},
-  {"<=", CONDITIONAL, LEQ},
-  {"<>", CONDITIONAL, NEQ},
-  {"=", CONDITIONAL, EQUAL},
-  {">", CONDITIONAL, GREATER},
-  {">=", CONDITIONAL, GEQ},
   {"ACCEPT", ACCEPT, 0},
   {"ACCESS", ACCESS, 0},
   {"ADD", ADD, 0},
