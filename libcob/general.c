@@ -270,10 +270,8 @@ picCompLength (const char *pic)
 {
   int len = 0, i;
   for (i = 0; pic[i]; i++)
-    {
-      if (pic[i] == '9' || pic[i] == 'P')
-	len += pic[++i];
-    }
+    if (pic[i] == '9' || pic[i] == 'P')
+      len += pic[++i];
   return len;
 }
 
