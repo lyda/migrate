@@ -887,6 +887,10 @@ extern void cb_error_x (cb_tree x, const char *fmt, ...);
 extern void redefinition_error (cb_tree x);
 extern void undefined_error (cb_tree x);
 extern void ambiguous_error (cb_tree x);
+extern void group_error (cb_tree x, const char *clause);
+extern void level_redundant_error (cb_tree x, const char *clause);
+extern void level_require_error (cb_tree x, const char *clause);
+extern void level_except_error (cb_tree x, const char *clause);
 
 /* typeck.c */
 extern int validate_move (cb_tree src, cb_tree dst, int value_flag);

@@ -975,34 +975,6 @@ cb_resolve_redefines (struct cb_field *field, cb_tree redefines)
   return f;
 }
 
-static void
-group_error (cb_tree x, const char *clause)
-{
-  cb_error_x (x, _("group item `%s' cannot have %s clause"),
-	      cb_name (x), clause);
-}
-
-static void
-level_redundant_error (cb_tree x, const char *clause)
-{
-  cb_error_x (x, _("level %02d item `%s' cannot have %s clause"),
-	      cb_field (x)->level, cb_name (x), clause);
-}
-
-static void
-level_require_error (cb_tree x, const char *clause)
-{
-  cb_error_x (x, _("level %02d item `%s' requires %s clause"),
-	      cb_field (x)->level, cb_name (x), clause);
-}
-
-static void
-level_except_error (cb_tree x, const char *clause)
-{
-  cb_error_x (x, _("level %02d item `%s' cannot have other than %s clause"),
-	      cb_field (x)->level, cb_name (x), clause);
-}
-
 static int
 validate_field_1 (struct cb_field *f)
 {
