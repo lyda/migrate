@@ -44,7 +44,6 @@
  */
 
 enum cb_compile_level cb_compile_level = CB_LEVEL_EXECUTABLE;
-enum cb_compile_target cb_compile_target = CB_TARGET_NATIVE;
 
 struct cb_exception cb_exception_table[] = {
   {0, 0, 0},		/* CB_EC_ZERO */
@@ -194,9 +193,6 @@ static struct option long_options[] = {
   {"save-temps", no_argument, &save_temps, 1},
   {"std", required_argument, 0, '$'},
   {"conf", required_argument, 0, '&'},
-#if 0
-  {"target", required_argument, 0, 't'},
-#endif
   {"debug", no_argument, 0, 'd'},
   {"ext", required_argument, 0, 'e'},
   {"free", no_argument, (int *) &cb_source_format, CB_FORMAT_FREE},
@@ -231,31 +227,31 @@ static void
 print_usage (void)
 {
   printf ("Usage: %s [options] file...\n\n", program_name);
-  puts (_("Options:\n\
-  --help                Display this message\n\
-  --version             Display compiler version\n\
-  --verbose, -v         Display the programs invoked by the compiler\n\
-  --list-reserved       Display all reserved words\n\
-  -save-temps           Do not delete intermediate files\n\
-  -E                    Preprocess only; do not compile, assemble or link\n\
-  -C                    Translation only; convert COBOL to C\n\
-  -S                    Compile only; output assembly file\n\
-  -c                    Compile and assemble, but do not link\n\
-  -m                    Build a dynamic-linking module\n\
-  -O, -O2               Enable optimization\n\
-  -g                    Produce debugging information in the output\n\
-  -debug                Enable all run-time error checking\n\
-  -o <file>             Place the output into <file>\n\
-  -I <directory>        Add <directory> to copybook search path\n\
-  -L <directory>        Add <directory> to library search path\n\
-  -l <lib>              Search for library <lib>
-  -MT <target>          Set target file used in dependency list\n\
-  -MF <file>            Place dependency list into <file>\n\
-  -free                 Use free source format\n\
-  -fixed                Use fixed source format\n\
-  -ext=<extension>      Add file extension\n\
-\n\
-  -Wall                 Enable all warnings"));
+  puts (_("Options:\n"
+"  --help                Display this message\n"
+"  --version             Display compiler version\n"
+"  --verbose, -v         Display the programs invoked by the compiler\n"
+"  --list-reserved       Display all reserved words\n"
+"  -save-temps           Do not delete intermediate files\n"
+"  -E                    Preprocess only; do not compile, assemble or link\n"
+"  -C                    Translation only; convert COBOL to C\n"
+"  -S                    Compile only; output assembly file\n"
+"  -c                    Compile and assemble, but do not link\n"
+"  -m                    Build a dynamic-linking module\n"
+"  -O, -O2               Enable optimization\n"
+"  -g                    Produce debugging information in the output\n"
+"  -debug                Enable all run-time error checking\n"
+"  -o <file>             Place the output into <file>\n"
+"  -I <directory>        Add <directory> to copybook search path\n"
+"  -L <directory>        Add <directory> to library search path\n"
+"  -l <lib>              Search for library <lib>\n"
+"  -MT <target>          Set target file used in dependency list\n"
+"  -MF <file>            Place dependency list into <file>\n"
+"  -free                 Use free source format\n"
+"  -fixed                Use fixed source format\n"
+"  -ext=<extension>      Add file extension\n"
+"\n"
+"  -Wall                 Enable all warnings"));
 #undef CB_WARNING
 #define CB_WARNING(sig,var,name,doc)		\
   printf ("  -W%-19s %s\n", name, gettext (doc));
@@ -325,18 +321,6 @@ process_command_line (int argc, char *argv[])
 	case '&': /* -conf */
 	  if (cb_load_conf (optarg, 1) != 0)
 	    exit (1);
-	  break;
-
-	case 't': /* -target */
-	  if (strcmp (optarg, "native") == 0)
-	    cb_compile_target = CB_TARGET_NATIVE;
-	  else if (strcmp (optarg, "class") == 0)
-	    cb_compile_target = CB_TARGET_CLASS;
-	  else
-	    {
-	      fprintf (stderr, _("Invalid option -target=%s\n"), optarg);
-	      exit (1);
-	    }
 	  break;
 
 	case 'd': /* -debug */
@@ -619,45 +603,24 @@ process_translate (struct filename *fn)
   if (cb_flag_syntax_only)
     return 0;
 
-  /* translate */
-  switch (cb_compile_target)
-    {
-    case CB_TARGET_NATIVE:
-      {
-	/* open the output file */
-	yyout = fopen (fn->translate, "w");
-	if (!yyout)
-	  terminate (fn->translate);
+  /* open the output file */
+  yyout = fopen (fn->translate, "w");
+  if (!yyout)
+    terminate (fn->translate);
 
-	/* open the storage file */
-	cb_storage_file_name = malloc (strlen (fn->translate) + 3);
-	sprintf (cb_storage_file_name, "%s.h", fn->translate);
-	cb_storage_file = fopen (cb_storage_file_name, "w");
-	if (!cb_storage_file)
-	  terminate (cb_storage_file_name);
+  /* open the storage file */
+  cb_storage_file_name = malloc (strlen (fn->translate) + 3);
+  sprintf (cb_storage_file_name, "%s.h", fn->translate);
+  cb_storage_file = fopen (cb_storage_file_name, "w");
+  if (!cb_storage_file)
+    terminate (cb_storage_file_name);
 
-	/* translate to C */
-	codegen (current_program);
+  /* translate to C */
+  codegen (current_program);
 
-	/* close the files */
-	fclose (cb_storage_file);
-	fclose (yyout);
-	break;
-      }
-    case CB_TARGET_CLASS:
-      {
-	/* open the output file */
-	yyout = fopen (fn->translate, "w");
-	if (!yyout)
-	  terminate (fn->translate);
-
-	bytegen (current_program);
-
-	/* close the files */
-	fclose (yyout);
-	break;
-      }
-    }
+  /* close the files */
+  fclose (cb_storage_file);
+  fclose (yyout);
   return 0;
 }
 
@@ -682,17 +645,8 @@ static int
 process_assemble (struct filename *fn)
 {
   char buff[FILENAME_MAX];
-
-  switch (cb_compile_target)
-    {
-    case CB_TARGET_NATIVE:
-      sprintf (buff, "%s -c -o %s %s %s",
-	       cob_cc, fn->object, cob_cflags, fn->translate);
-      break;
-    case CB_TARGET_CLASS:
-      sprintf (buff, "java cobol.util.Assembler %s", fn->translate);
-      break;
-    }
+  sprintf (buff, "%s -c -o %s %s %s",
+	   cob_cc, fn->object, cob_cflags, fn->translate);
   return process (buff);
 }
 
@@ -796,9 +750,7 @@ main (int argc, char *argv[])
     }
 
   /* Link */
-  if (!cb_flag_syntax_only
-      && cb_compile_level == CB_LEVEL_EXECUTABLE
-      && cb_compile_target == CB_TARGET_NATIVE)
+  if (!cb_flag_syntax_only && cb_compile_level == CB_LEVEL_EXECUTABLE)
     if (process_link (file_list) > 0)
       goto cleanup;
 

@@ -40,12 +40,6 @@ extern enum cb_compile_level {
   CB_LEVEL_EXECUTABLE
 } cb_compile_level;
 
-/* Compile target */
-extern enum cb_compile_target {
-  CB_TARGET_NATIVE,
-  CB_TARGET_CLASS,
-} cb_compile_target;
-
 extern struct cb_exception {
   int code;			/* exception code */
   const char *name;		/* exception name */
