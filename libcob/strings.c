@@ -30,6 +30,13 @@
 #define match(s1,s2,size) \
   ((*(s1) == *(s2)) && ((size) == 1 || memcmp ((s1), (s2), (size)) == 0))
 
+static void
+fatal_error (const char *func)
+{
+  fprintf (stderr, "%s: fatal error\n", func);
+  abort ();
+}
+
 
 /*
  * INSPECT
@@ -64,9 +71,7 @@ inspect_get_region (struct cob_field var, va_list ap, int *offset, int *len)
 	  break;
 
 	default:
-	  /* fatal error */
-	  fputs ("INSPECT data broken!\n", stderr);
-	  abort ();
+	  fatal_error ("inspect_get_region");
 	}
     }
 
@@ -159,9 +164,7 @@ cob_inspect_tallying (struct cob_field var, ...)
 	  }
 
 	default:
-	  /* fatal error */
-	  fputs ("INSPECT data broken!\n", stderr);
-	  abort ();
+	  fatal_error ("cob_inspect_tallying");
 	}
     }
 
@@ -243,9 +246,7 @@ cob_inspect_replacing (struct cob_field var, ...)
 	  }
 
 	default:
-	  /* fatal error */
-	  fputs ("INSPECT data broken!\n", stderr);
-	  abort ();
+	  fatal_error ("cob_inspect_replacing");
 	}
     }
 
@@ -286,9 +287,7 @@ cob_inspect_converting (struct cob_field var, ...)
 	  }
 
 	default:
-	  /* fatal error */
-	  fputs ("INSPECT data broken!\n", stderr);
-	  abort ();
+	  fatal_error ("cob_inspect_converting");
 	}
     }
 
@@ -371,9 +370,7 @@ cob_string (struct cob_field dst, ...)
 	break;
 
       default:
-	/* fatal error */
-	fputs ("STRING data broken!\n", stderr);
-	abort ();
+	fatal_error ("cob_string");
       }
 
   cob_status = COB_STATUS_SUCCESS;
