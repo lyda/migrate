@@ -514,35 +514,6 @@ memrefat (cob_tree sy)
   return memref_buf;
 }
 
-static char *
-memrefd (cob_tree sy)
-{
-  sprintf (memref_buf, "$c_base%d+%d", pgm_segment, sy->descriptor);
-  return memref_buf;
-}
-
-/* load in cpureg ("eax","ebx"...) location for normal 
-	(file/working-storage) or linkage variable */
-static void
-load_location (cob_tree sy, char *reg)
-{
-  unsigned offset;
-  if (SYMBOL_P (sy) && sy->linkage_flg)
-    {
-      cob_tree tmp = sy;
-      while (tmp->linkage_flg == 1)
-	tmp = tmp->parent;
-      offset = sy->location - tmp->location;
-      output ("\tmovl\t%d(%%ebp), %%%s\n", tmp->linkage_flg, reg);
-      if (offset)
-	output ("\taddl\t$%d, %%%s\n", offset, reg);
-    }
-  else if (sy->sec_no == SEC_STACK)
-    output ("\tleal\t%s, %%%s\n", memref (sy), reg);
-  else
-    output ("\tmovl\t%s, %%%s\n", memref (sy), reg);
-}
-
 static void
 gen_subscripted (cob_tree ref)
 {
@@ -571,6 +542,28 @@ gen_subscripted (cob_tree ref)
       sy = sy->parent;
     }
   output ("\tpopl\t%%eax\n");	/* return offset in %eax */
+}
+
+/* load in cpureg ("eax","ebx"...) location for normal 
+	(file/working-storage) or linkage variable */
+static void
+load_location (cob_tree sy, char *reg)
+{
+  unsigned offset;
+  if (SYMBOL_P (sy) && sy->linkage_flg)
+    {
+      cob_tree tmp = sy;
+      while (tmp->linkage_flg == 1)
+	tmp = tmp->parent;
+      offset = sy->location - tmp->location;
+      output ("\tmovl\t%d(%%ebp), %%%s\n", tmp->linkage_flg, reg);
+      if (offset)
+	output ("\taddl\t$%d, %%%s\n", offset, reg);
+    }
+  else if (sy->sec_no == SEC_STACK)
+    output ("\tleal\t%s, %%%s\n", memref (sy), reg);
+  else
+    output ("\tmovl\t%s, %%%s\n", memref (sy), reg);
 }
 
 static void
@@ -706,11 +699,10 @@ gen_loaddesc1 (cob_tree sy, int variable_length)
       else
 	{
 #ifdef COB_DEBUG
-	  output ("\tmovl\t%s, %%eax\t# descriptor of [%s]\n",
-		   memrefd (var), COB_FIELD_NAME (var));
-#else
-	  output ("\tmovl\t%s, %%eax\n", memrefd (var));
+	  output ("# descriptor of [%s]\n", COB_FIELD_NAME (var));
 #endif
+	  output ("\tmovl\t$c_base%d+%d, %%eax\n",
+		  pgm_segment, var->descriptor);
 	}
     }
   push_eax ();
