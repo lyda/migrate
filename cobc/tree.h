@@ -442,13 +442,13 @@ extern int is_numeric (cobc_tree x);
 struct cobc_class {
   struct cobc_tree_common common;
   char *cname;
-  cobc_tree cond;
+  struct cobc_list *list;
 };
 
 #define COBC_CLASS(x)		(COBC_TREE_CAST (cobc_tag_class, struct cobc_class, x))
 #define COBC_CLASS_P(x)		(COBC_TREE_TAG (x) == cobc_tag_class)
 
-extern cobc_tree make_class (struct cobc_word *word, cobc_tree cond);
+extern cobc_tree make_class (struct cobc_word *word, struct cobc_list *list);
 
 
 /*

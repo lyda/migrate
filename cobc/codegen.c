@@ -31,6 +31,8 @@
 #include "codegen.h"
 #include "libcob.h"
 
+#define SWAP(x,y) { typeof (x) t = y; y = x; x = t; }
+
 static void output_tree (cobc_tree x);
 
 
@@ -666,9 +668,7 @@ output_condition (cobc_tree x)
   switch (type)
     {
     case COBC_COND_CLASS:
-      output ("%s (", (char *) r);
-      output_tree (l);
-      output (")");
+      output_func_1 ((char *) r, l);
       break;
     case COBC_COND_NOT:
       output ("!");
@@ -925,6 +925,59 @@ output_file_name (struct cobc_file_name *f)
 	      f->cname);
     }
   output ("};\n\n");
+}
+
+
+/*
+ * Class
+ */
+
+static void
+output_class (struct cobc_class *p)
+{
+  struct cobc_list *l;
+
+  output_line ("static int");
+  output_line ("%s (struct cob_field f)", p->cname);
+  output_indent ("{", 2);
+  output_line ("int i;");
+  output_line ("int size = COB_FIELD_SIZE (f);");
+  output_line ("unsigned char *data = COB_FIELD_DATA (f);");
+  output_line ("for (i = 0; i < size; i++)");
+  output_prefix ();
+  output ("  if (!(");
+  for (l = p->list; l; l = l->next)
+    {
+      cobc_tree x = l->item;
+      if (COBC_PAIR_P (x))
+	{
+	  struct cobc_pair *p = COBC_PAIR (x);
+	  char x = COBC_LITERAL (p->x)->str[0];
+	  char y = COBC_LITERAL (p->y)->str[0];
+	  if (x > y)
+	    SWAP (x, y);
+	  output ("(%d <= data[i] && data[i] <= %d)", x, y);
+	}
+      else
+	{
+	  int i;
+	  int size = COBC_LITERAL (x)->size;
+	  char *str = COBC_LITERAL (x)->str;
+	  for (i = 0; i < size; i++)
+	    {
+	      output ("data[i] == %d", str[i]);
+	      if (i + 1 < size)
+		output (" || ");
+	    }
+	}
+      if (l->next)
+	output ("  || ");
+    }
+  output ("))\n");
+  output_line ("    return 0;");
+  output_line ("return 1;");
+  output_indent ("}", -2);
+  output_newline ();
 }
 
 
@@ -1537,18 +1590,7 @@ codegen (struct program_spec *spec)
 
   /* classes */
   for (l = spec->class_list; l; l = l->next)
-    {
-      struct cobc_class *p = l->item;
-      output_line ("static int");
-      output_line ("%s (struct cob_field x)", p->cname);
-      output_indent ("{", 2);
-      output_prefix ();
-      output ("return ");
-      output_condition (p->cond);
-      output (";\n");
-      output_indent ("}", -2);
-      output_newline ();
-    }
+    output_class (l->item);
 
   /* environment */
   output_line ("static void");

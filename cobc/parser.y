@@ -215,8 +215,9 @@ static void ambiguous_error (struct cobc_word *p);
 %type <list> file_name_list,math_name_list,math_edited_name_list
 %type <list> call_item_list,call_using
 %type <list> initialize_replacing,initialize_replacing_list
-%type <tree> special_name_class_condition,special_name_class_condition_1
-%type <tree> special_name_class_literal,on_or_off,select_file_name
+%type <list> special_name_class_item_list
+%type <tree> special_name_class_item,special_name_class_literal
+%type <tree> on_or_off,select_file_name
 %type <tree> call_returning,add_to,field_description_list,value_item
 %type <tree> field_description_list_1,field_description_list_2
 %type <tree> condition,condition_2,comparative_condition,class_condition
@@ -527,29 +528,21 @@ is_are: IS | ARE ;
 /* CLASS */
 
 special_name_class:
-  CLASS undefined_word _is special_name_class_condition
+  CLASS undefined_word _is special_name_class_item_list
   {
-    program_spec.class_list = cons (make_class ($2, $4),
-				    program_spec.class_list);
+    program_spec.class_list =
+      cons (make_class ($2, $4), program_spec.class_list);
   }
 ;
-special_name_class_condition:
-  special_name_class_condition_1 { $$ = $1; }
-| special_name_class_condition
-  special_name_class_condition_1 { $$ = make_cond ($1, COBC_COND_OR, $2); }
+special_name_class_item_list:
+  special_name_class_item	{ $$ = list ($1); }
+| special_name_class_item_list
+  special_name_class_item	{ $$ = list_add ($1, $2); }
 ;
-special_name_class_condition_1:
-  special_name_class_literal
-  {
-    $$ = make_cond ($1, COBC_COND_EQ, cobc_param);
-  }
+special_name_class_item:
+  special_name_class_literal	{ $$ = $1; }
 | special_name_class_literal THRU
-  special_name_class_literal
-  {
-    $$ = make_cond (make_cond ($1, COBC_COND_LE, cobc_param),
-		    COBC_COND_AND,
-		    make_cond (cobc_param, COBC_COND_LE, $1));
-  }
+  special_name_class_literal	{ $$ = make_pair ($1, $3); }
 ;
 special_name_class_literal:
   literal

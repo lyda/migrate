@@ -785,14 +785,14 @@ is_numeric (cobc_tree x)
  */
 
 cobc_tree
-make_class (struct cobc_word *word, cobc_tree cond)
+make_class (struct cobc_word *word, struct cobc_list *list)
 {
   char name[BUFSIZ];
   struct cobc_class *p =
     make_tree (cobc_tag_class, COB_NUMERIC, sizeof (struct cobc_class));
   sprintf (name, "is_%s", to_cname (word->name));
   p->cname = strdup (name);
-  p->cond = cond;
+  p->list = list;
   set_word_item (word, COBC_TREE (p));
   return COBC_TREE (p);
 }
