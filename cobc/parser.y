@@ -535,7 +535,11 @@ assign_clause:
 	cb_build_alphanumeric_literal (CB_REFERENCE ($3)->word->name,
 				       strlen (CB_REFERENCE ($3)->word->name));
     else
-      current_file->assign = $3;
+      {
+	current_file->assign = $3;
+	current_program->reference_list =
+	  list_add (current_program->reference_list, $3);
+      }
   }
 ;
 
