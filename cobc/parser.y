@@ -1216,11 +1216,18 @@ procedure_division:
 procedure_using:
 | USING data_name_list
   {
+    struct cobc_list *l;
     if (!cobc_module_flag)
       {
 	yywarn ("compiled as a module due to USING clause");
 	yywarn ("use compiler option `-m' explicitly");
 	cobc_module_flag = 1;
+      }
+    for (l = $2; l; l = l->next)
+      {
+	struct cobc_field *p = COBC_FIELD (l->item);
+	if (p->level != 01 && p->level != 77)
+	  yyerror ("parameter must be level 01 or 77 `%s'", p->word->name);
       }
     program_spec.using_list = $2;
   }
@@ -2892,10 +2899,10 @@ level_number:
   integer
   {
     $$ = $1;
-    if ($1 < 1 || ($1 > 49 && $1 != 66 && $1 != 77 && $1 != 88))
+    if ($1 < 01 || ($1 > 49 && $1 != 66 && $1 != 77 && $1 != 88))
       {
 	yyerror ("invalid level number `%02d'", $1);
-	$$ = 1;
+	$$ = 01;
       }
   }
 ;
@@ -3285,7 +3292,7 @@ init_field (int level, cobc_tree field)
   current_field->usage = COBC_USAGE_DISPLAY;
   current_field->category = COB_ALPHANUMERIC;
 
-  if (level == 1 || level == 77)
+  if (level == 01 || level == 77)
     {
       if (last_field)
 	field_founder (last_field)->sister = current_field;
