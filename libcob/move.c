@@ -50,20 +50,6 @@
  * Display
  */
 
-static void
-finalize_display (cob_field *f)
-{
-  if (COB_FIELD_BLANK_ZERO (f))
-    {
-      int i, size = COB_FIELD_SIZE (f);
-      unsigned char *data = COB_FIELD_DATA (f);
-      for (i = 0; i < size; i++)
-	if (data[i] != '0')
-	  return;
-      memset (data, ' ', size);
-    }
-}
-
 void
 cob_move_alphanum_to_display (cob_field *f1, cob_field *f2)
 {
@@ -118,13 +104,11 @@ cob_move_alphanum_to_display (cob_field *f1, cob_field *f2)
     }
 
   cob_put_sign (f2, sign);
-  finalize_display (f2);
   return;
 
  error:
   memset (f2->data, '0', f2->size);
   cob_put_sign (f2, 0);
-  finalize_display (f2);
 }
 
 void
@@ -140,7 +124,6 @@ cob_move_display_to_display (cob_field *f1, cob_field *f2)
 
   cob_put_sign (f1, sign);
   cob_put_sign (f2, sign);
-  finalize_display (f2);
 }
 
 void
@@ -264,7 +247,6 @@ cob_move_packed_to_display (cob_field *f1, cob_field *f2)
 
   cob_put_sign (f1, sign);
   cob_put_sign (f2, sign);
-  finalize_display (f2);
 }
 
 
@@ -345,7 +327,6 @@ cob_move_binary_to_display (cob_field *f1, cob_field *f2)
 		      COB_FIELD_EXPT (f2));
 
   cob_put_sign (f2, sign);
-  finalize_display (f2);
 }
 
 

@@ -303,7 +303,7 @@ cob_decimal_set_packed (cob_decimal *d, cob_field *f)
   mpz_set_si (d->data, 0);
   while (digits > 1)
     {
-      mpz_mul_ui (d->data, d->data, 10);
+      mpz_mul_ui (d->data, d->data, 100);
       mpz_add_ui (d->data, d->data, (*p >> 4) * 10 + (*p & 0x0f));
       digits -= 2;
       p++;
@@ -311,7 +311,7 @@ cob_decimal_set_packed (cob_decimal *d, cob_field *f)
   if (digits > 0)
     {
       mpz_mul_ui (d->data, d->data, 10);
-      mpz_add_ui (d->data, d->data, (*p >> 4) * 10);
+      mpz_add_ui (d->data, d->data, (*p >> 4));
     }
 
   if (sign < 0)
