@@ -1,6 +1,6 @@
 2002-06-04  Keisuke Nishida  <knishida@netlab.jp>
 
-	* libcob.conf (ding-on-error): New variable.
+	* libcob.conf (ding-on-error): New option.
 
 2002-06-02  Keisuke Nishida  <knishida@netlab.jp>
 
