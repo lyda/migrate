@@ -1365,7 +1365,7 @@ output_call (cobc_tree name, struct cobc_list *args,
   int dynamic_link = 1;
   struct cobc_list *l;
 
-  if (cobc_flags.static_call && COBC_LITERAL_P (name))
+  if (cobc_flag_call_static && COBC_LITERAL_P (name))
     dynamic_link = 0;
 
   /* local variables */
@@ -1664,13 +1664,10 @@ output_stmt (cobc_tree x)
 	static int last_line = 0;
 	if (x->source_file && last_line != x->source_line)
 	  {
-	    if (cobc_flags.line_directive)
+	    if (cobc_flag_line_directive)
 	      output ("#line %d \"%s\"\n", x->source_line, x->source_file);
-	    if (cobc_flags.source_location)
-	      {
-		output_line ("cob_source_file = \"%s\";", x->source_file);
-		output_line ("cob_source_line = %d;", x->source_line);
-	      }
+	    output_line ("cob_source_file = \"%s\";", x->source_file);
+	    output_line ("cob_source_line = %d;", x->source_line);
 	    last_line = x->source_line;
 	  }
 	break;
@@ -2130,7 +2127,7 @@ codegen (struct cobc_program_spec *spec)
   output ("#include <string.h>\n");
   output ("#include <libcob.h>\n\n");
 
-  if (cobc_flags.main)
+  if (cobc_flag_main)
     spec->initial_program = 1;
 
   output ("#define cob_perform(id,from,until) \\\n");
@@ -2289,7 +2286,7 @@ codegen (struct cobc_program_spec *spec)
   output_newline ();
 
   /* main function */
-  if (cobc_flags.main)
+  if (cobc_flag_main)
     {
       output_line ("int");
       output_line ("main (int argc, char **argv)");

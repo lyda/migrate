@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2002 Keisuke Nishida
+ * Copyright (C) 2001-2003 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,13 +28,14 @@
 #define COBC_VERSION	PACKAGE_VERSION
 #define COBC_COPYRIGHT	"Copyright (C) 2001-2003 Keisuke Nishida\n"
 
-extern struct cobc_flags {
-  int main;		/* a main function */
-  int failsafe;		/* run-time error checking */
-  int static_call;	/* static CALL statements */
-  int source_location;	/* cob_source_file/line */
-  int line_directive;	/* line directives */
-} cobc_flags;
+/* have a main function */
+extern int cobc_flag_main;
+
+/* CALL statements are static */
+extern int cobc_flag_call_static;
+
+/* output line directives */
+extern int cobc_flag_line_directive;
 
 extern FILE *yyin;
 extern FILE *cobc_out;

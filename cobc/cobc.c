@@ -53,7 +53,9 @@ extern int yy_bison_debug;
  * Global variables
  */
 
-struct cobc_flags cobc_flags;
+int cobc_flag_main = 0;
+int cobc_flag_call_static = 0;
+int cobc_flag_line_directive = 0;
 
 FILE *cobc_out;
 
@@ -164,13 +166,13 @@ static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'V'},
   {"verbose", no_argument, 0, 'v'},
-  {"main", no_argument, &cobc_flags.main, 1},
+  {"main", no_argument, &cobc_flag_main, 1},
   {"debug", no_argument, 0, 'D'},
   {"free", no_argument, &source_format, FORMAT_FREE},
   {"fixed", no_argument, &source_format, FORMAT_FIXED},
   {"semi-fixed", no_argument, &source_format, FORMAT_SEMI_FIXED},
-  {"static", no_argument, &cobc_flags.static_call, 1},
-  {"dynamic", no_argument, &cobc_flags.static_call, 0},
+  {"static", no_argument, &cobc_flag_call_static, 1},
+  {"dynamic", no_argument, &cobc_flag_call_static, 0},
   {"save-temps", no_argument, &save_temps, 1},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
@@ -239,9 +241,6 @@ process_command_line (int argc, char *argv[])
   yy_flex_debug = 0;
   yy_bison_debug = 0;
 #endif
-  memset (&cobc_flags, 0, sizeof (struct cobc_flags));
-  cobc_flags.failsafe = 1;
-  cobc_flags.source_location = 1;
 
   /* Parse the options */
   while ((c = getopt_long_only (argc, argv, short_options,
@@ -263,13 +262,11 @@ process_command_line (int argc, char *argv[])
 	case 'o': output_name = strdup (optarg); break;
 
 	case 'g':
-	  cobc_flags.line_directive = 1;
+	  cobc_flag_line_directive = 1;
 	  strcat (cob_cflags, " -g");
 	  break;
 
 	case 'O':
-	  cobc_flags.failsafe = 0;
-	  cobc_flags.source_location = 0;
 	  break;
 
 	case '%': /* -MT */
