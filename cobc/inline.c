@@ -567,7 +567,7 @@ output_search (cobc_tree table, cobc_tree var, cobc_tree whens)
   output_index (idx);
   output ("++;\n");
   if (var && var != idx)
-    output_call_2 ("cob_add_int", var, cobc_int1);
+    output_tree (make_op_assign (var, '+', cobc_int1));
   output_line ("continue;");
   output_indent ("  }", -4);
   output_line ("break;");

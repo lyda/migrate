@@ -859,6 +859,12 @@ make_assign (cobc_tree field, cobc_tree value, int rounded)
   return COBC_TREE (p);
 }
 
+cobc_tree
+make_op_assign (cobc_tree field, char op, cobc_tree value)
+{
+  return make_assign (field, make_expr (field, op, value), 0);
+}
+
 
 /*
  * Sequence

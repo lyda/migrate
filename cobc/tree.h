@@ -558,6 +558,7 @@ struct cobc_assign {
 #define COBC_ASSIGN_P(x)	(COBC_TREE_TAG (x) == cobc_tag_assign)
 
 extern cobc_tree make_assign (cobc_tree field, cobc_tree value, int rounded);
+extern cobc_tree make_op_assign (cobc_tree field, char op, cobc_tree value);
 
 
 /*

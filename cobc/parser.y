@@ -1947,7 +1947,7 @@ perform_option:
     $$ = make_perform (COBC_PERFORM_UNTIL);
     COBC_PERFORM ($$)->test = $1;
     COBC_PERFORM ($$)->init = make_call_2 (COB_MOVE, $5, $3);
-    COBC_PERFORM ($$)->step = make_assign ($3, make_expr ($3, '+', $7), 0);
+    COBC_PERFORM ($$)->step = make_op_assign ($3, '+', $7);
     COBC_PERFORM ($$)->cond = $9;
   }
 ;
@@ -2086,13 +2086,13 @@ set_statement:
   {
     struct cobc_list *l;
     for (l = $2; l; l = l->next)
-      push_tree (make_assign (l->item, make_expr (l->item, '+', $5), 0));
+      push_tree (make_op_assign (l->item, '+', $5));
   }
 | SET data_name_list DOWN BY number
   {
     struct cobc_list *l;
     for (l = $2; l; l = l->next)
-      push_tree (make_assign (l->item, make_expr (l->item, '-', $5), 0));
+      push_tree (make_op_assign (l->item, '-', $5));
   }
 | SET condition_name_list TO TRUE
   {
