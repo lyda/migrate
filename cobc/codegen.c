@@ -624,12 +624,17 @@ output_param (cb_tree x, int id)
 		      if (p->occurs_min <= n && n <= p->occurs_max)
 			{
 			  output_prefix ();
-			  output ("cob_check_subscript_depending (");
-			  output_integer (x);
-			  output (", %d, %d, ", p->occurs_min, p->occurs_max);
+			  output ("cob_check_odo (");
 			  output_integer (p->occurs_depending);
-			  output (", \"%s\", \"%s\");\n", p->name,
+			  output (", %d, %d, \"%s\");\n",
+				  p->occurs_min, p->occurs_max,
 				  cb_field (p->occurs_depending)->name);
+			  output_prefix ();
+			  output ("cob_check_subscript (");
+			  output_integer (x);
+			  output (", %d, ", p->occurs_min);
+			  output_integer (p->occurs_depending);
+			  output (", \"%s\");\n", p->name);
 			}
 		    }
 		  else
@@ -639,7 +644,8 @@ output_param (cb_tree x, int id)
 			  output_prefix ();
 			  output ("cob_check_subscript (");
 			  output_integer (x);
-			  output (", %d, \"%s\");\n", p->occurs_max, p->name);
+			  output (", 1, %d, \"%s\");\n",
+				  p->occurs_max, p->name);
 			}
 		    }
 		  l = CB_CHAIN (l);
