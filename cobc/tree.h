@@ -600,6 +600,7 @@ enum cb_cast_type {
   CB_CAST_INTEGER,
   CB_CAST_ADDRESS,
   CB_CAST_LENGTH,
+  CB_CAST_DEREFERENCE,
 };
 
 struct cb_cast {
@@ -616,6 +617,7 @@ extern cb_tree cb_build_cast (enum cb_cast_type type, cb_tree val);
 #define cb_build_cast_integer(x)	cb_build_cast (CB_CAST_INTEGER, x)
 #define cb_build_cast_address(x)	cb_build_cast (CB_CAST_ADDRESS, x)
 #define cb_build_cast_length(x)		cb_build_cast (CB_CAST_LENGTH, x)
+#define cb_build_dereference(x)		cb_build_cast (CB_CAST_DEREFERENCE, x)
 
 
 /*
@@ -930,6 +932,7 @@ extern cb_tree cb_build_section_name (cb_tree name);
 extern cb_tree cb_build_assignment_name (cb_tree name);
 extern cb_tree cb_build_identifier (cb_tree x);
 extern cb_tree cb_build_length (cb_tree x);
+extern cb_tree cb_build_address (cb_tree x);
 extern cb_tree cb_build_using_list (cb_tree list);
 
 extern void cb_validate_program_environment (struct cb_program *prog);
@@ -1017,6 +1020,7 @@ extern void cb_emit_return (cb_tree ref, cb_tree into);
 extern void cb_emit_search (cb_tree table, cb_tree varying, cb_tree at_end, cb_tree whens);
 extern void cb_emit_search_all (cb_tree table, cb_tree at_end, cb_tree when, cb_tree stmts);
 
+extern cb_tree cb_build_set (cb_tree dst, cb_tree src);
 extern void cb_emit_set_to (cb_tree l, cb_tree x);
 extern void cb_emit_set_up_down (cb_tree l, cb_tree flag, cb_tree x);
 extern void cb_emit_set_on_off (cb_tree l, cb_tree flag);

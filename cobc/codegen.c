@@ -521,6 +521,12 @@ output_integer (cb_tree x)
 	      }
 	    return;
 
+	  case CB_USAGE_POINTER:
+	    output ("((int) ");
+	    output_data (x);
+	    output (")");
+	    return;
+
 	  case CB_USAGE_DISPLAY:
 	    if (cb_flag_runtime_inlining
 		&& f->pic->scale >= 0
@@ -663,6 +669,10 @@ output_param (cb_tree x, int id)
 	  case CB_CAST_LENGTH:
 	    output_size (p->val);
 	    break;
+	  case CB_CAST_DEREFERENCE:
+	    output ("(*(void **)");
+	    output_data (p->val);
+	    output (")");
 	  }
 	break;
       }
@@ -1262,7 +1272,7 @@ output_call (struct cb_call *p)
 	case CB_CALL_BY_CONTENT:
 	  output_prefix ();
 	  output ("unsigned char content_%d[", n);
-	  if (CB_NUMERIC_LITERAL_P (x) || CB_BINARY_OP_P (x))
+	  if (CB_NUMERIC_LITERAL_P (x) || CB_BINARY_OP_P (x) || x == cb_null)
 	    output ("4");
 	  else
 	    output_size (x);
@@ -1277,7 +1287,7 @@ output_call (struct cb_call *p)
 	{
 	case CB_CALL_BY_CONTENT:
 	  output_prefix ();
-	  if (CB_NUMERIC_LITERAL_P (x) || CB_BINARY_OP_P (x))
+	  if (CB_NUMERIC_LITERAL_P (x) || CB_BINARY_OP_P (x) || x == cb_null)
 	    {
 	      output ("*(int *)content_%d = ", n);
 	      output_integer (x);
@@ -1394,7 +1404,7 @@ output_goto (struct cb_goto *p)
       cb_tree l;
       output_prefix ();
       output ("switch (");
-      output_integer (p->depending);
+      output_param (cb_build_cast_integer (p->depending), 0);
       output (")\n");
       output_indent ("  {");
       for (l = p->target; l; l = CB_CHAIN (l))
@@ -1504,7 +1514,7 @@ output_perform (struct cb_perform *p)
     case CB_PERFORM_TIMES:
       output_prefix ();
       output ("for (n[%d] = ", loop_counter);
-      output_integer (p->data);
+      output_param (cb_build_cast_integer (p->data), 0);
       output ("; n[%d] > 0; n[%d]--)\n", loop_counter, loop_counter);
       loop_counter++;
       output_indent ("  {");
@@ -1626,9 +1636,9 @@ output_stmt (cb_tree x)
       {
 	struct cb_assign *p = CB_ASSIGN (x);
 	output_prefix ();
-	output_integer (p->var);
+	output_param (p->var, 0);
 	output (" = ");
-	output_integer (p->val);
+	output_param (p->val, 1);
 	output (";\n");
 	break;
       }
@@ -1957,6 +1967,7 @@ output_internal_function (struct cb_program *prog, int single,
 {
   int i;
   cb_tree l;
+  struct cb_field *f;
 
   /* program function */
   if (single)
@@ -1967,7 +1978,8 @@ output_internal_function (struct cb_program *prog, int single,
     {
       if (!single || l != parameter_list)
 	output (", ");
-      output ("unsigned char *b_%s", cb_field (CB_VALUE (l))->cname);
+      output ("unsigned char *%s%s",
+	      CB_PREFIX_BASE, cb_field (CB_VALUE (l))->cname);
     }
   output (")\n");
   output_indent ("{");
@@ -1995,6 +2007,17 @@ output_internal_function (struct cb_program *prog, int single,
   output_line ("cob_field f[4];");
   output_newline ();
 
+  /* linkage section */
+  for (f = prog->linkage_storage; f; f = f->sister)
+    {
+      for (l = parameter_list; l; l = CB_CHAIN (l))
+	if (f == cb_field (CB_VALUE (l)))
+	  break;
+      if (l == NULL)
+	output_line ("unsigned char *%s%s = NULL;", CB_PREFIX_BASE, f->cname);
+    }
+  output_newline ();
+
   /* files */
   if (prog->file_list)
     {
@@ -2007,7 +2030,6 @@ output_internal_function (struct cb_program *prog, int single,
   /* screens */
   if (prog->screen_storage)
     {
-      struct cb_field *f;
       output ("/* Screens */\n\n");
       for (f = prog->screen_storage; f; f = f->sister)
 	output_screen_definition (f);
@@ -2020,7 +2042,8 @@ output_internal_function (struct cb_program *prog, int single,
   /* initialization */
   output_line ("if (!initialized)");
   output_indent ("  {");
-  output_stmt (cb_build_assign (cb_return_code, cb_int0));
+  output_stmt (cb_build_assign (cb_build_cast_integer (cb_return_code),
+				cb_int0));
   output_line ("/* initialize decimal numbers */");
   output_line ("for (i = 0; i < %d; i++)", prog->decimal_index_max);
   output_line ("  cob_decimal_init (&d[i]);");

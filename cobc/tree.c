@@ -287,6 +287,10 @@ cb_tree_type (cb_tree x)
 	}
     case CB_CATEGORY_NUMERIC_EDITED:
       return COB_TYPE_NUMERIC_EDITED;
+    case CB_CATEGORY_OBJECT_REFERENCE:
+    case CB_CATEGORY_DATA_POINTER:
+    case CB_CATEGORY_PROGRAM_POINTER:
+      return COB_TYPE_POINTER;
     default:
       ABORT ();
     }
@@ -1189,6 +1193,12 @@ cb_build_binary_op (cb_tree x, char op, cb_tree y)
     {
     case '+': case '-': case '*': case '/': case '^':
       /* arithmetic operators */
+      if (CB_TREE_CLASS (x) == CB_CLASS_POINTER
+	  && CB_TREE_CLASS (y) == CB_CLASS_POINTER)
+	{
+	  category = CB_CATEGORY_DATA_POINTER;
+	  break;
+	}
       x = cb_check_numeric_value (x);
       y = cb_check_numeric_value (y);
       if (x == cb_error_node || y == cb_error_node)

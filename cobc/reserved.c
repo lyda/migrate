@@ -63,7 +63,7 @@ static struct reserved reserved_words[] = {
   {"ACCESS",		ACCESS, 0},			/* 2002 */
   {"ACTIVE-CLASS",	-1, 0},				/* 2002 */
   {"ADD",		ADD, 0},			/* 2002 */
-  {"ADDRESS",		-1, 0},				/* 2002 */
+  {"ADDRESS",		ADDRESS, 0},			/* 2002 */
   {"ADVANCING",		ADVANCING, 0},			/* 2002 */
   {"AFTER",		AFTER, 0},			/* 2002 */
   {"ALIGNED",		-1, 0},				/* 2002 */
@@ -328,7 +328,7 @@ static struct reserved reserved_words[] = {
   {"NEXT",		NEXT, 0},			/* 2002 */
   {"NO",		NO, 0},				/* 2002 */
   {"NOT",		NOT, 0},			/* 2002 */
-  {"NULL",		-1, 0},				/* 2002 */
+  {"NULL",		TOK_NULL, 0},			/* 2002 */
   {"NUMBER",		NUMBER, 0},			/* 2002 */
   {"NUMERIC",		NUMERIC, 0},			/* 2002 */
   {"NUMERIC-EDITED",	NUMERIC_EDITED, 0},		/* 2002 */

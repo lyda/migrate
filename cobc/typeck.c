@@ -443,6 +443,16 @@ cb_build_length (cb_tree x)
 }
 
 cb_tree
+cb_build_address (cb_tree x)
+{
+  if (x == cb_error_node
+      || cb_ref (x) == cb_error_node)
+    return cb_error_node;
+
+  return cb_build_cast_address (x);
+}
+
+cb_tree
 cb_build_using_list (cb_tree list)
 {
   cb_tree l;
@@ -1150,7 +1160,9 @@ cb_build_cond (cb_tree x)
 	    return cb_build_binary_op (cb_build_cond (p->x), p->op,
 				       cb_build_cond (p->y));
 	  default:
-	    if (CB_INDEX_P (p->x) || CB_INDEX_P (p->y))
+	    if (CB_INDEX_P (p->x) || CB_INDEX_P (p->y)
+		|| CB_TREE_CLASS (p->x) == CB_CLASS_POINTER
+		|| CB_TREE_CLASS (p->y) == CB_CLASS_POINTER)
 	      {
 		x = cb_build_binary_op (p->x, '-', p->y);
 	      }
@@ -1383,7 +1395,7 @@ cb_emit_call (cb_tree prog, cb_tree using, cb_tree returning,
 {
   cb_emit (cb_build_call (prog, using, on_exception, not_on_exception));
   if (returning)
-    cb_emit (cb_build_move (cb_return_code, returning));
+    cb_emit (cb_build_set (returning, cb_return_code));
 }
 
 
@@ -2116,7 +2128,8 @@ cb_build_move_num (cb_tree x, int high)
   switch (cb_field (x)->usage)
     {
     case CB_USAGE_BINARY:
-      return cb_build_assign (x, cb_int (high ? -1 : 0));
+      return cb_build_assign (cb_build_cast_integer (x),
+			      cb_int (high ? -1 : 0));
     case CB_USAGE_DISPLAY:
       return cb_build_memset (x, high ? '9' : '0');
     case CB_USAGE_PACKED:
@@ -2294,7 +2307,7 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
       int n = f->pic->scale - l->scale;
       for (; n > 0; n--) val *= 10;
       for (; n < 0; n++) val /= 10;
-      return cb_build_assign (dst, cb_int (val));
+      return cb_build_assign (cb_build_cast_integer (dst), cb_int (val));
     }
   else
     {
@@ -2357,10 +2370,7 @@ cb_build_move (cb_tree src, cb_tree dst)
   if (CB_REFERENCE_P (dst))
     CB_REFERENCE (dst)->type = CB_RECEIVING_OPERAND;
 
-  if (CB_INDEX_P (dst))
-    return cb_build_assign (dst, src);
-
-  if (CB_INDEX_P (src) || CB_BINARY_OP_P (src))
+  if (CB_BINARY_OP_P (src))
     return cb_build_funcall_2 ("cob_set_int", dst,
 			       cb_build_cast_integer (src));
 
@@ -2625,11 +2635,30 @@ cb_emit_search_all (cb_tree table, cb_tree at_end, cb_tree when, cb_tree stmts)
  * SET statement
  */
 
+cb_tree
+cb_build_set (cb_tree dst, cb_tree src)
+{
+  if (CB_INDEX_P (dst))
+    return cb_build_assign (cb_build_cast_integer (dst),
+			    cb_build_cast_integer (src));
+
+  if (CB_INDEX_P (src))
+    return cb_build_funcall_2 ("cob_set_int", dst,
+			       cb_build_cast_integer (src));
+
+  if (CB_REFERENCE_P (dst))
+    dst = cb_build_dereference (dst);
+  if (CB_REFERENCE_P (src))
+    src = cb_build_dereference (src);
+
+  return cb_build_assign (dst, src);
+}
+
 void
 cb_emit_set_to (cb_tree l, cb_tree x)
 {
   for (; l; l = CB_CHAIN (l))
-    cb_emit (cb_build_move (x, CB_VALUE (l)));
+    cb_emit (cb_build_set (CB_VALUE (l), x));
 }
 
 void

@@ -75,7 +75,7 @@ static void terminator_error (void);
 
 %token WORD LITERAL PICTURE MNEMONIC_NAME FUNCTION_NAME
 
-%token ACCEPT ADD CALL CANCEL CLOSE COMPUTE DELETE DISPLAY DIVIDE ENTRY
+%token ACCEPT ADD ADDRESS CALL CANCEL CLOSE COMPUTE DELETE DISPLAY DIVIDE ENTRY
 %token EVALUATE IF INITIALIZE INSPECT MERGE MOVE MULTIPLY OPEN PERFORM
 %token READ RELEASE RETURN REWRITE SEARCH SET SORT START STRING
 %token SUBTRACT UNSTRING WRITE WORKING_STORAGE ZERO PACKED_DECIMAL RECURSIVE
@@ -108,7 +108,7 @@ static void terminator_error (void);
 %token SELECT SENTENCE SEPARATE SEQUENCE SEQUENTIAL SIGN SIZE SIZE SORT_MERGE
 %token SOURCE_COMPUTER SPACE SPECIAL_NAMES STANDARD STANDARD_1 STANDARD_2
 %token STATUS STOP SYMBOLIC SYNCHRONIZED TALLYING TAPE TEST THAN THEN THRU
-%token TIME TIMES TO TOK_FILE TOK_INITIAL TOK_TRUE TOK_FALSE TRAILING
+%token TIME TIMES TO TOK_FILE TOK_INITIAL TOK_TRUE TOK_FALSE TOK_NULL TRAILING
 %token UNDERLINE UNIT UNTIL UP UPON USAGE USE USING VALUE VARYING WHEN WITH
 %token COMP COMP_1 COMP_2 COMP_3 COMP_4 COMP_5 COMP_X
 
@@ -203,7 +203,6 @@ configuration_section:
   configuration_list
 ;
 configuration_list:
-  configuration_paragraph
 | configuration_list configuration_paragraph
 ;
 configuration_paragraph:
@@ -1048,6 +1047,7 @@ usage:
 | DISPLAY			{ current_field->usage = CB_USAGE_DISPLAY; }
 | INDEX				{ current_field->usage = CB_USAGE_INDEX; }
 | PACKED_DECIMAL		{ current_field->usage = CB_USAGE_PACKED; }
+| POINTER			{ current_field->usage = CB_USAGE_POINTER; }
 ;
 
 
@@ -1736,6 +1736,7 @@ call_mode:
 call_returning:
   /* empty */			{ $$ = NULL; }
 | RETURNING x			{ $$ = $2; }
+| GIVING x			{ $$ = $2; }
 ;
 call_on_exception:
   /* empty */			{ $$ = cb_build_funcall_0 ("cob_call_error"); }
@@ -3194,6 +3195,7 @@ x_list:
 x:
   identifier
 | LENGTH _of identifier		{ $$ = cb_build_length ($3); }
+| ADDRESS _of identifier	{ $$ = cb_build_address ($3); }
 | literal
 | function
 ;
@@ -3268,6 +3270,7 @@ basic_literal:
 | QUOTE				{ $$ = cb_quote; }
 | HIGH_VALUE			{ $$ = cb_high; }
 | LOW_VALUE			{ $$ = cb_low; }
+| TOK_NULL			{ $$ = cb_null; }
 ;
 
 /*
