@@ -149,7 +149,7 @@ static void
 config_load (void)
 {
   FILE *fp;
-  char buff[BUFSIZ];
+  char buff[256];
   const char *filename = getenv ("COB_CONFIG_FILE");
   if (!filename)
     filename = COB_CONFIG_FILE;
@@ -158,7 +158,7 @@ config_load (void)
   if (fp == NULL)
     return;
 
-  while (fgets (buff, BUFSIZ, fp) > 0)
+  while (fgets (buff, 256, fp) > 0)
     {
       char *key, *val;
 

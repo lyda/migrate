@@ -108,7 +108,6 @@ void
 cob_accept (cob_field *f, int fd)
 {
   size_t size;
-  char buff[BUFSIZ];
 
 #ifdef HAVE_LIBREADLINE
   if (isatty (fileno (stdin)))
@@ -116,20 +115,24 @@ cob_accept (cob_field *f, int fd)
       char *p = readline ("");
       add_history (p);
       size = strlen (p);
-      memcpy (buff, p, size);
+      if (size > f->size)
+	size = f->size;
+      memcpy (f->data, p, size);
+      memset (f->data + size, ' ', f->size - size);
       free (p);
     }
   else
 #endif
     {
-      fgets (buff, BUFSIZ, stdin);
+      char buff[FILENAME_MAX];
+      fgets (buff, FILENAME_MAX, stdin);
       size = strlen (buff) - 1;
+      if (size > f->size)
+	size = f->size;
+      memcpy (f->data, buff, size);
+      memset (f->data + size, ' ', f->size - size);
     }
 
-  if (size > f->size)
-    size = f->size;
-  memcpy (f->data, buff, size);
-  memset (f->data + size, ' ', f->size - size);
 }
 
 void
@@ -176,12 +179,12 @@ void
 cob_accept_command_line (cob_field *f)
 {
   int i, size = 0;
-  char buff[BUFSIZ];
+  char buff[FILENAME_MAX];
 
   for (i = 0; i < cob_argc; i++)
     {
       int len = strlen (cob_argv[i]);
-      if (size + len >= BUFSIZ)
+      if (size + len >= FILENAME_MAX)
 	/* overflow */
 	break;
       memcpy (buff + size, cob_argv[i], len);

@@ -446,7 +446,7 @@ indexed_open (cob_file *f, char *filename, int mode)
   for (i = 0; i < f->nkeys; i++)
     {
       BTREEINFO info;
-      char name[BUFSIZ];
+      char name[FILENAME_MAX];
 
       /* file name */
       if (i == 0)
