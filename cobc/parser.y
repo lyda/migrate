@@ -165,7 +165,7 @@ static void terminator_warning (void);
 %type <tree> at_line_column column_number condition expr expr_1
 %type <tree> expr_item record_description_list label line_number literal
 %type <tree> field_name integer_label reference_or_literal basic_literal
-%type <tree> integer_value numeric_value numeric_expr
+%type <tree> integer_value numeric_value numeric_expr alphanumeric_value
 %type <tree> on_or_off opt_screen_description_list as_literal
 %type <tree> opt_with_pointer perform_option perform_procedure
 %type <tree> reference screen_description screen_description_list at_eop
@@ -1756,7 +1756,7 @@ _proceed_to: | PROCEED TO ;
 
 call_statement:
   CALL	 			{ BEGIN_STATEMENT ("CALL"); }
-  data_name call_using call_returning
+  alphanumeric_value call_using call_returning
   call_on_exception call_not_on_exception
   end_call
   {
@@ -1817,7 +1817,7 @@ cancel_statement:
   cancel_list
 ;
 cancel_list:
-| cancel_list data_name
+| cancel_list alphanumeric_value
   {
     push_funcall_1 ("cob_cancel", $2);
   }
@@ -2685,25 +2685,68 @@ set_statement:
   set_body
 ;
 set_body:
-  data_name_list TO numeric_value
+  set_to
+| set_up_down
+| set_to_true_false
+| set_to_on_off
+;
+
+/* SET name ... TO expr */
+
+set_to:
+  data_name_list TO value
   {
     struct cb_list *l;
     for (l = $1; l; l = l->next)
       push (build_move ($3, l->item));
   }
-| data_name_list UP BY numeric_value
+;
+
+/* SET name ... UP/DOWN BY expr */
+
+set_up_down:
+  data_name_list up_or_down BY numeric_value
   {
     struct cb_list *l;
     for (l = $1; l; l = l->next)
-      push (build_add (l->item, $4, 0));
+      if ($<ival>2 == 0)
+	push (build_add (l->item, $4, 0));
+      else
+	push (build_sub (l->item, $4, 0));
   }
-| data_name_list DOWN BY numeric_value
+;
+up_or_down:
+  UP				{ $<ival>$ = 0; }
+| DOWN				{ $<ival>$ = 1; }
+;
+
+/* SET mnemonic-name-1 ... TO ON/OFF */
+
+set_to_on_off:
+  set_to_on_off_1
+| set_to_on_off set_to_on_off_1
+;
+set_to_on_off_1:
+  mnemonic_name_list TO on_or_off
   {
     struct cb_list *l;
     for (l = $1; l; l = l->next)
-      push (build_sub (l->item, $4, 0));
+      {
+	int id = builtin_switch_id (cb_ref (l->item));
+	if (id != -1)
+	  push (build_move ($3, cb_switch[id]));
+      }
   }
-| data_name_list TO TOK_TRUE
+;
+
+/* SET condition-name-1 ... TO TRUE/FALSE */
+
+set_to_true_false:
+  set_to_true_false_1
+| set_to_true_false set_to_true_false_1
+;
+set_to_true_false_1:
+  data_name_list TO TOK_TRUE
   {
     struct cb_list *l;
     for (l = $1; l; l = l->next)
@@ -2715,23 +2758,6 @@ set_body:
 	  push (build_move (CB_PARAMETER (value)->x, l->item));
 	else
 	  push (build_move (value, l->item));
-      }
-  }
-| set_on_off_list
-;
-set_on_off_list:
-  set_on_off
-| set_on_off_list set_on_off
-;
-set_on_off:
-  mnemonic_name_list TO on_or_off
-  {
-    struct cb_list *l;
-    for (l = $1; l; l = l->next)
-      {
-	int id = builtin_switch_id (cb_ref (l->item));
-	if (id != -1)
-	  push (build_move ($3, cb_switch[id]));
       }
   }
 ;
@@ -3661,7 +3687,7 @@ data_name:
       $$ = $1;
     else
       {
-	cb_error_x ($1, _("`%s' not identifier"), tree_name ($1));
+	cb_error_x ($1, _("identifier is expected `%s'"), tree_name ($1));
 	$$ = cb_error_node;
       }
   }
@@ -3779,6 +3805,18 @@ undefined_word:
 /*******************
  * Values
  *******************/
+
+/* Alphanumeric value */
+
+alphanumeric_value:
+  value
+  {
+    if (CB_TREE_CLASS ($1) != COB_TYPE_ALPHABETIC
+	&& CB_TREE_CLASS ($1) != COB_TYPE_ALPHANUMERIC)
+      cb_error_x ($1, _("alphanumeric value is expected `%s'"), tree_name ($1));
+    $$ = $1;
+  }
+;
 
 /* Numeric value */
 
