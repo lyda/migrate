@@ -225,6 +225,8 @@ cob_move_display_to_packed (cob_field *f1, cob_field *f2)
 
   cob_put_sign (f1, sign);
   cob_put_sign (f2, sign);
+  if (!COB_FIELD_HAVE_SIGN (f2))
+    data2[digits2 / 2] |= 0x0f;
 }
 
 static void
