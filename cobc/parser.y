@@ -89,8 +89,8 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %right OF
 
 %token <str>  ID_TOK
-%token <tree> INTEGER_TOK,NUMBER_TOK,STRING_TOK,SYMBOL_TOK,PICTURE_TOK
-%token <tree> SPECIAL_TOK,CLASS_TOK,VARIABLE,VARCOND,SUBSCVAR
+%token <tree> INTEGER_LITERAL,NUMERIC_LITERAL,NONNUMERIC_LITERAL,SYMBOL_TOK
+%token <tree> SPECIAL_TOK,CLASS_TOK,VARIABLE,VARCOND,SUBSCVAR,PICTURE_TOK
 
 %token EQUAL,GREATER,LESS,GE,LE,COMMAND_LINE,ENVIRONMENT_VARIABLE,ALPHABET
 %token DATE,DAY,DAY_OF_WEEK,TIME,INKEY,READ,WRITE,OBJECT_COMPUTER,INPUT_OUTPUT
@@ -342,7 +342,7 @@ off_status_is_name:
 /* ALPHABET */
 
 special_name_alphabet:
-  ALPHABET idstring opt_is alphabet_name
+  ALPHABET SYMBOL_TOK opt_is alphabet_name
   {
     yywarn ("ALPHABET name is ignored");
   }
@@ -362,12 +362,12 @@ alphabet_literal:
   literal alphabet_literal_option { }
 ;
 alphabet_literal_option:
-  THRU literal
+| THRU literal
 | also_literal_list
 ;
 also_literal_list:
-  ALSO literal
-| also_literal_list ALSO literal
+  ALSO without_all_literal
+| also_literal_list ALSO without_all_literal
 ;
 
 
@@ -385,17 +385,17 @@ special_name_class_options:
 | special_name_class_options special_name_class_option
 ;
 special_name_class_option:
-  STRING_TOK opt_through_literal { }
+  NONNUMERIC_LITERAL opt_through_literal { }
 ;
 opt_through_literal:
-| THRU STRING_TOK
+| THRU NONNUMERIC_LITERAL
 ;
 
 
 /* CURRENCY */
 
 special_name_currency:
-  CURRENCY opt_sign opt_is STRING_TOK
+  CURRENCY opt_sign opt_is NONNUMERIC_LITERAL
   {
     currency_symbol = COB_FIELD_NAME ($4)[0];
   }
@@ -1282,7 +1282,7 @@ label:
   }
 ;
 label_name:
-  INTEGER_TOK		{ $$ = install_label (COB_FIELD_NAME ($1)); }
+  INTEGER_LITERAL		{ $$ = install_label (COB_FIELD_NAME ($1)); }
 | SYMBOL_TOK		{ $$ = $1; }
 ;
 in_of: IN | OF ;
@@ -1377,7 +1377,7 @@ accept_options:
 | FROM TIME			{ gen_accept_from_time($<tree>-1); }
 | FROM INKEY			{ gen_accept_from_inkey($<tree>-1); }
 | FROM COMMAND_LINE		{ gen_accept_from_cmdline($<tree>-1); }
-| FROM ENVIRONMENT_VARIABLE STRING_TOK
+| FROM ENVIRONMENT_VARIABLE NONNUMERIC_LITERAL
   {
     save_literal($3, 'X');
     gen_accept_env_var($<tree>-1, $3);
@@ -2524,7 +2524,7 @@ opt_end_start: | END_START ;
 
 stoprun_statement:
   STOP RUN			{ gen_stoprun (); }
-| STOP STRING_TOK			{ yywarn ("STOP \"name\" is obsolete"); }
+| STOP NONNUMERIC_LITERAL			{ yywarn ("STOP \"name\" is obsolete"); }
 ;
 
 
@@ -2789,6 +2789,7 @@ condition_1:
 condition_2:
   condition_1			{ $$ = $1; }
 | unsafe_expr opt_is		{ $$ = make_opt_cond ($<tree>-1, -1, $1); }
+| NOT unsafe_expr opt_is	{ $$ = make_opt_cond ($<tree>-1, -1, $2); }
 | operator unsafe_expr		{ $$ = make_opt_cond ($<tree>-1, $1, $2); }
 ;
 
@@ -2975,7 +2976,7 @@ number:
 ;
 
 integer:
-  INTEGER_TOK
+  INTEGER_LITERAL
   {
     char *s = COB_FIELD_NAME ($1);
     $$ = 0;
@@ -3037,11 +3038,11 @@ special_literal:
 ;
 literal:
   nliteral			{ $$ = $1; }
-| STRING_TOK			{ $$ = save_literal ($1, 'X'); }
+| NONNUMERIC_LITERAL			{ $$ = save_literal ($1, 'X'); }
 ;
 nliteral:
-  INTEGER_TOK			{ $$ = save_literal ($1, '9'); }
-| NUMBER_TOK			{ $$ = save_literal ($1, '9'); }
+  INTEGER_LITERAL			{ $$ = save_literal ($1, '9'); }
+| NUMERIC_LITERAL			{ $$ = save_literal ($1, '9'); }
 ;
 
 
@@ -3192,10 +3193,16 @@ static cob_tree
 make_opt_cond (cob_tree last, int type, cob_tree this)
 {
  again:
+  if (COND_TYPE (last) == COND_NOT)
+    {
+      COND_LEFT (last) = make_opt_cond (COND_LEFT (last), type, this);
+      return last;
+    }
+
   if (COND_IS_UNARY (last))
     {
       yyerror ("broken condition");
-      return this; /* error recovery */
+      return last; /* error recovery */
     }
 
   if (COND_TYPE (last) == COND_AND || COND_TYPE (last) == COND_OR)

@@ -114,7 +114,7 @@ X\"[^\"\n]*\" {
   /* integer literal */
   SAVE_YYTEXT;
   yylval.tree = install_literal (yytext);
-  return INTEGER_TOK;
+  return INTEGER_LITERAL;
 }
 
 [+-]?[0-9]*[.,]?[0-9]+ {
@@ -128,7 +128,7 @@ X\"[^\"\n]*\" {
     invert_literal_sign (yylval.tree);
   if (strchr (yytext, decimal_comma ? '.' : ','))
     yyerror ("wrong decimal point character in numeric literal");
-  return NUMBER_TOK;
+  return NUMERIC_LITERAL;
 }
 
 [A-Z0-9]([A-Z0-9$-]*[A-Z0-9]+)? {
@@ -202,7 +202,7 @@ read_literal (char mark)
     }
   *p = 0;
   yylval.tree = install_literal (buff);
-  return STRING_TOK;
+  return NONNUMERIC_LITERAL;
 }
 
 static int
@@ -235,14 +235,14 @@ scan_x (char *text)
   if (high)
     {
       yylval.tree = install_literal (dst);
-      return STRING_TOK;
+      return NONNUMERIC_LITERAL;
     }
   else
     {
     error:
       yyerror ("invalid X literal: %s", text);
       yylval.tree = install_literal (dst);
-      return STRING_TOK;
+      return NONNUMERIC_LITERAL;
     }
 }
 
