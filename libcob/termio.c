@@ -27,13 +27,6 @@
 #include "move.h"
 #include "termio.h"
 
-#ifdef HAVE_READLINE_READLINE_H
-#include <readline/readline.h>
-#endif
-#ifdef HAVE_READLINE_HISTORY_H
-#include <readline/history.h>
-#endif
-
 void
 cob_init_termio (void)
 {
@@ -103,31 +96,13 @@ void
 cob_accept (cob_field *f)
 {
   size_t size;
-
-#ifdef HAVE_LIBREADLINE
-  if (isatty (fileno (stdin)))
-    {
-      char *p = readline ("");
-      add_history (p);
-      size = strlen (p);
-      if (size > f->size)
-	size = f->size;
-      memcpy (f->data, p, size);
-      memset (f->data + size, ' ', f->size - size);
-      free (p);
-    }
-  else
-#endif
-    {
-      char buff[FILENAME_MAX];
-      fgets (buff, FILENAME_MAX, stdin);
-      size = strlen (buff) - 1;
-      if (size > f->size)
-	size = f->size;
-      memcpy (f->data, buff, size);
-      memset (f->data + size, ' ', f->size - size);
-    }
-
+  char buff[FILENAME_MAX];
+  fgets (buff, FILENAME_MAX, stdin);
+  size = strlen (buff) - 1;
+  if (size > f->size)
+    size = f->size;
+  memcpy (f->data, buff, size);
+  memset (f->data + size, ' ', f->size - size);
 }
 
 void
