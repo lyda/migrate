@@ -1679,11 +1679,11 @@ multiply_statement:
 multiply_body:
   number BY var_list_name opt_on_size_error
   {
-    gen_multiply1($3, $1, $4);
+    gen_multiply1 ($3, $1, $4);
   }
 | number BY number GIVING var_list_name opt_on_size_error
   {
-    gen_multiply2($5, $1, $3, $6);
+    gen_multiply_giving ($1, $3, $5, $6);
   }
 ;
 opt_end_multiply: | END_MULTIPLY ;
@@ -2589,13 +2589,13 @@ opt_on_size_error:
 | on_size_error			{ $$ = $1; }
 ;
 on_size_error:
-  NOT opt_on SIZE error_sentence
-  {
-    $$=math_on_size_error4($4, 2);
-  }
-| opt_on SIZE error_sentence
+  opt_on SIZE error_sentence
   {
     $$=math_on_size_error4($3, 1);
+  }
+| NOT opt_on SIZE error_sentence
+  {
+    $$=math_on_size_error4($4, 2);
   }
 | opt_on SIZE error_sentence
   NOT opt_on SIZE

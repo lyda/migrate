@@ -3065,8 +3065,8 @@ gen_multiply1 (struct math_var *vl1, cob_tree sy1, struct math_ose *ose)
 }
 
 void
-gen_multiply2 (struct math_var *vl1, cob_tree sy1, cob_tree sy2,
-	       struct math_ose *ose)
+gen_multiply_giving (cob_tree sy1, cob_tree sy2, struct math_var *vl1,
+		     struct math_ose *ose)
 {
   if (ose)
     gen_dstlabel (ose->lbl4);

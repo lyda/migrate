@@ -165,7 +165,7 @@ extern void gen_add2 (cob_tree_list vl1, struct math_var *vl2, struct math_ose *
 extern void gen_subtract1 (cob_tree_list vl1, struct math_var *vl2, struct math_ose *v1);
 extern void gen_subtract2 (cob_tree_list vl1, struct math_var *vl2, cob_tree sy1, struct math_ose *v1);
 extern void gen_multiply1 (struct math_var *vl1, cob_tree sy1, struct math_ose *v1);
-extern void gen_multiply2 (struct math_var *vl1, cob_tree sy1, cob_tree sy2, struct math_ose *v1);
+extern void gen_multiply_giving (cob_tree sy1, cob_tree sy2, struct math_var *vl1, struct math_ose *v1);
 extern void gen_divide1 (struct math_var *vl1, cob_tree sy1, struct math_ose *v1);
 extern void gen_divide2 (struct math_var *vl1, cob_tree sy1, cob_tree sy2, struct math_ose *v1);
 extern void gen_store_fnres (cob_tree sy);
