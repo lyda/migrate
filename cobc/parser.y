@@ -3146,7 +3146,7 @@ expr_1:
       cobc_tree value;
     } stack[list_length ($1)];
 
-    int reduce (int prio)
+    static int reduce (int prio)
       {
 	while (i >= 2 && stack[i-2].token != VALUE && stack[i-2].prio <= prio)
 	  {
@@ -3221,7 +3221,7 @@ expr_1:
 	return 0;
       }
 
-    int shift (int prio, int token, cobc_tree value)
+    static int shift (int prio, int token, cobc_tree value)
       {
 	if (prio > 0)
 	  if (reduce (prio) == -1)
