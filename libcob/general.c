@@ -28,6 +28,7 @@
 #include "_libcob.h"
 
 int cob_status;
+int cob_status_register;
 int decimal_comma = 0;
 unsigned char cCurrencySymbol = '$';
 
