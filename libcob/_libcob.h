@@ -76,6 +76,13 @@
 #define INSPECT_BEFORE      	6
 #define INSPECT_AFTER      	7
 
+/* string options */
+#define STRING_END		0
+#define STRING_CONCATENATE	1
+#define STRING_DELIMITED_NAME	2
+#define STRING_DELIMITED_SIZE	3
+#define STRING_WITH_POINTER	4
+
 /* screen attributes */
 #define SCR_BLANK_WHEN_ZERO  0x00000001
 #define SCR_HIGHLIGHT        0x00000002

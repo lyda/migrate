@@ -21,7 +21,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 571
+%expect 583
 
 %{
 #define yydebug		cob_trace_parser
@@ -64,10 +64,9 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
   int ival;
   char *str;
   struct cob_picture *pic;
-  struct inspect_item *insp;
+  struct inspect_item *insi;
   struct call_parameter *para;
   struct coord_pair pval; /* lin,col */
-  struct string_from *sfval; /* variable list in string statement */
   struct unstring_delimited *udval;
   struct unstring_destinations *udstval;
   struct scr_info *sival;
@@ -150,7 +149,6 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <mval> numeric_variable_list,numeric_edited_variable_list
 %type <pfval> perform_after
 %type <pfvals> opt_perform_after
-%type <sfval> string_from_list,string_from
 %type <sival> screen_clauses
 %type <snval> sort_file_list,sort_input,sort_output
 %type <str> idstring
@@ -164,8 +162,8 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <tree> evaluate_object,evaluate_object_1,assign_clause
 %type <tree> call_returning,screen_to_name,var_or_lit,opt_add_to
 %type <tree> sort_keys,opt_perform_thru
-%type <tree> opt_read_key,file_name,string_with_pointer
-%type <tree> variable,sort_range,name_or_lit,name_or_literal,delimited_by
+%type <tree> opt_read_key,file_name,string_pointer
+%type <tree> variable,sort_range,name_or_lit,name_or_literal
 %type <tree> indexed_variable,search_opt_varying,opt_key_is
 %type <tree> from_rec_varying,to_rec_varying
 %type <tree> literal,gliteral,without_all_literal,all_literal,special_literal
@@ -174,7 +172,8 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <tree> search_all_when_conditional
 %type <list> inspect_tallying,inspect_replacing,inspect_converting
 %type <list> tallying_list,replacing_list,inspect_before_after_list
-%type <insp> tallying_item,replacing_item,inspect_before_after
+%type <insi> tallying_item,replacing_item,inspect_before_after
+%type <list> string_list,string_delimited_list,string_name_list
 %type <udstval> unstring_destinations,unstring_dest_var
 %type <udval> unstring_delimited_vars,unstring_delimited
 
@@ -2582,7 +2581,7 @@ opt_end_start: | END_START ;
 
 stoprun_statement:
   STOP RUN			{ gen_stoprun (); }
-| STOP NONNUMERIC_LITERAL			{ yywarn ("STOP \"name\" is obsolete"); }
+| STOP NONNUMERIC_LITERAL	{ yywarn ("STOP \"name\" is obsolete"); }
 ;
 
 
@@ -2591,27 +2590,44 @@ stoprun_statement:
  */
 
 string_statement:
-  STRING string_from_list INTO name string_with_pointer
+  STRING string_list INTO name string_pointer
   {
-    gen_string( $2, $4, $5 );
+    if ($5)
+      $2 = cons (make_string_item (STRING_WITH_POINTER, $5), $2);
+    gen_string ($4, $2);
   }
   opt_on_overflow
   opt_end_string
 ;
-string_from_list:
-  string_from			{ $$ = $1; }
-| string_from_list string_from	{ $2->next = $1; $$ = $2; }
-| error				{ yyerror ("variable expected"); }
+string_list:
+  string_delimited_list			{ $$ = $1; }
+| string_list string_delimited_list	{ $$ = list_append ($1, $2); }
 ;
-string_from:
-  gname				{ $$ = alloc_string_from ($1, NULL); }
-| gname DELIMITED opt_by delimited_by { $$ = alloc_string_from ($1, $4); }
+string_delimited_list:
+  string_name_list
+  {
+    $$ = $1;
+  }
+| string_name_list DELIMITED opt_by gname
+  {
+    $$ = cons (make_string_item (STRING_DELIMITED_NAME, $4), $1);
+  }
+| string_name_list DELIMITED opt_by SIZE
+  {
+    $$ = cons (make_string_item (STRING_DELIMITED_SIZE, 0), $1);
+  }
 ;
-delimited_by:
-  SIZE				{ $$ = NULL; }
-| gname				{ $$ = $1; }
+string_name_list:
+  gname
+  {
+    $$ = make_list (make_string_item (STRING_CONCATENATE, $1));
+  }
+| string_name_list gname
+  {
+    $$ = list_add ($1, make_string_item (STRING_CONCATENATE, $2));
+  }
 ;
-string_with_pointer:
+string_pointer:
   /* nothing */			{ $$ = NULL; }
 | opt_with POINTER name		{ $$ = $3; }
 ;
@@ -2648,9 +2664,9 @@ opt_end_subtract: | END_SUBTRACT ;
 
 unstring_statement:
   UNSTRING name unstring_delimited
-  INTO unstring_destinations string_with_pointer unstring_tallying
+  INTO unstring_destinations string_pointer unstring_tallying
   {
-    gen_unstring( $2, $3, $5, $6, $7 );
+    gen_unstring ($2, $3, $5, $6, $7);
   }
   opt_on_overflow
   opt_end_unstring
@@ -3100,11 +3116,11 @@ special_literal:
 ;
 literal:
   nliteral			{ $$ = $1; }
-| NONNUMERIC_LITERAL			{ $$ = save_literal ($1, 'X'); }
+| NONNUMERIC_LITERAL		{ $$ = save_literal ($1, 'X'); }
 ;
 nliteral:
-  INTEGER_LITERAL			{ $$ = save_literal ($1, '9'); }
-| NUMERIC_LITERAL			{ $$ = save_literal ($1, '9'); }
+  INTEGER_LITERAL		{ $$ = save_literal ($1, '9'); }
+| NUMERIC_LITERAL		{ $$ = save_literal ($1, '9'); }
 ;
 
 

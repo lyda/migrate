@@ -67,6 +67,19 @@ list_append (cob_tree_list l1, cob_tree_list l2)
     }
 }
 
+cob_tree_list
+list_reverse (cob_tree_list l)
+{
+  cob_tree_list next, last = NULL;
+  for (; l; l = next)
+    {
+      next = l->next;
+      l->next = last;
+      last = l;
+    }
+  return last;
+}
+
 int
 list_length (cob_tree_list l)
 {
@@ -274,6 +287,15 @@ make_inspect_item (int type, cob_tree sy1, cob_tree sy2, cob_tree_list list)
   p->sy1  = sy1;
   p->sy2  = sy2;
   p->list = list;
+  return p;
+}
+
+struct string_item *
+make_string_item (int type, cob_tree sy)
+{
+  struct string_item *p = malloc (sizeof (struct string_item));
+  p->type = type;
+  p->sy   = sy;
   return p;
 }
 

@@ -28,6 +28,9 @@
 
 #include "_libcob.h"
 
+#define MIN(x,y) ({int _x = (x), _y = (y); (_x < _y) ? _x : _y; })
+#define MAX(x,y) ({int _x = (x), _y = (y); (_x > _y) ? _x : _y; })
+
 #define match(s1,s2,size) \
   ((*(s1) == *(s2)) && ((size) == 1 || memcmp ((s1), (s2), (size)) == 0))
 
@@ -356,11 +359,21 @@ cob_inspect_converting (struct cob_field var, ...)
  * STRING
  */
 
+static void
+set_pointer (struct cob_field f, int n)
+{
+  int saved_status = cob_status;
+  cob_status = COB_STATUS_SUCCESS;
+  cob_push_int (n);
+  cob_set (f, 0);
+  cob_status = saved_status;
+}
+
 int
 cob_string (struct cob_field dst, ...)
 {
   int i, type, offset = 0;
-  struct cob_field dlm, src;
+  struct cob_field ptr = {0, 0}, dlm, src;
   int dlm_size, src_size, dst_size;
   unsigned char *dlm_data, *src_data, *dst_data;
   va_list ap;
@@ -370,20 +383,27 @@ cob_string (struct cob_field dst, ...)
   dst_size = FIELD_SIZE (dst);
   dst_data = FIELD_DATA (dst);
 
-  while ((type = va_arg (ap, int)) != 0)
+  while ((type = va_arg (ap, int)) != STRING_END)
     switch (type)
       {
-      case 1:
-	offset += get_index (va_arg (ap, struct cob_field)) - 1;
+      case STRING_WITH_POINTER:
+	ptr = va_arg (ap, struct cob_field);
+	offset = get_index (ptr) - 1;
+	if (offset < -1 || offset >= dst_size)
+	  goto overflow;
 	break;
 
-      case 2:
+      case STRING_DELIMITED_NAME:
 	dlm = va_arg (ap, struct cob_field);
 	dlm_size = FIELD_SIZE (dlm);
 	dlm_data = FIELD_DATA (dlm);
 	break;
 
-      case 3:
+      case STRING_DELIMITED_SIZE:
+	dlm_size = 0;
+	break;
+
+      case STRING_CONCATENATE:
 	src = va_arg (ap, struct cob_field);
 	src_size = FIELD_SIZE (src);
 	src_data = FIELD_DATA (src);
@@ -394,17 +414,17 @@ cob_string (struct cob_field dst, ...)
 		src_size = i;
 		break;
 	      }
-	if (src_size < dst_size)
+	if (src_size <= dst_size - offset)
 	  {
-	    memcpy (dst_data, src_data, src_size);
-	    dst_data += src_size;
-	    dst_size -= src_size;
+	    memcpy (dst_data + offset, src_data, src_size);
+	    offset += src_size;
 	  }
 	else
 	  {
-	    memcpy (dst_data, src_data, dst_size);
-	    cob_status = COB_STATUS_OVERFLOW;
-	    return cob_status;
+	    int len = dst_size - offset;
+	    memcpy (dst_data + offset, src_data, len);
+	    offset += len;
+	    goto overflow;
 	  }
 	break;
 
@@ -414,9 +434,16 @@ cob_string (struct cob_field dst, ...)
 	abort ();
       }
 
-  va_end (ap);
-  memset (dst_data, ' ', dst_size);
   cob_status = COB_STATUS_SUCCESS;
+  goto end;
+
+ overflow:
+  cob_status = COB_STATUS_OVERFLOW;
+
+ end:
+  va_end (ap);
+  if (ptr.data)
+    set_pointer (ptr, offset + 1);
   return cob_status;
 }
 

@@ -70,6 +70,7 @@ extern cob_tree_list cons (void *x, cob_tree_list l);
 extern cob_tree_list make_list (void *x);
 extern cob_tree_list list_add (cob_tree_list l, void *x);
 extern cob_tree_list list_append (cob_tree_list l1, cob_tree_list l2);
+extern cob_tree_list list_reverse (cob_tree_list l);
 extern int list_length (cob_tree_list l);
 
 
@@ -429,6 +430,14 @@ struct inspect_item
 };
 
 extern struct inspect_item *make_inspect_item (int type, cob_tree sy1, cob_tree sy2, cob_tree_list list);
+
+struct string_item
+{
+  int type;
+  cob_tree sy;
+};
+
+extern struct string_item *make_string_item (int type, cob_tree sy);
 
 struct alternate_list
 {

@@ -101,7 +101,7 @@ extern struct unstring_delimited *alloc_unstring_delimited (int all, cob_tree va
 extern struct unstring_destinations *alloc_unstring_dest (cob_tree var, cob_tree delim, cob_tree count);
 extern struct string_from *alloc_string_from (cob_tree var, cob_tree delim);
 extern void gen_unstring (cob_tree var, struct unstring_delimited *delim, struct unstring_destinations *dest, cob_tree ptr, cob_tree tally);
-extern void gen_string (struct string_from *sf, cob_tree sy, cob_tree ptr);
+extern void gen_string (cob_tree sy, cob_tree_list list);
 extern void gen_display_screen (cob_tree sy, int main);
 extern void gen_display (int dupon, int nl);
 extern void gen_gotoxy_expr (cob_tree x, cob_tree y);
