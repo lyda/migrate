@@ -39,9 +39,11 @@
 #include "lib/getopt.h"
 
 #if (defined __CYGWIN__ || defined __MINGW32__)
-#define LDFLAGS		"-Wl,--export-dynamic -Wl,--enable-auto-import"
+#define EXEC_LDFLAGS	"-Wl,--export-dynamic -Wl,--enable-auto-import"
+#define MODULE_LDFLAGS	"-Wl,--enable-auto-import"
 #else
-#define LDFLAGS		"-rdynamic"
+#define EXEC_LDFLAGS	"-rdynamic"
+#define MODULE_LDFLAGS	""
 #endif
 
 
@@ -692,8 +694,8 @@ process_module (struct filename *fn)
       strcat (name, ".");
       strcat (name, COB_MODULE_EXT);
     }
-  sprintf (buff, "%s -shared %s -o %s %s %s",
-	   cob_cc, cob_ldflags, name, fn->object, cob_libs);
+  sprintf (buff, "%s -shared %s %s -o %s %s",
+	   cob_cc, MODULE_LDFLAGS, cob_ldflags, name, fn->object);
   return process (buff);
 }
 
@@ -714,7 +716,7 @@ process_link (struct filename *l)
     strcpy (name, output_name);
 
   sprintf (buff, "%s %s %s -o %s %s %s",
-	   cob_cc, LDFLAGS, cob_ldflags, name, objs, cob_libs);
+	   cob_cc, EXEC_LDFLAGS, cob_ldflags, name, objs, cob_libs);
   return process (buff);
 }
 

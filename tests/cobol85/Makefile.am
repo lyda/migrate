@@ -25,7 +25,7 @@ diff:
 	done
 	diff summary.txt summary.log
 
-clean: clean-am
+clean-local:
 	rm -rf copy $(MODULES)
 
 $(MODULES): newcob.val EXEC85 EXEC85.conf.in
