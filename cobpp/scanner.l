@@ -1,5 +1,5 @@
 /*							-*- c -*-
- * Copyright (C) 2001-2002 Keisuke Nishida
+ * Copyright (C) 2001-2003 Keisuke Nishida
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -189,10 +190,10 @@ open_buffer (const char *name, struct replacement *replacing)
       /* Find the copy file */
       if (name[0] != '/' && stat (name, &st) == -1)
 	{
-	  struct cobpp_path *p;
-	  for (p = cobpp_include_path; p; p = p->next)
+	  struct cobpp_name_list *p;
+	  for (p = cobpp_include_list; p; p = p->next)
 	    {
-	      sprintf (buff, "%s/%s", p->dir, name);
+	      sprintf (buff, "%s/%s", p->name, name);
 	      if (stat (buff, &st) == 0)
 		{
 		  name = buff;
@@ -209,14 +210,14 @@ open_buffer (const char *name, struct replacement *replacing)
       /* Add to dependency list */
       if (cobpp_depend_file)
 	{
-	  struct cobpp_path *p = malloc (sizeof (struct cobpp_path));
-	  p->dir = strdup (name);
+	  struct cobpp_name_list *p = malloc (sizeof (struct cobpp_name_list));
+	  p->name = strdup (name);
 	  p->next = NULL;
 	  if (!cobpp_depend_list)
 	    cobpp_depend_list = p;
 	  else
 	    {
-	      struct cobpp_path *l;
+	      struct cobpp_name_list *l;
 	      for (l = cobpp_depend_list; l->next; l = l->next);
 	      l->next = p;
 	    }
@@ -301,7 +302,7 @@ read_line (char *buff, int size)
 	  buff[n++] = c;
 	else
 	  while ((n + 1) % cobpp_tab_width != 0)
-	    buff[n++] = c;
+	    buff[n++] = ' ';
 	break;
 
       case '\r':
@@ -328,20 +329,46 @@ read_line (char *buff, int size)
   if (n == 0)
     return 0;
 
-  /* nothing to be done for free format */
+  /* nothing to do for free format */
   if (cobpp_source_format == COBPP_FORMAT_FREE)
     return n;
 
-  /* clear the first 6 letters */
-  memset (buff, ' ', 6);
-  if (n < 6)
-    strcpy (buff + 6, " \n");
+  /* check the first 6 letters */
+  {
+    int i;
+    int (*func) (int c) = NULL;
+    if (n < 7)
+      strcat (buff, "       \n");
+    if (isspace (buff[0]))
+      func = isspace;
+    else if (isdigit (buff[0]))
+      func = isdigit;
+    if (func)
+      for (i = 1; i < 6; i++)
+	if (!func (buff[i]))
+	  {
+	    func = NULL;
+	    break;
+	  }
+    if (!func)
+      {
+	yyerror (_("invalid sequence number: \"%c%c%c%c%c%c\""),
+		 buff[0], buff[1], buff[2],
+		 buff[3], buff[4], buff[5]);
+	exit (1);
+      }
+    memset (buff, ' ', 6);
+  }
 
-  /* check the column 7 */
+  /* check the indicator (column 7) */
   switch (buff[6])
     {
+    case ' ':
+    case '-':
+      break;
+    case 'd':
     case 'D':
-      if (cobpp_debug_flag)
+      if (cobpp_flag_debugging_line)
 	{
 	  /* activate debugging line */
 	  buff[6] = ' ';
@@ -354,22 +381,30 @@ read_line (char *buff, int size)
       strcpy (buff + 6, " \n");
       n = 7;
       break;
+    default:
+      yyerror (_("invalid indicator: `%c'"), buff[6]);
+      break;
     }
 
-  /* remove letters after column 72 */
-  if (cobpp_source_format == COBPP_FORMAT_FIXED && n > 73)
+  /* check the text after cobpp_text_column */
+  if (n > cobpp_text_column + 1)
     {
       static int count = 0;
-      if (cobpp_source_format_inferred || cobpp_warn_trailing_line)
-	if (count < 4)
-	  {
-	    yywarn (_("source line over column 72"));
-	    if (cobpp_source_format_inferred && count == 0)
-	      yywarn (_("specify source format explicitly"));
-	    if (++count == 4)
-	      yywarn (_("more warnings inhibited"));
-	  }
-      strcpy (buff + 72, "\n");
+      if (cobpp_warn_column_overflow && count < 4)
+	{
+	  int i;
+	  for (i = cobpp_text_column; i < n; i++)
+	    if (buff[i] != ' ' && buff[i] != '\n')
+	      {
+		/* show warning if it is not whitespaces */
+		yywarn (_("source text after column %d"), cobpp_text_column);
+		if (++count == 4)
+		  yywarn (_("more warnings inhibited"));
+		break;
+	      }
+	}
+      /* remove it */
+      strcpy (buff + cobpp_text_column, "\n");
     }
 
   return strlen (buff);

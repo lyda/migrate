@@ -40,14 +40,16 @@ extern int yyparse (void);
  * Global variables
  */
 
-int cobpp_tab_width = 8;
-int cobpp_debug_flag = 0;
+int cobpp_flag_debugging_line = 0;
+int cobpp_warn_column_overflow = 0;
+
+int cobpp_source_format = COBPP_FORMAT_FIXED;
+int cobpp_tab_width = COBPP_DEFAULT_TAB_WIDTH;
+int cobpp_text_column = COBPP_DEFAULT_TEXT_COLUMN;
 int cobpp_exit_status = 0;
-int cobpp_warn_trailing_line = 0;
-int cobpp_source_format = COBPP_FORMAT_UNKNOWN;
-int cobpp_source_format_inferred = 0;
-struct cobpp_path *cobpp_include_path = NULL;
-struct cobpp_path *cobpp_depend_list = NULL;
+
+struct cobpp_name_list *cobpp_include_list = NULL;
+struct cobpp_name_list *cobpp_depend_list = NULL;
 FILE *cobpp_depend_file = NULL;
 char *cobpp_depend_target = NULL;
 
@@ -63,16 +65,15 @@ static const char *program_name;
  * Command line
  */
 
-static char short_options[] = "hvo:DT:I:";
+static char short_options[] = "hvo:T:C:I:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'v'},
-  {"debug", no_argument, 0, 'D'},
-  {"free", no_argument, &cobpp_source_format, COBPP_FORMAT_FREE},
-  {"fixed", no_argument, &cobpp_source_format, COBPP_FORMAT_FIXED},
-  {"semi-fixed", no_argument, &cobpp_source_format, COBPP_FORMAT_SEMI_FIXED},
-  {"Wtrailing-line", no_argument, &cobpp_warn_trailing_line, 1},
+  {"fdebugging-line", no_argument, &cobpp_flag_debugging_line, 1},
+  {"Wcolumn-overflow", no_argument, &cobpp_warn_column_overflow, 1},
+  {"FF", no_argument, &cobpp_source_format, COBPP_FORMAT_FREE},
+  {"FX", no_argument, &cobpp_source_format, COBPP_FORMAT_FIXED},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
   {0, 0, 0, 0}
@@ -89,22 +90,22 @@ print_usage ()
 {
   printf ("Usage: %s [options] file\n\n", program_name);
   puts (_("General options:\n"
-	  "  --help        Display this message\n"
-	  "  --version     Display compiler version\n"
-	  "  -o <file>     Place the output into <file>\n"
-	  "  -MT <target>  Set target file used in dependency list\n"
-	  "  -MF <file>    Place dependency list into <file>\n"
+	  "  --help                Display this message\n"
+	  "  --version             Display compiler version\n"
+	  "  -o <file>             Place the output into <file>\n"
+	  "  -MT <target>          Set target file used in dependency list\n"
+	  "  -MF <file>            Place dependency list into <file>\n"
 	  "\n"
 	  "COBOL options:\n"
-	  "  -free         Use free source format\n"
-	  "  -fixed        Use fixed source format\n"
-	  "  -semi-fixed   Use semi-fixed source format\n"
-	  "  -debug        Enable debugging lines\n"
-	  "  -T <n>        Set tab width to <n> (default 8)\n"
-	  "  -I <path>     Add copybook include path\n"
+	  "  -FF                   Use free source format\n"
+	  "  -FX                   Use fixed source format\n"
+	  "  -T <n>                Set tab width to <n> (default: 8)\n"
+	  "  -C <n>                Set text column to <n> (default: 72)\n"
+	  "  -I <path>             Add copybook include path\n"
+	  "  -fdebugging-line      Enable debugging lines\n"
 	  "\n"
 	  "Warning options:\n"
-	  "  -Wtrailing-line  Source line after column 72"
+	  "  -Wcolumn-overflow     Warn if any text after column 72\n"
 	  ));
 }
 
@@ -147,25 +148,25 @@ process_command_line (int argc, char *argv[])
 
 	case 'I':
 	  {
-	    struct cobpp_path *path =
-	      malloc (sizeof (struct cobpp_path));
-	    path->dir = strdup (optarg);
-	    path->next = NULL;
+	    struct cobpp_name_list *list =
+	      malloc (sizeof (struct cobpp_name_list));
+	    list->name = strdup (optarg);
+	    list->next = NULL;
 
 	    /* Append at the end */
-	    if (!cobpp_include_path)
-	      cobpp_include_path = path;
+	    if (!cobpp_include_list)
+	      cobpp_include_list = list;
 	    else
 	      {
-		struct cobpp_path *p;
-		for (p = cobpp_include_path; p->next; p = p->next);
-		p->next = path;
+		struct cobpp_name_list *p;
+		for (p = cobpp_include_list; p->next; p = p->next);
+		p->next = list;
 	      }
 	  }
 	  break;
 
-	case 'D': cobpp_debug_flag = 1; break;
 	case 'T': cobpp_tab_width = atoi (optarg); break;
+	case 'C': cobpp_text_column = atoi (optarg); break;
 
 	default: print_usage (); exit (1);
 	}
@@ -216,29 +217,12 @@ main (int argc, char *argv[])
   if (yyin == NULL)
     exit (1);
 
-  /* Infer source format */
-  if (cobpp_source_format == COBPP_FORMAT_UNKNOWN)
-    {
-      cobpp_source_format = COBPP_FORMAT_FREE;
-      cobpp_source_format_inferred = 1;
-
-      if (yyfilename)
-	{
-	  char buff[7];
-	  if (fgets (buff, 7, yyin))
-	    if (('0' <= buff[0] && buff[0] <= '9')
-		|| strncmp (buff, "      ", 6) == 0)
-	      cobpp_source_format = COBPP_FORMAT_FIXED;
-	  fseek (yyin, 0, SEEK_SET);
-	}
-    }
-
   yyparse ();
 
   /* Output dependency list */
   if (cobpp_depend_file)
     {
-      struct cobpp_path *l;
+      struct cobpp_name_list *l;
       if (!cobpp_depend_target)
 	{
 	  fputs (_("-MT must be given to specify target file\n"), stderr);
@@ -246,9 +230,9 @@ main (int argc, char *argv[])
 	}
       fprintf (cobpp_depend_file, "%s: \\\n", cobpp_depend_target);
       for (l = cobpp_depend_list; l; l = l->next)
-	fprintf (cobpp_depend_file, " %s%s\n", l->dir, l->next ? " \\" : "");
+	fprintf (cobpp_depend_file, " %s%s\n", l->name, l->next ? " \\" : "");
       for (l = cobpp_depend_list; l; l = l->next)
-	fprintf (cobpp_depend_file, "%s:\n", l->dir);
+	fprintf (cobpp_depend_file, "%s:\n", l->name);
       fclose (cobpp_depend_file);
     }
 

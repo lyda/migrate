@@ -28,28 +28,36 @@
 #define COBPP_VERSION	PACKAGE_VERSION
 #define COBPP_COPYRIGHT	"Copyright (C) 2001-2003 Keisuke Nishida\n"
 
-#define COBPP_FORMAT_UNKNOWN	0
-#define COBPP_FORMAT_FREE	1
-#define COBPP_FORMAT_FIXED	2
-#define COBPP_FORMAT_SEMI_FIXED	3
+#define COBPP_FORMAT_FREE		1
+#define COBPP_FORMAT_FIXED		2
+
+#define COBPP_DEFAULT_TAB_WIDTH		8
+#define COBPP_DEFAULT_TEXT_COLUMN	72
 
 #ifdef __MINGW32__
 #define __USE_MINGW_FSEEK 1	/* These are in libmingwex.a */
 #endif
 
-struct cobpp_path {
-  const char *dir;
-  struct cobpp_path *next;
+struct cobpp_name_list {
+  const char *name;
+  struct cobpp_name_list *next;
 };
 
+/* enable debugging lines */
+extern int cobpp_flag_debugging_line;
+
+/* warn if any text after cobpp_text_column */
+extern int cobpp_warn_column_overflow;
+
+int cobpp_source_format;
+
 extern int cobpp_tab_width;
-extern int cobpp_debug_flag;
+extern int cobpp_text_column;
 extern int cobpp_exit_status;
-extern int cobpp_warn_trailing_line;
-extern int cobpp_source_format;
-extern int cobpp_source_format_inferred;
-extern struct cobpp_path *cobpp_include_path;
-extern struct cobpp_path *cobpp_depend_list;
+
+extern struct cobpp_name_list *cobpp_include_list;
+extern struct cobpp_name_list *cobpp_depend_list;
 extern FILE *cobpp_depend_file;
+extern char *cobpp_depend_target;
 
 #endif /* COBPP_H */

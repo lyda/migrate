@@ -1,3 +1,20 @@
+2003-03-26  Keisuke Nishida  <knishida@netlab.jp>
+
+	* cobpp.h (COBPP_DEFAULT_TAB_WIDTH): New macro.
+	(COBPP_DEFAULT_TEXT_COLUMN): New macro.
+	(COBPP_FORMAT_UNKNOWN): Removed.
+	(COBPP_FORMAT_SEMI_FIXED): Removed.
+
+	* cobpp.c (short_options): New option `C'.  Remove `D'.
+	(long_options): "debug" is replaced by "-fdebugging-line".
+	"-Wtrailing-line" is replaced by "-Wcolumn-overflow".
+
+	* cobpp.h, cobpp.c (cobpp_text_column): New variable.
+	* scanner.l (read_line): Use it.
+
+	* cobpp.c (main): Do not infer the source format.
+	* scanner.l (read_line): Check the first 6 letters.
+
 2003-01-24  Keisuke Nishida  <knishida@netlab.jp>
 
 	* scanner.l (open_buffer): Open copy file in "rb" mode to avoid
