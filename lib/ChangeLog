@@ -1,0 +1,4 @@
+2002-05-29  Keisuke Nishida  <knishida@netlab.jp>
+
+	* getopt.c, getopt.h, getopt1.c: Extracted from glibc-2.2.5.
+
