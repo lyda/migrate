@@ -1,3 +1,11 @@
+2002-07-04  Keisuke Nishida  <knishida@netlab.jp>
+
+	* codegen.c (output_field_definition): New arguments `gen_data'
+	and `gen_filler'.
+	(output_file_name, codegen): Updated.
+	* parser.y (screen_option): Set LINE/COLUMN flags appropriately.
+	(screen_plus_minus): PLUS/MINUS flags.
+
 2002-07-03  Keisuke Nishida  <knishida@netlab.jp>
 
 	* parser.y (program_sequence): Removed.
