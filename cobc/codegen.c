@@ -1952,8 +1952,9 @@ output_internal_function (struct cb_program *prog, int single,
     output ("s_%s", CB_ALPHABET_NAME (cb_ref (prog->collating_sequence))->cname);
   else
     output ("0");
-  output (", %d, %d, %d, 0};\n",
-	  cb_display_sign, cb_filename_mapping, cb_binary_truncate);
+  output (", %d, %d, %d, %d, 0};\n",
+	  cb_display_sign, cb_filename_mapping, cb_binary_truncate,
+	  cb_pretty_display);
   output_newline ();
   output_line ("int i;");
   output_line ("int i1, i2, i3, i4, i5, i6, i7;");
