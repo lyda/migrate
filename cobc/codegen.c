@@ -1310,7 +1310,7 @@ output_call (struct cb_call *p)
     {
       /* static link */
       output_integer (cb_return_code);
-      output (" = %s", CB_LITERAL (p->name)->data);
+      output (" = %s", cb_encode_program_id (CB_LITERAL (p->name)->data));
     }
   else
     {

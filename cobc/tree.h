@@ -926,6 +926,7 @@ extern cb_tree cb_check_numeric_value (cb_tree x);
 extern cb_tree cb_check_integer_value (cb_tree x);
 
 extern int cb_get_int (cb_tree x);
+extern char *cb_encode_program_id (const char *name);
 extern const char *cb_build_program_id (cb_tree name, cb_tree alt_name);
 extern void cb_define_switch_name (cb_tree name, cb_tree sname, cb_tree flag, cb_tree ref);
 extern cb_tree cb_build_section_name (cb_tree name);

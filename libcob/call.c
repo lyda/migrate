@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -164,6 +165,9 @@ void *
 cob_resolve (const char *name)
 {
   int i;
+  char buff[FILENAME_MAX];
+  char *p = buff;
+  const char *s = name;
   lt_ptr_t func;
   lt_dlhandle handle;
 
@@ -173,6 +177,16 @@ cob_resolve (const char *name)
       exit (1);
     }
 
+  /* encode program name */
+  if (isdigit (*s))
+    p += sprintf (p, "$%02X", *s++);
+  for (; *s; s++)
+    if (isalnum (*s) || *s == '_')
+      *p++ = *s;
+    else
+      p += sprintf (p, "$%02X", *s);
+  *p = 0;
+
   /* search the cache */
   func = lookup (name);
   if (func)
@@ -180,7 +194,7 @@ cob_resolve (const char *name)
 
   /* search the main program */
   if ((handle = lt_dlopen (NULL)) != NULL
-      && (func = lt_dlsym (handle, name)) != NULL)
+      && (func = lt_dlsym (handle, buff)) != NULL)
     {
       insert (name, NULL, handle, func, 0);
       resolve_error = NULL;
@@ -197,7 +211,7 @@ cob_resolve (const char *name)
       if (stat (filename, &st) == 0)
 	{
 	  if ((handle = lt_dlopen (filename)) != NULL
-	      && (func = lt_dlsym (handle, name)) != NULL)
+	      && (func = lt_dlsym (handle, buff)) != NULL)
 	    {
 	      insert (name, filename, handle, func, st.st_mtime);
 	      resolve_error = NULL;

@@ -144,27 +144,34 @@ cb_get_int (cb_tree x)
   return cb_literal_to_int (CB_LITERAL (x));
 }
 
+char *
+cb_encode_program_id (const char *name)
+{
+  char buff[FILENAME_MAX];
+  char *p = buff;
+  const char *s = name;
+  /* encode the initial digit */
+  if (isdigit (*s))
+    p += sprintf (p, "$%02X", *s++);
+  /* encode invalid letters */
+  for (; *s; s++)
+    if (isalnum (*s) || *s == '_')
+      *p++ = *s;
+    else
+      p += sprintf (p, "$%02X", *s);
+  *p = 0;
+  return strdup (buff);
+}
+
 const char *
 cb_build_program_id (cb_tree name, cb_tree alt_name)
 {
   if (alt_name)
-    {
-      return CB_LITERAL (alt_name)->data;
-    }
+    return CB_LITERAL (alt_name)->data;
+  else if (CB_LITERAL_P (name))
+    return cb_encode_program_id (CB_LITERAL (name)->data);
   else
-    {
-      int converted = 0;
-      char *s, *str = strdup (CB_NAME (name));
-      for (s = str; *s; s++)
-	if (*s == '-')
-	  {
-	    converted = 1;
-	    *s = '_';
-	  }
-      if (converted)
-	cb_warning_x (name, _("PROGRAM-ID is converted to `%s'"), str);
-      return str;
-    }
+    return cb_encode_program_id (CB_NAME (name));
 }
 
 void

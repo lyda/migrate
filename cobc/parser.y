@@ -171,6 +171,7 @@ program_id_paragraph:
 ;
 program_name:
   WORD
+| LITERAL
 ;
 as_literal:
   /* empty */			{ $$ = NULL; }
