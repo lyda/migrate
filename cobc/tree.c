@@ -309,7 +309,6 @@ cb_tree cb_low;
 cb_tree cb_high;
 cb_tree cb_quote;
 cb_tree cb_return_code;
-cb_tree cb_switch[8];
 cb_tree cb_int0;
 cb_tree cb_int1;
 cb_tree cb_int2;
@@ -339,7 +338,6 @@ make_constant_label (const char *name)
 void
 cb_init_constants (void)
 {
-  int i;
   cb_error_node  = make_constant (CB_CATEGORY_UNKNOWN, 0);
   cb_any         = make_constant (CB_CATEGORY_UNKNOWN, 0);
   cb_true        = make_constant (CB_CATEGORY_BOOLEAN, "1");
@@ -354,13 +352,6 @@ cb_init_constants (void)
   cb_int0        = cb_build_integer (0);
   cb_int1        = cb_build_integer (1);
   cb_int2        = cb_build_integer (2);
-  for (i = 0; i < 8; i++)
-    {
-      char buff[16];
-      sprintf (buff, "switch[%d]", i);
-      cb_switch[i] = cb_build_index (make_reference (buff));
-    }
-
   cb_standard_error_handler = make_constant_label ("standard_error_handler");
 }
 

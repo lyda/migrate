@@ -209,7 +209,6 @@ extern cb_tree cb_low;
 extern cb_tree cb_high;
 extern cb_tree cb_quote;
 extern cb_tree cb_return_code;
-extern cb_tree cb_switch[];
 extern cb_tree cb_int0;
 extern cb_tree cb_int1;
 extern cb_tree cb_int2;
