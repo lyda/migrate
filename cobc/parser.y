@@ -1025,7 +1025,7 @@ usage_clause:
 usage:
   BINARY
   {
-    if (cb_binary_ordering == CB_ORDERING_BIG_ENDIAN)
+    if (cb_binary_order == CB_ORDER_BIG_ENDIAN)
       current_field->usage = CB_USAGE_BINARY;
     else
       current_field->usage = CB_USAGE_NATIVE;

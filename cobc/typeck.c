@@ -991,7 +991,7 @@ cb_build_move (cb_tree src, cb_tree dst)
     return cb_build_funcall_2 ("cob_set_int", dst,
 			       cb_build_cast_integer (src));
 
-  if (cb_flag_inline_move)
+  if (cb_flag_runtime_inlining)
     {
       if (cb_field (dst)->usage == CB_USAGE_BINARY)
 	return cb_build_move_call (src, dst);
@@ -1189,7 +1189,7 @@ cb_build_cond (cb_tree x)
 	      }
 	    else
 	      {
-		if (cb_flag_inline_cmp)
+		if (cb_flag_runtime_inlining)
 		  {
 		    if (CB_LITERAL_P (p->y))
 		      {

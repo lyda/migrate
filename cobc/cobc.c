@@ -249,6 +249,8 @@ print_usage (void)
   -MF <file>            Place dependency list into <file>\n\
   -free                 Use free source format\n\
   -fixed                Use fixed source format\n\
+  -static               Use free source format\n\
+  -dynamic              Use fixed source format\n\
   -ext=<extension>      Add file extension\n\
 \n\
   -Wall                 Enable all warnings"));
@@ -295,16 +297,12 @@ process_command_line (int argc, char *argv[])
 	case 'o': output_name = strdup (optarg); break;
 
 	case 'O':
-	  cb_flag_inline_cmp = 1;
-	  cb_flag_inline_get_int = 1;
-	  cb_flag_inline_move = 1;
+	  cb_flag_runtime_inlining = 1;
 	  strcat (cob_cflags, " -O");
 	  break;
 
 	case '2': /* -O2 */
-	  cb_flag_inline_cmp = 1;
-	  cb_flag_inline_get_int = 1;
-	  cb_flag_inline_move = 1;
+	  cb_flag_runtime_inlining = 1;
 	  strcat (cob_cflags, " -O2");
 	  break;
 

@@ -7,9 +7,6 @@ text-column: 72
 # Value: `auto', `free', `fixed'
 source-format: fixed
 
-# Value: `native', `big-endian'
-binary-ordering: big-endian
-
 # Value:         signed  unsigned  bytes
 #                ------  --------  -----
 # `2-4-8'        1 -  4                2
@@ -30,6 +27,9 @@ binary-ordering: big-endian
 #               15 - 16   15 - 16      7
 #               17 - 18   17 - 18      8
 binary-size: 1-2-4-8
+
+# Value: `native', `big-endian'
+binary-order: big-endian
 
 # Value: `warning', `error'
 invalid-value: warning

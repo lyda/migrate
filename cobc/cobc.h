@@ -106,9 +106,9 @@ enum cb_source_format {
   CB_FORMAT_FIXED,
 };
 
-enum cb_binary_ordering {
-  CB_ORDERING_NATIVE,
-  CB_ORDERING_BIG_ENDIAN,
+enum cb_binary_order {
+  CB_ORDER_NATIVE,
+  CB_ORDER_BIG_ENDIAN,
 };
 
 enum cb_binary_size {

@@ -22,19 +22,19 @@
 /* CB_FLAG (var, name, doc) */
 
 CB_FLAG (cb_flag_main, "main",
-	 N_("Include a main function in the output"))
+	 N_("Include the main function in the output"))
 
 CB_FLAG (cb_flag_syntax_only, "syntax-only",
 	 N_("Syntax error checking only; don't emit any output"))
 
-CB_FLAG (cb_flag_debugging_line, "debugging-line",
-	 N_("Activate debugging lines"))
+CB_FLAG (cb_flag_auto_initialize, "auto-initialize",
+	 N_("Initialize the whole data storage on startup"))
 
 CB_FLAG (cb_flag_static_call, "static-call",
 	 N_("Output static function calls for the CALL statement"))
 
-CB_FLAG (cb_flag_auto_initialize, "auto-initialize",
-	 N_("Initialize the whole data storage on startup"))
+CB_FLAG (cb_flag_debugging_line, "debugging-line",
+	 N_("Enable debugging lines"))
 
 CB_FLAG (cb_flag_source_location, "source-location",
 	 N_("Include source location in the output"))
@@ -42,11 +42,5 @@ CB_FLAG (cb_flag_source_location, "source-location",
 CB_FLAG (cb_flag_line_directive, "line-directive",
 	 N_("Include line directive in the output"))
 
-CB_FLAG (cb_flag_inline_cmp, "inline-cmp",
-	 N_("Inline cob_cmp"))
-
-CB_FLAG (cb_flag_inline_get_int, "inline-get-int",
-	 N_("Inline cob_get_int"))
-
-CB_FLAG (cb_flag_inline_move, "inline-move",
-	 N_("Inline cob_move"))
+CB_FLAG (cb_flag_runtime_inlining, "runtime-inlining",
+	 N_("Inline runtime functions in the most common cases"))

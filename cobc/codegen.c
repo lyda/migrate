@@ -509,7 +509,7 @@ output_integer (cb_tree x)
 	    return;
 	  }
 
-	if (cb_flag_inline_get_int)
+	if (cb_flag_runtime_inlining)
 	  {
 	    switch (f->usage)
 	      {
