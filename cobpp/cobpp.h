@@ -23,7 +23,7 @@
 #include <stdio.h>
 
 #define COB_PACKAGE	"cobpp (OpenCOBOL)"
-#define COB_VERSION	VERSION
+#define COB_VERSION	PACKAGE_VERSION
 #define COB_COPYRIGHT	"Copyright (C) 2001-2002 Keisuke Nishida\n"
 
 #define COB_FORMAT_FREE		0
