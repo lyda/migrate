@@ -19,7 +19,7 @@ Make Options
 ------------
 
 - make test     run the test suite
-- make save     save test reports to *.txt
+- make save     save test reports in *.txt
 - make diff     diff from *.txt to the last reports
 - make clean    remove built files
 
