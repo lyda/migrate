@@ -17,8 +17,8 @@
  * Boston, MA 02111-1307 USA
  */
 
-#ifndef _TREE_H_
-#define _TREE_H_
+#ifndef CB_TREE_H
+#define CB_TREE_H
 
 #define CB_BEFORE		0
 #define CB_AFTER		1
@@ -712,4 +712,4 @@ extern cb_tree cb_build_cond (cb_tree x);
 extern cb_tree cb_build_evaluate (struct cb_list *subject_list, struct cb_list *case_list);
 extern cb_tree cb_build_search_all (cb_tree table, cb_tree when);
 
-#endif /* _TREE_H_ */
+#endif /* CB_TREE_H */

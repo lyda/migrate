@@ -26,6 +26,7 @@
 #include <libcob.h>
 
 #include "cobc.h"
+#include "error.h"
 
 
 /*

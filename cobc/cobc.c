@@ -35,6 +35,7 @@
 #endif /* __MINGW32__ */
 
 #include "cobc.h"
+#include "error.h"
 #include "reserved.h"
 #include "lib/getopt.h"
 
@@ -69,14 +70,14 @@ int cb_flag_parse_only = 0;
 #define CB_WARNING(sig,var,name,doc) int var = 0;
 #include "warning.def"
 
-int errorcount;
-int warningcount;
-
 char *cb_source_file = NULL;
 int cb_source_line = 0;
 int cb_source_format = CB_FORMAT_FIXED;
 int cb_tab_width = CB_DEFAULT_TAB_WIDTH;
 int cb_text_column = CB_DEFAULT_TEXT_COLUMN;
+
+FILE *cb_storage_file;
+char *cb_storage_file_name;
 
 FILE *cb_depend_file = NULL;
 char *cb_depend_target = NULL;
@@ -573,8 +574,8 @@ process_translate (struct filename *fn)
   if (!yyin)
     terminate (fn->preprocess);
 
-  storage_file_name = malloc (strlen (fn->translate) + 3);
-  sprintf (storage_file_name, "%s.h", fn->translate);
+  cb_storage_file_name = malloc (strlen (fn->translate) + 3);
+  sprintf (cb_storage_file_name, "%s.h", fn->translate);
 
   if (!cb_flag_parse_only)
     {
@@ -583,9 +584,9 @@ process_translate (struct filename *fn)
       if (!yyout)
 	terminate (fn->translate);
       /* storage file */
-      storage_file = fopen (storage_file_name, "w");
-      if (!storage_file)
-	terminate (storage_file_name);
+      cb_storage_file = fopen (cb_storage_file_name, "w");
+      if (!cb_storage_file)
+	terminate (cb_storage_file_name);
     }
 
   cb_source_file = NULL;
@@ -602,7 +603,7 @@ process_translate (struct filename *fn)
   if (!cb_flag_parse_only)
     {
       fclose (yyout);
-      fclose (storage_file);
+      fclose (cb_storage_file);
     }
   fclose (yyin);
 
@@ -753,7 +754,7 @@ main (int argc, char *argv[])
 	      && (status == 1 || compile_level > stage_translate))
 	    {
 	      remove (fn->translate);
-	      remove (storage_file_name);
+	      remove (cb_storage_file_name);
 	    }
 	  if (fn->need_assemble
 	      && (status == 1 || compile_level > stage_assemble))
@@ -762,185 +763,4 @@ main (int argc, char *argv[])
     }
 
   return status;
-}
-
-
-static void
-print_error (char *file, int line, const char *prefix, const char *fmt, va_list ap)
-{
-  static struct cb_label *last_section = NULL;
-  static struct cb_label *last_paragraph = NULL;
-
-  file = file ? file : cb_source_file;
-  line = line ? line : cb_source_line;
-
-  /* print the paragraph or section name */
-  if (current_section != last_section
-      || current_paragraph != last_paragraph)
-    {
-      if (current_paragraph)
-	fprintf (stderr, _("%s: In paragraph `%s':\n"),
-		 file, current_paragraph->name);
-      else
-	fprintf (stderr, _("%s: In section `%s':\n"),
-		 file, current_section->name);
-      last_section = current_section;
-      last_paragraph = current_paragraph;
-    }
-
-  /* print the error */
-  fprintf (stderr, "%s:%d: %s", file, line, prefix);
-  vfprintf (stderr, fmt, ap);
-  fputs ("\n", stderr);
-}
-
-void
-cb_warning (const char *fmt, ...)
-{
-  va_list ap;
-  va_start (ap, fmt);
-  print_error (0, 0, "warning: ", fmt, ap);
-  va_end (ap);
-
-  warningcount++;
-}
-
-void
-cb_error (const char *fmt, ...)
-{
-  va_list ap;
-  va_start (ap, fmt);
-  print_error (0, 0, "", fmt, ap);
-  va_end (ap);
-
-  errorcount++;
-}
-
-void
-cb_warning_x (cb_tree x, const char *fmt, ...)
-{
-  va_list ap;
-  va_start (ap, fmt);
-  print_error (x->source_file, x->source_line, "warning: ", fmt, ap);
-  va_end (ap);
-
-  warningcount++;
-}
-
-void
-cb_error_x (cb_tree x, const char *fmt, ...)
-{
-  va_list ap;
-  va_start (ap, fmt);
-  print_error (x->source_file, x->source_line, "", fmt, ap);
-  va_end (ap);
-
-  errorcount++;
-}
-
-void
-cb_archaic (const char *feature)
-{
-  if (cb_warn_archaic)
-    cb_warning (_("%s is archaic in %s"), feature, cb_standard_name);
-}
-
-static void
-cb_obsolete (const char *feature)
-{
-  if (cb_warn_obsolete)
-    cb_warning (_("%s is obsolete in %s"), feature, cb_standard_name);
-}
-
-static void
-cb_unconformable (const char *feature)
-{
-  cb_error (_("%s not conform to %s"), feature, cb_standard_name);
-}
-
-void
-cb_obsolete_85 (const char *feature)
-{
-  if (cb_standard == CB_STANDARD_COBOL2002)
-    cb_unconformable (feature);
-  else if (cb_standard == CB_STANDARD_COBOL85)
-    cb_obsolete (feature);
-}
-
-void
-cb_obsolete_2002 (const char *feature)
-{
-  if (cb_standard == CB_STANDARD_COBOL2002)
-    cb_obsolete (feature);
-}
-
-
-void
-redefinition_error (cb_tree x)
-{
-  struct cb_word *w = CB_REFERENCE (x)->word;
-  cb_error_x (x, _("redefinition of `%s'"), w->name);
-  cb_error_x (w->items->item, _("`%s' previously defined here"), w->name);
-}
-
-void
-undefined_error (cb_tree x)
-{
-  struct cb_reference *r = CB_REFERENCE (x);
-  if (r->next)
-    cb_error_x (x, _("`%s' undefined in `%s'"),
-	       r->word->name, r->next->word->name);
-  else
-    cb_error_x (x, _("`%s' undefined"), r->word->name);
-}
-
-void
-ambiguous_error (cb_tree x)
-{
-  struct cb_word *w = CB_REFERENCE (x)->word;
-  if (w->error == 0)
-    {
-      struct cb_list *l;
-
-      /* display error on the first time */
-      cb_error_x (x, _("`%s' ambiguous; need qualification"), w->name);
-      w->error = 1;
-
-      /* display all fields with the same name */
-      for (l = w->items; l; l = l->next)
-	{
-	  char buff[BUFSIZ];
-	  cb_tree x = l->item;
-	  sprintf (buff, "`%s' ", w->name);
-	  switch (CB_TREE_TAG (x))
-	    {
-	    case CB_TAG_FIELD:
-	      {
-		struct cb_field *p;
-		for (p = CB_FIELD (x)->parent; p; p = p->parent)
-		  {
-		    strcat (buff, "in `");
-		    strcat (buff, p->name);
-		    strcat (buff, "' ");
-		  }
-		break;
-	      }
-	    case CB_TAG_LABEL:
-	      {
-		struct cb_label *l = CB_LABEL (x);
-		if (l->section)
-		  {
-		    strcat (buff, "in `");
-		    strcat (buff, l->section->name);
-		    strcat (buff, "' ");
-		  }
-		break;
-	      }
-	    default:
-	      break;
-	    }
-	  strcat (buff, _("defined here"));
-	  cb_error_x (x, buff);
-	}
-    }
 }

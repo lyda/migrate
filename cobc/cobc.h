@@ -17,8 +17,8 @@
  * Boston, MA 02111-1307 USA
  */
 
-#ifndef _COBC_H_
-#define _COBC_H_
+#ifndef CB_COBC_H
+#define CB_COBC_H
 
 #include "config.h"
 
@@ -92,14 +92,14 @@ struct cb_replacement {
   struct cb_replacement *next;
 };
 
-extern int errorcount;
-extern int warningcount;
-
 extern char *cb_source_file;
 extern int cb_source_line;
 extern int cb_source_format;
 extern int cb_tab_width;
 extern int cb_text_column;
+
+extern FILE *cb_storage_file;
+extern char *cb_storage_file_name;
 
 extern FILE *cb_depend_file;
 extern char *cb_depend_target;
@@ -108,18 +108,6 @@ extern struct cb_name_list *cb_include_list;
 
 extern struct cb_program *current_program;
 extern struct cb_label *current_section, *current_paragraph;
-
-extern void cb_warning (const char *fmt, ...);
-extern void cb_error (const char *fmt, ...);
-extern void cb_warning_x (cb_tree x, const char *fmt, ...);
-extern void cb_error_x (cb_tree x, const char *fmt, ...);
-extern void cb_archaic (const char *feature);
-extern void cb_obsolete_85 (const char *feature);
-extern void cb_obsolete_2002 (const char *feature);
-
-extern void redefinition_error (cb_tree x);
-extern void undefined_error (cb_tree x);
-extern void ambiguous_error (cb_tree x);
 
 /* preprocessor (in pplex.l, ppparse.y) */
 extern FILE *ppin;
@@ -136,9 +124,4 @@ extern FILE *yyout;
 extern int yylex (void);
 extern int yyparse (void);
 
-/* code generation (in codegen.c) */
-extern FILE *storage_file;
-extern char *storage_file_name;
-extern void codegen (struct cb_program *prog);
-
-#endif /* _COBC_H_ */
+#endif /* CB_COBC_H */

@@ -29,6 +29,7 @@
 #include <string.h>
 
 #include "cobc.h"
+#include "error.h"
 
 #define yyerror cb_error
 %}

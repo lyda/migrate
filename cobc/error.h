@@ -17,27 +17,26 @@
  * Boston, MA 02111-1307 USA
  */
 
-#ifndef CB_RESERVED_H
-#define CB_RESERVED_H
+#ifndef CB_ERROR_H
+#define CB_ERROR_H
 
-enum builtin_token {
-  BUILTIN_ZERO,
-  BUILTIN_CONSOLE,
-  BUILTIN_SYSIN,
-  BUILTIN_SYSOUT,
-  BUILTIN_SYSERR,
-  BUILTIN_SWITCH_1,
-  BUILTIN_SWITCH_2,
-  BUILTIN_SWITCH_3,
-  BUILTIN_SWITCH_4,
-  BUILTIN_SWITCH_5,
-  BUILTIN_SWITCH_6,
-  BUILTIN_SWITCH_7,
-  BUILTIN_SWITCH_8,
-};
+#include "config.h"
 
-extern int lookup_builtin_word (const char *name);
-extern int lookup_reserved_word (const char *name);
-extern void cb_init_reserved (void);
+#include "tree.h"
 
-#endif /* CB_RESERVED_H */
+extern int errorcount;
+extern int warningcount;
+
+extern void cb_warning (const char *fmt, ...);
+extern void cb_error (const char *fmt, ...);
+extern void cb_warning_x (cb_tree x, const char *fmt, ...);
+extern void cb_error_x (cb_tree x, const char *fmt, ...);
+extern void cb_archaic (const char *feature);
+extern void cb_obsolete_85 (const char *feature);
+extern void cb_obsolete_2002 (const char *feature);
+
+extern void redefinition_error (cb_tree x);
+extern void undefined_error (cb_tree x);
+extern void ambiguous_error (cb_tree x);
+
+#endif /* CB_ERROR_H */

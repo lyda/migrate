@@ -33,6 +33,8 @@
 #include <libcob.h>
 
 #include "cobc.h"
+#include "error.h"
+#include "codegen.h"
 #include "reserved.h"
 
 #define yyerror		cb_error

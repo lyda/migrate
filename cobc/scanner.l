@@ -32,6 +32,7 @@
 #include <libcob.h>
 
 #include "cobc.h"
+#include "error.h"
 #include "parser.h"
 #include "reserved.h"
 

@@ -27,9 +27,7 @@
 #include <libcob.h>
 
 #include "cobc.h"
-
-FILE *storage_file;
-char *storage_file_name;
+#include "codegen.h"
 
 static void output_stmt (cb_tree x);
 static void output_data (cb_tree x);
@@ -130,7 +128,7 @@ output_storage (const char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  vfprintf (storage_file, fmt, ap);
+  vfprintf (cb_storage_file, fmt, ap);
   va_end (ap);
 }
 
@@ -481,7 +479,7 @@ lookup_literal (cb_tree x)
   output_target = 0;
   output_field (x);
 
-  output_target = storage_file;
+  output_target = cb_storage_file;
   output ("static cob_field c_%d = ", ++id);
   output_field (x);
   output (";\n");
@@ -548,7 +546,7 @@ output_param (cb_tree x, int id)
 		output_target = 0;
 		output_field (x);
 
-		output_target = storage_file;
+		output_target = cb_storage_file;
 		if (!f->flag_local)
 		  output ("static ");
 		output ("cob_field f_%s = ", f->cname);
@@ -2259,7 +2257,7 @@ output_internal_function (struct cb_program *prog,
   output_line ("cob_field f[4];");
   output_newline ();
 
-  output ("#include \"%s\"\n\n", storage_file_name);
+  output ("#include \"%s\"\n\n", cb_storage_file_name);
 
   /* files */
   if (prog->file_list)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2003 Keisuke Nishida
+ * Copyright (C) 2003 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,27 +17,13 @@
  * Boston, MA 02111-1307 USA
  */
 
-#ifndef CB_RESERVED_H
-#define CB_RESERVED_H
+#ifndef CB_CODEGEN_H
+#define CB_CODEGEN_H
 
-enum builtin_token {
-  BUILTIN_ZERO,
-  BUILTIN_CONSOLE,
-  BUILTIN_SYSIN,
-  BUILTIN_SYSOUT,
-  BUILTIN_SYSERR,
-  BUILTIN_SWITCH_1,
-  BUILTIN_SWITCH_2,
-  BUILTIN_SWITCH_3,
-  BUILTIN_SWITCH_4,
-  BUILTIN_SWITCH_5,
-  BUILTIN_SWITCH_6,
-  BUILTIN_SWITCH_7,
-  BUILTIN_SWITCH_8,
-};
+#include "config.h"
 
-extern int lookup_builtin_word (const char *name);
-extern int lookup_reserved_word (const char *name);
-extern void cb_init_reserved (void);
+#include "tree.h"
 
-#endif /* CB_RESERVED_H */
+extern void codegen (struct cb_program *prog);
+
+#endif /* CB_CODEGEN_H */
