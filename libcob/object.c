@@ -409,6 +409,7 @@ cob_set (struct fld_desc *f, char *s, int round)
       shift_decimal (d, f->decimals - d->decimals);
     }
 
+  /* Store number */
   switch (f->type)
     {
     case 'B':
@@ -479,23 +480,31 @@ cob_set (struct fld_desc *f, char *s, int round)
 	mpz_get_str (p, 10, d->number);
 	size = strlen (p);
 
-	/* Check for overflow */
-	if (f->len < size)
-	  {
-	  size_error:
-	    fputs ("warning: size error in numeric operation\n", stderr);
-	    cob_size_error_flag = 1;
-	    return;
-	  }
-
 	/* Copy string */
-	memset (s, '0', f->len - size);
-	memcpy (s + f->len - size, p, size);
+	if (f->len == size)
+	  memcpy (s, p, size);
+	else if (f->len > size)
+	  {
+	    int pre = f->len - size;
+	    memset (s, '0', pre);
+	    memcpy (s + pre, p, size);
+	  }
+	else
+	  {
+	    /* Overflow */
+	    cob_size_error_flag = 1;
+	    memcpy (s, p + size - f->len, f->len);
+	  }
 
 	put_sign (f, s, sign);
 	break;
       }
     }
+  return;
+
+ size_error:
+  cob_size_error_flag = 1;
+  return;
 }
 
 
