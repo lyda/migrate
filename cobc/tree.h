@@ -430,28 +430,6 @@ struct alternate_list
   int duplicates;
 };
 
-struct unstring_delimited
-{
-  struct unstring_delimited *next;
-  int all;
-  cob_tree var;
-};
-
-struct unstring_destinations
-{
-  struct unstring_destinations *next;
-  cob_tree var;
-  cob_tree delim;
-  cob_tree count;
-};
-
-struct string_from
-{
-  struct string_from *next;
-  cob_tree var;
-  cob_tree delim;
-};
-
 struct list
 {
   struct list *next;
