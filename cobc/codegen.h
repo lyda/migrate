@@ -107,7 +107,6 @@ extern void gen_accept_from_time (cob_tree sy);
 extern void gen_accept_from_date (cob_tree sy);
 extern void gen_accept_from_day (cob_tree sy);
 extern void gen_accept_from_day_of_week (cob_tree sy);
-extern void gen_accept_from_inkey (cob_tree sy);
 extern void gen_accept_from_cmdline (cob_tree sy);
 extern void gen_accept_env_var (cob_tree sy, cob_tree v);
 extern struct perf_info *create_perf_info (cob_tree sy1, cob_tree sy2, unsigned long lj, unsigned long le);

@@ -2085,7 +2085,6 @@ gen_display_screen (cob_tree sy, int main)
 void
 gen_display (int dupon, int nl)
 {
-  /*int len; */
   int dspflags;
   int first = 1;
   cob_tree sy;
@@ -2105,7 +2104,7 @@ gen_display (int dupon, int nl)
 	if (screen_io_enable == 0)
 	  {
 	    push_immed (dupon);
-	    asm_call ("cob_display_erase");
+	    asm_call ("cob_erase");
 	  }
     }
   while (disp_list)
@@ -2146,7 +2145,7 @@ gen_gotoxy_expr (cob_tree x, cob_tree y)
 {
   push_expr (x);
   push_expr (y);
-  asm_call ("cob_goxy_expr");
+  asm_call ("cob_screen_move");
 }
 
 void
@@ -2178,7 +2177,7 @@ gen_accept (cob_tree sy, int echo, int main)
 	    }
 	}
       if (main)
-	asm_call ("cob_accept_screen");
+	asm_call ("cob_screen_accept");
     }
   else
     {
@@ -2187,9 +2186,9 @@ gen_accept (cob_tree sy, int echo, int main)
       push_eax ();
       gen_loadloc (sy);
       if (screen_io_enable == 0)
-	asm_call ("accept_std");
+	asm_call ("cob_accept_std");
       else
-	asm_call ("accept_curses");
+	asm_call ("cob_accept_curses");
     }
 }
 
@@ -2197,35 +2196,28 @@ void
 gen_accept_from_time (cob_tree sy)
 {
   gen_loadloc (sy);
-  asm_call ("accept_time");
+  asm_call ("cob_accept_time");
 }
 
 void
 gen_accept_from_date (cob_tree sy)
 {
   gen_loadloc (sy);
-  asm_call ("accept_date");
+  asm_call ("cob_accept_date");
 }
 
 void
 gen_accept_from_day (cob_tree sy)
 {
   gen_loadloc (sy);
-  asm_call ("accept_day");
+  asm_call ("cob_accept_day");
 }
 
 void
 gen_accept_from_day_of_week (cob_tree sy)
 {
   gen_loadloc (sy);
-  asm_call ("accept_day_of_week");
-}
-
-void
-gen_accept_from_inkey (cob_tree sy)
-{
-  gen_loadloc (sy);
-  asm_call ("accept_inkey");
+  asm_call ("cob_accept_day_of_week");
 }
 
 void
@@ -2234,28 +2226,18 @@ gen_accept_from_cmdline (cob_tree sy)
 
   cob_tree sy1;
 
-  gen_loadvar (sy);
   output ("\tmovl\t12(%%ebp), %%eax\n");
   push_eax ();
   output ("\tmovl\t8(%%ebp), %%eax\n");
   push_eax ();
-  asm_call ("accept_cmd_line");
-
-//      Set RETURN-CODE with the value returned by 
-//      the "accept_cmd_line" function, which is stored 
-//      in register %eax
+  asm_call_1 ("cob_accept_cmd_line", sy);
 
   if ((sy1 = lookup_symbol (SVAR_RCODE)) != NULL)
     {
       if (sy1->sec_no == SEC_STACK)
-	{
-	  output ("\tleal\t-%d(%%ebp), %%edx\n", sy1->location);
-	}
+	output ("\tleal\t-%d(%%ebp), %%edx\n", sy1->location);
       else
-	{
-	  output ("\tleal\tw_base%d+%d, %%edx\n",
-		   pgm_segment, sy1->location);
-	}
+	output ("\tleal\tw_base%d+%d, %%edx\n", pgm_segment, sy1->location);
       output ("\tmovl\t%%eax, (%%edx)\n");
     }
 }
@@ -2266,11 +2248,7 @@ gen_accept_env_var (cob_tree sy, cob_tree v)
   cob_tree sy2;
 
   gen_loadloc (v);
-  asm_call_1 ("accept_env_var", sy);
-
-//      Set RETURN-CODE with the value returned by 
-//      the "accept_cmd_line" function, which is stored 
-//      in register %eax
+  asm_call_1 ("cob_accept_env_var", sy);
 
   if ((sy2 = lookup_symbol (SVAR_RCODE)) != NULL)
     {

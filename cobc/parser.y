@@ -1397,7 +1397,6 @@ accept_options:
 | FROM DAY			{ gen_accept_from_day($<tree>-1); }
 | FROM DAY_OF_WEEK		{ gen_accept_from_day_of_week($<tree>-1); }
 | FROM TIME			{ gen_accept_from_time($<tree>-1); }
-| FROM INKEY			{ gen_accept_from_inkey($<tree>-1); }
 | FROM COMMAND_LINE		{ gen_accept_from_cmdline($<tree>-1); }
 | FROM ENVIRONMENT_VARIABLE NONNUMERIC_LITERAL
   {

@@ -1,9 +1,7 @@
-/* Genaral functions
- *
- * Copyright (C) 2000  Rildo Pragana, Alan Cox, Andrew Cameron,
- *		      David Essex, Glen Colbert, Jim Noeth.
- * Copyright (C) 1999  Rildo Pragana, Alan Cox, Andrew Cameron, David Essex.
- * Copyright (C) 1991, 1993  Rildo Pragana.
+/*
+ * Copyright (C) 2001, 2000, 1999,  Rildo Pragana, Jim Noeth, 
+ *               Andrew Cameron, David Essex.
+ * Copyright (C) 1993, 1991  Rildo Pragana.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
