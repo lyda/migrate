@@ -349,7 +349,7 @@ relative_read (struct cob_file_desc *f, struct cob_field k)
   char buff[f->record_size];
 
   if (lseek (f->file.fd, f->record_size * index, SEEK_SET) == -1
-      || read (f->file.fd, buff, f->record_size) == -1
+      || read (f->file.fd, buff, f->record_size) <= 0
       || buff[0] == '\0')
     return 23;
 
