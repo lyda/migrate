@@ -15,7 +15,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:7: error: invalid VALUE clause
+[prog.cob:6: error: invalid VALUE clause
 ])
 
 AT_CLEANUP
@@ -33,7 +33,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: warning: constant value mismatch
+[prog.cob:6: warning: constant value mismatch
 ])
 
 AT_CLEANUP
@@ -51,7 +51,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:7: error: invalid VALUE clause
+[prog.cob:6: error: invalid VALUE clause
 ])
 
 AT_CLEANUP
@@ -69,7 +69,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: warning: constant size overflow
+[prog.cob:6: warning: constant size overflow
 ])
 
 AT_CLEANUP
@@ -91,7 +91,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: warning: type mismatch
+[prog.cob:6: warning: type mismatch
 ])
 
 AT_CLEANUP
@@ -109,7 +109,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: warning: constant size overflow
+[prog.cob:6: warning: constant size overflow
 ])
 
 AT_CLEANUP
@@ -131,7 +131,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: warning: type mismatch
+[prog.cob:6: warning: type mismatch
 ])
 
 AT_CLEANUP
@@ -149,7 +149,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:7: error: invalid VALUE clause
+[prog.cob:6: error: invalid VALUE clause
 ])
 
 AT_CLEANUP
@@ -167,7 +167,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: warning: ignoring negative sign
+[prog.cob:6: warning: ignoring negative sign
 ])
 
 AT_CLEANUP
@@ -185,7 +185,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: warning: constant size overflow
+[prog.cob:6: warning: constant size overflow
 ])
 
 AT_CLEANUP
@@ -203,7 +203,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: warning: constant size overflow
+[prog.cob:6: warning: constant size overflow
 ])
 
 AT_CLEANUP
@@ -221,7 +221,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: warning: constant size overflow
+[prog.cob:6: warning: constant size overflow
 ])
 
 AT_CLEANUP
@@ -239,7 +239,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: warning: constant size overflow
+[prog.cob:6: warning: constant size overflow
 ])
 
 AT_CLEANUP
@@ -273,7 +273,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: warning: constant value mismatch
+[prog.cob:6: warning: constant value mismatch
 ])
 
 AT_CLEANUP
@@ -291,7 +291,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: warning: constant value mismatch
+[prog.cob:6: warning: constant value mismatch
 ])
 
 AT_CLEANUP
@@ -309,7 +309,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: warning: constant value mismatch
+[prog.cob:6: warning: constant value mismatch
 ])
 
 AT_CLEANUP
