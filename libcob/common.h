@@ -215,6 +215,12 @@ extern int cob_is_alpha (cob_field *f);
 extern int cob_is_upper (cob_field *f);
 extern int cob_is_lower (cob_field *f);
 
+/* Table sort */
+
+extern void cob_table_sort_init (int nkeys);
+extern void cob_table_sort_init_key (int flag, cob_field *field);
+extern void cob_table_sort (cob_field *f, int n);
+
 /* Run-time error checking */
 
 extern void cob_runtime_error (const char *fmt, ...);

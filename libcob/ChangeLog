@@ -1,5 +1,10 @@
 2004-04-07  Keisuke Nishida  <knishida@open-cobol.org>
 
+	* common.h, common.c (cob_table_sort_init, cob_table_sort_init_key)
+	(cob_table_sort): New functions.
+
+2004-04-07  Keisuke Nishida  <knishida@open-cobol.org>
+
 	* strings.c (cob_inspect_converting): Do not convert repeatedly.
 	(Thanks to Richard Smith <rich@theforest.plus.com>)
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2003 Keisuke Nishida
+ * Copyright (C) 2001-2004 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -597,6 +597,54 @@ cob_is_lower (cob_field *f)
     if (!isspace (f->data[i]) && !islower (f->data[i]))
       return 0;
   return 1;
+}
+
+
+/*
+ * Table sort
+ */
+
+static int sort_nkeys;
+static cob_file_key *sort_keys;
+static cob_field *sort_base;
+
+static int
+sort_compare (const void *data1, const void *data2)
+{
+  int i, cmp;
+  for (i = 0; i < sort_nkeys; i++)
+    {
+      cob_field f1 = *sort_keys[i].field;
+      cob_field f2 = *sort_keys[i].field;
+      f1.data += ((unsigned char *) data1) - sort_base->data;
+      f2.data += ((unsigned char *) data2) - sort_base->data;
+      cmp = cob_cmp (&f1, &f2);
+      if (cmp != 0)
+	return (sort_keys[i].flag == COB_ASCENDING) ? cmp : -cmp;
+    }
+  return 0;
+}
+
+void
+cob_table_sort_init (int nkeys)
+{
+  sort_nkeys = 0;
+  sort_keys = malloc (nkeys * sizeof (cob_file_key));
+}
+
+void
+cob_table_sort_init_key (int flag, cob_field *field)
+{
+  sort_keys[sort_nkeys].flag = flag;
+  sort_keys[sort_nkeys].field = field;
+  sort_nkeys++;
+}
+
+void
+cob_table_sort (cob_field *f, int n)
+{
+  sort_base = f;
+  qsort (f->data, n, f->size, sort_compare);
 }
 
 
