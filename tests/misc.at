@@ -417,6 +417,24 @@ AT_CHECK([./prog], [0], [99])
 AT_CLEANUP
 
 
+## PERFORM statement
+
+AT_SETUP([PERFORM ... CONTINUE])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       PROCEDURE        DIVISION.
+           PERFORM 2 TIMES
+             CONTINUE
+           END-PERFORM.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+
 AT_SETUP([STRING with subscript reference])
 
 AT_DATA([prog.cob], [
