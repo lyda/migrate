@@ -1,3 +1,8 @@
+2002-06-03  Keisuke Nishida  <knishida@netlab.jp>
+
+	* Makefile.am (cobc_LDADD): Add libsupport.a here.
+	(cobc_LIBS): Removed.
+
 2002-05-31  Keisuke Nishida  <knishida@netlab.jp>
 
 	* functions.h: Removed.

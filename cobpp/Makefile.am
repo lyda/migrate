@@ -1,8 +1,7 @@
 bin_PROGRAMS = cobpp
 cobpp_SOURCES = cobpp.c cobpp.h parser.y scanner.l scanner.h
 cobpp_CFLAGS = -I$(top_srcdir)/lib
-cobpp_LDADD = @LTLIBINTL@
-cobpp_LIBS = $(top_srcdir)/lib/libsupport.a
+cobpp_LDADD = $(top_srcdir)/lib/libsupport.a @LTLIBINTL@
 
 BUILT_SOURCES = parser.c parser.h scanner.c
 CLEANFILES = parser.c parser.h scanner.c

@@ -1,0 +1,5 @@
+2002-06-03  Keisuke Nishida  <knishida@netlab.jp>
+
+	* Makefile.am (cobpp_LDADD): Add libsupport.a here.
+	(cobpp_LIBS): Removed.
+
