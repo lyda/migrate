@@ -65,8 +65,6 @@ save_libs="$LIBS"
 
 # Checks for programs.
 AC_PROG_CC
-AM_PROG_LEX
-AC_PROG_YACC
 AC_PROG_LN_S
 AC_PROG_INSTALL
 AC_LIBTOOL_DLOPEN
