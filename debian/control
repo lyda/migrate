@@ -6,7 +6,7 @@ Standards-Version: 3.0.1
 
 Package: open-cobol
 Architecture: any
-Depends: ${shlibs:Depends}, gcc
+Depends: gcc, libdb2-dev, libgmp3-dev, libltdl0-dev, libreadline4-dev
 Description: A COBOL compiler
  OpenCOBOL is an open-source COBOL compiler, which translates COBOL
  programs to C code and compiles it using GCC.
