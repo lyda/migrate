@@ -29,8 +29,6 @@
 #include "cobc.h"
 #include "tree.h"
 
-static int param_id = 0;
-
 static void output_stmt (cb_tree x);
 static void output_integer (cb_tree x);
 static void output_index (cb_tree x);
@@ -628,12 +626,8 @@ output_index (cb_tree x)
  */
 
 static void
-output_param (cb_tree x, int id)
+output_param (cb_tree x)
 {
-  char fname[5];
-  sprintf (fname, "f[%d]", id);
-  param_id = id;
-
   if (x == NULL)
     {
       output ("0");
@@ -702,7 +696,7 @@ output_param (cb_tree x, int id)
       break;
     case CB_TAG_FIELD:
       /* TODO: remove me */
-      output_param (cb_build_field_reference (CB_FIELD (x), 0), id);
+      output_param (cb_build_field_reference (CB_FIELD (x), 0));
       break;
     case CB_TAG_REFERENCE:
       {
@@ -737,9 +731,8 @@ output_param (cb_tree x, int id)
 	  }
 	else
 	  {
-	    output ("(%s = (cob_field) ", fname);
+	    output ("&(cob_field)");
 	    output_field (x);
-	    output (", &%s)", fname);
 	  }
 
 	if (r->check)
@@ -764,7 +757,7 @@ output_funcall (cb_tree x)
   output ("%s (", p->name);
   for (i = 0; i < p->argc; i++)
     {
-      output_param (p->argv[i], i);
+      output_param (p->argv[i]);
       if (i + 1 < p->argc)
 	output (", ");
     }
@@ -775,7 +768,7 @@ static void
 output_func_1 (const char *name, cb_tree x)
 {
   output ("%s (", name);
-  output_param (x, param_id);
+  output_param (x);
   output (")");
 }
 
@@ -1357,7 +1350,7 @@ output_call (struct cb_call *p)
 	{
 	case CB_CALL_BY_REFERENCE:
 	  if (CB_REFERENCE_P (x) && CB_FILE_P (cb_ref (x)))
-	    output_param (cb_ref (x), -1);
+	    output_param (cb_ref (x));
 	  else
 	    output_data (x);
 	  break;
@@ -1420,7 +1413,7 @@ output_goto (struct cb_goto *p)
       cb_tree l;
       output_prefix ();
       output ("switch (");
-      output_param (cb_build_cast_integer (p->depending), 0);
+      output_param (cb_build_cast_integer (p->depending));
       output (")\n");
       output_indent ("  {");
       for (l = p->target; l; l = CB_CHAIN (l))
@@ -1530,7 +1523,7 @@ output_perform (struct cb_perform *p)
     case CB_PERFORM_TIMES:
       output_prefix ();
       output ("for (n[%d] = ", loop_counter);
-      output_param (cb_build_cast_integer (p->data), 0);
+      output_param (cb_build_cast_integer (p->data));
       output ("; n[%d] > 0; n[%d]--)\n", loop_counter, loop_counter);
       loop_counter++;
       output_indent ("  {");
@@ -1652,9 +1645,9 @@ output_stmt (cb_tree x)
       {
 	struct cb_assign *p = CB_ASSIGN (x);
 	output_prefix ();
-	output_param (p->var, 0);
+	output_param (p->var);
 	output (" = ");
-	output_param (p->val, 1);
+	output_param (p->val);
 	output (";\n");
 	break;
       }
@@ -1737,13 +1730,13 @@ output_file_definition (struct cb_file *f)
       struct cb_alt_key *l;
       output ("static cob_file_key %s%s[] = {\n", CB_PREFIX_KEYS, f->cname);
       output ("  {");
-      output_param (f->key, -1);
+      output_param (f->key);
       output (", 0},\n");
       for (l = f->alt_key_list; l; l = l->next)
 	{
 	  nkeys++;
 	  output ("  {");
-	  output_param (l->key, -1);
+	  output_param (l->key);
 	  output (", %d},\n", l->duplicates);
 	}
       output ("};\n");
@@ -1760,13 +1753,13 @@ output_file_definition (struct cb_file *f)
     output ("0");
   output (", ");
   /* assign */
-  output_param (f->assign, -1);
+  output_param (f->assign);
   output (", ");
   /* record */
-  output_param (CB_TREE (f->record), -1);
+  output_param (CB_TREE (f->record));
   output (", ");
   /* record_size */
-  output_param (f->record_depending, -1);
+  output_param (f->record_depending);
   output (", ");
   /* record_min, record_max */
   output ("%d, %d, ", f->record_min, f->record_max);
@@ -2007,7 +2000,7 @@ output_internal_function (struct cb_program *prog, int single,
   output ("static cob_module module = {'%c', '%c', '%c', ",
 	  prog->decimal_point, prog->currency_symbol, prog->numeric_separator);
   if (prog->collating_sequence)
-    output_param (cb_ref (prog->collating_sequence), -1);
+    output_param (cb_ref (prog->collating_sequence));
   else
     output ("0");
   output (", %d, %d, %d, %d, 0};\n",
