@@ -105,9 +105,7 @@ static void set_buffer (int lineno, const char *filename, struct replacement *re
 }
 
 . |
-[ \t]* |
 [0-9A-Z_-]+ |
-\'[^\'\n]*\' |
 \"[^\"\n]*\"		{ ECHO; }
 
 <COPY_STATE>{
@@ -120,7 +118,6 @@ static void set_buffer (int lineno, const char *filename, struct replacement *re
   [0-9A-Z_-]+		{ yylval.s = strdup (yytext); return NAME; }
   .			{ }
 
-  \'[^\'\n]*\' |
   \"[^\"\n]*\" {
     yylval.s = substring (yytext, 1);
     return NAME;
