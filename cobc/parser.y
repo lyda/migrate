@@ -789,7 +789,7 @@ record_clause:
     yywarn ("RECORD CONTAINS is not implemented");
   }
 | RECORD _is VARYING _in _size opt_from_integer opt_to_integer _characters
-  DEPENDING _on data_name
+  DEPENDING _on predefined_name
   {
     yywarn ("RECORD VARYING is not implemented");
   }
