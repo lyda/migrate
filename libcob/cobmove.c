@@ -780,9 +780,11 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 	      iDestIntDigits -= iDestDecimals;
 
 	    /* Zero the destination */
-	    //memset(pDstData, '0', min(iSrcIntDigits + iSrcDecimals, pDstFld->len));
-	    memset (pDstData, '0', min (iSrcIntDigits + iSrcDecimals,
-					fldLength (pDstFld)));
+	    if (iSrcIntDigits + iSrcDecimals > 0)
+	      memset (pDstData, '0', min (iSrcIntDigits + iSrcDecimals,
+					  fldLength (pDstFld)));
+	    else
+	      memset (pDstData, '0', fldLength (pDstFld));
 
 	    /* Fill in the destination integer part */
 	    memmove (pDstData, &caWork[j], iDestIntDigits);
