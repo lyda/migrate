@@ -1,3 +1,7 @@
+2002-06-17  Keisuke Nishida  <knishida@netlab.jp>
+
+	* call.c (cob_call_resolve): Don't set cob_status.
+
 2002-06-11  Keisuke Nishida  <knishida@netlab.jp>
 
 	* call.c (cob_resolve): Use COB_MODULE_EXT.
