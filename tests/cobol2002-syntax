@@ -365,7 +365,7 @@ at_help_all='1;definition.at:27;Undefined data name;;
 54;value.at:170;Alphanumeric item;;
 55;value.at:191;Alphanumeric group item;;
 56;value.at:225;Numeric-edited item;;
-57;value.at:247;Alphanumeric-edited item;;
+57;value.at:248;Alphanumeric-edited item;;
 58;move.at:36;MOVE SPACE TO numeric or numeric-edited item;;
 59;move.at:61;MOVE ZERO TO alphabetic item;;
 60;move.at:86;MOVE alphabetic TO x;;
@@ -4053,6 +4053,7 @@ cat >prog.cob <<'_ATEOF'
        PROGRAM-ID.      prog.
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
+       01 X-SPACE       PIC **99.00 VALUE SPACE.
        01 X-123         PIC **99.00 VALUE 123.
        01 X-ABC         PIC **99.00 VALUE "abc".
        01 X-MATCH       PIC **99.00 VALUE "*123.00".
@@ -4063,22 +4064,22 @@ _ATEOF
 
 
 $at_traceoff
-echo "value.at:243: \${COMPILE_ONLY} prog.cob"
-echo value.at:243 >$at_check_line_file
+echo "value.at:244: \${COMPILE_ONLY} prog.cob"
+echo value.at:244 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:6: warning: alphanumeric value is expected
-prog.cob:9: warning: value size exceeds data size
+echo >>$at_stderr; echo "prog.cob:7: warning: alphanumeric value is expected
+prog.cob:10: warning: value size exceeds data size
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "value.at:243: exit code was $at_status, expected 0"
+   *) echo "value.at:244: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -4096,13 +4097,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  57 ) # 57. value.at:247: Alphanumeric-edited item
-    at_setup_line='value.at:247'
+  57 ) # 57. value.at:248: Alphanumeric-edited item
+    at_setup_line='value.at:248'
     at_desc='Alphanumeric-edited item'
     $at_quiet $ECHO_N " 57: Alphanumeric-edited item                     $ECHO_C"
     at_xfail=no
     (
-      echo "57. value.at:247: testing ..."
+      echo "57. value.at:248: testing ..."
       $at_traceon
 
 
@@ -4122,8 +4123,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "value.at:265: \${COMPILE_ONLY} prog.cob"
-echo value.at:265 >$at_check_line_file
+echo "value.at:266: \${COMPILE_ONLY} prog.cob"
+echo value.at:266 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4137,7 +4138,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "value.at:265: exit code was $at_status, expected 0"
+   *) echo "value.at:266: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
