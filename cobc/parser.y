@@ -488,6 +488,10 @@ file_attrib:
       $<tree>-1->filenamevar = $<tree>6;
     }
   }
+| file_attrib RECORD opt_contains integer opt_characters
+  {
+    yywarn ("RECORD CONTAINS is ignored");
+  }
 | file_attrib RECORD opt_is VARYING opt_in_size
   from_rec_varying to_rec_varying opt_characters
   DEPENDING opt_on SYMBOL_TOK
