@@ -645,6 +645,10 @@ select_option:
   {
     yywarn ("PADDING not implemented");
   }
+| RECORD DELIMITER _is STANDARD_1
+  {
+    yywarn ("RECORD DELIMITER not implemented");
+  }
 | RELATIVE _key _is predefined_name
   {
     current_file_name->key = $4;
