@@ -108,47 +108,43 @@ arrange_decimal (cob_decimal d1, cob_decimal d2)
     shift_decimal (d2, d1->decimals - d2->decimals);
 }
 
-cob_decimal
+void
 cob_decimal_add (cob_decimal d1, cob_decimal d2)
 {
   arrange_decimal (d1, d2);
   mpz_add (d1->number, d1->number, d2->number);
-  return d1;
 }
 
-cob_decimal
+void
 cob_decimal_sub (cob_decimal d1, cob_decimal d2)
 {
   arrange_decimal (d1, d2);
   mpz_sub (d1->number, d1->number, d2->number);
-  return d1;
 }
 
-cob_decimal
+void
 cob_decimal_mul (cob_decimal d1, cob_decimal d2)
 {
   d1->decimals += d2->decimals;
   mpz_mul (d1->number, d1->number, d2->number);
-  return d1;
 }
 
-cob_decimal
+void
 cob_decimal_div (cob_decimal d1, cob_decimal d2)
 {
   /* check for division by zero */
   if (mpz_sgn (d2->number) == 0)
     {
       cob_status = COB_STATUS_OVERFLOW;
-      return d1;
+      return;
     }
 
   d1->decimals -= d2->decimals;
   shift_decimal (d1, 19 + ((d1->decimals < 0) ? -d1->decimals : 0));
   mpz_tdiv_q (d1->number, d1->number, d2->number);
-  return d1;
 }
 
-cob_decimal
+void
 cob_decimal_pow (cob_decimal d1, cob_decimal d2)
 {
   if (d2->decimals == 0 && mpz_fits_ulong_p (d2->number))
@@ -161,7 +157,6 @@ cob_decimal_pow (cob_decimal d1, cob_decimal d2)
     {
       cob_runtime_error ("%s: not implemented yet", __FUNCTION__);
     }
-  return d1;
 }
 
 int
@@ -176,25 +171,30 @@ cob_decimal_cmp (cob_decimal d1, cob_decimal d2)
  * Decimal set/get
  */
 
-cob_decimal
+void
+cob_decimal_set (cob_decimal dst, cob_decimal src)
+{
+  mpz_set (dst->number, src->number);
+  dst->decimals = src->decimals;
+}
+
+void
 cob_decimal_set_int (cob_decimal d, int n, int decimals)
 {
   mpz_set_si (d->number, n);
   d->decimals = decimals;
-  return d;
 }
 
-cob_decimal
+void
 cob_decimal_set_int64 (cob_decimal d, long long n, int decimals)
 {
   mpz_set_si (d->number, n >> 32);
   mpz_mul_2exp (d->number, d->number, 32);
   mpz_add_ui (d->number, d->number, n & 0xffffffff);
   d->decimals = decimals;
-  return d;
 }
 
-cob_decimal
+void
 cob_decimal_set_display (cob_decimal d, struct cob_field f)
 {
   int sign = get_sign (f);
@@ -208,11 +208,10 @@ cob_decimal_set_display (cob_decimal d, struct cob_field f)
     mpz_neg (d->number, d->number);
   d->decimals = f.desc->decimals;
   put_sign (f, sign);
-  return d;
 }
 
-cob_decimal
-cob_decimal_set (cob_decimal d, struct cob_field f)
+void
+cob_decimal_set_field (cob_decimal d, struct cob_field f)
 {
   switch (f.desc->type)
     {
@@ -235,7 +234,6 @@ cob_decimal_set (cob_decimal d, struct cob_field f)
       cob_decimal_set_display (d, f);
       break;
     }
-  return d;
 }
 
 void
@@ -381,7 +379,7 @@ decimal_get (cob_decimal d, struct cob_field f, int round)
 void
 cob_add_int (struct cob_field f, int n, int decimals, int round)
 {
-  cob_decimal_set (cob_d1, f);
+  cob_decimal_set_field (cob_d1, f);
   cob_decimal_set_int (cob_d2, n, decimals);
   cob_decimal_add (cob_d1, cob_d2);
   decimal_get (cob_d1, f, round);
@@ -390,7 +388,7 @@ cob_add_int (struct cob_field f, int n, int decimals, int round)
 void
 cob_add_int64 (struct cob_field f, long long n, int decimals, int round)
 {
-  cob_decimal_set (cob_d1, f);
+  cob_decimal_set_field (cob_d1, f);
   cob_decimal_set_int64 (cob_d2, n, decimals);
   cob_decimal_add (cob_d1, cob_d2);
   decimal_get (cob_d1, f, round);
@@ -399,8 +397,8 @@ cob_add_int64 (struct cob_field f, long long n, int decimals, int round)
 void
 cob_add (struct cob_field f1, struct cob_field f2, int round)
 {
-  cob_decimal_set (cob_d1, f1);
-  cob_decimal_set (cob_d2, f2);
+  cob_decimal_set_field (cob_d1, f1);
+  cob_decimal_set_field (cob_d2, f2);
   cob_decimal_add (cob_d1, cob_d2);
   decimal_get (cob_d1, f1, round);
 }
@@ -408,7 +406,7 @@ cob_add (struct cob_field f1, struct cob_field f2, int round)
 void
 cob_sub_int (struct cob_field f, int n, int decimals, int round)
 {
-  cob_decimal_set (cob_d1, f);
+  cob_decimal_set_field (cob_d1, f);
   cob_decimal_set_int (cob_d2, n, decimals);
   cob_decimal_sub (cob_d1, cob_d2);
   decimal_get (cob_d1, f, round);
@@ -417,7 +415,7 @@ cob_sub_int (struct cob_field f, int n, int decimals, int round)
 void
 cob_sub_int64 (struct cob_field f, long long n, int decimals, int round)
 {
-  cob_decimal_set (cob_d1, f);
+  cob_decimal_set_field (cob_d1, f);
   cob_decimal_set_int64 (cob_d2, n, decimals);
   cob_decimal_sub (cob_d1, cob_d2);
   decimal_get (cob_d1, f, round);
@@ -426,31 +424,37 @@ cob_sub_int64 (struct cob_field f, long long n, int decimals, int round)
 void
 cob_sub (struct cob_field f1, struct cob_field f2, int round)
 {
-  cob_decimal_set (cob_d1, f1);
-  cob_decimal_set (cob_d2, f2);
+  cob_decimal_set_field (cob_d1, f1);
+  cob_decimal_set_field (cob_d2, f2);
   cob_decimal_sub (cob_d1, cob_d2);
   decimal_get (cob_d1, f1, round);
 }
 
 void
 cob_div (struct cob_field dividend, struct cob_field divisor,
-	 struct cob_field quotient, struct cob_field remainder, int round)
+	 struct cob_field quotient, int round)
 {
-  cob_decimal_set (cob_d1, dividend);
-  cob_decimal_set (cob_d2, divisor);
+  cob_decimal_set_field (cob_d1, dividend);
+  cob_decimal_set_field (cob_d2, divisor);
+  cob_decimal_set (cob_d3, cob_d1);
 
   /* compute quotient */
   cob_decimal_div (cob_d1, cob_d2);
+  cob_decimal_set (cob_d4, cob_d1);
   decimal_get (cob_d1, quotient, round);
 
   /* truncate digits from the quotient */
-  shift_decimal (cob_d1, quotient.desc->decimals - cob_d1->decimals);
+  shift_decimal (cob_d4, quotient.desc->decimals - cob_d4->decimals);
 
   /* compute remainder */
-  cob_decimal_mul (cob_d1, cob_d2);
-  cob_decimal_set (cob_d2, dividend);
-  cob_decimal_sub (cob_d2, cob_d1);
-  decimal_get (cob_d2, remainder, 0);
+  cob_decimal_mul (cob_d4, cob_d2);
+  cob_decimal_sub (cob_d3, cob_d4);
+}
+
+void
+cob_div_reminder (struct cob_field remainder)
+{
+  decimal_get (cob_d3, remainder, 0);
 }
 
 void

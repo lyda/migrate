@@ -453,7 +453,7 @@ output_expr (cobc_tree x, int id)
 	    if (cobc_failsafe_flag && !COBC_CONST_P (x))
 	      output_call_1 ("cob_check_numeric", x);
 	    output_prefix ();
-	    output ("cob_decimal_set (cob_d%d, ", id);
+	    output ("cob_decimal_set_field (cob_d%d, ", id);
 	    output_tree (x);
 	    output (");\n");
 	  }
