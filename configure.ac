@@ -64,7 +64,7 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([atexit memmove memset strcasecmp strchr strdup \
 		strerror strrchr strstr strtol])
 
-COB_LDADD="-L\${libdir} -lcob -lncurses -ldl -lm $htg_ld_args_db"
+COB_LDADD="-L\${libdir} -lcob -lncurses -ldl -lm $DB_LIBS"
 COB_LDFLAGS=
 
 AC_SUBST(COB_LDADD)

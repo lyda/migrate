@@ -230,57 +230,55 @@ const void *vv;
             ) 
 fi
 
+LIBS="$LIBS_BK -ldb"
+
 #
-htg_ld_args_default2=""
-htg_ld_args_curses=""
-htg_ld_args_db=""
-htg_ld_args_readline=""
-htg_ld_args_dl=""
+DB_LIBS=""
 
 # Step 13: Define which header to use 
 #echo  "DB library db_version state is ${db_version}"
 if test "${db_version}" = "1" ; then
   AC_DEFINE(USE_DB_1) 
-  htg_ld_args_db="-ldb1"
+  DB_LIBS="-ldb1"
 fi
 
 if test "${db_version}" = "2" ; then
   AC_DEFINE(USE_DB_2) 
-  htg_ld_args_db="-ldb2"
+  DB_LIBS="-ldb2"
 fi
 
 if test "${db_version}" = "23" ; then
   AC_DEFINE(USE_DB_23) 
-  htg_ld_args_db="-ldb2"
+  DB_LIBS="-ldb2"
 fi
 
 if test "${db_version}" = "3" ; then
   AC_DEFINE(USE_DB_3) 
-  htg_ld_args_db="-ldb3"
+  DB_LIBS="-ldb3"
 fi
 
 if test "${db_version}" = "32" ; then
   AC_DEFINE(USE_DB_23) 
-  htg_ld_args_db="-ldb3"
+  DB_LIBS="-ldb3"
 fi
 
 if test "${db_version}" = "10" ; then
   AC_DEFINE(USE_DB) 
-  htg_ld_args_db="-ldb"
+  DB_LIBS="-ldb"
 fi
 
 if test "${db_version}" = "123" ; then
   AC_DEFINE(USE_DB_23) 
-  htg_ld_args_db="-ldb"
+  DB_LIBS="-ldb"
 fi
 
 if test "${db_version}" = "21" ; then
   AC_DEFINE(USE_DB_2) 
-  htg_ld_args_db="-ldb"
+  DB_LIBS="-ldb"
 fi
 
 if test "${db_version}" = "31" ; then
   AC_DEFINE(USE_DB_3) 
-  htg_ld_args_db="-ldb"
+  DB_LIBS="-ldb"
 fi
 ])
