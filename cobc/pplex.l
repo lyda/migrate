@@ -264,9 +264,9 @@ ppcopy (char *name, const char *lib, struct cb_replacement *replacement)
 	  }
       cb_error ("%s: %s", name, strerror (errno));
       return -1;
-    found:
     }
 
+ found:
   return ppopen (name, replacement);
 }
 
