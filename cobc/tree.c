@@ -562,7 +562,7 @@ int
 field_used_any_parent (struct cobc_field *p)
 {
   for (; p; p = p->parent)
-    if (p->f.used)
+    if (p->flag_used)
       return 1;
   return 0;
 }
@@ -570,7 +570,7 @@ field_used_any_parent (struct cobc_field *p)
 int
 field_used_any_child (struct cobc_field *p)
 {
-  if (p->f.used)
+  if (p->flag_used)
     return 1;
   for (p = p->children; p; p = p->sister)
     if (field_used_any_child (p))
@@ -672,7 +672,7 @@ compute_size (struct cobc_field *p)
 	    }
 	  else
 	    {
-	      if (c->f.synchronized)
+	      if (c->flag_synchronized)
 		{
 		  int csize = compute_size (c);
 		  int border = (csize <= 4) ? 4 : 8;
@@ -698,7 +698,7 @@ compute_size (struct cobc_field *p)
 	case COBC_USAGE_DISPLAY:
 	  {
 	    p->size = p->pic->size;
-	    if (p->pic->category == COB_TYPE_NUMERIC && p->f.sign_separate)
+	    if (p->pic->category == COB_TYPE_NUMERIC && p->flag_sign_separate)
 	      p->size++;
 	    break;
 	  }
@@ -716,12 +716,14 @@ compute_size (struct cobc_field *p)
 	      p->size = 8;
 	  }
 	  break;
+	default:
+	  abort ();
 	}
     }
 
   /* ISO+IEC+1989-2002: 13.16.42.2-9 */
   if (p->redefines && p->size * p->occurs > p->redefines->size)
-    if (p->redefines->level != 01 || p->redefines->f.external)
+    if (p->redefines->level != 01 || p->redefines->flag_external)
       yyerror_x (COBC_TREE (p), _("size of `%s' larger than size of `%s'"),
 		 p->name, p->redefines->name);
 

@@ -170,7 +170,7 @@ static void ambiguous_error (cobc_tree x);
 %type <inum> flag_all flag_duplicates flag_optional flag_global
 %type <inum> flag_not flag_next flag_rounded flag_separate
 %type <inum> integer display_upon screen_plus_minus
-%type <inum> before_or_after perform_test replacing_option usage
+%type <inum> before_or_after perform_test replacing_option
 %type <inum> select_organization select_access_mode same_option
 %type <inum> ascending_or_descending opt_from_integer opt_to_integer
 %type <list> occurs_key_list occurs_index_list data_name_list
@@ -932,7 +932,7 @@ redefines_clause:
 /* EXTERNAL */
 
 external_clause:
-  _is EXTERNAL			{ current_field->f.external = 1; }
+  _is EXTERNAL			{ current_field->flag_external = 1; }
 ;
 
 
@@ -954,11 +954,14 @@ picture_clause:
 
 usage_clause:
   _usage usage
+  {
+    current_field->usage = $<inum>2;
+  }
 ;
 usage:
-  DISPLAY			{ current_field->usage = COBC_USAGE_DISPLAY; }
-| BINARY /* or COMP */		{ current_field->usage = COBC_USAGE_BINARY; }
-| INDEX				{ current_field->usage = COBC_USAGE_INDEX; }
+  DISPLAY			{ $<inum>$ = COBC_USAGE_DISPLAY; }
+| BINARY /* or COMP */		{ $<inum>$ = COBC_USAGE_BINARY; }
+| INDEX				{ $<inum>$ = COBC_USAGE_INDEX; }
 ;
 _usage: | USAGE _is ;
 
@@ -968,13 +971,13 @@ _usage: | USAGE _is ;
 sign_clause:
   _sign LEADING flag_separate
   {
-    current_field->f.sign_separate = $3;
-    current_field->f.sign_leading  = 1;
+    current_field->flag_sign_separate = $3;
+    current_field->flag_sign_leading  = 1;
   }
 | _sign TRAILING flag_separate
   {
-    current_field->f.sign_separate = $3;
-    current_field->f.sign_leading  = 0;
+    current_field->flag_sign_separate = $3;
+    current_field->flag_sign_leading  = 0;
   }
 ;
 flag_separate:
@@ -992,7 +995,7 @@ occurs_clause:
     current_field->occurs = $2;
     current_field->occurs_min = 1;
     current_field->indexes++;
-    current_field->f.have_occurs = 1;
+    current_field->flag_occurs = 1;
   }
 | OCCURS integer TO integer _times DEPENDING _on reference
   occurs_keys occurs_indexed
@@ -1001,7 +1004,7 @@ occurs_clause:
     current_field->occurs_min = $2;
     current_field->occurs_depending = $8;
     current_field->indexes++;
-    current_field->f.have_occurs = 1;
+    current_field->flag_occurs = 1;
   }
 ;
 
@@ -1066,7 +1069,7 @@ _times: | TIMES ;
 /* JUSTIFIED RIGHT */
 
 justified_clause:
-  JUSTIFIED _right		{ current_field->f.justified = 1; }
+  JUSTIFIED _right		{ current_field->flag_justified = 1; }
 ;
 _right: | RIGHT ;
 
@@ -1074,7 +1077,7 @@ _right: | RIGHT ;
 /* SYNCHRONIZED */
 
 synchronized_clause:
-  SYNCHRONIZED left_or_right	{ current_field->f.synchronized = 1; }
+  SYNCHRONIZED left_or_right	{ current_field->flag_synchronized = 1; }
 ;
 left_or_right:
 | LEFT
@@ -1085,7 +1088,7 @@ left_or_right:
 /* BLANK */
 
 blank_clause:
-  BLANK _when ZERO		{ current_field->f.blank_zero = 1; }
+  BLANK _when ZERO		{ current_field->flag_blank_zero = 1; }
 ;
 
 
@@ -1185,7 +1188,7 @@ screen_description:
     if (current_field == NULL)
       YYERROR;
 
-    current_field->f.screen = 1;
+    current_field->flag_screen = 1;
     current_field->screen_flag |= COB_SCREEN_FG_NONE;
     current_field->screen_flag |= COB_SCREEN_BG_NONE;
     if (current_field->parent)
@@ -1545,7 +1548,7 @@ accept_body:
   {
     if (current_program->enable_screen)
       {
-	if (COBC_FIELD ($1)->f.screen)
+	if (COBC_FIELD ($1)->flag_screen)
 	  {
 	    cobc_tree line = COBC_PARAMETER ($2)->x;
 	    cobc_tree column = COBC_PARAMETER ($2)->y;
@@ -1813,7 +1816,7 @@ display_statement:
     if (current_program->enable_screen)
       {
 	for (l = $3; l; l = l->next)
-	  if (COBC_FIELD (l->item)->f.screen)
+	  if (COBC_FIELD (l->item)->flag_screen)
 	    {
 	      cobc_tree line = COBC_PARAMETER ($5)->x;
 	      cobc_tree column = COBC_PARAMETER ($5)->y;
@@ -3905,7 +3908,7 @@ resolve_field (cobc_tree x)
 	  struct cobc_list *l = r->subs = list_reverse (r->subs);
 
 	  for (p = f; p; p = p->parent)
-	    if (p->f.have_occurs)
+	    if (p->flag_occurs)
 	      {
 		cobc_tree sub = l->item;
 		if (COBC_LITERAL_P (sub))
@@ -4020,11 +4023,11 @@ resolve_label (cobc_tree x)
 static void
 field_set_used (struct cobc_field *p)
 {
-  p->f.used = 1;
+  p->flag_used = 1;
   for (; p; p = p->parent)
     if (p->redefines)
       {
-	p->redefines->f.used = 1;
+	p->redefines->flag_used = 1;
 	break;
       }
 }
@@ -4158,8 +4161,8 @@ build_field (cobc_tree level, cobc_tree name, struct cobc_field *last_field)
     {
       f->usage = f->parent->usage;
       f->indexes = f->parent->indexes;
-      f->f.sign_leading = f->parent->f.sign_leading;
-      f->f.sign_separate = f->parent->f.sign_separate;
+      f->flag_sign_leading = f->parent->flag_sign_leading;
+      f->flag_sign_separate = f->parent->flag_sign_separate;
     }
 
   return f;
@@ -4226,7 +4229,7 @@ validate_field_tree (struct cobc_field *f)
 	yyerror_x (x, _("group name `%s' may not have PICTURE"),
 		   tree_name (x));
 
-      if (f->f.justified)
+      if (f->flag_justified)
 	yyerror_x (x, _("group name `%s' may not have JUSTIFIED RIGHT"),
 		   tree_name (x));
 
@@ -4264,18 +4267,20 @@ validate_field_tree (struct cobc_field *f)
 	  break;
 	case COBC_USAGE_INDEX:
 	  break;
+	default:
+	  abort ();
 	}
 
       /* validate SIGN */
 
       /* validate OCCURS */
-      if (f->f.have_occurs)
+      if (f->flag_occurs)
 	if (f->level < 2 || f->level > 49)
 	  yyerror_x (x, _("level %02d field `%s' cannot have OCCURS"),
 		     f->level, tree_name (x));
 
       /* validate JUSTIFIED RIGHT */
-      if (f->f.justified)
+      if (f->flag_justified)
 	switch (f->pic->category)
 	  {
 	  case COB_TYPE_ALPHABETIC:
@@ -4289,11 +4294,11 @@ validate_field_tree (struct cobc_field *f)
 	  }
 
       /* validate SYNCHRONIZED */
-      if (f->f.synchronized)
+      if (f->flag_synchronized)
 	if (f->usage != COBC_USAGE_BINARY)
 	  {
 	    // yywarn ("SYNCHRONIZED here has no effect");
-	    f->f.synchronized = 0;
+	    f->flag_synchronized = 0;
 	  }
 
       /* validate BLANK ZERO */
@@ -4614,9 +4619,9 @@ build_corresponding_1 (cobc_tree (*func)(), cobc_tree x1, cobc_tree x2,
 {
   struct cobc_field *f1, *f2;
   for (f1 = field (x1)->children; f1; f1 = f1->sister)
-    if (!f1->redefines && !f1->f.have_occurs)
+    if (!f1->redefines && !f1->flag_occurs)
       for (f2 = field (x2)->children; f2; f2 = f2->sister)
-	if (!f2->redefines && !f2->f.have_occurs)
+	if (!f2->redefines && !f2->flag_occurs)
 	  if (strcmp (f1->name, f2->name) == 0)
 	    {
 	      cobc_tree t1 = copy_reference (x1, COBC_TREE (f1));
@@ -4625,8 +4630,8 @@ build_corresponding_1 (cobc_tree (*func)(), cobc_tree x1, cobc_tree x2,
 		l = build_corresponding_1 (func, t1, t2, opt, l);
 	      else
 		{
-		  field (t1)->f.used = 1;
-		  field (t2)->f.used = 1;
+		  field (t1)->flag_used = 1;
+		  field (t2)->flag_used = 1;
 		  if (opt < 0)
 		    l = cons (func (t1, t2), l);
 		  else

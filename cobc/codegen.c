@@ -68,7 +68,7 @@ field_name (cobc_tree x)
     case cobc_tag_field:
       {
 	struct cobc_field *f = COBC_FIELD (x);
-	if (f->f.screen)
+	if (f->flag_screen)
 	  sprintf (name, "s_%s", f->cname);
 	else
 	  sprintf (name, "f_%s", f->cname);
@@ -209,22 +209,22 @@ output_int32 (cobc_tree x)
       }
     default:
       {
-	struct cobc_field *p = field (x);
-	switch (p->usage)
+	struct cobc_field *f = field (x);
+	switch (f->usage)
 	  {
 	  case COBC_USAGE_DISPLAY:
 	    output_func_1 ("cob_to_int", x);
 	    break;
 	  case COBC_USAGE_BINARY:
 	  case COBC_USAGE_INDEX:
-	    if (p->level == 0)
+	    if (f->level == 0)
 	      {
-		output ("i_%s", p->cname);
+		output ("i_%s", f->cname);
 	      }
 	    else
 	      {
 		output ("(*(");
-		switch (p->size)
+		switch (f->size)
 		  {
 		  case 1: output ("char"); break;
 		  case 2: output ("short"); break;
@@ -235,6 +235,9 @@ output_int32 (cobc_tree x)
 		output_data (x);
 		output ("))");
 	      }
+	    break;
+	  default:
+	    abort ();
 	  }
 	break;
       }
@@ -323,7 +326,7 @@ output_data (cobc_tree x)
 	int i = f->indexes;
 	output_base (f);
 	for (; f; f = f->parent)
-	  if (f->f.have_occurs)
+	  if (f->flag_occurs)
 	    output (" + %d * i%d", f->size, i--);
 	break;
       }
@@ -342,7 +345,7 @@ output_data (cobc_tree x)
 	    struct cobc_list *l = r->subs = list_reverse (r->subs);
 
 	    for (p = f; p; p = p->parent)
-	      if (p->f.have_occurs)
+	      if (p->flag_occurs)
 		{
 		  output (" + %d * ", p->size);
 		  output_index (l->item);
@@ -497,7 +500,7 @@ output_field (cobc_tree x, int id)
 	    struct cobc_list *l = r->subs = list_reverse (r->subs);
 
 	    for (p = f; p; p = p->parent)
-	      if (p->f.have_occurs)
+	      if (p->flag_occurs)
 		{
 		  if (p->occurs_depending)
 		    {
@@ -687,7 +690,7 @@ output_recursive (void (*func) (struct cobc_field *), struct cobc_field *f)
   if (f->level != 01 && f->level != 77 && f->redefines)
     return;
 
-  if (f->f.have_occurs)
+  if (f->flag_occurs)
     {
       /* begin occurs loop */
       int i = f->indexes;
@@ -700,7 +703,7 @@ output_recursive (void (*func) (struct cobc_field *), struct cobc_field *f)
   /* process output */
   func (f);
 
-  if (f->f.have_occurs)
+  if (f->flag_occurs)
     {
       /* close loop */
       output_indent ("  }");
@@ -846,13 +849,13 @@ output_advance_move (cob_field *f, cobc_tree dst)
       attr.flags = 0;
       if (p->pic->have_sign)
 	attr.flags |= COB_FLAG_HAVE_SIGN;
-      if (p->f.sign_separate)
+      if (p->flag_sign_separate)
 	attr.flags |= COB_FLAG_SIGN_SEPARATE;
-      if (p->f.sign_leading)
+      if (p->flag_sign_leading)
 	attr.flags |= COB_FLAG_SIGN_LEADING;
-      if (p->f.blank_zero)
+      if (p->flag_blank_zero)
 	attr.flags |= COB_FLAG_BLANK_ZERO;
-      if (p->f.justified)
+      if (p->flag_justified)
 	attr.flags |= COB_FLAG_JUSTIFIED;
       attr.pic = p->pic->str;
     }
@@ -873,6 +876,8 @@ output_move_num (cobc_tree x, int high)
     case COBC_USAGE_INDEX:
       output_native_assign (x, high ? -1 : 0);
       break;
+    default:
+      abort ();
     }
 }
 
@@ -908,7 +913,7 @@ output_move_zero (cobc_tree x)
   switch (category (x))
     {
     case COB_TYPE_NUMERIC:
-      if (field (x)->f.blank_zero)
+      if (field (x)->flag_blank_zero)
 	output_move_space (x);
       else
 	output_move_num (x, 0);
@@ -1095,7 +1100,7 @@ field_uniform_class (struct cobc_field *f)
 static void
 output_initialize_uniform (struct cobc_field *f, int class, int size, int flag)
 {
-  if (flag && f->f.have_occurs)
+  if (flag && f->flag_occurs)
     {
       output_indent ("{");
       output_line ("int i%d = 0;", f->indexes);
@@ -1119,7 +1124,7 @@ output_initialize_uniform (struct cobc_field *f, int class, int size, int flag)
     }
   output (", %d);\n", size);
 
-  if (flag && f->f.have_occurs)
+  if (flag && f->flag_occurs)
     {
       output_indent ("}");
     }
@@ -1802,21 +1807,21 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
     {
       attr = "cob_group_attr";
     }
-  else if (p->f.used && gen_filler)
+  else if (p->flag_used && gen_filler)
     {
       char type = get_type (p);
       if (type == COB_TYPE_ALPHANUMERIC)
 	{
-	  if (p->f.justified)
+	  if (p->flag_justified)
 	    attr = "cob_just_attr";
 	  else
 	    attr = "cob_alnum_attr";
 	}
       else if (type == COB_TYPE_NUMERIC
 	       && p->pic->decimals == 0
-	       && p->f.sign_separate == 0
-	       && p->f.sign_leading == 0
-	       && p->f.blank_zero == 0)
+	       && p->flag_sign_separate == 0
+	       && p->flag_sign_leading == 0
+	       && p->flag_blank_zero == 0)
 	{
 	  if (p->pic->have_sign)
 	    sprintf (attr_buff, "cob_sint_attr[%d]", p->pic->digits);
@@ -1828,13 +1833,13 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
 	  char flags = 0;
 	  if (p->pic->have_sign)
 	    flags |= COB_FLAG_HAVE_SIGN;
-	  if (p->f.sign_separate)
+	  if (p->flag_sign_separate)
 	    flags |= COB_FLAG_SIGN_SEPARATE;
-	  if (p->f.sign_leading)
+	  if (p->flag_sign_leading)
 	    flags |= COB_FLAG_SIGN_LEADING;
-	  if (p->f.blank_zero)
+	  if (p->flag_blank_zero)
 	    flags |= COB_FLAG_BLANK_ZERO;
-	  if (p->f.justified)
+	  if (p->flag_justified)
 	    flags |= COB_FLAG_JUSTIFIED;
 
 	  sprintf (attr_buff, "%s_attr", fname);
@@ -1862,7 +1867,7 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
       /* level 01 */
       if (field_used_any_child (p) && gen_data)
 	{
-	  if (p->f.external)
+	  if (p->flag_external)
 	    {
 	      output ("unsigned char %s[%d];\n", p->cname, p->memory_size);
 	      output ("#define %s_data %s\n", fname, p->cname);
@@ -1876,7 +1881,7 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
     }
 
   /* field */
-  if (p->f.used && gen_filler)
+  if (p->flag_used && gen_filler)
     {
       if (gen_data)
 	output ("static ");
@@ -1884,7 +1889,7 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
       output_base (p);
       output (", &%s};\n", attr);
     }
-  if (p->f.used)
+  if (p->flag_used)
     output_newline ();
 
   /* children */

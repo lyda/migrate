@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2002 Keisuke Nishida
+ * Copyright (C) 2001-2003 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,17 +20,13 @@
 #ifndef _TREE_H_
 #define _TREE_H_
 
-#define COBC_USAGE_BINARY	'2'
-#define COBC_USAGE_INDEX	'6'
-#define COBC_USAGE_DISPLAY	'9'
+#define COBC_BEFORE		0
+#define COBC_AFTER		1
 
 #define COBC_CALL_BY_REFERENCE	1
 #define COBC_CALL_BY_CONTENT	2
 #define COBC_CALL_BY_LENGTH	3
 #define COBC_CALL_BY_VALUE	4
-
-#define COBC_BEFORE		0
-#define COBC_AFTER		1
 
 
 /*
@@ -236,6 +232,28 @@ extern cobc_tree make_decimal (char id);
  * Field
  */
 
+enum cobc_usage {
+  COBC_USAGE_BINARY,
+  COBC_USAGE_BIT,		/* not supported yet */
+  COBC_USAGE_DISPLAY,
+  COBC_USAGE_FLOAT,		/* not supported yet */
+  COBC_USAGE_INDEX,
+  COBC_USAGE_NATIONAL,		/* not supported yet */
+  COBC_USAGE_OBJECT,		/* not supported yet */
+  COBC_USAGE_PACKED,		/* not supported yet */
+  COBC_USAGE_POINTER,		/* not supported yet */
+  COBC_USAGE_PROGRAM		/* not supported yet */
+};
+
+struct cobc_picture {
+  int size;			/* byte size */
+  char *str;			/* picture string */
+  char category;		/* field category */
+  char digits;			/* the number of digit places */
+  char decimals;		/* the number of decimal digits */
+  char have_sign;		/* have `S' */
+};
+
 struct cobc_field {
   struct cobc_tree_common common;
   int size;			/* field size */
@@ -245,13 +263,11 @@ struct cobc_field {
   int occurs;			/* OCCURS */
   int occurs_min;
   int indexes;			/* the number of parents who have OCCURS */
-  int reference_id;
-  int reference_max;
-  char usage;			/* USAGE IS */
   char *name;			/* the original name */
   char *cname;			/* the name used in C */
   cobc_tree value;		/* VALUE */
   cobc_tree occurs_depending;	/* OCCURS ... DEPENDING ON */
+  enum cobc_usage usage;	/* USAGE */
   struct cobc_list *values;	/* VALUES used by level 88 item */
   struct cobc_list *index_list;	/* INDEXED BY */
   struct cobc_field *parent;	/* upper level field (NULL for 01 fields) */
@@ -267,25 +283,17 @@ struct cobc_field {
     cobc_tree val;		/* value to be compared in SEARCH ALL */
   } *keys;
   int nkeys;			/* the number of keys */
-  struct cobc_picture {
-    int size;			/* byte size */
-    char *str;			/* picture string */
-    char category;		/* field category */
-    char digits;		/* the number of digit places */
-    char decimals;		/* the number of decimal digits */
-    char have_sign;		/* have `S' */
-  } *pic;			/* PICTURE */
-  struct {
-    int external      : 1;	/* EXTERNAL */
-    int blank_zero    : 1;	/* BLANK WHEN ZERO */
-    int justified     : 1;	/* JUSTIFIED RIGHT */
-    int sign_leading  : 1;	/* SIGN IS LEADING */
-    int sign_separate : 1;	/* SIGN IS SEPARATE */
-    int synchronized  : 1;	/* SYNCHRONIZED */
-    int have_occurs   : 1;	/* if OCCURS clause exists */
-    int used          : 1;	/* if used more than once */
-    int screen        : 1;	/* if defined in SCREEN SECTION */
-  } f;
+  struct cobc_picture *pic;	/* PICTURE */
+  /* flags */
+  long flag_external      : 1;	/* EXTERNAL */
+  long flag_blank_zero    : 1;	/* BLANK WHEN ZERO */
+  long flag_justified     : 1;	/* JUSTIFIED RIGHT */
+  long flag_sign_leading  : 1;	/* SIGN IS LEADING */
+  long flag_sign_separate : 1;	/* SIGN IS SEPARATE */
+  long flag_synchronized  : 1;	/* SYNCHRONIZED */
+  long flag_occurs        : 1;	/* if OCCURS clause exists */
+  long flag_used          : 1;	/* if used more than once */
+  long flag_screen        : 1;	/* if defined in SCREEN SECTION */
   /* screen parameters */
   cobc_tree screen_line;
   cobc_tree screen_column;
