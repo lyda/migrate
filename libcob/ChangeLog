@@ -1,3 +1,8 @@
+2002-07-24  Keisuke Nishida  <knishida@netlab.jp>
+
+	* numeric.h (cob_decimal): Removed.
+	* numeric.c, numeric.h: Relace `cob_decimal' by `struct cob_decimal *'.
+
 2002-07-14  Keisuke Nishida  <knishida@netlab.jp>
 
 	* move.c (cob_set_int): Moved from numeric.c.

@@ -34,11 +34,11 @@ static struct cob_decimal cob_d3_data;
 static struct cob_decimal cob_d4_data;
 static struct cob_decimal cob_dt_data;
 
-cob_decimal cob_d1 = &cob_d1_data;
-cob_decimal cob_d2 = &cob_d2_data;
-cob_decimal cob_d3 = &cob_d3_data;
-cob_decimal cob_d4 = &cob_d4_data;
-cob_decimal cob_dt = &cob_dt_data;
+struct cob_decimal *cob_d1 = &cob_d1_data;
+struct cob_decimal *cob_d2 = &cob_d2_data;
+struct cob_decimal *cob_d3 = &cob_d3_data;
+struct cob_decimal *cob_d4 = &cob_d4_data;
+struct cob_decimal *cob_dt = &cob_dt_data;
 
 void
 cob_init_numeric (void)
@@ -56,21 +56,21 @@ cob_init_numeric (void)
  */
 
 void
-cob_decimal_init (cob_decimal d)
+cob_decimal_init (struct cob_decimal *d)
 {
   mpz_init (d->number);
   d->decimals = 0;
 }
 
 void
-cob_decimal_clear (cob_decimal d)
+cob_decimal_clear (struct cob_decimal *d)
 {
   mpz_clear (d->number);
 }
 
 #ifdef COB_DEBUG
 void
-cob_decimal_print (cob_decimal d)
+cob_decimal_print (struct cob_decimal *d)
 {
   mpz_out_str (stdout, 10, d->number);
   if (d->decimals)
@@ -81,7 +81,7 @@ cob_decimal_print (cob_decimal d)
 
 /* d->number *= 10^n, d->decimals += n */
 static void
-shift_decimal (cob_decimal d, int n)
+shift_decimal (struct cob_decimal *d, int n)
 {
   if (n > 0)
     {
@@ -117,7 +117,7 @@ shift_decimal (cob_decimal d, int n)
 }
 
 static void
-arrange_decimal (cob_decimal d1, cob_decimal d2)
+arrange_decimal (struct cob_decimal *d1, struct cob_decimal *d2)
 {
   if (d1->decimals < d2->decimals)
     shift_decimal (d1, d2->decimals - d1->decimals);
@@ -131,21 +131,21 @@ arrange_decimal (cob_decimal d1, cob_decimal d2)
  */
 
 void
-cob_decimal_set (cob_decimal dst, cob_decimal src)
+cob_decimal_set (struct cob_decimal *dst, struct cob_decimal *src)
 {
   mpz_set (dst->number, src->number);
   dst->decimals = src->decimals;
 }
 
 void
-cob_decimal_set_int (cob_decimal d, int n, int decimals)
+cob_decimal_set_int (struct cob_decimal *d, int n, int decimals)
 {
   mpz_set_si (d->number, n);
   d->decimals = decimals;
 }
 
 void
-cob_decimal_set_int64 (cob_decimal d, long long n, int decimals)
+cob_decimal_set_int64 (struct cob_decimal *d, long long n, int decimals)
 {
   mpz_set_si (d->number, n >> 32);
   mpz_mul_2exp (d->number, d->number, 32);
@@ -154,14 +154,14 @@ cob_decimal_set_int64 (cob_decimal d, long long n, int decimals)
 }
 
 void
-cob_decimal_set_double (cob_decimal d, double v)
+cob_decimal_set_double (struct cob_decimal *d, double v)
 {
   mpz_set_d (d->number, v * cob_exp10[9]);
   d->decimals = 9;
 }
 
 void
-cob_decimal_set_display (cob_decimal d, struct cob_field f)
+cob_decimal_set_display (struct cob_decimal *d, struct cob_field f)
 {
   int sign = cob_get_sign (f);
   int len = COB_FIELD_LENGTH (f);
@@ -177,7 +177,7 @@ cob_decimal_set_display (cob_decimal d, struct cob_field f)
 }
 
 void
-cob_decimal_set_field (cob_decimal d, struct cob_field f)
+cob_decimal_set_field (struct cob_decimal *d, struct cob_field f)
 {
   switch (COB_FIELD_TYPE (f))
     {
@@ -200,7 +200,7 @@ cob_decimal_set_field (cob_decimal d, struct cob_field f)
 }
 
 void
-cob_decimal_get (cob_decimal d, struct cob_field f)
+cob_decimal_get (struct cob_decimal *d, struct cob_field f)
 {
   if (cob_status == COB_STATUS_OVERFLOW)
     return;
@@ -304,7 +304,7 @@ cob_decimal_get (cob_decimal d, struct cob_field f)
 }
 
 void
-cob_decimal_get_rounded (cob_decimal d, struct cob_field f)
+cob_decimal_get_rounded (struct cob_decimal *d, struct cob_field f)
 {
   if (f.desc->decimals < d->decimals)
     {
@@ -322,7 +322,7 @@ cob_decimal_get_rounded (cob_decimal d, struct cob_field f)
 }
 
 double
-cob_decimal_get_double (cob_decimal d)
+cob_decimal_get_double (struct cob_decimal *d)
 {
   int n = d->decimals;
   double v = mpz_get_d (d->number);
@@ -337,28 +337,28 @@ cob_decimal_get_double (cob_decimal d)
  */
 
 void
-cob_decimal_add (cob_decimal d1, cob_decimal d2)
+cob_decimal_add (struct cob_decimal *d1, struct cob_decimal *d2)
 {
   arrange_decimal (d1, d2);
   mpz_add (d1->number, d1->number, d2->number);
 }
 
 void
-cob_decimal_sub (cob_decimal d1, cob_decimal d2)
+cob_decimal_sub (struct cob_decimal *d1, struct cob_decimal *d2)
 {
   arrange_decimal (d1, d2);
   mpz_sub (d1->number, d1->number, d2->number);
 }
 
 void
-cob_decimal_mul (cob_decimal d1, cob_decimal d2)
+cob_decimal_mul (struct cob_decimal *d1, struct cob_decimal *d2)
 {
   d1->decimals += d2->decimals;
   mpz_mul (d1->number, d1->number, d2->number);
 }
 
 void
-cob_decimal_div (cob_decimal d1, cob_decimal d2)
+cob_decimal_div (struct cob_decimal *d1, struct cob_decimal *d2)
 {
   /* check for division by zero */
   if (mpz_sgn (d2->number) == 0)
@@ -373,7 +373,7 @@ cob_decimal_div (cob_decimal d1, cob_decimal d2)
 }
 
 void
-cob_decimal_pow (cob_decimal d1, cob_decimal d2)
+cob_decimal_pow (struct cob_decimal *d1, struct cob_decimal *d2)
 {
   if (d2->decimals == 0 && mpz_fits_ulong_p (d2->number))
     {
@@ -389,7 +389,7 @@ cob_decimal_pow (cob_decimal d1, cob_decimal d2)
 }
 
 int
-cob_decimal_cmp (cob_decimal d1, cob_decimal d2)
+cob_decimal_cmp (struct cob_decimal *d1, struct cob_decimal *d2)
 {
   arrange_decimal (d1, d2);
   return mpz_cmp (d1->number, d2->number);
@@ -401,7 +401,7 @@ cob_decimal_cmp (cob_decimal d1, cob_decimal d2)
  */
 
 static void
-decimal_get (cob_decimal d, struct cob_field f, int round)
+decimal_get (struct cob_decimal *d, struct cob_field f, int round)
 {
   if (round)
     cob_decimal_get_rounded (d, f);
