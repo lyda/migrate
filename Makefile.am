@@ -19,4 +19,4 @@ rpm: dist
 	cp $(rpmdir)/SRPMS/$(distdir)-$(RELEASE).src.rpm .
 
 test:
-	@(cd test_suite && $(MAKE))
+	@(cd testsuite && $(MAKE))
