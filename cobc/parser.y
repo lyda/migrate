@@ -235,7 +235,7 @@ static void ambiguous_error (struct cobc_word *p);
 %type <tree> qualified_name,predefined_name
 %type <list> qualified_predefined_word
 %type <tree> integer_value,value,number
-%type <tree> literal,basic_literal,figurative_constant
+%type <tree> literal_or_predefined,literal,basic_literal,figurative_constant
 %type <word> qualified_word,label_word,undefined_word
 
 
@@ -641,7 +641,7 @@ select_option:
   {
     current_file_name->file_status = $4;
   }
-| PADDING _character _is literal
+| PADDING _character _is literal_or_predefined
   {
     yywarn ("PADDING not implemented");
   }
@@ -681,6 +681,10 @@ select_access_mode:
   SEQUENTIAL			{ $$ = COB_ACCESS_SEQUENTIAL; }
 | DYNAMIC			{ $$ = COB_ACCESS_DYNAMIC; }
 | RANDOM			{ $$ = COB_ACCESS_RANDOM; }
+;
+literal_or_predefined:
+  literal
+| predefined_name
 ;
 flag_optional:
   /* nothing */			{ $$ = 0; }
