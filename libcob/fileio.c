@@ -148,8 +148,8 @@ sequential_close (struct cob_file_desc *f, int opt)
       close (f->file.fd);
       f->file.fd = 0;
       RETURN_STATUS (00);
-    case COB_CLOSE_RELL:
-    case COB_CLOSE_RELL_REMOVAL:
+    case COB_CLOSE_REEL:
+    case COB_CLOSE_REEL_REMOVAL:
     case COB_CLOSE_UNIT:
     case COB_CLOSE_UNIT_REMOVAL:
     case COB_CLOSE_NO_REWIND:
