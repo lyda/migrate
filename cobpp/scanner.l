@@ -125,6 +125,10 @@ static void process_eol (void);
   if (copybook_stack->next == NULL)
     yyterminate ();
 
+  /* Close the current file */
+  if (yyin != stdin)
+    fclose (yyin);
+
   /* Switch to the last buffer */
   set_buffer (copybook_stack->lineno,
 	      copybook_stack->filename,

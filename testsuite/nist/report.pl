@@ -61,7 +61,7 @@ foreach $in (sort (glob("*.{CBL,SUB}"))) {
       if ($in =~ /\.CBL/) {
 	system ("rm -f XXXXX*");
       }
-      if (system ("$cmd > /dev/null") != 0) {
+      if (system ("$cmd > $exe.out") != 0) {
 	$execute_error++;
 	print LOG "  ***** execute error *****\n";
       } else {
@@ -97,6 +97,7 @@ foreach $in (sort (glob("*.{CBL,SUB}"))) {
 	$total_inspect += $inspect;
 	$total_ok++ if $fail == 0;
 	rename ("report.txt", "$exe.txt");
+	unlink "$exe.out" if (-s "$exe.out" == 0);
       }
     }
   }

@@ -45,6 +45,7 @@ while (<IN>) {
       open (OUT, "> $module/$name") or die;
       while (<IN>) {
 	last if /^      \*END/;
+	chop if ($type eq "DATA*" and length >= 80);
 	print OUT;
       }
     } else {

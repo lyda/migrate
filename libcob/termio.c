@@ -38,9 +38,9 @@ FILE *cob_stream[3];
 void
 cob_init_termio (void)
 {
-  cob_stream[COB_STDIN]  = stdin;
-  cob_stream[COB_STDOUT] = stdout;
-  cob_stream[COB_STDERR] = stderr;
+  cob_stream[COB_SYSIN]  = stdin;
+  cob_stream[COB_SYSOUT] = stdout;
+  cob_stream[COB_SYSERR] = stderr;
 }
 
 
@@ -101,8 +101,8 @@ cob_newline (int fd)
 void
 cob_debug_print (struct cob_field f)
 {
-  cob_display (f, COB_STDOUT);
-  cob_newline (COB_STDOUT);
+  cob_display (f, COB_SYSOUT);
+  cob_newline (COB_SYSOUT);
 }
 #endif
 
@@ -112,11 +112,10 @@ cob_debug_print (struct cob_field f)
  */
 
 void
-cob_accept (struct cob_field f)
+cob_accept (struct cob_field f, int fd)
 {
   int size;
   char buff[BUFSIZ];
-  struct cob_field_desc fld = {0, COB_ALPHANUMERIC};
 
 #ifdef HAVE_LIBREADLINE
   if (isatty (fileno (stdin)))
@@ -134,8 +133,10 @@ cob_accept (struct cob_field f)
       size = strlen (buff) - 1;
     }
 
-  fld.size = size;
-  cob_move_alphanum_to_alphanum ((struct cob_field) {&fld, buff}, f);
+  if (size > COB_FIELD_SIZE (f))
+    size = COB_FIELD_SIZE (f);
+  memcpy (COB_FIELD_DATA (f), buff, size);
+  memset (COB_FIELD_DATA (f) + size, ' ', COB_FIELD_SIZE (f) - size);
 }
 
 void

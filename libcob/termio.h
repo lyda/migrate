@@ -23,9 +23,9 @@
 #include <stdio.h>
 #include <libcob/common.h>
 
-#define COB_STDIN	0
-#define COB_STDOUT	1
-#define COB_STDERR	2
+#define COB_SYSIN	0
+#define COB_SYSOUT	1
+#define COB_SYSERR	2
 
 #define cob_puti(i,fd)	fprintf (cob_stream[fd], "%d", (i))
 #define cob_puts(s,fd)	fputs ((s), cob_stream[fd])
@@ -39,7 +39,7 @@ extern void cob_debug_print (struct cob_field f);
 
 extern void cob_display (struct cob_field f, int fd);
 extern void cob_newline (int fd);
-extern void cob_accept (struct cob_field f);
+extern void cob_accept (struct cob_field f, int fd);
 extern void cob_accept_date (struct cob_field f);
 extern void cob_accept_day (struct cob_field f);
 extern void cob_accept_day_of_week (struct cob_field f);

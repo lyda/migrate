@@ -1398,7 +1398,7 @@ statement:
 accept_statement:
   ACCEPT data_name
   {
-    push_call_1 (COBC_ACCEPT, $2);
+    push_call_2 (COBC_ACCEPT, $2, make_integer (COB_SYSIN));
   }
 | ACCEPT data_name FROM DATE
   {
@@ -1426,10 +1426,11 @@ accept_statement:
   }
 | ACCEPT data_name FROM mnemonic_name
   {
-    if (COBC_BUILTIN ($4)->id == BUILTIN_STDIN)
-      push_call_1 (COBC_ACCEPT, $2);
+    if (COBC_BUILTIN ($4)->id == BUILTIN_CONSOLE
+	|| COBC_BUILTIN ($4)->id == BUILTIN_SYSIN)
+      push_call_2 (COBC_ACCEPT, $2, make_integer (COB_SYSIN));
     else
-      yyerror ("ACCEPT FROM is allowed only from STDIN");
+      yyerror ("invalid input stream");
   }
 ;
 
@@ -1634,16 +1635,17 @@ display_statement:
   display_with_no_advancing
   ;
 display_upon:
-  /* nothing */			{ $$ = COB_STDOUT; }
+  /* nothing */			{ $$ = COB_SYSOUT; }
 | _upon mnemonic_name
   {
     switch (COBC_BUILTIN ($2)->id)
       {
-      case BUILTIN_STDOUT: $$ = COB_STDOUT; break;
-      case BUILTIN_STDERR: $$ = COB_STDERR; break;
+      case BUILTIN_CONSOLE: $$ = COB_SYSOUT; break;
+      case BUILTIN_SYSOUT:  $$ = COB_SYSOUT; break;
+      case BUILTIN_SYSERR:  $$ = COB_SYSERR; break;
       default:
 	yyerror ("invalid UPON item");
-	$$ = COB_STDOUT;
+	$$ = COB_SYSOUT;
 	break;
       }
   }
