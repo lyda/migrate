@@ -65,6 +65,8 @@ The config option `auto-initialize' controls this.
 
 *** LENGTH OF operator.
 
+*** PROCEDURE DIVISION USING BY REFERENCE/CONTENT/VALUE.
+
 *** DISPLAY ... ENVIRONMENT-NAME.  ACCEPT ... ENVIRONMENT-VALUE.
 
 *** COLLATING SEQUENCE in the SORT and MERGE statements.
