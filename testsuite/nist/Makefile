@@ -1,4 +1,4 @@
-VERSION = 0.4
+VERSION = 0.5
 
 distdir = open-cobol-testsuite-$(VERSION)
 DISTFILES = README Makefile EXEC85.conf.in expand.pl report.pl summary.pl
