@@ -3828,18 +3828,6 @@ gen_evaluate_start ()
 }
 
 int
-subject_set_size (struct selsubject *ssbj)
-{
-  int size = 0;
-  while (ssbj != NULL)
-    {
-      size++;
-      ssbj = ssbj->next;
-    }
-  return size;
-}
-
-int
 push_selection_subject_copy (int level, struct selsubject *ssbj,
 			     int stkadd, int objtype)
 {

@@ -632,7 +632,6 @@ extern void gen_subtractcorr (struct sym *sy1, struct sym *sy2, int rnd);
 extern void gen_set (struct sym *idx, int which, struct sym *var,
 		     int adrof_idx, int adrof_var);
 extern int gen_evaluate_start (void);
-extern int subject_set_size (struct selsubject *ssbj);
 extern int push_selection_subject_copy (int level, struct selsubject *ssbj,
 					int stkadd, int objtype);
 extern int selection_subject_type (int level, struct selsubject *ssbj);
