@@ -389,6 +389,10 @@ cob_set (struct cob_field f, int round)
   int decimals = (f.desc->type != 'E') ?
     f.desc->decimals : picCompDecimals (f.desc->pic);
 
+  /* Just return if something happened */
+  if (cob_status == COB_STATUS_OVERFLOW)
+    return;
+
   /* Append or truncate decimal digits */
   if (round && decimals < d->decimals)
     {
