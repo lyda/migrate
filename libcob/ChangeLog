@@ -1,3 +1,7 @@
+2002-11-19  Keisuke Nishida  <knishida@netlab.jp>
+
+	* fileio.c (lineseq_read): Not do anything special with '\0'.
+
 2002-09-30  Keisuke Nishida  <knishida@netlab.jp>
 
 	* cobconfig.h.in: Removed.
