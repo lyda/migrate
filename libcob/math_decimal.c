@@ -36,6 +36,7 @@ cob_fld_to_decimal (struct fld_desc *f, unsigned char *s, union numeric_type *p)
 	case 4: num = long_to_decimal (*((long *) s)); break;
 	case 8: num = long_long_to_decimal (*((long long *) s)); break;
 	}
+      num->weight -= f->decimals;
       break;
 
     case 'C':

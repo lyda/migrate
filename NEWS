@@ -1,5 +1,10 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Version 0.7.3 での変更点
+
+** いくつかのバグ修正
+
+
 * Version 0.7.2 での変更点
 
 ** ソースのフォーマット(fixed/free)を簡易的に自動判定

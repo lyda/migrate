@@ -1983,17 +1983,11 @@ gen_display (int dupon, int nl)
 	{
 	  dspflags = nl;
 	  if (first)
-	    {
-	      first = 0;
-	    }
+	    first = 0;
 	  else
-	    {
-	      dspflags &= ~2;	/* avoid erasing from now on */
-	    }
+	    dspflags &= ~2;	/* avoid erasing from now on */
 	  if (disp_list->next != NULL)
-	    {
-	      dspflags |= 1;	/* allow newline only at the last item */
-	    }
+	    dspflags |= 1;	/* allow newline only at the last item */
 	  push_immed (dspflags);
 	  gen_loadvar (sy);
 	  asm_call ("display_curses");

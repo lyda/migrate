@@ -43,10 +43,12 @@ extern int decimal_comma;
  |                                                                         |
 \*-------------------------------------------------------------------------*/
 
+#define port(dupon) ((dupon == 1) ? stdout : stderr)
+
 void
 newline (int dupon)
 {
-  putc ('\n', ((dupon == 1) ? stdout : stderr));
+  putc ('\n', port(dupon));
 }
 
 /*-------------------------------------------------------------------------*\
@@ -128,16 +130,8 @@ display (struct fld_desc *f, char *s, int dupon)
       buffer = s;
     }
 
-  if (dupon == 1)
-    {
-      for (i = 0; i < len; i++)
-	putc (buffer[i], stdout);
-    }
-  else
-    {
-      for (i = 0; i < len; i++)
-	putc (buffer[i], stderr);
-    }
+  for (i = 0; i < len; i++)
+    putc (buffer[i], port(dupon));
 
   if (moved)
     free (buffer);
@@ -153,7 +147,7 @@ display (struct fld_desc *f, char *s, int dupon)
 void
 display_erase (int dupon)
 {
-  putc ('\f', ((dupon == 1) ? stdout : stderr));
+  putc ('\f', port (dupon));
 }
 
 
