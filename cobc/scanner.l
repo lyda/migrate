@@ -67,7 +67,7 @@ static int scan_picture (char *text);
   start_condition = 0;
 %}
 
-<*>[ \t\r]*	{ /* ignore */ }
+<*>[ \t]*	{ /* ignore */ }
 <*>\n		{ cob_orig_lineno++; }
 
 ^"#".* {
@@ -282,6 +282,6 @@ scan_picture (char *text)
   return PICTURE;
 
  error:
-  yyerror ("syntax error, invalid picture");
+  yyerror ("invalid picture string");
   return PICTURE;
 }
