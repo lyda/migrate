@@ -110,7 +110,7 @@
 #define inspect_push(tag,a1,a2) \
   inspect_list = list_add (inspect_list, make_generic (tag, a1, a2))
 
-struct program_spec program_spec;
+struct cobc_program_spec program_spec;
 
 static struct cobc_field *current_field;
 static struct cobc_file_name *current_file_name;
@@ -266,14 +266,7 @@ start:
 program:
   {
     /* init program spec */
-    program_spec.program_id = NULL;
-    program_spec.initial_program = 0;
-    program_spec.enable_screen = 0;
-    program_spec.class_list = NULL;
-    program_spec.index_list = NULL;
-    program_spec.file_name_list = NULL;
-    program_spec.using_list = NULL;
-    program_spec.exec_list = NULL;
+    memset (&program_spec, 0, sizeof (struct cobc_program_spec));
     program_spec.input_handler = cobc_default_error_handler;
     program_spec.output_handler = cobc_default_error_handler;
     program_spec.i_o_handler = cobc_default_error_handler;

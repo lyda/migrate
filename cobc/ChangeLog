@@ -1,5 +1,16 @@
 2002-07-31  Keisuke Nishida  <knishida@netlab.jp>
 
+	* codegen.h (cobc_program_spec): Renamed from `program_spec'.
+	* parser.y (program_spec): Updated.
+	* codegen.c: (output_switch): New variable.
+	(output, output_newline, output_prefix, output_line): Updated.
+	(loop_counter, loop_counter_max): New variables.
+	(codegen_1): Renamed from codegen.  Set counter variables.
+	(codegen): New function.
+	(output_perform): Use loop_counter.
+
+2002-07-31  Keisuke Nishida  <knishida@netlab.jp>
+
 	* codegen.c (codegen): Return cob_return_code from main.
 
 2002-07-30  Keisuke Nishida  <knishida@netlab.jp>

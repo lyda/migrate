@@ -20,7 +20,7 @@
 #ifndef _CODEGEN_H_
 #define _CODEGEN_H_
 
-struct program_spec {
+struct cobc_program_spec {
   char *program_id;
   int initial_program;
   int enable_screen;
@@ -38,9 +38,7 @@ struct program_spec {
   struct cobc_label_name *extend_handler;
 };
 
-extern struct program_spec program_spec;
-
-extern void codegen (struct program_spec *spec);
+extern void codegen (struct cobc_program_spec *spec);
 
 extern void output_file_handler (struct cobc_file_name *f, int type, cobc_tree st1, cobc_tree st2);
 extern void output_goto (struct cobc_label_name *p);
