@@ -197,10 +197,13 @@ cob_inspect_converting (cob_field *f1, cob_field *f2)
   int i, j;
   int len = inspect_end - inspect_start;
 
-  for (i = 0; i < len; i++)
-    for (j = 0; j < f1->size; j++)
-      if (inspect_start[i] == f1->data[j])
-	inspect_start[i] = f2->data[j];
+  for (j = 0; j < f1->size; j++)
+    for (i = 0; i < len; i++)
+      if (inspect_mark[i] == -1 && inspect_start[i] == f1->data[j])
+	{
+	  inspect_start[i] = f2->data[j];
+	  inspect_mark[i] = 1;
+	}
 }
 
 void

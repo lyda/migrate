@@ -1,3 +1,8 @@
+2004-04-07  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* strings.c (cob_inspect_converting): Do not convert repeatedly.
+	(Thanks to Richard Smith <rich@theforest.plus.com>)
+
 2004-03-12  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
 
 	* screenio.c: #include <ncurses.h>
