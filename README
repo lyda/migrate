@@ -1,3 +1,14 @@
-OpenCOBOL is an open-source COBOL compiler, translating COBOL to C.
+OpenCOBOL is an open-source COBOL compiler, which translates COBOL
+programs to C code as the intermediate language.
+
+This package contains the following subdirectories:
+
+  cobc      COBOL compiler
+  cobpp     COBOL preprocessor
+  libcob    COBOL run-time library
+  libltdl   ltdl library
+  texi      Texinfo files
+
+See the following page for more information about OpenCOBOL:
 
   http://open-cobol.sourceforge.net/
