@@ -1,3 +1,7 @@
+2002-06-12  Keisuke Nishida  <knishida@netlab.jp>
+
+	* Version 0.9.6 released.
+
 2002-06-11  Keisuke Nishida  <knishida@netlab.jp>
 
 	* configure.ac (COB_MODULE_EXT): New variable.

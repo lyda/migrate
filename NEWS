@@ -2,22 +2,21 @@ NEWS - user visible changes				-*- outline -*-
 
 * Changes in OpenCOBOL 0.9.6
 
-** cobc now requires an option `-main' to build a standalone executable.
+** cobc now requires `-main' flag to build an executable from a COBOL file.
 
-Without -main, cobc generates a C function derived from PROGRAM-ID.
-With -main enabled, cobc generates a main function that calls PROGRAM-ID.
+Without -main, cobc does not generate a main function.
 See manual for details.
 
 ** Run-time configuration file: libcob.conf
 
-The environment variable `COB_CONFIG_FILE' specifies the file path
-(default to "${prefix}/share/open-cobol/libcob.conf").
+The environment variable `COB_CONFIG_FILE' specifies the file name
+(default: "${prefix}/share/open-cobol/libcob.conf").
 
 ** Use gettext for international messages.
 
 ** Include the test suite in subdir `testsuite'.
 
-** Bug fixes and improvements.
+** Many bug fixes and improvements.
 
 
 * Changes in OpenCOBOL 0.9.5
