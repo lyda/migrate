@@ -144,7 +144,7 @@ static void check_decimal_point (struct lit *lit);
 %token RIGHT,AUTO,REQUIRED,FULL,JUSTIFIED,BLINK,SECURE,BELL,COLUMN,SYNCHRONIZED
 %token TOK_INITIAL,FIRST,ALL,LEADING,OF,IN,BY,STRING,UNSTRING
 %token START,DELETE,PROGRAM,GLOBAL,EXTERNAL,SIZE,DELIMITED
-%token GIVING,ERASE,INSPECT,TALLYING,REPLACING,ON,POINTER,OVERFLOWTK
+%token GIVING,ERASE,INSPECT,TALLYING,REPLACING,ON,POINTER,OVERFLOW
 %token DELIMITER,COUNT,LEFT,TRAILING,CHARACTER,FILLER,OCCURS,TIMES
 %token ADD,SUBTRACT,MULTIPLY,DIVIDE,ROUNDED,REMAINDER,ERROR,SIZE
 %token FD,SD,REDEFINES,PICTURE,FILEN,USAGE,BLANK,SIGN,VALUE,MOVE,LABEL
@@ -1316,7 +1316,12 @@ on_exception_or_overflow:
     ;
 exception_or_overflow:
       EXCEPTION
-    | OVERFLOWTK
+    | OVERFLOW
+    ;
+on_not_exception:
+    NOT ON EXCEPTION { $<ival>$ = begin_on_except(); } 
+        statement_list            { gen_jmplabel($<dval>-1); $$=$<ival>4; }
+    | /* nothing */ { $$ = 0; }
     ;
 opt_end_call:
     | END_CALL
@@ -2615,12 +2620,12 @@ opt_on_overflow:
     on_not_overflow
     ;
 on_overflow:
-    ON OVERFLOWTK          { $<dval>$ = gen_at_end(-1); }
+    ON OVERFLOW          { $<dval>$ = gen_at_end(-1); }
         statement_list            { gen_dstlabel($<dval>3); }
     | /* nothing */
     ;
 on_not_overflow:
-    NOT ON OVERFLOWTK { $<dval>$ = gen_at_end(0); }
+    NOT ON OVERFLOW { $<dval>$ = gen_at_end(0); }
         statement_list            { gen_dstlabel($<dval>4); }
     | /* nothing */
     ;
@@ -2780,21 +2785,16 @@ error_sentence:
      }
     ;
 
-on_not_exception:
-    NOT ON EXCEPTION { $<ival>$ = begin_on_except(); } 
-        statement_list            { gen_jmplabel($<dval>-1); $$=$<ival>4; }
-    | /* nothing */ { $$ = 0; }
-    ;
 opt_invalid_key:
     opt_invalid_key_sentence
-    flag_not_invalid_key_sentence
+    opt_not_invalid_key_sentence
     ;
 opt_invalid_key_sentence:
     INVALID opt_key             { $<dval>$ = gen_at_end(23); }
     statement_list                    { gen_dstlabel($<dval>3); }
     | /* nothing */
     ;
-flag_not_invalid_key_sentence:
+opt_not_invalid_key_sentence:
     NOT INVALID opt_key    { $<dval>$ = gen_at_end(0); }
     statement_list                    { gen_dstlabel($<dval>4); }
     | /* nothing */
@@ -2825,7 +2825,6 @@ delimited_by:
     | error { yyerror("SIZE or identifier expected"); }
     ;
 
-
 
 /*
  * Condition
@@ -2947,24 +2946,13 @@ sign_condition:
 ;
 
 
+/*****************************************************************************
+ * Common rules
+ *****************************************************************************/
+
 /*
- * Flags
+ * 
  */
-
-flag_all:
-  /* nothing */			{ $$ = 0; }
-| ALL				{ $$ = 1; }
-;
-flag_rounded:
-  /* nothing */			{ $$ = 0; }
-| ROUNDED			{ $$ = 1; }
-;
-flag_not:
-  /* nothing */			{ $$ = 0; }
-| NOT				{ $$ = 1; }
-;
-
-
 
 opt_gname:
     /* nothing */ { $$ = NULL; }
@@ -3158,7 +3146,25 @@ in_of: IN | OF ;
 
 
 /*
- * Common propositions
+ * Common flags
+ */
+
+flag_all:
+  /* nothing */			{ $$ = 0; }
+| ALL				{ $$ = 1; }
+;
+flag_not:
+  /* nothing */			{ $$ = 0; }
+| NOT				{ $$ = 1; }
+;
+flag_rounded:
+  /* nothing */			{ $$ = 0; }
+| ROUNDED			{ $$ = 1; }
+;
+
+
+/*
+ * Common optional words
  */
 
 opt_is_are: | IS | ARE ;

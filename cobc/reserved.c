@@ -241,7 +241,7 @@ static struct reserved_word reserved_words[] = {
   {"ORGANIZATION", ORGANIZATION, 0},
   {"OTHER", OTHER, 0},
   {"OUTPUT", OUTPUT, 0},
-  {"OVERFLOW", OVERFLOWTK, 0},
+  {"OVERFLOW", OVERFLOW, 0},
   {"PACKED-DECIMAL", PACKED_DECIMAL, 0},
   {"PAGE", PAGE, 0},
   {"PERFORM", PERFORM, 0},
