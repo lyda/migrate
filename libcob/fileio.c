@@ -226,7 +226,6 @@ lineseq_write (cob_file *f)
   /* write to the file */
   for (i = 0; i < size; i++)
     putc (f->record->data[i], f->file);
-  fputs ("\n", f->file);
 
   return COB_STATUS_00_SUCCESS;
 }
