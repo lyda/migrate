@@ -30,7 +30,3 @@ binary-size: 1-2-4-8
 
 # Value: `native', `big-endian'
 binary-byteorder: big-endian
-
-# Value: `warning', `error'
-invalid-value: warning
-redefines-occurs-item: warning

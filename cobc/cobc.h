@@ -128,13 +128,11 @@ enum cb_support {
 #undef CB_CONFIG_INT
 #undef CB_CONFIG_STRING
 #undef CB_CONFIG_BOOLEAN
-#undef CB_CONFIG_ERROR
 #undef CB_CONFIG_SUPPORT
 #define CB_CONFIG_ANY(type,var,name)	extern type var;
 #define CB_CONFIG_INT(var,name)		extern int var;
 #define CB_CONFIG_STRING(var,name)	extern const char *var;
 #define CB_CONFIG_BOOLEAN(var,name)	extern int var;
-#define CB_CONFIG_ERROR(var,name)	extern int var;
 #define CB_CONFIG_SUPPORT(var,name)	extern enum cb_support var;
 #include "config.def"
 

@@ -31,13 +31,11 @@
 #undef CB_CONFIG_INT
 #undef CB_CONFIG_STRING
 #undef CB_CONFIG_BOOLEAN
-#undef CB_CONFIG_ERROR
 #undef CB_CONFIG_SUPPORT
 #define CB_CONFIG_ANY(type,var,name)	type var;
 #define CB_CONFIG_INT(var,name)		int var;
 #define CB_CONFIG_STRING(var,name)	const char *var;
 #define CB_CONFIG_BOOLEAN(var,name)	int var;
-#define CB_CONFIG_ERROR(var,name)	int var;
 #define CB_CONFIG_SUPPORT(var,name)	enum cb_support var;
 #include "config.def"
 
@@ -46,7 +44,6 @@ enum cb_config_type {
   INT,		/* integer */
   STRING,	/* "..." */
   BOOLEAN,	/* `yes', `no' */
-  ERROR,	/* `warning', `error' */
   SUPPORT,	/* `ok', `archaic', `obsolete', `unconformable' */
 };
 
@@ -61,13 +58,11 @@ struct {
 #undef CB_CONFIG_INT
 #undef CB_CONFIG_STRING
 #undef CB_CONFIG_BOOLEAN
-#undef CB_CONFIG_ERROR
 #undef CB_CONFIG_SUPPORT
 #define CB_CONFIG_ANY(type,var,name)	{ANY, name, &var, 0},
 #define CB_CONFIG_INT(var,name)		{INT, name, &var, 0},
 #define CB_CONFIG_STRING(var,name)	{STRING, name, &var, 0},
 #define CB_CONFIG_BOOLEAN(var,name)	{BOOLEAN, name, &var, 0},
-#define CB_CONFIG_ERROR(var,name)	{ERROR, name, &var, 0},
 #define CB_CONFIG_SUPPORT(var,name)	{SUPPORT, name, &var, 0},
 #include "config.def"
   {0, 0, 0}
@@ -236,16 +231,6 @@ cb_load_conf (const char *fname, int check_nodef)
 	      *((int *) var) = 1;
 	    else if (strcmp (val, "no") == 0)
 	      *((int *) var) = 0;
-	    else
-	      goto invalid_value;
-	    break;
-	  }
-	case ERROR:
-	  {
-	    if (strcmp (val, "warning") == 0)
-	      *((int *) var) = 0;
-	    else if (strcmp (val, "error") == 0)
-	      *((int *) var) = 1;
 	    else
 	      goto invalid_value;
 	    break;
