@@ -11,7 +11,7 @@ SUBDIRS = lib libcob cobpp cobc po texi
 EXTRA_DIST = HACKING config.rpath cob.m4 libcob.conf redhat debian
 
 BUILT_SOURCES = defaults.h
-CLEANFILES = $(BUILT_SOURCES)
+DISTCLEANFILES = $(BUILT_SOURCES)
 MAINTAINERCLEANFILES = ABOUT-NLS INSTALL COPYING Makefile.in \
 	config.guess config.sub config.status config.log config.rpath \
 	config.h.in stamp-h.in aclocal.m4 compile depcomp ltmain.sh \
