@@ -153,23 +153,6 @@ upcase (char *s, char *buf)
   return buf;
 }
 
-void
-update_xreflist (struct sym *as)
-{
-  if (as->xrefs.pos > 0
-      && as->xrefs.lineno[as->xrefs.pos - 1] == cob_orig_lineno)
-    return;
-
-  if (as->xrefs.size <= as->xrefs.pos)
-    {
-      as->xrefs.size += 10;
-      as->xrefs.lineno = realloc (as->xrefs.lineno,
-				  sizeof (int) * as->xrefs.size);
-    }
-  as->xrefs.lineno[as->xrefs.pos] = cob_orig_lineno;
-  as->xrefs.pos++;
-}
-
 struct sym *
 lookup_symbol (char *s)
 {
@@ -243,10 +226,6 @@ install (char *name, int tab, int cloning)
       as->clone = as->parent = NULL;
       as->son = NULL;
       as->occurs = NULL;
-      as->xrefs.size = 1;
-      as->xrefs.pos = 0;
-      as->xrefs.lineno = malloc (sizeof (int));
-      as->xrefs.lineno[0] = 0;
     }
   else if ((cloning && (as->defined == 1)) || (cloning == 2))
     {

@@ -25,12 +25,13 @@
 #define CDIV_ENVIR 	2
 #define CDIV_DATA 	3
 #define CDIV_PROC 	4
-#define CDIV_COMMENT 	5
 #define CDIV_FD 	6
 #define CDIV_REDEF 	7
 #define CDIV_EXCEPTION 	11
 #define CINITIAL 	15
 
 #define START_ID 	16
+#define START_COMMENT	5
+#define START_PICTURE	17
 
 #endif /* _SCANNER_H_ */

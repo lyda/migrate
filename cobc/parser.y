@@ -142,6 +142,7 @@ static void check_decimal_point (struct lit *lit);
 %right OF
 %nonassoc '.'
 
+%token TOK_SOURCE_COMPUTER, TOK_OBJECT_COMPUTER
 %token BEFORE,AFTER,SCREEN,REVERSEVIDEO,NUMBERTOK,PLUS,MINUS,SEPARATE
 %token FOREGROUNDCOLOR,BACKGROUNDCOLOR,UNDERLINE,HIGHLIGHT,LOWLIGHT
 %token RIGHT,AUTO,REQUIRED,FULL,JUST,BLINK,SECURE,BELL,COLUMN,SYNC
@@ -274,94 +275,109 @@ opt_end_program:
         { $$=1; }
         ;
 program: identification_division 
-         environment_division_opt 
+         environment_division
          data_division_opt
          procedure_division_opt
         ;
-identification_division: IDENTIFICATION_TOK DIVISION '.'
-    PROGRAM_ID '.' idstring programid_opts_opt '.' 
+
+
+/*****************************************************************************
+ * IDENTIFICATION DIVISION.
+ *****************************************************************************/
+
+identification_division:
+    IDENTIFICATION_TOK DIVISION '.'
+    PROGRAM_ID '.' idstring program_parameter '.' 
+    identification_division_options
     {
      pgm_header($6); 
      define_special_fields();
     }
-    identification_division_options_opt
-;
-programid_opts_opt:  /*nothing */
-    | opt_is INITIALTOK PROGRAM
-     {
-      yyerror("PROGRAM-ID clause INITIAL not currently implimented");
-     }
-    | opt_is COMMONTOK PROGRAM
-     {
-      yyerror("PROGRAM-ID clause COMMON not currently implimented");
-     }
-;
-identification_division_options_opt:  /*nothing */
-    | identification_division_options_opt identification_division_option
-;
-identification_division_option: AUTHOR_TOK '.' { curr_division = CDIV_COMMENT; }
-    | DATE_WRITTEN_TOK '.'  { curr_division = CDIV_COMMENT; }
-    | DATE_COMPILED_TOK '.' { curr_division = CDIV_COMMENT; }
-    | INSTALLATION_TOK '.'  { curr_division = CDIV_COMMENT; }
-    | SECURITY_TOK '.' { curr_division = CDIV_COMMENT; }
-    ;
-environment_division_opt: ENVIRONMENT_TOK DIVISION '.'
+  ;
+program_parameter:
+    /* nothing */
+  | opt_is INITIALTOK opt_program
     {
-     curr_division = CDIV_ENVIR;
+      yywarn ("parameter `INITIAL PROGRAM' is not supported yet");
     }
-    opt_configuration opt_input_output
+  | opt_is COMMONTOK opt_program
+    {
+      yywarn ("parameter `COMMON PROGRAM' is not supported yet");
+    }
+  ;
+identification_division_options:
+    /*nothing */
+  | identification_division_options identification_division_option
+  ;
+identification_division_option:
+    AUTHOR_TOK '.' comment
+  | DATE_WRITTEN_TOK '.' comment
+  | DATE_COMPILED_TOK '.' comment
+  | INSTALLATION_TOK '.' comment
+  | SECURITY_TOK '.' comment
+  ;
+
+opt_program: | PROGRAM ;
+
+comment: { curr_division = START_COMMENT; };
+
+
+/*****************************************************************************
+ * ENVIRONMENT DIVISION.
+ *****************************************************************************/
+
+environment_division:
+    /*nothing */
+  | ENVIRONMENT_TOK DIVISION '.'
+    {
+      curr_division = CDIV_ENVIR;
+    }
+    configuration_section
+    opt_input_output
     {
      curr_division = CINITIAL; 
     }
-    | /*nothing */
-    ;
-opt_configuration:
-    CONFIGURATION SECTION '.' configuration_section
-    | /*nothing */
-    ;
+  ;
+
+
+/*******************
+ * CONFICURATION SECTION
+ *******************/
+
+configuration_section:
+    /*nothing */
+  | CONFIGURATION SECTION '.' configuration_list
+  ;
+configuration_list:
+    /*nothing */
+  | configuration_list configuration
+  ;
+configuration:
+    TOK_SOURCE_COMPUTER '.' comment
+  | TOK_OBJECT_COMPUTER '.' comment
+  | SPECIAL_NAMES '.' special_names opt_dot
+  ;
+special_names:
+    /* nothing */
+  | special_names special_name
+  ;
+special_name:
+    CURRENCY opt_sign opt_is CLITERAL { currency_symbol = $4->name[0]; }
+  | DECIMAL_POINT opt_is COMMA { decimal_comma = 1; }
+  | CONSOLE opt_is CONSOLE { yywarn ("ignoring setting CONSOLE"); }
+  ;
+
+opt_dot: | '.' ;
+opt_sign: | SIGN ;
+
+
+/*******************
+ * INPUT-OUTPUT SECTION
+ *******************/
+
 opt_input_output:
     INPUT_OUTPUT SECTION '.' input_output_section { }
     | /*nothing */
-    ;
-configuration_section:
-    configuration_section configuration_option  { }
-    | /* nothing */                 { }
-    ;
-configuration_option:
-    COMMENTING '.' STRING '.' {
-                        if ($1 != SOURCE_COMPUTER && $1 != OBJECT_COMPUTER) {
-                                yyerror("expecting SOURCE-COMPUTER or OBJECT-COMPUTER");
-                        }
-                        $3->type = ';';
-                }
-    | SPECIAL_NAMES '.' opt_special_names_sentences
-    | error { yyerror("invalid format in CONFIGURATION SECTION"); }
-    ;
-opt_special_names_sentences:
-    special_names_sentences
-    | /*nothing*/
-    ;
-special_names_sentences:
-      currency_details_opt decimal_point_details_opt '.'
-    | CONSOLE IS CONSOLE '.' { yywarn ("ignoring setting CONSOLE"); }
-    ;
-currency_details_opt:
-    currency_details
-    | /* nothing */
-    ;
-currency_details:
-    CURRENCY opt_sign IS CLITERAL { currency_symbol = $<lval>4->name[0]; }
-    ;
-opt_sign:
-    SIGN
-    | /* nothing */
-    ;
-decimal_point_details_opt:
-    decimal_point_details
-    | /* nothing */
-    ;
-decimal_point_details:
-    DECIMAL_POINT IS COMMA { decimal_comma=1; }
     ;
 input_output_section:
     input_output_section i_o_option { }
@@ -913,11 +929,11 @@ index_name_list:
         ;
 
 picture_clause:
-    PIC PICTURE
+    PIC { curr_division = START_PICTURE; } PICTURE
     ;
 
 usage_option :
-    opt_USAGE opt_is usage
+    opt_usage opt_is usage
     {
       switch ($3)
 	{
@@ -945,8 +961,7 @@ usage_option :
 	  curr_field->len = 0;
 	  curr_field->type='B'; /* binary field */
 	  break;
-	  /*case 10: POINTER*/ 
-	case USAGE_POINTER: /*POINTER*/ 
+	case USAGE_POINTER:
 	  curr_field->len=4;
 	  curr_field->decimals=0;
 	  curr_field->type='B'; /* pointers are binary fields */
@@ -972,9 +987,16 @@ usage_option :
 	}
     }
     ;
-
-value_option:  VALUE opt_is_are value_list
+usage:
+      USAGENUM  { $$=$1; }
+    | DISPLAY   { $$=USAGE_DISPLAY; }
+    | POINTER   { $$=USAGE_POINTER; }
+    | COMP1     { $$=USAGE_COMP1; }
+    | COMP2     { $$=USAGE_COMP2; }
     ;
+opt_usage: | USAGE ;
+
+value_option: VALUE opt_is_are value_list ;
 
 value_list:
         value                           
@@ -1034,7 +1056,6 @@ sort_attrib:
     ;
 rec_or_recs: RECORD | RECORDS ;
 std_or_omitt: STANDARD | OMITTED ;
-opt_USAGE: | USAGE ;
 opt_TIMES: | TIMES ;
 opt_when: | WHEN ;
 opt_is: | IS { } ;
@@ -1043,12 +1064,6 @@ opt_is_are: | IS { } | ARE { } ;
 opt_contains: | CONTAINS ;
 opt_characters: | CHARACTERS ;
 chars_or_recs: CHARACTERS | RECORDS ;
-usage:  USAGENUM    { $$=$1; }
-    | DISPLAY   { /*$$=9;*/  $$=USAGE_DISPLAY; }
-    | POINTER   { /*$$=10;*/ $$=USAGE_POINTER; }
-    | COMP1     { $$=USAGE_COMP1; }
-    | COMP2     { $$=USAGE_COMP2; }
-    ;
 working_storage_section:
     working_storage_section
         field_description

@@ -438,8 +438,6 @@ struct occurs
 
 /* COMMENTING */
 
-#define SOURCE_COMPUTER 1
-#define OBJECT_COMPUTER 2
 #define AUTHOR		3
 #define DATE_WRITTEN	4
 #define DATE_COMPILED	5
@@ -457,7 +455,6 @@ struct occurs
 
 /* htcobgen.c */
 extern char *upcase (char *s, char *buf);
-extern void update_xreflist (struct sym *as);
 extern struct sym *lookup_symbol (char *s);
 extern struct sym *lookup (char *s, int tab);
 extern struct sym *install (char *name, int tab, int cloning);

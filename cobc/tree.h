@@ -105,13 +105,6 @@ struct sym
   }
   flags;
   unsigned char slack;		/* slack bytes inserted */
-  struct xref
-  {				/* xrefrence line number structure */
-    unsigned short size;	/* array size */
-    unsigned short pos;		/* current free array position  */
-    unsigned int *lineno;	/* line numbers array */
-  }
-  xrefs;
   struct occurs *occurs;	/* for DEPENDING ON or null if fixed table */
 };
 

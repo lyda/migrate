@@ -39,6 +39,8 @@
 #include "reserved.h"
 #include "_libcob.h"
 
+#define YY_NO_TOP_STATE
+
 extern char picture[];
 extern struct sym *curr_field;
 extern int picix,piccnt,sign,v_flag;
@@ -60,8 +62,8 @@ any [!-~]
 
 word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
 
-%x ENVIR_ST DATA_ST COMMENT_ST FD_ST REDEF_ST
-%x EXCEPTION_ST PIC_ST ID_STATE
+%x ENVIR_ST DATA_ST FD_ST REDEF_ST EXCEPTION_ST
+%x ID_STATE COMMENT_STATE PICTURE_STATE
 
 %%
 
@@ -79,9 +81,6 @@ word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
   case CDIV_PROC:
     BEGIN INITIAL;
     break;
-  case CDIV_COMMENT:
-    BEGIN COMMENT_ST;
-    break;
   case CDIV_FD:
     BEGIN FD_ST;
     break;
@@ -97,6 +96,12 @@ word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
   case START_ID:
     yy_push_state (ID_STATE);
     break;
+  case START_COMMENT:
+    yy_push_state (COMMENT_STATE);
+    break;
+  case START_PICTURE:
+    yy_push_state (PICTURE_STATE);
+    break;
   }
   curr_division=0; /* avoid new state switch */
 %}
@@ -111,13 +116,23 @@ word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
   strrchr (cob_orig_filename, '"')[0] = '\0';
 }
 
-<ID_STATE>{
-  {word} {
-    yy_pop_state ();
-    yylval.str = strdup (yytext);
-    return IDSTRING;
-  }
-  . { /* ignore */ }
+<DATA_ST>{word} {
+  int tok = scan_word (yytext);
+  if (tok)
+    return tok;
+
+  /* install w/clone if neccessary */
+  yylval.sval = install (yytext, SYTB_VAR, 1);
+  return (STRING);
+}
+
+<ENVIR_ST>{word} {
+  int tok = scan_word (yytext);
+  if (tok)
+    return tok;
+
+  yylval.sval = install (yytext, SYTB_VAR, 0);
+  return (STRING);
 }
 
 <INITIAL,EXCEPTION_ST>{word} {
@@ -131,19 +146,11 @@ word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
     {
       yylval.sval = symbol;
       if (symbol->type == '8')
-	{
-	  update_xreflist (yylval.sval);
-	  return (VARCOND);
-	}
+	return (VARCOND);
       else if (is_subscripted (symbol))
-	{
-	  return (SUBSCVAR);
-	}
+	return (SUBSCVAR);
       else
-	{
-	  update_xreflist (yylval.sval);
-	  return (VARIABLE);
-	}
+	return (VARIABLE);
     }
   /* otherwise, it should be a label */
   else
@@ -151,15 +158,6 @@ word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
       yylval.sval = install_label (yytext);
       return (LABELSTR);
     }
-}
-
-<ENVIR_ST>{word} {
-  int tok = scan_word (yytext);
-  if (tok)
-    return tok;
-
-  yylval.sval = install (yytext, SYTB_VAR, 0);
-  return (STRING);
 }
 
 <FD_ST>{
@@ -172,8 +170,7 @@ word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
       yyerror ("undefined %s at FD/SD", yytext);
     return (STRING);
   }
-
-  [ \t]* { }
+  . { }
 }
 
 <REDEF_ST>{word} {
@@ -183,18 +180,6 @@ word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
 
   /* don't clone redefined var */
   yylval.sval = install (yytext, SYTB_VAR, 0);
-  update_xreflist (yylval.sval);
-  return (STRING);
-}
-
-<DATA_ST>{word} {
-  int tok = scan_word (yytext);
-  if (tok)
-    return tok;
-
-  /* install w/clone if neccessary */
-  yylval.sval = install (yytext, SYTB_VAR, 1);
-  update_xreflist (yylval.sval);
   return (STRING);
 }
 
@@ -232,17 +217,30 @@ word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
   }
   "**"		{ return '^'; }
   {any}		{ return yytext[0]; }
+  . { }
 }
 
-<PIC_ST>{
-  "IS"		{ /* ignore */ }
-  [ \t\r\n]+	{ /* ignore */ }
-  [^ \t\r\n]+	{ BEGIN DATA_ST; return scan_picture (yytext); }
+<ID_STATE>{
+  .		{ /* ignore */ }
+  {word}	{
+    yy_pop_state ();
+    yylval.str = strdup (yytext);
+    return IDSTRING;
+  }
 }
 
-<COMMENT_ST>{
+<COMMENT_STATE>{
   .*		{ /* ignore */ }
-  "\n"		{ BEGIN INITIAL; }
+  "\n"		{ yy_pop_state (); }
+}
+
+<PICTURE_STATE>{
+  "IS" |
+  [ \t\r\n]+	{ /* ignore */ }
+  [^ \t\r\n]+	{
+    yy_pop_state ();
+    return scan_picture (yytext);
+  }
 }
 
 <<EOF>> {
@@ -381,8 +379,6 @@ scan_word (char *text)
     }
   else if ((token = scan_reserved_word (text)) != 0)
     {
-      if (token == PIC)
-	BEGIN PIC_ST;
       return token;
     }
   else
