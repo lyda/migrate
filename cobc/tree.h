@@ -57,7 +57,7 @@ struct cob_tree_list {
 
 typedef struct cob_tree_list *cob_tree_list;
 
-extern cob_tree_list make_list (cob_tree x);
+extern cob_tree_list cons (cob_tree x, cob_tree_list l);
 extern cob_tree_list list_append (cob_tree_list l, cob_tree x);
 
 

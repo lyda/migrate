@@ -1504,7 +1504,7 @@ goto_statement:
 | GO opt_to label_list DEPENDING opt_on variable { gen_goto ($3, $6); }
 ;
 label_list:
-  label				{ $$ = make_list ($1); }
+  label				{ $$ = cons ($1, NULL); }
 | label_list label		{ $$ = list_append ($1, $2); }
 | label_list ',' label		{ $$ = list_append ($1, $3); }
 ;
@@ -2631,7 +2631,7 @@ var_list_name:
   name flag_rounded opt_sep	{ $$ = create_mathvar_info ($1, $2, $3); }
 ;
 number_list:
-  number			{ $$ = make_list ($1); }
+  number			{ $$ = cons ($1, NULL); }
 | number_list opt_sep number	{ $$ = list_append ($1, $3); }
 ;
 number:
@@ -2793,8 +2793,8 @@ subscripted_variable:
     $$ = make_subref ($1, $3);
   }
 subscript_list:
-  subscript				{ $$ = make_list ($1); }
-| subscript_list opt_sep subscript	{ $$ = list_append ($1, $3); }
+  subscript				{ $$ = cons ($1, NULL); }
+| subscript_list opt_sep subscript	{ $$ = cons ($3, $1); }
 ;
 subscript:
   gname				{ $$ = $1; }

@@ -18,11 +18,11 @@
  */
 
 cob_tree_list
-make_list (cob_tree x)
+cons (cob_tree x, cob_tree_list l)
 {
   struct cob_tree_list *p = malloc (sizeof (struct cob_tree_list));
   p->tree = x;
-  p->next = NULL;
+  p->next = l;
   return p;
 }
 
@@ -31,7 +31,7 @@ list_append (cob_tree_list l, cob_tree x)
 {
   cob_tree_list p;
   for (p = l; p->next != NULL; p = p->next);
-  p->next = make_list (x);
+  p->next = cons (x, NULL);
   return l;
 }
 

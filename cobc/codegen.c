@@ -569,6 +569,9 @@ gen_subscripted (cob_tree ref)
   cob_tree sy = SUBREF_SYM (ref);
   cob_tree_list ls;
 
+#ifdef COB_DEBUG
+  fprintf (o_src, "# gen_subscripted\n");
+#endif
   fprintf (o_src, "\tpushl\t$0\n");
   for (ls = SUBREF_SUBS (ref); ls; ls = ls->next)
     {
@@ -782,6 +785,11 @@ value_to_eax (cob_tree sy)
   long value2;
   int stack_save;
   char *s;
+#ifdef COB_DEBUG
+  fprintf (o_src, "# value_to_eax: ");
+  print_tree (sy, o_src);
+  fputs ("\n", o_src);
+#endif
   if (sy == NULL)
     {
       fprintf (o_src, "\txorl\t%%eax,%%eax\n");
@@ -3457,7 +3465,7 @@ gen_SearchAllLoopCheck (unsigned long lbl3, cob_tree syidx,
   if ((it2->seq != '1') && (it2->seq != '2'))
     return;
 
-  sy1 = make_subref (sytbl, make_list (syidx));
+  sy1 = make_subref (sytbl, cons (syidx, NULL));
 
   /* table sort sequence: '0' = none, '1' = ASCENDING, '2' = DESCENDING */
 
