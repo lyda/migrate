@@ -312,6 +312,7 @@ cb_tree cb_quote;
 cb_tree cb_int0;
 cb_tree cb_int1;
 cb_tree cb_int2;
+cb_tree cb_i[8];
 cb_tree cb_error_node;
 cb_tree cb_return_code;
 
@@ -339,6 +340,7 @@ make_constant_label (const char *name)
 void
 cb_init_constants (void)
 {
+  int i;
   cb_error_node  = make_constant (CB_CATEGORY_UNKNOWN, 0);
   cb_any         = make_constant (CB_CATEGORY_UNKNOWN, 0);
   cb_true        = make_constant (CB_CATEGORY_BOOLEAN, "1");
@@ -352,6 +354,12 @@ cb_init_constants (void)
   cb_int0        = cb_int (0);
   cb_int1        = cb_int (1);
   cb_int2        = cb_int (2);
+  for (i = 1; i < 8; i++)
+    {
+      char *s = malloc (3);
+      sprintf (s, "i%d", i);
+      cb_i[i] = make_constant (CB_CATEGORY_NUMERIC, s);
+    }
   cb_standard_error_handler = make_constant_label ("standard_error_handler");
 }
 
@@ -945,10 +953,7 @@ cb_resolve_redefines (struct cb_field *field, cb_tree redefines)
 
   /* resolve the name in the current group (if any) */
   if (field->parent)
-    {
-      cb_tree parent = CB_TREE (field->parent);
-      r->chain = copy_reference (redefines, parent);
-    }
+    r->chain = cb_build_field_reference (field->parent, redefines);
   if (cb_ref (redefines) == cb_error_node)
     return NULL;
   f = CB_FIELD (r->value);
@@ -1503,14 +1508,15 @@ make_reference (const char *name)
 }
 
 cb_tree
-copy_reference (cb_tree ref, cb_tree value)
+cb_build_field_reference (struct cb_field *f, cb_tree ref)
 {
-  cb_tree x = make_reference (CB_FIELD (value)->name);
+  cb_tree x = make_reference (f->name);
   struct cb_word *word = CB_REFERENCE (x)->word;
-  memcpy (x, ref, sizeof (struct cb_reference));
+  if (ref)
+    memcpy (x, ref, sizeof (struct cb_reference));
   x->category = CB_CATEGORY_UNKNOWN;
   CB_REFERENCE (x)->word = word;
-  CB_REFERENCE (x)->value = value;
+  CB_REFERENCE (x)->value = CB_TREE (f);
   return x;
 }
 

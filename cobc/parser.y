@@ -1112,9 +1112,9 @@ occurs_index_list:
 occurs_index:
   undefined_word
   {
-    $$ = cb_build_index ($1);
+    $$ = $1;
     current_program->index_list =
-      list_add (current_program->index_list, $$);
+      list_add (current_program->index_list, cb_build_index ($1));
   }
 ;
 
@@ -2662,13 +2662,13 @@ set_to_true_false:
     cb_tree l;
     for (l = $1; l; l = CB_CHAIN (l))
       {
-	struct cb_field *f = cb_field (CB_VALUE (l));
-	cb_tree name = copy_reference (CB_VALUE (l), CB_TREE (f->parent));
-	cb_tree value = CB_VALUE (f->values);
-	if (CB_PAIR_P (value))
-	  push (cb_build_move (CB_PAIR_X (value), name));
-	else
-	  push (cb_build_move (value, name));
+	cb_tree x = CB_VALUE (l);
+	struct cb_field *f = cb_field (x);
+	cb_tree ref = cb_build_field_reference (f->parent, x);
+	cb_tree val = CB_VALUE (f->values);
+	if (CB_PAIR_P (val))
+	  val = CB_PAIR_X (val);
+	push (cb_build_move (val, ref));
       }
   }
 ;

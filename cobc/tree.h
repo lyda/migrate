@@ -214,6 +214,7 @@ extern cb_tree cb_quote;
 extern cb_tree cb_int0;
 extern cb_tree cb_int1;
 extern cb_tree cb_int2;
+extern cb_tree cb_i[8];
 extern cb_tree cb_error_node;
 extern cb_tree cb_return_code;
 
@@ -502,7 +503,7 @@ struct cb_reference {
 
 extern cb_tree make_filler (void);
 extern cb_tree make_reference (const char *name);
-extern cb_tree copy_reference (cb_tree ref, cb_tree value);
+extern cb_tree cb_build_field_reference (struct cb_field *f, cb_tree ref);
 extern const char *cb_define (cb_tree name, cb_tree val);
 extern cb_tree cb_ref (cb_tree x);
 

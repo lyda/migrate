@@ -147,8 +147,10 @@ output_storage (const char *fmt, ...)
  */
 
 static void
-output_recursive (void (*func) (struct cb_field *), struct cb_field *f)
+output_recursive (void (*func) (cb_tree), cb_tree x)
 {
+  struct cb_field *f = cb_field (x);
+
   if (f->level != 01 && f->level != 77 && f->redefines)
     return;
 
@@ -156,20 +158,20 @@ output_recursive (void (*func) (struct cb_field *), struct cb_field *f)
     {
       /* begin occurs loop */
       int i = f->indexes;
-      output_indent ("{");
-      output_line ("int i%d;", i);
-      output_line ("for (i%d = 0; i%d < %d; i%d++)", i, i, f->occurs_max, i);
+      output_line ("for (i%d = 1; i%d <= %d; i%d++)", i, i, f->occurs_max, i);
       output_indent ("  {");
+      if (CB_REFERENCE_P (x))
+	CB_REFERENCE (x)->subs = cons (cb_i[i], CB_REFERENCE (x)->subs);
     }
 
   /* process output */
-  func (f);
+  func (x);
 
   if (f->flag_occurs)
     {
       /* close loop */
+      CB_REFERENCE (x)->subs = CB_CHAIN (CB_REFERENCE (x)->subs);
       output_indent ("  }");
-      output_indent ("}");
     }
 }
 
@@ -221,20 +223,6 @@ output_data (cb_tree x)
 	  output_string (l->data, l->size);
 	break;
       }
-    case CB_TAG_FIELD:
-      {
-	struct cb_field *f = CB_FIELD (x);
-	int i = f->indexes;
-
-	/* base address */
-	output_base (f);
-
-	/* subscripts */
-	for (; f; f = f->parent)
-	  if (f->flag_occurs)
-	    output (" + %d * i%d", f->size, i--);
-	break;
-      }
     case CB_TAG_REFERENCE:
       {
 	struct cb_reference *r = CB_REFERENCE (x);
@@ -247,7 +235,6 @@ output_data (cb_tree x)
 	if (r->subs)
 	  {
 	    cb_tree l = r->subs;
-
 	    for (; f; f = f->parent)
 	      if (f->flag_occurs)
 		{
@@ -279,12 +266,6 @@ output_size (cb_tree x)
       {
 	struct cb_literal *l = CB_LITERAL (x);
 	output ("%d", l->size + ((l->sign != 0) ? 1 : 0));
-	break;
-      }
-    case CB_TAG_FIELD:
-      {
-	struct cb_field *f = CB_FIELD (x);
-	output ("%d", f->size);
 	break;
       }
     case CB_TAG_REFERENCE:
@@ -437,48 +418,43 @@ output_attr (cb_tree x)
 	  }
 	break;
       }
-    case CB_TAG_FIELD:
-      {
-	int type = tree_type (x);
-	struct cb_field *f = CB_FIELD (x);
-
-	switch (type)
-	  {
-	  case COB_TYPE_GROUP:
-	  case COB_TYPE_ALPHANUMERIC:
-	    if (f->flag_justified)
-	      id = lookup_attr (type, 0, 0, COB_FLAG_JUSTIFIED, 0);
-	    else
-	      id = lookup_attr (type, 0, 0, 0, 0);
-	    break;
-	  default:
-	    {
-	      char flags = 0;
-	      if (f->pic->have_sign)
-		flags |= COB_FLAG_HAVE_SIGN;
-	      if (f->flag_sign_separate)
-		flags |= COB_FLAG_SIGN_SEPARATE;
-	      if (f->flag_sign_leading)
-		flags |= COB_FLAG_SIGN_LEADING;
-	      if (f->flag_blank_zero)
-		flags |= COB_FLAG_BLANK_ZERO;
-	      if (f->flag_justified)
-		flags |= COB_FLAG_JUSTIFIED;
-
-	      id = lookup_attr (type, f->pic->digits, f->pic->expt,
-				flags, f->pic->str);
-	      break;
-	    }
-	  }
-	break;
-      }
     case CB_TAG_REFERENCE:
       {
+	int type = tree_type (x);
 	struct cb_reference *r = CB_REFERENCE (x);
+	struct cb_field *f = CB_FIELD (r->value);
+
 	if (r->offset)
 	  id = lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, 0);
 	else
-	  return output_attr (r->value);
+	  switch (type)
+	    {
+	    case COB_TYPE_GROUP:
+	    case COB_TYPE_ALPHANUMERIC:
+	      if (f->flag_justified)
+		id = lookup_attr (type, 0, 0, COB_FLAG_JUSTIFIED, 0);
+	      else
+		id = lookup_attr (type, 0, 0, 0, 0);
+	      break;
+	    default:
+	      {
+		char flags = 0;
+		if (f->pic->have_sign)
+		  flags |= COB_FLAG_HAVE_SIGN;
+		if (f->flag_sign_separate)
+		  flags |= COB_FLAG_SIGN_SEPARATE;
+		if (f->flag_sign_leading)
+		  flags |= COB_FLAG_SIGN_LEADING;
+		if (f->flag_blank_zero)
+		  flags |= COB_FLAG_BLANK_ZERO;
+		if (f->flag_justified)
+		  flags |= COB_FLAG_JUSTIFIED;
+
+		id = lookup_attr (type, f->pic->digits, f->pic->expt,
+				  flags, f->pic->str);
+		break;
+	      }
+	    }
 	break;
       }
     default:
@@ -499,6 +475,11 @@ output_field (cb_tree x)
   output_attr (x);
   output ("}");
 }
+
+
+/*
+ * Literal
+ */
 
 static int
 lookup_literal (cb_tree x)
@@ -573,7 +554,7 @@ output_integer (cb_tree x)
 	output_integer (p->y);
 	break;
       }
-    default:
+    case CB_TAG_REFERENCE:
       {
 	struct cb_field *f = cb_field (x);
 	if (f->usage == CB_USAGE_INDEX)
@@ -644,6 +625,8 @@ output_integer (cb_tree x)
 	output_funcall (cb_build_funcall_1 ("cob_get_int", x));
 	break;
       }
+    default:
+      abort ();
     }
 }
 
@@ -708,15 +691,23 @@ output_expr (cb_tree x, int id)
       output ("&c_%d", lookup_literal (x));
       break;
     case CB_TAG_FIELD:
+      /* TODO: remove me */
+      output_expr (cb_build_field_reference (CB_FIELD (x), 0), id);
+      break;
+    case CB_TAG_REFERENCE:
       {
-	struct cb_field *f = CB_FIELD (x);
-	if (f->indexes > 0)
+	struct cb_reference *r = CB_REFERENCE (x);
+	struct cb_field *f;
+
+      /* TODO: remove me */
+	if (!CB_FIELD_P (r->value))
 	  {
-	    output ("(%s = (cob_field) ", fname);
-	    output_field (x);
-	    output (", &%s)", fname);
+	    output_expr (r->value, id);
+	    return;
 	  }
-	else
+
+	f = CB_FIELD (r->value);
+	if (!r->subs && !r->offset && !cb_field_varying (f))
 	  {
 	    if (!f->flag_field)
 	      {
@@ -734,23 +725,9 @@ output_expr (cb_tree x, int id)
 		output_target = yyout;
 	      }
 	    output ("&f_%s", f->cname);
-	  }
-	break;
-      }
-    case CB_TAG_REFERENCE:
-      {
-	struct cb_reference *r = CB_REFERENCE (x);
-	struct cb_field *f;
-
-	if (!CB_FIELD_P (r->value)
-	    || (!r->subs && !r->offset && !cb_field_varying (cb_field (x))))
-	  {
-	    output_expr (r->value, id);
 	    return;
 	  }
 
-	f = CB_FIELD (r->value);
-	output_line ("/* %s */", cb_name (x));
 	output ("({");
 
 	/* subscript check */
@@ -947,19 +924,19 @@ output_move (cb_tree src, cb_tree dst)
 
 static cb_tree initialize_replacing_list;
 
-static void output_initialize_internal (struct cb_field *f);
+static void output_initialize_compound (cb_tree x);
 
 static int
-field_uniform_type (struct cb_field *f)
+field_uniform_char (struct cb_field *f)
 {
   if (f->children)
     {
-      int type = field_uniform_type (f->children);
+      int c = field_uniform_char (f->children);
       for (f = f->children->sister; f; f = f->sister)
 	if (!f->redefines)
-	  if (type != field_uniform_type (f))
-	    return COB_TYPE_UNKNOWN;
-      return type;
+	  if (c != field_uniform_char (f))
+	    return -1;
+      return c;
     }
   else
     {
@@ -967,55 +944,72 @@ field_uniform_type (struct cb_field *f)
 	{
 	case COB_TYPE_NUMERIC_BINARY:
 	case COB_TYPE_NUMERIC_PACKED:
-	  return COB_TYPE_NUMERIC_BINARY;
+	  return 0;
 	case COB_TYPE_NUMERIC_DISPLAY:
-	  return COB_TYPE_NUMERIC_DISPLAY;
+	  return '0';
 	case COB_TYPE_ALPHABETIC:
 	case COB_TYPE_ALPHANUMERIC:
-	  return COB_TYPE_ALPHANUMERIC;
+	  return ' ';
 	default:
-	  return COB_TYPE_UNKNOWN;
+	  return -1;
 	}
     }
 }
 
 static void
-output_initialize_uniform (struct cb_field *f, int type, int size, int flag)
+output_initialize_uniform (cb_tree x, int c, int size)
 {
-  if (flag && f->flag_occurs)
-    {
-      output_indent ("{");
-      output_line ("int i%d = 0;", f->indexes);
-    }
-
   output_prefix ();
   output ("memset (");
-  output_data (CB_TREE (f));
-  output (", ");
-  switch (type)
-    {
-    case COB_TYPE_NUMERIC_DISPLAY:
-      output ("'0'");
-      break;
-    case COB_TYPE_NUMERIC_BINARY:
-      output ("0");
-      break;
-    case COB_TYPE_ALPHANUMERIC:
-      output ("' '");
-      break;
-    }
-  output (", %d);\n", size);
-
-  if (flag && f->flag_occurs)
-    {
-      output_indent ("}");
-    }
+  output_data (x);
+  output (", %d, %d);\n", c, size);
 }
 
 static void
-output_initialize_compound (struct cb_field *f)
+output_initialize_internal (cb_tree x)
 {
-  cb_tree x = CB_TREE (f);
+  int last_char = -1;
+  cb_tree last_field = NULL;
+  struct cb_field *f = cb_field (x);
+  struct cb_field *p;
+
+  /* initialize all children, combining uniform sequence into one */
+  for (p = f->children; p; p = p->sister)
+    {
+      /* check if this child is uniform */
+      int c = field_uniform_char (p);
+      if (c == -1 || c != last_char)
+	{
+	  /* if not, or if this child's category is different from
+	     the previous one, initialize the last uniform sequence */
+	  if (last_field)
+	    output_initialize_uniform (last_field, last_char,
+				       p->offset - cb_field (last_field)->offset);
+	  /* if not uniform, initialize the children */
+	  if (c == -1)
+	    output_recursive (output_initialize_compound,
+			      cb_build_field_reference (p, x));
+	  /* keep the last field if it must be initialized later */
+	  last_char = c;
+	  last_field = NULL;
+	  if (c != -1 && c != ' ')
+	    {
+	      last_field = cb_build_field_reference (p, x);
+	      if (list_length (CB_REFERENCE (x)->subs) < p->indexes)
+		CB_REFERENCE (x)->subs =
+		  cons (cb_int1, CB_REFERENCE (x)->subs);
+	    }
+	}
+    }
+  /* initialize the last uniform sequence */
+  if (last_field)
+    output_initialize_uniform (last_field, last_char,
+			       f->offset + f->size - cb_field (last_field)->offset);
+}
+
+static void
+output_initialize_compound (cb_tree x)
+{
   switch (CB_TREE_CATEGORY (x))
     {
     case CB_CATEGORY_NUMERIC_EDITED:
@@ -1026,50 +1020,21 @@ output_initialize_compound (struct cb_field *f)
       output_move (cb_space, x);
       break;
     default:
-      output_initialize_internal (f);
+      output_initialize_internal (x);
       break;
     }
 }
 
 static void
-output_initialize_internal (struct cb_field *f)
+output_initialize_replacing (cb_tree x)
 {
-  int last_type = COB_TYPE_UNKNOWN;
-  struct cb_field *p;
-  struct cb_field *first_field = NULL;
+  struct cb_field *f = cb_field (x);
 
-  /* initialize all children, combining uniform sequence into one */
-  for (p = f->children; p; p = p->sister)
-    {
-      /* check if this child is uniform */
-      int type = field_uniform_type (p);
-      if (type == COB_TYPE_UNKNOWN || type != last_type)
-	{
-	  /* if not, or if this child's category is different from
-	     the previous one, initialize the last uniform sequence */
-	  if (first_field && last_type != COB_TYPE_ALPHANUMERIC)
-	    output_initialize_uniform (first_field, last_type,
-				       p->offset - first_field->offset, 1);
-	  /* if not uniform, initialize the children */
-	  if (type == COB_TYPE_UNKNOWN)
-	    output_recursive (output_initialize_compound, p);
-	  last_type = type;
-	  first_field = (type != COB_TYPE_UNKNOWN) ? p : NULL;
-	}
-    }
-  /* initialize the final uniform sequence */
-  if (first_field && last_type != COB_TYPE_ALPHANUMERIC)
-    output_initialize_uniform (first_field, last_type,
-			       f->offset + f->size - first_field->offset, 1);
-}
-
-static void
-output_initialize_replacing (struct cb_field *f)
-{
   if (f->children)
     {
       for (f = f->children; f; f = f->sister)
-	output_recursive (output_initialize_replacing, f);
+	output_recursive (output_initialize_replacing,
+			  cb_build_field_reference (f, x));
     }
   else
     {
@@ -1077,7 +1042,7 @@ output_initialize_replacing (struct cb_field *f)
       for (l = initialize_replacing_list; l; l = CB_CHAIN (l))
 	if (CB_PURPOSE_INT (l) == f->pic->category)
 	  {
-	    output_move (CB_VALUE (l), CB_TREE (f));
+	    output_move (CB_VALUE (l), x);
 	    break;
 	  }
     }
@@ -1086,52 +1051,31 @@ output_initialize_replacing (struct cb_field *f)
 static void
 output_initialize (struct cb_initialize *p)
 {
-  struct cb_reference *r = CB_REFERENCE (p->x);
-  struct cb_field *f = CB_FIELD (r->value);
-
-  /* output fixed indexes */
-  if (r->subs)
-    {
-      int i = list_length (r->subs);
-      cb_tree l;
-      output_indent ("{");
-      for (l = r->subs; l; l = CB_CHAIN (l))
-	{
-	  /* FIXME: need boundary check */
-	  output_prefix ();
-	  output ("int i%d = ", i--);
-	  output_index (CB_VALUE (l));
-	  output (";\n");
-	}
-    }
-
   if (p->l != NULL)
     {
       /* INITIALIZE REPLACING */
       initialize_replacing_list = p->l;
-      output_initialize_replacing (f);
+      output_initialize_replacing (p->x);
     }
   else
     {
       /* INITIALIZE */
-      int type = field_uniform_type (f);
-      if (type != COB_TYPE_UNKNOWN)
+      struct cb_field *f = cb_field (p->x);
+      int c = field_uniform_char (f);
+      if (c != -1)
 	{
 	  /* if field is uniform (i.e., all children are
 	     in the same category), initialize it at once */
-	  output_initialize_uniform (f, type, f->size, 0);
+	  output_initialize_uniform (p->x, c, f->size);
 	}
       else
 	{
 	  /* otherwise, fill the field by spaces first */
-	  output_initialize_uniform (f, COB_TYPE_ALPHANUMERIC, f->size, 0);
+	  output_initialize_uniform (p->x, ' ', f->size);
 	  /* then initialize the children recursively */
-	  output_initialize_compound (f);
+	  output_initialize_compound (p->x);
 	}
     }
-
-  if (r->subs)
-    output_indent ("}");
 }
 
 
@@ -1156,10 +1100,10 @@ output_search_whens (cb_tree table, cb_tree var, cb_tree stmt, cb_tree whens)
   cb_tree idx = NULL;
 
   /* determine the index to use */
-  var = var ? CB_TREE (cb_field (var)) : NULL;
-  for (l = p->index_list; l; l = CB_CHAIN (l))
-    if (CB_VALUE (l) == var)
-      idx = var;
+  if (var)
+    for (l = p->index_list; l; l = CB_CHAIN (l))
+      if (cb_ref (CB_VALUE (l)) == cb_ref (var))
+	idx = var;
   if (!idx)
     idx = CB_VALUE (p->index_list);
 
@@ -1199,7 +1143,7 @@ static void
 output_search_all (cb_tree table, cb_tree stmt, cb_tree cond, cb_tree when)
 {
   struct cb_field *p = cb_field (table);
-  cb_tree idx = CB_TREE (CB_VALUE (p->index_list));
+  cb_tree idx = CB_VALUE (p->index_list);
 
   /* header */
   output_indent ("{");
@@ -1959,8 +1903,10 @@ have_value (struct cb_field *p)
 }
 
 static void
-output_value (struct cb_field *f)
+output_value (cb_tree x)
 {
+  struct cb_field *f = cb_field (x);
+
   if (f->values)
     {
       cb_tree value = CB_VALUE (f->values);
@@ -1969,7 +1915,7 @@ output_value (struct cb_field *f)
 	  || CB_LITERAL (value)->all)
 	{
 	  /* figurative literal, numeric literal, or ALL literal */
-	  output_move (value, CB_TREE (f));
+	  output_move (value, x);
 	}
       else
 	{
@@ -1990,19 +1936,17 @@ output_value (struct cb_field *f)
 	    }
 	  output_prefix ();
 	  output ("memcpy (");
-	  output_data (CB_TREE (f));
+	  output_data (x);
 	  output (", ");
 	  output_string (buff, f->size);
-	  output (", ");
-	  output_size (CB_TREE (f));
-	  output (");\n");
+	  output (", %d);\n", f->size);
 	}
     }
   else
     {
       for (f = f->children; f; f = f->sister)
 	if (have_value (f))
-	  output_recursive (output_value, f);
+	  output_recursive (output_value, cb_build_field_reference (f, x));
     }
 }
 
@@ -2011,7 +1955,7 @@ output_init_values (struct cb_field *p)
 {
   for (; p; p = p->sister)
     if (have_value (p))
-      output_recursive (output_value, p);
+      output_recursive (output_value, cb_build_field_reference (p, 0));
 }
 
 
@@ -2041,6 +1985,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 		: "0"));
   output_newline ();
   output_line ("int i;");
+  output_line ("int i1, i2, i3, i4, i5, i6, i7;");
   output_line ("int n[%d];", prog->loop_counter);
   output_line ("int frame_index;");
   output_line ("struct frame { int perform_through; void *return_address; } "

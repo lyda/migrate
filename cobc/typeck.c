@@ -931,8 +931,8 @@ build_corr_1 (cb_tree (*func)(), cb_tree x1, cb_tree x2, cb_tree opt, cb_tree l)
 	if (!f2->redefines && !f2->flag_occurs)
 	  if (strcmp (f1->name, f2->name) == 0)
 	    {
-	      cb_tree t1 = copy_reference (x1, CB_TREE (f1));
-	      cb_tree t2 = copy_reference (x2, CB_TREE (f2));
+	      cb_tree t1 = cb_build_field_reference (f1, x1);
+	      cb_tree t2 = cb_build_field_reference (f2, x2);
 	      if (f1->children && f2->children)
 		l = build_corr_1 (func, t1, t2, opt, l);
 	      else
@@ -977,7 +977,7 @@ build_cond_88 (cb_tree x)
   cb_tree c1 = NULL;
 
   /* refer to parent's data storage */
-  x = copy_reference (x, CB_TREE (f->parent));
+  x = cb_build_field_reference (f->parent, x);
 
   /* build condition */
   for (l = f->values; l; l = CB_CHAIN (l))
