@@ -2754,16 +2754,12 @@ parameter:
             else
                $$->call_mode=curr_call_mode;
         }
- /*   | OMITTED
-        {   $$=spe_lit_ZE;
-            $$->call_mode=CM_VAL;
-        } */
     ;
 parm_type:
-    REFERENCE {$$=CM_REF;}
-    | VALUE {$$=CM_VAL;}
-    | CONTENT {$$=CM_CONT;}
-    ;
+    REFERENCE	{ $$ = CM_REF; }
+  | CONTENT	{ $$ = CM_CONT; }
+  | VALUE	{ $$ = CM_VAL; }
+;
 
 condition:
     simple_condition
