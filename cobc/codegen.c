@@ -1508,8 +1508,7 @@ output_tree (cobc_tree x)
       }
     case cobc_tag_subref:
       {
-	struct cobc_subref *p = COBC_SUBREF (x);
-	output_tree (p->field);
+	output_tree (COBC_SUBREF (x)->field);
 	output_subscripts (x);
 	break;
       }
