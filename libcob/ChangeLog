@@ -1,5 +1,9 @@
 2003-06-07  Keisuke Nishida  <knishida@netlab.jp>
 
+	* numeric.c, numeric.h: No longer use gmp.
+
+2003-06-07  Keisuke Nishida  <knishida@netlab.jp>
+
 	* common.h (cob_module): New member `collating_sequence'.
 	* common.c (CMP): New macro.
 	(cmp_char, cmp_all, cmp_alnum): Use CMP.
