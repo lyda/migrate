@@ -192,7 +192,6 @@ print_usage ()
   puts ("  -S            Compile only; do not assemble or link");
   puts ("  -c            Compile and assemble, but do not link");
   puts ("  -m            Compile, assemble, and build a .so module");
-  puts ("  -x            Compile, assemble, and link to an executable");
   puts ("  -g            Generate debugging output");
   puts ("  -o <file>     Place the output into <file>");
   puts ("");
@@ -235,7 +234,6 @@ process_command_line (int argc, char *argv[])
 	case 'S': compile_level = stage_compile; break;
 	case 'c': compile_level = stage_assemble; break;
 	case 'm': compile_level = stage_module; cob_module_flag = 1; break;
-	case 'x': compile_level = stage_link; break;
 
 	case 'g': cob_stabs_flag = 1; break;
 	case 'o': output_filename = strdup (optarg); break;
