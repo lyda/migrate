@@ -2669,17 +2669,6 @@ gen_inspect_converting (cob_tree var, cob_tree_list list)
 
 
 /*
- * CANCEL sattement
- */
-
-void
-gen_cancel (cob_tree sy)
-{
-  asm_call_1 ("cob_cancel", sy);
-}
-
-
-/*
  * PERFORM statement
  */
 

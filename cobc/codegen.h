@@ -124,7 +124,6 @@ extern int gen_passlabel (void);
 extern int gen_marklabel (void);
 extern void gen_jmplabel (int lbl);
 extern void gen_push_int (cob_tree sy);
-extern void gen_cancel (cob_tree sy);
 extern void gen_perform_test_counter (int lbl);
 extern void gen_perform_times (int lbl);
 extern void gen_perform_thru (cob_tree s1, cob_tree s2);

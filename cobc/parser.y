@@ -139,13 +139,13 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <ival> on_xxx_statement_list
 %type <ival> at_end_sentence,invalid_key_sentence
 %type <list> label_list,subscript_list,number_list,variable_list
-%type <list> conditional_variable_list,name_list
+%type <list> conditional_variable_list,name_list,opt_value_list
 %type <list> evaluate_subject_list,evaluate_when_list,evaluate_object_list
 %type <para> call_using,call_parameter,call_parameter_list
 %type <mval> numeric_variable_list,numeric_edited_variable_list
 %type <pfval> perform_after
 %type <pfvals> opt_perform_after
-%type <list> sort_file_list,display_list,procedure_using
+%type <list> sort_file_list,procedure_using
 %type <str> idstring
 %type <tree> field_description,label,label_name,filename
 %type <tree> file_description,redefines_var,function_call,subscript
@@ -158,7 +158,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <tree> call_returning,var_or_lit,opt_add_to
 %type <tree> opt_perform_thru
 %type <tree> opt_read_key,file_name,opt_with_pointer
-%type <tree> variable,sort_range,name_or_literal
+%type <tree> variable,sort_range
 %type <tree> indexed_variable,search_opt_varying,opt_key_is
 %type <tree> from_rec_varying,to_rec_varying
 %type <tree> literal,gliteral,without_all_literal,all_literal,special_literal
@@ -1378,7 +1378,7 @@ opt_end_call: | END_CALL ;
  */
 
 cancel_statement:
-  CANCEL value			{ gen_cancel ($2); }
+  CANCEL value			{ asm_call_1 ("cob_cancel", $2); }
 ;
 
 
@@ -1428,7 +1428,7 @@ opt_end_delete: | END_DELETE ;
  */
 
 display_statement:
-  DISPLAY display_list opt_upon display_upon opt_with_no_advancing
+  DISPLAY opt_value_list opt_upon display_upon opt_with_no_advancing
   {
     cob_tree_list l;
     for (l = $2; l; l = l->next)
@@ -1437,10 +1437,6 @@ display_statement:
       asm_call ("cob_newline");
   }
   ;
-display_list:
-  /* nothing */			{ $$ = NULL; }
-| display_list value		{ $$ = list_add ($1, $2); }
-;
 display_upon:
 | CONSOLE
 | VARIABLE			{ yywarn ("not supported"); }
@@ -1657,7 +1653,7 @@ initialize_replacing_list:
 | initialize_replacing_list initialize_replacing
 ;
 initialize_replacing:
-  replacing_option opt_data BY name_or_literal
+  replacing_option opt_data BY value
 ;
 replacing_option:
   ALPHABETIC
@@ -1703,11 +1699,11 @@ tallying_item:
   {
     $$ = make_inspect_item (INSPECT_CHARACTERS, inspect_name, 0, $2);
   }
-| ALL name_or_literal inspect_before_after_list
+| ALL value inspect_before_after_list
   {
     $$ = make_inspect_item (INSPECT_ALL, inspect_name, $2, $3);
   }
-| LEADING name_or_literal inspect_before_after_list
+| LEADING value inspect_before_after_list
   {
     $$ = make_inspect_item (INSPECT_LEADING, inspect_name, $2, $3);
   }
@@ -1722,19 +1718,19 @@ replacing_list:
 | replacing_list replacing_item	{ $$ = cons ($2, $1); }
 ;
 replacing_item:
-  CHARACTERS BY name_or_literal inspect_before_after_list
+  CHARACTERS BY value inspect_before_after_list
   {
     $$ = make_inspect_item (INSPECT_CHARACTERS, NULL, $3, $4);
   }
-| ALL name_or_literal BY name_or_literal inspect_before_after_list
+| ALL value BY value inspect_before_after_list
   {
     $$ = make_inspect_item (INSPECT_ALL, $4, $2, $5);
   }
-| LEADING name_or_literal BY name_or_literal inspect_before_after_list
+| LEADING value BY value inspect_before_after_list
   {
     $$ = make_inspect_item (INSPECT_LEADING, $4, $2, $5);
   }
-| FIRST name_or_literal BY name_or_literal inspect_before_after_list
+| FIRST value BY value inspect_before_after_list
   {
     $$ = make_inspect_item (INSPECT_FIRST, $4, $2, $5);
   }
@@ -1742,7 +1738,7 @@ replacing_item:
 /* INSPECT CONVERTING */
 
 inspect_converting:
-  CONVERTING name_or_literal TO name_or_literal inspect_before_after_list
+  CONVERTING value TO value inspect_before_after_list
   {
     $$ = make_list (make_inspect_item (INSPECT_CONVERTING, $2, $4, $5));
   }
@@ -1754,11 +1750,11 @@ inspect_before_after_list:
 | inspect_before_after_list inspect_before_after { $$ = list_add ($1, $2); }
 ;
 inspect_before_after:
-  BEFORE opt_initial name_or_literal
+  BEFORE opt_initial value
   {
     $$ = make_inspect_item (INSPECT_BEFORE, $3, 0, 0);
   }
-| AFTER opt_initial name_or_literal
+| AFTER opt_initial value
   {
     $$ = make_inspect_item (INSPECT_AFTER, $3, 0, 0);
   }
@@ -2922,26 +2918,21 @@ idstring:
 ;
 
 
+opt_value_list:
+  /* nothing */			{ $$ = NULL; }
+| opt_value_list value		{ $$ = list_add ($1, $2); }
+;
 value:
   name
 | gliteral
 | function_call
 ;
 function_call:
-  FUNCTION idstring '(' function_args ')'
+  FUNCTION idstring '(' opt_value_list ')'
   {
     yyerror ("function call is not supported yet");
     YYABORT;
   }
-;
-function_args:
-  value { }
-| function_args value
-;
-name_or_literal:
-  name
-| gliteral
-;
 
 
 /*
