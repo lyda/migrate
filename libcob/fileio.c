@@ -152,13 +152,7 @@ static int
 sequential_write (struct cob_file_desc *f, struct cob_field rec)
 {
   if (f->record_min != f->record_max)
-    {
-      if (f->record_depending.desc)
-	f->record_size = cob_to_int (f->record_depending);
-      else
-	f->record_size = COB_FIELD_SIZE (rec);
-      write (f->file.fd, &f->record_size, sizeof (f->record_size));
-    }
+    write (f->file.fd, &f->record_size, sizeof (f->record_size));
 
   write (f->file.fd, f->record_data, f->record_size);
   return 00;
@@ -427,10 +421,6 @@ relative_write (struct cob_file_desc *f, struct cob_field rec)
 	return 22;
     }
 
-  if (f->record_depending.desc)
-    f->record_size = cob_to_int (f->record_depending);
-  else
-    f->record_size = COB_FIELD_SIZE (rec);
   write (f->file.fd, &f->record_size, sizeof (f->record_size));
   write (f->file.fd, f->record_data, f->record_max);
 
@@ -714,11 +704,6 @@ indexed_write (struct cob_file_desc *f, struct cob_field rec)
     return 21;
   memcpy (f->last_key, key.data, key.size);
 
-  if (f->record_depending.desc)
-    f->record_size = cob_to_int (f->record_depending);
-  else
-    f->record_size = COB_FIELD_SIZE (rec);
-
   /* write data */
   data.data = f->record_data;
   data.size = f->record_size;
@@ -805,11 +790,6 @@ indexed_rewrite (struct cob_file_desc *f, struct cob_field rec)
   /* delete the current record */
   if ((ret = indexed_delete (f)) != 00)
     return ret;
-
-  if (f->record_depending.desc)
-    f->record_size = cob_to_int (f->record_depending);
-  else
-    f->record_size = COB_FIELD_SIZE (rec);
 
   /* write data */
   DBT_SET (key, f->keys[0].field);
@@ -1051,6 +1031,11 @@ cob_write (struct cob_file_desc *f, struct cob_field rec)
       if (!FILE_OPENED (f) || !FILE_WRITABLE (f))
 	RETURN_STATUS (48);
     }
+
+  if (f->record_depending.desc)
+    f->record_size = cob_to_int (f->record_depending);
+  else
+    f->record_size = COB_FIELD_SIZE (rec);
 
   ret = fileio_funcs[f->organization]->write (f, rec);
 
