@@ -215,7 +215,7 @@ print_usage ()
 	  "  -static       Use static link for subprogram calls if possible\n"
 	  "  -dynamic      Use dynamic link for subprogram calls (default)\n"
 	  "  -debug        Enable debugging lines\n"
-	  "  -I <path>     Add copybook include path"
+	  "  -I <path>     Add copybook include path\n"
 	  "\n"
 	  "Warning options:\n"
 	  "  -Wtrailing-line  Source line after column 72"));
@@ -485,6 +485,9 @@ process_translate (struct filename *fn)
   init_constants ();
   init_reserved_words ();
 
+  if (verbose_output)
+    fprintf (stderr, "translating %s into %s\n",
+	     fn->preprocess, fn->translate);
   ret = yyparse ();
 
   fclose (cobc_out);
