@@ -1,3 +1,8 @@
+2002-09-24  Keisuke Nishida  <knishida@netlab.jp>
+
+	* configure.ac: Generate libcob/cobconfig.h using AM_CONFIG_HEADER.
+	Check db.h as well as db1/db.h.
+	
 2002-09-12  Keisuke Nishida  <knishida@netlab.jp>
 
 	* configure.ac: Add check for regex.

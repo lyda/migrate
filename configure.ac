@@ -1,8 +1,9 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(open-cobol, 0.9.7.9)
+AC_INIT(open-cobol, 0.9.7.9, knishida@coboler.com)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR(config.h.in)
 AM_CONFIG_HEADER(config.h)
+AM_CONFIG_HEADER(libcob/cobconfig.h)
 AM_INIT_AUTOMAKE([gnu no-texinfo.tex])
 AM_MAINTAINER_MODE
 
@@ -75,12 +76,10 @@ AC_CHECK_FUNC([getopt_long_only], ,
 AC_CHECK_LIB([regex], [regcomp], [LIBCOB_LIBS="$LIBCOB_LIBS -lregex"])
 
 # Checks for db.
-AC_CHECK_HEADERS([db1/db.h], , AC_MSG_ERROR(db1/db.h is required))
-AC_CHECK_FUNCS([dbopen])
-if test "x$ac_cv_func_dbopen" != "xyes"; then
-  AC_CHECK_LIB([db1], [dbopen], , AC_MSG_ERROR(libdb1 is required))
-  LIBCOB_LIBS="$LIBCOB_LIBS -ldb1"
-fi
+AC_CHECK_HEADERS([db1/db.h db.h])
+AC_CHECK_FUNCS([dbopen], ,
+  [AC_CHECK_LIB([db1], [dbopen], , AC_MSG_ERROR(libdb1 is required))
+   LIBCOB_LIBS="$LIBCOB_LIBS -ldb1"])
 
 # Checks for gmp.
 AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp.h is required))
@@ -119,27 +118,6 @@ if test "x$ac_cv_lib_readline_readline" = "xyes"; then
   LIBCOB_LIBS="$LIBCOB_LIBS -lreadline"
 fi
 
-# Checks for GCC's computed-goto extension
-AC_CACHE_CHECK([for computed-goto], [ac_computed_goto],
-[AC_TRY_COMPILE([], [
-int foo(int);
-int foo(i)
-int i; { 
-static void *label[] = { &&l1, &&l2 };
-goto *label[i];
-l1: return 1;
-l2: return 2;
-}
-],
-ac_computed_goto=yes,
-ac_computed_goto=no)])
-
-COMPUTED_GOTO=0
-if test "$ac_computed_goto" = yes; then
-  COMPUTED_GOTO=1
-fi
-AC_SUBST(COMPUTED_GOTO)
-
 # OpenCOBOL Configuration
 
 COB_COBPP="cobpp"
@@ -164,7 +142,7 @@ AC_SUBST(COBPP_LIBS)
 AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBS)
 
-AC_CONFIG_FILES([cob.pc cob-config libcob/cobconfig.h
+AC_CONFIG_FILES([cob.pc cob-config
 		Makefile lib/Makefile libcob/Makefile
 		cobpp/Makefile cobc/Makefile po/Makefile.in texi/Makefile
 		testsuite/Makefile testsuite/cobol85/Makefile])
