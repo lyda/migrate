@@ -161,6 +161,7 @@ enum cb_usage {
   CB_USAGE_PACKED,
   CB_USAGE_POINTER,
   CB_USAGE_PROGRAM,
+  CB_USAGE_LENGTH
 };
 
 enum cb_operand_type {

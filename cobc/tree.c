@@ -294,6 +294,7 @@ cb_tree_type (cb_tree x)
 	case CB_USAGE_COMP_5:
 	case CB_USAGE_COMP_X:
 	case CB_USAGE_INDEX:
+	case CB_USAGE_LENGTH:
 	  return COB_TYPE_NUMERIC_BINARY;
 	case CB_USAGE_PACKED:
 	  return COB_TYPE_NUMERIC_PACKED;
@@ -329,6 +330,7 @@ cb_fits_int (cb_tree x)
 	switch (f->usage)
 	  {
 	  case CB_USAGE_INDEX:
+	  case CB_USAGE_LENGTH:
 	    return 1;
 	  case CB_USAGE_BINARY:
 	  case CB_USAGE_COMP_5:

@@ -571,6 +571,7 @@ output_integer (cb_tree x)
 	switch (f->usage)
 	  {
 	  case CB_USAGE_INDEX:
+	  case CB_USAGE_LENGTH:
 	    output ("(*(int *) (");
 	    output_data (x);
 	    output ("))");
@@ -1404,7 +1405,8 @@ output_call (struct cb_call *p)
 	{
 	case CB_CALL_BY_CONTENT:
 	  output_prefix ();
-	  if (CB_NUMERIC_LITERAL_P (x) || x == cb_null)
+	  if (CB_NUMERIC_LITERAL_P (x) || x == cb_null
+		|| cb_field (x)->usage == CB_USAGE_LENGTH)
 	    {
 	      output ("*(int *)content_%d = ", n);
 #ifndef WORDS_BIGENDIAN
@@ -1489,6 +1491,7 @@ output_call (struct cb_call *p)
 		case CB_USAGE_COMP_5:
 		case CB_USAGE_COMP_X:
 		case CB_USAGE_INDEX:
+		case CB_USAGE_LENGTH:
 		  output_integer (x);
 		  break;
 		default:
@@ -1751,8 +1754,10 @@ output_stmt (cb_tree x)
 	output_line ("/* %s: */", p->name);
 	if (p->need_begin)
 	  output_line ("%s%d:;", CB_PREFIX_LABEL, p->id);
-	if (cb_flag_trace)
+	if (cb_flag_trace) {
 	  output_line ("puts (\"%s\");", p->name);
+	  output_line ("fflush (stdout);");
+	}
 	break;
       }
     case CB_TAG_FUNCALL:
@@ -2207,8 +2212,11 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_line ("  cob_decimal_init (&d[i]);");
   }
   output_newline ();
-  if (!prog->flag_initial)
+  if (!prog->flag_initial) {
     output_initial_values (prog->working_storage);
+    output_newline ();
+  }
+
   output_line ("initialized = 1;");
   output_indent ("  }");
   if (prog->flag_initial)

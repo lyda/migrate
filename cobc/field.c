@@ -342,6 +342,7 @@ validate_field_1 (struct cb_field *f)
       {
 	int need_picture = 1;
 	if (f->usage == CB_USAGE_INDEX
+	    || f->usage == CB_USAGE_LENGTH
 	    || f->usage == CB_USAGE_OBJECT
 	    || f->usage == CB_USAGE_POINTER
 	    || f->usage == CB_USAGE_PROGRAM)
@@ -462,6 +463,10 @@ setup_parameters (struct cb_field *f)
 	  f->pic = CB_PICTURE (cb_build_picture ("S9(9)"));
 	  break;
 
+	case CB_USAGE_LENGTH:
+	  f->pic = CB_PICTURE (cb_build_picture ("9(9)"));
+	  break;
+
 	case CB_USAGE_POINTER:
 	  f->pic = CB_PICTURE (cb_build_picture ("9(10)"));
 	  break;
@@ -534,6 +539,7 @@ compute_size (struct cb_field *f)
 			align_size = c->size;
 		      break;
 		    case CB_USAGE_INDEX:
+		    case CB_USAGE_LENGTH:
 		      align_size = sizeof (int);
 		      break;
 		    case CB_USAGE_OBJECT:
@@ -606,6 +612,7 @@ compute_size (struct cb_field *f)
 	    break;
 	  }
 	case CB_USAGE_INDEX:
+	case CB_USAGE_LENGTH:
 	  {
 	    f->size = sizeof (int);
 	    break;

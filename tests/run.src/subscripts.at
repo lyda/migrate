@@ -174,7 +174,7 @@ AT_CHECK([./prog], [1], ,
 AT_CLEANUP
 
 
-AT_SETUP([Subscript out of bounds with OCCURS DEPENDING ON (lower)])
+AT_SETUP([Subscript bounds with ODO (lower)])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -196,7 +196,7 @@ AT_CHECK([${COMPILE} -o prog prog.cob], [1], ,
 AT_CLEANUP
 
 
-AT_SETUP([Subscript out of bounds with OCCURS DEPENDING ON (upper)])
+AT_SETUP([Subscript bounds with ODO (upper)])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -218,7 +218,7 @@ AT_CHECK([${COMPILE} -o prog prog.cob], [1], ,
 AT_CLEANUP
 
 
-AT_SETUP([Subscript out of bounds with OCCURS DEPENDING ON])
+AT_SETUP([Subscript bounds with ODO])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.

@@ -487,7 +487,7 @@ AT_CHECK([./caller], [0],
 
 AT_CLEANUP
 
-AT_SETUP([CALL: binary literal parameter])
+AT_SETUP([CALL: binary literal parameter/LENGTH OF])
 
 AT_DATA([test.conf], [
 include "default.conf"
@@ -497,7 +497,7 @@ binary-byteorder: native
 AT_DATA([dump.c], [
 int dump (int *p)
 {
-  printf ("%08x", *p);
+  printf ("%08x\n", *p);
   return 0;
 }
 ])
@@ -505,15 +505,33 @@ int dump (int *p)
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
        PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  MYOCC        PIC 9(8) COMP.
+       01  MYTAB.
+           03  MYBYTE   PIC X OCCURS 1 TO 20
+                        DEPENDING ON MYOCC.
        PROCEDURE        DIVISION.
+           MOVE 9 TO MYOCC.
            CALL "dump" USING BY CONTENT 1.
+           CALL "dump" USING BY CONTENT LENGTH OF MYTAB.
+           CALL "dump" USING BY CONTENT LENGTH OF MYOCC.
+           STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_MODULE} dump.c])
 AT_CHECK([${COMPILE} -o prog prog.cob])
-AT_CHECK([./prog], [0], [01000000])
+AT_CHECK([./prog], [0],
+[01000000
+09000000
+04000000
+])
 AT_CHECK([${COMPILE} -conf=test.conf -o prog prog.cob])
-AT_CHECK([./prog], [0], [00000001])
+AT_CHECK([./prog], [0],
+[00000001
+00000009
+00000004
+])
 
 AT_CLEANUP
 
@@ -746,7 +764,7 @@ AT_CHECK([./prog], [0], [0000000000])
 AT_CLEANUP
 
 
-AT_SETUP([First READ on an empty SEQUENTIAL INDEXED file])
+AT_SETUP([First READ on empty SEQUENTIAL INDEXED file])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.

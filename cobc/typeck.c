@@ -521,6 +521,7 @@ cb_build_length (cb_tree x)
     return cb_error_node;
 
   temp = cb_build_index (cb_build_filler ());
+  CB_FIELD (cb_ref (temp))-> usage = CB_USAGE_LENGTH;
   cb_emit (cb_build_assign (temp, cb_build_length_1 (x)));
   return temp;
 }

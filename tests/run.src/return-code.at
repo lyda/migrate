@@ -19,7 +19,7 @@
 
 ### Non-standard extensions
 
-AT_SETUP([RETURN-CODE])
+AT_SETUP([RETURN-CODE moving])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -42,7 +42,7 @@ AT_CHECK([./prog], [1], [01])
 AT_CLEANUP
 
 
-AT_SETUP([RETURN-CODE])
+AT_SETUP([RETURN-CODE passing])
 
 AT_DATA([mod1.cob], [
        IDENTIFICATION   DIVISION.
