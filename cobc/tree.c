@@ -162,10 +162,10 @@ make_unary_cond (cob_tree x, enum cond_type type)
 void
 print_tree (cob_tree x)
 {
-  if (LITERAL_P (x))
-    {
-      printf (LITERAL (x)->name);
-    }
+  if (x == spe_lit_ZE)
+    printf ("ZERO");
+  else if (LITERAL_P (x))
+    printf (LITERAL (x)->name);
   else if (COND_P (x))
     {
       cob_tree l = COND_X (x);
