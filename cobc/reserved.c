@@ -27,7 +27,7 @@
 
 #define HASH_SIZE 133
 
-struct word {
+static struct word {
   const char *name;
   int token;
   struct word *next;
