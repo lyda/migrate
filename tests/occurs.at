@@ -68,6 +68,7 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 
 AT_CLEANUP
 
+
 # 2) TODO
 
 # 3) TODO
@@ -82,8 +83,32 @@ AT_CLEANUP
 
 # 8) TODO
 
-# 9) TODO
+
+# 9) DONE
 
+AT_SETUP([Nested OCCURS clause])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 G-1.
+        02 G-2          OCCURS 2.
+         03 G-3         OCCURS 2.
+          04 G-4        OCCURS 2.
+           05 G-5       OCCURS 2.
+            06 G-6      OCCURS 2.
+             07 G-7     OCCURS 2.
+              08 G-8    OCCURS 2.
+               09 X     PIC X.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+
 # 10) TODO
 
 # 11) TODO
