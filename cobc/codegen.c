@@ -1873,6 +1873,7 @@ codegen (struct program_spec *spec)
       output_line ("%s ();", spec->program_id);
       if (spec->enable_screen)
 	output_line ("cob_screen_clear ();");
+      output_line ("return cob_return_code;");
       output_indent ("}", -2);
     }
 }
