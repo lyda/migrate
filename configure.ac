@@ -143,8 +143,8 @@ AC_SUBST(COMPUTED_GOTO)
 COB_COBPP="cobpp"
 COB_CFLAGS="-I$includedir"
 COB_LIBS="-L$libdir -lcob ${LIBCOB_LIBS}"
-COB_CONFIG_FILE="$sysconfdir/$PACKAGE/libcob.conf"
-COB_LIBRARY_PATH=".:$libdir/$PACKAGE"
+COB_CONFIG_FILE="$sysconfdir/$PACKAGE_NAME/libcob.conf"
+COB_LIBRARY_PATH=".:$libdir/$PACKAGE_NAME"
 COB_MODULE_EXT=`echo "$shlibext" | sed 's/dll\.a/dll/'`
 LIBS="$save_libs"
 
