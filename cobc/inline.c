@@ -62,7 +62,7 @@ output_advance_move (struct cob_field f, cobc_tree dst)
   unsigned char dst_data[p->size + 1];
   struct cob_field dst_fld = {&dst_desc, dst_data};
 
-  dst_desc.len = p->size;
+  dst_desc.size = p->size;
   if (p->children)
     {
       dst_desc.type = 'G';
@@ -70,12 +70,13 @@ output_advance_move (struct cob_field f, cobc_tree dst)
   else
     {
       dst_desc.type = get_type (p);
+      dst_desc.digits = p->pic->digits;
       dst_desc.decimals = p->pic->decimals;
-      dst_desc.just_r = p->f.justified;
       dst_desc.have_sign = p->pic->have_sign;
       dst_desc.separate_sign = p->f.sign_separate;
       dst_desc.leading_sign = p->f.sign_leading;
       dst_desc.blank_zero = p->f.blank_zero;
+      dst_desc.just_r = p->f.justified;
       dst_desc.pic = p->pic->str;
     }
 
@@ -218,7 +219,7 @@ output_move_literal (cobc_tree src, cobc_tree dst)
 	val /= cob_exp10[p->decimals - decs];
       output_native_assign (dst, val);
     }
-  else if (COBC_FIELD_P (dst))
+  else if (!COBC_REFMOD_P (dst))
     {
       char src_pic[5];
       struct cobc_literal *l = COBC_LITERAL (src);

@@ -32,16 +32,26 @@ int cob_status;
 int cob_argc = 0;
 char **cob_argv = NULL;
 
-char *cob_source_file;
-int cob_source_line;
-
-char *cob_source_file = NULL;
 int cob_source_line = 0;
+char *cob_source_file = NULL;
 
 unsigned char cob_decimal_point = '.';
 unsigned char cob_currency_symbol = '$';
 
-long long cob_exp10[19] = {
+long cob_exp10[10] = {
+  1,
+  10,
+  100,
+  1000,
+  10000,
+  100000,
+  1000000,
+  10000000,
+  100000000,
+  1000000000
+};
+
+long long cob_exp10LL[19] = {
   1,
   10,
   100,
@@ -71,8 +81,8 @@ get_sign (struct cob_field f)
   switch (FIELD_TYPE (f))
     {
     case 'C':
-      digit = f.desc->len / 2;
-      return (f.desc->len & 1) ?	/* odd number of digits? */
+      digit = f.desc->size / 2;
+      return (f.desc->size & 1) ?	/* odd number of digits? */
 	(((f.data[digit] & 0x0f) == 0x0d) ? 1 : 0) :
 	(((f.data[digit] & 0xf0) == 0xd0) ? 1 : 0);
     case '9':
@@ -80,14 +90,14 @@ get_sign (struct cob_field f)
 	return 0;
       if (f.desc->separate_sign)
 	{
-	  char *p = f.desc->leading_sign ? f.data : f.data + f.desc->len - 1;
+	  char *p = f.desc->leading_sign ? f.data : f.data + f.desc->size - 1;
 	  int sign = (*p == '+') ? 0 : 1;
 	  *p = '0';
 	  return sign;
 	}
       else
 	{
-	  char *p = f.desc->leading_sign ? f.data : f.data + f.desc->len - 1;
+	  char *p = f.desc->leading_sign ? f.data : f.data + f.desc->size - 1;
 	  if (*p <= '9')
 	    return 0;
 	  *p -= 0x10;
@@ -105,8 +115,8 @@ put_sign (struct cob_field f, int sign)
   switch (FIELD_TYPE (f))
     {
     case 'C':
-      digit = f.desc->len / 2;
-      f.data[digit] = (f.desc->len & 1) ?	/* odd number of digits */
+      digit = f.desc->size / 2;
+      f.data[digit] = (f.desc->size & 1) ?	/* odd number of digits */
 	((f.data[digit] & 0xf0) | (sign ? 0x0d : 0x0c)) : (sign ? 0xd0 : 0xc0);
       return;
     case '9':
@@ -114,39 +124,15 @@ put_sign (struct cob_field f, int sign)
 	return;
       if (f.desc->separate_sign)
 	{
-	  char *p = f.desc->leading_sign ? f.data : f.data + f.desc->len - 1;
+	  char *p = f.desc->leading_sign ? f.data : f.data + f.desc->size - 1;
 	  *p = sign ? '-' : '+';
 	}
       else if (sign)
 	{
-	  char *p = f.desc->leading_sign ? f.data : f.data + f.desc->len - 1;
+	  char *p = f.desc->leading_sign ? f.data : f.data + f.desc->size - 1;
 	  *p += 0x10;
 	}
     }
-}
-
-int
-picCompLength (const char *pic)
-{
-  int len = 0, i;
-  for (i = 0; pic[i]; i++)
-    if (pic[i] == '9' || pic[i] == 'P')
-      len += pic[++i];
-  return len;
-}
-
-int
-picCompDecimals (const char *pic)
-{
-  int decimals = -1;
-  for (; *pic; pic += 2)
-    {
-      if (*pic == 'V' || *pic == '.')
-	decimals = 0;
-      else if (decimals >= 0)
-	decimals += pic[1];
-    }
-  return (decimals < 0) ? 0 : decimals;
 }
 
 char *
@@ -178,10 +164,10 @@ get_index (struct cob_field f)
 {
   int index;
   struct cob_field_desc desc =
-    { 4, 'B', f.desc->decimals, 0, f.desc->have_sign, 0, 0, 0, "S9\x9" };
-  struct cob_field d = {&desc, (unsigned char *) &index};
+    {4, 'B', f.desc->digits, f.desc->decimals, f.desc->have_sign};
+  struct cob_field temp = {&desc, (unsigned char *) &index};
   cob_dis_check (f);
-  cob_move (f, d);
+  cob_move (f, temp);
   return index;
 }
 
@@ -189,8 +175,8 @@ int
 cob_str_cmp (struct cob_field f1, struct cob_field f2)
 {
   int sign1, sign2;
-  int len1 = f1.desc->len;
-  int len2 = f2.desc->len;
+  int len1 = f1.desc->size;
+  int len2 = f2.desc->size;
 
   sign1 = get_sign (f1);
   sign2 = get_sign (f2);
@@ -317,34 +303,4 @@ cob_cmp_zero (unsigned char *data, int len)
     if (data[i] != '0')
       return data[i] - '0';
   return 0;
-}
-
-
-void
-_DUMP_ (unsigned char *caData, char *szCount, char *caOut)
-{
-  int i, k;
-  unsigned char c;
-
-  k = 0;
-  for (i = 0; i < 4; ++i)
-    {
-      if (szCount[i] == '\0')
-	break;
-      k *= 10;
-      k += (szCount[i] - '0');
-    }
-
-  for (i = 0; i < k; ++i)
-    {
-      c = (caData[i] >> 4) + '0';
-      if (c > '9')
-	c += 7;
-      caOut[i * 2] = c;
-
-      c = (caData[i] & 0xf) + '0';
-      if (c > '9')
-	c += 7;
-      caOut[(i * 2) + 1] = c;
-    }
 }

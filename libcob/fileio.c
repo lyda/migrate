@@ -317,8 +317,8 @@ cob_read (struct cob_file_desc *f, ...)
       va_end (args);
       key.data = f->record + f->rec_index;
       save_key.data = f->record + f->rec_index;
-      key.size = f->ixd_desc->len;
-      save_key.size = f->ixd_desc->len;
+      key.size = f->ixd_desc->size;
+      save_key.size = f->ixd_desc->size;
       if (fkey == NULL)
 	{
 	  f->key_in_use = NULL;
@@ -332,7 +332,7 @@ cob_read (struct cob_file_desc *f, ...)
 		{
 		  f->key_in_use = akd;
 		  key.data = keybuf;
-		  key.size = akd->descriptor->len;
+		  key.size = akd->descriptor->size;
 		  result =
 		    akd->alt_dbp->seq (akd->alt_dbp, &key, &data, R_CURSOR);
 		  if (result)
@@ -341,8 +341,8 @@ cob_read (struct cob_file_desc *f, ...)
 		    RETURN_STATUS (23);
 		  key.data = data.data;
 		  save_key.data = data.data;
-		  key.size = f->ixd_desc->len;
-		  save_key.size = f->ixd_desc->len;
+		  key.size = f->ixd_desc->size;
+		  save_key.size = f->ixd_desc->size;
 		}
 	    }
 	}
@@ -445,7 +445,7 @@ cob_read_next (struct cob_file_desc *f)
 	  if (result)
 	    RETURN_STATUS (10);
 	  key.data = data.data;
-	  key.size = f->ixd_desc->len;
+	  key.size = f->ixd_desc->size;
 	  flags = 0;
 	  result = f->dbp->get (f->dbp, &key, &data, flags);
 	  if (result)
@@ -496,7 +496,7 @@ cob_write (struct cob_file_desc *f, ...)
     {
     case COB_ORG_INDEXED:
       key.data = f->record + f->rec_index;
-      key.size = f->ixd_desc->len;
+      key.size = f->ixd_desc->size;
       result = f->dbp->put (f->dbp, &key, &data, R_NOOVERWRITE);
       if (result == 1)
 	RETURN_STATUS (22);
@@ -511,9 +511,9 @@ cob_write (struct cob_file_desc *f, ...)
 	for (akd = f->altkeys; akd->offset != -1; akd++)
 	  {
 	    key.data = f->record + akd->offset;
-	    key.size = akd->descriptor->len;
+	    key.size = akd->descriptor->size;
 	    data.data = f->record + f->rec_index;
-	    data.size = f->ixd_desc->len;
+	    data.size = f->ixd_desc->size;
 	    result = akd->alt_dbp->put (akd->alt_dbp, &key, &data, flags);
 	    /* If an error occurs we need code to back out.
 	       Will be done later.
@@ -803,14 +803,14 @@ cob_start (struct cob_file_desc *f, int cond, ...)
 	    if (alternate == 1)
 	      {
 		key.data = key_ptr;
-		key.size = akd->descriptor->len;
+		key.size = akd->descriptor->size;
 		result = akd->alt_dbp->seq (akd->alt_dbp, &key, &data, flags);
 		if (result)
 		  RETURN_STATUS (23);
 		if (memcmp (key.data, key_ptr, key.size) != 0)
 		  RETURN_STATUS (23);
 		key.data = data.data;
-		key.size = f->ixd_desc->len;
+		key.size = f->ixd_desc->size;
 		flags = 0;
 		result = f->dbp->get (f->dbp, &key, &data, flags);
 		if (result)
@@ -822,7 +822,7 @@ cob_start (struct cob_file_desc *f, int cond, ...)
 	    else
 	      {
 		key.data = f->record + f->rec_index;
-		key.size = f->ixd_desc->len;
+		key.size = f->ixd_desc->size;
 		result = f->dbp->seq (f->dbp, &key, &data, flags);
 		if (result)
 		  RETURN_STATUS (23);	/* should have a better error info here */
@@ -840,7 +840,7 @@ cob_start (struct cob_file_desc *f, int cond, ...)
 	    if (alternate == 1)
 	      {
 		key.data = key_ptr;
-		key.size = akd->descriptor->len;
+		key.size = akd->descriptor->size;
 		result = akd->alt_dbp->seq (akd->alt_dbp, &key, &data, flags);
 		if (result)
 		  {
@@ -860,7 +860,7 @@ cob_start (struct cob_file_desc *f, int cond, ...)
 		      RETURN_STATUS (23);
 		  }
 		key.data = data.data;
-		key.size = f->ixd_desc->len;
+		key.size = f->ixd_desc->size;
 		flags = 0;
 		result = f->dbp->get (f->dbp, &key, &data, flags);
 		if (result)
@@ -872,7 +872,7 @@ cob_start (struct cob_file_desc *f, int cond, ...)
 	    else
 	      {
 		key.data = f->record + f->rec_index;
-		key.size = f->ixd_desc->len;
+		key.size = f->ixd_desc->size;
 		result = f->dbp->seq (f->dbp, &key, &data, flags);
 		if (result)
 		  {
@@ -904,7 +904,7 @@ cob_start (struct cob_file_desc *f, int cond, ...)
 	    if (alternate == 1)
 	      {
 		key.data = key_ptr;
-		key.size = akd->descriptor->len;
+		key.size = akd->descriptor->size;
 		result = akd->alt_dbp->seq (akd->alt_dbp, &key, &data, flags);
 		if (result)
 		  {
@@ -924,7 +924,7 @@ cob_start (struct cob_file_desc *f, int cond, ...)
 		      RETURN_STATUS (23);
 		  }
 		key.data = data.data;
-		key.size = f->ixd_desc->len;
+		key.size = f->ixd_desc->size;
 		flags = 0;
 		result = f->dbp->get (f->dbp, &key, &data, flags);
 		if (result)
@@ -936,7 +936,7 @@ cob_start (struct cob_file_desc *f, int cond, ...)
 	    else
 	      {
 		key.data = f->record + f->rec_index;
-		key.size = f->ixd_desc->len;
+		key.size = f->ixd_desc->size;
 		result = f->dbp->seq (f->dbp, &key, &data, flags);
 		if (result)
 		  {
@@ -968,12 +968,12 @@ cob_start (struct cob_file_desc *f, int cond, ...)
 	    if (alternate == 1)
 	      {
 		key.data = key_ptr;
-		key.size = akd->descriptor->len;
+		key.size = akd->descriptor->size;
 		result = akd->alt_dbp->seq (akd->alt_dbp, &key, &data, flags);
 		if (result)
 		  RETURN_STATUS (23);
 		/* If result equals Key read next record */
-//                              if(memcmp(data.data,key_ptr,akd->descriptor->len)==0)
+//                              if(memcmp(data.data,key_ptr,akd->descriptor->size)==0)
 		if (memcmp (key.data, key_ptr, key.size) == 0)
 		  {
 		    flags = R_NEXT;
@@ -983,7 +983,7 @@ cob_start (struct cob_file_desc *f, int cond, ...)
 		      RETURN_STATUS (23);
 		  }
 		key.data = data.data;
-		key.size = f->ixd_desc->len;
+		key.size = f->ixd_desc->size;
 		flags = 0;
 		result = f->dbp->get (f->dbp, &key, &data, flags);
 		if (result)
@@ -995,7 +995,7 @@ cob_start (struct cob_file_desc *f, int cond, ...)
 	    else
 	      {
 		key.data = f->record + f->rec_index;
-		key.size = f->ixd_desc->len;
+		key.size = f->ixd_desc->size;
 		result = f->dbp->seq (f->dbp, &key, &data, flags);
 		if (result)
 		  RETURN_STATUS (23);	/* should have a better error info here */
@@ -1022,12 +1022,12 @@ cob_start (struct cob_file_desc *f, int cond, ...)
 	    if (alternate == 1)
 	      {
 		key.data = key_ptr;
-		key.size = akd->descriptor->len;
+		key.size = akd->descriptor->size;
 		result = akd->alt_dbp->seq (akd->alt_dbp, &key, &data, flags);
 		if (result)
 		  RETURN_STATUS (23);
 		key.data = data.data;
-		key.size = f->ixd_desc->len;
+		key.size = f->ixd_desc->size;
 		flags = 0;
 		result = f->dbp->get (f->dbp, &key, &data, flags);
 		if (result)
@@ -1039,7 +1039,7 @@ cob_start (struct cob_file_desc *f, int cond, ...)
 	    else
 	      {
 		key.data = f->record + f->rec_index;
-		key.size = f->ixd_desc->len;
+		key.size = f->ixd_desc->size;
 		result = f->dbp->seq (f->dbp, &key, &data, flags);
 		if (result)
 		  RETURN_STATUS (23);	/* should have a better error info here */
@@ -1109,7 +1109,7 @@ cob_rewrite (struct cob_file_desc *f, ...)
     {
     case COB_ORG_INDEXED:
       key.data = f->record + f->rec_index;
-      key.size = f->ixd_desc->len;
+      key.size = f->ixd_desc->size;
       /* Get the origional Record so we can delete the
          Alternate Keys is there is any change */
       result = f->dbp->get (f->dbp, &key, &data, flags);
@@ -1121,13 +1121,13 @@ cob_rewrite (struct cob_file_desc *f, ...)
 	for (akd = f->altkeys; akd->offset != -1; akd++)
 	  {
 	    key.data = f->record + akd->offset;
-	    key.size = akd->descriptor->len;
+	    key.size = akd->descriptor->size;
 	    result = akd->alt_dbp->del (akd->alt_dbp, &key, flags);
 	  }
       }
       memmove (f->record, newdata_data, newdata_size);
       key.data = f->record + f->rec_index;
-      key.size = f->ixd_desc->len;
+      key.size = f->ixd_desc->size;
       data.data = newdata_data;
       data.size = newdata_size;
       /* Rewrite the Main Record */
@@ -1141,9 +1141,9 @@ cob_rewrite (struct cob_file_desc *f, ...)
 	for (akd = f->altkeys; akd->offset != -1; akd++)
 	  {
 	    key.data = f->record + akd->offset;
-	    key.size = akd->descriptor->len;
+	    key.size = akd->descriptor->size;
 	    data.data = f->record + f->rec_index;
-	    data.size = f->ixd_desc->len;
+	    data.size = f->ixd_desc->size;
 	    result = akd->alt_dbp->put (akd->alt_dbp, &key, &data, flags);
 	    result = akd->alt_dbp->seq (akd->alt_dbp, &key, &data, R_CURSOR);
 	  }
@@ -1204,12 +1204,12 @@ cob_delete (struct cob_file_desc *f, ...)
 	for (akd = f->altkeys; akd->offset != -1; akd++)
 	  {
 	    key.data = f->record + akd->offset;
-	    key.size = akd->descriptor->len;
+	    key.size = akd->descriptor->size;
 	    result = akd->alt_dbp->del (akd->alt_dbp, &key, flags);
 	  }
       }
       key.data = f->record + f->rec_index;
-      key.size = f->ixd_desc->len;
+      key.size = f->ixd_desc->size;
       result = f->dbp->del (f->dbp, &key, flags);
       if (result != 0)
 	RETURN_STATUS (23);

@@ -223,6 +223,7 @@ struct cobc_field {
     int size;			/* byte size */
     char *str;			/* picture string */
     char category;		/* field category */
+    char digits;		/* the number of digit places */
     char decimals;		/* the number of decimal digits */
     char have_sign;		/* if the field may hold sign */
   } *pic;			/* PICTURE */

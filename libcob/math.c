@@ -303,7 +303,7 @@ cob_push_decimal (struct cob_field f)
   switch (FIELD_TYPE (f))
     {
     case 'B':
-      switch (f.desc->len)
+      switch (f.desc->size)
 	{
 	case 1: mpz_set_si (d->number, *(char *) f.data); break;
 	case 2: mpz_set_si (d->number, *(short *) f.data); break;
@@ -379,18 +379,18 @@ cob_set (struct cob_field f)
     {
     case 'B':
       {
-	int len = picCompLength (f.desc->pic);
-	if (!len)
-	  len = 4;
-	if (f.desc->len <= 4)
+	int digits = f.desc->digits;
+	if (f.desc->size <= 4)
 	  {
 	    int val;
 	    if (!mpz_fits_sint_p (d->number))
 	      goto overflow;
 	    val = mpz_get_si (d->number);
-	    if (val <= -cob_exp10[len] || val >= cob_exp10[len])
+	    if (val <= -cob_exp10[digits] || val >= cob_exp10[digits])
 	      goto overflow;
-	    switch (f.desc->len)
+	    if (!f.desc->have_sign && val < 0)
+	      val = -val;
+	    switch (f.desc->size)
 	      {
 	      case 1: *(char *) f.data = val; break;
 	      case 2: *(short *) f.data = val; break;
@@ -412,15 +412,17 @@ cob_set (struct cob_field f)
 	    val = mpz_get_si (d->number);
 	    val = (val << 32) + mpz_get_ui (r);
 	    mpz_clear (r);
-	    if (val <= -cob_exp10[len] || val >= cob_exp10[len])
+	    if (val <= -cob_exp10LL[digits] || val >= cob_exp10LL[digits])
 	      goto overflow;
+	    if (!f.desc->have_sign && val < 0)
+	      val = -val;
 	    *(long long *) f.data = val;
 	  }
 	return;
       }
 
     case 'C':
-      puts ("cob_decimal_to_fld: not implemented yet");
+      puts ("cob_set: not implemented yet");
       return;
 
     default:
@@ -454,8 +456,11 @@ cob_set (struct cob_field f)
 	  }
 	else
 	  {
-	    struct cob_field_desc desc = {size, '9', f.desc->decimals, 0, 1};
+	    struct cob_field_desc desc =
+	      {size, '9', f.desc->digits, f.desc->decimals, 1};
 	    struct cob_field temp = {&desc, buff};
+	    if (f.desc->digits < size)
+	      goto overflow;
 	    put_sign (temp, sign);
 	    cob_move (temp, f);
 	  }

@@ -711,10 +711,12 @@ file_description_sequence:
     struct cobc_field *p = COBC_FIELD ($7);
     current_file_name->record = p;
     p->file = COBC_TREE (current_file_name);
+    p->f.used = 1;
     for (p = p->sister; p; p = p->sister)
       {
 	p->redefines = current_file_name->record;
 	p->file = COBC_TREE (current_file_name);
+	p->f.used = 1;
       }
   }
 ;
@@ -944,6 +946,7 @@ usage:
   {
     current_field->usage = USAGE_INDEX;
     current_field->pic = make_picture ();
+    current_field->pic->digits = 9;
   }
 | PACKED_DECIMAL /* or COMP-3 */
   {
@@ -1015,6 +1018,7 @@ occurs_index:
     COBC_TREE_CLASS ($$) = COB_NUMERIC;
     COBC_FIELD ($$)->usage = USAGE_INDEX;
     COBC_FIELD ($$)->pic = make_picture ();
+    COBC_FIELD ($$)->pic->digits = 9;
     finalize_field_tree (COBC_FIELD ($$));
     program_spec.index_list = cons ($$, program_spec.index_list);
   }
@@ -2075,19 +2079,19 @@ _end_search: | END_SEARCH ;
  */
 
 set_statement:
-  SET name_list TO number
+  SET data_name_list TO number
   {
     struct cobc_list *l;
     for (l = $2; l; l = l->next)
       push_move ($4, l->item);
   }
-| SET name_list UP BY number
+| SET data_name_list UP BY number
   {
     struct cobc_list *l;
     for (l = $2; l; l = l->next)
       push_tree (make_assign (l->item, make_expr (l->item, '+', $5), 0));
   }
-| SET name_list DOWN BY number
+| SET data_name_list DOWN BY number
   {
     struct cobc_list *l;
     for (l = $2; l; l = l->next)

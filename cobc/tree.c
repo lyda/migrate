@@ -337,6 +337,7 @@ make_picture (void)
   p->size = 0;
   p->str = "";
   p->category = 0;
+  p->digits = 0;
   p->decimals = 0;
   p->have_sign = 0;
   return p;

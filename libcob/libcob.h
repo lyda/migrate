@@ -86,27 +86,28 @@
 struct cob_field {
   struct cob_field_desc
   {
-    unsigned long len;
+    unsigned long size;
     char type;
+    char digits;
     char decimals;
-    char just_r        : 1;
     char have_sign     : 1;
     char separate_sign : 1;
     char leading_sign  : 1;
     char blank_zero    : 1;
+    char just_r        : 1;
     char *pic;
   } *desc;
   unsigned char *data;
 };
 
 #define FIELD_TYPE(f)		((f).desc->type)
-#define FIELD_SIZE(f)		((f).desc->len)
+#define FIELD_SIZE(f)		((f).desc->size)
 #define FIELD_DECIMALS(f)	((f).desc->decimals)
 #define FIELD_DATA(f)		((f).data)
 #define FIELD_BASE(f) \
   ((f).data + (((f).desc->separate_sign && (f).desc->leading_sign) ? 1 : 0))
 #define FIELD_LENGTH(f) \
-  ((f).desc->len - ((f).desc->separate_sign ? 1 : 0))
+  ((f).desc->size - ((f).desc->separate_sign ? 1 : 0))
 
 #define FIELD_SIGNED_P(f)	((f).desc->have_sign)
 #define FIELD_NUMERIC_P(x)				\
@@ -181,7 +182,7 @@ struct cob_frame {
   label:						\
   frame_index--
 
-#define cob_exit_section(label)				\
+#define cob_exit(label)					\
  if (frame_stack[frame_index].perform_through == label)	\
    goto *frame_stack[frame_index].return_address
 
@@ -208,7 +209,8 @@ extern unsigned char cob_decimal_point;
 extern unsigned char cob_currency_symbol;
 #define cob_numeric_separator ((cob_decimal_point == '.') ? ',' : '.')
 
-extern long long cob_exp10[19];
+extern long cob_exp10[10];
+extern long long cob_exp10LL[19];
 
 /* functional macros */
 
@@ -223,8 +225,6 @@ extern long long cob_exp10[19];
 extern void cob_init_stack (void);
 extern int get_sign (struct cob_field f);
 extern void put_sign (struct cob_field f, int sign);
-extern int picCompLength (const char *pic);
-extern int picCompDecimals (const char *pic);
 extern char *cob_field_to_string (struct cob_field f, char *s);
 
 extern void cob_display (struct cob_field f);

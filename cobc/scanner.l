@@ -301,6 +301,7 @@ scan_picture (char *text)
   char category = 0;
   int idx = 0;
   int size = 0;
+  int digits = 0;
   int decimals = 0;
   int s_count = 0;
   int v_count = 0;
@@ -359,6 +360,7 @@ scan_picture (char *text)
 
 	case '9':
 	  category |= PIC_NUMERIC;
+	  digits += n;
 	  if (v_count)
 	    decimals += n;
 	  break;
@@ -406,6 +408,7 @@ scan_picture (char *text)
 	      goto error;
 	    if (at_beginning)
 	      v_count++;		/* implicit V */
+	    digits += n;
 	    if (v_count)
 	      decimals += n;
 	    else
@@ -421,6 +424,7 @@ scan_picture (char *text)
 	  category |= PIC_NUMERIC_EDITED;
 	  if (category & PIC_ALPHABETIC)
 	    goto error;
+	  digits += n;
 	  if (v_count)
 	    decimals += n;
 	  break;
@@ -429,6 +433,7 @@ scan_picture (char *text)
 	  category |= PIC_NUMERIC_EDITED;
 	  if (category & PIC_ALPHABETIC)
 	    goto error;
+	  digits += n - 1;
 	  /* FIXME: need more check */
 	  break;
 
@@ -436,21 +441,21 @@ scan_picture (char *text)
 	  category |= PIC_NUMERIC_EDITED;
 	  if (!(p[1] == 'R' && p[2] == 0))
 	    goto error;
-	  break;
-
-	case 'R':
+	  p++;
 	  break;
 
 	case 'D':
 	  category |= PIC_NUMERIC_EDITED;
 	  if (!(p[1] == 'B' && p[2] == 0))
 	    goto error;
+	  p++;
 	  break;
 
 	default:
 	  if (c == cob_currency_symbol)
 	    {
 	      category |= PIC_NUMERIC_EDITED;
+	      digits += n - 1;
 	      /* FIXME: need more check */
 	      break;
 	    }
@@ -461,7 +466,7 @@ scan_picture (char *text)
       /* calculate size */
       if (c != 'V' && c != 'P')
 	size += n;
-      if (c == 'N')
+      if (c == 'C' || c == 'D' || c == 'N')
 	size += n;
 
       /* allocate enough pic buffer */
@@ -484,6 +489,7 @@ scan_picture (char *text)
   /* set picture */
   pic->str = buff;
   pic->size = size;
+  pic->digits = digits;
   pic->decimals = decimals;
   pic->have_sign = s_count;
 
