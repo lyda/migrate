@@ -835,13 +835,13 @@ build_init_str (struct sym *sy, int times)
 }
 
 static void
-gen_init_str (struct sym *sy, char init_ctype, int len)
+gen_init_str (struct sym *sy, char type)
 {
 #ifdef COB_DEBUG
-  fprintf (o_src, "# init_str %s, type %c, len %d, loc %d\n",
-	   sy->name, init_ctype, len, sy->location);
+  fprintf (o_src, "# init_str %s, type %c, loc %d\n",
+	   sy->name, type, sy->location);
 #endif
-  switch (init_ctype)
+  switch (type)
     {
     case '9':
     case 'C':
@@ -892,23 +892,25 @@ do_init_val ()
 	    nb_fields = get_nb_fields (v, v->times, 1);
 	    if (init_ctype != '&' && init_ctype != ' ' && init_val != 1)
 	      {
-		gen_init_str (v, init_ctype, symlen (v));
-		continue;
+		gen_init_str (v, init_ctype);
 	      }
-	    initp = 0;
-	    init_location = v->location;
-	    max_nb_fields = nb_fields;
-	    istrp = malloc (nb_fields * sizeof (struct init_str));
-	    build_init_str (v, 1);
-	    for (j = 0; j < nb_fields; j++)
-	      if (istrp->ent[j].value != NULL)
-		{
-		  saved_loc = istrp->ent[j].sy->location;
-		  istrp->ent[j].sy->location = istrp->ent[j].location;
-		  init_field_val (istrp->ent[j].sy);
-		  istrp->ent[j].sy->location = saved_loc;
-		}
-	    free (istrp);
+	    else
+	      {
+		initp = 0;
+		init_location = v->location;
+		max_nb_fields = nb_fields;
+		istrp = malloc (nb_fields * sizeof (struct init_str));
+		build_init_str (v, 1);
+		for (j = 0; j < nb_fields; j++)
+		  if (istrp->ent[j].value != NULL)
+		    {
+		      saved_loc = istrp->ent[j].sy->location;
+		      istrp->ent[j].sy->location = istrp->ent[j].location;
+		      init_field_val (istrp->ent[j].sy);
+		      istrp->ent[j].sy->location = saved_loc;
+		    }
+		free (istrp);
+	      }
 	  }
 }
 
@@ -927,7 +929,6 @@ proc_header (int using)
     {
       if (cob_stabs_flag)
 	{
-
 	  fprintf (o_src, ".stabs\t\"%s\",100,0,0,Ltext_%s\n",
 		   cob_source_filename, pgm_label);
 	  fprintf (o_src, ".stabs\t\"%s:F1\",36,0,0,%s\n",
@@ -940,7 +941,8 @@ proc_header (int using)
 	  /* compll (comp with 8 bytes size) is wrong. Use a dump instead */
 	  fprintf (o_src, ".stabs\t\"compll:t7=r(0,1);0;01777777777777777777777\",128,0,0,0\n");
 	}
-      fprintf (o_src, "\t.version\t\"01.01\"\ntiny_cobol_compiled.:\n");
+      fprintf (o_src, "\t.version\t\"01.01\"\n");
+      fprintf (o_src, "cobc_compiled.:\n");
     }
 
   fprintf (o_src, ".text\n");
@@ -964,7 +966,7 @@ proc_header (int using)
      Note: extra 4 bytes is to remove memory corruption problem
      found in test20c.cob, probably due to boundary alignment problem. 
    */
-  stack_offset = stack_offset + START_STACK_ADJUST;
+  stack_offset += START_STACK_ADJUST;
   /* add space for linkage section variables that are
      not arguments of the calling program */
   stack_offset += adjust_linkage_vars (START_STACK_ADJUST);
@@ -977,54 +979,42 @@ proc_header (int using)
   fprintf (o_src, "\tjne\t.Linite_%s\n", pgm_label);
   fprintf (o_src, "\tmovl\t$1, 0(%%eax)\n");
 
-	/********** initialize all VALUES of fields **********/
-#if INIT == 1
+  /********** initialize all VALUES of fields **********/
   do_init_val ();
-#endif
 
-	/********** dump stabs for local variables **********/
-  for (i = 0; i < HASHLEN; i++)
-    for (sy1 = vartab[i]; sy1 != NULL; sy1 = sy1->next)
-      for (sy = sy1; sy != NULL; sy = sy->clone)
-	if (sy->type != 'F' && sy->type != '8' &&
-	    sy->type != 'K' && sy->type != 'J')
-	  {
-#if INIT == 0
-	    init_field_val (sy);
-#endif
-	    if (cob_stabs_flag && sy->sec_no == SEC_STACK)
+  /********** dump stabs for local variables **********/
+  if (cob_stabs_flag)
+    for (i = 0; i < HASHLEN; i++)
+      for (sy1 = vartab[i]; sy1 != NULL; sy1 = sy1->next)
+	for (sy = sy1; sy != NULL; sy = sy->clone)
+	  if (sy->sec_no == SEC_STACK)
+	    switch (sy->type)
 	      {
-
-		if (sy->type == 'B')
+	      case '8': case 'F': case 'K': case 'J':
+		/* do nothing */
+		break;
+	      case 'B':
+		switch (symlen (sy))
 		  {
-		    switch (symlen (sy))
-		      {
-		      case 1:
-			stabs_type = '6';
-			break;
-		      case 2:
-			stabs_type = '5';
-			break;
-		      case 4:
-			stabs_type = '3';
-			break;
-		      case 8:
-			stabs_type = '7';
-			break;
-		      }
-		    fprintf (o_src, ".stabs\t\"%s:%c\",128,0,0,-%d\n",
-			     sy->name, stabs_type, sy->location);
+		  case 1: stabs_type = '6'; break;
+		  case 2: stabs_type = '5'; break;
+		  case 4: stabs_type = '3'; break;
+		  case 8: stabs_type = '7'; break;
 		  }
-		else if (sy->type == 'C')
-		  fprintf (o_src,
-			   ".stabs\t\"%s:(1,%d)=ar3;1;%d;4\",128,0,0,-%d\n",
-			   sy->name, sy->len, sy->len, sy->location);
-		else
-		  fprintf (o_src,
-			   ".stabs\t\"%s:(1,%d)=ar3;1;%d;2\",128,0,0,-%d\n",
-			   sy->name, sy->len, sy->len, sy->location);
+		fprintf (o_src, ".stabs\t\"%s:%c\",128,0,0,-%d\n",
+			 sy->name, stabs_type, sy->location);
+		break;
+	      case 'C':
+		fprintf (o_src,
+			 ".stabs\t\"%s:(1,%d)=ar3;1;%d;4\",128,0,0,-%d\n",
+			 sy->name, sy->len, sy->len, sy->location);
+		break;
+	      default:
+		fprintf (o_src,
+			 ".stabs\t\"%s:(1,%d)=ar3;1;%d;2\",128,0,0,-%d\n",
+			 sy->name, sy->len, sy->len, sy->location);
 	      }
-	  }
+
   fprintf (o_src, ".Linite_%s:\n", pgm_label);
   if (cob_stabs_flag)
     {
@@ -1895,7 +1885,7 @@ gen_initialize (struct sym *sy)
   nb_fields = get_nb_fields (sy, sy->times, 0);
   if (init_ctype != '&' && init_ctype != ' ')
     {
-      gen_init_str (sy, init_ctype, symlen (sy));
+      gen_init_str (sy, init_ctype);
     }
   else
     {
@@ -1911,9 +1901,7 @@ gen_initialize (struct sym *sy)
 	{
 	  unsigned temp_loc = istrp->ent[i].sy->location;
 	  istrp->ent[i].sy->location = istrp->ent[i].location;
-	  gen_init_str (istrp->ent[i].sy,
-			istrp->ent[i].type,
-			istrp->ent[i].len);
+	  gen_init_str (istrp->ent[i].sy, istrp->ent[i].type);
 	  istrp->ent[i].sy->location = temp_loc;
 	}
       free (istrp);
