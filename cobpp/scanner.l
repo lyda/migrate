@@ -60,13 +60,21 @@ static void set_buffer (int lineno, const char *filename,
 
 %%
 
-<*>^[*/] {
-  /* Remove comments */
-  int c = input ();
-  while (c != '\n' && c != '\r' && c != EOF)
-    c = input ();
-  if (c != EOF)
-    unput (c);
+<*>^[*/D] {
+  if (yytext[0] == 'D' && cob_debug_flag)
+    {
+      /* Activate debugging code */
+      yyless(1);
+    }
+  else
+    {
+      /* Remove comments */
+      int c = input ();
+      while (c != '\n' && c != '\r' && c != EOF)
+	c = input ();
+      if (c != EOF)
+	unput (c);
+    }
 }
 
 "COPY"    { BEGIN COPY_STATE; return TOK_COPY; }
