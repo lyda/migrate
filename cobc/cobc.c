@@ -301,13 +301,10 @@ process_command_line (int argc, char *argv[])
   switch (source_format)
     {
     case FORMAT_FREE:
-      strcat (cobpp_flags, " -free");
+      strcat (cobpp_flags, " -FF");
       break;
     case FORMAT_FIXED:
-      strcat (cobpp_flags, " -fixed");
-      break;
-    case FORMAT_SEMI_FIXED:
-      strcat (cobpp_flags, " -semi-fixed");
+      strcat (cobpp_flags, " -FX");
       break;
     }
 
