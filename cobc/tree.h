@@ -655,28 +655,29 @@ extern struct cb_statement *cb_build_statement (const char *name);
 
 struct cb_list {
   struct cb_tree_common common;
-  int type;
-  cb_tree value;
   cb_tree purpose;
+  cb_tree value;
   cb_tree chain;
 };
 
 #define CB_LIST(x)	(CB_TREE_CAST (CB_TAG_LIST, struct cb_list, x))
 #define CB_LIST_P(x)	(CB_TREE_TAG (x) == CB_TAG_LIST)
 
-#define CB_VALUE(x)	(CB_LIST (x)->value)
 #define CB_PURPOSE(x)	(CB_LIST (x)->purpose)
+#define CB_VALUE(x)	(CB_LIST (x)->value)
 #define CB_CHAIN(x)	(CB_LIST (x)->chain)
 
-extern cb_tree cb_build_list (int type, cb_tree value, cb_tree purpose, cb_tree rest);
+#define CB_PURPOSE_INT(x) (CB_INTEGER (CB_PURPOSE (x))->val)
+
+extern cb_tree cb_build_list (cb_tree purpose, cb_tree value, cb_tree rest);
 extern cb_tree list_add (cb_tree l, cb_tree x);
 extern cb_tree list_append (cb_tree l1, cb_tree l2);
 extern cb_tree list_reverse (cb_tree l);
 extern int list_length (cb_tree l);
 
-#define cons(x,l)		cb_build_list (0, x, 0, l)
-#define list(x)			cb_build_list (0, x, 0, 0)
-#define cb_build_pair(x,y)	cb_build_list (0, x, y, NULL)
+#define cons(x,l)		cb_build_list (0, x, l)
+#define list(x)			cb_build_list (0, x, 0)
+#define cb_build_int_list(n,x)	cb_build_list (cb_build_integer (n), x, 0)
 
 
 /*

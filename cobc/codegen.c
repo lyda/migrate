@@ -1391,14 +1391,11 @@ output_initialize_replacing (struct cb_field *f)
     {
       cb_tree l;
       for (l = initialize_replacing_list; l; l = CB_CHAIN (l))
-	{
-	  struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
-	  if (p->type == f->pic->category)
-	    {
-	      output_move (p->x, CB_TREE (f));
-	      break;
-	    }
-	}
+	if (CB_PURPOSE_INT (l) == f->pic->category)
+	  {
+	    output_move (CB_VALUE (l), CB_TREE (f));
+	    break;
+	  }
     }
 }
 
@@ -1580,11 +1577,10 @@ output_sort_init (cb_tree file, cb_tree keys)
   output_line ("static cob_file_key keys[] = {");
   for (l = keys; l; l = CB_CHAIN (l))
     {
-      struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
       output_prefix ();
       output ("  {");
-      output_param (p->x, -1);
-      output (", %d},\n", p->type);
+      output_param (CB_VALUE (l), -1);
+      output (", %d},\n", CB_PURPOSE_INT (l));
     }
   output_line ("};");
   output_prefix ();
@@ -1617,9 +1613,8 @@ output_call (cb_tree name, cb_tree args, cb_tree st1, cb_tree st2)
   /* setup arguments */
   for (l = args, n = 1; l; l = CB_CHAIN (l), n++)
     {
-      struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
-      cb_tree x = p->x;
-      switch (p->type)
+      cb_tree x = CB_VALUE (l);
+      switch (CB_PURPOSE_INT (l))
 	{
 	case CB_CALL_BY_CONTENT:
 	  output_prefix ();
@@ -1636,9 +1631,8 @@ output_call (cb_tree name, cb_tree args, cb_tree st1, cb_tree st2)
     }
   for (l = args, n = 1; l; l = CB_CHAIN (l), n++)
     {
-      struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
-      cb_tree x = p->x;
-      switch (p->type)
+      cb_tree x = CB_VALUE (l);
+      switch (CB_PURPOSE_INT (l))
 	{
 	case CB_CALL_BY_CONTENT:
 	  output_prefix ();
@@ -1680,9 +1674,8 @@ output_call (cb_tree name, cb_tree args, cb_tree st1, cb_tree st2)
   output (" (");
   for (l = args, n = 1; l; l = CB_CHAIN (l), n++)
     {
-      struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
-      cb_tree x = p->x;
-      switch (p->type)
+      cb_tree x = CB_VALUE (l);
+      switch (CB_PURPOSE_INT (l))
 	{
 	case CB_CALL_BY_REFERENCE:
 	  output_data (x);

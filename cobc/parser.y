@@ -59,14 +59,14 @@
 #define VALIDATE_2(v,x,flag,msg,cond)		\
   {						\
     if ((x) == cb_error_node)			\
-      v = cb_error_node;			\
+      v = NULL;					\
     else if (!(cond))				\
       {						\
 	cb_error_x (x, msg, cb_name (x));	\
-	v = cb_error_node;			\
+	v = NULL;				\
       }						\
     else					\
-      v = cb_build_parameter_1 (flag, x);	\
+      v = cb_build_int_list (flag, x);		\
   }
 
 #define push(x)	\
@@ -177,13 +177,12 @@ static void terminator_warning (void);
 %type <ival> flag_all flag_duplicates flag_optional flag_global
 %type <ival> flag_not flag_next flag_rounded flag_separate
 %type <ival> integer display_upon screen_plus_minus level_number
-%type <ival> before_or_after perform_test replacing_option
-%type <ival> ascending_or_descending opt_from_integer opt_to_integer
+%type <ival> before_or_after perform_test opt_from_integer opt_to_integer
 %type <tree> occurs_key_list data_name_list value_list opt_value_list
 %type <tree> numeric_value_list inspect_before_after_list
 %type <tree> reference_list mnemonic_name_list file_name_list using_phrase
 %type <tree> expr_item_list numeric_name_list numeric_edited_name_list
-%type <tree> procedure_name_list
+%type <tree> procedure_name_list ascending_or_descending
 %type <tree> at_line_column column_number condition expr expr_1
 %type <tree> expr_item record_description_list label line_number literal
 %type <tree> entry_name integer_label reference_or_literal basic_literal
@@ -1201,9 +1200,8 @@ occurs_keys:
 	cb_tree l = $1;
 	for (i = 0; i < nkeys; i++)
 	  {
-	    struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
-	    keys[i].dir = p->type;
-	    keys[i].key = p->x;
+	    keys[i].dir = CB_PURPOSE_INT (l);
+	    keys[i].key = CB_VALUE (l);
 	    l = CB_CHAIN (l);
 	  }
 	current_field->keys = keys;
@@ -1218,13 +1216,13 @@ occurs_key_list:
   {
     cb_tree l;
     for (l = $5; l; l = CB_CHAIN (l))
-      CB_VALUE (l) = cb_build_parameter_1 ($2, CB_VALUE (l));
+      CB_PURPOSE (l) = $2;
     $$ = list_append ($1, $5);
   }
 ;
 ascending_or_descending:
-  ASCENDING			{ $$ = COB_ASCENDING; }
-| DESCENDING			{ $$ = COB_DESCENDING; }
+  ASCENDING			{ $$ = cb_build_integer (COB_ASCENDING); }
+| DESCENDING			{ $$ = cb_build_integer (COB_DESCENDING); }
 ;
 
 occurs_indexed:
@@ -1855,13 +1853,13 @@ call_using:
   call_param_list	{ $<tree>$ = $<tree>3; }
 ;
 call_param_list:
-  call_param		{ $<tree>$ = list ($<tree>1); }
+  call_param		{ $<tree>$ = $<tree>1; }
 | call_param_list
-  call_param		{ $<tree>$ = list_add ($<tree>1, $<tree>2); }
+  call_param		{ $<tree>$ = list_append ($<tree>1, $<tree>2); }
 ;
 call_param:
-  value			{ $<tree>$ = cb_build_parameter_1 (current_call_mode, $1);}
-| _by call_mode value	{ $<tree>$ = cb_build_parameter_1 (current_call_mode, $3);}
+  value			{ $<tree>$ = cb_build_int_list (current_call_mode, $1); }
+| _by call_mode value	{ $<tree>$ = cb_build_int_list (current_call_mode, $3);}
 ;
 call_mode:
   REFERENCE		{ current_call_mode = CB_CALL_BY_REFERENCE; }
@@ -2263,17 +2261,17 @@ initialize_replacing_list:
 | initialize_replacing_list
   replacing_option _data BY value
   {
-    $<tree>$ = list_add ($<tree>1, cb_build_parameter_1 ($2, $5));
+    $<tree>$ = list_append ($<tree>1, cb_build_int_list ($<ival>2, $5));
   }
 ;
 replacing_option:
-  ALPHABETIC			{ $$ = CB_CATEGORY_ALPHABETIC; }
-| ALPHANUMERIC			{ $$ = CB_CATEGORY_ALPHANUMERIC; }
-| NUMERIC			{ $$ = CB_CATEGORY_NUMERIC; }
-| ALPHANUMERIC_EDITED		{ $$ = CB_CATEGORY_ALPHANUMERIC_EDITED; }
-| NUMERIC_EDITED		{ $$ = CB_CATEGORY_NUMERIC_EDITED; }
-| NATIONAL			{ $$ = CB_CATEGORY_NATIONAL; }
-| NATIONAL_EDITED		{ $$ = CB_CATEGORY_NATIONAL_EDITED; }
+  ALPHABETIC			{ $<ival>$ = CB_CATEGORY_ALPHABETIC; }
+| ALPHANUMERIC			{ $<ival>$ = CB_CATEGORY_ALPHANUMERIC; }
+| NUMERIC			{ $<ival>$ = CB_CATEGORY_NUMERIC; }
+| ALPHANUMERIC_EDITED		{ $<ival>$ = CB_CATEGORY_ALPHANUMERIC_EDITED; }
+| NUMERIC_EDITED		{ $<ival>$ = CB_CATEGORY_NUMERIC_EDITED; }
+| NATIONAL			{ $<ival>$ = CB_CATEGORY_NATIONAL; }
+| NATIONAL_EDITED		{ $<ival>$ = CB_CATEGORY_NATIONAL_EDITED; }
 ;
 _data: | DATA ;
 
@@ -2867,7 +2865,7 @@ sort_key_list:
   {
     cb_tree l;
     for (l = $5; l; l = CB_CHAIN (l))
-      CB_VALUE (l) = cb_build_parameter_1 ($3, CB_VALUE (l));
+      CB_PURPOSE (l) = $3;
     $<tree>$ = list_append ($<tree>1, $5);
   }
 ;
@@ -3742,9 +3740,9 @@ record_name:
 /* Numeric name (with ROUNDED) */
 
 numeric_name_list:
-  numeric_name			{ $$ = list ($1); }
+  numeric_name			{ $$ = $1; }
 | numeric_name_list
-  numeric_name			{ $$ = list_add ($1, $2); }
+  numeric_name			{ $$ = list_append ($1, $2); }
 ;
 numeric_name:
   data_name flag_rounded
@@ -3757,9 +3755,9 @@ numeric_name:
 /* Numeric-edited name (with ROUNDED) */
 
 numeric_edited_name_list:
-  numeric_edited_name		{ $$ = list ($1); }
+  numeric_edited_name		{ $$ = $1; }
 | numeric_edited_name_list
-  numeric_edited_name		{ $$ = list_add ($1, $2); }
+  numeric_edited_name		{ $$ = list_append ($1, $2); }
 ;
 numeric_edited_name:
   data_name flag_rounded

@@ -1820,13 +1820,12 @@ cb_build_statement (const char *name)
  */
 
 cb_tree
-cb_build_list (int type, cb_tree value, cb_tree purpose, cb_tree rest)
+cb_build_list (cb_tree purpose, cb_tree value, cb_tree rest)
 {
   struct cb_list *p =
     make_tree (CB_TAG_LIST, CB_CATEGORY_UNKNOWN, sizeof (struct cb_list));
-  p->type = type;
-  p->value = value;
   p->purpose = purpose;
+  p->value = value;
   p->chain = rest;
   return CB_TREE (p);
 }
@@ -2152,8 +2151,7 @@ build_decimal_assign (cb_tree vars, char op, cb_tree val)
       for (l = vars; l; l = CB_CHAIN (l))
 	{
 	  /* set VAR, d */
-	  struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
-	  decimal_assign (s2, p->x, d, p->type);
+	  decimal_assign (s2, CB_VALUE (l), d, CB_PURPOSE_INT (l));
 	  add_stmt (s1, s2);
 	  if (CB_CHAIN (l))
 	    s2 = make_sequence (NULL);
@@ -2168,10 +2166,9 @@ build_decimal_assign (cb_tree vars, char op, cb_tree val)
 	   * OP t, d
 	   * set VAR, t
 	   */
-	  struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
-	  decimal_expand (s2, t, p->x);
+	  decimal_expand (s2, t, CB_VALUE (l));
 	  decimal_compute (s2, op, t, d);
-	  decimal_assign (s2, p->x, t, p->type);
+	  decimal_assign (s2, CB_VALUE (l), t, CB_PURPOSE_INT (l));
 	  add_stmt (s1, s2);
 	  if (CB_CHAIN (l))
 	    s2 = make_sequence (NULL);
@@ -2200,11 +2197,10 @@ cb_build_assign (cb_tree vars, char op, cb_tree val)
       {
 	for (l = vars; l; l = CB_CHAIN (l))
 	  {
-	    struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
 	    if (op == '+')
-	      CB_VALUE (l) = cb_build_add (p->x, val, p->type);
+	      CB_VALUE (l) = cb_build_add (CB_VALUE (l), val, CB_PURPOSE_INT (l));
 	    else
-	      CB_VALUE (l) = cb_build_sub (p->x, val, p->type);
+	      CB_VALUE (l) = cb_build_sub (CB_VALUE (l), val, CB_PURPOSE_INT (l));
 	  }
 	return make_sequence (vars);
       }
@@ -2566,12 +2562,10 @@ cb_build_divide (cb_tree dividend, cb_tree divisor,
 		 cb_tree quotient, cb_tree remainder)
 {
   cb_tree l = NULL;
-  struct cb_parameter *pq = CB_PARAMETER (quotient);
-  struct cb_parameter *pr = CB_PARAMETER (remainder);
   l = list_add (l, cb_build_funcall_4 ("cob_div_quotient",
-				   dividend, divisor, pq->x,
-				   pq->type ? cb_int1 : cb_int0));
-  l = list_add (l, cb_build_funcall_1 ("cob_div_remainder", pr->x));
+				       dividend, divisor, CB_VALUE (quotient),
+				       CB_PURPOSE_INT (quotient) ? cb_int1 : cb_int0));
+  l = list_add (l, cb_build_funcall_1 ("cob_div_remainder", CB_VALUE (remainder)));
   return make_sequence (l);
 }
 
