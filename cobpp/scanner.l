@@ -23,8 +23,12 @@
 %option never-interactive
 
 %{
+
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include "cobpp.h"
 #include "parser.h"
@@ -52,9 +56,10 @@ static struct copybook {
 static int yyinput (char *buf, int max_size);
 
 static char *substring (const char *s, int size);
-static void process_eol (void);
 static void set_buffer (int lineno, const char *filename,
 			struct replacement *replacing, YY_BUFFER_STATE buffer);
+static void process_eol (void);
+
 %}
 
 %x COPY_STATE
@@ -63,12 +68,12 @@ static void set_buffer (int lineno, const char *filename,
 
 <*>^[*/].*		{ /* comment */ }
 
-<*>^"D "		{ if (cob_debug_flag) yyless(2); }
+<*>^"D ".*		{ if (cob_debug_flag) yyless(2); }
 
 <*>\n			{ process_eol (); }
 
 <*>\n-[ \t]*[\"\']? {
-  if (cob_format == COB_FORMAT_FIXED)
+  if (cob_file_format == COB_FORMAT_FIXED)
     {
       /* Line connection */
       yylineno++;
@@ -79,6 +84,7 @@ static void set_buffer (int lineno, const char *filename,
 }
 
 "COPY"			{ BEGIN COPY_STATE; return COPY; }
+"INCLUDE"		{ BEGIN COPY_STATE; return COPY; }
 "REPLACE"		{ BEGIN COPY_STATE; return REPLACE; }
 
 . |
@@ -122,9 +128,96 @@ static void set_buffer (int lineno, const char *filename,
 }
 
 %%
-/*
- * Public functions
- */
+
+static char *
+substring (const char *s, int size)
+{
+  int len = strlen (yytext) - size * 2;
+  char *buff = malloc (len + 1);
+  strncpy (buff, yytext + size, len);
+  buff[len] = '\0';
+  return buff;
+}
+
+static void
+set_buffer (int lineno, const char *filename,
+	    struct replacement *replacing, YY_BUFFER_STATE buffer)
+{
+  yylineno = lineno;
+  yyfilename = filename;
+  yyreplacing = replacing;
+  yy_switch_to_buffer (buffer);
+  fprintf (yyout, "# %d \"%s\"\n", yylineno, yyfilename ? yyfilename : "");
+}
+
+void
+open_buffer (const char *name, struct replacement *replacing)
+{
+  char buff[FILENAME_MAX];
+
+  /* Prepare input file */
+  if (name == NULL)
+    yyin = stdin;
+  else
+    {
+      FILE *fp;
+      struct stat st;
+
+      /* Find the copy file */
+      if (name[0] != '/' && stat (name, &st) == -1)
+	{
+	  struct cob_include_dir *p;
+	  for (p = cob_include_path; p; p = p->next)
+	    {
+	      sprintf (buff, "%s/%s", p->dir, name);
+	      if (stat (buff, &st) == 0)
+		{
+		  name = buff;
+		  break;
+		}
+	    }
+	  if (!p)
+	    {
+	      fprintf (stderr, "%s:%d: %s: Failed to find file\n",
+		       yyfilename ? yyfilename : "<stdin>", yylineno, name);
+	      return;
+	    }
+	}
+
+      /* Open the copy file */
+      fp = fopen (name, "r");
+      if (!fp)
+	{
+	  fprintf (stderr, "%s:%d: ",
+		   yyfilename ? yyfilename : "<stdin>", yylineno);
+	  perror (name);
+	  return;
+	}
+      yyin = fp;
+    }
+
+  /* Preserve the current buffer */
+  {
+    struct copybook *p = malloc (sizeof (struct copybook));
+    p->lineno    = yylineno;
+    p->filename  = yyfilename;
+    p->replacing = yyreplacing;
+    p->buffer    = YY_CURRENT_BUFFER;
+    p->next      = copybook_stack;
+    copybook_stack = p;
+  }
+
+  /* Switch to new buffer */
+  set_buffer (1, name, replacing, yy_create_buffer (yyin, YY_BUF_SIZE));
+}
+
+void
+include_copybook (const char *name, struct replacement *replacing)
+{
+  /* delay copying until the end of line */
+  copybook_name = name;
+  copybook_replacing = replacing;
+}
 
 static void
 process_eol (void)
@@ -139,58 +232,9 @@ process_eol (void)
     }
   else if (display_line)
     {
-      fprintf (yyout, "# %d \"%s\"\n", yylineno, yyfilename);
+      fprintf (yyout, "# %d \"%s\"\n", yylineno, yyfilename ? yyfilename : "");
       display_line = 0;
     }
-}
-
-static void
-set_buffer (int lineno, const char *filename,
-	    struct replacement *replacing, YY_BUFFER_STATE buffer)
-{
-  yylineno = lineno;
-  yyfilename = filename;
-  yyreplacing = replacing;
-  yy_switch_to_buffer (buffer);
-  fprintf (yyout, "# %d \"%s\"\n", yylineno, yyfilename);
-}
-
-void
-open_buffer (const char *name, struct replacement *replacing)
-{
-  /* Preserve the current buffer */
-  struct copybook *p = malloc (sizeof (struct copybook));
-  p->lineno    = yylineno;
-  p->filename  = yyfilename;
-  p->replacing = yyreplacing;
-  p->buffer    = YY_CURRENT_BUFFER;
-  p->next      = copybook_stack;
-  copybook_stack = p;
-
-  /* Switch to new buffer */
-  if (name == NULL)
-    {
-      name = "";
-      yyin = stdin;
-    }
-  else
-    {
-      yyin = fopen (name, "r");
-      if (!yyin)
-	{
-	  perror (name);
-	  exit (1);
-	}
-    }
-  set_buffer (1, name, replacing, yy_create_buffer (yyin, YY_BUF_SIZE));
-}
-
-void
-include_copybook (const char *name, struct replacement *replacing)
-{
-  /* delay copying until the end of line */
-  copybook_name = strdup (name);
-  copybook_replacing = replacing;
 }
 
 struct replacement *
@@ -204,19 +248,10 @@ add_replacement (struct replacement *replacing,
   return p;
 }
 
-
-/*
- * Local functions
- */
-
-static char *
-substring (const char *s, int size)
+void
+remove_replacements (void)
 {
-  int len = strlen (yytext) - size * 2;
-  char *buff = malloc (len + 1);
-  strncpy (buff, yytext + size, len);
-  buff[len] = '\0';
-  return buff;
+  yyreplacing = NULL;
 }
 
 static int
@@ -233,11 +268,12 @@ yyinput (char *buf, int max_size)
   len = strlen (buf);
   if (len >= max_size / cob_tab_width)
     {
+    too_long:
       fprintf (stderr, "%s:%d: source line too long\n", yyfilename, yylineno);
       exit (1);
     }
 
-  /* Regularize the end of line (i.e. \n) */
+  /* Regularize the end of line (i.e. \n) to LF */
   switch (buf[len - 1])
     {
     case '\n':
@@ -255,7 +291,7 @@ yyinput (char *buf, int max_size)
     }
 
   /* If fixed format... */
-  if (cob_format == COB_FORMAT_FIXED)
+  if (cob_file_format == COB_FORMAT_FIXED)
     {
       /* Tab expansion */
       int i, column = 0;
@@ -286,6 +322,7 @@ yyinput (char *buf, int max_size)
 	strcpy (buf, buf + 6);
       else
 	strcpy (buf, "\n");
+      len = strlen (buf);
     }
 
   /* Do replacement */
@@ -298,24 +335,21 @@ yyinput (char *buf, int max_size)
 	  int new_len = strlen (ls->new_text);
 	  if (old_len == new_len)
 	    {
-	      strncpy (p, ls->new_text, new_len);
+	      memcpy (p, ls->new_text, new_len);
 	    }
-	  else if (old_len > new_len)
+	  else if (len - old_len + new_len >= max_size)
 	    {
-	      strncpy (p, ls->new_text, new_len);
-	      strcpy (p + new_len, p + old_len);
+	      goto too_long;
 	    }
 	  else
 	    {
-	      /* FIXME: need to check buffer overflow */
-	      char *s = strdup (p + old_len);
-	      strncpy (p, ls->new_text, new_len);
-	      strcpy (p + new_len, s);
-	      free (s);
+	      memmove (p + new_len, p + old_len, len - old_len + 1);
+	      memcpy (p, ls->new_text, new_len);
+	      len = len - old_len + new_len;
 	    }
 	  p += new_len;
 	}
     }
 
-  return strlen (buf);
+  return len;
 }

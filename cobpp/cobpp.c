@@ -36,16 +36,17 @@ extern int yyparse (void);
  * Global variables
  */
 
-enum cob_format cob_format;
 int cob_tab_width = 8;
 int cob_debug_flag = 0;
+enum cob_format cob_file_format = COB_FORMAT_FREE;
+struct cob_include_dir *cob_include_path = NULL;
 
 
 /*
  * Local varialbes
  */
 
-const char *program_name;
+static const char *program_name;
 
 
 /*
@@ -81,7 +82,7 @@ print_usage ()
   puts ("  -F            Use standard fixed column format");
   puts ("  -D            Compile debug lines (i.e., \"D\" lines)");
   puts ("  -T <n>        Tab width (default 8)");
-  puts ("  -I <path>     Add include (copybooks) search path");
+  puts ("  -I <path>     Add include path");
 }
 
 static int
@@ -91,7 +92,6 @@ process_command_line (int argc, char *argv[])
 
   /* Default options */
   yyout = stdout;
-  cob_format = COB_FORMAT_FREE;
 
   /* Parse the options */
   while ((c = getopt_long_only (argc, argv, short_options,
@@ -113,11 +113,26 @@ process_command_line (int argc, char *argv[])
 	  break;
 
 	case 'I':
-	  puts ("`-I' is not supported yet.");
+	  {
+	    struct cob_include_dir *path =
+	      malloc (sizeof (struct cob_include_dir));
+	    path->dir = strdup (optarg);
+	    path->next = NULL;
+
+	    /* Append at the end */
+	    if (!cob_include_path)
+	      cob_include_path = path;
+	    else
+	      {
+		struct cob_include_dir *p;
+		for (p = cob_include_path; p->next; p = p->next);
+		p->next = path;
+	      }
+	  }
 	  break;
 
-	case 'X': cob_format = COB_FORMAT_FREE; break;
-	case 'F': cob_format = COB_FORMAT_FIXED; break;
+	case 'X': cob_file_format = COB_FORMAT_FREE; break;
+	case 'F': cob_file_format = COB_FORMAT_FIXED; break;
 	case 'D': cob_debug_flag = 1; break;
 	case 'T': cob_tab_width = atoi (optarg); break;
 
@@ -127,6 +142,11 @@ process_command_line (int argc, char *argv[])
 
   return optind;
 }
+
+
+/*
+ * Main
+ */
 
 int
 main (int argc, char *argv[])
@@ -143,7 +163,7 @@ main (int argc, char *argv[])
   /* Process command line arguments */
   index = process_command_line (argc, argv);
 
-  /* Setup input */
+  /* Prepare input */
   if (argc == index)
     {
       open_buffer (NULL, NULL);

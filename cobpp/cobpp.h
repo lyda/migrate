@@ -29,8 +29,13 @@ enum cob_format {
   COB_FORMAT_FIXED
 };
 
-extern enum cob_format cob_format;
 extern int cob_tab_width;
 extern int cob_debug_flag;
+extern enum cob_format cob_file_format;
+
+extern struct cob_include_dir {
+  const char *dir;
+  struct cob_include_dir *next;
+} *cob_include_path;
 
 #endif /* _COBPP_H_ */

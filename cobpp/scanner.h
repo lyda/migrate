@@ -17,6 +17,9 @@
  *  Boston, MA 02111-1307 USA
  */
 
+#ifndef _SCANNER_H_
+#define _SCANNER_H_
+
 #include <stdio.h>
 
 struct replacement {
@@ -34,3 +37,6 @@ extern int yylex (void);
 extern void open_buffer (const char *name, struct replacement *replacing);
 extern void include_copybook (const char *name, struct replacement *replacing);
 extern struct replacement *add_replacement (struct replacement *replacing, const char *old_text, const char *new_text);
+extern void remove_replacements (void);
+
+#endif /* _SCANNER_H_ */

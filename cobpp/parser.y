@@ -27,7 +27,6 @@ static void yyerror (char *msg);
 %}
 
 %union {
-  int i;
   const char *s;
   struct replacement *r;
 }
@@ -43,17 +42,17 @@ statement_list: | statement_list statement ;
 statement: copy_statement | replace_statement ;
 
 copy_statement:
-    COPY NAME '.'                          { include_copybook ($2, NULL); }
-  | COPY NAME REPLACING replacing_list '.' { include_copybook ($2, $4); }
+  COPY NAME '.'                          { include_copybook ($2, NULL); }
+| COPY NAME REPLACING replacing_list '.' { include_copybook ($2, $4); }
 ;
 replace_statement:
-    REPLACE replacing_list '.'
-  | REPLACE OFF '.'
+  REPLACE replacing_list '.'
+| REPLACE OFF '.'	{ remove_replacements (); }
 ;
 replacing_list:
-    text BY text { $$ = add_replacement (NULL, $1, $3); }
-  | replacing_list opt_comma
-    text BY text { $$ = add_replacement ($1, $3, $5); }
+  text BY text		{ $$ = add_replacement (NULL, $1, $3); }
+| replacing_list opt_comma
+  text BY text		{ $$ = add_replacement ($1, $3, $5); }
 ;
 text: NAME | TEXT ;
 opt_comma: | ',' ;
@@ -63,6 +62,6 @@ opt_comma: | ',' ;
 static void
 yyerror (char *msg)
 {
-  const char *name = yyfilename[0] ? yyfilename : "<stdin>";
-  fprintf (stderr, "%s:%d: %s before `%s'\n", name, yylineno, msg, yytext);
+  fprintf (stderr, "%s:%d: %s before `%s'\n",
+	   yyfilename ? yyfilename : "<stdin>", yylineno, msg, yytext);
 }
