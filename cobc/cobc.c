@@ -524,9 +524,20 @@ process_filename (const char *filename)
 static int
 process (const char *cmd)
 {
+  char buff[BUFSIZ];
+  char *p = buff;
+
+  /* quote '$' */
+  for (; *cmd; cmd++)
+    if (*cmd == '$')
+      p += sprintf (p, "\\$");
+    else
+      *p++ = *cmd;
+  *p = 0;
+
   if (verbose_output)
-    fprintf (stderr, "%s\n", cmd);
-  return system (cmd);
+    fprintf (stderr, "%s\n", buff);
+  return system (buff);
 }
 
 static int
