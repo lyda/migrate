@@ -76,13 +76,6 @@
 
 /* minor token numbers */
 
-/* DATE-TIME */
-#define DATE 0
-#define TIME 1
-#define INKEY 2
-#define DAY 3
-#define DAY_OF_WEEK 4
-
 /* CONDITIONAL */
 
 #define EQUAL 	1

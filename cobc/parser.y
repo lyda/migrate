@@ -137,15 +137,16 @@ static void check_decimal_point (struct lit *lit);
 %token <ival> USAGENUM,CONDITIONAL
 %token <ival> READ,WRITE
 %token <lval> NLITERAL,CLITERAL
-%token <ival> PORTNUM,DATE_TIME
+%token <ival> PORTNUM
 
+%token DATE,DAY,DAY_OF_WEEK,TIME,INKEY
 %token TO,FOR,IS,ARE,THRU,THAN,NO,CANCEL,ASCENDING,DESCENDING,ZERO
 %token TOK_SOURCE_COMPUTER, TOK_OBJECT_COMPUTER,INPUT_OUTPUT
 %token BEFORE,AFTER,SCREEN,REVERSEVIDEO,NUMBERTOK,PLUS,MINUS,SEPARATE
 %token FOREGROUNDCOLOR,BACKGROUNDCOLOR,UNDERLINE,HIGHLIGHT,LOWLIGHT
 %token RIGHT,AUTO,REQUIRED,FULL,JUSTIFIED,BLINK,SECURE,BELL,COLUMN,SYNCHRONIZED
 %token INITIALTOK,FIRSTTOK,ALL,LEADING,OF,IN,BY,STRINGCMD,UNSTRING
-%token START,DELETE,DATE_TIME,PROGRAM,GLOBAL,EXTERNAL,SIZE,DELIMITED
+%token START,DELETE,PROGRAM,GLOBAL,EXTERNAL,SIZE,DELIMITED
 %token GIVING,ERASE,INSPECT,TALLYING,REPLACING,ONTOK,POINTER,OVERFLOWTK
 %token DELIMITER,COUNT,LEFT,TRAILING,CHARACTER
 %token ADD,SUBTRACT,MULTIPLY,DIVIDE,ROUNDED,REMAINDER,TOK_ERROR,SIZE
@@ -1212,31 +1213,34 @@ accept_statement:
     ACCEPT name opt_line_pos accept_options
     ;
 accept_options:
-      screen_attribs    { gen_accept($<sval>-1, $1, 1); }
-    | screen_attribs
-        ONTOK EXCEPTION { screen_io_enable++; 
-                          gen_accept($<sval>-1, $1, 1); }
-        variable        { gen_store_fnres($5); 
-                          $<dval>$ = gen_check_zero(); }
-        statement_list  { gen_dstlabel($<dval>6); }
-    | FROM DATE_TIME    { if ($2 == DATE)
-                              gen_accept_from_date($<sval>-1);
-                          else if ($2 == DAY)
-                              gen_accept_from_day($<sval>-1);
-                          else if ($2 == DAY_OF_WEEK)
-                              gen_accept_from_day_of_week($<sval>-1);
-                          else if ($2 == TIME)
-                              gen_accept_from_time($<sval>-1);
-                          else if ($2 == INKEY)
-                              gen_accept_from_inkey($<sval>-1); }
-    | FROM COMMAND_LINE    { gen_accept_from_cmdline($<sval>-1); }
-    | FROM ENVIRONMENT_VARIABLE CLITERAL 
-     { 
-       save_literal($3,'X');
-           $3->all=0;
-       gen_accept_env_var($<sval>-1, $3);
-     }
-    ;
+  screen_attribs		{ gen_accept($<sval>-1, $1, 1); }
+| screen_attribs ONTOK EXCEPTION
+  {
+    screen_io_enable++; 
+    gen_accept($<sval>-1, $1, 1);
+  }
+  variable
+  {
+    gen_store_fnres($5); 
+    $<dval>$ = gen_check_zero();
+  }
+  statement_list
+  {
+    gen_dstlabel($<dval>6);
+  }
+| FROM DATE			{ gen_accept_from_date($<sval>-1); }
+| FROM DAY			{ gen_accept_from_day($<sval>-1); }
+| FROM DAY_OF_WEEK		{ gen_accept_from_day_of_week($<sval>-1); }
+| FROM TIME			{ gen_accept_from_time($<sval>-1); }
+| FROM INKEY			{ gen_accept_from_inkey($<sval>-1); }
+| FROM COMMAND_LINE		{ gen_accept_from_cmdline($<sval>-1); }
+| FROM ENVIRONMENT_VARIABLE CLITERAL
+  { 
+    save_literal($3,'X');
+    $3->all=0;
+    gen_accept_env_var($<sval>-1, $3);
+  }
+;
 
 
 /*
