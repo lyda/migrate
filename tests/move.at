@@ -1,0 +1,767 @@
+## ISO+IEC+1989-2002 14.8.24 - MOVE statement
+
+
+## 14.8.24.2-1
+
+# TO BE TESTED
+
+
+## 14.8.24.2-2
+
+# TO BE TESTED
+
+
+## 14.8.24.2-3
+
+# N/A
+
+
+## 14.8.24.2-4
+
+# N/A
+
+
+## 14.8.24.2-5
+
+AT_SETUP([MOVE SPACE TO numeric item])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 9.
+       PROCEDURE       DIVISION.
+         MOVE SPACE TO X.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:8: error: invalid MOVE statement
+])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE SPACE TO numeric-edited item])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 09.
+       PROCEDURE       DIVISION.
+         MOVE SPACE TO X.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:8: error: invalid MOVE statement
+])
+
+AT_CLEANUP
+
+
+## 14.8.24.2-6
+
+AT_SETUP([MOVE ZERO TO alphabetic item])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 A            PIC A.
+       PROCEDURE       DIVISION.
+         MOVE ZERO TO A.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:8: error: invalid MOVE statement
+])
+
+AT_CLEANUP
+
+
+## 14.8.24.2-7
+
+# TO BE TESTED
+
+
+## 14.8.24.2-8
+
+
+# MOVE alphabetic TO x
+
+AT_SETUP([MOVE alphabetic TO alphabetic])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC A.
+       01 Y            PIC A.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE alphabetic TO alphanumeric])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC A.
+       01 Y            PIC X.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE alphabetic TO alphanumeric-edited])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC A.
+       01 Y            PIC BX.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE alphabetic TO numeric])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC A.
+       01 Y            PIC 9.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:9: error: invalid MOVE statement
+])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE alphabetic TO numeric-edited])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC A.
+       01 Y            PIC 09.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:9: error: invalid MOVE statement
+])
+
+AT_CLEANUP
+
+
+# MOVE alphanumeric TO x
+
+AT_SETUP([MOVE alphanumeric TO alphabetic])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X.
+       01 Y            PIC A.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE alphanumeric TO alphanumeric])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X.
+       01 Y            PIC X.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE alphanumeric TO alphanumeric-edited])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X.
+       01 Y            PIC BX.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE alphanumeric TO numeric])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X.
+       01 Y            PIC 9.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE alphanumeric TO numeric-edited])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X.
+       01 Y            PIC 09.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+
+# MOVE alphanumeric-edited TO x
+
+AT_SETUP([MOVE alphanumeric-edited TO alphabetic])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC BX.
+       01 Y            PIC A.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE alphanumeric-edited TO alphanumeric])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC BX.
+       01 Y            PIC X.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE alphanumeric-edited TO alphanumeric-edited])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC BX.
+       01 Y            PIC BX.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE alphanumeric-edited TO numeric])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC BX.
+       01 Y            PIC 9.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:9: error: invalid MOVE statement
+])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE alphanumeric-edited TO numeric-edited])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC BX.
+       01 Y            PIC 09.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:9: error: invalid MOVE statement
+])
+
+AT_CLEANUP
+
+
+# MOVE numeric (integer) TO x
+
+AT_SETUP([MOVE numeric (integer) TO alphabetic])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 9.
+       01 Y            PIC A.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:9: error: invalid MOVE statement
+])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE numeric (integer) TO alphanumeric])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 9.
+       01 Y            PIC X.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE numeric (integer) TO alphanumeric-edited])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 9.
+       01 Y            PIC BX.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE numeric (integer) TO numeric])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 9.
+       01 Y            PIC 9.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE numeric (integer) TO numeric-edited])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 9.
+       01 Y            PIC 09.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+
+# MOVE numeric (non-integer) TO x
+
+AT_SETUP([MOVE numeric (non-integer) TO alphabetic])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 9V9.
+       01 Y            PIC A.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:9: error: invalid MOVE statement
+])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE numeric (non-integer) TO alphanumeric])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 9V9.
+       01 Y            PIC X.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:9: error: invalid MOVE statement
+])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE numeric (non-integer) TO alphanumeric-edited])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 9V9.
+       01 Y            PIC BX.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:9: error: invalid MOVE statement
+])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE numeric (non-integer) TO numeric])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 9V9.
+       01 Y            PIC 9.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE numeric (non-integer) TO numeric-edited])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 9V9.
+       01 Y            PIC 09.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+
+# MOVE numeric-edited TO x
+
+AT_SETUP([MOVE numeric-edited TO alphabetic])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 09.
+       01 Y            PIC A.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:9: error: invalid MOVE statement
+])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE numeric-edited TO alphanumeric])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 09.
+       01 Y            PIC X.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE numeric-edited TO alphanumeric-edited])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 09.
+       01 Y            PIC BX.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE numeric-edited TO numeric])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 09.
+       01 Y            PIC 9.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+AT_SETUP([MOVE numeric-edited TO numeric-edited])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 09.
+       01 Y            PIC 09.
+       PROCEDURE       DIVISION.
+         MOVE X TO Y.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+
+## 14.8.24.2-9
+
+# N/A
+
+
+## 14.8.24.2-10
+
+AT_SETUP([Sending operand not group])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G.
+         02 X          PIC X.
+       01 A            PIC X.
+       PROCEDURE       DIVISION.
+         MOVE CORR X TO G.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:10: error: `X' not a group
+])
+
+AT_CLEANUP
+
+AT_SETUP([Receiving operand not group])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G.
+         02 X          PIC X.
+       01 A            PIC X.
+       PROCEDURE       DIVISION.
+         MOVE CORR G TO X.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:10: error: `X' not a group
+])
+
+AT_CLEANUP
+
+AT_SETUP([Sending operand reference modified])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G1.
+         02 X          PIC X.
+       01 G2.
+         02 X          PIC X.
+       PROCEDURE       DIVISION.
+         MOVE CORR G1(1:1) TO G2.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:11: error: `G1(1:1)' not a group
+])
+
+AT_CLEANUP
+
+AT_SETUP([Receiving operand reference modified])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G1.
+         02 X          PIC X.
+       01 G2.
+         02 X          PIC X.
+       PROCEDURE       DIVISION.
+         MOVE CORR G1 TO G2(1:1).
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:11: error: `G2(1:1)' not a group
+])
+
+AT_CLEANUP
+
+
+## 14.8.24.2-11
+
+# N/A

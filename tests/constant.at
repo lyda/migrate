@@ -1,0 +1,319 @@
+###
+### Alphabetic consistency check
+###
+
+AT_SETUP([PIC AAA VALUE 123])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC AAA VALUE 123.
+       PROCEDURE       DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:7: error: invalid VALUE clause
+])
+
+AT_CLEANUP
+
+AT_SETUP([PIC AAA VALUE 'ab1'])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC AAA VALUE 'ab1'.
+       PROCEDURE       DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:7: warning: constant value mismatch
+])
+
+AT_CLEANUP
+
+AT_SETUP([PIC AAA VALUE ZERO])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC AAA VALUE ZERO.
+       PROCEDURE       DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:7: error: invalid VALUE clause
+])
+
+AT_CLEANUP
+
+AT_SETUP([PIC AAA VALUE 'abcd'])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC AAA VALUE 'abcd'.
+       PROCEDURE       DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:7: warning: constant size overflow
+])
+
+AT_CLEANUP
+
+###
+### Alphanumeric consistency check
+###
+
+AT_SETUP([PIC XXX VALUE 123])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC XXX VALUE 123.
+       PROCEDURE       DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:7: warning: type mismatch
+])
+
+AT_CLEANUP
+
+AT_SETUP([PIC XXX VALUE 'abcd'])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC XXX VALUE 'abcd'.
+       PROCEDURE       DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:7: warning: constant size overflow
+])
+
+AT_CLEANUP
+
+###
+### Numeric consistency check
+###
+
+AT_SETUP([PIC 999 VALUE 'abc'])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 999 VALUE 'abc'.
+       PROCEDURE       DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:7: warning: type mismatch
+])
+
+AT_CLEANUP
+
+AT_SETUP([PIC 999 VALUE SPACE])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 999 VALUE SPACE.
+       PROCEDURE       DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:7: error: invalid VALUE clause
+])
+
+AT_CLEANUP
+
+AT_SETUP([PIC 999 VALUE -1])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 999 VALUE -1.
+       PROCEDURE       DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:7: warning: ignoring negative sign
+])
+
+AT_CLEANUP
+
+AT_SETUP([PIC 999 VALUE 12.3])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 999 VALUE 12.3.
+       PROCEDURE       DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:7: warning: constant size overflow
+])
+
+AT_CLEANUP
+
+AT_SETUP([PIC 999 VALUE 1234])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 999 VALUE 1234.
+       PROCEDURE       DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:7: warning: constant size overflow
+])
+
+AT_CLEANUP
+
+AT_SETUP([PIC 99V9 VALUE 123])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 99V9 VALUE 123.
+       PROCEDURE       DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:7: warning: constant size overflow
+])
+
+AT_CLEANUP
+
+AT_SETUP([PIC 99V9 VALUE 12.34])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 99V9 VALUE 12.34.
+       PROCEDURE       DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:7: warning: constant size overflow
+])
+
+AT_CLEANUP
+
+AT_SETUP([PIC 99PP VALUE 0])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 99PP VALUE 0.
+       PROCEDURE       DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+AT_SETUP([PIC 99PP VALUE 1])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 99PP VALUE 1.
+       PROCEDURE       DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:7: warning: constant value mismatch
+])
+
+AT_CLEANUP
+
+AT_SETUP([PIC 99PP VALUE 1234])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 99PP VALUE 1234.
+       PROCEDURE       DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:7: warning: constant value mismatch
+])
+
+AT_CLEANUP
+
+AT_SETUP([PIC PP99 VALUE 1234])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC PP99 VALUE .1234.
+       PROCEDURE       DIVISION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:7: warning: constant value mismatch
+])
+
+AT_CLEANUP
+
+###
+### Numeric-edited consistency check
+###

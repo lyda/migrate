@@ -1,6 +1,4 @@
-AT_INIT([PACKED-DECIMAL tests])
-
-AT_TESTED([cobc])
+## PACKED-DECIMAL tests
 
 ###
 ### Dump tests

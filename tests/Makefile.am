@@ -1,12 +1,11 @@
 SUBDIRS = cobol85
 
-TESTS =	$(srcdir)/testsuite $(srcdir)/packed
+TESTS =	$(srcdir)/testsuite
 
-TESTSUITE_AT = testsuite.at definition.at reference.at redefines.at misc.at
+TESTSUITE_AT = testsuite.at definition.at reference.at redefines.at \
+	constant.at move.at packed.at misc.at
 
-PACKED_AT = packed.at
-
-EXTRA_DIST = $(TESTS) $(TESTSUITE_AT) $(PACKED_AT)
+EXTRA_DIST = $(TESTS) $(TESTSUITE_AT)
 
 DISTCLEANFILES = atconfig
 
