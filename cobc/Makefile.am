@@ -11,11 +11,9 @@ EXTRA_DIST = ppparse.y pplex.l parser.y scanner.l
 CLEANFILES = parser.output ppparse.output
 
 AM_CFLAGS = -Wall
-AM_YFLAGS = -d -v
-AM_LFLAGS = -s
 
 %.c: %.l
-	$(LEX) $(AM_LFLAGS) -o$@ $<
+	flex -s -o$@ $<
 
 %.c: %.y
-	$(YACC) $(AM_YFLAGS) -o $@ $<
+	bison -o $@ $<

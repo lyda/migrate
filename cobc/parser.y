@@ -19,6 +19,9 @@
 
 %expect 83
 
+%defines
+%verbose
+
 %{
 #include "config.h"
 
