@@ -1,3 +1,8 @@
+2002-07-08  Keisuke Nishida  <knishida@netlab.jp>
+
+	* codegen.c (output_field): New function.
+	(output_file_name): Use it.
+
 2002-07-05  Keisuke Nishida  <knishida@netlab.jp>
 
 	* parser.y (screen_description): Set default line/column.

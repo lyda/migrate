@@ -817,6 +817,20 @@ output_recursive (void (*func) (struct cobc_field *), cobc_tree x)
 
 
 /*
+ * Field
+ */
+
+static void
+output_field (cobc_tree x)
+{
+  if (x)
+    output ("f_%s", COBC_FIELD (x)->cname);
+  else
+    output ("{0, 0, 0}");
+}
+
+
+/*
  * Field definition
  */
 
@@ -1014,20 +1028,14 @@ output_file_name (struct cobc_file_name *f)
   /* record_min, record_max */
   output ("%d, %d, ", f->record_min, f->record_max);
   /* record_depending */
-  if (f->record_depending != NULL)
-    output_tree (f->record_depending);
-  else
-    output ("{0, 0}");
+  output_field (f->record_depending);
   output (", ");
   /* file */
   output ("0, ");
   /* flags */
   output ("{%d, 0, 0, 0, 0, 0}, ", f->optional);
   /* relative_key */
-  if (f->organization == COB_ORG_RELATIVE && f->key != NULL)
-    output_tree (f->key);
-  else
-    output ("{0, 0}");
+  output_field (f->key);
   output (", ");
   /* cursor, keys, nkeys, last_key */
   if (f->organization == COB_ORG_INDEXED)
