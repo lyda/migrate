@@ -69,6 +69,8 @@ The config option `auto-initialize' controls this.
 
 *** COLLATING SEQUENCE in the SORT and MERGE statements.
 
+*** EXIT PERFORM [CYCLE] statement.
+
 *** SORT table.
 
 *** OPEN ... WITH NO REWIND / WITH LOCK recognized, though not working.
