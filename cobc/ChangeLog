@@ -2,6 +2,9 @@
 
 	* typeck.c (cb_build_move_field): Optimize when the usage of src
 	and dst are the same, not only when they are DISPLAY.
+	(cb_build_move_high, cb_build_move_low): Really move low/high
+	values to numeric fields.
+	(cb_build_move): Do not convert 0 literal to ZERO.
 
 2004-05-03  Keisuke Nishida  <knishida@open-cobol.org>
 

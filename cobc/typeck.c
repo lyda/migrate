@@ -2275,7 +2275,6 @@ cb_build_move_high (cb_tree x)
   switch (CB_TREE_CATEGORY (x))
     {
     case CB_CATEGORY_NUMERIC:
-      return cb_build_move_num (x, 9);
     case CB_CATEGORY_ALPHABETIC:
     case CB_CATEGORY_ALPHANUMERIC:
       return cb_build_memset (x, 255);
@@ -2290,7 +2289,6 @@ cb_build_move_low (cb_tree x)
   switch (CB_TREE_CATEGORY (x))
     {
     case CB_CATEGORY_NUMERIC:
-      return cb_build_move_num (x, 0);
     case CB_CATEGORY_ALPHABETIC:
     case CB_CATEGORY_ALPHANUMERIC:
       return cb_build_memset (x, 0);
@@ -2481,12 +2479,6 @@ cb_build_move (cb_tree src, cb_tree dst)
   if (cb_flag_runtime_inlining)
     {
       struct cb_field *f = cb_field (dst);
-
-      /* convert "MOVE 0 TO X" into "MOVE ZERO TO X" */
-      if (CB_NUMERIC_LITERAL_P (src)
-	  && cb_fits_int (src)
-	  && cb_get_int (src) == 0)
-	src = cb_zero;
 
       /* no optimization for binary swap and packed decimal for now */
       if (f->flag_binary_swap
