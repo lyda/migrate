@@ -25,6 +25,21 @@
 
 #define binFldSize(f) (f->len)
 
+static struct fld_desc zero_fld  = { 1, '9', 0, 1, 0, 0, 0, 0, "9\001"};
+static struct fld_desc space_fld = { 1, 'X', 0, 1, 0, 0, 0, 0, "X\001"};
+
+void
+cob_move_zero (struct fld_desc *f, char *s)
+{
+  cob_move (&zero_fld, "0", f, s);
+}
+
+void
+cob_move_space (struct fld_desc *f, char *s)
+{
+  cob_move (&space_fld, " ", f, s);
+}
+
 /*--------------------------------------------------------------------------*\
  |                                                                           |
  |       void cob_move( struct fld_desc *FieldDescSrc,                       |

@@ -3559,7 +3559,6 @@ gen_inspect (struct sym *var, void *list, int operation)
 void
 gen_move (struct sym *sy_src, struct sym *sy_dst)
 {
-  /*int scaling; */
 #ifdef COB_DEBUG
   {
     struct sym *esys = sy_src, *esyd = sy_dst;
@@ -3571,10 +3570,21 @@ gen_move (struct sym *sy_src, struct sym *sy_dst)
     fprintf (o_src, "%s\n", sch_convert (esyd->name));
   }
 #endif
-  /* default move */
+
   gen_loadvar (sy_dst);
-  gen_loadvar (sy_src);
-  asm_call ("cob_move");
+  if (sy_src == (struct sym *) spe_lit_ZE)
+    {
+      asm_call ("cob_move_zero");
+    }
+  else if (sy_src == (struct sym *) spe_lit_SP)
+    {
+      asm_call ("cob_move_space");
+    }
+  else
+    {
+      gen_loadvar (sy_src);
+      asm_call ("cob_move");
+    }
 }
 
 /* The following functions will be activated when we change from
