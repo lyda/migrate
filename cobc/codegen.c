@@ -387,9 +387,9 @@ output_compare (cobc_tree s1, int op, cobc_tree s2)
   switch (op)
     {
     case COBC_COND_EQ: output (" == 0"); break;
-    case COBC_COND_LT: output (" == -1"); break;
+    case COBC_COND_LT: output (" <  0"); break;
     case COBC_COND_LE: output (" <= 0"); break;
-    case COBC_COND_GT: output (" == 1"); break;
+    case COBC_COND_GT: output (" >  0"); break;
     case COBC_COND_GE: output (" >= 0"); break;
     case COBC_COND_NE: output (" != 0"); break;
     }
@@ -446,10 +446,6 @@ output_condition (cobc_tree x)
       output_condition (r);
       output (")");
       break;
-    case COBC_COND_VAR:
-      yywarn ("condvar is not supported ");
-      output ("1");
-      return;
     default:
       output_compare (l, type, r);
       return;
@@ -679,7 +675,7 @@ output_evaluate_test (cobc_tree s, cobc_tree o)
       if (COBC_TREE_CLASS (s) != COB_BOOLEAN
 	  || COBC_TREE_CLASS (o) != COB_BOOLEAN)
 	{
-	  yyerror ("type mismatch");
+	  yyerror_loc (&COBC_TREE (o)->loc, "type mismatch");
 	  output ("0");
 	  return;
 	}
@@ -1243,8 +1239,8 @@ codegen (struct program_spec *spec)
   output_line ("init_environment (void)");
   output_indent ("{", 2);
   output_line ("cob_source_file = \"%s\";", cobc_source_file);
-  output_line ("cob_decimal_point = '%c';", spec->decimal_point);
-  output_line ("cob_currency_symbol = '%c';", spec->currency_symbol);
+  output_line ("cob_decimal_point = '%c';", cob_decimal_point);
+  output_line ("cob_currency_symbol = '%c';", cob_currency_symbol);
   output_indent ("}", -2);
   output_newline ();
 

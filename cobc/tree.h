@@ -210,6 +210,7 @@ struct cobc_field {
   char *cname;			/* the name used in C files */
   cobc_tree file;		/* file name associated in FD section */
   cobc_tree value;		/* VALUE */
+  cobc_tree cond;		/* condition for level 88 item */
   struct cobc_word *word;	/* the word of this field */
   struct cobc_list *index_list;	/* INDEXED BY */
   struct cobc_field *parent;	/* upper level field (NULL for 01 fields) */
@@ -393,7 +394,6 @@ enum cobc_cond_type {
   COBC_COND_NOT,		/* not x */
   COBC_COND_AND,		/* x and y */
   COBC_COND_OR,			/* x or y */
-  COBC_COND_VAR			/* 88 variable */
 };
 
 struct cobc_cond

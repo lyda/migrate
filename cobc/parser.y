@@ -136,7 +136,7 @@ static cobc_tree make_opt_cond (cobc_tree last, int type, cobc_tree this);
 %token <word> WORD,LABEL_WORD
 %token <pict> PICTURE_TOK
 %token <tree> INTEGER_LITERAL,NUMERIC_LITERAL,NONNUMERIC_LITERAL
-%token <tree> SPECIAL_TOK,VARCOND
+%token <tree> SPECIAL_TOK,CONDITION_NAME
 
 %token EQUAL,GREATER,LESS,GE,LE,COMMAND_LINE,ENVIRONMENT_VARIABLE,ALPHABET
 %token DATE,DAY,DAY_OF_WEEK,TIME,READ,WRITE,OBJECT_COMPUTER,INPUT_OUTPUT
@@ -177,7 +177,7 @@ static cobc_tree make_opt_cond (cobc_tree last, int type, cobc_tree this);
 %type <inum> class,integer,level_number,operator
 %type <inum> usage,before_or_after,perform_test
 %type <inum> select_organization,select_access_mode,open_mode
-%type <list> occurs_key_list,occurs_index_list
+%type <list> occurs_key_list,occurs_index_list,value_item_list
 %type <list> data_name_list,condition_name_list,name_list,opt_value_list
 %type <list> evaluate_subject_list,evaluate_case,evaluate_case_list
 %type <list> evaluate_when_list,evaluate_object_list
@@ -190,7 +190,7 @@ static cobc_tree make_opt_cond (cobc_tree last, int type, cobc_tree this);
 %type <list> file_name_list,math_name_list,math_edited_name_list
 %type <list> call_item_list,call_using
 %type <call> call_item
-%type <tree> call_returning,add_to,field_description_list
+%type <tree> call_returning,add_to,field_description_list,value_item
 %type <tree> field_description_list_1,field_description_list_2
 %type <tree> condition,condition_2,comparative_condition,class_condition
 %type <tree> imperative_statement,field_description
@@ -231,8 +231,6 @@ program_sequence:
 program:
   {
     program_spec.program_id = NULL;
-    program_spec.decimal_point = '.';
-    program_spec.currency_symbol = '$';
     program_spec.initial_program = 0;
     program_spec.index_list = NULL;
     program_spec.file_name_list = NULL;
@@ -241,6 +239,8 @@ program:
     program_spec.exec_list = NULL;
     label_check_list = NULL;
     cobc_in_procedure = 0;
+    cob_decimal_point = '.';
+    cob_currency_symbol = '$';
     init_word_table ();
   }
   identification_division
@@ -401,10 +401,20 @@ on_off_names:
 | off_status_is_name on_status_is_name
 ;
 on_status_is_name:
-  ON _status _is WORD		{ COBC_FIELD (make_field ($4))->level = 88; }
+  ON _status _is WORD
+  {
+    struct cobc_field *p = COBC_FIELD (make_field ($4));
+    p->level = 88;
+    p->cond = cobc_int1;
+  }
 ;
 off_status_is_name:
-  OFF _status _is WORD		{ COBC_FIELD (make_field ($4))->level = 88; }
+  OFF _status _is WORD
+  {
+    struct cobc_field *p = COBC_FIELD (make_field ($4));
+    p->level = 88;
+    p->cond = cobc_int0;
+  }
 ;
 
 
@@ -493,7 +503,7 @@ special_name_currency:
     unsigned char *s = COBC_LITERAL ($3)->str;
     if (strlen (s) != 1)
       yyerror ("invalid currency sign");
-    program_spec.currency_symbol = s[0];
+    cob_currency_symbol = s[0];
   }
 ;
 
@@ -501,7 +511,7 @@ special_name_currency:
 /* DECIMAL_POINT */
 
 special_name_decimal_point:
-  DECIMAL_POINT _is COMMA	{ program_spec.decimal_point = ','; }
+  DECIMAL_POINT _is COMMA	{ cob_decimal_point = ','; }
 ;
 
 
@@ -1034,15 +1044,55 @@ blank_clause:
 /* VALUE */
 
 value_clause:
-  VALUE _is_are value_list
+  VALUE _is_are value_item_list
+  {
+    if (current_field->level != 88)
+      {
+	if ($3->next != NULL || COBC_PAIR_P ($3))
+	  yyerror ("only level 88 item may have multiple values");
+	else
+	  current_field->value = $3->item;
+      }
+    else
+      {
+	struct cobc_list *l;
+	cobc_tree cond = NULL;
+	cobc_tree parent = COBC_TREE (current_field->parent);
+	for (l = $3; l; l = l->next)
+	  {
+	    cobc_tree c;
+	    if (COBC_PAIR_P (l->item))
+	      {
+		/* VALUE THRU VALUE */
+		struct cobc_pair *p = COBC_PAIR (l->item);
+		c = make_cond (make_cond (p->x, COBC_COND_LE, parent),
+			       COBC_COND_AND,
+			       make_cond (parent, COBC_COND_LE, p->y));
+	      }
+	    else
+	      {
+		/* VALUE */
+		c = make_cond (parent, COBC_COND_EQ, l->item);
+	      }
+	    if (cond)
+	      cond = make_cond (cond, COBC_COND_OR, c);
+	    else
+	      cond = c;
+	  }
+	current_field->cond = cond;
+	current_field->value = $3->item;
+	if (COBC_PAIR_P (current_field->value))
+	  current_field->value = COBC_PAIR (current_field->value)->x;
+      }
+  }
 ;
-value_list:
-  value_item
-| value_list value_item
+value_item_list:
+  value_item			{ $$ = list ($1); }
+| value_item_list value_item	{ $$ = list_add ($1, $2); }
 ;
 value_item:
-  literal			{ current_field->value = $1; }
-| literal THRU literal		{  }
+  literal			{ $$ = $1; }
+| literal THRU literal		{ $$ = make_pair ($1, $3); }
 ;
 
 
@@ -1050,9 +1100,9 @@ value_item:
 
 renames_clause:
   RENAMES qualified_predefined_word
-  _renames_thru			{ yywarn ("RENAMES is not implemented"); }
+  renames_thru			{ yywarn ("RENAMES is not implemented"); }
 ;
-_renames_thru:
+renames_thru:
 | THRU qualified_predefined_word
 ;
 
@@ -1568,7 +1618,11 @@ evaluate_object:
 	  }
       }
     else
-      $$ = $2;
+      {
+	$$ = $2;
+	COBC_TREE ($$)->loc.file = @2.text;
+	COBC_TREE ($$)->loc.line = @2.first_line;
+      }
   }
 ;
 evaluate_object_1:
@@ -2028,7 +2082,9 @@ set_statement:
   }
 | SET condition_name_list TO TRUE
   {
-    // gen_set_true ($2);
+    struct cobc_list *l;
+    for (l = $2; l; l = l->next)
+      push_call_1 (COB_SET_TRUE, l->item);
   }
 | SET set_on_off_list
   {
@@ -2412,7 +2468,7 @@ not_invalid_key_sentence:
  *******************/
 
 condition:
-  condition_name		{ $$ = make_unary_cond ($1, COBC_COND_VAR); }
+  condition_name		{ $$ = COBC_FIELD ($1)->cond; }
 | comparative_condition		{ $$ = $1; }
 | class_condition		{ $$ = $1; }
 | '(' condition ')'		{ $$ = $2; }
@@ -2591,7 +2647,7 @@ condition_name_list:
   condition_name		{ $$ = list_add ($1, $2); }
 ;
 condition_name:
-  VARCOND			{ $$ = $1; }
+  CONDITION_NAME		{ $$ = $1; }
 ;
 
 /* Data name */
@@ -2989,13 +3045,6 @@ init_field (int level, cobc_tree field)
 {
   struct cobc_field *last_field = current_field;
 
-  /* check level number */
-  if (level < 1 || (level > 49 && level != 66 && level != 77 && level != 88))
-    {
-      yyerror ("invalid level number `%d'", level);
-      level = 1;
-    }
-
   current_field = COBC_FIELD (field);
   current_field->level = level;
   current_field->occurs = 1;
@@ -3075,6 +3124,7 @@ validate_field (struct cobc_field *p)
   else if (p->level == 88)
     {
       /* conditional variable */
+      COBC_TREE_CLASS (p) = COB_BOOLEAN;
     }
   else
     {

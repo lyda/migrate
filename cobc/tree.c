@@ -357,6 +357,7 @@ make_field (struct cobc_word *word)
   p->cname = NULL;
   p->file = NULL;
   p->value = NULL;
+  p->cond = NULL;
   p->word = set_word_item (word, COBC_TREE (p));
   p->index_list = NULL;
   p->parent = NULL;

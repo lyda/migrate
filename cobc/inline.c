@@ -54,29 +54,6 @@ output_goto_depending (cobc_tree labels, cobc_tree index)
 }
 
 
-#if 0
-/*
- * SET
- */
-
-void
-gen_set_true (struct cobc_list *l)
-{
-  for (; l; l = l->next)
-    {
-      cobc_tree x = l->item;
-      if (COBC_SUBREF_P (x))
-	x = COBC_SUBREF_SYM (x);
-
-      if (COBC_SUBREF_P (l->item))
-	gen_move (x->value, make_subref (x->parent, COBC_SUBREF_SUBS (l->item)));
-      else
-	gen_move (x->value, x->parent);
-    }
-}
-#endif
-
-
 /*
  * MOVE
  */
@@ -110,6 +87,36 @@ output_native_assign (cobc_tree x, long long val)
 }
 
 static void
+output_advance_move (struct cob_field f, cobc_tree dst)
+{
+  struct cobc_field *p = COBC_FIELD (dst);
+  struct cob_field_desc dst_desc;
+  unsigned char dst_data[p->size + 1];
+  struct cob_field dst_fld = {&dst_desc, dst_data};
+
+  dst_desc.len = p->size;
+  if (p->children)
+    {
+      dst_desc.type = 'G';
+    }
+  else
+    {
+      dst_desc.type = get_type (p);
+      dst_desc.decimals = p->pic->decimals;
+      dst_desc.just_r = p->f.justified;
+      dst_desc.have_sign = p->pic->have_sign;
+      dst_desc.separate_sign = p->f.sign_separate;
+      dst_desc.leading_sign = p->f.sign_leading;
+      dst_desc.blank_zero = p->f.blank_zero;
+      dst_desc.pic = p->pic->str;
+    }
+
+  cob_move (f, dst_fld);
+  dst_data[p->size] = 0;
+  output_memcpy (dst, dst_data, p->size);
+}
+
+static void
 output_move_num (cobc_tree x, int high)
 {
   switch (COBC_FIELD (x)->usage)
@@ -130,40 +137,87 @@ output_move_num (cobc_tree x, int high)
 static void
 output_move_zero (cobc_tree x)
 {
-  if (COBC_TREE_CLASS (x) == COB_NUMERIC)
-    output_move_num (x, 0);
-  else
-    output_memset (x, '0');
+  switch (COBC_FIELD (x)->category)
+    {
+    case COB_NUMERIC:
+      output_move_num (x, 0);
+      break;
+    case COB_ALPHABETIC:
+    case COB_ALPHANUMERIC:
+      output_memset (x, '0');
+      break;
+    default:
+      output_advance_move (COB_ZERO, x);
+      break;
+    }
 }
 
 static void
 output_move_space (cobc_tree x)
 {
-  output_memset (x, ' ');
+  switch (COBC_FIELD (x)->category)
+    {
+    case COB_NUMERIC:
+    case COB_ALPHABETIC:
+    case COB_ALPHANUMERIC:
+      output_memset (x, ' ');
+      break;
+    default:
+      output_advance_move (COB_SPACE, x);
+      break;
+    }
 }
 
 static void
 output_move_high (cobc_tree x)
 {
-  if (COBC_TREE_CLASS (x) == COB_NUMERIC)
-    output_move_num (x, 1);
-  else
-    output_memset (x, 255);
+  switch (COBC_FIELD (x)->category)
+    {
+    case COB_NUMERIC:
+      output_move_num (x, 1);
+      break;
+    case COB_ALPHABETIC:
+    case COB_ALPHANUMERIC:
+      output_memset (x, 255);
+      break;
+    default:
+      output_advance_move (COB_HIGH, x);
+      break;
+    }
 }
 
 static void
 output_move_low (cobc_tree x)
 {
-  if (COBC_TREE_CLASS (x) == COB_NUMERIC)
-    output_move_zero (x);
-  else
-    output_memset (x, 0);
+  switch (COBC_FIELD (x)->category)
+    {
+    case COB_NUMERIC:
+      output_move_num (x, 0);
+      break;
+    case COB_ALPHABETIC:
+    case COB_ALPHANUMERIC:
+      output_memset (x, 0);
+      break;
+    default:
+      output_advance_move (COB_LOW, x);
+      break;
+    }
 }
 
 static void
 output_move_quote (cobc_tree x)
 {
-  output_memset (x, '\"');
+  switch (COBC_FIELD (x)->category)
+    {
+    case COB_NUMERIC:
+    case COB_ALPHABETIC:
+    case COB_ALPHANUMERIC:
+      output_memset (x, '\"');
+      break;
+    default:
+      output_advance_move (COB_QUOTE, x);
+      break;
+    }
 }
 
 static void
@@ -200,13 +254,9 @@ output_move_literal (cobc_tree src, cobc_tree dst)
     {
       char src_pic[5];
       struct cobc_literal *l = COBC_LITERAL (src);
-      struct cobc_field *f = COBC_FIELD (dst);
       struct cob_field_desc src_desc =
 	{l->size, COBC_TREE_CLASS (l), l->decimals};
       struct cob_field src_fld = {&src_desc, l->str};
-      struct cob_field_desc dst_desc;
-      unsigned char dst_data[f->size + 1];
-      struct cob_field dst_fld = {&dst_desc, dst_data};
       src_desc.pic = src_pic;
       src_pic[0] = COBC_TREE_CLASS (l);
       src_pic[1] = l->size;
@@ -216,27 +266,7 @@ output_move_literal (cobc_tree src, cobc_tree dst)
 	  src_desc.have_sign = 1;
 	  put_sign (src_fld, (l->sign < 0) ? 1 : 0);
 	}
-
-      dst_desc.len = f->size;
-      if (f->children)
-	{
-	  dst_desc.type = 'G';
-	}
-      else
-	{
-	  dst_desc.type = get_type (f);
-	  dst_desc.decimals = f->pic->decimals;
-	  dst_desc.just_r = f->f.justified;
-	  dst_desc.have_sign = f->pic->have_sign;
-	  dst_desc.separate_sign = f->f.sign_separate;
-	  dst_desc.leading_sign = f->f.sign_leading;
-	  dst_desc.blank_zero = f->f.blank_zero;
-	  dst_desc.pic = f->pic->str;
-	}
-
-      cob_move (src_fld, dst_fld);
-      dst_data[f->size] = 0;
-      output_memcpy (dst, dst_data, f->size);
+      output_advance_move (src_fld, dst);
     }
 }
 
@@ -261,7 +291,35 @@ output_move (cobc_tree src, cobc_tree dst)
 	output_move_literal (src, dst);
     }
   else
-    output_call_2 ("cob_move", src, dst);
+    {
+      struct cobc_field *dstp = COBC_FIELD (dst);
+      if (dstp->usage == USAGE_INDEX)
+	{
+	  output_prefix ();
+	  output_index (dst);
+	  output (" = ");
+	  output_index (src);
+	  output (";\n");
+	}
+      else
+	{
+	  output_call_2 ("cob_move", src, dst);
+	}
+    }
+}
+
+
+/*
+ * SET
+ */
+
+void
+output_set_true (cobc_tree x)
+{
+  cobc_tree parent = COBC_TREE (COBC_FIELD (x)->parent);
+  if (COBC_SUBREF_P (x))
+    parent = make_subref (parent, COBC_SUBREF (x)->subs);
+  output_move (COBC_TREE (COBC_FIELD (x)->value), parent);
 }
 
 
@@ -450,26 +508,6 @@ output_display (cobc_tree x)
       output_call_1 ("cob_display", x);
     }
 }
-
-
-/*
- * File IO
- */
-
-#if 0
-void
-gen_start (cobc_tree f, int cond, cobc_tree key)
-{
-  if (f->organization == ORG_RELATIVE)
-    push_index (f->ix_desc);
-  else
-    gen_loadvar (key);
-  push_immed (cond);
-  gen_save_filevar (f, NULL);
-  asm_call ("cob_start");
-  output_save_status (f);
-}
-#endif
 
 
 /*

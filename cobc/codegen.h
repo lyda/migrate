@@ -31,8 +31,6 @@ enum {
 
 struct program_spec {
   char *program_id;
-  char decimal_point;
-  char currency_symbol;
   int initial_program;
   struct cobc_list *index_list;
   struct cobc_list *file_name_list;

@@ -36,6 +36,7 @@
 #include "scanner.h"
 #include "codegen.h"
 #include "reserved.h"
+#include "libcob.h"
 
 extern YYLTYPE yylloc;
 
@@ -137,7 +138,10 @@ X\"[^\"\n]*\" {
     return LABEL_WORD;
   else if (yylval.word->item && COBC_FIELD_P (yylval.word->item)
 	   && COBC_FIELD (yylval.word->item)->level == 88)
-    return VARCOND;
+    {
+      yylval.tree = yylval.word->item;
+      return CONDITION_NAME;
+    }
   else
     return WORD;
 }
@@ -251,12 +255,12 @@ scan_numeric (char *text)
     text++;
 
   /* get decimal point */
-  s = strchr (text, program_spec.decimal_point);
+  s = strchr (text, cob_decimal_point);
   if (s) {
     decimals = strlen (s) - 1;
     memmove (s, s + 1, decimals + 1);
   }
-  if (strchr (text, (program_spec.decimal_point == ',') ? '.' : ','))
+  if (strchr (text, (cob_decimal_point == ',') ? '.' : ','))
     yyerror ("invalid numeric literal");
 
   yylval.tree = make_numeric_literal (sign, text, decimals);
@@ -362,7 +366,7 @@ scan_picture (char *text)
 	case ',':
 	case '.':
 	  category |= PIC_NUMERIC_EDITED;
-	  if (c != program_spec.decimal_point)
+	  if (c != cob_decimal_point)
 	    break;
 	  /* fall through */
 	case 'V':
@@ -431,7 +435,7 @@ scan_picture (char *text)
 	  break;
 
 	default:
-	  if (c == program_spec.currency_symbol)
+	  if (c == cob_currency_symbol)
 	    {
 	      category |= PIC_NUMERIC_EDITED;
 	      /* FIXME: need more check */
