@@ -28,14 +28,9 @@
 #include "codegen.h"
 #include "_libcob.h"
 
-#define MAXWORDSIZE 	64000
-
 #define MAXNAMEBUF 	300
 #define START_STACK_ADJUST 20
 #define SYMBUF_SIZE 128
-
-#define INTEGER_CLASS  1
-#define STRING_CLASS   2
 
 #define decimal_char() (decimal_comma ? ',' : '.')
 
