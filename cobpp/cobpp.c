@@ -37,7 +37,8 @@ extern int yyparse (void);
  */
 
 enum cob_format cob_format;
-int cob_debug_flag;
+int cob_tab_width = 8;
+int cob_debug_flag = 0;
 
 
 /*
@@ -51,7 +52,7 @@ const char *program_name;
  * Command line
  */
 
-static char short_options[] = "hvo:FXDI:";
+static char short_options[] = "hvo:FXDT:I:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
@@ -79,6 +80,7 @@ print_usage ()
   puts ("  -X            Use X/Open free format (default)");
   puts ("  -F            Use standard fixed column format");
   puts ("  -D            Compile debug lines (i.e., \"D\" lines)");
+  puts ("  -T <n>        Tab width (default 8)");
   puts ("  -I <path>     Add include (copybooks) search path");
 }
 
@@ -117,6 +119,7 @@ process_command_line (int argc, char *argv[])
 	case 'X': cob_format = COB_FORMAT_FREE; break;
 	case 'F': cob_format = COB_FORMAT_FIXED; break;
 	case 'D': cob_debug_flag = 1; break;
+	case 'T': cob_tab_width = atoi (optarg); break;
 
 	default: print_usage (); exit (1);
 	}

@@ -229,29 +229,61 @@ substring (const char *s, int size)
 static int
 yyinput (char *buf, int max_size)
 {
+  int len;
   struct replacement *ls;
 
   if (fgets (buf, max_size, yyin) == NULL)
     return YY_NULL;
 
+  len = strlen (buf);
+  if (len >= max_size / cob_tab_width)
+    {
+      fprintf (stderr, "%s:%d: source line too long\n", yyfilename, yylineno);
+      exit (1);
+    }
+
   /* If fixed format... */
   if (cob_format == COB_FORMAT_FIXED)
     {
-      /* Remove the letters after 72 columns */
-      if (strlen (buf) - 1 > 72)
+      /* Tab expansion */
+      int i, column = 0;
+      char *p = buf;
+      static char buf_copy[YY_READ_BUF_SIZE];
+      memcpy (buf_copy, buf, len + 1);
+      for (i = 0; i <= len; i++)
+	if (buf_copy[i] != '\t')
+	  {
+	    *p++ = buf_copy[i]; column++;
+	  }
+	else
+	  {
+	    *p++ = ' '; column++;
+	    while (column % cob_tab_width != 0)
+	      {
+		*p++ = ' '; column++;
+	      }
+	  }
+
+      /* Remove the letters after column 72  */
+      len = strlen (buf);
+      if (len > 73)
 	{
-	  buf[73] = '\n';
-	  buf[74] = '\0';
+	  buf[72] = '\n';
+	  buf[73] = '\0';
 	}
+
       /* Remove the first 6 letters */
-      strcpy (buf, buf + 6);
+      if (len > 6)
+	strcpy (buf, buf + 6);
+      else
+	strcpy (buf, "\n");
     }
 
   /* Do replacement */
   for (ls = yyreplacing; ls; ls = ls->next)
     {
-      char *p = strstr (buf, ls->old_text);
-      if (p)
+      char *p;
+      while ((p = strstr (buf, ls->old_text)) != NULL)
 	{
 	  int old_len = strlen (ls->old_text);
 	  int new_len = strlen (ls->new_text);

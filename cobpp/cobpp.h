@@ -30,6 +30,7 @@ enum cob_format {
 };
 
 extern enum cob_format cob_format;
+extern int cob_tab_width;
 extern int cob_debug_flag;
 
 #endif /* _COBPP_H_ */
