@@ -50,7 +50,7 @@ int at_procedure = 0;
 int at_linkage = 0;
 int loc_label = 1;
 unsigned char picture[4096];
-int picix, piccnt, sign, v_flag, n_flag;
+int piccnt;
 int substring_slots = 0;
 
 cob_tree spe_lit_ZE = NULL;
@@ -3163,103 +3163,6 @@ void
 gen_perform (cob_tree sy)
 {
   gen_perform_thru (sy, sy);
-}
-
-
-int
-save_pic_char (char c, int n)
-{
-  int c1 = toupper (c);
-  switch (c1)
-    {
-    case 'A':
-      piccnt += n;
-      if (COB_FIELD_TYPE (curr_field) != 'X'
-	  && COB_FIELD_TYPE (curr_field) != 'E')
-	COB_FIELD_TYPE (curr_field) = 'A';
-      break;
-    case 'N':
-      piccnt += n * 2;
-      if (COB_FIELD_TYPE (curr_field) == '9')
-	COB_FIELD_TYPE (curr_field) = 'X';
-      break;
-    case 'X':
-      piccnt += n;
-      if (COB_FIELD_TYPE (curr_field) == '9')
-	COB_FIELD_TYPE (curr_field) = 'X';
-      break;
-    case 'Z':
-      COB_FIELD_TYPE (curr_field) = 'E';
-    case '9':
-      piccnt += n;
-      if (v_flag)
-	curr_field->decimals += n;
-      n_flag = 1;
-      break;
-    case 'V':
-      if (v_flag)
-	{
-	  yyerror ("too many `V's in picture");
-	  return 0;
-	}
-      v_flag = 1;
-      break;
-    case 'P':
-      if (!n_flag)
-	v_flag = 1;		/* implicit V just before the first P */
-      if (v_flag)
-	curr_field->decimals += n;
-      else
-	curr_field->decimals -= n;
-      break;
-    case 'S':
-      sign = 1;
-      break;
-    case '.':
-    case ',':
-    case '0':
-    case 'B':
-    case '/':
-    case '+':
-    case '-':
-    case '*':
-    case 'C':
-    case 'R':
-    case 'D':
-      piccnt += n;
-      COB_FIELD_TYPE (curr_field) = 'E';
-      break;
-    default:
-      if (c == currency_symbol)
-	{
-	  piccnt += n;
-	  COB_FIELD_TYPE (curr_field) = 'E';
-	  break;
-	}
-
-      /* error */
-      yyerror ("invalid char in picture: `%c'", c);
-      return 0;
-    }
-
-  if (picture[picix] == 0 || picture[picix] != c1)
-    {
-      if (picture[picix] != 0)
-	picix += 2;
-      picture[picix] = c1;
-      picture[picix + 1] = 0;
-    }
-
-  n += picture[picix + 1];
-  while (n > 255)
-    {
-      picture[picix + 1] = 255;
-      picture[picix + 2] = c1;
-      picix += 2;
-      n -= 255;
-    }
-  picture[picix + 1] = n;
-  return 1;
 }
 
 

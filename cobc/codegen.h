@@ -78,7 +78,7 @@ extern unsigned global_offset;  /* offset das variaveis globais (DATA) */
 extern int paragr_num;
 extern int loc_label;
 extern unsigned char picture[];
-extern int picix,piccnt,v_flag;
+extern int piccnt;
 extern int at_linkage, stack_plus;
 extern char *toktext;
 extern int yylex(void);
@@ -186,7 +186,6 @@ extern void gen_perform_test_counter (int lbl);
 extern void gen_perform_times (int lbl);
 extern void gen_perform_thru (cob_tree s1, cob_tree s2);
 extern void gen_perform (cob_tree sy);
-extern int save_pic_char (char c, int n);
 extern void gen_SearchLoopCheck (unsigned long lbl5, cob_tree syidx, cob_tree sytbl);
 extern void gen_SearchAllLoopCheck (unsigned long lbl3, cob_tree syidx, cob_tree sytbl, cob_tree syvar, unsigned long lstart, unsigned long lend);
 extern void define_implicit_field (cob_tree sy, cob_tree sykey, int idxlen);
