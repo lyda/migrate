@@ -693,7 +693,7 @@ output_search_all (cobc_tree table, cobc_tree sentence, cobc_tree when)
   for (i = 0; i < p->nkeys; i++)
     if (p->keys[i].ref)
       {
-	int flag = (p->keys[i].dir == COBC_ASCENDING);
+	int flag = (p->keys[i].dir == COB_ASCENDING);
 	output_line ("if (cmp%d < 0)", i);
 	output_prefix ();
 	output ("  %s = ", flag ? "head" : "tail");

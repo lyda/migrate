@@ -266,10 +266,7 @@ struct cobc_field {
   struct cobc_field *rename_thru; /* RENAMES THRU */
   struct cobc_file_name *file;	/* file name associated in FD section */
   struct cobc_key {
-    enum {
-      COBC_ASCENDING,
-      COBC_DESCENDING
-    } dir;			/* ASCENDING or DESCENDING */
+    int dir;			/* ASCENDING or DESCENDING */
     cobc_tree key;		/* KEY */
     cobc_tree ref;		/* reference used in SEARCH ALL */
     cobc_tree val;		/* value to be compared in SEARCH ALL */

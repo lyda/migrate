@@ -1092,8 +1092,8 @@ occurs_key_list:
   }
 ;
 ascending_or_descending:
-  ASCENDING			{ $$ = COBC_ASCENDING; }
-| DESCENDING			{ $$ = COBC_DESCENDING; }
+  ASCENDING			{ $$ = COB_ASCENDING; }
+| DESCENDING			{ $$ = COB_DESCENDING; }
 ;
 
 occurs_indexed:
