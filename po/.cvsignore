@@ -1,8 +1,8 @@
 *.gmo
+*.header
 *.pot
 *.sed
 *.sin
-en@*
 Makefile
 Makefile.in
 Makefile.in.in
