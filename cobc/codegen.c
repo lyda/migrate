@@ -5020,7 +5020,7 @@ gen_exit (int code)
   int l1, l2;
   if (code)
     {
-      fprintf (o_src, "\tmovl\t-%d(%%ebp), %%ebx\n", stack_offset - 16);
+      fprintf (o_src, "\tmovl\t-%d(%%ebp), %%ebx\n", stack_offset - 8 - 16);
       fprintf (o_src, "\tmov\t%%ebp,%%esp\n");
       fprintf (o_src, "\tpop\t%%ebp\n");
       fprintf (o_src, "\tret\n");
