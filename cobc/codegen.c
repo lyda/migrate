@@ -885,7 +885,10 @@ initialize_type (struct cb_initialize *p, struct cb_field *f)
       case CB_CATEGORY_NATIONAL_EDITED:
 	return INITIALIZE_ONE;
       default:
-	return INITIALIZE_DEFAULT;
+	if (cb_tree_type (CB_TREE (f)) == COB_TYPE_NUMERIC_PACKED)
+	  return INITIALIZE_ONE;
+	else
+	  return INITIALIZE_DEFAULT;
       }
 
   return INITIALIZE_NONE;
@@ -908,7 +911,6 @@ initialize_uniform_char (struct cb_field *f)
       switch (cb_tree_type (CB_TREE (f)))
 	{
 	case COB_TYPE_NUMERIC_BINARY:
-	case COB_TYPE_NUMERIC_PACKED:
 	  return 0;
 	case COB_TYPE_NUMERIC_DISPLAY:
 	  return '0';
@@ -988,6 +990,7 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
   if (p->def)
     switch (CB_TREE_CATEGORY (x))
       {
+      case CB_CATEGORY_NUMERIC:
       case CB_CATEGORY_NUMERIC_EDITED:
 	output_move (cb_zero, x);
 	break;
@@ -996,7 +999,7 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
 	output_move (cb_space, x);
 	break;
       default:
-	break;
+	ABORT ();
       }
 }
 
@@ -1082,11 +1085,10 @@ output_initialize (struct cb_initialize *p)
       {
 	int c = initialize_uniform_char (f);
 	if (c != -1)
-	  {
-	    output_initialize_uniform (p->var, c, f->size);
-	    break;
-	  }
-	/* fall through */
+	  output_initialize_uniform (p->var, c, f->size);
+	else
+	  output_initialize_compound (p, p->var);
+	break;
       }
     case INITIALIZE_COMPOUND:
       output_initialize_compound (p, p->var);
