@@ -108,7 +108,7 @@ extern void cob_stop_run (void);
 extern int cob_index (int i, int max);
 extern int cob_index_depending (int i, int min, int max, int dep);
 
-extern int cob_str_cmp (struct cob_field f1, struct cob_field f2);
+extern int cob_cmp_field (struct cob_field f1, struct cob_field f2);
 extern int cob_cmp_str (struct cob_field f1, unsigned char *data2, int len2);
 extern int cob_cmp_all (unsigned char *data, unsigned char c, int len);
 

@@ -162,7 +162,7 @@ cob_index_depending (int i, int min, int max, int dep)
  */
 
 int
-cob_str_cmp (struct cob_field f1, struct cob_field f2)
+cob_cmp_field (struct cob_field f1, struct cob_field f2)
 {
   int i, ret = 0;
   int len1 = f1.desc->size;
