@@ -2512,11 +2512,11 @@ invalid_key:
 | invalid_key_sentence not_invalid_key_sentence
 ;
 invalid_key_sentence:
-  INVALID opt_key		{ $<ival>$ = gen_at_end(23); }
+  INVALID opt_key		{ $<ival>$ = gen_status_branch (23, 0); }
   target_sentence
 ;
 not_invalid_key_sentence:
-  NOT INVALID opt_key		{ $<ival>$ = gen_at_end(0); }
+  NOT INVALID opt_key		{ $<ival>$ = gen_status_branch (0, 0); }
   target_sentence
 ;
 

@@ -2037,9 +2037,19 @@ add_alternate_key (cob_tree sy, int duplicates)
  */
 
 static void
-gen_status_init (void)
+gen_init_status (void)
 {
   fprintf (o_src, "\tmovl\t$%d, cob_status\n", COB_STATUS_SUCCESS);
+}
+
+static void
+gen_save_status (cob_tree f)
+{
+  if (f->parent)
+    {
+      gen_loadloc (f->parent);
+      asm_call ("cob_save_status");
+    }
 }
 
 int
@@ -2054,19 +2064,6 @@ gen_status_branch (int status, int flag)
     fprintf (o_src, "\tjne\t.L%d\n", lbl);
 
   return lbl;
-}
-
-int
-gen_at_end (int status)
-{
-  int i = loc_label++;
-  int j = loc_label++;
-  fprintf (o_src, "\tcmp\t$%d, %%eax\n", status);
-  fprintf (o_src, "\tjz\t.L%d\n", j);
-  fprintf (o_src, "\tjmp\t.L%d\n", i);
-  fprintf (o_src, "\t.align 16\n");
-  fprintf (o_src, ".L%d:\n", j);
-  return i;
 }
 
 
@@ -2232,7 +2229,6 @@ gen_unstring (cob_tree var, struct unstring_delimited *delim,
       push_immed (delim->all);	/* push "all" flag */
       gen_loadvar (delim->var);
     }
-  gen_status_init ();
   asm_call_3 ("cob_unstring", var, ptr, tally);
 }
 
@@ -2571,7 +2567,7 @@ create_mathvar_info (struct math_var *mv, cob_tree sy, unsigned int opt)
 void
 gen_compute (struct math_var *vl1, cob_tree sy1)
 {
-  gen_status_init ();
+  gen_init_status ();
   for (; vl1; vl1 = vl1->next)
     {
       push_expr (sy1);
@@ -2596,7 +2592,7 @@ gen_add (cob_tree n1, cob_tree n2, int rnd)
 void
 gen_add_to (cob_tree_list nums, struct math_var *list)
 {
-  gen_status_init ();
+  gen_init_status ();
   for (; list; list = list->next)
     {
       cob_tree_list l;
@@ -2613,7 +2609,7 @@ gen_add_to (cob_tree_list nums, struct math_var *list)
 void
 gen_add_giving (cob_tree_list nums, struct math_var *list)
 {
-  gen_status_init ();
+  gen_init_status ();
   for (; list; list = list->next)
     {
       cob_tree_list l = nums;
@@ -2635,7 +2631,7 @@ gen_add_giving (cob_tree_list nums, struct math_var *list)
 void
 gen_subtract_from (cob_tree_list subtrahend_list, struct math_var *list)
 {
-  gen_status_init ();
+  gen_init_status ();
   for (; list; list = list->next)
     {
       cob_tree_list l;
@@ -2653,7 +2649,7 @@ void
 gen_subtract_giving (cob_tree_list subtrahend_list, cob_tree minuend,
 		     struct math_var *list)
 {
-  gen_status_init ();
+  gen_init_status ();
   for (; list; list = list->next)
     {
       cob_tree_list l;
@@ -2675,7 +2671,7 @@ gen_subtract_giving (cob_tree_list subtrahend_list, cob_tree minuend,
 void
 gen_multiply_by (cob_tree multiplicand, struct math_var *list)
 {
-  gen_status_init ();
+  gen_init_status ();
   for (; list; list = list->next)
     {
       push_expr (multiplicand);
@@ -2689,7 +2685,7 @@ void
 gen_multiply_giving (cob_tree multiplicand, cob_tree multiplier,
 		     struct math_var *list)
 {
-  gen_status_init ();
+  gen_init_status ();
   for (; list; list = list->next)
     {
       push_expr (multiplicand);
@@ -2707,7 +2703,7 @@ gen_multiply_giving (cob_tree multiplicand, cob_tree multiplier,
 void
 gen_divide_into (cob_tree divisor, struct math_var *list)
 {
-  gen_status_init ();
+  gen_init_status ();
   for (; list; list = list->next)
     {
       push_expr (list->sname);
@@ -2720,7 +2716,7 @@ gen_divide_into (cob_tree divisor, struct math_var *list)
 void
 gen_divide_giving (cob_tree divisor, cob_tree dividend, struct math_var *list)
 {
-  gen_status_init ();
+  gen_init_status ();
   for (; list; list = list->next)
     {
       push_expr (dividend);
@@ -2734,7 +2730,7 @@ void
 gen_divide_giving_remainder (cob_tree divisor, cob_tree dividend,
 			     cob_tree quotient, cob_tree remainder, int rnd)
 {
-  gen_status_init ();
+  gen_init_status ();
 
   push_expr (dividend);
   push_expr (divisor);
@@ -4500,27 +4496,6 @@ gen_fdesc (cob_tree f, cob_tree r)
   global_offset += len;
 }
 
-void
-gen_status (cob_tree f)
-{
-  if (f->parent)
-    {
-      push_eax ();
-      gen_loadloc (f->parent);
-      asm_call ("cob_save_status");
-    }
-}
-
-static void
-gen_set_status (cob_tree f)
-{
-  if (f->parent)
-    {
-      gen_loadloc (f->parent);
-      asm_call ("cob_set_status");
-    }
-}
-
 /****** sort statement related functions *******/
 struct sortfile_node *
 alloc_sortfile_node (cob_tree sy)
@@ -4607,7 +4582,7 @@ gen_sort (cob_tree f)
   gen_loadloc (f->filenamevar);
   gen_save_filevar (f, NULL);
   asm_call ("sort_open");
-  gen_status (f);
+  gen_save_status (f);
   gen_close_sort (f);
 }
 
@@ -4618,7 +4593,7 @@ gen_open (int mode, cob_tree f)
   gen_loadloc (f->filenamevar);
   gen_save_filevar (f, NULL);
   asm_call ("cob_open");
-  gen_status (f);
+  gen_save_status (f);
 }
 
 void
@@ -4642,7 +4617,7 @@ gen_close (cob_tree f)
 {
   gen_save_filevar (f, NULL);
   asm_call ("cob_close");
-  gen_status (f);
+  gen_save_status (f);
 }
 
 void
@@ -4650,7 +4625,7 @@ gen_return (cob_tree f, cob_tree buf)
 {
   gen_save_filevar (f, buf);
   asm_call ("sort_return");
-  gen_status (f);
+  gen_save_status (f);
 }
 
 void
@@ -4668,7 +4643,7 @@ gen_read (cob_tree f, cob_tree buf, cob_tree key)
     push_immed (0);
   gen_save_filevar (f, buf);
   asm_call ("cob_read");
-  gen_set_status (f);
+  gen_save_status (f);
 }
 
 void
@@ -4685,7 +4660,7 @@ gen_read_next (cob_tree f, cob_tree buf, int next_prev)
     asm_call ("cob_read_next");
   else
     asm_call ("cob_read_prev");
-  gen_set_status (f);
+  gen_save_status (f);
 }
 
 int
@@ -4709,7 +4684,21 @@ gen_release (cob_tree r, cob_tree buf)
     gen_move (buf, r);
   gen_save_sort_fields (r->ix_desc, buf);
   asm_call ("sort_release");
-  gen_status (r->ix_desc);
+  gen_save_status (r->ix_desc);
+}
+
+static void
+gen_check_varying (cob_tree f)
+{
+  struct rec_varying *rv = (struct rec_varying *) f->rec_varying;
+  if (rv != NULL)
+    {
+      gen_loadvar (rv->reclen);
+      gen_loadvar (rv->lmax);
+      gen_loadvar (rv->lmin);
+      gen_save_filedesc (f);
+      asm_call ("cob_check_varying");
+    }
 }
 
 void
@@ -4745,7 +4734,7 @@ gen_write (cob_tree r, int opt, cob_tree buf)
       gen_save_filevar (f, buf);
       asm_call ("cob_write");
     }
-  gen_status (f);
+  gen_save_status (f);
 }
 
 void
@@ -4762,7 +4751,7 @@ gen_rewrite (cob_tree r, cob_tree buf)
     push_immed (0);
   gen_save_filevar (f, buf);
   asm_call ("cob_rewrite");
-  gen_status (f);
+  gen_save_status (f);
 }
 
 void
@@ -4776,7 +4765,7 @@ gen_start (cob_tree f, int cond, cob_tree key)
   push_immed (cond);
   gen_save_filevar (f, NULL);
   asm_call ("cob_start");
-  gen_status (f);
+  gen_save_status (f);
 }
 
 void
@@ -4787,7 +4776,7 @@ gen_delete (cob_tree f)
     push_index (f->ix_desc);
   gen_save_filevar (f, NULL);
   asm_call ("cob_delete");
-  gen_status (f);
+  gen_save_status (f);
 }
 
 void
@@ -4799,20 +4788,6 @@ set_rec_varying_info (cob_tree f, cob_tree lmin, cob_tree lmax,
   rv->lmin = lmin;
   rv->lmax = lmax;
   rv->reclen = reclen;
-}
-
-void
-gen_check_varying (cob_tree f)
-{
-  struct rec_varying *rv = (struct rec_varying *) f->rec_varying;
-  if (rv != NULL)
-    {
-      gen_loadvar (rv->reclen);
-      gen_loadvar (rv->lmax);
-      gen_loadvar (rv->lmin);
-      gen_save_filedesc (f);
-      asm_call ("cob_check_varying");
-    }
 }
 
 void
