@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(open-cobol, 0.9.3)
+AC_INIT(open-cobol, 0.9.4)
 AC_CONFIG_SRCDIR(cobc/cobc.c)
 AC_CONFIG_SUBDIRS(libltdl)
 AM_CONFIG_HEADER(config.h)
@@ -27,7 +27,7 @@ AM_PROG_LEX
 AC_PROG_YACC
 AC_PROG_LN_S
 AC_PROG_INSTALL
-AC_LIBLTDL_INSTALLABLE
+AC_LIBLTDL_CONVENIENCE
 AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
 AC_PROG_MAKE_SET
@@ -89,5 +89,5 @@ AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBS)
 
 AC_CONFIG_FILES([Makefile libcob/Makefile cobpp/Makefile cobc/Makefile
-		texi/Makefile cob-config])
+		cob-config])
 AC_OUTPUT

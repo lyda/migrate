@@ -3,7 +3,7 @@ bin_SCRIPTS=cob-config
 aclocaldir = $(datadir)/aclocal
 aclocal_DATA = cob.m4
 
-SUBDIRS = libltdl libcob cobpp cobc texi
+SUBDIRS = libltdl libcob cobpp cobc
 EXTRA_DIST = cob.m4 redhat debian
 
 MAINTAINERCLEANFILES = config.guess config.sub config.status config.log \
