@@ -63,7 +63,7 @@ accept_curses (char *buffer, struct fld_desc *f, int flags)
   int tmp, len = f->len;
   int ib;			// rlbuff offset
   char pic1[3] = "X\000";
-  struct fld_desc f1 = { 0, 'X', 0, 0, 0, 0, 0, 0, pic1 };
+  struct fld_desc f1 = { 0, 'X', 0, 0, 0, 0, 0, 0, 0, pic1 };
 
   cob_init_screen ();
   raw ();

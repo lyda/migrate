@@ -47,7 +47,7 @@
  * ALL literal
  */
 
-static struct fld_desc all_desc = {1, 'X', 0, 1, 0, 0, 0, 0, "X\001"};
+static struct fld_desc all_desc = {1, 'X', 0, 1, 0, 0, 0, 0, 0, "X\001"};
 
 void
 cob_move_all (struct cob_field f1, struct cob_field f2)
@@ -74,7 +74,7 @@ cob_move_zero (struct cob_field f)
   switch (FIELD_TYPE (f))
     {
     case '9':
-      memset (f.data, '0', f.desc->len);
+      memset (f.data, f.desc->blank_zero ? ' ' : '0', f.desc->len);
       put_sign (f, 0);
       return;
 
@@ -166,6 +166,21 @@ cob_move_quote (struct cob_field f)
  * Display
  */
 
+static void
+finalize_display (struct cob_field f)
+{
+  if (f.desc->blank_zero)
+    {
+      int i, len = FIELD_LENGTH (f);
+      unsigned char *base = FIELD_BASE (f);
+      for (i = 0; i < len; i++)
+	if (base[i] != '0')
+	  break;
+      if (i == len)
+	memset (base, ' ', len);
+    }
+}
+
 void
 cob_move_alphanum_to_display (struct cob_field f1, struct cob_field f2)
 {
@@ -220,11 +235,13 @@ cob_move_alphanum_to_display (struct cob_field f1, struct cob_field f2)
     }
 
   put_sign (f2, sign);
+  finalize_display (f2);
   return;
 
  error:
   memset (f2.data, '0', f2.desc->len);
   put_sign (f2, 0);
+  finalize_display (f2);
 }
 
 void
@@ -238,6 +255,7 @@ cob_move_display_to_display (struct cob_field f1, struct cob_field f2)
 
   put_sign (f1, sign);
   put_sign (f2, sign);
+  finalize_display (f2);
 }
 
 void
@@ -358,6 +376,7 @@ cob_move_packed_to_display (struct cob_field f1, struct cob_field f2)
 
   put_sign (f1, sign);
   put_sign (f2, sign);
+  finalize_display (f2);
 }
 
 
@@ -437,6 +456,7 @@ cob_move_binary_to_display (struct cob_field f1, struct cob_field f2)
 		      FIELD_BASE (f2), FIELD_LENGTH (f2), FIELD_DECIMALS (f2));
 
   put_sign (f2, sign);
+  finalize_display (f2);
 }
 
 
@@ -511,6 +531,7 @@ cob_move_float_to_display (struct cob_field f1, struct cob_field f2)
   COPY_COMMON_REGION (buff, len, decimals, base, len, decimals);
 
   put_sign (f2, sign);
+  finalize_display (f2);
 }
 
 
@@ -518,7 +539,13 @@ cob_move_float_to_display (struct cob_field f1, struct cob_field f2)
  * Edited
  */
 
-#define get() ((min <= src && src < max) ? *src++ : (src++, '0'))
+#define get()								\
+  ({									\
+    char _x = ((min <= src && src < max) ? *src++ : (src++, '0'));	\
+    if (_x != '0')							\
+      is_zero = suppress_zero = 0;					\
+    _x;									\
+  })
 
 void
 cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
@@ -530,6 +557,7 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
   int count = 0;
   int count_sign = 1;
   int trailing_sign = 0;
+  int is_zero = 1;
   int suppress_zero = 1;
   unsigned char sign_symbol = 0;
   unsigned char *decimal_point = NULL;
@@ -592,31 +620,28 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	      memcpy (dst++, sign ? (c == 'C' ? "CR" : "DB") : "  ", 2);
 	      break;
 
+	    case 'Z':
+	    case '*':
+	      {
+		char x = get ();
+		pad = (c == '*') ? '*' : ' ';
+		*dst = suppress_zero ? pad : x;
+		break;
+	      }
+
 	    case '+':
 	    case '-':
 	      {
 		char x = get ();
 		if (trailing_sign)
 		  *dst = sign ? '-' : (c == '+') ? '+' : ' ';
-		else if (dst == f2.data || (suppress_zero && x == '0'))
+		else if (dst == f2.data || suppress_zero)
 		  {
 		    *dst = pad;
 		    sign_symbol = sign ? '-' : (c == '+') ? '+' : ' ';
 		  }
 		else
-		  *dst = x, suppress_zero = 0;
-		break;
-	      }
-
-	    case 'Z':
-	    case '*':
-	      {
-		char x = get ();
-		pad = (c == '*') ? '*' : ' ';
-		if (suppress_zero && x == '0')
-		  *dst = pad;
-		else
-		  *dst = x, suppress_zero = 0;
+		  *dst = x;
 		break;
 	      }
 
@@ -624,10 +649,10 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	      if (c == cob_currency_symbol)
 		{
 		  char x = get ();
-		  if (dst == f2.data || (suppress_zero && x == '0'))
+		  if (dst == f2.data || suppress_zero)
 		    *dst = pad, sign_symbol = cob_currency_symbol;
 		  else
-		    *dst = x, suppress_zero = 0;
+		    *dst = x;
 		  break;
 		}
 
@@ -637,10 +662,10 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	}
     }
 
-  if (suppress_zero)
+  if (suppress_zero || (is_zero && f2.desc->blank_zero))
     {
       /* all digits are zeros */
-      if (pad == ' ')
+      if (pad == ' ' || f2.desc->blank_zero)
 	memset (f2.data, ' ', f2.desc->len);
       else
 	for (dst = f2.data; dst < f2.data + f2.desc->len; dst++)

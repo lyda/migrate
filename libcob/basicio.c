@@ -170,7 +170,7 @@ accept_std (char *buffer, struct fld_desc *f, int flags)
   struct termios attr;
   int r;
   char pic1[3] = "X\000";
-  struct fld_desc f1 = { 0, 'X', 0, 0, 0, 0, 0, 0, pic1 };
+  struct fld_desc f1 = { 0, 'X', 0, 0, 0, 0, 0, 0, 0, pic1 };
 
   if ((flags & SCR_NOECHO) != 0)
     {

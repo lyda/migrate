@@ -80,7 +80,7 @@ offset_substr (char *s1, char *s2, int n1, int n2)
 static void
 put_integer (struct cob_field f, int v)
 {
-  struct fld_desc fld = { 4, 'B', 0, 0, 0, 0, 0, 0, "S9\x9" };
+  struct fld_desc fld = { 4, 'B', 0, 0, 0, 0, 0, 0, 0, "S9\x9" };
   cob_move ((struct cob_field) {&fld, (char *) &v}, f);
 }
 

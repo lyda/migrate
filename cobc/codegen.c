@@ -1803,9 +1803,10 @@ proc_trail (int using)
 
 	  output ("\t.long\t%d\n", sy->len);
 
-	  flag = sy->flags.just_r ? 2 : 0;
-	  flag |= (sy->flags.separate_sign ? 4 : 0);
-	  flag |= (sy->flags.leading_sign ? 8 : 0);
+	  flag = ((sy->flags.just_r ? 1 << 1 : 0)
+		  | (sy->flags.separate_sign ? 1 << 2 : 0)
+		  | (sy->flags.leading_sign ? 1 << 3 : 0)
+		  | (sy->flags.blank ? 1 << 4 : 0));
 	  output ("\t.byte\t'%c',%d,%d\n",
 		   COB_FIELD_TYPE (sy), sy->decimals, flag);
 	  if (COB_FIELD_TYPE (sy) != 'G')

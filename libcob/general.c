@@ -161,7 +161,7 @@ int
 get_index (struct cob_field f)
 {
   int index;
-  struct fld_desc desc = { 4, 'B', 0, 0, 0, 0, 0, 0, "S9\x9" };
+  struct fld_desc desc = { 4, 'B', 0, 0, 0, 0, 0, 0, 0, "S9\x9" };
   struct cob_field d = {&desc, (unsigned char *) &index};
   cob_move (f, d);
   return index;

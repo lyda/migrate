@@ -120,7 +120,8 @@ struct fld_desc
   char just_r        : 1;
   char separate_sign : 1;
   char leading_sign  : 1;
-  char reserved      : 4;
+  char blank_zero    : 1;
+  char reserved      : 3;
   char *pic;
 } __attribute__ ((packed));
 
