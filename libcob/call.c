@@ -96,6 +96,8 @@ lookup (const char *name)
   for (p = call_table[hash (name)]; p; p = p->next)
     if (strcmp (name, p->name) == 0)
       {
+	if (!cob_reloading_flag)
+	  return p->func;
 	if (stat (p->path, &st) == 0)
 	  {
 	    void *func, *handle;

@@ -199,6 +199,8 @@ extern unsigned char cob_decimal_point;
 extern unsigned char cob_currency_symbol;
 #define cob_numeric_separator ((cob_decimal_point == '.') ? ',' : '.')
 
+extern int cob_reloading_flag;
+
 extern long cob_exp10[10];
 extern long long cob_exp10LL[19];
 
