@@ -564,7 +564,8 @@ check_condition (struct fld_desc *f1, char *s1, ...)
 }
 
 int
-compare (struct fld_desc *f1, char *s1, struct fld_desc *f2, char *s2)
+compare (struct fld_desc *f1, unsigned char *s1,
+	 struct fld_desc *f2, unsigned char *s2)
 {
   int i, maxi;
 
