@@ -161,28 +161,18 @@ output_base (struct cb_field *f)
   if (f01->redefines)
     f01 = f01->redefines;
 
-  if (f01->flag_external)
+  if (!f01->flag_base)
     {
-      if (!f01->flag_base)
-	{
-	  output_storage ("unsigned char %s[%d];\n",
-			  f01->cname, f01->memory_size);
-	  f01->flag_base = 1;
-	}
-      output ("%s", f01->cname);
+      if (!f01->flag_external && !f01->flag_local)
+	output_storage ("static ");
+      output_storage ("unsigned char %s%s[%d]",
+		      CB_PREFIX_BASE, f01->cname, f01->memory_size);
+      if (cb_field_need_aligned (f01))
+	output_storage (" __attribute__ ((aligned))");
+      output_storage (";\n");
+      f01->flag_base = 1;
     }
-  else
-    {
-      if (!f01->flag_base)
-	{
-	  if (!f01->flag_local)
-	    output_storage ("static ");
-	  output_storage ("unsigned char %s%s[%d];\n",
-			  CB_PREFIX_BASE, f01->cname, f01->memory_size);
-	  f01->flag_base = 1;
-	}
-      output ("%s%s", CB_PREFIX_BASE, f01->cname);
-    }
+  output ("%s%s", CB_PREFIX_BASE, f01->cname);
 
   if (cb_field_variable_address (f))
     {

@@ -967,6 +967,36 @@ cb_field_subordinate (struct cb_field *p, struct cb_field *f)
   return 0;
 }
 
+int
+cb_field_need_aligned (struct cb_field *f)
+{
+  if (f->children)
+    {
+      for (f = f->children; f; f = f->sister)
+	if (cb_field_need_aligned (f))
+	  return 1;
+      return 0;
+    }
+
+  switch (f->usage)
+    {
+#if 0
+    case CB_USAGE_BINARY:
+    case CB_USAGE_COMP_5:
+    case CB_USAGE_COMP_X:
+    case CB_USAGE_FLOAT:
+      /* shoudl we align these? */
+#endif
+    case CB_USAGE_INDEX:
+    case CB_USAGE_OBJECT:
+    case CB_USAGE_POINTER:
+    case CB_USAGE_PROGRAM:
+      return 1;
+    default:
+      return 0;
+    }
+}
+
 
 /*
  * File
