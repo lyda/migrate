@@ -1,0 +1,12 @@
+Source: open-cobol
+Section: devel
+Priority: optional
+Maintainer: Noboru Saitou <noborus@netlab.jp>
+Standards-Version: 3.0.1
+
+Package: open-cobol
+Architecture: any
+Depends: ${shlibs:Depends}, gcc
+Description: A COBOL compiler
+ OpenCOBOL is an open-source COBOL compiler, based on TinyCOBOL.
+

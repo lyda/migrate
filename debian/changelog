@@ -1,0 +1,22 @@
+open-cobol (0.8.4b-2) unstable; urgency=low
+
+  * fix prefix(Make befor install).
+  * depends remove bin86. 
+
+ -- Noboru Saitou <noborus@netlab.jp>  Wed, 26 Dec 2001 22:52:14 +0900
+
+open-cobol (0.8.4b-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Noboru Saitou <noborus@netlab.jp>  Wed, 26 Dec 2001 19:18:16 +0900
+
+open-cobol (0.8.4a-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Noboru Saitou <noborus@netlab.jp>  Wed, 26 Dec 2001 17:34:51 +0900
+
+Local variables:
+mode: debian-changelog
+End:
