@@ -4816,7 +4816,7 @@ gen_return (cob_tree f, cob_tree buf)
   gen_status (f);
 }
 
-static void
+void
 gen_read (cob_tree f, cob_tree buf, cob_tree key)
 {
   struct rec_varying *rv = (struct rec_varying *) f->rec_varying;
@@ -4828,20 +4828,20 @@ gen_read (cob_tree f, cob_tree buf, cob_tree key)
   if (rv != NULL)
     gen_loadvar (rv->reclen);
   else
-    gen_loadvar (NULL);
+    push_immed (0);
   gen_save_filevar (f, buf);
   asm_call ("cob_read");
   gen_status (f);
 }
 
-static void
+void
 gen_read_next (cob_tree f, cob_tree buf, int next_prev)
 {
   struct rec_varying *rv = (struct rec_varying *) f->rec_varying;
   if (rv != NULL)
     gen_loadvar (rv->reclen);
   else
-    gen_loadvar (NULL);
+    push_immed (0);
   gen_save_filevar (f, buf);
   if (next_prev == 1)
     asm_call ("cob_read_next");
@@ -4897,7 +4897,7 @@ gen_write (cob_tree r, int opt, cob_tree buf)
       if (rv != NULL)
 	gen_loadvar (rv->reclen);
       else
-	gen_loadvar (NULL);
+	push_immed (0);
       push_immed (opt);
       gen_save_filevar (f, buf);
       if (buf == NULL)
@@ -4915,7 +4915,7 @@ gen_write (cob_tree r, int opt, cob_tree buf)
       if (rv != NULL)
 	gen_loadvar (rv->reclen);
       else
-	gen_loadvar (NULL);
+	push_immed (0);
       gen_save_filevar (f, buf);
       asm_call ("cob_write");
     }
@@ -4933,7 +4933,7 @@ gen_rewrite (cob_tree r, cob_tree buf)
   if (rv != NULL)
     gen_loadvar (rv->reclen);
   else
-    gen_loadvar (NULL);
+    push_immed (0);
   gen_save_filevar (f, buf);
   asm_call ("cob_rewrite");
   gen_status (f);

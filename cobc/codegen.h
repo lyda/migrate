@@ -235,6 +235,8 @@ extern void gen_sort (cob_tree f);
 extern void gen_open (int mode, cob_tree f);
 extern void gen_close_sort (cob_tree f);
 extern void gen_close (cob_tree f);
+extern void gen_read (cob_tree f, cob_tree buf, cob_tree key);
+extern void gen_read_next (cob_tree f, cob_tree buf, int next_prev);
 extern int gen_reads (cob_tree f, cob_tree buf, cob_tree key, int next_prev, int sel);
 extern void gen_return (cob_tree f, cob_tree buf);
 extern void gen_release (cob_tree r, cob_tree buf);

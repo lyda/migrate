@@ -2373,7 +2373,7 @@ opt_end_start: | END_START ;
  */
 
 stoprun_statement:
-  STOP RUN { gen_stoprun(); }
+  STOP RUN { gen_stoprun (); }
 ;
 
 
@@ -2393,11 +2393,11 @@ string_from_list:
   string_from			{ $$ = $1; }
 | string_from_list opt_sep
   string_from			{ $3->next = $1; $$ = $3; }
-| error				{ yyerror("variable expected"); }
+| error				{ yyerror ("variable expected"); }
 ;
 string_from:
-  gname				{ $$ = alloc_string_from( $1, NULL ); }
-| gname DELIMITED opt_by delimited_by { $$ = alloc_string_from( $1, $4 ); }
+  gname				{ $$ = alloc_string_from ($1, NULL); }
+| gname DELIMITED opt_by delimited_by { $$ = alloc_string_from ($1, $4); }
 ;
 delimited_by:
   SIZE				{ $$ = NULL; }
