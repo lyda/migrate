@@ -15,7 +15,6 @@ script `autogen.sh', which is in the CVS repository.  This
 script executes the following commands one after another and
 set up the configure script:
 
-  % libtoolize
   % autopoint
   % aclocal -I m4
   % autoheader

@@ -1,3 +1,7 @@
+2002-08-28  Keisuke Nishida  <knishida@netlab.jp>
+
+	* configure.ac: Use AC_LIBOBJ scheme.
+
 2002-08-27  Keisuke Nishida  <knishida@netlab.jp>
 
 	* HACKING: Use automake-1.6.3 and gettext-0.11.5.

@@ -1,6 +1,10 @@
 *.gmo
 *.pot
+*.sed
+*.sin
+en@*
 Makefile
 Makefile.in
+Makefile.in.in
 POTFILES
-remove-potcdate.sed
+Rules-quot
