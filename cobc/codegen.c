@@ -6705,8 +6705,6 @@ void
 gen_push_using (struct sym *sy)
 {
   struct parm_list *list;
-  if (sy->type == 'F')
-    yyerror ("file could not be used as parameter in a CALL");
   list = (struct parm_list *) malloc (sizeof (struct parm_list));
   list->var = (void *) sy;
   list->next = parameter_list;
@@ -6860,69 +6858,6 @@ check_call_except (int excep, int notexcep, int exceplabel,
 	fprintf (o_src, "\tjmp\t.L%d\n", notexcep);
       fprintf (o_src, ".L%d:\t# endlabel\n", endlabel);
     }
-}
-
-struct sym *
-gen_intrinsic_call (struct sym *v)
-{
-  int i;
-  struct parm_list *list, *tmp;
-  struct sym *cp;
-  struct lit *lp;
-  char function_name[40] = "cob_function_";
-  struct sym *temporary;
-
-  temporary = define_temp_field ('B', 4);
-
-  /* construct the routine name */
-  strcat (function_name, v->name);
-  for (i = 0; i < strlen (function_name); i++)
-    function_name[i] = tolower (function_name[i]);
-
-  /******** get the parameters from the parameter list ********/
-  for (list = parameter_list; list != NULL;)
-    {
-      cp = (struct sym *) list->var;
-      if (cp->litflag == 1)
-	{
-	  lp = (struct lit *) cp;
-#ifdef COB_DEBUG
-	  fprintf (o_src, "#call %s by %d\n", lp->name, lp->call_mode);
-#endif
-	  if (lp->call_mode == CM_REF)
-	    gen_loadloc ((struct sym *) list->var);
-	  else if (lp->call_mode == CM_VAL)
-	    {
-	      value_to_eax (cp);
-	      if (symlen (cp) > 4)
-		push_edx ();
-	      push_eax ();
-	    }
-	  else
-	    /*gen_loadvar((struct sym *)list->var) */ ;
-	}
-      else
-	{
-#ifdef COB_DEBUG
-	  fprintf (o_src, "#call %s by %d\n", cp->name, cp->call_mode);
-#endif
-	  if (cp->call_mode == CM_REF)
-	    gen_loadloc ((struct sym *) list->var);
-	  else if (cp->call_mode == CM_VAL)
-	    {
-	      gen_pushval ((struct sym *) list->var);
-	    }
-	  else
-	    gen_loadvar ((struct sym *) list->var);
-	}
-      tmp = list;
-      list = list->next;
-      free (tmp);
-    }
-  parameter_list = NULL;
-  asm_call (function_name);
-  gen_store_fnres (temporary);
-  return temporary;
 }
 
 short

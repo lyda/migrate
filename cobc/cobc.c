@@ -56,6 +56,8 @@ char HTG_COPYDIR[BUFSIZ];
 
 FILE *o_src;
 
+extern int yy_flex_debug;
+
 
 /*
  * Local variables
@@ -436,8 +438,10 @@ process_compile (struct filename *fn)
   if (!o_src)
     cob_error ("cannot open file: %s\n", fn->assembly);
 
-  cob_source_filename = fn->source;
   init_reserved_words ();
+
+  cob_source_filename = fn->source;
+  yy_flex_debug = cob_trace_scanner;
   yyparse ();
 
   fclose (o_src);

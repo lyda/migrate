@@ -23,6 +23,7 @@
  */
 
 %option 8bit
+%option stack
 %option caseless
 %option noyywrap
 %option never-interactive
@@ -60,44 +61,47 @@ any [!-~]
 word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
 
 %x IDENT_ST ENVIR_ST DATA_ST COMMENT_ST FD_ST REDEF_ST
-%x EXCEPTION_ST PIC_ST
+%x EXCEPTION_ST PIC_ST ID_STATE
 
 %%
 
 %{
-        extern int curr_division;
-        extern int need_subscripts;
+  extern int curr_division;
+  extern int need_subscripts;
 
-        switch (curr_division) {
-        case CDIV_IDENT:
-                BEGIN IDENT_ST;
-                break;
-        case CDIV_ENVIR:
-                BEGIN ENVIR_ST;
-                break;
-        case CDIV_DATA:
-                BEGIN DATA_ST;
-                break;
-        case CDIV_PROC:
-                BEGIN INITIAL;
-                break;
-        case CDIV_COMMENT:
-                BEGIN COMMENT_ST;
-                break;
-        case CDIV_FD:
-                BEGIN FD_ST;
-                break;
-        case CDIV_REDEF:
-                BEGIN REDEF_ST;
-                break;
-        case CDIV_EXCEPTION:
-                BEGIN EXCEPTION_ST;
-                break;
-        case CINITIAL:
-                BEGIN INITIAL;
-                break;
-        }
-        curr_division=0; /* avoid new state switch */
+  switch (curr_division) {
+  case CDIV_IDENT:
+    BEGIN IDENT_ST;
+    break;
+  case CDIV_ENVIR:
+    BEGIN ENVIR_ST;
+    break;
+  case CDIV_DATA:
+    BEGIN DATA_ST;
+    break;
+  case CDIV_PROC:
+    BEGIN INITIAL;
+    break;
+  case CDIV_COMMENT:
+    BEGIN COMMENT_ST;
+    break;
+  case CDIV_FD:
+    BEGIN FD_ST;
+    break;
+  case CDIV_REDEF:
+    BEGIN REDEF_ST;
+    break;
+  case CDIV_EXCEPTION:
+    BEGIN EXCEPTION_ST;
+    break;
+  case CINITIAL:
+    BEGIN INITIAL;
+    break;
+  case START_ID:
+    yy_push_state (ID_STATE);
+    break;
+  }
+  curr_division=0; /* avoid new state switch */
 %}
 
 <*>^"#".* {
@@ -108,6 +112,15 @@ word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
     free (cob_orig_filename);
   cob_orig_filename = strdup (strchr (endp, '"') + 1);
   strrchr (cob_orig_filename, '"')[0] = '\0';
+}
+
+<ID_STATE>{
+  {word} {
+    yy_pop_state ();
+    yylval.str = strdup (yytext);
+    return IDSTRING;
+  }
+  . { /* ignore */ }
 }
 
 <IDENT_ST>{

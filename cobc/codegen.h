@@ -26,16 +26,7 @@
 
 #include <stdio.h>
 
-/* current division (cobol source) */
-#define CDIV_IDENT 	1
-#define CDIV_ENVIR 	2
-#define CDIV_DATA 	3
-#define CDIV_PROC 	4
-#define CDIV_COMMENT 	5
-#define CDIV_FD 	6
-#define CDIV_REDEF 	7
-#define CDIV_EXCEPTION 	11
-#define CINITIAL 	15
+#include "scanner.h"
 
 /* symbol table selector */
 #define SYTB_LIT 1
@@ -771,9 +762,6 @@ extern unsigned long int gen_call (struct lit *v, int stack_size,
 extern int begin_on_except (void);
 extern void check_call_except (int excep, int notexcep, int exceplabel,
 			       int notexceplabel, int endlabel);
-extern void gen_inline_intrinsic (struct sym *v, short name_len,
-				  struct sym *temporary);
-extern struct sym *gen_intrinsic_call (struct sym *v);
 extern short get_std_val (struct sym *sy);
 extern int get_nb_fields (struct sym *sy, int times, int sw_val);
 extern int build_init_str (struct sym *sy, int times);

@@ -117,6 +117,7 @@ static void check_decimal_point (struct lit *lit);
     struct invalid_keys *iks; /* [NOT] INVALID KEY */
     struct invalid_key_element *ike; /* [NOT] INVALID KEY */
     struct condition condval;
+    struct pair *pair;
 }
 
 %nonassoc LOW_PREC
@@ -190,6 +191,7 @@ static void check_decimal_point (struct lit *lit);
 %token SECURITY_TOK,COMMONTOK,RETURN_TOK,END_RETURN,PREVIOUS,NEXT
 %token INPUT,I_O,OUTPUT,EXTEND,EOL_TOK,EOS_TOK
 
+%type <str> idstring
 %type <ival> organization_options,access_options,open_mode
 %type <ival> integer,cond_op,conditional,before_after
 %type <ival> IF,ELSE,usage,write_options,opt_read_next
@@ -223,7 +225,8 @@ static void check_decimal_point (struct lit *lit);
 %type <dval> search_body,search_all_body
 %type <dval> search_when,search_when_list,search_opt_at_end
 %type <ival> parm_type,sign_condition,class_condition
-%type <sval> intrinsic_parm_list,intrinsic_parm
+%type <sval> function_call
+%type <pair> parameters
 %type <sval> parm_list,parameter,expr,opt_expr
 %type <sval> cond_name
 %type <pfval> perform_after
@@ -2892,15 +2895,6 @@ parm_type:
     | CONTENT {$$=CM_CONT;}
 /*    | DESCRIPTOR {$$=CM_CONT;}*/
     ;
-intrinsic_parm_list:
-    intrinsic_parm_list opt_sep intrinsic_parm
-        { gen_push_using($<sval>3);}
-    | intrinsic_parm
-        { gen_push_using($<sval>1);}
-    ;
-intrinsic_parm:
-    gname {$$=$1;$$->call_mode=CM_REF;}
-    ;
 
 condition:
     simple_condition
@@ -3037,13 +3031,23 @@ opt_to: /* nothing */
     ;
 gname:  name    { $$ = $1; }
     | gliteral      { $$ = (struct sym *)$1;}
-    | FUNCTION LABELSTR '(' {
-                                $2->type = 'f'; /* function type */
-                                $<ival>$=CALL;
-                        }
-                intrinsic_parm_list ')' {
-                 $$ = gen_intrinsic_call((struct sym *)$2); }
+    | function_call
     ;
+function_call:
+    FUNCTION idstring '(' parameters ')'
+    {
+      yyerror ("function call is not supported yet");
+      YYABORT;
+    }
+    ;
+parameters:
+      gname			{ $$ = cons ($1, NULL); }
+    | parameters opt_sep gname	{ $$ = cons ($3, $1); }
+    ;
+idstring:
+    { curr_division = START_ID; } IDSTRING { $$ = $2; }
+    ;
+
 name_or_lit:
     name      { $$ = $1; }
     | literal { $$ = (struct sym *)$1; }

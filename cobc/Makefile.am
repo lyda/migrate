@@ -8,7 +8,7 @@ INCLUDES = -I$(top_srcdir)/libcob
 
 AM_CFLAGS = -Wall
 AM_YFLAGS = -d
-AM_LFLAGS = -s
+AM_LFLAGS = -s -d
 
 defaults.h: Makefile.am $(top_builddir)/config.status
 	@echo "Creating defaults.h..."

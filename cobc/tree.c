@@ -78,3 +78,16 @@ check_subscripts (struct sym *subs)
   return (sy == NULL) ? 1 : 0;
 }
 
+
+/*
+ * Pair
+ */
+
+struct pair *
+cons (void *car, struct pair *cdr)
+{
+  struct pair *p = malloc (sizeof (struct pair));
+  p->car = car;
+  p->cdr = cdr;
+  return p;
+}

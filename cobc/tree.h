@@ -154,3 +154,17 @@ struct subref
 #define SUBREF_NEXT(x)	(SUBREF (x)->next)
 #define SUBREF_SYM(x)	(SUBREF (x)->sym)
 
+
+/*
+ * Pair
+ */
+
+struct pair {
+  void *car;
+  struct pair *cdr;
+};
+
+#define CAR(x)		((x)->car)
+#define CDR(x)		((x)->cdr)
+
+extern struct pair *cons (void *car, struct pair *cdr);
