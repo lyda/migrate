@@ -13,6 +13,7 @@ TESTSUITE_AT = \
 	initialize.at \
 	move.at \
 	definition.at \
+	extension.at \
 	entry.at \
 	misc.at
 

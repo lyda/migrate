@@ -1,0 +1,78 @@
+### OpenCOBOL Test Suite				-*- m4 -*-
+
+## Copyright (C) 2003 Keisuke Nishida
+##
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 2, or (at your option)
+## any later version.
+## 
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU General Public License
+## along with this software; see the file COPYING.  If not, write to
+## the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+## Boston, MA 02111-1307 USA
+
+### Non-standard extensions
+
+
+## H literal
+
+AT_SETUP([Hexadecimal numeric literal])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X-1           PIC 9(8) VALUE H"012345".
+       01 X-2           PIC 9(8) VALUE H"FFFFFF".
+       PROCEDURE        DIVISION.
+           DISPLAY X-1.
+           DISPLAY X-2.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[00074565
+16777215
+])
+
+AT_CLEANUP
+
+
+## CALL
+
+AT_SETUP([CALL BY CONTENT LENGTH])
+
+AT_DATA([callee.c], [
+#include <stdio.h>
+int callee (char *str, int *len)
+{
+  fwrite (str, *len, 1, stdout);
+  return 0;
+}
+])
+
+AT_DATA([caller.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      caller.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X(4).
+       PROCEDURE        DIVISION.
+           MOVE "abcd" TO X.
+           CALL "callee" USING X BY CONTENT LENGTH OF X.
+           STOP RUN.
+])
+
+AT_CHECK([${CC} -shared -o callee.so callee.c])
+AT_CHECK([${COMPILE} -o caller caller.cob])
+AT_CHECK([./caller], [0], [abcd])
+
+AT_CLEANUP

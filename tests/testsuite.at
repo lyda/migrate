@@ -37,5 +37,6 @@ m4_include([move.at])		# 14.8.24 MOVE statement
 
 # Other tests
 m4_include([definition.at])
+m4_include([extension.at])
 m4_include([entry.at])
 m4_include([misc.at])
