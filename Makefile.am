@@ -13,10 +13,6 @@ EXTRA_DIST = HACKING cob.m4 libcob.conf redhat debian
 
 BUILT_SOURCES = defaults.h
 DISTCLEANFILES = $(BUILT_SOURCES)
-MAINTAINERCLEANFILES = ABOUT-NLS INSTALL COPYING Makefile.in \
-	config.guess config.sub config.status config.log config.rpath \
-	config.h.in stamp-h.in aclocal.m4 compile depcomp ltmain.sh \
-	configure missing mkinstalldirs install-sh m4
 
 ACLOCAL_AMFLAGS = -I m4
 
