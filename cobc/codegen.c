@@ -1127,20 +1127,21 @@ gen_condition (cob_tree cond)
  */
 
 static void
-emit_lit (char *s, int len)
+output_string (char *s, int len)
 {
-  int bcnt = 0;
-  while (len--)
-    if (!(bcnt++ % 8))
-      {
-	if (bcnt > 1)
-	  putc ('\n', o_src);
-	output ("\t.byte\t%d", *s++);
-      }
-    else
-      {
-	output (",%d", *s++);
-      }
+  int i;
+  output ("\t.string\t\"");
+  for (i = 0; i < len; i++)
+    {
+      int c = s[i];
+      if (c == '\"')
+	output ("\\\"");
+      else if (isprint (c))
+	output ("%c", c);
+      else
+	output ("\\%o", (unsigned char) c);
+    }
+  output ("\"\n");
 }
 
 void
@@ -1647,29 +1648,17 @@ proc_trail (int using)
 	  struct lit *v = LITERAL (list->var);
 	  int len = v->nick ? 1 : v->len;
 #ifdef COB_DEBUG
-	  output ("# Literal: %s, Data loc: c_base%d+%d, Desc: c_base+%d\n",
-		  COB_FIELD_NAME (v), pgm_segment, v->location, v->descriptor);
+	  output ("# Literal: %s, Data loc: c_base%d+%d, Desc: c_base%d+%d\n",
+		  COB_FIELD_NAME (v), pgm_segment, v->location,
+		  pgm_segment, v->descriptor);
 
 #endif
 	  if (!v->decimals)
 	    {			/* print literal string, w/special chars */
-	      int i;
-	      char *s;
 	      if (v->nick)
-		{
-		  s = v->nick;
-		  i = 1;
-		}
+		output_string (v->nick, 1);
 	      else
-		{
-		  s = COB_FIELD_NAME (v);
-		  i = v->len;
-		}
-	      emit_lit (s, i);
-	      if (i)
-		output (",0\n");
-	      else
-		output ("\t.byte\t0\n");	/* null string? */
+		output_string (COB_FIELD_NAME (v), v->len);
 	    }
 	  else
 	    {
