@@ -2312,7 +2312,7 @@ open_list:
     for (l = $3; l; l = l->next)
       {
 	struct cobc_file_name *p = COBC_FILE_NAME (l->item);
-	push_call_3 ("cob_open", p, p->assign, make_integer ($2));
+	push_call_2 ("cob_open", p, make_integer ($2));
 	push_handler (p, 0, 0, 0);
       }
   }

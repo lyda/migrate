@@ -823,10 +823,12 @@ output_recursive (void (*func) (struct cobc_field *), cobc_tree x)
 static void
 output_field (cobc_tree x)
 {
-  if (x)
-    output ("f_%s", COBC_FIELD (x)->cname);
-  else
+  if (x == NULL)
     output ("{0, 0, 0}");
+  else if (COBC_LITERAL_P (x))
+    output ("{%d, \"%s\", 0}", COBC_LITERAL (x)->size, COBC_LITERAL (x)->str);
+  else
+    output ("f_%s", COBC_FIELD (x)->cname);
 }
 
 
@@ -1017,6 +1019,9 @@ output_file_name (struct cobc_file_name *f)
   output ("static struct cob_file %s_desc = {", f->cname);
   /* organization, access_mode, open_mode */
   output ("%d, %d, 0, ", f->organization, f->access_mode);
+  /* assign */
+  output_field (f->assign);
+  output (", ");
   /* file_status */
   if (f->file_status)
     output_location (f->file_status);

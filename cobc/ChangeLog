@@ -1,5 +1,11 @@
 2002-07-08  Keisuke Nishida  <knishida@netlab.jp>
 
+	* codegen.c (output_field): Support literals.
+	(output_file_name): Output ASSIGN clause.
+	* parser.y (open_list): Call "cob_open" without file name.
+
+2002-07-08  Keisuke Nishida  <knishida@netlab.jp>
+
 	* codegen.c (output_field): New function.
 	(output_file_name): Use it.
 
