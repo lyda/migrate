@@ -138,7 +138,6 @@ sequential_read (struct cob_file_desc *f)
     case -1:
       return 46;
     case 0:
-      f->f.end_of_file = 1;
       return 10;
     default:
       return 00;
@@ -216,10 +215,7 @@ lineseq_read (struct cob_file_desc *f)
 
   /* read the file */
   if (fgets (buff, f->record_size + 1, f->file.fp) == NULL)
-    {
-      f->f.end_of_file = 1;
-      return 10;
-    }
+    return 10;
 
   /* remove the newline */
   for (i = 0; i < f->record_size; i++)
@@ -839,6 +835,7 @@ cob_open (struct cob_file_desc *f, struct cob_field name, int mode)
       if (f->f.optional)
 	{
 	  f->f.nonexistent = 1;
+	  f->f.end_of_file = 1;
 	  RETURN_STATUS (05);
 	}
       else
@@ -900,8 +897,8 @@ cob_start (struct cob_file_desc *f, int cond, struct cob_field key)
   RETURN_STATUS (ret);
 }
 
-void
-cob_read (struct cob_file_desc *f, struct cob_field key)
+static void
+read_common (struct cob_file_desc *f, struct cob_field key)
 {
   int ret;
 
@@ -916,40 +913,35 @@ cob_read (struct cob_file_desc *f, struct cob_field key)
   if (!FILE_OPENED (f) || !FILE_READABLE (f))
     RETURN_STATUS (47);
 
-  ret = fileio_funcs[f->organization]->read (f, key);
-  if (ret == 00)
+  if (key.desc)
+    ret = fileio_funcs[f->organization]->read (f, key);
+  else
+    ret = fileio_funcs[f->organization]->read_next (f);
+
+  switch (ret)
     {
+    case 00:
       f->f.first_read = 0;
       f->f.read_done = 1;
+      break;
+    case 10:
+      f->f.end_of_file = 1;
+      break;
     }
 
   RETURN_STATUS (ret);
 }
 
 void
+cob_read (struct cob_file_desc *f, struct cob_field key)
+{
+  read_common (f, key);
+}
+
+void
 cob_read_next (struct cob_file_desc *f)
 {
-  int ret;
-
-  f->f.read_done = 0;
-
-  if (f->f.nonexistent)
-    RETURN_STATUS (10);
-
-  if (f->f.end_of_file)
-    RETURN_STATUS (46);
-
-  if (!FILE_OPENED (f) || !FILE_READABLE (f))
-    RETURN_STATUS (47);
-
-  ret = fileio_funcs[f->organization]->read_next (f);
-  if (ret == 00)
-    {
-      f->f.first_read = 0;
-      f->f.read_done = 1;
-    }
-
-  RETURN_STATUS (ret);
+  read_common (f, (struct cob_field) {0, 0});
 }
 
 void
