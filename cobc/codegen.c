@@ -2107,7 +2107,7 @@ output_internal_function (struct cb_program *prog,
 
   /* program function */
   output_line ("static int");
-  output ("internal_main (int entry");
+  output ("__%s (int entry", prog->program_id);
   for (l = parameter_list; l; l = l->next)
     output (", unsigned char *b_%s", CB_FIELD (l->item)->cname);
   output (")\n");
@@ -2203,7 +2203,8 @@ output_internal_function (struct cb_program *prog,
 }
 
 static void
-output_entry_function (struct cb_parameter *entry,
+output_entry_function (struct cb_program *prog,
+		       struct cb_parameter *entry,
 		       struct cb_list *parameter_list)
 {
   static int id = 0;
@@ -2226,7 +2227,7 @@ output_entry_function (struct cb_parameter *entry,
   output (")\n");
   output ("{\n");
 
-  output ("  return internal_main (%d", id++);
+  output ("  return __%s (%d", prog->program_id, id++);
   for (l1 = parameter_list; l1; l1 = l1->next)
     {
       for (l2 = using_list; l2; l2 = l2->next)
@@ -2342,7 +2343,7 @@ codegen (struct cb_program *prog)
 
   /* entry functions */
   for (l = prog->entry_list ; l; l = l->next)
-    output_entry_function (CB_PARAMETER (l->item), parameter_list);
+    output_entry_function (prog, CB_PARAMETER (l->item), parameter_list);
 
   /* main function */
   if (cb_flag_main)
