@@ -17,9 +17,10 @@
 ## the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
 ## Boston, MA 02111-1307 USA
 
-AT_INIT([Non-standard Extensions])
+AT_INIT([Data Representation])
 
 AT_TESTED([cobc])
 
-m4_include([extensions.at])
-m4_include([return-code.at])
+m4_include([binary.at])		# USAGE BINARY
+m4_include([display.at])	# USAGE DISPLAY
+m4_include([packed.at])		# USAGE PACKED-DECIMAL

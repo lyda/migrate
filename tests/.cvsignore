@@ -5,4 +5,7 @@ Makefile.in
 atconfig
 atlocal
 package.m4
-testsuite
+cobol2002-run
+cobol2002-syntax
+data-rep
+extension

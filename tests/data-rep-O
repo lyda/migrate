@@ -1,0 +1,3 @@
+#!/bin/sh 
+
+COBOL_FLAGS='-fruntime-inlining' data-rep

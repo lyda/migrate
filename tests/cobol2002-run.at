@@ -17,9 +17,15 @@
 ## the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
 ## Boston, MA 02111-1307 USA
 
-AT_INIT([Non-standard Extensions])
+AT_INIT([COBOL 2002 Run Tests])
 
 AT_TESTED([cobc])
 
-m4_include([extensions.at])
-m4_include([return-code.at])
+m4_include([fundamental.at])
+
+m4_include([subscripts.at])	# 8.4.1.2 Subscripts
+m4_include([ref-mod.at])	# 8.4.2.3 Reference-modification
+
+m4_include([initialize.at])	# 14.8.19 INITIALIZE statement
+
+m4_include([misc.at])

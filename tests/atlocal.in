@@ -1,12 +1,12 @@
-AUTOTEST_PATH="${abs_top_builddir}/cobc"
-PATH="$AUTOTEST_PATH:$PATH"
-
 CC="@CC@"
+COBC="${abs_top_builddir}/cobc/cobc"
 
-FLAGS="-std=cobol2002 -debug -Wall"
-COMPILE="cobc ${FLAGS} ${COBOL_FLAGS}"
-COMPILE_ONLY="cobc -fsyntax-only ${FLAGS} ${COBOL_FLAGS}"
-COMPILE_MODULE="cobc -m ${FLAGS} ${COBOL_FLAGS}"
+TEMPLATE="${abs_srcdir}/data-rep.src"
+
+FLAGS="-std=cobol2002 -debug -Wall ${COBOL_FLAGS}"
+COMPILE="${COBC} ${FLAGS}"
+COMPILE_ONLY="${COBC} -fsyntax-only ${FLAGS}"
+COMPILE_MODULE="${COBC} -m ${FLAGS}"
 
 export COB_CFLAGS="-I${abs_top_srcdir}"
 export COB_LIBS="-L${abs_top_builddir}/libcob/.libs -lcob @LIBCOB_LIBS@"

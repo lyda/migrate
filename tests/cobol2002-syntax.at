@@ -17,9 +17,17 @@
 ## the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
 ## Boston, MA 02111-1307 USA
 
-AT_INIT([Non-standard Extensions])
+AT_INIT([COBOL 2002 Syntax])
 
 AT_TESTED([cobc])
 
-m4_include([extensions.at])
-m4_include([return-code.at])
+m4_include([definition.at])
+
+m4_include([subscripts.at])	# 8.4.1.2 Subscripts
+
+m4_include([occurs.at])		# 13.16.36 OCCURS clause
+m4_include([redefines.at])	# 13.16.42 REDEFINES clause
+m4_include([value.at])		# 13.16.61 VALUE clause
+
+m4_include([move.at])		# 14.8.24 MOVE statement
+m4_include([multiply.at])	# 14.8.25 MULTIPLY statement

@@ -1,3 +1,8 @@
+2003-11-26  Keisuke Nishida  <kxn30@yahoo.co.jp>
+
+	* cobol2002-run.src, cobol2002-syntax.src, data-rep.src,
+	extension.src: New subdirectories.
+
 2003-08-21  Keisuke Nishida  <kxn30@yahoo.co.jp>
 
 	* display.at, packed.at: New files.

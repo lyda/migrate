@@ -1,30 +1,48 @@
 SUBDIRS = cobol85
 
-TESTS =	$(srcdir)/testsuite
+TESTS =	$(srcdir)/cobol2002-syntax \
+	$(srcdir)/cobol2002-run \
+	$(srcdir)/cobol2002-run-O \
+	$(srcdir)/data-rep \
+	$(srcdir)/data-rep-O \
+	$(srcdir)/extension \
+	$(srcdir)/extension-O
 
-TESTSUITE_AT = \
-	testsuite.at \
-	fundamental.at \
-	subscripts.at \
-	ref-mod.at \
-	occurs.at \
-	redefines.at \
-	usage.at \
-	binary.at \
-	display.at \
-	packed.at \
-	value.at \
-	initialize.at \
-	move.at \
-	multiply.at \
-	definition.at \
-	extension.at \
-	entry.at \
-	misc.at
+cobol2002_syntax_DEPENDENCIES = \
+	cobol2002-syntax.src/definition.at \
+	cobol2002-syntax.src/multiply.at \
+	cobol2002-syntax.src/redefines.at \
+	cobol2002-syntax.src/value.at \
+	cobol2002-syntax.src/move.at \
+	cobol2002-syntax.src/occurs.at \
+	cobol2002-syntax.src/subscripts.at
 
-EXTRA_DIST = $(srcdir)/package.m4 templates $(TESTS) $(TESTSUITE_AT)
+cobol2002_run_DEPENDENCIES = \
+	cobol2002-run.src/fundamental.at \
+	cobol2002-run.src/initialize.at \
+	cobol2002-run.src/misc.at \
+	cobol2002-run.src/ref-mod.at \
+	cobol2002-run.src/subscripts.at
+
+data_rep_DEPENDENCIES = \
+	data-rep.src/binary.at \
+	data-rep.src/display.at \
+	data-rep.src/packed.at \
+	data-rep.src/numeric-dump.cob
+
+extension_DEPENDENCIES = \
+	extension.src/extensions.at \
+	extension.src/return-code.at
+
+EXTRA_DIST = $(srcdir)/package.m4 $(TESTS) \
+	$(cobol2002_syntax_DEPENDENCIES) \
+	$(cobol2002_run_DEPENDENCIES) \
+	$(data_rep_DEPENDENCIES) \
+	$(extension_DEPENDENCIES)
 
 DISTCLEANFILES = atconfig
+
+all: $(TESTS)
 
 clean-local:
 	@for x in $(TESTS); do \
@@ -42,8 +60,11 @@ $(srcdir)/package.m4: $(top_srcdir)/configure.ac
 	  echo 'm4_define([AT_PACKAGE_BUGREPORT], [@PACKAGE_BUGREPORT@])'; \
 	} > $(srcdir)/package.m4
 
-$(srcdir)/%: $(srcdir)/%.at $(srcdir)/package.m4 atlocal.in
-	autom4te --language=autotest -I $(srcdir) $< -o $@
+$(srcdir)/%: $(srcdir)/%.at
+	autom4te --language=autotest -I $(srcdir) -I $(srcdir)/$@.src -o $@ $<
 	chmod +x $@
 
-$(srcdir)/testsuite: $(TESTSUITE_AT)
+$(srcdir)/cobol2002-syntax: $(cobol2002_syntax_DEPENDENCIES)
+$(srcdir)/cobol2002-run: $(cobol2002_run_DEPENDENCIES)
+$(srcdir)/data-rep: $(data_rep_DEPENDENCIES)
+$(srcdir)/extension: $(extension_DEPENDENCIES)

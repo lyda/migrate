@@ -1,0 +1,450 @@
+### OpenCOBOL Test Suite				-*- m4 -*-
+
+## Copyright (C) 2003 Keisuke Nishida
+##
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 2, or (at your option)
+## any later version.
+## 
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU General Public License
+## along with this software; see the file COPYING.  If not, write to
+## the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+## Boston, MA 02111-1307 USA
+
+### Non-standard extensions
+
+
+AT_SETUP([COMP-5])
+
+AT_DATA([dump.c], [
+int dump (unsigned char *data)
+{
+  int i;
+  for (i = 0; i < 4; i++)
+    printf ("%02x", data[[i]]);
+  puts ("");
+  return 0;
+}
+])
+
+AT_CHECK([${CC} -shared -o dump.so dump.c])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X-1           PIC 9(9) VALUE 4660 COMP.
+       01 X-2           PIC 9(9) VALUE 4660 COMP-5.
+       PROCEDURE        DIVISION.
+           CALL "dump" USING X-1.
+           CALL "dump" USING X-2.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[00001234
+34120000
+])
+
+AT_CLEANUP
+
+
+## H literal
+
+AT_SETUP([Hexadecimal numeric literal])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X-1           PIC 9(8) VALUE H"012345".
+       01 X-2           PIC 9(8) VALUE H"FFFFFF".
+       PROCEDURE        DIVISION.
+           DISPLAY X-1.
+           DISPLAY X-2.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[00074565
+16777215
+])
+
+AT_CLEANUP
+
+
+## LENGTH OF
+
+AT_SETUP([LENGTH OF])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X(100).
+       01 L             PIC 9(4).
+       01 I             PIC 9(2) VALUE 10.
+       PROCEDURE        DIVISION.
+           MOVE LENGTH OF X TO L.      DISPLAY L.
+           MOVE LENGTH OF X(2:) TO L.  DISPLAY L.
+           MOVE LENGTH OF X(I:) TO L.  DISPLAY L.
+           MOVE LENGTH OF X(1:2) TO L. DISPLAY L.
+           MOVE LENGTH OF X(1:I) TO L. DISPLAY L.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[0100
+0099
+0090
+0002
+0010
+])
+
+AT_CLEANUP
+
+
+## WHEN-COMPILED
+
+AT_SETUP([WHEN-COMPILED])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X(20).
+       PROCEDURE        DIVISION.
+           MOVE WHEN-COMPILED TO X.
+           INSPECT X CONVERTING "0123456789" TO "9999999999".
+           DISPLAY X NO ADVANCING.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [99/99/9999.99.99    ])
+
+AT_CLEANUP
+
+
+## CALL
+
+AT_SETUP([CALL BY CONTENT LENGTH])
+
+AT_DATA([callee.c], [
+#include <stdio.h>
+int callee (char *str, int *len)
+{
+  fwrite (str, *len, 1, stdout);
+  return 0;
+}
+])
+
+AT_DATA([caller.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      caller.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X(4).
+       PROCEDURE        DIVISION.
+           MOVE "abcd" TO X.
+           CALL "callee" USING X BY CONTENT LENGTH OF X.
+           STOP RUN.
+])
+
+AT_CHECK([${CC} -shared -o callee.so callee.c])
+AT_CHECK([${COMPILE} -o caller caller.cob])
+AT_CHECK([./caller], [0], [abcd])
+
+AT_CLEANUP
+
+
+## ASSIGN
+
+AT_SETUP([ASSIGN data-name])
+
+AT_DATA([test.conf], [
+include "cobol2002.conf"
+assign-identifier: data-name
+])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       ENVIRONMENT      DIVISION.
+       INPUT-OUTPUT     SECTION.
+       FILE-CONTROL.
+       SELECT TEST-FILE ASSIGN FILENAME.
+       DATA             DIVISION.
+       FILE             SECTION.
+       FD TEST-FILE.
+       01 TEST-REC      PIC X(4).
+       PROCEDURE        DIVISION.
+           MOVE "TEST-FILE" TO FILENAME.
+           OPEN OUTPUT TEST-FILE.
+           CLOSE TEST-FILE.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -conf=test.conf -o prog prog.cob])
+AT_CHECK([./prog], [0])
+
+AT_CLEANUP
+
+AT_SETUP([ASSIGN literal])
+
+AT_DATA([test.conf], [
+include "cobol2002.conf"
+assign-identifier: literal
+])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       ENVIRONMENT      DIVISION.
+       INPUT-OUTPUT     SECTION.
+       FILE-CONTROL.
+       SELECT TEST-FILE ASSIGN FILENAME.
+       DATA             DIVISION.
+       FILE             SECTION.
+       FD TEST-FILE.
+       01 TEST-REC      PIC X(4).
+       PROCEDURE        DIVISION.
+           OPEN OUTPUT TEST-FILE.
+           CLOSE TEST-FILE.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -conf=test.conf -o prog prog.cob])
+AT_CHECK([./prog], [0])
+AT_CHECK([test -f FILENAME], [0])
+
+AT_CLEANUP
+
+AT_SETUP([ASSIGN mapping])
+
+AT_DATA([test.conf], [
+include "cobol2002.conf"
+filename-mapping: yes
+])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       ENVIRONMENT      DIVISION.
+       INPUT-OUTPUT     SECTION.
+       FILE-CONTROL.
+       SELECT TEST-FILE ASSIGN "FILENAME".
+       DATA             DIVISION.
+       FILE             SECTION.
+       FD TEST-FILE.
+       01 TEST-REC      PIC X(4).
+       PROCEDURE        DIVISION.
+           OPEN OUTPUT TEST-FILE.
+           CLOSE TEST-FILE.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -conf=test.conf -o prog prog.cob])
+AT_CHECK([DD_FILENAME="x" ./prog], [0])
+AT_CHECK([test -f "x"], [0])
+AT_CHECK([dd_FILENAME="y" ./prog], [0])
+AT_CHECK([test -f "y"], [0])
+AT_CHECK([FILENAME="z" ./prog], [0])
+AT_CHECK([test -f "z"], [0])
+AT_CHECK([./prog], [0])
+AT_CHECK([test -f "FILENAME"], [0])
+
+AT_CLEANUP
+
+AT_SETUP([ASSIGN expansion])
+
+AT_DATA([test.conf], [
+include "cobol2002.conf"
+filename-mapping: yes
+])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       ENVIRONMENT      DIVISION.
+       INPUT-OUTPUT     SECTION.
+       FILE-CONTROL.
+       SELECT TEST-FILE ASSIGN "$DIR/FILENAME".
+       DATA             DIVISION.
+       FILE             SECTION.
+       FD TEST-FILE.
+       01 TEST-REC      PIC X(4).
+       PROCEDURE        DIVISION.
+           OPEN OUTPUT TEST-FILE.
+           CLOSE TEST-FILE.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -conf=test.conf -o prog prog.cob])
+AT_CHECK([DIR="/tmp" ./prog], [0])
+AT_CHECK([test -f "/tmp/FILENAME"], [0])
+
+AT_CLEANUP
+
+
+# ENTRY
+
+AT_SETUP([ENTRY])
+
+AT_DATA([caller.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       PROCEDURE        DIVISION.
+           CALL "hello" USING "COBOL".
+           CALL "bye" USING "COBOL".
+           STOP RUN.
+])
+
+AT_DATA([callee.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      hello.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 MSG-HELLO     PIC X(7) VALUE "Hello, ".
+       01 MSG-BYE       PIC X(5) VALUE "Bye, ".
+       LINKAGE          SECTION.
+       01 X             PIC X(5).
+       01 Y             PIC X(5).
+       PROCEDURE        DIVISION USING X.
+           DISPLAY MSG-HELLO X "!".
+           EXIT PROGRAM.
+
+           ENTRY "bye" USING Y.
+           DISPLAY MSG-BYE Y "!".
+           EXIT PROGRAM.
+])
+
+AT_CHECK([${COMPILE} -std=mvs -c -fstatic-call -fmain caller.cob])
+AT_CHECK([${COMPILE} -std=mvs -c -fstatic-call callee.cob])
+AT_CHECK([${COMPILE} -o prog caller.o callee.o])
+AT_CHECK([./prog], [0],
+[Hello, COBOL!
+Bye, COBOL!
+])
+
+AT_CLEANUP
+
+
+## LINE SEQUENTIAL
+
+AT_SETUP([LINE SEQUENTIAL write])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       ENVIRONMENT      DIVISION.
+       INPUT-OUTPUT     SECTION.
+       FILE-CONTROL.
+       SELECT TEST-FILE ASSIGN       "./TEST-FILE"
+                        ORGANIZATION IS LINE SEQUENTIAL.
+       DATA             DIVISION.
+       FILE             SECTION.
+       FD TEST-FILE.
+       01 TEST-REC      PIC X(4).
+       PROCEDURE        DIVISION.
+           OPEN OUTPUT TEST-FILE.
+           MOVE "a"    TO TEST-REC. WRITE TEST-REC.
+           MOVE "ab"   TO TEST-REC. WRITE TEST-REC AFTER 1 LINES.
+           MOVE "abc"  TO TEST-REC. WRITE TEST-REC BEFORE 2 LINES.
+           MOVE "abcd" TO TEST-REC. WRITE TEST-REC.
+           CLOSE TEST-FILE.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog])
+AT_CHECK([cat TEST-FILE], [0], 
+[a
+
+ababc
+
+abcd
+])
+
+AT_CLEANUP
+
+AT_SETUP([LINE SEQUENTIAL read])
+
+AT_DATA([TEST-FILE],
+[a
+ab
+abc
+abcd
+abcde
+abcdef
+])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       ENVIRONMENT      DIVISION.
+       INPUT-OUTPUT     SECTION.
+       FILE-CONTROL.
+       SELECT TEST-FILE ASSIGN       "./TEST-FILE"
+                        ORGANIZATION IS LINE SEQUENTIAL.
+       DATA             DIVISION.
+       FILE             SECTION.
+       FD TEST-FILE.
+       01 TEST-REC      PIC X(4).
+       PROCEDURE        DIVISION.
+           OPEN INPUT TEST-FILE.
+           READ TEST-FILE. DISPLAY "(" TEST-REC ")".
+           READ TEST-FILE. DISPLAY "(" TEST-REC ")".
+           READ TEST-FILE. DISPLAY "(" TEST-REC ")".
+           READ TEST-FILE. DISPLAY "(" TEST-REC ")".
+           READ TEST-FILE. DISPLAY "(" TEST-REC ")".
+           READ TEST-FILE. DISPLAY "(" TEST-REC ")".
+           CLOSE TEST-FILE.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[(a   )
+(ab  )
+(abc )
+(abcd)
+(abcd)
+(abcd)
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([Environment variable])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X(4).
+       PROCEDURE        DIVISION.
+           DISPLAY "TEST_ENV" UPON ENVIRONMENT-NAME.
+           ACCEPT X FROM ENVIRONMENT-VALUE.
+           DISPLAY X NO ADVANCING.
+           STOP RUN.
+])
+
+export TEST_ENV=OK
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [OK  ])
+
+AT_CLEANUP
