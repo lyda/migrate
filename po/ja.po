@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.9.6\n"
-"POT-Creation-Date: 2002-12-05 21:21+0900\n"
+"POT-Creation-Date: 2002-12-05 21:24+0900\n"
 "PO-Revision-Date: 2002-12-01 12:28+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -211,7 +211,7 @@ msgstr "`%s' はグループ名ではありません"
 msgid "`%s' not indexed"
 msgstr "`%s' には INDEXED BY が必要です"
 
-#: cobc/parser.y:3373 cobc/parser.y:4814
+#: cobc/parser.y:3373 cobc/parser.y:4815
 msgid "defined here"
 msgstr "はここで定義されました"
 
@@ -231,136 +231,137 @@ msgid "numeric value is expected `%s'"
 msgstr "`%s' は数値ではありません"
 
 #: cobc/parser.y:3602
-msgid "subscript must be an integer value"
-msgstr "添字は整数でなければなりません"
+#, c-format
+msgid "`%s' must be an integer value"
+msgstr "`%s' は整数でなければなりません"
 
-#: cobc/parser.y:3808
+#: cobc/parser.y:3809
 #, c-format
 msgid "`%s' cannot be subscripted"
 msgstr "`%s' は添字付け出来ません"
 
-#: cobc/parser.y:3811
+#: cobc/parser.y:3812
 #, c-format
 msgid "`%s' requires 1 subscript"
 msgstr "`%s' は 1 つの添字を必要とします"
 
-#: cobc/parser.y:3814
+#: cobc/parser.y:3815
 #, c-format
 msgid "`%s' requires %d subscripts"
 msgstr "`%s' は %d つの添字を必要とします"
 
-#: cobc/parser.y:3850
+#: cobc/parser.y:3851
 #, c-format
 msgid "invalid section name `%s'"
 msgstr "段落名が不当です `%s'"
 
-#: cobc/parser.y:3868
+#: cobc/parser.y:3869
 #, c-format
 msgid "invalid label `%s'"
 msgstr "不当なラベルです `%s'"
 
-#: cobc/parser.y:3887
+#: cobc/parser.y:3888
 #, c-format
 msgid "no such label `%s' IN `%s'"
 msgstr "そのような段落はありません `%s' IN `%s'"
 
-#: cobc/parser.y:3929
+#: cobc/parser.y:3930
 msgid "not switch name"
 msgstr "スイッチ名ではありません"
 
-#: cobc/parser.y:3980
+#: cobc/parser.y:3981
 msgid "level number must begin with 01 or 77"
 msgstr "レベル番号は 01 か 77 で始まらなければなりません"
 
-#: cobc/parser.y:4000
+#: cobc/parser.y:4001
 #, c-format
 msgid "invalid level number `%s'"
 msgstr "不当なレベル番号です `%s'"
 
-#: cobc/parser.y:4033
+#: cobc/parser.y:4034
 msgid "field hierarchy broken"
 msgstr "項目のレベル番号が不当です"
 
-#: cobc/parser.y:4058
+#: cobc/parser.y:4059
 msgid "group name may not have PICTURE"
 msgstr "グループ名は PICTURE 句を持つことが出来ません"
 
-#: cobc/parser.y:4061
+#: cobc/parser.y:4062
 msgid "group name may not have JUSTIFIED RIGHT"
 msgstr "グループ名は JUSTIFIED RIGHT を持つことが出来ません"
 
-#: cobc/parser.y:4073
+#: cobc/parser.y:4074
 msgid "level 88 field may not have PICTURE"
 msgstr "レベル 88 項目は PICTURE 句を持つことが出来ません"
 
-#: cobc/parser.y:4080
+#: cobc/parser.y:4081
 msgid "PICTURE required"
 msgstr "には PICTURE 句が必要です"
 
-#: cobc/parser.y:4089
+#: cobc/parser.y:4090
 msgid "field must be numeric"
 msgstr "この項目は数字ではありません"
 
-#: cobc/parser.y:4100
+#: cobc/parser.y:4101
 #, c-format
 msgid "level %02d field cannot have OCCURS"
 msgstr "レベル %02d 項目は OCCURS 句を持つことが出来ません"
 
-#: cobc/parser.y:4111
+#: cobc/parser.y:4112
 msgid "cannot have JUSTIFIED RIGHT"
 msgstr "は JUSTIFIED RIGHT を持つことが出来ません"
 
-#: cobc/parser.y:4136
+#: cobc/parser.y:4137
 msgid "VALUE not allowed under REDEFINES"
 msgstr "REDEFINES に含まれる項目は VALUE を持つことが出来ません"
 
-#: cobc/parser.y:4145
+#: cobc/parser.y:4146
 msgid "VALUE should be alphanumeric"
 msgstr "VALUE の値は英数字でなければなりません"
 
-#: cobc/parser.y:4162
+#: cobc/parser.y:4163
 #, c-format
 msgid "record size too small `%s'"
 msgstr "レコード長が短か過ぎます `%s'"
 
-#: cobc/parser.y:4165
+#: cobc/parser.y:4166
 #, c-format
 msgid "record size too large `%s'"
 msgstr "レコード長が長過ぎます `%s'"
 
-#: cobc/parser.y:4677
+#: cobc/parser.y:4678
 msgid "wrong number of WHEN parameters"
 msgstr "WHEN 句の引数の数が不当です"
 
-#: cobc/parser.y:4729
+#: cobc/parser.y:4730
 #, c-format
 msgid "undeclared key `%s'"
 msgstr "`%s' はキー宣言されていません"
 
-#: cobc/parser.y:4733
+#: cobc/parser.y:4734
 msgid "invalid SEARCH ALL condition"
 msgstr "SEARCH ALL の条件式が不当です"
 
-#: cobc/parser.y:4773
+#: cobc/parser.y:4774
 #, c-format
 msgid "redefinition of `%s'"
 msgstr "`%s' が再定義されています"
 
-#: cobc/parser.y:4774
+#: cobc/parser.y:4775
 msgid "previously defined here"
 msgstr "はここで定義されました"
 
-#: cobc/parser.y:4782
+#: cobc/parser.y:4783
 #, c-format
 msgid "`%s' undefined in `%s'"
 msgstr "`%s' は `%s' の中で定義されていません"
 
-#: cobc/parser.y:4785
+#: cobc/parser.y:4786
 #, c-format
 msgid "`%s' undefined"
 msgstr "`%s' は未定義です"
 
-#: cobc/parser.y:4797
+#: cobc/parser.y:4798
 #, c-format
 msgid "`%s' ambiguous; need qualification"
 msgstr "`%s' は多重定義されています。一意に修飾して下さい"

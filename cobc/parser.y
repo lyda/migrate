@@ -174,7 +174,7 @@ static void ambiguous_error (cobc_tree x);
 %type <list> occurs_key_list occurs_index_list value_item_list data_name_list
 %type <list> value_list opt_value_list evaluate_case
 %type <list> evaluate_case_list evaluate_when_list evaluate_object_list
-%type <list> label_list subscript_list number_list string_list
+%type <list> label_list number_list string_list
 %type <list> string_list_1 inspect_before_after_list
 %type <list> reference_list mnemonic_name_list
 %type <list> file_name_list math_name_list math_edited_name_list
@@ -188,13 +188,13 @@ static void ambiguous_error (cobc_tree x);
 %type <tree> field_description_list_1 field_description_list_2 field_name
 %type <tree> figurative_constant file_name function group_name integer_label
 %type <tree> integer_value label label_name qualified_name
-%type <tree> line_number literal mnemonic_name name
+%type <tree> line_number literal mnemonic_name name opt_subscript subscript
 %type <tree> number numeric_edited_name numeric_expr
 %type <tree> numeric_name occurs_index on_or_off opt_screen_description_list
-%type <tree> opt_subscript opt_with_pointer perform_option perform_procedure
+%type <tree> opt_with_pointer perform_option perform_procedure
 %type <tree> program_name record_name reference_or_literal
 %type <tree> reference screen_description screen_description_list
-%type <tree> section_label section_name statement_list subscript
+%type <tree> section_label section_name statement_list
 %type <tree> table_name text_value undefined_name
 %type <tree> value value_item write_from
 %type <tree> on_size_error on_overflow at_end opt_invalid_key invalid_key
@@ -3462,7 +3462,7 @@ name:
 subref:
   '(' subscript_list ')'
   {
-    COBC_REFERENCE ($<tree>0)->subs = $2;
+    COBC_REFERENCE ($<tree>0)->subs = $<list>2;
     $<tree>$ = $<tree>0;
   }
 ;
@@ -3474,17 +3474,17 @@ refmod:
   }
 ;
 subscript_list:
-  subscript			{ $$ = list ($1); }
-| subscript_list subscript	{ $$ = list_add ($1, $2); }
+  subscript			{ $<list>$ = list ($1); }
+| subscript_list subscript	{ $<list>$ = list_add ($<list>1, $2); }
 ;
 opt_subscript:
   /* empty */			{ $$ = NULL; }
 | subscript			{ $$ = $1; }
 ;
 subscript:
-  value				{ $$ = $1; }
-| subscript '+' value		{ $$ = make_binary_op ($1, '+', $3); }
-| subscript '-' value		{ $$ = make_binary_op ($1, '-', $3); }
+  integer_value			{ $$ = $1; }
+| subscript '+' integer_value	{ $$ = make_binary_op ($1, '+', $3); }
+| subscript '-' integer_value	{ $$ = make_binary_op ($1, '+', $3); }
 ;
 
 /* Label name */
@@ -3577,6 +3577,34 @@ integer:
 
 integer_value:
   value
+  {
+    if (COBC_TREE_CLASS ($1) != COB_TYPE_NUMERIC)
+      goto invalid;
+
+    switch (COBC_TREE_TAG ($1))
+      {
+      case cobc_tag_literal:
+	{
+	  struct cobc_literal *l = COBC_LITERAL ($1);
+	  if (l->sign || l->decimals)
+	    goto invalid;
+	  break;
+	}
+      case cobc_tag_reference:
+	{
+	  struct cobc_field *f = COBC_FIELD (cobc_ref ($1));
+	  if (f->pic->decimals)
+	    goto invalid;
+	  break;
+	}
+      default:
+      invalid:
+	yyerror_loc ($1, _("`%s' must be an integer value"),
+		     tree_to_string ($1));
+	YYERROR;
+      }
+    $$ = $1;
+  }
 ;
 
 /* Text */
@@ -3781,13 +3809,15 @@ resolve_field (cobc_tree x)
 	      yyerror_loc (x, _("`%s' cannot be subscripted"), name);
 	      break;
 	    case 1:
-	      yyerror_loc (x, _("`%s' requires a subscript"), name);
+	      yyerror_loc (x, _("`%s' requires 1 subscript"), name);
 	      break;
 	    default:
 	      yyerror_loc (x, _("`%s' requires %d subscripts"), name, need);
 	      break;
 	    }
+	  return NULL;
 	}
+
       return x;
     }
 }
