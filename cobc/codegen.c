@@ -1238,8 +1238,7 @@ dump_working ()
 	continue;
       if (fld_len)
 	{			/* don't alloc dummy (zero storage) symbols */
-	  def_field_storage (v, fld_len);
-	  //fprintf(o_src,"\t.space\t%d\n",fld_len);
+	  fprintf(o_src,"\t.space\t%d\n",fld_len);
 	}
       if (fld_len == 0)
 	yyerror ("Invalid picture in %s", v->name);
@@ -2622,47 +2621,9 @@ gen_test_invalid_keys (struct invalid_keys *p)
 
 /******** functions to generate math verbs ***********/
 
-static enum num_type
-{
-  NUM_NAN,
-  NUM_DECIMAL,
-  NUM_INT32,
-  NUM_INT64,
-  NUM_DOUBLE
-} numeric_type = NUM_NAN;
-
-/* NOTE: This function doesn't have any effect right now */
-static void
-set_numeric_type (struct sym *sy)
-{
-  if (SUBREF_P (sy))
-    sy = SUBREF_SYM (sy);
-
-  switch (sy->type)
-    {
-    case '9':
-    case 'C':
-      numeric_type = NUM_DECIMAL;
-      break;
-    case 'B':
-      if (sy->len > 4)
-	numeric_type = NUM_DOUBLE;
-      else
-	numeric_type = NUM_DOUBLE;
-      break;
-    case 'U':
-      numeric_type = NUM_DOUBLE;
-      break;
-    default:
-      yyerror ("Non-numeric symbol `%s'", sy->name);
-      numeric_type = NUM_NAN;
-    }
-}
-
 void
 gen_add (struct sym *sy1, struct sym *sy2, int rnd)
 {
-  set_numeric_type (sy2);
   push_expr (sy2);
   push_expr (sy1);
   add_expr ();
@@ -2672,7 +2633,6 @@ gen_add (struct sym *sy1, struct sym *sy2, int rnd)
 void
 gen_subtract (struct sym *sy1, struct sym *sy2, int rnd)
 {
-  set_numeric_type (sy2);
   push_expr (sy2);
   push_expr (sy1);
   subtract_expr ();
@@ -2682,7 +2642,6 @@ gen_subtract (struct sym *sy1, struct sym *sy2, int rnd)
 void
 gen_multiply (struct sym *sy1, struct sym *sy2, struct sym *sy3, int rnd)
 {
-  set_numeric_type (sy3);
   push_expr (sy2);
   push_expr (sy1);
   multiply_expr ();
@@ -2693,7 +2652,6 @@ void
 gen_divide (struct sym *sy1, struct sym *sy2,
 	    struct sym *sy3, struct sym *sy4, int rnd)
 {
-  set_numeric_type (sy3);
   push_expr (sy2);
   push_expr (sy1);
   divide_expr ();
@@ -2701,7 +2659,6 @@ gen_divide (struct sym *sy1, struct sym *sy2,
 
   if (sy4)
     {
-      set_numeric_type (sy4);
       push_expr (sy3);
       push_expr (sy2);
       multiply_expr ();
@@ -2720,7 +2677,6 @@ gen_compute (struct math_var *vl1, struct sym *sy1, struct math_ose *ose)
 
   for (; vl1; vl1 = vl1->next)
     {
-      set_numeric_type (vl1->sname);
       push_expr (sy1);
       assign_expr (vl1->sname, vl1->rounded);
 
@@ -2741,7 +2697,6 @@ gen_add1 (struct math_var *vl1, struct math_var *vl2, struct math_ose *ose)
     {
       struct math_var *vl;
 
-      set_numeric_type (vl2->sname);
       push_expr (vl2->sname);
       for (vl = vl1; vl != NULL; vl = vl->next)
 	{
@@ -2768,7 +2723,6 @@ gen_add2 (struct math_var *vl1, struct math_var *vl2,
     {
       struct math_var *vl = vl1;
 
-      set_numeric_type (vl2->sname);
       if (sy1)
 	push_expr (sy1);
       else
@@ -2803,7 +2757,6 @@ gen_subtract1 (struct math_var *vl1, struct math_var *vl2,
     {
       struct math_var *vl;
 
-      set_numeric_type (vl2->sname);
       push_expr (vl2->sname);
       for (vl = vl1; vl; vl = vl->next)
 	{
@@ -2830,7 +2783,6 @@ gen_subtract2 (struct math_var *vl1, struct math_var *vl2, struct sym *sy1,
     {
       struct math_var *vl;
 
-      set_numeric_type (vl2->sname);
       push_expr (sy1);
       for (vl = vl1; vl; vl = vl->next)
 	{
@@ -2854,7 +2806,6 @@ gen_multiply1 (struct math_var *vl1, struct sym *sy1, struct math_ose *ose)
 
   for (; vl1; vl1 = vl1->next)
     {
-      set_numeric_type (vl1->sname);
       push_expr (sy1);
       push_expr (vl1->sname);
       multiply_expr ();
@@ -2876,7 +2827,6 @@ gen_multiply2 (struct math_var *vl1, struct sym *sy1, struct sym *sy2,
 
   for (; vl1; vl1 = vl1->next)
     {
-      set_numeric_type (vl1->sname);
       push_expr (sy1);
       push_expr (sy2);
       multiply_expr ();
@@ -2897,7 +2847,6 @@ gen_divide1 (struct math_var *vl1, struct sym *sy1, struct math_ose *ose)
 
   for (; vl1; vl1 = vl1->next)
     {
-      set_numeric_type (vl1->sname);
       push_expr (vl1->sname);
       push_expr (sy1);
       divide_expr ();
@@ -2919,7 +2868,6 @@ gen_divide2 (struct math_var *vl1, struct sym *sy1, struct sym *sy2,
 
   for (; vl1; vl1 = vl1->next)
     {
-      set_numeric_type (vl1->sname);
       push_expr (sy1);
       push_expr (sy2);
       divide_expr ();
@@ -3187,11 +3135,8 @@ load_address (struct sym *var)
 	  fprintf (o_src, "\taddl\t$%d, %%eax\n", locoff);
 	}
     }
-//      else if (!var->litflag) {
   else if (var->sec_no == SEC_STACK)
-    {
-      fprintf (o_src, "\tleal\t%s, %%eax\n", memref (var));
-    }
+    fprintf (o_src, "\tleal\t%s, %%eax\n", memref (var));
   else
     {
       if (var->sec_no == SEC_DATA)
@@ -3232,16 +3177,10 @@ load_location (struct sym *var, char *cpureg)
 	  fprintf (o_src, "\taddl\t$%d, %%%s\n", locoff, cpureg);
 	}
     }
-//      else if (!var->litflag) {
   else if (var->sec_no == SEC_STACK)
-    {
-      fprintf (o_src, "\tleal\t%s, %%%s\n", memref (var), cpureg);
-    }
+    fprintf (o_src, "\tleal\t%s, %%%s\n", memref (var), cpureg);
   else
-    {
-      fprintf (o_src, "\tmovl\t%s, %%%s\n", memref (var), cpureg);
-
-    }
+    fprintf (o_src, "\tmovl\t%s, %%%s\n", memref (var), cpureg);
 }
 
 void
@@ -3759,30 +3698,6 @@ init_field_val (struct sym *sy)
 }
 
 void
-def_field_storage (struct sym *sy, int fld_len)
-{
-  /*struct lit *val=(struct lit *)sy->value;
-     int vlen;
-     if (val == NULL || 
-     val->type != 'X' || sy->type != 'X' || val->nick != NULL) { */
-  fprintf (o_src, "\t.space\t%d\n", fld_len);
-  /*}
-     else {
-     vlen = strlen(val->name);
-     if (vlen < fld_len) {
-     emit_lit( val->name, vlen );
-     fprintf(o_src,"\n");
-     emit_lit_fill( ' ',  fld_len - vlen );
-     fprintf(o_src,"\n");
-     }
-     else {
-     emit_lit( val->name, fld_len );
-     fprintf(o_src,"\n");
-     }
-     } */
-}
-
-void
 gen_movecorr (struct sym *sy1, struct sym *sy2)
 {
   struct sym *t1, *t2;
@@ -3793,35 +3708,18 @@ gen_movecorr (struct sym *sy1, struct sym *sy2)
 #ifdef COB_DEBUG
   fprintf (o_src, "# MOVE CORR %s --> %s\n", sy1->name, sy2->name);
 #endif
-  t1 = sy1->son;
-  /* repeat for all sons of sy1 */
-  while (t1 != NULL)
-    {
-      if (!t1->redefines && t1->times == 1)
-	{
-	  t2 = sy2->son;
-	  /* repeat for all sons of sy2 */
-	  while (t2 != NULL)
+
+  for (t1 = sy1->son; t1 != NULL; t1 = t1->brother)
+    if (!t1->redefines && t1->times == 1)
+      for (t2 = sy2->son; t2 != NULL; t2 = t2->brother)
+	if (!t2->redefines && t2->times == 1)
+	  if (strcmp (t1->name, t2->name) == 0)
 	    {
-	      if (!t2->redefines && t2->times == 1)
-		{
-		  if (strcmp (t1->name, t2->name) == 0)
-		    {
-		      if ((t1->type != 'G') || (t2->type != 'G'))
-			{
-			  gen_move (t1, t2);
-			}
-		      else
-			{
-			  gen_movecorr (t1, t2);
-			}
-		    }
-		}
-	      t2 = t2->brother;
+	      if ((t1->type != 'G') || (t2->type != 'G'))
+		gen_move (t1, t2);
+	      else
+		gen_movecorr (t1, t2);
 	    }
-	}
-      t1 = t1->brother;
-    }
 }
 
 void
@@ -3835,35 +3733,17 @@ gen_addcorr (struct sym *sy1, struct sym *sy2, int rnd)
 #ifdef COB_DEBUG
   fprintf (o_src, "# ADD CORR %s --> %s\n", sy1->name, sy2->name);
 #endif
-  t1 = sy1->son;
-  /* repeat for all sons of sy1 */
-  while (t1 != NULL)
-    {
-      if (!t1->redefines && t1->times == 1)
-	{
-	  t2 = sy2->son;
-	  /* repeat for all sons of sy2 */
-	  while (t2 != NULL)
+  for (t1 = sy1->son; t1 != NULL; t1 = t1->brother)
+    if (!t1->redefines && t1->times == 1)
+      for (t2 = sy2->son; t2 != NULL; t2 = t2->brother)
+	if (!t2->redefines && t2->times == 1)
+	  if (strcmp (t1->name, t2->name) == 0)
 	    {
-	      if (!t2->redefines && t2->times == 1)
-		{
-		  if (strcmp (t1->name, t2->name) == 0)
-		    {
-		      if ((t1->type != 'G') && (t2->type != 'G'))
-			{
-			  gen_add (t1, t2, rnd);
-			}
-		      else
-			{
-			  gen_addcorr (t1, t2, rnd);
-			}
-		    }
-		}
-	      t2 = t2->brother;
+	      if ((t1->type != 'G') && (t2->type != 'G'))
+		gen_add (t1, t2, rnd);
+	      else
+		gen_addcorr (t1, t2, rnd);
 	    }
-	}
-      t1 = t1->brother;
-    }
 }
 
 void
@@ -3877,35 +3757,18 @@ gen_subtractcorr (struct sym *sy1, struct sym *sy2, int rnd)
 #ifdef COB_DEBUG
   fprintf (o_src, "# ADD CORR %s --> %s\n", sy1->name, sy2->name);
 #endif
-  t1 = sy1->son;
-  /* repeat for all sons of sy1 */
-  while (t1 != NULL)
-    {
-      if (!t1->redefines && t1->times == 1)
-	{
-	  t2 = sy2->son;
-	  /* repeat for all sons of sy2 */
-	  while (t2 != NULL)
+  
+  for (t1 = sy1->son; t1 != NULL; t1 = t1->brother)
+    if (!t1->redefines && t1->times == 1)
+      for (t2 = sy2->son; t2 != NULL; t2 = t2->brother)
+	if (!t2->redefines && t2->times == 1)
+	  if (strcmp (t1->name, t2->name) == 0)
 	    {
-	      if (!t2->redefines && t2->times == 1)
-		{
-		  if (strcmp (t1->name, t2->name) == 0)
-		    {
-		      if ((t1->type != 'G') && (t2->type != 'G'))
-			{
-			  gen_subtract (t1, t2, rnd);
-			}
-		      else
-			{
-			  gen_subtractcorr (t1, t2, rnd);
-			}
-		    }
-		}
-	      t2 = t2->brother;
+	      if ((t1->type != 'G') && (t2->type != 'G'))
+		gen_subtract (t1, t2, rnd);
+	      else
+		gen_subtractcorr (t1, t2, rnd);
 	    }
-	}
-      t1 = t1->brother;
-    }
 }
 
 void
@@ -5875,7 +5738,7 @@ gen_compare (struct sym *s1, int value, struct sym *s2)
 {
   /* if any of sy1 or sy2 is an expression, we must 
      compare full expressions */
-  if ((s1->litflag == 5) || (s2->litflag == 5))
+  if (EXPR_P (s1) || EXPR_P (s2))
     {
       push_expr (s2);
       push_expr (s1);
@@ -5932,27 +5795,10 @@ assign_expr (struct sym *sy, int rnd)
 int
 push_expr (struct sym *sy)
 {
-  int retcode;
-#ifdef COB_DEBUG
-  fprintf (o_src, "##### push_expr begin\n");
-#endif
-  retcode = push_subexpr (sy);
-#ifdef COB_DEBUG
-  fprintf (o_src, "##### push_expr end\n");
-#endif
-  return retcode;
-}
-
-int
-push_subexpr (struct sym *sy)
-{
-  if (sy == NULL)
-    return 0;
-
   if (EXPR_P (sy))
     {
-      push_subexpr ((struct sym *) EXPR_LEFT (sy));
-      push_subexpr ((struct sym *) EXPR_RIGHT (sy));
+      push_expr ((struct sym *) EXPR_LEFT (sy));
+      push_expr ((struct sym *) EXPR_RIGHT (sy));
       switch (EXPR_OP (sy))
 	{
 	case '+': add_expr (); break;
@@ -5973,7 +5819,7 @@ push_subexpr (struct sym *sy)
     return 0;
 
 #ifdef COB_DEBUG
-  fprintf (o_src, "# push_subexpr: %s\n", sy->name);
+  fprintf (o_src, "# push_expr: %s\n", sy->name);
 #endif
   fprintf (o_src, "\tsubl\t$8, %%esp\n");
   fprintf (o_src, "\tleal\t0(%%esp),%%eax\n");
@@ -5983,49 +5829,43 @@ push_subexpr (struct sym *sy)
   return 1;
 }
 
-void
-add_expr (void)
+static void
+call_expr (char *func)
 {
   fprintf (o_src, "\tleal\t8(%%esp),%%eax\n");
   push_eax ();
-  asm_call ("add_decimal");
+  asm_call (func);
   fprintf (o_src, "\taddl\t$8, %%esp\n");
+}
+
+void
+add_expr (void)
+{
+  call_expr ("add_decimal");
 }
 
 void
 subtract_expr (void)
 {
-  fprintf (o_src, "\tleal\t8(%%esp),%%eax\n");
-  push_eax ();
-  asm_call ("subtract_decimal");
-  fprintf (o_src, "\taddl\t$8, %%esp\n");
+  call_expr ("subtract_decimal");
 }
 
 void
 multiply_expr (void)
 {
-  fprintf (o_src, "\tleal\t8(%%esp),%%eax\n");
-  push_eax ();
-  asm_call ("multiply_decimal");
-  fprintf (o_src, "\taddl\t$8, %%esp\n");
+  call_expr ("multiply_decimal");
 }
 
 void
 divide_expr (void)
 {
-  fprintf (o_src, "\tleal\t8(%%esp),%%eax\n");
-  push_eax ();
-  asm_call ("divide_decimal");
-  fprintf (o_src, "\taddl\t$8, %%esp\n");
+  call_expr ("divide_decimal");
 }
 
 void
 pow_expr (void)
 {
-  fprintf (o_src, "\tleal\t8(%%esp),%%eax\n");
-  push_eax ();
-  asm_call ("pow_decimal");
-  fprintf (o_src, "\taddl\t$8, %%esp\n");
+  call_expr ("pow_decimal");
 }
 
 static void
