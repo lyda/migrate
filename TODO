@@ -156,6 +156,10 @@ Currently, all file I/O statements (OPEN, CLOSE, READ, WRITE, etc.)
 produces implicit PERFORM statements in order to run USE EXCEPTION.
 This produces lots of redundant code and should be improved.
 
+** Reimplement CALL statement
+
+** Build RETURN-CODE as a binary item, not in index
+
 ** Using fcntl instead of flock for file locking
 
 ** Move reserved word table into the config file
