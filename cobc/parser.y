@@ -2837,7 +2837,7 @@ without_all_literal:
 ;
 all_literal:
   ALL literal			{ LITERAL ($2)->all=1; $$=$2; }
-| ALL special_literal		{ $$=$2; }
+| ALL special_literal		{ $$ = $2; }
 ;
 special_literal:
   SPACES			{ $$ = spe_lit_SP; }
@@ -2848,7 +2848,7 @@ special_literal:
 ;
 literal:
   nliteral			{ $$ = $1; }
-| CLITERAL			{ $$ = save_literal($1,'X'); }
+| CLITERAL			{ $$ = save_literal ($1, 'X'); }
 ;
 nliteral:
   INTEGER_TOK			{ $$ = save_literal ($1, '9'); }
@@ -2859,13 +2859,13 @@ opt_def_name:
 | def_name			{ $$ = $1; }
 ;
 def_name:
-  FILLER    { $<tree>$=make_filler(); }
+  FILLER			{ $$ = make_filler(); }
 | SYMBOL_TOK
   {
     if ($1->defined)
       yyerror("variable redefined, %s", COB_FIELD_NAME ($1));
-    $1->defined=1;
-    $$=$1;
+    $1->defined = 1;
+    $$ = $1;
   }
 ;
 variable_indexed:
@@ -2873,7 +2873,7 @@ variable_indexed:
   {
     if ($1->times == 1)
        yyerror("\"%s\" is not an indexed variable ", COB_FIELD_NAME ($1));
-    $$=$1;
+    $$ = $1;
   }
 ;
 filename:
@@ -2897,7 +2897,7 @@ variable:
   subscripted_variable
 | qualified_var
   {
-    $$=$1;
+    $$ = $1;
     if (need_subscripts) {
       yyerror("variable `%s' must be subscripted or indexed",
 	      COB_FIELD_NAME ($1));
@@ -2932,12 +2932,12 @@ subscript:
 | subscript '-' gname		{ $$ = make_expr ($1, '-', $3); }
 ;
 qualified_var:
-  unqualified_var         { $$=$1; }
-| qualified_var in_of unqualified_var { $$=lookup_variable($1,$3); }
+  unqualified_var		{ $$ = $1; }
+| qualified_var in_of unqualified_var { $$ = lookup_variable($1,$3); }
 ;
 unqualified_var:
-  VARIABLE        { $$=$1; }
-| SUBSCVAR      { need_subscripts=1; $$=$1; }
+  VARIABLE			{ $$ = $1; }
+| SUBSCVAR			{ $$ = $1; need_subscripts = 1; }
 ;
 integer:
   INTEGER_TOK
