@@ -51,8 +51,8 @@ make
 %{_includedir}
 %{_datadir}/aclocal
 %{_datadir}/locale
-%{_datadir}/open-cobol
 %{_infodir}/open-cobol.info*
+%{_sysconfdir}/open-cobol
 
 %post
 /sbin/ldconfig
