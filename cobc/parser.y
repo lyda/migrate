@@ -162,6 +162,7 @@ static void ambiguous_error (struct cobc_word *p);
 %token GIVING,INSPECT,TALLYING,REPLACING,ON,OFF,POINTER,OVERFLOW,NATIVE
 %token DELIMITER,COUNT,LEFT,TRAILING,CHARACTER,FILLER,OCCURS,TIMES,CLASS
 %token ADD,SUBTRACT,MULTIPLY,DIVIDE,ROUNDED,REMAINDER,ERROR,SIZE,INDEX
+%token RELL,UNIT,REMOVAL,REWIND,LOCK
 %token FD,REDEFINES,TOK_FILE,USAGE,BLANK,SIGN,VALUE,MOVE
 %token PROGRAM_ID,DIVISION,CONFIGURATION,SPECIAL_NAMES,MEMORY,ALTER
 %token FILE_CONTROL,I_O_CONTROL,FROM,SAME,AREA,EXCEPTION,UNTIL
@@ -191,7 +192,7 @@ static void ambiguous_error (struct cobc_word *p);
 %type <inum> flag_all,flag_duplicates,flag_optional,flag_global
 %type <inum> flag_not,flag_next,flag_rounded,flag_separate
 %type <inum> sign,integer,level_number,operator,display_upon,usage
-%type <inum> before_or_after,perform_test,replacing_option
+%type <inum> before_or_after,perform_test,replacing_option,close_option
 %type <inum> select_organization,select_access_mode,open_mode
 %type <inum> ascending_or_descending
 %type <list> occurs_key_list,occurs_index_list,value_item_list
@@ -1531,12 +1532,26 @@ cancel_statement:
  */
 
 close_statement:
-  CLOSE file_name_list
+  CLOSE close_file_list
+;
+close_file_list:
+  close_file
+| close_file_list close_file
+;
+close_file:
+  file_name close_option
   {
-    struct cobc_list *l;
-    for (l = $2; l; l = l->next)
-      push_call_1 (COB_CLOSE, l->item);
+    push_call_2 (COB_CLOSE, $1, make_integer ($2));
   }
+;
+close_option:
+  /* nothing */			{ $$ = COB_CLOSE_NORMAL; }
+| RELL				{ $$ = COB_CLOSE_RELL; }
+| RELL _for REMOVAL		{ $$ = COB_CLOSE_RELL_REMOVAL; }
+| UNIT				{ $$ = COB_CLOSE_UNIT; }
+| UNIT _for REMOVAL		{ $$ = COB_CLOSE_UNIT_REMOVAL; }
+| _with NO REWIND		{ $$ = COB_CLOSE_NO_REWIND; }
+| _with LOCK			{ $$ = COB_CLOSE_LOCK; }
 ;
 
 

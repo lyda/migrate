@@ -140,11 +140,22 @@ sequential_open (struct cob_file_desc *f, char *filename, int mode)
 }
 
 static void
-sequential_close (struct cob_file_desc *f)
+sequential_close (struct cob_file_desc *f, int opt)
 {
-  close (f->file.fd);
-  f->file.fd = 0;
-  RETURN_STATUS (00);
+  switch (opt)
+    {
+    case COB_CLOSE_NORMAL:
+      close (f->file.fd);
+      f->file.fd = 0;
+      RETURN_STATUS (00);
+    case COB_CLOSE_RELL:
+    case COB_CLOSE_RELL_REMOVAL:
+    case COB_CLOSE_UNIT:
+    case COB_CLOSE_UNIT_REMOVAL:
+    case COB_CLOSE_NO_REWIND:
+    case COB_CLOSE_LOCK:
+      RETURN_STATUS (07);
+    }
 }
 
 static void
@@ -249,7 +260,7 @@ lineseq_open (struct cob_file_desc *f, char *filename, int mode)
 }
 
 static void
-lineseq_close (struct cob_file_desc *f)
+lineseq_close (struct cob_file_desc *f, int opt)
 {
   fclose (f->file.fp);
   f->file.fp = NULL;
@@ -342,10 +353,10 @@ relative_open (struct cob_file_desc *f, char *filename, int mode)
 }
 
 static void
-relative_close (struct cob_file_desc *f)
+relative_close (struct cob_file_desc *f, int opt)
 {
   cob_set_int (f->relative_key, 0);
-  sequential_close (f);
+  sequential_close (f, opt);
 }
 
 static void
@@ -531,7 +542,7 @@ indexed_open (struct cob_file_desc *f, char *filename, int mode)
 }
 
 static void
-indexed_close (struct cob_file_desc *f)
+indexed_close (struct cob_file_desc *f, int opt)
 {
   int i;
 
@@ -837,7 +848,7 @@ cob_open (struct cob_file_desc *f, struct cob_field name, int mode)
 }
 
 void
-cob_close (struct cob_file_desc *f)
+cob_close (struct cob_file_desc *f, int opt)
 {
   if (f->f.nonexistent)
     RETURN_STATUS (00);
@@ -845,7 +856,7 @@ cob_close (struct cob_file_desc *f)
   if (!FILE_OPENED (f))
     RETURN_STATUS (42);
 
-  fileio_funcs[f->organization]->close (f);
+  fileio_funcs[f->organization]->close (f, opt);
 }
 
 void

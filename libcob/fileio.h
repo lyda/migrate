@@ -45,6 +45,14 @@
 #define COB_OPEN_I_O 		3
 #define COB_OPEN_EXTEND		4
 
+#define COB_CLOSE_NORMAL	0
+#define COB_CLOSE_RELL		1
+#define COB_CLOSE_RELL_REMOVAL	2
+#define COB_CLOSE_UNIT		3
+#define COB_CLOSE_UNIT_REMOVAL	4
+#define COB_CLOSE_NO_REWIND	5
+#define COB_CLOSE_LOCK		6
+
 struct cob_file_desc {
   int organization;		/* ORGANIZATION */
   char access_mode;		/* ACCESS MODE */
@@ -79,7 +87,7 @@ struct cob_file_desc {
 
 struct cob_fileio_funcs {
   int (*open) (struct cob_file_desc *f, char *filename, int mode);
-  void (*close) (struct cob_file_desc *f);
+  void (*close) (struct cob_file_desc *f, int opt);
   void (*read) (struct cob_file_desc *f);
   void (*read_next) (struct cob_file_desc *f);
   void (*write) (struct cob_file_desc *f);
@@ -92,7 +100,7 @@ extern char cob_dummy_status[];
 
 extern void cob_init_fileio (void);
 extern void cob_open (struct cob_file_desc *f, struct cob_field name, int mode);
-extern void cob_close (struct cob_file_desc *f);
+extern void cob_close (struct cob_file_desc *f, int opt);
 extern void cob_read (struct cob_file_desc *f);
 extern void cob_read_next (struct cob_file_desc *f);
 extern void cob_write (struct cob_file_desc *f);
