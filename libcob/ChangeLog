@@ -1,5 +1,11 @@
 2002-07-30  Keisuke Nishida  <knishida@netlab.jp>
 
+	* fileio.h (cob_fileio_funcs): `write' takes only one argument.
+	(sequential_write, lineseq_write, relative_write, indexed_write):Ditto.
+	(cob_write): Updated.
+	
+2002-07-30  Keisuke Nishida  <knishida@netlab.jp>
+
 	* screenio.c: Check configuration.
 
 2002-07-24  Keisuke Nishida  <knishida@netlab.jp>

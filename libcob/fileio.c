@@ -127,7 +127,7 @@ sequential_read (struct cob_file *f)
 }
 
 static int
-sequential_write (struct cob_file *f, struct cob_field rec)
+sequential_write (struct cob_file *f)
 {
   if (f->record_min != f->record_max)
     write (f->file.fd, &f->record_size, sizeof (f->record_size));
@@ -143,7 +143,7 @@ sequential_rewrite (struct cob_file *f, struct cob_field rec)
     return COB_FILE_RECORD_OVERFLOW;
 
   if (COB_FIELD_IS_VALID (f->record_depending))
-    if (rec.size != cob_to_int (f->record_depending))
+    if (f->record_size != cob_to_int (f->record_depending))
       return COB_FILE_RECORD_OVERFLOW;
 
   lseek (f->file.fd, - f->record_size, SEEK_CUR);
@@ -235,7 +235,7 @@ lineseq_read (struct cob_file *f)
 }
 
 static int
-lineseq_write (struct cob_file *f, struct cob_field rec)
+lineseq_write (struct cob_file *f)
 {
   int i, size;
 
@@ -376,7 +376,7 @@ relative_read_next (struct cob_file *f)
 }
 
 static int
-relative_write (struct cob_file *f, struct cob_field rec)
+relative_write (struct cob_file *f)
 {
   size_t size;
 
@@ -679,7 +679,7 @@ indexed_read_next (struct cob_file *f)
 }
 
 static int
-indexed_write (struct cob_file *f, struct cob_field rec)
+indexed_write (struct cob_file *f)
 {
   int i;
   DBT key, data;
@@ -1028,7 +1028,7 @@ cob_write (struct cob_file *f, struct cob_field rec)
   if (f->record_size < f->record_min || f->record_max < f->record_size)
     RETURN_STATUS (COB_FILE_RECORD_OVERFLOW);
 
-  ret = fileio_funcs[f->organization]->write (f, rec);
+  ret = fileio_funcs[f->organization]->write (f);
 
   RETURN_STATUS (ret);
 }

@@ -115,7 +115,7 @@ struct cob_fileio_funcs {
   int (*start) (struct cob_file *f, int cond, struct cob_field key);
   int (*read) (struct cob_file *f, struct cob_field key);
   int (*read_next) (struct cob_file *f);
-  int (*write) (struct cob_file *f, struct cob_field rec);
+  int (*write) (struct cob_file *f);
   int (*rewrite) (struct cob_file *f, struct cob_field rec);
   int (*delete) (struct cob_file *f);
 };
