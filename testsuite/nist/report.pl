@@ -49,7 +49,7 @@ foreach $in (glob("*.CBL")) {
   }
   $num_progs++;
   printf LOG "%-12s", $in;
-  if ($skip{$exe}) {
+  if ($exe =~ /^..[34]0/) {
     $test_skipped++;
     print LOG "  ----- test skipped -----\n";
   } else {
