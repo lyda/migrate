@@ -53,4 +53,4 @@ binary-size: 1-2-4-8
 binary-byteorder: big-endian
 
 # Value: `yes', `no'
-binary-full-print: no
+binary-truncate: yes
