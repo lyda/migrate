@@ -341,10 +341,6 @@ struct init_str
   unsigned location;		/* location of occurence of symbol */
   struct lit *value;		/* original value of symbol */
 };
-struct init_str_tab
-{
-  struct init_str ent[1];
-};
 
 /* OCCURS ... DEPENDING ON info */
 struct occurs
@@ -701,7 +697,6 @@ extern unsigned long int gen_call (struct lit *v, int stack_size,
 extern int begin_on_except (void);
 extern void check_call_except (int excep, int notexcep, int exceplabel,
 			       int notexceplabel, int endlabel);
-extern short get_std_val (struct sym *sy);
 extern void gen_initialize (struct sym *sy_start);
 extern void mark_actives (int first, int last);
 extern void dump_symbols (void);

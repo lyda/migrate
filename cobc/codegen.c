@@ -78,7 +78,7 @@ struct lit *spe_lit_HV = NULL;
 struct lit *spe_lit_QU = NULL;
 static char init_ctype;		// hold homogenous type
 static short init_val;		// hold homogenous value
-static struct init_str_tab *istrp;
+static struct init_str *istrp;
 static int initp;
 static unsigned init_location;
 static unsigned curr_01_location;	// hold current root father when set_field_location
@@ -701,16 +701,14 @@ static int
 get_nb_fields (struct sym *sy, int times, int sw_val)
 {
   struct sym *tmp;
-  int nb_fields = 0, tmpnf;
+  int nb_fields = 0;
   char ftype = sy->type;
-  short val;
 
-  if (sy->type == 'G')
+  if (ftype == 'G')
     {
       for (tmp = sy->son; tmp != NULL; tmp = tmp->brother)
 	{
-	  tmpnf = tmp->times * get_nb_fields (tmp, times, sw_val);
-
+	  int tmpnf = tmp->times * get_nb_fields (tmp, times, sw_val);
 	  if (tmp->redefines == NULL)
 	    nb_fields += tmpnf;
 	}
@@ -721,29 +719,30 @@ get_nb_fields (struct sym *sy, int times, int sw_val)
       // non homogenous
       nb_fields = 1;
       if (ftype == 'C')
-	ftype = '&';
-      if (ftype == '9' && sy->picstr[0] == 'S')
-	ftype = '&';
-      if (init_ctype == ' ')
-	init_ctype = ftype;
-      if (ftype != init_ctype && init_ctype != '&')
 	init_ctype = '&';
-      if (sw_val == 0)
-	return nb_fields * times;
-      val = get_std_val (sy);
-      if (init_val == -1)
-	init_val = val;
-      if (ftype == init_ctype && init_ctype != '&' && val != init_val)
+      else if (ftype == '9' && sy->picstr[0] == 'S')
 	init_ctype = '&';
+      else
+	{
+	  if (init_ctype == ' ')
+	    init_ctype = ftype;
+	  if (ftype != init_ctype)
+	    init_ctype = '&';
+	}
+      if (sw_val == 1)
+	{
+	  short val = ((sy->value == NULL) ? 0 :
+		       (sy->value == spe_lit_ZE) ? 2 :
+		       (sy->value == spe_lit_SP) ? 3 :
+		       (sy->value == spe_lit_LV) ? 4 :
+		       (sy->value == spe_lit_HV) ? 5 : 1);
+	  if (init_val == -1)
+	    init_val = val;
+	  if (ftype == init_ctype && val != init_val)
+	    init_ctype = '&';
+	}
     }
   return nb_fields * times;
-}
-
-static void
-init_field_val (struct sym *sy)
-{
-  if (sy->value)
-    gen_move ((struct sym *) sy->value, sy);
 }
 
 static int
@@ -784,12 +783,12 @@ build_init_str (struct sym *sy, int times)
 			   sy->name);
 		  break;
 		}
-	      istrp->ent[initp].sy = istrp->ent[j].sy;
-	      istrp->ent[initp].type = istrp->ent[j].type;
-	      istrp->ent[initp].value = istrp->ent[j].value;
-	      istrp->ent[initp].len = istrp->ent[j].len;
-	      istrp->ent[initp].location = init_location;
-	      init_location += istrp->ent[initp].len;
+	      istrp[initp].sy = istrp[j].sy;
+	      istrp[initp].type = istrp[j].type;
+	      istrp[initp].value = istrp[j].value;
+	      istrp[initp].len = istrp[j].len;
+	      istrp[initp].location = init_location;
+	      init_location += istrp[initp].len;
 	      initp++;
 	    }
 	}
@@ -806,12 +805,12 @@ build_init_str (struct sym *sy, int times)
 	    }
 	  else
 	    {
-	      istrp->ent[initp].sy = sy;
-	      istrp->ent[initp].type = sy->type;
-	      istrp->ent[initp].value = sy->value;
-	      istrp->ent[initp].len = symlen (sy);
-	      istrp->ent[initp].location = init_location;
-	      init_location += istrp->ent[initp].len;
+	      istrp[initp].sy = sy;
+	      istrp[initp].type = sy->type;
+	      istrp[initp].value = sy->value;
+	      istrp[initp].len = symlen (sy);
+	      istrp[initp].location = init_location;
+	      init_location += istrp[initp].len;
 	      initp++;
 	    }
 	  stidx = initp - 1;
@@ -820,12 +819,12 @@ build_init_str (struct sym *sy, int times)
 	    {
 	      for (j = stidx; j < endidx; j++)
 		{
-		  istrp->ent[initp].sy = istrp->ent[j].sy;
-		  istrp->ent[initp].type = istrp->ent[j].type;
-		  istrp->ent[initp].value = istrp->ent[j].value;
-		  istrp->ent[initp].len = istrp->ent[j].len;
-		  istrp->ent[initp].location = init_location;
-		  init_location += istrp->ent[initp].len;
+		  istrp[initp].sy = istrp[j].sy;
+		  istrp[initp].type = istrp[j].type;
+		  istrp[initp].value = istrp[j].value;
+		  istrp[initp].len = istrp[j].len;
+		  istrp[initp].location = init_location;
+		  init_location += istrp[initp].len;
 		  initp++;
 		}
 	    }
@@ -857,7 +856,14 @@ gen_init_str (struct sym *sy, char type)
 }
 
 static void
-do_init_val ()
+init_field_val (struct sym *sy)
+{
+  if (sy->value)
+    gen_move ((struct sym *) sy->value, sy);
+}
+
+static void
+initialize_values (void)
 {
   struct sym *sy, *sy1, *v;
   int i, j;
@@ -890,7 +896,7 @@ do_init_val ()
 	    init_ctype = ' ';
 	    init_val = -1;
 	    nb_fields = get_nb_fields (v, v->times, 1);
-	    if (init_ctype != '&' && init_ctype != ' ' && init_val != 1)
+	    if (init_ctype != '&' && init_val != 1)
 	      {
 		gen_init_str (v, init_ctype);
 	      }
@@ -902,12 +908,12 @@ do_init_val ()
 		istrp = malloc (nb_fields * sizeof (struct init_str));
 		build_init_str (v, 1);
 		for (j = 0; j < nb_fields; j++)
-		  if (istrp->ent[j].value != NULL)
+		  if (istrp[j].value != NULL)
 		    {
-		      saved_loc = istrp->ent[j].sy->location;
-		      istrp->ent[j].sy->location = istrp->ent[j].location;
-		      init_field_val (istrp->ent[j].sy);
-		      istrp->ent[j].sy->location = saved_loc;
+		      saved_loc = istrp[j].sy->location;
+		      istrp[j].sy->location = istrp[j].location;
+		      init_field_val (istrp[j].sy);
+		      istrp[j].sy->location = saved_loc;
 		    }
 		free (istrp);
 	      }
@@ -980,7 +986,7 @@ proc_header (int using)
   fprintf (o_src, "\tmovl\t$1, 0(%%eax)\n");
 
   /********** initialize all VALUES of fields **********/
-  do_init_val ();
+  initialize_values ();
 
   /********** dump stabs for local variables **********/
   if (cob_stabs_flag)
@@ -1899,10 +1905,10 @@ gen_initialize (struct sym *sy)
 
       for (i = 0; i < nb_fields; i++)
 	{
-	  unsigned temp_loc = istrp->ent[i].sy->location;
-	  istrp->ent[i].sy->location = istrp->ent[i].location;
-	  gen_init_str (istrp->ent[i].sy, istrp->ent[i].type);
-	  istrp->ent[i].sy->location = temp_loc;
+	  unsigned temp_loc = istrp[i].sy->location;
+	  istrp[i].sy->location = istrp[i].location;
+	  gen_init_str (istrp[i].sy, istrp[i].type);
+	  istrp[i].sy->location = temp_loc;
 	}
       free (istrp);
     }
@@ -5828,12 +5834,9 @@ dump_fdesc ()
       f = (struct sym *) list->var;
       r = f->recordsym;
 #ifdef COB_DEBUG
-//      fprintf(o_src,"# FILE DESCRIPTOR, File: %s, Record: %s, Data Loc: %d(%x)\n",
-//                      f->name,r->name,global_offset);
       fprintf (o_src,
-	       "# FILE DESCRIPTOR, File: %s, Record: %s, Data Loc: %d(hex: %x)\n",
-	       f->name, r->name, f->location, f->location);
-      fprintf (o_src, "# FILE DESCRIPTOR2, opt: %x\n", f->flags.optional);
+	       "# FILE DESCRIPTOR, File: %s, Record: %s, Data Loc: %d(hex: %x), opt: %x\n",
+	       f->name, r->name, f->location, f->location, f->flags.optional);
 #endif
       if (f->filenamevar == NULL)
 	{
@@ -5854,7 +5857,7 @@ dump_fdesc ()
       fprintf (o_src, "\t.byte\t%u\n", RTL_FILE_VERSION);
       fprintf (o_src, "\t.long\tc_base%d+%u\n",
 	       pgm_segment, f->filenamevar->descriptor);
-      fprintf (o_src, "\t.word\t%u\n", r->len);
+      fprintf (o_src, "\t.long\t%d\n", r->len);
       fprintf (o_src, "\t.byte\t%d,%d\n", f->organization, f->access_mode);
       fprintf (o_src, "\t.long\t0\n");	/* open_mode */
       fprintf (o_src, "\t.long\t0\n");	/* struct DBT (libdb) */
@@ -6440,17 +6443,6 @@ check_call_except (int excep, int notexcep, int exceplabel,
 	fprintf (o_src, "\tjmp\t.L%d\n", notexcep);
       fprintf (o_src, ".L%d:\t# endlabel\n", endlabel);
     }
-}
-
-short
-get_std_val (struct sym *sy)
-{
-  if (sy->value == NULL) return 0;
-  else if (sy->value == spe_lit_ZE) return 2;
-  else if (sy->value == spe_lit_SP) return 3;
-  else if (sy->value == spe_lit_LV) return 4;
-  else if (sy->value == spe_lit_HV) return 5;
-  else return 1;
 }
 
 
