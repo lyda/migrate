@@ -756,7 +756,7 @@ output_condition (cobc_tree x)
 	case COBC_COND_GT: output (" >  0"); break;
 	case COBC_COND_GE: output (" >= 0"); break;
 	case COBC_COND_NE: output (" != 0"); break;
-	default:
+	default: break;
 	}
       output (")");
       break;
