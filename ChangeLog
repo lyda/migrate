@@ -1,6 +1,7 @@
 2002-09-30  Keisuke Nishida  <knishida@netlab.jp>
 
 	* configure.ac: Updated for autoconf-2.54 and automake-1.7.
+	Do not generate libcob/cobconfig.h.
 
 2002-09-24  Keisuke Nishida  <knishida@netlab.jp>
 

@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.9.6\n"
-"POT-Creation-Date: 2002-09-24 10:05+0900\n"
+"POT-Creation-Date: 2002-09-30 16:50+0900\n"
 "PO-Revision-Date: 2002-09-24 10:48+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -379,20 +379,20 @@ msgstr "`%s' は未定義です"
 msgid "`%s' ambiguous; need qualification"
 msgstr "`%s' は多重定義されています。一意に修飾して下さい"
 
-#: cobc/scanner.l:198
+#: cobc/scanner.l:197
 msgid "too large literal"
 msgstr "定数が大き過ぎます"
 
-#: cobc/scanner.l:240
+#: cobc/scanner.l:239
 #, c-format
 msgid "invalid X literal: %s"
 msgstr "不当な X 定数です: %s"
 
-#: cobc/scanner.l:263
+#: cobc/scanner.l:262
 msgid "invalid numeric literal"
 msgstr "不当な数字定数です"
 
-#: cobc/scanner.l:509
+#: cobc/scanner.l:508
 msgid "invalid picture string"
 msgstr "不当な PICTURE 定義です"
 
@@ -443,15 +443,15 @@ msgstr "warning: `%s' 以降の引数は無視されます\n"
 msgid "-MT must be given to specify target file\n"
 msgstr "ターゲット名を -MT で指定して下さい\n"
 
-#: cobpp/scanner.l:352
+#: cobpp/scanner.l:337
 msgid "source line over column 72"
 msgstr "ソース行が 72 桁を越えています"
 
-#: cobpp/scanner.l:354
+#: cobpp/scanner.l:339
 msgid "specify source format explicitly"
 msgstr "ソースフォーマットを明示的に指定して下さい"
 
-#: cobpp/scanner.l:430
+#: cobpp/scanner.l:423
 msgid "source line too long"
 msgstr "一行の行数が長過ぎます"
 
@@ -474,63 +474,63 @@ msgstr "添字 '%s' の値が範囲を超えています `%d'"
 msgid "value of `%s' not numeric: `%s'"
 msgstr "`%s' の値が数字ではありません: `%s'"
 
-#: libcob/fileio.c:1171
+#: libcob/fileio.c:1245
 msgid "end of file"
 msgstr "ファイルの終わりです"
 
-#: libcob/fileio.c:1174
+#: libcob/fileio.c:1248
 msgid "key order not ascending"
 msgstr "キーが昇順ではありません"
 
-#: libcob/fileio.c:1177
+#: libcob/fileio.c:1251
 msgid "record key already exists"
 msgstr "レコードキーが既に存在します"
 
-#: libcob/fileio.c:1180
+#: libcob/fileio.c:1254
 msgid "record key not exists"
 msgstr "レコードキーが存在しません"
 
-#: libcob/fileio.c:1183
+#: libcob/fileio.c:1257
 msgid "permanent file error"
 msgstr "永続ファイルエラーです"
 
-#: libcob/fileio.c:1189
+#: libcob/fileio.c:1263
 msgid "permission denied"
 msgstr "利用許可がありません"
 
-#: libcob/fileio.c:1192
+#: libcob/fileio.c:1266
 msgid "file already open"
 msgstr "ファイルは既に開いています"
 
-#: libcob/fileio.c:1195
+#: libcob/fileio.c:1269
 msgid "file not open"
 msgstr "ファイルが開いていません"
 
-#: libcob/fileio.c:1198
+#: libcob/fileio.c:1272
 msgid "READ must be executed first"
 msgstr "READ を先に実行しなければなりません"
 
-#: libcob/fileio.c:1201
+#: libcob/fileio.c:1275
 msgid "record overflow"
 msgstr "レコードの領域を超えています"
 
-#: libcob/fileio.c:1204
+#: libcob/fileio.c:1278
 msgid "failed to read"
 msgstr "読み込みに失敗しました"
 
-#: libcob/fileio.c:1207
+#: libcob/fileio.c:1281
 msgid "READ and START not allowed"
 msgstr "READ、START は許可されません"
 
-#: libcob/fileio.c:1210
+#: libcob/fileio.c:1284
 msgid "WRITE not allowed"
 msgstr "WRITE は許可されません"
 
-#: libcob/fileio.c:1213
+#: libcob/fileio.c:1287
 msgid "DELETE and REWRITE not allowed"
 msgstr "DELETE、REWRITE は許可されません"
 
-#: libcob/fileio.c:1216
+#: libcob/fileio.c:1290
 msgid "unknown file error"
 msgstr "原因不明のファイルエラーです"
 

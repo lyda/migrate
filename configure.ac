@@ -24,7 +24,6 @@ AC_INIT([OpenCOBOL],[0.9.7.9],[knishida@coboler.com],[open-cobol])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_HEADERS([libcob/cobconfig.h])
 
 AM_INIT_AUTOMAKE([gnu no-texinfo.tex])
 AM_MAINTAINER_MODE

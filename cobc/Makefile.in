@@ -166,8 +166,7 @@ AM_YFLAGS = -d -v
 AM_LFLAGS = -d -s
 subdir = cobc
 mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
-CONFIG_HEADER = $(top_builddir)/config.h \
-	$(top_builddir)/libcob/cobconfig.h
+CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 bin_PROGRAMS = cobc$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
@@ -180,7 +179,7 @@ cobc_DEPENDENCIES = $(top_builddir)/lib/libsupport.a \
 	$(top_builddir)/libcob/libcob.la
 cobc_LDFLAGS =
 
-DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir) -I$(top_builddir)/libcob
+DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/cobc-cobc.Po \

@@ -3,5 +3,4 @@
 .deps
 .libs
 Makefile
-cobconfig.h
 stamp-h*

@@ -151,8 +151,7 @@ target_alias = @target_alias@
 SUBDIRS = cobol85
 subdir = testsuite
 mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
-CONFIG_HEADER = $(top_builddir)/config.h \
-	$(top_builddir)/libcob/cobconfig.h
+CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 DIST_SOURCES =
 

@@ -166,7 +166,7 @@ DISTCLEANFILES = $(BUILT_SOURCES)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
-CONFIG_HEADER = config.h $(top_builddir)/libcob/cobconfig.h
+CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES = cob.pc cob-config redhat/open-cobol.spec
 SCRIPTS = $(bin_SCRIPTS)
 

@@ -160,8 +160,7 @@ AM_YFLAGS = -d
 AM_LFLAGS = -s
 subdir = cobpp
 mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
-CONFIG_HEADER = $(top_builddir)/config.h \
-	$(top_builddir)/libcob/cobconfig.h
+CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 bin_PROGRAMS = cobpp$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
@@ -172,7 +171,7 @@ cobpp_OBJECTS = $(am_cobpp_OBJECTS)
 cobpp_DEPENDENCIES = $(top_builddir)/lib/libsupport.a
 cobpp_LDFLAGS =
 
-DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir) -I$(top_builddir)/libcob
+DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/cobpp-cobpp.Po \
