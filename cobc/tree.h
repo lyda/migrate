@@ -784,6 +784,8 @@ extern void ambiguous_error (cb_tree x);
 extern int validate_move (cb_tree src, cb_tree dst, int value_flag);
 
 extern int cb_get_int (cb_tree x);
+extern const char *cb_build_program_id (cb_tree name, cb_tree alt_name);
+extern void cb_define_switch_name (cb_tree name, cb_tree sname, cb_tree flag, cb_tree ref);
 extern cb_tree cb_build_section_name (cb_tree name);
 extern cb_tree cb_build_identifier (cb_tree x);
 extern cb_tree cb_build_using_list (cb_tree list);
@@ -797,6 +799,9 @@ extern cb_tree cb_build_divide (cb_tree dividend, cb_tree divisor, cb_tree quoti
 extern cb_tree cb_build_cond (cb_tree x);
 extern cb_tree cb_build_evaluate (cb_tree subject_list, cb_tree case_list);
 extern cb_tree cb_build_search_all (cb_tree table, cb_tree when);
+
+extern void cb_validate_program_data (struct cb_program *prog);
+extern void cb_validate_program_body (struct cb_program *prog);
 
 /* codegen.c */
 extern void codegen (struct cb_program *prog);

@@ -183,42 +183,9 @@ program_definition:
   identification_division
   program_id_paragraph
   environment_division
-  data_division
-  {
-    /* resolve all references so far */
-    cb_tree l = list_reverse (current_program->reference_list);
-    for (; l; l = CB_CHAIN (l))
-      cb_ref (CB_VALUE (l));
-
-    /* resolve the program collating sequence */
-    if (current_program->collating_sequence)
-      if (!CB_ALPHABET_NAME_P (cb_ref (current_program->collating_sequence)))
-	cb_error_x (current_program->collating_sequence,
-		    _("`%s' not alphabet name"),
-		    cb_name (current_program->collating_sequence));
-  }
+  data_division		{ cb_validate_program_data (current_program); }
   procedure_division
-  end_program
-  {
-    /* resolve all labels */
-    cb_tree l;
-    for (l = list_reverse (current_program->label_list); l; l = CB_CHAIN (l))
-      {
-	cb_tree x = CB_VALUE (l);
-	cb_tree v = cb_ref (x);
-	if (CB_LABEL_P (v))
-	  {
-	    CB_LABEL (v)->need_begin = 1;
-	    if (CB_REFERENCE (x)->length)
-	      CB_LABEL (v)->need_return = 1;
-	  }
-	else if (v != cb_error_node)
-	  cb_error_x (x, _("`%s' not procedure name"), cb_name (x));
-      }
-
-    current_program->file_list = list_reverse (current_program->file_list);
-    current_program->exec_list = list_reverse (current_program->exec_list);
-  }
+  end_program		{ cb_validate_program_body (current_program); }
 ;
 end_program:
 | END PROGRAM program_name '.'
@@ -241,22 +208,7 @@ program_id_paragraph:
   }
   program_name as_literal program_type '.'
   {
-    if ($5)
-      current_program->program_id = CB_LITERAL ($5)->data;
-    else
-      {
-	int converted = 0;
-	char *s, *name = strdup (CB_NAME ($4));
-	for (s = name; *s; s++)
-	  if (*s == '-')
-	    {
-	      converted = 1;
-	      *s = '_';
-	    }
-	if (converted)
-	  cb_warning_x ($4, _("PROGRAM-ID is converted to `%s'"), name);
-	current_program->program_id = name;
-      }
+    current_program->program_id = cb_build_program_id ($4, $5);
   }
 ;
 program_name:
@@ -375,30 +327,13 @@ mnemonic_name_clause:
   special_name_mnemonic_on_off
 ;
 special_name_mnemonic_define:
-| IS undefined_word
-  {
-    cb_define ($2, $0);
-  }
+| IS undefined_word		{ cb_define ($2, $0); }
 ;
 special_name_mnemonic_on_off:
 | special_name_mnemonic_on_off
   on_or_off _status _is undefined_word
   {
-    cb_tree x = $-1;
-    if (x != cb_error_node)
-      {
-	struct cb_system_name *s = CB_SYSTEM_NAME (x);
-	if (s->category == CB_SWITCH_NAME)
-	  {
-	    cb_tree value = cb_build_funcall_1 ("cob_get_switch",
-						cb_build_integer (s->token));
-	    if ($2 == cb_int0)
-	      value = cb_build_negation (value);
-	    cb_build_constant ($5, value);
-	  }
-	else
-	  cb_error_x ($-2, _("switch-name is expected `%s'"), CB_NAME ($-2));
-      }
+    cb_define_switch_name ($5, $-1, $2, $-2);
   }
 ;
 on_or_off:

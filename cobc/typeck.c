@@ -34,6 +34,49 @@ cb_get_int (cb_tree x)
   return cb_literal_to_int (CB_LITERAL (x));
 }
 
+const char *
+cb_build_program_id (cb_tree name, cb_tree alt_name)
+{
+  if (alt_name)
+    {
+      return CB_LITERAL (alt_name)->data;
+    }
+  else
+    {
+      int converted = 0;
+      char *s, *str = strdup (CB_NAME (name));
+      for (s = str; *s; s++)
+	if (*s == '-')
+	  {
+	    converted = 1;
+	    *s = '_';
+	  }
+      if (converted)
+	cb_warning_x (name, _("PROGRAM-ID is converted to `%s'"), str);
+      return str;
+    }
+}
+
+void
+cb_define_switch_name (cb_tree name, cb_tree sname, cb_tree flag, cb_tree ref)
+{
+  if (name == cb_error_node || sname == cb_error_node)
+    return;
+
+  if (CB_SYSTEM_NAME (sname)->category != CB_SWITCH_NAME)
+    {
+      cb_error_x (ref, _("switch-name is expected `%s'"), CB_NAME (ref));
+    }
+  else
+    {
+      cb_tree switch_id = cb_build_integer (CB_SYSTEM_NAME (sname)->token);
+      cb_tree value = cb_build_funcall_1 ("cob_get_switch", switch_id);
+      if (flag == cb_int0)
+	value = cb_build_negation (value);
+      cb_build_constant (name, value);
+    }
+}
+
 cb_tree
 cb_build_section_name (cb_tree name)
 {
@@ -999,4 +1042,48 @@ cb_build_search_all (cb_tree table, cb_tree cond)
       }
 
   return cb_build_cond (c1);
+}
+
+
+/* validate program */
+
+void
+cb_validate_program_data (struct cb_program *prog)
+{
+  /* resolve all references so far */
+  cb_tree l = list_reverse (prog->reference_list);
+  for (; l; l = CB_CHAIN (l))
+    cb_ref (CB_VALUE (l));
+
+  /* resolve the program collating sequence */
+  if (prog->collating_sequence)
+    {
+      cb_tree v = cb_ref (prog->collating_sequence);
+      if (v != cb_error_node && !CB_ALPHABET_NAME_P (v))
+	cb_error_x (prog->collating_sequence, _("`%s' not alphabet name"),
+		    cb_name (prog->collating_sequence));
+    }
+}
+
+void
+cb_validate_program_body (struct cb_program *prog)
+{
+  /* resolve all labels */
+  cb_tree l;
+  for (l = list_reverse (prog->label_list); l; l = CB_CHAIN (l))
+    {
+      cb_tree x = CB_VALUE (l);
+      cb_tree v = cb_ref (x);
+      if (CB_LABEL_P (v))
+	{
+	  CB_LABEL (v)->need_begin = 1;
+	  if (CB_REFERENCE (x)->length)
+	    CB_LABEL (v)->need_return = 1;
+	}
+      else if (v != cb_error_node)
+	cb_error_x (x, _("`%s' not procedure name"), cb_name (x));
+    }
+
+  prog->file_list = list_reverse (prog->file_list);
+  prog->exec_list = list_reverse (prog->exec_list);
 }
