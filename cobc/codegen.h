@@ -273,7 +273,7 @@ extern void set_rec_varying_info (struct sym *f, struct lit *lmin, struct lit *l
 extern void gen_check_varying (struct sym *f);
 extern void gen_push_using (struct sym *sy);
 extern void gen_save_using (struct sym *sy);
-extern unsigned long int gen_call (struct lit *v, int stack_size, int exceplabel, int notexceplabel);
+extern unsigned long int gen_call (struct lit *v, int exceplabel, int notexceplabel);
 extern int begin_on_except (void);
 extern void check_call_except (int excep, int notexcep, int exceplabel, int notexceplabel, int endlabel);
 extern void gen_initialize (struct sym *sy_start);

@@ -5653,7 +5653,7 @@ gen_save_using (struct sym *sy)
 
 
 unsigned long int
-gen_call (struct lit *v, int stack_size, int exceplabel, int notexceplabel)
+gen_call (struct lit *v, int exceplabel, int notexceplabel)
 {
   struct parm_list *list, *tmp;
   struct sym *cp;

@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 516
+%expect 633
 
 %{
 #define yydebug		cob_trace_parser
@@ -189,10 +189,10 @@ static void check_decimal_point (struct lit *lit);
 %type <ival> flag_not,selection_subject,selection_object,when_case
 %type <ival> flag_rounded,opt_sign_separate,opt_plus_minus
 %type <ival> organization_options,access_options,open_mode,equal_to
-%type <ival> parm_type,sign_condition,class_condition,replacing_kind
+%type <ival> call_mode,sign_condition,class_condition,replacing_kind
 %type <ival> screen_attribs,screen_attrib,screen_sign,opt_separate
 %type <ival> sentence_or_nothing,when_case_list,opt_read_next,usage
-%type <ival> using_options,procedure_using,sort_direction,write_options
+%type <ival> procedure_using,sort_direction,write_options
 %type <lstval> goto_label_list
 %type <lval> from_rec_varying,to_rec_varying
 %type <lval> literal,gliteral,without_all_literal,all_literal,special_literal
@@ -215,7 +215,7 @@ static void check_decimal_point (struct lit *lit);
 %type <sval> name,gname,numeric_value,opt_gname,opt_def_name,def_name
 %type <sval> opt_read_into,opt_write_from,field_name,expr,opt_expr
 %type <sval> opt_unstring_count,opt_unstring_delim,unstring_tallying
-%type <sval> parm_list,parameter,qualified_var,unqualified_var
+%type <sval> qualified_var,unqualified_var
 %type <sval> returning_options,screen_to_name, opt_goto_depending_on
 %type <sval> set_variable,set_variable_or_nlit,set_target,opt_add_to
 %type <sval> sort_keys,opt_perform_thru,procedure_section
@@ -1070,8 +1070,12 @@ procedure_division:
   }
 ;
 procedure_using:
-  /* nothing */                        { $$ = 0; }
-| USING { $<ival>$ = USING; } var_list { $$ = 1; }
+  /* nothing */			{ $$ = 0; }
+| USING using_vars		{ $$ = 1; }
+;
+using_vars:
+  gname				{ gen_save_using ($1); }
+| using_vars opt_sep gname	{ gen_save_using ($3); }
 ;
 procedure_list:
 | procedure_list procedure
@@ -1118,16 +1122,6 @@ statement_list:
   statement
 | statement_list statement
 ;
-conditional_statement_list:
-  statement_list opt_continue
-| CONTINUE
-| NEXT SENTENCE
-;
-opt_continue:
-| CONTINUE
-| NEXT SENTENCE
-;
-
 statement:
   accept_statement
 | add_statement
@@ -1167,6 +1161,17 @@ statement:
 | READY TRACE       { yyerror ("TRACE is not implemented yet"); }
 | RESET TRACE       { yyerror ("TRACE is not implemented yet"); }
 ;
+
+conditional_statement_list:
+  conditional_statement
+| conditional_statement_list conditional_statement
+;
+conditional_statement:
+  statement
+| CONTINUE
+| NEXT SENTENCE
+;
+
 
 
 /*
@@ -1241,67 +1246,54 @@ end_add: | END_ADD ;
 
 call_statement:
     CALL  { curr_call_mode=CM_REF; }
-    gname
-    using_options       
-    returning_options 
+    gname call_using returning_options 
     { $<ival>$ = loc_label++; /* exception check */ }
     { $<ival>$ = loc_label++; /* not exception check */ } 
     { 
-      $<ival>$ = gen_call((struct lit *)$3,$4,$<ival>6,$<ival>7); 
+      $<ival>$ = gen_call((struct lit *)$3,$<ival>6,$<ival>7); 
       gen_store_fnres($5); 
     }
     on_exception_or_overflow 
-    on_not_exception { 
-      check_call_except($9,$10,$<ival>6,$<ival>7,$<ival>8); }
+    on_not_exception
+    { 
+      check_call_except($9,$10,$<ival>6,$<ival>7,$<ival>8);
+    }
     opt_end_call
     ;
-using_options:
-    /* nothing */   { $$=0; }
-    | USING     { $<ival>$=0; /* to save how many parameters */ }
-      dummy     { $<ival>$=CALL; }
-      parm_list  { $$=$<ival>2; } /* modified to signal calling pgm */
-    ;
-dummy: /* nothing */ ;
-parm_list:
-    parm_list opt_sep parameter
-        {   if ($<ival>0 == USING)
-                gen_save_using($<sval>3);
-            else if ($<ival>0 == CALL) {
-                gen_push_using($<sval>3);
-            }
-        }
-        | parameter
-        {   if ($<ival>0 == USING)
-                gen_save_using($<sval>1);
-            else if ($<ival>0 == CALL) {
-                gen_push_using($<sval>1);
-            }
-        }
-    ;
-parameter:
-    gname {$$=$1;
-            if ($$->litflag==1) {
-               struct lit *lp=(struct lit *)$$;
-               lp->call_mode=curr_call_mode;
-               }
-            else
-               $$->call_mode=curr_call_mode;
-        }
-    | BY parm_type gname
-        {   $$=$3;
-            curr_call_mode=$<ival>2;
-            if ($$->litflag==1) {
-               struct lit *lp=(struct lit *)$$;
-               lp->call_mode=curr_call_mode;
-               }
-            else
-               $$->call_mode=curr_call_mode;
-        }
-    ;
-parm_type:
-    REFERENCE	{ $$ = CM_REF; }
-  | CONTENT	{ $$ = CM_CONT; }
-  | VALUE	{ $$ = CM_VAL; }
+call_using:
+| USING call_parameter_list
+;
+call_parameter_list:
+  call_parameter
+| call_parameter_list opt_sep call_parameter
+;
+call_parameter:
+  gname
+  {
+    if ($1->litflag==1) {
+      struct lit *lp=(struct lit *)$1;
+      lp->call_mode=curr_call_mode;
+    }
+    else
+      $1->call_mode=curr_call_mode;
+    gen_push_using ($1);
+  }
+| BY call_mode gname
+  {
+    curr_call_mode = $2;
+    if ($3->litflag==1) {
+      struct lit *lp=(struct lit *)$3;
+      lp->call_mode=curr_call_mode;
+    }
+    else
+      $3->call_mode=curr_call_mode;
+    gen_push_using ($3);
+  }
+;
+call_mode:
+  REFERENCE		{ $$ = CM_REF; }
+| CONTENT		{ $$ = CM_CONT; }
+| VALUE			{ $$ = CM_VAL; }
 ;
 returning_options:
     /* nothing */   { $$=0; }
@@ -1636,8 +1628,12 @@ opt_end_if: | END_IF ;
  */
 
 initialize_statement:
-    INITIALIZE { $<ival>$ = INITIALIZE; } var_list
-    ;
+  INITIALIZE initialize_vars
+;
+initialize_vars:
+  gname				{ gen_initialize ($1); }
+| initialize_vars opt_sep gname	{ gen_initialize ($3); }
+;
 
 
 /*
@@ -1722,9 +1718,13 @@ opt_initial:
  */
 
 move_statement:
-      MOVE gname TO { $<ival>$ = MOVE; } var_list
-    | MOVE CORRESPONDING gname TO gname { gen_movecorr($3, $5); }
-    ;
+  MOVE gname TO move_vars
+| MOVE CORRESPONDING gname TO gname { gen_movecorr($3, $5); }
+;
+move_vars:
+  gname				{ gen_move ($<sval>-1, $1); }
+| move_vars opt_sep gname	{ gen_move ($<sval>-1, $3); }
+;
 
 
 /*
@@ -1755,23 +1755,23 @@ opt_end_multiply:
  */
 
 open_statement:
-    OPEN open_options
-    ;
+  OPEN open_options
+;
 open_options:
-      open_mode open_varlist { }
-    | open_options open_mode open_varlist { }
-    ;
+  open_mode open_varlist { }
+| open_options open_mode open_varlist { }
+;
 open_mode:
-    INPUT    { $$=1; }
-    | I_O    { $$=2; }
-    | OUTPUT { $$=3; }
-    | EXTEND { $$=4; }
-    | error  { yyerror("invalid OPEN mode"); }
-    ;
+  INPUT  { $$=1; }
+| I_O    { $$=2; }
+| OUTPUT { $$=3; }
+| EXTEND { $$=4; }
+| error  { yyerror("invalid OPEN mode"); }
+;
 open_varlist:
-      name { gen_open($<ival>0, $<sval>1); }
-    | open_varlist opt_sep name { gen_open($<ival>0, $<sval>3); }
-    ;
+  name { gen_open($<ival>0, $<sval>1); }
+| open_varlist opt_sep name { gen_open($<ival>0, $<sval>3); }
+;
 
 
 /*
@@ -2695,28 +2695,6 @@ opt_expr:
  * Common rules
  *******************/
 
-var_list:
-    var_list opt_sep gname
-        {   if ($<ival>0 == MOVE)
-                gen_move($<sval>-2,$<sval>3);
-            else if ($<ival>0 == INITIALIZE)
-                gen_initialize($<sval>3);
-            else if ($<ival>0 == ADD)
-                gen_add($<sval>-2,$<sval>3,0);
-            else if ($<ival>0 == USING)
-                gen_save_using($<sval>3);
-        }
-        | gname
-        {   if ($<ival>0 == MOVE)
-                gen_move($<sval>-2,$<sval>1);
-            else if ($<ival>0 == INITIALIZE)
-                gen_initialize($<sval>1);
-            else if ($<ival>0 == ADD)
-                gen_add($<sval>-2,$<sval>1,0);
-            else if ($<ival>0 == USING)
-                gen_save_using($<sval>1);
-        }
-    ;
 var_list_name: name flag_rounded opt_sep
      {
       $$ = create_mathvar_info(NULL, $1, $2);
@@ -2728,13 +2706,13 @@ var_list_name: name flag_rounded opt_sep
     ;
 
 var_list_gname:
-    gname opt_sep
+    gname
     {
       $$ = create_mathvar_info(NULL, $1, 0);
     }
-    | var_list_gname gname opt_sep
+    | var_list_gname opt_sep gname
       {
-	$$ = create_mathvar_info($1, $2, 0);
+	$$ = create_mathvar_info($1, $3, 0);
       }
     ;
 
