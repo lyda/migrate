@@ -1,5 +1,11 @@
 2004-03-08  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
 
+	* config.def (cb_synchronized_clause): New option.
+	* field.c (compute_size): Handle the SYNCHRONIZED clause.
+	* tree.c, tree.h (cb_field_align_size): Removed.
+
+2004-03-08  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
+
 	* pplex.l (switch_to_buffer): Duplicate file name.
 
 2004-03-06  Keisuke Nishida  <knishida@wind.sannet.ne.jp>

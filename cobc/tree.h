@@ -457,7 +457,6 @@ extern struct cb_field *cb_field_founder (struct cb_field *f);
 extern struct cb_field *cb_field_variable_size (struct cb_field *f);
 extern struct cb_field * cb_field_variable_address (struct cb_field *f);
 extern int cb_field_subordinate (struct cb_field *p, struct cb_field *f);
-extern int cb_field_align_size (struct cb_field *f);
 
 /* Index */
 
