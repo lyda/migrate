@@ -1,5 +1,14 @@
 2002-06-04  Keisuke Nishida  <knishida@netlab.jp>
 
+	* common.c, common.h (cob_config_compare): New function.
+	* call.c (cob_init_call): Use `cob_config_compare'.
+
+	* common.c (ding_on_error): New variable.
+	(cob_init): Set ding_on_error from option "ding-on-error".
+	(cob_runtime_error): Ring a bell only when "ding-on-error" is "yes".
+
+2002-06-04  Keisuke Nishida  <knishida@netlab.jp>
+
 	* support.h (cob_perform): Enclosed by do ... while (0).
 
 2002-06-04  Keisuke Nishida  <knishida@netlab.jp>

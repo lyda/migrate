@@ -97,6 +97,8 @@ long long cob_exp10LL[19] = {
   1000000000000000000
 };
 
+static int ding_on_error = 0;
+
 
 /*
  * Config file
@@ -127,6 +129,15 @@ cob_config_lookup (const char *key)
     if (strcmp (key, l->key) == 0)
       return l->val;
   return NULL;
+}
+
+int
+cob_config_compare (const char *key, const char *val)
+{
+  const char *tmp = cob_config_lookup (key);
+  if (tmp != NULL && strcmp (tmp, val) == 0)
+    return 1;
+  return 0;
 }
 
 static void
@@ -189,6 +200,8 @@ cob_init (int argc, char **argv)
   cob_init_call ();
 
   config_load ();
+
+  ding_on_error = cob_config_compare ("ding-on-error", "yes");
 
   cob_initialized = 1;
 }
@@ -505,11 +518,19 @@ void
 cob_runtime_error (char *fmt, ...)
 {
   va_list ap;
-  va_start (ap, fmt);
+
+  /* prefix */
   if (cob_source_line)
     fprintf (stderr, "%s:%d: ", cob_source_file, cob_source_line);
   fputs ("libcob: ", stderr);
+
+  /* body */
+  va_start (ap, fmt);
   vfprintf (stderr, fmt, ap);
-  fputs ("\a\n", stderr);
   va_end (ap);
+
+  /* postfix */
+  if (ding_on_error)
+    fputs ("\a", stderr);
+  fputs ("\n", stderr);
 }

@@ -50,10 +50,7 @@ cob_init_call (void)
   lt_dlinit ();
   cob_set_library_path (path);
 
-  /* check option `dynamic-reloading' */
-  val = cob_config_lookup ("dynamic-reloading");
-  if (val != NULL && strcmp (val, "yes") == 0)
-    dynamic_reloading = 1;
+  dynamic_reloading = cob_config_compare ("dynamic-reloading", "yes");
 }
 
 
