@@ -39,88 +39,13 @@
 #include "lib/getopt.h"
 
 
-/* specs */
-
-static struct cb_spec cb_spec_list[] = {
-  {
-    "gnu", "GNU COBOL",
-    CB_BINARY_REP_1_2_4_8,
-    0,
-    CB_OBSOLETE,		/* MEMORY SIZE clause */
-    CB_OBSOLETE,		/* MULTIPLE FILE TAPE clause */
-    CB_OBSOLETE,		/* LABEL RECORDS clause */
-    CB_OBSOLETE,		/* VALUE OF clause */
-    CB_OBSOLETE,		/* DATA RECORDS clause */
-    CB_OBSOLETE,		/* ALTER statement */
-    CB_OBSOLETE,		/* GO TO statement without procedure-name */
-    CB_OBSOLETE,		/* STOP literal statement */
-    CB_OBSOLETE,		/* AUTHER, DATA-WRITTEN, etc. */
-    CB_OK,			/* DEBUGGING MODE clause */
-    CB_OK,			/* PADDING CHARACTER clause */
-    CB_ARCHAIC,			/* NEXT SENTENCE statement */
-  },
-  {
-    "cobol85", "COBOL 85",
-    CB_BINARY_REP_1_2_4_8,
-    0,
-    CB_OBSOLETE,		/* MEMORY SIZE clause */
-    CB_OBSOLETE,		/* MULTIPLE FILE TAPE clause */
-    CB_OBSOLETE,		/* LABEL RECORDS clause */
-    CB_OBSOLETE,		/* VALUE OF clause */
-    CB_OBSOLETE,		/* DATA RECORDS clause */
-    CB_OBSOLETE,		/* ALTER statement */
-    CB_OBSOLETE,		/* GO TO statement without procedure-name */
-    CB_OBSOLETE,		/* STOP literal statement */
-    CB_OBSOLETE,		/* AUTHER, DATA-WRITTEN, etc. */
-    CB_OK,			/* DEBUGGING MODE clause */
-    CB_OK,			/* PADDING CHARACTER clause */
-    CB_ARCHAIC,			/* NEXT SENTENCE statement */
-  },
-  {
-    "cobol2002", "COBOL 2002",
-    CB_BINARY_REP_1_2_4_8,
-    1,
-    CB_UNCONFORMABLE,		/* MEMORY SIZE clause */
-    CB_UNCONFORMABLE,		/* MULTIPLE FILE TAPE clause */
-    CB_UNCONFORMABLE,		/* LABEL RECORDS clause */
-    CB_UNCONFORMABLE,		/* VALUE OF clause */
-    CB_UNCONFORMABLE,		/* DATA RECORDS clause */
-    CB_UNCONFORMABLE,		/* ALTER statement */
-    CB_UNCONFORMABLE,		/* GO TO statement without procedure-name */
-    CB_UNCONFORMABLE,		/* STOP literal statement */
-    CB_UNCONFORMABLE,		/* AUTHER, DATA-WRITTEN, etc. */
-    CB_OBSOLETE,		/* DEBUGGING MODE clause */
-    CB_OBSOLETE,		/* PADDING CHARACTER clause */
-    CB_ARCHAIC,			/* NEXT SENTENCE statement */
-  },
-  {
-    "mvs", "IBM COBOL for MVS & VM",
-    CB_BINARY_REP_2_4_8,
-    0,
-    CB_OBSOLETE,		/* MEMORY SIZE clause */
-    CB_OBSOLETE,		/* MULTIPLE FILE TAPE clause */
-    CB_OBSOLETE,		/* LABEL RECORDS clause */
-    CB_OBSOLETE,		/* VALUE OF clause */
-    CB_OBSOLETE,		/* DATA RECORDS clause */
-    CB_OBSOLETE,		/* ALTER statement */
-    CB_OBSOLETE,		/* GO TO statement without procedure-name */
-    CB_OBSOLETE,		/* STOP literal statement */
-    CB_OBSOLETE,		/* AUTHER, DATA-WRITTEN, etc. */
-    CB_OK,			/* DEBUGGING MODE clause */
-    CB_OK,			/* PADDING CHARACTER clause */
-    CB_ARCHAIC,			/* NEXT SENTENCE statement */
-  },
-  {0}
-};
-
-
 /*
  * Global variables
  */
 
 enum cb_compile_level cb_compile_level = CB_LEVEL_EXECUTABLE;
 enum cb_compile_target cb_compile_target = CB_TARGET_NATIVE;
-struct cb_spec *cb_spec = &cb_spec_list[0];
+struct cb_spec cb_spec;
 
 struct cb_exception cb_exception_table[] = {
   {0, 0, 0},		/* CB_EC_ZERO */
@@ -173,6 +98,7 @@ static char cob_cc[FILENAME_MAX];		/* gcc */
 static char cob_cflags[FILENAME_MAX];		/* -I... */
 static char cob_libs[FILENAME_MAX];		/* -L... -lcob */
 static char cob_ldflags[FILENAME_MAX];
+char cob_specs_dir[FILENAME_MAX];
 
 static struct filename {
   int need_preprocess;
@@ -218,6 +144,7 @@ init_environment (int argc, char *argv[])
   init_var (cob_cflags,  "COB_CFLAGS", COB_CFLAGS);
   init_var (cob_libs,    "COB_LIBS",   COB_LIBS);
   init_var (cob_ldflags, "COB_LDFLAGS", "");
+  init_var (cob_specs_dir, "COB_SPECS_DIR", COB_SPECS_DIR);
 
   p = getenv ("COB_LDADD");
   if (p)
@@ -355,21 +282,12 @@ process_command_line (int argc, char *argv[])
 	  break;
 
 	case '$': /* -std */
-	  {
-	    int i;
-	    for (i = 0; cb_spec_list[i].name; i++)
-	      if (strcmp (optarg, cb_spec_list[i].name) == 0)
-		{
-		  cb_spec = &cb_spec_list[i];
-		  break;
-		}
-	    if (!cb_spec_list[i].name)
-	      {
-		fprintf (stderr, _("Invalid option -std=%s\n"), optarg);
-		exit (1);
-	      }
-	    break;
-	  }
+	  if (cb_load_std (optarg) != 0)
+	    {
+	      fprintf (stderr, _("Invalid option -std=%s\n"), optarg);
+	      exit (1);
+	    }
+	  break;
 
 	case 't': /* -target */
 	  if (strcmp (optarg, "native") == 0)
@@ -440,6 +358,13 @@ process_command_line (int argc, char *argv[])
 	  exit (1);
 	}
     }
+
+  if (cb_spec.name == NULL)
+    if (cb_load_std ("gnu") != 0)
+      {
+	fprintf (stderr, "error: cannot find initial spec file");
+	exit (1);
+      }
 
   if (cb_compile_level == CB_LEVEL_EXECUTABLE)
     cb_flag_main = 1;

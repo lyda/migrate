@@ -1246,7 +1246,7 @@ compute_size (struct cb_field *f)
 	case CB_USAGE_NATIVE:
 	  {
 	    int size = f->pic->size;
-	    switch (cb_spec->binary_rep)
+	    switch (cb_spec.binary_rep)
 	      {
 	      case CB_BINARY_REP_1_2_4_8:
 		f->size = ((size <= 2) ? 1 :

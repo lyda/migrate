@@ -74,6 +74,8 @@ extern struct cb_exception {
 
 /* spec */
 
+extern char cob_specs_dir[];
+
 enum cb_support {
   CB_OK,
   CB_ARCHAIC,
@@ -83,7 +85,6 @@ enum cb_support {
 
 extern struct cb_spec {
   const char *name;
-  const char *fullname;
   enum {
     CB_BINARY_REP_1_2_4_8,	/* 1,2,4,8 bytes */
     CB_BINARY_REP_2_4_8,	/* 2,4,8 bytes */
@@ -97,11 +98,14 @@ extern struct cb_spec {
   enum cb_support alter;
   enum cb_support goto_without_name;
   enum cb_support stop_literal;
-  enum cb_support comment_id;
+  enum cb_support author_paragraph;
   enum cb_support debugging_mode;
   enum cb_support padding_character;
   enum cb_support next_sentence;
-} *cb_spec;
+} cb_spec;
+
+extern int cb_load_std (const char *name);
+extern int cb_load_spec (const char *fname);
 
 
 struct cb_name_list {

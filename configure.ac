@@ -143,6 +143,7 @@ else
 fi
 
 COB_LIBS="-L$libdir -lcob ${LIBCOB_LIBS}"
+COB_SPECS_DIR="$datadir/$PACKAGE_TARNAME/specs"
 COB_CONFIG_FILE="$sysconfdir/libcob.conf"
 COB_LIBRARY_PATH=".:$libdir/$PACKAGE_TARNAME"
 COB_MODULE_EXT=`echo "$shlibext" | sed 's/dll\.a/dll/'`
@@ -151,6 +152,7 @@ LIBS="$save_libs"
 AC_SUBST(COB_CC)
 AC_SUBST(COB_CFLAGS)
 AC_SUBST(COB_LIBS)
+AC_SUBST(COB_SPECS_DIR)
 AC_SUBST(COB_CONFIG_FILE)
 AC_SUBST(COB_LIBRARY_PATH)
 AC_SUBST(COB_MODULE_EXT)
@@ -161,7 +163,7 @@ AC_SUBST(LIBCOB_LIBS)
 
 AC_CONFIG_FILES([cob-config
 		Makefile lib/Makefile libcob/Makefile
-		cobc/Makefile po/Makefile.in texi/Makefile
+		cobc/Makefile po/Makefile.in texi/Makefile specs/Makefile
 		tests/atlocal tests/Makefile tests/cobol85/Makefile])
 AC_OUTPUT
 
@@ -171,6 +173,7 @@ echo ""
 echo "  COB_CC               ${COB_CC}"
 echo "  COB_CFLAGS           ${COB_CFLAGS}"
 echo "  COB_LIBS             ${COB_LIBS}"
+echo "  COB_SPECS_DIR        ${COB_SPECS_DIR}"
 echo "  COB_CONFIG_FILE      ${COB_CONFIG_FILE}"
 echo "  COB_LIBRARY_PATH     ${COB_LIBRARY_PATH}"
 echo "  COB_MODULE_EXT       ${COB_MODULE_EXT}"

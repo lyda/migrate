@@ -1,0 +1,4 @@
+2003-08-07  Keisuke Nishida  <knishida@netlab.jp>
+
+	* gnu.spec, cobol85.spec, cobol2002.spec, mf.spec, mvs.spec: New files.
+	* Makefile.am: New file.

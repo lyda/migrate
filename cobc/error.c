@@ -109,14 +109,14 @@ cb_verify (enum cb_support tag, const char *feature)
       return 1;
     case CB_ARCHAIC:
       if (cb_warn_archaic)
-	cb_warning (_("%s is archaic in %s"), feature, cb_spec->fullname);
+	cb_warning (_("%s is archaic in %s"), feature, cb_spec.name);
       return 1;
     case CB_OBSOLETE:
       if (cb_warn_obsolete)
-	cb_warning (_("%s is obsolete in %s"), feature, cb_spec->fullname);
+	cb_warning (_("%s is obsolete in %s"), feature, cb_spec.name);
       return 1;
     case CB_UNCONFORMABLE:
-      cb_error (_("%s not conform to %s"), feature, cb_spec->fullname);
+      cb_error (_("%s not conform to %s"), feature, cb_spec.name);
       return 0;
     default:
       abort ();
