@@ -83,7 +83,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %token <str>  ID_TOK
 %token <pic>  PICTURE_TOK
 %token <tree> INTEGER_LITERAL,NUMERIC_LITERAL,NONNUMERIC_LITERAL,SYMBOL_TOK
-%token <tree> SPECIAL_TOK,CLASS_TOK,VARIABLE,VARCOND
+%token <tree> SPECIAL_TOK,VARIABLE,VARCOND
 
 %token EQUAL,GREATER,LESS,GE,LE,COMMAND_LINE,ENVIRONMENT_VARIABLE,ALPHABET
 %token DATE,DAY,DAY_OF_WEEK,TIME,READ,WRITE,OBJECT_COMPUTER,INPUT_OUTPUT
@@ -390,7 +390,6 @@ is_are: IS | ARE ;
 special_name_class:
   CLASS SYMBOL_TOK opt_is special_name_class_options
   {
-    COB_FIELD_TYPE ($2) = '@';
     yywarn ("CLASS name is ignored");
   }
 ;
@@ -2768,7 +2767,7 @@ class:
 | POSITIVE			{ $$ = COND_POSITIVE; }
 | NEGATIVE			{ $$ = COND_NEGATIVE; }
 | ZEROS				{ $$ = COND_ZERO; }
-| CLASS_TOK			{ $$ = COND_ZERO; yywarn ("not supported"); }
+| VARIABLE			{ $$ = COND_ZERO; yywarn ("not supported"); }
 ;
 
 

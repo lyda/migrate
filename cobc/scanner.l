@@ -259,8 +259,6 @@ scan_word (char *text)
 	    return VARCOND;
 	  else if (COB_FIELD_TYPE (yylval.tree) == '!')
 	    return SPECIAL_TOK;
-	  else if (COB_FIELD_TYPE (yylval.tree) == '@')
-	    return CLASS_TOK;
 	  else
 	    return VARIABLE;
 	}
