@@ -934,7 +934,7 @@ adjust_desc_length (cob_tree sy)
  * Expression
  */
 
-static int
+static void
 push_expr (cob_tree sy)
 {
   if (!is_valid_expr (sy))
@@ -955,11 +955,11 @@ push_expr (cob_tree sy)
 	case '/': asm_call ("cob_div"); break;
 	case '^': asm_call ("cob_pow"); break;
 	}
-      return 1;
     }
-
-  asm_call_1 ("cob_push_decimal", sy);
-  return 1;
+  else
+    {
+      asm_call_1 ("cob_push_decimal", sy);
+    }
 }
 
 static void
@@ -2486,7 +2486,8 @@ create_mathvar_info (struct math_var *mv, cob_tree sy, unsigned int opt)
  */
 
 static void
-gen_foreach (void (*func)(), struct math_var *list, void *data1, void *data2)
+gen_foreach_variable (void (*func)(), struct math_var *list,
+		      void *data1, void *data2)
 {
   if (!list->next)
     {
@@ -2519,7 +2520,7 @@ gen_compute_1 (cob_tree var, cob_tree x)
 void
 gen_compute (struct math_var *list, cob_tree x)
 {
-  gen_foreach (gen_compute_1, list, x, 0);
+  gen_foreach_variable (gen_compute_1, list, x, 0);
 }
 
 
@@ -2552,7 +2553,7 @@ gen_add_to_1 (cob_tree var, cob_tree_list nums)
 void
 gen_add_to (cob_tree_list nums, struct math_var *list)
 {
-  gen_foreach (gen_add_to_1, list, nums, 0);
+  gen_foreach_variable (gen_add_to_1, list, nums, 0);
 }
 
 static void
@@ -2570,7 +2571,7 @@ gen_add_giving_1 (cob_tree var, cob_tree_list nums)
 void
 gen_add_giving (cob_tree_list nums, struct math_var *list)
 {
-  gen_foreach (gen_add_giving_1, list, nums, 0);
+  gen_foreach_variable (gen_add_giving_1, list, nums, 0);
 }
 
 
@@ -2603,7 +2604,7 @@ gen_subtract_from_1 (cob_tree var, cob_tree_list subtrahend_list)
 void
 gen_subtract_from (cob_tree_list subtrahend_list, struct math_var *list)
 {
-  gen_foreach (gen_subtract_from_1, list, subtrahend_list, 0);
+  gen_foreach_variable (gen_subtract_from_1, list, subtrahend_list, 0);
 }
 
 void
@@ -2629,17 +2630,18 @@ gen_subtract_giving (cob_tree_list subtrahend_list, cob_tree minuend,
  * MULTIPLY statement
  */
 
+static void
+gen_multiply_by_1 (cob_tree var, cob_tree multiplicand)
+{
+  push_expr (multiplicand);
+  push_expr (var);
+  asm_call ("cob_mul");
+}
+
 void
 gen_multiply_by (cob_tree multiplicand, struct math_var *list)
 {
-  gen_init_status ();
-  for (; list; list = list->next)
-    {
-      push_expr (multiplicand);
-      push_expr (list->sname);
-      asm_call ("cob_mul");
-      assign_expr (list->sname, list->rounded);
-    }
+  gen_foreach_variable (gen_multiply_by_1, list, multiplicand, 0);
 }
 
 void
@@ -2661,30 +2663,32 @@ gen_multiply_giving (cob_tree multiplicand, cob_tree multiplier,
  * DIVIDE statement
  */
 
+static void
+gen_divide_into_1 (cob_tree var, cob_tree divisor)
+{
+  push_expr (var);
+  push_expr (divisor);
+  asm_call ("cob_div");
+}
+
 void
 gen_divide_into (cob_tree divisor, struct math_var *list)
 {
-  gen_init_status ();
-  for (; list; list = list->next)
-    {
-      push_expr (list->sname);
-      push_expr (divisor);
-      asm_call ("cob_div");
-      assign_expr (list->sname, list->rounded);
-    }
+  gen_foreach_variable (gen_divide_into_1, list, divisor, 0);
+}
+
+static void
+gen_divide_giving_1 (cob_tree var, cob_tree divisor, cob_tree dividend)
+{
+  push_expr (dividend);
+  push_expr (divisor);
+  asm_call ("cob_div");
 }
 
 void
 gen_divide_giving (cob_tree divisor, cob_tree dividend, struct math_var *list)
 {
-  gen_init_status ();
-  for (; list; list = list->next)
-    {
-      push_expr (dividend);
-      push_expr (divisor);
-      asm_call ("cob_div");
-      assign_expr (list->sname, list->rounded);
-    }
+  gen_foreach_variable (gen_divide_giving_1, list, divisor, dividend);
 }
 
 void
