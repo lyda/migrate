@@ -165,9 +165,7 @@ program_id_paragraph:
 			 cb_build_alphanumeric_literal (buff, 16));
     }
     /* RETURN-CODE */
-    cb_return_code = cb_build_reference ("RETURN-CODE");
-    current_program->index_list =
-      cb_list_add (current_program->index_list, cb_build_index (cb_return_code));
+    cb_return_code = cb_build_index (cb_build_reference ("RETURN-CODE"));
   }
   program_name as_literal program_type '.'
   {
@@ -875,8 +873,6 @@ linage_clause:
   LINAGE _is reference_or_literal _lines
   linage_footing linage_top linage_bottom
   {
-    cb_build_index (cb_build_reference ("LINAGE-COUNTER"));
-
     cb_error ("LINAGE not implemented");
   }
 ;
@@ -926,7 +922,8 @@ working_storage_section:
   record_description_list
   {
     if ($5)
-      current_program->working_storage = CB_FIELD ($5);
+      current_program->working_storage =
+	cb_field_add (current_program->working_storage, CB_FIELD ($5));
   }
 ;
 record_description_list:
@@ -1141,21 +1138,7 @@ occurs_index_list:
   occurs_index			{ $$ = cb_list_add ($1, $2); }
 ;
 occurs_index:
-  WORD
-  {
-    cb_tree x = $1;
-    $$ = x;
-    if (CB_REFERENCE (x)->word->count == 0)
-      {
-	current_program->index_list =
-	  cb_list_add (current_program->index_list, cb_build_index (x));
-      }
-    else if (!CB_INDEX_P (x))
-      {
-	redefinition_error ($$);
-	$$ = cb_error_node;
-      }
-  }
+  WORD				{ $$ = cb_build_index ($1); }
 ;
 
 

@@ -263,6 +263,30 @@ cb_build_assignment_name (cb_tree name)
 }
 
 cb_tree
+cb_build_index (cb_tree x)
+{
+  if (CB_REFERENCE (x)->word->count == 0)
+    {
+      struct cb_field *f = CB_FIELD (cb_build_field (x));
+      f->usage = CB_USAGE_INDEX;
+      cb_validate_field (f);
+
+      current_program->working_storage =
+	cb_field_add (current_program->working_storage, f);
+
+      return x;
+    }
+
+  if (!CB_INDEX_P (x))
+    {
+      redefinition_error (x);
+      return cb_error_node;
+    }
+
+  return x;
+}
+
+cb_tree
 cb_build_identifier (cb_tree x)
 {
   struct cb_reference *r;

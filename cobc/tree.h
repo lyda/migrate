@@ -31,7 +31,6 @@
 #define CB_PREFIX_DECIMAL	"d_"	/* decimal number (cob_decimal) */
 #define CB_PREFIX_FIELD		"f_"	/* field (cob_field) */
 #define CB_PREFIX_FILE		"h_"	/* file (cob_file) */
-#define CB_PREFIX_INDEX		"i_"	/* index (int) */
 #define CB_PREFIX_KEYS		"k_"	/* file keys (cob_file_key []) */
 #define CB_PREFIX_LABEL		"l_"	/* label */
 #define CB_PREFIX_SEQUENCE	"s_"	/* collating sequence */
@@ -448,10 +447,10 @@ struct cb_field {
 
 extern cb_tree cb_build_field (cb_tree name);
 extern cb_tree cb_build_implicit_field (cb_tree name, int len);
-extern cb_tree cb_build_index (cb_tree name);
 extern cb_tree cb_build_constant (cb_tree name, cb_tree value);
 
 extern struct cb_field *cb_field (cb_tree x);
+extern struct cb_field *cb_field_add (struct cb_field *f, struct cb_field *p);
 extern int cb_field_size (cb_tree x);
 extern struct cb_field *cb_field_founder (struct cb_field *f);
 extern struct cb_field *cb_field_variable_size (struct cb_field *f);
@@ -864,7 +863,6 @@ struct cb_program {
   unsigned char currency_symbol;	/* '$' or user-specified */
   unsigned char numeric_separator;	/* ',' or '.' */
   cb_tree entry_list;
-  cb_tree index_list;
   cb_tree file_list;
   cb_tree exec_list;
   cb_tree label_list;
@@ -931,6 +929,7 @@ extern const char *cb_build_program_id (cb_tree name, cb_tree alt_name);
 extern void cb_define_switch_name (cb_tree name, cb_tree sname, cb_tree flag, cb_tree ref);
 extern cb_tree cb_build_section_name (cb_tree name);
 extern cb_tree cb_build_assignment_name (cb_tree name);
+extern cb_tree cb_build_index (cb_tree name);
 extern cb_tree cb_build_identifier (cb_tree x);
 extern cb_tree cb_build_length (cb_tree x);
 extern cb_tree cb_build_address (cb_tree x);

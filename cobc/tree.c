@@ -854,15 +854,6 @@ cb_build_implicit_field (cb_tree name, int len)
 }
 
 cb_tree
-cb_build_index (cb_tree name)
-{
-  cb_tree x = cb_build_field (name);
-  CB_FIELD (x)->usage = CB_USAGE_INDEX;
-  cb_validate_field (CB_FIELD (x));
-  return x;
-}
-
-cb_tree
 cb_build_constant (cb_tree name, cb_tree value)
 {
   cb_tree x = cb_build_field (name);
@@ -879,6 +870,18 @@ cb_field (cb_tree x)
     return CB_FIELD (cb_ref (x));
   else
     return CB_FIELD (x);
+}
+
+struct cb_field *
+cb_field_add (struct cb_field *f, struct cb_field *p)
+{
+  if (f == NULL)
+    return p;
+
+  while (f->sister)
+    f = f->sister;
+  f->sister = p;
+  return f;
 }
 
 int

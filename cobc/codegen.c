@@ -171,10 +171,6 @@ output_base (struct cb_field *f)
 	}
       output ("%s", f01->cname);
     }
-  else if (f->usage == CB_USAGE_INDEX && f->level == 0)
-    {
-      output ("((unsigned char *) &%s%s)", CB_PREFIX_INDEX, f->cname);
-    }
   else
     {
       if (!f01->flag_base)
@@ -563,16 +559,9 @@ output_integer (cb_tree x)
 	switch (f->usage)
 	  {
 	  case CB_USAGE_INDEX:
-	    if (f->level == 0)
-	      {
-		output ("%s%s", CB_PREFIX_INDEX, f->cname);
-	      }
-	    else
-	      {
-		output ("(*(int *) (");
-		output_data (x);
-		output ("))");
-	      }
+	    output ("(*(int *) (");
+	    output_data (x);
+	    output ("))");
 	    return;
 
 	  case CB_USAGE_POINTER:
@@ -2253,14 +2242,6 @@ codegen (struct cb_program *prog)
   output ("#include <string.h>\n");
   output ("#include <math.h>\n");
   output ("#include <libcob.h>\n\n");
-
-  /* fields */
-  output ("/* Fields */\n\n");
-  output ("#define i_LINAGE_COUNTER cob_linage_counter\n\n");
-  for (l = prog->index_list; l; l = CB_CHAIN (l))
-    output ("static int %s%s = 1;\n", CB_PREFIX_INDEX,
-	    CB_FIELD (CB_VALUE (l))->cname);
-  output_newline ();
 
   output ("#include \"%s\"\n\n", cb_storage_file_name);
 
