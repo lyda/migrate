@@ -185,7 +185,7 @@ cob_in_range (struct cob_field low, struct cob_field val, struct cob_field up)
 int
 cob_is_numeric (struct fld_desc *f, char *s)
 {
-  int i, dig = 0;
+  int i;
 
   if ((f->type == 'B') || (f->type == 'C') || (f->type == 'U'))
     /* the B and C formats have valid numbers always (?) */
@@ -193,37 +193,15 @@ cob_is_numeric (struct fld_desc *f, char *s)
 
   for (i = 0; i < f->len; i++)
     {
-      char c = s[i];
-      /* must have at least one digit */
-      if (!dig && (c >= '0') && (c <= '9'))
-	dig++;
-      if (i == 0 && ((c == ' ') || (c == '+') || (c == '-')))
-	continue;
-      /* look for a number followed by several spaces (is this valid?) */
-      if (c == ' ')
-	{
-	  while (i < f->len)
-	    {
-	      if (s[i] != ' ')
-		return 0;
-	      i++;
-	    }
-	  break;
-	}
-	/******** take care of NULL picture (bug in refmod's) ********/
+      int c = s[i];
       if (f->type != 'G' && f->pic != NULL)
 	/* take care of signed numbers (non separate sign) */
 	if (i == f->len - 1 && f->pic[0] == 'S')
 	  if (strchr ("}ABCDEFGHI{JKLMNOPQR", c) != NULL)
-	    {
-	      dig++;
-	      break;
-	    }
-      if ((c > '9') || (c < '0'))
+	    return 1;
+      if (!isdigit (c))
 	return 0;
     }
-  if (!dig)
-    return 0;
   return 1;
 }
 

@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <gmp.h>
 
 
@@ -377,10 +378,18 @@ cob_push_decimal (struct cob_field f)
 
     default:
       {
+	int i;
 	char *p, buff[32];
 	int sign = get_sign (f);
 	int len = FIELD_LENGTH (f);
 	unsigned char *base = FIELD_BASE (f);
+
+	for (i = 0; i < len; i++)
+	  if (!isdigit (base[i]))
+	    {
+	      fputs ("ERROR: non-numeric char found\007\n", stderr);
+	      break;
+	    }
 
 	p = (len < 32) ? buff : alloca (len + 1);
 	memcpy (p, base, len);
