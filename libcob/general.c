@@ -182,9 +182,9 @@ cob_runtime_error (char *fmt, ...)
   va_start (ap, fmt);
   if (cob_source_line)
     fprintf (stderr, "%s:%d: ", cob_source_file, cob_source_line);
-  fputs ("\arun-time error: ", stderr);
+  fputs ("run-time error: ", stderr);
   vfprintf (stderr, fmt, ap);
-  fputs ("\n", stderr);
+  fputs ("\a\n", stderr);
   va_end (ap);
 }
 

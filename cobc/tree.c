@@ -116,6 +116,27 @@ tree_to_string_1 (char *s, cobc_tree x)
 
   switch (COBC_TREE_TAG (x))
     {
+    case cobc_tag_const:
+      if (x == cobc_any)
+	strcpy (s, "ANY");
+      else if (x == cobc_true)
+	strcpy (s, "TRUE");
+      else if (x == cobc_false)
+	strcpy (s, "FALSE");
+      else if (x == cobc_zero)
+	strcpy (s, "ZERO");
+      else if (x == cobc_space)
+	strcpy (s, "SPACE");
+      else if (x == cobc_low)
+	strcpy (s, "LOW-VALUE");
+      else if (x == cobc_high)
+	strcpy (s, "HIGH-VALUE");
+      else if (x == cobc_quote)
+	strcpy (s, "QUOTE");
+      else
+	strcpy (s, "#<unknown constant>");
+      break;
+
     case cobc_tag_literal:
       if (COBC_TREE_CLASS (x) == COB_NUMERIC)
 	strcpy (s, COBC_LITERAL (x)->str);
@@ -375,6 +396,7 @@ make_field (struct cobc_word *word)
   p->redefines = NULL;
   p->rename_thru = NULL;
   p->pic = NULL;
+  p->f.external = 0;
   p->f.blank_zero = 0;
   p->f.justified = 0;
   p->f.sign_separate = 0;

@@ -242,6 +242,7 @@ struct cobc_field {
     char have_sign;		/* if the field may hold sign */
   } *pic;			/* PICTURE */
   struct {
+    int external      : 1;	/* EXTERNAL */
     int blank_zero    : 1;	/* BLANK WHEN ZERO */
     int justified     : 1;	/* JUSTIFIED RIGHT */
     int sign_leading  : 1;	/* SIGN IS LEADING */

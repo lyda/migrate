@@ -906,7 +906,7 @@ redefines_clause:
 /* EXTERNAL */
 
 external_clause:
-  _is EXTERNAL			{ yywarn ("EXTERNAL is not implemented"); }
+  _is EXTERNAL			{ current_field->f.external = 1; }
 ;
 
 

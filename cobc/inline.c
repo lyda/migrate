@@ -681,7 +681,6 @@ output_call_statement (cobc_tree name, struct cobc_list *args, cobc_tree ret)
 {
   int static_link = 0;
   struct cobc_list *l;
-  struct call_item *item;
 
   if (cobc_link_style == LINK_STATIC && COBC_LITERAL_P (name))
     static_link = 1;
@@ -695,37 +694,39 @@ output_call_statement (cobc_tree name, struct cobc_list *args, cobc_tree ret)
   /* setup arguments */
   for (l = args; l; l = l->next)
     {
-      item = l->item;
+      struct call_item *item = l->item;
       if (item->mode == COBC_CALL_BY_CONTENT)
 	{
-	  output_line ("char c_%s_data[%d];",
-		       COBC_FIELD (item->var)->cname,
-		       COBC_FIELD (item->var)->size);
+	  output_prefix ();
+	  output ("char c_%s_data[", COBC_FIELD (item->var)->cname);
+	  output_length (item->var);
+	  output ("];\n");
 	}
     }
   for (l = args; l; l = l->next)
     {
-      item = l->item;
+      struct call_item *item = l->item;
       if (item->mode == COBC_CALL_BY_CONTENT)
 	{
 	  output_prefix ();
 	  output ("memcpy (c_%s_data, ", COBC_FIELD (item->var)->cname);
 	  output_location (item->var);
-	  output (", %d);\n", COBC_FIELD (item->var)->size);
+	  output (", ");
+	  output_length (item->var);
+	  output (");\n");
 	}
     }
 
   /* function name */
+  output_prefix ();
   if (static_link)
     {
       /* static link */
-      output_prefix ();
       output ("ret = %s", COBC_LITERAL (name)->str);
     }
   else
     {
       /* dynamic link */
-      output_prefix ();
       output ("func = ");
       output_func_1 ("cob_call_resolve", name);
       output (";\n");
@@ -738,18 +739,39 @@ output_call_statement (cobc_tree name, struct cobc_list *args, cobc_tree ret)
   output (" (");
   for (l = args; l; l = l->next)
     {
-      item = l->item;
+      struct call_item *item = l->item;
+      cobc_tree x = item->var;
       switch (item->mode)
 	{
 	case COBC_CALL_BY_REFERENCE:
-	  output_location (item->var);
+	  output_location (x);
 	  break;
 	case COBC_CALL_BY_CONTENT:
-	  output ("c_%s_data", COBC_FIELD (item->var)->cname);
+	  output ("c_%s_data", COBC_FIELD (x)->cname);
 	  break;
 	case COBC_CALL_BY_VALUE:
-	  output_location (item->var);
-	  output ("[0]");
+	  switch (COBC_TREE_TAG (x))
+	    {
+	    case cobc_tag_literal:
+	      if (COBC_TREE_CLASS (x) == COB_NUMERIC)
+		output ("%lld", literal_to_int (COBC_LITERAL (x)));
+	      else
+		output ("%d", COBC_LITERAL (x)->str[0]);
+	      break;
+	    default:
+	      switch (COBC_FIELD (x)->usage)
+		{
+		case USAGE_BINARY:
+		case USAGE_INDEX:
+		  output_index (x);
+		  break;
+		default:
+		  output ("*");
+		  output_location (x);
+		  break;
+		}
+	      break;
+	    }
 	  break;
 	}
       if (l->next)
@@ -764,7 +786,7 @@ output_call_statement (cobc_tree name, struct cobc_list *args, cobc_tree ret)
       output_prefix ();
       output ("cob_set_int (");
       output_tree (ret);
-      output (", cob_status);\n");
+      output (", ret);\n");
     }
 
   output_indent ("}", -2);

@@ -707,7 +707,18 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
     {
       /* level 01 */
       if (field_used_any_child (p) && !linkage)
-	output ("static unsigned char f_%s_data[%d];\n", p->cname, p->size);
+	{
+	  if (p->f.external)
+	    {
+	      output ("unsigned char %s[%d];\n", p->cname, p->size);
+	      output ("#define f_%s_data %s\n", p->cname, p->cname);
+	    }
+	  else
+	    {
+	      output ("static unsigned char f_%s_data[%d];\n",
+		      p->cname, p->size);
+	    }
+	}
     }
   else if (p->indexes == 0)
     {

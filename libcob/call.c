@@ -194,7 +194,7 @@ cob_resolve (const char *name)
 	  return NULL;
 	}
     }
-  sprintf (resolve_error_buff, "cannot find module: %s", name);
+  sprintf (resolve_error_buff, "cannot find module `%s'", name);
   resolve_error = resolve_error_buff;
   return NULL;
 }
@@ -227,7 +227,7 @@ cob_call_resolve (struct cob_field f)
 void
 cob_call_error (void)
 {
-  fprintf (stderr, "%s\n", cob_resolve_error ());
+  cob_runtime_error ("%s", cob_resolve_error ());
 }
 
 void
