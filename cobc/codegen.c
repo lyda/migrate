@@ -3411,7 +3411,7 @@ define_field (int level, cob_tree sy)
     {
       yyerror ("data field hierarchy broken");
     }
-  if (level < 49)
+  if (level < 50)
     {
       while (tmp != NULL && tmp->level > level)
 	{
