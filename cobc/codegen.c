@@ -111,13 +111,8 @@ int active[37];
 int at_linkage = 0;
 int stackframe_cnt = 0;
 int inner_stack_size = 0;
-#if !defined(__CYGWIN__)
 char program_id[120] = "main";
 char *pgm_label = "main";
-#else
-char program_id[120] = "_main";
-char *pgm_label = "_main";
-#endif
 struct list *report_list = NULL;
 static int need_desc_length_cleanup = 0;
 
@@ -676,11 +671,7 @@ pgm_header (char *id)
 {
   if (!pgm_segment)
     fprintf (o_src, "\t.file\t\"%s\"\n", cob_source_filename);
-#if !defined(__CYGWIN__)
   strcpy (program_id, id);
-#else
-  sprintf (program_id, "_%s", id);
-#endif
 }
 
 void
@@ -814,9 +805,7 @@ proc_header (int using)
       fprintf (o_src, "\t.align 16\n");
     }
   fprintf (o_src, ".globl %s\n", pgm_label);
-#if !defined(__CYGWIN__)
   fprintf (o_src, "\t.type\t%s,@function\n", pgm_label);
-#endif
   fprintf (o_src, "%s:\n", pgm_label);
   fprintf (o_src, "\tpushl\t%%ebp\n\tmovl\t%%esp, %%ebp\n");
   if (stack_offset & 1)
@@ -914,20 +903,10 @@ proc_header (int using)
   if (!decimal_comma)
     {
       fprintf (o_src, "\txorl\t%%eax,%%eax\n");
-#if !defined(__CYGWIN__)
       fprintf (o_src, "\tmovl\t%%eax,decimal_comma\n");
-#else
-      fprintf (o_src, "\tmovl\t%%eax,_decimal_comma\n");
-#endif
     }
   if (currency_symbol != '$')
-    {
-#if !defined(__CYGWIN__)
-      fprintf (o_src, "\tmovb\t$%d,cCurrencySymbol\n", currency_symbol);
-#else
-      fprintf (o_src, "\tmovb\t$%d,_cCurrencySymbol\n", currency_symbol);
-#endif
-    }
+    fprintf (o_src, "\tmovb\t$%d,cCurrencySymbol\n", currency_symbol);
   at_procedure++;
 }
 
@@ -939,11 +918,7 @@ proc_trail (int using)
   struct list *list;
   struct sym *sy;
   /*char s[9]; */
-#if !defined(__CYGWIN__)
   char *pgm_label = "main";
-#else
-  char *pgm_label = "_main";
-#endif
   char flag;
 
   if (using)
@@ -1506,11 +1481,6 @@ cleanup_rt_stack ()
   stackframe_cnt = 0;
   if (need_desc_length_cleanup)
     {
-      /*#if !defined(__CYGWIN__)
-         fprintf(o_src,"\tcall\tcob_free_desc_list\n");
-         #else
-         fprintf(o_src,"\tcall\t_cob_free_desc_list\n");
-         #endif */
       tmpvar_offset = 0;	/* reuse this storage area */
       need_desc_length_cleanup = 0;
     }
