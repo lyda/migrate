@@ -400,7 +400,7 @@ cob_set (struct fld_desc *f, char *s, int round)
 	    mpz_add_ui (d->number, d->number, 5);
 	  else
 	    mpz_sub_ui (d->number, d->number, 5);
-	  shift_decimal (d, -1);
+	  mpz_tdiv_q_ui (d->number, d->number, 10);
 	}
     }
   else
