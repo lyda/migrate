@@ -1826,10 +1826,11 @@ output_class_name_definition (struct cb_class_name *p)
 static void
 output_initial_values (struct cb_field *p)
 {
+  cb_tree def = cb_flag_auto_initialize ? cb_true : NULL;
   for (; p; p = p->sister)
     {
       cb_tree x = cb_build_field_reference (p, 0);
-      output_stmt (cb_build_initialize (x, cb_true, NULL, NULL));
+      output_stmt (cb_build_initialize (x, cb_true, NULL, def));
     }
 }
 

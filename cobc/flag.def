@@ -24,6 +24,9 @@
 CB_FLAG (cb_flag_main, "main",
 	 N_("Include a main function in the output"))
 
+CB_FLAG (cb_flag_auto_initialize, "auto-initialize",
+	 N_("Initialize the whole data storage on startup"))
+
 CB_FLAG (cb_flag_source_location, "source-location",
 	 N_("Include source location in the output"))
 
