@@ -347,7 +347,13 @@ read_line (char *buff, int size)
 
   /* remove letters after column 72 */
   if (cobpp_source_format == COBPP_FORMAT_FIXED && n > 73)
-    strcpy (buff + 72, "\n");
+    {
+      if (cobpp_source_format_inferred || cobpp_warn_trailing_line)
+	yywarn (_("source line over column 72"));
+      if (cobpp_source_format_inferred)
+	yywarn (_("specify source format explicitly"));
+      strcpy (buff + 72, "\n");
+    }
 
   switch (buff[6])
     {

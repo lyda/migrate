@@ -1,5 +1,16 @@
 2002-09-17  Keisuke Nishida  <knishida@netlab.jp>
 
+	* parser.y (yywarn): New function.
+	* cobpp.h (COBPP_FORMAT_UNKNOWN): New macro.
+	* cobpp.h, cobpp.c (cobpp_source_format_inferred): New variable.
+	* cobpp.c (cobpp_source_format): Default to COBPP_FORMAT_UNKNOWN.
+	(main): Infer source format here.
+
+	* cobpp.h, cobpp.c (cobpp_warn_trailing_line): New variables.
+	* scanner.l (read_line): Show warnings for over column 72.
+
+2002-09-17  Keisuke Nishida  <knishida@netlab.jp>
+
 	* Rename all `cob_*' to `cobpp_*'.
 
 2002-09-09  Keisuke Nishida  <knishida@netlab.jp>

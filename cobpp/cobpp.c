@@ -41,7 +41,9 @@ extern int yyparse (void);
 int cobpp_tab_width = 8;
 int cobpp_debug_flag = 0;
 int cobpp_exit_status = 0;
-int cobpp_source_format = COBPP_FORMAT_FREE;
+int cobpp_warn_trailing_line = 0;
+int cobpp_source_format = COBPP_FORMAT_UNKNOWN;
+int cobpp_source_format_inferred = 0;
 struct cobpp_path *cobpp_include_path = NULL;
 struct cobpp_path *cobpp_depend_list = NULL;
 FILE *cobpp_depend_file = NULL;
@@ -68,6 +70,7 @@ static struct option long_options[] = {
   {"free", no_argument, &cobpp_source_format, COBPP_FORMAT_FREE},
   {"fixed", no_argument, &cobpp_source_format, COBPP_FORMAT_FIXED},
   {"semi-fixed", no_argument, &cobpp_source_format, COBPP_FORMAT_SEMI_FIXED},
+  {"Wtrailing-line", no_argument, &cobpp_warn_trailing_line, 1},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
   {0, 0, 0, 0}
@@ -93,9 +96,14 @@ print_usage ()
 	  "COBOL options:\n"
 	  "  -free         Use free source format\n"
 	  "  -fixed        Use fixed source format\n"
-	  "  -D, -debug    Enable debugging lines\n"
+	  "  -semi-fixed   Use semi-fixed source format\n"
+	  "  -debug        Enable debugging lines\n"
 	  "  -T <n>        Set tab width to <n> (default 8)\n"
-	  "  -I <path>     Add copybook include path"));
+	  "  -I <path>     Add copybook include path\n"
+	  "\n"
+	  "Warning options:\n"
+	  "  -Wtrailing-line  Source line after column 72"
+	  ));
 }
 
 static int
@@ -190,7 +198,7 @@ main (int argc, char *argv[])
   /* Process command line arguments */
   index = process_command_line (argc, argv);
 
-  /* Prepare input */
+  /* Open input file */
   if (argc == index)
     {
       open_buffer (NULL, NULL);
@@ -202,6 +210,24 @@ main (int argc, char *argv[])
 		 argv[index]);
       open_buffer (argv[index], NULL);
     }
+
+  /* Infer source format */
+  if (cobpp_source_format == COBPP_FORMAT_UNKNOWN)
+    {
+      cobpp_source_format = COBPP_FORMAT_FREE;
+      cobpp_source_format_inferred = 1;
+
+      if (yyfilename)
+	{
+	  char buff[7];
+	  if (fgets (buff, 7, yyin))
+	    if (('0' <= buff[0] && buff[0] <= '9')
+		|| strncmp (buff, "      ", 6) == 0)
+	      cobpp_source_format = COBPP_FORMAT_FIXED;
+	  fseek (yyin, 0, SEEK_SET);
+	}
+    }
+
   yyparse ();
 
   /* Output dependency list */

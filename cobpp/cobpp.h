@@ -26,9 +26,10 @@
 #define COBPP_VERSION	PACKAGE_VERSION
 #define COBPP_COPYRIGHT	"Copyright (C) 2001-2002 Keisuke Nishida\n"
 
-#define COBPP_FORMAT_FREE		0
-#define COBPP_FORMAT_FIXED	1
-#define COBPP_FORMAT_SEMI_FIXED	2
+#define COBPP_FORMAT_UNKNOWN	0
+#define COBPP_FORMAT_FREE	1
+#define COBPP_FORMAT_FIXED	2
+#define COBPP_FORMAT_SEMI_FIXED	3
 
 struct cobpp_path {
   const char *dir;
@@ -38,7 +39,9 @@ struct cobpp_path {
 extern int cobpp_tab_width;
 extern int cobpp_debug_flag;
 extern int cobpp_exit_status;
+extern int cobpp_warn_trailing_line;
 extern int cobpp_source_format;
+extern int cobpp_source_format_inferred;
 extern struct cobpp_path *cobpp_include_path;
 extern struct cobpp_path *cobpp_depend_list;
 extern FILE *cobpp_depend_file;
