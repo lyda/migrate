@@ -66,7 +66,7 @@
 #include "fileio.h"
 #include "lib/gettext.h"
 
-#ifdef _WIN32
+#if (defined __CYGWIN__ || defined __MINGW32__)
 #define INITIAL_FLAGS	O_BINARY
 #else
 #define INITIAL_FLAGS	0
@@ -117,7 +117,7 @@ file_open (cob_file *f, char *filename, int mode, int opt)
   if (fp == NULL)
     return errno;
 
-#ifndef _WIN32
+#if !(defined __CYGWIN__ || defined __MINGW32__)
   if (flock (fileno (fp), (opt ? LOCK_EX : LOCK_SH) | LOCK_NB) < 0)
     {
       fclose (fp);
@@ -132,7 +132,7 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 static int
 file_close (cob_file *f, int opt)
 {
-#ifndef _WIN32
+#if !(defined __CYGWIN__ || defined __MINGW32__)
   struct flock lock;
 #endif
 
@@ -140,7 +140,7 @@ file_close (cob_file *f, int opt)
     {
     case COB_CLOSE_NORMAL:
     case COB_CLOSE_LOCK:
-#ifndef _WIN32
+#if !(defined __CYGWIN__ || defined __MINGW32__)
       lock.l_type = F_UNLCK;
       flock (fileno (f->file), LOCK_UN);
 #endif
