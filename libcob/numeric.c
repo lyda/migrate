@@ -184,7 +184,7 @@ cob_decimal_set_field (cob_decimal d, struct cob_field f)
     case COB_BINARY:
       {
 	int n = f.desc->decimals;
-	switch (f.desc->size)
+	switch (f.size)
 	  {
 	  case 1: cob_decimal_set_int (d, *(char *) f.data, n); break;
 	  case 2: cob_decimal_set_int (d, *(short *) f.data, n); break;
@@ -214,7 +214,7 @@ cob_decimal_get (cob_decimal d, struct cob_field f)
     case COB_BINARY:
       {
 	int digits = f.desc->digits;
-	if (f.desc->size <= 4)
+	if (f.size <= 4)
 	  {
 	    int val;
 	    if (!mpz_fits_sint_p (d->number))
@@ -224,7 +224,7 @@ cob_decimal_get (cob_decimal d, struct cob_field f)
 	      goto overflow;
 	    if (!f.desc->have_sign && val < 0)
 	      val = -val;
-	    switch (f.desc->size)
+	    switch (f.size)
 	      {
 	      case 1: *(char *) f.data = val; break;
 	      case 2: *(short *) f.data = val; break;
@@ -287,8 +287,8 @@ cob_decimal_get (cob_decimal d, struct cob_field f)
 	else
 	  {
 	    struct cob_field_desc desc =
-	      {size, '9', f.desc->digits, f.desc->decimals, 1};
-	    struct cob_field temp = {&desc, buff};
+	      {'9', f.desc->digits, f.desc->decimals, 1};
+	    struct cob_field temp = {size, buff, &desc};
 	    if (f.desc->digits < size)
 	      goto overflow;
 	    cob_put_sign (temp, sign);

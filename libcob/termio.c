@@ -66,8 +66,8 @@ cob_display (struct cob_field f, int fd)
 	unsigned char pic[9], *p = pic;
 	unsigned char data[size];
 	struct cob_field_desc desc =
-	  {size, '0', f.desc->digits, f.desc->decimals};
-	struct cob_field temp = {&desc, data};
+	  {'0', f.desc->digits, f.desc->decimals};
+	struct cob_field temp = {size, data, &desc};
 	desc.pic = pic;
 	if (f.desc->have_sign)
 	  p += sprintf (p, "+\001");
@@ -84,10 +84,8 @@ cob_display (struct cob_field f, int fd)
     default:
       {
 	int i;
-	int size = COB_FIELD_SIZE (f);
-	unsigned char *data = COB_FIELD_DATA (f);
-	for (i = 0; i < size; i++)
-	  fputc (data[i], cob_stream[fd]);
+	for (i = 0; i < f.size; i++)
+	  fputc (f.data[i], cob_stream[fd]);
       }
     }
 }
@@ -135,10 +133,10 @@ cob_accept (struct cob_field f, int fd)
       size = strlen (buff) - 1;
     }
 
-  if (size > COB_FIELD_SIZE (f))
-    size = COB_FIELD_SIZE (f);
-  memcpy (COB_FIELD_DATA (f), buff, size);
-  memset (COB_FIELD_DATA (f) + size, ' ', COB_FIELD_SIZE (f) - size);
+  if (size > f.size)
+    size = f.size;
+  memcpy (f.data, buff, size);
+  memset (f.data + size, ' ', f.size - size);
 }
 
 void
@@ -204,7 +202,7 @@ cob_accept_command_line (struct cob_field f)
 void
 cob_accept_environment (struct cob_field f, struct cob_field env)
 {
-  char buff[COB_FIELD_SIZE (env) + 1];
+  char buff[env.size + 1];
   char *p = getenv (cob_field_to_string (env, buff));
   if (!p) p = "";
   cob_mem_move (f, p, strlen (p));

@@ -139,11 +139,11 @@ sequential_write (struct cob_file_desc *f, struct cob_field rec)
 static int
 sequential_rewrite (struct cob_file_desc *f, struct cob_field rec)
 {
-  if (COB_FIELD_SIZE (rec) != f->record_size)
+  if (rec.size != f->record_size)
     return COB_FILE_RECORD_OVERFLOW;
 
   if (f->record_depending.desc)
-    if (COB_FIELD_SIZE (rec) != cob_to_int (f->record_depending))
+    if (rec.size != cob_to_int (f->record_depending))
       return COB_FILE_RECORD_OVERFLOW;
 
   lseek (f->file.fd, - f->record_size, SEEK_CUR);
@@ -465,8 +465,8 @@ static struct cob_fileio_funcs relative_funcs = {
   })
 
 #define DBT_SET(k,fld)				\
-  k.data = COB_FIELD_DATA (fld);		\
-  k.size = COB_FIELD_SIZE (fld);
+  k.data = fld.data;				\
+  k.size = fld.size;
 
 static DB_ENV *dbenv = NULL;
 
@@ -589,13 +589,13 @@ indexed_start (struct cob_file_desc *f, int cond, struct cob_field k)
   switch (cond)
     {
     case COB_EQ:
-      if (COB_FIELD_SIZE (k) == COB_FIELD_SIZE (f->keys[i].field))
+      if (k.size == f->keys[i].field.size)
 	ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET);
       else
 	{
 	  ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET_RANGE);
 	  if (ret == 0)
-	    ret = memcmp (key.data, COB_FIELD_DATA (k), COB_FIELD_SIZE (k));
+	    ret = memcmp (key.data, k.data, k.size);
 	}
       break;
     case COB_LT:
@@ -604,14 +604,14 @@ indexed_start (struct cob_file_desc *f, int cond, struct cob_field k)
       if (ret != 0)
 	ret = f->cursor->c_get (f->cursor, &key, &data, DB_LAST);
       else if (cond == COB_LT
-	       || memcmp (key.data, k.data, COB_FIELD_SIZE (k)) != 0)
+	       || memcmp (key.data, k.data, k.size) != 0)
 	ret = f->cursor->c_get (f->cursor, &key, &data, DB_PREV);
       break;
     case COB_GT:
     case COB_GE:
       ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET_RANGE);
       if (cond == COB_GT)
-	while (ret == 0 && memcmp (key.data, k.data, COB_FIELD_SIZE (k)) == 0)
+	while (ret == 0 && memcmp (key.data, k.data, k.size) == 0)
 	  ret = f->cursor->c_get (f->cursor, &key, &data, DB_NEXT);
       break;
   }
@@ -1023,7 +1023,7 @@ cob_write (struct cob_file_desc *f, struct cob_field rec)
   if (f->record_depending.desc)
     f->record_size = cob_to_int (f->record_depending);
   else
-    f->record_size = COB_FIELD_SIZE (rec);
+    f->record_size = rec.size;
 
   if (f->record_size < f->record_min || f->record_max < f->record_size)
     RETURN_STATUS (COB_FILE_RECORD_OVERFLOW);

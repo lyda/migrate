@@ -36,8 +36,9 @@
 #define COB_DISPLAY		'9'
 
 struct cob_field {
+  size_t size;
+  unsigned char *data;
   struct cob_field_desc {
-    size_t size;
     char type;
     char digits;
     char decimals;
@@ -48,17 +49,14 @@ struct cob_field {
     char justified     : 1;
     char *pic;
   } *desc;
-  unsigned char *data;
 };
 
 #define COB_FIELD_TYPE(f)	((f).desc->type)
-#define COB_FIELD_SIZE(f)	((f).desc->size)
 #define COB_FIELD_DECIMALS(f)	((f).desc->decimals)
-#define COB_FIELD_DATA(f)	((f).data)
 #define COB_FIELD_BASE(f) \
   ((f).data + (((f).desc->sign_separate && (f).desc->sign_leading) ? 1 : 0))
 #define COB_FIELD_LENGTH(f) \
-  ((f).desc->size - ((f).desc->sign_separate ? 1 : 0))
+  ((f).size - ((f).desc->sign_separate ? 1 : 0))
 
 
 
@@ -107,9 +105,9 @@ extern int cob_index (int i, int max, const char *name);
 extern int cob_index_depending (int i, int min, int max, int dep, const char *name, const char *depname);
 
 extern int cob_cmp_field (struct cob_field f1, struct cob_field f2);
-extern int cob_cmp_str (struct cob_field f1, unsigned char *data2, int len2);
-extern int cob_cmp_all (unsigned char *data, unsigned char c, int len);
-extern int cob_cmp_all_str (unsigned char *data, unsigned char *str, int len);
+extern int cob_cmp_str (struct cob_field f1, unsigned char *data2, size_t size2);
+extern int cob_cmp_all (unsigned char *data, unsigned char c, size_t size);
+extern int cob_cmp_all_str (unsigned char *data, unsigned char *str, size_t size);
 
 extern void cob_check_numeric (struct cob_field f, const char *name);
 extern int cob_is_numeric (struct cob_field f);

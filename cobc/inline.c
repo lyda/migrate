@@ -85,9 +85,8 @@ output_advance_move (struct cob_field f, cobc_tree dst)
   struct cobc_field *p = COBC_FIELD (dst);
   struct cob_field_desc dst_desc;
   unsigned char dst_data[p->size];
-  struct cob_field dst_fld = {&dst_desc, dst_data};
+  struct cob_field dst_fld = {p->size, dst_data, &dst_desc};
 
-  dst_desc.size = p->size;
   if (p->children || p->rename_thru
       || (p->level == 66 && p->redefines->children))
     {
@@ -130,9 +129,9 @@ static void
 output_move_all (cobc_tree x, char c)
 {
   struct cobc_field *p = COBC_FIELD (x);
-  struct cob_field_desc desc = {p->size, 'X'};
+  struct cob_field_desc desc = {'X'};
   unsigned char data[p->size];
-  struct cob_field fld = {&desc, data};
+  struct cob_field fld = {p->size, data, &desc};
   memset (data, c, p->size);
   output_advance_move (fld, x);
 }
@@ -260,9 +259,9 @@ output_move_literal (cobc_tree src, cobc_tree dst)
       char src_pic[5];
       struct cobc_literal *l = COBC_LITERAL (src);
       struct cob_field_desc src_desc =
-	{l->size, COBC_TREE_CLASS (l), l->size, l->decimals};
+	{COBC_TREE_CLASS (l), l->size, l->decimals};
       unsigned char src_data[l->size + 1];
-      struct cob_field src_fld = {&src_desc, src_data};
+      struct cob_field src_fld = {l->size, src_data, &src_desc};
       strcpy (src_data, l->str);
       src_desc.pic = src_pic;
       src_pic[0] = COBC_TREE_CLASS (l);
