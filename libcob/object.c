@@ -576,7 +576,7 @@ check_condition (struct cob_field f1, ...)
 }
 
 int
-compare (struct cob_field f1, struct cob_field f2)
+cob_compare (struct cob_field f1, struct cob_field f2)
 {
   int i, maxi;
   char type1 = f1.desc->type;
@@ -584,8 +584,14 @@ compare (struct cob_field f1, struct cob_field f2)
   int len1 = f1.desc->len;
   int len2 = f2.desc->len;
 
-  if ((type1 != '9' && type1 != 'C' && type1 != 'B')
-      || (type2 != '9' && type2 != 'C' && type2 != 'B'))
+  if ((type1 == '9' || type1 == 'C' || type1 == 'B' || type1 == 'U')
+      && (type2 == '9' || type2 == 'C' || type2 == 'B' || type2 == 'U'))
+    {
+      cob_push_decimal (f1);
+      cob_push_decimal (f2);
+      return cob_cmp ();
+    }
+  else
     {
       if (f1.desc->all || f2.desc->all)
 	{
@@ -651,12 +657,6 @@ compare (struct cob_field f1, struct cob_field f2)
 	      return -1;
 	}
     }
-  else
-    {
-      cob_push_decimal (f1);
-      cob_push_decimal (f2);
-      return cob_cmp ();
-    }
   return 0;
 }
 
@@ -702,7 +702,7 @@ cob_is_equal ()
 
       case COB_TYPE_FIELD:
 	DROP (2);
-	return (compare (*COB_FIELD (o1), *COB_FIELD (o2)) == 0) ? 1 : 0;
+	return (cob_compare (*COB_FIELD (o1), *COB_FIELD (o2)) == 0) ? 1 : 0;
       }
   /* A trick that allows 88 variables */
   else if (COB_TYPE (o2) == COB_TYPE_BOOLEAN

@@ -1018,7 +1018,7 @@ gen_compare (cob_tree s1, int op, cob_tree s2)
     }
   else
     {
-      asm_call_2 ("compare", s1, s2);
+      asm_call_2 ("cob_compare", s1, s2);
     }
 
   switch (op)
