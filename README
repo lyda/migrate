@@ -41,16 +41,18 @@ OpenCOBOL requires the following external libraries to be installed:
 
     GNU Libtool is distributed under GNU Lesser General Public License.
 
+The following libraries are optional:
+
   o Berkeley DB (libdb) 1.85 or later
     http://www.sleepycat.com/
 
     libdb can be used to implement indexed file I/O and SORT/MERGE.
 
-    Berkeley DB is distributed under the BSD License (1.85) or their
-    own license (2.x or later).  Note that, as of 2.x, they requires
-    royalty for non-free software.
-
-The following libraries are optional:
+    Berkeley DB is distributed under the original BSD License (1.85)
+    or their own open-source license (2.x or later).  Note that, as
+    of 2.x, if you linked your software with Berkeley DB, you must
+    distribute the source code of your software along with your
+    software, or you have to pay royalty to Sleepycat Software, Inc.
 
   o Ncurses (libncurses) 5.2 or later
     http://www.gnu.org/software/ncurses/ncurses.html
@@ -72,6 +74,8 @@ this is done by the following commands:
 There are the following configure options:
 
   --with-cc=<cc>    specify C compiler command used by cobc
+  --with-db1        use Berkeley DB 1.85 (libdb-1.85)
+  --with-db         use Berkeley DB 3.0 or later (libdb)
   --with-lfs64      use large file system for file I/O
 
 Development
