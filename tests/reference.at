@@ -322,7 +322,7 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:8: error: offset out of range: 0
+[prog.cob:8: error: offset of `X' out of range: 0
 ])
 
 AT_CLEANUP
@@ -342,7 +342,7 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:8: error: offset out of range: 5
+[prog.cob:8: error: offset of `X' out of range: 5
 ])
 
 AT_CLEANUP
@@ -362,7 +362,7 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:8: error: length out of range: 4
+[prog.cob:8: error: length of `X' out of range: 4
 ])
 
 AT_CLEANUP

@@ -1,5 +1,14 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Changes in OpenCOBOL 0.12
+
+** Improved compile-time error check.
+
+** Additional testsuite entries.
+
+** Bug fixes.
+
+
 * Changes in OpenCOBOL 0.11
 
 ** Part of run-time library interface has been redesigned.

@@ -3935,12 +3935,13 @@ resolve_field (cobc_tree x)
 	{
 	  int offset = literal_to_int (COBC_LITERAL (r->offset));
 	  if (offset < 1 || offset > f->size)
-	    yyerror_x (x, _("offset out of range: %d"), offset);
+	    yyerror_x (x, _("offset of `%s' out of range: %d"), name, offset);
 	  else if (r->length && COBC_LITERAL_P (r->length))
 	    {
 	      int length = literal_to_int (COBC_LITERAL (r->length));
 	      if (length < 1 || length > f->size - offset + 1)
-		yyerror_x (x, _("length out of range: %d"), length);
+		yyerror_x (x, _("length of `%s' out of range: %d"),
+			   name, length);
 	    }
 	}
 
