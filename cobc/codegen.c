@@ -4602,7 +4602,7 @@ save_pic_char (char c, int n)
     case '9':
       piccnt += n;
       if (v_flag)
-	decimals += n;
+	curr_field->decimals += n;
       n_flag = 1;
       break;
     case 'V':
@@ -4617,9 +4617,9 @@ save_pic_char (char c, int n)
       if (!n_flag)
 	v_flag = 1;		/* implicit V just before the first P */
       if (v_flag)
-	decimals += n;
+	curr_field->decimals += n;
       else
-	decimals -= n;
+	curr_field->decimals -= n;
       break;
     case 'S':
       sign = 1;

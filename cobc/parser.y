@@ -946,12 +946,11 @@ index_name_list:
 picture_clause:
     PIC {
       curr_division = CDIV_PIC;
-      picix=piccnt=v_flag=decimals=0;
+      picix=piccnt=v_flag=curr_field->decimals=0;
       picture[picix]=0;
     }
     opt_is picture_spec {
       picture[picix+2]=0;
-      curr_field->decimals=decimals;
     }
     ;
 picture_spec:

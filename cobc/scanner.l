@@ -22,7 +22,10 @@
  * Boston, MA 02111-1307 USA
  */
 
+%option 8bit
+%option caseless
 %option noyywrap
+%option never-interactive
 
 %{
 #include <stdio.h>
