@@ -2656,9 +2656,9 @@ goto_statement:
     }
     ;
 goto_label_list:
-      label                             { $$ = insert_list(NULL, $1); }
-    | goto_label_list label             { $$ = insert_list($1, $2); }
-    | goto_label_list ',' label     { $$ = insert_list($1, $3); }
+      label                     { $$ = insert_list(NULL, $1); }
+    | goto_label_list label     { $$ = insert_list($1, $2); }
+    | goto_label_list ',' label { $$ = insert_list($1, $3); }
     ;
 opt_goto_depending_on:
     /* nothing */               { $$ = NULL; }
@@ -2695,14 +2695,15 @@ var_list_name: name opt_rounded opt_sep
      }
     ;
 
-var_list_gname: gname opt_sep
-     {
+var_list_gname:
+    gname opt_sep
+    {
       $$ = create_mathvar_info(NULL, $1, 0);
-     }
+    }
     | var_list_gname gname opt_sep
-     {
-      $$ = create_mathvar_info($1, $2, 0);
-     }
+      {
+	$$ = create_mathvar_info($1, $2, 0);
+      }
     ;
 
 opt_rounded: { $$=0; }

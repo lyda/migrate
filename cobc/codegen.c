@@ -32,6 +32,9 @@
 #define START_STACK_ADJUST 20
 #define SYMBUF_SIZE 128
 
+#define INTEGER_CLASS  1
+#define STRING_CLASS   2
+
 #define decimal_char() (decimal_comma ? ',' : '.')
 int pgm_segment = 0;
 int screen_io_enable = 0;
@@ -358,16 +361,10 @@ lookup_variable (struct sym *sy, struct sym *parent)
 struct sym *
 lookup_for_redefines (struct sym *sy)
 {
-  struct sym *tmp;
   if (curr_field->parent == NULL)
-    {
-      tmp = lookup (sy->name, SYTB_VAR);
-    }
+    return lookup (sy->name, SYTB_VAR);
   else
-    {
-      tmp = lookup_variable (sy, curr_field->parent);
-    }
-  return tmp;
+    return lookup_variable (sy, curr_field->parent);
 }
 
 void
@@ -475,9 +472,8 @@ invert_literal_sign (struct lit *sy)
 void
 set_sign_flags (int flags)
 {
-  struct sym *sy = curr_field;
-  sy->flags.separate_sign = (flags & SCR_SIGN_SEPARATE) ? 1 : 0;
-  sy->flags.leading_sign = (flags & SCR_SIGN_LEADING) ? 1 : 0;
+  curr_field->flags.separate_sign = (flags & SCR_SIGN_SEPARATE) ? 1 : 0;
+  curr_field->flags.leading_sign = (flags & SCR_SIGN_LEADING) ? 1 : 0;
 }
 
 void
@@ -486,9 +482,7 @@ check_decimal_point (struct lit *lit)
   char *s = lit->name;
   if ((decimal_comma && strchr (s, '.')) ||
       (!decimal_comma && strchr (s, ',')))
-    {
-      yyerror ("wrong decimal point character in numeric literal");
-    }
+    yyerror ("wrong decimal point character in numeric literal");
 }
 
 /* convert control characters to don't corrupt the assembly output */
@@ -500,51 +494,37 @@ sch_convert (char *s)
   while (*s && n++ < 45)
     {
       if (*s >= ' ' && *s < '\x7f')
-	{
-	  *d++ = *s++;
-	}
+	*d++ = *s++;
       else
-	{
-	  *d++ = (*s++ & 0x0f) + ' ';
-	}
+	*d++ = (*s++ & 0x0f) + ' ';
     }
   if (n >= 45)
-    {
-      sprintf (sch_convert_buf + 40, "...");
-    }
+    sprintf (sch_convert_buf + 40, "...");
   else
-    {
-      *d = 0;
-    }
+    *d = 0;
   return sch_convert_buf;
 }
 
 int
 is_variable (struct sym *sy)
 {
-  int r = 0;
   if (sy->litflag == 0)
-    {
-      switch (sy->type)
-	{
-	case '8':		/* 88 field */
-	case '9':		/* numeric */
-	case 'A':		/* alpha */
-	case 'B':		/* binary (comp/computational) */
-	case 'C':		/* compacted (comp-3/comptational-3) */
-	case 'D':		/* screen data */
-	case 'E':		/* edited */
-	case 'G':		/* group */
-	case 'U':		/* float(comp-1 4 bytes) / double(comp-2 8 bytes) */
-	case 'X':		/* alphanum */
-	  r = 1;
-	  break;
-	default:
-	  r = 0;
-	  break;
-	}
-    }
-  return r;
+    switch (sy->type)
+      {
+      case '8':		/* 88 field */
+      case '9':		/* numeric */
+      case 'A':		/* alpha */
+      case 'B':		/* binary (comp/computational) */
+      case 'C':		/* compacted (comp-3/comptational-3) */
+      case 'D':		/* screen data */
+      case 'E':		/* edited */
+      case 'G':		/* group */
+      case 'U':		/* float(comp-1 4 bytes) / double(comp-2 8 bytes) */
+      case 'X':		/* alphanum */
+	return 1;
+      }
+
+  return 0;
 }
 
 int
@@ -699,7 +679,6 @@ gen_init_value (struct lit *sy, int var_len)
   else
     {
       s = sy->name;
-      //len=strlen(s);
       len = sy->len;
       pad = ' ';
     }
@@ -814,19 +793,14 @@ adjust_linkage_vars (int start_offset)
   int offset = start_offset;
 
   for (i = 0; i < HASHLEN; i++)
-    {
-      for (sy1 = vartab[i]; sy1 != NULL; sy1 = sy1->next)
-	{
-	  for (sy = sy1; sy; sy = sy->clone)
-	    {
-	      if (sy->parent == NULL && sy->linkage_flg == 1)
-		{
-		  sy->linkage_flg = -offset;
-		  offset += 4;
-		}
-	    }
-	}
-    }
+    for (sy1 = vartab[i]; sy1 != NULL; sy1 = sy1->next)
+      for (sy = sy1; sy; sy = sy->clone)
+	if (sy->parent == NULL && sy->linkage_flg == 1)
+	  {
+	    sy->linkage_flg = -offset;
+	    offset += 4;
+	  }
+
   return offset;
 }
 
