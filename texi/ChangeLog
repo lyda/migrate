@@ -1,3 +1,7 @@
+2002-06-11  Keisuke Nishida  <knishida@netlab.jp>
+
+	* open-cobol.texi: Revise for 0.9.6.
+
 2002-06-03  Keisuke Nishida  <knishida@netlab.jp>
 
 	* open-cobol.texi (Customize): Add COB_LDADD, COB_CONFIG_FILE.
