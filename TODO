@@ -86,6 +86,11 @@ Frank Polscheit posted his implementation of SQL preprocessor.
 Firebird (firebird.sourceforge.net) has a SQL preprocessor
 for thier database.
 
+** New backends for INDEXED files
+
+ - Any alternative to BerkeleyDB?
+ - Use DB (PostgreSQM, MySQL, etc.) as backends
+
 * Improvement of compiler internals
 
 ** Error checking
@@ -362,6 +367,10 @@ and source locations.  We should also define a debugging function
 that receive a data name and displays its value, using the generated
 data hierarchy.  By calling the function from gdb, we can easily
 access to the COBOL data at debugging time.
+
+* IDE
+
+** Can we use Eclipse?
 
 * Documentation
 
