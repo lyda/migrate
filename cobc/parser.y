@@ -2711,8 +2711,8 @@ set_statement:
 set_body:
   set_to
 | set_up_down
-| set_to_true_false
-| set_to_on_off
+| set_to_on_off_sequence
+| set_to_true_false_sequence
 ;
 
 /* SET name ... TO expr */
@@ -2746,11 +2746,11 @@ up_or_down:
 
 /* SET mnemonic-name-1 ... TO ON/OFF */
 
-set_to_on_off:
-  set_to_on_off_1
-| set_to_on_off set_to_on_off_1
+set_to_on_off_sequence:
+  set_to_on_off
+| set_to_on_off_sequence set_to_on_off
 ;
-set_to_on_off_1:
+set_to_on_off:
   mnemonic_name_list TO on_or_off
   {
     struct cb_list *l;
@@ -2765,11 +2765,11 @@ set_to_on_off_1:
 
 /* SET condition-name-1 ... TO TRUE/FALSE */
 
-set_to_true_false:
-  set_to_true_false_1
-| set_to_true_false set_to_true_false_1
+set_to_true_false_sequence:
+  set_to_true_false
+| set_to_true_false_sequence set_to_true_false
 ;
-set_to_true_false_1:
+set_to_true_false:
   data_name_list TO TOK_TRUE
   {
     struct cb_list *l;
