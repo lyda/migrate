@@ -400,7 +400,7 @@ extern int validate_data_name (cobc_tree x);
 extern cobc_tree resolve_label (cobc_tree x);
 extern cobc_tree resolve_file_name (cobc_tree x);
 extern cobc_tree resolve_class_name (cobc_tree x);
-extern cobc_tree resolve_system_name (cobc_tree x);
+extern cobc_tree resolve_mnemonic_name (cobc_tree x);
 
 
 /*
@@ -653,7 +653,7 @@ extern cobc_tree build_add (cobc_tree v, cobc_tree n, int round);
 extern cobc_tree build_sub (cobc_tree v, cobc_tree n, int round);
 extern cobc_tree build_move (cobc_tree src, cobc_tree dst);
 extern cobc_tree build_corresponding (cobc_tree (*func)(), cobc_tree x1, cobc_tree x2, int opt);
-extern cobc_tree build_divide (cobc_tree dividend, cobc_tree divisor, cobc_tree quotient, int round, cobc_tree remainder);
+extern cobc_tree build_divide (cobc_tree dividend, cobc_tree divisor, cobc_tree quotient, cobc_tree remainder);
 extern cobc_tree build_cond (cobc_tree x);
 extern cobc_tree build_evaluate (struct cobc_list *subject_list, struct cobc_list *case_list);
 extern cobc_tree build_search_all (cobc_tree table, cobc_tree when);

@@ -1722,7 +1722,7 @@ resolve_class_name (cobc_tree x)
 /* resolve builtin name */
 
 cobc_tree
-resolve_system_name (cobc_tree x)
+resolve_mnemonic_name (cobc_tree x)
 {
   struct cobc_reference *r = COBC_REFERENCE (x);
 
@@ -1735,7 +1735,7 @@ resolve_system_name (cobc_tree x)
       if (COBC_BUILTIN_P (r->word->items->item))
 	{
 	  r->value = r->word->items->item;
-	  return r->value;
+	  return x;
 	}
       yyerror_x (x, _("`%s' not builtin name"), r->word->name);
       break;
@@ -2541,13 +2541,15 @@ build_corresponding (cobc_tree (*func)(), cobc_tree x1, cobc_tree x2, int opt)
 
 cobc_tree
 build_divide (cobc_tree dividend, cobc_tree divisor,
-	      cobc_tree quotient, int round, cobc_tree remainder)
+	      cobc_tree quotient, cobc_tree remainder)
 {
   struct cobc_list *l = NULL;
+  struct cobc_parameter *pq = COBC_PARAMETER (quotient);
+  struct cobc_parameter *pr = COBC_PARAMETER (remainder);
   l = list_add (l, make_funcall_4 ("cob_div_quotient",
-				   dividend, divisor, quotient,
-				   round ? cobc_int1 : cobc_int0));
-  l = list_add (l, make_funcall_1 ("cob_div_remainder", remainder));
+				   dividend, divisor, pq->x,
+				   pq->type ? cobc_int1 : cobc_int0));
+  l = list_add (l, make_funcall_1 ("cob_div_remainder", pr->x));
   return make_sequence (l);
 }
 

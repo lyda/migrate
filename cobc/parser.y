@@ -84,6 +84,11 @@ static int last_operator;
 static cobc_tree last_lefthand;
 
 static int builtin_switch_id (cobc_tree x);
+static cobc_tree validate_group_name (cobc_tree x);
+static cobc_tree validate_record_name (cobc_tree x);
+static cobc_tree validate_numeric_name (cobc_tree x, int rounded);
+static cobc_tree validate_numeric_edited_name (cobc_tree x, int rounded);
+static cobc_tree validate_integer_name (cobc_tree x);
 %}
 
 %union {
@@ -138,28 +143,23 @@ static int builtin_switch_id (cobc_tree x);
 %type <inum> before_or_after perform_test replacing_option
 %type <inum> select_organization select_access_mode same_option
 %type <inum> ascending_or_descending opt_from_integer opt_to_integer
-%type <list> occurs_key_list occurs_index_list data_name_list
-%type <list> value_list opt_value_list
-%type <list> label_list numeric_value_list string_list
-%type <list> string_list_1 inspect_before_after_list
-%type <list> reference_list mnemonic_name_list
-%type <list> file_name_list math_name_list math_edited_name_list
-%type <list> expr_item_list initialize_replacing
-%type <list> initialize_replacing_list
-%type <tree> add_to at_line_column
-%type <tree> column_number condition identifier data_name expr expr_1
-%type <tree> expr_item field_description_list
-%type <tree> field_name file_name function group_name integer_label
-%type <tree> integer_value label label_name qualified_word
-%type <tree> line_number literal mnemonic_name subscript
-%type <tree> numeric_value numeric_edited_name numeric_expr
-%type <tree> numeric_name occurs_index on_or_off opt_screen_description_list
+%type <list> occurs_key_list data_name_list value_list opt_value_list
+%type <list> label_list numeric_value_list inspect_before_after_list
+%type <list> reference_list mnemonic_name_list file_name_list
+%type <list> expr_item_list numeric_name_list numeric_edited_name_list
+%type <tree> at_line_column column_number condition  expr expr_1
+%type <tree> expr_item field_description_list label line_number literal
+%type <tree> field_name integer_label reference_or_literal basic_literal
+%type <tree> integer_value numeric_value numeric_expr
+%type <tree> on_or_off opt_screen_description_list
 %type <tree> opt_with_pointer perform_option perform_procedure
-%type <tree> record_name reference_or_literal basic_literal
 %type <tree> reference screen_description screen_description_list
-%type <tree> section_name statement_list non_all_value
-%type <tree> table_name undefined_name value write_from
+%type <tree> section_name statement_list non_all_value value write_from
 %type <tree> on_size_error on_overflow at_end opt_invalid_key invalid_key
+%type <tree> group_name record_name numeric_name numeric_edited_name
+%type <tree> integer_name data_name file_name table_name mnemonic_name
+%type <tree> label_name undefined_word
+%type <tree> identifier qualified_word subscript function
 
 
 %%
@@ -335,14 +335,14 @@ special_name_mnemonic:
   special_name_mnemonic_on_off
 ;
 special_name_mnemonic_define:
-| IS undefined_name
+| IS undefined_word
   {
     associate ($2, $<tree>0);
   }
 ;
 special_name_mnemonic_on_off:
 | special_name_mnemonic_on_off
-  on_or_off _status _is undefined_name
+  on_or_off _status _is undefined_word
   {
     int id = builtin_switch_id ($<tree>-1);
     if (id != -1)
@@ -420,7 +420,7 @@ integer_list:
 /* CLASS */
 
 special_name_class:
-  CLASS undefined_name _is class_item_list
+  CLASS undefined_word _is class_item_list
   {
     current_program->class_list =
       list_add (current_program->class_list, make_class ($2, $<list>4));
@@ -486,7 +486,7 @@ file_control:
 ;
 select_sequence:
 | select_sequence
-  SELECT flag_optional undefined_name
+  SELECT flag_optional undefined_word
   {
     current_file = COBC_FILE (make_file ($4));
     current_file->organization = COB_ORG_SEQUENTIAL;
@@ -989,19 +989,20 @@ ascending_or_descending:
 occurs_indexed:
 | INDEXED _by occurs_index_list
   {
-    current_field->index_list = $3;
+    current_field->index_list = $<list>3;
   }
 ;
 occurs_index_list:
-  occurs_index			{ $$ = list ($1); }
+  occurs_index			{ $<list>$ = list ($<tree>1); }
 | occurs_index_list
-  occurs_index			{ $$ = list_add ($1, $2); }
+  occurs_index			{ $<list>$ = list_add ($<list>1, $<tree>2); }
 ;
 occurs_index:
-  undefined_name
+  undefined_word
   {
-    $$ = make_field_3 ($1, "S9(9)", COBC_USAGE_INDEX);
-    current_program->index_list = list_add (current_program->index_list, $$);
+    $<tree>$ = make_field_3 ($1, "S9(9)", COBC_USAGE_INDEX);
+    current_program->index_list =
+      list_add (current_program->index_list, $<tree>$);
   }
 ;
 
@@ -1554,7 +1555,7 @@ add_statement:
   }
 ;
 add_body:
-  numeric_value_list TO math_name_list
+  numeric_value_list TO numeric_name_list
   {
     /* ADD A B C TO X Y  -->  t = a + b + c; x += t; y += t; */
     struct cobc_list *l;
@@ -1563,15 +1564,15 @@ add_body:
       e = make_binary_op (e, '+', l->item);
     $<tree>$ = build_assign ($3, '+', e);
   }
-| numeric_value_list add_to GIVING math_edited_name_list
+| numeric_value_list add_to GIVING numeric_edited_name_list
   {
     /* ADD A B TO C GIVING X Y  -->  t = a + b + c; x = t; y = t; */
     struct cobc_list *l;
     cobc_tree e = $1->item;
     for (l = $1->next; l; l = l->next)
       e = make_binary_op (e, '+', l->item);
-    if ($2)
-      e = make_binary_op (e, '+', $2);
+    if ($<tree>2)
+      e = make_binary_op (e, '+', $<tree>2);
     $<tree>$ = build_assign ($4, 0, e);
   }
 | CORRESPONDING group_name _to group_name flag_rounded
@@ -1580,8 +1581,8 @@ add_body:
   }
 ;
 add_to:
-  /* empty */			{ $$ = NULL; }
-| TO value			{ $$ = $2; }
+  /* empty */			{ $<tree>$ = NULL; }
+| TO value			{ $<tree>$ = $2; }
 ;
 _end_add: | END_ADD ;
 
@@ -1706,7 +1707,7 @@ compute_statement:
   }
 ;
 compute_body:
-  math_edited_name_list '=' numeric_expr
+  numeric_edited_name_list '=' numeric_expr
   {
     $<tree>$ = build_assign ($1, 0, $3);
   }
@@ -1803,27 +1804,27 @@ divide_statement:
   }
 ;
 divide_body:
-  numeric_value INTO math_name_list
+  numeric_value INTO numeric_name_list
   {
     $<tree>$ = build_assign ($3, '/', $1);
   }
-| numeric_value INTO numeric_value GIVING math_edited_name_list
+| numeric_value INTO numeric_value GIVING numeric_edited_name_list
   {
     $<tree>$ = build_assign ($5, 0, make_binary_op ($3, '/', $1));
   }
-| numeric_value BY numeric_value GIVING math_edited_name_list
+| numeric_value BY numeric_value GIVING numeric_edited_name_list
   {
     $<tree>$ = build_assign ($5, 0, make_binary_op ($1, '/', $3));
   }
-| numeric_value INTO numeric_value GIVING numeric_edited_name flag_rounded
+| numeric_value INTO numeric_value GIVING numeric_edited_name
   REMAINDER numeric_edited_name
   {
-    $<tree>$ = build_divide ($3, $1, $5, $6, $8);
+    $<tree>$ = build_divide ($3, $1, $5, $7);
   }
-| numeric_value BY numeric_value GIVING numeric_edited_name flag_rounded
+| numeric_value BY numeric_value GIVING numeric_edited_name
   REMAINDER numeric_edited_name
   {
-    $<tree>$ = build_divide ($1, $3, $5, $6, $8);
+    $<tree>$ = build_divide ($1, $3, $5, $7);
   }
 ;
 _end_divide: | END_DIVIDE ;
@@ -1916,7 +1917,7 @@ goto_statement:
     else
       push_funcall_1 ("@goto", $3->item);
   }
-| GO _to label_list DEPENDING _on numeric_name
+| GO _to label_list DEPENDING _on integer_name
   {
     push_funcall_2 ("@goto-depending", $3, $6);
   }
@@ -1972,19 +1973,19 @@ initialize_statement:
   {
     struct cobc_list *l;
     for (l = $3; l; l = l->next)
-      push_funcall_2 ("@initialize", l->item, $4);
+      push_funcall_2 ("@initialize", l->item, $<list>4);
   }
 ;
 initialize_replacing:
-  /* empty */			      { $$ = NULL; }
-| REPLACING initialize_replacing_list { $$ = $2; }
+  /* empty */			      { $<list>$ = NULL; }
+| REPLACING initialize_replacing_list { $<list>$ = $<list>2; }
 ;
 initialize_replacing_list:
-  /* empty */			      { $$ = NULL; }
+  /* empty */			      { $<list>$ = NULL; }
 | initialize_replacing_list
   replacing_option _data BY value
   {
-    $$ = list_add ($1, make_parameter_1 ($2, $5));
+    $<list>$ = list_add ($<list>1, make_parameter_1 ($2, $5));
   }
 ;
 replacing_option:
@@ -2170,7 +2171,8 @@ move_statement:
   }
 | MOVE save_location CORRESPONDING group_name TO group_name
   {
-    push (build_corresponding (build_move, $4, $6, -1));
+    if ($4 != cobc_error_node && $6 != cobc_error_node)
+      push (build_corresponding (build_move, $4, $6, -1));
   }
 ;
 
@@ -2186,11 +2188,11 @@ multiply_statement:
   }
 ;
 multiply_body:
-  numeric_value BY math_name_list
+  numeric_value BY numeric_name_list
   {
     $<tree>$ = build_assign ($3, '*', $1);
   }
-| numeric_value BY numeric_value GIVING math_edited_name_list
+| numeric_value BY numeric_value GIVING numeric_edited_name_list
   {
     $<tree>$ = build_assign ($5, 0, make_binary_op ($1, '*', $3));
   }
@@ -2295,11 +2297,11 @@ perform_test:
 ;
 perform_varying_list:
   perform_varying
-| perform_varying_list AFTER { $<tree>$ = $<tree>0; }
+| perform_varying_list AFTER	{ $<tree>$ = $<tree>0; }
   perform_varying
 ;
 perform_varying:
-  numeric_name FROM value BY value UNTIL condition
+  data_name FROM value BY value UNTIL condition
   {
     cobc_tree step = build_add ($1, $5, 0);
     add_perform_varying (COBC_PERFORM ($<tree>0), $1, $3, step, $7);
@@ -2355,7 +2357,8 @@ _end_read: | END_READ ;
  */
 
 release_statement:
-  RELEASE save_location record_name write_from
+  RELEASE save_location
+  record_name write_from
   {
     cobc_tree file = COBC_TREE (COBC_FIELD (cobc_ref ($3))->file);
     if ($4)
@@ -2387,7 +2390,8 @@ _end_return: | END_RETURN ;
  */
 
 rewrite_statement:
-  REWRITE save_location record_name write_from opt_invalid_key _end_rewrite
+  REWRITE save_location
+  record_name write_from opt_invalid_key _end_rewrite
   {
     cobc_tree file = COBC_TREE (COBC_FIELD (cobc_ref ($3))->file);
     if ($4)
@@ -2441,7 +2445,14 @@ search_all_when:
     $<tree>$ = make_if (build_search_all ($<tree>-1, $2), $3, 0);
   }
 ;
-_end_search: | END_SEARCH ;
+_end_search:
+  /* empty */
+  {
+    if (cobc_warn_end_search)
+      yywarn (_("END-SEARCH is expected here"));
+  }
+| END_SEARCH
+;
 
 
 /*
@@ -2624,15 +2635,15 @@ string_statement:
   STRING save_location
   string_list INTO data_name opt_with_pointer on_overflow _end_string
   {
-    struct cobc_list *l = $3;
+    struct cobc_list *l = $<list>3;
     l = cons (make_funcall_2 ("cob_string_init", $5, $6), l);
     l = list_add (l, make_funcall_0 ("cob_string_finish"));
     push_sequence_with_handler (make_sequence (l), $7);
   }
 ;
 string_list:
-  string_list_1			{ $$ = $1; }
-| string_list string_list_1	{ $$ = list_append ($1, $2); }
+  string_list_1			{ $<list>$ = $<list>1; }
+| string_list string_list_1	{ $<list>$ = list_append ($<list>1, $<list>2); }
 ;
 string_list_1:
   value_list string_delimited
@@ -2640,7 +2651,7 @@ string_list_1:
     struct cobc_list *l;
     for (l = $1; l; l = l->next)
       l->item = make_funcall_2 ("cob_string_append", l->item, $<tree>2);
-    $$ = $1;
+    $<list>$ = $1;
   }
 ;
 string_delimited:
@@ -2668,7 +2679,7 @@ subtract_statement:
   }
 ;
 subtract_body:
-  numeric_value_list FROM math_name_list
+  numeric_value_list FROM numeric_name_list
   {
     /* SUBTRACT A B C FROM X Y  -->  t = a + b + c; x -= t; y -= t; */
     struct cobc_list *l;
@@ -2677,7 +2688,7 @@ subtract_body:
       e = make_binary_op (e, '+', l->item);
     $<tree>$ = build_assign ($3, '-', e);
   }
-| numeric_value_list FROM numeric_value GIVING math_edited_name_list
+| numeric_value_list FROM numeric_value GIVING numeric_edited_name_list
   {
     /* SUBTRACT A B FROM C GIVING X Y  -->  t = c - a - b; x = t; y = t */
     struct cobc_list *l;
@@ -2818,8 +2829,6 @@ before_or_after:
   BEFORE			{ $$ = COBC_BEFORE; }
 | AFTER				{ $$ = COBC_AFTER; }
 ;
-_line_or_lines: | LINE | LINES ;
-_advancing: | ADVANCING ;
 _end_write: | END_WRITE ;
 
 
@@ -2934,6 +2943,11 @@ invalid_key_sentence:
 not_invalid_key_sentence:
   NOT INVALID _key statement_list	{ $<tree>$ = $4; }
 ;
+
+
+/*****************************************************************************
+ * Common Constructs
+ *****************************************************************************/
 
 
 /*******************
@@ -3287,74 +3301,58 @@ greater_or_equal: GE | GREATER _than OR EQUAL _to ;
 less_or_equal: LE | LESS _than OR EQUAL _to ;
 
 
-/*****************************************************************************
- * Common Constructs
- *****************************************************************************/
-
-
 /*******************
  * Names
  *******************/
 
-/* Math name */
-
-math_name_list:
-  numeric_name flag_rounded { $$ = list (make_parameter_1 ($2, $1)); }
-| math_name_list
-  numeric_name flag_rounded { $$ = list_add ($1, make_parameter_1 ($3, $2));}
-;
-
-/* Math edited name */
-
-math_edited_name_list:
-  numeric_edited_name flag_rounded { $$ = list (make_parameter_1 ($2, $1)); }
-| math_edited_name_list
-  numeric_edited_name flag_rounded { $$ = list_add ($1, make_parameter_1 ($3, $2));}
-;
-
-/* Numeric name */
-
-numeric_name:
-  data_name
-  {
-    if (COBC_TREE_CLASS ($1) != COB_TYPE_NUMERIC)
-      {
-	yyerror_x ($1, _("`%s' not numeric"), tree_name ($1));
-	YYERROR;
-      }
-    $$ = $1;
-  }
-;
-
-/* Numeric edited name */
-
-numeric_edited_name:
-  data_name
-  {
-    if (COBC_TREE_CLASS ($1) != COB_TYPE_NUMERIC
-	&& COBC_TREE_TYPE ($1) != COB_TYPE_NUMERIC_EDITED)
-      {
-	yyerror_x ($1, _("`%s' not numeric or numeric edited"),
-		   tree_name ($1));
-	YYERROR;
-      }
-    $$ = $1;
-  }
-;
-
 /* Group name */
 
 group_name:
-  data_name
-  {
-    cobc_tree x = cobc_ref ($1);
-    if (COBC_REFERENCE ($1)->offset || COBC_FIELD (x)->children == NULL)
-      {
-	yyerror_x ($1, _("`%s' not a group"), tree_name ($1));
-	YYERROR;
-      }
-    $$ = $1;
-  }
+  data_name			{ $$ = validate_group_name ($1); }
+;
+
+/* Record name */
+
+record_name:
+  data_name			{ $$ = validate_record_name ($1); }
+;
+
+/* Numeric name (with ROUNDED) */
+
+numeric_name_list:
+  numeric_name			{ $$ = list ($1); }
+| numeric_name_list
+  numeric_name			{ $$ = list_add ($1, $2); }
+;
+numeric_name:
+  data_name flag_rounded	{ $$ = validate_numeric_name ($1, $2); }
+;
+
+/* Numeric-edited name (with ROUNDED) */
+
+numeric_edited_name_list:
+  numeric_edited_name		{ $$ = list ($1); }
+| numeric_edited_name_list
+  numeric_edited_name		{ $$ = list_add ($1, $2); }
+;
+numeric_edited_name:
+  data_name flag_rounded	{ $$ = validate_numeric_edited_name ($1, $2); }
+;
+
+/* Integer name */
+
+integer_name:
+  data_name			{ $$ = validate_integer_name ($1); }
+;
+
+/* Data name */
+
+data_name_list:
+  data_name			{ $$ = list ($1); }
+| data_name_list data_name	{ $$ = list_add ($1, $2); }
+;
+data_name:
+  value
 ;
 
 /* Table name */
@@ -3378,21 +3376,6 @@ table_name:
   }
 ;
 
-/* Data name */
-
-data_name_list:
-  data_name			{ $$ = list ($1); }
-| data_name_list data_name	{ $$ = list_add ($1, $2); }
-;
-data_name:
-  value
-  {
-    $$ = $1;
-    if ($$ == cobc_error_node)
-      YYERROR;
-  }
-;
-
 /* File name */
 
 file_name_list:
@@ -3407,20 +3390,6 @@ file_name:
   }
 ;
 
-/* Record name */
-
-record_name:
-  data_name
-  {
-    if (COBC_FIELD (cobc_ref ($1))->file == NULL)
-      {
-	yyerror_x ($1, _("`%s' not record name"), tree_name ($1));
-	YYERROR;
-      }
-    $$ = $1;
-  }
-;
-
 /* Mnemonic name */
 
 mnemonic_name_list:
@@ -3429,11 +3398,7 @@ mnemonic_name_list:
   mnemonic_name			{ $$ = list_add ($1, $2); }
 ;
 mnemonic_name:
-  MNEMONIC_NAME
-  {
-    resolve_system_name ($1);
-    $$ = $1;
-  }
+  MNEMONIC_NAME			{ $$ = resolve_mnemonic_name ($1); }
 ;
 
 /* Label name */
@@ -3481,9 +3446,9 @@ reference_or_literal:
 | literal
 ;
 
-/* Undefined name */
+/* Undefined word */
 
-undefined_name:
+undefined_word:
   WORD
   {
     $$ = $1;
@@ -3579,17 +3544,9 @@ value_list:
 | value_list value		{ $$ = list_add ($1, $2); }
 ;
 value:
-  value_1
-  {
-    if ($<tree>1 == cobc_error_node)
-      YYERROR;
-    $$ = $<tree>1;
-  }
-;
-value_1:
-  identifier			{ $<tree>$ = $1; }
-| literal			{ $<tree>$ = $1; }
-| function			{ $<tree>$ = $1; }
+  identifier
+| literal
+| function
 ;
 
 non_all_value:
@@ -3683,7 +3640,6 @@ function:
     PENDING ("FUNCTION");
     YYABORT;
   }
-
 ;
 
 
@@ -3741,6 +3697,7 @@ flag_rounded:
 in_of: IN | OF ;
 is_are: IS | ARE ;
 
+_advancing:	| ADVANCING ;
 _are:		| ARE ;
 _area:		| AREA ;
 _at:		| AT ;
@@ -3754,10 +3711,11 @@ _in:		| IN ;
 _is:		| IS ;
 _is_are:	| IS | ARE ;
 _key:		| KEY ;
+_line_or_lines:	| LINE | LINES ;
 _mode:		| MODE ;
 _number:	| NUMBER ;
-_on:		| ON ;
 _of:		| OF ;
+_on:		| ON ;
 _order:		| ORDER ;
 _program:	| PROGRAM ;
 _record:	| RECORD ;
@@ -3794,4 +3752,82 @@ builtin_switch_id (cobc_tree x)
       yyerror (_("not switch name"));
       return -1;
     }
+}
+
+static cobc_tree
+validate_group_name (cobc_tree x)
+{
+  if (x == cobc_error_node)
+    return cobc_error_node;
+
+  if (COBC_FIELD (cobc_ref (x))->children == NULL
+      || COBC_REFERENCE (x)->offset != NULL)
+    {
+      yyerror_x (x, _("`%s' not a group"), tree_name (x));
+      return cobc_error_node;
+    }
+
+  return x;
+}
+
+static cobc_tree
+validate_record_name (cobc_tree x)
+{
+  if (x == cobc_error_node)
+    return cobc_error_node;
+
+  if (COBC_FIELD (cobc_ref (x))->file == NULL)
+    {
+      yyerror_x (x, _("`%s' not record name"), tree_name (x));
+      return cobc_error_node;
+    }
+
+  return x;
+}
+
+static cobc_tree
+validate_numeric_name (cobc_tree x, int rounded)
+{
+  if (x == cobc_error_node)
+    return cobc_error_node;
+
+  if (COBC_TREE_CLASS (x) != COB_TYPE_NUMERIC)
+    {
+      yyerror_x (x, _("`%s' not numeric"), tree_name (x));
+      return cobc_error_node;
+    }
+
+  return make_parameter_1 (rounded, x);
+}
+
+static cobc_tree
+validate_numeric_edited_name (cobc_tree x, int rounded)
+{
+  if (x == cobc_error_node)
+    return cobc_error_node;
+
+  if (COBC_TREE_CLASS (x) != COB_TYPE_NUMERIC
+      && COBC_TREE_TYPE (x) != COB_TYPE_NUMERIC_EDITED)
+    {
+      yyerror_x (x, _("`%s' not numeric or numeric edited"), tree_name (x));
+      return cobc_error_node;
+    }
+
+  return make_parameter_1 (rounded, x);
+}
+
+static cobc_tree
+validate_integer_name (cobc_tree x)
+{
+  if (x == cobc_error_node)
+    return cobc_error_node;
+
+  if (COBC_TREE_CLASS (x) != COB_TYPE_NUMERIC
+      || COBC_FIELD (cobc_ref (x))->pic->expt < 0)
+    {
+      yyerror_x (x, _("`%s' not integer"), tree_name (x));
+      return cobc_error_node;
+    }
+
+  return x;
 }
