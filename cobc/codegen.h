@@ -119,8 +119,6 @@ extern void save_field_in_list (struct sym *sy);
 extern void save_literal (struct lit *v, int type);
 extern void save_named_sect (struct sym *sy);
 extern void put_disp_list (struct sym *sy);
-extern int pic_digits (struct sym *sy);
-extern int query_comp_len (struct sym *sy);
 extern int symlen (struct sym *sy);
 extern int varsize_ch (struct sym *sy);
 extern void add_alternate_key (struct sym *sy, int duplicates);

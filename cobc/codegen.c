@@ -1766,55 +1766,6 @@ put_disp_list (struct sym *sy)
 }
 
 int
-pic_digits (struct sym *sy)
-{
-  char *p = NULL;
-  int len = 0;
-  if (sy == NULL)
-    return 0;
-  if (!SYMBOL_P (sy))
-    {
-      len = strlen (sy->name);
-      if (strchr (sy->name, decimal_char ()))
-	len--;
-      if (strchr (sy->name, '+'))
-	len--;
-      if (strchr (sy->name, '-'))
-	len--;
-      //printf("pic_digits: %s -> %d\n",sy->name,len);
-      return len;
-    }
-  else
-    {
-      p = sy->picstr;
-      while (*p)
-	{
-	  if (*p++ == '9')
-	    {
-	      len += *p++;
-	    }
-	  else
-	    p++;
-	}
-    }
-  //printf("pic_digits: %s -> %d\n",sy->name,len);
-  return len;
-}
-
-int
-query_comp_len (struct sym *sy)
-{
-  int plen;
-  if ((plen = pic_digits (sy)) <= 2)
-    return 1;
-  if (plen <= 4)
-    return 2;
-  if (plen <= 9)
-    return 4;
-  return 8;
-}
-
-int
 symlen (struct sym *sy)
 {
   /*int plen; */
@@ -2029,29 +1980,19 @@ gen_unstring (struct sym *var, struct unstring_delimited *delim,
 	      struct unstring_destinations *dest, struct sym *ptr,
 	      struct sym *tally)
 {
-
-  struct unstring_destinations *dest1;
-  struct unstring_delimited *delim1;
-
   fprintf (o_src, "# UNSTRING %s\n", var->name);
-  gen_loadvar ((struct sym *) NULL);	/* mark the end of destinations */
-  while (dest)
+  push_immed (0);
+  for (; dest; dest = dest->next)
     {
       gen_loadvar (dest->count);
       gen_loadvar (dest->delim);
       gen_loadvar (dest->var);
-      dest1 = dest;
-      dest = dest->next;
-      free (dest1);
     }
-  gen_loadvar ((struct sym *) NULL);	/* mark the end of delimiters */
-  while (delim)
+  push_immed (0);
+  for (; delim; delim = delim->next)
     {
       push_immed (delim->all);	/* push "all" flag */
       gen_loadvar (delim->var);
-      delim1 = delim;
-      delim = delim->next;
-      free (delim1);
     }
   asm_call_3 ("cob_unstring", var, ptr, tally);
 }
@@ -2061,7 +2002,7 @@ gen_string (struct string_from *sf, struct sym *sy, struct sym *ptr)
 {
   struct string_from *sf1;
   fprintf (o_src, "# STRING into %s\n", sy->name);
-  gen_loadvar ((struct sym *) NULL);	/* mark the end of variables */
+  push_immed (0);	/* mark the end of variables */
   while (sf)
     {
       gen_loadvar (sf->delim);
@@ -3321,7 +3262,7 @@ gen_inspect (struct sym *var, void *list, int operation)
       if (!list)
 	return;
       fprintf (o_src, "# INSPECT TALLYING %s\n", var->name);
-      gen_loadvar ((struct sym *) NULL);
+      push_immed (0);
       tl = (struct tallying_list *) list;
       while (tl)
 	{
@@ -4744,6 +4685,53 @@ update_screen_field (struct sym *sy, struct scr_info *si)
     }
 }
 
+static int
+pic_digits (struct sym *sy)
+{
+  char *p = NULL;
+  int len = 0;
+  if (sy == NULL)
+    return 0;
+  if (!SYMBOL_P (sy))
+    {
+      len = strlen (sy->name);
+      if (strchr (sy->name, decimal_char ()))
+	len--;
+      if (strchr (sy->name, '+'))
+	len--;
+      if (strchr (sy->name, '-'))
+	len--;
+      return len;
+    }
+  else
+    {
+      p = sy->picstr;
+      while (*p)
+	{
+	  if (*p++ == '9')
+	    {
+	      len += *p++;
+	    }
+	  else
+	    p++;
+	}
+    }
+  return len;
+}
+
+static int
+query_comp_len (struct sym *sy)
+{
+  int plen;
+  if ((plen = pic_digits (sy)) <= 2)
+    return 1;
+  if (plen <= 4)
+    return 2;
+  if (plen <= 9)
+    return 4;
+  return 8;
+}
+
 void
 update_field (void)
 {
@@ -4759,9 +4747,7 @@ update_field (void)
     }
   /* update COMP field length (but not BINARY-<something>) */
   if (curr_field->len == 0 && curr_field->type == 'B')
-    {
-      curr_field->len = query_comp_len (curr_field);
-    }
+    curr_field->len = query_comp_len (curr_field);
 }
 
 void
@@ -4777,12 +4763,11 @@ close_fields (void)
   /********** locate level 01 field   **************/
   for (sy = curr_field; sy->parent != NULL; sy = sy->parent);
   if (sy->level != 1 && sy->level != 77)
-    {
-      yyerror ("field not subordinate to any other: %s", sy->name);
-    }
-	/********** propagate value flags  *************/
+    yyerror ("field not subordinate to any other: %s", sy->name);
+
+  /********** propagate value flags  *************/
   sy->flags.spec_value = set_field_value_sw (sy, 1);
-	/********** update length of fields  *************/
+  /********** update length of fields  *************/
   if (sy->linkage_flg)
     {
       linkage_offset += (set_field_length (sy, 1) * sy->times);
@@ -5004,7 +4989,7 @@ gen_condition (struct sym *sy)
   struct sym *sy1 = sy;
   if (SUBREF_P (sy))
     sy1 = SUBREF_SYM (sy);
-  gen_loadvar ((struct sym *) NULL);
+  push_immed (0);
   gen_loadvar ((struct sym *) sy1->value2);
   gen_loadvar ((struct sym *) sy1->value);
   vr = sy1->refmod_redef.vr;
