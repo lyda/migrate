@@ -39,8 +39,6 @@ char *cob_source_file = NULL;
 unsigned char cob_decimal_point = '.';
 unsigned char cob_currency_symbol = '$';
 
-int cob_reloading_flag = 0;
-
 long cob_exp10[10] = {
   1,
   10,
@@ -159,6 +157,7 @@ cob_init (int argc, char **argv)
 
   cob_init_math ();
   cob_init_basicio ();
+  cob_init_call ();
 }
 
 void

@@ -126,8 +126,6 @@ extern unsigned char cob_decimal_point;
 extern unsigned char cob_currency_symbol;
 #define cob_numeric_separator ((cob_decimal_point == '.') ? ',' : '.')
 
-extern int cob_reloading_flag;
-
 extern long cob_exp10[10];
 extern long long cob_exp10LL[19];
 
@@ -323,6 +321,7 @@ extern void cob_unstring (struct cob_field src, ...);
 
 /* call.c */
 
+extern void cob_init_call (void);
 extern void cob_set_library_path (const char *path);
 extern void *cob_resolve (const char *name);
 extern const char *cob_resolve_error (void);

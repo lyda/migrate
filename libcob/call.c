@@ -25,13 +25,26 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <dlfcn.h>
+#include <ltdl.h>
 
 #include "libcob.h"
 #include "defaults.h"
 
 static char resolve_error_buff[FILENAME_MAX];
 static char *resolve_error = NULL;
+static int resolve_size = 0;
+static char **resolve_path = NULL;
+
+void
+cob_init_call (void)
+{
+  char *p = getenv ("COB_LIBRARY_PATH");
+  if (!p)
+    p = COB_LIBRARY_PATH;
+
+  lt_dlinit ();
+  cob_set_library_path (p);
+}
 
 
 /*
@@ -44,8 +57,8 @@ static struct call_hash
 {
   const char *name;
   const char *path;
-  void *func;
-  void *handle;
+  lt_ptr func;
+  lt_dlhandle handle;
   time_t mtime;
   struct call_hash *next;
 } *call_table[HASH_SIZE];
@@ -60,7 +73,7 @@ hash (const char *s)
 }
 
 static void
-insert (const char *name, const char *path, void *handle, void *func, time_t mtime)
+insert (const char *name, const char *path, lt_dlhandle handle, lt_ptr func, time_t mtime)
 {
   int val = hash (name);
   struct call_hash *p = malloc (sizeof (struct call_hash));
@@ -81,7 +94,7 @@ drop (const char *name)
     if (strcmp (name, (*pp)->name) == 0)
       {
 	struct call_hash *p = *pp;
-	dlclose (p->handle);
+	lt_dlclose (p->handle);
 	*pp = p->next;
 	free (p);
 	return;
@@ -96,28 +109,10 @@ lookup (const char *name)
   for (p = call_table[hash (name)]; p; p = p->next)
     if (strcmp (name, p->name) == 0)
       {
-	if (!cob_reloading_flag)
+	if (stat (p->path, &st) == 0 && p->mtime == st.st_mtime)
 	  return p->func;
-	if (stat (p->path, &st) == 0)
-	  {
-	    void *func, *handle;
-	    /* not modified */
-	    if (st.st_mtime == p->mtime)
-	      return p->func;
-	    /* reload */
-	    dlclose (p->handle);
-	    if ((handle = dlopen (p->path, RTLD_LAZY)) != NULL
-		&& (func = dlsym (handle, name)) != NULL)
-	      {
-		p->handle = handle;
-		p->func = func;
-		p->mtime = st.st_mtime;
-		resolve_error = NULL;
-		return p->func;
-	      }
-	  }
 	drop (name);
-	break;
+	return NULL;
       }
   return NULL;
 }
@@ -127,69 +122,61 @@ lookup (const char *name)
  * C interface
  */
 
-static char *path_str = NULL;
-
 void
 cob_set_library_path (const char *path)
 {
-  if (path_str)
-    free (path_str);
-  if (path)
-    path_str = strdup (path);
-  else
-    path_str = NULL;
+  int i;
+  char *p;
+
+  /* clear the previous path */
+  if (resolve_path)
+    {
+      free (resolve_path[0]);
+      free (resolve_path);
+    }
+
+  /* count the number of ':'s */
+  resolve_size = 1;
+  for (p = strchr (path, ':'); p; p = strchr (p + 1, ':'))
+    resolve_size++;
+
+  /* build path array */
+  p = strdup (path);
+  resolve_path = malloc (sizeof (char *) * resolve_size);
+  resolve_path[0] = strtok (p, ":");
+  for (i = 1; i < resolve_size; i++)
+    resolve_path[i] = strtok (NULL, ":");
 }
 
 void *
 cob_resolve (const char *name)
 {
   int i;
-  void *func, *handle;
-  static int size = 0;
-  static char **path = NULL;
+  lt_ptr func;
+  lt_dlhandle handle;
 
-  /* Search from cache */
+  /* search from the cache */
   func = lookup (name);
   if (func)
     return func;
 
-  /* Build search path at the first time */
-  if (!path)
-    {
-      char *p;
-      if (!path_str)
-	path_str = getenv ("COB_LIBRARY_PATH");
-      if (!path_str)
-	path_str = COB_LIBRARY_PATH;
-      path_str = strdup (path_str);
-
-      /* count the number of ':'s */
-      size = 1;
-      for (p = strchr (path_str, ':'); p; p = strchr (p + 1, ':'))
-	size++;
-
-      path = malloc (sizeof (char *) * size);
-      path[0] = strtok (path_str, ":");
-      for (i = 1; i < size; i++)
-	path[i] = strtok (NULL, ":");
-    }
-
-  /* Search module */
-  for (i = 0; i < size; i++)
+  /* search module */
+  for (i = 0; i < resolve_size; i++)
     {
       struct stat st;
       char filename[FILENAME_MAX];
-      sprintf (filename, "%s/%s.so", path[i], name);
+
+      sprintf (filename, "%s/%s.so", resolve_path[i], name);
       if (stat (filename, &st) == 0)
 	{
-	  if ((handle = dlopen (filename, RTLD_LAZY)) != NULL
-	      && (func = dlsym (handle, name)) != NULL)
+	  if ((handle = lt_dlopen (filename)) != NULL
+	      && (func = lt_dlsym (handle, name)) != NULL)
 	    {
 	      insert (name, filename, handle, func, st.st_mtime);
 	      resolve_error = NULL;
 	      return func;
 	    }
-	  strcpy (resolve_error_buff, dlerror ());
+	  strcpy (resolve_error_buff, lt_dlerror ());
 	  resolve_error = resolve_error_buff;
 	  return NULL;
 	}
