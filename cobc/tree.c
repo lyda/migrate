@@ -399,7 +399,7 @@ static struct cb_label *
 make_constant_label (const char *name)
 {
   struct cb_label *l =
-    CB_LABEL (make_label (make_reference (name), NULL));
+    CB_LABEL (cb_build_label (make_reference (name), NULL));
   l->cname = name;
   l->need_begin = 1;
   return l;
@@ -1853,13 +1853,22 @@ cb_build_binary_op (cb_tree left, char op, cb_tree right)
   return CB_TREE (p);
 }
 
+cb_tree
+cb_build_connective_op (struct cb_list *l, char op)
+{
+  cb_tree e = l->item;
+  for (l = l->next; l; l = l->next)
+    e = cb_build_binary_op (e, op, l->item);
+  return e;
+}
+
 
 /*
  * Function call
  */
 
 cb_tree
-make_funcall (const char *name, int argc,
+cb_build_funcall (const char *name, int argc,
 	      void *a1, void *a2, void *a3, void *a4)
 {
   struct cb_funcall *p =
@@ -1879,7 +1888,7 @@ make_funcall (const char *name, int argc,
  */
 
 cb_tree
-make_cast_integer (cb_tree val)
+cb_build_cast_integer (cb_tree val)
 {
   struct cb_cast_integer *p =
     make_tree (CB_TAG_CAST_INTEGER, CB_CLASS_NUMERIC, sizeof (struct cb_cast_integer));
@@ -1893,7 +1902,7 @@ make_cast_integer (cb_tree val)
  */
 
 cb_tree
-make_label (cb_tree name, struct cb_label *section)
+cb_build_label (cb_tree name, struct cb_label *section)
 {
   char buff[BUFSIZ];
   struct cb_label *p =
@@ -1914,7 +1923,7 @@ make_label (cb_tree name, struct cb_label *section)
  */
 
 cb_tree
-make_if (cb_tree test, cb_tree stmt1, cb_tree stmt2)
+cb_build_if (cb_tree test, cb_tree stmt1, cb_tree stmt2)
 {
   struct cb_if *p =
     make_tree (CB_TAG_IF, CB_CLASS_UNKNOWN, sizeof (struct cb_if));
@@ -1930,7 +1939,7 @@ make_if (cb_tree test, cb_tree stmt1, cb_tree stmt2)
  */
 
 cb_tree
-make_perform (int type)
+cb_build_perform (int type)
 {
   struct cb_perform *p =
     make_tree (CB_TAG_PERFORM, CB_CLASS_UNKNOWN, sizeof (struct cb_perform));
@@ -1939,24 +1948,24 @@ make_perform (int type)
 }
 
 cb_tree
-make_perform_once (cb_tree body)
+cb_build_perform_once (cb_tree body)
 {
-  cb_tree x = make_perform (CB_PERFORM_ONCE);
+  cb_tree x = cb_build_perform (CB_PERFORM_ONCE);
   CB_PERFORM (x)->body = body;
   return x;
 }
 
 cb_tree
-make_perform_exit (struct cb_label *label)
+cb_build_perform_exit (struct cb_label *label)
 {
-  cb_tree x = make_perform (CB_PERFORM_EXIT);
+  cb_tree x = cb_build_perform (CB_PERFORM_EXIT);
   CB_PERFORM (x)->data = CB_TREE (label);
   return x;
 }
 
 void
-add_perform_varying (struct cb_perform *perf, cb_tree name,
-		     cb_tree from, cb_tree step, cb_tree until)
+cb_add_perform_varying (struct cb_perform *perf, cb_tree name,
+			cb_tree from, cb_tree step, cb_tree until)
 {
   struct cb_perform_varying *p =
     malloc (sizeof (struct cb_perform_varying));
@@ -1996,7 +2005,7 @@ make_sequence (struct cb_list *list)
  */
 
 struct cb_statement *
-build_statement (const char *name)
+cb_build_statement (const char *name)
 {
   struct cb_statement *p =
     make_tree (CB_TAG_STATEMENT, CB_CLASS_UNKNOWN, sizeof (struct cb_statement));
@@ -2107,7 +2116,7 @@ decimal_compute (cb_tree s, char op, cb_tree x, cb_tree y)
     case '^': func = "cob_decimal_pow"; break;
     default: abort ();
     }
-  add_stmt (s, make_funcall_2 (func, x, y));
+  add_stmt (s, cb_build_funcall_2 (func, x, y));
 }
 
 static void
@@ -2119,7 +2128,7 @@ decimal_expand (cb_tree s, cb_tree d, cb_tree x)
       {
 	cb_tree e;
 	if (x == cb_zero)
-	  e = make_funcall_2 ("cob_decimal_set_int", d, cb_int0);
+	  e = cb_build_funcall_2 ("cob_decimal_set_int", d, cb_int0);
 	else
 	  abort ();
 	add_stmt (s, e);
@@ -2130,10 +2139,10 @@ decimal_expand (cb_tree s, cb_tree d, cb_tree x)
 	/* set d, N */
 	struct cb_literal *l = CB_LITERAL (x);
 	if (l->size < 10 && l->expt == 0)
-	  add_stmt (s, make_funcall_2 ("cob_decimal_set_int",
-				       d, make_cast_integer (x)));
+	  add_stmt (s, cb_build_funcall_2 ("cob_decimal_set_int",
+				       d, cb_build_cast_integer (x)));
 	else
-	  add_stmt (s, make_funcall_2 ("cob_decimal_set_field", d, x));
+	  add_stmt (s, cb_build_funcall_2 ("cob_decimal_set_field", d, x));
 	break;
       }
     case CB_TAG_REFERENCE:
@@ -2144,14 +2153,14 @@ decimal_expand (cb_tree s, cb_tree d, cb_tree x)
 	/* check numeric */
 	if (CB_EXCEPTION_ENABLE (COB_EC_DATA_INCOMPATIBLE))
 	  if (f->usage == CB_USAGE_DISPLAY)
-	    add_stmt (s, make_funcall_2 ("cob_check_numeric",
+	    add_stmt (s, cb_build_funcall_2 ("cob_check_numeric",
 					 x, cb_build_string (f->name)));
 
 	if (cb_fits_int (x))
-	  add_stmt (s, make_funcall_2 ("cob_decimal_set_int",
-				       d, make_cast_integer (x)));
+	  add_stmt (s, cb_build_funcall_2 ("cob_decimal_set_int",
+				       d, cb_build_cast_integer (x)));
 	else
-	  add_stmt (s, make_funcall_2 ("cob_decimal_set_field", d, x));
+	  add_stmt (s, cb_build_funcall_2 ("cob_decimal_set_field", d, x));
 	break;
       }
     case CB_TAG_BINARY_OP:
@@ -2184,7 +2193,7 @@ decimal_assign (cb_tree s, cb_tree x, cb_tree d, int round)
 {
   const char *func =
     round ? "cob_decimal_get_field_r" : "cob_decimal_get_field";
-  add_stmt (s, make_funcall_2 (func, d, x));
+  add_stmt (s, cb_build_funcall_2 (func, d, x));
 }
 
 static cb_tree
@@ -2275,11 +2284,11 @@ cb_build_add (cb_tree v, cb_tree n, int round)
     return cb_build_move (cb_build_binary_op (v, '+', n), v);
 
   if (round == 0 && cb_fits_int (n))
-    return make_funcall_2 ("cob_add_int", v, make_cast_integer (n));
+    return cb_build_funcall_2 ("cob_add_int", v, cb_build_cast_integer (n));
   if (round)
-    return make_funcall_2 ("cob_add_r", v, n);
+    return cb_build_funcall_2 ("cob_add_r", v, n);
   else
-    return make_funcall_2 ("cob_add", v, n);
+    return cb_build_funcall_2 ("cob_add", v, n);
 }
 
 cb_tree
@@ -2289,11 +2298,11 @@ cb_build_sub (cb_tree v, cb_tree n, int round)
     return cb_build_move (cb_build_binary_op (v, '-', n), v);
 
   if (round == 0 && cb_fits_int (n))
-    return make_funcall_2 ("cob_sub_int", v, make_cast_integer (n));
+    return cb_build_funcall_2 ("cob_sub_int", v, cb_build_cast_integer (n));
   if (round)
-    return make_funcall_2 ("cob_sub_r", v, n);
+    return cb_build_funcall_2 ("cob_sub_r", v, n);
   else
-    return make_funcall_2 ("cob_sub", v, n);
+    return cb_build_funcall_2 ("cob_sub", v, n);
 }
 
 static void
@@ -2573,7 +2582,7 @@ cb_tree
 cb_build_move (cb_tree src, cb_tree dst)
 {
   validate_move (src, dst, 0);
-  return make_funcall_2 ("@move", src, dst);
+  return cb_build_funcall_2 ("@move", src, dst);
 }
 
 static struct cb_list *
@@ -2620,10 +2629,10 @@ cb_build_divide (cb_tree dividend, cb_tree divisor,
   struct cb_list *l = NULL;
   struct cb_parameter *pq = CB_PARAMETER (quotient);
   struct cb_parameter *pr = CB_PARAMETER (remainder);
-  l = list_add (l, make_funcall_4 ("cob_div_quotient",
+  l = list_add (l, cb_build_funcall_4 ("cob_div_quotient",
 				   dividend, divisor, pq->x,
 				   pq->type ? cb_int1 : cb_int0));
-  l = list_add (l, make_funcall_1 ("cob_div_remainder", pr->x));
+  l = list_add (l, cb_build_funcall_1 ("cob_div_remainder", pr->x));
   return make_sequence (l);
 }
 
@@ -2681,8 +2690,8 @@ cb_build_cond (cb_tree x)
 	if (cb_field (x)->level == 88)
 	  {
 	    /* We need to build a 88 condition at every occurrence
-	       instead of once at the beginning, because a 88 item
-	       may be subscripted (i.e., not a constant tree). */
+	       instead of once at the beginning because a 88 item
+	       may be subscripted (i.e., it is not a constant tree). */
 	    return cb_build_cond (build_cond_88 (x));
 	  }
 
@@ -2713,7 +2722,7 @@ cb_build_cond (cb_tree x)
 		cb_tree d2 = decimal_alloc ();
 		decimal_expand (s, d1, p->x);
 		decimal_expand (s, d2, p->y);
-		add_stmt (s, make_funcall_2 ("cob_decimal_cmp", d1, d2));
+		add_stmt (s, cb_build_funcall_2 ("cob_decimal_cmp", d1, d2));
 		decimal_free ();
 		decimal_free ();
 		p->x = s;
@@ -2726,21 +2735,21 @@ cb_build_cond (cb_tree x)
 		if (CB_TREE_CLASS (p->x) == CB_CLASS_NUMERIC
 		    && CB_TREE_CLASS (p->y) == CB_CLASS_NUMERIC)
 		  {
-		    if (l->size < 10 && l->expt == 0)
-		      p->x = make_funcall_2 ("cob_cmp_int",
-					     p->x, make_cast_integer (p->y));
+		    if (cb_fits_int (p->y))
+		      p->x = cb_build_funcall_2 ("cob_cmp_int",
+						 p->x, cb_build_cast_integer (p->y));
 		    else
-		      p->x = make_funcall_2 ("cob_cmp", p->x, p->y);
+		      p->x = cb_build_funcall_2 ("cob_cmp", p->x, p->y);
 		  }
 		else if (size > 0 && size >= l->size && !l->all)
-		  p->x = make_funcall_2 ("@memcmp", p->x, p->y);
+		  p->x = cb_build_funcall_2 ("@memcmp", p->x, p->y);
 		else
-		  p->x = make_funcall_2 ("cob_cmp", p->x, p->y);
+		  p->x = cb_build_funcall_2 ("cob_cmp", p->x, p->y);
 	      }
 	    else
 	      {
 		/* field comparison */
-		p->x = make_funcall_2 ("cob_cmp", p->x, p->y);
+		p->x = cb_build_funcall_2 ("cob_cmp", p->x, p->y);
 	      }
 	    break;
 	  }
@@ -2836,8 +2845,8 @@ evaluate_internal (struct cb_list *subject_list, struct cb_list *case_list)
   if (c1 == NULL)
     return stmt;
   else
-    return make_if (cb_build_cond (c1), stmt,
-		    evaluate_internal (subject_list, case_list->next));
+    return cb_build_if (cb_build_cond (c1), stmt,
+			evaluate_internal (subject_list, case_list->next));
 }
 
 cb_tree

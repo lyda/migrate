@@ -471,6 +471,7 @@ struct cb_binary_op {
 #define cb_build_negation(x)	cb_build_binary_op (x, '!', 0)
 
 extern cb_tree cb_build_binary_op (cb_tree x, char op, cb_tree y);
+extern cb_tree cb_build_connective_op (struct cb_list *l, char op);
 
 
 /*
@@ -487,13 +488,13 @@ struct cb_funcall {
 #define CB_FUNCALL(x)		(CB_TREE_CAST (CB_TAG_FUNCALL, struct cb_funcall, x))
 #define CB_FUNCALL_P(x)		(CB_TREE_TAG (x) == CB_TAG_FUNCALL)
 
-extern cb_tree make_funcall (const char *name, int argc, void *a1, void *a2, void *a3, void *a4);
+extern cb_tree cb_build_funcall (const char *name, int argc, void *a1, void *a2, void *a3, void *a4);
 
-#define make_funcall_0(f)		make_funcall (f, 0, 0, 0, 0, 0)
-#define make_funcall_1(f,a1)		make_funcall (f, 1, a1, 0, 0, 0)
-#define make_funcall_2(f,a1,a2)		make_funcall (f, 2, a1, a2, 0, 0)
-#define make_funcall_3(f,a1,a2,a3)	make_funcall (f, 3, a1, a2, a3, 0)
-#define make_funcall_4(f,a1,a2,a3,a4)	make_funcall (f, 4, a1, a2, a3, a4)
+#define cb_build_funcall_0(f)		cb_build_funcall (f, 0, 0, 0, 0, 0)
+#define cb_build_funcall_1(f,a1)	cb_build_funcall (f, 1, a1, 0, 0, 0)
+#define cb_build_funcall_2(f,a1,a2)	cb_build_funcall (f, 2, a1, a2, 0, 0)
+#define cb_build_funcall_3(f,a1,a2,a3)	cb_build_funcall (f, 3, a1, a2, a3, 0)
+#define cb_build_funcall_4(f,a1,a2,a3,a4) cb_build_funcall (f, 4, a1, a2, a3, a4)
 
 
 /*
@@ -508,7 +509,7 @@ struct cb_cast_integer {
 #define CB_CAST_INTEGER(x)	(CB_TREE_CAST (CB_TAG_CAST_INTEGER, struct cb_cast_integer, x))
 #define CB_CAST_INTEGER_P(x)	(CB_TREE_TAG (x) == CB_TAG_CAST_INTEGER)
 
-extern cb_tree make_cast_integer (cb_tree val);
+extern cb_tree cb_build_cast_integer (cb_tree val);
 
 
 /*
@@ -528,7 +529,7 @@ struct cb_label {
 #define CB_LABEL(x)		(CB_TREE_CAST (CB_TAG_LABEL, struct cb_label, x))
 #define CB_LABEL_P(x)		(CB_TREE_TAG (x) == CB_TAG_LABEL)
 
-extern cb_tree make_label (cb_tree name, struct cb_label *section);
+extern cb_tree cb_build_label (cb_tree name, struct cb_label *section);
 
 
 /*
@@ -545,7 +546,7 @@ struct cb_if {
 #define CB_IF(x)		(CB_TREE_CAST (CB_TAG_IF, struct cb_if, x))
 #define CB_IF_P(x)		(CB_TREE_TAG (x) == CB_TAG_IF)
 
-extern cb_tree make_if (cb_tree test, cb_tree stmt1, cb_tree stmt2);
+extern cb_tree cb_build_if (cb_tree test, cb_tree stmt1, cb_tree stmt2);
 
 
 /*
@@ -575,10 +576,10 @@ struct cb_perform {
 #define CB_PERFORM(x)		(CB_TREE_CAST (CB_TAG_PERFORM, struct cb_perform, x))
 #define CB_PERFORM_P(x)		(CB_TREE_TAG (x) == CB_TAG_PERFORM)
 
-extern cb_tree make_perform (int type);
-extern cb_tree make_perform_once (cb_tree body);
-extern cb_tree make_perform_exit (struct cb_label *label);
-extern void add_perform_varying (struct cb_perform *perf, cb_tree name, cb_tree from, cb_tree step, cb_tree until);
+extern cb_tree cb_build_perform (int type);
+extern cb_tree cb_build_perform_once (cb_tree body);
+extern cb_tree cb_build_perform_exit (struct cb_label *label);
+extern void cb_add_perform_varying (struct cb_perform *perf, cb_tree name, cb_tree from, cb_tree step, cb_tree until);
 
 
 /*
@@ -610,7 +611,7 @@ struct cb_statement {
 #define CB_STATEMENT(x)		(CB_TREE_CAST (CB_TAG_STATEMENT, struct cb_statement, x))
 #define CB_STATEMENT_P(x)	(CB_TREE_TAG (x) == CB_TAG_STATEMENT)
 
-extern struct cb_statement *build_statement (const char *name);
+extern struct cb_statement *cb_build_statement (const char *name);
 
 
 /*

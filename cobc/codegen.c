@@ -1018,7 +1018,7 @@ output_exit_program (void)
 static void
 output_move_call (cb_tree src, cb_tree dst)
 {
-  output_stmt (make_funcall_2 ("cob_move", src, dst));
+  output_stmt (cb_build_funcall_2 ("cob_move", src, dst));
 }
 
 static void
@@ -1174,8 +1174,8 @@ output_move (cb_tree src, cb_tree dst)
     return output_move_index (src, dst);
 
   if (CB_INDEX_P (src))
-    return output_stmt (make_funcall_2 ("cob_set_int", dst,
-					make_cast_integer (src)));
+    return output_stmt (cb_build_funcall_2 ("cob_set_int", dst,
+					    cb_build_cast_integer (src)));
 
   if (cb_flag_inline_move)
     {

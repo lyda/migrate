@@ -33,10 +33,6 @@
 #define CB_DEFAULT_TAB_WIDTH	8
 #define CB_DEFAULT_TEXT_COLUMN	72
 
-#ifdef __MINGW32__
-#define __USE_MINGW_FSEEK 1	/* These are in libmingwex.a */
-#endif
-
 
 /* COBOL standard */
 extern enum cb_standard {

@@ -72,13 +72,13 @@
 #define push(x)	\
   current_program->exec_list = cons (x, current_program->exec_list)
 
-#define push_funcall_0(f)	   push (make_funcall_0 (f))
-#define push_funcall_1(f,a)	   push (make_funcall_1 (f, a))
-#define push_funcall_2(f,a,b)	   push (make_funcall_2 (f, a, b))
-#define push_funcall_3(f,a,b,c)	   push (make_funcall_3 (f, a, b, c))
-#define push_funcall_4(f,a,b,c,d)  push (make_funcall_4 (f, a, b, c, d))
+#define push_funcall_0(f)	   push (cb_build_funcall_0 (f))
+#define push_funcall_1(f,a)	   push (cb_build_funcall_1 (f, a))
+#define push_funcall_2(f,a,b)	   push (cb_build_funcall_2 (f, a, b))
+#define push_funcall_3(f,a,b,c)	   push (cb_build_funcall_3 (f, a, b, c))
+#define push_funcall_4(f,a,b,c,d)  push (cb_build_funcall_4 (f, a, b, c, d))
 
-#define make_handler(v,a,b)	make_funcall_4 ("@handler", (void *) v, a, b, 0)
+#define make_handler(v,a,b)	cb_build_funcall_4 ("@handler", (void *) v, a, b, 0)
 
 #define push_file_handler(file,handler)			\
   if (handler || CB_EXCEPTION_ENABLE (COB_EC_I_O))	\
@@ -95,7 +95,7 @@
 
 #define push_entry(name,using_list)				\
   {								\
-    cb_tree label = make_label (make_reference (name), NULL);	\
+    cb_tree label = cb_build_label (make_reference (name), NULL);	\
     CB_LABEL (label)->need_begin = 1;				\
     push (label);						\
 								\
@@ -105,7 +105,7 @@
   }
 
 #define BEGIN_STATEMENT(name)			\
-  current_statement = build_statement (name);	\
+  current_statement = cb_build_statement (name);	\
   push (current_statement)
 
 static struct cb_statement *current_statement = NULL;
@@ -124,7 +124,6 @@ static cb_tree last_lefthand;
 static int builtin_switch_id (cb_tree x);
 
 static cb_tree build_file_handler (cb_tree file, cb_tree handler);
-static cb_tree build_connective_op (struct cb_list *l, char op);
 
 static void terminator_warning (void);
 %}
@@ -1463,9 +1462,9 @@ procedure_division:
   procedure_list
   {
     if (current_paragraph)
-      push (make_perform_exit (current_paragraph));
+      push (cb_build_perform_exit (current_paragraph));
     if (current_section)
-      push (make_perform_exit (current_section));
+      push (cb_build_perform_exit (current_section));
   }
 ;
 using_phrase:
@@ -1518,12 +1517,12 @@ section_header:
   {
     /* Exit the last section */
     if (current_paragraph)
-      push (make_perform_exit (current_paragraph));
+      push (cb_build_perform_exit (current_paragraph));
     if (current_section)
-      push (make_perform_exit (current_section));
+      push (cb_build_perform_exit (current_section));
 
     /* Begin a new section */
-    current_section = CB_LABEL (make_label ($1, NULL));
+    current_section = CB_LABEL (cb_build_label ($1, NULL));
     current_paragraph = NULL;
     push (current_section);
   }
@@ -1534,10 +1533,10 @@ paragraph_header:
   {
     /* Exit the last paragraph */
     if (current_paragraph)
-      push (make_perform_exit (current_paragraph));
+      push (cb_build_perform_exit (current_paragraph));
 
     /* Begin a new paragraph */
-    current_paragraph = CB_LABEL (make_label ($1, current_section));
+    current_paragraph = CB_LABEL (cb_build_label ($1, current_section));
     if (current_section)
       current_section->children =
 	cons (current_paragraph, current_section->children);
@@ -1719,10 +1718,10 @@ at_line_column:
 | _at column_number line_number { $$ = cb_build_pair ($3, $2); }
 ;
 line_number:
-  LINE _number integer_value	{ $$ = make_cast_integer ($3); }
+  LINE _number integer_value	{ $$ = cb_build_cast_integer ($3); }
 ;
 column_number:
-  COLUMN _number integer_value	{ $$ = make_cast_integer ($3); }
+  COLUMN _number integer_value	{ $$ = cb_build_cast_integer ($3); }
 ;
 
 
@@ -1741,11 +1740,11 @@ add_statement:
 add_body:
   numeric_value_list TO numeric_name_list
   {
-    $<tree>$ = cb_build_assign ($3, '+', build_connective_op ($1, '+'));
+    $<tree>$ = cb_build_assign ($3, '+', cb_build_connective_op ($1, '+'));
   }
 | numeric_value_list add_to GIVING numeric_edited_name_list
   {
-    $<tree>$ = cb_build_assign ($4, 0, build_connective_op ($1, '+'));
+    $<tree>$ = cb_build_assign ($4, 0, cb_build_connective_op ($1, '+'));
   }
 | CORRESPONDING group_name _to group_name flag_rounded
   {
@@ -1785,7 +1784,7 @@ call_statement:
   call_on_exception call_not_on_exception
   end_call
   {
-    cb_tree x = $<tree>6 ? $<tree>6 : make_funcall_0 ("cob_call_error");
+    cb_tree x = $<tree>6 ? $<tree>6 : cb_build_funcall_0 ("cob_call_error");
     push_funcall_4 ("@call", $3, $<list>4, x, $<tree>7);
     if ($<tree>5)
       push (cb_build_move (cb_return_code, $<tree>5));
@@ -2167,7 +2166,7 @@ if_statement:
   condition _then statement_list if_else_sentence
   end_if
   {
-    push (make_if ($3, $5, $<tree>6));
+    push (cb_build_if ($3, $5, $<tree>6));
   }
 | IF error END_IF
 ;
@@ -2233,22 +2232,22 @@ inspect_item:
   inspect_tallying
   {
     struct cb_list *l = $<list>1;
-    l = cons (make_funcall_2 ("cob_inspect_init", $<tree>-1, cb_int0), l);
-    l = list_add (l, make_funcall_0 ("cob_inspect_finish"));
+    l = cons (cb_build_funcall_2 ("cob_inspect_init", $<tree>-1, cb_int0), l);
+    l = list_add (l, cb_build_funcall_0 ("cob_inspect_finish"));
     push (make_sequence (l));
   }
 | inspect_replacing
   {
     struct cb_list *l = $<list>1;
-    l = cons (make_funcall_2 ("cob_inspect_init", $<tree>-1, cb_int1), l);
-    l = list_add (l, make_funcall_0 ("cob_inspect_finish"));
+    l = cons (cb_build_funcall_2 ("cob_inspect_init", $<tree>-1, cb_int1), l);
+    l = list_add (l, cb_build_funcall_0 ("cob_inspect_finish"));
     push (make_sequence (l));
   }
 | inspect_converting
   {
     struct cb_list *l = $<list>1;
-    l = cons (make_funcall_2 ("cob_inspect_init", $<tree>-1, cb_int0), l);
-    l = list_add (l, make_funcall_0 ("cob_inspect_finish"));
+    l = cons (cb_build_funcall_2 ("cob_inspect_init", $<tree>-1, cb_int0), l);
+    l = list_add (l, cb_build_funcall_0 ("cob_inspect_finish"));
     push (make_sequence (l));
   }
 ;
@@ -2281,7 +2280,7 @@ tallying_item:
     if (current_inspect_data == NULL)
       cb_error (_("data name expected before CHARACTERS"));
     current_inspect_func = NULL;
-    $<list>$ = list_add ($2, make_funcall_1 ("cob_inspect_characters", current_inspect_data));
+    $<list>$ = list_add ($2, cb_build_funcall_1 ("cob_inspect_characters", current_inspect_data));
   }
 | ALL
   {
@@ -2301,7 +2300,7 @@ tallying_item:
   {
     if (current_inspect_func == NULL)
       cb_error_x ($1, _("ALL or LEADING expected before `%s'"), cb_name ($1));
-    $<list>$ = list_add ($2, make_funcall_2 (current_inspect_func, current_inspect_data, $1));
+    $<list>$ = list_add ($2, cb_build_funcall_2 (current_inspect_func, current_inspect_data, $1));
   }
 ;
 
@@ -2320,19 +2319,19 @@ inspect_replacing:
 replacing_item:
   CHARACTERS BY value inspect_before_after_list
   {
-    $<list>$ = list_add ($4, make_funcall_1 ("cob_inspect_characters", $3));
+    $<list>$ = list_add ($4, cb_build_funcall_1 ("cob_inspect_characters", $3));
   }
 | ALL value BY value inspect_before_after_list
   {
-    $<list>$ = list_add ($5, make_funcall_2 ("cob_inspect_all", $4, $2));
+    $<list>$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_all", $4, $2));
   }
 | LEADING value BY value inspect_before_after_list
   {
-    $<list>$ = list_add ($5, make_funcall_2 ("cob_inspect_leading", $4, $2));
+    $<list>$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_leading", $4, $2));
   }
 | FIRST value BY value inspect_before_after_list
   {
-    $<list>$ = list_add ($5, make_funcall_2 ("cob_inspect_first", $4, $2));
+    $<list>$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_first", $4, $2));
   }
 ;
 
@@ -2341,7 +2340,7 @@ replacing_item:
 inspect_converting:
   CONVERTING value TO value inspect_before_after_list
   {
-    $<list>$ = list_add ($5, make_funcall_2 ("cob_inspect_converting", $2, $4));
+    $<list>$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_converting", $2, $4));
   }
 ;
 
@@ -2350,14 +2349,14 @@ inspect_converting:
 inspect_before_after_list:
   /* empty */
   {
-    $$ = list (make_funcall_0 ("cob_inspect_start"));
+    $$ = list (cb_build_funcall_0 ("cob_inspect_start"));
   }
 | inspect_before_after_list before_or_after _initial value
   {
     if ($2 == CB_BEFORE)
-      $$ = list_add ($1, make_funcall_1 ("cob_inspect_before", $4));
+      $$ = list_add ($1, cb_build_funcall_1 ("cob_inspect_before", $4));
     else
-      $$ = list_add ($1, make_funcall_1 ("cob_inspect_after", $4));
+      $$ = list_add ($1, cb_build_funcall_1 ("cob_inspect_after", $4));
   }
 ;
 _initial: | TOK_INITIAL ;
@@ -2502,23 +2501,23 @@ perform_procedure:
 perform_option:
   /* empty */
   {
-    $$ = make_perform (CB_PERFORM_ONCE);
+    $$ = cb_build_perform (CB_PERFORM_ONCE);
   }
 | integer_value TIMES
   {
-    $$ = make_perform (CB_PERFORM_TIMES);
+    $$ = cb_build_perform (CB_PERFORM_TIMES);
     CB_PERFORM ($$)->data = $1;
     current_program->loop_counter++;
   }
 | perform_test UNTIL condition
   {
-    $$ = make_perform (CB_PERFORM_UNTIL);
+    $$ = cb_build_perform (CB_PERFORM_UNTIL);
     CB_PERFORM ($$)->test = $1;
-    add_perform_varying (CB_PERFORM ($$), 0, 0, 0, $3);
+    cb_add_perform_varying (CB_PERFORM ($$), 0, 0, 0, $3);
   }
 | perform_test VARYING
   {
-    $<tree>$ = make_perform (CB_PERFORM_UNTIL);
+    $<tree>$ = cb_build_perform (CB_PERFORM_UNTIL);
     CB_PERFORM ($<tree>$)->test = $1;
   }
   perform_varying_list
@@ -2539,7 +2538,7 @@ perform_varying:
   data_name FROM value BY value UNTIL condition
   {
     cb_tree step = cb_build_add ($1, $5, 0);
-    add_perform_varying (CB_PERFORM ($<tree>0), $1, $3, step, $7);
+    cb_add_perform_varying (CB_PERFORM ($<tree>0), $1, $3, step, $7);
   }
 ;
 
@@ -2687,12 +2686,12 @@ search_whens:
   }
 ;
 search_when:
-  WHEN condition statement_list	{ $<tree>$ = make_if ($2, $3, 0); }
+  WHEN condition statement_list	{ $<tree>$ = cb_build_if ($2, $3, 0); }
 ;
 search_all_when:
   WHEN expr statement_list
   {
-    $<tree>$ = make_if (cb_build_search_all ($<tree>-1, $2), $3, 0);
+    $<tree>$ = cb_build_if (cb_build_search_all ($<tree>-1, $2), $3, 0);
   }
 ;
 end_search:
@@ -2831,7 +2830,7 @@ sort_input:
 | INPUT PROCEDURE _is perform_procedure
   {
     push_funcall_2 ("cob_open", $<tree>0, cb_build_integer (COB_OPEN_OUTPUT));
-    push (make_perform_once ($4));
+    push (cb_build_perform_once ($4));
     push_funcall_2 ("cob_close", $<tree>0, cb_build_integer (COB_CLOSE_NORMAL));
   }
 ;
@@ -2850,7 +2849,7 @@ sort_output:
 | OUTPUT PROCEDURE _is perform_procedure
   {
     push_funcall_2 ("cob_open", $<tree>-1, cb_build_integer (COB_OPEN_INPUT));
-    push (make_perform_once ($4));
+    push (cb_build_perform_once ($4));
     push_funcall_2 ("cob_close", $<tree>-1, cb_build_integer (COB_CLOSE_NORMAL));
   }
 ;
@@ -2918,7 +2917,7 @@ string_statement:
     struct cb_list *seq;
     struct cb_list *start = $<list>3;
 
-    seq = list (make_funcall_2 ("cob_string_init", $5, $6));
+    seq = list (cb_build_funcall_2 ("cob_string_init", $5, $6));
 
     while (start)
       {
@@ -2932,16 +2931,16 @@ string_statement:
 
 	/* cob_string_delimited */
 	dlm = end ? CB_PARAMETER (end->item)->x : cb_int0;
-	list_add (seq, make_funcall_1 ("cob_string_delimited", dlm));
+	list_add (seq, cb_build_funcall_1 ("cob_string_delimited", dlm));
 
 	/* cob_string_append */
 	for (l = start; l != end; l = l->next)
-	  list_add (seq, make_funcall_1 ("cob_string_append", l->item));
+	  list_add (seq, cb_build_funcall_1 ("cob_string_append", l->item));
 
 	start = end ? end->next : NULL;
       }
 
-    list_add (seq, make_funcall_0 ("cob_string_finish"));
+    list_add (seq, cb_build_funcall_0 ("cob_string_finish"));
     push_sequence_with_handler (make_sequence (seq), $7);
   }
 ;
@@ -2979,11 +2978,11 @@ subtract_statement:
 subtract_body:
   numeric_value_list FROM numeric_name_list
   {
-    $<tree>$ = cb_build_assign ($3, '-', build_connective_op ($1, '+'));
+    $<tree>$ = cb_build_assign ($3, '-', cb_build_connective_op ($1, '+'));
   }
 | numeric_value_list FROM numeric_value GIVING numeric_edited_name_list
   {
-    $<tree>$ = cb_build_assign ($5, 0, build_connective_op (cons ($3, $1), '-'));
+    $<tree>$ = cb_build_assign ($5, 0, cb_build_connective_op (cons ($3, $1), '-'));
   }
 | CORRESPONDING group_name FROM group_name flag_rounded
   {
@@ -3007,11 +3006,11 @@ unstring_statement:
   end_unstring
   {
     struct cb_list *l = $<list>4;
-    l = cons (make_funcall_2 ("cob_unstring_init", $3, $7), l);
+    l = cons (cb_build_funcall_2 ("cob_unstring_init", $3, $7), l);
     l = list_append (l, $<list>6);
     if ($<tree>8)
-      l = list_add (l, make_funcall_1 ("cob_unstring_tallying", $<tree>8));
-    l = list_add (l, make_funcall_0 ("cob_unstring_finish"));
+      l = list_add (l, cb_build_funcall_1 ("cob_unstring_tallying", $<tree>8));
+    l = list_add (l, cb_build_funcall_0 ("cob_unstring_finish"));
     push_sequence_with_handler (make_sequence (l), $9);
   }
 ;
@@ -3030,7 +3029,7 @@ unstring_delimited_item:
   flag_all value
   {
     cb_tree flag = $1 ? cb_int1 : cb_int0;
-    $<tree>$ = make_funcall_2 ("cob_unstring_delimited", $2, flag);
+    $<tree>$ = cb_build_funcall_2 ("cob_unstring_delimited", $2, flag);
   }
 ;
 
@@ -3042,7 +3041,7 @@ unstring_into:
 unstring_into_item:
   data_name unstring_delimiter unstring_count
   {
-    $<tree>$ = make_funcall_3 ("cob_unstring_into", $1, $<tree>2, $<tree>3);
+    $<tree>$ = cb_build_funcall_3 ("cob_unstring_into", $1, $<tree>2, $<tree>3);
   }
 ;
 unstring_delimiter:
@@ -3141,7 +3140,7 @@ write_option:
   }
 | before_or_after _advancing integer_value _line_or_lines
   {
-    $<tree>$ = cb_build_parameter_1 ($1, make_cast_integer ($3));
+    $<tree>$ = cb_build_parameter_1 ($1, cb_build_cast_integer ($3));
   }
 | before_or_after _advancing PAGE
   {
@@ -3556,7 +3555,7 @@ expr_1:
 			    break;
 			  default:
 			    stack[i-1].value =
-			      make_funcall_1 (class_func, stack[i-1].value);
+			      cb_build_funcall_1 (class_func, stack[i-1].value);
 			    CB_TREE_CLASS (stack[i-1].value) = CB_CLASS_BOOLEAN;
 			    break;
 			  }
@@ -4159,15 +4158,6 @@ build_file_handler (cb_tree file, cb_tree handler)
     handler = make_handler (0, 0, 0);
   CB_FUNCALL (handler)->argv[3] = CB_FILE (file)->handler;
   return handler;
-}
-
-static cb_tree
-build_connective_op (struct cb_list *l, char op)
-{
-  cb_tree e = l->item;
-  for (l = l->next; l; l = l->next)
-    e = cb_build_binary_op (e, op, l->item);
-  return e;
 }
 
 
