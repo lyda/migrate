@@ -7,7 +7,7 @@ MAINTAINERCLEANFILES = Makefile.in
 INCLUDES = -I$(top_srcdir)/libcob
 
 AM_CFLAGS = -Wall
-AM_YFLAGS = -d
+AM_YFLAGS = -v -d
 AM_LFLAGS = -s -d
 
 defaults.h: Makefile.am $(top_builddir)/config.status

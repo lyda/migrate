@@ -116,6 +116,15 @@ word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
   strrchr (cob_orig_filename, '"')[0] = '\0';
 }
 
+<ENVIR_ST>{word} {
+  int tok = scan_word (yytext);
+  if (tok)
+    return tok;
+
+  yylval.sval = install (yytext, SYTB_VAR, 0);
+  return (STRING);
+}
+
 <DATA_ST>{word} {
   int tok = scan_word (yytext);
   if (tok)
@@ -123,15 +132,6 @@ word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
 
   /* install w/clone if neccessary */
   yylval.sval = install (yytext, SYTB_VAR, 1);
-  return (STRING);
-}
-
-<ENVIR_ST>{word} {
-  int tok = scan_word (yytext);
-  if (tok)
-    return tok;
-
-  yylval.sval = install (yytext, SYTB_VAR, 0);
   return (STRING);
 }
 
