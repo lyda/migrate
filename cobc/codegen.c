@@ -284,7 +284,7 @@ save_special_literal (char *val, char picc, char *nick)
   cob_tree lit = install_literal (nick);
   struct lit *p = LITERAL (lit);
   if (COB_FIELD_TYPE (lit))
-    return NULL;		/* already saved */
+    return lit;		/* already saved */
   COB_FIELD_TYPE (p) = picc;
   p->nick = val;
   p->all = 1;
@@ -4443,7 +4443,7 @@ create_status_register (char *name)
   char pic[] = { '9', 2, 0 };
   sy = install (name, SYTB_VAR, 0);
   if (COB_FIELD_TYPE (sy))
-    return NULL;		/* it already exists */
+    return sy;		/* it already exists */
   COB_FIELD_TYPE (sy) = '9';
   sy->picstr = malloc (strlen (pic) + 1);
   strcpy (sy->picstr, pic);

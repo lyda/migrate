@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 409
+%expect 407
 
 %{
 #define yydebug		cob_trace_parser
@@ -2555,15 +2555,15 @@ comparative_condition:
   expr opt_is operator expr	{ $$ = make_cond ($1, $3, $4); }
 ;
 operator:
-  flag_not equal opt_to		{ $$ = $1 ? COND_NE : COND_EQ; }
-| flag_not greater opt_than	{ $$ = $1 ? COND_LE : COND_GT; }
-| flag_not less opt_than	{ $$ = $1 ? COND_GE : COND_LT; }
+  flag_not equal		{ $$ = $1 ? COND_NE : COND_EQ; }
+| flag_not greater		{ $$ = $1 ? COND_LE : COND_GT; }
+| flag_not less			{ $$ = $1 ? COND_GE : COND_LT; }
 | flag_not greater_or_equal	{ $$ = $1 ? COND_LT : COND_GE; }
 | flag_not less_or_equal	{ $$ = $1 ? COND_GT : COND_LE; }
 ;
-equal: '=' | EQUAL ;
-greater: '>' | GREATER ;
-less: '<' | LESS ;
+equal: '=' | EQUAL opt_to ;
+greater: '>' | GREATER opt_than ;
+less: '<' | LESS opt_than ;
 greater_or_equal: GE | GREATER opt_than OR EQUAL opt_to ;
 less_or_equal: LE | LESS opt_than OR EQUAL opt_to ;
 
