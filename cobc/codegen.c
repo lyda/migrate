@@ -2601,6 +2601,8 @@ ginfo_container3 (struct ginfo *v, unsigned long ty)
 void
 ginfo_container4 (struct ginfo *v)
 {
+  if (v == NULL)
+    return;
 
   switch (v->sel)
     {
