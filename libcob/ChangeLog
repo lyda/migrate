@@ -1,3 +1,9 @@
+2002-05-30  Keisuke Nishida  <knishida@netlab.jp>
+
+	* numeric.c (cob_decimal_pow): Handle decimals.
+	(cob_decimal_set_double, cob_decimal_get_double): New functions.
+	* numeric.h (cob_decimal_set_double, cob_decimal_get_double): Exported.
+
 2002-05-29  Keisuke Nishida  <knishida@netlab.jp>
 
 	* Keep field names at run-time.

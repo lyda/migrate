@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
 
 #include "move.h"
 #include "numeric.h"
@@ -150,6 +151,13 @@ cob_decimal_set_int64 (cob_decimal d, long long n, int decimals)
   mpz_mul_2exp (d->number, d->number, 32);
   mpz_add_ui (d->number, d->number, n & 0xffffffff);
   d->decimals = decimals;
+}
+
+void
+cob_decimal_set_double (cob_decimal d, double v)
+{
+  mpz_set_d (d->number, v);
+  d->decimals = 0;
 }
 
 void
@@ -320,6 +328,16 @@ cob_decimal_get_rounded (cob_decimal d, struct cob_field f)
   cob_decimal_get (d, f);
 }
 
+double
+cob_decimal_get_double (cob_decimal d)
+{
+  int n = d->decimals;
+  double v = mpz_get_d (d->number);
+  for (; n > 0; n--) v *= 10;
+  for (; n < 0; n++) v /= 10;
+  return v;
+}
+
 
 /*
  * Decimal arithmetic
@@ -366,13 +384,14 @@ cob_decimal_pow (cob_decimal d1, cob_decimal d2)
 {
   if (d2->decimals == 0 && mpz_fits_ulong_p (d2->number))
     {
-      int n = mpz_get_ui (d2->number);
+      unsigned int n = mpz_get_ui (d2->number);
       mpz_pow_ui (d1->number, d1->number, n);
       d1->decimals *= n;
     }
   else
     {
-      cob_runtime_error ("%s: not implemented yet", __FUNCTION__);
+      cob_decimal_set_double (d1, pow (cob_decimal_get_double (d1),
+				       cob_decimal_get_double (d2)));
     }
 }
 
