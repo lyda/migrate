@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
-"POT-Creation-Date: 2003-06-08 12:09+0900\n"
+"POT-Creation-Date: 2003-06-11 15:42+0900\n"
 "PO-Revision-Date: 2003-06-08 12:09+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -316,17 +316,17 @@ msgstr "`%s' は 1 つの添字を必要とします"
 msgid "`%s' requires %d subscripts"
 msgstr "`%s' は %d つの添字を必要とします"
 
-#: cobc/typeck.c:154 libcob/common.c:638
+#: cobc/typeck.c:154 libcob/common.c:641
 #, c-format
 msgid "subscript of `%s' out of bounds: %d"
 msgstr "'%s' の添字が範囲を超えています: %d"
 
-#: cobc/typeck.c:168 libcob/common.c:652
+#: cobc/typeck.c:168 libcob/common.c:655
 #, c-format
 msgid "offset of `%s' out of bounds: %d"
 msgstr "'%s' の開始位置が範囲を超えています: %d"
 
-#: cobc/typeck.c:173 libcob/common.c:661
+#: cobc/typeck.c:173 libcob/common.c:664
 #, c-format
 msgid "length of `%s' out of bounds: %d"
 msgstr "'%s' の長さが範囲を超えています: %d"
@@ -632,89 +632,89 @@ msgstr "終止符(END-XXX)がなければ警告する"
 msgid "Warn type mismatch strictly"
 msgstr "タイプの不適合を厳密に警告する"
 
-#: libcob/call.c:167
+#: libcob/call.c:168
 msgid "cob_init() must be called before cob_resolve()"
 msgstr "cob_resolve() の前に cob_init() を呼ばなければなりません"
 
-#: libcob/call.c:197
+#: libcob/call.c:207
 #, c-format
 msgid "cannot find module `%s'"
 msgstr "モジュールが見付かりません `%s'"
 
-#: libcob/common.c:222
+#: libcob/common.c:225
 msgid "warning: cob_init expected in the main program\n"
 msgstr "warning: メインプログラムで cob_init 呼ばれていません\n"
 
-#: libcob/common.c:609
+#: libcob/common.c:612
 #, c-format
 msgid "`%s' not numeric: `%s'"
 msgstr "`%s' は数字ではありません: `%s'"
 
-#: libcob/common.c:629
+#: libcob/common.c:632
 #, c-format
 msgid "OCCURS DEPENDING ON `%s' out of bounds: %d"
 msgstr "OCCURS DEPENDING ON `%s' が範囲を越えています: %d"
 
-#: libcob/fileio.c:1205
+#: libcob/fileio.c:1220
 msgid "end of file"
 msgstr "ファイルの終わりです"
 
-#: libcob/fileio.c:1208
+#: libcob/fileio.c:1223
 msgid "out of key range"
 msgstr "キーの範囲が不当です"
 
-#: libcob/fileio.c:1211
+#: libcob/fileio.c:1226
 msgid "key order not ascending"
 msgstr "キーが昇順ではありません"
 
-#: libcob/fileio.c:1214
+#: libcob/fileio.c:1229
 msgid "record key already exists"
 msgstr "レコードキーが既に存在します"
 
-#: libcob/fileio.c:1217
+#: libcob/fileio.c:1232
 msgid "record key not exists"
 msgstr "レコードキーが存在しません"
 
-#: libcob/fileio.c:1220
+#: libcob/fileio.c:1235
 msgid "permanent file error"
 msgstr "永続ファイルエラーです"
 
-#: libcob/fileio.c:1226
+#: libcob/fileio.c:1241
 msgid "permission denied"
 msgstr "利用許可がありません"
 
-#: libcob/fileio.c:1229
+#: libcob/fileio.c:1244
 msgid "file already open"
 msgstr "ファイルは既に開いています"
 
-#: libcob/fileio.c:1232
+#: libcob/fileio.c:1247
 msgid "file not open"
 msgstr "ファイルが開いていません"
 
-#: libcob/fileio.c:1235
+#: libcob/fileio.c:1250
 msgid "READ must be executed first"
 msgstr "READ を先に実行しなければなりません"
 
-#: libcob/fileio.c:1238
+#: libcob/fileio.c:1253
 msgid "record overflow"
 msgstr "レコードの領域を超えています"
 
-#: libcob/fileio.c:1241
+#: libcob/fileio.c:1256
 msgid "failed to read"
 msgstr "読み込みに失敗しました"
 
-#: libcob/fileio.c:1244
+#: libcob/fileio.c:1259
 msgid "READ and START not allowed"
 msgstr "READ、START は許可されません"
 
-#: libcob/fileio.c:1247
+#: libcob/fileio.c:1262
 msgid "WRITE not allowed"
 msgstr "WRITE は許可されません"
 
-#: libcob/fileio.c:1250
+#: libcob/fileio.c:1265
 msgid "DELETE and REWRITE not allowed"
 msgstr "DELETE、REWRITE は許可されません"
 
-#: libcob/fileio.c:1253
+#: libcob/fileio.c:1268
 msgid "unknown file error"
 msgstr "原因不明のファイルエラーです"
