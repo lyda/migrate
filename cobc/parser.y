@@ -2767,7 +2767,7 @@ name:
   variable
 | variable '(' gname ':' opt_gname ')'
   {
-    $$ = make_refmod($1, $3, $5);
+    $$ = make_substring($1, $3, $5);
   }
   ;
 variable:

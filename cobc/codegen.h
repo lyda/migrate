@@ -84,7 +84,7 @@ extern int yylex(void);
 extern struct index_to_table_list *index2table;
 extern int pgm_segment;
 extern char *yytext;
-extern int refmod_slots;
+extern int substring_slots;
 
 extern cob_tree spe_lit_ZE;
 extern cob_tree spe_lit_SP;

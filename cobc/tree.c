@@ -122,19 +122,18 @@ make_subref (cob_tree sy, cob_tree_list subs)
 
 
 /*
- * refmod
+ * Substring
  */
 
 cob_tree
-make_refmod (cob_tree sy, cob_tree syoff, cob_tree sylen)
+make_substring (cob_tree var, cob_tree offset, cob_tree len)
 {
-  struct refmod *p;
-  p = malloc (sizeof (struct refmod));
-  COB_TREE_TYPE (p) = cob_tag_refmod;
-  p->sym = sy;
-  p->off = syoff;
-  p->len = sylen;
-  p->slot = refmod_slots++;
+  struct substring *p = malloc (sizeof (struct substring));
+  COB_TREE_TYPE (p) = cob_tag_substring;
+  p->sym = var;
+  p->off = offset;
+  p->len = len;
+  p->slot = substring_slots++;
   return COB_TREE (p);
 }
 

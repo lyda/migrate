@@ -30,7 +30,7 @@
 #define cob_tag_symbol		0
 #define cob_tag_literal		1
 #define cob_tag_subref		2
-#define cob_tag_refmod		4
+#define cob_tag_substring		4
 #define cob_tag_expr		5
 #define cob_tag_cond		8
 
@@ -153,9 +153,9 @@ struct sym
   union
   {
     struct vrange *vr;		/* pointer to next range of values (88 var) */
-    struct refmod *rfm;		/* offset and length of refmod */
+    struct substring *rfm;		/* offset and length of substring */
   }
-  refmod_redef;
+  substring_redef;
   int level;			/* level of field 
 				   or ASSIGN TO DISK/PRINTER (files) */
   int access_mode;		/* access mode (files) */
@@ -198,8 +198,9 @@ extern cob_tree make_filler (void);
 
 
 /*
- * Storage for subscripted variable references.
+ * Subscripted variable
  */
+
 struct subref
 {
   struct cob_tree_common common;
@@ -215,21 +216,27 @@ struct subref
 extern cob_tree make_subref (cob_tree sy, cob_tree_list subs);
 
 
+/*
+ * Substring
+ */
 
-/* Node for refmod's */
-struct refmod
+struct substring
 {
   struct cob_tree_common common;
   cob_tree off;		/* offset from normal start address */
   cob_tree sym;		/* pointer to original var: must be at the same relative offset as sym in subref */
   cob_tree len;		/* corrected length */
-  int slot;			/* slot in the data section */
+  int slot;		/* slot in the data section */
 };
 
-#define REFMOD(x)	((struct refmod *) (x))
-#define REFMOD_P(x)	(COB_TREE_TYPE (x) == cob_tag_refmod)
+#define SUBSTRING(x)		((struct substring *) (x))
+#define SUBSTRING_P(x)		(COB_TREE_TYPE (x) == cob_tag_substring)
+#define SUBSTRING_VAR(x)	(SUBSTRING (x)->sym)
+#define SUBSTRING_OFFSET(x)	(SUBSTRING (x)->off)
+#define SUBSTRING_LENGTH(x)	(SUBSTRING (x)->len)
+#define SUBSTRING_SLOT(x)	(SUBSTRING (x)->slot)
 
-extern cob_tree make_refmod (cob_tree sy, cob_tree syoff, cob_tree sylen);
+extern cob_tree make_substring (cob_tree var, cob_tree offset, cob_tree len);
 
 
 /*

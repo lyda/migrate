@@ -45,7 +45,7 @@ int at_linkage = 0;
 int loc_label = 1;
 unsigned char picture[4096];
 int picix, piccnt, sign, v_flag, n_flag;
-int refmod_slots = 0;
+int substring_slots = 0;
 
 cob_tree spe_lit_ZE = NULL;
 cob_tree spe_lit_SP = NULL;
@@ -267,7 +267,7 @@ clear_offsets ()
   data_offset = 0;
   linkage_offset = 0;
   using_offset = 8;
-  refmod_slots = 0;
+  substring_slots = 0;
   fields_list = NULL;
   files_list = NULL;
   /* clear all current paragraphs/sections and fields */
@@ -635,8 +635,8 @@ loadloc_to_eax (cob_tree sy_p)
   unsigned offset;
   cob_tree sy = sy_p, var;
 
-  if (REFMOD_P (sy))
-    sy = ((struct refmod *) sy)->sym;	// temp bypass
+  if (SUBSTRING_P (sy))
+    sy = SUBSTRING_VAR (sy);
   if (SUBREF_P (sy))
     {
       gen_subscripted (sy);
@@ -673,13 +673,13 @@ loadloc_to_eax (cob_tree sy_p)
     {
       load_location (sy, "eax");
     }
-//      At that stage, the address is ready in %eax; do we need
-//      to correct it because of RefMod's?
-  if (REFMOD_P (sy_p))
-    {				// should avoid all that if literal 1
-      struct refmod *rfp = (struct refmod *) sy_p;
+  //      At that stage, the address is ready in %eax; do we need
+  //      to correct it because of substring's?
+  if (SUBSTRING_P (sy_p))
+    {
+      // should avoid all that if literal 1
       fprintf (o_src, "\tmovl\t%%eax, %%ebx\n");
-      value_to_eax (rfp->off);
+      value_to_eax (SUBSTRING_OFFSET (sy_p));
       fprintf (o_src, "\tdecl\t%%eax\n");
       fprintf (o_src, "\taddl\t%%ebx, %%eax\n");
     }
@@ -720,7 +720,7 @@ static void
 gen_loaddesc1 (cob_tree sy, int variable_length)
 {
   cob_tree var;
-  if (SUBREF_P (sy) || REFMOD_P (sy))
+  if (SUBREF_P (sy) || SUBSTRING_P (sy))
     {
       var = SUBREF_SYM (sy);
       if (SUBREF_P (var))
@@ -730,11 +730,11 @@ gen_loaddesc1 (cob_tree sy, int variable_length)
     {
       var = sy;
     }
-  if (REFMOD_P (sy))
+  if (SUBSTRING_P (sy))
     {
-      struct refmod *rflp = (struct refmod *) sy;
-      cob_tree syl = rflp->len;
-      if (syl == NULL)
+      struct substring *rflp = SUBSTRING (sy);
+      cob_tree len = rflp->len;
+      if (len == NULL)
 	{
 	  fprintf (o_src, "#  corrected length EOV\n");
 	  value_to_eax (rflp->off);
@@ -746,13 +746,13 @@ gen_loaddesc1 (cob_tree sy, int variable_length)
 	}
       else
 	{
-	  fprintf (o_src, "#  corrected length %s\n", COB_FIELD_NAME (syl));
-	  if (LITERAL_P (syl))
+	  fprintf (o_src, "#  corrected length %s\n", COB_FIELD_NAME (len));
+	  if (LITERAL_P (len))
 	    fprintf (o_src, "\tmovl\t$%s, rf_base%d+%d\n",
-		     COB_FIELD_NAME (syl), pgm_segment, rflp->slot * 8);
+		     COB_FIELD_NAME (len), pgm_segment, rflp->slot * 8);
 	  else
 	    {
-	      value_to_eax (syl);
+	      value_to_eax (len);
 	      fprintf (o_src, "\tmovl\t%%eax, rf_base%d+%d\n",
 		       pgm_segment, rflp->slot * 8);
 	    }
@@ -1071,7 +1071,7 @@ gen_condvar (cob_tree sy)
   push_immed (0);
   gen_loadvar (sy1->value2);
   gen_loadvar (sy1->value);
-  vr = sy1->refmod_redef.vr;
+  vr = sy1->substring_redef.vr;
   while (vr)
     {
       gen_loadvar (vr->value2);
@@ -1228,8 +1228,9 @@ stabs_line ()
 void
 data_trail (void)
 {
-  if (refmod_slots > 0)
-    fprintf (o_src, "rf_base%d:\t.space\t%d\n", pgm_segment, refmod_slots * 8);
+  if (substring_slots > 0)
+    fprintf (o_src, "rf_base%d:\t.space\t%d\n",
+	     pgm_segment, substring_slots * 8);
 }
 
 int
@@ -2295,7 +2296,7 @@ gen_display (int dupon, int nl)
       /* separate screen displays from display of regular variables */
       sy = disp_list->var;
       if (disp_list && !LITERAL_P (sy))
-	if (!REFMOD_P (sy) && !SUBREF_P (sy) && sy->scr)
+	if (!SUBSTRING_P (sy) && !SUBREF_P (sy) && sy->scr)
 	  {
 	    gen_display_screen (disp_list->var, 1);
 	    return;
@@ -2852,10 +2853,10 @@ gen_move (cob_tree src, cob_tree dst)
 #ifdef COB_DEBUG
   {
     cob_tree esys = src, esyd = dst;
-    if (REFMOD_P (esys))
-      esys = ((struct refmod *) esys)->sym;
-    if (REFMOD_P (esyd))
-      esyd = ((struct refmod *) esyd)->sym;
+    if (SUBSTRING_P (esys))
+      esys = SUBSTRING_VAR (esys);
+    if (SUBSTRING_P (esyd))
+      esyd = SUBSTRING_VAR (esyd);
     fprintf (o_src, "### MOVE %s TO ", sch_convert (COB_FIELD_NAME (esys)));
     fprintf (o_src, "%s\n", sch_convert (COB_FIELD_NAME (esyd)));
   }
@@ -2975,14 +2976,14 @@ gen_set (cob_tree idx, enum set_mode mode, cob_tree var,
 	 int adrof_idx, int adrof_var)
 {
   cob_tree sy = idx;
-  if (REFMOD_P (idx))
-    sy = ((struct refmod *) idx)->sym;
+  if (SUBSTRING_P (idx))
+    sy = SUBSTRING_VAR (idx);
   else if (SUBREF_P (idx))
     sy = SUBREF_SYM (idx);
 
   if (COB_FIELD_TYPE (sy) == '8')
     {				/* conditional? */
-      if ((sy->refmod_redef.vr != NULL) || (sy->value2 != sy->value))
+      if ((sy->substring_redef.vr != NULL) || (sy->value2 != sy->value))
 	{
 	  yyerror ("conditional is not unique");
 	  return;
@@ -4354,7 +4355,7 @@ set_variable_values (cob_tree v1, cob_tree v2)
   struct vrange *new;
   if (curr_field->value == NULL)
     {
-      curr_field->refmod_redef.vr = NULL;
+      curr_field->substring_redef.vr = NULL;
       curr_field->value = v1;
       curr_field->value2 = v2;
       curr_field->flags.value = 1;
@@ -4366,8 +4367,8 @@ set_variable_values (cob_tree v1, cob_tree v2)
       new->value = v1;
       new->value2 = v2;
       // spec_value is not used for 88
-      new->next = curr_field->refmod_redef.vr;
-      curr_field->refmod_redef.vr = new;
+      new->next = curr_field->substring_redef.vr;
+      curr_field->substring_redef.vr = new;
     }
 }
 
