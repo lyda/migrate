@@ -97,6 +97,16 @@ drop (const char *name)
 static char resolve_error_buff[FILENAME_MAX];
 static char *resolve_error = NULL;
 
+static char *path_str = NULL;
+
+void
+cob_set_library_path (const char *path)
+{
+  if (path_str)
+    free (path_str);
+  path_str = strdup (path);
+}
+
 void *
 cob_resolve (const char *name)
 {
@@ -113,7 +123,9 @@ cob_resolve (const char *name)
   /* Build search path at the first time */
   if (!path)
     {
-      char *p, *path_str = getenv ("COB_LIBRARY_PATH");
+      char *p;
+      if (!path_str)
+	path_str = getenv ("COB_LIBRARY_PATH");
       if (!path_str)
 	path_str = COB_LIBRARY_PATH;
       path_str = strdup (path_str);

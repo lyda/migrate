@@ -25,6 +25,11 @@
 
 int cob_status;
 
+void
+cob_init (int argc, char **argv)
+{
+}
+
 char
 sign_to_char (int digit)
 {
