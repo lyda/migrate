@@ -36,7 +36,7 @@ AC_PROG_MAKE_SET
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([alloca.h errno.h fcntl.h limits.h malloc.h stdlib.h \
-		  string.h sys/param.h sys/time.h termios.h unistd.h])
+		  string.h sys/param.h sys/time.h unistd.h])
 
 # Checks for db.
 LIBDB="-ldb1"
