@@ -1927,7 +1927,8 @@ entry_statement:
   ENTRY				{ BEGIN_STATEMENT ("ENTRY"); }
   literal using_phrase
   {
-    push_entry (CB_LITERAL ($3)->data, $4);
+    if (cb_verify (cb_entry_statement, "ENTRY"))
+      push_entry (CB_LITERAL ($3)->data, $4);
   }
 ;
 
