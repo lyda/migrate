@@ -1021,7 +1021,6 @@ extern void cb_emit_return (cb_tree ref, cb_tree into);
 extern void cb_emit_search (cb_tree table, cb_tree varying, cb_tree at_end, cb_tree whens);
 extern void cb_emit_search_all (cb_tree table, cb_tree at_end, cb_tree when, cb_tree stmts);
 
-extern cb_tree cb_build_set (cb_tree dst, cb_tree src);
 extern void cb_emit_set_to (cb_tree l, cb_tree x);
 extern void cb_emit_set_up_down (cb_tree l, cb_tree flag, cb_tree x);
 extern void cb_emit_set_on_off (cb_tree l, cb_tree flag);

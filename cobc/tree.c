@@ -216,6 +216,19 @@ cb_tree_category (cb_tree x)
 
   switch (CB_TREE_TAG (x))
     {
+    case CB_TAG_CAST:
+      {
+	struct cb_cast *p = CB_CAST (x);
+	switch (p->type)
+	  {
+	  case CB_CAST_ADDRESS:
+	    x->category = CB_CATEGORY_DATA_POINTER;
+	    break;
+	  default:
+	    ABORT ();
+	  }
+	break;
+      }
     case CB_TAG_REFERENCE:
       {
 	struct cb_reference *r = CB_REFERENCE (x);

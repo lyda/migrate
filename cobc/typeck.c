@@ -1402,7 +1402,7 @@ cb_emit_call (cb_tree prog, cb_tree using, cb_tree returning,
 {
   cb_emit (cb_build_call (prog, using, on_exception, not_on_exception));
   if (returning)
-    cb_emit (cb_build_set (returning, cb_return_code));
+    cb_emit (cb_build_move (cb_return_code, returning));
 }
 
 
@@ -1879,9 +1879,18 @@ move_error (cb_tree src, cb_tree dst, int value_flag, int flag, const char *msg)
 int
 validate_move (cb_tree src, cb_tree dst, int is_value)
 {
-  struct cb_field *f = cb_field (dst);
+  struct cb_field *f;
   cb_tree loc = src->source_line ? src : dst;
 
+  if (CB_TREE_CLASS (dst) == CB_CLASS_POINTER)
+    {
+      if (CB_TREE_CLASS (src) == CB_CLASS_POINTER)
+	return 0;
+      else
+	goto invalid;
+    }
+
+  f = cb_field (dst);
   switch (CB_TREE_TAG (src))
     {
     case CB_TAG_CONST:
@@ -2377,6 +2386,15 @@ cb_build_move (cb_tree src, cb_tree dst)
   if (CB_REFERENCE_P (dst))
     CB_REFERENCE (dst)->type = CB_RECEIVING_OPERAND;
 
+  if (CB_TREE_CLASS (dst) == CB_CLASS_POINTER)
+    {
+      if (CB_REFERENCE_P (dst) && CB_TREE_CLASS (dst) == CB_CLASS_POINTER)
+	dst = cb_build_dereference (dst);
+      if (CB_REFERENCE_P (src) && CB_TREE_CLASS (src) == CB_CLASS_POINTER)
+	src = cb_build_dereference (src);
+      return cb_build_assign (dst, src);
+    }
+
   if (CB_INDEX_P (dst))
     return cb_build_assign (cb_build_cast_integer (dst),
 			    cb_build_cast_integer (src));
@@ -2646,30 +2664,11 @@ cb_emit_search_all (cb_tree table, cb_tree at_end, cb_tree when, cb_tree stmts)
  * SET statement
  */
 
-cb_tree
-cb_build_set (cb_tree dst, cb_tree src)
-{
-  if (CB_INDEX_P (dst))
-    return cb_build_assign (cb_build_cast_integer (dst),
-			    cb_build_cast_integer (src));
-
-  if (CB_INDEX_P (src))
-    return cb_build_funcall_2 ("cob_set_int", dst,
-			       cb_build_cast_integer (src));
-
-  if (CB_REFERENCE_P (dst))
-    dst = cb_build_dereference (dst);
-  if (CB_REFERENCE_P (src))
-    src = cb_build_dereference (src);
-
-  return cb_build_assign (dst, src);
-}
-
 void
 cb_emit_set_to (cb_tree l, cb_tree x)
 {
   for (; l; l = CB_CHAIN (l))
-    cb_emit (cb_build_set (CB_VALUE (l), x));
+    cb_emit (cb_build_move (x, CB_VALUE (l)));
 }
 
 void

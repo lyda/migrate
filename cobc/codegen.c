@@ -503,6 +503,21 @@ output_integer (cb_tree x)
 	output_integer (p->y);
 	break;
       }
+    case CB_TAG_CAST:
+      {
+	struct cb_cast *p = CB_CAST (x);
+	switch (p->type)
+	  {
+	  case CB_CAST_ADDRESS:
+	    output ("((int) (");
+	    output_data (p->val);
+	    output ("))");
+	    break;
+	  default:
+	    ABORT ();
+	  }
+	break;
+      }
     case CB_TAG_REFERENCE:
       {
 	struct cb_field *f = cb_field (x);
@@ -522,7 +537,7 @@ output_integer (cb_tree x)
 	    return;
 
 	  case CB_USAGE_POINTER:
-	    output ("((int) (");
+	    output ("(*(void **) (");
 	    output_data (x);
 	    output ("))");
 	    return;
@@ -929,6 +944,7 @@ initialize_uniform_char (struct cb_field *f)
       switch (cb_tree_type (CB_TREE (f)))
 	{
 	case COB_TYPE_NUMERIC_BINARY:
+	case COB_TYPE_POINTER:
 	  return 0;
 	case COB_TYPE_NUMERIC_DISPLAY:
 	  return '0';
