@@ -395,6 +395,34 @@ make_filler (void)
   return make_field (make_word (strdup (name)));
 }
 
+struct cobc_field *
+field_founder (struct cobc_field *p)
+{
+  while (p->parent)
+    p = p->parent;
+  return p;
+}
+
+int
+field_used_any_parent (struct cobc_field *p)
+{
+  for (; p; p = p->parent)
+    if (p->f.used)
+      return 1;
+  return 0;
+}
+
+int
+field_used_any_child (struct cobc_field *p)
+{
+  if (p->f.used)
+    return 1;
+  for (p = p->children; p; p = p->sister)
+    if (field_used_any_child (p))
+      return 1;
+  return 0;
+}
+
 static char *
 to_cname (char *s)
 {

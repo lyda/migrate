@@ -274,6 +274,9 @@ struct cobc_field {
 
 extern cobc_tree make_field (struct cobc_word *word);
 extern cobc_tree make_filler (void);
+extern struct cobc_field *field_founder (struct cobc_field *p);
+extern int field_used_any_parent (struct cobc_field *p);
+extern int field_used_any_child (struct cobc_field *p);
 extern void finalize_field_tree (struct cobc_field *p);
 
 struct cobc_picture *make_picture (void);

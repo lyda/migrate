@@ -195,12 +195,7 @@ output_index (cobc_tree x)
   switch (COBC_TREE_TAG (x))
     {
     case cobc_tag_const:
-      if (x == cobc_zero)
-	output ("0");
-      else if (x == cobc_status)
-	output ("cob_status");
-      else
-	yyerror ("non-numeric value");
+      output ("%s", COBC_CONST (x)->val);
       break;
 
     case cobc_tag_integer:
@@ -212,13 +207,9 @@ output_index (cobc_tree x)
       break;
 
     case cobc_tag_expr:
-      while (COBC_EXPR_P (x))
-	{
-	  output_index (COBC_EXPR (x)->left);
-	  output (" %c ", COBC_EXPR (x)->op);
-	  x = COBC_EXPR (x)->right;
-	}
-      output_index (x);
+      output_index (COBC_EXPR (x)->left);
+      output (" %c ", COBC_EXPR (x)->op);
+      output_index (COBC_EXPR (x)->right);
       break;
 
     default:
@@ -234,16 +225,8 @@ output_index (cobc_tree x)
 	    break;
 	  case USAGE_BINARY:
 	  case USAGE_INDEX:
-	    output ("(*");
-	    switch (p->size)
-	      {
-	      case 1: output ("(char *)"); break;
-	      case 2: output ("(short *)"); break;
-	      case 4: output ("(long *)"); break;
-	      case 8: output ("(long long *)"); break;
-	      }
-	    output_location (x);
-	    output (")");
+	    output ("i_%s", p->cname);
+	    output_subscripts (x);
 	    break;
 	  }
 	break;
@@ -645,10 +628,7 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
   if (p == p01 && !p->redefines)
     {
       /* level 01 */
-      if (linkage)
-	/* linkage fields are given as function parameters,
-	 * so nothing to be done here */;
-      else
+      if (field_used_any_child (p) && !linkage)
 	output ("static unsigned char f_%s_data[%d];\n", p->cname, p->size);
     }
   else if (p->indexes == 0)
@@ -676,6 +656,18 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
   if (p->f.used && !COBC_FILLER_P (COBC_TREE (p)))
     output ("#define f_%s%s ((struct cob_field) {&f_%s_desc, f_%s_data%s})\n",
 	    p->cname, subscripts, p->cname, p->cname, subscripts);
+  if (p->usage == USAGE_BINARY || p->usage == USAGE_INDEX)
+    {
+      output ("#define i_%s%s (*(", p->cname, subscripts);
+      switch (p->size)
+	{
+	case 1: output ("char"); break;
+	case 2: output ("short"); break;
+	case 4: output ("long"); break;
+	case 8: output ("long long"); break;
+	}
+      output (" *) f_%s_data%s)\n", p->cname, subscripts);
+    }
 
   /* reference modifier */
   if (p->f.referenced)
@@ -686,7 +678,7 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
       output ("  ((struct cob_field) ");
       output ("{&f_%s_desc, f_%s_data%s + cob_ref_off}); \\\n",
 	      p->cname, p->cname, subscripts);
-      output ("})\n\n");
+      output ("})\n");
     }
 
   if (p->f.used)
@@ -1028,6 +1020,9 @@ have_value (struct cobc_field *p)
 static void
 output_value (struct cobc_field *p)
 {
+  if (!field_used_any_child (p) && !field_used_any_parent (p))
+    return;
+
   if (p->value)
     {
       switch (COBC_TREE_TAG (p->value))
@@ -1070,10 +1065,9 @@ output_value (struct cobc_field *p)
     }
   else
     {
-      struct cobc_field *c;
-      for (c = p->children; c; c = c->sister)
-	if (have_value (c))
-	  output_recursive (output_value, COBC_TREE (c));
+      for (p = p->children; p; p = p->sister)
+	if (have_value (p))
+	  output_recursive (output_value, COBC_TREE (p));
     }
 }
 
@@ -1113,8 +1107,9 @@ output_tree (cobc_tree x)
 	    src_desc.have_sign = 1;
 	    put_sign (src_fld, (p->sign < 0) ? 1 : 0);
 	  }
-	output ("({ struct cob_field_desc desc = {%d, '%c', %d, 0, %d}; ",
-		p->size, COBC_TREE_CLASS (p), p->decimals, p->sign ? 1 : 0);
+	output ("({ struct cob_field_desc desc = {%d, '%c', %d, %d, %d}; ",
+		p->size, COBC_TREE_CLASS (p),
+		p->size, p->decimals, p->sign ? 1 : 0);
 	output ("(struct cob_field) {&desc, ");
 	output_quoted_string (p->str);
 	output ("}; })");

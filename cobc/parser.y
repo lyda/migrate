@@ -114,6 +114,7 @@ static cobc_tree make_move (cobc_tree f1, cobc_tree f2, int round);
 static struct cobc_list *make_corr (cobc_tree (*func)(), cobc_tree g1, cobc_tree g2, int opt, struct cobc_list *l);
 static cobc_tree make_opt_cond (cobc_tree last, int type, cobc_tree this);
 static void redefinition_error (cobc_tree x);
+static void ambiguous_error (struct cobc_word *p);
 %}
 
 %union {
@@ -2686,6 +2687,7 @@ data_name_list:
 data_name:
   name
   {
+    struct cobc_field *p = COBC_FIELD ($1);
     $$ = $1;
     if (COBC_REFMOD_P ($1))
       $1 = COBC_REFMOD ($1)->field;
@@ -2695,7 +2697,13 @@ data_name:
 	if (p->indexes > 0)
 	  yyerror ("`%s' must be subscripted", p->word->name);
       }
-    COBC_FIELD ($1)->f.used = 1;
+    p->f.used = 1;
+    for (; p; p = p->parent)
+      if (p->redefines)
+	{
+	  p->redefines->f.used = 1;
+	  break;
+	}
   }
 ;
 
@@ -2800,7 +2808,7 @@ qualified_word:
   {
     $$ = $1;
     if ($1->count > 1)
-      yywarn ("`%s' ambiguous; need qualification", $1->name);
+      ambiguous_error ($1);
   }
 | WORD in_of qualified_name
   {
@@ -3085,12 +3093,7 @@ init_field (int level, cobc_tree field)
   if (level == 1 || level == 77)
     {
       if (last_field)
-	{
-	  struct cobc_field *p = last_field;
-	  while (p->parent)
-	    p = p->parent;
-	  p->sister = current_field;
-	}
+	field_founder (last_field)->sister = current_field;
     }
   else if (!last_field || (last_field->level == 77 && level != 88))
     {
@@ -3296,7 +3299,7 @@ resolve_predefined_name (cobc_tree x)
       return NULL;
     }
   else if (p->count > 1)
-    yywarn ("`%s' ambiguous; need qualification", p->name);
+    ambiguous_error (p);
 
   name = p->item;
   for (l = l->next; l; l = l->next)
@@ -3449,6 +3452,12 @@ redefinition_error (cobc_tree x)
   struct cobc_field *p = COBC_FIELD (x);
   yyerror ("redefinition of `%s'", p->word->name);
   yyerror_loc (&x->loc, "`%s' previously defined here", p->word->name);
+}
+
+static void
+ambiguous_error (struct cobc_word *p)
+{
+  yyerror ("`%s' ambiguous; need qualification", p->name);
 }
 
 static void
