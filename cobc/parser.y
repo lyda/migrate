@@ -1008,11 +1008,11 @@ record_description_list_1:
   }
 ;
 record_description_list_2:
-  field_description		{ $<tree>$ = $<tree>1; }
+  data_description		{ $<tree>$ = $<tree>1; }
 | record_description_list_2
-  field_description		{ $<tree>$ = $<tree>1; }
+  data_description		{ $<tree>$ = $<tree>1; }
 ;
-field_description:
+data_description:
   level_number field_name
   {
     current_field = build_field ($1, $2, current_field, current_storage);
