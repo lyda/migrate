@@ -61,6 +61,7 @@ cob_decimal_init (cob_decimal d)
   d->decimals = 0;
 }
 
+#ifdef COB_DEBUG
 void
 cob_decimal_print (cob_decimal d)
 {
@@ -69,11 +70,7 @@ cob_decimal_print (cob_decimal d)
     fprintf (stdout, " * 10^%d", -d->decimals);
   fputs ("\n", stdout);
 }
-
-
-/*
- * Decimal arithmetic
- */
+#endif
 
 /* d->number *= 10^n, d->decimals += n */
 static void
@@ -119,64 +116,6 @@ arrange_decimal (cob_decimal d1, cob_decimal d2)
     shift_decimal (d1, d2->decimals - d1->decimals);
   else if (d1->decimals > d2->decimals)
     shift_decimal (d2, d1->decimals - d2->decimals);
-}
-
-void
-cob_decimal_add (cob_decimal d1, cob_decimal d2)
-{
-  arrange_decimal (d1, d2);
-  mpz_add (d1->number, d1->number, d2->number);
-}
-
-void
-cob_decimal_sub (cob_decimal d1, cob_decimal d2)
-{
-  arrange_decimal (d1, d2);
-  mpz_sub (d1->number, d1->number, d2->number);
-}
-
-void
-cob_decimal_mul (cob_decimal d1, cob_decimal d2)
-{
-  d1->decimals += d2->decimals;
-  mpz_mul (d1->number, d1->number, d2->number);
-}
-
-void
-cob_decimal_div (cob_decimal d1, cob_decimal d2)
-{
-  /* check for division by zero */
-  if (mpz_sgn (d2->number) == 0)
-    {
-      cob_status = COB_STATUS_OVERFLOW;
-      return;
-    }
-
-  d1->decimals -= d2->decimals;
-  shift_decimal (d1, 19 + ((d1->decimals < 0) ? -d1->decimals : 0));
-  mpz_tdiv_q (d1->number, d1->number, d2->number);
-}
-
-void
-cob_decimal_pow (cob_decimal d1, cob_decimal d2)
-{
-  if (d2->decimals == 0 && mpz_fits_ulong_p (d2->number))
-    {
-      int n = mpz_get_ui (d2->number);
-      mpz_pow_ui (d1->number, d1->number, n);
-      d1->decimals *= n;
-    }
-  else
-    {
-      cob_runtime_error ("%s: not implemented yet", __FUNCTION__);
-    }
-}
-
-int
-cob_decimal_cmp (cob_decimal d1, cob_decimal d2)
-{
-  arrange_decimal (d1, d2);
-  return mpz_cmp (d1->number, d2->number);
 }
 
 
@@ -373,6 +312,69 @@ cob_decimal_get_rounded (cob_decimal d, struct cob_field f)
 	}
     }
   cob_decimal_get (d, f);
+}
+
+
+/*
+ * Decimal arithmetic
+ */
+
+void
+cob_decimal_add (cob_decimal d1, cob_decimal d2)
+{
+  arrange_decimal (d1, d2);
+  mpz_add (d1->number, d1->number, d2->number);
+}
+
+void
+cob_decimal_sub (cob_decimal d1, cob_decimal d2)
+{
+  arrange_decimal (d1, d2);
+  mpz_sub (d1->number, d1->number, d2->number);
+}
+
+void
+cob_decimal_mul (cob_decimal d1, cob_decimal d2)
+{
+  d1->decimals += d2->decimals;
+  mpz_mul (d1->number, d1->number, d2->number);
+}
+
+void
+cob_decimal_div (cob_decimal d1, cob_decimal d2)
+{
+  /* check for division by zero */
+  if (mpz_sgn (d2->number) == 0)
+    {
+      cob_status = COB_STATUS_OVERFLOW;
+      return;
+    }
+
+  d1->decimals -= d2->decimals;
+  shift_decimal (d1, 19 + ((d1->decimals < 0) ? -d1->decimals : 0));
+  mpz_tdiv_q (d1->number, d1->number, d2->number);
+}
+
+void
+cob_decimal_pow (cob_decimal d1, cob_decimal d2)
+{
+  if (d2->decimals == 0 && mpz_fits_ulong_p (d2->number))
+    {
+      int n = mpz_get_ui (d2->number);
+      mpz_pow_ui (d1->number, d1->number, n);
+      d1->decimals *= n;
+    }
+  else
+    {
+      cob_runtime_error ("%s: not implemented yet", __FUNCTION__);
+    }
+}
+
+int
+cob_decimal_cmp (cob_decimal d1, cob_decimal d2)
+{
+  arrange_decimal (d1, d2);
+  return mpz_cmp (d1->number, d2->number);
 }
 
 

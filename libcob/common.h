@@ -21,6 +21,7 @@
 #define COB_COMMON_H
 
 #define COB_VOID		 0
+#define COB_GROUP		'G'
 #define COB_ALPHABETIC		'A'
 #define COB_NUMERIC		'9'
 #define COB_NUMERIC_EDITED	'0'

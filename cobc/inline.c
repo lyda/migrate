@@ -96,7 +96,7 @@ output_advance_move (struct cob_field f, cobc_tree dst)
   dst_desc.size = p->size;
   if (p->children)
     {
-      dst_desc.type = 'G';
+      dst_desc.type = COB_GROUP;
       dst_desc.justified = 0;
     }
   else

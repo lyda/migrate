@@ -776,7 +776,7 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
       if (p->children || p->rename_thru)
 	{
 	  /* field group */
-	  output ("{%d, 'G'};\n", p->size);
+	  output ("{%d, '%c'};\n", p->size, COB_GROUP);
 	}
       else
 	{

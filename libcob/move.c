@@ -185,7 +185,7 @@ cob_move_alphanum_to_alphanum (struct cob_field f1, struct cob_field f2)
 
   if (size1 >= size2)
     {
-      /* move string with truncating */
+      /* move string with truncation */
       if (f2.desc->justified)
 	memcpy (base2, base1 + size1 - size2, size2);
       else
@@ -569,6 +569,9 @@ cob_move (struct cob_field src, struct cob_field dst)
 {
   switch (COB_FIELD_TYPE (src))
     {
+    case COB_GROUP:
+      return cob_move_alphanum_to_alphanum (src, dst);
+
     case COB_NUMERIC:
       switch (COB_FIELD_TYPE (dst))
 	{
@@ -611,9 +614,6 @@ cob_move (struct cob_field src, struct cob_field dst)
 	  return indirect_move (cob_move_binary_to_display, src, dst,
 				src.desc->digits, src.desc->decimals);
 	}
-
-    case 'G':
-      return cob_move_alphanum_to_alphanum (src, dst);
 
     default:
       switch (COB_FIELD_TYPE (dst))
