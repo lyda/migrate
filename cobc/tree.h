@@ -120,7 +120,7 @@ typedef struct cb_tree_common *cb_tree;
     ((ty *) (_x));							\
   })
 #else
-#define CB_TREE_CAST(x,tg,ty)	((ty *) (x))
+#define CB_TREE_CAST(tg,ty,x)	((ty *) (x))
 #endif
 
 extern char *tree_name (cb_tree x);
