@@ -934,7 +934,7 @@ adjust_desc_length (cob_tree sy)
  * Expression
  */
 
-int
+static int
 push_expr (cob_tree sy)
 {
   if (!is_valid_expr (sy))
@@ -962,7 +962,7 @@ push_expr (cob_tree sy)
   return 1;
 }
 
-void
+static void
 assign_expr (cob_tree sy, int rnd)
 {
   push_immed (rnd);
@@ -1847,14 +1847,95 @@ add_alternate_key (cob_tree sy, int duplicates)
 }
 
 
+int
+gen_check_zero ()
+{
+  int i = loc_label++;
+  output ("\tand\t%%eax,%%eax\n");
+  output ("\tjz\t.L%d\n", i);
+  return i;
+}
+
+int
+gen_testif (void)
+{
+  int i = loc_label++;
+  int j = loc_label++;
+  output ("\tjz\t.L%d\n", j);
+  output ("\tjmp\t.L%d\n", i);
+  output ("\t.align 16\n");
+  output (".L%d:\n", j);
+  return i;
+}
+
+void
+gen_dstlabel (int lbl)
+{
+  output (".L%d:\n", lbl);
+}
+
+int
+gen_passlabel (void)
+{
+  int i = loc_label++;
+  output ("\tjmp\t.L%d\n", i);
+  return i;
+}
+
+int
+gen_marklabel (void)
+{
+  int i = loc_label++;
+  output (".L%d:\n", i);
+  return i;
+}
+
+void
+gen_jmplabel (int lbl)
+{
+  output ("\tjmp\t.L%d\n", lbl);
+}
+
+void
+gen_push_int (cob_tree sy)
+{
+#ifdef COB_DEBUG
+  output ("# gen_put_int\n");
+#endif
+  asm_call_1 ("get_index", sy);
+  /* this must be done without calling push_eax */
+  output ("\tpushl\t%%eax\n");
+}
+
+
 /*
  * Status handling
  */
 
 static void
+gen_init_status_register (void)
+{
+  output ("\tmovl\t$0, cob_status_register\n");
+}
+
+static void
 gen_init_status (void)
 {
   output ("\tmovl\t$%d, cob_status\n", COB_STATUS_SUCCESS);
+}
+
+static void
+gen_join_status (void)
+{
+  output ("\tmovl\tcob_status, %%eax\n");
+  output ("\torl\t%%eax, cob_status_register\n");
+}
+
+static void
+gen_total_status (void)
+{
+  output ("\tmovl\tcob_status_register, %%eax\n");
+  output ("\tmovl\t%%eax, cob_status\n");
 }
 
 static void
@@ -2182,9 +2263,10 @@ gen_display (int dupon, int nl)
 }
 
 void
-gen_gotoxy_expr ()
+gen_gotoxy_expr (cob_tree x, cob_tree y)
 {
-  stackframe_cnt += 16;		/* eliminate the coords expressions */
+  push_expr (x);
+  push_expr (y);
   asm_call ("cob_goxy_expr");
 }
 
@@ -2403,15 +2485,41 @@ create_mathvar_info (struct math_var *mv, cob_tree sy, unsigned int opt)
  * COMPUTE statement
  */
 
-void
-gen_compute (struct math_var *vl1, cob_tree sy1)
+static void
+gen_foreach (void (*func)(), struct math_var *list, void *data1, void *data2)
 {
-  gen_init_status ();
-  for (; vl1; vl1 = vl1->next)
+  if (!list->next)
     {
-      push_expr (sy1);
-      assign_expr (vl1->sname, vl1->rounded);
+      /* single assignment */
+      gen_init_status ();
+      func (list->sname, data1, data2);
+      assign_expr (list->sname, list->rounded);
     }
+  else
+    {
+      /* multiple assignment */
+      gen_init_status_register ();
+      for (; list; list = list->next)
+	{
+	  gen_init_status ();
+	  func (list->sname, data1, data2);
+	  assign_expr (list->sname, list->rounded);
+	  gen_join_status ();
+	}
+      gen_total_status ();
+    }
+}
+
+static void
+gen_compute_1 (cob_tree var, cob_tree x)
+{
+  push_expr (x);
+}
+
+void
+gen_compute (struct math_var *list, cob_tree x)
+{
+  gen_foreach (gen_compute_1, list, x, 0);
 }
 
 
@@ -2429,38 +2537,40 @@ gen_add (cob_tree n1, cob_tree n2, int rnd)
   assign_expr (n2, rnd);
 }
 
+static void
+gen_add_to_1 (cob_tree var, cob_tree_list nums)
+{
+  cob_tree_list l = nums;
+  push_expr (var);
+  for (; l; l = l->next)
+    {
+      push_expr (l->tree);
+      asm_call ("cob_add");
+    }
+}
+
 void
 gen_add_to (cob_tree_list nums, struct math_var *list)
 {
-  gen_init_status ();
-  for (; list; list = list->next)
+  gen_foreach (gen_add_to_1, list, nums, 0);
+}
+
+static void
+gen_add_giving_1 (cob_tree var, cob_tree_list nums)
+{
+  cob_tree_list l = nums;
+  push_expr (l->tree);
+  for (l = l->next; l; l = l->next)
     {
-      cob_tree_list l;
-      push_expr (list->sname);
-      for (l = nums; l; l = l->next)
-	{
-	  push_expr (l->tree);
-	  asm_call ("cob_add");
-	}
-      assign_expr (list->sname, list->rounded);
+      push_expr (l->tree);
+      asm_call ("cob_add");
     }
 }
 
 void
 gen_add_giving (cob_tree_list nums, struct math_var *list)
 {
-  gen_init_status ();
-  for (; list; list = list->next)
-    {
-      cob_tree_list l = nums;
-      push_expr (l->tree);
-      for (l = l->next; l; l = l->next)
-	{
-	  push_expr (l->tree);
-	  asm_call ("cob_add");
-	}
-      assign_expr (list->sname, list->rounded);
-    }
+  gen_foreach (gen_add_giving_1, list, nums, 0);
 }
 
 
@@ -2478,21 +2588,22 @@ gen_sub (cob_tree n1, cob_tree n2, int rnd)
   assign_expr (n2, rnd);
 }
 
+static void
+gen_subtract_from_1 (cob_tree var, cob_tree_list subtrahend_list)
+{
+  cob_tree_list l = subtrahend_list;
+  push_expr (var);
+  for (; l; l = l->next)
+    {
+      push_expr (l->tree);
+      asm_call ("cob_sub");
+    }
+}
+
 void
 gen_subtract_from (cob_tree_list subtrahend_list, struct math_var *list)
 {
-  gen_init_status ();
-  for (; list; list = list->next)
-    {
-      cob_tree_list l;
-      push_expr (list->sname);
-      for (l = subtrahend_list; l; l = l->next)
-	{
-	  push_expr (l->tree);
-	  asm_call ("cob_sub");
-	}
-      assign_expr (list->sname, list->rounded);
-    }
+  gen_foreach (gen_subtract_from_1, list, subtrahend_list, 0);
 }
 
 void
@@ -2589,82 +2700,6 @@ gen_divide_giving_remainder (cob_tree divisor, cob_tree dividend,
 
 
 /*
- * INSPECT statement
- */
-
-void
-gen_inspect (cob_tree var, void *list, int operation)
-{
-  /*struct inspect_before_after *ba,*ba1; */
-  struct tallying_list *tl;
-  struct tallying_for_list *tfl;
-  struct replacing_list *rl;
-  struct replacing_by_list *rbl;
-  struct converting_struct *cv;
-
-  if (!operation)
-    {
-      if (!list)
-	return;
-      push_immed (0);
-      for (tl = (struct tallying_list *) list; tl; tl = tl->next)
-	{
-	  push_immed (0);
-	  for (tfl = tl->tflist; tfl; tfl = tfl->next)
-	    {
-	      gen_loadvar (tfl->before_after->after);
-	      gen_loadvar (tfl->before_after->before);
-	      if (tfl->options != INSPECT_CHARACTERS)
-		gen_loadvar (tfl->forvar);
-	      push_immed (tfl->options);
-	    }
-	  gen_loadvar (tl->count);
-	}
-      asm_call_1 ("cob_inspect_tallying", var);
-    }
-  else if (operation == 1)
-    {
-      if (!list)
-	return;
-      push_immed (0);
-      for (rl = (struct replacing_list *) list; rl; rl = rl->next)
-	{
-	  if (rl->options == INSPECT_CHARACTERS)
-	    {
-	      gen_loadvar (rl->before_after->after);
-	      gen_loadvar (rl->before_after->before);
-	      gen_loadvar (rl->byvar);
-	      push_immed (rl->options);
-	    }
-	  else
-	    {
-	      
-	      for (rbl = rl->replbylist; rbl; rbl = rbl->next)
-		{
-		  gen_loadvar (rbl->before_after->after);
-		  gen_loadvar (rbl->before_after->before);
-		  gen_loadvar (rbl->byvar);
-		  gen_loadvar (rbl->replvar);
-		  push_immed (rl->options);
-		}
-	    }
-	}
-      asm_call_1 ("cob_inspect_replacing", var);
-    }
-  else
-    {
-      cv = (struct converting_struct *) list;
-      gen_loadvar (cv->before_after->after);
-      gen_loadvar (cv->before_after->before);
-      gen_loadvar (cv->tovar);
-      gen_loadvar (cv->fromvar);
-      gen_loadvar (var);
-      asm_call ("cob_inspect_converting");
-    }
-}
-
-
-/*
  * MOVE statement
  */
 
@@ -2696,6 +2731,7 @@ void
 gen_corresponding (void (*func)(), cob_tree g1, cob_tree g2, int opt)
 {
   cob_tree t1, t2;
+  gen_init_status_register ();
   for (t1 = g1->son; t1; t1 = t1->brother)
     if (!t1->redefines && t1->times == 1)
       for (t2 = g2->son; t2; t2 = t2->brother)
@@ -2705,8 +2741,12 @@ gen_corresponding (void (*func)(), cob_tree g1, cob_tree g2, int opt)
 	      if (COB_FIELD_TYPE (t1) == 'G' && COB_FIELD_TYPE (t2) == 'G')
 		gen_corresponding (func, t1, t2, opt);
 	      else
-		func (t1, t2, opt);
+		{
+		  func (t1, t2, opt);
+		  gen_join_status ();
+		}
 	    }
+  gen_total_status ();
 }
 
 
@@ -2973,65 +3013,85 @@ gen_goto (cob_tree_list l, cob_tree x)
 }
 
 
-int
-gen_check_zero ()
-{
-  int i = loc_label++;
-  output ("\tand\t%%eax,%%eax\n");
-  output ("\tjz\t.L%d\n", i);
-  return i;
-}
-
-int
-gen_testif (void)
-{
-  int i = loc_label++;
-  int j = loc_label++;
-  output ("\tjz\t.L%d\n", j);
-  output ("\tjmp\t.L%d\n", i);
-  output ("\t.align 16\n");
-  output (".L%d:\n", j);
-  return i;
-}
+/*
+ * INSPECT statement
+ */
 
 void
-gen_dstlabel (int lbl)
+gen_inspect (cob_tree var, void *list, int operation)
 {
-  output (".L%d:\n", lbl);
+  /*struct inspect_before_after *ba,*ba1; */
+  struct tallying_list *tl;
+  struct tallying_for_list *tfl;
+  struct replacing_list *rl;
+  struct replacing_by_list *rbl;
+  struct converting_struct *cv;
+
+  if (!operation)
+    {
+      if (!list)
+	return;
+      push_immed (0);
+      for (tl = (struct tallying_list *) list; tl; tl = tl->next)
+	{
+	  push_immed (0);
+	  for (tfl = tl->tflist; tfl; tfl = tfl->next)
+	    {
+	      gen_loadvar (tfl->before_after->after);
+	      gen_loadvar (tfl->before_after->before);
+	      if (tfl->options != INSPECT_CHARACTERS)
+		gen_loadvar (tfl->forvar);
+	      push_immed (tfl->options);
+	    }
+	  gen_loadvar (tl->count);
+	}
+      asm_call_1 ("cob_inspect_tallying", var);
+    }
+  else if (operation == 1)
+    {
+      if (!list)
+	return;
+      push_immed (0);
+      for (rl = (struct replacing_list *) list; rl; rl = rl->next)
+	{
+	  if (rl->options == INSPECT_CHARACTERS)
+	    {
+	      gen_loadvar (rl->before_after->after);
+	      gen_loadvar (rl->before_after->before);
+	      gen_loadvar (rl->byvar);
+	      push_immed (rl->options);
+	    }
+	  else
+	    {
+	      
+	      for (rbl = rl->replbylist; rbl; rbl = rbl->next)
+		{
+		  gen_loadvar (rbl->before_after->after);
+		  gen_loadvar (rbl->before_after->before);
+		  gen_loadvar (rbl->byvar);
+		  gen_loadvar (rbl->replvar);
+		  push_immed (rl->options);
+		}
+	    }
+	}
+      asm_call_1 ("cob_inspect_replacing", var);
+    }
+  else
+    {
+      cv = (struct converting_struct *) list;
+      gen_loadvar (cv->before_after->after);
+      gen_loadvar (cv->before_after->before);
+      gen_loadvar (cv->tovar);
+      gen_loadvar (cv->fromvar);
+      gen_loadvar (var);
+      asm_call ("cob_inspect_converting");
+    }
 }
 
-int
-gen_passlabel (void)
-{
-  int i = loc_label++;
-  output ("\tjmp\t.L%d\n", i);
-  return i;
-}
-
-int
-gen_marklabel (void)
-{
-  int i = loc_label++;
-  output (".L%d:\n", i);
-  return i;
-}
-
-void
-gen_jmplabel (int lbl)
-{
-  output ("\tjmp\t.L%d\n", lbl);
-}
-
-void
-gen_push_int (cob_tree sy)
-{
-#ifdef COB_DEBUG
-  output ("# gen_put_int\n");
-#endif
-  asm_call_1 ("get_index", sy);
-  /* this must be done without calling push_eax */
-  output ("\tpushl\t%%eax\n");
-}
+
+/*
+ * CANCEL sattement
+ */
 
 void
 gen_cancel (cob_tree sy)

@@ -1583,16 +1583,12 @@ opt_line_pos:
 | LINE expr POSITION expr
   {
     screen_io_enable++;
-    push_expr($2);
-    push_expr($4);
-    gen_gotoxy_expr();
+    gen_gotoxy_expr ($2, $4);
   }
 | LINE expr COLUMN expr
   {
     screen_io_enable++;
-    push_expr($2);
-    push_expr($4);
-    gen_gotoxy_expr();
+    gen_gotoxy_expr ($2, $4);
   }
 ;
 

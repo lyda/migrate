@@ -110,7 +110,7 @@ extern void gen_unstring (cob_tree var, struct unstring_delimited *delim, struct
 extern void gen_string (struct string_from *sf, cob_tree sy, cob_tree ptr);
 extern void gen_display_screen (cob_tree sy, int main);
 extern void gen_display (int dupon, int nl);
-extern void gen_gotoxy_expr (void);
+extern void gen_gotoxy_expr (cob_tree x, cob_tree y);
 extern void gen_accept (cob_tree sy, int echo, int main);
 extern void gen_accept_from_time (cob_tree sy);
 extern void gen_accept_from_date (cob_tree sy);
@@ -178,8 +178,6 @@ extern void gen_exit (cob_tree label);
 extern void gen_exit_program (void);
 extern void set_variable_values (cob_tree v1, cob_tree v2);
 extern void gen_condition (cob_tree x);
-extern void assign_expr (cob_tree sy, int rnd);
-extern int push_expr (cob_tree sy);
 extern void gen_save_filedesc (cob_tree f);
 extern void alloc_file_entry (cob_tree f);
 extern void gen_fdesc (cob_tree f, cob_tree r);
