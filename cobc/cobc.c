@@ -96,10 +96,10 @@ static struct filename {
 
 static int source_format;
 
-#define format_unspecified	0
-#define format_free		1
-#define format_fixed		2
-#define format_semi_fixed	3
+#define FORMAT_UNSPECIFIED	0
+#define FORMAT_FREE		1
+#define FORMAT_FIXED		2
+#define FORMAT_SEMI_FIXED	3
 
 
 /*
@@ -166,9 +166,9 @@ static struct option long_options[] = {
   {"verbose", no_argument, 0, 'v'},
   {"main", no_argument, &cobc_flags.main, 1},
   {"debug", no_argument, 0, 'D'},
-  {"free", no_argument, &source_format, format_free},
-  {"fixed", no_argument, &source_format, format_fixed},
-  {"semi-fixed", no_argument, &source_format, format_semi_fixed},
+  {"free", no_argument, &source_format, FORMAT_FREE},
+  {"fixed", no_argument, &source_format, FORMAT_FIXED},
+  {"semi-fixed", no_argument, &source_format, FORMAT_SEMI_FIXED},
   {"static", no_argument, &cobc_flags.static_call, 1},
   {"dynamic", no_argument, &cobc_flags.static_call, 0},
   {"save-temps", no_argument, &save_temps, 1},
@@ -211,10 +211,14 @@ print_usage ()
 	  "  -main         Include a main function in the output\n"
 	  "  -free         Use free source format\n"
 	  "  -fixed        Use fixed source format\n"
+	  "  -semi-fixed   Use semi-fixed source format\n"
 	  "  -static       Use static link for subprogram calls if possible\n"
 	  "  -dynamic      Use dynamic link for subprogram calls (default)\n"
 	  "  -debug        Enable debugging lines\n"
-	  "  -I <path>     Add copybook include path"));
+	  "  -I <path>     Add copybook include path"
+	  "\n"
+	  "Warning options:\n"
+	  "  -Wtrailing-line  Source line after column 72"));
 #ifdef COB_DEBUG
   puts (_("\n"
 	  "Debugging options:\n"
@@ -229,7 +233,7 @@ process_command_line (int argc, char *argv[])
   int c, index;
 
   /* Default options */
-  source_format = format_unspecified;
+  source_format = FORMAT_UNSPECIFIED;
   compile_level = stage_executable;
 #ifdef COB_DEBUG
   yy_flex_debug = 0;
@@ -291,6 +295,19 @@ process_command_line (int argc, char *argv[])
 	  print_usage ();
 	  exit (1);
 	}
+    }
+
+  switch (source_format)
+    {
+    case FORMAT_FREE:
+      strcat (cobpp_flags, " -free");
+      break;
+    case FORMAT_FIXED:
+      strcat (cobpp_flags, " -fixed");
+      break;
+    case FORMAT_SEMI_FIXED:
+      strcat (cobpp_flags, " -semi-fixed");
+      break;
     }
 
   if (cobc_flags.failsafe)
@@ -430,24 +447,6 @@ process_filename (const char *filename)
 }
 
 static int
-probe_source_format (const char *filename)
-{
-  FILE *fp = fopen (filename, "r");
-  char buff[7];
-
-  if (!fp)
-    terminate (filename);
-
-  if (fgets (buff, 7, fp))
-    if (('0' <= buff[0] && buff[0] <= '9')
-	|| (strncmp (buff, "      ", 6) == 0))
-      return format_fixed;
-
-  /* Assume to be free format by default */
-  return format_free;
-}
-
-static int
 process (const char *cmd)
 {
   if (verbose_output)
@@ -459,22 +458,14 @@ static int
 preprocess (struct filename *fn)
 {
   char buff[BUFSIZ];
-  sprintf (buff, "%s%s", cob_cobpp, cobpp_flags);
 
   if (output_name || compile_level > stage_preprocess)
     {
-      strcat (buff, " -o ");
-      strcat (buff, fn->preprocess);
+      strcat (cobpp_flags, " -o ");
+      strcat (cobpp_flags, fn->preprocess);
     }
 
-  if (source_format == format_unspecified)
-    source_format = probe_source_format (fn->source);
-
-  strcat (buff,
-	  (source_format == format_free) ? " -free" :
-	  (source_format == format_fixed) ? " -fixed" : " -semi-fixed");
-  strcat (buff, " ");
-  strcat (buff, fn->source);
+  sprintf (buff, "%s%s %s", cob_cobpp, cobpp_flags, fn->source);
   return process (buff);
 }
 
