@@ -532,7 +532,7 @@ field_size (cobc_tree x)
 	else if (r->offset)
 	  {
 	    if (COBC_LITERAL_P (r->offset))
-	      return f->size - literal_to_int (COBC_LITERAL (r->offset));
+	      return f->size - literal_to_int (COBC_LITERAL (r->offset)) + 1;
 	    else
 	      return -1;
 	  }
