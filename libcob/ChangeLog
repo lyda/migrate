@@ -1,3 +1,8 @@
+2003-08-17  Keisuke Nishida  <knishida@netlab.jp>
+
+	* termio.h, termio.c (cob_display_environment): New function.
+	(cob_accept_environment): Remove the second argument.
+
 2003-08-12  Keisuke Nishida  <knishida@netlab.jp>
 
 	* byteswap.h: New file.

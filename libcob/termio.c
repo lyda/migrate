@@ -160,11 +160,23 @@ cob_accept_command_line (cob_field *f)
   cob_memcpy (f, buff, size);
 }
 
+
+/*
+ * Environment variable
+ */
+
+static char env[FILENAME_MAX] = "";
+
 void
-cob_accept_environment (cob_field *f, cob_field *env)
+cob_display_environment (cob_field *f)
 {
-  char buff[env->size + 1];
-  char *p = getenv (cob_field_to_string (env, buff));
+  cob_field_to_string (f, env);
+}
+
+void
+cob_accept_environment (cob_field *f)
+{
+  char *p = getenv (env);
   if (!p) p = "";
   cob_memcpy (f, p, strlen (p));
 }

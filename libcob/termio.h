@@ -35,7 +35,8 @@ extern void cob_accept_day (cob_field *f);
 extern void cob_accept_day_of_week (cob_field *f);
 extern void cob_accept_time (cob_field *f);
 extern void cob_accept_command_line (cob_field *f);
-extern void cob_accept_environment (cob_field *f, cob_field *env);
+extern void cob_display_environment (cob_field *f);
+extern void cob_accept_environment (cob_field *f);
 
 extern void cob_init_termio (void);
 
