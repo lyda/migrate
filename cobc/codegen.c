@@ -823,8 +823,8 @@ value_to_eax (cob_tree x)
          so we use %edx to get the most significant part */
       if (symlen (x) > 4)
 	{
-	  output ("\tmovl\t%s+4, %%edx\n", memref (x));
-	  output ("\tmovl\t%s, %%eax\n", memref (x));
+	  output ("\tmovl\t%s+4, %%edx\n", memrefat (x));
+	  output ("\tmovl\t%s, %%eax\n", memrefat (x));
 	}
       else
 	{
