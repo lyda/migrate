@@ -619,20 +619,39 @@ output_param (cb_tree x, int id)
     case CB_TAG_STRING:
       output_string (CB_STRING (x)->data, CB_STRING (x)->size);
       break;
+    case CB_TAG_ALPHABET_NAME:
+      {
+	struct cb_alphabet_name *p = CB_ALPHABET_NAME (x);
+	switch (p->type)
+	  {
+	  case CB_ALPHABET_NATIVE:
+	  case CB_ALPHABET_STANDARD_1:
+	  case CB_ALPHABET_STANDARD_2:
+	    output ("0");
+	    break;
+	  case CB_ALPHABET_CUSTOM:
+	    output ("s_%s", p->cname);
+	    break;
+	  }
+	break;
+      }
     case CB_TAG_CAST:
-      switch (CB_CAST (x)->type)
-	{
-	case CB_CAST_INTEGER:
-	  output_integer (CB_CAST (x)->val);
-	  break;
-	case CB_CAST_ADDRESS:
-	  output_data (CB_CAST (x)->val);
-	  break;
-	case CB_CAST_LENGTH:
-	  output_size (CB_CAST (x)->val);
-	  break;
-	}
-      break;
+      {
+	struct cb_cast *p = CB_CAST (x);
+	switch (p->type)
+	  {
+	  case CB_CAST_INTEGER:
+	    output_integer (p->val);
+	    break;
+	  case CB_CAST_ADDRESS:
+	    output_data (p->val);
+	    break;
+	  case CB_CAST_LENGTH:
+	    output_size (p->val);
+	    break;
+	  }
+	break;
+      }
     case CB_TAG_DECIMAL:
       output ("&d[%d]", CB_DECIMAL (x)->id);
       break;
