@@ -668,7 +668,7 @@ extern void init_word_table (void);
 
 
 /*
- * Generic item
+ * General parameter
  */
 
 #define COBC_CALL_BY_REFERENCE	1
@@ -676,13 +676,13 @@ extern void init_word_table (void);
 #define COBC_CALL_BY_LENGTH	3
 #define COBC_CALL_BY_VALUE	4
 
-struct cobc_generic {
+struct cobc_parameter {
   int type;
   cobc_tree x;
   cobc_tree y;
 };
 
-extern struct cobc_generic *make_generic (int type, cobc_tree x, cobc_tree y);
-#define make_generic_1(type,x) make_generic (type, x, 0)
+extern struct cobc_parameter *make_parameter (int type, cobc_tree x, cobc_tree y);
+#define make_parameter_1(type,x) make_parameter (type, x, 0)
 
 #endif /* _TREE_H_ */

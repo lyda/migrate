@@ -231,7 +231,7 @@ output_call_1_list (const char *name, cobc_tree a1, struct cobc_list *l)
   output_tree (a1);
   for (; l; l = l->next)
     {
-      struct cobc_generic *p = l->item;
+      struct cobc_parameter *p = l->item;
       output (", %d", p->type);
       if (p->x) { output (", "); output_tree (p->x); }
       if (p->y) { output (", "); output_tree (p->y); }

@@ -108,7 +108,7 @@
   push_tree (make_if (make_cond (cobc_status, COBC_COND_EQ, val), st1, st2))
 
 #define inspect_push(tag,a1,a2) \
-  inspect_list = list_add (inspect_list, make_generic (tag, a1, a2))
+  inspect_list = list_add (inspect_list, make_parameter (tag, a1, a2))
 
 struct cobc_program_spec program_spec;
 
@@ -159,7 +159,7 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
   struct cobc_word *word;
   struct cobc_list *list;
   struct cobc_picture *pict;
-  struct cobc_generic *gene;
+  struct cobc_parameter *gene;
 }
 
 %token <str>  FUNCTION_NAME
@@ -1081,7 +1081,7 @@ occurs_keys:
 	struct cobc_list *l = $1;
 	for (i = 0; i < nkeys; i++)
 	  {
-	    struct cobc_generic *p = l->item;
+	    struct cobc_parameter *p = l->item;
 	    keys[i].dir = p->type;
 	    register_predefined_name (&keys[i].key, p->x);
 	    l = l->next;
@@ -1098,7 +1098,7 @@ occurs_key_list:
   {
     struct cobc_list *l;
     for (l = $5; l; l = l->next)
-      l->item = make_generic_1 ($2, l->item);
+      l->item = make_parameter_1 ($2, l->item);
     $$ = list_append ($1, $5);
   }
 ;
@@ -1737,8 +1737,8 @@ call_param_list:
   call_param			{ $$ = list_add ($1, $2); }
 ;
 call_param:
-  value				{ $$ = make_generic_1 (call_mode, $1);}
-| _by call_mode value		{ $$ = make_generic_1 (call_mode, $3);}
+  value				{ $$ = make_parameter_1 (call_mode, $1);}
+| _by call_mode value		{ $$ = make_parameter_1 (call_mode, $3);}
 ;
 call_mode:
   REFERENCE			{ call_mode = COBC_CALL_BY_REFERENCE; }
@@ -2679,7 +2679,7 @@ sort_key_list:
   {
     struct cobc_list *l;
     for (l = $5; l; l = l->next)
-      l->item = make_generic_1 ($3, l->item);
+      l->item = make_parameter_1 ($3, l->item);
     $$ = list_append ($1, $5);
   }
 ;
@@ -2795,7 +2795,7 @@ string_statement:
   {
     cobc_location = @1;
     if ($5)
-      $2 = cons (make_generic_1 (COB_STRING_WITH_POINTER, $5), $2);
+      $2 = cons (make_parameter_1 (COB_STRING_WITH_POINTER, $5), $2);
     push_call_1_list ("cob_string", $4, $2);
   }
   opt_on_overflow
@@ -2812,21 +2812,21 @@ string_delimited_list:
   }
 | string_name_list DELIMITED _by value
   {
-    $$ = cons (make_generic_1 (COB_STRING_DELIMITED_NAME, $4), $1);
+    $$ = cons (make_parameter_1 (COB_STRING_DELIMITED_NAME, $4), $1);
   }
 | string_name_list DELIMITED _by SIZE
   {
-    $$ = cons (make_generic_1 (COB_STRING_DELIMITED_SIZE, 0), $1);
+    $$ = cons (make_parameter_1 (COB_STRING_DELIMITED_SIZE, 0), $1);
   }
 ;
 string_name_list:
   value
   {
-    $$ = list (make_generic_1 (COB_STRING_CONCATENATE, $1));
+    $$ = list (make_parameter_1 (COB_STRING_CONCATENATE, $1));
   }
 | string_name_list value
   {
-    $$ = list_add ($1, make_generic_1 (COB_STRING_CONCATENATE, $2));
+    $$ = list_add ($1, make_parameter_1 (COB_STRING_CONCATENATE, $2));
   }
 ;
 opt_with_pointer:
@@ -2883,9 +2883,9 @@ unstring_statement:
   {
     cobc_location = @1;
     if ($6)
-      $3 = cons (make_generic_1 (COB_UNSTRING_WITH_POINTER, $6), $3);
+      $3 = cons (make_parameter_1 (COB_UNSTRING_WITH_POINTER, $6), $3);
     if ($7)
-      $5 = list_add ($5, make_generic_1 (COB_UNSTRING_TALLYING, $7));
+      $5 = list_add ($5, make_parameter_1 (COB_UNSTRING_TALLYING, $7));
     push_call_1_list ("cob_unstring", $2, list_append ($3, $5));
   }
   opt_on_overflow
@@ -2906,7 +2906,7 @@ unstring_delimited_item:
   flag_all value
   {
     int type = $1 ? COB_UNSTRING_DELIMITED_ALL : COB_UNSTRING_DELIMITED_BY;
-    $$ = list (make_generic_1 (type, $2));
+    $$ = list (make_parameter_1 (type, $2));
   }
 ;
 
@@ -2918,11 +2918,11 @@ unstring_into:
 unstring_into_item:
   data_name unstring_delimiter unstring_count
   {
-    $$ = list (make_generic_1 (COB_UNSTRING_INTO, $1));
+    $$ = list (make_parameter_1 (COB_UNSTRING_INTO, $1));
     if ($2)
-      $$ = list_add ($$, make_generic_1 (COB_UNSTRING_DELIMITER, $2));
+      $$ = list_add ($$, make_parameter_1 (COB_UNSTRING_DELIMITER, $2));
     if ($3)
-      $$ = list_add ($$, make_generic_1 (COB_UNSTRING_COUNT, $3));
+      $$ = list_add ($$, make_parameter_1 (COB_UNSTRING_COUNT, $3));
   }
 ;
 unstring_delimiter:
@@ -2982,11 +2982,11 @@ write_option:
   /* empty */			{ $$ = NULL; }
 | before_or_after _advancing integer_value _line_or_lines
   {
-    $$ = make_generic_1 ($1, $3);
+    $$ = make_parameter_1 ($1, $3);
   }
 | before_or_after _advancing PAGE
   {
-    $$ = make_generic_1 ($1, 0);
+    $$ = make_parameter_1 ($1, 0);
   }
 ;
 before_or_after:

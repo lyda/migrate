@@ -741,7 +741,7 @@ output_call_statement (cobc_tree name, struct cobc_list *args,
   /* setup arguments */
   for (l = args, n = 1; l; l = l->next, n++)
     {
-      struct cobc_generic *p = l->item;
+      struct cobc_parameter *p = l->item;
       switch (p->type)
 	{
 	case COBC_CALL_BY_CONTENT:
@@ -759,7 +759,7 @@ output_call_statement (cobc_tree name, struct cobc_list *args,
     }
   for (l = args, n = 1; l; l = l->next, n++)
     {
-      struct cobc_generic *p = l->item;
+      struct cobc_parameter *p = l->item;
       switch (p->type)
 	{
 	case COBC_CALL_BY_CONTENT:
@@ -805,7 +805,7 @@ output_call_statement (cobc_tree name, struct cobc_list *args,
   output (" (");
   for (l = args, n = 1; l; l = l->next, n++)
     {
-      struct cobc_generic *p = l->item;
+      struct cobc_parameter *p = l->item;
       cobc_tree x = p->x;
       switch (p->type)
 	{
