@@ -271,7 +271,7 @@ cb_tree_type (cb_tree x)
     case CB_CATEGORY_ALPHANUMERIC_EDITED:
       return COB_TYPE_ALPHANUMERIC_EDITED;
     case CB_CATEGORY_NUMERIC:
-      switch (f->usage)
+      switch (cb_field (x)->usage)
 	{
 	case CB_USAGE_DISPLAY:
 	  return COB_TYPE_NUMERIC_DISPLAY;
