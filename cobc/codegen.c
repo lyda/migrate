@@ -1148,13 +1148,13 @@ static void
 output_picture (unsigned char *pic)
 {
   unsigned char *p;
-  output ("\t.string\t\"");
+  output ("\t.byte\t");
   for (p = pic; *p; p += 2)
     {
-      output ("%c", p[0]);
-      output ("\\%03o", p[1]);
+      output ("'%c',", p[0]);
+      output ("%d,", p[1]);
     }
-  output ("\"\n");
+  output ("0\n");
 }
 
 void
