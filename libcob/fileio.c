@@ -1420,7 +1420,7 @@ cob_default_error_handle (void)
       msg = N_("permanent file error");
       break;
     case COB_STATUS_35_NOT_EXISTS:
-      /* no message */
+      msg = N_("file not exist");
       break;
     case COB_STATUS_37_PERMISSION_DENIED:
       msg = N_("permission denied");
