@@ -2000,16 +2000,12 @@ gen_unstring (cob_tree var, struct unstring_delimited *delim,
 void
 gen_string (struct string_from *sf, cob_tree sy, cob_tree ptr)
 {
-  struct string_from *sf1;
   fprintf (o_src, "# STRING into %s\n", sy->name);
   push_immed (0);	/* mark the end of variables */
-  while (sf)
+  for (; sf; sf = sf->next)
     {
       gen_loadvar (sf->delim);
       gen_loadvar (sf->var);
-      sf1 = sf;
-      sf = sf->next;
-      free (sf1);
     }
   asm_call_2 ("cob_string", sy, ptr);
 }
@@ -2018,7 +2014,6 @@ void
 gen_display_screen (cob_tree sy, int main)
 {
   cob_tree tmp;
-  struct list *tmpl;
   if (main)
     {
       fprintf (o_src, "#                      Screen Section: %s\n",
@@ -2046,16 +2041,13 @@ gen_display_screen (cob_tree sy, int main)
       asm_call ("cob_display_screen");
       if (disp_list->next)
 	yyerror ("we do not handle more than one screen");
-      tmpl = disp_list;
       disp_list = disp_list->next;
-      free (tmpl);
     }
 }
 
 void
 gen_display (int dupon, int nl)
 {
-  struct list *tmp;
   /*int len; */
   int dspflags;
   int first = 1;
@@ -2106,9 +2098,7 @@ gen_display (int dupon, int nl)
 	  gen_loadvar (sy);
 	  asm_call ("display_curses");
 	}
-      tmp = disp_list;
       disp_list = disp_list->next;
-      free (tmp);
     }
   if (!(nl & 1))
     if (screen_io_enable == 0)
@@ -2698,12 +2688,6 @@ gen_test_invalid_keys (struct invalid_keys *p)
     gen_dstlabel (p->invalid_key->lbl3);
   if (p->not_invalid_key)
     gen_dstlabel (p->not_invalid_key->lbl3);
-
-  if (p->invalid_key)
-    free (p->invalid_key);
-  if (p->not_invalid_key)
-    free (p->not_invalid_key);
-  free (p);
 }
 
 /******** functions to generate math verbs ***********/
@@ -3093,10 +3077,10 @@ void
 gen_inspect (cob_tree var, void *list, int operation)
 {
   /*struct inspect_before_after *ba,*ba1; */
-  struct tallying_list *tl, *tl1;
-  struct tallying_for_list *tfl, *tfl1;
-  struct replacing_list *rl, *rl1;
-  struct replacing_by_list *rbl, *rbl1;
+  struct tallying_list *tl;
+  struct tallying_for_list *tfl;
+  struct replacing_list *rl;
+  struct replacing_by_list *rbl;
   struct converting_struct *cv;
 
   if (!operation)
@@ -3105,29 +3089,18 @@ gen_inspect (cob_tree var, void *list, int operation)
 	return;
       fprintf (o_src, "# INSPECT TALLYING %s\n", var->name);
       push_immed (0);
-      tl = (struct tallying_list *) list;
-      while (tl)
+      for (tl = (struct tallying_list *) list; tl; tl = tl->next)
 	{
-	  tfl = tl->tflist;
 	  push_immed (0);
-	  while (tfl)
+	  for (tfl = tl->tflist; tfl; tfl = tfl->next)
 	    {
 	      gen_loadvar (tfl->before_after->after);
 	      gen_loadvar (tfl->before_after->before);
 	      if (tfl->options != INSPECT_CHARACTERS)
-		{
-		  gen_loadvar (tfl->forvar);
-		}
+		gen_loadvar (tfl->forvar);
 	      push_immed (tfl->options);
-	      free (tfl->before_after);
-	      tfl1 = tfl;
-	      tfl = tfl->next;
-	      free (tfl1);
 	    }
 	  gen_loadvar (tl->count);
-	  tl1 = tl;
-	  tl = tl->next;
-	  free (tl1);
 	}
       asm_call_1 ("cob_inspect_tallying", var);
     }
@@ -3136,9 +3109,8 @@ gen_inspect (cob_tree var, void *list, int operation)
       if (!list)
 	return;
       fprintf (o_src, "# INSPECT REPLACING %s\n", var->name);
-      rl = (struct replacing_list *) list;
       push_immed (0);
-      while (rl)
+      for (rl = (struct replacing_list *) list; rl; rl = rl->next)
 	{
 	  if (rl->options == INSPECT_CHARACTERS)
 	    {
@@ -3149,23 +3121,16 @@ gen_inspect (cob_tree var, void *list, int operation)
 	    }
 	  else
 	    {
-	      rbl = rl->replbylist;
-	      while (rbl)
+	      
+	      for (rbl = rl->replbylist; rbl; rbl = rbl->next)
 		{
 		  gen_loadvar (rbl->before_after->after);
 		  gen_loadvar (rbl->before_after->before);
 		  gen_loadvar (rbl->byvar);
 		  gen_loadvar (rbl->replvar);
-		  free (rbl->before_after);
-		  rbl1 = rbl;
-		  rbl = rbl->next;
-		  free (rbl1);
 		  push_immed (rl->options);
 		}
 	    }
-	  rl1 = rl;
-	  rl = rl->next;
-	  free (rl1);
 	}
       asm_call_1 ("cob_inspect_replacing", var);
     }
@@ -3370,15 +3335,9 @@ gen_set (cob_tree idx, int which, cob_tree var,
 	  return;
 	}
       if (SUBREF_P (idx))
-	{
-	  cob_tree ref = make_subref (sy->parent, SUBREF_SUBS (idx));
-	  gen_move (sy->value, ref);
-	  free (ref);
-	}
+	gen_move (sy->value, make_subref (sy->parent, SUBREF_SUBS (idx)));
       else
-	{
-	  gen_move (sy->value, sy->parent);
-	}
+	gen_move (sy->value, sy->parent);
       return;
     }
   if (sy->flags.is_pointer || adrof_idx)
@@ -4817,17 +4776,9 @@ gen_condition (cob_tree sy)
       vr = vr->next;
     }
   if (SUBREF_P (sy))
-    {
-      /* alloc a tmp node for condition parent 
-         so gen_loadvar will be happy */
-      cob_tree ref = make_subref (sy1->parent, SUBREF_SUBS (sy));
-      gen_loadvar (ref);
-      free (ref);
-    }
+    gen_loadvar (make_subref (sy1->parent, SUBREF_SUBS (sy)));
   else
-    {
-      gen_loadvar (sy->parent);
-    }
+    gen_loadvar (sy->parent);
   asm_call ("check_condition");
   fprintf (o_src, "\tand\t%%eax,%%eax\n");
 }
@@ -5029,9 +4980,8 @@ alloc_file_entry (cob_tree f)
 void
 dump_alternate_keys (cob_tree r, struct alternate_list *alt)
 {
-  struct alternate_list *tmp;
   cob_tree key;
-  while (alt)
+  for (; alt; alt = alt->next)
     {
       key = alt->key;
       fprintf (o_src, "# alternate key %s\n", key->name);
@@ -5039,9 +4989,6 @@ dump_alternate_keys (cob_tree r, struct alternate_list *alt)
 	       "\t.word\t%d\n\t.long\tc_base%d+%d\n\t.word\t%d\n\t.long\t0\n",
 	       key->location - r->location, pgm_segment,
 	       key->descriptor, alt->duplicates);
-      tmp = alt;
-      alt = alt->next;
-      free (tmp);
     }
   fprintf (o_src, "# end of alternate keys\n.word\t-1\n");
 }

@@ -53,33 +53,31 @@ static void assert_numeric_sy (cob_tree sy);
 %}
 
 %union {
-    cob_tree tree;
-    cob_tree_list list;
-    int ival;               /* int */
-    struct coord_pair pval; /* lin,col */
-    unsigned long dval;     /* label definition, compacted */
-    char *str;
-    struct refmod *rmval;   /* variable with RefMod specifier */
-    struct string_from *sfval; /* variable list in string statement */
-    struct unstring_delimited *udval;
-    struct unstring_destinations *udstval;
-    struct tallying_list *tlval;
-    struct tallying_for_list *tfval;
-    struct replacing_list *repval;
-    struct replacing_by_list *rbval;
-    struct converting_struct *cvval;
-    struct inspect_before_after *baval;
-    struct scr_info *sival;
-    struct perf_info *pfval;
-    struct perform_info *pfvals;
-    struct sortfile_node *snval;
-    struct selsubject *ssbjval;
-    struct math_var *mval;      /* math variables container list */
-    struct math_ose *mose;      /* math ON SIZE ERROR variables container */
-    struct ginfo    *gic;       /* generic container */
-    struct invalid_keys *iks; /* [NOT] INVALID KEY */
-    struct invalid_key_element *ike; /* [NOT] INVALID KEY */
-    struct condition condval;
+  cob_tree tree;
+  cob_tree_list list;
+  int ival;               /* int */
+  char *str;
+  struct coord_pair pval; /* lin,col */
+  struct string_from *sfval; /* variable list in string statement */
+  struct unstring_delimited *udval;
+  struct unstring_destinations *udstval;
+  struct tallying_list *tlval;
+  struct tallying_for_list *tfval;
+  struct replacing_list *repval;
+  struct replacing_by_list *rbval;
+  struct converting_struct *cvval;
+  struct inspect_before_after *baval;
+  struct scr_info *sival;
+  struct perf_info *pfval;
+  struct perform_info *pfvals;
+  struct sortfile_node *snval;
+  struct selsubject *ssbjval;
+  struct math_var *mval;      /* math variables container list */
+  struct math_ose *mose;      /* math ON SIZE ERROR variables container */
+  struct ginfo    *gic;       /* generic container */
+  struct invalid_keys *iks; /* [NOT] INVALID KEY */
+  struct invalid_key_element *ike; /* [NOT] INVALID KEY */
+  struct condition condval;
 }
 
 %left  '+', '-'
@@ -135,8 +133,8 @@ static void assert_numeric_sy (cob_tree sy);
 %type <baval> inspect_before_after
 %type <condval> condition,simple_condition,implied_op_condition
 %type <cvval> converting_clause
-%type <dval> if_then,search_body,search_all_body
-%type <dval> search_when,search_when_list,search_opt_at_end
+%type <ival> if_then,search_body,search_all_body
+%type <ival> search_when,search_when_list,search_opt_at_end
 %type <gic>  on_end,opt_read_at_end
 %type <ike>  read_invalid_key ,read_not_invalid_key
 %type <iks>  opt_read_invalid_key
@@ -1148,11 +1146,11 @@ accept_options:
   variable
   {
     gen_store_fnres($5);
-    $<dval>$ = gen_check_zero();
+    $<ival>$ = gen_check_zero();
   }
   statement_list
   {
-    gen_dstlabel($<dval>6);
+    gen_dstlabel($<ival>6);
   }
 | FROM DATE			{ gen_accept_from_date($<tree>-1); }
 | FROM DAY			{ gen_accept_from_day($<tree>-1); }
@@ -1260,7 +1258,7 @@ call_returning:
 on_exception_or_overflow:
   /* nothing */			{ $$ = 0; }
 | ON exception_or_overflow	{ $<ival>$ = begin_on_except(); }
-  statement_list		{ gen_jmplabel($<dval>0); $$=$<ival>3; }
+  statement_list		{ gen_jmplabel($<ival>0); $$=$<ival>3; }
 ;
 exception_or_overflow:
   EXCEPTION
@@ -1269,7 +1267,7 @@ exception_or_overflow:
 on_not_exception:
   /* nothing */			{ $$ = 0; }
 | NOT ON EXCEPTION		{ $<ival>$ = begin_on_except(); }
-  statement_list		{ gen_jmplabel($<dval>-1); $$=$<ival>4; }
+  statement_list		{ gen_jmplabel($<ival>-1); $$=$<ival>4; }
 ;
 opt_end_call: | END_CALL ;
 
@@ -1547,18 +1545,18 @@ label_list:
 if_statement:
   if_then { gen_dstlabel($1); } opt_end_if
 | if_then ELSE {
-    $<dval>$=gen_passlabel();
+    $<ival>$=gen_passlabel();
     gen_dstlabel($1);
   }
   conditional_statement_list {
-    gen_dstlabel($<dval>3);
+    gen_dstlabel($<ival>3);
   }
   opt_end_if
 | IF error END_IF
 ;
 if_then:
-  IF condition { $<dval>$ = gen_testif(); }
-  opt_then conditional_statement_list { $$ = $<dval>3; }
+  IF condition { $<ival>$ = gen_testif(); }
+  opt_then conditional_statement_list { $$ = $<ival>3; }
 ;
 opt_end_if: | END_IF ;
 
@@ -1733,12 +1731,12 @@ perform_options:
     | gname TIMES
       {
         gen_push_int($1);
-        $<dval>$=gen_marklabel();
-        gen_perform_test_counter($<dval>$);
+        $<ival>$=gen_marklabel();
+        gen_perform_test_counter($<ival>$);
       }
       conditional_statement_list
       {
-        gen_perform_times($<dval>3);
+        gen_perform_times($<ival>3);
       }
       END_PERFORM { $$ = NULL; }
     | opt_with_test UNTIL
@@ -1746,11 +1744,11 @@ perform_options:
         if ($1 == 2) {
            lbstart=gen_passlabel();
         }
-        $<dval>$=gen_marklabel();
+        $<ival>$=gen_marklabel();
       }
       condition
       {
-        $<dval>$=gen_orstart();
+        $<ival>$=gen_orstart();
         if ($1 == 2) {
            lbend=gen_passlabel();
            gen_dstlabel(lbstart);
@@ -1759,14 +1757,14 @@ perform_options:
       conditional_statement_list
       {
         if ($1 == 2) {
-           gen_jmplabel($<dval>3);
+           gen_jmplabel($<ival>3);
            gen_dstlabel(lbend);
            gen_jmplabel(lbstart);
-           gen_dstlabel($<dval>5);
+           gen_dstlabel($<ival>5);
         }
         else {
-           gen_jmplabel($<dval>3);
-           gen_dstlabel($<dval>5);
+           gen_jmplabel($<ival>3);
+           gen_dstlabel($<ival>5);
         }
       }
       END_PERFORM { $$ = NULL; }
@@ -1777,11 +1775,11 @@ perform_options:
         if ($1 == 2) {
            lbstart=gen_passlabel();
         }
-        $<dval>$=gen_marklabel();
+        $<ival>$=gen_marklabel();
       }
       condition
       {
-        $<dval>$=gen_orstart();
+        $<ival>$=gen_orstart();
         /* BEFORE=1 AFTER=2 */
         if ($1 == 2) {
            gen_add($7,$3,0);
@@ -1813,8 +1811,8 @@ perform_options:
                  }
               }
            }
-           gen_jmplabel($<dval>9);
-           gen_dstlabel($<dval>11);
+           gen_jmplabel($<ival>9);
+           gen_dstlabel($<ival>11);
         }
         else {
            if ($12 != NULL) {
@@ -1828,8 +1826,8 @@ perform_options:
               }
            }
            gen_add($7,$3,0);
-           gen_jmplabel($<dval>9);
-           gen_dstlabel($<dval>11);
+           gen_jmplabel($<ival>9);
+           gen_dstlabel($<ival>11);
         }
       }
       END_PERFORM { $$ = NULL; }
@@ -1840,7 +1838,7 @@ perform_options:
       }
     | label opt_perform_thru opt_with_test UNTIL
       {
-        $<dval>$=gen_marklabel();
+        $<ival>$=gen_marklabel();
         /* BEFORE=1 AFTER=2 */
         if ($3 == 2) {
         gen_perform_thru($1,$2);
@@ -1854,7 +1852,7 @@ perform_options:
         if ($3 == 1) {
         gen_perform_thru($1,$2);
         }
-        gen_jmplabel($<dval>5);
+        gen_jmplabel($<ival>5);
         gen_dstlabel(lbl);
       }
     | label opt_perform_thru gname TIMES
@@ -1873,11 +1871,11 @@ perform_options:
         if ($3 == 2) {
            lbstart=gen_passlabel();
         }
-        $<dval>$ = gen_marklabel();
+        $<ival>$ = gen_marklabel();
       }
       condition
       {
-        $<dval>$ = gen_orstart();
+        $<ival>$ = gen_orstart();
         /* BEFORE=1 AFTER=2 */
         if ($3 == 2) {
            gen_add($9,$5, 0);
@@ -1909,8 +1907,8 @@ perform_options:
                  }
               }
            }
-           gen_jmplabel($<dval>11);
-           gen_dstlabel($<dval>13);
+           gen_jmplabel($<ival>11);
+           gen_dstlabel($<ival>13);
         }
         else {
            if ($14 != NULL) {
@@ -1924,8 +1922,8 @@ perform_options:
               }
            }
            gen_add($9,$5,0);
-           gen_jmplabel($<dval>11);
-           gen_dstlabel($<dval>13);
+           gen_jmplabel($<ival>11);
+           gen_dstlabel($<ival>13);
         }
         $$ = NULL;
       }
@@ -1987,7 +1985,7 @@ perform_after: name FROM gname
         if (perform_after_sw == 2) {
            lbstart=gen_passlabel();
         }
-        $<dval>$ = gen_marklabel();
+        $<ival>$ = gen_marklabel();
       }
        condition
       {
@@ -1997,10 +1995,10 @@ perform_after: name FROM gname
         if (perform_after_sw == 2) {
            gen_add($5,$1,0);
            gen_dstlabel(lbstart);
-           $$ = create_perf_info($5, $1, $<dval>7, lbl);
+           $$ = create_perf_info($5, $1, $<ival>7, lbl);
         }
         else {
-           $$ = create_perf_info($5, $1, $<dval>7, lbl);
+           $$ = create_perf_info($5, $1, $<ival>7, lbl);
         }
       }
     ;
@@ -2175,33 +2173,33 @@ search_statement:
 search_body:
   variable_indexed
   {
-    $<dval>$=loc_label++; /* determine END label name */
+    $<ival>$=loc_label++; /* determine END label name */
     gen_marklabel();
   }
   search_opt_varying
   {
-    $<dval>$=loc_label++; /* determine search loop start label */
+    $<ival>$=loc_label++; /* determine search loop start label */
     if ($3 == NULL) {
       $3=determine_table_index_name($1);
       if ($3 == NULL) {
          yyerror("Unable to determine search index for table '%s'", $1->name);
       }
     }
-    gen_jmplabel($<dval>$); /* generate GOTO search loop start  */
+    gen_jmplabel($<ival>$); /* generate GOTO search loop start  */
   }
   search_opt_at_end
   {
-    gen_jmplabel($<dval>2); /* generate GOTO END  */
-    gen_dstlabel($<dval>4); /* generate search loop start label */
-    $$ = $<dval>2;
+    gen_jmplabel($<ival>2); /* generate GOTO END  */
+    gen_dstlabel($<ival>4); /* generate search loop start label */
+    $$ = $<ival>2;
   }
   search_when_list
   {
     /* increment loop index, check for end */
     gen_SearchLoopCheck($5, $3, $1);
 
-    gen_jmplabel($<dval>4); /* generate goto search loop start label */
-    gen_dstlabel($<dval>2); /* generate END label */
+    gen_jmplabel($<ival>4); /* generate goto search loop start label */
+    gen_dstlabel($<ival>2); /* generate END label */
   }
 ;
 search_all_body:
@@ -2241,17 +2239,17 @@ search_opt_varying:
 search_opt_at_end:
   /* nothing */
   {
-    $<dval>$=loc_label++; /* determine ATEND label name */
-    gen_dstlabel($<dval>$); /* determine ATEND label name */
+    $<ival>$=loc_label++; /* determine ATEND label name */
+    gen_dstlabel($<ival>$); /* determine ATEND label name */
   }
 | opt_at END
   {
-    $<dval>$=loc_label++; /* determine ATEND label name */
-    gen_dstlabel($<dval>$); /* determine ATEND label name */
+    $<ival>$=loc_label++; /* determine ATEND label name */
+    gen_dstlabel($<ival>$); /* determine ATEND label name */
   }
   statement_list
   {
-    $<dval>$=$<dval>3;
+    $<ival>$=$<ival>3;
   }
 ;
 search_when_list:
@@ -2261,12 +2259,12 @@ search_when_list:
 search_when:
   WHEN
   search_when_conditional
-  { $<dval>$=gen_testif(); }
+  { $<ival>$=gen_testif(); }
   conditional_statement_list
   {
-     $$ = $<dval>0;
+     $$ = $<ival>0;
      gen_jmplabel($$); /* generate GOTO END  */
-     gen_dstlabel($<dval>3);
+     gen_dstlabel($<ival>3);
   }
 ;
 search_when_conditional:
@@ -2283,11 +2281,11 @@ search_all_when_list:
 search_all_when:
   WHEN { curr_field = NULL; }
   search_all_when_conditional
-  { $<dval>$=gen_testif(); }
+  { $<ival>$=gen_testif(); }
   conditional_statement_list
   {
      gen_jmplabel(lbend); /* generate GOTO END  */
-     gen_dstlabel($<dval>4);
+     gen_dstlabel($<ival>4);
   }
 ;
 search_all_when_conditional:
@@ -2303,8 +2301,8 @@ search_all_when_conditional:
       curr_field = $1;
     gen_compare($1,$3,(cob_tree)$4);
   }
-| search_all_when_conditional AND { $<dval>$=gen_andstart(); }
-  search_all_when_conditional  { gen_dstlabel($<dval>3); }
+| search_all_when_conditional AND { $<ival>$=gen_andstart(); }
+  search_all_when_conditional  { gen_dstlabel($<ival>3); }
 ;
 opt_end_search:
     /* nothing */
@@ -2456,12 +2454,12 @@ opt_on_overflow:
   on_overflow on_not_overflow
 ;
 on_overflow:
-| ON OVERFLOW			{ $<dval>$ = gen_at_end(-1); }
-  statement_list		{ gen_dstlabel($<dval>3); }
+| ON OVERFLOW			{ $<ival>$ = gen_at_end(-1); }
+  statement_list		{ gen_dstlabel($<ival>3); }
 ;
 on_not_overflow:
-| NOT ON OVERFLOW		{ $<dval>$ = gen_at_end(0); }
-  statement_list		{ gen_dstlabel($<dval>4); }
+| NOT ON OVERFLOW		{ $<ival>$ = gen_at_end(0); }
+  statement_list		{ gen_dstlabel($<ival>4); }
 ;
 opt_end_string: | END_STRING ;
 
@@ -2631,12 +2629,12 @@ opt_invalid_key:
   opt_not_invalid_key_sentence
 ;
 opt_invalid_key_sentence:
-| INVALID opt_key		{ $<dval>$ = gen_at_end(23); }
-  statement_list		{ gen_dstlabel($<dval>3); }
+| INVALID opt_key		{ $<ival>$ = gen_at_end(23); }
+  statement_list		{ gen_dstlabel($<ival>3); }
 ;
 opt_not_invalid_key_sentence:
-| NOT INVALID opt_key		{ $<dval>$ = gen_at_end(0); }
-  statement_list		{ gen_dstlabel($<dval>4); }
+| NOT INVALID opt_key		{ $<ival>$ = gen_at_end(0); }
+  statement_list		{ gen_dstlabel($<ival>4); }
 ;
 
 
@@ -2668,10 +2666,10 @@ opt_expr:
 condition:
   simple_condition
 | NOT  condition    { gen_not(); $$=$2; }
-| condition AND     { $<dval>$=gen_andstart(); }
-            implied_op_condition { gen_dstlabel($<dval>3); $$=$4; }
-| condition OR      { $<dval>$=gen_orstart(); }
-    implied_op_condition { gen_dstlabel($<dval>3); $$=$4; }
+| condition AND     { $<ival>$=gen_andstart(); }
+            implied_op_condition { gen_dstlabel($<ival>3); $$=$4; }
+| condition OR      { $<ival>$=gen_orstart(); }
+    implied_op_condition { gen_dstlabel($<ival>3); $$=$4; }
 | '(' condition ')' { $$ = $2; }
 | VARCOND {
   gen_condition($1);
