@@ -2210,7 +2210,12 @@ codegen (struct cb_program *prog)
   for (l = prog->class_name_list; l; l = CB_CHAIN (l))
     output_class_name_definition (CB_CLASS_NAME (CB_VALUE (l)));
 
-  if (CB_CHAIN (prog->entry_list) == NULL)
+  if (prog->entry_list == NULL)
+    {
+      /* no entry */
+      return;
+    }
+  else if (CB_CHAIN (prog->entry_list) == NULL)
     {
       /* single entry */
       output_internal_function (prog, 1, CB_VALUE (prog->entry_list));
