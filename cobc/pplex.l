@@ -56,9 +56,11 @@ static void switch_to_buffer (int lineno, char *filename, struct cb_replacement 
 
 %}
 
-%x DIRECTIVE_STATE COPY_STATE
+%x PROCESS_STATE DIRECTIVE_STATE COPY_STATE
 
 %%
+
+"PROCESS"		{ BEGIN PROCESS_STATE; }
 
 ">>"			{ BEGIN DIRECTIVE_STATE; return DIRECTIVE; }
 
@@ -98,6 +100,11 @@ static void switch_to_buffer (int lineno, char *filename, struct cb_replacement 
     {
       ECHO;
     }
+}
+
+<PROCESS_STATE>{
+  \n			{ BEGIN INITIAL; unput ('\n'); }
+  .*			{ cb_warning (_("PROCESS statement is ignored")); }
 }
 
 <DIRECTIVE_STATE>{
