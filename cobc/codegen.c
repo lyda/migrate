@@ -589,15 +589,14 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
     }
 
   /* data */
-  if (linkage)
-    {
-      /* linkage fields are given as function parameters,
-       * so nothing to be done here */
-    }
-  else if (p == p01 && !p->redefines)
+  if (p == p01 && !p->redefines)
     {
       /* level 01 */
-      output ("static unsigned char f_%s_data[%d];\n", p->cname, p->size);
+      if (linkage)
+	/* linkage fields are given as function parameters,
+	 * so nothing to be done here */;
+      else
+	output ("static unsigned char f_%s_data[%d];\n", p->cname, p->size);
     }
   else if (p->indexes == 0)
     {
