@@ -24,7 +24,7 @@
 
 void
 output_file_handler (struct cobc_file_name *f, int type,
-		   cobc_tree st1, cobc_tree st2)
+		     cobc_tree st1, cobc_tree st2)
 {
   if (st1)
     {
@@ -33,14 +33,9 @@ output_file_handler (struct cobc_file_name *f, int type,
       output_line ("else");
     }
   output_line ("if (%s_desc.file_status[0] != '0')", f->cname);
-  output_line ("  {");
-  if (f->handler)
-    output_line ("    cob_perform (%d, lb_%s, le_%s);",
-		 global_label++, f->handler->cname, f->handler->cname);
-  else
-    output_line ("    cob_perform (%d, lb_standard_error_handle, "
-		 "le_standard_error_handle);", global_label++);
-  output_line ("  }");
+  output_indent_level += 2;
+  output_perform_call (f->handler, f->handler);
+  output_indent_level -= 2;
   if (st2)
     {
       output_line ("else");

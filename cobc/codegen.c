@@ -1085,6 +1085,126 @@ output_class (struct cobc_class *p)
 
 
 /*
+ * PERFORM
+ */
+
+static void
+output_perform_call (struct cobc_label_name *lb, struct cobc_label_name *le)
+{
+  output_line ("cob_perform (%d, lb_%s, le_%s);",
+	       global_label++, lb->cname, le->cname);
+}
+
+static void
+output_perform_once (struct cobc_perform *p)
+{
+  if (COBC_PAIR_P (p->body))
+    output_perform_call (COBC_PAIR (p->body)->x, COBC_PAIR (p->body)->y);
+  else
+    output_tree (p->body);
+}
+
+static void
+output_perform_before (struct cobc_perform *p, struct cobc_perform_varying *v)
+{
+  /* perform body at the end */
+  if (!v)
+    {
+      output_perform_once (p);
+      return;
+    }
+
+  /* loop */
+  output_prefix ();
+  output ("while (!");
+  output_condition (v->until);
+  output (")\n");
+  output_indent ("  {", 4);
+  output_perform_before (p, v->next);
+
+  /* step */
+  if (v->name)
+    {
+      output_tree (make_op_assign (v->name, '+', v->by));
+      if (v->next && v->next->name)
+	output_move (v->next->from, v->next->name);
+    }
+  output_indent ("  }", -4);
+}
+
+static void
+output_perform_after (struct cobc_perform *p, struct cobc_perform_varying *v)
+{
+  /* perform body at the end */
+  if (!v)
+    {
+      output_perform_once (p);
+      return;
+    }
+
+  /* init */
+  if (v->name)
+    output_move (v->from, v->name);
+
+  /* loop */
+  output_line ("while (1)");
+  output_indent ("  {", 4);
+  output_perform_after (p, v->next);
+
+  /* step */
+  output_prefix ();
+  output ("if (");
+  output_condition (v->until);
+  output (")\n");
+  output_line ("  break;");
+  if (v->name)
+    output_tree (make_op_assign (v->name, '+', v->by));
+  output_indent ("  }", -4);
+}
+
+static void
+output_perform (struct cobc_perform *p)
+{
+  switch (p->type)
+    {
+    case COBC_PERFORM_EXIT:
+      if (COBC_LABEL_NAME (p->data)->need_return)
+	output_line ("cob_exit (le_%s);", COBC_LABEL_NAME (p->data)->cname);
+      break;
+    case COBC_PERFORM_ONCE:
+      output_perform_once (p);
+      break;
+    case COBC_PERFORM_TIMES:
+      output_indent ("{", 2);
+      output_prefix ();
+      output ("int i, n = ");
+      output_index (p->data);
+      output (";\n");
+      output_line ("for (i = 0; i < n; i++)");
+      output_indent ("  {", 4);
+      output_perform_once (p);
+      output_indent ("  }", -4);
+      output_indent ("}", -2);
+      break;
+    case COBC_PERFORM_UNTIL:
+      if (p->test == COBC_BEFORE)
+	{
+	  struct cobc_perform_varying *v;
+	  for (v = p->varying; v; v = v->next)
+	    if (v->name)
+	      output_move (v->from, v->name);
+	  output_perform_before (p, p->varying);
+	}
+      else
+	{
+	  output_perform_after (p, p->varying);
+	}
+      break;
+    }
+}
+
+
+/*
  * CALL
  */
 
@@ -1231,127 +1351,6 @@ output_evaluate (struct cobc_evaluate *p)
 	  output_tree (stmt);
 	  output_indent_level -= 2;
 	}
-    }
-}
-
-
-/*
- * PERFORM
- */
-
-static void
-output_perform_once (struct cobc_perform *p)
-{
-  if (COBC_SEQUENCE_P (p->body))
-    {
-      output_tree (p->body);
-    }
-  else
-    {
-      struct cobc_pair *pair = COBC_PAIR (p->body);
-      output_line ("cob_perform (%d, lb_%s, le_%s);",
-		   global_label++,
-		   COBC_LABEL_NAME (pair->x)->cname,
-		   COBC_LABEL_NAME (pair->y)->cname);
-    }
-}
-
-static void
-output_perform_before (struct cobc_perform *p, struct cobc_perform_varying *v)
-{
-  /* perform body at the end */
-  if (!v)
-    {
-      output_perform_once (p);
-      return;
-    }
-
-  /* loop */
-  output_prefix ();
-  output ("while (!");
-  output_condition (v->until);
-  output (")\n");
-  output_indent ("  {", 4);
-  output_perform_before (p, v->next);
-
-  /* step */
-  if (v->name)
-    {
-      output_tree (make_op_assign (v->name, '+', v->by));
-      if (v->next && v->next->name)
-	output_move (v->next->from, v->next->name);
-    }
-  output_indent ("  }", -4);
-}
-
-static void
-output_perform_after (struct cobc_perform *p, struct cobc_perform_varying *v)
-{
-  /* perform body at the end */
-  if (!v)
-    {
-      output_perform_once (p);
-      return;
-    }
-
-  /* init */
-  if (v->name)
-    output_move (v->from, v->name);
-
-  /* loop */
-  output_line ("while (1)");
-  output_indent ("  {", 4);
-  output_perform_after (p, v->next);
-
-  /* step */
-  output_prefix ();
-  output ("if (");
-  output_condition (v->until);
-  output (")\n");
-  output_line ("  break;");
-  if (v->name)
-    output_tree (make_op_assign (v->name, '+', v->by));
-  output_indent ("  }", -4);
-}
-
-static void
-output_perform (struct cobc_perform *p)
-{
-  switch (p->type)
-    {
-    case COBC_PERFORM_EXIT:
-      if (COBC_LABEL_NAME (p->data)->need_return)
-	output_line ("cob_exit (le_%s);", COBC_LABEL_NAME (p->data)->cname);
-      break;
-    case COBC_PERFORM_ONCE:
-      output_perform_once (p);
-      break;
-    case COBC_PERFORM_TIMES:
-      output_indent ("{", 2);
-      output_prefix ();
-      output ("int i, n = ");
-      output_index (p->data);
-      output (";\n");
-      output_line ("for (i = 0; i < n; i++)");
-      output_indent ("  {", 4);
-      output_perform_once (p);
-      output_indent ("  }", -4);
-      output_indent ("}", -2);
-      break;
-    case COBC_PERFORM_UNTIL:
-      if (p->test == COBC_BEFORE)
-	{
-	  struct cobc_perform_varying *v;
-	  for (v = p->varying; v; v = v->next)
-	    if (v->name)
-	      output_move (v->from, v->name);
-	  output_perform_before (p, p->varying);
-	}
-      else
-	{
-	  output_perform_after (p, p->varying);
-	}
-      break;
     }
 }
 

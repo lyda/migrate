@@ -1,5 +1,11 @@
 2002-06-04  Keisuke Nishida  <knishida@netlab.jp>
 
+	* codegen.c (output_perform_call): New function.
+	(output_perform_once): Use `output_perform_call'.
+	* inline.c (output_file_handler): Use `output_perform_call'. Cleanup. 
+
+2002-06-04  Keisuke Nishida  <knishida@netlab.jp>
+
 	* Makefile.am (cobc_CFLAGS): -I$(top_srcdir), not -I$(top_srcdir)/lib.
 	* cobc.c, parser.y, scanner.l: Updated.
 
