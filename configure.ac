@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(open-cobol, 0.9.5.6)
+AC_INIT(open-cobol, 0.9.5.92)
 AC_CONFIG_SRCDIR(cobc/cobc.c)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -9,10 +9,16 @@ AM_MAINTAINER_MODE
 AC_DEFINE(COB_DEBUG)
 
 # Configure options.
-COB_CC="gcc"
+COB_CC=""
 AC_ARG_WITH(cc,
   [  --with-cc=<gcc>         specify C compiler],
   [ COB_CC=$withval ])
+if test "x${COB_CC}" = "x"; then
+  AC_CHECK_PROG([COB_CC], [gcc], [gcc])
+fi
+if test "x${COB_CC}" = "x"; then
+ AC_CHECK_PROG([COB_CC], [cc], [cc])
+fi
 
 AC_ARG_ENABLE(debug,
   [  --enable-debug          enable debugging options],
@@ -112,7 +118,7 @@ AC_SUBST(COMPUTED_GOTO)
 
 LIBCOB_CFLAGS=""
 LIBCOB_LIBS="-lm ${LIBDB} ${LIBGMP} ${LIBLTDL} ${LIBINTL} ${LIBRL}"
-COB_COBPP="cobpp"
+COB_COBPP="$bindir/cobpp"
 COB_CFLAGS="-I$includedir"
 COB_LIBS="-L$libdir -lcob ${LIBCOB_LIBS}"
 COB_CONFIG_FILE="$datadir/$PACKAGE/libcob.conf"
