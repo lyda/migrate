@@ -162,7 +162,7 @@ cob_check_numeric (struct fld_desc *f, char *s)
 	  break;
 	}
 	/******** take care of NULL picture (bug in refmod's) ********/
-      if (f->pic != NULL)
+      if (f->type != 'G' && f->pic != NULL)
 	{
 	  /* take care of signed numbers (non separate sign) */
 	  if ((i == f->len - 1) && (*(f->pic) == 'S'))
