@@ -329,7 +329,7 @@ read_line (char *buff, int size)
       }
  end:
   buff[n] = '\0';
-  if (c == EOF)
+  if (n == 0)
     return 0;
 
   /* nothing to be done for free format */
