@@ -122,5 +122,6 @@ extern int cob_get_sign (struct cob_field f);
 extern void cob_put_sign (struct cob_field f, int sign);
 extern char *cob_field_to_string (struct cob_field f, char *s);
 extern void cob_runtime_error (char *fmt, ...);
+extern const char *cob_config_lookup (const char *key);
 
 #endif /* COB_COMMON_H_ */

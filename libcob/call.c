@@ -32,7 +32,7 @@
 #include "call.h"
 #include "gettext.h"
 
-int cob_dynamic_reloading = 0;
+static int dynamic_reloading = 0;
 
 static int resolve_size = 0;
 static char **resolve_path = NULL;
@@ -42,12 +42,18 @@ static char resolve_error_buff[FILENAME_MAX];
 void
 cob_init_call (void)
 {
+  const char *val;
   const char *path = getenv ("COB_LIBRARY_PATH");
   if (path == NULL)
     path = COB_LIBRARY_PATH;
 
   lt_dlinit ();
   cob_set_library_path (path);
+
+  /* check option `dynamic-reloading' */
+  val = cob_config_lookup ("dynamic-reloading");
+  if (val != NULL && strcmp (val, "yes") == 0)
+    dynamic_reloading = 1;
 }
 
 
@@ -113,7 +119,7 @@ lookup (const char *name)
   for (p = call_table[hash (name)]; p; p = p->next)
     if (strcmp (name, p->name) == 0)
       {
-	if (cob_dynamic_reloading == 0
+	if (dynamic_reloading == 0
 	    || (stat (p->path, &st) == 0 && p->mtime == st.st_mtime))
 	  return p->func;
 	drop (name);
