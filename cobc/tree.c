@@ -51,7 +51,7 @@ make_literal (char *name)
   p->nick = NULL;
   p->len = strlen (p->name);
   p->next = NULL;
-  return (cob_tree) p;
+  return COB_TREE (p);
 }
 
 
@@ -62,45 +62,45 @@ make_literal (char *name)
 cob_tree 
 make_symbol (char *name)
 {
-  cob_tree sy = malloc (sizeof (struct sym));
-  sy->litflag = 0;
-  sy->name = name;
-  sy->next = NULL;
-  sy->times = 0;
-  sy->type = 0;
-  sy->slack = 0;
-  sy->level = 0;
-  sy->defined = 0;
-  sy->decimals = 0;
-  sy->redefines = NULL;
-  sy->value = NULL;
-  sy->sort_data = NULL;
-  sy->linkage_flg = 0;
-  sy->scr = NULL;
-  sy->clone = NULL;
-  sy->parent = NULL;
-  sy->son = NULL;
-  sy->brother = NULL;
-  sy->occurs = NULL;
-  sy->flags.is_pointer = 0;
-  sy->flags.just_r = 0;
-  sy->flags.separate_sign = 0;
-  sy->flags.leading_sign = 0;
-  sy->flags.blank = 0;
-  sy->flags.sync = 0;
-  return sy;
+  struct sym *p = malloc (sizeof (struct sym));
+  p->litflag = 0;
+  p->name = name;
+  p->next = NULL;
+  p->times = 0;
+  p->type = 0;
+  p->slack = 0;
+  p->level = 0;
+  p->defined = 0;
+  p->decimals = 0;
+  p->redefines = NULL;
+  p->value = NULL;
+  p->sort_data = NULL;
+  p->linkage_flg = 0;
+  p->scr = NULL;
+  p->clone = NULL;
+  p->parent = NULL;
+  p->son = NULL;
+  p->brother = NULL;
+  p->occurs = NULL;
+  p->flags.is_pointer = 0;
+  p->flags.just_r = 0;
+  p->flags.separate_sign = 0;
+  p->flags.leading_sign = 0;
+  p->flags.blank = 0;
+  p->flags.sync = 0;
+  return COB_TREE (p);
 }
 
 cob_tree 
 make_filler (void)
 {
+  char name[15];
+  cob_tree sy;
   static int filler_num = 1;
 
-  char s[15];
-  cob_tree sy;
-  sprintf (s, "FIL$%05d", filler_num++);
-  sy = install (s, SYTB_VAR, 0);
-  sy->defined = 1;
+  sprintf (name, "FIL$%05d", filler_num++);
+  sy = install (name, SYTB_VAR, 0);
+  SYMBOL (sy)->defined = 1;
   return sy;
 }
 
@@ -117,7 +117,7 @@ make_subref (cob_tree sy, cob_tree_list subs)
   p->sym     = sy;
   p->subs    = subs;
   /* FIXME: error check here!! */
-  return (cob_tree) p;
+  return COB_TREE (p);
 }
 
 
@@ -125,7 +125,7 @@ make_subref (cob_tree sy, cob_tree_list subs)
  * refmod
  */
 
-struct refmod *
+cob_tree
 create_refmoded_var (cob_tree sy, cob_tree syoff, cob_tree sylen)
 {
   struct refmod *ref;
@@ -135,7 +135,7 @@ create_refmoded_var (cob_tree sy, cob_tree syoff, cob_tree sylen)
   ref->off = syoff;
   ref->len = sylen;
   ref->slot = refmod_slots++;
-  return ref;
+  return COB_TREE (ref);
 }
 
 
@@ -146,12 +146,12 @@ create_refmoded_var (cob_tree sy, cob_tree syoff, cob_tree sylen)
 cob_tree
 make_expr (cob_tree left, char op, cob_tree right)
 {
-  struct expr *e = malloc (sizeof (struct expr));
-  e->litflag = 5;
-  e->op = op;
-  e->left = left;
-  e->right = right;
-  return (cob_tree) e;
+  struct expr *p = malloc (sizeof (struct expr));
+  p->litflag = 5;
+  p->op = op;
+  p->left = left;
+  p->right = right;
+  return COB_TREE (p);
 }
 
 
@@ -167,7 +167,7 @@ make_cond (cob_tree x, enum cond_type type, cob_tree y)
   p->type    = type;
   p->x       = x;
   p->y       = y;
-  return (cob_tree) p;
+  return COB_TREE (p);
 }
 
 cob_tree
@@ -182,10 +182,8 @@ print_tree (cob_tree x)
 {
   if (x == spe_lit_ZE)
     printf ("ZERO");
-  else if (SYMBOL_P (x))
-    printf (SYMBOL (x)->name);
-  else if (LITERAL_P (x))
-    printf (LITERAL (x)->name);
+  else if (SYMBOL_P (x) || LITERAL_P (x))
+    printf (FIELD_NAME (x));
   else if (SUBREF_P (x))
     {
       cob_tree_list ls;

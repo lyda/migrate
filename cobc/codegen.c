@@ -1884,7 +1884,7 @@ proc_trail (int using)
 
 	    }
 	}
-      else			/*if ( ((cob_tree)list->var)->type!='D' ) */
+      else
 	{
 	/********* it is a normal field ****************/
 	  sy = list->var;
@@ -2033,7 +2033,7 @@ add_alternate_key (cob_tree sy, int duplicates)
   new->next = alt;
   new->key = sy;
   new->duplicates = duplicates;
-  f->alternate = (cob_tree) new;
+  f->alternate = COB_TREE (new);
 }
 
 struct scr_info *

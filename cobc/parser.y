@@ -1628,8 +1628,8 @@ inspect_before_after:
   }
 ;
 noallname:
-  name				{ $$ = $1; }
-| without_all_literal		{ $$ = (cob_tree)$1; }
+  name
+| without_all_literal
 ;
 opt_initial: | TOK_INITIAL ;
 
@@ -2304,8 +2304,8 @@ opt_address_of:
 ;
 set_variable_or_nlit:
   name_or_lit			{ $$ = $1; }
-| TOK_NULL			{ $$ = (cob_tree) 0; }
-| TOK_TRUE			{ $$ = (cob_tree) 1; }
+| TOK_NULL			{ yywarn ("possibly a bug"); $$ = 0; }
+| TOK_TRUE			{ yywarn ("possibly a bug"); $$ = COB_TREE (1); }
 ;
 
 
@@ -2321,9 +2321,8 @@ sort_keys:
 | sort_keys sort_direction KEY name
     {
         $4->direction = $2;
-        (cob_tree)$4->sort_data =
-            (cob_tree)($<tree>0->sort_data);
-        (cob_tree)($<tree>0->sort_data) = $4;
+        $4->sort_data = $<tree>0->sort_data;
+        $<tree>0->sort_data = $4;
         $$ = $4;
     }
 ;
@@ -2791,7 +2790,7 @@ name:
   variable
 | variable '(' gname ':' opt_gname ')'
   {
-    $$ = (cob_tree) create_refmoded_var($1, $3, $5);
+    $$ = create_refmoded_var($1, $3, $5);
   }
   ;
 variable:

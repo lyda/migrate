@@ -25,6 +25,10 @@
  * Tree
  */
 
+struct cob_tree_common {
+  int litflag;
+};
+
 typedef struct sym *cob_tree;
 
 #define COB_TREE(x)		((struct sym *) (x))
@@ -47,15 +51,20 @@ extern cob_tree_list make_list (cob_tree x);
 extern cob_tree_list list_append (cob_tree_list l, cob_tree x);
 
 
+/*
+ * Field
+ */
+
 struct cob_field {
-  char litflag;
-  struct cob_field *next;
+  struct cob_tree_common common;
+  cob_tree next;
   char *name;
   char type;
   int decimals;
 };
 
 #define FIELD(x)		((struct cob_field *) (x))
+#define FIELD_NEXT(x)		(FIELD (x)->next)
 #define FIELD_NAME(x)		(FIELD (x)->name)
 #define FIELD_TYPE(x)		(FIELD (x)->type)
 
@@ -211,7 +220,7 @@ struct refmod
 #define REFMOD(x)	((struct refmod *) (x))
 #define REFMOD_P(x)	(COB_TREE_TYPE (x) == 4)
 
-extern struct refmod *create_refmoded_var (cob_tree sy, cob_tree syoff, cob_tree sylen);
+extern cob_tree create_refmoded_var (cob_tree sy, cob_tree syoff, cob_tree sylen);
 
 
 /*
@@ -260,7 +269,7 @@ struct report_info
   int line_offset;		/* PLUS <offset> given */
   int column;
   int value_source;		/* SUM, SOURCE (from a variable), literal */
-  /* the actual source symbol is in (cob_tree)->value */
+  /* the actual source symbol is in cob_tree->value */
 };
 
 /* varying record range and actual size */
