@@ -80,6 +80,8 @@ field_name (cobc_tree x)
 	sprintf (name, "%s", f->cname);
 	break;
       }
+    default:
+      abort ();
     }
 
   return name;
@@ -373,6 +375,8 @@ output_data (cobc_tree x)
 	  }
 	break;
       }
+    default:
+      abort ();
     }
 }
 
@@ -411,6 +415,8 @@ output_size (cobc_tree x)
 	  }
 	break;
       }
+    default:
+      abort ();
     }
 }
 
@@ -523,6 +529,9 @@ output_field (cobc_tree x, int id)
 
 	break;
       }
+    default:
+      /* nothing to do */
+      break;
     }
 }
 
@@ -789,7 +798,10 @@ output_advance_move (cob_field *f, cobc_tree dst)
     }
   else
     {
-      attr.type = get_type (p);
+      if (COBC_REFERENCE_P (dst) && COBC_REFERENCE (dst)->offset)
+	attr.type = COB_TYPE_ALPHANUMERIC;
+      else
+	attr.type = get_type (p);
       attr.digits = p->pic->digits;
       attr.decimals = p->pic->decimals;
       attr.flags = 0;
