@@ -1,3 +1,7 @@
+2004-03-12  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
+
+	* fileio.c (file_close): FILE *fp = f->file;
+
 2004-03-10  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
 
 	* fileio.c (cob_sort_init): Use temporary sort file.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2003 Keisuke Nishida
+ * Copyright (C) 2002-2004 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -163,6 +163,8 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 static int
 file_close (cob_file *f, int opt)
 {
+  FILE *fp = f->file;
+
   switch (opt)
     {
     case COB_CLOSE_NORMAL:
@@ -176,11 +178,11 @@ file_close (cob_file *f, int opt)
 	lock.l_whence = SEEK_SET;
 	lock.l_start = 0;
 	lock.l_len = 0;
-	fcntl (fileno (f->file), F_SETLK, &lock);
+	fcntl (fileno (fp), F_SETLK, &lock);
       }
 #endif
       /* close the file */
-      fclose (f->file);
+      fclose (fp);
       return COB_STATUS_00_SUCCESS;
     default:
       return COB_STATUS_07_SUCCESS_NO_UNIT;
