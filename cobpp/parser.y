@@ -66,6 +66,18 @@ text: NAME | TEXT ;
 %%
 
 void
+yywarn (const char *fmt, ...)
+{
+  const char *filename = yyfilename ? yyfilename : "<stdin>";
+  va_list ap;
+  va_start (ap, fmt);
+  fprintf (stderr, "%s:%d: warning: ", filename, yylineno);
+  vfprintf (stderr, fmt, ap);
+  fputs ("\n", stderr);
+  va_end (ap);
+}
+
+void
 yyerror (const char *fmt, ...)
 {
   const char *filename = yyfilename ? yyfilename : "<stdin>";
@@ -77,3 +89,4 @@ yyerror (const char *fmt, ...)
   va_end (ap);
   cobpp_exit_status = 1;
 }
+
