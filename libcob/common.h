@@ -66,7 +66,7 @@
 typedef struct {
   char type;
   char digits;
-  char expt;
+  char scale;
   char flags;
   const char *pic;
 } cob_field_attr;
@@ -81,7 +81,7 @@ typedef struct {
 
 #define COB_FIELD_TYPE(f)	((f)->attr->type)
 #define COB_FIELD_DIGITS(f)	((f)->attr->digits)
-#define COB_FIELD_EXPT(f)	((f)->attr->expt)
+#define COB_FIELD_SCALE(f)	((f)->attr->scale)
 #define COB_FIELD_DATA(f)						  \
   ((f)->data +								  \
    ((COB_FIELD_SIGN_SEPARATE (f) && COB_FIELD_SIGN_LEADING (f)) ? 1 : 0))

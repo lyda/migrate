@@ -198,7 +198,7 @@ cob_decimal_set_display (cob_decimal *d, cob_field *f)
   /* set sign and scale */
   if (sign < 0)
     mpz_neg (d->value, d->value);
-  d->scale = -f->attr->expt;
+  d->scale = f->attr->scale;
   cob_put_sign (f, sign);
 }
 
@@ -251,7 +251,7 @@ cob_decimal_set_binary (cob_decimal *d, cob_field *f)
 	break;
       }
     }
-  d->scale = -f->attr->expt;
+  d->scale = f->attr->scale;
 }
 
 static void
@@ -327,7 +327,7 @@ cob_decimal_set_packed (cob_decimal *d, cob_field *f)
 
   if (sign < 0)
     mpz_neg (d->value, d->value);
-  d->scale = -f->attr->expt;
+  d->scale = f->attr->scale;
 }
 
 /* General field */
@@ -368,7 +368,7 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f)
     }
 
   /* append or truncate decimal digits */
-  shift_decimal (d, -d->scale - f->attr->expt);
+  shift_decimal (d, f->attr->scale - d->scale);
 
   /* store number */
   switch (COB_FIELD_TYPE (f))
@@ -384,7 +384,7 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f)
 	cob_field_attr attr = {
 	  COB_TYPE_NUMERIC_DISPLAY,
 	  f->attr->digits,
-	  f->attr->expt,
+	  f->attr->scale,
 	  COB_FLAG_HAVE_SIGN
 	};
 	unsigned char data[f->attr->digits];
@@ -400,7 +400,7 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f)
 void
 cob_decimal_get_field_round (cob_decimal *d, cob_field *f)
 {
-  if (f->attr->expt > -d->scale)
+  if (f->attr->scale < d->scale)
     {
       int sign = mpz_sgn (d->value);
       if (sign != 0)
@@ -410,7 +410,7 @@ cob_decimal_get_field_round (cob_decimal *d, cob_field *f)
 	  d = &cob_d1;
 
 	  /* rounding */
-	  shift_decimal (d, -d->scale - f->attr->expt + 1);
+	  shift_decimal (d, f->attr->scale - d->scale + 1);
 	  if (sign > 0)
 	    mpz_add_ui (d->value, d->value, 5);
 	  else
@@ -612,7 +612,7 @@ cob_add_int_to_display (cob_field *f, int n)
   int sign = cob_get_sign (f);
   unsigned char *data = COB_FIELD_DATA (f);
   size_t size = COB_FIELD_SIZE (f);
-  int expt = COB_FIELD_EXPT (f);
+  int scale = COB_FIELD_SCALE (f);
 
   COB_SET_EXCEPTION (COB_EC_ZERO);
 
@@ -620,18 +620,18 @@ cob_add_int_to_display (cob_field *f, int n)
   if (sign < 0)
     n = -n;
 
-  if (expt > 0)
+  if (scale < 0)
     {
       /* PIC 9(n)P(m) */
-      if (expt < 10)
-	n /= cob_exp10[expt];
+      if (-scale < 10)
+	n /= cob_exp10[-scale];
       else
 	n = 0;
     }
   else
     {
       /* PIC 9(n)V9(m) */
-      size += expt;
+      size -= scale;
       if (size < 0)
 	goto overflow;
     }
@@ -758,7 +758,7 @@ cob_div_quotient (cob_field *dividend, cob_field *divisor,
     cob_decimal_get_field (&cob_d1, quotient);
 
   /* truncate digits from the quotient */
-  shift_decimal (&cob_d4, -cob_d4.scale - quotient->attr->expt);
+  shift_decimal (&cob_d4, quotient->attr->scale - cob_d4.scale);
 
   /* compute remainder */
   cob_decimal_mul (&cob_d4, &cob_d2);

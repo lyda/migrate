@@ -355,7 +355,7 @@ lookup_attr (char type, char digits, char expt, char flags, unsigned char *pic)
 
   /* output new attribute */
   output_storage ("static cob_field_attr a_%d = ", ++id);
-  output_storage ("{%d, %d, %d, %d, ", type, digits, expt, flags);
+  output_storage ("{%d, %d, %d, %d, ", type, digits, -expt, flags);
   if (pic)
     {
       unsigned char *s;
