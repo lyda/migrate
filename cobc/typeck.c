@@ -1599,20 +1599,30 @@ cb_validate_program_environment (struct cb_program *prog)
   /* resolve the program collating sequence */
   if (prog->collating_sequence)
     {
-      cb_tree v = cb_ref (prog->collating_sequence);
-      if (v != cb_error_node && !CB_ALPHABET_NAME_P (v))
-	cb_error_x (prog->collating_sequence, _("`%s' not alphabet name"),
-		    cb_name (prog->collating_sequence));
-
-      if (CB_ALPHABET_NAME (v)->custom_list)
+      cb_tree x = cb_ref (prog->collating_sequence);
+      if (x == cb_error_node)
 	{
-	  v = CB_VALUE (CB_ALPHABET_NAME (v)->custom_list);
-	  if (CB_PAIR_P (v) && CB_PAIR_X (v))
-	    cb_low = CB_PAIR_X (v);
-	  else if (CB_LIST_P (v))
-	    cb_low = CB_VALUE (v);
+	  prog->collating_sequence = NULL;
+	  return;
+	}
+
+      if (!CB_ALPHABET_NAME_P (x))
+	{
+	  cb_error_x (prog->collating_sequence, _("`%s' not alphabet name"),
+		      cb_name (prog->collating_sequence));
+	  prog->collating_sequence = NULL;
+	  return;
+	}
+
+      if (CB_ALPHABET_NAME (x)->type == CB_ALPHABET_CUSTOM)
+	{
+	  x = CB_VALUE (CB_ALPHABET_NAME (x)->custom_list);
+	  if (CB_PAIR_P (x) && CB_PAIR_X (x))
+	    cb_low = CB_PAIR_X (x);
+	  else if (CB_LIST_P (x))
+	    cb_low = CB_VALUE (x);
 	  else
-	    cb_low = cb_build_alphanumeric_literal (CB_LITERAL (v)->data, 1);
+	    cb_low = cb_build_alphanumeric_literal (CB_LITERAL (x)->data, 1);
 	}
     }
 }
