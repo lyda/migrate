@@ -6,9 +6,9 @@
 @setchapternewpage odd
 @c %**end of header
 
-@set UPDATED 2001-12-23
-@set EDITION 0.8.4
-@set VERSION 0.8.4
+@set UPDATED 2002-01-05
+@set EDITION 0.8.7
+@set VERSION 0.8.7
 
 @ifinfo
 @dircategory COBOL
@@ -164,9 +164,8 @@ open-cobol/texi/        マニュアル
 
 @example
 $(PREFIX)/bin/cobc                    コンパイラ
-$(PREFIX)/libexec/open-cobol/cobpp    プリプロセッサ
+$(PREFIX)/bin/cobpp                   プリプロセッサ
 $(PREFIX)/lib/libcob.a                実行時ライブラリ
-$(PREFIX)/lib/open-cobol/             各種モジュール
 $(PREFIX)/info/open-cobol.info        マニュアル
 @end example
 
@@ -258,7 +257,7 @@ COB_LIBRARY_PATH=. ./main
 
 @example
 COB_CC            利用する C コンパイラ ("cc")
-COB_COBPP         プリプロセッサ ("$(PREFIX)/libexec/open-cobol/cobpp")
+COB_COBPP         プリプロセッサ ("$(PREFIX)/bin/cobpp")
 COB_LIBADD        リンクするライブラリ ("-L$(PREFIX)/lib -lcob")
 COB_LIBRARY_PATH  ライブラリのパス (".:$(PREFIX)/lib/open-cobol")
 @end example
@@ -296,6 +295,30 @@ COB_LIBRARY_PATH  ライブラリのパス (".:$(PREFIX)/lib/open-cobol")
 @item ヘッダファイル @file{libcob.h} を用意
 
 C から COBOL の機能を呼ぶときに使える関数を定義している。
+
+@item 関数 @code{cob_init}
+
+最初に次のようにして COBOL ランタイムを初期化する必要がある。
+
+@example
+int
+main (int argc, char **argv)
+{
+  /* initialize of your program */
+  ...
+
+  /* initialize COBOL runtime library */
+  cob_init (argc, argv);
+
+  /* rest of your program */
+  ...
+}
+@end example
+
+@item 関数 @code{cob_set_library_path}
+
+環境変数 @code{COB_LIBRARY_PATH} を設定するのと同様のことを
+C プログラムから行なう。環境変数よりも優先される。
 
 @item 関数 @code{cob_resolve}, @code{cob_resolve_error}
 
