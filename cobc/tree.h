@@ -402,7 +402,7 @@ struct cobc_file_name {
     int duplicates;
     struct cobc_alt_key *next;
   } *alt_key_list;		/* ALTERNATE RECORD KEY list */
-  /* FD */
+  /* FD/SD */
   struct cobc_field *record;	/* record descriptor */
   int record_min, record_max;	/* RECORD CONTAINS */
   cobc_tree record_depending;	/* RECORD DEPENDING */
