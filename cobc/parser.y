@@ -214,7 +214,7 @@ static void check_decimal_point (struct lit *lit);
 %type <repval> replacing_list, replacing_clause
 %type <rbval> replacing_by_list
 %type <cvval> converting_clause
-%type <sval> var_or_nliteral,opt_read_key
+%type <sval> var_or_nliteral,opt_read_key,file_name
 %type <sival> screen_clauses
 %type <ival> screen_attribs,screen_attrib,screen_sign,opt_separate
 %type <sval> variable_indexed,search_opt_varying,opt_key_is
@@ -505,34 +505,35 @@ file_section:
 ;
 fd_list:
 | fd_list
-  FD			{ curr_division = CDIV_FD; }
-  STRING		{ curr_division = CDIV_DATA; }
-  file_attrib '.'
+  FD file_name file_attrib '.'
   {
     curr_field=NULL;
-    if ($4->filenamevar == NULL)
-	yyerror("External file name not defined for file %s", $4->name);
+    if ($3->filenamevar == NULL)
+	yyerror("External file name not defined for file %s", $3->name);
   }
   file_description
   {
     close_fields();
-    alloc_file_entry($4);
-    gen_fdesc($4,$9);
+    alloc_file_entry($3);
+    gen_fdesc($3,$7);
   }
 | fd_list
-  SD			{ curr_division = CDIV_FD; }
-  STRING		{ curr_division = CDIV_DATA; }
-  sort_attrib '.'
+  SD file_name sort_attrib '.'
   {
-    $4->organization=2;
+    $3->organization=2;
     curr_field=NULL;
   }
   file_description
   {
     close_fields();
-    alloc_file_entry($4);
-    gen_fdesc($4,$9);
+    alloc_file_entry($3);
+    gen_fdesc($3,$7);
   }
+;
+file_name:
+  { curr_division = CDIV_FD; }
+  STRING
+  { curr_division = CDIV_DATA; $$ = $2; }
 ;
 file_description:
   field_description       { $$=$1; }
@@ -659,7 +660,7 @@ field_option:
  */
 
 redefines_clause:
-  REDEFINES { curr_division = CDIV_INITIAL; }
+  REDEFINES			{ curr_division = CDIV_INITIAL; }
   redefines_var
   {
     curr_division = CDIV_DATA;
@@ -677,6 +678,7 @@ redefines_var:
 
 external_clause:
   opt_is EXTERNAL	{ save_named_sect (curr_field); }
+;
 
 
 /*
@@ -705,16 +707,16 @@ usage_clause:
   opt_usage opt_is usage
 ;
 usage:
-  BINARY /* including COMP, COMP-5, INDEX */
+  BINARY /* or COMP, COMP-5, INDEX */
   {
     curr_field->type = 'B';
-    curr_field->len  =  0;	/* computed by query_comp_length() */
+    curr_field->len  =  0;
   }
 | DISPLAY
   {
     /* do nothing */
   }
-| FLOAT_SHORT /* including COMP-1 */
+| FLOAT_SHORT /* or COMP-1 */
   {
     curr_field->type     = 'U';
     curr_field->len      =  4;
@@ -723,7 +725,7 @@ usage:
     /* default picture is 14 (max=7->7.7) digits */
     strcpy (picture,"S\x01\x39\x07\x56\x01\x39\x07");
   }
-| FLOAT_LONG /* including COMP-2 */
+| FLOAT_LONG /* or COMP-2 */
   {
     curr_field->type     = 'U';
     curr_field->len      =  8;
@@ -732,7 +734,7 @@ usage:
     /* default picture is 30 (max=15->15.15) digits*/
     strcpy (picture,"S\x01\x39\x0f\x56\x01\x39\x0f");
   }
-| PACKED_DECIMAL /* including COMP-3 */
+| PACKED_DECIMAL /* or COMP-3 */
   {
     curr_field->type = 'C';
   }
@@ -756,12 +758,12 @@ sign_clause:
   opt_sign_is LEADING opt_sign_separate
   {
     curr_field->flags.separate_sign = $3;
-    curr_field->flags.leading_sign = 1;
+    curr_field->flags.leading_sign  = 1;
   }
 | opt_sign_is TRAILING opt_sign_separate
   {
     curr_field->flags.separate_sign = $3;
-    curr_field->flags.leading_sign = 0;
+    curr_field->flags.leading_sign  = 0;
   }
 ;
 opt_sign_is:
@@ -783,9 +785,13 @@ occurs_clause:
 | OCCURS integer TO integer opt_times DEPENDING opt_on
   { curr_division = CDIV_INITIAL; }
   gname
-  {       
+  {
     curr_division = CDIV_DATA;
-    create_occurs_info($2,$4,$9);
+    curr_field->times = $4;
+    curr_field->occurs = malloc (sizeof (struct occurs));
+    curr_field->occurs->min = $2;
+    curr_field->occurs->max = $4;
+    curr_field->occurs->depend = $9;
   }
   opt_indexed_by
 ;

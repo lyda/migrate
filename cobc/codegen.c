@@ -3089,16 +3089,6 @@ gen_divide2 (struct math_var *vl1, struct sym *sy1, struct sym *sy2,
     }
 }
 
-void
-create_occurs_info (int min, int max, struct sym *depend)
-{
-  curr_field->occurs = (struct occurs *) malloc (sizeof (struct occurs));
-  curr_field->occurs->min = min;
-  curr_field->occurs->max = max;
-  curr_field->occurs->depend = depend;
-  curr_field->times = max;
-}
-
 /******** functions for refmoded var manipulation ***********/
 static int
 check_refmods (struct sym *var)
@@ -4485,11 +4475,6 @@ define_field (int level, struct sym *sy)
   struct sym *tmp;
   struct sym *tmp1 = NULL;
 
-  if (sy == NULL)
-    {
-      sy = malloc (sizeof (struct sym));
-      sy->name = "%noname%";
-    }
   if (level == 88)
     {
       sy->type = '8';
@@ -4549,8 +4534,6 @@ define_field (int level, struct sym *sy)
 	  sy->parent = tmp;
 	  if (tmp->son == NULL)
 	    tmp->son = sy;
-	  /*else
-	     yyerror("malformed data hierarchy"); */
 	  else
 	    {
 	      tmp1->brother = sy;

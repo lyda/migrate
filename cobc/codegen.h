@@ -511,7 +511,6 @@ extern struct subref *create_subscript (struct sym *sy);
 extern struct subref *add_subscript_item (struct subref *subs, char op,
 					struct sym *item);
 extern struct subref *add_subscript (struct subref *ref, struct subref *subs);
-extern void create_occurs_info (int min, int max, struct sym *depend);
 extern struct refmod *create_refmoded_var (struct sym *sy, struct sym *syoff,
 					   struct sym *sylen);
 extern void gen_subscripted (struct subref *subs);
