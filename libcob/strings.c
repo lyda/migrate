@@ -28,6 +28,9 @@
 
 #include "_libcob.h"
 
+#define match(s1,s2,size) \
+  ((*(s1) == *(s2)) && ((size) == 1 || memcmp ((s1), (s2), (size)) == 0))
+
 
 /*
  * Local functions
@@ -79,9 +82,9 @@ put_integer (struct cob_field f, int v)
 }
 
 
-/*****************************************************************************
- * INSPECT statement
- *****************************************************************************/
+/*
+ * INSPECT
+ */
 
 static va_list
 inspect_get_region (struct cob_field var, va_list ap, int *offset, int *len)
@@ -101,7 +104,7 @@ inspect_get_region (struct cob_field var, va_list ap, int *offset, int *len)
 	case INSPECT_BEFORE:
 	case INSPECT_AFTER:
 	  for (p = start; p < end - size; p++)
-	    if (*p == *s && (size == 1 || memcmp (p, s, size) == 0))
+	    if (match (p, s, size))
 	      {
 		if (type == INSPECT_BEFORE)
 		  end = p;
@@ -184,7 +187,7 @@ cob_inspect_tallying (struct cob_field var, ...)
 		    unsigned char *p = var_data + offset + i;
 		    unsigned char *s = str_data;
 		    /* find matching substring */
-		    if (*p == *s && (size == 1 || memcmp (p, s, size) == 0))
+		    if (match (p, s, size))
 		      {
 			/* check if it is already marked */
 			for (j = 0; j < size; j++)
@@ -270,7 +273,7 @@ cob_inspect_replacing (struct cob_field var, ...)
 		    unsigned char *p = var_data + offset + i;
 		    unsigned char *s = old_data;
 		    /* find matching substring */
-		    if (*p == *s && (size == 1 || memcmp (p, s, size) == 0))
+		    if (match (p, s, size))
 		      {
 			/* check if it is already marked */
 			for (j = 0; j < size; j++)
@@ -349,85 +352,78 @@ cob_inspect_converting (struct cob_field var, ...)
 }
 
 
-/*****************************************************************************
- * STRING statement
- *****************************************************************************/
-
-/*------------------------------------------------------------------------*\
- |                                                                        |
- |                          cob_string                                    |
- |  Cobol string statement.                                               |
- |  The variables are (in that order):                                    |
- |     receiving var, pointer (with pointer clause),                      |
- |     1st. sending var, 2nd sending var,...                              |
- |  Each variable have it's field descriptor (struct fld_desc) and it's   |
- |  buffer, except if it's non-existent. In such case, only a NULL is     |
- |  passed as argument and must be skipped. (not 2 stack positions ever)  |
- |  The last sending variable is a NULL.                                  |
- |                                                                        | 
- |  This function returns -1 in case of overflow found, or 0 if ok.       |
- |                                                                        |
-\*------------------------------------------------------------------------*/
+/*
+ * STRING
+ */
 
 int
-cob_string (struct fld_desc *fdst, char *sdst, ...)
+cob_string (struct cob_field dst, ...)
 {
-  struct fld_desc *fptr, *fsrc, *fdelim;
-  char *sptr, *ssrc, *sdelim;
-  int n, len, i = 0;
-  va_list args;
+  int i, type, offset = 0;
+  struct cob_field dlm, src;
+  int dlm_size, src_size, dst_size;
+  unsigned char *dlm_data, *src_data, *dst_data;
+  va_list ap;
 
-  len = fdst->len;
-  va_start (args, sdst);
-  fptr = va_arg (args, struct fld_desc *);
-  if (fptr)
-    {
-      sptr = va_arg (args, char *);
-      /* get the integer value of this */
-      i += get_index ((struct cob_field) {fptr, sptr});
-    }
-  fsrc = va_arg (args, struct fld_desc *);
-  while (fsrc)
-    {				/* while there are variables to move */
-      ssrc = va_arg (args, char *);
-      fdelim = va_arg (args, struct fld_desc *);
-      if (fdelim)
-	{			/* if there is a delimiter, get it's buffer */
-	  sdelim = va_arg (args, char *);
-	}
-      n = fsrc->len;
-      if (fdelim)
-	{
-	  n = offset_substr (ssrc, sdelim, n, fdelim->len);
-	}
-      if ((len - i) >= n)
-	{
-	  memmove (sdst + i, ssrc, n);
-	  i += n;
-	}
-      else
-	{
-	  cob_status = COB_STATUS_OVERFLOW;
-	  return cob_status;
-	}
-      fsrc = va_arg (args, struct fld_desc *);
-    }
-  va_end (args);
-  memset (sdst + i, ' ', len - i);
+  va_start (ap, dst);
+  dlm_size = 0;
+  dst_size = FIELD_SIZE (dst);
+  dst_data = FIELD_DATA (dst);
+
+  while ((type = va_arg (ap, int)) != 0)
+    switch (type)
+      {
+      case 1:
+	offset += get_index (va_arg (ap, struct cob_field)) - 1;
+	break;
+
+      case 2:
+	dlm = va_arg (ap, struct cob_field);
+	dlm_size = FIELD_SIZE (dlm);
+	dlm_data = FIELD_DATA (dlm);
+	break;
+
+      case 3:
+	src = va_arg (ap, struct cob_field);
+	src_size = FIELD_SIZE (src);
+	src_data = FIELD_DATA (src);
+	if (dlm_size > 0)
+	  for (i = 0; i < src_size - dlm_size + 1; i++)
+	    if (match (src_data + i, dlm_data, dlm_size))
+	      {
+		src_size = i;
+		break;
+	      }
+	if (src_size < dst_size)
+	  {
+	    memcpy (dst_data, src_data, src_size);
+	    dst_data += src_size;
+	    dst_size -= src_size;
+	  }
+	else
+	  {
+	    memcpy (dst_data, src_data, dst_size);
+	    cob_status = COB_STATUS_OVERFLOW;
+	    return cob_status;
+	  }
+	break;
+
+      default:
+	/* fatal error */
+	fputs ("STRING data broken!\n", stderr);
+	abort ();
+      }
+
+  va_end (ap);
+  memset (dst_data, ' ', dst_size);
   cob_status = COB_STATUS_SUCCESS;
   return cob_status;
 }
 
 
-/*****************************************************************************
- * UNSTRING statement
- *****************************************************************************/
-
-/*------------------------------------------------------------------------*\
- |                                                                        |
- |                          cob_unstring                                  |
- |                                                                        |
-\*------------------------------------------------------------------------*/
+/*
+ * UNSTRING
+ */
 
 int
 cob_unstring (struct fld_desc *fvar, char *svar, ...)

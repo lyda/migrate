@@ -1142,8 +1142,8 @@ output_string (char *s, int len)
   for (i = 0; i < len; i++)
     {
       int c = s[i];
-      if (c == '\"')
-	output ("\\\"");
+      if (c == '\"' || c == '\\')
+	output ("\\%c", c);
       else if (isprint (c))
 	output ("%c", c);
       else
@@ -2067,13 +2067,23 @@ void
 gen_string (struct string_from *sf, cob_tree sy, cob_tree ptr)
 {
   output ("# STRING into %s\n", COB_FIELD_NAME (sy));
-  push_immed (0);	/* mark the end of variables */
+  push_immed (0);
   for (; sf; sf = sf->next)
     {
-      gen_loadvar (sf->delim);
       gen_loadvar (sf->var);
+      push_immed (3);
+      if (sf->delim)
+	{
+	  gen_loadvar (sf->delim);
+	  push_immed (2);
+	}
     }
-  asm_call_2 ("cob_string", sy, ptr);
+  if (ptr)
+    {
+      gen_loadvar (ptr);
+      push_immed (1);
+    }
+  asm_call_1 ("cob_string", sy);
 }
 
 void
