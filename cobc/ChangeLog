@@ -1,5 +1,10 @@
 2005-02-08  Roger While <simrw@sim-basis.de>
 
+	* parser.y, codegen.c, tree.h, tree.c
+	  Implement EXTERNAL AS Literal
+
+2005-02-08  Roger While <simrw@sim-basis.de>
+
 	* codegen.c : Rearrange generated code slightly
 	  Do not gen stack values we do not need
 	  Generate static function prototype so that we

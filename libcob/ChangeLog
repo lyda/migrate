@@ -1,3 +1,7 @@
+2005-02-08  Roger While <simrw@sim-basis.de>
+
+	* Fix my cob_external_addr routine
+
 2005-02-07  Roger While <simrw@sim-basis.de>
 
 	* common.h, common.c : new routine cob_external_addr

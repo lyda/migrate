@@ -1009,13 +1009,14 @@ initialize_uniform_char (struct cb_field *f)
 }
 
 static void
-output_initialize_external (cb_tree x, int size)
+output_initialize_external (cb_tree x, struct cb_field *f)
 {
   output_prefix ();
   output_data (x);
-  output (" = cob_external_addr (\"");
-  output_data (x);
-  output ("\", %d);\n", size);
+  if ( f->ename )
+    output (" = cob_external_addr (\"%s\", %d);\n", f->ename, f->size);
+  else
+    output (" = cob_external_addr (\"%s\", %d);\n", f->name, f->size);
 }
 
 static void
@@ -1189,7 +1190,7 @@ output_initialize (struct cb_initialize *p)
       output_initialize_one (p, p->var);
       break;
     case INITIALIZE_EXTERNAL:
-	  output_initialize_external (p->var, f->size);
+	  output_initialize_external (p->var, f);
       break;
     case INITIALIZE_DEFAULT:
       {

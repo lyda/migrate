@@ -1009,9 +1009,17 @@ redefines_clause:
 /* EXTERNAL clause */
 
 external_clause:
-  _is EXTERNAL			{ current_field->flag_external = 1; }
+  _is EXTERNAL as_extname			{ current_field->flag_external = 1; }
 ;
 
+as_extname:
+  /* empty */			{ current_field->ename = NULL; }
+| AS LITERAL
+ {
+      struct cb_field *x = CB_FIELD(cb_build_field (cb_build_reference (CB_LITERAL ($2)->data)));
+      current_field->ename = x->name;
+ }
+;
 
 /* GLOBAL clause */
 

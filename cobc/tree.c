@@ -853,6 +853,7 @@ cb_build_field (cb_tree name)
     make_tree (CB_TAG_FIELD, CB_CATEGORY_UNKNOWN, sizeof (struct cb_field));
   p->id = cb_id++;
   p->name = cb_define (name, CB_TREE (p));
+  p->ename = NULL;
   p->usage = CB_USAGE_DISPLAY;
   p->storage = CB_STORAGE_WORKING;
   p->occurs_max = 1;

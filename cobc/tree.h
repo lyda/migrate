@@ -397,6 +397,7 @@ struct cb_field {
   struct cb_tree_common common;
   int id;			/* field id */
   const char *name;		/* the original name */
+  const char *ename;		/* the externalized name */
   int size;			/* field size */
   int memory_size;		/* memory size */
   int offset;			/* byte offset from the top (ie, 01 field) */
