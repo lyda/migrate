@@ -384,6 +384,7 @@ lookup_attr (char type, char digits, char expt, char flags, unsigned char *pic)
 static void
 output_attr (cb_tree x)
 {
+  int id;
   switch (CB_TREE_TAG (x))
     {
     case CB_TAG_LITERAL:
@@ -395,15 +396,15 @@ output_attr (cb_tree x)
 	    char flags = 0;
 	    if (l->sign != 0)
 	      flags = COB_FLAG_HAVE_SIGN | COB_FLAG_SIGN_SEPARATE;
-	    output ("&a_%d", lookup_attr (COB_TYPE_NUMERIC_DISPLAY,
-					  l->size, l->expt, flags, 0));
+	    id = lookup_attr (COB_TYPE_NUMERIC_DISPLAY,
+			      l->size, l->expt, flags, 0);
 	  }
 	else
 	  {
 	    if (l->all)
-	      output ("&cob_all_attr");
+	      id = lookup_attr (COB_TYPE_ALPHANUMERIC_ALL, 0, 0, 0, 0);
 	    else
-	      output ("&cob_alnum_attr");
+	      id = lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, 0);
 	  }
 	break;
       }
@@ -415,13 +416,11 @@ output_attr (cb_tree x)
 	switch (type)
 	  {
 	  case COB_TYPE_GROUP:
-	    output ("&cob_group_attr");
-	    break;
 	  case COB_TYPE_ALPHANUMERIC:
 	    if (f->flag_justified)
-	      output ("&cob_just_attr");
+	      id = lookup_attr (type, 0, 0, COB_FLAG_JUSTIFIED, 0);
 	    else
-	      output ("&cob_alnum_attr");
+	      id = lookup_attr (type, 0, 0, 0, 0);
 	    break;
 	  default:
 	    {
@@ -437,8 +436,8 @@ output_attr (cb_tree x)
 	      if (f->flag_justified)
 		flags |= COB_FLAG_JUSTIFIED;
 
-	      output ("&a_%d", lookup_attr (type, f->pic->digits, f->pic->expt,
-					    flags, f->pic->str));
+	      id = lookup_attr (type, f->pic->digits, f->pic->expt,
+				flags, f->pic->str);
 	      break;
 	    }
 	  }
@@ -448,14 +447,16 @@ output_attr (cb_tree x)
       {
 	struct cb_reference *r = CB_REFERENCE (x);
 	if (r->offset)
-	  output ("&cob_alnum_attr");
+	  id = lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, 0);
 	else
-	  output_attr (r->value);
+	  return output_attr (r->value);
 	break;
       }
     default:
       abort ();
     }
+
+  output ("&a_%d", id);
 }
 
 static void

@@ -150,11 +150,6 @@ extern int cob_return_code;
 extern int cob_linage_counter;
 extern int cob_cmp_result;
 
-extern cob_field_attr cob_group_attr;	/* group item */
-extern cob_field_attr cob_alnum_attr;	/* PIC X(n) */
-extern cob_field_attr cob_just_attr;	/* PIC X(n) JUSTIFIED RIGHT */
-extern cob_field_attr cob_all_attr;	/* ALL <literal> */
-
 extern cob_field cob_zero;		/* ZERO */
 extern cob_field cob_space;		/* SPACE */
 extern cob_field cob_high;		/* HIGH-VALUE */

@@ -44,16 +44,13 @@ int cob_return_code = 0;
 int cob_linage_counter = 0;
 int cob_cmp_result;
 
-cob_field_attr cob_group_attr = {COB_TYPE_GROUP, 0, 0, 0, NULL};
-cob_field_attr cob_alnum_attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
-cob_field_attr cob_just_attr  = {COB_TYPE_ALPHANUMERIC, 0, 0, COB_FLAG_JUSTIFIED, NULL};
-cob_field_attr cob_all_attr   = {COB_TYPE_ALPHANUMERIC_ALL, 0, 0, 0, NULL};
+static cob_field_attr all_attr = {COB_TYPE_ALPHANUMERIC_ALL, 0, 0, 0, NULL};
 
-cob_field cob_zero =  {1, "0",    &cob_all_attr};
-cob_field cob_space = {1, " ",    &cob_all_attr};
-cob_field cob_high =  {1, "\xff", &cob_all_attr};
-cob_field cob_low =   {1, "\0",   &cob_all_attr};
-cob_field cob_quote = {1, "\"",   &cob_all_attr};
+cob_field cob_zero =  {1, "0",    &all_attr};
+cob_field cob_space = {1, " ",    &all_attr};
+cob_field cob_high =  {1, "\xff", &all_attr};
+cob_field cob_low =   {1, "\0",   &all_attr};
+cob_field cob_quote = {1, "\"",   &all_attr};
 
 long cob_exp10[10] = {
   1,
