@@ -20,6 +20,8 @@
 #ifndef COB_COMMON_H
 #define COB_COMMON_H
 
+#include <stdio.h>
+
 #define COB_VOID		 0
 #define COB_GROUP		'G'
 #define COB_ALPHABETIC		'A'
