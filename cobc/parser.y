@@ -586,6 +586,8 @@ select_sequence:
   SELECT flag_optional undefined_word
   {
     current_file_name = COBC_FILE_NAME (make_file_name ($4));
+    current_file_name->organization = COB_ORG_LINE_SEQUENTIAL;
+    current_file_name->access_mode = COB_ACCESS_SEQUENTIAL;
     current_file_name->optional = $3;
     program_spec.file_name_list =
       cons (current_file_name, program_spec.file_name_list);
