@@ -482,8 +482,8 @@ scan_picture (char *text)
       while (n > 0)
 	{
 	  buff[idx++] = c;
-	  buff[idx++] = n % 256;
-	  n /= 256;
+	  buff[idx++] = (n < 256) ? n : 255;
+	  n -= 255;
 	}
     }
   buff[idx] = 0;

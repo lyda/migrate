@@ -1148,12 +1148,13 @@ opt_number_is: | NUMBER opt_is ;
  *****************************************************************************/
 
 procedure_division:
-| PROCEDURE DIVISION { in_procedure = 1; curr_division = CDIV_INITIAL; }
+| PROCEDURE DIVISION		{ curr_division = CDIV_INITIAL; }
   procedure_using dot
   {
     current_section = NULL;
     current_paragraph = NULL;
     proc_header ($4);
+    in_procedure = 1;
   }
   procedure_list
   {
