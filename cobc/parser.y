@@ -96,6 +96,7 @@ static int last_operator;
 static cb_tree last_lefthand;
 
 static int builtin_switch_id (cb_tree x);
+static cb_tree validate_data_name (cb_tree x);
 static cb_tree validate_group_name (cb_tree x);
 static cb_tree validate_record_name (cb_tree x);
 static cb_tree validate_numeric_name (cb_tree x, int rounded);
@@ -394,7 +395,7 @@ special_name_mnemonic_on_off:
 	CB_FIELD (x)->level = 88;
 	CB_FIELD (x)->parent = CB_FIELD (cb_switch[id]);
 	CB_FIELD (x)->values = list ($2);
-	CB_TREE_CLASS (x) = COB_TYPE_BOOLEAN;
+	CB_TREE_CLASS (x) = CB_CLASS_BOOLEAN;
       }
   }
 ;
@@ -481,11 +482,7 @@ class_item:
     if (CB_LITERAL ($1)->data[0] < CB_LITERAL ($3)->data[0])
       $<tree>$ = make_pair ($1, $3);
     else
-      {
-	cb_error_x ($1, _("%s not smaller than %s"),
-		    tree_name ($1), tree_name ($3));
-	$<tree>$ = cb_error_node;
-      }
+      $<tree>$ = make_pair ($3, $1);
   }
 ;
 
@@ -2189,13 +2186,13 @@ initialize_replacing_list:
   }
 ;
 replacing_option:
-  ALPHABETIC			{ $$ = COB_TYPE_ALPHABETIC; }
-| ALPHANUMERIC			{ $$ = COB_TYPE_ALPHANUMERIC; }
-| NUMERIC			{ $$ = COB_TYPE_NUMERIC; }
-| ALPHANUMERIC_EDITED		{ $$ = COB_TYPE_ALPHANUMERIC_EDITED; }
-| NUMERIC_EDITED		{ $$ = COB_TYPE_NUMERIC_EDITED; }
-| NATIONAL			{ $$ = COB_TYPE_NATIONAL; }
-| NATIONAL_EDITED		{ $$ = COB_TYPE_NATIONAL_EDITED; }
+  ALPHABETIC			{ $$ = CB_CATEGORY_ALPHABETIC; }
+| ALPHANUMERIC			{ $$ = CB_CATEGORY_ALPHANUMERIC; }
+| NUMERIC			{ $$ = CB_CATEGORY_NUMERIC; }
+| ALPHANUMERIC_EDITED		{ $$ = CB_CATEGORY_ALPHANUMERIC_EDITED; }
+| NUMERIC_EDITED		{ $$ = CB_CATEGORY_NUMERIC_EDITED; }
+| NATIONAL			{ $$ = CB_CATEGORY_NATIONAL; }
+| NATIONAL_EDITED		{ $$ = CB_CATEGORY_NATIONAL_EDITED; }
 ;
 _data: | DATA ;
 
@@ -3300,7 +3297,7 @@ condition:
 numeric_expr:
   expr
   {
-    if (CB_TREE_CLASS ($1) != COB_TYPE_NUMERIC)
+    if (CB_TREE_CLASS ($1) != CB_CLASS_NUMERIC)
       {
 	cb_error_x ($1, _("invalid expression `%s'"), tree_name ($1));
 	YYERROR;
@@ -3348,7 +3345,7 @@ expr_1:
 		i -= 2;
 		break;
 	      case '!':
-		if (CB_TREE_CLASS (stack[i-1].value) != COB_TYPE_BOOLEAN)
+		if (CB_TREE_CLASS (stack[i-1].value) != CB_CLASS_BOOLEAN)
 		  stack[i-1].value =
 		    make_binary_op (last_lefthand, last_operator, stack[i-1].value);
 		stack[i-2].token = VALUE;
@@ -3359,7 +3356,7 @@ expr_1:
 	      case '|':
 		if (i < 3 || stack[i-3].token != VALUE)
 		  return -1;
-		if (CB_TREE_CLASS (stack[i-1].value) != COB_TYPE_BOOLEAN)
+		if (CB_TREE_CLASS (stack[i-1].value) != CB_CLASS_BOOLEAN)
 		  stack[i-1].value =
 		    make_binary_op (last_lefthand, last_operator, stack[i-1].value);
 		if (cb_warn_parentheses
@@ -3400,7 +3397,7 @@ expr_1:
 	if (i >= 2
 	    && prio == 7
 	    && stack[i-2].token == '|'
-	    && CB_TREE_CLASS (stack[i-1].value) != COB_TYPE_BOOLEAN)
+	    && CB_TREE_CLASS (stack[i-1].value) != CB_CLASS_BOOLEAN)
 	  {
 	    stack[i-1].token = VALUE;
 	    stack[i-1].value =
@@ -3539,7 +3536,7 @@ expr_1:
 			  default:
 			    stack[i-1].value =
 			      make_funcall_1 (class_func, stack[i-1].value);
-			    CB_TREE_CLASS (stack[i-1].value) = COB_TYPE_BOOLEAN;
+			    CB_TREE_CLASS (stack[i-1].value) = CB_CLASS_BOOLEAN;
 			    break;
 			  }
 			if (not_flag)
@@ -3688,16 +3685,7 @@ data_name_list:
 | data_name_list data_name	{ $$ = list_add ($1, $2); }
 ;
 data_name:
-  value
-  {
-    if (CB_REFERENCE_P ($1) && CB_FIELD_P (CB_REFERENCE ($1)->value))
-      $$ = $1;
-    else
-      {
-	cb_error_x ($1, _("identifier is expected `%s'"), tree_name ($1));
-	$$ = cb_error_node;
-      }
-  }
+  value				{ $$ = validate_data_name ($1); }
 ;
 
 /* Table name */
@@ -3818,8 +3806,8 @@ undefined_word:
 alphanumeric_value:
   value
   {
-    if (CB_TREE_CLASS ($1) != COB_TYPE_ALPHABETIC
-	&& CB_TREE_CLASS ($1) != COB_TYPE_ALPHANUMERIC)
+    if (CB_TREE_CLASS ($1) != CB_CLASS_ALPHABETIC
+	&& CB_TREE_CLASS ($1) != CB_CLASS_ALPHANUMERIC)
       cb_error_x ($1, _("alphanumeric value is expected `%s'"), tree_name ($1));
     $$ = $1;
   }
@@ -3834,7 +3822,7 @@ numeric_value_list:
 numeric_value:
   value
   {
-    if (CB_TREE_CLASS ($1) != COB_TYPE_NUMERIC)
+    if (CB_TREE_CLASS ($1) != CB_CLASS_NUMERIC)
       cb_error_x ($1, _("numeric value is expected `%s'"), tree_name ($1));
     $$ = $1;
   }
@@ -3852,7 +3840,7 @@ integer:
 integer_value:
   value
   {
-    if (CB_TREE_CLASS ($1) != COB_TYPE_NUMERIC)
+    if (CB_TREE_CLASS ($1) != CB_CLASS_NUMERIC)
       goto invalid;
 
     switch (CB_TREE_TAG ($1))
@@ -3927,7 +3915,7 @@ identifier:
   {
     $$ = resolve_data_name ($<tree>1);
     if ($$ != cb_error_node)
-      validate_data_name ($$);
+      validate_identifier ($$);
   }
 ;
 identifier_1:
@@ -4116,6 +4104,22 @@ builtin_switch_id (cb_tree x)
 }
 
 static cb_tree
+validate_data_name (cb_tree x)
+{
+  if (x == cb_error_node)
+    return cb_error_node;
+
+  if (!CB_REFERENCE_P (x)
+      || !CB_FIELD_P (CB_REFERENCE (x)->value))
+    {
+      cb_error_x (x, _("`%s' not identifier"), tree_name (x));
+      return cb_error_node;
+    }
+
+  return x;
+}
+
+static cb_tree
 validate_group_name (cb_tree x)
 {
   if (x == cb_error_node)
@@ -4152,7 +4156,7 @@ validate_numeric_name (cb_tree x, int rounded)
   if (x == cb_error_node)
     return cb_error_node;
 
-  if (CB_TREE_CLASS (x) != COB_TYPE_NUMERIC)
+  if (CB_TREE_CLASS (x) != CB_CLASS_NUMERIC)
     {
       cb_error_x (x, _("`%s' not numeric"), tree_name (x));
       return cb_error_node;
@@ -4167,8 +4171,8 @@ validate_numeric_edited_name (cb_tree x, int rounded)
   if (x == cb_error_node)
     return cb_error_node;
 
-  if (CB_TREE_CLASS (x) != COB_TYPE_NUMERIC
-      && CB_TREE_TYPE (x) != COB_TYPE_NUMERIC_EDITED)
+  if (CB_TREE_CATEGORY (x) != CB_CATEGORY_NUMERIC
+      && CB_TREE_CATEGORY (x) != CB_CATEGORY_NUMERIC_EDITED)
     {
       cb_error_x (x, _("`%s' not numeric or numeric edited"), tree_name (x));
       return cb_error_node;
@@ -4183,7 +4187,7 @@ validate_integer_name (cb_tree x)
   if (x == cb_error_node)
     return cb_error_node;
 
-  if (CB_TREE_CLASS (x) != COB_TYPE_NUMERIC
+  if (CB_TREE_CLASS (x) != CB_CLASS_NUMERIC
       || CB_FIELD (cb_ref (x))->pic->expt < 0)
     {
       cb_error_x (x, _("`%s' not integer"), tree_name (x));

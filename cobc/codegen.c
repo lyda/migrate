@@ -181,7 +181,7 @@ output_data (cb_tree x)
     case CB_TAG_LITERAL:
       {
 	struct cb_literal *l = CB_LITERAL (x);
-	if (CB_TREE_CLASS (x) == COB_TYPE_NUMERIC)
+	if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC)
 	  output ("\"%s%s\"", l->data,
 		  (l->sign < 0) ? "-" : (l->sign > 0) ? "+" : "");
 	else
@@ -282,6 +282,41 @@ output_size (cb_tree x)
 }
 
 static int
+tree_type (cb_tree x)
+{
+  struct cb_field *f = field (x);
+
+  if (f->children)
+    return COB_TYPE_GROUP;
+
+  switch (CB_TREE_CATEGORY (x))
+    {
+    case CB_CATEGORY_ALPHABETIC:
+      return COB_TYPE_ALPHABETIC;
+    case CB_CATEGORY_ALPHANUMERIC:
+      return COB_TYPE_ALPHANUMERIC;
+    case CB_CATEGORY_ALPHANUMERIC_EDITED:
+      return COB_TYPE_ALPHANUMERIC_EDITED;
+    case CB_CATEGORY_NUMERIC:
+      {
+	struct cb_field *f = field (x);
+	if (f->usage == cb_usage_display)
+	  return COB_TYPE_NUMERIC_DISPLAY;
+	else if (f->usage == cb_usage_binary)
+	  return COB_TYPE_NUMERIC_BINARY;
+	else if (f->usage == cb_usage_packed)
+	  return COB_TYPE_NUMERIC_PACKED;
+	else
+	  abort ();
+      }
+    case CB_CATEGORY_NUMERIC_EDITED:
+      return COB_TYPE_NUMERIC_EDITED;
+    default:
+      abort ();
+    }
+}
+
+static int
 lookup_attr (char type, char digits, char expt, char flags, unsigned char *pic)
 {
   static int id = 0;
@@ -345,7 +380,7 @@ output_attr (cb_tree x)
       {
 	struct cb_literal *l = CB_LITERAL (x);
 
-	if (CB_TREE_CLASS (x) == COB_TYPE_NUMERIC)
+	if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC)
 	  {
 	    char flags = 0;
 	    if (l->sign != 0)
@@ -364,9 +399,10 @@ output_attr (cb_tree x)
       }
     case CB_TAG_FIELD:
       {
+	int type = tree_type (x);
 	struct cb_field *f = CB_FIELD (x);
 
-	switch (CB_TREE_TYPE (x))
+	switch (type)
 	  {
 	  case COB_TYPE_GROUP:
 	    output ("&cob_group_attr");
@@ -391,8 +427,7 @@ output_attr (cb_tree x)
 	      if (f->flag_justified)
 		flags |= COB_FLAG_JUSTIFIED;
 
-	      output ("&a_%d", lookup_attr (CB_TREE_TYPE (f),
-					    f->pic->digits, f->pic->expt,
+	      output ("&a_%d", lookup_attr (type, f->pic->digits, f->pic->expt,
 					    flags, f->pic->str));
 	      break;
 	    }
@@ -440,7 +475,7 @@ lookup_literal (cb_tree x)
 
   /* search literal cache */
   for (l = literal_cache; l; l = l->next)
-    if (CB_TREE_TYPE (literal) == CB_TREE_TYPE (l->literal)
+    if (CB_TREE_CLASS (literal) == CB_TREE_CLASS (l->literal)
 	&& literal->size == l->literal->size
 	&& literal->all  == l->literal->all
 	&& literal->sign == l->literal->sign
@@ -667,54 +702,51 @@ output_integer (cb_tree x)
 		output_data (x);
 		output ("))");
 	      }
-	    break;
+	    return;
 	  }
 
 	if (cb_flag_inline_get_int)
 	  {
-	    switch (CB_TREE_TYPE (x))
+	    if (f->usage == cb_usage_display
+		&& f->pic->expt <= 0
+		&& f->size + f->pic->expt <= 4
+		&& f->pic->have_sign == 0)
 	      {
-	      case COB_TYPE_NUMERIC_DISPLAY:
-		if (f->pic->expt <= 0
-		    && f->size + f->pic->expt <= 4
-		    && f->pic->have_sign == 0)
+		int i, j;
+		int size = f->size + f->pic->expt;
+		output ("(");
+		for (i = 0; i < size; i++)
 		  {
-		    int i, j;
-		    int size = f->size + f->pic->expt;
-		    output ("(");
-		    for (i = 0; i < size; i++)
-		      {
-			output ("((");
-			output_data (x);
-			output (")");
-			output ("[%d] - '0')", i);
-			if (i + 1 < size)
-			  {
-			    output (" * 1");
-			    for (j = 1; j < size - i; j++)
-			      output ("0");
-			    output (" + ");
-			  }
-		      }
+		    output ("((");
+		    output_data (x);
 		    output (")");
-		    return;
+		    output ("[%d] - '0')", i);
+		    if (i + 1 < size)
+		      {
+			output (" * 1");
+			for (j = 1; j < size - i; j++)
+			  output ("0");
+			output (" + ");
+		      }
 		  }
-		break;
-	      case COB_TYPE_NUMERIC_BINARY:
-		{
-		  output ("(*(");
-		  switch (f->size)
-		    {
-		    case 1: output ("char"); break;
-		    case 2: output ("short"); break;
-		    case 4: output ("long"); break;
-		    case 8: output ("long long"); break;
-		    }
-		  output (" *) (");
-		  output_data (x);
-		  output ("))");
-		  return;
-		}
+		output (")");
+		return;
+	      }
+
+	    if (f->usage == cb_usage_binary)
+	      {
+		output ("(*(");
+		switch (f->size)
+		  {
+		  case 1: output ("char"); break;
+		  case 2: output ("short"); break;
+		  case 4: output ("long"); break;
+		  case 8: output ("long long"); break;
+		  }
+		output (" *) (");
+		output_data (x);
+		output ("))");
+		return;
 	      }
 	  }
 
@@ -987,6 +1019,12 @@ output_exit_program (void)
  */
 
 static void
+output_move_call (cb_tree src, cb_tree dst)
+{
+  output_stmt (make_funcall_2 ("cob_move", src, dst));
+}
+
+static void
 output_move_num (cb_tree x, int high)
 {
   if (field (x)->usage == cb_usage_display)
@@ -1000,23 +1038,17 @@ output_move_num (cb_tree x, int high)
 }
 
 static void
-output_move_all (cb_tree src, cb_tree dst)
-{
-  output_stmt (make_funcall_2 ("cob_move_all", src, dst));
-}
-
-static void
 output_move_space (cb_tree x)
 {
-  switch (CB_TREE_TYPE (x))
+  switch (CB_TREE_CATEGORY (x))
     {
-    case COB_TYPE_NUMERIC:
-    case COB_TYPE_ALPHABETIC:
-    case COB_TYPE_ALPHANUMERIC:
+    case CB_CATEGORY_NUMERIC:
+    case CB_CATEGORY_ALPHABETIC:
+    case CB_CATEGORY_ALPHANUMERIC:
       output_memset (x, ' ');
       break;
     default:
-      output_move_all (cb_space, x);
+      output_move_call (cb_space, x);
       break;
     }
 }
@@ -1024,20 +1056,20 @@ output_move_space (cb_tree x)
 static void
 output_move_zero (cb_tree x)
 {
-  switch (CB_TREE_TYPE (x))
+  switch (CB_TREE_CATEGORY (x))
     {
-    case COB_TYPE_NUMERIC:
+    case CB_CATEGORY_NUMERIC:
       if (field (x)->flag_blank_zero)
 	output_move_space (x);
       else
 	output_move_num (x, 0);
       break;
-    case COB_TYPE_ALPHABETIC:
-    case COB_TYPE_ALPHANUMERIC:
+    case CB_CATEGORY_ALPHABETIC:
+    case CB_CATEGORY_ALPHANUMERIC:
       output_memset (x, '0');
       break;
     default:
-      output_move_all (cb_zero, x);
+      output_move_call (cb_zero, x);
       break;
     }
 }
@@ -1045,17 +1077,17 @@ output_move_zero (cb_tree x)
 static void
 output_move_high (cb_tree x)
 {
-  switch (CB_TREE_TYPE (x))
+  switch (CB_TREE_CATEGORY (x))
     {
-    case COB_TYPE_NUMERIC:
+    case CB_CATEGORY_NUMERIC:
       output_move_num (x, 9);
       break;
-    case COB_TYPE_ALPHABETIC:
-    case COB_TYPE_ALPHANUMERIC:
+    case CB_CATEGORY_ALPHABETIC:
+    case CB_CATEGORY_ALPHANUMERIC:
       output_memset (x, 255);
       break;
     default:
-      output_move_all (cb_high, x);
+      output_move_call (cb_high, x);
       break;
     }
 }
@@ -1063,17 +1095,17 @@ output_move_high (cb_tree x)
 static void
 output_move_low (cb_tree x)
 {
-  switch (CB_TREE_TYPE (x))
+  switch (CB_TREE_CATEGORY (x))
     {
-    case COB_TYPE_NUMERIC:
+    case CB_CATEGORY_NUMERIC:
       output_move_num (x, 0);
       break;
-    case COB_TYPE_ALPHABETIC:
-    case COB_TYPE_ALPHANUMERIC:
+    case CB_CATEGORY_ALPHABETIC:
+    case CB_CATEGORY_ALPHANUMERIC:
       output_memset (x, 0);
       break;
     default:
-      output_move_all (cb_low, x);
+      output_move_call (cb_low, x);
       break;
     }
 }
@@ -1081,22 +1113,23 @@ output_move_low (cb_tree x)
 static void
 output_move_quote (cb_tree x)
 {
-  switch (CB_TREE_TYPE (x))
+  switch (CB_TREE_CATEGORY (x))
     {
-    case COB_TYPE_NUMERIC:
-    case COB_TYPE_ALPHABETIC:
-    case COB_TYPE_ALPHANUMERIC:
+    case CB_CATEGORY_NUMERIC:
+    case CB_CATEGORY_ALPHABETIC:
+    case CB_CATEGORY_ALPHANUMERIC:
       output_memset (x, '"');
       break;
     default:
-      output_move_all (cb_quote, x);
+      output_move_call (cb_quote, x);
       break;
     }
 }
 
 static void
-output_move_literal (struct cb_literal *l, cb_tree dst)
+output_move_literal (cb_tree src, cb_tree dst)
 {
+  struct cb_literal *l = CB_LITERAL (src);
   struct cb_field *f = field (dst);
 
   if (l->all)
@@ -1117,7 +1150,7 @@ output_move_literal (struct cb_literal *l, cb_tree dst)
     }
   else
     {
-      output_stmt (make_funcall_2 ("cob_move", CB_TREE (l), dst));
+      output_move_call (src, dst);
     }
 }
 
@@ -1154,7 +1187,7 @@ output_move (cb_tree src, cb_tree dst)
       else if (src == cb_quote)
 	return output_move_quote (dst);
       else if (CB_LITERAL_P (src))
-	return output_move_literal (CB_LITERAL (src), dst);
+	return output_move_literal (src, dst);
       else
 	{
 	  int simple_copy = 0;
@@ -1164,21 +1197,23 @@ output_move (cb_tree src, cb_tree dst)
 	  struct cb_field *dst_f = field (dst);
 
 	  if (src_size > 0 && dst_size > 0 && src_size >= dst_size)
-	    switch (CB_TREE_TYPE (src))
+	    switch (CB_TREE_CLASS (src))
 	      {
-	      case COB_TYPE_ALPHABETIC:
-		if (CB_TREE_TYPE (dst) == COB_TYPE_ALPHABETIC
-		    || CB_TREE_TYPE (dst) == COB_TYPE_ALPHANUMERIC)
+	      case CB_CLASS_ALPHABETIC:
+		if (CB_TREE_CLASS (dst) == CB_CLASS_ALPHABETIC
+		    || CB_TREE_CLASS (dst) == CB_CLASS_ALPHANUMERIC)
 		  if (dst_f->flag_justified == 0)
 		    simple_copy = 1;
 		break;
-	      case COB_TYPE_ALPHANUMERIC:
-		if (CB_TREE_TYPE (dst) == COB_TYPE_ALPHANUMERIC)
+	      case CB_CLASS_ALPHANUMERIC:
+		if (CB_TREE_CLASS (dst) == CB_CLASS_ALPHANUMERIC)
 		  if (dst_f->flag_justified == 0)
 		    simple_copy = 1;
 		break;
-	      case COB_TYPE_NUMERIC_DISPLAY:
-		if (CB_TREE_TYPE (dst) == COB_TYPE_NUMERIC_DISPLAY
+	      case CB_CLASS_NUMERIC:
+		if (CB_TREE_CLASS (dst) == CB_CLASS_NUMERIC
+		    && src_f->usage == cb_usage_display
+		    && dst_f->usage == cb_usage_display
 		    && src_f->pic->size == dst_f->pic->size
 		    && src_f->pic->digits == dst_f->pic->digits
 		    && src_f->pic->expt == dst_f->pic->expt
@@ -1186,9 +1221,11 @@ output_move (cb_tree src, cb_tree dst)
 		    && src_f->flag_sign_leading == dst_f->flag_sign_leading
 		    && src_f->flag_sign_separate == dst_f->flag_sign_separate)
 		  simple_copy = 1;
-		else if (CB_TREE_TYPE (dst) == COB_TYPE_ALPHANUMERIC
+		else if (CB_TREE_CLASS (dst) == CB_CLASS_ALPHANUMERIC
 			 && src_f->pic->have_sign == 0)
 		  simple_copy = 1;
+		break;
+	      default:
 		break;
 	      }
 	  if (simple_copy)
@@ -1206,7 +1243,7 @@ output_move (cb_tree src, cb_tree dst)
 	}
     }
 
-  return output_stmt (make_funcall_2 ("cob_move", src, dst));
+  return output_move_call (src, dst);
 }
 
 
@@ -1219,26 +1256,26 @@ static struct cb_list *initialize_replacing_list;
 static void output_initialize_internal (struct cb_field *f);
 
 static int
-field_uniform_class (struct cb_field *f)
+field_uniform_type (struct cb_field *f)
 {
   if (f->children)
     {
-      int class = field_uniform_class (f->children);
+      int type = field_uniform_type (f->children);
       for (f = f->children->sister; f; f = f->sister)
 	if (!f->redefines)
-	  if (class != field_uniform_class (f))
+	  if (type != field_uniform_type (f))
 	    return COB_TYPE_UNKNOWN;
-      return class;
+      return type;
     }
   else
     {
-      switch (CB_TREE_TYPE (f))
+      switch (tree_type (CB_TREE (f)))
 	{
-	case COB_TYPE_NUMERIC_DISPLAY:
-	  return COB_TYPE_NUMERIC_DISPLAY;
 	case COB_TYPE_NUMERIC_BINARY:
 	case COB_TYPE_NUMERIC_PACKED:
 	  return COB_TYPE_NUMERIC_BINARY;
+	case COB_TYPE_NUMERIC_DISPLAY:
+	  return COB_TYPE_NUMERIC_DISPLAY;
 	case COB_TYPE_ALPHABETIC:
 	case COB_TYPE_ALPHANUMERIC:
 	  return COB_TYPE_ALPHANUMERIC;
@@ -1249,7 +1286,7 @@ field_uniform_class (struct cb_field *f)
 }
 
 static void
-output_initialize_uniform (struct cb_field *f, int class, int size, int flag)
+output_initialize_uniform (struct cb_field *f, int type, int size, int flag)
 {
   if (flag && f->flag_occurs)
     {
@@ -1261,7 +1298,7 @@ output_initialize_uniform (struct cb_field *f, int class, int size, int flag)
   output ("memset (");
   output_data (CB_TREE (f));
   output (", ");
-  switch (class)
+  switch (type)
     {
     case COB_TYPE_NUMERIC_DISPLAY:
       output ("'0'");
@@ -1285,14 +1322,14 @@ static void
 output_initialize_compound (struct cb_field *f)
 {
   cb_tree x = CB_TREE (f);
-  switch (CB_TREE_TYPE (x))
+  switch (CB_TREE_CATEGORY (x))
     {
-    case COB_TYPE_NUMERIC_EDITED:
-      output_move_zero (x);
+    case CB_CATEGORY_NUMERIC_EDITED:
+      output_move (cb_zero, x);
       break;
-    case COB_TYPE_ALPHANUMERIC_EDITED:
-    case COB_TYPE_NATIONAL_EDITED:
-      output_move_space (x);
+    case CB_CATEGORY_ALPHANUMERIC_EDITED:
+    case CB_CATEGORY_NATIONAL_EDITED:
+      output_move (cb_space, x);
       break;
     default:
       output_initialize_internal (f);
@@ -1303,7 +1340,7 @@ output_initialize_compound (struct cb_field *f)
 static void
 output_initialize_internal (struct cb_field *f)
 {
-  int last_class = COB_TYPE_UNKNOWN;
+  int last_type = COB_TYPE_UNKNOWN;
   struct cb_field *p;
   struct cb_field *first_field = NULL;
 
@@ -1311,24 +1348,24 @@ output_initialize_internal (struct cb_field *f)
   for (p = f->children; p; p = p->sister)
     {
       /* check if this child is uniform */
-      int class = field_uniform_class (p);
-      if (class == COB_TYPE_UNKNOWN || class != last_class)
+      int type = field_uniform_type (p);
+      if (type == COB_TYPE_UNKNOWN || type != last_type)
 	{
 	  /* if not, or if this child's category is different from
 	     the previous one, initialize the last uniform sequence */
-	  if (first_field && last_class != COB_TYPE_ALPHANUMERIC)
-	    output_initialize_uniform (first_field, last_class,
+	  if (first_field && last_type != COB_TYPE_ALPHANUMERIC)
+	    output_initialize_uniform (first_field, last_type,
 				       p->offset - first_field->offset, 1);
 	  /* if not uniform, initialize the children */
-	  if (class == COB_TYPE_UNKNOWN)
+	  if (type == COB_TYPE_UNKNOWN)
 	    output_recursive (output_initialize_compound, p);
-	  last_class = class;
-	  first_field = (class != COB_TYPE_UNKNOWN) ? p : NULL;
+	  last_type = type;
+	  first_field = (type != COB_TYPE_UNKNOWN) ? p : NULL;
 	}
     }
   /* initialize the final uniform sequence */
-  if (first_field && last_class != COB_TYPE_ALPHANUMERIC)
-    output_initialize_uniform (first_field, last_class,
+  if (first_field && last_type != COB_TYPE_ALPHANUMERIC)
+    output_initialize_uniform (first_field, last_type,
 			       f->offset + f->size - first_field->offset, 1);
 }
 
@@ -1386,12 +1423,12 @@ output_initialize (cb_tree x, struct cb_list *l)
   else
     {
       /* INITIALIZE */
-      int class = field_uniform_class (f);
-      if (class != COB_TYPE_UNKNOWN)
+      int type = field_uniform_type (f);
+      if (type != COB_TYPE_UNKNOWN)
 	{
 	  /* if field is uniform (i.e., all children are
 	     in the same category), initialize it at once */
-	  output_initialize_uniform (f, class, f->size, 0);
+	  output_initialize_uniform (f, type, f->size, 0);
 	}
       else
 	{
@@ -1651,7 +1688,7 @@ output_call (cb_tree name, struct cb_list *args,
 	  switch (CB_TREE_TAG (x))
 	    {
 	    case CB_TAG_LITERAL:
-	      if (CB_TREE_CLASS (x) == COB_TYPE_NUMERIC)
+	      if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC)
 		output ("%d", (int) literal_to_int (CB_LITERAL (x)));
 	      else
 		output ("%d", CB_LITERAL (x)->data[0]);
@@ -2138,7 +2175,7 @@ output_value (struct cb_field *f)
     {
       cb_tree value = f->values->item;
       if (CB_CONST_P (value)
-	  || CB_TREE_CLASS (value) == COB_TYPE_NUMERIC
+	  || CB_TREE_CLASS (value) == CB_CLASS_NUMERIC
 	  || CB_LITERAL (value)->all)
 	{
 	  /* figurative literal, numeric literal, or ALL literal */

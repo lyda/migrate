@@ -28,6 +28,66 @@
 #define CB_CALL_BY_LENGTH	3
 #define CB_CALL_BY_VALUE	4
 
+enum cb_tag {
+  /* primitives */
+  CB_TAG_CONST,			/* constant value */
+  CB_TAG_INTEGER,		/* native integer */
+  CB_TAG_STRING,		/* native string */
+  CB_TAG_LITERAL,		/* numeric/alphanumeric literal */
+  CB_TAG_DECIMAL,		/* decimal number */
+  CB_TAG_FIELD,			/* user-defined variable */
+  CB_TAG_FILE,			/* file description */
+  /* expressions */
+  CB_TAG_REFERENCE,		/* reference to a field, file, or label */
+  CB_TAG_BINARY_OP,		/* binary operation */
+  CB_TAG_FUNCALL,		/* run-time function call */
+  CB_TAG_CAST_INTEGER,		/* cast to integer */
+  /* statements */
+  CB_TAG_LABEL,			/* label statement */
+  CB_TAG_IF,			/* IF statement */
+  CB_TAG_PERFORM,		/* PERFORM statement */
+  CB_TAG_SEQUENCE,		/* multiple statements */
+  CB_TAG_STATEMENT,		/* general statement */
+  /* miscellaneous */
+  CB_TAG_PROPOSITION,		/* CLASS definition */
+  CB_TAG_BUILTIN,
+  CB_TAG_PARAMETER,
+};
+
+enum cb_class {
+  CB_CLASS_UNKNOWN,
+  CB_CLASS_ALPHABETIC,
+  CB_CLASS_ALPHANUMERIC,
+  CB_CLASS_BOOLEAN,
+  CB_CLASS_INDEX,
+  CB_CLASS_NATIONAL,
+  CB_CLASS_NUMERIC,
+  CB_CLASS_OBJECT,
+  CB_CLASS_POINTER,
+};
+
+enum cb_category {
+  CB_CATEGORY_ALPHABETIC,
+  CB_CATEGORY_ALPHANUMERIC,
+  CB_CATEGORY_ALPHANUMERIC_EDITED,
+  CB_CATEGORY_BOOLEAN,
+  CB_CATEGORY_INDEX,
+  CB_CATEGORY_NATIONAL,
+  CB_CATEGORY_NATIONAL_EDITED,
+  CB_CATEGORY_NUMERIC,
+  CB_CATEGORY_NUMERIC_EDITED,
+  CB_CATEGORY_OBJECT_REFERENCE,
+  CB_CATEGORY_DATA_POINTER,
+  CB_CATEGORY_PROGRAM_POINTER,
+};
+
+enum cb_storage {
+  CB_STORAGE_FILE,		/* FILE SECTION */
+  CB_STORAGE_WORKING,		/* WORKING-STORAGE SECTION */
+  CB_STORAGE_LINKAGE,		/* LINKAGE SECTION */
+  CB_STORAGE_SCREEN		/* SCREEN SECTION */
+};
+
 
 /*
  * List
@@ -64,36 +124,9 @@ struct cb_word {
  * Tree
  */
 
-enum cb_tag {
-  /* primitives */
-  CB_TAG_CONST,			/* constant value */
-  CB_TAG_INTEGER,		/* native integer */
-  CB_TAG_STRING,		/* native string */
-  CB_TAG_LITERAL,		/* numeric/alphanumeric literal */
-  CB_TAG_DECIMAL,		/* decimal number */
-  CB_TAG_FIELD,			/* user-defined variable */
-  CB_TAG_FILE,			/* file description */
-  /* expressions */
-  CB_TAG_REFERENCE,		/* reference to a field, file, or label */
-  CB_TAG_BINARY_OP,		/* binary operation */
-  CB_TAG_FUNCALL,		/* run-time function call */
-  CB_TAG_CAST_INTEGER,		/* cast to integer */
-  /* statements */
-  CB_TAG_LABEL,			/* label statement */
-  CB_TAG_IF,			/* IF statement */
-  CB_TAG_PERFORM,		/* PERFORM statement */
-  CB_TAG_SEQUENCE,		/* multiple statements */
-  CB_TAG_STATEMENT,		/* general statement */
-  /* miscellaneous */
-  CB_TAG_PROPOSITION,		/* CLASS definition */
-  CB_TAG_BUILTIN,
-  CB_TAG_PARAMETER,
-};
-
 struct cb_tree_common {
   enum cb_tag tag;
-  char class;
-  char type;
+  enum cb_class class;
   unsigned char *source_file;
   int source_line;
 };
@@ -103,7 +136,7 @@ typedef struct cb_tree_common *cb_tree;
 #define CB_TREE(x)		((struct cb_tree_common *) (x))
 #define CB_TREE_TAG(x)		(CB_TREE (x)->tag)
 #define CB_TREE_CLASS(x)	(CB_TREE (x)->class)
-#define CB_TREE_TYPE(x)		(CB_TREE (x)->type)
+#define CB_TREE_CATEGORY(x)	tree_category (x)
 
 #ifdef COB_DEBUG
 #define CB_TREE_CAST(tg,ty,x)						\
@@ -124,7 +157,7 @@ typedef struct cb_tree_common *cb_tree;
 #endif
 
 extern char *tree_name (cb_tree x);
-extern int tree_category (cb_tree x);
+extern enum cb_category tree_category (cb_tree x);
 extern int cb_fits_int (cb_tree x);
 
 
@@ -238,7 +271,7 @@ struct cb_picture {
   int size;			/* byte size */
   char *orig;			/* original picture string */
   char *str;			/* packed picture string */
-  char category;		/* field category */
+  enum cb_category category;	/* field category */
   char digits;			/* the number of digit places */
   char expt;			/* 10 ^ expt */
   char have_sign;		/* have `S' */
@@ -250,13 +283,6 @@ extern struct cb_picture *parse_picture (const char *str);
 /*
  * Field
  */
-
-enum cb_storage {
-  CB_STORAGE_FILE,		/* FILE SECTION */
-  CB_STORAGE_WORKING,		/* WORKING-STORAGE SECTION */
-  CB_STORAGE_LINKAGE,		/* LINKAGE SECTION */
-  CB_STORAGE_SCREEN		/* SCREEN SECTION */
-};
 
 struct cb_usage {
   char type;
@@ -395,11 +421,12 @@ extern const char *associate (cb_tree name, cb_tree val);
 extern cb_tree make_filler (void);
 
 extern cb_tree resolve_data_name (cb_tree x);
-extern int validate_data_name (cb_tree x);
 extern cb_tree resolve_label (cb_tree x);
 extern cb_tree resolve_file_name (cb_tree x);
 extern cb_tree resolve_class_name (cb_tree x);
 extern cb_tree resolve_mnemonic_name (cb_tree x);
+
+extern int validate_identifier (cb_tree x);
 
 
 /*
