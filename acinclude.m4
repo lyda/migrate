@@ -1,6 +1,6 @@
 # check for library db headers
 # ----------------------------
-AC_DEFUN([AC_HEADER_DB],[
+AC_DEFUN([AC_CHECK_DB],[
 # Step 0: check for library db headers db.h or db_185.h
 echo  "Beginning DB library header search sequence "
 db_header="0"
