@@ -2822,8 +2822,8 @@ gen_test_invalid_keys (struct invalid_keys *p)
 void
 gen_add (cob_tree sy1, cob_tree sy2, int rnd)
 {
-  push_expr (sy2);
   push_expr (sy1);
+  push_expr (sy2);
   asm_call ("cob_add");
   assign_expr (sy2, rnd);
 }
@@ -2831,8 +2831,8 @@ gen_add (cob_tree sy1, cob_tree sy2, int rnd)
 void
 gen_subtract (cob_tree sy1, cob_tree sy2, int rnd)
 {
-  push_expr (sy2);
   push_expr (sy1);
+  push_expr (sy2);
   asm_call ("cob_sub");
   assign_expr (sy2, rnd);
 }
@@ -2840,8 +2840,8 @@ gen_subtract (cob_tree sy1, cob_tree sy2, int rnd)
 void
 gen_multiply (cob_tree sy1, cob_tree sy2, cob_tree sy3, int rnd)
 {
-  push_expr (sy2);
   push_expr (sy1);
+  push_expr (sy2);
   asm_call ("cob_mul");
   assign_expr (sy3, rnd);
 }
@@ -2850,17 +2850,17 @@ void
 gen_divide (cob_tree sy1, cob_tree sy2,
 	    cob_tree sy3, cob_tree sy4, int rnd)
 {
-  push_expr (sy2);
   push_expr (sy1);
+  push_expr (sy2);
   asm_call ("cob_div");
   assign_expr (sy3, rnd);
 
   if (sy4)
     {
-      push_expr (sy3);
-      push_expr (sy2);
-      asm_call ("cob_mul");
       push_expr (sy1);
+      push_expr (sy2);
+      push_expr (sy3);
+      asm_call ("cob_mul");
       asm_call ("cob_sub");
       assign_expr (sy4, rnd);
     }
