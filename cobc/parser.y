@@ -157,7 +157,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <str> idstring
 %type <tree> field_description,label,filename,noallname,paragraph,assign_clause
 %type <tree> file_description,redefines_var,function_call,subscript
-%type <tree> name,gname,number,file,opt_gname,opt_def_name,def_name
+%type <tree> name,gname,number,file,level1,opt_gname,opt_def_name,def_name
 %type <tree> opt_read_into,opt_write_from,field_name,expr
 %type <tree> opt_unstring_count,opt_unstring_delim,unstring_tallying
 %type <tree> qualified_var,unqualified_var
@@ -2080,11 +2080,8 @@ opt_end_read: | END_READ ;
  */
 
 release_statement:
-  RELEASE name opt_write_from
+  RELEASE level1 opt_write_from
   {
-    if ($2->level != 1)
-      yyerror ("variable %s could not be used for RELEASE",
-	       COB_FIELD_NAME ($2));
     gen_release($2, $3);
   }
 ;
@@ -2121,11 +2118,8 @@ opt_end_return: | END_RETURN ;
  */
 
 rewrite_statement:
-  REWRITE name opt_write_from
+  REWRITE level1 opt_write_from
   {
-    if ($2->level != 1)
-      yyerror("variable %s could not be used for REWRITE",
-	      COB_FIELD_NAME ($2));
     gen_rewrite($2, $3);
   }
   opt_invalid_key
@@ -2508,11 +2502,8 @@ opt_end_unstring: | END_UNSTRING ;
  */
 
 write_statement:
-  WRITE name opt_write_from write_options
+  WRITE level1 opt_write_from write_options
   {
-    if ($2->level != 1)
-      yyerror("variable %s could not be used for WRITE",
-	      COB_FIELD_NAME ($2));
     gen_write($2, $4, $3);
   }
   opt_invalid_key
@@ -2534,37 +2525,6 @@ opt_end_write: | END_WRITE ;
 /*******************
  * Common rules
  *******************/
-
-/*
- * Number list
- */
-
-var_list_name:
-  name flag_rounded opt_sep	{ $$ = create_mathvar_info (NULL, $1, $2); }
-| var_list_name
-  name flag_rounded opt_sep	{ $$ = create_mathvar_info ($1, $2, $3); }
-;
-number_list:
-  number			{ $$ = make_list ($1); }
-| number_list opt_sep number	{ $$ = list_append ($1, $3); }
-;
-number:
-  gname
-  {
-    if (!is_numeric_sy ($1))
-      yyerror ("numeric value is expected: %s", COB_FIELD_NAME ($1));
-    $$ = $1;
-  }
-;
-
-file:
-  name
-  {
-    if (COB_FIELD_TYPE ($1) != 'F')
-      yyerror ("file name is expected: %s", COB_FIELD_NAME ($1));
-    $$ = $1;
-  }
-;
 
 
 /*
@@ -2696,6 +2656,60 @@ expr:
 /*****************************************************************************
  * Basic rules
  *****************************************************************************/
+
+/*******************
+ * Special variables
+ *******************/
+
+/*
+ * Number
+ */
+
+var_list_name:
+  name flag_rounded opt_sep	{ $$ = create_mathvar_info (NULL, $1, $2); }
+| var_list_name
+  name flag_rounded opt_sep	{ $$ = create_mathvar_info ($1, $2, $3); }
+;
+number_list:
+  number			{ $$ = make_list ($1); }
+| number_list opt_sep number	{ $$ = list_append ($1, $3); }
+;
+number:
+  gname
+  {
+    if (!is_numeric_sy ($1))
+      yyerror ("numeric value is expected: %s", COB_FIELD_NAME ($1));
+    $$ = $1;
+  }
+;
+
+
+/*
+ * File
+ */
+
+file:
+  name
+  {
+    if (COB_FIELD_TYPE ($1) != 'F')
+      yyerror ("file name is expected: %s", COB_FIELD_NAME ($1));
+    $$ = $1;
+  }
+;
+
+
+/*
+ * Level 1 variable
+ */
+
+level1:
+  name
+  {
+    if ($1->level != 1)
+      yyerror ("variable `%s' must be level 01", COB_FIELD_NAME ($1));
+    $$ = $1;
+  }
+;
 
 
 idstring:
