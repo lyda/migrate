@@ -288,8 +288,6 @@ program:
     struct cobc_list *l;
     for (l = list_reverse (label_check_list); l; l = l->next)
       validate_label_name (l->item);
-    program_spec.class_list = list_reverse (program_spec.class_list);
-    program_spec.index_list = list_reverse (program_spec.index_list);
     program_spec.exec_list = list_reverse (program_spec.exec_list);
     if (error_count == 0)
       codegen (&program_spec);
@@ -529,7 +527,7 @@ special_name_class:
   CLASS undefined_word _is special_name_class_item_list
   {
     program_spec.class_list =
-      cons (make_class ($2, $4), program_spec.class_list);
+      list_add (program_spec.class_list, make_class ($2, $4));
   }
 ;
 special_name_class_item_list:
@@ -1105,7 +1103,7 @@ occurs_index:
     $$ = make_field_3 ($1, "S9(9)", COBC_USAGE_INDEX);
     validate_field (COBC_FIELD ($$));
     finalize_field_tree (COBC_FIELD ($$));
-    program_spec.index_list = cons ($$, program_spec.index_list);
+    program_spec.index_list = list_add (program_spec.index_list, $$);
   }
 
 _times: | TIMES ;
