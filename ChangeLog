@@ -1,3 +1,8 @@
+2002-07-29  Keisuke Nishida  <knishida@netlab.jp>
+
+	* configure.ac (COB_CONFIG_FILE): Use sysconfdir, not datadir.
+	* Makefile.am (libcob.conf): Install into pkgconfdir, not pkgdatadir.
+
 2002-07-01  Keisuke Nishida  <knishida@netlab.jp>
 
 	* configure.ac: Checks for ncurses.

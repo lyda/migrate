@@ -5,7 +5,8 @@ aclocal_DATA = cob.m4
 
 include_HEADERS = libcob.h
 
-pkgdata_DATA = libcob.conf
+pkgconfdir = $(sysconfdir)/$(PACKAGE)
+pkgconf_DATA = libcob.conf
 
 SUBDIRS = lib libcob cobpp cobc po texi testsuite
 EXTRA_DIST = HACKING cob.m4 libcob.conf redhat debian
