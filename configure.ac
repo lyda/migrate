@@ -20,7 +20,7 @@
 
 AC_PREREQ(2.59)
 
-AC_INIT([OpenCOBOL],[0.23.30a],[open-cobol-list@lists.sourceforge.net],[open-cobol])
+AC_INIT([OpenCOBOL],[0.29a],[open-cobol-list@lists.sourceforge.net],[open-cobol])
 AC_CONFIG_SRCDIR([libcob.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_TESTDIR([tests])
@@ -135,7 +135,7 @@ AC_PROG_CC
 AC_PROG_LN_S
 AC_PROG_INSTALL
 AC_LIBTOOL_DLOPEN
-#AC_LIBTOOL_WIN32_DLL
+AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 
