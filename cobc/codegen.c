@@ -2520,8 +2520,8 @@ gen_compute (struct math_var *vl1, cob_tree sy1)
 void
 gen_add (cob_tree n1, cob_tree n2, int rnd)
 {
-  push_expr (n1);
   push_expr (n2);
+  push_expr (n1);
   asm_call ("cob_add");
   assign_expr (n2, rnd);
 }
@@ -2564,6 +2564,15 @@ gen_add_giving (cob_tree_list nums, struct math_var *list)
 /*
  * SUBTRACT statement
  */
+
+void
+gen_sub (cob_tree n1, cob_tree n2, int rnd)
+{
+  push_expr (n2);
+  push_expr (n1);
+  asm_call ("cob_sub");
+  assign_expr (n2, rnd);
+}
 
 void
 gen_subtract_from (cob_tree_list subtrahend_list, struct math_var *list)
@@ -2910,17 +2919,11 @@ gen_set (cob_tree_list l, int mode, cob_tree v)
 {
   for (; l; l = l->next)
     {
-      cob_tree x = l->tree;
-      if (COB_FIELD_TYPE (x) != 'B')
-	yyerror ("only usage comp variables can be used as indices");
-      else if (symlen (x) > 4)
-	yyerror ("index too large");
-      else
+      switch (mode)
 	{
-	  static char *op_table[3] = {"mov", "add", "sub"};
-  	  value_to_eax (v);
-	  output ("\t%s%c\t%%eax, -%d(%%ebp)\n",
-		  op_table[mode], varsize_ch (x), x->location);
+	case SET_TO: gen_move (v, l->tree); break;
+	case SET_UP: gen_add (v, l->tree, 0); break;
+	case SET_DOWN: gen_sub (v, l->tree, 0); break;
 	}
     }
 }
