@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(open-cobol, 0.9.6-devel)
+AC_INIT(open-cobol, 0.9.5.5)
 AC_CONFIG_SRCDIR(cobc/cobc.c)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -15,7 +15,7 @@ AC_ARG_WITH(cc,
   [ COB_CC=$withval ])
 
 AC_ARG_ENABLE(debug,
-  [  --enable-debug           enable debug features],
+  [  --enable-debug           enable debugging options],
   [ AC_DEFINE(COB_DEBUG) ])
 
 AC_ARG_ENABLE(maintainer-mode,
