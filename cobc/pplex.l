@@ -442,9 +442,30 @@ ppinput (char *buff, int max_size)
 	  ppinput_1 (bp, max_size - (bp - buff));
 	  for (np = bp + 7; *np == ' '; np++);
 	  if (*np == '\'' || *np == '\"')
-	    np++;
+	    {
+	      /* concatenate string literal */
+	      int c = 0;
+	      for (i = 0; buff + i < bp; i++)
+		if (buff[i] == '\'' || buff[i] == '\"')
+		  {
+		    if (c == 0)
+		      c = buff[i];
+		    else if (c == buff[i])
+		      c = 0;
+		  }
+	      if (c == 0)
+		{
+		  for (i = -1; bp[i] == ' '; i--);
+		  if (bp[i] == *np)
+		    bp += i;
+		}
+	      np++;
+	    }
 	  else
-	    for (; bp[-1] == ' '; bp--);
+	    {
+	      /* concatenate word */
+	      for (; bp[-1] == ' '; bp--);
+	    }
 	  strcpy (bp, np);
 	  lines++;
 	}
