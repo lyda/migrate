@@ -257,12 +257,12 @@ output_index (cobc_tree x)
  */
 
 static void
-output_memset (cobc_tree x, char c)
+output_memset (cobc_tree x, char c, int size)
 {
   output_prefix ();
   output ("memset (");
   output_location (x);
-  output (", %d, %d);\n", c, COBC_FIELD (x)->size);
+  output (", %d, %d);\n", c, size);
 }
 
 static void

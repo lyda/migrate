@@ -90,7 +90,7 @@ output_move_num (cobc_tree x, int high)
   switch (COBC_FIELD (x)->usage)
     {
     case USAGE_DISPLAY:
-      output_memset (x, high ? '9' : '0');
+      output_memset (x, high ? '9' : '0', COBC_FIELD (x)->size);
       break;
     case USAGE_BINARY:
     case USAGE_INDEX:
@@ -112,7 +112,7 @@ output_move_zero (cobc_tree x)
       break;
     case COB_ALPHABETIC:
     case COB_ALPHANUMERIC:
-      output_memset (x, '0');
+      output_memset (x, '0', COBC_FIELD (x)->size);
       break;
     default:
       output_advance_move (COB_ZERO, x);
@@ -128,7 +128,7 @@ output_move_space (cobc_tree x)
     case COB_NUMERIC:
     case COB_ALPHABETIC:
     case COB_ALPHANUMERIC:
-      output_memset (x, ' ');
+      output_memset (x, ' ', COBC_FIELD (x)->size);
       break;
     default:
       output_advance_move (COB_SPACE, x);
@@ -146,7 +146,7 @@ output_move_high (cobc_tree x)
       break;
     case COB_ALPHABETIC:
     case COB_ALPHANUMERIC:
-      output_memset (x, 255);
+      output_memset (x, 255, COBC_FIELD (x)->size);
       break;
     default:
       output_advance_move (COB_HIGH, x);
@@ -164,7 +164,7 @@ output_move_low (cobc_tree x)
       break;
     case COB_ALPHABETIC:
     case COB_ALPHANUMERIC:
-      output_memset (x, 0);
+      output_memset (x, 0, COBC_FIELD (x)->size);
       break;
     default:
       output_advance_move (COB_LOW, x);
@@ -180,7 +180,7 @@ output_move_quote (cobc_tree x)
     case COB_NUMERIC:
     case COB_ALPHABETIC:
     case COB_ALPHANUMERIC:
-      output_memset (x, '\"');
+      output_memset (x, '\"', COBC_FIELD (x)->size);
       break;
     default:
       output_advance_move (COB_QUOTE, x);
@@ -309,10 +309,12 @@ field_uniform_class (struct cobc_field *p)
 {
   if (!p->children)
     {
-      if (COBC_TREE_CLASS (p) == COB_NUMERIC)
-	return COB_NUMERIC;
-      else
+      if (COBC_TREE_CLASS (p) != COB_NUMERIC)
 	return COB_ALPHANUMERIC;
+      else if (p->usage == USAGE_BINARY || p->usage == USAGE_INDEX)
+	return COB_BINARY;
+      else
+	return COB_NUMERIC;
     }
   else
     {
@@ -325,29 +327,77 @@ field_uniform_class (struct cobc_field *p)
 }
 
 static void
-output_initialize_internal (struct cobc_field *p)
+output_initialize_class (cobc_tree x, int class, int size)
 {
-  switch (field_uniform_class (p))
+  switch (class)
     {
-    case COB_ALPHANUMERIC:
+    case COB_BINARY:
+      output_memset (x, 0, size);
       break;
     case COB_NUMERIC:
-      output_move_zero (COBC_TREE (p));
+      output_memset (x, '0', size);
       break;
-    default:
-      {
-	struct cobc_field *c;
-	for (c = p->children; c; c = c->sister)
-	  output_recursive (output_initialize_internal, COBC_TREE (c));
-      }
+    case COB_ALPHANUMERIC:
+      output_memset (x, ' ', size);
+      break;
     }
+}
+
+static void
+output_initialize_internal (struct cobc_field *p)
+{
+  int last_class = COB_VOID;
+  struct cobc_field *c;
+  struct cobc_field *first_field = NULL;
+  for (c = p->children; c; c = c->sister)
+    {
+      if (c->f.have_occurs)
+	{
+	  if (first_field && last_class != COB_ALPHANUMERIC)
+	    output_initialize_class (COBC_TREE (first_field), last_class,
+				     c->offset - first_field->offset);
+	  output_recursive (output_initialize_internal, COBC_TREE (c));
+	  first_field = NULL;
+	  last_class = COB_VOID;
+	}
+      else
+	{
+	  int class = field_uniform_class (c);
+	  if (class == COB_VOID || class != last_class)
+	    {
+	      if (first_field && last_class != COB_ALPHANUMERIC)
+		output_initialize_class (COBC_TREE (first_field), last_class,
+					 c->offset - first_field->offset);
+	      if (class == COB_VOID)
+		{
+		  first_field = NULL;
+		}
+	      else
+		{
+		  first_field = c;
+		}
+	    }
+	  last_class = class;
+	}
+    }
+  if (first_field && last_class != COB_ALPHANUMERIC)
+    output_initialize_class (COBC_TREE (first_field), last_class,
+			     p->offset + p->size - first_field->offset);
 }
 
 static void
 output_initialize (cobc_tree x)
 {
-  output_memset (x, ' ');
-  output_recursive (output_initialize_internal, x);
+  int class = field_uniform_class (COBC_FIELD (x));
+  if (class == COB_VOID)
+    {
+      output_memset (x, ' ', COBC_FIELD (x)->size);
+      output_recursive (output_initialize_internal, x);
+    }
+  else
+    {
+      output_initialize_class (x, class, COBC_FIELD (x)->size);
+    }
 }
 
 
