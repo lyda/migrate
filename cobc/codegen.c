@@ -1338,7 +1338,7 @@ output_perform_exit (struct cb_label *l)
 static void
 output_perform_once (struct cb_perform *p)
 {
-  if (CB_PAIR_P (p->body))
+  if (p->body && CB_PAIR_P (p->body))
     output_perform_call (CB_LABEL (cb_ref (CB_PAIR_X (p->body))),
 			 CB_LABEL (cb_ref (CB_PAIR_Y (p->body))));
   else
