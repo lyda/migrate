@@ -734,11 +734,13 @@ cob_binary_get_int (cob_field *f)
 	  n = (long) COB_BSWAP_32 (n) >> 8;
 	return n;
       }
-    default:
+    case 4:
       if (COB_FIELD_BINARY_SWAP (f))
 	return (long) COB_BSWAP_32 (*(long *) f->data);
       else
 	return *(long *) f->data;
+    default:
+      return cob_binary_get_int64 (f);
     }
 }
 
@@ -797,11 +799,14 @@ cob_binary_set_int (cob_field *f, int n)
       *(short *) f->data = (short) n;
       *(char *) (f->data + 2) = (char) (n >> 16);
       break;
-    default:
+    case 4:
       if (COB_FIELD_BINARY_SWAP (f))
 	*(long *) f->data = COB_BSWAP_32 (n);
       else
 	*(long *) f->data = (long) n;
+      break;
+    default:
+      cob_binary_set_int64 (f, n);
       break;
     }
 }
