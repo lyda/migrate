@@ -17,19 +17,19 @@ check:
 	done
 
 summary:
-	perl summary.pl $(MODULES) > summary.txt
+	perl summary.pl $(MODULES) > summary.log
 
 snap:
 	for m in $(MODULES); do \
-	  (cp $$m/report.log $$m.old) \
+	  (cp $$m/report.log $$m.txt) \
 	done
-	cp summary.txt summary.old
+	cp summary.log summary.txt
 
 diff:
 	for m in $(MODULES); do \
-	  (diff $$m.old $$m/report.log) \
+	  (diff $$m.txt $$m/report.log) \
 	done
-	diff summary.old summary.txt
+	diff summary.txt summary.log
 
 dist:
 	rm -rf $(distdir)
