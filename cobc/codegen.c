@@ -2159,10 +2159,6 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_line ("  case %d:", i);
 	output ("    ");
 	output_perform_call (prog->file_handler[i], prog->file_handler[i]);
-        output_line ("    if ( !cob_error_file->flag_has_status ) {");
-        output_line ("        cob_default_error_handle ();");
-        output_line ("        exit(1);");
-        output_line ("    }");
 	output_line ("    break;");
       }
   output_line ("  default:");

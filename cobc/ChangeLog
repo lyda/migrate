@@ -1,3 +1,12 @@
+2004-11-02  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Thinko by me - Do not exit execution
+	  if there is a file USE declarative and no FILE STATUS.
+
+2004-11-01  Roger While <simrw@sim-basis.de>
+
+	* tree.c : Fix bug 1014371 - 88 on POINTER
+
 2004-10-31  Roger While <simrw@sim-basis.de>
 
 	* cobc.c, codegen.c : Activate exceptions for I/O
