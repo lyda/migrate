@@ -94,6 +94,7 @@ static int verbose_output = 0;
 static char *program_name;
 static char *output_name;
 
+static char tmpdir[FILENAME_MAX];		/* /tmp */
 static char cob_cc[FILENAME_MAX];		/* gcc */
 static char cob_cflags[FILENAME_MAX];		/* -I... */
 static char cob_libs[FILENAME_MAX];		/* -L... -lcob */
@@ -140,6 +141,7 @@ init_environment (int argc, char *argv[])
 
   output_name = NULL;
 
+  init_var (tmpdir,      "TMPDIR",     "/tmp");
   init_var (cob_cc,      "COB_CC",     COB_CC);
   init_var (cob_cflags,  "COB_CFLAGS", COB_CFLAGS);
   init_var (cob_libs,    "COB_LIBS",   COB_LIBS);
@@ -417,7 +419,7 @@ temp_name (char *buff, const char *ext)
   DeleteFile(buff);
   strcpy (buff + strlen (buff) - 4, ext); /* replace ".tmp" by EXT */
 #else /* not __MINGW32__ */
-  strcpy (buff, "/tmp/cobXXXXXX");
+  sprintf (buff, "%s/cobXXXXXX", tmpdir);
   close (mkstemp (buff));
   unlink (buff);
   strcat (buff, ext);
