@@ -1,7 +1,8 @@
 lib_LTLIBRARIES = libcob.la
 libcob_la_SOURCES = _libcob.h mcmath.c cobmove.c general.c fileio.c \
 	pictures.c basicio.c strings.c screenio.c screenio.h \
-	dyncall.c bcd.c bcd.h math_double.c math_bcd.c ltdl.c ltdl.h
+	dyncall.c decimal.c decimal.h math_double.c math_decimal.c \
+	ltdl.c ltdl.h
 libcob_la_LDFLAGS = -version-info 0:0:0 -export-dynamic
 include_HEADERS = libcob.h
 BUILT_SOURCES = defaults.h

@@ -60,11 +60,11 @@
 #include <db3/db_185.h>
 #endif
 
-#include "bcd.h"
+#include "decimal.h"
 
 union numeric_type {
   double n_double;
-  bcd n_bcd;
+  decimal n_decimal;
 };
 
 #define min(x,y) ((x)<(y) ? (x) : (y))

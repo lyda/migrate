@@ -103,7 +103,7 @@ int block_label = 0;
 int line_label = 0;
 int paragr_num = 1;
 int loc_label = 1;
-unsigned char picture[1024];
+unsigned char picture[4096];
 int picix, piccnt, decimals, sign, v_flag, n_flag, digits;
 int active[37];
 int at_linkage = 0;
@@ -145,13 +145,9 @@ upcase (char *s, char *buf)
   int n = SYMBUF_SIZE - 1;
   t = buf;
   while (*s && n--)
-    {
-      *t++ = toupper (*s++);
-    }
+    *t++ = toupper (*s++);
   if (n <= 0)
-    {
-      yyerror ("Too large symbol");
-    }
+    yyerror ("Too large symbol");
   *t = 0;
   return buf;
 }
@@ -310,29 +306,12 @@ install_literal (const char *name)
 struct sym *
 lookup_label (struct sym *sy, struct sym *parent)
 {
-
-//#ifdef COB_DEBUG
-//       fprintf(stderr,"lookup_label: %s",sy->name);
-//#endif
   while (sy->clone && (sy->parent != parent))
     sy = sy->clone;
   if (sy->parent == parent)
-    {
-//#ifdef COB_DEBUG
-//              if (sy->parent != NULL)
-//                      fprintf(stderr," found -> %s\n",sy->parent->name);
-//              else
-//                      fprintf(stderr," found\n");
-//#endif
-      return sy;
-    }
+    return sy;
   else
-    {
-//#ifdef COB_DEBUG
-//              fprintf(stderr," not found\n");
-//#endif
-      return NULL;
-    }
+    return NULL;
 }
 
 struct sym *
@@ -579,9 +558,8 @@ memref (struct sym *sy)
 	}
     }
   else
-    {
-      sprintf (memref_buf, "$%s+%d", sec_name (sy->sec_no), sy->location);
-    }
+    sprintf (memref_buf, "$%s+%d", sec_name (sy->sec_no), sy->location);
+
   return memref_buf;
 }
 
@@ -620,40 +598,34 @@ void
 emit_lit (char *s, int len)
 {
   int bcnt = 0;
-  while (len)
-    {
-      if (!(bcnt++ % 8))
-	{
-	  if (bcnt > 1)
-	    putc ('\n', o_src);
-	  fprintf (o_src, "\t.byte\t%d", *s++);
-	}
-      else
-	{
-	  fprintf (o_src, ",%d", *s++);
-	}
-      len--;
-    }
+  while (len--)
+    if (!(bcnt++ % 8))
+      {
+	if (bcnt > 1)
+	  putc ('\n', o_src);
+	fprintf (o_src, "\t.byte\t%d", *s++);
+      }
+    else
+      {
+	fprintf (o_src, ",%d", *s++);
+      }
 }
 
 void
 emit_lit_fill (int c, int len)
 {
   int bcnt = 0;
-  while (len)
-    {
-      if (!(bcnt++ % 8))
-	{
-	  if (bcnt > 1)
-	    putc ('\n', o_src);
-	  fprintf (o_src, "\t.byte\t%d", c);
-	}
-      else
-	{
-	  fprintf (o_src, ",%d", c);
-	}
-      len--;
-    }
+  while (len--)
+    if (!(bcnt++ % 8))
+      {
+	if (bcnt > 1)
+	  putc ('\n', o_src);
+	fprintf (o_src, "\t.byte\t%d", c);
+      }
+    else
+      {
+	fprintf (o_src, ",%d", c);
+      }
 }
 
 void
@@ -1685,12 +1657,9 @@ varsize_ch (struct sym *sy)
 {
   switch (symlen (sy))
     {
-    case 1:
-      return 'b';
-    case 2:
-      return 'w';
-    default:
-      return 'l';
+    case 1:  return 'b';
+    case 2:  return 'w';
+    default: return 'l';
     }
 }
 
@@ -1766,24 +1735,16 @@ alloc_inspect_before_after (struct inspect_before_after *ba,
   if (before_after == 1)
     {				/* before given */
       if (ba->before)
-	{
-	  yyerror ("only one BEFORE phrase can be given");
-	}
+	yyerror ("only one BEFORE phrase can be given");
       else
-	{
-	  ba->before = var;
-	}
+	ba->before = var;
     }
   else if (before_after == 2)
     {				/* after given */
       if (ba->after)
-	{
-	  yyerror ("only one AFTER phrase can be given");
-	}
+	yyerror ("only one AFTER phrase can be given");
       else
-	{
-	  ba->after = var;
-	}
+	ba->after = var;
     }
   return ba;
 }
@@ -1969,17 +1930,13 @@ gen_display_screen (struct sym *sy, int main)
   else
     {
       for (tmp = sy->son; tmp != NULL; tmp = tmp->brother)
-	{
-	  gen_display_screen (tmp, 0);
-	}
+	gen_display_screen (tmp, 0);
     }
   if (main)
     {
       asm_call ("cob_display_screen");
       if (disp_list->next)
-	{
-	  yyerror ("we do not handle more than one screen");
-	}
+	yyerror ("we do not handle more than one screen");
       tmpl = disp_list;
       disp_list = disp_list->next;
       free (tmpl);
@@ -1999,22 +1956,18 @@ gen_display (int dupon, int nl)
       /* separate screen displays from display of regular variables */
       sy = (struct sym *) disp_list->var;
       if (disp_list && sy->litflag != 1)
-	{
-	  if (sy->litflag != 4 && sy->litflag != 2 && sy->scr)
-	    {
-	      gen_display_screen (disp_list->var, 1);
-	      return;
-	    }
-	}
+	if (sy->litflag != 4 && sy->litflag != 2 && sy->scr)
+	  {
+	    gen_display_screen (disp_list->var, 1);
+	    return;
+	  }
       /* continue w/a regular variable display */
       if (nl & 2)
-	{
-	  if (screen_io_enable == 0)
-	    {
-	      push_immed (dupon);
-	      asm_call ("display_erase");
-	    }
-	}
+	if (screen_io_enable == 0)
+	  {
+	    push_immed (dupon);
+	    asm_call ("display_erase");
+	  }
     }
   while (disp_list)
     {
@@ -2050,13 +2003,11 @@ gen_display (int dupon, int nl)
       free (tmp);
     }
   if (!(nl & 1))
-    {
-      if (screen_io_enable == 0)
-	{
-	  push_immed (dupon);
-	  asm_call ("newline");
-	}
-    }
+    if (screen_io_enable == 0)
+      {
+	push_immed (dupon);
+	asm_call ("newline");
+      }
 }
 
 void
@@ -2745,7 +2696,7 @@ gen_test_invalid_keys (struct invalid_keys *p)
 static enum num_type
 {
   NUM_NAN,
-  NUM_BCD,
+  NUM_DECIMAL,
   NUM_INT32,
   NUM_INT64,
   NUM_DOUBLE
@@ -2762,7 +2713,7 @@ set_numeric_type (struct sym *sy)
     {
     case '9':
     case 'C':
-      numeric_type = NUM_BCD;
+      numeric_type = NUM_DECIMAL;
       break;
     case 'B':
       if (sy->len > 4)
@@ -6045,7 +5996,7 @@ void
 gen_compare_exp (int value)
 {
   stackframe_cnt += 16;		/* must pop everything after comparing */
-  asm_call ("compare_bcd");
+  asm_call ("compare_decimal");
   switch (value)
     {
     case 0:
@@ -6134,7 +6085,7 @@ assign_expr (struct sym *sy, int rnd)
   push_immed (rnd);
   gen_loadvar (sy);
   stackframe_cnt += sizeof (double);	/* value to be poped too */
-  asm_call ("cob_bcd_to_fld");
+  asm_call ("cob_decimal_to_fld");
 }
 
 int
@@ -6187,7 +6138,7 @@ push_subexpr (struct sym *sy)
   fprintf (o_src, "\tleal\t0(%%esp),%%eax\n");
   push_eax ();
   gen_loadvar (sy);
-  asm_call ("cob_fld_to_bcd");
+  asm_call ("cob_fld_to_decimal");
   return 1;
 }
 
@@ -6196,7 +6147,7 @@ add_expr (void)
 {
   fprintf (o_src, "\tleal\t8(%%esp),%%eax\n");
   push_eax ();
-  asm_call ("add_bcd");
+  asm_call ("add_decimal");
   fprintf (o_src, "\taddl\t$8, %%esp\n");
 }
 
@@ -6205,7 +6156,7 @@ subtract_expr (void)
 {
   fprintf (o_src, "\tleal\t8(%%esp),%%eax\n");
   push_eax ();
-  asm_call ("subtract_bcd");
+  asm_call ("subtract_decimal");
   fprintf (o_src, "\taddl\t$8, %%esp\n");
 }
 
@@ -6214,7 +6165,7 @@ multiply_expr (void)
 {
   fprintf (o_src, "\tleal\t8(%%esp),%%eax\n");
   push_eax ();
-  asm_call ("multiply_bcd");
+  asm_call ("multiply_decimal");
   fprintf (o_src, "\taddl\t$8, %%esp\n");
 }
 
@@ -6223,7 +6174,7 @@ divide_expr (void)
 {
   fprintf (o_src, "\tleal\t8(%%esp),%%eax\n");
   push_eax ();
-  asm_call ("divide_bcd");
+  asm_call ("divide_decimal");
   fprintf (o_src, "\taddl\t$8, %%esp\n");
 }
 
@@ -6232,7 +6183,7 @@ pow_expr (void)
 {
   fprintf (o_src, "\tleal\t8(%%esp),%%eax\n");
   push_eax ();
-  asm_call ("pow_bcd");
+  asm_call ("pow_decimal");
   fprintf (o_src, "\taddl\t$8, %%esp\n");
 }
 
