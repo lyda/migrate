@@ -1,6 +1,6 @@
 bin_PROGRAMS = cobc
-cobc_SOURCES = cobc.c cobc.h tree.c tree.h codegen.c codegen.h \
-	reserved.c reserved.h parser.y scanner.l scanner.h warning.def
+cobc_SOURCES = cobc.c cobc.h tree.c tree.h codegen.c \
+	reserved.c reserved.h parser.y scanner.l warning.def
 cobc_CFLAGS = $(COBC_CFLAGS) -I$(top_srcdir)
 cobc_LDADD = $(COBC_LIBS) $(top_builddir)/lib/libsupport.a \
 	$(top_builddir)/libcob/libcob.la $(LIBCOB_LIBS)

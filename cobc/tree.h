@@ -232,6 +232,22 @@ extern cobc_tree make_decimal (char id);
 
 
 /*
+ * Picture
+ */
+
+struct cobc_picture {
+  int size;			/* byte size */
+  char *str;			/* picture string */
+  char category;		/* field category */
+  char digits;			/* the number of digit places */
+  char expt;			/* 10 ^ expt */
+  char have_sign;		/* have `S' */
+};
+
+extern struct cobc_picture *parse_picture (const char *str);
+
+
+/*
  * Field
  */
 
@@ -246,15 +262,6 @@ enum cobc_usage {
   COBC_USAGE_PACKED,		/* not supported yet */
   COBC_USAGE_POINTER,		/* not supported yet */
   COBC_USAGE_PROGRAM		/* not supported yet */
-};
-
-struct cobc_picture {
-  int size;			/* byte size */
-  char *str;			/* picture string */
-  char category;		/* field category */
-  char digits;			/* the number of digit places */
-  char expt;			/* 10 ^ expt */
-  char have_sign;		/* have `S' */
 };
 
 struct cobc_field {
@@ -320,8 +327,6 @@ extern struct cobc_field *field_founder (struct cobc_field *p);
 extern int field_used_any_parent (struct cobc_field *p);
 extern int field_used_any_child (struct cobc_field *p);
 extern void finalize_field (struct cobc_field *p);
-
-struct cobc_picture *make_picture (void);
 
 
 /*
@@ -597,5 +602,37 @@ struct cobc_parameter {
 extern cobc_tree make_parameter (int type, cobc_tree x, cobc_tree y);
 #define make_parameter_1(type,x) make_parameter (type, x, 0)
 #define make_pair(x,y)		 make_parameter (0, x, y)
+
+
+/*
+ * Program
+ */
+
+struct cobc_program {
+  char *program_id;
+  int initial_program;
+  int loop_counter;
+  int decimal_index;
+  int decimal_index_max;
+  int enable_screen;
+  unsigned char decimal_point;		/* '.' or ',' */
+  unsigned char currency_symbol;	/* '$' or user-specified */
+  unsigned char numeric_separator;	/* ',' or '.' */
+  struct cobc_list *class_list;
+  struct cobc_list *index_list;
+  struct cobc_list *file_list;
+  struct cobc_list *using_list;
+  struct cobc_list *exec_list;
+  struct cobc_list *label_list;
+  struct cobc_list *reference_list;
+  struct cobc_field *working_storage;
+  struct cobc_field *linkage_storage;
+  struct cobc_field *screen_storage;
+  struct cobc_label *file_handler[5];
+};
+
+extern struct cobc_program *current_program;
+
+extern struct cobc_program *build_program (void);
 
 #endif /* _TREE_H_ */

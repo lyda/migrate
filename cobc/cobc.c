@@ -35,11 +35,8 @@
 #endif /* __MINGW32__ */
 
 #include "cobc.h"
-#include "tree.h"
-#include "codegen.h"
 #include "reserved.h"
 #include "lib/getopt.h"
-#include "lib/gettext.h"
 
 /* from parser.c */
 extern int yyparse (void);
@@ -59,6 +56,12 @@ int cobc_flag_debugging_line = 0;
 int cobc_flag_line_directive = 0;
 
 FILE *cobc_out;
+
+char *cobc_source_file = NULL;
+int cobc_source_line = 0;
+
+int errorcount;
+int warningcount;
 
 #undef COBC_WARNING
 #define COBC_WARNING(sig,var,name,doc) int var = 0;
@@ -644,4 +647,60 @@ main (int argc, char *argv[])
     }
 
   return status;
+}
+
+
+static void
+yyprintf (char *file, int line, char *prefix, char *fmt, va_list ap)
+{
+  fprintf (stderr, "%s:%d: %s",
+	   file ? file : cobc_source_file,
+	   line ? line : cobc_source_line,
+	   prefix);
+  vfprintf (stderr, fmt, ap);
+  fputs ("\n", stderr);
+}
+
+void
+yywarn (char *fmt, ...)
+{
+  va_list ap;
+  va_start (ap, fmt);
+  yyprintf (0, 0, "warning: ", fmt, ap);
+  va_end (ap);
+
+  warningcount++;
+}
+
+void
+yyerror (char *fmt, ...)
+{
+  va_list ap;
+  va_start (ap, fmt);
+  yyprintf (0, 0, "error: ", fmt, ap);
+  va_end (ap);
+
+  errorcount++;
+}
+
+void
+yywarn_x (cobc_tree x, char *fmt, ...)
+{
+  va_list ap;
+  va_start (ap, fmt);
+  yyprintf (x->source_file, x->source_line, "warning: ", fmt, ap);
+  va_end (ap);
+
+  warningcount++;
+}
+
+void
+yyerror_x (cobc_tree x, char *fmt, ...)
+{
+  va_list ap;
+  va_start (ap, fmt);
+  yyprintf (x->source_file, x->source_line, "error: ", fmt, ap);
+  va_end (ap);
+
+  errorcount++;
 }

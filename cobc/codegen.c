@@ -27,9 +27,6 @@
 #include <libcob.h>
 
 #include "cobc.h"
-#include "tree.h"
-#include "scanner.h"
-#include "codegen.h"
 
 #ifndef PRId64
 #ifdef __MINGW32__
@@ -2125,13 +2122,17 @@ output_init_values (struct cobc_field *p)
 
 
 void
-codegen (struct cobc_program_spec *spec)
+codegen (struct cobc_program *prog)
 {
   int i;
   struct cobc_list *l;
   struct cobc_field *p;
+  cob_environment env;
 
-  cob_env = &spec->env;
+  cob_env = &env;
+  cob_env->decimal_point = prog->decimal_point;
+  cob_env->currency_symbol = prog->currency_symbol;
+  cob_env->numeric_separator = prog->numeric_separator;
 
   output ("/* Generated from %s by cobc %s */\n\n",
 	  cobc_source_file, COBC_VERSION);
@@ -2141,7 +2142,7 @@ codegen (struct cobc_program_spec *spec)
   output ("#include <libcob.h>\n\n");
 
   if (cobc_flag_main)
-    spec->initial_program = 1;
+    prog->initial_program = 1;
 
   output ("#define cob_perform(id,from,until) \\\n");
   output ("  do { \\\n");
@@ -2161,26 +2162,26 @@ codegen (struct cobc_program_spec *spec)
   output ("/* Fields */\n\n");
   output ("#define i_SWITCH      cob_switch\n");
   output ("#define i_RETURN_CODE cob_return_code\n\n");
-  for (p = spec->working_storage; p; p = p->sister)
+  for (p = prog->working_storage; p; p = p->sister)
     output_field_definition (p, p, 1, 0);
-  for (l = spec->index_list; l; l = l->next)
+  for (l = prog->index_list; l; l = l->next)
     output ("static int i_%s;\n", COBC_FIELD (l->item)->cname);
   output_newline ();
 
   /* files */
-  if (spec->file_list)
+  if (prog->file_list)
     {
       output ("/* Files */\n\n");
-      for (l = spec->file_list; l; l = l->next)
+      for (l = prog->file_list; l; l = l->next)
 	output_file_definition (l->item);
       output_newline ();
     }
 
   /* screens */
-  if (spec->screen_storage)
+  if (prog->screen_storage)
     {
       output ("/* Screens */\n\n");
-      for (p = spec->screen_storage; p; p = p->sister)
+      for (p = prog->screen_storage; p; p = p->sister)
 	{
 	  output_field_definition (p, p, 1, 1);
 	  output_screen_definition (p);
@@ -2192,22 +2193,22 @@ codegen (struct cobc_program_spec *spec)
   output ("/* Labels */\n\n");
   output ("enum {\n");
   output ("  le_standard_error_handler,\n");
-  for (l = spec->exec_list; l; l = l->next)
+  for (l = prog->exec_list; l; l = l->next)
     if (COBC_LABEL_P (l->item) && COBC_LABEL (l->item)->need_return)
       output ("  le_%s,\n", COBC_LABEL (l->item)->cname);
   output ("};\n\n");
 
   /* classes */
-  for (l = spec->class_list; l; l = l->next)
+  for (l = prog->class_list; l; l = l->next)
     output_class_definition (l->item);
 
   /* program function */
   output_line ("int");
-  output ("%s (", spec->program_id);
-  if (!spec->using_list)
+  output ("%s (", prog->program_id);
+  if (!prog->using_list)
     output ("void");
   else
-    for (l = spec->using_list; l; l = l->next)
+    for (l = prog->using_list; l; l = l->next)
       {
 	output ("unsigned char *f_%s_data", COBC_FIELD (l->item)->cname);
 	if (l->next)
@@ -2218,17 +2219,17 @@ codegen (struct cobc_program_spec *spec)
 
   /* local variables */
   output_line ("static int initialized = 0;");
-  output_line ("static cob_decimal d[%d];", spec->decimal_index_max);
+  output_line ("static cob_decimal d[%d];", prog->decimal_index_max);
   output_line ("static cob_environment env;");
   output_newline ();
   output_line ("int i;");
-  output_line ("int n[%d];", spec->loop_counter);
+  output_line ("int n[%d];", prog->loop_counter);
   output_line ("int frame_index;");
   output_line ("struct { int perform_through; void *return_address; } "
 	       "frame_stack[24];");
   output_line ("cob_field f[4];");
   output_newline ();
-  for (p = spec->linkage_storage; p; p = p->sister)
+  for (p = prog->linkage_storage; p; p = p->sister)
     output_field_definition (p, p, 0, 0);
   output_newline ();
 
@@ -2239,16 +2240,16 @@ codegen (struct cobc_program_spec *spec)
   output_line ("cob_module_init ();");
   output_newline ();
   output_line ("/* initialize decimal numbers */");
-  output_line ("for (i = 0; i < %d; i++)", spec->decimal_index_max);
+  output_line ("for (i = 0; i < %d; i++)", prog->decimal_index_max);
   output_line ("  cob_decimal_init (&d[i]);");
   output_newline ();
   output_line ("/* initialize environment */");
-  output_line ("env.decimal_point = '%c';", spec->env.decimal_point);
-  output_line ("env.currency_symbol = '%c';", spec->env.currency_symbol);
-  output_line ("env.numeric_separator = '%c';", spec->env.numeric_separator);
+  output_line ("env.decimal_point = '%c';", prog->decimal_point);
+  output_line ("env.currency_symbol = '%c';", prog->currency_symbol);
+  output_line ("env.numeric_separator = '%c';", prog->numeric_separator);
   output_newline ();
-  if (!spec->initial_program)
-    output_init_values (spec->working_storage);
+  if (!prog->initial_program)
+    output_init_values (prog->working_storage);
   output_line ("initialized = 1;");
   output_indent ("  }");
   output_newline ();
@@ -2257,10 +2258,10 @@ codegen (struct cobc_program_spec *spec)
   output_line ("frame_index = 0;");
   output_line ("frame_stack[0].perform_through = -1;");
   output_newline ();
-  output_line ("/* initialize %s */", spec->program_id);
+  output_line ("/* initialize %s */", prog->program_id);
   output_line ("cob_push_environment (&env);");
-  if (spec->initial_program)
-    output_init_values (spec->working_storage);
+  if (prog->initial_program)
+    output_init_values (prog->working_storage);
   output_newline ();
 
   output_line ("goto lb_main;");
@@ -2272,11 +2273,11 @@ codegen (struct cobc_program_spec *spec)
   output_line ("switch (cob_error_file->open_mode)");
   output_line ("  {");
   for (i = COB_OPEN_INPUT; i <= COB_OPEN_EXTEND; i++)
-    if (spec->file_handler[i])
+    if (prog->file_handler[i])
       {
 	output_line ("  case %d:", i);
 	output ("    ");
-	output_perform_call (spec->file_handler[i], spec->file_handler[i]);
+	output_perform_call (prog->file_handler[i], prog->file_handler[i]);
 	output_line ("    break;");
       }
   output_line ("  default:");
@@ -2288,7 +2289,7 @@ codegen (struct cobc_program_spec *spec)
 
   /* PROCEDURE DIVISION */
   output_line ("/* PROCEDURE DIVISION */");
-  for (l = spec->exec_list; l; l = l->next)
+  for (l = prog->exec_list; l; l = l->next)
     output_stmt (l->item);
   output_newline ();
 
@@ -2305,10 +2306,10 @@ codegen (struct cobc_program_spec *spec)
       output_line ("main (int argc, char **argv)");
       output_indent ("{");
       output_line ("cob_init (argc, argv);");
-      if (spec->enable_screen)
+      if (prog->enable_screen)
 	output_line ("cob_screen_init ();");
-      output_line ("%s ();", spec->program_id);
-      if (spec->enable_screen)
+      output_line ("%s ();", prog->program_id);
+      if (prog->enable_screen)
 	output_line ("cob_screen_clear ();");
       output_line ("return cob_return_code;");
       output_indent ("}");

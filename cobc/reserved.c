@@ -23,7 +23,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "tree.h"
+#include "cobc.h"
 #include "parser.h"
 #include "reserved.h"
 

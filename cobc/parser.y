@@ -30,11 +30,7 @@
 #include <libcob.h>
 
 #include "cobc.h"
-#include "tree.h"
-#include "scanner.h"
-#include "codegen.h"
 #include "reserved.h"
-#include "lib/gettext.h"
 
 #define yydebug		yy_bison_debug
 #define YYDEBUG		COB_DEBUG
@@ -44,7 +40,8 @@
 #define PENDING(x)	yywarn (_("`%s' not implemented"), x)
 #define OBSOLETE(x)	yywarn (_("`%s' obsolete"), x)
 
-#define push(x)	program_spec.exec_list = cons (x, program_spec.exec_list)
+#define push(x)	\
+  current_program->exec_list = cons (x, current_program->exec_list)
 
 #define push_funcall_0(f)	   push (make_funcall_0 (f))
 #define push_funcall_1(f,a)	   push (make_funcall_1 (f, a))
@@ -71,9 +68,11 @@
     if (__h) push (__h);				\
   }
 
-static struct cobc_program_spec program_spec;
+extern void codegen (struct cobc_program *prog);
+extern int cobc_in_procedure;
+extern int yylex (void);
 
-struct cobc_program_spec *current_program = &program_spec;
+struct cobc_program *current_program;
 
 static struct cobc_field *current_field;
 static struct cobc_file *current_file;
@@ -82,9 +81,6 @@ static struct cobc_label *current_section, *current_paragraph;
 static int current_call_mode;
 static const char *current_inspect_func;
 static cobc_tree current_inspect_data;
-
-static int warning_count = 0;
-static int error_count = 0;
 
 static int last_operator;
 static cobc_tree last_lefthand;
@@ -206,15 +202,11 @@ static void ambiguous_error (cobc_tree x);
  *****************************************************************************/
 
 start:
-  program			{ if (error_count) YYABORT; }
+  program			{ if (errorcount) YYABORT; }
 ;
 program:
   {
-    /* init program spec */
-    memset (current_program, 0, sizeof (struct cobc_program_spec));
-    current_program->env.decimal_point = '.';
-    current_program->env.currency_symbol = '$';
-    current_program->env.numeric_separator = ',';
+    current_program = build_program ();
 
     /* init environment */
     cobc_in_procedure = 0;
@@ -242,8 +234,8 @@ program:
       resolve_label (l->item);
     current_program->file_list = list_reverse (current_program->file_list);
     current_program->exec_list = list_reverse (current_program->exec_list);
-    if (error_count == 0)
-      codegen (&program_spec);
+    if (errorcount == 0)
+      codegen (current_program);
   }
 ;
 _end_program:
@@ -499,7 +491,7 @@ special_name_currency:
     unsigned char *s = COBC_LITERAL ($3)->data;
     if (COBC_LITERAL ($3)->size != 1)
       yyerror_x ($3, _("invalid currency sign `%s'"), s);
-    current_program->env.currency_symbol = s[0];
+    current_program->currency_symbol = s[0];
   }
 ;
 
@@ -509,8 +501,8 @@ special_name_currency:
 special_name_decimal_point:
   DECIMAL_POINT _is COMMA
   {
-    current_program->env.decimal_point = ',';
-    current_program->env.numeric_separator = '.';
+    current_program->decimal_point = ',';
+    current_program->numeric_separator = '.';
   }
 ;
 
@@ -1184,7 +1176,7 @@ screen_description:
   screen_options '.'
   {
     if (current_field->pic == NULL)
-      current_field->pic = yylex_picture ("X(0)");
+      current_field->pic = parse_picture ("X(0)");
     if (!current_field->screen_line)
       {
 	current_field->screen_line = cobc_int1;
@@ -5282,60 +5274,4 @@ ambiguous_error (cobc_tree x)
 	  yyerror_x (x, buff);
 	}
     }
-}
-
-
-static void
-yyprintf (char *file, int line, char *prefix, char *fmt, va_list ap)
-{
-  fprintf (stderr, "%s:%d: %s",
-	   file ? file : cobc_source_file,
-	   line ? line : cobc_source_line,
-	   prefix);
-  vfprintf (stderr, fmt, ap);
-  fputs ("\n", stderr);
-}
-
-void
-yywarn (char *fmt, ...)
-{
-  va_list ap;
-  va_start (ap, fmt);
-  yyprintf (0, 0, "warning: ", fmt, ap);
-  va_end (ap);
-
-  warning_count++;
-}
-
-void
-yyerror (char *fmt, ...)
-{
-  va_list ap;
-  va_start (ap, fmt);
-  yyprintf (0, 0, "error: ", fmt, ap);
-  va_end (ap);
-
-  error_count++;
-}
-
-void
-yywarn_x (cobc_tree x, char *fmt, ...)
-{
-  va_list ap;
-  va_start (ap, fmt);
-  yyprintf (x->source_file, x->source_line, "warning: ", fmt, ap);
-  va_end (ap);
-
-  warning_count++;
-}
-
-void
-yyerror_x (cobc_tree x, char *fmt, ...)
-{
-  va_list ap;
-  va_start (ap, fmt);
-  yyprintf (x->source_file, x->source_line, "error: ", fmt, ap);
-  va_end (ap);
-
-  error_count++;
 }

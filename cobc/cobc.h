@@ -24,6 +24,9 @@
 
 #include <stdio.h>
 
+#include "tree.h"
+#include "lib/gettext.h"
+
 #define COBC_PACKAGE	"cobc (" PACKAGE_NAME ")"
 #define COBC_VERSION	PACKAGE_VERSION
 #define COBC_COPYRIGHT	"Copyright (C) 2001-2003 Keisuke Nishida\n"
@@ -42,6 +45,17 @@ extern int cobc_flag_line_directive;
 
 extern FILE *yyin;
 extern FILE *cobc_out;
+
+extern char *cobc_source_file;
+extern int cobc_source_line;
+
+extern int errorcount;
+extern int warningcount;
+
+extern void yywarn (char *fmt, ...);
+extern void yyerror (char *fmt, ...);
+extern void yywarn_x (cobc_tree x, char *fmt, ...);
+extern void yyerror_x (cobc_tree x, char *fmt, ...);
 
 #undef COBC_WARNING
 #define COBC_WARNING(sig,var,name,doc) extern int var;
