@@ -6329,7 +6329,7 @@ gen_call (struct lit *v, int stack_size, int exceplabel, int notexceplabel)
       stack_save = stackframe_cnt;
       stackframe_cnt = 0;
       gen_loadvar ((struct sym *) v);
-      asm_call ("cob_resolve_subr");
+      asm_call ("cob_dyncall_resolve");
       stackframe_cnt = stack_save;
       fprintf (o_src, "\tand\t%%eax,%%eax\n");
       fprintf (o_src, "\tjz\t.L%d\n", exceplabel);
@@ -6366,7 +6366,7 @@ check_call_except (int excep, int notexcep, int exceplabel,
       /* if no exception phrase was given */
       if (excep == 0)
 	{
-	  fprintf (o_src, "\tcall\tcob_resolve_error\n");
+	  fprintf (o_src, "\tcall\tcob_dyncall_error\n");
 	  fprintf (o_src, "\tjmp\t.L%d\n", endlabel);
 	}
       fprintf (o_src, ".L%d:\t# notexceplabel\n", notexceplabel);

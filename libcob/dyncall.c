@@ -28,10 +28,6 @@
 #include "_libcob.h"
 #include "defaults.h"
 
-#define MODULE_NAME_MAX	256
-
-static char module_name[MODULE_NAME_MAX];
-
 
 /*
  * Symbol table hash
@@ -78,8 +74,11 @@ insert (const char *name, void *func)
 
 
 /*
- * Library functions
+ * C interface
  */
+
+static char resolve_error_buff[FILENAME_MAX];
+static char *resolve_error = NULL;
 
 void *
 cob_resolve (const char *name)
@@ -125,35 +124,51 @@ cob_resolve (const char *name)
 	      && (func = dlsym (handle, name)) != NULL)
 	    {
 	      insert (name, func);
+	      resolve_error = NULL;
 	      return func;
 	    }
+	  strcpy (resolve_error_buff, dlerror ());
+	  resolve_error = resolve_error_buff;
 	  return NULL;
 	}
     }
+  sprintf (resolve_error_buff, "cannot find module: %s", name);
+  resolve_error = resolve_error_buff;
   return NULL;
 }
 
-void *
-cob_resolve_subr (struct fld_desc *f, char *s)
+const char *
+cob_resolve_error (void)
 {
+  const char *p = resolve_error;
+  resolve_error = NULL;
+  return p;
+}
+
+
+/*
+ * COBOL interface
+ */
+
+void *
+cob_dyncall_resolve (struct fld_desc *f, char *s)
+{
+  char buff[FILENAME_MAX];
+
   /* get subroutine name */
-  strncpy (module_name, s, f->len);
-  module_name[f->len] = '\0';
+  strncpy (buff, s, f->len);
+  buff[f->len] = '\0';
 
   /* truncate unnecessary spaces */
-  s = strchr (module_name, ' ');
+  s = strchr (buff, ' ');
   if (s)
     *s = '\0';
 
-  return cob_resolve (module_name);
+  return cob_resolve (buff);
 }
 
 void
-cob_resolve_error ()
+cob_dyncall_error (void)
 {
-  const char *err = dlerror ();
-  if (err)
-    fprintf (stderr, "%s\n", err);
-  else
-    fprintf (stderr, "cannot find module: %s\n", module_name);
+  fprintf (stderr, "%s\n", cob_resolve_error ());
 }

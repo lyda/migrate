@@ -20,3 +20,4 @@
 /* Exported functions */
 
 extern void *cob_resolve (const char *name);
+extern const char *cob_resolve_error (void);
