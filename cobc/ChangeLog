@@ -1,3 +1,7 @@
+2004-03-08  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
+
+	* pplex.l (switch_to_buffer): Duplicate file name.
+
 2004-03-06  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
 
 	* codegen.c (output_base): Always align the 01 items.

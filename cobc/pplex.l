@@ -200,7 +200,7 @@ static void
 switch_to_buffer (int line, char *file, YY_BUFFER_STATE buffer)
 {
   cb_source_line = line;
-  cb_source_file = file;
+  cb_source_file = strdup (file);
   yy_switch_to_buffer (buffer);
   fprintf (yyout, "# %d \"%s\"\n", line, file);
 }
