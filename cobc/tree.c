@@ -1055,13 +1055,10 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 
   /* create record */
   sprintf (buff, "%s$record", f->name);
-  f->record = CB_FIELD (cb_build_field (cb_build_reference (buff)));
-  f->record->usage = CB_USAGE_DISPLAY;
-  sprintf (buff, "X(%d)", f->record_max);
-  f->record->pic = CB_PICTURE (cb_build_picture (buff));
+  f->record = CB_FIELD (cb_build_implicit_field (cb_build_reference (buff),
+						 f->record_max));
   f->record->sister = records;
   f->record->count++;
-  cb_validate_field (f->record);
 
   for (p = records; p; p = p->sister)
     {
