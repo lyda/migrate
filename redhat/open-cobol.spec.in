@@ -16,6 +16,10 @@ Buildroot:   %{_tmppath}/%{package}-%{version}-buildroot
 %description
 OpenCOBOL is an open-source COBOL compiler, translating COBOL to C.
 
+Related information can be obtained in the following site:
+
+  http://open-cobol.sourceforge.net/
+
 %description -l ja
 OpenCOBOL はオープンソースな COBOL コンパイラです。
 COBOL で書かれたプログラムを C 言語に変換して実行します。
