@@ -25,9 +25,16 @@
 #define CB_BEFORE		cb_int0
 #define CB_AFTER		cb_int1
 
-#define CB_CALL_BY_REFERENCE	1
-#define CB_CALL_BY_CONTENT	2
-#define CB_CALL_BY_VALUE	3
+#define CB_PREFIX_ATTR		"a_"	/* field attribute (cob_field_attr) */
+#define CB_PREFIX_BASE		"b_"	/* base address (unsigned char *) */
+#define CB_PREFIX_CONST		"c_"	/* constant or literal (cob_field) */
+#define CB_PREFIX_DECIMAL	"d_"	/* decimal number (cob_decimal) */
+#define CB_PREFIX_FIELD		"f_"	/* field (cob_field) */
+#define CB_PREFIX_FILE		"h_"	/* file (cob_file) */
+#define CB_PREFIX_INDEX		"i_"	/* index (int) */
+#define CB_PREFIX_KEYS		"k_"	/* file keys (cob_file_key []) */
+#define CB_PREFIX_LABEL		"l_"	/* label */
+#define CB_PREFIX_SEQUENCE	"s_"	/* collating sequence */
 
 enum cb_tag {
   /* primitives */
@@ -695,6 +702,10 @@ extern cb_tree cb_build_search (int flag_all, cb_tree table, cb_tree var, cb_tre
 /*
  * CALL
  */
+
+#define CB_CALL_BY_REFERENCE	1
+#define CB_CALL_BY_CONTENT	2
+#define CB_CALL_BY_VALUE	3
 
 struct cb_call {
   struct cb_tree_common common;

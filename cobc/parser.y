@@ -184,9 +184,9 @@ program_id_paragraph:
   PROGRAM_ID '.'
   {
     current_program = cb_build_program ();
-    cb_return_code = cb_build_index (make_reference ("RETURN-CODE"));
+    cb_return_code = make_reference ("RETURN-CODE");
     current_program->index_list =
-      list_add (current_program->index_list, cb_return_code);
+      list_add (current_program->index_list, cb_build_index (cb_return_code));
   }
   program_name as_literal program_type '.'
   {
@@ -2852,8 +2852,7 @@ end_start:
 stop_statement:
   STOP RUN			{ BEGIN_STATEMENT ("STOP"); }
   {
-    cb_tree status = cb_build_field_reference (CB_FIELD (cb_return_code), 0);
-    push_funcall_1 ("cob_stop_run", cb_build_cast_integer (status));
+    push_funcall_1 ("cob_stop_run", cb_build_cast_integer (cb_return_code));
   }
 | STOP LITERAL
   {

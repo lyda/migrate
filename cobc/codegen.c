@@ -166,7 +166,7 @@ output_base (struct cb_field *f)
     }
   else if (f->usage == CB_USAGE_INDEX && f->level == 0)
     {
-      output ("((unsigned char *) &i_%s)", f->cname);
+      output ("((unsigned char *) &%s%s)", CB_PREFIX_INDEX, f->cname);
     }
   else
     {
@@ -174,11 +174,11 @@ output_base (struct cb_field *f)
 	{
 	  if (!f01->flag_local)
 	    output_storage ("static ");
-	  output_storage ("unsigned char b_%s[%d];\n",
-			  f01->cname, f01->memory_size);
+	  output_storage ("unsigned char %s%s[%d];\n",
+			  CB_PREFIX_BASE, f01->cname, f01->memory_size);
 	  f01->flag_base = 1;
 	}
-      output ("b_%s", f01->cname);
+      output ("%s%s", CB_PREFIX_BASE, f01->cname);
     }
   if (f->offset > 0)
     output (" + %d", f->offset);
@@ -308,7 +308,7 @@ lookup_attr (char type, char digits, char scale, char flags, unsigned char *pic)
       return l->id;
 
   /* output new attribute */
-  output_storage ("static cob_field_attr a_%d = ", ++id);
+  output_storage ("static cob_field_attr %s%d = ", CB_PREFIX_ATTR, ++id);
   output_storage ("{%d, %d, %d, %d, ", type, digits, scale, flags);
   if (pic)
     {
@@ -410,7 +410,7 @@ output_attr (cb_tree x)
       ABORT ();
     }
 
-  output ("&a_%d", id);
+  output ("&%s%d", CB_PREFIX_ATTR, id);
 }
 
 static void
@@ -458,7 +458,7 @@ lookup_literal (cb_tree x)
   output_field (x);
 
   output_target = cb_storage_file;
-  output ("static cob_field c_%d = ", ++id);
+  output ("static cob_field %s%d = ", CB_PREFIX_CONST, ++id);
   output_field (x);
   output (";\n");
   output_target = yyout;
@@ -510,7 +510,7 @@ output_integer (cb_tree x)
 	  {
 	    if (f->level == 0)
 	      {
-		output ("i_%s", f->cname);
+		output ("%s%s", CB_PREFIX_INDEX, f->cname);
 	      }
 	    else
 	      {
@@ -641,7 +641,7 @@ output_param (cb_tree x, int id)
 	    output ("cob_a2e");
 	    break;
 	  case CB_ALPHABET_CUSTOM:
-	    output ("s_%s", p->cname);
+	    output ("%s%s", CB_PREFIX_SEQUENCE, p->cname);
 	    break;
 	  }
 	break;
@@ -667,10 +667,10 @@ output_param (cb_tree x, int id)
       output ("&d[%d]", CB_DECIMAL (x)->id);
       break;
     case CB_TAG_FILE:
-      output ("&%s", CB_FILE (x)->cname);
+      output ("&%s%s", CB_PREFIX_FILE, CB_FILE (x)->cname);
       break;
     case CB_TAG_LITERAL:
-      output ("&c_%d", lookup_literal (x));
+      output ("&%s%d", CB_PREFIX_CONST, lookup_literal (x));
       break;
     case CB_TAG_FIELD:
       /* TODO: remove me */
@@ -699,14 +699,14 @@ output_param (cb_tree x, int id)
 		output_target = cb_storage_file;
 		if (!f->flag_external && !f->flag_local)
 		  output ("static ");
-		output ("cob_field f_%s = ", f->cname);
+		output ("cob_field %s%s = ", CB_PREFIX_FIELD, f->cname);
 		output_field (x);
 		output (";\n");
 
 		f->flag_field = 1;
 		output_target = yyout;
 	      }
-	    output ("&f_%s", f->cname);
+	    output ("&%s%s", CB_PREFIX_FIELD, f->cname);
 	  }
 	else
 	  {
@@ -1260,7 +1260,7 @@ output_call (struct cb_call *p)
 	{
 	case CB_CALL_BY_CONTENT:
 	  output_prefix ();
-	  output ("char content_%d[", n);
+	  output ("unsigned char content_%d[", n);
 	  if (CB_NUMERIC_LITERAL_P (x) || CB_BINARY_OP_P (x))
 	    output ("4");
 	  else
@@ -1298,8 +1298,8 @@ output_call (struct cb_call *p)
   if (!dynamic_link)
     {
       /* static link */
-      output ("i_%s = %s", CB_FIELD (cb_return_code)->cname,
-	      CB_LITERAL (p->name)->data);
+      output_integer (cb_return_code);
+      output (" = %s", CB_LITERAL (p->name)->data);
     }
   else
     {
@@ -1317,7 +1317,8 @@ output_call (struct cb_call *p)
       output_line ("else");
       output_indent ("  {");
       output_prefix ();
-      output ("i_%s = func", CB_FIELD (cb_return_code)->cname);
+      output_integer (cb_return_code);
+      output (" = func");
     }
 
   /* arguments */
@@ -1378,7 +1379,7 @@ output_call (struct cb_call *p)
 static void
 output_goto_1 (cb_tree x)
 {
-  output_line ("goto lb_%s;", CB_LABEL (cb_ref (x))->cname);
+  output_line ("goto %s%s;", CB_PREFIX_LABEL, CB_LABEL (cb_ref (x))->cname);
 }
 
 static void
@@ -1418,10 +1419,10 @@ output_perform_call (struct cb_label *lb, struct cb_label *le)
 {
   static int id = 1;
   output_line ("/* PERFORM %s THRU %s */", lb->name, le->name);
-  output_line ("frame_stack[++frame_index] = (struct frame) {%d, &&l_%d};",
-	       le->id, id);
-  output_line ("goto lb_%s;", lb->cname);
-  output_line ("l_%d:", id++);
+  output_line ("frame_stack[++frame_index] = (struct frame) {%d, &&%s$%d};",
+	       le->id, CB_PREFIX_LABEL, id);
+  output_line ("goto %s%s;", CB_PREFIX_LABEL, lb->cname);
+  output_line ("%s$%d:", CB_PREFIX_LABEL, id++);
   output_line ("frame_index--;");
 }
 
@@ -1589,7 +1590,7 @@ output_stmt (cb_tree x)
 	output_newline ();
 	output_line ("/* %s: */", p->name);
 	if (p->need_begin)
-	  output_line ("lb_%s:", p->cname);
+	  output_line ("%s%s:", CB_PREFIX_LABEL, p->cname);
 	if (cb_flag_trace)
 	  output_line ("puts (\"%s\");", p->name);
 	break;
@@ -1688,7 +1689,7 @@ output_file_definition (struct cb_file *f)
       || f->organization == COB_ORG_INDEXED)
     {
       struct cb_alt_key *l;
-      output ("static cob_file_key %s_keys[] = {\n", f->cname);
+      output ("static cob_file_key %s%s[] = {\n", CB_PREFIX_KEYS, f->cname);
       output ("  {");
       output_param (f->key, -1);
       output (", 0},\n");
@@ -1703,7 +1704,7 @@ output_file_definition (struct cb_file *f)
     }
 
   /* output the file descriptor */
-  output ("static cob_file %s = {", f->cname);
+  output ("static cob_file %s%s = {", CB_PREFIX_FILE, f->cname);
   /* organization, access_mode, open_mode, flag_optional */
   output ("%d, %d, 0, %d, ", f->organization, f->access_mode, f->optional);
   /* file_status */
@@ -1726,7 +1727,7 @@ output_file_definition (struct cb_file *f)
   /* nkeys, keys */
   if (f->organization == COB_ORG_RELATIVE
       || f->organization == COB_ORG_INDEXED)
-    output ("%d, %s_keys, ", nkeys, f->cname);
+    output ("%d, %s%s, ", nkeys, CB_PREFIX_KEYS, f->cname);
   else
     output ("0, 0, ");
   /* flags */
@@ -1858,7 +1859,8 @@ output_alphabet_name_definition (struct cb_alphabet_name *p)
       table[i] = n++;
 
   /* output the table */
-  output ("static const unsigned char s_%s[256] = {\n", p->cname);
+  output ("static const unsigned char %s%s[256] = {\n",
+	  CB_PREFIX_SEQUENCE, p->cname);
   for (i = 0; i < 256; i++)
     {
       output (" %d,", table[i]);
@@ -1999,7 +2001,7 @@ output_internal_function (struct cb_program *prog, int single,
   /* initialization */
   output_line ("if (!initialized)");
   output_indent ("  {");
-  output_line ("i_%s = 0;", CB_FIELD (cb_return_code)->cname);
+  output_stmt (cb_build_assign (cb_return_code, cb_int0));
   output_line ("/* initialize decimal numbers */");
   output_line ("for (i = 0; i < %d; i++)", prog->decimal_index_max);
   output_line ("  cob_decimal_init (&d[i]);");
@@ -2021,7 +2023,8 @@ output_internal_function (struct cb_program *prog, int single,
   /* entry dispatch */
   if (single)
     {
-      output_line ("goto lb_%s;",
+      output_line ("goto %s%s;",
+		   CB_PREFIX_LABEL,
 		   CB_LABEL (CB_PURPOSE (prog->entry_list))->cname);
     }
   else
@@ -2031,7 +2034,8 @@ output_internal_function (struct cb_program *prog, int single,
       for (i = 0, l = prog->entry_list; l; l = CB_CHAIN (l))
 	{
 	  output_line ("  case %d:", i++);
-	  output_line ("    goto lb_%s;", CB_LABEL (CB_PURPOSE (l))->cname);
+	  output_line ("    goto %s%s;",
+		       CB_PREFIX_LABEL, CB_LABEL (CB_PURPOSE (l))->cname);
 	}
       output_line ("  }");
     }
@@ -2065,7 +2069,10 @@ output_internal_function (struct cb_program *prog, int single,
 
   output_line ("exit_program:");
   output_line ("cob_module_leave (&module);");
-  output_line ("return i_%s;", CB_FIELD (cb_return_code)->cname);
+  output_prefix ();
+  output ("return ");
+  output_integer (cb_return_code);
+  output (";\n");
   output_indent ("}");
   output_newline ();
 }
@@ -2147,7 +2154,8 @@ codegen (struct cb_program *prog)
   output ("/* Fields */\n\n");
   output ("#define i_LINAGE_COUNTER cob_linage_counter\n\n");
   for (l = prog->index_list; l; l = CB_CHAIN (l))
-    output ("static int i_%s = 1;\n", CB_FIELD (CB_VALUE (l))->cname);
+    output ("static int %s%s = 1;\n", CB_PREFIX_INDEX,
+	    CB_FIELD (CB_VALUE (l))->cname);
   output_newline ();
 
   /* alphabet-names */
