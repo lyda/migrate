@@ -291,6 +291,7 @@ struct cobc_field {
     int sign_separate : 1;	/* SIGN IS SEPARATE */
     int synchronized  : 1;	/* SYNCHRONIZED */
     int have_occurs   : 1;	/* if OCCURS clause exists */
+    int in_redefines  : 1;	/* if any parent has REDEFINES clause */
     int used          : 1;	/* if used more than once */
     int referenced    : 1;	/* if any reference modification exists */
   } f;

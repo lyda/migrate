@@ -3764,6 +3764,7 @@ init_field (int level, cobc_tree field)
       current_field->parent = last_field;
       current_field->f.sign_leading = current_field->parent->f.sign_leading;
       current_field->f.sign_separate = current_field->parent->f.sign_separate;
+      current_field->f.in_redefines = current_field->parent->f.in_redefines;
     }
   else if (level == last_field->level)
     {
@@ -3805,16 +3806,23 @@ init_field (int level, cobc_tree field)
 static void
 validate_field (struct cobc_field *p)
 {
+  cobc_tree x = COBC_TREE (p);
   if (p->level == 88)
     {
       /* conditional variable */
       COBC_TREE_CLASS (p) = COB_BOOLEAN;
       if (p->pic)
-	yyerror (_("level 88 field may not have PICTURE clause"));
+	yyerror_tree (x, _("level 88 field cannot have PICTURE"));
     }
   else
     {
       /* validate REDEFINES */
+      if (p->redefines)
+	{
+	  if (current_field->f.in_redefines)
+	    yyerror_tree (x, _("field already in REDEFINES"));
+	  current_field->f.in_redefines = 1;
+	}
 
       /* validate PICTURE */
       if (p->pic)
@@ -3851,15 +3859,14 @@ validate_field (struct cobc_field *p)
       /* validate OCCURS */
       if (p->f.have_occurs)
 	if (p->level < 2 || p->level > 49)
-	  yyerror (_("OCCURS cannot be used with level %02d field"), p->level);
+	  yyerror_tree (x, _("level %02d field cannot have OCCURS"), p->level);
 
       /* validate JUSTIFIED RIGHT */
       if (p->f.justified)
 	{
 	  char c = p->category;
 	  if (!(c == 'A' || c == 'X' || c == 'N'))
-	    yyerror (_("`%s' cannot have JUSTIFIED RIGHT"),
-		     tree_to_string (COBC_TREE (p)));
+	    yyerror_tree (x, _("cannot have JUSTIFIED RIGHT"));
 	}
 
       /* validate SYNCHRONIZED */
@@ -3875,7 +3882,11 @@ validate_field (struct cobc_field *p)
       /* validate VALUE */
       if (p->value)
 	{
-	  if (p->value == cobc_zero)
+	  if (p->f.in_redefines)
+	    {
+	      yyerror_tree (x, _("VALUE not allowed under REDEFINES"));
+	    }
+	  else if (p->value == cobc_zero)
 	    {
 	      /* just accept */
 	    }
@@ -3886,7 +3897,7 @@ validate_field (struct cobc_field *p)
 	  else if (COBC_TREE_CLASS (p) != COB_NUMERIC
 		   && COBC_TREE_CLASS (p->value) == COB_NUMERIC)
 	    {
-	      yywarn (_("VALUE should be non-numeric"));
+	      yywarn_tree (x, _("VALUE should be non-numeric"));
 	    }
 	  else
 	    {
