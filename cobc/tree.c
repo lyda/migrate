@@ -1034,6 +1034,13 @@ level_require_error (cb_tree x, const char *clause)
 	      cb_field (x)->level, cb_name (x), clause);
 }
 
+static void
+level_except_error (cb_tree x, const char *clause)
+{
+  cb_error_x (x, _("level %02d item `%s' cannot have other than %s clause"),
+	      cb_field (x)->level, cb_name (x), clause);
+}
+
 static int
 validate_field_1 (struct cb_field *f)
 {
@@ -1047,17 +1054,9 @@ validate_field_1 (struct cb_field *f)
 	  level_require_error (x, "RENAMES");
 	  return -1;
 	}
-      return 0;
-    }
-
-  if (f->level == 88)
-    {
-      if (!f->values)
-	level_require_error (x, "VALUE");
 
       if (f->pic || f->flag_occurs)
-	cb_error_x (x, _("level 88 item cannot have other than VALUE clause"));
-
+	level_except_error (x, "RENAMES");
       return 0;
     }
 
@@ -1349,6 +1348,18 @@ cb_validate_field (struct cb_field *f)
     return;
   finalize_field (f);
   validate_field_value (f);
+}
+
+void
+cb_validate_88_item (struct cb_field *f)
+{
+  cb_tree x = CB_TREE (f);
+
+  if (!f->values)
+    level_require_error (x, "VALUE");
+
+  if (f->pic || f->flag_occurs)
+    level_except_error (x, "VALUE");
 }
 
 struct cb_field *

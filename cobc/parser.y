@@ -1026,6 +1026,8 @@ data_description:
   }
   data_description_clause_sequence '.'
   {
+    if (current_field->level == 88)
+      cb_validate_88_item (current_field);
     $<tree>$ = CB_TREE (current_field);
   }
 ;
@@ -1080,14 +1082,12 @@ data_description_clause:
 redefines_clause:
   REDEFINES qualified_word
   {
-    if (initial_clause)
-      {
-	current_field->redefines = cb_resolve_redefines (current_field, $2);
-	if (current_field->redefines == NULL)
-	  YYERROR;
-      }
-    else
-      cb_error_x ($2, _("REDEFINES clause must follow entry-name"))
+    if (!initial_clause)
+      cb_error_x ($2, _("REDEFINES clause must follow entry-name"));
+
+    current_field->redefines = cb_resolve_redefines (current_field, $2);
+    if (current_field->redefines == NULL)
+      YYERROR;
   }
 ;
 

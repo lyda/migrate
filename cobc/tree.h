@@ -384,6 +384,7 @@ extern cb_tree cb_build_constant (cb_tree name, cb_tree value);
 extern cb_tree cb_build_field (int level, cb_tree name, struct cb_field *last_field, enum cb_storage storage);
 extern struct cb_field *cb_resolve_redefines (struct cb_field *field, cb_tree redefines);
 extern void cb_validate_field (struct cb_field *p);
+extern void cb_validate_88_item (struct cb_field *p);
 
 extern struct cb_field *cb_field (cb_tree x);
 extern int cb_field_size (cb_tree x);
