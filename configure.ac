@@ -135,17 +135,6 @@ if test "x$ac_cv_lib_ncurses_initscr" = "xyes"; then
   LIBCOB_LIBS="$LIBCOB_LIBS -lncurses"
 fi
 
-# Checks for readline.
-USE_READLINE="no"
-AC_ARG_WITH(readline,
-  [  --with-readline          use readline for terminal input],
-  [AC_CHECK_HEADERS([readline/readline.h readline/history.h])
-   AC_CHECK_LIB([readline], [readline])])
-if test "x$ac_cv_lib_readline_readline" = "xyes"; then
-  USE_READLINE="yes"
-  LIBCOB_LIBS="$LIBCOB_LIBS -lreadline"
-fi
-
 # OpenCOBOL Configuration
 
 if test "x$prefix" = "x/usr" \
