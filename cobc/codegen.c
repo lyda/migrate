@@ -624,7 +624,7 @@ output_integer (cb_tree x)
 		  {
 		  case 1: output ("char"); break;
 		  case 2: output ("short"); break;
-		  case 4: output ("long"); break;
+		  case 4: output ("int"); break;
 		  case 8: output ("long long"); break;
 		  }
 		output (" *) (");
@@ -790,6 +790,8 @@ output_param (cb_tree x, int id)
 	break;
       }
     default:
+      fprintf(stderr, "Unexpected tree tag %d\n", CB_TREE_TAG (x));
+      fflush(stderr);
       ABORT ();
     }
 }
@@ -1702,8 +1704,16 @@ output_stmt (cb_tree x)
 	  }
 
 	if (p->handler1 || p->handler2
-	    || (p->file && CB_EXCEPTION_ENABLE (COB_EC_I_O)))
+	    || (p->file && CB_EXCEPTION_ENABLE (COB_EC_I_O))) {
+
 	  output_line ("cob_exception_code = 0;");
+/* RXW - Dirty must be some other way */
+		if ( p->handler_id == COB_EC_I_O_EOP ) {
+			output_line ("cob_check_eop = 1;");
+		} else {
+			output_line ("cob_check_eop = 0;");
+		}
+	}
 
 	if (p->body)
 	  output_stmt (p->body);
@@ -1892,6 +1902,35 @@ output_file_definition (struct cb_file *f)
     output ("0, 0, ");
   /* file */
     output ("0, ");
+  /* LINAGE */
+  if ( f->linage ) {
+	output_param (f->linage, -1);
+	output (", ");
+	output_param (f->linage_ctr, -1);
+	output (", ");
+	if ( f->latfoot ) {
+		output_param (f->latfoot, -1);
+	} else {
+		output ("NULL");
+	}
+	output (", ");
+	if ( f->lattop ) {
+		output_param (f->lattop, -1);
+	} else {
+		output ("NULL");
+	}
+	output (", ");
+	if ( f->lattop ) {
+		output_param (f->latbot, -1);
+	} else {
+		output ("NULL");
+	}
+	output (", ");
+  } else {
+	output ("NULL, NULL, NULL, NULL, NULL, ");
+  }
+  /* LINAGE  Current values */
+  output ("0, 0, 0, 0, ");
   /* flags */
   output ("0, 0, 0, 0, 0, ");
   /* has file status flag */
@@ -1899,7 +1938,7 @@ output_file_definition (struct cb_file *f)
     output ("1, ");
   else
     output ("0, ");
-  /* spare bytes */
+  /* LS close needs NL / Linage needs top */
   output ("0, 0};\n\n");
 }
 

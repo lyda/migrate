@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 87
+%expect 86
 
 %defines
 %verbose
@@ -63,6 +63,8 @@ static cb_tree call_mode;
 static cb_tree perform_stack = NULL;
 
 static int next_label_id = 0;
+static int current_linage = 0;
+static struct cb_file *linage_file;
 static cb_tree next_label_list = NULL;
 
 static void emit_entry (const char *name, cb_tree using_list);
@@ -110,6 +112,7 @@ static void terminator_error (void);
 %token UNDERLINE UNIT UNTIL UP UPON USAGE USE USING VALUE VARYING WHEN WITH
 %token MANUAL AUTOMATIC EXCLUSIVE ROLLBACK
 %token COMP COMP_1 COMP_2 COMP_3 COMP_4 COMP_5 COMP_X
+%token LINAGE_COUNTER
 
 %left '+' '-'
 %left '*' '/'
@@ -866,21 +869,52 @@ data_records_clause:
 
 linage_clause:
   LINAGE _is reference_or_literal _lines
-  linage_footing linage_top linage_bottom
+  linage_sequence
   {
-    cb_error ("LINAGE not implemented");
+    if ( current_file->organization != COB_ORG_LINE_SEQUENTIAL
+	&& current_file->organization != COB_ORG_SEQUENTIAL ) {
+		cb_error ("LINAGE clause with wrong file type");
+		$$ = cb_error_node;
+    } else {
+	current_file->linage = $3;
+	current_file->organization = COB_ORG_LINE_SEQUENTIAL;
+	if ( current_linage == 0 ) {
+		linage_file = current_file;
+	}
+	current_linage++;
+    }
   }
 ;
+
+linage_sequence:
+| linage_sequence linage_lines
+;
+
+linage_lines:
+  linage_footing
+| linage_top
+| linage_bottom
+;
+
 linage_footing:
-| _with FOOTING _at reference_or_literal _lines
+  _with FOOTING _at reference_or_literal _lines
+  {
+    current_file->latfoot = $4;
+  }
 ;
 
 linage_top:
-| _at TOP reference_or_literal _lines
+  _at TOP reference_or_literal _lines
+  {
+    current_file->lattop = $3;
+  }
 ;
 
 linage_bottom:
-| _at BOTTOM reference_or_literal
+  _at BOTTOM reference_or_literal
+  {
+    current_file->latbot = $3;
+  }
 ;
 
 
@@ -3103,6 +3137,30 @@ e:
  * Names
  *******************/
 
+/* LINAGE-COUNTER */
+
+linage_counter:
+  LINAGE_COUNTER
+  {
+	if ( current_linage > 1 ) {
+		cb_error ("LINAGE-COUNTER must be qualified here");
+		$$ = cb_error_node;
+	} else {
+		$$ = linage_file->linage_ctr;
+	}
+  }
+|  LINAGE_COUNTER in_of WORD
+  {
+	if (CB_FILE_P (cb_ref ($3))) {
+		$$ = CB_FILE (cb_ref ($3))->linage_ctr;
+	} else {
+		cb_error_x ($3, _("'%s' not file name"), CB_NAME ($3));
+		$$ = cb_error_node;
+	}
+  }
+;
+
+
 /* Data name */
 
 arithmetic_x_list:
@@ -3260,6 +3318,7 @@ x:
 | ADDRESS _of identifier_1	{ $$ = cb_build_address ($3); }
 | literal
 | function
+| linage_counter
 ;
 
 simple_value:

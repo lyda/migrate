@@ -52,16 +52,16 @@ SQ153A.CBL      1    1    0       0       0 OK
 SQ154A.CBL      1    1    0       0       0 OK
 SQ155A.CBL      1    1    0       0       0 OK
 SQ156A.CBL      1    1    0       0       0 OK
-SQ201M.CBL    ===== compile error =====
+SQ201M.CBL     23   12    0       0      11 OK
 SQ202A.CBL      1    1    0       0       0 OK
 SQ203A.SUB      4    4    0       0       0 OK
 SQ204A.CBL      2    2    0       0       0 OK
 SQ205A.CBL      2    2    0       0       0 OK
 SQ206A.CBL      4    4    0       0       0 OK
 SQ207M.CBL    ----- test skipped -----
-SQ208M.CBL    ===== compile error =====
-SQ209M.CBL    ===== compile error =====
-SQ210M.CBL    ===== compile error =====
+SQ208M.CBL      7    0    0       0       7 OK
+SQ209M.CBL      3    0    0       0       3 OK
+SQ210M.CBL      3    0    0       0       3 OK
 SQ211A.CBL      4    4    0       0       0 OK
 SQ212A.CBL      1    1    0       0       0 OK
 SQ213A.CBL      7    7    0       0       0 OK
@@ -86,10 +86,10 @@ SQ302M.CBL    ----- test skipped -----
 SQ303M.CBL    ----- test skipped -----
 SQ401M.CBL    ----- test skipped -----
 --------    ----- ---- ---- ------- -------
-Total         563  500    0       6      57
-%           100.0 88.8  0.0     1.1    10.1
+Total         599  512    0       6      81
+%           100.0 85.5  0.0     1.0    13.5
 
 Number of programs:    81
-Successfully executed: 77 (95.06%)
-Compile error:          4 ( 4.94%)
+Successfully executed: 81 (100.00%)
+Compile error:          0 ( 0.00%)
 Execute error:          0 ( 0.00%)

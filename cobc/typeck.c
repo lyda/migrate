@@ -157,10 +157,10 @@ cb_build_registers (void)
 
   /* TALLY */
   {
-    /* 01 TALLY GLOBAL PICTURE 9(5) USAGE BINARY VALUE ZERO. */
+    /* 01 TALLY GLOBAL PICTURE 9(9) USAGE COMP-5 VALUE ZERO. */
     cb_tree x = cb_build_field (cb_build_reference ("TALLY"));
-    CB_FIELD (x)->pic = CB_PICTURE (cb_build_picture ("9(5)"));
-    CB_FIELD (x)->usage = CB_USAGE_BINARY;
+    CB_FIELD (x)->pic = CB_PICTURE (cb_build_picture ("9(9)"));
+    CB_FIELD (x)->usage = CB_USAGE_COMP_5;
     CB_FIELD (x)->values = cb_list (cb_zero);
     cb_validate_field (CB_FIELD (x));
 
@@ -514,12 +514,20 @@ cb_tree
 cb_build_length (cb_tree x)
 {
   cb_tree temp;
+  struct cb_field *f;
 
   if (x == cb_error_node)
     return cb_error_node;
   if (CB_REFERENCE_P (x) && cb_ref (x) == cb_error_node)
     return cb_error_node;
 
+  f = CB_FIELD (cb_ref (x));
+  if (cb_field_variable_size (f) == NULL)
+    {
+	char buff[64];
+	sprintf(buff, "%d", cb_field_size(x));
+      return cb_build_numeric_literal (0, buff, 0);
+    }
   temp = cb_build_index (cb_build_filler ());
   CB_FIELD (cb_ref (temp))-> usage = CB_USAGE_LENGTH;
   cb_emit (cb_build_assign (temp, cb_build_length_1 (x)));
@@ -586,6 +594,7 @@ cb_validate_program_data (struct cb_program *prog)
 	  {
 	    cb_tree x = cb_build_implicit_field (assign, FILENAME_MAX);
 	    struct cb_field *p = current_program->working_storage;
+	    CB_FIELD(x)->count++;
 	    if (p)
 	      {
 		while (p->sister)
@@ -3114,8 +3123,8 @@ cb_emit_write (cb_tree record, cb_tree from, cb_tree opt)
 {
   struct cb_field *f = CB_FIELD (cb_ref (record));
   cb_tree file = CB_TREE (f->file);
-  current_statement->file = file;
 
+  current_statement->file = file;
   if (from)
     cb_emit (cb_build_move (from, record));
   cb_emit (cb_build_funcall_3 ("cob_write", file, record, opt));

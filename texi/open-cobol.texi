@@ -707,17 +707,17 @@ Set to ``yes'' if modules must be reloaded when they are replaced (``no'')
 @node Optimize Options, Optimize Call, Optimize, Optimize
 @section Optimize Options
 
-There are two compiler options for optimizations: @code{-O} and
-@code{-O2}.  These options enable optimization at both translation
+There are three compiler options for optimization: @code{-O}, @code{-Os}
+and @code{-O2}.  These options enable optimization at both translation
 (from COBOL to C) and compilation (C to assembly) levels.
 
-Currently, there is no difference between @code{-O} and @code{-O2} at
+Currently, there is no difference between these optimization options at
 the translation level.  The only thing which is done is inlining some
 run-time functions, by enabling the option @code{-fruntime-inlining}
 (@pxref{Compiler Options}).
 
-The option @code{-O} or @code{-O2} is passed to the C compiler as it
-is and used for C level optimization.
+The option @code{-O}, @code{-Os} or @code{-O2} is passed to the
+C compiler as it is and used for C level optimization.
 
 @node Optimize Call, Optimize Binary, Optimize Options, Optimize
 @section Optimize Call

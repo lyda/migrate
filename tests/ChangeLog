@@ -1,3 +1,12 @@
+2005-03-03  Roger While <simrw@sim-basis.de>
+
+	* cobol85/SQ.txt, cobol85/summary.txt :
+	  We now pass the LINAGE tests
+	* run.src/extensions.at :
+	  Fix a dangling file in /tmp
+
+	  Small cleanups in other files
+
 2005-02-22  Roger While <simrw@sim-basis.de>
 
 	* run, run.src/misc.at : Fix REF/CONTENT/VALUE test

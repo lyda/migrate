@@ -92,6 +92,8 @@ struct cb_label *current_section = NULL, *current_paragraph = NULL;
 static int save_temps = 0;
 static int verbose_output = 0;
 
+static int	strip_output = 0;
+
 static char *program_name;
 static char *output_name;
 
@@ -113,6 +115,13 @@ static struct filename {
   struct filename *next;
 } *file_list;
 
+
+#if defined (__GNUC__) && (__GNUC__ >= 3)
+static const char	fcopts[] =
+	" -finline-functions -fno-gcse -fno-guess-branch-probability -fno-reorder-blocks -fno-align-functions -fno-align-labels -fno-align-loops -fno-align-jumps";
+#else
+static const char	fcopts[] = " ";
+#endif
 
 struct cb_text_list *
 cb_text_list_add (struct cb_text_list *list, const char *text)
@@ -162,6 +171,9 @@ init_environment (int argc, char *argv[])
 
   init_var (tmpdir,      "TMPDIR",     "/tmp");
   init_var (cob_cc,      "COB_CC",     COB_CC);
+#if defined (__GNUC__) && (__GNUC__ >= 3)
+  strcat (cob_cc, " -pipe");
+#endif
   init_var (cob_cflags,  "COB_CFLAGS", COB_CFLAGS);
   init_var (cob_libs,    "COB_LIBS",   COB_LIBS);
   init_var (cob_ldflags, "COB_LDFLAGS", "");
@@ -205,6 +217,7 @@ static struct option long_options[] = {
   {"static", no_argument, &cb_flag_static_call, 1},
   {"dynamic", no_argument, &cb_flag_static_call, 0},
   {"O2", no_argument, 0, '2'},
+  {"Os", no_argument, 0, 's'},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
 #undef CB_FLAG
@@ -252,7 +265,7 @@ print_usage (void)
 "                          v023        Open Cobol V23 Compatible (deprecated)\n"
 "                          default     When not specified\n"
 "                        See config/default.conf and config/*.conf\n"
-"  -O, -O2               Enable optimization\n"
+"  -O, -O2, -Os          Enable optimization\n"
 "  -g                    Produce debugging information in the output\n"
 "  -debug                Enable all run-time error checking\n"
 "  -o <file>             Place the output into <file>\n"
@@ -316,11 +329,21 @@ process_command_line (int argc, char *argv[])
 	case 'O':
 	  cb_flag_runtime_inlining = 1;
 	  strcat (cob_cflags, " -O");
+	  strcat (cob_cflags, fcopts);
 	  break;
 
 	case '2': /* -O2 */
 	  cb_flag_runtime_inlining = 1;
+	  strip_output = 1;
 	  strcat (cob_cflags, " -O2");
+	  strcat (cob_cflags, fcopts);
+	  break;
+
+	case 's': /* -Os */
+	  cb_flag_runtime_inlining = 1;
+	  strip_output = 1;
+	  strcat (cob_cflags, " -Os");
+	  strcat (cob_cflags, fcopts);
 	  break;
 
 	case 'g':
@@ -575,8 +598,13 @@ preprocess (struct filename *fn)
 	terminate (fn->preprocess);
     }
 
-  if (ppopen (fn->source, NULL) != 0)
+  if (ppopen (fn->source, NULL) != 0) {
+    if ( ppout != stdout ) {
+	fclose(ppout);
+	unlink(fn->preprocess);
+    }
     exit (1);
+  }
 
   if (verbose_output)
     fprintf (stderr, "preprocessing %s into %s\n",
@@ -681,16 +709,26 @@ static int
 process_assemble (struct filename *fn)
 {
   char buff[FILENAME_MAX];
-  sprintf (buff, "%s -c -o %s %s %s",
-	   cob_cc, fn->object, cob_cflags, fn->translate);
+
+  if (cb_compile_level == CB_LEVEL_MODULE) {
+	sprintf (buff, "%s -c %s %s -o %s %s",
+		cob_cc, cob_cflags, COB_PIC_FLAGS, fn->object, fn->translate);
+  } else {
+	sprintf (buff, "%s -c %s -o %s %s",
+		cob_cc, cob_cflags, fn->object, fn->translate);
+  }
   return process (buff);
 }
 
 static int
 process_module (struct filename *fn)
 {
+#ifdef	COB_STRIP_CMD
+  int	ret;
+#endif
   char buff[FILENAME_MAX];
   char name[FILENAME_MAX];
+
   if (output_name)
     strcpy (name, output_name);
   else
@@ -700,18 +738,33 @@ process_module (struct filename *fn)
       strcat (name, COB_MODULE_EXT);
     }
 #if (defined __CYGWIN__ || defined __MINGW32__)
-  sprintf (buff, "%s -shared -Wl,--enable-auto-import %s -o %s %s %s",
-	   cob_cc, cob_ldflags, name, fn->object, cob_libs);
+  sprintf (buff, "%s %s %s %s %s -o %s %s %s",
+	cob_cc, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
+	COB_EXPORT_DYN, name, fn->object, cob_libs);
 #else
-  sprintf (buff, "%s -shared %s -o %s %s",
-	   cob_cc, cob_ldflags, name, fn->object);
+  sprintf (buff, "%s %s %s %s %s -o %s %s",
+	cob_cc, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
+	COB_EXPORT_DYN, name, fn->object);
 #endif
+
+#ifdef	COB_STRIP_CMD
+  ret  = process (buff);
+  if ( strip_output && ret == 0 ) {
+	sprintf(buff, "%s %s", COB_STRIP_CMD, name);
+  	ret  = process (buff);
+  }
+  return ret;
+#else
   return process (buff);
+#endif
 }
 
 static int
 process_link (struct filename *l)
 {
+#ifdef	COB_STRIP_CMD
+  int	ret;
+#endif
   char buff[FILENAME_MAX], objs[FILENAME_MAX] = "";
   char name[FILENAME_MAX];
 
@@ -725,14 +778,19 @@ process_link (struct filename *l)
   if (output_name)
     strcpy (name, output_name);
 
-#if (defined __CYGWIN__ || defined __MINGW32__)
-  sprintf (buff, "%s -Wl,--export-all-symbols -Wl,--enable-auto-import %s -o %s %s %s",
-	   cob_cc, cob_ldflags, name, objs, cob_libs);
+  sprintf (buff, "%s %s %s -o %s %s %s",
+	   cob_cc, cob_ldflags, COB_EXPORT_DYN, name, objs, cob_libs);
+
+#ifdef	COB_STRIP_CMD
+  ret  = process (buff);
+  if ( strip_output && ret == 0 ) {
+	sprintf(buff, "%s %s", COB_STRIP_CMD, name);
+  	ret  = process (buff);
+  }
+  return ret;
 #else
-  sprintf (buff, "%s -rdynamic %s -o %s %s %s",
-	   cob_cc, cob_ldflags, name, objs, cob_libs);
-#endif
   return process (buff);
+#endif
 }
 
 int

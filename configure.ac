@@ -20,7 +20,7 @@
 
 AC_PREREQ(2.59)
 
-AC_INIT([OpenCOBOL],[0.31],[open-cobol-list@lists.sourceforge.net],[open-cobol])
+AC_INIT([OpenCOBOL],[0.32],[open-cobol-list@lists.sourceforge.net],[open-cobol])
 AC_CONFIG_SRCDIR([libcob.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_TESTDIR([tests])
@@ -33,8 +33,10 @@ AM_MAINTAINER_MODE
 AH_TEMPLATE([WITH_DB],   [Compile with the Berkeley DB library])
 AH_TEMPLATE([WITH_LFS64], [Compile with large file system 64])
 AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
-AH_TEMPLATE([COB_EXPORT_DYN], [Compile option for exporting symbols])
-AH_TEMPLATE([COB_PIC_FLAGS], [Compile option for PIC code])
+AH_TEMPLATE([COB_EXPORT_DYN], [Compile/link option for exporting symbols])
+AH_TEMPLATE([COB_PIC_FLAGS], [Compile/link option for PIC code])
+AH_TEMPLATE([COB_SHARED_OPT], [Compile/link option for shared code])
+AH_TEMPLATE([COB_STRIP_CMD], [Strip command])
 
 # enable debug mode by default for now
 AC_DEFINE(COB_DEBUG)
@@ -173,9 +175,28 @@ COB_MODULE_EXT=`echo "$shlibext" | sed 's/dll\.a/dll/'`
 LIBS="$save_libs"
 COB_EXPORT_DYN="`eval echo $export_dynamic_flag_spec`"
 COB_PIC_FLAGS="$lt_prog_compiler_pic"
+COB_SHARED_OPT="-shared"
 
+case $host_os in
+  cygwin* | mingw*)
+	cobcruns=true
+	COB_EXPORT_DYN="-Wl,--export-all-symbols -Wl,--enable-auto-import"
+	;;
+  darwin* | rhapsody*)
+	cobcruns=false
+	COB_SHARED_OPT="-dynamiclib"
+	;;
+  *)
+	cobcruns=false
+	;;
+esac
+AM_CONDITIONAL(COBCRUN_SHARED, test x$cobcruns = xtrue)
 AC_DEFINE_UNQUOTED(COB_EXPORT_DYN, "$COB_EXPORT_DYN")
 AC_DEFINE_UNQUOTED(COB_PIC_FLAGS, "$COB_PIC_FLAGS")
+AC_DEFINE_UNQUOTED(COB_SHARED_OPT, "$COB_SHARED_OPT")
+if test "x$striplib" != "x"; then
+ AC_DEFINE_UNQUOTED(COB_STRIP_CMD, "$striplib")
+fi
 AC_SUBST(COB_CC)
 AC_SUBST(COB_CFLAGS)
 AC_SUBST(COB_LIBS)
@@ -187,15 +208,6 @@ AC_SUBST(COBC_LIBS)
 AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBS)
 AC_SUBST(COB_EXPORT_DYN)
-case $host_os in
-  cygwin* | mingw*)
-	cobcruns=true
-	;;
-  *)
-	cobcruns=false
-	;;
-esac
-AM_CONDITIONAL(COBCRUN_SHARED, test x$cobcruns = xtrue)
 
 AC_CONFIG_FILES([cob-config
 		Makefile lib/Makefile libcob/Makefile
@@ -207,11 +219,18 @@ echo ""
 echo "OpenCOBOL Configuration:"
 echo ""
 echo "  COB_CC               ${COB_CC}"
+echo "  CFLAGS               ${CFLAGS}"
 echo "  COB_CFLAGS           ${COB_CFLAGS}"
 echo "  COB_LIBS             ${COB_LIBS}"
 echo "  COB_CONFIG_DIR       ${COB_CONFIG_DIR}"
 echo "  COB_LIBRARY_PATH     ${COB_LIBRARY_PATH}"
 echo "  COB_MODULE_EXT       ${COB_MODULE_EXT}"
+echo "  COB_SHARED_OPT       ${COB_SHARED_OPT}"
+echo "  COB_PIC_FLAGS        ${COB_PIC_FLAGS}"
+echo "  COB_EXPORT_DYN       ${COB_EXPORT_DYN}"
+if test "x$striplib" != "x"; then
+ echo "  COB_STRIP_CMD        ${striplib}"
+fi
 echo ""
 echo "  Use gettext for international messages:      ${USE_NLS}"
 echo "  Use Berkeley DB for file I/O:                ${USE_DB}"

@@ -1066,6 +1066,20 @@ finalize_file (struct cb_file *f, struct cb_field *records)
   sprintf (buff, "%s$record", f->name);
   f->record = CB_FIELD (cb_build_implicit_field (cb_build_reference (buff),
 						 f->record_max));
+  if ( f->linage ) {
+	cb_tree x;
+
+	sprintf (buff, "LC$%s", f->name);
+	x = cb_build_field (cb_build_reference (buff));
+	CB_FIELD (x)->pic = CB_PICTURE (cb_build_picture ("9(9)"));
+	CB_FIELD (x)->usage = CB_USAGE_COMP_5;
+	CB_FIELD (x)->values = cb_list (cb_zero);
+	CB_FIELD (x)->count++;
+	cb_validate_field (CB_FIELD (x));
+	f->linage_ctr = x;
+	current_program->working_storage =
+		cb_field_add (current_program->working_storage, CB_FIELD (x));
+  }
   f->record->sister = records;
   f->record->count++;
 

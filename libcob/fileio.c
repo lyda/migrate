@@ -85,18 +85,93 @@ cob_file *cob_error_file;
 
 static cob_fileio_funcs *fileio_funcs[COB_ORG_MAX];
 
+static int	eop_status = 0;
+int		cob_check_eop = 0;
+
+/* Need some value that does not conflict with errno for OPEN/LINAGE */
+#define	COB_LINAGE_INVALID	16384
+
+#define RETURN_STATUS(x)	do { save_status (f, x); return; } while (0)
+
+static void
+save_status (cob_file *f, int status)
+{
+  static int exception[] = {
+    0,				/* 0x */
+    COB_EC_I_O_AT_END,		/* 1x */
+    COB_EC_I_O_INVALID_KEY,	/* 2x */
+    COB_EC_I_O_PERMANENT_ERROR,	/* 3x */
+    COB_EC_I_O_LOGIC_ERROR,	/* 4x */
+    COB_EC_I_O_RECORD_OPERATION,/* 5x */
+    COB_EC_I_O_FILE_SHARING,	/* 6x */
+    COB_EC_I_O,			/* unused */
+    COB_EC_I_O,			/* unused */
+    COB_EC_I_O_IMP		/* 9x */
+  };
+
+  if (f->file_status == 0)
+    f->file_status = malloc (2);
+
+  f->file_status[0] = cob_i2d (status / 10);
+  f->file_status[1] = cob_i2d (status % 10);
+  cob_error_file = f;
+  if ( status != COB_STATUS_52_EOP )
+	  COB_SET_EXCEPTION (exception[status / 10]);
+}
 
 /*
  * Regular file
  */
 
 #define FILE_WRITE_AFTER(f,opt)			\
-  if (opt & COB_WRITE_AFTER)			\
-    file_write_opt (f, opt);
+  if (opt & COB_WRITE_AFTER) {			\
+    int ret = file_write_opt (f, opt);		\
+    if ( ret )					\
+       return ret;				\
+    f->flag_needs_nl = 1;			\
+  }
 
 #define FILE_WRITE_BEFORE(f,opt)		\
-  if (opt & COB_WRITE_BEFORE)			\
-    file_write_opt (f, opt);
+  if (opt & COB_WRITE_BEFORE) {			\
+    int ret = file_write_opt (f, opt);		\
+    if ( ret )					\
+       return ret;				\
+    f->flag_needs_nl = 0;			\
+  }
+
+static int
+file_linage_check (cob_file *f)
+{
+	f->lin_lines = cob_get_int(f->linage);
+	if ( f->lin_lines < 1 ) {
+		return COB_LINAGE_INVALID;
+	}
+	if ( f->latfoot ) {
+		f->lin_foot = cob_get_int(f->latfoot);
+		if ( f->lin_foot < 1 || f->lin_foot > f->lin_lines ) {
+			return COB_LINAGE_INVALID;
+		}
+	} else {
+		f->lin_foot = 0;
+	}
+	if ( f->lattop ) {
+		f->lin_top = cob_get_int(f->lattop);
+		if ( f->lin_top < 0 ) {
+			return COB_LINAGE_INVALID;
+		}
+	} else {
+		f->lin_top = 0;
+	}
+	if ( f->latbot ) {
+		f->lin_bot = cob_get_int(f->latbot);
+		if ( f->lin_bot < 0 ) {
+			return COB_LINAGE_INVALID;
+		}
+	} else {
+		f->lin_bot = 0;
+	}
+	return 0;
+}
 
 static int
 file_open (cob_file *f, char *filename, int mode, int opt)
@@ -157,6 +232,14 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 #endif
 
   f->file = fp;
+  if ( f->linage ) {
+	if ( file_linage_check(f) ) {
+		cob_set_int(f->linage_ctr, 0);
+		return COB_LINAGE_INVALID;
+	}
+	f->flag_needs_top = 1;
+	cob_set_int(f->linage_ctr, 1);
+  }
   return 0;
 }
 
@@ -169,6 +252,12 @@ file_close (cob_file *f, int opt)
     {
     case COB_CLOSE_NORMAL:
     case COB_CLOSE_LOCK:
+      if (f->organization == COB_ORG_LINE_SEQUENTIAL) {
+	if ( f->flag_needs_nl && !f->linage ) {
+		f->flag_needs_nl = 0;
+		fputc ('\n', f->file);
+	}
+      }
 #if HAVE_FCNTL
       /* unlock the file */
       {
@@ -189,19 +278,79 @@ file_close (cob_file *f, int opt)
     }
 }
 
-static void
+static int
 file_write_opt (cob_file *f, int opt)
 {
-  if (opt & COB_WRITE_PAGE)
-    {
-      fputc ('\f', f->file);
-    }
-  else if (opt & COB_WRITE_LINES)
-    {
-      int i;
-      for (i = opt & COB_WRITE_MASK; i > 0; i--)
-	fputc ('\n', f->file);
-    }
+	if (opt & COB_WRITE_PAGE)
+	{
+		if ( f->linage ) {
+			int i, n;
+			i = cob_get_int(f->linage_ctr);
+			if ( i == 0 ) {
+				return COB_STATUS_57_I_O_LINAGE;
+			}
+			n = f->lin_lines;
+			for ( ; i < n; i++ ) {
+				fputc ('\n', f->file);
+			}
+			for ( i = 0; i < f->lin_bot; i++ ) {
+				fputc ('\n', f->file);
+			}
+			if ( file_linage_check (f) ) {
+				cob_set_int(f->linage_ctr, 0);
+				return COB_STATUS_57_I_O_LINAGE;
+			}
+			for ( i = 0; i < f->lin_top; i++ ) {
+				fputc ('\n', f->file);
+			}
+			cob_set_int(f->linage_ctr, 1);
+		} else {
+			fputc ('\f', f->file);
+		}
+	}
+	else if (opt & COB_WRITE_LINES)
+	{
+		int i, n;
+		if ( f->linage ) {
+			n = cob_get_int(f->linage_ctr);
+			if ( n == 0 ) {
+				return COB_STATUS_57_I_O_LINAGE;
+			}
+			cob_add_int(f->linage_ctr, opt & COB_WRITE_MASK);
+			i = cob_get_int(f->linage_ctr);
+			if ( cob_check_eop && f->lin_foot ) {
+				if ( i >= f->lin_foot ) {
+					eop_status = 1;
+				}
+			}
+			if ( i > f->lin_lines ) {
+				if ( cob_check_eop ) {
+					eop_status = 1;
+				}
+				for ( ; n < f->lin_lines; i++ ) {
+					fputc ('\n', f->file);
+				}
+				for ( i = 0; i < f->lin_bot; i++ ) {
+					fputc ('\n', f->file);
+				}
+				if ( file_linage_check (f) ) {
+					cob_set_int(f->linage_ctr, 0);
+					return COB_STATUS_57_I_O_LINAGE;
+				}
+				cob_set_int(f->linage_ctr, 1);
+				for ( i = 0; i < f->lin_top; i++ ) {
+					fputc ('\n', f->file);
+				}
+			} else {
+				for (i = (opt & COB_WRITE_MASK) - 1; i > 0; i--)
+					fputc ('\n', f->file);
+			}
+		} else {
+			for (i = opt & COB_WRITE_MASK; i > 0; i--)
+				fputc ('\n', f->file);
+		}
+	}
+	return 0;
 }
 
 
@@ -316,14 +465,29 @@ lineseq_write (cob_file *f, int opt)
       break;
   size = i + 1;
 
+  if ( f->linage && f->flag_needs_top ) {
+	f->flag_needs_top = 0;
+	for ( i = 0; i < f->lin_top; i++ ) {
+		fputc ('\n', f->file);
+	}
+  }
   FILE_WRITE_AFTER (f, opt);
 
   /* write to the file */
   for (i = 0; i < size; i++)
     fputc (f->record->data[i], f->file);
 
+  if ( f->linage ) {
+	fputc ('\n', f->file);
+  }
+
   FILE_WRITE_BEFORE (f, opt);
 
+  if ( eop_status ) {
+	eop_status = 0;
+	cob_exception_code = 0x0502;
+  	return COB_STATUS_52_EOP;
+  }
   return COB_STATUS_00_SUCCESS;
 }
 
@@ -945,33 +1109,6 @@ static cob_fileio_funcs sort_funcs = {
  * Public interface
  */
 
-#define RETURN_STATUS(x)	do { save_status (f, x); return; } while (0)
-
-static void
-save_status (cob_file *f, int status)
-{
-  static int exception[] = {
-    0,				/* 0x */
-    COB_EC_I_O_AT_END,		/* 1x */
-    COB_EC_I_O_INVALID_KEY,	/* 2x */
-    COB_EC_I_O_PERMANENT_ERROR,	/* 3x */
-    COB_EC_I_O_LOGIC_ERROR,	/* 4x */
-    COB_EC_I_O_RECORD_OPERATION,/* 5x */
-    COB_EC_I_O_FILE_SHARING,	/* 6x */
-    COB_EC_I_O,			/* unused */
-    COB_EC_I_O,			/* unused */
-    COB_EC_I_O_IMP		/* 9x */
-  };
-
-  if (f->file_status == 0)
-    f->file_status = malloc (2);
-
-  f->file_status[0] = cob_i2d (status / 10);
-  f->file_status[1] = cob_i2d (status % 10);
-  cob_error_file = f;
-  COB_SET_EXCEPTION (exception[status / 10]);
-}
-
 void
 cob_open (cob_file *f, int mode, int opt)
 {
@@ -1088,6 +1225,8 @@ cob_open (cob_file *f, int mode, int opt)
       //case EACCES:
     case EAGAIN:
       RETURN_STATUS (COB_STATUS_61_FILE_SHARING);
+    case COB_LINAGE_INVALID:
+      RETURN_STATUS (COB_STATUS_57_I_O_LINAGE);
     default:
       RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
     }
@@ -1453,6 +1592,13 @@ cob_default_error_handle (void)
       break;
     case COB_STATUS_49_I_O_DENIED:
       msg = N_("DELETE/REWRITE not allowed");
+      break;
+/*
+    case COB_STATUS_52_EOP:
+      break;
+*/
+    case COB_STATUS_57_I_O_LINAGE:
+      msg = N_("LINAGE values invalid");
       break;
     default:
       msg = N_("Unknown file error");

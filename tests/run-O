@@ -1,4 +1,6 @@
 #!/bin/sh 
-
+echo
+echo "## Run time tests with runtime inlining ##"
+echo
 . atconfig
 COBOL_FLAGS='-fruntime-inlining' ${abs_srcdir}/run

@@ -307,7 +307,7 @@ static struct reserved reserved_words[] = {
   {"LIMIT",		-1, 0},				/* 2002 */
   {"LIMITS",		-1, 0},				/* 2002 */
   {"LINAGE",		LINAGE, 0},			/* 2002 */
-  {"LINAGE-COUNTER",	0, 0},				/* 2002 */
+  {"LINAGE-COUNTER",	LINAGE_COUNTER, 0},		/* 2002 */
   {"LINE",		LINE, 0},			/* 2002 */
   {"LINE-COUNTER",	-1, 0},				/* 2002 */
   {"LINES",		LINES, 0},			/* 2002 */

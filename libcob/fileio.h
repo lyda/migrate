@@ -73,6 +73,7 @@
 #define COB_WRITE_PAGE		0x00020000
 #define COB_WRITE_AFTER		0x00100000
 #define COB_WRITE_BEFORE	0x00200000
+#define COB_WRITE_EOP		0x00400000
 
 /* I-O status */
 
@@ -101,6 +102,8 @@
 #define COB_STATUS_47_INPUT_DENIED		47
 #define COB_STATUS_48_OUTPUT_DENIED		48
 #define COB_STATUS_49_I_O_DENIED		49
+#define COB_STATUS_52_EOP			52
+#define COB_STATUS_57_I_O_LINAGE		57
 #define COB_STATUS_61_FILE_SHARING		61
 
 
@@ -126,14 +129,23 @@ typedef struct {
   int nkeys;			/* the number of keys */
   cob_file_key *keys;		/* RELATIVE/RECORD/SORT keys */
   void *file;			/* file type specific data pointer */
+  cob_field *linage;		/* LINAGE */
+  cob_field *linage_ctr;	/* LINAGE-COUNTER */
+  cob_field *latfoot;		/* LINAGE FOOTING */
+  cob_field *lattop;		/* LINAGE AT TOP */
+  cob_field *latbot;		/* LINAGE AT BOTTOM */
+  int lin_lines;		/* Current Linage */
+  int lin_foot;			/* Current Footage */
+  int lin_top;			/* Current Top */
+  int lin_bot;			/* Current Bottom */
   char last_open_mode;		/* open mode given by OPEN */
   char flag_nonexistent;	/* nonexistent file */
   char flag_end_of_file;	/* reached the end of file */
   char flag_first_read;		/* first READ after OPEN or START */
   char flag_read_done;		/* last READ successfully done */
   char flag_has_status;		/* has FILE STATUS clause */
-  char flag_spare_byte7;	/* spare byte */
-  char flag_spare_byte8;	/* spare byte */
+  char flag_needs_nl;		/* LS file needs NL at close */
+  char flag_needs_top;		/* Linage needs top */
 } cob_file;
 
 /* File I-O functions */
@@ -150,6 +162,8 @@ typedef struct {
 } cob_fileio_funcs;
 
 extern cob_file *cob_error_file;
+
+extern int	cob_check_eop;
 
 extern void cob_init_fileio (void);
 extern void cob_default_error_handle (void);

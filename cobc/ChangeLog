@@ -1,6 +1,20 @@
+2005-03-03  Roger While <simrw@sim-basis.de>
+
+	* cobc.h, tree.h, parser.y, reserved.c, cobc.c,
+	  tree.c, codegen.c, typeck.c :
+	  Implement LINAGE
+	  Implement -Os
+	  Implement stripping of main/modules with O2 or Os
+	  Fix dangling preprocess file after non-existent
+	  file
+	  Fix ASSIGN implicit data-item when not referenced
+	  Implement some options for gcc >= 3
+	  Change an incorrect long to int
+	  Change bit fields from long to int
+
 2005-02-22  Roger While <simrw@sim-basis.de>
 
-	* codegen.c : Generated C code indnetation
+	* codegen.c : Generated C code indentation
 	  typeck.c : Check usage of 66 level with pointer
 
 2005-02-15  Roger While <simrw@sim-basis.de>

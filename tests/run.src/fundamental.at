@@ -49,7 +49,7 @@ AT_CHECK([./prog], [0],
 AT_CLEANUP
 
 
-AT_SETUP([DISPLAY literals])
+AT_SETUP([DISPLAY literals, Decimal Point is COMMA])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.

@@ -5672,11 +5672,14 @@ relink_command=\"$relink_command\""
 	    if test "$finalize" = yes && test -z "$run"; then
 	      tmpdir="/tmp"
 	      test -n "$TMPDIR" && tmpdir="$TMPDIR"
-	      tmpdir="$tmpdir/libtool-$$"
-	      if $mkdir "$tmpdir" && chmod 700 "$tmpdir"; then :
+              if tmpdir=`mktemp -d $tmpdir/libtool-XXXXXX 2> /dev/null`; then :
 	      else
-		$echo "$modename: error: cannot create temporary directory \`$tmpdir'" 1>&2
-		continue
+                tmpdir="$tmpdir/libtool-$$"
+		if $mkdir "$tmpdir" && chmod 700 "$tmpdir"; then :
+		else
+		  $echo "$modename: error: cannot create temporary directory \`$tmpdir'" 1>&2
+		  continue
+		fi
 	      fi
 	      file=`$echo "X$file$stripped_ext" | $Xsed -e 's%^.*/%%'`
 	      outputname="$tmpdir/$file"
@@ -5965,14 +5968,14 @@ relink_command=\"$relink_command\""
       fi
 
       # Now prepare to actually exec the command.
-      exec_cmd="\$cmd$args"
+      exec_cmd="\"\$cmd\"$args"
     else
       # Display what would be done.
       if test -n "$shlibpath_var"; then
 	eval "\$echo \"\$shlibpath_var=\$$shlibpath_var\""
 	$echo "export $shlibpath_var"
       fi
-      $echo "$cmd$args"
+      eval \$echo \"\$cmd\"$args
       exit 0
     fi
     ;;

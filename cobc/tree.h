@@ -426,25 +426,26 @@ struct cb_field {
   } *keys;
   int nkeys;			/* the number of keys */
   struct cb_picture *pic;	/* PICTURE */
-  /* flags */
-  long flag_external      : 1;	/* EXTERNAL */
-  long flag_blank_zero    : 1;	/* BLANK WHEN ZERO */
-  long flag_justified     : 1;	/* JUSTIFIED RIGHT */
-  long flag_sign_leading  : 1;	/* SIGN IS LEADING */
-  long flag_sign_separate : 1;	/* SIGN IS SEPARATE */
-  long flag_synchronized  : 1;	/* SYNCHRONIZED */
-  long flag_occurs        : 1;	/* OCCURS */
-  long flag_invalid       : 1;	/* is broken */
-  long flag_binary_swap   : 1;	/* binary byteswap */
-  long flag_local         : 1;	/* has local scope */
-  long flag_base          : 1;
-  long flag_field         : 1;
   /* screen parameters */
   cb_tree screen_line;
   cb_tree screen_column;
   cb_tree screen_from;
   cb_tree screen_to;
   long screen_flag;		/* flags used in SCREEN SECTION */
+  /* flags */
+  int flag_external      : 1;	/* EXTERNAL */
+  int flag_blank_zero    : 1;	/* BLANK WHEN ZERO */
+  int flag_justified     : 1;	/* JUSTIFIED RIGHT */
+  int flag_sign_leading  : 1;	/* SIGN IS LEADING */
+  int flag_sign_separate : 1;	/* SIGN IS SEPARATE */
+  int flag_synchronized  : 1;	/* SYNCHRONIZED */
+  int flag_occurs        : 1;	/* OCCURS */
+  int flag_invalid       : 1;	/* is broken */
+  int flag_binary_swap   : 1;	/* binary byteswap */
+  int flag_local         : 1;	/* has local scope */
+  int flag_base          : 1;
+  int flag_field         : 1;
+  int flag_spare	 : 20;
 };
 
 #define CB_FIELD(x)		(CB_TREE_CAST (CB_TAG_FIELD, struct cb_field, x))
@@ -494,6 +495,11 @@ struct cb_file {
   struct cb_field *record;	/* record descriptor */
   int record_min, record_max;	/* RECORD CONTAINS */
   cb_tree record_depending;	/* RECORD DEPENDING */
+  cb_tree linage_ctr;
+  cb_tree linage;
+  cb_tree latfoot;
+  cb_tree lattop;
+  cb_tree latbot;
   /* STANDARD ERROR PROCEDURE */
   struct cb_label *handler;	/* error handler */
 };
@@ -881,10 +887,10 @@ struct cb_program {
   struct cb_field *screen_storage;
   struct cb_label *file_handler[5];
   cb_tree collating_sequence;
-  long flag_common      : 1;		/* COMMON PROGRAM */
-  long flag_initial     : 1;		/* INITIAL PROGRAM */
-  long flag_recursive   : 1;		/* RECURSIVE PROGRAM */
-  long flag_screen      : 1;		/* have SCREEN SECTION */
+  char flag_common;		/* COMMON PROGRAM */
+  char flag_initial;		/* INITIAL PROGRAM */
+  char flag_recursive;		/* RECURSIVE PROGRAM */
+  char flag_screen;		/* have SCREEN SECTION */
   /* internal variables */
   int loop_counter;
   int decimal_index;

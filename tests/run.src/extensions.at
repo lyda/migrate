@@ -548,7 +548,7 @@ AT_DATA([prog.cob], [
 
 AT_CHECK([${COMPILE} -conf=test.conf -o prog prog.cob])
 AT_CHECK([DIR="/tmp" ./prog], [0])
-AT_CHECK([test -f "/tmp/FILENAME"], [0])
+AT_CHECK([test -f "/tmp/FILENAME" && rm -f "/tmp/FILENAME"], [0])
 
 AT_CLEANUP
 

@@ -32,6 +32,8 @@
   do {									      \
     fprintf (stderr, "Aborting compile of %s at line %d\n", cb_source_file, cb_source_line); \
     fprintf (stderr, "%s:%d: internal compiler error\n", __FILE__, __LINE__); \
+    if ( yyout ) fflush(yyout);						      \
+    if ( cb_storage_file ) fflush(cb_storage_file);			      \
     abort ();								      \
   } while (0)
 
