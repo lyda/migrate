@@ -488,6 +488,19 @@ cob_move_alphanum_to_edited (struct cob_field f1, struct cob_field f2)
 }
 
 
+/*
+ * MOVE dispatcher
+ */
+
+static int
+is_numeric_edited (const char *pic)
+{
+  for (; *pic; pic += 2)
+    if (strchr ("AX9B0/", *pic) == NULL)
+      return 1;
+  return 0;
+}
+
 static void
 indirect_move (void (*move_func) (struct cob_field f1, struct cob_field f2),
 	       struct cob_field f1, struct cob_field f2, char *pic)
@@ -502,30 +515,17 @@ indirect_move (void (*move_func) (struct cob_field f1, struct cob_field f2),
   cob_move (temp, f2);
 }
 
-static int
-is_numeric_edited (const char *pic)
-{
-  for (; *pic; pic += 2)
-    if (strchr ("AX9B0/", *pic) == NULL)
-      return 1;
-  return 0;
-}
-
 void
 cob_move (struct cob_field f1, struct cob_field f2)
 {
   if (f1.desc->all)
-    switch (f1.desc->type)
+    switch (f2.desc->type)
       {
       case DTYPE_BININT:
-	return indirect_move (cob_move_binary_to_display,
-			      f1, f2, f1.desc->pic);
       case DTYPE_FLOAT:
-	return indirect_move (cob_move_float_to_display,
-			      f1, f2, f1.desc->pic);
       case DTYPE_PACKED:
-	return indirect_move (cob_move_packed_to_display,
-			      f1, f2, f1.desc->pic);
+      case DTYPE_EDITED:
+	return indirect_move (cob_move_all, f1, f2, f2.desc->pic);
       default:
 	return cob_move_all (f1, f2);
       }
@@ -626,6 +626,7 @@ cob_move_zero (struct cob_field f)
 	}
 
     case '9':
+    case 'X':
       memset (f.data, '0', f.desc->len);
       put_sign (f.desc, f.data, 0);
       return;
