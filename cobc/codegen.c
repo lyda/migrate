@@ -33,7 +33,7 @@
 
 #define decimal_char() (decimal_comma ? ',' : '.')
 
-int pgm_segment = 0;
+int pgm_segment = -1;
 int screen_io_enable = 0;
 int scr_line, scr_column;
 int decimal_comma = 0;
@@ -272,7 +272,12 @@ lookup_for_redefines (struct sym *sy)
     return lookup_variable (sy, curr_field->parent);
 }
 
-void
+
+/*
+ * Init program
+ */
+
+static void
 clear_symtab ()
 {
   struct sym *sy, *sy1, *tmp;
@@ -317,8 +322,7 @@ clear_symtab ()
     }
 }
 
-/* clear_offset() is called when starting a new program segment */
-void
+static void
 clear_offsets ()
 {
   stack_offset = 0;
@@ -341,6 +345,58 @@ clear_offsets ()
   tmpvar_max = 0;
 }
 
+static void
+define_special_fields ()
+{
+  struct sym *sy, *tmp;
+
+  spe_lit_SP = save_special_literal (' ', 'X', "%SPACES%");
+  spe_lit_LV = save_special_literal ('\0', 'X', "%LOW-VALUES%");
+  spe_lit_HV = save_special_literal ('\xff', 'X', "%HIGH-VALUES%");
+  spe_lit_ZE = save_special_literal ('0', '9', "%ZEROS%");
+  spe_lit_QU = save_special_literal ('"', 'X', "%QUOTES%");
+  spe_lit_SP->all = 1;
+  spe_lit_LV->all = 1;
+  spe_lit_HV->all = 1;
+  spe_lit_ZE->all = 1;
+  spe_lit_QU->all = 1;
+
+  sy = install (SVAR_RCODE, SYTB_VAR, 0);
+  sy->type = 'B';		/* assume numeric "usage is comp" item */
+  sy->len = 4;
+  sy->decimals = 0;
+  sy->level = 1;
+  sy->sec_no = SEC_DATA;
+  sy->times = 1;
+  sy->flags.value = 1;
+  picture[0] = '9';
+  picture[1] = 5;
+  picture[2] = 0;
+
+  tmp = curr_field;
+  curr_field = sy;
+  curr_field->value = spe_lit_ZE;
+  curr_field->value2 = spe_lit_ZE;
+  update_field ();
+  close_fields ();
+  curr_field = tmp;
+}
+
+void
+init_program (const char *id)
+{
+  pgm_segment++;
+  clear_symtab ();
+  clear_offsets ();
+
+  if (!pgm_segment)
+    fprintf (o_src, "\t.file\t\"%s\"\n", cob_source_filename);
+  strcpy (program_id, id);
+
+  define_special_fields ();
+}
+
+
 /*** we need this because the literal string is already stored ***/
 char
 sign_to_char (int digit)
@@ -1044,14 +1100,6 @@ stabs_line ()
 
   last_orig_lineno = cob_orig_lineno;
   last_orig_filename = cob_orig_filename;
-}
-
-void
-pgm_header (char *id)
-{
-  if (!pgm_segment)
-    fprintf (o_src, "\t.file\t\"%s\"\n", cob_source_filename);
-  strcpy (program_id, id);
 }
 
 void
@@ -4301,43 +4349,6 @@ gen_SearchAllLoopCheck (unsigned long lbl3, struct sym *syidx,
   gen_dstlabel (lend);
 
   stabs_line ();
-}
-
-void
-define_special_fields ()
-{
-  struct sym *sy, *tmp;
-
-  spe_lit_SP = save_special_literal (' ', 'X', "%SPACES%");
-  spe_lit_LV = save_special_literal ('\0', 'X', "%LOW-VALUES%");
-  spe_lit_HV = save_special_literal ('\xff', 'X', "%HIGH-VALUES%");
-  spe_lit_ZE = save_special_literal ('0', '9', "%ZEROS%");
-  spe_lit_QU = save_special_literal ('"', 'X', "%QUOTES%");
-  spe_lit_SP->all = 1;
-  spe_lit_LV->all = 1;
-  spe_lit_HV->all = 1;
-  spe_lit_ZE->all = 1;
-  spe_lit_QU->all = 1;
-
-  sy = install (SVAR_RCODE, SYTB_VAR, 0);
-  sy->type = 'B';		/* assume numeric "usage is comp" item */
-  sy->len = 4;
-  sy->decimals = 0;
-  sy->level = 1;
-  sy->sec_no = SEC_DATA;
-  sy->times = 1;
-  sy->flags.value = 1;
-  picture[0] = '9';
-  picture[1] = 5;
-  picture[2] = 0;
-
-  tmp = curr_field;
-  curr_field = sy;
-  curr_field->value = spe_lit_ZE;
-  curr_field->value2 = spe_lit_ZE;
-  update_field ();
-  close_fields ();
-  curr_field = tmp;
 }
 
 void

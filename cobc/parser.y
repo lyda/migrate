@@ -240,7 +240,6 @@ static void check_decimal_point (struct lit *lit);
 %type <sval> set_variable,set_variable_or_nlit,set_target,opt_add_to
 %type <condval> condition,simple_condition,implied_op_condition
 %type <sval> qualified_var,unqualified_var
-%type <ival> opt_end_program,program_sequence
 %type <lval> from_rec_varying,to_rec_varying
 %type <sval> depend_rec_varying
 %type <sval> file_description,redefines_var
@@ -251,29 +250,23 @@ static void check_decimal_point (struct lit *lit);
 
 
 %%
-
-/************   Parser for Cobol Source  **************/
+/*****************************************************************************/
 
 program_sequence:
-        program opt_end_program { pgm_segment++; $$=$2; }
-        | program_sequence
-                program
-                opt_end_program { pgm_segment++;
-                        if (!$1) yyerror("END PROGRAM expected"); $$=$3; }
-        ;
-opt_end_program:                
-        /* nothing */ { $$=0; }
-        | END PROGRAM
-        { clear_symtab(); clear_offsets(); }
-        idstring
-        { $$=1; }
-        ;
+  program
+| program_sequence program
+;
 program:
-    identification_division 
-    environment_division
-    data_division
-    procedure_division
-  ;
+  identification_division 
+  environment_division
+  data_division
+  procedure_division
+  opt_end_program
+;
+opt_end_program:
+  /* nothing */
+| END PROGRAM idstring
+;
 
 
 /*****************************************************************************
@@ -281,36 +274,35 @@ program:
  *****************************************************************************/
 
 identification_division:
-    IDENTIFICATION_TOK DIVISION '.'
-    PROGRAM_ID '.' idstring opt_program_parameter '.' 
-    identification_division_options
-    {
-      pgm_header ($6);
-      define_special_fields ();
-    }
-  ;
+  IDENTIFICATION_TOK DIVISION '.'
+  PROGRAM_ID '.' idstring opt_program_parameter '.' 
+  identification_division_options
+  {
+    init_program ($6);
+  }
+;
 opt_program_parameter:
     /* nothing */
   | opt_is program_parameter opt_program
     {
-      yywarn ("program parameter is not supported yet");
+      yywarn ("program parameters are not supported yet");
     }
-  ;
+;
 program_parameter:
     INITIALTOK
   | COMMONTOK
-  ;
+;
 identification_division_options:
     /* nothing */
   | identification_division_options identification_division_option
-  ;
+;
 identification_division_option:
     AUTHOR_TOK '.' comment
   | DATE_WRITTEN_TOK '.' comment
   | DATE_COMPILED_TOK '.' comment
   | INSTALLATION_TOK '.' comment
   | SECURITY_TOK '.' comment
-  ;
+;
 
 opt_program: | PROGRAM ;
 

@@ -392,9 +392,8 @@ extern struct lit *install_literal (const char *name);
 extern struct sym *lookup_label (struct sym *sy, struct sym *parent);
 extern struct sym *lookup_variable (struct sym *sy, struct sym *parent);
 extern struct sym *lookup_for_redefines (struct sym *sy);
+extern void init_program (const char *id);
 extern void gen_loadvar (struct sym *sy);
-extern void clear_symtab (void);
-extern void clear_offsets (void);
 extern char sign_to_char (int digit);
 extern struct lit *invert_literal_sign (struct lit *sy);
 extern void set_sign_flags (int flags);
@@ -405,7 +404,6 @@ extern void emit_lit (char *s, int len);
 extern void emit_lit_fill (int c, int len);
 extern void gen_init_value (struct lit *sy, int var_len);
 extern void stabs_line (void);
-extern void pgm_header (char *id);
 extern void data_trail (void);
 extern int adjust_linkage_vars (int start_offset);
 extern void proc_header (int using);
@@ -581,7 +579,6 @@ extern void gen_SearchLoopCheck (unsigned long lbl5, struct sym *syidx,
 extern void gen_SearchAllLoopCheck (unsigned long lbl3, struct sym *syidx,
 				    struct sym *sytbl, struct sym *syvar,
 				    unsigned long lstart, unsigned long lend);
-extern void define_special_fields (void);
 extern void define_implicit_field (struct sym *sy, struct sym *sykey, int idxlen);
 extern void Initialize_SearchAll_Boundaries (struct sym *sy,
 					     struct sym *syidx);
