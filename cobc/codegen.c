@@ -32,14 +32,13 @@
 static int param_id = 0;
 
 static void output_stmt (cb_tree x);
-static void output_data (cb_tree x);
 static void output_integer (cb_tree x);
 static void output_index (cb_tree x);
 static void output_funcall (cb_tree x);
 
 
 /*
- * Output routine
+ * Output routines
  */
 
 static int output_indent_level = 0;
@@ -144,7 +143,39 @@ output_storage (const char *fmt, ...)
 
 
 /*
- * Output field
+ * Recursion
+ */
+
+static void
+output_recursive (void (*func) (struct cb_field *), struct cb_field *f)
+{
+  if (f->level != 01 && f->level != 77 && f->redefines)
+    return;
+
+  if (f->flag_occurs)
+    {
+      /* begin occurs loop */
+      int i = f->indexes;
+      output_indent ("{");
+      output_line ("int i%d;", i);
+      output_line ("for (i%d = 0; i%d < %d; i%d++)", i, i, f->occurs_max, i);
+      output_indent ("  {");
+    }
+
+  /* process output */
+  func (f);
+
+  if (f->flag_occurs)
+    {
+      /* close loop */
+      output_indent ("  }");
+      output_indent ("}");
+    }
+}
+
+
+/*
+ * Field
  */
 
 static void
@@ -514,6 +545,123 @@ lookup_literal (cb_tree x)
   return id;
 }
 
+
+/*
+ * Integer
+ */
+
+static void
+output_integer (cb_tree x)
+{
+  switch (CB_TREE_TAG (x))
+    {
+    case CB_TAG_CONST:
+      if (x == cb_zero)
+	output ("0");
+      else
+	output ("%s", CB_CONST (x)->val);
+      break;
+    case CB_TAG_INTEGER:
+      output ("%d", CB_INTEGER (x)->val);
+      break;
+    case CB_TAG_LITERAL:
+      output ("%d", cb_literal_to_int (CB_LITERAL (x)));
+      break;
+    case CB_TAG_BINARY_OP:
+      {
+	struct cb_binary_op *p = CB_BINARY_OP (x);
+	output_integer (p->x);
+	output (" %c ", p->op);
+	output_integer (p->y);
+	break;
+      }
+    default:
+      {
+	struct cb_field *f = cb_field (x);
+	if (f->usage == CB_USAGE_INDEX)
+	  {
+	    if (f->level == 0)
+	      {
+		output ("i_%s", f->cname);
+	      }
+	    else
+	      {
+		output ("(*(int *) (");
+		output_data (x);
+		output ("))");
+	      }
+	    return;
+	  }
+
+	if (cb_flag_inline_get_int)
+	  {
+	    switch (f->usage)
+	      {
+	      case CB_USAGE_DISPLAY:
+		if (f->pic->expt <= 0
+		    && f->size + f->pic->expt <= 4
+		    && f->pic->have_sign == 0)
+		  {
+		    int i, j;
+		    int size = f->size + f->pic->expt;
+		    output ("(");
+		    for (i = 0; i < size; i++)
+		      {
+			output ("((");
+			output_data (x);
+			output (")");
+			output ("[%d] - '0')", i);
+			if (i + 1 < size)
+			  {
+			    output (" * 1");
+			    for (j = 1; j < size - i; j++)
+			      output ("0");
+			    output (" + ");
+			  }
+		      }
+		    output (")");
+		    return;
+		  }
+		break;
+
+	      case CB_USAGE_BINARY:
+		output ("(*(");
+		switch (f->size)
+		  {
+		  case 1: output ("char"); break;
+		  case 2: output ("short"); break;
+		  case 4: output ("long"); break;
+		  case 8: output ("long long"); break;
+		  }
+		output (" *) (");
+		output_data (x);
+		output ("))");
+		return;
+
+	      default:
+		break;
+	      }
+	  }
+
+	output_funcall (cb_build_funcall_1 ("cob_get_int", x));
+	break;
+      }
+    }
+}
+
+static void
+output_index (cb_tree x)
+{
+  output ("(");
+  output_integer (x);
+  output (" - 1)");
+}
+
+
+/*
+ * Parameter
+ */
+
 static void
 output_param (cb_tree x, int id)
 {
@@ -682,127 +830,29 @@ output_param (cb_tree x, int id)
     }
 }
 
-static void
-output_move (cb_tree src, cb_tree dst)
-{
-  output_stmt (cb_build_move (src, dst));
-}
-
 
 /*
- * Integer
+ * Function call
  */
 
 static void
-output_integer (cb_tree x)
+output_funcall (cb_tree x)
 {
-  switch (CB_TREE_TAG (x))
+  int i;
+  struct cb_funcall *p = CB_FUNCALL (x);
+  output ("%s (", p->name);
+  for (i = 0; i < p->argc; i++)
     {
-    case CB_TAG_CONST:
-      if (x == cb_zero)
-	output ("0");
-      else
-	output ("%s", CB_CONST (x)->val);
-      break;
-    case CB_TAG_INTEGER:
-      output ("%d", CB_INTEGER (x)->val);
-      break;
-    case CB_TAG_LITERAL:
-      output ("%d", cb_literal_to_int (CB_LITERAL (x)));
-      break;
-    case CB_TAG_BINARY_OP:
-      {
-	struct cb_binary_op *p = CB_BINARY_OP (x);
-	output_integer (p->x);
-	output (" %c ", p->op);
-	output_integer (p->y);
-	break;
-      }
-    default:
-      {
-	struct cb_field *f = cb_field (x);
-	if (f->usage == CB_USAGE_INDEX)
-	  {
-	    if (f->level == 0)
-	      {
-		output ("i_%s", f->cname);
-	      }
-	    else
-	      {
-		output ("(*(int *) (");
-		output_data (x);
-		output ("))");
-	      }
-	    return;
-	  }
-
-	if (cb_flag_inline_get_int)
-	  {
-	    switch (f->usage)
-	      {
-	      case CB_USAGE_DISPLAY:
-		if (f->pic->expt <= 0
-		    && f->size + f->pic->expt <= 4
-		    && f->pic->have_sign == 0)
-		  {
-		    int i, j;
-		    int size = f->size + f->pic->expt;
-		    output ("(");
-		    for (i = 0; i < size; i++)
-		      {
-			output ("((");
-			output_data (x);
-			output (")");
-			output ("[%d] - '0')", i);
-			if (i + 1 < size)
-			  {
-			    output (" * 1");
-			    for (j = 1; j < size - i; j++)
-			      output ("0");
-			    output (" + ");
-			  }
-		      }
-		    output (")");
-		    return;
-		  }
-		break;
-
-	      case CB_USAGE_BINARY:
-		output ("(*(");
-		switch (f->size)
-		  {
-		  case 1: output ("char"); break;
-		  case 2: output ("short"); break;
-		  case 4: output ("long"); break;
-		  case 8: output ("long long"); break;
-		  }
-		output (" *) (");
-		output_data (x);
-		output ("))");
-		return;
-
-	      default:
-		break;
-	      }
-	  }
-
-	output_funcall (cb_build_funcall_1 ("cob_get_int", x));
-	break;
-      }
+      output_param (p->argv[i], i);
+      if (i + 1 < p->argc)
+	output (", ");
     }
-}
-
-static void
-output_index (cb_tree x)
-{
-  output ("(");
-  output_integer (x);
-  output (" - 1)");
+  output (")");
 }
 
 
 /*
- * Output condition
+ * Condition
  */
 
 static void
@@ -887,54 +937,13 @@ output_cond (cb_tree x, int save_flag)
 
 
 /*
- * Recursion
+ * MOVE
  */
 
 static void
-output_recursive (void (*func) (struct cb_field *), struct cb_field *f)
+output_move (cb_tree src, cb_tree dst)
 {
-  if (f->level != 01 && f->level != 77 && f->redefines)
-    return;
-
-  if (f->flag_occurs)
-    {
-      /* begin occurs loop */
-      int i = f->indexes;
-      output_indent ("{");
-      output_line ("int i%d;", i);
-      output_line ("for (i%d = 0; i%d < %d; i%d++)", i, i, f->occurs_max, i);
-      output_indent ("  {");
-    }
-
-  /* process output */
-  func (f);
-
-  if (f->flag_occurs)
-    {
-      /* close loop */
-      output_indent ("  }");
-      output_indent ("}");
-    }
-}
-
-
-/*
- * Function call
- */
-
-static void
-output_funcall (cb_tree x)
-{
-  int i;
-  struct cb_funcall *p = CB_FUNCALL (x);
-  output ("%s (", p->name);
-  for (i = 0; i < p->argc; i++)
-    {
-      output_param (p->argv[i], i);
-      if (i + 1 < p->argc)
-	output (", ");
-    }
-  output (")");
+  output_stmt (cb_build_move (src, dst));
 }
 
 
