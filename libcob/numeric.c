@@ -485,7 +485,7 @@ cob_div_quotient (struct cob_field dividend, struct cob_field divisor,
 }
 
 void
-cob_div_reminder (struct cob_field remainder)
+cob_div_remainder (struct cob_field remainder)
 {
   decimal_get (cob_d3, remainder, 0);
 }

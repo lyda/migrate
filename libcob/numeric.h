@@ -59,6 +59,6 @@ extern void cob_sub (struct cob_field f1, struct cob_field f2, int round);
 extern void cob_sub_int (struct cob_field f, int n, int decimals, int round);
 extern void cob_sub_int64 (struct cob_field f, long long n, int decimals, int round);
 extern void cob_div_quotient (struct cob_field dividend, struct cob_field divisor, struct cob_field quotient, int round);
-extern void cob_div_reminder (struct cob_field remainder);
+extern void cob_div_remainder (struct cob_field remainder);
 
 #endif /* COB_NUMERIC_H_ */

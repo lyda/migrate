@@ -1,5 +1,10 @@
 2002-05-31  Keisuke Nishida  <knishida@netlab.jp>
 
+	* numeric.c, numeric.h (cob_div_remainder): Renamed from
+	`cob_div_reminder' (typo fix).
+
+2002-05-31  Keisuke Nishida  <knishida@netlab.jp>
+
 	* common.c, common.h (cob_index, cob_index_depending): Take `name'.
 	Display index name with the error message.
 	* support.h (COB_INDEX, COB_INDEX_DEPENDING): Take `name'.
