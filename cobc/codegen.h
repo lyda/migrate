@@ -589,6 +589,7 @@ extern int gen_passlabel (void);
 extern int gen_marklabel (void);
 extern void gen_jmplabel (int lbl);
 extern void gen_push_int (struct sym *sy);
+extern void gen_cancel (struct sym *sy);
 extern void gen_perform_test_counter (int lbl);
 extern void gen_perform_times (int lbl);
 extern void gen_perform_thru (struct sym *s1, struct sym *s2);

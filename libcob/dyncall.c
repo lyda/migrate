@@ -30,46 +30,63 @@
 
 
 /*
- * Symbol table hash
+ * Call table
  */
 
-#define HASHSIZE	131
+#define HASH_SIZE	131
 
-static struct sym
+static struct call_hash
 {
-  char *name;
+  const char *name;
   void *func;
-  struct sym *next;
-} *symtab[HASHSIZE];
+  void *handle;
+  struct call_hash *next;
+} *call_table[HASH_SIZE];
 
 static int
 hash (const char *s)
 {
-  int i = 0;
+  int val = 0;
   while (*s)
-    i += *s++;
-  return i % HASHSIZE;
+    val += *s++;
+  return val % HASH_SIZE;
+}
+
+static void
+insert (const char *name, void *handle, void *func)
+{
+  int val = hash (name);
+  struct call_hash *p = malloc (sizeof (struct call_hash));
+  p->name = strdup (name);
+  p->func = func;
+  p->handle = handle;
+  p->next = call_table[val];
+  call_table[val] = p;
 }
 
 static void *
 lookup (const char *name)
 {
-  struct sym *sym;
-  for (sym = symtab[hash (name)]; sym; sym = sym->next)
-    if (strcmp (name, sym->name) == 0)
-      return sym->func;
+  struct call_hash *p;
+  for (p = call_table[hash (name)]; p; p = p->next)
+    if (strcmp (name, p->name) == 0)
+      return p->func;
   return NULL;
 }
 
 static void
-insert (const char *name, void *func)
+drop (const char *name)
 {
-  int i = hash (name);
-  struct sym *sym = malloc (sizeof (struct sym));
-  sym->name = strdup (name);
-  sym->func = func;
-  sym->next = symtab[i];
-  symtab[i] = sym;
+  struct call_hash **pp;
+  for (pp = &call_table[hash (name)]; *pp; pp = &(*pp)->next)
+    if (strcmp (name, (*pp)->name) == 0)
+      {
+	struct call_hash *p = *pp;
+	dlclose (p->handle);
+	*pp = p->next;
+	free (p);
+	return;
+      }
 }
 
 
@@ -123,7 +140,7 @@ cob_resolve (const char *name)
 	  if ((handle = dlopen (filename, RTLD_LAZY)) != NULL
 	      && (func = dlsym (handle, name)) != NULL)
 	    {
-	      insert (name, func);
+	      insert (name, handle, func);
 	      resolve_error = NULL;
 	      return func;
 	    }
@@ -150,25 +167,34 @@ cob_resolve_error (void)
  * COBOL interface
  */
 
+static char *
+subrname (struct fld_desc *f, char *s)
+{
+  int i;
+  static char buff[FILENAME_MAX];
+  for (i = 0; i < f->len; i++)
+    if (s[i] == ' ')
+      break;
+    else
+      buff[i] = s[i];
+  buff[i] = '\0';
+  return buff;
+}
+
 void *
 cob_dyncall_resolve (struct fld_desc *f, char *s)
 {
-  char buff[FILENAME_MAX];
-
-  /* get subroutine name */
-  strncpy (buff, s, f->len);
-  buff[f->len] = '\0';
-
-  /* truncate unnecessary spaces */
-  s = strchr (buff, ' ');
-  if (s)
-    *s = '\0';
-
-  return cob_resolve (buff);
+  return cob_resolve (subrname (f, s));
 }
 
 void
 cob_dyncall_error (void)
 {
   fprintf (stderr, "%s\n", cob_resolve_error ());
+}
+
+void
+cob_cancel (struct fld_desc *f, char *s)
+{
+  return drop (subrname (f, s));
 }

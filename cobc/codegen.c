@@ -4000,6 +4000,12 @@ gen_push_int (struct sym *sy)
   fprintf (o_src, "\tpushl\t%%eax\n");
 }
 
+void gen_cancel (struct sym *sy)
+{
+  gen_loadvar (sy);
+  asm_call ("cob_cancel");
+}
+
 void
 gen_perform_test_counter (int lbl)
 {

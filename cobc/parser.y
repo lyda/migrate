@@ -1213,7 +1213,7 @@ accept_options:
 /* CANCEL statement */
 
 cancel_statement:
-    CANCEL gname { yyerror ("CANCEL statement is not supported yet."); }
+    CANCEL gname { gen_cancel ($2); }
 ;
 
 
