@@ -1694,10 +1694,10 @@ at_line_column:
 | _at column_number line_number { $$ = make_pair ($3, $2); }
 ;
 line_number:
-  LINE _number integer_value	{ $$ = make_cast_int32 ($3); }
+  LINE _number integer_value	{ $$ = make_cast_integer ($3); }
 ;
 column_number:
-  COLUMN _number integer_value	{ $$ = make_cast_int32 ($3); }
+  COLUMN _number integer_value	{ $$ = make_cast_integer ($3); }
 ;
 
 
@@ -3090,7 +3090,7 @@ write_option:
   }
 | before_or_after _advancing integer_value _line_or_lines
   {
-    $<tree>$ = make_parameter_1 ($1, make_cast_int32 ($3));
+    $<tree>$ = make_parameter_1 ($1, make_cast_integer ($3));
   }
 | before_or_after _advancing PAGE
   {

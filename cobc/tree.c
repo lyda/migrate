@@ -1843,14 +1843,14 @@ make_funcall (const char *name, int argc,
 
 
 /*
- * Cast to int32
+ * Cast to integer
  */
 
 cb_tree
-make_cast_int32 (cb_tree val)
+make_cast_integer (cb_tree val)
 {
-  struct cb_cast_int32 *p =
-    make_tree (cb_tag_cast_int32, COB_TYPE_NUMERIC, sizeof (struct cb_cast_int32));
+  struct cb_cast_integer *p =
+    make_tree (cb_tag_cast_integer, COB_TYPE_NUMERIC, sizeof (struct cb_cast_integer));
   p->val = val;
   return CB_TREE (p);
 }
@@ -2099,7 +2099,7 @@ decimal_expand (cb_tree s, cb_tree d, cb_tree x)
 	struct cb_literal *l = CB_LITERAL (x);
 	if (l->size < 10 && l->expt == 0)
 	  add_stmt (s, make_funcall_2 ("cob_decimal_set_int",
-				       d, make_cast_int32 (x)));
+				       d, make_cast_integer (x)));
 	else
 	  add_stmt (s, make_funcall_2 ("cob_decimal_set_field", d, x));
 	break;
@@ -2117,7 +2117,7 @@ decimal_expand (cb_tree s, cb_tree d, cb_tree x)
 
 	if (cb_fits_int (x))
 	  add_stmt (s, make_funcall_2 ("cob_decimal_set_int",
-				       d, make_cast_int32 (x)));
+				       d, make_cast_integer (x)));
 	else
 	  add_stmt (s, make_funcall_2 ("cob_decimal_set_field", d, x));
 	break;
@@ -2235,7 +2235,7 @@ build_add (cb_tree v, cb_tree n, int round)
     return build_move (make_binary_op (v, '+', n), v);
 
   if (round == 0 && cb_fits_int (n))
-    return make_funcall_2 ("cob_add_int", v, make_cast_int32 (n));
+    return make_funcall_2 ("cob_add_int", v, make_cast_integer (n));
   if (round)
     return make_funcall_2 ("cob_add_r", v, n);
   else
@@ -2249,7 +2249,7 @@ build_sub (cb_tree v, cb_tree n, int round)
     return build_move (make_binary_op (v, '-', n), v);
 
   if (round == 0 && cb_fits_int (n))
-    return make_funcall_2 ("cob_sub_int", v, make_cast_int32 (n));
+    return make_funcall_2 ("cob_sub_int", v, make_cast_integer (n));
   if (round)
     return make_funcall_2 ("cob_sub_r", v, n);
   else
@@ -2676,7 +2676,7 @@ build_cond (cb_tree x)
 		  {
 		    if (l->size < 10 && l->expt == 0)
 		      p->x = make_funcall_2 ("cob_cmp_int",
-					     p->x, make_cast_int32 (p->y));
+					     p->x, make_cast_integer (p->y));
 		    else
 		      p->x = make_funcall_2 ("cob_cmp", p->x, p->y);
 		  }

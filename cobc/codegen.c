@@ -41,7 +41,7 @@ char *storage_file_name;
 
 static void output_stmt (cb_tree x);
 static void output_data (cb_tree x);
-static void output_int32 (cb_tree x);
+static void output_integer (cb_tree x);
 static void output_index (cb_tree x);
 static void output_func_1 (const char *name, cb_tree a1);
 
@@ -263,7 +263,7 @@ output_size (cb_tree x)
 
 	if (r->length)
 	  {
-	    output_int32 (r->length);
+	    output_integer (r->length);
 	  }
 	else if (r->offset)
 	  {
@@ -486,13 +486,13 @@ output_param (cb_tree x, int id)
       output ("%s", CB_CONST (x)->val);
       break;
     case cb_tag_integer:
-      output_int32 (x);
+      output_integer (x);
       break;
     case cb_tag_string:
       output ("\"%s\"", CB_STRING (x)->str);
       break;
-    case cb_tag_cast_int32:
-      output_int32 (CB_CAST_INT32 (x)->val);
+    case cb_tag_cast_integer:
+      output_integer (CB_CAST_INTEGER (x)->val);
       break;
     case cb_tag_decimal:
       output ("&d[%d]", CB_DECIMAL (x)->id);
@@ -564,9 +564,9 @@ output_param (cb_tree x, int id)
 			{
 			  output_prefix ();
 			  output ("cob_check_subscript_depending (");
-			  output_int32 (l->item);
+			  output_integer (l->item);
 			  output (", %d, %d, ", p->occurs_min, p->occurs);
-			  output_int32 (p->occurs_depending);
+			  output_integer (p->occurs_depending);
 			  output (", \"%s\", \"%s\");\n", p->name,
 				  field (p->occurs_depending)->name);
 			}
@@ -577,7 +577,7 @@ output_param (cb_tree x, int id)
 			{
 			  output_prefix ();
 			  output ("cob_check_subscript (");
-			  output_int32 (l->item);
+			  output_integer (l->item);
 			  output (", %d, \"%s\");\n", p->occurs, p->name);
 			}
 		    }
@@ -594,10 +594,10 @@ output_param (cb_tree x, int id)
 		|| (r->length && !CB_LITERAL_P (r->length)))
 	      {
 		output ("cob_check_ref_mod (");
-		output_int32 (r->offset);
+		output_integer (r->offset);
 		output (", ");
 		if (r->length)
-		  output_int32 (r->length);
+		  output_integer (r->length);
 		else
 		  output ("1");
 		output (", %d, \"%s\");\n", f->size, f->name);
@@ -624,11 +624,11 @@ output_func_1 (const char *name, cb_tree a1)
 
 
 /*
- * Convert to int32
+ * Convert to integer
  */
 
 static void
-output_int32 (cb_tree x)
+output_integer (cb_tree x)
 {
   switch (CB_TREE_TAG (x))
     {
@@ -647,9 +647,9 @@ output_int32 (cb_tree x)
     case cb_tag_binary_op:
       {
 	struct cb_binary_op *p = CB_BINARY_OP (x);
-	output_int32 (p->x);
+	output_integer (p->x);
 	output (" %c ", p->op);
-	output_int32 (p->y);
+	output_integer (p->y);
 	break;
       }
     default:
@@ -728,7 +728,7 @@ static void
 output_index (cb_tree x)
 {
   output ("(");
-  output_int32 (x);
+  output_integer (x);
   output (" - 1)");
 }
 
@@ -769,7 +769,7 @@ output_cond (cb_tree x)
 	    output ("(");
 	    if (CB_INDEX_P (p->x) || CB_INDEX_P (p->y))
 	      {
-		output_int32 (p->x);
+		output_integer (p->x);
 		switch (p->op)
 		  {
 		  case '=': output (" == "); break;
@@ -779,7 +779,7 @@ output_cond (cb_tree x)
 		  case ']': output (" >= "); break;
 		  case '~': output (" != "); break;
 		  }
-		output_int32 (p->y);
+		output_integer (p->y);
 	      }
 	    else
 	      {
@@ -938,7 +938,7 @@ static void
 output_native_assign (cb_tree x, long long val)
 {
   output_prefix ();
-  output_int32 (x);
+  output_integer (x);
   output (" = %" PRId64 "LL;\n", val);
 }
 
@@ -962,7 +962,7 @@ output_goto_depending (struct cb_list *labels, cb_tree index)
   struct cb_list *l;
   output_prefix ();
   output ("switch (");
-  output_int32 (index);
+  output_integer (index);
   output (")\n");
   output_indent ("  {");
   for (l = labels; l; l = l->next)
@@ -1125,9 +1125,9 @@ static void
 output_move_index (cb_tree src, cb_tree dst)
 {
   output_prefix ();
-  output_int32 (dst);
+  output_integer (dst);
   output (" = ");
-  output_int32 (src);
+  output_integer (src);
   output (";\n");
 }
 
@@ -1139,7 +1139,7 @@ output_move (cb_tree src, cb_tree dst)
 
   if (CB_INDEX_P (src))
     return output_stmt (make_funcall_2 ("cob_set_int", dst,
-					make_cast_int32 (src)));
+					make_cast_integer (src)));
 
   if (cb_flag_inline_move)
     {
@@ -1415,7 +1415,7 @@ static void
 output_occurs (struct cb_field *p)
 {
   if (p->occurs_depending)
-    output_int32 (p->occurs_depending);
+    output_integer (p->occurs_depending);
   else
     output ("%d", p->occurs);
 }
@@ -1442,7 +1442,7 @@ output_search (cb_tree table, cb_tree var, cb_tree stmt, cb_tree whens)
   /* end test */
   output_prefix ();
   output ("if (");
-  output_int32 (idx);
+  output_integer (idx);
   output (" > ");
   output_occurs (p);
   output (")\n");
@@ -1457,7 +1457,7 @@ output_search (cb_tree table, cb_tree var, cb_tree stmt, cb_tree whens)
   output_line ("else");
   output_indent ("  {");
   output_prefix ();
-  output_int32 (idx);
+  output_integer (idx);
   output ("++;\n");
   if (var && var != idx)
     output_move (idx, var);
@@ -1495,7 +1495,7 @@ output_search_all (cb_tree table, cb_tree stmt, cb_tree when)
 
   /* next index */
   output_prefix ();
-  output_int32 (idx);
+  output_integer (idx);
   output (" = (head + tail) / 2;\n");
 
   /* WHEN test */
@@ -1505,12 +1505,12 @@ output_search_all (cb_tree table, cb_tree stmt, cb_tree when)
   output_line ("if (cob_cmp_result < 0)");
   output_prefix ();
   output ("  head = ");
-  output_int32 (idx);
+  output_integer (idx);
   output (";\n");
   output_line ("else");
   output_prefix ();
   output ("  tail = ");
-  output_int32 (idx);
+  output_integer (idx);
   output (";\n");
   output_line ("continue;");
   output_indent ("  }");
@@ -1660,7 +1660,7 @@ output_call (cb_tree name, struct cb_list *args,
 	      if (field (x)->usage == cb_usage_binary
 		  || field (x)->usage == cb_usage_index)
 		{
-		  output_int32 (x);
+		  output_integer (x);
 		}
 	      else
 		{
@@ -1832,7 +1832,7 @@ output_perform (struct cb_perform *p)
     case CB_PERFORM_TIMES:
       output_prefix ();
       output ("for (n[%d] = ", loop_counter);
-      output_int32 (p->data);
+      output_integer (p->data);
       output ("; n[%d] > 0; n[%d]--)\n", loop_counter, loop_counter);
       output_indent ("  {");
       output_perform_once (p);
@@ -2059,9 +2059,9 @@ output_screen_definition (struct cb_field *p)
     output ("&f_%s, ", p->screen_to->cname);
   else
     output ("0, ");
-  output_int32 (p->screen_line);
+  output_integer (p->screen_line);
   output (", ");
-  output_int32 (p->screen_column);
+  output_integer (p->screen_column);
   output (", %d};\n", p->screen_flag);
 }
 

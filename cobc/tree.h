@@ -77,7 +77,7 @@ enum cb_tag {
   cb_tag_reference,		/* reference to a field, file, or label */
   cb_tag_binary_op,		/* binary operation */
   cb_tag_funcall,		/* run-time function call */
-  cb_tag_cast_int32,		/* cast to int32 */
+  cb_tag_cast_integer,		/* cast to integer */
   /* statements */
   cb_tag_label,			/* label statement */
   cb_tag_if,			/* IF statement */
@@ -464,18 +464,18 @@ extern cb_tree make_funcall (const char *name, int argc, void *a1, void *a2, voi
 
 
 /*
- * Cast to int32
+ * Cast to integer
  */
 
-struct cb_cast_int32 {
+struct cb_cast_integer {
   struct cb_tree_common common;
   cb_tree val;
 };
 
-#define CB_CAST_INT32(x)	(CB_TREE_CAST (cb_tag_cast_int32, struct cb_cast_int32, x))
-#define CB_CAST_INT32_P(x)	(CB_TREE_TAG (x) == cb_tag_cast_int32)
+#define CB_CAST_INTEGER(x)	(CB_TREE_CAST (cb_tag_cast_integer, struct cb_cast_integer, x))
+#define CB_CAST_INTEGER_P(x)	(CB_TREE_TAG (x) == cb_tag_cast_integer)
 
-extern cb_tree make_cast_int32 (cb_tree val);
+extern cb_tree make_cast_integer (cb_tree val);
 
 
 /*
