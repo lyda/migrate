@@ -18,6 +18,7 @@ syntax_DEPENDENCIES = \
 
 run_DEPENDENCIES = \
 	run.src/fundamental.at \
+	run.src/accept.at \
 	run.src/initialize.at \
 	run.src/misc.at \
 	run.src/ref-mod.at \
