@@ -50,10 +50,15 @@ make_list (cob_tree x)
 cob_tree_list
 list_append (cob_tree_list l, cob_tree x)
 {
-  cob_tree_list p;
-  for (p = l; p->next != NULL; p = p->next);
-  p->next = cons (x, NULL);
-  return l;
+  if (l == NULL)
+    return make_list (x);
+  else
+    {
+      cob_tree_list p;
+      for (p = l; p->next != NULL; p = p->next);
+      p->next = cons (x, NULL);
+      return l;
+    }
 }
 
 int
