@@ -167,8 +167,11 @@ extern void cob_stop_run (void);
 
 /* Utilities */
 
-extern int cob_get_sign (cob_field *f);
-extern void cob_put_sign (cob_field *f, int sign);
+#define cob_get_sign(f) (COB_FIELD_HAVE_SIGN (f) ? cob_real_get_sign (f) : 0)
+#define cob_put_sign(f,s) if (COB_FIELD_HAVE_SIGN (f)) cob_real_put_sign (f, s)
+
+extern int cob_real_get_sign (cob_field *f);
+extern void cob_real_put_sign (cob_field *f, int sign);
 extern char *cob_field_to_string (cob_field *f, char *s);
 
 /* Comparison */

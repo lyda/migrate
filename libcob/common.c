@@ -263,11 +263,8 @@ cob_stop_run (void)
  */
 
 int
-cob_get_sign (cob_field *f)
+cob_real_get_sign (cob_field *f)
 {
-  if (!COB_FIELD_HAVE_SIGN (f))
-    return 0;
-
   switch (COB_FIELD_TYPE (f))
     {
     case COB_TYPE_NUMERIC_DISPLAY:
@@ -304,11 +301,8 @@ cob_get_sign (cob_field *f)
 }
 
 void
-cob_put_sign (cob_field *f, int sign)
+cob_real_put_sign (cob_field *f, int sign)
 {
-  if (!COB_FIELD_HAVE_SIGN (f))
-    return;
-
   switch (COB_FIELD_TYPE (f))
     {
     case COB_TYPE_NUMERIC_DISPLAY:
