@@ -123,12 +123,13 @@ static void set_buffer (int lineno, const char *filename,
 }
 
 <*><<EOF>> {
+  yy_delete_buffer (YY_CURRENT_BUFFER);
+
   /* Terminate at the end of all input */
   if (copybook_stack->next == NULL)
     yyterminate ();
 
   /* Switch to the last buffer */
-  yy_delete_buffer (YY_CURRENT_BUFFER);
   set_buffer (copybook_stack->lineno,
 	      copybook_stack->filename,
 	      copybook_stack->replacing,
@@ -158,10 +159,11 @@ open_buffer (const char *name, struct replacement *replacing)
 {
   /* Preserve the current buffer */
   struct copybook *p = malloc (sizeof (struct copybook));
-  p->filename = yyfilename;
-  p->lineno   = yylineno;
-  p->buffer   = YY_CURRENT_BUFFER;
-  p->next = copybook_stack;
+  p->lineno    = yylineno;
+  p->filename  = yyfilename;
+  p->replacing = yyreplacing;
+  p->buffer    = YY_CURRENT_BUFFER;
+  p->next      = copybook_stack;
   copybook_stack = p;
 
   /* Switch to new buffer */
