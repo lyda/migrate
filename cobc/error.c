@@ -174,7 +174,7 @@ ambiguous_error (cb_tree x)
       /* display all fields with the same name */
       for (list = w->items; list; list = CB_CHAIN (list))
 	{
-	  char buff[BUFSIZ];
+	  char buff[FILENAME_MAX];
 	  cb_tree x = CB_LIST (list)->value;
 	  sprintf (buff, "`%s' ", w->name);
 	  switch (CB_TREE_TAG (x))

@@ -613,8 +613,8 @@ process_translate (struct filename *fn)
 static int
 process_compile (struct filename *fn)
 {
-  char buff[BUFSIZ];
-  char name[BUFSIZ];
+  char buff[FILENAME_MAX];
+  char name[FILENAME_MAX];
   if (output_name)
     strcpy (name, output_name);
   else
@@ -630,7 +630,7 @@ process_compile (struct filename *fn)
 static int
 process_assemble (struct filename *fn)
 {
-  char buff[BUFSIZ];
+  char buff[FILENAME_MAX];
   sprintf (buff, "%s -c -o %s %s %s",
 	   cob_cc, fn->object, cob_cflags, fn->translate);
   return process (buff);
@@ -639,8 +639,8 @@ process_assemble (struct filename *fn)
 static int
 process_module (struct filename *fn)
 {
-  char buff[BUFSIZ];
-  char name[BUFSIZ];
+  char buff[FILENAME_MAX];
+  char name[FILENAME_MAX];
   if (output_name)
     strcpy (name, output_name);
   else
@@ -657,8 +657,8 @@ process_module (struct filename *fn)
 static int
 process_link (struct filename *file_list)
 {
-  char buff[8192], objs[4096] = "";
-  char name[BUFSIZ];
+  char buff[FILENAME_MAX], objs[FILENAME_MAX] = "";
+  char name[FILENAME_MAX];
 
   for (; file_list; file_list = file_list->next)
     {

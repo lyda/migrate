@@ -178,7 +178,7 @@ cb_name_1 (char *s, cb_tree x)
 char *
 cb_name (cb_tree x)
 {
-  static char buff[BUFSIZ];
+  static char buff[CB_MAX_LITERAL_SIZE * 2];
   cb_name_1 (buff, x);
   return buff;
 }
@@ -414,7 +414,7 @@ cb_build_alphabet_name (enum cb_alphabet_name_type type)
 cb_tree
 cb_build_class_name (cb_tree name, cb_tree list)
 {
-  char buff[BUFSIZ];
+  char buff[CB_MAX_CNAME];
   struct cb_class_name *p =
     make_tree (CB_TAG_CLASS_NAME, CB_CATEGORY_BOOLEAN, sizeof (struct cb_class_name));
   p->name = cb_define (name, CB_TREE (p));
@@ -1122,7 +1122,7 @@ static void
 setup_parameters (struct cb_field *f)
 {
   /* setup cname */
-  char name[BUFSIZ] = "";
+  char name[CB_MAX_CNAME] = "";
   if (f->parent)
     sprintf (name, "%s$", f->parent->cname);
   strcat (name, f->name);
@@ -1404,7 +1404,7 @@ validate_file (struct cb_file *f, cb_tree name)
 void
 finalize_file (struct cb_file *f, struct cb_field *records)
 {
-  char buff[BUFSIZ];
+  char buff[CB_MAX_CNAME];
   struct cb_field *p;
 
   /* check the record size if it is limited */
@@ -1703,7 +1703,7 @@ cb_build_cast_integer (cb_tree val)
 cb_tree
 cb_build_label (cb_tree name, struct cb_label *section)
 {
-  char buff[BUFSIZ];
+  char buff[CB_MAX_CNAME];
   struct cb_label *p =
     make_tree (CB_TAG_LABEL, CB_CATEGORY_UNKNOWN, sizeof (struct cb_label));
   p->name = cb_define (name, CB_TREE (p));

@@ -179,7 +179,7 @@ static int
 read_literal (char mark)
 {
   int c;
-  char buff[BUFSIZ];
+  char buff[CB_MAX_LITERAL_SIZE + 1];
   char *p = buff;
 
   while ((c = input ()) != EOF)
@@ -191,7 +191,7 @@ read_literal (char mark)
 	  unput (c);
 	  break;
 	}
-      if (p - buff >= BUFSIZ - 1)
+      if (p - buff > CB_MAX_LITERAL_SIZE)
 	cb_error (_("too large literal"));
     }
   *p = 0;
