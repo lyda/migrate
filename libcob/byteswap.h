@@ -68,34 +68,16 @@
 		      : "0" (__x)					\
 		      : "cc");						\
 	    __v; }))
-#    if !defined (__i486__) && !defined (__i586__) \
-	&& !defined (__pentium__) && !defined (__i686__) \
-	&& !defined (__pentiumpro__)
-#       define COB_BSWAP_32_IA32(val)					 \
-	  (__extension__						 \
-	   ({ register unsigned long __v, __x = ((unsigned long) (val)); \
-	      if (__builtin_constant_p (__x))				 \
-		__v = COB_BSWAP_32_CONSTANT (__x);			 \
-	      else							 \
-		__asm__ ("rorw $8, %w0\n\t"				 \
-			 "rorl $16, %0\n\t"				 \
-			 "rorw $8, %w0"					 \
-			 : "=r" (__v)					 \
-			 : "0" (__x)					 \
-			 : "cc");					 \
-	      __v; }))
-#    else /* 486 and higherwap bs */
-#       define COB_BSWAP_32_IA32(val)					 \
-	  (__extension__						 \
-	   ({ register unsigned long __v, __x = ((unsigned long) (val)); \
-	      if (__builtin_constant_p (__x))				 \
-		__v = COB_BSWAP_32_CONSTANT (__x);			 \
-	      else							 \
-		__asm__ ("bswap %0"					 \
-			 : "=r" (__v)					 \
-			 : "0" (__x));					 \
-	      __v; }))
-#    endif /* processor specific 32-bit stuff */
+#    define COB_BSWAP_32_IA32(val)					\
+       (__extension__							\
+	({ register unsigned long __v, __x = ((unsigned long) (val));	\
+	   if (__builtin_constant_p (__x))				\
+	     __v = COB_BSWAP_32_CONSTANT (__x);				\
+	   else								\
+	     __asm__ ("bswap %0"					\
+		      : "=r" (__v)					\
+		      : "0" (__x));					\
+	    __v; }))
 #    define COB_BSWAP_64_IA32(val)				\
        (__extension__						\
 	({ union { unsigned long long __ll;			\
