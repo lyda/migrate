@@ -110,7 +110,7 @@ static void terminator_warning (void);
 %token BINARY BLANK BLINK BLOCK BY CHARACTER CHARACTERS CLASS CODE_SET
 %token COLLATING COLUMN COMMA COMMAND_LINE COMMON CONFIGURATION CONTAINS
 %token CONTENT CONTINUE CONVERTING CORRESPONDING COUNT CRT CURRENCY CURSOR
-%token DATA DATE DAY DAY_OF_WEEK DEBUGGING DECIMAL_POINT DECLARATIVES
+%token DATA DATE DAY DAY_OF_WEEK DEBUGGING DECIMAL_POINT DECLARATIVES DEFAULT
 %token DELIMITED DELIMITER DEPENDING DESCENDING DIVISION DOWN DUPLICATES
 %token DYNAMIC ELSE END END_ACCEPT END_ADD END_CALL END_COMPUTE END_DELETE
 %token END_DISPLAY END_DIVIDE END_EVALUATE END_IF END_MULTIPLY END_PERFORM
@@ -2079,35 +2079,48 @@ end_if:
 
 initialize_statement:
   INITIALIZE			{ BEGIN_STATEMENT ("INITIALIZE"); }
-  data_name_list initialize_replacing
+  data_name_list initialize_value initialize_replacing initialize_default
   {
     cb_tree l;
+    if ($4 == NULL && $5 == NULL)
+      $6 = cb_true;
     for (l = $3; l; l = CB_CHAIN (l))
-      push (cb_build_initialize (CB_VALUE (l), $4));
+      push (cb_build_initialize (CB_VALUE (l), $4, $5, $6));
   }
 ;
+
+initialize_value:
+  /* empty */				{ $$ = NULL; }
+| ALL _to VALUE				{ $$ = cb_true; }
+| initialize_category _to VALUE		{ $$ = $1; }
+;
+
 initialize_replacing:
-  /* empty */			      { $$ = NULL; }
-| REPLACING initialize_replacing_list { $$ = $2; }
+  /* empty */				{ $$ = NULL; }
+| REPLACING initialize_replacing_list	{ $$ = $2; }
 ;
 initialize_replacing_list:
-  /* empty */			      { $$ = NULL; }
+  initialize_replacing_item		{ $$ = $1; }
 | initialize_replacing_list
-  replacing_option _data BY value
-  {
-    $$ = list_append ($1, cb_build_pair ($2, $5));
-  }
+  initialize_replacing_item		{ $$ = list_append ($1, $2); }
 ;
-replacing_option:
-  ALPHABETIC			{ $$ = cb_int (CB_CATEGORY_ALPHABETIC); }
-| ALPHANUMERIC			{ $$ = cb_int (CB_CATEGORY_ALPHANUMERIC); }
-| NUMERIC			{ $$ = cb_int (CB_CATEGORY_NUMERIC); }
-| ALPHANUMERIC_EDITED		{ $$ = cb_int (CB_CATEGORY_ALPHANUMERIC_EDITED); }
-| NUMERIC_EDITED		{ $$ = cb_int (CB_CATEGORY_NUMERIC_EDITED); }
-| NATIONAL			{ $$ = cb_int (CB_CATEGORY_NATIONAL); }
-| NATIONAL_EDITED		{ $$ = cb_int (CB_CATEGORY_NATIONAL_EDITED); }
+initialize_replacing_item:
+  initialize_category _data BY value	{ $$ = cb_build_pair ($1, $4); }
 ;
-_data: | DATA ;
+initialize_category:
+  ALPHABETIC		{ $$ = cb_int (CB_CATEGORY_ALPHABETIC); }
+| ALPHANUMERIC		{ $$ = cb_int (CB_CATEGORY_ALPHANUMERIC); }
+| NUMERIC		{ $$ = cb_int (CB_CATEGORY_NUMERIC); }
+| ALPHANUMERIC_EDITED	{ $$ = cb_int (CB_CATEGORY_ALPHANUMERIC_EDITED); }
+| NUMERIC_EDITED	{ $$ = cb_int (CB_CATEGORY_NUMERIC_EDITED); }
+| NATIONAL		{ $$ = cb_int (CB_CATEGORY_NATIONAL); }
+| NATIONAL_EDITED	{ $$ = cb_int (CB_CATEGORY_NATIONAL_EDITED); }
+;
+
+initialize_default:
+  /* empty */			{ $$ = NULL; }
+| DEFAULT			{ $$ = cb_true; }
+;
 
 
 /*
@@ -3984,6 +3997,7 @@ _character:	| CHARACTER ;
 _characters:	| CHARACTERS ;
 _collating:	| COLLATING ;
 _contains:	| CONTAINS ;
+_data:		| DATA ;
 _file:		| TOK_FILE ;
 _for:		| FOR ;
 _from:		| FROM ;

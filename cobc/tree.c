@@ -1781,12 +1781,14 @@ cb_build_assign (cb_tree var, cb_tree val)
  */
 
 cb_tree
-cb_build_initialize (cb_tree x, cb_tree l)
+cb_build_initialize (cb_tree var, cb_tree val, cb_tree rep, cb_tree def)
 {
   struct cb_initialize *p =
     make_tree (CB_TAG_INITIALIZE, CB_CATEGORY_UNKNOWN, sizeof (struct cb_initialize));
-  p->x = x;
-  p->l = l;
+  p->var = var;
+  p->val = val;
+  p->rep = rep;
+  p->def = def;
   return CB_TREE (p);
 }
 

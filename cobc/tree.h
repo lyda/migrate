@@ -640,14 +640,16 @@ extern cb_tree cb_build_assign (cb_tree var, cb_tree val);
 
 struct cb_initialize {
   struct cb_tree_common common;
-  cb_tree x;
-  cb_tree l;
+  cb_tree var;
+  cb_tree val;
+  cb_tree rep;
+  cb_tree def;
 };
 
 #define CB_INITIALIZE(x)	(CB_TREE_CAST (CB_TAG_INITIALIZE, struct cb_initialize, x))
 #define CB_INITIALIZE_P(x)	(CB_TREE_TAG (x) == CB_TAG_INITIALIZE)
 
-extern cb_tree cb_build_initialize (cb_tree x, cb_tree l);
+extern cb_tree cb_build_initialize (cb_tree var, cb_tree val, cb_tree rep, cb_tree def);
 
 
 /*

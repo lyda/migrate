@@ -143,40 +143,6 @@ output_storage (const char *fmt, ...)
 
 
 /*
- * Recursion
- */
-
-static void
-output_recursive (void (*func) (cb_tree), cb_tree x)
-{
-  struct cb_field *f = cb_field (x);
-
-  if (f->level != 01 && f->level != 77 && f->redefines)
-    return;
-
-  if (f->flag_occurs)
-    {
-      /* begin occurs loop */
-      int i = f->indexes;
-      output_line ("for (i%d = 1; i%d <= %d; i%d++)", i, i, f->occurs_max, i);
-      output_indent ("  {");
-      if (CB_REFERENCE_P (x))
-	CB_REFERENCE (x)->subs = cons (cb_i[i], CB_REFERENCE (x)->subs);
-    }
-
-  /* process output */
-  func (x);
-
-  if (f->flag_occurs)
-    {
-      /* close loop */
-      CB_REFERENCE (x)->subs = CB_CHAIN (CB_REFERENCE (x)->subs);
-      output_indent ("  }");
-    }
-}
-
-
-/*
  * Field
  */
 
@@ -857,9 +823,34 @@ output_move (cb_tree src, cb_tree dst)
  * INITIALIZE
  */
 
-static cb_tree initialize_replacing_list;
+static int
+initialize_any (struct cb_initialize *p, struct cb_field *f)
+{
+  if (f->redefines)
+    return 0;
 
-static void output_initialize_compound (cb_tree x);
+  if (p->def)
+    return 1;
+
+  if (p->val && f->values)
+    return 1;
+
+  if (f->children)
+    {
+      for (f = f->children; f; f = f->sister)
+	if (initialize_any (p, f))
+	  return 1;
+    }
+  else
+    {
+      cb_tree l;
+      for (l = p->rep; l; l = CB_CHAIN (l))
+	if (CB_PURPOSE_INT (l) == CB_TREE_CATEGORY (f))
+	  return 1;
+    }
+
+  return 0;
+}
 
 static int
 field_uniform_char (struct cb_field *f)
@@ -901,116 +892,130 @@ output_initialize_uniform (cb_tree x, int c, int size)
 }
 
 static void
-output_initialize_internal (cb_tree x)
-{
-  int last_char = -1;
-  cb_tree last_field = NULL;
-  struct cb_field *f = cb_field (x);
-  struct cb_field *p;
-
-  /* initialize all children, combining uniform sequence into one */
-  for (p = f->children; p; p = p->sister)
-    {
-      /* check if this child is uniform */
-      int c = field_uniform_char (p);
-      if (c == -1 || c != last_char)
-	{
-	  /* if not, or if this child's category is different from
-	     the previous one, initialize the last uniform sequence */
-	  if (last_field)
-	    output_initialize_uniform (last_field, last_char,
-				       p->offset - cb_field (last_field)->offset);
-	  /* if not uniform, initialize the children */
-	  if (c == -1)
-	    output_recursive (output_initialize_compound,
-			      cb_build_field_reference (p, x));
-	  /* keep the last field if it must be initialized later */
-	  last_char = c;
-	  last_field = NULL;
-	  if (c != -1 && c != ' ')
-	    {
-	      last_field = cb_build_field_reference (p, x);
-	      if (list_length (CB_REFERENCE (x)->subs) < p->indexes)
-		CB_REFERENCE (x)->subs =
-		  cons (cb_int1, CB_REFERENCE (x)->subs);
-	    }
-	}
-    }
-  /* initialize the last uniform sequence */
-  if (last_field)
-    output_initialize_uniform (last_field, last_char,
-			       f->offset + f->size - cb_field (last_field)->offset);
-}
-
-static void
-output_initialize_compound (cb_tree x)
-{
-  switch (CB_TREE_CATEGORY (x))
-    {
-    case CB_CATEGORY_NUMERIC_EDITED:
-      output_move (cb_zero, x);
-      break;
-    case CB_CATEGORY_ALPHANUMERIC_EDITED:
-    case CB_CATEGORY_NATIONAL_EDITED:
-      output_move (cb_space, x);
-      break;
-    default:
-      output_initialize_internal (x);
-      break;
-    }
-}
-
-static void
-output_initialize_replacing (cb_tree x)
+output_initialize_value (cb_tree x)
 {
   struct cb_field *f = cb_field (x);
+  cb_tree value = CB_VALUE (f->values);
 
-  if (f->children)
+  if (CB_CONST_P (value)
+      || CB_TREE_CLASS (value) == CB_CLASS_NUMERIC
+      || CB_LITERAL (value)->all)
     {
-      for (f = f->children; f; f = f->sister)
-	output_recursive (output_initialize_replacing,
-			  cb_build_field_reference (f, x));
+      /* figurative literal, numeric literal, or ALL literal */
+      output_move (value, x);
     }
   else
     {
-      cb_tree l;
-      for (l = initialize_replacing_list; l; l = CB_CHAIN (l))
-	if (CB_PURPOSE_INT (l) == f->pic->category)
-	  {
-	    output_move (CB_VALUE (l), x);
-	    break;
-	  }
+      /* alphanumeric literal */
+      /* We do not use output_move here because
+	 we do not want to have the value be edited. */
+      char buff[f->size];
+      char *str = CB_LITERAL (value)->data;
+      int size = CB_LITERAL (value)->size;
+      if (size >= f->size)
+	{
+	  memcpy (buff, str, f->size);
+	}
+      else
+	{
+	  memcpy (buff, str, size);
+	  memset (buff + size, ' ', f->size - size);
+	}
+      output_prefix ();
+      output ("memcpy (");
+      output_data (x);
+      output (", ");
+      output_string (buff, f->size);
+      output (", %d);\n", f->size);
     }
+}
+
+static int
+output_initialize_one (struct cb_initialize *p, cb_tree x)
+{
+  struct cb_field *f = cb_field (x);
+  cb_tree l;
+
+  /* initialize by value */
+  if (p->val && f->values)
+    {
+      output_initialize_value (x);
+      return 0;
+    }
+
+  /* initialize replacing */
+  if (!f->children)
+    for (l = p->rep; l; l = CB_CHAIN (l))
+      if (CB_PURPOSE_INT (l) == CB_TREE_CATEGORY (x))
+	{
+	  output_move (CB_VALUE (l), x);
+	  return 0;
+	}
+
+  /* initialize by defualt */
+  if (p->def)
+    switch (CB_TREE_CATEGORY (x))
+      {
+      case CB_CATEGORY_NUMERIC_EDITED:
+	output_move (cb_zero, x);
+	return 0;
+      case CB_CATEGORY_ALPHANUMERIC_EDITED:
+      case CB_CATEGORY_NATIONAL_EDITED:
+	output_move (cb_space, x);
+	return 0;
+      default:
+	{
+	  int c = field_uniform_char (f);
+	  if (c != -1)
+	    {
+	      output_initialize_uniform (x, c, f->size * f->occurs_max);
+	      return 0;
+	    }
+	  return -1;
+	}
+      }
+
+  return f->children ? -1 : 0;
+}
+
+static void
+output_initialize_compound (struct cb_initialize *p, cb_tree x)
+{
+  struct cb_field *f = cb_field (x);
+
+  for (f = f->children; f; f = f->sister)
+    if (initialize_any (p, f))
+      {
+	cb_tree c = cb_build_field_reference (f, x);
+
+	if (f->flag_occurs)
+	  {
+	    /* begin occurs loop */
+	    int i = f->indexes;
+	    output_line ("for (i%d = 1; i%d <= %d; i%d++)",
+			 i, i, f->occurs_max, i);
+	    output_indent ("  {");
+	    CB_REFERENCE (c)->subs = cons (cb_i[i], CB_REFERENCE (c)->subs);
+	  }
+
+	/* process output */
+	if (output_initialize_one (p, c) != 0)
+	  output_initialize_compound (p, c);
+
+	if (f->flag_occurs)
+	  {
+	    /* close loop */
+	    CB_REFERENCE (c)->subs = CB_CHAIN (CB_REFERENCE (c)->subs);
+	    output_indent ("  }");
+	  }
+      }
 }
 
 static void
 output_initialize (struct cb_initialize *p)
 {
-  if (p->l != NULL)
-    {
-      /* INITIALIZE REPLACING */
-      initialize_replacing_list = p->l;
-      output_initialize_replacing (p->x);
-    }
-  else
-    {
-      /* INITIALIZE */
-      struct cb_field *f = cb_field (p->x);
-      int c = field_uniform_char (f);
-      if (c != -1)
-	{
-	  /* if field is uniform (i.e., all children are
-	     in the same category), initialize it at once */
-	  output_initialize_uniform (p->x, c, f->size);
-	}
-      else
-	{
-	  /* otherwise, fill the field by spaces first */
-	  output_initialize_uniform (p->x, ' ', f->size);
-	  /* then initialize the children recursively */
-	  output_initialize_compound (p->x);
-	}
-    }
+  if (output_initialize_one (p, p->var) != 0)
+    output_initialize_compound (p, p->var);
 }
 
 
@@ -1816,79 +1821,16 @@ output_class_name_definition (struct cb_class_name *p)
 }
 
 
-/*
- * Initial value
- */
-
-/* return 1 if any child has VALUE clause */
-static int
-have_value (struct cb_field *p)
-{
-  if (p->values)
-    return 1;
-  for (p = p->children; p; p = p->sister)
-    if (have_value (p))
-      return 1;
-  return 0;
-}
-
 static void
-output_value (cb_tree x)
-{
-  struct cb_field *f = cb_field (x);
-
-  if (f->values)
-    {
-      cb_tree value = CB_VALUE (f->values);
-      if (CB_CONST_P (value)
-	  || CB_TREE_CLASS (value) == CB_CLASS_NUMERIC
-	  || CB_LITERAL (value)->all)
-	{
-	  /* figurative literal, numeric literal, or ALL literal */
-	  output_move (value, x);
-	}
-      else
-	{
-	  /* alphanumeric literal */
-	  /* We do not use output_move here because
-	     we do not want to have the value be edited. */
-	  char buff[f->size];
-	  char *str = CB_LITERAL (value)->data;
-	  int size = CB_LITERAL (value)->size;
-	  if (size >= f->size)
-	    {
-	      memcpy (buff, str, f->size);
-	    }
-	  else
-	    {
-	      memcpy (buff, str, size);
-	      memset (buff + size, ' ', f->size - size);
-	    }
-	  output_prefix ();
-	  output ("memcpy (");
-	  output_data (x);
-	  output (", ");
-	  output_string (buff, f->size);
-	  output (", %d);\n", f->size);
-	}
-    }
-  else
-    {
-      for (f = f->children; f; f = f->sister)
-	if (have_value (f))
-	  output_recursive (output_value, cb_build_field_reference (f, x));
-    }
-}
-
-static void
-output_init_values (struct cb_field *p)
+output_initial_values (struct cb_field *p)
 {
   for (; p; p = p->sister)
-    if (have_value (p))
-      output_recursive (output_value, cb_build_field_reference (p, 0));
+    {
+      cb_tree x = cb_build_field_reference (p, 0);
+      output_stmt (cb_build_initialize (x, cb_true, NULL, NULL));
+    }
 }
 
-
 static void
 output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 {
@@ -1955,12 +1897,12 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   output_line ("  cob_decimal_init (&d[i]);");
   output_newline ();
   if (!prog->flag_initial)
-    output_init_values (prog->working_storage);
+    output_initial_values (prog->working_storage);
   output_line ("initialized = 1;");
   output_indent ("  }");
   if (prog->flag_initial)
-    output_init_values (prog->working_storage);
-  output_init_values (prog->local_storage);
+    output_initial_values (prog->working_storage);
+  output_initial_values (prog->local_storage);
   output_newline ();
 
   output_line ("/* initialize frame stack */");

@@ -131,6 +131,7 @@ static struct reserved reserved_words[] = {
   {"DEBUGGING",		DEBUGGING, 0},
   {"DECIMAL-POINT",	DECIMAL_POINT, 0},
   {"DECLARATIVES",	DECLARATIVES, 0},
+  {"DEFAULT",		DEFAULT, 0},
   {"DELETE",		DELETE, 0},
   {"DELIMITED",		DELIMITED, 0},
   {"DELIMITER",		DELIMITER, 0},
