@@ -1,3 +1,8 @@
+2004-06-12  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* termio.c (display): Display full digits of binary item
+	when pretty-display is off, not when binary-truncate is off.
+
 2004-05-21  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* move.c (cob_binary_get_int64): Reimplemented using memcpy.
