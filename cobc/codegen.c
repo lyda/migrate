@@ -586,15 +586,15 @@ output_param (cb_tree x, int id)
 		{
 		  if (p->occurs_depending)
 		    {
-		      int n = p->occurs;
+		      int n = p->occurs_max;
 		      if (CB_LITERAL_P (l->item))
 			n = cb_literal_to_int (CB_LITERAL (l->item));
-		      if (p->occurs_min <= n && n <= p->occurs)
+		      if (p->occurs_min <= n && n <= p->occurs_max)
 			{
 			  output_prefix ();
 			  output ("cob_check_subscript_depending (");
 			  output_integer (l->item);
-			  output (", %d, %d, ", p->occurs_min, p->occurs);
+			  output (", %d, %d, ", p->occurs_min, p->occurs_max);
 			  output_integer (p->occurs_depending);
 			  output (", \"%s\", \"%s\");\n", p->name,
 				  cb_field (p->occurs_depending)->name);
@@ -607,7 +607,7 @@ output_param (cb_tree x, int id)
 			  output_prefix ();
 			  output ("cob_check_subscript (");
 			  output_integer (l->item);
-			  output (", %d, \"%s\");\n", p->occurs, p->name);
+			  output (", %d, \"%s\");\n", p->occurs_max, p->name);
 			}
 		    }
 		  l = l->next;
@@ -863,7 +863,7 @@ output_recursive (void (*func) (struct cb_field *), struct cb_field *f)
       int i = f->indexes;
       output_indent ("{");
       output_line ("int i%d;", i);
-      output_line ("for (i%d = 0; i%d < %d; i%d++)", i, i, f->occurs, i);
+      output_line ("for (i%d = 0; i%d < %d; i%d++)", i, i, f->occurs_max, i);
       output_indent ("  {");
     }
 
@@ -1459,7 +1459,7 @@ output_occurs (struct cb_field *p)
   if (p->occurs_depending)
     output_integer (p->occurs_depending);
   else
-    output ("%d", p->occurs);
+    output ("%d", p->occurs_max);
 }
 
 static void

@@ -885,7 +885,7 @@ build_field (int level, cb_tree name, struct cb_field *last_field,
   f = CB_FIELD (make_field (name));
   f->level = level;
   f->usage = CB_USAGE_DISPLAY;
-  f->occurs = 1;
+  f->occurs_max = 1;
   f->storage = storage;
 
   if (last_field && last_field->level == 88)
@@ -1269,7 +1269,7 @@ compute_size (struct cb_field *p)
 	      else
 		{
 		  c->offset = p->offset + size;
-		  size += compute_size (c) * c->occurs;
+		  size += compute_size (c) * c->occurs_max;
 		}
 	    }
 	}
@@ -1330,7 +1330,7 @@ compute_size (struct cb_field *p)
     }
 
   /* ISO+IEC+1989-2002: 13.16.42.2-9 */
-  if (p->redefines && p->size * p->occurs > p->redefines->size)
+  if (p->redefines && p->size * p->occurs_max > p->redefines->size)
     if (p->redefines->level != 01 || p->redefines->flag_external)
       cb_error_x (CB_TREE (p), _("size of `%s' larger than size of `%s'"),
 		 p->name, p->redefines->name);
@@ -1612,7 +1612,7 @@ validate_identifier (cb_tree x)
 	    if (CB_LITERAL_P (sub))
 	      {
 		int n = cb_literal_to_int (CB_LITERAL (sub));
-		if (n < p->occurs_min || n > p->occurs)
+		if (n < p->occurs_min || n > p->occurs_max)
 		  cb_error_x (x, _("subscript of `%s' out of bounds: %d"),
 			     name, n);
 	      }

@@ -295,15 +295,15 @@ extern struct cb_picture *cb_parse_picture (const char *str);
 
 struct cb_field {
   struct cb_tree_common common;
+  const char *name;		/* the original name */
+  char *cname;			/* the name used in C */
   int size;			/* field size */
   int memory_size;		/* memory size */
   int offset;			/* byte offset from the top (ie, 01 field) */
   int level;			/* level number */
-  int occurs;			/* OCCURS */
-  int occurs_min;
+  int occurs_min;		/* OCCURS <max> */
+  int occurs_max;		/* or OCCURS <min> TO <max> */
   int indexes;			/* the number of parents who have OCCURS */
-  const char *name;		/* the original name */
-  char *cname;			/* the name used in C */
   cb_tree occurs_depending;	/* OCCURS ... DEPENDING ON */
   enum cb_storage storage;
   enum cb_usage usage;		/* USAGE */
@@ -330,7 +330,7 @@ struct cb_field {
   long flag_sign_leading  : 1;	/* SIGN IS LEADING */
   long flag_sign_separate : 1;	/* SIGN IS SEPARATE */
   long flag_synchronized  : 1;	/* SYNCHRONIZED */
-  long flag_occurs        : 1;	/* if OCCURS clause exists */
+  long flag_occurs        : 1;	/* OCCURS */
   long flag_base          : 1;
   long flag_field         : 1;
   /* screen parameters */
