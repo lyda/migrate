@@ -99,10 +99,7 @@ cb_name_1 (char *s, cb_tree x)
     case CB_TAG_REFERENCE:
       {
 	struct cb_reference *p = CB_REFERENCE (x);
-	if (p->value)
-	  s += cb_name_1 (s, p->value);
-	else
-	  s += sprintf (s, "#<reference %s>", p->word->name);
+	s += sprintf (s, "%s", p->word->name);
 	if (p->subs)
 	  {
 	    cb_tree l = p->subs = list_reverse (p->subs);
@@ -122,6 +119,11 @@ cb_name_1 (char *s, cb_tree x)
 	    if (p->length)
 	      s += cb_name_1 (s, p->length);
 	    strcpy (s, ")");
+	  }
+	if (p->chain)
+	  {
+	    s += sprintf (s, " in ");
+	    s += cb_name_1 (s, p->chain);
 	  }
       }
       break;
@@ -1007,28 +1009,42 @@ cb_resolve_redefines (struct cb_field *field, cb_tree redefines)
 {
   struct cb_field *f;
   struct cb_reference *r = CB_REFERENCE (redefines);
+  const char *name = CB_NAME (redefines);
   cb_tree x = CB_TREE (field);
 
   /* check qualification */
   if (r->chain)
     {
-      cb_error_x (x, _("`%s' cannot be qualified here"), CB_NAME (redefines));
+      cb_error_x (x, _("`%s' cannot be qualified here"), name);
       return NULL;
     }
 
   /* check subscripts */
   if (r->subs)
     {
-      cb_error_x (x, _("`%s' cannot be subscripted here"), CB_NAME (redefines));
+      cb_error_x (x, _("`%s' cannot be subscripted here"), name);
       return NULL;
     }
 
   /* resolve the name in the current group (if any) */
-  if (field->parent)
-    r->chain = cb_build_field_reference (field->parent, redefines);
-  if (cb_ref (redefines) == cb_error_node)
-    return NULL;
-  f = CB_FIELD (r->value);
+  if (field->parent && field->parent->children)
+    {
+      for (f = field->parent->children; f; f = f->sister)
+	if (strcasecmp (f->name, name) == 0)
+	  break;
+      if (f == NULL)
+	{
+	  cb_error_x (x, _("`%s' undefined in `%s'"),
+		      name, field->parent->name);
+	  return NULL;
+	}
+    }
+  else
+    {
+      if (cb_ref (redefines) == cb_error_node)
+	return NULL;
+      f = cb_field (redefines);
+    }
 
   /* check level number */
   if (f->level != field->level)
@@ -1695,107 +1711,96 @@ cb_define_system_name (const char *name)
     cb_define (x, lookup_system_name (name));
 }
 
-static cb_tree
-resolve_label (const char *name, struct cb_label *section)
-{
-  cb_tree l;
-  for (l = section->children; l; l = CB_CHAIN (l))
-    if (strcasecmp (name, CB_LABEL (CB_VALUE (l))->name) == 0)
-      return CB_VALUE (l);
-  return cb_error_node;
-}
-
 cb_tree
 cb_ref (cb_tree x)
 {
   struct cb_reference *r = CB_REFERENCE (x);
-  cb_tree pv;
-  cb_tree v = NULL;
+  cb_tree candidate = NULL;
+  cb_tree items;
 
+  /* if this reference has already been resolved (and the value
+     has been cached), then just return the value */
   if (r->value)
     return r->value;
 
-  if (r->chain == NULL)
+  /* resolve the value */
+  for (items = r->word->items; items; items = CB_CHAIN (items))
     {
-      switch (r->word->count)
+      /* find a candidate value by resolving qualification */
+      cb_tree v = CB_VALUE (items);
+      cb_tree c = r->chain;
+      switch (CB_TREE_TAG (v))
 	{
-	case 0:
-	  undefined_error (x);
-	  goto error;
-	case 1:
-	  v = CB_VALUE (r->word->items);
-	  goto end;
-	default:
-	  if (r->offset && CB_LABEL_P (r->offset))
-	    {
-	      v = resolve_label (r->word->name, CB_LABEL (r->offset));
-	      if (v != cb_error_node)
+	case CB_TAG_FIELD:
+	  {
+	    /* in case the value is a field, it might be qualified
+	       by its parent names and a file name */
+	    struct cb_field *p = CB_FIELD (v)->parent;
+
+	    /* resolve by parents */
+	    for (; p; p = p->parent)
+	      if (c && strcasecmp (CB_NAME (c), p->name) == 0)
+		c = CB_REFERENCE (c)->chain;
+
+	    /* TODO: resolve by file */
+	    break;
+	  }
+	case CB_TAG_LABEL:
+	  {
+	    /* in case the value is a label, it might be qualified
+	       by its section name */
+	    struct cb_label *s = CB_LABEL (v)->section;
+
+	    /* unqualified paragraph name referenced within the section
+	       is resolved without ambiguity check */
+	    if (c == NULL && r->offset && s == CB_LABEL (r->offset))
+	      {
+		candidate = v;
 		goto end;
+	      }
+
+	    /* resolve by section name */
+	    if (c && strcasecmp (CB_NAME (c), s->name) == 0)
+	      c = CB_REFERENCE (c)->chain;
+
+	    break;
+	  }
+	default:
+	  /* other values cannot be qualified */
+	  break;
+	}
+
+      /* a well qualified value is a good candidate */
+      if (c == NULL)
+	{
+	  if (candidate == NULL)
+	    {
+	      /* keep the first candidate */
+	      candidate = v;
 	    }
-	  ambiguous_error (x);
-	  goto error;
+	  else
+	    {
+	      /* there are several candidates */
+	      ambiguous_error (x);
+	      r->value = cb_error_node;
+	      return cb_error_node;
+	    }
 	}
     }
 
-  pv = cb_ref (r->chain);
-  if (pv == cb_error_node)
-    goto error;
-
-  switch (CB_TREE_TAG (pv))
+  /* there is no candidate */
+  if (candidate == NULL)
     {
-    case CB_TAG_FILE:
-      pv = CB_TREE (CB_FILE (pv)->record->sister);
-      /* fall through */
-    case CB_TAG_FIELD:
-      {
-	cb_tree l;
-	struct cb_field *p, *pp;
-
-	/* find the definition in the parent */
-	pp = CB_FIELD (pv);
-	for (l = r->word->items; l; l = CB_CHAIN (l))
-	  if (CB_FIELD_P (CB_VALUE (l)))
-	    for (p = CB_FIELD (CB_VALUE (l))->parent; p; p = p->parent)
-	      if (p == pp)
-		{
-		  if (v)
-		    {
-		      ambiguous_error (x);
-		      goto error;
-		    }
-		  v = CB_VALUE (l);
-		}
-	if (v == NULL)
-	  {
-	    if (pp->children == NULL)
-	      cb_error_x (r->chain, _("`%s' not a group"), pp->name);
-	    else
-	      undefined_error (x);
-	    goto error;
-	  }
-	goto end;
-      }
-    case CB_TAG_LABEL:
-      {
-	v = resolve_label (r->word->name, CB_LABEL (pv));
-	if (v != cb_error_node)
-	  goto end;
-	undefined_error (x);
-	goto error;
-      }
-    default:
-      ABORT ();
+      undefined_error (x);
+      r->value = cb_error_node;
+      return cb_error_node;
     }
 
  end:
-  if (CB_FIELD_P (v))
-    CB_FIELD (v)->count++;
-  r->value = v;
+  r->value = candidate;
+  if (CB_FIELD_P (r->value))
+    CB_FIELD (r->value)->count++;
   return r->value;
-
- error:
-  r->value = cb_error_node;
-  return cb_error_node;
 }
 
 
