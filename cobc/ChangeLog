@@ -1,6 +1,7 @@
 2002-08-01  Keisuke Nishida  <knishida@netlab.jp>
 
 	* parser.y (occurs_clause): Use predefined_name for DEPENDING ON.
+	(record_depending): Set `record_depending' directly.
 
 2002-07-31  Keisuke Nishida  <knishida@netlab.jp>
 
