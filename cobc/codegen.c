@@ -697,23 +697,14 @@ output_compare (cobc_tree x, cobc_tree s1, cobc_tree s2)
       if (COBC_LITERAL_P (s1))
 	output ("-");
       if (COBC_LITERAL (y)->all)
-	{
-	  output ("cob_cmp_all (");
-	  output_tree (x);
-	  output (", ");
-	  output_location (y);
-	  output (")");
-	}
+	output ("cob_cmp_all");
       else
-	{
-	  output ("cob_cmp_str (");
-	  output_tree (x);
-	  output (", ");
-	  output_location (y);
-	  output (", ");
-	  output_length (y);
-	  output (")");
-	}
+	output ("cob_cmp_str");
+      output (" (");
+      output_tree (x);
+      output (", ");
+      output_location (y);
+      output (")");
     }
   else
     {
