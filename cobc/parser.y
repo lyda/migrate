@@ -143,7 +143,8 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <ival> opt_on_size_error_sentence,opt_on_overflow_sentence
 %type <ival> on_xxx_statement_list
 %type <ival> at_end_sentence,invalid_key_sentence
-%type <list> label_list,subscript_list,number_list,varcond_list,variable_list
+%type <list> label_list,subscript_list,number_list,variable_list
+%type <list> conditional_variable_list
 %type <list> evaluate_subject_list,evaluate_when_list,evaluate_object_list
 %type <para> call_using,call_parameter,call_parameter_list
 %type <mval> numeric_variable_list,numeric_edited_variable_list
@@ -167,7 +168,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <tree> indexed_variable,search_opt_varying,opt_key_is
 %type <tree> from_rec_varying,to_rec_varying
 %type <tree> literal,gliteral,without_all_literal,all_literal,special_literal
-%type <tree> nliteral
+%type <tree> nliteral,conditional_variable
 %type <tree> condition_1,condition_2,comparative_condition,class_condition
 %type <tree> search_all_when_conditional
 %type <list> inspect_tallying,inspect_replacing,inspect_converting
@@ -2481,7 +2482,7 @@ opt_end_search: | END_SEARCH ;
 
 set_statement:
   SET variable_list set_mode number	{ gen_set ($2, $3, $4); }
-| SET varcond_list TO TRUE		{ gen_set_true ($2); }
+| SET conditional_variable_list TO TRUE	{ gen_set_true ($2); }
 | SET set_on_off_list
   {
     yywarn ("SET ON/OFF is not supported");
@@ -3140,9 +3141,13 @@ filename:
   SYMBOL_TOK
 | literal
 ;
-varcond_list:
-  VARCOND			{ $$ = make_list ($1); }
-| varcond_list VARCOND		{ $$ = list_add ($1, $2); }
+conditional_variable_list:
+  conditional_variable		{ $$ = make_list ($1); }
+| conditional_variable_list
+  conditional_variable		{ $$ = list_add ($1, $2); }
+;
+conditional_variable:
+  VARCOND			{ $$ = $1; }
 ;
 variable_list:
   variable			{ $$ = make_list ($1); }
