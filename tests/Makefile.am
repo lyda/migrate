@@ -22,7 +22,7 @@ TESTSUITE_AT = \
 	entry.at \
 	misc.at
 
-EXTRA_DIST = $(srcdir)/package.m4 $(TESTS) $(TESTSUITE_AT)
+EXTRA_DIST = $(srcdir)/package.m4 templates $(TESTS) $(TESTSUITE_AT)
 
 DISTCLEANFILES = atconfig
 
