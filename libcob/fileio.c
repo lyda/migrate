@@ -420,6 +420,11 @@ relative_write (struct cob_file_desc *f)
 
   write (f->file.fd, f->record_data, f->record_size);
 
+  /* update RECORD KEY */
+  if (f->relative_key.desc)
+    cob_set_int (f->relative_key,
+		 lseek (f->file.fd, 0, SEEK_CUR) / f->record_size);
+
   RETURN_STATUS (00);
 }
 
