@@ -33,8 +33,10 @@
 #define SYTB_VAR 2
 #define SYTB_LAB 3
 
-/* set operations */
-enum set_mode { SET_TO, SET_UP, SET_DOWN };
+/* set mode (see gen_set) */
+#define SET_TO		0
+#define SET_UP		1
+#define SET_DOWN	2
 
 /* asm sections or pseudo-sections */
 #define SEC_CONST 2
@@ -162,7 +164,8 @@ extern void gen_class_check (cob_tree sy, int class);
 extern void gen_inspect (cob_tree var, void *list, int operation);
 extern void gen_move (cob_tree sy_src, cob_tree sy_dst);
 extern void gen_move_corresponding (cob_tree sy1, cob_tree sy2);
-extern void gen_set (cob_tree idx, enum set_mode mode, cob_tree var, int adrof_idx, int adrof_var);
+extern void gen_set (cob_tree_list l, int mode, cob_tree v);
+extern void gen_set_true (cob_tree_list l);
 extern int gen_evaluate_start (void);
 extern int push_selection_subject_copy (int level, struct selsubject *ssbj, int stkadd, int objtype);
 extern int selection_subject_type (int level, struct selsubject *ssbj);

@@ -883,39 +883,6 @@ value_to_eax (cob_tree x)
   }
 }
 
-/* store variable pointer in eax to sy.
-   sy must be a pointer or a linkage section 01/77 variable */
-static void
-set_ptr (cob_tree sy)
-{
-  if (SYMBOL_P (sy) && sy->linkage_flg)
-    {
-      if (sy->linkage_flg == 1)
-	{
-	  yyerror ("only level 01 or 77 linkage vars may be set");
-	  return;
-	}
-      output ("\tmovl\t%%eax,%d(%%ebp)\n", sy->linkage_flg);
-      return;
-    }
-  else
-    {
-      if (SYMBOL_P (sy))
-	{
-	  load_location (sy, "ebx");
-	  output ("\tmovl\t%%eax,0(%%ebx)\n");
-	}
-      else
-	{
-	  output ("\tpushl\t%%eax\t# saving ptr value\n");
-	  loadloc_to_eax (sy);
-	  output ("\tmovl\t%%eax,%%ebx\n");
-	  output ("\tpopl\t%%eax\n");
-	  output ("\tmovl\t%%eax,0(%%ebx)\n");
-	}
-    }
-}
-
 static void
 cleanup_rt_stack ()
 {
@@ -2939,84 +2906,43 @@ gen_initialize (cob_tree sy)
  */
 
 void
-gen_set (cob_tree idx, enum set_mode mode, cob_tree var,
-	 int adrof_idx, int adrof_var)
+gen_set (cob_tree_list l, int mode, cob_tree v)
 {
-  cob_tree sy = idx;
-  if (SUBSTRING_P (idx))
-    sy = SUBSTRING_VAR (idx);
-  else if (SUBREF_P (idx))
-    sy = SUBREF_SYM (idx);
+  for (; l; l = l->next)
+    {
+      cob_tree x = l->tree;
+      if (COB_FIELD_TYPE (x) != 'B')
+	yyerror ("only usage comp variables can be used as indices");
+      else if (symlen (x) > 4)
+	yyerror ("index too large");
+      else
+	{
+	  static char *op_table[3] = {"mov", "add", "sub"};
+  	  value_to_eax (v);
+	  output ("\t%s%c\t%%eax, -%d(%%ebp)\n",
+		  op_table[mode], varsize_ch (x), x->location);
+	}
+    }
+}
 
-  if (COB_FIELD_TYPE (sy) == '8')
-    {				/* conditional? */
-      if ((sy->substring_redef.vr != NULL) || (sy->value2 != sy->value))
-	{
-	  yyerror ("conditional is not unique");
-	  return;
-	}
-      if (SUBREF_P (idx))
-	gen_move (sy->value, make_subref (sy->parent, SUBREF_SUBS (idx)));
-      else
-	gen_move (sy->value, sy->parent);
-      return;
-    }
-  if (sy->flags.is_pointer || adrof_idx)
-    {				/* pointer? */
-      if (mode != SET_TO)
-	{
-	  yyerror ("only SET TO work with pointers");
-	  return;
-	}
-      if (adrof_idx && !(idx->linkage_flg))
-	{
-	  yyerror ("only linkage variables may be set to a new address");
-	  return;
-	}
-      if (adrof_var)
-	{
-	  loadloc_to_eax (var);
-	  set_ptr (idx);
-	}
+void
+gen_set_true (cob_tree_list l)
+{
+  for (; l; l = l->next)
+    {
+      cob_tree x = l->tree;
+      if (SUBREF_P (x))
+	x = SUBREF_SYM (x);
+
+      if ((x->substring_redef.vr != NULL) || (x->value2 != x->value))
+	yyerror ("conditional is not unique");
       else
 	{
-	  if (var == NULL)
-	    {
-	      output ("\txorl\t%%eax,%%eax\n");
-	    }
+	  if (SUBREF_P (l->tree))
+	    gen_move (x->value, make_subref (x->parent, SUBREF_SUBS (l->tree)));
 	  else
-	    {
-	      load_location (var, "ebx");
-	      output ("\tmovl\t0(%%ebx),%%eax\n");
-	    }
-	  set_ptr (idx);
+	    gen_move (x->value, x->parent);
 	}
-      return;
-    }
-	/******** it is not a pointer, so must be an index ********/
-  if (COB_FIELD_TYPE (idx) != 'B')
-    {
-      yyerror ("only usage comp variables can be used as indices");
-      return;
-    }
-  /* first get the second operand */
-  if (symlen (idx) > 4)
-    yyerror ("warning: we don't allow this large index variable");
-  value_to_eax (var);
-  switch (mode)
-    {
-    case SET_TO:		/* just move this value */
-      output ("\tmov%c\t%%eax, -%d(%%ebp)\n",
-	       varsize_ch (idx), idx->location);
-      break;
-    case SET_UP:		/* we need to add this value to the index */
-      output ("\tadd%c\t%%eax, -%d(%%ebp)\n",
-	       varsize_ch (idx), idx->location);
-      break;
-    case SET_DOWN:
-      output ("\tsub%c\t%%eax, -%d(%%ebp)\n",
-	       varsize_ch (idx), idx->location);
-      break;
     }
 }
 

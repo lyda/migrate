@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 421
+%expect 419
 
 %{
 #define yydebug		cob_trace_parser
@@ -112,7 +112,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %token END_START,END_STRING,END_SUBTRACT,END_UNSTRING,END_WRITE
 %token THEN,EVALUATE,OTHER,ALSO,CONTINUE,CURRENCY,REFERENCE,INITIALIZE
 %token NUMERIC,ALPHABETIC,ALPHABETIC_LOWER,ALPHABETIC_UPPER
-%token RETURNING,TOK_TRUE,TOK_FALSE,ANY,SUBSCVAR,FUNCTION,OPTIONAL
+%token RETURNING,TRUE,FALSE,ANY,SUBSCVAR,FUNCTION,OPTIONAL
 %token REPORT,RD,CONTROL,LIMIT,FINAL,HEADING,FOOTING,LAST,DETAIL,SUM
 %token POSITION,FILE_ID,DEPENDING,TYPE,SOURCE,CORRESPONDING,CONVERTING
 %token INITIATE,GENERATE,TERMINATE,TOK_NULL,ADDRESS,NOECHO,LPAR
@@ -124,9 +124,9 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <baval> inspect_before_after
 %type <ival> if_then,search_body,search_all_body,class
 %type <ival> search_when,search_when_list,search_opt_at_end
-%type <ival> integer,operator,before_after
+%type <ival> integer,operator,before_after,set_mode
 %type <ival> on_exception_or_overflow,on_not_exception
-%type <ival> opt_address_of,display_upon,display_options
+%type <ival> display_upon,display_options
 %type <ival> flag_all,opt_with_duplicates,opt_with_test,opt_optional
 %type <ival> flag_not,selection_subject,selection_object,when_case
 %type <ival> flag_rounded,opt_sign_separate,opt_plus_minus
@@ -137,7 +137,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <ival> procedure_using,sort_direction,write_options
 %type <ival> opt_on_size_error_sentence,opt_on_overflow_sentence
 %type <ival> at_end_sentence,invalid_key_sentence
-%type <list> label_list,subscript_list,number_list
+%type <list> label_list,subscript_list,number_list,varcond_list,variable_list
 %type <para> call_using,call_parameter,call_parameter_list
 %type <mval> var_list_name
 %type <pfval> perform_after
@@ -155,10 +155,9 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <tree> opt_read_into,opt_write_from,field_name,expr
 %type <tree> opt_unstring_count,opt_unstring_delim,unstring_tallying
 %type <tree> qualified_var,unqualified_var
-%type <tree> call_returning,screen_to_name,var_or_lit
-%type <tree> set_variable,set_variable_or_nlit,set_target,opt_add_to
+%type <tree> call_returning,screen_to_name,var_or_lit,opt_add_to
 %type <tree> sort_keys,opt_perform_thru,procedure_section
-%type <tree> var_or_nliteral,opt_read_key,file_name,string_with_pointer
+%type <tree> opt_read_key,file_name,string_with_pointer
 %type <tree> variable,sort_range,name_or_lit,delimited_by
 %type <tree> variable_indexed,search_opt_varying,opt_key_is
 %type <tree> from_rec_varying,to_rec_varying
@@ -716,14 +715,6 @@ usage:
 | PACKED_DECIMAL /* or COMP-3 */
   {
     COB_FIELD_TYPE (curr_field) = 'C';
-  }
-| POINTER
-  {
-    COB_FIELD_TYPE (curr_field) = 'B';
-    curr_field->len      =  4;
-    curr_field->decimals =  0;
-    curr_field->flags.is_pointer = 1;
-    strcpy (picture,"9\xa")
   }
 ;
 opt_usage: | USAGE ;
@@ -1472,8 +1463,8 @@ selection_subject:
       }
   }
 | condition			{ push_condition(); $$ = SSUBJ_BOOLEAN; }
-| TOK_TRUE			{ push_boolean (1); $$ = SSUBJ_BOOLEAN; }
-| TOK_FALSE			{ push_boolean (0); $$ = SSUBJ_BOOLEAN; }
+| TRUE				{ push_boolean (1); $$ = SSUBJ_BOOLEAN; }
+| FALSE				{ push_boolean (0); $$ = SSUBJ_BOOLEAN; }
 ;
 when_case_list:
   WHEN				{ $<ival>$ = loc_label++; }
@@ -1511,8 +1502,8 @@ when_case:
 ;
 selection_object:
   ANY			{ $$ = SOBJ_ANY; }
-| TOK_TRUE		{ push_boolean (1); $$ = SOBJ_BOOLEAN; }
-| TOK_FALSE		{ push_boolean (0); $$ = SOBJ_BOOLEAN; }
+| TRUE			{ push_boolean (1); $$ = SOBJ_BOOLEAN; }
+| FALSE			{ push_boolean (0); $$ = SOBJ_BOOLEAN; }
 | flag_not condition	{ push_condition (); $$ = SOBJ_BOOLEAN | $1; }
 | flag_not expr
   {
@@ -2253,42 +2244,13 @@ opt_end_search: | END_SEARCH ;
  */
 
 set_statement:
-  SET set_list
+  SET variable_list set_mode number	{ gen_set ($2, $3, $4); }
+| SET varcond_list TO TRUE		{ gen_set_true ($2); }
 ;
-set_list:
-  set_target TO opt_address_of set_variable_or_nlit
-  {
-    gen_set($1,SET_TO,$4,0,$3);
-  }
-| variable UP BY var_or_nliteral
-  {
-    gen_set($1,SET_UP,$4,0,0);
-  }
-| variable DOWN BY var_or_nliteral
-  {
-    gen_set($1,SET_DOWN,$4,0,0);
-  }
-| opt_address_of variable TO opt_address_of set_variable
-  {
-    gen_set($2,SET_TO,$5,$1,$4);
-  }
-;
-set_target:
-  variable			{ $$ = $1; }
-| VARCOND			{ $$ = $1; }
-;
-set_variable:
-  variable			{ $$ = $1; }
-| TOK_NULL			{ $$ = NULL; }
-;
-opt_address_of:
-  /* nothing */			{ $$ = 0; }
-| ADDRESS opt_of		{ $$ = 1; }
-;
-set_variable_or_nlit:
-  name_or_lit			{ $$ = $1; }
-| TOK_NULL			{ yywarn ("possibly a bug"); $$ = 0; }
-| TOK_TRUE			{ yywarn ("possibly a bug"); $$ = COB_TREE (1); }
+set_mode:
+  TO			{ $$ = SET_TO; }
+| UP BY			{ $$ = SET_UP; }
+| DOWN BY		{ $$ = SET_DOWN; }
 ;
 
 
@@ -2772,10 +2734,6 @@ special_literal:
 | HIGH_VALUES			{ $$ = spe_lit_HV; }
 | LOW_VALUES			{ $$ = spe_lit_LV; }
 ;
-var_or_nliteral:
-  variable
-| nliteral
-;
 literal:
   nliteral		{ $$=$1; }
 | CLITERAL		{ save_literal($1,'X'); LITERAL ($1)->all=0; $$=$1; }
@@ -2826,6 +2784,14 @@ name:
   variable
 | variable '(' subscript ':' ')'	   { $$ = make_substring ($1, $3, 0); }
 | variable '(' subscript ':' subscript ')' { $$ = make_substring ($1, $3, $5); }
+;
+varcond_list:
+  VARCOND			{ $$ = cons ($1, NULL); }
+| varcond_list VARCOND		{ $$ = list_append ($1, $2); }
+;
+variable_list:
+  variable			{ $$ = cons ($1, NULL); }
+| variable_list variable	{ $$ = list_append ($1, $2); }
 ;
 variable:
   subscripted_variable
