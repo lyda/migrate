@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2001  Keisuke Nishida
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this software; see the file COPYING.  If not, write to
+ * the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ * Boston, MA 02111-1307 USA
+ */
+
 #ifndef _TREE_H_
 #define _TREE_H_
 
@@ -7,6 +26,9 @@
  */
 
 typedef struct sym *cob_tree;
+
+#define COB_TREE(x)		((struct sym *) (x))
+#define COB_TREE_TYPE(x)	(COB_TREE (x)->litflag)
 
 extern void print_tree (cob_tree x);
 
@@ -57,13 +79,13 @@ struct lit
 };
 
 #define LITERAL(x)		((struct lit *) (x))
-#define LITERAL_P(x)		(LITERAL (x)->litflag == 1)
+#define LITERAL_P(x)		(COB_TREE_TYPE (x) == 1)
 
 extern cob_tree make_literal (char *name);
 
 
 /*
- * Symbols
+ * Symbol
  */
 
 #define organization decimals
@@ -80,7 +102,7 @@ extern cob_tree make_literal (char *name);
 struct sym
 {
   char litflag;			/* 1 for literals, 2 for variables */
-  cob_tree next;		/* pointer to next symbol with same hash */
+  struct sym *next;		/* pointer to next symbol with same hash */
   char *name;			/* symbol (variable) name */
   char type;			/* label or elementary item or group item 
 				   9,A,X,B,C=elem; 
@@ -149,8 +171,8 @@ struct sym
   struct occurs *occurs;	/* for DEPENDING ON or null if fixed table */
 };
 
-#define SYMBOL(x)		((cob_tree) (x))
-#define SYMBOL_P(x)		(SYMBOL (x)->litflag == 0)
+#define SYMBOL(x)		((struct sym *) (x))
+#define SYMBOL_P(x)		(COB_TREE_TYPE (x) == 0)
 
 extern cob_tree make_symbol (char *name);
 extern cob_tree make_filler (void);
@@ -167,7 +189,7 @@ struct subref
 };
 
 #define SUBREF(x)	((struct subref *) (x))
-#define SUBREF_P(x)	(SUBREF (x)->litflag == 2)
+#define SUBREF_P(x)	(COB_TREE_TYPE (x) == 2)
 #define SUBREF_SUBS(x)	(SUBREF (x)->subs)
 #define SUBREF_SYM(x)	(SUBREF (x)->sym)
 
@@ -186,7 +208,7 @@ struct refmod
 };
 
 #define REFMOD(x)	((struct refmod *) (x))
-#define REFMOD_P(x)	(REFMOD (x)->litflag == 4)
+#define REFMOD_P(x)	(COB_TREE_TYPE (x) == 4)
 
 
 /*
@@ -461,7 +483,7 @@ struct expr
 };
 
 #define EXPR(x)		((struct expr *) (x))
-#define EXPR_P(x)	(EXPR (x)->litflag == 5)
+#define EXPR_P(x)	(COB_TREE_TYPE (x) == 5)
 #define EXPR_OP(x)	(EXPR (x)->op)
 #define EXPR_LEFT(x)	(EXPR (x)->left)
 #define EXPR_RIGHT(x)	(EXPR (x)->right)
@@ -502,7 +524,7 @@ struct cond
 };
 
 #define COND(x)		((struct cond *) (x))
-#define COND_P(x)	(COND (x)->litflag == 8)
+#define COND_P(x)	(COB_TREE_TYPE (x) == 8)
 #define COND_TYPE(c)	(COND (c)->type)
 #define COND_X(c)	(COND (c)->x)
 #define COND_Y(c)	(COND (c)->y)
