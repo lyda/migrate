@@ -2,65 +2,89 @@ NEWS - user visible changes				-*- outline -*-
 
 * Changes in OpenCOBOL 0.24
 
-** No longer use readline.
+** Installation changes
 
-** No longer use run-time configuration file (libcob.conf)
+*** No longer use readline.
 
-** New subdirectory `config', which contains compiler config files,
-will be installed under $prefix/share/open-cobol.
+*** No longer use run-time configuration file (libcob.conf)
 
-** Binary data items are now big endian.
+*** New subdirectory `config' will be installed under
+$prefix/share/open-cobol.
+
+** Feature changes
+
+*** Compile-time options can be stored in a "config" file.
+There are various config options.  See the manual for details.
+
+*** Binary data items are now big endian.
 COMP-5 data items are native integers.
+The config option `binary-byteorder' controls this.
 
-** COPY statements try to complement the file extension:
+*** Numeric sign of USAGE DISPLAY items has been changed as follows:
+
+  Positive: 0123456789  Negative: pqrstuvwxy
+
+The config option `display-sign' controls this.
+
+*** COPY statements now try to complement the following file extensions:
 .CBL, .COB, .cbl, or .cob.
 
-** New environment variable TMPDIR.
+*** ALPHABET ... IS EBCDIC.
 
-** New environment variable COB_LDFLAGS.
+*** SHARING clause has been implemented.
 
-** The environment variable COB_CONFIG_FILE has been removed.
+*** LENGTH OF operator has been implemented.
 
-** New environment variable COB_DYNAMIC_RELOADING.
+*** COLLATING SEQUENCE in the SORT and MERGE statements.
 
-** New compiler option `--list-reserved', which list all reserved words.
+** Compiler changes
 
-** New compiler option `-conf', which specifies the config file.
+*** New compiler environment variable TMPDIR.
 
-** New compiler option `-ext', which specifies the copy file extension.
+*** New compiler environment variable COB_LDFLAGS.
 
-** The compiler option `-O' now does C level optimization.
+*** The runtime environment variable COB_CONFIG_FILE has been removed.
 
-** New compiler option `-O2', which does further C level optimization.
+*** New runtime environment variable COB_DYNAMIC_RELOADING.
 
-** New compiler option `-L' and `-l', which are passed to the C compiler.
+*** New compiler option `--list-reserved', which list all reserved words.
 
-** New compiler option `-fsyntax-only', which does syntax error check
+*** New compiler option `-conf', which specifies the config file.
+
+*** New compiler option `-ext', which specifies the copy file extension.
+
+*** The compiler option `-O' now does C level optimization.
+
+*** New compiler option `-O2', which does further C level optimization.
+
+*** New compiler option `-L' and `-l', which are passed to the C compiler.
+
+*** New compiler option `-fsyntax-only', which does syntax error check
 only without any output.
 
-** New compiler option `-fauto-initialize', which initializes all
+*** New compiler option `-fauto-initialize', which initializes all
 data items at the beginning of program.
 
-** New compiler option `-fdebugging-line', which enables debugging lines.
+*** New compiler option `-fstatic-call', which is equivalent to old `-static'.
 
-** New compiler option `-fsource-location', which includes source location
+*** New compiler option `-fdebugging-line', which enables debugging lines.
+
+*** New compiler option `-fsource-location', which includes source location
 in the output.
 
-** New compiler option `-fline-directive', which includes line directive
+*** New compiler option `-fline-directive', which includes line directive
 in the output.
 
-** New compiler option `-fruntime-inlining', which is the replacement
+*** New compiler option `-fruntime-inlining', which is the replacement
 of obsolete options `-finline-move' and `-finline-get-int'.
 
-** New compiler option `-w', which inhibits warnings.
+*** New compiler option `-w', which inhibits warnings.
 
-** New compiler option `-Wredefinition', which warns redefined names.
+*** New compiler option `-Wredefinition', which warns redefined names.
 
-** The compiler option `-column' removed.
+*** The compiler options `-static' and `-dynamic' are obsolete.
 
-** SHARING clause has been implemented.
-
-** LENGTH OF operator has been implemented.
+*** The compiler option `-column' removed.
 
 ** Many bug fixes.
 
