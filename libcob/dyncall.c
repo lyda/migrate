@@ -104,7 +104,10 @@ cob_set_library_path (const char *path)
 {
   if (path_str)
     free (path_str);
-  path_str = strdup (path);
+  if (path)
+    path_str = strdup (path);
+  else
+    path_str = NULL;
 }
 
 void *
