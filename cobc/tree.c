@@ -710,7 +710,7 @@ compute_size (struct cobc_field *p)
     }
 
   /* ISO+IEC+1989-2002: 13.16.42.2-9 */
-  if (p->redefines && p->size > p->redefines->size)
+  if (p->redefines && p->size * p->occurs > p->redefines->size)
     if (p->redefines->level != 01 || p->redefines->f.external)
       yyerror_x (COBC_TREE (p), _("size of `%s' larger than size of `%s'"),
 		 p->name, p->redefines->name);

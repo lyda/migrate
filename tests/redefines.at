@@ -211,6 +211,26 @@ IDENTIFICATION  DIVISION.
 PROGRAM-ID.     prog.
 DATA            DIVISION.
 WORKING-STORAGE SECTION.
+01 G1.
+  02 X          PIC X.
+  02 A          REDEFINES X PIC 9 OCCURS 2.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C prog.cob], [1], ,
+[prog.cob:8: size of `A' larger than size of `X'
+])
+
+AT_CLEANUP
+
+AT_SETUP([Redefined size exceeds the storage size (3)])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
 01 X            PIC X EXTERNAL.
 01 A            REDEFINES X PIC 99.
 PROCEDURE       DIVISION.
