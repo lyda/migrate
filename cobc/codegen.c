@@ -425,8 +425,65 @@ is_subscripted (struct sym *sy)
 
 
 /*
- *	Code Generating Routines
+ * Local functions
  */
+
+static void asm_call_1 (const char *name, struct sym *sy1);
+static void value_to_eax (struct sym *sy);
+
+static void
+push_immed (int i)
+{
+  stackframe_cnt += 4;
+  fprintf (o_src, "\tpushl\t$%d\n", i);
+}
+
+static void
+push_eax ()
+{
+  stackframe_cnt += 4;
+  fprintf (o_src, "\tpushl\t%%eax\n");
+}
+
+static void
+push_edx ()
+{
+  stackframe_cnt += 4;
+  fprintf (o_src, "\tpushl\t%%edx\n");
+}
+
+static void
+push_ebx ()
+{
+  stackframe_cnt += 4;
+  fprintf (o_src, "\tpushl\t%%ebx\n");
+}
+
+static void
+push_at_eax (struct sym *sy)
+{
+#ifdef COB_DEBUG
+  fprintf (stderr, "push_at_eax:\n");
+#endif
+  stackframe_cnt += 4;
+  if (sy->type == 'B' || sy->type == 'U')
+    {
+      if (symlen (sy) == 8)
+	{
+	  fprintf (o_src, "\tmovl\t4(%%eax), %%edx\n");
+	  fprintf (o_src, "\tmovl\t0(%%eax), %%eax\n");
+	  fprintf (o_src, "\tpushl\t%%edx\n");
+	  stackframe_cnt += 4;
+	}
+      else if (symlen (sy) >= 4)
+	fprintf (o_src, "\tmovl\t0(%%eax), %%eax\n");
+      else
+	fprintf (o_src, "\tmovs%cl\t0(%%eax), %%eax\n", varsize_ch (sy));
+    }
+  else
+    fprintf (o_src, "\tmovl\t0(%%eax), %%eax\n");
+  fprintf (o_src, "\tpushl\t%%eax\n");
+}
 
 static char *
 sec_name (short sec_no)
@@ -498,6 +555,371 @@ memrefd (struct sym *sy)
   sprintf (memref_buf, "$c_base%d+%d", pgm_segment, sy->descriptor);
   return memref_buf;
 }
+
+/* load address for normal (file/working-storage) or linkage variable */
+static void
+load_address (struct sym *sy)
+{
+  unsigned offset;
+  if (SYMBOL_P (sy) && sy->linkage_flg)
+    {
+      struct sym *tmp = sy;
+      while (tmp->linkage_flg == 1)
+	tmp = tmp->parent;
+      offset = sy->location - tmp->location;
+      fprintf (o_src, "\tmovl\t%d(%%ebp), %%eax\n", tmp->linkage_flg);
+      if (offset)
+	fprintf (o_src, "\taddl\t$%d, %%eax\n", offset);
+    }
+  else if (sy->sec_no == SEC_STACK)
+    fprintf (o_src, "\tleal\t%s, %%eax\n", memref (sy));
+  else if (sy->sec_no == SEC_DATA)
+    fprintf (o_src, "\tleal\tw_base%d+%d, %%eax\n",
+	     pgm_segment, sy->location);
+  else if (sy->sec_no == SEC_CONST)
+    fprintf (o_src, "\tleal\tc_base%d+%d, %%eax\n",
+	     pgm_segment, sy->location);
+}
+
+/* load in cpureg ("eax","ebx"...) location for normal 
+	(file/working-storage) or linkage variable */
+static void
+load_location (struct sym *sy, char *reg)
+{
+  unsigned offset;
+  if (SYMBOL_P (sy) && sy->linkage_flg)
+    {
+      struct sym *tmp = sy;
+      while (tmp->linkage_flg == 1)
+	tmp = tmp->parent;
+      offset = sy->location - tmp->location;
+      fprintf (o_src, "\tmovl\t%d(%%ebp), %%%s\n", tmp->linkage_flg, reg);
+      if (offset)
+	fprintf (o_src, "\taddl\t$%d, %%%s\n", offset, reg);
+    }
+  else if (sy->sec_no == SEC_STACK)
+    fprintf (o_src, "\tleal\t%s, %%%s\n", memref (sy), reg);
+  else
+    fprintf (o_src, "\tmovl\t%s, %%%s\n", memref (sy), reg);
+}
+
+static void
+loadloc_to_eax (struct sym *sy_p)
+{
+  unsigned offset;
+  struct sym *sy = sy_p, *var, *tmp;
+
+#ifdef COB_DEBUG
+  fprintf (o_src, "#gen_loadloc litflg %d\n", sy->litflag);
+#endif
+  if (REFMOD_P (sy))
+    sy = ((struct refmod *) sy)->sym;	// temp bypass
+  if (SUBREF_P (sy))
+    {
+      gen_subscripted ((struct subref *) sy);
+      var = SUBREF_SYM (sy);
+      if (var->linkage_flg)
+	{
+	  tmp = var;
+	  while (tmp->linkage_flg == 1)
+	    tmp = tmp->parent;
+	  offset = var->location - tmp->location;
+	  fprintf (o_src, "\tmovl %d(%%ebp), %%ebx\n", tmp->linkage_flg);
+	  if (offset)
+	    fprintf (o_src, "\taddl\t$%d, %%ebx\n", offset);
+	  fprintf (o_src, "\taddl\t%%ebx, %%eax\n");
+	}
+      else
+	{
+	  if (var->sec_no == SEC_STACK)
+	    fprintf (o_src, "\tleal\t%s, %%ebx\n", memref (var));
+	  else if (var->sec_no == SEC_DATA)
+	    fprintf (o_src, "\tleal\tw_base%d+%d, %%ebx\n",
+		     pgm_segment, var->location);
+	  else if (var->sec_no == SEC_CONST)
+	    fprintf (o_src, "\tleal\tc_base%d+%d, %%ebx\n",
+		     pgm_segment, var->location);
+	  fprintf (o_src, "\taddl\t%%ebx,%%eax\n");
+	}
+    }
+  else
+    {
+      load_location (sy, "eax");
+    }
+//      At that stage, the address is ready in %eax; do we need
+//      to correct it because of RefMod's?
+  if (REFMOD_P (sy_p))
+    {				// should avoid all that if literal 1
+      struct refmod *rfp = (struct refmod *) sy_p;
+      fprintf (o_src, "\tmovl\t%%eax, %%ebx\n");
+      value_to_eax (rfp->off);
+      fprintf (o_src, "\tdecl\t%%eax\n");
+      fprintf (o_src, "\taddl\t%%ebx, %%eax\n");
+    }
+}
+
+static void
+gen_loadloc (struct sym *sy)
+{
+  loadloc_to_eax (sy);
+  push_eax ();
+}
+
+static void
+gen_loaddesc1 (struct sym *sy, int variable_length)
+{
+  struct sym *var;
+  if (SUBREF_P (sy) || REFMOD_P (sy))
+    {
+      var = SUBREF_SYM (sy);
+      if (SUBREF_P (var))
+	var = SUBREF_SYM (var);
+    }
+  else
+    {
+      var = sy;
+    }
+  if (REFMOD_P (sy))
+    {
+      struct refmod *rflp = (struct refmod *) sy;
+      struct sym *syl = rflp->len;
+      if (syl == NULL)
+	{
+	  fprintf (o_src, "#  corrected length EOV\n");
+	  value_to_eax (rflp->off);
+	  fprintf (o_src, "\tnegl\t%%eax\n");
+	  fprintf (o_src, "\taddl\t$%d, %%eax\n", symlen (var));
+	  fprintf (o_src, "\tincl\t%%eax\n");
+	  fprintf (o_src, "\tmovl\t%%eax, rf_base%d+%d\n",
+		   pgm_segment, rflp->slot * 8);
+	}
+      else
+	{
+	  fprintf (o_src, "#  corrected length %s\n", syl->name);
+	  if (LITERAL_P (syl))
+	    fprintf (o_src, "\tmovl\t$%s, rf_base%d+%d\n",
+		     syl->name, pgm_segment, rflp->slot * 8);
+	  else
+	    {
+	      value_to_eax (syl);
+	      fprintf (o_src, "\tmovl\t%%eax, rf_base%d+%d\n",
+		       pgm_segment, rflp->slot * 8);
+	    }
+	}
+      fprintf (o_src, "\tmovl\t$'%c', rf_base%d+%d\n", 'G',
+	       pgm_segment, rflp->slot * 8 + 4);
+      fprintf (o_src, "\tmovl\t$rf_base%d+%d, %%eax\n",
+	       pgm_segment, rflp->slot * 8);
+    }
+  else
+    {
+      /* adjust its length if there is a variable size item inside */
+      if (variable_length && get_variable_item (sy) != NULL)
+	{
+	  adjust_desc_length (sy);
+	}
+      else
+	{
+#ifdef COB_DEBUG
+	  fprintf (o_src, "\tmovl\t%s, %%eax\t# descriptor of [%s]\n",
+		   memrefd (var), sch_convert (var->name));
+#else
+	  fprintf (o_src, "\tmovl\t%s, %%eax\n", memrefd (var));
+#endif
+	}
+    }
+  push_eax ();
+}
+
+static void
+gen_loaddesc (struct sym *sy)
+{
+  gen_loaddesc1 (sy, 1);
+}
+
+void
+gen_loadvar (struct sym *sy)
+{
+  if (sy == NULL)
+    push_immed (0);
+  else
+    {
+      gen_loadloc (sy);
+      gen_loaddesc (sy);
+    }
+}
+
+static void
+value_to_eax (struct sym *sy)
+{
+  long long value;
+  long value2;
+  int stack_save;
+  char *s;
+#ifdef COB_DEBUG
+  if (sy)
+    fprintf (o_src, "# value_to_eax %s\n", sy->name);
+#endif
+  if (sy == NULL)
+    {
+      fprintf (o_src, "\txorl\t%%eax,%%eax\n");
+      return;
+    }
+  if (!SYMBOL_P (sy))
+    {
+      /* if it's an integer, compute it now, not at runtime! */
+      value = 0;
+      s = sy->name;		/* integer's name is just it's value in ascii */
+      while (*s)
+	value = value * 10 + *s++ - '0';
+      fprintf (o_src, "#bef val\n");
+      fprintf (o_src, "\tmovl\t$%d,%%eax\n", (int) value);
+      if ((value2 = value >> 32) != 0)
+	fprintf (o_src, "\tmovl\t$%d,%%edx\n", (int) value2);
+    }
+  else if (sy->type == 'B' || sy->type == 'U')
+    {
+      /* load binary (comp) value directly */
+      /* %eax doesn't hold greater than 4 bytes binary types
+         so we use %edx to get the most significant part */
+      if (symlen (sy) > 4)
+	{
+	  fprintf (o_src, "\tmovl\t%s+4, %%edx\n", memref (sy));
+	  fprintf (o_src, "\tmovl\t%s, %%eax\n", memref (sy));
+	}
+      else
+	{
+	  if (symlen (sy) >= 4)
+	    {
+	      switch (sy->sec_no)
+		{
+		case SEC_CONST:
+		  fprintf (o_src, "\tmovl\tc_base%d+%d, %%eax\n",
+			   pgm_segment, sy->location);
+		  break;
+		case SEC_DATA:
+		  fprintf (o_src, "\tmovl\tw_base%d+%d, %%eax\n",
+			   pgm_segment, sy->location);
+		  break;
+		case SEC_STACK:
+		  fprintf (o_src, "\tmovl\t-%d(%%ebp), %%eax\n",
+			   sy->location);
+		  break;
+		}
+	    }
+	  else
+	    {
+	      switch (sy->sec_no)
+		{
+		case SEC_CONST:
+		  fprintf (o_src, "\tmovs%cl\tc_base%d+%d, %%eax\n",
+			   varsize_ch (sy), pgm_segment, sy->location);
+		  break;
+		case SEC_DATA:
+		  fprintf (o_src, "\tmovs%cl\tw_base%d+%d, %%eax\n",
+			   varsize_ch (sy), pgm_segment, sy->location);
+		  break;
+		case SEC_STACK:
+		  fprintf (o_src, "\tmovs%cl\t-%d(%%ebp), %%eax\n",
+			   varsize_ch (sy), sy->location);
+		  break;
+		}
+	    }
+	}
+    }
+  else
+    {
+      stack_save = stackframe_cnt;
+      stackframe_cnt = 0;
+      asm_call_1 ("get_index", sy);
+      stackframe_cnt = stack_save;
+    }
+}
+
+/* store variable pointer in eax to sy.
+   sy must be a pointer or a linkage section 01/77 variable */
+static void
+set_ptr (struct sym *sy)
+{
+  if (SYMBOL_P (sy) && sy->linkage_flg)
+    {
+      if (sy->linkage_flg == 1)
+	{
+	  yyerror ("only level 01 or 77 linkage vars may be set");
+	  return;
+	}
+      fprintf (o_src, "\tmovl\t%%eax,%d(%%ebp)\n", sy->linkage_flg);
+      return;
+    }
+  else
+    {
+      if (SYMBOL_P (sy))
+	{
+	  load_location (sy, "ebx");
+	  fprintf (o_src, "\tmovl\t%%eax,0(%%ebx)\n");
+	}
+      else
+	{
+	  fprintf (o_src, "\tpushl\t%%eax\t# saving ptr value\n");
+	  loadloc_to_eax (sy);
+	  fprintf (o_src, "\tmovl\t%%eax,%%ebx\n");
+	  fprintf (o_src, "\tpopl\t%%eax\n");
+	  fprintf (o_src, "\tmovl\t%%eax,0(%%ebx)\n");
+	}
+    }
+}
+
+static void
+cleanup_rt_stack ()
+{
+  /* generate stack cleanup only if there is something to clean */
+  if (stackframe_cnt == 1)
+    fprintf (o_src, "\tpopl\t%%ecx\n");
+  else if (stackframe_cnt)
+    fprintf (o_src, "\taddl\t$%d, %%esp\n", stackframe_cnt);
+  stackframe_cnt = 0;
+  if (need_desc_length_cleanup)
+    {
+      tmpvar_offset = 0;	/* reuse this storage area */
+      need_desc_length_cleanup = 0;
+    }
+}
+
+static void
+asm_call (const char *name)
+{
+  fprintf (o_src, "\tcall\t%s\n", name);
+  cleanup_rt_stack ();
+}
+
+static void
+asm_call_1 (const char *name, struct sym *s1)
+{
+  gen_loadvar (s1);
+  asm_call (name);
+}
+
+static void
+asm_call_2 (const char *name, struct sym *s1, struct sym *s2)
+{
+  gen_loadvar (s2);
+  gen_loadvar (s1);
+  asm_call (name);
+}
+
+static void
+asm_call_3 (const char *name, struct sym *s1, struct sym *s2, struct sym *s3)
+{
+  gen_loadvar (s3);
+  gen_loadvar (s2);
+  gen_loadvar (s1);
+  asm_call (name);
+}
+
+
+/*
+ *	Code Generating Routines
+ */
 
 void
 emit_lit (char *s, int len)
@@ -961,10 +1383,8 @@ proc_trail (int using)
 
   /********** generate .Lfe statement   ************/
   fprintf (o_src, ".Lfe1_%s:\n", pgm_label);
-#if !defined(__CYGWIN__)
   fprintf (o_src, "\t.size\t%s,.Lfe1_%s-%s\n",
 	   pgm_label, pgm_label, pgm_label);
-#endif
 
 
   /********** generate data for literals & fields ************/
@@ -1328,148 +1748,6 @@ put_disp_list (struct sym *sy)
 	tmp = tmp->next;
       tmp->next = list;
     }
-}
-
-/* 
-** Use push_eax and push_ebx to generate code for
-** passing parameters to the runtime functions.
-** Use asm_call to call the runtime and
-** automatically clean the stack.
-*/
-void
-push_immed (int i)
-{
-  stackframe_cnt += 4;
-  fprintf (o_src, "\tpushl\t$%d\n", i);
-}
-
-void
-push_eax ()
-{
-  stackframe_cnt += 4;
-  fprintf (o_src, "\tpushl\t%%eax\n");
-}
-
-void
-push_edx ()
-{
-  stackframe_cnt += 4;
-  fprintf (o_src, "\tpushl\t%%edx\n");
-}
-
-void
-pop_eax ()
-{
-  stackframe_cnt -= 4;
-  fprintf (o_src, "\tpopl\t%%eax\n");
-}
-
-void
-push_ebx ()
-{
-  stackframe_cnt += 4;
-  fprintf (o_src, "\tpushl\t%%ebx\n");
-}
-
-void
-push_at_ebx (struct sym *sy)
-{
-#ifdef COB_DEBUG
-  fprintf (stderr, "push_at_ebx:\n");
-#endif
-  stackframe_cnt += 4;
-  if (sy->type == 'B')
-    {
-      if (symlen (sy) == 8)
-	{
-	  fprintf (o_src, "\tmovl\t4(%%ebx), %%edx\n");
-	  fprintf (o_src, "\tmovl\t0(%%ebx), %%eax\n");
-	  fprintf (o_src, "\tpushl\t%%edx\n");
-	  stackframe_cnt += 4;
-	}
-      else if (symlen (sy) >= 4)
-	fprintf (o_src, "\tmovl\t0(%%ebx), %%eax\n");
-      else
-	fprintf (o_src, "\tmovs%cl\t0(%%ebx), %%eax\n", varsize_ch (sy));
-    }
-  else
-    fprintf (o_src, "\tmovl\t0(%%ebx), %%eax\n");
-  fprintf (o_src, "\tpushl\t%%eax\n");
-}
-
-void
-push_at_eax (struct sym *sy)
-{
-#ifdef COB_DEBUG
-  fprintf (stderr, "push_at_eax:\n");
-#endif
-  stackframe_cnt += 4;
-  if (sy->type == 'B' || sy->type == 'U')
-    {
-      if (symlen (sy) == 8)
-	{
-	  fprintf (o_src, "\tmovl\t4(%%eax), %%edx\n");
-	  fprintf (o_src, "\tmovl\t0(%%eax), %%eax\n");
-	  fprintf (o_src, "\tpushl\t%%edx\n");
-	  stackframe_cnt += 4;
-	}
-      else if (symlen (sy) >= 4)
-	fprintf (o_src, "\tmovl\t0(%%eax), %%eax\n");
-      else
-	fprintf (o_src, "\tmovs%cl\t0(%%eax), %%eax\n", varsize_ch (sy));
-    }
-  else
-    fprintf (o_src, "\tmovl\t0(%%eax), %%eax\n");
-  fprintf (o_src, "\tpushl\t%%eax\n");
-}
-
-void
-load_at_eax (struct sym *sy)
-{
-#ifdef COB_DEBUG
-  fprintf (stderr, "load_at_eax:\n");
-#endif
-  if (sy->type == 'B' || sy->type == 'U')
-    {
-      if (symlen (sy) == 8)
-	{
-	  fprintf (o_src, "\tmovl\t4(%%eax), %%edx\n");
-	  fprintf (o_src, "\tmovl\t0(%%eax), %%eax\n");
-	}
-      else if (symlen (sy) >= 4)
-	fprintf (o_src, "\tmovl\t0(%%eax), %%eax\n");
-      else
-	fprintf (o_src, "\tmovs%cl\t0(%%eax), %%eax\n", varsize_ch (sy));
-    }
-  else
-    fprintf (o_src, "\tmovl\t0(%%eax), %%eax\n");
-}
-
-void
-cleanup_rt_stack ()
-{
-  /* generate stack cleanup only if there is something to clean */
-  if (stackframe_cnt == 1)
-    fprintf (o_src, "\tpopl\t%%ecx\n");
-  else if (stackframe_cnt)
-    fprintf (o_src, "\taddl\t$%d, %%esp\n", stackframe_cnt);
-  stackframe_cnt = 0;
-  if (need_desc_length_cleanup)
-    {
-      tmpvar_offset = 0;	/* reuse this storage area */
-      need_desc_length_cleanup = 0;
-    }
-}
-
-void
-asm_call (char *s)
-{
-#if !defined(__CYGWIN__)
-  fprintf (o_src, "\tcall\t%s\n", s);
-#else
-  fprintf (o_src, "\tcall\t_%s\n", s);
-#endif
-  cleanup_rt_stack ();
 }
 
 int
@@ -2905,321 +3183,7 @@ adjust_desc_length (struct sym *sy)
   need_desc_length_cleanup = 1;
 }
 
-void
-value_to_eax (struct sym *sy)
-{
-  long long value;
-  long value2;
-  int stack_save;
-  char *s;
-#ifdef COB_DEBUG
-  if (sy)
-    fprintf (o_src, "# value_to_eax %s\n", sy->name);
-#endif
-  if (sy == NULL)
-    {
-      fprintf (o_src, "\txorl\t%%eax,%%eax\n");
-      return;
-    }
-  if (!SYMBOL_P (sy))
-    {
-      /* if it's an integer, compute it now, not at runtime! */
-      value = 0;
-      s = sy->name;		/* integer's name is just it's value in ascii */
-      while (*s)
-	value = value * 10 + *s++ - '0';
-      fprintf (o_src, "#bef val\n");
-      fprintf (o_src, "\tmovl\t$%d,%%eax\n", (int) value);
-      if ((value2 = value >> 32) != 0)
-	fprintf (o_src, "\tmovl\t$%d,%%edx\n", (int) value2);
-    }
-  else if (sy->type == 'B' || sy->type == 'U')
-    {
-      /* load binary (comp) value directly */
-      /* %eax doesn't hold greater than 4 bytes binary types
-         so we use %edx to get the most significant part */
-      if (symlen (sy) > 4)
-	{
-	  fprintf (o_src, "\tmovl\t%s+4, %%edx\n", memref (sy));
-	  fprintf (o_src, "\tmovl\t%s, %%eax\n", memref (sy));
-	}
-      else
-	{
-	  if (symlen (sy) >= 4)
-	    {
-	      switch (sy->sec_no)
-		{
-		case SEC_CONST:
-		  fprintf (o_src, "\tmovl\tc_base%d+%d, %%eax\n",
-			   pgm_segment, sy->location);
-		  break;
-		case SEC_DATA:
-		  fprintf (o_src, "\tmovl\tw_base%d+%d, %%eax\n",
-			   pgm_segment, sy->location);
-		  break;
-		case SEC_STACK:
-		  fprintf (o_src, "\tmovl\t-%d(%%ebp), %%eax\n",
-			   sy->location);
-		  break;
-		}
-	    }
-	  else
-	    {
-	      switch (sy->sec_no)
-		{
-		case SEC_CONST:
-		  fprintf (o_src, "\tmovs%cl\tc_base%d+%d, %%eax\n",
-			   varsize_ch (sy), pgm_segment, sy->location);
-		  break;
-		case SEC_DATA:
-		  fprintf (o_src, "\tmovs%cl\tw_base%d+%d, %%eax\n",
-			   varsize_ch (sy), pgm_segment, sy->location);
-		  break;
-		case SEC_STACK:
-		  fprintf (o_src, "\tmovs%cl\t-%d(%%ebp), %%eax\n",
-			   varsize_ch (sy), sy->location);
-		  break;
-		}
-	    }
-	}
-    }
-  else
-    {
-      stack_save = stackframe_cnt;
-      stackframe_cnt = 0;
-      gen_loadvar (sy);
-      asm_call ("get_index");
-      stackframe_cnt = stack_save;
-    }
-}
-
-/* load address for normal (file/working-storage) or linkage variable */
-void
-load_address (struct sym *sy)
-{
-  unsigned offset;
-  if (SYMBOL_P (sy) && sy->linkage_flg)
-    {
-      struct sym *tmp = sy;
-      while (tmp->linkage_flg == 1)
-	tmp = tmp->parent;
-      offset = sy->location - tmp->location;
-      fprintf (o_src, "\tmovl\t%d(%%ebp), %%eax\n", tmp->linkage_flg);
-      if (offset)
-	fprintf (o_src, "\taddl\t$%d, %%eax\n", offset);
-    }
-  else if (sy->sec_no == SEC_STACK)
-    fprintf (o_src, "\tleal\t%s, %%eax\n", memref (sy));
-  else if (sy->sec_no == SEC_DATA)
-    fprintf (o_src, "\tleal\tw_base%d+%d, %%eax\n",
-	     pgm_segment, sy->location);
-  else if (sy->sec_no == SEC_CONST)
-    fprintf (o_src, "\tleal\tc_base%d+%d, %%eax\n",
-	     pgm_segment, sy->location);
-}
-
-/* load in cpureg ("eax","ebx"...) location for normal 
-	(file/working-storage) or linkage variable */
-void
-load_location (struct sym *sy, char *reg)
-{
-  unsigned offset;
-  if (SYMBOL_P (sy) && sy->linkage_flg)
-    {
-      struct sym *tmp = sy;
-      while (tmp->linkage_flg == 1)
-	tmp = tmp->parent;
-      offset = sy->location - tmp->location;
-      fprintf (o_src, "\tmovl\t%d(%%ebp), %%%s\n", tmp->linkage_flg, reg);
-      if (offset)
-	fprintf (o_src, "\taddl\t$%d, %%%s\n", offset, reg);
-    }
-  else if (sy->sec_no == SEC_STACK)
-    fprintf (o_src, "\tleal\t%s, %%%s\n", memref (sy), reg);
-  else
-    fprintf (o_src, "\tmovl\t%s, %%%s\n", memref (sy), reg);
-}
-
-void
-loadloc_to_eax (struct sym *sy_p)
-{
-  unsigned offset;
-  struct sym *sy = sy_p, *var, *tmp;
-
-#ifdef COB_DEBUG
-  fprintf (o_src, "#gen_loadloc litflg %d\n", sy->litflag);
-#endif
-  if (REFMOD_P (sy))
-    sy = ((struct refmod *) sy)->sym;	// temp bypass
-  if (SUBREF_P (sy))
-    {
-      gen_subscripted ((struct subref *) sy);
-      var = SUBREF_SYM (sy);
-      if (var->linkage_flg)
-	{
-	  tmp = var;
-	  while (tmp->linkage_flg == 1)
-	    tmp = tmp->parent;
-	  offset = var->location - tmp->location;
-	  fprintf (o_src, "\tmovl %d(%%ebp), %%ebx\n", tmp->linkage_flg);
-	  if (offset)
-	    fprintf (o_src, "\taddl\t$%d, %%ebx\n", offset);
-	  fprintf (o_src, "\taddl\t%%ebx, %%eax\n");
-	}
-      else
-	{
-	  if (var->sec_no == SEC_STACK)
-	    fprintf (o_src, "\tleal\t%s, %%ebx\n", memref (var));
-	  else if (var->sec_no == SEC_DATA)
-	    fprintf (o_src, "\tleal\tw_base%d+%d, %%ebx\n",
-		     pgm_segment, var->location);
-	  else if (var->sec_no == SEC_CONST)
-	    fprintf (o_src, "\tleal\tc_base%d+%d, %%ebx\n",
-		     pgm_segment, var->location);
-	  fprintf (o_src, "\taddl\t%%ebx,%%eax\n");
-	}
-    }
-  else
-    {
-      load_location (sy, "eax");
-    }
-//      At that stage, the address is ready in %eax; do we need
-//      to correct it because of RefMod's?
-  if (REFMOD_P (sy_p))
-    {				// should avoid all that if literal 1
-      struct refmod *rfp = (struct refmod *) sy_p;
-      fprintf (o_src, "\tmovl\t%%eax, %%ebx\n");
-      value_to_eax (rfp->off);
-      fprintf (o_src, "\tdecl\t%%eax\n");
-      fprintf (o_src, "\taddl\t%%ebx, %%eax\n");
-    }
-}
-
-void
-gen_loadloc (struct sym *sy)
-{
-  loadloc_to_eax (sy);
-  push_eax ();
-}
-
-/* store variable pointer in eax to sy.
-   sy must be a pointer or a linkage section 01/77 variable */
-void
-set_ptr (struct sym *sy)
-{
-  if (SYMBOL_P (sy) && sy->linkage_flg)
-    {
-      if (sy->linkage_flg == 1)
-	{
-	  yyerror ("only level 01 or 77 linkage vars may be set");
-	  return;
-	}
-      fprintf (o_src, "\tmovl\t%%eax,%d(%%ebp)\n", sy->linkage_flg);
-      return;
-    }
-  else
-    {
-      if (SYMBOL_P (sy))
-	{
-	  load_location (sy, "ebx");
-	  fprintf (o_src, "\tmovl\t%%eax,0(%%ebx)\n");
-	}
-      else
-	{
-	  fprintf (o_src, "\tpushl\t%%eax\t# saving ptr value\n");
-	  loadloc_to_eax (sy);
-	  fprintf (o_src, "\tmovl\t%%eax,%%ebx\n");
-	  fprintf (o_src, "\tpopl\t%%eax\n");
-	  fprintf (o_src, "\tmovl\t%%eax,0(%%ebx)\n");
-	}
-    }
-}
-
-void
-gen_loaddesc1 (struct sym *sy, int variable_length)
-{
-  struct sym *var;
-  if (SUBREF_P (sy) || REFMOD_P (sy))
-    {
-      var = SUBREF_SYM (sy);
-      if (SUBREF_P (var))
-	var = SUBREF_SYM (var);
-    }
-  else
-    {
-      var = sy;
-    }
-  if (REFMOD_P (sy))
-    {
-      struct refmod *rflp = (struct refmod *) sy;
-      struct sym *syl = rflp->len;
-      if (syl == NULL)
-	{
-	  fprintf (o_src, "#  corrected length EOV\n");
-	  value_to_eax (rflp->off);
-	  fprintf (o_src, "\tnegl\t%%eax\n");
-	  fprintf (o_src, "\taddl\t$%d, %%eax\n", symlen (var));
-	  fprintf (o_src, "\tincl\t%%eax\n");
-	  fprintf (o_src, "\tmovl\t%%eax, rf_base%d+%d\n",
-		   pgm_segment, rflp->slot * 8);
-	}
-      else
-	{
-	  fprintf (o_src, "#  corrected length %s\n", syl->name);
-	  if (LITERAL_P (syl))
-	    fprintf (o_src, "\tmovl\t$%s, rf_base%d+%d\n",
-		     syl->name, pgm_segment, rflp->slot * 8);
-	  else
-	    {
-	      value_to_eax (syl);
-	      fprintf (o_src, "\tmovl\t%%eax, rf_base%d+%d\n",
-		       pgm_segment, rflp->slot * 8);
-	    }
-	}
-      fprintf (o_src, "\tmovl\t$'%c', rf_base%d+%d\n", 'G',
-	       pgm_segment, rflp->slot * 8 + 4);
-      fprintf (o_src, "\tmovl\t$rf_base%d+%d, %%eax\n",
-	       pgm_segment, rflp->slot * 8);
-    }
-  else
-    {
-      /* adjust its length if there is a variable size item inside */
-      if (variable_length && get_variable_item (sy) != NULL)
-	{
-	  adjust_desc_length (sy);
-	}
-      else
-	{
-#ifdef COB_DEBUG
-	  fprintf (o_src, "\tmovl\t%s, %%eax\t# descriptor of [%s]\n",
-		   memrefd (var), sch_convert (var->name));
-#else
-	  fprintf (o_src, "\tmovl\t%s, %%eax\n", memrefd (var));
-#endif
-	}
-    }
-  push_eax ();
-}
-
-void
-gen_loaddesc (struct sym *sy)
-{
-  gen_loaddesc1 (sy, 1);
-}
-
-void
-gen_loadvar (struct sym *sy)
-{
-  if (sy == NULL)
-    push_immed (0);
-  else
-    {
-      gen_loadloc (sy);
-      gen_loaddesc (sy);
-    }
-}
-
-void
+static void
 gen_pushval (struct sym *sy)
 {
   unsigned offset;
@@ -3262,8 +3226,7 @@ gen_pushval (struct sym *sy)
     }
   else
     {
-      abort ();
-      /*value_to_eax(sy); */
+      value_to_eax(sy);
     }
 }
 
