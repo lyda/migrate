@@ -391,7 +391,7 @@ cob_push_decimal (struct cob_field f)
 	for (i = 0; i < len; i++)
 	  if (!isdigit (p[i]))
 	    {
-	      fprintf (stderr, "ERROR: non-numeric value: %s\007\n", p);
+	      fprintf (stderr, "\007ERROR: non-numeric value: `%s'\n", p);
 	      break;
 	    }
 
