@@ -5,7 +5,7 @@ CC="@CC@"
 
 FLAGS="-std=cobol2002 -debug -Wall"
 COMPILE="cobc ${FLAGS} ${COBOL_FLAGS}"
-COMPILE_ONLY="cobc -P ${FLAGS} ${COBOL_FLAGS}"
+COMPILE_ONLY="cobc -fsyntax-only ${FLAGS} ${COBOL_FLAGS}"
 COMPILE_MODULE="cobc -m ${FLAGS} ${COBOL_FLAGS}"
 
 export COB_CFLAGS="-I${abs_top_srcdir}"

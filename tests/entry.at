@@ -28,8 +28,8 @@ AT_DATA([callee.cob], [
            EXIT PROGRAM.
 ])
 
-AT_CHECK([${COMPILE} -c -static -fmain caller.cob])
-AT_CHECK([${COMPILE} -c -static callee.cob])
+AT_CHECK([${COMPILE} -c -fstatic-call -fmain caller.cob])
+AT_CHECK([${COMPILE} -c -fstatic-call callee.cob])
 AT_CHECK([${COMPILE} -o prog caller.o callee.o])
 AT_CHECK([./prog], [0],
 [Hello, COBOL!
