@@ -29,6 +29,9 @@
 #include "cobc.h"
 #include "tree.h"
 
+static int label_id = 0;
+
+static void output_stmt (cb_tree x);
 static void output_integer (cb_tree x);
 static void output_index (cb_tree x);
 
@@ -63,28 +66,41 @@ output_line (const char *fmt, ...)
 }
 
 static void
-output_int (int i)
+output_inst_int (int i)
 {
   output_line ("\tipush\t%d", i);
 }
 
 static void
-output_add (void)
+output_inst_add (void)
 {
   output_line ("\tadd");
 }
 
 static void
-output_sub (void)
+output_inst_sub (void)
 {
   output_line ("\tsub");
 }
 
 static void
-output_mul (void)
+output_inst_mul (void)
 {
   output_line ("\tmul");
 }
+
+static void
+output_inst_label (int i)
+{
+  output_line (".L%d", i);
+}
+
+static void
+output_inst_goto (int i)
+{
+  output_line ("\tgoto\t.L%d", i);
+}
+
 
 
 /*
@@ -99,7 +115,7 @@ output_base (struct cb_field *f)
   if (f01->redefines)
     f01 = f01->redefines;
 
-  output_line ("\tbpush\tb%s", f01->cname);
+  output_line ("\tbpush\t%s", f01->name);
 }
 
 static void
@@ -113,16 +129,16 @@ output_offset (cb_tree x)
 	int i = f->indexes;
 
 	/* base offset */
-	output_int (f->offset);
+	output_inst_int (f->offset);
 
 	/* subscripts */
 	for (; f; f = f->parent)
 	  if (f->flag_occurs)
 	    {
-	      output_int (f->size);
+	      output_inst_int (f->size);
 	      output_line ("\tlpush\ti%d", i--);
-	      output_mul ();
-	      output_add ();
+	      output_inst_mul ();
+	      output_inst_add ();
 	    }
 	break;
       }
@@ -132,7 +148,7 @@ output_offset (cb_tree x)
 	struct cb_field *f = CB_FIELD (r->value);
 
 	/* base offset */
-	output_int (f->offset);
+	output_inst_int (f->offset);
 
 	/* subscripts */
 	if (r->subs)
@@ -142,10 +158,10 @@ output_offset (cb_tree x)
 	    for (; f; f = f->parent)
 	      if (f->flag_occurs)
 		{
-		  output_int (f->size);
+		  output_inst_int (f->size);
 		  output_index (CB_VALUE (l));
-		  output_mul ();
-		  output_add ();
+		  output_inst_mul ();
+		  output_inst_add ();
 		  l = CB_CHAIN (l);
 		}
 
@@ -156,7 +172,7 @@ output_offset (cb_tree x)
 	if (r->offset)
 	  {
 	    output_index (r->offset);
-	    output_add ();
+	    output_inst_add ();
 	  }
 	break;
       }
@@ -173,7 +189,7 @@ output_length (cb_tree x)
     case CB_TAG_FIELD:
       {
 	struct cb_field *f = CB_FIELD (x);
-	output_int (f->size);
+	output_inst_int (f->size);
 	break;
       }
     case CB_TAG_REFERENCE:
@@ -187,9 +203,9 @@ output_length (cb_tree x)
 	  }
 	else if (r->offset)
 	  {
-	    output_int (f->size);
+	    output_inst_int (f->size);
 	    output_index (r->offset);
-	    output_sub ();
+	    output_inst_sub ();
 	  }
 	else
 	  {
@@ -197,14 +213,14 @@ output_length (cb_tree x)
 	    if (p && (r->type == CB_SENDING_OPERAND
 		      || !cb_field_subordinate (cb_field (p->occurs_depending), f)))
 	      {
-		output_int (p->offset - f->offset);
-		output_int (p->size);
+		output_inst_int (p->offset - f->offset);
+		output_inst_int (p->size);
 		output_integer (p->occurs_depending);
-		output_mul ();
-		output_add ();
+		output_inst_mul ();
+		output_inst_add ();
 	      }
 	    else
-	      output_int (f->size);
+	      output_inst_int (f->size);
 	  }
 	break;
       }
@@ -359,15 +375,15 @@ output_integer (cb_tree x)
     {
     case CB_TAG_CONST:
       if (x == cb_zero)
-	output_int (0);
+	output_inst_int (0);
       else
 	abort ();
       break;
     case CB_TAG_INTEGER:
-      output_int (CB_INTEGER (x)->val);
+      output_inst_int (CB_INTEGER (x)->val);
       break;
     case CB_TAG_LITERAL:
-      output_int (cb_literal_to_int (CB_LITERAL (x)));
+      output_inst_int (cb_literal_to_int (CB_LITERAL (x)));
       break;
     case CB_TAG_BINARY_OP:
       {
@@ -375,9 +391,9 @@ output_integer (cb_tree x)
 	output_integer (p->x);
 	output_integer (p->y);
 	if (p->op == '+')
-	  output_add ();
+	  output_inst_add ();
 	else
-	  output_sub ();
+	  output_inst_sub ();
 	break;
       }
     default:
@@ -409,8 +425,8 @@ static void
 output_index (cb_tree x)
 {
   output_integer (x);
-  output_int (1);
-  output_sub ();
+  output_inst_int (1);
+  output_inst_sub ();
 }
 
 static void
@@ -418,7 +434,7 @@ output_param (cb_tree x)
 {
   if (x == NULL)
     {
-      output_int (0);
+      output_inst_int (0);
       return;
     }
 
@@ -521,12 +537,114 @@ output_funcall (struct cb_funcall *p)
 
 
 /*
- * Output statement
+ * Condition
+ */
+
+static void
+output_cond (cb_tree x, int flag, int target)
+{
+  switch (CB_TREE_TAG (x))
+    {
+#if 0
+    case CB_TAG_CONST:
+      {
+	output ("%s", CB_CONST (x)->val);
+	break;
+      }
+#endif
+    case CB_TAG_BINARY_OP:
+      {
+	struct cb_binary_op *p = CB_BINARY_OP (x);
+	switch (p->op)
+	  {
+	  case '!':
+	    output_cond (p->x, !flag, target);
+	    break;
+
+	  case '&':
+	    if (flag)
+	      {
+		int fail = label_id++;
+		output_cond (p->x, 0, fail);
+		output_cond (p->y, 1, target);
+		output_inst_label (fail);
+	      }
+	    else
+	      {
+		output_cond (p->x, 0, target);
+		output_cond (p->y, 0, target);
+	      }
+	    break;
+
+	  case '|':
+	    if (flag)
+	      {
+		output_cond (p->x, 1, target);
+		output_cond (p->y, 1, target);
+	      }
+	    else
+	      {
+		int fail = label_id++;
+		output_cond (p->x, 1, fail);
+		output_cond (p->y, 0, target);
+		output_inst_label (fail);
+	      }
+	    break;
+
+	  case '=': case '<': case '[': case '>': case ']': case '~':
+	    {
+	      const char *op = NULL;
+	      output_cond (p->x, flag, target);
+	      switch (p->op)
+		{
+		case '=': op = (flag ? "eq" : "ne"); break;
+		case '<': op = (flag ? "lt" : "ge"); break;
+		case '[': op = (flag ? "le" : "gt"); break;
+		case '>': op = (flag ? "gt" : "le"); break;
+		case ']': op = (flag ? "ge" : "lt"); break;
+		case '~': op = (flag ? "ne" : "eq"); break;
+		}
+	      output_line ("\tif%s\t.L%d", op, target);
+	      break;
+	    }
+
+	  default:
+	    output_integer (x);
+	  }
+	break;
+      }
+    case CB_TAG_FUNCALL:
+      {
+	output_funcall (CB_FUNCALL (x));
+	break;
+      }
+    case CB_TAG_SEQUENCE:
+      {
+	struct cb_sequence *p = CB_SEQUENCE (x);
+	cb_tree l = p->list;
+	for (; l; l = CB_CHAIN (l))
+	  output_stmt (CB_VALUE (l));
+	break;
+      }
+    default:
+      abort ();
+    }
+}
+
+
+/*
+ * Statement
  */
 
 static void
 output_stmt (cb_tree x)
 {
+  if (x == NULL)
+    {
+      output_line ("\tnop");
+      return;
+    }
+
   switch (CB_TREE_TAG (x))
     {
     case CB_TAG_STATEMENT:
@@ -558,6 +676,38 @@ output_stmt (cb_tree x)
 	output_funcall (CB_FUNCALL (x));
 	break;
       }
+#if 0
+    case CB_TAG_ASSIGN:
+      {
+	struct cb_assign *p = CB_ASSIGN (x);
+	output_prefix ();
+	output_integer (p->var);
+	output (" = ");
+	output_integer (p->val);
+	output (";\n");
+	break;
+      }
+#endif
+    case CB_TAG_IF:
+      {
+	int l1 = label_id++;
+	int l2 = label_id++;
+	struct cb_if *p = CB_IF (x);
+	output_cond (p->test, 0, l1);
+	output_stmt (p->stmt1);
+	output_inst_goto (l2);
+	output_inst_label (l1);
+	output_stmt (p->stmt2);
+	output_inst_label (l2);
+	break;
+      }
+#if 0
+    case CB_TAG_PERFORM:
+      {
+	output_perform (CB_PERFORM (x));
+	break;
+      }
+#endif
     case CB_TAG_SEQUENCE:
       {
 	struct cb_sequence *p = CB_SEQUENCE (x);
@@ -619,7 +769,7 @@ bytegen (struct cb_program *prog)
 
   output_line (".static");
   for (f = prog->working_storage; f; f = f->sister)
-    output_line ("\tbase\tb%s %d", f->cname, f->memory_size);
+    output_line ("\tbase\t%s %d", f->name, f->memory_size);
   output_line ("\treturn");
   output_newline ();
 

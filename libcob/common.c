@@ -421,7 +421,6 @@ cmp_alnum (cob_field *f1, cob_field *f2)
   int sign1 = cob_get_sign (f1);
   int sign2 = cob_get_sign (f2);
   size_t min = (f1->size < f2->size) ? f1->size : f2->size;
-  size_t max = (f1->size > f2->size) ? f1->size : f2->size;
 
   /* compare common substring */
   for (i = 0; i < min; i++)
@@ -432,15 +431,20 @@ cmp_alnum (cob_field *f1, cob_field *f2)
     }
 
   /* compare the rest (if any) with spaces */
-  for (; i < max; i++)
-    {
-      if (f1->size > f2->size)
+  if (f1->size > f2->size)
+    for (; i < f1->size; i++)
+      {
 	ret = CMP (f1->data[i], ' ');
-      else
+	if (ret != 0)
+	  goto end;
+      }
+  else
+    for (; i < f2->size; i++)
+      {
 	ret = CMP (' ', f2->data[i]);
-      if (ret != 0)
-	goto end;
-    }
+	if (ret != 0)
+	  goto end;
+      }
 
  end:
   cob_put_sign (f1, sign1);
