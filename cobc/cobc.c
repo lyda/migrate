@@ -117,6 +117,8 @@ init_var (char *var, const char *env, const char *def)
 static void
 init_environment (int argc, char *argv[])
 {
+  char *p;
+
   /* Initialize program_name */
   program_name = strrchr (argv[0], '/');
   if (program_name)
@@ -130,6 +132,14 @@ init_environment (int argc, char *argv[])
   init_var (cob_cobpp,  "COB_COBPP",  COB_COBPP);
   init_var (cob_cflags, "COB_CFLAGS", COB_CFLAGS);
   init_var (cob_libs,   "COB_LIBS",   COB_LIBS);
+
+  p = getenv ("COB_LDADD");
+  if (p)
+    {
+      strcat (cob_libs, " ");
+      strcat (cob_libs, p);
+    }
+
   strcpy (cobpp_flags, "");
 }
 
