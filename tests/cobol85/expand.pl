@@ -46,6 +46,7 @@ while (<IN>) {
       while (<IN>) {
 	last if /^      \*END/;
 	chop if ($type eq "DATA*" and length >= 80);
+	s/REC-FILLER/FILLER    /;
 	print OUT;
       }
     } else {
