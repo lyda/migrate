@@ -1,5 +1,11 @@
 2002-10-30  Keisuke Nishida  <knishida@netlab.jp>
 
+	* inline.c (output_search): Move index to variable.
+
+	* inline.c (output_search_all): Unified `cmp' variable.
+
+2002-10-30  Keisuke Nishida  <knishida@netlab.jp>
+
 	* codegen.c (output_perform_until): Merge `output_perform_before'
 	and `output_perform_after'.
 	(output_perform): Call `output_perform_until'.

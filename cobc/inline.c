@@ -604,7 +604,7 @@ output_search (cobc_tree table, cobc_tree var,
   output_index (idx);
   output ("++;\n");
   if (var && var != idx)
-    output_tree (make_op_assign (var, '+', cobc_int1));
+    output_move (idx, var);
   output_line ("continue;");
   output_indent ("  }", -4);
   output_line ("break;");
@@ -656,14 +656,12 @@ output_search_all (cobc_tree table, cobc_tree sentence, cobc_tree when)
 
   /* header */
   output_indent ("{", 2);
+  output_line ("int cmp;");
   output_line ("int head = %d - 1;", p->occurs_min);
   output_prefix ();
   output ("int tail = ");
   output_occurs (p);
   output (" + 1;\n");
-  for (i = 0; i < p->nkeys; i++)
-    if (p->keys[i].ref)
-      output_line ("int cmp%d;", i);
 
   /* start loop */
   output_line ("while (1)");
@@ -687,26 +685,24 @@ output_search_all (cobc_tree table, cobc_tree sentence, cobc_tree when)
     if (p->keys[i].ref)
       {
 	output_prefix ();
-	output ("cmp%d = ", i);
+	output ("if ((cmp = ");
+	if (p->keys[i].dir == COB_DESCENDING)
+	  output ("-");
 	output_compare (0, p->keys[i].ref, p->keys[i].val);
-	output (";\n");
+	output (") == 0)\n");
       }
-  for (i = 0; i < p->nkeys; i++)
-    if (p->keys[i].ref)
-      {
-	int flag = (p->keys[i].dir == COB_ASCENDING);
-	output_line ("if (cmp%d < 0)", i);
-	output_prefix ();
-	output ("  %s = ", flag ? "head" : "tail");
-	output_index (idx);
-	output (";\n");
-	output_line ("else if (cmp%d > 0)", i);
-	output_prefix ();
-	output ("  %s = ", flag ? "tail" : "head");
-	output_index (idx);
-	output (";\n");
-	output_line ("else");
-      }
+  output_line ("  /* nothing */ ;");
+  output_line ("if (cmp < 0)");
+  output_prefix ();
+  output ("  head = ");
+  output_index (idx);
+  output (";\n");
+  output_line ("else if (cmp > 0)");
+  output_prefix ();
+  output ("  tail = ");
+  output_index (idx);
+  output (";\n");
+  output_line ("else");
   output_indent ("  {", 4);
   output_tree (ifp->stmt1);
   output_line ("break;");
