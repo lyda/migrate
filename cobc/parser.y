@@ -4972,7 +4972,7 @@ yyerror (char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  yyprintf (0, 0, "", fmt, ap);
+  yyprintf (0, 0, "error: ", fmt, ap);
   va_end (ap);
 
   error_count++;
@@ -4994,7 +4994,7 @@ yyerror_x (cobc_tree x, char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  yyprintf (x->source_file, x->source_line, "", fmt, ap);
+  yyprintf (x->source_file, x->source_line, "error: ", fmt, ap);
   va_end (ap);
 
   error_count++;
