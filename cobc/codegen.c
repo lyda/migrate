@@ -921,11 +921,6 @@ output_file_name (struct cobc_file_name *f)
       output ("};\n");
     }
 
-  //if (COBC_LITERAL_P (f->assign))
-  //  {
-  //    output ("static struct cob_field_desc fn_%s_desc = {%d, 'X'};\n",
-  //	      f->cname, COBC_LITERAL (f->assign)->size);
-  //  }
   output ("static struct cob_file_desc %s_desc = {", f->cname);
   /* organization, access_mode, open_mode */
   output ("%d, %d, 0, ", f->organization, f->access_mode);
