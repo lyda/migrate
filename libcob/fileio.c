@@ -577,25 +577,21 @@ indexed_start (struct cob_file_desc *f, int cond, struct cob_field k)
     case COB_LT:
     case COB_LE:
       ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET_RANGE);
-      if (ret == 0 && cond == COB_LE)
-	if (memcpy (k.data, key.data, key.size) == 0)
-	  break;
-      ret = f->cursor->c_get (f->cursor, &key, &data, DB_PREV);
+      if (ret != 0)
+	ret = f->cursor->c_get (f->cursor, &key, &data, DB_LAST);
+      else if (cond == COB_LT || memcpy (k.data, key.data, key.size) != 0)
+	ret = f->cursor->c_get (f->cursor, &key, &data, DB_PREV);
       break;
     case COB_GT:
     case COB_GE:
       ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET_RANGE);
-      if (ret == 0 && cond == COB_GE)
-	if (memcpy (k.data, key.data, key.size) == 0)
-	  break;
-      ret = f->cursor->c_get (f->cursor, &key, &data, DB_NEXT);
+      if (ret == 0)
+	if (cond == COB_GT && memcpy (k.data, key.data, key.size) == 0)
+	  ret = f->cursor->c_get (f->cursor, &key, &data, DB_NEXT);
       break;
   }
-  
-  if (ret == 0)
-    return 00;
-  else
-    return 23;
+
+  return (ret == 0) ? 00 : 23;
 }
 
 static int
