@@ -76,17 +76,6 @@
 #define push_funcall_3(f,a,b,c)	   push (cb_build_funcall_3 (f, a, b, c))
 #define push_funcall_4(f,a,b,c,d)  push (cb_build_funcall_4 (f, a, b, c, d))
 
-#define push_entry(name,using_list)				\
-  {								\
-    cb_tree label = cb_build_label (make_reference (name), NULL);	\
-    CB_LABEL (label)->need_begin = 1;				\
-    push (label);						\
-								\
-    current_program->entry_list =				\
-      list_append (current_program->entry_list,			\
-		   cb_build_pair (label, using_list));		\
-  }
-
 #define BEGIN_STATEMENT(name)				\
   current_statement = cb_build_statement (name);	\
   push (CB_TREE (current_statement))
@@ -104,6 +93,7 @@ static cb_tree current_inspect_data;
 static int last_operator;
 static cb_tree last_lefthand;
 
+static void push_entry (const char *name, cb_tree using_list);
 static void terminator_warning (void);
 %}
 
@@ -4040,6 +4030,23 @@ _with:		| WITH ;
 
 
 %%
+
+static void
+push_entry (const char *name, cb_tree using_list)
+{
+  char buff[256];
+  cb_tree label;
+  sprintf (buff, "E$%s", name);
+  label = cb_build_label (make_reference (buff), NULL);
+  CB_LABEL (label)->name = name;
+  CB_LABEL (label)->need_begin = 1;
+  push (label);
+
+  current_program->entry_list =
+    list_append (current_program->entry_list,
+		 cb_build_pair (label, using_list));
+}
+
 
 static void
 terminator_warning (void)
