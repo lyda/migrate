@@ -187,7 +187,7 @@ read_literal (char mark)
 	yyerror (_("too large literal"));
     }
   *p = 0;
-  yylval.tree = make_nonnumeric_literal (buff);
+  yylval.tree = make_nonnumeric_literal (strlen (buff), buff);
   SET_LOCATION (yylval.tree);
   return LITERAL;
 }
@@ -197,8 +197,8 @@ scan_x (char *text)
 {
   int high = 1;
   char *src = text;
-  char dst[strlen (text)];
-  char *p = dst;
+  char buff[strlen (text)];
+  char *dst = buff;
   while (isalnum (*src))
     {
       int c = toupper (*src);
@@ -210,29 +210,26 @@ scan_x (char *text)
 	goto error;
 
       if (high)
-	*p = c << 4;
+	*dst = c << 4;
       else
-	*p++ += c;
+	*dst++ += c;
 
       src++;
       high = 1 - high;
     }
-  *p = '\0';
+  *dst = '\0';
 
   if (high)
     {
-      yylval.tree = make_nonnumeric_literal (dst);
+      yylval.tree = make_nonnumeric_literal (dst - buff, buff);
       SET_LOCATION (yylval.tree);
       return LITERAL;
     }
-  else
-    {
-    error:
-      yyerror (_("invalid X literal: %s"), text);
-      yylval.tree = make_nonnumeric_literal (dst);
-      SET_LOCATION (yylval.tree);
-      return LITERAL;
-    }
+
+ error:
+  yyerror (_("invalid X literal: %s"), text);
+  yylval.tree = cb_error_node;
+  return LITERAL;
 }
 
 static int

@@ -209,7 +209,7 @@ struct cb_literal {
 #define CB_LITERAL_P(x)		(CB_TREE_TAG (x) == cb_tag_literal)
 
 extern cb_tree make_numeric_literal (int sign, unsigned char *digits, int expt);
-extern cb_tree make_nonnumeric_literal (unsigned char *str);
+extern cb_tree make_nonnumeric_literal (size_t size, unsigned char *data);
 extern long long literal_to_int (struct cb_literal *l);
 
 
@@ -318,10 +318,6 @@ struct cb_field {
 
 #define CB_FIELD(x)		(CB_TREE_CAST (cb_tag_field, struct cb_field, x))
 #define CB_FIELD_P(x)		(CB_TREE_TAG (x) == cb_tag_field)
-#define CB_FILLER_P(x) \
-  (CB_FIELD_P (x) && CB_FIELD (x)->cname[0] == '$')
-#define CB_INDEX_NAME_P(x) \
-  (CB_FIELD_P (x) && CB_FIELD (x)->usage == CB_USAGE_INDEX)
 
 extern cb_tree make_field (cb_tree name);
 extern cb_tree make_field_3 (cb_tree name, const char *pic, int usage);

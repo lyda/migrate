@@ -7,12 +7,11 @@ programs to C code and compiles it using GCC.
 This package contains the following subdirectories:
 
     cobc        COBOL compiler
-    cobpp       COBOL preprocessor
     libcob      COBOL run-time library
     lib         static library and common headers
     po          international messages
     texi        Texinfo files
-    testsuite   Test suite
+    tests       Test suite
 
 All programs excepts those in lib and libcob are distributed under
 the GNU General Public License.  See COPYING for details.
@@ -92,8 +91,8 @@ You need to install the following extra packages before building
 OpenCOBOL:
 
   o Autoconf 2.57
-  o Automake 1.7.2
-  o Libtool 1.4.3
+  o Automake 1.7.3
+  o Libtool 1.5
   o gettext 0.11.5
   o Bison 1.35
   o Flex 2.5.4

@@ -425,28 +425,30 @@ make_string (const unsigned char *str)
  */
 
 static struct cb_literal *
-make_literal (int class, unsigned char *str)
+make_literal (int class, size_t size, unsigned char *data)
 {
   struct cb_literal *p =
     make_tree (cb_tag_literal, class, sizeof (struct cb_literal));
-  p->size = strlen (str);
-  p->data = strdup (str);
+  p->size = size;
+  p->data = malloc (size + 1);
+  memcpy (p->data, data, size + 1);
   return p;
 }
 
 cb_tree
 make_numeric_literal (int sign, unsigned char *digits, int expt)
 {
-  struct cb_literal *p = make_literal (COB_TYPE_NUMERIC, digits);
+  struct cb_literal *p =
+    make_literal (COB_TYPE_NUMERIC, strlen (digits), digits);
   p->sign = sign;
   p->expt = expt;
   return CB_TREE (p);
 }
 
 cb_tree
-make_nonnumeric_literal (unsigned char *str)
+make_nonnumeric_literal (size_t size, unsigned char *data)
 {
-  return CB_TREE (make_literal (COB_TYPE_ALPHANUMERIC, str));
+  return CB_TREE (make_literal (COB_TYPE_ALPHANUMERIC, size, data));
 }
 
 long long
