@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(open-cobol, 0.9.6.2)
+AC_INIT(open-cobol, 0.9.6.4)
 AC_CONFIG_SRCDIR(cobc/cobc.c)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -7,6 +7,9 @@ AM_MAINTAINER_MODE
 
 # enable debug mode by default for now
 AC_DEFINE(COB_DEBUG)
+
+LIBCOB_LIBS="-lm"
+LIBCOB_CFLAGS=""
 
 # Configure options.
 COB_CC=""
@@ -17,7 +20,7 @@ if test "x${COB_CC}" = "x"; then
   AC_CHECK_PROG([COB_CC], [gcc], [gcc])
 fi
 if test "x${COB_CC}" = "x"; then
- AC_CHECK_PROG([COB_CC], [cc], [cc])
+  AC_CHECK_PROG([COB_CC], [cc], [cc], AC_MSG_ERROR(cc is required))
 fi
 
 AC_ARG_ENABLE(debug,
@@ -68,37 +71,39 @@ AC_CHECK_FUNC([getopt_long_only], getopt=true, getopt=false)
 AM_CONDITIONAL(HAVE_GETOPT_LONG_ONLY, test x$getopt = xtrue)
 
 # Checks for db.
-LIBDB="-ldb"
 AC_CHECK_HEADERS([db.h], , AC_MSG_ERROR(db.h is required))
 AC_CHECK_LIB([db], [db_version], , AC_MSG_ERROR(DB 2.0 or later is required))
+LIBCOB_LIBS="$LIBCOB_LIBS -ldb"
 
 # Checks for gmp.
-LIBGMP="-lgmp"
 AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp.h is required))
 AC_CHECK_LIB([gmp], [__gmp_rand], , AC_MSG_ERROR(gmp3 is required))
+LIBCOB_LIBS="$LIBCOB_LIBS -lgmp"
 
 # Checks for ltdl.
-LIBLTDL="-lltdl"
 AC_CHECK_HEADERS([ltdl.h], , AC_MSG_ERROR(ltdl.h is required))
 AC_CHECK_LIB([ltdl], [lt_dlopen], , AC_MSG_ERROR(libltdl is required))
+LIBCOB_LIBS="$LIBCOB_LIBS -lltdl"
 
 # Checks for readline.
-LIBRL=""
 USE_READLINE="no"
 AC_ARG_WITH(readline,
   [  --with-readline          use readline for terminal input],
   [AC_CHECK_HEADERS([readline/readline.h readline/history.h])
-   AC_CHECK_LIB([readline], [readline],
-                [LIBRL="-lreadline"; USE_READLINE="yes"],
-		[AC_MSG_ERROR(libreadline is required)])
-  ])
+   AC_CHECK_LIB([readline], [readline])])
+if test "x$ac_cv_lib_readline_readline" = "xyes"; then
+  USE_READLINE="yes"
+  LIBCOB_LIBS="$LIBCOB_LIBS -lreadline"
+fi
 
 # Checks for ncurses.
-LIBNCURSES=""
 USE_NCURSES="no"
 AC_CHECK_HEADERS([curses.h])
-AC_CHECK_LIB([ncurses], [initscr],
-             [LIBNCURSES="-lncurses"; USE_NCURSES="yes"])
+AC_CHECK_LIB([ncurses], [initscr])
+if test "x$ac_cv_lib_ncurses_initscr" = "xyes"; then
+  USE_NCURSES="yes"
+  LIBCOB_LIBS="$LIBCOB_LIBS -lncurses"
+fi
 
 # Checks for GCC's computed-goto extension
 AC_CACHE_CHECK([for computed-goto], [ac_computed_goto],
@@ -123,8 +128,6 @@ AC_SUBST(COMPUTED_GOTO)
 
 # OpenCOBOL Configuration
 
-LIBCOB_CFLAGS=""
-LIBCOB_LIBS="-lm ${LIBDB} ${LIBGMP} ${LIBLTDL} ${LIBINTL} ${LIBNCURSES} ${LIBRL}"
 COB_COBPP="$bindir/cobpp"
 COB_CFLAGS="-I$includedir"
 COB_LIBS="-L$libdir -lcob ${LIBCOB_LIBS}"
