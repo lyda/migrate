@@ -4252,6 +4252,9 @@ gen_exit (void)
 {
   int l1 = loc_label++;
   int l2 = loc_label++;
+#ifdef COB_DEBUG
+  output ("# EXIT\n");
+#endif
   if (curr_paragr != NULL)
     output ("\tleal\t.LE_%s, %%eax\n", label_name (curr_paragr));
   else
@@ -4269,6 +4272,9 @@ gen_exit (void)
 void
 gen_exit_program (void)
 {
+#ifdef COB_DEBUG
+  output ("# EXIT PROGRAM\n");
+#endif
   output ("\tmovl\t-%d(%%ebp), %%ebx\n", stack_offset - 8 - 16);
   output ("\tmov\t%%ebp,%%esp\n");
   output ("\tpop\t%%ebp\n");
