@@ -34,6 +34,7 @@ extern cob_decimal cob_d1, cob_d2, cob_d3, cob_d4, cob_dt;
 
 extern void cob_init_numeric (void);
 extern void cob_decimal_init (cob_decimal d);
+extern void cob_decimal_clear (cob_decimal d);
 extern void cob_decimal_print (cob_decimal d);
 extern void cob_decimal_set (cob_decimal dst, cob_decimal src);
 extern void cob_decimal_set_int (cob_decimal d, int n, int decimals);

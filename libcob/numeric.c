@@ -61,6 +61,12 @@ cob_decimal_init (cob_decimal d)
   d->decimals = 0;
 }
 
+void
+cob_decimal_clear (cob_decimal d)
+{
+  mpz_clear (d->number);
+}
+
 #ifdef COB_DEBUG
 void
 cob_decimal_print (cob_decimal d)
