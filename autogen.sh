@@ -1,13 +1,13 @@
 #!/bin/sh
 
 echo "Running aclocal..."
-aclocal -I m4
+aclocal
 
 echo "Running autoheader..."
 autoheader
 
 echo "Running automake..."
-automake --copy --add-missing --force-missing
+automake --copy --add-missing
 
 echo "Running autoconf..."
 autoconf
