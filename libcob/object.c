@@ -346,7 +346,7 @@ cob_push_decimal (struct cob_field f)
 {
   decimal d = grab_decimal ();
 
-  switch (f.desc->type)
+  switch (FIELD_TYPE (f))
     {
     case 'B':
       switch (f.desc->len)
@@ -422,7 +422,7 @@ cob_set (struct cob_field f, int round)
     }
 
   /* Store number */
-  switch (f.desc->type)
+  switch (FIELD_TYPE (f))
     {
     case 'B':
       {
@@ -482,7 +482,7 @@ cob_set (struct cob_field f, int round)
 	mpz_get_str (p, 10, d->number);
 	size = strlen (p);
 
-	if (f.desc->type == '9')
+	if (FIELD_TYPE (f) == '9')
 	  {
 	    int len = FIELD_LENGTH (f);
 	    unsigned char *base = FIELD_BASE (f);
@@ -562,7 +562,7 @@ check_condition (struct cob_field f1, ...)
       f2.data = va_arg (args, char *);
       f3 = va_arg (args, struct cob_field);
 
-      if (f1.desc->type == '9' || f1.desc->type == 'B')
+      if (FIELD_TYPE (f1) == '9' || FIELD_TYPE (f1) == 'B')
 	{
 	  cob_push_decimal (f1);
 	  cob_push_decimal (f2);
@@ -597,8 +597,8 @@ int
 cob_compare (struct cob_field f1, struct cob_field f2)
 {
   int sign1, sign2;
-  char type1 = f1.desc->type;
-  char type2 = f2.desc->type;
+  char type1 = FIELD_TYPE (f1);
+  char type2 = FIELD_TYPE (f2);
   int len1 = f1.desc->len;
   int len2 = f2.desc->len;
 

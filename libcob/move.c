@@ -790,6 +790,9 @@ cob_move (struct cob_field f1, struct cob_field f2)
 				f1, f2, f1.desc->pic);
 	}
 
+    case DTYPE_GROUP:
+      return cob_move_alphanum_to_alphanum (f1, f2);
+
     default:
       switch (FIELD_TYPE (f2))
 	{

@@ -89,7 +89,7 @@ get_sign (struct cob_field f)
 {
   int digit;
 
-  switch (f.desc->type)
+  switch (FIELD_TYPE (f))
     {
     case 'C':
       digit = f.desc->len / 2;
@@ -130,7 +130,7 @@ put_sign (struct cob_field f, int sign)
 {
   int digit;
 
-  switch (f.desc->type)
+  switch (FIELD_TYPE (f))
     {
     case 'C':
       digit = f.desc->len / 2;

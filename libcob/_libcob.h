@@ -113,13 +113,13 @@ struct fld_desc
   char *pic;
 } __attribute__ ((packed));
 
+#define FIELD_TYPE(f)		((f).desc->type)
+#define FIELD_SIGNED(f)		((f).desc->pic[0] == 'S')
+#define FIELD_DECIMALS(f)	((f).desc->decimals)
 #define FIELD_BASE(f) \
   ((f).data + (((f).desc->separate_sign && (f).desc->leading_sign) ? 1 : 0))
 #define FIELD_LENGTH(f) \
   ((f).desc->len - ((f).desc->separate_sign ? 1 : 0))
-#define FIELD_DECIMALS(f) \
-  ((f).desc->decimals)
-#define FIELD_SIGNED(f) ((f).desc->pic[0] == 'S')
 
 struct file_desc
 {
