@@ -275,7 +275,7 @@ AT_SETUP([CALL USING file-name])
 
 AT_DATA([setfilename.c], [
 #include <stdio.h>
-#include "libcob.h"
+#include <libcob.h>
 int setfilename (cob_file *f, char *name)
 {
   cob_memcpy (f->assign, name, strlen (name));
@@ -304,7 +304,7 @@ AT_DATA([prog.cob], [
            STOP RUN.
 ])
 
-AT_CHECK([${CC} -I${abs_top_srcdir} -shared -o setfilename.${SHREXT} setfilename.c])
+AT_CHECK([${COMPILE_MODULE} setfilename.c])
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0])
 AT_CHECK([test -e TESTFILE], [0])

@@ -6377,7 +6377,7 @@ $at_traceon
 cat >setfilename.c <<'_ATEOF'
 
 #include <stdio.h>
-#include "libcob.h"
+#include <libcob.h>
 int setfilename (cob_file *f, char *name)
 {
   cob_memcpy (f->assign, name, strlen (name));
@@ -6410,9 +6410,9 @@ _ATEOF
 
 
 $at_traceoff
-echo "extensions.at:307: \${CC} -I\${abs_top_srcdir} -shared -o setfilename.\${SHREXT} setfilename.c"
+echo "extensions.at:307: \${COMPILE_MODULE} setfilename.c"
 echo extensions.at:307 >$at_check_line_file
-( $at_traceon; ${CC} -I${abs_top_srcdir} -shared -o setfilename.${SHREXT} setfilename.c ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${COMPILE_MODULE} setfilename.c ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
