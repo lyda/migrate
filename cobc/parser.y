@@ -228,13 +228,12 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %type <list> initialize_replacing initialize_replacing_list
 %type <list> special_name_class_item_list
 %type <tree> special_name_class_item special_name_class_literal
-%type <tree> on_or_off record_depending
 %type <tree> add_to value_item field_description field_description_list
 %type <tree> field_description_list_1 field_description_list_2
 %type <tree> opt_screen_description_list screen_description_list
 %type <tree> screen_description condition imperative_statement
 %type <tree> evaluate_object evaluate_object_1
-%type <tree> function subscript subref refmod
+%type <tree> function subscript subref refmod on_or_off
 %type <tree> search_varying search_at_end search_whens search_when
 %type <tree> perform_procedure perform_sentence perform_option start_key
 %type <tree> read_into read_key write_from field_name expr expr_1 expr_item
@@ -828,13 +827,13 @@ record_clause:
   {
     current_file_name->record_min = $6;
     current_file_name->record_max = $7;
-    if ($9)
-      register_predefined_name (&current_file_name->record_depending, $9);
   }
 ;
 record_depending:
-  /* empty */			{ $$ = NULL; }
-| DEPENDING _on predefined_name { $$ = $3; }
+| DEPENDING _on predefined_name
+  {
+    register_predefined_name (&current_file_name->record_depending, $3);
+  }
 ;
 opt_from_integer:
   /* empty */			{ $$ = 0; }
