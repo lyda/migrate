@@ -2436,8 +2436,7 @@ cb_build_move_field (cb_tree src, cb_tree dst)
 	break;
       case CB_CATEGORY_NUMERIC:
 	if (CB_TREE_CATEGORY (dst) == CB_CATEGORY_NUMERIC
-	    && src_f->usage == CB_USAGE_DISPLAY
-	    && dst_f->usage == CB_USAGE_DISPLAY
+	    && src_f->usage == dst_f->usage
 	    && src_f->pic->size == dst_f->pic->size
 	    && src_f->pic->digits == dst_f->pic->digits
 	    && src_f->pic->scale == dst_f->pic->scale

@@ -1,3 +1,8 @@
+2004-05-04  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* typeck.c (cb_build_move_field): Optimize when the usage of src
+	and dst are the same, not only when they are DISPLAY.
+
 2004-05-03  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* typeck.c (cb_build_length): Handle non-references.
