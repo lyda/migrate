@@ -43,7 +43,7 @@ extern int need_subscripts;
 extern int in_procedure;
 
 static int read_literal (char mark);
-static int read_literal_x (char mark);
+static int scan_x (char *text);
 static int scan_word (char *text);
 static int scan_picture (char *text);
 %}
@@ -86,12 +86,15 @@ static int scan_picture (char *text);
   strrchr (cob_orig_filename, '"')[0] = '\0';
 }
 
-X?[\'\"] {
+[\'\"] {
   /* string literal */
-  if (yytext[0] == 'X')
-    return read_literal_x (yytext[1]);
-  else
-    return read_literal (yytext[0]);
+  return read_literal (yytext[0]);
+}
+
+X\'[^\'\n]\' |
+X\"[^\"\n]\" {
+  /* X string literal */
+  return scan_x (yytext);
 }
 
 [0-9]*[.,]?[0-9]+ {
@@ -171,36 +174,43 @@ read_literal (char mark)
 }
 
 static int
-read_literal_x (char mark)
+scan_x (char *text)
 {
-  unsigned char hnum[512];
-  unsigned char *s = hnum;
-  char toktext[1024];
-  char *tp = toktext;
-  while ((*tp = toupper (input ())) != mark)
+  int high = 1;
+  char *src = text;
+  char *dst = alloca (strlen (text));
+  while (*src)
     {
-      if (tp >= toktext + 1024)
-	{
-	  yyerror ("scanner error: token too large");
-	  while (input () != mark);
-	  *tp = 0;
-	  yylval.lval = install_literal (toktext);
-	  return (CLITERAL);
-	}
-      *s = (*tp > '9') ? (*tp - 'A' + 0x0a) : (*tp - '0');
-      if ((*tp = toupper (input ())) == mark)
-	{
-	  break;
-	}
-      *s++ = *s * 0x10 + ((*tp > '9') ? (*tp - 'A' + 0x0a) : (*tp - '0'));
+      int c = toupper (*src);
+      if ('0' <= c && c <= '9')
+	c = c - '0';
+      else if ('A' <= c && c <= 'F')
+	c = c - 'A' + 10;
+      else
+	goto error;
+
+      if (high)
+	*dst = c << 4;
+      else
+	*dst++ += c;
+
+      src++;
+      high = 1 - high;
     }
-  {
-    char buff[1024];
-    strncpy (buff, hnum, s - hnum);
-    buff[s - hnum] = '\0';
-    yylval.lval = install_literal (buff);
-  }
-  return CLITERAL;
+  *dst = '\0';
+
+  if (high)
+    {
+      yylval.lval = install_literal (dst);
+      return CLITERAL;
+    }
+  else
+    {
+    error:
+      yyerror ("invalid X literal: %s", text);
+      yylval.lval = install_literal (dst);
+      return CLITERAL;
+    }
 }
 
 static int
