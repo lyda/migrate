@@ -416,6 +416,7 @@ output_attr (cb_tree x)
 	    {
 	    case COB_TYPE_GROUP:
 	    case COB_TYPE_ALPHANUMERIC:
+	    case COB_TYPE_POINTER:
 	      if (f->flag_justified)
 		id = lookup_attr (type, 0, 0, COB_FLAG_JUSTIFIED, 0);
 	      else
