@@ -125,7 +125,8 @@ static void switch_to_buffer (int lineno, char *filename, struct cb_replacement 
   }
 }
 
-<*>^"*".*		{ /* comment */ }
+<*>^"*".* |
+<*>^"/".* |
 <*>"*>".*		{ /* comment */ }
 
 <*>\n			{ ECHO; cb_source_line++; }
