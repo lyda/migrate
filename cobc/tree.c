@@ -824,12 +824,10 @@ make_field (cb_tree name)
 }
 
 cb_tree
-make_field_3 (cb_tree name, const char *pic, enum cb_usage usage)
+cb_build_index (cb_tree name)
 {
   cb_tree x = make_field (name);
-  CB_FIELD (x)->usage = usage;
-  if (pic)
-    CB_FIELD (x)->pic = cb_parse_picture (pic);
+  CB_FIELD (x)->usage = CB_USAGE_INDEX;
   validate_field (CB_FIELD (x));
   return x;
 }
@@ -1063,7 +1061,7 @@ level_error (cb_tree x, const char *clause)
 	      cb_field (x)->level, cb_name (x), clause);
 }
 
-int
+static int
 validate_field_1 (struct cb_field *f)
 {
   cb_tree x = CB_TREE (f);
@@ -1440,9 +1438,11 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 
   /* create record */
   sprintf (pic, "X(%d)", f->record_max);
-  f->record = CB_FIELD (make_field_3 (make_reference (f->name),
-				      pic, CB_USAGE_DISPLAY));
+  f->record = CB_FIELD (make_field (make_reference (f->name)));
+  f->record->usage = CB_USAGE_DISPLAY;
+  f->record->pic = cb_parse_picture (pic);
   f->record->sister = records;
+  validate_field (f->record);
 
   for (p = records; p; p = p->sister)
     {

@@ -350,7 +350,7 @@ struct cb_field {
 #define CB_FIELD_P(x)		(CB_TREE_TAG (x) == CB_TAG_FIELD)
 
 extern cb_tree make_field (cb_tree name);
-extern cb_tree make_field_3 (cb_tree name, const char *pic, enum cb_usage usage);
+extern cb_tree cb_build_index (cb_tree name);
 extern struct cb_field *cb_field (cb_tree x);
 extern int field_size (cb_tree x);
 extern struct cb_field *field_founder (struct cb_field *p);
@@ -364,8 +364,6 @@ extern int validate_field (struct cb_field *p);
 #define CB_INDEX_P(x)				\
   ((CB_FIELD_P (x) || CB_REFERENCE_P (x))	\
    && cb_field (x)->usage == CB_USAGE_INDEX)
-
-#define cb_build_index(name)	make_field_3 (name, NULL, CB_USAGE_INDEX)
 
 
 /*
