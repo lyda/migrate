@@ -1047,7 +1047,9 @@ cb_build_cond (cb_tree x)
 	    break;
 	  default:
 	    if (CB_INDEX_P (p->x) || CB_INDEX_P (p->y))
-	      return x;
+	      {
+		p->x = cb_build_binary_op (p->x, '-', p->y);
+	      }
 	    else if (CB_BINARY_OP_P (p->x) || CB_BINARY_OP_P (p->y))
 	      {
 		/* decimal comparison */

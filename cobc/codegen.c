@@ -36,6 +36,7 @@ static void output_data (cb_tree x);
 static void output_integer (cb_tree x);
 static void output_index (cb_tree x);
 static void output_func_1 (const char *name, cb_tree a1);
+static void output_funcall (struct cb_funcall *p);
 
 
 /*
@@ -836,51 +837,40 @@ output_cond (cb_tree x)
 
 	  case '=': case '<': case '[': case '>': case ']': case '~':
 	    output ("(");
-	    if (CB_INDEX_P (p->x) || CB_INDEX_P (p->y))
+	    output_cond (p->x);
+	    switch (p->op)
 	      {
-		output_integer (p->x);
-		switch (p->op)
-		  {
-		  case '=': output (" == "); break;
-		  case '<': output (" < "); break;
-		  case '[': output (" <= "); break;
-		  case '>': output (" > "); break;
-		  case ']': output (" >= "); break;
-		  case '~': output (" != "); break;
-		  }
-		output_integer (p->y);
-	      }
-	    else
-	      {
-		output ("(");
-		if (CB_TREE_TAG (p->x) != CB_TAG_SEQUENCE)
-		  output ("{");
-		output_stmt (p->x);
-		if (CB_TREE_TAG (p->x) != CB_TAG_SEQUENCE)
-		  output ("}");
-		output (")");
-		switch (p->op)
-		  {
-		  case '=': output (" == 0"); break;
-		  case '<': output (" <  0"); break;
-		  case '[': output (" <= 0"); break;
-		  case '>': output (" >  0"); break;
-		  case ']': output (" >= 0"); break;
-		  case '~': output (" != 0"); break;
-		  }
+	      case '=': output (" == 0"); break;
+	      case '<': output (" <  0"); break;
+	      case '[': output (" <= 0"); break;
+	      case '>': output (" >  0"); break;
+	      case ']': output (" >= 0"); break;
+	      case '~': output (" != 0"); break;
 	      }
 	    output (")");
 	    break;
 
 	  default:
-	    abort ();
+	    output_integer (x);
+	    break;
 	  }
 	break;
       }
     case CB_TAG_FUNCALL:
       {
-	struct cb_funcall *p = CB_FUNCALL (x);
-	output_func_1 (p->name, p->argv[0]);
+	output ("({");
+	output_funcall (CB_FUNCALL (x));
+	output ("})");
+	break;
+      }
+    case CB_TAG_SEQUENCE:
+      {
+	struct cb_sequence *p = CB_SEQUENCE (x);
+	cb_tree l = p->list;
+	output_indent ("({");
+	for (; l; l = CB_CHAIN (l))
+	  output_stmt (CB_VALUE (l));
+	output_indent ("})");
 	break;
       }
     default:
