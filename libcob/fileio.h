@@ -72,7 +72,7 @@
 #define COB_FILE_OUTPUT_DENIED		48
 #define COB_FILE_I_O_DENIED		49
 
-struct cob_file_desc {
+struct cob_file {
   int organization;		/* ORGANIZATION */
   char access_mode;		/* ACCESS MODE */
   char open_mode;		/* OPEN MODE */
@@ -109,30 +109,30 @@ struct cob_file_desc {
 };
 
 struct cob_fileio_funcs {
-  int (*open) (struct cob_file_desc *f, char *filename, int mode);
-  int (*close) (struct cob_file_desc *f, int opt);
-  int (*start) (struct cob_file_desc *f, int cond, struct cob_field key);
-  int (*read) (struct cob_file_desc *f, struct cob_field key);
-  int (*read_next) (struct cob_file_desc *f);
-  int (*write) (struct cob_file_desc *f, struct cob_field rec);
-  int (*rewrite) (struct cob_file_desc *f, struct cob_field rec);
-  int (*delete) (struct cob_file_desc *f);
+  int (*open) (struct cob_file *f, char *filename, int mode);
+  int (*close) (struct cob_file *f, int opt);
+  int (*start) (struct cob_file *f, int cond, struct cob_field key);
+  int (*read) (struct cob_file *f, struct cob_field key);
+  int (*read_next) (struct cob_file *f);
+  int (*write) (struct cob_file *f, struct cob_field rec);
+  int (*rewrite) (struct cob_file *f, struct cob_field rec);
+  int (*delete) (struct cob_file *f);
 };
 
-extern struct cob_file_desc *cob_last_file;
+extern struct cob_file *cob_last_file;
 extern char cob_dummy_status[];
 
 extern void cob_init_fileio (void);
-extern void cob_default_error_handle (struct cob_file_desc *f);
-extern void cob_open (struct cob_file_desc *f, struct cob_field name, int mode);
-extern void cob_close (struct cob_file_desc *f, int opt);
-extern void cob_read (struct cob_file_desc *f, struct cob_field key);
-extern void cob_read_next (struct cob_file_desc *f);
-extern void cob_write (struct cob_file_desc *f, struct cob_field rec);
-extern void cob_write_page (struct cob_file_desc *f);
-extern void cob_write_lines (struct cob_file_desc *f, int lines);
-extern void cob_rewrite (struct cob_file_desc *f, struct cob_field rec);
-extern void cob_delete (struct cob_file_desc *f);
-extern void cob_start (struct cob_file_desc *f, int cond, struct cob_field key);
+extern void cob_default_error_handle (struct cob_file *f);
+extern void cob_open (struct cob_file *f, struct cob_field name, int mode);
+extern void cob_close (struct cob_file *f, int opt);
+extern void cob_read (struct cob_file *f, struct cob_field key);
+extern void cob_read_next (struct cob_file *f);
+extern void cob_write (struct cob_file *f, struct cob_field rec);
+extern void cob_write_page (struct cob_file *f);
+extern void cob_write_lines (struct cob_file *f, int lines);
+extern void cob_rewrite (struct cob_file *f, struct cob_field rec);
+extern void cob_delete (struct cob_file *f);
+extern void cob_start (struct cob_file *f, int cond, struct cob_field key);
 
 #endif /* COB_FILEIO_H_ */
