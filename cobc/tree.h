@@ -20,6 +20,15 @@
 #ifndef _TREE_H_
 #define _TREE_H_
 
+#define COBC_USAGE_DISPLAY	'9'
+#define COBC_USAGE_BINARY	'B'
+#define COBC_USAGE_PACKED	'C'
+#define COBC_USAGE_FLOAT	'U'
+#define COBC_USAGE_INDEX	'I'
+
+#define COBC_BEFORE		0
+#define COBC_AFTER		1
+
 enum cobc_tag {
   cobc_tag_const,
   cobc_tag_integer,
@@ -44,15 +53,6 @@ enum cobc_tag {
   cobc_tag_class,
   cobc_tag_builtin,
 };
-
-#define USAGE_DISPLAY	'9'
-#define USAGE_BINARY	'B'
-#define USAGE_PACKED	'C'
-#define USAGE_FLOAT	'U'
-#define USAGE_INDEX	'I'
-
-#define COBC_BEFORE		0
-#define COBC_AFTER		1
 
 
 /*
@@ -129,7 +129,6 @@ extern cobc_tree cobc_space;
 extern cobc_tree cobc_low;
 extern cobc_tree cobc_high;
 extern cobc_tree cobc_quote;
-extern cobc_tree cobc_param;
 extern cobc_tree cobc_dt;
 extern cobc_tree cobc_status;
 extern cobc_tree cobc_switch[];
@@ -240,12 +239,14 @@ struct cobc_field {
   int offset;			/* byte offset from the top (ie, 01 field) */
   int level;			/* level number */
   int occurs;			/* OCCURS */
+  int occurs_min;
   int indexes;			/* the number of parents who have OCCURS */
-  char usage;			/* USAGE IS */
   char category;		/* 9,A,X,E,N,M */
+  char usage;			/* USAGE IS */
   char *cname;			/* the name used in C files */
   cobc_tree file;		/* file name associated in FD section */
   cobc_tree value;		/* VALUE */
+  cobc_tree occurs_depending;	/* OCCURS ... DEPENDING ON */
   struct cobc_word *word;	/* the word of this field */
   struct cobc_list *values;	/* VALUES used by level 88 item */
   struct cobc_list *index_list;	/* INDEXED BY */
@@ -254,13 +255,23 @@ struct cobc_field {
   struct cobc_field *sister;	/* fields in the same level */
   struct cobc_field *redefines;	/* REDEFIENS */
   struct cobc_field *rename_thru; /* RENAMES THRU */
+  struct cobc_key {
+    enum {
+      COBC_ASCENDING,
+      COBC_DESCENDING
+    } dir;			/* ASCENDING or DESCENDING */
+    cobc_tree key;		/* KEY */
+    cobc_tree ref;		/* reference used in SEARCH ALL */
+    cobc_tree val;		/* value to be compared in SEARCH ALL */
+  } *keys;
+  int nkeys;			/* the number of keys */
   struct cobc_picture {
     int size;			/* byte size */
     char *str;			/* picture string */
     char category;		/* field category */
     char digits;		/* the number of digit places */
     char decimals;		/* the number of decimal digits */
-    char have_sign;		/* if the field may hold sign */
+    char have_sign;		/* have `S' */
   } *pic;			/* PICTURE */
   struct {
     int external      : 1;	/* EXTERNAL */
@@ -292,7 +303,7 @@ struct cobc_field {
 #define COBC_FILLER_P(x) \
   (COBC_FIELD_P (x) && COBC_FIELD (x)->cname[0] == '$')
 #define COBC_INDEX_NAME_P(x) \
-  (COBC_FIELD_P (x) && COBC_FIELD (x)->usage == USAGE_INDEX)
+  (COBC_FIELD_P (x) && COBC_FIELD (x)->usage == COBC_USAGE_INDEX)
 
 extern cobc_tree make_field (struct cobc_word *word);
 extern cobc_tree make_field_3 (struct cobc_word *word, char *pic, int usage);
@@ -476,13 +487,8 @@ struct cobc_cond
   cobc_tree right;
 };
 
-#define COND(x)		(COBC_TREE_CAST (cobc_tag_cond, struct cobc_cond, x))
-#define COND_P(x)	(COBC_TREE_TAG (x) == cobc_tag_cond)
-#define COND_TYPE(c)	(COND (c)->type)
-#define COND_LEFT(c)	(COND (c)->left)
-#define COND_RIGHT(c)	(COND (c)->right)
-
-#define COND_IS_UNARY(c) (COND_RIGHT (c) == 0)
+#define COBC_COND(x)		(COBC_TREE_CAST (cobc_tag_cond, struct cobc_cond, x))
+#define COBC_COND_P(x)	(COBC_TREE_TAG (x) == cobc_tag_cond)
 
 extern cobc_tree make_cond (cobc_tree x, enum cobc_cond_type type, cobc_tree y);
 extern cobc_tree make_unary_cond (cobc_tree x, enum cobc_cond_type type);
@@ -609,39 +615,6 @@ extern cobc_tree make_sequence (struct cobc_list *list);
 extern cobc_tree make_status_sequence (struct cobc_list *list);
 
 
-struct inspect_item {
-  int type;
-  cobc_tree sy1;
-  cobc_tree sy2;
-  struct cobc_list *list;
-};
-
-extern struct inspect_item *make_inspect_item (int type, cobc_tree sy1, cobc_tree sy2, struct cobc_list *list);
-
-struct string_item {
-  int type;
-  cobc_tree sy;
-};
-
-extern struct string_item *make_string_item (int type, cobc_tree sy);
-
-
-/*
- * CALL
- */
-
-#define COBC_CALL_BY_REFERENCE	1
-#define COBC_CALL_BY_CONTENT	2
-#define COBC_CALL_BY_VALUE	3
-
-struct call_item {
-  int mode;
-  cobc_tree var;
-};
-
-extern struct call_item *make_call_item (int mode, cobc_tree var);
-
-
 /*
  * Word table
  */
@@ -659,5 +632,24 @@ extern struct cobc_word *set_word_item (struct cobc_word *word, cobc_tree item);
 extern struct cobc_word *lookup_user_word (const char *name);
 extern struct cobc_word *lookup_qualified_word (struct cobc_word *word, struct cobc_field *parent);
 extern void init_word_table (void);
+
+
+/*
+ * Generic item
+ */
+
+#define COBC_CALL_BY_REFERENCE	1
+#define COBC_CALL_BY_CONTENT	2
+#define COBC_CALL_BY_VALUE	3
+
+struct cobc_generic {
+  int type;
+  cobc_tree x;
+  cobc_tree y;
+  struct cobc_list *l;
+};
+
+extern struct cobc_generic *make_generic (int type, cobc_tree x, cobc_tree y, struct cobc_list *l);
+#define make_generic_1(type,x) make_generic (type, x, 0, 0)
 
 #endif /* _TREE_H_ */

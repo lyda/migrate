@@ -110,6 +110,7 @@ struct cob_frame {
 /* miscellaneous macros */
 
 #define COB_INDEX(i,max) ((i) - 1)
+#define COB_INDEX_DEPENDING(i,min,max,dep) ((i) - 1)
 
 #define cob_cmp(x,y) ((x) - (y))
 
@@ -158,6 +159,7 @@ extern long long cob_exp10LL[19];
 extern void cob_init (int argc, char **argv);
 extern void cob_stop_run (void);
 extern int cob_index (int i, int max);
+extern int cob_index_depending (int i, int min, int max, int dep);
 
 extern int cob_str_cmp (struct cob_field f1, struct cob_field f2);
 extern int cob_cmp_str (struct cob_field f1, unsigned char *data2, int len2);
@@ -302,7 +304,7 @@ struct cob_file_desc {
 #define COB_INSPECT_ALL			2
 #define COB_INSPECT_LEADING		3
 #define COB_INSPECT_FIRST	      	4
-#define COB_INSPECT_CONVERTING     	5
+#define COB_INSPECT_CONVERT     	5
 #define COB_INSPECT_BEFORE      	6
 #define COB_INSPECT_AFTER		7
 

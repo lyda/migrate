@@ -121,6 +121,22 @@ cob_index (int i, int max)
   return i - 1;
 }
 
+int
+cob_index_depending (int i, int min, int max, int dep)
+{
+  if (dep < min || max < dep)
+    {
+      cob_runtime_error ("value out of range `%d'", dep);
+      return 0;
+    }
+  if (i < min || dep < i)
+    {
+      cob_runtime_error ("index out of range `%d'", i);
+      return 0;
+    }
+  return i - 1;
+}
+
 
 /*
  * Comparison

@@ -204,7 +204,7 @@ cob_inspect_converting (struct cob_field var, ...)
       int offset, len;
       switch (type)
 	{
-	case COB_INSPECT_CONVERTING:
+	case COB_INSPECT_CONVERT:
 	  {
 	    struct cob_field old = va_arg (ap, struct cob_field);
 	    struct cob_field new = va_arg (ap, struct cob_field);

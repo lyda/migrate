@@ -35,6 +35,7 @@ extern int cobc_failsafe_flag;
 extern int cobc_link_style;
 
 extern char *cobc_index_func;
+extern char *cobc_index_depending_func;
 
 extern FILE *yyin;
 extern FILE *cobc_out;

@@ -193,10 +193,10 @@ tree_to_string_1 (char *s, cobc_tree x)
 
     case cobc_tag_cond:
       {
-	cobc_tree l = COND_LEFT (x);
-	cobc_tree r = COND_RIGHT (x);
+	cobc_tree l = COBC_COND (x)->left;
+	cobc_tree r = COBC_COND (x)->right;
 
-	switch (COND_TYPE (x))
+	switch (COBC_COND (x)->type)
 	  {
 	  case COBC_COND_EQ:
 	    s += sprintf (s, "(= ");
@@ -215,7 +215,7 @@ tree_to_string_1 (char *s, cobc_tree x)
 	    break;
 
 	  default:
-	    s += sprintf (s, "(cond %d ", COND_TYPE (x));
+	    s += sprintf (s, "(cond %d ", COBC_COND (x)->type);
 	    s += tree_to_string_1 (s, l);
 	    if (r)
 	      {
@@ -255,7 +255,6 @@ cobc_tree cobc_space;
 cobc_tree cobc_low;
 cobc_tree cobc_high;
 cobc_tree cobc_quote;
-cobc_tree cobc_param;
 cobc_tree cobc_dt;
 cobc_tree cobc_status;
 cobc_tree cobc_switch[8];
@@ -283,10 +282,10 @@ make_builtin (int id)
 void
 init_constants (void)
 {
+  int i;
   cobc_any       = make_constant (COB_VOID, 0);
   cobc_true      = make_constant (COB_BOOLEAN, "1");
   cobc_false     = make_constant (COB_BOOLEAN, "0");
-  cobc_param     = make_constant (COB_NUMERIC, "x");
   cobc_dt        = make_constant (COB_NUMERIC, "cob_dt");
   cobc_status    = make_constant (COB_NUMERIC, "cob_status");
   cobc_zero      = make_constant (COB_NUMERIC, "cob_zero");
@@ -294,16 +293,15 @@ init_constants (void)
   cobc_low       = make_constant (COB_ALPHANUMERIC, "cob_low");
   cobc_high      = make_constant (COB_ALPHANUMERIC, "cob_high");
   cobc_quote     = make_constant (COB_ALPHANUMERIC, "cob_quote");
-  cobc_switch[0] = make_field_3 (make_word ("switch[0]"), "S9", USAGE_BINARY);
-  cobc_switch[1] = make_field_3 (make_word ("switch[1]"), "S9", USAGE_BINARY);
-  cobc_switch[2] = make_field_3 (make_word ("switch[2]"), "S9", USAGE_BINARY);
-  cobc_switch[3] = make_field_3 (make_word ("switch[3]"), "S9", USAGE_BINARY);
-  cobc_switch[4] = make_field_3 (make_word ("switch[4]"), "S9", USAGE_BINARY);
-  cobc_switch[5] = make_field_3 (make_word ("switch[5]"), "S9", USAGE_BINARY);
-  cobc_switch[6] = make_field_3 (make_word ("switch[6]"), "S9", USAGE_BINARY);
-  cobc_switch[7] = make_field_3 (make_word ("switch[7]"), "S9", USAGE_BINARY);
   cobc_int0      = make_integer (0);
   cobc_int1      = make_integer (1);
+  for (i = 0; i < 8; i++)
+    {
+      char buff[16];
+      sprintf (buff, "switch[%d]", i);
+      cobc_switch[i] =
+	make_field_3 (make_word (strdup (buff)), "9", COBC_USAGE_BINARY);
+    }
 }
 
 
@@ -407,12 +405,14 @@ make_field (struct cobc_word *word)
   p->offset = 0;
   p->level = 0;
   p->occurs = 0;
+  p->occurs_min = 0;
   p->indexes = 0;
-  p->usage = 0;
   p->category = 0;
+  p->usage = 0;
   p->cname = NULL;
   p->file = NULL;
   p->value = NULL;
+  p->occurs_depending = NULL;
   p->word = set_word_item (word, COBC_TREE (p));
   p->values = NULL;
   p->index_list = NULL;
@@ -421,6 +421,8 @@ make_field (struct cobc_word *word)
   p->sister = NULL;
   p->redefines = NULL;
   p->rename_thru = NULL;
+  p->keys = NULL;
+  p->nkeys = 0;
   p->pic = NULL;
   p->f.external = 0;
   p->f.blank_zero = 0;
@@ -580,14 +582,14 @@ compute_size (struct cobc_field *p)
       /* terminals */
       switch (p->usage)
 	{
-	case USAGE_DISPLAY:
+	case COBC_USAGE_DISPLAY:
 	  {
 	    p->size = p->pic->size;
 	    if (p->f.sign_separate)
 	      p->size++;
 	    break;
 	  }
-	case USAGE_BINARY:
+	case COBC_USAGE_BINARY:
 	  {
 	    int len = p->pic->size;
 	    if (len <= 2)
@@ -600,12 +602,12 @@ compute_size (struct cobc_field *p)
 	      p->size = 8;
 	  }
 	  break;
-	case USAGE_INDEX:
+	case COBC_USAGE_INDEX:
 	  {
 	    p->size = sizeof (unsigned int);
 	    break;
 	  }
-	case USAGE_PACKED:
+	case COBC_USAGE_PACKED:
 	  {
 	    p->size = p->pic->size / 2 + 1;
 	    break;
@@ -1008,40 +1010,6 @@ add_perform_varying (struct cobc_perform *perf, cobc_tree name,
 
 
 /*
- * Various containers
- */
-
-struct call_item *
-make_call_item (int mode, cobc_tree var)
-{
-  struct call_item *p = malloc (sizeof (struct call_item));
-  p->mode = mode;
-  p->var = var;
-  return p;
-}
-
-struct inspect_item *
-make_inspect_item (int type, cobc_tree sy1, cobc_tree sy2, struct cobc_list *list)
-{
-  struct inspect_item *p = malloc (sizeof (struct inspect_item));
-  p->type = type;
-  p->sy1  = sy1;
-  p->sy2  = sy2;
-  p->list = list;
-  return p;
-}
-
-struct string_item *
-make_string_item (int type, cobc_tree sy)
-{
-  struct string_item *p = malloc (sizeof (struct string_item));
-  p->type = type;
-  p->sy   = sy;
-  return p;
-}
-
-
-/*
  * Word table
  */
 
@@ -1126,4 +1094,20 @@ init_word_table (void)
   int i;
   for (i = 0; i < HASH_SIZE; i++)
     word_table[i] = NULL;
+}
+
+
+/*
+ * Generic item
+ */
+
+struct cobc_generic *
+make_generic (int type, cobc_tree x, cobc_tree y, struct cobc_list *l)
+{
+  struct cobc_generic *p = malloc (sizeof (struct cobc_generic));
+  p->type = type;
+  p->x = x;
+  p->y = y;
+  p->l = l;
+  return p;
 }

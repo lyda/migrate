@@ -90,14 +90,14 @@ output_move_num (cobc_tree x, int high)
 {
   switch (COBC_FIELD (x)->usage)
     {
-    case USAGE_DISPLAY:
+    case COBC_USAGE_DISPLAY:
       output_memset (x, high ? '9' : '0', COBC_FIELD (x)->size);
       break;
-    case USAGE_BINARY:
-    case USAGE_INDEX:
+    case COBC_USAGE_BINARY:
+    case COBC_USAGE_INDEX:
       output_native_assign (x, high ? -1 : 0);
       break;
-    case USAGE_PACKED:
+    case COBC_USAGE_PACKED:
       printf ("%s: not implemented\n", __FUNCTION__);
       abort ();
     }
@@ -220,8 +220,8 @@ output_move_all_literal (cobc_tree src, cobc_tree dst)
 static void
 output_move_literal (cobc_tree src, cobc_tree dst)
 {
-  if (COBC_FIELD (dst)->usage == USAGE_BINARY
-      || COBC_FIELD (dst)->usage == USAGE_INDEX)
+  if (COBC_FIELD (dst)->usage == COBC_USAGE_BINARY
+      || COBC_FIELD (dst)->usage == COBC_USAGE_INDEX)
     {
       struct cobc_literal *p = COBC_LITERAL (src);
       long long val = literal_to_int (p);
@@ -290,7 +290,7 @@ output_move (cobc_tree src, cobc_tree dst)
     {
       struct cobc_field *srcp = COBC_FIELD (src);
       struct cobc_field *dstp = COBC_FIELD (dst);
-      if (dstp->usage == USAGE_INDEX)
+      if (dstp->usage == COBC_USAGE_INDEX)
 	{
 	  output_prefix ();
 	  output_index (dst);
@@ -298,7 +298,7 @@ output_move (cobc_tree src, cobc_tree dst)
 	  output_index (src);
 	  output (";\n");
 	}
-      else if (srcp->usage == USAGE_INDEX)
+      else if (srcp->usage == COBC_USAGE_INDEX)
 	{
 	  output_call_2 ("cob_set_int", dst, make_index (src));
 	}
@@ -326,10 +326,10 @@ field_uniform_class (struct cobc_field *p)
 	case COB_NUMERIC:
 	  switch (p->usage)
 	    {
-	    case USAGE_DISPLAY:
+	    case COBC_USAGE_DISPLAY:
 	      return COB_NUMERIC;
-	    case USAGE_BINARY:
-	    case USAGE_INDEX:
+	    case COBC_USAGE_BINARY:
+	    case COBC_USAGE_INDEX:
 	      return COB_BINARY;
 	    default:
 	      return COB_VOID;
@@ -496,12 +496,12 @@ output_string (cobc_tree x, cobc_tree list)
   output_tree (x);
   for (; l; l = l->next)
     {
-      struct string_item *p = l->item;
+      struct cobc_generic *p = l->item;
       output (", %d", p->type);
-      if (p->sy)
+      if (p->x)
 	{
 	  output (", ");
-	  output_tree (p->sy);
+	  output_tree (p->x);
 	}
     }
   output (", 0);\n");
@@ -521,12 +521,12 @@ output_unstring (cobc_tree x, cobc_tree list)
   output_tree (x);
   for (; l; l = l->next)
     {
-      struct string_item *p = l->item;
+      struct cobc_generic *p = l->item;
       output (", %d", p->type);
-      if (p->sy)
+      if (p->x)
 	{
 	  output (", ");
-	  output_tree (p->sy);
+	  output_tree (p->x);
 	}
     }
   output (", 0);\n");
@@ -546,17 +546,17 @@ output_inspect (char *name, cobc_tree var, struct cobc_list *list)
   for (; list; list = list->next)
     {
       struct cobc_list *l;
-      struct inspect_item *p = list->item;
+      struct cobc_generic *p = list->item;
       /* parameters */
       output (", %d", p->type);
-      if (p->sy1) { output (", "); output_tree (p->sy1); }
-      if (p->sy2) { output (", "); output_tree (p->sy2); }
+      if (p->x) { output (", "); output_tree (p->x); }
+      if (p->y) { output (", "); output_tree (p->y); }
       /* BEFORE/AFTER */
-      for (l = p->list; l; l = l->next)
+      for (l = p->l; l; l = l->next)
 	{
-	  struct inspect_item *p = l->item;
+	  struct cobc_generic *p = l->item;
 	  output (", %d, ", p->type);
-	  output_tree (p->sy1);
+	  output_tree (p->x);
 	}
       output (", 0");
     }
@@ -633,17 +633,47 @@ output_display (cobc_tree x, cobc_tree fd)
  */
 
 static void
-output_search (cobc_tree table, cobc_tree var, cobc_tree whens)
+output_occurs (struct cobc_field *p)
 {
+  if (p->occurs_depending)
+    output_index (p->occurs_depending);
+  else
+    output_index (make_integer (p->occurs));
+}
+
+static void
+output_search (cobc_tree table, cobc_tree var,
+	       cobc_tree sentence, cobc_tree whens)
+{
+  struct cobc_list *l;
   struct cobc_field *p = COBC_FIELD (table);
-  cobc_tree idx = COBC_TREE (p->index_list->item);
+  cobc_tree idx = NULL;
+
+  /* determine the index to use */
+  for (l = p->index_list; l; l = l->next)
+    if (l->item == var)
+      idx = var;
+  if (!idx)
+    idx = COBC_TREE (p->index_list->item);
+
+  /* start loop */
+  output_line ("while (1)");
+  output_indent ("  {", 4);
+
+  /* end test */
   output_prefix ();
-  output ("while (");
+  output ("if (");
   output_index (idx);
-  output (" <= ");
-  output_index (make_integer (p->occurs));
+  output (" > ");
+  output_occurs (p);
   output (")\n");
   output_indent ("  {", 4);
+  if (sentence)
+    output_tree (sentence);
+  output_line ("break;");
+  output_indent ("  }", -4);
+
+  /* WHEN test */
   output_tree (whens);
   output_line ("else");
   output_indent ("  {", 4);
@@ -659,17 +689,111 @@ output_search (cobc_tree table, cobc_tree var, cobc_tree whens)
 }
 
 static void
-output_search_at_end (cobc_tree table, cobc_tree sentence)
+output_search_all (cobc_tree table, cobc_tree sentence, cobc_tree when)
 {
+  int i;
   struct cobc_field *p = COBC_FIELD (table);
+  struct cobc_if *ifp = COBC_IF (when);
   cobc_tree idx = COBC_TREE (p->index_list->item);
+  cobc_tree x;
+
+  for (i = 0; i < p->nkeys; i++)
+    {
+      p->keys[i].ref = 0;
+      p->keys[i].val = 0;
+    }
+
+  x = ifp->test;
+  do
+    {
+      cobc_tree eq;
+      if (COBC_COND (x)->type == COBC_COND_AND)
+	{
+	  eq = COBC_COND (x)->left;
+	  x = COBC_COND (x)->right;
+	}
+      else
+	{
+	  eq = x;
+	  x = 0;
+	}
+      if (COBC_COND (eq)->type == COBC_COND_EQ)
+	{
+	  cobc_tree ref = COBC_COND (eq)->left;
+	  cobc_tree val = COBC_COND (eq)->right;
+	  for (i = 0; i < p->nkeys; i++)
+	    if (COBC_FIELD (ref) == COBC_FIELD (p->keys[i].key))
+	      {
+		p->keys[i].ref = ref;
+		p->keys[i].val = val;
+		break;
+	      }
+	  if (i == p->nkeys)
+	    yyerror ("undeclared key");
+	}
+      else
+	yyerror ("invalid condition");
+    } while (x);
+
+  /* header */
+  output_indent ("{", 2);
+  output_line ("int head = %d;", p->occurs_min);
   output_prefix ();
-  output ("if (");
+  output ("int tail = ");
+  output_occurs (p);
+  output (" + 1;\n");
+  for (i = 0; i < p->nkeys; i++)
+    if (p->keys[i].ref)
+      output_line ("int cmp%d;", i);
+
+  /* start loop */
+  output_line ("while (1)");
+  output_indent ("  {", 4);
+
+  /* end test */
+  output_line ("if (head >= tail - 1)");
+  output_indent ("  {", 4);
+  if (sentence)
+    output_tree (sentence);
+  output_line ("break;");
+  output_indent ("  }", -4);
+
+  /* next index */
+  output_prefix ();
   output_index (idx);
-  output (" > ");
-  output_index (make_integer (p->occurs));
-  output (")\n");
-  output_tree (sentence);
+  output (" = (head + tail) / 2;\n");
+
+  /* WHEN test */
+  for (i = 0; i < p->nkeys; i++)
+    if (p->keys[i].ref)
+      {
+	output_prefix ();
+	output ("cmp%d = ", i);
+	output_compare (p->keys[i].ref, p->keys[i].val);
+	output (";\n");
+      }
+  for (i = 0; i < p->nkeys; i++)
+    if (p->keys[i].ref)
+      {
+	int flag = (p->keys[i].dir == COBC_ASCENDING);
+	output_line ("if (cmp%d < 0)", i);
+	output_prefix ();
+	output ("  %s = ", flag ? "head" : "tail");
+	output_index (idx);
+	output (";\n");
+	output_line ("else if (cmp%d > 0)", i);
+	output_prefix ();
+	output ("  %s = ", flag ? "tail" : "head");
+	output_index (idx);
+	output (";\n");
+	output_line ("else");
+      }
+  output_indent ("  {", 4);
+  output_tree (ifp->stmt1);
+  output_line ("break;");
+  output_indent ("  }", -4);
+  output_indent ("  }", -4);
+  output_indent ("}", -2);
 }
 
 
@@ -694,25 +818,25 @@ output_call_statement (cobc_tree name, struct cobc_list *args, cobc_tree ret)
   /* setup arguments */
   for (l = args; l; l = l->next)
     {
-      struct call_item *item = l->item;
-      if (item->mode == COBC_CALL_BY_CONTENT)
+      struct cobc_generic *p = l->item;
+      if (p->type == COBC_CALL_BY_CONTENT)
 	{
 	  output_prefix ();
-	  output ("char c_%s_data[", COBC_FIELD (item->var)->cname);
-	  output_length (item->var);
+	  output ("char c_%s_data[", COBC_FIELD (p->x)->cname);
+	  output_length (p->x);
 	  output ("];\n");
 	}
     }
   for (l = args; l; l = l->next)
     {
-      struct call_item *item = l->item;
-      if (item->mode == COBC_CALL_BY_CONTENT)
+      struct cobc_generic *p = l->item;
+      if (p->type == COBC_CALL_BY_CONTENT)
 	{
 	  output_prefix ();
-	  output ("memcpy (c_%s_data, ", COBC_FIELD (item->var)->cname);
-	  output_location (item->var);
+	  output ("memcpy (c_%s_data, ", COBC_FIELD (p->x)->cname);
+	  output_location (p->x);
 	  output (", ");
-	  output_length (item->var);
+	  output_length (p->x);
 	  output (");\n");
 	}
     }
@@ -739,9 +863,9 @@ output_call_statement (cobc_tree name, struct cobc_list *args, cobc_tree ret)
   output (" (");
   for (l = args; l; l = l->next)
     {
-      struct call_item *item = l->item;
-      cobc_tree x = item->var;
-      switch (item->mode)
+      struct cobc_generic *p = l->item;
+      cobc_tree x = p->x;
+      switch (p->type)
 	{
 	case COBC_CALL_BY_REFERENCE:
 	  output_location (x);
@@ -761,8 +885,8 @@ output_call_statement (cobc_tree name, struct cobc_list *args, cobc_tree ret)
 	    default:
 	      switch (COBC_FIELD (x)->usage)
 		{
-		case USAGE_BINARY:
-		case USAGE_INDEX:
+		case COBC_USAGE_BINARY:
+		case COBC_USAGE_INDEX:
 		  output_index (x);
 		  break;
 		default:

@@ -353,12 +353,12 @@ output_index (cobc_tree x)
 	struct cobc_field *p = COBC_FIELD (x);
 	switch (p->usage)
 	  {
-	  case USAGE_DISPLAY:
-	  case USAGE_PACKED:
+	  case COBC_USAGE_DISPLAY:
+	  case COBC_USAGE_PACKED:
 	    output_func_1 ("cob_to_int", x);
 	    break;
-	  case USAGE_BINARY:
-	  case USAGE_INDEX:
+	  case COBC_USAGE_BINARY:
+	  case COBC_USAGE_INDEX:
 	    output ("i_%s", p->cname);
 	    output_subscripts (x);
 	    break;
@@ -451,7 +451,7 @@ output_expr (cobc_tree x, int id)
       }
     default:
       {
-	if (COBC_FIELD_P (x) && COBC_FIELD (x)->usage == USAGE_BINARY)
+	if (COBC_FIELD_P (x) && COBC_FIELD (x)->usage == COBC_USAGE_BINARY)
 	  {
 	    output_prefix ();
 	    if (COBC_FIELD (x)->size <= 4)
@@ -502,7 +502,7 @@ output_assign (struct cobc_assign *p)
       return;
     }
 
-  if (COBC_FIELD (p->field)->usage == USAGE_INDEX)
+  if (COBC_FIELD (p->field)->usage == COBC_USAGE_INDEX)
     {
       /* Index */
       output_prefix ();
@@ -586,10 +586,8 @@ output_assign (struct cobc_assign *p)
  */
 
 static void
-output_compare (cobc_tree s1, int op, cobc_tree s2)
+output_compare (cobc_tree s1, cobc_tree s2)
 {
-  output ("(");
-
   if (COBC_INDEX_NAME_P (s1) || COBC_INDEX_NAME_P (s2)
       || s1 == cobc_status || s2 == cobc_true || s2 == cobc_false)
     {
@@ -604,7 +602,7 @@ output_compare (cobc_tree s1, int op, cobc_tree s2)
       output_line ("cob_decimal_cmp (cob_d1, cob_d2);");
       output_indent ("})", -2);
     }
-  else if (COBC_CONST_P (s1) || (COBC_CONST_P (s2) && s2 != cobc_param))
+  else if (COBC_CONST_P (s1) || COBC_CONST_P (s2))
     {
       /* non-numeric figurative comparison */
       unsigned char c, *neg;
@@ -644,26 +642,14 @@ output_compare (cobc_tree s1, int op, cobc_tree s2)
       /* non-numeric comparison */
       output_func_2 ("cob_str_cmp", s1, s2);
     }
-
-  switch (op)
-    {
-    case COBC_COND_EQ: output (" == 0"); break;
-    case COBC_COND_LT: output (" <  0"); break;
-    case COBC_COND_LE: output (" <= 0"); break;
-    case COBC_COND_GT: output (" >  0"); break;
-    case COBC_COND_GE: output (" >= 0"); break;
-    case COBC_COND_NE: output (" != 0"); break;
-    }
-
-  output (")");
 }
 
 static void
 output_condition (cobc_tree x)
 {
-  enum cobc_cond_type type = COND_TYPE (x);
-  cobc_tree l = COND_LEFT (x);
-  cobc_tree r = COND_RIGHT (x);
+  enum cobc_cond_type type = COBC_COND (x)->type;
+  cobc_tree l = COBC_COND (x)->left;
+  cobc_tree r = COBC_COND (x)->right;
 
   switch (type)
     {
@@ -683,7 +669,19 @@ output_condition (cobc_tree x)
       output (")");
       break;
     default:
-      output_compare (l, type, r);
+      output ("(");
+      output_compare (l, r);
+      switch (type)
+	{
+	case COBC_COND_EQ: output (" == 0"); break;
+	case COBC_COND_LT: output (" <  0"); break;
+	case COBC_COND_LE: output (" <= 0"); break;
+	case COBC_COND_GT: output (" >  0"); break;
+	case COBC_COND_GE: output (" >= 0"); break;
+	case COBC_COND_NE: output (" != 0"); break;
+	default:
+	}
+      output (")");
       break;
     }
 }
@@ -715,7 +713,7 @@ output_recursive (void (*func) (struct cobc_field *), cobc_tree x)
 	  output (";\n");
 	}
     }
-  else if (p->occurs > 1)
+  else if (p->f.have_occurs)
     {
       /* begin occurs loop */
       int i = p->indexes;
@@ -733,7 +731,7 @@ output_recursive (void (*func) (struct cobc_field *), cobc_tree x)
     {
       output_indent ("}", -2);
     }
-  else if (p->occurs > 1)
+  else if (p->f.have_occurs)
     {
       output_indent ("  }", -4);
       output_indent ("}", -2);
@@ -749,9 +747,9 @@ static char
 get_type (struct cobc_field *p)
 {
   int type = p->category;
-  if (p->usage == USAGE_BINARY || p->usage == USAGE_INDEX)
+  if (p->usage == COBC_USAGE_BINARY || p->usage == COBC_USAGE_INDEX)
     type = 'B';
-  else if (p->usage == USAGE_PACKED)
+  else if (p->usage == COBC_USAGE_PACKED)
     type = 'C';
   return type;
 }
@@ -828,8 +826,21 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
 	      p->cname, subscripts, p01->cname, p->offset);
       for (f = p; f; f = f->parent)
 	if (f->f.have_occurs)
-	  output (" + %s (i%d, %d) * %d",
-		  cobc_index_func, i--, f->occurs, f->size);
+	  {
+	    if (f->occurs_depending)
+	      {
+		output (" + %s (i%d, %d, %d, ",
+			cobc_index_depending_func, i--,
+			f->occurs_min, f->occurs);
+		output_index (f->occurs_depending);
+		output (") * %d", f->size);
+	      }
+	    else
+	      {
+		output (" + %s (i%d, %d) * %d",
+			cobc_index_func, i--, f->occurs, f->size);
+	      }
+	  }
       output (")\n");
     }
 
@@ -837,7 +848,7 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
   if (p->f.used && !COBC_FILLER_P (COBC_TREE (p)))
     output ("#define f_%s%s ((struct cob_field) {&f_%s_desc, f_%s_data%s})\n",
 	    p->cname, subscripts, p->cname, p->cname, subscripts);
-  if (p->usage == USAGE_BINARY || p->usage == USAGE_INDEX)
+  if (p->usage == COBC_USAGE_BINARY || p->usage == COBC_USAGE_INDEX)
     {
       output ("#define i_%s%s (*(", p->cname, subscripts);
       switch (p->size)
@@ -1053,16 +1064,16 @@ static void
 output_evaluate_test (cobc_tree s, cobc_tree o)
 {
   /* extract NOT option */
-  if (COND_P (o) && COND_TYPE (o) == COBC_COND_NOT)
+  if (COBC_COND_P (o) && COBC_COND (o)->type == COBC_COND_NOT)
     {
       output ("!");
-      o = COND_LEFT (o);
+      o = COBC_COND (o)->left;
     }
 
   /* ANY is always true */
   if (o == cobc_any)
     {
-      output ("1");
+      output_tree (cobc_true);
       return;
     }
 
@@ -1074,7 +1085,7 @@ output_evaluate_test (cobc_tree s, cobc_tree o)
 	  || COBC_TREE_CLASS (o) != COB_BOOLEAN)
 	{
 	  yyerror_loc (&COBC_TREE (o)->loc, "type mismatch");
-	  output ("0");
+	  output_tree (cobc_false);
 	  return;
 	}
       output ("(");
