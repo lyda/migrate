@@ -2,8 +2,6 @@ NEWS - user visible changes				-*- outline -*-
 
 * Version 0.8.5 での変更点
 
-** Debian パッケージを用意
-
 ** cobpp を $(PREFIX)/bin にインストール
 
 ** INSPECT ... CONVERTING を実装
