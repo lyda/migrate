@@ -580,19 +580,6 @@ cob_runtime_error (const char *fmt, ...)
 }
 
 void
-cob_exception (void)
-{
-  int i;
-  for (i = 1; i < COB_EC_MAX; i++)
-    if (cob_exception_code == cob_exception_table[i].code)
-      {
-	cob_runtime_error (cob_exception_table[i].name);
-	if (cob_exception_table[i].critical)
-	  exit (1);
-      }
-}
-
-void
 cob_check_numeric (cob_field *f, const char *name)
 {
   if (!cob_is_numeric (f))

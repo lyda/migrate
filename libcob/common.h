@@ -213,7 +213,6 @@ extern int cob_is_lower (cob_field *f);
 /* Run-time error checking */
 
 extern void cob_runtime_error (const char *fmt, ...);
-extern void cob_exception (void);
 extern void cob_check_numeric (cob_field *f, const char *name);
 extern void cob_check_odo (int i, int min, int max, const char *name);
 extern void cob_check_subscript (int i, int min, int max, const char *name);

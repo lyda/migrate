@@ -1,3 +1,7 @@
+2003-07-28  Keisuke Nishida  <knishida@netlab.jp>
+
+	* common.h, common.c (cob_exception): Removed.
+
 2003-06-29  Keisuke Nishida  <knishida@netlab.jp>
 
 	* fileio.h, fileio.c (cob_sort_init): Removed the 3rd argument.
