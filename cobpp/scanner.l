@@ -70,8 +70,6 @@ static void process_eol (void);
 
 <*>^"D ".*		{ if (cob_debug_flag) yyless(2); }
 
-<*>";"			{ fputc (' ', yyout); }
-
 <*>\n			{ process_eol (); }
 
 <*>\n-[ \t]*[\"\']? {
