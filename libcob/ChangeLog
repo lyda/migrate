@@ -1,3 +1,15 @@
+2004-07-06  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* numeric.h (COB_STORE_ROUND, COB_STORE_KEEP_ON_OVERFLOW) 
+	(COB_STORE_TRUNC_ON_OVERFLOW): New macros.
+	* numeric.h, numeric.c (cob_decimal_get_display) 
+	(cob_decimal_get_binary, cob_decimal_get_field, cob_add, cob_sub)
+	(cob_div_quotient, cob_div_remainder): New arg `opt'.
+	* numeric.c (cob_decimal_get_field_round): Removed.
+	Integrated into `cob_decimal_get_field'.
+	(cob_display_add_int): Renamed from cob_add_int_to_display.
+	(cob_add_round, cob_sub_round): Removed.
+
 2004-07-05  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* fileio.c (sort_read): Set field size for varying records.

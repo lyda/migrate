@@ -23,6 +23,10 @@
 #include <gmp.h>
 #include <libcob/common.h>
 
+#define COB_STORE_ROUND			0x01
+#define COB_STORE_KEEP_ON_OVERFLOW	0x02
+#define COB_STORE_TRUNC_ON_OVERFLOW	0x02
+
 /*
  * Internal representation of decimal numbers.
  *
@@ -42,8 +46,7 @@ extern int cob_decimal_get_int (cob_decimal *d);
 extern void cob_decimal_set_double (cob_decimal *d, double v);
 extern double cob_decimal_get_double (cob_decimal *d);
 extern void cob_decimal_set_field (cob_decimal *d, cob_field *f);
-extern int cob_decimal_get_field (cob_decimal *d, cob_field *f);
-extern int cob_decimal_get_field_round (cob_decimal *d, cob_field *f);
+extern int cob_decimal_get_field (cob_decimal *d, cob_field *f, int opt);
 extern void cob_decimal_add (cob_decimal *d1, cob_decimal *d2);
 extern void cob_decimal_sub (cob_decimal *d1, cob_decimal *d2);
 extern void cob_decimal_mul (cob_decimal *d1, cob_decimal *d2);
@@ -51,14 +54,12 @@ extern void cob_decimal_div (cob_decimal *d1, cob_decimal *d2);
 extern void cob_decimal_pow (cob_decimal *d1, cob_decimal *d2);
 extern int cob_decimal_cmp (cob_decimal *d1, cob_decimal *d2);
 
-extern int cob_add (cob_field *f1, cob_field *f2);
-extern int cob_sub (cob_field *f1, cob_field *f2);
-extern int cob_add_round (cob_field *f1, cob_field *f2);
-extern int cob_sub_round (cob_field *f1, cob_field *f2);
+extern int cob_add (cob_field *f1, cob_field *f2, int opt);
+extern int cob_sub (cob_field *f1, cob_field *f2, int opt);
 extern int cob_add_int (cob_field *f, int n);
 extern int cob_sub_int (cob_field *f, int n);
-extern int cob_div_quotient (cob_field *dividend, cob_field *divisor, cob_field *quotient, int round);
-extern int cob_div_remainder (cob_field *remainder);
+extern int cob_div_quotient (cob_field *dividend, cob_field *divisor, cob_field *quotient, int opt);
+extern int cob_div_remainder (cob_field *remainder, int opt);
 
 extern int cob_numeric_cmp (cob_field *f1, cob_field *f2);
 
