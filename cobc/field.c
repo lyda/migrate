@@ -566,13 +566,6 @@ compute_size (struct cb_field *f)
 			     (size <= 16) ? 7 : 8);
 		break;
 	      }
-
-	    /* modify digits */
-	    if (!cb_binary_truncate)
-	      {
-		static int digits[] = {1, 3, 5, 7, 10, 12, 15, 17, 19};
-		f->pic->digits = digits[f->size];
-	      }
 	    break;
 	  }
 	case CB_USAGE_DISPLAY:
