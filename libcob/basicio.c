@@ -48,7 +48,8 @@ extern int decimal_comma;
 void
 newline (int dupon)
 {
-  putc ('\n', port(dupon));
+  fputc ('\n', port(dupon));
+  fflush (port(dupon));
 }
 
 /*-------------------------------------------------------------------------*\
