@@ -258,12 +258,8 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
  * COBOL program sequence
  *****************************************************************************/
 
-top:
-  program_sequence		{ if (error_count) YYABORT; }
-;
-program_sequence:
-  program
-| program_sequence program
+start:
+  program			{ if (error_count) YYABORT; }
 ;
 program:
   {
@@ -719,11 +715,11 @@ literal_or_predefined:
 | predefined_name
 ;
 flag_optional:
-  /* nothing */			{ $$ = 0; }
+  /* empty */			{ $$ = 0; }
 | OPTIONAL			{ $$ = 1; }
 ;
 flag_duplicates:
-  /* nothing */			{ $$ = 0; }
+  /* empty */			{ $$ = 0; }
 | _with DUPLICATES		{ $$ = 1; }
 ;
 
@@ -753,7 +749,7 @@ same_statement:
   }
 ;
 same_option:
-  /* nothing */			{ $$ = 0; }
+  /* empty */			{ $$ = 0; }
 | RECORD			{ $$ = 1; }
 | SORT				{ $$ = 2; }
 | SORT_MERGE			{ $$ = 3; }
@@ -842,15 +838,15 @@ record_clause:
   }
 ;
 record_depending:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | DEPENDING _on predefined_name { $$ = $3; }
 ;
 opt_from_integer:
-  /* nothing */			{ $$ = 0; }
+  /* empty */			{ $$ = 0; }
 | _from integer			{ $$ = $2; }
 ;
 opt_to_integer:
-  /* nothing */			{ $$ = 0; }
+  /* empty */			{ $$ = 0; }
 | TO integer			{ $$ = $2; }
 ;
 
@@ -906,7 +902,7 @@ working_storage_section:
   }
 ;
 field_description_list:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | field_description_list_1	{ $$ = $1; }
 ;
 field_description_list_1:
@@ -942,7 +938,7 @@ field_description:
   }
 ;
 field_name:
-  /* nothing */			{ $$ = make_filler (); }
+  /* empty */			{ $$ = make_filler (); }
 | FILLER			{ $$ = make_filler (); }
 | WORD				{ $$ = make_field ($1); }
 ;
@@ -1045,7 +1041,7 @@ sign_clause:
   }
 ;
 flag_separate:
-  /* nothing */			{ $$ = 0; }
+  /* empty */			{ $$ = 0; }
 | SEPARATE _character		{ $$ = 1; }
 ;
 
@@ -1091,7 +1087,7 @@ occurs_keys:
   }
 ;
 occurs_key_list:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | occurs_key_list
   ascending_or_descending _key _is predefined_name_list
   {
@@ -1239,7 +1235,7 @@ screen_section:
 ;
 
 opt_screen_description_list:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | screen_description_list	{ $$ = $1; }
 ;
 screen_description_list:
@@ -1612,7 +1608,7 @@ accept_statement:
 _end_accept: | END_ACCEPT ;
 
 at_line_column:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | _at line_number column_number { $$ = make_pair ($2, $3); }
 | _at column_number line_number { $$ = make_pair ($3, $2); }
 ;
@@ -1662,7 +1658,7 @@ add_body:
   }
 ;
 add_to:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | TO value			{ $$ = $2; }
 ;
 end_add: | END_ADD ;
@@ -1698,7 +1694,7 @@ call_statement:
   _end_call
 ;
 call_using:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | USING call_param_list		{ $$ = $2; }
 ;
 call_param_list:
@@ -1716,16 +1712,16 @@ call_mode:
 | VALUE				{ call_mode = COBC_CALL_BY_VALUE; }
 ;
 call_returning:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | RETURNING data_name		{ $$ = $2; }
 ;
 call_on_exception:
-  /* nothing */				{ $$ = NULL; }
+  /* empty */				{ $$ = NULL; }
 | _on OVERFLOW imperative_statement	{ $$ = $3; }
 | _on EXCEPTION imperative_statement	{ $$ = $3; }
 ;
 call_not_on_exception:
-  /* nothing */				 { $$ = NULL; }
+  /* empty */				 { $$ = NULL; }
 | NOT _on EXCEPTION imperative_statement { $$ = $4; }
 ;
 _end_call: | END_CALL ;
@@ -1767,7 +1763,7 @@ close_list:
   }
 ;
 close_option:
-  /* nothing */			{ $$ = COB_CLOSE_NORMAL; }
+  /* empty */			{ $$ = COB_CLOSE_NORMAL; }
 | REEL				{ $$ = COB_CLOSE_REEL; }
 | REEL _for REMOVAL		{ $$ = COB_CLOSE_REEL_REMOVAL; }
 | UNIT				{ $$ = COB_CLOSE_UNIT; }
@@ -1854,7 +1850,7 @@ display_statement:
   _end_display
   ;
 display_upon:
-  /* nothing */			{ $$ = COB_SYSOUT; }
+  /* empty */			{ $$ = COB_SYSOUT; }
 | _upon mnemonic_name
   {
     switch (COBC_BUILTIN ($2)->id)
@@ -1875,7 +1871,7 @@ display_upon:
   }
 ;
 display_with_no_advancing:
-  /* nothing */
+  /* empty */
   {
     if (!program_spec.enable_screen)
       push_call_1 ("cob_newline", make_integer ($<inum>-1));
@@ -1948,7 +1944,7 @@ evaluate_subject:
 ;
 
 evaluate_case_list:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | evaluate_case_list
   evaluate_case			{ $$ = list_add ($1, $2); }
 ;
@@ -2074,11 +2070,11 @@ initialize_statement:
   }
 ;
 initialize_replacing:
-  /* nothing */			      { $$ = NULL; }
+  /* empty */			      { $$ = NULL; }
 | REPLACING initialize_replacing_list { $$ = $2; }
 ;
 initialize_replacing_list:
-  /* nothing */			      { $$ = NULL; }
+  /* empty */			      { $$ = NULL; }
 | initialize_replacing_list
   replacing_option _data BY value
   {
@@ -2218,7 +2214,7 @@ inspect_converting:
 /* INSPECT BEFORE/AFTER */
 
 inspect_before_after_list:
-  /* nothing */
+  /* empty */
   {
     inspect_push (COB_INSPECT_INIT, 0, 0);
   }
@@ -2331,7 +2327,7 @@ perform_procedure:
 ;
 
 perform_option:
-  /* nothing */
+  /* empty */
   {
     cobc_location = @0;
     $$ = make_perform (COBC_PERFORM_ONCE);
@@ -2362,7 +2358,7 @@ perform_option:
   }
 ;
 perform_test:
-  /* nothing */			{ $$ = COBC_BEFORE; }
+  /* empty */			{ $$ = COBC_BEFORE; }
 | _with TEST before_or_after	{ $$ = $3; }
 ;
 perform_after_list:
@@ -2407,15 +2403,15 @@ read_statement:
   _end_read
 ;
 read_into:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | INTO data_name		{ $$ = $2; }
 ;
 read_key:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | KEY _is data_name		{ $$ = $3; }
 ;
 read_handler:
-  /* nothing */
+  /* empty */
   {
     push_handler ($<tree>0, 0, 0, 0);
   }
@@ -2492,11 +2488,11 @@ search_statement:
   }
 ;
 search_varying:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | VARYING data_name		{ $$ = $2; }
 ;
 search_at_end:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | _at END imperative_statement	{ $$ = $3; }
 ;
 search_whens:
@@ -2586,7 +2582,7 @@ start_statement:
   _end_start
 ;
 start_key:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | KEY _is start_operator data_name
   {
     switch ($3)
@@ -2672,7 +2668,7 @@ string_name_list:
   }
 ;
 opt_with_pointer:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | _with POINTER data_name	{ $$ = $3; }
 ;
 _end_string: | END_STRING ;
@@ -2735,7 +2731,7 @@ unstring_statement:
 ;
 
 unstring_delimited:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | DELIMITED _by
   unstring_delimited_list	{ $$ = $3; }
 ;
@@ -2768,16 +2764,16 @@ unstring_into_item:
   }
 ;
 unstring_delimiter:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | DELIMITER _in data_name	{ $$ = $3; }
 ;
 unstring_count:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | COUNT _in data_name		{ $$ = $3; }
 ;
 
 unstring_tallying:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | TALLYING _in data_name	{ $$ = $3; }
 ;
 _end_unstring: | END_UNSTRING ;
@@ -2817,11 +2813,11 @@ write_statement:
   _end_write
 ;
 write_from:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | FROM value			{ $$ = $2; }
 ;
 write_option:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | before_or_after _advancing integer_value _line_or_lines
   {
     $$ = make_generic_1 ($1, $3);
@@ -2857,11 +2853,11 @@ opt_on_size_error:
   }
 ;
 opt_on_size_error_sentence:
-  /* nothing */				  { $$ = NULL; }
+  /* empty */				  { $$ = NULL; }
 | _on SIZE ERROR imperative_statement	  { $$ = $4; }
 ;
 opt_not_on_size_error_sentence:
-  /* nothing */				  { $$ = NULL; }
+  /* empty */				  { $$ = NULL; }
 | NOT _on SIZE ERROR imperative_statement { $$ = $5; }
 ;
 
@@ -2879,11 +2875,11 @@ opt_on_overflow:
   }
 ;
 opt_on_overflow_sentence:
-  /* nothing */				{ $$ = NULL; }
+  /* empty */				{ $$ = NULL; }
 | _on OVERFLOW imperative_statement	{ $$ = $3; }
 ;
 opt_not_on_overflow_sentence:
-  /* nothing */				{ $$ = NULL; }
+  /* empty */				{ $$ = NULL; }
 | NOT _on OVERFLOW imperative_statement	{ $$ = $4; }
 ;
 
@@ -2920,7 +2916,7 @@ not_at_end_sentence:
  */
 
 opt_invalid_key:
-  /* nothing */
+  /* empty */
   {
     push_handler ($<tree>0, 2, 0, 0);
   }
@@ -3718,7 +3714,7 @@ text_value:
  */
 
 opt_value_list:
-  /* nothing */			{ $$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | opt_value_list value		{ $$ = list_add ($1, $2); }
 ;
 value:
@@ -3770,7 +3766,7 @@ figurative_constant:
 dot:
   '.'
 | error
-| /* nothing */
+| /* empty */
   {
     yywarn (_("`.' is expected after `%s'"), cobc_last_text);
   }
@@ -3782,23 +3778,23 @@ dot:
  */
 
 flag_all:
-  /* nothing */			{ $$ = 0; }
+  /* empty */			{ $$ = 0; }
 | ALL				{ $$ = 1; }
 ;
 flag_not:
-  /* nothing */			{ $$ = 0; }
+  /* empty */			{ $$ = 0; }
 | NOT				{ $$ = 1; }
 ;
 flag_next:
-  /* nothing */			{ $$ = 0; }
+  /* empty */			{ $$ = 0; }
 | NEXT				{ $$ = 1; }
 ;
 flag_global:
-  /* nothing */			{ $$ = 0; }
+  /* empty */			{ $$ = 0; }
 | GLOBAL			{ $$ = 1; }
 ;
 flag_rounded:
-  /* nothing */			{ $$ = 0; }
+  /* empty */			{ $$ = 0; }
 | ROUNDED			{ $$ = 1; }
 ;
 
