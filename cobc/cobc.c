@@ -39,6 +39,7 @@
 
 int cob_stabs_flag = 0;
 int cob_debug_flag = 0;
+int cob_module_flag = 0;
 int cob_dynamic_flag = 0;
 int cob_verbose_flag = 0;
 
@@ -75,7 +76,7 @@ static char *output_filename;
 /* Environment variables */
 static char cob_cc[FILENAME_MAX];		/* gcc */
 static char cob_cobpp[FILENAME_MAX];		/* cobpp */
-static char cob_ldadd[BUFSIZ];			/* -lcob -ldb -lm ... */
+static char cob_libadd[FILENAME_MAX];		/* -lcob */
 
 static enum format {
   format_unspecified,
@@ -135,7 +136,7 @@ init_environment (int argc, char *argv[])
 
   init_var (cob_cc,      "COB_CC",      COB_CC);
   init_var (cob_cobpp,   "COB_COBPP",   COB_COBPP);
-  init_var (cob_ldadd,   "COB_LDADD",   COB_LDADD);
+  init_var (cob_libadd,  "COB_LIBADD",  COB_LIBADD);
 }
 
 static void
@@ -233,7 +234,7 @@ process_command_line (int argc, char *argv[])
 	case 'E': compile_level = stage_preprocess; break;
 	case 'S': compile_level = stage_compile; break;
 	case 'c': compile_level = stage_assemble; break;
-	case 'm': compile_level = stage_module; break;
+	case 'm': compile_level = stage_module; cob_module_flag = 1; break;
 	case 'x': compile_level = stage_link; break;
 
 	case 'g': cob_stabs_flag = 1; break;
@@ -493,7 +494,7 @@ process_module (struct filename *fn)
 {
   char buff[BUFSIZ];
   sprintf (buff, "%s -shared -Wl,-soname,%s -o %s %s %s",
-	   cob_cc, fn->module, fn->module, fn->object, cob_ldadd);
+	   cob_cc, fn->module, fn->module, fn->object, cob_libadd);
   print_command (buff);
   return system (buff);
 }
@@ -511,7 +512,7 @@ process_link (struct filename *file_list)
       exe = file_list->execute;
     }
 
-  sprintf (buff, "%s -o %s %s %s", cob_cc, exe, objs, cob_ldadd);
+  sprintf (buff, "%s -o %s %s %s", cob_cc, exe, objs, cob_libadd);
   print_command (buff);
   return system (buff);
 }

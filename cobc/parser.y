@@ -191,7 +191,7 @@ static void check_decimal_point (struct lit *lit);
 %type <ival> organization_options,access_options,open_mode
 %type <ival> integer,cond_op,conditional,before_after
 %type <ival> IF,ELSE,usage,write_options,opt_read_next
-%type <ival> using_options,using_parameters
+%type <ival> using_options,procedure_using
 %type <dval> if_part
 %type <sval> name,gname,numeric_value,opt_gname,opt_def_name,def_name
 %type <sval> field_description,label,filename,noallname,paragraph,assign_clause
@@ -521,7 +521,6 @@ data_division:
     opt_record_section
     {
       data_trail();
-      curr_division = CDIV_INITIAL;
     }
     | /* nothing */
     ;
@@ -704,13 +703,13 @@ screen_clauses:
     | /* nothing */             { $$ = alloc_scr_info(); }
     ;
 screen_source_destination:
-    USING                   { curr_division = CDIV_INITIAL; }
+    USING { curr_division = CDIV_INITIAL; }
     name_or_lit
     {
       curr_division = CDIV_DATA;
       $<sival>0->from = $<sival>0->to = $3;
     }
-    | FROM                  { curr_division = CDIV_INITIAL; }
+    | FROM { curr_division = CDIV_INITIAL; }
       name_or_lit
       screen_to_name
       {
@@ -718,10 +717,7 @@ screen_source_destination:
 	$<sival>0->from = $3;
 	$<sival>0->to = $4;
       }
-    | TO
-      {
-	curr_division = CDIV_INITIAL;
-      }
+    | TO { curr_division = CDIV_INITIAL; }
       name
       {
 	curr_division = CDIV_DATA;
@@ -839,10 +835,7 @@ field_description:
     ;
 
 redefines_clause:
-    REDEFINES
-    {
-      curr_division = CDIV_INITIAL; /* parsing variable */
-    }
+    REDEFINES { curr_division = CDIV_INITIAL; }
     redefines_var
     {       
       curr_division = CDIV_DATA;
@@ -888,10 +881,7 @@ array_options:  OCCURS integer opt_TIMES
        }
        opt_indexed_by
      | OCCURS integer TO integer opt_TIMES DEPENDING opt_on
-       {
-	 curr_division = CDIV_INITIAL; /* needed for parsing variable */
-       }
-       gname
+       { curr_division = CDIV_INITIAL; } gname
        {       
 	 curr_division = CDIV_DATA;
 	 create_occurs_info($2,$4,$9);
@@ -1101,23 +1091,24 @@ linkage_section:
  *****************************************************************************/
 
 procedure_division:
-     PROCEDURE_TOK DIVISION 
-    { 
-     curr_division = CDIV_INITIAL; 
-    }
-     using_parameters '.'
-    { 
-     proc_header($4);
-    }
-     procedure_list
+    /* nothing */
+  | PROCEDURE_TOK DIVISION { curr_division = CDIV_INITIAL; }
+    procedure_using '.'
     {
-     /* close procedure_list sections & paragraphs */
-     close_section(); /* this also closes paragraph */
-     resolve_labels();
-     proc_trail($4); 
+      proc_header ($4);
     }
-    | /* nothing */
-    ;
+    procedure_list
+    {
+      /* close procedure_list sections & paragraphs */
+      close_section (); /* this also closes paragraph */
+      resolve_labels ();
+      proc_trail ($4); 
+    }
+;
+procedure_using:
+    /* nothing */                        { $$ = 0; }
+  | USING { $<ival>$ = USING; } var_list { $$ = 1; }
+;
 procedure_list:
     | procedure_list procedure_decl
     ;
@@ -2726,11 +2717,6 @@ returning_options:
     | GIVING variable { $$=$2; }
     ;
 dummy: /* nothing */ ;
-using_parameters:   /* defined at procedure division */
-    /* nothing */       { $$=0; }
-    | USING     { $<ival>$=USING; }
-      var_list  { $$=1; }
-    ;
 var_list:
     var_list opt_sep gname
         {   if ($<ival>0 == MOVE)

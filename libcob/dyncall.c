@@ -1,5 +1,4 @@
-/* Dynamic CALL library
- *
+/*
  * Copyright (C) 2001 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
@@ -18,9 +17,20 @@
  * Suite 330, Boston, MA 02111-1307 USA
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dlfcn.h>
+
 #include "_libcob.h"
 #include "defaults.h"
-#include <ltdl.h>
+
+#define MODULE_NAME_MAX	256
+
+static char module_name[MODULE_NAME_MAX];
 
 
 /*
@@ -32,7 +42,7 @@
 static struct sym
 {
   char *name;
-  lt_ptr func;
+  void *func;
   struct sym *next;
 } *symtab[HASHSIZE];
 
@@ -45,28 +55,25 @@ hash (const char *s)
   return i % HASHSIZE;
 }
 
-static struct sym *
+static void *
 lookup (const char *name)
 {
   struct sym *sym;
   for (sym = symtab[hash (name)]; sym; sym = sym->next)
     if (strcmp (name, sym->name) == 0)
-      return sym;
+      return sym->func;
   return NULL;
 }
 
 static void
-insert (const char *name, lt_ptr func)
+insert (const char *name, void *func)
 {
-  if (!lookup (name))
-    {
-      int idx = hash (name);
-      struct sym *sym = malloc (sizeof (struct sym));
-      sym->name = strdup (name);
-      sym->func = func;
-      sym->next = symtab[idx];
-      symtab[idx] = sym;
-    }
+  int i = hash (name);
+  struct sym *sym = malloc (sizeof (struct sym));
+  sym->name = strdup (name);
+  sym->func = func;
+  sym->next = symtab[i];
+  symtab[i] = sym;
 }
 
 
@@ -74,40 +81,53 @@ insert (const char *name, lt_ptr func)
  * Library functions
  */
 
-static char subrname[256];
-
 void *
 cob_resolve (const char *name)
 {
-  char *path;
-  struct sym *sym;
-  lt_dlhandle handle;
+  int i;
+  void *func, *handle;
+  static int size = 0;
+  static char **path = NULL;
 
-  strcpy (subrname, name);
+  /* Search from cache */
+  func = lookup (name);
+  if (func)
+    return func;
 
-  /* check if we've seen it before */
-  sym = lookup (subrname);
-  if (sym)
-    return sym->func;
-
-  path = getenv ("COB_LIBRARY_PATH");
+  /* Build search path at the first time */
   if (!path)
-    path = COB_LIBRARY_PATH;
-
-  if (lt_dlinit () != 0 || lt_dlsetsearchpath (path) != 0)
     {
-      fprintf (stderr, "cob_resolve: %s\n", lt_dlerror ());
-      return NULL;
+      char *p, *path_str = getenv ("COB_LIBRARY_PATH");
+      if (!path_str)
+	path_str = COB_LIBRARY_PATH;
+      path_str = strdup (path_str);
+
+      /* count the number of ':'s */
+      size = 1;
+      for (p = strchr (path_str, ':'); p; p = strchr (p + 1, ':'))
+	size++;
+
+      path = malloc (sizeof (char *) * size);
+      path[0] = strtok (path_str, ":");
+      for (i = 1; i < size; i++)
+	path[i] = strtok (NULL, ":");
     }
 
-  handle = lt_dlopenext (subrname);
-  if (handle)
+  /* Search module */
+  for (i = 0; i < size; i++)
     {
-      lt_ptr func = lt_dlsym (handle, subrname);
-      if (func)
+      struct stat st;
+      char filename[FILENAME_MAX];
+      sprintf (filename, "%s/%s.so", path[i], name);
+      if (stat (filename, &st) == 0)
 	{
-	  insert (subrname, func);
-	  return func;
+	  if ((handle = dlopen (filename, RTLD_NOW)) != NULL
+	      && (func = dlsym (handle, name)) != NULL)
+	    {
+	      insert (name, func);
+	      return func;
+	    }
+	  return NULL;
 	}
     }
   return NULL;
@@ -116,23 +136,24 @@ cob_resolve (const char *name)
 void *
 cob_resolve_subr (struct fld_desc *f, char *s)
 {
-  char name[256];
-
   /* get subroutine name */
-  strncpy (name, s, f->len);
-  name[f->len] = '\0';
+  strncpy (module_name, s, f->len);
+  module_name[f->len] = '\0';
 
-  /* remove unnecessary spaces */
-  s = strchr (name, ' ');
+  /* truncate unnecessary spaces */
+  s = strchr (module_name, ' ');
   if (s)
     *s = '\0';
 
-  return cob_resolve (name);
+  return cob_resolve (module_name);
 }
 
 void
-resolve_subr_error ()
+cob_resolve_error ()
 {
-  fprintf (stderr, "libcob: dynamic library call \"%s\" not found\n",
-	   subrname);
+  const char *err = dlerror ();
+  if (err)
+    fprintf (stderr, "%s\n", err);
+  else
+    fprintf (stderr, "cannot find module: %s\n", module_name);
 }

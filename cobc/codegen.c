@@ -771,7 +771,7 @@ proc_header (int using)
   int i;
   int stabs_type = '3';
   chg_underline (program_id);
-  if (using)
+  if (using || cob_module_flag)
     {
       pgm_label = program_id;
     }
@@ -920,7 +920,7 @@ proc_trail (int using)
   char *pgm_label = "main";
   char flag;
 
-  if (using)
+  if (using || cob_module_flag)
     {
       pgm_label = program_id;
     }
@@ -6366,7 +6366,7 @@ check_call_except (int excep, int notexcep, int exceplabel,
       /* if no exception phrase was given */
       if (excep == 0)
 	{
-	  fprintf (o_src, "\tcall\tresolve_subr_error\n");
+	  fprintf (o_src, "\tcall\tcob_resolve_error\n");
 	  fprintf (o_src, "\tjmp\t.L%d\n", endlabel);
 	}
       fprintf (o_src, ".L%d:\t# notexceplabel\n", notexceplabel);

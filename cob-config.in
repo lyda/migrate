@@ -8,7 +8,7 @@ includedir=@includedir@
 
 version="@VERSION@"
 cflags="@COB_CFLAGS@"
-ldadd="@COB_LDADD@"
+libadd="@COB_LIBADD@"
 
 usage()
 {
@@ -80,5 +80,5 @@ if test "$echo_cflags" = "yes"; then
 fi
 
 if test "$echo_libs" = "yes"; then
-      echo $ldadd
+      echo $libadd
 fi      

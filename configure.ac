@@ -11,13 +11,13 @@ AC_SUBST(RELEASE)
 
 # Configure options.
 AC_ARG_ENABLE(debug,
-        [  --enable-debug           enable debug features],
+	[  --enable-debug           enable debug features],
 	[ AC_DEFINE(COB_DEBUG) ])
 
 AC_ARG_ENABLE(maintainer-mode,
-        [  --enable-maintainer-mode enable maintainer mode],
+	[  --enable-maintainer-mode enable maintainer mode],
 	[ AC_DEFINE(COB_DEBUG)
-          AC_CONFIG_FILES([rpm/open-cobol.spec]) ])
+	  AC_CONFIG_FILES([rpm/open-cobol.spec]) ])
 
 save_libs="$LIBS"
 
@@ -27,8 +27,7 @@ AM_PROG_LEX
 AC_PROG_YACC
 AC_PROG_LN_S
 AC_PROG_INSTALL
-AC_LIBTOOL_DLOPEN
-AC_PROG_LIBTOOL
+AM_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 
 # Checks for header files.
@@ -37,8 +36,9 @@ AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([alloca.h errno.h fcntl.h limits.h malloc.h stdlib.h \
 		  string.h sys/param.h sys/time.h termios.h unistd.h])
 
-# Checks for ltdl.
-AC_LIB_LTDL
+# Checks for dl
+AC_CHECK_HEADERS([dlfcn.h], , AC_MSG_ERROR(dlfcn.h is required))
+AC_CHECK_LIB([dl], [dlopen], , AC_MSG_ERROR(dl is required))
 
 # Checks for db.
 AC_CHECK_HEADERS([db1/db.h], , AC_MSG_ERROR(db1 is required))
@@ -48,9 +48,9 @@ AC_CHECK_LIB([db1], [dbopen], , AC_MSG_ERROR(db1 is required))
 AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp is required))
 
 # Checks for readline.
-LIBADD_RL=""
+LIBRL=""
 AC_CHECK_HEADERS([readline/readline.h readline/history.h])
-AC_CHECK_LIB([readline], [readline], LIBADD_RL="-lreadline")
+AC_CHECK_LIB([readline], [readline], LIBRL="-lreadline")
 
 # Checks for ncurses.
 AC_CHECK_HEADERS([ncurses.h], , AC_MSG_ERROR(ncurses is required))
@@ -72,16 +72,21 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([atexit memmove memset strcasecmp strchr strdup \
 		strerror strrchr strstr strtol])
 
-LIBS="$save_libs"
 COB_CC="cc"
 COB_COBPP="$libexecdir/$PACKAGE/cobpp"
-COB_LDADD="-L\${libdir} -lcob ${LIBADD_DL} -ldb1 -lgmp -lncurses ${LIBADD_RL}"
-COB_CFLAGS="-I\${includedir}"
+COB_CFLAGS="-I$includedir"
+COB_LIBADD="-L$libdir -lcob"
+COB_LIBRARY_PATH=".:$libdir/$PACKAGE"
+LIBCOB_CFLAGS="${INCLTDL}"
+LIBCOB_LIBADD="-ldl -ldb1 -lgmp -lncurses ${LIBRL}"
+LIBS="$save_libs"
 
 AC_SUBST(COB_CC)
 AC_SUBST(COB_COBPP)
-AC_SUBST(COB_LDADD)
-AC_SUBST(COB_CFLAGS)
+AC_SUBST(COB_LIBADD)
+AC_SUBST(COB_LIBRARY_PATH)
+AC_SUBST(LIBCOB_CFLAGS)
+AC_SUBST(LIBCOB_LIBADD)
 
 AC_CONFIG_FILES([Makefile cobpp/Makefile cobc/Makefile libcob/Makefile
 		doc/Makefile cob-config])
