@@ -71,7 +71,7 @@ AC_CHECK_FUNCS([atexit memmove memset strcasecmp strchr strdup \
 # Autoheader templates
 AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
 
-COB_CC="cc"
+COB_CC="gcc"
 COB_COBPP="cobpp"
 COB_CFLAGS="-I$includedir"
 COB_LIBS="-L$libdir -lcob"
