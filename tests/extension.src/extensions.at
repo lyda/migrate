@@ -138,12 +138,18 @@ AT_DATA([prog.cob], [
          ELSE
            DISPLAY "NG"
          END-IF.
+         IF ADDRESS OF Y = PTR-1
+           DISPLAY "OK"
+         ELSE
+           DISPLAY "NG"
+         END-IF.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0], 
 [X-1
 X-2
+OK
 OK
 OK
 ])
