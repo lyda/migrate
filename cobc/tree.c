@@ -1082,12 +1082,11 @@ init_word_table (void)
  */
 
 struct cobc_generic *
-make_generic (int type, cobc_tree x, cobc_tree y, struct cobc_list *l)
+make_generic (int type, cobc_tree x, cobc_tree y)
 {
   struct cobc_generic *p = malloc (sizeof (struct cobc_generic));
   p->type = type;
   p->x = x;
   p->y = y;
-  p->l = l;
   return p;
 }

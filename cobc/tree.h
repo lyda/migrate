@@ -580,7 +580,7 @@ struct cobc_call {
   struct cobc_tree_common common;
   int tag;
   int argc;
-  void *argv[5];
+  void *argv[4];
 };
 
 #define COBC_CALL(x)		(COBC_TREE_CAST (cobc_tag_call, struct cobc_call, x))
@@ -659,10 +659,9 @@ struct cobc_generic {
   int type;
   cobc_tree x;
   cobc_tree y;
-  struct cobc_list *l;
 };
 
-extern struct cobc_generic *make_generic (int type, cobc_tree x, cobc_tree y, struct cobc_list *l);
-#define make_generic_1(type,x) make_generic (type, x, 0, 0)
+extern struct cobc_generic *make_generic (int type, cobc_tree x, cobc_tree y);
+#define make_generic_1(type,x) make_generic (type, x, 0)
 
 #endif /* _TREE_H_ */

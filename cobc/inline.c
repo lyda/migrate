@@ -515,55 +515,6 @@ output_initialize_replacing (cobc_tree x, struct cobc_list *l)
 
 
 /*
- * STRING
- */
-
-static void
-output_generic (char *name, cobc_tree x, struct cobc_list *list)
-{
-  output_prefix ();
-  output ("%s (", name);
-  output_tree (x);
-  for (; list; list = list->next)
-    {
-      struct cobc_generic *p = list->item;
-      output (", %d", p->type);
-      if (p->x) { output (", "); output_tree (p->x); }
-      if (p->y) { output (", "); output_tree (p->y); }
-    }
-  output (", 0);\n");
-}
-
-static void
-output_string (cobc_tree x, struct cobc_list *l)
-{
-  output_generic ("cob_string", x, l);
-}
-
-
-/*
- * UNSTRING
- */
-
-static void
-output_unstring (cobc_tree x, struct cobc_list *l)
-{
-  output_generic ("cob_unstring", x, l);
-}
-
-
-/*
- * INSPECT
- */
-
-static void
-output_inspect (cobc_tree x, struct cobc_list *l)
-{
-  output_generic ("cob_inspect", x, l);
-}
-
-
-/*
  * DISPLAY
  */
 

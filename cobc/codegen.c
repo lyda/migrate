@@ -169,18 +169,6 @@ output_func_4 (const char *name, cobc_tree a1, cobc_tree a2, cobc_tree a3, cobc_
 }
 
 static void
-output_func_5 (const char *name, cobc_tree a1, cobc_tree a2, cobc_tree a3, cobc_tree a4, cobc_tree a5)
-{
-  output ("%s (", name);
-  output_tree (a1); output (", ");
-  output_tree (a2); output (", ");
-  output_tree (a3); output (", ");
-  output_tree (a4); output (", ");
-  output_tree (a5);
-  output (")");
-}
-
-static void
 output_call_0 (const char *name)
 {
   output_prefix ();
@@ -221,11 +209,19 @@ output_call_4 (const char *name, cobc_tree a1, cobc_tree a2, cobc_tree a3, cobc_
 }
 
 static void
-output_call_5 (const char *name, cobc_tree a1, cobc_tree a2, cobc_tree a3, cobc_tree a4, cobc_tree a5)
+output_call_1_list (const char *name, cobc_tree a1, struct cobc_list *l)
 {
   output_prefix ();
-  output_func_5 (name, a1, a2, a3, a4, a5);
-  output (";\n");
+  output ("%s (", name);
+  output_tree (a1);
+  for (; l; l = l->next)
+    {
+      struct cobc_generic *p = l->item;
+      output (", %d", p->type);
+      if (p->x) { output (", "); output_tree (p->x); }
+      if (p->y) { output (", "); output_tree (p->y); }
+    }
+  output (", 0);\n");
 }
 
 
@@ -1105,45 +1101,45 @@ struct {
 static void
 output_call (struct cobc_call *p)
 {
+  int argc;
   const char *name;
   void (*func)();
 
+  argc = function_table[p->tag].argc;
+  name = function_table[p->tag].name;
+  func = function_table[p->tag].func;
+
 #ifdef COB_DEBUG
   /* check the number of arguments */
-  if (p->argc != function_table[p->tag].argc)
+  if ((argc >= 0 && argc != p->argc)
+      || (argc < 0 && (1 - argc) != p->argc))
     {
       puts ("output_call: argc does not match");
       abort ();
     }
 #endif
 
-  name = function_table[p->tag].name;
-  func = function_table[p->tag].func;
-
   if (func)
     /* call inline function if exists */
-    switch (p->argc)
+    switch (argc)
       {
       case 0: func (); break;
       case 1: func (p->argv[0]); break;
       case 2: func (p->argv[0], p->argv[1]); break;
       case 3: func (p->argv[0], p->argv[1], p->argv[2]); break;
       case 4: func (p->argv[0], p->argv[1], p->argv[2], p->argv[3]); break;
-      case 5: func (p->argv[0], p->argv[1], p->argv[2], p->argv[3], p->argv[4]); break;
       }
   else
-    {
-      /* regular function call */
-      switch (p->argc)
-	{
-	case 0: output_call_0 (name); break;
-	case 1: output_call_1 (name, p->argv[0]); break;
-	case 2: output_call_2 (name, p->argv[0], p->argv[1]); break;
-	case 3: output_call_3 (name, p->argv[0], p->argv[1], p->argv[2]); break;
-	case 4: output_call_4 (name, p->argv[0], p->argv[1], p->argv[2], p->argv[3]); break;
-	case 5: output_call_5 (name, p->argv[0], p->argv[1], p->argv[2], p->argv[3], p->argv[4]); break;
-	}
-    }
+    /* regular function call */
+    switch (argc)
+      {
+      case 0: output_call_0 (name); break;
+      case 1: output_call_1 (name, p->argv[0]); break;
+      case 2: output_call_2 (name, p->argv[0], p->argv[1]); break;
+      case 3: output_call_3 (name, p->argv[0], p->argv[1], p->argv[2]); break;
+      case 4: output_call_4 (name, p->argv[0], p->argv[1], p->argv[2], p->argv[3]); break;
+      case -1: output_call_1_list (name, p->argv[0], p->argv[1]); break;
+      }
 }
 
 

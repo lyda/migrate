@@ -98,7 +98,7 @@
   push_tree (make_if (make_cond (cobc_status, COBC_COND_EQ, val), st1, st2))
 
 #define inspect_push(tag,a1,a2) \
-  inspect_list = list_add (inspect_list, make_generic (tag, a1, a2, 0))
+  inspect_list = list_add (inspect_list, make_generic (tag, a1, a2))
 
 struct program_spec program_spec;
 
@@ -1887,7 +1887,9 @@ inspect_tallying:
   TALLYING
   {
     inspect_list = NULL;
-    //inspect_push (COB_INSPECT_TALLYING, 0, 0);
+    inspect_name = 0;
+    inspect_mode = 0;
+    inspect_push (COB_INSPECT_TALLYING, 0, 0);
   }
   tallying_list
   {
@@ -1903,25 +1905,32 @@ tallying_item:
   data_name FOR
   {
     inspect_name = $1;
-    inspect_mode = 0;
   }
 | CHARACTERS inspect_before_after_list
   {
     inspect_mode = 0;
-    inspect_push (COB_INSPECT_CHARACTERS, inspect_name, 0)
+    if (inspect_name == 0)
+      yyerror_loc (&@1, "data name expected before CHARACTERS");
+    else
+      inspect_push (COB_INSPECT_CHARACTERS, inspect_name, 0)
   }
 | ALL
   {
+    if (inspect_name == 0)
+      yyerror_loc (&@1, "data name expected before ALL");
     inspect_mode = COB_INSPECT_ALL;
   }
 | LEADING
   {
+    if (inspect_name == 0)
+      yyerror_loc (&@1, "data name expected before LEADING");
     inspect_mode = COB_INSPECT_LEADING;
   }
 | text_value inspect_before_after_list
   {
     if (inspect_mode == 0)
-      yyerror ("ALL or LEADING expected");
+      yyerror_loc (&@1, "ALL or LEADING expected before `%s'",
+		   tree_to_string ($1));
     else
       inspect_push (inspect_mode, inspect_name, $1);
   }
