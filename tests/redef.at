@@ -1,0 +1,156 @@
+AT_INIT([Redefinition Tests])
+
+AT_TESTED([cobpp cobc])
+
+
+AT_SETUP([Redefinition of 01 fields (1)])
+
+AT_DATA([redef.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     redef.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 X            PIC X.
+01 X            PIC X.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C redef.cob], [1], ,
+[redef.cob:7: redefinition of `X'
+redef.cob:6: `X' previously defined here
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([Redefinition of 01 fields (2)])
+
+AT_DATA([redef.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     redef.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 X            PIC X.
+01 Y            PIC X.
+01 X            PIC X.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C redef.cob], [1], ,
+[redef.cob:8: redefinition of `X'
+redef.cob:6: `X' previously defined here
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([Redefinition of 01 and 02 fields])
+
+AT_DATA([redef.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     redef.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 X.
+  02 X          PIC X.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C redef.cob], [1], ,
+[redef.cob:7: redefinition of `X'
+redef.cob:6: `X' previously defined here
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([Redefinition of 02 fields (same group)])
+
+AT_DATA([redef.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     redef.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G.
+  02 X          PIC X.
+  02 X          PIC X.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C redef.cob], [1], ,
+[redef.cob:8: redefinition of `X'
+redef.cob:7: `X' previously defined here
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([Redefinition of 02 fields (different groups with reference)])
+
+AT_DATA([redef.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     redef.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G1.
+  02 X          PIC X.
+01 G2.
+  02 X          PIC X.
+PROCEDURE       DIVISION.
+  DISPLAY X.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C redef.cob], [1], ,
+[redef.cob:11: `X' ambiguous; need qualification
+redef.cob:7: `X' in `G1' defined here
+redef.cob:9: `X' in `G2' defined here
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([Redefinition of 77 fields])
+
+AT_DATA([redef.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     redef.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+77 X            PIC X.
+77 X            PIC X.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C redef.cob], [1], ,
+[redef.cob:7: redefinition of `X'
+redef.cob:6: `X' previously defined here
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([Redefinition of 01 and 77 fields])
+
+AT_DATA([redef.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     redef.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 X            PIC X.
+77 X            PIC X.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C redef.cob], [1], ,
+[redef.cob:7: redefinition of `X'
+redef.cob:6: `X' previously defined here
+])
+
+AT_CLEANUP

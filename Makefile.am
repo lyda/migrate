@@ -6,7 +6,7 @@ sysconf_DATA = libcob.conf
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = cob.pc
 
-SUBDIRS = lib libcob cobpp cobc po texi testsuite
+SUBDIRS = lib libcob cobpp cobc po texi tests
 EXTRA_DIST = libcob.conf
 
 BUILT_SOURCES = defaults.h

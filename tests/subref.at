@@ -1,0 +1,150 @@
+AT_INIT([Subscript Reference Tests])
+
+
+AT_SETUP([Level 01 subscripts])
+
+AT_DATA([subref.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     subref.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 X            PIC X OCCURS 10.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C subref.cob], [1], ,
+[subref.cob:6: `X' level 01 field cannot have OCCURS
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([1 subscripts (too few)])
+
+AT_DATA([subref.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     subref.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G.
+  02 X          PIC X OCCURS 10.
+PROCEDURE       DIVISION.
+  MOVE "X" TO X.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C subref.cob], [1], ,
+[subref.cob:9: `X' requires 1 subscript
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([1 subscripts (too many)])
+
+AT_DATA([subref.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     subref.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G.
+  02 X          PIC X OCCURS 10.
+PROCEDURE       DIVISION.
+  MOVE "X" TO X (1, 2).
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C subref.cob], [1], ,
+[subref.cob:9: `X' requires 1 subscript
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([2 subscripts (too few)])
+
+AT_DATA([subref.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     subref.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G1.
+  02 G2         OCCURS 10.
+    03 X        PIC X OCCURS 10.
+PROCEDURE       DIVISION.
+  MOVE "X" TO X (1).
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C subref.cob], [1], ,
+[subref.cob:10: `X' requires 2 subscripts
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([2 subscripts (too many)])
+
+AT_DATA([subref.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     subref.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G1.
+  02 G2         OCCURS 10.
+    03 X        PIC X OCCURS 10.
+PROCEDURE       DIVISION.
+  MOVE "X" TO X (1, 2, 3).
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C subref.cob], [1], ,
+[subref.cob:10: `X' requires 2 subscripts
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([non-numeric subscript])
+
+AT_DATA([subref.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     subref.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G1.
+  02 X          PIC X OCCURS 10.
+01 I            PIC X.
+PROCEDURE       DIVISION.
+  MOVE "X" TO X (I).
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C subref.cob], [1], ,
+[subref.cob:10: `I' must be an integer value
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([non-numeric subscript with addition])
+
+AT_DATA([subref.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     subref.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G1.
+  02 X          PIC X OCCURS 10.
+01 I            PIC X.
+PROCEDURE       DIVISION.
+  MOVE "X" TO X (I + 1).
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C subref.cob], [1], ,
+[subref.cob:10: `I' must be an integer value
+])
+
+AT_CLEANUP

@@ -1,0 +1,5 @@
+AUTOTEST_PATH="${abs_top_builddir}/cobpp:${abs_top_builddir}/cobc"
+PATH="$AUTOTEST_PATH:$PATH"
+
+cobsrcdir=${abs_builddir}/cobol85.src
+cobdatdir=${abs_builddir}/cobol85.dat

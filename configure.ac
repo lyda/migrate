@@ -18,12 +18,13 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 # 02111-1307, USA.
 
-AC_PREREQ(2.56)
+AC_PREREQ(2.57)
 
 AC_INIT([OpenCOBOL],[0.10],[knishida@coboler.com],[open-cobol])
-AC_CONFIG_SRCDIR([config.h.in])
+AC_CONFIG_SRCDIR([libcob.h])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_TESTDIR([tests])
 
 AM_INIT_AUTOMAKE([gnu no-texinfo.tex])
 AM_MAINTAINER_MODE
@@ -167,7 +168,7 @@ AC_SUBST(LIBCOB_LIBS)
 AC_CONFIG_FILES([cob.pc cob-config
 		Makefile lib/Makefile libcob/Makefile
 		cobpp/Makefile cobc/Makefile po/Makefile.in texi/Makefile
-		testsuite/Makefile testsuite/cobol85/Makefile])
+		tests/atlocal tests/Makefile tests/cobol85/Makefile])
 if test "$USE_MAINTAINER_MODE" = "yes"; then
   AC_CONFIG_FILES([redhat/open-cobol.spec])
 fi
