@@ -23,6 +23,10 @@
 
 #include "_libcob.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <time.h>
 #include <termios.h>
 
 #ifdef HAVE_READLINE_READLINE_H
@@ -248,14 +252,14 @@ accept_std (char *buffer, struct fld_desc *f, int flags)
     }
   else
     {
-      fgets (rlbuf, RLBUF_SIZE, stdin);
+      fgets (rlbuf, BUFSIZ, stdin);
       rlbuf[strlen (rlbuf) - 1] = 0;
     }
 #else
   /* we alloc the line buffer only at the first time */
   if (!rlbuf)
     rlbuf = malloc (8192);
-  fgets (rlbuf, RLBUF_SIZE, stdin);
+  fgets (rlbuf, BUFSIZ, stdin);
   rlbuf[strlen (rlbuf) - 1] = 0;
 #endif
 
@@ -410,7 +414,7 @@ accept_env_var1 (struct fld_desc *f, char *buffer)
   pt = buffer + 15;
   for (i = 0, pt; i < env_name_maxlen; i++, pt++)
     {
-      if (*pt == CHR_BLANK)
+      if (*pt == ' ')
 	{
 	  j = i;
 	  if ((envpt = malloc (j)) == NULL)
@@ -454,7 +458,7 @@ accept_env_var1 (struct fld_desc *f, char *buffer)
 	    }
 	  else
 	    {
-	      *pt1 = CHR_BLANK;
+	      *pt1 = ' ';
 	      pt1++;
 	    }
 	}

@@ -21,6 +21,10 @@
  * Suite 330, Boston, MA 02111-1307 USA
  */
 
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
 #include "_libcob.h"
 
 int cob_status;
@@ -224,7 +228,7 @@ cob_is_lower (struct fld_desc *f, char *s)
  */
 
 void
-stop_run ()
+cob_exit ()
 {
 //     do_scrio_finish();
 }

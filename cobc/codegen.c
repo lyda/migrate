@@ -1678,7 +1678,7 @@ proc_trail (int using)
   if (screen_io_enable != 0)
     asm_call ("do_scrio_finish");
 
-  asm_call ("stop_run");
+  asm_call ("cob_exit");
 
 //      Program return code is stored in register %eax
 //      Note:

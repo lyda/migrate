@@ -26,12 +26,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "cobc.h"
 #include "codegen.h"
 #include "parser.h"
+#include "scanner.h"
 #include "reserved.h"
-#include "_libcob.h"
 
 cob_tree curr_file;
 int curr_division = 0;

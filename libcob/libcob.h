@@ -26,6 +26,7 @@
 extern int cob_status;
 
 extern void cob_init (int argc, char **argv);
+extern void cob_exit (void);
 extern void cob_set_library_path (const char *path);
 extern void *cob_resolve (const char *name);
 extern const char *cob_resolve_error (void);

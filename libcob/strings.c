@@ -21,10 +21,12 @@
  * Suite 330, Boston, MA 02111-1307 USA
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
+
 #include "_libcob.h"
-#if defined(SunOS)
-va_list __builtin_va_alist;
-#endif
 
 static int offset_substr (char *s1, char *s2, int n1, int n2);
 static void cob_put_integer (struct fld_desc *fdesc, char *sbuf, int value);

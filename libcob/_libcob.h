@@ -20,20 +20,6 @@
 #include "config.h"
 #include "libcob.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <errno.h>
-#include <limits.h>
-#include <fcntl.h>
-#include <time.h>
-#include <sys/param.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <stdarg.h>
-#include <sys/types.h>
-#include <fcntl.h>
 #include <db1/db.h>
 
 #define min(x,y) ((x)<(y) ? (x) : (y))
@@ -41,14 +27,6 @@
 #define RTL_FILE_VERSION	3
 
 #define KEY_RETURN		10
-#define CHR_POSITIVE		'+'
-#define CHR_NEGATIVE		'-'
-// #define CHR_DECIMAL          '.'
-// #define CHR_DEC_GROUP_DEL    ','
-#define CHR_DECIMAL		','
-#define CHR_DEC_GROUP_DEL	'.'
-#define CHR_BLANK		' '
-#define CHR_ZERO		'0'
 
 #define DTYPE_DISPLAY           '9'
 #define DTYPE_ALPHA             'A'
@@ -60,12 +38,7 @@
 #define DTYPE_FLOAT             'U'
 #define DTYPE_ALPHANUMERIC      'X'
 
-#define DTYPE_COUNT             7
 #define MAX_DIGITS              18
-#define MAX_INTEGERS            18                          
-#define MAX_DECIMALS            18                          
-
-#define RLBUF_SIZE              8192
 
 #define ORG_INDEXED		1
 #define ORG_SEQUENTIAL 		2
@@ -190,7 +163,6 @@ extern int extract_sign (struct fld_desc *f, char *s);
 extern void put_sign (struct fld_desc *f, char *s, int sign);
 extern int get_index (struct fld_desc *f, char *s);
 
-extern void stop_run (void);
 extern int fldLength (struct fld_desc *f);
 extern int picCompLength (struct fld_desc *f);
 
@@ -198,5 +170,3 @@ extern void cob_move (struct fld_desc *pfldDesc1, char *caData1,
 		      struct fld_desc *pfldDesc2, char *caData2);
 
 extern void runtime_error (int iErrorNbr, struct fld_desc *pFld, void *pData);
-
-/* EOF _libcob.h */

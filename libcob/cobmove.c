@@ -23,6 +23,10 @@
 
 #include "_libcob.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #define binFldSize(f) (f->len)
 
 static struct fld_desc zero_fld  = { 1, '9', 0, 1, 0, 0, 0, 0, "9\001"};

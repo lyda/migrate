@@ -21,11 +21,11 @@
  * Suite 330, Boston, MA 02111-1307 USA
  */
 
-#if defined(SunOS)
-#include <curses.h>
-#else
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <ctype.h>
 #include <ncurses.h>
-#endif
 
 #include "_libcob.h"
 #include "screenio.h"
@@ -74,7 +74,7 @@ accept_curses (char *buffer, struct fld_desc *f, int flags)
   noecho ();
   /* we alloc the line buffer only at the first time */
   if (!rlbuff)
-    rlbuff = malloc (RLBUF_SIZE);
+    rlbuff = malloc (BUFSIZ);
   /* check if UPDATE was given (copy input field to rlbuff and show it) */
   getyx (stdscr, y0, x0);
   if (flags & SCR_UPDATE)

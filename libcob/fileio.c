@@ -54,6 +54,14 @@
 //             |  delete    |                X
 //   ----------+------------+--------------------------
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <sys/stat.h>
 
 #include "_libcob.h"
 
@@ -82,9 +90,9 @@ cob_check_varying (struct file_desc *f,
   char *t_value;
   char *b;
 
-  t = (struct fld_desc *) malloc (sizeof (struct fld_desc *));
-  t_value = (char *) malloc (sizeof (char *));
-  b = (char *) malloc (sizeof (char *));
+  t = malloc (sizeof (struct fld_desc *));
+  t_value = malloc (sizeof (char *));
+  b = malloc (sizeof (char *));
   memset (temp, 0, 19);
   if (min_desc == NULL)
     {
@@ -586,9 +594,8 @@ cob_read (struct file_desc *f, char *record, ...)
 	    RETURN_STATUS (10);
 	  memmove (record, temp_record, result - bcounter);
 	  sprintf (t_value, "%0*i", bcounter, result - bcounter);
-	  t = (struct fld_desc *) malloc (sizeof (struct fld_desc *));
-//                      t_value=(char *)malloc(sizeof(char *));
-	  b = (char *) malloc (sizeof (char *));
+	  t = malloc (sizeof (struct fld_desc *));
+	  b = malloc (sizeof (char *));
 	  t->len = bcounter;
 	  t->type = '9';
 	  t->decimals = 0;
@@ -829,8 +836,6 @@ cob_write (struct file_desc *f, char *record, ...)
   char sclen[bcounter];
   char temp_record[f->reclen];
   char eclen[bcounter];
-
-//      t->temp_record=malloc(f->reclen);
 
   /* Check to see if file is open. If not return File Status 92
      In accordance with the Cobol 74 Standard. */
