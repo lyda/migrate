@@ -25,6 +25,13 @@
  * Tree
  */
 
+#define cob_tag_symbol		0
+#define cob_tag_literal		1
+#define cob_tag_subref		2
+#define cob_tag_refmod		4
+#define cob_tag_expr		5
+#define cob_tag_cond		8
+
 struct cob_tree_common {
   int litflag;
 };
@@ -89,7 +96,7 @@ struct lit
 };
 
 #define LITERAL(x)		((struct lit *) (x))
-#define LITERAL_P(x)		(COB_TREE_TYPE (x) == 1)
+#define LITERAL_P(x)		(COB_TREE_TYPE (x) == cob_tag_literal)
 
 extern cob_tree make_literal (char *name);
 
@@ -182,7 +189,7 @@ struct sym
 };
 
 #define SYMBOL(x)		((struct sym *) (x))
-#define SYMBOL_P(x)		(COB_TREE_TYPE (x) == 0)
+#define SYMBOL_P(x)		(COB_TREE_TYPE (x) == cob_tag_symbol)
 
 extern cob_tree make_symbol (char *name);
 extern cob_tree make_filler (void);
@@ -199,7 +206,7 @@ struct subref
 };
 
 #define SUBREF(x)	((struct subref *) (x))
-#define SUBREF_P(x)	(COB_TREE_TYPE (x) == 2)
+#define SUBREF_P(x)	(COB_TREE_TYPE (x) == cob_tag_subref)
 #define SUBREF_SUBS(x)	(SUBREF (x)->subs)
 #define SUBREF_SYM(x)	(SUBREF (x)->sym)
 
@@ -218,9 +225,74 @@ struct refmod
 };
 
 #define REFMOD(x)	((struct refmod *) (x))
-#define REFMOD_P(x)	(COB_TREE_TYPE (x) == 4)
+#define REFMOD_P(x)	(COB_TREE_TYPE (x) == cob_tag_refmod)
 
-extern cob_tree create_refmoded_var (cob_tree sy, cob_tree syoff, cob_tree sylen);
+extern cob_tree make_refmod (cob_tree sy, cob_tree syoff, cob_tree sylen);
+
+
+/*
+ * Expression
+ */
+
+struct expr
+{
+  char litflag;			/* 5 for expr */
+  char op;
+  cob_tree left;
+  cob_tree right;
+};
+
+#define EXPR(x)		((struct expr *) (x))
+#define EXPR_P(x)	(COB_TREE_TYPE (x) == cob_tag_expr)
+#define EXPR_OP(x)	(EXPR (x)->op)
+#define EXPR_LEFT(x)	(EXPR (x)->left)
+#define EXPR_RIGHT(x)	(EXPR (x)->right)
+
+extern cob_tree make_expr (cob_tree left, char op, cob_tree right);
+
+
+/*
+ * Condition
+ */
+
+enum cond_type {
+  COND_EQ,			/* x = y */
+  COND_GT,			/* x > y */
+  COND_LT,			/* x < y */
+  COND_GE,			/* x >= y */
+  COND_LE,			/* x <= y */
+  COND_NE,			/* x != y */
+  COND_NUMERIC,			/* x is NUMERIC */
+  COND_ALPHABETIC,		/* x is ALPHABETIC */
+  COND_LOWER,			/* x is ALPHABETIC-LOWER */
+  COND_UPPER,			/* x is ALPHABETIC-UPPER */
+  COND_POSITIVE,		/* x is POSITIVE */
+  COND_NEGATIVE,		/* x is NEGATIVE */
+  COND_ZERO,			/* x is ZERO */
+  COND_NOT,			/* not x */
+  COND_AND,			/* x and y */
+  COND_OR,			/* x or y */
+  COND_VAR			/* 88 variable */
+};
+
+struct cond
+{
+  char litflag;			/* 8 for condition */
+  enum cond_type type;
+  cob_tree x;
+  cob_tree y;
+};
+
+#define COND(x)		((struct cond *) (x))
+#define COND_P(x)	(COB_TREE_TYPE (x) == cob_tag_cond)
+#define COND_TYPE(c)	(COND (c)->type)
+#define COND_X(c)	(COND (c)->x)
+#define COND_Y(c)	(COND (c)->y)
+
+#define COND_IS_UNARY(c) (COND_Y (c) == 0)
+
+extern cob_tree make_cond (cob_tree x, enum cond_type type, cob_tree y);
+extern cob_tree make_unary_cond (cob_tree x, enum cond_type type);
 
 
 /*
@@ -483,70 +555,5 @@ struct occurs
   cob_tree depend;
   int min, max;
 };
-
-
-/*
- * Expression
- */
-
-struct expr
-{
-  char litflag;			/* 5 for expr */
-  char op;
-  cob_tree left;
-  cob_tree right;
-};
-
-#define EXPR(x)		((struct expr *) (x))
-#define EXPR_P(x)	(COB_TREE_TYPE (x) == 5)
-#define EXPR_OP(x)	(EXPR (x)->op)
-#define EXPR_LEFT(x)	(EXPR (x)->left)
-#define EXPR_RIGHT(x)	(EXPR (x)->right)
-
-extern cob_tree make_expr (cob_tree left, char op, cob_tree right);
-
-
-/*
- * Condition
- */
-
-enum cond_type {
-  COND_EQ,			/* x = y */
-  COND_GT,			/* x > y */
-  COND_LT,			/* x < y */
-  COND_GE,			/* x >= y */
-  COND_LE,			/* x <= y */
-  COND_NE,			/* x != y */
-  COND_NUMERIC,			/* x is NUMERIC */
-  COND_ALPHABETIC,		/* x is ALPHABETIC */
-  COND_LOWER,			/* x is ALPHABETIC-LOWER */
-  COND_UPPER,			/* x is ALPHABETIC-UPPER */
-  COND_POSITIVE,		/* x is POSITIVE */
-  COND_NEGATIVE,		/* x is NEGATIVE */
-  COND_ZERO,			/* x is ZERO */
-  COND_NOT,			/* not x */
-  COND_AND,			/* x and y */
-  COND_OR,			/* x or y */
-  COND_VAR			/* 88 variable */
-};
-
-struct cond
-{
-  char litflag;			/* 8 for condition */
-  enum cond_type type;
-  cob_tree x;
-  cob_tree y;
-};
-
-#define COND(x)		((struct cond *) (x))
-#define COND_P(x)	(COB_TREE_TYPE (x) == 8)
-#define COND_TYPE(c)	(COND (c)->type)
-#define COND_X(c)	(COND (c)->x)
-#define COND_Y(c)	(COND (c)->y)
-
-#define COND_IS_UNARY(c) (COND_Y (c) == 0)
-
-extern cob_tree make_cond (cob_tree x, enum cond_type type, cob_tree y);
-extern cob_tree make_unary_cond (cob_tree x, enum cond_type type);
 
 #endif /* _TREE_H_ */

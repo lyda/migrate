@@ -2781,7 +2781,7 @@ name:
   variable
 | variable '(' gname ':' opt_gname ')'
   {
-    $$ = create_refmoded_var($1, $3, $5);
+    $$ = make_refmod($1, $3, $5);
   }
   ;
 variable:

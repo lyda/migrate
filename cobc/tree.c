@@ -44,7 +44,7 @@ cob_tree
 make_literal (char *name)
 {
   struct lit *p = malloc (sizeof (struct lit));
-  p->litflag = 1;
+  COB_TREE_TYPE (p) = cob_tag_literal;
   p->name = name;
   p->type = 0;
   p->all = 0;
@@ -63,7 +63,7 @@ cob_tree
 make_symbol (char *name)
 {
   struct sym *p = malloc (sizeof (struct sym));
-  p->litflag = 0;
+  COB_TREE_TYPE (p) = cob_tag_symbol;
   p->name = name;
   p->next = NULL;
   p->times = 0;
@@ -113,7 +113,7 @@ cob_tree
 make_subref (cob_tree sy, cob_tree_list subs)
 {
   struct subref *p = malloc (sizeof (struct subref));
-  p->litflag = 2;
+  COB_TREE_TYPE (p) = cob_tag_subref;
   p->sym     = sy;
   p->subs    = subs;
   /* FIXME: error check here!! */
@@ -126,16 +126,16 @@ make_subref (cob_tree sy, cob_tree_list subs)
  */
 
 cob_tree
-create_refmoded_var (cob_tree sy, cob_tree syoff, cob_tree sylen)
+make_refmod (cob_tree sy, cob_tree syoff, cob_tree sylen)
 {
-  struct refmod *ref;
-  ref = malloc (sizeof (struct refmod));
-  ref->litflag = 4;
-  ref->sym = sy;
-  ref->off = syoff;
-  ref->len = sylen;
-  ref->slot = refmod_slots++;
-  return COB_TREE (ref);
+  struct refmod *p;
+  p = malloc (sizeof (struct refmod));
+  COB_TREE_TYPE (p) = cob_tag_refmod;
+  p->sym = sy;
+  p->off = syoff;
+  p->len = sylen;
+  p->slot = refmod_slots++;
+  return COB_TREE (p);
 }
 
 
@@ -147,7 +147,7 @@ cob_tree
 make_expr (cob_tree left, char op, cob_tree right)
 {
   struct expr *p = malloc (sizeof (struct expr));
-  p->litflag = 5;
+  COB_TREE_TYPE (p) = cob_tag_expr;
   p->op = op;
   p->left = left;
   p->right = right;
@@ -163,7 +163,7 @@ cob_tree
 make_cond (cob_tree x, enum cond_type type, cob_tree y)
 {
   struct cond *p = malloc (sizeof (struct cond));
-  p->litflag = 8;
+  COB_TREE_TYPE (p) = cob_tag_cond;
   p->type    = type;
   p->x       = x;
   p->y       = y;
@@ -248,5 +248,5 @@ print_tree (cob_tree x)
 	}
     }
   else
-    printf ("litflag(%d)", x->litflag);
+    printf ("tree(%p)", x);
 }
