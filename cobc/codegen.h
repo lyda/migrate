@@ -24,6 +24,8 @@
 #ifndef _CODEGEN_H_
 #define _CODEGEN_H_
 
+#include <stdio.h>
+
 /* current division (cobol source) */
 #define CDIV_IDENT 	1
 #define CDIV_ENVIR 	2
@@ -467,12 +469,12 @@ struct occurs
 #define SVAR_RCODE  	"RETURN-CODE"
 
 /* htcobgen.c */
-extern int hash (char *s);
 extern char *upcase (char *s, char *buf);
 extern void update_xreflist (struct sym *as);
 extern struct sym *lookup_symbol (char *s);
 extern struct sym *lookup (char *s, int tab);
 extern struct sym *install (char *name, int tab, int cloning);
+extern struct sym *install_label (char *name);
 extern struct lit *install_literal (const char *name);
 extern struct sym *lookup_label (struct sym *sy, struct sym *parent);
 extern struct sym *lookup_variable (struct sym *sy, struct sym *parent);
@@ -807,10 +809,5 @@ extern void opt_is (int i);
 extern void hterror (int erno, int severity, char *s, ...);
 extern void yyerror (char *s, ...);
 extern int yyparse (void);
-
-/* scan.c */
-extern int yylex (void);
-extern void yyrestart (FILE * input_file);
-extern void install_reserved (void);
 
 #endif /* _CODEGEN_H_ */

@@ -29,6 +29,7 @@
 
 #include "cobc.h"
 #include "codegen.h"
+#include "reserved.h"
 #include "defaults.h"
 
 
@@ -443,7 +444,7 @@ process_compile (struct filename *fn)
     cob_error ("cannot open file: %s\n", fn->assembly);
 
   cob_source_filename = fn->source;
-  install_reserved ();
+  init_reserved_words ();
   yyparse ();
 
   fclose (o_src);

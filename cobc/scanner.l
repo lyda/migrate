@@ -32,6 +32,7 @@
 #include "cobc.h"
 #include "codegen.h"
 #include "parser.h"
+#include "reserved.h"
 #include "_libcob.h"
 
 #define MAX_COPY_DEPTH          10
@@ -54,166 +55,6 @@ static int lex_fgets (char *buf, int maxsize);
 unsigned int varnumber;
 int previous_state = 0;
 int stabs_started=0;
-
-struct {
-        char *name;
-        int token;
-        unsigned minor;
-} reserved_symbols[] = {
-  {"GLOBAL",GLOBAL,0},{"EXTERNAL",EXTERNAL,0},
-  {"SEPARATE",SEPARATE,0},{"LEFT",LEFT,0},{"TRAILING",TRAILING,0},
-  {"CHARACTER",CHARACTER,0},{"PIC",PIC,0},{"PICTURE",PIC,0},
-  {"SCREEN",SCREEN,0},{"REVERSE-VIDEO",REVERSEVIDEO,0},
-  {"NUMBER",NUMBERTOK,0},{"PLUS",PLUS,0},{"MINUS",MINUS,0},
-  {"FOREGROUND-COLOR",FOREGROUNDCOLOR,0},
-  {"BACKGROUND-COLOR",BACKGROUNDCOLOR,0},{"COL",COLUMN,0},
-  {"COLUMN",COLUMN,0},{"BELL",BELL,0},{"UNDERLINE",UNDERLINE,0},
-  {"HIGHLIGHT",HIGHLIGHT,0},{"LOWLIGHT",LOWLIGHT,0},
-  {"BLINK",BLINK,0},{"SECURE",SECURE,0},
-  {"JUST",JUST,0},{"JUSTIFIED",JUST,0},{"RIGHT",RIGHT,0},{"AUTO",AUTO,0},
-  {"REQUIRED",REQUIRED,0},{"FULL",FULL,0},
-  {"ASCENDING",DIRECTION,ASCENDING},{"DESCENDING",DIRECTION,DESCENDING},
-  {"OR",OR,0},{"AND",AND,0},{"UPDATE",UPDATE,0},{"SORT",SORT,0},
-  {"DATE",DATE_TIME,DATE},{"TIME",DATE_TIME,TIME},
-  {"DAY",DATE_TIME,DAY},{"DAY-OF-WEEK",DATE_TIME,DAY_OF_WEEK},
-  {"COMMAND-LINE",CMD_LINE,0},{"ENVIRONMENT-VARIABLE",ENVIRONMENT_VARIABLE,0},
-  {"INKEY",DATE_TIME,INKEY},{"INSPECT",INSPECT,0},
-  {"TALLYING",TALLYING,0},{"REPLACING",REPLACING,0},{"LEADING",LEADING,0},
-  {"INITIAL",INITIALTOK,0},{"COMMON",COMMONTOK,0},
-  {"FIRST",FIRSTTOK,0},{"ALL",ALL,0},
-  {"EXCEPTION",EXCEPTION,0},{"MOVE",MOVE,0},{"ACCEPT",ACCEPT,0},
-  {"FD",FD,0},{"SD",SD,0},{"ECHO",ECHOT,0},{"REDEFINES",REDEFINES,0},
-  {"FILLER",FILLER,0},{"OCCURS",OCCURS,0},{"TIMES",TIMES,0},
-  {"GIVING",GIVING,0},{"ERASE",ERASE,0},
-  {"COMP",USAGENUM,COMP},{"COMPUTATIONAL",USAGENUM,COMP},
-  {"INDEX",USAGENUM,INDEX},{"BINARY",USAGENUM,COMP},
-  {"COMP-3",USAGENUM,COMP3},{"COMPUTATIONAL-3",USAGENUM,COMP3},
-  {"PACKED-DECIMAL",USAGENUM,COMP3},
-  {"COMP-5",USAGENUM,COMP},{"COMPUTATIONAL-5",USAGENUM,COMP},
-  {"DISPLAY",DISPLAY,0},{"UPON",UPON,0},{"CONSOLE",CONSOLE,0},
-  {"STD-OUTPUT",STD_OUTPUT,0},{"STD-ERROR",STD_ERROR,0},
-  {"TRACE",TRACE,0},{"READY",READY,0},{"RESET",RESET,0},
-  {"PROGRAM",PROGRAM,0},
-  {"PROGRAM-ID",PROGRAM_ID,0},
-  {"IDENTIFICATION",IDENTIFICATION_TOK,0},
-  {"ENVIRONMENT",ENVIRONMENT_TOK,0},
-  {"DATA",DATA_TOK,0},
-  {"PROCEDURE",PROCEDURE_TOK,0},
-  {"DIVISION",DIVISION,0},{"SECTION",SECTION,0},
-  {"TO",TO,0},{"EXIT",EXIT,0},{"OF",OF,0},{"IN",IN,0},
-  {"AUTHOR",AUTHOR_TOK,0},
-  {"CONFIGURATION",CONFIGURATION,0},
-  {"SAME",SAME,0},{"FOR",FOR,0},
-  {"INPUT-OUTPUT",INPUT_OUTPUT,0},{"SPECIAL-NAMES",SPECIAL_NAMES,0},
-  {"FILE-CONTROL",FILE_CONTROL,0},{"FILE-ID",FILE_ID,0},
-  {"I-O-CONTROL",I_O_CONTROL,0},
-  {"IS",IS,0},{"ARE",ARE,0},{"START",START,0},
-  {"THROUGH",THRU,0},{"THRU",THRU,0},
-  {"WORKING-STORAGE",WORKING_STORAGE,0},{"AREA",AREA,0},
-  {"LINKAGE",LINKAGE,0},{"COMMA",COMMA,0},{"INVALID",INVALID,0},
-  {"DECIMAL-POINT",DECIMAL_POINT,0},{"FILE",FILEN,0},{"BY",BY,0},
-  {"GO",GO,0},{"USAGE",USAGE,0},{"BLANK",BLANK,0},{"SIGN",SIGN,0},
-  {"VALUE",VALUE,0},{"VALUES",VALUE,0},
-  {"OTHER",OTHER,0},{"CONTINUE",CONTINUE,0},
-  {"THEN",THEN,0},{"EVALUATE",EVALUATE,0},{"ALSO",ALSO,0},
-  {"END-ADD",END_ADD,0},{"END-CALL",END_CALL,0},
-  {"END-COMPUTE",END_COMPUTE,0},{"END-DELETE",END_DELETE,0},
-  {"END-DIVIDE",END_DIVIDE,0},{"END-EVALUATE",END_EVALUATE,0},
-  {"END-IF",END_IF,0},{"END-MULTIPLY",END_MULTIPLY,0},{"END-PERFORM",END_PERFORM,0},
-  {"END-READ",END_READ,0},{"END-REWRITE",END_REWRITE,0},{"END-SEARCH",END_SEARCH,0},
-  {"END-START",END_START,0},{"END-STRING",END_STRINGCMD,0},
-  {"END-SUBTRACT",END_SUBTRACT,0},{"END-UNSTRING",END_UNSTRING,0},
-  {"END-WRITE",END_WRITE,0},{"END-RETURN",END_RETURN,0},
-  {"TEST",TEST,0},
-  {"SEARCH",SEARCH,0},{"WHEN",WHEN,0},
-  {"LABEL",LABEL,0},{"RECORD",RECORD,0},{"OMITTED",OMITTED,0},
-  {"STANDARD",STANDARD,0},{"RECORDS",RECORDS,0},{"BLOCK",BLOCK,0},
-  {"CONTAINS",CONTAINS,0},{"CHARACTERS",CHARACTERS,0},
-  {"ADD",ADD,0},{"SUBTRACT",SUBTRACT,0},{"DELETE",DELETE,0},
-  {"MULTIPLY",MULTIPLY,0},
-  {"DIVIDE",DIVIDE,0},{"ROUNDED",ROUNDED,0},{"REMAINDER",REMAINDER,0},
-  {"COMPUTE",COMPUTE,0},{"STOP",STOP,0},{"RUN",RUN,0},
-  {"PERFORM",PERFORM,0},{"VARYING",VARYING,0},{"FROM",FROM,0},
-  {"UNTIL",UNTIL,0},{"IF",IF,0},
-  {"NEXT",NEXT,0},{"PREV",PREVIOUS,0},{"PREVIOUS",PREVIOUS,0},
-  {"ELSE",ELSE,0},{"LINE",LINE,0},{"LINES",LINE,0},{"PAGE",PAGETOK,0},
-  {"SELECT",SELECT,0},{"ASSIGN",ASSIGN,0},{"SENTENCE",SENTENCE,0},
-  {"EQUAL",CONDITIONAL,EQUAL},{"LESS",CONDITIONAL,LESS},
-  {"THAN",THAN,0},
-  {"=",CONDITIONAL,EQUAL},{"<",CONDITIONAL,LESS},{">",CONDITIONAL,GREATER},
-  {"<=",CONDITIONAL,LEQ},{">=",CONDITIONAL,GEQ},{"<>",CONDITIONAL,NEQ},
-  {"GREATER",CONDITIONAL,GREATER},{"OPEN",OPEN,0},{"CLOSE",CLOSE,0},
-  {"READ",READ,0},{"RETURN",RETURN_TOK,0},
-  {"WRITE",WRITE,0},{"RELEASE",WRITE,1},{"REWRITE",REWRITE,0},
-  {"AFTER",AFTER,0},{"BEFORE",BEFORE,0},
-  {"ADVANCING",ADVANCING,0},
-  {"INTO",INTO,0},{"AT",AT,0},{"END",END,0},{"NEGATIVE",NEGATIVE,0},
-  {"ZERO",ZERONUM,ZERO},{"ZEROS",ZERONUM,ZEROS},{"ZEROES",ZERONUM,ZEROES},
-  {"SPACE",SPACES,0},{"SPACES",SPACES,0},
-  {"HIGH-VALUE",HIGHVALUES,0},{"HIGH-VALUES",HIGHVALUES,0},
-  {"LOW-VALUE",LOWVALUES,0},{"LOW-VALUES",LOWVALUES,0},
-  {"QUOTE",QUOTES,0},{"QUOTES",QUOTES,0},
-  {"POSITIVE",POSITIVE,0},{"NOT",NOT,0},
-  {"NO",NO,0},
-  {"INPUT",INPUT,0},{"I-O",I_O,0},
-  {"OUTPUT",OUTPUT,0},{"EXTEND",EXTEND,0},
-  {"CALL",CALL,0},{"USING",USING,0},{"WITH",WITH,0},{"CONTENT",CONTENT,0},
-  {"DARK",DARK,0},
-  {"EOL",EOL_TOK,0},{"EOS",EOS_TOK,0},
-  {"SET",SET,0},{"UP",UP,0},{"DOWN",DOWN,0},
-  {"SOURCE-COMPUTER",COMMENTING,SOURCE_COMPUTER},
-  {"OBJECT-COMPUTER",COMMENTING,OBJECT_COMPUTER},
-  {"DATE-WRITTEN",DATE_WRITTEN_TOK,0},
-  {"DATE-COMPILED",DATE_COMPILED_TOK,0},
-  {"INSTALLATION",INSTALLATION_TOK,0},
-  {"SECURITY",SECURITY_TOK,0},
-  {"ORGANIZATION",ORGANIZATION,0},{"ACCESS",ACCESS,0},{"MODE",MODE,0},
-  {"KEY",KEY,0},{"STATUS",STATUS,0},{"SEQUENTIAL",SEQUENTIAL,0},
-  {"INDEXED",INDEXED,0},{"DYNAMIC",DYNAMIC,0},
-  {"RANDOM",RANDOM,0},{"RELATIVE",RELATIVE,0},
-  {"COM1",PORTNUM,8},{"COM2",PORTNUM,1},{"COM3",PORTNUM,2},
-  {"COM4",PORTNUM,3},{"LPT1",PORTNUM,4},{"LPT2",PORTNUM,5},
-  {"LPT3",PORTNUM,6},{"LPT4",PORTNUM,7},
-  {"DISK",PORTNUM,0},{"PRINTER",PORTNUM,4},
-  {"STRING",STRINGCMD,0},{"UNSTRING",UNSTRING,0},
-  {"ON",ONTOK,0},{"ERROR",ERRORTOK,0},{"SIZE",SIZE,0},
-  {"POINTER",POINTER,0},
-  {"COMP-1",COMP1,0},{"COMPUTATIONAL-1",COMP1,0},{"FLOAT-SHORT",COMP1,0},
-  {"COMP-2",COMP2,0},{"COMPUTATIONAL-2",COMP2,0},{"FLOAT-LONG",COMP2,0},
-  {"DELIMITED",DELIMITED,0},
-  {"OVERFLOW",OVERFLOWTK,0},{"DELIMITER",DELIMITER,0},
-  {"COUNT",COUNT,0},{"DUPLICATES",DUPLICATES,0},
-  {"ALTERNATE",ALTERNATE,0},{"CURRENCY",CURRENCY,0},
-  {"REFERENCE",REFERENCE,0},{"INITIALIZE",INITIALIZE,0},
-  {"NUMERIC",NUMERIC,0},{"ALPHABETIC",ALPHABETICTOK,0},
-  {"ALPHABETIC-LOWER",ALPHABETICLOWER,0},
-  {"ALPHABETIC-UPPER",ALPHABETICUPPER,0},
-  {"RETURNING",RETURNING,0},{"TRUE",TOKTRUE,0},{"FALSE",TOKFALSE,0},
-  {"FUNCTION",FUNCTION,0},{"SYNCHRONIZED",SYNC,0},{"SYNC",SYNC,0},
-  {"ANY",ANY,0},{"REPORT",REPORT,0},{"RD",TOKRD,0},{"CODE",TOKCODE,0},
-  {"CONTROL",CONTROL,0},{"CONTROLS",CONTROL,1},
-  {"LIMIT",LIMIT,0},{"FINAL",FINAL,0},{"HEADING",HEADING,0},
-  {"FOOTING",FOOTING,0},{"LAST",TOKLAST,0},{"DETAIL",DETAIL,0},
-  {"GROUP",GROUP,0},{"INDICATE",INDICATE,0},{"SUM",TOKSUM,0},
-  {"POSITION",TOKPOSITION,0},{"DEPENDING",DEPENDING,0},{"TYPE",TYPETOK,0},
-  {"SOURCE",TOKSOURCE,0}, {"INITIATE",INITIATE,0}, {"TERMINATE",TERMINATE,0},
-  {"GENERATE",GENERATE,0},{"ADDRESS",ADDRESS,0},{"NULL",NULLTOK,0},
-  {"NO-ECHO",NOECHO,0},{"CORRESPONDING",CORRESPONDING,0},
-  {"CORR",CORRESPONDING,0},{"LENGTH",LENGTH,0},
-  {"BINARY-CHAR",USAGENUM,USAGE_BINARY_CHAR}, 
-  {"BINARY-SHORT",USAGENUM,USAGE_BINARY_SHORT},
-  {"BINARY-LONG",USAGENUM,USAGE_BINARY_LONG}, 
-  {"BINARY-DOUBLE",USAGENUM,USAGE_BINARY_DOUBLE},
-  {"CONVERTING",CONVERTING,0},{"OPTIONAL",OPTIONAL,0},
-  {"",0,0}
-};
-struct reserved_sym {
-  char *name;
-  struct reserved_sym *next;
-  int i; /* index on reserved symbol table */
-};
-#define HASHLEN 100
-static struct reserved_sym *reserved_tab[ HASHLEN ]={NULL};
 
 static int read_literal (char mark);
 static int read_literal_x (char mark);
@@ -362,7 +203,7 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   /* otherwise, it should be a label */
   else
     {
-      yylval.sval = install (yytext, SYTB_LAB, 0);
+      yylval.sval = install_label (yytext);
       TRACE_PRINT (("<LABELSTR>: %s\n", yytext));
       return (LABELSTR);
     }
@@ -405,7 +246,7 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   /* otherwise, it should be a label */
   else
     {
-      yylval.sval = install (yytext, SYTB_LAB, 0);
+      yylval.sval = install_label (yytext);
       TRACE_PRINT (("<LABELSTR>: %s\n", yytext));
       return (LABELSTR);
     }
@@ -419,7 +260,6 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
       return tok;
 
     TRACE_PRINT (("<STRING>: %s\n", yytext));
-    /* install w/clone if neccessary */
     if ((yylval.sval = lookup_symbol (yytext)) == NULL)
       yyerror ("undefined %s at FD/SD", yytext);
     return (STRING);
@@ -685,7 +525,7 @@ scan_word (char *text)
     }
   else if (!is_valid_identifier (text))
     {
-      yylval.sval = install (text, SYTB_LAB, 0);
+      yylval.sval = install_label (text);
       TRACE_PRINT (("<LABELSTR>: %s\n", text));
       return (LABELSTR);
     }
@@ -698,28 +538,14 @@ scan_word (char *text)
     return 0;
 }
 
-static struct reserved_sym *
-lookup_reserved (char *s)
-{
-  struct reserved_sym *as;
-  for (as = reserved_tab[hash (s)]; as != NULL; as = as->next)
-    if (strcasecmp (s, as->name) == 0)
-      {
-	return (as);
-      }
-  return (NULL);
-}
-
 static int
 scan_reserved_word (char *s)
 {
-  struct reserved_sym *r;
-  if ((r = lookup_reserved (s)) != NULL)
-    {
-      yylval.ival = reserved_symbols[r->i].minor;
-      return reserved_symbols[r->i].token;
-    }
-  return 0;
+  struct reserved_word *word = lookup_reserved_word (s);
+  if (!word)
+    return 0;
+  yylval.ival = word->minor;
+  return word->token;
 }
 
 static int
@@ -730,24 +556,6 @@ lex_fgets (char *buf, int maxsize)
 
   cob_orig_lineno++;
   return strlen (buf);
-}
-
-int hash (char *name);
-
-void
-install_reserved (void)
-{
-  struct reserved_sym *as;
-  int val, i;
-  for (i = 0; strcmp (reserved_symbols[i].name, ""); i++)
-    {
-      as = (struct reserved_sym *) malloc (sizeof (struct reserved_sym));
-      as->name = strdup (reserved_symbols[i].name);
-      val = hash (as->name);
-      as->next = reserved_tab[val];
-      reserved_tab[val] = as;
-      as->i = i;
-    }
 }
 
 #ifdef COB_DEBUG
@@ -768,6 +576,6 @@ trace_print (char *fmt, ...)
 void
 dummy ()
 {
-  /* This avoids warnings */
+  /* This is to avoid warnings */
   yy_flex_realloc (0, 0);
 }

@@ -210,22 +210,11 @@ install (char *name, int tab, int cloning)
   char sbuf[SYMBUF_SIZE];
   struct sym *clone;
   struct sym *as;
-  struct lit *al;
   int val;
 
   if (tab == SYTB_LIT)
     {
-      al = malloc (sizeof (struct lit));
-      al->name = strdup (name);
-      al->type = 0;
-      al->all = 0;
-      al->litflag = 1;
-      al->nick = NULL;
-      al->len = strlen (name);
-      val = hash (al->name);
-      al->next = littab[val];
-      littab[val] = al;
-      return (struct sym *) al;
+      abort ();
     }
   else
     {
@@ -309,6 +298,12 @@ install_literal (const char *name)
   al->next = littab[val];
   littab[val] = al;
   return al;
+}
+
+struct sym *
+install_label (char *name)
+{
+  return install (name, SYTB_LAB, 0);
 }
 
 struct sym *
