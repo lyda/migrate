@@ -70,6 +70,7 @@ struct cob_file_desc {
     char optional    : 1;	/* OPTIONAL */
     char nonexistent : 1;	/* nonexistent file */
     char end_of_file : 1;	/* reached the end of file */
+    char first_read  : 1;	/* first READ after OPEN or START */
     char read_done   : 1;	/* last READ successfully done */
     char secondary   : 1;	/* alternative key is in use (INDEXED files) */
   } f;

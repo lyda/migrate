@@ -361,19 +361,19 @@ static int
 relative_read_next (struct cob_file_desc *f)
 {
   do {
-      if (lseek (f->file.fd, 0, SEEK_CUR) > 0)
-	f->relative_index++;
+    if (!f->f.first_read)
+      f->relative_index++;
 
-      switch (read (f->file.fd, f->record_data, f->record_size))
-	{
-	case 0:
-	  return 10;
-	case -1:
-	  return 99;
-	}
+    switch (read (f->file.fd, f->record_data, f->record_size))
+      {
+      case 0:
+	return 10;
+      case -1:
+	return 99;
+      }
 
-      if (f->relative_key.desc)
-	cob_set_int (f->relative_key, f->relative_index + 1);
+    if (f->relative_key.desc)
+      cob_set_int (f->relative_key, f->relative_index + 1);
   } while (f->record_data[0] == '\0');
 
   return 00;
@@ -627,9 +627,13 @@ indexed_read_next (struct cob_file_desc *f)
   memset (&key, 0, sizeof (DBT));
   memset (&data, 0, sizeof (DBT));
 
-  if (f->cursor)
+  if (!f->f.first_read)
     {
       ret = DBC_GET (f->cursor, &key, &data, DB_NEXT);
+    }
+  else if (f->cursor)
+    {
+      ret = DBC_GET (f->cursor, &key, &data, DB_CURRENT);
     }
   else
     {
@@ -829,6 +833,7 @@ cob_open (struct cob_file_desc *f, struct cob_field name, int mode)
   f->open_mode = mode;
   f->f.nonexistent = 0;
   f->f.end_of_file = 0;
+  f->f.first_read = 1;
 
   switch (fileio_funcs[f->organization]->open (f, filename, mode))
     {
@@ -891,6 +896,10 @@ cob_start (struct cob_file_desc *f, int cond, struct cob_field key)
     RETURN_STATUS (47);
 
   ret = fileio_funcs[f->organization]->start (f, cond, key);
+  if (ret == 00)
+    {
+      f->f.first_read = 1;
+    }
 
   RETURN_STATUS (ret);
 }
@@ -913,7 +922,10 @@ cob_read (struct cob_file_desc *f, struct cob_field key)
 
   ret = fileio_funcs[f->organization]->read (f, key);
   if (ret == 00)
-    f->f.read_done = 1;
+    {
+      f->f.first_read = 0;
+      f->f.read_done = 1;
+    }
 
   RETURN_STATUS (ret);
 }
@@ -936,7 +948,10 @@ cob_read_next (struct cob_file_desc *f)
 
   ret = fileio_funcs[f->organization]->read_next (f);
   if (ret == 00)
-    f->f.read_done = 1;
+    {
+      f->f.first_read = 0;
+      f->f.read_done = 1;
+    }
 
   RETURN_STATUS (ret);
 }

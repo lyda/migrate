@@ -947,7 +947,7 @@ output_file_name (struct cobc_file_name *f)
   /* file */
   output ("0, ");
   /* flags */
-  output ("{%d, 0, 0, 0, 0}, ", f->optional);
+  output ("{%d, 0, 0, 0, 0, 0}, ", f->optional);
   /* relative_index */
   output ("0, ");
   /* relative_key */
