@@ -198,9 +198,8 @@ cob_push_copy (int n)
 static void
 shift_decimal (decimal d, int n)
 {
-  static unsigned long exp[10] =
-    {1, 10, 100, 1000, 10000, 10000, 1000000, 10000000, 100000000, 1000000000};
-
+  static unsigned long exp[10] = {1, 10, 100, 1000, 10000, 100000, 1000000,
+				  10000000, 100000000, 1000000000};
   if (n == 0)
     return;
 
@@ -393,9 +392,16 @@ cob_set (struct fld_desc *f, char *s, int round)
   if (round && f->decimals < d->decimals)
     {
       /* with rounding */
-      shift_decimal (d, f->decimals - d->decimals + 1);
-      mpz_add_ui (d->number, d->number, 5);
-      shift_decimal (d, -1);
+      int sign = mpz_sgn (d->number);
+      if (sign != 0)
+	{
+	  shift_decimal (d, f->decimals - d->decimals + 1);
+	  if (sign > 0)
+	    mpz_add_ui (d->number, d->number, 5);
+	  else
+	    mpz_sub_ui (d->number, d->number, 5);
+	  shift_decimal (d, -1);
+	}
     }
   else
     {
