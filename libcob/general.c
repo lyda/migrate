@@ -119,15 +119,6 @@ put_sign (struct fld_desc *f, char *s, int sign)
     }
 }
 
-int
-get_index (struct fld_desc *f, char *s)
-{
-  int index;
-  struct fld_desc fld = { 4, 'B', 0, 0, 0, 0, 0, 0, "S9\x9" };
-  cob_move (f, s, &fld, (char *) &index);
-  return index;
-}
-
 struct fld_desc *
 cob_adjust_length (struct fld_desc *dep_desc, char *dep_val,
 		   int min, int max, struct fld_desc *var_desc,

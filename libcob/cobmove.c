@@ -55,6 +55,16 @@ static void move_edited (struct fld_desc *pSrcFld, char *pSrcData,
 static void float2all (struct fld_desc *pSrcFld, char *pSrcData,
 		       struct fld_desc *pDstFld, char *pDstData);
 
+
+int
+get_index (struct fld_desc *f, char *s)
+{
+  int index;
+  struct fld_desc fld = { 4, 'B', 0, 0, 0, 0, 0, 0, "S9\x9" };
+  cob_move (f, s, &fld, (char *) &index);
+  return index;
+}
+
 void
 cob_move_zero (struct fld_desc *f, char *s)
 {
@@ -113,34 +123,36 @@ fldLength (struct fld_desc *f)
     }
 }
 
-/*--------------------------------------------------------------------------*\
- |                                                                           |
- |       void cob_move( struct fld_desc *FieldDescSrc,                       |
- |                      char            *caSrcBuffer,                        |
- |                      struct fld_desc *FieldDescDest,                      |
- |                      char            *caDestBuffer)                       |
- |                                                                           |
- |   Copy the contents of the field described by FieldDescSrc (data is       |
- |   pointed to by caSrcBuffer) to the field described by FieldDescDest      |
- |   (data will be stored in memory pointed to by caDescBuffer).             |
- |                                                                           |
- |   This routine will appropriately convert data (or format it) as it       |
- |   potentially moves from one data type to another. Truncation and         |
- |   padding will also be done in this routine if field sizes differ.        |
- |   Data types that this routine will handle are:                           |
- |                                                                           |
- |   Type  Source Type            Destination Type       Defined As          |
- |    '9'  Numeric Display	  Numeric Display	 DTYPE_DISPLAY       |
- |    'D'  Accept Display	  Accept Display	 DTYPE_ACCEP_DISPLAY |
- |    'C'  Numeric Packed Decimal Numeric Packed Decimal DTYPE_PACKED        |
- |    'A'  Alpha		  Alpha 		 DTYPE_ALPHA         |
- |    'X'  AlphaNumeric 	  AlphaNumeric  	 DTYPE_ALPHANUMERIC  |
- |    'E'  AlphaNumeric 	  Numeric Edited	 DTYPE_EDITED        |
- |    'G'  AlphaNumeric 	  AlphaNumeric  	 DTYPE_GROUP         |
- |    'B'  Numeric Bin Int	  Numeric Bin Int	 DTYPE_BININT        |
- |    'U'  Floating Point	  Floating Point	 DTYPE_FLOAT         |
- |                                                                           |
-\*--------------------------------------------------------------------------*/
+void
+cob_move_to_binary (struct fld_desc *f1desc, unsigned char *f1data,
+		    struct fld_desc *f2desc, unsigned char *f2data)
+{
+  int i, sign;
+  long long val;
+  struct fld_desc desc;
+  unsigned char data[18];
+  desc.len = picCompLength (f2desc);
+  desc.type = DTYPE_DISPLAY;
+  desc.decimals = f2desc->decimals;
+  desc.all = 0;
+  desc.pic = f2desc->pic;
+  cob_move (f1desc, f1data, &desc, data);
+
+  sign = extract_sign (&desc, data);
+  val = 0;
+  for (i = 0; i < desc.len; ++i)
+    val = val * 10 + data[i] - '0';
+  if (sign)
+    val *= -1;
+
+  switch (f2desc->len)
+    {
+    case 1: *(char *) f2data = val; break;
+    case 2: *(short int *) f2data = val; break;
+    case 4: *(int *) f2data = val; break;
+    case 8: *(long long int *) f2data = val; break;
+    }
+}
 
 void
 cob_move (struct fld_desc *f1desc, unsigned char *f1data,
@@ -153,10 +165,21 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
   unsigned char *pSrcData, *pDstData;
   unsigned char caWrkData[20];
   unsigned char caPic[20];
-  unsigned char cWork;
 
   struct fld_desc *pSrcFld, *pDstFld;
   struct fld_desc FldWrk;
+
+  if (f2desc->type == DTYPE_EDITED)
+    {
+      move_edited (f1desc, f1data, f2desc, f2data);
+      return;
+    }
+
+  if (f2desc->type == DTYPE_BININT)
+    {
+      cob_move_to_binary (f1desc, f1data, f2desc, f2data);
+      return;
+    }
 
   iSrcLength = fldLength (f1desc);
   iDestLength = fldLength (f2desc);
@@ -175,21 +198,18 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
     case DTYPE_EDITED:
     case DTYPE_GROUP:
     case DTYPE_ACCEPT_DISPLAY:
-      if ((pSrcFld->all)	/* handle high/low values for */
-	  && ((pDstFld->type == DTYPE_DISPLAY)
-	      || (pDstFld->type == DTYPE_PACKED)))
+      if (pSrcFld->all	/* handle high/low values for */
+	  && (pSrcData[0] == 0 || pSrcData[0] == 255)
+	  && (pDstFld->type == DTYPE_DISPLAY || pDstFld->type == DTYPE_PACKED))
 	{
-	  if ((pSrcData[0] == 0) || (pSrcData[0] == 255))
-	    {
-	      cWork = pSrcFld->type;
-	      pSrcFld->type = DTYPE_DISPLAY;
-	      cob_move (pSrcFld, pSrcData, pDstFld, pDstData);
-	      pSrcFld->type = cWork;
-	      return;
-	    }
+	  char cWork = pSrcFld->type;
+	  pSrcFld->type = DTYPE_DISPLAY;
+	  cob_move (pSrcFld, pSrcData, pDstFld, pDstData);
+	  pSrcFld->type = cWork;
+	  return;
 	}
       switch (pDstFld->type)
-	{			/* destination field type */
+	{
 	case DTYPE_ALPHA:
 	case DTYPE_ALPHANUMERIC:
 	case DTYPE_GROUP:
@@ -295,7 +315,6 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 
 	    if (iDestDecimals < 0)
 	      {			/* integer scaling */
-		//FldWrk.len = pDstFld->len;
 		FldWrk.len = fldLength (pDstFld);
 		FldWrk.len += ((char) pDstFld->decimals * -1);
 		FldWrk.type = DTYPE_DISPLAY;
@@ -392,7 +411,6 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 		  default:
 		    runtime_error (RTERR_INVALID_DATA, f1desc,
 				   (void *) pSrcData);
-		    //memset(pDstData, '0', pDstFld->len);
 		    memset (pDstData, '0', fldLength (pDstFld));
 		    return;
 		  }
@@ -442,7 +460,6 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
                     \*----------------------------------------------------*/
 
 	    memcpy (&FldWrk, pSrcFld, sizeof (FldWrk));
-	    FldWrk.pic = caPic;
 	    FldWrk.type = DTYPE_DISPLAY;
 	    FldWrk.pic[0] = 'S';
 	    FldWrk.pic[1] = 1;
@@ -472,17 +489,6 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 	    cob_move (&FldWrk, caWrkData, pDstFld, pDstData);
 	    break;
 	  }
-	case DTYPE_EDITED:
-		    /*----------------------------------------------------*\
-                     |                                                    |
-                     |  We are handling edited moves in their own routine | 
-                     |  since the logic involved is very complicated, and |
-                     |  will be used in a similar fashion regardless of   |
-                     |  source data type.                                 |
-                    \*----------------------------------------------------*/
-
-	  move_edited (pSrcFld, pSrcData, pDstFld, pDstData);
-	  break;
 
 	case DTYPE_FLOAT:
 	  {
@@ -557,55 +563,6 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 	    break;
 	  }
 
-	case DTYPE_BININT:
-	  {
-		    /*----------------------------------------------------*\
-                     |                                                    |
-                     |  Call cobmove to move the alphanumeric source into |
-                     |  a work area of type display with an implied       |
-                     |  picture of destination field, then convert the    |
-                     |  value in the work area to a 8 byte binary integer |
-                     |  and store in the receiving field.                 |
-                     |                                                    |
-                    \*----------------------------------------------------*/
-
-	    long long iWork;
-	    int bIsNegative;
-	    char caWork[18];
-
-	    //FldWrk.len = pDstFld->len;
-	    FldWrk.len = picCompLength (pDstFld);
-	    FldWrk.decimals = pDstFld->decimals;
-	    FldWrk.type = DTYPE_DISPLAY;
-	    FldWrk.all = 0;
-	    strcpy (FldWrk.pic, pDstFld->pic);
-	    cob_move (pSrcFld, pSrcData, &FldWrk, caWork);
-	    bIsNegative = extract_sign (&FldWrk, caWork);
-	    iWork = 0;
-	    for (i = 0; i < FldWrk.len; ++i)
-	      {
-		iWork *= 10;
-		iWork += (int) (caWork[i] - '0');
-	      }
-	    if (bIsNegative)
-	      iWork *= -1;
-	    switch (binFldSize (pDstFld))
-	      {
-	      case 1:
-		*(char *) pDstData = iWork;
-		break;
-	      case 2:
-		*(short int *) pDstData = iWork;
-		break;
-	      case 4:
-		*(int *) pDstData = iWork;
-		break;
-	      case 8:
-		*(long long int *) pDstData = iWork;
-		break;
-	      }
-	    break;
-	  }
 	}
       break;
 
@@ -952,7 +909,6 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 	    /* zero fill destination first */
 	    for (i = 0; i < (iSrcIntDigits + iSrcDecimals); ++i)
 	      {
-		//if(i == pDstFld->len)
 		if (i == fldLength (pDstFld))
 		  break;
 		if (i & 1)	/* if lower (right) nibble */
@@ -1003,18 +959,6 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 	    put_sign (pDstFld, pDstData, iSrcSign);
 	    break;
 	  }
-
-	case DTYPE_EDITED:
-		    /*----------------------------------------------------*\
-                     |                                                    |
-                     |  We are handling edited moves in their own routine | 
-                     |  since the logic involved is very complicated, and |
-                     |  will be used in a similar fashion regardless of   |
-                     |  source data type.                                 |
-                    \*----------------------------------------------------*/
-
-	  move_edited (pSrcFld, pSrcData, pDstFld, pDstData);
-	  break;
 
 	case DTYPE_FLOAT:
 	  {
@@ -1080,56 +1024,7 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 		  dWork *= -1;
 		*(double *) pDstData = dWork;
 	      }
-
 	    break;
-	  }
-
-	case DTYPE_BININT:
-	  {
-		    /*----------------------------------------------------*\
-                     |                                                    |
-                     |  Just scan through the integer portion of the      |
-                     |  source field and build the resulting 4 byte       |
-                     |  binary integer (which will be move to the         |
-                     |  receiving field.  The picture of the receiving    |
-                     |  field is ignored.                                 |
-                     |                                                    |
-                    \*----------------------------------------------------*/
-
-	    long long iWork;
-	    int bIsNegative;
-	    char caWork[18];
-
-	    FldWrk.len = picCompLength (pDstFld);
-	    FldWrk.decimals = pDstFld->decimals;
-	    FldWrk.type = DTYPE_DISPLAY;
-	    FldWrk.all = 0;
-	    strcpy (FldWrk.pic, pDstFld->pic);
-	    cob_move (pSrcFld, pSrcData, &FldWrk, caWork);
-	    bIsNegative = extract_sign (&FldWrk, caWork);
-	    iWork = 0;
-	    for (i = 0; i < FldWrk.len; ++i)
-	      {
-		iWork *= 10;
-		iWork += (int) (caWork[i] - '0');
-	      }
-	    if (bIsNegative)
-	      iWork *= -1;
-	    switch (binFldSize (pDstFld))
-	      {
-	      case 1:
-		*(char *) pDstData = iWork;
-		break;
-	      case 2:
-		*(short int *) pDstData = iWork;
-		break;
-	      case 4:
-		*(int *) pDstData = iWork;
-		break;
-	      case 8:
-		*(long long int *) pDstData = iWork;
-		break;
-	      }
 	  }
 	}
       break;
@@ -1433,18 +1328,6 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 	    break;
 	  }
 
-	case DTYPE_EDITED:
-		    /*----------------------------------------------------*\
-                     |                                                    |
-                     |  We are handling edited moves in their own routine | 
-                     |  since the logic involved is very complicated, and |
-                     |  will be used in a similar fashion regardless of   |
-                     |  source data type.                                 |
-                    \*----------------------------------------------------*/
-
-	  move_edited (pSrcFld, pSrcData, pDstFld, pDstData);
-	  break;
-
 	case DTYPE_FLOAT:
 	  {
 		    /*----------------------------------------------------*\
@@ -1510,112 +1393,26 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 	      }
 	    break;
 	  }
-
-	case DTYPE_BININT:
-	  {
-
-		    /*----------------------------------------------------*\
-                     |                                                    |
-                     |  Call cobmove to move the packed  source into      |
-                     |  a work area of type display.                      |
-                     |                                                    |
-                    \*----------------------------------------------------*/
-
-	    long long iWork;
-	    int bIsNegative;
-	    char caWork[18];
-
-	    FldWrk.len = picCompLength (pDstFld);
-	    FldWrk.decimals = pDstFld->decimals;
-	    FldWrk.type = DTYPE_DISPLAY;
-	    FldWrk.all = 0;
-	    strcpy (FldWrk.pic, pDstFld->pic);
-	    cob_move (pSrcFld, pSrcData, &FldWrk, caWork);
-	    bIsNegative = extract_sign (&FldWrk, caWork);
-	    iWork = 0;
-	    for (i = 0; i < FldWrk.len; ++i)
-	      {
-		iWork *= 10;
-		iWork += (int) (caWork[i] - '0');
-	      }
-	    if (bIsNegative)
-	      iWork *= -1;
-	    switch (binFldSize (pDstFld))
-	      {
-	      case 1:
-		*(char *) pDstData = iWork;
-		break;
-	      case 2:
-		*(short int *) pDstData = iWork;
-		break;
-	      case 4:
-		*(int *) pDstData = iWork;
-		break;
-	      case 8:
-		*(long long int *) pDstData = iWork;
-		break;
-	      }
-	    break;
-	  }
 	}
       break;
 
-
-/* Source type is floating point */
-/*----------------------------------------------------*\
- |  DTYPE_FLOAT -> All                                |
- |  Convert the source to a normalized DISPLAY type.  |
- |  Then convert the contents of the normalized       |
- |  data area to sestination field type  	      |
- |						      |
-\*----------------------------------------------------*/
     case DTYPE_FLOAT:
       float2all (pSrcFld, pSrcData, pDstFld, pDstData);
       break;
 
-/* source is binary integer */
     case DTYPE_BININT:
       {
 	long long iWork;
 	int j, k;
-	int bIsNegative;
+	int bIsNegative = 0;
 	char caWork[19];
 
 	switch (binFldSize (pSrcFld))
 	  {
-	  case 1:
-	    iWork = *(char *) pSrcData;
-	    break;
-	  case 2:
-	    iWork = *(short int *) pSrcData;
-	    break;
-	  case 4:
-	    iWork = *(int *) pSrcData;
-	    break;
-	  case 8:
-	    iWork = *(long long int *) pSrcData;
-	    break;
-	  }
-	if ((pDstFld->type == DTYPE_BININT)
-	    && (pDstFld->decimals == pSrcFld->decimals)
-	    && (fldLength (pDstFld) == fldLength (pDstFld)))
-	  {
-	    switch (binFldSize (pDstFld))
-	      {
-	      case 1:
-		*(char *) pDstData = iWork;
-		break;
-	      case 2:
-		*(short int *) pDstData = iWork;
-		break;
-	      case 4:
-		*(int *) pDstData = iWork;
-		break;
-	      case 8:
-		*(long long int *) pDstData = iWork;
-		break;
-		return;
-	      }
+	  case 1: iWork = *(char *) pSrcData; break;
+	  case 2: iWork = *(short *) pSrcData; break;
+	  case 4: iWork = *(long *) pSrcData; break;
+	  case 8: iWork = *(long long *) pSrcData; break;
 	  }
 
 	if (iWork < 0)
@@ -1623,8 +1420,6 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 	    bIsNegative = 1;
 	    iWork *= -1;
 	  }
-	else
-	  bIsNegative = 0;
 
 	k = 18 - fldLength (pSrcFld);
 	for (i = 0; i < fldLength (pSrcFld); ++i)
@@ -2283,18 +2078,10 @@ float2all (struct fld_desc *pSrcFld, char *pSrcData, struct fld_desc *pDstFld,
       typesw = (10 * binFldSize (pSrcFld)) + binFldSize (pDstFld);
       switch (typesw)
 	{
-	case 44:
-	  *(float *) pDstData = *(float *) pSrcData;
-	  break;
-	case 48:
-	  *(double *) pDstData = *(float *) pSrcData;
-	  break;
-	case 84:
-	  *(float *) pDstData = *(double *) pSrcData;
-	  break;
-	case 88:
-	  *(double *) pDstData = *(double *) pSrcData;
-	  break;
+	case 44: *(float *) pDstData = *(float *) pSrcData; break;
+	case 48: *(double *) pDstData = *(float *) pSrcData; break;
+	case 84: *(float *) pDstData = *(double *) pSrcData; break;
+	case 88: *(double *) pDstData = *(double *) pSrcData; break;
 	}
     }
   else
@@ -2362,7 +2149,6 @@ float2all (struct fld_desc *pSrcFld, char *pSrcData, struct fld_desc *pDstFld,
       if (FldWrk.pic[0] == 'S')
 	put_sign (&FldWrk, caWork, bIsNegative);
       cob_move (&FldWrk, caWork, pDstFld, pDstData);
-
     }
 }
 
