@@ -823,10 +823,10 @@ data_division:
 
 file_section:
 | TOK_FILE SECTION '.'		{ current_storage = CB_STORAGE_FILE; }
-  file_descriptions
+  file_description_sequence
 ;
-file_descriptions:
-| file_descriptions file_description
+file_description_sequence:
+| file_description_sequence file_description
 ;
 file_description:
   file_description_entry
