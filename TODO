@@ -60,6 +60,9 @@ which does partial word replacement?
 ** Listing file
 (2004-02-13: BUG: "COPY REPLACING ..."  and  REQUEST for "mini-listing")
 
+** Partial expression in the EVALUATE statement
+(2004-02-19: feature request:  EVALUATE: partial-expression)
+
 ** READ ... PREVIOUS
 
 ** And many bugs reported recently
