@@ -1008,11 +1008,11 @@ cob_rewrite (struct cob_file_desc *f)
 
   f->f.read_done = 0;
 
-  if (!read_done)
-    RETURN_STATUS (43);
-
   if (!FILE_OPENED (f) || f->open_mode != COB_OPEN_I_O)
     RETURN_STATUS (49);
+
+  if (!read_done)
+    RETURN_STATUS (43);
 
   ret = fileio_funcs[f->organization]->rewrite (f);
 
