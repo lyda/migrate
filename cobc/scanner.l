@@ -122,7 +122,7 @@ X\"[^\"\n]*\" {
   yylval.word = lookup_user_word (yytext);
   if (cobc_in_procedure)
     {
-      if (!yylval.word->item || COBC_LABEL_NAME_P (yylval.word->item))
+      if (!yylval.word->item || COBC_LABEL_P (yylval.word->item))
 	{
 	  return LABEL_WORD;
 	}

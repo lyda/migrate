@@ -39,7 +39,7 @@ enum cobc_tag {
   cobc_tag_cond,
   cobc_tag_pair,
   cobc_tag_file_name,
-  cobc_tag_label_name,
+  cobc_tag_label,
   cobc_tag_call,
   cobc_tag_sequence,
   cobc_tag_perform,
@@ -141,8 +141,8 @@ extern cobc_tree cobc_int0;
 extern cobc_tree cobc_int1;
 extern cobc_tree cobc_int2;
 
-extern struct cobc_label_name *cobc_default_error_handler;
-extern struct cobc_label_name *cobc_standard_error_handler;
+extern struct cobc_label *cobc_default_error_handler;
+extern struct cobc_label *cobc_standard_error_handler;
 
 struct cobc_const {
   struct cobc_tree_common common;
@@ -402,7 +402,7 @@ struct cobc_file_name {
   int record_min, record_max;	/* RECORD CONTAINS */
   cobc_tree record_depending;	/* RECORD DEPENDING */
   /* STANDARD ERROR PROCEDURE */
-  struct cobc_label_name *handler; /* error handler */
+  struct cobc_label *handler;	/* error handler */
 };
 
 #define COBC_FILE_NAME(x)	(COBC_TREE_CAST (cobc_tag_file_name, struct cobc_file_name, x))
@@ -415,23 +415,23 @@ extern cobc_tree make_file_name (struct cobc_word *word);
  * Label name
  */
 
-struct cobc_label_name {
+struct cobc_label {
   struct cobc_tree_common common;
   const char *cname;
   struct cobc_word *word;
   struct cobc_word *in_word;
-  struct cobc_label_name *section;
+  struct cobc_label *section;
   struct cobc_list *children;
   char need_begin;
   char need_return;
 };
 
-#define COBC_LABEL_NAME(x)	(COBC_TREE_CAST (cobc_tag_label_name, struct cobc_label_name, x))
-#define COBC_LABEL_NAME_P(x)	(COBC_TREE_TAG (x) == cobc_tag_label_name)
+#define COBC_LABEL(x)		(COBC_TREE_CAST (cobc_tag_label, struct cobc_label, x))
+#define COBC_LABEL_P(x)		(COBC_TREE_TAG (x) == cobc_tag_label)
 
-extern cobc_tree make_label_name_nodef (struct cobc_word *word, struct cobc_word *in_word);
-extern cobc_tree make_label_name (struct cobc_word *word);
-extern void finalize_label_name (struct cobc_label_name *p);
+extern cobc_tree make_label_nodef (struct cobc_word *word, struct cobc_word *in_word);
+extern cobc_tree make_label (struct cobc_word *word);
+extern void finalize_label (struct cobc_label *p);
 
 
 /*

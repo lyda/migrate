@@ -182,8 +182,8 @@ tree_to_string_1 (char *s, cobc_tree x)
       }
       break;
 
-    case cobc_tag_label_name:
-      sprintf (s, "%s:", COBC_LABEL_NAME (x)->word->name);
+    case cobc_tag_label:
+      sprintf (s, "%s:", COBC_LABEL (x)->word->name);
       break;
 
     case cobc_tag_expr:
@@ -266,8 +266,8 @@ cobc_tree cobc_int0;
 cobc_tree cobc_int1;
 cobc_tree cobc_int2;
 
-struct cobc_label_name *cobc_default_error_handler;
-struct cobc_label_name *cobc_standard_error_handler;
+struct cobc_label *cobc_default_error_handler;
+struct cobc_label *cobc_standard_error_handler;
 
 static cobc_tree
 make_constant (char class, char *val)
@@ -313,9 +313,9 @@ init_constants (void)
 	make_field_3 (make_word (buff), "9", COBC_USAGE_BINARY);
     }
 
-  cobc_default_error_handler = COBC_LABEL_NAME (make_label_name_nodef (0, 0));
+  cobc_default_error_handler = COBC_LABEL (make_label_nodef (0, 0));
   cobc_default_error_handler->cname = "default_error_handler";
-  cobc_standard_error_handler = COBC_LABEL_NAME (make_label_name_nodef (0, 0));
+  cobc_standard_error_handler = COBC_LABEL (make_label_nodef (0, 0));
   cobc_standard_error_handler->cname = "standard_error_handler";
 }
 
@@ -665,25 +665,25 @@ make_file_name (struct cobc_word *word)
  */
 
 cobc_tree
-make_label_name_nodef (struct cobc_word *word, struct cobc_word *in_word)
+make_label_nodef (struct cobc_word *word, struct cobc_word *in_word)
 {
-  struct cobc_label_name *p =
-    make_tree (cobc_tag_label_name, COB_VOID, sizeof (struct cobc_label_name));
+  struct cobc_label *p =
+    make_tree (cobc_tag_label, COB_VOID, sizeof (struct cobc_label));
   p->word = word;
   p->in_word = in_word;
   return COBC_TREE (p);
 }
 
 cobc_tree
-make_label_name (struct cobc_word *word)
+make_label (struct cobc_word *word)
 {
-  cobc_tree x = make_label_name_nodef (word, NULL);
+  cobc_tree x = make_label_nodef (word, NULL);
   set_word_item (word, x);
   return x;
 }
 
 void
-finalize_label_name (struct cobc_label_name *p)
+finalize_label (struct cobc_label *p)
 {
   char name[BUFSIZ] = "";
   if (p->section)

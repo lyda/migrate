@@ -32,16 +32,16 @@ struct cobc_program_spec {
   struct cobc_field *working_storage;
   struct cobc_field *linkage_storage;
   struct cobc_field *screen_storage;
-  struct cobc_label_name *input_handler;
-  struct cobc_label_name *output_handler;
-  struct cobc_label_name *i_o_handler;
-  struct cobc_label_name *extend_handler;
+  struct cobc_label *input_handler;
+  struct cobc_label *output_handler;
+  struct cobc_label *i_o_handler;
+  struct cobc_label *extend_handler;
 };
 
 extern void codegen (struct cobc_program_spec *spec);
 
 extern void output_file_handler (struct cobc_file_name *f, int type, cobc_tree st1, cobc_tree st2);
-extern void output_goto (struct cobc_label_name *p);
+extern void output_goto (struct cobc_label *p);
 extern void output_goto_depending (struct cobc_list *labels, cobc_tree index);
 extern void output_move (cobc_tree src, cobc_tree dst);
 extern void output_initialize (cobc_tree x);

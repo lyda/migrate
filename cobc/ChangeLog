@@ -1,3 +1,7 @@
+2002-10-02  Keisuke Nishida  <knishida@netlab.jp>
+
+	* Rename `label_name' to `label'.
+
 2002-10-01  Keisuke Nishida  <knishida@netlab.jp>
 
 	* tree.h (cobc_tag_register, cobc_register): Removed.

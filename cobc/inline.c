@@ -49,7 +49,7 @@ output_file_handler (struct cobc_file_name *f, int type,
  */
 
 void
-output_goto (struct cobc_label_name *p)
+output_goto (struct cobc_label *p)
 {
   output_line ("goto lb_%s;", p->cname);
 }

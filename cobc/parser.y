@@ -67,8 +67,8 @@
 
 #define push_label(x)				\
   do {						\
-    struct cobc_label_name *p = x;		\
-    finalize_label_name (p);			\
+    struct cobc_label *p = x;		\
+    finalize_label (p);			\
     push_tree (p);				\
   } while (0)
 
@@ -114,7 +114,7 @@ struct cobc_program_spec program_spec;
 
 static struct cobc_field *current_field;
 static struct cobc_file_name *current_file_name;
-static struct cobc_label_name *current_section, *current_paragraph;
+static struct cobc_label *current_section, *current_paragraph;
 
 static int call_mode;
 static int inspect_mode;
@@ -135,7 +135,7 @@ static void resolve_predefined_names (void);
 static struct cobc_field *init_field (int level, struct cobc_field *field);
 static void validate_field_tree (struct cobc_field *p);
 static void finalize_file_name (struct cobc_file_name *f, struct cobc_field *records);
-static void validate_label_name (struct cobc_label_name *p);
+static void validate_label (struct cobc_label *p);
 
 static void field_set_used (struct cobc_field *p);
 static int builtin_switch_id (cobc_tree x);
@@ -218,7 +218,7 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %type <list> data_name_list condition_name_list opt_value_list
 %type <list> evaluate_subject_list evaluate_case evaluate_case_list
 %type <list> evaluate_when_list evaluate_object_list
-%type <list> label_name_list subscript_list number_list sort_key_list
+%type <list> label_list subscript_list number_list sort_key_list
 %type <list> string_list string_delimited_list string_name_list
 %type <list> unstring_delimited unstring_delimited_list unstring_into
 %type <list> unstring_delimited_item unstring_into_item
@@ -246,7 +246,7 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %type <tree> opt_on_size_error_sentence opt_not_on_size_error_sentence
 %type <tree> numeric_name numeric_edited_name group_name table_name class_name
 %type <tree> program_name condition_name qualified_cond_name data_name
-%type <tree> file_name record_name label_name mnemonic_name section_name name
+%type <tree> file_name record_name label mnemonic_name section_name name
 %type <tree> qualified_name predefined_name
 %type <tree> integer_value text_value value number
 %type <tree> literal_or_predefined literal basic_literal figurative_constant
@@ -291,7 +291,7 @@ program:
   {
     struct cobc_list *l;
     for (l = list_reverse (label_check_list); l; l = l->next)
-      validate_label_name (l->item);
+      validate_label (l->item);
     program_spec.file_name_list = list_reverse (program_spec.file_name_list);
     program_spec.exec_list = list_reverse (program_spec.exec_list);
     if (error_count == 0)
@@ -1395,8 +1395,8 @@ procedure_division:
   }
   procedure_declaratives
   {
-    struct cobc_label_name *label =
-      COBC_LABEL_NAME (make_label_name (make_word ("$MAIN$")));
+    struct cobc_label *label =
+      COBC_LABEL (make_label (make_word ("$MAIN$")));
     label->need_begin = 1;
     push_label (label);
   }
@@ -1459,7 +1459,7 @@ section_header:
       push_exit_section (current_section);
 
     /* Begin a new section */
-    current_section = COBC_LABEL_NAME ($1);
+    current_section = COBC_LABEL ($1);
     current_paragraph = NULL;
     push_label (current_section);
   }
@@ -1474,7 +1474,7 @@ paragraph_header:
       push_exit_section (current_paragraph);
 
     /* Begin a new paragraph */
-    current_paragraph = COBC_LABEL_NAME ($1);
+    current_paragraph = COBC_LABEL ($1);
     current_paragraph->section = current_section;
     if (current_section)
       current_section->children =
@@ -1707,7 +1707,7 @@ alter_statement:
 ;
 alter_options:
 | alter_options
-  label_name TO _proceed_to label_name
+  label TO _proceed_to label
 ;
 _proceed_to: | PROCEED TO ;
 
@@ -2044,7 +2044,7 @@ exit_statement:
  */
 
 goto_statement:
-  GO _to label_name_list
+  GO _to label_list
   {
     if ($3 == NULL)
       OBSOLETE ("GO TO without label");
@@ -2053,16 +2053,16 @@ goto_statement:
     else
       {
 	cobc_location = @1;
-	COBC_LABEL_NAME ($3->item)->need_begin = 1;
+	COBC_LABEL ($3->item)->need_begin = 1;
 	push_inline_1 (output_goto, $3->item);
       }
   }
-| GO _to label_name_list DEPENDING _on numeric_name
+| GO _to label_list DEPENDING _on numeric_name
   {
     struct cobc_list *l;
     cobc_location = @1;
     for (l = $3; l; l = l->next)
-      COBC_LABEL_NAME (l->item)->need_begin = 1;
+      COBC_LABEL (l->item)->need_begin = 1;
     push_inline_2 (output_goto_depending, $3, $6);
   }
 ;
@@ -2368,16 +2368,16 @@ perform_statement:
 ;
 
 perform_procedure:
-  label_name
+  label
   {
-    COBC_LABEL_NAME ($1)->need_begin = 1;
-    COBC_LABEL_NAME ($1)->need_return = 1;
+    COBC_LABEL ($1)->need_begin = 1;
+    COBC_LABEL ($1)->need_return = 1;
     $$ = make_pair ($1, $1);
   }
-| label_name THRU label_name
+| label THRU label
   {
-    COBC_LABEL_NAME ($1)->need_begin = 1;
-    COBC_LABEL_NAME ($3)->need_return = 1;
+    COBC_LABEL ($1)->need_begin = 1;
+    COBC_LABEL ($3)->need_return = 1;
     $$ = make_pair ($1, $3);
   }
 ;
@@ -3653,11 +3653,11 @@ section_name:
   {
     if ($1->item
 	&& (/* used as a non-label name */
-	    !COBC_LABEL_NAME_P ($1->item)
+	    !COBC_LABEL_P ($1->item)
 	    /* used as a section name */
-	    || COBC_LABEL_NAME ($1->item)->section == NULL
+	    || COBC_LABEL ($1->item)->section == NULL
 	    /* used as the same paragraph name in the same section */
-	    || COBC_LABEL_NAME ($1->item)->section == current_section))
+	    || COBC_LABEL ($1->item)->section == current_section))
       {
 	redefinition_error (&@1, $1->item);
 	$$ = $1->item;
@@ -3665,7 +3665,7 @@ section_name:
     else
       {
 	cobc_location = @1;
-	$$ = make_label_name ($1);
+	$$ = make_label ($1);
       }
   }
 ;
@@ -3758,22 +3758,22 @@ subscript:
  * Label name
  */
 
-label_name_list:
-  label_name			{ $$ = list ($1); }
-| label_name_list label_name	{ $$ = list_add ($1, $2); }
+label_list:
+  label			{ $$ = list ($1); }
+| label_list label	{ $$ = list_add ($1, $2); }
 ;
-label_name:
+label:
   label_word
   {
     cobc_location = @1;
-    $$ = make_label_name_nodef ($1, 0);
-    COBC_LABEL_NAME ($$)->section = current_section;
+    $$ = make_label_nodef ($1, 0);
+    COBC_LABEL ($$)->section = current_section;
     label_check_list = cons ($$, label_check_list);
   }
 | label_word in_of label_word
   {
     cobc_location = @1;
-    $$ = make_label_name_nodef ($1, $3);
+    $$ = make_label_nodef ($1, $3);
     label_check_list = cons ($$, label_check_list);
   }
 ;
@@ -4285,39 +4285,39 @@ finalize_file_name (struct cobc_file_name *f, struct cobc_field *records)
     }
 }
 
-static struct cobc_label_name *
-lookup_label (struct cobc_word *w, struct cobc_label_name *section)
+static struct cobc_label *
+lookup_label (struct cobc_word *w, struct cobc_label *section)
 {
   for (; w; w = w->link)
     if (w->item
-	&& COBC_LABEL_NAME_P (w->item)
-	&& section == COBC_LABEL_NAME (w->item)->section)
-      return COBC_LABEL_NAME (w->item);
+	&& COBC_LABEL_P (w->item)
+	&& section == COBC_LABEL (w->item)->section)
+      return COBC_LABEL (w->item);
 
   yyerror (_("`%s' undefined in section `%s'"), w->name, section->word->name);
   return NULL;
 }
 
 static void
-validate_label_name (struct cobc_label_name *p)
+validate_label (struct cobc_label *p)
 {
-  struct cobc_label_name *label = NULL;
+  struct cobc_label *label = NULL;
 
   if (p->in_word)
     {
       /* LABEL IN LABEL */
       if (p->in_word->count == 0)
 	yyerror (_("no such section `%s'"), p->in_word->name);
-      else if (!COBC_LABEL_NAME_P (p->in_word->item))
+      else if (!COBC_LABEL_P (p->in_word->item))
 	yyerror (_("invalid section name `%s'"), p->in_word->name);
       else
-	label = lookup_label (p->word, COBC_LABEL_NAME (p->in_word->item));
+	label = lookup_label (p->word, COBC_LABEL (p->in_word->item));
     }
   else
     {
       /* LABEL */
-      if (p->word->count == 1 && COBC_LABEL_NAME_P (p->word->item))
-	label = COBC_LABEL_NAME (p->word->item);
+      if (p->word->count == 1 && COBC_LABEL_P (p->word->item))
+	label = COBC_LABEL (p->word->item);
       else if (p->word->count > 0 && p->section)
 	label = lookup_label (p->word, p->section);
       else

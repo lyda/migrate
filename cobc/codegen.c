@@ -1154,7 +1154,7 @@ output_class (struct cobc_class *p)
  */
 
 static void
-output_perform_call (struct cobc_label_name *lb, struct cobc_label_name *le)
+output_perform_call (struct cobc_label *lb, struct cobc_label *le)
 {
   output_line ("cob_perform (%d, lb_%s, le_%s);",
 	       global_label++, lb->cname, le->cname);
@@ -1233,8 +1233,8 @@ output_perform (struct cobc_perform *p)
   switch (p->type)
     {
     case COBC_PERFORM_EXIT:
-      if (COBC_LABEL_NAME (p->data)->need_return)
-	output_line ("cob_exit (le_%s);", COBC_LABEL_NAME (p->data)->cname);
+      if (COBC_LABEL (p->data)->need_return)
+	output_line ("cob_exit (le_%s);", COBC_LABEL (p->data)->cname);
       break;
     case COBC_PERFORM_ONCE:
       output_perform_once (p);
@@ -1564,9 +1564,9 @@ output_tree (cobc_tree x)
 	output ("&%s_desc", p->cname);
 	break;
       }
-    case cobc_tag_label_name:
+    case cobc_tag_label:
       {
-	struct cobc_label_name *p = COBC_LABEL_NAME (x);
+	struct cobc_label *p = COBC_LABEL (x);
 	output_newline ();
 	if (p->need_begin)
 	  output_line ("lb_%s:", p->cname);
@@ -1743,9 +1743,9 @@ codegen_1 (struct cobc_program_spec *spec)
   output ("  le_default_error_handler,\n");
   output ("  le_standard_error_handler,\n");
   for (l = spec->exec_list; l; l = l->next)
-    if (COBC_LABEL_NAME_P (l->item)
-	&& COBC_LABEL_NAME (l->item)->need_return)
-      output ("  le_%s,\n", COBC_LABEL_NAME (l->item)->cname);
+    if (COBC_LABEL_P (l->item)
+	&& COBC_LABEL (l->item)->need_return)
+      output ("  le_%s,\n", COBC_LABEL (l->item)->cname);
   output ("};\n\n");
 
   /* classes */
