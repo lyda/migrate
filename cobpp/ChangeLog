@@ -1,3 +1,10 @@
+2002-08-12  Keisuke Nishida  <knishida@netlab.jp>
+
+	* cobpp.h (COB_FORMAT_SEMI_FIXED): New macro.
+	* cobpp.c (long_options): New option `semi-fixed'.
+	* scanner.l (yyinput): Support semi-fixed.
+	Skip comments and debugging lines here.
+
 2002-06-07  Keisuke Nishida  <knishida@netlab.jp>
 
 	* parser.y (copy_statement, copy_in, copy_replacing):

@@ -28,6 +28,7 @@
 
 #define COB_FORMAT_FREE		0
 #define COB_FORMAT_FIXED	1
+#define COB_FORMAT_SEMI_FIXED	2
 
 struct cob_path {
   const char *dir;

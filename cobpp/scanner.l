@@ -65,11 +65,7 @@ static void process_eol (void);
 
 %%
 
-<*>^[*/].*		{ /* comment */ }
-
 <*>"*>".*		{ /* comment */ }
-
-<*>^"D ".*		{ if (cob_debug_flag) yyless(2); }
 
 <*>\n			{ process_eol (); }
 
@@ -319,7 +315,8 @@ yyinput (char *buf, int max_size)
     }
 
   /* If fixed format... */
-  if (cob_file_format == COB_FORMAT_FIXED)
+  if (cob_file_format == COB_FORMAT_FIXED
+      || cob_file_format == COB_FORMAT_SEMI_FIXED)
     {
       /* Tab expansion */
       int i, column = 0;
@@ -342,7 +339,7 @@ yyinput (char *buf, int max_size)
 
       /* Remove the letters after column 72  */
       len = strlen (buf);
-      if (len > 73)
+      if (cob_file_format != COB_FORMAT_SEMI_FIXED && len > 73)
 	strcpy (buf + 72, "\n");
 
       /* Remove the first 6 letters */
@@ -350,6 +347,21 @@ yyinput (char *buf, int max_size)
 	strcpy (buf, buf + 6);
       else
 	strcpy (buf, "\n");
+
+      switch (buf[0])
+	{
+	case '*':
+	case '/':
+	  /* Remove comments */
+	  strcpy (buf, " \n");
+	  break;
+	case 'D':
+	  /* Debug line */
+	  if (cob_debug_flag)
+	    buf[0] = ' ';
+	  break;
+	}
+
       len = strlen (buf);
     }
 

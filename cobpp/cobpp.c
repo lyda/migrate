@@ -67,6 +67,7 @@ static struct option long_options[] = {
   {"debug", no_argument, 0, 'D'},
   {"free", no_argument, &cob_file_format, COB_FORMAT_FREE},
   {"fixed", no_argument, &cob_file_format, COB_FORMAT_FIXED},
+  {"semi-fixed", no_argument, &cob_file_format, COB_FORMAT_SEMI_FIXED},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
   {0, 0, 0, 0}
