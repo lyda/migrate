@@ -2562,127 +2562,6 @@ create_mathvar_info (struct math_var *mv, cob_tree sy, unsigned int opt)
     }
 }
 
-struct math_ose *
-math_on_size_error0 (void)
-{
-  struct math_ose *v;
-  v = malloc (sizeof (struct math_ose));
-  v->ose = 0;			/* type of option */
-  v->lbl1 = 0;			/* call label name 1 - on_size */
-  v->lbl2 = 0;			/* call label name 2 - not_on_size */
-  v->lbl4 = loc_label++;	/* determine bypass label name */
-  gen_jmplabel (v->lbl4);	/* generate bypass jump */
-  return v;
-}
-
-struct math_ose *
-math_on_size_error1 (struct math_ose *v)
-{
-  v->ose = loc_label++;
-  fprintf (o_src, ".L%d:\n", (int) v->ose);
-  return v;
-}
-
-void
-math_on_size_error2 (void)
-{
-  fprintf (o_src, "\tret\n");
-}
-
-void
-math_on_size_error3 (struct math_ose *v)
-{
-  unsigned long lbl1, lbl2;
-  lbl1 = loc_label++;
-
-  switch (v->ose)
-    {
-    case 1:
-      fprintf (o_src, "\tcmpl\t$0, cob_size_error_flag\n");
-      fprintf (o_src, "\tje\t.L%ld\n", lbl1);
-      fprintf (o_src, "\tleal\t.L%ld, %%eax\n", lbl1);
-      fprintf (o_src, "\tpushl\t%%eax\n");
-      gen_jmplabel (v->lbl1);
-      fprintf (o_src, "\t.align 16\n");
-      fprintf (o_src, ".L%ld:\n", lbl1);
-      break;
-
-    case 2:
-      fprintf (o_src, "\tcmpl\t$0, cob_size_error_flag\n");
-      fprintf (o_src, "\tjne\t.L%ld\n", lbl1);
-      fprintf (o_src, "\tleal\t.L%ld, %%eax\n", lbl1);
-      fprintf (o_src, "\tpushl\t%%eax\n");
-      gen_jmplabel (v->lbl2);
-      fprintf (o_src, "\t.align 16\n");
-      fprintf (o_src, ".L%ld:\n", lbl1);
-      break;
-
-    default:
-      lbl2 = loc_label++;
-      fprintf (o_src, "\tcmpl\t$0, cob_size_error_flag\n");
-      fprintf (o_src, "\tje\t.L%ld\n", lbl1);
-      fprintf (o_src, "\tleal\t.L%ld, %%eax\n", lbl2);
-      fprintf (o_src, "\tpushl\t%%eax\n");
-      gen_jmplabel (v->lbl1);
-      fprintf (o_src, "\t.align 16\n");
-      fprintf (o_src, ".L%ld:\n", lbl1);
-      fprintf (o_src, "\tleal\t.L%ld, %%eax\n", lbl2);
-      fprintf (o_src, "\tpushl\t%%eax\n");
-      gen_jmplabel (v->lbl2);
-      fprintf (o_src, "\t.align 16\n");
-      fprintf (o_src, ".L%ld:\n", lbl2);
-      break;
-    }
-}
-
-struct math_ose *
-math_on_size_error4 (struct math_ose *v, unsigned long ty)
-{
-
-  /* ose=ty;     type of option */
-  /* lbl1        call label name 1 - on_size */
-  /* lbl2        call label name 2 - not_on_size */
-
-  switch (ty)
-    {
-    case 1:
-      v->lbl1 = v->ose;
-      v->ose = ty;
-      break;
-
-    case 2:
-      v->lbl2 = v->ose;
-      v->ose = ty;
-      break;
-
-    case 3:
-      v->lbl2 = v->ose;
-      v->ose = ty;
-      break;
-
-    default:
-      break;
-    }
-
-  return v;
-}
-
-static void
-gen_math_init (struct math_ose *ose)
-{
-  if (ose)
-    gen_dstlabel (ose->lbl4);
-
-  fprintf (o_src, "\tmovl\t$0, cob_size_error_flag\n");
-}
-
-static void
-gen_math_finish (struct math_ose *ose)
-{
-  if (ose)
-    math_on_size_error3 (ose);
-}
-
 /******** generic structure allocation and code genertion ***********/
 struct ginfo *
 ginfo_container0 (void)
@@ -2860,21 +2739,43 @@ gen_test_invalid_keys (struct invalid_keys *p)
 
 
 /*
+ * ON SIZE ERROR
+ */
+
+static void
+gen_math_init (void)
+{
+  fprintf (o_src, "\tmovl\t$0, cob_size_error_flag\n");
+}
+
+int
+gen_on_size_error (int flag)
+{
+  int lbl = loc_label++;
+
+  fprintf (o_src, "\tcmpl\t$0, cob_size_error_flag\n");
+  if (flag)
+    fprintf (o_src, "\tjne\t.L%d\n", lbl);
+  else
+    fprintf (o_src, "\tje\t.L%d\n", lbl);
+
+  return lbl;
+}
+
+
+/*
  * COMPUTE statement
  */
 
 void
-gen_compute (struct math_var *vl1, cob_tree sy1, struct math_ose *ose)
+gen_compute (struct math_var *vl1, cob_tree sy1)
 {
-  gen_math_init (ose);
-
+  gen_math_init ();
   for (; vl1; vl1 = vl1->next)
     {
       push_expr (sy1);
       assign_expr (vl1->sname, vl1->rounded);
     }
-
-  gen_math_finish (ose);
 }
 
 
@@ -2892,9 +2793,9 @@ gen_add (cob_tree n1, cob_tree n2, int rnd)
 }
 
 void
-gen_add_to (cob_tree_list nums, struct math_var *list, struct math_ose *ose)
+gen_add_to (cob_tree_list nums, struct math_var *list)
 {
-  gen_math_init (ose);
+  gen_math_init ();
   for (; list; list = list->next)
     {
       cob_tree_list l;
@@ -2906,14 +2807,12 @@ gen_add_to (cob_tree_list nums, struct math_var *list, struct math_ose *ose)
 	}
       assign_expr (list->sname, list->rounded);
     }
-  gen_math_finish (ose);
 }
 
 void
-gen_add_giving (cob_tree_list nums, struct math_var *list,
-		struct math_ose *ose)
+gen_add_giving (cob_tree_list nums, struct math_var *list)
 {
-  gen_math_init (ose);
+  gen_math_init ();
   for (; list; list = list->next)
     {
       cob_tree_list l = nums;
@@ -2925,7 +2824,6 @@ gen_add_giving (cob_tree_list nums, struct math_var *list,
 	}
       assign_expr (list->sname, list->rounded);
     }
-  gen_math_finish (ose);
 }
 
 
@@ -2934,10 +2832,9 @@ gen_add_giving (cob_tree_list nums, struct math_var *list,
  */
 
 void
-gen_subtract_from (cob_tree_list subtrahend_list,
-		   struct math_var *list, struct math_ose *ose)
+gen_subtract_from (cob_tree_list subtrahend_list, struct math_var *list)
 {
-  gen_math_init (ose);
+  gen_math_init ();
   for (; list; list = list->next)
     {
       cob_tree_list l;
@@ -2949,14 +2846,13 @@ gen_subtract_from (cob_tree_list subtrahend_list,
 	}
       assign_expr (list->sname, list->rounded);
     }
-  gen_math_finish (ose);
 }
 
 void
 gen_subtract_giving (cob_tree_list subtrahend_list, cob_tree minuend,
-		     struct math_var *list, struct math_ose *ose)
+		     struct math_var *list)
 {
-  gen_math_init (ose);
+  gen_math_init ();
   for (; list; list = list->next)
     {
       cob_tree_list l;
@@ -2968,7 +2864,6 @@ gen_subtract_giving (cob_tree_list subtrahend_list, cob_tree minuend,
 	}
       assign_expr (list->sname, list->rounded);
     }
-  gen_math_finish (ose);
 }
 
 
@@ -2977,10 +2872,9 @@ gen_subtract_giving (cob_tree_list subtrahend_list, cob_tree minuend,
  */
 
 void
-gen_multiply_by (cob_tree multiplicand, struct math_var *list,
-		 struct math_ose *ose)
+gen_multiply_by (cob_tree multiplicand, struct math_var *list)
 {
-  gen_math_init (ose);
+  gen_math_init ();
   for (; list; list = list->next)
     {
       push_expr (multiplicand);
@@ -2988,14 +2882,13 @@ gen_multiply_by (cob_tree multiplicand, struct math_var *list,
       asm_call ("cob_mul");
       assign_expr (list->sname, list->rounded);
     }
-  gen_math_finish (ose);
 }
 
 void
 gen_multiply_giving (cob_tree multiplicand, cob_tree multiplier,
-		     struct math_var *list, struct math_ose *ose)
+		     struct math_var *list)
 {
-  gen_math_init (ose);
+  gen_math_init ();
   for (; list; list = list->next)
     {
       push_expr (multiplicand);
@@ -3003,7 +2896,6 @@ gen_multiply_giving (cob_tree multiplicand, cob_tree multiplier,
       asm_call ("cob_mul");
       assign_expr (list->sname, list->rounded);
     }
-  gen_math_finish (ose);
 }
 
 
@@ -3012,9 +2904,9 @@ gen_multiply_giving (cob_tree multiplicand, cob_tree multiplier,
  */
 
 void
-gen_divide_into (cob_tree divisor, struct math_var *list, struct math_ose *ose)
+gen_divide_into (cob_tree divisor, struct math_var *list)
 {
-  gen_math_init (ose);
+  gen_math_init ();
   for (; list; list = list->next)
     {
       push_expr (list->sname);
@@ -3022,14 +2914,12 @@ gen_divide_into (cob_tree divisor, struct math_var *list, struct math_ose *ose)
       asm_call ("cob_div");
       assign_expr (list->sname, list->rounded);
     }
-  gen_math_finish (ose);
 }
 
 void
-gen_divide_giving (cob_tree divisor, cob_tree dividend,
-		   struct math_var *list, struct math_ose *ose)
+gen_divide_giving (cob_tree divisor, cob_tree dividend, struct math_var *list)
 {
-  gen_math_init (ose);
+  gen_math_init ();
   for (; list; list = list->next)
     {
       push_expr (dividend);
@@ -3037,15 +2927,13 @@ gen_divide_giving (cob_tree divisor, cob_tree dividend,
       asm_call ("cob_div");
       assign_expr (list->sname, list->rounded);
     }
-  gen_math_finish (ose);
 }
 
 void
 gen_divide_giving_remainder (cob_tree divisor, cob_tree dividend,
-			     cob_tree quotient, cob_tree remainder,
-			     int rnd, struct math_ose *ose)
+			     cob_tree quotient, cob_tree remainder, int rnd)
 {
-  gen_math_init (ose);
+  gen_math_init ();
 
   push_expr (dividend);
   push_expr (divisor);
@@ -3058,8 +2946,6 @@ gen_divide_giving_remainder (cob_tree divisor, cob_tree dividend,
   asm_call ("cob_mul");
   asm_call ("cob_sub");
   assign_expr (remainder, rnd);
-
-  gen_math_finish (ose);
 }
 
 

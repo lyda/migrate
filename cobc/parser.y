@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 680
+%expect 666
 
 %{
 #define yydebug		cob_trace_parser
@@ -42,8 +42,6 @@
 static unsigned long lbend, lbstart;
 static unsigned int perform_after_sw;
 
-/* struct math_var *vl1, *vl2; */
-static struct math_ose *tmose=NULL;
 static struct ginfo    *gic=NULL;
 
 static int warning_count = 0;
@@ -72,7 +70,6 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
   struct sortfile_node *snval;
   struct selsubject *ssbjval;
   struct math_var *mval;      /* math variables container list */
-  struct math_ose *mose;      /* math ON SIZE ERROR variables container */
   struct ginfo    *gic;       /* generic container */
   struct invalid_keys *iks; /* [NOT] INVALID KEY */
   struct invalid_key_element *ike; /* [NOT] INVALID KEY */
@@ -146,7 +143,6 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <ival> sentence_or_nothing,when_case_list,opt_read_next,usage
 %type <ival> procedure_using,sort_direction,write_options
 %type <list> label_list,subscript_list,number_list
-%type <mose> opt_on_size_error,on_size_error,error_sentence
 %type <mval> var_list_name
 %type <pfval> perform_after
 %type <pfvals> opt_perform_after
@@ -1169,18 +1165,18 @@ accept_options:
  */
 
 add_statement:
-  ADD add_body end_add
+  ADD add_body opt_on_size_error end_add
 ;
 add_body:
-  number_list TO var_list_name opt_on_size_error
+  number_list TO var_list_name 
   {
-    gen_add_to ($1, $3, $4);
+    gen_add_to ($1, $3);
   }
-| number_list opt_add_to GIVING var_list_name opt_on_size_error
+| number_list opt_add_to GIVING var_list_name
   {
-    gen_add_giving ($2 ? list_append ($1, $2) : $1, $4, $5);
+    gen_add_giving ($2 ? list_append ($1, $2) : $1, $4);
   }
-| CORRESPONDING gname opt_to name flag_rounded opt_on_size_error
+| CORRESPONDING gname opt_to name flag_rounded
   {
     yyerror ("ADD CORRESPONDING is not implemented yet.");
   }
@@ -1298,10 +1294,10 @@ close_file:
  */
 
 compute_statement:
-  COMPUTE var_list_name '=' expr opt_on_size_error opt_end_compute
-  {
-    gen_compute($2, $4, $5);
-  }
+  COMPUTE compute_body opt_on_size_error opt_end_compute
+;
+compute_body:
+  var_list_name '=' expr	{ gen_compute ($1, $3); }
 ;
 opt_end_compute: | END_COMPUTE ;
 
@@ -1367,28 +1363,28 @@ opt_line_pos:
  */
 
 divide_statement:
-  DIVIDE divide_body opt_end_divide
+  DIVIDE divide_body opt_on_size_error opt_end_divide
 ;
 divide_body:
-  number INTO var_list_name opt_on_size_error
+  number INTO var_list_name
   {
-    gen_divide_into ($1, $3, $4);
+    gen_divide_into ($1, $3);
   }
-| number INTO number GIVING var_list_name opt_on_size_error
+| number INTO number GIVING var_list_name
   {
-    gen_divide_giving ($1, $3, $5, $6);
+    gen_divide_giving ($1, $3, $5);
   } 
-| number BY number GIVING var_list_name opt_on_size_error
+| number BY number GIVING var_list_name
   {
-    gen_divide_giving ($3, $1, $5, $6);
+    gen_divide_giving ($3, $1, $5);
   }
-| number INTO number GIVING name flag_rounded REMAINDER name opt_on_size_error
+| number INTO number GIVING name flag_rounded REMAINDER name
   {
-    gen_divide_giving_remainder ($1, $3, $5, $8, $6, $9);
+    gen_divide_giving_remainder ($1, $3, $5, $8, $6);
   }
-| number BY number GIVING name flag_rounded REMAINDER name opt_on_size_error
+| number BY number GIVING name flag_rounded REMAINDER name
   {
-    gen_divide_giving_remainder ($3, $1, $5, $8, $6, $9);
+    gen_divide_giving_remainder ($3, $1, $5, $8, $6);
   }
 ;
 opt_end_divide: | END_DIVIDE ;
@@ -1657,16 +1653,16 @@ move_vars:
  */
 
 multiply_statement:
-  MULTIPLY multiply_body opt_end_multiply
+  MULTIPLY multiply_body opt_on_size_error opt_end_multiply
 ;
 multiply_body:
-  number BY var_list_name opt_on_size_error
+  number BY var_list_name
   {
-    gen_multiply_by ($1, $3, $4);
+    gen_multiply_by ($1, $3);
   }
-| number BY number GIVING var_list_name opt_on_size_error
+| number BY number GIVING var_list_name
   {
-    gen_multiply_giving ($1, $3, $5, $6);
+    gen_multiply_giving ($1, $3, $5);
   }
 ;
 opt_end_multiply: | END_MULTIPLY ;
@@ -2436,18 +2432,18 @@ opt_end_string: | END_STRING ;
  */
 
 subtract_statement:
-  SUBTRACT subtract_body opt_end_subtract
+  SUBTRACT subtract_body opt_on_size_error opt_end_subtract
 ;
 subtract_body:
-  number_list FROM var_list_name opt_on_size_error
+  number_list FROM var_list_name
   {
-    gen_subtract_from ($1, $3, $4);
+    gen_subtract_from ($1, $3);
   }
-| number_list FROM number GIVING var_list_name opt_on_size_error
+| number_list FROM number GIVING var_list_name
   {
-    gen_subtract_giving ($1, $3, $5, $6);
+    gen_subtract_giving ($1, $3, $5);
   }
-| CORRESPONDING gname FROM name flag_rounded opt_on_size_error
+| CORRESPONDING gname FROM name flag_rounded
   {
     yyerror ("SUBTRACT CORRESPONDING is not implemented yet.");
   }
@@ -2568,46 +2564,19 @@ number:
  */
 
 opt_on_size_error:
-  /* nothing */			{ $$ = NULL; }
-| on_size_error			{ $$ = $1; }
+  opt_on_size_error_sentence
+  opt_not_on_size_error_sentence
 ;
-on_size_error:
-  opt_on SIZE error_sentence
-  {
-    tmose = NULL;
-    $$=math_on_size_error4($3, 1);
-  }
-| NOT opt_on SIZE error_sentence
-  {
-    tmose = NULL;
-    $$=math_on_size_error4($4, 2);
-  }
-| opt_on SIZE error_sentence
-  NOT opt_on SIZE
-  {
-    $3->lbl1=$3->ose;
-  }
+opt_on_size_error_sentence:
+| opt_on SIZE			{ $<ival>$ = gen_on_size_error (0); }
   error_sentence
-  {
-    tmose = NULL;
-    $$ = math_on_size_error4($8, 3);
-  }
+;
+opt_not_on_size_error_sentence:
+| NOT opt_on SIZE		{ $<ival>$ = gen_on_size_error (1); }
+  error_sentence
 ;
 error_sentence:
-  ERROR
-  {
-    if ( tmose == NULL ) {
-      tmose = math_on_size_error0();
-      $$ = math_on_size_error1(tmose);
-    } else {
-      $$ = math_on_size_error1(tmose);
-    }
-  }
-  statement_list
-  {
-    math_on_size_error2();
-    $$=$<mose>2;
-  }
+  ERROR statement_list		{ gen_dstlabel ($<ival>0); }
 ;
 
 

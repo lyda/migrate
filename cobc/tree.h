@@ -307,15 +307,6 @@ struct math_var
   struct math_var *next;
 };
 
-/* information required by the math ON SIZE ERROR statement */
-struct math_ose
-{
-  unsigned long ose;		/* 1=on_size, 2=not_on_size, 3=both */
-  unsigned long lbl1;		/* call label name 1 - on_size */
-  unsigned long lbl2;		/* call label name 2 - not_on_size */
-  unsigned long lbl4;		/* bypass label name  */
-};
-
 /* generic information container used by the [NOT] AT END cluases */
 struct ginfo
 {
