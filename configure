@@ -24960,7 +24960,8 @@ done
 
 
 
-for ac_func in memmove memset regcomp pow setlocale strerror \
+
+for ac_func in memmove memset regcomp pow setlocale fcntl strerror \
 		strcasecmp strchr strrchr strdup strstr strtol
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
@@ -26728,6 +26729,7 @@ echo "  COB_MODULE_EXT       ${COB_MODULE_EXT}"
 echo ""
 echo "  Use gettext for international messages:      ${USE_NLS}"
 echo "  Use Berkeley DB for file I/O:                ${USE_DB}"
+echo "  Use fcntl for file locking:                  ${ac_cv_func_fcntl}"
 echo "  Use ncurses for screen I/O:                  ${USE_NCURSES}"
 echo ""
 

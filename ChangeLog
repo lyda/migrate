@@ -1,3 +1,7 @@
+2004-03-06  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
+
+	* configure.ac: Checks for fcntl.
+
 2003-08-22  Keisuke Nishida  <kxn30@yahoo.co.jp>
 
 	* libcob.conf: Removed.

@@ -1,7 +1,7 @@
 #                                                       -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-# Copyright (C) 2001-2003 Keisuke Nishida
+# Copyright (C) 2001-2004 Keisuke Nishida
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -152,7 +152,7 @@ AC_STRUCT_TM
 # Checks for library functions.
 AC_FUNC_ALLOCA
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([memmove memset regcomp pow setlocale strerror \
+AC_CHECK_FUNCS([memmove memset regcomp pow setlocale fcntl strerror \
 		strcasecmp strchr strrchr strdup strstr strtol])
 
 # OpenCOBOL Configuration
@@ -199,6 +199,7 @@ echo "  COB_MODULE_EXT       ${COB_MODULE_EXT}"
 echo ""
 echo "  Use gettext for international messages:      ${USE_NLS}"
 echo "  Use Berkeley DB for file I/O:                ${USE_DB}"
+echo "  Use fcntl for file locking:                  ${ac_cv_func_fcntl}"
 echo "  Use ncurses for screen I/O:                  ${USE_NCURSES}"
 echo ""
 
