@@ -1040,8 +1040,9 @@ cb_build_move (cb_tree src, cb_tree dst)
 	  && cb_literal_to_int (CB_LITERAL (src)) == 0)
 	src = cb_zero;
 
-      /* no optimization for packed decimal for now */
-      if (cb_field (dst)->usage == CB_USAGE_PACKED)
+      /* no optimization for binary swap and packed decimal for now */
+      if (cb_field (dst)->usage == CB_USAGE_BINARY_SWAP
+	  || cb_field (dst)->usage == CB_USAGE_PACKED)
 	return cb_build_move_call (src, dst);
 
       /* output optimal code */
