@@ -157,7 +157,7 @@ error (const char *str)
  * Command line
  */
 
-static char short_options[] = "h?VvECScmxgOo:DT:I:";
+static char short_options[] = "h?VvECScmgOo:I:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
@@ -211,7 +211,7 @@ print_usage ()
 	  "  -fixed        Use fixed source format\n"
 	  "  -static       Use static link for subprogram calls if possible\n"
 	  "  -dynamic      Use dynamic link for subprogram calls (default)\n"
-	  "  -D, -debug    Enable debugging lines\n"
+	  "  -debug        Enable debugging lines\n"
 	  "  -I <path>     Add copybook include path"));
 #ifdef COB_DEBUG
   puts (_("\n"
