@@ -89,8 +89,6 @@ static int scan_picture (char *text);
   /* line directive */
   char *endp;
   cobc_source_line = strtol (yytext + 2, &endp, 10) - 1;
-  if (cobc_source_file)
-    free (cobc_source_file);
   cobc_source_file = strdup (strchr (endp, '"') + 1);
   strrchr (cobc_source_file, '"')[0] = '\0';
   yylloc.text = cobc_source_file;
