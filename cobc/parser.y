@@ -2547,7 +2547,8 @@ opt_on_size_error_sentence:
   target_sentence   { $$ = gen_passlabel (); }
 ;
 opt_not_on_size_error_sentence:
-| NOT opt_on SIZE ERROR { $<ival>$ = gen_status_branch (COB_STATUS_OVERFLOW, 1); }
+| NOT opt_on SIZE ERROR
+  { $<ival>$ = gen_status_branch (COB_STATUS_OVERFLOW, 1); }
   target_sentence
 ;
 
@@ -2562,11 +2563,12 @@ opt_on_overflow:
 ;
 opt_on_overflow_sentence:
   /* nothing */   { $$ = 0; }
-| ON OVERFLOW	  { $<ival>$ = gen_status_branch (COB_STATUS_OVERFLOW, 0); }
+| opt_on OVERFLOW { $<ival>$ = gen_status_branch (COB_STATUS_OVERFLOW, 0); }
   target_sentence { $$ = gen_passlabel (); }
 ;
 opt_not_on_overflow_sentence:
-| NOT ON OVERFLOW { $<ival>$ = gen_status_branch (COB_STATUS_OVERFLOW, 1); }
+| NOT opt_on OVERFLOW
+  { $<ival>$ = gen_status_branch (COB_STATUS_OVERFLOW, 1); }
   target_sentence
 ;
 
