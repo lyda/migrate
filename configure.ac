@@ -22,19 +22,19 @@ save_libs="$LIBS"
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_CXX
 AM_PROG_LEX
 AC_PROG_YACC
 AC_PROG_LN_S
 AC_PROG_INSTALL
 AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
+AC_PROG_RANLIB
 AC_PROG_MAKE_SET
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([alloca.h errno.h fcntl.h limits.h malloc.h stdlib.h \
-		  string.h sys/param.h sys/time.h unistd.h])
+AC_CHECK_HEADERS([fcntl.h malloc.h libintl.h])
 
 # Checks for db.
 LIBDB="-ldb"
@@ -59,17 +59,18 @@ AC_CHECK_LIB([readline], [readline], LIBRL="-lreadline")
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_TYPE_OFF_T
+AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_STRUCT_TM
 
 # Checks for library functions.
-AC_FUNC_FORK
+AC_FUNC_STAT
+AC_FUNC_ALLOCA
 AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
-AC_FUNC_STAT
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([atexit memmove memset strcasecmp strchr strdup \
-		strerror strrchr strstr strtol])
+AC_CHECK_FUNCS([memmove memset regcomp \
+		strcasecmp strchr strrchr strdup strstr strtol])
 
 # Autoheader templates
 AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
