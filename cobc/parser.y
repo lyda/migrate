@@ -922,14 +922,7 @@ global_clause:
 /* PICTURE */
 
 picture_clause:
-  PICTURE_TOK
-  {
-    int level = current_field->level;
-    if (level == 88)
-      yyerror ("level %02d field may not have PICTURE clause", level);
-    else
-      current_field->pic = $1;
-  }
+  PICTURE_TOK			{ current_field->pic = $1; }
 ;
 
 
@@ -3086,6 +3079,8 @@ static void
 init_field (int level, cobc_tree field)
 {
   struct cobc_field *last_field = current_field;
+  if (last_field && last_field->level == 88)
+    last_field = last_field->parent;
 
   current_field = COBC_FIELD (field);
   current_field->level = level;
@@ -3108,8 +3103,8 @@ init_field (int level, cobc_tree field)
       if (level != 88)
 	last_field->children = current_field;
       current_field->parent = last_field;
-      current_field->f.sign_separate = last_field->f.sign_separate;
-      current_field->f.sign_leading = last_field->f.sign_leading;
+      current_field->f.sign_separate = current_field->parent->f.sign_separate;
+      current_field->f.sign_leading = current_field->parent->f.sign_leading;
     }
   else if (level == last_field->level)
     {
@@ -3158,6 +3153,8 @@ validate_field (struct cobc_field *p)
     {
       /* conditional variable */
       COBC_TREE_CLASS (p) = COB_BOOLEAN;
+      if (p->pic)
+	yyerror ("level 88 field may not have PICTURE clause");
     }
   else
     {
