@@ -1,3 +1,7 @@
+2002-06-02  Keisuke Nishida  <knishida@netlab.jp>
+
+	* testsuite: New directory.
+
 2002-05-31  Keisuke Nishida  <knishida@netlab.jp>
 
 	* configure.ac (maintainer-mode): Do not define.

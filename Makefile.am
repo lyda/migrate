@@ -7,7 +7,7 @@ include_HEADERS = libcob.h
 
 pkgdata_DATA = libcob.conf
 
-SUBDIRS = lib libcob cobpp cobc po texi
+SUBDIRS = lib libcob cobpp cobc po texi testsuite
 EXTRA_DIST = HACKING config.rpath cob.m4 libcob.conf redhat debian
 
 BUILT_SOURCES = defaults.h
