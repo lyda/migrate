@@ -170,6 +170,10 @@ sequential_rewrite (struct cob_file_desc *f, struct cob_field rec)
   if (COB_FIELD_SIZE (rec) != f->record_size)
     return 44;
 
+  if (f->record_depending.desc)
+    if (COB_FIELD_SIZE (rec) != cob_to_int (f->record_depending))
+      return 44;
+
   lseek (f->file.fd, - f->record_size, SEEK_CUR);
   write (f->file.fd, f->record_data, f->record_size);
   return 00;
@@ -408,16 +412,18 @@ relative_read_next (struct cob_file_desc *f)
 static int
 relative_write (struct cob_file_desc *f, struct cob_field rec)
 {
+  size_t size;
+
   if (f->access_mode != COB_ACCESS_SEQUENTIAL)
     {
       int index = cob_to_int (f->relative_key) - 1;
       lseek (f->file.fd, RELATIVE_SIZE (f) * index, SEEK_SET);
     }
 
-  if (read (f->file.fd, &f->record_size, sizeof (f->record_size)) > 0)
+  if (read (f->file.fd, &size, sizeof (size)) > 0)
     {
-      lseek (f->file.fd, - sizeof (f->record_size), SEEK_CUR);
-      if (f->record_size > 0)
+      lseek (f->file.fd, - sizeof (size), SEEK_CUR);
+      if (size > 0)
 	return 22;
     }
 
