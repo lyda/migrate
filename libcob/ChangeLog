@@ -1,5 +1,10 @@
 2002-07-30  Keisuke Nishida  <knishida@netlab.jp>
 
+	* fileio.c (indexed_write_internal): New function.
+	(indexed_write, indexed_rewrite): Updated.
+
+2002-07-30  Keisuke Nishida  <knishida@netlab.jp>
+
 	* fileio.c (lineseq_read): Check for EOF.
 
 2002-07-30  Keisuke Nishida  <knishida@netlab.jp>

@@ -679,22 +679,12 @@ indexed_read_next (struct cob_file *f)
 }
 
 static int
-indexed_write (struct cob_file *f)
+indexed_write_internal (struct cob_file *f, DBT key)
 {
   int i;
-  DBT key, data;
+  DBT data;
 
-  memset (&key, 0, sizeof (DBT));
   memset (&data, 0, sizeof (DBT));
-
-  /* check record key */
-  DBT_SET (key, f->keys[0].field);
-  if (!f->last_key)
-    f->last_key = malloc (key.size);
-  else if (f->access_mode == COB_ACCESS_SEQUENTIAL
-	   && memcmp (f->last_key, key.data, key.size) > 0)
-    return COB_FILE_KEY_INVALID;
-  memcpy (f->last_key, key.data, key.size);
 
   /* write data */
   data.data = f->record_data;
@@ -713,6 +703,25 @@ indexed_write (struct cob_file *f)
     }
 
   return COB_FILE_SUCCEED;
+}
+
+static int
+indexed_write (struct cob_file *f)
+{
+  DBT key;
+
+  memset (&key, 0, sizeof (DBT));
+
+  /* check record key */
+  DBT_SET (key, f->keys[0].field);
+  if (!f->last_key)
+    f->last_key = malloc (key.size);
+  else if (f->access_mode == COB_ACCESS_SEQUENTIAL
+	   && memcmp (f->last_key, key.data, key.size) > 0)
+    return COB_FILE_KEY_INVALID;
+  memcpy (f->last_key, key.data, key.size);
+
+  return indexed_write_internal (f, key);
 }
 
 static int
@@ -784,11 +793,10 @@ indexed_delete (struct cob_file *f)
 static int
 indexed_rewrite (struct cob_file *f, struct cob_field rec)
 {
-  int i, ret;
-  DBT key, data;
+  int ret;
+  DBT key;
 
   memset (&key, 0, sizeof (DBT));
-  memset (&data, 0, sizeof (DBT));
 
   /* delete the current record */
   if ((ret = indexed_delete (f)) != COB_FILE_SUCCEED)
@@ -796,22 +804,7 @@ indexed_rewrite (struct cob_file *f, struct cob_field rec)
 
   /* write data */
   DBT_SET (key, f->keys[0].field);
-  data.data = f->record_data;
-  data.size = f->record_size;
-  if (DB_PUT (f->keys[0].db, &key, &data, DB_NOOVERWRITE) != 0)
-    return COB_FILE_KEY_EXISTS;
-
-  /* write secondary keys */
-  data = key;
-  for (i = 1; i < f->nkeys; i++)
-    {
-      DBT_SET (key, f->keys[i].field);
-      if (DB_PUT (f->keys[i].db, &key, &data,
-		  f->keys[i].duplicates ? 0 : DB_NOOVERWRITE) != 0)
-	return COB_FILE_KEY_EXISTS;
-    }
-
-  return COB_FILE_SUCCEED;
+  return indexed_write_internal (f, key);
 }
 
 static struct cob_fileio_funcs indexed_funcs = {
