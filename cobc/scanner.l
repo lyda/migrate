@@ -248,7 +248,7 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
     yyerror("unknown operator: `%s'", yytext);
   }
 
-  "**"		{ return POW_OP; }
+  "**"		{ return '^'; }
   {any}		{ return yytext[0]; }
 }
 

@@ -478,9 +478,8 @@ extern struct sym *lookup_for_redefines (struct sym *sy);
 extern void clear_symtab (void);
 extern void clear_offsets (void);
 extern char sign_to_char (int digit);
-extern void invert_literal_sign (struct lit *sy);
+extern struct lit *invert_literal_sign (struct lit *sy);
 extern void set_sign_flags (int flags);
-extern void check_decimal_point (struct lit *lit);
 extern char *sch_convert (char *s);
 extern int is_variable (struct sym *sy);
 extern int is_subscripted (struct sym *sy);
@@ -801,7 +800,6 @@ extern int main (int argc, char *argv[]);
 
 /* htcobol.c */
 extern void opt_is (int i);
-extern void hterror (int erno, int severity, char *s, ...);
 extern void yyerror (char *s, ...);
 extern int yyparse (void);
 

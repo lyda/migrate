@@ -1,9 +1,5 @@
 /*
  * Copyright (C) 2001  Keisuke Nishida
- * Copyright (C) 2000  Rildo Pragana, Alan Cox, Andrew Cameron,
- *		      David Essex, Glen Colbert, Jim Noeth.
- * Copyright (C) 1999  Rildo Pragana, Alan Cox, Andrew Cameron, David Essex.
- * Copyright (C) 1991, 1993  Rildo Pragana.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

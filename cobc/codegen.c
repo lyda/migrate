@@ -421,13 +421,14 @@ sign_to_char (int digit)
   return 'J' + (char) (digit - 1);
 }
 
-void
+struct lit *
 invert_literal_sign (struct lit *sy)
 {
   char *s;
   s = sy->name;
   s += strlen (s) - 1;
   *s = sign_to_char (-(*s - 0x30));
+  return sy;
 }
 
 void
@@ -435,13 +436,6 @@ set_sign_flags (int flags)
 {
   curr_field->flags.separate_sign = (flags & SCR_SIGN_SEPARATE) ? 1 : 0;
   curr_field->flags.leading_sign = (flags & SCR_SIGN_LEADING) ? 1 : 0;
-}
-
-void
-check_decimal_point (struct lit *lit)
-{
-  if (strchr (lit->name, decimal_comma ? '.' : ','))
-    yyerror ("wrong decimal point character in numeric literal");
 }
 
 /* convert control characters to don't corrupt the assembly output */
@@ -3619,8 +3613,6 @@ gen_class_check (struct sym *sy, int class)
     }
   if (class == CLASS_NUMERIC)
     {
-      /*if (!sy || is_numeric_sy(sy)) {
-       */
       if (sy)			/* don't save already pushed variable */
 	gen_loadvar (sy);
       else
@@ -3635,9 +3627,6 @@ gen_class_check (struct sym *sy, int class)
   else
     {
       /* from now on, only alphabetic tests are allowed */
-      /*if (is_numeric_sy(sy)) {
-         yyerror("invalid ALPHABETIC class check");
-         } */
       gen_loadvar (sy);
       switch (class)
 	{

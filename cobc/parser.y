@@ -84,6 +84,7 @@ struct ginfo    *gic=NULL;
 
 extern void yywarn(char *s,...);
 static void assert_numeric_sy (struct sym *sy);
+static void check_decimal_point (struct lit *lit);
 %}
 
 %union {
@@ -129,14 +130,16 @@ static void assert_numeric_sy (struct sym *sy);
 %token <lval> NLITERAL,CLITERAL
 %token <ival> PORTNUM,DATE_TIME
 
-
 %left   '+','-'
 %left   '*','/'
-%left   POW_OP
+%left   '^'
 
 %left  OR
 %left  AND
 %right NOT
+
+%right OF
+%nonassoc '.'
 
 %token BEFORE,AFTER,SCREEN,REVERSEVIDEO,NUMBERTOK,PLUS,MINUS,SEPARATE
 %token FOREGROUNDCOLOR,BACKGROUNDCOLOR,UNDERLINE,HIGHLIGHT,LOWLIGHT
@@ -187,10 +190,6 @@ static void assert_numeric_sy (struct sym *sy);
 %token SECURITY_TOK,COMMONTOK,RETURN_TOK,END_RETURN,PREVIOUS,NEXT
 %token INPUT,I_O,OUTPUT,EXTEND,EOL_TOK,EOS_TOK
 
- 
-%right OF
-%nonassoc '.'
-
 %type <ival> organization_options,access_options,open_mode
 %type <ival> integer,cond_op,conditional,before_after
 %type <ival> IF,ELSE,usage,write_options,opt_read_next
@@ -199,7 +198,7 @@ static void assert_numeric_sy (struct sym *sy);
 %type <sval> anystring,name,gname,opt_gname,opt_def_name,def_name,procedure_section
 %type <sval> field_description,label,filename,noallname,paragraph,assign_clause
 %type <lval> literal,gliteral,without_all_literal,all_literal,special_literal
-%type <lval> nliteral
+%type <lval> nliteral,signed_nliteral
 %type <sval> sort_keys,opt_perform_thru
 %type <sval> opt_read_into,opt_write_from
 %type <sval> variable,sort_range,perform_options,name_or_lit,delimited_by
@@ -236,7 +235,6 @@ static void assert_numeric_sy (struct sym *sy);
 %type <ssbjval> selection_subject_set
 %type <sval> screen_to_name, opt_goto_depending_on
 %type <lstval> goto_label_list
-%type <lval> signed_nliteral
 %type <ival> sentence_or_nothing,when_case_list
 %type <ival> opt_rounded
 %type <mval> var_list_name, var_list_gname
@@ -770,7 +768,7 @@ opt_character:
         | /* nothing */
         ;
 opt_plus_minus:
-    PLUS            { $$ = 1; }
+      PLUS          { $$ = 1; }
     | MINUS         { $$ = -1; }
     | /* nothing */ { $$ = 0; }
     ;
@@ -1188,6 +1186,11 @@ statement_list:
     statement opt_dummy {stabs_line();}
     | statement_list statement opt_dummy {stabs_line();}
     ;
+/* this token doesn't really exists, but forces look ahead 
+   to keep line numbers synchronized with our position
+   because we need to generate correct debug stabs */
+opt_dummy: | TOKDUMMY ;
+
 statement:
       accept_statement
     | add_statement
@@ -2483,9 +2486,8 @@ read_body:
     opt_read_into
     opt_read_key
     {
-     if (gen_reads($1, $4, $5, $2, 0) != 0) {
+      if (gen_reads($1, $4, $5, $2, 0) != 0)
         YYABORT;
-     }
     }
     | name
     opt_read_next
@@ -2494,13 +2496,13 @@ read_body:
     opt_read_key
     opt_read_at_end
     {    
-     if (gen_reads($1, $4, $5, $2, 1) != 0) {
-        YYABORT;
-     }
-     else {
-        ginfo_container4($6);
-        gic = NULL;
-     }
+     if (gen_reads($1, $4, $5, $2, 1) != 0)
+       YYABORT;
+     else
+       {
+	 ginfo_container4($6);
+	 gic = NULL;
+       }
     }
    | name
     opt_read_next
@@ -2509,12 +2511,10 @@ read_body:
     opt_read_key
     opt_read_invalid_key 
     {    
-     if (gen_reads($1, $4, $5, $2, 2) != 0) {
-        YYABORT;
-     }
-     else {
+     if (gen_reads($1, $4, $5, $2, 2) != 0)
+       YYABORT;
+     else
        gen_test_invalid_keys ($6);
-     }
     }
     ;
 opt_read_next:
@@ -2856,7 +2856,7 @@ expr:
     | expr '/' expr    { $$ = create_expr('/', $1, $3); }
     | expr '+' expr    { $$ = create_expr('+', $1, $3); }
     | expr '-' expr    { $$ = create_expr('-', $1, $3); }
-    | expr POW_OP expr { $$ = create_expr('^', $1, $3); }
+    | expr '^' expr    { $$ = create_expr('^', $1, $3); }
     ;
 /* opt_expr will be NULL or a (struct sym *) pointer if the expression
    was given, otherwise it will be valued -1 */
@@ -3060,10 +3060,6 @@ conditional:
     CONDITIONAL opt_than_to     { $$ = $1; }
     ;
 opt_sep: | ',' ;
-/* this token doesn't really exists, but forces look ahead 
-   to keep line numbers synchronized with our position
-   because we need to generate correct debug stabs */
-opt_dummy: | TOKDUMMY ;
 opt_eos: | '.' ;
 opt_not:
     /* nothing */ { $$=0; }
@@ -3133,21 +3129,23 @@ var_or_nliteral:
     variable        { $$ = $1; }
     | nliteral      { $$ = (struct sym *)$1; }
     ;
-nliteral:
-    signed_nliteral    { save_literal($1,'9'); $1->all = 0; $$=$1; }
-    ;
 literal:
-    signed_nliteral        { save_literal($1,'9'); $1->all=0; $$=$1; }
-    | CLITERAL      { save_literal($1,'X'); $1->all=0; $$=$1; }
+    nliteral		{ $$=$1; }
+    | CLITERAL		{ save_literal($1,'X'); $1->all=0; $$=$1; }
     ;
+nliteral:
+  signed_nliteral {
+      check_decimal_point($1);
+      save_literal($1,'9');
+      $1->all = 0;
+      $$=$1;
+  }
+  ;
 signed_nliteral:
-        NLITERAL                { check_decimal_point($1); $$=$1; }
-        | '+' NLITERAL  { check_decimal_point($2); $$=$2; }
-        | '-' NLITERAL  { check_decimal_point($2);
-                        invert_literal_sign( $2 );
-                        $$=$2;
-                }
-        ;
+        NLITERAL  { $$ = $1; }
+  | '+' NLITERAL  { $$ = $2; }
+  | '-' NLITERAL  { $$ = invert_literal_sign($2); }
+  ;
 opt_def_name:
     def_name        { $$ = $1; }
     | /* nothing */ { $$ = alloc_filler(); }
@@ -3220,7 +3218,7 @@ subscript:
     | subscript '-' gname       { $$ = add_subscript_item( $1, '-', $3 ); }
     ;
 integer:
-    signed_nliteral {
+    nliteral {
       char *s;
       $$=0;
       s=$1->name;
@@ -3276,6 +3274,13 @@ assert_numeric_sy (struct sym *sy)
 {
   if (!is_numeric_sy (sy))
     yyerror ("non numeric variable: %s", sy->name);
+}
+
+static void
+check_decimal_point (struct lit *lit)
+{
+  if (strchr (lit->name, decimal_comma ? '.' : ','))
+    yyerror ("wrong decimal point character in numeric literal");
 }
 
 void
