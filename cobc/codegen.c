@@ -930,6 +930,75 @@ adjust_desc_length (cob_tree sy)
 }
 
 
+
+static void
+gen_branch_true (int lbl)
+{
+  output ("\tjz\t.L%d\n", lbl);
+}
+
+static void
+gen_branch_false (int lbl)
+{
+  output ("\tjnz\t.L%d\n", lbl);
+}
+
+int
+gen_check_zero ()
+{
+  int i = loc_label++;
+  output ("\tand\t%%eax,%%eax\n");
+  gen_branch_true (i);
+  return i;
+}
+
+int
+gen_testif (void)
+{
+  int i = loc_label++;
+  int j = loc_label++;
+  gen_branch_true (j);
+  output ("\tjmp\t.L%d\n", i);
+  output (".L%d:\n", j);
+  return i;
+}
+
+void
+gen_dstlabel (int lbl)
+{
+  output (".L%d:\n", lbl);
+}
+
+int
+gen_passlabel (void)
+{
+  int i = loc_label++;
+  output ("\tjmp\t.L%d\n", i);
+  return i;
+}
+
+int
+gen_marklabel (void)
+{
+  int i = loc_label++;
+  output (".L%d:\n", i);
+  return i;
+}
+
+void
+gen_jmplabel (int lbl)
+{
+  output ("\tjmp\t.L%d\n", lbl);
+}
+
+void
+gen_push_int (cob_tree sy)
+{
+  asm_call_1 ("get_index", sy);
+  output ("\tpushl\t%%eax\n"); /* don't use push_eax */
+}
+
+
 /*
  * Expression
  */
@@ -979,7 +1048,7 @@ int
 gen_orstart (void)
 {
   int i = loc_label++;
-  output ("\tjz\t.L%d\n", i);
+  gen_branch_true (i);
   return i;
 }
 
@@ -1035,7 +1104,7 @@ gen_compare (cob_tree s1, int op, cob_tree s2)
     case COND_LE:			/* eax <= 0 */
       lbl = loc_label++;
       output ("\tcmpl\t$0,%%eax\n");
-      output ("\tjz\t.L%d\n", lbl);
+      gen_branch_true (lbl);
       output ("\tcmpl\t$-1,%%eax\n");
       gen_dstlabel (lbl);
       break;
@@ -1045,14 +1114,14 @@ gen_compare (cob_tree s1, int op, cob_tree s2)
     case COND_GE:			/* eax >= 0 */
       lbl = loc_label++;
       output ("\tcmpl\t$0,%%eax\n");
-      output ("\tjz\t.L%d\n", lbl);
+      gen_branch_true (lbl);
       output ("\tcmpl\t$1,%%eax\n");
       gen_dstlabel (lbl);
       break;
     case COND_NE:			/* eax != 0 */
       lbl = loc_label++;
       output ("\tcmpl\t$1,%%eax\n");
-      output ("\tjz\t.L%d\n", lbl);
+      gen_branch_true (lbl);
       output ("\tcmpl\t$-1,%%eax\n");
       gen_dstlabel (lbl);
       break;
@@ -1098,7 +1167,7 @@ gen_condition (cob_tree cond)
 	int i = loc_label++;
 	int j = loc_label++;
 	gen_condition (l);
-	output ("\tjz\t.L%d\n", i);
+	gen_branch_true (i);
 	output ("\txorl\t%%eax,%%eax\n");
 	gen_jmplabel (j);
 	gen_dstlabel (i);
@@ -1113,9 +1182,9 @@ gen_condition (cob_tree cond)
 	int lab = loc_label++;
 	gen_condition (l);
 	if (type == COND_AND)
-	  output ("\tjnz\t.L%d\n", lab);
+	  gen_branch_false (lab);
 	else
-	  output ("\tjz\t.L%d\n", lab);
+	  gen_branch_true (lab);
 	gen_condition (r);
 	output (".L%d:\n", lab);
       }
@@ -1852,62 +1921,6 @@ add_alternate_key (cob_tree sy, int duplicates)
 }
 
 
-int
-gen_check_zero ()
-{
-  int i = loc_label++;
-  output ("\tand\t%%eax,%%eax\n");
-  output ("\tjz\t.L%d\n", i);
-  return i;
-}
-
-int
-gen_testif (void)
-{
-  int i = loc_label++;
-  int j = loc_label++;
-  output ("\tjz\t.L%d\n", j);
-  output ("\tjmp\t.L%d\n", i);
-  output (".L%d:\n", j);
-  return i;
-}
-
-void
-gen_dstlabel (int lbl)
-{
-  output (".L%d:\n", lbl);
-}
-
-int
-gen_passlabel (void)
-{
-  int i = loc_label++;
-  output ("\tjmp\t.L%d\n", i);
-  return i;
-}
-
-int
-gen_marklabel (void)
-{
-  int i = loc_label++;
-  output (".L%d:\n", i);
-  return i;
-}
-
-void
-gen_jmplabel (int lbl)
-{
-  output ("\tjmp\t.L%d\n", lbl);
-}
-
-void
-gen_push_int (cob_tree sy)
-{
-  asm_call_1 ("get_index", sy);
-  output ("\tpushl\t%%eax\n"); /* don't use push_eax */
-}
-
-
 /*
  * Status handling
  */
@@ -1955,9 +1968,9 @@ gen_status_branch (int status, int flag)
 
   output ("\tcmpl\t$%d, cob_status\n", status);
   if (flag)
-    output ("\tje\t.L%d\n", lbl);
+    gen_branch_true (lbl);
   else
-    output ("\tjne\t.L%d\n", lbl);
+    gen_branch_false (lbl);
 
   return lbl;
 }
@@ -2678,7 +2691,7 @@ gen_initialize_1 (cob_tree sy)
 	  if (sy->times != 1)
 	    {
 	      output ("\tdecl\t%%ebx\n");
-	      output ("\tjnz\t.L%d\n", lab);
+	      gen_branch_false (lab);
 	      output ("\tpopl\t%%eax\n");
 	      output ("\tpopl\t%%ebx\n");
 	      output ("\tpushl\t%%eax\n");
@@ -2786,7 +2799,7 @@ push_tree (cob_tree x)
 	int i = loc_label++;
 	int j = loc_label++;
 	gen_condition (x);
-	output ("\tjz\t.L%d\n", i);
+	gen_branch_true (i);
 	push_immed (1);
 	gen_jmplabel (j);
 	gen_dstlabel (i);
@@ -2873,9 +2886,9 @@ gen_evaluate_when (cob_tree_list subs, cob_tree_list whens, int next_lbl)
 
 	  output ("\tand\t%%eax,%%eax\n");
 	  if (not_flag)
-	    output ("\tjnz\t.L%d\n", next_when_lbl);
+	    gen_branch_false (next_when_lbl);
 	  else
-	    output ("\tjz\t.L%d\n", next_when_lbl);
+	    gen_branch_true (next_when_lbl);
 	}
       if (subs || objs)
 	yyerror ("wrong number of WHEN parameters");
@@ -2991,8 +3004,9 @@ void
 gen_perform_times (int lbl)
 {
   output ("\tdecl\t0(%%esp)\n");
-  output ("\tjnz\t.L%d\n", lbl);
-  output (".L%dE:\tpopl\t%%ecx\n", lbl);
+  gen_branch_false (lbl);
+  output (".L%dE:\n", lbl);
+  output ("\tpopl\t%%ecx\n");
 }
 
 void
@@ -3023,7 +3037,6 @@ gen_perform (cob_tree sy)
  * SEARCH statement
  */
 
-/* increment loop index, check for end */
 void
 gen_SearchLoopCheck (unsigned long lbl5, cob_tree syidx, cob_tree sytbl)
 {
@@ -3042,7 +3055,7 @@ gen_SearchLoopCheck (unsigned long lbl5, cob_tree syidx, cob_tree sytbl)
   save_literal (x, '9');
 
   gen_compare (syidx, COND_GT, x);
-  output ("\tjz\t.L%ld\n", lbl5);
+  gen_branch_true (lbl5);
 }
 
 void
@@ -3100,12 +3113,12 @@ gen_SearchAllLoopCheck (unsigned long lbl3, cob_tree syidx,
   if (it2->seq == '2')
     {
       gen_compare (sy1, COND_GT, syvar);
-      output ("\tjnz\t.L%ld\n", l2);
+      gen_branch_false (l2);
     }
   else
     {
       gen_compare (sy1, COND_LT, syvar);
-      output ("\tjnz\t.L%ld\n", l2);
+      gen_branch_false (l2);
     }
   output ("\t.align 16\n");
 
@@ -3150,13 +3163,13 @@ gen_SearchAllLoopCheck (unsigned long lbl3, cob_tree syidx,
     {
 //       if (itbl1 > in) {
       gen_compare (sy1, COND_GT, syvar);
-      output ("\tjnz\t.L%ld\n", l4);
+      gen_branch_false (l4);
     }
   else
     {
 //       if (itbl1 < in) {
       gen_compare (sy1, COND_LT, syvar);
-      output ("\tjnz\t.L%ld\n", l4);
+      gen_branch_false (l4);
     }
   output ("\t.align 16\n");
 
@@ -3198,53 +3211,12 @@ gen_SearchAllLoopCheck (unsigned long lbl3, cob_tree syidx,
 
   output ("\tmovl\t-%d(%%ebp), %%eax\n", stack_offset - 4);
   output ("\tcmpl $1, %%eax\n");
-  output ("\tjz\t.L%ld\n", lbl3);
+  gen_branch_true (lbl3);
 
 
   gen_jmplabel (lstart);
   output ("\t.align 16\n");
   gen_dstlabel (lend);
-}
-
-void
-define_implicit_field (cob_tree sy, cob_tree sykey)
-{
-  cob_tree tmp = NULL;
-  struct index_to_table_list *i2t;
-
-  COB_FIELD_TYPE (sy) = 'B';	/* assume numeric "usage is comp" item */
-  sy->len = 4;
-  sy->decimals = 0;	/* suppose no decimals yet */
-  sy->level = 1;
-  sy->redefines = NULL;
-  sy->linkage_flg = 0;	/* should not go in the linkage section, never! */
-  sy->sec_no = SEC_STACK;
-  sy->times = 1;
-  sy->son = sy->brother = NULL;
-  sy->flags.is_pointer = 0;
-  sy->flags.blank = 0;
-  sy->picstr = "9\x08";
-  tmp = curr_field;
-  curr_field = sy;
-  update_field ();
-  close_fields ();
-  curr_field = tmp;
-
-  i2t = malloc (sizeof (struct index_to_table_list));
-  i2t->idxname = strdup (COB_FIELD_NAME (sy));
-  i2t->tablename = strdup (COB_FIELD_NAME (curr_field));
-  i2t->seq = '0';	/* no sort sequence is yet defined for the table */
-  i2t->keyname = NULL;
-  if (sykey != NULL)
-    {
-      if (sykey->level == -1)
-	i2t->seq = '1';
-      if (sykey->level == -2)
-	i2t->seq = '2';
-      i2t->keyname = strdup (COB_FIELD_NAME (sykey));
-    }
-  i2t->next = index2table;
-  index2table = i2t;
 }
 
 void
@@ -3312,6 +3284,7 @@ determine_table_index_name (cob_tree sy)
   return rsy;
 }
 
+
 void
 define_field (int level, cob_tree sy)
 {
@@ -3389,6 +3362,47 @@ define_field (int level, cob_tree sy)
 	}
     }
   curr_field = sy;
+}
+
+void
+define_implicit_field (cob_tree sy, cob_tree sykey)
+{
+  cob_tree tmp = NULL;
+  struct index_to_table_list *i2t;
+
+  COB_FIELD_TYPE (sy) = 'B';	/* assume numeric "usage is comp" item */
+  sy->len = 4;
+  sy->decimals = 0;	/* suppose no decimals yet */
+  sy->level = 1;
+  sy->redefines = NULL;
+  sy->linkage_flg = 0;	/* should not go in the linkage section, never! */
+  sy->sec_no = SEC_STACK;
+  sy->times = 1;
+  sy->son = sy->brother = NULL;
+  sy->flags.is_pointer = 0;
+  sy->flags.blank = 0;
+  sy->picstr = "9\x08";
+  tmp = curr_field;
+  curr_field = sy;
+  update_field ();
+  close_fields ();
+  curr_field = tmp;
+
+  i2t = malloc (sizeof (struct index_to_table_list));
+  i2t->idxname = strdup (COB_FIELD_NAME (sy));
+  i2t->tablename = strdup (COB_FIELD_NAME (curr_field));
+  i2t->seq = '0';	/* no sort sequence is yet defined for the table */
+  i2t->keyname = NULL;
+  if (sykey != NULL)
+    {
+      if (sykey->level == -1)
+	i2t->seq = '1';
+      if (sykey->level == -2)
+	i2t->seq = '2';
+      i2t->keyname = strdup (COB_FIELD_NAME (sykey));
+    }
+  i2t->next = index2table;
+  index2table = i2t;
 }
 
 static int
@@ -4212,7 +4226,7 @@ gen_call (cob_tree v, struct call_parameter *parameter_list,
       asm_call_1 ("cob_dyncall_resolve", v);
       stackframe_cnt = stack_save;
       output ("\tand\t%%eax,%%eax\n");
-      output ("\tjz\t.L%d\n", exceplabel);
+      gen_branch_true (exceplabel);
       output ("\tcall\t*%%eax\n");
       cleanup_rt_stack ();
       endlabel = loc_label++;
