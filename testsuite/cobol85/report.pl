@@ -54,8 +54,8 @@ foreach $in (sort (glob("*.{CBL,SUB}"))) {
     print LOG "  ----- test skipped -----\n";
   } else {
     $copy = ($exe =~ /^SM/) ? "-I ../copy " : "";
-    print "cobc $copy$in && $cmd\n";
-    if (system ("cobc $copy$in") != 0) {
+    print "cobc -main $copy$in && $cmd\n";
+    if (system ("cobc -main $copy$in") != 0) {
       $compile_error++;
       print LOG "  ===== compile error =====\n";
     } else {
