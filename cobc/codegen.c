@@ -1011,12 +1011,22 @@ initialize_uniform_char (struct cb_field *f)
 static void
 output_initialize_external (cb_tree x, struct cb_field *f)
 {
+  char	*p;
+  char	name[CB_MAX_CNAME];
+
   output_prefix ();
   output_data (x);
-  if ( f->ename )
+  if ( f->ename ) {
     output (" = cob_external_addr (\"%s\", %d);\n", f->ename, f->size);
-  else
-    output (" = cob_external_addr (\"%s\", %d);\n", f->name, f->size);
+  } else {
+    strcpy(name, f->name);
+    for ( p = name; *p; p++ ) {
+	if ( islower(*p) ) {
+		*p = toupper(*p);
+	}
+    }
+    output (" = cob_external_addr (\"%s\", %d);\n", name, f->size);
+  }
 }
 
 static void
