@@ -195,7 +195,7 @@ print_usage ()
 	  "  -v, --verbose Display the programs invoked by the compiler\n"
 	  "  -save-temps   Do not delete intermediate files\n"
 	  "  -E            Preprocess only; do not compile, assemble or link\n"
-	  "  -C            Translate only; convert COBOL to C\n"
+	  "  -C            Translation only; convert COBOL to C\n"
 	  "  -S            Compile only; output assembly file\n"
 	  "  -c            Compile and assemble, but do not link\n"
 	  "  -m            Build a dynamic-linking module\n"
