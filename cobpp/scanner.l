@@ -52,6 +52,7 @@ static struct copybook {
 static int yyinput (char *buf, int max_size);
 
 static char *substring (const char *s, int size);
+static void process_eol (void);
 static void set_buffer (int lineno, const char *filename,
 			struct replacement *replacing, YY_BUFFER_STATE buffer);
 %}
@@ -68,26 +69,17 @@ static void set_buffer (int lineno, const char *filename,
 }
 
 <*>\n-[ \t]*[\"\']? {
-  /* Line connection */
-  yylineno++;
-  display_line = 1;
+  if (cob_format == COB_FORMAT_FIXED)
+    {
+      /* Line connection */
+      yylineno++;
+      display_line = 1;
+    }
+  else
+    process_eol ();
 }
 
-<*>\n {
-  ECHO;
-  yylineno++;
-
-  if (copybook_name)
-    {
-      open_buffer (copybook_name, copybook_replacing);
-      copybook_name = NULL;
-    }
-  else if (display_line)
-    {
-      fprintf (yyout, "# %d \"%s\"\n", yylineno, yyfilename);
-      display_line = 0;
-    }
-}
+<*>\n			{ process_eol (); }
 
 "COPY"			{ BEGIN COPY_STATE; return COPY; }
 "REPLACE"		{ BEGIN COPY_STATE; return REPLACE; }
@@ -136,6 +128,24 @@ static void set_buffer (int lineno, const char *filename,
 /*
  * Public functions
  */
+
+static void
+process_eol (void)
+{
+  ECHO;
+  yylineno++;
+
+  if (copybook_name)
+    {
+      open_buffer (copybook_name, copybook_replacing);
+      copybook_name = NULL;
+    }
+  else if (display_line)
+    {
+      fprintf (yyout, "# %d \"%s\"\n", yylineno, yyfilename);
+      display_line = 0;
+    }
+}
 
 static void
 set_buffer (int lineno, const char *filename,
