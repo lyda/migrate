@@ -25,7 +25,7 @@
 #include <ctype.h>
 
 #include "move.h"
-#include "byteorder.h"
+#include "byteswap.h"
 #include "lib/gettext.h"
 
 #define MIN(x,y) ({int _x = (x), _y = (y); (_x < _y) ? _x : _y; })
@@ -717,7 +717,7 @@ cob_binary_get_int (cob_field *f)
       return *(char *) f->data;
     case 2:
       if (COB_FIELD_BINARY_SWAP (f))
-	return (short) COB_UINT16_SWAP_LE_BE (*(short *) f->data);
+	return (short) COB_BSWAP_16 (*(short *) f->data);
       else
 	return *(short *) f->data;
     case 3:
@@ -725,12 +725,12 @@ cob_binary_get_int (cob_field *f)
 	long n = (((long) *(unsigned short *) f->data)
 		  | ((long) ((char) f->data[2]) << 16));
 	if (COB_FIELD_BINARY_SWAP (f))
-	  n = (long) COB_UINT32_SWAP_LE_BE (n) >> 8;
+	  n = (long) COB_BSWAP_32 (n) >> 8;
 	return n;
       }
     default:
       if (COB_FIELD_BINARY_SWAP (f))
-	return (long) COB_UINT32_SWAP_LE_BE (*(long *) f->data);
+	return (long) COB_BSWAP_32 (*(long *) f->data);
       else
 	return *(long *) f->data;
     }
@@ -748,24 +748,24 @@ cob_binary_get_int64 (cob_field *f)
       n = (((long long) *(unsigned long *) f->data)
 	   | ((long long) ((char) f->data[4]) << 32));
       if (COB_FIELD_BINARY_SWAP (f))
-	n = (long long) COB_UINT64_SWAP_LE_BE (n) >> 24;
+	n = (long long) COB_BSWAP_64 (n) >> 24;
       return n;
     case 6:
       n = (((long long) *(unsigned long *) f->data)
 	   | ((long long) (*(short *) (f->data + 4)) << 32));
       if (COB_FIELD_BINARY_SWAP (f))
-	n = (long long) COB_UINT64_SWAP_LE_BE (n) >> 16;
+	n = (long long) COB_BSWAP_64 (n) >> 16;
       return n;
     case 7:
       n = (((long long) *(unsigned long *) f->data)
 	   | ((long long) (*(unsigned short *) (f->data + 4)) << 32)
 	   | ((long long) ((char) f->data[6]) << 48));
       if (COB_FIELD_BINARY_SWAP (f))
-	n = (long long) COB_UINT64_SWAP_LE_BE (n) >> 8;
+	n = (long long) COB_BSWAP_64 (n) >> 8;
       return n;
     default:
       if (COB_FIELD_BINARY_SWAP (f))
-	return (long long) COB_UINT64_SWAP_LE_BE (*(long long *) f->data);
+	return (long long) COB_BSWAP_64 (*(long long *) f->data);
       else
 	return *(long long *) f->data;
     }
@@ -781,19 +781,19 @@ cob_binary_set_int (cob_field *f, int n)
       break;
     case 2:
       if (COB_FIELD_BINARY_SWAP (f))
-	*(short *) f->data = COB_UINT16_SWAP_LE_BE (n);
+	*(short *) f->data = COB_BSWAP_16 (n);
       else
 	*(short *) f->data = (short) n;
       break;
     case 3:
       if (COB_FIELD_BINARY_SWAP (f))
-	n = COB_UINT32_SWAP_LE_BE (n << 8);
+	n = COB_BSWAP_32 (n << 8);
       *(short *) f->data = (short) n;
       *(char *) (f->data + 2) = (char) (n >> 16);
       break;
     default:
       if (COB_FIELD_BINARY_SWAP (f))
-	*(long *) f->data = COB_UINT32_SWAP_LE_BE (n);
+	*(long *) f->data = COB_BSWAP_32 (n);
       else
 	*(long *) f->data = (long) n;
       break;
@@ -810,26 +810,26 @@ cob_binary_set_int64 (cob_field *f, long long n)
       break;
     case 5:
       if (COB_FIELD_BINARY_SWAP (f))
-	n = COB_UINT64_SWAP_LE_BE (n << 24);
+	n = COB_BSWAP_64 (n << 24);
       *(long *) f->data = (long) n;
       *(char *) (f->data + 4) = (char) (n >> 32);
       break;
     case 6:
       if (COB_FIELD_BINARY_SWAP (f))
-	n = COB_UINT64_SWAP_LE_BE (n << 16);
+	n = COB_BSWAP_64 (n << 16);
       *(long *) f->data = (long) n;
       *(short *) (f->data + 4) = (short) (n >> 32);
       break;
     case 7:
       if (COB_FIELD_BINARY_SWAP (f))
-	n = COB_UINT64_SWAP_LE_BE (n << 8);
+	n = COB_BSWAP_64 (n << 8);
       *(long *) f->data = (long) n;
       *(short *) (f->data + 4) = (short) (n >> 32);
       *(char *) (f->data + 6) = (char) (n >> 48);
       break;
     default:
       if (COB_FIELD_BINARY_SWAP (f))
-	*(long long *) f->data = COB_UINT64_SWAP_LE_BE (n);
+	*(long long *) f->data = COB_BSWAP_64 (n);
       else
 	*(long long *) f->data = n;
       break;

@@ -1,5 +1,10 @@
 2003-08-12  Keisuke Nishida  <knishida@netlab.jp>
 
+	* byteswap.h: New file.
+	* byteorder.h: Removed.
+
+2003-08-12  Keisuke Nishida  <knishida@netlab.jp>
+
 	* common.h, common.c (cob_return_code): Removed.
 
 2003-08-10  Keisuke Nishida  <knishida@netlab.jp>
