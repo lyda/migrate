@@ -578,7 +578,7 @@ check_condition (struct cob_field f1, ...)
 int
 cob_compare (struct cob_field f1, struct cob_field f2)
 {
-  int i, maxi;
+  int sign1, sign2;
   char type1 = f1.desc->type;
   char type2 = f2.desc->type;
   int len1 = f1.desc->len;
@@ -591,73 +591,89 @@ cob_compare (struct cob_field f1, struct cob_field f2)
       cob_push_decimal (f2);
       return cob_cmp ();
     }
-  else
+
+  sign1 = extract_sign (f1.desc, f1.data);
+  sign2 = extract_sign (f2.desc, f2.data);
+
+  if (f1.desc->all || f2.desc->all)
     {
-      if (f1.desc->all || f2.desc->all)
-	{
-	  int i, j, k, maxi;
-
-	  maxi = (len1 < len2) ? len1 : len2;
-	  j = 0;
-	  k = 0;
-	  for (i = 0; i < maxi; i++)
-	    {
-	      if (f1.data[j] == f2.data[k])
-		continue;
-	      if (f1.data[j] > f2.data[k])
-		return 1;
-	      if (f1.data[j] < f2.data[k])
-		return -1;
-	      j++;
-	      k++;
-	      if (f1.desc->all && j >= len1)
-		j = 0;
-	      if (f2.desc->all && k >= len2)
-		k = 0;
-	    }
-
-	  if (len1 > len2)
-	    while (j < len1)
-	      {
-		if (f1.data[j++] != f2.data[k++])
-		  return 1;
-		if (k >= len2)
-		  k = 0;
-	      }
-	  else
-	    while (k < len2)
-	      {
-		if (f1.data[j++] != f2.data[k++])
-		  return -1;
-		if (j >= len1)
-		  j = 0;
-	      }
-	  return 0;
-	}
-      maxi = (len1 < len2) ? len1 : len2;
+      int i, j = 0, k = 0;
+      int maxi = (len1 < len2) ? len1 : len2;
       for (i = 0; i < maxi; i++)
 	{
-	  if (f1.data[i] == f2.data[i])
+	  if (f1.data[j] == f2.data[k])
 	    continue;
-	  if (f1.data[i] > f2.data[i])
-	    return 1;
-	  if (f1.data[i] < f2.data[i])
-	    return -1;
+	  if (f1.data[j] > f2.data[k])
+	    goto positive;
+	  if (f1.data[j] < f2.data[k])
+	    goto negative;
+	  j++;
+	  k++;
+	  if (f1.desc->all && j >= len1)
+	    j = 0;
+	  if (f2.desc->all && k >= len2)
+	    k = 0;
 	}
+
       if (len1 > len2)
-	{
-	  while (i < len1)
-	    if (f1.data[i++] != ' ')
-	      return 1;
-	}
+	while (j < len1)
+	  {
+	    if (f1.data[j++] != f2.data[k++])
+	      goto positive;
+	    if (k >= len2)
+	      k = 0;
+	  }
       else
-	{
-	  while (i < len2)
-	    if (f2.data[i++] != ' ')
-	      return -1;
-	}
+	while (k < len2)
+	  {
+	    if (f1.data[j++] != f2.data[k++])
+	      goto negative;
+	    if (j >= len1)
+	      j = 0;
+	  }
+      goto zero;
     }
-  return 0;
+
+  {
+    int i;
+    int maxi = (len1 < len2) ? len1 : len2;
+    for (i = 0; i < maxi; i++)
+      {
+	if (f1.data[i] == f2.data[i])
+	  continue;
+	if (f1.data[i] > f2.data[i])
+	  goto positive;
+	if (f1.data[i] < f2.data[i])
+	  goto negative;
+      }
+    if (len1 > len2)
+      {
+	while (i < len1)
+	  if (f1.data[i++] != ' ')
+	    goto positive;
+      }
+    else
+      {
+	while (i < len2)
+	  if (f2.data[i++] != ' ')
+	    goto negative;
+      }
+    goto zero;
+  }
+
+  {
+    int ret;
+  positive:
+    ret = 1; goto end;
+  zero:
+    ret = 0; goto end;
+  negative:
+    ret = -1; goto end;
+  end:
+    put_sign (f1.desc, f1.data, sign1);
+    put_sign (f2.desc, f2.data, sign2);
+    return ret;
+  }
 }
 
 int

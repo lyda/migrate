@@ -74,20 +74,24 @@ extract_sign (struct fld_desc *f, char *s)
 	(((s[digit] & 0x0f) == 0x0d) ? 1 : 0) :
 	(((s[digit] & 0xf0) == 0xd0) ? 1 : 0);
     }
-  if (*f->pic != 'S')
-    return 0;
-  tmp = (f->leading_sign) ? s : s + f->len - 1;
-  digit = char_to_sign (*tmp);
-  if (digit == 0x80)
-    *tmp = '0';
-  else if (digit < 0)
-    *tmp = '0' - digit;
-  else
+  if (f->type == '9')
     {
-      *tmp = '0' + digit;
-      return 0;
+      if (f->pic[0] != 'S')
+	return 0;
+      tmp = (f->leading_sign) ? s : s + f->len - 1;
+      digit = char_to_sign (*tmp);
+      if (digit == 0x80)
+	*tmp = '0';
+      else if (digit < 0)
+	*tmp = '0' - digit;
+      else
+	{
+	  *tmp = '0' + digit;
+	  return 0;
+	}
+      return 1;
     }
-  return 1;
+  return 0;
 }
 
 void
@@ -103,13 +107,16 @@ put_sign (struct fld_desc *f, char *s, int sign)
 	((s[digit] & 0xf0) | (sign ? 0x0d : 0x0c)) : (sign ? 0xd0 : 0xc0);
       return;
     }
-  if (*f->pic != 'S')
-    return;
-  tmp = (f->leading_sign) ? s : s + f->len - 1;
-  digit = *tmp - '0';
-  if (sign)
-    digit = -digit;
-  *tmp = sign_to_char ((sign && digit == 0) ? 0x80 : digit);
+  if (f->type == '9')
+    {
+      if (f->pic[0] != 'S')
+	return;
+      tmp = (f->leading_sign) ? s : s + f->len - 1;
+      digit = *tmp - '0';
+      if (sign)
+	digit = -digit;
+      *tmp = sign_to_char ((sign && digit == 0) ? 0x80 : digit);
+    }
 }
 
 int
