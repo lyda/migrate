@@ -336,7 +336,7 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01 X             PIC X.
        01 Y             REDEFINES X PIC X.
-           88 A           VALUE "A".
+         88 A           VALUE "A".
        PROCEDURE        DIVISION.
            STOP RUN.
 ])
