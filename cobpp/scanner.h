@@ -34,6 +34,7 @@ extern int yylineno;
 extern const char *yyfilename;
 
 extern int yylex (void);
+extern void yywarn (const char *fmt, ...);
 extern void yyerror (const char *fmt, ...);
 extern void open_buffer (const char *name, struct replacement *replacing);
 extern void include_copybook (const char *name, const char *lib, struct replacement *replacing);
