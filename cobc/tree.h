@@ -436,14 +436,26 @@ struct list
   void *var;
 };
 
-struct parm_list
+
+/*
+ * CALL
+ */
+
+struct call_parameter
 {
-  struct parm_list *next;
-  void *var;
-  unsigned location;
-  short sec_no;
+  cob_tree var;
+  int mode;
+  int sec_no;
+  int location;
+  struct call_parameter *next;
 };
 
+#define CALL_BY_REFERENCE	1
+#define CALL_BY_CONTENT		2
+
+extern struct call_parameter * make_parameter (cob_tree var, int mode);
+
+
 struct coord_pair
 {
   int lin;

@@ -68,7 +68,6 @@ static unsigned tmpvar_max = 0;
 
 static struct list *files_list = NULL;
 static struct list *disp_list = NULL;
-static struct parm_list *parameter_list = NULL;
 static struct list *fields_list = NULL;
 static struct list *last_field = NULL;
 static struct index_to_table_list *index2table = NULL;
@@ -5031,76 +5030,56 @@ gen_check_varying (cob_tree f)
 }
 
 void
-gen_push_using (cob_tree sy)
-{
-  struct parm_list *list;
-  list = (struct parm_list *) malloc (sizeof (struct parm_list));
-  list->var = (void *) sy;
-  list->next = parameter_list;
-  list->location = 0;
-  list->sec_no = 0;
-  parameter_list = list;
-}
-
-void
 gen_save_using (cob_tree sy)
 {
   sy->linkage_flg = using_offset;
   using_offset += 4;
 }
 
-unsigned long int
-gen_call (cob_tree v, int exceplabel, int notexceplabel)
+int
+gen_call (cob_tree v, struct call_parameter *parameter_list,
+	  int exceplabel, int notexceplabel)
 {
-  struct parm_list *list;
+  struct call_parameter *l;
   int len, totlen = 0;
   int saved_stack_offset = stack_offset;
   int stack_save;
   int endlabel;
 
   /******** prepare all parameters which are passed by content ********/
-  for (list = parameter_list; list != NULL; list = list->next)
-    {
-      cob_tree cp = list->var;
-      if (!LITERAL_P (cp))
-	{
-	  if (cp->call_mode == CALL_BY_CONTENT)
-	    {
-	      len = symlen (cp);	// should we round to 4?
-	      totlen += len;
-	      list->sec_no = SEC_STACK;
-	      list->location = stack_offset + len;
-	      stack_offset += len;
-	      fprintf (o_src, "\tsubl\t$%d, %%esp\n", len);
-	      push_immed (len);	// length
-	      gen_loadloc (cp);	// src address
-	      fprintf (o_src, "\tleal\t-%d(%%ebp), %%eax\n", list->location);
-	      push_eax ();	// dest address ie on stack
-	      asm_call ("memcpy");
-	    }
-	}
-    }
+  for (l = parameter_list; l != NULL; l = l->next)
+    if (l->mode == CALL_BY_CONTENT && !LITERAL_P (l->var))
+      {
+	len = symlen (l->var);	// should we round to 4?
+	totlen += len;
+	l->sec_no = SEC_STACK;
+	l->location = stack_offset + len;
+	stack_offset += len;
+	fprintf (o_src, "\tsubl\t$%d, %%esp\n", len);
+	push_immed (len);		// length
+	gen_loadloc (l->var);	// src address
+	fprintf (o_src, "\tleal\t-%d(%%ebp), %%eax\n", l->location);
+	push_eax ();		// dest address ie on stack
+	asm_call ("memcpy");
+      }
 
   /******** get the parameters from the parameter list ********/
-  for (list = parameter_list; list != NULL; list = list->next)
+  for (l = parameter_list; l != NULL; l = l->next)
     {
-      cob_tree p = list->var;
-      int mode = (LITERAL_P (p) ? LITERAL (p)->call_mode : p->call_mode);
 #ifdef COB_DEBUG
-      fprintf (o_src, "#parm %s by %d\n", FIELD_NAME (p), mode);
+      fprintf (o_src, "#parm %s by %d\n", FIELD_NAME (l->var), l->mode);
 #endif
-      switch (mode)
+      switch (l->mode)
 	{
 	case CALL_BY_REFERENCE:
-	  gen_loadloc (list->var);
+	  gen_loadloc (l->var);
 	  break;
 	case CALL_BY_CONTENT:
-	  fprintf (o_src, "\tleal\t-%d(%%ebp), %%eax\n", list->location);
+	  fprintf (o_src, "\tleal\t-%d(%%ebp), %%eax\n", l->location);
 	  push_eax ();
 	  break;
 	}
     }
-  parameter_list = NULL;
   if (cob_link_style == LINK_STATIC && LITERAL_P (v))
     {
       /* static call */

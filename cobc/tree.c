@@ -177,6 +177,20 @@ make_unary_cond (cob_tree x, enum cond_type type)
 }
 
 
+
+struct call_parameter *
+make_parameter (cob_tree var, int mode)
+{
+  struct call_parameter *p = malloc (sizeof (struct call_parameter));
+  p->var = var;
+  p->mode = mode;
+  p->location = 0;
+  p->sec_no = 0;
+  p->next = NULL;
+  return p;
+}
+
+
 void
 print_tree (cob_tree x)
 {

@@ -55,6 +55,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
   cob_tree_list list;
   int ival;               /* int */
   char *str;
+  struct call_parameter *para;
   struct coord_pair pval; /* lin,col */
   struct string_from *sfval; /* variable list in string statement */
   struct unstring_delimited *udval;
@@ -143,6 +144,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <ival> sentence_or_nothing,when_case_list,opt_read_next,usage
 %type <ival> procedure_using,sort_direction,write_options
 %type <list> label_list,subscript_list,number_list
+%type <para> call_using,call_parameter,call_parameter_list
 %type <mval> var_list_name
 %type <pfval> perform_after
 %type <pfvals> opt_perform_after
@@ -1193,49 +1195,38 @@ end_add: | END_ADD ;
  */
 
 call_statement:
-    CALL		{ curr_call_mode = CALL_BY_REFERENCE; }
-    gname call_using call_returning
-    { $<ival>$ = loc_label++; /* exception check */ }
-    { $<ival>$ = loc_label++; /* not exception check */ }
-    {
-      $<ival>$ = gen_call($3,$<ival>6,$<ival>7);
-      gen_store_fnres($5);
-    }
-    on_exception_or_overflow
-    on_not_exception
-    {
-      check_call_except($9,$10,$<ival>6,$<ival>7,$<ival>8);
-    }
-    opt_end_call
-    ;
+  CALL		{ curr_call_mode = CALL_BY_REFERENCE; }
+  gname call_using call_returning
+  { $<ival>$ = loc_label++; /* exception check */ }
+  { $<ival>$ = loc_label++; /* not exception check */ }
+  {
+    $<ival>$ = gen_call ($3, $4, $<ival>6, $<ival>7);
+    gen_store_fnres($5);
+  }
+  on_exception_or_overflow
+  on_not_exception
+  {
+    check_call_except($9,$10,$<ival>6,$<ival>7,$<ival>8);
+  }
+  opt_end_call
+;
 call_using:
-| USING call_parameter_list
+  /* nothing */			{ $$ = NULL; }
+| USING call_parameter_list	{ $$ = $2; }
 ;
 call_parameter_list:
-  call_parameter
-| call_parameter_list opt_sep call_parameter
+  call_parameter			     { $$ = $1; }
+| call_parameter_list opt_sep call_parameter { $3->next = $1; $$ = $3; }
 ;
 call_parameter:
   gname
   {
-    if ($1->litflag==1) {
-      struct lit *lp=(struct lit *)$1;
-      lp->call_mode=curr_call_mode;
-    }
-    else
-      $1->call_mode=curr_call_mode;
-    gen_push_using ($1);
+    $$ = make_parameter ($1, curr_call_mode);
   }
 | BY call_mode gname
   {
     curr_call_mode = $2;
-    if ($3->litflag==1) {
-      struct lit *lp=(struct lit *)$3;
-      lp->call_mode=curr_call_mode;
-    }
-    else
-      $3->call_mode=curr_call_mode;
-    gen_push_using ($3);
+    $$ = make_parameter ($3, curr_call_mode);
   }
 ;
 call_mode:

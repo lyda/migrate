@@ -36,10 +36,6 @@
 /* set operations */
 enum set_mode { SET_TO, SET_UP, SET_DOWN };
 
-/* call modes */
-#define CALL_BY_REFERENCE	1
-#define CALL_BY_CONTENT		2
-
 /* asm sections or pseudo-sections */
 #define SEC_CONST 2
 #define SEC_DATA 3
@@ -248,9 +244,8 @@ extern void gen_start (cob_tree f, int cond, cob_tree key);
 extern void gen_delete (cob_tree f);
 extern void set_rec_varying_info (cob_tree f, cob_tree lmin, cob_tree lmax, cob_tree reclen);
 extern void gen_check_varying (cob_tree f);
-extern void gen_push_using (cob_tree sy);
 extern void gen_save_using (cob_tree sy);
-extern unsigned long int gen_call (cob_tree v, int exceplabel, int notexceplabel);
+extern int gen_call (cob_tree v, struct call_parameter *parameter_list, int exceplabel, int notexceplabel);
 extern int begin_on_except (void);
 extern void check_call_except (int excep, int notexcep, int exceplabel, int notexceplabel, int endlabel);
 extern void gen_initialize (cob_tree sy_start);
