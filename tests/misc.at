@@ -8,14 +8,55 @@ AT_DATA([prog.cob], [
        01 X            PIC 9(4) VALUE 0.
        PROCEDURE       DIVISION.
          MOVE "1" TO X(1:1).
-         DISPLAY X.
+         DISPLAY X NO ADVANCING.
          STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
-AT_CHECK([./prog], [0],
-[1000
+AT_CHECK([./prog], [0], [1000])
+
+AT_CLEANUP
+
+
+AT_SETUP([MOVE with group refmod])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G.
+         02 X          PIC 9999 VALUE 1234.
+       PROCEDURE       DIVISION.
+         MOVE "99" TO G(3:2).
+         DISPLAY G NO ADVANCING.
+         STOP RUN.
 ])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [1299])
+
+AT_CLEANUP
+
+
+AT_SETUP([MOVE with group refmod])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G.
+         02 X          PIC X OCCURS 10 INDEXED I.
+       PROCEDURE       DIVISION.
+         SET I TO ZERO.
+         MOVE I TO X(1).
+         DISPLAY X(1) NO ADVANCING.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [0])
 
 AT_CLEANUP
 
@@ -149,14 +190,12 @@ AT_DATA([prog.cob], [
          02 Z          PIC 9.
        PROCEDURE DIVISION.
          INITIALIZE G1.
-         DISPLAY G1.
+         DISPLAY G1 NO ADVANCING.
          STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
-AT_CHECK([./prog], [0],
-[ 000
-])
+AT_CHECK([./prog], [0], [ 000])
 
 AT_CLEANUP
 
@@ -175,14 +214,12 @@ AT_DATA([prog.cob], [
        PROCEDURE       DIVISION.
          MOVE SPACE TO G1.
          INITIALIZE G2 (2).
-         DISPLAY G1.
+         DISPLAY G1 NO ADVANCING.
          STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
-AT_CHECK([./prog], [0],
-[   0
-])
+AT_CHECK([./prog], [0], [   0])
 
 AT_CLEANUP
 
@@ -199,14 +236,12 @@ AT_DATA([prog.cob], [
            03 X        PIC Z9.
        PROCEDURE       DIVISION.
          INITIALIZE G1.
-         DISPLAY G1.
+         DISPLAY G1 NO ADVANCING.
          STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
-AT_CHECK([./prog], [0],
-[ 0 0 0 0 0
-])
+AT_CHECK([./prog], [0], [ 0 0 0 0 0])
 
 AT_CLEANUP
 
@@ -223,14 +258,12 @@ AT_DATA([prog.cob], [
        PROCEDURE       DIVISION.
          COMPUTE X = 100.
          COMPUTE Y = 99.
-         DISPLAY Y.
+         DISPLAY Y NO ADVANCING.
          STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
-AT_CHECK([./prog], [0],
-[99
-])
+AT_CHECK([./prog], [0], [99])
 
 AT_CLEANUP
 
@@ -245,15 +278,13 @@ AT_DATA([prog.cob], [
        01 X            PIC X(6) VALUE "123   ".
        PROCEDURE       DIVISION.
          IF X(1:3) NUMERIC
-           DISPLAY "OK"
+           DISPLAY "OK" NO ADVANCING
          END-IF.
          STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
-AT_CHECK([./prog], [0],
-[OK
-])
+AT_CHECK([./prog], [0], [OK])
 
 AT_CLEANUP
 
@@ -266,17 +297,15 @@ AT_DATA([prog.cob], [
        DATA            DIVISION.
        WORKING-STORAGE SECTION.
        01 G.
-       02 X            PIC X(3) OCCURS 3.
+         02 X          PIC X(3) OCCURS 3.
        PROCEDURE       DIVISION.
          STRING "abc" INTO X(1).
-         DISPLAY X(1).
+         DISPLAY X(1) NO ADVANCING.
          STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
-AT_CHECK([./prog], [0],
-[abc
-])
+AT_CHECK([./prog], [0], [abc])
 
 AT_CLEANUP
 
@@ -301,14 +330,15 @@ AT_DATA([prog.cob], [
          OPEN  OUTPUT TEST-FILE.
          CLOSE TEST-FILE.
          OPEN  INPUT  TEST-FILE.
-         READ  TEST-FILE AT END DISPLAY "OK" END-READ.
+         READ  TEST-FILE
+           AT END
+             DISPLAY "OK" NO ADVANCING
+	 END-READ.
          CLOSE TEST-FILE.
          STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
-AT_CHECK([./prog], [0],
-[OK
-])
+AT_CHECK([./prog], [0], [OK])
 
 AT_CLEANUP
