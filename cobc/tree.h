@@ -263,7 +263,7 @@ struct cb_alphabet_name {
 #define CB_ALPHABET_NAME(x)	(CB_TREE_CAST (CB_TAG_ALPHABET_NAME, struct cb_alphabet_name, x))
 #define CB_ALPHABET_NAME_P(x)	(CB_TREE_TAG (x) == CB_TAG_ALPHABET_NAME)
 
-extern cb_tree cb_build_alphabet_name (enum cb_alphabet_name_type type);
+extern cb_tree cb_define_alphabet_name (cb_tree name, enum cb_alphabet_name_type type);
 
 
 /*
@@ -280,7 +280,7 @@ struct cb_class_name {
 #define CB_CLASS_NAME(x)	(CB_TREE_CAST (CB_TAG_CLASS_NAME, struct cb_class_name, x))
 #define CB_CLASS_NAME_P(x)	(CB_TREE_TAG (x) == CB_TAG_CLASS_NAME)
 
-extern cb_tree cb_build_class_name (cb_tree name, cb_tree list);
+extern cb_tree cb_define_class_name (cb_tree name, cb_tree list);
 
 
 /*

@@ -633,12 +633,12 @@ assign_clause:
 /* ACCESS MODE clause */
 
 access_mode_clause:
-  ACCESS _mode _is access_mode	{ current_file->access_mode = $<ival>4; }
+  ACCESS _mode _is access_mode
 ;
 access_mode:
-  SEQUENTIAL			{ $<ival>$ = COB_ACCESS_SEQUENTIAL; }
-| DYNAMIC			{ $<ival>$ = COB_ACCESS_DYNAMIC; }
-| RANDOM			{ $<ival>$ = COB_ACCESS_RANDOM; }
+  SEQUENTIAL		{ current_file->access_mode = COB_ACCESS_SEQUENTIAL; }
+| DYNAMIC		{ current_file->access_mode = COB_ACCESS_DYNAMIC; }
+| RANDOM		{ current_file->access_mode = COB_ACCESS_RANDOM; }
 ;
 
 
@@ -692,14 +692,14 @@ lock_mode_clause:
 /* ORGANIZATION clause */
 
 organization_clause:
-  ORGANIZATION _is organization	{ current_file->organization = $<ival>3; }
-| organization			{ current_file->organization = $<ival>1; }
+  ORGANIZATION _is organization
+| organization
 ;
 organization:
-  INDEXED			{ $<ival>$ = COB_ORG_INDEXED; }
-| SEQUENTIAL			{ $<ival>$ = COB_ORG_SEQUENTIAL; }
-| RELATIVE			{ $<ival>$ = COB_ORG_RELATIVE; }
-| LINE SEQUENTIAL		{ $<ival>$ = COB_ORG_LINE_SEQUENTIAL; }
+  INDEXED		{ current_file->organization = COB_ORG_INDEXED; }
+| SEQUENTIAL		{ current_file->organization = COB_ORG_SEQUENTIAL; }
+| RELATIVE		{ current_file->organization = COB_ORG_RELATIVE; }
+| LINE SEQUENTIAL	{ current_file->organization = COB_ORG_LINE_SEQUENTIAL; }
 ;
 
 
