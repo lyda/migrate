@@ -25,6 +25,7 @@
 #include <ctype.h>
 
 #include "move.h"
+#include "numeric.h"
 #include "lib/gettext.h"
 
 #define MIN(x,y) ({int _x = (x), _y = (y); (_x < _y) ? _x : _y; })
