@@ -202,6 +202,7 @@ static struct reserved reserved_words[] = {
   {"LABEL",		LABEL},
   {"LEADING",		LEADING},
   {"LEFT",		LEFT},
+  {"LENGTH",		LENGTH},
   {"LESS",		LESS},
   {"LINE",		LINE},
   {"LINES",		LINES},

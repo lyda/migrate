@@ -673,7 +673,8 @@ extern void init_word_table (void);
 
 #define COBC_CALL_BY_REFERENCE	1
 #define COBC_CALL_BY_CONTENT	2
-#define COBC_CALL_BY_VALUE	3
+#define COBC_CALL_BY_LENGTH	3
+#define COBC_CALL_BY_VALUE	4
 
 struct cobc_generic {
   int type;

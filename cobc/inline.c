@@ -806,6 +806,9 @@ output_call_statement (cobc_tree name, struct cobc_list *args,
 	case COBC_CALL_BY_CONTENT:
 	  output ("c_%s_data", COBC_FIELD (x)->cname);
 	  break;
+	case COBC_CALL_BY_LENGTH:
+	  output_length (x);
+	  break;
 	case COBC_CALL_BY_VALUE:
 	  switch (COBC_TREE_TAG (x))
 	    {

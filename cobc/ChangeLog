@@ -1,3 +1,10 @@
+2002-09-17  Keisuke Nishida  <knishida@netlab.jp>
+
+	* tree.h (COBC_CALL_BY_LENGTH): New macro.
+	* reserved.c (reserved_words): Add LENGTH.
+	* parser.y (call_mode): Add CONTENT LENGTH.
+	* inline.c (output_call_statement): Handle COBC_CALL_BY_LENGTH.
+
 2002-09-13  Keisuke Nishida  <knishida@netlab.jp>
 
 	* tree.h (cobc_field): Remove `category'.  Related files updated.
