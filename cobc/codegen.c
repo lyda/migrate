@@ -156,6 +156,12 @@ output_base (struct cb_field *f)
 
   if (f01->flag_external)
     {
+      if (!f01->flag_base)
+	{
+	  output_storage ("extern unsigned char %s[%d];\n",
+			  f01->cname, f01->memory_size);
+	  f01->flag_base = 1;
+	}
       output ("%s", f01->cname);
     }
   else if (f->usage == CB_USAGE_INDEX && f->level == 0)
@@ -691,7 +697,7 @@ output_param (cb_tree x, int id)
 		output_field (x);
 
 		output_target = cb_storage_file;
-		if (!f->flag_local)
+		if (!f->flag_external && !f->flag_local)
 		  output ("static ");
 		output ("cob_field f_%s = ", f->cname);
 		output_field (x);
