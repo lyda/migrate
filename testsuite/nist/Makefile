@@ -20,6 +20,18 @@ check:
 summary:
 	perl summary.pl $(MODULES) > summary.txt
 
+keep:
+	for m in $(MODULES); do \
+	  (cp $$m/report.log $$m.old) \
+	done
+	cp summary.txt summary.old
+
+diff:
+	for m in $(MODULES); do \
+	  (diff $$m.old $$m/report.log) \
+	done
+	diff summary.old summary.txt
+
 dist:
 	rm -rf $(distdir)
 	mkdir -p $(distdir)/nist
