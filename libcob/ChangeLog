@@ -1,3 +1,7 @@
+2002-08-01  Keisuke Nishida  <knishida@netlab.jp>
+
+	* common.h (COB_ASCENDING, COB_DESCENDING): New macros.
+
 2002-07-31  Keisuke Nishida  <knishida@netlab.jp>
 
 	* common.c (cob_init_config): New function.
