@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <time.h>
 
 #include "move.h"
@@ -139,14 +140,32 @@ cob_field_print (cob_field *f)
 void
 cob_accept (cob_field *f)
 {
-  size_t size;
-  char buff[FILENAME_MAX];
-  fgets (buff, FILENAME_MAX, stdin);
-  size = strlen (buff) - 1;
-  if (size > f->size)
-    size = f->size;
-  memcpy (f->data, buff, size);
-  memset (f->data + size, ' ', f->size - size);
+  if (isatty (fileno (stdin)))
+    {
+      /* terminal input */
+      unsigned char buff[BUFSIZ];
+      cob_field_attr attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, 0};
+      cob_field temp = {0, buff, &attr};
+
+      /* read a line */
+      fgets (buff, BUFSIZ, stdin);
+      temp.size = strlen (buff) - 1;
+
+      /* move it to the field */
+      cob_move (&temp, f);
+    }
+  else
+    {
+      /* non-terminal input */
+      size_t size;
+      char buff[BUFSIZ];
+      fgets (buff, BUFSIZ, stdin);
+      size = strlen (buff) - 1;
+      if (size > f->size)
+	size = f->size;
+      memcpy (f->data, buff, size);
+      memset (f->data + size, ' ', f->size - size);
+    }
 }
 
 void
