@@ -814,9 +814,13 @@ output_cond (cb_tree x)
 	      }
 	    else
 	      {
-		output ("({");
+		output ("(");
+		if (CB_TREE_TAG (p->x) != CB_TAG_SEQUENCE)
+		  output ("{");
 		output_stmt (p->x);
-		output ("})");
+		if (CB_TREE_TAG (p->x) != CB_TAG_SEQUENCE)
+		  output ("}");
+		output (")");
 		switch (p->op)
 		  {
 		  case '=': output (" == 0"); break;
