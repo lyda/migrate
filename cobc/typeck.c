@@ -27,6 +27,56 @@
 
 #include "cobc.h"
 
+int
+cb_build_level_number (cb_tree name)
+{
+  int level = 0;
+  const char *p;
+
+  if (name == cb_error_node)
+    return -1;
+
+  /* get level number */
+  for (p = CB_REFERENCE (name)->word->name; *p; p++)
+    {
+      if (!isdigit (*p))
+	goto error;
+      level = level * 10 + (*p - '0');
+    }
+
+  if ((01 <= level && level <= 49)
+      || (level == 66 || level == 77 || level == 88))
+    return level;
+
+ error:
+  cb_error_x (name, _("invalid level number `%s'"), cb_name (name));
+  return -1;
+}
+
+cb_tree
+cb_build_section_name (cb_tree name)
+{
+  if (name == cb_error_node)
+    return cb_error_node;
+
+  if (CB_REFERENCE (name)->word->count > 0)
+    {
+      cb_tree x = CB_VALUE (CB_REFERENCE (name)->word->items);
+      if (/* used as a non-label name */
+	  !CB_LABEL_P (x)
+	  /* used as a section name */
+	  || CB_LABEL (x)->section == NULL
+	  /* used as the same paragraph name in the same section */
+	  || CB_LABEL (x)->section == current_section)
+	{
+	  redefinition_error (name);
+	  return cb_error_node;
+	}
+    }
+
+  return name;
+}
+
 cb_tree
 cb_build_identifier (cb_tree x)
 {
@@ -101,6 +151,25 @@ cb_build_identifier (cb_tree x)
     }
 
   return x;
+}
+
+cb_tree
+cb_build_using_list (cb_tree list)
+{
+  cb_tree l;
+  for (l = list; l; l = CB_CHAIN (l))
+    {
+      if (CB_VALUE (l) == cb_error_node)
+	return cb_error_node;
+      else
+	{
+	  cb_tree x = CB_VALUE (l);
+	  struct cb_field *f = CB_FIELD (cb_ref (x));
+	  if (f->level != 01 && f->level != 77)
+	    cb_error_x (x, _("`%s' not level 01 or 77"), cb_name (x));
+	}
+      }
+  return list;
 }
 
 

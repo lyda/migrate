@@ -1051,21 +1051,7 @@ data_description:
 ;
 
 level_number:
-  WORD
-  {
-    int level = 0;
-    const char *p = CB_REFERENCE ($1)->word->name;
-    for (; *p; p++)
-      level = level * 10 + (*p - '0');
-    if ((01 <= level && level <= 49)
-	|| (level == 66 || level == 77 || level == 88))
-      $$ = level;
-    else
-      {
-	cb_error_x ($1, _("invalid level number `%s'"), cb_name ($1));
-	YYERROR;
-      }
-  }
+  WORD				{ $$ = cb_build_level_number ($1); }
 ;
 
 entry_name:
@@ -1075,7 +1061,7 @@ entry_name:
 ;
 
 data_description_clause_sequence:
-				{ initial_clause = 1; }
+  /* empty */			{ initial_clause = 1; }
 | data_description_clause_sequence
   data_description_clause	{ initial_clause = 0; }
 ;
@@ -1521,21 +1507,7 @@ procedure_division:
 ;
 using_phrase:
   /* empty */			{ $$ = NULL; }
-| USING data_name_list
-  {
-    cb_tree l;
-    for (l = $2; l; l = CB_CHAIN (l))
-      if (CB_VALUE (l) != cb_error_node)
-	{
-	  cb_tree x = CB_VALUE (l);
-	  cb_tree v = cb_ref (x);
-	  struct cb_field *f = CB_FIELD (v);
-	  if (f->level != 01 && f->level != 77)
-	    cb_error_x (x, _("`%s' not level 01 or 77"), f->name);
-	  CB_VALUE (l) = v; /* TODO: remove this */
-	}
-    $$ = $2;
-  }
+| USING data_name_list		{ $$ = cb_build_using_list ($2); }
 ;
 
 procedure_declaratives:
@@ -1569,6 +1541,9 @@ procedure:
 section_header:
   section_name SECTION '.'
   {
+    if ($1 == cb_error_node)
+      YYERROR;
+
     /* Exit the last section */
     if (current_paragraph)
       push (cb_build_perform_exit (current_paragraph));
@@ -1585,6 +1560,9 @@ section_header:
 paragraph_header:
   section_name '.'
   {
+    if ($1 == cb_error_node)
+      YYERROR;
+
     /* Exit the last paragraph */
     if (current_paragraph)
       push (cb_build_perform_exit (current_paragraph));
@@ -1601,31 +1579,14 @@ paragraph_header:
 invalid_statement:
   section_name
   {
-    cb_error_x ($1, _("unknown statement `%s'"), CB_NAME ($1));
+    if ($1 != cb_error_node)
+      cb_error_x ($1, _("unknown statement `%s'"), CB_NAME ($1));
     YYERROR;
   }
 ;
 
 section_name:
-  WORD
-  {
-    struct cb_word *w = CB_REFERENCE ($1)->word;
-    if (w->count > 0)
-      {
-	cb_tree item = CB_VALUE (w->items);
-	if (/* used as a non-label name */
-	    !CB_LABEL_P (item)
-	    /* used as a section name */
-	    || CB_LABEL (item)->section == NULL
-	    /* used as the same paragraph name in the same section */
-	    || CB_LABEL (item)->section == current_section)
-	  {
-	    redefinition_error ($1);
-	    YYERROR;
-	  }
-      }
-    $$ = $1;
-  }
+  WORD				{ $$ = cb_build_section_name ($1); }
 ;
 
 

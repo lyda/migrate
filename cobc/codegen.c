@@ -2228,7 +2228,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   output_line ("static int");
   output ("__%s (int entry", prog->program_id);
   for (l = parameter_list; l; l = CB_CHAIN (l))
-    output (", unsigned char *b_%s", CB_FIELD (CB_VALUE (l))->cname);
+    output (", unsigned char *b_%s", cb_field (CB_VALUE (l))->cname);
   output (")\n");
   output_indent ("{");
 
@@ -2355,7 +2355,7 @@ output_entry_function (struct cb_program *prog,
   else
     for (l = using_list; l; l = CB_CHAIN (l))
       {
-	output ("unsigned char *b_%s", CB_FIELD (CB_VALUE (l))->cname);
+	output ("unsigned char *b_%s", cb_field (CB_VALUE (l))->cname);
 	if (CB_CHAIN (l))
 	  output (", ");
       }
@@ -2366,10 +2366,10 @@ output_entry_function (struct cb_program *prog,
   for (l1 = parameter_list; l1; l1 = CB_CHAIN (l1))
     {
       for (l2 = using_list; l2; l2 = CB_CHAIN (l2))
-	if (strcmp (CB_FIELD (CB_VALUE (l1))->cname,
-		    CB_FIELD (CB_VALUE (l2))->cname) == 0)
+	if (strcmp (cb_field (CB_VALUE (l1))->cname,
+		    cb_field (CB_VALUE (l2))->cname) == 0)
 	  {
-	    output (", b_%s", CB_FIELD (CB_VALUE (l1))->cname);
+	    output (", b_%s", cb_field (CB_VALUE (l1))->cname);
 	    break;
 	  }
       if (l2 == NULL)
@@ -2443,8 +2443,8 @@ codegen (struct cb_program *prog)
       for (l1 = using_list; l1; l1 = CB_CHAIN (l1))
 	{
 	  for (l2 = parameter_list; l2; l2 = CB_CHAIN (l2))
-	    if (strcmp (CB_FIELD (CB_VALUE (l1))->cname,
-			CB_FIELD (CB_VALUE (l2))->cname) == 0)
+	    if (strcmp (cb_field (CB_VALUE (l1))->cname,
+			cb_field (CB_VALUE (l2))->cname) == 0)
 	      break;
 	  if (l2 == NULL)
 	    parameter_list = list_add (parameter_list, CB_VALUE (l1));

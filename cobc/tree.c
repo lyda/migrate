@@ -786,6 +786,9 @@ cb_build_field (int level, cb_tree name, struct cb_field *last_field,
   struct cb_field *f;
   struct cb_reference *r = CB_REFERENCE (name);
 
+  if (level < 0)
+    return cb_error_node;
+
   /* checks for redefinition */
   if (level == 01 || level == 77)
     {
