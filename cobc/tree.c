@@ -163,9 +163,9 @@ make_cond (cob_tree x, enum cond_type type, cob_tree y)
 {
   struct cond *p = malloc (sizeof (struct cond));
   COB_TREE_TAG (p) = cob_tag_cond;
-  p->type    = type;
-  p->x       = x;
-  p->y       = y;
+  p->type  = type;
+  p->left  = x;
+  p->right = y;
   return COB_TREE (p);
 }
 
@@ -193,61 +193,73 @@ make_parameter (cob_tree var, int mode)
 void
 print_tree (cob_tree x, FILE *fp)
 {
-  if (x == spe_lit_ZE)
-    fputs ("ZERO", fp);
-  else if (LITERAL_P (x))
-    fprintf (fp, "\"%s\"", COB_FIELD_NAME (x));
-  else if (SYMBOL_P (x))
-    fputs (COB_FIELD_NAME (x), fp);
-  else if (SUBREF_P (x))
+  switch (COB_TREE_TAG (x))
     {
-      cob_tree_list ls;
-      print_tree (SUBREF_SYM (x), fp);
-      fputs ("(", fp);
-      for (ls = SUBREF_SUBS (x); ls; ls = ls->next)
-	{
-	  print_tree (ls->tree, fp);
-	  if (ls->next)
-	    fputs (", ", fp);
-	  else
+    case cob_tag_literal:
+      if (x == spe_lit_ZE)
+	fputs ("ZERO", fp);
+      else
+	fprintf (fp, "\"%s\"", COB_FIELD_NAME (x));
+      break;
+
+    case cob_tag_symbol:
+      fputs (COB_FIELD_NAME (x), fp);
+      break;
+
+    case cob_tag_subref:
+      {
+	cob_tree_list ls;
+	print_tree (SUBREF_SYM (x), fp);
+	fputs ("(", fp);
+	for (ls = SUBREF_SUBS (x); ls; ls = ls->next)
+	  {
+	    print_tree (ls->tree, fp);
+	    if (ls->next)
+	      fputs (", ", fp);
+	    else
+	      fputs (")", fp);
+	  }
+      }
+      break;
+
+      //case cob_tag_substring:
+      //case cob_tag_expr:
+    case cob_tag_cond:
+      {
+	cob_tree l = COND_LEFT (x);
+	cob_tree r = COND_RIGHT (x);
+
+	switch (COND_TYPE (x))
+	  {
+	  case COND_EQ:
+	    fputs ("(= ", fp);
+	    print_tree (l, fp);
+	    fputs (" ", fp);
+	    print_tree (r, fp);
 	    fputs (")", fp);
-	}
+	    break;
+
+	  case COND_AND:
+	    fputs ("(and ", fp);
+	    print_tree (l, fp);
+	    fputs (" ", fp);
+	    print_tree (r, fp);
+	    fputs (")", fp);
+	    break;
+
+	  default:
+	    fprintf (fp, "(cond %d ", COND_TYPE (x));
+	    print_tree (l, fp);
+	    if (r)
+	      {
+		fputs (" ", fp);
+		print_tree (r, fp);
+	      }
+	    fputs (")", fp);
+	  }
+      }
+
+    default:
+      fprintf (fp, "#<unknown %d %p>", COB_TREE_TAG (x), x);
     }
-  else if (COND_P (x))
-    {
-      cob_tree l = COND_X (x);
-      cob_tree r = COND_Y (x);
-      enum cond_type type = COND_TYPE (x);
-
-      switch (type)
-	{
-	case COND_EQ:
-	  fputs ("(= ", fp);
-	  print_tree (l, fp);
-	  fputs (" ", fp);
-	  print_tree (r, fp);
-	  fputs (")", fp);
-	  break;
-
-	case COND_AND:
-	  fputs ("(and ", fp);
-	  print_tree (l, fp);
-	  fputs (" ", fp);
-	  print_tree (r, fp);
-	  fputs (")", fp);
-	  break;
-
-	default:
-	  fprintf (fp, "(cond %d ", type);
-	  print_tree (l, fp);
-	  if (r)
-	    {
-	      fputs (" ", fp);
-	      print_tree (r, fp);
-	    }
-	  fputs (")", fp);
-	}
-    }
-  else
-    fprintf (fp, "tree(%p)", x);
 }

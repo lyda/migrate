@@ -2922,13 +2922,13 @@ make_opt_cond (cob_tree last, int type, cob_tree this)
 
   if (COND_TYPE (last) == COND_AND || COND_TYPE (last) == COND_OR)
     {
-      last = COND_X (last);
+      last = COND_LEFT (last);
       goto again;
     }
 
   if (type == -1)
     type = COND_TYPE (last);
-  return make_cond (COND_X (last), type, this);
+  return make_cond (COND_LEFT (last), type, this);
 }
 
 void

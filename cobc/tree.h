@@ -27,10 +27,10 @@
  * Tree
  */
 
-#define cob_tag_symbol		0
 #define cob_tag_literal		1
+#define cob_tag_symbol		0
 #define cob_tag_subref		2
-#define cob_tag_substring		4
+#define cob_tag_substring	4
 #define cob_tag_expr		5
 #define cob_tag_cond		8
 
@@ -309,17 +309,17 @@ struct cond
 {
   struct cob_tree_common common;
   enum cond_type type;
-  cob_tree x;
-  cob_tree y;
+  cob_tree left;
+  cob_tree right;
 };
 
 #define COND(x)		((struct cond *) (x))
 #define COND_P(x)	(COB_TREE_TAG (x) == cob_tag_cond)
 #define COND_TYPE(c)	(COND (c)->type)
-#define COND_X(c)	(COND (c)->x)
-#define COND_Y(c)	(COND (c)->y)
+#define COND_LEFT(c)	(COND (c)->left)
+#define COND_RIGHT(c)	(COND (c)->right)
 
-#define COND_IS_UNARY(c) (COND_Y (c) == 0)
+#define COND_IS_UNARY(c) (COND_RIGHT (c) == 0)
 
 extern cob_tree make_cond (cob_tree x, enum cond_type type, cob_tree y);
 extern cob_tree make_unary_cond (cob_tree x, enum cond_type type);

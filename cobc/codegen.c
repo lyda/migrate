@@ -1129,59 +1129,59 @@ gen_compare (cob_tree s1, int op, cob_tree s2)
 void
 gen_condition (cob_tree cond)
 {
-  cob_tree x = COND_X (cond);
-  cob_tree y = COND_Y (cond);
+  cob_tree l = COND_LEFT (cond);
+  cob_tree r = COND_RIGHT (cond);
   enum cond_type type = COND_TYPE (cond);
 
   switch (type)
     {
     case COND_NUMERIC:
-      asm_call_1 ("cob_is_numeric", x);
+      asm_call_1 ("cob_is_numeric", l);
       fprintf (o_src, "\tdecl\t%%eax\n");
       break;
     case COND_ALPHABETIC:
-      asm_call_1 ("cob_is_alphabetic", x);
+      asm_call_1 ("cob_is_alphabetic", l);
       fprintf (o_src, "\tdecl\t%%eax\n");
       break;
     case COND_LOWER:
-      asm_call_1 ("cob_is_lower", x);
+      asm_call_1 ("cob_is_lower", l);
       fprintf (o_src, "\tdecl\t%%eax\n");
       break;
     case COND_UPPER:
-      asm_call_1 ("cob_is_upper", x);
+      asm_call_1 ("cob_is_upper", l);
       fprintf (o_src, "\tdecl\t%%eax\n");
       break;
     case COND_POSITIVE:
-      gen_compare (x, COND_GT, spe_lit_ZE);
+      gen_compare (l, COND_GT, spe_lit_ZE);
       break;
     case COND_NEGATIVE:
-      gen_compare (x, COND_LT, spe_lit_ZE);
+      gen_compare (l, COND_LT, spe_lit_ZE);
       break;
     case COND_ZERO:
-      gen_compare (x, COND_EQ, spe_lit_ZE);
+      gen_compare (l, COND_EQ, spe_lit_ZE);
       break;
     case COND_NOT:
-      gen_condition (x);
+      gen_condition (l);
       gen_not ();
       return;
     case COND_AND:
     case COND_OR:
       {
 	int lab = loc_label++;
-	gen_condition (x);
+	gen_condition (l);
 	if (type == COND_AND)
 	  fprintf (o_src, "\tjnz\t.L%d\n", lab);
 	else
 	  fprintf (o_src, "\tjz\t.L%d\n", lab);
-	gen_condition (y);
+	gen_condition (r);
 	fprintf (o_src, ".L%d:\n", lab);
       }
       return;
     case COND_VAR:
-      gen_condvar (x);
+      gen_condvar (l);
       return;
     default:
-      gen_compare (x, type, y);
+      gen_compare (l, type, r);
       return;
     }
   fprintf (o_src, "\tand\t%%eax,%%eax\n");
