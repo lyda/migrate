@@ -129,10 +129,12 @@ enum cb_binary_size {
 
 enum cb_support {
   CB_OK,
+  CB_WARNING,
   CB_ARCHAIC,
   CB_OBSOLETE,
   CB_SKIP,
   CB_IGNORE,
+  CB_ERROR,
   CB_UNCONFORMABLE,
 };
 

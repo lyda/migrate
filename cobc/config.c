@@ -265,6 +265,8 @@ cb_load_conf (const char *fname, int check_nodef)
 	  {
 	    if (strcmp (val, "ok") == 0)
 	      *((enum cb_support *) var) = CB_OK;
+	    else if (strcmp (val, "warning") == 0)
+	      *((enum cb_support *) var) = CB_WARNING;
 	    else if (strcmp (val, "archaic") == 0)
 	      *((enum cb_support *) var) = CB_ARCHAIC;
 	    else if (strcmp (val, "obsolete") == 0)
@@ -273,6 +275,8 @@ cb_load_conf (const char *fname, int check_nodef)
 	      *((enum cb_support *) var) = CB_SKIP;
 	    else if (strcmp (val, "ignore") == 0)
 	      *((enum cb_support *) var) = CB_IGNORE;
+	    else if (strcmp (val, "error") == 0)
+	      *((enum cb_support *) var) = CB_ERROR;
 	    else if (strcmp (val, "unconformable") == 0)
 	      *((enum cb_support *) var) = CB_UNCONFORMABLE;
 	    else

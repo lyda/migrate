@@ -107,6 +107,8 @@ cb_verify (enum cb_support tag, const char *feature)
     {
     case CB_OK:
       return 1;
+    case CB_WARNING:
+      return 1;
     case CB_ARCHAIC:
       if (cb_warn_archaic)
 	cb_warning (_("%s is archaic in %s"), feature, cb_config_name);
@@ -119,6 +121,8 @@ cb_verify (enum cb_support tag, const char *feature)
       return 0;
     case CB_IGNORE:
       cb_warning (_("%s ignored"), feature);
+      return 0;
+    case CB_ERROR:
       return 0;
     case CB_UNCONFORMABLE:
       cb_error (_("%s not conform to %s"), feature, cb_config_name);

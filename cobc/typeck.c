@@ -2137,7 +2137,12 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
 	      case CB_CATEGORY_ALPHANUMERIC_EDITED:
 		if (CB_TREE_CATEGORY (src) == CB_CATEGORY_NUMERIC
 		    && cb_field (src)->pic->scale > 0)
-		  goto invalid;
+		  {
+		    if (cb_move_noninteger_to_alphanumeric == CB_ERROR)
+		      goto invalid;
+		    cb_warning_x (loc, _("move non-integer to alphanumeric"));
+		    break;
+		  }
 	      default:
 		break;
 	      }
