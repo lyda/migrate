@@ -1,3 +1,7 @@
+2002-09-12  Keisuke Nishida  <knishida@netlab.jp>
+
+	* configure.ac: Add check for regex.
+
 2002-09-09  Keisuke Nishida  <knishida@netlab.jp>
 
 	* Makefile.am (deb, rpm): Removed.

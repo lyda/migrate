@@ -70,11 +70,14 @@ AC_HEADER_TIME
 AC_CHECK_HEADERS([fcntl.h malloc.h libintl.h locale.h stddef.h \
 		  sys/time.h wchar.h])
 
-# Checks for getopt_long
+# Checks for getopt_long.
 AC_CHECK_FUNC([getopt_long_only], ,
   [AC_LIBOBJ(getopt)
    AC_LIBOBJ(getopt1)
    AC_LIBSOURCE(getopt.h)])
+
+# Checks for regex.
+AC_CHECK_LIB([regex], [regcomp], [LIBCOB_LIBS="$LIBCOB_LIBS -lregex"])
 
 # Checks for db.
 AC_CHECK_HEADERS([db1/db.h], , AC_MSG_ERROR(db1/db.h is required))
