@@ -18,7 +18,6 @@
  */
 
 %option 8bit
-%option fast
 %option caseless
 %option noyywrap
 %option never-interactive
