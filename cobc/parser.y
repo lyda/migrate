@@ -692,14 +692,14 @@ lock_mode_clause:
 /* ORGANIZATION clause */
 
 organization_clause:
-  ORGANIZATION _is organization
-| organization
+  ORGANIZATION _is organization	{ current_file->organization = $<ival>3; }
+| organization			{ current_file->organization = $<ival>1; }
 ;
 organization:
-  INDEXED		{ current_file->organization = COB_ORG_INDEXED; }
-| SEQUENTIAL		{ current_file->organization = COB_ORG_SEQUENTIAL; }
-| RELATIVE		{ current_file->organization = COB_ORG_RELATIVE; }
-| LINE SEQUENTIAL	{ current_file->organization = COB_ORG_LINE_SEQUENTIAL; }
+  INDEXED			{ $<ival>$ = COB_ORG_INDEXED; }
+| SEQUENTIAL			{ $<ival>$ = COB_ORG_SEQUENTIAL; }
+| RELATIVE			{ $<ival>$ = COB_ORG_RELATIVE; }
+| LINE SEQUENTIAL		{ $<ival>$ = COB_ORG_LINE_SEQUENTIAL; }
 ;
 
 
