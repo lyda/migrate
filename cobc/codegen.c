@@ -735,8 +735,19 @@ loadloc_to_eax (cob_tree sy_p)
 static void
 gen_loadloc (cob_tree sy)
 {
-  loadloc_to_eax (sy);
-  push_eax ();
+  if (!SUBREF_P (sy) && !SUBSTRING_P (sy)
+      && !(SYMBOL_P (sy) && sy->linkage_flg)
+      && sy->sec_no != SEC_STACK)
+    {
+      /* optimization */
+      stackframe_cnt += 4;
+      output ("\tpushl\t%s\n", memref (sy));
+    }
+  else
+    {
+      loadloc_to_eax (sy);
+      push_eax ();
+    }
 }
 
 static cob_tree 
@@ -766,16 +777,12 @@ gen_temp_storage (int size)
 static void
 gen_loaddesc1 (cob_tree sy, int variable_length)
 {
-  cob_tree var;
+  cob_tree var = sy;
   if (SUBREF_P (sy) || SUBSTRING_P (sy))
     {
       var = SUBREF_SYM (sy);
       if (SUBREF_P (var))
 	var = SUBREF_SYM (var);
-    }
-  else
-    {
-      var = sy;
     }
   if (SUBSTRING_P (sy))
     {
@@ -805,9 +812,10 @@ gen_loaddesc1 (cob_tree sy, int variable_length)
 	    }
 	}
       output ("\tmovl\t$'%c', rf_base%d+%d\n", 'G',
-	       pgm_segment, rflp->slot * 8 + 4);
+	      pgm_segment, rflp->slot * 8 + 4);
       output ("\tmovl\t$rf_base%d+%d, %%eax\n",
-	       pgm_segment, rflp->slot * 8);
+	      pgm_segment, rflp->slot * 8);
+      push_eax ();
     }
   else
     {
@@ -815,17 +823,19 @@ gen_loaddesc1 (cob_tree sy, int variable_length)
       if (variable_length && get_variable_item (sy) != NULL)
 	{
 	  adjust_desc_length (sy);
+	  push_eax ();
 	}
       else
 	{
+	  /* optimization */
+	  stackframe_cnt += 4;
+	  output ("\tpushl\t$c_base%d+%d", pgm_segment, var->descriptor);
 #ifdef COB_DEBUG
-	  output ("# descriptor of [%s]\n", COB_FIELD_NAME (var));
+	  output ("\t# descriptor of [%s]", COB_FIELD_NAME (var));
 #endif
-	  output ("\tmovl\t$c_base%d+%d, %%eax\n",
-		  pgm_segment, var->descriptor);
+	  output ("\n");
 	}
     }
-  push_eax ();
 }
 
 static void
