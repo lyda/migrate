@@ -154,6 +154,28 @@ AT_CHECK([./prog], [0], [+000000000+000000001+000000001+000000000])
 AT_CLEANUP
 
 
+## WHEN-COMPILED
+
+AT_SETUP([WHEN-COMPILED])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X(20).
+       PROCEDURE        DIVISION.
+           MOVE WHEN-COMPILED TO X.
+           INSPECT X CONVERTING "0123456789" TO "9999999999".
+           DISPLAY X NO ADVANCING.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [99/99/9999.99.99    ])
+
+AT_CLEANUP
+
+
 ## CALL
 
 AT_SETUP([CALL BY CONTENT LENGTH])
