@@ -60,7 +60,7 @@ $(srcdir)/package.m4: $(top_srcdir)/configure.ac
 	  echo 'm4_define([AT_PACKAGE_BUGREPORT], [@PACKAGE_BUGREPORT@])'; \
 	} > $(srcdir)/package.m4
 
-$(srcdir)/%: $(srcdir)/%.at
+$(srcdir)/%: $(srcdir)/%.at $(srcdir)/package.m4
 	autom4te --language=autotest -I $(srcdir) -I $(srcdir)/$@.src -o $@ $<
 	chmod +x $@
 
