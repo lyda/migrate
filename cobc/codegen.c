@@ -472,9 +472,9 @@ output_expr (cobc_tree x, int id)
 	      output_call_1 ("cob_check_numeric", x);
 	    output_prefix ();
 	    if (x == cobc_dt)
-	      output ("cob_decimal_set", id);
+	      output ("cob_decimal_set");
 	    else
-	      output ("cob_decimal_set_field", id);
+	      output ("cob_decimal_set_field");
 	    output (" (cob_d%d, ", id);
 	    output_tree (x);
 	    output (");\n");
@@ -755,12 +755,18 @@ output_recursive (void (*func) (struct cobc_field *), cobc_tree x)
 static char
 get_type (struct cobc_field *p)
 {
-  int type = p->category;
-  if (p->usage == COBC_USAGE_BINARY || p->usage == COBC_USAGE_INDEX)
-    type = COB_BINARY;
-  else if (p->usage == COBC_USAGE_PACKED)
-    type = COB_PACKED;
-  return type;
+  switch (p->usage)
+    {
+    case COBC_USAGE_BINARY:
+    case COBC_USAGE_INDEX:
+      return COB_BINARY;
+    case COBC_USAGE_BIGENDIAN:
+      return COB_BIGENDIAN;
+    case COBC_USAGE_PACKED:
+      return COB_PACKED;
+    default:
+      return p->category;
+    }
 }
 
 static void
