@@ -1,5 +1,20 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Version 0.8.3 での変更点
+
+** CANCEL 文を実装
+
+** 除算で小数点以下 18 桁までの精度で計算するようにした。
+
+** INITIALIZE 文が吐くアセンブリコードを小型化
+
+** 新しい C 関数 cob_resolve_error
+
+cob_resolve が NULL を返したとき、エラーの原因を示す文字列を返す。
+
+** いつものごとくバグ修正
+
+
 * Version 0.8.2 での変更点
 
 ** db の自動判定をやめ、db1 を必須にした。
