@@ -301,7 +301,7 @@ extern void cob_accept_environment (struct cob_field f, struct cob_field env);
 extern char cob_dummy_status[];
 
 struct cob_file_desc {
-  char organization;		/* ORGANIZATION */
+  int organization;		/* ORGANIZATION */
   char access_mode;		/* ACCESS MODE */
   char open_mode;		/* OPEN MODE */
   char *file_status;		/* FILE STATUS */
@@ -332,36 +332,25 @@ struct cob_file_desc {
   int nkeys;			/* the number of keys */
 };
 
-extern void cob_open_sequential (struct cob_file_desc *f, struct cob_field name, int mode);
-extern void cob_close_sequential (struct cob_file_desc *f);
-extern void cob_read_sequential (struct cob_file_desc *p);
-extern void cob_write_sequential (struct cob_file_desc *f);
-extern void cob_write_lines (struct cob_file_desc *f, int lines);
-extern void cob_write_page (struct cob_file_desc *f);
-extern void cob_rewrite_sequential (struct cob_file_desc *f);
+struct cob_fileio_funcs {
+  void (*open) (struct cob_file_desc *f, struct cob_field name, int mode);
+  void (*close) (struct cob_file_desc *f);
+  void (*read) (struct cob_file_desc *f);
+  void (*read_next) (struct cob_file_desc *f);
+  void (*write) (struct cob_file_desc *f);
+  void (*rewrite) (struct cob_file_desc *f);
+  void (*delete) (struct cob_file_desc *f);
+  void (*start) (struct cob_file_desc *f, int cond, struct cob_field key);
+};
 
-extern void cob_open_lineseq (struct cob_file_desc *f, struct cob_field name, int mode);
-extern void cob_close_lineseq (struct cob_file_desc *f);
-extern void cob_read_lineseq (struct cob_file_desc *p);
-extern void cob_write_lineseq (struct cob_file_desc *f);
-
-extern void cob_open_relative (struct cob_file_desc *f, struct cob_field name, int mode);
-extern void cob_close_relative (struct cob_file_desc *f);
-extern void cob_read_relative (struct cob_file_desc *f);
-extern void cob_read_next_relative (struct cob_file_desc *f);
-extern void cob_write_relative (struct cob_file_desc *f);
-extern void cob_rewrite_relative (struct cob_file_desc *f);
-extern void cob_delete_relative (struct cob_file_desc *f);
-extern void cob_start_relative (struct cob_file_desc *f, int cond, struct cob_field k);
-
-extern void cob_open_indexed (struct cob_file_desc *f, struct cob_field name, int mode);
-extern void cob_close_indexed (struct cob_file_desc *f);
-extern void cob_read_indexed (struct cob_file_desc *f, struct cob_field k);
-extern void cob_read_next_indexed (struct cob_file_desc *f);
-extern void cob_write_indexed (struct cob_file_desc *f);
-extern void cob_rewrite_indexed (struct cob_file_desc *f);
-extern void cob_delete_indexed (struct cob_file_desc *f);
-extern void cob_start_indexed (struct cob_file_desc *f, int cond, struct cob_field k);
+extern void cob_open (struct cob_file_desc *f, struct cob_field name, int mode);
+extern void cob_close (struct cob_file_desc *f);
+extern void cob_read (struct cob_file_desc *f);
+extern void cob_read_next (struct cob_file_desc *f);
+extern void cob_write (struct cob_file_desc *f);
+extern void cob_rewrite (struct cob_file_desc *f);
+extern void cob_delete (struct cob_file_desc *f);
+extern void cob_start (struct cob_file_desc *f, int cond, struct cob_field key);
 
 
 /* string.c */

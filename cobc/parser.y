@@ -97,62 +97,6 @@
 
 struct program_spec program_spec;
 
-static struct fileio_tag {
-  int open;
-  int close;
-  int read;
-  int read_next;
-  int write;
-  int rewrite;
-  int delete;
-  int start;
-} fileio_tags[] = {
-  /* ORGANIZATION IS SEQUENTIAL */
-  {
-    COB_OPEN_SEQUENTIAL,
-    COB_CLOSE_SEQUENTIAL,
-    COB_READ_SEQUENTIAL,
-    COB_READ_SEQUENTIAL,
-    COB_WRITE_SEQUENTIAL,
-    COB_REWRITE_SEQUENTIAL,
-    0,
-    0
-  },
-  /* ORGANIZATION IS LINE SEQUENTIAL */
-  {
-    COB_OPEN_LINESEQ,
-    COB_CLOSE_LINESEQ,
-    COB_READ_LINESEQ,
-    COB_READ_LINESEQ,
-    COB_WRITE_LINESEQ,
-    0,
-    0,
-    0
-  },
-  /* ORGANIZATION IS RELATIVE */
-  {
-    COB_OPEN_RELATIVE,
-    COB_CLOSE_RELATIVE,
-    COB_READ_RELATIVE,
-    COB_READ_NEXT_RELATIVE,
-    COB_WRITE_RELATIVE,
-    COB_REWRITE_RELATIVE,
-    COB_DELETE_RELATIVE,
-    COB_START_RELATIVE,
-  },
-  /* ORGANIZATION IS INDEXED */
-  {
-    COB_OPEN_INDEXED,
-    COB_CLOSE_INDEXED,
-    COB_READ_INDEXED,
-    COB_READ_NEXT_INDEXED,
-    COB_WRITE_INDEXED,
-    COB_REWRITE_INDEXED,
-    COB_DELETE_INDEXED,
-    COB_START_INDEXED,
-  }
-};
-
 static struct cobc_field *current_field;
 static struct cobc_file_name *current_file_name;
 static struct cobc_label_name *current_section, *current_paragraph;
@@ -1589,10 +1533,7 @@ close_statement:
   {
     struct cobc_list *l;
     for (l = $2; l; l = l->next)
-      {
-	struct cobc_file_name *p = l->item;
-	push_call_1 (fileio_tags[p->organization].close, l->item);
-      }
+      push_call_1 (COB_CLOSE, l->item);
   }
 ;
 
@@ -1632,7 +1573,7 @@ delete_statement:
   DELETE file_name _record
   {
     current_file_name = COBC_FILE_NAME ($2);
-    push_call_1 (fileio_tags[current_file_name->organization].delete, $2);
+    push_call_1 (COB_DELETE, $2);
   }
   opt_invalid_key
   _end_delete
@@ -2034,9 +1975,8 @@ open_option:
     struct cobc_list *l;
     for (l = $2; l; l = l->next)
       {
-	struct cobc_file_name *p = l->item;
-	push_call_3 (fileio_tags[p->organization].open, l->item,
-		     p->assign, make_integer ($1));
+	struct cobc_file_name *p = COBC_FILE_NAME (l->item);
+	push_call_3 (COB_OPEN, p, p->assign, make_integer ($1));
       }
   }
 ;
@@ -2125,25 +2065,20 @@ read_statement:
     if ($3 || current_file_name->access_mode == COB_ACCESS_SEQUENTIAL)
       {
 	/* READ NEXT */
-	int tag = fileio_tags[current_file_name->organization].read_next;
-	if ($6 && current_file_name->organization != COB_ORG_INDEXED)
-	  yyerror ("KEY can be specified only with INDEXED files");
-	else
-	  push_call_1 (tag, $2);
+	if ($6)
+	  yywarn ("KEY ignored with sequential READ");
+	push_call_1 (COB_READ_NEXT, $2);
       }
     else
       {
 	/* READ */
-	int tag = fileio_tags[current_file_name->organization].read;
 	if (current_file_name->organization == COB_ORG_INDEXED)
 	  {
-	    if ($6)
-	      push_call_2 (tag, $2, $6);
-	    else
-	      push_call_2 (tag, $2, current_file_name->key);
+	    if (!$6)
+	      $6 = current_file_name->key;
+	    push_call_3 (COB_START, $2, make_integer (COB_EQ), $6);
 	  }
-	else
-	  push_call_1 (tag, $2);
+	push_call_1 (COB_READ, $2);
       }
     if ($5)
       push_move (COBC_TREE (current_file_name->record), $5);
@@ -2181,7 +2116,7 @@ rewrite_statement:
     current_file_name = COBC_FILE_NAME (file);
     if ($3)
       push_move ($3, $2);
-    push_call_1 (fileio_tags[current_file_name->organization].rewrite, file);
+    push_call_1 (COB_REWRITE, file);
   }
   opt_invalid_key
   _end_rewrite
@@ -2286,17 +2221,13 @@ start_statement:
 start_body:
   file_name
   {
-    int tag;
     current_file_name = COBC_FILE_NAME ($1);
-    tag = fileio_tags[current_file_name->organization].start;
-    push_call_3 (tag, $1, make_integer (COB_EQ), current_file_name->key);
+    push_call_3 (COB_START, $1, make_integer (COB_EQ), current_file_name->key);
   }
 | file_name KEY _is operator data_name
   {
-    int tag;
     int cond = 0;
     current_file_name = COBC_FILE_NAME ($1);
-    tag = fileio_tags[current_file_name->organization].start;
     switch ($4)
       {
       case COBC_COND_EQ: cond = COB_EQ; break;
@@ -2306,7 +2237,7 @@ start_body:
       case COBC_COND_GE: cond = COB_GE; break;
       case COBC_COND_NE: cond = COB_NE; break;
       }
-    push_call_3 (tag, $1, make_integer (cond), $5);
+    push_call_3 (COB_START, $1, make_integer (cond), $5);
   }
 ;
 _end_start: | END_START ;
@@ -2495,7 +2426,7 @@ write_statement:
     /* WRITE */
     if ($3)
       push_move ($3, $2);
-    push_call_1 (fileio_tags[current_file_name->organization].write, file);
+    push_call_1 (COB_WRITE, file);
     /* BEFORE ADVANCING */
     if ($4 && $4->type == COBC_BEFORE)
       {
