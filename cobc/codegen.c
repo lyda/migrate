@@ -916,6 +916,13 @@ asm_call_3 (const char *name, struct sym *s1, struct sym *s2, struct sym *s3)
   asm_call (name);
 }
 
+static void
+push_index (struct sym *sy)
+{
+  asm_call_1 ("get_index", sy);
+  push_eax ();
+}
+
 
 /*
  *	Code Generating Routines
@@ -2038,10 +2045,7 @@ gen_unstring (struct sym *var, struct unstring_delimited *delim,
       delim = delim->next;
       free (delim1);
     }
-  gen_loadvar (tally);
-  gen_loadvar (ptr);
-  gen_loadvar (var);
-  asm_call ("cob_unstring");
+  asm_call_3 ("cob_unstring", var, ptr, tally);
 }
 
 void
@@ -2058,9 +2062,7 @@ gen_stringcmd (struct string_from *sf, struct sym *sy, struct sym *ptr)
       sf = sf->next;
       free (sf1);
     }
-  gen_loadvar (ptr);
-  gen_loadvar (sy);
-  asm_call ("cob_stringcmd");
+  asm_call_2 ("cob_stringcmd", sy, ptr);
 }
 
 void
@@ -2294,13 +2296,10 @@ void
 gen_accept_env_var (struct sym *sy, struct lit *v)
 {
 
-  struct sym *sy1, *sy2;
+  struct sym *sy2;
 
-  sy1 = (struct sym *) v;
-  gen_loadloc (sy1);
-
-  gen_loadvar (sy);
-  asm_call ("accept_env_var");
+  gen_loadloc ((struct sym *) v);
+  asm_call_1 ("accept_env_var", sy);
 
 //      Set RETURN-CODE with the value returned by 
 //      the "accept_cmd_line" function, which is stored 
@@ -3288,17 +3287,16 @@ gen_class_check (struct sym *sy, int class)
   else
     {
       /* from now on, only alphabetic tests are allowed */
-      gen_loadvar (sy);
       switch (class)
 	{
 	case CLASS_ALPHABETIC:
-	  asm_call ("cob_check_alphabetic");
+	  asm_call_1 ("cob_check_alphabetic", sy);
 	  break;
 	case CLASS_ALPHABETICUPPER:
-	  asm_call ("cob_check_upper");
+	  asm_call_1 ("cob_check_upper", sy);
 	  break;
 	case CLASS_ALPHABETICLOWER:
-	  asm_call ("cob_check_lower");
+	  asm_call_1 ("cob_check_lower", sy);
 	  break;
 	default:
 	  yyerror ("unknown class condition");
@@ -3350,8 +3348,7 @@ gen_inspect (struct sym *var, void *list, int operation)
 	  tl = tl->next;
 	  free (tl1);
 	}
-      gen_loadvar (var);
-      asm_call ("cob_inspect_tallying");
+      asm_call_1 ("cob_inspect_tallying", var);
     }
   else if (operation == 1)
     {
@@ -3389,8 +3386,7 @@ gen_inspect (struct sym *var, void *list, int operation)
 	  rl = rl->next;
 	  free (rl1);
 	}
-      gen_loadvar (var);
-      asm_call ("cob_inspect_replacing");
+      asm_call_1 ("cob_inspect_replacing", var);
     }
   else
     {
@@ -3406,29 +3402,22 @@ gen_inspect (struct sym *var, void *list, int operation)
 }
 
 static void
-gen_move_1 (struct sym *sy_src)
+gen_move_1 (struct sym *src)
 {
-  if (sy_src == (struct sym *) spe_lit_ZE)
-    {
-      asm_call ("cob_move_zero");
-    }
-  else if (sy_src == (struct sym *) spe_lit_SP)
-    {
-      asm_call ("cob_move_space");
-    }
+  if (src == (struct sym *) spe_lit_ZE)
+    asm_call ("cob_move_zero");
+  else if (src == (struct sym *) spe_lit_SP)
+    asm_call ("cob_move_space");
   else
-    {
-      gen_loadvar (sy_src);
-      asm_call ("cob_move");
-    }
+    asm_call_1 ("cob_move", src);
 }
 
 void
-gen_move (struct sym *sy_src, struct sym *sy_dst)
+gen_move (struct sym *src, struct sym *dst)
 {
 #ifdef COB_DEBUG
   {
-    struct sym *esys = sy_src, *esyd = sy_dst;
+    struct sym *esys = src, *esyd = dst;
     if (REFMOD_P (esys))
       esys = ((struct refmod *) esys)->sym;
     if (REFMOD_P (esyd))
@@ -3438,8 +3427,8 @@ gen_move (struct sym *sy_src, struct sym *sy_dst)
   }
 #endif
 
-  gen_loadvar (sy_dst);
-  gen_move_1 (sy_src);
+  gen_loadvar (dst);
+  gen_move_1 (src);
 }
 
 /* The following functions will be activated when we change from
@@ -3692,8 +3681,7 @@ push_condition ()
 void
 push_field (struct sym *sy)
 {
-  gen_loadvar (sy);
-  asm_call ("cob_push_field");
+  asm_call_1 ("cob_push_field", sy);
 }
 
 int
@@ -3965,8 +3953,7 @@ gen_push_int (struct sym *sy)
 
 void gen_cancel (struct sym *sy)
 {
-  gen_loadvar (sy);
-  asm_call ("cob_cancel");
+  asm_call_1 ("cob_cancel", sy);
 }
 
 void
@@ -5057,9 +5044,6 @@ gen_exit (int code)
     }
   else
     {
-      //fprintf(o_src,"\tleal\t.LE_%s, %%eax\n",label_name(curr_paragr));
-      //push_eax();
-      //asm_call("exit_paragraph");
       l1 = loc_label++;
       l2 = loc_label++;
       if (curr_paragr != NULL)
@@ -5195,9 +5179,7 @@ gen_compare (struct sym *s1, int value, struct sym *s2)
     }
   else
     {
-      gen_loadvar (s2);
-      gen_loadvar (s1);
-      asm_call ("compare");
+      asm_call_2 ("compare", s1, s2);
       switch (value)
 	{
 	case 0:
@@ -5264,8 +5246,7 @@ push_expr (struct sym *sy)
 #ifdef COB_DEBUG
   fprintf (o_src, "# push_expr: %s\n", sy->name);
 #endif
-  gen_loadvar (sy);
-  asm_call ("cob_push_decimal");
+  asm_call_1 ("cob_push_decimal", sy);
   return 1;
 }
 
@@ -5664,11 +5645,7 @@ gen_read (struct sym *f, struct sym *buf, struct sym *key)
 {
   struct rec_varying *rv = (struct rec_varying *) f->rec_varying;
   if (f->organization == ORG_RELATIVE)
-    {
-      gen_loadvar (f->ix_desc);
-      asm_call ("get_index");
-      push_eax ();
-    }
+    push_index (f->ix_desc);
   if (f->organization == ORG_INDEXED)
     {
       gen_loadvar (key);
@@ -5736,11 +5713,7 @@ gen_write (struct sym *r, int opt, struct sym *buf)
   else
     {
       if (f->organization == ORG_RELATIVE)
-	{
-	  gen_loadvar (f->ix_desc);
-	  asm_call ("get_index");
-	  push_eax ();
-	}
+	push_index (f->ix_desc);
       if (rv != NULL)
 	gen_loadvar (rv->reclen);
       else
@@ -5758,11 +5731,7 @@ gen_rewrite (struct sym *r, struct sym *buf)
   struct rec_varying *rv = (struct rec_varying *) f->rec_varying;
   gen_check_varying (f);
   if (f->organization == ORG_RELATIVE)
-    {
-      gen_loadvar (f->ix_desc);
-      asm_call ("get_index");
-      push_eax ();
-    }
+    push_index (f->ix_desc);
   if (rv != NULL)
     gen_loadvar (rv->reclen);
   else
@@ -5777,15 +5746,9 @@ gen_start (struct sym *f, int cond, struct sym *key)
 {
   gen_check_varying (f);
   if (f->organization == ORG_RELATIVE)
-    {
-      gen_loadvar (f->ix_desc);
-      asm_call ("get_index");
-      push_eax ();
-    }
+    push_index (f->ix_desc);
   else
-    {
-      gen_loadvar (key);
-    }
+    gen_loadvar (key);
   push_immed (cond);
   gen_save_filevar (f, NULL);
   asm_call ("cob_start");
@@ -5797,11 +5760,7 @@ gen_delete (struct sym *f)
 {
   gen_check_varying (f);
   if (f->organization == ORG_RELATIVE)
-    {
-      gen_loadvar (f->ix_desc);
-      asm_call ("get_index");
-      push_eax ();
-    }
+    push_index (f->ix_desc);
   gen_save_filevar (f, NULL);
   asm_call ("cob_delete");
   gen_status (f);
@@ -5942,8 +5901,7 @@ gen_call (struct lit *v, int stack_size, int exceplabel, int notexceplabel)
       /* call dynamic routine (call by name) */
       stack_save = stackframe_cnt;
       stackframe_cnt = 0;
-      gen_loadvar ((struct sym *) v);
-      asm_call ("cob_dyncall_resolve");
+      asm_call_1 ("cob_dyncall_resolve", (struct sym *) v);
       stackframe_cnt = stack_save;
       fprintf (o_src, "\tand\t%%eax,%%eax\n");
       fprintf (o_src, "\tjz\t.L%d\n", exceplabel);
