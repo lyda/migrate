@@ -174,7 +174,6 @@ static struct option long_options[] = {
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
   {"fmain", no_argument, &cb_flag_main, 1},
-  {"fdebugging-line", no_argument, &cb_flag_debugging_line, 1},
   {"Wall", no_argument, 0, 'W'},
 #undef CB_WARNING
 #define CB_WARNING(sig,var,name,doc)		\
@@ -218,7 +217,6 @@ COBOL options:\n\
   -T <n>                Set tab width to <n> (default: 8)\n\
   -I <path>             Add copybook include path\n\
   -fmain                Include a main function in the output\n\
-  -fdebugging-line      Enable debugging lines\n\
 \n\
 Warning options:\n\
   -Wall                 Enable all warnings"));
