@@ -122,15 +122,6 @@ static void check_decimal_point (struct lit *lit);
 
 %nonassoc LOW_PREC
 
-%token <str>  IDSTRING
-%token <sval> STRING,VARIABLE,VARCOND,SUBSCVAR
-%token <sval> LABELSTR,CMD_LINE,ENVIRONMENT_VARIABLE,PICTURE
-%token <ival> USAGENUM,ZERONUM,CONDITIONAL
-%token <ival> TO,FOR,IS,ARE,THRU,THAN,NO
-%token <ival> COMMENTING,DIRECTION,READ,WRITE,INPUT_OUTPUT
-%token <lval> NLITERAL,CLITERAL
-%token <ival> PORTNUM,DATE_TIME
-
 %left   '+','-'
 %left   '*','/'
 %left   '^'
@@ -142,7 +133,16 @@ static void check_decimal_point (struct lit *lit);
 %right OF
 %nonassoc '.'
 
-%token TOK_SOURCE_COMPUTER, TOK_OBJECT_COMPUTER
+%token <str>  IDSTRING
+%token <sval> STRING,VARIABLE,VARCOND,SUBSCVAR
+%token <sval> LABELSTR,CMD_LINE,ENVIRONMENT_VARIABLE,PICTURE
+%token <ival> USAGENUM,ZERONUM,CONDITIONAL
+%token <ival> COMMENTING,DIRECTION,READ,WRITE
+%token <lval> NLITERAL,CLITERAL
+%token <ival> PORTNUM,DATE_TIME
+
+%token TO,FOR,IS,ARE,THRU,THAN,NO
+%token TOK_SOURCE_COMPUTER, TOK_OBJECT_COMPUTER,INPUT_OUTPUT
 %token BEFORE,AFTER,SCREEN,REVERSEVIDEO,NUMBERTOK,PLUS,MINUS,SEPARATE
 %token FOREGROUNDCOLOR,BACKGROUNDCOLOR,UNDERLINE,HIGHLIGHT,LOWLIGHT
 %token RIGHT,AUTO,REQUIRED,FULL,JUST,BLINK,SECURE,BELL,COLUMN,SYNC
@@ -169,7 +169,7 @@ static void check_decimal_point (struct lit *lit);
 %token SELECT,ASSIGN,DISPLAY,UPON,CONSOLE,STD_OUTPUT,STD_ERROR
 %token ORGANIZATION,ACCESS,MODE,KEY,STATUS,ALTERNATE
 %token SEQUENTIAL,INDEXED,DYNAMIC,RANDOM,RELATIVE
-%token SECTION,SORT,DUPLICATES,WITH
+%token SECTION,SORT,SORT_MERGE,DUPLICATES,WITH
 %token QUOTES,LOWVALUES,HIGHVALUES
 %token SET,UP,DOWN
 %token TRACE,READY,RESET
@@ -198,7 +198,7 @@ static void check_decimal_point (struct lit *lit);
 %type <ival> IF,ELSE,usage,write_options,opt_read_next
 %type <ival> using_options,using_parameters
 %type <dval> if_part
-%type <sval> anystring,name,gname,opt_gname,opt_def_name,def_name,procedure_section
+%type <sval> name,gname,opt_gname,opt_def_name,def_name,procedure_section
 %type <sval> field_description,label,filename,noallname,paragraph,assign_clause
 %type <lval> literal,gliteral,without_all_literal,all_literal,special_literal
 %type <lval> nliteral,signed_nliteral
@@ -256,6 +256,7 @@ static void check_decimal_point (struct lit *lit);
 %type <iks>  opt_read_invalid_key
 %type <ike>  read_invalid_key ,read_not_invalid_key
 
+
 %%
 
 /************   Parser for Cobol Source  **************/
@@ -274,11 +275,12 @@ opt_end_program:
         idstring
         { $$=1; }
         ;
-program: identification_division 
-         environment_division
-         data_division_opt
-         procedure_division_opt
-        ;
+program:
+    identification_division 
+    environment_division
+    data_division
+    procedure_division
+  ;
 
 
 /*****************************************************************************
@@ -287,26 +289,26 @@ program: identification_division
 
 identification_division:
     IDENTIFICATION_TOK DIVISION '.'
-    PROGRAM_ID '.' idstring program_parameter '.' 
+    PROGRAM_ID '.' idstring opt_program_parameter '.' 
     identification_division_options
     {
-     pgm_header($6); 
-     define_special_fields();
+      pgm_header ($6);
+      define_special_fields ();
+    }
+  ;
+opt_program_parameter:
+    /* nothing */
+  | opt_is program_parameter opt_program
+    {
+      yywarn ("program parameter is not supported yet");
     }
   ;
 program_parameter:
-    /* nothing */
-  | opt_is INITIALTOK opt_program
-    {
-      yywarn ("parameter `INITIAL PROGRAM' is not supported yet");
-    }
-  | opt_is COMMONTOK opt_program
-    {
-      yywarn ("parameter `COMMON PROGRAM' is not supported yet");
-    }
+    INITIALTOK
+  | COMMONTOK
   ;
 identification_division_options:
-    /*nothing */
+    /* nothing */
   | identification_division_options identification_division_option
   ;
 identification_division_option:
@@ -333,7 +335,7 @@ environment_division:
       curr_division = CDIV_ENVIR;
     }
     configuration_section
-    opt_input_output
+    input_output_section
     {
      curr_division = CINITIAL; 
     }
@@ -375,28 +377,30 @@ opt_sign: | SIGN ;
  * INPUT-OUTPUT SECTION
  *******************/
 
-opt_input_output:
-    INPUT_OUTPUT SECTION '.' input_output_section { }
-    | /*nothing */
-    ;
 input_output_section:
-    input_output_section i_o_option { }
-    | /* nothing */     { }
-    ;
-i_o_option:
-    FILE_CONTROL '.' file_control
-    | I_O_CONTROL '.' io_control
-    | error { yyerror("I-O SECTION format wrong"); }
-    ;
-file_control:
-    file_control file_select
-    | /* nothing */
-    ;
+    /* nothing */
+  | INPUT_OUTPUT SECTION '.' input_output_list
+  ;
+input_output_list:
+    /* nothing */
+  | input_output_list input_output
+  ;
+input_output:
+    FILE_CONTROL '.' file_control_list
+  | I_O_CONTROL '.' i_o_control_list
+  ;
 
-/* SELECT def_name ASSIGN opt_to filename {*/
-/*    SELECT def_name ASSIGN opt_to opt_portnum opt_filename {*/
-/*    SELECT def_name ASSIGN opt_to assign_clause {*/
-file_select:
+
+/*
+ * FILE-CONTROL
+ */
+
+file_control_list:
+    /* nothing */
+  | file_control_list file_control
+  ;
+
+file_control:
     SELECT opt_optional def_name ASSIGN opt_to {
             $3->type='F';   /* mark as file variable */
             curr_file=$3;
@@ -470,27 +474,48 @@ organization_options:
     | SEQUENTIAL	{ $$ = 2; }
     | RELATIVE		{ $$ = 3; }
     | LINE SEQUENTIAL	{ $$ = 4; }
-    | anystring { yyerror("invalid option, %s",$1->name); }
     ;
 access_options:
       SEQUENTIAL	{ $$ = 1; }
     | DYNAMIC		{ $$ = 2; }
     | RANDOM		{ $$ = 3; }
-    | anystring { yyerror("invalid access option, %s", $1->name); }
     ;
-io_control:
-    io_control io_ctrl
-    | /* nothing */
-    ;
-io_ctrl:
-    SAME AREA FOR name_list '.'
-    ;
-name_list:
+
+
+/*
+ * I-O-CONTROL
+ */
+
+i_o_control_list:
+    /* nothing */
+  | i_o_control_list i_o_control
+  ;
+i_o_control:
+    SAME i_o_control_param opt_area opt_for filename_list '.'
+    {
+      yywarn ("I-O-CONTROL is not supported yet");
+    }
+  ;
+i_o_control_param:
+    RECORD
+  | SORT
+  | SORT_MERGE
+  ;
+filename_list:
     variable { }
-    | name_list variable { }
-    | error { yyerror("variable expected"); }
-    ;
-data_division_opt: DATA_TOK DIVISION '.' 
+  | filename_list variable { }
+  ;
+
+opt_area: | AREA ;
+opt_for: | FOR ;
+
+
+/*****************************************************************************
+ * DATA DIVISION.
+ *****************************************************************************/
+
+data_division:
+    DATA_TOK DIVISION '.' 
     {
      curr_division = CDIV_DATA;
     }
@@ -1074,7 +1099,14 @@ linkage_section:
     | linkage_section
         field_description
     ;
-procedure_division_opt: PROCEDURE_TOK DIVISION 
+
+
+/*****************************************************************************
+ * PROCEDURE DIVISION.
+ *****************************************************************************/
+
+procedure_division:
+     PROCEDURE_TOK DIVISION 
     { 
      curr_division = CDIV_PROC; 
     }
@@ -1082,17 +1114,17 @@ procedure_division_opt: PROCEDURE_TOK DIVISION
     { 
      proc_header($4);
     }
-     procedure_division
+     procedure_list
     {
-     /* close procedure_division sections & paragraphs */
+     /* close procedure_list sections & paragraphs */
      close_section(); /* this also closes paragraph */
      resolve_labels();
      proc_trail($4); 
     }
     | /* nothing */
     ;
-procedure_division:
-    | procedure_division procedure_decl
+procedure_list:
+    | procedure_list procedure_decl
     ;
 procedure_decl:
     procedure_section { close_section(); open_section($1); }
@@ -1103,26 +1135,26 @@ procedure_decl:
     ;
 procedure_section:
      LABELSTR SECTION '.' {
-            struct sym *lab=$1;
-                        if (lab->defined != 0) {
-                                lab = install(lab->name,SYTB_LAB,2);
-                        }
-                        lab->defined = 1;
-            $$=lab;
-        }
+       struct sym *lab=$1;
+       if (lab->defined != 0) {
+	 lab = install(lab->name,SYTB_LAB,2);
+       }
+       lab->defined = 1;
+       $$=lab;
+     }
     ;
 paragraph:
     LABELSTR '.' {
-            struct sym *lab=$1;
-                        if (lab->defined != 0) {
-                                if ((lab=lookup_label(lab,curr_section))==NULL) {
-                                        lab = install($1->name,SYTB_LAB,2);
-                                }
-                        }
-                        lab->parent = curr_section;
-                        lab->defined=1;
-                        $$=lab;
-        }
+       struct sym *lab=$1;
+       if (lab->defined != 0) {
+	 if ((lab=lookup_label(lab,curr_section))==NULL) {
+	   lab = install($1->name,SYTB_LAB,2);
+	 }
+       }
+       lab->parent = curr_section;
+       lab->defined=1;
+       $$=lab;
+    }
     ;
 
 /*
@@ -1239,11 +1271,11 @@ unstring_delimited:
 unstring_delimited_vars:
     opt_all gname       { $$=alloc_unstring_delimited($1,$2); }
     | unstring_delimited_vars OR opt_all gname {
-            struct unstring_delimited *ud;
-            ud=alloc_unstring_delimited($3,$4);
-            ud->next = $1;
-            $$=ud;
-        }
+      struct unstring_delimited *ud;
+      ud=alloc_unstring_delimited($3,$4);
+      ud->next = $1;
+      $$=ud;
+    }
     ;
 unstring_destinations:
     unstring_dest_var       { $$=$1; }
@@ -3221,10 +3253,6 @@ label:
 	}
       $$ = lab;
     }
-    ;
-anystring:
-    STRING
-    | LABELSTR
     ;
 
 %%
