@@ -1189,12 +1189,27 @@ cob_delete (cob_file *f)
   RETURN_STATUS (ret);
 }
 
+
+static unsigned char *old_sequence;
+
 void
-cob_sort_init (cob_file *f, int nkeys)
+cob_sort_init (cob_file *f, int nkeys, unsigned char *sequence)
 {
   f->file = malloc (sizeof (struct sort_file));
   f->keys = malloc (sizeof (cob_file_key) * nkeys);
   f->nkeys = 0;
+
+  old_sequence = cob_current_module->collating_sequence;
+  if (sequence)
+    cob_current_module->collating_sequence = sequence;
+}
+
+void
+cob_sort_finish (cob_file *f)
+{
+  free (f->file);
+  free (f->keys);
+  cob_current_module->collating_sequence = old_sequence;
 }
 
 void
@@ -1238,6 +1253,7 @@ cob_sort_giving (cob_file *sort_file, cob_file *data_file)
   cob_close (data_file, COB_CLOSE_NORMAL);
 }
 
+
 void
 cob_default_error_handle (void)
 {

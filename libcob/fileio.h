@@ -158,7 +158,8 @@ extern void cob_rewrite (cob_file *f, cob_field *rec);
 extern void cob_delete (cob_file *f);
 extern void cob_start (cob_file *f, int cond, cob_field *key);
 
-extern void cob_sort_init (cob_file *f, int nkeys);
+extern void cob_sort_init (cob_file *f, int nkeys, unsigned char *sequence);
+extern void cob_sort_finish (cob_file *f);
 extern void cob_sort_init_key (cob_file *f, int flag, cob_field *field);
 extern void cob_sort_using (cob_file *sort_file, cob_file *data_file);
 extern void cob_sort_giving (cob_file *sort_file, cob_file *data_file);

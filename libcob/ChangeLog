@@ -1,3 +1,8 @@
+2003-08-25  Keisuke Nishida  <kxn30@yahoo.co.jp>
+
+	* fileio.h, fileio.c (cob_sort_init): 3rd argument `sequence'.
+	(cob_sort_finish): New function.
+
 2003-08-22  Keisuke Nishida  <kxn30@yahoo.co.jp>
 
 	* Don't use run-time config file.
