@@ -91,4 +91,4 @@ replacing_list:
 ;
 _printing: | PRINTING ;
 text: NAME | TEXT ;
-dot: | '.'
+dot: | '.' ;

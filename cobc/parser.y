@@ -2782,6 +2782,7 @@ use_debugging:
 use_debugging_target:
   procedure_name
 | ALL PROCEDURES
+;
 
 
 /*

@@ -1,5 +1,4 @@
 *.gmo
-*.pot
 *.sed
 Makefile
 Makefile.in

@@ -16,7 +16,7 @@
 
 This file documents OpenCOBOL, a COBOL compiler
 
-Copyright @copyright{} 2002-2003 Keisuke Nishida
+Copyright @copyright{} 2002, 2003 Keisuke Nishida
 
 Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -51,7 +51,7 @@ Edition @value{EDITION} @*
 Updated for OpenCOBOL @value{VERSION} @*
 @value{UPDATED} @*
 
-Copyright @copyright{} 2002-2003 Keisuke Nishida
+Copyright @copyright{} 2002, 2003 Keisuke Nishida
 
 Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -80,9 +80,10 @@ This manual corresponds to OpenCOBOL @value{VERSION}.
 
 @menu
 * Getting Started::             Introduction to OpenCOBOL
-* Compile::                     How to compile COBOL programs
-* C Interface::                 Working with COBOL and C
-* Customize::                   Customize options
+* Compile::                     Compiling COBOL programs
+* Customize::                   Customizing the compiler
+* Optimize::                    Optimizing your program
+* Debug::                       Debugging your program
 
 @detailmenu
  --- The Detailed Node Listing ---
@@ -91,38 +92,47 @@ Getting Started
 
 * Hello World!::                Hello World!
 
-How to Compile
+Compile
 
-* Compiler Options::            Compiler Options
-* Dynamic Linking::             Dynamic Linking
-* Static Linking::              Static Linking
+* Compiler Options::            Compiler options
+* Multiple Sources::            Compiling multiple source files
+* C Interface::                 Dealing with C files
 
 Compiler Options
 
 * Built Target::                Built Target
 * Source Format::               Source Format
-* Linking Options::             Linking Options
+* Warning Options::             Warning Options
+
+Multiple Sources
+
+* Static Linking::              Compiling into a single executable
+* Dynamic Linking::             A main program and separate modules
+* Building Library::            Building a shared library
+* Using Library::               Using external libraries
 
 C Interface
 
 * Main C Program::              Writing Main Program in C
-* C to COBOL::                  Using COBOL Programs from C
-* COBOL to C::                  Using C Programs from COBOL
-
-Using COBOL Programs from C
-
-* Static C to COBOL::           Static linking with COBOL programs
-* Dynamic C to COBOL::          Dynamic linking with COBOL programs
-
-Using C Programs from COBOL
-
-* Static COBOL to C::           Static linking with C programs
-* Dynamic COBOL to C::          Static linking with C programs
+* Static C to COBOL::           
+* Dynamic C to COBOL::          
+* Static COBOL to C::           
+* Dynamic COBOL to C::          
 
 Customize
 
 * Customizing Compiler::        Customizing Compiler
 * Customizing Library::         Customizing Library
+
+Optimize
+
+* Optimize Options::            How to enable optimization
+* Optimize Call::               Call subroutines efficiently
+* Optimize Binary::             Use efficient binary representation
+
+Debug
+
+* Debug Options::               Debug options
 
 @end detailmenu
 @end menu
@@ -141,6 +151,7 @@ This is a sample program that displays ``Hello World'':
 
 @example
 ---- hello.cob -------------------------
+      * Sample COBOL program
        IDENTIFICATION DIVISION.
        PROGRAM-ID. hello.
        PROCEDURE DIVISION.
@@ -149,39 +160,38 @@ This is a sample program that displays ``Hello World'':
 ----------------------------------------
 @end example
 
-The compiler is @code{cobc}, which can be executed as follows:
+The compiler is @code{cobc}, which is executed as follows:
 
 @example
-% cobc hello.cob
-% ./hello
+$ cobc hello.cob
+$ ./hello
 Hello World!
 @end example
 
-The executable program name (i.e., @file{hello} in this case) is
-determined from the source file name (i.e., @file{hello.cob}) by
-removing the file extension.
+The executable file name (i.e., @file{hello} in this case) is
+determined by removing the extension from the source file name.
 
-You can specify the executable name by giving the option @code{-o} to
-@code{cobc} as follows:
+You can specify the executable file name by specifying the compiler
+option @code{-o} as follows:
 
 @example
-% cobc -o hello-world hello.cob 
-% ./hello-world
+$ cobc -o hello-world hello.cob 
+$ ./hello-world
 Hello World!
 @end example
 
-@node Compile, C Interface, Getting Started, Top
-@chapter How to Compile
+@node Compile, Customize, Getting Started, Top
+@chapter Compile
 
 This chapter describes how to compile COBOL programs using OpenCOBOL.
 
 @menu
-* Compiler Options::            Compiler Options
-* Dynamic Linking::             Dynamic Linking
-* Static Linking::              Static Linking
+* Compiler Options::            Compiler options
+* Multiple Sources::            Compiling multiple source files
+* C Interface::                 Dealing with C files
 @end menu
 
-@node Compiler Options, Dynamic Linking, Compile, Compile
+@node Compiler Options, Multiple Sources, Compile, Compile
 @section Compiler Options
 
 The compiler @code{cobc} accepts the options described in this section.
@@ -189,7 +199,6 @@ The compiler @code{cobc} accepts the options described in this section.
 @menu
 * Built Target::                Built Target
 * Source Format::               Source Format
-* Linking Options::             Linking Options
 * Warning Options::             Warning Options
 @end menu
 
@@ -236,7 +245,7 @@ If you give this option with @code{-C}, you will see the main
 function at the end of the generated C file.
 @end table
 
-@node Source Format, Linking Options, Built Target, Compiler Options
+@node Source Format, Warning Options, Built Target, Compiler Options
 @subsection Source Format
 
 OpenCOBOL supports both fixed and free source format.
@@ -251,29 +260,6 @@ Free format.
 @item -fixed
 Fixed format.
 @end table
-
-@node Linking Options,  , Source Format, Compiler Options
-@subsection Linking Options
-
-The following options control how to implement CALL statements,
-namely, static-linking or dynamic-linking.
-
-@table @code
-@item -static
-CALL statements with a literal parameter (like @code{CALL "prog".})
-are converted into C function calls (like @code{foo();}).  Those
-functions must be linked at compile time.
-
-Note that CALL statements with a variable (like @code{CALL PROG.})
-are still converted into dynamic calls.
-
-@item -dynamic
-CALL statements are dynamically resolved at run-time by searching
-dynamic-linking modules.  The modules being called do not need to
-exist at compile-time.  @ref{Dynamic Linking} for details.
-@end table
-
-Without these options, @code{-dynamic} is assumed by default.
 
 @node Warning Options,  , Source Format, Compiler Options
 @subsection Warning Options
@@ -295,68 +281,154 @@ Warn lacks of END-IF
 Warn lacks of parentheses around AND within OR
 @end table
 
-@node Dynamic Linking, Static Linking, Compiler Options, Compile
-@section Dynamic Linking
+@node Multiple Sources, C Interface, Compiler Options, Compile
+@section Multiple Sources
 
-@enumerate
-@item
-Compile the main program:
-@example
-% cobc main.cob
-@end example
-This creates an executable file @file{main}.
+A program often consists of multiple source files.  This section
+describes how to compile multiple source files.
 
-@item
-Compile subprograms with option @code{-m}:
+This section also describes how to build a shared library that can
+be used by any COBOL programs and how to use external libraries from
+COBOL programs.
+
+@menu
+* Static Linking::              Compiling into a single executable
+* Dynamic Linking::             A main program and separate modules
+* Building Library::            Building a shared library
+* Using Library::               Using external libraries
+@end menu
+
+@node Static Linking, Dynamic Linking, Multiple Sources, Multiple Sources
+@subsection Static Linking
+
+The easiest way of combining multiple files is to compile them into a
+single executable.
+
+Compile each file with the option @code{-c}, and link them at the end.
+The top-level program must be compiled with the option @code{-fmain}:
+
 @example
-% cobc -m module.cob
+$ cobc -c subr1.cob
+$ cobc -c subr2.cob
+$ cobc -c -fmain main.cob
+$ cobc -o prog main.o subr1.o subr2.o
 @end example
-This creates a module file @file{module.so}
+
+You can link C routines as well:
+
+@example
+$ cc -c subrs.c
+$ cobc -c -fmain main.cob
+$ cobc -o prog main.o subrs.o
+@end example
+
+Any number of functions can be contained in a single C file.
+
+By default, the linked programs are called dynamically, which means
+the symbol is resolved at run time.  For example, the following COBOL
+statement
+
+@example
+CALL "subr" USING X.
+@end example
+
+will be converted into an equivalent C code like this:
+
+@example
+int (*func)() = cob_resolve ("subr");
+if (func != NULL)
+  func (X);
+@end example
+
+With the compiler options @code{-fstatic-call}, more efficient code
+will be generated like this:
+
+@example
+subr (X);
+@end example
+
+Note that this option is effective only when the called program name
+is a literal (like @code{CALL "subr".}).  With a data name (like
+@code{CALL SUBR.}), the program is still called dynamically.
+
+@node Dynamic Linking, Building Library, Static Linking, Multiple Sources
+@subsection Dynamic Linking
+
+The main program and subprograms can be compiled separately.
+
+The main program is compiled as usual:
+@example
+$ cobc -o main main.cob
+@end example
+
+Subprograms are compiled with the option @code{-m}:
+@example
+$ cobc -m subr.cob
+@end example
+This creates a module file @file{subr.so}
 @footnote{The extension varies depending on your host.}.
 
-@item
-Install the module file to your library directory:
-
+Before running the main program, install the module files in your
+library directory:
 @example
-% cp module.so /your/cobol/lib
+$ cp subr.so /your/cobol/lib
 @end example
 
-@item
-Set the environment variable @code{COB_LIBRARY_PATH}
+Now, set the environment variable @code{COB_LIBRARY_PATH}
 to your library directory, and run the main program:
 @example
-% export COB_LIBRARY_PATH=/your/cobol/lib
-% ./main
+$ export COB_LIBRARY_PATH=/your/cobol/lib
+$ ./main
 @end example
-@end enumerate
 
-@node Static Linking,  , Dynamic Linking, Compile
-@section Static Linking
+@node Building Library, Using Library, Dynamic Linking, Multiple Sources
+@subsection Building Library
 
-You need to give @code{-static} for static linking.
-For main program, @code{-fmain} flag is also needed:
+You can build a shared library by combining multiple COBOL programs
+and even C routines:
 
 @example
-% cobc -c -static -fmain main.cob
-% cobc -c -static module.cob
-% cobc -o hello main.o module.o
-% ./hello
-Hello World!
+$ cobc -c subr1.cob
+$ cobc -c subr2.cob
+$ cc -c subr3.c
+$ cc -shared -o libsubrs.so subr1.o subr2.o subr3.o
 @end example
 
-@node C Interface, Customize, Compile, Top
-@chapter C Interface
+@node Using Library,  , Building Library, Multiple Sources
+@subsection Using Library
+
+You can use a shared library by linking it with your main program.
+
+Before linking the library, install it in your system library directory:
+@example
+$ cp libsubrs.so /usr/lib
+@end example
+or install it somewhere else and set @code{LD_LIBRARY_PATH}:
+@example
+$ cp libsubrs.so /your/cobol/lib
+$ export LD_LIBRARY_PATH=/your/cobol/lib
+@end example
+
+Then, compile the main program, linking the library as follows:
+@example
+$ cobc main.cob -L/your/cobol/lib -lsubrs
+@end example
+
+@node C Interface,  , Multiple Sources, Compile
+@section C Interface
 
 This chapter describes how to combine C programs with COBOL programs.
 
 @menu
 * Main C Program::              Writing Main Program in C
-* C to COBOL::                  Using COBOL Programs from C
-* COBOL to C::                  Using C Programs from COBOL
+* Static C to COBOL::           
+* Dynamic C to COBOL::          
+* Static COBOL to C::           
+* Dynamic COBOL to C::          
 @end menu
 
-@node Main C Program, C to COBOL, C Interface, C Interface
-@section Writing Main Program in C
+@node Main C Program, Static C to COBOL, C Interface, C Interface
+@subsection Writing Main Program in C
 
 Include @file{libcob.h} in your C program.
 Call @code{cob_init} before using any COBOL module:
@@ -396,15 +468,7 @@ The compiled object must be linked with libcob as follows:
 cc -o main main.o `cob-config --libs`
 @end example
 
-@node C to COBOL, COBOL to C, Main C Program, C Interface
-@section Using COBOL Programs from C
-
-@menu
-* Static C to COBOL::           Static linking with COBOL programs
-* Dynamic C to COBOL::          Dynamic linking with COBOL programs
-@end menu
-
-@node Static C to COBOL, Dynamic C to COBOL, C to COBOL, C to COBOL
+@node Static C to COBOL, Dynamic C to COBOL, Main C Program, C Interface
 @subsection Static linking with COBOL programs
 
 Let's call the following COBOL module from a C program:
@@ -460,14 +524,14 @@ main ()
 Compile these programs as follows:
 
 @example
-% cc -c `cob-config --cflags` hello.c
-% cobc -c -static say.cob
-% cobc -o hello hello.o say.o
-% ./hello
+$ cc -c `cob-config --cflags` hello.c
+$ cobc -c -static say.cob
+$ cobc -o hello hello.o say.o
+$ ./hello
 Hello World!
 @end example
 
-@node Dynamic C to COBOL,  , Static C to COBOL, C to COBOL
+@node Dynamic C to COBOL, Static COBOL to C, Static C to COBOL, C Interface
 @subsection Dynamic linking with COBOL programs
 
 You can find a COBOL module having a specific PROGRAM-ID by using a C
@@ -514,23 +578,15 @@ main ()
 Compile these programs as follows:
 
 @example
-% cc -c `cob-config --cflags` hello-dynamic.c 
-% cobc -o hello hello-dynamic.o
-% cobc -m say.cob
-% export COB_LIBRARY_PATH=.
-% ./hello
+$ cc -c `cob-config --cflags` hello-dynamic.c 
+$ cobc -o hello hello-dynamic.o
+$ cobc -m say.cob
+$ export COB_LIBRARY_PATH=.
+$ ./hello
 Hello World!
 @end example
 
-@node COBOL to C,  , C to COBOL, C Interface
-@section Using C Programs from COBOL
-
-@menu
-* Static COBOL to C::           Static linking with C programs
-* Dynamic COBOL to C::          Static linking with C programs
-@end menu
-
-@node Static COBOL to C, Dynamic COBOL to C, COBOL to C, COBOL to C
+@node Static COBOL to C, Dynamic COBOL to C, Dynamic C to COBOL, C Interface
 @subsection Static linking with C programs
 
 Let's call the following C function from COBOL:
@@ -576,28 +632,28 @@ You can call this function in the same way you call COBOL programs:
 Compile these programs as follows:
 
 @example
-% cc -c say.c
-% cobc -c -static -fmain hello.cob
-% cobc -o hello hello.o say.o
-% ./hello
+$ cc -c say.c
+$ cobc -c -static -fmain hello.cob
+$ cobc -o hello hello.o say.o
+$ ./hello
 Hello World!
 @end example
 
-@node Dynamic COBOL to C,  , Static COBOL to C, COBOL to C
+@node Dynamic COBOL to C,  , Static COBOL to C, C Interface
 @subsection Dynamic linking with C programs
 
 You can create a dynamic-linking module from a C program by passing an
 option @code{-shared} to the C compiler:
 
 @example
-% cc -shared -o say.so say.c
-% cobc hello.cob
-% export COB_LIBRARY_PATH=.
-% ./hello
+$ cc -shared -o say.so say.c
+$ cobc hello.cob
+$ export COB_LIBRARY_PATH=.
+$ ./hello
 Hello World!
 @end example
 
-@node Customize,  , C Interface, Top
+@node Customize, Optimize, Compile, Top
 @chapter Customize
 
 @menu
@@ -615,10 +671,10 @@ Environment variables (default value):
 @table @code
 @item COB_CC
 C compiler ("gcc")
-@item COB_COBPP
-COBOL preprocessor ("cobpp")
 @item COB_CFLAGS
 Flags passed to the C compiler ("-I$(PREFIX)/include")
+@item COB_LDFLAGS
+Flags passed to the C compiler ("")
 @item COB_LIBS
 Standard libraries linked with the program ("-L$(PREFIX)/lib -lcob")
 @item COB_LDADD
@@ -633,20 +689,76 @@ These settings are effective at run-time.
 Environment variables (default value):
 
 @table @code
-@item COB_CONFIG_FILE
-Run-time configuration file ("$(PREFIX)/share/open-cobol/libcob.conf")
 @item COB_LIBRARY_PATH
 Dynamic-linking module path (".:$(PREFIX)/lib/open-cobol")
-@end table
-
-Config options (default value):
-
-@table @code
-@item dynamic-reloading
+@item COB_DYNAMIC_RELOADING
 Set to ``yes'' if modules must be reloaded when they are replaced (``no'')
-@item ding-on-error
-Set to ``yes'' if you want to ring a terminal bell on run-time errors (``no'')
 @end table
+
+@node Optimize, Debug, Customize, Top
+@chapter Optimize
+
+@menu
+* Optimize Options::            How to enable optimization
+* Optimize Call::               Call subroutines efficiently
+* Optimize Binary::             Use efficient binary representation
+@end menu
+
+@node Optimize Options, Optimize Call, Optimize, Optimize
+@section Optimize Options
+
+There are two compiler options for optimizations: @code{-O} and
+@code{-O2}.  These options enable optimization at both translation
+(from COBOL to C) and compilation (C to assembly) levels.
+
+Currently, there is no difference between @code{-O} and @code{-O2} at
+the translation level.  The only thing which is done is inlining some
+run-time functions, by enabling the option @code{-fruntime-inlining}
+(@pxref{Compiler Options}).
+
+The option @code{-O} or @code{-O2} is passed to the C compiler as it
+is and used for C level optimization.
+
+@node Optimize Call, Optimize Binary, Optimize Options, Optimize
+@section Optimize Call
+
+When a CALL statement is executed, the called program is linked at run
+time.  By specifying the compiler option @code{-fstatic-call}, you can
+statically link the program at compile time and call it efficiently.
+(@pxref{Static Linking})
+
+@node Optimize Binary,  , Optimize Call, Optimize
+@section Optimize Binary
+
+By default, data items of usage binary or comp are stored in the
+big-endian form.  On those machines whose native byte order is
+little-endian, this is not quite efficient.
+
+If you prefer, you can store binary items in the native form of your
+machine.  Set the config option @code{binary-byteorder} to
+@code{native} in your config file (@pxref{Customize}).
+
+In addition, setting the option @code{binary-size} to @code{2-4-8} or
+@code{1-2-4-8} is more efficient than others.
+
+@node Debug,  , Optimize, Top
+@chapter Debug
+
+@menu
+* Debug Options::               Debug options
+@end menu
+
+@node Debug Options,  , Debug, Debug
+@section Debug Options
+
+The compiler option @code{-debug} can be used during the development
+of your programs.  It enables all run-time error checking, such as
+subscript boundary checks and numeric data checks, and displays
+run-time errors with source locations.
+
+The compiler option @code{-g} includes line directives in the output.
+This helps debugging your COBOL programs using GDB, but this feature
+is not complete and not very useful yet.
 
 @bye
 
