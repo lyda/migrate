@@ -139,7 +139,7 @@ file_open (cob_file *f, char *filename, int mode, int opt)
   {
     struct flock lock;
     memset (&lock, 0, sizeof (struct flock));
-    lock.l_type = opt ? F_WRLCK : F_RDLCK;
+    lock.l_type = (opt || mode == COB_OPEN_OUTPUT) ? F_WRLCK : F_RDLCK;
     lock.l_whence = SEEK_SET;
     lock.l_start = 0;
     lock.l_len = 0;
