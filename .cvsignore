@@ -6,10 +6,8 @@ Makefile.in
 aclocal.m4
 autom4te.cache
 cob.pc
-config
 config.*
 configure
 defaults.h
 libtool
-m4
 stamp-h1
