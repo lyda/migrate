@@ -39,9 +39,8 @@
 #define SET_DOWN_BY 3
 
 /* call modes */
-#define CALL_BY_REFERENCE 1
-#define CALL_BY_VALUE 2
-#define CALL_BY_CONTENT 3
+#define CALL_BY_REFERENCE	1
+#define CALL_BY_CONTENT		2
 
 /* asm sections or pseudo-sections */
 #define SEC_CONST 2

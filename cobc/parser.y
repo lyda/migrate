@@ -1248,7 +1248,6 @@ call_parameter:
 call_mode:
   REFERENCE			{ $$ = CALL_BY_REFERENCE; }
 | CONTENT			{ $$ = CALL_BY_CONTENT; }
-| VALUE				{ $$ = CALL_BY_VALUE; }
 ;
 call_returning:
   /* nothing */			{ $$ = NULL; }

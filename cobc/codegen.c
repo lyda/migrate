@@ -508,46 +508,6 @@ push_eax ()
   fprintf (o_src, "\tpushl\t%%eax\n");
 }
 
-static void
-push_edx ()
-{
-  stackframe_cnt += 4;
-  fprintf (o_src, "\tpushl\t%%edx\n");
-}
-
-static void
-push_ebx ()
-{
-  stackframe_cnt += 4;
-  fprintf (o_src, "\tpushl\t%%ebx\n");
-}
-
-static void
-push_at_eax (cob_tree sy)
-{
-#ifdef COB_DEBUG
-  fprintf (stderr, "push_at_eax:\n");
-#endif
-  stackframe_cnt += 4;
-  if (sy->type == 'B' || sy->type == 'U')
-    {
-      if (symlen (sy) == 8)
-	{
-	  fprintf (o_src, "\tmovl\t4(%%eax), %%edx\n");
-	  fprintf (o_src, "\tmovl\t0(%%eax), %%eax\n");
-	  fprintf (o_src, "\tpushl\t%%edx\n");
-	  stackframe_cnt += 4;
-	}
-      else if (symlen (sy) >= 4)
-	fprintf (o_src, "\tmovl\t0(%%eax), %%eax\n");
-      else
-	fprintf (o_src, "\tmovs%cl\t0(%%eax), %%eax\n", varsize_ch (sy));
-    }
-  else
-    fprintf (o_src, "\tmovl\t0(%%eax), %%eax\n");
-  fprintf (o_src, "\tpushl\t%%eax\n");
-}
-
 static char *
 sec_name (short sec_no)
 {
@@ -617,31 +577,6 @@ memrefd (cob_tree sy)
 {
   sprintf (memref_buf, "$c_base%d+%d", pgm_segment, sy->descriptor);
   return memref_buf;
-}
-
-/* load address for normal (file/working-storage) or linkage variable */
-static void
-load_address (cob_tree sy)
-{
-  unsigned offset;
-  if (SYMBOL_P (sy) && sy->linkage_flg)
-    {
-      cob_tree tmp = sy;
-      while (tmp->linkage_flg == 1)
-	tmp = tmp->parent;
-      offset = sy->location - tmp->location;
-      fprintf (o_src, "\tmovl\t%d(%%ebp), %%eax\n", tmp->linkage_flg);
-      if (offset)
-	fprintf (o_src, "\taddl\t$%d, %%eax\n", offset);
-    }
-  else if (sy->sec_no == SEC_STACK)
-    fprintf (o_src, "\tleal\t%s, %%eax\n", memref (sy));
-  else if (sy->sec_no == SEC_DATA)
-    fprintf (o_src, "\tleal\tw_base%d+%d, %%eax\n",
-	     pgm_segment, sy->location);
-  else if (sy->sec_no == SEC_CONST)
-    fprintf (o_src, "\tleal\tc_base%d+%d, %%eax\n",
-	     pgm_segment, sy->location);
 }
 
 /* load in cpureg ("eax","ebx"...) location for normal 
@@ -732,7 +667,11 @@ loadloc_to_eax (cob_tree sy_p)
 	  while (tmp->linkage_flg == 1)
 	    tmp = tmp->parent;
 	  offset = var->location - tmp->location;
-	  fprintf (o_src, "\tmovl %d(%%ebp), %%ebx\n", tmp->linkage_flg);
+	  if (symlen (var) >= 4)
+	    fprintf (o_src, "\tmovl %d(%%ebp), %%ebx\n", tmp->linkage_flg);
+	  else
+	    fprintf (o_src, "\tmovs%cl %d(%%ebp), %%ebx\n",
+		     varsize_ch (var), tmp->linkage_flg);
 	  if (offset)
 	    fprintf (o_src, "\taddl\t$%d, %%ebx\n", offset);
 	  fprintf (o_src, "\taddl\t%%ebx, %%eax\n");
@@ -1444,7 +1383,6 @@ dump_alternate_keys (cob_tree r, struct alternate_list *alt)
 static void
 dump_fdesc ()
 {
-
   cob_tree f;
   cob_tree r;
   struct list *list /*,*visited */ ;
@@ -5374,56 +5312,6 @@ gen_save_using (cob_tree sy)
   using_offset += 4;
 }
 
-static void
-gen_pushval (cob_tree sy)
-{
-  unsigned offset;
-  cob_tree var;
-
-#ifdef COB_DEBUG
-  fprintf (o_src, "#gen_pushval\n");
-#endif
-  if (SUBREF_P (sy))
-    {
-      gen_subscripted (sy);
-      var = SUBREF_SYM (sy);
-      if (var->linkage_flg)
-	{
-	  cob_tree tmp = var;
-	  while (tmp->linkage_flg == 1)
-	    tmp = tmp->parent;
-	  offset = var->location - tmp->location;
-	  if (symlen (var) >= 4)
-	    fprintf (o_src, "\tmovl %d(%%ebp), %%ebx\n", tmp->linkage_flg);
-	  else
-	    fprintf (o_src, "\tmovs%cl %d(%%ebp), %%ebx\n",
-		     varsize_ch (var), tmp->linkage_flg);
-	  if (offset)
-	    fprintf (o_src, "\taddl\t$%d, %%ebx\n", offset);
-	  fprintf (o_src, "\taddl\t%%eax, %%ebx\n");
-	  push_ebx ();
-	}
-      else
-	{
-	  fprintf (o_src, "\tleal\t-%d(%%ebp), %%ebx\n", var->location);
-	  fprintf (o_src, "\taddl\t%%ebx,%%eax\n");
-	  push_at_eax (var);
-	}
-    }
-  else if (SYMBOL_P (sy))
-    {
-      load_address (sy);
-      push_at_eax (sy);
-    }
-  else
-    {
-      value_to_eax(sy);
-      if (symlen (sy) > 4)
-	push_edx ();
-      push_eax ();
-    }
-}
-
 unsigned long int
 gen_call (cob_tree v, int exceplabel, int notexceplabel)
 {
@@ -5468,9 +5356,6 @@ gen_call (cob_tree v, int exceplabel, int notexceplabel)
 	{
 	case CALL_BY_REFERENCE:
 	  gen_loadloc (list->var);
-	  break;
-	case CALL_BY_VALUE:
-	  gen_pushval (list->var);
 	  break;
 	case CALL_BY_CONTENT:
 	  fprintf (o_src, "\tleal\t-%d(%%ebp), %%eax\n", list->location);
