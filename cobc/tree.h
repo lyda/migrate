@@ -246,7 +246,6 @@ struct cobc_field {
   char category;		/* 9,A,X,E,N,M */
   char usage;			/* USAGE IS */
   char *cname;			/* the name used in C files */
-  cobc_tree file;		/* file name associated in FD section */
   cobc_tree value;		/* VALUE */
   cobc_tree occurs_depending;	/* OCCURS ... DEPENDING ON */
   struct cobc_word *word;	/* the word of this field */
@@ -257,6 +256,7 @@ struct cobc_field {
   struct cobc_field *sister;	/* fields in the same level */
   struct cobc_field *redefines;	/* REDEFIENS */
   struct cobc_field *rename_thru; /* RENAMES THRU */
+  struct cobc_file_name *file;	/* file name associated in FD section */
   struct cobc_key {
     enum {
       COBC_ASCENDING,

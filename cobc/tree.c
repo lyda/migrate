@@ -412,7 +412,6 @@ make_field (struct cobc_word *word)
   p->category = 0;
   p->usage = 0;
   p->cname = NULL;
-  p->file = NULL;
   p->value = NULL;
   p->occurs_depending = NULL;
   p->word = set_word_item (word, COBC_TREE (p));
@@ -423,6 +422,7 @@ make_field (struct cobc_word *word)
   p->sister = NULL;
   p->redefines = NULL;
   p->rename_thru = NULL;
+  p->file = NULL;
   p->keys = NULL;
   p->nkeys = 0;
   p->pic = NULL;

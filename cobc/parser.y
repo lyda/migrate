@@ -763,12 +763,12 @@ file_description_sequence:
   {
     struct cobc_field *p = COBC_FIELD ($7);
     current_file_name->record = p;
-    p->file = COBC_TREE (current_file_name);
+    p->file = current_file_name;
     field_set_used (p);
     for (p = p->sister; p; p = p->sister)
       {
 	p->redefines = current_file_name->record;
-	p->file = COBC_TREE (current_file_name);
+	p->file = current_file_name;
 	field_set_used (p);
       }
   }
@@ -2152,11 +2152,10 @@ _end_read: | END_READ ;
 rewrite_statement:
   REWRITE record_name write_from
   {
-    cobc_tree file = COBC_FIELD ($2)->file;
-    current_file_name = COBC_FILE_NAME (file);
+    current_file_name = COBC_FIELD ($2)->file;
     if ($3)
       push_move ($3, $2);
-    push_call_1 (COBC_REWRITE, file);
+    push_call_1 (COBC_REWRITE, current_file_name);
   }
   opt_invalid_key
   _end_rewrite
@@ -2453,27 +2452,28 @@ _end_unstring: | END_UNSTRING ;
 write_statement:
   WRITE record_name write_from write_option
   {
-    cobc_tree file = COBC_FIELD ($2)->file;
-    current_file_name = COBC_FILE_NAME (file);
+    current_file_name = COBC_FIELD ($2)->file;
     /* AFTER ADVANCING */
     if ($4 && $4->type == COBC_AFTER)
       {
 	if ($4->x)
-	  push_call_2 (COBC_WRITE_LINES, file, make_index ($4->x));
+	  push_call_2 (COBC_WRITE_LINES, current_file_name,
+		       make_index ($4->x));
 	else
-	  push_call_1 (COBC_WRITE_PAGE, file);
+	  push_call_1 (COBC_WRITE_PAGE, current_file_name);
       }
     /* WRITE */
     if ($3)
       push_move ($3, $2);
-    push_call_1 (COBC_WRITE, file);
+    push_call_1 (COBC_WRITE, current_file_name);
     /* BEFORE ADVANCING */
     if ($4 && $4->type == COBC_BEFORE)
       {
 	if ($4->x)
-	  push_call_2 (COBC_WRITE_LINES, file, make_index ($4->x));
+	  push_call_2 (COBC_WRITE_LINES, current_file_name,
+		       make_index ($4->x));
 	else
-	  push_call_1 (COBC_WRITE_PAGE, file);
+	  push_call_1 (COBC_WRITE_PAGE, current_file_name);
       }
   }
   opt_invalid_key
