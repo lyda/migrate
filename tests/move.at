@@ -37,7 +37,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: error: invalid MOVE statement
+[prog.cob:8: invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -56,7 +56,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: error: invalid MOVE statement
+[prog.cob:8: invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -78,7 +78,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: error: invalid MOVE statement
+[prog.cob:8: invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -163,7 +163,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:9: error: invalid MOVE statement
+[prog.cob:9: invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -183,7 +183,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:9: error: invalid MOVE statement
+[prog.cob:9: invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -353,7 +353,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:9: error: invalid MOVE statement
+[prog.cob:9: invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -373,7 +373,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:9: error: invalid MOVE statement
+[prog.cob:9: invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -396,7 +396,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:9: error: invalid MOVE statement
+[prog.cob:9: invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -491,7 +491,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:9: error: invalid MOVE statement
+[prog.cob:9: invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -511,7 +511,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:9: error: invalid MOVE statement
+[prog.cob:9: invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -531,7 +531,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:9: error: invalid MOVE statement
+[prog.cob:9: invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -590,7 +590,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:9: error: invalid MOVE statement
+[prog.cob:9: invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -691,7 +691,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:10: error: `X' not a group
+[prog.cob:10: `X' not a group
 ])
 
 AT_CLEANUP
@@ -712,7 +712,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:10: error: `X' not a group
+[prog.cob:10: `X' not a group
 ])
 
 AT_CLEANUP
@@ -734,7 +734,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:11: error: `G1(1:1)' not a group
+[prog.cob:11: `G1(1:1)' not a group
 ])
 
 AT_CLEANUP
@@ -756,7 +756,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:11: error: `G2(1:1)' not a group
+[prog.cob:11: `G2(1:1)' not a group
 ])
 
 AT_CLEANUP

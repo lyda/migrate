@@ -15,7 +15,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:6: error: invalid VALUE clause
+[prog.cob:6: invalid VALUE clause
 ])
 
 AT_CLEANUP
@@ -51,7 +51,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:6: error: invalid VALUE clause
+[prog.cob:6: invalid VALUE clause
 ])
 
 AT_CLEANUP
@@ -149,7 +149,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:6: error: invalid VALUE clause
+[prog.cob:6: invalid VALUE clause
 ])
 
 AT_CLEANUP

@@ -11,7 +11,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:6: error: level 01 field `X' cannot have OCCURS
+[prog.cob:6: level 01 field `X' cannot have OCCURS
 ])
 
 AT_CLEANUP
@@ -32,7 +32,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:9: error: `X' requires 1 subscript
+[prog.cob:9: `X' requires 1 subscript
 ])
 
 AT_CLEANUP
@@ -53,7 +53,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:9: error: `X' requires 1 subscript
+[prog.cob:9: `X' requires 1 subscript
 ])
 
 AT_CLEANUP
@@ -75,7 +75,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:10: error: `X' requires 2 subscripts
+[prog.cob:10: `X' requires 2 subscripts
 ])
 
 AT_CLEANUP
@@ -97,7 +97,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:10: error: `X' requires 2 subscripts
+[prog.cob:10: `X' requires 2 subscripts
 ])
 
 AT_CLEANUP
@@ -118,7 +118,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:9: error: subscript of `X' out of bounds: 5
+[prog.cob:9: subscript of `X' out of bounds: 5
 ])
 
 AT_CLEANUP
@@ -140,7 +140,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:10: error: subscript of `X' out of bounds: 20
+[prog.cob:10: subscript of `X' out of bounds: 20
 ])
 
 AT_CLEANUP
@@ -162,7 +162,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:10: error: `I' must be an integer value
+[prog.cob:10: `I' must be an integer value
 ])
 
 AT_CLEANUP
@@ -184,7 +184,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:10: error: `I' must be an integer value
+[prog.cob:10: `I' must be an integer value
 ])
 
 AT_CLEANUP
@@ -321,7 +321,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob], [1], ,
-[prog.cob:10: error: subscript of `X' out of bounds: 3
+[prog.cob:10: subscript of `X' out of bounds: 3
 ])
 
 AT_CLEANUP
@@ -343,7 +343,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob], [1], ,
-[prog.cob:10: error: subscript of `X' out of bounds: 7
+[prog.cob:10: subscript of `X' out of bounds: 7
 ])
 
 AT_CLEANUP
@@ -386,7 +386,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: error: offset of `X' out of bounds: 0
+[prog.cob:8: offset of `X' out of bounds: 0
 ])
 
 AT_CLEANUP
@@ -406,7 +406,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: error: offset of `X' out of bounds: 5
+[prog.cob:8: offset of `X' out of bounds: 5
 ])
 
 AT_CLEANUP
@@ -426,7 +426,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: error: length of `X' out of bounds: 4
+[prog.cob:8: length of `X' out of bounds: 4
 ])
 
 AT_CLEANUP
