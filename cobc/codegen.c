@@ -2070,6 +2070,14 @@ output_value (struct cobc_field *f)
     }
 }
 
+static void
+output_init_values (struct cobc_field *p)
+{
+  for (; p; p = p->sister)
+    if (have_value (p))
+      output_recursive (output_value, p);
+}
+
 
 void
 codegen (struct cobc_program_spec *spec)
@@ -2148,16 +2156,6 @@ codegen (struct cobc_program_spec *spec)
   for (l = spec->class_list; l; l = l->next)
     output_class_definition (l->item);
 
-  /* initialize values */
-  output_line ("static void");
-  output_line ("%s_init (void)", spec->program_id);
-  output_indent ("{");
-  for (p = spec->working_storage; p; p = p->sister)
-    if (have_value (p))
-      output_recursive (output_value, p);
-  output_indent ("}");
-  output_newline ();
-
   /* program function */
   output_line ("int");
   output ("%s (", spec->program_id);
@@ -2204,7 +2202,7 @@ codegen (struct cobc_program_spec *spec)
   output_line ("env.numeric_separator = '%c';", spec->env.numeric_separator);
   output_newline ();
   if (!spec->initial_program)
-    output_line ("%s_init ();", spec->program_id);
+    output_init_values (spec->working_storage);
   output_line ("initialized = 1;");
   output_indent ("  }");
   output_newline ();
@@ -2216,7 +2214,7 @@ codegen (struct cobc_program_spec *spec)
   output_line ("/* initialize %s */", spec->program_id);
   output_line ("cob_env = &env;");
   if (spec->initial_program)
-    output_line ("%s_init ();", spec->program_id);
+    output_init_values (spec->working_storage);
   output_newline ();
 
   output_line ("goto lb_main;");
