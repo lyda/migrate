@@ -14,4 +14,5 @@ cobpp/scanner.l
 # libcob
 libcob/common.c
 libcob/move.c
+libcob/fileio.c
 libcob/call.c
