@@ -193,43 +193,16 @@ switch_to_buffer (int line, char *file,
 }
 
 int
-ppopen (char *name, const char *lib, struct cb_replacement *replacement)
+ppopen (char *name, struct cb_replacement *replacement)
 {
-  struct stat st;
-  char buff[FILENAME_MAX];
-
-  if (lib)
-    {
-      char *s = alloca (strlen (name) + strlen (lib) + 2);
-      sprintf (s, "%s/%s", lib, name);
-      name = s;
-    }
-
-  /* Find the file */
-  if (name[0] != '/' && stat (name, &st) == -1)
-    {
-      struct cb_name_list *l;
-      for (l = cb_include_list; l; l = l->next)
-	{
-	  sprintf (buff, "%s/%s", l->name, name);
-	  if (stat (buff, &st) == 0)
-	    {
-	      name = buff;
-	      break;
-	    }
-	}
-      if (l == NULL)
-	{
-	  cb_error ("%s: %s", name, strerror (errno));
-	  return -1;
-	}
-    }
-
   /* Open the copy file */
   ppin = fopen (name, "rb");
   if (!ppin)
     {
-      cb_error ("%s: %s", name, strerror (errno));
+      if (cb_source_file)
+	cb_error ("%s: %s", name, strerror (errno));
+      else
+	perror (name);
       return -1;
     }
 
@@ -264,6 +237,41 @@ ppopen (char *name, const char *lib, struct cb_replacement *replacement)
   switch_to_buffer (1, name, replacement,
 		    yy_create_buffer (ppin, YY_BUF_SIZE));
   return 0;
+}
+
+int
+ppcopy (char *name, const char *lib, struct cb_replacement *replacement)
+{
+  struct stat st;
+  char buff[FILENAME_MAX];
+
+  if (lib)
+    {
+      sprintf (buff, "%s/%s", lib, name);
+      name = buff;
+    }
+
+  /* Find the file */
+  if (name[0] != '/' && stat (name, &st) == -1)
+    {
+      struct cb_name_list *l;
+      for (l = cb_include_list; l; l = l->next)
+	{
+	  sprintf (buff, "%s/%s", l->name, name);
+	  if (stat (buff, &st) == 0)
+	    {
+	      name = buff;
+	      break;
+	    }
+	}
+      if (l == NULL)
+	{
+	  cb_error ("%s: %s", name, strerror (errno));
+	  return -1;
+	}
+    }
+
+  return ppopen (name, replacement);
 }
 
 struct cb_replacement *

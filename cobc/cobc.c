@@ -530,7 +530,7 @@ preprocess (struct filename *fn)
 	terminate (fn->preprocess);
     }
 
-  if (ppopen (fn->source, NULL, NULL) != 0)
+  if (ppopen (fn->source, NULL) != 0)
     exit (1);
 
   if (verbose_output)

@@ -67,7 +67,7 @@ copy_statement:
   COPY NAME copy_in copy_replacing '.'
   {
     fputc ('\n', ppout);
-    ppopen ($2, $3, $4);
+    ppcopy ($2, $3, $4);
   }
 ;
 copy_in:
