@@ -165,20 +165,24 @@ static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'V'},
   {"verbose", no_argument, 0, 'v'},
-  {"main", no_argument, &cobc_flag_main, 1},
-  {"free", no_argument, 0, 'F'},
-  {"fixed", no_argument, 0, 'X'},
+  {"save-temps", no_argument, &save_temps, 1},
   {"static", no_argument, &cobc_flag_call_static, 1},
   {"dynamic", no_argument, &cobc_flag_call_static, 0},
-  {"save-temps", no_argument, &save_temps, 1},
+  {"FF", no_argument, 0, 'F'},
+  {"FX", no_argument, 0, 'X'},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
+  {"fmain", no_argument, &cobc_flag_main, 1},
   {"fdebugging-line", no_argument, &cobc_flag_debugging_line, 1},
   {"Wall", no_argument, 0, 'W'},
   {"Wcolumn-overflow", no_argument, &cobc_warn_column_overflow, 1},
+  {"Wno-column-overflow", no_argument, &cobc_warn_column_overflow, 0},
   {"Wend-evaluate", no_argument, &cobc_warn_end_evaluate, 1},
+  {"Wno-end-evaluate", no_argument, &cobc_warn_end_evaluate, 0},
   {"Wend-if", no_argument, &cobc_warn_end_if, 1},
+  {"Wno-end-if", no_argument, &cobc_warn_end_if, 0},
   {"Wparentheses", no_argument, &cobc_warn_parentheses, 1},
+  {"Wno-parentheses", no_argument, &cobc_warn_parentheses, 0},
 #ifdef COB_DEBUG
   {"ts", no_argument, &yy_flex_debug, 1},
   {"tp", no_argument, &yy_bison_debug, 1},
@@ -289,10 +293,12 @@ process_command_line (int argc, char *argv[])
 	case 'X': strcat (cobpp_flags, " -FX"); break;
 
 	case 'W':
+	  cobc_warn_class_mismatch = 1;
 	  cobc_warn_column_overflow = 1;
 	  cobc_warn_end_evaluate = 1;
 	  cobc_warn_end_if = 1;
 	  cobc_warn_parentheses = 1;
+	  cobc_warn_size_overflow = 1;
 	  break;
 
 	default:
@@ -305,6 +311,9 @@ process_command_line (int argc, char *argv[])
     strcat (cobpp_flags, " -fdebugging-line");
   if (cobc_warn_column_overflow)
     strcat (cobpp_flags, " -Wcolumn-overflow");
+
+  if (compile_level)
+    cobc_flag_main = 1;
 
   return optind;
 }
