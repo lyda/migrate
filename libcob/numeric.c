@@ -59,7 +59,7 @@ void
 cob_decimal_init (struct cob_decimal *d)
 {
   mpz_init (d->number);
-  d->exp = 0;
+  d->expt = 0;
 }
 
 void
@@ -73,13 +73,13 @@ void
 cob_decimal_print (struct cob_decimal *d)
 {
   mpz_out_str (stdout, 10, d->number);
-  if (d->exp)
-    fprintf (stdout, " * 10^%d", d->exp);
+  if (d->expt)
+    fprintf (stdout, " * 10^%d", d->expt);
   fputs ("\n", stdout);
 }
 #endif
 
-/* d->number *= 10^n, d->exp -= n */
+/* d->number *= 10^n, d->expt -= n */
 static void
 shift_decimal (struct cob_decimal *d, int n)
 {
@@ -113,16 +113,16 @@ shift_decimal (struct cob_decimal *d, int n)
 	  mpz_clear (m);
 	}
     }
-  d->exp -= n;
+  d->expt -= n;
 }
 
 static void
 arrange_decimal (struct cob_decimal *d1, struct cob_decimal *d2)
 {
-  if (d1->exp > d2->exp)
-    shift_decimal (d1, d1->exp - d2->exp);
-  else if (d1->exp < d2->exp)
-    shift_decimal (d2, d2->exp - d1->exp);
+  if (d1->expt > d2->expt)
+    shift_decimal (d1, d1->expt - d2->expt);
+  else if (d1->expt < d2->expt)
+    shift_decimal (d2, d2->expt - d1->expt);
 }
 
 
@@ -134,14 +134,14 @@ void
 cob_decimal_set (struct cob_decimal *dst, struct cob_decimal *src)
 {
   mpz_set (dst->number, src->number);
-  dst->exp = src->exp;
+  dst->expt = src->expt;
 }
 
 void
 cob_decimal_set_int (struct cob_decimal *d, int n, int decimals)
 {
   mpz_set_si (d->number, n);
-  d->exp = - decimals;
+  d->expt = - decimals;
 }
 
 void
@@ -150,14 +150,14 @@ cob_decimal_set_int64 (struct cob_decimal *d, long long n, int decimals)
   mpz_set_si (d->number, n >> 32);
   mpz_mul_2exp (d->number, d->number, 32);
   mpz_add_ui (d->number, d->number, n & 0xffffffff);
-  d->exp = - decimals;
+  d->expt = - decimals;
 }
 
 void
 cob_decimal_set_double (struct cob_decimal *d, double v)
 {
   mpz_set_d (d->number, v * cob_exp10[9]);
-  d->exp = -9;
+  d->expt = -9;
 }
 
 void
@@ -172,7 +172,7 @@ cob_decimal_set_display (struct cob_decimal *d, struct cob_field f)
   mpz_set_str (d->number, buff, 10);
   if (sign < 0)
     mpz_neg (d->number, d->number);
-  d->exp = f.desc ? - f.desc->decimals : 0;
+  d->expt = f.desc ? - f.desc->decimals : 0;
   cob_put_sign (f, sign);
 }
 
@@ -206,7 +206,7 @@ cob_decimal_get (struct cob_decimal *d, struct cob_field f)
     return;
 
   /* Append or truncate decimal digits */
-  shift_decimal (d, f.desc->decimals + d->exp);
+  shift_decimal (d, f.desc->decimals + d->expt);
 
   /* Store number */
   switch (COB_FIELD_TYPE (f))
@@ -306,12 +306,12 @@ cob_decimal_get (struct cob_decimal *d, struct cob_field f)
 void
 cob_decimal_get_rounded (struct cob_decimal *d, struct cob_field f)
 {
-  if (f.desc->decimals < - d->exp)
+  if (f.desc->decimals < - d->expt)
     {
       int sign = mpz_sgn (d->number);
       if (sign != 0)
 	{
-	  shift_decimal (d, f.desc->decimals + d->exp + 1);
+	  shift_decimal (d, f.desc->decimals + d->expt + 1);
 	  if (sign > 0)
 	    mpz_add_ui (d->number, d->number, 5);
 	  else
@@ -324,7 +324,7 @@ cob_decimal_get_rounded (struct cob_decimal *d, struct cob_field f)
 double
 cob_decimal_get_double (struct cob_decimal *d)
 {
-  int n = d->exp;
+  int n = d->expt;
   double v = mpz_get_d (d->number);
   for (; n > 0; n--) v *= 10;
   for (; n < 0; n++) v /= 10;
@@ -353,7 +353,7 @@ cob_decimal_sub (struct cob_decimal *d1, struct cob_decimal *d2)
 void
 cob_decimal_mul (struct cob_decimal *d1, struct cob_decimal *d2)
 {
-  d1->exp += d2->exp;
+  d1->expt += d2->expt;
   mpz_mul (d1->number, d1->number, d2->number);
 }
 
@@ -367,19 +367,19 @@ cob_decimal_div (struct cob_decimal *d1, struct cob_decimal *d2)
       return;
     }
 
-  d1->exp -= d2->exp;
-  shift_decimal (d1, 19 + ((d1->exp > 0) ? d1->exp : 0));
+  d1->expt -= d2->expt;
+  shift_decimal (d1, 19 + ((d1->expt > 0) ? d1->expt : 0));
   mpz_tdiv_q (d1->number, d1->number, d2->number);
 }
 
 void
 cob_decimal_pow (struct cob_decimal *d1, struct cob_decimal *d2)
 {
-  if (d2->exp == 0 && mpz_fits_ulong_p (d2->number))
+  if (d2->expt == 0 && mpz_fits_ulong_p (d2->number))
     {
       unsigned int n = mpz_get_ui (d2->number);
       mpz_pow_ui (d1->number, d1->number, n);
-      d1->exp *= n;
+      d1->expt *= n;
     }
   else
     {
@@ -477,7 +477,7 @@ cob_div_quotient (struct cob_field dividend, struct cob_field divisor,
   decimal_get (cob_d1, quotient, round);
 
   /* truncate digits from the quotient */
-  shift_decimal (cob_d4, quotient.desc->decimals + cob_d4->exp);
+  shift_decimal (cob_d4, quotient.desc->decimals + cob_d4->expt);
 
   /* compute remainder */
   cob_decimal_mul (cob_d4, cob_d2);

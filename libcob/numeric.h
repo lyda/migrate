@@ -23,9 +23,14 @@
 #include <gmp.h>
 #include <libcob/common.h>
 
+/*
+ * Internal representation of decimal numbers.
+ *
+ *   n = number * 10^expt
+ */
 struct cob_decimal {
-  char exp;
-  mpz_t number;
+  mpz_t number;		/* multi-byte binary integer */
+  char expt;		/* exponent */
 };
 
 extern struct cob_decimal *cob_d1, *cob_d2, *cob_d3, *cob_d4, *cob_dt;
