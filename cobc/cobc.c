@@ -364,7 +364,7 @@ process_command_line (int argc, char *argv[])
   if (cb_spec.name == NULL)
     if (cb_load_std ("gnu") != 0)
       {
-	fprintf (stderr, "error: cannot find initial spec file");
+	fprintf (stderr, "error: failed to load initial spec file\n");
 	exit (1);
       }
 
