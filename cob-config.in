@@ -8,7 +8,7 @@ includedir=@includedir@
 
 version="@VERSION@"
 cflags="@COB_CFLAGS@"
-libadd="@COB_LIBADD@"
+libadd="@COB_LIBS@"
 
 usage()
 {
