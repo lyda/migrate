@@ -18,6 +18,7 @@ set -e
 case "$1" in
     remove|upgrade|deconfigure)
 #       install-info --quiet --remove /usr/info/open-cobol.info.gz
+	rmdir /usr/lib/open-cobol 2>/dev/null || true
         ;;
     failed-upgrade)
         ;;

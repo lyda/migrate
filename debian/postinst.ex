@@ -4,7 +4,6 @@
 # see: dh_installdeb(1)
 
 set -e
-ldconfig
 
 # summary of how this script can be called:
 #        * <postinst> `configure' <most-recently-configured-version>
@@ -24,12 +23,9 @@ ldconfig
 #     `abort-remove' or `abort-deconfigure'.
 
 case "$1" in
-    configure)
-
-    ;;
-
-    abort-upgrade|abort-remove|abort-deconfigure)
-
+    configure|abort-upgrade|abort-remove|abort-deconfigure)
+	ldconfig
+	mkdir -p /usr/lib/open-cobol
     ;;
 
     *)
