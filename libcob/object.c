@@ -665,10 +665,6 @@ cob_is_equal ()
   cob_object o1 = REF (0);
   cob_object o2 = REF (1);
 
-  puts ("is_equal?");
-  cob_debug_print (o1);
-  cob_debug_print (o2);
-
   if (COB_TYPE (o1) == COB_TYPE (o2))
     switch (COB_TYPE (o1))
       {
