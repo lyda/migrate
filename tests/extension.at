@@ -106,7 +106,7 @@ AT_DATA([prog.cob], [
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog])
-AT_CHECK([echo -ne "a\r\n\r\nab\r\nabc\r\n\r\n\r\nabcd\r\n" > output])
+AT_CHECK([echo -ne "a\n\nab\nabc\n\n\nabcd\n" > output])
 AT_CHECK([cmp TEST-FILE output])
 
 AT_CLEANUP
