@@ -143,12 +143,6 @@ chg_underline (char *str)
 }
 
 struct sym *
-lookup_symbol (char *s)
-{
-  return lookup (s, SYTB_VAR);
-}
-
-struct sym *
 lookup (char *s, int tab)
 {
   char sbuf[SYMBUF_SIZE];
@@ -173,6 +167,12 @@ lookup (char *s, int tab)
 	  return (as);
       return (NULL);
     }
+}
+
+struct sym *
+lookup_symbol (char *s)
+{
+  return lookup (s, SYTB_VAR);
 }
 
 struct sym *
@@ -244,38 +244,10 @@ lookup_label (struct sym *sy, struct sym *parent)
     return NULL;
 }
 
-struct sym *
-lookup_variable (struct sym *sy, struct sym *parent)
-{
-  if (SUBREF_P (parent))
-    parent = SUBREF_SYM (parent);
-
-  for (;;)
-    {
-      struct sym *p;
-      for (p = sy; p != NULL; p = p->parent)
-	if (p->parent == parent)
-	  return sy;
-
-      if (sy->clone == NULL)
-	return sy;
-      sy = sy->clone;
-    }
-}
-
-struct sym *
-lookup_for_redefines (struct sym *sy)
-{
-  if (curr_field->parent == NULL)
-    return lookup_symbol (sy->name);
-  else
-    return lookup_variable (sy, curr_field->parent);
-}
-
 
-/*
- * Init program
- */
+/*****************************************************************************
+ * IDENTIFICATION DIVISION.
+ *****************************************************************************/
 
 static void
 clear_symtab ()
@@ -394,6 +366,55 @@ init_program (const char *id)
   strcpy (program_id, id);
 
   define_special_fields ();
+}
+
+
+/*****************************************************************************
+ * DATA DIVISION.
+ *****************************************************************************/
+
+/*******************
+ * WORKING-STRAGE SECTION
+ *******************/
+
+struct sym *
+lookup_variable (struct sym *sy, struct sym *parent)
+{
+  if (SUBREF_P (parent))
+    parent = SUBREF_SYM (parent);
+
+  for (;;)
+    {
+      struct sym *p;
+      for (p = sy; p != NULL; p = p->parent)
+	if (p->parent == parent)
+	  return sy;
+
+      if (sy->clone == NULL)
+	return sy;
+      sy = sy->clone;
+    }
+}
+
+struct sym *
+lookup_for_redefines (struct sym *sy)
+{
+  if (curr_field->parent == NULL)
+    return lookup_symbol (sy->name);
+  else
+    return lookup_variable (sy, curr_field->parent);
+}
+
+void
+save_named_sect (struct sym *sy)
+{
+  struct named_sect *nsp = malloc (sizeof (struct named_sect));
+  nsp->sec_no = next_available_sec_no++;
+  nsp->os_name = chg_underline (strdup (sy->name));
+  nsp->next = named_sect_list;
+  named_sect_list = nsp;
+  curr_sec_no = nsp->sec_no;	// Uncomment to activate
+  sy->sec_no = curr_sec_no;
 }
 
 
@@ -1748,20 +1769,6 @@ save_literal (struct lit *v, int type)
 	/******** save address of field descriptor ********/
   v->descriptor = literal_offset;
   literal_offset += 11 + piclen;
-}
-
-void
-save_named_sect (struct sym *sy)
-{
-  struct named_sect *nsp =
-    (struct named_sect *) malloc (sizeof (struct named_sect));
-
-  nsp->sec_no = next_available_sec_no++;
-  nsp->os_name = chg_underline (strdup (sy->name));
-  nsp->next = named_sect_list;
-  named_sect_list = nsp;
-  curr_sec_no = nsp->sec_no;	// Uncomment to activate
-  sy->sec_no = curr_sec_no;
 }
 
 struct lit *
@@ -4843,7 +4850,8 @@ close_fields (void)
 
   if (curr_field == NULL)
     return;
-	/********** locate level 01 field   **************/
+
+  /********** locate level 01 field   **************/
   for (sy = curr_field; sy->parent != NULL; sy = sy->parent);
   if (sy->level != 1 && sy->level != 77)
     {

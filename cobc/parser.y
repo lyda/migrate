@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 546
+%expect 547
 
 %{
 #define yydebug		cob_trace_parser
@@ -602,24 +602,18 @@ chars_or_recs: CHARACTERS | RECORDS ;
  *******************/
 
 working_storage_section:
-| WORKING_STORAGE SECTION '.'     { curr_field=NULL; }
-  field_description_list         { close_fields(); }
+| WORKING_STORAGE SECTION '.'	{ curr_field = NULL; }
+  field_description_list	{ close_fields (); }
 ;
-
-/*
- * Field description
- */
-
 field_description_list:
 | field_description_list field_description
 ;
 field_description:
-  integer field_name { define_field ($1, $2); }
-  redefines_clause
-  data_clauses '.'
+  integer field_name	{ define_field ($1, $2); }
+  field_options '.'
   {
-    $$ = $2;
     update_field();
+    $$ = $2;
   }
 ;
 field_name:
@@ -628,54 +622,69 @@ field_name:
 | STRING
   {
     if ($1->defined)
-      yyerror("variable redefined, %s",$1->name);
+      yyerror ("variable already defined: %s", $1->name);
     $1->defined=1;
-    $$=$1;
+    $$ = $1;
   }
 ;
-redefines_clause:
-| REDEFINES { curr_division = CDIV_INITIAL; }
-  redefines_var
-  {       
-    curr_division = CDIV_DATA;
-    if ($<sval>-1 != NULL)
-	$<sval>-1->redefines = lookup_for_redefines($3);
-    else
-	yyerror("cannot redefine an unnamed field");
-  }
+field_options:
+| field_options field_option
 ;
-redefines_var:
-  VARIABLE  { $$=$1; }
-| SUBSCVAR  { $$=$1; }
-;
-data_clauses:
-| data_clauses data_clause
-;
-data_clause:
-  array_options
+field_option:
+  redefines_clause
+| external_clause
+| global_clause
+| occurs_clause
 | picture_clause
 | usage_option
 | sign_clause       { set_sign_flags($1); }
 | value_option
 | SYNC sync_options {curr_field->flags.sync=1;}
 | JUST RIGHT {curr_field->flags.just_r=1;}
-| EXTERNAL {save_named_sect(curr_field);}
 | BLANK opt_when ZERONUM { curr_field->flags.blank=1; }
 ;
-sync_options:
-| LEFT
-| RIGHT
-;
-array_options:
-  OCCURS integer opt_TIMES
+
+
+/*
+ * REDEFINES clause
+ */
+
+redefines_clause:
+  REDEFINES { curr_division = CDIV_INITIAL; }
+  redefines_var
   {
-    if ($2 < 1)
-      {
-	yyerror ("occurs number must be positive integer");
-	$2 = 1;
-      }
-    curr_field->times = $2;
+    curr_division = CDIV_DATA;
+    curr_field->redefines = lookup_for_redefines ($3);
   }
+redefines_var:
+  VARIABLE		{ $$ = $1; }
+| SUBSCVAR		{ $$ = $1; }
+;
+
+
+/*
+ * EXTERNAL clause
+ */
+
+external_clause:
+  opt_is EXTERNAL	{ save_named_sect (curr_field); }
+
+
+/*
+ * GLOBAL clause
+ */
+
+global_clause:
+  opt_is GLOBAL		{ yywarn ("GLOBAL is not supported"); }
+;
+
+
+/*
+ * OCCURS clause
+ */
+
+occurs_clause:
+  OCCURS integer opt_TIMES { curr_field->times = $2; }
   opt_indexed_by
 | OCCURS integer TO integer opt_TIMES DEPENDING opt_on
   { curr_division = CDIV_INITIAL; }
@@ -707,6 +716,11 @@ index_name_list:
   def_name { define_implicit_field ($1, $<sval>-2, curr_field->times); }
 | index_name_list
   def_name { define_implicit_field ($2, $<sval>-2, curr_field->times); }
+;
+
+sync_options:
+| LEFT
+| RIGHT
 ;
 
 picture_clause: PIC { start_condition = START_PICTURE; } PICTURE ;
