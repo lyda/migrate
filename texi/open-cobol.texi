@@ -324,8 +324,8 @@ $ cobc -o prog main.o subrs.o
 
 Any number of functions can be contained in a single C file.
 
-By default, the linked programs are called dynamically, which means
-the symbol is resolved at run time.  For example, the following COBOL
+The linked programs will be called dynamically; that is, the symbol
+will be resolved at run time.  For example, the following COBOL
 statement
 
 @example
@@ -335,7 +335,7 @@ CALL "subr" USING X.
 will be converted into an equivalent C code like this:
 
 @example
-int (*func)() = cob_resolve ("subr");
+int (*func)() = cob_resolve("subr");
 if (func != NULL)
   func (X);
 @end example
@@ -344,7 +344,7 @@ With the compiler options @code{-fstatic-call}, more efficient code
 will be generated like this:
 
 @example
-subr (X);
+subr(X);
 @end example
 
 Note that this option is effective only when the called program name
@@ -437,20 +437,20 @@ Call @code{cob_init} before using any COBOL module:
 #include <libcob.h>
 
 int
-main (int argc, char **argv)
+main(int argc, char **argv)
 @{
   /* initialize your program */
   ...
 
   /* initialize the COBOL run-time library */
-  cob_init (argc, argv);
+  cob_init(argc, argv);
 
   /* rest of your program */
   ...
 @}
 @end example
 
-You can write @code{cobc_init (0, NULL);} if you do not want to pass
+You can write @code{cobc_init(0, NULL);} if you do not want to pass
 command line arguments to COBOL.
 
 The function @code{cob_set_library_path} will overwrite the user
@@ -494,7 +494,7 @@ From the viewpoint of C, this is equivalent to a function having the
 following prototype:
 
 @example
-extern int say (char *hello, char *world);
+extern int say(char *hello, char *world);
 @end example
 
 So, your main program will look like as follows:
@@ -503,18 +503,18 @@ So, your main program will look like as follows:
 ---- hello.c ---------------------------
 #include <libcob.h>
 
-extern int say (char *hello, char *world);
+extern int say(char *hello, char *world);
 
 int
-main ()
+main()
 @{
   int ret;
   char hello[6] = "Hello ";
   char world[6] = "World!";
 
-  cob_init (0, NULL);
+  cob_init(0, NULL);
 
-  ret = say (hello, world);
+  ret = say(hello, world);
 
   return ret;
 @}
@@ -547,28 +547,28 @@ Let's see an example:
 ---- hello-dynamic.c -------------------
 #include <libcob.h>
 
-static int (*say) (char *hello, char *world);
+static int (*say)(char *hello, char *world);
 
 int
-main ()
+main()
 @{
   int ret;
   char hello[6] = "Hello ";
   char world[6] = "World!";
 
-  cob_init (0, NULL);
+  cob_init(0, NULL);
 
   /* find the module with PROGRAM-ID "say". */
-  say = cob_resolve ("say");
+  say = cob_resolve("say");
 
   /* if there is no such module, show error and exit */
   if (say == NULL) @{
-    fprintf (stderr, "%s\n", cob_resolve_error ());
-    exit (1);
+    fprintf(stderr, "%s\n", cob_resolve_error ());
+    exit(1);
   @}
 
   /* call the module found and exit with the return code */
-  ret = say (hello, world);
+  ret = say(hello, world);
 
   return ret;
 @}
@@ -594,14 +594,14 @@ Let's call the following C function from COBOL:
 @example
 ---- say.c -----------------------------
 int
-say (char *hello, char *world)
+say(char *hello, char *world)
 @{
   int i;
   for (i = 0; i < 6; i++)
-    putchar (hello[i]);
+    putchar(hello[i]);
   for (i = 0; i < 6; i++)
-    putchar (world[i]);
-  putchar ('\n');
+    putchar(world[i]);
+  putchar('\n');
   return 0;
 @}
 ----------------------------------------
