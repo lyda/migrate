@@ -659,11 +659,11 @@ output_index (cb_tree x)
 
 
 /*
- * Parameter
+ * Expression
  */
 
 static void
-output_param (cb_tree x, int id)
+output_expr (cb_tree x, int id)
 {
   char fname[5];
   sprintf (fname, "f[%d]", id);
@@ -747,7 +747,7 @@ output_param (cb_tree x, int id)
 	if (!CB_FIELD_P (r->value)
 	    || (!r->subs && !r->offset && !cb_field_varying (cb_field (x))))
 	  {
-	    output_param (r->value, id);
+	    output_expr (r->value, id);
 	    return;
 	  }
 
@@ -843,7 +843,7 @@ output_funcall (cb_tree x)
   output ("%s (", p->name);
   for (i = 0; i < p->argc; i++)
     {
-      output_param (p->argv[i], i);
+      output_expr (p->argv[i], i);
       if (i + 1 < p->argc)
 	output (", ");
     }
@@ -1719,13 +1719,13 @@ output_file_definition (struct cb_file *f)
       struct cb_alt_key *l;
       output ("static cob_file_key %s_keys[] = {\n", f->cname);
       output ("  {");
-      output_param (f->key, -1);
+      output_expr (f->key, -1);
       output (", 0},\n");
       for (l = f->alt_key_list; l; l = l->next)
 	{
 	  nkeys++;
 	  output ("  {");
-	  output_param (l->key, -1);
+	  output_expr (l->key, -1);
 	  output (", %d},\n", l->duplicates);
 	}
       output ("};\n");
@@ -1742,13 +1742,13 @@ output_file_definition (struct cb_file *f)
     output ("0");
   output (", ");
   /* assign */
-  output_param (f->assign, -1);
+  output_expr (f->assign, -1);
   output (", ");
   /* record */
-  output_param (CB_TREE (f->record), -1);
+  output_expr (CB_TREE (f->record), -1);
   output (", ");
   /* record_size */
-  output_param (f->record_depending, -1);
+  output_expr (f->record_depending, -1);
   output (", ");
   /* record_min, record_max */
   output ("%d, %d, ", f->record_min, f->record_max);
