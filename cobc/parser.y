@@ -609,12 +609,12 @@ select_sequence:
       {
       case COB_ORG_INDEXED:
 	if (!current_file_name->key)
-	  yyerror ("RECORD KEY is required for file `%s'", $4->name);
+	  yyerror_loc (&@2, "RECORD KEY required for file `%s'", $4->name);
 	break;
       case COB_ORG_RELATIVE:
 	if (current_file_name->access_mode != COB_ACCESS_SEQUENTIAL
 	    && !current_file_name->key)
-	  yyerror ("RELATIVE KEY is required for file `%s'", $4->name);
+	  yyerror_loc (&@2, "RELATIVE KEY required for file `%s'", $4->name);
 	break;
       }
   }
@@ -1249,7 +1249,7 @@ procedure_using:
       {
 	struct cobc_field *p = COBC_FIELD (l->item);
 	if (p->level != 01 && p->level != 77)
-	  yyerror ("parameter must be level 01 or 77 `%s'", p->word->name);
+	  yyerror ("`%s' not level 01 or 77", p->word->name);
       }
     program_spec.using_list = $2;
   }
@@ -3285,7 +3285,7 @@ resolve_predefined_name (cobc_tree x)
   struct cobc_word *p = l->item;
   if (p->count == 0)
     {
-      yyerror ("`%s' is used, but not defined", p->name);
+      undefined_error (p, 0);
       return NULL;
     }
   else if (p->count > 1)
@@ -3748,12 +3748,14 @@ ambiguous_error (struct cobc_word *p)
 
 
 static void
-yyprintf (char *file, int line, char *prefix, char *fmt, va_list ap)
+yyprintf (char *file, int line, char *prefix, char *fmt, va_list ap, char *name)
 {
   fprintf (stderr, "%s:%d: %s",
 	   file ? file : cobc_source_file,
 	   line ? line : cobc_source_line,
 	   prefix);
+  if (name)
+    fprintf (stderr, "`%s' ", name);
   vfprintf (stderr, fmt, ap);
   fputs ("\n", stderr);
 }
@@ -3763,7 +3765,7 @@ yywarn (char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  yyprintf (0, 0, "warning: ", fmt, ap);
+  yyprintf (0, 0, "warning: ", fmt, ap, NULL);
   va_end (ap);
 
   warning_count++;
@@ -3774,7 +3776,7 @@ yyerror (char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  yyprintf (0, 0, "", fmt, ap);
+  yyprintf (0, 0, "", fmt, ap, NULL);
   va_end (ap);
 
   error_count++;
@@ -3785,7 +3787,7 @@ yywarn_loc (YYLTYPE *loc, char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  yyprintf (loc->text, loc->first_line, "warning: ", fmt, ap);
+  yyprintf (loc->text, loc->first_line, "warning: ", fmt, ap, NULL);
   va_end (ap);
 
   warning_count++;
@@ -3796,7 +3798,29 @@ yyerror_loc (YYLTYPE *loc, char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  yyprintf (loc->text, loc->first_line, "", fmt, ap);
+  yyprintf (loc->text, loc->first_line, "", fmt, ap, NULL);
+  va_end (ap);
+
+  error_count++;
+}
+
+void
+yywarn_tree (cobc_tree x, char *fmt, ...)
+{
+  va_list ap;
+  va_start (ap, fmt);
+  yyprintf (x->loc.text, x->loc.first_line, "warning: ", fmt, ap, tree_to_string (x));
+  va_end (ap);
+
+  warning_count++;
+}
+
+void
+yyerror_tree (cobc_tree x, char *fmt, ...)
+{
+  va_list ap;
+  va_start (ap, fmt);
+  yyprintf (x->loc.text, x->loc.first_line, "", fmt, ap, tree_to_string (x));
   va_end (ap);
 
   error_count++;

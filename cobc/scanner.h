@@ -37,5 +37,7 @@ extern void yywarn (char *fmt, ...);
 extern void yyerror (char *fmt, ...);
 extern void yywarn_loc (YYLTYPE *loc, char *fmt, ...);
 extern void yyerror_loc (YYLTYPE *loc, char *fmt, ...);
+extern void yywarn_tree (cobc_tree x, char *fmt, ...);
+extern void yyerror_tree (cobc_tree x, char *fmt, ...);
 
 #endif /* _SCANNER_H_ */
