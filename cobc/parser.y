@@ -1639,19 +1639,19 @@ end_accept:
 
 add_statement:
   ADD				{ BEGIN_STATEMENT ("ADD"); }
-  add_body on_size_error
+  add_body
   end_add
 ;
 add_body:
-  x_list TO arithmetic_x_list
+  x_list TO arithmetic_x_list on_size_error
   {
     cb_emit_arithmetic ($3, '+', cb_build_binary_list ($1, '+'));
   }
-| x_list add_to GIVING arithmetic_x_list
+| x_list add_to GIVING arithmetic_x_list on_size_error
   {
     cb_emit_arithmetic ($4, 0, cb_build_binary_list ($1, '+'));
   }
-| CORRESPONDING x _to x flag_rounded
+| CORRESPONDING x _to x flag_rounded on_size_error
   {
     cb_emit_corresponding (cb_build_add, $4, $2, $5);
   }
@@ -1783,11 +1783,11 @@ reel_or_unit: REEL | UNIT ;
 
 compute_statement:
   COMPUTE			{ BEGIN_STATEMENT ("COMPUTE"); }
-  compute_body on_size_error
+  compute_body
   end_compute
 ;
 compute_body:
-  arithmetic_x_list '=' expr
+  arithmetic_x_list '=' expr on_size_error
   {
     cb_emit_arithmetic ($1, 0, $3);
   }
@@ -1858,27 +1858,27 @@ end_display:
 
 divide_statement:
   DIVIDE			{ BEGIN_STATEMENT ("DIVIDE"); }
-  divide_body on_size_error
+  divide_body
   end_divide
 ;
 divide_body:
-  x INTO arithmetic_x_list
+  x INTO arithmetic_x_list on_size_error
   {
     cb_emit_arithmetic ($3, '/', $1);
   }
-| x INTO x GIVING arithmetic_x_list
+| x INTO x GIVING arithmetic_x_list on_size_error
   {
     cb_emit_arithmetic ($5, 0, cb_build_binary_op ($3, '/', $1));
   }
-| x BY x GIVING arithmetic_x_list
+| x BY x GIVING arithmetic_x_list on_size_error
   {
     cb_emit_arithmetic ($5, 0, cb_build_binary_op ($1, '/', $3));
   }
-| x INTO x GIVING arithmetic_x REMAINDER arithmetic_x
+| x INTO x GIVING arithmetic_x REMAINDER arithmetic_x on_size_error
   {
     cb_emit_divide ($3, $1, $5, $7);
   }
-| x BY x GIVING arithmetic_x REMAINDER arithmetic_x
+| x BY x GIVING arithmetic_x REMAINDER arithmetic_x on_size_error
   {
     cb_emit_divide ($1, $3, $5, $7);
   }
@@ -2193,15 +2193,15 @@ move_body:
 
 multiply_statement:
   MULTIPLY			{ BEGIN_STATEMENT ("MULTIPLY"); }
-  multiply_body on_size_error
+  multiply_body
   end_multiply
 ;
 multiply_body:
-  x BY arithmetic_x_list
+  x BY arithmetic_x_list on_size_error
   {
     cb_emit_arithmetic ($3, '*', $1);
   }
-| x BY x GIVING arithmetic_x_list
+| x BY x GIVING arithmetic_x_list on_size_error
   {
     cb_emit_arithmetic ($5, 0, cb_build_binary_op ($1, '*', $3));
   }
@@ -2669,19 +2669,19 @@ end_string:
 
 subtract_statement:
   SUBTRACT			{ BEGIN_STATEMENT ("SUBTRACT"); }
-  subtract_body on_size_error
+  subtract_body
   end_subtract
 ;
 subtract_body:
-  x_list FROM arithmetic_x_list
+  x_list FROM arithmetic_x_list on_size_error
   {
     cb_emit_arithmetic ($3, '-', cb_build_binary_list ($1, '+'));
   }
-| x_list FROM x GIVING arithmetic_x_list
+| x_list FROM x GIVING arithmetic_x_list on_size_error
   {
     cb_emit_arithmetic ($5, 0, cb_build_binary_list (cb_cons ($3, $1), '-'));
   }
-| CORRESPONDING x FROM x flag_rounded
+| CORRESPONDING x FROM x flag_rounded on_size_error
   {
     cb_emit_corresponding (cb_build_sub, $4, $2, $5);
   }

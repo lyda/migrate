@@ -1,3 +1,14 @@
+2004-07-06  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* parser.y (add_statement, add_body, compute_statement, compute_body)
+	(divide_statement, divide_body, multiply_statement, multiply_body)
+	(subtract_statement, subtract_body): Parse on_size_error before
+	emitting the statement.
+	* typeck.c (build_store_option): New function.
+	(decimal_assign, build_decimal_assign, cb_build_add) 
+	(cb_build_sub, cb_emit_divide): Updated for the new store scheme
+	in libcob.
+
 2004-05-15  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* parser.y (stop_statement): Accept RETURNING/GIVING phrase.

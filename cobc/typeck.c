@@ -963,6 +963,32 @@ static cb_tree decimal_stack = NULL;
 #define dpush(x) decimal_stack = cb_cons (x, decimal_stack)
 
 static cb_tree
+build_store_option (cb_tree x, cb_tree round)
+{
+  int opt = 0;
+
+  if (round == cb_int1)
+    opt |= COB_STORE_ROUND;
+
+  switch (CB_FIELD (cb_ref (x))->usage)
+    {
+    case CB_USAGE_COMP_5:
+    case CB_USAGE_COMP_X:
+      if (current_statement->handler_id)
+	opt |= COB_STORE_TRUNC_ON_OVERFLOW;
+      break;
+    default:
+      if (current_statement->handler_id)
+	opt |= COB_STORE_KEEP_ON_OVERFLOW;
+      else if (cb_binary_truncate)
+	opt |= COB_STORE_TRUNC_ON_OVERFLOW;
+      break;
+    }
+
+  return cb_int (opt);
+}
+
+static cb_tree
 decimal_alloc (void)
 {
   cb_tree x = cb_build_decimal (current_program->decimal_index++);
@@ -1054,12 +1080,10 @@ decimal_expand (cb_tree d, cb_tree x)
 }
 
 static void
-decimal_assign (cb_tree x, cb_tree d, int round)
+decimal_assign (cb_tree x, cb_tree d, cb_tree round)
 {
-  if (round)
-    dpush (cb_build_funcall_2 ("cob_decimal_get_field_round", d, x));
-  else
-    dpush (cb_build_funcall_2 ("cob_decimal_get_field", d, x));
+  dpush (cb_build_funcall_3 ("cob_decimal_get_field", d, x,
+			     build_store_option (x, round)));
 }
 
 static cb_tree
@@ -1077,7 +1101,7 @@ build_decimal_assign (cb_tree vars, char op, cb_tree val)
       for (l = vars; l; l = CB_CHAIN (l))
 	{
 	  /* set VAR, d */
-	  decimal_assign (CB_VALUE (l), d, CB_PURPOSE_INT (l));
+	  decimal_assign (CB_VALUE (l), d, CB_PURPOSE (l));
 	  s1 = cb_list_add (s1, cb_list_reverse (decimal_stack));
 	  decimal_stack = NULL;
 	}
@@ -1093,7 +1117,7 @@ build_decimal_assign (cb_tree vars, char op, cb_tree val)
 	   */
 	  decimal_expand (t, CB_VALUE (l));
 	  decimal_compute (op, t, d);
-	  decimal_assign (CB_VALUE (l), t, CB_PURPOSE_INT (l));
+	  decimal_assign (CB_VALUE (l), t, CB_PURPOSE (l));
 	  s1 = cb_list_add (s1, cb_list_reverse (decimal_stack));
 	  decimal_stack = NULL;
 	}
@@ -1281,29 +1305,29 @@ cb_build_cond (cb_tree x)
 cb_tree
 cb_build_add (cb_tree v, cb_tree n, cb_tree round)
 {
+  cb_tree opt;
+
   if (CB_INDEX_P (v) || CB_TREE_CLASS (v) == CB_CLASS_POINTER)
     return cb_build_move (cb_build_binary_op (v, '+', n), v);
 
-  if (round == cb_int0 && cb_fits_int (n))
+  opt = build_store_option (v, round);
+  if (opt == cb_int0 && cb_fits_int (n))
     return cb_build_funcall_2 ("cob_add_int", v, cb_build_cast_integer (n));
-  if (round == cb_int1)
-    return cb_build_funcall_2 ("cob_add_round", v, n);
-  else
-    return cb_build_funcall_2 ("cob_add", v, n);
+  return cb_build_funcall_3 ("cob_add", v, n, opt);
 }
 
 cb_tree
 cb_build_sub (cb_tree v, cb_tree n, cb_tree round)
 {
+  cb_tree opt;
+
   if (CB_INDEX_P (v) || CB_TREE_CLASS (v) == CB_CLASS_POINTER)
     return cb_build_move (cb_build_binary_op (v, '-', n), v);
 
-  if (round == cb_int0 && cb_fits_int (n))
+  opt = build_store_option (v, round);
+  if (opt == cb_int0 && cb_fits_int (n))
     return cb_build_funcall_2 ("cob_sub_int", v, cb_build_cast_integer (n));
-  if (round == cb_int1)
-    return cb_build_funcall_2 ("cob_sub_round", v, n);
-  else
-    return cb_build_funcall_2 ("cob_sub", v, n);
+  return cb_build_funcall_3 ("cob_sub", v, n, opt);
 }
 
 static void
@@ -1619,8 +1643,12 @@ cb_emit_divide (cb_tree dividend, cb_tree divisor,
   VALIDATE (CB_VALUE (remainder));
 
   cb_emit (cb_build_funcall_4 ("cob_div_quotient", dividend, divisor,
-			       CB_VALUE (quotient), CB_PURPOSE (quotient)));
-  cb_emit (cb_build_funcall_1 ("cob_div_remainder", CB_VALUE (remainder)));
+			       CB_VALUE (quotient),
+			       build_store_option (CB_VALUE (quotient),
+						   CB_PURPOSE (quotient))));
+  cb_emit (cb_build_funcall_2 ("cob_div_remainder", CB_VALUE (remainder),
+			       build_store_option (CB_VALUE (remainder),
+						   cb_int0)));
 }
 
 
