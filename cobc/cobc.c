@@ -304,7 +304,7 @@ file_extension (const char *filename)
   if (p)
     return p + 1;
   else
-    return NULL;
+    return "";
 }
 
 static void
@@ -511,6 +511,7 @@ int
 main (int argc, char *argv[])
 {
   int index;
+  int status = 1;
 
   /* Initialize the global variables */
   init_environment (argc, argv);
@@ -554,6 +555,9 @@ main (int argc, char *argv[])
   if (compile_level >= stage_link)
     process_link (file_list);
 
+  /* We successfully completed */
+  status = 0;
+
   /* Remove unnecessary files */
  cleanup:
   if (!save_temps_flag)
@@ -570,5 +574,5 @@ main (int argc, char *argv[])
 	}
     }
 
-  return 0;
+  return status;
 }
