@@ -105,7 +105,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %token IF,ELSE,SENTENCE,LINE,PAGE,OPEN,CLOSE,REWRITE,SECTION,SYMBOLIC
 %token ADVANCING,INTO,AT,END,NEGATIVE,POSITIVE,SPACES,NOT
 %token CALL,USING,INVALID,CONTENT,QUOTES,LOW_VALUES,HIGH_VALUES
-%token SELECT,ASSIGN,DISPLAY,UPON,CONSOLE,STD_OUTPUT,STD_ERROR
+%token SELECT,ASSIGN,DISPLAY,UPON,CONSOLE
 %token ORGANIZATION,ACCESS,MODE,KEY,STATUS,ALTERNATE,SORT,SORT_MERGE
 %token SEQUENTIAL,INDEXED,DYNAMIC,RANDOM,RELATIVE,RELEASE
 %token SET,UP,DOWN,TRACE,READY,RESET,SEARCH,WHEN,TEST
@@ -128,7 +128,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <ival> search_when,search_when_list,search_opt_at_end
 %type <ival> integer,operator,before_after,set_mode
 %type <ival> opt_on_exception_or_overflow,opt_on_exception_sentence
-%type <ival> display_upon,display_options
+%type <ival> opt_with_no_advancing
 %type <ival> flag_all,opt_with_duplicates,opt_with_test,opt_optional
 %type <ival> flag_not
 %type <ival> flag_rounded,opt_sign_separate
@@ -145,7 +145,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <mval> numeric_variable_list,numeric_edited_variable_list
 %type <pfval> perform_after
 %type <pfvals> opt_perform_after
-%type <list> sort_file_list
+%type <list> sort_file_list,display_list
 %type <str> idstring
 %type <tree> field_description,label,label_name,filename
 %type <tree> file_description,redefines_var,function_call,subscript
@@ -1435,27 +1435,26 @@ opt_end_delete: | END_DELETE ;
  */
 
 display_statement:
-  DISPLAY display_varlist opt_upon display_upon display_options
+  DISPLAY display_list opt_upon display_upon opt_with_no_advancing
   {
-    gen_display ($4, $5);
+    cob_tree_list l;
+    for (l = $2; l; l = l->next)
+      asm_call_1 ("cob_display", l->item);
+    if ($5 == 0)
+      asm_call ("cob_newline");
   }
   ;
-display_varlist:
-| display_varlist gname		{ put_disp_list ($2); }
+display_list:
+  /* nothing */			{ $$ = NULL; }
+| display_list gname		{ $$ = list_add ($1, $2); }
 ;
 display_upon:
-  /* nothing */			{ $$ = 1; }
-| CONSOLE			{ $$ = 1; }
-| STD_OUTPUT			{ $$ = 1; }
-| STD_ERROR			{ $$ = 2; }
-| VARIABLE			{ $$ = 2; yywarn ("not supported"); }
+| CONSOLE
+| VARIABLE			{ yywarn ("not supported"); }
 ;
-display_options:
+opt_with_no_advancing:
   /* nothing */			{ $$ = 0; }
-| display_options opt_with NO ADVANCING { $$ = $1 | 1; }
-| display_options ERASE		{ $$ = $1 | 2; }
-| display_options ERASE EOS	{ $$ = $1 | 2; }
-| display_options ERASE EOL	{ $$ = $1 | 4; }
+| opt_with NO ADVANCING		{ $$ = 1; }
 ;
 
 

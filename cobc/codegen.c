@@ -71,7 +71,6 @@ static unsigned tmpvar_offset = 0;
 static unsigned tmpvar_max = 0;
 
 static struct list *files_list = NULL;
-static struct list *disp_list = NULL;
 static struct list *fields_list = NULL;
 static struct list *last_field = NULL;
 static struct index_to_table_list *index2table = NULL;
@@ -239,53 +238,6 @@ output (char *fmt, ...)
  *****************************************************************************/
 
 static void
-clear_symtab ()
-{
-  cob_tree sy, sy1;
-  int i;
-  for (i = 0; i < HASHLEN; i++)
-    {
-      for (sy1 = vartab[i]; sy1 != NULL;)
-	{
-	  for (sy = sy1->clone; sy;)
-	    if (sy)
-	      sy = sy->clone;
-	  sy1 = COB_FIELD_NEXT (sy1);
-	}
-      vartab[i] = NULL;
-    }
-  for (i = 0; i < HASHLEN; i++)
-    {
-      for (sy1 = labtab[i]; sy1 != NULL;)
-	{
-	  for (sy = sy1->clone; sy;)
-	    if (sy)
-	      sy = sy->clone;
-	  sy1 = COB_FIELD_NEXT (sy1);
-	}
-      labtab[i] = NULL;
-    }
-}
-
-static void
-clear_offsets ()
-{
-  stack_offset = 0;
-  global_offset = 4;
-  literal_offset = 0;
-  data_offset = 0;
-  linkage_offset = 0;
-  using_offset = 8;
-  substring_slots = 0;
-  fields_list = NULL;
-  files_list = NULL;
-  curr_field = NULL;
-  /* free tmpvar storage */
-  tmpvar_offset = 0;
-  tmpvar_max = 0;
-}
-
-static void
 save_field_in_list (cob_tree sy)
 {
   struct list *list;
@@ -396,9 +348,25 @@ define_special_fields ()
 void
 init_program (const char *id)
 {
+  int i;
   pgm_segment++;
-  clear_symtab ();
-  clear_offsets ();
+
+  for (i = 0; i < HASHLEN; i++)
+    vartab[i] = labtab[i] = NULL;
+
+  stack_offset = 0;
+  global_offset = 4;
+  literal_offset = 0;
+  data_offset = 0;
+  linkage_offset = 0;
+  using_offset = 8;
+  substring_slots = 0;
+  fields_list = NULL;
+  files_list = NULL;
+  curr_field = NULL;
+  /* free tmpvar storage */
+  tmpvar_offset = 0;
+  tmpvar_max = 0;
 
   if (!pgm_segment)
     output ("\t.file\t\"%s\"\n", cob_source_filename);
@@ -461,7 +429,6 @@ save_named_sect (cob_tree sy)
  * Local functions
  */
 
-static void asm_call_1 (const char *name, cob_tree sy1);
 static void adjust_desc_length (cob_tree sy);
 
 static void
@@ -872,21 +839,21 @@ cleanup_rt_stack ()
     }
 }
 
-static void
+void
 asm_call (const char *name)
 {
   output ("\tcall\t%s\n", name);
   cleanup_rt_stack ();
 }
 
-static void
+void
 asm_call_1 (const char *name, cob_tree s1)
 {
   gen_loadvar (s1);
   asm_call (name);
 }
 
-static void
+void
 asm_call_2 (const char *name, cob_tree s1, cob_tree s2)
 {
   gen_loadvar (s2);
@@ -894,7 +861,7 @@ asm_call_2 (const char *name, cob_tree s1, cob_tree s2)
   asm_call (name);
 }
 
-static void
+void
 asm_call_3 (const char *name, cob_tree s1, cob_tree s2, cob_tree s3)
 {
   gen_loadvar (s3);
@@ -1893,24 +1860,6 @@ proc_trail (int using)
 }
 
 void
-put_disp_list (cob_tree sy)
-{
-  struct list *list, *tmp;
-  list = (struct list *) malloc (sizeof (struct list));
-  list->var = sy;
-  list->next = NULL;
-  if (disp_list == NULL)
-    disp_list = list;
-  else
-    {
-      tmp = disp_list;
-      while (tmp->next != NULL)
-	tmp = tmp->next;
-      tmp->next = list;
-    }
-}
-
-void
 add_alternate_key (cob_tree sy, int duplicates)
 {
   cob_tree f = curr_file;
@@ -2037,35 +1986,6 @@ gen_unstring (cob_tree x, cob_tree_list l)
       push_immed (p->type);
     }
   asm_call_1 ("cob_unstring", x);
-}
-
-void
-gen_display (int dupon, int nl)
-{
-  cob_tree sy;
-
-  if (disp_list)
-    {
-      sy = disp_list->var;
-      if (nl & 2)
-	{
-	  push_immed (dupon);
-	  asm_call ("cob_erase");
-	}
-    }
-  while (disp_list)
-    {
-      sy = disp_list->var;
-      push_immed (dupon);
-      gen_loadvar (sy);
-      asm_call ("cob_display");
-      disp_list = disp_list->next;
-    }
-  if (!(nl & 1))
-    {
-      push_immed (dupon);
-      asm_call ("cob_newline");
-    }
 }
 
 void

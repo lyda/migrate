@@ -498,12 +498,12 @@ scan_picture (char *text)
     {
     case PIC_ALPHABETIC:		pic->type = 'A'; break;
     case PIC_NUMERIC:			pic->type = '9'; break;
-    case PIC_ALPHANUMERIC:		pic->type = 'X'; break;
+    case PIC_ALPHANUMERIC:
     case PIC_NATIONAL:			pic->type = 'X'; break;
     case PIC_EDITED:
-    case PIC_NUMERIC_EDITED:		pic->type = 'E'; break;
+    case PIC_NUMERIC_EDITED:
     case PIC_ALPHABETIC | PIC_EDITED:
-    case PIC_ALPHANUMERIC_EDITED:	pic->type = 'E'; break;
+    case PIC_ALPHANUMERIC_EDITED:
     case PIC_NATIONAL_EDITED:		pic->type = 'E'; break;
     default:				goto error;
     }
