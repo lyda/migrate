@@ -414,10 +414,11 @@ special_name_mnemonic_on_off:
 	struct cb_system_name *s = CB_SYSTEM_NAME (x);
 	if (s->category == CB_SWITCH_NAME)
 	  {
-	    cb_tree x = make_field ($5);
-	    CB_FIELD (x)->level = 88;
-	    CB_FIELD (x)->parent = CB_FIELD (cb_switch[s->token]);
-	    CB_FIELD (x)->values = list ($2);
+	    cb_tree value = cb_build_funcall_1 ("cob_get_switch",
+						cb_build_integer (s->token));
+	    if ($2 == cb_int0)
+	      value = cb_build_negation (value);
+	    cb_build_constant ($5, value);
 	  }
 	else
 	  cb_error_x ($<tree>-2, _("switch-name is expected `%s'"),
@@ -426,8 +427,8 @@ special_name_mnemonic_on_off:
   }
 ;
 on_or_off:
-  ON				{ $$ = cb_true; }
-| OFF				{ $$ = cb_false; }
+  ON				{ $$ = cb_int1; }
+| OFF				{ $$ = cb_int0; }
 ;
 
 
@@ -2789,7 +2790,7 @@ set_to_on_off:
     for (l = $1; l; l = l->next)
       {
 	struct cb_system_name *s = CB_SYSTEM_NAME (cb_ref (l->item));
-	push (cb_build_move ($3, cb_switch[s->token]));
+	push_funcall_2 ("cob_set_switch", cb_build_integer (s->token), $3);
       }
   }
 ;

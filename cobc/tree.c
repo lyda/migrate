@@ -830,7 +830,7 @@ cb_parse_picture (const char *str)
  * Field
  */
 
-cb_tree
+static cb_tree
 make_field (cb_tree name)
 {
   struct cb_field *p =
@@ -845,6 +845,16 @@ cb_build_index (cb_tree name)
   cb_tree x = make_field (name);
   CB_FIELD (x)->usage = CB_USAGE_INDEX;
   validate_field (CB_FIELD (x));
+  return x;
+}
+
+cb_tree
+cb_build_constant (cb_tree name, cb_tree value)
+{
+  cb_tree x = make_field (name);
+  x->category = cb_tree_category (value);
+  CB_FIELD (x)->storage = CB_STORAGE_CONSTANT;
+  CB_FIELD (x)->values = list (value);
   return x;
 }
 
@@ -2704,14 +2714,20 @@ cb_build_cond (cb_tree x)
       return x;
     case CB_TAG_REFERENCE:
       {
+	struct cb_field *f = cb_field (x);
+
 	/* level 88 condition */
-	if (cb_field (x)->level == 88)
+	if (f->level == 88)
 	  {
 	    /* We need to build a 88 condition at every occurrence
 	       instead of once at the beginning because a 88 item
 	       may be subscripted (i.e., it is not a constant tree). */
 	    return cb_build_cond (build_cond_88 (x));
 	  }
+
+	/* constant condition */
+	if (f->storage == CB_STORAGE_CONSTANT)
+	  return cb_build_cond (f->values->item);
 
 	abort ();
       }

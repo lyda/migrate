@@ -96,6 +96,7 @@ enum cb_category {
 };
 
 enum cb_storage {
+  CB_STORAGE_CONSTANT,		/* Constants */
   CB_STORAGE_FILE,		/* FILE SECTION */
   CB_STORAGE_WORKING,		/* WORKING-STORAGE SECTION */
   CB_STORAGE_LOCAL,		/* LOCAL-STORAGE SECTION */
@@ -378,8 +379,8 @@ struct cb_field {
 #define CB_FIELD(x)		(CB_TREE_CAST (CB_TAG_FIELD, struct cb_field, x))
 #define CB_FIELD_P(x)		(CB_TREE_TAG (x) == CB_TAG_FIELD)
 
-extern cb_tree make_field (cb_tree name);
 extern cb_tree cb_build_index (cb_tree name);
+extern cb_tree cb_build_constant (cb_tree name, cb_tree value);
 extern struct cb_field *cb_field (cb_tree x);
 extern int field_size (cb_tree x);
 extern struct cb_field *field_founder (struct cb_field *p);
