@@ -302,7 +302,7 @@ struct expr_node {
   /* The token of this node.
    *  'x'                          - values (cb_tree)
    *  '+', '-', '*', '/', '^'      - arithmetic operators
-   *  '=', '~', '<', '>', '[', ']' - conditional operators
+   *  '=', '~', '<', '>', '[', ']' - relational operators
    *  '!', '&', '|'                - logical operators
    *  '(', ')'                     - parentheses
    */
@@ -351,12 +351,15 @@ cb_expr_init (void)
       /* init stack */
       expr_stack_size = 8;
       expr_stack = malloc (sizeof (struct expr_node) * expr_stack_size);
+      expr_stack[0].token = 0; /* dummy */
+      expr_stack[1].token = 0; /* dummy */
+      expr_stack[2].token = 0; /* dummy */
       initialized = 1;
     }
 
   expr_op = 0;
   expr_lh = NULL;
-  expr_index = 0;
+  expr_index = 3;
 }
 
 static int
@@ -366,8 +369,7 @@ expr_reduce (int token)
    * index: -3  -2  -1   0
    * token: 'x' '*' 'x' '+' ...
    */
-  while (expr_index >= 2
-	 && expr_prio[TOKEN (-2)] > 0
+  while (expr_prio[TOKEN (-2)] > 0
 	 && expr_prio[TOKEN (-2)] <= expr_prio[token])
     {
       /* Reduce the expression depending on the last operator */
@@ -376,7 +378,7 @@ expr_reduce (int token)
 	{
 	case '+': case '-': case '*': case '/': case '^':
 	  /* Arithmetic operators: 'x' op 'x' */
-	  if (expr_index < 3 || TOKEN (-1) != 'x' || TOKEN (-3) != 'x')
+	  if (TOKEN (-1) != 'x' || TOKEN (-3) != 'x')
 	    return -1;
 	  TOKEN (-3) = 'x';
 	  VALUE (-3) = cb_build_binary_op (VALUE (-3), op, VALUE (-1));
@@ -397,7 +399,7 @@ expr_reduce (int token)
 
 	case '&': case '|':
 	  /* Logical AND/OR: 'x' op 'x' */
-	  if (expr_index < 3 || TOKEN (-1) != 'x' || TOKEN (-3) != 'x')
+	  if (TOKEN (-1) != 'x' || TOKEN (-3) != 'x')
 	    return -1;
 	  /* 'x' '=' 'x' '|' 'x' */
 	  if (CB_TREE_CLASS (VALUE (-1)) != CB_CLASS_BOOLEAN)
@@ -419,8 +421,8 @@ expr_reduce (int token)
 	  return 0;
 
 	default:
-	  /* Conditional operators */
-	  if (expr_index < 3 || TOKEN (-1) != 'x')
+	  /* Relational operators */
+	  if (TOKEN (-1) != 'x')
 	    return -1;
 	  switch (TOKEN (-3))
 	    {
@@ -449,7 +451,6 @@ expr_reduce (int token)
 
   /* handle special case "op OR x AND" */
   if (token == '&'
-      && expr_index >= 2
       && TOKEN (-2) == '|'
       && CB_TREE_CLASS (VALUE (-1)) != CB_CLASS_BOOLEAN)
     {
@@ -463,9 +464,9 @@ expr_reduce (int token)
 void
 cb_expr_shift (int token, cb_tree value)
 {
- start:
-  if (token == 'x')
+  switch (token)
     {
+    case 'x':
       /* sign ZERO condition */
       if (value == cb_zero)
 	if (TOKEN (-1) == 'x' || TOKEN (-1) == '!')
@@ -482,19 +483,40 @@ cb_expr_shift (int token, cb_tree value)
 	}
 
       /* unary sign */
-      if (expr_index > 0 && (TOKEN (-1) == '+' || TOKEN (-1) == '-'))
-	if (expr_index == 1 || TOKEN (-2) != 'x')
+      if (TOKEN (-1) == '+' || TOKEN (-1) == '-')
+	if (TOKEN (-2) != 'x')
 	  {
 	    if (TOKEN (-1) == '-')
 	      value = cb_build_binary_op (cb_zero, '-', value);
-	    expr_index--;
+	    expr_index -= 1;
 	  }
-    }
-  else
-    {
+      break;
+
+    case '(':
+      switch (TOKEN (-1))
+	{
+	case '=': case '~': case '<': case '>': case '[': case ']':
+	  expr_lh = VALUE (-1);
+	  expr_op = token;
+	}
+      break;
+
+    case ')':
+      /* enclose by parentheses */
+      expr_reduce (token);
+      if (TOKEN (-2) == '(')
+	{
+	  value = cb_build_parenthesis (VALUE (-1));
+	  expr_index -= 2;
+	  cb_expr_shift ('x', value);
+	  return;
+	}
+      break;
+
+    default:
       /* '<' '|' '=' --> '[' */
       /* '>' '|' '=' --> ']' */
-      if (expr_index >= 2 && token == '=' && TOKEN (-1) == '|'
+      if (token == '=' && TOKEN (-1) == '|'
 	  && (TOKEN (-2) == '<' || TOKEN (-2) == '>'))
 	{
 	  token = (TOKEN (-2) == '<') ? '[' : ']';
@@ -502,7 +524,7 @@ cb_expr_shift (int token, cb_tree value)
 	}
 
       /* '!' '=' --> '~', etc. */
-      if (expr_index >= 1 && TOKEN (-1) == '!')
+      if (TOKEN (-1) == '!')
 	switch (token)
 	  {
 	  case '=': token = '~'; expr_index--; break;
@@ -512,58 +534,37 @@ cb_expr_shift (int token, cb_tree value)
 	  case '[': token = '>'; expr_index--; break;
 	  case ']': token = '<'; expr_index--; break;
 	  }
-
-#if 0
-      switch (token)
-	{
-	case '=': case '~': case '<': case '>': case '[': case ']':
-	  expr_lh = VALUE (-1);
-	  expr_op = token;
-	}
-#endif
+      break;
     }
 
   /* reduce */
   expr_reduce (token);
 
-  if (token == ')')
+  /* allocate sufficient stack memory */
+  if (expr_index >= expr_stack_size)
     {
-      if (expr_index >= 2 && TOKEN (-2) == '(')
-	{
-	  token = 'x';
-	  value = cb_build_parenthesis (VALUE (-1));
-	  expr_index -= 2;
-	  goto start;
-	}
+      expr_stack_size *= 2;
+      expr_stack = realloc (expr_stack,
+			    sizeof (struct expr_node) * expr_stack_size);
     }
-  else
-    {
-      /* allocate sufficient stack memory */
-      if (expr_index >= expr_stack_size)
-	{
-	  expr_stack_size *= 2;
-	  expr_stack = realloc (expr_stack,
-				sizeof (struct expr_node) * expr_stack_size);
-	}
 
-      /* put on the stack */
-      expr_stack[expr_index].token = token;
-      expr_stack[expr_index].value = value;
-      expr_index++;
-    }
+  /* put on the stack */
+  TOKEN (0) = token;
+  VALUE (0) = value;
+  expr_index++;
 }
 
 void
 cb_expr_shift_class (const char *name)
 {
   int have_not = 0;
-  if (expr_index > 0 && TOKEN (-1) == '!')
+  if (TOKEN (-1) == '!')
     {
       have_not = 1;
       expr_index--;
     }
   expr_reduce ('=');
-  if (expr_index > 0 && TOKEN (-1) == 'x')
+  if (TOKEN (-1) == 'x')
     {
       VALUE (-1) = cb_build_funcall_1 (name, VALUE (-1));
       if (have_not)
@@ -575,13 +576,13 @@ void
 cb_expr_shift_sign (char op)
 {
   int have_not = 0;
-  if (expr_index > 0 && TOKEN (-1) == '!')
+  if (TOKEN (-1) == '!')
     {
       have_not = 1;
       expr_index--;
     }
   expr_reduce ('=');
-  if (expr_index > 0 && TOKEN (-1) == 'x')
+  if (TOKEN (-1) == 'x')
     {
       VALUE (-1) = cb_build_binary_op (VALUE (-1), op, cb_zero);
       if (have_not)
@@ -594,13 +595,13 @@ cb_expr_finish (void)
 {
   expr_reduce (0); /* reduce all */
 
-  if (expr_index != 1)
+  if (expr_index != 4)
     {
       cb_error (_("invalid expression"));
       return cb_error_node;
     }
 
-  return expr_stack[0].value;
+  return expr_stack[3].value;
 }
 
 
