@@ -4,6 +4,7 @@ include_HEADERS = libcob.h
 
 SUBDIRS = lib libcob cobc po texi config tests
 
+ACLOCAL_AMFLAGS = -I m4
 BUILT_SOURCES = defaults.h
 DISTCLEANFILES = $(BUILT_SOURCES)
 
