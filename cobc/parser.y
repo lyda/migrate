@@ -102,7 +102,7 @@
 		   cb_build_pair (label, using_list));		\
   }
 
-#define BEGIN_STATEMENT(name)			\
+#define BEGIN_STATEMENT(name)				\
   current_statement = cb_build_statement (name);	\
   push (CB_TREE (current_statement))
 
@@ -115,8 +115,6 @@ static enum cb_storage current_storage;
 static int current_call_mode;
 static const char *current_inspect_func;
 static cb_tree current_inspect_data;
-
-static int initial_clause;
 
 static int last_operator;
 static cb_tree last_lefthand;
@@ -967,9 +965,9 @@ entry_name:
 ;
 
 data_description_clause_sequence:
-  /* empty */			{ initial_clause = 1; }
+  /* empty */			{ $$ = NULL; }
 | data_description_clause_sequence
-  data_description_clause	{ initial_clause = 0; }
+  data_description_clause	{ $$ = cb_true; }
 ;
 data_description_clause:
   redefines_clause
@@ -992,7 +990,7 @@ data_description_clause:
 redefines_clause:
   REDEFINES qualified_word
   {
-    if (!initial_clause)
+    if ($0 != NULL)
       cb_error_x ($2, _("REDEFINES clause must follow entry-name"));
 
     current_field->redefines = cb_resolve_redefines (current_field, $2);
