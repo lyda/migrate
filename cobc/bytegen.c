@@ -159,7 +159,7 @@ output_offset (cb_tree x)
 	/* subscripts */
 	if (r->subs)
 	  {
-	    cb_tree l = r->subs = list_reverse (r->subs);
+	    cb_tree l = r->subs;
 
 	    for (; f; f = f->parent)
 	      if (f->flag_occurs)
@@ -170,8 +170,6 @@ output_offset (cb_tree x)
 		  output_inst_add ();
 		  l = CB_CHAIN (l);
 		}
-
-	    r->subs = list_reverse (r->subs);
 	  }
 
 	/* offset */

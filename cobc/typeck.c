@@ -142,7 +142,7 @@ cb_build_identifier (cb_tree x)
   if (r->subs)
     {
       struct cb_field *p;
-      cb_tree l = r->subs = list_reverse (r->subs);
+      cb_tree l = r->subs;
 
       for (p = f; p; p = p->parent)
 	if (p->flag_occurs)
@@ -156,8 +156,6 @@ cb_build_identifier (cb_tree x)
 	      }
 	    l = CB_CHAIN (l);
 	  }
-
-      r->subs = list_reverse (r->subs);
     }
 
   /* check the range of constant reference modification */

@@ -3867,18 +3867,10 @@ identifier_1:
 ;
 qualified_word:
   WORD				{ $$ = $1; }
-| WORD in_of qualified_word
-  {
-    $$ = $1;
-    CB_REFERENCE ($1)->chain = $3;
-  }
+| WORD in_of qualified_word	{ $$ = $1; CB_REFERENCE ($1)->chain = $3; }
 ;
 subref:
-  '(' subscript_list ')'
-  {
-    CB_REFERENCE ($0)->subs = $2;
-    $$ = $0;
-  }
+  '(' subscript_list ')'	{ $$ = $0; CB_REFERENCE ($0)->subs = $2; }
 ;
 refmod:
   '(' subscript ':' ')'
@@ -3893,7 +3885,7 @@ refmod:
 ;
 subscript_list:
   subscript			{ $$ = list ($1); }
-| subscript_list subscript	{ $$ = list_add ($1, $2); }
+| subscript_list subscript	{ $$ = cons ($2, $1); }
 ;
 subscript:
   integer_value			{ $$ = $1; }

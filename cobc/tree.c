@@ -105,13 +105,14 @@ cb_name_1 (char *s, cb_tree x)
 	  s += sprintf (s, "#<reference %s>", p->word->name);
 	if (p->subs)
 	  {
-	    cb_tree l;
+	    cb_tree l = p->subs = list_reverse (p->subs);
 	    s += sprintf (s, "(");
-	    for (l = p->subs; l; l = CB_CHAIN (l))
+	    for (; l; l = CB_CHAIN (l))
 	      {
 		s += cb_name_1 (s, CB_VALUE (l));
 		s += sprintf (s, CB_CHAIN (l) ? ", " : ")");
 	      }
+	    p->subs = list_reverse (p->subs);
 	  }
 	if (p->offset)
 	  {

@@ -246,7 +246,7 @@ output_data (cb_tree x)
 	/* subscripts */
 	if (r->subs)
 	  {
-	    cb_tree l = r->subs = list_reverse (r->subs);
+	    cb_tree l = r->subs;
 
 	    for (; f; f = f->parent)
 	      if (f->flag_occurs)
@@ -255,8 +255,6 @@ output_data (cb_tree x)
 		  output_index (CB_VALUE (l));
 		  l = CB_CHAIN (l);
 		}
-
-	    r->subs = list_reverse (r->subs);
 	  }
 
 	/* offset */
@@ -759,7 +757,7 @@ output_expr (cb_tree x, int id)
 	if (CB_EXCEPTION_ENABLE (COB_EC_BOUND_SUBSCRIPT) && r->subs)
 	  {
 	    struct cb_field *p;
-	    cb_tree l = r->subs = list_reverse (r->subs);
+	    cb_tree l = r->subs;
 
 	    for (p = f; p; p = p->parent)
 	      if (p->flag_occurs)
@@ -799,8 +797,6 @@ output_expr (cb_tree x, int id)
 		    }
 		  l = CB_CHAIN (l);
 		}
-
-	    r->subs = list_reverse (r->subs);
 	  }
 
 	/* reference modifier check */
@@ -1096,15 +1092,15 @@ output_initialize (struct cb_initialize *p)
   /* output fixed indexes */
   if (r->subs)
     {
-      int i = 1;
-      cb_tree subs;
+      int i = list_length (r->subs);
+      cb_tree l;
       output_indent ("{");
-      for (subs = r->subs; subs; subs = CB_CHAIN (subs))
+      for (l = r->subs; l; l = CB_CHAIN (l))
 	{
 	  /* FIXME: need boundary check */
 	  output_prefix ();
-	  output ("int i%d = ", i++);
-	  output_index (CB_VALUE (subs));
+	  output ("int i%d = ", i--);
+	  output_index (CB_VALUE (l));
 	  output (";\n");
 	}
     }
