@@ -229,6 +229,7 @@ AT_DATA([prog.cob], [
        PROGRAM-ID.      prog.
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
+       01 X-SPACE       PIC **99.00 VALUE SPACE.
        01 X-123         PIC **99.00 VALUE 123.
        01 X-ABC         PIC **99.00 VALUE "abc".
        01 X-MATCH       PIC **99.00 VALUE "*123.00".
@@ -238,8 +239,8 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:6: warning: alphanumeric value is expected
-prog.cob:9: warning: value size exceeds data size
+[prog.cob:7: warning: alphanumeric value is expected
+prog.cob:10: warning: value size exceeds data size
 ])
 
 AT_CLEANUP
