@@ -1486,10 +1486,10 @@ output_perform (struct cb_perform *p)
       output ("for (n[%d] = ", loop_counter);
       output_integer (p->data);
       output ("; n[%d] > 0; n[%d]--)\n", loop_counter, loop_counter);
+      loop_counter++;
       output_indent ("  {");
       output_perform_once (p);
       output_indent ("  }");
-      loop_counter++;
       break;
     case CB_PERFORM_UNTIL:
       if (p->varying->name)
@@ -1989,6 +1989,7 @@ output_internal_function (struct cb_program *prog, int single,
   /* initialization */
   output_line ("if (!initialized)");
   output_indent ("  {");
+  output_line ("i_%s = 0;", CB_FIELD (cb_return_code)->cname);
   output_line ("/* initialize decimal numbers */");
   output_line ("for (i = 0; i < %d; i++)", prog->decimal_index_max);
   output_line ("  cob_decimal_init (&d[i]);");

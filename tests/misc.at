@@ -389,6 +389,29 @@ AT_CHECK([./prog], [0], [   1])
 AT_CLEANUP
 
 
+## PERFORM
+
+AT_SETUP([Nested PERFORM])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       PROCEDURE        DIVISION.
+           PERFORM 2 TIMES
+             PERFORM 2 TIMES
+               DISPLAY "X" NO ADVANCING
+             END-PERFORM
+           END-PERFORM.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [XXXX])
+
+AT_CLEANUP
+
+
 AT_SETUP([88 with FILLER])
 
 AT_DATA([prog.cob], [
