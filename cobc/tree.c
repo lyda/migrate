@@ -768,7 +768,7 @@ associate (cobc_tree name, cobc_tree val)
 {
   struct cobc_word *w = COBC_REFERENCE (name)->word;
   COBC_TREE_CLASS (name) = COBC_TREE_CLASS (val);
-  w->items = cons (val, w->items);
+  w->items = list_add (w->items, val);
   w->count++;
   val->loc = name->loc;
   return w->name;
