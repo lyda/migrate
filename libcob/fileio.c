@@ -557,7 +557,7 @@ indexed_start (struct cob_file *f, int cond, struct cob_field key)
       if (ret != 0)
 	ret = DB_SEQ (f->keys[f->key_index].db, R_LAST);
       else if (cond == COB_LT
-	       || memcmp (key.data, key.data, key.size) != 0)
+	       || memcmp (f->key.data, key.data, key.size) != 0)
 	ret = DB_SEQ (f->keys[f->key_index].db, R_PREV);
       break;
     case COB_GT:
@@ -924,9 +924,6 @@ cob_close (struct cob_file *f, int opt)
 
   ret = fileio_funcs[f->organization]->close (f, opt);
 
-  f->f.nonexistent = 0;
-  f->f.end_of_file = 0;
-
   RETURN_STATUS (ret);
 }
 
@@ -949,7 +946,10 @@ cob_start (struct cob_file *f, int cond, struct cob_field key)
 
   ret = fileio_funcs[f->organization]->start (f, cond, key);
   if (ret == COB_FILE_SUCCEED)
-    f->f.first_read = 1;
+    {
+      f->f.end_of_file = 0;
+      f->f.first_read = 1;
+    }
 
   RETURN_STATUS (ret);
 }
