@@ -136,9 +136,12 @@ extern FILE *cb_depend_file;
 extern char *cb_depend_target;
 extern struct cb_name_list *cb_depend_list;
 extern struct cb_name_list *cb_include_list;
+extern struct cb_name_list *cb_extension_list;
 
 extern struct cb_program *current_program;
 extern struct cb_label *current_section, *current_paragraph;
+
+extern struct cb_name_list *cb_name_list_add (struct cb_name_list *list, const char *name);
 
 /* preprocessor (in pplex.l, ppparse.y) */
 extern FILE *ppin;

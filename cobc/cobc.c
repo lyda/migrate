@@ -79,6 +79,7 @@ FILE *cb_depend_file = NULL;
 char *cb_depend_target = NULL;
 struct cb_name_list *cb_depend_list = NULL;
 struct cb_name_list *cb_include_list = NULL;
+struct cb_name_list *cb_extension_list = NULL;
 
 struct cb_program *current_program = NULL;
 struct cb_label *current_section = NULL, *current_paragraph = NULL;
@@ -111,6 +112,24 @@ static struct filename {
   char object[FILENAME_MAX];			/* foo.o */
   struct filename *next;
 } *file_list;
+
+
+struct cb_name_list *
+cb_name_list_add (struct cb_name_list *list, const char *name)
+{
+  struct cb_name_list *p = malloc (sizeof (struct cb_name_list));
+  p->name = strdup (name);
+  p->next = NULL;
+  if (!list)
+    return p;
+  else
+    {
+      struct cb_name_list *l;
+      for (l = list; l->next; l = l->next);
+      l->next = p;
+      return list;
+    }
+}
 
 
 /*
@@ -179,6 +198,7 @@ static struct option long_options[] = {
   {"std", required_argument, 0, '$'},
   {"target", required_argument, 0, 't'},
   {"debug", no_argument, 0, 'd'},
+  {"ext", required_argument, 0, 'e'},
   {"free", no_argument, &cb_source_format, CB_FORMAT_FREE},
   {"fixed", no_argument, &cb_source_format, CB_FORMAT_FIXED},
   {"O2", no_argument, 0, '2'},
@@ -226,7 +246,9 @@ print_usage (void)
   -I <directory>        Add copybook include path\n\
   -MT <target>          Set target file used in dependency list\n\
   -MF <file>            Place dependency list into <file>\n\
-  -F <form>             Use free source format\n\
+  -free                 Use free source format\n\
+  -fixed                Use fixed source format\n\
+  -ext=<extension>      Add file extension\n\
 \n\
   -Wall                 Enable all warnings"));
 #undef CB_WARNING
@@ -245,6 +267,10 @@ static int
 process_command_line (int argc, char *argv[])
 {
   int c, idx;
+
+  /* default extension list */
+  cb_extension_list = cb_name_list_add (cb_extension_list, "");
+  cb_extension_list = cb_name_list_add (cb_extension_list, ".CBL");
 
   while ((c = getopt_long_only (argc, argv, short_options,
 				long_options, &idx)) >= 0)
@@ -324,22 +350,16 @@ process_command_line (int argc, char *argv[])
 	  break;
 
 	case 'I':
-	  {
-	    struct cb_name_list *list = malloc (sizeof (struct cb_name_list));
-	    list->name = strdup (optarg);
-	    list->next = NULL;
-
-	    /* Append at the end */
-	    if (!cb_include_list)
-	      cb_include_list = list;
-	    else
-	      {
-		struct cb_name_list *p;
-		for (p = cb_include_list; p->next; p = p->next);
-		p->next = list;
-	      }
-	  }
+	  cb_include_list = cb_name_list_add (cb_include_list, optarg);
 	  break;
+
+	case 'e':
+	  {
+	    char ext[strlen (optarg) + 2];
+	    sprintf (ext, ".%s", optarg);
+	    cb_extension_list = cb_name_list_add (cb_extension_list, ext);
+	    break;
+	  }
 
 	case 'w':
 #undef CB_WARNING

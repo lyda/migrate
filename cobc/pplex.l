@@ -208,19 +208,7 @@ ppopen (char *name, struct cb_replacement *replacement)
 
   /* Add to dependency list */
   if (cb_depend_file)
-    {
-      struct cb_name_list *p = malloc (sizeof (struct cb_name_list));
-      p->name = strdup (name);
-      p->next = NULL;
-      if (!cb_depend_list)
-	cb_depend_list = p;
-      else
-	{
-	  struct cb_name_list *l;
-	  for (l = cb_depend_list; l->next; l = l->next);
-	  l->next = p;
-	}
-    }
+    cb_depend_list = cb_name_list_add (cb_depend_list, name);
 
   /* Preserve the current buffer */
   {
@@ -254,21 +242,29 @@ ppcopy (char *name, const char *lib, struct cb_replacement *replacement)
   /* Find the file */
   if (name[0] != '/' && stat (name, &st) == -1)
     {
-      struct cb_name_list *l;
-      for (l = cb_include_list; l; l = l->next)
+      struct cb_name_list *il, *el;
+      for (el = cb_extension_list; el; el = el->next)
 	{
-	  sprintf (buff, "%s/%s", l->name, name);
+	  sprintf (buff, "%s%s", name, el->name);
 	  if (stat (buff, &st) == 0)
 	    {
 	      name = buff;
-	      break;
+	      goto found;
 	    }
 	}
-      if (l == NULL)
-	{
-	  cb_error ("%s: %s", name, strerror (errno));
-	  return -1;
-	}
+      for (il = cb_include_list; il; il = il->next)
+	for (el = cb_extension_list; el; el = el->next)
+	  {
+	    sprintf (buff, "%s/%s%s", il->name, name, el->name);
+	    if (stat (buff, &st) == 0)
+	      {
+		name = buff;
+		goto found;
+	      }
+	  }
+      cb_error ("%s: %s", name, strerror (errno));
+      return -1;
+    found:
     }
 
   return ppopen (name, replacement);
