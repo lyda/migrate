@@ -1,3 +1,9 @@
+2002-06-24  Keisuke Nishida  <knishida@netlab.jp>
+
+	* parser.y (delete_statement, read_statement, start_statement)
+	(write_statement): set $$ instead of current_file_name.
+	(at_end, opt_invalid_key): Updated.
+
 2002-06-18  Keisuke Nishida  <knishida@netlab.jp>
 
 	* Makefile.am (cobc_LDADD): Add LIBCOB_LIBS.

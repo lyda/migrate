@@ -229,7 +229,7 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %type <tree> evaluate_object,evaluate_object_1
 %type <tree> function,subscript,subref,refmod
 %type <tree> search_varying,search_at_end,search_whens,search_when
-%type <tree> perform_procedure,perform_sentence,perform_option
+%type <tree> perform_procedure,perform_sentence,perform_option,start_key
 %type <tree> read_into,read_key,write_from,field_name,expr,expr_1,expr_item
 %type <tree> file_name,opt_with_pointer,occurs_index,evaluate_subject
 %type <tree> unstring_delimiter,unstring_count,unstring_tallying
@@ -1637,8 +1637,8 @@ delete_statement:
   DELETE file_name _record
   {
     cobc_location = @1;
-    current_file_name = COBC_FILE_NAME ($2);
     push_call_1 ("cob_delete", $2);
+    $<tree>$ = $2;
   }
   opt_invalid_key
   _end_delete
@@ -2187,9 +2187,9 @@ perform_sentence:
 read_statement:
   READ file_name flag_next _record read_into read_key
   {
+    struct cobc_file_name *f = COBC_FILE_NAME ($2);
     cobc_location = @1;
-    current_file_name = COBC_FILE_NAME ($2);
-    if ($3 || current_file_name->access_mode == COB_ACCESS_SEQUENTIAL)
+    if ($3 || f->access_mode == COB_ACCESS_SEQUENTIAL)
       {
 	/* READ NEXT */
 	if ($6)
@@ -2199,10 +2199,11 @@ read_statement:
     else
       {
 	/* READ */
-	push_call_2 ("cob_read", $2, $6 ? $6 : current_file_name->key);
+	push_call_2 ("cob_read", $2, $6 ? $6 : f->key);
       }
     if ($5)
-      push_move (COBC_TREE (current_file_name->record), $5);
+      push_move (COBC_TREE (f->record), $5);
+    $<tree>$ = $2;
   }
   read_handler
   _end_read
@@ -2218,7 +2219,7 @@ read_key:
 read_handler:
   /* nothing */
   {
-    push_handler (current_file_name, 0, 0, 0);
+    push_handler ($<tree>0, 0, 0, 0);
   }
 | at_end
 | invalid_key
@@ -2234,10 +2235,10 @@ rewrite_statement:
   REWRITE record_name write_from
   {
     cobc_location = @1;
-    current_file_name = COBC_FIELD ($2)->file;
+    $<tree>$ = COBC_TREE (COBC_FIELD ($2)->file);
     if ($3)
       push_move ($3, $2);
-    push_call_2 ("cob_rewrite", current_file_name, $2);
+    push_call_2 ("cob_rewrite", $<tree>$, $2);
   }
   opt_invalid_key
   _end_rewrite
@@ -2375,30 +2376,31 @@ set_on_off:
  */
 
 start_statement:
-  START start_body opt_invalid_key _end_start
-;
-start_body:
-  file_name
+  START file_name { $<inum>$ = COB_EQ; } start_key
   {
     cobc_location = @1;
-    current_file_name = COBC_FILE_NAME ($1);
-    push_call_3 ("cob_start", $1, make_integer (COB_EQ), current_file_name->key);
+    if ($4 == NULL)
+      $4 = COBC_FILE_NAME ($2)->key;
+    push_call_3 ("cob_start", $2, make_integer ($<inum>3), $4);
+    $<tree>$ = $2;
   }
-| file_name KEY _is start_operator data_name
+  opt_invalid_key
+  _end_start
+;
+start_key:
+  /* nothing */			{ $$ = NULL; }
+| KEY _is start_operator data_name
   {
-    int cond = 0;
-    cobc_location = @1;
-    current_file_name = COBC_FILE_NAME ($1);
-    switch ($4)
+    switch ($3)
       {
-      case COBC_COND_EQ: cond = COB_EQ; break;
-      case COBC_COND_LT: cond = COB_LT; break;
-      case COBC_COND_LE: cond = COB_LE; break;
-      case COBC_COND_GT: cond = COB_GT; break;
-      case COBC_COND_GE: cond = COB_GE; break;
-      case COBC_COND_NE: cond = COB_NE; break;
+      case COBC_COND_EQ: $<inum>0 = COB_EQ; break;
+      case COBC_COND_LT: $<inum>0 = COB_LT; break;
+      case COBC_COND_LE: $<inum>0 = COB_LE; break;
+      case COBC_COND_GT: $<inum>0 = COB_GT; break;
+      case COBC_COND_GE: $<inum>0 = COB_GE; break;
+      case COBC_COND_NE: $<inum>0 = COB_NE; break;
       }
-    push_call_3 ("cob_start", $1, make_integer (cond), $5);
+    $$ = $4;
   }
 ;
 start_operator:
@@ -2591,28 +2593,26 @@ write_statement:
   WRITE record_name write_from write_option
   {
     cobc_location = @1;
-    current_file_name = COBC_FIELD ($2)->file;
+    $<tree>$ = COBC_TREE (COBC_FIELD ($2)->file);
     /* AFTER ADVANCING */
     if ($4 && $4->type == COBC_AFTER)
       {
 	if ($4->x)
-	  push_call_2 ("cob_write_lines", current_file_name,
-		       make_index ($4->x));
+	  push_call_2 ("cob_write_lines", $<tree>$, make_index ($4->x));
 	else
-	  push_call_1 ("cob_write_page", current_file_name);
+	  push_call_1 ("cob_write_page", $<tree>$);
       }
     /* WRITE */
     if ($3)
       push_move ($3, $2);
-    push_call_2 ("cob_write", current_file_name, $2);
+    push_call_2 ("cob_write", $<tree>$, $2);
     /* BEFORE ADVANCING */
     if ($4 && $4->type == COBC_BEFORE)
       {
 	if ($4->x)
-	  push_call_2 ("cob_write_lines", current_file_name,
-		       make_index ($4->x));
+	  push_call_2 ("cob_write_lines", $<tree>$, make_index ($4->x));
 	else
-	  push_call_1 ("cob_write_page", current_file_name);
+	  push_call_1 ("cob_write_page", $<tree>$);
       }
   }
   opt_invalid_key
@@ -2697,15 +2697,15 @@ opt_not_on_overflow_sentence:
 at_end:
   at_end_sentence
   {
-    push_handler (current_file_name, 1, $1, 0);
+    push_handler ($<tree>0, 1, $1, 0);
   }
 | not_at_end_sentence
   {
-    push_handler (current_file_name, 1, 0, $1);
+    push_handler ($<tree>0, 1, 0, $1);
   }
 | at_end_sentence not_at_end_sentence
   {
-    push_handler (current_file_name, 1, $1, $2);
+    push_handler ($<tree>0, 1, $1, $2);
   }
 ;
 at_end_sentence:
@@ -2724,23 +2724,23 @@ not_at_end_sentence:
 opt_invalid_key:
   /* nothing */
   {
-    push_handler (current_file_name, 2, 0, 0);
+    push_handler ($<tree>0, 2, 0, 0);
   }
 | invalid_key
 ;
 invalid_key:
   invalid_key_sentence
   {
-    push_handler (current_file_name, 2, $1, 0);
+    push_handler ($<tree>0, 2, $1, 0);
   }
 | not_invalid_key_sentence
   {
-    push_handler (current_file_name, 2, 0, $1);
+    push_handler ($<tree>0, 2, 0, $1);
   }
 | invalid_key_sentence
   not_invalid_key_sentence
   {
-    push_handler (current_file_name, 2, $1, $2);
+    push_handler ($<tree>0, 2, $1, $2);
   }
 ;
 invalid_key_sentence:
