@@ -362,7 +362,7 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
   for (p = f2.desc->pic; *p; p += 2)
     {
       unsigned char c = p[0];
-      if (c == '9' || c == 'Z' || c == '*' || c == cCurrencySymbol)
+      if (c == '9' || c == 'P' || c == 'Z' || c == '*' || c == cCurrencySymbol)
 	count += p[1], count_sign = 0;
       else if (count_sign && (c == '+' || c == '-'))
 	count += p[1];
@@ -386,8 +386,8 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	    case '0':
 	    case '/': *dst = c; break;
 	    case 'B': *dst = pad; break;
-	    case 'P': *dst = suppress_zero ? pad : '0'; break;
 	    case ',': *dst = suppress_zero ? pad : ','; break;
+	    case 'P': break;
 
 	    case 'V':
 	    case '.': *dst = '.'; decimal_point = dst; break;
@@ -452,6 +452,7 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 
   if (suppress_zero)
     {
+      /* all digits are zeros */
       if (pad == ' ')
 	memset (f2.data, ' ', f2.desc->len);
       else
@@ -461,11 +462,13 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
     }
   else
     {
+      /* put zero after the decimal point if necessary */
       if (decimal_point)
 	for (dst = decimal_point + 1; dst < end; dst++)
 	  if (!isdigit (*dst) && *dst != ',')
 	    *dst = '0';
 
+      /* put sign or currency symbol at the beginning */
       if (sign_symbol)
 	{
 	  for (dst = end - 1; dst > f2.data; dst--)
