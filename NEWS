@@ -17,13 +17,21 @@ SORT/MEGER statements will not work.
 *** New subdirectory `config' will be installed under
 $prefix/share/open-cobol.
 
-** Feature changes
+** Compatibility changes
+
+*** New -std options:
+
+  default       used when you omit -std
+  cobol85       COBOL 85 Standard
+  cobol2002     COBOL 2002 Standard
+  ibm           IBM COBOL compatibility
+  mf            Micro Focus COBOL compatibility
+  v023          OpenCOBOL 0.23 compatibility
 
 *** Compile-time options can be stored in a "config" file.
-There are various config options.  See the manual for details.
+See config/default.conf for details.
 
 *** Binary data items are now big endian.
-COMP-5 data items are native integers.
 The config option `binary-byteorder' controls this.
 
 *** Numeric sign of USAGE DISPLAY items has been changed as follows:
@@ -36,18 +44,28 @@ The config option `display-sign' controls this.
 initialized at the beginning of program by default.
 The config option `auto-initialize' controls this.
 
+** Feature changes
+
 *** COPY statements try to complement the following file extensions:
 .CBL, .COB, .cbl, or .cob.
+
+*** COPY / REPLACE statements are reimplemented for better replacement.
 
 *** SPECIAL-NAMES. FORMFEED IS ...
 
 *** ALPHABET ... IS EBCDIC.
 
+*** EXTERNAL clause.
+
 *** SHARING clause.
+
+*** USAGE COMP-5 and COMP-X.
 
 *** USAGE POINTER and ADDRESS OF operator.
 
 *** LENGTH OF operator.
+
+*** DISPLAY ... ENVIRONMENT-NAME.  ACCEPT ... ENVIRONMENT-VALUE.
 
 *** COLLATING SEQUENCE in the SORT and MERGE statements.
 
