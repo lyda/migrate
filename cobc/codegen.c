@@ -499,11 +499,14 @@ output_field (cobc_tree x, int id)
 	    for (p = f; p; p = p->parent)
 	      if (p->f.have_occurs)
 		{
-		  if (!COBC_LITERAL_P (l->item))
+		  if (p->occurs_depending)
 		    {
-		      output_prefix ();
-		      if (p->occurs_depending)
+		      int n = p->occurs;
+		      if (COBC_LITERAL_P (l->item))
+			n = literal_to_int (COBC_LITERAL (l->item));
+		      if (p->occurs_min <= n && n <= p->occurs)
 			{
+			  output_prefix ();
 			  output ("cob_check_subscript_depending (");
 			  output_int32 (l->item);
 			  output (", %d, %d, ", p->occurs_min, p->occurs);
@@ -511,8 +514,12 @@ output_field (cobc_tree x, int id)
 			  output (", \"%s\", \"%s\");\n", p->name,
 				  field (p->occurs_depending)->name);
 			}
-		      else
+		    }
+		  else
+		    {
+		      if (!COBC_LITERAL_P (l->item))
 			{
+			  output_prefix ();
 			  output ("cob_check_subscript (");
 			  output_int32 (l->item);
 			  output (", %d, \"%s\");\n", p->occurs, p->name);

@@ -3911,7 +3911,7 @@ resolve_field (cobc_tree x)
 		if (COBC_LITERAL_P (sub))
 		  {
 		    int n = literal_to_int (COBC_LITERAL (sub));
-		    if (n < 1 || n > p->occurs)
+		    if (n < p->occurs_min || n > p->occurs)
 		      yyerror_x (x, _("subscript of `%s' out of bounds: %d"),
 				 name, n);
 		  }

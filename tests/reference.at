@@ -236,7 +236,7 @@ AT_CHECK([./prog], [1], ,
 AT_CLEANUP
 
 
-AT_SETUP([Value of DEPENDING ON N out of bounds (1)])
+AT_SETUP([Value of DEPENDING ON N out of bounds (lower)])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.
@@ -259,7 +259,7 @@ AT_CHECK([./prog], [1], ,
 AT_CLEANUP
 
 
-AT_SETUP([Value of DEPENDING ON N out of bounds (1)])
+AT_SETUP([Value of DEPENDING ON N out of bounds (upper)])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.
@@ -283,6 +283,73 @@ AT_CLEANUP
 
 
 AT_SETUP([Index exceeds DEPENDING ON N])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G.
+  02 X          PIC X OCCURS 4 TO 6 DEPENDING ON N.
+01 N            PIC 9 VALUE 4.
+PROCEDURE       DIVISION.
+  DISPLAY X(5).
+  STOP RUN.
+])
+
+AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([./prog], [1], ,
+[prog.cob:10: libcob: subscript of `X' out of bounds: 5
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([Subscript out of bounds with OCCURS DEPENDING ON (lower)])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G.
+  02 X          PIC X OCCURS 4 TO 6 DEPENDING ON N.
+01 N            PIC 9 VALUE 4.
+PROCEDURE       DIVISION.
+  DISPLAY X(3).
+  STOP RUN.
+])
+
+AT_CHECK([cobc -main prog.cob], [1], ,
+[prog.cob:10: error: subscript of `X' out of bounds: 3
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([Subscript out of bounds with OCCURS DEPENDING ON (upper)])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G.
+  02 X          PIC X OCCURS 4 TO 6 DEPENDING ON N.
+01 N            PIC 9 VALUE 4.
+PROCEDURE       DIVISION.
+  DISPLAY X(7).
+  STOP RUN.
+])
+
+AT_CHECK([cobc -main prog.cob], [1], ,
+[prog.cob:10: error: subscript of `X' out of bounds: 7
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([Subscript out of bounds with OCCURS DEPENDING ON (run-time)])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.
