@@ -620,9 +620,7 @@ output_cond (cobc_tree x)
     case cobc_tag_funcall:
       {
 	struct cobc_funcall *p = COBC_FUNCALL (x);
-	output ("%s (", p->name);
-	output_param (p->argv[0]);
-	output (")");
+	output_func_1 (p->name, p->argv[0]);
 	break;
       }
     default:

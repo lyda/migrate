@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002 Keisuke Nishida
+ * Copyright (C) 2002-2003 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -41,7 +41,7 @@
  * INSPECT
  */
 
-static cob_field *inspect_var;
+static cob_field *inspect_var, inspect_var_copy;
 static int inspect_replacing;
 static int inspect_sign;
 static size_t inspect_size;
@@ -53,7 +53,8 @@ static unsigned char *inspect_mark;
 void
 cob_inspect_init (cob_field *var, int replacing)
 {
-  inspect_var = var;
+  inspect_var_copy = *var;
+  inspect_var = &inspect_var_copy;
   inspect_replacing = replacing;
   inspect_sign = cob_get_sign (var);
   inspect_size = COB_FIELD_SIZE (var);
@@ -222,15 +223,21 @@ cob_inspect_finish (void)
  * STRING
  */
 
-static cob_field *string_dst;
-static cob_field *string_ptr;
+static cob_field *string_dst, string_dst_copy;
+static cob_field *string_ptr, string_ptr_copy;
 static int string_offset;
 
 void
 cob_string_init (cob_field *dst, cob_field *ptr)
 {
-  string_dst = dst;
-  string_ptr = ptr;
+  string_dst_copy = *dst;
+  string_dst = &string_dst_copy;
+  string_ptr = 0;
+  if (ptr)
+    {
+      string_ptr_copy = *ptr;
+      string_ptr = &string_ptr_copy;
+    }
   string_offset = 0;
 
   cob_error_code = 0;
@@ -289,8 +296,8 @@ cob_string_finish (void)
  * UNSTRING
  */
 
-static cob_field *unstring_src;
-static cob_field *unstring_ptr;
+static cob_field *unstring_src, unstring_src_copy;
+static cob_field *unstring_ptr, unstring_ptr_copy;
 static int unstring_offset;
 static int unstring_count;
 static int unstring_ndlms;
@@ -301,8 +308,15 @@ static unsigned char unstring_regexp[256]; /* FIXME: should be dynamic */
 void
 cob_unstring_init (cob_field *src, cob_field *ptr)
 {
-  unstring_src = src;
-  unstring_ptr = ptr;
+  unstring_src_copy = *src;
+  unstring_src = &unstring_src_copy;
+  unstring_ptr = 0;
+  if (ptr)
+    {
+      unstring_ptr_copy = *ptr;
+      unstring_ptr = &unstring_ptr_copy;
+    }
+
   unstring_offset = 0;
   unstring_count = 0;
   unstring_ndlms = 0;

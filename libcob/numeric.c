@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2002 Keisuke Nishida
+ * Copyright (C) 2001-2003 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -83,9 +83,6 @@ cob_decimal_print (cob_decimal *d)
 static void
 shift_decimal (cob_decimal *d, int n)
 {
-  if (d->expt == DECIMAL_NAN)
-    return;
-
   if (n > 0)
     {
       if (n < 10)
@@ -491,6 +488,13 @@ cob_div_quotient (cob_field *dividend, cob_field *divisor,
 
   /* compute quotient */
   cob_decimal_div (&cob_d1, &cob_d2);
+  if (cob_d1.expt == DECIMAL_NAN)
+    {
+      cob_d3.expt = DECIMAL_NAN;
+      return;
+    }
+
+  /* set quotient */
   cob_decimal_set (&cob_d4, &cob_d1);
   if (round)
     cob_decimal_get_r (&cob_d1, quotient);
