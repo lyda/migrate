@@ -54,18 +54,6 @@ OpenCOBOL requires the following external libraries to be installed:
 
     Ncurses is distributed under the "as is" basis.
 
-  o GNU Readline (libreadline) [optional]
-    http://cnswww.cns.cwru.edu/~chet/readline/rltop.html
-
-    Readline can be used for terminal input to implement
-    ACCEPT statements.  You must give --with-readline
-    option to the configure script to activate this.
-
-    Note that Readline is distributed under GNU General Public 
-    License (GPL), not Lesser General Public License (LGPL).
-    You must distribute your COBOL programs under GNU GPL
-    if you are going to link them with Readline.
-
 Installation
 ============
 
@@ -74,10 +62,6 @@ Installing OpenCOBOL is typically done by the following commands:
     ./configure
     make
     make install
-
-You can give the following options to the configure scripts:
-
-    --with-readline     Link with libreadline
 
 See INSTALL for general installation instruction.
 
@@ -93,7 +77,7 @@ OpenCOBOL:
   o Autoconf 2.57
   o Automake 1.7.3
   o Libtool 1.5
-  o gettext 0.11.5
+  o Gettext 0.12.1
   o Bison 1.35
   o Flex 2.5.4
 
