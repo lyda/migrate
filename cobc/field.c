@@ -228,6 +228,12 @@ cb_resolve_redefines (struct cb_field *field, cb_tree redefines)
       return NULL;
     }
 
+  if (!cb_indirect_redefines && f->redefines)
+    {
+      cb_error_x (x, _("`%s' not the original definition"), f->name);
+      return NULL;
+    }
+
   /* return the original definition */
   while (f->redefines)
     f = f->redefines;
