@@ -518,7 +518,7 @@ indexed_open (struct cob_file_desc *f, char *filename, int mode)
       flags = DB_CREATE;
       break;
     case COB_OPEN_EXTEND:
-      flags = 0;
+      flags = DB_CREATE;
       break;
     }
 
@@ -873,7 +873,9 @@ cob_init_fileio (void)
 void
 cob_open (struct cob_file_desc *f, struct cob_field name, int mode)
 {
+  int was_not_exist = 0;
   char filename[FILENAME_MAX];
+  struct stat st;
 
   f->f.read_done = 0;
 
@@ -882,6 +884,10 @@ cob_open (struct cob_file_desc *f, struct cob_field name, int mode)
     RETURN_STATUS (41);
 
   cob_field_to_string (name, filename);
+  if ((mode == COB_OPEN_I_O || mode == COB_OPEN_EXTEND)
+      && f->f.optional
+      && stat (filename, &st) == -1)
+    was_not_exist = 1;
 
   f->open_mode = mode;
   f->f.nonexistent = 0;
@@ -891,7 +897,10 @@ cob_open (struct cob_file_desc *f, struct cob_field name, int mode)
   switch (fileio_funcs[f->organization]->open (f, filename, mode))
     {
     case 0:
-      RETURN_STATUS (00);
+      if (was_not_exist)
+	RETURN_STATUS (05);
+      else
+	RETURN_STATUS (00);
     case ENOENT:
       if (f->f.optional)
 	{
