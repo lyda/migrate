@@ -205,6 +205,35 @@ AT_CHECK([./prog], [0], [99/99/9999.99.99    ])
 AT_CLEANUP
 
 
+## OCCURS
+
+AT_SETUP([Complex OCCURS DEPENDING ON])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 I PIC 9.
+       01 G-1 VALUE "123456789".
+         02 G-2.
+           03 X PIC X OCCURS 1 TO 3 DEPENDING ON I.
+         02 G-3.
+           03 G-4.
+             04 X PIC X OCCURS 1 TO 3 DEPENDING ON I.
+           03 G-5.
+             04 X PIC X OCCURS 1 TO 3 DEPENDING ON I.
+       PROCEDURE        DIVISION.
+           MOVE 2 TO I.
+           DISPLAY G-4 G-5 NO ADVANCING.
+])
+
+AT_CHECK([${COMPILE} -std=mvs -o prog prog.cob])
+AT_CHECK([./prog], [0], [3456])
+
+AT_CLEANUP
+
+
 ## CALL
 
 AT_SETUP([CALL BY CONTENT LENGTH])
