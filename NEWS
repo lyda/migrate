@@ -1,6 +1,6 @@
 NEWS - user visible changes				-*- outline -*-
 
-* Changes in OpenCOBOL 0.24
+* Changes in OpenCOBOL 0.30
 
 ** Installation changes
 
@@ -99,7 +99,7 @@ of obsolete options `-finline-move' and `-finline-get-int'.
 
 *** The compiler option `-column' removed.
 
-** Many bug fixes.
+** Many many bug fixes.
 
 
 * Changes in OpenCOBOL 0.23
