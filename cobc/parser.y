@@ -3108,6 +3108,8 @@ init_field (int level, cobc_tree field)
       if (level != 88)
 	last_field->children = current_field;
       current_field->parent = last_field;
+      current_field->f.sign_separate = last_field->f.sign_separate;
+      current_field->f.sign_leading = last_field->f.sign_leading;
     }
   else if (level == last_field->level)
     {
