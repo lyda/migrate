@@ -554,6 +554,9 @@ cob_move_all (cob_field *src, cob_field *dst)
 void
 cob_move (cob_field *src, cob_field *dst)
 {
+  if (COB_FIELD_TYPE (src) == COB_TYPE_ALPHANUMERIC_ALL)
+    return cob_move_all (src, dst);
+
   /* non-elementary move (ISO+IEC+1989-2002 14.8.24.3-2) */
   if (COB_FIELD_TYPE (src) == COB_TYPE_GROUP
       || COB_FIELD_TYPE (dst) == COB_TYPE_GROUP)
@@ -562,9 +565,6 @@ cob_move (cob_field *src, cob_field *dst)
   /* elementary move */
   switch (COB_FIELD_TYPE (src))
     {
-    case COB_TYPE_ALPHANUMERIC_ALL:
-      return cob_move_all (src, dst);
-
     case COB_TYPE_NUMERIC_DISPLAY:
       switch (COB_FIELD_TYPE (dst))
 	{
@@ -687,9 +687,9 @@ cob_binary_to_int (cob_field *f, int *n)
 {
   switch (f->size)
     {
-    case 1: *n = *(char *) f->data;
-    case 2: *n = *(short *) f->data;
-    default: *n = *(long *) f->data;
+    case 1: *n = *(char *) f->data; break;
+    case 2: *n = *(short *) f->data; break;
+    default: *n = *(long *) f->data; break;
     }
 }
 

@@ -39,6 +39,27 @@ AT_CHECK([./prog], [0], [1000])
 
 AT_CLEANUP
 
+AT_SETUP([MOVE with refmod])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X(4) VALUE "1234".
+       01 Y             PIC X(4) VALUE "abcd".
+       01 I             PIC 9 VALUE 1.
+       PROCEDURE        DIVISION.
+           MOVE X(1:I) TO Y.
+           DISPLAY Y NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [1   ])
+
+AT_CLEANUP
+
 AT_SETUP([MOVE with group refmod])
 
 AT_DATA([prog.cob], [
@@ -264,6 +285,28 @@ int callee (char *str, int *len)
 AT_CHECK([${CC} -shared -o callee.so callee.c])
 AT_CHECK([${COMPILE} -o caller caller.cob])
 AT_CHECK([./caller], [0], [abcd])
+
+AT_CLEANUP
+
+
+## INSPECT
+
+AT_SETUP([INSPECT REPLACING LEADING ZEROS BY SPACES])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X(4) VALUE "0001".
+       PROCEDURE        DIVISION.
+           INSPECT X REPLACING LEADING ZEROS BY SPACES.
+           DISPLAY X NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0], [   1])
 
 AT_CLEANUP
 
