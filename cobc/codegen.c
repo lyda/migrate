@@ -1898,14 +1898,15 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   /* local variables */
   output_line ("static int initialized = 0;");
   output_line ("static cob_decimal d[%d];", prog->decimal_index_max);
-  output_line ("static cob_module module = {'%c', '%c', '%c', %s, %d, 0};",
+  output_line ("static cob_module module = {'%c', '%c', '%c', %s, %d, %d, 0};",
 	       prog->decimal_point,
 	       prog->currency_symbol,
 	       prog->numeric_separator,
 	       (prog->collating_sequence
 		? CB_ALPHABET_NAME (cb_ref (prog->collating_sequence))->cname
 		: "0"),
-	       cb_display_sign);
+	       cb_display_sign,
+	       cb_binary_full_print);
   output_newline ();
   output_line ("int i;");
   output_line ("int i1, i2, i3, i4, i5, i6, i7;");

@@ -45,3 +45,6 @@ binary-size: 1-2-4-8
 
 # Value: `native', `big-endian'
 binary-byteorder: big-endian
+
+# Value: `yes', `no'
+binary-full-print: no
