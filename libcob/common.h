@@ -193,7 +193,7 @@ typedef struct {
   char digits;
   char decimals;
   char flags;
-  char *pic;
+  const char *pic;
 } cob_field_attr;
 
 /* field structure */
@@ -259,7 +259,7 @@ extern cob_field cob_space;		/* SPACE */
 extern cob_field cob_high;		/* HIGH-VALUE */
 extern cob_field cob_low;		/* LOW-VALUE */
 extern cob_field cob_quote;		/* QUOTE */
-extern char cob_switch[];
+extern int cob_switch[];
 
 extern long cob_exp10[];
 extern long long cob_exp10LL[];

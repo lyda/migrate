@@ -152,7 +152,7 @@ cob_field cob_quote = {1, "\"",   &cob_all_attr};
 
 /* SWITCH-1/2/3/4/5/6/7/8 */
 
-char cob_switch[8] = {1, 0, 1, 1, 1, 1, 1, 1};
+int cob_switch[8] = {1, 0, 1, 1, 1, 1, 1, 1};
 
 long cob_exp10[10] = {
   1,

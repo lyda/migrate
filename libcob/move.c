@@ -361,7 +361,7 @@ cob_move_binary_to_display (cob_field *f1, cob_field *f2)
 void
 cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 {
-  char *p;
+  const char *p;
   int sign = cob_get_sign (f1);
   int neg = (sign < 0) ? 1 : 0;
   unsigned char *min, *max, *src, *dst, *end;
@@ -515,7 +515,7 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 void
 cob_move_alphanum_to_edited (cob_field *f1, cob_field *f2)
 {
-  char *p;
+  const char *p;
   unsigned char *max, *src, *dst;
   int sign = cob_get_sign (f1);
 
