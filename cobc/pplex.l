@@ -123,6 +123,8 @@ static void switch_to_buffer (int lineno, char *filename, struct cb_replacement 
   "IN"			{ return IN; }
   "OF"			{ return IN; }
   "OFF"			{ return OFF; }
+  "SUPPRESS"		{ return SUPPRESS; }
+  "PRINTING"		{ return PRINTING; }
   "REPLACING"		{ return REPLACING; }
   [0-9A-Z_-]+		{ pplval.s = strdup (yytext); return NAME; }
   .			{ }

@@ -39,7 +39,7 @@
 }
 
 %token DIRECTIVE SOURCE FORMAT IS FIXED FREE
-%token COPY REPLACE REPLACING OFF IN BY
+%token COPY REPLACE SUPPRESS PRINTING REPLACING OFF IN BY
 %token <s> NAME TEXT
 %type <s> text copy_in
 %type <r> copy_replacing replacing_list
@@ -64,15 +64,18 @@ _format: | FORMAT ;
 _is: | IS ;
 
 copy_statement:
-  COPY NAME copy_in copy_replacing dot
+  COPY NAME copy_in copy_suppress copy_replacing dot
   {
     fputc ('\n', ppout);
-    ppcopy ($2, $3, $4);
+    ppcopy ($2, $3, $5);
   }
 ;
 copy_in:
   /* nothing */			{ $$ = NULL; }
 | IN text			{ $$ = $2; }
+;
+copy_suppress:
+| SUPPRESS _printing
 ;
 copy_replacing:
   /* nothing */			{ $$ = NULL; }
@@ -86,5 +89,6 @@ replacing_list:
   text BY text			{ $$ = add_replacement (NULL, $1, $3); }
 | replacing_list text BY text	{ $$ = add_replacement ($1, $2, $4); }
 ;
+_printing: | PRINTING ;
 text: NAME | TEXT ;
 dot: | '.'
