@@ -599,14 +599,7 @@ loadloc_to_eax (cob_tree sy_p)
 	}
       else
 	{
-	  if (var->sec_no == SEC_STACK)
-	    output ("\tleal\t%s, %%ebx\n", memref (var));
-	  else if (var->sec_no == SEC_DATA)
-	    output ("\tleal\tw_base%d+%d, %%ebx\n",
-		     pgm_segment, var->location);
-	  else if (var->sec_no == SEC_CONST)
-	    output ("\tleal\tc_base%d+%d, %%ebx\n",
-		     pgm_segment, var->location);
+	  output ("\tleal\t%s, %%ebx\n", memrefat (var));
 	  output ("\taddl\t%%ebx,%%eax\n");
 	}
     }
