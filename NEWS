@@ -8,6 +8,10 @@ NEWS - user visible changes				-*- outline -*-
 
 ** New option -semi-fixed.
 
+** New option -Wtrailing-line.
+
+** CALL statements now accept CONTENT LENGTH OF clause.
+
 
 * Changes in OpenCOBOL 0.9.7
 
