@@ -243,7 +243,7 @@ cb_tree_category (cb_tree x)
 	struct cb_field *f = CB_FIELD (x);
 	if (f->children)
 	  x->category = CB_CATEGORY_ALPHANUMERIC;
-	else if (f->usage == CB_USAGE_POINTER)
+	else if (f->usage == CB_USAGE_POINTER && f->level != 88)
 	  x->category = CB_CATEGORY_DATA_POINTER;
 	else
 	  switch (f->level)
