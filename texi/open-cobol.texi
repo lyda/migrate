@@ -102,7 +102,6 @@ Compiler Options
 * Built Target::                Built Target
 * Source Format::               Source Format
 * Linking Options::             Linking Options
-* Warning Options::             Warning Options
 
 C Interface
 
@@ -253,7 +252,7 @@ Free format.
 Fixed format.
 @end table
 
-@node Linking Options, Warning Options, Source Format, Compiler Options
+@node Linking Options,  , Source Format, Compiler Options
 @subsection Linking Options
 
 The following options control how to implement CALL statements,
@@ -276,7 +275,7 @@ exist at compile-time.  @ref{Dynamic Linking} for details.
 
 Without these options, @code{-dynamic} is assumed by default.
 
-@node Warning Options,  , Linking Options, Compiler Options
+@node Warning Options,  , Source Format, Compiler Options
 @subsection Warning Options
 
 @table @code
