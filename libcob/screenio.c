@@ -30,8 +30,6 @@
 #include "_libcob.h"
 #include "screenio.h"
 
-int picCompLength (struct fld_desc *f);
-
 #ifndef HAVE_COLOR_SET
 #define color_set(x,y) start_color ()
 #endif
@@ -192,7 +190,7 @@ accept_curses (char *buffer, struct fld_desc *f, int flags)
 	addch (rlbuff[i]);
     }
   pic1[1] = f1.len = strlen (rlbuff);
-  cob_move (&f1, rlbuff, f, buffer);
+  cob_move_2 (&f1, rlbuff, f, buffer);
   return r;
 }
 
@@ -231,10 +229,7 @@ display_curses (struct fld_desc *f, char *s, int dspflags)
     }
   if ((f->type == '9') || (f->type == 'C') || (f->type == 'B'))
     {
-      len = picCompLength (f);
-      /*printf("display: type=%c, len=%d, decimals=%d\n",
-         f->type, f->len, f->decimals);
-       */
+      len = picCompLength (f->pic);
       if ((f->pic[0] == 'S') || (f->pic[0] == 's'))
 	{
 	  szSigned[0] = '-';
@@ -286,7 +281,7 @@ display_curses (struct fld_desc *f, char *s, int dspflags)
 	}
       if (decimals)
 	len++;			/* accounts for the decimal point */
-      cob_move (f, s, &ftmp, buffer);
+      cob_move_2 (f, s, &ftmp, buffer);
     }
   for (i = 0; i < len; i++)
     {
@@ -360,10 +355,8 @@ cob_accept_screen ()
   for (pFld = _Fields_; pFld; pFld = pFld->pNext)
     {
       if (pFld->fldFrom)
-	{			/* if we have a from field */
-	  cob_move (pFld->fldFrom, pFld->caFrom, &(pFld->fldScr),
-		    pFld->caScr);
-	}
+	/* if we have a from field */
+	cob_move_2 (pFld->fldFrom, pFld->caFrom, &(pFld->fldScr), pFld->caScr);
       if (pFld->fldTo)
 	{			/* cursor stop */
 	  if (!pFldWk)
@@ -633,10 +626,8 @@ cob_accept_screen ()
       while (pFld->pNext->pNext)
 	pFld = (struct ScrFld *) pFld->pNext;
       if (pFld->pNext->fldTo)
-	{
-	  cob_move (&pFld->pNext->fldWk, pFld->pNext->caWk,
+	cob_move_2 (&pFld->pNext->fldWk, pFld->pNext->caWk,
 		    pFld->pNext->fldTo, pFld->pNext->caTo);
-	}
       if (pFld->pNext->caWk)
 	free (pFld->pNext->caWk);
       free (pFld->pNext);
@@ -671,10 +662,8 @@ cob_display_screen ()
   while (pFld)
     {
       if (pFld->fldFrom)
-	{			/* if we have a from field */
-	  cob_move (pFld->fldFrom, pFld->caFrom, &(pFld->fldScr),
-		    pFld->caScr);
-	}
+	/* if we have a from field */
+	cob_move_2 (pFld->fldFrom, pFld->caFrom, &(pFld->fldScr), pFld->caScr);
       _DisplayField (pFld);
       pFld = pFld->pNext;
     }
@@ -717,14 +706,9 @@ cob_scr_process (int iAttr, int iLine, int iColumn,
   pFld = (struct ScrFld *) &_Fields_;
   for (i = 0; pFld->pNext; i++)
     pFld = pFld->pNext;
-  pFld->pNext = (struct ScrFld *) malloc (sizeof (struct ScrFld));
-  if (!pFld->pNext)
-    {
-      runtime_error (RTERR_NO_MEM, (struct fld_desc *) 0, (void *) 0);
-      return;
-    }
+  pFld->pNext = malloc (sizeof (struct ScrFld));
   pFld = pFld->pNext;
-  pFld->pNext = (struct ScrFld *) 0;
+  pFld->pNext = 0;
 
   va_start (ap, pInfo);
   pWk = pInfo;
@@ -854,9 +838,9 @@ cob_scr_process (int iAttr, int iLine, int iColumn,
 	}
       pFld->caWk = (char *) malloc (iCharCnt);
       if (pFld->fldFrom)
-	cob_move (pFld->fldFrom, pFld->caFrom, &pFld->fldWk, pFld->caWk);
+	cob_move_2 (pFld->fldFrom, pFld->caFrom, &pFld->fldWk, pFld->caWk);
       else
-	cob_move (&pFld->fldScr, pFld->caScr, &pFld->fldWk, pFld->caWk);
+	cob_move_2 (&pFld->fldScr, pFld->caScr, &pFld->fldWk, pFld->caWk);
     }
   else
     {
@@ -955,12 +939,7 @@ cob_init_screen (void)
 #endif
 
   j = COLOR_PAIRS * sizeof (struct Colors);
-  _colors_ = (struct Colors *) malloc (j);
-  if (!_colors_)
-    {
-      runtime_error (RTERR_NO_MEM, (struct fld_desc *) 0, (void *) 0);
-      return;
-    }
+  _colors_ = malloc (j);
   for (i = 0; i < COLOR_PAIRS; i++)
     _colors_[i].iPairNbr = -1;
   _colors_[0].iPairNbr = 0;
@@ -1284,9 +1263,7 @@ _DisplayField (struct ScrFld *pFld)
   color_set (_GetColor (pFld), (void *) 0);
 
   if (pFld->fldTo)
-    {
-      cob_move (&pFld->fldWk, pFld->caWk, &pFld->fldScr, pFld->caScr);
-    }
+    cob_move_2 (&pFld->fldWk, pFld->caWk, &pFld->fldScr, pFld->caScr);
   move (pFld->iLine, pFld->iCol);
   if ((pFld->iAttributes & SCR_BLANK_LINE) == SCR_BLANK_LINE)
     clrtoeol ();

@@ -29,7 +29,29 @@
 
 int cob_status;
 int decimal_comma = 0;
-char cCurrencySymbol = '$';
+unsigned char cCurrencySymbol = '$';
+
+long long cob_exp10[19] = {
+  1,
+  10,
+  100,
+  1000,
+  10000,
+  100000,
+  1000000,
+  10000000,
+  100000000,
+  1000000000,
+  10000000000,
+  100000000000,
+  1000000000000,
+  10000000000000,
+  100000000000000,
+  1000000000000000,
+  10000000000000000,
+  100000000000000000,
+  1000000000000000000
+};
 
 void
 cob_init (int argc, char **argv)
@@ -119,12 +141,22 @@ put_sign (struct fld_desc *f, char *s, int sign)
     }
 }
 
+int
+get_index (struct cob_field f)
+{
+  int index;
+  struct fld_desc desc = { 4, 'B', 0, 0, 0, 0, 0, 0, "S9\x9" };
+  struct cob_field d = {&desc, (unsigned char *) &index};
+  cob_move (f, d);
+  return index;
+}
+
 struct fld_desc *
 cob_adjust_length (struct fld_desc *dep_desc, char *dep_val,
 		   int min, int max, struct fld_desc *var_desc,
 		   struct fld_desc *item, struct fld_desc *copy)
 {
-  int itocc = get_index (dep_desc, dep_val);
+  int itocc = get_index ((struct cob_field) {dep_desc, dep_val});
   if (itocc < min || itocc > max)
     {
       /* should generate exception, for now just a warning */
@@ -234,14 +266,43 @@ cob_exit ()
 }
 
 int
-picCompLength (struct fld_desc *f)
+picCompLength (const char *pic)
 {
   int len = 0, i;
-  unsigned char *pic = f->pic;
   for (i = 0; pic[i]; i++)
     {
       if (pic[i] == '9' || pic[i] == 'P')
 	len += pic[++i];
     }
   return len;
+}
+
+
+void
+_DUMP_ (unsigned char *caData, char *szCount, char *caOut)
+{
+  int i, k;
+  unsigned char c;
+
+  k = 0;
+  for (i = 0; i < 4; ++i)
+    {
+      if (szCount[i] == '\0')
+	break;
+      k *= 10;
+      k += (szCount[i] - '0');
+    }
+
+  for (i = 0; i < k; ++i)
+    {
+      c = (caData[i] >> 4) + '0';
+      if (c > '9')
+	c += 7;
+      caOut[i * 2] = c;
+
+      c = (caData[i] & 0xf) + '0';
+      if (c > '9')
+	c += 7;
+      caOut[(i * 2) + 1] = c;
+    }
 }

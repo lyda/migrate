@@ -190,8 +190,6 @@ cob_push_copy (int n)
 static void
 shift_decimal (decimal d, int n)
 {
-  static unsigned long exp[10] = {1, 10, 100, 1000, 10000, 100000, 1000000,
-				  10000000, 100000000, 1000000000};
   if (n == 0)
     return;
 
@@ -199,7 +197,7 @@ shift_decimal (decimal d, int n)
     {
       if (n < 10)
 	/* 0 < n < 10 */
-	mpz_mul_ui (d->number, d->number, exp[n]);
+	mpz_mul_ui (d->number, d->number, cob_exp10[n]);
       else
 	{
 	  /* n >= 10 */
@@ -214,7 +212,7 @@ shift_decimal (decimal d, int n)
     {
       if (n > -10)
 	/* -10 < n < 0 */
-	mpz_tdiv_q_ui (d->number, d->number, exp[-n]);
+	mpz_tdiv_q_ui (d->number, d->number, cob_exp10[-n]);
       else
 	{
 	  /* n <= -10 */
@@ -343,12 +341,12 @@ cob_push_decimal (struct cob_field f)
     case 'B':
       switch (f.desc->len)
 	{
-	case 1: mpz_set_si (d->number, *((signed char *) f.data)); break;
-	case 2: mpz_set_si (d->number, *((signed short *) f.data)); break;
-	case 4: mpz_set_si (d->number, *((signed long *) f.data)); break;
+	case 1: mpz_set_si (d->number, *((char *) f.data)); break;
+	case 2: mpz_set_si (d->number, *((short *) f.data)); break;
+	case 4: mpz_set_si (d->number, *((long *) f.data)); break;
 	case 8:
 	  {
-	    signed long long val = *((signed long long *) f.data);
+	    long long val = *((long long *) f.data);
 	    mpz_set_si (d->number, val >> 32);
 	    mpz_mul_2exp (d->number, d->number, 32);
 	    mpz_add_ui (d->number, d->number, val & 0xffffffff);
@@ -413,37 +411,14 @@ cob_set (struct cob_field f, int round)
     {
     case 'B':
       {
-	static long long maximum_value[19] = {
-	  0,
-	  9,
-	  99,
-	  999,
-	  9999,
-	  99999,
-	  999999,
-	  9999999,
-	  99999999,
-	  999999999,
-	  9999999999,
-	  99999999999,
-	  999999999999,
-	  9999999999999,
-	  99999999999999,
-	  999999999999999,
-	  9999999999999999,
-	  99999999999999999,
-	  999999999999999999,
-	};
-
-	int len = picCompLength (f.desc);
-
+	int len = picCompLength (f.desc->pic);
 	if (f.desc->len <= 4)
 	  {
 	    int val;
 	    if (!mpz_fits_sint_p (d->number))
 	      goto overflow;
 	    val = mpz_get_si (d->number);
-	    if (val < -maximum_value[len] || val > maximum_value[len])
+	    if (val <= -cob_exp10[len] || val >= cob_exp10[len])
 	      goto overflow;
 	    switch (f.desc->len)
 	      {
@@ -467,7 +442,7 @@ cob_set (struct cob_field f, int round)
 	    val = mpz_get_si (d->number);
 	    val = (val << 32) + mpz_get_ui (r);
 	    mpz_clear (r);
-	    if (val < -maximum_value[len] || val > maximum_value[len])
+	    if (val <= -cob_exp10[len] || val >= cob_exp10[len])
 	      goto overflow;
 	    *((signed long long *) f.data) = val;
 	  }

@@ -345,8 +345,10 @@ cob_unstring (struct fld_desc *fvar, char *svar, ...)
   len = fvar->len;
   i = 0;
   if (fptr)
-    {				/* if there is a pointer, skip some length at svar */
-      n = get_index (fptr, sptr) - 1;	/* get the integer value of this */
+    {
+      /* if there is a pointer, skip some length at svar */
+      /* get the integer value of this */
+      n = get_index ((struct cob_field) {fptr, sptr}) - 1;
       if (n >= (len - i) || n < 0)
 	goto error;		/* overflow at the pointer */
       i += n;
@@ -433,7 +435,8 @@ cob_unstring (struct fld_desc *fvar, char *svar, ...)
     }
   if (ftally)
     {
-      cob_put_integer (ftally, stally, nfields + get_index (ftally, stally));
+      cob_put_integer (ftally, stally,
+		       nfields + get_index ((struct cob_field) {ftally, stally}));
     }
   if (fptr)
     {
@@ -483,7 +486,8 @@ cob_string (struct fld_desc *fdst, char *sdst, ...)
   if (fptr)
     {
       sptr = va_arg (args, char *);
-      i += get_index (fptr, sptr);	/* get the integer value of this */
+      /* get the integer value of this */
+      i += get_index ((struct cob_field) {fptr, sptr});
     }
   fsrc = va_arg (args, struct fld_desc *);
   while (fsrc)
@@ -559,12 +563,8 @@ static void
 cob_put_integer (struct fld_desc *fdesc, char *sbuf, int value)
 {
   struct fld_desc fld = { 4, 'B', 0, 0, 0, 0, 0, 0, "S9\x9" };
-  cob_move (&fld, (char *) &value, fdesc, sbuf);
-/*	char *s;
-	s = malloc(fdesc->len+1);
-	sprintf(s,"%0*d",(int)fdesc->len,value);
-	memmove(sbuf,s,fdesc->len);
-	free(s);*/
+  cob_move ((struct cob_field) {&fld, (char *) &value},
+	    (struct cob_field) {fdesc, sbuf});
 }
 
 /* end of strings.c */

@@ -67,7 +67,7 @@ cob_display (struct fld_desc *f, char *s, int dupon)
   if ((f->type == '9') || (f->type == 'C') || (f->type == 'B')
       || (f->type == 'U'))
     {
-      len = picCompLength (f);
+      len = picCompLength (f->pic);
       if (f->pic[0] == 'S')
 	{
 	  szSigned[0] = '-';
@@ -112,7 +112,7 @@ cob_display (struct fld_desc *f, char *s, int dupon)
 	}
       if (decimals > 0)
 	len++;			/* accounts for the decimal point */
-      cob_move (f, s, &ftmp, buffer);
+      cob_move_2 (f, s, &ftmp, buffer);
     }
   else
     {
@@ -217,7 +217,7 @@ accept_std (char *buffer, struct fld_desc *f, int flags)
     add_history (rlbuf);
 #endif
 
-  cob_move (&f1, rlbuf, f, buffer);
+  cob_move_2 (&f1, rlbuf, f, buffer);
 
 #ifdef HAVE_LIBREADLINE
   /* free the buffer only if it came from a readline call */

@@ -1,5 +1,5 @@
 lib_LTLIBRARIES = libcob.la
-libcob_la_SOURCES = _libcob.h object.c cobmove.c general.c fileio.c \
+libcob_la_SOURCES = _libcob.h object.c move.c general.c fileio.c \
 	basicio.c strings.c screenio.c screenio.h dyncall.c
 libcob_la_LDFLAGS = -version-info 0:0:0
 libcob_la_LIBADD = $(LIBCOB_LIBADD)

@@ -163,14 +163,13 @@ struct cob_field {
 } __attribute__ ((packed));
 
 extern int decimal_comma;
-extern char cCurrencySymbol;
+extern unsigned char cCurrencySymbol;
+extern long long cob_exp10[19];
 
 extern int extract_sign (struct fld_desc *f, char *s);
 extern void put_sign (struct fld_desc *f, char *s, int sign);
-extern int get_index (struct fld_desc *f, char *s);
+extern int picCompLength (const char *pic);
 
-extern int picCompLength (struct fld_desc *f);
-
-extern void cob_move (struct fld_desc *f1desc, unsigned char *f1data, struct fld_desc *f2desc, unsigned char *f2data);
-
-extern void runtime_error (int iErrorNbr, struct fld_desc *pFld, void *pData);
+extern void cob_move (struct cob_field f1, struct cob_field f2);
+extern void cob_move_2 (struct fld_desc *f1, char *s1, struct fld_desc *f2, char *s2);
+extern int get_index (struct cob_field f);

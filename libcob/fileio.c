@@ -114,7 +114,7 @@ cob_check_varying (struct file_desc *f,
   t->just_r = reclen_desc->just_r;
   t->reserved = reclen_desc->reserved;
   t->pic = b;
-  cob_move (reclen_desc, reclen_value, t, t_value);
+  cob_move_2 (reclen_desc, reclen_value, t, t_value);
   strncpy (temp, t_value, t->len);
   rc_len = atoi (temp);
   if ((rc_len <= mx_value) && (rc_len >= mi_value))
@@ -603,7 +603,7 @@ cob_read (struct file_desc *f, char *record, ...)
 	  t->just_r = reclen_desc->just_r;
 	  t->reserved = reclen_desc->reserved;
 	  t->pic = b;
-	  cob_move (t, t_value, reclen_desc, reclen_buf);
+	  cob_move_2 (t, t_value, reclen_desc, reclen_buf);
 	  RETURN_STATUS (0);
 	}
       else
@@ -1656,8 +1656,6 @@ cob_write_adv (struct file_desc *f, char *record, int opt, ...)
 {
   int result;
   va_list args;
-  struct fld_desc *cnt_desc;
-  char *cnt_buf;
   int lines = 0;
   struct fld_desc *reclen_desc;
   char *reclen_buf;
@@ -1685,9 +1683,7 @@ cob_write_adv (struct file_desc *f, char *record, int opt, ...)
 //      va_start( args, opt );
   if (opt > 0)
     {
-      cnt_desc = va_arg (args, struct fld_desc *);
-      cnt_buf = va_arg (args, char *);
-      lines = get_index (cnt_desc, cnt_buf);
+      lines = get_index (va_arg (args, struct cob_field));
       if (opt == 1)
 	{
 	  result = write ((int) f->dbp, record, f->reclen);
