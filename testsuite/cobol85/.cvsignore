@@ -1,7 +1,5 @@
 *.tar.gz
-*.txt
 *.fix
-*.log
 copy
 CM
 DB

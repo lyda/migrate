@@ -1,0 +1,52 @@
+Filename    total pass fail deleted inspect
+--------    ----- ---- ---- ------- -------
+ST101A.CBL      9    9    0       0       0 OK
+ST102A.SUB      0    0    0       0       0 OK
+ST103A.SUB      9    9    0       0       0 OK
+ST104A.CBL      1    1    0       0       0 OK
+ST105A.SUB      2    2    0       0       0 OK
+ST106A.CBL      1    1    0       0       0 OK
+ST107A.SUB      6    6    0       0       0 OK
+ST108A.CBL      9    9    0       0       0 OK
+ST109A.CBL      0    0    0       0       0 OK
+ST110A.SUB      0    0    0       0       0 OK
+ST111A.SUB      7    7    0       0       0 OK
+ST112M.CBL      0    0    0       0       0 OK
+ST113M.SUB      0    0    0       0       0 OK
+ST114M.SUB     10   10    0       0       0 OK
+ST115A.CBL      0    0    0       0       0 OK
+ST116A.SUB      0    0    0       0       0 OK
+ST117A.SUB      1    1    0       0       0 OK
+ST118A.CBL      9    9    0       0       0 OK
+ST119A.CBL     27   27    0       0       0 OK
+ST120A.SUB      0    0    0       0       0 OK
+ST121A.SUB      9    9    0       0       0 OK
+ST122A.CBL      0    0    0       0       0 OK
+ST123A.SUB      0    0    0       0       0 OK
+ST124A.SUB      7    7    0       0       0 OK
+ST125A.CBL      1    1    0       0       0 OK
+ST126A.SUB     18   18    0       0       0 OK
+ST127A.CBL     27   19    8       0       0 
+ST131A.CBL     15    9    6       0       0 
+ST132A.CBL      6    6    0       0       0 OK
+ST133A.CBL     18   18    0       0       0 OK
+ST134A.CBL      4    4    0       0       0 OK
+ST135A.CBL      9    9    0       0       0 OK
+ST136A.CBL      5    5    0       0       0 OK
+ST137A.CBL      6    3    3       0       0 
+ST139A.CBL    ===== compile error =====
+ST140A.CBL    ===== compile error =====
+ST144A.CBL     11   11    0       0       0 OK
+ST146A.CBL      4    2    2       0       0 
+ST147A.CBL     26   26    0       0       0 OK
+ST301M.CBL    ----- test skipped -----
+--------    ----- ---- ---- ------- -------
+Total         257  238   19       0       0
+%           100.0 92.6  7.4     0.0     0.0
+
+Number of programs:    40
+Successfully tested:   37 (92.50%)
+Successfully executed: 33 (82.50%)
+Test skipped:           1 ( 2.50%)
+Compile error:          2 ( 5.00%)
+Execute error:          0 ( 0.00%)
