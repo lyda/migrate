@@ -8,7 +8,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -C prog.cob], [1], ,
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:5: error: `X' undefined
 ])
 
@@ -28,7 +28,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -C prog.cob], [1], ,
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:7: error: redefinition of `X'
 prog.cob:6: error: `X' previously defined here
 ])
@@ -50,7 +50,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -C prog.cob], [1], ,
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:8: error: redefinition of `X'
 prog.cob:6: error: `X' previously defined here
 ])
@@ -71,7 +71,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -C prog.cob], [1], ,
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:7: error: redefinition of `X'
 prog.cob:6: error: `X' previously defined here
 ])
@@ -93,7 +93,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -C prog.cob], [1], ,
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:8: error: redefinition of `X'
 prog.cob:7: error: `X' previously defined here
 ])
@@ -117,7 +117,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -C prog.cob], [1], ,
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:11: error: `X' ambiguous; need qualification
 prog.cob:7: error: `X' in `G1' defined here
 prog.cob:9: error: `X' in `G2' defined here
@@ -139,7 +139,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -C prog.cob], [1], ,
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:7: error: redefinition of `X'
 prog.cob:6: error: `X' previously defined here
 ])
@@ -160,7 +160,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -C prog.cob], [1], ,
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:7: error: redefinition of `X'
 prog.cob:6: error: `X' previously defined here
 ])

@@ -10,7 +10,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -C prog.cob], [1], ,
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:6: error: level 01 field `X' cannot have OCCURS
 ])
 
@@ -31,7 +31,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -C prog.cob], [1], ,
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:9: error: `X' requires 1 subscript
 ])
 
@@ -52,7 +52,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -C prog.cob], [1], ,
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:9: error: `X' requires 1 subscript
 ])
 
@@ -74,7 +74,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -C prog.cob], [1], ,
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:10: error: `X' requires 2 subscripts
 ])
 
@@ -96,7 +96,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -C prog.cob], [1], ,
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:10: error: `X' requires 2 subscripts
 ])
 
@@ -117,7 +117,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -C prog.cob], [1], ,
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:9: error: subscript of `X' out of bounds: 5
 ])
 
@@ -139,7 +139,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -C prog.cob], [1], ,
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:10: error: subscript of `X' out of bounds: 20
 ])
 
@@ -161,7 +161,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -C prog.cob], [1], ,
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:10: error: `I' must be an integer value
 ])
 
@@ -183,7 +183,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -C prog.cob], [1], ,
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:10: error: `I' must be an integer value
 ])
 
@@ -205,7 +205,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob])
+AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [1], ,
 [prog.cob:10: libcob: subscript of `X' out of bounds: 0
 ])
@@ -228,7 +228,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob])
+AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [1], ,
 [prog.cob:10: libcob: subscript of `X' out of bounds: 11
 ])
@@ -251,7 +251,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob])
+AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [1], ,
 [prog.cob:10: libcob: OCCURS DEPENDING ON `N' out of bounds: 3
 ])
@@ -274,7 +274,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob])
+AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [1], ,
 [prog.cob:10: libcob: OCCURS DEPENDING ON `N' out of bounds: 7
 ])
@@ -297,7 +297,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob])
+AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [1], ,
 [prog.cob:10: libcob: subscript of `X' out of bounds: 5
 ])
@@ -320,7 +320,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob], [1], ,
+AT_CHECK([${COMPILE} -o prog prog.cob], [1], ,
 [prog.cob:10: error: subscript of `X' out of bounds: 3
 ])
 
@@ -342,7 +342,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob], [1], ,
+AT_CHECK([${COMPILE} -o prog prog.cob], [1], ,
 [prog.cob:10: error: subscript of `X' out of bounds: 7
 ])
 
@@ -364,7 +364,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob])
+AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [1], ,
 [prog.cob:10: libcob: subscript of `X' out of bounds: 5
 ])
@@ -385,7 +385,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -C prog.cob], [1], ,
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:8: error: offset of `X' out of bounds: 0
 ])
 
@@ -405,7 +405,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -C prog.cob], [1], ,
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:8: error: offset of `X' out of bounds: 5
 ])
 
@@ -425,7 +425,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -C prog.cob], [1], ,
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:8: error: length of `X' out of bounds: 4
 ])
 
@@ -446,7 +446,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob])
+AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [1], ,
 [prog.cob:9: libcob: offset of `X' out of bounds: 0
 ])
@@ -468,7 +468,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob])
+AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [1], ,
 [prog.cob:9: libcob: offset of `X' out of bounds: 5
 ])
@@ -490,7 +490,7 @@ AT_DATA([prog.cob], [
          STOP RUN.
 ])
 
-AT_CHECK([cobc -main prog.cob])
+AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [1], ,
 [prog.cob:9: libcob: length of `X' out of bounds: 5
 ])
