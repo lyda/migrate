@@ -303,7 +303,7 @@ C から COBOL の機能を呼ぶときに使える関数を定義している。
 @example
 int
 main (int argc, char **argv)
-{
+@{
   /* initialize of your program */
   ...
 
@@ -312,7 +312,7 @@ main (int argc, char **argv)
 
   /* rest of your program */
   ...
-}
+@}
 @end example
 
 @item 関数 @code{cob_set_library_path}
