@@ -2448,6 +2448,7 @@ cb_build_move_field (cb_tree src, cb_tree dst)
 	    && src_f->pic->digits == dst_f->pic->digits
 	    && src_f->pic->scale == dst_f->pic->scale
 	    && src_f->pic->have_sign == dst_f->pic->have_sign
+	    && src_f->flag_binary_swap == dst_f->flag_binary_swap
 	    && src_f->flag_sign_leading == dst_f->flag_sign_leading
 	    && src_f->flag_sign_separate == dst_f->flag_sign_separate)
 	  return cb_build_move_copy (src, dst);

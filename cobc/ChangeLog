@@ -1,3 +1,8 @@
+2004-09-28  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* typeck.c (cb_build_move_field): Compare flag_binary_swap for
+	numeric moves.  (Thanks to Roger White)
+
 2004-09-07  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* tree.c (finalize_file): Use cb_build_implicit_field to create record.
