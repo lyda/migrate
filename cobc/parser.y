@@ -3254,6 +3254,7 @@ label:
       $$ = lab;
     }
     ;
+
 
 %%
 
@@ -3272,19 +3273,20 @@ check_decimal_point (struct lit *lit)
 }
 
 void
-yywarn (char *s, ...)
+yywarn (char *fmt, ...)
 {
   va_list argptr;
-  char buff[BUFSIZ];
 
-  /* Build warning */
-  va_start (argptr, s);
-  vsprintf (buff, s, argptr);
+  /* Print warning line */
+  printf ("%s:%d: warning: ", cob_orig_filename, cob_orig_lineno);
+
+  /* Print error body */
+  va_start (argptr, fmt);
+  vprintf (fmt, argptr);
+  putchar ('\n');
   va_end (argptr);
 
-  /* Display warning */
-  printf ("%s:%d: warning: %s before `%s'\n",
-	  cob_orig_filename, cob_orig_lineno, buff, yytext);
+  /* Count warning */
   cob_warning_count++;
 }
 
