@@ -228,6 +228,9 @@ cb_resolve_redefines (struct cb_field *field, cb_tree redefines)
       return NULL;
     }
 
+  /* return the original definition */
+  while (f->redefines)
+    f = f->redefines;
   return f;
 }
 
