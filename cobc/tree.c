@@ -308,11 +308,11 @@ cb_tree cb_space;
 cb_tree cb_low;
 cb_tree cb_high;
 cb_tree cb_quote;
-cb_tree cb_return_code;
 cb_tree cb_int0;
 cb_tree cb_int1;
 cb_tree cb_int2;
 cb_tree cb_error_node;
+cb_tree cb_return_code;
 
 struct cb_label *cb_standard_error_handler;
 
@@ -343,7 +343,6 @@ cb_init_constants (void)
   cb_true        = make_constant (CB_CATEGORY_BOOLEAN, "1");
   cb_false       = make_constant (CB_CATEGORY_BOOLEAN, "0");
   cb_null        = make_constant (CB_CATEGORY_DATA_POINTER, "0");
-  cb_return_code = make_constant (CB_CATEGORY_NUMERIC, "cob_return_code");
   cb_zero        = make_constant (CB_CATEGORY_NUMERIC, "&cob_zero");
   cb_space       = make_constant (CB_CATEGORY_ALPHANUMERIC, "&cob_space");
   cb_low         = make_constant (CB_CATEGORY_ALPHANUMERIC, "&cob_low");
@@ -1794,6 +1793,57 @@ cb_build_assign (cb_tree var, cb_tree val)
     make_tree (CB_TAG_ASSIGN, CB_CATEGORY_UNKNOWN, sizeof (struct cb_assign));
   p->var = var;
   p->val = val;
+  return CB_TREE (p);
+}
+
+
+/*
+ * INITIALIZE
+ */
+
+cb_tree
+cb_build_initialize (cb_tree x, cb_tree l)
+{
+  struct cb_initialize *p =
+    make_tree (CB_TAG_INITIALIZE, CB_CATEGORY_UNKNOWN, sizeof (struct cb_initialize));
+  p->x = x;
+  p->l = l;
+  return CB_TREE (p);
+}
+
+
+/*
+ * SEARCH
+ */
+
+cb_tree
+cb_build_search (int flag_all, cb_tree table, cb_tree var,
+		 cb_tree end_stmt, cb_tree whens)
+{
+  struct cb_search *p =
+    make_tree (CB_TAG_SEARCH, CB_CATEGORY_UNKNOWN, sizeof (struct cb_search));
+  p->flag_all = flag_all;
+  p->table    = table;
+  p->var      = var;
+  p->end_stmt = end_stmt;
+  p->whens    = whens;
+  return CB_TREE (p);
+}
+
+
+/*
+ * CALL
+ */
+
+cb_tree
+cb_build_call (cb_tree name, cb_tree args, cb_tree stmt1, cb_tree stmt2)
+{
+  struct cb_call *p =
+    make_tree (CB_TAG_CALL, CB_CATEGORY_UNKNOWN, sizeof (struct cb_call));
+  p->name  = name;
+  p->args  = args;
+  p->stmt1 = stmt1;
+  p->stmt2 = stmt2;
   return CB_TREE (p);
 }
 

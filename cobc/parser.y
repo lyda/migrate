@@ -183,7 +183,7 @@ program_id_paragraph:
   PROGRAM_ID '.'
   {
     current_program = cb_build_program ();
-    cb_build_index (make_reference ("RETURN-CODE"));
+    cb_return_code = cb_build_index (make_reference ("RETURN-CODE"));
   }
   program_name as_literal program_type '.'
   {
@@ -1686,8 +1686,7 @@ call_statement:
   call_on_exception call_not_on_exception
   end_call
   {
-    cb_tree x = $6 ? $6 : cb_build_funcall_0 ("cob_call_error");
-    push_funcall_4 ("@call", $3, $4, x, $7);
+    push (cb_build_call ($3, $4, $6, $7));
     if ($5)
       push (cb_build_move (cb_return_code, $5));
   }
@@ -1717,7 +1716,7 @@ call_returning:
 | RETURNING data_name	{ $$ = $2; }
 ;
 call_on_exception:
-  /* empty */		{ $$ = NULL; }
+  /* empty */		{ $$ = cb_build_funcall_0 ("cob_call_error"); }
 | _on OVERFLOW
   statement_list	{ $$ = $3; }
 | _on EXCEPTION
@@ -2089,7 +2088,7 @@ initialize_statement:
   {
     cb_tree l;
     for (l = $3; l; l = CB_CHAIN (l))
-      push_funcall_2 ("@initialize", CB_VALUE (l), $4);
+      push (cb_build_initialize (CB_VALUE (l), $4));
   }
 ;
 initialize_replacing:
@@ -2560,11 +2559,12 @@ search_statement:
 search_body:
   table_name search_varying search_at_end search_whens
   {
-    push_funcall_4 ("@search", $1, $2, $3, $4);
+    push (cb_build_search (0, $1, $2, $3, $4));
   }
 | ALL table_name search_at_end WHEN expr statement_list
   {
-    push_funcall_4 ("@search-all", $2, $3, cb_build_search_all ($2, $5), $6);
+    push (cb_build_search (1, $2, 0, $3,
+			   cb_build_if (cb_build_search_all ($2, $5), $6, 0)));
   }
 ;
 search_varying:
@@ -2577,11 +2577,7 @@ search_at_end:
 ;
 search_whens:
   search_when			{ $$ = $1; }
-| search_when search_whens
-  {
-    $$ = $1;
-    CB_IF ($1)->stmt2 = $2;
-  }
+| search_when search_whens	{ $$ = $1; CB_IF ($1)->stmt2 = $2; }
 ;
 search_when:
   WHEN condition statement_list	{ $$ = cb_build_if ($2, $3, 0); }

@@ -50,6 +50,9 @@ enum cb_tag {
   /* statements */
   CB_TAG_LABEL,			/* label statement */
   CB_TAG_ASSIGN,		/* assignment statement */
+  CB_TAG_INITIALIZE,		/* INITIALIZE statement */
+  CB_TAG_SEARCH,		/* SEARCH statement */
+  CB_TAG_CALL,			/* CALL statement */
   CB_TAG_GOTO,			/* GO TO statement */
   CB_TAG_IF,			/* IF statement */
   CB_TAG_PERFORM,		/* PERFORM statement */
@@ -209,11 +212,11 @@ extern cb_tree cb_space;
 extern cb_tree cb_low;
 extern cb_tree cb_high;
 extern cb_tree cb_quote;
-extern cb_tree cb_return_code;
 extern cb_tree cb_int0;
 extern cb_tree cb_int1;
 extern cb_tree cb_int2;
 extern cb_tree cb_error_node;
+extern cb_tree cb_return_code;
 
 extern struct cb_label *cb_standard_error_handler;
 
@@ -628,6 +631,59 @@ struct cb_assign {
 #define CB_ASSIGN_P(x)		(CB_TREE_TAG (x) == CB_TAG_ASSIGN)
 
 extern cb_tree cb_build_assign (cb_tree var, cb_tree val);
+
+
+/*
+ * INITIALIZE
+ */
+
+struct cb_initialize {
+  struct cb_tree_common common;
+  cb_tree x;
+  cb_tree l;
+};
+
+#define CB_INITIALIZE(x)	(CB_TREE_CAST (CB_TAG_INITIALIZE, struct cb_initialize, x))
+#define CB_INITIALIZE_P(x)	(CB_TREE_TAG (x) == CB_TAG_INITIALIZE)
+
+extern cb_tree cb_build_initialize (cb_tree x, cb_tree l);
+
+
+/*
+ * SEARCH
+ */
+
+struct cb_search {
+  struct cb_tree_common common;
+  int flag_all;
+  cb_tree table;
+  cb_tree var;
+  cb_tree end_stmt;
+  cb_tree whens;
+};
+
+#define CB_SEARCH(x)		(CB_TREE_CAST (CB_TAG_SEARCH, struct cb_search, x))
+#define CB_SEARCH_P(x)		(CB_TREE_TAG (x) == CB_TAG_SEARCH)
+
+extern cb_tree cb_build_search (int flag_all, cb_tree table, cb_tree var, cb_tree end_stmt, cb_tree whens);
+
+
+/*
+ * CALL
+ */
+
+struct cb_call {
+  struct cb_tree_common common;
+  cb_tree name;
+  cb_tree args;
+  cb_tree stmt1;
+  cb_tree stmt2;
+};
+
+#define CB_CALL(x)		(CB_TREE_CAST (CB_TAG_CALL, struct cb_call, x))
+#define CB_CALL_P(x)		(CB_TREE_TAG (x) == CB_TAG_CALL)
+
+extern cb_tree cb_build_call (cb_tree name, cb_tree args, cb_tree stmt1, cb_tree stmt2);
 
 
 /*

@@ -35,7 +35,7 @@ static void output_stmt (cb_tree x);
 static void output_data (cb_tree x);
 static void output_integer (cb_tree x);
 static void output_index (cb_tree x);
-static void output_funcall (struct cb_funcall *p);
+static void output_funcall (cb_tree x);
 
 
 /*
@@ -786,7 +786,7 @@ output_integer (cb_tree x)
 	      }
 	  }
 
-	output_funcall (CB_FUNCALL (cb_build_funcall_1 ("cob_get_int", x)));
+	output_funcall (cb_build_funcall_1 ("cob_get_int", x));
 	break;
       }
     }
@@ -861,7 +861,7 @@ output_cond (cb_tree x, int save_flag)
       {
 	if (save_flag)
 	  output ("(ret = ");
-	output_funcall (CB_FUNCALL (x));
+	output_funcall (x);
 	if (save_flag)
 	  output (")");
 	break;
@@ -915,6 +915,26 @@ output_recursive (void (*func) (struct cb_field *), struct cb_field *f)
       output_indent ("  }");
       output_indent ("}");
     }
+}
+
+
+/*
+ * Function call
+ */
+
+static void
+output_funcall (cb_tree x)
+{
+  int i;
+  struct cb_funcall *p = CB_FUNCALL (x);
+  output ("%s (", p->name);
+  for (i = 0; i < p->argc; i++)
+    {
+      output_param (p->argv[i], i);
+      if (i + 1 < p->argc)
+	output (", ");
+    }
+  output (")");
 }
 
 
@@ -1061,9 +1081,9 @@ output_initialize_replacing (struct cb_field *f)
 }
 
 static void
-output_initialize (cb_tree x, cb_tree l)
+output_initialize (struct cb_initialize *p)
 {
-  struct cb_reference *r = CB_REFERENCE (x);
+  struct cb_reference *r = CB_REFERENCE (p->x);
   struct cb_field *f = CB_FIELD (r->value);
 
   /* output fixed indexes */
@@ -1082,10 +1102,10 @@ output_initialize (cb_tree x, cb_tree l)
 	}
     }
 
-  if (l != NULL)
+  if (p->l != NULL)
     {
       /* INITIALIZE REPLACING */
-      initialize_replacing_list = l;
+      initialize_replacing_list = p->l;
       output_initialize_replacing (f);
     }
   else
@@ -1126,7 +1146,7 @@ output_occurs (struct cb_field *p)
 }
 
 static void
-output_search (cb_tree table, cb_tree var, cb_tree stmt, cb_tree whens)
+output_search_whens (cb_tree table, cb_tree var, cb_tree stmt, cb_tree whens)
 {
   cb_tree l;
   struct cb_field *p = cb_field (table);
@@ -1230,19 +1250,29 @@ output_search_all (cb_tree table, cb_tree stmt, cb_tree cond, cb_tree when)
   output_indent ("}");
 }
 
+static void
+output_search (struct cb_search *p)
+{
+  if (p->flag_all)
+    output_search_all (p->table, p->end_stmt,
+		       CB_IF (p->whens)->test, CB_IF (p->whens)->stmt1);
+  else
+    output_search_whens (p->table, p->var, p->end_stmt, p->whens);
+}
+
 
 /*
  * CALL
  */
 
 static void
-output_call (cb_tree name, cb_tree args, cb_tree st1, cb_tree st2)
+output_call (struct cb_call *p)
 {
   int n;
   int dynamic_link = 1;
   cb_tree l;
 
-  if (cb_flag_call_static && CB_LITERAL_P (name))
+  if (cb_flag_call_static && CB_LITERAL_P (p->name))
     dynamic_link = 0;
 
   /* local variables */
@@ -1251,7 +1281,7 @@ output_call (cb_tree name, cb_tree args, cb_tree st1, cb_tree st2)
     output_line ("int (*func)();");
 
   /* setup arguments */
-  for (l = args, n = 1; l; l = CB_CHAIN (l), n++)
+  for (l = p->args, n = 1; l; l = CB_CHAIN (l), n++)
     {
       cb_tree x = CB_VALUE (l);
       switch (CB_PURPOSE_INT (l))
@@ -1269,7 +1299,7 @@ output_call (cb_tree name, cb_tree args, cb_tree st1, cb_tree st2)
 	  output (";\n");
 	}
     }
-  for (l = args, n = 1; l; l = CB_CHAIN (l), n++)
+  for (l = p->args, n = 1; l; l = CB_CHAIN (l), n++)
     {
       cb_tree x = CB_VALUE (l);
       switch (CB_PURPOSE_INT (l))
@@ -1289,20 +1319,20 @@ output_call (cb_tree name, cb_tree args, cb_tree st1, cb_tree st2)
   if (!dynamic_link)
     {
       /* static link */
-      output ("cob_return_code = %s", CB_LITERAL (name)->data);
+      output ("cob_return_code = %s", CB_LITERAL (p->name)->data);
     }
   else
     {
       /* dynamic link */
       output ("func = ");
-      if (CB_LITERAL_P (name))
-	output ("cob_resolve (\"%s\")", CB_LITERAL (name)->data);
+      if (CB_LITERAL_P (p->name))
+	output ("cob_resolve (\"%s\")", CB_LITERAL (p->name)->data);
       else
-	output_funcall (CB_FUNCALL (cb_build_funcall_1 ("cob_call_resolve", name)));
+	output_funcall (cb_build_funcall_1 ("cob_call_resolve", p->name));
       output (";\n");
       output_line ("if (func == NULL)");
       output_indent_level += 2;
-      output_stmt (st1);
+      output_stmt (p->stmt1);
       output_indent_level -= 2;
       output_line ("else");
       output_indent ("  {");
@@ -1312,7 +1342,7 @@ output_call (cb_tree name, cb_tree args, cb_tree st1, cb_tree st2)
 
   /* arguments */
   output (" (");
-  for (l = args, n = 1; l; l = CB_CHAIN (l), n++)
+  for (l = p->args, n = 1; l; l = CB_CHAIN (l), n++)
     {
       cb_tree x = CB_VALUE (l);
       switch (CB_PURPOSE_INT (l))
@@ -1354,64 +1384,11 @@ output_call (cb_tree name, cb_tree args, cb_tree st1, cb_tree st2)
 	output (", ");
     }
   output (");\n");
-  if (st2)
-    output_stmt (st2);
+  if (p->stmt2)
+    output_stmt (p->stmt2);
   if (dynamic_link)
     output_indent ("  }");
   output_indent ("}");
-}
-
-
-/*
- * Function call
- */
-
-static struct inline_func {
-  const char *name;
-  void (*func) ();
-} inline_table[] = {
-  {"@initialize", output_initialize},
-  {"@search", output_search},
-  {"@search-all", output_search_all},
-  {"@call", output_call},
-  {0, 0}
-};
-
-static void
-output_funcall (struct cb_funcall *p)
-{
-  if (p->name[0] == '@')
-    {
-      /* inline function */
-      int i;
-      for (i = 0; inline_table[i].name; i++)
-	if (strcmp (p->name, inline_table[i].name) == 0)
-	  {
-	    void (*func) () = inline_table[i].func;
-	    switch (p->argc)
-	      {
-	      case 0: func (); break;
-	      case 1: func (p->argv[0]); break;
-	      case 2: func (p->argv[0], p->argv[1]); break;
-	      case 3: func (p->argv[0], p->argv[1], p->argv[2]); break;
-	      case 4: func (p->argv[0], p->argv[1], p->argv[2], p->argv[3]); break;
-	      }
-	    break;
-	  }
-    }
-  else
-    {
-      /* regular function call */
-      int i;
-      output ("%s (", p->name);
-      for (i = 0; i < p->argc; i++)
-	{
-	  output_param (p->argv[i], i);
-	  if (i + 1 < p->argc)
-	    output (", ");
-	}
-      output (")");
-    }
 }
 
 
@@ -1636,7 +1613,7 @@ output_stmt (cb_tree x)
     case CB_TAG_FUNCALL:
       {
 	output_prefix ();
-	output_funcall (CB_FUNCALL (x));
+	output_funcall (x);
 	output (";\n");
 	break;
       }
@@ -1648,6 +1625,21 @@ output_stmt (cb_tree x)
 	output (" = ");
 	output_integer (p->val);
 	output (";\n");
+	break;
+      }
+    case CB_TAG_INITIALIZE:
+      {
+	output_initialize (CB_INITIALIZE (x));
+	break;
+      }
+    case CB_TAG_SEARCH:
+      {
+	output_search (CB_SEARCH (x));
+	break;
+      }
+    case CB_TAG_CALL:
+      {
+	output_call (CB_CALL (x));
 	break;
       }
     case CB_TAG_GOTO:
