@@ -289,12 +289,12 @@ output_refmod_offset (cobc_tree x)
 static void
 output_location (cobc_tree x)
 {
-  if (COBC_LITERAL_P (x))
+  switch (COBC_TREE_TAG (x))
     {
+    case cobc_tag_literal:
       output_quoted_string (COBC_LITERAL (x)->str, COBC_LITERAL (x)->size);
-    }
-  else
-    {
+      break;
+    default:
       output ("f_%s_data", COBC_FIELD (x)->cname);
       output_subscripts (x);
       if (COBC_REFMOD_P (x))
@@ -302,26 +302,37 @@ output_location (cobc_tree x)
 	  output (" + ");
 	  output_refmod_offset (x);
 	}
+      break;
     }
 }
 
 static void
 output_length (cobc_tree x)
 {
-  if (COBC_LITERAL_P (x))
-    output ("%d", COBC_LITERAL (x)->size);
-  else if (COBC_REFMOD_P (x))
+  switch (COBC_TREE_TAG (x))
     {
+    case cobc_tag_literal:
+      output ("%d", COBC_LITERAL (x)->size);
+      break;
+    case cobc_tag_refmod:
       if (COBC_REFMOD (x)->length)
-	output_index (COBC_REFMOD (x)->length);
+	{
+	  output ("%s (", cobc_index_func);
+	  output_index (COBC_REFMOD (x)->length);
+	  output (", %d - ", COBC_FIELD (x)->size);
+	  output_refmod_offset (x);
+	  output (") + 1");
+	}
       else
 	{
 	  output ("%d - ", COBC_FIELD (x)->size);
 	  output_refmod_offset (x);
 	}
+      break;
+    default:
+      output ("%d", COBC_FIELD (x)->size);
+      break;
     }
-  else
-    output ("%d", COBC_FIELD (x)->size);
 }
 
 
