@@ -208,7 +208,7 @@ static void
 print_usage (void)
 {
   printf ("Usage: %s [options] file...\n\n", program_name);
-  puts (_("General options:\n\
+  puts (_("Options:\n\
   --help                Display this message\n\
   --version             Display compiler version\n\
   --verbose, -v         Display the programs invoked by the compiler\n\
@@ -218,36 +218,21 @@ print_usage (void)
   -S                    Compile only; output assembly file\n\
   -c                    Compile and assemble, but do not link\n\
   -m                    Build a dynamic-linking module\n\
-  -O                    Enable optimization\n\
+  -O, -O2               Enable optimization\n\
   -g                    Produce debugging information in the output\n\
+  -debug                Enable all run-time error checking\n\
   -o <file>             Place the output into <file>\n\
   -I <directory>        Add copybook include path\n\
   -MT <target>          Set target file used in dependency list\n\
   -MF <file>            Place dependency list into <file>\n\
-"));
-  puts (_("COBOL standard:\n\
-  -std=<standard>       Specify the standard to use:\n\
-    gnu                   GNU COBOL (default)\n\
-    cobol85               COBOL 85\n\
-    cobol2002             COBOL 2002\n\
-    mvs                   IBM COBOL for MVS & VM\n\
-"));
-  puts (_("COBOL options:\n\
-  -free                 Use free source format\n\
-  -fixed                Use fixed source format\n\
-  -static               Use static link for subprogram calls if possible\n\
-  -dynamic              Use dynamic link for subprogram calls (default)\n\
-  -debug                Enable all run-time error check\n\
-  -column <n>           Set text area column to <n> (default: 72)\n\
-"));
-  puts (_("Warning options:\n\
-  -Wall                 Enable all warnings"));
+  -F <form>             Use free source format\n\
+\n\
+  -Wall                 Enable all warnings\n"));
 #undef CB_WARNING
 #define CB_WARNING(sig,var,name,doc)		\
   printf ("  -W%-19s %s\n", name, gettext (doc));
 #include "warning.def"
   puts ("");
-  puts (_("Flag options:"));
 #undef CB_FLAG
 #define CB_FLAG(var,name,doc)			\
   printf ("  -f%-19s %s\n", name, gettext (doc));
