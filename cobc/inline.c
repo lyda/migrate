@@ -79,6 +79,9 @@ output_goto_depending (struct cobc_list *labels, cobc_tree index)
  * MOVE
  */
 
+#define CATEGORY(x) \
+  (COBC_FIELD (x)->pic ? COBC_FIELD (x)->pic->category : COB_ALPHANUMERIC)
+
 static void
 output_advance_move (struct cob_field f, cobc_tree dst)
 {
@@ -139,7 +142,7 @@ output_move_all (cobc_tree x, char c)
 static void
 output_move_space (cobc_tree x)
 {
-  switch (COBC_FIELD (x)->category)
+  switch (CATEGORY (x))
     {
     case COB_NUMERIC:
     case COB_ALPHABETIC:
@@ -155,7 +158,7 @@ output_move_space (cobc_tree x)
 static void
 output_move_zero (cobc_tree x)
 {
-  switch (COBC_FIELD (x)->category)
+  switch (CATEGORY (x))
     {
     case COB_NUMERIC:
       if (COBC_FIELD (x)->f.blank_zero)
@@ -176,7 +179,7 @@ output_move_zero (cobc_tree x)
 static void
 output_move_high (cobc_tree x)
 {
-  switch (COBC_FIELD (x)->category)
+  switch (CATEGORY (x))
     {
     case COB_NUMERIC:
       output_move_num (x, 9);
@@ -194,7 +197,7 @@ output_move_high (cobc_tree x)
 static void
 output_move_low (cobc_tree x)
 {
-  switch (COBC_FIELD (x)->category)
+  switch (CATEGORY (x))
     {
     case COB_NUMERIC:
       output_move_num (x, 0);
@@ -212,7 +215,7 @@ output_move_low (cobc_tree x)
 static void
 output_move_quote (cobc_tree x)
 {
-  switch (COBC_FIELD (x)->category)
+  switch (CATEGORY (x))
     {
     case COB_NUMERIC:
     case COB_ALPHABETIC:
@@ -348,7 +351,7 @@ field_uniform_class (struct cobc_field *p)
     }
   else
     {
-      switch (p->category)
+      switch (p->pic->category)
 	{
 	case COB_NUMERIC:
 	  switch (p->usage)
@@ -400,7 +403,7 @@ output_initialize_uniform (cobc_tree x, int class, int size)
 static void
 output_initialize_compound (cobc_tree x)
 {
-  switch (COBC_FIELD (x)->category)
+  switch (CATEGORY (x))
     {
     case COB_NUMERIC_EDITED:
       output_move_zero (x);
@@ -484,7 +487,7 @@ output_initialize_replacing_internal (struct cobc_field *p)
 	  struct cobc_pair *pair = l->item;
 	  int category = (int) pair->x;
 	  cobc_tree text = pair->y;
-	  if (category == p->category)
+	  if (category == p->pic->category)
 	    {
 	      output_move (text, COBC_TREE (p));
 	      break;

@@ -132,8 +132,7 @@ static cobc_tree last_lefthand;
 static void register_predefined_name (cobc_tree *ptr, cobc_tree name);
 static void resolve_predefined_names (void);
 
-static void init_field (int level, cobc_tree field);
-static void validate_field (struct cobc_field *p);
+static struct cobc_field *init_field (int level, struct cobc_field *field);
 static void validate_field_tree (struct cobc_field *p);
 static void finalize_file_name (struct cobc_file_name *f, struct cobc_field *records);
 static void validate_label_name (struct cobc_label_name *p);
@@ -278,11 +277,7 @@ program:
     cob_currency_symbol = '$';
     /* init symbol table */
     init_word_table ();
-    {
-      cobc_tree rc = make_field_3 (lookup_user_word ("RETURN-CODE"),
-				   "S9(9)", COBC_USAGE_INDEX);
-      validate_field (COBC_FIELD (rc));
-    }
+    make_field_3 (lookup_user_word ("RETURN-CODE"), "S9(9)", COBC_USAGE_INDEX);
   }
   identification_division
   environment_division
@@ -948,11 +943,10 @@ field_description:
   level_number field_name
   {
     $2->loc = @2;
-    init_field ($1, $2);
+    current_field = init_field ($1, COBC_FIELD ($2));
   }
   field_options dot
   {
-    validate_field (current_field);
     $$ = COBC_TREE (current_field);
   }
 ;
@@ -1063,6 +1057,7 @@ occurs_clause:
   {
     current_field->occurs = $2;
     current_field->occurs_min = 1;
+    current_field->indexes++;
     current_field->f.have_occurs = 1;
   }
 | OCCURS integer TO integer _times DEPENDING _on predefined_name
@@ -1071,6 +1066,7 @@ occurs_clause:
     current_field->occurs = $4;
     current_field->occurs_min = $2;
     register_predefined_name (&current_field->occurs_depending, $8);
+    current_field->indexes++;
     current_field->f.have_occurs = 1;
   }
 ;
@@ -1127,7 +1123,6 @@ occurs_index:
   {
     cobc_location = @1;
     $$ = make_field_3 ($1, "S9(9)", COBC_USAGE_INDEX);
-    validate_field (COBC_FIELD ($$));
     program_spec.index_list = list_add (program_spec.index_list, $$);
   }
 ;
@@ -1257,10 +1252,12 @@ screen_description:
   level_number field_name
   {
     $2->loc = @2;
-    init_field ($1, $2);
+    current_field = init_field ($1, COBC_FIELD ($2));
     current_field->f.screen = 1;
     current_field->screen_flag |= COB_SCREEN_FG_NONE;
     current_field->screen_flag |= COB_SCREEN_BG_NONE;
+    if (current_field->parent)
+      current_field->screen_flag |= current_field->parent->screen_flag;
   }
   screen_options dot
   {
@@ -3489,7 +3486,7 @@ numeric_name:
 numeric_edited_name:
   data_name
   {
-    int category = COBC_FIELD ($1)->category;
+    int category = COBC_FIELD ($1)->pic->category;
     if (category != COB_NUMERIC && category != COB_NUMERIC_EDITED)
       yyerror_loc (&@1, _("`%s' not numeric or numeric edited"),
 		   tree_to_string ($1));
@@ -4063,23 +4060,21 @@ resolve_predefined_names (void)
     }
 }
 
-static void
-init_field (int level, cobc_tree field)
+static struct cobc_field *
+init_field (int level, struct cobc_field *field)
 {
   struct cobc_field *last_field = current_field;
   if (last_field && last_field->level == 88)
     last_field = last_field->parent;
 
-  current_field = COBC_FIELD (field);
-  current_field->level = level;
-  current_field->occurs = 1;
-  current_field->usage = COBC_USAGE_DISPLAY;
-  current_field->category = COB_ALPHANUMERIC;
+  field->level = level;
+  field->occurs = 1;
+  field->usage = COBC_USAGE_DISPLAY;
 
   if (level == 01 || level == 77)
     {
       if (last_field)
-	field_founder (last_field)->sister = current_field;
+	field_founder (last_field)->sister = field;
     }
   else if (!last_field)
     {
@@ -4092,19 +4087,19 @@ init_field (int level, cobc_tree field)
   else if (level == 66)
     {
       struct cobc_field *p;
-      current_field->parent = field_founder (last_field);
-      for (p = current_field->parent->children; p->sister; p = p->sister);
-      p->sister = current_field;
+      field->parent = field_founder (last_field);
+      for (p = field->parent->children; p->sister; p = p->sister);
+      p->sister = field;
     }
   else if (level == 88)
     {
-      current_field->parent = last_field;
+      field->parent = last_field;
     }
   else if (level > last_field->level)
     {
       /* lower level */
-      last_field->children = current_field;
-      current_field->parent = last_field;
+      last_field->children = field;
+      field->parent = last_field;
     }
   else if (level == last_field->level)
     {
@@ -4112,16 +4107,16 @@ init_field (int level, cobc_tree field)
     sister:
       /* ensure that there is no field with the same name
 	 in the same level */
-      if (current_field->word && current_field->word->count > 1)
+      if (field->word && field->word->count > 1)
 	{
 	  struct cobc_field *p = last_field->parent;
 	  for (p = p->children; p; p = p->sister)
-	    if (strcasecmp (current_field->word->name, p->word->name) == 0)
-	      redefinition_error (&COBC_TREE_LOC (current_field),
+	    if (strcasecmp (field->word->name, p->word->name) == 0)
+	      redefinition_error (&COBC_TREE_LOC (field),
 				  COBC_TREE (p));
 	}
-      last_field->sister = current_field;
-      current_field->parent = last_field->parent;
+      last_field->sister = field;
+      field->parent = last_field->parent;
     }
   else
     {
@@ -4137,62 +4132,62 @@ init_field (int level, cobc_tree field)
     }
 
   /* inherit parent's properties */
-  if (current_field->parent)
+  if (field->parent)
     {
-      current_field->usage = current_field->parent->usage;
-      current_field->f.sign_leading = current_field->parent->f.sign_leading;
-      current_field->f.sign_separate = current_field->parent->f.sign_separate;
-      current_field->f.in_redefines = current_field->parent->f.in_redefines;
-      current_field->screen_flag |= current_field->parent->screen_flag;
+      field->usage = field->parent->usage;
+      field->indexes = field->parent->indexes;
+      field->f.sign_leading = field->parent->f.sign_leading;
+      field->f.sign_separate = field->parent->f.sign_separate;
     }
+
+  return field;
 }
 
 static void
-validate_field (struct cobc_field *p)
+validate_field_tree (struct cobc_field *p)
 {
   cobc_tree x = COBC_TREE (p);
-  if (p->level == 88)
+
+  if (p->children)
+    {
+      /* group */
+      if (p->pic)
+	yyerror_tree (x, _("group name may not have PICTURE"));
+
+      if (p->f.justified)
+	yyerror_tree (x, _("group name may not have JUSTIFIED RIGHT"));
+
+      for (p = p->children; p; p = p->sister)
+	validate_field_tree (p);
+    }
+  else if (p->level == 66)
+    {
+    }
+  else if (p->level == 88)
     {
       /* conditional variable */
-      COBC_TREE_CLASS (p) = COB_BOOLEAN;
       if (p->pic)
-	yyerror_tree (x, _("level 88 field cannot have PICTURE"));
+	yyerror_tree (x, _("level 88 field may not have PICTURE"));
     }
   else
     {
-      /* validate REDEFINES */
-      if (p->redefines)
-	current_field->f.in_redefines = 1;
-
       /* validate PICTURE */
-      if (p->pic)
-	{
-	  /* determine the class */
-	  p->category = p->pic->category;
-	  switch (p->category)
-	    {
-	    case COB_ALPHABETIC:
-	      COBC_TREE_CLASS (p) = COB_ALPHABETIC;
-	      break;
-	    case COB_NUMERIC:
-	      COBC_TREE_CLASS (p) = COB_NUMERIC;
-	      break;
-	    case COB_NUMERIC_EDITED:
-	    case COB_ALPHANUMERIC:
-	    case COB_ALPHANUMERIC_EDITED:
-	      COBC_TREE_CLASS (p) = COB_ALPHANUMERIC;
-	      break;
-	    case COB_NATIONAL:
-	    case COB_NATIONAL_EDITED:
-	      COBC_TREE_CLASS (p) = COB_NATIONAL;
-	      break;
-	    case COB_BOOLEAN:
-	      COBC_TREE_CLASS (p) = COB_BOOLEAN;
-	      break;
-	    }
-	}
+      if (!p->pic)
+	if (p->usage != COBC_USAGE_INDEX)
+	  yyerror_tree (x, _("PICTURE required"));
 
       /* validate USAGE */
+      switch (p->usage)
+	{
+	case COBC_USAGE_DISPLAY:
+	  break;
+	case COBC_USAGE_BINARY:
+	  if (p->pic->category != COB_NUMERIC)
+	    yywarn (_("field must be numeric"));
+	  break;
+	case COBC_USAGE_INDEX:
+	  break;
+	}
 
       /* validate SIGN */
 
@@ -4204,7 +4199,7 @@ validate_field (struct cobc_field *p)
       /* validate JUSTIFIED RIGHT */
       if (p->f.justified)
 	{
-	  char c = p->category;
+	  char c = p->pic->category;
 	  if (!(c == 'A' || c == 'X' || c == 'N'))
 	    yyerror_tree (x, _("cannot have JUSTIFIED RIGHT"));
 	}
@@ -4219,6 +4214,12 @@ validate_field (struct cobc_field *p)
 
       /* validate BLANK ZERO */
 
+      /* validate REDEFINES */
+      if (p->parent)
+	p->f.in_redefines = p->parent->f.in_redefines;
+      if (p->redefines)
+	p->f.in_redefines = 1;
+
       /* validate VALUE */
       if (p->value)
 	{
@@ -4230,73 +4231,11 @@ validate_field (struct cobc_field *p)
 	    {
 	      /* just accept */
 	    }
-	  else if (COBC_TREE_CLASS (p) == COB_NUMERIC
-		   && COBC_TREE_CLASS (p->value) != COB_NUMERIC)
+	  else if (COBC_TREE_CLASS (p->value) == COB_NUMERIC)
 	    {
+	      if (p->pic->category != COB_NUMERIC)
+		yywarn_tree (x, _("VALUE should be non-numeric"));
 	    }
-	  else if (COBC_TREE_CLASS (p) != COB_NUMERIC
-		   && COBC_TREE_CLASS (p->value) == COB_NUMERIC)
-	    {
-	      yywarn_tree (x, _("VALUE should be non-numeric"));
-	    }
-	  else
-	    {
-	    }
-	}
-
-    }
-
-  /* count the number of indexes needed */
-  if (p->parent)
-    p->indexes = p->parent->indexes;
-  if (p->f.have_occurs)
-    p->indexes++;
-}
-
-static void
-validate_field_tree (struct cobc_field *p)
-{
-  if (p->children)
-    {
-      /* group */
-      COBC_TREE_CLASS (p) = COB_ALPHANUMERIC;
-
-      if (p->pic)
-	yyerror_tree (COBC_TREE (p),
-		      _("group name may not have PICTURE"));
-
-      if (p->f.justified)
-	yyerror_tree (COBC_TREE (p),
-		      _("group name may not have JUSTIFIED RIGHT"));
-
-      for (p = p->children; p; p = p->sister)
-	validate_field_tree (p);
-    }
-  else if (p->level == 66)
-    {
-    }
-  else
-    {
-      switch (p->usage)
-	{
-	case COBC_USAGE_DISPLAY:
-	  break;
-	case COBC_USAGE_BINARY:
-	  if (p->category != COB_NUMERIC)
-	    yywarn (_("field must be numeric"));
-	  break;
-	case COBC_USAGE_INDEX:
-	  COBC_TREE_CLASS (p) = COB_NUMERIC;
-	  if (!p->pic)
-	    p->pic = yylex_picture ("S9(9)");
-	  break;
-	}
-
-      if (!p->pic)
-	{
-	  if (p->usage != COBC_USAGE_INDEX)
-	    yyerror_tree (COBC_TREE (p), _("must have PICTURE"));
-	  p->pic = make_picture ();
 	}
     }
 }
@@ -4333,7 +4272,6 @@ finalize_file_name (struct cobc_file_name *f, struct cobc_field *records)
   sprintf (pic, "X(%d)", f->record_max);
   f->record = COBC_FIELD (make_field_3 (f->word, pic, COBC_USAGE_DISPLAY));
   field_set_used (f->record);
-  validate_field (f->record);
   f->record->sister = records;
   f->word->count--;
 

@@ -1,3 +1,9 @@
+2002-09-13  Keisuke Nishida  <knishida@netlab.jp>
+
+	* tree.h (cobc_field): Remove `category'.  Related files updated.
+	* tree.c (setup_parameters): Merge `validate_field' and `setup_cname'.
+	* parser.y (validate_field): Removed.
+
 2002-09-12  Keisuke Nishida  <knishida@netlab.jp>
 
 	* cobc.c (temp_name): Call GetTempFileName with 3rd argument 0.

@@ -251,7 +251,6 @@ struct cobc_field {
   int occurs;			/* OCCURS */
   int occurs_min;
   int indexes;			/* the number of parents who have OCCURS */
-  char category;		/* 9,A,X,E,N,M */
   char usage;			/* USAGE IS */
   char *cname;			/* the name used in C files */
   cobc_tree value;		/* VALUE */

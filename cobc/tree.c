@@ -470,8 +470,9 @@ to_cname (char *s)
 }
 
 static void
-setup_cname (struct cobc_field *p)
+setup_parameters (struct cobc_field *p)
 {
+  /* setup cname */
   if (p->word->count == 1)
     {
       /* there are no other field with the same name,
@@ -488,8 +489,55 @@ setup_cname (struct cobc_field *p)
       p->cname = to_cname (name);
     }
 
-  for (p = p->children; p; p = p->sister)
-    setup_cname (p);
+  /* determine the class */
+  if (p->children)
+    {
+      /* group field */
+      COBC_TREE_CLASS (p) = COB_ALPHANUMERIC;
+
+      for (p = p->children; p; p = p->sister)
+	setup_parameters (p);
+    }
+  else if (p->level == 66)
+    {
+      COBC_TREE_CLASS (p) = COBC_TREE_CLASS (p->redefines);
+    }
+  else if (p->level == 88)
+    {
+      /* conditional field */
+      COBC_TREE_CLASS (p) = COB_BOOLEAN;
+    }
+  else
+    {
+      /* regular field */
+      if (p->usage == COBC_USAGE_INDEX)
+	{
+	  COBC_TREE_CLASS (p) = COB_NUMERIC;
+	  p->pic = yylex_picture ("S9(9)");
+	}
+      else
+	switch (p->pic->category)
+	  {
+	  case COB_ALPHABETIC:
+	    COBC_TREE_CLASS (p) = COB_ALPHABETIC;
+	    break;
+	  case COB_NUMERIC:
+	    COBC_TREE_CLASS (p) = COB_NUMERIC;
+	    break;
+	  case COB_NUMERIC_EDITED:
+	  case COB_ALPHANUMERIC:
+	  case COB_ALPHANUMERIC_EDITED:
+	    COBC_TREE_CLASS (p) = COB_ALPHANUMERIC;
+	    break;
+	  case COB_NATIONAL:
+	  case COB_NATIONAL_EDITED:
+	    COBC_TREE_CLASS (p) = COB_NATIONAL;
+	    break;
+	  case COB_BOOLEAN:
+	    COBC_TREE_CLASS (p) = COB_BOOLEAN;
+	    break;
+	  }
+    }
 }
 
 static int
@@ -572,10 +620,10 @@ compute_size (struct cobc_field *p)
 void
 finalize_field_tree (struct cobc_field *p)
 {
-  setup_cname (p);
-  compute_size (p);
+  setup_parameters (p);
 
-  /* compute the memory size */
+  /* compute size */
+  compute_size (p);
   if (!p->redefines)
     p->memory_size = p->size;
   else if (p->redefines->memory_size < p->size)

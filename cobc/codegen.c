@@ -837,7 +837,7 @@ get_type (struct cobc_field *p)
     case COBC_USAGE_INDEX:
       return COB_BINARY;
     default:
-      return p->category;
+      return p->pic->category;
     }
 }
 
@@ -868,8 +868,8 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
 		  type, p->pic->digits, p->pic->decimals,
 		  p->pic->have_sign, p->f.sign_separate, p->f.sign_leading,
 		  p->f.blank_zero, p->f.justified);
-	  if (p->category == COB_NUMERIC_EDITED
-	      || p->category == COB_ALPHANUMERIC_EDITED)
+	  if (p->pic->category == COB_NUMERIC_EDITED
+	      || p->pic->category == COB_ALPHANUMERIC_EDITED)
 	    {
 	      char *s;
 	      output ("\"");
