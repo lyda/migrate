@@ -349,6 +349,27 @@ cb_fits_int (cb_tree x)
     }
 }
 
+int
+cb_get_int (cb_tree x)
+{
+  int i;
+  int val = 0;
+  struct cb_literal *l = CB_LITERAL (x);
+
+  for (i = 0; i < l->size; i++)
+    if (l->data[i] != '0')
+      break;
+
+  if (l->size - i >= 10)
+    ABORT ();
+
+  for (; i < l->size; i++)
+    val = val * 10 + l->data[i] - '0';
+  if (l->sign < 0)
+    val = -val;
+  return val;
+}
+
 
 /*
  * Constants
@@ -544,26 +565,6 @@ cb_tree
 cb_build_alphanumeric_literal (const unsigned char *data, size_t size)
 {
   return CB_TREE (build_literal (CB_CATEGORY_ALPHANUMERIC, data, size));
-}
-
-int
-cb_literal_to_int (struct cb_literal *l)
-{
-  int i;
-  int val = 0;
-
-  for (i = 0; i < l->size; i++)
-    if (l->data[i] != '0')
-      break;
-
-  if (l->size - i >= 10)
-    ABORT ();
-
-  for (; i < l->size; i++)
-    val = val * 10 + l->data[i] - '0';
-  if (l->sign < 0)
-    val = -val;
-  return val;
 }
 
 
@@ -900,14 +901,14 @@ cb_field_size (cb_tree x)
 	if (r->length)
 	  {
 	    if (CB_LITERAL_P (r->length))
-	      return cb_literal_to_int (CB_LITERAL (r->length));
+	      return cb_get_int (r->length);
 	    else
 	      return -1;
 	  }
 	else if (r->offset)
 	  {
 	    if (CB_LITERAL_P (r->offset))
-	      return f->size - cb_literal_to_int (CB_LITERAL (r->offset)) + 1;
+	      return f->size - cb_get_int (r->offset) + 1;
 	    else
 	      return -1;
 	  }

@@ -211,6 +211,7 @@ extern enum cb_class cb_tree_class (cb_tree x);
 extern enum cb_category cb_tree_category (cb_tree x);
 extern int cb_tree_type (cb_tree x);
 extern int cb_fits_int (cb_tree x);
+extern int cb_get_int (cb_tree x);
 
 
 /*
@@ -349,7 +350,6 @@ struct cb_literal {
 
 extern cb_tree cb_build_numeric_literal (int sign, const unsigned char *data, int scale);
 extern cb_tree cb_build_alphanumeric_literal (const unsigned char *data, size_t size);
-extern int cb_literal_to_int (struct cb_literal *l);
 
 
 /*
@@ -928,7 +928,6 @@ extern cb_tree cb_check_numeric_edited_name (cb_tree x);
 extern cb_tree cb_check_numeric_value (cb_tree x);
 extern cb_tree cb_check_integer_value (cb_tree x);
 
-extern int cb_get_int (cb_tree x);
 extern char *cb_encode_program_id (const char *name);
 extern const char *cb_build_program_id (cb_tree name, cb_tree alt_name);
 extern void cb_define_switch_name (cb_tree name, cb_tree sname, cb_tree flag, cb_tree ref);

@@ -519,7 +519,7 @@ output_integer (cb_tree x)
       output ("%d", CB_INTEGER (x)->val);
       break;
     case CB_TAG_LITERAL:
-      output ("%d", cb_literal_to_int (CB_LITERAL (x)));
+      output ("%d", cb_get_int (x));
       break;
     case CB_TAG_BINARY_OP:
       {
@@ -651,7 +651,7 @@ output_index (cb_tree x)
       output ("%d", CB_INTEGER (x)->val - 1);
       break;
     case CB_TAG_LITERAL:
-      output ("%d", cb_literal_to_int (CB_LITERAL (x)) - 1);
+      output ("%d", cb_get_int (x) - 1);
       break;
     default:
       output ("(");
@@ -1419,7 +1419,7 @@ output_call (struct cb_call *p)
 	    {
 	    case CB_TAG_LITERAL:
 	      if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC)
-		output ("%d", cb_literal_to_int (CB_LITERAL (x)));
+		output ("%d", cb_get_int (x));
 	      else
 		output ("%d", CB_LITERAL (x)->data[0]);
 	      break;
@@ -1899,7 +1899,7 @@ static int
 literal_value (cb_tree x)
 {
   if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC)
-    return cb_literal_to_int (CB_LITERAL (x)) - 1;
+    return cb_get_int (x) - 1;
   else
     return CB_LITERAL (x)->data[0];
 }

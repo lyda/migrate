@@ -138,12 +138,6 @@ cb_check_integer_value (cb_tree x)
 }
 
 
-int
-cb_get_int (cb_tree x)
-{
-  return cb_literal_to_int (CB_LITERAL (x));
-}
-
 char *
 cb_encode_program_id (const char *name)
 {
@@ -336,7 +330,7 @@ cb_build_identifier (cb_tree x)
 	    /* compile-time check */
 	    if (CB_LITERAL_P (sub))
 	      {
-		int n = cb_literal_to_int (CB_LITERAL (sub));
+		int n = cb_get_int (sub);
 		if (n < p->occurs_min || n > p->occurs_max)
 		  cb_error_x (x, _("subscript of `%s' out of bounds: %d"),
 			     name, n);
@@ -349,7 +343,7 @@ cb_build_identifier (cb_tree x)
 		  {
 		    int n = p->occurs_max;
 		    if (CB_LITERAL_P (sub))
-		      n = cb_literal_to_int (CB_LITERAL (sub));
+		      n = cb_get_int (sub);
 		    if (p->occurs_min <= n && n <= p->occurs_max)
 		      {
 			cb_tree e1, e2;
@@ -390,13 +384,13 @@ cb_build_identifier (cb_tree x)
       /* compile-time check */
       if (CB_LITERAL_P (r->offset))
 	{
-	  int offset = cb_literal_to_int (CB_LITERAL (r->offset));
+	  int offset = cb_get_int (r->offset);
 	  if (offset < 1 || offset > f->size)
 	    cb_error_x (x, _("offset of `%s' out of bounds: %d"),
 			name, offset);
 	  else if (r->length && CB_LITERAL_P (r->length))
 	    {
-	      int length = cb_literal_to_int (CB_LITERAL (r->length));
+	      int length = cb_get_int (r->length);
 	      if (length < 1 || length > f->size - offset + 1)
 		cb_error_x (x, _("length of `%s' out of bounds: %d"),
 			    name, length);
@@ -1161,7 +1155,7 @@ cb_build_cond (cb_tree x)
 	switch (p->op)
 	  {
 	  case '!':
-	    return cb_build_binary_op (cb_build_cond (p->x), '!', 0);
+	    return cb_build_negation (cb_build_cond (p->x));
 	  case '&': case '|':
 	    return cb_build_binary_op (cb_build_cond (p->x), p->op,
 				       cb_build_cond (p->y));
@@ -2319,7 +2313,7 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 	   && (f->usage == CB_USAGE_BINARY && !f->flag_binary_swap)
 	   && (f->size == 1 || f->size == 2 || f->size == 4 || f->size == 8))
     {
-      int val = cb_literal_to_int (l);
+      int val = cb_get_int (src);
       int n = f->pic->scale - l->scale;
       for (; n > 0; n--) val *= 10;
       for (; n < 0; n++) val /= 10;
@@ -2408,7 +2402,7 @@ cb_build_move (cb_tree src, cb_tree dst)
       /* convert "MOVE 0 TO X" into "MOVE ZERO TO X" */
       if (CB_NUMERIC_LITERAL_P (src)
 	  && cb_fits_int (src)
-	  && cb_literal_to_int (CB_LITERAL (src)) == 0)
+	  && cb_get_int (src) == 0)
 	src = cb_zero;
 
       /* no optimization for binary swap and packed decimal for now */
