@@ -30,6 +30,9 @@ CB_WARNING (2, cb_warn_archaic, "archaic",
 CB_WARNING (2, cb_warn_column_overflow, "column-overflow",
 	    N_("Warn any text after column 72"))
 
+CB_WARNING (2, cb_warn_redefinition, "redefinition",
+	    N_("Warn redefinition of data items"))
+
 CB_WARNING (2, cb_warn_constant, "constant",
 	    N_("Warn inconsistent constant"))
 

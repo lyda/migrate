@@ -1253,7 +1253,8 @@ output_call (struct cb_call *p)
   if (!dynamic_link)
     {
       /* static link */
-      output ("i_RETURN_CODE = %s", CB_LITERAL (p->name)->data);
+      output ("i_%s = %s", CB_FIELD (cb_return_code)->cname,
+	      CB_LITERAL (p->name)->data);
     }
   else
     {
@@ -1271,7 +1272,7 @@ output_call (struct cb_call *p)
       output_line ("else");
       output_indent ("  {");
       output_prefix ();
-      output ("i_RETURN_CODE = func");
+      output ("i_%s = func", CB_FIELD (cb_return_code)->cname);
     }
 
   /* arguments */
@@ -1482,6 +1483,7 @@ output_stmt (cb_tree x)
       {
 	static int last_line = 0;
 	struct cb_statement *p = CB_STATEMENT (x);
+	cb_tree l;
 
 	output_line ("/* %s */", p->name);
 	if (x->source_file && last_line != x->source_line)
@@ -1500,8 +1502,8 @@ output_stmt (cb_tree x)
 	    || (p->file && CB_EXCEPTION_ENABLE (COB_EC_I_O)))
 	  output_line ("cob_exception_code = 0;");
 
-	if (p->body)
-	  output_stmt (p->body);
+	for (l = p->body; l; l = CB_CHAIN (l))
+	  output_stmt (CB_VALUE (l));
 
 	if (p->handler1 || p->handler2
 	    || (p->file && CB_EXCEPTION_ENABLE (COB_EC_I_O)))
@@ -1999,7 +2001,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 
   output_line ("exit_program:");
   output_line ("cob_module_leave (&module);");
-  output_line ("return i_RETURN_CODE;");
+  output_line ("return i_%s;", CB_FIELD (cb_return_code)->cname);
   output_indent ("}");
   output_newline ();
 }

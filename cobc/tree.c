@@ -845,61 +845,77 @@ cb_build_constant (cb_tree name, cb_tree value)
   return x;
 }
 
-cb_tree
-cb_build_field (cb_tree lv, cb_tree name, struct cb_field *last_field,
-		enum cb_storage storage)
+static int
+get_level (cb_tree x)
 {
   const char *p;
-  struct cb_field *f;
-  struct cb_reference *r = CB_REFERENCE (name);
   int level = 0;
 
-  if (lv == cb_error_node || name == cb_error_node)
-    return cb_error_node;
+  if (x == cb_error_node)
+    return -1;
 
-  /* get level number */
-  for (p = CB_REFERENCE (lv)->word->name; *p; p++)
+  /* get level */
+  for (p = CB_NAME (x); *p; p++)
     {
       if (!isdigit (*p))
 	goto level_error;
       level = level * 10 + (*p - '0');
     }
+
+  /* check level */
   if (!((01 <= level && level <= 49)
 	|| (level == 66 || level == 77 || level == 88)))
     {
     level_error:
-      cb_error_x (lv, _("invalid level number `%s'"), cb_name (lv));
-      return cb_error_node;
+      cb_error_x (x, _("invalid level number `%s'"), CB_NAME (x));
+      return -1;
     }
 
-  /* checks for redefinition */
-  if (level == 01 || level == 77)
-    {
-      if (r->word->count > 0)
-	redefinition_warning (name);
-    }
-  else
-    {
-      cb_tree l;
-      for (l = r->word->items; l; l = CB_CHAIN (l))
-	{
-	  cb_tree x = CB_VALUE (l);
-	  if (!CB_FIELD_P (x)
-	      || CB_FIELD (x)->level == 01
-	      || CB_FIELD (x)->level == 77)
-	    {
-	      redefinition_warning (name);
-	      break;
-	    }
-	}
-    }
+  return level;
+}
+
+cb_tree
+cb_build_field (cb_tree level, cb_tree name, struct cb_field *last_field,
+		enum cb_storage storage)
+{
+  struct cb_reference *r;
+  struct cb_field *f;
+
+  if (get_level (level) == -1 || name == cb_error_node)
+    return cb_error_node;
 
   /* build the field */
+  r = CB_REFERENCE (name);
   f = CB_FIELD (make_field (name));
-  f->level = level;
+  f->level = get_level (level);
   f->usage = CB_USAGE_DISPLAY;
   f->occurs_max = 1;
   f->storage = storage;
+
+  /* checks for redefinition */
+  if (cb_warn_redefinition)
+    {
+      if (f->level == 01 || f->level == 77)
+	{
+	  if (r->word->count >= 2)
+	    redefinition_warning (name);
+	}
+      else
+	{
+	  cb_tree l;
+	  for (l = r->word->items; l; l = CB_CHAIN (l))
+	    {
+	      cb_tree x = CB_VALUE (l);
+	      if (!CB_FIELD_P (x)
+		  || CB_FIELD (x)->level == 01
+		  || CB_FIELD (x)->level == 77)
+		{
+		  redefinition_warning (name);
+		  break;
+		}
+	    }
+	}
+    }
 
   if (last_field && last_field->level == 88)
     last_field = last_field->parent;
@@ -937,16 +953,19 @@ cb_build_field (cb_tree lv, cb_tree name, struct cb_field *last_field,
   else if (f->level == last_field->level)
     {
       /* same level */
-      struct cb_field *p;
     sister:
-      /* ensure that there is no field with the same name
-	 in the same level */
-      for (p = last_field->parent->children; p; p = p->sister)
-	if (strcasecmp (f->name, p->name) == 0)
-	  {
-	    redefinition_warning (name);
-	    break;
-	  }
+      if (cb_warn_redefinition)
+	{
+	  /* ensure that there is no field with the same name
+	     in the same level */
+	  struct cb_field *p;
+	  for (p = last_field->parent->children; p; p = p->sister)
+	    if (strcasecmp (f->name, p->name) == 0)
+	      {
+		redefinition_warning (name);
+		break;
+	      }
+	}
       last_field->sister = f;
       f->parent = last_field->parent;
     }
@@ -1201,11 +1220,11 @@ validate_field_1 (struct cb_field *f)
 static void
 setup_parameters (struct cb_field *f)
 {
+  static int id = 0;
+
   /* setup cname */
-  char name[CB_MAX_CNAME] = "";
-  if (f->parent)
-    sprintf (name, "%s$", f->parent->cname);
-  strcat (name, f->name);
+  char name[CB_MAX_CNAME];
+  sprintf (name, "%s_%d", f->name, id++);
   f->cname = to_cname (name);
 
   /* determine the class */
