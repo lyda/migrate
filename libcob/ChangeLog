@@ -1,3 +1,8 @@
+2002-11-21  Keisuke Nishida  <knishida@netlab.jp>
+
+	* numeric.c (cob_add, cob_add_int, cob_add_int64): Init cob_status.
+	* numeric.c (cob_sub, cob_sub_int, cob_sub_int64): Init cob_status.
+
 2002-11-19  Keisuke Nishida  <knishida@netlab.jp>
 
 	* fileio.c (lineseq_read): Not do anything special with '\0'.

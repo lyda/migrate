@@ -412,6 +412,7 @@ decimal_get (struct cob_decimal *d, struct cob_field f, int round)
 void
 cob_add (struct cob_field f1, struct cob_field f2, int round)
 {
+  cob_status = 0;
   cob_decimal_set_field (cob_d1, f1);
   cob_decimal_set_field (cob_d2, f2);
   cob_decimal_add (cob_d1, cob_d2);
@@ -421,6 +422,7 @@ cob_add (struct cob_field f1, struct cob_field f2, int round)
 void
 cob_add_int (struct cob_field f, int n, int decimals, int round)
 {
+  cob_status = 0;
   cob_decimal_set_field (cob_d1, f);
   cob_decimal_set_int (cob_d2, n, decimals);
   cob_decimal_add (cob_d1, cob_d2);
@@ -430,6 +432,7 @@ cob_add_int (struct cob_field f, int n, int decimals, int round)
 void
 cob_add_int64 (struct cob_field f, long long n, int decimals, int round)
 {
+  cob_status = 0;
   cob_decimal_set_field (cob_d1, f);
   cob_decimal_set_int64 (cob_d2, n, decimals);
   cob_decimal_add (cob_d1, cob_d2);
@@ -439,6 +442,7 @@ cob_add_int64 (struct cob_field f, long long n, int decimals, int round)
 void
 cob_sub (struct cob_field f1, struct cob_field f2, int round)
 {
+  cob_status = 0;
   cob_decimal_set_field (cob_d1, f1);
   cob_decimal_set_field (cob_d2, f2);
   cob_decimal_sub (cob_d1, cob_d2);
@@ -448,6 +452,7 @@ cob_sub (struct cob_field f1, struct cob_field f2, int round)
 void
 cob_sub_int (struct cob_field f, int n, int decimals, int round)
 {
+  cob_status = 0;
   cob_decimal_set_field (cob_d1, f);
   cob_decimal_set_int (cob_d2, n, decimals);
   cob_decimal_sub (cob_d1, cob_d2);
@@ -457,6 +462,7 @@ cob_sub_int (struct cob_field f, int n, int decimals, int round)
 void
 cob_sub_int64 (struct cob_field f, long long n, int decimals, int round)
 {
+  cob_status = 0;
   cob_decimal_set_field (cob_d1, f);
   cob_decimal_set_int64 (cob_d2, n, decimals);
   cob_decimal_sub (cob_d1, cob_d2);
@@ -467,6 +473,7 @@ void
 cob_div_quotient (struct cob_field dividend, struct cob_field divisor,
 		  struct cob_field quotient, int round)
 {
+  cob_status = 0;
   cob_decimal_set_field (cob_d1, dividend);
   cob_decimal_set_field (cob_d2, divisor);
   cob_decimal_set (cob_d3, cob_d1);
