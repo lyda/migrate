@@ -158,7 +158,7 @@ This produces lots of redundant code and should be improved.
 
 ** Reimplement CALL statement
 
-** Build RETURN-CODE as a binary item, not in index
+** Build RETURN-CODE as a binary item, not an index
 
 ** Using fcntl instead of flock for file locking
 
