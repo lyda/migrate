@@ -3092,6 +3092,12 @@ expr_1:
 		if (COBC_TREE_CLASS (stack[i-1].value) != COB_TYPE_BOOLEAN)
 		  stack[i-1].value =
 		    make_binary_op (last_lefthand, last_operator, stack[i-1].value);
+		if (token == '|'
+		    && ((COBC_BINARY_OP_P (stack[i-3].value)
+			 && COBC_BINARY_OP (stack[i-3].value)->op == '&')
+			|| (COBC_BINARY_OP_P (stack[i-1].value)
+			    && COBC_BINARY_OP (stack[i-1].value)->op == '&')))
+		  yywarn ("suggest parentheses around AND within OR");
 		stack[i-3].token = VALUE;
 		stack[i-3].value =
 		  make_binary_op (stack[i-3].value, token, stack[i-1].value);
@@ -3324,7 +3330,7 @@ expr_item_list:
 ;
 expr_item:
   value				{ $$ = $1; }
-| '(' expr_1 ')'		{ $$ = $2; }
+| '(' expr_1 ')'		{ $$ = make_parenthesize ($2); }
 /* arithmetic operator */
 | '+'				{ $$ = make_integer ('+'); }
 | '-'				{ $$ = make_integer ('-'); }
@@ -4398,15 +4404,22 @@ decimal_expand (cobc_tree s, cobc_tree d, cobc_tree x)
       }
     case cobc_tag_binary_op:
       {
-	/* set d, X
-	 * set t, Y
-	 * OP d, t */
 	struct cobc_binary_op *p = COBC_BINARY_OP (x);
-	cobc_tree t = decimal_alloc ();
-	decimal_expand (s, d, p->x);
-	decimal_expand (s, t, p->y);
-	decimal_compute (s, p->op, d, t);
-	decimal_free ();
+	if (p->op == '@')
+	  {
+	    decimal_expand (s, d, p->x);
+	  }
+	else
+	  {
+	    /* set d, X
+	     * set t, Y
+	     * OP d, t */
+	    cobc_tree t = decimal_alloc ();
+	    decimal_expand (s, d, p->x);
+	    decimal_expand (s, t, p->y);
+	    decimal_compute (s, p->op, d, t);
+	    decimal_free ();
+	  }
 	break;
       }
     default:
@@ -4671,6 +4684,8 @@ build_cond (cobc_tree x)
 	struct cobc_binary_op *p = COBC_BINARY_OP (x);
 	switch (p->op)
 	  {
+	  case '@':
+	    return build_cond (p->x);
 	  case '!':
 	    p->x = build_cond (p->x);
 	    break;

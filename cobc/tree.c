@@ -242,7 +242,13 @@ tree_name_1 (char *s, cobc_tree x)
     case cobc_tag_binary_op:
       {
 	struct cobc_binary_op *p = COBC_BINARY_OP (x);
-	if (p->op == '!')
+	if (p->op == '@')
+	  {
+	    s += sprintf (s, "(");
+	    s += tree_name_1 (s, p->x);
+	    s += sprintf (s, ")");
+	  }
+	else if (p->op == '!')
 	  {
 	    s += sprintf (s, "!");
 	    s += tree_name_1 (s, p->x);
@@ -832,6 +838,11 @@ make_binary_op (cobc_tree left, char op, cobc_tree right)
       if (COBC_TREE_CLASS (left) != COB_TYPE_BOOLEAN
 	  || (right && COBC_TREE_CLASS (right) != COB_TYPE_BOOLEAN))
 	goto invalid;
+      break;
+
+    case '@':
+      /* parentheses */
+      COBC_TREE_CLASS (p) = COBC_TREE_CLASS (left);
       break;
 
     default:

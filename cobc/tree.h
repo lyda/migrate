@@ -395,6 +395,7 @@ extern cobc_tree make_filler (void);
   '['	x <= y
   ']'	x >= y
   '~'	x != y
+  '@'	( x )
   '!'	not x
   '&'	x and y
   '|'	x or y
@@ -410,6 +411,7 @@ struct cobc_binary_op {
 #define COBC_BINARY_OP(x)	(COBC_TREE_CAST (cobc_tag_binary_op, struct cobc_binary_op, x))
 #define COBC_BINARY_OP_P(x)	(COBC_TREE_TAG (x) == cobc_tag_binary_op)
 
+#define make_parenthesize(x)	make_binary_op (x, '@', 0)
 #define make_negative(x)	make_binary_op (x, '!', 0)
 
 extern cobc_tree make_binary_op (cobc_tree x, char op, cobc_tree y);
