@@ -84,6 +84,7 @@ extern unsigned char cob_currency_symbol;
 /* operation status */
 
 extern int cob_status;
+extern int cob_return_code;
 
 #define COB_STATUS_SUCCESS	0
 #define COB_STATUS_OVERFLOW	1
@@ -95,8 +96,6 @@ extern struct cob_field cob_space;
 extern struct cob_field cob_high;
 extern struct cob_field cob_low;
 extern struct cob_field cob_quote;
-extern struct cob_field cob_return_code;
-extern int cob_return_code_value;
 extern char cob_switch[];
 
 extern long cob_exp10[10];

@@ -39,6 +39,9 @@ struct cob_frame {
  if (frame_stack[frame_index].perform_through == label)	\
    goto *frame_stack[frame_index].return_address
 
+#define cob_exit_program()				\
+  return cob_return_code;
+
 #define cob_standard_error_handle(lbl,f)				\
   if (f.open_mode == COB_OPEN_INPUT)					\
     {									\
@@ -71,7 +74,5 @@ struct cob_frame {
 #define COB_INDEX_DEPENDING(i,min,max,dep) ((i) - 1)
 
 #define cob_cmp(x,y) ((x) - (y))
-
-#define cob_exit_program() goto l_exit;
 
 #endif /* COB_SUPPORT_H_ */

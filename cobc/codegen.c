@@ -1679,8 +1679,7 @@ codegen (struct program_spec *spec)
   /* fields */
   output ("/* Fields */\n\n");
   output ("#define i_SWITCH      cob_switch\n");
-  output ("#define f_RETURN_CODE cob_return_code\n");
-  output ("#define i_RETURN_CODE cob_return_code_value\n\n");
+  output ("#define i_RETURN_CODE cob_return_code\n\n");
   for (p = spec->working_storage; p; p = p->sister)
     output_field_definition (p, p, 0);
   for (p = spec->linkage_storage; p; p = p->sister)
@@ -1806,7 +1805,6 @@ codegen (struct program_spec *spec)
     output_tree (l->item);
   output_newline ();
 
-  output_line ("l_exit:");
-  output_line ("return i_RETURN_CODE;");
+  output_line ("return cob_return_code;");
   output_indent ("}", -2);
 }

@@ -274,7 +274,7 @@ program:
     init_word_table ();
     {
       cobc_tree rc = make_field_3 (lookup_user_word ("RETURN-CODE"),
-				   "S9(9)", COBC_USAGE_BINARY);
+				   "S9(9)", COBC_USAGE_INDEX);
       validate_field (COBC_FIELD (rc));
       finalize_field_tree (COBC_FIELD (rc));
     }
