@@ -27,7 +27,7 @@ ST124A.SUB      7    7    0       0       0 OK
 ST125A.CBL      1    1    0       0       0 OK
 ST126A.SUB     18   18    0       0       0 OK
 ST127A.CBL     27   19    8       0       0 
-ST131A.CBL     15    9    6       0       0 
+ST131A.CBL     15    8    7       0       0 
 ST132A.CBL      6    6    0       0       0 OK
 ST133A.CBL     18   18    0       0       0 OK
 ST134A.CBL      4    4    0       0       0 OK
@@ -41,8 +41,8 @@ ST146A.CBL      4    4    0       0       0 OK
 ST147A.CBL     26   26    0       0       0 OK
 ST301M.CBL    ----- test skipped -----
 --------    ----- ---- ---- ------- -------
-Total         278  261   17       0       0
-%           100.0 93.9  6.1     0.0     0.0
+Total         278  260   18       0       0
+%           100.0 93.5  6.5     0.0     0.0
 
 Number of programs:    39
 Successfully executed: 36 (92.31%)
