@@ -519,7 +519,7 @@ output_initialize_replacing (cobc_tree x, struct cobc_list *l)
  */
 
 static void
-output_generic_1 (char *name, cobc_tree x, struct cobc_list *list)
+output_generic (char *name, cobc_tree x, struct cobc_list *list)
 {
   output_prefix ();
   output ("%s (", name);
@@ -527,9 +527,9 @@ output_generic_1 (char *name, cobc_tree x, struct cobc_list *list)
   for (; list; list = list->next)
     {
       struct cobc_generic *p = list->item;
-      /* parameters */
       output (", %d", p->type);
       if (p->x) { output (", "); output_tree (p->x); }
+      if (p->y) { output (", "); output_tree (p->y); }
     }
   output (", 0);\n");
 }
@@ -537,7 +537,7 @@ output_generic_1 (char *name, cobc_tree x, struct cobc_list *list)
 static void
 output_string (cobc_tree x, struct cobc_list *l)
 {
-  output_generic_1 ("cob_string", x, l);
+  output_generic ("cob_string", x, l);
 }
 
 
@@ -548,7 +548,7 @@ output_string (cobc_tree x, struct cobc_list *l)
 static void
 output_unstring (cobc_tree x, struct cobc_list *l)
 {
-  output_generic_1 ("cob_unstring", x, l);
+  output_generic ("cob_unstring", x, l);
 }
 
 
@@ -557,28 +557,9 @@ output_unstring (cobc_tree x, struct cobc_list *l)
  */
 
 static void
-output_inspect (cobc_tree x, struct cobc_list *list)
+output_inspect (cobc_tree x, struct cobc_list *l)
 {
-  output_prefix ();
-  output ("cob_inspect (");
-  output_tree (x);
-  for (; list; list = list->next)
-    {
-      struct cobc_list *l;
-      struct cobc_generic *p = list->item;
-      /* BEFORE/AFTER */
-      for (l = p->l; l; l = l->next)
-	{
-	  struct cobc_generic *p = l->item;
-	  output (", %d", p->type);
-	  if (p->x) { output (", "); output_tree (p->x); }
-	}
-      /* parameters */
-      output (", %d", p->type);
-      if (p->x) { output (", "); output_tree (p->x); }
-      if (p->y) { output (", "); output_tree (p->y); }
-    }
-  output (", 0);\n");
+  output_generic ("cob_inspect", x, l);
 }
 
 

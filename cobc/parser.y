@@ -97,7 +97,8 @@
 #define push_status_handler(val,st1,st2) \
   push_tree (make_if (make_cond (cobc_status, COBC_COND_EQ, val), st1, st2))
 
-#define inspect_push(x) inspect_list = list_add (inspect_list, (x))
+#define inspect_push(tag,a1,a2) \
+  inspect_list = list_add (inspect_list, make_generic (tag, a1, a2, 0))
 
 struct program_spec program_spec;
 
@@ -187,7 +188,6 @@ static void ambiguous_error (struct cobc_word *w);
 %token COMMON,NEXT,PACKED_DECIMAL,INPUT,I_O,OUTPUT,EXTEND,BINARY
 %token ALPHANUMERIC,ALPHANUMERIC_EDITED,NUMERIC_EDITED,NATIONAL,NATIONAL_EDITED
 
-%type <gene> inspect_before_after
 %type <gene> call_item,write_option
 %type <inum> flag_all,flag_duplicates,flag_optional,flag_global
 %type <inum> flag_not,flag_next,flag_rounded,flag_separate
@@ -201,7 +201,6 @@ static void ambiguous_error (struct cobc_word *w);
 %type <list> evaluate_when_list,evaluate_object_list
 %type <list> label_list,subscript_list,number_list
 %type <list> string_list,string_delimited_list,string_name_list
-%type <list> inspect_before_after_list
 %type <list> unstring_delimited,unstring_delimited_list,unstring_into
 %type <list> unstring_delimited_item,unstring_into_item
 %type <list> predefined_name_list,qualified_predefined_word,mnemonic_name_list
@@ -1885,7 +1884,11 @@ inspect_statement:
 /* INSPECT TALLYING */
 
 inspect_tallying:
-  TALLYING			{ inspect_list = NULL; }
+  TALLYING
+  {
+    inspect_list = NULL;
+    //inspect_push (COB_INSPECT_TALLYING, 0, 0);
+  }
   tallying_list
   {
     cobc_location = @1;
@@ -1905,7 +1908,7 @@ tallying_item:
 | CHARACTERS inspect_before_after_list
   {
     inspect_mode = 0;
-    inspect_push (make_generic (COB_INSPECT_CHARACTERS, inspect_name, 0, $2))
+    inspect_push (COB_INSPECT_CHARACTERS, inspect_name, 0)
   }
 | ALL
   {
@@ -1920,19 +1923,21 @@ tallying_item:
     if (inspect_mode == 0)
       yyerror ("ALL or LEADING expected");
     else
-      inspect_push (make_generic (inspect_mode, inspect_name, $1, $2));
+      inspect_push (inspect_mode, inspect_name, $1);
   }
 ;
 
 /* INSPECT REPLACING */
 
 inspect_replacing:
-  REPLACING			{ inspect_list = NULL; }
+  REPLACING
+  {
+    inspect_list = NULL;
+    inspect_push (COB_INSPECT_REPLACING, 0, 0);
+  }
   replacing_list
   {
     cobc_location = @1;
-    inspect_list = cons (make_generic (COB_INSPECT_REPLACING, 0, 0, 0),
-			 inspect_list);
     push_call_2 (COBC_INSPECT, $<tree>0, inspect_list);
   }
 ;
@@ -1943,29 +1948,33 @@ replacing_list:
 replacing_item:
   CHARACTERS BY value inspect_before_after_list
   {
-    inspect_push (make_generic (COB_INSPECT_CHARACTERS, $3, 0, $4));
+    inspect_push (COB_INSPECT_CHARACTERS, $3, 0);
   }
 | ALL value BY value inspect_before_after_list
   {
-    inspect_push (make_generic (COB_INSPECT_ALL, $4, $2, $5));
+    inspect_push (COB_INSPECT_ALL, $4, $2);
   }
 | LEADING value BY value inspect_before_after_list
   {
-    inspect_push (make_generic (COB_INSPECT_LEADING, $4, $2, $5));
+    inspect_push (COB_INSPECT_LEADING, $4, $2);
   }
 | FIRST value BY value inspect_before_after_list
   {
-    inspect_push (make_generic (COB_INSPECT_FIRST, $4, $2, $5));
+    inspect_push (COB_INSPECT_FIRST, $4, $2);
   }
 ;
 
 /* INSPECT CONVERTING */
 
 inspect_converting:
-  CONVERTING value TO value inspect_before_after_list
+  CONVERTING
+  {
+    inspect_list = NULL;
+  }
+  value TO value inspect_before_after_list
   {
     cobc_location = @1;
-    inspect_list = list (make_generic (COB_INSPECT_CONVERTING, $2, $4, $5));
+    inspect_push (COB_INSPECT_CONVERTING, $3, $5);
     push_call_2 (COBC_INSPECT, $<tree>0, inspect_list);
   }
 ;
@@ -1975,21 +1984,17 @@ inspect_converting:
 inspect_before_after_list:
   /* nothing */
   {
-    $$ = list (make_generic (COB_INSPECT_INIT, 0, 0, 0));
+    inspect_push (COB_INSPECT_INIT, 0, 0);
   }
-| inspect_before_after_list inspect_before_after
-  {
-    $$ = list_add ($1, $2);
-  }
-;
-inspect_before_after:
+| inspect_before_after_list
   BEFORE _initial value
   {
-    $$ = make_generic (COB_INSPECT_BEFORE, $3, 0, 0);
+    inspect_push (COB_INSPECT_BEFORE, $4, 0);
   }
-| AFTER _initial value
+| inspect_before_after_list
+  AFTER _initial value
   {
-    $$ = make_generic (COB_INSPECT_AFTER, $3, 0, 0);
+    inspect_push (COB_INSPECT_AFTER, $4, 0);
   }
 ;
 _initial: | TOK_INITIAL ;
