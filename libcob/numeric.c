@@ -28,6 +28,14 @@
 #include "move.h"
 #include "numeric.h"
 
+#define DECIMAL_NAN	-128
+#define DECIMAL_CHECK(d1,d2) \
+  if (d1->expt == DECIMAL_NAN || d2->expt == DECIMAL_NAN) \
+    { \
+      d1->expt = DECIMAL_NAN; \
+      return; \
+    }
+
 static cob_decimal cob_d1;
 static cob_decimal cob_d2;
 static cob_decimal cob_d3;
@@ -75,6 +83,9 @@ cob_decimal_print (cob_decimal *d)
 static void
 shift_decimal (cob_decimal *d, int n)
 {
+  if (d->expt == DECIMAL_NAN)
+    return;
+
   if (n > 0)
     {
       if (n < 10)
@@ -194,8 +205,10 @@ cob_decimal_set_field (cob_decimal *d, cob_field *f)
 void
 cob_decimal_get (cob_decimal *d, cob_field *f)
 {
-  if (cob_error_code)
-    return;
+  if (d->expt == DECIMAL_NAN)
+    goto overflow;
+
+  cob_error_code = 0;
 
   /* work copy */
   if (d != &cob_d1)
@@ -346,6 +359,7 @@ cob_decimal_get_double (cob_decimal *d)
 void
 cob_decimal_add (cob_decimal *d1, cob_decimal *d2)
 {
+  DECIMAL_CHECK (d1, d2);
   arrange_decimal (d1, d2);
   mpz_add (d1->data, d1->data, d2->data);
 }
@@ -353,6 +367,7 @@ cob_decimal_add (cob_decimal *d1, cob_decimal *d2)
 void
 cob_decimal_sub (cob_decimal *d1, cob_decimal *d2)
 {
+  DECIMAL_CHECK (d1, d2);
   arrange_decimal (d1, d2);
   mpz_sub (d1->data, d1->data, d2->data);
 }
@@ -360,6 +375,7 @@ cob_decimal_sub (cob_decimal *d1, cob_decimal *d2)
 void
 cob_decimal_mul (cob_decimal *d1, cob_decimal *d2)
 {
+  DECIMAL_CHECK (d1, d2);
   d1->expt += d2->expt;
   mpz_mul (d1->data, d1->data, d2->data);
 }
@@ -367,10 +383,12 @@ cob_decimal_mul (cob_decimal *d1, cob_decimal *d2)
 void
 cob_decimal_div (cob_decimal *d1, cob_decimal *d2)
 {
+  DECIMAL_CHECK (d1, d2);
+
   /* check for division by zero */
   if (mpz_sgn (d2->data) == 0)
     {
-      cob_error_code = COB_EC_SIZE_ZERO_DIVIDE;
+      d1->expt = DECIMAL_NAN;
       return;
     }
 
@@ -382,6 +400,8 @@ cob_decimal_div (cob_decimal *d1, cob_decimal *d2)
 void
 cob_decimal_pow (cob_decimal *d1, cob_decimal *d2)
 {
+  DECIMAL_CHECK (d1, d2);
+
   if (d2->expt == 0 && mpz_fits_ulong_p (d2->data))
     {
       unsigned int n = mpz_get_ui (d2->data);
@@ -410,7 +430,6 @@ cob_decimal_cmp (cob_decimal *d1, cob_decimal *d2)
 void
 cob_add (cob_field *f1, cob_field *f2)
 {
-  cob_error_code = 0;
   cob_decimal_set_field (&cob_d1, f1);
   cob_decimal_set_field (&cob_d2, f2);
   cob_decimal_add (&cob_d1, &cob_d2);
@@ -420,7 +439,6 @@ cob_add (cob_field *f1, cob_field *f2)
 void
 cob_sub (cob_field *f1, cob_field *f2)
 {
-  cob_error_code = 0;
   cob_decimal_set_field (&cob_d1, f1);
   cob_decimal_set_field (&cob_d2, f2);
   cob_decimal_sub (&cob_d1, &cob_d2);
@@ -430,7 +448,6 @@ cob_sub (cob_field *f1, cob_field *f2)
 void
 cob_add_r (cob_field *f1, cob_field *f2)
 {
-  cob_error_code = 0;
   cob_decimal_set_field (&cob_d1, f1);
   cob_decimal_set_field (&cob_d2, f2);
   cob_decimal_add (&cob_d1, &cob_d2);
@@ -440,7 +457,6 @@ cob_add_r (cob_field *f1, cob_field *f2)
 void
 cob_sub_r (cob_field *f1, cob_field *f2)
 {
-  cob_error_code = 0;
   cob_decimal_set_field (&cob_d1, f1);
   cob_decimal_set_field (&cob_d2, f2);
   cob_decimal_sub (&cob_d1, &cob_d2);
@@ -450,7 +466,6 @@ cob_sub_r (cob_field *f1, cob_field *f2)
 void
 cob_add_int (cob_field *f, int n)
 {
-  cob_error_code = 0;
   cob_decimal_set_field (&cob_d1, f);
   cob_decimal_set_int (&cob_d2, n, 0);
   cob_decimal_add (&cob_d1, &cob_d2);
@@ -460,7 +475,6 @@ cob_add_int (cob_field *f, int n)
 void
 cob_sub_int (cob_field *f, int n)
 {
-  cob_error_code = 0;
   cob_decimal_set_field (&cob_d1, f);
   cob_decimal_set_int (&cob_d2, n, 0);
   cob_decimal_sub (&cob_d1, &cob_d2);
@@ -471,7 +485,6 @@ void
 cob_div_quotient (cob_field *dividend, cob_field *divisor,
 		  cob_field *quotient, int round)
 {
-  cob_error_code = 0;
   cob_decimal_set_field (&cob_d1, dividend);
   cob_decimal_set_field (&cob_d2, divisor);
   cob_decimal_set (&cob_d3, &cob_d1);
