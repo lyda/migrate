@@ -122,6 +122,8 @@ static void validate_field_tree (struct cobc_field *p);
 static void validate_file_name (struct cobc_file_name *p);
 static void validate_label_name (struct cobc_label_name *p);
 
+static int builtin_switch_id (cobc_tree x);
+
 static cobc_tree make_add (cobc_tree f1, cobc_tree f2, int round);
 static cobc_tree make_sub (cobc_tree f1, cobc_tree f2, int round);
 static cobc_tree make_move (cobc_tree f1, cobc_tree f2, int round);
@@ -209,7 +211,7 @@ static void ambiguous_error (struct cobc_word *p);
 %type <list> tallying_list,replacing_list,inspect_before_after_list
 %type <list> unstring_delimited,unstring_delimited_list,unstring_into
 %type <list> unstring_delimited_item,unstring_into_item
-%type <list> predefined_name_list
+%type <list> predefined_name_list,mnemonic_name_list
 %type <list> file_name_list,math_name_list,math_edited_name_list
 %type <list> call_item_list,call_using
 %type <list> initialize_replacing,initialize_replacing_list
@@ -274,9 +276,8 @@ program:
     /* init symbol table */
     init_word_table ();
     {
-      cobc_tree rc = make_field (lookup_user_word ("RETURN-CODE"));
-      COBC_FIELD (rc)->pic = yylex_picture ("S9(9)");
-      COBC_FIELD (rc)->usage = USAGE_BINARY;
+      cobc_tree rc = make_field_3 (lookup_user_word ("RETURN-CODE"),
+				   "S9(9)", USAGE_BINARY);
       validate_field (COBC_FIELD (rc));
       finalize_field_tree (COBC_FIELD (rc));
     }
@@ -448,23 +449,16 @@ special_name_mnemonic_on_off:
 | special_name_mnemonic_on_off
   on_or_off _status _is undefined_word
   {
-    struct cobc_field *p = COBC_FIELD (make_field ($5));
-    p->level = 88;
-#if 0
-    cobc_tree x = $<tree>-1;
-    if (COBC_BUILTIN_SWITCH_P (x))
+    int id = builtin_switch_id ($<tree>-1);
+    if (id != -1)
       {
 	struct cobc_field *p = COBC_FIELD (make_field ($5));
 	p->level = 88;
-	p->parent = cobc_switch[0];
+	p->parent = COBC_FIELD (cobc_switch[id]);
 	p->value = $2;
 	p->values = list (p->value);
+	break;
       }
-    else
-      {
-	yyerror ("`%s' not switch name", $<word>-2->name);
-      }
-#endif
   }
 ;
 on_or_off:
@@ -2145,17 +2139,22 @@ set_statement:
       }
   }
 | SET set_on_off_list
-  {
-    yywarn ("SET ON/OFF is not implemented");
-  }
 ;
 set_on_off_list:
   set_on_off
 | set_on_off_list set_on_off
 ;
 set_on_off:
-  mnemonic_name_list TO ON
-| mnemonic_name_list TO OFF
+  mnemonic_name_list TO on_or_off
+  {
+    struct cobc_list *l;
+    for (l = $1; l; l = l->next)
+      {
+	int id = builtin_switch_id (l->item);
+	if (id != -1)
+	  push_move ($3, cobc_switch[id]);
+      }
+  }
 ;
 
 
@@ -2304,7 +2303,7 @@ unstring_delimited:
 ;
 unstring_delimited_list:
   unstring_delimited_item	{ $$ = $1; }
-| unstring_delimited_list OR 
+| unstring_delimited_list OR
   unstring_delimited_item	{ $$ = list_append ($1, $3); }
 ;
 unstring_delimited_item:
@@ -2814,8 +2813,9 @@ level_number:
 /* Mnemonic name */
 
 mnemonic_name_list:
-  mnemonic_name { }
-| mnemonic_name_list mnemonic_name { }
+  mnemonic_name			{ $$ = list ($1); }
+| mnemonic_name_list
+  mnemonic_name			{ $$ = list_add ($1, $2); }
 ;
 mnemonic_name:
   MNEMONIC_NAME
@@ -3313,7 +3313,6 @@ validate_field (struct cobc_field *p)
 	    }
 	  else
 	    {
-	      
 	    }
 	}
 
@@ -3433,6 +3432,27 @@ validate_label_name (struct cobc_label_name *p)
 	p->cname = lookup_label (p->word, p->section);
       else
 	yyerror ("no such section `%s'", p->word->name);
+    }
+}
+
+static int
+builtin_switch_id (cobc_tree x)
+{
+  int id = COBC_BUILTIN (x)->id;
+  switch (id)
+    {
+    case BUILTIN_SWITCH_1:
+    case BUILTIN_SWITCH_2:
+    case BUILTIN_SWITCH_3:
+    case BUILTIN_SWITCH_4:
+    case BUILTIN_SWITCH_5:
+    case BUILTIN_SWITCH_6:
+    case BUILTIN_SWITCH_7:
+    case BUILTIN_SWITCH_8:
+      return id - BUILTIN_SWITCH_1;
+    default:
+      yyerror ("not switch name");
+      return -1;
     }
 }
 

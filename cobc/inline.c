@@ -115,24 +115,6 @@ output_move_all (cobc_tree x, char c)
 }
 
 static void
-output_move_zero (cobc_tree x)
-{
-  switch (COBC_FIELD (x)->category)
-    {
-    case COB_NUMERIC:
-      output_move_num (x, 0);
-      break;
-    case COB_ALPHABETIC:
-    case COB_ALPHANUMERIC:
-      output_memset (x, '0', COBC_FIELD (x)->size);
-      break;
-    default:
-      output_move_all (x, '0');
-      break;
-    }
-}
-
-static void
 output_move_space (cobc_tree x)
 {
   switch (COBC_FIELD (x)->category)
@@ -144,6 +126,27 @@ output_move_space (cobc_tree x)
       break;
     default:
       output_move_all (x, ' ');
+      break;
+    }
+}
+
+static void
+output_move_zero (cobc_tree x)
+{
+  switch (COBC_FIELD (x)->category)
+    {
+    case COB_NUMERIC:
+      if (COBC_FIELD (x)->f.blank_zero)
+	output_move_space (x);
+      else
+	output_move_num (x, 0);
+      break;
+    case COB_ALPHABETIC:
+    case COB_ALPHANUMERIC:
+      output_memset (x, '0', COBC_FIELD (x)->size);
+      break;
+    default:
+      output_move_all (x, '0');
       break;
     }
 }
@@ -274,6 +277,14 @@ output_move (cobc_tree src, cobc_tree dst)
 	output_move_all_literal (src, dst);
       else
 	output_move_literal (src, dst);
+    }
+  else if (src == cobc_true || src == cobc_false)
+    {
+      output_prefix ();
+      output_index (dst);
+      output (" = ");
+      output_index (src);
+      output (";\n");
     }
   else
     {

@@ -221,9 +221,9 @@ extern struct cob_field cob_space;
 extern struct cob_field cob_high;
 extern struct cob_field cob_low;
 extern struct cob_field cob_quote;
-extern struct cob_field cob_switch[];
 extern struct cob_field cob_return_code;
 extern int cob_return_code_value;
+extern char cob_switch[];
 
 /* functional macros */
 

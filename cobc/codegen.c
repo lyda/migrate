@@ -588,7 +588,8 @@ output_compare (cobc_tree s1, int op, cobc_tree s2)
 {
   output ("(");
 
-  if (COBC_INDEX_NAME_P (s1) || COBC_INDEX_NAME_P (s2) || s1 == cobc_status)
+  if (COBC_INDEX_NAME_P (s1) || COBC_INDEX_NAME_P (s2)
+      || s1 == cobc_status || s2 == cobc_true || s2 == cobc_false)
     {
       output_func_2 ("cob_cmp", make_index (s1), make_index (s2));
     }
@@ -601,7 +602,7 @@ output_compare (cobc_tree s1, int op, cobc_tree s2)
       output_line ("cob_decimal_cmp (cob_d1, cob_d2);");
       output_indent ("})", -2);
     }
-  else if (COBC_CONST_P (s1) || COBC_CONST_P (s2))
+  else if (COBC_CONST_P (s1) || (COBC_CONST_P (s2) && s2 != cobc_param))
     {
       /* non-numeric figurative comparison */
       unsigned char c, *neg;
@@ -639,11 +640,7 @@ output_compare (cobc_tree s1, int op, cobc_tree s2)
   else
     {
       /* non-numeric comparison */
-      output ("cob_str_cmp (");
-      output_tree (s1);
-      output (", ");
-      output_tree (s2);
-      output (")");
+      output_func_2 ("cob_str_cmp", s1, s2);
     }
 
   switch (op)
@@ -1511,6 +1508,7 @@ codegen (struct program_spec *spec)
 
   /* fields */
   output ("/* Fields */\n\n");
+  output ("#define i_SWITCH      cob_switch\n");
   output ("#define f_RETURN_CODE cob_return_code\n");
   output ("#define i_RETURN_CODE cob_return_code_value\n\n");
   for (p = spec->working_storage; p; p = p->sister)

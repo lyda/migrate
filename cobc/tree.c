@@ -25,6 +25,7 @@
 #include <ctype.h>
 
 #include "tree.h"
+#include "scanner.h"
 #include "libcob.h"
 
 
@@ -293,14 +294,14 @@ init_constants (void)
   cobc_low       = make_constant (COB_ALPHANUMERIC, "cob_low");
   cobc_high      = make_constant (COB_ALPHANUMERIC, "cob_high");
   cobc_quote     = make_constant (COB_ALPHANUMERIC, "cob_quote");
-  cobc_switch[0] = make_constant (COB_BOOLEAN, "cob_switch[0]");
-  cobc_switch[1] = make_constant (COB_BOOLEAN, "cob_switch[1]");
-  cobc_switch[2] = make_constant (COB_BOOLEAN, "cob_switch[2]");
-  cobc_switch[3] = make_constant (COB_BOOLEAN, "cob_switch[3]");
-  cobc_switch[4] = make_constant (COB_BOOLEAN, "cob_switch[4]");
-  cobc_switch[5] = make_constant (COB_BOOLEAN, "cob_switch[5]");
-  cobc_switch[6] = make_constant (COB_BOOLEAN, "cob_switch[6]");
-  cobc_switch[7] = make_constant (COB_BOOLEAN, "cob_switch[7]");
+  cobc_switch[0] = make_field_3 (make_word ("switch[0]"), "S9", USAGE_BINARY);
+  cobc_switch[1] = make_field_3 (make_word ("switch[1]"), "S9", USAGE_BINARY);
+  cobc_switch[2] = make_field_3 (make_word ("switch[2]"), "S9", USAGE_BINARY);
+  cobc_switch[3] = make_field_3 (make_word ("switch[3]"), "S9", USAGE_BINARY);
+  cobc_switch[4] = make_field_3 (make_word ("switch[4]"), "S9", USAGE_BINARY);
+  cobc_switch[5] = make_field_3 (make_word ("switch[5]"), "S9", USAGE_BINARY);
+  cobc_switch[6] = make_field_3 (make_word ("switch[6]"), "S9", USAGE_BINARY);
+  cobc_switch[7] = make_field_3 (make_word ("switch[7]"), "S9", USAGE_BINARY);
   cobc_int0      = make_integer (0);
   cobc_int1      = make_integer (1);
 }
@@ -430,6 +431,16 @@ make_field (struct cobc_word *word)
   p->f.used = 0;
   p->f.referenced = 0;
   return COBC_TREE (p);
+}
+
+cobc_tree
+make_field_3 (struct cobc_word *word, char *pic, int usage)
+{
+  cobc_tree x = make_field (word);
+  COBC_FIELD (x)->pic = yylex_picture (pic);
+  COBC_FIELD (x)->usage = usage;
+  finalize_field_tree (COBC_FIELD (x));
+  return x;
 }
 
 cobc_tree

@@ -294,6 +294,7 @@ struct cobc_field {
   (COBC_FIELD_P (x) && COBC_FIELD (x)->usage == USAGE_INDEX)
 
 extern cobc_tree make_field (struct cobc_word *word);
+extern cobc_tree make_field_3 (struct cobc_word *word, char *pic, int usage);
 extern cobc_tree make_filler (void);
 extern struct cobc_field *field_founder (struct cobc_field *p);
 extern int field_used_any_parent (struct cobc_field *p);
