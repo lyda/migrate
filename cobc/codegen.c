@@ -583,21 +583,7 @@ gen_subscripted (cob_tree ref)
   for (ls = SUBREF_SUBS (ref); ls; ls = ls->next)
     {
       cob_tree x = ls->tree;
-      if (!EXPR_P (x))
-	value_to_eax (x);
-      else
-	{
-	  value_to_eax (EXPR_LEFT (x));
-	  output ("\tpushl\t%%eax\n");
-	  do {
-	    cob_tree r = EXPR_RIGHT (x);
-	    value_to_eax (EXPR_P (r) ? EXPR_LEFT (r) : r);
-	    output ("\t%sl\t%%eax,0(%%esp)\n",
-		     (EXPR_OP (x) == '+') ? "add" : "sub");
-	    x = r;
-	  } while (EXPR_P (x));
-	  output ("\tpopl\t%%eax\n");
-	}
+      value_to_eax (x);
       output ("\tdecl\t%%eax\n");	/* subscript start at 1 */
 
       /* find the first parent var that needs subscripting */
@@ -786,92 +772,115 @@ gen_loadvar (cob_tree sy)
 }
 
 static void
-value_to_eax (cob_tree sy)
+value_to_eax (cob_tree x)
 {
-  long long value;
-  long value2;
-  int stack_save;
   char *s;
+
 #ifdef COB_DEBUG
   output ("# value_to_eax: ");
-  print_tree (sy, o_src);
+  print_tree (x, o_src);
   fputs ("\n", o_src);
 #endif
-  if (sy == NULL)
+
+  if (x == NULL)
     {
       output ("\txorl\t%%eax,%%eax\n");
       return;
     }
-  if (!SYMBOL_P (sy))
+
+  /* Subscript */
+  if (EXPR_P (x))
+    {
+      value_to_eax (EXPR_LEFT (x));
+      output ("\tpushl\t%%eax\n");
+      do {
+	cob_tree r = EXPR_RIGHT (x);
+	value_to_eax (EXPR_P (r) ? EXPR_LEFT (r) : r);
+	output ("\t%s\t%%eax,0(%%esp)\n",
+		(EXPR_OP (x) == '+') ? "addl" : "subl");
+	x = r;
+      } while (EXPR_P (x));
+      output ("\tpopl\t%%eax\n");
+      return;
+    }
+
+  /* Literal */
+  if (!SYMBOL_P (x))
     {
       /* if it's an integer, compute it now, not at runtime! */
-      value = 0;
+      long long value = 0;
+      long value2;
       /* integer's name is just it's value in ascii */
-      s = COB_FIELD_NAME (sy);
+      s = COB_FIELD_NAME (x);
       while (*s)
 	value = value * 10 + *s++ - '0';
       output ("#bef val\n");
       output ("\tmovl\t$%d,%%eax\n", (int) value);
       if ((value2 = value >> 32) != 0)
 	output ("\tmovl\t$%d,%%edx\n", (int) value2);
+      return;
     }
-  else if (COB_FIELD_TYPE (sy) == 'B' || COB_FIELD_TYPE (sy) == 'U')
+
+  /* Binary variable */
+  if (COB_FIELD_TYPE (x) == 'B' || COB_FIELD_TYPE (x) == 'U')
     {
       /* load binary (comp) value directly */
       /* %eax doesn't hold greater than 4 bytes binary types
          so we use %edx to get the most significant part */
-      if (symlen (sy) > 4)
+      if (symlen (x) > 4)
 	{
-	  output ("\tmovl\t%s+4, %%edx\n", memref (sy));
-	  output ("\tmovl\t%s, %%eax\n", memref (sy));
+	  output ("\tmovl\t%s+4, %%edx\n", memref (x));
+	  output ("\tmovl\t%s, %%eax\n", memref (x));
 	}
       else
 	{
-	  if (symlen (sy) >= 4)
+	  if (symlen (x) >= 4)
 	    {
-	      switch (sy->sec_no)
+	      switch (x->sec_no)
 		{
 		case SEC_CONST:
 		  output ("\tmovl\tc_base%d+%d, %%eax\n",
-			   pgm_segment, sy->location);
+			   pgm_segment, x->location);
 		  break;
 		case SEC_DATA:
 		  output ("\tmovl\tw_base%d+%d, %%eax\n",
-			   pgm_segment, sy->location);
+			   pgm_segment, x->location);
 		  break;
 		case SEC_STACK:
 		  output ("\tmovl\t-%d(%%ebp), %%eax\n",
-			   sy->location);
+			   x->location);
 		  break;
 		}
 	    }
 	  else
 	    {
-	      switch (sy->sec_no)
+	      switch (x->sec_no)
 		{
 		case SEC_CONST:
 		  output ("\tmovs%cl\tc_base%d+%d, %%eax\n",
-			   varsize_ch (sy), pgm_segment, sy->location);
+			   varsize_ch (x), pgm_segment, x->location);
 		  break;
 		case SEC_DATA:
 		  output ("\tmovs%cl\tw_base%d+%d, %%eax\n",
-			   varsize_ch (sy), pgm_segment, sy->location);
+			   varsize_ch (x), pgm_segment, x->location);
 		  break;
 		case SEC_STACK:
 		  output ("\tmovs%cl\t-%d(%%ebp), %%eax\n",
-			   varsize_ch (sy), sy->location);
+			   varsize_ch (x), x->location);
 		  break;
 		}
 	    }
 	}
+      return;
     }
-  else
-    {
-      stack_save = stackframe_cnt;
-      stackframe_cnt = 0;
-      asm_call_1 ("get_index", sy);
-      stackframe_cnt = stack_save;
-    }
+
+  /* Other variable */
+  {
+    int stack_save = stackframe_cnt;
+    stackframe_cnt = 0;
+    asm_call_1 ("get_index", x);
+    stackframe_cnt = stack_save;
+  }
 }
 
 /* store variable pointer in eax to sy.

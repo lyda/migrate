@@ -151,7 +151,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <str> idstring
 %type <tree> field_description,label,filename,noallname,paragraph,assign_clause
 %type <tree> file_description,redefines_var,function_call,subscript
-%type <tree> name,gname,number,file,level1,opt_gname,opt_def_name,def_name
+%type <tree> name,gname,number,file,level1,opt_def_name,def_name
 %type <tree> opt_read_into,opt_write_from,field_name,expr
 %type <tree> opt_unstring_count,opt_unstring_delim,unstring_tallying
 %type <tree> qualified_var,unqualified_var
@@ -2733,10 +2733,6 @@ level1:
 idstring:
   { start_condition = START_ID; } IDSTRING { $$ = $2; }
 ;
-opt_gname:
-  /* nothing */			{ $$ = NULL; }
-| gname				{ $$ = $1; }
-;
 gname:
   name
 | gliteral
@@ -2828,11 +2824,9 @@ filename:
 ;
 name:
   variable
-| variable '(' gname ':' opt_gname ')'
-  {
-    $$ = make_substring($1, $3, $5);
-  }
-  ;
+| variable '(' subscript ':' ')'	   { $$ = make_substring ($1, $3, 0); }
+| variable '(' subscript ':' subscript ')' { $$ = make_substring ($1, $3, $5); }
+;
 variable:
   subscripted_variable
 | qualified_var
