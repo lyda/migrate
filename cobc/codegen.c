@@ -309,20 +309,20 @@ clear_offsets ()
 static cob_tree
 save_special_literal (char *val, char picc, char *nick)
 {
-  cob_tree p = install_literal (nick);
-  struct lit *lit = LITERAL (p);
-  if (lit->type)
+  cob_tree lit = install_literal (nick);
+  struct lit *p = LITERAL (lit);
+  if (p->type)
     return NULL;		/* already saved */
-  lit->type = picc;
-  lit->nick = val;
-  lit->all = 1;
-  save_field_in_list (p);
-  lit->location = literal_offset;
-  lit->sec_no = SEC_CONST;
+  p->type = picc;
+  p->nick = val;
+  p->all = 1;
+  save_field_in_list (lit);
+  p->location = literal_offset;
+  p->sec_no = SEC_CONST;
   literal_offset += 2;		/* we have only 1-char special literals */
-  lit->descriptor = literal_offset;
+  p->descriptor = literal_offset;
   literal_offset += 14;
-  return p;
+  return lit;
 }
 
 static void
@@ -1041,18 +1041,18 @@ gen_init_value (cob_tree x, int var_len)
   int len, start_len;
   char *s;
   char pad;
-  struct lit *sy = LITERAL (x);
+  struct lit *p = LITERAL (x);
 
-  if (sy->nick)
+  if (p->nick)
     {
-      s = sy->nick;
+      s = p->nick;
       len = 1;
-      pad = sy->nick[0];
+      pad = p->nick[0];
     }
   else
     {
-      s = sy->name;
-      len = sy->len;
+      s = p->name;
+      len = p->len;
       pad = ' ';
     }
   if (len > var_len)
@@ -1189,11 +1189,11 @@ get_init_symbol (char type)
   switch (type)
     {
     case '9': case 'C':
-      return (cob_tree) spe_lit_ZE;
+      return spe_lit_ZE;
     case 'B':
-      return (cob_tree) spe_lit_LV;
+      return spe_lit_LV;
     default:
-      return (cob_tree) spe_lit_SP;
+      return spe_lit_SP;
     }
 }
 
@@ -1218,7 +1218,7 @@ initialize_values_1 (cob_tree sy, unsigned int loc)
 	      {
 		unsigned saved_loc = sy->location;
 		sy->location = loc;
-		gen_move ((cob_tree) sy->value, sy);
+		gen_move (sy->value, sy);
 		sy->location = saved_loc;
 	      }
 	    loc += symlen (sy);
@@ -1255,7 +1255,7 @@ initialize_values (void)
 	    if (v->level == 77 || (v->level == 1 && v->son == NULL))
 	      {
 		if (v->value)
-		  gen_move ((cob_tree) v->value, v);
+		  gen_move (v->value, v);
 		continue;
 	      }
 	    init_ctype = ' ';
@@ -1473,7 +1473,6 @@ void
 proc_trail (int using)
 {
   int i;
-  struct lit *v;
   struct list *list;
   cob_tree sy;
   /*char s[9]; */
@@ -1568,7 +1567,7 @@ proc_trail (int using)
 	{
 	  /***** it is a literal *****/
 	  int len, tmplen;
-	  v = (struct lit *) list->var;
+	  struct lit *v = LITERAL (list->var);
 	  len = v->nick ? 1 : v->len;
 #ifdef COB_DEBUG
 	  fprintf (o_src,
@@ -1764,14 +1763,13 @@ put_disp_list (cob_tree sy)
 }
 
 int
-symlen (cob_tree sy)
+symlen (cob_tree x)
 {
-  /*int plen; */
-  if (sy->type == 'C')
-    return sy->len / 2 + 1;
-  else if (LITERAL_P (sy))
-    return ((struct lit *) sy)->len;
-  return sy->len;
+  if (x->type == 'C')
+    return x->len / 2 + 1;
+  else if (LITERAL_P (x))
+    return LITERAL (x)->len;
+  return x->len;
 }
 
 int
@@ -3063,53 +3061,6 @@ adjust_desc_length (cob_tree sy)
   asm_call ("cob_adjust_length");
   stackframe_cnt = stack_save;
   need_desc_length_cleanup = 1;
-}
-
-static void
-gen_pushval (cob_tree sy)
-{
-  unsigned offset;
-  cob_tree var;
-
-#ifdef COB_DEBUG
-  fprintf (o_src, "#gen_pushval\n");
-#endif
-  if (SUBREF_P (sy))
-    {
-      gen_subscripted ((struct subref *) sy);
-      var = SUBREF_SYM (sy);
-      if (var->linkage_flg)
-	{
-	  cob_tree tmp = var;
-	  while (tmp->linkage_flg == 1)
-	    tmp = tmp->parent;
-	  offset = var->location - tmp->location;
-	  if (symlen (var) >= 4)
-	    fprintf (o_src, "\tmovl %d(%%ebp), %%ebx\n", tmp->linkage_flg);
-	  else
-	    fprintf (o_src, "\tmovs%cl %d(%%ebp), %%ebx\n",
-		     varsize_ch (var), tmp->linkage_flg);
-	  if (offset)
-	    fprintf (o_src, "\taddl\t$%d, %%ebx\n", offset);
-	  fprintf (o_src, "\taddl\t%%eax, %%ebx\n");
-	  push_ebx ();
-	}
-      else
-	{
-	  fprintf (o_src, "\tleal\t-%d(%%ebp), %%ebx\n", var->location);
-	  fprintf (o_src, "\taddl\t%%ebx,%%eax\n");
-	  push_at_eax (var);
-	}
-    }
-  else if (SYMBOL_P (sy))
-    {
-      load_address (sy);
-      push_at_eax (sy);
-    }
-  else
-    {
-      value_to_eax(sy);
-    }
 }
 
 void
@@ -5615,22 +5566,69 @@ gen_save_using (cob_tree sy)
   using_offset += 4;
 }
 
+static void
+gen_pushval (cob_tree sy)
+{
+  unsigned offset;
+  cob_tree var;
+
+#ifdef COB_DEBUG
+  fprintf (o_src, "#gen_pushval\n");
+#endif
+  if (SUBREF_P (sy))
+    {
+      gen_subscripted ((struct subref *) sy);
+      var = SUBREF_SYM (sy);
+      if (var->linkage_flg)
+	{
+	  cob_tree tmp = var;
+	  while (tmp->linkage_flg == 1)
+	    tmp = tmp->parent;
+	  offset = var->location - tmp->location;
+	  if (symlen (var) >= 4)
+	    fprintf (o_src, "\tmovl %d(%%ebp), %%ebx\n", tmp->linkage_flg);
+	  else
+	    fprintf (o_src, "\tmovs%cl %d(%%ebp), %%ebx\n",
+		     varsize_ch (var), tmp->linkage_flg);
+	  if (offset)
+	    fprintf (o_src, "\taddl\t$%d, %%ebx\n", offset);
+	  fprintf (o_src, "\taddl\t%%eax, %%ebx\n");
+	  push_ebx ();
+	}
+      else
+	{
+	  fprintf (o_src, "\tleal\t-%d(%%ebp), %%ebx\n", var->location);
+	  fprintf (o_src, "\taddl\t%%ebx,%%eax\n");
+	  push_at_eax (var);
+	}
+    }
+  else if (SYMBOL_P (sy))
+    {
+      load_address (sy);
+      push_at_eax (sy);
+    }
+  else
+    {
+      value_to_eax(sy);
+      if (symlen (sy) > 4)
+	push_edx ();
+      push_eax ();
+    }
+}
 
 unsigned long int
 gen_call (cob_tree v, int exceplabel, int notexceplabel)
 {
-  struct parm_list *list, *tmp;
-  cob_tree cp;
-  struct lit *lp;
+  struct parm_list *list;
   int len, totlen = 0;
   int saved_stack_offset = stack_offset;
   int stack_save;
   int endlabel;
 
-	/******** prepare all parameters which are passed by content ********/
+  /******** prepare all parameters which are passed by content ********/
   for (list = parameter_list; list != NULL; list = list->next)
     {
-      cp = (cob_tree) list->var;
+      cob_tree cp = (cob_tree) list->var;
       if (!LITERAL_P (cp))
 	{
 	  if (cp->call_mode == CM_CONT)
@@ -5649,50 +5647,28 @@ gen_call (cob_tree v, int exceplabel, int notexceplabel)
 	    }
 	}
     }
-	/******** get the parameters from the parameter list ********/
-  for (list = parameter_list; list != NULL;)
+
+  /******** get the parameters from the parameter list ********/
+  for (list = parameter_list; list != NULL; list = list->next)
     {
-      cp = (cob_tree) list->var;
-      if (LITERAL_P (cp))
-	{
-	  lp = (struct lit *) cp;
+      cob_tree p = (cob_tree) list->var;
+      int mode = (LITERAL_P (p) ? LITERAL (p)->call_mode : p->call_mode);
 #ifdef COB_DEBUG
-	  fprintf (o_src, "#call %s by %d\n", lp->name, lp->call_mode);
+      fprintf (o_src, "#parm %s by %d\n", FIELD_NAME (p), mode);
 #endif
-	  if (lp->call_mode == CM_REF)
-	    gen_loadloc ((cob_tree) list->var);
-	  else if (lp->call_mode == CM_VAL)
-	    {
-	      value_to_eax (cp);
-	      if (symlen (cp) > 4)
-		push_edx ();
-	      push_eax ();
-	    }
-	  else
-	    abort ();
-	}
-      else
+      switch (mode)
 	{
-#ifdef COB_DEBUG
-	  fprintf (o_src, "### CALL %s BY %d\n", cp->name, cp->call_mode);
-#endif
-	  switch (cp->call_mode)
-	    {
-	    case CM_REF:
-	      gen_loadloc ((cob_tree) list->var);
-	      break;
-	    case CM_VAL:
-	      gen_pushval ((cob_tree) list->var);
-	      break;
-	    case CM_CONT:
-	      fprintf (o_src, "\tleal\t-%d(%%ebp), %%eax\n", list->location);
-	      push_eax ();
-	      break;
-	    }
+	case CM_REF:
+	  gen_loadloc ((cob_tree) list->var);
+	  break;
+	case CM_VAL:
+	  gen_pushval ((cob_tree) list->var);
+	  break;
+	case CM_CONT:
+	  fprintf (o_src, "\tleal\t-%d(%%ebp), %%eax\n", list->location);
+	  push_eax ();
+	  break;
 	}
-      tmp = list;
-      list = list->next;
-      free (tmp);
     }
   parameter_list = NULL;
   if (cob_link_style == LINK_STATIC && LITERAL_P (v))
@@ -5706,7 +5682,7 @@ gen_call (cob_tree v, int exceplabel, int notexceplabel)
       /* dynamic call */
       stack_save = stackframe_cnt;
       stackframe_cnt = 0;
-      asm_call_1 ("cob_dyncall_resolve", (cob_tree) v);
+      asm_call_1 ("cob_dyncall_resolve", v);
       stackframe_cnt = stack_save;
       fprintf (o_src, "\tand\t%%eax,%%eax\n");
       fprintf (o_src, "\tjz\t.L%d\n", exceplabel);
