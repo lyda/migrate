@@ -379,11 +379,13 @@ output_attr (cb_tree x)
 	      {
 		char flags = 0;
 		if (f->pic->have_sign)
-		  flags |= COB_FLAG_HAVE_SIGN;
-		if (f->flag_sign_separate)
-		  flags |= COB_FLAG_SIGN_SEPARATE;
-		if (f->flag_sign_leading)
-		  flags |= COB_FLAG_SIGN_LEADING;
+		  {
+		    flags |= COB_FLAG_HAVE_SIGN;
+		    if (f->flag_sign_separate)
+		      flags |= COB_FLAG_SIGN_SEPARATE;
+		    if (f->flag_sign_leading)
+		      flags |= COB_FLAG_SIGN_LEADING;
+		  }
 		if (f->flag_blank_zero)
 		  flags |= COB_FLAG_BLANK_ZERO;
 		if (f->flag_justified)

@@ -1336,6 +1336,7 @@ compute_size (struct cb_field *f)
 	  {
 	    f->size = f->pic->size;
 	    if (f->pic->category == CB_CATEGORY_NUMERIC
+		&& f->pic->have_sign
 		&& f->flag_sign_separate)
 	      f->size++;
 	    break;
