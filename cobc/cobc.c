@@ -18,6 +18,7 @@
  */
 
 #include "config.h"
+#include "defaults.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,7 +33,6 @@
 #include "gettext.h"
 #include "codegen.h"
 #include "reserved.h"
-#include "defaults.h"
 
 /* from parser.c */
 extern int yyparse (void);

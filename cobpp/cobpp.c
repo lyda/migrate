@@ -18,6 +18,7 @@
  */
 
 #include "config.h"
+#include "defaults.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +30,6 @@
 #include "scanner.h"
 #include "getopt.h"
 #include "gettext.h"
-#include "defaults.h"
 
 extern int yyparse (void);
 
