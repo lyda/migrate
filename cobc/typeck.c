@@ -868,6 +868,25 @@ cb_expr_shift_sign (char op)
     }
 }
 
+static void
+expr_expand (cb_tree *x)
+{
+ start:
+  /* remove parenthesis */
+  if (CB_BINARY_OP_P (*x))
+    {
+      struct cb_binary_op *p = CB_BINARY_OP (*x);
+      if (p->op == '@')
+	{
+	  *x = p->x;
+	  goto start;
+	}
+      expr_expand (&p->x);
+      if (p->y)
+	expr_expand (&p->y);
+    }
+}
+
 cb_tree
 cb_expr_finish (void)
 {
@@ -879,6 +898,7 @@ cb_expr_finish (void)
       return cb_error_node;
     }
 
+  expr_expand (&expr_stack[3].value);
   return expr_stack[3].value;
 }
 
@@ -966,22 +986,15 @@ decimal_expand (cb_tree d, cb_tree x)
       }
     case CB_TAG_BINARY_OP:
       {
+	/* set d, X
+	 * set t, Y
+	 * OP d, t */
 	struct cb_binary_op *p = CB_BINARY_OP (x);
-	if (p->op == '@')
-	  {
-	    decimal_expand (d, p->x);
-	  }
-	else
-	  {
-	    /* set d, X
-	     * set t, Y
-	     * OP d, t */
-	    cb_tree t = decimal_alloc ();
-	    decimal_expand (d, p->x);
-	    decimal_expand (t, p->y);
-	    decimal_compute (p->op, d, t);
-	    decimal_free ();
-	  }
+	cb_tree t = decimal_alloc ();
+	decimal_expand (d, p->x);
+	decimal_expand (t, p->y);
+	decimal_compute (p->op, d, t);
+	decimal_free ();
 	break;
       }
     default:
@@ -1147,8 +1160,6 @@ cb_build_cond (cb_tree x)
 	struct cb_binary_op *p = CB_BINARY_OP (x);
 	switch (p->op)
 	  {
-	  case '@':
-	    return cb_build_cond (p->x);
 	  case '!':
 	    return cb_build_binary_op (cb_build_cond (p->x), '!', 0);
 	  case '&': case '|':
