@@ -1579,6 +1579,8 @@ output_stmt (cb_tree x)
 	output_line ("/* %s: */", p->name);
 	if (p->need_begin)
 	  output_line ("lb_%s:", p->cname);
+	if (cb_flag_trace)
+	  output_line ("puts (\"%s\");", p->name);
 	break;
       }
     case CB_TAG_FUNCALL:
