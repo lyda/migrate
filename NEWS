@@ -1,5 +1,18 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Version 0.8.4 での変更点
+
+** doc にあった文書を Texinfo で書き直して texi に移動
+
+** TinyCOBOL 0.54 からの変更点をまとめた章をマニュアルに追加
+
+** デフォルトで動的リンク(-dynamic)を行なうようにした。
+
+従来のように静的リンクを行なうには、オプション -static を用いる。
+
+** いろいろなバグ修正
+
+
 * Version 0.8.3 での変更点
 
 ** CANCEL 文を実装

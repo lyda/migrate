@@ -272,7 +272,7 @@ COB_LIBRARY_PATH  ライブラリのパス (".:$(PREFIX)/lib/open-cobol")
 
 ただし現時点では、内部的に @samp{X} 二つに置き換えるだけの便宜的対応。
 
-@item 数値計算を全面的に見直し
+@item 数値計算の内部処理を見直し
 
 @itemize @minus
 @item 内部処理に多バイト整数を使い、誤差が出ないようにした
@@ -403,7 +403,7 @@ Hello World!
 @end example
 
 @code{-m} を付けてコンパイルを行なうと @file{.so} という拡張子を
-持つオブジェクトファイル(上の場合、@file{callee.so})が生成され、
+持ったモジュールファイル(上の場合は @file{callee.so})が生成され、
 プログラムの実行時に動的にリンクされます。
 
 モジュールの呼び出しにはいくつかの注意が必要です。
@@ -415,12 +415,12 @@ Hello World!
 ディレクトリ(標準では @file{/usr/local/lib/open-cobol/})に置く。
 
 環境変数 @code{COB_LIBRARY_PATH} により、モジュールを検索する
-パスを変更することが出来る。環境変数 PATH と同様に、
+パスを変更することが出来る。環境変数 @code{PATH} と同様に、
 @samp{:} で区切られたディレクトリのリストを指定する。
 
 @item
-モジュールの名前は、CALL に与えるプログラム名に拡張子
-@file{.so} を付けたものとし、そのソースコードの PROGRAM-ID は
+モジュールの名前は、@code{CALL} に与えるプログラム名に拡張子
+@file{.so} を付けたものとし、そのソースコードの @code{PROGRAM-ID} は
 プログラム名と同一にしておく。
 
 例えば @code{CALL "foo"} というコードを実行する場合、
@@ -432,41 +432,43 @@ Hello World!
 @node Static Linking, Makefile, Multiple Files, Compile
 @section 静的リンク
 
-これをコンパイルするには二つの方法があります。簡単なのは、
-次のようにして二つまとめてコンパイルする方法です。
+コンパイル時にオプション @code{-static} を指定することで、
+サブプログラムを静的にリンクすることも可能です。最も簡単
+なのは、次のように全てのファイルをまとめてコンパイルする
+ことです。
 
 @example
-% cobc -o hello caller.cob callee.cob
+% cobc -static -o hello caller.cob callee.cob
 % ./hello
 Hello World!
 @end example
 
-別の方法として、それぞれを別々にコンパイルしてから、最後に
-リンクしてやる次のような方法もあります。
+別な方法として、それぞれを別々にコンパイルしてから、最後に
+リンクしてやる方法もあります。
 
 @example
-% cobc -c caller.cob
-% cobc -c callee.cob
+% cobc -static -c caller.cob
+% cobc -static -c callee.cob
 % cobc -o hello caller.o callee.o
 % ./hello
 Hello World!
 @end example
 
 オプション @code{-c} を付けるのを忘れないで下さい。これは
-プログラムのリンクを後で行なうことを意味します。@code{-c} を
+プログラムのリンクを後で行なうように指示します。@code{-c} を
 忘れると、呼ばれるべきプログラムが見付からずに次のような
 エラーになります。
 
 @example
-% cobc caller.cob
+% cobc -static caller.cob
 /tmp/filezBF4hG.o: In function `main':
 /tmp/filezBF4hG.o(.text+0x77): undefined reference to `callee'
 collect2: ld returned 1 exit status
 @end example
 
-CALL に変数を与えて呼び出した場合、オプション `-dynamic' が
-なくとも常に実行時にプログラムを探すようになります。これは
-例えば次のような場合です。
+オプション @code{-static} を与えた場合にも、@code{CALL} に変数を
+与えて呼び出しを行なった場合には、例外的に動的リンクが行なわれます。
+これは例えば次のような場合です。
 
 @example
 ---- caller.cob ------------------------
@@ -487,24 +489,28 @@ CALL に変数を与えて呼び出した場合、オプション `-dynamic' が
 @section Makefile の作成
 
 ソースファイルが複数になると、Makefile を書くと便利です。
-例えば第 2 節の例では、次のような Makefile を書きます。
+例えば動的リンクの例では、次のような Makefile を書きます。
 
 @example
 ---- Makefile --------------------------
-TARGET = hello
-SOURCES = caller.cob callee.cob
-OBJECTS = caller.o   callee.o
+PROGRAM = hello
+SOURCES = caller.cob callee.cob 
+OBJECTS = caller.o
+MODULES = callee.so
 
-all: $(TARGET)
+all: $(PROGRAM) $(MODULES)
 
 clean:
-	rm -f *.o $(TARGET)
+	rm -f *.o *.so $(PROGRAM)
 
-$(TARGET): $(OBJECTS)
+$(PROGRAM): $(OBJECTS)
 	cobc -o $@ $(OBJECTS)
 
 %.o: %.cob
 	cobc -c $<
+
+%.so: %.cob
+	cobc -m $<
 ----------------------------------------
 @end example
 
@@ -514,34 +520,30 @@ $(TARGET): $(OBJECTS)
 @example
 % make
 cobc -c caller.cob
-cobc -c callee.cob
-cobc -o hello caller.o   callee.o
+cobc -o hello caller.o
+cobc -m callee.cob
 % make clean
-rm -f *.o hello
+rm -f *.o *.so hello
 @end example
 
-第 3 節の例では、次のように書きます。
+静的リンクの例では、次のように書きます。
 
 @example
 ---- Makefile --------------------------
-TARGET = hello
-SOURCES = caller.cob callee.cob 
-OBJECTS = caller.o
-MODULES = callee.so
+PROGRAM = hello
+SOURCES = caller.cob callee.cob
+OBJECTS = caller.o   callee.o
 
-all: $(TARGET) $(MODULES)
+all: $(PROGRAM)
 
 clean:
-	rm -f *.o *.so $(TARGET)
+	rm -f *.o $(PROGRAM)
 
-$(TARGET): $(OBJECTS)
+$(PROGRAM): $(OBJECTS)
 	cobc -o $@ $(OBJECTS)
 
 %.o: %.cob
-	cobc -dynamic -c $<
-
-%.so: %.cob
-	cobc -m $<
+	cobc -static -c $<
 ----------------------------------------
 @end example
 
@@ -549,11 +551,11 @@ $(TARGET): $(OBJECTS)
 
 @example
 % make
-cobc -dynamic -c caller.cob
-cobc -o hello caller.o
-cobc -m callee.cob
+cobc -static -c caller.cob
+cobc -static -c callee.cob
+cobc -o hello caller.o   callee.o
 % make clean
-rm -f *.o *.so hello
+rm -f *.o hello
 @end example
 
 @node C Interface,  , Compile, Top
@@ -663,7 +665,10 @@ main ()
   char world[6] = "World!";
 
   say = cob_resolve ("say");
-  say (hello, world);
+  if (say)
+    say (hello, world);
+  else
+    puts (cob_resolve_error ());
   return 0;
 @}
 ----------------------------------------
@@ -671,12 +676,15 @@ main ()
 
 ヘッダファイル @file{libcob.h} で宣言された関数 @code{cob_resolve}
 により、指定された名前を持つ COBOL プログラムを実行時に見付ける
-ことが出来ます。
+ことが出来ます。モジュールが見付かった場合にはそれを呼び出す関数
+ポインタを、見付からなければ @code{NULL} を返します。
+
+モジュールが見つからなかった場合、関数 @code{cob_resolve_error} を
+呼び出すことでその原因を示す文字列を得ることが出来ます。
 
 呼び出される COBOL プログラムは @code{-m} オプションを付けて
 コンパイルし、環境変数 @code{COB_LIBRARY_PATH} によって指定された
 ディレクトリに置いておきます。
-(デフォルトでは @file{.:$(PREFIX)/lib/open-cobol})
 
 コンパイルは次のように行ないます。
 
@@ -747,7 +755,7 @@ COBOL 側のデータを破壊してしまうので注意して下さい。
 
 @example
 % cc -c say.c
-% cobc -c hello.cob
+% cobc -static -c hello.cob
 % cobc -o hello hello.o say.o
 % ./hello
 Hello World!
@@ -756,39 +764,17 @@ Hello World!
 @node Dynamic COBOL to C,  , Static COBOL to C, COBOL to C
 @subsection 動的リンクの場合
 
-C プログラムをモジュールとしてコンパイルし、それを名前によって
-動的に呼び出したい場合、COBOL のコードは次のようになります。
-
-@example
----- hello-dynamic.cob -----------------
- IDENTIFICATION DIVISION.
- PROGRAM-ID. hello.
- ENVIRONMENT DIVISION.
- DATA DIVISION.
- WORKING-STORAGE SECTION.
- 01 PROC  PIC X(6) VALUE "say".
- 01 HELLO PIC X(6) VALUE "Hello ".
- 01 WORLD PIC X(6) VALUE "World!".
-
- PROCEDURE DIVISION.
- CALL PROC USING HELLO WORLD.
- STOP RUN.
-----------------------------------------
-@end example
-
-先との違いは、CALL により呼び出される関数を変数として指定して
-いることです。この場合、呼び出される関数は動的に見付けられます。
-
-呼び出される C プログラムは @code{-shared} オプションを付けて
-コンパイルし、出来上がった @file{.so} ファイルを
-@code{COB_LIBRARY_PATH} の指すディレクトリに置いておきます。
+C プログラムをモジュールとしてコンパイルし、それを動的に呼び出す
+ことも可能です。この場合、呼び出される C プログラムは
+@code{-shared} オプションを付けてコンパイルし、出来上がった
+@file{.so} ファイルを @code{COB_LIBRARY_PATH} の指すディレクトリに
+置いておきます。
 
 コンパイルは次のように行ないます。
 
 @example
 % cc -shared -o say.so say.c
-% cobc -c hello-dynamic.cob
-% cobc -o hello hello-dynamic.o
+% cobc -o hello hello.cob
 % ./hello
 Hello World!
 @end example

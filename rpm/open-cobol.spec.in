@@ -39,9 +39,9 @@ make
 %files
 %defattr (-,root,root)
 %doc AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README
-%doc doc/*.txt
 %{_bindir}
 %{_includedir}
+%{_infodir}
 %{_libdir}
 %{_libexecdir}
 
