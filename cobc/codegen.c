@@ -153,9 +153,11 @@ output_base (struct cb_field *f)
     }
   else
     {
-      if (!f01->flag_base && f01->storage != CB_STORAGE_LINKAGE)
+      if (!f01->flag_base)
 	{
-	  output_storage ("static unsigned char b_%s[%d];\n",
+	  if (!f01->flag_local)
+	    output_storage ("static ");
+	  output_storage ("unsigned char b_%s[%d];\n",
 			  f01->cname, f01->memory_size);
 	  f01->flag_base = 1;
 	}
@@ -547,7 +549,7 @@ output_param (cb_tree x, int id)
 		output_field (x);
 
 		output_target = storage_file;
-		if (f->storage != CB_STORAGE_LINKAGE)
+		if (!f->flag_local)
 		  output ("static ");
 		output ("cob_field f_%s = ", f->cname);
 		output_field (x);
@@ -2302,6 +2304,7 @@ output_internal_function (struct cb_program *prog,
   output_line ("cob_push_environment (&env);");
   if (prog->flag_initial)
     output_init_values (prog->working_storage);
+  output_init_values (prog->local_storage);
   output_newline ();
 
   /* entry dispatch */

@@ -84,6 +84,7 @@ enum cb_category {
 enum cb_storage {
   CB_STORAGE_FILE,		/* FILE SECTION */
   CB_STORAGE_WORKING,		/* WORKING-STORAGE SECTION */
+  CB_STORAGE_LOCAL,		/* LOCAL-STORAGE SECTION */
   CB_STORAGE_LINKAGE,		/* LINKAGE SECTION */
   CB_STORAGE_SCREEN		/* SCREEN SECTION */
 };
@@ -331,6 +332,7 @@ struct cb_field {
   long flag_sign_separate : 1;	/* SIGN IS SEPARATE */
   long flag_synchronized  : 1;	/* SYNCHRONIZED */
   long flag_occurs        : 1;	/* OCCURS */
+  long flag_local         : 1;	/* has local scope */
   long flag_base          : 1;
   long flag_field         : 1;
   /* screen parameters */
@@ -683,6 +685,7 @@ struct cb_program {
   struct cb_list *reference_list;
   struct cb_list *proposition_list;
   struct cb_field *working_storage;
+  struct cb_field *local_storage;
   struct cb_field *linkage_storage;
   struct cb_field *screen_storage;
   struct cb_label *file_handler[5];

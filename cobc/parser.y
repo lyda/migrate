@@ -144,7 +144,7 @@ static void terminator_warning (void);
 %token EVALUATE IF INITIALIZE INSPECT MERGE MOVE MULTIPLY OPEN PERFORM
 %token READ RELEASE RETURN REWRITE SEARCH SET SORT START STRING
 %token SUBTRACT UNSTRING WRITE WORKING_STORAGE ZERO PACKED_DECIMAL RECURSIVE
-%token LINAGE FOOTING TOP BOTTOM SHARING ONLY RECORDING
+%token LINAGE FOOTING TOP BOTTOM SHARING ONLY RECORDING LOCAL_STORAGE
 %token ACCESS ADVANCING AFTER ALL ALPHABET ALPHABETIC ALPHABETIC_LOWER AS
 %token ALPHABETIC_UPPER ALPHANUMERIC ALPHANUMERIC_EDITED ALSO ALTER ALTERNATE
 %token AND ANY ARE AREA ASCENDING ASSIGN AT AUTO BACKGROUND_COLOR BEFORE BELL
@@ -800,11 +800,12 @@ multiple_file_position:
  *****************************************************************************/
 
 data_division:
-| DATA DIVISION '.'		{ current_storage = CB_STORAGE_FILE; }
-  file_section			{ current_storage = CB_STORAGE_WORKING; }
-  working_storage_section	{ current_storage = CB_STORAGE_LINKAGE; }
-  linkage_section		{ current_storage = CB_STORAGE_SCREEN; }
-  screen_section		{ current_storage = CB_STORAGE_WORKING; }
+| DATA DIVISION '.'
+  file_section
+  working_storage_section
+  local_storage_section
+  linkage_section
+  screen_section
 ;
 
 
@@ -813,7 +814,7 @@ data_division:
  *******************/
 
 file_section:
-| TOK_FILE SECTION '.'
+| TOK_FILE SECTION '.'		{ current_storage = CB_STORAGE_FILE; }
   file_descriptions
 ;
 file_descriptions:
@@ -978,11 +979,11 @@ code_set_clause:
  *******************/
 
 working_storage_section:
-| WORKING_STORAGE SECTION '.'
+| WORKING_STORAGE SECTION '.'	{ current_storage = CB_STORAGE_WORKING; }
   record_description_list
   {
-    if ($4)
-      current_program->working_storage = CB_FIELD ($4);
+    if ($5)
+      current_program->working_storage = CB_FIELD ($5);
   }
 ;
 record_description_list:
@@ -1272,15 +1273,29 @@ renames_clause:
 
 
 /*******************
+ * LOCAL-STORAGE SECTION
+ *******************/
+
+local_storage_section:
+| LOCAL_STORAGE SECTION '.'	{ current_storage = CB_STORAGE_LOCAL; }
+  record_description_list
+  {
+    if ($5)
+      current_program->local_storage = CB_FIELD ($5);
+  }
+;
+
+
+/*******************
  * LINKAGE SECTION
  *******************/
 
 linkage_section:
-| LINKAGE SECTION '.'
+| LINKAGE SECTION '.'		{ current_storage = CB_STORAGE_LINKAGE; }
   record_description_list
   {
-    if ($4)
-      current_program->linkage_storage = CB_FIELD ($4);
+    if ($5)
+      current_program->linkage_storage = CB_FIELD ($5);
   }
 ;
 
@@ -1290,16 +1305,16 @@ linkage_section:
  *******************/
 
 screen_section:
-| SCREEN SECTION '.'
+| SCREEN SECTION '.'		{ current_storage = CB_STORAGE_SCREEN; }
   {
     current_field = NULL;
   }
   opt_screen_description_list
   {
     struct cb_field *p;
-    for (p = CB_FIELD ($5); p; p = p->sister)
+    for (p = CB_FIELD ($6); p; p = p->sister)
       finalize_field (p);
-    current_program->screen_storage = CB_FIELD ($5);
+    current_program->screen_storage = CB_FIELD ($6);
     current_program->flag_screen = 1;
   }
 ;

@@ -1174,54 +1174,59 @@ to_cname (const char *s)
 }
 
 static void
-setup_parameters (struct cb_field *p)
+setup_parameters (struct cb_field *f)
 {
   /* setup cname */
   char name[BUFSIZ] = "";
-  if (p->parent)
-    sprintf (name, "%s$", p->parent->cname);
-  strcat (name, p->name);
-  p->cname = to_cname (name);
+  if (f->parent)
+    sprintf (name, "%s$", f->parent->cname);
+  strcat (name, f->name);
+  f->cname = to_cname (name);
 
   /* determine the class */
-  if (p->children)
+  if (f->children)
     {
-      /* group field */
-      CB_TREE_CLASS (p) = CB_CLASS_ALPHANUMERIC;
+      int flag_local = f->flag_local;
 
-      for (p = p->children; p; p = p->sister)
-	setup_parameters (p);
+      /* group field */
+      CB_TREE_CLASS (f) = CB_CLASS_ALPHANUMERIC;
+
+      for (f = f->children; f; f = f->sister)
+	{
+	  f->flag_local = flag_local;
+	  setup_parameters (f);
+	}
     }
-  else if (p->level == 66)
+  else if (f->level == 66)
     {
-      CB_TREE_CLASS (p) = CB_TREE_CLASS (p->redefines);
+      CB_TREE_CLASS (f) = CB_TREE_CLASS (f->redefines);
     }
   else
     {
       /* regular field */
-      if (p->usage == CB_USAGE_INDEX)
-	p->pic = cb_parse_picture ("S9(9)");
+      if (f->usage == CB_USAGE_INDEX)
+	f->pic = cb_parse_picture ("S9(9)");
 
       /* set class */
-      switch (p->pic->category)
+      switch (f->pic->category)
 	{
 	case CB_CATEGORY_ALPHABETIC:
-	  CB_TREE_CLASS (p) = CB_CLASS_ALPHABETIC;
+	  CB_TREE_CLASS (f) = CB_CLASS_ALPHABETIC;
 	  break;
 	case CB_CATEGORY_NUMERIC:
-	  CB_TREE_CLASS (p) = CB_CLASS_NUMERIC;
+	  CB_TREE_CLASS (f) = CB_CLASS_NUMERIC;
 	  break;
 	case CB_CATEGORY_NUMERIC_EDITED:
 	case CB_CATEGORY_ALPHANUMERIC:
 	case CB_CATEGORY_ALPHANUMERIC_EDITED:
-	  CB_TREE_CLASS (p) = CB_CLASS_ALPHANUMERIC;
+	  CB_TREE_CLASS (f) = CB_CLASS_ALPHANUMERIC;
 	  break;
 	case CB_CATEGORY_NATIONAL:
 	case CB_CATEGORY_NATIONAL_EDITED:
-	  CB_TREE_CLASS (p) = CB_CLASS_NATIONAL;
+	  CB_TREE_CLASS (f) = CB_CLASS_NATIONAL;
 	  break;
 	case CB_CATEGORY_BOOLEAN:
-	  CB_TREE_CLASS (p) = CB_CLASS_BOOLEAN;
+	  CB_TREE_CLASS (f) = CB_CLASS_BOOLEAN;
 	  break;
 	default:
 	  abort ();
@@ -1230,24 +1235,24 @@ setup_parameters (struct cb_field *p)
 }
 
 static int
-compute_size (struct cb_field *p)
+compute_size (struct cb_field *f)
 {
-  if (p->level == 66)
+  if (f->level == 66)
     {
       /* rename */
-      if (p->rename_thru)
-	p->size =
-	  p->rename_thru->offset + p->rename_thru->size - p->redefines->offset;
+      if (f->rename_thru)
+	f->size =
+	  f->rename_thru->offset + f->rename_thru->size - f->redefines->offset;
       else
-	p->size = p->redefines->size;
-      return p->size;
+	f->size = f->redefines->size;
+      return f->size;
     }
 
-  if (p->children)
+  if (f->children)
     {
       /* groups */
       int size = 0;
-      struct cb_field *c = p->children;
+      struct cb_field *c = f->children;
       for (; c; c = c->sister)
 	{
 	  if (c->redefines)
@@ -1263,35 +1268,35 @@ compute_size (struct cb_field *p)
 		  int border = (csize <= 4) ? 4 : 8;
 		  if (size % border)
 		    size += border - csize % border;
-		  c->offset = p->offset + size;
+		  c->offset = f->offset + size;
 		  size += border;
 		}
 	      else
 		{
-		  c->offset = p->offset + size;
+		  c->offset = f->offset + size;
 		  size += compute_size (c) * c->occurs_max;
 		}
 	    }
 	}
-      p->size = size;
+      f->size = size;
     }
   else
     {
       /* elementary item */
-      switch (p->usage)
+      switch (f->usage)
 	{
 	case CB_USAGE_BINARY:
 	  {
-	    int size = p->pic->size;
+	    int size = f->pic->size;
 	    switch (cb_binary_rep)
 	      {
 	      case CB_BINARY_REP_1_2_4_8:
-		p->size = ((size <= 2) ? 1 :
+		f->size = ((size <= 2) ? 1 :
 			   (size <= 4) ? 2 :
 			   (size <= 9) ? 4 : 8);
 		break;
 	      case CB_BINARY_REP_2_4_8:
-		p->size = ((size <= 4) ? 2 :
+		f->size = ((size <= 4) ? 2 :
 			   (size <= 9) ? 4 : 8);
 		break;
 	      }
@@ -1299,29 +1304,29 @@ compute_size (struct cb_field *p)
 	  }
 	case CB_USAGE_DISPLAY:
 	  {
-	    p->size = p->pic->size;
-	    if (p->pic->category == CB_CATEGORY_NUMERIC
-		&& p->flag_sign_separate)
-	      p->size++;
+	    f->size = f->pic->size;
+	    if (f->pic->category == CB_CATEGORY_NUMERIC
+		&& f->flag_sign_separate)
+	      f->size++;
 	    break;
 	  }
 	case CB_USAGE_PACKED:
 	  {
-	    p->size = p->pic->size / 2;
-	    if (p->pic->size % 2 || p->pic->have_sign)
-	      p->size++;
+	    f->size = f->pic->size / 2;
+	    if (f->pic->size % 2 || f->pic->have_sign)
+	      f->size++;
 	    break;
 	  }
 	case CB_USAGE_INDEX:
 	  {
-	    p->size = sizeof (int);
+	    f->size = sizeof (int);
 	    break;
 	  }
 	case CB_USAGE_OBJECT:
 	case CB_USAGE_POINTER:
 	case CB_USAGE_PROGRAM:
 	  {
-	    p->size = sizeof (void *);
+	    f->size = sizeof (void *);
 	    break;
 	  }
 	default:
@@ -1330,25 +1335,32 @@ compute_size (struct cb_field *p)
     }
 
   /* ISO+IEC+1989-2002: 13.16.42.2-9 */
-  if (p->redefines && p->size * p->occurs_max > p->redefines->size)
-    if (p->redefines->level != 01 || p->redefines->flag_external)
-      cb_error_x (CB_TREE (p), _("size of `%s' larger than size of `%s'"),
-		 p->name, p->redefines->name);
+  if (f->redefines && f->size * f->occurs_max > f->redefines->size)
+    if (f->redefines->level != 01 || f->redefines->flag_external)
+      cb_error_x (CB_TREE (f), _("size of `%s' larger than size of `%s'"),
+		 f->name, f->redefines->name);
 
-  return p->size;
+  return f->size;
 }
 
 void
-finalize_field (struct cb_field *p)
+finalize_field (struct cb_field *f)
 {
-  setup_parameters (p);
+  if (f->storage == CB_STORAGE_LOCAL
+      || f->storage == CB_STORAGE_LINKAGE)
+    f->flag_local = 1;
+
+  if (f->storage == CB_STORAGE_LINKAGE)
+    f->flag_base = 1;
+
+  setup_parameters (f);
 
   /* compute size */
-  compute_size (p);
-  if (!p->redefines)
-    p->memory_size = p->size;
-  else if (p->redefines->memory_size < p->size)
-    p->redefines->memory_size = p->size;
+  compute_size (f);
+  if (!f->redefines)
+    f->memory_size = f->size;
+  else if (f->redefines->memory_size < f->size)
+    f->redefines->memory_size = f->size;
 }
 
 

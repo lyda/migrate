@@ -224,6 +224,7 @@ static struct reserved reserved_words[] = {
   {"LINE",		LINE, 0},
   {"LINES",		LINES, 0},
   {"LINKAGE",		LINKAGE, 0},
+  {"LOCAL-STORAGE",	LOCAL_STORAGE, 0},
   {"LOCK",		LOCK, 0},
   {"LOW-VALUE",		LOW_VALUE, 0},
   {"LOW-VALUES",	LOW_VALUE, 0},
