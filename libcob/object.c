@@ -269,6 +269,14 @@ cob_div (void)
 {
   decimal d2 = COB_DECIMAL (POP ());
   decimal d1 = COB_DECIMAL (TOP ());
+
+  /* check for division by zero */
+  if (mpz_sgn (d2->number) == 0)
+    {
+      cob_status = COB_STATUS_OVERFLOW;
+      return;
+    }
+
   d1->decimals -= d2->decimals;
   shift_decimal (d1, 19 + ((d1->decimals < 0) ? -d1->decimals : 0));
   mpz_tdiv_q (d1->number, d1->number, d2->number);
