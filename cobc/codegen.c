@@ -1213,9 +1213,9 @@ codegen (struct program_spec *spec)
 
   output ("/* Generated from %s by OpenCOBOL %s */\n\n",
 	  cobc_source_file, COBC_VERSION);
-  output ("#include <stdio.h>\n\n");
-  output ("#include <stdlib.h>\n\n");
-  output ("#include <string.h>\n\n");
+  output ("#include <stdio.h>\n");
+  output ("#include <stdlib.h>\n");
+  output ("#include <string.h>\n");
   output ("#include <libcob.h>\n\n");
 
   if (!cobc_module_flag)
