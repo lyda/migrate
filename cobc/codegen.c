@@ -2592,7 +2592,6 @@ math_on_size_error2 (void)
 void
 math_on_size_error3 (struct math_ose *v)
 {
-
   unsigned long lbl1, lbl2;
   lbl1 = loc_label++;
 
@@ -2668,6 +2667,22 @@ math_on_size_error4 (struct math_ose *v, unsigned long ty)
   return v;
 }
 
+static void
+gen_math_init (struct math_ose *ose)
+{
+  if (ose)
+    gen_dstlabel (ose->lbl4);
+
+  fprintf (o_src, "\tmovl\t$0, cob_size_error_flag\n");
+}
+
+static void
+gen_math_finish (struct math_ose *ose)
+{
+  if (ose)
+    math_on_size_error3 (ose);
+}
+
 /******** generic structure allocation and code genertion ***********/
 struct ginfo *
 ginfo_container0 (void)
@@ -2701,18 +2716,14 @@ ginfo_container2 (struct ginfo *v, unsigned long ty)
     case 1:
       v->lbl1 = v->sel;
       v->sel = 0;
-      /*v->lbl3=loc_label++;    return 1 label name */
-      /* gen_jmplabel(v->lbl3);  generate return 1 label jump */
       break;
 
     case 2:
       v->lbl2 = v->sel;
       v->sel = 0;
-      /*v->lbl4=loc_label++;    return 2 label name */
-      /*gen_jmplabel(v->lbl4); generate return 2 label jump */
       break;
     }
-  gen_jmplabel (v->lbl3);	/* generate end label jump */
+  gen_jmplabel (v->lbl3);
 }
 
 struct ginfo *
@@ -2756,7 +2767,6 @@ ginfo_container4 (struct ginfo *v)
     case 1:
       fprintf (o_src, "\tcmpl\t$0, %%eax\n");
       fprintf (o_src, "\tjne\t.L%ld\n", v->lbl1);
-      /* gen_jmplabel(v->lbl1); */
       fprintf (o_src, "\t.align 16\n");
       fprintf (o_src, ".L%ld:\n", v->lbl3);
       break;
@@ -2764,7 +2774,6 @@ ginfo_container4 (struct ginfo *v)
     case 2:
       fprintf (o_src, "\tcmpl\t$0, %%eax\n");
       fprintf (o_src, "\tje\t.L%ld\n", v->lbl2);
-      /* gen_jmplabel(v->lbl2);  */
       fprintf (o_src, "\t.align 16\n");
       fprintf (o_src, ".L%ld:\n", v->lbl3);
       break;
@@ -2775,9 +2784,6 @@ ginfo_container4 (struct ginfo *v)
       gen_jmplabel (v->lbl1);
       fprintf (o_src, "\t.align 16\n");
       fprintf (o_src, ".L%ld:\n", v->lbl3);
-      /* gen_jmplabel(v->lbl2);  */
-      /* fprintf(o_src,"\t.align 16\n"); */
-      /* fprintf(o_src,".L%ld:\n",v->lbl4); */
       break;
     }
 
@@ -2860,17 +2866,15 @@ gen_test_invalid_keys (struct invalid_keys *p)
 void
 gen_compute (struct math_var *vl1, cob_tree sy1, struct math_ose *ose)
 {
-  if (ose)
-    gen_dstlabel (ose->lbl4);
+  gen_math_init (ose);
 
   for (; vl1; vl1 = vl1->next)
     {
       push_expr (sy1);
       assign_expr (vl1->sname, vl1->rounded);
-
-      if (ose)
-	math_on_size_error3 (ose);
     }
+
+  gen_math_finish (ose);
 }
 
 
@@ -2879,81 +2883,49 @@ gen_compute (struct math_var *vl1, cob_tree sy1, struct math_ose *ose)
  */
 
 void
-gen_add (cob_tree sy1, cob_tree sy2, int rnd)
+gen_add (cob_tree n1, cob_tree n2, int rnd)
 {
-  push_expr (sy1);
-  push_expr (sy2);
+  push_expr (n1);
+  push_expr (n2);
   asm_call ("cob_add");
-  assign_expr (sy2, rnd);
+  assign_expr (n2, rnd);
 }
 
 void
-gen_add1 (cob_tree_list vl1, struct math_var *vl2, struct math_ose *ose)
+gen_add_to (cob_tree_list nums, struct math_var *list, struct math_ose *ose)
 {
-  if (ose)
-    gen_dstlabel (ose->lbl4);
-
-  for (; vl2; vl2 = vl2->next)
+  gen_math_init (ose);
+  for (; list; list = list->next)
     {
       cob_tree_list l;
-      push_expr (vl2->sname);
-      for (l = vl1; l; l = l->next)
+      push_expr (list->sname);
+      for (l = nums; l; l = l->next)
 	{
 	  push_expr (l->tree);
 	  asm_call ("cob_add");
 	}
-      assign_expr (vl2->sname, vl2->rounded);
-
-      if (ose)
-	math_on_size_error3 (ose);
+      assign_expr (list->sname, list->rounded);
     }
+  gen_math_finish (ose);
 }
 
 void
-gen_add2 (cob_tree_list vl1, struct math_var *vl2, struct math_ose *ose)
+gen_add_giving (cob_tree_list nums, struct math_var *list,
+		struct math_ose *ose)
 {
-  if (ose != NULL)
-    gen_dstlabel (ose->lbl4);
-
-  for (; vl2; vl2 = vl2->next)
+  gen_math_init (ose);
+  for (; list; list = list->next)
     {
-      cob_tree_list l = vl1;
+      cob_tree_list l = nums;
       push_expr (l->tree);
       for (l = l->next; l; l = l->next)
 	{
 	  push_expr (l->tree);
 	  asm_call ("cob_add");
 	}
-      assign_expr (vl2->sname, vl2->rounded);
-
-      if (ose)
-	math_on_size_error3 (ose);
+      assign_expr (list->sname, list->rounded);
     }
-}
-
-void
-gen_addcorr (cob_tree sy1, cob_tree sy2, int rnd)
-{
-  cob_tree t1, t2;
-  if (!(SYMBOL_P (sy1) && SYMBOL_P (sy2)))
-    {
-      yyerror ("sorry we don't handle this case yet!");
-      return;
-    }
-#ifdef COB_DEBUG
-  fprintf (o_src, "# ADD CORR %s --> %s\n", sy1->name, sy2->name);
-#endif
-  for (t1 = sy1->son; t1 != NULL; t1 = t1->brother)
-    if (!t1->redefines && t1->times == 1)
-      for (t2 = sy2->son; t2 != NULL; t2 = t2->brother)
-	if (!t2->redefines && t2->times == 1)
-	  if (strcmp (t1->name, t2->name) == 0)
-	    {
-	      if ((t1->type != 'G') && (t2->type != 'G'))
-		gen_add (t1, t2, rnd);
-	      else
-		gen_addcorr (t1, t2, rnd);
-	    }
+  gen_math_finish (ose);
 }
 
 
@@ -2962,83 +2934,41 @@ gen_addcorr (cob_tree sy1, cob_tree sy2, int rnd)
  */
 
 void
-gen_subtract1 (cob_tree_list vl1, struct math_var *vl2, struct math_ose *ose)
+gen_subtract_from (cob_tree_list subtrahend_list,
+		   struct math_var *list, struct math_ose *ose)
 {
-  if (ose)
-    gen_dstlabel (ose->lbl4);
-
-  for (; vl2; vl2 = vl2->next)
+  gen_math_init (ose);
+  for (; list; list = list->next)
     {
       cob_tree_list l;
-      push_expr (vl2->sname);
-      for (l = vl1; l; l = l->next)
+      push_expr (list->sname);
+      for (l = subtrahend_list; l; l = l->next)
 	{
 	  push_expr (l->tree);
 	  asm_call ("cob_sub");
 	}
-      assign_expr (vl2->sname, vl2->rounded);
-
-      if (ose)
-	math_on_size_error3 (ose);
+      assign_expr (list->sname, list->rounded);
     }
+  gen_math_finish (ose);
 }
 
 void
-gen_subtract2 (cob_tree_list vl1, struct math_var *vl2, cob_tree sy1,
-	       struct math_ose *ose)
+gen_subtract_giving (cob_tree_list subtrahend_list, cob_tree minuend,
+		     struct math_var *list, struct math_ose *ose)
 {
-  if (ose)
-    gen_dstlabel (ose->lbl4);
-
-  for (; vl2; vl2 = vl2->next)
+  gen_math_init (ose);
+  for (; list; list = list->next)
     {
       cob_tree_list l;
-      push_expr (sy1);
-      for (l = vl1; l; l = l->next)
+      push_expr (minuend);
+      for (l = subtrahend_list; l; l = l->next)
 	{
 	  push_expr (l->tree);
 	  asm_call ("cob_sub");
 	}
-      assign_expr (vl2->sname, vl2->rounded);
-
-      if (ose)
-	math_on_size_error3 (ose);
+      assign_expr (list->sname, list->rounded);
     }
-}
-
-void
-gen_subtract (cob_tree sy1, cob_tree sy2, int rnd)
-{
-  push_expr (sy1);
-  push_expr (sy2);
-  asm_call ("cob_sub");
-  assign_expr (sy2, rnd);
-}
-
-void
-gen_subtractcorr (cob_tree sy1, cob_tree sy2, int rnd)
-{
-  cob_tree t1, t2;
-  if (!(SYMBOL_P (sy1) && SYMBOL_P (sy2)))
-    {
-      yyerror ("sorry we don't handle this case yet!");
-      return;
-    }
-#ifdef COB_DEBUG
-  fprintf (o_src, "# ADD CORR %s --> %s\n", sy1->name, sy2->name);
-#endif
-  
-  for (t1 = sy1->son; t1 != NULL; t1 = t1->brother)
-    if (!t1->redefines && t1->times == 1)
-      for (t2 = sy2->son; t2 != NULL; t2 = t2->brother)
-	if (!t2->redefines && t2->times == 1)
-	  if (strcmp (t1->name, t2->name) == 0)
-	    {
-	      if ((t1->type != 'G') && (t2->type != 'G'))
-		gen_subtract (t1, t2, rnd);
-	      else
-		gen_subtractcorr (t1, t2, rnd);
-	    }
+  gen_math_finish (ose);
 }
 
 
@@ -3047,40 +2977,33 @@ gen_subtractcorr (cob_tree sy1, cob_tree sy2, int rnd)
  */
 
 void
-gen_multiply1 (struct math_var *vl1, cob_tree sy1, struct math_ose *ose)
+gen_multiply_by (cob_tree multiplicand, struct math_var *list,
+		 struct math_ose *ose)
 {
-  if (ose)
-    gen_dstlabel (ose->lbl4);
-
-  for (; vl1; vl1 = vl1->next)
+  gen_math_init (ose);
+  for (; list; list = list->next)
     {
-      push_expr (sy1);
-      push_expr (vl1->sname);
+      push_expr (multiplicand);
+      push_expr (list->sname);
       asm_call ("cob_mul");
-      assign_expr (vl1->sname, vl1->rounded);
-
-      if (ose)
-	math_on_size_error3 (ose);
+      assign_expr (list->sname, list->rounded);
     }
+  gen_math_finish (ose);
 }
 
 void
-gen_multiply_giving (cob_tree sy1, cob_tree sy2, struct math_var *vl1,
-		     struct math_ose *ose)
+gen_multiply_giving (cob_tree multiplicand, cob_tree multiplier,
+		     struct math_var *list, struct math_ose *ose)
 {
-  if (ose)
-    gen_dstlabel (ose->lbl4);
-
-  for (; vl1; vl1 = vl1->next)
+  gen_math_init (ose);
+  for (; list; list = list->next)
     {
-      push_expr (sy1);
-      push_expr (sy2);
+      push_expr (multiplicand);
+      push_expr (multiplier);
       asm_call ("cob_mul");
-      assign_expr (vl1->sname, vl1->rounded);
-
-      if (ose)
-	math_on_size_error3 (ose);
+      assign_expr (list->sname, list->rounded);
     }
+  gen_math_finish (ose);
 }
 
 
@@ -3089,60 +3012,54 @@ gen_multiply_giving (cob_tree sy1, cob_tree sy2, struct math_var *vl1,
  */
 
 void
-gen_divide (cob_tree sy1, cob_tree sy2,
-	    cob_tree sy3, cob_tree sy4, int rnd)
+gen_divide_into (cob_tree divisor, struct math_var *list, struct math_ose *ose)
 {
-  push_expr (sy1);
-  push_expr (sy2);
+  gen_math_init (ose);
+  for (; list; list = list->next)
+    {
+      push_expr (list->sname);
+      push_expr (divisor);
+      asm_call ("cob_div");
+      assign_expr (list->sname, list->rounded);
+    }
+  gen_math_finish (ose);
+}
+
+void
+gen_divide_giving (cob_tree divisor, cob_tree dividend,
+		   struct math_var *list, struct math_ose *ose)
+{
+  gen_math_init (ose);
+  for (; list; list = list->next)
+    {
+      push_expr (dividend);
+      push_expr (divisor);
+      asm_call ("cob_div");
+      assign_expr (list->sname, list->rounded);
+    }
+  gen_math_finish (ose);
+}
+
+void
+gen_divide_giving_remainder (cob_tree divisor, cob_tree dividend,
+			     cob_tree quotient, cob_tree remainder,
+			     int rnd, struct math_ose *ose)
+{
+  gen_math_init (ose);
+
+  push_expr (dividend);
+  push_expr (divisor);
   asm_call ("cob_div");
-  assign_expr (sy3, rnd);
+  assign_expr (quotient, rnd);
 
-  if (sy4)
-    {
-      push_expr (sy1);
-      push_expr (sy2);
-      push_expr (sy3);
-      asm_call ("cob_mul");
-      asm_call ("cob_sub");
-      assign_expr (sy4, rnd);
-    }
-}
+  push_expr (dividend);
+  push_expr (divisor);
+  push_expr (quotient);
+  asm_call ("cob_mul");
+  asm_call ("cob_sub");
+  assign_expr (remainder, rnd);
 
-void
-gen_divide1 (struct math_var *vl1, cob_tree sy1, struct math_ose *ose)
-{
-  if (ose)
-    gen_dstlabel (ose->lbl4);
-
-  for (; vl1; vl1 = vl1->next)
-    {
-      push_expr (vl1->sname);
-      push_expr (sy1);
-      asm_call ("cob_div");
-      assign_expr (vl1->sname, vl1->rounded);
-
-      if (ose)
-	math_on_size_error3 (ose);
-    }
-}
-
-void
-gen_divide2 (struct math_var *vl1, cob_tree sy1, cob_tree sy2,
-	     struct math_ose *ose)
-{
-  if (ose)
-    gen_dstlabel (ose->lbl4);
-
-  for (; vl1; vl1 = vl1->next)
-    {
-      push_expr (sy1);
-      push_expr (sy2);
-      asm_call ("cob_div");
-      assign_expr (vl1->sname, vl1->rounded);
-
-      if (ose)
-	math_on_size_error3 (ose);
-    }
+  gen_math_finish (ose);
 }
 
 
@@ -3262,7 +3179,7 @@ gen_move (cob_tree src, cob_tree dst)
 /* The following functions will be activated when we change from
    defining the outermost group to define each elementary item. */
 void
-gen_movecorr (cob_tree sy1, cob_tree sy2)
+gen_move_corresponding (cob_tree sy1, cob_tree sy2)
 {
   cob_tree t1, t2;
   if (!(SYMBOL_P (sy1) && SYMBOL_P (sy2)))
@@ -3283,7 +3200,7 @@ gen_movecorr (cob_tree sy1, cob_tree sy2)
 	      if ((t1->type != 'G') || (t2->type != 'G'))
 		gen_move (t1, t2);
 	      else
-		gen_movecorr (t1, t2);
+		gen_move_corresponding (t1, t2);
 	    }
 }
 

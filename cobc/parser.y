@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 678
+%expect 680
 
 %{
 #define yydebug		cob_trace_parser
@@ -49,7 +49,6 @@ static struct ginfo    *gic=NULL;
 static int warning_count = 0;
 static int error_count = 0;
 
-static void assert_numeric_sy (cob_tree sy);
 static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %}
 
@@ -88,7 +87,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %right OF
 
 %token <str>  IDSTRING
-%token <tree> SYMBOL,VARIABLE,VARCOND,SUBSCVAR,LABELSTR,PICTURE_TOK
+%token <tree> SYMBOL_TOK,VARIABLE,VARCOND,SUBSCVAR,LABELSTR,PICTURE_TOK
 %token <tree> INTEGER_TOK,NLITERAL,CLITERAL
 
 %token EQUAL,GREATER,LESS,GE,LE,COMMAND_LINE,ENVIRONMENT_VARIABLE
@@ -349,10 +348,10 @@ select_clause:
       curr_file->access_mode = $4 + 5;
     }
   }
-| FILEN STATUS opt_is SYMBOL { curr_file->parent=$4; }
-| RECORD KEY opt_is SYMBOL { curr_file->ix_desc=$4; }
-| RELATIVE KEY opt_is SYMBOL { curr_file->ix_desc=$4; }
-| ALTERNATE RECORD KEY opt_is SYMBOL opt_with_duplicates
+| FILEN STATUS opt_is SYMBOL_TOK { curr_file->parent=$4; }
+| RECORD KEY opt_is SYMBOL_TOK { curr_file->ix_desc=$4; }
+| RELATIVE KEY opt_is SYMBOL_TOK { curr_file->ix_desc=$4; }
+| ALTERNATE RECORD KEY opt_is SYMBOL_TOK opt_with_duplicates
   { add_alternate_key($5,$6); }
 | error         { yyerror("invalid clause in select"); }
 ;
@@ -458,7 +457,7 @@ fd_list:
 ;
 file_name:
   { curr_division = CDIV_FD; }
-  SYMBOL
+  SYMBOL_TOK
   { curr_division = CDIV_DATA; $$ = $2; }
 ;
 file_description:
@@ -476,7 +475,7 @@ file_description:
   }
 ;
 file_attrib:
-| file_attrib REPORT opt_is SYMBOL { save_report( $4,$<tree>0 ); }
+| file_attrib REPORT opt_is SYMBOL_TOK { save_report( $4,$<tree>0 ); }
 | file_attrib opt_is GLOBAL     { $<tree>0->type = 'J'; }
 | file_attrib opt_is EXTERNAL   { $<tree>0->type = 'K'; }
 | file_attrib LABEL rec_or_recs opt_is_are std_or_omitt
@@ -493,14 +492,14 @@ file_attrib:
   }
 | file_attrib RECORD opt_is VARYING opt_in_size
   from_rec_varying to_rec_varying opt_characters
-  DEPENDING opt_on SYMBOL
+  DEPENDING opt_on SYMBOL_TOK
   {
     set_rec_varying_info ($<tree>-1, $6, $7, $11);
   }
 ;
 var_strings:
-  SYMBOL { }
-| var_strings SYMBOL { }
+  SYMBOL_TOK { }
+| var_strings SYMBOL_TOK { }
 ;
 opt_to_integer:
 | TO integer
@@ -517,7 +516,7 @@ sort_attrib:
 | sort_attrib DATA rec_or_recs  opt_is_are var_strings
 | sort_attrib RECORD opt_is VARYING opt_in_size
   from_rec_varying to_rec_varying opt_characters
-  DEPENDING opt_on SYMBOL
+  DEPENDING opt_on SYMBOL_TOK
   {
     set_rec_varying_info( $<tree>-1,$6,$7,$11 );
   }
@@ -551,7 +550,7 @@ field_description:
 field_name:
   /* nothing */		{ $$ = make_filler (); }
 | FILLER		{ $$ = make_filler (); }
-| SYMBOL
+| SYMBOL_TOK
   {
     if ($1->defined)
       yyerror ("variable already defined: %s", $1->name);
@@ -722,8 +721,8 @@ opt_indexed_by:
 ;
 opt_key_is:
   /* nothing */				{ $$ = NULL; }
-| ASCENDING opt_key opt_is SYMBOL	{ $4->level = -1; $$ = $4; }
-| DESCENDING opt_key opt_is SYMBOL	{ $4->level = -2; $$ = $4; }
+| ASCENDING opt_key opt_is SYMBOL_TOK	{ $4->level = -1; $$ = $4; }
+| DESCENDING opt_key opt_is SYMBOL_TOK	{ $4->level = -2; $$ = $4; }
 ;
 index_name_list:
   def_name { define_implicit_field ($1, $<tree>-2, curr_field->times); }
@@ -804,7 +803,7 @@ rd_statement_list:
 | rd_statement_list rd_statement
 ;
 rd_statement:
-  RD SYMBOL { $2->type='W'; curr_division = CDIV_INITIAL; }
+  RD SYMBOL_TOK { $2->type='W'; curr_division = CDIV_INITIAL; }
   report_controls { curr_division = CDIV_DATA; }
   report_description
 ;
@@ -1175,15 +1174,15 @@ add_statement:
 add_body:
   number_list TO var_list_name opt_on_size_error
   {
-    gen_add1 ($1, $3, $4);
+    gen_add_to ($1, $3, $4);
   }
 | number_list opt_add_to GIVING var_list_name opt_on_size_error
   {
-    gen_add2 ($2 ? list_append ($1, $2) : $1, $4, $5);
+    gen_add_giving ($2 ? list_append ($1, $2) : $1, $4, $5);
   }
-| CORRESPONDING gname opt_to name flag_rounded
+| CORRESPONDING gname opt_to name flag_rounded opt_on_size_error
   {
-    gen_addcorr ($2, $4, $5);
+    yyerror ("ADD CORRESPONDING is not implemented yet.");
   }
 ;
 opt_add_to:
@@ -1371,41 +1370,25 @@ divide_statement:
   DIVIDE divide_body opt_end_divide
 ;
 divide_body:
-  number BY number GIVING var_list_name opt_on_size_error
+  number INTO var_list_name opt_on_size_error
   {
-    gen_divide2($5, $1, $3, $6);
-  }
-| number BY number GIVING name flag_rounded REMAINDER name
-  {
-    assert_numeric_sy($5);
-    gen_divide($1, $3, $5, $8, $6);
-  }
-| number INTO number GIVING name flag_rounded REMAINDER name
-  {
-    assert_numeric_sy($5);
-    gen_divide($3, $1, $5, $8, $6);
-  }
-| number BY number GIVING name flag_rounded REMAINDER name on_size_error
-  {
-    assert_numeric_sy($5);
-    gen_dstlabel($9->lbl4); /* generate bypass jump */
-    gen_divide($1, $3, $5, $8, $6);
-    math_on_size_error3($9);
-  }
-| number INTO number GIVING name flag_rounded REMAINDER name on_size_error
-  {
-    assert_numeric_sy($5);
-    gen_dstlabel($9->lbl4); /* generate bypass jump */
-    gen_divide($3, $1, $5, $8, $6);
-    math_on_size_error3($9);
+    gen_divide_into ($1, $3, $4);
   }
 | number INTO number GIVING var_list_name opt_on_size_error
   {
-    gen_divide2($5, $3, $1, $6);
-  }
-| number INTO var_list_name opt_on_size_error
+    gen_divide_giving ($1, $3, $5, $6);
+  } 
+| number BY number GIVING var_list_name opt_on_size_error
   {
-    gen_divide1($3, $1, $4);
+    gen_divide_giving ($3, $1, $5, $6);
+  }
+| number INTO number GIVING name flag_rounded REMAINDER name opt_on_size_error
+  {
+    gen_divide_giving_remainder ($1, $3, $5, $8, $6, $9);
+  }
+| number BY number GIVING name flag_rounded REMAINDER name opt_on_size_error
+  {
+    gen_divide_giving_remainder ($3, $1, $5, $8, $6, $9);
   }
 ;
 opt_end_divide: | END_DIVIDE ;
@@ -1661,7 +1644,7 @@ opt_initial: | TOK_INITIAL ;
 
 move_statement:
   MOVE gname TO move_vars
-| MOVE CORRESPONDING gname TO gname { gen_movecorr($3, $5); }
+| MOVE CORRESPONDING gname TO gname { gen_move_corresponding($3, $5); }
 ;
 move_vars:
   gname				{ gen_move ($<tree>-1, $1); }
@@ -1679,7 +1662,7 @@ multiply_statement:
 multiply_body:
   number BY var_list_name opt_on_size_error
   {
-    gen_multiply1 ($3, $1, $4);
+    gen_multiply_by ($1, $3, $4);
   }
 | number BY number GIVING var_list_name opt_on_size_error
   {
@@ -2458,15 +2441,15 @@ subtract_statement:
 subtract_body:
   number_list FROM var_list_name opt_on_size_error
   {
-    gen_subtract1 ($1, $3, $4);
+    gen_subtract_from ($1, $3, $4);
   }
 | number_list FROM number GIVING var_list_name opt_on_size_error
   {
-    gen_subtract2 ($1, $5, $3, $6);
+    gen_subtract_giving ($1, $3, $5, $6);
   }
-| CORRESPONDING gname FROM name flag_rounded
+| CORRESPONDING gname FROM name flag_rounded opt_on_size_error
   {
-    gen_subtractcorr ($2, $4, $5);
+    yyerror ("SUBTRACT CORRESPONDING is not implemented yet.");
   }
 ;
 opt_end_subtract: | END_SUBTRACT ;
@@ -2591,10 +2574,12 @@ opt_on_size_error:
 on_size_error:
   opt_on SIZE error_sentence
   {
+    tmose = NULL;
     $$=math_on_size_error4($3, 1);
   }
 | NOT opt_on SIZE error_sentence
   {
+    tmose = NULL;
     $$=math_on_size_error4($4, 2);
   }
 | opt_on SIZE error_sentence
@@ -2812,7 +2797,7 @@ opt_def_name:
 ;
 def_name:
   FILLER    { $<tree>$=make_filler(); }
-| SYMBOL
+| SYMBOL_TOK
   {
     if ($1->defined)
       yyerror("variable redefined, %s",$1->name);
@@ -2829,7 +2814,7 @@ variable_indexed:
   }
 ;
 filename:
-  SYMBOL
+  SYMBOL_TOK
 | literal
 ;
 name:
@@ -2977,13 +2962,6 @@ opt_when: | WHEN ;
 
 
 %%
-
-static void
-assert_numeric_sy (cob_tree sy)
-{
-  if (!is_numeric_sy (sy))
-    yyerror ("non numeric variable: %s", sy->name);
-}
 
 static cob_tree
 make_opt_cond (cob_tree last, int type, cob_tree this)

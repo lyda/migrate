@@ -251,16 +251,16 @@ scan_word (char *text)
     {
     case CDIV_ENVIR:
       yylval.tree = install (yytext, SYTB_VAR, 0);
-      return SYMBOL;
+      return SYMBOL_TOK;
 
     case CDIV_DATA:
       yylval.tree = install (yytext, SYTB_VAR, 1);
-      return SYMBOL;
+      return SYMBOL_TOK;
 
     case CDIV_FD:
       if ((yylval.tree = lookup_symbol (yytext)) == NULL)
 	yyerror ("undefined %s at FD/SD", yytext);
-      return SYMBOL;
+      return SYMBOL_TOK;
 
     default:
       /* if symbol was defined at the data division */
