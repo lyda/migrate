@@ -1,3 +1,7 @@
+2004-11-04  Roger While <simrw@sim-basis.de>
+
+	* move.c : Fix regression for NIST suite
+
 2004-11-04  Bernard Giroud <bgiroud@open-cobol.org>
 	* numeric.c (cob_decimal_get_binary) : reverted:
 	  NIST test suite is no mre working.
