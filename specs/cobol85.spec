@@ -4,6 +4,7 @@ name: "COBOL 85"
 
 # Value: `yes', `no'
 binary-bigendian: no
+redefines-occurs: no
 
 # Value:         digits  bytes
 #                ------  -----

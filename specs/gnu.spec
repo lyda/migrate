@@ -4,6 +4,7 @@ name: "GNU COBOL"
 
 # Value: `yes', `no'
 binary-bigendian: no
+redefines-occurs: yes
 
 # Value:         digits  bytes
 #                ------  -----
