@@ -24,7 +24,7 @@
 
 ## Undefined
 
-AT_SETUP([Undefined entry])
+AT_SETUP([Undefined data name])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -40,7 +40,7 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 
 AT_CLEANUP
 
-AT_SETUP([Undefined group])
+AT_SETUP([Undefined group name])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -59,7 +59,7 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 
 AT_CLEANUP
 
-AT_SETUP([Undefined in the group])
+AT_SETUP([Undefined data name in group])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -80,7 +80,7 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 
 AT_CLEANUP
 
-AT_SETUP([Reference not a group])
+AT_SETUP([Reference not a group name])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -121,7 +121,7 @@ AT_CLEANUP
 
 ## Redefinition
 
-AT_SETUP([Redefinition of 01 entries])
+AT_SETUP([Redefinition of 01 items])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -139,7 +139,7 @@ prog.cob:6: warning: `X' previously defined here
 
 AT_CLEANUP
 
-AT_SETUP([Redefinition of 01 and 02 entries])
+AT_SETUP([Redefinition of 01 and 02 items])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -157,7 +157,7 @@ prog.cob:6: warning: `X' previously defined here
 
 AT_CLEANUP
 
-AT_SETUP([Redefinition of 02 entries in the same group])
+AT_SETUP([Redefinition of 02 items])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -176,7 +176,43 @@ prog.cob:7: warning: `X' previously defined here
 
 AT_CLEANUP
 
-AT_SETUP([Redefinition of 02 entries in different groups])
+AT_SETUP([Redefinition of 77 items])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       77 X             PIC X.
+       77 X             PIC X.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:7: warning: redefinition of `X'
+prog.cob:6: warning: `X' previously defined here
+])
+
+AT_CLEANUP
+
+AT_SETUP([Redefinition of 01 and 77 items])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X.
+       77 X             PIC X.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:7: warning: redefinition of `X'
+prog.cob:6: warning: `X' previously defined here
+])
+
+AT_CLEANUP
+
+AT_SETUP([Ambiguous definition of 02 items])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -200,7 +236,7 @@ prog.cob:9: `X' in `G2' defined here
 
 AT_CLEANUP
 
-AT_SETUP([Redefinition of 02 and 03 entries])
+AT_SETUP([Ambiguous definition of 02 and 03 items])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -223,42 +259,6 @@ prog.cob:8: `X' in `X' in `G' defined here
 
 AT_CLEANUP
 
-AT_SETUP([Redefinition of 77 entries])
-
-AT_DATA([prog.cob], [
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       77 X             PIC X.
-       77 X             PIC X.
-])
-
-AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: warning: redefinition of `X'
-prog.cob:6: warning: `X' previously defined here
-])
-
-AT_CLEANUP
-
-AT_SETUP([Redefinition of 01 and 77 entries])
-
-AT_DATA([prog.cob], [
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 X             PIC X.
-       77 X             PIC X.
-])
-
-AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: warning: redefinition of `X'
-prog.cob:6: warning: `X' previously defined here
-])
-
-AT_CLEANUP
-
 
 ###
 ### File name
@@ -271,7 +271,7 @@ AT_CLEANUP
 
 ## Undefined
 
-AT_SETUP([Undefined label])
+AT_SETUP([Undefined procedure name])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -290,7 +290,7 @@ AT_CLEANUP
 
 ## Redefinition
 
-AT_SETUP([Redefinition of section label])
+AT_SETUP([Redefinition of section names])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -309,7 +309,7 @@ prog.cob:5: `L' previously defined here
 
 AT_CLEANUP
 
-AT_SETUP([Redefinition of section and paragraph label])
+AT_SETUP([Redefinition of section and paragraph names])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -328,7 +328,7 @@ prog.cob:5: `L' previously defined here
 
 AT_CLEANUP
 
-AT_SETUP([Redefinition of paragraph label in the same section])
+AT_SETUP([Redefinition of paragraph names])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -347,7 +347,7 @@ prog.cob:5: `L' previously defined here
 
 AT_CLEANUP
 
-AT_SETUP([Redefinition of paragraph label in deferent sections])
+AT_SETUP([Ambiguous definition of paragraph names])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.

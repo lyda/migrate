@@ -18,12 +18,13 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 # 02111-1307, USA.
 
-AC_PREREQ(2.57)
+AC_PREREQ(2.59)
 
-AC_INIT([OpenCOBOL],[0.23],[open-cobol-list@lists.sourceforge.net],[open-cobol])
+AC_INIT([OpenCOBOL],[0.23.30a],[open-cobol-list@lists.sourceforge.net],[open-cobol])
 AC_CONFIG_SRCDIR([libcob.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_TESTDIR([tests])
+AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE([gnu no-texinfo.tex])
 AM_MAINTAINER_MODE
@@ -114,7 +115,7 @@ LIBCOB_LIBS="$LIBCOB_LIBS -lltdl"
 
 # Checks for gettext.
 AM_GNU_GETTEXT([external])
-AM_GNU_GETTEXT_VERSION(0.12.1)
+AM_GNU_GETTEXT_VERSION(0.13)
 if test "x$LTLIBINTL" != "x"; then
   COBC_LIBS="$COBC_LIBS $LTLIBINTL"
   LIBCOB_LIBS="$LIBCOB_LIBS $LTLIBINTL"
