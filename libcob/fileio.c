@@ -113,7 +113,7 @@ char cob_dummy_status[2];
  * SEQUENTIAL
  */
 
-static void
+static int
 sequential_open (struct cob_file_desc *f, char *filename, int mode)
 {
   int flags;
@@ -135,6 +135,8 @@ sequential_open (struct cob_file_desc *f, char *filename, int mode)
     }
 
   f->file.fd = open (filename, flags, FILE_PERMISSION);
+
+  return f->file.fd ? 0 : errno;
 }
 
 static void
@@ -224,7 +226,7 @@ cob_write_page (struct cob_file_desc *f)
  * LINE SEQUENTIAL
  */
 
-static void
+static int
 lineseq_open (struct cob_file_desc *f, char *filename, int mode)
 {
   switch (mode)
@@ -242,6 +244,8 @@ lineseq_open (struct cob_file_desc *f, char *filename, int mode)
       f->file.fp = fopen (filename, "w+");
       break;
     }
+
+  return f->file.fp ? 0 : errno;
 }
 
 static void
@@ -306,7 +310,7 @@ lineseq_write (struct cob_file_desc *f)
       break;
   size = i + 1;
 
-  /* write the the file */
+  /* write to the file */
   for (i = 0; i < size; i++)
     putc (f->record_data[i], f->file.fp);
   putc ('\n', f->file.fp);
@@ -330,18 +334,18 @@ static struct cob_fileio_funcs lineseq_funcs = {
  * RELATIVE
  */
 
-static void
+static int
 relative_open (struct cob_file_desc *f, char *filename, int mode)
 {
-  sequential_open (f, filename, mode);
   cob_set_int (f->relative_key, 1);
+  return sequential_open (f, filename, mode);
 }
 
 static void
 relative_close (struct cob_file_desc *f)
 {
-  sequential_close (f);
   cob_set_int (f->relative_key, 0);
+  sequential_close (f);
 }
 
 static void
@@ -453,18 +457,17 @@ static struct cob_fileio_funcs relative_funcs = {
  * INDEXED
  */
 
-#define DB_OPEN(db,name,dbname,flags)					\
-  ({									\
-    db_create (&db, NULL, 0);						\
-    db->open (db, name, dbname, DB_BTREE, flags, FILE_PERMISSION);	\
-  })
-#define DB_PUT(db,key,data,flags)					\
+#define DB_OPEN(db,name,dbname,flags)				\
+  db->open (db, name, dbname, DB_BTREE, flags, FILE_PERMISSION)
+#define DB_CLOSE(db)						\
+  db->close (db, 0)
+#define DB_PUT(db,key,data,flags)				\
   db->put (db, NULL, key, data, flags)
-#define DB_GET(db,key,data,flags)					\
+#define DB_GET(db,key,data,flags)				\
   db->get (db, NULL, key, data, flags)
-#define DB_DEL(db,key,flags)						\
+#define DB_DEL(db,key,flags)					\
   db->del (db, NULL, key, flags)
-#define DB_CURSOR(db,cur)						\
+#define DB_CURSOR(db,cur)					\
   db->cursor (db, NULL, cur, 0)
 #define DBC_GET(cur,key,data,flags)			\
   ({							\
@@ -481,11 +484,13 @@ static struct cob_fileio_funcs relative_funcs = {
   k.data = COB_FIELD_DATA (f->keys[i].field) - f->record_data + (base);	\
   k.size = COB_FIELD_SIZE (f->keys[i].field);
 
-static void
+static DB_ENV *dbenv = NULL;
+
+static int
 indexed_open (struct cob_file_desc *f, char *filename, int mode)
 {
-  int i;
-  int flags;
+  int i, j, ret;
+  int flags = 0;
 
   switch (mode)
     {
@@ -503,28 +508,26 @@ indexed_open (struct cob_file_desc *f, char *filename, int mode)
       break;
     }
 
-  switch (DB_OPEN (f->file.db, filename, "primary", flags))
+  for (i = 0; i < f->nkeys; i++)
     {
-    case 0:
-      f->keys[0].db = f->file.db;
-      f->file.db->set_errfile (f->file.db, stderr);
-      break;
-    case ENOENT:
-      f->file.db->close (f->file.db, 0);
-      f->file.db = NULL;
-      errno = ENOENT;
-      return;
+      char dbname[BUFSIZ];
+      if (i == 0)
+	strcpy (dbname, filename);
+      else
+	sprintf (dbname, "%s.%d", filename, i);
+      db_create (&f->keys[i].db, dbenv, 0);
+      if (f->keys[i].duplicates)
+	f->keys[i].db->set_flags (f->keys[i].db, DB_DUP);
+      if ((ret = DB_OPEN (f->keys[i].db, dbname, NULL, flags)) != 0)
+	{
+	  for (j = 0; j <= i; j++)
+	    DB_CLOSE (f->keys[j].db);
+	  return ret;
+	}
     }
 
-  if (FILE_OPENED (f))
-    for (i = 1; i < f->nkeys; i++)
-      {
-	char dbname[BUFSIZ];
-	sprintf (dbname, "secondary%d", i);
-	DB_OPEN (f->keys[i].db, filename, dbname, flags);
-	if (f->keys[i].duplicates)
-	  f->keys[i].db->set_flags (f->keys[i].db, DB_DUP);
-      }
+  f->file.db = f->keys[0].db;
+  return 0;
 }
 
 static void
@@ -535,13 +538,12 @@ indexed_close (struct cob_file_desc *f)
   /* close the cursor */
   if (f->cursor)
     f->cursor->c_close (f->cursor);
+  f->cursor = NULL;
 
   /* close DB's */
   for (i = 0; i < f->nkeys; i++)
-    f->keys[i].db->close (f->keys[i].db, 0);
-
+    DB_CLOSE (f->keys[i].db);
   f->file.db = NULL;
-  f->cursor = NULL;
 
   RETURN_STATUS (00);
 }
@@ -786,6 +788,13 @@ cob_init_fileio (void)
   fileio_funcs[COB_ORG_LINE_SEQUENTIAL] = &lineseq_funcs;
   fileio_funcs[COB_ORG_RELATIVE] = &relative_funcs;
   fileio_funcs[COB_ORG_INDEXED] = &indexed_funcs;
+
+  db_env_create (&dbenv, 0);
+#ifdef COB_DEBUG
+  dbenv->set_errpfx (dbenv, "DB");
+  dbenv->set_errfile (dbenv, stderr);
+#endif
+  dbenv->open (dbenv, NULL, DB_CREATE | DB_INIT_MPOOL, 0);
 }
 
 void
@@ -793,7 +802,7 @@ cob_open (struct cob_file_desc *f, struct cob_field name, int mode)
 {
   char filename[FILENAME_MAX];
 
-  /* check if the file is opened */
+  /* check if the file is already open */
   if (FILE_OPENED (f))
     RETURN_STATUS (41);
 
@@ -804,13 +813,10 @@ cob_open (struct cob_file_desc *f, struct cob_field name, int mode)
   f->f.end_of_file = 0;
   f->f.read_done   = 0;
 
-  fileio_funcs[f->organization]->open (f, filename, mode);
-
-  if (FILE_OPENED (f))
-      RETURN_STATUS (00);
-
-  switch (errno)
+  switch (fileio_funcs[f->organization]->open (f, filename, mode))
     {
+    case 0:
+      RETURN_STATUS (00);
     case ENOENT:
       if (f->f.optional)
 	{
