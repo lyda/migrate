@@ -1962,7 +1962,7 @@ output_internal_function (struct cb_program *prog, int single,
   output_line ("int n[%d];", prog->loop_counter);
   output_line ("int frame_index;");
   output_line ("struct frame { int perform_through; void *return_address; } "
-	       "frame_stack[24];");
+	       "frame_stack[254];");
   output_line ("cob_field f[4];");
   output_newline ();
 
