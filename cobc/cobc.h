@@ -105,7 +105,7 @@ extern int ppopen (char *name, const char *lib, struct cobc_replacement *replace
 
 /* parser (in scanner.l, parser.y) */
 extern FILE *yyin;
-extern FILE *cobc_out;
+extern FILE *yyout;
 extern int yylex (void);
 extern int yyparse (void);
 

@@ -96,14 +96,14 @@ output (char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  vfprintf (cobc_out, fmt, ap);
+  vfprintf (yyout, fmt, ap);
   va_end (ap);
 }
 
 static void
 output_newline (void)
 {
-  fputs ("\n", cobc_out);
+  fputs ("\n", yyout);
 }
 
 static void
@@ -111,7 +111,7 @@ output_prefix (void)
 {
   int i;
   for (i = 0; i < output_indent_level; i++)
-    fputc (' ', cobc_out);
+    fputc (' ', yyout);
 }
 
 static void
@@ -120,8 +120,8 @@ output_line (char *fmt, ...)
   va_list ap;
   va_start (ap, fmt);
   output_prefix ();
-  vfprintf (cobc_out, fmt, ap);
-  fputc ('\n', cobc_out);
+  vfprintf (yyout, fmt, ap);
+  fputc ('\n', yyout);
   va_end (ap);
 }
 

@@ -38,8 +38,6 @@
 #include "reserved.h"
 #include "lib/getopt.h"
 
-struct cobc_replacement *cobc_replacement = NULL;
-
 
 /*
  * Global variables
@@ -56,8 +54,6 @@ int cobc_flag_line_directive = 0;
 
 int errorcount;
 int warningcount;
-
-FILE *cobc_out;
 
 char *cobc_source_file = NULL;
 int cobc_source_line = 0;
@@ -471,8 +467,8 @@ preprocess (struct filename *fn)
 	     fn->source, fn->preprocess);
   ppparse ();
 
-  fclose (ppin);
   fclose (ppout);
+  fclose (ppin);
 
   if (errorcount > 0)
     return -1;
@@ -506,8 +502,8 @@ process_translate (struct filename *fn)
   if (!yyin)
     terminate (fn->preprocess);
 
-  cobc_out = fopen (fn->translate, "w");
-  if (!cobc_out)
+  yyout = fopen (fn->translate, "w");
+  if (!yyout)
     terminate (fn->translate);
 
   cobc_source_file = NULL;
@@ -521,7 +517,7 @@ process_translate (struct filename *fn)
 	     fn->preprocess, fn->translate);
   ret = yyparse ();
 
-  fclose (cobc_out);
+  fclose (yyout);
   fclose (yyin);
 
   return ret;
