@@ -1744,7 +1744,7 @@ evaluate_subject_list:
   evaluate_subject		{ $$ = list_add ($1, $3); }
 ;
 evaluate_subject:
-  condition			{ $$ = $1; }
+  expr				{ $$ = $1; }
 | TRUE				{ $$ = cobc_true; }
 | FALSE				{ $$ = cobc_false; }
 ;
@@ -1796,11 +1796,11 @@ evaluate_object:
   }
 ;
 evaluate_object_1:
-  ANY				{ $$ = cobc_any; }
+  expr				{ $$ = $1; }
+| expr THRU expr		{ $$ = make_pair ($1, $3); }
+| ANY				{ $$ = cobc_any; }
 | TRUE				{ $$ = cobc_true; }
 | FALSE				{ $$ = cobc_false; }
-| condition			{ $$ = $1; }
-| expr THRU expr		{ $$ = make_pair ($1, $3); }
 ;
 _end_evaluate: | END_EVALUATE ;
 
