@@ -5,6 +5,5 @@ cobpp_LDADD = $(COBPP_LIBS) $(top_builddir)/lib/libsupport.a
 
 BUILT_SOURCES = parser.c parser.h scanner.c
 
-AM_CFLAGS = -Wall
 AM_YFLAGS = -d
 AM_LFLAGS = -s
