@@ -336,8 +336,9 @@ field_uniform_class (struct cobc_field *p)
     {
       int class = field_uniform_class (p->children);
       for (p = p->children->sister; p; p = p->sister)
-	if (class != field_uniform_class (p))
-	  return COB_VOID;
+	if (!p->redefines)
+	  if (class != field_uniform_class (p))
+	    return COB_VOID;
       return class;
     }
 }
@@ -345,6 +346,12 @@ field_uniform_class (struct cobc_field *p)
 static void
 output_initialize_uniform (cobc_tree x, int class, int size)
 {
+  int is_table = COBC_FIELD_P (x) && COBC_FIELD (x)->f.have_occurs;
+  if (is_table)
+    {
+      output_indent ("{", 2);
+      output_line ("int i%d = 1;", COBC_FIELD (x)->indexes);
+    }
   switch (class)
     {
     case COB_BINARY:
@@ -356,6 +363,10 @@ output_initialize_uniform (cobc_tree x, int class, int size)
     case COB_ALPHANUMERIC:
       output_memset (x, ' ', size);
       break;
+    }
+  if (is_table)
+    {
+      output_indent ("}", -2);
     }
 }
 
