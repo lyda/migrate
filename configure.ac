@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(open-cobol, 0.9.7)
+AC_INIT(open-cobol, 0.9.7.1)
 AC_CONFIG_SRCDIR(cobc/cobc.c)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -63,9 +63,6 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([memmove memset regcomp \
 		strcasecmp strchr strrchr strdup strstr strtol])
 
-# Checks for gettext
-AM_GNU_GETTEXT([external])
-
 # Checks for getopt_long
 AC_CHECK_FUNC([getopt_long_only], getopt=true, getopt=false)
 AM_CONDITIONAL(HAVE_GETOPT_LONG_ONLY, test x$getopt = xtrue)
@@ -84,6 +81,10 @@ LIBCOB_LIBS="$LIBCOB_LIBS -lgmp"
 AC_CHECK_HEADERS([ltdl.h], , AC_MSG_ERROR(ltdl.h is required))
 AC_CHECK_LIB([ltdl], [lt_dlopen], , AC_MSG_ERROR(libltdl is required))
 LIBCOB_LIBS="$LIBCOB_LIBS -lltdl"
+
+# Checks for gettext
+AM_GNU_GETTEXT([external])
+LIBCOB_LIBS="$LIBCOB_LIBS $LIBINTL"
 
 # Checks for readline.
 USE_READLINE="no"
