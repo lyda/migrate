@@ -3867,7 +3867,11 @@ identifier:
   {
     $$ = cb_build_identifier ($1);
     if ($$ != cb_error_node)
-      push (cb_build_check_identifier ($$));
+      {
+	cb_tree l = cb_build_check_identifier ($$);
+	if (l)
+	  push (l);
+      }
   }
 ;
 identifier_1:
