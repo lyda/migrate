@@ -363,7 +363,7 @@ cob_push_decimal (struct cob_field f)
     default:
       {
 	char *p, buff[32];
-	int sign = extract_sign (f.desc, f.data);
+	int sign = extract_sign (f);
 
 	p = (f.desc->len < 32) ? buff : alloca (f.desc->len + 1);
 	memcpy (p, f.data, f.desc->len);
@@ -373,7 +373,7 @@ cob_push_decimal (struct cob_field f)
 	if (sign == 1) /* negative */
 	  mpz_neg (d->number, d->number);
 
-	put_sign (f.desc, f.data, sign);
+	put_sign (f, sign);
 	break;
       }
     }
@@ -482,11 +482,12 @@ cob_set (struct cob_field f, int round)
 	    else
 	      goto overflow;
 
-	    put_sign (f.desc, f.data, sign);
+	    put_sign (f, sign);
 	  }
 	else
 	  {
 	    struct fld_desc desc = {size, '9', decimals, 0, 0, 0, 0, 0, 0};
+	    struct cob_field temp = {&desc, buff};
 	    unsigned char pic[10];
 	    if (decimals > 0)
 	      sprintf (pic, "S\0019%cV\0019%c",
@@ -494,8 +495,8 @@ cob_set (struct cob_field f, int round)
 	    else
 	      sprintf (pic, "S\0019%c", (char) size);
 	    desc.pic = pic;
-	    put_sign (&desc, buff, sign);
-	    cob_move ((struct cob_field) {&desc, buff}, f);
+	    put_sign (temp, sign);
+	    cob_move (temp, f);
 	  }
 	return;
       }
@@ -593,8 +594,8 @@ cob_compare (struct cob_field f1, struct cob_field f2)
       return cob_cmp ();
     }
 
-  sign1 = extract_sign (f1.desc, f1.data);
-  sign2 = extract_sign (f2.desc, f2.data);
+  sign1 = extract_sign (f1);
+  sign2 = extract_sign (f2);
 
   if (f1.desc->all || f2.desc->all)
     {
@@ -671,8 +672,8 @@ cob_compare (struct cob_field f1, struct cob_field f2)
   negative:
     ret = -1; goto end;
   end:
-    put_sign (f1.desc, f1.data, sign1);
-    put_sign (f2.desc, f2.data, sign2);
+    put_sign (f1, sign1);
+    put_sign (f2, sign2);
     return ret;
   }
 }

@@ -84,23 +84,22 @@ char_to_sign (char ch)
 }
 
 int
-extract_sign (struct fld_desc *f, char *s)
+extract_sign (struct cob_field f)
 {
   char *tmp;
   int digit;
 
-  if (f->type == 'C')
+  switch (f.desc->type)
     {
-      digit = f->len / 2;
-      return (f->len & 1) ?	/* odd number of digits? */
-	(((s[digit] & 0x0f) == 0x0d) ? 1 : 0) :
-	(((s[digit] & 0xf0) == 0xd0) ? 1 : 0);
-    }
-  if (f->type == '9')
-    {
-      if (f->pic[0] != 'S')
+    case 'C':
+      digit = f.desc->len / 2;
+      return (f.desc->len & 1) ?	/* odd number of digits? */
+	(((f.data[digit] & 0x0f) == 0x0d) ? 1 : 0) :
+	(((f.data[digit] & 0xf0) == 0xd0) ? 1 : 0);
+    case '9':
+      if (f.desc->pic[0] != 'S')
 	return 0;
-      tmp = (f->leading_sign) ? s : s + f->len - 1;
+      tmp = (f.desc->leading_sign) ? f.data : f.data + f.desc->len - 1;
       digit = char_to_sign (*tmp);
       if (digit == 0x80)
 	*tmp = '0';
@@ -117,23 +116,22 @@ extract_sign (struct fld_desc *f, char *s)
 }
 
 void
-put_sign (struct fld_desc *f, char *s, int sign)
+put_sign (struct cob_field f, int sign)
 {
   char *tmp;
   int digit;
 
-  if (f->type == 'C')
+  switch (f.desc->type)
     {
-      digit = f->len / 2;
-      s[digit] = (f->len & 1) ?	/* odd number of digits */
-	((s[digit] & 0xf0) | (sign ? 0x0d : 0x0c)) : (sign ? 0xd0 : 0xc0);
+    case 'C':
+      digit = f.desc->len / 2;
+      f.data[digit] = (f.desc->len & 1) ?	/* odd number of digits */
+	((f.data[digit] & 0xf0) | (sign ? 0x0d : 0x0c)) : (sign ? 0xd0 : 0xc0);
       return;
-    }
-  if (f->type == '9')
-    {
-      if (f->pic[0] != 'S')
+    case '9':
+      if (f.desc->pic[0] != 'S')
 	return;
-      tmp = (f->leading_sign) ? s : s + f->len - 1;
+      tmp = (f.desc->leading_sign) ? f.data : f.data + f.desc->len - 1;
       digit = *tmp - '0';
       if (sign)
 	digit = -digit;

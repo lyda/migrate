@@ -27,6 +27,11 @@
 #define MIN(x,y) ({int _x = (x), _y = (y); (_x < _y) ? _x : _y; })
 #define MAX(x,y) ({int _x = (x), _y = (y); (_x > _y) ? _x : _y; })
 
+#define FIELD_BASE(f) \
+  ((f).data + ((f).desc->separate_sign && (f).leading_sign) ? 1 : 0)
+#define FIELD_LENGTH(f) \
+  ((f).desc->len - (f).desc->separate_sign ? 1 : 0)
+
 void
 print_field (struct cob_field f)
 {
@@ -96,18 +101,18 @@ cob_move_alphanum_to_display (struct cob_field f1, struct cob_field f2)
 	goto error;
     }
 
-  put_sign (f2.desc, f2.data, sign);
+  put_sign (f2, sign);
   return;
 
  error:
   memset (f2.data, '0', f2.desc->len);
-  put_sign (f2.desc, f2.data, 0);
+  put_sign (f2, 0);
 }
 
 void
 cob_move_display_to_display (struct cob_field f1, struct cob_field f2)
 {
-  int sign = extract_sign (f1.desc, f1.data);
+  int sign = extract_sign (f1);
   int hf1 = f1.desc->len - f1.desc->decimals;
   int hf2 = f2.desc->len - f2.desc->decimals;
   int lf1 = -f1.desc->decimals;
@@ -125,14 +130,14 @@ cob_move_display_to_display (struct cob_field f1, struct cob_field f2)
   if (s1 < e1)
     memcpy (s2, s1, e1 - s1);
 
-  put_sign (f1.desc, f1.data, sign);
-  put_sign (f2.desc, f2.data, sign);
+  put_sign (f1, sign);
+  put_sign (f2, sign);
 }
 
 void
 cob_move_display_to_alphanum (struct cob_field f1, struct cob_field f2)
 {
-  int sign = extract_sign (f1.desc, f1.data);
+  int sign = extract_sign (f1);
 
   if (f1.desc->len >= f2.desc->len)
     {
@@ -155,7 +160,7 @@ cob_move_display_to_alphanum (struct cob_field f1, struct cob_field f2)
 	memset (f2.data + f1.desc->len + zero_len, ' ', diff - zero_len);
     }
 
-  put_sign (f1.desc, f1.data, sign);
+  put_sign (f1, sign);
 }
 
 void
@@ -215,7 +220,7 @@ void
 cob_move_display_to_binary (struct cob_field f1, struct cob_field f2)
 {
   int i, len;
-  int sign = extract_sign (f1.desc, f1.data);
+  int sign = extract_sign (f1);
   long long val = 0;
 
   len = f1.desc->len - f1.desc->decimals + f2.desc->decimals;
@@ -236,7 +241,7 @@ cob_move_display_to_binary (struct cob_field f1, struct cob_field f2)
     case 8: *(long long *) f2.data = val; break;
     }
 
-  put_sign (f1.desc, f1.data, sign);
+  put_sign (f1, sign);
 }
 
 void
@@ -289,7 +294,7 @@ cob_move_binary_to_display (struct cob_field f1, struct cob_field f2)
       memcpy (s2, s1, e1 - s1);
   }
 
-  put_sign (f2.desc, f2.data, sign);
+  put_sign (f2, sign);
 }
 
 
@@ -337,7 +342,7 @@ void
 cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 {
   char *p;
-  int sign = extract_sign (f1.desc, f1.data);
+  int sign = extract_sign (f1);
   unsigned char *min, *max, *src, *dst, *end;
   unsigned char pad = ' ';
   int count = 0;
@@ -451,7 +456,7 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
       *dst = sign_symbol;
     }
 
-  put_sign (f1.desc, f1.data, sign);
+  put_sign (f1, sign);
 }
 
 void
@@ -628,7 +633,7 @@ cob_move_zero (struct cob_field f)
     case '9':
     case 'X':
       memset (f.data, '0', f.desc->len);
-      put_sign (f.desc, f.data, 0);
+      put_sign (f, 0);
       return;
 
     default:
