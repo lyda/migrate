@@ -230,8 +230,8 @@ static void ambiguous_error (struct cobc_word *p);
 %type <tree> opt_on_overflow_sentence,opt_not_on_overflow_sentence
 %type <tree> opt_on_size_error_sentence,opt_not_on_size_error_sentence
 %type <tree> numeric_name,numeric_edited_name,group_name,table_name,class_name
-%type <tree> condition_name,qualified_cond_name,data_name,file_name
-%type <tree> record_name,label_name,mnemonic_name,section_name,name
+%type <tree> program_name,condition_name,qualified_cond_name,data_name
+%type <tree> file_name,record_name,label_name,mnemonic_name,section_name,name
 %type <tree> qualified_name,predefined_name
 %type <list> qualified_predefined_word
 %type <tree> integer_value,value,number
@@ -1480,7 +1480,7 @@ _proceed_to: | PROCEED TO ;
  */
 
 call_statement:
-  CALL value			{ current_call_mode = COBC_CALL_BY_REFERENCE; }
+  CALL program_name		{ current_call_mode = COBC_CALL_BY_REFERENCE; }
   call_using call_returning
   {
     push_call_3 (COB_CALL, $2, $4, $5);
@@ -1536,11 +1536,19 @@ _end_call: | END_CALL ;
  */
 
 cancel_statement:
-  CANCEL value
+  CANCEL cancel_list
+;
+cancel_list:
+| cancel_list program_name
   {
     push_call_1 (COB_CANCEL, $2);
   }
 ;
+program_name:
+  data_name
+| NONNUMERIC_LITERAL
+;
+
 
 
 /*
