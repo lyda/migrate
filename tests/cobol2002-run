@@ -1027,9 +1027,9 @@ _ATEOF
 
 
 $at_traceoff
-echo "fundamental.at:90: \${CC} -shared -o dump.so dump.c"
+echo "fundamental.at:90: \${CC} -shared -o dump.\${SHREXT} dump.c"
 echo fundamental.at:90 >$at_check_line_file
-( $at_traceon; ${CC} -shared -o dump.so dump.c ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${CC} -shared -o dump.${SHREXT} dump.c ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -3983,9 +3983,9 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:251: \${CC} -shared -o dump.so dump.c"
+echo "misc.at:251: \${CC} -shared -o dump.\${SHREXT} dump.c"
 echo misc.at:251 >$at_check_line_file
-( $at_traceon; ${CC} -shared -o dump.so dump.c ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${CC} -shared -o dump.${SHREXT} dump.c ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr

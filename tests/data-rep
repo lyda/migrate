@@ -819,9 +819,9 @@ _ATEOF
 
 
 $at_traceoff
-echo "binary.at:42: \${CC} -shared -o dump.so dump.c"
+echo "binary.at:42: \${CC} -shared -o dump.\${SHREXT} dump.c"
 echo binary.at:42 >$at_check_line_file
-( $at_traceon; ${CC} -shared -o dump.so dump.c ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${CC} -shared -o dump.${SHREXT} dump.c ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -1177,9 +1177,9 @@ _ATEOF
 
 
 $at_traceoff
-echo "binary.at:267: \${CC} -shared -o dump.so dump.c"
+echo "binary.at:267: \${CC} -shared -o dump.\${SHREXT} dump.c"
 echo binary.at:267 >$at_check_line_file
-( $at_traceon; ${CC} -shared -o dump.so dump.c ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${CC} -shared -o dump.${SHREXT} dump.c ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -1535,9 +1535,9 @@ _ATEOF
 
 
 $at_traceoff
-echo "binary.at:492: \${CC} -shared -o dump.so dump.c"
+echo "binary.at:492: \${CC} -shared -o dump.\${SHREXT} dump.c"
 echo binary.at:492 >$at_check_line_file
-( $at_traceon; ${CC} -shared -o dump.so dump.c ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${CC} -shared -o dump.${SHREXT} dump.c ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -1893,9 +1893,9 @@ _ATEOF
 
 
 $at_traceoff
-echo "binary.at:717: \${CC} -shared -o dump.so dump.c"
+echo "binary.at:717: \${CC} -shared -o dump.\${SHREXT} dump.c"
 echo binary.at:717 >$at_check_line_file
-( $at_traceon; ${CC} -shared -o dump.so dump.c ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${CC} -shared -o dump.${SHREXT} dump.c ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -2251,9 +2251,9 @@ _ATEOF
 
 
 $at_traceoff
-echo "binary.at:942: \${CC} -shared -o dump.so dump.c"
+echo "binary.at:942: \${CC} -shared -o dump.\${SHREXT} dump.c"
 echo binary.at:942 >$at_check_line_file
-( $at_traceon; ${CC} -shared -o dump.so dump.c ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${CC} -shared -o dump.${SHREXT} dump.c ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -2609,9 +2609,9 @@ _ATEOF
 
 
 $at_traceoff
-echo "binary.at:1167: \${CC} -shared -o dump.so dump.c"
+echo "binary.at:1167: \${CC} -shared -o dump.\${SHREXT} dump.c"
 echo binary.at:1167 >$at_check_line_file
-( $at_traceon; ${CC} -shared -o dump.so dump.c ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${CC} -shared -o dump.${SHREXT} dump.c ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
