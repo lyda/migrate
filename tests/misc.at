@@ -85,6 +85,25 @@ AT_CLEANUP
 
 ## MOVE statement
 
+AT_SETUP([MOVE to itself])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC 99 VALUE 12.
+       PROCEDURE        DIVISION.
+           MOVE X TO X.
+           DISPLAY X NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [12])
+
+AT_CLEANUP
+
 AT_SETUP([MOVE with refmod])
 
 AT_DATA([prog.cob], [
