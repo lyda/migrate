@@ -5,6 +5,7 @@
 cobc/cobc.c
 cobc/parser.y
 cobc/scanner.l
+cobc/warning.def
 
 # cobpp
 cobpp/cobpp.c

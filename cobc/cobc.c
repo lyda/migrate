@@ -58,14 +58,11 @@ int cobc_flag_call_static = 0;
 int cobc_flag_debugging_line = 0;
 int cobc_flag_line_directive = 0;
 
-int cobc_warn_column_overflow = 0;
-int cobc_warn_constant = 0;
-int cobc_warn_end_evaluate = 0;
-int cobc_warn_end_if = 0;
-int cobc_warn_type_mismatch = 0;
-int cobc_warn_parentheses = 0;
-
 FILE *cobc_out;
+
+#undef COBC_WARNING
+#define COBC_WARNING(sig,var,name,doc) int var = 0;
+#include "warning.def"
 
 
 /*
@@ -178,18 +175,11 @@ static struct option long_options[] = {
   {"fmain", no_argument, &cobc_flag_main, 1},
   {"fdebugging-line", no_argument, &cobc_flag_debugging_line, 1},
   {"Wall", no_argument, 0, 'W'},
-  {"Wcolumn-overflow", no_argument, &cobc_warn_column_overflow, 1},
-  {"Wno-column-overflow", no_argument, &cobc_warn_column_overflow, 0},
-  {"Wconstant", no_argument, &cobc_warn_constant, 1},
-  {"Wno-constant", no_argument, &cobc_warn_constant, 0},
-  {"Wend-evaluate", no_argument, &cobc_warn_end_evaluate, 1},
-  {"Wno-end-evaluate", no_argument, &cobc_warn_end_evaluate, 0},
-  {"Wend-if", no_argument, &cobc_warn_end_if, 1},
-  {"Wno-end-if", no_argument, &cobc_warn_end_if, 0},
-  {"Wtype-mismatch", no_argument, &cobc_warn_type_mismatch, 1},
-  {"Wno-type-mismatch", no_argument, &cobc_warn_type_mismatch, 0},
-  {"Wparentheses", no_argument, &cobc_warn_parentheses, 1},
-  {"Wno-parentheses", no_argument, &cobc_warn_parentheses, 0},
+#undef COBC_WARNING
+#define COBC_WARNING(sig,var,name,doc)		\
+  {"W"#name, no_argument, &var, 1},		\
+  {"Wno-"#name, no_argument, &var, 0},
+#include "warning.def"
 #ifdef COB_DEBUG
   {"ts", no_argument, &yy_flex_debug, 1},
   {"tp", no_argument, &yy_bison_debug, 1},
@@ -234,14 +224,13 @@ COBOL options:\n\
   -fdebugging-line      Enable debugging lines\n\
 \n\
 Warning options:\n\
-  -Wall                 Enable all warnings\n\
-  -Wcolumn-overflow     Warn any text after column 72\n\
-  -Wconstant            Warn inconsistent constants\n\
-  -Wend-evaluate        Warn lacks of END-EVALUATE\n\
-  -Wend-if              Warn lacks of END-IF\n\
-  -Wtype-mismatch       Warn type mismatch\n\
-  -Wparentheses         Warn lacks of parentheses around AND within OR\n\
-"));
+  -Wall                 Enable all warnings"));
+#undef COBC_WARNING
+#define COBC_WARNING(sig,var,name,doc)		\
+  printf ("  -W%-19s %s\n", name, gettext (doc));
+#include "warning.def"
+  puts ("");
+
 #ifdef COB_DEBUG
   puts (_("Debugging options:\n"
 	  "  -ts           Trace scanner\n"
@@ -314,12 +303,10 @@ process_command_line (int argc, char *argv[])
 	case 'X': strcat (cobpp_flags, " -FX"); break;
 
 	case 'W':
-	  cobc_warn_column_overflow = 1;
-	  cobc_warn_constant = 1;
-	  cobc_warn_end_evaluate = 1;
-	  cobc_warn_end_if = 1;
-	  cobc_warn_type_mismatch = 1;
-	  cobc_warn_parentheses = 1;
+#undef COBC_WARNING
+#define COBC_WARNING(sig,var,name,doc)		\
+          var = 1;
+#include "warning.def"
 	  break;
 
 	default:

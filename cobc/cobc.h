@@ -40,25 +40,11 @@ extern int cobc_flag_debugging_line;
 /* output line directives */
 extern int cobc_flag_line_directive;
 
-/* warn any text after cobpp_text_column */
-extern int cobc_warn_column_overflow;
-
-/* warn inconsistent constant */
-extern int cobc_warn_constant;
-
-/* warn lacks of END-EVALUATE */
-extern int cobc_warn_end_evaluate;
-
-/* warn lacks of END-IF */
-extern int cobc_warn_end_if;
-
-/* warn type mismatch */
-extern int cobc_warn_type_mismatch;
-
-/* warn lacks of parentheses around AND within OR */
-extern int cobc_warn_parentheses;
-
 extern FILE *yyin;
 extern FILE *cobc_out;
+
+#undef COBC_WARNING
+#define COBC_WARNING(sig,var,name,doc) extern int var;
+#include "warning.def"
 
 #endif /* _COBC_H_ */

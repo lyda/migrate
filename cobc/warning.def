@@ -1,0 +1,40 @@
+/*							-*- c -*-
+ * Copyright (C) 2003 Keisuke Nishida
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
+ * as published by the Free Software Foundation; either version 2.1,
+ * or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; see the file COPYING.LIB.  If
+ * not, write to the Free Software Foundation, Inc., 59 Temple Place,
+ * Suite 330, Boston, MA 02111-1307 USA
+ */
+
+#include "lib/gettext.h"
+
+/* COBC_WARNING (sig, var, name, doc) */
+
+COBC_WARNING (2, cobc_warn_column_overflow, "column-overflow",
+	      N_("Warn any text after column 72"))
+
+COBC_WARNING (2, cobc_warn_constant, "constant",
+	      N_("Warn inconsistent constant"))
+
+COBC_WARNING (2, cobc_warn_parentheses, "parentheses",
+	      N_("Warn lacks of parentheses around AND within OR"))
+
+COBC_WARNING (3, cobc_warn_end_evaluate, "end-evaluate",
+	      N_("Warn lacks of END-EVALUATE"))
+
+COBC_WARNING (3, cobc_warn_end_if, "end-if",
+	      N_("Warn lacks of END-IF"))
+
+COBC_WARNING (3, cobc_warn_type_mismatch, "type-mismatch",
+	      N_("Warn type mismatch"))
