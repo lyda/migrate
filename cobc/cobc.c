@@ -502,7 +502,7 @@ static int
 process_link (struct filename *file_list)
 {
   char buff[8192], objs[4096] = "";
-  const char *exe;
+  const char *exe = NULL;
 
   for (; file_list; file_list = file_list->next)
     {
