@@ -742,16 +742,28 @@ cob_is_equal ()
 int
 cob_in_range ()
 {
-  decimal value = COB_DECIMAL (POP ());
-  decimal upper = COB_DECIMAL (POP ());
-  decimal lower = COB_DECIMAL (POP ());
+  cob_object value = POP ();
+  cob_object upper = POP ();
+  cob_object lower = POP ();
 
-  arrange_decimal (lower, value);
-  if (mpz_cmp (lower->number, value->number) <= 0)
+  if (COB_TYPE (value) == COB_TYPE_DECIMAL)
     {
-      arrange_decimal (value, upper);
-      if (mpz_cmp (value->number, upper->number) <= 0)
-	return 1;
+      arrange_decimal (COB_DECIMAL (lower), COB_DECIMAL (value));
+      if (mpz_cmp (COB_DECIMAL (lower)->number,
+		   COB_DECIMAL (value)->number) <= 0)
+	{
+	  arrange_decimal (COB_DECIMAL (value), COB_DECIMAL (upper));
+	  if (mpz_cmp (COB_DECIMAL (value)->number,
+		       COB_DECIMAL (upper)->number) <= 0)
+	    return 1;
+	}
+      return 0;
     }
-  return 0;
+  else
+    {
+      if (cob_compare (*COB_FIELD (lower), *COB_FIELD (value)) <= 0
+	  && cob_compare (*COB_FIELD (value), *COB_FIELD (upper)) <= 0)
+	return 1;
+      return 0;
+    }
 }
