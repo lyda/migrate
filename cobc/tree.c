@@ -1733,14 +1733,17 @@ cb_build_funcall (const char *name, int argc,
 
 
 /*
- * Cast to integer
+ * Type cast
  */
 
 cb_tree
-cb_build_cast_integer (cb_tree val)
+cb_build_cast (enum cb_cast_type type, cb_tree val)
 {
-  struct cb_cast_integer *p =
-    make_tree (CB_TAG_CAST_INTEGER, CB_CATEGORY_NUMERIC, sizeof (struct cb_cast_integer));
+  enum cb_category category =
+    (type == CB_CAST_INTEGER) ? CB_CATEGORY_NUMERIC : CB_CATEGORY_UNKNOWN;
+  struct cb_cast *p =
+    make_tree (CB_TAG_CAST, category, sizeof (struct cb_cast));
+  p->type = type;
   p->val = val;
   return CB_TREE (p);
 }
@@ -1763,6 +1766,21 @@ cb_build_label (cb_tree name, struct cb_label *section)
   else
     sprintf (buff, "%s", p->name);
   p->cname = to_cname (buff);
+  return CB_TREE (p);
+}
+
+
+/*
+ * Assign
+ */
+
+cb_tree
+cb_build_native_assign (cb_tree var, cb_tree val)
+{
+  struct cb_assign *p =
+    make_tree (CB_TAG_ASSIGN, CB_CATEGORY_UNKNOWN, sizeof (struct cb_assign));
+  p->var = var;
+  p->val = val;
   return CB_TREE (p);
 }
 

@@ -108,17 +108,25 @@ output_indent (const char *str)
 }
 
 static void
-output_quoted_string (unsigned char *s, int size)
+output_string (const unsigned char *s, int size)
 {
   int i;
+  int printable = 1;
+  for (i = 0; i < size; i++)
+    if (!isprint (s[i]))
+      printable = 0;
+
   output ("\"");
   for (i = 0; i < size; i++)
     {
       int c = s[i];
-      if (c == '\"' || c == '\\')
-	output ("\\%c", c);
-      else if (isprint (c))
-	output ("%c", c);
+      if (printable)
+	{
+	  if (c == '\"' || c == '\\')
+	    output ("\\%c", c);
+	  else
+	    output ("%c", c);
+	}
       else
 	output ("\\%03o", c);
     }
@@ -179,7 +187,7 @@ output_data (cb_tree x)
 	  output ("\"%s%s\"", l->data,
 		  (l->sign < 0) ? "-" : (l->sign > 0) ? "+" : "");
 	else
-	  output_quoted_string (l->data, l->size);
+	  output_string (l->data, l->size);
 	break;
       }
     case CB_TAG_FIELD:
@@ -527,10 +535,21 @@ output_param (cb_tree x, int id)
       output_integer (x);
       break;
     case CB_TAG_STRING:
-      output ("\"%s\"", CB_STRING (x)->str);
+      output_string (CB_STRING (x)->str, strlen (CB_STRING (x)->str));
       break;
-    case CB_TAG_CAST_INTEGER:
-      output_integer (CB_CAST_INTEGER (x)->val);
+    case CB_TAG_CAST:
+      switch (CB_CAST (x)->type)
+	{
+	case CB_CAST_INTEGER:
+	  output_integer (CB_CAST (x)->val);
+	  break;
+	case CB_CAST_ADDRESS:
+	  output_data (CB_CAST (x)->val);
+	  break;
+	case CB_CAST_LENGTH:
+	  output_size (CB_CAST (x)->val);
+	  break;
+	}
       break;
     case CB_TAG_DECIMAL:
       output ("&d[%d]", CB_DECIMAL (x)->id);
@@ -664,9 +683,15 @@ output_func_1 (const char *name, cb_tree a1)
   output (")");
 }
 
+static void
+output_move (cb_tree src, cb_tree dst)
+{
+  output_stmt (cb_build_move (src, dst));
+}
+
 
 /*
- * Convert to integer
+ * Integer
  */
 
 static void
@@ -952,42 +977,8 @@ output_memcmp (cb_tree x, cb_tree y)
   output ("cob_cmp_result = memcmp (");
   output_data (x);
   output (", ");
-  output_quoted_string (buff, size);
+  output_string (buff, size);
   output (", %d);\n", size);
-}
-
-static void
-output_memset (cb_tree x, char c)
-{
-  output_prefix ();
-  output ("memset (");
-  output_data (x);
-  output (", ");
-  output (isprint (c) ? "'%c'" : "%d", c);
-  output (", ");
-  output_size (x);
-  output (");\n");
-}
-
-static void
-output_memcpy (cb_tree x, char *s)
-{
-  output_prefix ();
-  output ("memcpy (");
-  output_data (x);
-  output (", ");
-  output_quoted_string (s, cb_field (x)->size);
-  output (", ");
-  output_size (x);
-  output (");\n");
-}
-
-static void
-output_native_assign (cb_tree x, int val)
-{
-  output_prefix ();
-  output_integer (x);
-  output (" = %d;\n", val);
 }
 
 
@@ -1027,245 +1018,6 @@ static void
 output_exit_program (void)
 {
   output_line ("goto exit_program;");
-}
-
-
-/*
- * MOVE
- */
-
-static void
-output_move_call (cb_tree src, cb_tree dst)
-{
-  output_stmt (cb_build_funcall_2 ("cob_move", src, dst));
-}
-
-static void
-output_move_num (cb_tree x, int high)
-{
-  switch (cb_field (x)->usage)
-    {
-    case CB_USAGE_BINARY:
-      output_native_assign (x, high ? -1 : 0);
-      break;
-    case CB_USAGE_DISPLAY:
-      output_memset (x, high ? '9' : '0');
-      break;
-    case CB_USAGE_PACKED:
-      output_memset (x, high ? 0x99 : 0x00);
-      break;
-    default:
-      abort ();
-    }
-}
-
-static void
-output_move_space (cb_tree x)
-{
-  switch (CB_TREE_CATEGORY (x))
-    {
-    case CB_CATEGORY_NUMERIC:
-    case CB_CATEGORY_ALPHABETIC:
-    case CB_CATEGORY_ALPHANUMERIC:
-      output_memset (x, ' ');
-      break;
-    default:
-      output_move_call (cb_space, x);
-      break;
-    }
-}
-
-static void
-output_move_zero (cb_tree x)
-{
-  switch (CB_TREE_CATEGORY (x))
-    {
-    case CB_CATEGORY_NUMERIC:
-      if (cb_field (x)->flag_blank_zero)
-	output_move_space (x);
-      else
-	output_move_num (x, 0);
-      break;
-    case CB_CATEGORY_ALPHABETIC:
-    case CB_CATEGORY_ALPHANUMERIC:
-      output_memset (x, '0');
-      break;
-    default:
-      output_move_call (cb_zero, x);
-      break;
-    }
-}
-
-static void
-output_move_high (cb_tree x)
-{
-  switch (CB_TREE_CATEGORY (x))
-    {
-    case CB_CATEGORY_NUMERIC:
-      output_move_num (x, 9);
-      break;
-    case CB_CATEGORY_ALPHABETIC:
-    case CB_CATEGORY_ALPHANUMERIC:
-      output_memset (x, 255);
-      break;
-    default:
-      output_move_call (cb_high, x);
-      break;
-    }
-}
-
-static void
-output_move_low (cb_tree x)
-{
-  switch (CB_TREE_CATEGORY (x))
-    {
-    case CB_CATEGORY_NUMERIC:
-      output_move_num (x, 0);
-      break;
-    case CB_CATEGORY_ALPHABETIC:
-    case CB_CATEGORY_ALPHANUMERIC:
-      output_memset (x, 0);
-      break;
-    default:
-      output_move_call (cb_low, x);
-      break;
-    }
-}
-
-static void
-output_move_quote (cb_tree x)
-{
-  switch (CB_TREE_CATEGORY (x))
-    {
-    case CB_CATEGORY_NUMERIC:
-    case CB_CATEGORY_ALPHABETIC:
-    case CB_CATEGORY_ALPHANUMERIC:
-      output_memset (x, '"');
-      break;
-    default:
-      output_move_call (cb_quote, x);
-      break;
-    }
-}
-
-static void
-output_move_literal (cb_tree src, cb_tree dst)
-{
-  struct cb_literal *l = CB_LITERAL (src);
-  struct cb_field *f = cb_field (dst);
-
-  if (l->all)
-    {
-      int i;
-      unsigned char buff[f->size];
-      for (i = 0; i < f->size; i++)
-	buff[i] = l->data[i % l->size];
-      output_memcpy (dst, buff);
-    }
-  else if (f->usage == CB_USAGE_BINARY && cb_fits_int (src))
-    {
-      int val = cb_literal_to_int (l);
-      int n = l->expt - f->pic->expt;
-      for (; n > 0; n--) val *= 10;
-      for (; n < 0; n++) val /= 10;
-      output_native_assign (dst, val);
-    }
-  else
-    {
-      output_move_call (src, dst);
-    }
-}
-
-static void
-output_move_index (cb_tree src, cb_tree dst)
-{
-  output_prefix ();
-  output_integer (dst);
-  output (" = ");
-  output_integer (src);
-  output (";\n");
-}
-
-static void
-output_move (cb_tree src, cb_tree dst)
-{
-  if (CB_INDEX_P (dst))
-    return output_move_index (src, dst);
-
-  if (CB_INDEX_P (src))
-    return output_stmt (cb_build_funcall_2 ("cob_set_int", dst,
-					    cb_build_cast_integer (src)));
-
-  if (cb_flag_inline_move)
-    {
-      if (src == cb_zero)
-	return output_move_zero (dst);
-      else if (src == cb_space)
-	return output_move_space (dst);
-      else if (src == cb_high)
-	return output_move_high (dst);
-      else if (src == cb_low)
-	return output_move_low (dst);
-      else if (src == cb_quote)
-	return output_move_quote (dst);
-      else if (CB_LITERAL_P (src))
-	return output_move_literal (src, dst);
-      else
-	{
-	  int simple_copy = 0;
-	  int src_size = cb_field_size (src);
-	  int dst_size = cb_field_size (dst);
-	  struct cb_field *src_f = cb_field (src);
-	  struct cb_field *dst_f = cb_field (dst);
-
-	  if (src_size > 0 && dst_size > 0 && src_size >= dst_size)
-	    switch (CB_TREE_CATEGORY (src))
-	      {
-	      case CB_CATEGORY_ALPHABETIC:
-		if (CB_TREE_CATEGORY (dst) == CB_CATEGORY_ALPHABETIC
-		    || CB_TREE_CATEGORY (dst) == CB_CATEGORY_ALPHANUMERIC)
-		  if (dst_f->flag_justified == 0)
-		    simple_copy = 1;
-		break;
-	      case CB_CATEGORY_ALPHANUMERIC:
-		if (CB_TREE_CATEGORY (dst) == CB_CATEGORY_ALPHANUMERIC)
-		  if (dst_f->flag_justified == 0)
-		    simple_copy = 1;
-		break;
-	      case CB_CATEGORY_NUMERIC:
-		if (CB_TREE_CATEGORY (dst) == CB_CATEGORY_NUMERIC
-		    && src_f->usage == CB_USAGE_DISPLAY
-		    && dst_f->usage == CB_USAGE_DISPLAY
-		    && src_f->pic->size == dst_f->pic->size
-		    && src_f->pic->digits == dst_f->pic->digits
-		    && src_f->pic->expt == dst_f->pic->expt
-		    && src_f->pic->have_sign == dst_f->pic->have_sign
-		    && src_f->flag_sign_leading == dst_f->flag_sign_leading
-		    && src_f->flag_sign_separate == dst_f->flag_sign_separate)
-		  simple_copy = 1;
-		else if (CB_TREE_CATEGORY (dst) == CB_CATEGORY_ALPHANUMERIC
-			 && src_f->pic->have_sign == 0)
-		  simple_copy = 1;
-		break;
-	      default:
-		break;
-	      }
-	  if (simple_copy)
-	    {
-	      output_prefix ();
-	      output ("memcpy (");
-	      output_data (dst);
-	      output (", ");
-	      output_data (src);
-	      output (", ");
-	      output_size (dst);
-	      output (");\n");
-	      return;
-	    }
-	}
-    }
-
-  return output_move_call (src, dst);
 }
 
 
@@ -1937,6 +1689,16 @@ output_stmt (cb_tree x)
 	output_funcall (CB_FUNCALL (x));
 	break;
       }
+    case CB_TAG_ASSIGN:
+      {
+	struct cb_assign *p = CB_ASSIGN (x);
+	output_prefix ();
+	output_integer (p->var);
+	output (" = ");
+	output_integer (p->val);
+	output (";\n");
+	break;
+      }
     case CB_TAG_IF:
       {
 	struct cb_if *p = CB_IF (x);
@@ -2085,8 +1847,8 @@ output_screen_definition (struct cb_field *p)
       output ("&s_%s", p->children->cname);
       break;
     case COB_SCREEN_TYPE_VALUE:
-      output_quoted_string (CB_LITERAL (CB_VALUE (p->values))->data,
-			    CB_LITERAL (CB_VALUE (p->values))->size);
+      output_string (CB_LITERAL (CB_VALUE (p->values))->data,
+		     CB_LITERAL (CB_VALUE (p->values))->size);
       break;
       break;
     case COB_SCREEN_TYPE_FIELD:
@@ -2286,7 +2048,14 @@ output_value (struct cb_field *f)
 	      memcpy (buff, str, size);
 	      memset (buff + size, ' ', f->size - size);
 	    }
-	  output_memcpy (CB_TREE (f), buff);
+	  output_prefix ();
+	  output ("memcpy (");
+	  output_data (CB_TREE (f));
+	  output (", ");
+	  output_string (buff, f->size);
+	  output (", ");
+	  output_size (CB_TREE (f));
+	  output (");\n");
 	}
     }
   else

@@ -691,15 +691,234 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 		     _("value size exceeds data size"));
 }
 
+static cb_tree
+cb_build_memset (cb_tree x, char c)
+{
+  return cb_build_funcall_3 ("memset",
+			     cb_build_cast_address (x),
+			     cb_build_integer (c),
+			     cb_build_cast_length (x));
+}
+
+static cb_tree
+cb_build_move_copy (cb_tree src, cb_tree dst)
+{
+  return cb_build_funcall_3 ("memcpy",
+			     cb_build_cast_address (dst),
+			     cb_build_cast_address (src),
+			     cb_build_cast_length (dst));
+}
+
+static cb_tree
+cb_build_move_call (cb_tree src, cb_tree dst)
+{
+  return cb_build_funcall_2 ("cob_move", src, dst);
+}
+
+static cb_tree
+cb_build_move_num (cb_tree x, int high)
+{
+  switch (cb_field (x)->usage)
+    {
+    case CB_USAGE_BINARY:
+      return cb_build_native_assign (x, cb_build_integer (high ? -1 : 0));
+    case CB_USAGE_DISPLAY:
+      return cb_build_memset (x, high ? '9' : '0');
+    case CB_USAGE_PACKED:
+      return cb_build_memset (x, high ? 0x99 : 0x00);
+    default:
+      abort ();
+    }
+}
+
+static cb_tree
+cb_build_move_space (cb_tree x)
+{
+  switch (CB_TREE_CATEGORY (x))
+    {
+    case CB_CATEGORY_NUMERIC:
+    case CB_CATEGORY_ALPHABETIC:
+    case CB_CATEGORY_ALPHANUMERIC:
+      return cb_build_memset (x, ' ');
+    default:
+      return cb_build_move_call (cb_space, x);
+    }
+}
+
+static cb_tree
+cb_build_move_zero (cb_tree x)
+{
+  switch (CB_TREE_CATEGORY (x))
+    {
+    case CB_CATEGORY_NUMERIC:
+      if (cb_field (x)->flag_blank_zero)
+	return cb_build_move_space (x);
+      else
+	return cb_build_move_num (x, 0);
+    case CB_CATEGORY_ALPHABETIC:
+    case CB_CATEGORY_ALPHANUMERIC:
+      return cb_build_memset (x, '0');
+    default:
+      return cb_build_move_call (cb_zero, x);
+    }
+}
+
+static cb_tree
+cb_build_move_high (cb_tree x)
+{
+  switch (CB_TREE_CATEGORY (x))
+    {
+    case CB_CATEGORY_NUMERIC:
+      return cb_build_move_num (x, 9);
+    case CB_CATEGORY_ALPHABETIC:
+    case CB_CATEGORY_ALPHANUMERIC:
+      return cb_build_memset (x, 255);
+    default:
+      return cb_build_move_call (cb_high, x);
+    }
+}
+
+static cb_tree
+cb_build_move_low (cb_tree x)
+{
+  switch (CB_TREE_CATEGORY (x))
+    {
+    case CB_CATEGORY_NUMERIC:
+      return cb_build_move_num (x, 0);
+    case CB_CATEGORY_ALPHABETIC:
+    case CB_CATEGORY_ALPHANUMERIC:
+      return cb_build_memset (x, 0);
+    default:
+      return cb_build_move_call (cb_low, x);
+    }
+}
+
+static cb_tree
+cb_build_move_quote (cb_tree x)
+{
+  switch (CB_TREE_CATEGORY (x))
+    {
+    case CB_CATEGORY_NUMERIC:
+    case CB_CATEGORY_ALPHABETIC:
+    case CB_CATEGORY_ALPHANUMERIC:
+      return cb_build_memset (x, '"');
+    default:
+      return cb_build_move_call (cb_quote, x);
+    }
+}
+
+static cb_tree
+cb_build_move_literal (cb_tree src, cb_tree dst)
+{
+  struct cb_literal *l = CB_LITERAL (src);
+  struct cb_field *f = cb_field (dst);
+
+  if (l->all)
+    {
+      int i;
+      unsigned char buff[f->size + 1];
+      for (i = 0; i < f->size; i++)
+	buff[i] = l->data[i % l->size];
+      buff[i] = 0;
+      return cb_build_funcall_3 ("memcpy",
+				 cb_build_cast_address (dst),
+				 cb_build_string (strdup (buff)),
+				 cb_build_cast_length (dst));
+    }
+  else if (f->usage == CB_USAGE_BINARY && cb_fits_int (src))
+    {
+      int val = cb_literal_to_int (l);
+      int n = l->expt - f->pic->expt;
+      for (; n > 0; n--) val *= 10;
+      for (; n < 0; n++) val /= 10;
+      return cb_build_native_assign (dst, cb_build_integer (val));
+    }
+  else
+    {
+      return cb_build_move_call (src, dst);
+    }
+}
+
+static cb_tree
+cb_build_move_field (cb_tree src, cb_tree dst)
+{
+  int src_size = cb_field_size (src);
+  int dst_size = cb_field_size (dst);
+  struct cb_field *src_f = cb_field (src);
+  struct cb_field *dst_f = cb_field (dst);
+
+  if (src_size > 0 && dst_size > 0 && src_size >= dst_size)
+    switch (CB_TREE_CATEGORY (src))
+      {
+      case CB_CATEGORY_ALPHABETIC:
+	if (CB_TREE_CATEGORY (dst) == CB_CATEGORY_ALPHABETIC
+	    || CB_TREE_CATEGORY (dst) == CB_CATEGORY_ALPHANUMERIC)
+	  if (dst_f->flag_justified == 0)
+	    return cb_build_move_copy (src, dst);
+	break;
+      case CB_CATEGORY_ALPHANUMERIC:
+	if (CB_TREE_CATEGORY (dst) == CB_CATEGORY_ALPHANUMERIC)
+	  if (dst_f->flag_justified == 0)
+	    return cb_build_move_copy (src, dst);
+	break;
+      case CB_CATEGORY_NUMERIC:
+	if (CB_TREE_CATEGORY (dst) == CB_CATEGORY_NUMERIC
+	    && src_f->usage == CB_USAGE_DISPLAY
+	    && dst_f->usage == CB_USAGE_DISPLAY
+	    && src_f->pic->size == dst_f->pic->size
+	    && src_f->pic->digits == dst_f->pic->digits
+	    && src_f->pic->expt == dst_f->pic->expt
+	    && src_f->pic->have_sign == dst_f->pic->have_sign
+	    && src_f->flag_sign_leading == dst_f->flag_sign_leading
+	    && src_f->flag_sign_separate == dst_f->flag_sign_separate)
+	  return cb_build_move_copy (src, dst);
+	else if (CB_TREE_CATEGORY (dst) == CB_CATEGORY_ALPHANUMERIC
+		 && src_f->pic->have_sign == 0)
+	  return cb_build_move_copy (src, dst);
+	break;
+      default:
+	break;
+      }
+
+  return cb_build_move_call (src, dst);
+}
+
 cb_tree
 cb_build_move (cb_tree src, cb_tree dst)
 {
   validate_move (src, dst, 0);
+
   if (CB_REFERENCE_P (src))
     CB_REFERENCE (src)->type = CB_SENDING_OPERAND;
   if (CB_REFERENCE_P (dst))
     CB_REFERENCE (dst)->type = CB_RECEIVING_OPERAND;
-  return cb_build_funcall_2 ("@move", src, dst);
+
+  if (CB_INDEX_P (dst))
+    return cb_build_native_assign (dst, src);
+
+  if (CB_INDEX_P (src))
+    return cb_build_funcall_2 ("cob_set_int", dst,
+			       cb_build_cast_integer (src));
+
+  if (cb_flag_inline_move)
+    {
+      if (src == cb_zero)
+	return cb_build_move_zero (dst);
+      else if (src == cb_space)
+	return cb_build_move_space (dst);
+      else if (src == cb_high)
+	return cb_build_move_high (dst);
+      else if (src == cb_low)
+	return cb_build_move_low (dst);
+      else if (src == cb_quote)
+	return cb_build_move_quote (dst);
+      else if (CB_LITERAL_P (src))
+	return cb_build_move_literal (src, dst);
+      else
+	return cb_build_move_field (src, dst);
+    }
+
+  return cb_build_move_call (src, dst);
 }
 
 static cb_tree

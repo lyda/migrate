@@ -46,9 +46,10 @@ enum cb_tag {
   CB_TAG_REFERENCE,		/* reference to a field, file, or label */
   CB_TAG_BINARY_OP,		/* binary operation */
   CB_TAG_FUNCALL,		/* run-time function call */
-  CB_TAG_CAST_INTEGER,		/* cast to integer */
+  CB_TAG_CAST,			/* type cast */
   /* statements */
   CB_TAG_LABEL,			/* label statement */
+  CB_TAG_ASSIGN,		/* assignment statement */
   CB_TAG_IF,			/* IF statement */
   CB_TAG_PERFORM,		/* PERFORM statement */
   CB_TAG_SEQUENCE,		/* multiple statements */
@@ -567,18 +568,29 @@ extern cb_tree cb_build_funcall (const char *name, int argc, void *a1, void *a2,
 
 
 /*
- * Cast to integer
+ * Type cast
  */
 
-struct cb_cast_integer {
+enum cb_cast_type {
+  CB_CAST_INTEGER,
+  CB_CAST_ADDRESS,
+  CB_CAST_LENGTH,
+};
+
+struct cb_cast {
   struct cb_tree_common common;
+  enum cb_cast_type type;
   cb_tree val;
 };
 
-#define CB_CAST_INTEGER(x)	(CB_TREE_CAST (CB_TAG_CAST_INTEGER, struct cb_cast_integer, x))
-#define CB_CAST_INTEGER_P(x)	(CB_TREE_TAG (x) == CB_TAG_CAST_INTEGER)
+#define CB_CAST(x)	(CB_TREE_CAST (CB_TAG_CAST, struct cb_cast, x))
+#define CB_CAST_P(x)	(CB_TREE_TAG (x) == CB_TAG_CAST)
 
-extern cb_tree cb_build_cast_integer (cb_tree val);
+extern cb_tree cb_build_cast (enum cb_cast_type type, cb_tree val);
+
+#define cb_build_cast_integer(x)	cb_build_cast (CB_CAST_INTEGER, x)
+#define cb_build_cast_address(x)	cb_build_cast (CB_CAST_ADDRESS, x)
+#define cb_build_cast_length(x)		cb_build_cast (CB_CAST_LENGTH, x)
 
 
 /*
@@ -599,6 +611,22 @@ struct cb_label {
 #define CB_LABEL_P(x)		(CB_TREE_TAG (x) == CB_TAG_LABEL)
 
 extern cb_tree cb_build_label (cb_tree name, struct cb_label *section);
+
+
+/*
+ * Assign
+ */
+
+struct cb_assign {
+  struct cb_tree_common common;
+  cb_tree var;
+  cb_tree val;
+};
+
+#define CB_ASSIGN(x)		(CB_TREE_CAST (CB_TAG_ASSIGN, struct cb_assign, x))
+#define CB_ASSIGN_P(x)		(CB_TREE_TAG (x) == CB_TAG_ASSIGN)
+
+extern cb_tree cb_build_native_assign (cb_tree var, cb_tree val);
 
 
 /*
