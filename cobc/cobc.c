@@ -235,7 +235,7 @@ print_usage ()
   -std=<standard>       Specify the standard to use:\n\
     cobol2002             COBOL 2002 (default)\n\
     cobol85               COBOL 85\n\
-    mvs                   IBM COBOL for MVS\n\
+    mvs                   IBM COBOL for MVS & VM\n\
 "));
   puts (_("COBOL options:\n\
   -free                 Use free source format\n\
@@ -303,7 +303,7 @@ process_command_line (int argc, char *argv[])
 	  else if (strcmp (optarg, "mvs") == 0)
 	    {
 	      cb_standard = CB_STANDARD_MVS;
-	      cb_standard_name = "IBM COBOL for MVS";
+	      cb_standard_name = "IBM COBOL for MVS & VM";
 	      cb_binary_rep = CB_BINARY_REP_2_4_8;
 	    }
 	  else
@@ -847,10 +847,10 @@ cb_unconformable (const char *feature)
 void
 cb_obsolete_85 (const char *feature)
 {
-  if (cb_standard == CB_STANDARD_COBOL85)
-    cb_obsolete (feature);
-  else
+  if (cb_standard == CB_STANDARD_COBOL2002)
     cb_unconformable (feature);
+  else if (cb_standard == CB_STANDARD_COBOL85)
+    cb_obsolete (feature);
 }
 
 void
