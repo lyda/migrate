@@ -77,9 +77,8 @@ struct list *fields_list = NULL;
 struct list *last_field = NULL;
 struct index_to_table_list *index2table = NULL;
 struct named_sect *named_sect_list = NULL;
-short next_available_sec_no = SEC_FIRST_NAMED;
-short default_sec_no = SEC_DATA;
-short curr_sec_no = SEC_DATA;
+int next_available_sec_no = SEC_FIRST_NAMED;
+int curr_sec_no = SEC_DATA;
 
 int screen_label = 0;
 int para_label = 0;
@@ -1276,15 +1275,11 @@ save_literal (struct lit *v, int type)
 void
 save_named_sect (struct sym *sy)
 {
-  /*char *s;
-     char *dp; */
   struct named_sect *nsp =
     (struct named_sect *) malloc (sizeof (struct named_sect));
 
   nsp->sec_no = next_available_sec_no++;
-  nsp->os_name = sy->name;
-  nsp->os_name = (char *) malloc (strlen (nsp->os_name) + 1);
-  strcpy (nsp->os_name, sy->name);
+  nsp->os_name = strdup (sy->name);
   chg_underline (nsp->os_name);
   nsp->next = named_sect_list;
   named_sect_list = nsp;
@@ -2079,14 +2074,9 @@ gen_accept_env_var (struct sym *sy, struct lit *v)
   if ((sy2 = lookup_symbol (SVAR_RCODE)) != NULL)
     {
       if (sy2->sec_no == SEC_STACK)
-	{
-	  fprintf (o_src, "\tleal\t-%d(%%ebp), %%edx\n", sy2->location);
-	}
+	fprintf (o_src, "\tleal\t-%d(%%ebp), %%edx\n", sy2->location);
       else
-	{
-	  fprintf (o_src, "\tleal\tw_base%d+%d, %%edx\n",
-		   pgm_segment, sy2->location);
-	}
+	fprintf (o_src, "\tleal\tw_base%d+%d, %%edx\n", pgm_segment, sy2->location);
       fprintf (o_src, "\tmovl\t%%eax, (%%edx)\n");
     }
 }
@@ -3048,68 +3038,55 @@ value_to_eax (struct sym *sy)
 
 /* load address for normal (file/working-storage) or linkage variable */
 void
-load_address (struct sym *var)
+load_address (struct sym *sy)
 {
-  unsigned base, locoff;
-  struct sym *tmp;
-  if (SYMBOL_P (var) && var->linkage_flg)
+  unsigned offset;
+  if (SYMBOL_P (sy) && sy->linkage_flg)
     {
-      tmp = var;
+      struct sym *tmp = sy;
       while (tmp->linkage_flg == 1)
 	tmp = tmp->parent;
-      base = tmp->linkage_flg;
-      locoff = tmp->location - var->location;
-      fprintf (o_src, "\tmovl\t%d(%%ebp), %%eax\n", base);
-      if (locoff)
-	{
-	  fprintf (o_src, "\taddl\t$%d, %%eax\n", locoff);
-	}
+      fprintf (o_src, "\tmovl\t%d(%%ebp), %%eax\n", tmp->linkage_flg);
+      offset = sy->location - tmp->location;
+      if (offset)
+	fprintf (o_src, "\taddl\t$%d, %%eax\n", offset);
     }
-  else if (var->sec_no == SEC_STACK)
-    fprintf (o_src, "\tleal\t%s, %%eax\n", memref (var));
-  else if (var->sec_no == SEC_DATA)
+  else if (sy->sec_no == SEC_STACK)
+    fprintf (o_src, "\tleal\t%s, %%eax\n", memref (sy));
+  else if (sy->sec_no == SEC_DATA)
     fprintf (o_src, "\tleal\tw_base%d+%d, %%eax\n",
-	     pgm_segment, var->location);
-  else if (var->sec_no == SEC_CONST)
+	     pgm_segment, sy->location);
+  else if (sy->sec_no == SEC_CONST)
     fprintf (o_src, "\tleal\tc_base%d+%d, %%eax\n",
-	     pgm_segment, var->location);
+	     pgm_segment, sy->location);
 }
 
 /* load in cpureg ("eax","ebx"...) location for normal 
 	(file/working-storage) or linkage variable */
 void
-load_location (struct sym *sy, char *cpureg)
+load_location (struct sym *sy, char *reg)
 {
-  unsigned base, locoff;
-  struct sym *tmp;
-  if (sy == NULL)
-    {
-      fprintf (o_src, "\txorl\t%%%s,%%%s\n", cpureg, cpureg);
-      return;
-    }
+  unsigned offset;
   if (SYMBOL_P (sy) && sy->linkage_flg)
     {
-      tmp = sy;
+      struct sym *tmp = sy;
       while (tmp->linkage_flg == 1)
 	tmp = tmp->parent;
-      base = tmp->linkage_flg;
-      locoff = sy->location - tmp->location;
-      fprintf (o_src, "\tmovl\t%d(%%ebp), %%%s\n", base, cpureg);
-      if (locoff)
-	{
-	  fprintf (o_src, "\taddl\t$%d, %%%s\n", locoff, cpureg);
-	}
+      fprintf (o_src, "\tmovl\t%d(%%ebp), %%%s\n", tmp->linkage_flg, reg);
+      offset = sy->location - tmp->location;
+      if (offset)
+	fprintf (o_src, "\taddl\t$%d, %%%s\n", offset, reg);
     }
   else if (sy->sec_no == SEC_STACK)
-    fprintf (o_src, "\tleal\t%s, %%%s\n", memref (sy), cpureg);
+    fprintf (o_src, "\tleal\t%s, %%%s\n", memref (sy), reg);
   else
-    fprintf (o_src, "\tmovl\t%s, %%%s\n", memref (sy), cpureg);
+    fprintf (o_src, "\tmovl\t%s, %%%s\n", memref (sy), reg);
 }
 
 void
 loadloc_to_eax (struct sym *sy_p)
 {
-  unsigned base, locoff;
+  unsigned base, offset;
   struct sym *sy = sy_p, *var, *tmp;
 
 #ifdef COB_DEBUG
@@ -3127,10 +3104,10 @@ loadloc_to_eax (struct sym *sy_p)
 	  while (tmp->linkage_flg == 1)
 	    tmp = tmp->parent;
 	  base = tmp->linkage_flg;
-	  locoff = var->location - tmp->location;
+	  offset = var->location - tmp->location;
 	  fprintf (o_src, "\tmovl %d(%%ebp), %%ebx\n", base);
-	  if (locoff)
-	    fprintf (o_src, "\taddl\t$%d, %%ebx\n", locoff);
+	  if (offset)
+	    fprintf (o_src, "\taddl\t$%d, %%ebx\n", offset);
 	  fprintf (o_src, "\taddl\t%%ebx, %%eax\n");
 	}
       else
@@ -3290,7 +3267,7 @@ gen_loadvar (struct sym *sy)
 void
 gen_loadval (struct sym *sy)
 {
-  unsigned base, locoff;
+  unsigned base, offset;
   struct sym *var;
   struct sym *tmp = NULL;
 
@@ -3307,14 +3284,14 @@ gen_loadval (struct sym *sy)
 	  while (tmp->linkage_flg == 1)
 	    tmp = tmp->parent;
 	  base = tmp->linkage_flg;
-	  locoff = tmp->location - var->location;
+	  offset = tmp->location - var->location;
 	  if (symlen (var) >= 4)
 	    fprintf (o_src, "\tmovl %d(%%ebp), %%ebx\n", base);
 	  else
 	    fprintf (o_src, "\tmovs%cl %d(%%ebp), %%ebx\n",
 		     varsize_ch (var), base);
-	  if (locoff)
-	    fprintf (o_src, "\taddl\t$%d, %%ebx\n", locoff);
+	  if (offset)
+	    fprintf (o_src, "\taddl\t$%d, %%ebx\n", offset);
 	  fprintf (o_src, "\taddl\t%%eax, %%ebx\n");
 	  fprintf (o_src, "\tmovl\t%%ebx, %%eax\n");
 	  tmp = var;
@@ -3340,7 +3317,7 @@ gen_loadval (struct sym *sy)
 void
 gen_pushval (struct sym *sy)
 {
-  unsigned base, locoff;
+  unsigned base, offset;
   struct sym *var, *tmp;
 
 #ifdef COB_DEBUG
@@ -3356,14 +3333,14 @@ gen_pushval (struct sym *sy)
 	  while (tmp->linkage_flg == 1)
 	    tmp = tmp->parent;
 	  base = tmp->linkage_flg;
-	  locoff = tmp->location - var->location;
+	  offset = tmp->location - var->location;
 	  if (symlen (var) >= 4)
 	    fprintf (o_src, "\tmovl %d(%%ebp), %%ebx\n", base);
 	  else
 	    fprintf (o_src, "\tmovs%cl %d(%%ebp), %%ebx\n",
 		     varsize_ch (var), base);
-	  if (locoff)
-	    fprintf (o_src, "\taddl\t$%d, %%ebx\n", locoff);
+	  if (offset)
+	    fprintf (o_src, "\taddl\t$%d, %%ebx\n", offset);
 	  fprintf (o_src, "\taddl\t%%eax, %%ebx\n");
 	  push_ebx ();
 	}
@@ -4533,50 +4510,24 @@ define_temp_field (char desired_type, int desired_len)
   return sy;
 }
 
-int
+void
 define_implicit_field (struct sym *sy, struct sym *sykey, int idxlen)
 {
-  int i = 1, /*m=0, d, */ r = 0;
   struct sym *tmp = NULL;
   struct index_to_table_list *i2t;
 
-//  Fix me: 
-//  This is a fix to ensure that indexes are defined as int (4 bytes) 
-//  For some reason if defined otherwise (1, 2 bytes) the search all 
-//  will not work.
-
-//      for (i=1; i<idxlen; i=i*10) {
-//                   m++;
-//      }
-//      d = idxlen;
-//      while (d != 0) {
-//        m++;
-//        i=i*10;
-//        d = idxlen / i;
-//      }
-
-//  Fix me: 
-//  This is a fix to ensure that indexes are defined as int (4 bytes) 
-//
-//      sy->len=m; 
   sy->len = 4;
-
-  sy->decimals = 0;		/* suppose no decimals yet */
+  sy->decimals = 0;	/* suppose no decimals yet */
   sy->level = 1;
-  sy->type = 'B';		/* assume numeric "usage is comp" item */
+  sy->type = 'B';	/* assume numeric "usage is comp" item */
   sy->redefines = NULL;
-  sy->linkage_flg = 0;		/* should not go in the linkage section, never! */
+  sy->linkage_flg = 0;	/* should not go in the linkage section, never! */
   sy->sec_no = SEC_STACK;
   sy->times = 1;
   sy->son = sy->brother = NULL;
   sy->flags.is_pointer = 0;
   sy->flags.blank = 0;
   picture[0] = '9';
-
-//  Fix me: 
-//  This is a fix to ensure that indexes are defined as int (4 bytes) 
-//
-//        picture[1] = (char)m;
   picture[1] = (char) 8;
   picture[2] = 0;
   tmp = curr_field;
@@ -4584,81 +4535,22 @@ define_implicit_field (struct sym *sy, struct sym *sykey, int idxlen)
   update_field ();
   close_fields ();
   curr_field = tmp;
-  tmp = NULL;
 
   i2t = malloc (sizeof (struct index_to_table_list));
-  if (i2t == NULL)
-    {
-      return 0;
-    }
-  i2t->next = NULL;
-
-  i = strlen (sy->name);
-  i2t->idxname = malloc (i + 1);
-  if (i2t->idxname == NULL)
-    {
-      free (i2t);
-      return 0;
-    }
-  strcpy (i2t->idxname, sy->name);
-
-  i = strlen (curr_field->name);
-  i2t->tablename = malloc (i + 1);
-  if (i2t->tablename == NULL)
-    {
-      free (i2t->idxname);
-      free (i2t);
-      return 0;
-    }
-  strcpy (i2t->tablename, curr_field->name);
-
-  i2t->seq = '0';		/* no sort sequence is yet defined for the table */
+  i2t->idxname = strdup (sy->name);
+  i2t->tablename = strdup (curr_field->name);
+  i2t->seq = '0';	/* no sort sequence is yet defined for the table */
   i2t->keyname = NULL;
   if (sykey != NULL)
     {
-
       if (sykey->level == -1)
-	{
-	  i2t->seq = '1';
-	}
-
+	i2t->seq = '1';
       if (sykey->level == -2)
-	{
-	  i2t->seq = '2';
-	}
-
-      i = strlen (sykey->name);
-      i2t->keyname = malloc (i + 1);
-      if (i2t->keyname == NULL)
-	{
-	  free (i2t->idxname);
-	  free (i2t->tablename);
-	  free (i2t);
-	  return 0;
-	}
-      strcpy (i2t->keyname, sykey->name);
+	i2t->seq = '2';
+      i2t->keyname = strdup (sykey->name);
     }
-
-  if (index2table == NULL)
-    {
-      index2table = i2t;
-    }
-  else
-    {
-      i2t->next = index2table;
-      index2table = i2t;
-    }
-
-#ifdef COB_DEBUG
-  if (cob_trace_codegen)
-    fprintf (stderr,
-	     "trace (define_implicit_field): index '%s' table '%s' tablekey '%s' sequence '%c'\n",
-	     i2t->idxname, i2t->tablename, i2t->keyname, i2t->seq);
-#endif
-
-  i2t = NULL;
-
-  return r;
+  i2t->next = index2table;
+  index2table = i2t;
 }
 
 void
@@ -4799,7 +4691,7 @@ define_field (int level, struct sym *sy)
       return;
     }
   if (level == 1 || level == 77)
-    curr_sec_no = default_sec_no;
+    curr_sec_no = SEC_DATA;
   sy->len = 0;
   sy->decimals = -1;		/* suppose no decimals yet */
   sy->level = level;
