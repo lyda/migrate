@@ -74,6 +74,16 @@ typedef struct cob_object *cob_object;
 #define COB_DECIMAL(x)		(&((x)->data.decimal))
 #define COB_FIELD(x)		(&((x)->data.field))
 
+static void
+print_decimal (decimal d)
+{
+  fputs ("decimal(", stdout);
+  mpz_out_str (stdout, 10, d->number);
+  if (d->decimals)
+    fprintf (stdout, " * 10^-%d", d->decimals);
+  fputs (")\n", stdout);
+}
+
 void
 cob_debug_print (cob_object o)
 {
@@ -89,14 +99,7 @@ cob_debug_print (cob_object o)
       break;
 
     case COB_TYPE_DECIMAL:
-      {
-	decimal d = COB_DECIMAL (o);
-	fputs ("decimal(", stdout);
-	mpz_out_str (stdout, 10, d->number);
-	if (d->decimals)
-	  fprintf (stdout, " * 10^-%d", d->decimals);
-	fputs (")\n", stdout);
-      }
+      print_decimal (COB_DECIMAL (o));
       break;
 
     case COB_TYPE_FIELD:
@@ -432,12 +435,18 @@ cob_set (struct fld_desc *f, char *s, int round)
 	else
 	  {
 	    signed long long val;
-	    unsigned long lower = mpz_get_ui (d->number);
+	    mpz_t r;
+	    mpz_init (r);
+	    mpz_fdiv_r_2exp (r, d->number, 32);
 	    mpz_fdiv_q_2exp (d->number, d->number, 32);
 	    if (!mpz_fits_sint_p (d->number))
-	      goto size_error;
+	      {
+		mpz_clear (r);
+		goto size_error;
+	      }
 	    val = mpz_get_si (d->number);
-	    val = (val << 32) + lower;
+	    val = (val << 32) + mpz_get_ui (r);
+	    mpz_clear (r);
 	    if (val < -999999999999999999 || val > 999999999999999999)
 	      goto size_error;
 	    *((signed long long *) s) = val;
