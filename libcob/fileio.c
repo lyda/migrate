@@ -104,7 +104,7 @@ sequential_open (struct cob_file_desc *f, char *filename, int mode)
       flags = O_CREAT | O_RDWR | O_TRUNC;
       break;
     case COB_OPEN_I_O:
-      flags = O_CREAT | O_RDWR;
+      flags = O_RDWR;
       break;
     case COB_OPEN_EXTEND:
       flags = O_CREAT | O_RDWR | O_APPEND;
@@ -113,7 +113,7 @@ sequential_open (struct cob_file_desc *f, char *filename, int mode)
 
   f->file.fd = open (filename, flags, FILE_PERMISSION);
 
-  return f->file.fd ? 0 : errno;
+  return (f->file.fd > 0) ? 0 : errno;
 }
 
 static int
@@ -196,7 +196,7 @@ lineseq_open (struct cob_file_desc *f, char *filename, int mode)
       break;
     }
 
-  return f->file.fp ? 0 : errno;
+  return (f->file.fp != NULL) ? 0 : errno;
 }
 
 static int
