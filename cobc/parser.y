@@ -116,6 +116,9 @@ static struct cobc_list *label_check_list;
 static int warning_count = 0;
 static int error_count = 0;
 
+static int last_operator;
+static cobc_tree last_lefthand;
+
 static void register_predefined_name (cobc_tree *ptr, cobc_tree name);
 static void resolve_predefined_names (void);
 
@@ -135,9 +138,9 @@ static struct cobc_list *make_corr (cobc_tree (*func)(), cobc_tree g1, cobc_tree
 static cobc_tree make_opt_cond (cobc_tree last, int type, cobc_tree this);
 static cobc_tree make_cond_name (cobc_tree x);
 
-static void redefinition_error (cobc_tree x);
-static void undefined_error (struct cobc_word *w, cobc_tree parent);
-static void ambiguous_error (struct cobc_word *w);
+static void redefinition_error (struct cobc_location *loc, cobc_tree x);
+static void undefined_error (struct cobc_location *loc, struct cobc_word *w, cobc_tree parent);
+static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %}
 
 %union {
@@ -213,11 +216,11 @@ static void ambiguous_error (struct cobc_word *w);
 %type <tree> call_returning,add_to,field_description_list,value_item
 %type <tree> field_description_list_1,field_description_list_2
 %type <tree> condition,imperative_statement,field_description
-%type <tree> evaluate_object,evaluate_object_1,expr_item
+%type <tree> evaluate_object,evaluate_object_1
 %type <tree> function,subscript,subref,refmod
 %type <tree> search_varying,search_at_end,search_whens,search_when
 %type <tree> perform_procedure,perform_sentence,perform_option
-%type <tree> read_into,read_key,write_from,field_name,expr
+%type <tree> read_into,read_key,write_from,field_name,expr,expr_1,expr_item
 %type <tree> file_name,opt_with_pointer,occurs_index,evaluate_subject
 %type <tree> unstring_delimiter,unstring_count,unstring_tallying
 %type <tree> at_end_sentence,not_at_end_sentence
@@ -945,7 +948,7 @@ redefines_clause:
     switch ($2->count)
       {
       case 0:
-	undefined_error ($2, 0);
+	undefined_error (&@2, $2, 0);
 	break;
       case 1:
 	current_field->redefines = COBC_FIELD ($2->item);
@@ -2727,11 +2730,16 @@ condition:
 ;
 
 expr:
+  {
+    last_operator = 0;
+    last_lefthand = NULL;
+  }
+  expr_1			{ $$ = $2; }
+;
+expr_1:
   expr_item_list
   {
     int i;
-    int last_operator = 0;
-    cobc_tree last_lefthand = NULL;
     char *class_func = NULL;
     struct cobc_list *l;
     struct stack_item {
@@ -2764,8 +2772,7 @@ expr:
 		  stack[i-1].value =
 		    make_cond (last_lefthand, last_operator, stack[i-1].value);
 		stack[i-2].token = VALUE;
-		stack[i-2].value =
-		  make_negate_cond (stack[i-1].value);
+		stack[i-2].value = make_negate_cond (stack[i-1].value);
 		i -= 1;
 		break;
 	      case COBC_COND_AND:
@@ -3014,7 +3021,7 @@ expr_item_list:
 ;
 expr_item:
   value				{ $$ = $1; }
-| '(' expr ')'			{ $$ = $2; }
+| '(' expr_1 ')'		{ $$ = $2; }
 | condition_name		{ $$ = make_cond_name ($1); }
 /* arithmetic operator */
 | '+'				{ $$ = make_integer ('+'); }
@@ -3156,7 +3163,7 @@ qualified_cond_name:
   CONDITION_NAME
   {
     if (COBC_FIELD ($1)->word->count > 1)
-      ambiguous_error (COBC_FIELD ($1)->word);
+      ambiguous_error (&@1, COBC_FIELD ($1)->word);
     $$ = $1;
     field_set_used (COBC_FIELD ($$)->parent);
   }
@@ -3166,7 +3173,7 @@ qualified_cond_name:
     struct cobc_word *qw = lookup_qualified_word (w, COBC_FIELD ($3));
     $$ = $1;
     if (!qw)
-      undefined_error (w, $3);
+      undefined_error (&@1, w, $3);
     else
       {
 	$$ = qw->item;
@@ -3192,7 +3199,7 @@ data_name:
       {
 	struct cobc_field *p = COBC_FIELD ($1);
 	if (p->indexes > 0)
-	  yyerror ("`%s' must be subscripted", p->word->name);
+	  yyerror_loc (&@1, "`%s' must be subscripted", tree_to_string ($1));
       }
     field_set_used (p);
   }
@@ -3262,7 +3269,7 @@ section_name:
 	    /* used as the same paragraph name in the same section */
 	    || COBC_LABEL_NAME ($1->item)->section == current_section))
       {
-	redefinition_error ($1->item);
+	redefinition_error (&@1, $1->item);
 	$$ = $1->item;
       }
     else
@@ -3287,7 +3294,7 @@ qualified_name:
     $$ = $1->item;
     if (!$$)
       {
-	undefined_error ($1, 0);
+	undefined_error (&@1, $1, 0);
 	$$ = make_filler ();
       }
   }
@@ -3297,14 +3304,14 @@ qualified_word:
   {
     $$ = $1;
     if ($1->count > 1)
-      ambiguous_error ($1);
+      ambiguous_error (&@1, $1);
   }
 | WORD in_of qualified_name
   {
     $$ = lookup_qualified_word ($1, COBC_FIELD ($3));
     if (!$$)
       {
-	undefined_error ($1, $3);
+	undefined_error (&@1, $1, $3);
 	$$ = $1;
       }
   }
@@ -3392,7 +3399,11 @@ predefined_name_list:
   predefined_name		{ $$ = list_add ($1, $2); }
 ;
 predefined_name:
-  qualified_predefined_word	{ $$ = make_predefined ($1); }
+  qualified_predefined_word
+  {
+    cobc_location = @1;
+    $$ = make_predefined ($1);
+  }
 ;
 qualified_predefined_word:
   WORD				{ $$ = cons ($1, NULL); }
@@ -3413,7 +3424,7 @@ undefined_word:
   WORD
   {
     if ($1->item)
-      redefinition_error ($1->item);
+      redefinition_error (&@1, $1->item);
     $$ = $1;
   }
 ;
@@ -3610,14 +3621,15 @@ resolve_predefined_name (cobc_tree x)
   cobc_tree name;
   struct cobc_list *l = COBC_PREDEFINED (x)->words;
   struct cobc_word *p = l->item;
+  struct cobc_location *loc = &COBC_TREE_LOC (x);
   if (p->count == 0)
     {
-      undefined_error (p, 0);
+      undefined_error (loc, p, 0);
       return NULL;
     }
   else if (p->count > 1)
     {
-      ambiguous_error (p);
+      ambiguous_error (loc, p);
       return NULL;
     }
 
@@ -3628,7 +3640,7 @@ resolve_predefined_name (cobc_tree x)
       p = lookup_qualified_word (w, COBC_FIELD (name));
       if (!p)
 	{
-	  undefined_error (w, name);
+	  undefined_error (loc, w, name);
 	  return NULL;
 	}
       name = p->item;
@@ -3705,7 +3717,8 @@ init_field (int level, cobc_tree field)
 	  struct cobc_field *p = last_field->parent;
 	  for (p = p->children; p; p = p->sister)
 	    if (strcasecmp (current_field->word->name, p->word->name) == 0)
-	      redefinition_error (COBC_TREE (p));
+	      redefinition_error (&COBC_TREE (current_field)->loc,
+				  COBC_TREE (p));
 	}
       last_field->sister = current_field;
       current_field->parent = last_field->parent;
@@ -3866,7 +3879,7 @@ validate_field_tree (struct cobc_field *p)
       if (!p->pic)
 	{
 	  if (p->usage != COBC_USAGE_INDEX)
-	    yyerror ("`%s' must have PICTURE", tree_to_string (COBC_TREE (p)));
+	    yyerror_tree (COBC_TREE (p), "must have PICTURE");
 	  p->pic = make_picture ();
 	}
     }
@@ -4102,26 +4115,26 @@ make_cond_name (cobc_tree x)
 
 
 static void
-redefinition_error (cobc_tree x)
+redefinition_error (struct cobc_location *loc, cobc_tree x)
 {
-  struct cobc_field *p = COBC_FIELD (x);
-  yywarn ("redefinition of `%s'", p->word->name);
-  yywarn_tree (x, "previously defined here", p->word->name);
+  yywarn_loc (loc, "redefinition of `%s'", tree_to_string (x));
+  yywarn_tree (x, "previously defined here");
 }
 
 static void
-undefined_error (struct cobc_word *w, cobc_tree parent)
+undefined_error (struct cobc_location *loc, struct cobc_word *w, cobc_tree parent)
 {
   if (parent)
-    yyerror ("`%s' undefined in `%s'", w->name, tree_to_string (parent));
+    yyerror_loc (loc, "`%s' undefined in `%s'",
+		 w->name, tree_to_string (parent));
   else
-    yyerror ("`%s' undefined", w->name);
+    yyerror_loc (loc, "`%s' undefined", w->name);
 }
 
 static void
-ambiguous_error (struct cobc_word *w)
+ambiguous_error (struct cobc_location *loc, struct cobc_word *w)
 {
-  yyerror ("`%s' ambiguous; need qualification", w->name);
+  yyerror_loc (loc, "`%s' ambiguous; need qualification", w->name);
 }
 
 
