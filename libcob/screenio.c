@@ -20,7 +20,9 @@
 #include "config.h"
 
 #include <string.h>
+#if HAVE_CURSES_H
 #include <curses.h>
+#endif
 
 #include "move.h"
 #include "screenio.h"
@@ -35,6 +37,7 @@ static int screen_initialized = 0;
 void
 cob_screen_init (void)
 {
+#if HAVE_LIBNCURSES
   if (!screen_initialized)
     {
       initscr ();
@@ -44,13 +47,16 @@ cob_screen_init (void)
       echo ();
       screen_initialized = 1;
     }
+#endif
 }
 
 void
 cob_screen_clear (void)
 {
+#if HAVE_LIBNCURSES
   if (screen_initialized)
     endwin ();
+#endif
 }
 
 void
@@ -61,13 +67,17 @@ cob_screen_attr (int line, int column, long attr)
 void
 cob_screen_puts (const char *data, size_t size, int line, int column, long attr)
 {
+#if HAVE_LIBNCURSES
   mvaddnstr (line, column, data, size);
+#endif
 }
 
 void
 cob_screen_gets (char *data, size_t size, int line, int column, long attr)
 {
+#if HAVE_LIBNCURSES
   mvgetnstr (line, column, data, size);
+#endif
 }
 
 void
