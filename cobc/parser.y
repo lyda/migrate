@@ -666,7 +666,7 @@ padding_character_clause:
 /* RECORD DELIMITER clause */
 
 record_delimiter_clause:
-  RECORD DELIMITER _is STANDARD_1	{ PENDING ("RECORD DELIMITER"); }
+  RECORD DELIMITER _is STANDARD_1	{ /* ignored */ }
 ;
 
 
