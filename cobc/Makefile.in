@@ -157,7 +157,7 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 bin_PROGRAMS = cobc
 cobc_SOURCES = cobc.c cobc.h config.c tree.c tree.h reserved.c error.c \
-	parser.c parser.h scanner.c typeck.c codegen.c \
+	parser.c parser.h scanner.c field.c typeck.c codegen.c \
 	ppparse.c ppparse.h pplex.c config.def flag.def warning.def
 
 
@@ -179,9 +179,9 @@ PROGRAMS = $(bin_PROGRAMS)
 am_cobc_OBJECTS = cobc-cobc.$(OBJEXT) cobc-config.$(OBJEXT) \
 	cobc-tree.$(OBJEXT) cobc-reserved.$(OBJEXT) \
 	cobc-error.$(OBJEXT) cobc-parser.$(OBJEXT) \
-	cobc-scanner.$(OBJEXT) cobc-typeck.$(OBJEXT) \
-	cobc-codegen.$(OBJEXT) cobc-ppparse.$(OBJEXT) \
-	cobc-pplex.$(OBJEXT)
+	cobc-scanner.$(OBJEXT) cobc-field.$(OBJEXT) \
+	cobc-typeck.$(OBJEXT) cobc-codegen.$(OBJEXT) \
+	cobc-ppparse.$(OBJEXT) cobc-pplex.$(OBJEXT)
 cobc_OBJECTS = $(am_cobc_OBJECTS)
 cobc_DEPENDENCIES = $(top_builddir)/lib/libsupport.a
 cobc_LDFLAGS =
@@ -192,7 +192,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/cobc-cobc.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/cobc-codegen.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/cobc-config.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/cobc-error.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/cobc-error.Po ./$(DEPDIR)/cobc-field.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/cobc-parser.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/cobc-pplex.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/cobc-ppparse.Po \
@@ -263,6 +263,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cobc-codegen.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cobc-config.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cobc-error.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cobc-field.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cobc-parser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cobc-pplex.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cobc-ppparse.Po@am__quote@
@@ -534,6 +535,39 @@ cobc-scanner.lo: scanner.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/cobc-scanner.Plo' tmpdepfile='$(DEPDIR)/cobc-scanner.TPlo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cobc_CFLAGS) $(CFLAGS) -c -o cobc-scanner.lo `test -f 'scanner.c' || echo '$(srcdir)/'`scanner.c
+
+cobc-field.o: field.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cobc_CFLAGS) $(CFLAGS) -MT cobc-field.o -MD -MP -MF "$(DEPDIR)/cobc-field.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o cobc-field.o `test -f 'field.c' || echo '$(srcdir)/'`field.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/cobc-field.Tpo" "$(DEPDIR)/cobc-field.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/cobc-field.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='field.c' object='cobc-field.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/cobc-field.Po' tmpdepfile='$(DEPDIR)/cobc-field.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cobc_CFLAGS) $(CFLAGS) -c -o cobc-field.o `test -f 'field.c' || echo '$(srcdir)/'`field.c
+
+cobc-field.obj: field.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cobc_CFLAGS) $(CFLAGS) -MT cobc-field.obj -MD -MP -MF "$(DEPDIR)/cobc-field.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o cobc-field.obj `if test -f 'field.c'; then $(CYGPATH_W) 'field.c'; else $(CYGPATH_W) '$(srcdir)/field.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/cobc-field.Tpo" "$(DEPDIR)/cobc-field.Po"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/cobc-field.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='field.c' object='cobc-field.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/cobc-field.Po' tmpdepfile='$(DEPDIR)/cobc-field.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cobc_CFLAGS) $(CFLAGS) -c -o cobc-field.obj `if test -f 'field.c'; then $(CYGPATH_W) 'field.c'; else $(CYGPATH_W) '$(srcdir)/field.c'; fi`
+
+cobc-field.lo: field.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cobc_CFLAGS) $(CFLAGS) -MT cobc-field.lo -MD -MP -MF "$(DEPDIR)/cobc-field.Tpo" \
+@am__fastdepCC_TRUE@	  -c -o cobc-field.lo `test -f 'field.c' || echo '$(srcdir)/'`field.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/cobc-field.Tpo" "$(DEPDIR)/cobc-field.Plo"; \
+@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/cobc-field.Tpo"; exit 1; \
+@am__fastdepCC_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='field.c' object='cobc-field.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/cobc-field.Plo' tmpdepfile='$(DEPDIR)/cobc-field.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cobc_CFLAGS) $(CFLAGS) -c -o cobc-field.lo `test -f 'field.c' || echo '$(srcdir)/'`field.c
 
 cobc-typeck.o: typeck.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cobc_CFLAGS) $(CFLAGS) -MT cobc-typeck.o -MD -MP -MF "$(DEPDIR)/cobc-typeck.Tpo" \

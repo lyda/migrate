@@ -445,13 +445,10 @@ struct cb_field {
 #define CB_FIELD(x)		(CB_TREE_CAST (CB_TAG_FIELD, struct cb_field, x))
 #define CB_FIELD_P(x)		(CB_TREE_TAG (x) == CB_TAG_FIELD)
 
+extern cb_tree cb_build_field (cb_tree name);
 extern cb_tree cb_build_implicit_field (cb_tree name, int len);
 extern cb_tree cb_build_index (cb_tree name);
 extern cb_tree cb_build_constant (cb_tree name, cb_tree value);
-extern cb_tree cb_build_field (cb_tree level, cb_tree name, struct cb_field *last_field, enum cb_storage storage);
-extern struct cb_field *cb_resolve_redefines (struct cb_field *field, cb_tree redefines);
-extern void cb_validate_field (struct cb_field *p);
-extern void cb_validate_88_item (struct cb_field *p);
 
 extern struct cb_field *cb_field (cb_tree x);
 extern int cb_field_size (cb_tree x);
@@ -907,6 +904,12 @@ extern void group_error (cb_tree x, const char *clause);
 extern void level_redundant_error (cb_tree x, const char *clause);
 extern void level_require_error (cb_tree x, const char *clause);
 extern void level_except_error (cb_tree x, const char *clause);
+
+/* field.c */
+extern cb_tree cb_build_field_tree (cb_tree level, cb_tree name, struct cb_field *last_field, enum cb_storage storage);
+extern struct cb_field *cb_resolve_redefines (struct cb_field *field, cb_tree redefines);
+extern void cb_validate_field (struct cb_field *p);
+extern void cb_validate_88_item (struct cb_field *p);
 
 /* typeck.c */
 extern int validate_move (cb_tree src, cb_tree dst, int value_flag);

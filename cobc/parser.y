@@ -977,7 +977,7 @@ record_description_list_2:
 data_description:
   level_number entry_name
   {
-    cb_tree x = cb_build_field ($1, $2, current_field, current_storage);
+    cb_tree x = cb_build_field_tree ($1, $2, current_field, current_storage);
     if (x == cb_error_node)
       YYERROR;
     else
@@ -1300,7 +1300,7 @@ screen_description_list:
 screen_description:
   level_number entry_name
   {
-    cb_tree x = cb_build_field ($1, $2, current_field, current_storage);
+    cb_tree x = cb_build_field_tree ($1, $2, current_field, current_storage);
     if (x == cb_error_node)
       YYERROR;
 
