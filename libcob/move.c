@@ -332,7 +332,6 @@ cob_move_packed_to_display (struct cob_field f1, struct cob_field f2)
  */
 
 #define get() ((min <= src && src < max) ? *src++ : (src++, '0'))
-#define unget() (src--)
 
 void
 cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
@@ -440,7 +439,7 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
     {
       *decimal_point = '.';
       for (dst = decimal_point + 1; dst < end; dst++)
-	if (!isdigit (*dst))
+	if (!isdigit (*dst) && *dst != ',')
 	  *dst = '0';
     }
 
