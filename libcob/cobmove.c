@@ -90,6 +90,29 @@ cob_move_space (struct fld_desc *f, char *s)
   cob_move (&fld, " ", f, s);
 }
 
+static int
+fldLength (struct fld_desc *f)
+{
+  switch (f->type)
+    {
+    case 'B':
+      switch (f->len)
+	{
+	case 1: return 3;
+	case 2: return 5;
+	case 4: return 10;
+	default: return 18;
+	}
+    case 'U':
+      if (f->len == 4)
+	return 14;
+      else
+	return 30;
+    default:
+      return f->len;
+    }
+}
+
 /*--------------------------------------------------------------------------*\
  |                                                                           |
  |       void cob_move( struct fld_desc *FieldDescSrc,                       |
@@ -120,8 +143,8 @@ cob_move_space (struct fld_desc *f, char *s)
 \*--------------------------------------------------------------------------*/
 
 void
-cob_move (struct fld_desc *pfldDesc1, char *caData1,
-	  struct fld_desc *pfldDesc2, char *caData2)
+cob_move (struct fld_desc *f1desc, char *f1data,
+	  struct fld_desc *f2desc, char *f2data)
 {
   int i;
   int iPadLength;
@@ -135,14 +158,14 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
   struct fld_desc *pSrcFld, *pDstFld;
   struct fld_desc FldWrk;
 
-  iSrcLength = fldLength (pfldDesc1);
-  iDestLength = fldLength (pfldDesc2);
-  iSrcDecimals = pfldDesc1->decimals;
-  iDestDecimals = pfldDesc2->decimals;
-  pSrcFld = pfldDesc1;		/* may be changed to point to work area */
-  pDstFld = pfldDesc2;		/* may be changed to point to work area */
-  pSrcData = caData1;		/* may be changed to point to work area */
-  pDstData = caData2;		/* may be changed to point to work area */
+  iSrcLength = fldLength (f1desc);
+  iDestLength = fldLength (f2desc);
+  iSrcDecimals = f1desc->decimals;
+  iDestDecimals = f2desc->decimals;
+  pSrcFld = f1desc;		/* may be changed to point to work area */
+  pDstFld = f2desc;		/* may be changed to point to work area */
+  pSrcData = f1data;		/* may be changed to point to work area */
+  pDstData = f2data;		/* may be changed to point to work area */
   FldWrk.pic = caPic;
 
   switch (pSrcFld->type)
@@ -367,7 +390,7 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 		  case '\t':
 		    break;
 		  default:
-		    runtime_error (RTERR_INVALID_DATA, pfldDesc1,
+		    runtime_error (RTERR_INVALID_DATA, f1desc,
 				   (void *) pSrcData);
 		    //memset(pDstData, '0', pDstFld->len);
 		    memset (pDstData, '0', fldLength (pDstFld));
@@ -384,7 +407,7 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 		if (iIntCount < iWork)
 		  {		/* move pad first */
 		    i = iWork - iIntCount;
-		    memset (caData2, '0', i);
+		    memset (f2data, '0', i);
 		  }
 		if (iIntCount > iWork)	/* truncate */
 		  iSrcPtr = iIntCount - iWork;
@@ -589,7 +612,7 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 
 /* Source type is Display */
     case DTYPE_DISPLAY:
-      switch (pfldDesc2->type)
+      switch (f2desc->type)
 	{
 	case DTYPE_ALPHA:
 	case DTYPE_GROUP:
@@ -1113,7 +1136,7 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 
 /* Source type is Packed */
     case DTYPE_PACKED:
-      switch (pfldDesc2->type)
+      switch (f2desc->type)
 	{			/* destination field type */
 	case DTYPE_ALPHA:
 	case DTYPE_GROUP:

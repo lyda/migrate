@@ -243,29 +243,6 @@ cob_exit ()
 }
 
 int
-fldLength (struct fld_desc *f)
-{
-  switch (f->type)
-    {
-    case 'B':
-      switch (f->len)
-	{
-	case 1: return 3;
-	case 2: return 5;
-	case 4: return 10;
-	default: return 18;
-	}
-    case 'U':
-      if (f->len == 4)
-	return 14;
-      else
-	return 30;
-    default:
-      return f->len;
-    }
-}
-
-int
 picCompLength (struct fld_desc *f)
 {
   int len = 0, i;

@@ -171,7 +171,6 @@ extern int extract_sign (struct fld_desc *f, char *s);
 extern void put_sign (struct fld_desc *f, char *s, int sign);
 extern int get_index (struct fld_desc *f, char *s);
 
-extern int fldLength (struct fld_desc *f);
 extern int picCompLength (struct fld_desc *f);
 
 extern void cob_move (struct fld_desc *pfldDesc1, char *caData1,
