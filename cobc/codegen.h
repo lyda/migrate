@@ -337,7 +337,6 @@ struct init_str
 {				/* structure to hold initialization sequence */
   struct sym *sy;		/* pointer on symbol */
   char type;			/* type of symbol */
-  int len;			/* size of symbol */
   unsigned location;		/* location of occurence of symbol */
   struct lit *value;		/* original value of symbol */
 };

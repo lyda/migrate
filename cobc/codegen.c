@@ -80,9 +80,7 @@ static char init_ctype;		// hold homogenous type
 static short init_val;		// hold homogenous value
 static struct init_str *istrp;
 static int initp;
-static unsigned init_location;
 static unsigned curr_01_location;	// hold current root father when set_field_location
-static int max_nb_fields;
 
 struct list *expr_list = NULL;
 struct list *files_list = NULL;
@@ -739,69 +737,6 @@ get_nb_fields (struct sym *sy, int times, int sw_val)
   return nb_fields * times;
 }
 
-static int
-build_init_str (struct sym *sy, int times)
-{
-  struct sym *tmp;
-  int nb_fields = 0, tmpnf;
-  int stidx = -1, endidx = -1;
-  int i, j;
-
-  if (sy->type == 'G')
-    {
-      if (sy->occurs_flg)
-	stidx = initp;
-      for (tmp = sy->son; tmp != NULL; tmp = tmp->brother)
-	{
-	  tmpnf = tmp->times * build_init_str (tmp, times);
-
-	  if (tmp->redefines == NULL)
-	    nb_fields += tmpnf;
-	}
-      endidx = initp;
-      for (i = 1; i < sy->times; i++)
-	for (j = stidx; j < endidx; j++)
-	  {
-	    istrp[initp].sy = istrp[j].sy;
-	    istrp[initp].type = istrp[j].type;
-	    istrp[initp].value = istrp[j].value;
-	    istrp[initp].len = istrp[j].len;
-	    istrp[initp].location = init_location;
-	    init_location += istrp[initp].len;
-	    initp++;
-	  }
-    }
-  else
-    {
-      if (!sy->flags.in_redefinition)
-	{
-	  istrp[initp].sy = sy;
-	  istrp[initp].type = sy->type;
-	  istrp[initp].value = sy->value;
-	  istrp[initp].len = symlen (sy);
-	  istrp[initp].location = init_location;
-	  init_location += istrp[initp].len;
-	  initp++;
-	  stidx = initp - 1;
-	  endidx = initp;
-	  for (i = 1; i < sy->times; i++)
-	    {
-	      for (j = stidx; j < endidx; j++)
-		{
-		  istrp[initp].sy = istrp[j].sy;
-		  istrp[initp].type = istrp[j].type;
-		  istrp[initp].value = istrp[j].value;
-		  istrp[initp].len = istrp[j].len;
-		  istrp[initp].location = init_location;
-		  init_location += istrp[initp].len;
-		  initp++;
-		}
-	    }
-	}
-    }
-  return nb_fields * times;
-}
-
 static void
 gen_init_str (struct sym *sy, char type)
 {
@@ -824,11 +759,32 @@ gen_init_str (struct sym *sy, char type)
     }
 }
 
-static void
-init_field_val (struct sym *sy)
+static unsigned int
+initialize_values_1 (struct sym *sy, unsigned int loc)
 {
-  if (sy->value)
-    gen_move ((struct sym *) sy->value, sy);
+  int i;
+
+  if (sy->type == 'G')
+    {
+      struct sym *p;
+      for (i = 0; i < sy->times; i++)
+	for (p = sy->son; p != NULL; p = p->brother)
+	  loc = initialize_values_1 (p, loc);
+    }
+  else
+    {
+      if (!sy->flags.in_redefinition)
+	for (i = 0; i < sy->times; i++)
+	  {
+	    istrp[initp].sy = sy;
+	    istrp[initp].type = sy->type;
+	    istrp[initp].value = sy->value;
+	    istrp[initp].location = loc;
+	    loc += symlen (sy);
+	    initp++;
+	  }
+    }
+  return loc;
 }
 
 static void
@@ -858,7 +814,8 @@ initialize_values (void)
 	      continue;
 	    if (v->level == 77 || (v->level == 1 && v->son == NULL))
 	      {
-		init_field_val (v);
+		if (v->value)
+		  gen_move ((struct sym *) v->value, v);
 		continue;
 	      }
 	    init_ctype = ' ';
@@ -871,17 +828,16 @@ initialize_values (void)
 	    else
 	      {
 		initp = 0;
-		init_location = v->location;
-		max_nb_fields = nb_fields;
 		istrp = malloc (nb_fields * sizeof (struct init_str));
-		build_init_str (v, 1);
+		initialize_values_1 (v, v->location);
 		for (j = 0; j < nb_fields; j++)
 		  if (istrp[j].value != NULL)
 		    {
-		      unsigned saved_loc = istrp[j].sy->location;
-		      istrp[j].sy->location = istrp[j].location;
-		      init_field_val (istrp[j].sy);
-		      istrp[j].sy->location = saved_loc;
+		      struct sym *sy = istrp[j].sy;
+		      unsigned saved_loc = sy->location;
+		      sy->location = istrp[j].location;
+		      gen_move ((struct sym *) istrp[j].value, sy);
+		      sy->location = saved_loc;
 		    }
 		free (istrp);
 	      }
@@ -1880,7 +1836,7 @@ gen_initialize (struct sym *sy)
 #endif
   init_ctype = ' ';
   get_nb_fields (sy, sy->times, 0);
-  if (init_ctype != '&' && init_ctype != ' ')
+  if (init_ctype != '&')
     gen_init_str (sy, init_ctype);
   else
     gen_initialize_1 (sy, sy->location);
