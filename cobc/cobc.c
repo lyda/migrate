@@ -43,8 +43,8 @@
  * Global variables
  */
 
-enum cb_standard cb_standard = CB_STANDARD_COBOL2002;
-const char *cb_standard_name = "COBOL 2002";
+enum cb_standard cb_standard = CB_STANDARD_GNU;
+const char *cb_standard_name = "OpenCOBOL";
 
 enum cb_binary_rep cb_binary_rep = CB_BINARY_REP_1_2_4_8;
 
@@ -234,8 +234,9 @@ print_usage ()
 "));
   puts (_("COBOL standard:\n\
   -std=<standard>       Specify the standard to use:\n\
-    cobol2002             COBOL 2002 (default)\n\
+    gnu                   GNU COBOL (default)\n\
     cobol85               COBOL 85\n\
+    cobol2002             COBOL 2002\n\
     mvs                   IBM COBOL for MVS & VM\n\
 "));
   puts (_("COBOL options:\n\
@@ -296,7 +297,12 @@ process_command_line (int argc, char *argv[])
 	  break;
 
 	case 's': /* -std */
-	  if (strcmp (optarg, "cobol85") == 0)
+	  if (strcmp (optarg, "gnu") == 0)
+	    {
+	      cb_standard = CB_STANDARD_GNU;
+	      cb_standard_name = "GNU COBOL";
+	    }
+	  else if (strcmp (optarg, "cobol85") == 0)
 	    {
 	      cb_standard = CB_STANDARD_COBOL85;
 	      cb_standard_name = "COBOL 85";

@@ -44,6 +44,7 @@
 
 /* COBOL standard */
 extern enum cb_standard {
+  CB_STANDARD_GNU,
   CB_STANDARD_COBOL85,
   CB_STANDARD_COBOL2002,
   CB_STANDARD_MVS,
