@@ -528,26 +528,11 @@ compute_size (struct cobc_field *p)
   if (p->level == 66)
     {
       /* rename */
-      if (!p->rename_thru)
-	{
-	  p->size = p->redefines->size;
-	}
+      if (p->rename_thru)
+	p->size =
+	  p->rename_thru->offset + p->rename_thru->size - p->redefines->offset;
       else
-	{
-	  struct cobc_field *c = p->redefines;
-	  p->size = 0;
-	  while (c != p->rename_thru)
-	    {
-	      p->size += c->size;
-	      if (c->sister)
-		c = c->sister;
-	      else if (c->parent)
-		c = c->parent;
-	      else
-		return p->size;
-	    }
-	  p->size += c->size;
-	}
+	p->size = p->redefines->size;
       return p->size;
     }
   else if (p->children)

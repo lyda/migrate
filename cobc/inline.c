@@ -94,7 +94,8 @@ output_advance_move (struct cob_field f, cobc_tree dst)
   struct cob_field dst_fld = {&dst_desc, dst_data};
 
   dst_desc.size = p->size;
-  if (p->children)
+  if (p->children || p->rename_thru
+      || (p->level == 66 && p->redefines->children))
     {
       dst_desc.type = COB_GROUP;
       dst_desc.justified = 0;
@@ -350,7 +351,16 @@ static void output_initialize_internal (struct cobc_field *p);
 static int
 field_uniform_class (struct cobc_field *p)
 {
-  if (!p->children)
+  if (p->children)
+    {
+      int class = field_uniform_class (p->children);
+      for (p = p->children->sister; p; p = p->sister)
+	if (!p->redefines)
+	  if (class != field_uniform_class (p))
+	    return COB_VOID;
+      return class;
+    }
+  else
     {
       switch (p->category)
 	{
@@ -371,15 +381,6 @@ field_uniform_class (struct cobc_field *p)
 	default:
 	  return COB_VOID;
 	}
-    }
-  else
-    {
-      int class = field_uniform_class (p->children);
-      for (p = p->children->sister; p; p = p->sister)
-	if (!p->redefines)
-	  if (class != field_uniform_class (p))
-	    return COB_VOID;
-      return class;
     }
 }
 
@@ -473,8 +474,7 @@ output_initialize (cobc_tree x)
   else
     {
       /* otherwise, fill the field by spaces first */
-      if (COBC_FIELD (x)->children)
-	output_initialize_uniform (x, COB_ALPHANUMERIC, COBC_FIELD (x)->size);
+      output_initialize_uniform (x, COB_ALPHANUMERIC, COBC_FIELD (x)->size);
       /* then initialize the children recursively */
       output_initialize_compound (x);
     }
@@ -485,7 +485,12 @@ static struct cobc_list *initialize_replacing_list;
 static void
 output_initialize_replacing_internal (struct cobc_field *p)
 {
-  if (!p->children)
+  if (p->children)
+    {
+      for (p = p->children; p; p = p->sister)
+	output_recursive (output_initialize_replacing_internal, COBC_TREE (p));
+    }
+  else
     {
       struct cobc_list *l;
       for (l = initialize_replacing_list; l; l = l->next)
@@ -499,11 +504,7 @@ output_initialize_replacing_internal (struct cobc_field *p)
 	      break;
 	    }
 	}
-      return;
     }
-
-  for (p = p->children; p; p = p->sister)
-    output_recursive (output_initialize_replacing_internal, COBC_TREE (p));
 }
 
 static void

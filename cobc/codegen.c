@@ -448,7 +448,17 @@ output_expr (cobc_tree x, int id)
 	struct cobc_expr *p = COBC_EXPR (x);
 	output_expr (p->left, id);
 	if (p->right != cobc_dt)
-	  output_expr (p->right, id + 1);
+	  {
+	    if (id >= 4)
+	      {
+		int i = id + 1;
+		output_indent ("{", 2);
+		output_line ("struct cob_decimal cob_d%d_data;", i);
+		output_line ("cob_decimal cob_d%d = &cob_d%d_data;", i, i);
+		output_line ("cob_decimal_init (cob_d%d);", i);
+	      }
+	    output_expr (p->right, id + 1);
+	  }
 	output_prefix ();
 	switch (p->op)
 	  {
@@ -461,7 +471,14 @@ output_expr (cobc_tree x, int id)
 	if (p->right == cobc_dt)
 	  output (" (cob_d%d, cob_dt);\n", id);
 	else
-	  output (" (cob_d%d, cob_d%d);\n", id, id + 1);
+	  {
+	    output (" (cob_d%d, cob_d%d);\n", id, id + 1);
+	    if (id >= 4)
+	      {
+		output_line ("cob_decimal_clear (cob_d%d);", id + 1);
+		output_indent ("}", -2);
+	      }
+	  }
 	break;
       }
     case cobc_tag_integer:
@@ -827,7 +844,8 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
   if (p->f.used && !COBC_FILLER_P (COBC_TREE (p)))
     {
       output ("static struct cob_field_desc f_%s_desc = ", p->cname);
-      if (p->children || p->rename_thru)
+      if (p->children || p->rename_thru
+	  || (p->level == 66 && p->redefines->children))
 	{
 	  /* field group */
 	  output ("{%d, '%c'};\n", p->size, COB_GROUP);
@@ -1785,6 +1803,7 @@ codegen (struct program_spec *spec)
 
   output_line ("/* PROCEDURE DIVISION */");
   output_line ("lb_default_handler:");
+  output_line ("cob_runtime_error (\"I/O error\");");
   output_line ("cob_exit (le_default_handler);");
 
   for (l = spec->exec_list; l; l = l->next)

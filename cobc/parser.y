@@ -328,11 +328,11 @@ identification_division_options:
 | identification_division_options identification_division_option
 ;
 identification_division_option:
-  AUTHOR '.' comment		{ OBSOLETE ("AUTHOR"); }
-| DATE_WRITTEN '.' comment	{ OBSOLETE ("DATE-WRITTEN"); }
-| DATE_COMPILED '.' comment	{ OBSOLETE ("DATE-COMPILED"); }
-| INSTALLATION '.' comment	{ OBSOLETE ("INSTALLATION"); }
-| SECURITY '.' comment		{ OBSOLETE ("SECURITY"); }
+  AUTHOR '.' comment		{ IGNORE ("AUTHOR"); }
+| DATE_WRITTEN '.' comment	{ IGNORE ("DATE-WRITTEN"); }
+| DATE_COMPILED '.' comment	{ IGNORE ("DATE-COMPILED"); }
+| INSTALLATION '.' comment	{ IGNORE ("INSTALLATION"); }
+| SECURITY '.' comment		{ IGNORE ("SECURITY"); }
 ;
 comment: { cobc_skip_comment = 1; };
 
@@ -904,8 +904,8 @@ field_description_list_2:
 field_description:
   level_number field_name
   {
+    $2->loc = @2;
     init_field ($1, $2);
-    COBC_TREE (current_field)->loc = @2;
   }
   field_options dot
   {
@@ -3047,7 +3047,7 @@ numeric_edited_name:
 group_name:
   data_name
   {
-    if (!COBC_FIELD ($1)->children)
+    if (COBC_FIELD ($1)->children == NULL)
       yyerror ("`%s' not a group", tree_to_string ($1));
     $$ = $1;
   }
@@ -3578,18 +3578,32 @@ init_field (int level, cobc_tree field)
       if (last_field)
 	field_founder (last_field)->sister = current_field;
     }
-  else if (!last_field || (last_field->level == 77 && level != 88))
+  else if (!last_field)
     {
-      yyerror ("level number must begin with 01, 66, or 77");
+      yyerror ("level number must begin with 01 or 77");
+    }
+  else if (last_field->level == 77 && level != 88)
+    {
+      yyerror ("level 77 item may include only 88 items");
+    }
+  else if (level == 66)
+    {
+      struct cobc_field *p;
+      current_field->parent = field_founder (last_field);
+      for (p = current_field->parent->children; p->sister; p = p->sister);
+      p->sister = current_field;
+    }
+  else if (level == 88)
+    {
+      current_field->parent = last_field;
     }
   else if (level > last_field->level)
     {
       /* lower level */
-      if (level != 88)
-	last_field->children = current_field;
+      last_field->children = current_field;
       current_field->parent = last_field;
-      current_field->f.sign_separate = current_field->parent->f.sign_separate;
       current_field->f.sign_leading = current_field->parent->f.sign_leading;
+      current_field->f.sign_separate = current_field->parent->f.sign_separate;
     }
   else if (level == last_field->level)
     {
