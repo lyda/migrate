@@ -2036,13 +2036,9 @@ gen_accept (struct sym *sy, int echo, int main)
       push_eax ();
       gen_loadloc (sy);
       if (screen_io_enable == 0)
-	{
-	  asm_call ("accept_std");
-	}
+	asm_call ("accept_std");
       else
-	{
-	  asm_call ("accept_curses");
-	}
+	asm_call ("accept_curses");
     }
 }
 
@@ -2087,9 +2083,6 @@ gen_accept_from_cmdline (struct sym *sy)
 
   struct sym *sy1;
 
-  /*gen_loadloc( sy );
-     fprintf(o_src,"\tmovl\t$c_base+%u, %%eax\n",sy->descriptor);
-     push_eax(); */
   gen_loadvar (sy);
   fprintf (o_src, "\tmovl\t12(%%ebp), %%eax\n");
   push_eax ();
@@ -3098,10 +3091,6 @@ value_to_eax (struct sym *sy)
     {
       stack_save = stackframe_cnt;
       stackframe_cnt = 0;
-      /*gen_loadloc( sy ); 
-         fprintf(o_src,"\tmovl $c_base+%u, %%eax\n",
-         sy->descriptor);
-         push_eax(); */
       gen_loadvar (sy);
       asm_call ("get_index");
       stackframe_cnt = stack_save;
@@ -3210,15 +3199,12 @@ loadloc_to_eax (struct sym *sy_p)
 	{
 	  if (var->sec_no == SEC_STACK)
 	    fprintf (o_src, "\tleal\t%s, %%ebx\n", memref (var));
-	  else
-	    {
-	      if (var->sec_no == SEC_DATA)
-		fprintf (o_src, "\tleal\tw_base%d+%d, %%ebx\n",
-			 pgm_segment, var->location);
-	      else if (var->sec_no == SEC_CONST)
-		fprintf (o_src, "\tleal\tc_base%d+%d, %%ebx\n",
-			 pgm_segment, var->location);
-	    }
+	  else if (var->sec_no == SEC_DATA)
+	    fprintf (o_src, "\tleal\tw_base%d+%d, %%ebx\n",
+		     pgm_segment, var->location);
+	  else if (var->sec_no == SEC_CONST)
+	    fprintf (o_src, "\tleal\tc_base%d+%d, %%ebx\n",
+		     pgm_segment, var->location);
 	  fprintf (o_src, "\taddl\t%%ebx,%%eax\n");
 	}
     }
@@ -3354,21 +3340,10 @@ gen_loaddesc (struct sym *sy)
 void
 gen_loadvar (struct sym *sy)
 {
-  struct sym *var;
   if (sy == NULL)
     push_immed (0);
   else
     {
-      if (SUBREF_P (sy) || REFMOD_P (sy))
-	{
-	  var = SUBREF_SYM (sy);
-	  if (SUBREF_P (var))
-	    var = SUBREF_SYM (var);
-	}
-      else
-	{
-	  var = sy;
-	}
       gen_loadloc (sy);
       gen_loaddesc (sy);
     }
