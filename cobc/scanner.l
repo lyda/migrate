@@ -308,11 +308,7 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   strrchr (cob_orig_filename, '"')[0] = '\0';
 }
 
-^"*".* { 
-  TRACE_PRINT (("<comment>: %s:\n", yytext));
-}
-
-^"D ".* {
+<*>^"D ".* {
   if (cob_debug_flag)
     yyless(2);
   else
