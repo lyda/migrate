@@ -16,7 +16,7 @@
 
 This file documents OpenCOBOL, a COBOL compiler
 
-Copyright @copyright{} 2002 Keisuke Nishida
+Copyright @copyright{} 2002-2003 Keisuke Nishida
 
 Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -51,7 +51,7 @@ Edition @value{EDITION} @*
 Updated for OpenCOBOL @value{VERSION} @*
 @value{UPDATED} @*
 
-Copyright @copyright{} 2002 Keisuke Nishida
+Copyright @copyright{} 2002-2003 Keisuke Nishida
 
 Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -102,6 +102,7 @@ Compiler Options
 * Built Target::                Built Target
 * Source Format::               Source Format
 * Linking Options::             Linking Options
+* Warning Options::             Warning Options
 
 C Interface
 
@@ -141,25 +142,21 @@ This is a sample program that displays ``Hello World'':
 
 @example
 ---- hello.cob -------------------------
-*> Hello World Program
-IDENTIFICATION DIVISION.
-PROGRAM-ID. hello.
-PROCEDURE DIVISION.
-DISPLAY "Hello World!".
-STOP RUN.
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. hello.
+       PROCEDURE DIVISION.
+       DISPLAY "Hello World!".
+       STOP RUN.
 ----------------------------------------
 @end example
 
 The compiler is @code{cobc}, which can be executed as follows:
 
 @example
-% cobc -main hello.cob
+% cobc hello.cob
 % ./hello
 Hello World!
 @end example
-
-You need to give the option @code{-main} when you build an executable
-from a COBOL source file.
 
 The executable program name (i.e., @file{hello} in this case) is
 determined from the source file name (i.e., @file{hello.cob}) by
@@ -169,7 +166,7 @@ You can specify the executable name by giving the option @code{-o} to
 @code{cobc} as follows:
 
 @example
-% cobc -main -o hello-world hello.cob 
+% cobc -o hello-world hello.cob 
 % ./hello-world
 Hello World!
 @end example
@@ -194,9 +191,8 @@ The compiler @code{cobc} accepts the options described in this section.
 * Built Target::                Built Target
 * Source Format::               Source Format
 * Linking Options::             Linking Options
+* Warning Options::             Warning Options
 @end menu
-
-[ more options to be described ]
 
 @node Built Target, Source Format, Compiler Options, Compiler Options
 @subsection Built Target
@@ -229,13 +225,11 @@ a shared library).  The output is saved in file @file{*.so}.
 
 Without any options above, the compiler tries to build an executable.
 
-When you are building an executable from a COBOL source, you need to
-explicitly specify that the program has an entry point, or the
-@code{main} function.  This is done by adding the following option
-to one of the above options:
+When you build an executable, the compiler implicitly gives the option
+`-fmain', which includes a main function in the output file.
 
 @table @code
-@item -main
+@item -fmain
 Include the main function in the output.
 
 This option takes effect at the translation stage.
@@ -248,8 +242,8 @@ function at the end of the generated C file.
 
 OpenCOBOL supports both fixed and free source format.
 
-The format can be explicitly specified by giving one of the following
-options to @code{cobc}:
+The default format is the fixed format.  This can be explicitly
+overwritten by one of the following options:
 
 @table @code
 @item -free
@@ -259,15 +253,7 @@ Free format.
 Fixed format.
 @end table
 
-If non of these options is given, the format is automatically
-determined by the following rule.
-
-The compiler inspects the first six characters of the first line in
-the source file.  If the characters are all digits or spaces, the
-format is considered to be fixed format.  Otherwise, it is free
-format.
-
-@node Linking Options,  , Source Format, Compiler Options
+@node Linking Options, Warning Options, Source Format, Compiler Options
 @subsection Linking Options
 
 The following options control how to implement CALL statements,
@@ -290,14 +276,34 @@ exist at compile-time.  @ref{Dynamic Linking} for details.
 
 Without these options, @code{-dynamic} is assumed by default.
 
+@node Warning Options,  , Linking Options, Compiler Options
+@subsection Warning Options
+
+@table @code
+@item -Wall
+Enable all warnings
+
+@item -Wcolumn-overflow
+Warn any text after column 72
+
+@item -Wend-evaluate
+Warn lacks of END-EVALUATE
+
+@item -Wend-if
+Warn lacks of END-IF
+
+@item -Wparentheses
+Warn lacks of parentheses around AND within OR
+@end table
+
 @node Dynamic Linking, Static Linking, Compiler Options, Compile
 @section Dynamic Linking
 
 @enumerate
 @item
-Compile the main program with option @code{-main}:
+Compile the main program:
 @example
-% cobc -main main.cob
+% cobc main.cob
 @end example
 This creates an executable file @file{main}.
 
@@ -328,10 +334,11 @@ to your library directory, and run the main program:
 @node Static Linking,  , Dynamic Linking, Compile
 @section Static Linking
 
-You need to give @code{-static} for static linking:
+You need to give @code{-static} for static linking.
+For main program, @code{-fmain} flag is also needed:
 
 @example
-% cobc -c -static -main main.cob
+% cobc -c -static -fmain main.cob
 % cobc -c -static module.cob
 % cobc -o hello main.o module.o
 % ./hello
@@ -405,17 +412,16 @@ Let's call the following COBOL module from a C program:
 
 @example
 ---- say.cob ---------------------------
-IDENTIFICATION DIVISION.
-PROGRAM-ID. say.
-ENVIRONMENT DIVISION.
-DATA DIVISION.
-LINKAGE SECTION.
-01 HELLO PIC X(6).
-01 WORLD PIC X(6).
-
-PROCEDURE DIVISION USING HELLO WORLD.
-DISPLAY HELLO WORLD.
-EXIT PROGRAM.
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. say.
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+       LINKAGE SECTION.
+       01 HELLO PIC X(6).
+       01 WORLD PIC X(6).
+       PROCEDURE DIVISION USING HELLO WORLD.
+       DISPLAY HELLO WORLD.
+       EXIT PROGRAM.
 ----------------------------------------
 @end example
 
@@ -555,17 +561,16 @@ You can call this function in the same way you call COBOL programs:
 
 @example
 ---- hello.cob -------------------------
-IDENTIFICATION DIVISION.
-PROGRAM-ID. hello.
-ENVIRONMENT DIVISION.
-DATA DIVISION.
-WORKING-STORAGE SECTION.
-01 HELLO PIC X(6) VALUE "Hello ".
-01 WORLD PIC X(6) VALUE "World!".
-
-PROCEDURE DIVISION.
-CALL "say" USING HELLO WORLD.
-STOP RUN.
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. hello.
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01 HELLO PIC X(6) VALUE "Hello ".
+       01 WORLD PIC X(6) VALUE "World!".
+       PROCEDURE DIVISION.
+       CALL "say" USING HELLO WORLD.
+       STOP RUN.
 ----------------------------------------
 @end example
 
@@ -573,7 +578,7 @@ Compile these programs as follows:
 
 @example
 % cc -c say.c
-% cobc -c -static -main hello.cob
+% cobc -c -static -fmain hello.cob
 % cobc -o hello hello.o say.o
 % ./hello
 Hello World!
@@ -587,7 +592,7 @@ option @code{-shared} to the C compiler:
 
 @example
 % cc -shared -o say.so say.c
-% cobc -main hello.cob
+% cobc hello.cob
 % export COB_LIBRARY_PATH=.
 % ./hello
 Hello World!

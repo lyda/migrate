@@ -1,5 +1,57 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Changes in OpenCOBOL 0.20
+
+** cobc now generates an executable without `-main' flag.
+
+`-main' has been renamed to `-fmain', which is turned on
+by default if none of -E, -C, -S, -c, or -m is given.
+
+** Default source format is now fixed format.
+
+Source format auto-detection is now disabled.
+Instead, you can use SOURCE FORMAT compiler directive
+as described below.  This conforms to the COBOL 2002
+standard.
+
+** Compiler directive "SOURCE FORMAT" is now supported.
+
+Put the following line at the beginning of file if you
+want to use the free-form:
+
+  >>SOURCE FORMAT IS FREE
+
+** Option `-semi-fixed' has been removed.
+
+If you want to expand program text area into more than 72 columns,
+use the new option `-column' instead.
+
+** New option `-column', which specifies the end of program text area.
+
+** New option `-T', which specifies the tab width.
+
+** New option `-Wall', which enables all warning options.
+
+** New option `-Wend-evaluate', which warns lacks of END-EVALUATE.
+
+** New option `-Wend-if', which warns lacks of END-IF.
+
+** New option `-Wparentheses', which warns lacks of parentheses
+around AND within OR.
+
+** New option `-Wcolumn-overflow', which warns any text after column 72.
+
+** Option `debug' has been renamed to `-fdebugging-line'.
+
+** USAGE PACKED-DECIMAL is now supported.
+
+** Improved error checking.
+
+** Additional testsuite entries.
+
+** Bug fixes.
+
+
 * Changes in OpenCOBOL 0.12
 
 ** Improved compile-time error check.

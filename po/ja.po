@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
-"POT-Creation-Date: 2003-03-25 05:19+0900\n"
-"PO-Revision-Date: 2003-03-25 05:26+0900\n"
+"POT-Creation-Date: 2003-04-04 06:13+0900\n"
+"PO-Revision-Date: 2003-04-04 06:23+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -15,77 +15,84 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: cobc/cobc.c:200
+#: cobc/cobc.c:204
 msgid ""
 "General options:\n"
-"  --help        Display this message\n"
-"  --version     Display compiler version\n"
-"  -v, --verbose Display the programs invoked by the compiler\n"
-"  -save-temps   Do not delete intermediate files\n"
-"  -E            Preprocess only; do not compile, assemble or link\n"
-"  -C            Translation only; convert COBOL to C\n"
-"  -S            Compile only; output assembly file\n"
-"  -c            Compile and assemble, but do not link\n"
-"  -m            Build a dynamic-linking module\n"
-"  -g            Produce debugging information in the output\n"
-"  -O            Optimize speed; minimize run-time error checking\n"
-"  -o <file>     Place the output into <file>\n"
-"  -MT <target>  Set target file used in dependency list\n"
-"  -MF <file>    Place dependency list into <file>\n"
+"  --help                Display this message\n"
+"  --version             Display compiler version\n"
+"  --verbose, -v         Display the programs invoked by the compiler\n"
+"  -save-temps           Do not delete intermediate files\n"
+"  -E                    Preprocess only; do not compile, assemble or link\n"
+"  -C                    Translation only; convert COBOL to C\n"
+"  -S                    Compile only; output assembly file\n"
+"  -c                    Compile and assemble, but do not link\n"
+"  -m                    Build a dynamic-linking module\n"
+"  -g                    Produce debugging information in the output\n"
+"  -o <file>             Place the output into <file>\n"
+"  -MT <target>          Set target file used in dependency list\n"
+"  -MF <file>            Place dependency list into <file>\n"
 "\n"
 "COBOL options:\n"
-"  -main         Include a main function in the output\n"
-"  -free         Use free source format\n"
-"  -fixed        Use fixed source format\n"
-"  -semi-fixed   Use semi-fixed source format\n"
-"  -static       Use static link for subprogram calls if possible\n"
-"  -dynamic      Use dynamic link for subprogram calls (default)\n"
-"  -debug        Enable debugging lines\n"
-"  -I <path>     Add copybook include path\n"
+"  -free                 Use free source format\n"
+"  -fixed                Use fixed source format\n"
+"  -column <n>           Set text area column to <n> (default: 72)\n"
+"  -static               Use static link for subprogram calls if possible\n"
+"  -dynamic              Use dynamic link for subprogram calls (default)\n"
+"  -T <n>                Set tab width to <n> (default: 8)\n"
+"  -I <path>             Add copybook include path\n"
+"  -fmain                Include a main function in the output\n"
+"  -fdebugging-line      Enable debugging lines\n"
 "\n"
 "Warning options:\n"
-"  -Wtrailing-line  Source line after column 72"
+"  -Wall                 Enable all warnings\n"
+"  -Wcolumn-overflow     Warn any text after column 72\n"
+"  -Wend-evaluate        Warn lacks of END-EVALUATE\n"
+"  -Wend-if              Warn lacks of END-IF\n"
+"  -Wparentheses         Warn lacks of parentheses around AND within OR\n"
 msgstr ""
 "一般的なオプション:\n"
-"  --help        このメッセージを表示\n"
-"  --version     コンパイラのバージョンを表示\n"
-"  -v, --verbose コンパイラから呼ばれるプログラムを表示する\n"
-"  -save-temps   中間ファイルを削除しない\n"
-"  -E            前処理のみ。コンパイル、アセンブル、リンクをしない\n"
-"  -C            翻訳のみ。COBOL を C に変換する\n"
-"  -S            コンパイルのみ。アセンブリファイルを出力する\n"
-"  -c            コンパイルとアセンブル。リンクをしない\n"
-"  -m            動的リンク可能なモジュールを生成する\n"
-"  -g            デバッグ情報を出力に含める\n"
-"  -O            実行時エラーチェックをせず、速度を最適化する\n"
-"  -o <file>     出力を <file> に保存する\n"
-"  -MT <target>  依存リストの対象ファイルを指定する\n"
-"  -MF <file>    依存リストを <file> に保存する\n"
+"  --help                このメッセージを表示\n"
+"  --version             コンパイラのバージョンを表示\n"
+"  --verbose, -v         コンパイラから呼ばれるプログラムを表示する\n"
+"  -save-temps           中間ファイルを削除しない\n"
+"  -E                    前処理のみ。コンパイル、アセンブル、リンクをしない\n"
+"  -C                    翻訳のみ。COBOL を C に変換する\n"
+"  -S                    コンパイルのみ。アセンブリファイルを出力する\n"
+"  -c                    コンパイルとアセンブル。リンクをしない\n"
+"  -m                    動的リンク可能なモジュールを生成する\n"
+"  -g                    デバッグ情報を出力に含める\n"
+"  -O                    実行時エラーチェックをせず、速度を最適化する\n"
+"  -o <file>             出力を <file> に保存する\n"
+"  -MT <target>          依存リストの対象ファイルを指定する\n"
+"  -MF <file>            依存リストを <file> に保存する\n"
 "\n"
 "COBOL オプション:\n"
-"  -main         出力に main 関数を含める\n"
-"  -free         ソースフォーマットを自由形式とみなす\n"
-"  -fixed        ソースフォーマットを固定形式とみなす\n"
-"  -semi-fixed   ソースフォーマットを半固定形式とみなす\n"
-"  -static       サブプログラムを可能なら静的リンクする\n"
-"  -dynamic      サブプログラムを動的リンクする (標準)\n"
-"  -debug        デバッグ行を有効にする\n"
-"  -I <path>     コピーファイルを <path> から探す\n"
+"  -free                 ソースフォーマットを自由形式とみなす\n"
+"  -fixed                ソースフォーマットを固定形式とみなす\n"
+"  -column <n>           テキスト領域の桁数を <n> にする (標準: 72)\n"
+"  -static               サブプログラムを可能なら静的リンクする\n"
+"  -dynamic              サブプログラムを動的リンクする (標準)\n"
+"  -T <n>                タブの幅を <n> にする (標準: 8)\n"
+"  -I <path>             コピーファイルを <path> から探す\n"
+"  -fmain                出力に main 関数を含める\n"
+"  -fdebugging-line      デバッグ行を有効にする\n"
 "\n"
 "ワーニングオプション:\n"
-"  -Wtrailing-line  72 桁を越えるソース行"
+"  -Wall                 すべてのワーニングを有効にする\n"
+"  -Wcolumn-overflow     72 桁を越えるテキストがあれば警告する\n"
+"  -Wend-evaluate        END-EVALUATE がなければ警告する\n"
+"  -Wend-if              END-IF がなければ警告する\n"
+"  -Wparentheses         AND と OR が括弧なしで並んでいたら警告する\n"
 
-#: cobc/cobc.c:229
+#: cobc/cobc.c:238
 msgid ""
-"\n"
 "Debugging options:\n"
 "  -ts           Trace scanner\n"
-"  -tp           Trace parser"
+"  -tp           Trace parser\n"
 msgstr ""
-"\n"
 "デバッグオプション:\n"
 "  -ts           字句解析をトレースする\n"
-"  -tp           構文解析をトレースする"
+"  -tp           構文解析をトレースする\n"
 
 #: cobc/parser.y:44
 #, c-format
@@ -97,333 +104,333 @@ msgstr "`%s' は実装されていません"
 msgid "`%s' obsolete"
 msgstr "`%s' は利用できません"
 
-#: cobc/parser.y:267
+#: cobc/parser.y:270
 #, c-format
 msgid "PROGRAM-ID is converted to `%s'"
 msgstr "PROGRAM-ID を `%s' に変換します"
 
-#: cobc/parser.y:316
+#: cobc/parser.y:319
 msgid "DEBUGGING MODE is ignored"
 msgstr "DEBUGGING MODE は利用できません"
 
-#: cobc/parser.y:317
+#: cobc/parser.y:320
 msgid "use compiler option `-debug' instead"
 msgstr "コンパイラオプション `-debug' を用いて下さい"
 
-#: cobc/parser.y:375
+#: cobc/parser.y:378
 #, c-format
 msgid "unknown name `%s'"
 msgstr "不当な名前です `%s'"
 
-#: cobc/parser.y:497
+#: cobc/parser.y:500
 #, c-format
 msgid "invalid currency sign `%s'"
 msgstr "不当な通貨記号です `%s'"
 
-#: cobc/parser.y:549
+#: cobc/parser.y:552
 #, c-format
 msgid "ASSIGN required for file `%s'"
 msgstr "`%s' には ASSIGN が必要です"
 
-#: cobc/parser.y:556
+#: cobc/parser.y:559
 #, c-format
 msgid "RECORD KEY required for file `%s'"
 msgstr "`%s' には RECORD KEY が必要です"
 
-#: cobc/parser.y:561
+#: cobc/parser.y:564
 #, c-format
 msgid "RELATIVE KEY required for file `%s'"
 msgstr "`%s' には RELATIVE KEY が必要です"
 
-#: cobc/parser.y:1107
+#: cobc/parser.y:1114
 msgid "only level 88 item may have multiple values"
 msgstr "複数の値はレベル 88 項目のみに許されます"
 
-#: cobc/parser.y:1255 cobc/parser.y:1272
+#: cobc/parser.y:1262 cobc/parser.y:1279
 #, c-format
 msgid "invalid color `%d'"
 msgstr "不当な色です `%d'"
 
-#: cobc/parser.y:1348
+#: cobc/parser.y:1355
 #, c-format
 msgid "`%s' not level 01 or 77"
 msgstr "`%s' はレベル 01 か 77 でなければなりません"
 
-#: cobc/parser.y:1596
+#: cobc/parser.y:1604
 #, c-format
 msgid "invalid input stream `%s'"
 msgstr "`%s' は不当な入力ストリームです"
 
-#: cobc/parser.y:1846
+#: cobc/parser.y:1854
 msgid "invalid UPON item"
 msgstr "不当な UPON 項目です"
 
-#: cobc/parser.y:1853
+#: cobc/parser.y:1861
 #, c-format
 msgid "`%s' undefined in SPECIAL-NAMES"
 msgstr "`%s' は SPECIAL-NAMES で定義されていません"
 
-#: cobc/parser.y:1959
+#: cobc/parser.y:1967
 msgid "END-EVALUATE is expected here"
 msgstr "END-EVALUATE が必要です"
 
-#: cobc/parser.y:1988
+#: cobc/parser.y:1996
 msgid "too many labels with GO TO"
 msgstr "GO TO のラベルが多過ぎます"
 
-#: cobc/parser.y:2021
+#: cobc/parser.y:2041
 msgid "END-IF is expected here"
 msgstr "END-IF が必要です"
 
-#: cobc/parser.y:2123
+#: cobc/parser.y:2143
 msgid "data name expected before CHARACTERS"
 msgstr "CHARACTERS の前にデータ名が必要です"
 
-#: cobc/parser.y:2130
+#: cobc/parser.y:2150
 msgid "data name expected before ALL"
 msgstr "ALL の前にデータ名が必要です<"
 
-#: cobc/parser.y:2137
+#: cobc/parser.y:2157
 msgid "data name expected before LEADING"
 msgstr "LEADING の前にデータ名が必要です<"
 
-#: cobc/parser.y:2144
+#: cobc/parser.y:2164
 #, c-format
 msgid "ALL or LEADING expected before `%s'"
 msgstr "`%s' の前に ALL または LEADINGが必要です"
 
-#: cobc/parser.y:2308
+#: cobc/parser.y:2328
 msgid "END-PERFORM is expected here"
 msgstr "END-PERFORM が必要です"
 
-#: cobc/parser.y:2385
+#: cobc/parser.y:2405
 msgid "KEY ignored with sequential READ"
 msgstr "順読み込みの READ であるため KEY は無視されます"
 
-#: cobc/parser.y:3015 cobc/parser.y:3298
+#: cobc/parser.y:3035 cobc/parser.y:3318
 #, c-format
 msgid "invalid expression `%s'"
 msgstr "不当な式です `%s'"
 
-#: cobc/parser.y:3081
+#: cobc/parser.y:3101
 msgid "suggest parentheses around AND within OR"
 msgstr "OR に隣接する AND には括弧が推奨されます"
 
-#: cobc/parser.y:3382
+#: cobc/parser.y:3402
 #, c-format
 msgid "`%s' not numeric"
 msgstr "`%s' は数字ではありません"
 
-#: cobc/parser.y:3397
+#: cobc/parser.y:3417
 #, c-format
 msgid "`%s' not numeric or numeric edited"
 msgstr "`%s' は数字でも数字編集でもありません"
 
-#: cobc/parser.y:3412
+#: cobc/parser.y:3432
 #, c-format
 msgid "`%s' not a group"
 msgstr "`%s' はグループ名ではありません"
 
-#: cobc/parser.y:3427
+#: cobc/parser.y:3447
 #, c-format
 msgid "`%s' not indexed"
 msgstr "`%s' には INDEXED BY が必要です"
 
-#: cobc/parser.y:3428
+#: cobc/parser.y:3448
 #, c-format
 msgid "`%s' defined here"
 msgstr "`%s' はここで定義されました"
 
-#: cobc/parser.y:3475
+#: cobc/parser.y:3495
 #, c-format
 msgid "`%s' not file name"
 msgstr "`%s' はファイル名ではありません"
 
-#: cobc/parser.y:3488
+#: cobc/parser.y:3508
 #, c-format
 msgid "`%s' not record name"
 msgstr "`%s' はレコード名ではありません"
 
-#: cobc/parser.y:3626
+#: cobc/parser.y:3646
 #, c-format
 msgid "numeric value is expected `%s'"
 msgstr "`%s' は数値ではありません"
 
-#: cobc/parser.y:3671
+#: cobc/parser.y:3691
 #, c-format
 msgid "`%s' must be an integer value"
 msgstr "`%s' は整数でなければなりません"
 
-#: cobc/parser.y:3889
+#: cobc/parser.y:3919
 #, c-format
 msgid "`%s' cannot be subscripted"
 msgstr "`%s' は添字付け出来ません"
 
-#: cobc/parser.y:3892
+#: cobc/parser.y:3922
 #, c-format
 msgid "`%s' requires 1 subscript"
 msgstr "`%s' は 1 つの添字を必要とします"
 
-#: cobc/parser.y:3895
+#: cobc/parser.y:3925
 #, c-format
 msgid "`%s' requires %d subscripts"
 msgstr "`%s' は %d つの添字を必要とします"
 
-#: cobc/parser.y:3915 libcob/common.c:684
+#: cobc/parser.y:3945 libcob/common.c:714
 #, c-format
 msgid "subscript of `%s' out of bounds: %d"
 msgstr "'%s' の添字が範囲を超えています: %d"
 
-#: cobc/parser.y:3929 libcob/common.c:698
+#: cobc/parser.y:3959 libcob/common.c:728
 #, c-format
 msgid "offset of `%s' out of bounds: %d"
 msgstr "'%s' の開始位置が範囲を超えています: %d"
 
-#: cobc/parser.y:3934 libcob/common.c:707
+#: cobc/parser.y:3964 libcob/common.c:737
 #, c-format
 msgid "length of `%s' out of bounds: %d"
 msgstr "'%s' の長さが範囲を超えています: %d"
 
-#: cobc/parser.y:3969
+#: cobc/parser.y:3999
 #, c-format
 msgid "invalid section name `%s'"
 msgstr "段落名が不当です `%s'"
 
-#: cobc/parser.y:3987
+#: cobc/parser.y:4017
 #, c-format
 msgid "invalid label `%s'"
 msgstr "不当なラベルです `%s'"
 
-#: cobc/parser.y:4006
+#: cobc/parser.y:4036
 #, c-format
 msgid "no such label `%s' IN `%s'"
 msgstr "そのような段落はありません `%s' IN `%s'"
 
-#: cobc/parser.y:4048
+#: cobc/parser.y:4078
 msgid "not switch name"
 msgstr "スイッチ名ではありません"
 
-#: cobc/parser.y:4099
+#: cobc/parser.y:4129
 msgid "level number must begin with 01 or 77"
 msgstr "レベル番号は 01 か 77 で始まらなければなりません"
 
-#: cobc/parser.y:4119
+#: cobc/parser.y:4149
 #, c-format
 msgid "invalid level number `%s'"
 msgstr "不当なレベル番号です `%s'"
 
-#: cobc/parser.y:4152
+#: cobc/parser.y:4182
 msgid "field hierarchy broken"
 msgstr "項目のレベル番号が不当です"
 
-#: cobc/parser.y:4178
+#: cobc/parser.y:4208
 #, c-format
 msgid "`%s' cannot be qualified"
 msgstr "`%s' は修飾出来ません"
 
-#: cobc/parser.y:4197
+#: cobc/parser.y:4227
 msgid "level number of REDEFINES entries must be identical"
 msgstr "REDEFINES 句の項目は同じレベル番号でなければなりません"
 
-#: cobc/parser.y:4202
+#: cobc/parser.y:4232
 msgid "level number of REDEFINES entry cannot be 66 or 88"
 msgstr "REDEFINES 句の項目はレベル番号 66 または 88 であってはなりません"
 
-#: cobc/parser.y:4210
+#: cobc/parser.y:4240
 msgid "REDEFINES must follow the original definition"
 msgstr "REDEFINES 句は参照元の項目の直後になければなりません"
 
-#: cobc/parser.y:4226
+#: cobc/parser.y:4256
 #, c-format
 msgid "group name `%s' may not have PICTURE"
 msgstr "グループ名 `%s' は PICTURE 句を持つことが出来ません"
 
-#: cobc/parser.y:4230
+#: cobc/parser.y:4260
 #, c-format
 msgid "group name `%s' may not have JUSTIFIED RIGHT"
 msgstr "グループ名 `%s' は JUSTIFIED RIGHT を持つことが出来ません"
 
-#: cobc/parser.y:4243
+#: cobc/parser.y:4273
 #, c-format
 msgid "level 88 field `%s' may not have PICTURE"
 msgstr "レベル 88 項目 `%s' は PICTURE 句を持つことが出来ません"
 
-#: cobc/parser.y:4252
+#: cobc/parser.y:4282
 #, c-format
-msgid "PICTURE required for `%s'"
+msgid "PICTURE clause required for `%s'"
 msgstr "`%s' には PICTURE 句が必要です"
 
-#: cobc/parser.y:4263
+#: cobc/parser.y:4295
 msgid "field must be numeric"
 msgstr "この項目は数字ではありません"
 
-#: cobc/parser.y:4274
+#: cobc/parser.y:4308
 #, c-format
 msgid "level %02d field `%s' cannot have OCCURS"
 msgstr "レベル %02d 項目 `%s' は OCCURS 句を持つことが出来ません"
 
-#: cobc/parser.y:4286
+#: cobc/parser.y:4320
 #, c-format
 msgid "`%s' cannot have JUSTIFIED RIGHT"
 msgstr "`%s' は JUSTIFIED RIGHT を持つことが出来ません"
 
-#: cobc/parser.y:4308
+#: cobc/parser.y:4342
 msgid "entries under REDEFINES cannot have VALUE clause"
 msgstr "REDEFINES に含まれる項目は VALUE 句を持つことが出来ません"
 
-#: cobc/parser.y:4316
+#: cobc/parser.y:4350
 msgid "VALUE should be alphanumeric"
 msgstr "VALUE の値は英数字でなければなりません"
 
-#: cobc/parser.y:4335
+#: cobc/parser.y:4369
 #, c-format
 msgid "record size too small `%s'"
 msgstr "レコード長が短か過ぎます `%s'"
 
-#: cobc/parser.y:4338
+#: cobc/parser.y:4372
 #, c-format
 msgid "record size too large `%s'"
 msgstr "レコード長が長過ぎます `%s'"
 
-#: cobc/parser.y:4859
+#: cobc/parser.y:4893
 msgid "wrong number of WHEN parameters"
 msgstr "WHEN 句の引数の数が不当です"
 
-#: cobc/parser.y:4911
+#: cobc/parser.y:4945
 #, c-format
 msgid "undeclared key `%s'"
 msgstr "`%s' はキー宣言されていません"
 
-#: cobc/parser.y:4915
+#: cobc/parser.y:4949
 msgid "invalid SEARCH ALL condition"
 msgstr "SEARCH ALL の条件式が不当です"
 
-#: cobc/parser.y:4955
+#: cobc/parser.y:4989
 #, c-format
 msgid "redefinition of `%s'"
 msgstr "`%s' が再定義されています"
 
-#: cobc/parser.y:4956
+#: cobc/parser.y:4990
 #, c-format
 msgid "`%s' previously defined here"
 msgstr "`%s' はここで定義されました"
 
-#: cobc/parser.y:4965
+#: cobc/parser.y:4999
 #, c-format
 msgid "`%s' undefined in `%s'"
 msgstr "`%s' は `%s' の中で定義されていません"
 
-#: cobc/parser.y:4968
+#: cobc/parser.y:5002
 #, c-format
 msgid "`%s' undefined"
 msgstr "`%s' は未定義です"
 
-#: cobc/parser.y:4980
+#: cobc/parser.y:5014
 #, c-format
 msgid "`%s' ambiguous; need qualification"
 msgstr "`%s' は多重定義されています。一意に修飾して下さい"
 
-#: cobc/parser.y:4997
+#: cobc/parser.y:5031
 msgid "defined here"
 msgstr "はここで定義されました"
 
@@ -448,70 +455,72 @@ msgstr "18 桁を越える数字項目は許されません"
 msgid "invalid picture string"
 msgstr "不当な PICTURE 定義です"
 
-#: cobpp/cobpp.c:91
+#: cobpp/cobpp.c:92
 msgid ""
 "General options:\n"
-"  --help        Display this message\n"
-"  --version     Display compiler version\n"
-"  -o <file>     Place the output into <file>\n"
-"  -MT <target>  Set target file used in dependency list\n"
-"  -MF <file>    Place dependency list into <file>\n"
+"  --help                Display this message\n"
+"  --version             Display compiler version\n"
+"  -o <file>             Place the output into <file>\n"
+"  -MT <target>          Set target file used in dependency list\n"
+"  -MF <file>            Place dependency list into <file>\n"
 "\n"
 "COBOL options:\n"
-"  -free         Use free source format\n"
-"  -fixed        Use fixed source format\n"
-"  -semi-fixed   Use semi-fixed source format\n"
-"  -debug        Enable debugging lines\n"
-"  -T <n>        Set tab width to <n> (default 8)\n"
-"  -I <path>     Add copybook include path\n"
+"  -FF                   Use free source format\n"
+"  -FX                   Use fixed source format\n"
+"  -T <n>                Set tab width to <n> (default: 8)\n"
+"  -C <n>                Set text area column to <n> (default: 72)\n"
+"  -I <path>             Add copybook include path\n"
+"  -fdebugging-line      Enable debugging lines\n"
 "\n"
 "Warning options:\n"
-"  -Wtrailing-line  Source line after column 72"
+"  -Wcolumn-overflow     Warn any text after column 72\n"
 msgstr ""
 "一般的なオプション:\n"
-"  --help        このメッセージを表示\n"
-"  --version     コンパイラのバージョンを表示\n"
-"  -o <file>     出力を <file> に保存する\n"
-"  -MT <target>  依存リストの対象ファイルを指定する\n"
-"  -MF <file>    依存リストを <file> に保存する\n"
+"  --help                このメッセージを表示\n"
+"  --version             コンパイラのバージョンを表示\n"
+"  -o <file>             出力を <file> に保存する\n"
+"  -MT <target>          依存リストの対象ファイルを指定する\n"
+"  -MF <file>            依存リストを <file> に保存する\n"
 "\n"
 "COBOL オプション:\n"
-"  -free         ソースフォーマットを自由形式とみなす\n"
-"  -fixed        ソースフォーマットを固定形式とみなす\n"
-"  -semi-fixed   ソースフォーマットを半固定形式とみなす\n"
-"  -debug        デバッグ行を有効にする\n"
-"  -T <n>        タブ幅を <n> にする (標準は 8)\n"
-"  -I <path>     コピーファイルを <path> から探す\n"
+"  -FF                   ソースフォーマットを自由形式とみなす\n"
+"  -FX                   ソースフォーマットを固定形式とみなす\n"
+"  -T <n>                タブ幅を <n> にする (標準は 8)\n"
+"  -C <n>                テキスト領域の桁数を <n> にする (標準は 72)\n"
+"  -I <path>             コピーファイルを <path> から探す\n"
+"  -fdebugging-line      デバッグ行を有効にする\n"
 "\n"
 "ワーニングオプション:\n"
-"  -Wtrailing-line  72 桁を越えるソース行"
+"  -Wcolumn-overflow     72 桁を越えるテキストがあれば警告する\n"
 
-#: cobpp/cobpp.c:211
+#: cobpp/cobpp.c:212
 #, c-format
 msgid "warning: arguments after `%s' is ignored\n"
 msgstr "warning: `%s' 以降の引数は無視されます\n"
 
-#: cobpp/cobpp.c:244
+#: cobpp/cobpp.c:228
 msgid "-MT must be given to specify target file\n"
 msgstr "ターゲット名を -MT で指定して下さい\n"
 
-#: cobpp/scanner.l:324
+#: cobpp/scanner.l:337
 msgid "file unterminated by a newline"
 msgstr "ファイルが改行で終わっていません"
 
-#: cobpp/scanner.l:366
-msgid "source line over column 72"
-msgstr "ソース行が 72 桁を越えています"
+#: cobpp/scanner.l:379
+#, c-format
+msgid "invalid indicator: `%c'"
+msgstr "不当な指示子です `%c'"
 
-#: cobpp/scanner.l:368
-msgid "specify source format explicitly"
-msgstr "ソースフォーマットを明示的に指定して下さい"
+#: cobpp/scanner.l:394
+#, c-format
+msgid "source text after column %d"
+msgstr "ソース行が %d 桁を越えています"
 
-#: cobpp/scanner.l:370
+#: cobpp/scanner.l:396
 msgid "more warnings inhibited"
 msgstr "これ以上のワーニングは抑制されます"
 
-#: cobpp/scanner.l:438
+#: cobpp/scanner.l:467
 msgid "source line too long"
 msgstr "一行の行数が長過ぎます"
 
@@ -524,76 +533,76 @@ msgstr "モジュールが見付かりません `%s'"
 msgid "warning: cob_init expected in the main program\n"
 msgstr "warning: メインプログラムで cob_init 呼ばれていません\n"
 
-#: libcob/common.c:655
+#: libcob/common.c:685
 #, c-format
 msgid "`%s' not numeric: `%s'"
 msgstr "`%s' は数字ではありません: `%s'"
 
-#: libcob/common.c:675
+#: libcob/common.c:705
 #, c-format
 msgid "OCCURS DEPENDING ON `%s' out of bounds: %d"
 msgstr "OCCURS DEPENDING ON `%s' が範囲を越えています: %d"
 
-#: libcob/fileio.c:1251
+#: libcob/fileio.c:1245
 msgid "end of file"
 msgstr "ファイルの終わりです"
 
-#: libcob/fileio.c:1254
+#: libcob/fileio.c:1248
 msgid "out of key range"
 msgstr "キーの範囲が不当です"
 
-#: libcob/fileio.c:1257
+#: libcob/fileio.c:1251
 msgid "key order not ascending"
 msgstr "キーが昇順ではありません"
 
-#: libcob/fileio.c:1260
+#: libcob/fileio.c:1254
 msgid "record key already exists"
 msgstr "レコードキーが既に存在します"
 
-#: libcob/fileio.c:1263
+#: libcob/fileio.c:1257
 msgid "record key not exists"
 msgstr "レコードキーが存在しません"
 
-#: libcob/fileio.c:1266
+#: libcob/fileio.c:1260
 msgid "permanent file error"
 msgstr "永続ファイルエラーです"
 
-#: libcob/fileio.c:1272
+#: libcob/fileio.c:1266
 msgid "permission denied"
 msgstr "利用許可がありません"
 
-#: libcob/fileio.c:1275
+#: libcob/fileio.c:1269
 msgid "file already open"
 msgstr "ファイルは既に開いています"
 
-#: libcob/fileio.c:1278
+#: libcob/fileio.c:1272
 msgid "file not open"
 msgstr "ファイルが開いていません"
 
-#: libcob/fileio.c:1281
+#: libcob/fileio.c:1275
 msgid "READ must be executed first"
 msgstr "READ を先に実行しなければなりません"
 
-#: libcob/fileio.c:1284
+#: libcob/fileio.c:1278
 msgid "record overflow"
 msgstr "レコードの領域を超えています"
 
-#: libcob/fileio.c:1287
+#: libcob/fileio.c:1281
 msgid "failed to read"
 msgstr "読み込みに失敗しました"
 
-#: libcob/fileio.c:1290
+#: libcob/fileio.c:1284
 msgid "READ and START not allowed"
 msgstr "READ、START は許可されません"
 
-#: libcob/fileio.c:1293
+#: libcob/fileio.c:1287
 msgid "WRITE not allowed"
 msgstr "WRITE は許可されません"
 
-#: libcob/fileio.c:1296
+#: libcob/fileio.c:1290
 msgid "DELETE and REWRITE not allowed"
 msgstr "DELETE、REWRITE は許可されません"
 
-#: libcob/fileio.c:1299
+#: libcob/fileio.c:1293
 msgid "unknown file error"
 msgstr "原因不明のファイルエラーです"
