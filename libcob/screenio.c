@@ -32,7 +32,9 @@
 #define SCREEN_COLUMN_POS(s) \
   (((s->attr & COB_SCREEN_COLUMN_CONST) ? s->column.val : cob_to_int (*s->column.ptr)) - 1)
 
+#if HAVE_LIBNCURSES
 static int screen_initialized = 0;
+#endif
 
 void
 cob_screen_init (void)
