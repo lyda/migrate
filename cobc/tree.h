@@ -509,7 +509,7 @@ struct cobc_cond
 #define COBC_COND_P(x)	(COBC_TREE_TAG (x) == cobc_tag_cond)
 
 extern cobc_tree make_cond (cobc_tree x, enum cobc_cond_type type, cobc_tree y);
-extern cobc_tree make_negate_cond (cobc_tree x);
+extern cobc_tree make_negative (cobc_tree x);
 
 
 /*

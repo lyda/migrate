@@ -810,7 +810,7 @@ make_cond (cobc_tree x, enum cobc_cond_type type, cobc_tree y)
 }
 
 cobc_tree
-make_negate_cond (cobc_tree x)
+make_negative (cobc_tree x)
 {
   return make_cond (x, COBC_COND_NOT, 0);
 }

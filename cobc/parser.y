@@ -1785,7 +1785,7 @@ evaluate_object:
 	    /* NOTE: $2 is not necessarily a condition, but
 	     * we use COBC_COND_NOT here to store it, which
 	     * is later expanded in output_evaluate_test. */
-	    $$ = make_negate_cond ($2);
+	    $$ = make_negative ($2);
 	  }
       }
     else
@@ -2804,7 +2804,7 @@ expr_1:
 		  stack[i-1].value =
 		    make_cond (last_lefthand, last_operator, stack[i-1].value);
 		stack[i-2].token = VALUE;
-		stack[i-2].value = make_negate_cond (stack[i-1].value);
+		stack[i-2].value = make_negative (stack[i-1].value);
 		i -= 1;
 		break;
 	      case COBC_COND_AND:
@@ -2995,8 +2995,7 @@ expr_1:
 			stack[i-1].value =
 			  make_cond (stack[i-1].value, cond, val);
 			if (not_flag)
-			  stack[i-1].value =
-			    make_negate_cond (stack[i-1].value);
+			  stack[i-1].value =make_negative (stack[i-1].value);
 			break;
 		      }
 		    goto error;
