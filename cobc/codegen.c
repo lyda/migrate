@@ -1473,7 +1473,7 @@ output_call (cobc_tree name, struct cobc_list *args,
 	output (", ");
     }
   output (");\n");
-  output_line ("init_environment ();");
+  output_line ("cob_env = &env;");
   if (st2)
     output_stmt (st2);
   if (dynamic_link)
@@ -2066,6 +2066,8 @@ codegen (struct cobc_program_spec *spec)
   struct cobc_list *l;
   struct cobc_field *p;
 
+  cob_env = &spec->env;
+
   output ("/* Generated from %s by cobc %s */\n\n",
 	  cobc_source_file, COBC_VERSION);
   output ("#include <stdio.h>\n");
@@ -2134,15 +2136,6 @@ codegen (struct cobc_program_spec *spec)
   for (l = spec->class_list; l; l = l->next)
     output_class_definition (l->item);
 
-  /* environment */
-  output ("static void\n");
-  output ("init_environment (void)\n");
-  output ("{\n");
-  output ("  cob_source_file = \"%s\";\n", cobc_source_file);
-  output ("  cob_decimal_point = '%c';\n", cob_decimal_point);
-  output ("  cob_currency_symbol = '%c';\n", cob_currency_symbol);
-  output ("}\n\n");
-
   /* initialize values */
   output_line ("static void");
   output_line ("%s_init (void)", spec->program_id);
@@ -2169,8 +2162,7 @@ codegen (struct cobc_program_spec *spec)
   output_indent ("{");
 
   /* local variables */
-  if (!spec->initial_program)
-    output_line ("static int initialized = 0;\n");
+  output_line ("static int initialized = 0;\n");
   output_line ("int i;");
   output_line ("int n[%d];", spec->loop_counter);
   output_line ("int frame_index;");
@@ -2178,36 +2170,43 @@ codegen (struct cobc_program_spec *spec)
 	       "frame_stack[24];");
   output_line ("cob_field f[4];");
   output_line ("cob_decimal d[%d];", spec->decimal_index_max);
+  output_line ("cob_environment env;");
   output_newline ();
   for (p = spec->linkage_storage; p; p = p->sister)
     output_field_definition (p, p, 0, 0);
   output_newline ();
 
   /* initialization */
+  output_line ("if (!initialized)");
+  output_indent ("  {");
   output_line ("/* ensure initializing libcob */");
   output_line ("cob_module_init ();");
-  output_newline ();
-  output_line ("/* initialize frame stack */");
-  output_line ("frame_index = 0;");
-  output_line ("frame_stack[0].perform_through = -1;");
   output_newline ();
   output_line ("/* initialize decimal numbers */");
   output_line ("for (i = 0; i < %d; i++)", spec->decimal_index_max);
   output_line ("  cob_decimal_init (&d[i]);");
   output_newline ();
+  output_line ("/* initialize environment */");
+  output_line ("env.decimal_point = '%c';", spec->env.decimal_point);
+  output_line ("env.currency_symbol = '%c';", spec->env.currency_symbol);
+  output_line ("env.numeric_separator = '%c';", spec->env.numeric_separator);
+  output_newline ();
+  if (!spec->initial_program)
+    output_line ("%s_init ();", spec->program_id);
+  output_line ("initialized = 1;");
+  output_indent ("  }");
+  output_newline ();
+
+  output_line ("/* initialize frame stack */");
+  output_line ("frame_index = 0;");
+  output_line ("frame_stack[0].perform_through = -1;");
+  output_newline ();
   output_line ("/* initialize %s */", spec->program_id);
-  output_line ("init_environment ();");
-  if (!spec->initial_program)
-    {
-      output_line ("if (!initialized)");
-      output_indent ("  {");
-    }
-  output_line ("%s_init ();", spec->program_id);
-  if (!spec->initial_program)
-    {
-      output_line ("initialized = 1;");
-      output_indent ("  }");
-    }
+  output_line ("cob_env = &env;");
+  if (spec->initial_program)
+    output_line ("%s_init ();", spec->program_id);
+  output_newline ();
+
   output_line ("goto lb_main;");
   output_newline ();
 

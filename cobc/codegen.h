@@ -20,6 +20,8 @@
 #ifndef _CODEGEN_H_
 #define _CODEGEN_H_
 
+#include <libcob.h>
+
 struct cobc_program_spec {
   char *program_id;
   int initial_program;
@@ -38,7 +40,10 @@ struct cobc_program_spec {
   struct cobc_field *linkage_storage;
   struct cobc_field *screen_storage;
   struct cobc_label *file_handler[5];
+  cob_environment env;
 };
+
+extern struct cobc_program_spec *current_program;
 
 extern void codegen (struct cobc_program_spec *spec);
 

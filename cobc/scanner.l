@@ -246,12 +246,12 @@ scan_numeric (char *text)
     text++;
 
   /* get decimal point */
-  s = strchr (text, cob_decimal_point);
+  s = strchr (text, current_program->env.decimal_point);
   if (s) {
     decimals = strlen (s) - 1;
     memmove (s, s + 1, decimals + 1);
   }
-  if (strchr (text, (cob_decimal_point == ',') ? '.' : ','))
+  if (strchr (text, (current_program->env.decimal_point == ',') ? '.' : ','))
     yyerror (_("invalid numeric literal"));
 
   yylval.tree = make_numeric_literal (sign, text, decimals);
@@ -369,7 +369,7 @@ yylex_picture (char *str)
 	case ',':
 	case '.':
 	  category |= PIC_NUMERIC_EDITED;
-	  if (c != cob_decimal_point)
+	  if (c != current_program->env.decimal_point)
 	    break;
 	  /* fall through */
 	case 'V':
@@ -440,7 +440,7 @@ yylex_picture (char *str)
 	  break;
 
 	default:
-	  if (c == cob_currency_symbol)
+	  if (c == current_program->env.currency_symbol)
 	    {
 	      category |= PIC_NUMERIC_EDITED;
 	      digits += n - 1;

@@ -76,6 +76,8 @@
 
 static struct cobc_program_spec program_spec;
 
+struct cobc_program_spec *current_program = &program_spec;
+
 static struct cobc_field *current_field;
 static struct cobc_file *current_file;
 static struct cobc_label *current_section, *current_paragraph;
@@ -211,12 +213,13 @@ start:
 program:
   {
     /* init program spec */
-    memset (&program_spec, 0, sizeof (struct cobc_program_spec));
+    memset (current_program, 0, sizeof (struct cobc_program_spec));
+    current_program->env.decimal_point = '.';
+    current_program->env.currency_symbol = '$';
+    current_program->env.numeric_separator = ',';
+
     /* init environment */
     cobc_in_procedure = 0;
-    cob_decimal_point = '.';
-    cob_currency_symbol = '$';
-    /* init symbol table */
     init_word_table ();
     make_field_3 (make_reference (lookup_word ("RETURN-CODE")),
 		  "S9(9)", COBC_USAGE_INDEX);
@@ -226,17 +229,17 @@ program:
   data_division
   {
     struct cobc_list *l;
-    for (l = list_reverse (program_spec.reference_list); l; l = l->next)
+    for (l = list_reverse (current_program->reference_list); l; l = l->next)
       field_set_used (COBC_FIELD (cobc_ref (l->item)));
   }
   procedure_division
   _end_program
   {
     struct cobc_list *l;
-    for (l = list_reverse (program_spec.label_list); l; l = l->next)
+    for (l = list_reverse (current_program->label_list); l; l = l->next)
       resolve_label (l->item);
-    program_spec.file_list = list_reverse (program_spec.file_list);
-    program_spec.exec_list = list_reverse (program_spec.exec_list);
+    current_program->file_list = list_reverse (current_program->file_list);
+    current_program->exec_list = list_reverse (current_program->exec_list);
     if (error_count == 0)
       codegen (&program_spec);
   }
@@ -264,11 +267,11 @@ identification_division:
 	}
     if (converted)
       yywarn_x ($6, _("PROGRAM-ID is converted to `%s'"), name);
-    program_spec.program_id = name;
+    current_program->program_id = name;
   }
 ;
 opt_program_parameter:
-| _is TOK_INITIAL _program	{ program_spec.initial_program = 1; }
+| _is TOK_INITIAL _program	{ current_program->initial_program = 1; }
 | _is COMMON _program		{ PENDING ("COMMON"); }
 ;
 
@@ -466,8 +469,8 @@ is_are: IS | ARE ;
 special_name_class:
   CLASS undefined_name _is class_item_list
   {
-    program_spec.class_list =
-      list_add (program_spec.class_list, make_class ($2, $4));
+    current_program->class_list =
+      list_add (current_program->class_list, make_class ($2, $4));
   }
 ;
 class_item_list:
@@ -494,7 +497,7 @@ special_name_currency:
     unsigned char *s = COBC_LITERAL ($3)->data;
     if (COBC_LITERAL ($3)->size != 1)
       yyerror_x ($3, _("invalid currency sign `%s'"), s);
-    cob_currency_symbol = s[0];
+    current_program->env.currency_symbol = s[0];
   }
 ;
 
@@ -502,7 +505,11 @@ special_name_currency:
 /* DECIMAL_POINT */
 
 special_name_decimal_point:
-  DECIMAL_POINT _is COMMA	{ cob_decimal_point = ','; }
+  DECIMAL_POINT _is COMMA
+  {
+    current_program->env.decimal_point = ',';
+    current_program->env.numeric_separator = '.';
+  }
 ;
 
 
@@ -533,7 +540,7 @@ select_sequence:
     current_file->access_mode = COB_ACCESS_SEQUENTIAL;
     current_file->optional = $3;
     current_file->handler = cobc_standard_error_handler;
-    program_spec.file_list = cons (current_file, program_spec.file_list);
+    current_program->file_list = cons (current_file, current_program->file_list);
   }
   select_options '.'
   {
@@ -848,7 +855,7 @@ working_storage_section:
   field_description_list
   {
     if ($4)
-      program_spec.working_storage = COBC_FIELD ($4);
+      current_program->working_storage = COBC_FIELD ($4);
   }
 ;
 field_description_list:
@@ -1053,7 +1060,7 @@ occurs_index:
   undefined_name
   {
     $$ = make_field_3 ($1, "S9(9)", COBC_USAGE_INDEX);
-    program_spec.index_list = list_add (program_spec.index_list, $$);
+    current_program->index_list = list_add (current_program->index_list, $$);
   }
 ;
 
@@ -1141,7 +1148,7 @@ linkage_section:
   field_description_list
   {
     if ($4)
-      program_spec.linkage_storage = COBC_FIELD ($4);
+      current_program->linkage_storage = COBC_FIELD ($4);
   }
 ;
 
@@ -1160,8 +1167,8 @@ screen_section:
     struct cobc_field *p;
     for (p = COBC_FIELD ($5); p; p = p->sister)
       finalize_field_tree (p);
-    program_spec.screen_storage = COBC_FIELD ($5);
-    program_spec.enable_screen = 1;
+    current_program->screen_storage = COBC_FIELD ($5);
+    current_program->enable_screen = 1;
   }
 ;
 
@@ -1344,7 +1351,7 @@ procedure_using:
 	  yyerror (_("`%s' not level 01 or 77"), f->name);
 	l->item = cobc_ref (l->item);
       }
-    program_spec.using_list = $2;
+    current_program->using_list = $2;
   }
 ;
 
@@ -1461,10 +1468,10 @@ use_target:
     for (l = $1; l; l = l->next)
       COBC_FILE (cobc_ref (l->item))->handler = current_section;
   }
-| INPUT	 { program_spec.file_handler[COB_OPEN_INPUT]  = current_section; }
-| OUTPUT { program_spec.file_handler[COB_OPEN_OUTPUT] = current_section; }
-| I_O	 { program_spec.file_handler[COB_OPEN_I_O]    = current_section; }
-| EXTEND { program_spec.file_handler[COB_OPEN_EXTEND] = current_section; }
+| INPUT	 { current_program->file_handler[COB_OPEN_INPUT]  = current_section; }
+| OUTPUT { current_program->file_handler[COB_OPEN_OUTPUT] = current_section; }
+| I_O	 { current_program->file_handler[COB_OPEN_I_O]    = current_section; }
+| EXTEND { current_program->file_handler[COB_OPEN_EXTEND] = current_section; }
 ;
 _standard: | STANDARD ;
 exception_or_error: EXCEPTION | ERROR ;
@@ -1476,13 +1483,13 @@ exception_or_error: EXCEPTION | ERROR ;
 
 statement_list:
   {
-    $<list>$ = program_spec.exec_list;
-    program_spec.exec_list = NULL;
+    $<list>$ = current_program->exec_list;
+    current_program->exec_list = NULL;
   }
   statement_list_1
   {
-    $$ = make_sequence (list_reverse (program_spec.exec_list));
-    program_spec.exec_list = $<list>1;
+    $$ = make_sequence (list_reverse (current_program->exec_list));
+    current_program->exec_list = $<list>1;
   }
 ;
 statement_list_1:
@@ -1536,7 +1543,7 @@ statement:
 accept_statement:
   ACCEPT data_name at_line_column
   {
-    if (program_spec.enable_screen)
+    if (current_program->enable_screen)
       {
 	if (COBC_FIELD ($2)->f.screen)
 	  {
@@ -1800,7 +1807,7 @@ display_statement:
   DISPLAY opt_value_list display_upon at_line_column
   {
     struct cobc_list *l;
-    if (program_spec.enable_screen)
+    if (current_program->enable_screen)
       {
 	for (l = $2; l; l = l->next)
 	  if (COBC_FIELD (l->item)->f.screen)
@@ -1847,7 +1854,7 @@ display_upon:
 display_with_no_advancing:
   /* empty */
   {
-    if (!program_spec.enable_screen)
+    if (!current_program->enable_screen)
       push_funcall_1 ("cob_newline", make_integer ($<inum>-2));
   }
 | _with NO ADVANCING { /* nothing */ }
@@ -2298,7 +2305,7 @@ perform_option:
   {
     $$ = make_perform (COBC_PERFORM_TIMES);
     COBC_PERFORM ($$)->data = $1;
-    program_spec.loop_counter++;
+    current_program->loop_counter++;
   }
 | perform_test UNTIL condition
   {
@@ -3501,7 +3508,7 @@ label:
   {
     $$ = $1;
     COBC_REFERENCE ($$)->offset = COBC_TREE (current_section);
-    program_spec.label_list = cons ($$, program_spec.label_list);
+    current_program->label_list = cons ($$, current_program->label_list);
   }
 ;
 label_name:
@@ -3520,7 +3527,7 @@ reference:
   qualified_name
   {
     $$ = $1;
-    program_spec.reference_list = cons ($$, program_spec.reference_list);
+    current_program->reference_list = cons ($$, current_program->reference_list);
   }
 ;
 qualified_name:
@@ -4216,16 +4223,16 @@ finalize_file (struct cobc_file *f, struct cobc_field *records)
 static cobc_tree
 decimal_alloc (void)
 {
-  cobc_tree x = make_decimal (program_spec.decimal_index++);
-  if (program_spec.decimal_index > program_spec.decimal_index_max)
-    program_spec.decimal_index_max = program_spec.decimal_index;
+  cobc_tree x = make_decimal (current_program->decimal_index++);
+  if (current_program->decimal_index > current_program->decimal_index_max)
+    current_program->decimal_index_max = current_program->decimal_index;
   return x;
 }
 
 static void
 decimal_free (void)
 {
-  program_spec.decimal_index--;
+  current_program->decimal_index--;
 }
 
 static void
