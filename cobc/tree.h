@@ -18,6 +18,9 @@ struct lit
   int len;			/* length of (possibly including NULLs) string */
 };
 
+#define LITERAL(x)		((struct lit *) (x))
+#define LITERAL_P(x)		(LITERAL (x)->litflag == 1)
+
 
 /*
  * Symbols
@@ -106,6 +109,9 @@ struct sym
   unsigned char slack;		/* slack bytes inserted */
   struct occurs *occurs;	/* for DEPENDING ON or null if fixed table */
 };
+
+#define SYMBOL(x)		((struct sym *) (x))
+#define SYMBOL_P(x)		(SYMBOL (x)->litflag == 0)
 
 extern struct sym *make_symbol (const char *name);
 

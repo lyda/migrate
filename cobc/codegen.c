@@ -393,7 +393,7 @@ sch_convert (char *s)
 int
 is_variable (struct sym *sy)
 {
-  if (sy->litflag == 0)
+  if (SYMBOL_P (sy))
     switch (sy->type)
       {
       case '8':		/* 88 field */
@@ -696,25 +696,17 @@ get_nb_fields (struct sym *sy, int times, int sw_val)
   return nb_fields * times;
 }
 
-static void
-gen_init_str (struct sym *sy, char type)
+static struct sym *
+get_init_symbol (char type)
 {
-#ifdef COB_DEBUG
-  fprintf (o_src, "# init_str %s, type %c, loc %d\n",
-	   sy->name, type, sy->location);
-#endif
   switch (type)
     {
-    case '9':
-    case 'C':
-      gen_move ((struct sym *) spe_lit_ZE, sy);
-      break;
+    case '9': case 'C':
+      return (struct sym *) spe_lit_ZE;
     case 'B':
-      gen_move ((struct sym *) spe_lit_LV, sy);
-      break;
+      return (struct sym *) spe_lit_LV;
     default:
-      gen_move ((struct sym *) spe_lit_SP, sy);
-      break;
+      return (struct sym *) spe_lit_SP;
     }
 }
 
@@ -783,7 +775,7 @@ initialize_values (void)
 	    init_val = -1;
 	    nb_fields = get_nb_fields (v, v->times, 1);
 	    if (init_ctype != '&' && init_val != 1)
-	      gen_init_str (v, init_ctype);
+	      gen_move (get_init_symbol (init_ctype), v);
 	    else
 	      initialize_values_1 (v, v->location);
 	  }
@@ -1016,8 +1008,9 @@ proc_trail (int using)
 	    }
 	  fprintf (o_src, "\t.byte\t0\n");
 	}
-      else if (((struct sym *) list->var)->litflag)
-	{					       /***** it is a literal *****/
+      else if (!SYMBOL_P (list->var))
+	{
+	  /***** it is a literal *****/
 	  int len, tmplen;
 	  v = (struct lit *) list->var;
 	  //len = v->nick ? 1 : strlen(v->name);
@@ -1155,7 +1148,7 @@ dump_working ()
     {
       v = (struct sym *) list->var;
       sy = v;
-      if (v->litflag)
+      if (!SYMBOL_P (v))
 	continue;
       if (v->sec_no == SEC_STACK)
 	continue;
@@ -1494,7 +1487,7 @@ pic_digits (struct sym *sy)
   int len = 0;
   if (sy == NULL)
     return 0;
-  if (sy->litflag)
+  if (!SYMBOL_P (sy))
     {
       len = strlen (sy->name);
       if (strchr (sy->name, decimal_char ()))
@@ -1542,7 +1535,7 @@ symlen (struct sym *sy)
   /*int plen; */
   if (sy->type == 'C')
     return sy->len / 2 + 1;
-  else if (sy->litflag == 1)
+  else if (LITERAL_P (sy))
     return ((struct lit *) sy)->len;
   return sy->len;
 }
@@ -1765,7 +1758,11 @@ gen_initialize_1 (struct sym *sy, unsigned int loc)
 	  {
 	    unsigned save_loc = sy->location;
 	    sy->location = loc;
-	    gen_init_str (sy, sy->type);
+	    load_location (sy, "eax");
+	    push_eax ();
+	    gen_loaddesc (sy);
+	    gen_loadvar (get_init_symbol (sy->type));
+	    asm_call ("cob_move");
 	    sy->location = save_loc;
 	    loc += symlen (sy);
 	  }
@@ -1782,7 +1779,7 @@ gen_initialize (struct sym *sy)
   init_ctype = ' ';
   get_nb_fields (sy, sy->times, 0);
   if (init_ctype != '&')
-    gen_init_str (sy, init_ctype);
+    gen_move (get_init_symbol (init_ctype), sy);
   else
     gen_initialize_1 (sy, sy->location);
 }
@@ -1896,8 +1893,8 @@ gen_display (int dupon, int nl)
     {
       /* separate screen displays from display of regular variables */
       sy = (struct sym *) disp_list->var;
-      if (disp_list && sy->litflag != 1)
-	if (sy->litflag != 4 && sy->litflag != 2 && sy->scr)
+      if (disp_list && !LITERAL_P (sy))
+	if (!REFMOD_P (sy) && !SUBREF_P (sy) && sy->scr)
 	  {
 	    gen_display_screen (disp_list->var, 1);
 	    return;
@@ -2180,47 +2177,6 @@ check_perform_variables (struct sym *sy1, struct perform_info *pi1)
 }
 
 /******** structure allocation for math verbs variables ***********/
-
-struct sym *
-create_expr (char op, struct sym *left, struct sym *right)
-{
-  struct expr *left_expr = (struct expr *) left;
-  struct expr *right_expr = (struct expr *) right;
-  struct expr *e = malloc (sizeof (struct expr));
-  struct list *list = malloc (sizeof (struct list));
-  e->litflag = 5;
-  e->op = op;
-  e->left = left_expr;
-  e->right = right_expr;
-  expr_list = list;
-  list->next = NULL;
-  list->var = e;
-  return (struct sym *) e;
-}
-
-void
-free_expr (struct expr *e)
-{
-  if (e && EXPR_P (e))
-    {
-      free_expr (EXPR_LEFT (e));
-      free_expr (EXPR_RIGHT (e));
-      free (e);
-    }
-}
-
-void
-free_expr_list ()
-{
-  struct list *list;
-  struct expr *e;
-  for (list = expr_list; list != NULL; list = list->next)
-    {
-      e = (struct expr *) list->var;
-      free_expr (e);
-    }
-  expr_list = NULL;
-}
 
 struct math_var *
 create_mathvar_info (struct math_var *mv, struct sym *sy, unsigned int opt)
@@ -2585,6 +2541,47 @@ gen_test_invalid_keys (struct invalid_keys *p)
 
 /******** functions to generate math verbs ***********/
 
+struct sym *
+create_expr (char op, struct sym *left, struct sym *right)
+{
+  struct expr *left_expr = (struct expr *) left;
+  struct expr *right_expr = (struct expr *) right;
+  struct expr *e = malloc (sizeof (struct expr));
+  struct list *list = malloc (sizeof (struct list));
+  e->litflag = 5;
+  e->op = op;
+  e->left = left_expr;
+  e->right = right_expr;
+  expr_list = list;
+  list->next = NULL;
+  list->var = e;
+  return (struct sym *) e;
+}
+
+void
+free_expr (struct expr *e)
+{
+  if (e && EXPR_P (e))
+    {
+      free_expr (EXPR_LEFT (e));
+      free_expr (EXPR_RIGHT (e));
+      free (e);
+    }
+}
+
+void
+free_expr_list ()
+{
+  struct list *list;
+  struct expr *e;
+  for (list = expr_list; list != NULL; list = list->next)
+    {
+      e = (struct expr *) list->var;
+      free_expr (e);
+    }
+  expr_list = NULL;
+}
+
 void
 gen_add (struct sym *sy1, struct sym *sy2, int rnd)
 {
@@ -2923,7 +2920,7 @@ struct sym *
 get_variable_item (struct sym *sy)
 {
   struct sym *son, *item;
-  if (sy->litflag != 0)
+  if (!SYMBOL_P (sy))
     return NULL;
   if (sy->occurs != NULL)
     return sy;
@@ -2982,7 +2979,7 @@ value_to_eax (struct sym *sy)
       fprintf (o_src, "\txorl\t%%eax,%%eax\n");
       return;
     }
-  if (sy->litflag)
+  if (!SYMBOL_P (sy))
     {
       /* if it's an integer, compute it now, not at runtime! */
       value = 0;
@@ -3060,13 +3057,11 @@ load_address (struct sym *var)
 {
   unsigned base, locoff;
   struct sym *tmp;
-  if (!var->litflag && var->linkage_flg)
+  if (SYMBOL_P (var) && var->linkage_flg)
     {
       tmp = var;
       while (tmp->linkage_flg == 1)
 	tmp = tmp->parent;
-      if (tmp == 0)
-	yyerror ("linkage section broken");
       base = tmp->linkage_flg;
       locoff = tmp->location - var->location;
       fprintf (o_src, "\tmovl\t%d(%%ebp), %%eax\n", base);
@@ -3088,34 +3083,32 @@ load_address (struct sym *var)
 /* load in cpureg ("eax","ebx"...) location for normal 
 	(file/working-storage) or linkage variable */
 void
-load_location (struct sym *var, char *cpureg)
+load_location (struct sym *sy, char *cpureg)
 {
   unsigned base, locoff;
   struct sym *tmp;
-  if (var == NULL)
+  if (sy == NULL)
     {
       fprintf (o_src, "\txorl\t%%%s,%%%s\n", cpureg, cpureg);
       return;
     }
-  if (!var->litflag && var->linkage_flg)
+  if (SYMBOL_P (sy) && sy->linkage_flg)
     {
-      tmp = var;
+      tmp = sy;
       while (tmp->linkage_flg == 1)
 	tmp = tmp->parent;
-      if (tmp == 0)
-	yyerror ("linkage section broken");
       base = tmp->linkage_flg;
-      locoff = var->location - tmp->location;
+      locoff = sy->location - tmp->location;
       fprintf (o_src, "\tmovl\t%d(%%ebp), %%%s\n", base, cpureg);
       if (locoff)
 	{
 	  fprintf (o_src, "\taddl\t$%d, %%%s\n", locoff, cpureg);
 	}
     }
-  else if (var->sec_no == SEC_STACK)
-    fprintf (o_src, "\tleal\t%s, %%%s\n", memref (var), cpureg);
+  else if (sy->sec_no == SEC_STACK)
+    fprintf (o_src, "\tleal\t%s, %%%s\n", memref (sy), cpureg);
   else
-    fprintf (o_src, "\tmovl\t%s, %%%s\n", memref (var), cpureg);
+    fprintf (o_src, "\tmovl\t%s, %%%s\n", memref (sy), cpureg);
 }
 
 void
@@ -3138,8 +3131,6 @@ loadloc_to_eax (struct sym *sy_p)
 	  tmp = var;
 	  while (tmp->linkage_flg == 1)
 	    tmp = tmp->parent;
-	  if (tmp == 0)
-	    yyerror ("linkage section broken");
 	  base = tmp->linkage_flg;
 	  locoff = var->location - tmp->location;
 	  fprintf (o_src, "\tmovl %d(%%ebp), %%ebx\n", base);
@@ -3177,9 +3168,9 @@ loadloc_to_eax (struct sym *sy_p)
 }
 
 void
-gen_loadloc (struct sym *sy_p)
+gen_loadloc (struct sym *sy)
 {
-  loadloc_to_eax (sy_p);
+  loadloc_to_eax (sy);
   push_eax ();
 }
 
@@ -3189,7 +3180,7 @@ void
 set_ptr (struct sym *sy)
 {
   /*unsigned base; */
-  if (sy->litflag == 0 && sy->linkage_flg)
+  if (SYMBOL_P (sy) && sy->linkage_flg)
     {
       if (sy->linkage_flg == 1)
 	{
@@ -3201,7 +3192,7 @@ set_ptr (struct sym *sy)
     }
   else
     {
-      if (sy->litflag == 0)
+      if (SYMBOL_P (sy))
 	{
 	  load_location (sy, "ebx");
 	  fprintf (o_src, "\tmovl\t%%eax,0(%%ebx)\n");
@@ -3248,7 +3239,7 @@ gen_loaddesc1 (struct sym *sy, int variable_length)
       else
 	{
 	  fprintf (o_src, "#  corrected length %s\n", syl->name);
-	  if (syl->litflag == 1)
+	  if (LITERAL_P (syl))
 	    fprintf (o_src, "\tmovl\t$%s, rf_base%d+%d\n",
 		     syl->name, pgm_segment, rflp->slot * 8);
 	  else
@@ -3320,8 +3311,6 @@ gen_loadval (struct sym *sy)
 	  tmp = var;
 	  while (tmp->linkage_flg == 1)
 	    tmp = tmp->parent;
-	  if (tmp == 0)
-	    yyerror ("linkage section broken");
 	  base = tmp->linkage_flg;
 	  locoff = tmp->location - var->location;
 	  if (symlen (var) >= 4)
@@ -3342,12 +3331,12 @@ gen_loadval (struct sym *sy)
 	  tmp = var;
 	}
     }
-  else if (sy->litflag == 0)
+  else if (SYMBOL_P (sy))
     {
       tmp = sy;
       load_address (tmp);
     }
-  if (sy->litflag == 1)
+  if (LITERAL_P (sy))
     value_to_eax (sy);
   else
     load_at_eax (tmp);
@@ -3371,8 +3360,6 @@ gen_pushval (struct sym *sy)
 	  tmp = var;
 	  while (tmp->linkage_flg == 1)
 	    tmp = tmp->parent;
-	  if (tmp == 0)
-	    yyerror ("linkage section broken");
 	  base = tmp->linkage_flg;
 	  locoff = tmp->location - var->location;
 	  if (symlen (var) >= 4)
@@ -3392,7 +3379,7 @@ gen_pushval (struct sym *sy)
 	  push_at_eax (var);
 	}
     }
-  else if (sy->litflag == 0)
+  else if (SYMBOL_P (sy))
     {
       load_address (sy);
       push_at_eax (sy);
@@ -3615,9 +3602,10 @@ void
 gen_movecorr (struct sym *sy1, struct sym *sy2)
 {
   struct sym *t1, *t2;
-  if (sy1->litflag || sy2->litflag)
+  if (!(SYMBOL_P (sy1) && SYMBOL_P (sy2)))
     {
       yyerror ("sorry we don't handle this case yet!");
+      return;
     }
 #ifdef COB_DEBUG
   fprintf (o_src, "# MOVE CORR %s --> %s\n", sy1->name, sy2->name);
@@ -3640,9 +3628,10 @@ void
 gen_addcorr (struct sym *sy1, struct sym *sy2, int rnd)
 {
   struct sym *t1, *t2;
-  if (sy1->litflag || sy2->litflag)
+  if (!(SYMBOL_P (sy1) && SYMBOL_P (sy2)))
     {
       yyerror ("sorry we don't handle this case yet!");
+      return;
     }
 #ifdef COB_DEBUG
   fprintf (o_src, "# ADD CORR %s --> %s\n", sy1->name, sy2->name);
@@ -3664,9 +3653,10 @@ void
 gen_subtractcorr (struct sym *sy1, struct sym *sy2, int rnd)
 {
   struct sym *t1, *t2;
-  if (sy1->litflag || sy2->litflag)
+  if (!(SYMBOL_P (sy1) && SYMBOL_P (sy2)))
     {
       yyerror ("sorry we don't handle this case yet!");
+      return;
     }
 #ifdef COB_DEBUG
   fprintf (o_src, "# ADD CORR %s --> %s\n", sy1->name, sy2->name);
@@ -6161,7 +6151,7 @@ gen_call (struct lit *v, int stack_size, int exceplabel, int notexceplabel)
   for (list = parameter_list; list != NULL; list = list->next)
     {
       cp = (struct sym *) list->var;
-      if (cp->litflag != 1)
+      if (!LITERAL_P (cp))
 	{
 	  if (cp->call_mode == CM_CONT)
 	    {
@@ -6183,7 +6173,7 @@ gen_call (struct lit *v, int stack_size, int exceplabel, int notexceplabel)
   for (list = parameter_list; list != NULL;)
     {
       cp = (struct sym *) list->var;
-      if (cp->litflag == 1)
+      if (LITERAL_P (cp))
 	{
 	  lp = (struct lit *) cp;
 #ifdef COB_DEBUG
@@ -6199,7 +6189,7 @@ gen_call (struct lit *v, int stack_size, int exceplabel, int notexceplabel)
 	      push_eax ();
 	    }
 	  else
-	    /*gen_loadvar((struct sym *)list->var) */ ;
+	    abort ();
 	}
       else
 	{
@@ -6225,7 +6215,7 @@ gen_call (struct lit *v, int stack_size, int exceplabel, int notexceplabel)
       free (tmp);
     }
   parameter_list = NULL;
-  if (v->litflag == 1 && cob_dynamic_flag == 0)
+  if (LITERAL_P (v) && cob_dynamic_flag == 0)
     {
       /* call literal (static) routine */
       asm_call (v->name);
