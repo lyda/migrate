@@ -132,7 +132,7 @@ AT_CLEANUP
 
 ## 13.16.42.2-7
 
-AT_SETUP([Lower level number than REDEFINES entry])
+AT_SETUP([Qualified REDEFINES item])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION  DIVISION.
