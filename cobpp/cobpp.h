@@ -20,9 +20,11 @@
 #ifndef COBPP_H
 #define COBPP_H
 
+#include "config.h"
+
 #include <stdio.h>
 
-#define COBPP_PACKAGE	"cobpp (OpenCOBOL)"
+#define COBPP_PACKAGE	"cobpp (" PACKAGE_NAME ")"
 #define COBPP_VERSION	PACKAGE_VERSION
 #define COBPP_COPYRIGHT	"Copyright (C) 2001-2002 Keisuke Nishida\n"
 

@@ -1,9 +1,31 @@
+#                                                       -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-AC_INIT([open-cobol],[0.9.7.9],[knishida@coboler.com])
-AC_CONFIG_AUX_DIR(config)
+
+# Copyright (C) 2001-2002 Keisuke Nishida
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+# 02111-1307, USA.
+
+AC_PREREQ(2.54)
+
+AC_INIT([OpenCOBOL],[0.9.7.9],[knishida@coboler.com],[open-cobol])
 AC_CONFIG_SRCDIR([config.h.in])
+AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_HEADERS([libcob/cobconfig.h])
+
 AM_INIT_AUTOMAKE([gnu no-texinfo.tex])
 AM_MAINTAINER_MODE
 
@@ -124,8 +146,8 @@ fi
 COB_COBPP="cobpp"
 COB_CFLAGS="-I$includedir"
 COB_LIBS="-L$libdir -lcob ${LIBCOB_LIBS}"
-COB_CONFIG_FILE="$sysconfdir/$PACKAGE_NAME/libcob.conf"
-COB_LIBRARY_PATH=".:$libdir/$PACKAGE_NAME"
+COB_CONFIG_FILE="$sysconfdir/$PACKAGE_TARNAME/libcob.conf"
+COB_LIBRARY_PATH=".:$libdir/$PACKAGE_TARNAME"
 COB_MODULE_EXT=`echo "$shlibext" | sed 's/dll\.a/dll/'`
 LIBS="$save_libs"
 
