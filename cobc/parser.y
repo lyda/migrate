@@ -90,6 +90,9 @@ static int current_mode;
 static const char *current_inspect_func;
 static cb_tree current_inspect_data;
 
+static int next_label_id = 0;
+static cb_tree next_label_list = NULL;
+
 static int last_operator;
 static cb_tree last_lefthand;
 
@@ -1441,6 +1444,20 @@ procedure:
 | paragraph_header
 | invalid_statement
 | statements '.'
+  {
+    if (next_label_list)
+      {
+	char name[16];
+	cb_tree label;
+	sprintf (name, "L$%d", next_label_id);
+	label = make_reference (name);
+	push (cb_build_label (label, 0));
+	current_program->label_list =
+	  list_append (current_program->label_list, next_label_list);
+	next_label_list = NULL;
+	next_label_id++;
+      }
+  }
 | error '.'
 | '.'
 ;
@@ -1539,6 +1556,7 @@ statement:
 | cancel_statement
 | close_statement
 | compute_statement
+| continue_statement
 | delete_statement
 | display_statement
 | divide_statement
@@ -1569,10 +1587,17 @@ statement:
 | unstring_statement
 | use_statement
 | write_statement
-| CONTINUE
 | NEXT SENTENCE
   {
-    cb_verify (cb_next_sentence_phrase, "NEXT SENTENCE");
+    if (cb_verify (cb_next_sentence_phrase, "NEXT SENTENCE"))
+      {
+	char name[16];
+	cb_tree label;
+	sprintf (name, "L$%d", next_label_id);
+	label = make_reference (name);
+	next_label_list = list_add (next_label_list, label);
+	push (cb_build_goto (label, 0));
+      }
   }
 ;
 
@@ -1827,6 +1852,15 @@ compute_body:
 end_compute:
   /* empty */			{ terminator_warning (); }
 | END_COMPUTE
+;
+
+
+/*
+ * CONTINUE statement
+ */
+
+continue_statement:
+  CONTINUE
 ;
 
 
