@@ -28,11 +28,6 @@
 
 #include "_libcob.h"
 
-static int offset_substr (char *s1, char *s2, int n1, int n2);
-static void cob_put_integer (struct fld_desc *fdesc, char *sbuf, int value);
-static struct comparand *alloc_comparand (int opt, struct comparand **list);
-void free_comparands (struct comparand *cmps);
-
 /*
  * auxiliary comparands list to walk several times through comparands
  * in cob_inspect_replacing function.
@@ -46,6 +41,52 @@ struct comparand
   int stop;			/* -1 -> not yet (only if "after" found), 
 				   0 -> go, 1 -> stop */
 };
+
+/*------------------------------------------------------------------------*\
+ |                                                                        |
+ |                          offset_substr                                 |
+ |  return number of characters before found s2 in s1                     |
+ |  (C string functions are not useful here, because                      |
+ |  the strings are _not_ NULL-terminated)                                |
+ |  I would like to see here a better algorithm, but this                 |
+ |  "brute-force" method is easier to code now.                           |
+ |                                                                        |
+\*------------------------------------------------------------------------*/
+
+static int
+offset_substr (char *s1, char *s2, int n1, int n2)
+{
+  int i, j;
+  for (i = 0; i < n1; i++)
+    {
+      for (j = 0; j < n2; j++)
+	{
+	  if (i + j > n1)
+	    break;		/* past the first string, ignore */
+	  if (s1[i + j] != s2[j])
+	    break;
+	}
+      if (j == n2)
+	break;			/* found! */
+    }
+  return i;
+}
+
+/*------------------------------------------------------------------------*\
+ |                                                                        |
+ |                          cob_put_integer                               |
+ |  this is not the most generic implementation, as we should use a call  |
+ |  to cob_move in the future, but it's better than none                  |
+ |                                                                        |
+\*------------------------------------------------------------------------*/
+
+static void
+cob_put_integer (struct fld_desc *fdesc, char *sbuf, int value)
+{
+  struct fld_desc fld = { 4, 'B', 0, 0, 0, 0, 0, 0, "S9\x9" };
+  cob_move ((struct cob_field) {&fld, (char *) &value},
+	    (struct cob_field) {fdesc, sbuf});
+}
 
 /*------------------------------------------------------------------------*\
  |                                                                        |
@@ -520,51 +561,3 @@ cob_string (struct fld_desc *fdst, char *sdst, ...)
   cob_status = COB_STATUS_SUCCESS;
   return cob_status;
 }
-
-/*------------------------------------------------------------------------*\
- |                                                                        |
- |                          offset_substr                                 |
- |  return number of characters before found s2 in s1                     |
- |  (C string functions are not useful here, because                      |
- |  the strings are _not_ NULL-terminated)                                |
- |  I would like to see here a better algorithm, but this                 |
- |  "brute-force" method is easier to code now.                           |
- |                                                                        |
-\*------------------------------------------------------------------------*/
-
-static int
-offset_substr (char *s1, char *s2, int n1, int n2)
-{
-  int i, j;
-  for (i = 0; i < n1; i++)
-    {
-      for (j = 0; j < n2; j++)
-	{
-	  if (i + j > n1)
-	    break;		/* past the first string, ignore */
-	  if (s1[i + j] != s2[j])
-	    break;
-	}
-      if (j == n2)
-	break;			/* found! */
-    }
-  return i;
-}
-
-/*------------------------------------------------------------------------*\
- |                                                                        |
- |                          cob_put_integer                               |
- |  this is not the most generic implementation, as we should use a call  |
- |  to cob_move in the future, but it's better than none                  |
- |                                                                        |
-\*------------------------------------------------------------------------*/
-
-static void
-cob_put_integer (struct fld_desc *fdesc, char *sbuf, int value)
-{
-  struct fld_desc fld = { 4, 'B', 0, 0, 0, 0, 0, 0, "S9\x9" };
-  cob_move ((struct cob_field) {&fld, (char *) &value},
-	    (struct cob_field) {fdesc, sbuf});
-}
-
-/* end of strings.c */
