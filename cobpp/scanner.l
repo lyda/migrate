@@ -72,7 +72,7 @@ static void process_eol (void);
 
 <*>\n			{ process_eol (); }
 
-<*>\n-[ \t]*[\"\']? {
+<*>[ \t]*\n-[ \t]*[\"\']? {
   if (cob_file_format == COB_FORMAT_FIXED)
     {
       /* Line connection */
