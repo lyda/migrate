@@ -31,15 +31,16 @@
 extern int cob_stabs_flag;
 extern int cob_debug_flag;
 extern int cob_module_flag;
-extern int cob_dynamic_flag;
 extern int cob_verbose_flag;
+
+#define LINK_STATIC	0
+#define LINK_DYNAMIC	1
+
+extern int cob_link_style;
 
 extern int cob_trace_scanner;
 extern int cob_trace_parser;
 extern int cob_trace_codegen;
-
-extern int cob_error_count;
-extern int cob_warning_count;
 
 extern int cob_orig_lineno;
 extern char *cob_orig_filename;

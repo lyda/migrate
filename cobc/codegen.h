@@ -632,7 +632,6 @@ extern void check_call_except (int excep, int notexcep, int exceplabel,
 			       int notexceplabel, int endlabel);
 extern void gen_initialize (struct sym *sy_start);
 extern void mark_actives (int first, int last);
-extern void dump_symbols (void);
 extern struct ginfo *ginfo_container0 (void);
 extern struct ginfo *ginfo_container1 (struct ginfo *v);
 extern void ginfo_container2 (struct ginfo *v, unsigned long ty);
@@ -646,11 +645,10 @@ extern struct invalid_keys *gen_invalid_keys (struct invalid_key_element *p1,
 					      struct invalid_key_element *p2);
 extern void gen_test_invalid_keys (struct invalid_keys *p);
 extern int sort_exref_compare (const void *z1, const void *z2);
-extern int main (int argc, char *argv[]);
 
-/* htcobol.c */
+/* parser.y */
+extern int yyparse (void);
 extern void yywarn (char *fmt, ...);
 extern void yyerror (char *fmt, ...);
-extern int yyparse (void);
 
 #endif /* _CODEGEN_H_ */

@@ -5879,15 +5879,15 @@ gen_call (struct lit *v, int stack_size, int exceplabel, int notexceplabel)
       free (tmp);
     }
   parameter_list = NULL;
-  if (LITERAL_P (v) && cob_dynamic_flag == 0)
+  if (cob_link_style == LINK_STATIC && LITERAL_P (v))
     {
-      /* call literal (static) routine */
+      /* static call */
       asm_call (v->name);
       endlabel = 0;
     }
   else
     {
-      /* call dynamic routine (call by name) */
+      /* dynamic call */
       stack_save = stackframe_cnt;
       stackframe_cnt = 0;
       asm_call_1 ("cob_dyncall_resolve", (struct sym *) v);

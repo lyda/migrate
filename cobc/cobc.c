@@ -40,16 +40,14 @@
 int cob_stabs_flag = 0;
 int cob_debug_flag = 0;
 int cob_module_flag = 0;
-int cob_dynamic_flag = 0;
 int cob_verbose_flag = 0;
+
+int cob_link_style = LINK_DYNAMIC;
 
 int cob_trace_scanner = 0;
 int cob_trace_parser = 0;
 int cob_trace_codegen = 0;
 int cob_trace_command = 0;
-
-int cob_warning_count = 0;
-int cob_error_count = 0;
 
 int cob_orig_lineno = 0;
 char *cob_orig_filename = NULL;
@@ -160,7 +158,8 @@ static char short_options[] = "hvEScmxgo:FXDI:T:";
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'v'},
-  {"dynamic", no_argument, &cob_dynamic_flag, 1},
+  {"static", no_argument, &cob_link_style, LINK_STATIC},
+  {"dynamic", no_argument, &cob_link_style, LINK_DYNAMIC},
   {"save-temps", no_argument, &save_temps_flag, 1},
 #if COB_DEBUG
   {"ta", no_argument, 0, 'a'},
@@ -187,7 +186,8 @@ print_usage ()
   puts ("  --help        Display this information");
   puts ("  --version     Display compiler version");
   puts ("  -save-temps   Do not delete intermediate files");
-  puts ("  -dynamic      Use dynamic link for all subprogram calls");
+  puts ("  -static       Use static link for subprogram calls if possible");
+  puts ("  -dynamic      Use dynamic link for all subprogram calls (default)");
   puts ("  -E            Preprocess only; do not compile, assemble or link");
   puts ("  -S            Compile only; do not assemble or link");
   puts ("  -c            Compile and assemble, but do not link");
@@ -459,6 +459,8 @@ preprocess (struct filename *fn)
 static int
 process_compile (struct filename *fn)
 {
+  int ret;
+
   yyin = fopen (fn->preprocess, "r");
   if (!yyin)
     cob_error ("cannot open file: %s\n", fn->preprocess);
@@ -471,12 +473,12 @@ process_compile (struct filename *fn)
 
   cob_source_filename = fn->source;
   yy_flex_debug = cob_trace_scanner;
-  yyparse ();
+  ret = yyparse ();
 
   fclose (o_src);
   fclose (yyin);
 
-  return (cob_error_count > 0) ? 1 : 0;
+  return ret;
 }
 
 static int

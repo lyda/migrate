@@ -82,7 +82,9 @@ unsigned int perform_after_sw;
 struct math_ose *tmose=NULL;
 struct ginfo    *gic=NULL;
 
-extern void yywarn(char *s,...);
+static int warning_count = 0;
+static int error_count = 0;
+
 static void assert_numeric_sy (struct sym *sy);
 static void check_decimal_point (struct lit *lit);
 %}
@@ -253,6 +255,13 @@ static void check_decimal_point (struct lit *lit);
  * COBOL program sequence
  *****************************************************************************/
 
+top:
+  program_sequence
+  {
+    if (error_count)
+      YYABORT;
+  }
+;
 program_sequence:
   program
 | program_sequence program
@@ -3136,7 +3145,7 @@ yywarn (char *fmt, ...)
   va_end (argptr);
 
   /* Count warning */
-  cob_warning_count++;
+  warning_count++;
 }
 
 void
@@ -3154,5 +3163,5 @@ yyerror (char *fmt, ...)
   va_end (argptr);
 
   /* Count error */
-  cob_error_count++;
+  error_count++;
 }
