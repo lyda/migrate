@@ -35,6 +35,7 @@ extern cob_tree curr_file;
 extern int curr_division;
 extern int start_condition;
 extern int need_subscripts;
+extern int need_separator;
 extern int in_procedure;
 extern int last_lineno;
 extern char last_text[];
