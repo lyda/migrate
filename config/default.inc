@@ -7,6 +7,21 @@ text-column: 72
 # Value: `auto', `free', `fixed'
 source-format: fixed
 
+# Value:             sign  0123456789
+#                    ----  ----------
+# `ascii'        positive  0123456789
+#                negative  pqrstuvwxy
+#
+# `ebcdic'       positive  {ABCDEFGHI
+#                negative  }JKLMNOPQR
+#
+# `ascii10'      positive  0123456789
+#                negative  @ABCDEFGHI
+#
+# `ascii20'      positive  @ABCDEFGHI
+#                negative  PQRSTUVWXY
+display-sign: ascii
+
 # Value:         signed  unsigned  bytes
 #                ------  --------  -----
 # `2-4-8'        1 -  4                2

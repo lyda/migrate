@@ -876,7 +876,15 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 	      memcpy (buff + diff, l->data, l->size);
 	    }
 	  if (l->sign < 0)
-	    buff[f->size - 1] += 0x10;
+	    {
+	      unsigned char *p = &buff[f->size - 1];
+	      switch (cb_display_sign)
+		{
+		case COB_DISPLAY_SIGN_ASCII: *p += 0x40; break;
+		case COB_DISPLAY_SIGN_ASCII10: *p += 0x10; break;
+		default: abort ();
+		}
+	    }
 	}
       else
 	{

@@ -26,6 +26,7 @@
 #include <ctype.h>
 
 #include "cobc.h"
+#include "libcob.h"
 
 #undef CB_CONFIG_ANY
 #undef CB_CONFIG_INT
@@ -168,7 +169,7 @@ cb_load_conf (const char *fname, int check_nodef)
 	    if (strcmp (name, "source-format") == 0)
 	      {
 		if (strcmp (val, "auto") == 0)
-		  cb_binary_size = CB_FORMAT_AUTO;
+		  goto unsupported_value;
 		else if (strcmp (val, "free") == 0)
 		  cb_binary_size = CB_FORMAT_FREE;
 		else if (strcmp (val, "fixed") == 0)
@@ -176,12 +177,16 @@ cb_load_conf (const char *fname, int check_nodef)
 		else
 		  goto invalid_value;
 	      }
-	    else if (strcmp (name, "binary-byteorder") == 0)
+	    else if (strcmp (name, "display-sign") == 0)
 	      {
-		if (strcmp (val, "native") == 0)
-		  cb_binary_byteorder = CB_BYTEORDER_NATIVE;
-		else if (strcmp (val, "big-endian") == 0)
-		  cb_binary_byteorder = CB_BYTEORDER_BIG_ENDIAN;
+		if (strcmp (val, "ascii") == 0)
+		  cb_display_sign = COB_DISPLAY_SIGN_ASCII;
+		else if (strcmp (val, "ebcdic") == 0)
+		  goto unsupported_value;
+		else if (strcmp (val, "ascii10") == 0)
+		  cb_display_sign = COB_DISPLAY_SIGN_ASCII10;
+		else if (strcmp (val, "ascii20") == 0)
+		  goto unsupported_value;
 		else
 		  goto invalid_value;
 	      }
@@ -193,6 +198,15 @@ cb_load_conf (const char *fname, int check_nodef)
 		  cb_binary_size = CB_BINARY_SIZE_1_2_4_8;
 		else if (strcmp (val, "1--8") == 0)
 		  cb_binary_size = CB_BINARY_SIZE_1__8;
+		else
+		  goto invalid_value;
+	      }
+	    else if (strcmp (name, "binary-byteorder") == 0)
+	      {
+		if (strcmp (val, "native") == 0)
+		  cb_binary_byteorder = CB_BYTEORDER_NATIVE;
+		else if (strcmp (val, "big-endian") == 0)
+		  cb_binary_byteorder = CB_BYTEORDER_BIG_ENDIAN;
 		else
 		  goto invalid_value;
 	      }
@@ -250,8 +264,13 @@ cb_load_conf (const char *fname, int check_nodef)
 	    break;
 	  }
 	invalid_value:
-	  fprintf (stderr, "%s:%d: invalid value for `%s'\n",
+	  fprintf (stderr, _("%s:%d: invalid value for `%s'\n"),
 		   fname, line, name);
+	  ret = -1;
+	  break;
+	unsupported_value:
+	  fprintf (stderr, _("%s:%d: `%s' not supported yet\n"),
+		   fname, line, val);
 	  ret = -1;
 	  break;
 	}
