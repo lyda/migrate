@@ -282,15 +282,18 @@ validate_field_1 (struct cb_field *f)
 	    break;
 	  }
 
-      /* the data item that contains a OCCURS DEPENDING clause must be
-	 the last data item in the group */
-      for (p = f; p->parent; p = p->parent)
-	for (; p->sister; p = p->sister)
-	  if (!p->sister->redefines)
-	    {
-	      cb_error_x (x, _("`%s' cannot have OCCURS DEPENDING"), name);
-	      break;
-	    }
+      if (!cb_complex_odo)
+	{
+	  /* the data item that contains a OCCURS DEPENDING clause must be
+	     the last data item in the group */
+	  for (p = f; p->parent; p = p->parent)
+	    for (; p->sister; p = p->sister)
+	      if (!p->sister->redefines)
+		{
+		  cb_error_x (x, _("`%s' cannot have OCCURS DEPENDING"), name);
+		  break;
+		}
+	}
     }
 
   /* validate REDEFINES */
@@ -310,9 +313,9 @@ validate_field_1 (struct cb_field *f)
 	  }
 
       /* check variable occurrence */
-      if (f->occurs_depending || cb_field_varying (f))
+      if (f->occurs_depending || cb_field_variable_size (f))
 	cb_error_x (x, _("`%s' cannot be variable length"), f->name);
-      if (cb_field_varying (f->redefines))
+      if (cb_field_variable_size (f->redefines))
 	cb_error_x (x, _("the original definition `%s' cannot be variable length"),
 		    f->redefines->name);
     }

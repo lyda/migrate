@@ -187,7 +187,26 @@ output_base (struct cb_field *f)
 	}
       output ("%s%s", CB_PREFIX_BASE, f01->cname);
     }
-  if (f->offset > 0)
+
+  if (cb_field_variable_address (f))
+    {
+      struct cb_field *p;
+      for (p = f->parent; p; f = f->parent, p = f->parent)
+	for (p = p->children; p != f; p = p->sister)
+	  {
+	    struct cb_field *v = cb_field_variable_size (p);
+	    if (v)
+	      {
+		output (" + %d + ", v->offset - p->offset);
+		if (v->size != 1)
+		  output ("%d * ", v->size);
+		output_integer (v->occurs_depending);
+	      }
+	    else
+	      output (" + %d", p->size);
+	  }
+    }
+  else if (f->offset > 0)
     output (" + %d", f->offset);
 }
 
@@ -269,7 +288,7 @@ output_size (cb_tree x)
 	  }
 	else
 	  {
-	    struct cb_field *p = cb_field_varying (f);
+	    struct cb_field *p = cb_field_variable_size (f);
 	    if (p && (r->type == CB_SENDING_OPERAND
 		      || !cb_field_subordinate (cb_field (p->occurs_depending), f)))
 	      {
@@ -737,8 +756,8 @@ output_param (cb_tree x, int id)
 	      output_stmt (CB_VALUE (l));
 	  }
 
-	if (!r->subs && !r->offset
-	    && !f->flag_local && !cb_field_varying (f) && f->count > 0)
+	if (!r->subs && !r->offset && !f->flag_local && f->count > 0
+	    && !cb_field_variable_size (f) && !cb_field_variable_address (f))
 	  {
 	    if (!f->flag_field)
 	      {

@@ -454,7 +454,8 @@ extern cb_tree cb_build_constant (cb_tree name, cb_tree value);
 extern struct cb_field *cb_field (cb_tree x);
 extern int cb_field_size (cb_tree x);
 extern struct cb_field *cb_field_founder (struct cb_field *f);
-extern struct cb_field *cb_field_varying (struct cb_field *f);
+extern struct cb_field *cb_field_variable_size (struct cb_field *f);
+extern struct cb_field * cb_field_variable_address (struct cb_field *f);
 extern int cb_field_subordinate (struct cb_field *p, struct cb_field *f);
 
 /* Index */

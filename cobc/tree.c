@@ -930,14 +930,25 @@ cb_field_founder (struct cb_field *f)
 }
 
 struct cb_field *
-cb_field_varying (struct cb_field *f)
+cb_field_variable_size (struct cb_field *f)
 {
   struct cb_field *p;
   for (f = f->children; f; f = f->sister)
     if (f->occurs_depending)
       return f;
-    else if ((p = cb_field_varying (f)) != NULL)
+    else if ((p = cb_field_variable_size (f)) != NULL)
       return p;
+  return NULL;
+}
+
+struct cb_field *
+cb_field_variable_address (struct cb_field *f)
+{
+  struct cb_field *p;
+  for (p = f->parent; p; f = f->parent, p = f->parent)
+    for (p = p->children; p != f; p = p->sister)
+      if (p->occurs_depending || cb_field_variable_size (p))
+	return p;
   return NULL;
 }
 
@@ -1017,7 +1028,7 @@ finalize_file (struct cb_file *f, struct cb_field *records)
     f->record_min = records->size;
   for (p = records; p; p = p->sister)
     {
-      struct cb_field *v = cb_field_varying (p);
+      struct cb_field *v = cb_field_variable_size (p);
       if (v && v->offset + v->size * v->occurs_min < f->record_min)
 	f->record_min = v->offset + v->size * v->occurs_min;
       if (p->size < f->record_min)
