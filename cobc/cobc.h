@@ -39,7 +39,6 @@ extern int cob_link_style;
 
 extern int cob_trace_scanner;
 extern int cob_trace_parser;
-extern int cob_trace_codegen;
 
 extern int cob_orig_lineno;
 extern char *cob_orig_filename;
