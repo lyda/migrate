@@ -3,12 +3,13 @@ programs to C code and compiles it using GCC.
 
 This package contains the following subdirectories:
 
-  cobc      COBOL compiler
-  cobpp     COBOL preprocessor
-  libcob    COBOL run-time library
-  lib       static library and common headers
-  po        localization files
-  texi      Texinfo files
+  cobc          COBOL compiler
+  cobpp         COBOL preprocessor
+  libcob        COBOL run-time library
+  lib           static library and common headers
+  po            localization files
+  texi          Texinfo files
+  testsuite     Test suite
 
 All programs excepts those in lib and libcob are distributed under
 the terms of GNU General Public License.  See COPYING for details.
