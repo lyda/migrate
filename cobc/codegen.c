@@ -2246,7 +2246,7 @@ output_internal_function (struct cb_program *prog,
   /* local variables */
   output_line ("static int initialized = 0;");
   output_line ("static cob_decimal d[%d];", prog->decimal_index_max);
-  output_line ("static cob_environment env = {'%c', '%c', '%c'};",
+  output_line ("static cob_module module = {'%c', '%c', '%c', 0};",
 	       prog->decimal_point,
 	       prog->currency_symbol,
 	       prog->numeric_separator);
@@ -2280,12 +2280,12 @@ output_internal_function (struct cb_program *prog,
       output_newline ();
     }
 
+  output_line ("cob_module_enter (&module);");
+  output_newline ();
+
   /* initialization */
   output_line ("if (!initialized)");
   output_indent ("  {");
-  output_line ("/* ensure initializing libcob */");
-  output_line ("cob_module_init ();");
-  output_newline ();
   output_line ("/* initialize decimal numbers */");
   output_line ("for (i = 0; i < %d; i++)", prog->decimal_index_max);
   output_line ("  cob_decimal_init (&d[i]);");
@@ -2294,17 +2294,14 @@ output_internal_function (struct cb_program *prog,
     output_init_values (prog->working_storage);
   output_line ("initialized = 1;");
   output_indent ("  }");
+  if (prog->flag_initial)
+    output_init_values (prog->working_storage);
+  output_init_values (prog->local_storage);
   output_newline ();
 
   output_line ("/* initialize frame stack */");
   output_line ("frame_index = 0;");
   output_line ("frame_stack[0].perform_through = -1;");
-  output_newline ();
-  output_line ("/* initialize program */");
-  output_line ("cob_push_environment (&env);");
-  if (prog->flag_initial)
-    output_init_values (prog->working_storage);
-  output_init_values (prog->local_storage);
   output_newline ();
 
   /* entry dispatch */
@@ -2346,7 +2343,7 @@ output_internal_function (struct cb_program *prog,
   output_newline ();
 
   output_line ("exit_program:");
-  output_line ("cob_pop_environment ();");
+  output_line ("cob_module_leave (&module);");
   output_line ("return cob_return_code;");
   output_indent ("}");
   output_newline ();
