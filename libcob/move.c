@@ -340,9 +340,13 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
   char *p;
   int sign = extract_sign (f1.desc, f1.data);
   unsigned char *min, *max, *src, *dst, *end;
+  unsigned char pad = ' ';
   int count = 0;
   int count_sign = 1;
-  int move_digits = 0;
+  int trailing_sign = 0;
+  int have_digits = 0;
+  unsigned char sign_symbol = 0;
+  unsigned char *decimal_point = NULL;
 
   /* count the number of digit places before decimal point */
   for (p = f2.desc->pic; *p; p += 2)
@@ -360,7 +364,7 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
   max = f1.data + f1.desc->len;
   src = max - f1.desc->decimals - count;
   dst = f2.data;
-  end = f2.data + f2.desc->len - 1;
+  end = f2.data + f2.desc->len;
   for (p = f2.desc->pic; *p; )
     {
       unsigned char c = *p++; /* PIC char */
@@ -369,36 +373,37 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	{
 	  switch (c)
 	    {
-	    case '9': *dst = get (); move_digits = 1; break;
+	    case '9': *dst = get (); have_digits = trailing_sign = 1; break;
 
 	    case '0':
 	    case '/': *dst = c; break;
-	    case 'B': *dst = ' '; break;
-	    case 'P': *dst = '0'; break;
+	    case 'B': *dst = pad; break;
+	    case 'P': *dst = have_digits ? '0' : pad; break;
 
 	    case 'V':
-	    case '.': *dst = '.'; move_digits = 1; break;
-	    case ',': *dst = move_digits ? ',' : dst[-1]; break;
+	    case '.': *dst = pad; decimal_point = dst; break;
+	    case ',': *dst = have_digits ? ',' : pad; break;
 
 	    case 'C':
-	      p += 2;
-	      memcpy (dst++, sign ? "CR" : "  ", 2);
-	      break;
 	    case 'D':
 	      p += 2;
-	      memcpy (dst++, sign ? "DB" : "  ", 2);
+	      end = dst;
+	      memcpy (dst++, sign ? (c == 'C' ? "CR" : "DB") : "  ", 2);
 	      break;
 
 	    case '+':
 	    case '-':
 	      {
 		char x = get ();
-		if (dst == f2.data
-		    || (move_digits && dst == end)
-		    || (!move_digits && x == '0'))
+		if (trailing_sign)
 		  *dst = sign ? '-' : (c == '+') ? '+' : ' ';
+		else if (dst == f2.data || (!have_digits && x == '0'))
+		  {
+		    *dst = pad;
+		    sign_symbol = sign ? '-' : (c == '+') ? '+' : ' ';
+		  }
 		else
-		  *dst = x, move_digits = 1;
+		  *dst = x, have_digits = 1;
 		break;
 	      }
 
@@ -406,10 +411,11 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	    case '*':
 	      {
 		char x = get ();
-		if (!move_digits && x == '0')
-		  *dst = (c == '*') ? '*' : ' ';
+		pad = (c == '*') ? '*' : ' ';
+		if (!have_digits && x == '0')
+		  *dst = pad;
 		else
-		  *dst = x, move_digits = 1;
+		  *dst = x, have_digits = 1;
 		break;
 	      }
 
@@ -417,10 +423,10 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	      if (c == cCurrencySymbol)
 		{
 		  char x = get ();
-		  if (dst == f2.data || (!move_digits && x == '0'))
-		    *dst = cCurrencySymbol;
+		  if (dst == f2.data || (!have_digits && x == '0'))
+		    *dst = pad, sign_symbol = cCurrencySymbol;
 		  else
-		    *dst = x, move_digits = 1;
+		    *dst = x, have_digits = 1;
 		  break;
 		}
 
@@ -430,14 +436,21 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	}
     }
 
-  for (dst = f2.data; dst < end; dst++)
+  if (have_digits && decimal_point)
     {
-      unsigned char c = dst[0];
-      if (c == dst[1] && (c == '+' || c == '-' || c == cCurrencySymbol))
-	dst[0] = ' ';
+      *decimal_point = '.';
+      for (dst = decimal_point + 1; dst < end; dst++)
+	if (!isdigit (*dst))
+	  *dst = '0';
     }
-  if (dst[0] == '+' || dst[0] == '-' || dst[0] == cCurrencySymbol)
-    dst[0] = ' ';
+
+  if (have_digits && sign_symbol)
+    {
+      for (dst = end - 1; dst > f2.data; dst--)
+	if (*dst == ' ' || *dst == '*')
+	  break;
+      *dst = sign_symbol;
+    }
 
   put_sign (f1.desc, f1.data, sign);
 }
