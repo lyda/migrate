@@ -113,7 +113,7 @@ typedef struct __cob_module {
   const unsigned char *collating_sequence;
   enum cob_display_sign display_sign;
   unsigned long flag_filename_mapping : 1;
-  unsigned long flag_binary_print_full : 1;
+  unsigned long flag_binary_truncate : 1;
   struct __cob_module *next;
 } cob_module;
 

@@ -35,16 +35,6 @@
 static void
 display (cob_field *f, FILE *fp)
 {
-  if (cob_current_module->flag_binary_print_full
-      && COB_FIELD_TYPE (f) == COB_TYPE_NUMERIC_BINARY)
-    {
-      static int digits[] = {1, 3, 5, 7, 10, 12, 15, 17, 19};
-      cob_field_attr attr = *f->attr;
-      cob_field temp = {f->size, f->data, &attr};
-      attr.digits = digits[f->size];
-      f = &temp;
-    }
-
   if (COB_FIELD_IS_NUMERIC (f))
     {
       int i;

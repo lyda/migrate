@@ -275,7 +275,8 @@ cob_move_display_to_binary (cob_field *f1, cob_field *f2)
       val = val * 10;
   if (sign < 0 && COB_FIELD_HAVE_SIGN (f2))
     val = -val;
-  val %= cob_exp10LL[(int) f2->attr->digits];
+  if (cob_current_module->flag_binary_truncate)
+    val %= cob_exp10LL[(int) f2->attr->digits];
 
   /* store */
   cob_binary_set_int64 (f2, val);
@@ -717,28 +718,34 @@ cob_display_get_int (cob_field *f)
 int
 cob_binary_get_int (cob_field *f)
 {
+  int n;
   switch (f->size)
     {
     case 1:
-      return *(char *) f->data;
+      n = *(unsigned char *) f->data;
+      if (COB_FIELD_HAVE_SIGN (f))
+	n = (char) n;
+      return n;
     case 2:
+      n = *(unsigned short *) f->data;
       if (COB_FIELD_BINARY_SWAP (f))
-	return (short) COB_BSWAP_16 (*(short *) f->data);
-      else
-	return *(short *) f->data;
+	n = COB_BSWAP_16 (n);
+      if (COB_FIELD_HAVE_SIGN (f))
+	n = (short) n;
+      return n;
     case 3:
-      {
-	long n = (((long) *(unsigned short *) f->data)
-		  | ((long) ((char) f->data[2]) << 16));
-	if (COB_FIELD_BINARY_SWAP (f))
-	  n = (long) COB_BSWAP_32 (n) >> 8;
-	return n;
-      }
-    case 4:
+      n = (((unsigned long) *(unsigned short *) f->data)
+	   | ((unsigned long) f->data[2] << 16));
       if (COB_FIELD_BINARY_SWAP (f))
-	return (long) COB_BSWAP_32 (*(long *) f->data);
-      else
-	return *(long *) f->data;
+	n = COB_BSWAP_32 (n) >> 8;
+      if (COB_FIELD_HAVE_SIGN (f) && (n & 0x00800000))
+	n |= 0xff000000;
+      return n;
+    case 4:
+      n = *(unsigned long *) f->data;
+      if (COB_FIELD_BINARY_SWAP (f))
+	n = COB_BSWAP_32 (n);
+      return n;
     default:
       return cob_binary_get_int64 (f);
     }
@@ -750,32 +757,43 @@ cob_binary_get_int64 (cob_field *f)
   long long n;
   switch (f->size)
     {
-    case 1: case 2: case 3: case 4:
+    case 1: case 2: case 3:
       return cob_binary_get_int (f);
+    case 4:
+      n = (unsigned int) cob_binary_get_int (f);
+      if (COB_FIELD_HAVE_SIGN (f))
+	n = (int) n;
+      return n;
     case 5:
-      n = (((long long) *(unsigned long *) f->data)
-	   | ((long long) ((char) f->data[4]) << 32));
+      n = (((unsigned long long) *(unsigned long *) f->data)
+	   | ((unsigned long long) f->data[4] << 32));
       if (COB_FIELD_BINARY_SWAP (f))
-	n = (long long) COB_BSWAP_64 (n) >> 24;
+	n = COB_BSWAP_64 (n) >> 24;
+      if (COB_FIELD_HAVE_SIGN (f) && (n & 0x0000008000000000LL))
+	n |= 0xffffff0000000000LL;
       return n;
     case 6:
-      n = (((long long) *(unsigned long *) f->data)
-	   | ((long long) (*(short *) (f->data + 4)) << 32));
+      n = (((unsigned long long) *(unsigned long *) f->data)
+	   | ((unsigned long long) (*(unsigned short *) (f->data + 4)) << 32));
       if (COB_FIELD_BINARY_SWAP (f))
-	n = (long long) COB_BSWAP_64 (n) >> 16;
+	n = COB_BSWAP_64 (n) >> 16;
+      if (COB_FIELD_HAVE_SIGN (f) && (n & 0x0000800000000000LL))
+	n |= 0xffff000000000000LL;
       return n;
     case 7:
-      n = (((long long) *(unsigned long *) f->data)
-	   | ((long long) (*(unsigned short *) (f->data + 4)) << 32)
-	   | ((long long) ((char) f->data[6]) << 48));
+      n = (((unsigned long long) *(unsigned long *) f->data)
+	   | ((unsigned long long) (*(unsigned short *) (f->data + 4)) << 32)
+	   | ((unsigned long long) f->data[6] << 48));
       if (COB_FIELD_BINARY_SWAP (f))
-	n = (long long) COB_BSWAP_64 (n) >> 8;
+	n = COB_BSWAP_64 (n) >> 8;
+      if (COB_FIELD_HAVE_SIGN (f) && (n & 0x0080000000000000LL))
+	n |= 0xff00000000000000LL;
       return n;
     default:
+      n = *(unsigned long long *) f->data;
       if (COB_FIELD_BINARY_SWAP (f))
-	return (long long) COB_BSWAP_64 (*(long long *) f->data);
-      else
-	return *(long long *) f->data;
+	n = COB_BSWAP_64 (n);
+      return n;
     }
 }
 
@@ -785,25 +803,23 @@ cob_binary_set_int (cob_field *f, int n)
   switch (f->size)
     {
     case 1:
-      *(char *) f->data = (char) n;
+      *(unsigned char *) f->data = n;
       break;
     case 2:
       if (COB_FIELD_BINARY_SWAP (f))
-	*(short *) f->data = COB_BSWAP_16 (n);
-      else
-	*(short *) f->data = (short) n;
+	n = COB_BSWAP_16 (n);
+      *(unsigned short *) f->data = n;
       break;
     case 3:
       if (COB_FIELD_BINARY_SWAP (f))
 	n = COB_BSWAP_32 (n << 8);
-      *(short *) f->data = (short) n;
-      *(char *) (f->data + 2) = (char) (n >> 16);
+      *(unsigned short *) f->data = n;
+      *(unsigned char *) (f->data + 2) = n >> 16;
       break;
     case 4:
       if (COB_FIELD_BINARY_SWAP (f))
-	*(long *) f->data = COB_BSWAP_32 (n);
-      else
-	*(long *) f->data = (long) n;
+	n = COB_BSWAP_32 (n);
+      *(unsigned long *) f->data = n;
       break;
     default:
       cob_binary_set_int64 (f, n);
@@ -822,27 +838,26 @@ cob_binary_set_int64 (cob_field *f, long long n)
     case 5:
       if (COB_FIELD_BINARY_SWAP (f))
 	n = COB_BSWAP_64 (n << 24);
-      *(long *) f->data = (long) n;
-      *(char *) (f->data + 4) = (char) (n >> 32);
+      *(unsigned long *) f->data = n;
+      *(unsigned char *) (f->data + 4) = n >> 32;
       break;
     case 6:
       if (COB_FIELD_BINARY_SWAP (f))
 	n = COB_BSWAP_64 (n << 16);
-      *(long *) f->data = (long) n;
-      *(short *) (f->data + 4) = (short) (n >> 32);
+      *(unsigned long *) f->data = n;
+      *(unsigned short *) (f->data + 4) = n >> 32;
       break;
     case 7:
       if (COB_FIELD_BINARY_SWAP (f))
 	n = COB_BSWAP_64 (n << 8);
-      *(long *) f->data = (long) n;
-      *(short *) (f->data + 4) = (short) (n >> 32);
-      *(char *) (f->data + 6) = (char) (n >> 48);
+      *(unsigned long *) f->data = n;
+      *(unsigned short *) (f->data + 4) = n >> 32;
+      *(unsigned char *) (f->data + 6) = n >> 48;
       break;
     default:
       if (COB_FIELD_BINARY_SWAP (f))
-	*(long long *) f->data = COB_BSWAP_64 (n);
-      else
-	*(long long *) f->data = n;
+	n = COB_BSWAP_64 (n);
+      *(unsigned long long *) f->data = n;
       break;
     }
 }

@@ -256,38 +256,76 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f)
   int digits = f->attr->digits;
   if (f->size <= 4)
     {
-      int val;
-      if (!mpz_fits_sint_p (d->value))
-	goto overflow;
-      val = mpz_get_si (d->value);
-      if (val <= -cob_exp10[digits] || val >= cob_exp10[digits])
-	goto overflow;
-      if (!COB_FIELD_HAVE_SIGN (f) && val < 0)
-	val = -val;
-      cob_binary_set_int (f, val);
+      if (COB_FIELD_HAVE_SIGN (f))
+	{
+	  long val;
+	  if (!mpz_fits_sint_p (d->value))
+	    goto overflow;
+	  val = mpz_get_si (d->value);
+	  if (cob_current_module->flag_binary_truncate)
+	    if (val <= -cob_exp10[digits] || val >= cob_exp10[digits])
+	      goto overflow;
+	  if (!COB_FIELD_HAVE_SIGN (f) && val < 0)
+	    val = -val;
+	  cob_binary_set_int (f, val);
+	}
+      else
+	{
+	  unsigned long val;
+	  if (mpz_sgn (d->value) < 0)
+	    mpz_abs (d->value, d->value);
+	  if (!mpz_fits_uint_p (d->value))
+	    goto overflow;
+	  val = mpz_get_ui (d->value);
+	  if (cob_current_module->flag_binary_truncate)
+	    if (val >= cob_exp10[digits])
+	      goto overflow;
+	  cob_binary_set_int (f, val);
+	}
+      return 0;
     }
   else
     {
-      long long val;
       mpz_t r;
       mpz_init (r);
       mpz_fdiv_r_2exp (r, d->value, 32);
       mpz_fdiv_q_2exp (d->value, d->value, 32);
-      if (!mpz_fits_sint_p (d->value))
+
+      if (COB_FIELD_HAVE_SIGN (f))
 	{
-	  mpz_clear (r);
-	  goto overflow;
+	  long long val;
+	  if (!mpz_fits_sint_p (d->value))
+	    goto overflow_1;
+	  val = mpz_get_si (d->value);
+	  val = (val << 32) + mpz_get_ui (r);
+	  if (cob_current_module->flag_binary_truncate)
+	    if (val <= -cob_exp10LL[digits] || val >= cob_exp10LL[digits])
+	      goto overflow_1;
+	  if (!COB_FIELD_HAVE_SIGN (f) && val < 0)
+	    val = -val;
+	  cob_binary_set_int64 (f, val);
 	}
-      val = mpz_get_si (d->value);
-      val = (val << 32) + mpz_get_ui (r);
+      else
+	{
+	  unsigned long long val;
+	  if (mpz_sgn (d->value) < 0)
+	    mpz_abs (d->value, d->value);
+	  if (!mpz_fits_uint_p (d->value))
+	    goto overflow_1;
+	  val = mpz_get_ui (d->value);
+	  val = (val << 32) + mpz_get_ui (r);
+	  if (cob_current_module->flag_binary_truncate)
+	    if (val >= cob_exp10LL[digits])
+	      goto overflow_1;
+	  cob_binary_set_int64 (f, val);
+	}
       mpz_clear (r);
-      if (val <= -cob_exp10LL[digits] || val >= cob_exp10LL[digits])
-	goto overflow;
-      if (!COB_FIELD_HAVE_SIGN (f) && val < 0)
-	val = -val;
-      cob_binary_set_int64 (f, val);
+      return 0;
+
+    overflow_1:
+      mpz_clear (r);
+      goto overflow;
     }
-  return 0;
 
  overflow:
   COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);

@@ -1,3 +1,8 @@
+2003-08-30  Keisuke Nishida  <kxn30@yahoo.co.jp>
+
+	* common.h (cob_module): Replace `flag_binary_print_full' by
+	`flag_binary_truncate'.  Related functions updated.
+
 2003-08-29  Keisuke Nishida  <kxn30@yahoo.co.jp>
 
 	* termio.h (COB_SYSIN, COB_SYSOUT, COB_SYSERR): Removed.
