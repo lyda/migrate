@@ -88,9 +88,9 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %right NOT
 %right OF
 
-%token <str>  STRING_TOK
-%token <tree> SYMBOL_TOK,VARIABLE,VARCOND,SUBSCVAR,PICTURE_TOK
-%token <tree> INTEGER_TOK,NLITERAL,CLITERAL
+%token <str>  IDSTRING
+%token <tree> SYMBOL_TOK,SPECIAL_TOK,CLASS_TOK,VARIABLE,VARCOND,SUBSCVAR
+%token <tree> PICTURE_TOK,INTEGER_TOK,NUMBER_TOK,STRING_TOK
 
 %token EQUAL,GREATER,LESS,GE,LE,COMMAND_LINE,ENVIRONMENT_VARIABLE,ALPHABET
 %token DATE,DAY,DAY_OF_WEEK,TIME,INKEY,READ,WRITE,OBJECT_COMPUTER,INPUT_OUTPUT
@@ -101,7 +101,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %token TOK_INITIAL,FIRST,ALL,LEADING,OF,IN,BY,STRING,UNSTRING,DEBUGGING
 %token START,DELETE,PROGRAM,GLOBAL,EXTERNAL,SIZE,DELIMITED,COLLATING,SEQUENCE
 %token GIVING,ERASE,INSPECT,TALLYING,REPLACING,ON,OFF,POINTER,OVERFLOW,NATIVE
-%token DELIMITER,COUNT,LEFT,TRAILING,CHARACTER,FILLER,OCCURS,TIMES
+%token DELIMITER,COUNT,LEFT,TRAILING,CHARACTER,FILLER,OCCURS,TIMES,CLASS
 %token ADD,SUBTRACT,MULTIPLY,DIVIDE,ROUNDED,REMAINDER,ERROR,SIZE,INDEX
 %token FD,SD,REDEFINES,PICTURE,FILEN,USAGE,BLANK,SIGN,VALUE,MOVE,LABEL
 %token PROGRAM_ID,DIVISION,CONFIGURATION,SPECIAL_NAMES,MEMORY,ALTER
@@ -310,26 +310,20 @@ special_names:
 | special_names special_name
 ;
 special_name:
-  special_name_defined
-| special_name_switch
+  special_name_builtin
 | special_name_alphabet
+| special_name_class
 | special_name_currency
 | special_name_decimal_point
 | special_name_console
 ;
 
 
-/* User defined name */
-
-special_name_defined:
-  SYMBOL_TOK opt_is SYMBOL_TOK { }
-;
-
-
 /* SW1, ..., SW8 */
-special_name_switch:
-  sw opt_is SYMBOL_TOK on_off_names { }
-| sw on_off_names { }
+
+special_name_builtin:
+  sw opt_is SYMBOL_TOK on_off_names { COB_FIELD_TYPE ($3) = '!'; }
+| sw on_off_names
 ;
 on_off_names:
   on_status_is_name
@@ -378,10 +372,31 @@ also_literal_list:
 ;
 
 
+/* CLASS */
+
+special_name_class:
+  CLASS SYMBOL_TOK opt_is special_name_class_options
+  {
+    COB_FIELD_TYPE ($2) = '@';
+    yywarn ("CLASS name is ignored");
+  }
+;
+special_name_class_options:
+  special_name_class_option
+| special_name_class_options special_name_class_option
+;
+special_name_class_option:
+  STRING_TOK opt_through_literal { }
+;
+opt_through_literal:
+| THRU STRING_TOK
+;
+
+
 /* CURRENCY */
 
 special_name_currency:
-  CURRENCY opt_sign opt_is CLITERAL
+  CURRENCY opt_sign opt_is STRING_TOK
   {
     currency_symbol = COB_FIELD_NAME ($4)[0];
   }
@@ -1276,7 +1291,7 @@ label:
 ;
 label_name:
   INTEGER_TOK		{ $$ = install_label (COB_FIELD_NAME ($1)); }
-| STRING_TOK		{ $$ = install_label ($1); }
+| IDSTRING		{ $$ = install_label ($1); }
 ;
 in_of: IN | OF ;
 
@@ -1370,7 +1385,7 @@ accept_options:
 | FROM TIME			{ gen_accept_from_time($<tree>-1); }
 | FROM INKEY			{ gen_accept_from_inkey($<tree>-1); }
 | FROM COMMAND_LINE		{ gen_accept_from_cmdline($<tree>-1); }
-| FROM ENVIRONMENT_VARIABLE CLITERAL
+| FROM ENVIRONMENT_VARIABLE STRING_TOK
   {
     save_literal($3, 'X');
     gen_accept_env_var($<tree>-1, $3);
@@ -2429,11 +2444,27 @@ opt_end_search: | END_SEARCH ;
 set_statement:
   SET variable_list set_mode number	{ gen_set ($2, $3, $4); }
 | SET varcond_list TO TRUE		{ gen_set_true ($2); }
+| SET set_on_off_list
+  {
+    yywarn ("SET ON/OFF is not supported");
+  }
 ;
 set_mode:
   TO			{ $$ = SET_TO; }
 | UP BY			{ $$ = SET_UP; }
 | DOWN BY		{ $$ = SET_DOWN; }
+;
+set_on_off_list:
+  set_on_off
+| set_on_off_list set_on_off
+;
+set_on_off:
+  set_name_list TO ON
+| set_name_list TO OFF
+;
+set_name_list:
+  SPECIAL_TOK { }
+| set_name_list SPECIAL_TOK { }
 ;
 
 
@@ -2499,7 +2530,7 @@ opt_end_start: | END_START ;
 
 stoprun_statement:
   STOP RUN			{ gen_stoprun (); }
-| STOP CLITERAL			{ yywarn ("STOP \"name\" is obsolete"); }
+| STOP STRING_TOK			{ yywarn ("STOP \"name\" is obsolete"); }
 ;
 
 
@@ -2822,6 +2853,7 @@ class:
 | POSITIVE			{ $$ = COND_POSITIVE; }
 | NEGATIVE			{ $$ = COND_NEGATIVE; }
 | ZEROS				{ $$ = COND_ZERO; }
+| CLASS_TOK			{ $$ = COND_ZERO; yywarn ("not supported"); }
 ;
 
 
@@ -2958,7 +2990,7 @@ integer:
 
 
 idstring:
-  { start_condition = START_ID; } STRING_TOK { $$ = $2; }
+  { start_condition = START_ID; } IDSTRING { $$ = $2; }
 ;
 
 
@@ -3009,11 +3041,11 @@ special_literal:
 ;
 literal:
   nliteral			{ $$ = $1; }
-| CLITERAL			{ $$ = save_literal ($1, 'X'); }
+| STRING_TOK			{ $$ = save_literal ($1, 'X'); }
 ;
 nliteral:
   INTEGER_TOK			{ $$ = save_literal ($1, '9'); }
-| NLITERAL			{ $$ = save_literal ($1, '9'); }
+| NUMBER_TOK			{ $$ = save_literal ($1, '9'); }
 ;
 
 

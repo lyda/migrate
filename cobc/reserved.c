@@ -68,6 +68,7 @@ static struct reserved_word reserved_words[] = {
   {"CANCEL",		CANCEL},
   {"CHARACTER",		CHARACTER},
   {"CHARACTERS",	CHARACTERS},
+  {"CLASS",		CLASS},
   {"CLOSE",		CLOSE},
   {"COL",		COLUMN},
   {"COLLATING",		COLLATING},

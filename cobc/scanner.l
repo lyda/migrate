@@ -128,7 +128,7 @@ X\"[^\"\n]*\" {
     invert_literal_sign (yylval.tree);
   if (strchr (yytext, decimal_comma ? '.' : ','))
     yyerror ("wrong decimal point character in numeric literal");
-  return NLITERAL;
+  return NUMBER_TOK;
 }
 
 [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)? {
@@ -156,7 +156,7 @@ X\"[^\"\n]*\" {
     BEGIN INITIAL;
     SAVE_YYTEXT;
     yylval.str = strdup (yytext);
-    return STRING_TOK;
+    return IDSTRING;
   }
   .		{ /* ignore */ }
 }
@@ -202,7 +202,7 @@ read_literal (char mark)
     }
   *p = 0;
   yylval.tree = install_literal (buff);
-  return CLITERAL;
+  return STRING_TOK;
 }
 
 static int
@@ -235,14 +235,14 @@ scan_x (char *text)
   if (high)
     {
       yylval.tree = install_literal (dst);
-      return CLITERAL;
+      return STRING_TOK;
     }
   else
     {
     error:
       yyerror ("invalid X literal: %s", text);
       yylval.tree = install_literal (dst);
-      return CLITERAL;
+      return STRING_TOK;
     }
 }
 
@@ -276,6 +276,10 @@ scan_word (char *text)
 	{
 	  if (COB_FIELD_TYPE (yylval.tree) == '8')
 	    return VARCOND;
+	  else if (COB_FIELD_TYPE (yylval.tree) == '!')
+	    return SPECIAL_TOK;
+	  else if (COB_FIELD_TYPE (yylval.tree) == '@')
+	    return CLASS_TOK;
 	  else if (is_subscripted (yylval.tree))
 	    return SUBSCVAR;
 	  else
@@ -285,7 +289,7 @@ scan_word (char *text)
       else
 	{
 	  yylval.str = strdup (yytext);
-	  return STRING_TOK;
+	  return IDSTRING;
 	}
     }
 }
