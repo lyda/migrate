@@ -663,7 +663,7 @@ process_module (struct filename *fn)
       strcat (name, ".");
       strcat (name, COB_MODULE_EXT);
     }
-  sprintf (buff, "%s -shared%s -o %s %s %s",
+  sprintf (buff, "%s -shared %s -o %s %s %s",
 	   cob_cc, cob_ldflags, name, fn->object, cob_libs);
   return process (buff);
 }
@@ -684,7 +684,7 @@ process_link (struct filename *l)
   if (output_name)
     strcpy (name, output_name);
 
-  sprintf (buff, "%s -rdynamic%s -o %s %s %s",
+  sprintf (buff, "%s -rdynamic %s -o %s %s %s",
 	   cob_cc, cob_ldflags, name, objs, cob_libs);
   return process (buff);
 }

@@ -452,7 +452,7 @@ lookup_literal (cb_tree x)
   output_field (x);
 
   output_target = cb_storage_file;
-  output ("static cob_field c_%d = ", ++id);
+  output ("static const cob_field c_%d = ", ++id);
   output_field (x);
   output (";\n");
   output_target = yyout;
