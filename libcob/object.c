@@ -424,17 +424,20 @@ cob_set (struct cob_field f, int round)
 	      case 1:
 		if (val < -99 || val > 99)
 		  cob_status = COB_STATUS_OVERFLOW;
-		*((signed char *) f.data) = val;
+		else
+		  *((signed char *) f.data) = val;
 		break;
 	      case 2:
 		if (val < -9999 || val > 9999)
 		  cob_status = COB_STATUS_OVERFLOW;
-		*((signed short *) f.data) = val;
+		else
+		  *((signed short *) f.data) = val;
 		break;
 	      case 4:
 		if (val < -99999999 || val > 99999999)
 		  cob_status = COB_STATUS_OVERFLOW;
-		*((signed long *) f.data) = val;
+		else
+		  *((signed long *) f.data) = val;
 		break;
 	      }
 	  }
@@ -456,10 +459,9 @@ cob_set (struct cob_field f, int round)
 	    if (val < -999999999999999999 || val > 999999999999999999)
 	      cob_status = COB_STATUS_OVERFLOW;
 	    *((signed long long *) f.data) = val;
-	    break;
 	  }
+	return;
       }
-      break;
 
     case 'C':
     case 'U':
@@ -492,15 +494,11 @@ cob_set (struct cob_field f, int round)
 	  {
 	    /* Overflow */
 	    cob_status = COB_STATUS_OVERFLOW;
-#if 0
-	    memcpy (f.data, p + size - f.desc->len, f.desc->len);
-#else
 	    return;
-#endif
 	  }
 
 	put_sign (f.desc, f.data, sign);
-	break;
+	return;
       }
     }
 }
