@@ -423,7 +423,8 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 		}
 	      else
 		{
-		  *dst = suppress_zero ? pad : c; break;
+		  *dst = suppress_zero ? pad : c;
+		  break;
 		}
 
 	    case 'C':
