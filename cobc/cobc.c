@@ -38,6 +38,12 @@
 #include "tree.h"
 #include "lib/getopt.h"
 
+#if (defined __CYGWIN__ || defined __MINGW32__)
+#define LDFLAGS		"-Wl,--export-dynamic -Wl,--enable-auto-import"
+#else
+#define LDFLAGS		"-rdynamic"
+#endif
+
 
 /*
  * Global variables
@@ -697,13 +703,8 @@ process_link (struct filename *l)
   if (output_name)
     strcpy (name, output_name);
 
-#if (defined __CYGWIN__ || defined __MINGW32__)
-  sprintf (buff, "%s %s -Wl,--enable-auto-import -o %s %s %s",
-	   cob_cc, cob_ldflags, name, objs, cob_libs);
-#else
-  sprintf (buff, "%s -rdynamic %s -o %s %s %s",
-	   cob_cc, cob_ldflags, name, objs, cob_libs);
-#endif
+  sprintf (buff, "%s %s %s -o %s %s %s",
+	   cob_cc, LDFLAGS, cob_ldflags, name, objs, cob_libs);
   return process (buff);
 }
 
