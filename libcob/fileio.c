@@ -615,14 +615,15 @@ indexed_start (struct cob_file_desc *f, int cond, struct cob_field k)
       ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET_RANGE);
       if (ret != 0)
 	ret = f->cursor->c_get (f->cursor, &key, &data, DB_LAST);
-      else if (cond == COB_LT || memcmp (k.data, key.data, key.size) != 0)
+      else if (cond == COB_LT
+	       || memcmp (key.data, k.data, COB_FIELD_SIZE (k)) != 0)
 	ret = f->cursor->c_get (f->cursor, &key, &data, DB_PREV_NODUP);
       break;
     case COB_GT:
     case COB_GE:
       ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET_RANGE);
-      if (ret == 0)
-	if (cond == COB_GT && memcmp (k.data, key.data, key.size) == 0)
+      if (cond == COB_GT)
+	while (ret == 0 && memcmp (key.data, k.data, COB_FIELD_SIZE (k)) == 0)
 	  ret = f->cursor->c_get (f->cursor, &key, &data, DB_NEXT_NODUP);
       break;
   }
