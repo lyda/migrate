@@ -45,13 +45,10 @@
 #define CM_DESC 4
 
 /* asm sections or pseudo-sections */
-#define SEC_CODE 1
 #define SEC_CONST 2
 #define SEC_DATA 3
 #define SEC_STACK 4
 #define SEC_ARGS 5
-#define SEC_TEMPS 6
-#define SEC_WORKING SEC_DATA
 #define SEC_FIRST_NAMED 7
 
 /* selection subject types (evaluate statement) */

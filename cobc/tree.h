@@ -107,6 +107,9 @@ struct sym
   struct occurs *occurs;	/* for DEPENDING ON or null if fixed table */
 };
 
+extern struct sym *make_symbol (const char *name);
+
+
 /*
  * expression nodes
  */

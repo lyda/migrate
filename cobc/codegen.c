@@ -56,8 +56,6 @@ unsigned stack_offset = 0;	/* offset for variables on the stack */
 unsigned stack_plus = 0;
 unsigned global_offset = 4;	/* offset for global variables (DATA) */
 unsigned literal_offset = 0;
-#define SEC_WORKING SEC_DATA
-#define SEC_RETURN_CODE SEC_DATA
 unsigned data_offset = 0;
 unsigned linkage_offset = 0;
 unsigned using_offset = 8;
@@ -85,8 +83,8 @@ struct list *last_field = NULL;
 struct index_to_table_list *index2table = NULL;
 struct named_sect *named_sect_list = NULL;
 short next_available_sec_no = SEC_FIRST_NAMED;
-short default_sec_no = SEC_WORKING;
-short curr_sec_no = SEC_WORKING;
+short default_sec_no = SEC_DATA;
+short curr_sec_no = SEC_DATA;
 
 int screen_label = 0;
 int para_label = 0;
@@ -186,8 +184,7 @@ install (char *name, int tab, int cloning)
   name = upcase (name, sbuf);
   if ((as = lookup (name, tab)) == NULL)
     {
-      as = malloc (sizeof (struct sym));
-      as->name = strdup (name);
+      as = make_symbol (name);
       val = hash (as->name);
       if (tab == SYTB_VAR)
 	{
@@ -199,43 +196,11 @@ install (char *name, int tab, int cloning)
 	  as->next = labtab[val];
 	  labtab[val] = as;
 	}
-      as->type = 0;
-      as->flags.is_pointer = 0;
-      as->flags.just_r = 0;
-      as->flags.separate_sign = 0;
-      as->flags.leading_sign = 0;
-      as->flags.blank = 0;
-      as->flags.sync = 0;
-      as->slack = 0;
-      as->defined = 0;
-      as->value = as->sort_data = NULL;
-      as->linkage_flg = 0;
-      as->litflag = 0;
-      as->scr = NULL;
-      as->clone = as->parent = NULL;
-      as->son = NULL;
-      as->occurs = NULL;
     }
   else if ((cloning && (as->defined == 1)) || (cloning == 2))
     {
       /* install clone (cloning==2 -> force) */
-      clone = malloc (sizeof (struct sym));
-      clone->name = as->name;
-      clone->type = 0;
-      clone->flags.is_pointer = 0;
-      clone->flags.just_r = 0;
-      clone->flags.separate_sign = 0;
-      clone->flags.leading_sign = 0;
-      clone->flags.blank = 0;
-      clone->flags.sync = 0;
-      clone->slack = 0;
-      clone->defined = 0;
-      clone->value = as->sort_data = NULL;
-      clone->linkage_flg = 0;
-      clone->litflag = 0;
-      clone->scr = NULL;
-      clone->parent = NULL;
-      clone->occurs = NULL;
+      clone = make_symbol (as->name);
       clone->clone = as->clone;
       as->clone = clone;
       as = clone;
@@ -492,9 +457,6 @@ memref (struct sym *sy)
 	case SEC_STACK:
 	  sprintf (memref_buf, "-%d(%%ebp)", sy->location);
 	  break;
-	case SEC_TEMPS:
-	  sprintf (memref_buf, "-%u(%%esp)", sy->location);
-	  break;
 	default:
 	  // Make sure we have an error at assembly stage
 	  sprintf (memref_buf, "$ww_base%d+%d #sec:%d", pgm_segment,
@@ -520,9 +482,6 @@ memrefat (struct sym *sy)
       break;
     case SEC_STACK:
       sprintf (memref_buf, "-%d(%%ebp)", sy->location);
-    case SEC_TEMPS:
-      sprintf (memref_buf, "-%u(%%esp)", sy->location);
-      break;
     default:
       // Make sure we have an error at assembly stage
       sprintf (memref_buf, "ww_base%d+%d #sec:%d", pgm_segment,
@@ -1189,7 +1148,7 @@ dump_working ()
   struct list *list;
   int fld_len;
   int stabs_type = '3';
-  short cur_sec_no = SEC_WORKING;
+  short cur_sec_no = SEC_DATA;
 
   fprintf (o_src, "w_base%d:\n", pgm_segment);
   for (list = fields_list; list != NULL; list = list->next)
@@ -3063,7 +3022,6 @@ value_to_eax (struct sym *sy)
 		  fprintf (o_src, "\tmovl\t-%d(%%ebp), %%eax\n",
 			   sy->location);
 		  break;
-		  break;
 		}
 	    }
 	  else
@@ -3119,17 +3077,12 @@ load_address (struct sym *var)
     }
   else if (var->sec_no == SEC_STACK)
     fprintf (o_src, "\tleal\t%s, %%eax\n", memref (var));
-  else
-    {
-      if (var->sec_no == SEC_DATA)
-	fprintf (o_src, "\tleal\tw_base%d+%d, %%eax\n",
-		 pgm_segment, var->location);
-      else if (var->sec_no == SEC_CONST)
-	fprintf (o_src, "\tleal\tc_base%d+%d, %%eax\n",
-		 pgm_segment, var->location);
-      /* this is not the same! I need an address here, not the value.
-         fprintf(o_src,"\tmovl\t%s, %%eax\n",memref(var)); */
-    }
+  else if (var->sec_no == SEC_DATA)
+    fprintf (o_src, "\tleal\tw_base%d+%d, %%eax\n",
+	     pgm_segment, var->location);
+  else if (var->sec_no == SEC_CONST)
+    fprintf (o_src, "\tleal\tc_base%d+%d, %%eax\n",
+	     pgm_segment, var->location);
 }
 
 /* load in cpureg ("eax","ebx"...) location for normal 
@@ -4532,7 +4485,7 @@ define_special_fields ()
   sy->type = 'B';		/* assume numeric "usage is comp" item */
   sy->redefines = NULL;
   sy->linkage_flg = at_linkage;
-  sy->sec_no = SEC_RETURN_CODE;
+  sy->sec_no = SEC_DATA;
   sy->times = 1;
   sy->flags.just_r = 0;
   sy->flags.separate_sign = 0;
@@ -4575,7 +4528,6 @@ define_temp_field (char desired_type, int desired_len)
   sy->redefines = NULL;
   sy->linkage_flg = 0;
   sy->sec_no = SEC_DATA;	/* not optimal; should be in stack */
-  //sy->sec_no=SEC_STACK;
   sy->times = 1;
   sy->flags.just_r = 0;
   sy->flags.separate_sign = 0;

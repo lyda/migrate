@@ -7,6 +7,39 @@
 
 #include "codegen.h"
 
+
+/*
+ * Symbols
+ */
+
+struct sym *
+make_symbol (const char *name)
+{
+  struct sym *sy = malloc (sizeof (struct sym));
+  sy->name = strdup (name);
+  sy->next = NULL;
+  sy->type = 0;
+  sy->slack = 0;
+  sy->defined = 0;
+  sy->value = NULL;
+  sy->sort_data = NULL;
+  sy->linkage_flg = 0;
+  sy->litflag = 0;
+  sy->scr = NULL;
+  sy->clone = NULL;
+  sy->parent = NULL;
+  sy->son = NULL;
+  sy->occurs = NULL;
+  sy->flags.is_pointer = 0;
+  sy->flags.just_r = 0;
+  sy->flags.separate_sign = 0;
+  sy->flags.leading_sign = 0;
+  sy->flags.blank = 0;
+  sy->flags.sync = 0;
+  return sy;
+}
+
+
 /*
  * Subscript references
  */
