@@ -63,10 +63,13 @@ char cob_dummy_status[2];
 
 static struct cob_fileio_funcs *fileio_funcs[COB_ORG_MAX];
 
-/* fd open/close */
+
+/*
+ * SEQUENTIAL
+ */
 
 static int
-fd_open (struct cob_file *f, char *filename, int mode)
+sequential_open (struct cob_file *f, char *filename, int mode)
 {
   int flags;
 
@@ -92,7 +95,7 @@ fd_open (struct cob_file *f, char *filename, int mode)
 }
 
 static int
-fd_close (struct cob_file *f, int opt)
+sequential_close (struct cob_file *f, int opt)
 {
   switch (opt)
     {
@@ -106,10 +109,64 @@ fd_close (struct cob_file *f, int opt)
     }
 }
 
-/* fp open/close */
+static int
+sequential_read (struct cob_file *f)
+{
+  if (f->record_min != f->record_max)
+    {
+      if (read (f->file.fd, &f->record_size, sizeof (f->record_size)) <= 0)
+	return COB_FILE_END_OF_FILE;
+    }
+
+  if (read (f->file.fd, f->record_data, f->record_size) <= 0)
+    return COB_FILE_END_OF_FILE;
+
+  return COB_FILE_SUCCEED;
+}
 
 static int
-fp_open (struct cob_file *f, char *filename, int mode)
+sequential_write (struct cob_file *f)
+{
+  if (f->record_min != f->record_max)
+    write (f->file.fd, &f->record_size, sizeof (f->record_size));
+
+  write (f->file.fd, f->record_data, f->record_size);
+  return COB_FILE_SUCCEED;
+}
+
+static int
+sequential_rewrite (struct cob_file *f, struct cob_field rec)
+{
+  if (rec.size != f->record_size)
+    return COB_FILE_RECORD_OVERFLOW;
+
+  if (COB_FIELD_IS_VALID (f->record_depending))
+    if (f->record_size != cob_to_int (f->record_depending))
+      return COB_FILE_RECORD_OVERFLOW;
+
+  lseek (f->file.fd, - f->record_size, SEEK_CUR);
+  write (f->file.fd, f->record_data, f->record_size);
+  return COB_FILE_SUCCEED;
+}
+
+static struct cob_fileio_funcs sequential_funcs = {
+  sequential_open,
+  sequential_close,
+  0,
+  0,
+  sequential_read,
+  sequential_write,
+  sequential_rewrite,
+  0
+};
+
+
+/*
+ * LINE SEQUENTIAL
+ */
+
+static int
+lineseq_open (struct cob_file *f, char *filename, int mode)
 {
   switch (mode)
     {
@@ -131,132 +188,12 @@ fp_open (struct cob_file *f, char *filename, int mode)
 }
 
 static int
-fp_close (struct cob_file *f, int opt)
+lineseq_close (struct cob_file *f, int opt)
 {
   fclose (f->file.fp);
   f->file.fp = NULL;
   return COB_FILE_SUCCEED;
 }
-
-
-/*
- * SEQUENTIAL - fixed format
- */
-
-static int
-fixed_read (struct cob_file *f)
-{
-  if (f->record_min != f->record_max)
-    if (read (f->file.fd, &f->record_size, sizeof (f->record_size)) <= 0)
-      return COB_FILE_END_OF_FILE;
-
-  if (read (f->file.fd, f->record_data, f->record_size) <= 0)
-    return COB_FILE_END_OF_FILE;
-
-  return COB_FILE_SUCCEED;
-}
-
-static int
-fixed_write (struct cob_file *f)
-{
-  if (f->record_min != f->record_max)
-    write (f->file.fd, &f->record_size, sizeof (f->record_size));
-
-  write (f->file.fd, f->record_data, f->record_size);
-  return COB_FILE_SUCCEED;
-}
-
-static int
-fixed_rewrite (struct cob_file *f, struct cob_field rec)
-{
-  if (rec.size != f->record_size)
-    return COB_FILE_RECORD_OVERFLOW;
-
-  if (COB_FIELD_IS_VALID (f->record_depending))
-    if (f->record_size != cob_to_int (f->record_depending))
-      return COB_FILE_RECORD_OVERFLOW;
-
-  lseek (f->file.fd, - f->record_size, SEEK_CUR);
-  write (f->file.fd, f->record_data, f->record_size);
-  return COB_FILE_SUCCEED;
-}
-
-static struct cob_fileio_funcs fixed_funcs = {
-  fd_open,
-  fd_close,
-  0,
-  0,
-  fixed_read,
-  fixed_write,
-  fixed_rewrite,
-  0
-};
-
-
-/*
- * SEQUENTIAL - line format
- */
-
-static int
-line_read (struct cob_file *f)
-{
-  char buff[f->record_max + 2];
-  if (fgets (buff, f->record_max + 2, f->file.fp) == NULL)
-    return COB_FILE_END_OF_FILE;
-
-  if (f->record_min != f->record_max)
-    f->record_size = strlen (buff) - 1;
-
-  memcpy (f->record_data, buff, f->record_size);
-
-  return COB_FILE_SUCCEED;
-}
-
-static int
-line_write (struct cob_file *f)
-{
-  int i;
-  for (i = 0; i < f->record_size; i++)
-    fputc (f->record_data[i], f->file.fp);
-  fputc ('\n', f->file.fp);
-
-  return COB_FILE_SUCCEED;
-}
-
-static int
-line_rewrite (struct cob_file *f, struct cob_field rec)
-{
-  int i;
-
-  if (rec.size != f->record_size)
-    return COB_FILE_RECORD_OVERFLOW;
-
-  if (COB_FIELD_IS_VALID (f->record_depending))
-    if (f->record_size != cob_to_int (f->record_depending))
-      return COB_FILE_RECORD_OVERFLOW;
-
-  fseek (f->file.fp, - f->record_size, SEEK_CUR);
-  for (i = 0; i < f->record_size; i++)
-    fputc (f->record_data[i], f->file.fp);
-
-  return COB_FILE_SUCCEED;
-}
-
-static struct cob_fileio_funcs line_funcs = {
-  fp_open,
-  fp_close,
-  0,
-  0,
-  line_read,
-  line_write,
-  line_rewrite,
-  0
-};
-
-
-/*
- * LINE SEQUENTIAL
- */
 
 static int
 lineseq_read (struct cob_file *f)
@@ -315,8 +252,8 @@ lineseq_write (struct cob_file *f)
 }
 
 static struct cob_fileio_funcs lineseq_funcs = {
-  fp_open,
-  fp_close,
+  lineseq_open,
+  lineseq_close,
   0,
   0,
   lineseq_read,
@@ -337,6 +274,18 @@ static struct cob_fileio_funcs lineseq_funcs = {
       || read (f->file.fd, &f->record_size, sizeof (f->record_size)) <= 0) \
     return COB_FILE_KEY_NOT_EXISTS;					   \
   lseek (f->file.fd, - sizeof (f->record_size), SEEK_CUR);
+
+static int
+relative_open (struct cob_file *f, char *filename, int mode)
+{
+  return sequential_open (f, filename, mode);
+}
+
+static int
+relative_close (struct cob_file *f, int opt)
+{
+  return sequential_close (f, opt);
+}
 
 static int
 relative_start (struct cob_file *f, int cond, struct cob_field k)
@@ -476,8 +425,8 @@ relative_delete (struct cob_file *f)
 }
 
 static struct cob_fileio_funcs relative_funcs = {
-  fd_open,
-  fd_close,
+  relative_open,
+  relative_close,
   relative_start,
   relative_read,
   relative_read_next,
@@ -1271,18 +1220,7 @@ cob_default_error_handle (struct cob_file *f)
 void
 cob_init_fileio (void)
 {
-  const char *seq = cob_config_lookup ("sequential-format");
-  fileio_funcs[COB_ORG_SEQUENTIAL] = &fixed_funcs;
-  if (seq != NULL)
-    {
-      if (strcmp (seq, "fixed") == 0)
-	fileio_funcs[COB_ORG_SEQUENTIAL] = &fixed_funcs;
-      else if (strcmp (seq, "line") == 0)
-	fileio_funcs[COB_ORG_SEQUENTIAL] = &line_funcs;
-      else
-	fprintf (stderr, _("invalid sequential-format `%s'\n"), seq);
-    }
-
+  fileio_funcs[COB_ORG_SEQUENTIAL] = &sequential_funcs;
   fileio_funcs[COB_ORG_LINE_SEQUENTIAL] = &lineseq_funcs;
   fileio_funcs[COB_ORG_RELATIVE] = &relative_funcs;
   fileio_funcs[COB_ORG_INDEXED] = &indexed_funcs;
