@@ -1626,6 +1626,9 @@ cb_ref (cb_tree x)
 
   switch (CB_TREE_TAG (pv))
     {
+    case CB_TAG_FILE:
+      pv = CB_TREE (CB_FILE (pv)->record->sister);
+      /* fall through */
     case CB_TAG_FIELD:
       {
 	struct cb_list *l;
