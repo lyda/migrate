@@ -70,15 +70,15 @@ extern struct cb_exception {
 #define CB_WARNING(sig,var,name,doc) extern int var;
 #include "warning.def"
 
-struct cb_name_list {
-  const char *name;
-  struct cb_name_list *next;
+struct cb_text_list {
+  const char *text;
+  struct cb_text_list *next;
 };
 
-struct cb_replacement {
-  const char *old_text;
-  const char *new_text;
-  struct cb_replacement *next;
+struct cb_replace_list {
+  struct cb_text_list *old_text;
+  struct cb_text_list *new_text;
+  struct cb_replace_list *next;
 };
 
 extern int errorcount;
@@ -94,15 +94,15 @@ extern char *cb_storage_file_name;
 
 extern FILE *cb_depend_file;
 extern char *cb_depend_target;
-extern struct cb_name_list *cb_depend_list;
-extern struct cb_name_list *cb_include_list;
-extern struct cb_name_list *cb_extension_list;
+extern struct cb_text_list *cb_depend_list;
+extern struct cb_text_list *cb_include_list;
+extern struct cb_text_list *cb_extension_list;
 
 extern struct cb_program *current_program;
 extern struct cb_statement *current_statement;
 extern struct cb_label *current_section, *current_paragraph;
 
-extern struct cb_name_list *cb_name_list_add (struct cb_name_list *list, const char *name);
+extern struct cb_text_list *cb_text_list_add (struct cb_text_list *list, const char *name);
 
 
 /* config.c */
@@ -153,9 +153,9 @@ extern FILE *ppin;
 extern FILE *ppout;
 extern int pplex (void);
 extern int ppparse (void);
-extern int ppopen (char *name, struct cb_replacement *replacement);
-extern int ppcopy (char *name, const char *lib, struct cb_replacement *replacement);
-extern struct cb_replacement *add_replacement (struct cb_replacement *replacement, const char *old_text, const char *new_text);
+extern int ppopen (char *name, struct cb_replace_list *replace_list);
+extern int ppcopy (char *name, const char *lib, struct cb_replace_list *replace_list);
+extern void pp_set_replace_list (struct cb_replace_list *replace_list);
 
 /* parser (in scanner.l, parser.y) */
 extern FILE *yyin;

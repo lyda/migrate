@@ -79,9 +79,9 @@ char *cb_storage_file_name;
 
 FILE *cb_depend_file = NULL;
 char *cb_depend_target = NULL;
-struct cb_name_list *cb_depend_list = NULL;
-struct cb_name_list *cb_include_list = NULL;
-struct cb_name_list *cb_extension_list = NULL;
+struct cb_text_list *cb_depend_list = NULL;
+struct cb_text_list *cb_include_list = NULL;
+struct cb_text_list *cb_extension_list = NULL;
 
 struct cb_program *current_program = NULL;
 struct cb_statement *current_statement = NULL;
@@ -117,17 +117,17 @@ static struct filename {
 } *file_list;
 
 
-struct cb_name_list *
-cb_name_list_add (struct cb_name_list *list, const char *name)
+struct cb_text_list *
+cb_text_list_add (struct cb_text_list *list, const char *text)
 {
-  struct cb_name_list *p = malloc (sizeof (struct cb_name_list));
-  p->name = strdup (name);
+  struct cb_text_list *p = malloc (sizeof (struct cb_text_list));
+  p->text = strdup (text);
   p->next = NULL;
   if (!list)
     return p;
   else
     {
-      struct cb_name_list *l;
+      struct cb_text_list *l;
       for (l = list; l->next; l = l->next);
       l->next = p;
       return list;
@@ -278,11 +278,11 @@ process_command_line (int argc, char *argv[])
   int c, idx;
 
   /* default extension list */
-  cb_extension_list = cb_name_list_add (cb_extension_list, "");
-  cb_extension_list = cb_name_list_add (cb_extension_list, ".CBL");
-  cb_extension_list = cb_name_list_add (cb_extension_list, ".COB");
-  cb_extension_list = cb_name_list_add (cb_extension_list, ".cbl");
-  cb_extension_list = cb_name_list_add (cb_extension_list, ".cob");
+  cb_extension_list = cb_text_list_add (cb_extension_list, "");
+  cb_extension_list = cb_text_list_add (cb_extension_list, ".CBL");
+  cb_extension_list = cb_text_list_add (cb_extension_list, ".COB");
+  cb_extension_list = cb_text_list_add (cb_extension_list, ".cbl");
+  cb_extension_list = cb_text_list_add (cb_extension_list, ".cob");
 
   while ((c = getopt_long_only (argc, argv, short_options,
 				long_options, &idx)) >= 0)
@@ -352,7 +352,7 @@ process_command_line (int argc, char *argv[])
 	  break;
 
 	case 'I':
-	  cb_include_list = cb_name_list_add (cb_include_list, optarg);
+	  cb_include_list = cb_text_list_add (cb_include_list, optarg);
 	  break;
 
 	case 'L':
@@ -369,7 +369,7 @@ process_command_line (int argc, char *argv[])
 	  {
 	    char ext[strlen (optarg) + 2];
 	    sprintf (ext, ".%s", optarg);
-	    cb_extension_list = cb_name_list_add (cb_extension_list, ext);
+	    cb_extension_list = cb_text_list_add (cb_extension_list, ext);
 	    break;
 	  }
 
@@ -576,7 +576,7 @@ preprocess (struct filename *fn)
   /* Output dependency list */
   if (cb_depend_file)
     {
-      struct cb_name_list *l;
+      struct cb_text_list *l;
       if (!cb_depend_target)
 	{
 	  fputs (_("-MT must be given to specify target file\n"), stderr);
@@ -584,9 +584,9 @@ preprocess (struct filename *fn)
 	}
       fprintf (cb_depend_file, "%s: \\\n", cb_depend_target);
       for (l = cb_depend_list; l; l = l->next)
-	fprintf (cb_depend_file, " %s%s\n", l->name, l->next ? " \\" : "");
+	fprintf (cb_depend_file, " %s%s\n", l->text, l->next ? " \\" : "");
       for (l = cb_depend_list; l; l = l->next)
-	fprintf (cb_depend_file, "%s:\n", l->name);
+	fprintf (cb_depend_file, "%s:\n", l->text);
       fclose (cb_depend_file);
     }
 

@@ -25,6 +25,8 @@
 
 %{
 
+#include "config.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -38,35 +40,88 @@
 
 static int within_comment = 0;
 
-static struct cb_replacement *current_replacement = NULL;
+static struct cb_replace_list *current_replace_list = NULL;
 
 static struct copy_info {
   int line;
   char *file;
-  struct cb_replacement *replacement;
+  int replacing;
   YY_BUFFER_STATE buffer;
   struct copy_info *next;
 } *copy_stack = NULL;
 
 #define YY_INPUT(buf,result,max_size) result = ppinput (buf, max_size);
 static int ppinput (char *buf, int max_size);
+static void ppecho (const char *text);
 
-static char *substring (const char *s, int offset);
-static void switch_to_buffer (int lineno, char *filename, struct cb_replacement *replacing, YY_BUFFER_STATE buffer);
+static void switch_to_buffer (int lineno, char *filename, YY_BUFFER_STATE buffer);
 
 %}
 
-%x PROCESS_STATE DIRECTIVE_STATE COPY_STATE
+WORD		[0-9A-Z-]+
+NUMRIC_LITERAL	[+-]?[0-9,.]*[0-9]
+ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
+
+%x PROCESS_STATE DIRECTIVE_STATE COPY_STATE PSEUDO_STATE
 
 %%
 
+<*>^"*".* |
+<*>^"/".* |
+<*>"*>".*		{ ppecho (" "); }
+
 "PROCESS"		{ BEGIN PROCESS_STATE; }
 
+<PROCESS_STATE>{
+  \n			{ BEGIN INITIAL; unput ('\n'); }
+  .*			{ cb_warning (_("PROCESS statement is ignored")); }
+}
+
 ">>"			{ BEGIN DIRECTIVE_STATE; return DIRECTIVE; }
+
+<DIRECTIVE_STATE>{
+  \n			{ BEGIN INITIAL; unput ('\n'); }
+  "SOURCE"		{ return SOURCE; }
+  "FORMAT"		{ return FORMAT; }
+  "IS"			{ return IS; }
+  "FIXED"		{ return FIXED; }
+  "FREE"		{ return FREE; }
+  .			{ }
+}
 
 "COPY"			{ BEGIN COPY_STATE; return COPY; }
 "INCLUDE"		{ BEGIN COPY_STATE; return COPY; }
 "REPLACE"		{ BEGIN COPY_STATE; return REPLACE; }
+
+<COPY_STATE>{
+  \n			{ ECHO; cb_source_line++; }
+  [,;]?[ ]+		{ /* ignore */ }
+  "."			{ BEGIN INITIAL; return '.'; }
+  "=="			{ BEGIN PSEUDO_STATE; return EQEQ; }
+  "("			{ return '('; }
+  ")"			{ return ')'; }
+  "BY"			{ return BY; }
+  "IN"			{ return IN; }
+  "OF"			{ return OF; }
+  "OFF"			{ return OFF; }
+  "SUPPRESS"		{ return SUPPRESS; }
+  "PRINTING"		{ return PRINTING; }
+  "REPLACING"		{ return REPLACING; }
+  {WORD} |
+  {NUMRIC_LITERAL} |
+  {ALNUM_LITERAL} |
+  .			{ pplval.s = strdup (yytext); return TOKEN; }
+}
+
+<PSEUDO_STATE>{
+  \n			{ ECHO; cb_source_line++; }
+  "=="			{ BEGIN COPY_STATE; return EQEQ; }
+  [,;]?[ ]+		{ pplval.s = strdup (" "); return TOKEN; }
+  {WORD} |
+  {NUMRIC_LITERAL} |
+  {ALNUM_LITERAL} |
+  .			{ pplval.s = strdup (yytext); return TOKEN; }
+}
 
 "AUTHOR" |
 "DATE-WRITTEN" |
@@ -102,102 +157,54 @@ static void switch_to_buffer (int lineno, char *filename, struct cb_replacement 
     }
 }
 
-<PROCESS_STATE>{
-  \n			{ BEGIN INITIAL; unput ('\n'); }
-  .*			{ cb_warning (_("PROCESS statement is ignored")); }
-}
+\n			{ ppecho ("\n"); cb_source_line++; }
+[,;]?[ ]+		{ ppecho (" "); }
 
-<DIRECTIVE_STATE>{
-  \n			{ BEGIN INITIAL; unput ('\n'); }
-  "SOURCE"		{ return SOURCE; }
-  "FORMAT"		{ return FORMAT; }
-  "IS"			{ return IS; }
-  "FIXED"		{ return FIXED; }
-  "FREE"		{ return FREE; }
-  .			{ }
-}
-
-<COPY_STATE>{
-  "."			{ BEGIN INITIAL; return '.'; }
-  "BY"			{ return BY; }
-  "IN"			{ return IN; }
-  "OF"			{ return IN; }
-  "OFF"			{ return OFF; }
-  "SUPPRESS"		{ return SUPPRESS; }
-  "PRINTING"		{ return PRINTING; }
-  "REPLACING"		{ return REPLACING; }
-  [0-9A-Z_-]+		{ pplval.s = strdup (yytext); return NAME; }
-  .			{ }
-
-  \'[^\'\n]*\' |
-  \"[^\"\n]*\" {
-    pplval.s = substring (yytext, 1);
-    return NAME;
-  }
-
-  "=="[^=\n]*"==" {
-    pplval.s = substring (yytext, 2);
-    return TEXT;
-  }
-}
-
-<*>^"*".* |
-<*>^"/".* |
-<*>"*>".*		{ /* comment */ }
-
-<*>\n			{ ECHO; cb_source_line++; }
-
-. |
-[0-9A-Z_-]+ |
-\'[^\'\n]*\' |
-\"[^\"\n]*\"		{ ECHO; }
+{WORD} |
+{NUMRIC_LITERAL} |
+{ALNUM_LITERAL} |
+.			{ ppecho (yytext); }
 
 <<EOF>> {
+  struct copy_info *p = copy_stack;
+
   yy_delete_buffer (YY_CURRENT_BUFFER);
 
   /* Terminate at the end of all input */
-  if (copy_stack->next == NULL)
+  if (p->next == NULL)
     yyterminate ();
 
   /* Close the current file */
   fclose (ppin);
 
   /* Switch to the last buffer */
-  switch_to_buffer (copy_stack->line, copy_stack->file,
-		    copy_stack->replacement, copy_stack->buffer);
+  if (p->replacing)
+    pp_set_replace_list (NULL);
+  switch_to_buffer (p->line, p->file, p->buffer);
 
-  {
-    struct copy_info *p = copy_stack;
-    copy_stack = p->next;
-    free (p);
-  }
+  copy_stack = p->next;
+  free (p);
 }
 
 %%
 
-static char *
-substring (const char *s, int offset)
+void
+pp_set_replace_list (struct cb_replace_list *list)
 {
-  int size = strlen (yytext) - offset * 2;
-  char *buff = malloc (size + 1);
-  strncpy (buff, yytext + offset, size);
-  buff[size] = '\0';
-  return buff;
+  current_replace_list = list;
 }
 
 static void
-switch_to_buffer (int line, char *file,
-		  struct cb_replacement *replacement, YY_BUFFER_STATE buffer)
+switch_to_buffer (int line, char *file, YY_BUFFER_STATE buffer)
 {
   cb_source_line = line;
   cb_source_file = file;
-  current_replacement = replacement;
   yy_switch_to_buffer (buffer);
   fprintf (yyout, "# %d \"%s\"\n", line, file);
 }
 
 int
-ppopen (char *name, struct cb_replacement *replacement)
+ppopen (char *name, struct cb_replace_list *replace_list)
 {
   /* Open the copy file */
   ppin = fopen (name, "rb");
@@ -212,27 +219,28 @@ ppopen (char *name, struct cb_replacement *replacement)
 
   /* Add to dependency list */
   if (cb_depend_file)
-    cb_depend_list = cb_name_list_add (cb_depend_list, name);
+    cb_depend_list = cb_text_list_add (cb_depend_list, name);
 
   /* Preserve the current buffer */
   {
     struct copy_info *p = malloc (sizeof (struct copy_info));
-    p->line        = cb_source_line;
-    p->file        = cb_source_file;
-    p->replacement = current_replacement;
-    p->buffer      = YY_CURRENT_BUFFER;
-    p->next        = copy_stack;
+    p->line      = cb_source_line;
+    p->file      = cb_source_file;
+    p->replacing = replace_list ? 1 : 0;
+    p->buffer    = YY_CURRENT_BUFFER;
+    p->next      = copy_stack;
     copy_stack = p;
   }
 
   /* Switch to new buffer */
-  switch_to_buffer (1, name, replacement,
-		    yy_create_buffer (ppin, YY_BUF_SIZE));
+  if (replace_list)
+    pp_set_replace_list (replace_list);
+  switch_to_buffer (1, name, yy_create_buffer (ppin, YY_BUF_SIZE));
   return 0;
 }
 
 int
-ppcopy (char *name, const char *lib, struct cb_replacement *replacement)
+ppcopy (char *name, const char *lib, struct cb_replace_list *replace_list)
 {
   struct stat st;
   char buff1[FILENAME_MAX];
@@ -247,10 +255,10 @@ ppcopy (char *name, const char *lib, struct cb_replacement *replacement)
   /* Find the file */
   if (name[0] != '/' && stat (name, &st) == -1)
     {
-      struct cb_name_list *il, *el;
+      struct cb_text_list *il, *el;
       for (el = cb_extension_list; el; el = el->next)
 	{
-	  sprintf (buff2, "%s%s", name, el->name);
+	  sprintf (buff2, "%s%s", name, el->text);
 	  if (stat (buff2, &st) == 0)
 	    {
 	      name = buff2;
@@ -260,7 +268,7 @@ ppcopy (char *name, const char *lib, struct cb_replacement *replacement)
       for (il = cb_include_list; il; il = il->next)
 	for (el = cb_extension_list; el; el = el->next)
 	  {
-	    sprintf (buff2, "%s/%s%s", il->name, name, el->name);
+	    sprintf (buff2, "%s/%s%s", il->text, name, el->text);
 	    if (stat (buff2, &st) == 0)
 	      {
 		name = buff2;
@@ -272,18 +280,7 @@ ppcopy (char *name, const char *lib, struct cb_replacement *replacement)
     }
 
  found:
-  return ppopen (name, replacement);
-}
-
-struct cb_replacement *
-add_replacement (struct cb_replacement *replacement,
-		 const char *old_text, const char *new_text)
-{
-  struct cb_replacement *p = malloc (sizeof (struct cb_replacement));
-  p->old_text = old_text;
-  p->new_text = new_text;
-  p->next = replacement;
-  return p;
+  return ppopen (name, replace_list);
 }
 
 
@@ -417,8 +414,6 @@ ppinput_1 (char *buff, int size)
 static int
 ppinput (char *buff, int max_size)
 {
-  struct cb_replacement *l;
-
   /* Read a line */
   if (ppinput_1 (buff, max_size) == 0)
     return YY_NULL;
@@ -517,33 +512,62 @@ ppinput (char *buff, int max_size)
       *p = '\0';
     }
 
-  /* Do replacement */
-  for (l = current_replacement; l; l = l->next)
-    {
-      char *p = buff;
-      int len = strlen (buff);
-      while ((p = strstr (p, l->old_text)) != NULL)
-	{
-	  int old_len = strlen (l->old_text);
-	  int new_len = strlen (l->new_text);
-	  if (old_len == new_len)
-	    {
-	      memcpy (p, l->new_text, new_len);
-	    }
-	  else if (len - old_len + new_len >= max_size)
-	    {
-	      cb_error (_("source line too long"));
-	      return YY_NULL;
-	    }
-	  else
-	    {
-	      memmove (p + new_len, p + old_len, len - old_len + 1);
-	      memcpy (p, l->new_text, new_len);
-	      len = len - old_len + new_len;
-	    }
-	  p += new_len;
-	}
-    }
-
   return strlen (buff);
+}
+
+static struct cb_text_list *text_queue = NULL;
+
+static void
+ppecho (const char *text)
+{
+  if (text_queue == NULL && (text[0] == ' ' || text[0] == '\n'))
+    {
+      fputs (text, ppout);
+    }
+  else if (!current_replace_list)
+    {
+      for (; text_queue; text_queue = text_queue->next)
+	fputs (text_queue->text, ppout);
+      fputs (text, ppout);
+    }
+  else
+    {
+      /* Do replacement */
+      struct cb_replace_list *r;
+      struct cb_text_list *l, *queue;
+
+      text_queue = cb_text_list_add (text_queue, text);
+
+      for (r = current_replace_list; r; r = r->next)
+	{
+	  queue = text_queue;
+	  for (l = r->old_text; l; l = l->next)
+	    {
+	      while (l && (l->text[0] == ' ' || l->text[0] == '\n'))
+		l = l->next;
+	      if (l == NULL)
+		break;
+	      while (queue
+		     && (queue->text[0] == ' ' || queue->text[0] == '\n'))
+		queue = queue->next;
+	      if (queue == NULL)
+		return; /* partial match */
+	      if (strcasecmp (l->text, queue->text) != 0)
+		break;
+	      queue = queue->next;
+	    }
+	  if (l == NULL)
+	    {
+	      /* match */
+	      for (l = r->new_text; l; l = l->next)
+		fputs (l->text, ppout);
+	      text_queue = queue ? queue->next : NULL;
+	      return;
+	    }
+	}
+
+      /* no match */
+      for (; text_queue; text_queue = text_queue->next)
+	fputs (text_queue->text, ppout);
+    }
 }
