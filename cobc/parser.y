@@ -63,7 +63,7 @@
 	v = NULL;				\
       }						\
     else					\
-      v = cb_build_int_list (flag, x);		\
+      v = cb_build_pair (flag, x);		\
   }
 
 #define push(x)	\
@@ -127,14 +127,10 @@ static void terminator_warning (void);
 
 %union {
   int ival;
-  char *sval;
   cb_tree tree;
-  struct cb_picture *pict;
 }
 
-%token <sval> FUNCTION_NAME
-%token <pict> PICTURE
-%token <tree> WORD LITERAL CLASS_NAME MNEMONIC_NAME
+%token <tree> WORD LITERAL PICTURE CLASS_NAME MNEMONIC_NAME FUNCTION_NAME
 
 %token ACCEPT ADD CALL CANCEL CLOSE COMPUTE DELETE DISPLAY DIVIDE ENTRY
 %token EVALUATE IF INITIALIZE INSPECT MERGE MOVE MULTIPLY OPEN PERFORM
@@ -171,10 +167,11 @@ static void terminator_warning (void);
 %token TIME TIMES TO TOK_FILE TOK_INITIAL TOK_TRUE TOK_FALSE TRAILING
 %token UNDERLINE UNIT UNTIL UP UPON USAGE USE USING VALUE VARYING WHEN WITH
 
-%type <ival> flag_all flag_duplicates flag_optional flag_global
-%type <ival> flag_not flag_next flag_rounded flag_separate
+%type <tree> flag_all flag_duplicates flag_optional flag_global
+%type <tree> flag_not flag_next flag_rounded flag_separate
 %type <ival> integer display_upon screen_plus_minus level_number
 %type <ival> before_or_after perform_test opt_from_integer opt_to_integer
+
 %type <tree> occurs_key_list data_name_list value_list opt_value_list
 %type <tree> numeric_value_list inspect_before_after_list
 %type <tree> reference_list mnemonic_name_list file_name_list using_phrase
@@ -597,7 +594,7 @@ file_control_entry:
 
     /* build new file */
     current_file = build_file ($3);
-    current_file->optional = $2;
+    current_file->optional = CB_INTEGER ($2)->val;
 
     /* register the file */
     current_program->file_list =
@@ -654,7 +651,7 @@ alternative_record_key_clause:
   {
     struct cb_alt_key *p = malloc (sizeof (struct cb_alt_key));
     p->key = $5;
-    p->duplicates = $6;
+    p->duplicates = CB_INTEGER ($6)->val;
     p->next = NULL;
 
     /* add to the end of list */
@@ -1113,7 +1110,7 @@ global_clause:
 /* PICTURE */
 
 picture_clause:
-  PICTURE			{ current_field->pic = $1; }
+  PICTURE			{ current_field->pic = CB_PICTURE ($1); }
 ;
 
 
@@ -1136,18 +1133,14 @@ usage:
 sign_clause:
   _sign_is LEADING flag_separate
   {
-    current_field->flag_sign_separate = $3;
+    current_field->flag_sign_separate = CB_INTEGER ($3)->val;
     current_field->flag_sign_leading  = 1;
   }
 | _sign_is TRAILING flag_separate
   {
-    current_field->flag_sign_separate = $3;
+    current_field->flag_sign_separate = CB_INTEGER ($3)->val;
     current_field->flag_sign_leading  = 0;
   }
-;
-flag_separate:
-  /* empty */			{ $$ = 0; }
-| SEPARATE _character		{ $$ = 1; }
 ;
 
 
@@ -1366,7 +1359,7 @@ screen_description:
   screen_options '.'
   {
     if (current_field->pic == NULL)
-      current_field->pic = cb_parse_picture ("X(0)");
+      current_field->pic = CB_PICTURE (cb_build_picture ("X(0)"));
     if (!current_field->screen_line)
       {
 	current_field->screen_line = cb_int1;
@@ -2105,8 +2098,8 @@ evaluate_object_list:
   evaluate_object		{ $<tree>$ = list_add ($<tree>1, $<tree>3); }
 ;
 evaluate_object:
-  flag_not expr			{ $<tree>$ = cb_build_int_list ($1, cb_build_pair ($2, 0)); }
-| flag_not expr THRU expr	{ $<tree>$ = cb_build_int_list ($1, cb_build_pair ($2, $4)); }
+  flag_not expr			{ $<tree>$ = cb_build_pair ($1, cb_build_pair ($2, 0)); }
+| flag_not expr THRU expr	{ $<tree>$ = cb_build_pair ($1, cb_build_pair ($2, $4)); }
 | ANY				{ $<tree>$ = cb_any; }
 | TOK_TRUE			{ $<tree>$ = cb_true; }
 | TOK_FALSE			{ $<tree>$ = cb_false; }
@@ -2412,7 +2405,7 @@ move_body:
 | CORRESPONDING group_name TO group_name
   {
     if ($2 != cb_error_node && $4 != cb_error_node)
-      push (cb_build_corr (cb_build_move, $2, $4, -1));
+      push (cb_build_corr (cb_build_move, $2, $4, cb_int0));
   }
 ;
 
@@ -2554,7 +2547,7 @@ perform_varying_list:
 perform_varying:
   data_name FROM value BY value UNTIL condition
   {
-    cb_tree step = cb_build_add ($1, $5, 0);
+    cb_tree step = cb_build_add ($1, $5, cb_int0);
     cb_add_perform_varying (CB_PERFORM ($<tree>0), $1, $3, step, $7);
   }
 ;
@@ -2571,7 +2564,7 @@ read_statement:
   {
     cb_tree file = cb_ref ($3);
     cb_tree key = $<tree>7;
-    if ($4 || CB_FILE (file)->access_mode == COB_ACCESS_SEQUENTIAL)
+    if ($4 == cb_int1 || CB_FILE (file)->access_mode == COB_ACCESS_SEQUENTIAL)
       {
 	/* READ NEXT */
 	if (key)
@@ -2751,9 +2744,9 @@ set_up_down:
     cb_tree l;
     for (l = $1; l; l = CB_CHAIN (l))
       if ($<ival>2 == 0)
-	push (cb_build_add (CB_VALUE (l), $4, 0));
+	push (cb_build_add (CB_VALUE (l), $4, cb_int0));
       else
-	push (cb_build_sub (CB_VALUE (l), $4, 0));
+	push (cb_build_sub (CB_VALUE (l), $4, cb_int0));
   }
 ;
 up_or_down:
@@ -2893,11 +2886,11 @@ start_key:
 | KEY _is start_op data_name	{ $<ival>0 = $<ival>3; $<tree>$ = $4; }
 ;
 start_op:
-  flag_not equal		{ $<ival>$ = $1 ? COB_NE : COB_EQ; }
-| flag_not greater		{ $<ival>$ = $1 ? COB_LE : COB_GT; }
-| flag_not less			{ $<ival>$ = $1 ? COB_GE : COB_LT; }
-| flag_not greater_or_equal	{ $<ival>$ = $1 ? COB_LT : COB_GE; }
-| flag_not less_or_equal	{ $<ival>$ = $1 ? COB_GT : COB_LE; }
+  flag_not equal		{ $<ival>$ = ($1 == cb_int1) ? COB_NE : COB_EQ; }
+| flag_not greater		{ $<ival>$ = ($1 == cb_int1) ? COB_LE : COB_GT; }
+| flag_not less			{ $<ival>$ = ($1 == cb_int1) ? COB_GE : COB_LT; }
+| flag_not greater_or_equal	{ $<ival>$ = ($1 == cb_int1) ? COB_LT : COB_GE; }
+| flag_not less_or_equal	{ $<ival>$ = ($1 == cb_int1) ? COB_GT : COB_LE; }
 ;
 end_start:
   /* empty */			{ terminator_warning (); }
@@ -3044,8 +3037,7 @@ unstring_delimited_list:
 unstring_delimited_item:
   flag_all value
   {
-    cb_tree flag = $1 ? cb_int1 : cb_int0;
-    $<tree>$ = cb_build_funcall_2 ("cob_unstring_delimited", $2, flag);
+    $<tree>$ = cb_build_funcall_2 ("cob_unstring_delimited", $2, $1);
   }
 ;
 
@@ -4070,32 +4062,36 @@ function:
  */
 
 flag_all:
-  /* empty */			{ $$ = 0; }
-| ALL				{ $$ = 1; }
+  /* empty */			{ $$ = cb_int0; }
+| ALL				{ $$ = cb_int1; }
 ;
 flag_duplicates:
-  /* empty */			{ $$ = 0; }
-| _with DUPLICATES		{ $$ = 1; }
-;
-flag_not:
-  /* empty */			{ $$ = 0; }
-| NOT				{ $$ = 1; }
-;
-flag_next:
-  /* empty */			{ $$ = 0; }
-| NEXT				{ $$ = 1; }
+  /* empty */			{ $$ = cb_int0; }
+| _with DUPLICATES		{ $$ = cb_int1; }
 ;
 flag_global:
-  /* empty */			{ $$ = 0; }
-| GLOBAL			{ $$ = 1; }
+  /* empty */			{ $$ = cb_int0; }
+| GLOBAL			{ $$ = cb_int1; }
+;
+flag_next:
+  /* empty */			{ $$ = cb_int0; }
+| NEXT				{ $$ = cb_int1; }
+;
+flag_not:
+  /* empty */			{ $$ = cb_int0; }
+| NOT				{ $$ = cb_int1; }
 ;
 flag_optional:
-  /* empty */			{ $$ = 0; }
-| OPTIONAL			{ $$ = 1; }
+  /* empty */			{ $$ = cb_int0; }
+| OPTIONAL			{ $$ = cb_int1; }
 ;
 flag_rounded:
-  /* empty */			{ $$ = 0; }
-| ROUNDED			{ $$ = 1; }
+  /* empty */			{ $$ = cb_int0; }
+| ROUNDED			{ $$ = cb_int1; }
+;
+flag_separate:
+  /* empty */			{ $$ = cb_int0; }
+| SEPARATE _character		{ $$ = cb_int1; }
 ;
 
 /*

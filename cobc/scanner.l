@@ -161,7 +161,8 @@ H\"[^\"\n]*\" {
 <FUNCTION_STATE>{
   [a-z0-9-]+	{
     BEGIN INITIAL;
-    yylval.sval = strdup (yytext);
+    yylval.tree = make_reference (yytext);
+    SET_LOCATION (yylval.tree);
     return FUNCTION_NAME;
   }
   .		{ return yytext[0]; }
@@ -311,6 +312,6 @@ scan_picture (char *text)
       *p = toupper (*p);
     }
 
-  yylval.pict = cb_parse_picture (text);
+  yylval.tree = cb_build_picture (text);
   return PICTURE;
 }

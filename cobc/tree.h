@@ -52,6 +52,7 @@ enum cb_tag {
   CB_TAG_SEQUENCE,		/* multiple statements */
   CB_TAG_STATEMENT,		/* general statement */
   /* miscellaneous */
+  CB_TAG_PICTURE,
   CB_TAG_LIST,
 };
 
@@ -339,6 +340,7 @@ extern cb_tree cb_build_decimal (int id);
  */
 
 struct cb_picture {
+  struct cb_tree_common common;
   int size;			/* byte size */
   char *orig;			/* original picture string */
   char *str;			/* packed picture string */
@@ -348,7 +350,10 @@ struct cb_picture {
   char have_sign;		/* have `S' */
 };
 
-extern struct cb_picture *cb_parse_picture (const char *str);
+#define CB_PICTURE(x)	(CB_TREE_CAST (CB_TAG_PICTURE, struct cb_picture, x))
+#define CB_PICTURE_P(x)	(CB_TREE_TAG (x) == CB_TAG_PICTURE)
+
+extern cb_tree cb_build_picture (const char *str);
 
 
 /*
@@ -779,10 +784,10 @@ extern cb_tree cb_build_identifier (cb_tree x);
 extern cb_tree cb_build_using_list (cb_tree list);
 
 extern cb_tree cb_build_assign (cb_tree vars, char op, cb_tree val);
-extern cb_tree cb_build_add (cb_tree v, cb_tree n, int round);
-extern cb_tree cb_build_sub (cb_tree v, cb_tree n, int round);
+extern cb_tree cb_build_add (cb_tree v, cb_tree n, cb_tree round);
+extern cb_tree cb_build_sub (cb_tree v, cb_tree n, cb_tree round);
 extern cb_tree cb_build_move (cb_tree src, cb_tree dst);
-extern cb_tree cb_build_corr (cb_tree (*func)(), cb_tree x1, cb_tree x2, int opt);
+extern cb_tree cb_build_corr (cb_tree (*func)(), cb_tree x1, cb_tree x2, cb_tree opt);
 extern cb_tree cb_build_divide (cb_tree dividend, cb_tree divisor, cb_tree quotient, cb_tree remainder);
 extern cb_tree cb_build_cond (cb_tree x);
 extern cb_tree cb_build_evaluate (cb_tree subject_list, cb_tree case_list);

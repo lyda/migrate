@@ -520,9 +520,11 @@ cb_build_decimal (int id)
 #define PIC_NUMERIC_EDITED	(PIC_NUMERIC | PIC_EDITED)
 #define PIC_NATIONAL_EDITED	(PIC_NATIONAL | PIC_EDITED)
 
-struct cb_picture *
-cb_parse_picture (const char *str)
+cb_tree
+cb_build_picture (const char *str)
 {
+  struct cb_picture *pic =
+    make_tree (CB_TAG_PICTURE, CB_CATEGORY_UNKNOWN, sizeof (struct cb_picture));
   const char *p;
   char category = 0;
   int idx = 0;
@@ -533,8 +535,6 @@ cb_parse_picture (const char *str)
   int v_count = 0;
   int buff_size = 9;
   unsigned char *buff = malloc (buff_size);
-  struct cb_picture *pic = malloc (sizeof (struct cb_picture));
-  memset (pic, 0, sizeof (struct cb_picture));
 
   for (p = str; *p; p++)
     {
@@ -738,12 +738,15 @@ cb_parse_picture (const char *str)
     default:
       goto error;
     }
-
-  return pic;
+  goto end;
 
  error:
   cb_error (_("invalid picture string"));
-  return pic;
+
+ end:
+  if (!pic->str)
+    free (buff);
+  return CB_TREE (pic);
 }
 
 
@@ -1145,7 +1148,7 @@ setup_parameters (struct cb_field *f)
     {
       /* regular field */
       if (f->usage == CB_USAGE_INDEX)
-	f->pic = cb_parse_picture ("S9(9)");
+	f->pic = CB_PICTURE (cb_build_picture ("S9(9)"));
     }
 }
 
@@ -1434,7 +1437,7 @@ finalize_file (struct cb_file *f, struct cb_field *records)
   f->record = CB_FIELD (make_field (make_reference (buff)));
   f->record->usage = CB_USAGE_DISPLAY;
   sprintf (buff, "X(%d)", f->record_max);
-  f->record->pic = cb_parse_picture (buff);
+  f->record->pic = CB_PICTURE (cb_build_picture (buff));
   f->record->sister = records;
   cb_validate_field (f->record);
 

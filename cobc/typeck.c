@@ -351,9 +351,9 @@ cb_build_assign (cb_tree vars, char op, cb_tree val)
 	for (l = vars; l; l = CB_CHAIN (l))
 	  {
 	    if (op == '+')
-	      CB_VALUE (l) = cb_build_add (CB_VALUE (l), val, CB_PURPOSE_INT (l));
+	      CB_VALUE (l) = cb_build_add (CB_VALUE (l), val, CB_PURPOSE (l));
 	    else
-	      CB_VALUE (l) = cb_build_sub (CB_VALUE (l), val, CB_PURPOSE_INT (l));
+	      CB_VALUE (l) = cb_build_sub (CB_VALUE (l), val, CB_PURPOSE (l));
 	  }
 	return make_sequence (vars);
       }
@@ -367,28 +367,28 @@ cb_build_assign (cb_tree vars, char op, cb_tree val)
  */
 
 cb_tree
-cb_build_add (cb_tree v, cb_tree n, int round)
+cb_build_add (cb_tree v, cb_tree n, cb_tree round)
 {
   if (cb_field (v)->usage == CB_USAGE_INDEX)
     return cb_build_move (cb_build_binary_op (v, '+', n), v);
 
-  if (round == 0 && cb_fits_int (n))
+  if (round == cb_int0 && cb_fits_int (n))
     return cb_build_funcall_2 ("cob_add_int", v, cb_build_cast_integer (n));
-  if (round)
+  if (round == cb_int1)
     return cb_build_funcall_2 ("cob_add_r", v, n);
   else
     return cb_build_funcall_2 ("cob_add", v, n);
 }
 
 cb_tree
-cb_build_sub (cb_tree v, cb_tree n, int round)
+cb_build_sub (cb_tree v, cb_tree n, cb_tree round)
 {
   if (cb_field (v)->usage == CB_USAGE_INDEX)
     return cb_build_move (cb_build_binary_op (v, '-', n), v);
 
-  if (round == 0 && cb_fits_int (n))
+  if (round == cb_int0 && cb_fits_int (n))
     return cb_build_funcall_2 ("cob_sub_int", v, cb_build_cast_integer (n));
-  if (round)
+  if (round == cb_int1)
     return cb_build_funcall_2 ("cob_sub_r", v, n);
   else
     return cb_build_funcall_2 ("cob_sub", v, n);
@@ -675,7 +675,7 @@ cb_build_move (cb_tree src, cb_tree dst)
 }
 
 static cb_tree
-build_corr_1 (cb_tree (*func)(), cb_tree x1, cb_tree x2, int opt, cb_tree l)
+build_corr_1 (cb_tree (*func)(), cb_tree x1, cb_tree x2, cb_tree opt, cb_tree l)
 {
   struct cb_field *f1, *f2;
   for (f1 = cb_field (x1)->children; f1; f1 = f1->sister)
@@ -689,18 +689,13 @@ build_corr_1 (cb_tree (*func)(), cb_tree x1, cb_tree x2, int opt, cb_tree l)
 	      if (f1->children && f2->children)
 		l = build_corr_1 (func, t1, t2, opt, l);
 	      else
-		{
-		  if (opt < 0)
-		    l = cons (func (t1, t2), l);
-		  else
-		    l = cons (func (t1, t2, opt), l);
-		}
+		l = cons (func (t1, t2, opt), l);
 	    }
   return l;
 }
 
 cb_tree
-cb_build_corr (cb_tree (*func)(), cb_tree x1, cb_tree x2, int opt)
+cb_build_corr (cb_tree (*func)(), cb_tree x1, cb_tree x2, cb_tree opt)
 {
   return make_sequence (build_corr_1 (func, x1, x2, opt, NULL));
 }
