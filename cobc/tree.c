@@ -1229,8 +1229,7 @@ cb_ref (cb_tree x)
 	    {
 	      /* there are several candidates */
 	      ambiguous_error (x);
-	      r->value = cb_error_node;
-	      return cb_error_node;
+	      goto error;
 	    }
 	}
     }
@@ -1239,15 +1238,23 @@ cb_ref (cb_tree x)
   if (candidate == NULL)
     {
       undefined_error (x);
-      r->value = cb_error_node;
-      return cb_error_node;
+      goto error;
     }
 
  end:
+  if (CB_FIELD_P (candidate))
+    {
+      CB_FIELD (candidate)->count++;
+      if (CB_FIELD (candidate)->flag_invalid)
+	goto error;
+    }
+
   r->value = candidate;
-  if (CB_FIELD_P (r->value))
-    CB_FIELD (r->value)->count++;
   return r->value;
+
+ error:
+  r->value = cb_error_node;
+  return cb_error_node;
 }
 
 

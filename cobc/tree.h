@@ -430,6 +430,7 @@ struct cb_field {
   long flag_sign_separate : 1;	/* SIGN IS SEPARATE */
   long flag_synchronized  : 1;	/* SYNCHRONIZED */
   long flag_occurs        : 1;	/* OCCURS */
+  long flag_invalid       : 1;	/* is broken */
   long flag_binary_swap   : 1;	/* binary byteswap */
   long flag_local         : 1;	/* has local scope */
   long flag_base          : 1;

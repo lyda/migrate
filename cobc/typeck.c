@@ -2496,6 +2496,13 @@ void
 cb_emit_move (cb_tree src, cb_tree dsts)
 {
   cb_tree l;
+
+  if (src == cb_error_node)
+    return;
+  for (l = dsts; l; l = CB_CHAIN (l))
+    if (CB_VALUE (l) == cb_error_node)
+      return;
+
   for (l = dsts; l; l = CB_CHAIN (l))
     cb_emit (cb_build_move (src, CB_VALUE (l)));
 }

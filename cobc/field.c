@@ -632,7 +632,10 @@ void
 cb_validate_field (struct cb_field *f)
 {
   if (validate_field_1 (f) != 0)
-    return;
+    {
+      f->flag_invalid = 1;
+      return;
+    }
 
   /* setup parameters */
   if (f->storage == CB_STORAGE_LOCAL
