@@ -117,10 +117,11 @@ AC_CHECK_HEADERS([ltdl.h], , AC_MSG_ERROR(ltdl.h is required))
 AC_CHECK_LIB([ltdl], [lt_dlopen], , AC_MSG_ERROR(libltdl is required))
 LIBCOB_LIBS="$LIBCOB_LIBS -lltdl"
 
-# Checks for gettext
+# Checks for gettext.
 AM_GNU_GETTEXT([external])
 AM_GNU_GETTEXT_VERSION(0.11.5)
 if test "x$LTLIBINTL" != "x"; then
+  COBC_LIBS="$COBC_LIBS $LTLIBINTL"
   LIBCOB_LIBS="$LIBCOB_LIBS $LTLIBINTL"
 fi
 
