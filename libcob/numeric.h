@@ -33,8 +33,6 @@ typedef struct {
   char expt;		/* exponent */
 } cob_decimal;
 
-extern void cob_init_numeric (void);
-
 extern void cob_decimal_init (cob_decimal *d);
 extern void cob_decimal_clear (cob_decimal *d);
 extern void cob_decimal_print (cob_decimal *d);
@@ -68,5 +66,7 @@ extern void cob_div_quotient (cob_field *dividend, cob_field *divisor, cob_field
 extern void cob_div_remainder (cob_field *remainder);
 
 extern int cob_numeric_cmp (cob_field *f1, cob_field *f2);
+
+extern void cob_init_numeric (void);
 
 #endif /* COB_NUMERIC_H_ */
