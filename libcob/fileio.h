@@ -88,13 +88,13 @@ struct cob_file_desc {
 
 struct cob_fileio_funcs {
   int (*open) (struct cob_file_desc *f, char *filename, int mode);
-  void (*close) (struct cob_file_desc *f, int opt);
-  void (*start) (struct cob_file_desc *f, int cond, struct cob_field key);
-  void (*read) (struct cob_file_desc *f, struct cob_field key);
-  void (*read_next) (struct cob_file_desc *f);
-  void (*write) (struct cob_file_desc *f);
-  void (*rewrite) (struct cob_file_desc *f);
-  void (*delete) (struct cob_file_desc *f);
+  int (*close) (struct cob_file_desc *f, int opt);
+  int (*start) (struct cob_file_desc *f, int cond, struct cob_field key);
+  int (*read) (struct cob_file_desc *f, struct cob_field key);
+  int (*read_next) (struct cob_file_desc *f);
+  int (*write) (struct cob_file_desc *f);
+  int (*rewrite) (struct cob_file_desc *f);
+  int (*delete) (struct cob_file_desc *f);
 };
 
 extern char cob_dummy_status[];
