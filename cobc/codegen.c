@@ -510,7 +510,15 @@ output_expr (cobc_tree x, int id)
 	else
 	  {
 	    if (cobc_failsafe_flag && !COBC_CONST_P (x))
-	      output_call_1 ("cob_check_numeric", x);
+	      {
+		struct cobc_field *p = COBC_FIELD (x);
+		output_prefix ();
+		output ("cob_check_numeric (");
+		output_tree (x);
+		output (", ");
+		output_quoted_string (p->word->name, strlen (p->word->name));
+		output (");\n");
+	      }
 	    output_prefix ();
 	    if (x == cobc_dt)
 	      output ("cob_decimal_set");
@@ -844,7 +852,7 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
 	  || (p->level == 66 && p->redefines->children))
 	{
 	  /* field group */
-	  output ("{%d, '%c', 0, 0, 0, 0, 0, 0, 0, 0", p->size, COB_GROUP);
+	  output ("{%d, '%c'", p->size, COB_GROUP);
 	}
       else
 	{
@@ -865,8 +873,6 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
 	  else
 	    output ("0");
 	}
-      output (", ");
-      output_quoted_string (p->word->name, strlen (p->word->name));
       output ("};\n");
     }
 

@@ -347,7 +347,7 @@ cob_cmp_all_str (unsigned char *data, unsigned char *str, int len)
  */
 
 void
-cob_check_numeric (struct cob_field f)
+cob_check_numeric (struct cob_field f, const char *name)
 {
   if (!cob_is_numeric (f))
     {
@@ -362,8 +362,7 @@ cob_check_numeric (struct cob_field f)
 	else
 	  p += sprintf (p, "\\%03o", data[i]);
       *p = '\0';
-      cob_runtime_error (_("value of `%s' not numeric: `%s'"),
-			 f.desc->name, buff);
+      cob_runtime_error (_("value of `%s' not numeric: `%s'"), name, buff);
     }
 }
 

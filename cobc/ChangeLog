@@ -1,3 +1,8 @@
+2002-05-31  Keisuke Nishida  <knishida@netlab.jp>
+
+	* codegen.c (output_expr): Give field name to cob_check_numeric.
+	(output_field_definition): No longer output field name.
+
 2002-05-29  Keisuke Nishida  <knishida@netlab.jp>
 
 	* parser.y (expr_item_list): Better source location.

@@ -48,7 +48,6 @@ struct cob_field {
     char blank_zero    : 1;
     char justified     : 1;
     char *pic;
-    const char *name;
   } *desc;
   unsigned char *data;
 };
@@ -113,7 +112,7 @@ extern int cob_cmp_str (struct cob_field f1, unsigned char *data2, int len2);
 extern int cob_cmp_all (unsigned char *data, unsigned char c, int len);
 extern int cob_cmp_all_str (unsigned char *data, unsigned char *str, int len);
 
-extern void cob_check_numeric (struct cob_field f);
+extern void cob_check_numeric (struct cob_field f, const char *name);
 extern int cob_is_numeric (struct cob_field f);
 extern int cob_is_alpha (struct cob_field f);
 extern int cob_is_upper (struct cob_field f);

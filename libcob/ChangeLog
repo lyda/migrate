@@ -1,3 +1,12 @@
+2002-05-31  Keisuke Nishida  <knishida@netlab.jp>
+
+	* Makefile.am (libcob_la_DEPENDENCIES): Removed.
+
+2002-05-30  Keisuke Nishida  <knishida@netlab.jp>
+
+	* common.c (cob_check_numeric): Takes the field name as an argument.
+	* common.h (cob_field_desc): Remove member `name'.
+
 2002-05-30  Keisuke Nishida  <knishida@netlab.jp>
 
 	* numeric.c (cob_decimal_pow): Handle decimals.
