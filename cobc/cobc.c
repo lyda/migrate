@@ -206,6 +206,7 @@ print_usage ()
 	  "  -MF <file>    Place dependency list into <file>\n"
 	  "\n"
 	  "COBOL options:\n"
+	  "  -main         Include a main function in the output\n"
 	  "  -free         Use free source format\n"
 	  "  -fixed        Use fixed source format\n"
 	  "  -static       Use static link for subprogram calls if possible\n"
