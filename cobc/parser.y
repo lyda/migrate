@@ -3454,10 +3454,10 @@ mnemonic_name:
  */
 
 name:
-  qualified_name		{ $$ = resolve_field ($1); }
-| qualified_name subref		{ $$ = resolve_field ($1); }
-| qualified_name refmod		{ $$ = resolve_field ($1); }
-| qualified_name subref refmod	{ $$ = resolve_field ($1); }
+  qualified_name		{ $$ = resolve_field ($1); if (!$$) YYERROR; }
+| qualified_name subref		{ $$ = resolve_field ($1); if (!$$) YYERROR; }
+| qualified_name refmod		{ $$ = resolve_field ($1); if (!$$) YYERROR; }
+| qualified_name subref refmod	{ $$ = resolve_field ($1); if (!$$) YYERROR; }
 ;
 subref:
   '(' subscript_list ')'
@@ -3764,10 +3764,11 @@ resolve_name (cobc_tree x)
 static cobc_tree
 resolve_field (cobc_tree x)
 {
-  struct cobc_reference *r = COBC_REFERENCE (x);
-
-  if (resolve_name (x))
+  if (resolve_name (x) == NULL)
+    return NULL;
+  else
     {
+      struct cobc_reference *r = COBC_REFERENCE (x);
       int need = COBC_FIELD (r->value)->indexes;
       int given = list_length (r->subs);
 
@@ -3787,9 +3788,8 @@ resolve_field (cobc_tree x)
 	      break;
 	    }
 	}
+      return x;
     }
-
-  return x;
 }
 
 static cobc_tree
@@ -3906,9 +3906,35 @@ builtin_switch_id (cobc_tree x)
 static struct cobc_field *
 build_field (cobc_tree level, cobc_tree name, struct cobc_field *last_field)
 {
-  struct cobc_field *f = COBC_FIELD (make_field (name));
+  struct cobc_field *f;
+  struct cobc_reference *r = COBC_REFERENCE (name);
+  int lv = literal_to_int (COBC_LITERAL (level));
 
-  f->level = literal_to_int (COBC_LITERAL (level));
+  /* checks for redefinition */
+  if (lv == 01 || lv == 77)
+    {
+      if (r->word->count > 0)
+	{
+	  redefinition_error (name);
+	  return NULL;
+	}
+    }
+  else
+    {
+      struct cobc_list *l;
+      for (l = r->word->items; l; l = l->next)
+	if (!COBC_FIELD_P (l->item)
+	    || COBC_FIELD (l->item)->level == 01
+	    || COBC_FIELD (l->item)->level == 77)
+	  {
+	    redefinition_error (name);
+	    return NULL;
+	  }
+    }
+
+  /* build the field */
+  f = COBC_FIELD (make_field (name));
+  f->level = lv;
   f->usage = COBC_USAGE_DISPLAY;
   f->occurs = 1;
 
@@ -4715,8 +4741,8 @@ static void
 redefinition_error (cobc_tree x)
 {
   struct cobc_word *w = COBC_REFERENCE (x)->word;
-  yywarn_loc (x, _("redefinition of `%s'"), w->name);
-  yywarn_tree (w->items->item, _("previously defined here"));
+  yyerror_loc (x, _("redefinition of `%s'"), w->name);
+  yyerror_tree (w->items->item, _("previously defined here"));
 }
 
 static void
