@@ -3936,6 +3936,9 @@ integer:
 integer_value:
   value
   {
+    if ($1 == cb_error_node)
+      YYERROR;
+
     if (CB_TREE_CLASS ($1) != CB_CLASS_NUMERIC)
       goto invalid;
 
