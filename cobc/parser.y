@@ -2495,7 +2495,7 @@ read_statement:
     cb_tree file = cb_ref ($3);
     cb_tree rec = cb_build_field_reference (CB_FILE (file)->record, $3);
     cb_tree key = $7;
-    cb_tree e;
+    cb_tree e, l;
     if ($4 == cb_int1 || CB_FILE (file)->access_mode == COB_ACCESS_SEQUENTIAL)
       {
 	/* READ NEXT */
@@ -2509,10 +2509,11 @@ read_statement:
 	e = cb_build_funcall_2 ("cob_read", file,
 				key ? key : CB_FILE (file)->key);
       }
-    current_statement->file = file;
-    current_statement->body = e;
+    l = list (e);
     if ($6)
-      push (cb_build_move (rec, $6));
+      l = list_add (l, cb_build_move (rec, $6));
+    current_statement->file = file;
+    current_statement->body = l;
   }
 ;
 read_into:

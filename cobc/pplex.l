@@ -369,7 +369,15 @@ ppinput_1 (char *buff, int size)
       n = 7;
       break;
     default:
-      cb_error (_("invalid indicator `%c' at column 7"), buff[6]);
+      {
+	static int count = 0;
+	if (count < 4)
+	  {
+	    cb_warning (_("invalid indicator `%c' at column 7"), buff[6]);
+	    if (++count == 4)
+	      cb_warning (_("more warnings inhibited"));
+	  }
+      }
       break;
     }
 
