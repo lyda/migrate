@@ -284,7 +284,6 @@ program:
       cobc_tree rc = make_field_3 (lookup_user_word ("RETURN-CODE"),
 				   "S9(9)", COBC_USAGE_INDEX);
       validate_field (COBC_FIELD (rc));
-      finalize_field_tree (COBC_FIELD (rc));
     }
   }
   identification_division
@@ -1113,7 +1112,6 @@ occurs_index:
   {
     $$ = make_field_3 ($1, "S9(9)", COBC_USAGE_INDEX);
     validate_field (COBC_FIELD ($$));
-    finalize_field_tree (COBC_FIELD ($$));
     program_spec.index_list = list_add (program_spec.index_list, $$);
   }
 ;
@@ -1941,7 +1939,7 @@ tallying_item:
     if (inspect_name == 0)
       yyerror_loc (&@1, _("data name expected before CHARACTERS"));
     else
-      inspect_push (COB_INSPECT_CHARACTERS, inspect_name, 0)
+      inspect_push (COB_INSPECT_CHARACTERS, inspect_name, 0);
   }
 | ALL
   {
@@ -3744,9 +3742,6 @@ init_field (int level, cobc_tree field)
       /* lower level */
       last_field->children = current_field;
       current_field->parent = last_field;
-      current_field->f.sign_leading = current_field->parent->f.sign_leading;
-      current_field->f.sign_separate = current_field->parent->f.sign_separate;
-      current_field->f.in_redefines = current_field->parent->f.in_redefines;
     }
   else if (level == last_field->level)
     {
@@ -3782,6 +3777,9 @@ init_field (int level, cobc_tree field)
   if (current_field->parent)
     {
       current_field->usage = current_field->parent->usage;
+      current_field->f.sign_leading = current_field->parent->f.sign_leading;
+      current_field->f.sign_separate = current_field->parent->f.sign_separate;
+      current_field->f.in_redefines = current_field->parent->f.in_redefines;
     }
 }
 
@@ -3800,11 +3798,7 @@ validate_field (struct cobc_field *p)
     {
       /* validate REDEFINES */
       if (p->redefines)
-	{
-	  if (current_field->f.in_redefines)
-	    yyerror_tree (x, _("field already in REDEFINES"));
-	  current_field->f.in_redefines = 1;
-	}
+	current_field->f.in_redefines = 1;
 
       /* validate PICTURE */
       if (p->pic)
@@ -3969,7 +3963,6 @@ finalize_file_name (struct cobc_file_name *f, struct cobc_field *records)
   f->record = COBC_FIELD (make_field_3 (f->word, pic, COBC_USAGE_DISPLAY));
   field_set_used (f->record);
   validate_field (f->record);
-  finalize_field_tree (f->record);
   f->record->sister = records;
   f->word->count--;
 
