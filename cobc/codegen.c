@@ -631,8 +631,8 @@ output_compare (cobc_tree s1, cobc_tree s2)
       output_expr (s1, 1);
       output_expr (s2, 2);
       output_line ("cob_decimal_cmp (cob_d1, cob_d2);");
-      output_prefix ();
       output_indent_level -= 2;
+      output_prefix ();
       output ("})");
     }
   else if (COBC_CONST_P (s1) || COBC_CONST_P (s2))
@@ -662,11 +662,24 @@ output_compare (cobc_tree s1, cobc_tree s2)
 	output ("-");
       if (COBC_LITERAL (y)->all)
 	{
-	  output ("cob_cmp_all (");
-	  output_location (x);
-	  output (", %d, ", COBC_LITERAL (y)->str[0]);
-	  output_length (x);
-	  output (")");
+	  if (COBC_LITERAL (y)->size == 1)
+	    {
+	      output ("cob_cmp_all (");
+	      output_location (x);
+	      output (", %d, ", COBC_LITERAL (y)->str[0]);
+	      output_length (x);
+	      output (")");
+	    }
+	  else
+	    {
+	      output ("cob_cmp_all_str (");
+	      output_location (x);
+	      output (", ");
+	      output_location (y);
+	      output (", ");
+	      output_length (x);
+	      output (")");
+	    }
 	}
       else
 	{
