@@ -185,7 +185,7 @@ static void check_decimal_point (struct lit *lit);
 %type <ival> integer,cond_op,conditional,before_after,greater_than,less_than
 %type <ival> on_exception_or_overflow,on_not_exception
 %type <ival> opt_address_of,display_upon,display_options
-%type <ival> flag_all,with_duplicates,opt_with_test,opt_optional
+%type <ival> flag_all,opt_with_duplicates,opt_with_test,opt_optional
 %type <ival> flag_not,selection_subject,selection_object,when_case
 %type <ival> flag_rounded,opt_sign_separate,opt_plus_minus
 %type <ival> organization_options,access_options,open_mode,equal_to
@@ -399,17 +399,17 @@ select_clause:
 | FILEN STATUS opt_is SYMBOL { curr_file->parent=$4; }
 | RECORD KEY opt_is SYMBOL { curr_file->ix_desc=$4; }
 | RELATIVE KEY opt_is SYMBOL { curr_file->ix_desc=$4; }
-| ALTERNATE RECORD KEY opt_is SYMBOL with_duplicates
+| ALTERNATE RECORD KEY opt_is SYMBOL opt_with_duplicates
   { add_alternate_key($5,$6); }
 | error         { yyerror("invalid clause in select"); }
 ;
-with_duplicates:
-  /* nothing */			{ $$=0; }
-| WITH DUPLICATES		{ $$=1; }
+opt_with_duplicates:
+  /* nothing */			{ $$ = 0; }
+| WITH DUPLICATES		{ $$ = 1; }
 ;
 opt_optional:
-  /* nothing */			{ $$=0; }
-| OPTIONAL			{ $$=1; }
+  /* nothing */			{ $$ = 0; }
+| OPTIONAL			{ $$ = 1; }
 ;
 organization_options:
   INDEXED			{ $$ = 1; }
