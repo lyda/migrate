@@ -4,7 +4,7 @@ aclocaldir = $(datadir)/aclocal
 aclocal_DATA = cob.m4
 
 SUBDIRS = libcob cobpp cobc texi libltdl
-EXTRA_DIST = VERSION cob.m4 redhat debian
+EXTRA_DIST = cob.m4 redhat debian
 
 MAINTAINERCLEANFILES = config.guess config.sub config.status config.log \
 	Makefile.in aclocal.m4 config.h.in stamp-h.in depcomp ltmain.sh \
