@@ -1,10 +1,9 @@
 *.gmo
-*.header
 *.pot
 *.sed
-*.sin
 Makefile
 Makefile.in
+Makevars.template
 POTFILES
 Rules-quot
 stamp-po
