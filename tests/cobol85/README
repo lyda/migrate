@@ -1,0 +1,49 @@
+Hot To Run NIST CCVS85 Test Suite
+=================================
+
+1. Download the test archive `newcob.val.Z' from
+
+  http://www.itl.nist.gov/div897/ctg/cobol_form.htm
+
+2. Uncompress it:
+
+  % uncompress newcob.val.Z
+
+3. Run the test suite:
+
+  % make test
+
+4. Test report summary will be put in summary.log.
+
+Make Options
+------------
+
+- make test     run the test suite
+- make save     save test reports in *.txt
+- make diff     diff from *.txt to the last reports
+- make clean    remove built files
+
+Test Modules
+------------
+
+Core tests:
+
+  NC - COBOL core tests
+  SM - COPY sentence tests
+  IC - CALL sentence tests
+
+File I-O tests:
+
+  SQ - Sequential file I-O tests
+  RL - Relative file I-O tests
+  IX - Indexed file I-O tests
+  ST - SORT sentence tests
+
+Advanced facilities:
+
+  RW - REPORT SECTION tests
+  CM - COMMUNICATION SECTION tests
+  IF - Intrinsic Function tests
+  SG - Segment tests
+  DB - Debugging facilities tests
+  OB - Obsolete facilities tests
