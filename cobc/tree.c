@@ -1747,7 +1747,7 @@ resolve_mnemonic_name (cb_tree x)
 	  r->value = r->word->items->item;
 	  return x;
 	}
-      yyerror_x (x, _("`%s' not builtin name"), r->word->name);
+      yyerror_x (x, _("`%s' not mnemonic name"), r->word->name);
       break;
     }
 
