@@ -1836,19 +1836,6 @@ codegen_1 (struct cobc_program_spec *spec)
     output_tree (l->item);
   output_newline ();
 
-#if !COB_HAVE_COMPUTED_GOTO
-  /* go back to PERFORM */
-  output_line ("l_exit:");
-  output_line ("switch (frame_stack[frame_index].perform_id)");
-  output_indent ("  {", 2);
-  {
-    int i;
-    for (i = 1; i < global_label; i++)
-      output_line ("case %d: goto l_%d;", i, i);
-  }
-  output_indent ("  }", -2);
-#endif
-
   output_line ("cob_exit_program ();");
   output_indent ("}", -2);
   output_newline ();
