@@ -393,7 +393,7 @@ relative_write (struct cob_file_desc *f)
     {
       lseek (f->file.fd, -1, SEEK_CUR);
       if (c != '\0')
-	return 23;
+	return 22;
     }
 
   write (f->file.fd, f->record_data, f->record_size);
