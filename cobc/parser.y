@@ -3319,7 +3319,7 @@ expr_1:
   expr_item_list
   {
     int i;
-    char *class_func = NULL;
+    const char *class_func = NULL;
     struct cb_list *l;
     struct stack_item {
       int prio;

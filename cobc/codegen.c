@@ -54,7 +54,7 @@ static int output_indent_level = 0;
 static FILE *output_target;
 
 static void
-output (char *fmt, ...)
+output (const char *fmt, ...)
 {
   if (output_target)
     {
@@ -84,7 +84,7 @@ output_prefix (void)
 }
 
 static void
-output_line (char *fmt, ...)
+output_line (const char *fmt, ...)
 {
   if (output_target)
     {
@@ -98,9 +98,9 @@ output_line (char *fmt, ...)
 }
 
 static void
-output_indent (char *str)
+output_indent (const char *str)
 {
-  char *p;
+  const char *p;
   int level = 2;
 
   for (p = str; *p == ' '; p++)
@@ -134,7 +134,7 @@ output_quoted_string (unsigned char *s, int size)
 }
 
 static void
-output_storage (char *fmt, ...)
+output_storage (const char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
@@ -1725,7 +1725,7 @@ output_call (cb_tree name, struct cb_list *args,
  */
 
 static struct inline_func {
-  char *name;
+  const char *name;
   void (*func) ();
 } inline_table[] = {
   {"@handler", output_handler},

@@ -188,7 +188,7 @@ extern struct cb_label *cb_standard_error_handler;
 
 struct cb_const {
   struct cb_tree_common common;
-  char *val;
+  const char *val;
 };
 
 #define CB_CONST(x)		(CB_TREE_CAST (CB_TAG_CONST, struct cb_const, x))
@@ -512,7 +512,7 @@ extern cb_tree make_cast_integer (cb_tree val);
 struct cb_label {
   struct cb_tree_common common;
   const char *name;
-  char *cname;
+  const char *cname;
   struct cb_label *section;
   struct cb_list *children;
   char need_begin;

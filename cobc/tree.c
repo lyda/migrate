@@ -387,7 +387,7 @@ struct cb_label *cb_standard_error_handler;
 #include "usage.def"
 
 static cb_tree
-make_constant (enum cb_class class, char *val)
+make_constant (enum cb_class class, const char *val)
 {
   struct cb_const *p =
     make_tree (CB_TAG_CONST, class, sizeof (struct cb_const));
@@ -396,11 +396,10 @@ make_constant (enum cb_class class, char *val)
 }
 
 static struct cb_label *
-make_constant_label (char *name)
+make_constant_label (const char *name)
 {
   struct cb_label *l =
     CB_LABEL (make_label (make_reference (name), NULL));
-  free (l->cname);
   l->cname = name;
   l->need_begin = 1;
   return l;
@@ -2069,7 +2068,7 @@ decimal_free (void)
 static void
 decimal_compute (cb_tree s, char op, cb_tree x, cb_tree y)
 {
-  char *func;
+  const char *func;
   switch (op)
     {
     case '+': func = "cob_decimal_add"; break;

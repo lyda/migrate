@@ -206,14 +206,14 @@ static struct option long_options[] = {
 };
 
 static void
-print_version ()
+print_version (void)
 {
   puts ("cobc (" PACKAGE_NAME ") " PACKAGE_VERSION);
   puts ("Copyright (C) 2001-2003 Keisuke Nishida");
 }
 
 static void
-print_usage ()
+print_usage (void)
 {
   printf ("Usage: %s [options] file...\n\n", program_name);
   puts (_("General options:\n\
@@ -765,7 +765,7 @@ main (int argc, char *argv[])
 
 
 static void
-print_error (char *file, int line, char *prefix, const char *fmt, va_list ap)
+print_error (char *file, int line, const char *prefix, const char *fmt, va_list ap)
 {
   static struct cb_label *last_section = NULL;
   static struct cb_label *last_paragraph = NULL;
@@ -844,14 +844,14 @@ cb_archaic (const char *feature)
     cb_warning (_("%s is archaic in %s"), feature, cb_standard_name);
 }
 
-void
+static void
 cb_obsolete (const char *feature)
 {
   if (cb_warn_obsolete)
     cb_warning (_("%s is obsolete in %s"), feature, cb_standard_name);
 }
 
-void
+static void
 cb_unconformable (const char *feature)
 {
   cb_error (_("%s not conform to %s"), feature, cb_standard_name);

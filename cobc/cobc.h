@@ -131,6 +131,7 @@ extern FILE *ppout;
 extern int pplex (void);
 extern int ppparse (void);
 extern int ppopen (char *name, const char *lib, struct cb_replacement *replacement);
+extern struct cb_replacement *add_replacement (struct cb_replacement *replacement, const char *old_text, const char *new_text);
 
 /* parser (in scanner.l, parser.y) */
 extern FILE *yyin;
