@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 558
+%expect 516
 
 %{
 #define yydebug		cob_trace_parser
@@ -1074,12 +1074,12 @@ procedure_using:
 | USING { $<ival>$ = USING; } var_list { $$ = 1; }
 ;
 procedure_list:
-| procedure_list procedure_decl
+| procedure_list procedure
 ;
-procedure_decl:
+procedure:
   procedure_section { close_section(); open_section($1); }
 | paragraph { close_paragr(); open_paragr($1); }
-| statement_list opt_dot
+| statement_list '.'
 | error '.'
 | '.'
 ;
