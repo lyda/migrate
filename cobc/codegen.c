@@ -835,17 +835,20 @@ get_type (struct cobc_field *p)
 
 static void
 output_field_definition (struct cobc_field *p, struct cobc_field *p01,
-			 int linkage)
+			 int gen_data, int gen_filler)
 {
   int have_desc = 1;
   char *subscripts;
+
+  if (!gen_filler)
+    gen_filler = !COBC_FILLER_P (COBC_TREE (p));
 
   if (p->children || p->rename_thru
       || (p->level == 66 && p->redefines->children))
     have_desc = 0;
 
   /* descriptor */
-  if (have_desc && p->f.used && !COBC_FILLER_P (COBC_TREE (p)))
+  if (have_desc && p->f.used && gen_filler)
     {
       char type = get_type (p);
       if (type == COB_ALPHANUMERIC && p->f.justified == 0)
@@ -877,7 +880,7 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
   if (p == p01 && !p->redefines)
     {
       /* level 01 */
-      if (field_used_any_child (p) && !linkage)
+      if (field_used_any_child (p) && gen_data)
 	{
 	  if (p->f.external)
 	    {
@@ -926,7 +929,7 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
     }
 
   /* macro */
-  if (p->f.used && !COBC_FILLER_P (COBC_TREE (p)))
+  if (p->f.used && gen_filler)
     {
       output ("#define f_%s%s ((struct cob_field) {%d, f_%s_data%s, ",
 	      p->cname, subscripts, p->size, p->cname, subscripts);
@@ -960,7 +963,7 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
 
   /* children */
   for (p = p->children; p; p = p->sister)
-    output_field_definition (p, p01, linkage);
+    output_field_definition (p, p01, gen_data, gen_filler);
 }
 
 
@@ -976,7 +979,7 @@ output_file_name (struct cobc_file_name *f)
 
   /* output record definition */
   for (p = f->record; p; p = p->sister)
-    output_field_definition (p, p, 0);
+    output_field_definition (p, p, 1, 0);
 
   /* output ALTERNATE RECORD KEY's */
   if (f->organization == COB_ORG_INDEXED)
@@ -1691,9 +1694,9 @@ codegen (struct program_spec *spec)
   output ("#define i_SWITCH      cob_switch\n");
   output ("#define i_RETURN_CODE cob_return_code\n\n");
   for (p = spec->working_storage; p; p = p->sister)
-    output_field_definition (p, p, 0);
+    output_field_definition (p, p, 1, 0);
   for (p = spec->linkage_storage; p; p = p->sister)
-    output_field_definition (p, p, 1);
+    output_field_definition (p, p, 0, 0);
   for (l = spec->index_list; l; l = l->next)
     {
       struct cobc_field *p = l->item;
@@ -1714,7 +1717,7 @@ codegen (struct program_spec *spec)
       output ("/* Screens */\n\n");
       for (p = spec->screen_storage; p; p = p->sister)
 	{
-	  output_field_definition (p, p, 0);
+	  output_field_definition (p, p, 1, 1);
 	  output_screen_definition (p);
 	}
       output_newline ();
