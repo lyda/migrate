@@ -2753,6 +2753,7 @@ cb_emit_set_to (cb_tree vars, cb_tree x)
   VALIDATE (x);
   VALIDATE_LIST (vars);
 
+#if 0
   /* determine the class of targets */
   for (l = vars; l; l = CB_CHAIN (l))
     if (CB_TREE_CLASS (CB_VALUE (l)) != CB_CLASS_UNKNOWN)
@@ -2768,6 +2769,7 @@ cb_emit_set_to (cb_tree vars, cb_tree x)
 		  _("the targets of SET must be either indexes or pointers"));
       return;
     }
+#endif
 
   /* validate the targets */
   for (l = vars; l; l = CB_CHAIN (l))
