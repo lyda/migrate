@@ -208,7 +208,8 @@ static struct option long_options[] = {
 static void
 print_version ()
 {
-  printf ("%s %s\n%s", CB_PACKAGE, CB_VERSION, CB_COPYRIGHT);
+  puts ("cobc (" PACKAGE_NAME ") " PACKAGE_VERSION);
+  puts ("Copyright (C) 2001-2003 Keisuke Nishida");
 }
 
 static void

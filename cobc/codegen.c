@@ -2368,7 +2368,7 @@ codegen (struct cb_program *prog)
   output_target = yyout;
 
   output ("/* Generated from %s by cobc %s */\n\n",
-	  cb_source_file, CB_VERSION);
+	  cb_source_file, PACKAGE_VERSION);
   output ("#include <stdio.h>\n");
   output ("#include <stdlib.h>\n");
   output ("#include <string.h>\n");

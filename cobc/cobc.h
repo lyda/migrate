@@ -27,10 +27,6 @@
 #include "tree.h"
 #include "lib/gettext.h"
 
-#define CB_PACKAGE	"cobc (" PACKAGE_NAME ")"
-#define CB_VERSION	PACKAGE_VERSION
-#define CB_COPYRIGHT	"Copyright (C) 2001-2003 Keisuke Nishida\n"
-
 #define CB_FORMAT_FREE		1
 #define CB_FORMAT_FIXED		2
 
