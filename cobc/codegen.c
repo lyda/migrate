@@ -621,8 +621,7 @@ void
 data_trail (void)
 {
   if (refmod_slots > 0)
-    fprintf (o_src, "rf_base%d:\t.space\t%d\n",
-	     pgm_segment, refmod_slots * 8);
+    fprintf (o_src, "rf_base%d:\t.space\t%d\n", pgm_segment, refmod_slots * 8);
 }
 
 int
@@ -936,14 +935,10 @@ proc_trail (int using)
   else
     {
       if (sy->sec_no == SEC_STACK)
-	{
-	  fprintf (o_src, "\tleal\t-%d(%%ebp), %%edx\n", sy->location);
-	}
+	fprintf (o_src, "\tleal\t-%d(%%ebp), %%edx\n", sy->location);
       else
-	{
-	  fprintf (o_src, "\tleal\tw_base%d+%d, %%edx\n",
-		   pgm_segment, sy->location);
-	}
+	fprintf (o_src, "\tleal\tw_base%d+%d, %%edx\n",
+		 pgm_segment, sy->location);
       fprintf (o_src, "\tmovl\t(%%edx), %%eax\n");
     }
 
@@ -3086,7 +3081,7 @@ load_location (struct sym *sy, char *reg)
 void
 loadloc_to_eax (struct sym *sy_p)
 {
-  unsigned base, offset;
+  unsigned offset;
   struct sym *sy = sy_p, *var, *tmp;
 
 #ifdef COB_DEBUG
@@ -3103,9 +3098,8 @@ loadloc_to_eax (struct sym *sy_p)
 	  tmp = var;
 	  while (tmp->linkage_flg == 1)
 	    tmp = tmp->parent;
-	  base = tmp->linkage_flg;
 	  offset = var->location - tmp->location;
-	  fprintf (o_src, "\tmovl %d(%%ebp), %%ebx\n", base);
+	  fprintf (o_src, "\tmovl %d(%%ebp), %%ebx\n", tmp->linkage_flg);
 	  if (offset)
 	    fprintf (o_src, "\taddl\t$%d, %%ebx\n", offset);
 	  fprintf (o_src, "\taddl\t%%ebx, %%eax\n");
@@ -3151,7 +3145,6 @@ gen_loadloc (struct sym *sy)
 void
 set_ptr (struct sym *sy)
 {
-  /*unsigned base; */
   if (SYMBOL_P (sy) && sy->linkage_flg)
     {
       if (sy->linkage_flg == 1)
@@ -3267,7 +3260,7 @@ gen_loadvar (struct sym *sy)
 void
 gen_loadval (struct sym *sy)
 {
-  unsigned base, offset;
+  unsigned offset;
   struct sym *var;
   struct sym *tmp = NULL;
 
@@ -3283,13 +3276,12 @@ gen_loadval (struct sym *sy)
 	  tmp = var;
 	  while (tmp->linkage_flg == 1)
 	    tmp = tmp->parent;
-	  base = tmp->linkage_flg;
 	  offset = tmp->location - var->location;
 	  if (symlen (var) >= 4)
-	    fprintf (o_src, "\tmovl %d(%%ebp), %%ebx\n", base);
+	    fprintf (o_src, "\tmovl %d(%%ebp), %%ebx\n", tmp->linkage_flg);
 	  else
 	    fprintf (o_src, "\tmovs%cl %d(%%ebp), %%ebx\n",
-		     varsize_ch (var), base);
+		     varsize_ch (var), tmp->linkage_flg);
 	  if (offset)
 	    fprintf (o_src, "\taddl\t$%d, %%ebx\n", offset);
 	  fprintf (o_src, "\taddl\t%%eax, %%ebx\n");
@@ -3317,7 +3309,7 @@ gen_loadval (struct sym *sy)
 void
 gen_pushval (struct sym *sy)
 {
-  unsigned base, offset;
+  unsigned offset;
   struct sym *var, *tmp;
 
 #ifdef COB_DEBUG
@@ -3332,13 +3324,12 @@ gen_pushval (struct sym *sy)
 	  tmp = var;
 	  while (tmp->linkage_flg == 1)
 	    tmp = tmp->parent;
-	  base = tmp->linkage_flg;
 	  offset = tmp->location - var->location;
 	  if (symlen (var) >= 4)
-	    fprintf (o_src, "\tmovl %d(%%ebp), %%ebx\n", base);
+	    fprintf (o_src, "\tmovl %d(%%ebp), %%ebx\n", tmp->linkage_flg);
 	  else
 	    fprintf (o_src, "\tmovs%cl %d(%%ebp), %%ebx\n",
-		     varsize_ch (var), base);
+		     varsize_ch (var), tmp->linkage_flg);
 	  if (offset)
 	    fprintf (o_src, "\taddl\t$%d, %%ebx\n", offset);
 	  fprintf (o_src, "\taddl\t%%eax, %%ebx\n");
@@ -3895,8 +3886,7 @@ gen_goto_depending (struct list *l, struct sym *sy)
 {
   struct list *tmp;
   gen_loadloc (sy);
-  fprintf (o_src, "\tmovl $c_base%d+%u, %%eax\n",
-	   pgm_segment, sy->descriptor);
+  fprintf (o_src, "\tmovl $c_base%d+%u, %%eax\n", pgm_segment, sy->descriptor);
   push_eax ();
   asm_call ("get_index");	/* this will return %eax with var's value */
   for (tmp = l; tmp != NULL; tmp = tmp->next)
@@ -4061,8 +4051,7 @@ void
 gen_push_int (struct sym *sy)
 {
   gen_loadloc (sy);
-  fprintf (o_src, "\tmovl $c_base%d+%u, %%eax\n",
-	   pgm_segment, sy->descriptor);
+  fprintf (o_src, "\tmovl $c_base%d+%u, %%eax\n", pgm_segment, sy->descriptor);
   push_eax ();
   asm_call ("get_index");
   /* this must be done without calling push_eax */
@@ -5516,9 +5505,7 @@ dump_alternate_keys (struct sym *r, struct alternate_list *alt)
       key = alt->key;
       fprintf (o_src, "# alternate key %s\n", key->name);
       fprintf (o_src,
-//                      "\t.word\t%d\n\t.long\tc_base+%d,0\n\t.word\t%d\n",
 	       "\t.word\t%d\n\t.long\tc_base%d+%d\n\t.word\t%d\n\t.long\t0\n",
-	       /*r->location - key->location, */
 	       key->location - r->location, pgm_segment,
 	       key->descriptor, alt->duplicates);
       tmp = alt;
@@ -5540,12 +5527,7 @@ dump_fdesc ()
   struct list *list /*,*visited */ ;
   unsigned char fflags;
 
-  //fprintf(o_src,".data\n\t.align 4\n");
   fprintf (o_src, "s_base%d:\t.long\t0\n", pgm_segment);
-  if (files_list != NULL)
-    {
-//         fprintf(o_src,"s_base:\n");
-    }
   for (list = files_list; list != NULL; list = list->next)
     {
       f = (struct sym *) list->var;
