@@ -157,6 +157,11 @@ struct scr_desc
   short int background;
   void (*process_scr) ();
 };
+
+struct cob_field {
+  struct fld_desc *desc;
+  char *mem;
+};
 #pragma pack()
 
 extern int extract_sign (struct fld_desc *f, char *s);

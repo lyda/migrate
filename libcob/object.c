@@ -41,11 +41,6 @@ struct cob_decimal {
 
 typedef struct cob_decimal *decimal;
 
-struct cob_field {
-  struct fld_desc *f;
-  char *s;
-};
-
 struct cob_object {
   int type;
   union {
@@ -103,8 +98,8 @@ cob_debug_print (cob_object o)
       {
 	int i;
 	struct cob_field *p = COB_FIELD (o);
-	for (i = 0; i < p->f->len; i++)
-	  fputc (p->s[i], stdout);
+	for (i = 0; i < p->desc->len; i++)
+	  fputc (p->mem[i], stdout);
 	fputc ('\n', stdout);
       }
       break;
@@ -158,11 +153,11 @@ cob_push_boolean (int flag)
 }
 
 void
-cob_push_field (struct fld_desc *f, unsigned char *s)
+cob_push_field (struct cob_field fld)
 {
   struct cob_field *p = COB_FIELD (grab_object (COB_TYPE_FIELD));
-  p->f = f;
-  p->s = s;
+  p->desc = fld.desc;
+  p->mem = fld.mem;
 }
 
 void
@@ -180,8 +175,8 @@ cob_push_copy (int n)
       COB_DECIMAL (dst)->decimals = COB_DECIMAL (src)->decimals;
       break;
     case COB_TYPE_FIELD:
-      COB_FIELD (dst)->f = COB_FIELD (src)->f;
-      COB_FIELD (dst)->s = COB_FIELD (src)->s;
+      COB_FIELD (dst)->desc = COB_FIELD (src)->desc;
+      COB_FIELD (dst)->mem  = COB_FIELD (src)->mem;
       break;
     }
 }
@@ -331,21 +326,21 @@ cob_push_zero (void)
 }
 
 void
-cob_push_decimal (struct fld_desc *f, unsigned char *s)
+cob_push_decimal (struct cob_field f)
 {
   decimal d = grab_decimal ();
 
-  switch (f->type)
+  switch (f.desc->type)
     {
     case 'B':
-      switch (f->len)
+      switch (f.desc->len)
 	{
-	case 1: mpz_set_si (d->number, *((signed char *) s)); break;
-	case 2: mpz_set_si (d->number, *((signed short *) s)); break;
-	case 4: mpz_set_si (d->number, *((signed long *) s)); break;
+	case 1: mpz_set_si (d->number, *((signed char *) f.mem)); break;
+	case 2: mpz_set_si (d->number, *((signed short *) f.mem)); break;
+	case 4: mpz_set_si (d->number, *((signed long *) f.mem)); break;
 	case 8:
 	  {
-	    signed long long val = *((signed long long *) s);
+	    signed long long val = *((signed long long *) f.mem);
 	    mpz_set_si (d->number, val >> 32);
 	    mpz_mul_2exp (d->number, d->number, 32);
 	    mpz_add_ui (d->number, d->number, val & 0xffffffff);
@@ -362,36 +357,36 @@ cob_push_decimal (struct fld_desc *f, unsigned char *s)
     default:
       {
 	char *p, buff[32];
-	int sign = extract_sign (f, s);
+	int sign = extract_sign (f.desc, f.mem);
 
-	p = (f->len < 32) ? buff : alloca (f->len + 1);
-	memcpy (p, s, f->len);
-	p[f->len] = 0;
+	p = (f.desc->len < 32) ? buff : alloca (f.desc->len + 1);
+	memcpy (p, f.mem, f.desc->len);
+	p[f.desc->len] = 0;
 	mpz_set_str (d->number, p, 10);
 
 	if (sign == 1) /* negative */
 	  mpz_neg (d->number, d->number);
 
-	put_sign (f, s, sign);
+	put_sign (f.desc, f.mem, sign);
 	break;
       }
     }
-  d->decimals = f->decimals;
+  d->decimals = f.desc->decimals;
 }
 
 void
-cob_set (struct fld_desc *f, char *s, int round)
+cob_set (struct cob_field f, int round)
 {
   decimal d = COB_DECIMAL (POP ());
 
   /* Append or truncate decimal digits */
-  if (round && f->decimals < d->decimals)
+  if (round && f.desc->decimals < d->decimals)
     {
       /* with rounding */
       int sign = mpz_sgn (d->number);
       if (sign != 0)
 	{
-	  shift_decimal (d, f->decimals - d->decimals + 1);
+	  shift_decimal (d, f.desc->decimals - d->decimals + 1);
 	  if (sign > 0)
 	    mpz_add_ui (d->number, d->number, 5);
 	  else
@@ -402,36 +397,36 @@ cob_set (struct fld_desc *f, char *s, int round)
   else
     {
       /* without rounding */
-      shift_decimal (d, f->decimals - d->decimals);
+      shift_decimal (d, f.desc->decimals - d->decimals);
     }
 
   /* Store number */
-  switch (f->type)
+  switch (f.desc->type)
     {
     case 'B':
       {
-	if (f->len <= 4)
+	if (f.desc->len <= 4)
 	  {
 	    int val;
 	    if (!mpz_fits_sint_p (d->number))
 	      cob_status = COB_STATUS_OVERFLOW;
 	    val = mpz_get_si (d->number);
-	    switch (f->len)
+	    switch (f.desc->len)
 	      {
 	      case 1:
 		if (val < -99 || val > 99)
 		  cob_status = COB_STATUS_OVERFLOW;
-		*((signed char *) s) = val;
+		*((signed char *) f.mem) = val;
 		break;
 	      case 2:
 		if (val < -9999 || val > 9999)
 		  cob_status = COB_STATUS_OVERFLOW;
-		*((signed short *) s) = val;
+		*((signed short *) f.mem) = val;
 		break;
 	      case 4:
 		if (val < -99999999 || val > 99999999)
 		  cob_status = COB_STATUS_OVERFLOW;
-		*((signed long *) s) = val;
+		*((signed long *) f.mem) = val;
 		break;
 	      }
 	  }
@@ -452,7 +447,7 @@ cob_set (struct fld_desc *f, char *s, int round)
 	    mpz_clear (r);
 	    if (val < -999999999999999999 || val > 999999999999999999)
 	      cob_status = COB_STATUS_OVERFLOW;
-	    *((signed long long *) s) = val;
+	    *((signed long long *) f.mem) = val;
 	    break;
 	  }
       }
@@ -477,22 +472,22 @@ cob_set (struct fld_desc *f, char *s, int round)
 	size = strlen (p);
 
 	/* Copy string */
-	if (f->len == size)
-	  memcpy (s, p, size);
-	else if (f->len > size)
+	if (f.desc->len == size)
+	  memcpy (f.mem, p, size);
+	else if (f.desc->len > size)
 	  {
-	    int pre = f->len - size;
-	    memset (s, '0', pre);
-	    memcpy (s + pre, p, size);
+	    int pre = f.desc->len - size;
+	    memset (f.mem, '0', pre);
+	    memcpy (f.mem + pre, p, size);
 	  }
 	else
 	  {
 	    /* Overflow */
 	    cob_status = COB_STATUS_OVERFLOW;
-	    memcpy (s, p + size - f->len, f->len);
+	    memcpy (f.mem, p + size - f.desc->len, f.desc->len);
 	  }
 
-	put_sign (f, s, sign);
+	put_sign (f.desc, f.mem, sign);
 	break;
       }
     }
@@ -501,136 +496,129 @@ cob_set (struct fld_desc *f, char *s, int round)
 
 
 int
-check_condition (struct fld_desc *f1, char *s1, ...)
+check_condition (struct cob_field f1, ...)
 {
-  int i, len2, len3;
-  struct fld_desc *f2, *f3;
-  char *s2, *s3;
-  int ret = 1;			/* assume wrong */
+  struct cob_field f2, f3;
   va_list args;
 
-  va_start (args, s1);
-  f2 = va_arg (args, struct fld_desc *);
-  while (f2)
+  va_start (args, f1);
+  f2.desc = va_arg (args, struct fld_desc *);
+  while (f2.desc)
     {
-      s2 = va_arg (args, char *);
-      f3 = va_arg (args, struct fld_desc *);
-      s3 = va_arg (args, char *);
+      f2.mem = va_arg (args, char *);
+      f3 = va_arg (args, struct cob_field);
 
-      if (f1->type == '9' || f1->type == 'B')
+      if (f1.desc->type == '9' || f1.desc->type == 'B')
 	{
-	  cob_push_decimal (f1, s1);
-	  cob_push_decimal (f2, s2);
+	  cob_push_decimal (f1);
+	  cob_push_decimal (f2);
 	  if (cob_cmp () >= 0)		/* f1 >= f2 */
 	    {
-	      cob_push_decimal (f1, s1);
-	      cob_push_decimal (f3, s3);
+	      cob_push_decimal (f1);
+	      cob_push_decimal (f3);
 	      if (cob_cmp () <= 0)	/* f1 <= f3 */
-		{
-		  ret = 0;
-		  break;
-		}
+		goto success;
 	    }
 	}
       else
 	{
-	  len2 = f2->len;
-	  len3 = f3->len;
-	  for (i = 0; i < f1->len; i++)
-	    {
-	      if ((i < len2) && (s1[i] >= s2[i]))
-		{
-		  if ((i < len3) && (s1[i] <= s3[i]))
-		    {
-		      va_end (args);
-		      return 0;
-		    }
-		}
-	    }
+	  int i;
+	  for (i = 0; i < f1.desc->len; i++)
+	    if ((i < f2.desc->len) && (f1.mem[i] >= f2.mem[i]))
+	      if ((i < f3.desc->len) && (f1.mem[i] <= f3.mem[i]))
+		goto success;
 	}
-      f2 = va_arg (args, struct fld_desc *);
+      f2.desc = va_arg (args, struct fld_desc *);
     }
+  /* fail */
   va_end (args);
-  return ret;
+  return 1;
+
+ success:
+  va_end (args);
+  return 0;
 }
 
 int
-compare (struct fld_desc *f1, unsigned char *s1,
-	 struct fld_desc *f2, unsigned char *s2)
+compare (struct cob_field f1, struct cob_field f2)
 {
   int i, maxi;
+  char type1 = f1.desc->type;
+  char type2 = f2.desc->type;
+  int len1 = f1.desc->len;
+  int len2 = f2.desc->len;
 
-  if ((f1->type != '9' && f1->type != 'C' && f1->type != 'B') ||
-      (f2->type != '9' && f2->type != 'C' && f2->type != 'B'))
+  if ((type1 != '9' && type1 != 'C' && type1 != 'B')
+      || (type2 != '9' && type2 != 'C' && type2 != 'B'))
     {
-      if (f1->all || f2->all)
+      if (f1.desc->all || f2.desc->all)
 	{
 	  int i, j, k, maxi;
 
-	  maxi = (f1->len < f2->len) ? f1->len : f2->len;
+	  maxi = (len1 < len2) ? len1 : len2;
 	  j = 0;
 	  k = 0;
 	  for (i = 0; i < maxi; i++)
 	    {
-	      if (s1[j] == s2[k])
+	      if (f1.mem[j] == f2.mem[k])
 		continue;
-	      if (s1[j] > s2[k])
+	      if (f1.mem[j] > f2.mem[k])
 		return 1;
-	      if (s1[j] < s2[k])
+	      if (f1.mem[j] < f2.mem[k])
 		return -1;
 	      j++;
 	      k++;
-	      if (f1->all && j >= f1->len)
+	      if (f1.desc->all && j >= len1)
 		j = 0;
-	      if (f2->all && k >= f2->len)
+	      if (f2.desc->all && k >= len2)
 		k = 0;
 	    }
 
-	  if (f1->len > f2->len)
-	    while (j < f1->len)
+	  if (len1 > len2)
+	    while (j < len1)
 	      {
-		if (s1[j++] != s2[k++])
+		if (f1.mem[j++] != f2.mem[k++])
 		  return 1;
-		if (k >= f2->len)
+		if (k >= len2)
 		  k = 0;
 	      }
 	  else
-	    while (k < f2->len)
+	    while (k < len2)
 	      {
-		if (s2[k++] != s1[j++])
+		if (f1.mem[j++] != f2.mem[k++])
 		  return -1;
-		if (j >= f1->len)
+		if (j >= len1)
 		  j = 0;
 	      }
 	  return 0;
 	}
-      maxi = (f1->len < f2->len) ? f1->len : f2->len;
+      maxi = (len1 < len2) ? len1 : len2;
       for (i = 0; i < maxi; i++)
 	{
-	  if (s1[i] == s2[i])
+	  if (f1.mem[i] == f2.mem[i])
 	    continue;
-	  if (s1[i] > s2[i])
+	  if (f1.mem[i] > f2.mem[i])
 	    return 1;
-	  if (s1[i] < s2[i])
+	  if (f1.mem[i] < f2.mem[i])
 	    return -1;
 	}
-      if (f1->len > f2->len)
-	while (i < f1->len)
-	  {
-	    if (s1[i++] != ' ')
+      if (len1 > len2)
+	{
+	  while (i < len1)
+	    if (f1.mem[i++] != ' ')
 	      return 1;
-	  }
+	}
       else
-	while (i < f2->len)
-	  {
-	    if (s2[i++] != ' ')
+	{
+	  while (i < len2)
+	    if (f2.mem[i++] != ' ')
 	      return -1;
-	  }
+	}
     }
   else
     {
-      cob_push_decimal (f1, s1);
-      cob_push_decimal (f2, s2);
+      cob_push_decimal (f1);
+      cob_push_decimal (f2);
       return cob_cmp ();
     }
   return 0;
@@ -649,8 +637,8 @@ cob_is_zero ()
       {
 	int i;
 	struct cob_field *p = COB_FIELD (POP ());
-	for (i = 0; i < p->f->len; i++)
-	  if (p->s[i] != '0')
+	for (i = 0; i < p->desc->len; i++)
+	  if (p->mem[i] != '0')
 	    return 0;
 	return 1;
       }
@@ -678,8 +666,7 @@ cob_is_equal ()
 
       case COB_TYPE_FIELD:
 	DROP (2);
-	return (compare (COB_FIELD (o1)->f, COB_FIELD (o1)->s,
-			 COB_FIELD (o2)->f, COB_FIELD (o2)->s) == 0) ? 1 : 0;
+	return (compare (*COB_FIELD (o1), *COB_FIELD (o2)) == 0) ? 1 : 0;
       }
   /* A trick that allows 88 variables */
   else if (COB_TYPE (o2) == COB_TYPE_BOOLEAN
