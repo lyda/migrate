@@ -44,6 +44,9 @@ The config option `display-sign' controls this.
 initialized at the beginning of program by default.
 The config option `auto-initialize' controls this.
 
+*** SORT statement now creates a temporary file in /tmp for sorting
+and removes it after sorting.
+
 ** Feature changes
 
 *** COPY statements try to complement the following file extensions:
