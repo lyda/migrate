@@ -342,7 +342,14 @@ cob_push_decimal (struct fld_desc *f, unsigned char *s)
 	case 1: mpz_set_si (d->number, *((signed char *) s)); break;
 	case 2: mpz_set_si (d->number, *((signed short *) s)); break;
 	case 4: mpz_set_si (d->number, *((signed long *) s)); break;
-	case 8: mpz_set_si (d->number, *((signed long long *) s)); break;
+	case 8:
+	  {
+	    signed long long val = *((signed long long *) s);
+	    mpz_set_si (d->number, val >> 32);
+	    mpz_mul_2exp (d->number, d->number, 32);
+	    mpz_add_ui (d->number, d->number, val & 0xffffffff);
+	    break;
+	  }
 	}
       break;
 
@@ -397,31 +404,41 @@ cob_set (struct fld_desc *f, char *s, int round)
     {
     case 'B':
       {
-	int val;
-	if (!mpz_fits_sint_p (d->number))
-	  goto size_error;
-	val = mpz_get_si (d->number);
-	switch (f->len)
+	if (f->len <= 4)
 	  {
-	  case 1:
-	    if (val < -99 || val > 99)
+	    int val;
+	    if (!mpz_fits_sint_p (d->number))
 	      goto size_error;
-	    *((signed char *) s) = val;
-	    break;
-	  case 2:
-	    if (val < -9999 || val > 9999)
+	    val = mpz_get_si (d->number);
+	    switch (f->len)
+	      {
+	      case 1:
+		if (val < -99 || val > 99)
+		  goto size_error;
+		*((signed char *) s) = val;
+		break;
+	      case 2:
+		if (val < -9999 || val > 9999)
+		  goto size_error;
+		*((signed short *) s) = val;
+		break;
+	      case 4:
+		if (val < -99999999 || val > 99999999)
+		  goto size_error;
+		*((signed long *) s) = val;
+		break;
+	      }
+	  }
+	else
+	  {
+	    signed long long val;
+	    unsigned long lower = mpz_get_ui (d->number);
+	    mpz_fdiv_q_2exp (d->number, d->number, 32);
+	    if (!mpz_fits_sint_p (d->number))
 	      goto size_error;
-	    *((signed short *) s) = val;
-	    break;
-	  case 4:
-	    if (val < -99999999 || val > 99999999)
-	      goto size_error;
-	    *((signed long *) s) = val;
-	    break;
-	  case 8:
-	    /* FIXME: val should be long long, and
-	     * FIXME: this should allow 18 digits */
-	    if (val < -99999999 || val > 99999999)
+	    val = mpz_get_si (d->number);
+	    val = (val << 32) + lower;
+	    if (val < -999999999999999999 || val > 999999999999999999)
 	      goto size_error;
 	    *((signed long long *) s) = val;
 	    break;
