@@ -296,7 +296,7 @@ init_constants (void)
   cobc_false       = make_constant (COB_BOOLEAN, "0");
   cobc_dt          = make_constant (COB_NUMERIC, "cob_dt");
   cobc_status      = make_constant (COB_NUMERIC, "cob_status");
-  cobc_return_code = make_constant (COB_NUMERIC, "cob_retrun_code");
+  cobc_return_code = make_constant (COB_NUMERIC, "cob_return_code");
   cobc_zero        = make_constant (COB_NUMERIC, "cob_zero");
   cobc_space       = make_constant (COB_ALPHANUMERIC, "cob_space");
   cobc_low         = make_constant (COB_ALPHANUMERIC, "cob_low");

@@ -1,3 +1,7 @@
+2002-09-28  Keisuke Nishida  <knishida@netlab.jp>
+
+	* tree.c (init_constants): Typo fixed.  Thanks to Mike Black.
+
 2002-09-24  Keisuke Nishida  <knishida@netlab.jp>
 
 	* scanner.l: Do not support single-quoted strings.
