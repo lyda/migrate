@@ -61,12 +61,11 @@ static void set_buffer (int lineno, const char *filename,
 
 %%
 
-<*>^[*/D].* {
-  /* Comment */
-  if (yytext[0] == 'D' && cob_debug_flag)
-    /* Activate debugging code */
-    yyless(1);
-}
+<*>^[*/].*		{ /* comment */ }
+
+<*>^"D "		{ if (cob_debug_flag) yyless(2); }
+
+<*>\n			{ process_eol (); }
 
 <*>\n-[ \t]*[\"\']? {
   if (cob_format == COB_FORMAT_FIXED)
@@ -79,8 +78,6 @@ static void set_buffer (int lineno, const char *filename,
     process_eol ();
 }
 
-<*>\n			{ process_eol (); }
-
 "COPY"			{ BEGIN COPY_STATE; return COPY; }
 "REPLACE"		{ BEGIN COPY_STATE; return REPLACE; }
 
@@ -88,7 +85,7 @@ static void set_buffer (int lineno, const char *filename,
 [ \t]* |
 [0-9A-Z_-]+ |
 \'[^\'\n]*\' |
-\"[^\"\n]*\" { ECHO; }
+\"[^\"\n]*\"		{ ECHO; }
 
 <COPY_STATE>","		{ return ','; }
 <COPY_STATE>"."		{ BEGIN INITIAL; return '.'; }
