@@ -1,6 +1,6 @@
 ### OpenCOBOL Test Suite				-*- m4 -*-
 
-## Copyright (C) 2003 Keisuke Nishida
+## Copyright (C) 2003-2004 Keisuke Nishida
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -24,7 +24,8 @@
 
 # 1) DONE
 
-AT_SETUP([REDEFINES not following entry-name])
+AT_SETUP([REDEFINES: not following entry-name])
+AT_KEYWORDS([redefines])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -44,7 +45,8 @@ AT_CLEANUP
 
 # 2) DONE
 
-AT_SETUP([REDEFINES 02 by 01])
+AT_SETUP([REDEFINES: level 02 by 01])
+AT_KEYWORDS([redefines])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -64,7 +66,8 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 
 AT_CLEANUP
 
-AT_SETUP([REDEFINES 03 by 02])
+AT_SETUP([REDEFINES: level 03 by 02])
+AT_KEYWORDS([redefines])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -85,7 +88,8 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 
 AT_CLEANUP
 
-AT_SETUP([REDEFINES 66])
+AT_SETUP([REDEFINES: level 66])
+AT_KEYWORDS([redefines])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -106,7 +110,8 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 
 AT_CLEANUP
 
-AT_SETUP([REDEFINES 88])
+AT_SETUP([REDEFINES: level 88])
+AT_KEYWORDS([redefines])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -134,7 +139,8 @@ AT_CLEANUP
 
 # 5) DONE
 
-AT_SETUP([Lower level number than REDEFINES entry])
+AT_SETUP([REDEFINES: lower level number])
+AT_KEYWORDS([redefines])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -159,7 +165,8 @@ AT_CLEANUP
 
 # 6) DONE
 
-AT_SETUP([REDEFINES to OCCURS])
+AT_SETUP([REDEFINES: with OCCURS])
+AT_KEYWORDS([redefines])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -179,7 +186,8 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
 
 AT_CLEANUP
 
-AT_SETUP([REDEFINES with subscript])
+AT_SETUP([REDEFINES: with subscript])
+AT_KEYWORDS([redefines])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -200,7 +208,8 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 
 AT_CLEANUP
 
-AT_SETUP([REDEFINES with variable occurrence])
+AT_SETUP([REDEFINES: with variable occurrence])
+AT_KEYWORDS([redefines])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -234,7 +243,8 @@ AT_CLEANUP
 
 # 7) DONE
 
-AT_SETUP([Qualified REDEFINES item])
+AT_SETUP([REDEFINES: with qualification])
+AT_KEYWORDS([redefines])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -259,7 +269,8 @@ AT_CLEANUP
 
 # 8) DONE
 
-AT_SETUP([Multiple redefinition of the same storage])
+AT_SETUP([REDEFINES: multiple redefinition])
+AT_KEYWORDS([redefines])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -270,18 +281,24 @@ AT_DATA([prog.cob], [
          02 X           PIC X.
          02 A           REDEFINES X PIC 9.
          02 B           REDEFINES X PIC 9.
+         02 C           REDEFINES B PIC 9.
        PROCEDURE        DIVISION.
            STOP RUN.
 ])
 
-AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:10: `B' not the original definition
+])
+
+AT_CHECK([${COMPILE_ONLY} -std=mvs prog.cob], [0])
 
 AT_CLEANUP
 
 
 # 9) DONE
 
-AT_SETUP([Redefined size exceeds the storage size (1)])
+AT_SETUP([REDEFINES: size exceeds])
+AT_KEYWORDS([redefines])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -291,76 +308,30 @@ AT_DATA([prog.cob], [
        01 G1.
          02 X           PIC X.
          02 A           REDEFINES X PIC 99.
-       PROCEDURE        DIVISION.
-           STOP RUN.
-])
-
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: size of `A' larger than size of `X'
-])
-
-AT_CLEANUP
-
-AT_SETUP([Redefined size exceeds the storage size (2)])
-
-AT_DATA([prog.cob], [
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 G1.
+       01 G2.
          02 X           PIC X.
          02 A           REDEFINES X PIC 9 OCCURS 2.
+       01 WRK-X         PIC X.
+       01 WRK-X-REDEF   REDEFINES WRK-X PIC 99.
+       01 EXT-X         PIC X EXTERNAL.
+       01 EXT-X-REDEF   REDEFINES EXT-X PIC 99.
        PROCEDURE        DIVISION.
            STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:8: size of `A' larger than size of `X'
+prog.cob:11: size of `A' larger than size of `X'
+prog.cob:15: size of `EXT-X-REDEF' larger than size of `EXT-X'
 ])
-
-AT_CLEANUP
-
-AT_SETUP([Redefined size exceeds the storage size (3)])
-
-AT_DATA([prog.cob], [
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 X             PIC X EXTERNAL.
-       01 A             REDEFINES X PIC 99.
-       PROCEDURE        DIVISION.
-           STOP RUN.
-])
-
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:7: size of `A' larger than size of `X'
-])
-
-AT_CLEANUP
-
-AT_SETUP([Redefined size exceeds the storage size (OK)])
-
-AT_DATA([prog.cob], [
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 X             PIC X.
-       01 A             REDEFINES X PIC 99.
-       PROCEDURE        DIVISION.
-           STOP RUN.
-])
-
-AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
 
 AT_CLEANUP
 
 
 # 10) DONE
 
-AT_SETUP([VALUE clause under REDEFIENS (1)])
+AT_SETUP([REDEFINES: with VALUE])
+AT_KEYWORDS([redefines])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -369,58 +340,26 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01 X             PIC X.
        01 A             REDEFINES X PIC X VALUE "A".
+       01 G             REDEFINES X.
+         02 B           PIC X VALUE "A".
+       01 Y             REDEFINES X PIC X.
+         88 C           VALUE "A".
        PROCEDURE        DIVISION.
            STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:7: entries under REDEFINES cannot have VALUE clause
+prog.cob:9: entries under REDEFINES cannot have VALUE clause
 ])
-
-AT_CLEANUP
-
-AT_SETUP([VALUE clause under REDEFIENS (2)])
-
-AT_DATA([prog.cob], [
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 X             PIC X.
-       01 G             REDEFINES X.
-         02 A           PIC X VALUE "A".
-       PROCEDURE        DIVISION.
-           STOP RUN.
-])
-
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: entries under REDEFINES cannot have VALUE clause
-])
-
-AT_CLEANUP
-
-AT_SETUP([VALUE clause under REDEFIENS (OK)])
-
-AT_DATA([prog.cob], [
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 X             PIC X.
-       01 Y             REDEFINES X PIC X.
-         88 A           VALUE "A".
-       PROCEDURE        DIVISION.
-           STOP RUN.
-])
-
-AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
 
 AT_CLEANUP
 
 
 # 11) DONE
 
-AT_SETUP([REDEFINES with intervention (1)])
+AT_SETUP([REDEFINES: with intervention])
+AT_KEYWORDS([redefines])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -430,33 +369,17 @@ AT_DATA([prog.cob], [
        01 X             PIC X.
        01 Y             PIC X.
        01 A             REDEFINES X PIC X.
+       01 G.
+         02 G-X         PIC X.
+         02 G-Y         PIC X.
+         02 G-A         REDEFINES G-X PIC X.
        PROCEDURE        DIVISION.
            STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:8: REDEFINES must follow the original definition
-])
-
-AT_CLEANUP
-
-AT_SETUP([REDEFINES with intervention (2)])
-
-AT_DATA([prog.cob], [
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 G.
-         02 X           PIC X.
-         02 Y           PIC X.
-         02 A           REDEFINES X PIC X.
-       PROCEDURE        DIVISION.
-           STOP RUN.
-])
-
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:9: REDEFINES must follow the original definition
+prog.cob:12: REDEFINES must follow the original definition
 ])
 
 AT_CLEANUP
@@ -464,7 +387,8 @@ AT_CLEANUP
 
 # 12) DONE
 
-AT_SETUP([REDEFINES under REDEFINES])
+AT_SETUP([REDEFINES: within REDEFINES])
+AT_KEYWORDS([redefines])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -491,23 +415,3 @@ AT_CLEANUP
 # 15) TODO
 
 # 16) TODO
-
-
-AT_SETUP([REDEFINES with already redefined field])
-
-AT_DATA([prog.cob], [
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 G.
-         02 A           PIC X(5).
-         02 B           REDEFINES A PIC X(3).
-         02 C           REDEFINES B PIC X(5).
-       PROCEDURE        DIVISION.
-           STOP RUN.
-])
-
-AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
-
-AT_CLEANUP
