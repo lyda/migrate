@@ -40,13 +40,10 @@ store_common_region (cob_field *f, unsigned char *data, size_t size, int scale)
   int hf2 = COB_FIELD_SIZE (f) + lf2;
   int lcf = MAX (lf1, lf2);
   int gcf = MIN (hf1, hf2);
-  unsigned char *s1 = data + (hf1 - gcf);
-  unsigned char *s2 = COB_FIELD_DATA (f) + (hf2 - gcf);
-  unsigned char *e1 = data + (hf1 - lcf);
 
   memset (f->data, '0', f->size);
-  if (s1 < e1)
-    memcpy (s2, s1, e1 - s1);
+  if (gcf > lcf)
+    memcpy (COB_FIELD_DATA (f) + (hf2 - gcf), data + (hf1 - gcf), gcf - lcf);
 }
 
 
