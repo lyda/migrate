@@ -246,7 +246,7 @@ cob_open (struct file_desc *f, char *record, char *fname, int mode)
       oflags = O_RDONLY;
       break;
     case FMOD_IO:
-      oflags = O_RDWR;
+      oflags = O_CREAT | O_RDWR;
       if (f->organization == ORG_LINESEQUENTIAL)
 	{
 	  /* Line Sequential does not Support Mode IO */
