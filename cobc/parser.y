@@ -212,7 +212,7 @@ static void ambiguous_error (struct cobc_word *p);
 %token DATE,DAY,DAY_OF_WEEK,TIME,READ,WRITE,OBJECT_COMPUTER,INPUT_OUTPUT
 %token TO,FOR,IS,ARE,THRU,THAN,NO,CANCEL,ASCENDING,DESCENDING,ZERO
 %token SOURCE_COMPUTER,BEFORE,AFTER,RESERVE,DECLARATIVES,USE
-%token RIGHT,JUSTIFIED,SYNCHRONIZED,SEPARATE,BLOCK
+%token RIGHT,JUSTIFIED,SYNCHRONIZED,SEPARATE,BLOCK,CODE_SET
 %token TOK_INITIAL,FIRST,ALL,LEADING,OF,IN,BY,STRING,UNSTRING,DEBUGGING
 %token START,DELETE,PROGRAM,GLOBAL,EXTERNAL,SIZE,DELIMITED,COLLATING,SEQUENCE
 %token GIVING,INSPECT,TALLYING,REPLACING,ON,OFF,POINTER,OVERFLOW,NATIVE
@@ -764,10 +764,10 @@ same_statement_list:
 | same_statement_list same_statement
 ;
 same_statement:
-  SAME same_option _area _for data_name_list '.'
+  SAME same_option _area _for file_name_list '.'
 ;
 same_option:
-  RECORD
+| RECORD
 | SORT
 | SORT_MERGE
 ;
@@ -821,6 +821,7 @@ file_option:
 | record_clause
 | label_clause
 | data_clause
+| codeset_clause
 ;
 
 
@@ -886,11 +887,6 @@ record_or_records:
 
 
 /*
- * VALUE OF clause
- */
-
-
-/*
  * DATA clause
  */
 
@@ -900,8 +896,15 @@ data_clause:
 
 
 /*
- * LINAGE clause
+ * CODE-SET clause
  */
+
+codeset_clause:
+  CODE_SET _is WORD
+  {
+    yyerror ("CODE-SET is not implemented");
+  }
+;
 
 
 /*******************

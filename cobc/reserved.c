@@ -91,6 +91,7 @@ static struct reserved reserved_words[] = {
   {"CHARACTERS",	CHARACTERS},
   {"CLASS",		CLASS},
   {"CLOSE",		CLOSE},
+  {"CODE-SET",		CODE_SET},
   {"COLLATING",		COLLATING},
   {"COMMA",		COMMA},
   {"COMMAND-LINE",	COMMAND_LINE},
