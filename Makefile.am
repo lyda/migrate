@@ -1,3 +1,5 @@
+bin_SCRIPTS=cob-config
+
 SUBDIRS = cobpp cobc libcob doc
 EXTRA_DIST = VERSION
 

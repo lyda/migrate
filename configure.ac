@@ -44,7 +44,6 @@ AC_CHECK_DB
 
 # Checks for gmp.
 AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp is required))
-AC_CHECK_LIB([gmp], [__gmp_rand], , AC_MSG_ERROR(gmp is required))
 
 # Checks for readline.
 AC_CHECK_HEADERS([readline/readline.h readline/history.h])
@@ -71,11 +70,11 @@ AC_CHECK_FUNCS([atexit memmove memset strcasecmp strchr strdup \
 		strerror strrchr strstr strtol])
 
 COB_LDADD="-L\${libdir} -lcob -lncurses -ldl -lm -lgmp $DB_LIBS"
-COB_LDFLAGS=
+COB_CFLAGS="-I\${includedir}"
 
 AC_SUBST(COB_LDADD)
-AC_SUBST(COB_LDFLAGS)
+AC_SUBST(COB_CFLAGS)
 
 AC_CONFIG_FILES([Makefile cobpp/Makefile cobc/Makefile libcob/Makefile
-		doc/Makefile])
+		doc/Makefile cob-config])
 AC_OUTPUT

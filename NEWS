@@ -1,5 +1,26 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Version 0.8.1 での変更点
+
+** スクリプト cob-config を作成
+
+cobc によって生成されたファイルを gcc でリンクするとき、
+必要となるオプションを出力する。次のようにして使う。
+
+  % cobc -c foo.cob
+  % gcc -o foo foo.o `cob-config --libs`
+
+** cobc にオプション -dynamic を追加
+
+通常、COBOL の CALL 文で定数が指定された場合はモジュールが
+static link されるが、オプション -dynamic を指定した場合、
+常に dynamic link を行なうようになる。
+
+詳しくは doc/module.txt を参照。
+
+** いくつかのバグ修正
+
+
 * Version 0.8 での変更点
 
 ** cobpp を完全に書き直した

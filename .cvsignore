@@ -10,3 +10,4 @@ ltmain.sh
 missing
 mkinstalldirs
 stamp-h*
+cob-config
