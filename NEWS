@@ -1,20 +1,11 @@
 NEWS - user visible changes				-*- outline -*-
 
-* Changes in OpenCOBOL 0.9.3
+* Changes in OpenCOBOL 0.9.4
 
-** NIST Test Suite 83.16%.
+** OpenCOBOL now requires Berkeley DB 3.0 or later.
 
-
-* Changes in OpenCOBOL 0.9.2
+** File I/O routine (libcob/fileio.c) has been reimplemented.
 
-** NIST Test Suite 69.47%.
+** New NIST Test Suite modules: SM, IC, SQ, RL, IX.
 
-
-* Changes in OpenCOBOL 0.9.1
-
-** NIST Test Suite 52.63%.
-
-
-* Changes in OpenCOBOL 0.9
-
-** NIST Test Suite 41.05%.
+** Many bug fixes.
