@@ -311,18 +311,6 @@ struct index_to_table_list
   char seq;			/* '0' = none, '1' = ASCENDING, '2' = DESCENDING */
 };
 
-union label_def
-{
-  struct
-  {
-    unsigned n:15;
-    unsigned defined:1;
-    unsigned off;
-  }
-  l;
-  unsigned long x;
-};
-
 struct condition
 {
   struct sym *sy;		/* implied first operand */
@@ -592,18 +580,18 @@ extern void push_field (struct sym *sy);
 extern void gen_goto_depending (struct list *l, struct sym *sy);
 extern void gen_goto (struct list *l);
 extern int gen_check_zero (void);
-extern unsigned long gen_at_end (int status);
-extern unsigned long gen_testif (void);
+extern int gen_at_end (int status);
+extern int gen_testif (void);
 extern void gen_not (void);
-extern unsigned long gen_andstart (void);
-extern unsigned long gen_orstart (void);
-extern void gen_dstlabel (unsigned long lbl);
-extern unsigned long gen_passlabel (void);
-extern unsigned long gen_marklabel (void);
-extern void gen_jmplabel (unsigned long lbl);
+extern int gen_andstart (void);
+extern int gen_orstart (void);
+extern void gen_dstlabel (int lbl);
+extern int gen_passlabel (void);
+extern int gen_marklabel (void);
+extern void gen_jmplabel (int lbl);
 extern void gen_push_int (struct sym *sy);
-extern void gen_perform_test_counter (unsigned long lbl);
-extern void gen_perform_times (unsigned long lbl);
+extern void gen_perform_test_counter (int lbl);
+extern void gen_perform_times (int lbl);
 extern void gen_perform_thru (struct sym *s1, struct sym *s2);
 extern void gen_perform (struct sym *sy);
 extern int save_pic_char (char c, int n);

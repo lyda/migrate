@@ -3885,11 +3885,10 @@ gen_check_zero ()
   return i;
 }
 
-unsigned long
+int
 gen_at_end (int status)
 {
   int i, j;
-  union label_def label;
   i = loc_label++;
   j = loc_label++;
 
@@ -3902,30 +3901,21 @@ gen_at_end (int status)
   fprintf (o_src, ".L%d:\n", j);
 
   stabs_line ();
-  label.l.n = i;
-  label.l.off = label.l.defined = 0;
-  return label.x;
+  return i;
 }
 
-unsigned long
+int
 gen_testif (void)
 {
   int i, j;
-  union label_def label;
   i = loc_label++;
   j = loc_label++;
   fprintf (o_src, "\tjz\t.L%d\n", j);
   fprintf (o_src, "\tjmp\t.L%d\n", i);
-
-//      fprintf(o_src,"L%d:\n",j);
   fprintf (o_src, "\t.align 16\n");
   fprintf (o_src, ".L%d:\n", j);
-
   stabs_line ();
-
-  label.l.n = i;
-  label.l.off = label.l.defined = 0;
-  return label.x;
+  return i;
 }
 
 void
@@ -3945,72 +3935,50 @@ gen_not (void)
   stabs_line ();
 }
 
-unsigned long
+int
 gen_andstart (void)
 {
-  int i;
-  union label_def label;
-  i = loc_label++;
+  int i = loc_label++;
   fprintf (o_src, "\tjnz\t.L%d\n", i);
-  label.l.n = i;
-  label.l.off = label.l.defined = 0;
-  return label.x;
+  return i;
 }
 
-unsigned long
+int
 gen_orstart (void)
 {
-  int i;
-  union label_def label;
-  i = loc_label++;
+  int i = loc_label++;
   fprintf (o_src, "\tjz\t.L%d\n", i);
-  label.l.n = i;
-  label.l.off = label.l.defined = 0;
-  return label.x;
+  return i;
 }
 
 void
-gen_dstlabel (unsigned long lbl)
+gen_dstlabel (int lbl)
 {
-  char slab[32];
-  union label_def label;
-  label.x = lbl;
-  sprintf (slab, ".L%d", label.l.n);
-  fprintf (o_src, ".L%d:\n", label.l.n);
+  fprintf (o_src, ".L%d:\n", lbl);
   stabs_line ();
 }
 
-unsigned long
+int
 gen_passlabel (void)
 {
-  int i;
-  union label_def label;
-  i = loc_label++;
+  int i = loc_label++;
   fprintf (o_src, "\tjmp\t.L%d\n", i);
-  label.l.off = label.l.defined = 0;
-  label.l.n = i;
-  return label.x;
+  return i;
 }
 
-unsigned long
+int
 gen_marklabel (void)
 {
-  int i;
-  union label_def label;
-  i = loc_label++;
+  int i = loc_label++;
   fprintf (o_src, ".L%d:\n", i);
   stabs_line ();
-  label.l.defined = 1;
-  label.l.n = i;
-  return label.x;
+  return i;
 }
 
 void
-gen_jmplabel (unsigned long lbl)
+gen_jmplabel (int lbl)
 {
-  union label_def label;
-  label.x = lbl;
-  fprintf (o_src, "\tjmp\t.L%d\n", label.l.n);
+  fprintf (o_src, "\tjmp\t.L%d\n", lbl);
 }
 
 void
@@ -4025,22 +3993,18 @@ gen_push_int (struct sym *sy)
 }
 
 void
-gen_perform_test_counter (unsigned long lbl)
+gen_perform_test_counter (int lbl)
 {
-  union label_def label;
-  label.x = lbl;
   fprintf (o_src, "\tcmpl\t$0,0(%%esp)\n");
-  fprintf (o_src, "\tjle\t.L%dE\n", label.l.n);
+  fprintf (o_src, "\tjle\t.L%dE\n", lbl);
 }
 
 void
-gen_perform_times (unsigned long lbl)
+gen_perform_times (int lbl)
 {
-  union label_def label;
-  label.x = lbl;
   fprintf (o_src, "\tdecl\t0(%%esp)\n");
-  fprintf (o_src, "\tjnz\t.L%d\n", label.l.n);
-  fprintf (o_src, ".L%dE:\tpopl\t%%ecx\n", label.l.n);
+  fprintf (o_src, "\tjnz\t.L%d\n", lbl);
+  fprintf (o_src, ".L%dE:\tpopl\t%%ecx\n", lbl);
 }
 
 void
