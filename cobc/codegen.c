@@ -1275,7 +1275,7 @@ output_perform_once (struct cobc_perform *p)
   else
     {
       struct cobc_pair *pair = COBC_PAIR (p->body);
-      output_line ("cob_perform (l_%d, lb_%s, le_%s);",
+      output_line ("cob_perform (%d, lb_%s, le_%s);",
 		   global_label++,
 		   COBC_LABEL_NAME (pair->x)->cname,
 		   COBC_LABEL_NAME (pair->y)->cname);
@@ -1801,10 +1801,24 @@ codegen (struct program_spec *spec)
 	       "cob_file_status);");
   output_line ("cob_exit (le_default_handler);");
 
+  /* PROCEDURE */
   for (l = spec->exec_list; l; l = l->next)
     output_tree (l->item);
   output_newline ();
 
-  output_line ("return cob_return_code;");
+#if !COB_HAVE_COMPUTED_GOTO
+  /* go back to PERFORM */
+  output_line ("l_exit:");
+  output_line ("switch (frame_stack[frame_index].perform_id)");
+  output_indent ("  {", 2);
+  {
+    int i;
+    for (i = 1; i < global_label; i++)
+      output_line ("case %d: goto l_%d;", i, i);
+  }
+  output_indent ("  }", -2);
+#endif
+
+  output_line ("cob_exit_program ();");
   output_indent ("}", -2);
 }

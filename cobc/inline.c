@@ -35,11 +35,15 @@ output_file_handler (struct cobc_file_name *f, int type,
   output_line ("if (%s_desc.file_status[0] != '0')", f->cname);
   output_line ("  {");
   if (f->handler)
-    output_line ("    cob_perform (lp_%d, lb_%s, le_%s);",
+    output_line ("    cob_perform (%d, lb_%s, le_%s);",
 		 global_label++, f->handler->cname, f->handler->cname);
   else
-    output_line ("    cob_standard_error_handle (%d, %s_desc);",
-		 global_label++, f->cname);
+    {
+      output_line ("    cob_standard_error_handle (%d, %d, %d, %d, %s_desc);",
+		   global_label, global_label + 1, global_label + 2,
+		   global_label + 3, f->cname);
+      global_label += 4;
+    }
   output_line ("  }");
   if (st2)
     {

@@ -17,17 +17,10 @@
  * Suite 330, Boston, MA 02111-1307 USA
  */
 
-#ifndef COB_LIBCOB_H
-#define COB_LIBCOB_H
+#ifndef COB_CONFIG_H
+#define COB_CONFIG_H
 
-#include <libcob/cobconfig.h>
-#include <libcob/common.h>
-#include <libcob/move.h>
-#include <libcob/numeric.h>
-#include <libcob/strings.h>
-#include <libcob/termio.h>
-#include <libcob/fileio.h>
-#include <libcob/call.h>
-#include <libcob/support.h>
+/* Define to 1 if cc supports computed-goto */
+#define COB_HAVE_COMPUTED_GOTO	@COMPUTED_GOTO@
 
-#endif /* COB_LIBCOB_H_ */
+#endif /* COB_CONFIG_H_ */

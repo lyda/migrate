@@ -23,6 +23,9 @@ AC_ARG_ENABLE(maintainer-mode,
   [ AC_DEFINE(COB_DEBUG)
     AC_CONFIG_FILES([redhat/open-cobol.spec])])
 
+# Autoheader templates
+AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
+
 save_libs="$LIBS"
 
 # Checks for programs.
@@ -82,10 +85,31 @@ AC_CHECK_LIB([ltdl], [lt_dlopen], , AC_MSG_ERROR(ltdl is required))
 LIBRL=""
 USE_READLINE="no"
 AC_CHECK_HEADERS([readline/readline.h readline/history.h])
-AC_CHECK_LIB([readline], [readline], LIBRL="-lreadline", USE_READLINE="yes")
+AC_CHECK_LIB([readline], [readline], [LIBRL="-lreadline"; USE_READLINE="yes"])
 
-# Autoheader templates
-AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
+# Checks for GCC's computed-goto extension
+AC_CACHE_CHECK([for computed-goto], [ac_computed_goto],
+[AC_TRY_COMPILE([], [
+int foo(int);
+int foo(i)
+int i; { 
+static void *label[] = { &&l1, &&l2 };
+goto *label[i];
+l1: return 1;
+l2: return 2;
+}
+],
+ac_computed_goto=yes,
+ac_computed_goto=no)])
+
+if test "$ac_computed_goto" = yes; then
+  COMPUTED_GOTO=1
+else
+  COMPUTED_GOTO=0
+fi
+AC_SUBST(COMPUTED_GOTO)
+
+# OpenCOBOL Configuration
 
 COB_COBPP="cobpp"
 COB_CFLAGS="-I$includedir"
@@ -103,7 +127,8 @@ AC_SUBST(COB_LIBRARY_PATH)
 AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBS)
 
-AC_CONFIG_FILES([cob-config Makefile lib/Makefile libcob/Makefile
+AC_CONFIG_FILES([cob-config libcob/cobconfig.h
+		Makefile lib/Makefile libcob/Makefile
 		cobpp/Makefile cobc/Makefile po/Makefile.in texi/Makefile])
 AC_OUTPUT
 
@@ -116,6 +141,7 @@ echo "  COB_CFLAGS           ${COB_CFLAGS}"
 echo "  COB_LDADD            ${COB_LDADD}"
 echo "  COB_LIBRARY_PATH     ${COB_LIBRARY_PATH}"
 echo ""
-echo "  Use readline for input:      ${USE_READLINE}"
-echo "  Use gettext for I17n:        ${USE_NLS}"
+echo "  Use gettext for I17n:                        ${USE_NLS}"
+echo "  Use readline for input:                      ${USE_READLINE}"
+echo "  Use computed-goto to implement PERFORM:      ${ac_computed_goto}"
 echo ""
