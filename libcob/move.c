@@ -354,7 +354,7 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
   int count = 0;
   int count_sign = 1;
   int trailing_sign = 0;
-  int have_digits = 0;
+  int suppress_zero = 1;
   unsigned char sign_symbol = 0;
   unsigned char *decimal_point = NULL;
 
@@ -383,16 +383,20 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	{
 	  switch (c)
 	    {
-	    case '9': *dst = get (); have_digits = trailing_sign = 1; break;
-
 	    case '0':
 	    case '/': *dst = c; break;
 	    case 'B': *dst = pad; break;
-	    case 'P': *dst = have_digits ? '0' : pad; break;
+	    case 'P': *dst = suppress_zero ? pad : '0'; break;
+	    case ',': *dst = suppress_zero ? pad : ','; break;
 
 	    case 'V':
-	    case '.': *dst = pad; decimal_point = dst; break;
-	    case ',': *dst = have_digits ? ',' : pad; break;
+	    case '.': *dst = '.'; decimal_point = dst; break;
+
+	    case '9':
+	      *dst = get ();
+	      suppress_zero = 0;
+	      trailing_sign = 1;
+	      break;
 
 	    case 'C':
 	    case 'D':
@@ -407,13 +411,13 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 		char x = get ();
 		if (trailing_sign)
 		  *dst = sign ? '-' : (c == '+') ? '+' : ' ';
-		else if (dst == f2.data || (!have_digits && x == '0'))
+		else if (dst == f2.data || (suppress_zero && x == '0'))
 		  {
 		    *dst = pad;
 		    sign_symbol = sign ? '-' : (c == '+') ? '+' : ' ';
 		  }
 		else
-		  *dst = x, have_digits = 1;
+		  *dst = x, suppress_zero = 0;
 		break;
 	      }
 
@@ -422,10 +426,10 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	      {
 		char x = get ();
 		pad = (c == '*') ? '*' : ' ';
-		if (!have_digits && x == '0')
+		if (suppress_zero && x == '0')
 		  *dst = pad;
 		else
-		  *dst = x, have_digits = 1;
+		  *dst = x, suppress_zero = 0;
 		break;
 	      }
 
@@ -433,10 +437,10 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	      if (c == cCurrencySymbol)
 		{
 		  char x = get ();
-		  if (dst == f2.data || (!have_digits && x == '0'))
+		  if (dst == f2.data || (suppress_zero && x == '0'))
 		    *dst = pad, sign_symbol = cCurrencySymbol;
 		  else
-		    *dst = x, have_digits = 1;
+		    *dst = x, suppress_zero = 0;
 		  break;
 		}
 
@@ -446,20 +450,29 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	}
     }
 
-  if (have_digits && decimal_point)
+  if (suppress_zero)
     {
-      *decimal_point = '.';
-      for (dst = decimal_point + 1; dst < end; dst++)
-	if (!isdigit (*dst) && *dst != ',')
-	  *dst = '0';
+      if (pad == ' ')
+	memset (f2.data, ' ', f2.desc->len);
+      else
+	for (dst = f2.data; dst < f2.data + f2.desc->len; dst++)
+	  if (*dst != '.')
+	    *dst = pad;
     }
-
-  if (have_digits && sign_symbol)
+  else
     {
-      for (dst = end - 1; dst > f2.data; dst--)
-	if (*dst == ' ')
-	  break;
-      *dst = sign_symbol;
+      if (decimal_point)
+	for (dst = decimal_point + 1; dst < end; dst++)
+	  if (!isdigit (*dst) && *dst != ',')
+	    *dst = '0';
+
+      if (sign_symbol)
+	{
+	  for (dst = end - 1; dst > f2.data; dst--)
+	    if (*dst == ' ')
+	      break;
+	  *dst = sign_symbol;
+	}
     }
 
   put_sign (f1, sign);
