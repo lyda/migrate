@@ -738,6 +738,8 @@ same_statement:
 same_option:
   /* nothing */			{ $$ = 0; }
 | RECORD			{ $$ = 1; }
+| SORT				{ $$ = 2; }
+| SORT_MERGE			{ $$ = 3; }
 ;
 
 
@@ -856,7 +858,7 @@ record_or_records:
  */
 
 data_clause:
-  DATA record_or_records undefined_word_list { /* ignore */ }
+  DATA record_or_records undefined_word_list { IGNORE ("DATA RECORD"); }
 ;
 
 
@@ -2124,7 +2126,7 @@ read_statement:
     if ($5)
       push_move (COBC_TREE (current_file_name->record), $5);
   }
-  read_option
+  read_handler
   _end_read
 ;
 read_into:
@@ -2135,7 +2137,7 @@ read_key:
   /* nothing */			{ $$ = NULL; }
 | KEY _is data_name		{ $$ = $3; }
 ;
-read_option:
+read_handler:
   /* nothing */
   {
     push_call_4 (COBC_FILE_HANDLER, current_file_name, 0, 0, 0);
@@ -2499,7 +2501,7 @@ before_or_after:
   BEFORE			{ $$ = COBC_BEFORE; }
 | AFTER				{ $$ = COBC_AFTER; }
 ;
-_line_or_lines: | LINE | LINES;
+_line_or_lines: | LINE | LINES ;
 _advancing: | ADVANCING ;
 _end_write: | END_WRITE ;
 

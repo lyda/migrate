@@ -198,7 +198,7 @@ static struct reserved reserved_words[] = {
   {"LEFT",		LEFT},
   {"LESS",		LESS},
   {"LINE",		LINE},
-  {"LINES",		LINE},
+  {"LINES",		LINES},
   {"LINKAGE",		LINKAGE},
   {"LOCK",		LOCK},
   {"LOW-VALUE",		LOW_VALUE},
