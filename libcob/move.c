@@ -471,8 +471,7 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 		  break;
 		}
 
-	      *dst = '?';
-	      cob_runtime_error (_("invalid PIC char `%c'"), c);
+	      *dst = '?'; /* invalid PIC */
 	    }
 	}
     }
@@ -527,21 +526,17 @@ cob_move_alphanum_to_edited (struct cob_field f1, struct cob_field f2)
     {
       unsigned char c = *p++; /* PIC char */
       unsigned char n = *p++; /* PIC char count */
-      for (; n > 0; n--, dst++)
+      for (; n > 0; n--)
 	{
 	  switch (c)
 	    {
 	    case 'A':
 	    case 'X':
-	    case '9': *dst = (src < max) ? *src++ : ' '; break;
-
+	    case '9': *dst++ = (src < max) ? *src++ : ' '; break;
 	    case '0':
-	    case '/': *dst = c; break;
-	    case 'B': *dst = ' '; break;
-
-	    default:
-	      *dst = '?';
-	      cob_runtime_error (_("invalid PIC char `%c'"), c);
+	    case '/': *dst++ = c; break;
+	    case 'B': *dst++ = ' '; break;
+	    default:  *dst++ = '?'; /* invalid PIC */
 	    }
 	}
     }
