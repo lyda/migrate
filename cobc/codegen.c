@@ -2425,7 +2425,7 @@ math_on_size_error3 (struct math_ose *v)
   switch (v->ose)
     {
     case 1:
-      fprintf (o_src, "\tcmpl\t$0, %%eax\n");
+      fprintf (o_src, "\tcmpl\t$0, cob_math_size_error_flag\n");
       fprintf (o_src, "\tje\t.L%ld\n", lbl1);
       fprintf (o_src, "\tleal\t.L%ld, %%eax\n", lbl1);
       fprintf (o_src, "\tpushl\t%%eax\n");
@@ -2435,7 +2435,7 @@ math_on_size_error3 (struct math_ose *v)
       break;
 
     case 2:
-      fprintf (o_src, "\tcmpl\t$0, %%eax\n");
+      fprintf (o_src, "\tcmpl\t$0, cob_math_size_error_flag\n");
       fprintf (o_src, "\tjne\t.L%ld\n", lbl1);
       fprintf (o_src, "\tleal\t.L%ld, %%eax\n", lbl1);
       fprintf (o_src, "\tpushl\t%%eax\n");
@@ -2446,7 +2446,7 @@ math_on_size_error3 (struct math_ose *v)
 
     default:
       lbl2 = loc_label++;
-      fprintf (o_src, "\tcmpl\t$0, %%eax\n");
+      fprintf (o_src, "\tcmpl\t$0, cob_math_size_error_flag\n");
       fprintf (o_src, "\tje\t.L%ld\n", lbl1);
       fprintf (o_src, "\tleal\t.L%ld, %%eax\n", lbl2);
       fprintf (o_src, "\tpushl\t%%eax\n");
@@ -2460,7 +2460,6 @@ math_on_size_error3 (struct math_ose *v)
       fprintf (o_src, ".L%ld:\n", lbl2);
       break;
     }
-
 }
 
 struct math_ose *

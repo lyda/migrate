@@ -21,6 +21,8 @@
 #include "_libcob.h"
 #include "decimal.h"
 
+int cob_math_size_error_flag;
+
 void
 cob_fld_to_decimal (struct fld_desc *f, unsigned char *s, union numeric_type *p)
 {
@@ -63,19 +65,23 @@ cob_fld_to_decimal (struct fld_desc *f, unsigned char *s, union numeric_type *p)
   p->n_decimal = num;
 }
 
-int
+void
 cob_decimal_to_fld (struct fld_desc *f, char *s, int round, union numeric_type val)
 {
   decimal num = val.n_decimal;
 
-  /* FIXME: Do rounding here */
+  /* Initialize global flags */
+  cob_math_size_error_flag = 0;
 
+  /* FIXME: Do rounding here */
 
   /* Check for overflow */
   if (f->len - f->decimals < DECIMAL_WEIGHT (num) + 1)
     {
+      puts ("cob_decimal_to_fld: overflow");
       decimal_free (num);
-      return 1;
+      cob_math_size_error_flag = 1;
+      return;
     }
 
   switch (f->type)
@@ -94,7 +100,7 @@ cob_decimal_to_fld (struct fld_desc *f, char *s, int round, union numeric_type v
     case 'U':
       puts ("cob_decimal_to_fld: not implemented yet");
       decimal_free (num);
-      return 1;
+      return;
 
     default:
       {
@@ -110,7 +116,7 @@ cob_decimal_to_fld (struct fld_desc *f, char *s, int round, union numeric_type v
       }
     }
   decimal_free (num);
-  return 0;
+  return;
 }
 
 void
