@@ -114,12 +114,9 @@ X?[\'\"] {
     return '(';
 }
 
-"<"		{ return LESS; }
-"<="		{ return TOK_LE; }
-"="		{ return '='; }
-">"		{ return GREATER; }
-">="		{ return TOK_GE; }
 "**"		{ return '^'; }
+"<="		{ return TOK_LE; }
+">="		{ return TOK_GE; }
 .		{ return yytext[0]; }
 
 <ID_STATE>{

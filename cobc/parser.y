@@ -141,15 +141,15 @@ static void check_decimal_point (struct lit *lit);
 %token EQUAL,GREATER,LESS,TOK_GE,TOK_LE
 %token DATE,DAY,DAY_OF_WEEK,TIME,INKEY,READ,WRITE
 %token TO,FOR,IS,ARE,THRU,THAN,NO,CANCEL,ASCENDING,DESCENDING,ZEROS
-%token TOK_SOURCE_COMPUTER, TOK_OBJECT_COMPUTER,INPUT_OUTPUT
-%token BEFORE,AFTER,SCREEN,REVERSEVIDEO,NUMBERTOK,PLUS,MINUS,SEPARATE
+%token SOURCE_COMPUTER, OBJECT_COMPUTER,INPUT_OUTPUT
+%token BEFORE,AFTER,SCREEN,REVERSEVIDEO,NUMBER,PLUS,MINUS,SEPARATE
 %token FOREGROUNDCOLOR,BACKGROUNDCOLOR,UNDERLINE,HIGHLIGHT,LOWLIGHT
 %token RIGHT,AUTO,REQUIRED,FULL,JUSTIFIED,BLINK,SECURE,BELL,COLUMN,SYNCHRONIZED
-%token INITIALTOK,FIRSTTOK,ALL,LEADING,OF,IN,BY,STRING,UNSTRING
+%token TOK_INITIAL,FIRST,ALL,LEADING,OF,IN,BY,STRING,UNSTRING
 %token START,DELETE,PROGRAM,GLOBAL,EXTERNAL,SIZE,DELIMITED
 %token GIVING,ERASE,INSPECT,TALLYING,REPLACING,ON,POINTER,OVERFLOWTK
 %token DELIMITER,COUNT,LEFT,TRAILING,CHARACTER
-%token ADD,SUBTRACT,MULTIPLY,DIVIDE,ROUNDED,REMAINDER,TOK_ERROR,SIZE
+%token ADD,SUBTRACT,MULTIPLY,DIVIDE,ROUNDED,REMAINDER,ERROR,SIZE
 %token FD,SD,REDEFINES,PICTURE,FILLER,OCCURS,TIMES
 %token PROGRAM_ID,DIVISION,CONFIGURATION,SPECIAL_NAMES
 %token FILE_CONTROL,I_O_CONTROL
@@ -178,14 +178,14 @@ static void check_decimal_point (struct lit *lit);
 %token NUMERIC,ALPHABETIC,ALPHABETIC_LOWER,ALPHABETIC_UPPER
 %token RETURNING,TOK_TRUE,TOK_FALSE,ANY,SUBSCVAR,FUNCTION
 %token REPORT,RD,CONTROL,LIMIT,FINAL
-%token HEADING,FOOTING,TOKLAST,DETAIL,SUM
-%token POSITION,FILE_ID,DEPENDING,TOK_TYPE,TOKSOURCE
+%token HEADING,FOOTING,LAST,DETAIL,SUM
+%token POSITION,FILE_ID,DEPENDING,TYPE,SOURCE
 %token INITIATE,GENERATE,TERMINATE,TOK_NULL,ADDRESS,NOECHO,LPAR
 %token CORRESPONDING,CONVERTING,OPTIONAL
-%token IDENTIFICATION_TOK,ENVIRONMENT_TOK,DATA,PROCEDURE_TOK
+%token IDENTIFICATION,ENVIRONMENT,DATA,PROCEDURE
 %token AUTHOR,DATE_WRITTEN,DATE_COMPILED,INSTALLATION,SECURITY
-%token COMMON,RETURN_TOK,END_RETURN,PREVIOUS,NEXT
-%token INPUT,I_O,OUTPUT,EXTEND,EOL_TOK,EOS_TOK,BINARY,FLOAT_SHORT,FLOAT_LONG
+%token COMMON,RETURN,END_RETURN,PREVIOUS,NEXT
+%token INPUT,I_O,OUTPUT,EXTEND,EOL,EOS,BINARY,FLOAT_SHORT,FLOAT_LONG
 %token PACKED_DECIMAL
 
 %type <str> idstring
@@ -284,7 +284,7 @@ opt_end_program:
  *****************************************************************************/
 
 identification_division:
-  IDENTIFICATION_TOK DIVISION '.'
+  IDENTIFICATION DIVISION '.'
   PROGRAM_ID '.' idstring opt_program_parameter '.' 
   identification_division_options
   {
@@ -292,7 +292,7 @@ identification_division:
   }
 ;
 opt_program_parameter:
-| opt_is INITIALTOK opt_program { yywarn ("INITIAL is not supported yet"); }
+| opt_is TOK_INITIAL opt_program { yywarn ("INITIAL is not supported yet"); }
 | opt_is COMMON opt_program  { yywarn ("COMMON is not supported yet"); }
 ;
 identification_division_options:
@@ -314,7 +314,7 @@ comment: { start_condition = START_COMMENT; };
  *****************************************************************************/
 
 environment_division:
-| ENVIRONMENT_TOK DIVISION '.' { curr_division = CDIV_ENVIR; }
+| ENVIRONMENT DIVISION '.' { curr_division = CDIV_ENVIR; }
   configuration_section
   input_output_section
 ;
@@ -331,8 +331,8 @@ configuration_list:
 | configuration_list configuration
 ;
 configuration:
-  TOK_SOURCE_COMPUTER '.' comment
-| TOK_OBJECT_COMPUTER '.' comment
+  SOURCE_COMPUTER '.' comment
+| OBJECT_COMPUTER '.' comment
 | SPECIAL_NAMES '.' special_names opt_dot
 ;
 special_names:
@@ -913,7 +913,7 @@ report_item:
   }
 ;
 report_clauses:
-| report_clauses TOK_TYPE opt_is report_type
+| report_clauses TYPE opt_is report_type
         report_position { curr_division = CDIV_INITIAL; }
         opt_report_name
 | report_clauses LINE opt_number opt_line_rel integer
@@ -928,7 +928,7 @@ opt_report_name:
 ;
 report_value:
 | VALUE opt_is gname
-| TOKSOURCE opt_is gname
+| SOURCE opt_is gname
 | SUM opt_of name
 ;
 opt_report_column:
@@ -936,7 +936,7 @@ opt_report_column:
 | /* nothing */
 ;
 opt_number:
-| NUMBERTOK
+| NUMBER
 ;
 opt_line_rel:
 | '+'
@@ -957,8 +957,8 @@ opt_line: | LINE ;
 opt_final: | FINAL ;
 opt_limit_is: | LIMIT opt_is ;
 opt_footing: | FOOTING opt_is integer ;
-opt_last_detail: | TOKLAST DETAIL opt_is integer ;
-opt_first_detail: | FIRSTTOK DETAIL opt_is integer ;
+opt_last_detail: | LAST DETAIL opt_is integer ;
+opt_first_detail: | FIRST DETAIL opt_is integer ;
 opt_of: | OF ;
 
 
@@ -1081,7 +1081,7 @@ opt_plus_minus:
 | MINUS         { $$ = -1; }
 ;
 opt_character: | CHARACTER ;
-opt_number_is: | NUMBERTOK opt_is ;
+opt_number_is: | NUMBER opt_is ;
 
 
 /*****************************************************************************
@@ -1089,7 +1089,7 @@ opt_number_is: | NUMBERTOK opt_is ;
  *****************************************************************************/
 
 procedure_division:
-| PROCEDURE_TOK DIVISION { in_procedure = 1; curr_division = CDIV_INITIAL; }
+| PROCEDURE DIVISION { in_procedure = 1; curr_division = CDIV_INITIAL; }
   procedure_using '.'
   {
     proc_header ($4);
@@ -1433,8 +1433,8 @@ display_options:
     /* nothing */                           { $$ = 0; }
     | display_options opt_with NO ADVANCING { $$ = $1 | 1; }
     | display_options ERASE                 { $$ = $1 | 2; }
-    | display_options ERASE EOS_TOK         { $$ = $1 | 2; }
-    | display_options ERASE EOL_TOK         { $$ = $1 | 4; }
+    | display_options ERASE EOS         { $$ = $1 | 2; }
+    | display_options ERASE EOL         { $$ = $1 | 4; }
     ;
 opt_line_pos:
     /* nothing */
@@ -1724,7 +1724,7 @@ replacing_by_list:
 replacing_kind:
     ALL         { $$ = INSPECT_ALL; }
     | LEADING   { $$ = INSPECT_LEADING; }
-    | FIRSTTOK  { $$ = INSPECT_FIRST; }
+    | FIRST  { $$ = INSPECT_FIRST; }
     ;
 inspect_before_after:
     inspect_before_after
@@ -1736,7 +1736,7 @@ inspect_before_after:
     | /* nothing */  { $$ = alloc_inspect_before_after(NULL,0,NULL); }
     ;
 opt_initial:
-    INITIALTOK
+    TOK_INITIAL
     | /* nothing */
     ;
 
@@ -2235,7 +2235,7 @@ release_statement:
  */
 
 return_statement:
-    RETURN_TOK return_body opt_end_return
+    RETURN return_body opt_end_return
     ;
 return_body:
     name
@@ -2492,11 +2492,11 @@ sort_direction:
 | DESCENDING			{ $$ = 2; }
 ;
 sort_input:
-    INPUT PROCEDURE_TOK opt_is sort_range { $$=NULL; }
+    INPUT PROCEDURE opt_is sort_range { $$=NULL; }
     | USING sort_file_list { gen_sort_using($<sval>-2,$2); $$=$2; }
     ;       
 sort_output:
-    OUTPUT PROCEDURE_TOK opt_is sort_range { $$=NULL; }
+    OUTPUT PROCEDURE opt_is sort_range { $$=NULL; }
     | GIVING sort_file_list { gen_sort_giving($<sval>-3,$2); $$=$2; }
     ;
 sort_file_list:
@@ -2743,7 +2743,7 @@ on_size_error:
     ;
 
 error_sentence:
-     TOK_ERROR
+     ERROR
      {
        if ( tmose == NULL ) {
          tmose = math_on_size_error0();
