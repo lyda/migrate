@@ -4,5 +4,6 @@
 
 次のドキュメントが含まれています。
 
+- changes.txt   TinyCOBOL 0.54 からの変更点
 - compile.txt   コンパイルの方法
 - c-cobol.txt   C と COBOL のリンク
