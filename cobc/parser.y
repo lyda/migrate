@@ -61,8 +61,9 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %union {
   cob_tree tree;
   cob_tree_list list;
-  int ival;               /* int */
+  int ival;
   char *str;
+  struct cob_picture *pic;
   struct call_parameter *para;
   struct coord_pair pval; /* lin,col */
   struct string_from *sfval; /* variable list in string statement */
@@ -89,8 +90,9 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %right OF
 
 %token <str>  ID_TOK
+%token <pic>  PICTURE_TOK
 %token <tree> INTEGER_LITERAL,NUMERIC_LITERAL,NONNUMERIC_LITERAL,SYMBOL_TOK
-%token <tree> SPECIAL_TOK,CLASS_TOK,VARIABLE,VARCOND,SUBSCVAR,PICTURE_TOK
+%token <tree> SPECIAL_TOK,CLASS_TOK,VARIABLE,VARCOND,SUBSCVAR
 
 %token EQUAL,GREATER,LESS,GE,LE,COMMAND_LINE,ENVIRONMENT_VARIABLE,ALPHABET
 %token DATE,DAY,DAY_OF_WEEK,TIME,INKEY,READ,WRITE,OBJECT_COMPUTER,INPUT_OUTPUT
@@ -757,6 +759,12 @@ global_clause:
 
 picture_clause:
   PICTURE { start_condition = START_PICTURE; } PICTURE_TOK
+  {
+    COB_FIELD_TYPE (curr_field) = $3->type;
+    curr_field->picstr   = $3->str;
+    curr_field->len      = $3->size;
+    curr_field->decimals = $3->decimals;
+  }
 ;
 
 
@@ -772,15 +780,16 @@ usage:
   }
 | BINARY /* or COMP, COMP-5 */
   {
+    int len = curr_field->len;
     COB_FIELD_TYPE (curr_field) = 'B';
-    curr_field->len = 0; /* computed in update_field */
+    curr_field->len = (len <= 2) ? 1 : (len <= 4) ? 2 : (len <= 9) ? 4 : 8;
   }
 | INDEX
   {
     COB_FIELD_TYPE (curr_field) = 'B';
     curr_field->len      = 4;
     curr_field->decimals = 0;
-    strcpy (picture, "S\x01\x39\x04");
+    curr_field->picstr   = "9\x04";
   }
 | FLOAT_SHORT /* or COMP-1 */
   {
@@ -788,8 +797,7 @@ usage:
     curr_field->len      =  4;
     curr_field->decimals =  7;
     curr_field->sign     =  1;
-    /* default picture is 14 (max=7->7.7) digits */
-    strcpy (picture, "S\x01\x39\x07\x56\x01\x39\x07");
+    curr_field->picstr   = "S\x01\x39\x07\x56\x01\x39\x07";
   }
 | FLOAT_LONG /* or COMP-2 */
   {
@@ -797,8 +805,7 @@ usage:
     curr_field->len      =  8;
     curr_field->decimals = 15;
     curr_field->sign     =  1;
-    /* default picture is 30 (max=15->15.15) digits*/
-    strcpy (picture, "S\x01\x39\x0f\x56\x01\x39\x0f");
+    curr_field->picstr   = "S\x01\x39\x0f\x56\x01\x39\x0f";
   }
 | PACKED_DECIMAL /* or COMP-3 */
   {

@@ -246,8 +246,6 @@ scan_x (char *text)
     }
 }
 
-static int picix, v_flag, n_flag;
-
 static int
 scan_word (char *text)
 {
@@ -286,126 +284,235 @@ scan_word (char *text)
     }
 }
 
+#define PIC_ALPHABETIC		0x01
+#define PIC_NUMERIC		0x02
+#define PIC_NATIONAL		0x04
+#define PIC_EDITED		0x08
+#define PIC_ALPHANUMERIC	(PIC_ALPHABETIC | PIC_NUMERIC)
+#define PIC_ALPHANUMERIC_EDITED	(PIC_ALPHANUMERIC | PIC_EDITED)
+#define PIC_NUMERIC_EDITED	(PIC_NUMERIC | PIC_EDITED)
+#define PIC_NATIONAL_EDITED	(PIC_NATIONAL | PIC_EDITED)
+
 static int
 scan_picture (char *text)
 {
   char *p;
-  picix = piccnt = v_flag = n_flag = curr_field->decimals = 0;
-  picture[picix]=0;
+  unsigned char type = 0;
+  int idx = 0;
+  int size = 0;
+  int decimals = 0;
+  int s_count = 0;
+  int v_count = 0;
+  int buff_size = 9;
+  unsigned char *buff = malloc (buff_size);
+
+  /* allocate new picture */
+  struct cob_picture *pic = malloc (sizeof (struct cob_picture));
+  pic->str = "";
+  pic->type = 0;
+  pic->size = 0;
+  pic->decimals = 0;
+
+  /* normalize the input */
+  for (p = text; *p; p++)
+    {
+      /* unput trailing '.' or ',' */
+      if (p[1] == 0 && (*p == '.' || *p == ','))
+	{
+	  unput (*p);
+	  *p = 0;
+	  break;
+	}
+      /* upcase */
+      *p = toupper (*p);
+    }
 
   for (p = text; *p; p++)
     {
-      int c = *p;
       int n = 1;
+      char c = *p;
 
-      if (c == '.' && p[1] == '\0')
-	{
-	  unput (c);
-	  break;
-	}
+    repeat:
+      /* count the number of repeated chars */
+      while (p[1] == c)
+	p++, n++;
+
+      /* add parenthesized numbers */
       if (p[1] == '(')
 	{
-	  n = 0;
+	  int i = 0;
 	  for (p += 2; *p != ')'; p++)
-	    {
-	      if (!('0' <= *p && *p <= '9'))
-		goto error;
-	      n = n * 10 + *p - '0';
-	    }
+	    if (!isdigit (*p))
+	      goto error;
+	    else
+	      i = i * 10 + (*p - '0');
+	  n += i - 1;
+	  goto repeat;
 	}
 
-      {
-	int c1 = toupper (c);
-	switch (c1)
+      /* check grammar and type */
+      /* FIXME: need more error check */
+      switch (c)
+	{
+	case 'A':
+	  type |= PIC_ALPHABETIC;
+	  break;
+
+	case 'X':
+	  type |= PIC_ALPHANUMERIC;
+	  break;
+
+	case '9':
+	  type |= PIC_NUMERIC;
+	  if (v_count)
+	    decimals += n;
+	  break;
+
+	case 'N':
+	  type |= PIC_NATIONAL;
+	  break;
+
+	case 'S':
+	  type |= PIC_NUMERIC;
+	  if (type & PIC_ALPHABETIC)
+	    goto error;
+	  s_count += n;
+	  if (s_count > 1 || idx != 0)
+	    goto error;
+	  break;
+
+	case ',':
+	case '.':
+	  type |= PIC_NUMERIC_EDITED;
+	  if ((decimal_comma && c == '.') || (!decimal_comma && c == ','))
+	    break;
+	  /* fall through */
+	case 'V':
+	  type |= PIC_NUMERIC;
+	  if (type & PIC_ALPHABETIC)
+	    goto error;
+	  v_count += n;
+	  if (v_count > 1)
+	    goto error;
+	  break;
+
+	case 'P':
+	  type |= PIC_NUMERIC;
+	  if (type & PIC_ALPHABETIC)
+	    goto error;
 	  {
-	  case 'A':
-	    piccnt += n;
-	    if (COB_FIELD_TYPE (curr_field) != 'X'
-		&& COB_FIELD_TYPE (curr_field) != 'E')
-	      COB_FIELD_TYPE (curr_field) = 'A';
-	    break;
-	  case 'N':
-	    piccnt += n * 2;
-	    if (COB_FIELD_TYPE (curr_field) == '9')
-	      COB_FIELD_TYPE (curr_field) = 'X';
-	    break;
-	  case 'X':
-	    piccnt += n;
-	    if (COB_FIELD_TYPE (curr_field) == '9')
-	      COB_FIELD_TYPE (curr_field) = 'X';
-	    break;
-	  case 'Z':
-	    COB_FIELD_TYPE (curr_field) = 'E';
-	  case '9':
-	    piccnt += n;
-	    if (v_flag)
-	      curr_field->decimals += n;
-	    n_flag = 1;
-	    break;
-	  case 'V':
-	    if (v_flag)
-	      {
-		yyerror ("too many `V's in picture");
-		return PICTURE_TOK;
-	      }
-	    v_flag = 1;
-	    break;
-	  case 'P':
-	    if (!n_flag)
-	      v_flag = 1;		/* implicit V just before the first P */
-	    if (v_flag)
-	      curr_field->decimals += n;
+	    int at_beginning =
+	         (idx == 0)					 /* P... */
+	      || (idx == 2 && buff[0] == 'S')			 /* SP... */
+	      || (idx == 2 && buff[0] == 'V')			 /* VP... */
+	      || (idx == 4 && buff[0] == 'V' && buff[2] == 'V'); /* SVP... */
+	    int at_end =
+	         (p[1] == 0)					 /* ...P */
+	      || (p[1] == 'V' && p[2] == 0);			 /* ...PV */
+	    if (!at_beginning && !at_end)
+	      goto error;
+	    if (at_beginning)
+	      v_count++;		/* implicit V */
+	    if (v_count)
+	      decimals += n;
 	    else
-	      curr_field->decimals -= n;
-	    break;
-	  case 'S':
-	    break;
-	  case '.':
-	  case ',':
-	  case '0':
-	  case 'B':
-	  case '/':
-	  case '+':
-	  case '-':
-	  case '*':
-	  case 'C':
-	  case 'R':
-	  case 'D':
-	  edited:
-	    piccnt += n;
-	    COB_FIELD_TYPE (curr_field) = 'E';
-	    break;
-	  default:
-	    if (c == currency_symbol)
-	      goto edited;
-
-	    yyerror ("invalid char in PICTURE clause: `%c'", c);
-	    return PICTURE_TOK;
+	      decimals -= n;
 	  }
+	  break;
 
-	if (picture[picix] == 0 || picture[picix] != c1)
-	  {
-	    if (picture[picix] != 0)
-	      picix += 2;
-	    picture[picix] = c1;
-	    picture[picix + 1] = 0;
-	  }
+	case '0': case 'B': case '/':
+	  type |= PIC_EDITED;
+	  break;
 
-	n += picture[picix + 1];
-	while (n > 255)
-	  {
-	    picture[picix + 1] = 255;
-	    picture[picix + 2] = c1;
-	    picix += 2;
-	    n -= 255;
-	  }
-	picture[picix + 1] = n;
-      }
+	case '*': case 'Z':
+	  type |= PIC_NUMERIC_EDITED;
+	  if (type & PIC_ALPHABETIC)
+	    goto error;
+	  if (v_count)
+	    decimals += n;
+	  break;
+
+	case '+': case '-':
+	  type |= PIC_NUMERIC_EDITED;
+	  if (type & PIC_ALPHABETIC)
+	    goto error;
+	  /* FIXME: need more check */
+	  break;
+
+	case 'C':
+	  type |= PIC_NUMERIC_EDITED;
+	  if (!(p[1] == 'R' && p[2] == 0))
+	    goto error;
+	  break;
+
+	case 'R':
+	  break;
+
+	case 'D':
+	  type |= PIC_NUMERIC_EDITED;
+	  if (!(p[1] == 'B' && p[2] == 0))
+	    goto error;
+	  break;
+
+	default:
+	  if (c == currency_symbol)
+	    {
+	      type |= PIC_NUMERIC_EDITED;
+	      /* FIXME: need more check */
+	      break;
+	    }
+
+	  goto error;
+	}
+
+      /* calculate size */
+      if (c != 'S' && c != 'V' && c != 'P')
+	size += n;
+      if (c == 'N')
+	size += n;
+
+      /* allocate enough pic buffer */
+      while (idx + n / 64 + 1 > buff_size)
+	{
+	  buff_size *= 2;
+	  buff = realloc (buff, buff_size);
+	}
+
+      /* store in the buffer */
+      while (n > 0)
+	{
+	  buff[idx++] = c;
+	  buff[idx++] = n % 256;
+	  n /= 256;
+	}
     }
-  picture[picix + 2] = 0;
+  buff[idx] = 0;
+
+  /* set picture */
+  pic->str = buff;
+  pic->size = size;
+  pic->decimals = decimals;
+
+  /* set picture type */
+  switch (type)
+    {
+    case PIC_ALPHABETIC:		pic->type = 'A'; break;
+    case PIC_NUMERIC:			pic->type = '9'; break;
+    case PIC_ALPHANUMERIC:		pic->type = 'X'; break;
+    case PIC_NATIONAL:			pic->type = 'X'; break;
+    case PIC_EDITED:
+    case PIC_NUMERIC_EDITED:		pic->type = 'E'; break;
+    case PIC_ALPHABETIC | PIC_EDITED:
+    case PIC_ALPHANUMERIC_EDITED:	pic->type = 'E'; break;
+    case PIC_NATIONAL_EDITED:		pic->type = 'E'; break;
+    default:				goto error;
+    }
+
+  yylval.pic = pic;
   return PICTURE_TOK;
 
  error:
   yyerror ("invalid picture string");
+  yylval.pic = pic;
   return PICTURE_TOK;
 }

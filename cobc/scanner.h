@@ -30,6 +30,13 @@
 #define CDIV_ENVIR 	2
 #define CDIV_DATA 	3
 
+struct cob_picture {
+  unsigned char *str;		/* picture string */
+  char type;			/* field type */
+  int size;			/* byte size */
+  int decimals;			/* the number of decimal digits */
+};
+
 extern cob_tree curr_file;
 extern int curr_division;
 extern int start_condition;

@@ -62,8 +62,6 @@ extern unsigned stack_offset;   /* offset das variaveis na pilha */
 extern unsigned global_offset;  /* offset das variaveis globais (DATA) */
 extern int paragr_num;
 extern int loc_label;
-extern unsigned char picture[];
-extern int piccnt;
 extern int at_linkage, stack_plus;
 extern char *toktext;
 extern int yylex(void);
@@ -166,10 +164,6 @@ extern void define_implicit_field (cob_tree sy, cob_tree sykey);
 extern void Initialize_SearchAll_Boundaries (cob_tree sy, cob_tree syidx);
 extern cob_tree determine_table_index_name (cob_tree sy);
 extern void define_field (int level, cob_tree sy);
-extern int set_field_value_sw (cob_tree sy, int times);
-extern int set_field_length (cob_tree sy, int times);
-extern unsigned field_alignment (cob_tree sy, unsigned location);
-extern void set_field_location (cob_tree sy, unsigned location);
 extern void scr_set_column (struct scr_info *si, int val, int plus_minus);
 extern void scr_set_line (struct scr_info *si, int val, int plus_minus);
 extern void update_report_field (cob_tree sy);

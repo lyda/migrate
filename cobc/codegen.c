@@ -43,14 +43,11 @@ int screen_io_enable = 0;
 int scr_line, scr_column;
 int decimal_comma = 0;
 char currency_symbol = '$';
-cob_tree curr_paragr = NULL, curr_section = NULL;
 cob_tree curr_field;
 int curr_call_mode = 0;
 int at_procedure = 0;
 int at_linkage = 0;
 int loc_label = 1;
-unsigned char picture[4096];
-int piccnt;
 int substring_slots = 0;
 
 cob_tree spe_lit_ZE = NULL;
@@ -386,10 +383,7 @@ define_special_fields ()
   sy->sec_no = SEC_DATA;
   sy->times = 1;
   sy->flags.value = 1;
-  picture[0] = '9';
-  picture[1] = 5;
-  picture[2] = 0;
-
+  sy->picstr = "9\x05";
   tmp = curr_field;
   curr_field = sy;
   curr_field->value = spe_lit_ZE;
@@ -1329,11 +1323,30 @@ initialize_values (void)
 	}
 }
 
+static int
+set_field_length (cob_tree sy, int times)
+{
+  cob_tree tmp;
+  int len, tmplen;
+  if (sy->son != NULL)
+    {
+      len = 0;
+      COB_FIELD_TYPE (sy) = 'G';
+      for (tmp = sy->son; tmp != NULL; tmp = tmp->brother)
+	{
+	  tmplen = tmp->times * set_field_length (tmp, times);
+	  if (tmp->redefines == NULL)
+	    len += tmplen;
+	}
+      sy->len = len;
+    }
+  len = symlen (sy) + sy->slack;
+  return len * times;
+}
+
 static void
 dump_working ()
 {
-
-  cob_tree v, sy;
   struct list *list;
   int fld_len;
   int stabs_type = '3';
@@ -1342,13 +1355,13 @@ dump_working ()
   output ("w_base%d:\n", pgm_segment);
   for (list = fields_list; list != NULL; list = list->next)
     {
-      v = list->var;
-      sy = v;
+      int type = COB_FIELD_TYPE (list->var);
+      cob_tree v = list->var;
       if (!SYMBOL_P (v))
 	continue;
       if (v->sec_no == SEC_STACK)
 	continue;
-      if (COB_FIELD_TYPE (v) == 'F' || COB_FIELD_TYPE (v) == 'R')
+      if (type == 'F' || type == 'R' || v->level == 66)
 	continue;
       fld_len = set_field_length (v, 1);
       if (v->sec_no != cur_sec_no && v->sec_no >= SEC_FIRST_NAMED)
@@ -1362,14 +1375,13 @@ dump_working ()
 	}
 #ifdef COB_DEBUG
       output ("# FIELD %s, Data Loc: %d(hex: %x) %c\n",
-	       COB_FIELD_NAME (v), v->location, v->location,
-	       COB_FIELD_TYPE (v));
+	       COB_FIELD_NAME (v), v->location, v->location, type);
 #endif
       if (cob_stabs_flag)
-	switch (COB_FIELD_TYPE (sy))
+	switch (type)
 	  {
 	  case 'B':
-	    switch (symlen (sy))
+	    switch (symlen (v))
 	      {
 	      case 1: stabs_type = '6'; break;
 	      case 2: stabs_type = '5'; break;
@@ -1377,29 +1389,27 @@ dump_working ()
 	      case 8: stabs_type = '7'; break;
 	      }
 	    output (".stabs\t\"%s:S%c\",38,0,0,w_base%d+%d\n",
-		     COB_FIELD_NAME (sy), stabs_type, pgm_segment,
-		     sy->location);
+		     COB_FIELD_NAME (v), stabs_type, pgm_segment,
+		     v->location);
 	    break;
 
 	  case 'C':
 	    output (".stabs\t\"%s:S(1,%d)=ar3;1;%d;4\",38,0,0,w_base%d+%d\n",
-		     COB_FIELD_NAME (sy), sy->len, sy->len, pgm_segment, 0);
+		     COB_FIELD_NAME (v), v->len, v->len, pgm_segment, 0);
 	    break;
 
 	  default:
 	    output (".stabs\t\"%s:S(1,%d)=ar3;1;%d;2\",38,0,0,w_base%d+%d\n",
-		     COB_FIELD_NAME (sy), sy->len, sy->len, pgm_segment,
-		     sy->location);
+		     COB_FIELD_NAME (v), v->len, v->len, pgm_segment,
+		     v->location);
 	    break;
 	  }
 
       if (v->parent)
 	continue;
       if (fld_len)
-	{			/* don't alloc dummy (zero storage) symbols */
-	  output ("\t.space\t%d\n", fld_len);
-	}
-      if (fld_len == 0)
+	output ("\t.space\t%d\n", fld_len);
+      else
 	yyerror ("Invalid picture in %s", COB_FIELD_NAME (v));
     }
   /* output tmpvar storage */
@@ -3269,9 +3279,7 @@ define_implicit_field (cob_tree sy, cob_tree sykey)
   sy->son = sy->brother = NULL;
   sy->flags.is_pointer = 0;
   sy->flags.blank = 0;
-  picture[0] = '9';
-  picture[1] = (char) 8;
-  picture[2] = 0;
+  sy->picstr = "9\x08";
   tmp = curr_field;
   curr_field = sy;
   update_field ();
@@ -3439,26 +3447,24 @@ define_field (int level, cob_tree sy)
   curr_field = sy;
 }
 
-int
+static int
 check_fields (cob_tree sy)
 {
-  cob_tree tmp;
   int len;
+  cob_tree tmp;
 
   if (sy->son != NULL)
     {
       len = 0;
       for (tmp = sy->son; tmp != NULL; tmp = tmp->brother)
-	{
-	  check_fields (tmp);
-	}
+	check_fields (tmp);
     }
   if (COB_FIELD_TYPE (sy) == '9' && sy->len > 31)
     yyerror ("Elementary numeric item %s > 31 digits", COB_FIELD_NAME (sy));
   return 0;
 }
 
-int
+static int
 set_field_value_sw (cob_tree sy, int times)
 {
   cob_tree tmp;
@@ -3483,34 +3489,10 @@ set_field_value_sw (cob_tree sy, int times)
     }
   f.v = f.v || sy->value != NULL;
   f.sv = f.v;
-  //fprintf(stderr,"set_field_value_sw: %s -> %d,%d\n",sy->name,f.v,f.sv);
-//      return f.v*2 + f.sv;
   return f.v;
 }
 
-int
-set_field_length (cob_tree sy, int times)
-{
-  cob_tree tmp;
-  int len, tmplen;
-  if (sy->son != NULL)
-    {
-      len = 0;
-      COB_FIELD_TYPE (sy) = 'G';
-      for (tmp = sy->son; tmp != NULL; tmp = tmp->brother)
-	{
-	  tmplen = tmp->times * set_field_length (tmp, times);
-	  if (tmp->redefines == NULL)
-	    len += tmplen;
-	}
-      sy->len = len;
-    }
-  len = symlen (sy) + sy->slack;
-  //fprintf(stderr,"set_field_length: %s -> %d\n",sy->name,len*times);
-  return len * times;
-}
-
-unsigned
+static unsigned
 field_alignment (cob_tree sy, unsigned location)
 {
   unsigned slack_bytes = 0, mod_loc;
@@ -3527,7 +3509,7 @@ field_alignment (cob_tree sy, unsigned location)
   return slack_bytes;
 }
 
-void
+static void
 set_field_location (cob_tree sy, unsigned location)
 {
   cob_tree tmp;
@@ -3645,71 +3627,26 @@ update_screen_field (cob_tree sy, struct scr_info *si)
     }
 }
 
-static int
-pic_digits (cob_tree sy)
-{
-  char *p = NULL;
-  int len = 0;
-  if (sy == NULL)
-    return 0;
-  if (!SYMBOL_P (sy))
-    {
-      const char *name = COB_FIELD_NAME (sy);
-      len = strlen (name);
-      if (strchr (name, decimal_char ()))
-	len--;
-      if (strchr (name, '+'))
-	len--;
-      if (strchr (name, '-'))
-	len--;
-      return len;
-    }
-  else
-    {
-      p = sy->picstr;
-      while (*p)
-	if (*p++ == '9')
-	  len += *p++;
-	else
-	  p++;
-    }
-  return len;
-}
-
 void
 update_field (void)
 {
   char type = COB_FIELD_TYPE (curr_field);
-
-  if (curr_field->level != 88)
-    if (type != 'G')
-      curr_field->picstr = strdup (picture);
-
-  if (type == 'E')
+  if (!curr_field->picstr)
     {
-      int decimals = -1;
-      char *p;
-      for (p = picture; *p; p += 2)
-	{
-	  if (*p == '.' || *p == 'V')
-	    decimals = 0;
-	  else if (!strchr ("0BCDR", *p) && decimals >= 0)
-	    decimals += p[1];
-	}
-      curr_field->len = piccnt;
-      curr_field->decimals = decimals;
+      cob_tree p;
+      for (p = curr_field->parent; p; p = p->parent)
+	if (p->picstr)
+	  {
+	    curr_field->picstr = p->picstr;
+	    curr_field->len = p->len;
+	    curr_field->sign = p->sign;
+	    curr_field->decimals = p->decimals;
+	  }
+      if (!p)
+	curr_field->picstr = "";
     }
-  else if (type != 'B' && type != 'U')
-    {
-      curr_field->len = piccnt;
-      if (curr_field->flags.separate_sign)
-	curr_field->len++;
-    }
-  else if (type == 'B' && curr_field->len == 0)
-    {
-      int len = pic_digits (curr_field);
-      curr_field->len = (len <= 2) ? 1 : (len <= 4) ? 2 : (len <= 9) ? 4 : 8;
-    }
+  if (type != 'B' && type != 'U' && curr_field->flags.separate_sign)
+    curr_field->len++;
 }
 
 void
@@ -3998,15 +3935,13 @@ cob_tree
 create_status_register (char *name)
 {
   cob_tree sy;
-  char pic[] = { '9', 2, 0 };
   sy = install (name, SYTB_VAR, 0);
   if (COB_FIELD_TYPE (sy))
     return sy;		/* it already exists */
   COB_FIELD_TYPE (sy) = '9';
-  sy->picstr = malloc (strlen (pic) + 1);
-  strcpy (sy->picstr, pic);
-  sy->times = 1;
   sy->len = 2;
+  sy->picstr = "9\x02";
+  sy->times = 1;
   sy->son = sy->brother = NULL;
   sy->linkage_flg = 0;
   sy->sec_no = SEC_DATA;
@@ -4015,7 +3950,7 @@ create_status_register (char *name)
   sy->descriptor = literal_offset;
   literal_offset += 11;
   sy->pic = literal_offset;
-  literal_offset += strlen (pic) + 1;
+  literal_offset += strlen (sy->picstr) + 1;
   save_field_in_list (sy);
   return sy;
 }
