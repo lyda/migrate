@@ -4,7 +4,7 @@ cobc_SOURCES = cobc.c cobc.h tree.c tree.h codegen.c codegen.h \
 EXTRA_cobc_SOURCES = inline.c
 cobc_CFLAGS = $(COBC_CFLAGS) -I$(top_srcdir)
 cobc_LDADD = $(COBC_LIBS) $(top_builddir)/lib/libsupport.a \
-	-L$(top_builddir)/libcob -lcob $(LIBCOB_LIBS)
+	$(top_builddir)/libcob/libcob.la $(LIBCOB_LIBS)
 
 BUILT_SOURCES = parser.c parser.h scanner.c
 CLEANFILES = parser.output
