@@ -44,18 +44,6 @@ int cobc_in_procedure = 0;
 char *cobc_source_file = NULL;
 int cobc_source_line = 0;
 
-int cobc_last_line;
-char cobc_last_text[YY_BUF_SIZE];
-static int this_lineno = 0;
-static char this_text[YY_BUF_SIZE] = "";
-#define SAVE_YYTEXT				\
-{						\
-  cobc_last_line = this_lineno;			\
-  this_lineno = cobc_source_line;		\
-  strcpy (cobc_last_text, this_text);		\
-  strcpy (this_text, yytext);			\
-}
-
 static int read_literal (char mark);
 static int scan_x (char *text);
 static int scan_numeric (char *text);
@@ -85,34 +73,29 @@ static int scan_picture (char *text);
 
 [\'\"] {
   /* string literal */
-  SAVE_YYTEXT;
   return read_literal (yytext[0]);
 }
 
 X\'[^\'\n]*\' |
 X\"[^\"\n]*\" {
   /* X string literal */
-  SAVE_YYTEXT;
   return scan_x (yytext + 2);
 }
 
 [0-9]+ {
   /* integer literal */
-  SAVE_YYTEXT;
   yylval.tree = make_numeric_literal (0, yytext, 0);
   return INTEGER_LITERAL;
 }
 
 [+-]?[0-9]*[.,]?[0-9]+ {
   /* numeric literal */
-  SAVE_YYTEXT;
   return scan_numeric (yytext);
 }
 
 [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)? {
   int token;
   struct cobc_word *word;
-  SAVE_YYTEXT;
 
   /* reserved word */
   token = lookup_reserved_word (yytext);
@@ -148,7 +131,6 @@ X\"[^\"\n]*\" {
   "IS"		{ /* ignore */ }
   [^ \t\n;]+	{
     BEGIN INITIAL;
-    SAVE_YYTEXT;
     return scan_picture (yytext);
   }
 }
@@ -156,7 +138,6 @@ X\"[^\"\n]*\" {
 <FUNCTION_STATE>{
   [a-z0-9-]+	{
     BEGIN INITIAL;
-    SAVE_YYTEXT;
     yylval.str = strdup (yytext);
     return FUNCTION_NAME;
   }
@@ -164,7 +145,6 @@ X\"[^\"\n]*\" {
 }
 
 <<EOF>> {
-  SAVE_YYTEXT;
   yyterminate ();
 }
 

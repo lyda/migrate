@@ -24,8 +24,6 @@
 
 extern char *cobc_source_file;
 extern int cobc_source_line;
-extern int cobc_last_line;
-extern char cobc_last_text[];
 
 extern int cobc_in_procedure;
 
