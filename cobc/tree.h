@@ -31,10 +31,11 @@
 enum cb_tag {
   /* primitives */
   CB_TAG_CONST,			/* constant value */
-  CB_TAG_ALPHABET_NAME,		/* alphabet-name identifier */
-  CB_TAG_SYSTEM_NAME,		/* system-name identifier */
   CB_TAG_INTEGER,		/* integer constant */
   CB_TAG_STRING,		/* string constant */
+  CB_TAG_ALPHABET_NAME,		/* alphabet-name */
+  CB_TAG_CLASS_NAME,		/* class-name */
+  CB_TAG_SYSTEM_NAME,		/* system-name */
   CB_TAG_LITERAL,		/* numeric/alphanumeric literal */
   CB_TAG_DECIMAL,		/* decimal number */
   CB_TAG_FIELD,			/* user-defined variable */
@@ -51,7 +52,6 @@ enum cb_tag {
   CB_TAG_SEQUENCE,		/* multiple statements */
   CB_TAG_STATEMENT,		/* general statement */
   /* miscellaneous */
-  CB_TAG_PROPOSITION,		/* CLASS definition */
   CB_TAG_PARAMETER,
 };
 
@@ -233,38 +233,6 @@ extern void cb_init_constants (void);
 
 
 /*
- * Alphabet-name
- */
-
-struct cb_alphabet_name {
-  struct cb_tree_common common;
-  enum cb_alphabet_name_type type;
-  struct cb_list *custom_list;
-};
-
-#define CB_ALPHABET_NAME(x)	(CB_TREE_CAST (CB_TAG_ALPHABET_NAME, struct cb_alphabet_name, x))
-#define CB_ALPHABET_NAME_P(x)	(CB_TREE_TAG (x) == CB_TAG_ALPHABET_NAME)
-
-extern cb_tree cb_build_alphabet_name (enum cb_alphabet_name_type type);
-
-
-/*
- * System-name
- */
-
-struct cb_system_name {
-  struct cb_tree_common common;
-  enum cb_system_name_category category;
-  int token;
-};
-
-#define CB_SYSTEM_NAME(x)	(CB_TREE_CAST (CB_TAG_SYSTEM_NAME, struct cb_system_name, x))
-#define CB_SYSTEM_NAME_P(x)	(CB_TREE_TAG (x) == CB_TAG_SYSTEM_NAME)
-
-extern cb_tree cb_build_system_name (enum cb_system_name_category category, int token);
-
-
-/*
  * Integer
  */
 
@@ -292,6 +260,55 @@ struct cb_string {
 #define CB_STRING_P(x)	(CB_TREE_TAG (x) == CB_TAG_STRING)
 
 extern cb_tree cb_build_string (const unsigned char *str);
+
+
+/*
+ * Alphabet-name
+ */
+
+struct cb_alphabet_name {
+  struct cb_tree_common common;
+  enum cb_alphabet_name_type type;
+  struct cb_list *custom_list;
+};
+
+#define CB_ALPHABET_NAME(x)	(CB_TREE_CAST (CB_TAG_ALPHABET_NAME, struct cb_alphabet_name, x))
+#define CB_ALPHABET_NAME_P(x)	(CB_TREE_TAG (x) == CB_TAG_ALPHABET_NAME)
+
+extern cb_tree cb_build_alphabet_name (enum cb_alphabet_name_type type);
+
+
+/*
+ * Class-name
+ */
+
+struct cb_class_name {
+  struct cb_tree_common common;
+  const char *name;
+  char *cname;
+  struct cb_list *list;
+};
+
+#define CB_CLASS_NAME(x)	(CB_TREE_CAST (CB_TAG_CLASS_NAME, struct cb_class_name, x))
+#define CB_CLASS_NAME_P(x)	(CB_TREE_TAG (x) == CB_TAG_CLASS_NAME)
+
+extern cb_tree cb_build_class_name (cb_tree name, struct cb_list *list);
+
+
+/*
+ * System-name
+ */
+
+struct cb_system_name {
+  struct cb_tree_common common;
+  enum cb_system_name_category category;
+  int token;
+};
+
+#define CB_SYSTEM_NAME(x)	(CB_TREE_CAST (CB_TAG_SYSTEM_NAME, struct cb_system_name, x))
+#define CB_SYSTEM_NAME_P(x)	(CB_TREE_TAG (x) == CB_TAG_SYSTEM_NAME)
+
+extern cb_tree cb_build_system_name (enum cb_system_name_category category, int token);
 
 
 /*
@@ -663,23 +680,6 @@ extern struct cb_statement *cb_build_statement (const char *name);
 
 
 /*
- * Proposition
- */
-
-struct cb_proposition {
-  struct cb_tree_common common;
-  const char *name;
-  char *cname;
-  struct cb_list *list;
-};
-
-#define CB_PROPOSITION(x)	(CB_TREE_CAST (CB_TAG_PROPOSITION, struct cb_proposition, x))
-#define CB_PROPOSITION_P(x)	(CB_TREE_TAG (x) == CB_TAG_PROPOSITION)
-
-extern cb_tree cb_build_proposition (cb_tree name, struct cb_list *list);
-
-
-/*
  * Parameter
  */
 
@@ -714,7 +714,7 @@ struct cb_program {
   struct cb_list *exec_list;
   struct cb_list *label_list;
   struct cb_list *reference_list;
-  struct cb_list *proposition_list;
+  struct cb_list *class_name_list;
   struct cb_field *working_storage;
   struct cb_field *local_storage;
   struct cb_field *linkage_storage;

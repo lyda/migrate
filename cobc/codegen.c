@@ -2120,7 +2120,7 @@ output_screen_definition (struct cb_field *p)
  */
 
 static void
-output_proposition_definition (struct cb_proposition *p)
+output_class_name_definition (struct cb_class_name *p)
 {
   struct cb_list *l;
 
@@ -2445,9 +2445,9 @@ codegen (struct cb_program *prog)
       output ("  le_%s,\n", CB_LABEL (l->item)->cname);
   output ("};\n\n");
 
-  /* propositions */
-  for (l = prog->proposition_list; l; l = l->next)
-    output_proposition_definition (l->item);
+  /* class-names */
+  for (l = prog->class_name_list; l; l = l->next)
+    output_class_name_definition (l->item);
 
   /* build parameter list */
   for (l = prog->entry_list; l; l = l->next)

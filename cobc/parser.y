@@ -514,9 +514,9 @@ integer_list:
 class_name_clause:
   CLASS undefined_word _is class_item_list
   {
-    current_program->proposition_list =
-      list_add (current_program->proposition_list,
-		cb_build_proposition ($2, $<list>4));
+    current_program->class_name_list =
+      list_add (current_program->class_name_list,
+		cb_build_class_name ($2, $<list>4));
   }
 ;
 class_item_list:
@@ -3507,8 +3507,8 @@ expr_1:
 	cb_tree x = l->item;
 	switch (CB_TREE_TAG (x))
 	  {
-	  case CB_TAG_PROPOSITION:
-	    class_func = CB_PROPOSITION (x)->cname;
+	  case CB_TAG_CLASS_NAME:
+	    class_func = CB_CLASS_NAME (x)->cname;
 	    goto unary_cond;
 	  case CB_TAG_INTEGER:
 	    {

@@ -28,6 +28,16 @@
 #include "cobc.h"
 #include "error.h"
 
+static char *
+to_cname (const char *s)
+{
+  char *copy = strdup (s);
+  char *p;
+  for (p = copy; *p; p++)
+    *p = (*p == '-') ? '_' : toupper (*p);
+  return copy;
+}
+
 
 /*
  * List
@@ -476,35 +486,6 @@ cb_init_constants (void)
 
 
 /*
- * Alphabet-name
- */
-
-cb_tree
-cb_build_alphabet_name (enum cb_alphabet_name_type type)
-{
-  struct cb_alphabet_name *p =
-    make_tree (CB_TAG_ALPHABET_NAME, CB_CATEGORY_UNKNOWN, sizeof (struct cb_alphabet_name));
-  p->type = type;
-  return CB_TREE (p);
-}
-
-
-/*
- * System-name
- */
-
-cb_tree
-cb_build_system_name (enum cb_system_name_category category, int token)
-{
-  struct cb_system_name *p =
-    make_tree (CB_TAG_SYSTEM_NAME, CB_CATEGORY_UNKNOWN, sizeof (struct cb_system_name));
-  p->category = category;
-  p->token = token;
-  return CB_TREE (p);
-}
-
-
-/*
  * Integer
  */
 
@@ -528,6 +509,53 @@ cb_build_string (const unsigned char *str)
   struct cb_string *p =
     make_tree (CB_TAG_STRING, CB_CATEGORY_ALPHANUMERIC, sizeof (struct cb_string));
   p->str = str;
+  return CB_TREE (p);
+}
+
+
+/*
+ * Alphabet-name
+ */
+
+cb_tree
+cb_build_alphabet_name (enum cb_alphabet_name_type type)
+{
+  struct cb_alphabet_name *p =
+    make_tree (CB_TAG_ALPHABET_NAME, CB_CATEGORY_UNKNOWN, sizeof (struct cb_alphabet_name));
+  p->type = type;
+  return CB_TREE (p);
+}
+
+
+/*
+ * Class-name
+ */
+
+cb_tree
+cb_build_class_name (cb_tree name, struct cb_list *list)
+{
+  char buff[BUFSIZ];
+  struct cb_class_name *p =
+    make_tree (CB_TAG_CLASS_NAME, CB_CATEGORY_BOOLEAN, sizeof (struct cb_class_name));
+  p->name = cb_define (name, CB_TREE (p));
+  sprintf (buff, "is_%s", to_cname (p->name));
+  p->cname = strdup (buff);
+  p->list = list;
+  return CB_TREE (p);
+}
+
+
+/*
+ * System-name
+ */
+
+cb_tree
+cb_build_system_name (enum cb_system_name_category category, int token)
+{
+  struct cb_system_name *p =
+    make_tree (CB_TAG_SYSTEM_NAME, CB_CATEGORY_UNKNOWN, sizeof (struct cb_system_name));
+  p->category = category;
+  p->token = token;
   return CB_TREE (p);
 }
 
@@ -1205,16 +1233,6 @@ validate_field_1 (struct cb_field *f)
     }
 
   return 0;
-}
-
-static char *
-to_cname (const char *s)
-{
-  char *copy = strdup (s);
-  char *p;
-  for (p = copy; *p; p++)
-    *p = (*p == '-') ? '_' : toupper (*p);
-  return copy;
 }
 
 static void
@@ -1911,24 +1929,6 @@ cb_build_statement (const char *name)
   CB_TREE (p)->source_file = cb_source_file;
   CB_TREE (p)->source_line = cb_source_line;
   return p;
-}
-
-
-/*
- * Proposition
- */
-
-cb_tree
-cb_build_proposition (cb_tree name, struct cb_list *list)
-{
-  char buff[BUFSIZ];
-  struct cb_proposition *p =
-    make_tree (CB_TAG_PROPOSITION, CB_CATEGORY_BOOLEAN, sizeof (struct cb_proposition));
-  p->name = cb_define (name, CB_TREE (p));
-  sprintf (buff, "is_%s", to_cname (p->name));
-  p->cname = strdup (buff);
-  p->list = list;
-  return CB_TREE (p);
 }
 
 
