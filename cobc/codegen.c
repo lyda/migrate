@@ -2688,17 +2688,44 @@ gen_divide_giving_remainder (cob_tree divisor, cob_tree dividend,
 {
   gen_init_status ();
 
-  push_expr (dividend);
-  push_expr (divisor);
-  asm_call ("cob_div");
-  assign_expr (quotient, rnd);
+  if (rnd)
+    {
+      /* need quotient without rounding */
+      push_expr (dividend);
+      push_expr (divisor);
+      asm_call ("cob_div");
+      assign_expr (quotient, 0);
 
-  push_expr (dividend);
-  push_expr (divisor);
-  push_expr (quotient);
-  asm_call ("cob_mul");
-  asm_call ("cob_sub");
-  assign_expr (remainder, rnd);
+      /* compute remainder */
+      push_expr (dividend);
+      push_expr (divisor);
+      push_expr (quotient);
+      asm_call ("cob_mul");
+      asm_call ("cob_sub");
+      assign_expr (remainder, 0);
+
+      /* now compute quotient with rounding */
+      push_expr (dividend);
+      push_expr (divisor);
+      asm_call ("cob_div");
+      assign_expr (quotient, 1);
+    }
+  else
+    {
+      /* compute quotient */
+      push_expr (dividend);
+      push_expr (divisor);
+      asm_call ("cob_div");
+      assign_expr (quotient, 0);
+
+      /* compute remainder */
+      push_expr (dividend);
+      push_expr (divisor);
+      push_expr (quotient);
+      asm_call ("cob_mul");
+      asm_call ("cob_sub");
+      assign_expr (remainder, 0);
+    }
 }
 
 
