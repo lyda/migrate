@@ -555,6 +555,7 @@ indexed_read (struct cob_file_desc *f)
 static void
 indexed_read_next (struct cob_file_desc *f)
 {
+  int ret;
   DBT key, data;
 
   memset (&key, 0, sizeof (DBT));
@@ -562,20 +563,26 @@ indexed_read_next (struct cob_file_desc *f)
 
   if (f->cursor)
     {
-      if (DBC_GET (f->cursor, &key, &data, DB_NEXT) != 0)
-	RETURN_STATUS (23);
+      ret = DBC_GET (f->cursor, &key, &data, DB_NEXT);
     }
   else
     {
       DB_CURSOR (f->keys[0].db, &f->cursor);
       f->f.secondary = 0;
-      if (DBC_GET (f->cursor, &key, &data, DB_FIRST) != 0)
-	RETURN_STATUS (23);
+      ret = DBC_GET (f->cursor, &key, &data, DB_FIRST);
     }
 
-  memcpy (f->record_data, data.data, f->record_size);
-
-  RETURN_STATUS (00);
+  switch (ret)
+    {
+    case 0:
+      memcpy (f->record_data, data.data, f->record_size);
+      RETURN_STATUS (00);
+    case DB_NOTFOUND:
+      RETURN_STATUS (10);
+      break;
+    default:
+      RETURN_STATUS (99);
+    }
 }
 
 static void
