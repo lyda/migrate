@@ -83,6 +83,7 @@
 
 #define FILE_PERMISSION 0644
 
+int cob_file_status;
 char cob_dummy_status[2];
 
 
@@ -772,19 +773,20 @@ indexed_delete (struct cob_file_desc *f)
 	{
 	  DBC *cursor;
 	  DB_CURSOR (f->keys[i].db, &cursor);
-	  if (cursor->c_get (cursor, &skey, &data, DB_SET) != 0)
-	    return 99; /* database broken */
-	  do {
-	    if (memcmp (data.data, key.data, key.size) == 0)
-	      cursor->c_del (cursor, 0);
-	  }
+	  if (cursor->c_get (cursor, &skey, &data, DB_SET) == 0)
+	    {
+	      do {
+		if (memcmp (data.data, key.data, key.size) == 0)
+		  cursor->c_del (cursor, 0);
+	      }
 #if DB_VERSION_MAJOR == 2
-	  while (cursor->c_get (cursor, &dkey, &data, DB_NEXT) == 0
-		 && skey.size == dkey.size
-		 && memcmp (dkey.data, skey.data, skey.size) == 0);
+	      while (cursor->c_get (cursor, &dkey, &data, DB_NEXT) == 0
+		     && skey.size == dkey.size
+		     && memcmp (dkey.data, skey.data, skey.size) == 0);
 #else
-	  while (cursor->c_get (cursor, &dkey, &data, DB_NEXT_DUP) == 0);
+	      while (cursor->c_get (cursor, &dkey, &data, DB_NEXT_DUP) == 0);
 #endif
+	    }
 	  cursor->c_close (cursor);
 	}
       else
@@ -864,6 +866,7 @@ static struct cob_fileio_funcs indexed_funcs = {
 
 #define RETURN_STATUS(x)			\
   do {						\
+    cob_file_status = x;			\
     f->file_status[0] = x / 10 + '0';		\
     f->file_status[1] = x % 10 + '0';		\
     return;					\

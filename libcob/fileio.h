@@ -100,6 +100,7 @@ struct cob_fileio_funcs {
   int (*delete) (struct cob_file_desc *f);
 };
 
+extern int cob_file_status;
 extern char cob_dummy_status[];
 
 extern void cob_init_fileio (void);
