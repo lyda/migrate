@@ -3234,7 +3234,10 @@ dot:
 | error
 | /* nothing */
   {
+    int save_lineno = cob_orig_lineno;
+    cob_orig_lineno = last_lineno;
     yywarn ("`.' is expected after `%s'", last_text);
+    cob_orig_lineno = save_lineno;
   }
 ;
 
@@ -3322,7 +3325,7 @@ yywarn (char *fmt, ...)
   va_list argptr;
 
   /* Print warning line */
-  fprintf (stderr, "%s:%d: warning: ", cob_orig_filename, last_lineno);
+  fprintf (stderr, "%s:%d: warning: ", cob_orig_filename, cob_orig_lineno);
 
   /* Print error body */
   va_start (argptr, fmt);
@@ -3340,7 +3343,7 @@ yyerror (char *fmt, ...)
   va_list argptr;
 
   /* Print error line */
-  fprintf (stderr, "%s:%d: ", cob_orig_filename, last_lineno);
+  fprintf (stderr, "%s:%d: ", cob_orig_filename, cob_orig_lineno);
 
   /* Print error body */
   va_start (argptr, fmt);
