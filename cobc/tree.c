@@ -1627,6 +1627,14 @@ cb_define (cb_tree name, cb_tree val)
   return w->name;
 }
 
+void
+cb_define_system_name (const char *name)
+{
+  cb_tree x = make_reference (name);
+  if (CB_REFERENCE (x)->word->count == 0)
+    cb_define (x, lookup_system_name (name));
+}
+
 static cb_tree
 resolve_label (const char *name, struct cb_label *section)
 {

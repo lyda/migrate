@@ -1396,6 +1396,14 @@ procedure_division:
   {
     current_section = NULL;
     current_paragraph = NULL;
+
+    if (cb_device_predefine)
+      {
+	cb_define_system_name ("CONSOLE");
+	cb_define_system_name ("SYSIN");
+	cb_define_system_name ("SYSOUT");
+	cb_define_system_name ("SYSERR");
+      }
   }
   procedure_declaratives
   {
@@ -1851,65 +1859,19 @@ end_delete:
 
 display_statement:
   DISPLAY			{ BEGIN_STATEMENT ("DISPLAY"); }
-  opt_value_list display_upon at_line_column display_with_no_advancing
+  opt_value_list display_upon display_no_advancing at_line_column
   end_display
   {
-    cb_tree l;
-    if ($4 == cb_true)
-      {
-	push_funcall_1 ("cob_display_environment", CB_VALUE ($3));
-      }
-    else if (current_program->flag_screen)
-      {
-	for (l = $3; l; l = CB_CHAIN (l))
-	  {
-	    cb_tree x = CB_VALUE (l);
-	    if (CB_FIELD (x)->storage == CB_STORAGE_SCREEN)
-	      {
-		cb_tree line = CB_PAIR_X ($5);
-		cb_tree column = CB_PAIR_Y ($5);
-		push_funcall_3 ("cob_screen_display", x, line, column);
-	      }
-	    else
-	      cb_error_x (x, "`%s' not defined in SCREEN SECTION", cb_name (x));
-	  }
-      }
-    else
-      {
-	for (l = $3; l; l = CB_CHAIN (l))
-	  push_funcall_2 ("cob_display", CB_VALUE (l), $4);
-	if ($6 == cb_int0)
-	  push_funcall_1 ("cob_newline", $4);
-      }
+    current_statement->body = cb_build_display_statement ($3, $4, $5, $6);
   }
   ;
 display_upon:
   /* empty */			{ $$ = cb_int (COB_SYSOUT); }
-| _upon mnemonic_name
-  {
-    switch (CB_SYSTEM_NAME (cb_ref ($2))->token)
-      {
-      case CB_DEVICE_CONSOLE:
-      case CB_DEVICE_SYSOUT:
-	$$ = cb_int (COB_SYSOUT);
-	break;
-      case CB_DEVICE_SYSERR:
-	$$ = cb_int (COB_SYSERR);
-	break;
-      default:
-	cb_error_x ($2, _("invalid UPON item"));
-	$$ = cb_error_node;
-	break;
-      }
-  }
+| _upon mnemonic_name		{ $$ = cb_build_display_upon ($2); }
+| UPON WORD			{ $$ = cb_build_display_upon_direct ($2); }
 | _upon ENVIRONMENT_NAME	{ $$ = cb_true; }
-| UPON WORD
-  {
-    cb_error_x ($2, _("`%s' undefined in SPECIAL-NAMES"), CB_NAME ($2));
-    $$ = cb_error_node;
-  }
 ;
-display_with_no_advancing:
+display_no_advancing:
   /* empty */			{ $$ = cb_int0; }
 | _with NO ADVANCING		{ $$ = cb_int1; }
 ;

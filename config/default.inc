@@ -8,6 +8,9 @@ text-column: 72
 source-format: fixed
 
 # Value: `yes', `no'
+device-predefine: no
+
+# Value: `yes', `no'
 filename-mapping: no
 
 # Value:             sign  0123456789

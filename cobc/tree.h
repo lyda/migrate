@@ -525,6 +525,7 @@ extern cb_tree make_filler (void);
 extern cb_tree make_reference (const char *name);
 extern cb_tree cb_build_field_reference (struct cb_field *f, cb_tree ref);
 extern const char *cb_define (cb_tree name, cb_tree val);
+extern void cb_define_system_name (const char *name);
 extern cb_tree cb_ref (cb_tree x);
 
 
@@ -919,6 +920,9 @@ extern cb_tree cb_build_move (cb_tree src, cb_tree dst);
 extern cb_tree cb_build_corr (cb_tree (*func)(), cb_tree x1, cb_tree x2, cb_tree opt);
 extern cb_tree cb_build_divide (cb_tree dividend, cb_tree divisor, cb_tree quotient, cb_tree remainder);
 extern cb_tree cb_build_cond (cb_tree x);
+extern cb_tree cb_build_display_statement (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos);
+extern cb_tree cb_build_display_upon (cb_tree x);
+extern cb_tree cb_build_display_upon_direct (cb_tree x);
 extern cb_tree cb_build_evaluate (cb_tree subject_list, cb_tree case_list);
 extern cb_tree cb_build_search_all (cb_tree table, cb_tree when);
 

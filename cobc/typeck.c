@@ -1256,6 +1256,107 @@ cb_build_cond (cb_tree x)
 
 
 /*
+ * DISPLAY
+ */
+
+cb_tree
+cb_build_display_statement (cb_tree values, cb_tree upon, cb_tree no_adv,
+			    cb_tree pos)
+{
+  cb_tree l;
+
+  /* screen mode */
+  if (current_program->flag_screen)
+    {
+      for (l = values; l; l = CB_CHAIN (l))
+	{
+	  cb_tree x = CB_VALUE (l);
+	  if (CB_FIELD_P (cb_ref (x))
+	      && CB_FIELD (cb_ref (x))->storage == CB_STORAGE_SCREEN)
+	    {
+	      cb_tree line = CB_PAIR_X (pos);
+	      cb_tree column = CB_PAIR_Y (pos);
+	      CB_VALUE (l) =
+		cb_build_funcall_3 ("cob_screen_display", x, line, column);
+	    }
+	  else
+	    {
+	      cb_error_x (x, "`%s' not defined in SCREEN SECTION",
+			  cb_name (x));
+	      return cb_error_node;
+	    }
+	}
+      return values;
+    }
+
+  /* DISPLAY x UPON ENVIRONMENT-NAME */
+  if (upon == cb_true)
+    {
+      if (list_length (values) != 1)
+	{
+	  cb_error (_("wrong number of data items"));
+	  return cb_error_node;
+	}
+      return cb_build_funcall_1 ("cob_display_environment", CB_VALUE (values));
+    }
+
+  for (l = values; l; l = CB_CHAIN (l))
+    CB_VALUE (l) = cb_build_funcall_2 ("cob_display", CB_VALUE (l), upon);
+  if (no_adv == cb_int0)
+    values = list_add (values, cb_build_funcall_1 ("cob_newline", upon));
+  return values;
+}
+
+cb_tree
+cb_build_display_upon (cb_tree x)
+{
+  if (x == cb_error_node)
+    return cb_error_node;
+
+  switch (CB_SYSTEM_NAME (cb_ref (x))->token)
+    {
+    case CB_DEVICE_CONSOLE:
+    case CB_DEVICE_SYSOUT:
+      return cb_int (COB_SYSOUT);
+    case CB_DEVICE_SYSERR:
+      return cb_int (COB_SYSERR);
+    default:
+      cb_error_x (x, _("invalid UPON item"));
+      return cb_error_node;
+    }
+}
+
+cb_tree
+cb_build_display_upon_direct (cb_tree x)
+{
+  const char *name = CB_NAME (x);
+
+  if (CB_REFERENCE (x)->word->count == 0)
+    {
+      cb_tree sys = lookup_system_name (CB_NAME (x));
+      if (sys != cb_error_node)
+	{
+	  switch (CB_SYSTEM_NAME (sys)->token)
+	    {
+	    case CB_DEVICE_CONSOLE:
+	    case CB_DEVICE_SYSOUT:
+	      cb_warning_x (x, _("`%s' undefined in SPECIAL-NAMES"), name);
+	      return cb_int (COB_SYSOUT);
+	    case CB_DEVICE_SYSERR:
+	      cb_warning_x (x, _("`%s' undefined in SPECIAL-NAMES"), name);
+	      return cb_int (COB_SYSERR);
+	    default:
+	      break;
+	    }
+	}
+    }
+
+  cb_error_x (x, _("`%s' undefined in SPECIAL-NAMES"), name);
+  return cb_error_node;
+}
+
+
+/*
  * EVALUATE
  */
 
