@@ -1,5 +1,17 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Changes in OpenCOBOL 0.9.7
+
+** The default value of COB_CONFIG_FILE has been changed to
+"$PREFIX/etc/open-cobol/libcob.conf".
+
+** SORT and MERGE statements have been impelemented.
+
+** Preliminary implementation of SCREEN SECTION.
+
+** Many bug fixes and improvements.
+
+
 * Changes in OpenCOBOL 0.9.6
 
 ** cobc now requires `-main' flag to build an executable from a COBOL file.
