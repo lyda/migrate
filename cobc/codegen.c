@@ -667,10 +667,55 @@ load_location (cob_tree sy, char *reg)
 }
 
 static void
+gen_subscripted (cob_tree ref)
+{
+  cob_tree sy = SUBREF_SYM (ref);
+  cob_tree_list ls;
+
+#ifdef COB_DEBUG
+  fprintf (o_src, "# gen_subscripted\n");
+#endif
+
+  fprintf (o_src, "\tpushl\t$0\n");
+  for (ls = SUBREF_SUBS (ref); ls; ls = ls->next)
+    {
+      cob_tree x = ls->tree;
+      if (!EXPR_P (x))
+	value_to_eax (x);
+      else
+	{
+	  value_to_eax (EXPR_LEFT (x));
+	  fprintf (o_src, "\tpushl\t%%eax\n");
+	  do {
+	    cob_tree r = EXPR_RIGHT (x);
+	    value_to_eax (EXPR_P (r) ? EXPR_LEFT (r) : r);
+	    fprintf (o_src, "\t%sl\t%%eax,0(%%esp)\n",
+		     (EXPR_OP (x) == '+') ? "add" : "sub");
+	    x = r;
+	  } while (EXPR_P (x));
+	  fprintf (o_src, "\tpopl\t%%eax\n");
+	}
+      fprintf (o_src, "\tdecl\t%%eax\n");	/* subscript start at 1 */
+
+      /* find the first parent var that needs subscripting */
+      while (sy->times == 1)
+	sy = sy->parent;
+      if (sy->len > 1)
+	{
+	  fprintf (o_src, "\tmovl\t$%d, %%edx\n", symlen (sy));
+	  fprintf (o_src, "\timull\t%%edx\n");
+	}
+      fprintf (o_src, "\taddl\t%%eax,0(%%esp)\n");
+      sy = sy->parent;
+    }
+  fprintf (o_src, "\tpopl\t%%eax\n");	/* return offset in %eax */
+}
+
+static void
 loadloc_to_eax (cob_tree sy_p)
 {
   unsigned offset;
-  cob_tree sy = sy_p, var, tmp;
+  cob_tree sy = sy_p, var;
 
 #ifdef COB_DEBUG
   fprintf (o_src, "#gen_loadloc litflg %d\n", sy->litflag);
@@ -679,11 +724,11 @@ loadloc_to_eax (cob_tree sy_p)
     sy = ((struct refmod *) sy)->sym;	// temp bypass
   if (SUBREF_P (sy))
     {
-      gen_subscripted ((struct subref *) sy);
+      gen_subscripted (sy);
       var = SUBREF_SYM (sy);
       if (var->linkage_flg)
 	{
-	  tmp = var;
+	  cob_tree tmp = var;
 	  while (tmp->linkage_flg == 1)
 	    tmp = tmp->parent;
 	  offset = var->location - tmp->location;
@@ -2918,63 +2963,6 @@ create_refmoded_var (cob_tree sy, cob_tree syoff, cob_tree sylen)
   return ref;
 }
 
-void
-gen_subscripted (struct subref *subs)
-{
-  struct subref *ref;
-  cob_tree sy;
-  int outer_pushed, eax_in_use;
-  ref = subs->next;		/* here start the subscripts */
-  sy = subs->sym;		/* here our array */
-  fprintf (o_src, "# gen_subscripted\n");
-  outer_pushed = 0;
-  eax_in_use = 0;
-  while (ref)
-    {
-      if (ref->sym->type == 'B' && symlen (ref->sym) > 4)
-	yyerror ("warning: we don't handle this large subscript");
-      if (eax_in_use && !outer_pushed)
-	{
-	  /* accumulate offsets here */
-	  fprintf (o_src, "\tpushl\t%%eax\t# outer_pushed\n");
-	  outer_pushed = 1;
-	}
-      eax_in_use = 1;
-      value_to_eax (ref->sym);
-      fprintf (o_src, "\tpushl\t%%eax\n");
-      while (ref->litflag != ',')
-	{
-	  ref = ref->next;
-	  if (symlen (ref->sym) > 4)
-	    yyerror ("warning: we don't handle this large subscript");
-	  value_to_eax (ref->sym);
-	  if (ref->litflag == '+')
-	    fprintf (o_src, "\taddl\t%%eax,0(%%esp)\n");
-	  else
-	    fprintf (o_src, "\tsubl\t%%eax,0(%%esp)\n");
-	}
-      /* find the first parent var that needs subscripting */
-      while (sy && sy->times == 1)
-	sy = sy->parent;
-      fprintf (o_src, "\tpopl\t%%eax\n");
-      fprintf (o_src, "\tdecl\t%%eax\n");	/* subscript start at 1 */
-      if (sy->len != 1)
-	{
-	  fprintf (o_src, "\tmovl\t$%d, %%edx\n", symlen (sy));
-	  fprintf (o_src, "\timull\t%%edx\n");
-	}
-      if (outer_pushed)
-	{
-	  fprintf (o_src, "\taddl\t%%eax,0(%%esp)\n");
-	}
-      if (sy)
-	sy = sy->parent;
-      ref = ref->next;
-    }
-  if (outer_pushed)
-    fprintf (o_src, "\tpopl\t%%eax\n");	/* return offset in %eax */
-}
-
 cob_tree 
 get_variable_item (cob_tree sy)
 {
@@ -3383,8 +3371,8 @@ gen_set (cob_tree idx, int which, cob_tree var,
 	}
       if (SUBREF_P (idx))
 	{
-	  struct subref *ref = make_subref (sy->parent, SUBREF_NEXT (idx));
-	  gen_move (sy->value, (cob_tree) ref);
+	  cob_tree ref = make_subref (sy->parent, SUBREF_SUBS (idx));
+	  gen_move (sy->value, ref);
 	  free (ref);
 	}
       else
@@ -3908,7 +3896,6 @@ gen_SearchAllLoopCheck (unsigned long lbl3, cob_tree syidx,
 {
 
   cob_tree sy1;
-  struct subref *vr1;
   struct index_to_table_list *it1, *it2;
   unsigned long l1, l2, l3, l4, l5, l6;
 
@@ -3940,8 +3927,7 @@ gen_SearchAllLoopCheck (unsigned long lbl3, cob_tree syidx,
   if ((it2->seq != '1') && (it2->seq != '2'))
     return;
 
-  vr1 = create_subscript (syidx);
-  sy1 = (cob_tree) make_subref (sytbl, vr1);
+  sy1 = make_subref (sytbl, list_append (NULL, syidx));
 
   /* table sort sequence: '0' = none, '1' = ASCENDING, '2' = DESCENDING */
 
@@ -4834,8 +4820,8 @@ gen_condition (cob_tree sy)
     {
       /* alloc a tmp node for condition parent 
          so gen_loadvar will be happy */
-      struct subref *ref = make_subref (sy1->parent, SUBREF_NEXT (sy));
-      gen_loadvar ((cob_tree) ref);
+      cob_tree ref = make_subref (sy1->parent, SUBREF_SUBS (sy));
+      gen_loadvar (ref);
       free (ref);
     }
   else
@@ -5536,7 +5522,7 @@ gen_pushval (cob_tree sy)
 #endif
   if (SUBREF_P (sy))
     {
-      gen_subscripted ((struct subref *) sy);
+      gen_subscripted (sy);
       var = SUBREF_SYM (sy);
       if (var->linkage_flg)
 	{

@@ -59,7 +59,6 @@ static void assert_numeric_sy (cob_tree sy);
     struct coord_pair pval; /* lin,col */
     unsigned long dval;     /* label definition, compacted */
     char *str;
-    struct subref *rval;      /* variable reference (with subscripts) */
     struct refmod *rmval;   /* variable with RefMod specifier */
     struct string_from *sfval; /* variable list in string statement */
     struct unstring_delimited *udval;
@@ -81,7 +80,6 @@ static void assert_numeric_sy (cob_tree sy);
     struct invalid_keys *iks; /* [NOT] INVALID KEY */
     struct invalid_key_element *ike; /* [NOT] INVALID KEY */
     struct condition condval;
-    struct pair *pair;
 }
 
 %left  '+', '-'
@@ -154,22 +152,20 @@ static void assert_numeric_sy (cob_tree sy);
 %type <ival> screen_attribs,screen_attrib,screen_sign,opt_separate
 %type <ival> sentence_or_nothing,when_case_list,opt_read_next,usage
 %type <ival> procedure_using,sort_direction,write_options
-%type <list> label_list
+%type <list> label_list,subscript_list
 %type <mose> opt_on_size_error,on_size_error,error_sentence
 %type <mval> var_list_name, var_list_gname
-%type <pair> parameters
 %type <pfval> perform_after
 %type <pfvals> opt_perform_after
 %type <rbval> replacing_by_list
-%type <repval> replacing_list, replacing_clause
-%type <rval> subscript,subscript_list
+%type <repval> replacing_list,replacing_clause
 %type <sfval> string_from_list,string_from
 %type <sival> screen_clauses
 %type <snval> sort_file_list,sort_input,sort_output
 %type <ssbjval> selection_subject_set
 %type <str> idstring
 %type <tree> field_description,label,filename,noallname,paragraph,assign_clause
-%type <tree> file_description,redefines_var,function_call
+%type <tree> file_description,redefines_var,function_call,subscript_expr
 %type <tree> name,gname,numeric_value,opt_gname,opt_def_name,def_name
 %type <tree> opt_read_into,opt_write_from,field_name,expr,opt_expr
 %type <tree> opt_unstring_count,opt_unstring_delim,unstring_tallying
@@ -2928,16 +2924,16 @@ variable:
 subscripted_variable:
   qualified_var LPAR subscript_list ')'
   {
-    $$ = (cob_tree)make_subref( $1, $3 );
+    $$ = make_subref ($1, $3);
   }
 subscript_list:
-  subscript                         { $$ = $1; }
-| subscript_list opt_sep subscript  { $$ = add_subscript($1, $3); }
+  subscript_expr			{ $$ = list_append (NULL, $1); }
+| subscript_list opt_sep subscript_expr	{ $$ = list_append ($1, $3); }
 ;
-subscript:
-  gname                     { $$ = create_subscript( $1 ); }
-| subscript '+' gname       { $$ = add_subscript_item( $1, '+', $3 ); }
-| subscript '-' gname       { $$ = add_subscript_item( $1, '-', $3 ); }
+subscript_expr:
+  gname				{ $$ = $1; }
+| subscript_expr '+' gname	{ $$ = make_expr ($1, '+', $3); }
+| subscript_expr '-' gname	{ $$ = make_expr ($1, '-', $3); }
 ;
 qualified_var:
   unqualified_var         { $$=$1; }

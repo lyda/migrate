@@ -1,8 +1,27 @@
 #ifndef _TREE_H_
 #define _TREE_H_
 
+
+/*
+ * Tree
+ */
+
 typedef struct sym *cob_tree;
 
+/*
+ * Tree list
+ */
+
+struct cob_tree_list {
+  cob_tree tree;
+  struct cob_tree_list *next;
+};
+
+typedef struct cob_tree_list *cob_tree_list;
+
+extern cob_tree_list list_append (cob_tree_list l, cob_tree x);
+
+
 struct cob_field {
   char litflag;
   struct cob_field *next;
@@ -157,25 +176,20 @@ extern cob_tree make_expr (cob_tree left, char op, cob_tree right);
 
 /*
  * Storage for subscripted variable references.
- * First node is the variable, other are subscripts as 
- * variable/literals with operations.
- * For instance: VAR ( SUB1 - 5, SUB2 + 3 ) is represented as
- * 5 nodes: (sy,op) = (VAR,0) (SUB1,'-') (5,',') (SUB2,'+') (3,',')
- * where the numbers are (struct lit *) pointers and the variables
- * are (cob_tree) pointers.
  */
 struct subref
 {
-  char litflag;			/* ',' = end of subscript, 
-				   '+','-' = subscript arith */
-  struct subref *next;		/* link to next in list or NULL */
-  cob_tree sym;			/* variable/literal at this node */
+  char litflag;
+  cob_tree_list subs;
+  cob_tree sym;
 };
 
 #define SUBREF(x)	((struct subref *) (x))
 #define SUBREF_P(x)	(SUBREF (x)->litflag == 2)
-#define SUBREF_NEXT(x)	(SUBREF (x)->next)
+#define SUBREF_SUBS(x)	(SUBREF (x)->subs)
 #define SUBREF_SYM(x)	(SUBREF (x)->sym)
+
+extern cob_tree make_subref (cob_tree sy, cob_tree_list subs);
 
 
 
@@ -450,19 +464,5 @@ struct occurs
   cob_tree depend;
   int min, max;
 };
-
-
-/*
- * Tree list
- */
-
-struct cob_tree_list {
-  cob_tree tree;
-  struct cob_tree_list *next;
-};
-
-typedef struct cob_tree_list *cob_tree_list;
-
-extern cob_tree_list list_append (cob_tree_list l, cob_tree x);
 
 #endif /* _TREE_H_ */

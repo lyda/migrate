@@ -192,12 +192,7 @@ extern void gen_multiply1 (struct math_var *vl1, cob_tree sy1, struct math_ose *
 extern void gen_multiply2 (struct math_var *vl1, cob_tree sy1, cob_tree sy2, struct math_ose *v1);
 extern void gen_divide1 (struct math_var *vl1, cob_tree sy1, struct math_ose *v1);
 extern void gen_divide2 (struct math_var *vl1, cob_tree sy1, cob_tree sy2, struct math_ose *v1);
-extern struct subref *make_subref (cob_tree sy, struct subref *subs);
-extern struct subref *create_subscript (cob_tree sy);
-extern struct subref *add_subscript_item (struct subref *subs, char op, cob_tree item);
-extern struct subref *add_subscript (struct subref *ref, struct subref *subs);
 extern struct refmod *create_refmoded_var (cob_tree sy, cob_tree syoff, cob_tree sylen);
-extern void gen_subscripted (struct subref *subs);
 extern cob_tree get_variable_item (cob_tree sy);
 extern void gen_temp_storage (int size);
 extern void adjust_desc_length (cob_tree sy);
