@@ -1,5 +1,9 @@
 2004-11-05  Roger While <simrw@sim-basis.de>
 
+	* codegen.c : readjust align to 8
+
+2004-11-05  Roger While <simrw@sim-basis.de>
+
 	* cobc.h : Print file/line when ABORT()
 
 2004-11-05  Roger While <simrw@sim-basis.de>
