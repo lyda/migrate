@@ -353,19 +353,15 @@ save_pic_char (char c, int n)
     case 'C':
     case 'R':
     case 'D':
+    edited:
       piccnt += n;
       COB_FIELD_TYPE (curr_field) = 'E';
       break;
     default:
       if (c == currency_symbol)
-	{
-	  piccnt += n;
-	  COB_FIELD_TYPE (curr_field) = 'E';
-	  break;
-	}
+	goto edited;
 
-      /* error */
-      yyerror ("invalid char in picture: `%c'", c);
+      yyerror ("invalid char in PICTURE clause: `%c'", c);
       return 0;
     }
 
