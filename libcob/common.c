@@ -30,6 +30,8 @@
 #include "termio.h"
 #include "fileio.h"
 #include "call.h"
+#include "gettext.h"
+#include "defaults.h"
 
 int cob_initialized = 0;
 
@@ -105,6 +107,12 @@ cob_init (int argc, char **argv)
   cob_argc = argc;
   cob_argv = argv;
 
+#if ENABLE_NLS
+  setlocale (LC_ALL, "");
+  bindtextdomain (PACKAGE, LOCALEDIR);
+  textdomain (PACKAGE);
+#endif
+
   cob_init_numeric ();
   cob_init_termio ();
   cob_init_fileio ();
@@ -118,7 +126,7 @@ cob_module_init (void)
 {
   if (!cob_initialized)
     {
-      fputs ("warning: cob_init expected in the main program\n", stderr);
+      fputs (_("warning: cob_init expected in the main program\n"), stderr);
       cob_init (0, NULL);
     }
 }
@@ -134,7 +142,7 @@ cob_index (int i, int max)
 {
   if (i < 1 || i > max)
     {
-      cob_runtime_error ("index out of range `%d'", i);
+      cob_runtime_error (_("index out of range `%d'"), i);
       return (i < 1) ? 0 : max - 1;
     }
   return i - 1;
@@ -145,12 +153,12 @@ cob_index_depending (int i, int min, int max, int dep)
 {
   if (dep < min || max < dep)
     {
-      cob_runtime_error ("value out of range `%d'", dep);
+      cob_runtime_error (_("value out of range `%d'"), dep);
       dep = (dep < min) ? min : max;
     }
   if (i < min || dep < i)
     {
-      cob_runtime_error ("index out of range `%d'", i);
+      cob_runtime_error (_("index out of range `%d'"), i);
       return (i < min) ? 0 : dep - 1;
     }
   return i - 1;
@@ -274,7 +282,7 @@ cob_check_numeric (struct cob_field f)
       char buff[COB_FIELD_SIZE (f) + 1];
       memcpy (buff, COB_FIELD_DATA (f), COB_FIELD_SIZE (f));
       buff[COB_FIELD_SIZE (f)] = '\0';
-      cob_runtime_error ("non-numeric value `%s'", buff);
+      cob_runtime_error (_("non-numeric value `%s'"), buff);
     }
 }
 
@@ -415,7 +423,7 @@ cob_runtime_error (char *fmt, ...)
   va_start (ap, fmt);
   if (cob_source_line)
     fprintf (stderr, "%s:%d: ", cob_source_file, cob_source_line);
-  fputs ("run-time error: ", stderr);
+  fputs ("libcob: ", stderr);
   vfprintf (stderr, fmt, ap);
   fputs ("\a\n", stderr);
   va_end (ap);

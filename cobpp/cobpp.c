@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001 Keisuke Nishida
+ * Copyright (C) 2001-2002 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,8 @@
 #include "cobpp.h"
 #include "scanner.h"
 #include "getopt.h"
+#include "gettext.h"
+#include "defaults.h"
 
 extern int yyparse (void);
 
@@ -62,6 +64,7 @@ static char short_options[] = "hvo:DT:I:";
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'v'},
+  {"debug", no_argument, 0, 'D'},
   {"free", no_argument, &cob_file_format, COB_FORMAT_FREE},
   {"fixed", no_argument, &cob_file_format, COB_FORMAT_FIXED},
   {"MT", required_argument, 0, '%'},
@@ -78,21 +81,20 @@ print_version ()
 static void
 print_usage ()
 {
-  printf ("Usage: %s [options] file\n", program_name);
-  puts ("");
-  puts ("General options:");
-  puts ("  --help        Display this information");
-  puts ("  --version     Display compiler version");
-  puts ("  -o <file>     Place the output into <file>");
-  puts ("");
-  puts ("COBOL options:");
-  puts ("  -free         Use free source format");
-  puts ("  -fixed        Use fixed source format");
-  puts ("  -D            Compile debug lines (i.e., \"D\" lines)");
-  puts ("  -T <n>        Tab width (default 8)");
-  puts ("  -I <path>     Add include path");
-  puts ("  -MT <target>  Set target file used in dependency list");
-  puts ("  -MF <file>    Place dependency list into <file>");
+  printf ("Usage: %s [options] file\n\n", program_name);
+  puts (_("General options:\n"
+	  "  --help        Display this message\n"
+	  "  --version     Display compiler version\n"
+	  "  -o <file>     Place the output into <file>\n"
+	  "  -MT <target>  Set target file used in dependency list\n"
+	  "  -MF <file>    Place dependency list into <file>\n"
+	  "\n"
+	  "COBOL options:\n"
+	  "  -free         Use free source format\n"
+	  "  -fixed        Use fixed source format\n"
+	  "  -D, -debug    Enable debugging lines\n"
+	  "  -T <n>        Set tab width to <n> (default 8)\n"
+	  "  -I <path>     Add copybook include path"));
 }
 
 static int
@@ -171,6 +173,12 @@ main (int argc, char *argv[])
 {
   int index;
 
+#if ENABLE_NLS
+  setlocale (LC_ALL, "");
+  bindtextdomain (PACKAGE, LOCALEDIR);
+  textdomain (PACKAGE);
+#endif
+
   /* Initialize program_name */
   program_name = strrchr (argv[0], '/');
   if (program_name)
@@ -189,7 +197,7 @@ main (int argc, char *argv[])
   else
     {
       if (argc > index + 1)
-	fprintf (stderr, "warning: arguments after `%s' is ignored\n",
+	fprintf (stderr, _("warning: arguments after `%s' is ignored\n"),
 		 argv[index]);
       open_buffer (argv[index], NULL);
     }
@@ -201,7 +209,7 @@ main (int argc, char *argv[])
       struct cob_path *l;
       if (!cob_depend_target)
 	{
-	  fputs ("-MT must be given to specify target file\n", stderr);
+	  fputs (_("-MT must be given to specify target file\n"), stderr);
 	  exit (1);
 	}
       fprintf (cob_depend_file, "%s: \\\n", cob_depend_target);

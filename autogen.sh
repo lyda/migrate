@@ -1,16 +1,23 @@
 #!/bin/sh
 
-echo "Running libtoolize..."
-libtoolize --automake --force --copy
+if test ! -e po; then
+  echo "Running gettextize..."
+  gettextize --force --no-changelog
+fi
+
+if test ! -e ltmain.sh; then
+  echo "Running libtoolize..."
+  libtoolize --force --automake
+fi
 
 echo "Running aclocal..."
-aclocal -I .
+aclocal
 
 echo "Running autoheader..."
 autoheader
 
 echo "Running automake..."
-automake -a -c
+automake --add-missing --force-missing
 
 echo "Running autoconf..."
 autoconf

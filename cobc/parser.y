@@ -34,6 +34,7 @@
 #include "scanner.h"
 #include "codegen.h"
 #include "reserved.h"
+#include "gettext.h"
 
 #define yydebug		yy_bison_debug
 #define YYDEBUG		COB_DEBUG
@@ -42,7 +43,8 @@
 #define YYLTYPE		struct cobc_location
 
 #define IGNORE(x)	/* ignored */
-#define OBSOLETE(x)	yywarn ("`%s' is obsolete", x)
+#define PENDING(x)	yywarn (_("`%s' not implemented"), x)
+#define OBSOLETE(x)	yywarn (_("`%s' obsolete"), x)
 
 #define push_tree(x) \
   program_spec.exec_list = cons (x, program_spec.exec_list)
@@ -318,14 +320,14 @@ identification_division:
 	  *s = '_';
 	}
     if (converted)
-      yywarn ("PROGRAM-ID is converted to `%s'", $6->name);
+      yywarn (_("PROGRAM-ID is converted to `%s'"), $6->name);
     program_spec.program_id = $6->name;
   }
   identification_division_options
 ;
 opt_program_parameter:
 | _is TOK_INITIAL _program	{ program_spec.initial_program = 1; }
-| _is COMMON _program		{ yywarn ("COMMON is not implemented yet"); }
+| _is COMMON _program		{ PENDING ("COMMON"); }
 ;
 identification_division_options:
 | identification_division_options identification_division_option
@@ -379,8 +381,8 @@ source_computer:
 _with_debugging_mode:
 | _with DEBUGGING MODE
   {
-    yywarn ("DEBUGGING MODE is ignored");
-    yywarn ("use compiler option `-debug' instead");
+    yywarn (_("DEBUGGING MODE is ignored"));
+    yywarn (_("use compiler option `-debug' instead"));
   }
 ;
 
@@ -433,7 +435,7 @@ special_name_mnemonic:
   {
     int n = lookup_builtin_word ($1->name);
     if (n == 0)
-      yyerror ("unknown name `%s'", $1->name);
+      yyerror_loc (&@1, _("unknown name `%s'"), $1->name);
     $<tree>$ = make_builtin (n);
   }
   special_name_mnemonic_define
@@ -472,7 +474,7 @@ on_or_off:
 special_name_alphabet:
   ALPHABET WORD _is alphabet_group
   {
-    yywarn ("ALPHABET name is ignored");
+    PENDING ("ALPHABET");
   }
 ;
 alphabet_group:
@@ -503,7 +505,7 @@ also_literal_list:
 special_name_symbolic:
   SYMBOLIC _characters symbolic_characters_list
   {
-    yywarn ("SYMBOLIC CHARACTERS is ignored");
+    PENDING ("SYMBOLIC CHARACTERS");
   }
 ;
 symbolic_characters_list:
@@ -555,7 +557,7 @@ special_name_currency:
   {
     unsigned char *s = COBC_LITERAL ($3)->str;
     if (strlen (s) != 1)
-      yyerror ("invalid currency sign");
+      yyerror_loc (&@3, _("invalid currency sign `%s'"), s);
     cob_currency_symbol = s[0];
   }
 ;
@@ -604,12 +606,12 @@ select_sequence:
       {
       case COB_ORG_INDEXED:
 	if (current_file_name->key == NULL)
-	  yyerror_loc (&@2, "RECORD KEY required for file `%s'", $4->name);
+	  yyerror_loc (&@2, _("RECORD KEY required for file `%s'"), $4->name);
 	break;
       case COB_ORG_RELATIVE:
 	if (current_file_name->access_mode != COB_ACCESS_SEQUENTIAL
 	    && current_file_name->key == NULL)
-	  yyerror_loc (&@2, "RELATIVE KEY required for file `%s'", $4->name);
+	  yyerror_loc (&@2, _("RELATIVE KEY required for file `%s'"), $4->name);
 	break;
       }
   }
@@ -647,11 +649,11 @@ select_option:
   }
 | PADDING _character _is literal_or_predefined
   {
-    yywarn ("PADDING not implemented");
+    PENDING ("PADDING");
   }
 | RECORD DELIMITER _is STANDARD_1
   {
-    yywarn ("RECORD DELIMITER not implemented");
+    PENDING ("RECORD DELIMITER");
   }
 | RELATIVE _key _is predefined_name
   {
@@ -721,10 +723,10 @@ same_statement:
     switch ($2)
       {
       case 0:
-	yywarn ("SAME not implemented");
+	PENDING ("SAME");
 	break;
       case 1:
-	yywarn ("SAME RECORD not implemented");
+	PENDING ("SAME RECORD");
       }
   }
 ;
@@ -769,8 +771,8 @@ file_options:
 | file_options file_option
 ;
 file_option:
-  _is GLOBAL			{ yyerror ("GLOBAL is not implemented"); }
-| _is EXTERNAL			{ yyerror ("EXTERNAL is not implemented"); }
+  _is GLOBAL			{ PENDING ("GLOBAL"); }
+| _is EXTERNAL			{ PENDING ("EXTERNAL"); }
 | block_clause
 | record_clause
 | label_clause
@@ -863,7 +865,7 @@ data_clause:
 codeset_clause:
   CODE_SET _is WORD
   {
-    yywarn ("CODE-SET not implemented");
+    PENDING ("CODE-SET");
   }
 ;
 
@@ -971,7 +973,7 @@ external_clause:
 /* GLOBAL */
 
 global_clause:
-  _is GLOBAL			{ yywarn ("GLOBAL is not implemented"); }
+  _is GLOBAL			{ PENDING ("GLOBAL"); }
 ;
 
 
@@ -1152,7 +1154,7 @@ value_clause:
       {
 	/* single VALUE */
 	if ($3->next != NULL || COBC_PAIR_P ($3->item))
-	  yyerror ("only level 88 item may have multiple values");
+	  yyerror (_("only level 88 item may have multiple values"));
 	else
 	  current_field->value = $3->item;
       }
@@ -1227,15 +1229,15 @@ procedure_using:
     struct cobc_list *l;
     if (!cobc_module_flag)
       {
-	yywarn ("compiled as a module due to USING clause");
-	yywarn ("use compiler option `-m' explicitly");
+	yywarn (_("compiled as a module due to USING clause"));
+	yywarn (_("use compiler option `-m' explicitly"));
 	cobc_module_flag = 1;
       }
     for (l = $2; l; l = l->next)
       {
 	struct cobc_field *p = COBC_FIELD (l->item);
 	if (p->level != 01 && p->level != 77)
-	  yyerror ("`%s' not level 01 or 77", p->word->name);
+	  yyerror (_("`%s' not level 01 or 77"), p->word->name);
       }
     program_spec.using_list = $2;
   }
@@ -1431,7 +1433,7 @@ accept_statement:
 	|| COBC_BUILTIN ($4)->id == BUILTIN_SYSIN)
       push_call_2 (COBC_ACCEPT, $2, make_integer (COB_SYSIN));
     else
-      yyerror_tree ($4, "invalid input stream");
+      yyerror_tree ($4, _("invalid input stream"));
   }
 ;
 
@@ -1589,7 +1591,7 @@ compute_body:
   math_edited_name_list '=' expr
   {
     if (!is_numeric ($3))
-      yyerror ("invalid expression");
+      yyerror (_("invalid expression"));
     else
       {
 	struct cobc_list *l;
@@ -1646,14 +1648,14 @@ display_upon:
       case BUILTIN_SYSOUT:  $$ = COB_SYSOUT; break;
       case BUILTIN_SYSERR:  $$ = COB_SYSERR; break;
       default:
-	yyerror ("invalid UPON item");
+	yyerror (_("invalid UPON item"));
 	$$ = COB_SYSOUT;
 	break;
       }
   }
 | UPON LABEL_WORD
   {
-    yywarn ("`%s' undefined in SPECIAL-NAMES", $2->name);
+    yywarn (_("`%s' undefined in SPECIAL-NAMES"), $2->name);
     $$ = COB_SYSOUT;
   }
 ;
@@ -1753,7 +1755,7 @@ evaluate_object:
       {
 	if ($2 == cobc_any || $2 == cobc_true || $2 == cobc_false)
 	  {
-	    yyerror ("cannot use NOT with TRUE, FALSE, or ANY");
+	    yyerror (_("cannot use NOT with TRUE, FALSE, or ANY"));
 	    $$ = $2;
 	  }
 	else
@@ -1806,7 +1808,7 @@ goto_statement:
     if ($3 == NULL)
       OBSOLETE ("GO TO without label");
     else if ($3->next)
-      yyerror ("too many labels with GO TO");
+      yyerror_loc (&@1, _("too many labels with GO TO"));
     else
       push_call_1 (COBC_GOTO, $3->item);
   }
@@ -1918,26 +1920,26 @@ tallying_item:
   {
     inspect_mode = 0;
     if (inspect_name == 0)
-      yyerror_loc (&@1, "data name expected before CHARACTERS");
+      yyerror_loc (&@1, _("data name expected before CHARACTERS"));
     else
       inspect_push (COB_INSPECT_CHARACTERS, inspect_name, 0)
   }
 | ALL
   {
     if (inspect_name == 0)
-      yyerror_loc (&@1, "data name expected before ALL");
+      yyerror_loc (&@1, _("data name expected before ALL"));
     inspect_mode = COB_INSPECT_ALL;
   }
 | LEADING
   {
     if (inspect_name == 0)
-      yyerror_loc (&@1, "data name expected before LEADING");
+      yyerror_loc (&@1, _("data name expected before LEADING"));
     inspect_mode = COB_INSPECT_LEADING;
   }
 | text_value inspect_before_after_list
   {
     if (inspect_mode == 0)
-      yyerror_loc (&@1, "ALL or LEADING expected before `%s'",
+      yyerror_loc (&@1, _("ALL or LEADING expected before `%s'"),
 		   tree_to_string ($1));
     else
       inspect_push (inspect_mode, inspect_name, $1);
@@ -2170,7 +2172,7 @@ read_statement:
       {
 	/* READ NEXT */
 	if ($6)
-	  yywarn ("KEY ignored with sequential READ");
+	  yywarn (_("KEY ignored with sequential READ"));
 	push_call_1 (COBC_READ_NEXT, $2);
       }
     else
@@ -3006,7 +3008,7 @@ expr_1:
     if (i != 1)
       {
       error:
-	yyerror_tree ($1->item, "invalid expression");
+	yyerror_tree ($1->item, _("invalid expression"));
 	YYERROR;
       }
 
@@ -3092,7 +3094,7 @@ numeric_name:
   data_name
   {
     if (COBC_TREE_CLASS ($1) != COB_NUMERIC)
-      yyerror ("`%s' not numeric", tree_to_string ($1));
+      yyerror_loc (&@1, _("`%s' not numeric"), tree_to_string ($1));
     $$ = $1;
   }
 ;
@@ -3104,7 +3106,8 @@ numeric_edited_name:
   {
     int category = COBC_FIELD ($1)->category;
     if (category != COB_NUMERIC && category != COB_NUMERIC_EDITED)
-      yyerror ("`%s' not numeric or numeric edited", tree_to_string ($1));
+      yyerror_loc (&@1, _("`%s' not numeric or numeric edited"),
+		   tree_to_string ($1));
     $$ = $1;
   }
 ;
@@ -3115,7 +3118,7 @@ group_name:
   data_name
   {
     if (COBC_FIELD ($1)->children == NULL)
-      yyerror ("`%s' not a group", tree_to_string ($1));
+      yyerror_loc (&@1, _("`%s' not a group"), tree_to_string ($1));
     $$ = $1;
   }
 ;
@@ -3126,7 +3129,10 @@ table_name:
   name
   {
     if (!COBC_FIELD ($1)->index_list)
-      yyerror ("`%s' must be indexed", tree_to_string ($1));
+      {
+	yyerror_loc (&@1, _("`%s' must be indexed"), tree_to_string ($1));
+	yyerror_tree ($1, _("defined here"));
+      }
     $$ = $1;
   }
 ;
@@ -3199,7 +3205,8 @@ data_name:
       {
 	struct cobc_field *p = COBC_FIELD ($1);
 	if (p->indexes > 0)
-	  yyerror_loc (&@1, "`%s' must be subscripted", tree_to_string ($1));
+	  yyerror_loc (&@1, _("`%s' must be subscripted"),
+		       tree_to_string ($1));
       }
     field_set_used (p);
   }
@@ -3215,7 +3222,7 @@ file_name:
   name
   {
     if (!COBC_FILE_NAME_P ($1))
-      yyerror ("`%s' not file name", tree_to_string ($1));
+      yyerror_loc (&@1, _("`%s' not file name"), tree_to_string ($1));
     $$ = $1;
   }
 ;
@@ -3226,7 +3233,7 @@ record_name:
   name
   {
     if (!COBC_FIELD_P ($1) || !COBC_FIELD ($1)->file)
-      yyerror ("`%s' not record name", tree_to_string ($1));
+      yyerror_loc (&@1, _("`%s' not record name"), tree_to_string ($1));
     $$ = $1;
   }
 ;
@@ -3239,7 +3246,7 @@ level_number:
     $$ = $1;
     if ($1 < 01 || ($1 > 49 && $1 != 66 && $1 != 77 && $1 != 88))
       {
-	yyerror ("invalid level number `%02d'", $1);
+	yyerror_loc (&@1, _("invalid level number `%02d'"), $1);
 	$$ = 01;
       }
   }
@@ -3319,21 +3326,21 @@ qualified_word:
 subref:
  '(' subscript_list ')'
   {
-    int required = COBC_FIELD ($<tree>0)->indexes;
+    int need = COBC_FIELD ($<tree>0)->indexes;
     int given = list_length ($2);
-    if (given != required)
+    if (given != need)
       {
 	const char *name = tree_to_string ($<tree>0);
-	switch (required)
+	switch (need)
 	  {
 	  case 0:
-	    yyerror ("`%s' cannot be subscripted", name);
+	    yyerror_loc (&@0, _("`%s' cannot be subscripted"), name);
 	    break;
 	  case 1:
-	    yyerror ("`%s' requires one subscript", name);
+	    yyerror_loc (&@0, _("`%s' requires one subscript"), name);
 	    break;
 	  default:
-	    yyerror ("`%s' requires %d subscripts", name, required);
+	    yyerror_loc (&@0, _("`%s' requires %d subscripts"), name, need);
 	    break;
 	  }
       }
@@ -3448,7 +3455,8 @@ number:
   value
   {
     if (COBC_TREE_CLASS ($1) != COB_NUMERIC)
-      yyerror ("numeric value is expected `%s'", tree_to_string ($1));
+      yyerror_loc (&@1, _("numeric value is expected `%s'"),
+		   tree_to_string ($1));
     $$ = $1;
   }
 ;
@@ -3491,7 +3499,7 @@ value:
 function:
   FUNCTION_NAME '(' opt_value_list ')'
   {
-    yyerror ("FUNCTION is not implemented yet");
+    PENDING ("FUNCTION");
     YYABORT;
   }
 
@@ -3533,7 +3541,7 @@ dot:
 | error
 | /* nothing */
   {
-    yywarn ("`.' is expected after `%s'", cobc_last_text);
+    yywarn (_("`.' is expected after `%s'"), cobc_last_text);
   }
 ;
 
@@ -3681,11 +3689,11 @@ init_field (int level, cobc_tree field)
     }
   else if (!last_field)
     {
-      yyerror ("level number must begin with 01 or 77");
+      yyerror (_("level number must begin with 01 or 77"));
     }
   else if (last_field->level == 77 && level != 88)
     {
-      yyerror ("level 77 item may include only 88 items");
+      yyerror (_("level 77 item may include only 88 items"));
     }
   else if (level == 66)
     {
@@ -3733,7 +3741,7 @@ init_field (int level, cobc_tree field)
 	    last_field = p;
 	    goto sister;
 	  }
-      yyerror ("field hierarchy broken");
+      yyerror (_("field hierarchy broken"));
     }
 
   /* inherit parent's properties */
@@ -3751,7 +3759,7 @@ validate_field (struct cobc_field *p)
       /* conditional variable */
       COBC_TREE_CLASS (p) = COB_BOOLEAN;
       if (p->pic)
-	yyerror ("level 88 field may not have PICTURE clause");
+	yyerror (_("level 88 field may not have PICTURE clause"));
     }
   else
     {
@@ -3792,14 +3800,14 @@ validate_field (struct cobc_field *p)
       /* validate OCCURS */
       if (p->f.have_occurs)
 	if (p->level < 2 || p->level > 49)
-	  yyerror ("OCCURS cannot be used with level %02d field", p->level);
+	  yyerror (_("OCCURS cannot be used with level %02d field"), p->level);
 
       /* validate JUSTIFIED RIGHT */
       if (p->f.justified)
 	{
 	  char c = p->category;
 	  if (!(c == 'A' || c == 'X' || c == 'N'))
-	    yyerror ("`%s' cannot have JUSTIFIED RIGHT",
+	    yyerror (_("`%s' cannot have JUSTIFIED RIGHT"),
 		     tree_to_string (COBC_TREE (p)));
 	}
 
@@ -3827,7 +3835,7 @@ validate_field (struct cobc_field *p)
 	  else if (COBC_TREE_CLASS (p) != COB_NUMERIC
 		   && COBC_TREE_CLASS (p->value) == COB_NUMERIC)
 	    {
-	      yywarn ("VALUE should be non-numeric");
+	      yywarn (_("VALUE should be non-numeric"));
 	    }
 	  else
 	    {
@@ -3852,7 +3860,7 @@ validate_field_tree (struct cobc_field *p)
       COBC_TREE_CLASS (p) = COB_ALPHANUMERIC;
 
       if (p->f.justified)
-	yyerror ("group item cannot have JUSTIFIED RIGHT");
+	yyerror (_("group item cannot have JUSTIFIED RIGHT"));
 
       for (p = p->children; p; p = p->sister)
 	validate_field_tree (p);
@@ -3869,7 +3877,7 @@ validate_field_tree (struct cobc_field *p)
 	case COBC_USAGE_BINARY:
 	case COBC_USAGE_PACKED:
 	  if (p->category != COB_NUMERIC)
-	    yywarn ("field must be numeric");
+	    yywarn (_("field must be numeric"));
 	  break;
 	case COBC_USAGE_INDEX:
 	  COBC_TREE_CLASS (p) = COB_NUMERIC;
@@ -3879,7 +3887,7 @@ validate_field_tree (struct cobc_field *p)
       if (!p->pic)
 	{
 	  if (p->usage != COBC_USAGE_INDEX)
-	    yyerror_tree (COBC_TREE (p), "must have PICTURE");
+	    yyerror_tree (COBC_TREE (p), _("must have PICTURE"));
 	  p->pic = make_picture ();
 	}
     }
@@ -3896,10 +3904,10 @@ finalize_file_name (struct cobc_file_name *f, struct cobc_field *records)
       /* check the record size */
       if (f->record_min > 0)
 	if (p->size < f->record_min)
-	  yyerror ("record size too small `%s'", p->word->name);
+	  yyerror (_("record size too small `%s'"), p->word->name);
       if (f->record_max > 0)
 	if (p->size > f->record_max)
-	  yyerror ("record size too large `%s'", p->word->name);
+	  yyerror (_("record size too large `%s'"), p->word->name);
     }
 
   /* compute the record size */
@@ -3939,7 +3947,7 @@ lookup_label (struct cobc_word *w, struct cobc_label_name *section)
 	&& section == COBC_LABEL_NAME (w->item)->section)
       return COBC_LABEL_NAME (w->item)->cname;
 
-  yyerror ("`%s' undefined in section `%s'", w->name, section->word->name);
+  yyerror (_("`%s' undefined in section `%s'"), w->name, section->word->name);
   return NULL;
 }
 
@@ -3950,9 +3958,9 @@ validate_label_name (struct cobc_label_name *p)
     {
       /* LABEL IN LABEL */
       if (p->in_word->count == 0)
-	yyerror ("no such section `%s'", p->in_word->name);
+	yyerror (_("no such section `%s'"), p->in_word->name);
       else if (!COBC_LABEL_NAME_P (p->in_word->item))
-	yyerror ("invalid section name `%s'", p->in_word->name);
+	yyerror (_("invalid section name `%s'"), p->in_word->name);
       else
 	p->cname = lookup_label (p->word, COBC_LABEL_NAME (p->in_word->item));
     }
@@ -3964,7 +3972,7 @@ validate_label_name (struct cobc_label_name *p)
       else if (p->word->count > 0 && p->section)
 	p->cname = lookup_label (p->word, p->section);
       else
-	yyerror ("no such section `%s'", p->word->name);
+	yyerror (_("no such section `%s'"), p->word->name);
     }
 }
 
@@ -3997,7 +4005,7 @@ builtin_switch_id (cobc_tree x)
     case BUILTIN_SWITCH_8:
       return id - BUILTIN_SWITCH_1;
     default:
-      yyerror ("not switch name");
+      yyerror (_("not switch name"));
       return -1;
     }
 }
@@ -4063,7 +4071,7 @@ make_opt_cond (cobc_tree last, int type, cobc_tree this)
 
   if (!COBC_COND (last)->right)
     {
-      yyerror ("broken condition");
+      yyerror (_("broken condition"));
       return last; /* error recovery */
     }
 
@@ -4117,18 +4125,18 @@ make_cond_name (cobc_tree x)
 static void
 redefinition_error (struct cobc_location *loc, cobc_tree x)
 {
-  yywarn_loc (loc, "redefinition of `%s'", tree_to_string (x));
-  yywarn_tree (x, "previously defined here");
+  yywarn_loc (loc, _("redefinition of `%s'"), tree_to_string (x));
+  yywarn_tree (x, _("previously defined here"));
 }
 
 static void
 undefined_error (struct cobc_location *loc, struct cobc_word *w, cobc_tree parent)
 {
   if (parent)
-    yyerror_loc (loc, "`%s' undefined in `%s'",
+    yyerror_loc (loc, _("`%s' undefined in `%s'"),
 		 w->name, tree_to_string (parent));
   else
-    yyerror_loc (loc, "`%s' undefined", w->name);
+    yyerror_loc (loc, _("`%s' undefined"), w->name);
 }
 
 static void
@@ -4137,7 +4145,7 @@ ambiguous_error (struct cobc_location *loc, struct cobc_word *w)
   if (w->error == 0)
     {
       /* on first time */
-      yyerror_loc (loc, "`%s' ambiguous; need qualification", w->name);
+      yyerror_loc (loc, _("`%s' ambiguous; need qualification"), w->name);
       w->error = 1;
     }
 }

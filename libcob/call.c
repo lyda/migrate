@@ -18,7 +18,6 @@
  */
 
 #include "config.h"
-#include "defaults.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,6 +29,8 @@
 #include <ltdl.h>
 
 #include "libcob.h"
+#include "gettext.h"
+#include "defaults.h"
 
 int cob_dynamic_reloading = 0;
 
@@ -187,7 +188,7 @@ cob_resolve (const char *name)
 	  return NULL;
 	}
     }
-  sprintf (resolve_error_buff, "cannot find module `%s'", name);
+  sprintf (resolve_error_buff, _("cannot find module `%s'"), name);
   resolve_error = resolve_error_buff;
   return NULL;
 }

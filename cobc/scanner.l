@@ -37,6 +37,7 @@
 #include "scanner.h"
 #include "codegen.h"
 #include "reserved.h"
+#include "gettext.h"
 
 int cobc_skip_comment = 0;
 int cobc_in_procedure = 0;
@@ -207,7 +208,7 @@ read_literal (char mark)
 	  break;
 	}
       if (p - buff >= BUFSIZ - 1)
-	yyerror ("too large literal");
+	yyerror (_("too large literal"));
     }
   *p = 0;
   yylval.tree = make_nonnumeric_literal (buff);
@@ -249,7 +250,7 @@ scan_x (char *text)
   else
     {
     error:
-      yyerror ("invalid X literal: %s", text);
+      yyerror (_("invalid X literal: %s"), text);
       yylval.tree = make_nonnumeric_literal (dst);
       return NONNUMERIC_LITERAL;
     }
@@ -272,7 +273,7 @@ scan_numeric (char *text)
     memmove (s, s + 1, decimals + 1);
   }
   if (strchr (text, (cob_decimal_point == ',') ? '.' : ','))
-    yyerror ("invalid numeric literal");
+    yyerror (_("invalid numeric literal"));
 
   yylval.tree = make_numeric_literal (sign, text, decimals);
   return NUMERIC_LITERAL;
@@ -518,6 +519,6 @@ yylex_picture (char *str)
   return pic;
 
  error:
-  yyerror ("invalid picture string");
+  yyerror (_("invalid picture string"));
   return pic;
 }

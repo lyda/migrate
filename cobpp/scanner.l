@@ -1,20 +1,20 @@
 /*							-*- c -*-
- *  Copyright (C) 2001 Keisuke Nishida
+ * Copyright (C) 2001-2002 Keisuke Nishida
  * 
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2, or (at your option)
- *  any later version.
- *  
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *  
- *  You should have received a copy of the GNU General Public License
- *  along with this software; see the file COPYING.  If not, write to
- *  the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
- *  Boston, MA 02111-1307 USA
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this software; see the file COPYING.  If not, write to
+ * the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ * Boston, MA 02111-1307 USA
  */
 
 %option 8bit
@@ -27,12 +27,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
 #include "cobpp.h"
 #include "parser.h"
 #include "scanner.h"
+#include "gettext.h"
 
 #define YY_NO_UNPUT
 
@@ -188,9 +190,7 @@ open_buffer (const char *name, struct replacement *replacing)
 	    }
 	  if (!p)
 	    {
-	      fprintf (stderr, "%s:%d: %s: failed to find file\n",
-		       yyfilename ? yyfilename : "<stdin>", yylineno, name);
-	      cob_exit_status = 1;
+	      yyerror ("%s: no such file", name);
 	      return;
 	    }
 	}
@@ -215,10 +215,7 @@ open_buffer (const char *name, struct replacement *replacing)
       fp = fopen (name, "r");
       if (!fp)
 	{
-	  fprintf (stderr, "%s:%d: ",
-		   yyfilename ? yyfilename : "<stdin>", yylineno);
-	  perror (name);
-	  cob_exit_status = 1;
+	  yyerror ("%s: %s", name, strerror (errno));
 	  return;
 	}
       yyin = fp;
@@ -291,7 +288,7 @@ yyinput (char *buf, int max_size)
   if (len >= max_size / cob_tab_width)
     {
     too_long:
-      fprintf (stderr, "%s:%d: source line too long\n", yyfilename, yylineno);
+      yyerror (_("source line too long"));
       exit (1);
     }
 

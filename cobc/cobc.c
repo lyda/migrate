@@ -29,6 +29,7 @@
 #include "cobc.h"
 #include "tree.h"
 #include "getopt.h"
+#include "gettext.h"
 #include "codegen.h"
 #include "reserved.h"
 #include "defaults.h"
@@ -132,13 +133,10 @@ init_environment (int argc, char *argv[])
 }
 
 static void
-cob_error (char *s, ...)
+error (const char *str)
 {
-  va_list argptr;
-  va_start (argptr, s);
-  printf ("%s: ", program_name);
-  vprintf (s, argptr);
-  va_end (argptr);
+  fprintf (stderr, "%s: ", program_name);
+  perror (str);
   exit (1);
 }
 
@@ -152,6 +150,7 @@ static char short_options[] = "hvECScmxgOo:DT:I:";
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'v'},
+  {"debug", no_argument, 0, 'D'},
   {"free", no_argument, &source_format, format_free},
   {"fixed", no_argument, &source_format, format_fixed},
   {"static", no_argument, &cobc_link_style, LINK_STATIC},
@@ -175,35 +174,34 @@ print_version ()
 static void
 print_usage ()
 {
-  printf ("Usage: %s [options] file...\n", program_name);
-  puts ("");
-  puts ("General options:");
-  puts ("  --help        Display this information");
-  puts ("  --version     Display compiler version");
-  puts ("  -save-temps   Do not delete intermediate files");
-  puts ("  -E            Preprocess only; do not compile, assemble or link");
-  puts ("  -C            Translate only; do not compile, assemble or link");
-  puts ("  -S            Compile only; do not assemble or link");
-  puts ("  -c            Compile and assemble, but do not link");
-  puts ("  -m            Compile, assemble, and build a .so module");
-  puts ("  -g            Generate debug format output");
-  puts ("  -O            Do exhaustive optimization");
-  puts ("  -o <file>     Place the output into <file>");
-  puts ("  -MT <target>  Set target file used in dependency list");
-  puts ("  -MF <file>    Place dependency list into <file>");
-  puts ("");
-  puts ("COBOL options:");
-  puts ("  -free         Use free source format");
-  puts ("  -fixed        Use fixed source format");
-  puts ("  -static       Use static link for subprogram calls if possible");
-  puts ("  -dynamic      Use dynamic link for all subprogram calls (default)");
-  puts ("  -D            Compile debug lines (i.e., \"D\" lines)");
-  puts ("  -I <path>     Add include (copybooks) search path");
+  printf ("Usage: %s [options] file...\n\n", program_name);
+  puts (_("General options:\n"
+	  "  --help        Display this message\n"
+	  "  --version     Display compiler version\n"
+	  "  -save-temps   Do not delete intermediate files\n"
+	  "  -E            Preprocess only; do not compile, assemble or link\n"
+	  "  -C            Translate only; convert COBOL to C\n"
+	  "  -S            Compile only; output assembly file\n"
+	  "  -c            Compile and assemble, but do not link\n"
+	  "  -m            Build a dynamic-linking module\n"
+	  "  -g            Produce debugging information in the output\n"
+	  "  -O            Optimize speed; minimum run-time error checking\n"
+	  "  -o <file>     Place the output into <file>\n"
+	  "  -MT <target>  Set target file used in dependency list\n"
+	  "  -MF <file>    Place dependency list into <file>\n"
+	  "\n"
+	  "COBOL options:\n"
+	  "  -free         Use free source format\n"
+	  "  -fixed        Use fixed source format\n"
+	  "  -static       Use static link for subprogram calls if possible\n"
+	  "  -dynamic      Use dynamic link for subprogram calls (default)\n"
+	  "  -D, -debug    Enable debugging lines\n"
+	  "  -I <path>     Add copybook include path"));
 #ifdef COB_DEBUG
-  puts ("");
-  puts ("Debug options:");
-  puts ("  -ts           Trace scanner");
-  puts ("  -tp           Trace parser");
+  puts (_("\n"
+	  "Debugging options:\n"
+	  "  -ts           Trace scanner\n"
+	  "  -tp           Trace parser"));
 #endif
 }
 
@@ -408,10 +406,7 @@ probe_source_format (const char *filename)
   char buff[7];
 
   if (!fp)
-    {
-      cob_error ("failed to open file: %s\n", filename);
-      exit (1);
-    }
+    error (filename);
 
   if (fgets (buff, 7, fp))
     if (('0' <= buff[0] && buff[0] <= '9')
@@ -450,11 +445,11 @@ process_translate (struct filename *fn)
 
   yyin = fopen (fn->preprocess, "r");
   if (!yyin)
-    cob_error ("cannot open file: %s\n", fn->preprocess);
+    error (fn->preprocess);
 
   cobc_out = fopen (fn->translate, "w");
   if (!cobc_out)
-    cob_error ("cannot open file: %s\n", fn->translate);
+    error (fn->translate);
 
   init_constants ();
   init_reserved_words ();
@@ -536,6 +531,8 @@ main (int argc, char *argv[])
   int index;
   int status = 1;
 
+  cob_init (0, NULL);
+
   /* Initialize the global variables */
   init_environment (argc, argv);
 
@@ -544,7 +541,10 @@ main (int argc, char *argv[])
 
   /* Check the filename */
   if (index == argc)
-    cob_error ("No input files\n");
+    {
+      print_usage ();
+      exit (1);
+    }
 
   file_list = NULL;
   while (index < argc)

@@ -25,6 +25,7 @@
 #include <ctype.h>
 
 #include "move.h"
+#include "gettext.h"
 
 #define MIN(x,y) ({int _x = (x), _y = (y); (_x < _y) ? _x : _y; })
 #define MAX(x,y) ({int _x = (x), _y = (y); (_x > _y) ? _x : _y; })
@@ -471,7 +472,7 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 		}
 
 	      *dst = '?';
-	      cob_runtime_error ("invalid PIC char `%c'", c);
+	      cob_runtime_error (_("invalid PIC char `%c'"), c);
 	    }
 	}
     }
@@ -540,7 +541,7 @@ cob_move_alphanum_to_edited (struct cob_field f1, struct cob_field f2)
 
 	    default:
 	      *dst = '?';
-	      cob_runtime_error ("invalid PIC char `%c'", c);
+	      cob_runtime_error (_("invalid PIC char `%c'"), c);
 	    }
 	}
     }

@@ -56,6 +56,9 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([memmove memset regcomp \
 		strcasecmp strchr strrchr strdup strstr strtol])
 
+# Checks for gettext
+AM_GNU_GETTEXT([external])
+
 # Checks for getopt_long
 AC_CHECK_FUNC([getopt_long_only], getopt=true, getopt=false)
 AM_CONDITIONAL(HAVE_GETOPT_LONG_ONLY, test x$getopt = xtrue)
@@ -99,6 +102,6 @@ AC_SUBST(COB_LIBRARY_PATH)
 AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBS)
 
-AC_CONFIG_FILES([Makefile libcob/Makefile cobpp/Makefile cobc/Makefile
-		texi/Makefile cob-config])
+AC_CONFIG_FILES([cob-config Makefile lib/Makefile libcob/Makefile
+		cobpp/Makefile cobc/Makefile po/Makefile.in texi/Makefile])
 AC_OUTPUT

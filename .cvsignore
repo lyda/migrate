@@ -1,6 +1,7 @@
 *.cache
 *.rpm
 *.tar.gz
+INSTALL
 Makefile
 Makefile.in
 aclocal.m4
@@ -8,12 +9,11 @@ cob-config
 config.*
 configure
 defaults.h
-info
+depcomp
 install-sh
 libtool
 ltmain.sh
+m4
 missing
 mkinstalldirs
 stamp-h1
-depcomp
-INSTALL

@@ -1,14 +1,9 @@
-if HAVE_GETOPT_LONG_ONLY
-getopt_SOURCES = 
-else
-getopt_SOURCES = getopt.c getopt1.c getopt.h
-endif
-
 bin_PROGRAMS = cobpp
-cobpp_SOURCES = cobpp.c cobpp.h parser.y parser.h scanner.l scanner.h \
-	$(getopt_SOURCES)
-BUILT_SOURCES = parser.c parser.h scanner.c
-EXTRA_DIST = getopt.c getopt1.c getopt.h
+cobpp_SOURCES = cobpp.c cobpp.h parser.y scanner.l scanner.h
+cobpp_CFLAGS = -I$(top_srcdir)/lib
+cobc_LIBS = $(top_srcdir)/lib/libsupport.a
+
+CLEANFILES = parser.c parser.h scanner.c
 MAINTAINERCLEANFILES = Makefile.in
 
 AM_CFLAGS = -Wall

@@ -1,0 +1,17 @@
+# List of source files containing translatable strings.
+# Copyright (C) 2002 Keisuke Nishida
+
+# cobc
+cobc/cobc.c
+cobc/parser.y
+cobc/scanner.l
+
+# cobpp
+cobpp/cobpp.c
+cobpp/parser.y
+cobpp/scanner.l
+
+# libcob
+libcob/common.c
+libcob/move.c
+libcob/call.c
