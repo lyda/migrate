@@ -216,7 +216,7 @@ static void check_decimal_point (struct lit *lit);
 %type <cvval> converting_clause
 %type <sval> var_or_nliteral,opt_read_key
 %type <sival> screen_clauses
-%type <ival> screen_attribs,screen_attrib,sign_clause,opt_separate
+%type <ival> screen_attribs,screen_attrib,screen_sign,opt_separate
 %type <sval> variable_indexed,search_opt_varying,opt_key_is
 %type <dval> search_body,search_all_body
 %type <dval> search_when,search_when_list,search_opt_at_end
@@ -235,7 +235,7 @@ static void check_decimal_point (struct lit *lit);
 %type <sval> screen_to_name, opt_goto_depending_on
 %type <lstval> goto_label_list
 %type <ival> sentence_or_nothing,when_case_list
-%type <ival> opt_rounded
+%type <ival> opt_rounded,opt_sign_separate
 %type <mval> var_list_name, var_list_gname
 %type <mose> opt_on_size_error,on_size_error,error_sentence
 %type <ival> opt_address_of,display_upon,display_options
@@ -621,7 +621,7 @@ field_description:
   integer field_name	{ define_field ($1, $2); }
   field_options '.'
   {
-    update_field();
+    update_field ();
     $$ = $2;
   }
 ;
@@ -645,11 +645,11 @@ field_option:
 | global_clause
 | picture_clause
 | usage_clause
-| sign_clause       { set_sign_flags($1); }
+| sign_clause
 | occurs_clause
-| JUST RIGHT {curr_field->flags.just_r=1;}
-| SYNC sync_options {curr_field->flags.sync=1;}
-| BLANK opt_when ZERONUM { curr_field->flags.blank=1; }
+| JUST RIGHT			{ curr_field->flags.just_r=1; }
+| SYNC sync_options		{ curr_field->flags.sync=1; }
+| BLANK opt_when ZERONUM	{ curr_field->flags.blank=1; }
 | value_option
 ;
 
@@ -746,6 +746,31 @@ usage:
   }
 ;
 opt_usage: | USAGE ;
+
+
+/*
+ * SIGN clause
+ */
+
+sign_clause:
+  opt_sign_is LEADING opt_sign_separate
+  {
+    curr_field->flags.separate_sign = $3;
+    curr_field->flags.leading_sign = 1;
+  }
+| opt_sign_is TRAILING opt_sign_separate
+  {
+    curr_field->flags.separate_sign = $3;
+    curr_field->flags.leading_sign = 0;
+  }
+;
+opt_sign_is:
+| SIGN opt_is
+;
+opt_sign_separate:
+  /* nothing */			{ $$ = 0; }
+| SEPARATE opt_character	{ $$ = 1; }
+;
 
 
 /*
@@ -1004,9 +1029,9 @@ screen_attrib:
 | BLANK opt_when ZERONUM        { $$ = SCR_BLANK_WHEN_ZERO; }
 | NOECHO                        { $$ = SCR_NOECHO; }
 | UPDATE                        { $$ = SCR_UPDATE; }
-| sign_clause                   { $$ = $1; }
+| screen_sign                   { $$ = $1; }
 ;
-sign_clause:
+screen_sign:
   SIGN opt_is LEADING opt_separate
   {
     $$ = SCR_SIGN_LEADING | SCR_SIGN_PRESENT | $4;
@@ -1018,7 +1043,7 @@ sign_clause:
 ;
 opt_separate:
   SEPARATE opt_character  { $$ = SCR_SIGN_SEPARATE; }
-| /* nothing */                 { $$ = 0; }
+| /* nothing */           { $$ = 0; }
 ;
 opt_plus_minus:
   /* nothing */ { $$ = 0; }

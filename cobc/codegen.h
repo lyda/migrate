@@ -380,7 +380,6 @@ extern void init_program (const char *id);
 extern void gen_loadvar (struct sym *sy);
 extern char sign_to_char (int digit);
 extern struct lit *invert_literal_sign (struct lit *sy);
-extern void set_sign_flags (int flags);
 extern char *sch_convert (char *s);
 extern int is_variable (struct sym *sy);
 extern int is_subscripted (struct sym *sy);

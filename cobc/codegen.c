@@ -442,13 +442,6 @@ invert_literal_sign (struct lit *sy)
   return sy;
 }
 
-void
-set_sign_flags (int flags)
-{
-  curr_field->flags.separate_sign = (flags & SCR_SIGN_SEPARATE) ? 1 : 0;
-  curr_field->flags.leading_sign = (flags & SCR_SIGN_LEADING) ? 1 : 0;
-}
-
 /* convert control characters to don't corrupt the assembly output */
 char *
 sch_convert (char *s)
