@@ -1406,18 +1406,11 @@ output_call (struct cb_call *p)
 	case CB_CALL_BY_CONTENT:
 	  output_prefix ();
 	  if (CB_NUMERIC_LITERAL_P (x) || x == cb_null
-		|| cb_field (x)->usage == CB_USAGE_LENGTH)
+		|| ( CB_TREE_CATEGORY (x) == CB_CATEGORY_NUMERIC
+			&& cb_field (x)->usage == CB_USAGE_LENGTH ))
 	    {
 	      output ("*(int *)content_%d = ", n);
-#ifndef WORDS_BIGENDIAN
-	      if (cb_binary_byteorder == CB_BYTEORDER_BIG_ENDIAN)
-		output ("COB_BSWAP_32 (");
-#endif
 	      output_integer (x);
-#ifndef WORDS_BIGENDIAN
-	      if (cb_binary_byteorder == CB_BYTEORDER_BIG_ENDIAN)
-		output (")");
-#endif
 	      output (";\n");
 	    }
 	  else
@@ -1494,15 +1487,7 @@ output_call (struct cb_call *p)
 		  output_integer (x);
 		  break;
 		case CB_USAGE_LENGTH:
-#ifndef WORDS_BIGENDIAN
-			if (cb_binary_byteorder == CB_BYTEORDER_BIG_ENDIAN)
-				output ("COB_BSWAP_32 (");
-#endif
 			output_integer (x);
-#ifndef WORDS_BIGENDIAN
-			if (cb_binary_byteorder == CB_BYTEORDER_BIG_ENDIAN)
-				output (")");
-#endif
 			break;
 		default:
 		  output ("*");

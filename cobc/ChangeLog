@@ -1,5 +1,10 @@
 2005-02-15  Roger While <simrw@sim-basis.de>
 
+	* codegen.c : Fix incorrect cast check,
+	  LENGTH OF past as int (COMP-5)
+
+2005-02-15  Roger While <simrw@sim-basis.de>
+
 	* codegen.c : Fix .. BY VALUE LENGTH OF
 
 2005-02-12  Roger While <simrw@sim-basis.de>
