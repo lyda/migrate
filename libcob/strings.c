@@ -117,7 +117,10 @@ inspect_internal (struct cob_field var, va_list ap, int replacing)
 		  if (mark[offset + i] == 0)
 		    {
 		      n++;
-		      mark[offset + i] = COB_FIELD_DATA (f1)[0];
+		      if (replacing)
+			mark[offset + i] = COB_FIELD_DATA (f1)[0];
+		      else
+			mark[offset + i] = 1;
 		    }
 		if (!replacing)
 		  add_int (f1, n);
@@ -151,8 +154,11 @@ inspect_internal (struct cob_field var, va_list ap, int replacing)
 			if (j == size)
 			  {
 			    n++;
-			    memcpy (mark + offset + i,
-				    COB_FIELD_DATA (f1), size);
+			    if (replacing)
+			      memcpy (mark + offset + i,
+				      COB_FIELD_DATA (f1), size);
+			    else
+			      memset (mark + offset + i, 1, size);
 			    if (type == COB_INSPECT_FIRST)
 			      break;
 			    continue;
