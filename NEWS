@@ -8,6 +8,12 @@ NEWS - user visible changes				-*- outline -*-
 
 *** No longer use run-time configuration file (libcob.conf)
 
+*** libdb is now optional.
+Use the new configure option --with-db1 to link with libdb1.
+Use the new configure option --with-db to link with libdb.
+Otherwise, libdb will not be linked, and indexed files and
+SORT/MEGER statements will not work.
+
 *** New subdirectory `config' will be installed under
 $prefix/share/open-cobol.
 
