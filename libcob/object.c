@@ -66,8 +66,8 @@ typedef struct cob_object *cob_object;
 #define COB_DECIMAL(x)		(&((x)->data.decimal))
 #define COB_FIELD(x)		(&((x)->data.field))
 
-static void
-print_decimal (decimal d)
+void
+cob_print_decimal (decimal d)
 {
   fputs ("decimal(", stdout);
   mpz_out_str (stdout, 10, d->number);
@@ -91,7 +91,7 @@ cob_debug_print (cob_object o)
       break;
 
     case COB_TYPE_DECIMAL:
-      print_decimal (COB_DECIMAL (o));
+      cob_print_decimal (COB_DECIMAL (o));
       break;
 
     case COB_TYPE_FIELD:
