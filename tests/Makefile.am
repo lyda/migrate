@@ -12,6 +12,7 @@ TESTSUITE_AT = \
 	initialize.at \
 	move.at \
 	definition.at \
+	entry.at \
 	misc.at
 
 EXTRA_DIST = $(TESTS) $(TESTSUITE_AT)

@@ -32,4 +32,5 @@ m4_include([initialize.at])	# 14.8.19 INITIALIZE statement
 m4_include([move.at])		# 14.8.24 MOVE statement
 
 m4_include([definition.at])
+m4_include([entry.at])
 m4_include([misc.at])
