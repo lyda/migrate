@@ -2136,7 +2136,7 @@ codegen (struct cb_program *prog)
   output ("/* Fields */\n\n");
   output ("#define i_LINAGE_COUNTER cob_linage_counter\n\n");
   for (l = prog->index_list; l; l = CB_CHAIN (l))
-    output ("static int i_%s;\n", CB_FIELD (CB_VALUE (l))->cname);
+    output ("static int i_%s = 1;\n", CB_FIELD (CB_VALUE (l))->cname);
   output_newline ();
 
   /* alphabet-names */
