@@ -25,7 +25,6 @@
 #include <ctype.h>
 
 #include "move.h"
-#include "numeric.h"
 #include "lib/gettext.h"
 
 #define MIN(x,y) ({int _x = (x), _y = (y); (_x < _y) ? _x : _y; })
@@ -656,6 +655,7 @@ cob_to_int (struct cob_field f)
 void
 cob_set_int (struct cob_field f, int n)
 {
-  cob_decimal_set_int (cob_d1, n, 0);
-  cob_decimal_get (cob_d1, f);
+  struct cob_field_desc desc = {COB_BINARY, 18, 0, 1};
+  struct cob_field temp = {4, (unsigned char *) &n, &desc};
+  cob_move (temp, f);
 }
