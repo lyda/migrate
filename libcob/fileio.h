@@ -35,6 +35,8 @@
 #define COB_ORG_LINE_SEQUENTIAL	1
 #define COB_ORG_RELATIVE	2
 #define COB_ORG_INDEXED		3
+#define COB_ORG_SORT		4
+#define COB_ORG_MAX		5
 
 #define COB_ACCESS_SEQUENTIAL	1
 #define COB_ACCESS_DYNAMIC	2
@@ -107,6 +109,11 @@ struct cob_file {
   } *keys;
   int nkeys;			/* the number of keys */
   unsigned char *last_key;	/* the last key written */
+  int sort_nkeys;
+  struct cob_sort_key {
+    int dir;
+    struct cob_field field;
+  } *sort_keys;
 };
 
 struct cob_fileio_funcs {
@@ -135,5 +142,9 @@ extern void cob_write_lines (struct cob_file *f, int lines);
 extern void cob_rewrite (struct cob_file *f, struct cob_field rec);
 extern void cob_delete (struct cob_file *f);
 extern void cob_start (struct cob_file *f, int cond, struct cob_field key);
+
+extern void cob_sort_keys (struct cob_file *f, ...);
+extern void cob_sort_using (struct cob_file *sort_file, struct cob_file *data_file);
+extern void cob_sort_giving (struct cob_file *sort_file, struct cob_file *data_file);
 
 #endif /* COB_FILEIO_H_ */
