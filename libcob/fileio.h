@@ -30,6 +30,9 @@
 #define COB_GE	5 	/* x >= y */
 #define COB_NE	6 	/* x != y */
 
+#define COB_ASCENDING		1
+#define COB_DESCENDING		2
+
 #define COB_ORG_SEQUENTIAL	0
 #define COB_ORG_LINE_SEQUENTIAL	1
 #define COB_ORG_RELATIVE	2
@@ -60,6 +63,7 @@
 #define COB_FILE_SUCCEED_OPTIONAL	05
 #define COB_FILE_SUCCEED_NO_REEL	07
 #define COB_FILE_END_OF_FILE		10
+#define COB_FILE_OUT_OF_KEY_RANGE	14
 #define COB_FILE_KEY_INVALID		21
 #define COB_FILE_KEY_EXISTS		22
 #define COB_FILE_KEY_NOT_EXISTS		23
@@ -75,62 +79,63 @@
 #define COB_FILE_OUTPUT_DENIED		48
 #define COB_FILE_I_O_DENIED		49
 
-struct cob_file {
+typedef struct {
+  cob_field *field;		/* key field */
+  int flag;			/* WITH DUPLICATES (for RELATIVE/INDEXED) */
+				/* ASCENDING/DESCENDING (for SORT) */
+} cob_file_key;
+
+typedef struct {
   int organization;		/* ORGANIZATION */
   char access_mode;		/* ACCESS MODE */
   char open_mode;		/* OPEN MODE */
-  struct cob_field assign;	/* ASSIGN */
   char *file_status;		/* FILE STATUS */
-  size_t record_size;		/* record size */
-  unsigned char *record_data;	/* record data address */
-  size_t record_min, record_max; /* record min/max size */
-  struct cob_field record_depending; /* record size depending on */
+  cob_field *assign;		/* ASSIGN TO */
+  cob_field *record;		/* record area */
+  cob_field *record_size;	/* record size depending on */
+  size_t record_min;		/* record min size */
+  size_t record_max;		/* record max size */
   struct {
-    char opened      : 1;	/* successfully opened */
     char optional    : 1;	/* OPTIONAL */
+    char opened      : 1;	/* successfully opened */
     char nonexistent : 1;	/* nonexistent file */
     char end_of_file : 1;	/* reached the end of file */
     char first_read  : 1;	/* first READ after OPEN or START */
     char read_done   : 1;	/* last READ successfully done */
   } f;
+  int nkeys;			/* the number of keys */
+  cob_file_key *keys;		/* RELATIVE/RECORD keys */
   void *file;			/* file type specific data pointer */
-  /* for INDEXED files */
-  struct cob_file_key {
-    struct cob_field field;	/* key field */
-    int duplicates;		/* WITH DUPLICATES */
-  } *keys;
-  int nkeys;
-};
+} cob_file;
 
-struct cob_fileio_funcs {
-  int (*open) (struct cob_file *f, char *filename, int mode);
-  int (*close) (struct cob_file *f, int opt);
-  int (*start) (struct cob_file *f, int cond, struct cob_field key);
-  int (*read) (struct cob_file *f, struct cob_field key);
-  int (*read_next) (struct cob_file *f);
-  int (*write) (struct cob_file *f);
-  int (*rewrite) (struct cob_file *f, struct cob_field rec);
-  int (*delete) (struct cob_file *f);
-};
+typedef struct {
+  int (*open) (cob_file *f, char *filename, int mode);
+  int (*close) (cob_file *f, int opt);
+  int (*start) (cob_file *f, int cond, cob_field *key);
+  int (*read) (cob_file *f, cob_field *key);
+  int (*read_next) (cob_file *f);
+  int (*write) (cob_file *f);
+  int (*rewrite) (cob_file *f, cob_field *rec);
+  int (*delete) (cob_file *f);
+} cob_fileio_funcs;
 
-extern struct cob_file *cob_last_file;
+extern cob_file *cob_error_file;
 extern char cob_dummy_status[];
 
 extern void cob_init_fileio (void);
-extern void cob_default_error_handle (struct cob_file *f);
-extern void cob_open (struct cob_file *f, int mode);
-extern void cob_close (struct cob_file *f, int opt);
-extern void cob_read (struct cob_file *f, struct cob_field key);
-extern void cob_read_next (struct cob_file *f);
-extern void cob_write (struct cob_file *f, struct cob_field rec);
-extern void cob_write_page (struct cob_file *f);
-extern void cob_write_lines (struct cob_file *f, int lines);
-extern void cob_rewrite (struct cob_file *f, struct cob_field rec);
-extern void cob_delete (struct cob_file *f);
-extern void cob_start (struct cob_file *f, int cond, struct cob_field key);
+extern void cob_default_error_handle (cob_file *f);
+extern void cob_open (cob_file *f, int mode);
+extern void cob_close (cob_file *f, int opt);
+extern void cob_read (cob_file *f, cob_field *key);
+extern void cob_write (cob_file *f, cob_field *rec);
+extern void cob_write_page (cob_file *f);
+extern void cob_write_lines (cob_file *f, int lines);
+extern void cob_rewrite (cob_file *f, cob_field *rec);
+extern void cob_delete (cob_file *f);
+extern void cob_start (cob_file *f, int cond, cob_field *key);
 
-extern void cob_sort_init (struct cob_file *sort_file, ...);
-extern void cob_sort_using (struct cob_file *sort_file, struct cob_file *data_file);
-extern void cob_sort_giving (struct cob_file *sort_file, struct cob_file *data_file);
+extern void cob_sort_init (cob_file *sort_file, int nkeys, cob_file_key *keys);
+extern void cob_sort_using (cob_file *sort_file, cob_file *data_file);
+extern void cob_sort_giving (cob_file *sort_file, cob_file *data_file);
 
 #endif /* COB_FILEIO_H_ */

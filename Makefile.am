@@ -1,15 +1,13 @@
 bin_SCRIPTS=cob-config
 
 include_HEADERS = libcob.h
+sysconf_DATA = libcob.conf
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = cob.pc
 
-pkgconfdir = $(sysconfdir)/$(PACKAGE)
-pkgconf_DATA = libcob.conf
-
 SUBDIRS = lib libcob cobpp cobc po texi testsuite
-EXTRA_DIST = HACKING libcob.conf
+EXTRA_DIST = libcob.conf
 
 BUILT_SOURCES = defaults.h
 DISTCLEANFILES = $(BUILT_SOURCES)

@@ -1,6 +1,7 @@
 .deps
 .libs
 Makefile
+Makefile.in
 cobpp
 parser.c
 parser.h

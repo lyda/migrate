@@ -27,6 +27,7 @@
 #include <ctype.h>
 
 #include "common.h"
+#include "numeric.h"
 #include "lib/gettext.h"
 
 extern void cob_init_numeric (void);
@@ -35,6 +36,10 @@ extern void cob_init_fileio (void);
 extern void cob_init_call (void);
 
 int cob_initialized = 0;
+
+int cob_error_code = 0;
+int cob_return_code = 0;
+int cob_cmp_result;
 
 int cob_argc = 0;
 char **cob_argv = NULL;
@@ -45,18 +50,106 @@ int cob_source_line = 0;
 unsigned char cob_decimal_point = '.';
 unsigned char cob_currency_symbol = '$';
 
-int cob_status;
-int cob_return_code = 0;
-
 /* ZERO,SPACE,HIGH-VALUE,LOW-VALUE,QUOTE */
 
-struct cob_field_desc cob_alnum_desc = {'X'};
+cob_field_attr cob_group_attr = {COB_TYPE_GROUP, 0, 0, 0, 0, 0, 0, 0, NULL};
+cob_field_attr cob_alnum_attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, 0, 0, 0, 0, NULL};
+cob_field_attr cob_just_attr  = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, 0, 0, 0, 1, NULL};
+cob_field_attr cob_all_attr   = {COB_TYPE_ALPHANUMERIC_ALL, 0, 0, 0, 0, 0, 0, 0, NULL};
 
-struct cob_field cob_zero =  {1, "0",    &cob_alnum_desc};
-struct cob_field cob_space = {1, " ",    &cob_alnum_desc};
-struct cob_field cob_high =  {1, "\xff", &cob_alnum_desc};
-struct cob_field cob_low =   {1, "\0",   &cob_alnum_desc};
-struct cob_field cob_quote = {1, "\"",   &cob_alnum_desc};
+cob_field_attr cob_uint_attr[] = {
+  {COB_TYPE_NUMERIC_DISPLAY,  0, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  1, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  2, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  3, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  4, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  5, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  6, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  7, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  8, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  9, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 10, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 11, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 12, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 13, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 14, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 15, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 16, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 17, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 18, 0, 0, 0, 0, 0, 0, NULL}
+};
+
+cob_field_attr cob_sint_attr[] = {
+  {COB_TYPE_NUMERIC_DISPLAY,  0, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  1, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  2, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  3, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  4, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  5, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  6, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  7, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  8, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY,  9, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 10, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 11, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 12, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 13, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 14, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 15, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 16, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 17, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_DISPLAY, 18, 0, 1, 0, 0, 0, 0, NULL}
+};
+
+cob_field_attr cob_ubin_attr[] = {
+  {COB_TYPE_NUMERIC_BINARY,  0, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  1, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  2, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  3, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  4, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  5, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  6, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  7, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  8, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  9, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 10, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 11, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 12, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 13, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 14, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 15, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 16, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 17, 0, 0, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 18, 0, 0, 0, 0, 0, 0, NULL}
+};
+
+cob_field_attr cob_sbin_attr[] = {
+  {COB_TYPE_NUMERIC_BINARY,  0, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  1, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  2, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  3, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  4, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  5, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  6, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  7, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  8, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY,  9, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 10, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 11, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 12, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 13, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 14, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 15, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 16, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 17, 0, 1, 0, 0, 0, 0, NULL},
+  {COB_TYPE_NUMERIC_BINARY, 18, 0, 1, 0, 0, 0, 0, NULL}
+};
+
+cob_field cob_zero =  {1, "0",    &cob_all_attr};
+cob_field cob_space = {1, " ",    &cob_all_attr};
+cob_field cob_high =  {1, "\xff", &cob_all_attr};
+cob_field cob_low =   {1, "\0",   &cob_all_attr};
+cob_field cob_quote = {1, "\"",   &cob_all_attr};
 
 /* SWITCH-1/2/3/4/5/6/7/8 */
 
@@ -260,81 +353,117 @@ cob_index_depending (int i, int min, int max, int dep, const char *name, const c
  */
 
 static int
-cmp_internal (unsigned char *data1, size_t size1,
-	      unsigned char *data2, size_t size2)
+cmp_char (cob_field *f, unsigned char c)
 {
-  int i, ret;
-  int min = (size1 < size2) ? size1 : size2;
-  int max = (size1 > size2) ? size1 : size2;
+  size_t i;
+  int ret = 0;
+  int sign = cob_get_sign (f);
+
+  for (i = 0; i < f->size; i++)
+    {
+      ret = f->data[i] - c;
+      if (ret != 0)
+	break;
+    }
+
+  cob_put_sign (f, sign);
+  return ret;
+}
+
+static int
+cmp_all (cob_field *f1, cob_field *f2)
+{
+  size_t i;
+  int ret = 0;
+  int sign = cob_get_sign (f1);
+  unsigned char *s = NULL;
+
+  for (i = 0; i < f1->size; i++)
+    {
+      if (i % f2->size == 0)
+	s = f2->data;
+      ret = f1->data[i] - *s++;
+      if (ret != 0)
+	break;
+    }
+
+  cob_put_sign (f1, sign);
+  return ret;
+}
+
+static int
+cmp_alnum (cob_field *f1, cob_field *f2)
+{
+  size_t i;
+  int ret = 0;
+  int sign1 = cob_get_sign (f1);
+  int sign2 = cob_get_sign (f2);
+  size_t min = (f1->size < f2->size) ? f1->size : f2->size;
+  size_t max = (f1->size > f2->size) ? f1->size : f2->size;
 
   /* compare common substring */
   for (i = 0; i < min; i++)
     {
-      ret = data1[i] - data2[i];
+      ret = f1->data[i] - f2->data[i];
       if (ret != 0)
-	return ret;
+	goto end;
     }
 
   /* compare the rest (if any) with spaces */
   for (; i < max; i++)
     {
-      if (size1 > size2)
-	ret = data1[i] - ' ';
+      if (f1->size > f2->size)
+	ret = f1->data[i] - ' ';
       else
-	ret = ' ' - data2[i];
+	ret = ' ' - f2->data[i];
       if (ret != 0)
-	return ret;
+	goto end;
     }
 
-  return 0;
-}
-
-int
-cob_cmp_field (struct cob_field f1, struct cob_field f2)
-{
-  int ret = 0;
-  int sign1 = cob_get_sign (f1);
-  int sign2 = cob_get_sign (f2);
-
-  ret = cmp_internal (f1.data, f1.size, f2.data, f2.size);
-
+ end:
   cob_put_sign (f1, sign1);
   cob_put_sign (f2, sign2);
   return ret;
 }
 
 int
-cob_cmp_str (struct cob_field f1, unsigned char *str)
+cob_cmp (cob_field *f1, cob_field *f2)
 {
-  int ret = 0;
-  int sign1 = cob_get_sign (f1);
-
-  ret = cmp_internal (f1.data, f1.size, str, strlen (str));
-
-  cob_put_sign (f1, sign1);
-  return ret;
+  if (COB_FIELD_TYPE (f2) == COB_TYPE_ALPHANUMERIC_ALL)
+    {
+      if (f2 == &cob_zero && COB_FIELD_IS_NUMERIC (f1))
+	cob_cmp_result = cob_cmp_int (f1, 0);
+      else if (f2->size == 1)
+	cob_cmp_result = cmp_char (f1, f2->data[0]);
+      else
+	cob_cmp_result = cmp_all (f1, f2);
+    }
+  else if (COB_FIELD_TYPE (f1) == COB_TYPE_ALPHANUMERIC_ALL)
+    {
+      if (f1 == &cob_zero && COB_FIELD_IS_NUMERIC (f2))
+	cob_cmp_result = - cob_cmp_int (f2, 0);
+      else if (f1->size == 1)
+	cob_cmp_result = - cmp_char (f2, f1->data[0]);
+      else
+	cob_cmp_result = - cmp_all (f2, f1);
+    }
+  else
+    {
+      if (COB_FIELD_IS_NUMERIC (f1) && COB_FIELD_IS_NUMERIC (f2))
+	cob_cmp_result = cob_numeric_cmp (f1, f2);
+      else
+	cob_cmp_result = cmp_alnum (f1, f2);
+    }
+  return cob_cmp_result;
 }
 
 int
-cob_cmp_all (struct cob_field f1, unsigned char *str)
+cob_cmp_int (cob_field *f1, int n)
 {
-  size_t i;
-  int ret = 0;
-  unsigned char *s = str;
-  int sign = cob_get_sign (f1);
-
-  for (i = 0; i < f1.size; i++)
-    {
-      ret = f1.data[i] - *s;
-      if (ret != 0)
-	goto end;
-      if (*++s == 0)
-	s = str;
-    }
-
- end:
-  cob_put_sign (f1, sign);
-  return ret;
+  cob_field_attr attr = {COB_TYPE_NUMERIC_BINARY, 9, 0, 1};
+  cob_field temp = {sizeof (int), (unsigned char *) &n, &attr};
+  cob_cmp_result = cob_numeric_cmp (f1, &temp);
+  return cob_cmp_result;
 }
 
 
@@ -343,15 +472,15 @@ cob_cmp_all (struct cob_field f1, unsigned char *str)
  */
 
 void
-cob_check_numeric (struct cob_field f, const char *name)
+cob_check_numeric (cob_field *f, const char *name)
 {
   if (!cob_is_numeric (f))
     {
       size_t i;
-      unsigned char *data = f.data;
-      char buff[f.size * 4 + 1];
+      unsigned char *data = f->data;
+      char buff[f->size * 4 + 1];
       char *p = buff;
-      for (i = 0; i < f.size; i++)
+      for (i = 0; i < f->size; i++)
 	if (isprint (data[i]))
 	  *p++ = data[i];
 	else
@@ -362,19 +491,19 @@ cob_check_numeric (struct cob_field f, const char *name)
 }
 
 int
-cob_is_numeric (struct cob_field f)
+cob_is_numeric (cob_field *f)
 {
   switch (COB_FIELD_TYPE (f))
     {
-    case COB_BINARY:
-    case COB_PACKED:
+    case COB_TYPE_NUMERIC_BINARY:
+    case COB_TYPE_NUMERIC_PACKED:
       return 1;
-    case COB_DISPLAY:
+    case COB_TYPE_NUMERIC_DISPLAY:
       {
 	int i;
 	int sign = cob_get_sign (f);
-	int size = COB_FIELD_LENGTH (f);
-	unsigned char *data = COB_FIELD_BASE (f);
+	int size = COB_FIELD_SIZE (f);
+	unsigned char *data = COB_FIELD_DATA (f);
 	for (i = 0; i < size; i++)
 	  if (!isdigit (data[i]))
 	    {
@@ -387,8 +516,8 @@ cob_is_numeric (struct cob_field f)
     default:
       {
 	size_t i;
-	for (i = 0; i < f.size; i++)
-	  if (!isdigit (f.data[i]))
+	for (i = 0; i < f->size; i++)
+	  if (!isdigit (f->data[i]))
 	    return 0;
 	return 1;
       }
@@ -396,31 +525,31 @@ cob_is_numeric (struct cob_field f)
 }
 
 int
-cob_is_alpha (struct cob_field f)
+cob_is_alpha (cob_field *f)
 {
   size_t i;
-  for (i = 0; i < f.size; i++)
-    if (!isspace (f.data[i]) && !isalpha (f.data[i]))
+  for (i = 0; i < f->size; i++)
+    if (!isspace (f->data[i]) && !isalpha (f->data[i]))
       return 0;
   return 1;
 }
 
 int
-cob_is_upper (struct cob_field f)
+cob_is_upper (cob_field *f)
 {
   size_t i;
-  for (i = 0; i < f.size; i++)
-    if (!isspace (f.data[i]) && !isupper (f.data[i]))
+  for (i = 0; i < f->size; i++)
+    if (!isspace (f->data[i]) && !isupper (f->data[i]))
       return 0;
   return 1;
 }
 
 int
-cob_is_lower (struct cob_field f)
+cob_is_lower (cob_field *f)
 {
   size_t i;
-  for (i = 0; i < f.size; i++)
-    if (!isspace (f.data[i]) && !islower (f.data[i]))
+  for (i = 0; i < f->size; i++)
+    if (!isspace (f->data[i]) && !islower (f->data[i]))
       return 0;
   return 1;
 }
@@ -436,18 +565,18 @@ cob_is_lower (struct cob_field f)
  */
 
 int
-cob_get_sign (struct cob_field f)
+cob_get_sign (cob_field *f)
 {
-  if (f.desc && f.desc->have_sign)
+  if (f->attr->have_sign)
     {
-      if (f.desc->sign_separate)
+      if (f->attr->sign_separate)
 	{
-	  char *p = f.desc->sign_leading ? f.data : f.data + f.size - 1;
+	  char *p = f->attr->sign_leading ? f->data : f->data + f->size - 1;
 	  return (*p == '+') ? 1 : -1;
 	}
       else
 	{
-	  char *p = f.desc->sign_leading ? f.data : f.data + f.size - 1;
+	  char *p = f->attr->sign_leading ? f->data : f->data + f->size - 1;
 	  if (*p <= '9')
 	    return 1;
 	  *p -= 0x10;
@@ -458,29 +587,29 @@ cob_get_sign (struct cob_field f)
 }
 
 void
-cob_put_sign (struct cob_field f, int sign)
+cob_put_sign (cob_field *f, int sign)
 {
-  if (f.desc && f.desc->have_sign)
+  if (f->attr->have_sign)
     {
-      if (f.desc->sign_separate)
+      if (f->attr->sign_separate)
 	{
-	  char *p = f.desc->sign_leading ? f.data : f.data + f.size - 1;
+	  char *p = f->attr->sign_leading ? f->data : f->data + f->size - 1;
 	  *p = (sign < 0) ? '-' : '+';
 	}
       else if (sign < 0)
 	{
-	  char *p = f.desc->sign_leading ? f.data : f.data + f.size - 1;
+	  char *p = f->attr->sign_leading ? f->data : f->data + f->size - 1;
 	  *p += 0x10;
 	}
     }
 }
 
 char *
-cob_field_to_string (struct cob_field f, char *s)
+cob_field_to_string (cob_field *f, char *s)
 {
   size_t i;
-  memcpy (s, f.data, f.size);
-  for (i = 0; i < f.size; i++)
+  memcpy (s, f->data, f->size);
+  for (i = 0; i < f->size; i++)
     if (s[i] == ' ')
       break;
   s[i] = '\0';

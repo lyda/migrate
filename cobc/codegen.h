@@ -24,32 +24,22 @@ struct cobc_program_spec {
   char *program_id;
   int initial_program;
   int loop_counter;
+  int decimal_index;
+  int decimal_index_max;
   int enable_screen;
   struct cobc_list *class_list;
   struct cobc_list *index_list;
   struct cobc_list *file_list;
   struct cobc_list *using_list;
   struct cobc_list *exec_list;
+  struct cobc_list *label_list;
+  struct cobc_list *reference_list;
   struct cobc_field *working_storage;
   struct cobc_field *linkage_storage;
   struct cobc_field *screen_storage;
-  struct cobc_label *input_handler;
-  struct cobc_label *output_handler;
-  struct cobc_label *i_o_handler;
-  struct cobc_label *extend_handler;
+  struct cobc_label *file_handler[5];
 };
 
 extern void codegen (struct cobc_program_spec *spec);
-
-extern void output_file_handler (struct cobc_file *f, int type, cobc_tree st1, cobc_tree st2);
-extern void output_goto (struct cobc_label *p);
-extern void output_goto_depending (struct cobc_list *labels, cobc_tree index);
-extern void output_move (cobc_tree src, cobc_tree dst);
-extern void output_initialize (cobc_tree x);
-extern void output_initialize_replacing (cobc_tree x, struct cobc_list *l);
-extern void output_display (cobc_tree x, cobc_tree fd);
-extern void output_search (cobc_tree table, cobc_tree var, cobc_tree sentence, cobc_tree whens);
-extern void output_search_all (cobc_tree table, cobc_tree sentence, cobc_tree when);
-extern void output_call_statement (cobc_tree name, struct cobc_list *args, cobc_tree st1, cobc_tree st2);
 
 #endif /* _CODEGEN_H_ */

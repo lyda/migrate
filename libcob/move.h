@@ -22,19 +22,20 @@
 
 #include <libcob/common.h>
 
-extern void cob_move (struct cob_field src, struct cob_field dst);
-extern void cob_move_alphanum_to_display (struct cob_field f1, struct cob_field f2);
-extern void cob_move_display_to_display (struct cob_field f1, struct cob_field f2);
-extern void cob_move_display_to_alphanum (struct cob_field f1, struct cob_field f2);
-extern void cob_move_alphanum_to_alphanum (struct cob_field f1, struct cob_field f2);
-extern void cob_move_display_to_packed (struct cob_field f1, struct cob_field f2);
-extern void cob_move_packed_to_display (struct cob_field f1, struct cob_field f2);
-extern void cob_move_display_to_binary (struct cob_field f1, struct cob_field f2);
-extern void cob_move_binary_to_display (struct cob_field f1, struct cob_field f2);
-extern void cob_move_display_to_edited (struct cob_field f1, struct cob_field f2);
-extern void cob_move_alphanum_to_edited (struct cob_field f1, struct cob_field f2);
-extern void cob_mem_move (struct cob_field dst, unsigned char *src, int len);
-extern int cob_to_int (struct cob_field f);
-extern void cob_set_int (struct cob_field f, int n);
+extern void cob_move (cob_field *src, cob_field *dst);
+extern void cob_move_alphanum_to_display (cob_field *f1, cob_field *f2);
+extern void cob_move_display_to_display (cob_field *f1, cob_field *f2);
+extern void cob_move_display_to_alphanum (cob_field *f1, cob_field *f2);
+extern void cob_move_alphanum_to_alphanum (cob_field *f1, cob_field *f2);
+extern void cob_move_display_to_packed (cob_field *f1, cob_field *f2);
+extern void cob_move_packed_to_display (cob_field *f1, cob_field *f2);
+extern void cob_move_display_to_binary (cob_field *f1, cob_field *f2);
+extern void cob_move_binary_to_display (cob_field *f1, cob_field *f2);
+extern void cob_move_display_to_edited (cob_field *f1, cob_field *f2);
+extern void cob_move_alphanum_to_edited (cob_field *f1, cob_field *f2);
+
+extern void cob_memcpy (cob_field *dst, unsigned char *src, int len);
+extern int cob_to_int (cob_field *f);
+extern void cob_set_int (cob_field *f, int n);
 
 #endif /* COB_MOVE_H_ */

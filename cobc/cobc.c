@@ -52,9 +52,6 @@ extern int yy_bison_debug;
 
 struct cobc_flags cobc_flags;
 
-char *cobc_index_func;
-char *cobc_index_depending_func;
-
 FILE *cobc_out;
 
 
@@ -308,17 +305,6 @@ process_command_line (int argc, char *argv[])
     case FORMAT_SEMI_FIXED:
       strcat (cobpp_flags, " -semi-fixed");
       break;
-    }
-
-  if (cobc_flags.failsafe)
-    {
-      cobc_index_func = "cob_index";
-      cobc_index_depending_func = "cob_index_depending";
-    }
-  else
-    {
-      cobc_index_func = "COB_INDEX";
-      cobc_index_depending_func = "COB_INDEX_DEPENDING";
     }
 
   return optind;

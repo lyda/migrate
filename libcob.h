@@ -27,7 +27,6 @@
 #include <libcob/numeric.h>
 #include <libcob/screenio.h>
 #include <libcob/strings.h>
-#include <libcob/support.h>
 #include <libcob/termio.h>
 
 #endif /* COB_LIBCOB_H_ */

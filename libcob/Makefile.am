@@ -7,6 +7,6 @@ libcob_la_LDFLAGS = -version-info 0:0:0
 
 pkgincludedir = $(includedir)/libcob
 pkginclude_HEADERS = common.h move.h numeric.h \
-	termio.h fileio.h screenio.h strings.h call.h support.h
+	termio.h fileio.h screenio.h strings.h call.h
 
 AM_CFLAGS = -Wall

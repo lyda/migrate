@@ -100,10 +100,61 @@ list_length (struct cobc_list *l)
 
 
 /*
- * Tree
+ * Word table
  */
 
-struct cobc_location cobc_location = { 0 };
+#define HASH_SIZE	133
+
+static struct cobc_word *word_table[HASH_SIZE];
+
+static int
+hash (const char *s)
+{
+  int val = 0;
+  for (; *s; s++)
+    val += toupper (*s);
+  return val % HASH_SIZE;
+}
+
+static struct cobc_word *
+make_word (const char *name)
+{
+  struct cobc_word *p = malloc (sizeof (struct cobc_word));
+  memset (p, 0, sizeof (struct cobc_word));
+  p->name  = strdup (name);
+  return p;
+}
+
+struct cobc_word *
+lookup_word (const char *name)
+{
+  struct cobc_word *p;
+  int val = hash (name);
+
+  /* find existing symbol */
+  for (p = word_table[val]; p; p = p->next)
+    if (strcasecmp (p->name, name) == 0)
+      return p;
+
+  /* create new symbol */
+  p = make_word (name);
+  p->next = word_table[val];
+  word_table[val] = p;
+  return p;
+}
+
+void
+init_word_table (void)
+{
+  int i;
+  for (i = 0; i < HASH_SIZE; i++)
+    word_table[i] = NULL;
+}
+
+
+/*
+ * Tree
+ */
 
 static void *
 make_tree (int tag, char class, int size)
@@ -112,7 +163,6 @@ make_tree (int tag, char class, int size)
   memset (x, 0, size);
   x->tag = tag;
   x->class = class;
-  x->loc = cobc_location;
   return x;
 }
 
@@ -145,63 +195,79 @@ tree_to_string_1 (char *s, cobc_tree x)
       break;
 
     case cobc_tag_literal:
-      if (COBC_TREE_CLASS (x) == COB_NUMERIC)
-	strcpy (s, COBC_LITERAL (x)->str);
+      if (COBC_TREE_CLASS (x) == COB_TYPE_NUMERIC)
+	strcpy (s, COBC_LITERAL (x)->data);
       else
-	sprintf (s, "\"%s\"", COBC_LITERAL (x)->str);
+	sprintf (s, "\"%s\"", COBC_LITERAL (x)->data);
       break;
 
     case cobc_tag_field:
-      strcpy (s, COBC_FIELD (x)->word->name);
+      strcpy (s, COBC_FIELD (x)->name);
       break;
 
-    case cobc_tag_subref:
+    case cobc_tag_reference:
       {
-	struct cobc_list *l;
-	struct cobc_subref *p = COBC_SUBREF (x);
-	s += tree_to_string_1 (s, p->field);
-	s += sprintf (s, "(");
-	for (l = p->subs; l; l = l->next)
+	struct cobc_reference *p = COBC_REFERENCE (x);
+	if (p->value)
+	  s += tree_to_string_1 (s, p->value);
+	else
+	  s += sprintf (s, "#<reference %s>", p->word->name);
+	if (p->subs)
 	  {
-	    s += tree_to_string_1 (s, l->item);
-	    s += sprintf (s, l->next ? ", " : ")");
+	    struct cobc_list *l;
+	    s += sprintf (s, "(");
+	    for (l = p->subs; l; l = l->next)
+	      {
+		s += tree_to_string_1 (s, l->item);
+		s += sprintf (s, l->next ? ", " : ")");
+	      }
 	  }
-      }
-      break;
-
-    case cobc_tag_refmod:
-      {
-	struct cobc_refmod *p = COBC_REFMOD (x);
-	s += sprintf (s, "%s", COBC_FIELD (x)->word->name);
-	s += sprintf (s, "(");
-	s += tree_to_string_1 (s, p->offset);
-	s += sprintf (s, ":");
-	if (p->length)
-	  s += tree_to_string_1 (s, p->length);
-	strcpy (s, ")");
+	if (p->offset)
+	  {
+	    s += sprintf (s, "(");
+	    s += tree_to_string_1 (s, p->offset);
+	    s += sprintf (s, ":");
+	    if (p->length)
+	      s += tree_to_string_1 (s, p->length);
+	    strcpy (s, ")");
+	  }
       }
       break;
 
     case cobc_tag_label:
-      sprintf (s, "%s:", COBC_LABEL (x)->word->name);
+      sprintf (s, "%s:", COBC_LABEL (x)->name);
       break;
 
-    case cobc_tag_expr:
+    case cobc_tag_binary_op:
       {
-	struct cobc_expr *p = COBC_EXPR (x);
+	struct cobc_binary_op *p = COBC_BINARY_OP (x);
 	if (p->op == '!')
 	  {
 	    s += sprintf (s, "!");
-	    s += tree_to_string_1 (s, p->left);
+	    s += tree_to_string_1 (s, p->x);
 	  }
 	else
 	  {
 	    s += sprintf (s, "(");
-	    s += tree_to_string_1 (s, p->left);
+	    s += tree_to_string_1 (s, p->x);
 	    s += sprintf (s, " %c ", p->op);
-	    s += tree_to_string_1 (s, p->right);
+	    s += tree_to_string_1 (s, p->y);
 	    strcpy (s, ")");
 	  }
+	break;
+      }
+
+    case cobc_tag_funcall:
+      {
+	int i;
+	struct cobc_funcall *p = COBC_FUNCALL (x);
+	s += sprintf (s, "%s", p->name);
+	for (i = 0; i < p->argc; i++)
+	  {
+	    s += sprintf (s, (i == 0) ? "(" : ", ");
+	    s += tree_to_string_1 (s, p->argv[i]);
+	  }
+	s += sprintf (s, ")");
 	break;
       }
 
@@ -233,15 +299,13 @@ cobc_tree cobc_space;
 cobc_tree cobc_low;
 cobc_tree cobc_high;
 cobc_tree cobc_quote;
-cobc_tree cobc_dt;
-cobc_tree cobc_status;
 cobc_tree cobc_return_code;
 cobc_tree cobc_switch[8];
 cobc_tree cobc_int0;
 cobc_tree cobc_int1;
 cobc_tree cobc_int2;
 
-struct cobc_label *cobc_default_error_handler;
+struct cobc_label *cobc_main_label;
 struct cobc_label *cobc_standard_error_handler;
 
 static cobc_tree
@@ -253,30 +317,30 @@ make_constant (char class, char *val)
   return COBC_TREE (p);
 }
 
-cobc_tree
-make_builtin (int id)
+static struct cobc_label *
+make_constant_label (char *name)
 {
-  struct cobc_builtin *p =
-    make_tree (cobc_tag_builtin, COB_NUMERIC, sizeof (struct cobc_builtin));
-  p->id = id;
-  return COBC_TREE (p);
+  struct cobc_label *l =
+    COBC_LABEL (make_label (make_reference (make_word (name)), NULL));
+  free (l->cname);
+  l->cname = name;
+  l->need_begin = 1;
+  return l;
 }
 
 void
 init_constants (void)
 {
   int i;
-  cobc_any         = make_constant (COB_VOID, 0);
-  cobc_true        = make_constant (COB_BOOLEAN, "1");
-  cobc_false       = make_constant (COB_BOOLEAN, "0");
-  cobc_dt          = make_constant (COB_NUMERIC, "cob_dt");
-  cobc_status      = make_constant (COB_NUMERIC, "cob_status");
-  cobc_return_code = make_constant (COB_NUMERIC, "cob_return_code");
-  cobc_zero        = make_constant (COB_NUMERIC, "cob_zero");
-  cobc_space       = make_constant (COB_ALPHANUMERIC, "cob_space");
-  cobc_low         = make_constant (COB_ALPHANUMERIC, "cob_low");
-  cobc_high        = make_constant (COB_ALPHANUMERIC, "cob_high");
-  cobc_quote       = make_constant (COB_ALPHANUMERIC, "cob_quote");
+  cobc_any         = make_constant (COB_TYPE_UNKNOWN, 0);
+  cobc_true        = make_constant (COB_TYPE_BOOLEAN, "1");
+  cobc_false       = make_constant (COB_TYPE_BOOLEAN, "0");
+  cobc_return_code = make_constant (COB_TYPE_NUMERIC, "cob_return_code");
+  cobc_zero        = make_constant (COB_TYPE_NUMERIC, "&cob_zero");
+  cobc_space       = make_constant (COB_TYPE_ALPHANUMERIC, "&cob_space");
+  cobc_low         = make_constant (COB_TYPE_ALPHANUMERIC, "&cob_low");
+  cobc_high        = make_constant (COB_TYPE_ALPHANUMERIC, "&cob_high");
+  cobc_quote       = make_constant (COB_TYPE_ALPHANUMERIC, "&cob_quote");
   cobc_int0        = make_integer (0);
   cobc_int1        = make_integer (1);
   cobc_int2        = make_integer (2);
@@ -284,14 +348,11 @@ init_constants (void)
     {
       char buff[16];
       sprintf (buff, "switch[%d]", i);
-      cobc_switch[i] =
-	make_field_3 (make_word (buff), "9", COBC_USAGE_BINARY);
+      cobc_switch[i] = make_field_x (buff, "9", COBC_USAGE_INDEX);
     }
 
-  cobc_default_error_handler = COBC_LABEL (make_label_nodef (0, 0));
-  cobc_default_error_handler->cname = "default_error_handler";
-  cobc_standard_error_handler = COBC_LABEL (make_label_nodef (0, 0));
-  cobc_standard_error_handler->cname = "standard_error_handler";
+  cobc_main_label = make_constant_label ("main");
+  cobc_standard_error_handler = make_constant_label ("standard_error_handler");
 }
 
 
@@ -303,22 +364,22 @@ cobc_tree
 make_integer (int val)
 {
   struct cobc_integer *p =
-    make_tree (cobc_tag_integer, COB_NUMERIC, sizeof (struct cobc_integer));
+    make_tree (cobc_tag_integer, COB_TYPE_NUMERIC, sizeof (struct cobc_integer));
   p->val = val;
   return COBC_TREE (p);
 }
 
 
 /*
- * Index
+ * String
  */
 
 cobc_tree
-make_index (cobc_tree val)
+make_string (unsigned char *str)
 {
-  struct cobc_index *p =
-    make_tree (cobc_tag_index, COB_NUMERIC, sizeof (struct cobc_index));
-  p->val = val;
+  struct cobc_string *p =
+    make_tree (cobc_tag_string, COB_TYPE_NUMERIC, sizeof (struct cobc_string));
+  p->str = str;
   return COBC_TREE (p);
 }
 
@@ -332,15 +393,15 @@ make_literal (int class, unsigned char *str)
 {
   struct cobc_literal *p =
     make_tree (cobc_tag_literal, class, sizeof (struct cobc_literal));
-  p->str = strdup (str);
   p->size = strlen (str);
+  p->data = strdup (str);
   return p;
 }
 
 cobc_tree
 make_numeric_literal (int sign, unsigned char *digits, int decimals)
 {
-  struct cobc_literal *p = make_literal (COB_NUMERIC, digits);
+  struct cobc_literal *p = make_literal (COB_TYPE_NUMERIC, digits);
   p->sign = sign;
   p->decimals = decimals;
   return COBC_TREE (p);
@@ -349,19 +410,33 @@ make_numeric_literal (int sign, unsigned char *digits, int decimals)
 cobc_tree
 make_nonnumeric_literal (unsigned char *str)
 {
-  return COBC_TREE (make_literal (COB_ALPHANUMERIC, str));
+  return COBC_TREE (make_literal (COB_TYPE_ALPHANUMERIC, str));
 }
 
 long long
-literal_to_int (struct cobc_literal *p)
+literal_to_int (struct cobc_literal *l)
 {
   long long val = 0;
-  char *s = p->str;
+  unsigned char *s = l->data;
   while (*s)
     val = val * 10 + *s++ - '0';
-  if (p->sign < 0)
+  if (l->sign < 0)
     val = -val;
   return val;
+}
+
+
+/*
+ * Decimal
+ */
+
+cobc_tree
+make_decimal (char id)
+{
+  struct cobc_decimal *p =
+    make_tree (cobc_tag_decimal, COB_TYPE_NUMERIC, sizeof (struct cobc_decimal));
+  p->id = id;
+  return COBC_TREE (p);
 }
 
 
@@ -379,18 +454,18 @@ make_picture (void)
 }
 
 cobc_tree
-make_field (struct cobc_word *word)
+make_field (cobc_tree name)
 {
   struct cobc_field *p =
-    make_tree (cobc_tag_field, COB_ALPHANUMERIC, sizeof (struct cobc_field));
-  p->word = set_word_item (word, COBC_TREE (p));
+    make_tree (cobc_tag_field, COB_TYPE_ALPHANUMERIC, sizeof (struct cobc_field));
+  p->name = associate (name, COBC_TREE (p));
   return COBC_TREE (p);
 }
 
 cobc_tree
-make_field_3 (struct cobc_word *word, char *pic, int usage)
+make_field_3 (cobc_tree name, char *pic, int usage)
 {
-  cobc_tree x = make_field (word);
+  cobc_tree x = make_field (name);
   COBC_FIELD (x)->pic = yylex_picture (pic);
   COBC_FIELD (x)->usage = usage;
   finalize_field_tree (COBC_FIELD (x));
@@ -398,12 +473,55 @@ make_field_3 (struct cobc_word *word, char *pic, int usage)
 }
 
 cobc_tree
-make_filler (void)
+make_field_x (char *name, char *pic, int usage)
 {
-  static int id = 1;
-  char name[256];
-  sprintf (name, "$%d", id++);
-  return make_field (make_word (name));
+  return make_field_3 (make_reference (make_word (name)), pic, usage);
+}
+
+struct cobc_field *
+field (cobc_tree x)
+{
+  if (COBC_REFERENCE_P (x))
+    return COBC_FIELD (COBC_REFERENCE (x)->value);
+  else
+    return COBC_FIELD (x);
+}
+
+int
+field_size (cobc_tree x)
+{
+  switch (COBC_TREE_TAG (x))
+    {
+    case cobc_tag_literal:
+      {
+	return COBC_LITERAL (x)->size;
+      }
+    case cobc_tag_reference:
+      {
+	struct cobc_reference *r = COBC_REFERENCE (x);
+	struct cobc_field *f = COBC_FIELD (r->value);
+	if (r->length)
+	  {
+	    if (COBC_LITERAL_P (r->length))
+	      return literal_to_int (COBC_LITERAL (r->length));
+	    else
+	      return -1;
+	  }
+	else if (r->offset)
+	  {
+	    if (COBC_LITERAL_P (r->offset))
+	      return f->size - literal_to_int (COBC_LITERAL (r->offset));
+	    else
+	      return -1;
+	  }
+	else
+	  {
+	    return f->size;
+	  }
+      }
+    default:
+      abort ();
+    }
 }
 
 struct cobc_field *
@@ -448,27 +566,17 @@ static void
 setup_parameters (struct cobc_field *p)
 {
   /* setup cname */
-  if (p->word->count == 1)
-    {
-      /* there are no other field with the same name,
-	 so just use the data name */
-      p->cname = to_cname (p->word->name);
-    }
-  else
-    {
-      /* otherwise, use parent's cname as a prefix */
-      char name[BUFSIZ] = "";
-      if (p->parent)
-	sprintf (name, "%s$", p->parent->cname);
-      strcat (name, p->word->name);
-      p->cname = to_cname (name);
-    }
+  char name[BUFSIZ] = "";
+  if (p->parent)
+    sprintf (name, "%s$", p->parent->cname);
+  strcat (name, p->name);
+  p->cname = to_cname (name);
 
   /* determine the class */
   if (p->children)
     {
       /* group field */
-      COBC_TREE_CLASS (p) = COB_ALPHANUMERIC;
+      COBC_TREE_CLASS (p) = COB_TYPE_ALPHANUMERIC;
 
       for (p = p->children; p; p = p->sister)
 	setup_parameters (p);
@@ -477,39 +585,34 @@ setup_parameters (struct cobc_field *p)
     {
       COBC_TREE_CLASS (p) = COBC_TREE_CLASS (p->redefines);
     }
-  else if (p->level == 88)
-    {
-      /* conditional field */
-      COBC_TREE_CLASS (p) = COB_BOOLEAN;
-    }
   else
     {
       /* regular field */
       if (p->usage == COBC_USAGE_INDEX)
 	{
-	  COBC_TREE_CLASS (p) = COB_NUMERIC;
+	  COBC_TREE_CLASS (p) = COB_TYPE_NUMERIC;
 	  p->pic = yylex_picture ("S9(9)");
 	}
       else
 	switch (p->pic->category)
 	  {
-	  case COB_ALPHABETIC:
-	    COBC_TREE_CLASS (p) = COB_ALPHABETIC;
+	  case COB_TYPE_ALPHABETIC:
+	    COBC_TREE_CLASS (p) = COB_TYPE_ALPHABETIC;
 	    break;
-	  case COB_NUMERIC:
-	    COBC_TREE_CLASS (p) = COB_NUMERIC;
+	  case COB_TYPE_NUMERIC:
+	    COBC_TREE_CLASS (p) = COB_TYPE_NUMERIC;
 	    break;
-	  case COB_NUMERIC_EDITED:
-	  case COB_ALPHANUMERIC:
-	  case COB_ALPHANUMERIC_EDITED:
-	    COBC_TREE_CLASS (p) = COB_ALPHANUMERIC;
+	  case COB_TYPE_NUMERIC_EDITED:
+	  case COB_TYPE_ALPHANUMERIC:
+	  case COB_TYPE_ALPHANUMERIC_EDITED:
+	    COBC_TREE_CLASS (p) = COB_TYPE_ALPHANUMERIC;
 	    break;
-	  case COB_NATIONAL:
-	  case COB_NATIONAL_EDITED:
-	    COBC_TREE_CLASS (p) = COB_NATIONAL;
+	  case COB_TYPE_NATIONAL:
+	  case COB_TYPE_NATIONAL_EDITED:
+	    COBC_TREE_CLASS (p) = COB_TYPE_NATIONAL;
 	    break;
-	  case COB_BOOLEAN:
-	    COBC_TREE_CLASS (p) = COB_BOOLEAN;
+	  case COB_TYPE_BOOLEAN:
+	    COBC_TREE_CLASS (p) = COB_TYPE_BOOLEAN;
 	    break;
 	  }
     }
@@ -569,7 +672,7 @@ compute_size (struct cobc_field *p)
 	case COBC_USAGE_DISPLAY:
 	  {
 	    p->size = p->pic->size;
-	    if (p->pic->category == COB_NUMERIC && p->f.sign_separate)
+	    if (p->pic->category == COB_TYPE_NUMERIC && p->f.sign_separate)
 	      p->size++;
 	    break;
 	  }
@@ -607,97 +710,68 @@ finalize_field_tree (struct cobc_field *p)
 
 
 /*
- * Predefined name
+ * File
  */
 
 cobc_tree
-make_predefined (struct cobc_list *words)
-{
-  struct cobc_predefined *p =
-    make_tree (cobc_tag_predefined, COB_VOID, sizeof (struct cobc_predefined));
-  p->words = words;
-  return COBC_TREE (p);
-}
-
-
-/*
- * File name
- */
-
-cobc_tree
-make_file (struct cobc_word *word)
+make_file (cobc_tree name)
 {
   struct cobc_file *p =
-    make_tree (cobc_tag_file, COB_VOID, sizeof (struct cobc_file));
-  p->word = set_word_item (word, COBC_TREE (p));
-  p->cname = to_cname (word->name);
+    make_tree (cobc_tag_file, COB_TYPE_UNKNOWN, sizeof (struct cobc_file));
+  p->name = associate (name, COBC_TREE (p));
+  p->cname = to_cname (p->name);
   return COBC_TREE (p);
 }
 
 
 /*
- * Label name
+ * Reference
  */
 
 cobc_tree
-make_label_nodef (struct cobc_word *word, struct cobc_word *in_word)
+make_reference (struct cobc_word *word)
 {
-  struct cobc_label *p =
-    make_tree (cobc_tag_label, COB_VOID, sizeof (struct cobc_label));
+  struct cobc_reference *p =
+    make_tree (cobc_tag_reference, COB_TYPE_UNKNOWN, sizeof (struct cobc_reference));
   p->word = word;
-  p->in_word = in_word;
   return COBC_TREE (p);
 }
 
 cobc_tree
-make_label (struct cobc_word *word)
+copy_reference (cobc_tree ref, cobc_tree value)
 {
-  cobc_tree x = make_label_nodef (word, NULL);
-  set_word_item (word, x);
+  struct cobc_reference *r = COBC_REFERENCE (ref);
+  cobc_tree x = make_reference (r->word);
+  memcpy (x, ref, sizeof (struct cobc_reference));
+  set_value (x, value);
   return x;
 }
 
 void
-finalize_label (struct cobc_label *p)
+set_value (cobc_tree ref, cobc_tree value)
 {
-  char name[BUFSIZ] = "";
-  if (p->section)
-    sprintf (name, "%s$", p->section->cname);
-  strcat (name, p->word->name);
-  p->cname = to_cname (name);
+  COBC_REFERENCE (ref)->value = value;
+  COBC_TREE_CLASS (ref) = COBC_TREE_CLASS (value);
 }
 
-
-/*
- * Subscript references
- */
-
 cobc_tree
-make_subref (cobc_tree field, struct cobc_list *subs)
+make_filler (void)
 {
-  struct cobc_subref *p =
-    make_tree (cobc_tag_subref, COB_VOID, sizeof (struct cobc_subref));
-  COBC_TREE_CLASS (p) = COBC_TREE_CLASS (field);
-  p->field = field;
-  p->subs  = subs;
-  return COBC_TREE (p);
+  static int id = 1;
+  char name[256];
+  sprintf (name, "$%d", id++);
+  return make_reference (make_word (name));
 }
 
-
-/*
- * Reference modifier
- */
-
-cobc_tree
-make_refmod (cobc_tree field, cobc_tree offset, cobc_tree length)
+char *
+associate (cobc_tree name, cobc_tree val)
 {
-  struct cobc_refmod *p =
-    make_tree (cobc_tag_refmod, COB_ALPHANUMERIC, sizeof (struct cobc_refmod));
-  COBC_FIELD (field)->f.referenced = 1;
-  p->field = field;
-  p->offset = offset;
-  p->length = length;
-  return COBC_TREE (p);
+  struct cobc_word *w = COBC_REFERENCE (name)->word;
+  COBC_TREE_CLASS (name) = COBC_TREE_CLASS (val);
+  w->items = cons (val, w->items);
+  w->count++;
+  val->loc = name->loc;
+  return w->name;
 }
 
 
@@ -706,20 +780,20 @@ make_refmod (cobc_tree field, cobc_tree offset, cobc_tree length)
  */
 
 cobc_tree
-make_expr (cobc_tree left, char op, cobc_tree right)
+make_binary_op (cobc_tree left, char op, cobc_tree right)
 {
-  struct cobc_expr *p =
-    make_tree (cobc_tag_expr, COB_VOID, sizeof (struct cobc_expr));
+  struct cobc_binary_op *p =
+    make_tree (cobc_tag_binary_op, COB_TYPE_UNKNOWN, sizeof (struct cobc_binary_op));
   p->op = op;
-  p->left = left;
-  p->right = right;
+  p->x = left;
+  p->y = right;
   switch (op)
     {
     case '+': case '-': case '*': case '/': case '^':
       /* numeric expression */
-      COBC_TREE_CLASS (p) = COB_NUMERIC;
-      if (COBC_TREE_CLASS (left) != COB_NUMERIC
-	  || COBC_TREE_CLASS (right) != COB_NUMERIC)
+      COBC_TREE_CLASS (p) = COB_TYPE_NUMERIC;
+      if (COBC_TREE_CLASS (left) != COB_TYPE_NUMERIC
+	  || COBC_TREE_CLASS (right) != COB_TYPE_NUMERIC)
 	{
 	  yyerror (tree_to_string (COBC_TREE (p)));
 	  abort ();
@@ -728,19 +802,14 @@ make_expr (cobc_tree left, char op, cobc_tree right)
 
     case '=': case '~': case '<': case '>': case '[': case ']':
       /* comparison conditional */
-      COBC_TREE_CLASS (p) = COB_BOOLEAN;
-      break;
-
-    case '@':
-      /* class conditional */
-      COBC_TREE_CLASS (p) = COB_BOOLEAN;
+      COBC_TREE_CLASS (p) = COB_TYPE_BOOLEAN;
       break;
 
     case '!': case '&': case '|':
       /* compound conditional */
-      COBC_TREE_CLASS (p) = COB_BOOLEAN;
-      if (COBC_TREE_CLASS (left) != COB_BOOLEAN
-	  || (right && COBC_TREE_CLASS (right) != COB_BOOLEAN))
+      COBC_TREE_CLASS (p) = COB_TYPE_BOOLEAN;
+      if (COBC_TREE_CLASS (left) != COB_TYPE_BOOLEAN
+	  || (right && COBC_TREE_CLASS (right) != COB_TYPE_BOOLEAN))
 	{
 	  yyerror (tree_to_string (COBC_TREE (p)));
 	  abort ();
@@ -754,82 +823,18 @@ make_expr (cobc_tree left, char op, cobc_tree right)
   return COBC_TREE (p);
 }
 
-int
-is_numeric (cobc_tree x)
-{
-  if (COBC_EXPR_P (x))
-    if (is_numeric (COBC_EXPR (x)->left)
-	&& is_numeric (COBC_EXPR (x)->right))
-      return 1;
-
-  if (COBC_TREE_CLASS (x) == COB_NUMERIC)
-    return 1;
-
-  return 0;
-}
-
 
 /*
- * Class
+ * Function call
  */
 
 cobc_tree
-make_class (struct cobc_word *word, struct cobc_list *list)
+make_funcall (const char *name, int argc,
+	      void *a1, void *a2, void *a3, void *a4)
 {
-  char name[BUFSIZ];
-  struct cobc_class *p =
-    make_tree (cobc_tag_class, COB_NUMERIC, sizeof (struct cobc_class));
-  sprintf (name, "is_%s", to_cname (word->name));
-  p->cname = strdup (name);
-  p->list = list;
-  set_word_item (word, COBC_TREE (p));
-  return COBC_TREE (p);
-}
-
-
-/*
- * If
- */
-
-cobc_tree
-make_if (cobc_tree test, cobc_tree stmt1, cobc_tree stmt2)
-{
-  struct cobc_if *p =
-    make_tree (cobc_tag_if, COB_VOID, sizeof (struct cobc_if));
-  p->test  = test;
-  p->stmt1 = stmt1;
-  p->stmt2 = stmt2;
-  return COBC_TREE (p);
-}
-
-
-/*
- * Pair
- */
-
-cobc_tree
-make_pair (void *x, void *y)
-{
-  struct cobc_pair *p =
-    make_tree (cobc_tag_pair, COB_VOID, sizeof (struct cobc_pair));
-  p->x = x;
-  p->y = y;
-  return COBC_TREE (p);
-}
-
-
-/*
- * Call
- */
-
-cobc_tree
-make_call (const char *name, void (*func)(),
-	   int argc, void *a1, void *a2, void *a3, void *a4)
-{
-  struct cobc_call *p =
-    make_tree (cobc_tag_call, COB_VOID, sizeof (struct cobc_call));
+  struct cobc_funcall *p =
+    make_tree (cobc_tag_funcall, COB_TYPE_UNKNOWN, sizeof (struct cobc_funcall));
   p->name = name;
-  p->func = func;
   p->argc = argc;
   p->argv[0] = a1;
   p->argv[1] = a2;
@@ -840,59 +845,65 @@ make_call (const char *name, void (*func)(),
 
 
 /*
- * Assignment
+ * Cast to int32
  */
 
 cobc_tree
-make_assign (cobc_tree field, cobc_tree value, int rounded)
+make_cast_int32 (cobc_tree val)
 {
-  struct cobc_assign *p =
-    make_tree (cobc_tag_assign, COB_VOID, sizeof (struct cobc_assign));
-  p->field = field;
-  p->value = value;
-  p->rounded = rounded;
-  return COBC_TREE (p);
-}
-
-cobc_tree
-make_op_assign (cobc_tree field, char op, cobc_tree value)
-{
-  return make_assign (field, make_expr (field, op, value), 0);
-}
-
-
-/*
- * Sequence
- */
-
-cobc_tree
-make_sequence (struct cobc_list *list)
-{
-  struct cobc_sequence *p =
-    make_tree (cobc_tag_sequence, COB_VOID, sizeof (struct cobc_sequence));
-  p->list = list;
-  p->save_status = 0;
-  return COBC_TREE (p);
-}
-
-cobc_tree
-make_status_sequence (struct cobc_list *list)
-{
-  struct cobc_sequence *p = COBC_SEQUENCE (make_sequence (list));
-  p->save_status = 1;
+  struct cobc_cast_int32 *p =
+    make_tree (cobc_tag_cast_int32, COB_TYPE_NUMERIC, sizeof (struct cobc_cast_int32));
+  p->val = val;
   return COBC_TREE (p);
 }
 
 
 /*
- * Perform
+ * Label
+ */
+
+cobc_tree
+make_label (cobc_tree name, struct cobc_label *section)
+{
+  char buff[BUFSIZ];
+  struct cobc_label *p =
+    make_tree (cobc_tag_label, COB_TYPE_UNKNOWN, sizeof (struct cobc_label));
+  p->name = associate (name, COBC_TREE (p));
+  p->section = section;
+  if (section)
+    sprintf (buff, "%s$%s", section->cname, p->name);
+  else
+    sprintf (buff, "%s", p->name);
+  p->cname = to_cname (buff);
+  return COBC_TREE (p);
+}
+
+
+/*
+ * IF
+ */
+
+cobc_tree
+make_if (cobc_tree test, cobc_tree stmt1, cobc_tree stmt2)
+{
+  struct cobc_if *p =
+    make_tree (cobc_tag_if, COB_TYPE_UNKNOWN, sizeof (struct cobc_if));
+  p->test  = test;
+  p->stmt1 = stmt1;
+  p->stmt2 = stmt2;
+  return COBC_TREE (p);
+}
+
+
+/*
+ * PERFORM
  */
 
 cobc_tree
 make_perform (int type)
 {
   struct cobc_perform *p =
-    make_tree (cobc_tag_perform, COB_VOID, sizeof (struct cobc_perform));
+    make_tree (cobc_tag_perform, COB_TYPE_UNKNOWN, sizeof (struct cobc_perform));
   p->type = type;
   return COBC_TREE (p);
 }
@@ -905,15 +916,23 @@ make_perform_once (cobc_tree body)
   return x;
 }
 
+cobc_tree
+make_perform_exit (struct cobc_label *label)
+{
+  cobc_tree x = make_perform (COBC_PERFORM_EXIT);
+  COBC_PERFORM (x)->data = COBC_TREE (label);
+  return x;
+}
+
 void
 add_perform_varying (struct cobc_perform *perf, cobc_tree name,
-		     cobc_tree from, cobc_tree by, cobc_tree until)
+		     cobc_tree from, cobc_tree step, cobc_tree until)
 {
   struct cobc_perform_varying *p =
     malloc (sizeof (struct cobc_perform_varying));
   p->name = name;
   p->from = from;
-  p->by = by;
+  p->step = step;
   p->until = until;
   p->next = NULL;
   if (perf->varying == NULL)
@@ -929,100 +948,62 @@ add_perform_varying (struct cobc_perform *perf, cobc_tree name,
 
 
 /*
- * Word table
+ * Sequence
  */
 
-#define HASH_SIZE	133
-
-static struct cobc_word *word_table[HASH_SIZE];
-
-static int
-hash (const char *s)
+cobc_tree
+make_sequence (struct cobc_list *list)
 {
-  int val = 0;
-  for (; *s; s++)
-    val += toupper (*s);
-  return val % HASH_SIZE;
-}
-
-struct cobc_word *
-make_word (const char *name)
-{
-  struct cobc_word *p = malloc (sizeof (struct cobc_word));
-  memset (p, 0, sizeof (struct cobc_word));
-  p->name  = strdup (name);
-  return p;
-}
-
-struct cobc_word *
-set_word_item (struct cobc_word *word, cobc_tree item)
-{
-  if (!word->item)
-    {
-      word->item = item;
-    }
-  else
-    {
-      /* Create new word */
-      struct cobc_word *new_word = make_word (word->name);
-      new_word->item = item;
-      new_word->link = word->link;
-      word->link = new_word;
-    }
-
-  word->count++;
-  return word;
-}
-
-struct cobc_word *
-lookup_user_word (const char *name)
-{
-  struct cobc_word *p;
-  int val = hash (name);
-
-  /* find existing symbol */
-  for (p = word_table[val]; p; p = p->next)
-    if (strcasecmp (p->name, name) == 0)
-      return p;
-
-  /* create new symbol */
-  p = make_word (name);
-  p->next = word_table[val];
-  word_table[val] = p;
-  return p;
-}
-
-struct cobc_word *
-lookup_qualified_word (struct cobc_word *word, struct cobc_field *parent)
-{
-  struct cobc_field *p;
-  for (; word; word = word->link)
-    if (word->item && COBC_FIELD_P (word->item))
-      for (p = COBC_FIELD (word->item)->parent; p; p = p->parent)
-	if (p == parent)
-	  return word;
-  return NULL;
-}
-
-void
-init_word_table (void)
-{
-  int i;
-  for (i = 0; i < HASH_SIZE; i++)
-    word_table[i] = NULL;
+  struct cobc_sequence *p =
+    make_tree (cobc_tag_sequence, COB_TYPE_UNKNOWN, sizeof (struct cobc_sequence));
+  p->list = list;
+  return COBC_TREE (p);
 }
 
 
 /*
- * General parameter
+ * Class
  */
 
-struct cobc_parameter *
+cobc_tree
+make_class (cobc_tree name, struct cobc_list *list)
+{
+  char buff[BUFSIZ];
+  struct cobc_class *p =
+    make_tree (cobc_tag_class, COB_TYPE_NUMERIC, sizeof (struct cobc_class));
+  p->name = associate (name, COBC_TREE (p));
+  sprintf (buff, "is_%s", to_cname (p->name));
+  p->cname = strdup (buff);
+  p->list = list;
+  return COBC_TREE (p);
+}
+
+
+/*
+ * Bulitin
+ */
+
+cobc_tree
+make_builtin (int id)
+{
+  struct cobc_builtin *p =
+    make_tree (cobc_tag_builtin, COB_TYPE_NUMERIC, sizeof (struct cobc_builtin));
+  p->id = id;
+  return COBC_TREE (p);
+}
+
+
+/*
+ * Parameter
+ */
+
+cobc_tree
 make_parameter (int type, cobc_tree x, cobc_tree y)
 {
-  struct cobc_parameter *p = malloc (sizeof (struct cobc_parameter));
+  struct cobc_parameter *p =
+    make_tree (cobc_tag_parameter, COB_TYPE_UNKNOWN, sizeof (struct cobc_parameter));
   p->type = type;
   p->x = x;
   p->y = y;
-  return p;
+  return COBC_TREE (p);
 }

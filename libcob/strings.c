@@ -31,161 +31,190 @@
 #include "strings.h"
 
 #define MIN(x,y) ({int _x = (x), _y = (y); (_x < _y) ? _x : _y; })
-#define MAX(x,y) ({int _x = (x), _y = (y); (_x > _y) ? _x : _y; })
 
-#define match(s1,s2,size) \
-  ((*(s1) == *(s2)) && ((size) == 1 || memcmp ((s1), (s2), (size)) == 0))
+#define INSPECT_ALL		0
+#define INSPECT_LEADING		1
+#define INSPECT_FIRST	      	2
 
 
 /*
  * INSPECT
  */
 
+static cob_field *inspect_var;
+static int inspect_replacing;
+static int inspect_sign;
+static size_t inspect_size;
+static unsigned char *inspect_data;
+static unsigned char *inspect_start;
+static unsigned char *inspect_end;
+static unsigned char *inspect_mark;
+
 void
-cob_inspect (struct cob_field var, ...)
+cob_inspect_init (cob_field *var, int replacing)
 {
-  int type;
-  int var_sign = cob_get_sign (var);
-  size_t var_size = COB_FIELD_LENGTH (var);
-  unsigned char *var_data = COB_FIELD_BASE (var);
-  unsigned char *region_start = 0, *region_end = 0;
-  unsigned char region_mark[var_size];
-  int replacing = 0;
-  va_list ap;
+  inspect_var = var;
+  inspect_replacing = replacing;
+  inspect_sign = cob_get_sign (var);
+  inspect_size = COB_FIELD_SIZE (var);
+  inspect_data = COB_FIELD_DATA (var);
+  inspect_start = NULL;
+  inspect_end = NULL;
+  inspect_mark = malloc (inspect_size);
+  memset (inspect_mark, 0, inspect_size);
 
-  va_start (ap, var);
-  memset (region_mark, 0, var_size);
+  cob_error_code = 0;
+}
 
-  while ((type = va_arg (ap, int)) != COB_INSPECT_END)
-    switch (type)
+void
+cob_inspect_start (void)
+{
+  inspect_start = inspect_data;
+  inspect_end   = inspect_data + inspect_size;
+}
+
+void
+cob_inspect_before (cob_field *str)
+{
+  unsigned char *p;
+  for (p = inspect_start; p < inspect_end - str->size; p++)
+    if (memcmp (p, str->data, str->size) == 0)
       {
-      case COB_INSPECT_INIT:
-	{
-	  /* initialize the region inspected */
-	  region_start = var_data;
-	  region_end   = var_data + var_size;
-	  break;
-	}
-
-      case COB_INSPECT_BEFORE:
-      case COB_INSPECT_AFTER:
-	{
-	  /* determine the region inspected */
-	  struct cob_field str = va_arg (ap, struct cob_field);
-	  unsigned char *p;
-	  for (p = region_start; p < region_end - str.size; p++)
-	    if (match (p, str.data, str.size))
-	      {
-		if (type == COB_INSPECT_BEFORE)
-		  region_end = p;
-		else
-		  region_start = p + str.size;
-		goto done;
-	      }
-	  if (type == COB_INSPECT_AFTER)
-	    region_start = region_end;
-	done:
-	  break;
-	}
-
-      case COB_INSPECT_TALLYING:
-	replacing = 0;
-	break;
-
-      case COB_INSPECT_REPLACING:
-	replacing = 1;
-	break;
-
-      case COB_INSPECT_CHARACTERS:
-	{
-	  struct cob_field f1 = va_arg (ap, struct cob_field);
-	  unsigned char *mark = &region_mark[region_start - var_data];
-	  int len = region_end - region_start;
-	  if (len > 0)
-	    {
-	      int i, n = 0;
-	      for (i = 0; i < len; i++)
-		if (mark[i] == 0)
-		  {
-		    n++;
-		    if (replacing)
-		      mark[i] = f1.data[0];
-		    else
-		      mark[i] = 1;
-		  }
-	      if (!replacing)
-		cob_add_int (f1, n, 0, 0);
-	    }
-	  break;
-	}
-
-      case COB_INSPECT_ALL:
-      case COB_INSPECT_LEADING:
-      case COB_INSPECT_FIRST:
-	{
-	  struct cob_field f1 = va_arg (ap, struct cob_field);
-	  struct cob_field f2 = va_arg (ap, struct cob_field);
-	  unsigned char *mark = &region_mark[region_start - var_data];
-	  int len = region_end - region_start;
-	  if (len > 0)
-	    {
-	      int i, n = 0;
-	      for (i = 0; i < len - f2.size + 1; i++)
-		{
-		  /* find matching substring */
-		  if (match (region_start + i, f2.data, f2.size))
-		    {
-		      int j;
-		      /* check if it is already marked */
-		      for (j = 0; j < f2.size; j++)
-			if (mark[i + j])
-			  break;
-		      /* if not, mark and count it */
-		      if (j == f2.size)
-			{
-			  n++;
-			  if (replacing)
-			    memcpy (mark + i, f1.data, f2.size);
-			  else
-			    memset (mark + i, 1, f2.size);
-			  if (type == COB_INSPECT_FIRST)
-			    break;
-			  continue;
-			}
-		    }
-		  /* not found */
-		  if (type == COB_INSPECT_LEADING)
-		    break;
-		}
-	      if (!replacing)
-		cob_add_int (f1, n, 0, 0);
-	    }
-	  break;
-	}
-
-      case COB_INSPECT_CONVERTING:
-	{
-	  int i, j;
-	  struct cob_field old = va_arg (ap, struct cob_field);
-	  struct cob_field new = va_arg (ap, struct cob_field);
-	  for (i = 0; i < region_end - region_start; i++)
-	    for (j = 0; j < old.size; j++)
-	      if (region_start[i] == old.data[j])
-		region_start[i] = new.data[j];
-	  break;
-	}
+	inspect_end = p;
+	return;
       }
+}
 
-  /* do replacement */
-  if (replacing)
+void
+cob_inspect_after (cob_field *str)
+{
+  unsigned char *p;
+  for (p = inspect_start; p < inspect_end - str->size; p++)
+    if (memcmp (p, str->data, str->size) == 0)
+      {
+	inspect_start = p + str->size;
+	return;
+      }
+  inspect_start = inspect_end;
+}
+
+void
+cob_inspect_characters (cob_field *f1)
+{
+  int i;
+  int len = inspect_end - inspect_start;
+  unsigned char *mark = &inspect_mark[inspect_start - inspect_data];
+
+  if (inspect_replacing)
     {
-      int i;
-      for (i = 0; i < var_size; i++)
-	if (region_mark[i])
-	  var_data[i] = region_mark[i];
+      /* INSPECT REPLACING CHARACTERS f1 */
+      for (i = 0; i < len; i++)
+	if (mark[i] == 0)
+	  mark[i] = f1->data[0];
+    }
+  else
+    {
+      /* INSPECT TALLYING f1 CHARACTERS */
+      int n = 0;
+
+      for (i = 0; i < len; i++)
+	if (mark[i] == 0)
+	  {
+	    mark[i] = 1;
+	    n++;
+	  }
+
+      if (n > 0)
+	cob_add_int (f1, n);
+    }
+}
+
+static void
+inspect_common (cob_field *f1, cob_field *f2, int type)
+{
+  int i, last, n = 0;
+  int len = inspect_end - inspect_start;
+  unsigned char *mark = &inspect_mark[inspect_start - inspect_data];
+
+  if (inspect_replacing && f1->size != f2->size)
+    {
+      cob_error_code = COB_EC_RANGE_INSPECT_SIZE;
+      return;
     }
 
-  cob_put_sign (var, var_sign);
+  last = (type == INSPECT_LEADING) ? 1 : len - f2->size + 1;
+
+  for (i = 0; i < last; i++)
+    {
+      /* find matching substring */
+      if (memcmp (inspect_start + i, f2->data, f2->size) == 0)
+	{
+	  int j;
+	  /* check if it is already marked */
+	  for (j = 0; j < f2->size; j++)
+	    if (mark[i + j])
+	      break;
+	  /* if not, mark and count it */
+	  if (j == f2->size)
+	    {
+	      if (inspect_replacing)
+		memcpy (mark + i, f1->data, f2->size);
+	      else
+		memset (mark + i, 1, f2->size);
+	      n++;
+	      if (type == INSPECT_FIRST)
+		break;
+	    }
+	}
+    }
+
+  if (n > 0 && !inspect_replacing)
+    cob_add_int (f1, n);
+}
+
+void
+cob_inspect_all (cob_field *f1, cob_field *f2)
+{
+  inspect_common (f1, f2, INSPECT_ALL);
+};
+
+void
+cob_inspect_leading (cob_field *f1, cob_field *f2)
+{
+  inspect_common (f1, f2, INSPECT_LEADING);
+};
+
+void
+cob_inspect_first (cob_field *f1, cob_field *f2)
+{
+  inspect_common (f1, f2, INSPECT_FIRST);
+};
+
+void
+cob_inspect_converting (cob_field *f1, cob_field *f2)
+{
+  int i, j;
+  int len = inspect_end - inspect_start;
+
+  for (i = 0; i < len; i++)
+    for (j = 0; j < f1->size; j++)
+      if (inspect_start[i] == f1->data[j])
+	inspect_start[i] = f2->data[j];
+}
+
+void
+cob_inspect_finish (void)
+{
+  if (inspect_replacing)
+    {
+      int i;
+      for (i = 0; i < inspect_size; i++)
+	if (inspect_mark[i] > 1)
+	  inspect_data[i] = inspect_mark[i];
+    }
+
+  cob_put_sign (inspect_var, inspect_sign);
+  free (inspect_mark);
 }
 
 
@@ -193,70 +222,66 @@ cob_inspect (struct cob_field var, ...)
  * STRING
  */
 
+static cob_field *string_dst;
+static cob_field *string_ptr;
+static int string_offset;
+
 void
-cob_string (struct cob_field dst, ...)
+cob_string_init (cob_field *dst, cob_field *ptr)
 {
-  int i, type, offset = 0;
-  struct cob_field ptr = {0}, dlm = {0}, src;
-  va_list ap;
+  string_dst = dst;
+  string_ptr = ptr;
+  string_offset = 0;
 
-  va_start (ap, dst);
+  cob_error_code = 0;
 
-  while ((type = va_arg (ap, int)) != COB_STRING_END)
-    switch (type)
-      {
-      case COB_STRING_WITH_POINTER:
-	ptr = va_arg (ap, struct cob_field);
-	offset = cob_to_int (ptr) - 1;
-	if (offset < -1 || offset >= dst.size)
-	  goto overflow;
-	break;
+  if (string_ptr)
+    {
+      string_offset = cob_to_int (string_ptr) - 1;
+      if (string_offset < 0 || string_offset >= string_dst->size)
+	cob_error_code = COB_EC_OVERFLOW_STRING;
+    }
+}
 
-      case COB_STRING_DELIMITED_NAME:
-	dlm = va_arg (ap, struct cob_field);
-	break;
+void
+cob_string_append (cob_field *src, cob_field *dlm)
+{
+  size_t src_size = src->size;
 
-      case COB_STRING_DELIMITED_SIZE:
-	dlm.size = 0;
-	break;
+  if (cob_error_code)
+    return;
 
-      case COB_STRING_CONCATENATE:
-	src = va_arg (ap, struct cob_field);
-	if (COB_FIELD_IS_VALID (dlm))
+  if (dlm)
+    {
+      int i;
+      int size = src_size - dlm->size + 1;
+      for (i = 0; i < size; i++)
+	if (memcmp (src->data + i, dlm->data, dlm->size) == 0)
 	  {
-	    int size = src.size - dlm.size + 1;
-	    for (i = 0; i < size; i++)
-	      if (match (src.data + i, dlm.data, dlm.size))
-		{
-		  src.size = i;
-		  break;
-		}
+	    src_size = i;
+	    break;
 	  }
-	if (src.size <= dst.size - offset)
-	  {
-	    memcpy (dst.data + offset, src.data, src.size);
-	    offset += src.size;
-	  }
-	else
-	  {
-	    int size = dst.size - offset;
-	    memcpy (dst.data + offset, src.data, size);
-	    offset += size;
-	    goto overflow;
-	  }
-	break;
-      }
+    }
 
-  cob_status = COB_STATUS_SUCCESS;
-  goto end;
+  if (src_size <= string_dst->size - string_offset)
+    {
+      memcpy (string_dst->data + string_offset, src->data, src_size);
+      string_offset += src_size;
+    }
+  else
+    {
+      int size = string_dst->size - string_offset;
+      memcpy (string_dst->data + string_offset, src->data, size);
+      string_offset += size;
+      cob_error_code = COB_EC_OVERFLOW_STRING;
+    }
+}
 
- overflow:
-  cob_status = COB_STATUS_OVERFLOW;
-
- end:
-  va_end (ap);
-  if (COB_FIELD_IS_VALID (ptr))
-    cob_set_int (ptr, offset + 1);
+void
+cob_string_finish (void)
+{
+  if (string_ptr)
+    cob_set_int (string_ptr, string_offset + 1);
 }
 
 
@@ -264,144 +289,151 @@ cob_string (struct cob_field dst, ...)
  * UNSTRING
  */
 
+static cob_field *unstring_src;
+static cob_field *unstring_ptr;
+static int unstring_offset;
+static int unstring_count;
+static int unstring_ndlms;
+static regex_t unstring_reg;
+static int unstring_reg_inited;
+static unsigned char unstring_regexp[256]; /* FIXME: should be dynamic */
+
 void
-cob_unstring (struct cob_field src, ...)
+cob_unstring_init (cob_field *src, cob_field *ptr)
 {
-  int i, type, offset = 0, count = 0, delms = 0;
-  struct cob_field ptr = {0};
-  int delm_size = 0;
-  unsigned char *delm_data = NULL;
-  regex_t reg;
-  int reg_inited = 0, match_size = 0;
-  char regexp[256] = ""; /* FIXME: should be dynamic */
-  va_list ap;
+  unstring_src = src;
+  unstring_ptr = ptr;
+  unstring_offset = 0;
+  unstring_count = 0;
+  unstring_ndlms = 0;
+  unstring_reg_inited = 0;
+  unstring_regexp[0] = 0;
 
-  va_start (ap, src);
+  cob_error_code = 0;
 
-  while ((type = va_arg (ap, int)) != COB_UNSTRING_END)
-    switch (type)
-      {
-      case COB_UNSTRING_WITH_POINTER:
-	ptr = va_arg (ap, struct cob_field);
-	offset = cob_to_int (ptr) - 1;
-	if (offset < -1 || offset >= src.size)
-	  goto overflow;
-	break;
+  if (unstring_ptr)
+    {
+      unstring_offset = cob_to_int (unstring_ptr) - 1;
+      if (unstring_offset < 0 || unstring_offset >= unstring_src->size)
+	cob_error_code = COB_EC_OVERFLOW_UNSTRING;
+    }
+}
 
-      case COB_UNSTRING_DELIMITED_BY:
-      case COB_UNSTRING_DELIMITED_ALL:
+void
+cob_unstring_delimited (cob_field *dlm, int all)
+{
+  int i;
+  unsigned char *p;
+
+  if (unstring_ndlms > 0)
+    strcat (unstring_regexp, "\\|");
+  strcat (unstring_regexp, "\\(");
+
+  /* copy deliminator with regexp quote */
+  p = unstring_regexp + strlen (unstring_regexp);
+  for (i = 0; i < dlm->size; i++)
+    {
+      int c = dlm->data[i];
+      if (c == '.' || c == '\\')
+	*p++ = '\\';
+      *p++ = c;
+    }
+  *p = 0;
+
+  strcat (unstring_regexp, "\\)");
+  if (all)
+    strcat (unstring_regexp, "\\+");
+
+  unstring_ndlms++;
+}
+
+void
+cob_unstring_into (cob_field *dst, cob_field *dlm, cob_field *cnt)
+{
+  int match_size = 0;
+  size_t dlm_size = 0;
+  unsigned char *dlm_data = NULL;
+  unsigned char *start = unstring_src->data + unstring_offset;
+  regmatch_t match[unstring_ndlms + 1];
+
+  if (cob_error_code)
+    return;
+
+  if (unstring_offset >= unstring_src->size)
+    return;
+
+  if (unstring_ndlms == 0)
+    {
+      match_size = MIN (COB_FIELD_SIZE (dst),
+			unstring_src->size - unstring_offset);
+      cob_memcpy (dst, start, match_size);
+      unstring_offset += match_size;
+    }
+  else
+    {
+      /* delimit using regexec */
+      if (!unstring_reg_inited)
 	{
+	  regcomp (&unstring_reg, unstring_regexp, 0);
+	  unstring_reg_inited = 1;
+	}
+      if (regexec (&unstring_reg, start, unstring_ndlms + 1, match, 0) == 0
+	  && match[0].rm_so <= unstring_src->size - unstring_offset)
+	{
+	  /* match */
 	  int i;
-	  char *p;
-	  struct cob_field dlm = va_arg (ap, struct cob_field);
-	  if (delms > 0)
-	    strcat (regexp, "\\|");
-	  strcat (regexp, "\\(");
-	  /* copy deliminator with regexp quote */
-	  p = regexp + strlen (regexp);
-	  for (i = 0; i < dlm.size; i++)
-	    {
-	      int c = dlm.data[i];
-	      if (c == '.' || c == '\\')
-		*p++ = '\\';
-	      *p++ = c;
-	    }
-	  *p = 0;
-	  strcat (regexp, "\\)");
-	  if (type == COB_UNSTRING_DELIMITED_ALL)
-	    strcat (regexp, "\\+");
-	  delms++;
-	  reg_inited = 0;
-	  break;
-	}
+	  match_size = match[0].rm_so;
+	  cob_memcpy (dst, start, match_size);
+	  unstring_offset += match[0].rm_eo;
 
-      case COB_UNSTRING_INTO:
+	  for (i = 1; i <= unstring_ndlms; i++)
+	    if (match[i].rm_so >= 0)
+	      {
+		dlm_data = start + match[i].rm_so;
+		dlm_size = match[i].rm_eo - match[i].rm_so;
+		break;
+	      }
+	}
+      else
 	{
-	  struct cob_field f = va_arg (ap, struct cob_field);
-	  unsigned char *start = src.data + offset;
-	  regmatch_t match[delms + 1];
-	  if (offset >= src.size)
-	    break;
-	  if (delms == 0)
-	    {
-	      match_size = MIN (COB_FIELD_LENGTH (f), src.size - offset);
-	      cob_mem_move (f, start, match_size);
-	      offset += match_size;
-	    }
-	  else
-	    {
-	      /* delimit using regexec */
-	      if (!reg_inited)
-		{
-		  regcomp (&reg, regexp, 0);
-		  reg_inited = 1;
-		}
-	      if (regexec (&reg, start, delms + 1, match, 0) == 0
-		  && match[0].rm_so <= src.size - offset)
-		{
-		  match_size = match[0].rm_so;
-		  cob_mem_move (f, start, match_size);
-		  offset += match[0].rm_eo;
-		  for (i = 1; i <= delms; i++)
-		    if (match[i].rm_so >= 0)
-		      {
-			delm_data = start + match[i].rm_so;
-			delm_size = match[i].rm_eo - match[i].rm_so;
-			break;
-		      }
-		}
-	      else
-		{
-		  match_size = src.size - offset;
-		  cob_mem_move (f, start, match_size);
-		  offset = src.size;
-		  delm_data = NULL;
-		}
-	    }
-	  count++;
-	  break;
+	  /* not match */
+	  match_size = unstring_src->size - unstring_offset;
+	  cob_memcpy (dst, start, match_size);
+	  unstring_offset = unstring_src->size;
+	  dlm_data = NULL;
 	}
+    }
+  unstring_count++;
 
-      case COB_UNSTRING_DELIMITER:
-	{
-	  struct cob_field f = va_arg (ap, struct cob_field);
-	  if (delm_data)
-	    cob_mem_move (f, delm_data, delm_size);
-	  else if (COB_FIELD_TYPE (f) == '9')
-	    cob_move (cob_zero, f);
-	  else
-	    cob_move (cob_space, f);
-	  break;
-	}
+  if (dlm)
+    {
+      if (dlm_data)
+	cob_memcpy (dlm, dlm_data, dlm_size);
+      else if (COB_FIELD_IS_NUMERIC (dlm))
+	cob_move (&cob_zero, dlm);
+      else
+	cob_move (&cob_space, dlm);
+    }
 
-      case COB_UNSTRING_COUNT:
-	{
-	  struct cob_field f = va_arg (ap, struct cob_field);
-	  cob_set_int (f, match_size);
-	  break;
-	}
+  if (cnt)
+    cob_set_int (cnt, match_size);
+}
 
-      case COB_UNSTRING_TALLYING:
-	{
-	  struct cob_field f = va_arg (ap, struct cob_field);
-	  cob_add_int (f, count, 0, 0);
-	  break;
-	}
-      }
+void
+cob_unstring_tallying (cob_field *f)
+{
+  cob_add_int (f, unstring_count);
+}
 
-  if (offset < src.size)
-    goto overflow;
+void
+cob_unstring_finish (void)
+{
+  if (unstring_offset < unstring_src->size)
+    cob_error_code = COB_EC_OVERFLOW_UNSTRING;
 
-  cob_status = COB_STATUS_SUCCESS;
-  goto end;
+  if (unstring_reg_inited)
+    regfree (&unstring_reg);
 
- overflow:
-  cob_status = COB_STATUS_OVERFLOW;
-
- end:
-  va_end (ap);
-  if (reg_inited)
-    regfree (&reg);
-  if (COB_FIELD_IS_VALID (ptr))
-    cob_set_int (ptr, offset + 1);
+  if (unstring_ptr)
+    cob_set_int (unstring_ptr, unstring_offset + 1);
 }

@@ -1,9 +1,15 @@
 *.tar.gz
+ABOUT-NLS
+INSTALL
 Makefile
+Makefile.in
+aclocal.m4
 autom4te.cache
 cob-config
 cob.pc
 config.*
+configure
 defaults.h
 libtool
+m4
 stamp-h*

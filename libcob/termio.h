@@ -34,17 +34,17 @@ extern FILE *cob_stream[];
 
 extern void cob_init_termio (void);
 #ifdef COB_DEBUG
-extern void cob_debug_print (struct cob_field f);
+extern void cob_debug_print (cob_field *f);
 #endif
 
-extern void cob_display (struct cob_field f, int fd);
+extern void cob_display (cob_field *f, int fd);
 extern void cob_newline (int fd);
-extern void cob_accept (struct cob_field f, int fd);
-extern void cob_accept_date (struct cob_field f);
-extern void cob_accept_day (struct cob_field f);
-extern void cob_accept_day_of_week (struct cob_field f);
-extern void cob_accept_time (struct cob_field f);
-extern void cob_accept_command_line (struct cob_field f);
-extern void cob_accept_environment (struct cob_field f, struct cob_field env);
+extern void cob_accept (cob_field *f, int fd);
+extern void cob_accept_date (cob_field *f);
+extern void cob_accept_day (cob_field *f);
+extern void cob_accept_day_of_week (cob_field *f);
+extern void cob_accept_time (cob_field *f);
+extern void cob_accept_command_line (cob_field *f);
+extern void cob_accept_environment (cob_field *f, cob_field *env);
 
 #endif /* COB_TERMIO_H_ */

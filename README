@@ -1,23 +1,29 @@
+			       OpenCOBOL
+		       http://www.open-cobol.org/
+
 OpenCOBOL is an open-source COBOL compiler, which translates COBOL
 programs to C code and compiles it using GCC.
 
 This package contains the following subdirectories:
 
-  cobc          COBOL compiler
-  cobpp         COBOL preprocessor
-  libcob        COBOL run-time library
-  lib           static library and common headers
-  po            localization files
-  texi          Texinfo files
-  testsuite     Test suite
+    cobc        COBOL compiler
+    cobpp       COBOL preprocessor
+    libcob      COBOL run-time library
+    lib         static library and common headers
+    po          international messages
+    texi        Texinfo files
+    testsuite   Test suite
 
 All programs excepts those in lib and libcob are distributed under
 the GNU General Public License.  See COPYING for details.
 
-Programs those in lib and libcob are distributed under the GNU
-Lesser General Public License.  See COPYING.LIB for details.
+Programs in lib and libcob are distributed under the GNU Lesser
+General Public License.  See COPYING.LIB for details.
 
 See AUTHORS for the author of each file.
+
+Requirement
+===========
 
 OpenCOBOL requires the following external libraries to be installed:
 
@@ -35,7 +41,7 @@ OpenCOBOL requires the following external libraries to be installed:
 
     GNU Libtool is distributed under GNU Lesser General Public License.
 
-  o Berkeley DB (libdb) 2.0 or later
+  o Berkeley DB (libdb) 1.85 or later
     http://www.sleepycat.com/
 
     libdb is used to implement indexed file I/O.
@@ -61,14 +67,41 @@ OpenCOBOL requires the following external libraries to be installed:
     You must distribute your COBOL programs under GNU GPL
     if you are going to link them with Readline.
 
+Installation
+============
+
+Installing OpenCOBOL is typically done by the following commands:
+
+    ./configure
+    make
+    make install
+
+You can give the following options to the configure scripts:
+
+    --with-readline     Link with libreadline
+
 See INSTALL for general installation instruction.
-Generally, this must be done by the following commands:
 
-  ./configure
-  make install
+Development
+===========
 
-See HACKING for the developer's guide.
+If you are a developer, consider building the latest OpenCOBOL
+from the CVS repository.
 
-See the following page for more information about OpenCOBOL:
+You need to install the following extra packages before building
+OpenCOBOL:
 
-  http://www.open-cobol.org/
+  o Autoconf 2.56
+  o Automake 1.7.1
+  o Libtool 1.4.3
+  o gettext 0.11.5
+  o Bison 1.35
+  o Flex 2.5.4
+
+After checking out the latest source from the repository, run
+"autoreconf -i" to generate configure script.  You need to run
+autoreconf whenever you modify configure.ac or Makefile.am.
+
+You might want to run your configure script with option
+--enable-maintainer-mode during development so that make
+will automatically regenerate configure script and so on.

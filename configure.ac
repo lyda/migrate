@@ -18,9 +18,9 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 # 02111-1307, USA.
 
-AC_PREREQ(2.54)
+AC_PREREQ(2.56)
 
-AC_INIT([OpenCOBOL],[0.9.7.9],[knishida@coboler.com],[open-cobol])
+AC_INIT([OpenCOBOL],[0.10],[knishida@coboler.com],[open-cobol])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_HEADERS([config.h])
@@ -104,7 +104,7 @@ AC_CHECK_FUNCS([dbopen], ,
 
 # Checks for gmp.
 AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp.h is required))
-AC_CHECK_LIB([gmp], [__gmp_rand], , AC_MSG_ERROR(gmp3 is required))
+AC_CHECK_LIB([gmp], [__gmp_rand], , AC_MSG_ERROR(GMP 3 or later is required))
 LIBCOB_LIBS="$LIBCOB_LIBS -lgmp"
 
 # Checks for ltdl.
@@ -145,7 +145,7 @@ fi
 COB_COBPP="cobpp"
 COB_CFLAGS="-I$includedir"
 COB_LIBS="-L$libdir -lcob ${LIBCOB_LIBS}"
-COB_CONFIG_FILE="$sysconfdir/$PACKAGE_TARNAME/libcob.conf"
+COB_CONFIG_FILE="$sysconfdir/libcob.conf"
 COB_LIBRARY_PATH=".:$libdir/$PACKAGE_TARNAME"
 COB_MODULE_EXT=`echo "$shlibext" | sed 's/dll\.a/dll/'`
 LIBS="$save_libs"

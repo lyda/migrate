@@ -71,33 +71,35 @@
 #define COB_SCREEN_SECURE	0x10000000
 #define COB_SCREEN_UNDERLINE	0x20000000
 
-enum cob_screen_type {
+typedef struct __cob_screen cob_screen;
+
+typedef enum {
   COB_SCREEN_TYPE_GROUP,
   COB_SCREEN_TYPE_FIELD,
   COB_SCREEN_TYPE_VALUE,
   COB_SCREEN_TYPE_ATTRIBUTE
-};
+} cob_screen_type;
 
-union cob_screen_data {
-  struct cob_screen *child;	/* for COB_SCREEN_TYPE_GROUP */
-  struct cob_field *field;	/* for COB_SCREEN_TYPE_FIELD */
+typedef union {
+  cob_screen *child;		/* for COB_SCREEN_TYPE_GROUP */
+  cob_field *field;		/* for COB_SCREEN_TYPE_FIELD */
   char *value;			/* for COB_SCREEN_TYPE_VALUE */
   int dummy;			/* for COB_SCREEN_TYPE_ATTRIBUTE */
-};
+} cob_screen_data;
 
-union cob_screen_position {
+typedef union {
   int val;
-  struct cob_field *ptr;
-};
+  cob_field *ptr;
+} cob_screen_position;
 
-struct cob_screen {
-  enum cob_screen_type type;
-  union cob_screen_data data;
-  struct cob_screen *next;
-  struct cob_field *from;
-  struct cob_field *to;
-  union cob_screen_position line;
-  union cob_screen_position column;
+struct __cob_screen {
+  cob_screen_type type;
+  cob_screen_data data;
+  cob_screen *next;
+  cob_field *from;
+  cob_field *to;
+  cob_screen_position line;
+  cob_screen_position column;
   long attr;
 };
 
@@ -106,7 +108,7 @@ extern void cob_screen_clear (void);
 extern void cob_screen_attr (int line, int column, long attr);
 extern void cob_screen_puts (const char *data, size_t size, int line, int column, long attr);
 extern void cob_screen_gets (char *data, size_t size, int line, int column, long attr);
-extern void cob_screen_display (struct cob_screen *s, int line, int column);
-extern void cob_screen_accept (struct cob_screen *s, int line, int column);
+extern void cob_screen_display (cob_screen *s, int line, int column);
+extern void cob_screen_accept (cob_screen *s, int line, int column);
 
 #endif /* COB_SCREENIO_H_ */

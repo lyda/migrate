@@ -67,9 +67,9 @@ static int scan_picture (char *text);
 
 %%
 
-<*>[ \t,;]+ { /* ignore */ }
+<*>[ \t,;]+	{ /* ignore */ }
 
-<*>\n { yylloc.first_line = ++cobc_source_line; }
+<*>\n		{ cobc_source_line++; }
 
 ^"#".* {
   /* line directive */
@@ -77,7 +77,6 @@ static int scan_picture (char *text);
   cobc_source_line = strtol (yytext + 2, &endp, 10) - 1;
   cobc_source_file = strdup (strchr (endp, '"') + 1);
   strrchr (cobc_source_file, '"')[0] = '\0';
-  yylloc.text = cobc_source_file;
 }
 
 "PIC" |
@@ -112,6 +111,7 @@ X\"[^\"\n]*\" {
 
 [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)? {
   int token;
+  struct cobc_word *word;
   SAVE_YYTEXT;
 
   /* reserved word */
@@ -120,25 +120,23 @@ X\"[^\"\n]*\" {
     return token;
 
   /* user word */
-  yylval.word = lookup_user_word (yytext);
-  if (cobc_in_procedure)
+  word = lookup_word (yytext);
+  yylval.tree = make_reference (word);
+  yylval.tree->loc.text = cobc_source_file;
+  yylval.tree->loc.first_line = cobc_source_line;
+
+  if (cobc_in_procedure && word->count > 0)
     {
-      if (!yylval.word->item || COBC_LABEL_P (yylval.word->item))
-	{
-	  return LABEL_WORD;
-	}
-      if (COBC_BUILTIN_P (yylval.word->item))
-	{
-	  yylval.tree = yylval.word->item;
-	  return MNEMONIC_NAME;
-	}
-      if (COBC_CLASS_P (yylval.word->item))
-	{
-	  yylval.tree = yylval.word->item;
-	  return CLASS_NAME;
-	}
+      cobc_tree x = word->items->item;
+
+      if (COBC_BUILTIN_P (x))
+	return MNEMONIC_NAME;
+
+      if (COBC_CLASS_P (x))
+	return CLASS_NAME;
     }
-  return WORD;
+
+  return NAME;
 }
 
 "<="		{ return LE; }
@@ -293,6 +291,7 @@ scan_picture (char *text)
 #define PIC_NATIONAL		0x04
 #define PIC_EDITED		0x08
 #define PIC_ALPHANUMERIC	(PIC_ALPHABETIC | PIC_NUMERIC)
+#define PIC_ALPHABETIC_EDITED	(PIC_ALPHABETIC | PIC_EDITED)
 #define PIC_ALPHANUMERIC_EDITED	(PIC_ALPHANUMERIC | PIC_EDITED)
 #define PIC_NUMERIC_EDITED	(PIC_NUMERIC | PIC_EDITED)
 #define PIC_NATIONAL_EDITED	(PIC_NATIONAL | PIC_EDITED)
@@ -476,7 +475,6 @@ yylex_picture (char *str)
   buff[idx] = 0;
 
   /* set picture */
-  pic->str = buff;
   pic->size = size;
   pic->digits = digits;
   pic->decimals = decimals;
@@ -485,16 +483,29 @@ yylex_picture (char *str)
   /* set picture category */
   switch (category)
     {
-    case PIC_ALPHABETIC:		pic->category = 'A'; break;
-    case PIC_NUMERIC:			pic->category = '9'; break;
+    case PIC_ALPHABETIC:
+      pic->category = COB_TYPE_ALPHABETIC;
+      break;
+    case PIC_NUMERIC:
+      pic->category = COB_TYPE_NUMERIC;
+      break;
     case PIC_ALPHANUMERIC:
-    case PIC_NATIONAL:			pic->category = 'X'; break;
-    case PIC_NUMERIC_EDITED:		pic->category = '0'; break;
+    case PIC_NATIONAL:
+      pic->category = COB_TYPE_ALPHANUMERIC;
+      break;
+    case PIC_NUMERIC_EDITED:
+      pic->str = buff;
+      pic->category = COB_TYPE_NUMERIC_EDITED;
+      break;
     case PIC_EDITED:
-    case PIC_ALPHABETIC | PIC_EDITED:
+    case PIC_ALPHABETIC_EDITED:
     case PIC_ALPHANUMERIC_EDITED:
-    case PIC_NATIONAL_EDITED:		pic->category = 'E'; break;
-    default:				goto error;
+    case PIC_NATIONAL_EDITED:
+      pic->str = buff;
+      pic->category = COB_TYPE_ALPHANUMERIC_EDITED;
+      break;
+    default:
+      goto error;
     }
 
   return pic;

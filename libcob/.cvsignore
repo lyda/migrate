@@ -3,4 +3,4 @@
 .deps
 .libs
 Makefile
-stamp-h*
+Makefile.in

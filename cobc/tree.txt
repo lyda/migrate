@@ -1,0 +1,87 @@
+note on cobol tree					-*- outline -*-
+
+* Types
+
+Name        USAGE
+------      -----
+display     DISPLAY                 
+binary      COMP, BINARY
+packed      COMP-3, PACKED-DECIMAL
+float       COMP-1, COMP-2, FLOAT-SHORT, FLOAT-LONG, FLOAT-EXTEND
+ordered     COMP-5
+index       INDEX
+pointer     POINTER
+
+* Parameter types
+
+Name        C type
+----        ------
+int         int
+double      double
+string      unsigned char *
+pointer     void *
+decimal     cob_decimal *
+field       cob_field *
+file        cob_file *
+
+* Tree
+
+** Primitives
+
+const           組み込み定数
+integer         整数
+literal         文字列
+decimal         十進数
+field           変数
+file            ファイル
+
+** Expressions
+
+reference       名前参照
+binary_op       二項演算
+funcall         関数呼び出し
+cast_int32      整数値への変換
+
+** Statements
+
+label           ラベル文
+if              IF 文
+perform         PERFORM 文
+block           複合文
+
+** Miscellaneous
+
+class           CLASS 句
+builtin
+parameter
+
+* Terms
+
+** Word
+
+Word は、プログラム中に現れる任意の名前を、特定のデータと
+結び付けるために用いられる。
+
+プログラム中で名前が表われると、テーブルから対応した Word
+が見付けられる。しかし、その時点ではそれがどのデータと
+結び付いているか判断することは出来ない。
+
+一つの Word は、複数のアイテムにリンクされる。
+
+Word は構文木の要素ではなく、位置情報を持たない。
+
+** Field
+
+Field は、特定の項目を表現する。
+
+Field の位置は、その Field が定義された位置である。
+
+** Reference
+
+Reference は、プログラム中に現れた名前と、それに関連付け
+られた項目を表現する。
+
+Reference は名前が現れる度に生成され、それに対応する Word
+と位置情報を記録する。
+
+Reference の位置は、その名前が現れた位置である。

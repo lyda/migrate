@@ -50,42 +50,36 @@ cob_init_termio (void)
  */
 
 void
-cob_display (struct cob_field f, int fd)
+cob_display (cob_field *f, int fd)
 {
-  switch (COB_FIELD_TYPE (f))
+  if (COB_FIELD_IS_NUMERIC (f))
     {
-    case COB_BINARY:
-    case COB_PACKED:
-    case COB_DISPLAY:
-      {
-	int i;
-	int size = (f.desc->digits
-		    + (f.desc->have_sign ? 1 : 0)
-		    + (f.desc->decimals > 0 ? 1 : 0));
-	unsigned char pic[9], *p = pic;
-	unsigned char data[size];
-	struct cob_field_desc desc =
-	  {'0', f.desc->digits, f.desc->decimals};
-	struct cob_field temp = {size, data, &desc};
-	desc.pic = pic;
-	if (f.desc->have_sign)
-	  p += sprintf (p, "+\001");
-	if (f.desc->decimals > 0)
-	  sprintf (p, "9%c.%c9%c", f.desc->digits - f.desc->decimals,
-		   1, f.desc->decimals);
-	else
-	  sprintf (p, "9%c", f.desc->digits);
-	cob_move (f, temp);
-	for (i = 0; i < size; i++)
-	  fputc (data[i], cob_stream[fd]);
-      }
-      break;
-    default:
-      {
-	size_t i;
-	for (i = 0; i < f.size; i++)
-	  fputc (f.data[i], cob_stream[fd]);
-      }
+      int i;
+      int size = (f->attr->digits
+		  + (f->attr->have_sign ? 1 : 0)
+		  + (f->attr->decimals > 0 ? 1 : 0));
+      unsigned char pic[9], *p = pic;
+      unsigned char data[size];
+      cob_field_attr attr =
+	{COB_TYPE_NUMERIC_EDITED, f->attr->digits, f->attr->decimals};
+      cob_field temp = {size, data, &attr};
+      attr.pic = pic;
+      if (f->attr->have_sign)
+	p += sprintf (p, "+\001");
+      if (f->attr->decimals > 0)
+	sprintf (p, "9%c.%c9%c", f->attr->digits - f->attr->decimals,
+		 1, f->attr->decimals);
+      else
+	sprintf (p, "9%c", f->attr->digits);
+      cob_move (f, &temp);
+      for (i = 0; i < size; i++)
+	fputc (data[i], cob_stream[fd]);
+    }
+  else
+    {
+      size_t i;
+      for (i = 0; i < f->size; i++)
+	fputc (f->data[i], cob_stream[fd]);
     }
 }
 
@@ -98,7 +92,7 @@ cob_newline (int fd)
 
 #ifdef COB_DEBUG
 void
-cob_debug_print (struct cob_field f)
+cob_debug_print (cob_field *f)
 {
   cob_display (f, COB_SYSOUT);
   cob_newline (COB_SYSOUT);
@@ -111,7 +105,7 @@ cob_debug_print (struct cob_field f)
  */
 
 void
-cob_accept (struct cob_field f, int fd)
+cob_accept (cob_field *f, int fd)
 {
   size_t size;
   char buff[BUFSIZ];
@@ -132,54 +126,54 @@ cob_accept (struct cob_field f, int fd)
       size = strlen (buff) - 1;
     }
 
-  if (size > f.size)
-    size = f.size;
-  memcpy (f.data, buff, size);
-  memset (f.data + size, ' ', f.size - size);
+  if (size > f->size)
+    size = f->size;
+  memcpy (f->data, buff, size);
+  memset (f->data + size, ' ', f->size - size);
 }
 
 void
-cob_accept_date (struct cob_field f)
+cob_accept_date (cob_field *f)
 {
   char s[7];
   time_t t = time (NULL);
   struct tm *tm = localtime (&t);
   sprintf (s, "%02d%02d%02d", tm->tm_year % 100, tm->tm_mon + 1, tm->tm_mday);
-  cob_mem_move (f, s, 6);
+  cob_memcpy (f, s, 6);
 }
 
 void
-cob_accept_day (struct cob_field f)
+cob_accept_day (cob_field *f)
 {
   char s[6];
   time_t t = time (NULL);
   struct tm *tm = localtime (&t);
   sprintf (s, "%02d%03d", tm->tm_year % 100, tm->tm_yday + 1);
-  cob_mem_move (f, s, 5);
+  cob_memcpy (f, s, 5);
 }
 
 void
-cob_accept_day_of_week (struct cob_field f)
+cob_accept_day_of_week (cob_field *f)
 {
   char s[2];
   time_t t = time (NULL);
   struct tm *tm = localtime (&t);
   sprintf (s, "%01d", ((tm->tm_wday + 6) % 7) + 1);
-  cob_mem_move (f, s, 1);
+  cob_memcpy (f, s, 1);
 }
 
 void
-cob_accept_time (struct cob_field f)
+cob_accept_time (cob_field *f)
 {
   char s[9];
   time_t t = time (NULL);
   struct tm *tm = localtime (&t);
   sprintf (s, "%02d%02d%02d%02d", tm->tm_hour, tm->tm_min, tm->tm_sec, 0);
-  cob_mem_move (f, s, 8);
+  cob_memcpy (f, s, 8);
 }
 
 void
-cob_accept_command_line (struct cob_field f)
+cob_accept_command_line (cob_field *f)
 {
   int i, size = 0;
   char buff[BUFSIZ];
@@ -195,14 +189,14 @@ cob_accept_command_line (struct cob_field f)
       buff[size++] = ' ';
     }
 
-  cob_mem_move (f, buff, size);
+  cob_memcpy (f, buff, size);
 }
 
 void
-cob_accept_environment (struct cob_field f, struct cob_field env)
+cob_accept_environment (cob_field *f, cob_field *env)
 {
-  char buff[env.size + 1];
+  char buff[env->size + 1];
   char *p = getenv (cob_field_to_string (env, buff));
   if (!p) p = "";
-  cob_mem_move (f, p, strlen (p));
+  cob_memcpy (f, p, strlen (p));
 }

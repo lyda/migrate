@@ -29,15 +29,12 @@
 #define COBC_COPYRIGHT	"Copyright (C) 2001-2002 Keisuke Nishida\n"
 
 extern struct cobc_flags {
-  int main;		/* 1 generates a main function */
-  int failsafe;		/* 1 generates run-time error checking */
-  int static_call;	/* 1 generates static CALL statements */
-  int source_location;	/* 1 generates cob_source_file/line */
-  int line_directive;	/* 1 generates line directives */
+  int main;		/* a main function */
+  int failsafe;		/* run-time error checking */
+  int static_call;	/* static CALL statements */
+  int source_location;	/* cob_source_file/line */
+  int line_directive;	/* line directives */
 } cobc_flags;
-
-extern char *cobc_index_func;
-extern char *cobc_index_depending_func;
 
 extern FILE *yyin;
 extern FILE *cobc_out;

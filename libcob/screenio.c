@@ -28,9 +28,9 @@
 #include "screenio.h"
 
 #define SCREEN_LINE_POS(s) \
-  (((s->attr & COB_SCREEN_LINE_CONST) ? s->line.val : cob_to_int (*s->line.ptr)) - 1)
+  ((COB_SCREEN_LINE_CONST ? s->line.val : cob_to_int (s->line.ptr)) - 1)
 #define SCREEN_COLUMN_POS(s) \
-  (((s->attr & COB_SCREEN_COLUMN_CONST) ? s->column.val : cob_to_int (*s->column.ptr)) - 1)
+  ((COB_SCREEN_COLUMN_CONST ? s->column.val : cob_to_int (s->column.ptr)) - 1)
 
 #if HAVE_LIBNCURSES
 static int screen_initialized = 0;
@@ -83,7 +83,7 @@ cob_screen_gets (char *data, size_t size, int line, int column, long attr)
 }
 
 void
-cob_screen_display (struct cob_screen *s, int line, int column)
+cob_screen_display (cob_screen *s, int line, int column)
 {
   switch (s->type)
     {
@@ -99,7 +99,7 @@ cob_screen_display (struct cob_screen *s, int line, int column)
 	  {
 	    int line = SCREEN_LINE_POS (s);
 	    int column = SCREEN_COLUMN_POS (s);
-	    cob_move (*s->from, *s->data.field);
+	    cob_move (s->from, s->data.field);
 	    cob_screen_puts (s->data.field->data, s->data.field->size,
 			     line, column, s->attr);
 	  }
@@ -124,7 +124,7 @@ cob_screen_display (struct cob_screen *s, int line, int column)
 }
 
 void
-cob_screen_accept (struct cob_screen *s, int line, int column)
+cob_screen_accept (cob_screen *s, int line, int column)
 {
   switch (s->type)
     {
@@ -142,7 +142,7 @@ cob_screen_accept (struct cob_screen *s, int line, int column)
 	    int column = SCREEN_COLUMN_POS (s);
 	    cob_screen_gets (s->data.field->data, s->data.field->size,
 			     line, column, s->attr);
-	    cob_move (*s->data.field, *s->to);
+	    cob_move (s->data.field, s->to);
 	  }
 	break;
       }

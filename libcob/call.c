@@ -209,7 +209,7 @@ cob_resolve_error (void)
  */
 
 void *
-cob_call_resolve (struct cob_field f)
+cob_call_resolve (cob_field *f)
 {
   char buff[FILENAME_MAX];
   return cob_resolve (cob_field_to_string (f, buff));
@@ -222,7 +222,7 @@ cob_call_error (void)
 }
 
 void
-cob_cancel (struct cob_field f)
+cob_cancel (cob_field *f)
 {
   char buff[FILENAME_MAX];
   return drop (cob_field_to_string (f, buff));

@@ -29,15 +29,13 @@ extern char cobc_last_text[];
 
 extern int cobc_in_procedure;
 
-extern struct cobc_location yylloc;
-
 extern int yylex (void);
 extern struct cobc_picture *yylex_picture (char *str);
 
 extern void yywarn (char *fmt, ...);
 extern void yyerror (char *fmt, ...);
-extern void yywarn_loc (struct cobc_location *loc, char *fmt, ...);
-extern void yyerror_loc (struct cobc_location *loc, char *fmt, ...);
+extern void yywarn_loc (cobc_tree x, char *fmt, ...);
+extern void yyerror_loc (cobc_tree x, char *fmt, ...);
 extern void yywarn_tree (cobc_tree x, char *fmt, ...);
 extern void yyerror_tree (cobc_tree x, char *fmt, ...);
 

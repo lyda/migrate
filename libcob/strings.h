@@ -22,35 +22,25 @@
 
 #include <libcob/common.h>
 
-#define COB_INSPECT_END			0
-#define COB_INSPECT_INIT	     	1
-#define COB_INSPECT_BEFORE      	2
-#define COB_INSPECT_AFTER		3
-#define COB_INSPECT_TALLYING     	4
-#define COB_INSPECT_REPLACING     	5
-#define COB_INSPECT_CONVERTING     	6
-#define COB_INSPECT_CHARACTERS		7
-#define COB_INSPECT_ALL			8
-#define COB_INSPECT_LEADING		9
-#define COB_INSPECT_FIRST	      	10
+extern void cob_inspect_init (cob_field *var, int replacing);
+extern void cob_inspect_start (void);
+extern void cob_inspect_before (cob_field *str);
+extern void cob_inspect_after (cob_field *str);
+extern void cob_inspect_characters (cob_field *f1);
+extern void cob_inspect_all (cob_field *f1, cob_field *f2);
+extern void cob_inspect_leading (cob_field *f1, cob_field *f2);
+extern void cob_inspect_first (cob_field *f1, cob_field *f2);
+extern void cob_inspect_converting (cob_field *f1, cob_field *f2);
+extern void cob_inspect_finish (void);
 
-#define COB_STRING_END			0
-#define COB_STRING_CONCATENATE		1
-#define COB_STRING_DELIMITED_NAME	2
-#define COB_STRING_DELIMITED_SIZE	3
-#define COB_STRING_WITH_POINTER		4
+extern void cob_string_init (cob_field *dst, cob_field *ptr);
+extern void cob_string_append (cob_field *src, cob_field *dlm);
+extern void cob_string_finish (void);
 
-#define COB_UNSTRING_END		0
-#define COB_UNSTRING_INTO		1
-#define COB_UNSTRING_DELIMITER		2
-#define COB_UNSTRING_COUNT		3
-#define COB_UNSTRING_DELIMITED_BY	4
-#define COB_UNSTRING_DELIMITED_ALL	5
-#define COB_UNSTRING_WITH_POINTER	6
-#define COB_UNSTRING_TALLYING		7
-
-extern void cob_inspect (struct cob_field var, ...);
-extern void cob_string (struct cob_field dst, ...);
-extern void cob_unstring (struct cob_field src, ...);
+extern void cob_unstring_init (cob_field *src, cob_field *ptr);
+extern void cob_unstring_delimited (cob_field *dlm, int all);
+extern void cob_unstring_into (cob_field *dst, cob_field *dlm, cob_field *cnt);
+extern void cob_unstring_tallying (cob_field *f);
+extern void cob_unstring_finish (void);
 
 #endif /* COB_STRINGS_H_ */

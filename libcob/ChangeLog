@@ -1,13 +1,172 @@
+2002-11-25  Keisuke Nishida  <knishida@netlab.jp>
+
+	* numeric.c (cob_decimal_get, cob_decimal_get_r): Copy decimal
+	before modifying it.
+
+2002-11-25  Keisuke Nishida  <knishida@netlab.jp>
+
+	* strings.h (cob_inspect_init): Take second argument `replacing'.
+	(cob_inspect_characters): New function.
+	(cob_inspect_all): New function.
+	(cob_inspect_leading): New function.
+	(cob_inspect_first): New function.
+
+2002-11-25  Keisuke Nishida  <knishida@netlab.jp>
+
+	* common.h, common.c (cob_cmp_int): New function.
+
+2002-11-24  Keisuke Nishida  <knishida@netlab.jp>
+
+	* move.h, move.c (cob_memcpy): Renamed from cob_mem_move.
+
+	* fileio.h (COB_ASCENDING, COB_DESCENDING): Moved from common.h.
+
+	* common.h (cob_field_attr): Remove member `all'.
+	(COB_TYPE_*): New macros.
+	(COB_FIELD_IS_NUMERIC): New macro.
+
+	* numeric.h (cob_d1, cob_d2, cob_d3, cob_d4, cob_dt): Removed.
+	(cob_decimal_set_int64): Removed.
+	* numeric.h, numeric.c (cob_numeric_cmp): New function.
+	* common.c (cob_cmp): Call `cob_numeric_cmp' for numeric comparison.
+	* fileio.c (sort_compare): Always call cob_cmp.
+
+2002-11-23  Keisuke Nishida  <knishida@netlab.jp>
+
+	* numeric.h, numeric.c (cob_add_r, cob_sub_r): New functions.
+	(cob_decimal_get_r): Renamed from `cob_decimal_get_rounded'.
+
+2002-11-22  Keisuke Nishida  <knishida@netlab.jp>
+
+	* fileio.h, fileio.c (cob_sort_init): Take 3 arguments.
+
+2002-11-22  Keisuke Nishida  <knishida@netlab.jp>
+
+	* common.h, common.c (cob_uint_attr, cob_sint_attr): New constants.
+	* common.h, common.c (cob_ubin_attr, cob_sbin_attr): New constants.
+
 2002-11-21  Keisuke Nishida  <knishida@netlab.jp>
 
-	* strings.c (set_int, add_int): Removed.
-
-	* numeric.c (cob_add, cob_add_int, cob_add_int64): Init cob_status.
-	* numeric.c (cob_sub, cob_sub_int, cob_sub_int64): Init cob_status.
+	* numeric.h, numeric.c (cob_add, cob_sub, cob_add_int, cob_sub_int):
+	Don't take parameter `round'.  All caller updated.
 
 2002-11-19  Keisuke Nishida  <knishida@netlab.jp>
 
 	* fileio.c (lineseq_read): Not do anything special with '\0'.
+
+2002-11-19  Keisuke Nishida  <knishida@netlab.jp>
+
+	* strings.h, strings.c: Divide string functions.
+	(cob_inspect, cob_string, cob_unstring): Removed.
+	(cob_inspect_init): New function.
+	(cob_inspect_start): New function.
+	(cob_inspect_before): New function.
+	(cob_inspect_after): New function.
+	(cob_inspect_tallying_characters): New function.
+	(cob_inspect_tallying_all): New function.
+	(cob_inspect_tallying_leading): New function.
+	(cob_inspect_replacing_characters): New function.
+	(cob_inspect_replacing_all): New function.
+	(cob_inspect_replacing_leading): New function.
+	(cob_inspect_replacing_first): New function.
+	(cob_inspect_converting): New function.
+	(cob_inspect_finish): New function.
+	(cob_string_init): New function.
+	(cob_string_append): New function.
+	(cob_string_finish): New function.
+	(cob_unstring_init): New function.
+	(cob_unstring_delimited): New function.
+	(cob_unstring_init): New function.
+	(cob_unstring_tallying): New function.
+	(cob_unstring_finish): New function.
+	* strings.h (COB_INSPECT_*, COB_STRING_*, COB_UNSTRING_*): Removed.
+
+2002-11-13  Keisuke Nishida  <knishida@netlab.jp>
+
+	* common.h, common.c (cob_all_attr): New variable.
+	(cob_just_attr): Renamed from `cob_alnum_justified_attr'.
+	(cob_cmp): New function.
+	(cob_cmp_zero, cob_cmp_space, cob_cmp_low): Removed.
+	(cob_cmp_high, cob_cmp_quote, cob_cmp_field): Removed.
+	* common.c (cmp_char): Renamed from `cmp_figurative'.
+	(cob_cmp_alnum): Renamed from `cmp_field'.
+	* fileio.c (sort_compare): Updated.
+
+2002-11-13  Keisuke Nishida  <knishida@netlab.jp>
+
+	* common.h (cob_status): Removed.
+	(cob_error_code): New variable.
+	(COB_STATUS_SUCCESS, COB_STATUS_OVERFLOW): Removed.
+	(COB_EC_*): New macros.
+	All files updated.
+
+	* strings.h (COB_STRING_WITH_POINTER): Removed.
+	(COB_UNSTRING_WITH_POINTER): Removed.
+	* strings.h, strings.c (cob_string, cob_unstring): Take second
+	argument `ptr'.
+	* strings.c (set_int, add_int): Removed.
+
+2002-11-11  Keisuke Nishida  <knishida@netlab.jp>
+
+	* fileio.h (COB_FILE_OUT_OF_KEY_RANGE): New macro.
+	* fileio.c (relative_read_next): Use COB_FILE_OUT_OF_KEY_RANGE.
+	(cob_default_error_handle): Add COB_FILE_OUT_OF_KEY_RANGE.
+
+2002-11-08  Keisuke Nishida  <knishida@netlab.jp>
+
+	* common.h (cob_field_attr): New member `all'.
+	* common.c, common.h (cob_cmp_str, cob_cmp_all): Removed.
+	* common.c (cob_cmp_field): Integrate comparison functions.
+
+2002-11-08  Keisuke Nishida  <knishida@netlab.jp>
+
+	* support.h: Removed.
+	* Makefile.am: Remove support.h.
+
+2002-11-07  Keisuke Nishida  <knishida@netlab.jp>
+
+	* numeric.c, numeric.h (cob_add_int, cob_sub_int): Do not take
+	argument `decimals'.  All callers updated.
+
+2002-10-21  Keisuke Nishida  <knishida@netlab.jp>
+
+	* common.c (cmp_figurative): New function.
+	* common.c, common.h (cob_cmp_zero, cob_cmp_space): New functions.
+	(cob_cmp_low, cob_cmp_high, cob_cmp_quote): New functions.
+
+2002-10-18  Keisuke Nishida  <knishida@netlab.jp>
+
+	* numeric.h, numeric.c (cob_add_int64, cob_sub_int64): Removed.
+
+2002-10-13  Keisuke Nishida  <knishida@netlab.jp>
+
+	* fileio.h (cob_file): New member `record', replacing
+	`record_size' and `record_data'.
+	(cob_file): Rename `record_depending' to `record_size'.
+	* fileio.c: Updated.
+
+2002-10-13  Keisuke Nishida  <knishida@netlab.jp>
+
+	* common.h (cob_field_attr, cob_field): New typedef.
+	* fileio.h (cob_file_key, cob_file, cob_fileio_funcs): New typedef.
+	* numeric.h (cob_decimal): New typedef.
+	* screenio.h (cob_screen): New typedef.
+	(cob_screen_type, cob_screen_data, cob_screen_position): New typedef.
+	* support.h (cob_frame): New typedef.
+
+2002-10-08  Keisuke Nishida  <knishida@netlab.jp>
+
+	* Use `struct cob_field *' instead of `struct cob_field'
+	for all function prototypes.  All files updated.
+	* common.h (COB_FIELD_IS_VALID): Removed.
+
+	* common.h (cob_field_attr): Renamed from cob_field_desc.
+	All files updated.
+
+	* common.c, common.h (cob_group_attr): New variable.
+	(cob_alnum_justified_attr): New variable.
+
+	* support.h (cob_ref, cob_ref_rest): Removed.
 
 2002-09-30  Keisuke Nishida  <knishida@netlab.jp>
 
