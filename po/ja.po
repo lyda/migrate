@@ -1,7 +1,7 @@
 # Japanese translations for OpenCOBOL package
-# PACKAGE パッケージに対する英訳.
+# OpenCOBOL パッケージに対する英訳.
 # Copyright (C) 2002 Keisuke Nishida
-# This file is distributed under the same license as the PACKAGE package.
+# This file is distributed under the same license as the OpenCOBOL package.
 # Keisuke Nishida <knishida@coboler.com>, 2002.
 #
 msgid ""
