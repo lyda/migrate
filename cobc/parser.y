@@ -4753,6 +4753,12 @@ validate_move (cobc_tree src, cobc_tree dst, int value_flag)
     case cobc_tag_field:
     case cobc_tag_reference:
       {
+	/* non-elementary move (ISO+IEC+1989-2002 14.8.24.3-2) */
+	if (COBC_TREE_TYPE (src) == COB_TYPE_GROUP
+	    || COBC_TREE_TYPE (dst) == COB_TYPE_GROUP)
+	  break;
+
+	/* elementary move */
 	switch (tree_category (src))
 	  {
 	  case COB_TYPE_ALPHANUMERIC:
@@ -4775,10 +4781,7 @@ validate_move (cobc_tree src, cobc_tree dst, int value_flag)
 	      case COB_TYPE_ALPHANUMERIC:
 	      case COB_TYPE_ALPHANUMERIC_EDITED:
 		if (tree_category (src) == COB_TYPE_NUMERIC
-		    && field (src)->pic->expt < 0
-		    /* FIXME: NC105A of NIST testsuite fails
-		       without this.  Why? */
-		    && field (dst)->children == 0)
+		    && field (src)->pic->expt < 0)
 		  goto invalid;
 		break;
 	      }
