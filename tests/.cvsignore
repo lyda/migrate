@@ -1,7 +1,6 @@
 *.dir
 *.log
 Makefile
-Makefile.in
 atconfig
 atlocal
 package.m4
