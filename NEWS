@@ -73,6 +73,8 @@ The config option `auto-initialize' controls this.
 
 *** OPEN ... WITH NO REWIND / WITH LOCK recognized, though not working.
 
+*** Literal concatenation (the `&' operator).
+
 ** Compiler changes
 
 *** New compiler environment variable TMPDIR.
