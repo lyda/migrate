@@ -13,6 +13,7 @@ syntax_DEPENDENCIES = \
 	syntax.src/redefines.at \
 	syntax.src/value.at \
 	syntax.src/move.at \
+	syntax.src/set.at \
 	syntax.src/occurs.at \
 	syntax.src/subscripts.at
 

@@ -303,7 +303,7 @@ at_times_file=$at_suite_dir/at-times
 # List of the tested programs.
 at_tested='cobc'
 # List of the all the test groups.
-at_groups_all=' 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69'
+at_groups_all=' 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70'
 # As many dots as there are digits in the last test group number.
 # Used to normalize the test group numbers so that `ls' lists them in
 # numerical order.
@@ -378,6 +378,7 @@ at_help_all='1;copy.at:21;COPY: file not found;copy;
 67;multiply.at:27;Category check of Format 1;;
 68;multiply.at:60;Category check of Format 2;;
 69;multiply.at:95;Category check of literals;;
+70;set.at:23;SET: misc;;
 '
 
 at_keywords=
@@ -5113,6 +5114,62 @@ case $at_status in
             exit 77;;
    1) ;;
    *) echo "multiply.at:115: exit code was $at_status, expected 1"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  70 ) # 70. set.at:23: SET: misc
+    at_setup_line='set.at:23'
+    at_desc='SET: misc'
+    $at_quiet $ECHO_N " 70: SET: misc                                    $ECHO_C"
+    at_xfail=no
+    (
+      echo "70. set.at:23: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X.
+       PROCEDURE        DIVISION.
+           SET ADDRESS OF X TO NULL.
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "set.at:38: \${COMPILE_ONLY} prog.cob"
+echo set.at:38 >$at_check_line_file
+( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+echo >>$at_stderr; echo "prog.cob:8: the address of \`X' cannot be changed
+" | $at_diff - $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   1) ;;
+   *) echo "set.at:38: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
