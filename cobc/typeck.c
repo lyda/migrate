@@ -951,10 +951,6 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 				 cb_build_string (buff, f->size),
 				 cb_build_cast_length (dst));
     }
-  else if (cb_fits_int (src) && cb_literal_to_int (l) == 0)
-    {
-      return cb_build_move_zero (dst);
-    }
   else if (cb_fits_int (src)
 	   && f->usage == CB_USAGE_BINARY_NATIVE
 	   && (f->size == 1 || f->size == 2 || f->size == 4 || f->size == 8))
@@ -1035,9 +1031,18 @@ cb_build_move (cb_tree src, cb_tree dst)
 
   if (cb_flag_runtime_inlining)
     {
+      /* convert "MOVE 0 TO X" into "MOVE ZERO TO X" */
+      if (CB_NUMERIC_LITERAL_P (src)
+	  && cb_fits_int (src)
+	  && cb_literal_to_int (CB_LITERAL (src)) == 0)
+	src = cb_zero;
+
+      /* no optimization for packed decimal for now */
       if (cb_field (dst)->usage == CB_USAGE_PACKED)
 	return cb_build_move_call (src, dst);
-      else if (src == cb_zero)
+
+      /* output optimal code */
+      if (src == cb_zero)
 	return cb_build_move_zero (dst);
       else if (src == cb_space)
 	return cb_build_move_space (dst);
@@ -1053,6 +1058,7 @@ cb_build_move (cb_tree src, cb_tree dst)
 	return cb_build_move_field (src, dst);
     }
 
+  /* output runtime call */
   return cb_build_move_call (src, dst);
 }
 
