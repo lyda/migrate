@@ -380,12 +380,6 @@ cob_close (struct file_desc *f, char *record)
     }
   else
     {
-//              if ((f->organization == ORG_LINESEQUENTIAL || f->organization == ORG_SEQUENTIAL) && f->open_mode == FMOD_OUTPUT
-      if (f->organization == ORG_LINESEQUENTIAL && f->open_mode == FMOD_OUTPUT
-	  && f->adv_before == 0)
-	{
-	  write ((int) f->dbp, "\x0a", 1);
-	}
       if ((f->organization == ORG_LINESEQUENTIAL)
 	  && (f->open_mode == FMOD_INPUT))
 	fclose ((FILE *) f->dbp);
