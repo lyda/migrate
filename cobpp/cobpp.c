@@ -211,6 +211,9 @@ main (int argc, char *argv[])
       open_buffer (argv[index], NULL);
     }
 
+  if (yyin == NULL)
+    exit (1);
+
   /* Infer source format */
   if (cobpp_source_format == COBPP_FORMAT_UNKNOWN)
     {
