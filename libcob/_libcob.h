@@ -100,19 +100,18 @@
 #define RTERR_NO_MEM            3
 #define RTERR_DBG_TRACE		4
 
-#pragma pack(1)
 struct fld_desc
 {
   unsigned long len;
   char type;
   char decimals;
-  unsigned int all:1;
-  unsigned int just_r:1;
-  unsigned int separate_sign:1;
-  unsigned int leading_sign:1;
-  unsigned int reserved:4;
+  char all           : 1;
+  char just_r        : 1;
+  char separate_sign : 1;
+  char leading_sign  : 1;
+  char reserved      : 4;
   char *pic;
-};
+} __attribute__ ((packed));
 
 struct file_desc
 {
@@ -138,7 +137,7 @@ struct file_desc
   short unsigned rec_index;	/* offset of index field in record */
   struct fld_desc *ixd_desc;	/* offset (DGROUP) index field descriptor */
   struct altkey_desc *key_in_use;
-};
+} __attribute__ ((packed));
 
 struct altkey_desc
 {
@@ -146,7 +145,7 @@ struct altkey_desc
   struct fld_desc *descriptor;	/* descriptor for this field */
   short int duplicates;		/* = 1 if duplicates allowed */
   DB *alt_dbp;			/* handle for the alternate key file */
-};
+} __attribute__ ((packed));
 
 struct scr_desc
 {
@@ -156,13 +155,12 @@ struct scr_desc
   short int foreground;
   short int background;
   void (*process_scr) ();
-};
+} __attribute__ ((packed));
 
 struct cob_field {
   struct fld_desc *desc;
   unsigned char *data;
-};
-#pragma pack()
+} __attribute__ ((packed));
 
 extern int decimal_comma;
 extern char cCurrencySymbol;
