@@ -240,6 +240,87 @@ AT_CHECK([./prog], [0], [123456:34:56])
 AT_CLEANUP
 
 
+AT_SETUP([MOVE NON-INTEGER TO ALPHA-NUMERIC])
+#  see MF - COBOL  Error Messages  1029-E ...
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+        01 INTEGER             PIC 9(4)   VALUE 1289 .
+        01 SIGNED-INTEGER      PIC S9(4)  VALUE -1289 .
+
+        01 ALPHA-FIELD         PIC X(4).
+
+        01 NON-INTEGER           PIC 9(2)V99   VALUE 12.89 .
+        01 NON-INTEGER-2         PIC 9(2)V99   
+                                     USAGE BINARY VALUE 12.89 .
+        01 NON-INTEGER-3         PIC 9(2)V99
+                                      USAGE PACKED-DECIMAL VALUE 12.89 .
+        01 SIGNED-NON-INTEGER    PIC S9(2)V99   VALUE -12.89 .
+        01 SIGNED-NON-INTEGER-2  PIC S9(2)V99
+                                     USAGE BINARY VALUE -12.89 .
+        01 SIGNED-NON-INTEGER-3  PIC S9(2)V99
+                                     USAGE PACKED-DECIMAL VALUE -12.89 .
+
+       PROCEDURE        DIVISION.
+*     *    1029-E :  MF-COBOL Extension  see ERROR-Messages (2-77) !
+*     *    MOVE NON-INTEGER TO ALPHA-NUMERIC --> ignore Decimal Point!
+       S-01.
+          MOVE SPACES TO ALPHA-FIELD.
+          MOVE INTEGER TO ALPHA-FIELD.
+          DISPLAY  ALPHA-FIELD NO ADVANCING.
+       S-02.
+          MOVE SPACES TO ALPHA-FIELD.
+          MOVE SIGNED-INTEGER TO ALPHA-FIELD.
+          DISPLAY  ALPHA-FIELD NO ADVANCING.
+       S-03.
+          MOVE SPACES TO ALPHA-FIELD.
+          MOVE NON-INTEGER TO ALPHA-FIELD.
+          DISPLAY  ALPHA-FIELD NO ADVANCING.
+       S-10.
+          MOVE SPACES TO ALPHA-FIELD.
+          MOVE NON-INTEGER-2 TO ALPHA-FIELD.
+          DISPLAY  ALPHA-FIELD NO ADVANCING.
+       S-20.
+          MOVE SPACES TO ALPHA-FIELD.
+          MOVE NON-INTEGER-3 TO ALPHA-FIELD.
+          DISPLAY  ALPHA-FIELD NO ADVANCING.IELD.
+       S-30.
+          MOVE SPACES TO ALPHA-FIELD.
+          MOVE SIGNED-NON-INTEGER TO ALPHA-FIELD.
+          DISPLAY  ALPHA-FIELD NO ADVANCING.
+       S-40.
+          MOVE SPACES TO ALPHA-FIELD.
+          MOVE SIGNED-NON-INTEGER-2 TO ALPHA-FIELD.
+          DISPLAY  ALPHA-FIELD NO ADVANCING.
+       S-50.
+          MOVE SPACES TO ALPHA-FIELD.
+          MOVE SIGNED-NON-INTEGER-3 TO ALPHA-FIELD.
+          DISPLAY  ALPHA-FIELD NO ADVANCING.
+
+          STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -std=mf -o prog prog.cob], [0], ,
+[prog.cob: In paragraph `S-03':
+prog.cob:35: warning: move non-integer to alphanumeric
+prog.cob: In paragraph `S-10':
+prog.cob:39: warning: move non-integer to alphanumeric
+prog.cob: In paragraph `S-20':
+prog.cob:43: warning: move non-integer to alphanumeric
+prog.cob: In paragraph `S-30':
+prog.cob:47: warning: move non-integer to alphanumeric
+prog.cob: In paragraph `S-40':
+prog.cob:51: warning: move non-integer to alphanumeric
+prog.cob: In paragraph `S-50':
+prog.cob:55: warning: move non-integer to alphanumeric
+])
+AT_CHECK([./prog], [0], [12891289128912891289128912891289])
+
+AT_CLEANUP
+
+
 ## CALL
 
 AT_SETUP([CALL BY CONTENT LENGTH])
