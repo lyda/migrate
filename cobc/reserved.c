@@ -326,7 +326,7 @@ lookup_builtin_word (const char *name)
   for (i = 0; builtin_words[i].name != 0; i++)
     if (strcasecmp (name, builtin_words[i].name) == 0)
       return builtin_words[i].token;
-  return 0;
+  return BUILTIN_ZERO;
 }
 
 int
