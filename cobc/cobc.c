@@ -502,12 +502,13 @@ static int
 process_link (struct filename *file_list)
 {
   char buff[8192], objs[4096] = "";
-  const char *exe = file_list->execute;
+  const char *exe;
 
   for (; file_list; file_list = file_list->next)
     {
       strcat (objs, file_list->object);
       strcat (objs, " ");
+      exe = file_list->execute;
     }
 
   sprintf (buff, "%s -o %s %s %s", cob_cc, exe, objs, cob_ldadd);

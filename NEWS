@@ -2,6 +2,9 @@ NEWS - user visible changes				-*- outline -*-
 
 * Version 0.8.1 での変更点
 
+** OpenCOBOL を使ったコンパイル方法について説明した文書
+doc/compile.txt を追加。
+
 ** スクリプト cob-config を作成
 
 cobc によって生成されたファイルを gcc でリンクするとき、
@@ -10,13 +13,20 @@ cobc によって生成されたファイルを gcc でリンクするとき、
   % cobc -c foo.cob
   % gcc -o foo foo.o `cob-config --libs`
 
+** cobc が標準で生成する実行ファイル名を a.out ではなく
+ファイルから拡張子を取り除いたものにした。例えば
+
+  % cobc foo.cob
+
+とすると、実行プログラム foo が生成される。
+
 ** cobc にオプション -dynamic を追加
 
 通常、COBOL の CALL 文で定数が指定された場合はモジュールが
 static link されるが、オプション -dynamic を指定した場合、
 常に dynamic link を行なうようになる。
 
-詳しくは doc/module.txt を参照。
+詳しくは doc/compile.txt を参照。
 
 ** いくつかのバグ修正
 
