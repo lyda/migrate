@@ -220,4 +220,40 @@
            INITIALIZE X-S16.  CALL "dump" USING G-S16.
            INITIALIZE X-S17.  CALL "dump" USING G-S17.
            INITIALIZE X-S18.  CALL "dump" USING G-S18.
+           MOVE ZERO TO X-1.    CALL "dump" USING G-1.
+           MOVE ZERO TO X-2.    CALL "dump" USING G-2.
+           MOVE ZERO TO X-3.    CALL "dump" USING G-3.
+           MOVE ZERO TO X-4.    CALL "dump" USING G-4.
+           MOVE ZERO TO X-5.    CALL "dump" USING G-5.
+           MOVE ZERO TO X-6.    CALL "dump" USING G-6.
+           MOVE ZERO TO X-7.    CALL "dump" USING G-7.
+           MOVE ZERO TO X-8.    CALL "dump" USING G-8.
+           MOVE ZERO TO X-9.    CALL "dump" USING G-9.
+           MOVE ZERO TO X-10.   CALL "dump" USING G-10.
+           MOVE ZERO TO X-11.   CALL "dump" USING G-11.
+           MOVE ZERO TO X-12.   CALL "dump" USING G-12.
+           MOVE ZERO TO X-13.   CALL "dump" USING G-13.
+           MOVE ZERO TO X-14.   CALL "dump" USING G-14.
+           MOVE ZERO TO X-15.   CALL "dump" USING G-15.
+           MOVE ZERO TO X-16.   CALL "dump" USING G-16.
+           MOVE ZERO TO X-17.   CALL "dump" USING G-17.
+           MOVE ZERO TO X-18.   CALL "dump" USING G-18.
+           MOVE ZERO TO X-S1.   CALL "dump" USING G-S1.
+           MOVE ZERO TO X-S2.   CALL "dump" USING G-S2.
+           MOVE ZERO TO X-S3.   CALL "dump" USING G-S3.
+           MOVE ZERO TO X-S4.   CALL "dump" USING G-S4.
+           MOVE ZERO TO X-S5.   CALL "dump" USING G-S5.
+           MOVE ZERO TO X-S6.   CALL "dump" USING G-S6.
+           MOVE ZERO TO X-S7.   CALL "dump" USING G-S7.
+           MOVE ZERO TO X-S8.   CALL "dump" USING G-S8.
+           MOVE ZERO TO X-S9.   CALL "dump" USING G-S9.
+           MOVE ZERO TO X-S10.  CALL "dump" USING G-S10.
+           MOVE ZERO TO X-S11.  CALL "dump" USING G-S11.
+           MOVE ZERO TO X-S12.  CALL "dump" USING G-S12.
+           MOVE ZERO TO X-S13.  CALL "dump" USING G-S13.
+           MOVE ZERO TO X-S14.  CALL "dump" USING G-S14.
+           MOVE ZERO TO X-S15.  CALL "dump" USING G-S15.
+           MOVE ZERO TO X-S16.  CALL "dump" USING G-S16.
+           MOVE ZERO TO X-S17.  CALL "dump" USING G-S17.
+           MOVE ZERO TO X-S18.  CALL "dump" USING G-S18.
            STOP RUN.

@@ -309,21 +309,21 @@ at_groups_all=' 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15'
 # numerical order.
 at_format='..'
 # Description of all the test groups.
-at_help_all='1;binary.at:23;2-4-8 big-endian;;
-2;binary.at:248;2-4-8 native;;
-3;binary.at:473;1-2-4-8 big-endian;;
-4;binary.at:698;1-2-4-8 native;;
-5;binary.at:923;1--8 big-endian;;
-6;binary.at:1148;1--8 native;;
-7;binary.at:1373;full-print;;
-8;display.at:21;Sign ascii;;
-9;display.at:112;Sign ascii10;;
+at_help_all='1;binary.at:23;BINARY: 2-4-8 big-endian;;
+2;binary.at:205;BINARY: 2-4-8 native;;
+3;binary.at:387;BINARY: 1-2-4-8 big-endian;;
+4;binary.at:569;BINARY: 1-2-4-8 native;;
+5;binary.at:751;BINARY: 1--8 big-endian;;
+6;binary.at:933;BINARY: 1--8 native;;
+7;binary.at:1115;BINARY: full-print;;
+8;display.at:21;DISPLAY: Sign ascii;;
+9;display.at:112;DISPLAY: Sign ascii10;;
 10;packed.at:24;PACKED-DECIMAL dump;;
-11;packed.at:121;PACKED-DECIMAL display;;
-12;packed.at:160;PACKED-DECIMAL move;;
-13;packed.at:201;PACKED-DECIMAL arithmetic;;
-14;packed.at:232;PACKED-DECIMAL arithmetic;;
-15;packed.at:259;PACKED-DECIMAL numeric test;;
+11;packed.at:157;PACKED-DECIMAL display;;
+12;packed.at:196;PACKED-DECIMAL move;;
+13;packed.at:237;PACKED-DECIMAL arithmetic;;
+14;packed.at:268;PACKED-DECIMAL arithmetic;;
+15;packed.at:295;PACKED-DECIMAL numeric test;;
 '
 
 at_keywords=
@@ -787,10 +787,10 @@ echo "$as_me: error: cannot create $at_group_dir" >&2;}
   fi
 
   case $at_group in
-  1 ) # 1. binary.at:23: 2-4-8 big-endian
+  1 ) # 1. binary.at:23: BINARY: 2-4-8 big-endian
     at_setup_line='binary.at:23'
-    at_desc='2-4-8 big-endian'
-    $at_quiet $ECHO_N "  1: 2-4-8 big-endian                             $ECHO_C"
+    at_desc='BINARY: 2-4-8 big-endian'
+    $at_quiet $ECHO_N "  1: BINARY: 2-4-8 big-endian                     $ECHO_C"
     at_xfail=no
     (
       echo "1. binary.at:23: testing ..."
@@ -872,8 +872,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:120: ./prog"
-echo binary.at:120 >$at_check_line_file
+echo "binary.at:156: ./prog"
+echo binary.at:156 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -952,12 +952,48 @@ fe4964b459cf0cb2
 0000000000000000
 0000000000000000
 0000000000000000
+0000202020202020
+0000202020202020
+0000202020202020
+0000202020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000202020202020
+0000202020202020
+0000202020202020
+0000202020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
 " | $at_diff - $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:120: exit code was $at_status, expected 0"
+   *) echo "binary.at:156: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -969,92 +1005,11 @@ fi
 $at_traceon
 
 
-cat >prog.cob <<'_ATEOF'
-
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 X-P1          PIC 9(1) VALUE 1 BINARY.
-       01 X-P2          PIC 9(2) VALUE 12 BINARY.
-       01 X-P3          PIC 9(3) VALUE 123 BINARY.
-       01 X-P4          PIC 9(4) VALUE 1234 BINARY.
-       01 X-P5          PIC 9(5) VALUE 12345 BINARY.
-       01 X-P6          PIC 9(6) VALUE 123456 BINARY.
-       01 X-P7          PIC 9(7) VALUE 1234567 BINARY.
-       01 X-P8          PIC 9(8) VALUE 12345678 BINARY.
-       01 X-P9          PIC 9(9) VALUE 123456789 BINARY.
-       01 X-P10         PIC 9(10) VALUE 1234567890 BINARY.
-       01 X-P11         PIC 9(11) VALUE 12345678901 BINARY.
-       01 X-P12         PIC 9(12) VALUE 123456789012 BINARY.
-       01 X-P13         PIC 9(13) VALUE 1234567890123 BINARY.
-       01 X-P14         PIC 9(14) VALUE 12345678901234 BINARY.
-       01 X-P15         PIC 9(15) VALUE 123456789012345 BINARY.
-       01 X-P16         PIC 9(16) VALUE 1234567890123456 BINARY.
-       01 X-P17         PIC 9(17) VALUE 12345678901234567 BINARY.
-       01 X-P18         PIC 9(18) VALUE 123456789012345678 BINARY.
-       01 X-N1          PIC S9(1) VALUE -1 BINARY.
-       01 X-N2          PIC S9(2) VALUE -12 BINARY.
-       01 X-N3          PIC S9(3) VALUE -123 BINARY.
-       01 X-N4          PIC S9(4) VALUE -1234 BINARY.
-       01 X-N5          PIC S9(5) VALUE -12345 BINARY.
-       01 X-N6          PIC S9(6) VALUE -123456 BINARY.
-       01 X-N7          PIC S9(7) VALUE -1234567 BINARY.
-       01 X-N8          PIC S9(8) VALUE -12345678 BINARY.
-       01 X-N9          PIC S9(9) VALUE -123456789 BINARY.
-       01 X-N10         PIC S9(10) VALUE -1234567890 BINARY.
-       01 X-N11         PIC S9(11) VALUE -12345678901 BINARY.
-       01 X-N12         PIC S9(12) VALUE -123456789012 BINARY.
-       01 X-N13         PIC S9(13) VALUE -1234567890123 BINARY.
-       01 X-N14         PIC S9(14) VALUE -12345678901234 BINARY.
-       01 X-N15         PIC S9(15) VALUE -123456789012345 BINARY.
-       01 X-N16         PIC S9(16) VALUE -1234567890123456 BINARY.
-       01 X-N17         PIC S9(17) VALUE -12345678901234567 BINARY.
-       01 X-N18         PIC S9(18) VALUE -123456789012345678 BINARY.
-       PROCEDURE        DIVISION.
-           DISPLAY X-P1.
-           DISPLAY X-P2.
-           DISPLAY X-P3.
-           DISPLAY X-P4.
-           DISPLAY X-P5.
-           DISPLAY X-P6.
-           DISPLAY X-P7.
-           DISPLAY X-P8.
-           DISPLAY X-P9.
-           DISPLAY X-P10.
-           DISPLAY X-P11.
-           DISPLAY X-P12.
-           DISPLAY X-P13.
-           DISPLAY X-P14.
-           DISPLAY X-P15.
-           DISPLAY X-P16.
-           DISPLAY X-P17.
-           DISPLAY X-P18.
-           DISPLAY X-N1.
-           DISPLAY X-N2.
-           DISPLAY X-N3.
-           DISPLAY X-N4.
-           DISPLAY X-N5.
-           DISPLAY X-N6.
-           DISPLAY X-N7.
-           DISPLAY X-N8.
-           DISPLAY X-N9.
-           DISPLAY X-N10.
-           DISPLAY X-N11.
-           DISPLAY X-N12.
-           DISPLAY X-N13.
-           DISPLAY X-N14.
-           DISPLAY X-N15.
-           DISPLAY X-N16.
-           DISPLAY X-N17.
-           DISPLAY X-N18.
-           STOP RUN.
-_ATEOF
-
+sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-display.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:203: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:203 >$at_check_line_file
+echo "binary.at:160: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:160 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1066,7 +1021,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:203: exit code was $at_status, expected 0"
+   *) echo "binary.at:160: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1078,8 +1033,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:241: ./prog"
-echo binary.at:241 >$at_check_line_file
+echo "binary.at:198: ./prog"
+echo binary.at:198 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1127,7 +1082,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:241: exit code was $at_status, expected 0"
+   *) echo "binary.at:198: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1145,13 +1100,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  2 ) # 2. binary.at:248: 2-4-8 native
-    at_setup_line='binary.at:248'
-    at_desc='2-4-8 native'
-    $at_quiet $ECHO_N "  2: 2-4-8 native                                 $ECHO_C"
+  2 ) # 2. binary.at:205: BINARY: 2-4-8 native
+    at_setup_line='binary.at:205'
+    at_desc='BINARY: 2-4-8 native'
+    $at_quiet $ECHO_N "  2: BINARY: 2-4-8 native                         $ECHO_C"
     at_xfail=no
     (
-      echo "2. binary.at:248: testing ..."
+      echo "2. binary.at:205: testing ..."
       $at_traceon
 
 
@@ -1177,8 +1132,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "binary.at:267: \${CC} -shared -o dump.\${SHREXT} dump.c"
-echo binary.at:267 >$at_check_line_file
+echo "binary.at:224: \${CC} -shared -o dump.\${SHREXT} dump.c"
+echo binary.at:224 >$at_check_line_file
 ( $at_traceon; ${CC} -shared -o dump.${SHREXT} dump.c ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1190,7 +1145,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:267: exit code was $at_status, expected 0"
+   *) echo "binary.at:224: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1205,8 +1160,8 @@ $at_traceon
 sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-dump.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:271: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:271 >$at_check_line_file
+echo "binary.at:228: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:228 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1218,7 +1173,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:271: exit code was $at_status, expected 0"
+   *) echo "binary.at:228: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1230,8 +1185,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:345: ./prog"
-echo binary.at:345 >$at_check_line_file
+echo "binary.at:338: ./prog"
+echo binary.at:338 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1310,12 +1265,48 @@ b20ccf59b46449fe
 0000000000000000
 0000000000000000
 0000000000000000
+0000202020202020
+0000202020202020
+0000202020202020
+0000202020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000202020202020
+0000202020202020
+0000202020202020
+0000202020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
 " | $at_diff - $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:345: exit code was $at_status, expected 0"
+   *) echo "binary.at:338: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1327,92 +1318,11 @@ fi
 $at_traceon
 
 
-cat >prog.cob <<'_ATEOF'
-
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 X-P1          PIC 9(1) VALUE 1 BINARY.
-       01 X-P2          PIC 9(2) VALUE 12 BINARY.
-       01 X-P3          PIC 9(3) VALUE 123 BINARY.
-       01 X-P4          PIC 9(4) VALUE 1234 BINARY.
-       01 X-P5          PIC 9(5) VALUE 12345 BINARY.
-       01 X-P6          PIC 9(6) VALUE 123456 BINARY.
-       01 X-P7          PIC 9(7) VALUE 1234567 BINARY.
-       01 X-P8          PIC 9(8) VALUE 12345678 BINARY.
-       01 X-P9          PIC 9(9) VALUE 123456789 BINARY.
-       01 X-P10         PIC 9(10) VALUE 1234567890 BINARY.
-       01 X-P11         PIC 9(11) VALUE 12345678901 BINARY.
-       01 X-P12         PIC 9(12) VALUE 123456789012 BINARY.
-       01 X-P13         PIC 9(13) VALUE 1234567890123 BINARY.
-       01 X-P14         PIC 9(14) VALUE 12345678901234 BINARY.
-       01 X-P15         PIC 9(15) VALUE 123456789012345 BINARY.
-       01 X-P16         PIC 9(16) VALUE 1234567890123456 BINARY.
-       01 X-P17         PIC 9(17) VALUE 12345678901234567 BINARY.
-       01 X-P18         PIC 9(18) VALUE 123456789012345678 BINARY.
-       01 X-N1          PIC S9(1) VALUE -1 BINARY.
-       01 X-N2          PIC S9(2) VALUE -12 BINARY.
-       01 X-N3          PIC S9(3) VALUE -123 BINARY.
-       01 X-N4          PIC S9(4) VALUE -1234 BINARY.
-       01 X-N5          PIC S9(5) VALUE -12345 BINARY.
-       01 X-N6          PIC S9(6) VALUE -123456 BINARY.
-       01 X-N7          PIC S9(7) VALUE -1234567 BINARY.
-       01 X-N8          PIC S9(8) VALUE -12345678 BINARY.
-       01 X-N9          PIC S9(9) VALUE -123456789 BINARY.
-       01 X-N10         PIC S9(10) VALUE -1234567890 BINARY.
-       01 X-N11         PIC S9(11) VALUE -12345678901 BINARY.
-       01 X-N12         PIC S9(12) VALUE -123456789012 BINARY.
-       01 X-N13         PIC S9(13) VALUE -1234567890123 BINARY.
-       01 X-N14         PIC S9(14) VALUE -12345678901234 BINARY.
-       01 X-N15         PIC S9(15) VALUE -123456789012345 BINARY.
-       01 X-N16         PIC S9(16) VALUE -1234567890123456 BINARY.
-       01 X-N17         PIC S9(17) VALUE -12345678901234567 BINARY.
-       01 X-N18         PIC S9(18) VALUE -123456789012345678 BINARY.
-       PROCEDURE        DIVISION.
-           DISPLAY X-P1.
-           DISPLAY X-P2.
-           DISPLAY X-P3.
-           DISPLAY X-P4.
-           DISPLAY X-P5.
-           DISPLAY X-P6.
-           DISPLAY X-P7.
-           DISPLAY X-P8.
-           DISPLAY X-P9.
-           DISPLAY X-P10.
-           DISPLAY X-P11.
-           DISPLAY X-P12.
-           DISPLAY X-P13.
-           DISPLAY X-P14.
-           DISPLAY X-P15.
-           DISPLAY X-P16.
-           DISPLAY X-P17.
-           DISPLAY X-P18.
-           DISPLAY X-N1.
-           DISPLAY X-N2.
-           DISPLAY X-N3.
-           DISPLAY X-N4.
-           DISPLAY X-N5.
-           DISPLAY X-N6.
-           DISPLAY X-N7.
-           DISPLAY X-N8.
-           DISPLAY X-N9.
-           DISPLAY X-N10.
-           DISPLAY X-N11.
-           DISPLAY X-N12.
-           DISPLAY X-N13.
-           DISPLAY X-N14.
-           DISPLAY X-N15.
-           DISPLAY X-N16.
-           DISPLAY X-N17.
-           DISPLAY X-N18.
-           STOP RUN.
-_ATEOF
-
+sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-display.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:428: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:428 >$at_check_line_file
+echo "binary.at:342: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:342 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1424,7 +1334,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:428: exit code was $at_status, expected 0"
+   *) echo "binary.at:342: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1436,8 +1346,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:466: ./prog"
-echo binary.at:466 >$at_check_line_file
+echo "binary.at:380: ./prog"
+echo binary.at:380 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1485,7 +1395,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:466: exit code was $at_status, expected 0"
+   *) echo "binary.at:380: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1503,13 +1413,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  3 ) # 3. binary.at:473: 1-2-4-8 big-endian
-    at_setup_line='binary.at:473'
-    at_desc='1-2-4-8 big-endian'
-    $at_quiet $ECHO_N "  3: 1-2-4-8 big-endian                           $ECHO_C"
+  3 ) # 3. binary.at:387: BINARY: 1-2-4-8 big-endian
+    at_setup_line='binary.at:387'
+    at_desc='BINARY: 1-2-4-8 big-endian'
+    $at_quiet $ECHO_N "  3: BINARY: 1-2-4-8 big-endian                   $ECHO_C"
     at_xfail=no
     (
-      echo "3. binary.at:473: testing ..."
+      echo "3. binary.at:387: testing ..."
       $at_traceon
 
 
@@ -1535,8 +1445,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "binary.at:492: \${CC} -shared -o dump.\${SHREXT} dump.c"
-echo binary.at:492 >$at_check_line_file
+echo "binary.at:406: \${CC} -shared -o dump.\${SHREXT} dump.c"
+echo binary.at:406 >$at_check_line_file
 ( $at_traceon; ${CC} -shared -o dump.${SHREXT} dump.c ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1548,7 +1458,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:492: exit code was $at_status, expected 0"
+   *) echo "binary.at:406: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1563,8 +1473,8 @@ $at_traceon
 sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-dump.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:496: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:496 >$at_check_line_file
+echo "binary.at:410: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:410 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1576,7 +1486,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:496: exit code was $at_status, expected 0"
+   *) echo "binary.at:410: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1588,8 +1498,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:570: ./prog"
-echo binary.at:570 >$at_check_line_file
+echo "binary.at:520: ./prog"
+echo binary.at:520 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1668,12 +1578,48 @@ fe4964b459cf0cb2
 0000000000000000
 0000000000000000
 0000000000000000
+0020202020202020
+0020202020202020
+0000202020202020
+0000202020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0020202020202020
+0020202020202020
+0000202020202020
+0000202020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
 " | $at_diff - $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:570: exit code was $at_status, expected 0"
+   *) echo "binary.at:520: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1685,92 +1631,11 @@ fi
 $at_traceon
 
 
-cat >prog.cob <<'_ATEOF'
-
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 X-P1          PIC 9(1) VALUE 1 BINARY.
-       01 X-P2          PIC 9(2) VALUE 12 BINARY.
-       01 X-P3          PIC 9(3) VALUE 123 BINARY.
-       01 X-P4          PIC 9(4) VALUE 1234 BINARY.
-       01 X-P5          PIC 9(5) VALUE 12345 BINARY.
-       01 X-P6          PIC 9(6) VALUE 123456 BINARY.
-       01 X-P7          PIC 9(7) VALUE 1234567 BINARY.
-       01 X-P8          PIC 9(8) VALUE 12345678 BINARY.
-       01 X-P9          PIC 9(9) VALUE 123456789 BINARY.
-       01 X-P10         PIC 9(10) VALUE 1234567890 BINARY.
-       01 X-P11         PIC 9(11) VALUE 12345678901 BINARY.
-       01 X-P12         PIC 9(12) VALUE 123456789012 BINARY.
-       01 X-P13         PIC 9(13) VALUE 1234567890123 BINARY.
-       01 X-P14         PIC 9(14) VALUE 12345678901234 BINARY.
-       01 X-P15         PIC 9(15) VALUE 123456789012345 BINARY.
-       01 X-P16         PIC 9(16) VALUE 1234567890123456 BINARY.
-       01 X-P17         PIC 9(17) VALUE 12345678901234567 BINARY.
-       01 X-P18         PIC 9(18) VALUE 123456789012345678 BINARY.
-       01 X-N1          PIC S9(1) VALUE -1 BINARY.
-       01 X-N2          PIC S9(2) VALUE -12 BINARY.
-       01 X-N3          PIC S9(3) VALUE -123 BINARY.
-       01 X-N4          PIC S9(4) VALUE -1234 BINARY.
-       01 X-N5          PIC S9(5) VALUE -12345 BINARY.
-       01 X-N6          PIC S9(6) VALUE -123456 BINARY.
-       01 X-N7          PIC S9(7) VALUE -1234567 BINARY.
-       01 X-N8          PIC S9(8) VALUE -12345678 BINARY.
-       01 X-N9          PIC S9(9) VALUE -123456789 BINARY.
-       01 X-N10         PIC S9(10) VALUE -1234567890 BINARY.
-       01 X-N11         PIC S9(11) VALUE -12345678901 BINARY.
-       01 X-N12         PIC S9(12) VALUE -123456789012 BINARY.
-       01 X-N13         PIC S9(13) VALUE -1234567890123 BINARY.
-       01 X-N14         PIC S9(14) VALUE -12345678901234 BINARY.
-       01 X-N15         PIC S9(15) VALUE -123456789012345 BINARY.
-       01 X-N16         PIC S9(16) VALUE -1234567890123456 BINARY.
-       01 X-N17         PIC S9(17) VALUE -12345678901234567 BINARY.
-       01 X-N18         PIC S9(18) VALUE -123456789012345678 BINARY.
-       PROCEDURE        DIVISION.
-           DISPLAY X-P1.
-           DISPLAY X-P2.
-           DISPLAY X-P3.
-           DISPLAY X-P4.
-           DISPLAY X-P5.
-           DISPLAY X-P6.
-           DISPLAY X-P7.
-           DISPLAY X-P8.
-           DISPLAY X-P9.
-           DISPLAY X-P10.
-           DISPLAY X-P11.
-           DISPLAY X-P12.
-           DISPLAY X-P13.
-           DISPLAY X-P14.
-           DISPLAY X-P15.
-           DISPLAY X-P16.
-           DISPLAY X-P17.
-           DISPLAY X-P18.
-           DISPLAY X-N1.
-           DISPLAY X-N2.
-           DISPLAY X-N3.
-           DISPLAY X-N4.
-           DISPLAY X-N5.
-           DISPLAY X-N6.
-           DISPLAY X-N7.
-           DISPLAY X-N8.
-           DISPLAY X-N9.
-           DISPLAY X-N10.
-           DISPLAY X-N11.
-           DISPLAY X-N12.
-           DISPLAY X-N13.
-           DISPLAY X-N14.
-           DISPLAY X-N15.
-           DISPLAY X-N16.
-           DISPLAY X-N17.
-           DISPLAY X-N18.
-           STOP RUN.
-_ATEOF
-
+sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-display.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:653: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:653 >$at_check_line_file
+echo "binary.at:524: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:524 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1782,7 +1647,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:653: exit code was $at_status, expected 0"
+   *) echo "binary.at:524: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1794,8 +1659,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:691: ./prog"
-echo binary.at:691 >$at_check_line_file
+echo "binary.at:562: ./prog"
+echo binary.at:562 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1843,7 +1708,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:691: exit code was $at_status, expected 0"
+   *) echo "binary.at:562: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1861,13 +1726,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  4 ) # 4. binary.at:698: 1-2-4-8 native
-    at_setup_line='binary.at:698'
-    at_desc='1-2-4-8 native'
-    $at_quiet $ECHO_N "  4: 1-2-4-8 native                               $ECHO_C"
+  4 ) # 4. binary.at:569: BINARY: 1-2-4-8 native
+    at_setup_line='binary.at:569'
+    at_desc='BINARY: 1-2-4-8 native'
+    $at_quiet $ECHO_N "  4: BINARY: 1-2-4-8 native                       $ECHO_C"
     at_xfail=no
     (
-      echo "4. binary.at:698: testing ..."
+      echo "4. binary.at:569: testing ..."
       $at_traceon
 
 
@@ -1893,8 +1758,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "binary.at:717: \${CC} -shared -o dump.\${SHREXT} dump.c"
-echo binary.at:717 >$at_check_line_file
+echo "binary.at:588: \${CC} -shared -o dump.\${SHREXT} dump.c"
+echo binary.at:588 >$at_check_line_file
 ( $at_traceon; ${CC} -shared -o dump.${SHREXT} dump.c ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1906,7 +1771,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:717: exit code was $at_status, expected 0"
+   *) echo "binary.at:588: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1921,8 +1786,8 @@ $at_traceon
 sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-dump.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:721: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:721 >$at_check_line_file
+echo "binary.at:592: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:592 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1934,7 +1799,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:721: exit code was $at_status, expected 0"
+   *) echo "binary.at:592: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1946,8 +1811,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:795: ./prog"
-echo binary.at:795 >$at_check_line_file
+echo "binary.at:702: ./prog"
+echo binary.at:702 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2026,12 +1891,48 @@ b20ccf59b46449fe
 0000000000000000
 0000000000000000
 0000000000000000
+0020202020202020
+0020202020202020
+0000202020202020
+0000202020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0020202020202020
+0020202020202020
+0000202020202020
+0000202020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
 " | $at_diff - $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:795: exit code was $at_status, expected 0"
+   *) echo "binary.at:702: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2043,92 +1944,11 @@ fi
 $at_traceon
 
 
-cat >prog.cob <<'_ATEOF'
-
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 X-P1          PIC 9(1) VALUE 1 BINARY.
-       01 X-P2          PIC 9(2) VALUE 12 BINARY.
-       01 X-P3          PIC 9(3) VALUE 123 BINARY.
-       01 X-P4          PIC 9(4) VALUE 1234 BINARY.
-       01 X-P5          PIC 9(5) VALUE 12345 BINARY.
-       01 X-P6          PIC 9(6) VALUE 123456 BINARY.
-       01 X-P7          PIC 9(7) VALUE 1234567 BINARY.
-       01 X-P8          PIC 9(8) VALUE 12345678 BINARY.
-       01 X-P9          PIC 9(9) VALUE 123456789 BINARY.
-       01 X-P10         PIC 9(10) VALUE 1234567890 BINARY.
-       01 X-P11         PIC 9(11) VALUE 12345678901 BINARY.
-       01 X-P12         PIC 9(12) VALUE 123456789012 BINARY.
-       01 X-P13         PIC 9(13) VALUE 1234567890123 BINARY.
-       01 X-P14         PIC 9(14) VALUE 12345678901234 BINARY.
-       01 X-P15         PIC 9(15) VALUE 123456789012345 BINARY.
-       01 X-P16         PIC 9(16) VALUE 1234567890123456 BINARY.
-       01 X-P17         PIC 9(17) VALUE 12345678901234567 BINARY.
-       01 X-P18         PIC 9(18) VALUE 123456789012345678 BINARY.
-       01 X-N1          PIC S9(1) VALUE -1 BINARY.
-       01 X-N2          PIC S9(2) VALUE -12 BINARY.
-       01 X-N3          PIC S9(3) VALUE -123 BINARY.
-       01 X-N4          PIC S9(4) VALUE -1234 BINARY.
-       01 X-N5          PIC S9(5) VALUE -12345 BINARY.
-       01 X-N6          PIC S9(6) VALUE -123456 BINARY.
-       01 X-N7          PIC S9(7) VALUE -1234567 BINARY.
-       01 X-N8          PIC S9(8) VALUE -12345678 BINARY.
-       01 X-N9          PIC S9(9) VALUE -123456789 BINARY.
-       01 X-N10         PIC S9(10) VALUE -1234567890 BINARY.
-       01 X-N11         PIC S9(11) VALUE -12345678901 BINARY.
-       01 X-N12         PIC S9(12) VALUE -123456789012 BINARY.
-       01 X-N13         PIC S9(13) VALUE -1234567890123 BINARY.
-       01 X-N14         PIC S9(14) VALUE -12345678901234 BINARY.
-       01 X-N15         PIC S9(15) VALUE -123456789012345 BINARY.
-       01 X-N16         PIC S9(16) VALUE -1234567890123456 BINARY.
-       01 X-N17         PIC S9(17) VALUE -12345678901234567 BINARY.
-       01 X-N18         PIC S9(18) VALUE -123456789012345678 BINARY.
-       PROCEDURE        DIVISION.
-           DISPLAY X-P1.
-           DISPLAY X-P2.
-           DISPLAY X-P3.
-           DISPLAY X-P4.
-           DISPLAY X-P5.
-           DISPLAY X-P6.
-           DISPLAY X-P7.
-           DISPLAY X-P8.
-           DISPLAY X-P9.
-           DISPLAY X-P10.
-           DISPLAY X-P11.
-           DISPLAY X-P12.
-           DISPLAY X-P13.
-           DISPLAY X-P14.
-           DISPLAY X-P15.
-           DISPLAY X-P16.
-           DISPLAY X-P17.
-           DISPLAY X-P18.
-           DISPLAY X-N1.
-           DISPLAY X-N2.
-           DISPLAY X-N3.
-           DISPLAY X-N4.
-           DISPLAY X-N5.
-           DISPLAY X-N6.
-           DISPLAY X-N7.
-           DISPLAY X-N8.
-           DISPLAY X-N9.
-           DISPLAY X-N10.
-           DISPLAY X-N11.
-           DISPLAY X-N12.
-           DISPLAY X-N13.
-           DISPLAY X-N14.
-           DISPLAY X-N15.
-           DISPLAY X-N16.
-           DISPLAY X-N17.
-           DISPLAY X-N18.
-           STOP RUN.
-_ATEOF
-
+sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-display.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:878: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:878 >$at_check_line_file
+echo "binary.at:706: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:706 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2140,7 +1960,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:878: exit code was $at_status, expected 0"
+   *) echo "binary.at:706: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2152,8 +1972,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:916: ./prog"
-echo binary.at:916 >$at_check_line_file
+echo "binary.at:744: ./prog"
+echo binary.at:744 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2201,7 +2021,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:916: exit code was $at_status, expected 0"
+   *) echo "binary.at:744: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2219,13 +2039,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  5 ) # 5. binary.at:923: 1--8 big-endian
-    at_setup_line='binary.at:923'
-    at_desc='1--8 big-endian'
-    $at_quiet $ECHO_N "  5: 1--8 big-endian                              $ECHO_C"
+  5 ) # 5. binary.at:751: BINARY: 1--8 big-endian
+    at_setup_line='binary.at:751'
+    at_desc='BINARY: 1--8 big-endian'
+    $at_quiet $ECHO_N "  5: BINARY: 1--8 big-endian                      $ECHO_C"
     at_xfail=no
     (
-      echo "5. binary.at:923: testing ..."
+      echo "5. binary.at:751: testing ..."
       $at_traceon
 
 
@@ -2251,8 +2071,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "binary.at:942: \${CC} -shared -o dump.\${SHREXT} dump.c"
-echo binary.at:942 >$at_check_line_file
+echo "binary.at:770: \${CC} -shared -o dump.\${SHREXT} dump.c"
+echo binary.at:770 >$at_check_line_file
 ( $at_traceon; ${CC} -shared -o dump.${SHREXT} dump.c ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2264,7 +2084,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:942: exit code was $at_status, expected 0"
+   *) echo "binary.at:770: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2279,8 +2099,8 @@ $at_traceon
 sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-dump.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:946: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:946 >$at_check_line_file
+echo "binary.at:774: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:774 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2292,7 +2112,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:946: exit code was $at_status, expected 0"
+   *) echo "binary.at:774: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2304,8 +2124,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:1020: ./prog"
-echo binary.at:1020 >$at_check_line_file
+echo "binary.at:884: ./prog"
+echo binary.at:884 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2384,12 +2204,48 @@ fe4964b459cf0cb2
 0000000000000020
 0000000000000000
 0000000000000000
+0020202020202020
+0020202020202020
+0000202020202020
+0000202020202020
+0000002020202020
+0000002020202020
+0000002020202020
+0000000020202020
+0000000020202020
+0000000000202020
+0000000000202020
+0000000000202020
+0000000000002020
+0000000000002020
+0000000000000020
+0000000000000020
+0000000000000000
+0000000000000000
+0020202020202020
+0020202020202020
+0000202020202020
+0000202020202020
+0000002020202020
+0000002020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000000202020
+0000000000202020
+0000000000002020
+0000000000002020
+0000000000002020
+0000000000000020
+0000000000000020
+0000000000000000
+0000000000000000
 " | $at_diff - $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:1020: exit code was $at_status, expected 0"
+   *) echo "binary.at:884: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2401,92 +2257,11 @@ fi
 $at_traceon
 
 
-cat >prog.cob <<'_ATEOF'
-
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 X-P1          PIC 9(1) VALUE 1 BINARY.
-       01 X-P2          PIC 9(2) VALUE 12 BINARY.
-       01 X-P3          PIC 9(3) VALUE 123 BINARY.
-       01 X-P4          PIC 9(4) VALUE 1234 BINARY.
-       01 X-P5          PIC 9(5) VALUE 12345 BINARY.
-       01 X-P6          PIC 9(6) VALUE 123456 BINARY.
-       01 X-P7          PIC 9(7) VALUE 1234567 BINARY.
-       01 X-P8          PIC 9(8) VALUE 12345678 BINARY.
-       01 X-P9          PIC 9(9) VALUE 123456789 BINARY.
-       01 X-P10         PIC 9(10) VALUE 1234567890 BINARY.
-       01 X-P11         PIC 9(11) VALUE 12345678901 BINARY.
-       01 X-P12         PIC 9(12) VALUE 123456789012 BINARY.
-       01 X-P13         PIC 9(13) VALUE 1234567890123 BINARY.
-       01 X-P14         PIC 9(14) VALUE 12345678901234 BINARY.
-       01 X-P15         PIC 9(15) VALUE 123456789012345 BINARY.
-       01 X-P16         PIC 9(16) VALUE 1234567890123456 BINARY.
-       01 X-P17         PIC 9(17) VALUE 12345678901234567 BINARY.
-       01 X-P18         PIC 9(18) VALUE 123456789012345678 BINARY.
-       01 X-N1          PIC S9(1) VALUE -1 BINARY.
-       01 X-N2          PIC S9(2) VALUE -12 BINARY.
-       01 X-N3          PIC S9(3) VALUE -123 BINARY.
-       01 X-N4          PIC S9(4) VALUE -1234 BINARY.
-       01 X-N5          PIC S9(5) VALUE -12345 BINARY.
-       01 X-N6          PIC S9(6) VALUE -123456 BINARY.
-       01 X-N7          PIC S9(7) VALUE -1234567 BINARY.
-       01 X-N8          PIC S9(8) VALUE -12345678 BINARY.
-       01 X-N9          PIC S9(9) VALUE -123456789 BINARY.
-       01 X-N10         PIC S9(10) VALUE -1234567890 BINARY.
-       01 X-N11         PIC S9(11) VALUE -12345678901 BINARY.
-       01 X-N12         PIC S9(12) VALUE -123456789012 BINARY.
-       01 X-N13         PIC S9(13) VALUE -1234567890123 BINARY.
-       01 X-N14         PIC S9(14) VALUE -12345678901234 BINARY.
-       01 X-N15         PIC S9(15) VALUE -123456789012345 BINARY.
-       01 X-N16         PIC S9(16) VALUE -1234567890123456 BINARY.
-       01 X-N17         PIC S9(17) VALUE -12345678901234567 BINARY.
-       01 X-N18         PIC S9(18) VALUE -123456789012345678 BINARY.
-       PROCEDURE        DIVISION.
-           DISPLAY X-P1.
-           DISPLAY X-P2.
-           DISPLAY X-P3.
-           DISPLAY X-P4.
-           DISPLAY X-P5.
-           DISPLAY X-P6.
-           DISPLAY X-P7.
-           DISPLAY X-P8.
-           DISPLAY X-P9.
-           DISPLAY X-P10.
-           DISPLAY X-P11.
-           DISPLAY X-P12.
-           DISPLAY X-P13.
-           DISPLAY X-P14.
-           DISPLAY X-P15.
-           DISPLAY X-P16.
-           DISPLAY X-P17.
-           DISPLAY X-P18.
-           DISPLAY X-N1.
-           DISPLAY X-N2.
-           DISPLAY X-N3.
-           DISPLAY X-N4.
-           DISPLAY X-N5.
-           DISPLAY X-N6.
-           DISPLAY X-N7.
-           DISPLAY X-N8.
-           DISPLAY X-N9.
-           DISPLAY X-N10.
-           DISPLAY X-N11.
-           DISPLAY X-N12.
-           DISPLAY X-N13.
-           DISPLAY X-N14.
-           DISPLAY X-N15.
-           DISPLAY X-N16.
-           DISPLAY X-N17.
-           DISPLAY X-N18.
-           STOP RUN.
-_ATEOF
-
+sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-display.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:1103: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:1103 >$at_check_line_file
+echo "binary.at:888: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:888 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2498,7 +2273,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:1103: exit code was $at_status, expected 0"
+   *) echo "binary.at:888: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2510,8 +2285,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:1141: ./prog"
-echo binary.at:1141 >$at_check_line_file
+echo "binary.at:926: ./prog"
+echo binary.at:926 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2559,7 +2334,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:1141: exit code was $at_status, expected 0"
+   *) echo "binary.at:926: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2577,13 +2352,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  6 ) # 6. binary.at:1148: 1--8 native
-    at_setup_line='binary.at:1148'
-    at_desc='1--8 native'
-    $at_quiet $ECHO_N "  6: 1--8 native                                  $ECHO_C"
+  6 ) # 6. binary.at:933: BINARY: 1--8 native
+    at_setup_line='binary.at:933'
+    at_desc='BINARY: 1--8 native'
+    $at_quiet $ECHO_N "  6: BINARY: 1--8 native                          $ECHO_C"
     at_xfail=no
     (
-      echo "6. binary.at:1148: testing ..."
+      echo "6. binary.at:933: testing ..."
       $at_traceon
 
 
@@ -2609,8 +2384,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "binary.at:1167: \${CC} -shared -o dump.\${SHREXT} dump.c"
-echo binary.at:1167 >$at_check_line_file
+echo "binary.at:952: \${CC} -shared -o dump.\${SHREXT} dump.c"
+echo binary.at:952 >$at_check_line_file
 ( $at_traceon; ${CC} -shared -o dump.${SHREXT} dump.c ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2622,7 +2397,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:1167: exit code was $at_status, expected 0"
+   *) echo "binary.at:952: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2637,8 +2412,8 @@ $at_traceon
 sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-dump.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:1171: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:1171 >$at_check_line_file
+echo "binary.at:956: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:956 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2650,7 +2425,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:1171: exit code was $at_status, expected 0"
+   *) echo "binary.at:956: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2662,8 +2437,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:1245: ./prog"
-echo binary.at:1245 >$at_check_line_file
+echo "binary.at:1066: ./prog"
+echo binary.at:1066 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2742,12 +2517,48 @@ b20ccf59b46449fe
 0000000000000020
 0000000000000000
 0000000000000000
+0020202020202020
+0020202020202020
+0000202020202020
+0000202020202020
+0000002020202020
+0000002020202020
+0000002020202020
+0000000020202020
+0000000020202020
+0000000000202020
+0000000000202020
+0000000000202020
+0000000000002020
+0000000000002020
+0000000000000020
+0000000000000020
+0000000000000000
+0000000000000000
+0020202020202020
+0020202020202020
+0000202020202020
+0000202020202020
+0000002020202020
+0000002020202020
+0000000020202020
+0000000020202020
+0000000020202020
+0000000000202020
+0000000000202020
+0000000000002020
+0000000000002020
+0000000000002020
+0000000000000020
+0000000000000020
+0000000000000000
+0000000000000000
 " | $at_diff - $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:1245: exit code was $at_status, expected 0"
+   *) echo "binary.at:1066: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2759,92 +2570,11 @@ fi
 $at_traceon
 
 
-cat >prog.cob <<'_ATEOF'
-
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 X-P1          PIC 9(1) VALUE 1 BINARY.
-       01 X-P2          PIC 9(2) VALUE 12 BINARY.
-       01 X-P3          PIC 9(3) VALUE 123 BINARY.
-       01 X-P4          PIC 9(4) VALUE 1234 BINARY.
-       01 X-P5          PIC 9(5) VALUE 12345 BINARY.
-       01 X-P6          PIC 9(6) VALUE 123456 BINARY.
-       01 X-P7          PIC 9(7) VALUE 1234567 BINARY.
-       01 X-P8          PIC 9(8) VALUE 12345678 BINARY.
-       01 X-P9          PIC 9(9) VALUE 123456789 BINARY.
-       01 X-P10         PIC 9(10) VALUE 1234567890 BINARY.
-       01 X-P11         PIC 9(11) VALUE 12345678901 BINARY.
-       01 X-P12         PIC 9(12) VALUE 123456789012 BINARY.
-       01 X-P13         PIC 9(13) VALUE 1234567890123 BINARY.
-       01 X-P14         PIC 9(14) VALUE 12345678901234 BINARY.
-       01 X-P15         PIC 9(15) VALUE 123456789012345 BINARY.
-       01 X-P16         PIC 9(16) VALUE 1234567890123456 BINARY.
-       01 X-P17         PIC 9(17) VALUE 12345678901234567 BINARY.
-       01 X-P18         PIC 9(18) VALUE 123456789012345678 BINARY.
-       01 X-N1          PIC S9(1) VALUE -1 BINARY.
-       01 X-N2          PIC S9(2) VALUE -12 BINARY.
-       01 X-N3          PIC S9(3) VALUE -123 BINARY.
-       01 X-N4          PIC S9(4) VALUE -1234 BINARY.
-       01 X-N5          PIC S9(5) VALUE -12345 BINARY.
-       01 X-N6          PIC S9(6) VALUE -123456 BINARY.
-       01 X-N7          PIC S9(7) VALUE -1234567 BINARY.
-       01 X-N8          PIC S9(8) VALUE -12345678 BINARY.
-       01 X-N9          PIC S9(9) VALUE -123456789 BINARY.
-       01 X-N10         PIC S9(10) VALUE -1234567890 BINARY.
-       01 X-N11         PIC S9(11) VALUE -12345678901 BINARY.
-       01 X-N12         PIC S9(12) VALUE -123456789012 BINARY.
-       01 X-N13         PIC S9(13) VALUE -1234567890123 BINARY.
-       01 X-N14         PIC S9(14) VALUE -12345678901234 BINARY.
-       01 X-N15         PIC S9(15) VALUE -123456789012345 BINARY.
-       01 X-N16         PIC S9(16) VALUE -1234567890123456 BINARY.
-       01 X-N17         PIC S9(17) VALUE -12345678901234567 BINARY.
-       01 X-N18         PIC S9(18) VALUE -123456789012345678 BINARY.
-       PROCEDURE        DIVISION.
-           DISPLAY X-P1.
-           DISPLAY X-P2.
-           DISPLAY X-P3.
-           DISPLAY X-P4.
-           DISPLAY X-P5.
-           DISPLAY X-P6.
-           DISPLAY X-P7.
-           DISPLAY X-P8.
-           DISPLAY X-P9.
-           DISPLAY X-P10.
-           DISPLAY X-P11.
-           DISPLAY X-P12.
-           DISPLAY X-P13.
-           DISPLAY X-P14.
-           DISPLAY X-P15.
-           DISPLAY X-P16.
-           DISPLAY X-P17.
-           DISPLAY X-P18.
-           DISPLAY X-N1.
-           DISPLAY X-N2.
-           DISPLAY X-N3.
-           DISPLAY X-N4.
-           DISPLAY X-N5.
-           DISPLAY X-N6.
-           DISPLAY X-N7.
-           DISPLAY X-N8.
-           DISPLAY X-N9.
-           DISPLAY X-N10.
-           DISPLAY X-N11.
-           DISPLAY X-N12.
-           DISPLAY X-N13.
-           DISPLAY X-N14.
-           DISPLAY X-N15.
-           DISPLAY X-N16.
-           DISPLAY X-N17.
-           DISPLAY X-N18.
-           STOP RUN.
-_ATEOF
-
+sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-display.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:1328: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:1328 >$at_check_line_file
+echo "binary.at:1070: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:1070 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2856,7 +2586,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:1328: exit code was $at_status, expected 0"
+   *) echo "binary.at:1070: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2868,8 +2598,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:1366: ./prog"
-echo binary.at:1366 >$at_check_line_file
+echo "binary.at:1108: ./prog"
+echo binary.at:1108 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2917,7 +2647,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:1366: exit code was $at_status, expected 0"
+   *) echo "binary.at:1108: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2935,13 +2665,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  7 ) # 7. binary.at:1373: full-print
-    at_setup_line='binary.at:1373'
-    at_desc='full-print'
-    $at_quiet $ECHO_N "  7: full-print                                   $ECHO_C"
+  7 ) # 7. binary.at:1115: BINARY: full-print
+    at_setup_line='binary.at:1115'
+    at_desc='BINARY: full-print'
+    $at_quiet $ECHO_N "  7: BINARY: full-print                           $ECHO_C"
     at_xfail=no
     (
-      echo "7. binary.at:1373: testing ..."
+      echo "7. binary.at:1115: testing ..."
       $at_traceon
 
 
@@ -2953,92 +2683,11 @@ binary-truncate: no
 _ATEOF
 
 
-cat >prog.cob <<'_ATEOF'
-
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 X-P1          PIC 9(1) VALUE 1 BINARY.
-       01 X-P2          PIC 9(2) VALUE 12 BINARY.
-       01 X-P3          PIC 9(3) VALUE 123 BINARY.
-       01 X-P4          PIC 9(4) VALUE 1234 BINARY.
-       01 X-P5          PIC 9(5) VALUE 12345 BINARY.
-       01 X-P6          PIC 9(6) VALUE 123456 BINARY.
-       01 X-P7          PIC 9(7) VALUE 1234567 BINARY.
-       01 X-P8          PIC 9(8) VALUE 12345678 BINARY.
-       01 X-P9          PIC 9(9) VALUE 123456789 BINARY.
-       01 X-P10         PIC 9(10) VALUE 1234567890 BINARY.
-       01 X-P11         PIC 9(11) VALUE 12345678901 BINARY.
-       01 X-P12         PIC 9(12) VALUE 123456789012 BINARY.
-       01 X-P13         PIC 9(13) VALUE 1234567890123 BINARY.
-       01 X-P14         PIC 9(14) VALUE 12345678901234 BINARY.
-       01 X-P15         PIC 9(15) VALUE 123456789012345 BINARY.
-       01 X-P16         PIC 9(16) VALUE 1234567890123456 BINARY.
-       01 X-P17         PIC 9(17) VALUE 12345678901234567 BINARY.
-       01 X-P18         PIC 9(18) VALUE 123456789012345678 BINARY.
-       01 X-N1          PIC S9(1) VALUE -1 BINARY.
-       01 X-N2          PIC S9(2) VALUE -12 BINARY.
-       01 X-N3          PIC S9(3) VALUE -123 BINARY.
-       01 X-N4          PIC S9(4) VALUE -1234 BINARY.
-       01 X-N5          PIC S9(5) VALUE -12345 BINARY.
-       01 X-N6          PIC S9(6) VALUE -123456 BINARY.
-       01 X-N7          PIC S9(7) VALUE -1234567 BINARY.
-       01 X-N8          PIC S9(8) VALUE -12345678 BINARY.
-       01 X-N9          PIC S9(9) VALUE -123456789 BINARY.
-       01 X-N10         PIC S9(10) VALUE -1234567890 BINARY.
-       01 X-N11         PIC S9(11) VALUE -12345678901 BINARY.
-       01 X-N12         PIC S9(12) VALUE -123456789012 BINARY.
-       01 X-N13         PIC S9(13) VALUE -1234567890123 BINARY.
-       01 X-N14         PIC S9(14) VALUE -12345678901234 BINARY.
-       01 X-N15         PIC S9(15) VALUE -123456789012345 BINARY.
-       01 X-N16         PIC S9(16) VALUE -1234567890123456 BINARY.
-       01 X-N17         PIC S9(17) VALUE -12345678901234567 BINARY.
-       01 X-N18         PIC S9(18) VALUE -123456789012345678 BINARY.
-       PROCEDURE        DIVISION.
-           DISPLAY X-P1.
-           DISPLAY X-P2.
-           DISPLAY X-P3.
-           DISPLAY X-P4.
-           DISPLAY X-P5.
-           DISPLAY X-P6.
-           DISPLAY X-P7.
-           DISPLAY X-P8.
-           DISPLAY X-P9.
-           DISPLAY X-P10.
-           DISPLAY X-P11.
-           DISPLAY X-P12.
-           DISPLAY X-P13.
-           DISPLAY X-P14.
-           DISPLAY X-P15.
-           DISPLAY X-P16.
-           DISPLAY X-P17.
-           DISPLAY X-P18.
-           DISPLAY X-N1.
-           DISPLAY X-N2.
-           DISPLAY X-N3.
-           DISPLAY X-N4.
-           DISPLAY X-N5.
-           DISPLAY X-N6.
-           DISPLAY X-N7.
-           DISPLAY X-N8.
-           DISPLAY X-N9.
-           DISPLAY X-N10.
-           DISPLAY X-N11.
-           DISPLAY X-N12.
-           DISPLAY X-N13.
-           DISPLAY X-N14.
-           DISPLAY X-N15.
-           DISPLAY X-N16.
-           DISPLAY X-N17.
-           DISPLAY X-N18.
-           STOP RUN.
-_ATEOF
-
+sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-display.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:1462: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:1462 >$at_check_line_file
+echo "binary.at:1125: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:1125 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3050,7 +2699,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:1462: exit code was $at_status, expected 0"
+   *) echo "binary.at:1125: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3062,8 +2711,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:1500: ./prog"
-echo binary.at:1500 >$at_check_line_file
+echo "binary.at:1163: ./prog"
+echo binary.at:1163 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3111,7 +2760,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:1500: exit code was $at_status, expected 0"
+   *) echo "binary.at:1163: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3129,10 +2778,10 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  8 ) # 8. display.at:21: Sign ascii
+  8 ) # 8. display.at:21: DISPLAY: Sign ascii
     at_setup_line='display.at:21'
-    at_desc='Sign ascii'
-    $at_quiet $ECHO_N "  8: Sign ascii                                   $ECHO_C"
+    at_desc='DISPLAY: Sign ascii'
+    $at_quiet $ECHO_N "  8: DISPLAY: Sign ascii                          $ECHO_C"
     at_xfail=no
     (
       echo "8. display.at:21: testing ..."
@@ -3332,10 +2981,10 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  9 ) # 9. display.at:112: Sign ascii10
+  9 ) # 9. display.at:112: DISPLAY: Sign ascii10
     at_setup_line='display.at:112'
-    at_desc='Sign ascii10'
-    $at_quiet $ECHO_N "  9: Sign ascii10                                 $ECHO_C"
+    at_desc='DISPLAY: Sign ascii10'
+    $at_quiet $ECHO_N "  9: DISPLAY: Sign ascii10                        $ECHO_C"
     at_xfail=no
     (
       echo "9. display.at:112: testing ..."
@@ -3520,8 +3169,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "packed.at:115: ./prog"
-echo packed.at:115 >$at_check_line_file
+echo "packed.at:151: ./prog"
+echo packed.at:151 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3600,12 +3249,48 @@ echo >>$at_stdout; echo "1f202020202020202020
 00000000000000000c20
 00000000000000000c20
 0000000000000000000c
+0f202020202020202020
+000f2020202020202020
+000f2020202020202020
+00000f20202020202020
+00000f20202020202020
+0000000f202020202020
+0000000f202020202020
+000000000f2020202020
+000000000f2020202020
+00000000000f20202020
+00000000000f20202020
+0000000000000f202020
+0000000000000f202020
+000000000000000f2020
+000000000000000f2020
+00000000000000000f20
+00000000000000000f20
+0000000000000000000f
+0c202020202020202020
+000c2020202020202020
+000c2020202020202020
+00000c20202020202020
+00000c20202020202020
+0000000c202020202020
+0000000c202020202020
+000000000c2020202020
+000000000c2020202020
+00000000000c20202020
+00000000000c20202020
+0000000000000c202020
+0000000000000c202020
+000000000000000c2020
+000000000000000c2020
+00000000000000000c20
+00000000000000000c20
+0000000000000000000c
 " | $at_diff - $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "packed.at:115: exit code was $at_status, expected 0"
+   *) echo "packed.at:151: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3623,13 +3308,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  11 ) # 11. packed.at:121: PACKED-DECIMAL display
-    at_setup_line='packed.at:121'
+  11 ) # 11. packed.at:157: PACKED-DECIMAL display
+    at_setup_line='packed.at:157'
     at_desc='PACKED-DECIMAL display'
     $at_quiet $ECHO_N " 11: PACKED-DECIMAL display                       $ECHO_C"
     at_xfail=no
     (
-      echo "11. packed.at:121: testing ..."
+      echo "11. packed.at:157: testing ..."
       $at_traceon
 
 
@@ -3657,8 +3342,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "packed.at:144: \${COMPILE} prog.cob"
-echo packed.at:144 >$at_check_line_file
+echo "packed.at:180: \${COMPILE} prog.cob"
+echo packed.at:180 >$at_check_line_file
 ( $at_traceon; ${COMPILE} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3670,7 +3355,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "packed.at:144: exit code was $at_status, expected 0"
+   *) echo "packed.at:180: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3682,8 +3367,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "packed.at:154: ./prog"
-echo packed.at:154 >$at_check_line_file
+echo "packed.at:190: ./prog"
+echo packed.at:190 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3703,7 +3388,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "packed.at:154: exit code was $at_status, expected 0"
+   *) echo "packed.at:190: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3721,13 +3406,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  12 ) # 12. packed.at:160: PACKED-DECIMAL move
-    at_setup_line='packed.at:160'
+  12 ) # 12. packed.at:196: PACKED-DECIMAL move
+    at_setup_line='packed.at:196'
     at_desc='PACKED-DECIMAL move'
     $at_quiet $ECHO_N " 12: PACKED-DECIMAL move                          $ECHO_C"
     at_xfail=no
     (
-      echo "12. packed.at:160: testing ..."
+      echo "12. packed.at:196: testing ..."
       $at_traceon
 
 
@@ -3757,8 +3442,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "packed.at:185: \${COMPILE} prog.cob"
-echo packed.at:185 >$at_check_line_file
+echo "packed.at:221: \${COMPILE} prog.cob"
+echo packed.at:221 >$at_check_line_file
 ( $at_traceon; ${COMPILE} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3770,7 +3455,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "packed.at:185: exit code was $at_status, expected 0"
+   *) echo "packed.at:221: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3782,8 +3467,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "packed.at:195: ./prog"
-echo packed.at:195 >$at_check_line_file
+echo "packed.at:231: ./prog"
+echo packed.at:231 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3803,7 +3488,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "packed.at:195: exit code was $at_status, expected 0"
+   *) echo "packed.at:231: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3821,13 +3506,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  13 ) # 13. packed.at:201: PACKED-DECIMAL arithmetic
-    at_setup_line='packed.at:201'
+  13 ) # 13. packed.at:237: PACKED-DECIMAL arithmetic
+    at_setup_line='packed.at:237'
     at_desc='PACKED-DECIMAL arithmetic'
     $at_quiet $ECHO_N " 13: PACKED-DECIMAL arithmetic                    $ECHO_C"
     at_xfail=no
     (
-      echo "13. packed.at:201: testing ..."
+      echo "13. packed.at:237: testing ..."
       $at_traceon
 
 
@@ -3851,8 +3536,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "packed.at:220: \${COMPILE} prog.cob"
-echo packed.at:220 >$at_check_line_file
+echo "packed.at:256: \${COMPILE} prog.cob"
+echo packed.at:256 >$at_check_line_file
 ( $at_traceon; ${COMPILE} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3864,7 +3549,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "packed.at:220: exit code was $at_status, expected 0"
+   *) echo "packed.at:256: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3876,8 +3561,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "packed.at:226: ./prog"
-echo packed.at:226 >$at_check_line_file
+echo "packed.at:262: ./prog"
+echo packed.at:262 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3893,7 +3578,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "packed.at:226: exit code was $at_status, expected 0"
+   *) echo "packed.at:262: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3911,13 +3596,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  14 ) # 14. packed.at:232: PACKED-DECIMAL arithmetic
-    at_setup_line='packed.at:232'
+  14 ) # 14. packed.at:268: PACKED-DECIMAL arithmetic
+    at_setup_line='packed.at:268'
     at_desc='PACKED-DECIMAL arithmetic'
     $at_quiet $ECHO_N " 14: PACKED-DECIMAL arithmetic                    $ECHO_C"
     at_xfail=no
     (
-      echo "14. packed.at:232: testing ..."
+      echo "14. packed.at:268: testing ..."
       $at_traceon
 
 
@@ -3938,8 +3623,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "packed.at:248: \${COMPILE} prog.cob"
-echo packed.at:248 >$at_check_line_file
+echo "packed.at:284: \${COMPILE} prog.cob"
+echo packed.at:284 >$at_check_line_file
 ( $at_traceon; ${COMPILE} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3951,7 +3636,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "packed.at:248: exit code was $at_status, expected 0"
+   *) echo "packed.at:284: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3963,8 +3648,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "packed.at:253: ./prog"
-echo packed.at:253 >$at_check_line_file
+echo "packed.at:289: ./prog"
+echo packed.at:289 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3979,7 +3664,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "packed.at:253: exit code was $at_status, expected 0"
+   *) echo "packed.at:289: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3997,13 +3682,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  15 ) # 15. packed.at:259: PACKED-DECIMAL numeric test
-    at_setup_line='packed.at:259'
+  15 ) # 15. packed.at:295: PACKED-DECIMAL numeric test
+    at_setup_line='packed.at:295'
     at_desc='PACKED-DECIMAL numeric test'
     $at_quiet $ECHO_N " 15: PACKED-DECIMAL numeric test                  $ECHO_C"
     at_xfail=no
     (
-      echo "15. packed.at:259: testing ..."
+      echo "15. packed.at:295: testing ..."
       $at_traceon
 
 
@@ -4044,8 +3729,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "packed.at:295: \${COMPILE} prog.cob"
-echo packed.at:295 >$at_check_line_file
+echo "packed.at:331: \${COMPILE} prog.cob"
+echo packed.at:331 >$at_check_line_file
 ( $at_traceon; ${COMPILE} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4057,7 +3742,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "packed.at:295: exit code was $at_status, expected 0"
+   *) echo "packed.at:331: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -4069,8 +3754,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "packed.at:311: ./prog"
-echo packed.at:311 >$at_check_line_file
+echo "packed.at:347: ./prog"
+echo packed.at:347 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4096,7 +3781,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "packed.at:311: exit code was $at_status, expected 0"
+   *) echo "packed.at:347: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then

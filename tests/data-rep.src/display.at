@@ -1,6 +1,6 @@
 ### OpenCOBOL Test Suite				-*- m4 -*-
 
-## Copyright (C) 2003 Keisuke Nishida
+## Copyright (C) 2003-2004 Keisuke Nishida
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 ## Boston, MA 02111-1307 USA
 
 
-AT_SETUP([Sign ascii])
+AT_SETUP([DISPLAY: Sign ascii])
 
 AT_DATA([test.conf], [
 include "cobol2002.conf"
@@ -109,7 +109,7 @@ AT_CHECK([./prog], [0], [0123456789pqrstuvwxy])
 AT_CLEANUP
 
 
-AT_SETUP([Sign ascii10])
+AT_SETUP([DISPLAY: Sign ascii10])
 
 AT_DATA([test.conf], [
 include "cobol2002.conf"
