@@ -1254,6 +1254,18 @@ screen_description:
   }
   screen_options dot
   {
+    if (current_field->pic == NULL)
+      current_field->pic = yylex_picture ("X(0)");
+    if (!current_field->screen_line)
+      {
+	current_field->screen_line = cobc_int1;
+	current_field->screen_flag |= COB_SCREEN_LINE_CONST;
+      }
+    if (!current_field->screen_column)
+      {
+	current_field->screen_column = cobc_int1;
+	current_field->screen_flag |= COB_SCREEN_COLUMN_CONST;
+      }
     $$ = COBC_TREE (current_field);
   }
 ;
@@ -1326,9 +1338,6 @@ screen_option:
 | justified_clause
 | sign_clause
 | value_clause
-  {
-    current_field->pic = yylex_picture ("X(0)");
-  }
 | picture_clause
   {
     field_set_used (current_field);

@@ -1043,8 +1043,10 @@ output_file_name (struct cobc_file_name *f)
 static void
 output_screen_definition (struct cobc_field *p)
 {
-  int type = (p->children ? COB_SCREEN_TYPE_GROUP :
-	      p->value    ? COB_SCREEN_TYPE_VALUE : COB_SCREEN_TYPE_FIELD);
+  int type = (p->children   ? COB_SCREEN_TYPE_GROUP :
+	      p->value      ? COB_SCREEN_TYPE_VALUE :
+	      (p->size > 0) ? COB_SCREEN_TYPE_FIELD :
+			      COB_SCREEN_TYPE_ATTRIBUTE);
 
   if (p->sister)
     output_screen_definition (p->sister);
@@ -1067,6 +1069,9 @@ output_screen_definition (struct cobc_field *p)
     case COB_SCREEN_TYPE_FIELD:
       output ("&f_%s", p->cname);
       break;
+    case COB_SCREEN_TYPE_ATTRIBUTE:
+      output ("0");
+      break;
     }
   output (", ");
 
@@ -1082,15 +1087,9 @@ output_screen_definition (struct cobc_field *p)
     output ("&f_%s, ", p->screen_to->cname);
   else
     output ("0, ");
-  if (p->screen_line)
-    output_index (p->screen_line);
-  else
-    output ("0");
+  output_index (p->screen_line);
   output (", ");
-  if (p->screen_column)
-    output_index (p->screen_column);
-  else
-    output ("0");
+  output_index (p->screen_column);
   output (", %d};\n", p->screen_flag);
 }
 

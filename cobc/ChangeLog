@@ -1,3 +1,9 @@
+2002-07-05  Keisuke Nishida  <knishida@netlab.jp>
+
+	* parser.y (screen_description): Set default line/column.
+	* codegen.c (output_screen_definition): Updated.
+	Handle COB_SCREEN_TYPE_ATTRIBUTE.
+
 2002-07-04  Keisuke Nishida  <knishida@netlab.jp>
 
 	* codegen.c (output_file_name): Rename `cob_file_desc' to `cob_file'.
