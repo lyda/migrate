@@ -813,21 +813,6 @@ make_if (cobc_tree test, cobc_tree stmt1, cobc_tree stmt2)
 
 
 /*
- * Evaluate
- */
-
-cobc_tree
-make_evaluate (struct cobc_list *subject_list, struct cobc_list *case_list)
-{
-  struct cobc_evaluate *p =
-    make_tree (cobc_tag_evaluate, COB_VOID, sizeof (struct cobc_evaluate));
-  p->subject_list = subject_list;
-  p->case_list = case_list;
-  return COBC_TREE (p);
-}
-
-
-/*
  * Pair
  */
 

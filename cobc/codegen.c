@@ -727,14 +727,14 @@ output_condition (cobc_tree x)
       break;
     case COBC_COND_NOT:
       output ("!");
-      output_condition (l);
+      output_tree (l);
       break;
     case COBC_COND_AND:
     case COBC_COND_OR:
       output ("(");
-      output_condition (l);
+      output_tree (l);
       output (type == COBC_COND_AND ? " && " : " || ");
-      output_condition (r);
+      output_tree (r);
       output (")");
       break;
     default:
@@ -1182,7 +1182,7 @@ output_perform_before (struct cobc_perform *p, struct cobc_perform_varying *v)
   /* loop */
   output_prefix ();
   output ("while (!");
-  output_condition (v->until);
+  output_tree (v->until);
   output (")\n");
   output_indent ("  {", 4);
   output_perform_before (p, v->next);
@@ -1219,7 +1219,7 @@ output_perform_after (struct cobc_perform *p, struct cobc_perform_varying *v)
   /* step */
   output_prefix ();
   output ("if (");
-  output_condition (v->until);
+  output_tree (v->until);
   output (")\n");
   output_line ("  break;");
   if (v->name)
@@ -1298,124 +1298,6 @@ output_call (struct cobc_call *p)
       case 4: output_call_4 (p->name, p->argv[0], p->argv[1], p->argv[2], p->argv[3]); break;
       case -1: output_call_1_list (p->name, p->argv[0], p->argv[1]); break;
       }
-}
-
-
-/*
- * EVALUATE
- */
-
-static void
-output_evaluate_test (cobc_tree s, cobc_tree o)
-{
-  /* extract NOT option */
-  if (COBC_COND_P (o) && COBC_COND (o)->type == COBC_COND_NOT)
-    {
-      output ("!");
-      o = COBC_COND (o)->left;
-    }
-
-  /* ANY is always true */
-  if (o == cobc_any)
-    {
-      output_tree (cobc_true);
-      return;
-    }
-
-  /* boolean comparison */
-  if (COBC_TREE_CLASS (s) == COB_BOOLEAN
-      || COBC_TREE_CLASS (o) == COB_BOOLEAN)
-    {
-      if (COBC_TREE_CLASS (s) != COB_BOOLEAN
-	  || COBC_TREE_CLASS (o) != COB_BOOLEAN)
-	{
-	  yyerror_tree (COBC_TREE (o), "type mismatch");
-	  output_tree (cobc_false);
-	  return;
-	}
-      output ("(");
-      output_tree (s);
-      output (" == ");
-      output_tree (o);
-      output (")");
-      return;
-    }
-
-  /* x THRU y */
-  if (COBC_PAIR_P (o))
-    {
-      cobc_tree l = COBC_PAIR (o)->x;
-      cobc_tree u = COBC_PAIR (o)->y;
-      output_condition (make_cond (make_cond (l, COBC_COND_LE, s),
-				   COBC_COND_AND,
-				   make_cond (s, COBC_COND_LE, u)));
-      return;
-    }
-
-  /* regular comparison */
-  output_condition (make_cond (s, COBC_COND_EQ, o));
-}
-
-static void
-output_evaluate (struct cobc_evaluate *p)
-{
-  struct cobc_list *sbjs, *cases, *whens, *objs;
-
-  /* for each case (i.e., WHEN ... WHEN ... statement ...) */
-  for (cases = p->case_list; cases; cases = cases->next)
-    {
-      cobc_tree stmt;
-      whens = cases->item;
-      stmt = whens->item;
-      whens = whens->next;
-
-      /* output a single case */
-      output_prefix ();
-      if (cases != p->case_list)
-	output ("else ");
-      if (!whens)
-	{
-	  /* WHEN OTHER */
-	  output ("\n");
-	  output_indent_level += 2;
-	  output_tree (stmt);
-	  output_indent_level -= 2;
-	}
-      else
-	{
-	  output ("if (");
-	  output_indent_level += 4;
-	  /* for each WHEN */
-	  for (; whens; whens = whens->next)
-	    {
-	      output ("(");
-	      /* output condition test */
-	      for (sbjs = p->subject_list, objs = whens->item;
-		   sbjs && objs;
-		   sbjs = sbjs->next, objs = objs->next)
-		{
-		  output_evaluate_test (sbjs->item, objs->item);
-		  if (sbjs->next)
-		    output (" && ");
-		}
-	      if (sbjs || objs)
-		yyerror ("wrong number of WHEN parameters");
-	      output (")");
-	      /* connect multiple WHEN's by || */
-	      if (whens->next)
-		{
-		  output_newline ();
-		  output_prefix ();
-		  output ("|| ");
-		}
-	    }
-	  output (")\n");
-	  /* output imperative statemtnt */
-	  output_indent_level -= 2;
-	  output_tree (stmt);
-	  output_indent_level -= 2;
-	}
-    }
 }
 
 
@@ -1604,12 +1486,6 @@ output_tree (cobc_tree x)
 	    output_tree (p->stmt2);
 	    output_indent_level -= 2;
 	  }
-	break;
-      }
-    case cobc_tag_evaluate:
-      {
-	output_line_directive (x);
-	output_evaluate (COBC_EVALUATE (x));
 	break;
       }
     case cobc_tag_assign:

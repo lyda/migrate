@@ -1,3 +1,11 @@
+2002-10-06  Keisuke Nishida  <knishida@netlab.jp>
+
+	* tree.h (cobc_evaluate): Removed.
+	* tree.c (make_evaluate): Removed.
+	* codegen.c (output_tree): Do not handle cobc_evaluate.
+	(output_evaluate, output_evaluate_test): Removed.
+	* parser.y (make_evaluate, make_evaluate_test): Build evaluate tree.
+
 2002-10-02  Keisuke Nishida  <knishida@netlab.jp>
 
 	* parser.y (CONDITIONAL_NAME): Removed.

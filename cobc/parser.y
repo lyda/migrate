@@ -146,6 +146,7 @@ static cobc_tree make_move (cobc_tree f1, cobc_tree f2, int round);
 static struct cobc_list *make_corr (cobc_tree (*func)(), cobc_tree g1, cobc_tree g2, int opt, struct cobc_list *l);
 static cobc_tree make_opt_cond (cobc_tree last, int type, cobc_tree this);
 static cobc_tree make_cond_name (cobc_tree x);
+static cobc_tree make_evaluate (struct cobc_list *subject_list, struct cobc_list *case_list);
 
 static void redefinition_error (struct cobc_location *loc, cobc_tree x);
 static void undefined_error (struct cobc_location *loc, struct cobc_word *w, cobc_tree parent);
@@ -206,7 +207,7 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %token REVERSE_VIDEO UNDERLINE COLUMN FOREGROUND_COLOR BACKGROUND_COLOR AUTO
 %token SECURE REQUIRED FULL NUMBER PLUS MINUS
 
-%type <gene> call_param write_option
+%type <gene> call_param write_option evaluate_object
 %type <inum> flag_all flag_duplicates flag_optional flag_global
 %type <inum> flag_not flag_next flag_rounded flag_separate
 %type <inum> integer level_number start_operator display_upon screen_plus_minus
@@ -232,7 +233,6 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %type <tree> field_description_list_1 field_description_list_2
 %type <tree> opt_screen_description_list screen_description_list
 %type <tree> screen_description condition imperative_statement
-%type <tree> evaluate_object evaluate_object_1
 %type <tree> function subscript subref refmod on_or_off
 %type <tree> search_varying search_at_end search_whens search_when
 %type <tree> perform_procedure perform_sentence perform_option start_key
@@ -1999,27 +1999,11 @@ evaluate_object_list:
   evaluate_object		{ $$ = list_add ($1, $3); }
 ;
 evaluate_object:
-  flag_not evaluate_object_1
-  {
-    $$ = $2;
-    if ($1)
-      {
-	if ($2 == cobc_any || $2 == cobc_true || $2 == cobc_false)
-	  yyerror (_("cannot use NOT with TRUE, FALSE, or ANY"));
-	else
-	  /* NOTE: $2 is not necessarily a condition, but
-	   * we use COBC_COND_NOT here to store it, which
-	   * is later expanded in output_evaluate_test. */
-	  $$ = make_negative ($2);
-      }
-  }
-;
-evaluate_object_1:
-  expr				{ $$ = $1; }
-| expr THRU expr		{ $$ = make_pair ($1, $3); }
-| ANY				{ $$ = cobc_any; }
-| TRUE				{ $$ = cobc_true; }
-| FALSE				{ $$ = cobc_false; }
+  flag_not expr			{ $$ = make_parameter ($1, $2, 0); }
+| flag_not expr THRU expr	{ $$ = make_parameter ($1, $2, $4); }
+| ANY				{ $$ = make_parameter (0, cobc_any, 0); }
+| TRUE				{ $$ = make_parameter (0, cobc_true, 0); }
+| FALSE				{ $$ = make_parameter (0, cobc_false, 0); }
 ;
 _end_evaluate: | END_EVALUATE ;
 
@@ -4446,6 +4430,83 @@ make_cond_name (cobc_tree x)
   if (!cond)
     cond = make_cond (cobc_int0, COBC_COND_EQ, cobc_int0);
   return cond;
+}
+
+static cobc_tree
+make_evaluate_test (cobc_tree s, struct cobc_parameter *p)
+{
+  /* ANY is always true */
+  if (p->x == cobc_any)
+    return cobc_true;
+
+  /* x THRU y */
+  if (p->y)
+    {
+      cobc_tree x = make_cond (make_cond (p->x, COBC_COND_LE, s),
+			       COBC_COND_AND,
+			       make_cond (s, COBC_COND_LE, p->y));
+      return p->type ? make_negative (x) : x;
+    }
+
+  /* TRUE or FALSE */
+  if (s == cobc_true)
+    return p->type ? make_negative (p->x) : p->x;
+  if (s == cobc_false)
+    return p->type ? p->x : make_negative (p->x);
+  if (p->x == cobc_true)
+    return p->type ? make_negative (s) : s;
+  if (p->x == cobc_false)
+    return p->type ? s : make_negative (s);
+
+  /* regular comparison */
+  if (p->type)
+    return make_cond (s, COBC_COND_NE, p->x);
+  else
+    return make_cond (s, COBC_COND_EQ, p->x);
+}
+
+static cobc_tree
+make_evaluate (struct cobc_list *subject_list, struct cobc_list *case_list)
+{
+  cobc_tree stmt;
+  cobc_tree c1 = NULL;
+  struct cobc_list *subjs, *whens, *objs;
+
+  if (case_list == NULL)
+    return NULL;
+
+  whens = case_list->item;
+  stmt = whens->item;
+  whens = whens->next;
+
+  /* for each WHEN sequence */
+  for (; whens; whens = whens->next)
+    {
+      cobc_tree c2 = NULL;
+      /* single WHEN test */
+      for (subjs = subject_list, objs = whens->item;
+	   subjs && objs;
+	   subjs = subjs->next, objs = objs->next)
+	{
+	  cobc_tree c3 = make_evaluate_test (subjs->item, objs->item);
+	  if (c2 == NULL)
+	    c2 = c3;
+	  else
+	    c2 = make_cond (c2, COBC_COND_AND, c3);
+	}
+      if (subjs || objs)
+	yyerror (_("wrong number of WHEN parameters"));
+      /* connect multiple WHEN's */
+      if (c1 == NULL)
+	c1 = c2;
+      else
+	c1 = make_cond (c1, COBC_COND_OR, c2);
+    }
+
+  if (c1 == NULL)
+    return stmt;
+  else
+    return make_if (c1, stmt, make_evaluate (subject_list, case_list->next));
 }
 
 

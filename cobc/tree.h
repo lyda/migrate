@@ -45,7 +45,6 @@ enum cobc_tag {
   cobc_tag_perform,
   cobc_tag_assign,
   cobc_tag_if,
-  cobc_tag_evaluate,
   cobc_tag_predefined,
   cobc_tag_class,
   cobc_tag_builtin,
@@ -515,22 +514,6 @@ struct cobc_if {
 #define COBC_IF_P(x)		(COBC_TREE_TAG (x) == cobc_tag_if)
 
 extern cobc_tree make_if (cobc_tree test, cobc_tree stmt1, cobc_tree stmt2);
-
-
-/*
- * Evaluate
- */
-
-struct cobc_evaluate {
-  struct cobc_tree_common common;
-  struct cobc_list *subject_list;
-  struct cobc_list *case_list;
-};
-
-#define COBC_EVALUATE(x)	(COBC_TREE_CAST (cobc_tag_evaluate, struct cobc_evaluate, x))
-#define COBC_EVALUATE_P(x)	(COBC_TREE_TAG (x) == cobc_tag_evaluate)
-
-extern cobc_tree make_evaluate (struct cobc_list *subject_list, struct cobc_list *case_list);
 
 
 /*
