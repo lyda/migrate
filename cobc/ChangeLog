@@ -1,5 +1,12 @@
 2002-10-02  Keisuke Nishida  <knishida@netlab.jp>
 
+	* parser.y (CONDITIONAL_NAME): Removed.
+	(condition_name_list, condition_name, qualified_cond_name): Removed.
+	(data_name, expr_item): Handle conditional names here.
+	* scanner.l: Don't return CONDITIONAL_NAME.
+
+2002-10-02  Keisuke Nishida  <knishida@netlab.jp>
+
 	* Rename `label_name' to `label'.
 	* Rename `file_name' to `file'.
 

@@ -136,12 +136,6 @@ X\"[^\"\n]*\" {
 	  yylval.tree = yylval.word->item;
 	  return CLASS_NAME;
 	}
-      if (COBC_FIELD_P (yylval.word->item)
-	  && COBC_FIELD (yylval.word->item)->level == 88)
-	{
-	  yylval.tree = yylval.word->item;
-	  return CONDITION_NAME;
-	}
     }
   return WORD;
 }

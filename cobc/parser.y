@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 108
+%expect 107
 
 %{
 #include "config.h"
@@ -165,7 +165,7 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %token <str>  FUNCTION_NAME
 %token <pict> PICTURE_TOK
 %token <tree> INTEGER_LITERAL NUMERIC_LITERAL NONNUMERIC_LITERAL
-%token <tree> CLASS_NAME CONDITION_NAME MNEMONIC_NAME
+%token <tree> CLASS_NAME MNEMONIC_NAME
 %token <word> WORD LABEL_WORD
 
 %token EQUAL GREATER LESS GE LE COMMAND_LINE ENVIRONMENT_VARIABLE ALPHABET
@@ -215,7 +215,7 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %type <inum> ascending_or_descending opt_from_integer opt_to_integer usage
 %type <inum> file_type
 %type <list> occurs_key_list occurs_index_list value_item_list
-%type <list> data_name_list condition_name_list opt_value_list
+%type <list> data_name_list opt_value_list
 %type <list> evaluate_subject_list evaluate_case evaluate_case_list
 %type <list> evaluate_when_list evaluate_object_list
 %type <list> label_list subscript_list number_list sort_key_list
@@ -245,7 +245,7 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %type <tree> call_returning call_on_exception call_not_on_exception
 %type <tree> opt_on_size_error_sentence opt_not_on_size_error_sentence
 %type <tree> numeric_name numeric_edited_name group_name table_name class_name
-%type <tree> program_name condition_name qualified_cond_name data_name
+%type <tree> program_name data_name
 %type <tree> file_name record_name label mnemonic_name section_name name
 %type <tree> qualified_name predefined_name
 %type <tree> integer_value text_value value number
@@ -2620,7 +2620,7 @@ set_statement:
     for (l = $2; l; l = l->next)
       push_tree (make_op_assign (l->item, '-', $5));
   }
-| SET condition_name_list TO TRUE
+| SET data_name_list TO TRUE
   {
     struct cobc_list *l;
     cobc_location = @1;
@@ -3404,9 +3404,15 @@ expr_item_list:
 | expr_item_list expr_item	{ $$ = list_add ($1, $2); }
 ;
 expr_item:
-  value				{ $$ = $1; }
+  value
+  {
+    if ((COBC_FIELD_P ($1) || COBC_SUBREF_P ($1))
+	&& COBC_FIELD ($1)->level == 88)
+      $$ = make_cond_name ($1);
+    else
+      $$ = $1;
+  }
 | '(' expr_1 ')'		{ $$ = $2; }
-| condition_name		{ $$ = make_cond_name ($1); }
 /* arithmetic operator */
 | '+'				{ $$ = make_integer ('+'); }
 | '-'				{ $$ = make_integer ('-'); }
@@ -3536,40 +3542,6 @@ class_name:
   CLASS_NAME
 ;
 
-/* Condition name */
-
-condition_name_list:
-  condition_name		{ $$ = list ($1); }
-| condition_name_list
-  condition_name		{ $$ = list_add ($1, $2); }
-;
-condition_name:
-  qualified_cond_name		{ $$ = $1; }
-| qualified_cond_name subref	{ $$ = $2; }
-;
-qualified_cond_name:
-  CONDITION_NAME
-  {
-    if (COBC_FIELD ($1)->word->count > 1)
-      ambiguous_error (&@1, COBC_FIELD ($1)->word);
-    $$ = $1;
-    field_set_used (COBC_FIELD ($$)->parent);
-  }
-| CONDITION_NAME in_of qualified_name
-  {
-    struct cobc_word *w = COBC_FIELD ($1)->word;
-    struct cobc_word *qw = lookup_qualified_word (w, COBC_FIELD ($3));
-    $$ = $1;
-    if (!qw)
-      undefined_error (&@1, w, $3);
-    else
-      {
-	$$ = qw->item;
-	field_set_used (COBC_FIELD ($$)->parent);
-      }
-  }
-;
-
 /* Data name */
 
 data_name_list:
@@ -3584,13 +3556,13 @@ data_name:
     if (COBC_REFMOD_P ($1))
       $1 = COBC_REFMOD ($1)->field;
     if (COBC_FIELD_P ($1))
-      {
-	struct cobc_field *p = COBC_FIELD ($1);
-	if (p->indexes > 0)
-	  yyerror_loc (&@1, _("`%s' must be subscripted"),
-		       tree_to_string ($1));
-      }
-    field_set_used (p);
+      if (p->indexes > 0)
+	yyerror_loc (&@1, _("`%s' must be subscripted"),
+		     tree_to_string ($1));
+    if (p->level == 88)
+      field_set_used (p->parent);
+    else
+      field_set_used (p);
   }
 ;
 
