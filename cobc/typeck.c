@@ -892,7 +892,8 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 	    && !f->flag_sign_separate)
 	   || ((cat == CB_CATEGORY_ALPHABETIC
 		|| cat == CB_CATEGORY_ALPHANUMERIC)
-	       && f->size < l->size + 16))
+	       && f->size < l->size + 16
+	       && !cb_field_varying (f)))
     {
       unsigned char *buff = malloc (f->size);
       int diff = f->size - l->size;
@@ -972,7 +973,8 @@ cb_build_move_field (cb_tree src, cb_tree dst)
   struct cb_field *src_f = cb_field (src);
   struct cb_field *dst_f = cb_field (dst);
 
-  if (src_size > 0 && dst_size > 0 && src_size >= dst_size)
+  if ((src_size > 0 && dst_size > 0 && src_size >= dst_size)
+      && (!cb_field_varying (src_f) && !cb_field_varying (dst_f)))
     switch (CB_TREE_CATEGORY (src))
       {
       case CB_CATEGORY_ALPHABETIC:
