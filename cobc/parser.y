@@ -10,12 +10,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2, or (at your option)
  * any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.  If not, write to
  * the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
@@ -245,7 +245,7 @@ program_sequence:
 | program_sequence program
 ;
 program:
-  identification_division 
+  identification_division
   environment_division
   data_division
   procedure_division
@@ -262,7 +262,7 @@ opt_end_program:
 
 identification_division:
   IDENTIFICATION DIVISION '.'
-  PROGRAM_ID '.' idstring opt_program_parameter '.' 
+  PROGRAM_ID '.' idstring opt_program_parameter '.'
   identification_division_options
   {
     init_program ($6);
@@ -367,7 +367,6 @@ select_statement:
   {
     if ((curr_file->organization==ORG_INDEXED) && !(curr_file->ix_desc)) {
       yyerror("indexed file must have a record key");
-      YYABORT;
     }
   }
 ;
@@ -375,10 +374,10 @@ assign_clause:
   PORT { yywarn ("assign target is ignored"); $$=NULL; }
 | filename { $$=$1; }
 | PORT filename { $$=$2; }
-| EXTERNAL filename 
-  { 
-    curr_file->access_mode = curr_file->access_mode + 5; 
-    $$=$2; 
+| EXTERNAL filename
+  {
+    curr_file->access_mode = curr_file->access_mode + 5;
+    $$=$2;
   }
 | error  { yyerror("Invalid ASSIGN clause in SELECT statement"); }
 ;
@@ -388,13 +387,13 @@ select_clauses:
 select_clause:
   ORGANIZATION opt_is organization_options { curr_file->organization=$3; }
 | ACCESS opt_mode opt_is access_options
-  { 
+  {
     /*{ curr_file->access_mode=$4; }*/
     if (curr_file->access_mode < 5) {
-      curr_file->access_mode=$4; 
+      curr_file->access_mode=$4;
     }
     else {
-      curr_file->access_mode = $4 + 5; 
+      curr_file->access_mode = $4 + 5;
     }
   }
 | FILEN STATUS opt_is SYMBOL { curr_file->parent=$4; }
@@ -549,7 +548,7 @@ file_attrib:
 var_strings:
   SYMBOL { }
 | var_strings SYMBOL { }
-; 
+;
 opt_to_integer:
 | TO integer
 ;
@@ -765,7 +764,7 @@ occurs_clause:
   }
   opt_indexed_by
 ;
-opt_indexed_by: 
+opt_indexed_by:
 | opt_key_is INDEXED opt_by index_name_list { }
 ;
 opt_key_is:
@@ -1185,12 +1184,12 @@ accept_options:
   screen_attribs		{ gen_accept($<sval>-1, $1, 1); }
 | screen_attribs ON EXCEPTION
   {
-    screen_io_enable++; 
+    screen_io_enable++;
     gen_accept($<sval>-1, $1, 1);
   }
   variable
   {
-    gen_store_fnres($5); 
+    gen_store_fnres($5);
     $<dval>$ = gen_check_zero();
   }
   statement_list
@@ -1204,7 +1203,7 @@ accept_options:
 | FROM INKEY			{ gen_accept_from_inkey($<sval>-1); }
 | FROM COMMAND_LINE		{ gen_accept_from_cmdline($<sval>-1); }
 | FROM ENVIRONMENT_VARIABLE CLITERAL
-  { 
+  {
     save_literal($3,'X');
     $3->all=0;
     gen_accept_env_var($<sval>-1, $3);
@@ -1246,16 +1245,16 @@ end_add: | END_ADD ;
 
 call_statement:
     CALL  { curr_call_mode=CM_REF; }
-    gname call_using returning_options 
+    gname call_using returning_options
     { $<ival>$ = loc_label++; /* exception check */ }
-    { $<ival>$ = loc_label++; /* not exception check */ } 
-    { 
-      $<ival>$ = gen_call((struct lit *)$3,$<ival>6,$<ival>7); 
-      gen_store_fnres($5); 
+    { $<ival>$ = loc_label++; /* not exception check */ }
+    {
+      $<ival>$ = gen_call((struct lit *)$3,$<ival>6,$<ival>7);
+      gen_store_fnres($5);
     }
-    on_exception_or_overflow 
+    on_exception_or_overflow
     on_not_exception
-    { 
+    {
       check_call_except($9,$10,$<ival>6,$<ival>7,$<ival>8);
     }
     opt_end_call
@@ -1302,7 +1301,7 @@ returning_options:
     ;
 on_exception_or_overflow:
     /* nothing */ { $$ = 0; }
-    | ON exception_or_overflow { $<ival>$ = begin_on_except(); } 
+    | ON exception_or_overflow { $<ival>$ = begin_on_except(); }
       statement_list            { gen_jmplabel($<dval>0); $$=$<ival>3; }
     ;
 exception_or_overflow:
@@ -1310,7 +1309,7 @@ exception_or_overflow:
     | OVERFLOW
     ;
 on_not_exception:
-    NOT ON EXCEPTION { $<ival>$ = begin_on_except(); } 
+    NOT ON EXCEPTION { $<ival>$ = begin_on_except(); }
         statement_list            { gen_jmplabel($<dval>-1); $$=$<ival>4; }
     | /* nothing */ { $$ = 0; }
     ;
@@ -1407,20 +1406,20 @@ display_options:
     ;
 opt_line_pos:
     /* nothing */
-    | LINE expr POSITION expr 
+    | LINE expr POSITION expr
      {
       screen_io_enable++;
       push_expr($2);
       push_expr($4);
       gen_gotoxy_expr();
      }
-    | LINE expr COLUMN expr 
+    | LINE expr COLUMN expr
      {
       screen_io_enable++;
       push_expr($2);
       push_expr($4);
       gen_gotoxy_expr();
-     } 
+     }
     ;
 
 
@@ -1605,7 +1604,7 @@ opt_goto_depending_on:
  */
 
 if_statement:
-    if_then { gen_dstlabel($1); } opt_end_if 
+    if_then { gen_dstlabel($1); } opt_end_if
   | if_then ELSE {
       $<dval>$=gen_passlabel();
       gen_dstlabel($1);
@@ -1646,9 +1645,9 @@ inspect_statement:
   | INSPECT name converting_clause { gen_inspect($2,(void *)$3,2); }
   ;
 converting_clause:
-        CONVERTING 
+        CONVERTING
         noallname TO noallname inspect_before_after {
-            $$ = alloc_converting_struct($2,$4,$5); 
+            $$ = alloc_converting_struct($2,$4,$5);
                 }
         ;
 tallying_clause:
@@ -1912,7 +1911,7 @@ perform_options:
       }
     | label opt_perform_thru gname TIMES
       {
-        unsigned long lbl;      
+        unsigned long lbl;
         gen_push_int($3);
         lbl = gen_marklabel();
         gen_perform_test_counter(lbl);
@@ -1984,7 +1983,7 @@ perform_options:
       }
     ;
 
-opt_perform_thru: 
+opt_perform_thru:
     /* nothing */ { $$ = NULL; }
     | THRU label { $$ = $2;}
     ;
@@ -2070,126 +2069,99 @@ before_after:
 read_statement:
   READ read_body opt_end_read
 ;
-read_body: 
-    name
-    opt_read_next
-    opt_record
-    opt_read_into
-    opt_read_key
-    {
-      if (gen_reads($1, $4, $5, $2, 0) != 0)
-        YYABORT;
-    }
-    | name
-    opt_read_next
-    opt_record
-    opt_read_into
-    opt_read_key
-    opt_read_at_end
-    {    
-     if (gen_reads($1, $4, $5, $2, 1) != 0)
-       YYABORT;
-     else
-       {
-	 ginfo_container4($6);
-	 gic = NULL;
-       }
-    }
-   | name
-    opt_read_next
-    opt_record 
-    opt_read_into
-    opt_read_key
-    opt_read_invalid_key 
-    {    
-     if (gen_reads($1, $4, $5, $2, 2) != 0)
-       YYABORT;
-     else
-       gen_test_invalid_keys ($6);
-    }
-    ;
+read_body:
+  name opt_read_next opt_record opt_read_into opt_read_key
+  {
+    if (gen_reads($1, $4, $5, $2, 0) != 0)
+      YYABORT;
+  }
+| name opt_read_next opt_record opt_read_into opt_read_key opt_read_at_end
+  {
+    gen_reads($1, $4, $5, $2, 1);
+    ginfo_container4($6);
+    gic = NULL;
+  }
+| name opt_read_next opt_record opt_read_into opt_read_key opt_read_invalid_key
+  {
+    gen_reads($1, $4, $5, $2, 2);
+    gen_test_invalid_keys ($6);
+  }
+;
 opt_read_next:
-    /* nothing */       { $$ = 0; }
-    | NEXT              { $$ = 1; }  
-    | PREVIOUS          { $$ = 2; }  
-    ;
+  /* nothing */			{ $$ = 0; }
+| NEXT				{ $$ = 1; }
+| PREVIOUS			{ $$ = 2; }
+;
 opt_read_into:
-    /* nothing */       { $$ = NULL; }
-    | INTO name         { $$ = $2; }
-    ;
+  /* nothing */			{ $$ = NULL; }
+| INTO name			{ $$ = $2; }
+;
 opt_read_key:
-    /* nothing */       { $$ = NULL; }
-    | KEY opt_is name   { $$ = $3; }
-    ;
+  /* nothing */			{ $$ = NULL; }
+| KEY opt_is name		{ $$ = $3; }
+;
 opt_read_at_end:
-    NOT opt_at on_end       
-     {
-      ginfo_container2($3, 2);
-      $$=ginfo_container3($3, 2);
-     }
-    | AT on_end 
-     {
-      ginfo_container2($2, 1);
-      $$=ginfo_container3($2, 1);
-     }
-    | on_end
-     {
-      ginfo_container2($1, 1);
-      $$=ginfo_container3($1, 1);
-     }
-    | AT on_end NOT opt_at 
-     { 
-      ginfo_container2($2, 1);
-     } 
-     on_end 
-     { 
-      ginfo_container2($6, 2);
-      $$=ginfo_container3($6, 3);
-     }
-    | on_end NOT opt_at 
-     { 
-      ginfo_container2($1, 1);
-     } 
-     on_end 
-     { 
-      ginfo_container2($5, 2);
-      $$=ginfo_container3($5, 3);
-     }
-    ;
+  NOT opt_at on_end
+  {
+    ginfo_container2($3, 2);
+    $$=ginfo_container3($3, 2);
+  }
+| AT on_end
+  {
+    ginfo_container2($2, 1);
+    $$=ginfo_container3($2, 1);
+  }
+| on_end
+  {
+    ginfo_container2($1, 1);
+    $$=ginfo_container3($1, 1);
+  }
+| AT on_end NOT opt_at
+  {
+    ginfo_container2($2, 1);
+  }
+  on_end
+  {
+    ginfo_container2($6, 2);
+    $$=ginfo_container3($6, 3);
+  }
+| on_end NOT opt_at
+  {
+    ginfo_container2($1, 1);
+  }
+  on_end
+  {
+    ginfo_container2($5, 2);
+    $$=ginfo_container3($5, 3);
+  }
+;
 on_end:
-    END
-    { 
-      if ( gic == NULL ) {
-         gic=ginfo_container0();
-      }
-      $$=ginfo_container1(gic);
-    }
-    statement_list
-    { 
-      $$=$<gic>2;
-    }
-    ;
+  END
+  {
+    if (gic == NULL)
+      gic=ginfo_container0();
+    $$=ginfo_container1(gic);
+  }
+  statement_list
+  {
+    $$=$<gic>2;
+  }
+  ;
 opt_read_invalid_key:
-    read_invalid_key { $$ = gen_invalid_keys ($1, NULL); }
-    | read_not_invalid_key { $$ = gen_invalid_keys (NULL, $1); }
-    | read_invalid_key read_not_invalid_key { $$ = gen_invalid_keys ($1, $2); }
-    ;
+  read_invalid_key		{ $$ = gen_invalid_keys ($1, NULL); }
+| read_not_invalid_key		{ $$ = gen_invalid_keys (NULL, $1); }
+| read_invalid_key
+  read_not_invalid_key		{ $$ = gen_invalid_keys ($1, $2); }
+;
 read_invalid_key:
-    INVALID opt_key     { $<ike>$ = gen_before_invalid_key (); }
-    statement_list      { $$ = gen_after_invalid_key ($<ike>3); }
-    ;
+  INVALID opt_key		{ $<ike>$ = gen_before_invalid_key (); }
+  statement_list		{ $$ = gen_after_invalid_key ($<ike>3); }
+;
 read_not_invalid_key:
-    NOT INVALID opt_key { $<ike>$ = gen_before_invalid_key (); }
-    statement_list      { $$ = gen_after_invalid_key ($<ike>4); }
-    ;
-opt_end_read:
-    /* nothing */
-    | END_READ
-    ;
-opt_end_return:
-    /* nothing */
-    | END_RETURN
-    ;
+  NOT INVALID opt_key		{ $<ike>$ = gen_before_invalid_key (); }
+  statement_list		{ $$ = gen_after_invalid_key ($<ike>4); }
+;
+opt_end_read: | END_READ ;
 
 
 /*
@@ -2211,31 +2183,21 @@ release_statement:
  */
 
 return_statement:
-    RETURN return_body opt_end_return
-    ;
+  RETURN return_body opt_end_return
+;
 return_body:
-    name
-    opt_record
-    opt_read_into
-    {    
-     if (gen_reads($1, $3, NULL, 1, 4) != 0) {
-        YYABORT;
-     }
-    }
-    | name
-    opt_record
-    opt_read_into
-    opt_read_at_end
-    {    
-     if (gen_reads($1, $3, NULL, 1, 5) != 0) {
-        YYABORT;
-     }
-     else {
-        ginfo_container4($4);
-        gic = NULL;
-     }
-    }
-    ;
+  name opt_record opt_read_into
+  {
+    gen_reads ($1, $3, NULL, 1, 4);
+  }
+| name opt_record opt_read_into opt_read_at_end
+  {
+    gen_reads ($1, $3, NULL, 1, 5);
+    ginfo_container4 ($4);
+    gic = NULL;
+  }
+;
+opt_end_return: | END_RETURN ;
 
 
 /*
@@ -2263,8 +2225,8 @@ opt_end_rewrite:
  */
 
 search_statement:
-      SEARCH search_body opt_end_search 
-    | SEARCH ALL search_all_body opt_end_search 
+      SEARCH search_body opt_end_search
+    | SEARCH ALL search_all_body opt_end_search
 search_body:
       variable_indexed
       {
@@ -2287,7 +2249,7 @@ search_body:
         gen_jmplabel($<dval>2); /* generate GOTO END  */
         gen_dstlabel($<dval>4); /* generate search loop start label */
         $$ = $<dval>2;
-      } 
+      }
       search_when_list
       {
         /* increment loop index, check for end */
@@ -2384,7 +2346,7 @@ search_all_when:
      }
     ;
 search_all_when_conditional:
-  variable opt_is equal_to variable 
+  variable opt_is equal_to variable
   {
     if (curr_field == NULL)
       curr_field = $1;
@@ -2413,13 +2375,13 @@ set_statement:
    SET set_list
    ;
 set_list:
-   set_target TO opt_address_of set_variable_or_nlit  
+   set_target TO opt_address_of set_variable_or_nlit
    { gen_set($1,SET_TO,$4,0,$3); }
-  | variable UP BY var_or_nliteral   
+  | variable UP BY var_or_nliteral
    { gen_set($1,SET_UP_BY,$4,0,0); }
-  | variable DOWN BY var_or_nliteral 
+  | variable DOWN BY var_or_nliteral
    { gen_set($1,SET_DOWN_BY,$4,0,0); }
-  | opt_address_of variable TO opt_address_of set_variable 
+  | opt_address_of variable TO opt_address_of set_variable
    { gen_set($2,SET_TO,$5,$1,$4); }
   ;
 set_target:
@@ -2438,9 +2400,9 @@ set_variable_or_nlit:
   name_or_lit	  { $$ = $1; }
   | TOK_NULL	  { $$ = NULL; }
   | TOK_TRUE
-    { 
+    {
       $$ = (struct sym *)1;
-      /* no (struct sym *) may have this value! */ 
+      /* no (struct sym *) may have this value! */
     }
   ;
 
@@ -2470,14 +2432,14 @@ sort_direction:
 sort_input:
     INPUT PROCEDURE opt_is sort_range { $$=NULL; }
     | USING sort_file_list { gen_sort_using($<sval>-2,$2); $$=$2; }
-    ;       
+    ;
 sort_output:
     OUTPUT PROCEDURE opt_is sort_range { $$=NULL; }
     | GIVING sort_file_list { gen_sort_giving($<sval>-3,$2); $$=$2; }
     ;
 sort_file_list:
   name { $$ = alloc_sortfile_node($1);  }
-  | sort_file_list name 
+  | sort_file_list name
    {
     $1->next = alloc_sortfile_node($2); $$=$1;
    }
@@ -2928,7 +2890,7 @@ sign_condition:
  *****************************************************************************/
 
 /*
- * 
+ *
  */
 
 opt_gname:
