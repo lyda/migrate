@@ -248,7 +248,7 @@ output_move_literal (cobc_tree src, cobc_tree dst)
       if (l->sign)
 	{
 	  src_desc.have_sign = 1;
-	  cob_put_sign (src_fld, (l->sign < 0) ? 1 : 0);
+	  cob_put_sign (src_fld, l->sign);
 	}
       output_advance_move (src_fld, dst);
     }

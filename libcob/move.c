@@ -287,7 +287,7 @@ cob_move_display_to_binary (struct cob_field f1, struct cob_field f2)
       val = val * 10 + base1[i] - '0';
     else
       val = val * 10;
-  if (sign && f2.desc->have_sign)
+  if (sign < 0 && f2.desc->have_sign)
     val = -val;
   val %= cob_exp10LL[(int) f2.desc->digits];
 
@@ -320,10 +320,10 @@ cob_move_binary_to_display (struct cob_field f1, struct cob_field f2)
     }
 
   /* get sign */
-  sign = 0;
+  sign = 1;
   if (val < 0)
     {
-      sign = 1;
+      sign = -1;
       val = -val;
     }
 
@@ -363,6 +363,7 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 {
   char *p;
   int sign = cob_get_sign (f1);
+  int neg = (sign < 0);
   unsigned char *min, *max, *src, *dst, *end;
   unsigned char pad = ' ';
   int count = 0;
@@ -427,7 +428,7 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	    case 'C':
 	    case 'D':
 	      end = dst;
-	      memcpy (dst++, sign ? (c == 'C' ? "CR" : "DB") : "  ", 2);
+	      memcpy (dst++, neg ? (c == 'C' ? "CR" : "DB") : "  ", 2);
 	      break;
 
 	    case 'Z':
@@ -445,13 +446,13 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 		char x = get ();
 		if (trailing_sign)
 		  {
-		    *dst = sign ? '-' : (c == '+') ? '+' : ' ';
+		    *dst = neg ? '-' : (c == '+') ? '+' : ' ';
 		    end--;
 		  }
 		else if (dst == f2.data || suppress_zero)
 		  {
 		    *dst = pad;
-		    sign_symbol = sign ? '-' : (c == '+') ? '+' : ' ';
+		    sign_symbol = neg ? '-' : (c == '+') ? '+' : ' ';
 		  }
 		else
 		  *dst = x;

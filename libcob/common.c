@@ -27,15 +27,35 @@
 
 #include "libcob.h"
 
-int cob_status;
 int cob_argc = 0;
 char **cob_argv = NULL;
 
-int cob_source_line = 0;
 char *cob_source_file = NULL;
+int cob_source_line = 0;
 
 unsigned char cob_decimal_point = '.';
 unsigned char cob_currency_symbol = '$';
+
+int cob_status;
+
+/* ZERO,SPACE,HIGH-VALUE,LOW-VALUE,QUOTE */
+
+static struct cob_field_desc x_desc = {1, 'X'};
+struct cob_field cob_zero =  {&x_desc, "0"};
+struct cob_field cob_space = {&x_desc, " "};
+struct cob_field cob_high =  {&x_desc, "\xff"};
+struct cob_field cob_low =   {&x_desc, "\0"};
+struct cob_field cob_quote = {&x_desc, "\""};
+
+/* RETURN-CODE */
+
+int cob_return_code_value = 0;
+static struct cob_field_desc rc_desc = {4, 'B', 9, 0, 1};
+struct cob_field cob_return_code = {&rc_desc, (char *)&cob_return_code_value};
+
+/* SWITCH-1/2/3/4/5/6/7/8 */
+
+char cob_switch[8] = {1, 0, 1, 1, 1, 1, 1, 1};
 
 long cob_exp10[10] = {
   1,
@@ -72,86 +92,12 @@ long long cob_exp10LL[19] = {
   1000000000000000000
 };
 
-/* ZERO,SPACE,HIGH-VALUE,LOW-VALUE,QUOTE */
-
-static struct cob_field_desc x_desc = {1, 'X'};
-struct cob_field cob_zero =  {&x_desc, "0"};
-struct cob_field cob_space = {&x_desc, " "};
-struct cob_field cob_high =  {&x_desc, "\xff"};
-struct cob_field cob_low =   {&x_desc, "\0"};
-struct cob_field cob_quote = {&x_desc, "\""};
-
-/* RETURN-CODE */
-
-int cob_return_code_value = 0;
-static struct cob_field_desc rc_desc = {4, 'B', 9, 0, 1};
-struct cob_field cob_return_code = {&rc_desc, (char *)&cob_return_code_value};
-
-/* SWITCH-1/2/3/4/5/6/7/8 */
-
-char cob_switch[8] = {1, 0, 1, 1, 1, 1, 1, 1};
-
-
-int
-cob_get_sign (struct cob_field f)
-{
-  if (COB_FIELD_TYPE (f) == '9' && f.desc->have_sign)
-    {
-      if (f.desc->sign_separate)
-	{
-	  char *p = f.desc->sign_leading ? f.data : f.data + f.desc->size - 1;
-	  return (*p == '+') ? 0 : 1;
-	}
-      else
-	{
-	  char *p = f.desc->sign_leading ? f.data : f.data + f.desc->size - 1;
-	  if (*p <= '9')
-	    return 0;
-	  *p -= 0x10;
-	  return 1;
-	}
-    }
-  return 0;
-}
-
-void
-cob_put_sign (struct cob_field f, int sign)
-{
-  if (COB_FIELD_TYPE (f) == '9' && f.desc->have_sign)
-    {
-      if (f.desc->sign_separate)
-	{
-	  char *p = f.desc->sign_leading ? f.data : f.data + f.desc->size - 1;
-	  *p = sign ? '-' : '+';
-	}
-      else if (sign)
-	{
-	  char *p = f.desc->sign_leading ? f.data : f.data + f.desc->size - 1;
-	  *p += 0x10;
-	}
-    }
-}
-
-char *
-cob_field_to_string (struct cob_field f, char *s)
-{
-  int i, size = COB_FIELD_SIZE (f);
-  memcpy (s, COB_FIELD_DATA (f), size);
-  for (i = 0; i < size; i++)
-    if (s[i] == ' ')
-      break;
-  s[i] = '\0';
-  return s;
-}
-
 
 void
 cob_init (int argc, char **argv)
 {
   cob_argc = argc;
   cob_argv = argv;
-  cob_source_file = 0;
-  cob_source_line = 0;
 
   cob_init_math ();
   cob_init_basicio ();
@@ -162,19 +108,6 @@ void
 cob_stop_run (void)
 {
   exit (cob_return_code_value);
-}
-
-void
-cob_runtime_error (char *fmt, ...)
-{
-  va_list ap;
-  va_start (ap, fmt);
-  if (cob_source_line)
-    fprintf (stderr, "%s:%d: ", cob_source_file, cob_source_line);
-  fputs ("run-time error: ", stderr);
-  vfprintf (stderr, fmt, ap);
-  fputs ("\a\n", stderr);
-  va_end (ap);
 }
 
 int
@@ -283,42 +216,48 @@ cob_cmp_all (unsigned char *data, unsigned char c, int len)
  * Class check
  */
 
-int
-cob_is_numeric (struct cob_field f)
-{
-  if (COB_FIELD_TYPE (f) == '9')
-    {
-      int i, sign;
-      int ret = 1;
-      int size = COB_FIELD_LENGTH (f);
-      unsigned char *data = COB_FIELD_BASE (f);
-      sign = cob_get_sign (f);
-      for (i = 0; i < size; i++)
-	if (!isdigit (data[i]))
-	  {
-	    ret = 0;
-	    break;
-	  }
-      cob_put_sign (f, sign);
-      return ret;
-    }
-  else
-    {
-      int i;
-      int size = COB_FIELD_SIZE (f);
-      unsigned char *data = COB_FIELD_DATA (f);
-      for (i = 0; i < size; i++)
-	if (!isdigit (data[i]))
-	  return 0;
-      return 1;
-    }
-}
-
 void
 cob_check_numeric (struct cob_field f)
 {
   if (!cob_is_numeric (f))
     cob_runtime_error ("non-numeric value `%s'", COB_FIELD_BASE (f));
+}
+
+int
+cob_is_numeric (struct cob_field f)
+{
+  switch (COB_FIELD_TYPE (f))
+    {
+    case 'B':
+    case 'C':
+      return 1;
+    case '9':
+      {
+	int i;
+	int ret = 1;
+	int sign = cob_get_sign (f);
+	int len = COB_FIELD_LENGTH (f);
+	unsigned char *data = COB_FIELD_BASE (f);
+	for (i = 0; i < len; i++)
+	  if (!isdigit (data[i]))
+	    {
+	      ret = 0;
+	      break;
+	    }
+	cob_put_sign (f, sign);
+	return ret;
+      }
+    default:
+      {
+	int i;
+	int size = COB_FIELD_SIZE (f);
+	unsigned char *data = COB_FIELD_DATA (f);
+	for (i = 0; i < size; i++)
+	  if (!isdigit (data[i]))
+	    return 0;
+	return 1;
+      }
+    }
 }
 
 int
@@ -355,4 +294,74 @@ cob_is_lower (struct cob_field f)
     if (!isspace (data[i]) && !islower (data[i]))
       return 0;
   return 1;
+}
+
+
+/*
+ * Common functions
+ */
+
+int
+cob_get_sign (struct cob_field f)
+{
+  if (f.desc->have_sign)
+    {
+      if (f.desc->sign_separate)
+	{
+	  char *p = f.desc->sign_leading ? f.data : f.data + f.desc->size - 1;
+	  return (*p == '+') ? 1 : -1;
+	}
+      else
+	{
+	  char *p = f.desc->sign_leading ? f.data : f.data + f.desc->size - 1;
+	  if (*p <= '9')
+	    return 1;
+	  *p -= 0x10;
+	  return -1;
+	}
+    }
+  return 0;
+}
+
+void
+cob_put_sign (struct cob_field f, int sign)
+{
+  if (f.desc->have_sign)
+    {
+      if (f.desc->sign_separate)
+	{
+	  char *p = f.desc->sign_leading ? f.data : f.data + f.desc->size - 1;
+	  *p = (sign < 0) ? '-' : '+';
+	}
+      else if (sign < 0)
+	{
+	  char *p = f.desc->sign_leading ? f.data : f.data + f.desc->size - 1;
+	  *p += 0x10;
+	}
+    }
+}
+
+char *
+cob_field_to_string (struct cob_field f, char *s)
+{
+  int i, size = COB_FIELD_SIZE (f);
+  memcpy (s, COB_FIELD_DATA (f), size);
+  for (i = 0; i < size; i++)
+    if (s[i] == ' ')
+      break;
+  s[i] = '\0';
+  return s;
+}
+
+void
+cob_runtime_error (char *fmt, ...)
+{
+  va_list ap;
+  va_start (ap, fmt);
+  if (cob_source_line)
+    fprintf (stderr, "%s:%d: ", cob_source_file, cob_source_line);
+  fputs ("run-time error: ", stderr);
+  vfprintf (stderr, fmt, ap);
+  fputs ("\a\n", stderr);
+  va_end (ap);
 }

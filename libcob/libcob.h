@@ -25,6 +25,11 @@
 #include <db1/db.h>
 #include <gmp.h>
 
+
+/*
+ * Field structure
+ */
+
 #define COB_VOID		 0
 #define COB_ALPHABETIC		'A'
 #define COB_NUMERIC		'9'
@@ -37,11 +42,6 @@
 
 #define COB_BINARY		'B'
 #define COB_PACKED		'C'
-
-
-/*
- * Field structure
- */
 
 struct cob_field {
   struct cob_field_desc {
@@ -76,13 +76,9 @@ struct cob_field {
   })
 
 
-/* reference modification */
-
-#define cob_ref(var,off,len) \
-  ({ int cob_ref_off = (off) - 1, cob_ref_len = (len); var; })
-
-#define cob_ref_rest(var,off,siz) \
-  ({ int cob_ref_off = (off) - 1, cob_ref_len = (siz) - cob_ref_off; var; })
+/*
+ * Supporting macros
+ */
 
 /* frame stack */
 
@@ -103,6 +99,25 @@ struct cob_frame {
  if (frame_stack[frame_index].perform_through == label)	\
    goto *frame_stack[frame_index].return_address
 
+/* reference modification */
+
+#define cob_ref(var,off,len) \
+  ({ int cob_ref_off = (off) - 1, cob_ref_len = (len); var; })
+
+#define cob_ref_rest(var,off,siz) \
+  ({ int cob_ref_off = (off) - 1, cob_ref_len = (siz) - cob_ref_off; var; })
+
+/* miscellaneous macros */
+
+#define COB_INDEX(i,max) ((i) - 1)
+
+#define cob_cmp(x,y) ((x) - (y))
+
+#define cob_exit_program() goto l_exit;
+
+
+/* common.c */
+
 /* command line arguments */
 
 extern int cob_argc;
@@ -113,21 +128,18 @@ extern char **cob_argv;
 extern char *cob_source_file;
 extern int cob_source_line;
 
-/* operation status */
-
-extern int cob_status;
-
-#define COB_STATUS_SUCCESS	0
-#define COB_STATUS_OVERFLOW	1
-
 /* environment variables */
 
 extern unsigned char cob_decimal_point;
 extern unsigned char cob_currency_symbol;
 #define cob_numeric_separator ((cob_decimal_point == '.') ? ',' : '.')
 
-extern long cob_exp10[10];
-extern long long cob_exp10LL[19];
+/* operation status */
+
+extern int cob_status;
+
+#define COB_STATUS_SUCCESS	0
+#define COB_STATUS_OVERFLOW	1
 
 /* constants */
 
@@ -140,28 +152,27 @@ extern struct cob_field cob_return_code;
 extern int cob_return_code_value;
 extern char cob_switch[];
 
-/* functional macros */
-
-#define COB_INDEX(i,max) ((i) - 1)
-
-#define cob_cmp(x,y) ((x) - (y))
-
-#define cob_exit_program() goto l_exit;
-
-
-/* general.c */
+extern long cob_exp10[10];
+extern long long cob_exp10LL[19];
 
 extern void cob_init (int argc, char **argv);
 extern void cob_stop_run (void);
-extern void cob_runtime_error (char *fmt, ...);
+extern int cob_index (int i, int max);
+
+extern int cob_str_cmp (struct cob_field f1, struct cob_field f2);
+extern int cob_cmp_str (struct cob_field f1, unsigned char *data2, int len2);
+extern int cob_cmp_all (unsigned char *data, unsigned char c, int len);
+
+extern void cob_check_numeric (struct cob_field f);
+extern int cob_is_numeric (struct cob_field f);
+extern int cob_is_alpha (struct cob_field f);
+extern int cob_is_upper (struct cob_field f);
+extern int cob_is_lower (struct cob_field f);
 
 extern int cob_get_sign (struct cob_field f);
 extern void cob_put_sign (struct cob_field f, int sign);
 extern char *cob_field_to_string (struct cob_field f, char *s);
-
-extern int cob_index (int i, int max);
-extern void cob_check_numeric (struct cob_field f);
-extern int cob_str_cmp (struct cob_field f1, struct cob_field f2);
+extern void cob_runtime_error (char *fmt, ...);
 
 
 /* move.c */

@@ -1332,7 +1332,7 @@ output_tree (cobc_tree x)
 	      {p->size, COBC_TREE_CLASS (p), p->size, p->decimals};
 	    struct cob_field src_fld = {&src_desc, p->str};
 	    src_desc.have_sign = 1;
-	    cob_put_sign (src_fld, (p->sign < 0) ? 1 : 0);
+	    cob_put_sign (src_fld, p->sign);
 	  }
 	output ("({ struct cob_field_desc desc = {%d, '%c', %d, %d, %d}; ",
 		p->size, COBC_TREE_CLASS (p),

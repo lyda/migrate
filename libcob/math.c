@@ -216,7 +216,7 @@ cob_decimal_set_display (cob_decimal d, struct cob_field f)
   memcpy (buff, base, len);
   buff[len] = 0;
   mpz_set_str (d->number, buff, 10);
-  if (sign == 1) /* negative */
+  if (sign < 0)
     mpz_neg (d->number, d->number);
   d->decimals = f.desc->decimals;
   cob_put_sign (f, sign);
@@ -312,7 +312,7 @@ cob_decimal_get (cob_decimal d, struct cob_field f)
       {
 	char *p, buff[32];
 	int size;
-	int sign = (mpz_sgn (d->number) >= 0) ? 0 : 1;
+	int sign = (mpz_sgn (d->number) < 0) ? -1 : 1;
 
 	/* Build string */
 	mpz_abs (d->number, d->number);
