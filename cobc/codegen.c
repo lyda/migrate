@@ -596,27 +596,32 @@ output_compare (cobc_tree s1, cobc_tree s2)
   else if (is_numeric (s1) && is_numeric (s2))
     {
       /* numeric comparison */
-      output_indent ("({", 2);
+      output ("({\n");
+      output_indent_level += 2;
       output_expr (s1, 1);
       output_expr (s2, 2);
       output_line ("cob_decimal_cmp (cob_d1, cob_d2);");
-      output_indent ("})", -2);
+      output_prefix ();
+      output_indent_level -= 2;
+      output ("})");
     }
   else if (COBC_CONST_P (s1) || COBC_CONST_P (s2))
     {
       /* non-numeric figurative comparison */
-      unsigned char c, *neg;
       cobc_tree x, y;
+      unsigned char c;
       if (COBC_CONST_P (s2))
-	x = s1, y = s2, neg = "";
+	x = s1, y = s2;
       else
-	x = s2, y = s1, neg = "-";
+	x = s2, y = s1;
       c = ((y == cobc_zero) ? '0' :
 	   (y == cobc_space) ? ' ' :
 	   (y == cobc_low) ? '\0' :
 	   (y == cobc_high) ? '\xff' :
 	   (y == cobc_quote) ? '\"' : 0);
-      output ("%scob_cmp_all (", neg);
+      if (COBC_CONST_P (s1))
+	output ("-");
+      output ("cob_cmp_all (");
       output_location (x);
       output (", %d, ", c);
       output_length (x);
