@@ -511,12 +511,12 @@ struct cb_reference {
   struct cb_tree_common common;
   struct cb_word *word;
   enum cb_operand_type type;
-  cb_tree value;
-  cb_tree subs;
-  cb_tree offset;
-  cb_tree length;
+  cb_tree value;		/* the item referred by this reference */
+  cb_tree subs;			/* the list of subscripts */
+  cb_tree offset;		/* 1st operand of reference modification */
+  cb_tree length;		/* 2nd operand of reference modification */
   cb_tree check;
-  cb_tree chain;
+  cb_tree chain;		/* next qualified name */
 };
 
 #define CB_REFERENCE(x)		(CB_TREE_CAST (CB_TAG_REFERENCE, struct cb_reference, x))
