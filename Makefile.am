@@ -20,13 +20,16 @@ deb:
 	dpkg-buildpackage -rfakeroot -us -uc
 
 upload:
-	test -e $(distdir).tar.gz && \
-	  ncftpput upload.sourceforge.net /incoming $(distdir).tar.gz
-	test -e $(rpmdir)/RPMS/i386/$(distdir)-$(RELEASE).i386.rpm && \
+	if test -e $(distdir).tar.gz; then \
+	  ncftpput upload.sourceforge.net /incoming $(distdir).tar.gz; \
+	fi
+	if test -e $(rpmdir)/RPMS/i386/$(distdir)-$(RELEASE).i386.rpm; then \
 	  ncftpput upload.sourceforge.net /incoming \
 	    $(rpmdir)/RPMS/i386/$(distdir)-$(RELEASE).i386.rpm \
-	    $(rpmdir)/SRPMS/$(distdir)-$(RELEASE).src.rpm
-	test -e ../$(PACKAGE)_$(VERSION)-$(RELEASE)_i386.deb && \
+	    $(rpmdir)/SRPMS/$(distdir)-$(RELEASE).src.rpm; \
+	fi
+	if test -e ../$(PACKAGE)_$(VERSION)-$(RELEASE)_i386.deb; then \
 	  ncftpput upload.sourceforge.net /incoming \
 	    ../$(PACKAGE)_$(VERSION)-$(RELEASE).tar.gz \
-	    ../$(PACKAGE)_$(VERSION)-$(RELEASE)_i386.deb
+	    ../$(PACKAGE)_$(VERSION)-$(RELEASE)_i386.deb; \
+	fi

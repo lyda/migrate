@@ -4,6 +4,7 @@ cobc_SOURCES = cobc.c cobc.h tree.c tree.h codegen.c codegen.h \
 cobc_DEPENDENCIES = defaults.h
 BUILT_SOURCES = parser.c parser.h scanner.c defaults.h
 CLEANFILES = parser.c parser.h scanner.c y.output
+DISTCLEANFILES = defaults.h
 MAINTAINERCLEANFILES = Makefile.in
 INCLUDES = -I$(top_srcdir)/libcob
 

@@ -5,6 +5,7 @@ libcob_la_LDFLAGS = -version-info 0:0:0
 libcob_la_LIBADD = $(LIBCOB_LIBADD)
 include_HEADERS = libcob.h
 BUILT_SOURCES = defaults.h
+DISTCLEANFILES = defaults.h
 MAINTAINERCLEANFILES = Makefile.in
 INCLUDES = -I$(top_srcdir)
 
