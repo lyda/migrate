@@ -48,7 +48,7 @@ AT_DATA([prog.cob], [
            STOP RUN.
 ])
 
-AT_CHECK([${COMPILE} -fbinary-bigendian -o prog prog.cob])
+AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0],
 [00001234
 34120000
