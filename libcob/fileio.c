@@ -142,7 +142,7 @@ sequential_rewrite (struct cob_file_desc *f, struct cob_field rec)
   if (rec.size != f->record_size)
     return COB_FILE_RECORD_OVERFLOW;
 
-  if (f->record_depending.desc)
+  if (COB_FIELD_IS_VALID (f->record_depending))
     if (rec.size != cob_to_int (f->record_depending))
       return COB_FILE_RECORD_OVERFLOW;
 
@@ -349,7 +349,7 @@ relative_read_next (struct cob_file_desc *f)
       if (read (f->file.fd, &f->record_size, sizeof (f->record_size)) <= 0)
 	return COB_FILE_END_OF_FILE;
 
-      if (f->relative_key.desc)
+      if (COB_FIELD_IS_VALID (f->relative_key))
 	{
 	  if (f->f.first_read)
 	    {
@@ -398,7 +398,7 @@ relative_write (struct cob_file_desc *f, struct cob_field rec)
 
   /* update RELATIVE KEY */
   if (f->access_mode == COB_ACCESS_SEQUENTIAL)
-    if (f->relative_key.desc)
+    if (COB_FIELD_IS_VALID (f->relative_key))
       cob_set_int (f->relative_key,
 		   lseek (f->file.fd, 0, SEEK_CUR) / RELATIVE_SIZE (f));
 
@@ -969,7 +969,7 @@ read_common (struct cob_file_desc *f, struct cob_field key)
   if (!FILE_OPENED (f) || !FILE_READABLE (f))
     RETURN_STATUS (COB_FILE_INPUT_DENIED);
 
-  if (key.desc)
+  if (COB_FIELD_IS_VALID (key))
     ret = fileio_funcs[f->organization]->read (f, key);
   else
     ret = fileio_funcs[f->organization]->read_next (f);
@@ -979,7 +979,7 @@ read_common (struct cob_file_desc *f, struct cob_field key)
     case COB_FILE_SUCCEED:
       f->f.first_read = 0;
       f->f.read_done = 1;
-      if (f->record_depending.desc)
+      if (COB_FIELD_IS_VALID (f->record_depending))
 	cob_set_int (f->record_depending, f->record_size);
       break;
     case COB_FILE_END_OF_FILE:
@@ -1020,7 +1020,7 @@ cob_write (struct cob_file_desc *f, struct cob_field rec)
 	RETURN_STATUS (COB_FILE_OUTPUT_DENIED);
     }
 
-  if (f->record_depending.desc)
+  if (COB_FIELD_IS_VALID (f->record_depending))
     f->record_size = cob_to_int (f->record_depending);
   else
     f->record_size = rec.size;

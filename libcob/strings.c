@@ -242,7 +242,7 @@ cob_string (struct cob_field dst, ...)
 
       case COB_STRING_CONCATENATE:
 	src = va_arg (ap, struct cob_field);
-	if (dlm.size > 0)
+	if (COB_FIELD_IS_VALID (dlm))
 	  {
 	    int size = src.size - dlm.size + 1;
 	    for (i = 0; i < size; i++)
@@ -275,7 +275,7 @@ cob_string (struct cob_field dst, ...)
 
  end:
   va_end (ap);
-  if (ptr.size)
+  if (COB_FIELD_IS_VALID (ptr))
     set_int (ptr, offset + 1);
 }
 
