@@ -689,7 +689,7 @@ output_param (cb_tree x, int id)
 	      output_stmt (CB_VALUE (l));
 	  }
 
-	if (!r->subs && !r->offset && !cb_field_varying (f))
+	if (!r->subs && !r->offset && !cb_field_varying (f) && f->count > 0)
 	  {
 	    if (!f->flag_field)
 	      {

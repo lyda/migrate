@@ -409,6 +409,7 @@ struct cb_field {
   int occurs_min;		/* OCCURS <max> */
   int occurs_max;		/* or OCCURS <min> TO <max> */
   int indexes;			/* the number of parents who have OCCURS */
+  int count;			/* reference count */
   cb_tree occurs_depending;	/* OCCURS ... DEPENDING ON */
   enum cb_storage storage;
   enum cb_usage usage;		/* USAGE */

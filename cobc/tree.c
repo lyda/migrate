@@ -1228,12 +1228,17 @@ validate_field_1 (struct cb_field *f)
 static void
 setup_parameters (struct cb_field *f)
 {
-  static int id = 0;
-
   /* setup cname */
-  char name[CB_MAX_CNAME];
-  sprintf (name, "%s_%d", f->name, id++);
-  f->cname = to_cname (name);
+  if (f->parent)
+    {
+      char name[CB_MAX_CNAME];
+      snprintf (name, CB_MAX_CNAME, "%s$%s", f->parent->cname, f->name);
+      f->cname = to_cname (name);
+    }
+  else
+    {
+      f->cname = to_cname (f->name);
+    }
 
   /* determine the class */
   if (f->children)
@@ -1588,6 +1593,7 @@ finalize_file (struct cb_file *f, struct cb_field *records)
   sprintf (buff, "X(%d)", f->record_max);
   f->record->pic = CB_PICTURE (cb_build_picture (buff));
   f->record->sister = records;
+  f->record->count++;
   cb_validate_field (f->record);
 
   for (p = records; p; p = p->sister)
@@ -1668,6 +1674,7 @@ cb_ref (cb_tree x)
 {
   struct cb_reference *r = CB_REFERENCE (x);
   cb_tree pv;
+  cb_tree v = NULL;
 
   if (r->value)
     return r->value;
@@ -1680,17 +1687,14 @@ cb_ref (cb_tree x)
 	  undefined_error (x);
 	  goto error;
 	case 1:
-	  r->value = CB_VALUE (r->word->items);
-	  return r->value;
+	  v = CB_VALUE (r->word->items);
+	  goto end;
 	default:
 	  if (r->offset && CB_LABEL_P (r->offset))
 	    {
-	      cb_tree v = resolve_label (r->word->name, CB_LABEL (r->offset));
+	      v = resolve_label (r->word->name, CB_LABEL (r->offset));
 	      if (v != cb_error_node)
-		{
-		  r->value = v;
-		  return r->value;
-		}
+		goto end;
 	    }
 	  ambiguous_error (x);
 	  goto error;
@@ -1710,7 +1714,6 @@ cb_ref (cb_tree x)
       {
 	cb_tree l;
 	struct cb_field *p, *pp;
-	cb_tree v = NULL;
 
 	/* find the definition in the parent */
 	pp = CB_FIELD (pv);
@@ -1734,23 +1737,25 @@ cb_ref (cb_tree x)
 	      undefined_error (x);
 	    goto error;
 	  }
-	r->value = v;
-	return r->value;
+	goto end;
       }
     case CB_TAG_LABEL:
       {
-	cb_tree v = resolve_label (r->word->name, CB_LABEL (pv));
-	if (v == cb_error_node)
-	  {
-	    undefined_error (x);
-	    goto error;
-	  }
-	r->value = v;
-	return r->value;
+	v = resolve_label (r->word->name, CB_LABEL (pv));
+	if (v != cb_error_node)
+	  goto end;
+	undefined_error (x);
+	goto error;
       }
     default:
       ABORT ();
     }
+
+ end:
+  if (CB_FIELD_P (v))
+    CB_FIELD (v)->count++;
+  r->value = v;
+  return r->value;
 
  error:
   r->value = cb_error_node;
