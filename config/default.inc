@@ -7,6 +7,9 @@ text-column: 72
 # Value: `auto', `free', `fixed'
 source-format: fixed
 
+# Value: `yes', `no'
+filename-mapping: no
+
 # Value:             sign  0123456789
 #                    ----  ----------
 # `ascii'        positive  0123456789

@@ -54,6 +54,19 @@ class           CLASS 句
 builtin
 parameter
 
+* Prefix
+
+a_NAME      field attribute (cob_field_attr)
+b_NAME      base address (unsigned char *)
+c_ID        constant (cob_field)
+d_ID        decimal (cob_decimal)
+f_NAME      field (cob_field)
+f_ID        filler (cob_field)
+            file (cob_file)
+i_          index (int)
+l_ID        label
+s_NAME      collating sequence (unsigned char *)
+
 * Terms
 
 ** Word
