@@ -30,6 +30,9 @@
 #include "libcob.h"
 #include "defaults.h"
 
+static char resolve_error_buff[FILENAME_MAX];
+static char *resolve_error = NULL;
+
 
 /*
  * Call table
@@ -40,8 +43,10 @@
 static struct call_hash
 {
   const char *name;
+  const char *path;
   void *func;
   void *handle;
+  time_t mtime;
   struct call_hash *next;
 } *call_table[HASH_SIZE];
 
@@ -55,25 +60,17 @@ hash (const char *s)
 }
 
 static void
-insert (const char *name, void *handle, void *func)
+insert (const char *name, const char *path, void *handle, void *func, time_t mtime)
 {
   int val = hash (name);
   struct call_hash *p = malloc (sizeof (struct call_hash));
   p->name = strdup (name);
+  p->path = strdup (path);
   p->func = func;
   p->handle = handle;
+  p->mtime = mtime;
   p->next = call_table[val];
   call_table[val] = p;
-}
-
-static void *
-lookup (const char *name)
-{
-  struct call_hash *p;
-  for (p = call_table[hash (name)]; p; p = p->next)
-    if (strcmp (name, p->name) == 0)
-      return p->func;
-  return NULL;
 }
 
 static void
@@ -91,13 +88,42 @@ drop (const char *name)
       }
 }
 
+static void *
+lookup (const char *name)
+{
+  struct stat st;
+  struct call_hash *p;
+  for (p = call_table[hash (name)]; p; p = p->next)
+    if (strcmp (name, p->name) == 0)
+      {
+	if (stat (p->path, &st) == 0)
+	  {
+	    void *func, *handle;
+	    /* not modified */
+	    if (st.st_mtime == p->mtime)
+	      return p->func;
+	    /* reload */
+	    dlclose (p->handle);
+	    if ((handle = dlopen (p->path, RTLD_LAZY)) != NULL
+		&& (func = dlsym (handle, name)) != NULL)
+	      {
+		p->handle = handle;
+		p->func = func;
+		p->mtime = st.st_mtime;
+		resolve_error = NULL;
+		return p->func;
+	      }
+	  }
+	drop (name);
+	break;
+      }
+  return NULL;
+}
+
 
 /*
  * C interface
  */
-
-static char resolve_error_buff[FILENAME_MAX];
-static char *resolve_error = NULL;
 
 static char *path_str = NULL;
 
@@ -157,7 +183,7 @@ cob_resolve (const char *name)
 	  if ((handle = dlopen (filename, RTLD_LAZY)) != NULL
 	      && (func = dlsym (handle, name)) != NULL)
 	    {
-	      insert (name, handle, func);
+	      insert (name, filename, handle, func, st.st_mtime);
 	      resolve_error = NULL;
 	      return func;
 	    }

@@ -258,7 +258,15 @@ output_length (cobc_tree x)
   if (COBC_LITERAL_P (x))
     output ("%d", COBC_LITERAL (x)->size);
   else if (COBC_REFMOD_P (x))
-    output_index (COBC_REFMOD (x)->length);
+    {
+      if (COBC_REFMOD (x)->length)
+	output_index (COBC_REFMOD (x)->length);
+      else
+	{
+	  output ("%d - ", COBC_FIELD (x)->size);
+	  output_index (COBC_REFMOD (x)->offset);
+	}
+    }
   else
     output ("%d", COBC_FIELD (x)->size);
 }
@@ -369,8 +377,10 @@ output_expr (cobc_tree x)
 	break;
       }
     case cobc_tag_integer:
-      output_line ("cob_push_int (%d, 0);", COBC_INTEGER (x)->val);
-      break;
+      {
+	output_line ("cob_push_int (%d, 0);", COBC_INTEGER (x)->val);
+	break;
+      }
     case cobc_tag_literal:
       {
 	struct cobc_literal *p = COBC_LITERAL (x);
@@ -383,7 +393,12 @@ output_expr (cobc_tree x)
 	break;
       }
     default:
-      output_call_1 ("cob_push_decimal", x);
+      {
+	if (COBC_FIELD_P (x) && COBC_FIELD (x)->usage == USAGE_BINARY)
+	  output_call_1 ("cob_push_binary", x);
+	else
+	  output_call_1 ("cob_push_decimal", x);
+      }
     }
 }
 
@@ -422,22 +437,33 @@ output_assign (struct cobc_assign *p)
 	  && !COBC_EXPR_P (e->right))
 	{
 	  /* X = X +/- Y */
-	  if (COBC_LITERAL_P (e->right))
+	  switch (COBC_TREE_TAG (e->right))
 	    {
-	      struct cobc_literal *l = COBC_LITERAL (e->right);
-	      char *func = (e->op == '+') ? "cob_add_str" : "cob_sub_str";
-	      output_prefix ();
-	      output ("%s (", func);
-	      output_tree (p->field);
-	      output (", \"%s%s\", %d, %d);\n",
-		      (l->sign < 0) ? "-" : "", l->str, l->decimals,
-		      p->rounded);
-	    }
-	  else
-	    {
-	      char *func = (e->op == '+') ? "cob_add" : "cob_sub";
-	      output_call_3 (func, p->field, e->right,
-			     p->rounded ? cobc_int1 : cobc_int0);
+	    case cobc_tag_integer:
+	      {
+		char *func = (e->op == '+') ? "cob_add_int" : "cob_sub_int";
+		output_call_2 (func, p->field, e->right);
+		break;
+	      }
+	    case cobc_tag_literal:
+	      {
+		struct cobc_literal *l = COBC_LITERAL (e->right);
+		char *func = (e->op == '+') ? "cob_add_str" : "cob_sub_str";
+		output_prefix ();
+		output ("%s (", func);
+		output_tree (p->field);
+		output (", \"%s%s\", %d, %d);\n",
+			(l->sign < 0) ? "-" : "", l->str, l->decimals,
+			p->rounded);
+		break;
+	      }
+	    default:
+	      {
+		char *func = (e->op == '+') ? "cob_add" : "cob_sub";
+		output_call_3 (func, p->field, e->right,
+			       p->rounded ? cobc_int1 : cobc_int0);
+		break;
+	      }
 	    }
 	  return;
 	}
@@ -493,23 +519,21 @@ output_compare (cobc_tree s1, int op, cobc_tree s2)
       output_length (x);
       output (")");
     }
-#if 0
   else if (COBC_LITERAL_P (s1) || COBC_LITERAL_P (s2))
     {
       /* non-numeric literal comparison */
       cobc_tree x = COBC_LITERAL_P (s1) ? s2 : s1;
-      struct cobc_literal *p = COBC_LITERAL (COBC_LITERAL_P (s1) ? s1 : s2);
+      cobc_tree y = COBC_LITERAL_P (s1) ? s1 : s2;
       if (COBC_LITERAL_P (s1))
 	output ("-");
       output ("cob_cmp_str (");
       output_tree (x);
       output (", ");
-      output_location (x);
+      output_location (y);
       output (", ");
-      output_length (x);
+      output_length (y);
       output (")");
     }
-#endif
   else
     {
       /* non-numeric comparison */

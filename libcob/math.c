@@ -77,14 +77,6 @@ static struct cob_object cob_stack[STACK_SIZE];
 #define DROP(n)	(stack_index -= (n))
 
 void
-cob_init_stack (void)
-{
-  int i;
-  for (i = 0; i < STACK_SIZE; i++)
-    mpz_init (COB_DECIMAL (&cob_stack[i])->number);
-}
-
-void
 cob_print_stack (void)
 {
   int i;
@@ -96,7 +88,16 @@ cob_print_stack (void)
 static cob_object
 grab_object (int type)
 {
+  int i;
   cob_object o;
+  static int initialized = 0;
+
+  if (!initialized)
+    {
+      for (i = 0; i < STACK_SIZE; i++)
+	mpz_init (COB_DECIMAL (&cob_stack[i])->number);
+      initialized = 1;
+    }
 
   /* Check stack overflow */
   if (++stack_index == STACK_SIZE)
@@ -295,6 +296,27 @@ cob_dis_check (struct cob_field f)
 	break;
       }
   put_sign (f, sign);
+}
+
+void
+cob_push_binary (struct cob_field f)
+{
+  decimal d = grab_decimal ();
+  switch (f.desc->size)
+    {
+    case 1: mpz_set_si (d->number, *(char *) f.data); break;
+    case 2: mpz_set_si (d->number, *(short *) f.data); break;
+    case 4: mpz_set_si (d->number, *(long *) f.data); break;
+    case 8:
+      {
+	long long val = *(long long *) f.data;
+	mpz_set_si (d->number, val >> 32);
+	mpz_mul_2exp (d->number, d->number, 32);
+	mpz_add_ui (d->number, d->number, val & 0xffffffff);
+	break;
+      }
+    }
+  d->decimals = f.desc->decimals;
 }
 
 void

@@ -183,11 +183,11 @@ static void ambiguous_error (struct cobc_word *p);
 %type <inum> usage,before_or_after,perform_test
 %type <inum> select_organization,select_access_mode,open_mode
 %type <list> occurs_key_list,occurs_index_list,value_item_list
-%type <list> data_name_list,condition_name_list,name_list,opt_value_list
+%type <list> data_name_list,condition_name_list,opt_value_list
 %type <list> evaluate_subject_list,evaluate_case,evaluate_case_list
 %type <list> evaluate_when_list,evaluate_object_list
 %type <list> inspect_tallying,inspect_replacing,inspect_converting
-%type <list> label_list,subscript_list,number_list,name_list
+%type <list> label_list,subscript_list,number_list
 %type <list> string_list,string_delimited_list,string_name_list
 %type <list> tallying_list,replacing_list,inspect_before_after_list
 %type <list> unstring_delimited,unstring_delimited_list,unstring_into
@@ -675,7 +675,7 @@ same_statement_list:
 | same_statement_list same_statement
 ;
 same_statement:
-  SAME same_option _area _for name_list '.'
+  SAME same_option _area _for data_name_list '.'
 ;
 same_option:
   RECORD
@@ -1702,7 +1702,7 @@ _end_if: | END_IF ;
  */
 
 initialize_statement:
-  INITIALIZE name_list _initialize_replacing
+  INITIALIZE data_name_list _initialize_replacing
   {
     struct cobc_list *l;
     for (l = $2; l; l = l->next)
@@ -2783,10 +2783,6 @@ section_name:
  * Primitive name
  */
 
-name_list:
-  name				{ $$ = list ($1); }
-| name_list name		{ $$ = list_add ($1, $2); }
-;
 name:
   qualified_name		{ $$ = $1; }
 | qualified_name subref		{ $$ = $2; }

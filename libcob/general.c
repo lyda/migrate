@@ -164,7 +164,6 @@ cob_init (int argc, char **argv)
   cob_argv = argv;
   cob_source_file = 0;
   cob_source_line = 0;
-  cob_init_stack ();
 }
 
 int
@@ -215,6 +214,42 @@ cob_str_cmp (struct cob_field f1, struct cob_field f2)
  end:
   put_sign (f1, sign1);
   put_sign (f2, sign2);
+  return ret;
+}
+
+int
+cob_cmp_str (struct cob_field f1, unsigned char *data2, int len2)
+{
+  int i, ret = 0;
+  int len1 = f1.desc->size;
+  int min = (len1 < len2) ? len1 : len2;
+  int sign1 = get_sign (f1);
+
+  /* compare common substring */
+  for (i = 0; i < min; i++)
+    if (f1.data[i] != data2[i])
+      {
+	ret = f1.data[i] - data2[i];
+	goto end;
+      }
+
+  /* compare the rest (if any) with spaces */
+  if (len1 != len2)
+    {
+      int max = (len1 > len2) ? len1 : len2;
+      unsigned char *data = (len1 > len2) ? f1.data : data2;
+      for (; i < max; i++)
+	if (data[i] != ' ')
+	  {
+	    ret = data[i] - ' ';
+	    if (len1 < len2)
+	      ret = -ret;
+	    break;
+	  }
+    }
+
+ end:
+  put_sign (f1, sign1);
   return ret;
 }
 

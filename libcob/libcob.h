@@ -220,7 +220,6 @@ extern struct cob_field cob_quote;
 
 /* functions */
 
-extern void cob_init_stack (void);
 extern int get_sign (struct cob_field f);
 extern void put_sign (struct cob_field f, int sign);
 extern char *cob_field_to_string (struct cob_field f, char *s);
