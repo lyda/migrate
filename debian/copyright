@@ -7,4 +7,13 @@ Upstream Author(s): Keisuke Nishida <knishida@coboler.com>
 
 Copyright:
 
-GPL and LGPL.
+Copyright (C) 2001 Keisuke Nishida
+
+The Open COBOL compiler is licensed under the GNU General Public License.
+On Debian systems, the complete text of the GNU General Public
+License can be found in /usr/share/common-licenses/GPL file
+
+The Open COBOL compiler run time library is licensed under the GNU Library 
+General Public License.
+On Debian systems, the complete text of the GNU Library General Public
+License can be found in /usr/share/common-licenses/LGPL file

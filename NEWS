@@ -1,5 +1,24 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Version 0.8.5 での変更点
+
+** Debian パッケージを用意
+
+** cobpp を $(PREFIX)/bin にインストール
+
+** INSPECT ... CONVERTING を実装
+
+ただし現時点では、BEFORE/AFTER の指定は無視される。
+
+** ADD/SUBTRACT CORRESPONDING の実装を取り除いた
+
+** CALL BY VALUE の実装を取り除いた
+
+将来的に再実装する。
+
+** 多くのバグ修正
+
+
 * Version 0.8.4 での変更点
 
 ** doc にあった文書を Texinfo で書き直して texi に移動
