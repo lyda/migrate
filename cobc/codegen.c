@@ -1036,7 +1036,7 @@ push_index (cob_tree sy)
  *	Code Generating Routines
  */
 
-void
+static void
 emit_lit (char *s, int len)
 {
   int bcnt = 0;
@@ -1051,84 +1051,6 @@ emit_lit (char *s, int len)
       {
 	fprintf (o_src, ",%d", *s++);
       }
-}
-
-void
-emit_lit_fill (int c, int len)
-{
-  int bcnt = 0;
-  while (len--)
-    if (!(bcnt++ % 8))
-      {
-	if (bcnt > 1)
-	  putc ('\n', o_src);
-	fprintf (o_src, "\t.byte\t%d", c);
-      }
-    else
-      {
-	fprintf (o_src, ",%d", c);
-      }
-}
-
-void
-gen_init_value (cob_tree x, int var_len)
-{
-  int bcnt = 0;
-  int len, start_len;
-  char *s;
-  char pad;
-  struct lit *p = LITERAL (x);
-
-  if (p->nick)
-    {
-      s = p->nick;
-      len = 1;
-      pad = p->nick[0];
-    }
-  else
-    {
-      s = p->name;
-      len = p->len;
-      pad = ' ';
-    }
-  if (len > var_len)
-    len = var_len;
-  start_len = len;
-  while (len)
-    {
-      if (!(bcnt++ % 8))
-	{
-	  if (bcnt > 1)
-	    putc ('\n', o_src);
-	  fprintf (o_src, "\t.byte\t%d", *s++);
-	}
-      else
-	{
-	  fprintf (o_src, ",%d", *s++);
-	}
-      len--;
-    }
-  putc ('\n', o_src);
-  if (start_len < var_len)
-    {
-      len = var_len - start_len;
-      bcnt = 0;
-      while (len)
-	{
-	  if (!(bcnt++ % 8))
-	    {
-	      if (bcnt > 1)
-		putc ('\n', o_src);
-	      fprintf (o_src, "\t.byte\t%d", pad);
-	    }
-	  else
-	    {
-	      fprintf (o_src, ",%d", pad);
-	    }
-	  len--;
-	}
-      putc ('\n', o_src);
-    }
 }
 
 void
@@ -1268,7 +1190,6 @@ initialize_values (void)
 {
   cob_tree sy, sy1, v;
   int i;
-  char typ;
   int nb_fields;
 
   for (i = 0; i < HASHLEN; i++)
@@ -1278,9 +1199,8 @@ initialize_values (void)
 	    sy->type != 'K' && sy->type != 'J')
 	  {
 	    v = sy;
-	    typ = v->type;
-	    if (typ == 'F' || typ == 'R' || typ == 'K' || typ == 'J'
-		|| typ == '8')
+	    if (v->type == 'F' || v->type == 'R' || v->type == 'K'
+		|| v->type == 'J' || v->type == '8')
 	      continue;
 	    if (v->level != 1 && v->level != 77)
 	      continue;
@@ -1505,6 +1425,85 @@ proc_header (int using)
   at_procedure++;
 }
 
+static void
+dump_alternate_keys (cob_tree r, struct alternate_list *alt)
+{
+  cob_tree key;
+  for (; alt; alt = alt->next)
+    {
+      key = alt->key;
+      fprintf (o_src, "# alternate key %s\n", key->name);
+      fprintf (o_src,
+	       "\t.word\t%d\n\t.long\tc_base%d+%d\n\t.word\t%d\n\t.long\t0\n",
+	       key->location - r->location, pgm_segment,
+	       key->descriptor, alt->duplicates);
+    }
+  fprintf (o_src, "# end of alternate keys\n.word\t-1\n");
+}
+
+static void
+dump_fdesc ()
+{
+
+  cob_tree f;
+  cob_tree r;
+  struct list *list /*,*visited */ ;
+  unsigned char fflags;
+
+  fprintf (o_src, "s_base%d:\t.long\t0\n", pgm_segment);
+  for (list = files_list; list != NULL; list = list->next)
+    {
+      f = list->var;
+      r = f->recordsym;
+#ifdef COB_DEBUG
+      fprintf (o_src,
+	       "# FILE DESCRIPTOR, File: %s, Record: %s, Data Loc: %d(hex: %x), opt: %x\n",
+	       f->name, r->name, f->location, f->location, f->flags.optional);
+#endif
+      if (f->filenamevar == NULL)
+	{
+	  yyerror ("No file name assigned to %s.\n", f->name);
+	  continue;
+	}
+      if (f->type == 'K')
+	{
+	  fprintf (o_src, "\t.extern\t_%s:far\n", f->name);
+	  continue;
+	}
+      if (f->type == 'J')
+	{
+	  fprintf (o_src, "\tpublic\t_%s\n", f->name);
+	  fprintf (o_src, "_%s\tlabel\tbyte\n", f->name);
+	}
+      fflags = f->flags.optional;
+      fprintf (o_src, "\t.byte\t%u\n", RTL_FILE_VERSION);
+      fprintf (o_src, "\t.long\tc_base%d+%u\n",
+	       pgm_segment, f->filenamevar->descriptor);
+      fprintf (o_src, "\t.long\t%d\n", r->len);
+      fprintf (o_src, "\t.byte\t%d,%d\n", f->organization, f->access_mode);
+      fprintf (o_src, "\t.long\t0\n");	/* open_mode */
+      fprintf (o_src, "\t.long\t0\n");	/* struct DBT (libdb) */
+      fprintf (o_src, "\t.long\t0\n");	/* start_record */
+      fprintf (o_src, "\t.byte\t%x\n", fflags);	/* flags */
+      if (f->organization == 1)
+	{			/* indexed file */
+	  if (f->ix_desc)
+	    {
+	      fprintf (o_src, "\t.word\t%d\n\t.long\tc_base%d+%d\n",
+		       f->ix_desc->location - r->location,
+		       pgm_segment, f->ix_desc->descriptor);
+	    }
+	  else
+	    {
+	      /* no key field was given for this file */
+	      fprintf (o_src, "\t.word\t0\n\t.long\t0\n");
+	    }
+	  fprintf (o_src, "\t.long\t0\n");	/* struct altkey_desc *key_in_use */
+	  dump_alternate_keys (r, (struct alternate_list *) f->alternate);
+	}
+    }
+}
+
 void
 proc_trail (int using)
 {
@@ -1713,9 +1712,8 @@ proc_trail (int using)
 	    }
 	}
     }
-/* generate data for files */
+  /* generate data for files */
   dump_fdesc ();
-  /* dump_scr_data(); */
   data_trail ();
   fprintf (o_src, "\n\t.ident\t\"%s %s\"\n", COB_PACKAGE, COB_VERSION);
 }
@@ -4975,88 +4973,6 @@ alloc_file_entry (cob_tree f)
   fprintf (o_src, "# Allocate space for file '%s' Stack Addr: %d\n",
 	   f->name, stack_offset);
 #endif
-}
-
-void
-dump_alternate_keys (cob_tree r, struct alternate_list *alt)
-{
-  cob_tree key;
-  for (; alt; alt = alt->next)
-    {
-      key = alt->key;
-      fprintf (o_src, "# alternate key %s\n", key->name);
-      fprintf (o_src,
-	       "\t.word\t%d\n\t.long\tc_base%d+%d\n\t.word\t%d\n\t.long\t0\n",
-	       key->location - r->location, pgm_segment,
-	       key->descriptor, alt->duplicates);
-    }
-  fprintf (o_src, "# end of alternate keys\n.word\t-1\n");
-}
-
-/* 
-** dump all file descriptors in file_list
-*/
-void
-dump_fdesc ()
-{
-
-  cob_tree f;
-  cob_tree r;
-  struct list *list /*,*visited */ ;
-  unsigned char fflags;
-
-  fprintf (o_src, "s_base%d:\t.long\t0\n", pgm_segment);
-  for (list = files_list; list != NULL; list = list->next)
-    {
-      f = list->var;
-      r = f->recordsym;
-#ifdef COB_DEBUG
-      fprintf (o_src,
-	       "# FILE DESCRIPTOR, File: %s, Record: %s, Data Loc: %d(hex: %x), opt: %x\n",
-	       f->name, r->name, f->location, f->location, f->flags.optional);
-#endif
-      if (f->filenamevar == NULL)
-	{
-	  yyerror ("No file name assigned to %s.\n", f->name);
-	  continue;
-	}
-      if (f->type == 'K')
-	{
-	  fprintf (o_src, "\t.extern\t_%s:far\n", f->name);
-	  continue;
-	}
-      if (f->type == 'J')
-	{
-	  fprintf (o_src, "\tpublic\t_%s\n", f->name);
-	  fprintf (o_src, "_%s\tlabel\tbyte\n", f->name);
-	}
-      fflags = f->flags.optional;
-      fprintf (o_src, "\t.byte\t%u\n", RTL_FILE_VERSION);
-      fprintf (o_src, "\t.long\tc_base%d+%u\n",
-	       pgm_segment, f->filenamevar->descriptor);
-      fprintf (o_src, "\t.long\t%d\n", r->len);
-      fprintf (o_src, "\t.byte\t%d,%d\n", f->organization, f->access_mode);
-      fprintf (o_src, "\t.long\t0\n");	/* open_mode */
-      fprintf (o_src, "\t.long\t0\n");	/* struct DBT (libdb) */
-      fprintf (o_src, "\t.long\t0\n");	/* start_record */
-      fprintf (o_src, "\t.byte\t%x\n", fflags);	/* flags */
-      if (f->organization == 1)
-	{			/* indexed file */
-	  if (f->ix_desc)
-	    {
-	      fprintf (o_src, "\t.word\t%d\n\t.long\tc_base%d+%d\n",
-		       f->ix_desc->location - r->location,
-		       pgm_segment, f->ix_desc->descriptor);
-	    }
-	  else
-	    {
-	      /* no key field was given for this file */
-	      fprintf (o_src, "\t.word\t0\n\t.long\t0\n");
-	    }
-	  fprintf (o_src, "\t.long\t0\n");	/* struct altkey_desc *key_in_use */
-	  dump_alternate_keys (r, (struct alternate_list *) f->alternate);
-	}
-    }
 }
 
 /*
