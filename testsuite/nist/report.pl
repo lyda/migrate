@@ -17,15 +17,6 @@
 #  the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
 #  Boston, MA 02111-1307 USA
 
-$skip{"NC109M"} = 1;
-$skip{"NC110M"} = 1;
-$skip{"NC113M"} = 1;
-$skip{"NC204M"} = 1;
-$skip{"NC233A"} = 1;
-$skip{"NC302M"} = 1;
-$skip{"NC303M"} = 1;
-$skip{"NC401M"} = 1;
-
 my $num_progs = 0;
 my $test_skipped = 0;
 my $compile_error = 0;
@@ -45,20 +36,25 @@ print LOG "--------    ----- ---- ---- ------- -------\n";
 foreach $in (glob("*.CBL")) {
   my $exe = $in;
   my $prt = $in;
+  my $cmd;
   $exe =~ s/\.CBL//;
   $prt =~ s/\.CBL/\.PRT/;
+  $cmd = "./$exe";
+  if (-e "./$exe.DATA") {
+    $cmd = "./$exe < $exe.DATA";
+  }
   $num_progs++;
   printf LOG "%-12s", $in;
   if ($skip{$exe}) {
     $test_skipped++;
     print LOG "  ----- test skipped -----\n";
   } else {
-    print "cobc $in && ./$exe\n";
+    print "cobc $in && $cmd\n";
     if (system ("cobc $in") != 0) {
       $compile_error++;
       print LOG "  ===== compile error =====\n";
     } else {
-      if (system ("./$exe") != 0) {
+      if (system ("$cmd > /dev/null") != 0) {
 	$execute_error++;
 	print LOG "  ***** execute error *****\n";
       } else {
