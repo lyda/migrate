@@ -4562,9 +4562,27 @@ ambiguous_error (struct cobc_location *loc, struct cobc_word *w)
 {
   if (w->error == 0)
     {
-      /* on first time */
+      struct cobc_word *w1;
+
+      /* display error on the first time */
       yyerror_loc (loc, _("`%s' ambiguous; need qualification"), w->name);
       w->error = 1;
+
+      /* display all fields with the same name */
+      for (w1 = w; w1; w1 = w1->link)
+	{
+	  char buff[BUFSIZ];
+	  struct cobc_field *p;
+	  sprintf (buff, "`%s' ", w1->name);
+	  for (p = COBC_FIELD (w1->item)->parent; p; p = p->parent)
+	    {
+	      strcat (buff, "in `");
+	      strcat (buff, p->word->name);
+	      strcat (buff, "' ");
+	    }
+	  strcat (buff, _("defined here"));
+	  yyerror_loc (&w1->item->loc, buff, w1->name);
+	}
     }
 }
 
