@@ -2710,7 +2710,7 @@ gen_test_invalid_keys (struct invalid_keys *p)
 /******** functions to generate math verbs ***********/
 
 struct sym *
-create_expr (char op, struct sym *left, struct sym *right)
+create_expr (struct sym *left, char op, struct sym *right)
 {
   struct expr *left_expr = (struct expr *) left;
   struct expr *right_expr = (struct expr *) right;

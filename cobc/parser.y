@@ -186,9 +186,9 @@ static void check_decimal_point (struct lit *lit);
 %type <ival> integer,cond_op,conditional,before_after,greater_than,less_than
 %type <ival> on_exception_or_overflow,on_not_exception
 %type <ival> opt_address_of,display_upon,display_options
-%type <ival> opt_all,with_duplicates,opt_with_test,opt_optional
-%type <ival> opt_not,selection_subject,selection_object,when_case
-%type <ival> opt_rounded,opt_sign_separate,opt_plus_minus
+%type <ival> flag_all,with_duplicates,opt_with_test,opt_optional
+%type <ival> flag_not,selection_subject,selection_object,when_case
+%type <ival> flag_rounded,opt_sign_separate,opt_plus_minus
 %type <ival> organization_options,access_options,open_mode,equal_to
 %type <ival> parm_type,sign_condition,class_condition,replacing_kind
 %type <ival> screen_attribs,screen_attrib,screen_sign,opt_separate
@@ -321,8 +321,6 @@ special_name:
 | DECIMAL_POINT opt_is COMMA	{ decimal_comma = 1; }
 | CONSOLE opt_is CONSOLE	{ yywarn ("CONSOLE name is ignored"); }
 ;
-opt_dot: | '.' ;
-opt_sign: | SIGN ;
 
 
 /*******************
@@ -453,8 +451,6 @@ filename_list:
   variable { }
 | filename_list variable { }
 ;
-opt_area: | AREA ;
-opt_for: | FOR ;
 
 
 /*****************************************************************************
@@ -577,9 +573,6 @@ sort_attrib:
 ;
 rec_or_recs: RECORD | RECORDS ;
 std_or_omitt: STANDARD | OMITTED ;
-opt_is: | IS ;
-opt_mode: | MODE ;
-opt_is_are: | IS | ARE ;
 opt_contains: | CONTAINS ;
 opt_characters: | CHARACTERS ;
 chars_or_recs: CHARACTERS | RECORDS ;
@@ -819,7 +812,6 @@ left_or_right:
 blank_clause:
   BLANK opt_when ZEROS	{ curr_field->flags.blank=1; }
 ;
-opt_when: | WHEN ;
 
 
 /*
@@ -931,13 +923,10 @@ report_type:
 | DETAIL
 ;
 opt_picture_clause: | picture_clause ;
-opt_line: | LINE ;
-opt_final: | FINAL ;
 opt_limit_is: | LIMIT opt_is ;
 opt_footing: | FOOTING opt_is integer ;
 opt_last_detail: | LAST DETAIL opt_is integer ;
 opt_first_detail: | FIRST DETAIL opt_is integer ;
-opt_of: | OF ;
 
 
 /*******************
@@ -1091,7 +1080,7 @@ procedure_list:
 procedure_decl:
   procedure_section { close_section(); open_section($1); }
 | paragraph { close_paragr(); open_paragr($1); }
-| {free_expr_list(); } statement_list opt_eos
+| {free_expr_list(); } statement_list opt_dot
 | error '.'
 | '.'
 ;
@@ -1235,7 +1224,7 @@ add_body:
       {
         gen_add2($1, $4, $2, $5);
       }
-    | CORRESPONDING gname opt_to name opt_rounded
+    | CORRESPONDING gname opt_to name flag_rounded
       {
         gen_addcorr($2, $4, $5);
       }
@@ -1273,6 +1262,7 @@ using_options:
       dummy     { $<ival>$=CALL; }
       parm_list  { $$=$<ival>2; } /* modified to signal calling pgm */
     ;
+dummy: /* nothing */ ;
 parm_list:
     parm_list opt_sep parameter
         {   if ($<ival>0 == USING)
@@ -1314,6 +1304,11 @@ parm_type:
   | CONTENT	{ $$ = CM_CONT; }
   | VALUE	{ $$ = CM_VAL; }
 ;
+returning_options:
+    /* nothing */   { $$=0; }
+    | RETURNING variable { $$=$2; }
+    | GIVING variable { $$=$2; }
+    ;
 on_exception_or_overflow:
     /* nothing */ { $$ = 0; }
     | ON exception_or_overflow { $<ival>$ = begin_on_except(); } 
@@ -1445,24 +1440,24 @@ divide_body:
       {
         gen_divide2($5, $1, $3, $6);
       }
-    | numeric_value BY numeric_value GIVING name opt_rounded REMAINDER name
+    | numeric_value BY numeric_value GIVING name flag_rounded REMAINDER name
       {
         assert_numeric_sy($5);
         gen_divide($1, $3, $5, $8, $6);
       }
-    | numeric_value INTO numeric_value GIVING name opt_rounded REMAINDER name
+    | numeric_value INTO numeric_value GIVING name flag_rounded REMAINDER name
       {
         assert_numeric_sy($5);
         gen_divide($3, $1, $5, $8, $6);
       }
-    | numeric_value BY numeric_value GIVING name opt_rounded REMAINDER name on_size_error
+    | numeric_value BY numeric_value GIVING name flag_rounded REMAINDER name on_size_error
       {
         assert_numeric_sy($5);
         gen_dstlabel($9->lbl4); /* generate bypass jump */
         gen_divide($1, $3, $5, $8, $6);
         math_on_size_error3($9);
       }
-    | numeric_value INTO numeric_value GIVING name opt_rounded REMAINDER name on_size_error
+    | numeric_value INTO numeric_value GIVING name flag_rounded REMAINDER name on_size_error
       {
         assert_numeric_sy($5);
         gen_dstlabel($9->lbl4); /* generate bypass jump */
@@ -1544,8 +1539,8 @@ selection_object:
     ANY			{ $$ = SOBJ_ANY; }
   | TOK_TRUE		{ push_boolean (1); $$ = SOBJ_BOOLEAN; }
   | TOK_FALSE		{ push_boolean (0); $$ = SOBJ_BOOLEAN; }
-  | opt_not condition	{ push_condition (); $$ = SOBJ_BOOLEAN | $1; }
-  | opt_not expr
+  | flag_not condition	{ push_condition (); $$ = SOBJ_BOOLEAN | $1; }
+  | flag_not expr
     {
       if ($2 == (struct sym *) spe_lit_ZE)
 	$$ = SOBJ_ZERO | $1;
@@ -1557,7 +1552,7 @@ selection_object:
 	  $$ = SOBJ_STR | $1;
 	}
     }
-  | opt_not expr THRU expr
+  | flag_not expr THRU expr
     {
       if (push_expr($2) && push_expr($4))
 	$$ = SOBJ_RANGE | $1;
@@ -1629,7 +1624,6 @@ if_then:
     IF condition { $<dval>$ = gen_testif(); } opt_then
        conditional_statement_list { $$ = $<dval>3; }
 ;
-opt_then: | THEN ;
 opt_end_if: | END_IF ;
 
 
@@ -2553,7 +2547,7 @@ subtract_body:
       {
         gen_subtract2($1, $5, $3, $6);
       }
-    | CORRESPONDING gname FROM name opt_rounded
+    | CORRESPONDING gname FROM name flag_rounded
       {
         gen_subtractcorr($2, $4, $5);
       }
@@ -2583,8 +2577,8 @@ unstring_delimited:
     | /* nothing */                          { $$=NULL; }
     ;
 unstring_delimited_vars:
-    opt_all gname       { $$=alloc_unstring_delimited($1,$2); }
-    | unstring_delimited_vars OR opt_all gname {
+    flag_all gname       { $$=alloc_unstring_delimited($1,$2); }
+    | unstring_delimited_vars OR flag_all gname {
       struct unstring_delimited *ud;
       ud=alloc_unstring_delimited($3,$4);
       ud->next = $1;
@@ -2664,17 +2658,66 @@ opt_end_write:
     /* nothing */
     | END_WRITE
     ;
+opt_advancing: | ADVANCING ;
+
+
+/*******************
+ * Substructures
+ *******************/
+
+
+/*
+ * Expressions
+ */
+
+expr:
+      gname            { $$ = $1; }
+    | '(' expr ')'     { $$ = $2; }
+    | expr '+' expr    { $$ = create_expr ($1, '+', $3); }
+    | expr '-' expr    { $$ = create_expr ($1, '-', $3); }
+    | expr '*' expr    { $$ = create_expr ($1, '*', $3); }
+    | expr '/' expr    { $$ = create_expr ($1, '/', $3); }
+    | expr '^' expr    { $$ = create_expr ($1, '^', $3); }
+    ;
+/* opt_expr will be NULL or a (struct sym *) pointer if the expression
+   was given, otherwise it will be valued -1 */
+opt_expr:
+    /* nothing */   { $$ = (struct sym *)-1; }
+    | expr          { $$ = $1; }
+    ;
 
 
 /*******************
  * Common rules
  *******************/
 
-var_list_name: name opt_rounded opt_sep
+var_list:
+    var_list opt_sep gname
+        {   if ($<ival>0 == MOVE)
+                gen_move($<sval>-2,$<sval>3);
+            else if ($<ival>0 == INITIALIZE)
+                gen_initialize($<sval>3);
+            else if ($<ival>0 == ADD)
+                gen_add($<sval>-2,$<sval>3,0);
+            else if ($<ival>0 == USING)
+                gen_save_using($<sval>3);
+        }
+        | gname
+        {   if ($<ival>0 == MOVE)
+                gen_move($<sval>-2,$<sval>1);
+            else if ($<ival>0 == INITIALIZE)
+                gen_initialize($<sval>1);
+            else if ($<ival>0 == ADD)
+                gen_add($<sval>-2,$<sval>1,0);
+            else if ($<ival>0 == USING)
+                gen_save_using($<sval>1);
+        }
+    ;
+var_list_name: name flag_rounded opt_sep
      {
       $$ = create_mathvar_info(NULL, $1, $2);
      }
-    | var_list_name name opt_rounded opt_sep
+    | var_list_name name flag_rounded opt_sep
      {
       $$ = create_mathvar_info($1, $2, $3);
      }
@@ -2691,35 +2734,35 @@ var_list_gname:
       }
     ;
 
-opt_rounded: { $$=0; }
-    | ROUNDED { $$=1; }
-    ;
+
+/*
+ * ON SIZE ERROR
+ */
 
 opt_on_size_error:
     /* nothing */	{ $$ = NULL; }
   | on_size_error	{ $$ = $1; }
   ;
 on_size_error:
-      NOT opt_on SIZE error_sentence
-      {
-       $$=math_on_size_error4($4, 2);
-      }
-    | opt_on SIZE error_sentence
-      {
-       $$=math_on_size_error4($3, 1);
-      }
-    | opt_on SIZE error_sentence
-      NOT opt_on SIZE
-      {
-       $3->lbl1=$3->ose;
-      }
-      error_sentence
-      {
-	tmose = NULL;
-	$$ = math_on_size_error4($8, 3);
-      }
-    ;
-
+  NOT opt_on SIZE error_sentence
+  {
+    $$=math_on_size_error4($4, 2);
+  }
+| opt_on SIZE error_sentence
+  {
+    $$=math_on_size_error4($3, 1);
+  }
+| opt_on SIZE error_sentence
+  NOT opt_on SIZE
+  {
+    $3->lbl1=$3->ose;
+  }
+  error_sentence
+  {
+    tmose = NULL;
+    $$ = math_on_size_error4($8, 3);
+  }
+;
 error_sentence:
      ERROR
      {
@@ -2737,13 +2780,6 @@ error_sentence:
      }
     ;
 
-opt_in_size:
-        | IN SIZE
-        ;
-opt_all:
-    /* nothing */           { $$=0; }
-    | ALL                   { $$=1; }
-    ;
 on_not_exception:
     NOT ON EXCEPTION { $<ival>$ = begin_on_except(); } 
         statement_list            { gen_jmplabel($<dval>-1); $$=$<ival>4; }
@@ -2751,14 +2787,14 @@ on_not_exception:
     ;
 opt_invalid_key:
     opt_invalid_key_sentence
-    opt_not_invalid_key_sentence
+    flag_not_invalid_key_sentence
     ;
 opt_invalid_key_sentence:
     INVALID opt_key             { $<dval>$ = gen_at_end(23); }
     statement_list                    { gen_dstlabel($<dval>3); }
     | /* nothing */
     ;
-opt_not_invalid_key_sentence:
+flag_not_invalid_key_sentence:
     NOT INVALID opt_key    { $<dval>$ = gen_at_end(0); }
     statement_list                    { gen_dstlabel($<dval>4); }
     | /* nothing */
@@ -2790,54 +2826,6 @@ delimited_by:
     ;
 
 
-/*
- * Expression
- */
-
-expr:
-      gname            { $$ = $1; }
-    | '(' expr ')'     { $$ = $2; }
-    | expr '*' expr    { $$ = create_expr('*', $1, $3); }
-    | expr '/' expr    { $$ = create_expr('/', $1, $3); }
-    | expr '+' expr    { $$ = create_expr('+', $1, $3); }
-    | expr '-' expr    { $$ = create_expr('-', $1, $3); }
-    | expr '^' expr    { $$ = create_expr('^', $1, $3); }
-    ;
-/* opt_expr will be NULL or a (struct sym *) pointer if the expression
-   was given, otherwise it will be valued -1 */
-opt_expr:
-    /* nothing */   { $$ = (struct sym *)-1; }
-    | expr          { $$ = $1; }
-    ;
-returning_options:
-    /* nothing */   { $$=0; }
-    | RETURNING variable { $$=$2; }
-    | GIVING variable { $$=$2; }
-    ;
-dummy: /* nothing */ ;
-var_list:
-    var_list opt_sep gname
-        {   if ($<ival>0 == MOVE)
-                gen_move($<sval>-2,$<sval>3);
-            else if ($<ival>0 == INITIALIZE)
-                gen_initialize($<sval>3);
-            else if ($<ival>0 == ADD)
-                gen_add($<sval>-2,$<sval>3,0);
-            else if ($<ival>0 == USING)
-                gen_save_using($<sval>3);
-        }
-        | gname
-        {   if ($<ival>0 == MOVE)
-                gen_move($<sval>-2,$<sval>1);
-            else if ($<ival>0 == INITIALIZE)
-                gen_initialize($<sval>1);
-            else if ($<ival>0 == ADD)
-                gen_add($<sval>-2,$<sval>1,0);
-            else if ($<ival>0 == USING)
-                gen_save_using($<sval>1);
-        }
-    ;
-
 
 /*
  * Condition
@@ -2957,24 +2945,27 @@ sign_condition:
 | NEGATIVE			{ $$ = RELATION_LT | COND_UNARY; }
 | ZEROS				{ $$ = RELATION_EQ | COND_UNARY; }
 ;
-opt_sep: | ',' ;
-opt_eos: | '.' ;
-opt_not:
-    /* nothing */ { $$=0; }
-    | NOT { $$=1; }
-    ;
-opt_key: | KEY ;
-opt_advancing: | ADVANCING ;
-opt_than: | THAN ;
-opt_record: | RECORD ;
-opt_at: | AT ;
-opt_in: | IN ;
-in_of: IN | OF ;
-opt_by: | BY ;
-opt_upon: | UPON ;
-opt_with: | WITH ;
-opt_on: | ON ;
-opt_to: | TO ;
+
+
+/*
+ * Flags
+ */
+
+flag_all:
+  /* nothing */			{ $$ = 0; }
+| ALL				{ $$ = 1; }
+;
+flag_rounded:
+  /* nothing */			{ $$ = 0; }
+| ROUNDED			{ $$ = 1; }
+;
+flag_not:
+  /* nothing */			{ $$ = 0; }
+| NOT				{ $$ = 1; }
+;
+
+
+
 opt_gname:
     /* nothing */ { $$ = NULL; }
     | gname       { $$ = $1; }
@@ -3163,6 +3154,37 @@ label:
       $$ = lab;
     }
     ;
+in_of: IN | OF ;
+
+
+/*
+ * Common propositions
+ */
+
+opt_is_are: | IS | ARE ;
+opt_dot: | '.' ;
+opt_sign: | SIGN ;
+opt_area: | AREA ;
+opt_for: | FOR ;
+opt_in_size: | IN SIZE ;
+opt_is: | IS ;
+opt_mode: | MODE ;
+opt_at: | AT ;
+opt_by: | BY ;
+opt_in: | IN ;
+opt_key: | KEY ;
+opt_on: | ON ;
+opt_record: | RECORD ;
+opt_sep: | ',' ;
+opt_than: | THAN ;
+opt_then: | THEN ;
+opt_line: | LINE ;
+opt_final: | FINAL ;
+opt_of: | OF ;
+opt_to: | TO ;
+opt_upon: | UPON ;
+opt_with: | WITH ;
+opt_when: | WHEN ;
 
 
 %%

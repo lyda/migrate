@@ -147,7 +147,7 @@ extern void gen_accept_env_var (struct sym *sy, struct lit *v);
 extern struct perf_info *create_perf_info (struct sym *sy1, struct sym *sy2, unsigned long lj, unsigned long le);
 extern struct perform_info *create_perform_info (void);
 extern char *check_perform_variables (struct sym *sy1, struct perform_info *pi1);
-extern struct sym *create_expr (char op, struct sym *left, struct sym *right);
+extern struct sym *create_expr (struct sym *left, char op, struct sym *right);
 extern void free_expr (struct expr *e);
 extern void free_expr_list (void);
 extern struct math_var *create_mathvar_info (struct math_var *mv, struct sym *sy, unsigned int opt);
