@@ -3196,8 +3196,8 @@ x_list:
 ;
 x:
   identifier
-| LENGTH _of qualified_word	{ $$ = cb_build_length ($3); }
-| ADDRESS _of qualified_word	{ $$ = cb_build_address ($3); }
+| LENGTH _of identifier_1	{ $$ = cb_build_length ($3); }
+| ADDRESS _of identifier_1	{ $$ = cb_build_address ($3); }
 | literal
 | function
 ;

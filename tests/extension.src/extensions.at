@@ -169,12 +169,14 @@ AT_DATA([prog.cob], [
        PROCEDURE        DIVISION.
            MOVE LENGTH OF X TO L.  DISPLAY L.
            MOVE LENGTH OF Y TO L.  DISPLAY L.
+           MOVE LENGTH OF Y(1) TO L.  DISPLAY L.
            STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0],
 [0002
+0002
 0002
 ])
 
