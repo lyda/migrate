@@ -27,6 +27,10 @@
 #include <unistd.h>
 #include <libcob.h>
 
+#ifdef __MINGW32__
+#include <windows.h>		/* for GetTempPath */
+#endif /* __MINGW32__ */
+
 #include "cobc.h"
 #include "tree.h"
 #include "codegen.h"
@@ -341,7 +345,12 @@ file_extension (const char *filename)
 static void
 temp_name (char *buff, const char *ext)
 {
-  strcpy (buff, "/tmp/cobXXXXXX");
+#ifdef __MINGW32__
+  GetTempPath (FILENAME_MAX, buff);
+#else
+  strcpy (buff, "/tmp/");
+#endif
+  strcat (buff, "cobXXXXXX");
   close (mkstemp (buff));
   unlink (buff);
   strcat (buff, ext);
