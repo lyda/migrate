@@ -5238,8 +5238,7 @@ redefinition_error (cobc_tree x)
 {
   struct cobc_word *w = COBC_REFERENCE (x)->word;
   yyerror_x (x, _("redefinition of `%s'"), w->name);
-  yyerror_x (w->items->item, _("`%s' previously defined here"),
-	     tree_name (w->items->item));
+  yyerror_x (w->items->item, _("`%s' previously defined here"), w->name);
 }
 
 static void
