@@ -1,5 +1,9 @@
 2004-03-06  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
 
+	* reserved.c (system_table): Add "SYSLST".
+
+2004-03-06  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
+
 	* typeck.c (cb_build_move): Handle cb_error_node.
 	(cb_build_add, cb_build_sub): Native arithmetic for pointers.
 
