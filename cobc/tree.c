@@ -11,6 +11,31 @@
  * Subscript references
  */
 
+static int
+check_subscripts (struct sym *subs)
+{
+  struct subref *ref;
+  struct sym *sy;
+  sy = SUBREF_SYM (subs);
+  for (ref = (struct subref *) subs; ref; ref = ref->next)
+    {
+      if (ref->litflag == ',')
+	{
+	  while (sy && !sy->occurs_flg)
+	    sy = sy->parent;
+	  if (!sy)
+	    {
+	      yyerror ("check_subscripts: no parent found");
+	      return 0;		/* excess subscripts, error */
+	    }
+	  sy = sy->parent;
+	}
+    }
+  while (sy && !sy->occurs_flg)	/* any other subscripts needed ? */
+    sy = sy->parent;
+  return (sy == NULL) ? 1 : 0;
+}
+
 struct subref *
 make_subref (struct sym *sy, struct subref *next)
 {
@@ -18,6 +43,7 @@ make_subref (struct sym *sy, struct subref *next)
   ref->litflag = 2;
   ref->sym     = sy;
   ref->next    = next;
+  check_subscripts ((struct sym *) ref);
   return ref;
 }
 
@@ -51,31 +77,6 @@ add_subscript (struct subref *ref, struct subref *subs)
     p = p->next;
   p->next = ref;
   return subs;
-}
-
-int
-check_subscripts (struct sym *subs)
-{
-  struct subref *ref;
-  struct sym *sy;
-  sy = SUBREF_SYM (subs);
-  for (ref = (struct subref *) subs; ref; ref = ref->next)
-    {
-      if (ref->litflag == ',')
-	{
-	  while (sy && !sy->occurs_flg)
-	    sy = sy->parent;
-	  if (!sy)
-	    {
-	      yyerror ("check_subscripts: no parent found");
-	      return 0;		/* excess subscripts, error */
-	    }
-	  sy = sy->parent;
-	}
-    }
-  while (sy && !sy->occurs_flg)	/* any other subscripts needed ? */
-    sy = sy->parent;
-  return (sy == NULL) ? 1 : 0;
 }
 
 

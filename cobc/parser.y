@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 528
+%expect 529
 
 %{
 #define yydebug		cob_trace_parser
@@ -179,10 +179,10 @@ static void check_decimal_point (struct lit *lit);
 %token END_START,END_STRINGCMD,END_SUBTRACT,END_UNSTRING,END_WRITE
 %token THEN,EVALUATE,OTHER,ALSO,CONTINUE,CURRENCY,REFERENCE,INITIALIZE
 %token NUMERIC,ALPHABETICTOK,ALPHABETICLOWER,ALPHABETICUPPER
-%token RETURNING,TOKTRUE,TOKFALSE,ANY,SUBSCVAR,FUNCTION
+%token RETURNING,TOK_TRUE,TOK_FALSE,ANY,SUBSCVAR,FUNCTION
 %token REPORT,TOKRD,TOKCODE,CONTROL,LIMIT,FINAL
 %token HEADING,FOOTING,TOKLAST,DETAIL,GROUP,INDICATE,TOKSUM
-%token TOKPOSITION,FILE_ID,DEPENDING,TYPETOK,TOKSOURCE
+%token TOKPOSITION,FILE_ID,DEPENDING,TOK_TYPE,TOKSOURCE
 %token INITIATE,GENERATE,TERMINATE,NULLTOK,ADDRESS,NOECHO,LPAR
 %token CORRESPONDING,LENGTH
 %token TOKDUMMY
@@ -619,7 +619,7 @@ report_item:
         ;
 report_clauses:
         /* nothing */
-        | report_clauses TYPETOK opt_is report_type
+        | report_clauses TOK_TYPE opt_is report_type
                 report_position { curr_division = CDIV_PROC; }
                 opt_report_name
         | report_clauses report_line
@@ -1769,7 +1769,7 @@ opt_address_of:
 set_variable_or_nlit:
   name_or_lit	  { $$ = $1; }
   | NULLTOK	  { $$ = NULL; }
-  | TOKTRUE	  
+  | TOK_TRUE	  
     { 
       $$ = (struct sym *)1;
       /* no (struct sym *) may have this value! */ 
@@ -1781,10 +1781,30 @@ set_variable_or_nlit:
 
 evaluate_statement:
     EVALUATE { $<ival>$ = gen_evaluate_start(); }
-                selection_subject_set { compute_subject_set_size($3); }
+                selection_subject_set { }
                 when_case_list
                 END_EVALUATE { release_sel_subject($<ival>2,$3); }
     ;
+selection_subject_set:
+          selection_subject { $$=save_sel_subject(NULL,$1); }
+        | selection_subject_set ALSO
+	    selection_subject { $$=save_sel_subject($1,$3); }
+        ;
+selection_subject:
+    expr
+    {
+      if (push_expr($1))
+	$$=SSUBJ_EXPR;
+      else
+	{
+	  push_field ($1);
+	  $$=SSUBJ_STR;
+	}
+    }
+  | condition	{ push_condition(); $$ = SSUBJ_BOOLEAN; }
+  | TOK_TRUE	{ push_boolean (1); $$ = SSUBJ_BOOLEAN; }
+  | TOK_FALSE	{ push_boolean (0); $$ = SSUBJ_BOOLEAN; }
+  ;
 when_case_list:
         WHEN { $<ival>$ = loc_label++; /* mark end of "when" case */ }
                 { $<ssbjval>$=$<ssbjval>-1; /* store inherited subject set */ }
@@ -1799,92 +1819,47 @@ when_case_list:
                 { $$=gen_end_when($<ival>-2,$<ival>3,$7); }
         ;
 when_case:
-        { $<sval>$ = NULL; }
-        selection_object {
-                        gen_when_check(0,$<ssbjval>0,$2,$<ival>-1,$<sval>1);
-                        $$=0;
-                }
-        | when_case ALSO
-                        { $<sval>$ = NULL; }
-                        selection_object {
-                        gen_when_check($1+1,$<ssbjval>0,$4,$<ival>-1,$<sval>3);
-                        $$=$1+1;
-                }
+          selection_object
+          {
+	    $$ = 0;
+	    gen_when_check($$,$<ssbjval>0,$1,$<ival>-1);
+	  }
+        | when_case ALSO selection_object
+          {
+	    $$ = $1 + 1;
+	    gen_when_check($$,$<ssbjval>0,$3,$<ival>-1);
+	  }
         | OTHER { $$=-1; }
         ;
-selection_subject_set:
-        { $<sval>$=NULL; /* to store non-numeric symbols */ }
-        selection_subject { $$=save_sel_subject($2,NULL,$<sval>1); }
-        | selection_subject_set ALSO
-                { $<sval>$=NULL; /* to store non-numeric symbols */ }
-                selection_subject
-                { $$=save_sel_subject($4,$1,$<sval>3); }
-        ;
-selection_subject:
-        expr    /* this already includes identifiers and literals */
-                { if (push_expr($1))
-                        $$=SSUBJ_EXPR;
-                  else {
-                        $<sval>0 = $1;
-                        $$=SSUBJ_STR;
-                   }
-                }
-        | condition { push_condition(); $$=SSUBJ_COND; }
-        | TOKTRUE       { $$=SSUBJ_TRUE; }
-        | TOKFALSE { $$=SSUBJ_FALSE; }
-        ;
 selection_object:
-        ANY     { $$=SOBJ_ANY; }
-        | TOKTRUE { $$=SOBJ_TRUE; }
-        | TOKFALSE { $$=SOBJ_FALSE; }
-        | opt_not expr {
-	  if ($2 == (struct sym *) spe_lit_ZE)
-	    {
-	      if ($1)
-		$$ = SOBJ_NEGZERO;
-	      else
-		$$ = SOBJ_ZERO;
-	    }
-	  else if (push_expr($2))
-	    {
-	      if ($1)
-		$$ = SOBJ_NEGEXPR;
-	      else
-		$$ = SOBJ_EXPR;
-	    }
-	  else
-	    {
-	      /* non-numeric comparation */
-	      $<sval>0 = $2;
-	      if ($1)
-		$$ = SOBJ_NEGSTR;
-	      else
-		$$ = SOBJ_STR;
-	    }
+    ANY			{ $$ = SOBJ_ANY; }
+  | TOK_TRUE		{ push_boolean (1); $$ = SOBJ_BOOLEAN; }
+  | TOK_FALSE		{ push_boolean (0); $$ = SOBJ_BOOLEAN; }
+  | opt_not condition	{ push_condition (); $$ = SOBJ_BOOLEAN | $1; }
+  | opt_not expr
+    {
+      if ($2 == (struct sym *) spe_lit_ZE)
+	$$ = SOBJ_ZERO | $1;
+      else if (push_expr($2))
+	$$ = SOBJ_EXPR | $1;
+      else
+	{
+	  push_field ($2);
+	  $$ = SOBJ_STR | $1;
 	}
-        | opt_not expr THRU expr {
-	  if (push_expr($4) && push_expr($2))
-	    {
-	      if ($1)
-		$$=SOBJ_NEGRANGE;
-	      else
-		$$=SOBJ_RANGE;
-	    }
-	  else
-	    {
-	      yywarn ("unsupported range");
-	      if ($1)
-		$$=SOBJ_NEGRANGE;
-	      else
-		$$=SOBJ_RANGE;
-	    }
+    }
+  | opt_not expr THRU expr
+    {
+      if (push_expr($2) && push_expr($4))
+	$$ = SOBJ_RANGE | $1;
+      else
+	{
+	  push_field ($2);
+	  push_field ($4);
+	  $$ = SOBJ_RANGE | $1;
 	}
-        | opt_not condition {
-                if ($1)
-                        $$=SOBJ_NEGCOND;
-                else
-                        $$=SOBJ_COND; }
-        ;
+    }
+  ;
 sentence_or_nothing:
     /* nothing */               { $$ = 0; }
     | conditional_statement_list     { $$ = 1; }
@@ -2815,7 +2790,7 @@ parameter:
                $$->call_mode=curr_call_mode;
         }
  /*   | OMITTED
-        {   $$=save_special_literal('0','9', "%ZEROS%");
+        {   $$=spe_lit_ZE;
             $$->call_mode=CM_VAL;
         } */
     ;
@@ -2823,7 +2798,6 @@ parm_type:
     REFERENCE {$$=CM_REF;}
     | VALUE {$$=CM_VAL;}
     | CONTENT {$$=CM_CONT;}
-/*    | DESCRIPTOR {$$=CM_CONT;}*/
     ;
 
 condition:
@@ -2835,8 +2809,6 @@ condition:
         implied_op_condition { gen_dstlabel($<dval>3); $$=$4; }
     | '(' condition ')' { $$ = $2; }
     | cond_name {
-      /*if ($1->level != 88)
-	yyerror("condition unknown");*/
       gen_condition($1);
       $$.sy=NULL;
       $$.oper=0;
@@ -2850,11 +2822,7 @@ simple_condition:
 	  if ($2 & COND_CLASS)
 	    gen_class_check ($1, $2);
 	  else
-	    {
-	      struct sym *sy =
-		(struct sym *) save_special_literal ('0', '9', "%ZEROS%");
-	      gen_compare ($1, $2 & ~COND_UNARY, sy);
-	    }
+	    gen_compare ($1, $2 & ~COND_UNARY, (struct sym *) spe_lit_ZE);
 	}
     }
     opt_expr
@@ -3060,18 +3028,12 @@ filename:
     | STRING {$$=$1; }
     ;
 cond_name:
-    VARCOND '(' subscript_list  ')'
-    {
-      $$ = (struct sym *)make_subref( $1, $3 );
-      check_subscripts($$);
-    }
-    | VARCOND  { $<sval>$=$1; }
+    VARCOND  { $<sval>$=$1; }
     ;
 name:
     variable '(' gname ':' opt_gname ')'
     {
       $$ = (struct sym *) create_refmoded_var($1, $3, $5);
-      check_refmods((struct sym *)$$);
     }
     | variable
     ;
@@ -3085,7 +3047,6 @@ variable:
     }
     | qualified_var LPAR subscript_list ')' {
       $$ = (struct sym *)make_subref( $1, $3 );
-      check_subscripts($$);
       }
     ;
 qualified_var:

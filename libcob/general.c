@@ -22,7 +22,6 @@
  */
 
 #include "_libcob.h"
-#include "decimal.h"
 
 char
 sign_to_char (int digit)
@@ -129,162 +128,6 @@ cob_adjust_length (struct fld_desc *dep_desc, char *dep_val,
   return copy;
 }
 
-int
-check_condition (struct fld_desc *f1, char *s1, ...)
-{
-  int i, len2, len3;
-  struct fld_desc *f2, *f3;
-  char *s2, *s3;
-  int ret = 1;			/* assume wrong */
-  va_list args;
-
-  va_start (args, s1);
-  f2 = va_arg (args, struct fld_desc *);
-  while (f2)
-    {
-      s2 = va_arg (args, char *);
-      f3 = va_arg (args, struct fld_desc *);
-      s3 = va_arg (args, char *);
-
-      if (f1->type == '9' || f1->type == 'B')
-	{
-	  union numeric_type n1, n2, n3;
-	  cob_fld_to_decimal (f1, s1, &n1);
-	  cob_fld_to_decimal (f2, s2, &n2);
-	  cob_fld_to_decimal (f3, s3, &n3);
-	  if ((compare_decimal (n2, n1) <= 0)
-	      && (compare_decimal (n1, n3) <= 0))
-	    {
-	      ret = 0;
-	      break;
-	    }
-	}
-      else
-	{
-	  len2 = f2->len;
-	  len3 = f3->len;
-	  for (i = 0; i < f1->len; i++)
-	    {
-	      if ((i < len2) && (s1[i] >= s2[i]))
-		{
-		  if ((i < len3) && (s1[i] <= s3[i]))
-		    {
-		      va_end (args);
-		      return 0;
-		    }
-		}
-	    }
-	}
-      f2 = va_arg (args, struct fld_desc *);
-    }
-  va_end (args);
-  return ret;
-}
-
-/*------------------------------------------------------------------------*\
- |                                                                        |
- |                          compare_all                                   |
- |  return  1 if s1>s2; 0 if s1==s2; -1 if s1<s2                          |
- |                                                                        |
-\*------------------------------------------------------------------------*/
-
-int
-compare_all (struct fld_desc *f1, unsigned char *s1,
-	     struct fld_desc *f2, unsigned char *s2)
-{
-  int i, j, k, maxi;
-
-  maxi = (f1->len < f2->len) ? f1->len : f2->len;	// min (f1->len, f2->len)
-  j = 0;
-  k = 0;
-  for (i = 0; i < maxi; i++)
-    {
-      if (s1[j] == s2[k])
-	continue;
-      if (s1[j] > s2[k])
-	return 1;
-      if (s1[j] < s2[k])
-	return -1;
-      j++;
-      k++;
-      if (f1->all && j >= f1->len)
-	j = 0;
-      if (f2->all && k >= f2->len)
-	k = 0;
-    }
-
-  if (f1->len > f2->len)
-    while (j < f1->len)
-      {
-	if (s1[j++] != s2[k++])
-	  return 1;
-	if (k >= f2->len)
-	  k = 0;
-      }
-  else
-    while (k < f2->len)
-      {
-	if (s2[k++] != s1[j++])
-	  return -1;
-	if (j >= f1->len)
-	  j = 0;
-      }
-  return 0;
-}
-
-/*------------------------------------------------------------------------*\
- |                                                                        |
- |                          compare                                       |
- |  return  1 if s1>s2; 0 if s1==s2; -1 if s1<s2                          |
- |  return  1 if s1>s2; 0 if s1==s2; -1 if s1<s2                          |
- |                                                                        |
-\*------------------------------------------------------------------------*/
-
-int
-compare (struct fld_desc *f1, char *s1, struct fld_desc *f2, char *s2)
-{
-  int i, maxi;
-
-  if ((f1->type != '9' && f1->type != 'C' && f1->type != 'B') ||
-      (f2->type != '9' && f2->type != 'C' && f2->type != 'B'))
-    {				// compare strings
-      if (f1->all || f2->all)
-	{
-	  return (compare_all (f1, s1, f2, s2));
-	}
-      maxi = (f1->len < f2->len) ? f1->len : f2->len;	// min (f1->len, f2->len)
-      for (i = 0; i < maxi; i++)
-	{
-	  if (s1[i] == s2[i])
-	    continue;
-	  if (s1[i] > s2[i])
-	    return 1;
-	  if (s1[i] < s2[i])
-	    return -1;
-	}
-      if (f1->len > f2->len)
-	while (i < f1->len)
-	  {
-	    if (s1[i++] != ' ')
-	      return 1;
-	  }
-      else
-	while (i < f2->len)
-	  {
-	    if (s2[i++] != ' ')
-	      return -1;
-	  }
-    }
-  else
-    {
-      union numeric_type n1, n2;
-      cob_fld_to_decimal (f1, s1, &n1);
-      cob_fld_to_decimal (f2, s2, &n2);
-      return compare_decimal (n1, n2);
-    }
-  return 0;
-}
-
 /*
  * Class check
  */
@@ -296,7 +139,9 @@ cob_check_numeric (struct fld_desc *f, char *s)
   char c;
 
   if ((f->type == 'B') || (f->type == 'C') || (f->type == 'U'))
-    return 0;			/* the B and C formats have valid numbers always (?) */
+    /* the B and C formats have valid numbers always (?) */
+    return 0;
+
   for (i = 0; i < f->len; i++)
     {
       c = s[i];
@@ -373,12 +218,11 @@ int
 cob_check_lower (struct fld_desc *f, char *s)
 {
   int i;
-  char c;
 
   for (i = 0; i < f->len; i++)
     {
-      c = s[i];
-      if (!((c == ' ') || ((c >= 'a') && (c <= 'z'))))
+      char c = s[i];
+      if (!((c == ' ') || (('a' <= c) && (c <= 'z'))))
 	return 1;
     }
   return 0;

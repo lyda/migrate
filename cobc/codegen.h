@@ -9,12 +9,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2, or (at your option)
  * any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.  If not, write to
  * the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
@@ -55,26 +55,18 @@
 #define SEC_FIRST_NAMED 7
 
 /* selection subject types (evaluate statement) */
-#define SSUBJ_FALSE 0
-#define SSUBJ_TRUE 1
-#define SSUBJ_EXPR 2
-#define SSUBJ_COND 3
-#define SSUBJ_STR 4
+#define SSUBJ_BOOLEAN	0
+#define SSUBJ_EXPR	2
+#define SSUBJ_STR	4
 
 /* selection object types (evaluate statement) */
-#define SOBJ_FALSE 0
-#define SOBJ_TRUE 1
-#define SOBJ_ANY 2
-#define SOBJ_EXPR 3
-#define SOBJ_NEGEXPR 4
-#define SOBJ_RANGE 5
-#define SOBJ_NEGRANGE 6
-#define SOBJ_COND 7
-#define SOBJ_NEGCOND 8
-#define SOBJ_NEGSTR 9
-#define SOBJ_STR 10
-#define SOBJ_ZERO 11
-#define SOBJ_NEGZERO 12
+#define SOBJ_ANY	0x00
+#define SOBJ_ZERO	0x10
+#define SOBJ_EXPR	0x20
+#define SOBJ_RANGE	0x30
+#define SOBJ_STR	0x40
+#define SOBJ_BOOLEAN	0x50
+#define SOBJ_TYPE_MASK	0xf0
 
 #include "tree.h"
 
@@ -149,7 +141,6 @@ struct rec_varying
 struct selsubject
 {
   struct selsubject *next;
-  struct sym *var;		/* non-numeric variables */
   int type;
 };
 
@@ -611,11 +602,9 @@ extern struct subref *create_subscript (struct sym *sy);
 extern struct subref *add_subscript_item (struct subref *subs, char op,
 					struct sym *item);
 extern struct subref *add_subscript (struct subref *ref, struct subref *subs);
-extern int check_subscripts (struct sym *subs);
 extern void create_occurs_info (int min, int max, struct sym *depend);
 extern struct refmod *create_refmoded_var (struct sym *sy, struct sym *syoff,
 					   struct sym *sylen);
-extern int check_refmods (struct sym *var);
 extern void gen_subscripted (struct subref *subs);
 extern struct sym *get_variable_item (struct sym *sy);
 extern void gen_temp_storage (int size);
@@ -644,15 +633,15 @@ extern void gen_set (struct sym *idx, int which, struct sym *var,
 		     int adrof_idx, int adrof_var);
 extern int gen_evaluate_start (void);
 extern int subject_set_size (struct selsubject *ssbj);
-extern int selection_object_size (int type);
 extern int push_selection_subject_copy (int level, struct selsubject *ssbj,
 					int stkadd, int objtype);
 extern int selection_subject_type (int level, struct selsubject *ssbj);
-extern void gen_when_check (int level, struct selsubject *ssbj, int type,
-			    int endcase, struct sym *var);
+extern void gen_when_check (int level, struct selsubject *ssbj, int type, int endcase);
 extern void gen_bypass_when_case (int bypass);
 extern int gen_end_when (int n, int endcase, int sentence);
+extern void push_boolean (int flag);
 extern void push_condition (void);
+extern void push_field (struct sym *sy);
 extern void gen_goto_depending (struct list *l, struct sym *sy);
 extern void gen_goto (struct list *l);
 extern int gen_check_zero (void);
@@ -685,11 +674,8 @@ extern void Initialize_SearchAll_Boundaries (struct sym *sy,
 extern struct sym *determine_table_index_name (struct sym *sy);
 extern void define_field (int level, struct sym *sy);
 extern struct sym *alloc_filler (void);
-extern struct selsubject *save_sel_subject (int type,
-					    struct selsubject *ssubj,
-					    struct sym *sy);
+extern struct selsubject *save_sel_subject (struct selsubject *ssubj, int type);
 extern void release_sel_subject (int label, struct selsubject *ssbj);
-extern void compute_subject_set_size (struct selsubject *ssbj);
 extern int set_field_value_sw (struct sym *sy, int times);
 extern int set_field_length (struct sym *sy, int times);
 extern unsigned field_alignment (struct sym *sy, unsigned location);
@@ -716,11 +702,6 @@ extern void gen_compare_exp (int value);
 extern void gen_compare (struct sym *s1, int value, struct sym *s2);
 extern void assign_expr (struct sym *sy, int rnd);
 extern int push_expr (struct sym *sy);
-extern void add_expr (void);
-extern void subtract_expr (void);
-extern void multiply_expr (void);
-extern void divide_expr (void);
-extern void pow_expr (void);
 extern void gen_save_filedesc (struct sym *f);
 extern void alloc_file_entry (struct sym *f);
 extern void dump_alternate_keys (struct sym *r, struct alternate_list *alt);
@@ -780,7 +761,8 @@ extern int sort_exref_compare (const void *z1, const void *z2);
 extern int main (int argc, char *argv[]);
 
 /* htcobol.c */
-extern void yyerror (char *s, ...);
+extern void yywarn (char *fmt, ...);
+extern void yyerror (char *fmt, ...);
 extern int yyparse (void);
 
 #endif /* _CODEGEN_H_ */

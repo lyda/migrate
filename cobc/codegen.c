@@ -110,7 +110,6 @@ int picix, piccnt, sign, v_flag, n_flag;
 int active[37];
 int at_linkage = 0;
 int stackframe_cnt = 0;
-int inner_stack_size = 0;
 char program_id[120] = "main";
 char *pgm_label = "main";
 struct list *report_list = NULL;
@@ -2573,7 +2572,7 @@ gen_add (struct sym *sy1, struct sym *sy2, int rnd)
 {
   push_expr (sy2);
   push_expr (sy1);
-  add_expr ();
+  asm_call ("cob_add");
   assign_expr (sy2, rnd);
 }
 
@@ -2582,7 +2581,7 @@ gen_subtract (struct sym *sy1, struct sym *sy2, int rnd)
 {
   push_expr (sy2);
   push_expr (sy1);
-  subtract_expr ();
+  asm_call ("cob_sub");
   assign_expr (sy2, rnd);
 }
 
@@ -2591,7 +2590,7 @@ gen_multiply (struct sym *sy1, struct sym *sy2, struct sym *sy3, int rnd)
 {
   push_expr (sy2);
   push_expr (sy1);
-  multiply_expr ();
+  asm_call ("cob_mul");
   assign_expr (sy3, rnd);
 }
 
@@ -2601,16 +2600,16 @@ gen_divide (struct sym *sy1, struct sym *sy2,
 {
   push_expr (sy2);
   push_expr (sy1);
-  divide_expr ();
+  asm_call ("cob_div");
   assign_expr (sy3, rnd);
 
   if (sy4)
     {
       push_expr (sy3);
       push_expr (sy2);
-      multiply_expr ();
+      asm_call ("cob_mul");
       push_expr (sy1);
-      subtract_expr ();
+      asm_call ("cob_sub");
       assign_expr (sy4, rnd);
     }
 }
@@ -2618,16 +2617,14 @@ gen_divide (struct sym *sy1, struct sym *sy2,
 void
 gen_compute (struct math_var *vl1, struct sym *sy1, struct math_ose *ose)
 {
-  /* ON SIZE ERROR option only */
   if (ose)
-    gen_dstlabel (ose->lbl4);	/* generate bypass jump label */
+    gen_dstlabel (ose->lbl4);
 
   for (; vl1; vl1 = vl1->next)
     {
       push_expr (sy1);
       assign_expr (vl1->sname, vl1->rounded);
 
-      /* ON SIZE ERROR option only */
       if (ose)
 	math_on_size_error3 (ose);
     }
@@ -2636,7 +2633,6 @@ gen_compute (struct math_var *vl1, struct sym *sy1, struct math_ose *ose)
 void
 gen_add1 (struct math_var *vl1, struct math_var *vl2, struct math_ose *ose)
 {
-  /* ON SIZE ERROR option only */
   if (ose)
     gen_dstlabel (ose->lbl4);
 
@@ -2648,11 +2644,10 @@ gen_add1 (struct math_var *vl1, struct math_var *vl2, struct math_ose *ose)
       for (vl = vl1; vl != NULL; vl = vl->next)
 	{
 	  push_expr (vl->sname);
-	  add_expr ();
+	  asm_call ("cob_add");
 	}
       assign_expr (vl2->sname, vl2->rounded);
 
-      /* ON SIZE ERROR option only */
       if (ose)
 	math_on_size_error3 (ose);
     }
@@ -2662,7 +2657,6 @@ void
 gen_add2 (struct math_var *vl1, struct math_var *vl2,
 	  struct sym *sy1, struct math_ose *ose)
 {
-  /* ON SIZE ERROR option only */
   if (ose != NULL)
     gen_dstlabel (ose->lbl4);
 
@@ -2682,11 +2676,10 @@ gen_add2 (struct math_var *vl1, struct math_var *vl2,
       for (; vl; vl = vl->next)
 	{
 	  push_expr (vl->sname);
-	  add_expr ();
+	  asm_call ("cob_add");
 	}
       assign_expr (vl2->sname, vl2->rounded);
 
-      /* ON SIZE ERROR option only */
       if (ose)
 	math_on_size_error3 (ose);
     }
@@ -2696,7 +2689,6 @@ void
 gen_subtract1 (struct math_var *vl1, struct math_var *vl2,
 	       struct math_ose *ose)
 {
-  /* ON SIZE ERROR option only */
   if (ose)
     gen_dstlabel (ose->lbl4);
 
@@ -2708,11 +2700,10 @@ gen_subtract1 (struct math_var *vl1, struct math_var *vl2,
       for (vl = vl1; vl; vl = vl->next)
 	{
 	  push_expr (vl->sname);
-	  subtract_expr ();
+	  asm_call ("cob_sub");
 	}
       assign_expr (vl2->sname, vl2->rounded);
 
-      /* ON SIZE ERROR option only */
       if (ose)
 	math_on_size_error3 (ose);
     }
@@ -2722,7 +2713,6 @@ void
 gen_subtract2 (struct math_var *vl1, struct math_var *vl2, struct sym *sy1,
 	       struct math_ose *ose)
 {
-  /* ON SIZE ERROR option only */
   if (ose)
     gen_dstlabel (ose->lbl4);
 
@@ -2734,11 +2724,10 @@ gen_subtract2 (struct math_var *vl1, struct math_var *vl2, struct sym *sy1,
       for (vl = vl1; vl; vl = vl->next)
 	{
 	  push_expr (vl->sname);
-	  subtract_expr ();
+	  asm_call ("cob_sub");
 	}
       assign_expr (vl2->sname, vl2->rounded);
 
-      /* ON SIZE ERROR option only */
       if (ose)
 	math_on_size_error3 (ose);
     }
@@ -2747,7 +2736,6 @@ gen_subtract2 (struct math_var *vl1, struct math_var *vl2, struct sym *sy1,
 void
 gen_multiply1 (struct math_var *vl1, struct sym *sy1, struct math_ose *ose)
 {
-  /* ON SIZE ERROR option only */
   if (ose)
     gen_dstlabel (ose->lbl4);
 
@@ -2755,10 +2743,9 @@ gen_multiply1 (struct math_var *vl1, struct sym *sy1, struct math_ose *ose)
     {
       push_expr (sy1);
       push_expr (vl1->sname);
-      multiply_expr ();
+      asm_call ("cob_mul");
       assign_expr (vl1->sname, vl1->rounded);
 
-      /* ON SIZE ERROR option only */
       if (ose)
 	math_on_size_error3 (ose);
     }
@@ -2768,7 +2755,6 @@ void
 gen_multiply2 (struct math_var *vl1, struct sym *sy1, struct sym *sy2,
 	       struct math_ose *ose)
 {
-  /* ON SIZE ERROR option only */
   if (ose)
     gen_dstlabel (ose->lbl4);
 
@@ -2776,10 +2762,9 @@ gen_multiply2 (struct math_var *vl1, struct sym *sy1, struct sym *sy2,
     {
       push_expr (sy1);
       push_expr (sy2);
-      multiply_expr ();
+      asm_call ("cob_mul");
       assign_expr (vl1->sname, vl1->rounded);
 
-      /* ON SIZE ERROR option only */
       if (ose)
 	math_on_size_error3 (ose);
     }
@@ -2788,7 +2773,6 @@ gen_multiply2 (struct math_var *vl1, struct sym *sy1, struct sym *sy2,
 void
 gen_divide1 (struct math_var *vl1, struct sym *sy1, struct math_ose *ose)
 {
-  /* ON SIZE ERROR option only */
   if (ose)
     gen_dstlabel (ose->lbl4);
 
@@ -2796,10 +2780,9 @@ gen_divide1 (struct math_var *vl1, struct sym *sy1, struct math_ose *ose)
     {
       push_expr (vl1->sname);
       push_expr (sy1);
-      divide_expr ();
+      asm_call ("cob_div");
       assign_expr (vl1->sname, vl1->rounded);
 
-      /* ON SIZE ERROR option only */
       if (ose)
 	math_on_size_error3 (ose);
     }
@@ -2809,7 +2792,6 @@ void
 gen_divide2 (struct math_var *vl1, struct sym *sy1, struct sym *sy2,
 	     struct math_ose *ose)
 {
-  /* ON SIZE ERROR option only */
   if (ose)
     gen_dstlabel (ose->lbl4);
 
@@ -2817,10 +2799,9 @@ gen_divide2 (struct math_var *vl1, struct sym *sy1, struct sym *sy2,
     {
       push_expr (sy1);
       push_expr (sy2);
-      divide_expr ();
+      asm_call ("cob_div");
       assign_expr (vl1->sname, vl1->rounded);
 
-      /* ON SIZE ERROR option only */
       if (ose)
 	math_on_size_error3 (ose);
     }
@@ -2838,6 +2819,18 @@ create_occurs_info (int min, int max, struct sym *depend)
 }
 
 /******** functions for refmoded var manipulation ***********/
+static int
+check_refmods (struct sym *var)
+{
+  struct refmod *ref = (struct refmod *) var;
+  struct sym *sy = ref->sym;
+
+  if (SUBREF_P (sy))
+    sy = SUBREF_SYM (sy);
+
+  return (sy == NULL) ? 1 : 0;
+}
+
 struct refmod *
 create_refmoded_var (struct sym *sy, struct sym *syoff, struct sym *sylen)
 {
@@ -2848,19 +2841,8 @@ create_refmoded_var (struct sym *sy, struct sym *syoff, struct sym *sylen)
   ref->off = syoff;
   ref->len = sylen;
   ref->slot = refmod_slots++;
+  check_refmods ((struct sym *) ref);
   return ref;
-}
-
-int
-check_refmods (struct sym *var)
-{
-  struct refmod *ref = (struct refmod *) var;
-  struct sym *sy = ref->sym;
-
-  if (SUBREF_P (sy))
-    sy = SUBREF_SYM (sy);
-
-  return (sy == NULL) ? 1 : 0;
 }
 
 void
@@ -3484,10 +3466,6 @@ gen_class_check (struct sym *sy, int class)
 	stackframe_cnt += 8;
       asm_call ("cob_check_numeric");
       fprintf (o_src, "\tand\t%%eax,%%eax\n");
-      /*}
-         else {
-         yyerror("invalid NUMERIC class check");
-         } */
     }
   else
     {
@@ -3818,11 +3796,34 @@ gen_set (struct sym *idx, int which, struct sym *var,
 }
 
 /******* short-circuit conditional evaluators ********/
+
+void
+push_boolean (int flag)
+{
+  push_immed (flag ? 0 : 1);
+  asm_call ("cob_push_boolean");
+}
+
+void
+push_condition ()
+{
+  push_eax ();
+  asm_call ("cob_push_boolean");
+}
+
+void
+push_field (struct sym *sy)
+{
+  gen_loadvar (sy);
+  asm_call ("cob_push_field");
+}
+
 int
 gen_evaluate_start ()
 {
   int i = loc_label++;
   fprintf (o_src, "# EVALUATE statement\n");
+  asm_call ("cob_stack_clear");
   return i;
 }
 
@@ -3839,22 +3840,6 @@ subject_set_size (struct selsubject *ssbj)
 }
 
 int
-selection_object_size (int type)
-{
-  switch (type)
-    {
-    case SOBJ_EXPR:
-    case SOBJ_NEGEXPR:
-      return 8;
-    case SOBJ_RANGE:
-    case SOBJ_NEGRANGE:
-      return 16;
-    default:
-      return 0;
-    }
-}
-
-int
 push_selection_subject_copy (int level, struct selsubject *ssbj,
 			     int stkadd, int objtype)
 {
@@ -3866,33 +3851,11 @@ push_selection_subject_copy (int level, struct selsubject *ssbj,
 
   /* calculate the subject address */
   for (p = ssbj->next; p; p = p->next)
-    {
-      if (ssbj->type == SSUBJ_EXPR)
-	{
-	  stkadd += 8;
-	}
-      else if (ssbj->type == SSUBJ_COND)
-	{
-	  stkadd += 4;
-	}
-    }
+    stkadd++;
 
-  /* push expressions to the stack, conditions in %eax */
-  switch (ssbj->type)
-    {
-    case SSUBJ_COND:
-      fprintf (o_src, "\tmovl	%d(%%esp),%%eax\n", stkadd);
-      break;
-    case SSUBJ_EXPR:
-      fprintf (o_src, "\tpushl	%d(%%esp)\n", stkadd + 4);
-      fprintf (o_src, "\tpushl	%d(%%esp)\n", stkadd + 4);
-      break;
-    case SSUBJ_STR:
-      gen_loadvar (ssbj->var);
-      break;
-    case 0:
-      return 1;
-    }
+  /* push expressions to the stack */
+  push_immed (stkadd);
+  asm_call ("cob_push_copy");
   return 0;
 }
 
@@ -3900,162 +3863,75 @@ int
 selection_subject_type (int level, struct selsubject *ssbj)
 {
   while (level--)
-    {
-      ssbj = ssbj->next;
-    }
+    ssbj = ssbj->next;
   return ssbj->type;
 }
 
 void
-gen_when_check (int level, struct selsubject *ssbj, int type,
-		int endcase, struct sym *var)
+gen_when_check (int level, struct selsubject *ssbj, int type, int endcase)
 {
-  int invert = 0;
-  int stkadd = 0;
-  int cleanup, bypass;
+  int real_type;
+
   fprintf (o_src,
 	   "# WHEN check: level=%d, subject->type=%d, object type=%d\n",
 	   level, ssbj->type, type);
-  stkadd += selection_object_size (type);
+
+  if (type == SOBJ_ANY)
+    return;
 
   /* check if compatible subject/object found */
+  real_type = type & SOBJ_TYPE_MASK;
   switch (selection_subject_type (level, ssbj))
     {
     case SSUBJ_STR:
-      if ((type != SOBJ_STR) && (type != SOBJ_NEGSTR) &&
-	  (type != SOBJ_RANGE) && (type != SOBJ_NEGRANGE) &&
-	  (type != SOBJ_ZERO) && (type != SOBJ_NEGZERO) && (type != SOBJ_ANY))
-	{
-	  yyerror ("incompatible selection object");
-	}
+      if (real_type != SOBJ_STR
+	  && real_type != SOBJ_RANGE
+	  && real_type != SOBJ_ZERO)
+	yyerror ("incompatible selection object");
       break;
     case SSUBJ_EXPR:
-      if ((type == SOBJ_STR) || (type == SOBJ_NEGSTR))
+      if (real_type == SOBJ_STR)
 	{
-	  yyerror ("warning: expression expected");
-	  type = (type == SOBJ_STR) ? SOBJ_EXPR : SOBJ_NEGEXPR;
+	  yywarn ("expression expected");
+	  type = SOBJ_EXPR | (type & 1);
 	}
       break;
-    case SSUBJ_COND:
-      if ((type != SOBJ_TRUE) && (type != SOBJ_FALSE) && (type != SOBJ_ANY))
-	{
-	  yyerror ("incompatible selection object");
-	}
+    case SSUBJ_BOOLEAN:
+      if (real_type != SOBJ_BOOLEAN)
+	yyerror ("incompatible selection object");
       break;
-    case SSUBJ_FALSE:
-      invert = 1;
-    case SSUBJ_TRUE:
-      if ((type != SOBJ_COND) && (type != SOBJ_NEGCOND) && (type != SOBJ_ANY))
-	{
-	  yyerror ("incompatible selection object");
-	}
     }
 
   /* perform the actual tests */
-  switch (type)
+  switch (real_type)
     {
     case SOBJ_ZERO:
-    case SOBJ_NEGZERO:
-      fprintf (o_src, "# SOBJ_ZERO or SOBJ_NEGZERO\n");
-      if (selection_subject_type (level, ssbj) == SSUBJ_EXPR)
-	{
-	  push_selection_subject_copy (level, ssbj, stkadd, type);
-	  push_expr ((struct sym *) spe_lit_ZE);
-	  gen_compare_exp (EQUAL);
-	}
-      else
-	{
-	  push_selection_subject_copy (level, ssbj, stkadd, type);
-	  asm_call ("compare_zero");
-	  fprintf (o_src, "\tand\t%%eax,%%eax\n");	/* equal */
-	}
-      if (type == SOBJ_ZERO)
-	fprintf (o_src, "\tjnz\t.L%d\n", endcase);
-      else
-	fprintf (o_src, "\tjz\t.L%d\n", endcase);
+      push_selection_subject_copy (level, ssbj, 0, type);
+      asm_call ("cob_is_zero");
       break;
     case SOBJ_STR:
-    case SOBJ_NEGSTR:
-      fprintf (o_src, "# SOBJ_STR or SOBJ_NEGSTR\n");
-      push_selection_subject_copy (level, ssbj, stkadd, type);
-      gen_loadvar (var);
-      asm_call ("compare");
-      fprintf (o_src, "\tand\t%%eax,%%eax\n");	/* equal */
-      if (type == SOBJ_STR)
-	fprintf (o_src, "\tjnz\t.L%d\n", endcase);
-      else
-	fprintf (o_src, "\tjz\t.L%d\n", endcase);
-      break;
     case SOBJ_EXPR:
-    case SOBJ_NEGEXPR:
-      fprintf (o_src, "# SOBJ_EXPR or SOBJ_NEGEXPR\n");
-      push_selection_subject_copy (level, ssbj, stkadd, type);
-      gen_compare_exp (EQUAL);
-      if (type == SOBJ_EXPR)
-	fprintf (o_src, "\tjnz\t.L%d\n", endcase);
-      else
-	fprintf (o_src, "\tjz\t.L%d\n", endcase);
+    case SOBJ_BOOLEAN:
+      push_selection_subject_copy (level, ssbj, 1, type);
+      asm_call ("cob_is_equal");
       break;
     case SOBJ_RANGE:
-    case SOBJ_NEGRANGE:
-      cleanup = loc_label++;
-      bypass = loc_label++;
-      fprintf (o_src, "# SOBJ_RANGE or SOBJ_NEGRANGE\n");
-      push_selection_subject_copy (level, ssbj, stkadd, type);
-      gen_compare_exp (LESS);
-      if (type == SOBJ_RANGE)
-	fprintf (o_src, "\tjz\t.L%d\n", cleanup);
-      else
-	fprintf (o_src, "\tjnz\t.L%d\n", cleanup);
-      stkadd -= 8;
-      push_selection_subject_copy (level, ssbj, stkadd, type);
-      gen_compare_exp (GREATER);
-      if (type == SOBJ_RANGE)
-	fprintf (o_src, "\tjz\t.L%d\n", endcase);
-      else
-	fprintf (o_src, "\tjnz\t.L%d\n", endcase);
-      /* cleanup unused double at stack */
-      fprintf (o_src, "\tjmp\t.L%d\n", bypass);
-      fprintf (o_src, ".L%d:\taddl\t$8, %%esp\n", cleanup);
-      fprintf (o_src, "\tjmp\t.L%d\n", endcase);
-      fprintf (o_src, ".L%d:\n", bypass);
-      break;
-    case SOBJ_COND:
-    case SOBJ_NEGCOND:
-      //invert=push_selection_subject_copy(level,ssbj,stkadd,type);
-      if (type == SOBJ_COND)
-	fprintf (o_src, "\tjnz\t.L%d\n", endcase);
-      else
-	fprintf (o_src, "\tjz\t.L%d\n", endcase);
-      break;
-    case SOBJ_ANY:		/* no tests needed, just accept */
-      break;
-    case SOBJ_TRUE:
-      invert = push_selection_subject_copy (level, ssbj, stkadd, type);
-      fprintf (o_src, "\tand\t%%eax,%%eax\n");
-      if (invert)
-	fprintf (o_src, "\tjz\t.L%d\n", endcase);
-      else
-	fprintf (o_src, "\tjnz\t.L%d\n", endcase);
-      break;
-    case SOBJ_FALSE:
-      invert = push_selection_subject_copy (level, ssbj, stkadd, type);
-      fprintf (o_src, "\tand\t%%eax,%%eax\n");
-      if (invert)
-	fprintf (o_src, "\tjnz\t.L%d\n", endcase);
-      else
-	fprintf (o_src, "\tjz\t.L%d\n", endcase);
+      push_selection_subject_copy (level, ssbj, 2, type);
+      asm_call ("cob_in_range");
       break;
     }
+  fprintf (o_src, "\tand\t%%eax,%%eax\n");
+  if (type & 1)
+    fprintf (o_src, "\tjnz\t.L%d\n", endcase);
+  else
+    fprintf (o_src, "\tjz\t.L%d\n", endcase);
 }
 
 void
 gen_bypass_when_case (int bypass)
 {
   if (bypass)
-    {
-      fprintf (o_src, ".L%d:\n", bypass);
-    }
+    fprintf (o_src, ".L%d:\n", bypass);
 }
 
 int
@@ -4074,12 +3950,6 @@ gen_end_when (int n, int endcase, int sentence)
     }
   fprintf (o_src, ".L%d:\n", endcase);
   return lab;
-}
-
-void
-push_condition ()
-{
-  fprintf (o_src, "\tpushl\t%%eax\t# push_condition\n");
 }
 
 void
@@ -4103,10 +3973,6 @@ void
 gen_goto (struct list *l)
 {
   struct sym *sy = (struct sym *) l->var;
-  if (inner_stack_size)
-    {
-      fprintf (o_src, "\taddl\t$%d, %%esp\n", inner_stack_size);
-    }
   fprintf (o_src, "\tjmp\t.LB_%s\n", label_name (sy));
   if (l->next)
     {
@@ -4179,8 +4045,6 @@ gen_not (void)
   fprintf (o_src, "\txorl\t%%eax,%%eax\n");
   fprintf (o_src, "\tjmp\t.L%d\n", j);
   fprintf (o_src, ".L%d:\tincl\t%%eax\n", i);
-
-//      fprintf(o_src,"L%d:\n",j);
   fprintf (o_src, "\t.align 16\n");
   fprintf (o_src, ".L%d:\n", j);
 
@@ -5050,12 +4914,11 @@ alloc_filler (void)
 }
 
 struct selsubject *
-save_sel_subject (int type, struct selsubject *ssubj, struct sym *sy)
+save_sel_subject (struct selsubject *ssubj, int type)
 {
   struct selsubject *tmp = malloc (sizeof (struct selsubject));
   struct selsubject *tmp1;
   tmp->type = type;
-  tmp->var = sy;
   tmp->next = NULL;
   if (ssubj != NULL)
     {
@@ -5069,48 +4932,10 @@ save_sel_subject (int type, struct selsubject *ssubj, struct sym *sy)
 }
 
 void
-compute_subject_set_size (struct selsubject *ssbj)
-{
-  int stack_adjust = 0;
-  while (ssbj != NULL)
-    {
-      if (ssbj->type == SSUBJ_EXPR)
-	{
-	  stack_adjust += 8;
-	}
-      else if (ssbj->type == SSUBJ_COND)
-	{
-	  stack_adjust += 4;
-	}
-      ssbj = ssbj->next;
-    }
-  inner_stack_size += stack_adjust;
-}
-
-void
 release_sel_subject (int label, struct selsubject *ssbj)
 {
-  struct selsubject *tmp;
-  int stack_adjust = 0;
+  asm_call ("cob_stack_clear");
   fprintf (o_src, ".L%d:\t# EVALUATE end\n", label);
-  while (ssbj != NULL)
-    {
-      if (ssbj->type == SSUBJ_EXPR)
-	{
-	  stack_adjust += 8;
-	}
-      else if (ssbj->type == SSUBJ_COND)
-	{
-	  stack_adjust += 4;
-	}
-      tmp = ssbj;
-      ssbj = ssbj->next;
-      free (tmp);
-    }
-  if (stack_adjust)
-    fprintf (o_src, "\taddl\t$%d, %%esp\n", stack_adjust);
-  /* we're leaving this level of stack frame */
-  inner_stack_size -= stack_adjust;
 }
 
 int
@@ -5574,7 +5399,6 @@ gen_exit (int code)
       fprintf (o_src, "\tjb\t\t.L%d\n", l2);
       fprintf (o_src, ".L%d:\n", l1);
       fprintf (o_src, "\taddl\t$8,%%esp\n");
-      inner_stack_size = 0;
       fprintf (o_src, "\tret\n");
       fprintf (o_src, ".L%d:\n", l2);
     }
@@ -5646,8 +5470,7 @@ gen_condition (struct sym *sy)
 void
 gen_compare_exp (int value)
 {
-  stackframe_cnt += 16;		/* must pop everything after comparing */
-  asm_call ("compare_decimal");
+  asm_call ("cob_cmp");
   switch (value)
     {
     case 0:
@@ -5735,8 +5558,7 @@ assign_expr (struct sym *sy, int rnd)
 {
   push_immed (rnd);
   gen_loadvar (sy);
-  stackframe_cnt += sizeof (double);	/* value to be poped too */
-  asm_call ("cob_decimal_to_fld");
+  asm_call ("cob_set");
 }
 
 int
@@ -5748,19 +5570,14 @@ push_expr (struct sym *sy)
       push_expr ((struct sym *) EXPR_RIGHT (sy));
       switch (EXPR_OP (sy))
 	{
-	case '+': add_expr (); break;
-	case '-': subtract_expr (); break;
-	case '*': multiply_expr (); break;
-	case '/': divide_expr (); break;
-	case '^': pow_expr (); break;
-	default:
-	  yyerror ("unknown expression operator");
-	  abort ();
+	case '+': asm_call ("cob_add"); break;
+	case '-': asm_call ("cob_sub"); break;
+	case '*': asm_call ("cob_mul"); break;
+	case '/': asm_call ("cob_div"); break;
+	case '^': asm_call ("cob_pow"); break;
 	}
       return 1;
     }
-
-  /* sy is really a symbol, not expr */
 
   if (!is_numeric_sy (sy))
     return 0;
@@ -5768,51 +5585,9 @@ push_expr (struct sym *sy)
 #ifdef COB_DEBUG
   fprintf (o_src, "# push_expr: %s\n", sy->name);
 #endif
-  fprintf (o_src, "\tsubl\t$8, %%esp\n");
-  fprintf (o_src, "\tleal\t0(%%esp),%%eax\n");
-  push_eax ();
   gen_loadvar (sy);
-  asm_call ("cob_fld_to_decimal");
+  asm_call ("cob_push_decimal");
   return 1;
-}
-
-static void
-call_expr (char *func)
-{
-  fprintf (o_src, "\tleal\t8(%%esp),%%eax\n");
-  push_eax ();
-  asm_call (func);
-  fprintf (o_src, "\taddl\t$8, %%esp\n");
-}
-
-void
-add_expr (void)
-{
-  call_expr ("add_decimal");
-}
-
-void
-subtract_expr (void)
-{
-  call_expr ("subtract_decimal");
-}
-
-void
-multiply_expr (void)
-{
-  call_expr ("multiply_decimal");
-}
-
-void
-divide_expr (void)
-{
-  call_expr ("divide_decimal");
-}
-
-void
-pow_expr (void)
-{
-  call_expr ("pow_decimal");
 }
 
 static void
@@ -5829,7 +5604,6 @@ gen_save_filevar (struct sym *f, struct sym *buf)
 	       f->name);
 #endif
 
-//              fprintf(o_src,"\tleal\t-u(%%ebp), %%eax\n",f->record);
       fprintf (o_src, "\tmovl\t%s, %%eax\n", memref (f->recordsym));
       push_eax ();
     }
@@ -6576,7 +6350,6 @@ gen_call (struct lit *v, int stack_size, int exceplabel, int notexceplabel)
       endlabel = loc_label++;
       fprintf (o_src, "\tjmp\t.L%d\n", notexceplabel);
     }
-  //fprintf(o_src,"\taddl\t$%d, %%esp\n",stack_size*2);
   if (totlen != 0)
     fprintf (o_src, "\taddl\t$%d, %%esp\n", totlen);
   stack_offset = saved_stack_offset;

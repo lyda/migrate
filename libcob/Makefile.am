@@ -1,6 +1,5 @@
 lib_LTLIBRARIES = libcob.la
-libcob_la_SOURCES = _libcob.h decimal.c decimal.h \
-	cobmove.c general.c fileio.c \
+libcob_la_SOURCES = _libcob.h object.c cobmove.c general.c fileio.c \
 	basicio.c strings.c screenio.c screenio.h \
 	dyncall.c ltdl.c ltdl.h
 libcob_la_LDFLAGS = -version-info 0:0:0 -export-dynamic
