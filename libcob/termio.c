@@ -68,7 +68,7 @@ cob_display (cob_field *f, int fd)
       if (COB_FIELD_HAVE_SIGN (f))
 	p += sprintf (p, "+\001");
       if (expt < 0)
-	sprintf (p, "9%c.%c9%c", digits + expt, 1, expt);
+	sprintf (p, "9%c.%c9%c", digits + expt, 1, - expt);
       else
 	sprintf (p, "9%c", digits);
       cob_move (f, &temp);
