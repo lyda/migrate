@@ -533,7 +533,7 @@ output_param (cb_tree x, int id)
     case CB_TAG_FIELD:
       {
 	struct cb_field *f = CB_FIELD (x);
-	if (f->indexes > 0 || f->storage == CB_STORAGE_LINKAGE)
+	if (f->indexes > 0)
 	  {
 	    output ("(%s = (cob_field) ", fname);
 	    output_field (x);
@@ -547,7 +547,9 @@ output_param (cb_tree x, int id)
 		output_field (x);
 
 		output_target = storage_file;
-		output ("static cob_field f_%s = ", f->cname);
+		if (f->storage != CB_STORAGE_LINKAGE)
+		  output ("static ");
+		output ("cob_field f_%s = ", f->cname);
 		output_field (x);
 		output (";\n");
 
@@ -2242,7 +2244,10 @@ output_internal_function (struct cb_program *prog,
   /* local variables */
   output_line ("static int initialized = 0;");
   output_line ("static cob_decimal d[%d];", prog->decimal_index_max);
-  output_line ("static cob_environment env;");
+  output_line ("static cob_environment env = {'%c', '%c', '%c'};",
+	       prog->decimal_point,
+	       prog->currency_symbol,
+	       prog->numeric_separator);
   output_newline ();
   output_line ("int i;");
   output_line ("int n[%d];", prog->loop_counter);
@@ -2251,6 +2256,27 @@ output_internal_function (struct cb_program *prog,
 	       "frame_stack[24];");
   output_line ("cob_field f[4];");
   output_newline ();
+
+  output ("#include \"%s\"\n\n", storage_file_name);
+
+  /* files */
+  if (prog->file_list)
+    {
+      output ("/* Files */\n\n");
+      for (l = prog->file_list; l; l = l->next)
+	output_file_definition (l->item);
+      output_newline ();
+    }
+
+  /* screens */
+  if (prog->screen_storage)
+    {
+      struct cb_field *f;
+      output ("/* Screens */\n\n");
+      for (f = prog->screen_storage; f; f = f->sister)
+	output_screen_definition (f);
+      output_newline ();
+    }
 
   /* initialization */
   output_line ("if (!initialized)");
@@ -2261,11 +2287,6 @@ output_internal_function (struct cb_program *prog,
   output_line ("/* initialize decimal numbers */");
   output_line ("for (i = 0; i < %d; i++)", prog->decimal_index_max);
   output_line ("  cob_decimal_init (&d[i]);");
-  output_newline ();
-  output_line ("/* initialize environment */");
-  output_line ("env.decimal_point = '%c';", prog->decimal_point);
-  output_line ("env.currency_symbol = '%c';", prog->currency_symbol);
-  output_line ("env.numeric_separator = '%c';", prog->numeric_separator);
   output_newline ();
   if (!prog->flag_initial)
     output_init_values (prog->working_storage);
@@ -2404,8 +2425,6 @@ codegen (struct cb_program *prog)
   output ("#include <string.h>\n");
   output ("#include <libcob.h>\n\n");
 
-  output ("#include \"%s\"\n\n", storage_file_name);
-
   /* fields */
   output ("/* Fields */\n\n");
   output ("#define i_SWITCH         cob_switch\n");
@@ -2414,25 +2433,6 @@ codegen (struct cb_program *prog)
   for (l = prog->index_list; l; l = l->next)
     output ("static int i_%s;\n", CB_FIELD (l->item)->cname);
   output_newline ();
-
-  /* files */
-  if (prog->file_list)
-    {
-      output ("/* Files */\n\n");
-      for (l = prog->file_list; l; l = l->next)
-	output_file_definition (l->item);
-      output_newline ();
-    }
-
-  /* screens */
-  if (prog->screen_storage)
-    {
-      struct cb_field *f;
-      output ("/* Screens */\n\n");
-      for (f = prog->screen_storage; f; f = f->sister)
-	output_screen_definition (f);
-      output_newline ();
-    }
 
   /* labels */
   output ("/* Labels */\n\n");
