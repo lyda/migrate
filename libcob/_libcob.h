@@ -119,7 +119,7 @@ struct fld_desc
   ((f).desc->len - ((f).desc->separate_sign ? 1 : 0))
 #define FIELD_DECIMALS(f) \
   ((f).desc->decimals)
-
+#define FIELD_SIGNED(f) ((f).desc->pic[0] == 'S')
 
 struct file_desc
 {

@@ -230,7 +230,7 @@ display_curses (struct fld_desc *f, char *s, int dspflags)
   if ((f->type == '9') || (f->type == 'C') || (f->type == 'B'))
     {
       len = picCompLength (f->pic);
-      if ((f->pic[0] == 'S') || (f->pic[0] == 's'))
+      if (f->pic[0] == 'S')
 	{
 	  szSigned[0] = '-';
 	  szSigned[1] = (char) 1;

@@ -220,17 +220,13 @@ cob_is_numeric (struct fld_desc *f, char *s)
 	}
 	/******** take care of NULL picture (bug in refmod's) ********/
       if (f->type != 'G' && f->pic != NULL)
-	{
-	  /* take care of signed numbers (non separate sign) */
-	  if ((i == f->len - 1) && (*(f->pic) == 'S'))
+	/* take care of signed numbers (non separate sign) */
+	if (i == f->len - 1 && f->pic[0] == 'S')
+	  if (strchr ("}ABCDEFGHI{JKLMNOPQR", c) != NULL)
 	    {
-	      if (strchr ("}ABCDEFGHI{JKLMNOPQR", c) != NULL)
-		{
-		  dig++;
-		  break;
-		}
+	      dig++;
+	      break;
 	    }
-	}
       if ((c > '9') || (c < '0'))
 	return 0;
     }
