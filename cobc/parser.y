@@ -569,7 +569,12 @@ collating_sequence_clause:
 /* FILE STATUS clause */
 
 file_status_clause:
-  _file STATUS _is reference	{ current_file->file_status = $4; }
+  _file STATUS _is reference reference
+  {
+    current_file->file_status = $4;
+    if ($5)
+      PENDING ("2nd FILE STATUS");
+  }
 ;
 
 
