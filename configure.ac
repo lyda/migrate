@@ -56,11 +56,6 @@ LIBRL=""
 AC_CHECK_HEADERS([readline/readline.h readline/history.h])
 AC_CHECK_LIB([readline], [readline], LIBRL="-lreadline")
 
-# Checks for ncurses.
-AC_CHECK_HEADERS([ncurses.h], , AC_MSG_ERROR(ncurses is required))
-AC_CHECK_LIB([ncurses], [addch], , AC_MSG_ERROR(ncurses is required))
-AC_CHECK_FUNCS([color_set attr_get])
-
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_TYPE_OFF_T
@@ -82,7 +77,7 @@ COB_CFLAGS="-I$includedir"
 COB_LIBADD="-L$libdir -lcob"
 COB_LIBRARY_PATH=".:$libdir/$PACKAGE"
 LIBCOB_CFLAGS="${INCLTDL}"
-LIBCOB_LIBADD="-ldl -ldb1 -lgmp -lncurses ${LIBRL}"
+LIBCOB_LIBADD="-ldl -ldb1 -lgmp ${LIBRL}"
 LIBS="$save_libs"
 
 AC_SUBST(COB_CC)
