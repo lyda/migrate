@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 92
+%expect 83
 
 %{
 #include "config.h"
@@ -2861,39 +2861,52 @@ stop_statement:
 
 string_statement:
   STRING			{ BEGIN_STATEMENT ("STRING"); }
-  string_list INTO data_name opt_with_pointer on_overflow
+  string_item_list INTO data_name opt_with_pointer on_overflow
   end_string
   {
-    struct cb_list *l = $<list>3;
-    l = cons (make_funcall_2 ("cob_string_init", $5, $6), l);
-    l = list_add (l, make_funcall_0 ("cob_string_finish"));
-    push_sequence_with_handler (make_sequence (l), $7);
-  }
-;
-string_list:
-  string_list_1			{ $<list>$ = $<list>1; }
-| string_list string_list_1	{ $<list>$ = list_append ($<list>1, $<list>2); }
-;
-string_list_1:
-  value_list string_delimited
-  {
-    struct cb_list *l;
-    for (l = $1; l; l = l->next)
-      l->item = make_funcall_2 ("cob_string_append", l->item, $<tree>2);
-    $<list>$ = $1;
-  }
-;
-string_delimited:
-  /* empty */			{ $<tree>$ = cb_int0; }
-| DELIMITED _by SIZE		{ $<tree>$ = cb_int0; }
-| DELIMITED _by value		{ $<tree>$ = $3; }
-;
+    struct cb_list *seq;
+    struct cb_list *start = $<list>3;
 
+    seq = list (make_funcall_2 ("cob_string_init", $5, $6));
+
+    while (start)
+      {
+	struct cb_list *l, *end;
+	cb_tree dlm;
+
+	/* find DELIMITED item */
+	for (end = start; end; end = end->next)
+	  if (CB_PARAMETER_P (end->item))
+	    break;
+
+	/* cob_string_delimited */
+	dlm = end ? CB_PARAMETER (end->item)->x : cb_int0;
+	list_add (seq, make_funcall_1 ("cob_string_delimited", dlm));
+
+	/* cob_string_append */
+	for (l = start; l != end; l = l->next)
+	  list_add (seq, make_funcall_1 ("cob_string_append", l->item));
+
+	start = end ? end->next : NULL;
+      }
+
+    list_add (seq, make_funcall_0 ("cob_string_finish"));
+    push_sequence_with_handler (make_sequence (seq), $7);
+  }
+;
+string_item_list:
+  string_item			{ $<list>$ = list ($<tree>1); }
+| string_item_list string_item	{ $<list>$ = list_add ($<list>1, $<tree>2); }
+;
+string_item:
+  value				{ $<tree>$ = $1; }
+| DELIMITED _by SIZE		{ $<tree>$ = make_parameter_1 (0, cb_int0); }
+| DELIMITED _by value		{ $<tree>$ = make_parameter_1 (0, $3); }
+;
 opt_with_pointer:
   /* empty */			{ $$ = cb_int0; }
 | _with POINTER data_name	{ $$ = $3; }
 ;
-
 end_string:
   /* empty */			{ terminator_warning (); }
 | END_STRING
