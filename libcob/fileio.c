@@ -196,11 +196,11 @@ sequential_rewrite (struct cob_file_desc *f)
 static struct cob_fileio_funcs sequential_funcs = {
   sequential_open,
   sequential_close,
-  sequential_read,
+  0,
+  0,
   sequential_read,
   sequential_write,
   sequential_rewrite,
-  0,
   0
 };
 
@@ -322,10 +322,10 @@ lineseq_write (struct cob_file_desc *f)
 static struct cob_fileio_funcs lineseq_funcs = {
   lineseq_open,
   lineseq_close,
-  lineseq_read,
+  0,
+  0,
   lineseq_read,
   lineseq_write,
-  0,
   0,
   0
 };
@@ -350,9 +350,54 @@ relative_close (struct cob_file_desc *f, int opt)
 }
 
 static void
-relative_read (struct cob_file_desc *f)
+relative_start (struct cob_file_desc *f, int cond, struct cob_field k)
 {
-  /* an error occurred in the previous relative_start */
+  char c;
+
+  /* get the index */
+  f->relative_index = cob_to_int (k) - 1;
+  if (cond == COB_LT)
+    f->relative_index--;
+  else if (cond == COB_GT)
+    f->relative_index++;
+
+  /* seek the index */
+ again:
+  if (lseek (f->file.fd, f->record_size * f->relative_index, SEEK_SET) == -1
+      || read (f->file.fd, &c, 1) == -1)
+    {
+    not_found:
+      f->relative_index = -1;
+      RETURN_STATUS (23);
+    }
+
+  /* check if a valid record */
+  if (c != '\0')
+    {
+      cob_set_int (k, f->relative_index);
+      RETURN_STATUS (00);
+    }
+
+  /* continue */
+  switch (cond)
+    {
+    case COB_EQ:
+      goto not_found;
+    case COB_LT:
+    case COB_LE:
+      f->relative_index--;
+      goto again;
+    case COB_GT:
+    case COB_GE:
+      f->relative_index++;
+      goto again;
+    }
+}
+
+static void
+relative_read (struct cob_file_desc *f, struct cob_field k)
+{
+  relative_start (f, COB_EQ, k);
   if (FILE_STATUS (f) != 00)
     return;
 
@@ -423,60 +468,15 @@ relative_delete (struct cob_file_desc *f)
   RETURN_STATUS (00);
 }
 
-static void
-relative_start (struct cob_file_desc *f, int cond, struct cob_field k)
-{
-  char c;
-
-  /* get the index */
-  f->relative_index = cob_to_int (k) - 1;
-  if (cond == COB_LT)
-    f->relative_index--;
-  else if (cond == COB_GT)
-    f->relative_index++;
-
-  /* seek the index */
- again:
-  if (lseek (f->file.fd, f->record_size * f->relative_index, SEEK_SET) == -1
-      || read (f->file.fd, &c, 1) == -1)
-    {
-    not_found:
-      f->relative_index = -1;
-      RETURN_STATUS (23);
-    }
-
-  /* check if a valid record */
-  if (c != '\0')
-    {
-      cob_set_int (k, f->relative_index);
-      RETURN_STATUS (00);
-    }
-
-  /* continue */
-  switch (cond)
-    {
-    case COB_EQ:
-      goto not_found;
-    case COB_LT:
-    case COB_LE:
-      f->relative_index--;
-      goto again;
-    case COB_GT:
-    case COB_GE:
-      f->relative_index++;
-      goto again;
-    }
-}
-
 static struct cob_fileio_funcs relative_funcs = {
   relative_open,
   relative_close,
+  relative_start,
   relative_read,
   relative_read_next,
   relative_write,
   relative_rewrite,
-  relative_delete,
-  relative_start
+  relative_delete
 };
 
 
@@ -576,16 +576,74 @@ indexed_close (struct cob_file_desc *f, int opt)
 }
 
 static void
-indexed_read (struct cob_file_desc *f)
+indexed_start (struct cob_file_desc *f, int cond, struct cob_field k)
 {
+  int i, ret;
   DBT key, data;
-
-  /* an error occurred in the previous indexed_start */
-  if (FILE_STATUS (f) != 00)
-    return;
 
   memset (&key, 0, sizeof (DBT));
   memset (&data, 0, sizeof (DBT));
+
+  /* look up for the key */
+  for (i = 0; i < f->nkeys; i++)
+    if (f->keys[i].field.desc == k.desc)
+      break;
+#if COB_DEBUG
+  if (i == f->nkeys)
+    cob_runtime_error ("cob_start_indexed: key not found "
+		       "(should have been detected by cobc)");
+#endif
+
+  /* close the current cursor */
+  if (f->cursor)
+    f->cursor->c_close (f->cursor);
+
+  /* create a new cursor */
+  DB_CURSOR (f->keys[i].db, &f->cursor);
+  f->f.secondary = (i > 0);
+
+  /* search */
+  DBT_SET (key, f->record_data, i);
+  switch (cond)
+    {
+    case COB_EQ:
+      ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET);
+      break;
+    case COB_LT:
+    case COB_LE:
+      ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET_RANGE);
+      if (ret == 0 && cond == COB_LE)
+	if (memcpy (k.data, key.data, key.size) == 0)
+	  break;
+      ret = f->cursor->c_get (f->cursor, &key, &data, DB_PREV);
+      break;
+    case COB_GT:
+    case COB_GE:
+      ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET_RANGE);
+      if (ret == 0 && cond == COB_GE)
+	if (memcpy (k.data, key.data, key.size) == 0)
+	  break;
+      ret = f->cursor->c_get (f->cursor, &key, &data, DB_NEXT);
+      break;
+  }
+  
+  if (ret == 0)
+    RETURN_STATUS (00);
+  else
+    RETURN_STATUS (23);
+}
+
+static void
+indexed_read (struct cob_file_desc *f, struct cob_field k)
+{
+  DBT key, data;
+
+  memset (&key, 0, sizeof (DBT));
+  memset (&data, 0, sizeof (DBT));
+
+  indexed_start (f, COB_EQ, k);
+  if (FILE_STATUS (f) != 00)
+    return;
 
   if (DBC_GET (f->cursor, &key, &data, DB_CURRENT) != 0)
     RETURN_STATUS (23);
@@ -732,73 +790,15 @@ indexed_rewrite (struct cob_file_desc *f)
     indexed_write (f);
 }
 
-static void
-indexed_start (struct cob_file_desc *f, int cond, struct cob_field k)
-{
-  int i, ret;
-  DBT key, data;
-
-  memset (&key, 0, sizeof (DBT));
-  memset (&data, 0, sizeof (DBT));
-
-  /* look up for the key */
-  for (i = 0; i < f->nkeys; i++)
-    if (f->keys[i].field.desc == k.desc)
-      break;
-#if COB_DEBUG
-  if (i == f->nkeys)
-    cob_runtime_error ("cob_start_indexed: key not found "
-		       "(should have been detected by cobc)");
-#endif
-
-  /* close the current cursor */
-  if (f->cursor)
-    f->cursor->c_close (f->cursor);
-
-  /* create a new cursor */
-  DB_CURSOR (f->keys[i].db, &f->cursor);
-  f->f.secondary = (i > 0);
-
-  /* search */
-  DBT_SET (key, f->record_data, i);
-  switch (cond)
-    {
-    case COB_EQ:
-      ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET);
-      break;
-    case COB_LT:
-    case COB_LE:
-      ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET_RANGE);
-      if (ret == 0 && cond == COB_LE)
-	if (memcpy (k.data, key.data, key.size) == 0)
-	  break;
-      ret = f->cursor->c_get (f->cursor, &key, &data, DB_PREV);
-      break;
-    case COB_GT:
-    case COB_GE:
-      ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET_RANGE);
-      if (ret == 0 && cond == COB_GE)
-	if (memcpy (k.data, key.data, key.size) == 0)
-	  break;
-      ret = f->cursor->c_get (f->cursor, &key, &data, DB_NEXT);
-      break;
-  }
-  
-  if (ret == 0)
-    RETURN_STATUS (00);
-  else
-    RETURN_STATUS (23);
-}
-
 static struct cob_fileio_funcs indexed_funcs = {
   indexed_open,
   indexed_close,
+  indexed_start,
   indexed_read,
   indexed_read_next,
   indexed_write,
   indexed_rewrite,
-  indexed_delete,
-  indexed_start
+  indexed_delete
 };
 
 
@@ -882,7 +882,24 @@ cob_close (struct cob_file_desc *f, int opt)
 }
 
 void
-cob_read (struct cob_file_desc *f)
+cob_start (struct cob_file_desc *f, int cond, struct cob_field key)
+{
+  f->f.read_done = 0;
+
+  if (f->f.nonexistent)
+    RETURN_STATUS (23);
+
+  if (f->access_mode == COB_ACCESS_RANDOM)
+    RETURN_STATUS (47);
+
+  if (!FILE_OPENED (f) || !FILE_READABLE (f))
+    RETURN_STATUS (47);
+
+  fileio_funcs[f->organization]->start (f, cond, key);
+}
+
+void
+cob_read (struct cob_file_desc *f, struct cob_field key)
 {
   f->f.read_done = 0;
 
@@ -895,7 +912,7 @@ cob_read (struct cob_file_desc *f)
   if (!FILE_OPENED (f) || !FILE_READABLE (f))
     RETURN_STATUS (47);
 
-  fileio_funcs[f->organization]->read (f);
+  fileio_funcs[f->organization]->read (f, key);
 
   if (FILE_STATUS (f) == 00)
     f->f.read_done = 1;
@@ -970,21 +987,4 @@ cob_delete (struct cob_file_desc *f)
     RETURN_STATUS (49);
 
   fileio_funcs[f->organization]->delete (f);
-}
-
-void
-cob_start (struct cob_file_desc *f, int cond, struct cob_field key)
-{
-  f->f.read_done = 0;
-
-  if (f->f.nonexistent)
-    RETURN_STATUS (23);
-
-  if (f->access_mode == COB_ACCESS_RANDOM)
-    RETURN_STATUS (47);
-
-  if (!FILE_OPENED (f) || !FILE_READABLE (f))
-    RETURN_STATUS (47);
-
-  fileio_funcs[f->organization]->start (f, cond, key);
 }

@@ -2107,10 +2107,7 @@ read_statement:
     else
       {
 	/* READ */
-	if (!$6)
-	  $6 = current_file_name->key;
-	push_call_3 (COB_START, $2, make_integer (COB_EQ), $6);
-	push_call_1 (COB_READ, $2);
+	push_call_2 (COB_READ, $2, $6 ? $6 : current_file_name->key);
       }
     if ($5)
       push_move (COBC_TREE (current_file_name->record), $5);
