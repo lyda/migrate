@@ -27,6 +27,7 @@
 #include <ctype.h>
 
 #include "common.h"
+#include "move.h"
 #include "numeric.h"
 #include "termio.h"
 #include "fileio.h"
@@ -497,10 +498,32 @@ cob_cmp (cob_field *f1, cob_field *f2)
     }
   else
     {
+      cob_field temp;
+      cob_field_attr attr;
+      unsigned char buff[18];
       if (COB_FIELD_IS_NUMERIC (f1) && COB_FIELD_IS_NUMERIC (f2))
 	return cob_numeric_cmp (f1, f2);
-      else
-	return cob_cmp_alnum (f1, f2);
+      if (COB_FIELD_IS_NUMERIC (f1)
+	  && COB_FIELD_TYPE (f1) != COB_TYPE_NUMERIC_DISPLAY)
+	{
+	  temp = (cob_field) {f1->attr->digits, buff, &attr};
+	  attr = *f1->attr;
+	  attr.type = COB_TYPE_NUMERIC_DISPLAY;
+	  attr.flags &= ~COB_FLAG_HAVE_SIGN;
+	  cob_move (f1, &temp);
+	  f1 = &temp;
+	}
+      if (COB_FIELD_IS_NUMERIC (f2)
+	  && COB_FIELD_TYPE (f2) != COB_TYPE_NUMERIC_DISPLAY)
+	{
+	  temp = (cob_field) {f2->attr->digits, buff, &attr};
+	  attr = *f2->attr;
+	  attr.type = COB_TYPE_NUMERIC_DISPLAY;
+	  attr.flags &= ~COB_FLAG_HAVE_SIGN;
+	  cob_move (f2, &temp);
+	  f2 = &temp;
+	}
+      return cob_cmp_alnum (f1, f2);
     }
 }
 

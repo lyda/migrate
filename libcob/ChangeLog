@@ -1,3 +1,8 @@
+2004-05-16  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* common.c (cob_cmp): Compare non-display numeric and alphanumeric
+	correctly.
+
 2004-05-04  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* termio.c (display_numeric): Leading sign for binary.
