@@ -30,9 +30,6 @@ CB_FLAG (cb_flag_trace, "trace",
 CB_FLAG (cb_flag_syntax_only, "syntax-only",
 	 N_("Syntax error checking only; don't emit any output"))
 
-CB_FLAG (cb_flag_auto_initialize, "auto-initialize",
-	 N_("Initialize the whole data storage on startup"))
-
 CB_FLAG (cb_flag_static_call, "static-call",
 	 N_("Output static function calls for the CALL statement"))
 

@@ -1025,6 +1025,10 @@ output_initialize_compound (struct cb_initialize *p, cb_tree x)
 	      {
 		size_t size;
 
+		if (f->flag_occurs)
+		  CB_REFERENCE (c)->subs =
+		    cons (cb_int1, CB_REFERENCE (c)->subs);
+
 		for (; f->sister; f = f->sister)
 		  if (!f->sister->redefines)
 		    if (initialize_type (p, f->sister) != INITIALIZE_DEFAULT
@@ -1036,9 +1040,6 @@ output_initialize_compound (struct cb_initialize *p, cb_tree x)
 		else
 		  size = ff->offset + ff->size - last_field->offset;
 
-		if (f->flag_occurs)
-		  CB_REFERENCE (c)->subs =
-		    cons (cb_int1, CB_REFERENCE (c)->subs);
 		output_initialize_uniform (c, last_char, size);
 		break;
 	      }
@@ -1913,7 +1914,7 @@ output_class_name_definition (struct cb_class_name *p)
 static void
 output_initial_values (struct cb_field *p)
 {
-  cb_tree def = cb_flag_auto_initialize ? cb_true : NULL;
+  cb_tree def = cb_auto_initialize ? cb_true : NULL;
   for (; p; p = p->sister)
     {
       cb_tree x = cb_build_field_reference (p, 0);
