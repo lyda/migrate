@@ -119,6 +119,58 @@ AT_CHECK([./caller], [0], [abcd])
 AT_CLEANUP
 
 
+AT_SETUP([INITIALIZE complex group])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G1.
+  02 X          PIC X.
+  02 G2         OCCURS 2.
+    03 Y        PIC 9.
+  02 Z          PIC 9.
+PROCEDURE DIVISION.
+  INITIALIZE G1.
+  DISPLAY G1.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([./prog], [0],
+[ 000
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([INITIALIZE group entry with OCCURS])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01  G1.
+  02  G2        OCCURS 2.
+    03  X1      PIC X.
+    03  X2      PIC 9.
+PROCEDURE       DIVISION.
+  MOVE SPACE TO G1.
+  INITIALIZE G2 (2).
+  DISPLAY G1.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -main prog.cob], [0])
+AT_CHECK([./prog], [0],
+[   0
+])
+
+AT_CLEANUP
+
+
 AT_SETUP([INITIALIZE OCCURS with numeric edited])
 
 AT_DATA([prog.cob], [
