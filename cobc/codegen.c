@@ -910,8 +910,6 @@ output_file_name (struct cobc_file_name *f)
 	max_size = p->size;
 	max_record = p;
       }
-  if (f->record_max == 0)
-    f->record_max = max_size;
 
   /* output record definition */
   for (p = f->record; p; p = p->sister)
@@ -950,7 +948,7 @@ output_file_name (struct cobc_file_name *f)
     output ("cob_dummy_status");
   output (", ");
   /* record_size, record_data */
-  output ("%d, f_%s_data, ", f->record_max, f->record->cname);
+  output ("%d, f_%s_data, ", max_size, max_record->cname);
   /* file */
   output ("0, ");
   /* flags */

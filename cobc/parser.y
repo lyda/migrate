@@ -767,6 +767,14 @@ file_description_sequence:
       {
 	p->file = current_file_name;
 	field_set_used (p);
+
+	/* check the record size */
+	if (current_file_name->record_min > 0)
+	  if (p->size < current_file_name->record_min)
+	    yyerror ("record size too small `%s'", p->word->name);
+	if (current_file_name->record_max > 0)
+	  if (p->size > current_file_name->record_max)
+	    yyerror ("record size too large `%s'", p->word->name);
       }
   }
 ;
@@ -809,7 +817,8 @@ record_clause:
   }
 | RECORD _contains integer _to integer _characters
   {
-    yywarn ("RECORD CONTAINS is not implemented");
+    current_file_name->record_min = $3;
+    current_file_name->record_max = $5;
   }
 | RECORD _is VARYING _in _size opt_from_integer opt_to_integer _characters
   record_depending
