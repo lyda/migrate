@@ -670,9 +670,9 @@ output_param (cb_tree x, int id)
 	    output_size (p->val);
 	    break;
 	  case CB_CAST_DEREFERENCE:
-	    output ("(*(void **)");
+	    output ("(*(void **)(");
 	    output_data (p->val);
-	    output (")");
+	    output ("))");
 	  }
 	break;
       }

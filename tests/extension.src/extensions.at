@@ -103,6 +103,38 @@ AT_CHECK([./prog], [0], [OK])
 AT_CLEANUP
 
 
+## ADDRESS OF
+
+AT_SETUP([ADDRESS OF])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X-1           PIC X(4) VALUE "X-1".
+       01 X-2           PIC X(4) VALUE "X-2".
+       01 G.
+         02 PTR-1       USAGE POINTER.
+         02 PTR-2       USAGE POINTER.
+       LINKAGE          SECTION.
+       01 Y             PIC X(4).
+       PROCEDURE        DIVISION.
+         SET ADDRESS OF Y TO ADDRESS OF X-1.
+         DISPLAY Y NO ADVANCING.
+         SET PTR-1 TO ADDRESS OF X-2.
+         SET PTR-2 TO PTR-1
+         SET ADDRESS OF Y TO PTR-2.
+         DISPLAY Y NO ADVANCING.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [X-1 X-2 ])
+
+AT_CLEANUP
+
+
+
 ## LENGTH OF
 
 AT_SETUP([LENGTH OF])
