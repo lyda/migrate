@@ -431,7 +431,7 @@ ppinput (char *buff, int max_size)
 	  bp = buff + strlen (buff) - 1;
 	  ppinput_1 (bp, max_size - (bp - buff));
 	  for (np = bp + 7; *np == ' '; np++);
-	  if (*np == '"')
+	  if (*np == '\'' || *np == '\"')
 	    np++;
 	  else
 	    for (; bp[-1] == ' '; bp--);
