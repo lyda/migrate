@@ -1075,8 +1075,10 @@ cb_build_cond (cb_tree x)
 		  {
 		    if (CB_LITERAL_P (p->y))
 		      {
+#if 0
 			struct cb_literal *l = CB_LITERAL (p->y);
 			int size = cb_field_size (p->x);
+#endif
 
 			if (CB_TREE_CLASS (p->x) == CB_CLASS_NUMERIC
 			    && CB_TREE_CLASS (p->y) == CB_CLASS_NUMERIC
@@ -1086,11 +1088,13 @@ cb_build_cond (cb_tree x)
 						       p->x, cb_build_cast_integer (p->y));
 			    break;
 			  }
+#if 0
 			if (size > 0 && size >= l->size && !l->all)
 			  {
 			    p->x = cb_build_funcall_2 ("@memcmp", p->x, p->y);
 			    break;
 			  }
+#endif
 		      }
 		  }
 
