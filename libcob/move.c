@@ -201,6 +201,7 @@ static void
 cob_move_display_to_packed (cob_field *f1, cob_field *f2)
 {
   size_t i;
+  int offset;
   int sign = cob_get_sign (f1);
   int digits1 = COB_FIELD_DIGITS (f1);
   int digits2 = COB_FIELD_DIGITS (f2);
@@ -212,7 +213,8 @@ cob_move_display_to_packed (cob_field *f1, cob_field *f2)
 
   /* pack string */
   memset (f2->data, 0, f2->size);
-  for (i = 0; i < digits2; i++, p++)
+  offset = 1 - (digits2 % 2);
+  for (i = offset; i < digits2 + offset; i++, p++)
     {
       char n = (data1 <= p && p < data1 + digits1) ? cob_d2i (*p): 0;
       if (i % 2 == 0)
@@ -229,16 +231,18 @@ static void
 cob_move_packed_to_display (cob_field *f1, cob_field *f2)
 {
   size_t i;
+  int offset;
   int sign = cob_get_sign (f1);
   unsigned char *data = f1->data;
   unsigned char buff[f1->size];
 
   /* unpack string */
-  for (i = 0; i < f1->attr->digits; i++)
+  offset = 1 - (f1->attr->digits % 2);
+  for (i = offset; i < f1->attr->digits + offset; i++)
     if (i % 2 == 0)
-      buff[i] = cob_i2d (data[i/2] >> 4);
+      buff[i - offset] = cob_i2d (data[i/2] >> 4);
     else
-      buff[i] = cob_i2d (data[i/2] & 0x0f);
+      buff[i - offset] = cob_i2d (data[i/2] & 0x0f);
 
   /* store */
   store_common_region (f2, buff, COB_FIELD_DIGITS (f1), COB_FIELD_SCALE (f1));
