@@ -47,7 +47,7 @@ static int scan_x (char *text);
 static int scan_h (char *text);
 static int scan_numeric (char *text);
 static int scan_picture (char *text);
-
+
 %}
 
 %s DECIMAL_IS_PERIOD DECIMAL_IS_COMMA
@@ -190,7 +190,7 @@ H\"[^\"\n]*\" {
 }
 
 %%
-
+
 static int
 read_literal (char mark)
 {

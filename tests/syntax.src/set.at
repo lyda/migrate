@@ -19,7 +19,7 @@
 
 ### ISO+IEC+1989-2002 14.8.35 SET statement
 
-
+
 AT_SETUP([SET: misc])
 
 AT_DATA([prog.cob], [

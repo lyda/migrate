@@ -389,7 +389,7 @@ at_help_all='1;fundamental.at:22;DISPLAY literals;;
 78;extensions.at:621;ENTRY;;
 79;extensions.at:664;LINE SEQUENTIAL write;;
 80;extensions.at:700;LINE SEQUENTIAL read;;
-81;extensions.at:748;Environment variable;;
+81;extensions.at:748;Environment/Argument variable;;
 82;return-code.at:22;RETURN-CODE;;
 83;return-code.at:45;RETURN-CODE;;
 '
@@ -8586,10 +8586,10 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  81 ) # 81. extensions.at:748: Environment variable
+  81 ) # 81. extensions.at:748: Environment/Argument variable
     at_setup_line='extensions.at:748'
-    at_desc='Environment variable'
-    $at_quiet $ECHO_N " 81: Environment variable                         $ECHO_C"
+    at_desc='Environment/Argument variable'
+    $at_quiet $ECHO_N " 81: Environment/Argument variable                $ECHO_C"
     at_xfail=no
     (
       echo "81. extensions.at:748: testing ..."
@@ -8603,18 +8603,27 @@ cat >prog.cob <<'_ATEOF'
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
        01 X             PIC X(4).
+       01 Y             PIC X(8).
+       01 Z             PIC 9(4).
        PROCEDURE        DIVISION.
            DISPLAY "TEST_ENV" UPON ENVIRONMENT-NAME.
            ACCEPT X FROM ENVIRONMENT-VALUE.
-           DISPLAY X NO ADVANCING.
+           DISPLAY "(" X ")".
+           DISPLAY "RXW" UPON ENVIRONMENT-VALUE.
+           ACCEPT X FROM ENVIRONMENT-VALUE.
+           DISPLAY "(" X ")".
+           ACCEPT Y FROM ARGUMENT-VALUE.
+           DISPLAY "(" Y ")".
+           ACCEPT Z FROM ARGUMENT-NUMBER.
+           DISPLAY "(" Z ")".
            STOP RUN.
 _ATEOF
 
 
 export TEST_ENV=OK
 $at_traceoff
-echo "extensions.at:764: \${COMPILE} -o prog prog.cob"
-echo extensions.at:764 >$at_check_line_file
+echo "extensions.at:773: \${COMPILE} -o prog prog.cob"
+echo extensions.at:773 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -8626,7 +8635,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "extensions.at:764: exit code was $at_status, expected 0"
+   *) echo "extensions.at:773: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -8638,20 +8647,24 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "extensions.at:765: ./prog"
-echo extensions.at:765 >$at_check_line_file
+echo "extensions.at:779: ./prog"
+echo extensions.at:779 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
 $at_diff $at_devnull $at_stderr || at_failed=:
-echo >>$at_stdout; echo "OK  " | $at_diff - $at_stdout || at_failed=:
+echo >>$at_stdout; echo "(OK  )
+(RXW )
+(./prog  )
+(0001)
+" | $at_diff - $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "extensions.at:765: exit code was $at_status, expected 0"
+   *) echo "extensions.at:779: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then

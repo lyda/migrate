@@ -21,14 +21,14 @@
 
 ## 8.4.2.3.3 General rules
 
-
+
 # 1) DONE
 
 # 2) DONE
 
 # 3) TODO
 
-
+
 # 4) DONE
 
 AT_SETUP([Separate sign positions])
@@ -51,7 +51,7 @@ AT_CHECK([./prog], [0], [-11-])
 
 AT_CLEANUP
 
-
+
 # 5) TODO
 
 AT_SETUP([Static reference modification])
@@ -216,5 +216,5 @@ AT_CHECK([./prog], [1], ,
 
 AT_CLEANUP
 
-
+
 # 6) TODO

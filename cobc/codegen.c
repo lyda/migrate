@@ -43,7 +43,7 @@ static void output_integer (cb_tree x);
 static void output_index (cb_tree x);
 static void output_func_1 (const char *name, cb_tree x);
 
-
+
 /*
  * Output routines
  */
@@ -148,7 +148,7 @@ output_storage (const char *fmt, ...)
   va_end (ap);
 }
 
-
+
 /*
  * Field
  */
@@ -463,7 +463,7 @@ output_field (cb_tree x)
   output ("}");
 }
 
-
+
 /*
  * Literal
  */
@@ -510,7 +510,7 @@ lookup_literal (cb_tree x)
   return cb_id++;
 }
 
-
+
 /*
  * Integer
  */
@@ -523,6 +523,8 @@ output_integer (cb_tree x)
     case CB_TAG_CONST:
       if (x == cb_zero)
 	output ("0");
+      else if ( x == cb_null )
+	output ("(unsigned char *)0");
       else
 	output ("%s", CB_CONST (x)->val);
       break;
@@ -667,7 +669,7 @@ output_index (cb_tree x)
     }
 }
 
-
+
 /*
  * Parameter
  */
@@ -792,7 +794,7 @@ output_param (cb_tree x, int id)
     }
 }
 
-
+
 /*
  * Function call
  */
@@ -820,7 +822,7 @@ output_func_1 (const char *name, cb_tree x)
   output (")");
 }
 
-
+
 /*
  * Condition
  */
@@ -903,7 +905,7 @@ output_cond (cb_tree x, int save_flag)
     }
 }
 
-
+
 /*
  * MOVE
  */
@@ -914,7 +916,7 @@ output_move (cb_tree src, cb_tree dst)
   output_stmt (cb_build_move (src, dst));
 }
 
-
+
 /*
  * INITIALIZE
  */
@@ -1181,7 +1183,7 @@ output_initialize (struct cb_initialize *p)
     }
 }
 
-
+
 /*
  * SEARCH
  */
@@ -1310,7 +1312,7 @@ output_search (struct cb_search *p)
     output_search_whens (p->table, p->var, p->end_stmt, p->whens);
 }
 
-
+
 /*
  * CALL
  */
@@ -1461,7 +1463,7 @@ output_call (struct cb_call *p)
   output_indent ("}");
 }
 
-
+
 /*
  * GO TO
  */
@@ -1499,7 +1501,7 @@ output_goto (struct cb_goto *p)
     output_goto_1 (p->target);
 }
 
-
+
 /*
  * PERFORM
  */
@@ -1613,7 +1615,7 @@ output_perform (struct cb_perform *p)
     output_stmt (cb_ref (p->exit_label));
 }
 
-
+
 /*
  * Output statement
  */
@@ -1784,7 +1786,7 @@ output_stmt (cb_tree x)
     }
 }
 
-
+
 /*
  * File definition
  */
@@ -1853,7 +1855,7 @@ output_file_definition (struct cb_file *f)
   output ("0, 0};\n\n");
 }
 
-
+
 /*
  * Screen definition
  */
@@ -1911,7 +1913,7 @@ output_screen_definition (struct cb_field *p)
   output (", %ld};\n", p->screen_flag);
 }
 
-
+
 /*
  * Alphabet-name
  */
@@ -1987,7 +1989,7 @@ output_alphabet_name_definition (struct cb_alphabet_name *p)
   output ("};\n\n");
 }
 
-
+
 /*
  * Class definition
  */
@@ -2035,7 +2037,7 @@ output_class_name_definition (struct cb_class_name *p)
   output_newline ();
 }
 
-
+
 static void
 output_initial_values (struct cb_field *p)
 {

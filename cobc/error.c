@@ -131,7 +131,7 @@ cb_verify (enum cb_support tag, const char *feature)
   return 0;
 }
 
-
+
 void
 redefinition_error (cb_tree x)
 {

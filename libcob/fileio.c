@@ -17,7 +17,7 @@
  * Suite 330, Boston, MA 02111-1307 USA
  */
 
-
+
 #include "config.h"
 
 #if WITH_LFS64
@@ -85,7 +85,7 @@ cob_file *cob_error_file;
 
 static cob_fileio_funcs *fileio_funcs[COB_ORG_MAX];
 
-
+
 /*
  * Regular file
  */
@@ -204,7 +204,7 @@ file_write_opt (cob_file *f, int opt)
     }
 }
 
-
+
 /*
  * SEQUENTIAL
  */
@@ -264,7 +264,7 @@ static cob_fileio_funcs sequential_funcs = {
   0
 };
 
-
+
 /*
  * LINE SEQUENTIAL
  */
@@ -338,7 +338,7 @@ static cob_fileio_funcs lineseq_funcs = {
   0
 };
 
-
+
 /*
  * RELATIVE
  */
@@ -512,7 +512,7 @@ static cob_fileio_funcs relative_funcs = {
   relative_delete
 };
 
-
+
 /*
  * INDEXED
  */
@@ -832,7 +832,7 @@ static cob_fileio_funcs indexed_funcs = {
 
 #endif /* defined(HAVE_DBOPEN) | defined(WITH_DB) */
 
-
+
 /*
  * SORT
  */
@@ -940,7 +940,7 @@ static cob_fileio_funcs sort_funcs = {
 
 #endif /* defined(HAVE_DBOPEN) | defined(WITH_DB) */
 
-
+
 /*
  * Public interface
  */
@@ -1297,7 +1297,7 @@ cob_delete (cob_file *f)
   RETURN_STATUS (ret);
 }
 
-
+
 #if defined(HAVE_DBOPEN) | defined(WITH_DB)
 
 static const unsigned char *old_sequence;
@@ -1396,7 +1396,7 @@ cob_sort_giving (cob_file *sort_file, cob_file *data_file)
 
 #endif /* defined(HAVE_DBOPEN) | defined(WITH_DB) */
 
-
+
 void
 cob_default_error_handle (void)
 {
@@ -1463,7 +1463,7 @@ cob_default_error_handle (void)
     cob_runtime_error ("%s (STATUS=%02d)", gettext (msg), status);
 }
 
-
+
 void
 cob_init_fileio (void)
 {

@@ -44,7 +44,7 @@
 	return;					\
   }
 
-
+
 cb_tree
 cb_check_group_name (cb_tree x)
 {
@@ -148,7 +148,7 @@ cb_check_integer_value (cb_tree x)
     }
 }
 
-
+
 void
 cb_build_registers (void)
 {
@@ -534,7 +534,7 @@ cb_build_address (cb_tree x)
   return cb_build_cast_address (x);
 }
 
-
+
 /* validate program */
 
 void
@@ -624,7 +624,7 @@ cb_validate_program_body (struct cb_program *prog)
   prog->exec_list = cb_list_reverse (prog->exec_list);
 }
 
-
+
 /*
  * Expressions
  */
@@ -980,7 +980,7 @@ cb_expr_finish (void)
   return expr_stack[3].value;
 }
 
-
+
 /*
  * Numerical operation
  */
@@ -1193,7 +1193,7 @@ cb_emit_arithmetic (cb_tree vars, char op, cb_tree val)
   cb_emit (build_decimal_assign (vars, op, val));
 }
 
-
+
 /*
  * Condition
  */
@@ -1331,7 +1331,7 @@ cb_build_cond (cb_tree x)
     }
 }
 
-
+
 /*
  * ADD/SUBTRACT CORRESPONDING
  */
@@ -1395,7 +1395,7 @@ cb_emit_corresponding (cb_tree (*func)(), cb_tree x1, cb_tree x2, cb_tree opt)
   emit_corresponding (func, x1, x2, opt);
 }
 
-
+
 /*
  * ACCEPT statement
  */
@@ -1521,7 +1521,7 @@ cb_emit_accept_name (cb_tree var, cb_tree name)
   cb_error_x (name, _("'%s' undefined in SPECIAL-NAMES"), CB_NAME (name));
 }
 
-
+
 /*
  * CALL statement
  */
@@ -1535,7 +1535,7 @@ cb_emit_call (cb_tree prog, cb_tree using, cb_tree returning,
     cb_emit (cb_build_move (cb_return_code, returning));
 }
 
-
+
 /*
  * CANCEL statement
  */
@@ -1546,7 +1546,7 @@ cb_emit_cancel (cb_tree prog)
   cb_emit (cb_build_funcall_1 ("cob_cancel", prog));
 }
 
-
+
 /*
  * CLOSE statement
  */
@@ -1559,7 +1559,7 @@ cb_emit_close (cb_tree file, cb_tree opt)
   cb_emit (cb_build_funcall_2 ("cob_close", file, opt));
 }
 
-
+
 /*
  * DELETE statement
  */
@@ -1572,7 +1572,7 @@ cb_emit_delete (cb_tree file)
   cb_emit (cb_build_funcall_1 ("cob_delete", file));
 }
 
-
+
 /*
  * DISPLAY statement
  */
@@ -1693,7 +1693,7 @@ cb_build_display_upon_direct (cb_tree x)
   return cb_error_node;
 }
 
-
+
 /*
  * DIVIDE statement
  */
@@ -1717,7 +1717,7 @@ cb_emit_divide (cb_tree dividend, cb_tree divisor,
 						   cb_int0)));
 }
 
-
+
 /*
  * EVALUATE statement
  */
@@ -1816,7 +1816,7 @@ cb_emit_evaluate (cb_tree subject_list, cb_tree case_list)
   cb_emit (build_evaluate (subject_list, case_list));
 }
 
-
+
 /*
  * GO TO statement
  */
@@ -1848,7 +1848,7 @@ cb_emit_exit (void)
   cb_emit (cb_build_goto (0, 0));
 }
 
-
+
 /*
  * IF statement
  */
@@ -1859,7 +1859,7 @@ cb_emit_if (cb_tree cond, cb_tree stmt1, cb_tree stmt2)
   cb_emit (cb_build_if (cond, stmt1, stmt2));
 }
 
-
+
 /*
  * INITIALIZE statement
  */
@@ -1874,7 +1874,7 @@ cb_emit_initialize (cb_tree vars, cb_tree value, cb_tree replacing, cb_tree def)
     cb_emit (cb_build_initialize (CB_VALUE (l), value, replacing, def));
 }
 
-
+
 /*
  * INSPECT statement
  */
@@ -1985,7 +1985,7 @@ cb_build_inspect_region (cb_tree l, cb_tree pos, cb_tree x)
     return cb_list_add (l, cb_build_funcall_1 ("cob_inspect_after", x));
 }
 
-
+
 /*
  * MOVE statement
  */
@@ -2603,7 +2603,7 @@ cb_emit_move (cb_tree src, cb_tree dsts)
     cb_emit (cb_build_move (src, CB_VALUE (l)));
 }
 
-
+
 /*
  * OPEN statement
  */
@@ -2624,7 +2624,7 @@ cb_emit_open (cb_tree file, cb_tree mode, cb_tree sharing)
   cb_emit (cb_build_funcall_3 ("cob_open", file, mode, sharing));
 }
 
-
+
 /*
  * PERFORM statement
  */
@@ -2674,7 +2674,7 @@ cb_build_perform_exit (struct cb_label *label)
   return x;
 }
 
-
+
 /*
  * READ statement
  */
@@ -2702,7 +2702,7 @@ cb_emit_read (cb_tree ref, cb_tree next, cb_tree into, cb_tree key)
   current_statement->file = file;
 }
 
-
+
 /*
  * REWRITE statement
  */
@@ -2717,7 +2717,7 @@ cb_emit_rewrite (cb_tree record, cb_tree from)
   cb_emit (cb_build_funcall_2 ("cob_rewrite", file, record));
 }
 
-
+
 /*
  * RETURN statement
  */
@@ -2733,7 +2733,7 @@ cb_emit_return (cb_tree ref, cb_tree into)
   current_statement->file = file;
 }
 
-
+
 /*
  * SEARCH statement
  */
@@ -2817,7 +2817,7 @@ cb_emit_search_all (cb_tree table, cb_tree at_end, cb_tree when, cb_tree stmts)
 					 stmts, NULL)));
 }
 
-
+
 /*
  * SET statement
  */
@@ -2908,7 +2908,7 @@ cb_emit_set_true (cb_tree l)
     }
 }
 
-
+
 /*
  * SORT statement
  */
@@ -3002,7 +3002,7 @@ cb_emit_sort_finish (cb_tree file)
     cb_emit (cb_build_funcall_1 ("cob_sort_finish", cb_ref (file)));
 }
 
-
+
 /*
  * START statement
  */
@@ -3015,7 +3015,7 @@ cb_emit_start (cb_tree file, cb_tree op, cb_tree key)
 			       key ? key : CB_FILE (cb_ref (file))->key));
 }
 
-
+
 /*
  * STOP statement
  */
@@ -3026,7 +3026,7 @@ cb_emit_stop_run (cb_tree x)
   cb_emit (cb_build_funcall_1 ("cob_stop_run", cb_build_cast_integer (x)));
 }
 
-
+
 /*
  * STRING statement
  */
@@ -3059,7 +3059,7 @@ cb_emit_string (cb_tree items, cb_tree into, cb_tree pointer)
   cb_emit (cb_build_funcall_0 ("cob_string_finish"));
 }
 
-
+
 /*
  * UNSTRING statement
  */
@@ -3094,7 +3094,7 @@ cb_build_unstring_into (cb_tree name, cb_tree delimiter, cb_tree count)
   return cb_build_funcall_3 ("cob_unstring_into", name, delimiter, count);
 }
 
-
+
 /*
  * WRITE statement
  */

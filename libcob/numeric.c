@@ -41,7 +41,7 @@ static cob_decimal cob_d2;
 static cob_decimal cob_d3;
 static cob_decimal cob_d4;
 
-
+
 /*
  * Decimal number
  */
@@ -114,7 +114,7 @@ align_decimal (cob_decimal *d1, cob_decimal *d2)
     shift_decimal (d2, d1->scale - d2->scale);
 }
 
-
+
 /*
  * Decimal set/get
  */
@@ -522,7 +522,7 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f, int opt)
     }
 }
 
-
+
 /*
  * Decimal arithmetic
  */
@@ -594,7 +594,7 @@ cob_decimal_cmp (cob_decimal *d1, cob_decimal *d2)
   return mpz_cmp (d1->value, d2->value);
 }
 
-
+
 /*
  * Optimized arithmetic for DISPLAY
  */
@@ -772,7 +772,7 @@ cob_display_add_int (cob_field *f, int n)
   return cob_exception_code;
 }
 
-
+
 /*
  * Convenience functions
  */
@@ -863,7 +863,7 @@ cob_numeric_cmp (cob_field *f1, cob_field *f2)
   return cob_decimal_cmp (&cob_d1, &cob_d2);
 }
 
-
+
 void
 cob_init_numeric (void)
 {

@@ -33,10 +33,10 @@
 
 ## 13.16.61.2 Syntax rules
 
-
+
 # 1) TODO
 
-
+
 # 2) TODO
 
 AT_SETUP([Numeric item (integer)])
@@ -114,7 +114,7 @@ prog.cob:13: warning: value size exceeds data size
 
 AT_CLEANUP
 
-
+
 # 3) DONE
 
 AT_SETUP([Signed numeric literal])
@@ -139,7 +139,7 @@ prog.cob:7: data item not signed
 
 AT_CLEANUP
 
-
+
 # 4) DONE
 
 AT_SETUP([Alphabetic item])
@@ -212,14 +212,14 @@ prog.cob:10: warning: value size exceeds data size
 
 AT_CLEANUP
 
-
+
 # 5) TODO
 
 # 6) TODO
 
 # 7) DONE
 
-
+
 # 8) DONE
 
 AT_SETUP([Numeric-edited item])
@@ -267,7 +267,7 @@ prog.cob:9: warning: value size exceeds data size
 
 AT_CLEANUP
 
-
+
 # 9) TODO
 
 # 10) DONE (tested in redefines.at)

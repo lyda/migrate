@@ -28,7 +28,7 @@
 #include "move.h"
 #include "termio.h"
 
-
+
 /*
  * DISPLAY
  */
@@ -157,7 +157,7 @@ cob_field_print (cob_field *f)
   cob_newline ();
 }
 
-
+
 /*
  * ACCEPT
  */
@@ -267,7 +267,7 @@ cob_accept_command_line (cob_field *f)
   cob_memcpy (f, buff, size);
 }
 
-
+
 /*
  * Argument number
  */
@@ -348,7 +348,7 @@ cob_accept_environment (cob_field *f)
   cob_memcpy (f, p, strlen (p));
 }
 
-
+
 void
 cob_init_termio (void)
 {

@@ -521,7 +521,7 @@ static struct reserved reserved_words[] = {
   {0, 0, 0}
 };
 
-
+
 static int
 hash (const char *s)
 {

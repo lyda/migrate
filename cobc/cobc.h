@@ -35,7 +35,7 @@
     abort ();								      \
   } while (0)
 
-
+
 /* Compile level */
 extern enum cb_compile_level {
   CB_LEVEL_PREPROCESS,
@@ -108,7 +108,7 @@ extern struct cb_label *current_section, *current_paragraph;
 
 extern struct cb_text_list *cb_text_list_add (struct cb_text_list *list, const char *name);
 
-
+
 /* config.c */
 
 enum cb_assign_clause {

@@ -103,7 +103,7 @@
 #define COB_STATUS_49_I_O_DENIED		49
 #define COB_STATUS_61_FILE_SHARING		61
 
-
+
 /* File connector */
 
 typedef struct {

@@ -116,7 +116,7 @@ static void terminator_error (void);
 %left UNARY_SIGN
 %right '^'
 
-
+
 %%
 /*****************************************************************************
  * COBOL Compilation Unit
@@ -141,7 +141,7 @@ end_program:
 | END PROGRAM program_name '.'
 ;
 
-
+
 /*****************************************************************************
  * Environment division
  *****************************************************************************/
@@ -172,7 +172,7 @@ program_type:
 ;
 dot: | '.' ;
 
-
+
 /*****************************************************************************
  * Environment division
  *****************************************************************************/
@@ -183,7 +183,7 @@ environment_division:
   input_output_section
 ;
 
-
+
 /*******************
  * Conficuration section
  *******************/
@@ -201,7 +201,7 @@ configuration_paragraph:
 | special_names_paragraph
 ;
 
-
+
 /*
  * SOURCE-COMPUTER paragraph
  */
@@ -226,7 +226,7 @@ computer_name:
   WORD { }
 ;
 
-
+
 /*
  * OBJECT-COMPUTER paragraph
  */
@@ -248,7 +248,7 @@ object_computer_phrase:
   }
 ;
 
-
+
 /*
  * SPECIAL-NAMES paragraph
  */
@@ -274,7 +274,7 @@ special_name:
 | crt_status_clause
 ;
 
-
+
 /* Mnemonic name clause */
 
 mnemonic_name_clause:
@@ -302,7 +302,7 @@ on_or_off:
 | OFF				{ $$ = cb_int0; }
 ;
 
-
+
 /* Alphabet name clause */
 
 alphabet_name_clause:
@@ -346,7 +346,7 @@ alphabet_also_literal:
 | LOW_VALUE			{ cb_low = CB_VALUE ($0); }
 ;
 
-
+
 /* Symbolic characters clause */
 
 symbolic_characters_clause:
@@ -371,7 +371,7 @@ integer_list:
 | integer_list integer { }
 ;
 
-
+
 /* Class name clause */
 
 class_name_clause:
@@ -397,7 +397,7 @@ class_item:
   }
 ;
 
-
+
 /* CURRENCY SIGN clause */
 
 currency_sign_clause:
@@ -410,7 +410,7 @@ currency_sign_clause:
   }
 ;
 
-
+
 /* DECIMAL-POINT clause */
 
 decimal_point_clause:
@@ -421,21 +421,21 @@ decimal_point_clause:
   }
 ;
 
-
+
 /* CURSOR clause */
 
 cursor_clause:
   CURSOR _is reference		{ PENDING ("CURSOR"); }
 ;
 
-
+
 /* CRT STATUS clause */
 
 crt_status_clause:
   CRT STATUS _is reference	{ PENDING ("CRT STATUS"); }
 ;
 
-
+
 /*******************
  * INPUT-OUTPUT SECTION
  *******************/
@@ -446,7 +446,7 @@ input_output_section:
   i_o_control_paragraph
 ;
 
-
+
 /*
  * FILE-CONTROL paragraph
  */
@@ -495,7 +495,7 @@ select_clause:
 | sharing_clause
 ;
 
-
+
 /* ASSIGN clause */
 
 assign_clause:
@@ -509,7 +509,7 @@ assignment_name:
 | qualified_word
 ;
 
-
+
 /* ACCESS MODE clause */
 
 access_mode_clause:
@@ -521,7 +521,7 @@ access_mode:
 | RANDOM		{ current_file->access_mode = COB_ACCESS_RANDOM; }
 ;
 
-
+
 /* ALTERNATIVE RECORD KEY clause */
 
 alternative_record_key_clause:
@@ -544,7 +544,7 @@ alternative_record_key_clause:
   }
 ;
 
-
+
 /* COLLATING SEQUENCE clause */
 
 collating_sequence_clause:
@@ -554,7 +554,7 @@ collating_sequence_clause:
   }
 ;
 
-
+
 /* FILE STATUS clause */
 
 file_status_clause:
@@ -566,7 +566,7 @@ file_status_clause:
   }
 ;
 
-
+
 /* LOCK MODE clause */
 
 lock_mode_clause:
@@ -582,7 +582,7 @@ lock_with:
 | WITH ROLLBACK
 ;
 
-
+
 /* ORGANIZATION clause */
 
 organization_clause:
@@ -596,7 +596,7 @@ organization:
 | LINE SEQUENTIAL	{ current_file->organization = COB_ORG_LINE_SEQUENTIAL; }
 ;
 
-
+
 /* PADDING CHARACTER clause */
 
 padding_character_clause:
@@ -606,35 +606,35 @@ padding_character_clause:
   }
 ;
 
-
+
 /* RECORD DELIMITER clause */
 
 record_delimiter_clause:
   RECORD DELIMITER _is STANDARD_1	{ /* ignored */ }
 ;
 
-
+
 /* RECORD KEY clause */
 
 record_key_clause:
   RECORD _key _is reference	{ current_file->key = $4; }
 ;
 
-
+
 /* RELATIVE KEY clause */
 
 relative_key_clause:
   RELATIVE _key _is reference	{ current_file->key = $4; }
 ;
 
-
+
 /* RESERVE clause */
 
 reserve_clause:
   RESERVE integer _area		{ /* ignored */ }
 ;
 
-
+
 /* SHARING clause */
 
 sharing_clause:
@@ -646,7 +646,7 @@ sharing_option:
 | READ ONLY			{ $$ = cb_int0; }
 ;
 
-
+
 /*
  * I-O-CONTROL paragraph
  */
@@ -712,7 +712,7 @@ multiple_file_position:
 | POSITION integer
 ;
 
-
+
 /*****************************************************************************
  * DATA DIVISION.
  *****************************************************************************/
@@ -726,7 +726,7 @@ data_division:
   screen_section
 ;
 
-
+
 /*******************
  * FILE SECTION
  *******************/
@@ -746,7 +746,7 @@ file_description:
   }
 ;
 
-
+
 /*
  * File description entry
  */
@@ -783,7 +783,7 @@ file_description_clause:
 | code_set_clause
 ;
 
-
+
 /* BLOCK CONTAINS clause */
 
 block_contains_clause:
@@ -792,7 +792,7 @@ block_contains_clause:
 ;
 _records_or_characters: | RECORDS | CHARACTERS ;
 
-
+
 /* RECORD clause */
 
 record_clause:
@@ -827,7 +827,7 @@ opt_to_integer:
 | TO integer			{ $$ = $2; }
 ;
 
-
+
 /* LABEL RECORDS clause */
 
 label_records_clause:
@@ -841,7 +841,7 @@ label_option:
 | OMITTED
 ;
 
-
+
 /* VALUE OF clause */
 
 value_of_clause:
@@ -851,7 +851,7 @@ value_of_clause:
   }
 ;
 
-
+
 /* DATA RECORDS clause */
 
 data_records_clause:
@@ -861,7 +861,7 @@ data_records_clause:
   }
 ;
 
-
+
 /* LINAGE clause */
 
 linage_clause:
@@ -883,14 +883,14 @@ linage_bottom:
 | _at BOTTOM reference_or_literal
 ;
 
-
+
 /* RECORDING MODE clause */
 
 recording_mode_clause:
   RECORDING _mode _is WORD	{ /* ignore */ }
 ;
 
-
+
 /* CODE-SET clause */
 
 code_set_clause:
@@ -907,7 +907,7 @@ code_set_clause:
   }
 ;
 
-
+
 /*******************
  * WORKING-STRAGE SECTION
  *******************/
@@ -990,7 +990,7 @@ data_description_clause:
 | renames_clause
 ;
 
-
+
 /* REDEFINES clause */
 
 redefines_clause:
@@ -1005,28 +1005,28 @@ redefines_clause:
   }
 ;
 
-
+
 /* EXTERNAL clause */
 
 external_clause:
   _is EXTERNAL			{ current_field->flag_external = 1; }
 ;
 
-
+
 /* GLOBAL clause */
 
 global_clause:
   _is GLOBAL			{ PENDING ("GLOBAL"); }
 ;
 
-
+
 /* PICTURE clause */
 
 picture_clause:
   PICTURE			{ current_field->pic = CB_PICTURE ($1); }
 ;
 
-
+
 /* USAGE clause */
 
 usage_clause:
@@ -1048,7 +1048,7 @@ usage:
 | POINTER			{ current_field->usage = CB_USAGE_POINTER; }
 ;
 
-
+
 /* SIGN clause */
 
 sign_clause:
@@ -1064,7 +1064,7 @@ sign_clause:
   }
 ;
 
-
+
 /* OCCURS clause */
 
 occurs_clause:
@@ -1136,14 +1136,14 @@ occurs_index:
   WORD				{ $$ = cb_build_index ($1); }
 ;
 
-
+
 /* JUSTIFIED clause */
 
 justified_clause:
   JUSTIFIED _right		{ current_field->flag_justified = 1; }
 ;
 
-
+
 /* SYNCHRONIZED clause */
 
 synchronized_clause:
@@ -1154,14 +1154,14 @@ left_or_right:
 | RIGHT
 ;
 
-
+
 /* BLANK clause */
 
 blank_clause:
   BLANK _when ZERO		{ current_field->flag_blank_zero = 1; }
 ;
 
-
+
 /* VALUE clause */
 
 value_clause:
@@ -1176,7 +1176,7 @@ value_item:
 | literal THRU literal		{ $$ = cb_build_pair ($1, $3); }
 ;
 
-
+
 /* RENAMES clause */
 
 renames_clause:
@@ -1198,7 +1198,7 @@ renames_clause:
   }
 ;
 
-
+
 /*******************
  * LOCAL-STORAGE SECTION
  *******************/
@@ -1212,7 +1212,7 @@ local_storage_section:
   }
 ;
 
-
+
 /*******************
  * LINKAGE SECTION
  *******************/
@@ -1226,7 +1226,7 @@ linkage_section:
   }
 ;
 
-
+
 /*******************
  * SCREEN SECTION
  *******************/
@@ -1387,7 +1387,7 @@ screen_plus_minus:
   }
 ;
 
-
+
 /*****************************************************************************
  * PROCEDURE DIVISION
  *****************************************************************************/
@@ -1425,7 +1425,7 @@ procedure_declaratives:
   END DECLARATIVES '.'
 ;
 
-
+
 /*******************
  * Procedure list
  *******************/
@@ -1456,7 +1456,7 @@ procedure:
 | '.'
 ;
 
-
+
 /*******************
  * Section/Paragraph
  *******************/
@@ -1516,7 +1516,7 @@ opt_segment:
 | x				{ /* ignore */ }
 ;
 
-
+
 /*******************
  * Statements
  *******************/
@@ -1595,7 +1595,7 @@ statement:
   }
 ;
 
-
+
 /*
  * ACCEPT statement
  */
@@ -1635,7 +1635,7 @@ end_accept:
 | END_ACCEPT
 ;
 
-
+
 /*
  * ADD statement
  */
@@ -1667,7 +1667,7 @@ end_add:
 | END_ADD
 ;
 
-
+
 /*
  * ALTER statement
  */
@@ -1684,7 +1684,7 @@ alter_options:
 ;
 _proceed_to: | PROCEED TO ;
 
-
+
 /*
  * CALL statement
  */
@@ -1737,7 +1737,7 @@ end_call:
 | END_CALL
 ;
 
-
+
 /*
  * CANCEL statement
  */
@@ -1753,7 +1753,7 @@ cancel_list:
   }
 ;
 
-
+
 /*
  * CLOSE statement
  */
@@ -1779,7 +1779,7 @@ close_option:
 ;
 reel_or_unit: REEL | UNIT ;
 
-
+
 /*
  * COMPUTE statement
  */
@@ -1800,7 +1800,7 @@ end_compute:
 | END_COMPUTE
 ;
 
-
+
 /*
  * CONTINUE statement
  */
@@ -1809,7 +1809,7 @@ continue_statement:
   CONTINUE
 ;
 
-
+
 /*
  * DELETE statement
  */
@@ -1827,7 +1827,7 @@ end_delete:
 | END_DELETE
 ;
 
-
+
 /*
  * DISPLAY statement
  */
@@ -1856,7 +1856,7 @@ end_display:
 | END_DISPLAY
 ;
 
-
+
 /*
  * DIVIDE statement
  */
@@ -1893,7 +1893,7 @@ end_divide:
 | END_DIVIDE
 ;
 
-
+
 /*
  * ENTRY statement
  */
@@ -1907,7 +1907,7 @@ entry_statement:
   }
 ;
 
-
+
 /*
  * EVALUATE statement
  */
@@ -1976,7 +1976,7 @@ end_evaluate:
 | END_EVALUATE
 ;
 
-
+
 /*
  * EXIT statement
  */
@@ -2008,7 +2008,7 @@ exit_body:
   }
 ;
 
-
+
 /*
  * GO TO statement
  */
@@ -2025,7 +2025,7 @@ goto_depending:
 | DEPENDING _on x		{ $$ = $3; }
 ;
 
-
+
 /*
  * GOBACK statement
  */
@@ -2037,7 +2037,7 @@ goback_statement:
   }
 ;
 
-
+
 /*
  * IF statement
  */
@@ -2060,7 +2060,7 @@ end_if:
 | END_IF
 ;
 
-
+
 /*
  * INITIALIZE statement
  */
@@ -2107,7 +2107,7 @@ initialize_default:
 | DEFAULT			{ $$ = cb_true; }
 ;
 
-
+
 /*
  * INSPECT statement
  */
@@ -2174,7 +2174,7 @@ inspect_region:
 ;
 _initial: | TOK_INITIAL ;
 
-
+
 /*
  * MERGE statement
  */
@@ -2184,7 +2184,7 @@ merge_statement:
   sort_body
 ;
 
-
+
 /*
  * MOVE statement
  */
@@ -2204,7 +2204,7 @@ move_body:
   }
 ;
 
-
+
 /*
  * MULTIPLY statement
  */
@@ -2229,7 +2229,7 @@ end_multiply:
 | END_MULTIPLY
 ;
 
-
+
 /*
  * OPEN statement
  */
@@ -2265,7 +2265,7 @@ open_option:
 | _with LOCK			{ PENDING ("OPEN ... WITH LOCK"); }
 ;
 
-
+
 /*
  * PERFORM statement
  */
@@ -2347,7 +2347,7 @@ perform_varying:
   }
 ;
 
-
+
 /*
  * READ statements
  */
@@ -2377,7 +2377,7 @@ end_read:
 | END_READ
 ;
 
-
+
 /*
  * RELEASE statement
  */
@@ -2390,7 +2390,7 @@ release_statement:
   }
 ;
 
-
+
 /*
  * RETURN statement
  */
@@ -2408,7 +2408,7 @@ end_return:
 | END_RETURN
 ;
 
-
+
 /*
  * REWRITE statement
  */
@@ -2426,7 +2426,7 @@ end_rewrite:
 | END_REWRITE
 ;
 
-
+
 /*
  * SEARCH statement
  */
@@ -2466,7 +2466,7 @@ end_search:
 | END_SEARCH
 ;
 
-
+
 /*
  * SET statement
  */
@@ -2530,7 +2530,7 @@ set_to_true_false:
   }
 ;
 
-
+
 /*
  * SORT statement
  */
@@ -2597,7 +2597,7 @@ sort_output:
   }
 ;
 
-
+
 /*
  * START statement
  */
@@ -2627,7 +2627,7 @@ end_start:
 | END_START
 ;
 
-
+
 /*
  * STOP statement
  */
@@ -2649,7 +2649,7 @@ stop_returning:
 | GIVING x		{ $$ = $2; }
 ;
 
-
+
 /*
  * STRING statement
  */
@@ -2680,7 +2680,7 @@ end_string:
 | END_STRING
 ;
 
-
+
 /*
  * SUBTRACT statement
  */
@@ -2709,7 +2709,7 @@ end_subtract:
 | END_SUBTRACT
 ;
 
-
+
 /*
  * UNSTRING statement
  */
@@ -2771,7 +2771,7 @@ end_unstring:
 | END_UNSTRING
 ;
 
-
+
 /*
  * USE statement
  */
@@ -2817,7 +2817,7 @@ use_debugging_target:
 | ALL PROCEDURES
 ;
 
-
+
 /*
  * WRITE statement
  */
@@ -2865,7 +2865,7 @@ end_write:
 | END_WRITE
 ;
 
-
+
 /*******************
  * Status handlers
  *******************/
@@ -2888,7 +2888,7 @@ opt_not_on_size_error:
 | NOT _on SIZE ERROR statement_list	{ current_statement->handler2 = $5; }
 ;
 
-
+
 /*
  * ON OVERFLOW
  */
@@ -2907,7 +2907,7 @@ opt_not_on_overflow:
 | NOT _on OVERFLOW statement_list	{ current_statement->handler2 = $4; }
 ;
 
-
+
 /*
  * AT END
  */
@@ -2938,7 +2938,7 @@ not_at_end_sentence:
   NOT _at END statement_list	{ $$ = $4; }
 ;
 
-
+
 /*
  * AT EOP
  */
@@ -2968,7 +2968,7 @@ not_at_eop_sentence:
   NOT _at EOP statement_list		{ $$ = $4; }
 ;
 
-
+
 /*
  * INVALID KEY
  */
@@ -3002,12 +3002,12 @@ not_invalid_key_sentence:
   NOT INVALID _key statement_list	{ $$ = $4; }
 ;
 
-
+
 /*****************************************************************************
  * Common Constructs
  *****************************************************************************/
 
-
+
 /*******************
  * Expressions
  *******************/
@@ -3090,7 +3090,7 @@ e:
 | e '^' e			{ $$ = cb_build_binary_op ($1, '^', $3); }
 ;
 
-
+
 /*******************
  * Names
  *******************/
@@ -3228,7 +3228,7 @@ undefined_word:
   }
 ;
 
-
+
 /*******************
  * Primitive elements
  *******************/
@@ -3338,7 +3338,7 @@ function:
   }
 ;
 
-
+
 /*******************
  * Common rules
  *******************/
@@ -3430,7 +3430,7 @@ _upon:		| UPON ;
 _when:		| WHEN ;
 _with:		| WITH ;
 
-
+
 %%
 
 static void

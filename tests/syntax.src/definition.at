@@ -17,7 +17,7 @@
 ## the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
 ## Boston, MA 02111-1307 USA
 
-
+
 ###
 ### Data name
 ###
@@ -99,7 +99,7 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 
 AT_CLEANUP
 
-
+
 ## Incomplete
 
 AT_SETUP([Incomplete 01 definition])
@@ -118,7 +118,7 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 
 AT_CLEANUP
 
-
+
 ## Redefinition
 
 AT_SETUP([Redefinition of 01 items])
@@ -304,7 +304,7 @@ prog.cob:11: 'Y' in 'X' in 'G2' defined here
 
 AT_CLEANUP
 
-
+
 
 AT_SETUP([Unique reference with ambiguous qualifiers])
 
@@ -328,12 +328,12 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
 
 AT_CLEANUP
 
-
+
 ###
 ### File name
 ###
 
-
+
 ###
 ### Label name
 ###
@@ -356,7 +356,7 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 
 AT_CLEANUP
 
-
+
 ## Redefinition
 
 AT_SETUP([Redefinition of section names])
@@ -440,7 +440,7 @@ prog.cob:8: 'L' in 'S-2' defined here
 
 AT_CLEANUP
 
-
+
 ###
 ### Special name
 ###

@@ -38,7 +38,7 @@
 #include "tree.h"
 #include "lib/getopt.h"
 
-
+
 /*
  * Global variables
  */
@@ -84,7 +84,7 @@ struct cb_program *current_program = NULL;
 struct cb_statement *current_statement = NULL;
 struct cb_label *current_section = NULL, *current_paragraph = NULL;
 
-
+
 /*
  * Local variables
  */
@@ -113,7 +113,7 @@ static struct filename {
   struct filename *next;
 } *file_list;
 
-
+
 struct cb_text_list *
 cb_text_list_add (struct cb_text_list *list, const char *text)
 {
@@ -131,7 +131,7 @@ cb_text_list_add (struct cb_text_list *list, const char *text)
     }
 }
 
-
+
 /*
  * Local functions
  */
@@ -183,7 +183,7 @@ terminate (const char *str)
   exit (1);
 }
 
-
+
 /*
  * Command line
  */

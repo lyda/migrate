@@ -17,7 +17,7 @@
 ## the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
 ## Boston, MA 02111-1307 USA
 
-
+
 # 2-4-8 big-endian
 
 AT_SETUP([BINARY: 2-4-8 big-endian])
@@ -199,7 +199,7 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
-
+
 # 2-4-8 native
 
 AT_SETUP([BINARY: 2-4-8 native])
@@ -381,7 +381,7 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
-
+
 # 1-2-4-8 big-endian
 
 AT_SETUP([BINARY: 1-2-4-8 big-endian])
@@ -563,7 +563,7 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
-
+
 # 1-2-4-8 native
 
 AT_SETUP([BINARY: 1-2-4-8 native])
@@ -745,7 +745,7 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
-
+
 # 1--8 big-endian
 
 AT_SETUP([BINARY: 1--8 big-endian])
@@ -927,7 +927,7 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
-
+
 # 1--8 native
 
 AT_SETUP([BINARY: 1--8 native])
@@ -1109,7 +1109,7 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
-
+
 # full-print
 
 AT_SETUP([BINARY: full-print])

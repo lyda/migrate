@@ -21,7 +21,7 @@
 
 ## 8.4.1.2.3 General rules
 
-
+
 # 1) TODO
 
 AT_SETUP([non-numeric subscript])
@@ -47,7 +47,7 @@ prog.cob:11: 'I' is not numeric value
 
 AT_CLEANUP
 
-
+
 # 2) DONE
 
 AT_SETUP([The range of subscripts])
@@ -81,7 +81,7 @@ prog.cob:17: subscript of 'Y' out of bounds: 4
 
 AT_CLEANUP
 
-
+
 AT_SETUP([Subscript out of bounds (1)])
 
 AT_DATA([prog.cob], [
@@ -104,7 +104,7 @@ AT_CHECK([./prog], [1], ,
 
 AT_CLEANUP
 
-
+
 AT_SETUP([Subscript out of bounds (2)])
 
 AT_DATA([prog.cob], [
@@ -127,7 +127,7 @@ AT_CHECK([./prog], [1], ,
 
 AT_CLEANUP
 
-
+
 AT_SETUP([Value of DEPENDING ON N out of bounds (lower)])
 
 AT_DATA([prog.cob], [
@@ -150,7 +150,7 @@ AT_CHECK([./prog], [1], ,
 
 AT_CLEANUP
 
-
+
 AT_SETUP([Value of DEPENDING ON N out of bounds (upper)])
 
 AT_DATA([prog.cob], [
@@ -173,7 +173,7 @@ AT_CHECK([./prog], [1], ,
 
 AT_CLEANUP
 
-
+
 AT_SETUP([Subscript out of bounds with OCCURS DEPENDING ON (lower)])
 
 AT_DATA([prog.cob], [
@@ -195,7 +195,7 @@ AT_CHECK([${COMPILE} -o prog prog.cob], [1], ,
 
 AT_CLEANUP
 
-
+
 AT_SETUP([Subscript out of bounds with OCCURS DEPENDING ON (upper)])
 
 AT_DATA([prog.cob], [
@@ -217,7 +217,7 @@ AT_CHECK([${COMPILE} -o prog prog.cob], [1], ,
 
 AT_CLEANUP
 
-
+
 AT_SETUP([Subscript out of bounds with OCCURS DEPENDING ON])
 
 AT_DATA([prog.cob], [
@@ -240,7 +240,7 @@ AT_CHECK([./prog], [1], ,
 
 AT_CLEANUP
 
-
+
 ##
 
 AT_SETUP([Subscript by arithmetic expression])

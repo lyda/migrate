@@ -19,7 +19,7 @@
 
 ### Non-standard extensions
 
-
+
 AT_SETUP([COMP-5])
 
 AT_DATA([dump.c], [
@@ -56,7 +56,7 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
-
+
 ## H literal
 
 AT_SETUP([Hexadecimal numeric literal])
@@ -82,7 +82,7 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
-
+
 ## Expression
 
 AT_SETUP([Semi-parenthesized condition])
@@ -102,7 +102,7 @@ AT_CHECK([./prog], [0], [OK])
 
 AT_CLEANUP
 
-
+
 ## ADDRESS OF
 
 AT_SETUP([ADDRESS OF])
@@ -157,7 +157,7 @@ OK
 AT_CLEANUP
 
 
-
+
 ## LENGTH OF
 
 AT_SETUP([LENGTH OF])
@@ -188,7 +188,7 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
-
+
 ## WHEN-COMPILED
 
 AT_SETUP([WHEN-COMPILED])
@@ -210,7 +210,7 @@ AT_CHECK([./prog], [0], [99/99/9999.99.99    ])
 
 AT_CLEANUP
 
-
+
 ## OCCURS
 
 AT_SETUP([Complex OCCURS DEPENDING ON])
@@ -239,7 +239,7 @@ AT_CHECK([./prog], [0], [123456:34:56])
 
 AT_CLEANUP
 
-
+
 AT_SETUP([MOVE NON-INTEGER TO ALPHA-NUMERIC])
 #  see MF - COBOL  Error Messages  1029-E ...
 AT_DATA([prog.cob], [
@@ -320,7 +320,7 @@ AT_CHECK([./prog], [0], [12891289128912891289128912891289])
 
 AT_CLEANUP
 
-
+
 ## CALL
 
 AT_SETUP([CALL USING file-name])
@@ -423,7 +423,7 @@ AT_CHECK([./caller], [0])
 
 AT_CLEANUP
 
-
+
 ## ASSIGN
 
 AT_SETUP([ASSIGN MF])
@@ -552,7 +552,7 @@ AT_CHECK([test -f "/tmp/FILENAME"], [0])
 
 AT_CLEANUP
 
-
+
 # Program parameters
 
 AT_SETUP([PROCEDURE DIVISION USING BY ...])
@@ -600,7 +600,7 @@ X = X Y = 56 Z = 34
 
 AT_CLEANUP
 
-
+
 AT_SETUP([STOP RUN RETURNING])
 
 AT_DATA([prog.cob], [
@@ -615,7 +615,7 @@ AT_CHECK([./prog], [1])
 
 AT_CLEANUP
 
-
+
 # ENTRY
 
 AT_SETUP([ENTRY])
@@ -658,7 +658,7 @@ Bye, COBOL!
 
 AT_CLEANUP
 
-
+
 ## LINE SEQUENTIAL
 
 AT_SETUP([LINE SEQUENTIAL write])
@@ -744,8 +744,8 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
-
-AT_SETUP([Environment variable])
+
+AT_SETUP([Environment/Argument variable])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -753,15 +753,29 @@ AT_DATA([prog.cob], [
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
        01 X             PIC X(4).
+       01 Y             PIC X(8).
+       01 Z             PIC 9(4).
        PROCEDURE        DIVISION.
            DISPLAY "TEST_ENV" UPON ENVIRONMENT-NAME.
            ACCEPT X FROM ENVIRONMENT-VALUE.
-           DISPLAY X NO ADVANCING.
+           DISPLAY "(" X ")".
+           DISPLAY "RXW" UPON ENVIRONMENT-VALUE.
+           ACCEPT X FROM ENVIRONMENT-VALUE.
+           DISPLAY "(" X ")".
+           ACCEPT Y FROM ARGUMENT-VALUE.
+           DISPLAY "(" Y ")".
+           ACCEPT Z FROM ARGUMENT-NUMBER.
+           DISPLAY "(" Z ")".
            STOP RUN.
 ])
 
 export TEST_ENV=OK
 AT_CHECK([${COMPILE} -o prog prog.cob])
-AT_CHECK([./prog], [0], [OK  ])
+AT_CHECK([./prog], [0],
+[(OK  )
+(RXW )
+(./prog  )
+(0001)
+])
 
 AT_CLEANUP

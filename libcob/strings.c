@@ -36,7 +36,7 @@
 #define INSPECT_LEADING		1
 #define INSPECT_FIRST	      	2
 
-
+
 /*
  * INSPECT
  */
@@ -221,7 +221,7 @@ cob_inspect_finish (void)
   free (inspect_mark);
 }
 
-
+
 /*
  * STRING
  */
@@ -305,7 +305,7 @@ cob_string_finish (void)
     cob_set_int (string_ptr, string_offset + 1);
 }
 
-
+
 /*
  * UNSTRING
  */

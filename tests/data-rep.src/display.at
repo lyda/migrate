@@ -17,7 +17,7 @@
 ## the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
 ## Boston, MA 02111-1307 USA
 
-
+
 AT_SETUP([DISPLAY: Sign ascii])
 
 AT_DATA([test.conf], [
@@ -108,7 +108,7 @@ AT_CHECK([./prog], [0], [0123456789pqrstuvwxy])
 
 AT_CLEANUP
 
-
+
 AT_SETUP([DISPLAY: Sign ascii10])
 
 AT_DATA([test.conf], [

@@ -19,7 +19,7 @@
 
 ### PACKED-DECIMAL
 
-
+
 # dump
 AT_SETUP([PACKED-DECIMAL dump])
 
@@ -152,7 +152,7 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
-
+
 # display
 AT_SETUP([PACKED-DECIMAL display])
 
@@ -191,7 +191,7 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
-
+
 # move
 AT_SETUP([PACKED-DECIMAL move])
 
@@ -232,7 +232,7 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
-
+
 # initialize
 AT_SETUP([PACKED-DECIMAL arithmetic])
 
@@ -263,7 +263,7 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
-
+
 # arithmetic
 AT_SETUP([PACKED-DECIMAL arithmetic])
 
@@ -290,7 +290,7 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
-
+
 # numeric test
 AT_SETUP([PACKED-DECIMAL numeric test])
 

@@ -3,7 +3,7 @@ MODULES = NC SM IC SQ RL IX ST
 
 EXTRA_DIST = EXEC85.conf.in expand.pl report.pl summary.pl summary.txt \
 	NC.txt SM.txt IC.txt SQ.txt RL.txt IX.txt ST.txt
-CLEANFILES = EXEC85
+CLEANFILES = EXEC85 summary.log
 
 COBOL = cobc -std=cobol85
 

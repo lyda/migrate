@@ -21,7 +21,7 @@
 
 ## 13.16.42.2 Syntax rules
 
-
+
 # 1) DONE
 
 AT_SETUP([REDEFINES: not following entry-name])
@@ -42,7 +42,7 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 
 AT_CLEANUP
 
-
+
 # 2) DONE
 
 AT_SETUP([REDEFINES: level 02 by 01])
@@ -131,12 +131,12 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 
 AT_CLEANUP
 
-
+
 # 3) TODO
 
 # 4) TODO
 
-
+
 # 5) DONE
 
 AT_SETUP([REDEFINES: lower level number])
@@ -162,7 +162,7 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 
 AT_CLEANUP
 
-
+
 # 6) DONE
 
 AT_SETUP([REDEFINES: with OCCURS])
@@ -240,7 +240,7 @@ prog.cob:16: the original definition 'X' cannot be variable length
 
 AT_CLEANUP
 
-
+
 # 7) DONE
 
 AT_SETUP([REDEFINES: with qualification])
@@ -266,7 +266,7 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 
 AT_CLEANUP
 
-
+
 # 8) DONE
 
 AT_SETUP([REDEFINES: multiple redefinition])
@@ -294,7 +294,7 @@ AT_CHECK([${COMPILE_ONLY} -std=mvs prog.cob], [0])
 
 AT_CLEANUP
 
-
+
 # 9) DONE
 
 AT_SETUP([REDEFINES: size exceeds])
@@ -327,7 +327,7 @@ prog.cob:15: size of 'EXT-X-REDEF' larger than size of 'EXT-X'
 
 AT_CLEANUP
 
-
+
 # 10) DONE
 
 AT_SETUP([REDEFINES: with VALUE])
@@ -355,7 +355,7 @@ prog.cob:9: entries under REDEFINES cannot have VALUE clause
 
 AT_CLEANUP
 
-
+
 # 11) DONE
 
 AT_SETUP([REDEFINES: with intervention])
@@ -384,7 +384,7 @@ prog.cob:12: REDEFINES must follow the original definition
 
 AT_CLEANUP
 
-
+
 # 12) DONE
 
 AT_SETUP([REDEFINES: within REDEFINES])
@@ -407,7 +407,7 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
 
 AT_CLEANUP
 
-
+
 # 13) TODO
 
 # 14) TODO

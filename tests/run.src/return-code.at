@@ -41,7 +41,7 @@ AT_CHECK([./prog], [1], [01])
 
 AT_CLEANUP
 
-
+
 AT_SETUP([RETURN-CODE])
 
 AT_DATA([mod1.cob], [

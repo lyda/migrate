@@ -170,7 +170,7 @@ struct cob_exception cob_exception_table[] = {
 
 int cob_initialized = 0;
 
-
+
 /*
  * General functions
  */
@@ -223,7 +223,7 @@ cob_stop_run (int status)
   exit (status);
 }
 
-
+
 /*
  * Sign
  */
@@ -334,7 +334,7 @@ cob_real_put_sign (cob_field *f, int sign)
     }
 }
 
-
+
 char *
 cob_field_to_string (cob_field *f, char *s)
 {
@@ -347,7 +347,7 @@ cob_field_to_string (cob_field *f, char *s)
   return s;
 }
 
-
+
 /*
  * Switch
  */
@@ -366,7 +366,7 @@ cob_set_switch (int n, int flag)
   cob_switch[n] = flag;
 }
 
-
+
 /*
  * Comparison
  */
@@ -535,7 +535,7 @@ cob_cmp_int (cob_field *f1, int n)
   return cob_numeric_cmp (f1, &temp);
 }
 
-
+
 /*
  * Class check
  */
@@ -622,7 +622,7 @@ cob_is_lower (cob_field *f)
   return 1;
 }
 
-
+
 /*
  * Table sort
  */
@@ -670,7 +670,7 @@ cob_table_sort (cob_field *f, int n)
   qsort (f->data, n, f->size, sort_compare);
 }
 
-
+
 /*
  * Run-time error checking
  */

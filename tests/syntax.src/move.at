@@ -21,7 +21,7 @@
 
 ## 14.8.24.2 Syntax rules
 
-
+
 # 1) TODO
 
 # 2) TODO
@@ -30,7 +30,7 @@
 
 # 4) DONE
 
-
+
 # 5) DONE
 
 AT_SETUP([MOVE SPACE TO numeric or numeric-edited item])
@@ -55,7 +55,7 @@ prog.cob:10: invalid MOVE statement
 
 AT_CLEANUP
 
-
+
 # 6) DONE
 
 AT_SETUP([MOVE ZERO TO alphabetic item])
@@ -77,10 +77,10 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 
 AT_CLEANUP
 
-
+
 # 7) TODO
 
-
+
 # 8) TODO
 
 AT_SETUP([MOVE alphabetic TO x])
@@ -253,10 +253,10 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 
 AT_CLEANUP
 
-
+
 # 9) DONE
 
-
+
 # 10) DONE
 
 AT_SETUP([Operands must be groups])
@@ -287,10 +287,10 @@ prog.cob:14: 'G-2(1:1)' is not group name
 
 AT_CLEANUP
 
-
+
 # 11) DONE
 
-
+
 AT_SETUP([MOVE: misc])
 
 AT_DATA([prog.cob], [

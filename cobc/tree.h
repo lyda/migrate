@@ -168,7 +168,7 @@ enum cb_operand_type {
   CB_RECEIVING_OPERAND
 };
 
-
+
 /*
  * Tree
  */
@@ -212,7 +212,7 @@ extern int cb_tree_type (cb_tree x);
 extern int cb_fits_int (cb_tree x);
 extern int cb_get_int (cb_tree x);
 
-
+
 /*
  * Constants
  */
@@ -245,7 +245,7 @@ struct cb_const {
 
 extern void cb_init_constants (void);
 
-
+
 /*
  * Integer
  */
@@ -260,7 +260,7 @@ struct cb_integer {
 
 extern cb_tree cb_int (int n);
 
-
+
 /*
  * String
  */
@@ -278,7 +278,7 @@ struct cb_string {
 
 extern cb_tree cb_build_string (const unsigned char *data, size_t size);
 
-
+
 /*
  * Alphabet-name
  */
@@ -296,7 +296,7 @@ struct cb_alphabet_name {
 
 extern cb_tree cb_build_alphabet_name (cb_tree name, enum cb_alphabet_name_type type);
 
-
+
 /*
  * Class-name
  */
@@ -313,7 +313,7 @@ struct cb_class_name {
 
 extern cb_tree cb_build_class_name (cb_tree name, cb_tree list);
 
-
+
 /*
  * System-name
  */
@@ -329,7 +329,7 @@ struct cb_system_name {
 
 extern cb_tree cb_build_system_name (enum cb_system_name_category category, int token);
 
-
+
 /*
  * Literal
  */
@@ -352,7 +352,7 @@ extern cb_tree cb_build_numeric_literal (int sign, const unsigned char *data, in
 extern cb_tree cb_build_alphanumeric_literal (const unsigned char *data, size_t size);
 extern cb_tree cb_concat_literals (cb_tree x1, cb_tree x2);
 
-
+
 /*
  * Decimal
  */
@@ -367,7 +367,7 @@ struct cb_decimal {
 
 extern cb_tree cb_build_decimal (int id);
 
-
+
 /*
  * Picture
  */
@@ -388,7 +388,7 @@ struct cb_picture {
 
 extern cb_tree cb_build_picture (const char *str);
 
-
+
 /*
  * Field
  */
@@ -466,7 +466,7 @@ extern int cb_field_subordinate (struct cb_field *p, struct cb_field *f);
   ((CB_FIELD_P (x) || CB_REFERENCE_P (x))	\
    && cb_field (x)->usage == CB_USAGE_INDEX)
 
-
+
 /*
  * File
  */
@@ -503,7 +503,7 @@ extern struct cb_file *build_file (cb_tree name);
 extern void validate_file (struct cb_file *f, cb_tree name);
 extern void finalize_file (struct cb_file *f, struct cb_field *records);
 
-
+
 /*
  * Reference
  */
@@ -532,7 +532,7 @@ extern const char *cb_define (cb_tree name, cb_tree val);
 extern void cb_define_system_name (const char *name);
 extern cb_tree cb_ref (cb_tree x);
 
-
+
 /*
  * Binary operation
  */
@@ -571,7 +571,7 @@ struct cb_binary_op {
 extern cb_tree cb_build_binary_op (cb_tree x, char op, cb_tree y);
 extern cb_tree cb_build_binary_list (cb_tree l, char op);
 
-
+
 /*
  * Function call
  */
@@ -594,7 +594,7 @@ extern cb_tree cb_build_funcall (const char *name, int argc, cb_tree a1, cb_tree
 #define cb_build_funcall_3(f,a1,a2,a3)	cb_build_funcall (f, 3, a1, a2, a3, 0)
 #define cb_build_funcall_4(f,a1,a2,a3,a4) cb_build_funcall (f, 4, a1, a2, a3, a4)
 
-
+
 /*
  * Type cast
  */
@@ -620,7 +620,7 @@ extern cb_tree cb_build_cast (enum cb_cast_type type, cb_tree val);
 #define cb_build_cast_address(x)	cb_build_cast (CB_CAST_ADDRESS, x)
 #define cb_build_cast_length(x)		cb_build_cast (CB_CAST_LENGTH, x)
 
-
+
 /*
  * Label
  */
@@ -640,7 +640,7 @@ struct cb_label {
 
 extern cb_tree cb_build_label (cb_tree name, struct cb_label *section);
 
-
+
 /*
  * Assign
  */
@@ -656,7 +656,7 @@ struct cb_assign {
 
 extern cb_tree cb_build_assign (cb_tree var, cb_tree val);
 
-
+
 /*
  * INITIALIZE
  */
@@ -674,7 +674,7 @@ struct cb_initialize {
 
 extern cb_tree cb_build_initialize (cb_tree var, cb_tree val, cb_tree rep, cb_tree def);
 
-
+
 /*
  * SEARCH
  */
@@ -693,7 +693,7 @@ struct cb_search {
 
 extern cb_tree cb_build_search (int flag_all, cb_tree table, cb_tree var, cb_tree end_stmt, cb_tree whens);
 
-
+
 /*
  * CALL
  */
@@ -715,7 +715,7 @@ struct cb_call {
 
 extern cb_tree cb_build_call (cb_tree name, cb_tree args, cb_tree stmt1, cb_tree stmt2);
 
-
+
 /*
  * GO TO statement
  */
@@ -731,7 +731,7 @@ struct cb_goto {
 
 extern cb_tree cb_build_goto (cb_tree target, cb_tree depending);
 
-
+
 /*
  * IF
  */
@@ -748,7 +748,7 @@ struct cb_if {
 
 extern cb_tree cb_build_if (cb_tree test, cb_tree stmt1, cb_tree stmt2);
 
-
+
 /*
  * PERFORM
  */
@@ -807,7 +807,7 @@ struct cb_statement {
 
 extern struct cb_statement *cb_build_statement (const char *name);
 
-
+
 /*
  * List
  */
@@ -845,7 +845,7 @@ extern int cb_list_length (cb_tree l);
 
 #define cb_build_pair(x,y)	cb_build_list (x, y, 0)
 
-
+
 /*
  * Program
  */
@@ -892,7 +892,7 @@ struct cb_program {
 
 extern struct cb_program *cb_build_program (void);
 
-
+
 /* reserved.c */
 extern cb_tree lookup_system_name (const char *name);
 extern int lookup_reserved_word (const char *name);

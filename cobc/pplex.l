@@ -24,7 +24,7 @@
 %option prefix="pp"
 
 %{
-
+
 #include "config.h"
 
 #include <stdio.h>
@@ -58,7 +58,7 @@ static int ppinput (char *buf, int max_size);
 static void ppecho (const char *text);
 
 static void switch_to_buffer (int lineno, char *filename, YY_BUFFER_STATE buffer);
-
+
 %}
 
 WORD		[0-9A-Z-]+
@@ -189,7 +189,7 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
 }
 
 %%
-
+
 void
 pp_set_replace_list (struct cb_replace_list *list)
 {
@@ -288,7 +288,7 @@ ppcopy (char *name, const char *lib, struct cb_replace_list *replace_list)
   return ppopen (name, replace_list);
 }
 
-
+
 /*
  * Read line
  */
@@ -515,7 +515,7 @@ ppinput (char *buff, int max_size)
   return strlen (buff);
 }
 
-
+
 static void
 ppecho (const char *text)
 {

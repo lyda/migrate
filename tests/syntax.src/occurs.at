@@ -21,7 +21,7 @@
 
 ## 13.16.36.2 Syntax rules
 
-
+
 # 1) DONE
 
 AT_SETUP([OCCURS with level 01, 66, 77, and 88])
@@ -68,7 +68,7 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 
 AT_CLEANUP
 
-
+
 # 2) TODO
 
 # 3) TODO
@@ -83,7 +83,7 @@ AT_CLEANUP
 
 # 8) TODO
 
-
+
 # 9) DONE
 
 AT_SETUP([Nested OCCURS clause])
@@ -108,7 +108,7 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
 
 AT_CLEANUP
 
-
+
 # 10) TODO
 
 # 11) TODO
@@ -129,7 +129,7 @@ AT_CLEANUP
 
 # 19) TODO
 
-
+
 # 20) DONE
 
 AT_SETUP([OCCURS DEPENDING followed by another field])
@@ -161,7 +161,7 @@ prog.cob:15: 'X' cannot have OCCURS DEPENDING
 
 AT_CLEANUP
 
-
+
 # 21) TODO
 
 # 22) TODO

@@ -21,7 +21,7 @@
 
 ## 14.8.19.3 General rules
 
-
+
 
 AT_SETUP([INITIALIZE group entry with OCCURS])
 
@@ -46,7 +46,7 @@ AT_CHECK([./prog], [0], [   0])
 
 AT_CLEANUP
 
-
+
 AT_SETUP([INITIALIZE OCCURS with numeric edited])
 
 AT_DATA([prog.cob], [
@@ -68,7 +68,7 @@ AT_CHECK([./prog], [0], [ 0 0 0 0 0])
 
 AT_CLEANUP
 
-
+
 AT_SETUP([INITIALIZE complex group])
 
 AT_DATA([prog.cob], [

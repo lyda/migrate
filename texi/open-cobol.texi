@@ -761,7 +761,7 @@ This helps debugging your COBOL programs using GDB, but this feature
 is not complete and not very useful yet.
 
 @bye
-
+
 @c Local Variables:
 @c mode:outline-minor
 @c outline-regexp:"@\\(ch\\|sec\\|subs\\)"

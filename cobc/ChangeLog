@@ -1,5 +1,9 @@
 2005-02-04  Roger While <simrw@sim-basis.de>
 
+	* codegen.c : Fix code gen for tag NULL
+
+2005-02-04  Roger While <simrw@sim-basis.de>
+
 	* parser.y, typeck.c, tree.h, tree.c, reserved.c :
 	  implement DISPLAY .. UPON ENVIRONMENT-VALUE
 	  implement DISPLAY .. UPON ARGUMENT-NUMBER

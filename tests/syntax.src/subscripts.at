@@ -21,10 +21,10 @@
 
 ## 8.4.1.2.2 Syntax rules
 
-
+
 # 1) DONE
 
-
+
 # 2) DONE
 
 AT_SETUP([Subscripted item requires OCCURS clause])
@@ -49,7 +49,7 @@ prog.cob:10: 'X' cannot be subscripted
 
 AT_CLEANUP
 
-
+
 # 3) DONE
 
 AT_SETUP([The number of subscripts])
@@ -81,7 +81,7 @@ prog.cob:15: 'Y' requires 2 subscripts
 
 AT_CLEANUP
 
-
+
 # 4) TODO
 
 # 5) TODO

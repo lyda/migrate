@@ -51,7 +51,7 @@ store_common_region (cob_field *f, unsigned char *data, size_t size, int scale)
     memset (f->data, '0', f->size);
 }
 
-
+
 /*
  * Display
  */
@@ -194,7 +194,7 @@ cob_move_alphanum_to_alphanum (cob_field *f1, cob_field *f2)
     }
 }
 
-
+
 /*
  * Packed decimal
  */
@@ -254,7 +254,7 @@ cob_move_packed_to_display (cob_field *f1, cob_field *f2)
   cob_put_sign (f2, sign);
 }
 
-
+
 /*
  * Binary integer
  */
@@ -316,7 +316,7 @@ cob_move_binary_to_display (cob_field *f1, cob_field *f2)
   cob_put_sign (f2, sign);
 }
 
-
+
 /*
  * Edited
  */
@@ -572,7 +572,7 @@ cob_move_alphanum_to_edited (cob_field *f1, cob_field *f2)
   cob_put_sign (f1, sign);
 }
 
-
+
 /*
  * MOVE dispatcher
  */
@@ -701,7 +701,7 @@ cob_move (cob_field *src, cob_field *dst)
     }
 }
 
-
+
 /*
  * Convenience functions
  */

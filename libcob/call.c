@@ -57,7 +57,7 @@ cob_init_call (void)
     dynamic_reloading = 1;
 }
 
-
+
 /*
  * Call table
  */
@@ -130,7 +130,7 @@ lookup (const char *name)
   return NULL;
 }
 
-
+
 /*
  * C interface
  */
@@ -235,7 +235,7 @@ cob_resolve_error (void)
   return p;
 }
 
-
+
 /*
  * COBOL interface
  */

@@ -40,7 +40,7 @@ to_cname (const char *s)
   return copy;
 }
 
-
+
 /*
  * Tree
  */
@@ -374,7 +374,7 @@ cb_get_int (cb_tree x)
   return val;
 }
 
-
+
 /*
  * Constants
  */
@@ -441,7 +441,7 @@ cb_init_constants (void)
   cb_standard_error_handler = make_constant_label ("standard_error_handler");
 }
 
-
+
 /*
  * Integer
  */
@@ -475,7 +475,7 @@ cb_int (int n)
   return p->node;
 }
 
-
+
 /*
  * String
  */
@@ -490,7 +490,7 @@ cb_build_string (const unsigned char *data, size_t size)
   return CB_TREE (p);
 }
 
-
+
 /*
  * Alphabet-name
  */
@@ -506,7 +506,7 @@ cb_build_alphabet_name (cb_tree name, enum cb_alphabet_name_type type)
   return CB_TREE (p);
 }
 
-
+
 /*
  * Class-name
  */
@@ -524,7 +524,7 @@ cb_build_class_name (cb_tree name, cb_tree list)
   return CB_TREE (p);
 }
 
-
+
 /*
  * System-name
  */
@@ -539,7 +539,7 @@ cb_build_system_name (enum cb_system_name_category category, int token)
   return CB_TREE (p);
 }
 
-
+
 /*
  * Literal
  */
@@ -583,7 +583,7 @@ cb_concat_literals (cb_tree x1, cb_tree x2)
   return cb_build_alphanumeric_literal (buff, l1->size + l2->size);
 }
 
-
+
 /*
  * Decimal
  */
@@ -597,7 +597,7 @@ cb_build_decimal (int id)
   return CB_TREE (p);
 }
 
-
+
 /*
  * Picture
  */
@@ -841,7 +841,7 @@ cb_build_picture (const char *str)
   return CB_TREE (pic);
 }
 
-
+
 /*
  * Field
  */
@@ -985,7 +985,7 @@ cb_field_subordinate (struct cb_field *p, struct cb_field *f)
   return 0;
 }
 
-
+
 /*
  * File
  */
@@ -1073,7 +1073,7 @@ finalize_file (struct cb_file *f, struct cb_field *records)
     }
 }
 
-
+
 /*
  * Reference
  */
@@ -1235,7 +1235,7 @@ cb_ref (cb_tree x)
   return cb_error_node;
 }
 
-
+
 /*
  * Expression
  */
@@ -1301,7 +1301,7 @@ cb_build_binary_list (cb_tree l, char op)
   return e;
 }
 
-
+
 /*
  * Function call
  */
@@ -1321,7 +1321,7 @@ cb_build_funcall (const char *name, int argc,
   return CB_TREE (p);
 }
 
-
+
 /*
  * Type cast
  */
@@ -1338,7 +1338,7 @@ cb_build_cast (enum cb_cast_type type, cb_tree val)
   return CB_TREE (p);
 }
 
-
+
 /*
  * Label
  */
@@ -1354,7 +1354,7 @@ cb_build_label (cb_tree name, struct cb_label *section)
   return CB_TREE (p);
 }
 
-
+
 /*
  * Assign
  */
@@ -1369,7 +1369,7 @@ cb_build_assign (cb_tree var, cb_tree val)
   return CB_TREE (p);
 }
 
-
+
 /*
  * INITIALIZE
  */
@@ -1386,7 +1386,7 @@ cb_build_initialize (cb_tree var, cb_tree val, cb_tree rep, cb_tree def)
   return CB_TREE (p);
 }
 
-
+
 /*
  * SEARCH
  */
@@ -1405,7 +1405,7 @@ cb_build_search (int flag_all, cb_tree table, cb_tree var,
   return CB_TREE (p);
 }
 
-
+
 /*
  * CALL
  */
@@ -1422,7 +1422,7 @@ cb_build_call (cb_tree name, cb_tree args, cb_tree stmt1, cb_tree stmt2)
   return CB_TREE (p);
 }
 
-
+
 /*
  * GO TO
  */
@@ -1437,7 +1437,7 @@ cb_build_goto (cb_tree target, cb_tree depending)
   return CB_TREE (p);
 }
 
-
+
 /*
  * IF
  */
@@ -1453,7 +1453,7 @@ cb_build_if (cb_tree test, cb_tree stmt1, cb_tree stmt2)
   return CB_TREE (p);
 }
 
-
+
 /*
  * PERFORM
  */
@@ -1479,7 +1479,7 @@ cb_build_perform_varying (cb_tree name, cb_tree from, cb_tree by, cb_tree until)
   return CB_TREE (p);
 }
 
-
+
 /*
  * Statement
  */
@@ -1493,7 +1493,7 @@ cb_build_statement (const char *name)
   return p;
 }
 
-
+
 /*
  * List
  */
@@ -1561,7 +1561,7 @@ cb_list_map (cb_tree (*func) (cb_tree x), cb_tree l)
     CB_VALUE (l) = func (CB_VALUE (l));
 }
 
-
+
 /*
  * Program
  */

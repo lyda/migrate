@@ -20,7 +20,7 @@
 #ifndef COB_COMMON_H
 #define COB_COMMON_H
 
-
+
 /*
  * Field
  */
@@ -90,7 +90,7 @@ typedef struct {
 
 #define COB_FIELD_IS_NUMERIC(f)	(COB_FIELD_TYPE (f) & COB_TYPE_NUMERIC)
 
-
+
 /*
  * Module
  */
@@ -116,7 +116,7 @@ typedef struct __cob_module {
 
 extern cob_module *cob_current_module;
 
-
+
 /*
  * Exception
  */
@@ -143,7 +143,7 @@ extern struct cob_exception {
 
 extern int cob_exception_code;
 
-
+
 /*
  * Global variables
  */
@@ -170,14 +170,14 @@ extern const long long cob_exp10LL[];
 extern const unsigned char cob_a2e[];	/* ASCII -> EBCDIC */
 extern const unsigned char cob_e2a[];	/* EBCDIC -> ASCII */
 
-
+
 /* convert a digit (e.g., '0') into an integer (e.g., 0) */
 #define cob_d2i(x)	((x) - '0')
 
 /* convert an integer (e.g., 0) into a digit (e.g., '0') */
 #define cob_i2d(x)	((x) + '0')
 
-
+
 /*
  * Function declaration
  */
