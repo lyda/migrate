@@ -2267,12 +2267,7 @@ _initial: | TOK_INITIAL ;
 
 merge_statement:
   MERGE				{ BEGIN_STATEMENT ("MERGE"); }
-  file_name sort_key_list sort_collating
-  {
-    push_funcall_2 ("@sort-init", $3, $4);
-    $$ = $3; /* used in sort_input, sort_output */
-  }
-  sort_input sort_output
+  sort_body
 ;
 
 
@@ -2689,10 +2684,16 @@ set_to_true_false:
 
 sort_statement:
   SORT				{ BEGIN_STATEMENT ("SORT"); }
+  sort_body
+;
+sort_body:
   file_name sort_key_list sort_duplicates sort_collating
   {
-    push_funcall_2 ("@sort-init", $3, $4);
-    $$ = $3; /* used in sort_input, sort_output */
+    cb_tree l;
+    push_funcall_2 ("cob_sort_init", $1, cb_int (list_length ($2)));
+    for (l = $2; l; l = CB_CHAIN (l))
+      push_funcall_3 ("cob_sort_init_key", $1, CB_PURPOSE (l), CB_VALUE (l));
+    $$ = $1; /* used in sort_input, sort_output */
   }
   sort_input sort_output
 ;

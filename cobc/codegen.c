@@ -1232,33 +1232,6 @@ output_search_all (cb_tree table, cb_tree stmt, cb_tree cond, cb_tree when)
 
 
 /*
- * SORT
- */
-
-static void
-output_sort_init (cb_tree file, cb_tree keys)
-{
-  cb_tree l;
-
-  output_indent ("{");
-  output_line ("static cob_file_key keys[] = {");
-  for (l = keys; l; l = CB_CHAIN (l))
-    {
-      output_prefix ();
-      output ("  {");
-      output_param (CB_VALUE (l), -1);
-      output (", %d},\n", CB_PURPOSE_INT (l));
-    }
-  output_line ("};");
-  output_prefix ();
-  output ("cob_sort_init (");
-  output_param (file, 0);
-  output (", %d, keys);\n", list_length (keys));
-  output_indent ("}");
-}
-
-
-/*
  * CALL
  */
 
@@ -1400,7 +1373,6 @@ static struct inline_func {
   {"@initialize", output_initialize},
   {"@search", output_search},
   {"@search-all", output_search_all},
-  {"@sort-init", output_sort_init},
   {"@call", output_call},
   {0, 0}
 };
