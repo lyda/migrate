@@ -1,3 +1,8 @@
+2002-10-01  Keisuke Nishida  <knishida@netlab.jp>
+
+	* tree.h (cobc_tag_register, cobc_register): Removed.
+	* tree.c (make_register): Removed.
+
 2002-09-30  Keisuke Nishida  <knishida@netlab.jp>
 
 	* cobc.h (COBC_PACKAGE): Use PACKAGE_NAME.

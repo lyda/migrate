@@ -727,20 +727,6 @@ make_refmod (cobc_tree field, cobc_tree offset, cobc_tree length)
 
 
 /*
- * Register
- */
-
-cobc_tree
-make_register ()
-{
-  struct cobc_register *p =
-    make_tree (cobc_tag_register, COB_NUMERIC, sizeof (struct cobc_register));
-  p->id = 0;
-  return COBC_TREE (p);
-}
-
-
-/*
  * Expression
  */
 

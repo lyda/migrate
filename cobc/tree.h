@@ -44,7 +44,6 @@ enum cobc_tag {
   cobc_tag_sequence,
   cobc_tag_perform,
   cobc_tag_assign,
-  cobc_tag_register,
   cobc_tag_if,
   cobc_tag_evaluate,
   cobc_tag_predefined,
@@ -433,21 +432,6 @@ struct cobc_label_name {
 extern cobc_tree make_label_name_nodef (struct cobc_word *word, struct cobc_word *in_word);
 extern cobc_tree make_label_name (struct cobc_word *word);
 extern void finalize_label_name (struct cobc_label_name *p);
-
-
-/*
- * Register
- */
-
-struct cobc_register {
-  struct cobc_tree_common common;
-  int id;
-};
-
-#define COBC_REGISTER(x)	(COBC_TREE_CAST (cobc_tag_register, struct cobc_register, x))
-#define COBC_REGISTER_P(x)	(COBC_TREE_TAG (x) == cobc_tag_register)
-
-extern cobc_tree make_register ();
 
 
 /*
