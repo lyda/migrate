@@ -104,6 +104,7 @@ static char *output_name;
 static char cob_cc[FILENAME_MAX];		/* gcc */
 static char cob_cflags[FILENAME_MAX];		/* -I... */
 static char cob_libs[FILENAME_MAX];		/* -L... -lcob */
+static char cob_ldflags[FILENAME_MAX];
 
 static struct filename {
   int need_preprocess;
@@ -145,9 +146,10 @@ init_environment (int argc, char *argv[])
 
   output_name = NULL;
 
-  init_var (cob_cc,     "COB_CC",     COB_CC);
-  init_var (cob_cflags, "COB_CFLAGS", COB_CFLAGS);
-  init_var (cob_libs,   "COB_LIBS",   COB_LIBS);
+  init_var (cob_cc,      "COB_CC",     COB_CC);
+  init_var (cob_cflags,  "COB_CFLAGS", COB_CFLAGS);
+  init_var (cob_libs,    "COB_LIBS",   COB_LIBS);
+  init_var (cob_ldflags, "COB_LDFLAGS", "");
 
   p = getenv ("COB_LDADD");
   if (p)
@@ -170,14 +172,14 @@ terminate (const char *str)
  * Command line
  */
 
-static char short_options[] = "h?VvEPCScmOgo:I:";
+static char short_options[] = "h?VvEPCScmOgso:I:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'V'},
   {"verbose", no_argument, 0, 'v'},
   {"save-temps", no_argument, &save_temps, 1},
-  {"std", required_argument, 0, 's'},
+  {"std", required_argument, 0, '$'},
   {"target", required_argument, 0, 't'},
   {"debug", no_argument, 0, 'd'},
   {"static", no_argument, &cb_flag_call_static, 1},
@@ -293,7 +295,11 @@ process_command_line (int argc, char *argv[])
 	  strcat (cob_cflags, " -g");
 	  break;
 
-	case 's': /* -std */
+	case 's':
+	  strcat (cob_ldflags, " -s");
+	  break;
+
+	case '$': /* -std */
 	  if (strcmp (optarg, "gnu") == 0)
 	    {
 	      cb_standard = CB_STANDARD_GNU;
@@ -690,8 +696,8 @@ process_module (struct filename *fn)
       strcat (name, ".");
       strcat (name, COB_MODULE_EXT);
     }
-  sprintf (buff, "%s -shared -o %s %s %s",
-	   cob_cc, name, fn->object, cob_libs);
+  sprintf (buff, "%s -shared%s -o %s %s %s",
+	   cob_cc, cob_ldflags, name, fn->object, cob_libs);
   return process (buff);
 }
 
@@ -711,7 +717,8 @@ process_link (struct filename *file_list)
   if (output_name)
     strcpy (name, output_name);
 
-  sprintf (buff, "%s -o %s %s %s", cob_cc, name, objs, cob_libs);
+  sprintf (buff, "%s%s -o %s %s %s",
+	   cob_cc, cob_ldflags, name, objs, cob_libs);
   return process (buff);
 }
 
