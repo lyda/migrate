@@ -2593,15 +2593,15 @@ opt_not_on_overflow_sentence:
 at_end:
   at_end_sentence
   {
-    push_status_handler (cobc_int0, 0, $1);
+    push_status_handler (cobc_int1, $1, 0);
   }
 | not_at_end_sentence
   {
-    push_status_handler (cobc_int0, $1, 0);
+    push_status_handler (cobc_int1, 0, $1);
   }
 | at_end_sentence not_at_end_sentence
   {
-    push_status_handler (cobc_int0, $2, $1);
+    push_status_handler (cobc_int1, $1, $2);
   }
 ;
 at_end_sentence:
@@ -2623,16 +2623,16 @@ opt_invalid_key:
 invalid_key:
   invalid_key_sentence
   {
-    push_status_handler (cobc_int0, 0, $1);
+    push_status_handler (cobc_int2, $1, 0);
   }
 | not_invalid_key_sentence
   {
-    push_status_handler (cobc_int0, $1, 0);
+    push_status_handler (cobc_int2, 0, $1);
   }
 | invalid_key_sentence
   not_invalid_key_sentence
   {
-    push_status_handler (cobc_int0, $2, $1);
+    push_status_handler (cobc_int2, $1, $2);
   }
 ;
 invalid_key_sentence:

@@ -260,6 +260,7 @@ cobc_tree cobc_status;
 cobc_tree cobc_switch[8];
 cobc_tree cobc_int0;
 cobc_tree cobc_int1;
+cobc_tree cobc_int2;
 
 static cobc_tree
 make_constant (char class, char *val)
@@ -295,6 +296,7 @@ init_constants (void)
   cobc_quote     = make_constant (COB_ALPHANUMERIC, "cob_quote");
   cobc_int0      = make_integer (0);
   cobc_int1      = make_integer (1);
+  cobc_int2      = make_integer (2);
   for (i = 0; i < 8; i++)
     {
       char buff[16];

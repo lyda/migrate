@@ -134,6 +134,7 @@ extern cobc_tree cobc_status;
 extern cobc_tree cobc_switch[];
 extern cobc_tree cobc_int0;
 extern cobc_tree cobc_int1;
+extern cobc_tree cobc_int2;
 
 struct cobc_const {
   struct cobc_tree_common common;

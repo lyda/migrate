@@ -98,6 +98,7 @@
 
 #define RETURN_STATUS(x)			\
   do {						\
+    cob_status = x / 10;			\
     f->file_status[0] = x / 10 + '0';		\
     f->file_status[1] = x % 10 + '0';		\
     return;					\
