@@ -382,17 +382,6 @@ struct math_var
   struct math_var *next;
 };
 
-/* generic information container used by the [NOT] AT END cluases */
-struct ginfo
-{
-  unsigned long sel;		/* 1=true, 2=not true, 3=both */
-  unsigned long lbl1;		/* call label name 1 - true */
-  unsigned long lbl2;		/* call label name 2 - not true */
-  unsigned long lbl3;		/* retrun 1 label name  */
-  unsigned long lbl4;		/* retrun 2 label name  */
-  unsigned long lbl5;		/* test bypass label name  */
-};
-
 /******* supplemental information for screen items **********/
 /* this is linked at the sym->index (aliased scrinfo) */
 struct scr_info

@@ -147,7 +147,7 @@ extern struct perf_info *create_perf_info (cob_tree sy1, cob_tree sy2, unsigned 
 extern struct perform_info *create_perform_info (void);
 extern char *check_perform_variables (cob_tree sy1, struct perform_info *pi1);
 extern struct math_var *create_mathvar_info (struct math_var *mv, cob_tree sy, unsigned int opt);
-extern int gen_on_size_error (int flag);
+extern int gen_status_branch (int flag);
 extern void gen_compute (struct math_var *vl1, cob_tree sy1);
 extern void gen_add (cob_tree n1, cob_tree n2, int rnd);
 extern void gen_add_to (cob_tree_list nums, struct math_var *list);

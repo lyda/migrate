@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 666
+%expect 483
 
 %{
 #define yydebug		cob_trace_parser
@@ -41,8 +41,6 @@
 
 static unsigned long lbend, lbstart;
 static unsigned int perform_after_sw;
-
-static struct ginfo    *gic=NULL;
 
 static int warning_count = 0;
 static int error_count = 0;
@@ -71,7 +69,6 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
   struct sortfile_node *snval;
   struct selsubject *ssbjval;
   struct math_var *mval;      /* math variables container list */
-  struct ginfo    *gic;       /* generic container */
 }
 
 %left  '+', '-'
@@ -127,7 +124,6 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <baval> inspect_before_after
 %type <ival> if_then,search_body,search_all_body,class
 %type <ival> search_when,search_when_list,search_opt_at_end
-%type <gic>  on_end,opt_at_end
 %type <ival> integer,operator,before_after
 %type <ival> on_exception_or_overflow,on_not_exception
 %type <ival> opt_address_of,display_upon,display_options
@@ -1302,7 +1298,10 @@ opt_end_compute: | END_COMPUTE ;
  */
 
 delete_statement:
-  DELETE name opt_record { gen_delete($2); }
+  DELETE name opt_record
+  {
+    gen_delete($2);
+  }
   opt_invalid_key
   opt_end_delete
 ;
@@ -1980,17 +1979,9 @@ read_statement:
 read_body:
   file opt_read_next opt_record opt_read_into opt_read_key
   {
-    gen_reads($1, $4, $5, $2);
+    gen_reads ($1, $4, $5, $2);
   }
   read_option
-;
-read_option:
-  opt_at_end
-  {
-    ginfo_container4 ($1);
-    gic = NULL;
-  }
-| read_invalid_key
 ;
 opt_read_next:
   /* nothing */			{ $$ = 0; }
@@ -2005,19 +1996,9 @@ opt_read_key:
   /* nothing */			{ $$ = NULL; }
 | KEY opt_is name		{ $$ = $3; }
 ;
-read_invalid_key:
-  invalid_key_statement
-| not_invalid_key_statement
-| invalid_key_statement
-  not_invalid_key_statement
-;
-invalid_key_statement:
-  INVALID opt_key		{ $<ival>$ = gen_at_end (23); }
-  statement_list		{ gen_dstlabel ($<ival>3); }
-;
-not_invalid_key_statement:
-  NOT INVALID opt_key		{ $<ival>$ = gen_at_end (0); }
-  statement_list		{ gen_dstlabel ($<ival>4); }
+read_option:
+| at_end
+| invalid_key
 ;
 opt_end_read: | END_READ ;
 
@@ -2042,15 +2023,14 @@ return_statement:
   RETURN return_body opt_end_return
 ;
 return_body:
-  name opt_record opt_read_into opt_at_end
+  name opt_record opt_read_into
   {
     if ($1->organization != ORG_SEQUENTIAL)
       gen_read_next ($1, $3, 1);
     else
       gen_return ($1, $3);
-    ginfo_container4 ($4);
-    gic = NULL;
   }
+  opt_at_end
 ;
 opt_end_return: | END_RETURN ;
 
@@ -2465,6 +2445,9 @@ opt_end_write: | END_WRITE ;
  * Common rules
  *******************/
 
+target_sentence:
+  statement_list		{ gen_dstlabel ($<ival>0); }
+;
 
 /*
  * ON SIZE ERROR
@@ -2475,15 +2458,12 @@ opt_on_size_error:
   opt_not_on_size_error_sentence
 ;
 opt_on_size_error_sentence:
-| opt_on SIZE			{ $<ival>$ = gen_on_size_error (0); }
-  error_sentence
+| opt_on SIZE ERROR		{ $<ival>$ = gen_status_branch (0); }
+  target_sentence
 ;
 opt_not_on_size_error_sentence:
-| NOT opt_on SIZE		{ $<ival>$ = gen_on_size_error (1); }
-  error_sentence
-;
-error_sentence:
-  ERROR statement_list		{ gen_dstlabel ($<ival>0); }
+| NOT opt_on SIZE ERROR		{ $<ival>$ = gen_status_branch (1); }
+  target_sentence
 ;
 
 
@@ -2492,53 +2472,23 @@ error_sentence:
  */
 
 opt_at_end:
-  /* nothing */			{ $$ = NULL; }
-| NOT opt_at on_end
-  {
-    ginfo_container2($3, 2);
-    $$=ginfo_container3($3, 2);
-  }
-| AT on_end
-  {
-    ginfo_container2($2, 1);
-    $$=ginfo_container3($2, 1);
-  }
-| on_end
-  {
-    ginfo_container2($1, 1);
-    $$=ginfo_container3($1, 1);
-  }
-| AT on_end NOT opt_at
-  {
-    ginfo_container2($2, 1);
-  }
-  on_end
-  {
-    ginfo_container2($6, 2);
-    $$=ginfo_container3($6, 3);
-  }
-| on_end NOT opt_at
-  {
-    ginfo_container2($1, 1);
-  }
-  on_end
-  {
-    ginfo_container2($5, 2);
-    $$=ginfo_container3($5, 3);
-  }
+| at_end
 ;
-on_end:
-  END
-  {
-    if (gic == NULL)
-      gic=ginfo_container0();
-    $$=ginfo_container1(gic);
-  }
-  statement_list
-  {
-    $$=$<gic>2;
-  }
-  ;
+at_end:
+  at_end_sentence
+| not_at_end_sentence
+| at_end_sentence not_at_end_sentence
+;
+at_end_sentence:
+  END				{ $<ival>$ = gen_status_branch (0); }
+  target_sentence
+| AT END			{ $<ival>$ = gen_status_branch (0); }
+  target_sentence
+;
+not_at_end_sentence:
+  NOT opt_at END		{ $<ival>$ = gen_status_branch (1); }
+  target_sentence
+;
 
 
 /*
@@ -2546,16 +2496,20 @@ on_end:
  */
 
 opt_invalid_key:
-  opt_invalid_key_sentence
-  opt_not_invalid_key_sentence
+| invalid_key
 ;
-opt_invalid_key_sentence:
-| INVALID opt_key		{ $<ival>$ = gen_at_end(23); }
-  statement_list		{ gen_dstlabel($<ival>3); }
+invalid_key:
+  invalid_key_sentence
+| not_invalid_key_sentence
+| invalid_key_sentence not_invalid_key_sentence
 ;
-opt_not_invalid_key_sentence:
-| NOT INVALID opt_key		{ $<ival>$ = gen_at_end(0); }
-  statement_list		{ gen_dstlabel($<ival>4); }
+invalid_key_sentence:
+  INVALID opt_key		{ $<ival>$ = gen_at_end(23); }
+  target_sentence
+;
+not_invalid_key_sentence:
+  NOT INVALID opt_key		{ $<ival>$ = gen_at_end(0); }
+  target_sentence
 ;
 
 

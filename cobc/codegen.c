@@ -2523,91 +2523,6 @@ create_mathvar_info (struct math_var *mv, cob_tree sy, unsigned int opt)
     }
 }
 
-/******** generic structure allocation and code genertion ***********/
-struct ginfo *
-ginfo_container0 (void)
-{
-  struct ginfo *v;
-  v = malloc (sizeof (struct ginfo));
-  v->sel = 0;			/* type of option */
-  v->lbl1 = 0;			/* call label name 1 - true */
-  v->lbl2 = 0;			/* call label name 2 - not true */
-  v->lbl3 = loc_label++;	/* End of statement label name */
-  v->lbl4 = 0;			/* not used */
-  v->lbl5 = loc_label++;	/* determine test  bypass label name */
-  gen_jmplabel (v->lbl5);	/* generate test bypass jump */
-  return v;
-}
-
-struct ginfo *
-ginfo_container1 (struct ginfo *v)
-{
-  v->sel = loc_label++;
-  fprintf (o_src, ".L%d:\n", (int) v->sel);
-  return v;
-}
-
-void
-ginfo_container2 (struct ginfo *v, unsigned long ty)
-{
-
-  switch (ty)
-    {
-    case 1:
-      v->lbl1 = v->sel;
-      v->sel = 0;
-      break;
-
-    case 2:
-      v->lbl2 = v->sel;
-      v->sel = 0;
-      break;
-    }
-  gen_jmplabel (v->lbl3);
-}
-
-struct ginfo *
-ginfo_container3 (struct ginfo *v, unsigned long ty)
-{
-  v->sel = ty;
-  fprintf (o_src, "\t.align 16\n");
-  fprintf (o_src, ".L%d:\n", (int) v->lbl5);
-  return v;
-}
-
-void
-ginfo_container4 (struct ginfo *v)
-{
-  if (v == NULL)
-    return;
-
-  switch (v->sel)
-    {
-    case 1:
-      fprintf (o_src, "\tcmpl\t$0, %%eax\n");
-      fprintf (o_src, "\tjne\t.L%ld\n", v->lbl1);
-      fprintf (o_src, "\t.align 16\n");
-      fprintf (o_src, ".L%ld:\n", v->lbl3);
-      break;
-
-    case 2:
-      fprintf (o_src, "\tcmpl\t$0, %%eax\n");
-      fprintf (o_src, "\tje\t.L%ld\n", v->lbl2);
-      fprintf (o_src, "\t.align 16\n");
-      fprintf (o_src, ".L%ld:\n", v->lbl3);
-      break;
-
-    default:
-      fprintf (o_src, "\tcmpl\t$0, %%eax\n");
-      fprintf (o_src, "\tje\t.L%ld\n", v->lbl2);
-      gen_jmplabel (v->lbl1);
-      fprintf (o_src, "\t.align 16\n");
-      fprintf (o_src, ".L%ld:\n", v->lbl3);
-      break;
-    }
-
-}
-
 
 /*
  * ON SIZE ERROR
@@ -2620,7 +2535,7 @@ gen_init_status (void)
 }
 
 int
-gen_on_size_error (int flag)
+gen_status_branch (int flag)
 {
   int lbl = loc_label++;
 
@@ -4751,7 +4666,7 @@ gen_read (cob_tree f, cob_tree buf, cob_tree key)
     push_immed (0);
   gen_save_filevar (f, buf);
   asm_call ("cob_read");
-  gen_status (f);
+  gen_set_status (f);
 }
 
 void
@@ -4763,11 +4678,12 @@ gen_read_next (cob_tree f, cob_tree buf, int next_prev)
   else
     push_immed (0);
   gen_save_filevar (f, buf);
+  asm_call ("cob_read");
   if (next_prev == 1)
     asm_call ("cob_read_next");
   else
     asm_call ("cob_read_prev");
-  gen_status (f);
+  gen_set_status (f);
 }
 
 int
