@@ -79,11 +79,11 @@ enum cb_tag {
   cb_tag_funcall,		/* run-time function call */
   cb_tag_cast_int32,		/* cast to int32 */
   /* statements */
-  cb_tag_location,		/* source location */
   cb_tag_label,			/* label statement */
   cb_tag_if,			/* IF statement */
   cb_tag_perform,		/* PERFORM statement */
   cb_tag_sequence,		/* multiple statements */
+  cb_tag_statement,		/* general statement */
   /* miscellaneous */
   cb_tag_class,			/* CLASS definition */
   cb_tag_builtin,
@@ -125,8 +125,6 @@ typedef struct cb_tree_common *cb_tree;
 
 extern char *tree_name (cb_tree x);
 extern int tree_category (cb_tree x);
-
-extern cb_tree make_location (char *file, int line);
 
 
 /*
@@ -562,6 +560,22 @@ struct cb_sequence {
 #define CB_SEQUENCE_P(x)	(CB_TREE_TAG (x) == cb_tag_sequence)
 
 extern cb_tree make_sequence (struct cb_list *list);
+
+
+/*
+ * Statement
+ */
+
+struct cb_statement {
+  struct cb_tree_common common;
+  const char *name;
+  int need_terminator;
+};
+
+#define CB_STATEMENT(x)		(CB_TREE_CAST (cb_tag_statement, struct cb_statement, x))
+#define CB_STATEMENT_P(x)	(CB_TREE_TAG (x) == cb_tag_statement)
+
+extern struct cb_statement *build_statement (const char *name);
 
 
 /*

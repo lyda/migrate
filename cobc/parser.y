@@ -75,10 +75,11 @@
 		make_pair (label, CB_TREE (using_list)));	\
   }
 
-#define SET_TERMINATOR(loc,cond)			\
-  statement_location = (cond) ? (loc) : NULL
+#define BEGIN_STATEMENT(name)			\
+  current_statement = build_statement (name);	\
+  push (current_statement)
 
-static cb_tree statement_location;
+static struct cb_statement *current_statement = NULL;
 
 static struct cb_field *current_field;
 static struct cb_file *current_file;
@@ -101,7 +102,7 @@ static cb_tree validate_integer_name (cb_tree x);
 static cb_tree build_file_handler (cb_tree file, cb_tree handler);
 static cb_tree build_connective_op (struct cb_list *l, char op);
 
-static void terminator_warning (const char *name);
+static void terminator_warning (void);
 %}
 
 %union {
@@ -164,7 +165,7 @@ static void terminator_warning (const char *name);
 %type <tree> at_line_column column_number condition expr expr_1
 %type <tree> expr_item record_description_list label line_number literal
 %type <tree> field_name integer_label reference_or_literal basic_literal
-%type <tree> integer_value numeric_value numeric_expr save_location
+%type <tree> integer_value numeric_value numeric_expr
 %type <tree> on_or_off opt_screen_description_list as_literal
 %type <tree> opt_with_pointer perform_option perform_procedure
 %type <tree> reference screen_description screen_description_list at_eop
@@ -1559,10 +1560,16 @@ statement_list:
     $<list>$ = current_program->exec_list;
     current_program->exec_list = NULL;
   }
+  {
+    $<tree>$ = CB_TREE (current_statement);
+    current_statement->need_terminator = 1;
+    current_statement = NULL;
+  }
   statements
   {
     $$ = make_sequence (list_reverse (current_program->exec_list));
     current_program->exec_list = $<list>1;
+    current_statement = CB_STATEMENT ($<tree>2);
   }
 ;
 statements:
@@ -1617,7 +1624,8 @@ statement:
  */
 
 accept_statement:
-  ACCEPT save_location accept_body end_accept
+  ACCEPT			{ BEGIN_STATEMENT ("ACCEPT"); }
+  accept_body end_accept
 ;
 accept_body:
   data_name at_line_column
@@ -1698,13 +1706,12 @@ column_number:
  */
 
 add_statement:
-  ADD save_location add_body on_size_error
+  ADD				{ BEGIN_STATEMENT ("ADD"); }
+  add_body on_size_error
+  end_add
   {
     push_sequence_with_handler ($<tree>3, $4);
-
-    SET_TERMINATOR ($2, $4);
   }
-  end_add
 ;
 add_body:
   numeric_value_list TO numeric_name_list
@@ -1724,7 +1731,7 @@ add_to:
 | TO numeric_value		{ list_add ($<list>0, $2); }
 ;
 end_add:
-  /* empty */			{ terminator_warning ("ADD"); }
+  /* empty */			{ terminator_warning (); }
 | END_ADD
 ;
 
@@ -1748,18 +1755,16 @@ _proceed_to: | PROCEED TO ;
  */
 
 call_statement:
-  CALL save_location
+  CALL	 			{ BEGIN_STATEMENT ("CALL"); }
   data_name call_using call_returning
   call_on_exception call_not_on_exception
+  end_call
   {
     cb_tree x = $<tree>6 ? $<tree>6 : make_funcall_0 ("cob_call_error");
     push_funcall_4 ("@call", $3, $<list>4, x, $<tree>7);
     if ($<tree>5)
       push (build_move (cb_return_code, $<tree>5));
-
-    SET_TERMINATOR ($2, $<tree>6 || $<tree>7);
   }
-  end_call
 ;
 call_using:
   /* empty */		{ $<list>$ = NULL; }
@@ -1798,7 +1803,7 @@ call_not_on_exception:
   statement_list	{ $<tree>$ = $4; }
 ;
 end_call:
-  /* empty */		{ terminator_warning ("CALL"); }
+  /* empty */		{ terminator_warning (); }
 | END_CALL
 ;
 
@@ -1808,7 +1813,8 @@ end_call:
  */
 
 cancel_statement:
-  CANCEL save_location cancel_list
+  CANCEL			{ BEGIN_STATEMENT ("CANCEL"); }
+  cancel_list
 ;
 cancel_list:
 | cancel_list data_name
@@ -1823,7 +1829,8 @@ cancel_list:
  */
 
 close_statement:
-  CLOSE save_location close_list
+  CLOSE				{ BEGIN_STATEMENT ("CLOSE"); }
+  close_list
 ;
 close_list:
 | close_list file_name close_option
@@ -1851,13 +1858,12 @@ reel_or_unit: REEL | UNIT ;
  */
 
 compute_statement:
-  COMPUTE save_location compute_body on_size_error
+  COMPUTE			{ BEGIN_STATEMENT ("COMPUTE"); }
+  compute_body on_size_error
+  end_compute
   {
     push_sequence_with_handler ($<tree>3, $4);
-
-    SET_TERMINATOR ($2, $4);
   }
-  end_compute
 ;
 compute_body:
   numeric_edited_name_list '=' numeric_expr
@@ -1866,7 +1872,7 @@ compute_body:
   }
 ;
 end_compute:
-  /* empty */			{ terminator_warning ("COMPUTE"); }
+  /* empty */			{ terminator_warning (); }
 | END_COMPUTE
 ;
 
@@ -1876,18 +1882,17 @@ end_compute:
  */
 
 delete_statement:
-  DELETE save_location file_name _record opt_invalid_key
+  DELETE			{ BEGIN_STATEMENT ("DELETE"); }
+  file_name _record opt_invalid_key
+  end_delete
   {
     cb_tree file = cb_ref ($3);
     push_funcall_1 ("cob_delete", file);
     push_file_handler (file, $5);
-
-    SET_TERMINATOR ($2, $5);
   }
-  end_delete
 ;
 end_delete:
-  /* empty */			{ terminator_warning ("DELETE"); }
+  /* empty */			{ terminator_warning (); }
 | END_DELETE
 ;
 
@@ -1897,7 +1902,8 @@ end_delete:
  */
 
 display_statement:
-  DISPLAY save_location opt_value_list display_upon at_line_column
+  DISPLAY			{ BEGIN_STATEMENT ("DISPLAY"); }
+  opt_value_list display_upon at_line_column
   {
     struct cb_list *l;
     if (current_program->flag_screen)
@@ -1962,13 +1968,12 @@ end_display:
  */
 
 divide_statement:
-  DIVIDE save_location divide_body on_size_error
+  DIVIDE			{ BEGIN_STATEMENT ("DIVIDE"); }
+  divide_body on_size_error
+  end_divide
   {
     push_sequence_with_handler ($<tree>3, $4);
-
-    SET_TERMINATOR ($2, $4);
   }
-  end_divide
 ;
 divide_body:
   numeric_value INTO numeric_name_list
@@ -1995,7 +2000,7 @@ divide_body:
   }
 ;
 end_divide:
-  /* empty */			{ terminator_warning ("DIVIDE"); }
+  /* empty */			{ terminator_warning (); }
 | END_DIVIDE
 ;
 
@@ -2005,7 +2010,8 @@ end_divide:
  */
 
 entry_statement:
-  ENTRY save_location literal using_phrase
+  ENTRY				{ BEGIN_STATEMENT ("ENTRY"); }
+  literal using_phrase
   {
     push_entry (CB_LITERAL ($3)->data, $4);
   }
@@ -2017,13 +2023,12 @@ entry_statement:
  */
 
 evaluate_statement:
-  EVALUATE save_location evaluate_subject_list evaluate_case_list
+  EVALUATE			{ BEGIN_STATEMENT ("EVALUATE"); }
+  evaluate_subject_list evaluate_case_list
+  end_evaluate
   {
     push (build_evaluate ($<list>3, $<list>4));
-
-    SET_TERMINATOR ($2, 1);
   }
-  end_evaluate
 ;
 
 evaluate_subject_list:
@@ -2066,7 +2071,7 @@ evaluate_object:
 | TOK_FALSE			{ $<tree>$ = cb_false; }
 ;
 end_evaluate:
-  /* empty */			{ terminator_warning ("EVALUATE"); }
+  /* empty */			{ terminator_warning (); }
 | END_EVALUATE
 ;
 
@@ -2076,11 +2081,12 @@ end_evaluate:
  */
 
 exit_statement:
-  EXIT				{ /* nothing */ }
-| EXIT PROGRAM
-  {
-    push_funcall_0 ("@exit-program");
-  }
+  EXIT				{ BEGIN_STATEMENT ("EXIT"); }
+  exit_body
+;
+exit_body:
+  /* empty */			{ /* nothing */ }
+| PROGRAM			{ push_funcall_0 ("@exit-program"); }
 ;
 
 
@@ -2089,7 +2095,8 @@ exit_statement:
  */
 
 goto_statement:
-  GO _to save_location procedure_name_list goto_depending
+  GO _to			{ BEGIN_STATEMENT ("GO TO"); }
+  procedure_name_list goto_depending
   {
     if ($<tree>5)
       {
@@ -2102,7 +2109,7 @@ goto_statement:
 	if ($4 == NULL)
 	  cb_obsolete_85 ("GO TO without procedure-name");
 	else if ($4->next)
-	  cb_error_x ($3, _("GO TO with multiple procesure-name"));
+	  cb_error (_("GO TO with multiple procesure-name"));
 	else
 	  push_funcall_1 ("@goto", $4->item);
       }
@@ -2119,7 +2126,7 @@ goto_depending:
  */
 
 goback_statement:
-  GOBACK
+  GOBACK			{ BEGIN_STATEMENT ("GOBACK"); }
   {
     push_funcall_0 ("@exit-program");
   }
@@ -2131,13 +2138,12 @@ goback_statement:
  */
 
 if_statement:
-  IF save_location condition _then statement_list if_else_sentence
+  IF				{ BEGIN_STATEMENT ("IF"); }
+  condition _then statement_list if_else_sentence
+  end_if
   {
     push (make_if ($3, $5, $<tree>6));
-
-    SET_TERMINATOR ($2, 1);
   }
-  end_if
 | IF error END_IF
 ;
 if_else_sentence:
@@ -2145,7 +2151,7 @@ if_else_sentence:
 | ELSE statement_list		{ $<tree>$ = $2; }
 ;
 end_if:
-  /* empty */			{ terminator_warning ("IF"); }
+  /* empty */			{ terminator_warning (); }
 | END_IF
 ;
 
@@ -2155,7 +2161,8 @@ end_if:
  */
 
 initialize_statement:
-  INITIALIZE save_location data_name_list initialize_replacing
+  INITIALIZE			{ BEGIN_STATEMENT ("INITIALIZE"); }
+  data_name_list initialize_replacing
   {
     struct cb_list *l;
     for (l = $3; l; l = l->next)
@@ -2191,7 +2198,8 @@ _data: | DATA ;
  */
 
 inspect_statement:
-  INSPECT save_location data_name inspect_list
+  INSPECT			{ BEGIN_STATEMENT ("INSPECT"); }
+  data_name inspect_list
 ;
 inspect_list:
 | inspect_list inspect_item
@@ -2335,7 +2343,8 @@ _initial: | TOK_INITIAL ;
  */
 
 merge_statement:
-  MERGE save_location file_name sort_key_list sort_collating
+  MERGE				{ BEGIN_STATEMENT ("MERGE"); }
+  file_name sort_key_list sort_collating
   {
     push_funcall_2 ("@sort-init", $3, $<list>4);
     $<tree>$ = $3; /* used in sort_input, sort_output */
@@ -2349,16 +2358,20 @@ merge_statement:
  */
 
 move_statement:
-  MOVE save_location value TO data_name_list
+  MOVE				{ BEGIN_STATEMENT ("MOVE"); }
+  move_body
+;
+move_body:
+  value TO data_name_list
   {
     struct cb_list *l;
-    for (l = $5; l; l = l->next)
-      push (build_move ($3, l->item));
+    for (l = $3; l; l = l->next)
+      push (build_move ($1, l->item));
   }
-| MOVE save_location CORRESPONDING group_name TO group_name
+| CORRESPONDING group_name TO group_name
   {
-    if ($4 != cb_error_node && $6 != cb_error_node)
-      push (build_corresponding (build_move, $4, $6, -1));
+    if ($2 != cb_error_node && $4 != cb_error_node)
+      push (build_corresponding (build_move, $2, $4, -1));
   }
 ;
 
@@ -2368,13 +2381,12 @@ move_statement:
  */
 
 multiply_statement:
-  MULTIPLY save_location multiply_body on_size_error
+  MULTIPLY			{ BEGIN_STATEMENT ("MULTIPLY"); }
+  multiply_body on_size_error
+  end_multiply
   {
     push_sequence_with_handler ($<tree>3, $4);
-
-    SET_TERMINATOR ($2, $4);
   }
-  end_multiply
 ;
 multiply_body:
   numeric_value BY numeric_name_list
@@ -2387,7 +2399,7 @@ multiply_body:
   }
 ;
 end_multiply:
-  /* empty */			{ terminator_warning ("MULTIPLY"); }
+  /* empty */			{ terminator_warning (); }
 | END_MULTIPLY
 ;
 
@@ -2397,7 +2409,8 @@ end_multiply:
  */
 
 open_statement:
-  OPEN save_location open_list
+  OPEN				{ BEGIN_STATEMENT ("OPEN"); }
+  open_list
 ;
 open_list:
 | open_list open_mode file_name_list
@@ -2424,15 +2437,19 @@ open_mode:
  */
 
 perform_statement:
-  PERFORM save_location perform_procedure perform_option
+  PERFORM			{ BEGIN_STATEMENT ("PERFORM"); }
+  perform_body
+;
+perform_body:
+  perform_procedure perform_option
   {
-    CB_PERFORM ($4)->body = $3;
-    push ($4);
+    CB_PERFORM ($2)->body = $1;
+    push ($2);
   }
-| PERFORM save_location perform_option statement_list end_perform
+| perform_option statement_list end_perform
   {
-    CB_PERFORM ($3)->body = $4;
-    push ($3);
+    CB_PERFORM ($1)->body = $2;
+    push ($1);
   }
 ;
 end_perform:
@@ -2507,8 +2524,9 @@ perform_varying:
  */
 
 read_statement:
-  READ save_location
+  READ				{ BEGIN_STATEMENT ("READ"); }
   file_name flag_next _record read_into read_key read_handler
+  end_read
   {
     cb_tree file = cb_ref ($3);
     cb_tree key = $<tree>7;
@@ -2527,10 +2545,7 @@ read_statement:
     if ($<tree>6)
       push (build_move (CB_TREE (CB_FILE (file)->record), $<tree>6));
     push_file_handler (file, $<tree>8);
-
-    SET_TERMINATOR ($2, $<tree>8);
   }
-  end_read
 ;
 read_into:
   /* empty */			{ $<tree>$ = NULL; }
@@ -2546,7 +2561,7 @@ read_handler:
 | invalid_key			{ $<tree>$ = $1; }
 ;
 end_read:
-  /* empty */			{ terminator_warning ("READ"); }
+  /* empty */			{ terminator_warning (); }
 | END_READ
 ;
 
@@ -2556,7 +2571,7 @@ end_read:
  */
 
 release_statement:
-  RELEASE save_location
+  RELEASE			{ BEGIN_STATEMENT ("RELEASE"); }
   record_name write_from
   {
     cb_tree file = CB_TREE (CB_FIELD (cb_ref ($3))->file);
@@ -2572,20 +2587,19 @@ release_statement:
  */
 
 return_statement:
-  RETURN save_location file_name _record read_into at_end
+  RETURN			{ BEGIN_STATEMENT ("RETURN"); }
+  file_name _record read_into at_end
+  end_return
   {
     cb_tree file = cb_ref ($3);
     push_funcall_2 ("cob_read", file, cb_int0);
     if ($<tree>5)
       push (build_move (CB_TREE (CB_FILE (file)->record), $<tree>5));
     push_file_handler (file, $6);
-
-    SET_TERMINATOR ($2, $6);
   }
-  end_return
 ;
 end_return:
-  /* empty */			{ terminator_warning ("RETURN"); }
+  /* empty */			{ terminator_warning (); }
 | END_RETURN
 ;
 
@@ -2595,21 +2609,19 @@ end_return:
  */
 
 rewrite_statement:
-  REWRITE save_location
+  REWRITE			{ BEGIN_STATEMENT ("REWRITE"); }
   record_name write_from opt_invalid_key
+  end_rewrite
   {
     cb_tree file = CB_TREE (CB_FIELD (cb_ref ($3))->file);
     if ($4)
       push (build_move ($4, $3));
     push_funcall_2 ("cob_rewrite", file, $3);
     push_file_handler (file, $5);
-
-    SET_TERMINATOR ($2, $5);
   }
-  end_rewrite
 ;
 end_rewrite:
-  /* empty */			{ terminator_warning ("REWRITE"); }
+  /* empty */			{ terminator_warning (); }
 | END_REWRITE
 ;
 
@@ -2619,10 +2631,8 @@ end_rewrite:
  */
 
 search_statement:
-  SEARCH save_location search_body
-  {
-    SET_TERMINATOR ($2, 1);
-  }
+  SEARCH			{ BEGIN_STATEMENT ("SEARCH"); }
+  search_body
   end_search
 ;
 search_body:
@@ -2661,7 +2671,7 @@ search_all_when:
   }
 ;
 end_search:
-  /* empty */			{ terminator_warning ("SEARCH"); }
+  /* empty */			{ terminator_warning (); }
 | END_SEARCH
 ;
 
@@ -2671,7 +2681,8 @@ end_search:
  */
 
 set_statement:
-  SET save_location set_body
+  SET				{ BEGIN_STATEMENT ("SET"); }
+  set_body
 ;
 set_body:
   data_name_list TO numeric_value
@@ -2731,7 +2742,8 @@ set_on_off:
  */
 
 sort_statement:
-  SORT save_location file_name sort_key_list sort_duplicates sort_collating
+  SORT				{ BEGIN_STATEMENT ("SORT"); }
+  file_name sort_key_list sort_duplicates sort_collating
   {
     push_funcall_2 ("@sort-init", $3, $<list>4);
     $<tree>$ = $3; /* used in sort_input, sort_output */
@@ -2798,18 +2810,17 @@ sort_output:
  */
 
 start_statement:
-  START save_location file_name	{ $<ival>$ = COB_EQ; }
+  START				{ BEGIN_STATEMENT ("START"); }
+  file_name			{ $<ival>$ = COB_EQ; }
   start_key opt_invalid_key
+  end_start
   {
     cb_tree file = cb_ref ($3);
     if ($<tree>5 == NULL)
       $<tree>5 = CB_FILE (file)->key;
     push_funcall_3 ("cob_start", file, make_integer ($<ival>4), $<tree>5);
     push_file_handler (file, $6);
-
-    SET_TERMINATOR ($2, $6);
   }
-  end_start
 ;
 start_key:
   /* empty */			{ $<tree>$ = NULL; }
@@ -2823,7 +2834,7 @@ start_op:
 | flag_not less_or_equal	{ $<ival>$ = $1 ? COB_GT : COB_LE; }
 ;
 end_start:
-  /* empty */			{ terminator_warning ("START"); }
+  /* empty */			{ terminator_warning (); }
 | END_START
 ;
 
@@ -2833,7 +2844,7 @@ end_start:
  */
 
 stop_statement:
-  STOP RUN
+  STOP RUN			{ BEGIN_STATEMENT ("STOP"); }
   {
     push_funcall_0 ("cob_stop_run");
   }
@@ -2849,17 +2860,15 @@ stop_statement:
  */
 
 string_statement:
-  STRING save_location
+  STRING			{ BEGIN_STATEMENT ("STRING"); }
   string_list INTO data_name opt_with_pointer on_overflow
+  end_string
   {
     struct cb_list *l = $<list>3;
     l = cons (make_funcall_2 ("cob_string_init", $5, $6), l);
     l = list_add (l, make_funcall_0 ("cob_string_finish"));
     push_sequence_with_handler (make_sequence (l), $7);
-
-    SET_TERMINATOR ($2, $7);
   }
-  end_string
 ;
 string_list:
   string_list_1			{ $<list>$ = $<list>1; }
@@ -2886,7 +2895,7 @@ opt_with_pointer:
 ;
 
 end_string:
-  /* empty */			{ terminator_warning ("STRING"); }
+  /* empty */			{ terminator_warning (); }
 | END_STRING
 ;
 
@@ -2896,13 +2905,12 @@ end_string:
  */
 
 subtract_statement:
-  SUBTRACT save_location subtract_body on_size_error
+  SUBTRACT			{ BEGIN_STATEMENT ("SUBTRACT"); }
+  subtract_body on_size_error
+  end_subtract
   {
     push_sequence_with_handler ($<tree>3, $4);
-
-    SET_TERMINATOR ($2, $4);
   }
-  end_subtract
 ;
 subtract_body:
   numeric_value_list FROM numeric_name_list
@@ -2919,7 +2927,7 @@ subtract_body:
   }
 ;
 end_subtract:
-  /* empty */			{ terminator_warning ("SUBTRACT"); }
+  /* empty */			{ terminator_warning (); }
 | END_SUBTRACT
 ;
 
@@ -2929,9 +2937,10 @@ end_subtract:
  */
 
 unstring_statement:
-  UNSTRING save_location
+  UNSTRING			{ BEGIN_STATEMENT ("UNSTRING"); }
   data_name unstring_delimited INTO unstring_into
   opt_with_pointer unstring_tallying on_overflow
+  end_unstring
   {
     struct cb_list *l = $<list>4;
     l = cons (make_funcall_2 ("cob_unstring_init", $3, $7), l);
@@ -2940,10 +2949,7 @@ unstring_statement:
       l = list_add (l, make_funcall_1 ("cob_unstring_tallying", $<tree>8));
     l = list_add (l, make_funcall_0 ("cob_unstring_finish"));
     push_sequence_with_handler (make_sequence (l), $9);
-
-    SET_TERMINATOR ($2, $9);
   }
-  end_unstring
 ;
 
 unstring_delimited:
@@ -2990,7 +2996,7 @@ unstring_tallying:
 ;
 
 end_unstring:
-  /* empty */			{ terminator_warning ("UNSTRING"); }
+  /* empty */			{ terminator_warning (); }
 | END_UNSTRING
 ;
 
@@ -3027,8 +3033,9 @@ exception_or_error: EXCEPTION | ERROR ;
  */
 
 write_statement:
-  WRITE save_location
+  WRITE				{ BEGIN_STATEMENT ("WRITE"); }
   record_name write_from write_option write_exception
+  end_write
   {
     struct cb_field *f = CB_FIELD (cb_ref ($3));
     struct cb_parameter *p = $<tree>5 ? CB_PARAMETER ($<tree>5) : 0;
@@ -3057,10 +3064,7 @@ write_statement:
 	else
 	  push_funcall_1 ("cob_write_page", file);
       }
-
-    SET_TERMINATOR ($2, $<tree>6);
   }
-  end_write
 ;
 write_from:
   /* empty */			{ $$ = NULL; }
@@ -3090,7 +3094,7 @@ write_exception:
 | invalid_key			{ $<tree>$ = $1; }
 ;
 end_write:
-  /* empty */			{ terminator_warning ("WRITE"); }
+  /* empty */			{ terminator_warning (); }
 | END_WRITE
 ;
 
@@ -3941,17 +3945,6 @@ function:
  *******************/
 
 /*
- * Save location
- */
-
-save_location:
-  {
-    $$ = make_location (cb_source_file, cb_source_line);
-    push ($$);
-  }
-;
-
-/*
  * Common flags
  */
 
@@ -4154,9 +4147,10 @@ build_connective_op (struct cb_list *l, char op)
 
 
 static void
-terminator_warning (const char *name)
+terminator_warning (void)
 {
-  if (cb_warn_implicit_terminator && statement_location)
-    cb_warning_x (statement_location,
-		  _("%s statement not terminated by END-%s"), name, name);
+  if (cb_warn_implicit_terminator && current_statement->need_terminator)
+    cb_warning_x (CB_TREE (current_statement),
+		  _("%s statement not terminated by END-%s"),
+		  current_statement->name, current_statement->name);
 }

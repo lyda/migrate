@@ -307,21 +307,6 @@ tree_category (cb_tree x)
 
 
 /*
- * Location
- */
-
-cb_tree
-make_location (char *file, int line)
-{
-  struct cb_tree_common *p =
-    make_tree (cb_tag_location, COB_TYPE_UNKNOWN, sizeof (struct cb_tree_common));
-  p->source_file = file;
-  p->source_line = line;
-  return CB_TREE (p);
-}
-
-
-/*
  * Constants
  */
 
@@ -1955,6 +1940,22 @@ make_sequence (struct cb_list *list)
     make_tree (cb_tag_sequence, COB_TYPE_UNKNOWN, sizeof (struct cb_sequence));
   p->list = list;
   return CB_TREE (p);
+}
+
+
+/*
+ * Statement
+ */
+
+struct cb_statement *
+build_statement (const char *name)
+{
+  struct cb_statement *p =
+    make_tree (cb_tag_statement, COB_TYPE_UNKNOWN, sizeof (struct cb_statement));
+  p->name = name;
+  CB_TREE (p)->source_file = cb_source_file;
+  CB_TREE (p)->source_line = cb_source_line;
+  return p;
 }
 
 

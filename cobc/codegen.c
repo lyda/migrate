@@ -1776,13 +1776,15 @@ output_stmt (cb_tree x)
 {
   switch (CB_TREE_TAG (x))
     {
-    case cb_tag_location:
+    case cb_tag_statement:
       {
 	static int last_line = 0;
 	if (x->source_file && last_line != x->source_line)
 	  {
+	    struct cb_statement *p = CB_STATEMENT (x);
 	    if (cb_flag_line_directive)
 	      output ("#line %d \"%s\"\n", x->source_line, x->source_file);
+	    output_line ("/* %s */;", p->name);
 	    output_line ("cob_source_file = \"%s\";", x->source_file);
 	    output_line ("cob_source_line = %d;", x->source_line);
 	    last_line = x->source_line;
