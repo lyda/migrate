@@ -810,65 +810,35 @@ cob_binary_get_int64 (cob_field *f)
 void
 cob_binary_set_int (cob_field *f, int n)
 {
-  switch (f->size)
+  if (f->size <= 4)
     {
-    case 1:
-      *(unsigned char *) f->data = n;
-      break;
-    case 2:
       if (COB_FIELD_BINARY_SWAP (f))
-	n = COB_BSWAP_16 (n);
-      *(unsigned short *) f->data = n;
-      break;
-    case 3:
-      if (COB_FIELD_BINARY_SWAP (f))
-	n = COB_BSWAP_32 (n << 8);
-      *(unsigned short *) f->data = n;
-      *(unsigned char *) (f->data + 2) = n >> 16;
-      break;
-    case 4:
-      if (COB_FIELD_BINARY_SWAP (f))
-	n = COB_BSWAP_32 (n);
-      *(unsigned long *) f->data = n;
-      break;
-    default:
+	{
+	  n = COB_BSWAP_32 (n);
+	  memcpy (f->data, ((unsigned char *) &n) + 4 - f->size, f->size);
+	}
+      else
+	{
+	  memcpy (f->data, &n, f->size);
+	}
+    }
+  else
+    {
       cob_binary_set_int64 (f, n);
-      break;
     }
 }
 
 void
 cob_binary_set_int64 (cob_field *f, long long n)
 {
-  switch (f->size)
+  if (COB_FIELD_BINARY_SWAP (f))
     {
-    case 1: case 2: case 3: case 4:
-      cob_binary_set_int (f, n);
-      break;
-    case 5:
-      if (COB_FIELD_BINARY_SWAP (f))
-	n = COB_BSWAP_64 (n << 24);
-      *(unsigned long *) f->data = n;
-      *(unsigned char *) (f->data + 4) = n >> 32;
-      break;
-    case 6:
-      if (COB_FIELD_BINARY_SWAP (f))
-	n = COB_BSWAP_64 (n << 16);
-      *(unsigned long *) f->data = n;
-      *(unsigned short *) (f->data + 4) = n >> 32;
-      break;
-    case 7:
-      if (COB_FIELD_BINARY_SWAP (f))
-	n = COB_BSWAP_64 (n << 8);
-      *(unsigned long *) f->data = n;
-      *(unsigned short *) (f->data + 4) = n >> 32;
-      *(unsigned char *) (f->data + 6) = n >> 48;
-      break;
-    default:
-      if (COB_FIELD_BINARY_SWAP (f))
-	n = COB_BSWAP_64 (n);
-      *(unsigned long long *) f->data = n;
-      break;
+      n = COB_BSWAP_64 (n);
+      memcpy (f->data, ((unsigned char *) &n) + 8 - f->size, f->size);
+    }
+  else
+    {
+      memcpy (f->data, &n, f->size);
     }
 }
 

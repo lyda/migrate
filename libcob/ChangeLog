@@ -1,3 +1,8 @@
+2004-03-09  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
+
+	* move.c (cob_binary_set_int, cob_binary_set_int64): Reimplemented.
+	(Thanks to Roger While)
+
 2004-03-06  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
 
 	* fileio.c (file_open): Open files in the text mode for line
