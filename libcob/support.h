@@ -36,12 +36,14 @@ struct cob_frame {
 };
 
 #define cob_perform(id,from,until)			\
-  frame_index++;					\
-  frame_stack[frame_index].perform_through = until;	\
-  frame_stack[frame_index].return_address = &&l_##id;	\
-  goto from;						\
-  l_##id:						\
-  frame_index--
+  do {							\
+    frame_index++;					\
+    frame_stack[frame_index].perform_through = until;	\
+    frame_stack[frame_index].return_address = &&l_##id;	\
+    goto from;						\
+    l_##id:						\
+    frame_index--;					\
+  } while (0)
 
 #define cob_exit(label)					\
  if (frame_stack[frame_index].perform_through == label)	\
@@ -57,12 +59,14 @@ struct cob_frame {
 };
 
 #define cob_perform(id,from,until)			\
-  frame_index++;					\
-  frame_stack[frame_index].perform_through = until;	\
-  frame_stack[frame_index].perform_id = id;		\
-  goto from;						\
-  l_##id:						\
-  frame_index--
+  do {							\
+    frame_index++;					\
+    frame_stack[frame_index].perform_through = until;	\
+    frame_stack[frame_index].perform_id = id;		\
+    goto from;						\
+    l_##id:						\
+    frame_index--;					\
+  } while (0)
 
 #define cob_exit(label)					\
  if (frame_stack[frame_index].perform_through == label)	\
