@@ -405,6 +405,14 @@ lookup_reserved_word (const char *name)
 }
 
 void
+cb_list_reserved (void)
+{
+  int i;
+  for (i = 0; reserved_words[i].name; i++)
+    puts (reserved_words[i].name);
+}
+
+void
 cb_init_reserved (void)
 {
   int i;

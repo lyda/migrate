@@ -878,6 +878,7 @@ extern struct cb_program *cb_build_program (void);
 /* reserved.c */
 extern cb_tree lookup_system_name (const char *name);
 extern int lookup_reserved_word (const char *name);
+extern void cb_list_reserved (void);
 extern void cb_init_reserved (void);
 
 /* error.c */

@@ -190,6 +190,7 @@ static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'V'},
   {"verbose", no_argument, 0, 'v'},
+  {"list-reserved", no_argument, 0, 'R'},
   {"save-temps", no_argument, &save_temps, 1},
   {"std", required_argument, 0, '$'},
   {"conf", required_argument, 0, '&'},
@@ -234,6 +235,7 @@ print_usage (void)
   --help                Display this message\n\
   --version             Display compiler version\n\
   --verbose, -v         Display the programs invoked by the compiler\n\
+  --list-reserved       Display all reserved words\n\
   -save-temps           Do not delete intermediate files\n\
   -E                    Preprocess only; do not compile, assemble or link\n\
   -C                    Translation only; convert COBOL to C\n\
@@ -287,6 +289,7 @@ process_command_line (int argc, char *argv[])
 	case 'h':
 	case '?': print_usage (); exit (0);
 	case 'V': print_version (); exit (0);
+	case 'R': cb_list_reserved (); exit (0);
 
 	case 'E': cb_compile_level = CB_LEVEL_PREPROCESS; break;
 	case 'C': cb_compile_level = CB_LEVEL_TRANSLATE; break;
