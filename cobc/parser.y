@@ -907,38 +907,14 @@ opt_key_is:
      ;
 
 opt_indexed_by: 
-        opt_key_is INDEXED opt_by index_name_list
-          { 
-          /*define_implicit_field($4, $1, curr_field->times);*/
-           /* Fix Me: Does not work, thus dup vars can be defined
-           if ($4->defined) {
-              yyerror("variable redefined, '%s'",$4->name);
-              $4->defined=1;
-           }
-           else {
-              define_implicit_field($4, $1, curr_field->times);
-           } */
-          }
-         | /* nothing */
-         ;
-             
+    /* nothing */
+  | opt_key_is INDEXED opt_by index_name_list { }
+;
 index_name_list:
-        def_name        { 
-                  define_implicit_field($1, $<sval>-2, curr_field->times);
-                  /* Fix Me: Does not work, thus dup vars can be defined
-                  if ($4->defined) {
-                     yyerror("variable redefined, '%s'",$4->name);
-                     $4->defined=1;
-                  }
-                  else { 
-                     define_implicit_field($4, $1, curr_field->times);
-                  } */
-                } 
-        
-        | index_name_list def_name {
-          define_implicit_field($2,$<sval>-2,curr_field->times);
-         }  
-        ;
+    def_name { define_implicit_field ($1, $<sval>-2, curr_field->times); }
+  | index_name_list
+    def_name { define_implicit_field ($2, $<sval>-2, curr_field->times); }
+;
 
 picture_clause:
     PIC { start_condition = START_PICTURE; } PICTURE
