@@ -1,3 +1,10 @@
+2004-10-30  Roger While <simrw@sim-basis.de>
+
+	* configure.ac, configure (over autoconf) :
+	  Change entry point name check from __db_dbopen
+	  to __db_open. This fixes configuring against
+	  the NPTL versions of DB (eg. Red Hat, Suse)
+
 2004-08-02  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* Version 0.30 released.
