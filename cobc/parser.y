@@ -1490,8 +1490,8 @@ sentence_or_nothing:
  */
 
 exit_statement:
-  EXIT				{ gen_exit (0); }
-| EXIT PROGRAM			{ gen_exit (1); }
+  EXIT				{ gen_exit (); }
+| EXIT PROGRAM			{ gen_exit_program (); }
 ;
 
 

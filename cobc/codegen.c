@@ -4185,7 +4185,7 @@ close_section (void)
   if (curr_section)
     {
       fprintf (o_src, ".LE_%s:\n", label_name (curr_section));
-      gen_exit (0);
+      gen_exit ();
     }
 }
 
@@ -4226,7 +4226,7 @@ close_paragr (void)
   if (curr_paragr)
     {
       fprintf (o_src, ".LE_%s:\n", label_name (curr_paragr));
-      gen_exit (0);
+      gen_exit ();
       curr_paragr = NULL;
     }
 }
@@ -4248,32 +4248,31 @@ gen_stoprun (void)
 }
 
 void
-gen_exit (int code)
+gen_exit (void)
 {
-  if (code)
-    {
-      fprintf (o_src, "\tmovl\t-%d(%%ebp), %%ebx\n", stack_offset - 8 - 16);
-      fprintf (o_src, "\tmov\t%%ebp,%%esp\n");
-      fprintf (o_src, "\tpop\t%%ebp\n");
-      fprintf (o_src, "\tret\n");
-    }
+  int l1 = loc_label++;
+  int l2 = loc_label++;
+  if (curr_paragr != NULL)
+    fprintf (o_src, "\tleal\t.LE_%s, %%eax\n", label_name (curr_paragr));
   else
-    {
-      int l1 = loc_label++;
-      int l2 = loc_label++;
-      if (curr_paragr != NULL)
-	fprintf (o_src, "\tleal\t.LE_%s, %%eax\n", label_name (curr_paragr));
-      else
-	fprintf (o_src, "\tleal\t.LE_%s, %%eax\n", label_name (curr_section));
-      fprintf (o_src, "\tcmpl\t4(%%esp), %%eax\n");
-      fprintf (o_src, "\tjb\t\t.L%d\n", l1);
-      fprintf (o_src, "\tcmpl\t0(%%esp), %%eax\n");
-      fprintf (o_src, "\tjb\t\t.L%d\n", l2);
-      fprintf (o_src, ".L%d:\n", l1);
-      fprintf (o_src, "\taddl\t$8,%%esp\n");
-      fprintf (o_src, "\tret\n");
-      fprintf (o_src, ".L%d:\n", l2);
-    }
+    fprintf (o_src, "\tleal\t.LE_%s, %%eax\n", label_name (curr_section));
+  fprintf (o_src, "\tcmpl\t4(%%esp), %%eax\n");
+  fprintf (o_src, "\tjb\t\t.L%d\n", l1);
+  fprintf (o_src, "\tcmpl\t0(%%esp), %%eax\n");
+  fprintf (o_src, "\tjb\t\t.L%d\n", l2);
+  fprintf (o_src, ".L%d:\n", l1);
+  fprintf (o_src, "\taddl\t$8,%%esp\n");
+  fprintf (o_src, "\tret\n");
+  fprintf (o_src, ".L%d:\n", l2);
+}
+
+void
+gen_exit_program (void)
+{
+  fprintf (o_src, "\tmovl\t-%d(%%ebp), %%ebx\n", stack_offset - 8 - 16);
+  fprintf (o_src, "\tmov\t%%ebp,%%esp\n");
+  fprintf (o_src, "\tpop\t%%ebp\n");
+  fprintf (o_src, "\tret\n");
 }
 
 /* save variable values, including 88-var range/values list */
