@@ -67,21 +67,17 @@
 
 #include "libcob.h"
 
-#define bcounter	 5
-
 #define RETURN_STATUS(x)			\
   do {						\
-    cob_status = (x);				\
-    if (f->status)				\
-      {						\
-	f->status[0] = cob_status / 10 + '0';	\
-	f->status[1] = cob_status % 10 + '0';	\
-      }						\
-    return cob_status;				\
+    f->status[0] = x / 10 + '0';		\
+    f->status[1] = x % 10 + '0';		\
+    return;					\
   } while (0)
 
-int
-cob_open (struct cob_file_desc *f, int mode)
+char cob_dummy_status[2];
+
+void
+cob_open (struct cob_file_desc *f, struct cob_field name, int mode)
 {
   DBTYPE type = DB_BTREE;
   void *infop = NULL;
@@ -101,8 +97,7 @@ cob_open (struct cob_file_desc *f, int mode)
   alt_key.prefix = NULL;
   alt_key.lorder = 0;
 
-  cob_field_to_string ((struct cob_field) {f->filename_desc, f->filename_data},
-		       filename);
+  cob_field_to_string (name, filename);
 
   /* Check to see if the file is already open. If so return
      File Status 91 in according to the Ansi 74 Standard. */
@@ -111,10 +106,10 @@ cob_open (struct cob_file_desc *f, int mode)
 
   switch (mode)
     {
-    case FMOD_INPUT:
+    case COB_OPEN_INPUT:
       oflags = O_RDONLY;
       break;
-    case FMOD_IO:
+    case COB_OPEN_I_O:
       oflags = O_CREAT | O_RDWR;
       if (f->organization == COB_ORG_LINE_SEQUENTIAL)
 	{
@@ -122,11 +117,11 @@ cob_open (struct cob_file_desc *f, int mode)
 	  RETURN_STATUS (92);
 	}
       break;
-    case FMOD_OUTPUT:
+    case COB_OPEN_OUTPUT:
       /* libdb doesn't support O_WRONLY */
       oflags = O_CREAT | O_TRUNC | O_RDWR;
       break;
-    case FMOD_EXTEND:
+    case COB_OPEN_EXTEND:
       oflags = O_CREAT | O_RDWR | O_APPEND;
       break;
     }
@@ -176,7 +171,7 @@ cob_open (struct cob_file_desc *f, int mode)
       f->dbp = dbopen (filename, oflags, sflags, type, infop);
     }
   /* otherwise it is sequential or relative, save its file handle, converted */
-  else if ((f->organization == COB_ORG_LINE_SEQUENTIAL) && (mode == FMOD_INPUT))
+  else if ((f->organization == COB_ORG_LINE_SEQUENTIAL) && (mode == COB_OPEN_INPUT))
     f->dbp = (void *) fopen (filename, "r");
   else
     {
@@ -188,7 +183,7 @@ cob_open (struct cob_file_desc *f, int mode)
   if (!f->dbp)
     {
       // Check to see if optional
-      if (f->optional && mode == FMOD_INPUT)
+      if (f->optional && mode == COB_OPEN_INPUT)
 	{
 	  f->dbp = NULL;
 	  f->file_missing = 1;
@@ -213,7 +208,7 @@ cob_open (struct cob_file_desc *f, int mode)
   RETURN_STATUS (0);
 }
 
-int
+void
 cob_close (struct cob_file_desc *f)
 {
   /* Check to see if file is open. If not return File Status 91
@@ -246,7 +241,7 @@ cob_close (struct cob_file_desc *f)
   else
     {
       if ((f->organization == COB_ORG_LINE_SEQUENTIAL)
-	  && (f->open_mode == FMOD_INPUT))
+	  && (f->open_mode == COB_OPEN_INPUT))
 	fclose ((FILE *) f->dbp);
       else
 	close ((int) f->dbp);
@@ -255,7 +250,7 @@ cob_close (struct cob_file_desc *f)
   RETURN_STATUS (0);
 }
 
-int
+void
 cob_read (struct cob_file_desc *f, ...)
 {
   int result;
@@ -281,7 +276,7 @@ cob_read (struct cob_file_desc *f, ...)
 
   /* Check the mode the file is opened in to make sure that read
      is Allowed */
-  if (f->open_mode != FMOD_INPUT && f->open_mode != FMOD_IO)
+  if (f->open_mode != COB_OPEN_INPUT && f->open_mode != COB_OPEN_I_O)
     RETURN_STATUS (92);
 
   /* If there is a start record outstanding use it to fulfill the read */
@@ -390,7 +385,7 @@ cob_read (struct cob_file_desc *f, ...)
     }
 }
 
-int
+void
 cob_read_next (struct cob_file_desc *f)
 {
   int result;
@@ -409,7 +404,7 @@ cob_read_next (struct cob_file_desc *f)
 
   /* Check the mode the file is opened in to make sure that read
      is Allowed */
-  if (((f->open_mode != FMOD_INPUT) && (f->open_mode != FMOD_IO)))
+  if (((f->open_mode != COB_OPEN_INPUT) && (f->open_mode != COB_OPEN_I_O)))
     RETURN_STATUS (92);
 
   /* If there is a start record outstanding use it to fulfill the read */
@@ -466,7 +461,7 @@ cob_read_next (struct cob_file_desc *f)
   RETURN_STATUS (99);
 }
 
-int
+void
 cob_write (struct cob_file_desc *f, ...)
 {
   int result;
@@ -486,8 +481,8 @@ cob_write (struct cob_file_desc *f, ...)
 
   /* Check the mode the file is opened in to make sure that write
      is Allowed */
-  if (((f->open_mode != FMOD_OUTPUT) && (f->open_mode != FMOD_IO)
-       && (f->open_mode != FMOD_EXTEND)))
+  if (((f->open_mode != COB_OPEN_OUTPUT) && (f->open_mode != COB_OPEN_I_O)
+       && (f->open_mode != COB_OPEN_EXTEND)))
     RETURN_STATUS (92);
 
   data.data = f->record;
@@ -592,9 +587,9 @@ cob_write_lines (struct cob_file_desc *f, int lines)
   if (f->dbp == NULL)
     return;
 
-  if (f->open_mode != FMOD_OUTPUT
-      && f->open_mode != FMOD_IO
-      && f->open_mode != FMOD_EXTEND)
+  if (f->open_mode != COB_OPEN_OUTPUT
+      && f->open_mode != COB_OPEN_I_O
+      && f->open_mode != COB_OPEN_EXTEND)
     return;
 
   for (i = 0; i < lines; i++)
@@ -607,15 +602,15 @@ cob_write_page (struct cob_file_desc *f)
   if (f->dbp == NULL)
     return;
 
-  if (f->open_mode != FMOD_OUTPUT
-      && f->open_mode != FMOD_IO
-      && f->open_mode != FMOD_EXTEND)
+  if (f->open_mode != COB_OPEN_OUTPUT
+      && f->open_mode != COB_OPEN_I_O
+      && f->open_mode != COB_OPEN_EXTEND)
     return;
 
   write ((int) f->dbp, "\f", 1);
 }
 
-int
+void
 cob_start (struct cob_file_desc *f, int cond, ...)
 {
   int result;
@@ -637,7 +632,7 @@ cob_start (struct cob_file_desc *f, int cond, ...)
 
   /* Check the mode the file is opened in to make sure that start
      is Allowed */
-  if (((f->open_mode != FMOD_INPUT) && (f->open_mode != FMOD_IO)))
+  if (((f->open_mode != COB_OPEN_INPUT) && (f->open_mode != COB_OPEN_I_O)))
     RETURN_STATUS (92);
 
   switch (f->organization)
@@ -1060,7 +1055,7 @@ cob_start (struct cob_file_desc *f, int cond, ...)
     }
 }
 
-int
+void
 cob_rewrite (struct cob_file_desc *f, ...)
 {
   int result;
@@ -1081,7 +1076,7 @@ cob_rewrite (struct cob_file_desc *f, ...)
 
   /* Check the mode the file is opened in to make sure that rewrite
      is Allowed */
-  if (f->open_mode != FMOD_IO)
+  if (f->open_mode != COB_OPEN_I_O)
     RETURN_STATUS (92);
 
   switch (f->organization)
@@ -1175,7 +1170,7 @@ cob_rewrite (struct cob_file_desc *f, ...)
   RETURN_STATUS (0);
 }
 
-int
+void
 cob_delete (struct cob_file_desc *f, ...)
 {
   int result;
@@ -1193,7 +1188,7 @@ cob_delete (struct cob_file_desc *f, ...)
 
   /* Check the mode the file is opened in to make sure that delete
      is Allowed */
-  if (f->open_mode != FMOD_IO)
+  if (f->open_mode != COB_OPEN_I_O)
     RETURN_STATUS (92);
 
   switch (f->organization)

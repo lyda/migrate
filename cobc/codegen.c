@@ -916,23 +916,12 @@ output_file_name (struct cobc_file_name *f)
 	      f->cname, COBC_LITERAL (f->assign)->size);
     }
   output ("static struct cob_file_desc %s_desc = {", f->cname);
-  if (COBC_LITERAL_P (f->assign))
-    {
-      output ("&fn_%s_desc, ", f->cname);
-      output_quoted_string (COBC_LITERAL (f->assign)->str,
-			    COBC_LITERAL (f->assign)->size);
-    }
-  else
-    {
-      output ("&f_%s_desc, ", COBC_FIELD (f->assign)->cname);
-      output_location (f->assign);
-    }
-  output (", %d, f_%s_data, %d, %d, ",
+  output ("%d, f_%s_data, %d, %d, ",
 	  f->record->size, f->record->cname, f->organization, f->access_mode);
   if (f->status)
     output_location (f->status);
   else
-    output ("0");
+    output ("cob_dummy_status");
   output (", 0, 0, 0, %d, 0", f->optional);
   if (f->organization == COB_ORG_INDEXED)
     {

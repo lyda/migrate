@@ -1935,14 +1935,18 @@ open_option:
   {
     struct cobc_list *l;
     for (l = $2; l; l = l->next)
-      push_call_2 (COB_OPEN, l->item, make_integer ($1));
+      {
+	struct cobc_file_name *p = l->item;
+	push_call_3 (COB_OPEN, COBC_TREE (p), COBC_TREE (p->assign),
+		     make_integer ($1));
+      }
   }
 ;
 open_mode:
-  INPUT				{ $$ = 1; }
-| I_O				{ $$ = 2; }
-| OUTPUT			{ $$ = 3; }
-| EXTEND			{ $$ = 4; }
+  INPUT				{ $$ = COB_OPEN_INPUT; }
+| OUTPUT			{ $$ = COB_OPEN_OUTPUT; }
+| I_O				{ $$ = COB_OPEN_I_O; }
+| EXTEND			{ $$ = COB_OPEN_EXTEND; }
 ;
 
 

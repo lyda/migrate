@@ -268,14 +268,14 @@ extern void cob_accept_environment (struct cob_field f, struct cob_field env);
 #define COB_ACCESS_DYNAMIC	2
 #define COB_ACCESS_RANDOM	3
 
-#define FMOD_INPUT 		1
-#define FMOD_IO 		2
-#define FMOD_OUTPUT 		3
-#define FMOD_EXTEND 		4
+#define COB_OPEN_INPUT 		1
+#define COB_OPEN_OUTPUT		2
+#define COB_OPEN_I_O 		3
+#define COB_OPEN_EXTEND		4
+
+extern char cob_dummy_status[];
 
 struct cob_file_desc {
-  struct cob_field_desc *filename_desc;
-  unsigned char *filename_data;
   signed long reclen;		/* length of record */
   char *record;
   unsigned char organization;
