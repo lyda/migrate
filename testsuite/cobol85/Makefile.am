@@ -43,5 +43,5 @@ EXEC85: newcob.val
 	      -e 's/XXXXX058.*/"EXEC85.conf" ORGANIZATION LINE SEQUENTIAL./' \
 	      -e 's/ORGANIZATION SEQUENTIAL.*//'			     \
 	    > EXEC85.cob
-	cobc EXEC85.cob
+	cobc -main EXEC85.cob
 	@rm -f EXEC85.cob
