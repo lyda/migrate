@@ -12,16 +12,16 @@ This package contains the following subdirectories:
   testsuite     Test suite
 
 All programs excepts those in lib and libcob are distributed under
-the terms of GNU General Public License.  See COPYING for details.
+the GNU General Public License.  See COPYING for details.
 
-Programs those in lib and libcob are distributed under the terms
-of GNU Lesser General Public License.  See COPYING.LIB for details.
+Programs those in lib and libcob are distributed under the GNU
+Lesser General Public License.  See COPYING.LIB for details.
 
-See AUTHORS for the authors of each files.
+See AUTHORS for the author of each file.
 
 OpenCOBOL requires the following external libraries to be installed:
 
-  o GNU MP 3.1.1 or later
+  o GNU MP (libgmp) 3.1.1 or later
     http://swox.com/gmp/
 
     libgmp is used to implement decimal arithmetic.
@@ -31,12 +31,12 @@ OpenCOBOL requires the following external libraries to be installed:
 
     libltdl is used to implement dynamic CALL statements.
 
-  o Berkeley DB 2.0 or later
+  o Berkeley DB (libdb) 2.0 or later
     http://www.sleepycat.com/
 
     libdb is used to implement indexed file I/O.
 
-  o GNU Readline (optional)
+  o GNU Readline (libreadline) [optional]
     http://cnswww.cns.cwru.edu/~chet/readline/rltop.html
 
     Readline can be used for terminal input to implement
@@ -53,7 +53,7 @@ Generally, this must be done by the following commands:
   ./configure
   make install
 
-See HACKING for some developer's note.
+See HACKING for the developer's guide.
 
 See the following page for more information about OpenCOBOL:
 
