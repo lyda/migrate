@@ -127,55 +127,17 @@ extern void add_alternate_key (struct sym *sy, int duplicates);
 extern struct list *insert_list (struct list *l, void *item);
 extern void free_list (struct list *l);
 extern struct scr_info *alloc_scr_info (void);
-extern struct inspect_before_after *alloc_inspect_before_after (struct
-								inspect_before_after
-								*ba,
-								int
-								before_after,
-								struct sym
-								*var);
-extern struct converting_struct *alloc_converting_struct (struct sym *fromvar,
-							  struct sym *tovar,
-							  struct
-							  inspect_before_after
-							  *ba);
-extern struct tallying_list *alloc_tallying_list (struct tallying_list *tl,
-						  struct sym *count,
-						  struct tallying_for_list
-						  *tfl);
-extern struct tallying_for_list *alloc_tallying_for_list (struct
-							  tallying_for_list
-							  *tfl, int options,
-							  struct sym *forvar,
-							  struct
-							  inspect_before_after
-							  *ba);
-extern struct replacing_list *alloc_replacing_list (struct replacing_list *rl,
-						    int options,
-						    struct replacing_by_list
-						    *rbl, struct sym *byvar,
-						    struct
-						    inspect_before_after *ba);
-extern struct replacing_by_list *alloc_replacing_by_list (struct
-							  replacing_by_list
-							  *rbl,
-							  struct sym *replvar,
-							  struct sym *byvar,
-							  struct
-							  inspect_before_after
-							  *ba);
-extern struct unstring_delimited *alloc_unstring_delimited (short int all,
-							    struct sym *var);
-extern struct unstring_destinations *alloc_unstring_dest (struct sym *var,
-							  struct sym *delim,
-							  struct sym *count);
-extern struct string_from *alloc_string_from (struct sym *var,
-					      struct sym *delim);
-extern void gen_unstring (struct sym *var, struct unstring_delimited *delim,
-			  struct unstring_destinations *dest, struct sym *ptr,
-			  struct sym *tally);
-extern void gen_string (struct string_from *sf, struct sym *sy,
-			   struct sym *ptr);
+extern struct inspect_before_after *alloc_inspect_before_after (struct inspect_before_after *ba, int before_after, struct sym *var);
+extern struct converting_struct *alloc_converting_struct (struct sym *fromvar, struct sym *tovar, struct inspect_before_after *ba);
+extern struct tallying_list *alloc_tallying_list (struct tallying_list *tl, struct sym *count, struct tallying_for_list *tfl);
+extern struct tallying_for_list *alloc_tallying_for_list (struct tallying_for_list *tfl, int options, struct sym *forvar, struct inspect_before_after *ba);
+extern struct replacing_list *alloc_replacing_list (struct replacing_list *rl, int options, struct replacing_by_list *rbl, struct sym *byvar, struct inspect_before_after *ba);
+extern struct replacing_by_list *alloc_replacing_by_list (struct replacing_by_list *rbl, struct sym *replvar, struct sym *byvar, struct inspect_before_after *ba);
+extern struct unstring_delimited *alloc_unstring_delimited (short int all, struct sym *var);
+extern struct unstring_destinations *alloc_unstring_dest (struct sym *var, struct sym *delim, struct sym *count);
+extern struct string_from *alloc_string_from (struct sym *var, struct sym *delim);
+extern void gen_unstring (struct sym *var, struct unstring_delimited *delim, struct unstring_destinations *dest, struct sym *ptr, struct sym *tally);
+extern void gen_string (struct string_from *sf, struct sym *sy, struct sym *ptr);
 extern void gen_display_screen (struct sym *sy, int main);
 extern void gen_display (int dupon, int nl);
 extern void gen_gotoxy_expr (void);
@@ -187,54 +149,36 @@ extern void gen_accept_from_day_of_week (struct sym *sy);
 extern void gen_accept_from_inkey (struct sym *sy);
 extern void gen_accept_from_cmdline (struct sym *sy);
 extern void gen_accept_env_var (struct sym *sy, struct lit *v);
-extern struct perf_info *create_perf_info (struct sym *sy1, struct sym *sy2,
-					   unsigned long lj,
-					   unsigned long le);
+extern struct perf_info *create_perf_info (struct sym *sy1, struct sym *sy2, unsigned long lj, unsigned long le);
 extern struct perform_info *create_perform_info (void);
-extern char *check_perform_variables (struct sym *sy1,
-				      struct perform_info *pi1);
+extern char *check_perform_variables (struct sym *sy1, struct perform_info *pi1);
 extern struct sym *create_expr (char op, struct sym *left, struct sym *right);
 extern void free_expr (struct expr *e);
 extern void free_expr_list (void);
-extern struct math_var *create_mathvar_info (struct math_var *mv,
-					     struct sym *sy,
-					     unsigned int opt);
+extern struct math_var *create_mathvar_info (struct math_var *mv, struct sym *sy, unsigned int opt);
 extern struct math_ose *math_on_size_error0 (void);
 extern struct math_ose *math_on_size_error1 (struct math_ose *v);
 extern void math_on_size_error2 (void);
 extern void math_on_size_error3 (struct math_ose *v);
-extern struct math_ose *math_on_size_error4 (struct math_ose *v,
-					     unsigned long ty);
+extern struct math_ose *math_on_size_error4 (struct math_ose *v, unsigned long ty);
 extern void gen_add (struct sym *s1, struct sym *s2, int rnd);
 extern void gen_subtract (struct sym *s1, struct sym *s2, int rnd);
-extern void gen_multiply (struct sym *s1, struct sym *s2, struct sym *s3,
-			  int rnd);
-extern void gen_divide (struct sym *s1, struct sym *s2, struct sym *s3,
-			struct sym *s4, int rnd);
+extern void gen_multiply (struct sym *s1, struct sym *s2, struct sym *s3, int rnd);
+extern void gen_divide (struct sym *s1, struct sym *s2, struct sym *s3, struct sym *s4, int rnd);
 extern void gen_compute (struct math_var *vl1, struct sym *sy1, struct math_ose *ose);
-extern void gen_add1 (struct math_var *vl0, struct math_var *vl2,
-		      struct math_ose *v1);
-extern void gen_add2 (struct math_var *vl1, struct math_var *vl2,
-		      struct sym *sy1, struct math_ose *v1);
-extern void gen_subtract1 (struct math_var *vl0, struct math_var *vl2,
-			   struct math_ose *v1);
-extern void gen_subtract2 (struct math_var *vl1, struct math_var *vl2,
-			   struct sym *sy1, struct math_ose *v1);
-extern void gen_multiply1 (struct math_var *vl1, struct sym *sy1,
-			   struct math_ose *v1);
-extern void gen_multiply2 (struct math_var *vl1, struct sym *sy1,
-			   struct sym *sy2, struct math_ose *v1);
-extern void gen_divide1 (struct math_var *vl1, struct sym *sy1,
-			 struct math_ose *v1);
-extern void gen_divide2 (struct math_var *vl1, struct sym *sy1,
-			 struct sym *sy2, struct math_ose *v1);
+extern void gen_add1 (struct math_var *vl0, struct math_var *vl2, struct math_ose *v1);
+extern void gen_add2 (struct math_var *vl1, struct math_var *vl2, struct sym *sy1, struct math_ose *v1);
+extern void gen_subtract1 (struct math_var *vl0, struct math_var *vl2, struct math_ose *v1);
+extern void gen_subtract2 (struct math_var *vl1, struct math_var *vl2, struct sym *sy1, struct math_ose *v1);
+extern void gen_multiply1 (struct math_var *vl1, struct sym *sy1, struct math_ose *v1);
+extern void gen_multiply2 (struct math_var *vl1, struct sym *sy1, struct sym *sy2, struct math_ose *v1);
+extern void gen_divide1 (struct math_var *vl1, struct sym *sy1, struct math_ose *v1);
+extern void gen_divide2 (struct math_var *vl1, struct sym *sy1, struct sym *sy2, struct math_ose *v1);
 extern struct subref *make_subref (struct sym *sy, struct subref *subs);
 extern struct subref *create_subscript (struct sym *sy);
-extern struct subref *add_subscript_item (struct subref *subs, char op,
-					struct sym *item);
+extern struct subref *add_subscript_item (struct subref *subs, char op, struct sym *item);
 extern struct subref *add_subscript (struct subref *ref, struct subref *subs);
-extern struct refmod *create_refmoded_var (struct sym *sy, struct sym *syoff,
-					   struct sym *sylen);
+extern struct refmod *create_refmoded_var (struct sym *sy, struct sym *syoff, struct sym *sylen);
 extern void gen_subscripted (struct subref *subs);
 extern struct sym *get_variable_item (struct sym *sy);
 extern void gen_temp_storage (int size);
@@ -247,11 +191,9 @@ extern void gen_move (struct sym *sy_src, struct sym *sy_dst);
 extern void gen_movecorr (struct sym *sy1, struct sym *sy2);
 extern void gen_addcorr (struct sym *sy1, struct sym *sy2, int rnd);
 extern void gen_subtractcorr (struct sym *sy1, struct sym *sy2, int rnd);
-extern void gen_set (struct sym *idx, int which, struct sym *var,
-		     int adrof_idx, int adrof_var);
+extern void gen_set (struct sym *idx, int which, struct sym *var, int adrof_idx, int adrof_var);
 extern int gen_evaluate_start (void);
-extern int push_selection_subject_copy (int level, struct selsubject *ssbj,
-					int stkadd, int objtype);
+extern int push_selection_subject_copy (int level, struct selsubject *ssbj, int stkadd, int objtype);
 extern int selection_subject_type (int level, struct selsubject *ssbj);
 extern void gen_when_check (int level, struct selsubject *ssbj, int type, int endcase);
 extern void gen_bypass_when_case (int bypass);
@@ -278,14 +220,10 @@ extern void gen_perform_times (int lbl);
 extern void gen_perform_thru (struct sym *s1, struct sym *s2);
 extern void gen_perform (struct sym *sy);
 extern int save_pic_char (char c, int n);
-extern void gen_SearchLoopCheck (unsigned long lbl5, struct sym *syidx,
-				 struct sym *sytbl);
-extern void gen_SearchAllLoopCheck (unsigned long lbl3, struct sym *syidx,
-				    struct sym *sytbl, struct sym *syvar,
-				    unsigned long lstart, unsigned long lend);
+extern void gen_SearchLoopCheck (unsigned long lbl5, struct sym *syidx, struct sym *sytbl);
+extern void gen_SearchAllLoopCheck (unsigned long lbl3, struct sym *syidx, struct sym *sytbl, struct sym *syvar, unsigned long lstart, unsigned long lend);
 extern void define_implicit_field (struct sym *sy, struct sym *sykey, int idxlen);
-extern void Initialize_SearchAll_Boundaries (struct sym *sy,
-					     struct sym *syidx);
+extern void Initialize_SearchAll_Boundaries (struct sym *sy, struct sym *syidx);
 extern struct sym *determine_table_index_name (struct sym *sy);
 extern void define_field (int level, struct sym *sy);
 extern struct selsubject *save_sel_subject (struct selsubject *ssubj, int type);
@@ -330,8 +268,7 @@ extern void gen_sort (struct sym *f);
 extern void gen_open (int mode, struct sym *f);
 extern void gen_close_sort (struct sym *f);
 extern void gen_close (struct sym *f);
-extern int gen_reads (struct sym *f, struct sym *buf, struct sym *key,
-		      int next_prev, int sel);
+extern int gen_reads (struct sym *f, struct sym *buf, struct sym *key, int next_prev, int sel);
 extern void gen_return (struct sym *f, struct sym *buf);
 extern void gen_read (struct sym *f, struct sym *buf, struct sym *key);
 extern void gen_read_next (struct sym *f, struct sym *buf, int next_prev);
@@ -340,16 +277,13 @@ extern void gen_write (struct sym *r, int opt, struct sym *buf);
 extern void gen_rewrite (struct sym *r, struct sym *buf);
 extern void gen_start (struct sym *f, int cond, struct sym *key);
 extern void gen_delete (struct sym *f);
-extern void set_rec_varying_info (struct sym *f, struct lit *lmin,
-				  struct lit *lmax, struct sym *reclen);
+extern void set_rec_varying_info (struct sym *f, struct lit *lmin, struct lit *lmax, struct sym *reclen);
 extern void gen_check_varying (struct sym *f);
 extern void gen_push_using (struct sym *sy);
 extern void gen_save_using (struct sym *sy);
-extern unsigned long int gen_call (struct lit *v, int stack_size,
-				   int exceplabel, int notexceplabel);
+extern unsigned long int gen_call (struct lit *v, int stack_size, int exceplabel, int notexceplabel);
 extern int begin_on_except (void);
-extern void check_call_except (int excep, int notexcep, int exceplabel,
-			       int notexceplabel, int endlabel);
+extern void check_call_except (int excep, int notexcep, int exceplabel, int notexceplabel, int endlabel);
 extern void gen_initialize (struct sym *sy_start);
 extern void mark_actives (int first, int last);
 extern struct ginfo *ginfo_container0 (void);
@@ -358,11 +292,8 @@ extern void ginfo_container2 (struct ginfo *v, unsigned long ty);
 extern struct ginfo *ginfo_container3 (struct ginfo *v, unsigned long ty);
 extern void ginfo_container4 (struct ginfo *v);
 extern struct invalid_key_element *gen_before_invalid_key ();
-extern struct invalid_key_element *gen_after_invalid_key (struct
-							  invalid_key_element
-							  *p);
-extern struct invalid_keys *gen_invalid_keys (struct invalid_key_element *p1,
-					      struct invalid_key_element *p2);
+extern struct invalid_key_element *gen_after_invalid_key (struct invalid_key_element *p);
+extern struct invalid_keys *gen_invalid_keys (struct invalid_key_element *p1, struct invalid_key_element *p2);
 extern void gen_test_invalid_keys (struct invalid_keys *p);
 extern int sort_exref_compare (const void *z1, const void *z2);
 

@@ -316,6 +316,28 @@ clear_offsets ()
   tmpvar_max = 0;
 }
 
+static struct lit *
+save_special_literal (char val, char picc, char *nick)
+{
+  struct lit *v;
+  v = install_literal (nick);
+  if (v->type)
+    return NULL;		/* already saved */
+  v->decimals = 0;
+  v->type = picc;
+  v->nick = (char *) malloc (2);
+  v->nick[0] = val;
+  v->nick[1] = 0;
+  v->all = 0;
+  save_field_in_list ((struct sym *) v);
+  v->location = literal_offset;
+  v->sec_no = SEC_CONST;
+  literal_offset += 2;		/* we have only 1-char special literals */
+  v->descriptor = literal_offset;
+  literal_offset += 14;
+  return v;
+}
+
 static void
 define_special_fields ()
 {
@@ -1709,7 +1731,6 @@ save_literal (struct lit *v, int type)
   char *s;
   char *dp;
   int piclen;
-  //if (v->type) return; /* already saved */
   s = v->name;
   piclen = 3;			/* assume 'X'-only literal */
   if ((type == '9') && (*(v->name + v->len - 1) > '9'))
@@ -1724,9 +1745,7 @@ save_literal (struct lit *v, int type)
   else
     v->decimals = 0;
   if (type == 'X' && v->len > 255)
-    {
-      piclen += (v->len / 255) * 2;
-    }
+    piclen += (v->len / 255) * 2;
   v->type = type;
 	/****** save literal in fields list for later *******/
   save_field_in_list ((struct sym *) v);
@@ -1741,28 +1760,6 @@ save_literal (struct lit *v, int type)
 	/******** save address of field descriptor ********/
   v->descriptor = literal_offset;
   literal_offset += 11 + piclen;
-}
-
-struct lit *
-save_special_literal (char val, char picc, char *nick)
-{
-  struct lit *v;
-  v = install_literal (nick);
-  if (v->type)
-    return NULL;		/* already saved */
-  v->decimals = 0;
-  v->type = picc;
-  v->nick = (char *) malloc (2);
-  v->nick[0] = val;
-  v->nick[1] = 0;
-  v->all = 0;
-  save_field_in_list ((struct sym *) v);
-  v->location = literal_offset;
-  v->sec_no = SEC_CONST;
-  literal_offset += 2;		/* we have only 1-char special literals */
-  v->descriptor = literal_offset;
-  literal_offset += 14;
-  return v;
 }
 
 void
