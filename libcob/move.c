@@ -638,3 +638,14 @@ cob_mem_move (struct cob_field dst, unsigned char *src, int len)
   struct cob_field_desc fld = {len, 'X'};
   cob_move ((struct cob_field) {&fld, src}, dst);
 }
+
+int
+cob_to_int (struct cob_field f)
+{
+  int val;
+  struct cob_field_desc desc =
+    {4, 'B', f.desc->digits, f.desc->decimals, f.desc->have_sign};
+  struct cob_field temp = {&desc, (unsigned char *) &val};
+  cob_move (f, temp);
+  return val;
+}

@@ -281,24 +281,6 @@ cob_push_str (char *s, int decimals)
 }
 
 void
-cob_dis_check (struct cob_field f)
-{
-  int i;
-  int sign = get_sign (f);
-  int len = FIELD_LENGTH (f);
-  unsigned char *p = FIELD_BASE (f);
-  for (i = 0; i < len; i++)
-    if (!isdigit (p[i]))
-      {
-	if (cob_source_line)
-	  fprintf (stderr, "%s:%d: ", cob_source_file, cob_source_line);
-	fprintf (stderr, "\aerror: non-numeric value `%s'\n", p);
-	break;
-      }
-  put_sign (f, sign);
-}
-
-void
 cob_push_binary (struct cob_field f)
 {
   decimal d = grab_decimal ();

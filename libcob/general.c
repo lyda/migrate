@@ -23,6 +23,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -166,17 +167,56 @@ cob_init (int argc, char **argv)
   cob_source_line = 0;
 }
 
-int
-get_index (struct cob_field f)
+void
+cob_stop_run (void)
 {
-  int index;
-  struct cob_field_desc desc =
-    {4, 'B', f.desc->digits, f.desc->decimals, f.desc->have_sign};
-  struct cob_field temp = {&desc, (unsigned char *) &index};
-  cob_dis_check (f);
-  cob_move (f, temp);
-  return index;
+  exit (0);
 }
+
+void
+cob_runtime_error (char *fmt, ...)
+{
+  va_list ap;
+  va_start (ap, fmt);
+  if (cob_source_line)
+    fprintf (stderr, "%s:%d: ", cob_source_file, cob_source_line);
+  fputs ("\arun-time error: ", stderr);
+  vfprintf (stderr, fmt, ap);
+  fputs ("\n", stderr);
+  va_end (ap);
+}
+
+int
+cob_index (int i, int max)
+{
+  if (i < 1 || i > max)
+    {
+      cob_runtime_error ("index out of range `%d'", i);
+      return 0;
+    }
+  return i - 1;
+}
+
+void
+cob_check_numeric (struct cob_field f)
+{
+  int i;
+  int sign = get_sign (f);
+  int len = FIELD_LENGTH (f);
+  unsigned char *s = FIELD_BASE (f);
+  for (i = 0; i < len; i++)
+    if (!isdigit (s[i]))
+      {
+	cob_runtime_error ("non-numeric value `%s'", s);
+	break;
+      }
+  put_sign (f, sign);
+}
+
+
+/*
+ * Comparison
+ */
 
 int
 cob_str_cmp (struct cob_field f1, struct cob_field f2)

@@ -31,6 +31,7 @@
 
 extern int cobc_module_flag;
 extern int cobc_optimize_flag;
+extern int cobc_failsafe_flag;
 extern int cobc_link_style;
 
 extern FILE *yyin;

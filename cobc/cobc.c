@@ -46,6 +46,7 @@ extern int yy_bison_debug;
 
 int cobc_module_flag = 0;
 int cobc_optimize_flag = 0;
+int cobc_failsafe_flag = 1;
 int cobc_link_style = LINK_DYNAMIC;
 
 FILE *cobc_out;
@@ -229,10 +230,17 @@ process_command_line (int argc, char *argv[])
 	case 'S': compile_level = stage_compile; break;
 	case 'c': compile_level = stage_assemble; break;
 	case 'm': compile_level = stage_module; cobc_module_flag = 1; break;
-
-	case 'g': strcat (cob_cflags, " -g"); break;
-	case 'O': strcat (cob_cflags, " -O2"); cobc_optimize_flag = 1; break;
 	case 'o': output_name = strdup (optarg); break;
+
+	case 'g':
+	  strcat (cob_cflags, " -g");
+	  break;
+
+	case 'O':
+	  strcat (cob_cflags, " -O2");
+	  cobc_optimize_flag = 1;
+	  cobc_failsafe_flag = 0;
+	  break;
 
 	case '%':
 	  strcat (cobpp_flags, " -MT ");

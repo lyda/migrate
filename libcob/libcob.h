@@ -214,11 +214,16 @@ extern struct cob_field cob_quote;
 
 #define cob_cmp(x,y) ((x) - (y))
 
-#define cob_stop_run() exit (0)
-
 #define cob_exit_program() return 0
 
 /* functions */
+
+extern void cob_init (int argc, char **argv);
+extern void cob_stop_run (void);
+extern void cob_runtime_error (char *fmt, ...);
+
+extern int cob_index (int i, int max);
+extern void cob_check_numeric (struct cob_field f);
 
 extern int get_sign (struct cob_field f);
 extern void put_sign (struct cob_field f, int sign);
@@ -228,9 +233,8 @@ extern void cob_display (struct cob_field f);
 extern void cob_newline (void);
 extern void cob_move (struct cob_field f1, struct cob_field f2);
 extern void cob_mem_move (struct cob_field dst, unsigned char *src, int len);
-extern int get_index (struct cob_field f);
+extern int cob_to_int (struct cob_field f);
 
-extern void cob_dis_check (struct cob_field f);
 extern void cob_push_int (int n, int decimals);
 extern void cob_push_decimal (struct cob_field f);
 extern void cob_num_add (void);
@@ -240,7 +244,6 @@ extern void cob_set_int (struct cob_field f, int n);
 extern int cob_num_cmp (void);
 extern int cob_str_cmp (struct cob_field f1, struct cob_field f2);
 
-extern void cob_init (int argc, char **argv);
 extern void cob_set_library_path (const char *path);
 extern void *cob_resolve (const char *name);
 extern const char *cob_resolve_error (void);

@@ -248,7 +248,7 @@ cob_string (struct cob_field dst, ...)
       {
       case STRING_WITH_POINTER:
 	ptr = va_arg (ap, struct cob_field);
-	offset = get_index (ptr) - 1;
+	offset = cob_to_int (ptr) - 1;
 	if (offset < -1 || offset >= dst_size)
 	  goto overflow;
 	break;
@@ -331,7 +331,7 @@ cob_unstring (struct cob_field src, ...)
       {
       case UNSTRING_WITH_POINTER:
 	ptr = va_arg (ap, struct cob_field);
-	offset = get_index (ptr) - 1;
+	offset = cob_to_int (ptr) - 1;
 	if (offset < -1 || offset >= src_size)
 	  goto overflow;
 	break;

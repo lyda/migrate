@@ -305,7 +305,7 @@ output_index (cobc_tree x)
 	  {
 	  case USAGE_DISPLAY:
 	  case USAGE_PACKED:
-	    output_func_1 ("get_index", x);
+	    output_func_1 ("cob_to_int", x);
 	    break;
 	  case USAGE_BINARY:
 	  case USAGE_INDEX:
@@ -395,9 +395,15 @@ output_expr (cobc_tree x)
     default:
       {
 	if (COBC_FIELD_P (x) && COBC_FIELD (x)->usage == USAGE_BINARY)
-	  output_call_1 ("cob_push_binary", x);
+	  {
+	    output_call_1 ("cob_push_binary", x);
+	  }
 	else
-	  output_call_1 ("cob_push_decimal", x);
+	  {
+	    if (cobc_failsafe_flag)
+	      output_call_1 ("cob_check_numeric", x);
+	    output_call_1 ("cob_push_decimal", x);
+	  }
       }
     }
 }
@@ -714,12 +720,16 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
       /* field with subscripts */
       int i = p->indexes;
       struct cobc_field *f;
-      /* TODO: check subscripts overflow */
       output ("#define f_%s_data%s (f_%s_data + %d",
 	      p->cname, subscripts, p01->cname, p->offset);
       for (f = p; f; f = f->parent)
 	if (f->f.have_occurs)
-	  output (" + ((i%d) - 1) * %d", i--, f->size);
+	  {
+	    if (cobc_failsafe_flag)
+	      output (" + cob_index (i%d, %d) * %d", i--, f->occurs, f->size);
+	    else
+	      output (" + (i%d - 1) * %d", i--, f->size);
+	  }
       output (")\n");
     }
 
