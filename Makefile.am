@@ -31,5 +31,5 @@ upload:
 	    ../$(PACKAGE)_$(VERSION)-$(RELEASE).tar.gz \
 	    ../$(PACKAGE)_$(VERSION)-$(RELEASE)_i386.deb
 
-test:
-	@(cd testsuite && $(MAKE))
+check:
+	@(cd testsuite && $(MAKE) check)
