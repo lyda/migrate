@@ -338,24 +338,20 @@ lookup_label (struct sym *sy, struct sym *parent)
 struct sym *
 lookup_variable (struct sym *sy, struct sym *parent)
 {
-  struct sym *tmp;
-  //sy = lookup(sy->name,SYTB_VAR);
-  if (parent->litflag == 2)
+  if (SUBREF_P (parent))
+    parent = SUBREF_SYM (parent);
+
+  for (;;)
     {
-      parent = (struct sym *) ((struct vref *) parent)->sym;
-    }
-  while (1)
-    {
-      tmp = sy;
-      while (tmp && tmp->parent != parent)
-	tmp = tmp->parent;
-      if (tmp && tmp->parent == parent)
-	break;
+      struct sym *p;
+      for (p = sy; p != NULL; p = p->parent)
+	if (p->parent == parent)
+	  return sy;
+
       if (sy->clone == NULL)
-	break;
+	return sy;
       sy = sy->clone;
     }
-  return sy;
 }
 
 struct sym *
@@ -2320,59 +2316,30 @@ check_perform_variables (struct sym *sy1, struct perform_info *pi1)
 
 /******** structure allocation for math verbs variables ***********/
 
-struct expr *
-create_expr (char op, struct expr *left, struct expr *right)
+struct sym *
+create_expr (char op, struct sym *left, struct sym *right)
 {
+  struct expr *left_expr = (struct expr *) left;
+  struct expr *right_expr = (struct expr *) right;
   struct expr *e = malloc (sizeof (struct expr));
-  struct list *list = (struct list *) malloc (sizeof (struct list));
+  struct list *list = malloc (sizeof (struct list));
   e->litflag = 5;
-
-#ifdef COB_DEBUG
-  if (cob_trace_codegen)
-    {
-      fprintf (stderr, "create_expr: [0x%x] %c ", (int) e, op);
-      if (left->litflag < 2)
-	fprintf (stderr, "%s ", ((struct sym *) left)->name);
-      else
-	fprintf (stderr, "0x%x ", (int) left);
-      if (right->litflag < 2)
-	fprintf (stderr, "%s\n", ((struct sym *) right)->name);
-      else
-	fprintf (stderr, "0x%x\n", (int) right);
-    }
-#endif
-
   e->op = op;
-  e->left = left;
-  e->right = right;
+  e->left = left_expr;
+  e->right = right_expr;
   expr_list = list;
   list->next = NULL;
   list->var = e;
-  return e;
+  return (struct sym *) e;
 }
 
 void
 free_expr (struct expr *e)
 {
-  if ((e != NULL) && (e->litflag == 5))
+  if (e && EXPR_P (e))
     {
-#ifdef COB_DEBUG
-      if (cob_trace_codegen)
-	{
-	  fprintf (stderr, "free_expr: %c (%d,%d) ", e->op,
-		   e->left->litflag, e->right->litflag);
-	  if (e->left->litflag < 2)
-	    fprintf (stderr, "%s ", ((struct sym *) e->left)->name);
-	  else
-	    fprintf (stderr, "0x%x ", (int) e->left);
-	  if (e->right->litflag < 2)
-	    fprintf (stderr, "%s\n", ((struct sym *) e->right)->name);
-	  else
-	    fprintf (stderr, "0x%x\n", (int) e->right);
-	}
-#endif
-      free_expr (e->right);
-      free_expr (e->left);
+      free_expr (EXPR_LEFT (e));
+      free_expr (EXPR_RIGHT (e));
       free (e);
     }
 }
@@ -2784,15 +2751,14 @@ static enum num_type
   NUM_INT32,
   NUM_INT64,
   NUM_DOUBLE
-}
-numeric_type = NUM_NAN;
+} numeric_type = NUM_NAN;
 
 /* NOTE: This function doesn't have any effect right now */
 static void
 set_numeric_type (struct sym *sy)
 {
-  if (sy->litflag == 2)
-    sy = ((struct vref *) sy)->sym;
+  if (SUBREF_P (sy))
+    sy = SUBREF_SYM (sy);
 
   switch (sy->type)
     {
@@ -3143,22 +3109,13 @@ check_subscripts (struct sym *subs)
 {
   struct vref *ref;
   struct sym *sy;
-  sy = ((struct vref *) subs)->sym;
+  sy = SUBREF_SYM (subs);
   for (ref = (struct vref *) subs; ref; ref = ref->next)
     {
-
-//#ifdef COB_DEBUG
-//              fprintf(stderr,"check_subscripts: symbol: %s, op: '%c'\n",
-//                      ((struct sym *)ref->sym)->name, 
-//                      ref->litflag == 2 ? 2 : ref->litflag );
-//#endif
-
       if (ref->litflag == ',')
 	{
 	  while (sy && !sy->occurs_flg)
-	    {
-	      sy = sy->parent;
-	    }
+	    sy = sy->parent;
 	  if (!sy)
 	    {
 	      yyerror ("check_subscripts: no parent found");
@@ -3203,8 +3160,8 @@ check_refmods (struct sym *var)
   struct refmod *ref = (struct refmod *) var;
   struct sym *sy = ref->sym;
 
-  if (sy->litflag == 2)
-    sy = ((struct vref *) sy)->sym;
+  if (SUBREF_P (sy))
+    sy = SUBREF_SYM (sy);
 
   return (sy == NULL) ? 1 : 0;
 }
@@ -3498,10 +3455,10 @@ loadloc_to_eax (struct sym *sy_p)
 #endif
   if (sy->litflag == 4)
     sy = ((struct refmod *) sy)->sym;	// temp bypass
-  if (sy->litflag == 2)
+  if (SUBREF_P (sy))
     {
       gen_subscripted ((struct vref *) sy);
-      var = (struct sym *) ((struct vref *) sy)->sym;
+      var = SUBREF_SYM (sy);
       if (var->linkage_flg)
 	{
 	  tmp = var;
@@ -3594,13 +3551,11 @@ void
 gen_loaddesc1 (struct sym *sy, int variable_length)
 {
   struct sym *var;
-  if (sy->litflag == 2 || sy->litflag == 4)
+  if (SUBREF_P (sy) || sy->litflag == 4)
     {
-      var = ((struct vref *) sy)->sym;
-      if (var->litflag == 2)
-	{
-	  var = ((struct vref *) var)->sym;
-	}
+      var = SUBREF_SYM (sy);
+      if (SUBREF_P (var))
+	var = SUBREF_SYM (var);
     }
   else
     {
@@ -3672,11 +3627,11 @@ gen_loadvar (struct sym *sy)
     push_immed (0);
   else
     {
-      if (sy->litflag == 2 || sy->litflag == 4)
+      if (SUBREF_P (sy) || sy->litflag == 4)
 	{
-	  var = ((struct vref *) sy)->sym;
-	  if (var->litflag == 2)
-	    var = ((struct vref *) var)->sym;
+	  var = SUBREF_SYM (sy);
+	  if (SUBREF_P (var))
+	    var = SUBREF_SYM (var);
 	}
       else
 	{
@@ -3697,10 +3652,10 @@ gen_loadval (struct sym *sy)
 #ifdef COB_DEBUG
   fprintf (o_src, "#gen_loadval\n");
 #endif
-  if (sy->litflag == 2)
+  if (SUBREF_P (sy))
     {
       gen_subscripted ((struct vref *) sy);
-      var = (struct sym *) ((struct vref *) sy)->sym;
+      var = SUBREF_SYM (sy);
       if (var->linkage_flg)
 	{
 	  tmp = var;
@@ -3748,10 +3703,10 @@ gen_pushval (struct sym *sy)
 #ifdef COB_DEBUG
   fprintf (o_src, "#gen_pushval\n");
 #endif
-  if (sy->litflag == 2)
+  if (SUBREF_P (sy))
     {
       gen_subscripted ((struct vref *) sy);
-      var = (struct sym *) ((struct vref *) sy)->sym;
+      var = SUBREF_SYM (sy);
       if (var->linkage_flg)
 	{
 	  tmp = var;
@@ -3816,12 +3771,10 @@ int
 is_numeric_sy (struct sym *sy)
 {
   char type;
-  if (sy->litflag == 2)
-    {				/* subscripted ? */
-      sy = ((struct vref *) sy)->sym;
-    }
+  if (SUBREF_P (sy))
+    sy = SUBREF_SYM (sy);
+
   type = sy->type;
-//      if ((type=='9')||(type=='B')||(type=='C'))
   if ((type == '9') || (type == 'B') || (type == 'C') || (type == 'U'))
     return 1;
   return 0;
@@ -4180,8 +4133,8 @@ gen_set (struct sym *idx, int which, struct sym *var,
   struct sym *sy = idx;
   if (idx->litflag == 4)
     sy = ((struct refmod *) idx)->sym;
-  else if (idx->litflag == 2)
-    sy = (struct sym *) ((struct vref *) idx)->sym;
+  else if (SUBREF_P (idx))
+    sy = SUBREF_SYM (idx);
 
   if (sy->type == '8')
     {				/* conditional? */
@@ -4191,12 +4144,12 @@ gen_set (struct sym *idx, int which, struct sym *var,
 	  yyerror ("conditional is not unique");
 	  return;
 	}
-      if (idx->litflag == 2)
+      if (SUBREF_P (idx))
 	{
 	  ref = malloc (sizeof (struct vref));
 	  ref->litflag = 2;
 	  ref->sym = sy->parent;
-	  ref->next = ((struct vref *) idx)->next;
+	  ref->next = SUBREF_NEXT (idx);
 	  gen_move ((struct sym *) sy->value, (struct sym *) ref);
 	  free (ref);
 	}
@@ -4901,7 +4854,6 @@ gen_SearchAllLoopCheck (unsigned long lbl3, struct sym *syidx,
 
   struct sym *sy1;
   struct vref *vr1;
-//   int len, i;
   struct index_to_table_list *it1, *it2;
   unsigned long l1, l2, l3, l4, l5, l6;
 
@@ -6076,10 +6028,8 @@ gen_condition (struct sym *sy)
   /*fprintf(o_src,"# 88 condition (top): (%s , %s)\n",
      sy->value->name,sy->value2->name); */
   /* is this an indexed condition ? */
-  if (sy->litflag == 2)
-    {
-      sy1 = (struct sym *) ((struct vref *) sy)->sym;
-    }
+  if (SUBREF_P (sy))
+    sy1 = SUBREF_SYM (sy);
   gen_loadvar ((struct sym *) NULL);
   gen_loadvar ((struct sym *) sy1->value2);
   gen_loadvar ((struct sym *) sy1->value);
@@ -6092,14 +6042,14 @@ gen_condition (struct sym *sy)
       gen_loadvar ((struct sym *) vr->value);
       vr = vr->next;
     }
-  if (sy->litflag == 2)
+  if (SUBREF_P (sy))
     {
       /* alloc a tmp node for condition parent 
          so gen_loadvar will be happy */
       ref = malloc (sizeof (struct vref));
       ref->litflag = 2;
       ref->sym = sy1->parent;
-      ref->next = ((struct vref *) sy)->next;
+      ref->next = SUBREF_NEXT (sy);
       gen_loadvar ((struct sym *) ref);
       free (ref);
     }
@@ -6227,52 +6177,38 @@ push_subexpr (struct sym *sy)
 {
   if (sy == NULL)
     return 0;
-  /* generate code to compute expr */
-  if (sy->litflag == 5)
+
+  if (EXPR_P (sy))
     {
-      push_subexpr ((struct sym *) ((struct expr *) sy)->left);
-      push_subexpr ((struct sym *) ((struct expr *) sy)->right);
-      switch (((struct expr *) sy)->op)
+      push_subexpr ((struct sym *) EXPR_LEFT (sy));
+      push_subexpr ((struct sym *) EXPR_RIGHT (sy));
+      switch (EXPR_OP (sy))
 	{
-	case '+':
-	  add_expr ();
-	  break;
-	case '-':
-	  subtract_expr ();
-	  break;
-	case '*':
-	  multiply_expr ();
-	  break;
-	case '/':
-	  divide_expr ();
-	  break;
-	case '^':
-	  pow_expr ();
-	  break;
+	case '+': add_expr (); break;
+	case '-': subtract_expr (); break;
+	case '*': multiply_expr (); break;
+	case '/': divide_expr (); break;
+	case '^': pow_expr (); break;
 	default:
 	  yyerror ("unknown expression operator");
+	  abort ();
 	}
+      return 1;
     }
+
   /* sy is really a symbol, not expr */
-  else
-    {
+
+  if (!is_numeric_sy (sy))
+    return 0;
+
 #ifdef COB_DEBUG
-      fprintf (o_src, "# push_subexpr: %s\n", sy->name);
+  fprintf (o_src, "# push_subexpr: %s\n", sy->name);
 #endif
-      if (sy)
-	{			/*only if not yet pushed */
-	  if (is_numeric_sy (sy))
-	    {
-	      fprintf (o_src, "\tsubl\t$8, %%esp\n");
-	      fprintf (o_src, "\tleal\t0(%%esp),%%eax\n");
-	      push_eax ();
-	      gen_loadvar (sy);
-	      asm_call ("cob_fld_to_bcd");
-	    }
-	  else
-	    return 0;
-	}
-    }
+  fprintf (o_src, "\tsubl\t$8, %%esp\n");
+  fprintf (o_src, "\tleal\t0(%%esp),%%eax\n");
+  push_eax ();
+  gen_loadvar (sy);
+  asm_call ("cob_fld_to_bcd");
   return 1;
 }
 

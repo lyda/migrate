@@ -99,26 +99,6 @@
 #define SOBJ_ZERO 11
 #define SOBJ_NEGZERO 12
 
-
-/*
- * COBOL parse tree
- */
-
-struct cob_tree_common {
-  char litflag;
-  char op;
-};
-
-typedef struct cob_tree_common *cob_tree;
-
-#define COB_TREE_TYPE(x)	(((cob_tree) (x))->litflag)
-
-enum cob_tree_type {
-  tree_literal = 1,
-  tree_variable = 2,
-  tree_expr = 5,
-};
-
 /*
  * expression nodes
  */
@@ -129,6 +109,12 @@ struct expr
   struct expr *left;
   struct expr *right;
 };
+
+#define EXPR(x)		((struct expr *) (x))
+#define EXPR_P(x)	(EXPR (x)->litflag == 5)
+#define EXPR_OP(x)	(EXPR (x)->op)
+#define EXPR_LEFT(x)	(EXPR (x)->left)
+#define EXPR_RIGHT(x)	(EXPR (x)->right)
 
 /*
  * Storage for subscripted variable references.
@@ -146,6 +132,11 @@ struct vref
   struct vref *next;		/* link to next in list or NULL */
   void *sym;			/* variable/literal at this node */
 };
+
+#define SUBREF(x)	((struct vref *) (x))
+#define SUBREF_P(x)	(SUBREF (x)->litflag == 2)
+#define SUBREF_NEXT(x)	(SUBREF (x)->next)
+#define SUBREF_SYM(x)	(SUBREF (x)->sym)
 
 /* Node for refmod's */
 struct refmod
@@ -742,8 +733,7 @@ extern struct perf_info *create_perf_info (struct sym *sy1, struct sym *sy2,
 extern struct perform_info *create_perform_info (void);
 extern char *check_perform_variables (struct sym *sy1,
 				      struct perform_info *pi1);
-extern struct expr *create_expr (char op, struct expr *left,
-				 struct expr *right);
+extern struct sym *create_expr (char op, struct sym *left, struct sym *right);
 extern void free_expr (struct expr *e);
 extern void free_expr_list (void);
 extern struct math_var *create_mathvar_info (struct math_var *mv,

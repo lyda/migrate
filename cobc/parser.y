@@ -2872,18 +2872,13 @@ delimited_by:
  */
 
 expr:
-    gname   { $$ = $1; }
-    | expr '*' expr { $$ =
-        (struct sym *)create_expr('*',(struct expr *)$1,(struct expr *)$3); }
-    | expr '/' expr { $$ =
-        (struct sym *)create_expr('/',(struct expr *)$1,(struct expr *)$3); }
-    | expr '+' expr { $$ =
-        (struct sym *)create_expr('+',(struct expr *)$1,(struct expr *)$3); }
-    | expr '-' expr { $$ =
-        (struct sym *)create_expr('-',(struct expr *)$1,(struct expr *)$3); }
-    | expr POW_OP expr { $$ =
-        (struct sym *)create_expr('^',(struct expr *)$1,(struct expr *)$3); }
-    | '(' expr ')'  { $$=$2; }
+      gname            { $$ = $1; }
+    | '(' expr ')'     { $$ = $2; }
+    | expr '*' expr    { $$ = create_expr('*', $1, $3); }
+    | expr '/' expr    { $$ = create_expr('/', $1, $3); }
+    | expr '+' expr    { $$ = create_expr('+', $1, $3); }
+    | expr '-' expr    { $$ = create_expr('-', $1, $3); }
+    | expr POW_OP expr { $$ = create_expr('^', $1, $3); }
     ;
 /* opt_expr will be NULL or a (struct sym *) pointer if the expression
    was given, otherwise it will be valued -1 */
