@@ -52,15 +52,6 @@
 
 #define make_handler(v,a,b)	make_funcall_4 ("@handler", (void *) v, a, b, 0)
 
-#define push_file_handler(f,h)				\
-  {							\
-    cb_tree __f = (f);					\
-    cb_tree __h = (h);					\
-    __h = __h ? __h : make_handler (0, 0, 0);		\
-    CB_FUNCALL (__h)->argv[3] = CB_FILE (__f)->handler;	\
-    push (__h);						\
-  }
-
 #define push_sequence_with_handler(x,h)			\
   {							\
     cb_tree __x = (x);					\
@@ -72,11 +63,6 @@
 
 #define SET_TERMINATOR(loc,cond)			\
   statement_location = (cond) ? (loc) : NULL
-
-#define YYWARN_TERMINATOR(name)						\
-  if (cb_warn_implicit_terminator && statement_location)		\
-    yywarn_x (statement_location,					\
-	      _("%s statement not terminated by END-%s"), name, name)
 
 static cb_tree statement_location;
 
@@ -98,6 +84,11 @@ static cb_tree validate_record_name (cb_tree x);
 static cb_tree validate_numeric_name (cb_tree x, int rounded);
 static cb_tree validate_numeric_edited_name (cb_tree x, int rounded);
 static cb_tree validate_integer_name (cb_tree x);
+
+static cb_tree build_file_handler (cb_tree file, cb_tree handler);
+static cb_tree build_connective_op (struct cb_list *l, char op);
+
+static void terminator_warning (const char *name);
 %}
 
 %union {
@@ -1565,23 +1556,11 @@ add_statement:
 add_body:
   numeric_value_list TO numeric_name_list
   {
-    /* ADD A B C TO X Y  -->  t = a + b + c; x += t; y += t; */
-    struct cb_list *l;
-    cb_tree e = $1->item;
-    for (l = $1->next; l; l = l->next)
-      e = make_binary_op (e, '+', l->item);
-    $<tree>$ = build_assign ($3, '+', e);
+    $<tree>$ = build_assign ($3, '+', build_connective_op ($1, '+'));
   }
 | numeric_value_list add_to GIVING numeric_edited_name_list
   {
-    /* ADD A B TO C GIVING X Y  -->  t = a + b + c; x = t; y = t; */
-    struct cb_list *l;
-    cb_tree e = $1->item;
-    for (l = $1->next; l; l = l->next)
-      e = make_binary_op (e, '+', l->item);
-    if ($<tree>2)
-      e = make_binary_op (e, '+', $<tree>2);
-    $<tree>$ = build_assign ($4, 0, e);
+    $<tree>$ = build_assign ($4, 0, build_connective_op ($1, '+'));
   }
 | CORRESPONDING group_name _to group_name flag_rounded
   {
@@ -1589,11 +1568,10 @@ add_body:
   }
 ;
 add_to:
-  /* empty */			{ $<tree>$ = NULL; }
-| TO value			{ $<tree>$ = $2; }
+| TO numeric_value		{ list_add ($<list>0, $2); }
 ;
 end_add:
-  /* empty */			{ YYWARN_TERMINATOR ("ADD"); }
+  /* empty */			{ terminator_warning ("ADD"); }
 | END_ADD
 ;
 
@@ -1667,7 +1645,7 @@ call_not_on_exception:
   statement_list	{ $<tree>$ = $4; }
 ;
 end_call:
-  /* empty */		{ YYWARN_TERMINATOR ("CALL"); }
+  /* empty */		{ terminator_warning ("CALL"); }
 | END_CALL
 ;
 
@@ -1699,7 +1677,7 @@ close_list:
   {
     cb_tree file = cb_ref ($2);
     push_funcall_2 ("cob_close", file, make_integer ($<inum>3));
-    push_file_handler (file, NULL);
+    push (build_file_handler (file, NULL));
   }
 ;
 close_option:
@@ -1733,7 +1711,7 @@ compute_body:
   }
 ;
 end_compute:
-  /* empty */			{ YYWARN_TERMINATOR ("COMPUTE"); }
+  /* empty */			{ terminator_warning ("COMPUTE"); }
 | END_COMPUTE
 ;
 
@@ -1747,14 +1725,14 @@ delete_statement:
   {
     cb_tree file = cb_ref ($3);
     push_funcall_1 ("cob_delete", file);
-    push_file_handler (file, $5);
+    push (build_file_handler (file, $5));
 
     SET_TERMINATOR ($2, $5);
   }
   end_delete
 ;
 end_delete:
-  /* empty */			{ YYWARN_TERMINATOR ("DELETE"); }
+  /* empty */			{ terminator_warning ("DELETE"); }
 | END_DELETE
 ;
 
@@ -1862,7 +1840,7 @@ divide_body:
   }
 ;
 end_divide:
-  /* empty */			{ YYWARN_TERMINATOR ("DIVIDE"); }
+  /* empty */			{ terminator_warning ("DIVIDE"); }
 | END_DIVIDE
 ;
 
@@ -1921,7 +1899,7 @@ evaluate_object:
 | TOK_FALSE			{ $<tree>$ = cb_false; }
 ;
 end_evaluate:
-  /* empty */			{ YYWARN_TERMINATOR ("EVALUATE"); }
+  /* empty */			{ terminator_warning ("EVALUATE"); }
 | END_EVALUATE
 ;
 
@@ -1991,7 +1969,7 @@ if_else_sentence:
 | ELSE statement_list		{ $<tree>$ = $2; }
 ;
 end_if:
-  /* empty */			{ YYWARN_TERMINATOR ("IF"); }
+  /* empty */			{ terminator_warning ("IF"); }
 | END_IF
 ;
 
@@ -2233,7 +2211,7 @@ multiply_body:
   }
 ;
 end_multiply:
-  /* empty */			{ YYWARN_TERMINATOR ("MULTIPLY"); }
+  /* empty */			{ terminator_warning ("MULTIPLY"); }
 | END_MULTIPLY
 ;
 
@@ -2253,7 +2231,7 @@ open_list:
       {
 	cb_tree file = cb_ref (l->item);
 	push_funcall_2 ("cob_open", file, make_integer ($<inum>2));
-	push_file_handler (file, NULL);
+	push (build_file_handler (file, NULL));
       }
   }
 ;
@@ -2372,7 +2350,7 @@ read_statement:
       }
     if ($<tree>6)
       push (build_move (CB_TREE (CB_FILE (file)->record), $<tree>6));
-    push_file_handler (file, $<tree>8);
+    push (build_file_handler (file, $<tree>8));
 
     SET_TERMINATOR ($2, $<tree>8);
   }
@@ -2392,7 +2370,7 @@ read_handler:
 | invalid_key			{ $<tree>$ = $1; }
 ;
 end_read:
-  /* empty */			{ YYWARN_TERMINATOR ("READ"); }
+  /* empty */			{ terminator_warning ("READ"); }
 | END_READ
 ;
 
@@ -2424,14 +2402,14 @@ return_statement:
     push_funcall_2 ("cob_read", file, cb_int0);
     if ($<tree>5)
       push (build_move (CB_TREE (CB_FILE (file)->record), $<tree>5));
-    push_file_handler (file, $6);
+    push (build_file_handler (file, $6));
 
     SET_TERMINATOR ($2, $6);
   }
   end_return
 ;
 end_return:
-  /* empty */			{ YYWARN_TERMINATOR ("RETURN"); }
+  /* empty */			{ terminator_warning ("RETURN"); }
 | END_RETURN
 ;
 
@@ -2448,14 +2426,14 @@ rewrite_statement:
     if ($4)
       push (build_move ($4, $3));
     push_funcall_2 ("cob_rewrite", file, $3);
-    push_file_handler (file, $5);
+    push (build_file_handler (file, $5));
 
     SET_TERMINATOR ($2, $5);
   }
   end_rewrite
 ;
 end_rewrite:
-  /* empty */			{ YYWARN_TERMINATOR ("REWRITE"); }
+  /* empty */			{ terminator_warning ("REWRITE"); }
 | END_REWRITE
 ;
 
@@ -2507,7 +2485,7 @@ search_all_when:
   }
 ;
 end_search:
-  /* empty */			{ YYWARN_TERMINATOR ("SEARCH"); }
+  /* empty */			{ terminator_warning ("SEARCH"); }
 | END_SEARCH
 ;
 
@@ -2651,7 +2629,7 @@ start_statement:
     if ($<tree>5 == NULL)
       $<tree>5 = CB_FILE (file)->key;
     push_funcall_3 ("cob_start", file, make_integer ($<inum>4), $<tree>5);
-    push_file_handler (file, $6);
+    push (build_file_handler (file, $6));
 
     SET_TERMINATOR ($2, $6);
   }
@@ -2669,7 +2647,7 @@ start_op:
 | flag_not less_or_equal	{ $<inum>$ = $1 ? COB_GT : COB_LE; }
 ;
 end_start:
-  /* empty */			{ YYWARN_TERMINATOR ("START"); }
+  /* empty */			{ terminator_warning ("START"); }
 | END_START
 ;
 
@@ -2732,7 +2710,7 @@ opt_with_pointer:
 ;
 
 end_string:
-  /* empty */			{ YYWARN_TERMINATOR ("STRING"); }
+  /* empty */			{ terminator_warning ("STRING"); }
 | END_STRING
 ;
 
@@ -2753,21 +2731,11 @@ subtract_statement:
 subtract_body:
   numeric_value_list FROM numeric_name_list
   {
-    /* SUBTRACT A B C FROM X Y  -->  t = a + b + c; x -= t; y -= t; */
-    struct cb_list *l;
-    cb_tree e = $1->item;
-    for (l = $1->next; l; l = l->next)
-      e = make_binary_op (e, '+', l->item);
-    $<tree>$ = build_assign ($3, '-', e);
+    $<tree>$ = build_assign ($3, '-', build_connective_op ($1, '+'));
   }
 | numeric_value_list FROM numeric_value GIVING numeric_edited_name_list
   {
-    /* SUBTRACT A B FROM C GIVING X Y  -->  t = c - a - b; x = t; y = t */
-    struct cb_list *l;
-    cb_tree e = $3;
-    for (l = $1; l; l = l->next)
-      e = make_binary_op (e, '-', l->item);
-    $<tree>$ = build_assign ($5, 0, e);
+    $<tree>$ = build_assign ($5, 0, build_connective_op (cons ($3, $1), '-'));
   }
 | CORRESPONDING group_name FROM group_name flag_rounded
   {
@@ -2775,7 +2743,7 @@ subtract_body:
   }
 ;
 end_subtract:
-  /* empty */			{ YYWARN_TERMINATOR ("SUBTRACT"); }
+  /* empty */			{ terminator_warning ("SUBTRACT"); }
 | END_SUBTRACT
 ;
 
@@ -2846,7 +2814,7 @@ unstring_tallying:
 ;
 
 end_unstring:
-  /* empty */			{ YYWARN_TERMINATOR ("UNSTRING"); }
+  /* empty */			{ terminator_warning ("UNSTRING"); }
 | END_UNSTRING
 ;
 
@@ -2876,7 +2844,7 @@ write_statement:
     if ($4)
       push (build_move ($4, $3));
     push_funcall_2 ("cob_write", file, $3);
-    push_file_handler (file, $6);
+    push (build_file_handler (file, $6));
 
     /* BEFORE ADVANCING */
     if (p && p->type == CB_BEFORE)
@@ -2914,7 +2882,7 @@ before_or_after:
 | AFTER				{ $$ = CB_AFTER; }
 ;
 end_write:
-  /* empty */			{ YYWARN_TERMINATOR ("WRITE"); }
+  /* empty */			{ terminator_warning ("WRITE"); }
 | END_WRITE
 ;
 
@@ -3915,4 +3883,32 @@ validate_integer_name (cb_tree x)
     }
 
   return x;
+}
+
+
+static cb_tree
+build_file_handler (cb_tree file, cb_tree handler)
+{
+  if (handler == NULL)
+    handler = make_handler (0, 0, 0);
+  CB_FUNCALL (handler)->argv[3] = CB_FILE (file)->handler;
+  return handler;
+}
+
+static cb_tree
+build_connective_op (struct cb_list *l, char op)
+{
+  cb_tree e = l->item;
+  for (l = l->next; l; l = l->next)
+    e = make_binary_op (e, op, l->item);
+  return e;
+}
+
+
+static void
+terminator_warning (const char *name)
+{
+  if (cb_warn_implicit_terminator && statement_location)
+    yywarn_x (statement_location,
+	      _("%s statement not terminated by END-%s"), name, name);
 }
