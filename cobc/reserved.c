@@ -311,6 +311,7 @@ static struct reserved_word reserved_words[] = {
   {"SIGN", SIGN, 0},
   {"SIZE", SIZE, 0},
   {"SORT", SORT, 0},
+  {"SORT-MERGE", SORT_MERGE, 0},
   {"SOURCE", TOKSOURCE, 0},
   {"SOURCE-COMPUTER", TOK_SOURCE_COMPUTER, 0},
   {"SPACE", SPACES, 0},
