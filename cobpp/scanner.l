@@ -77,6 +77,9 @@ static void set_buffer (int lineno, const char *filename,
     }
 }
 
+\'[^\"\n]*\' |
+\"[^\"\n]*\" { ECHO; }
+
 "COPY"    { BEGIN COPY_STATE; return TOK_COPY; }
 "REPLACE" { BEGIN COPY_STATE; return TOK_REPLACE; }
 
