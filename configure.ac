@@ -20,7 +20,7 @@
 
 AC_PREREQ(2.57)
 
-AC_INIT([OpenCOBOL],[0.10],[knishida@coboler.com],[open-cobol])
+AC_INIT([OpenCOBOL],[0.10.1],[knishida@coboler.com],[open-cobol])
 AC_CONFIG_SRCDIR([libcob.h])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_HEADERS([config.h])
@@ -98,10 +98,13 @@ AC_CHECK_FUNC([getopt_long_only], ,
 AC_CHECK_LIB([regex], [regcomp], [LIBCOB_LIBS="$LIBCOB_LIBS -lregex"])
 
 # Checks for db.
-AC_CHECK_HEADERS([db1/db.h db.h])
+AC_CHECK_HEADERS([db1/db.h db_185.h db.h])
 AC_CHECK_FUNCS([dbopen], ,
-  [AC_CHECK_LIB([db1], [dbopen], , AC_MSG_ERROR(libdb1 is required))
-   LIBCOB_LIBS="$LIBCOB_LIBS -ldb1"])
+  [AC_CHECK_LIB([db1], [dbopen],
+    [LIBCOB_LIBS="$LIBCOB_LIBS -ldb1"],
+    [AC_CHECK_LIB([db], [__db_dbopen],
+      [LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
+      [AC_MSG_ERROR(libdb1 is required)])])])
 
 # Checks for gmp.
 AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp.h is required))
@@ -169,9 +172,6 @@ AC_CONFIG_FILES([cob.pc cob-config
 		Makefile lib/Makefile libcob/Makefile
 		cobpp/Makefile cobc/Makefile po/Makefile.in texi/Makefile
 		tests/atlocal tests/Makefile tests/cobol85/Makefile])
-if test "$USE_MAINTAINER_MODE" = "yes"; then
-  AC_CONFIG_FILES([redhat/open-cobol.spec])
-fi
 AC_OUTPUT
 
 echo ""
