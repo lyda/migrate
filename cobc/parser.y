@@ -1848,6 +1848,53 @@ call_statement:
       check_call_except($9,$10,$<ival>6,$<ival>7,$<ival>8); }
     opt_end_call
     ;
+using_options:
+    /* nothing */   { $$=0; }
+    | USING     { $<ival>$=0; /* to save how many parameters */ }
+      dummy     { $<ival>$=CALL; }
+      parm_list  { $$=$<ival>2; } /* modified to signal calling pgm */
+    ;
+parm_list:
+    parm_list opt_sep parameter
+        {   if ($<ival>0 == USING)
+                gen_save_using($<sval>3);
+            else if ($<ival>0 == CALL) {
+                gen_push_using($<sval>3);
+            }
+        }
+        | parameter
+        {   if ($<ival>0 == USING)
+                gen_save_using($<sval>1);
+            else if ($<ival>0 == CALL) {
+                gen_push_using($<sval>1);
+            }
+        }
+    ;
+parameter:
+    gname {$$=$1;
+            if ($$->litflag==1) {
+               struct lit *lp=(struct lit *)$$;
+               lp->call_mode=curr_call_mode;
+               }
+            else
+               $$->call_mode=curr_call_mode;
+        }
+    | BY parm_type gname
+        {   $$=$3;
+            curr_call_mode=$<ival>2;
+            if ($$->litflag==1) {
+               struct lit *lp=(struct lit *)$$;
+               lp->call_mode=curr_call_mode;
+               }
+            else
+               $$->call_mode=curr_call_mode;
+        }
+    ;
+parm_type:
+    REFERENCE	{ $$ = CM_REF; }
+  | CONTENT	{ $$ = CM_CONT; }
+  | VALUE	{ $$ = CM_VAL; }
+;
 on_exception_or_overflow:
     /* nothing */ { $$ = 0; }
     | ONTOK exception_or_overflow { $<ival>$ = begin_on_except(); } 
@@ -2685,12 +2732,6 @@ opt_expr:
     /* nothing */   { $$ = (struct sym *)-1; }
     | expr          { $$ = $1; }
     ;
-using_options:
-    /* nothing */   { $$=0; }
-    | USING     { $<ival>$=0; /* to save how many parameters */ }
-      dummy     { $<ival>$=CALL; }
-      parm_list  { $$=$<ival>2; } /* modified to signal calling pgm */
-    ;
 returning_options:
     /* nothing */   { $$=0; }
     | RETURNING variable { $$=$2; }
@@ -2719,47 +2760,11 @@ var_list:
                 gen_save_using($<sval>1);
         }
     ;
-parm_list:
-    parm_list opt_sep parameter
-        {   if ($<ival>0 == USING)
-                gen_save_using($<sval>3);
-            else if ($<ival>0 == CALL) {
-                gen_push_using($<sval>3);
-            }
-        }
-        | parameter
-        {   if ($<ival>0 == USING)
-                gen_save_using($<sval>1);
-            else if ($<ival>0 == CALL) {
-                gen_push_using($<sval>1);
-            }
-        }
-    ;
-parameter:
-    gname {$$=$1;
-            if ($$->litflag==1) {
-               struct lit *lp=(struct lit *)$$;
-               lp->call_mode=curr_call_mode;
-               }
-            else
-               $$->call_mode=curr_call_mode;
-        }
-    | BY parm_type gname
-        {   $$=$3;
-            curr_call_mode=$<ival>2;
-            if ($$->litflag==1) {
-               struct lit *lp=(struct lit *)$$;
-               lp->call_mode=curr_call_mode;
-               }
-            else
-               $$->call_mode=curr_call_mode;
-        }
-    ;
-parm_type:
-    REFERENCE	{ $$ = CM_REF; }
-  | CONTENT	{ $$ = CM_CONT; }
-  | VALUE	{ $$ = CM_VAL; }
-;
+
+
+/*
+ * Condition
+ */
 
 condition:
     simple_condition

@@ -42,7 +42,6 @@
 #define CM_REF 1
 #define CM_VAL 2
 #define CM_CONT 3
-#define CM_DESC 4
 
 /* asm sections or pseudo-sections */
 #define SEC_CONST 2
