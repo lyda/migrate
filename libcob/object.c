@@ -413,32 +413,43 @@ cob_set (struct cob_field f, int round)
     {
     case 'B':
       {
+	static long long maximum_value[19] = {
+	  0,
+	  9,
+	  99,
+	  999,
+	  9999,
+	  99999,
+	  999999,
+	  9999999,
+	  99999999,
+	  999999999,
+	  9999999999,
+	  99999999999,
+	  999999999999,
+	  9999999999999,
+	  99999999999999,
+	  999999999999999,
+	  9999999999999999,
+	  99999999999999999,
+	  999999999999999999,
+	};
+
+	int len = picCompLength (f.desc);
+
 	if (f.desc->len <= 4)
 	  {
 	    int val;
 	    if (!mpz_fits_sint_p (d->number))
-	      cob_status = COB_STATUS_OVERFLOW;
+	      goto overflow;
 	    val = mpz_get_si (d->number);
+	    if (val < -maximum_value[len] || val > maximum_value[len])
+	      goto overflow;
 	    switch (f.desc->len)
 	      {
-	      case 1:
-		if (val < -99 || val > 99)
-		  cob_status = COB_STATUS_OVERFLOW;
-		else
-		  *((signed char *) f.data) = val;
-		break;
-	      case 2:
-		if (val < -9999 || val > 9999)
-		  cob_status = COB_STATUS_OVERFLOW;
-		else
-		  *((signed short *) f.data) = val;
-		break;
-	      case 4:
-		if (val < -99999999 || val > 99999999)
-		  cob_status = COB_STATUS_OVERFLOW;
-		else
-		  *((signed long *) f.data) = val;
-		break;
+	      case 1: *((signed char *) f.data) = val; break;
+	      case 2: *((signed short *) f.data) = val; break;
+	      case 4: *((signed long *) f.data) = val; break;
 	      }
 	  }
 	else
@@ -451,13 +462,13 @@ cob_set (struct cob_field f, int round)
 	    if (!mpz_fits_sint_p (d->number))
 	      {
 		mpz_clear (r);
-		cob_status = COB_STATUS_OVERFLOW;
+		goto overflow;
 	      }
 	    val = mpz_get_si (d->number);
 	    val = (val << 32) + mpz_get_ui (r);
 	    mpz_clear (r);
-	    if (val < -999999999999999999 || val > 999999999999999999)
-	      cob_status = COB_STATUS_OVERFLOW;
+	    if (val < -maximum_value[len] || val > maximum_value[len])
+	      goto overflow;
 	    *((signed long long *) f.data) = val;
 	  }
 	return;
@@ -491,16 +502,17 @@ cob_set (struct cob_field f, int round)
 	    memcpy (f.data + pre, p, size);
 	  }
 	else
-	  {
-	    /* Overflow */
-	    cob_status = COB_STATUS_OVERFLOW;
-	    return;
-	  }
+	  goto overflow;
 
 	put_sign (f.desc, f.data, sign);
 	return;
       }
     }
+  return;
+
+ overflow:
+  cob_status = COB_STATUS_OVERFLOW;
+  return;
 }
 
 void
