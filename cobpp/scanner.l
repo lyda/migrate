@@ -55,7 +55,6 @@ static int yyinput (char *buf, int max_size);
 
 static char *substring (const char *s, int size);
 static void set_buffer (int lineno, const char *filename, struct replacement *replacing, YY_BUFFER_STATE buffer);
-static void process_eol (void);
 
 %}
 
@@ -65,7 +64,17 @@ static void process_eol (void);
 
 <*>"*>".*		{ /* comment */ }
 
-<*>\n			{ process_eol (); }
+<*>\n {
+  /* end of line */
+  ECHO;
+  yylineno++;
+
+  if (display_line)
+    {
+      fprintf (yyout, "# %d \"%s\"\n", yylineno, yyfilename ? yyfilename : "");
+      display_line = 0;
+    }
+}
 
 "COPY"			{ BEGIN COPY_STATE; return COPY; }
 "INCLUDE"		{ BEGIN COPY_STATE; return COPY; }
@@ -258,19 +267,6 @@ include_copybook (const char *name, const char *lib,
     }
   fputc ('\n', yyout);
   open_buffer (name, replacing);
-}
-
-static void
-process_eol (void)
-{
-  ECHO;
-  yylineno++;
-
-  if (display_line)
-    {
-      fprintf (yyout, "# %d \"%s\"\n", yylineno, yyfilename ? yyfilename : "");
-      display_line = 0;
-    }
 }
 
 struct replacement *
