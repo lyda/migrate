@@ -812,12 +812,10 @@ output_cond (cb_tree x, int save_flag)
     {
     case CB_TAG_CONST:
       {
-	puts (cb_name (x));
-	if (save_flag)
-	  output ("(ret = ");
-	output ("%s", CB_CONST (x)->val);
-	if (save_flag)
-	  output (")");
+	if (x == cb_true)
+	  output ("1");
+	else
+	  abort ();
 	break;
       }
     case CB_TAG_BINARY_OP:
