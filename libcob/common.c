@@ -386,7 +386,7 @@ cob_get_sign (cob_field *f)
 	return (*p & 0x0f) ? -1 : 1;
       }
     default:
-      abort ();
+      return 0;
     }
 }
 
@@ -410,9 +410,15 @@ cob_put_sign (cob_field *f, int sign)
 
 	/* put sign */
 	if (COB_FIELD_SIGN_SEPARATE (f))
-	  *p = (sign < 0) ? '-' : '+';
+	  {
+	    int c = (sign < 0) ? '-' : '+';
+	    if (*p != c)
+	      *p = c;
+	  }
 	else if (sign < 0)
-	  *p += 0x10;
+	  {
+	    *p += 0x10;
+	  }
 	return;
       }
     case COB_TYPE_NUMERIC_PACKED:
@@ -425,7 +431,7 @@ cob_put_sign (cob_field *f, int sign)
 	return;
       }
     default:
-      abort ();
+      return;
     }
 }
 
