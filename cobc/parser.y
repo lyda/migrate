@@ -161,7 +161,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <tree> name,gname,number,file,level1_variable,opt_def_name,def_name
 %type <tree> opt_read_into,opt_write_from,field_name,expr,unsafe_expr
 %type <tree> opt_unstring_count,opt_unstring_delim,unstring_tallying
-%type <tree> numeric_variable,numeric_edited_variable
+%type <tree> numeric_variable,group_variable,numeric_edited_variable
 %type <tree> qualified_var,unqualified_var
 %type <tree> call_returning,screen_to_name,var_or_lit,opt_add_to
 %type <tree> sort_keys,opt_perform_thru,procedure_section
@@ -1295,7 +1295,7 @@ add_body:
   {
     gen_add_giving ($2 ? list_append ($1, $2) : $1, $4);
   }
-| CORRESPONDING gname opt_to numeric_variable flag_rounded
+| CORRESPONDING gname opt_to group_variable flag_rounded
   {
     yyerror ("ADD CORRESPONDING is not implemented yet.");
   }
@@ -1508,7 +1508,7 @@ evaluate_statement:
   EVALUATE			{ $<ival>$ = gen_evaluate_start(); }
   selection_subject_set		{ }
   when_case_list
-  END_EVALUATE			{ release_sel_subject($<ival>2,$3); }
+  opt_end_evaluate		{ release_sel_subject($<ival>2,$3); }
 ;
 selection_subject_set:
   selection_subject		{ $$=save_sel_subject(NULL,$1); }
@@ -1617,6 +1617,7 @@ sentence_or_nothing:
   /* nothing */			{ $$ = 0; }
 | conditional_statement_list	{ $$ = 1; }
 ;
+opt_end_evaluate: END_EVALUATE ;
 
 
 /*
@@ -2452,7 +2453,7 @@ subtract_body:
   {
     gen_subtract_giving ($1, $3, $5);
   }
-| CORRESPONDING gname FROM numeric_variable flag_rounded
+| CORRESPONDING gname FROM group_variable flag_rounded
   {
     yyerror ("SUBTRACT CORRESPONDING is not implemented yet.");
   }
@@ -2795,6 +2796,18 @@ numeric_edited_variable:
   {
     if (!is_editable ($1))
       yyerror ("variable `%s' must be numeric edited", COB_FIELD_NAME ($1));
+    $$ = $1;
+  }
+;
+
+
+/* Group variable */
+
+group_variable:
+  variable
+  {
+    if (!SYMBOL_P ($1) || COB_FIELD_TYPE ($1) != 'G')
+      yyerror ("variable `%s' must be group", COB_FIELD_NAME ($1));
     $$ = $1;
   }
 ;
