@@ -184,7 +184,7 @@ terminate (const char *str)
  * Command line
  */
 
-static char short_options[] = "h?VvECScmOgwo:I:";
+static char short_options[] = "h?VvECScmOgwo:I:L:l:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
@@ -246,13 +246,13 @@ print_usage (void)
   -g                    Produce debugging information in the output\n\
   -debug                Enable all run-time error checking\n\
   -o <file>             Place the output into <file>\n\
-  -I <directory>        Add copybook include path\n\
+  -I <directory>        Add <directory> to copybook search path\n\
+  -L <directory>        Add <directory> to library search path\n\
+  -l <lib>              Search for library <lib>
   -MT <target>          Set target file used in dependency list\n\
   -MF <file>            Place dependency list into <file>\n\
   -free                 Use free source format\n\
   -fixed                Use fixed source format\n\
-  -static               Use free source format\n\
-  -dynamic              Use fixed source format\n\
   -ext=<extension>      Add file extension\n\
 \n\
   -Wall                 Enable all warnings"));
@@ -286,8 +286,8 @@ process_command_line (int argc, char *argv[])
       switch (c)
 	{
 	case 0: break;
-	case 'h':
-	case '?': print_usage (); exit (0);
+	case '?': break;
+	case 'h': print_usage (); exit (0);
 	case 'V': print_version (); exit (0);
 	case 'R': cb_list_reserved (); exit (0);
 
@@ -363,6 +363,16 @@ process_command_line (int argc, char *argv[])
 	  cb_include_list = cb_name_list_add (cb_include_list, optarg);
 	  break;
 
+	case 'L':
+	  strcat (cob_libs, " -L");
+	  strcat (cob_libs, optarg);
+	  break;
+
+	case 'l':
+	  strcat (cob_libs, " -l");
+	  strcat (cob_libs, optarg);
+	  break;
+
 	case 'e':
 	  {
 	    char ext[strlen (optarg) + 2];
@@ -386,8 +396,7 @@ process_command_line (int argc, char *argv[])
 	  break;
 
 	default:
-	  print_usage ();
-	  exit (1);
+	  abort ();
 	}
     }
 
@@ -747,7 +756,7 @@ main (int argc, char *argv[])
   /* Check the filename */
   if (i == argc)
     {
-      print_usage ();
+      fprintf (stderr, "%s: No input files\n", program_name);
       exit (1);
     }
 
