@@ -3717,7 +3717,7 @@ update_field (void)
 	{
 	  if (*p == '.' || *p == 'V')
 	    decimals = 0;
-	  else if (*p != '0' && *p != 'B' && decimals >= 0)
+	  else if (!strchr ("0BCDR", *p) && decimals >= 0)
 	    decimals += p[1];
 	}
       curr_field->len = piccnt;
