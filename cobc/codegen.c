@@ -2031,6 +2031,45 @@ add_alternate_key (cob_tree sy, int duplicates)
   f->alternate = COB_TREE (new);
 }
 
+
+/*
+ * Status handling
+ */
+
+static void
+gen_status_init (void)
+{
+  fprintf (o_src, "\tmovl\t$%d, cob_status\n", COB_STATUS_SUCCESS);
+}
+
+int
+gen_status_branch (int status, int flag)
+{
+  int lbl = loc_label++;
+
+  fprintf (o_src, "\tcmpl\t$%d, cob_status\n", status);
+  if (flag)
+    fprintf (o_src, "\tje\t.L%d\n", lbl);
+  else
+    fprintf (o_src, "\tjne\t.L%d\n", lbl);
+
+  return lbl;
+}
+
+int
+gen_at_end (int status)
+{
+  int i = loc_label++;
+  int j = loc_label++;
+  fprintf (o_src, "\tcmp\t$%d, %%eax\n", status);
+  fprintf (o_src, "\tjz\t.L%d\n", j);
+  fprintf (o_src, "\tjmp\t.L%d\n", i);
+  fprintf (o_src, "\t.align 16\n");
+  fprintf (o_src, ".L%d:\n", j);
+  return i;
+}
+
+
 struct scr_info *
 alloc_scr_info ()
 {
@@ -2193,6 +2232,7 @@ gen_unstring (cob_tree var, struct unstring_delimited *delim,
       push_immed (delim->all);	/* push "all" flag */
       gen_loadvar (delim->var);
     }
+  gen_status_init ();
   asm_call_3 ("cob_unstring", var, ptr, tally);
 }
 
@@ -2525,52 +2565,13 @@ create_mathvar_info (struct math_var *mv, cob_tree sy, unsigned int opt)
 
 
 /*
- * ON SIZE ERROR
- */
-
-static void
-gen_init_status (void)
-{
-  fprintf (o_src, "\tmovl\t$0, cob_status\n");
-}
-
-int
-gen_status_branch (int status, int flag)
-{
-  int lbl = loc_label++;
-
-  fprintf (o_src, "\tcmpl\t$0, cob_status\n");
-  if (flag)
-    fprintf (o_src, "\tjne\t.L%d\n", lbl);
-  else
-    fprintf (o_src, "\tje\t.L%d\n", lbl);
-
-  return lbl;
-}
-
-int
-gen_at_end (int status)
-{
-  int i = loc_label++;
-  int j = loc_label++;
-  fprintf (o_src, "\tcmp\t$%d, %%eax\n", status);
-  fprintf (o_src, "\tjz\t.L%d\n", j);
-  fprintf (o_src, "\tjmp\t.L%d\n", i);
-  fprintf (o_src, "\t.align 16\n");
-  fprintf (o_src, ".L%d:\n", j);
-  return i;
-}
-
-
-
-/*
  * COMPUTE statement
  */
 
 void
 gen_compute (struct math_var *vl1, cob_tree sy1)
 {
-  gen_init_status ();
+  gen_status_init ();
   for (; vl1; vl1 = vl1->next)
     {
       push_expr (sy1);
@@ -2595,7 +2596,7 @@ gen_add (cob_tree n1, cob_tree n2, int rnd)
 void
 gen_add_to (cob_tree_list nums, struct math_var *list)
 {
-  gen_init_status ();
+  gen_status_init ();
   for (; list; list = list->next)
     {
       cob_tree_list l;
@@ -2612,7 +2613,7 @@ gen_add_to (cob_tree_list nums, struct math_var *list)
 void
 gen_add_giving (cob_tree_list nums, struct math_var *list)
 {
-  gen_init_status ();
+  gen_status_init ();
   for (; list; list = list->next)
     {
       cob_tree_list l = nums;
@@ -2634,7 +2635,7 @@ gen_add_giving (cob_tree_list nums, struct math_var *list)
 void
 gen_subtract_from (cob_tree_list subtrahend_list, struct math_var *list)
 {
-  gen_init_status ();
+  gen_status_init ();
   for (; list; list = list->next)
     {
       cob_tree_list l;
@@ -2652,7 +2653,7 @@ void
 gen_subtract_giving (cob_tree_list subtrahend_list, cob_tree minuend,
 		     struct math_var *list)
 {
-  gen_init_status ();
+  gen_status_init ();
   for (; list; list = list->next)
     {
       cob_tree_list l;
@@ -2674,7 +2675,7 @@ gen_subtract_giving (cob_tree_list subtrahend_list, cob_tree minuend,
 void
 gen_multiply_by (cob_tree multiplicand, struct math_var *list)
 {
-  gen_init_status ();
+  gen_status_init ();
   for (; list; list = list->next)
     {
       push_expr (multiplicand);
@@ -2688,7 +2689,7 @@ void
 gen_multiply_giving (cob_tree multiplicand, cob_tree multiplier,
 		     struct math_var *list)
 {
-  gen_init_status ();
+  gen_status_init ();
   for (; list; list = list->next)
     {
       push_expr (multiplicand);
@@ -2706,7 +2707,7 @@ gen_multiply_giving (cob_tree multiplicand, cob_tree multiplier,
 void
 gen_divide_into (cob_tree divisor, struct math_var *list)
 {
-  gen_init_status ();
+  gen_status_init ();
   for (; list; list = list->next)
     {
       push_expr (list->sname);
@@ -2719,7 +2720,7 @@ gen_divide_into (cob_tree divisor, struct math_var *list)
 void
 gen_divide_giving (cob_tree divisor, cob_tree dividend, struct math_var *list)
 {
-  gen_init_status ();
+  gen_status_init ();
   for (; list; list = list->next)
     {
       push_expr (dividend);
@@ -2733,7 +2734,7 @@ void
 gen_divide_giving_remainder (cob_tree divisor, cob_tree dividend,
 			     cob_tree quotient, cob_tree remainder, int rnd)
 {
-  gen_init_status ();
+  gen_status_init ();
 
   push_expr (dividend);
   push_expr (divisor);

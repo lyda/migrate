@@ -2448,11 +2448,11 @@ opt_on_size_error:
   opt_not_on_size_error_sentence
 ;
 opt_on_size_error_sentence:
-| opt_on SIZE ERROR { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 0); }
+| opt_on SIZE ERROR { $<ival>$ = gen_status_branch (COB_STATUS_OVERFLOW, 0); }
   target_sentence
 ;
 opt_not_on_size_error_sentence:
-| NOT opt_on SIZE ERROR { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 1); }
+| NOT opt_on SIZE ERROR { $<ival>$ = gen_status_branch (COB_STATUS_OVERFLOW, 1); }
   target_sentence
 ;
 
@@ -2466,11 +2466,11 @@ opt_on_overflow:
   opt_not_on_overflow_sentence
 ;
 opt_on_overflow_sentence:
-| ON OVERFLOW			{ $<ival>$ = gen_at_end(-1); }
+| ON OVERFLOW	{ $<ival>$ = gen_status_branch (COB_STATUS_OVERFLOW, 0); }
   target_sentence
 ;
 opt_not_on_overflow_sentence:
-| NOT ON OVERFLOW		{ $<ival>$ = gen_at_end(0); }
+| NOT ON OVERFLOW { $<ival>$ = gen_status_branch (COB_STATUS_OVERFLOW, 1); }
   target_sentence
 ;
 
