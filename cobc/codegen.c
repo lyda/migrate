@@ -189,7 +189,8 @@ install (char *name, int tab, int cloning)
 	  labtab[val] = as;
 	}
     }
-  else if ((cloning && (as->defined == 1)) || (cloning == 2))
+  else if (((cloning && as->defined == 1) || cloning == 2)
+	   && (as->parent != curr_field->parent))
     {
       /* install clone (cloning==2 -> force) */
       cob_tree cl = make_symbol (COB_FIELD_NAME (as));
@@ -197,7 +198,7 @@ install (char *name, int tab, int cloning)
       as->clone = cl;
       as = cl;
     }
-  return (as);
+  return as;
 }
 
 cob_tree 
