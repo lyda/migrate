@@ -623,7 +623,8 @@ process_translate (struct filename *fn)
   if (ret)
     return ret;
 
-  if (cb_flag_syntax_only)
+  if (cb_flag_syntax_only
+      || current_program->entry_list == NULL)
     return 0;
 
   /* open the output file */

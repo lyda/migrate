@@ -2038,25 +2038,17 @@ output_initial_values (struct cb_field *p)
 }
 
 static void
-output_internal_function (struct cb_program *prog, int single,
-			  cb_tree parameter_list)
+output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 {
   int i;
   cb_tree l;
   struct cb_field *f;
 
   /* program function */
-  if (single)
-    output ("int\n%s (", prog->program_id);
-  else
-    output ("static int\n%s_ (int entry", prog->program_id);
+  output ("static int\n%s_ (int entry", prog->program_id);
   for (l = parameter_list; l; l = CB_CHAIN (l))
-    {
-      if (!single || l != parameter_list)
-	output (", ");
-      output ("unsigned char *%s%d",
-	      CB_PREFIX_BASE, cb_field (CB_VALUE (l))->id);
-    }
+    output (", unsigned char *%s%d",
+	    CB_PREFIX_BASE, cb_field (CB_VALUE (l))->id);
   output (")\n");
   output_indent ("{");
 
@@ -2138,24 +2130,15 @@ output_internal_function (struct cb_program *prog, int single,
   output_newline ();
 
   /* entry dispatch */
-  if (single)
+  output_line ("switch (entry)");
+  output_line ("  {");
+  for (i = 0, l = prog->entry_list; l; l = CB_CHAIN (l))
     {
-      output_line ("goto %s%d;",
-		   CB_PREFIX_LABEL,
-		   CB_LABEL (CB_PURPOSE (prog->entry_list))->id);
+      output_line ("  case %d:", i++);
+      output_line ("    goto %s%d;",
+		   CB_PREFIX_LABEL, CB_LABEL (CB_PURPOSE (l))->id);
     }
-  else
-    {
-      output_line ("switch (entry)");
-      output_line ("  {");
-      for (i = 0, l = prog->entry_list; l; l = CB_CHAIN (l))
-	{
-	  output_line ("  case %d:", i++);
-	  output_line ("    goto %s%d;",
-		       CB_PREFIX_LABEL, CB_LABEL (CB_PURPOSE (l))->id);
-	}
-      output_line ("  }");
-    }
+  output_line ("  }");
   output_newline ();
 
   /* error handlers */
@@ -2209,12 +2192,38 @@ output_entry_function (struct cb_program *prog,
   output ("%s (", entry_name);
   for (l = using_list; l; l = CB_CHAIN (l))
     {
-      output ("unsigned char *b_%d", cb_field (CB_VALUE (l))->id);
+      struct cb_field *f = cb_field (CB_VALUE (l));
+      switch (CB_PURPOSE_INT (l))
+	{
+	case CB_CALL_BY_REFERENCE:
+	case CB_CALL_BY_CONTENT:
+	  output ("unsigned char *%s%d", CB_PREFIX_BASE, f->id);
+	  break;
+	case CB_CALL_BY_VALUE:
+	  if (CB_TREE_CLASS (CB_VALUE (l)) == CB_CLASS_NUMERIC)
+	    output ("int i_%d", f->id);
+	  else
+	    output ("unsigned char i_%d", f->id);
+	  break;
+	}
       if (CB_CHAIN (l))
 	output (", ");
     }
   output (")\n");
   output ("{\n");
+  for (l = using_list; l; l = CB_CHAIN (l))
+    if (CB_PURPOSE_INT (l) == CB_CALL_BY_CONTENT)
+      {
+	struct cb_field *f = cb_field (CB_VALUE (l));
+	output_line ("unsigned char copy_%d[%d];", f->id, f->size);
+      }
+  for (l = using_list; l; l = CB_CHAIN (l))
+    if (CB_PURPOSE_INT (l) == CB_CALL_BY_CONTENT)
+      {
+	struct cb_field *f = cb_field (CB_VALUE (l));
+	output_line ("memcpy (copy_%d, %s%d, %d);",
+		     f->id, CB_PREFIX_BASE, f->id, f->size);
+      }
 
   output ("  return %s_ (%d", prog->program_id, id++);
   for (l1 = parameter_list; l1; l1 = CB_CHAIN (l1))
@@ -2223,7 +2232,19 @@ output_entry_function (struct cb_program *prog,
 	if (strcasecmp (cb_field (CB_VALUE (l1))->name,
 			cb_field (CB_VALUE (l2))->name) == 0)
 	  {
-	    output (", b_%d", cb_field (CB_VALUE (l1))->id);
+	    struct cb_field *f = cb_field (CB_VALUE (l2));
+	    switch (CB_PURPOSE_INT (l2))
+	      {
+	      case CB_CALL_BY_REFERENCE:
+		output (", b_%d", f->id);
+		break;
+	      case CB_CALL_BY_CONTENT:
+		output (", copy_%d", f->id);
+		break;
+	      case CB_CALL_BY_VALUE:
+		output (", (unsigned char *) &i_%d", f->id);
+		break;
+	      }
 	    break;
 	  }
       if (l2 == NULL)
@@ -2254,6 +2275,7 @@ void
 codegen (struct cb_program *prog)
 {
   cb_tree l;
+  cb_tree parameter_list = NULL;
 
   if (cb_flag_main)
     prog->flag_initial = 1;
@@ -2278,41 +2300,26 @@ codegen (struct cb_program *prog)
   for (l = prog->class_name_list; l; l = CB_CHAIN (l))
     output_class_name_definition (CB_CLASS_NAME (CB_VALUE (l)));
 
-  if (prog->entry_list == NULL)
+  /* build parameter list */
+  for (l = prog->entry_list; l; l = CB_CHAIN (l))
     {
-      /* no entry */
-      return;
-    }
-  else if (CB_CHAIN (prog->entry_list) == NULL)
-    {
-      /* single entry */
-      output_internal_function (prog, 1, CB_VALUE (prog->entry_list));
-    }
-  else
-    {
-      /* multiple entries */
-      cb_tree parameter_list = NULL;
-
-      /* build parameter list */
-      for (l = prog->entry_list; l; l = CB_CHAIN (l))
+      cb_tree using_list = CB_VALUE (l);
+      cb_tree l1, l2;
+      for (l1 = using_list; l1; l1 = CB_CHAIN (l1))
 	{
-	  cb_tree using_list = CB_VALUE (l);
-	  cb_tree l1, l2;
-	  for (l1 = using_list; l1; l1 = CB_CHAIN (l1))
-	    {
-	      for (l2 = parameter_list; l2; l2 = CB_CHAIN (l2))
-		if (strcasecmp (cb_field (CB_VALUE (l1))->name,
-				cb_field (CB_VALUE (l2))->name) == 0)
-		  break;
-	      if (l2 == NULL)
-		parameter_list = cb_list_add (parameter_list, CB_VALUE (l1));
-	    }
+	  for (l2 = parameter_list; l2; l2 = CB_CHAIN (l2))
+	    if (strcasecmp (cb_field (CB_VALUE (l1))->name,
+			    cb_field (CB_VALUE (l2))->name) == 0)
+	      break;
+	  if (l2 == NULL)
+	    parameter_list = cb_list_add (parameter_list, CB_VALUE (l1));
 	}
-
-      output_internal_function (prog, 0, parameter_list);
-      for (l = prog->entry_list; l; l = CB_CHAIN (l))
-	output_entry_function (prog, l, parameter_list);
     }
+
+  /* functions */
+  output_internal_function (prog, parameter_list);
+  for (l = prog->entry_list; l; l = CB_CHAIN (l))
+    output_entry_function (prog, l, parameter_list);
 
   /* main function */
   if (cb_flag_main)

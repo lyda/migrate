@@ -1392,7 +1392,7 @@ screen_plus_minus:
  *****************************************************************************/
 
 procedure_division:
-| PROCEDURE DIVISION using_phrase '.'
+| PROCEDURE DIVISION call_using '.'
   {
     current_section = NULL;
     current_paragraph = NULL;
@@ -1416,10 +1416,6 @@ procedure_division:
     if (current_section)
       emit_statement (cb_build_perform_exit (current_section));
   }
-;
-using_phrase:
-  /* empty */			{ $$ = NULL; }
-| USING x_list		{ $$ = cb_build_using_list ($2); }
 ;
 
 procedure_declaratives:
@@ -1899,7 +1895,7 @@ end_divide:
 
 entry_statement:
   ENTRY				{ BEGIN_STATEMENT ("ENTRY"); }
-  literal using_phrase
+  literal call_using
   {
     if (cb_verify (cb_entry_statement, "ENTRY"))
       emit_entry (CB_LITERAL ($3)->data, $4);
@@ -3417,12 +3413,24 @@ static void
 emit_entry (const char *name, cb_tree using_list)
 {
   char buff[256];
-  cb_tree label;
+  cb_tree l, label;
+
   sprintf (buff, "E$%s", name);
   label = cb_build_label (cb_build_reference (buff), NULL);
   CB_LABEL (label)->name = name;
   CB_LABEL (label)->need_begin = 1;
   emit_statement (label);
+
+  for (l = using_list; l; l = CB_CHAIN (l))
+    {
+      cb_tree x = CB_VALUE (l);
+      if (x != cb_error_node && cb_ref (x) != cb_error_node)
+	{
+	  struct cb_field *f = CB_FIELD (cb_ref (x));
+	  if (f->level != 01 && f->level != 77)
+	    cb_error_x (x, _("`%s' not level 01 or 77"), cb_name (x));
+	}
+      }
 
   current_program->entry_list =
     cb_list_append (current_program->entry_list,

@@ -937,7 +937,6 @@ extern cb_tree cb_build_index (cb_tree name);
 extern cb_tree cb_build_identifier (cb_tree x);
 extern cb_tree cb_build_length (cb_tree x);
 extern cb_tree cb_build_address (cb_tree x);
-extern cb_tree cb_build_using_list (cb_tree list);
 
 extern void cb_validate_program_environment (struct cb_program *prog);
 extern void cb_validate_program_data (struct cb_program *prog);

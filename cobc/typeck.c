@@ -507,25 +507,6 @@ cb_build_address (cb_tree x)
   return cb_build_cast_address (x);
 }
 
-cb_tree
-cb_build_using_list (cb_tree list)
-{
-  cb_tree l;
-  for (l = list; l; l = CB_CHAIN (l))
-    {
-      if (CB_VALUE (l) == cb_error_node)
-	return cb_error_node;
-      else
-	{
-	  cb_tree x = CB_VALUE (l);
-	  struct cb_field *f = CB_FIELD (cb_ref (x));
-	  if (f->level != 01 && f->level != 77)
-	    cb_error_x (x, _("`%s' not level 01 or 77"), cb_name (x));
-	}
-      }
-  return list;
-}
-
 
 /* validate program */
 

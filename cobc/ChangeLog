@@ -1,3 +1,11 @@
+2004-05-06  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* parser.y (procedure_division, entry_statement): Use using_clause.
+	* codegen.c (codegen, output_entry_function): Handle using_list
+	with BY REFERENCE/CONTENT/VALUE.
+	* typeck.c, tree.h (cb_build_using_list): Removed.
+	* cobc.c (process_translate): Do not call codegen when no entry.
+
 2004-05-04  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* parser.y (x): Accept literal with LENGTH OF operator.
