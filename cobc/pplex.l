@@ -370,7 +370,7 @@ ppinput_1 (char *buff, int size)
       break;
     default:
       cb_error (_("invalid indicator `%c' at column 7"), buff[6]);
-      exit (1);
+      break;
     }
 
   /* check the text after cb_text_column */
