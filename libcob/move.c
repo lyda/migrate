@@ -112,7 +112,7 @@ cob_move_alphanum_to_display (struct cob_field f1, struct cob_field f2)
 void
 cob_move_display_to_display (struct cob_field f1, struct cob_field f2)
 {
-  int sign = extract_sign (f1);
+  int sign = extract_sign (f1.desc, f1.data);
   int hf1 = f1.desc->len - f1.desc->decimals;
   int hf2 = f2.desc->len - f2.desc->decimals;
   int lf1 = -f1.desc->decimals;
@@ -137,7 +137,7 @@ cob_move_display_to_display (struct cob_field f1, struct cob_field f2)
 void
 cob_move_display_to_alphanum (struct cob_field f1, struct cob_field f2)
 {
-  int sign = extract_sign (f1);
+  int sign = extract_sign (f1.desc, f1.data);
 
   if (f1.desc->len >= f2.desc->len)
     {
@@ -220,7 +220,7 @@ void
 cob_move_display_to_binary (struct cob_field f1, struct cob_field f2)
 {
   int i, len;
-  int sign = extract_sign (f1);
+  int sign = extract_sign (f1.desc, f1.data);
   long long val = 0;
 
   len = f1.desc->len - f1.desc->decimals + f2.desc->decimals;
@@ -342,7 +342,7 @@ void
 cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 {
   char *p;
-  int sign = extract_sign (f1);
+  int sign = extract_sign (f1.desc, f1.data);
   unsigned char *min, *max, *src, *dst, *end;
   unsigned char pad = ' ';
   int count = 0;

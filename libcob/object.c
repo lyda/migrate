@@ -363,7 +363,7 @@ cob_push_decimal (struct cob_field f)
     default:
       {
 	char *p, buff[32];
-	int sign = extract_sign (f);
+	int sign = extract_sign (f.desc, f.data);
 
 	p = (f.desc->len < 32) ? buff : alloca (f.desc->len + 1);
 	memcpy (p, f.data, f.desc->len);
@@ -594,8 +594,8 @@ cob_compare (struct cob_field f1, struct cob_field f2)
       return cob_cmp ();
     }
 
-  sign1 = extract_sign (f1);
-  sign2 = extract_sign (f2);
+  sign1 = extract_sign (f1.desc, f1.data);
+  sign2 = extract_sign (f2.desc, f2.data);
 
   if (f1.desc->all || f2.desc->all)
     {

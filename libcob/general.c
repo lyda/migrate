@@ -84,22 +84,23 @@ char_to_sign (char ch)
 }
 
 int
-extract_sign (struct cob_field f)
+extract_sign (struct fld_desc *f, char *s)
 {
   char *tmp;
   int digit;
 
-  switch (f.desc->type)
+  if (f->type == 'C')
     {
-    case 'C':
-      digit = f.desc->len / 2;
-      return (f.desc->len & 1) ?	/* odd number of digits? */
-	(((f.data[digit] & 0x0f) == 0x0d) ? 1 : 0) :
-	(((f.data[digit] & 0xf0) == 0xd0) ? 1 : 0);
-    case '9':
-      if (f.desc->pic[0] != 'S')
+      digit = f->len / 2;
+      return (f->len & 1) ?	/* odd number of digits? */
+	(((s[digit] & 0x0f) == 0x0d) ? 1 : 0) :
+	(((s[digit] & 0xf0) == 0xd0) ? 1 : 0);
+    }
+  if (f->type == '9')
+    {
+      if (f->pic[0] != 'S')
 	return 0;
-      tmp = (f.desc->leading_sign) ? f.data : f.data + f.desc->len - 1;
+      tmp = (f->leading_sign) ? s : s + f->len - 1;
       digit = char_to_sign (*tmp);
       if (digit == 0x80)
 	*tmp = '0';
