@@ -1,3 +1,7 @@
+2002-09-23  Keisuke Nishida  <knishida@netlab.jp>
+
+	* strings.c (cob_unstring): Don't use alloca.
+
 2002-09-12  Keisuke Nishida  <knishida@netlab.jp>
 
 	* numeric.h (cob_decimal): Use exponent instead of decimals.

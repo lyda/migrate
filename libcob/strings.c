@@ -339,7 +339,7 @@ cob_unstring (struct cob_field src, ...)
 	{
 	  struct cob_field f = va_arg (ap, struct cob_field);
 	  unsigned char *start = src.data + offset;
-	  regmatch_t *match = NULL;
+	  regmatch_t match[delms + 1];
 	  if (offset >= src.size)
 	    break;
 	  if (delms == 0)
@@ -354,7 +354,6 @@ cob_unstring (struct cob_field src, ...)
 	      if (!reg_inited)
 		{
 		  regcomp (&reg, regexp, 0);
-		  match = alloca ((delms + 1) * sizeof (regmatch_t));
 		  reg_inited = 1;
 		}
 	      if (regexec (&reg, start, delms + 1, match, 0) == 0
