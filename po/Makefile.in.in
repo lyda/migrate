@@ -11,6 +11,8 @@
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
 
+top_builddir = ..
+
 SHELL = /bin/sh
 @SET_MAKE@
 
