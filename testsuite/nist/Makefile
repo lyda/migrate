@@ -15,11 +15,8 @@ check: all
 	for m in $(MODULES); do \
 	  (cd $$m && make check) \
 	done
-	make summary
-	diff summary.txt summary.log
-
-summary:
 	perl summary.pl $(MODULES) > summary.log
+	diff summary.txt summary.log
 
 snap:
 	for m in $(MODULES); do \

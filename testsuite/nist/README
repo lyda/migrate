@@ -11,7 +11,7 @@ Hot To Run NIST CCVS85 Test Suite
 
 3. Run the test suite:
 
-  % make check summary
+  % make check
 
 4. Test report summary will be put in summary.log.
 
@@ -19,7 +19,6 @@ Make Options
 ------------
 
 - make check    run test suite
-- make summary  store the test summary in "summary.log"
 - make snap     copy test logs in *.txt
 - make diff     show diff from *.txt
 - make clean    remove built files
