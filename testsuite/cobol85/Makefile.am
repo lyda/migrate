@@ -1,17 +1,10 @@
-VERSION = 0.6
-
-distdir = open-cobol-testsuite-$(VERSION)
-DISTFILES = README Makefile EXEC85.conf.in expand.pl report.pl summary.pl
-
 #MODULES = CM DB IC IF IX NC OB RL RW SG SM SQ ST
 MODULES = NC SM IC SQ RL IX
 
-all: $(MODULES)
+EXTRA_DIST = EXEC85.conf.in expand.pl report.pl summary.pl
+CLEANFILES = $(MODULES) copy EXEC85 EXEC85.cob
 
-clean:
-	rm -rf $(MODULES) copy EXEC85 EXEC85.cob
-
-check: all
+check: $(MODULES)
 	for m in $(MODULES); do \
 	  (cd $$m && make check) \
 	done
@@ -29,13 +22,6 @@ diff:
 	  (diff $$m.txt $$m/report.log) \
 	done
 	diff summary.txt summary.log
-
-dist:
-	rm -rf $(distdir)
-	mkdir -p $(distdir)/nist
-	cp $(DISTFILES) $(distdir)/nist
-	tar cfz $(distdir).tar.gz $(distdir)
-	rm -rf $(distdir)
 
 $(MODULES): newcob.val EXEC85 EXEC85.conf.in
 	@echo -n "Building module $@..."
