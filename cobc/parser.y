@@ -1507,7 +1507,7 @@ call_returning:
 ;
 on_exception_or_overflow:
   /* nothing */			{ $$ = 0; }
-| ON exception_or_overflow	{ $<ival>$ = begin_on_except(); }
+| ON exception_or_overflow	{ $<ival>$ = gen_marklabel(); }
   statement_list		{ gen_jmplabel($<ival>0); $$=$<ival>3; }
 ;
 exception_or_overflow:
@@ -1516,7 +1516,7 @@ exception_or_overflow:
 ;
 on_not_exception:
   /* nothing */			{ $$ = 0; }
-| NOT ON EXCEPTION		{ $<ival>$ = begin_on_except(); }
+| NOT ON EXCEPTION		{ $<ival>$ = gen_marklabel(); }
   statement_list		{ gen_jmplabel($<ival>-1); $$=$<ival>4; }
 ;
 opt_end_call: | END_CALL ;

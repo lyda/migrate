@@ -197,7 +197,6 @@ extern void gen_delete (cob_tree f);
 extern void set_rec_varying_info (cob_tree f, cob_tree lmin, cob_tree lmax, cob_tree reclen);
 extern void gen_save_using (cob_tree sy);
 extern int gen_call (cob_tree v, struct call_parameter *parameter_list, int exceplabel, int notexceplabel);
-extern int begin_on_except (void);
 extern void check_call_except (int excep, int notexcep, int exceplabel, int notexceplabel, int endlabel);
 extern void gen_initialize (cob_tree sy_start);
 

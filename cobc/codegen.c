@@ -959,7 +959,7 @@ gen_testif (void)
   int j = loc_label++;
   gen_branch_true (j);
   output ("\tjmp\t.L%d\n", i);
-  output (".L%d:\n", j);
+  gen_dstlabel (j);
   return i;
 }
 
@@ -981,7 +981,7 @@ int
 gen_marklabel (void)
 {
   int i = loc_label++;
-  output (".L%d:\n", i);
+  gen_dstlabel (i);
   return i;
 }
 
@@ -1186,7 +1186,7 @@ gen_condition (cob_tree cond)
 	else
 	  gen_branch_true (lab);
 	gen_condition (r);
-	output (".L%d:\n", lab);
+	gen_dstlabel (lab);
       }
       return;
     case COND_VAR:
@@ -1404,8 +1404,6 @@ initialize_values (void)
 	    continue;
 	  if (sy->level != 1 && sy->level != 77)
 	    continue;
-	  // for the time being spec_value will be true if any value encountered;
-	  // later on it will contain only non standard values
 	  if (!sy->flags.value)
 	    continue;
 	  if (sy->level == 77 || (sy->level == 1 && sy->son == NULL))
@@ -2685,7 +2683,7 @@ gen_initialize_1 (cob_tree sy)
 	      output ("\tpushl\t%%ebx\n");
 	      output ("\tpushl\t%%eax\n");
 	      output ("\tmovl\t$%d, %%ebx\n", sy->times);
-	      output (".L%d:\n", lab);
+	      gen_dstlabel (lab);
 	    }
 	  for (p = sy->son; p; p = p->brother)
 	    gen_initialize_1 (p);
@@ -3013,18 +3011,17 @@ gen_perform_times (int lbl)
 void
 gen_perform_thru (cob_tree s1, cob_tree s2)
 {
+  int lbl = loc_label++;
   if (s2 == NULL)
     s2 = s1;
-  output ("\tleal\t.L%d, %%eax\n", loc_label);
+  output ("\tleal\t.L%d, %%eax\n", lbl);
   output ("\tpushl\t%%eax\n");
   output ("\tleal\t.LB_%s, %%eax\n", label_name (s1));
   output ("\tpushl\t%%eax\n");
   output ("\tleal\t.LE_%s, %%eax\n", label_name (s2));
   output ("\tpushl\t%%eax\n");
   output ("\tjmp\t.LB_%s\n", label_name (s1));
-
-  output ("\t.align 16\n");
-  output (".L%d:\n", loc_label++);
+  gen_dstlabel (lbl);
 }
 
 void
@@ -3717,10 +3714,10 @@ gen_exit (cob_tree label)
   output ("\tjb\t\t.L%d\n", l1);
   output ("\tcmpl\t0(%%esp), %%eax\n");
   output ("\tjb\t\t.L%d\n", l2);
-  output (".L%d:\n", l1);
+  gen_dstlabel (l1);
   output ("\taddl\t$8,%%esp\n");
   output ("\tret\n");
-  output (".L%d:\n", l2);
+  gen_dstlabel (l2);
 }
 
 void
@@ -4227,14 +4224,6 @@ gen_call (cob_tree v, struct call_parameter *parameter_list,
     output ("\taddl\t$%d, %%esp\n", totlen);
   stack_offset = saved_stack_offset;
   return endlabel;
-}
-
-int
-begin_on_except ()
-{
-  int i = loc_label++;
-  output (".L%d:\t# begin_on_except\n", i);
-  return i;
 }
 
 void
