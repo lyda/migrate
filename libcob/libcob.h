@@ -223,6 +223,7 @@ extern struct cob_field cob_low;
 extern struct cob_field cob_quote;
 extern struct cob_field cob_switch[];
 extern struct cob_field cob_return_code;
+extern int cob_return_code_value;
 
 /* functional macros */
 
@@ -230,7 +231,7 @@ extern struct cob_field cob_return_code;
 
 #define cob_cmp(x,y) ((x) - (y))
 
-#define cob_exit_program() return 0
+#define cob_exit_program() goto l_exit;
 
 
 /*

@@ -280,34 +280,10 @@ scan_numeric (char *text)
   return NUMERIC_LITERAL;
 }
 
-
-/*
- * Picture scanner
- */
-
-#define PIC_ALPHABETIC		0x01
-#define PIC_NUMERIC		0x02
-#define PIC_NATIONAL		0x04
-#define PIC_EDITED		0x08
-#define PIC_ALPHANUMERIC	(PIC_ALPHABETIC | PIC_NUMERIC)
-#define PIC_ALPHANUMERIC_EDITED	(PIC_ALPHANUMERIC | PIC_EDITED)
-#define PIC_NUMERIC_EDITED	(PIC_NUMERIC | PIC_EDITED)
-#define PIC_NATIONAL_EDITED	(PIC_NATIONAL | PIC_EDITED)
-
 static int
 scan_picture (char *text)
 {
   char *p;
-  char category = 0;
-  int idx = 0;
-  int size = 0;
-  int digits = 0;
-  int decimals = 0;
-  int s_count = 0;
-  int v_count = 0;
-  int buff_size = 9;
-  unsigned char *buff = malloc (buff_size);
-  struct cobc_picture *pic = make_picture ();
 
   /* normalize the input */
   for (p = text; *p; p++)
@@ -323,7 +299,40 @@ scan_picture (char *text)
       *p = toupper (*p);
     }
 
-  for (p = text; *p; p++)
+  yylval.pict = yylex_picture (text);
+  return PICTURE_TOK;
+}
+
+
+/*
+ * Picture scanner
+ */
+
+#define PIC_ALPHABETIC		0x01
+#define PIC_NUMERIC		0x02
+#define PIC_NATIONAL		0x04
+#define PIC_EDITED		0x08
+#define PIC_ALPHANUMERIC	(PIC_ALPHABETIC | PIC_NUMERIC)
+#define PIC_ALPHANUMERIC_EDITED	(PIC_ALPHANUMERIC | PIC_EDITED)
+#define PIC_NUMERIC_EDITED	(PIC_NUMERIC | PIC_EDITED)
+#define PIC_NATIONAL_EDITED	(PIC_NATIONAL | PIC_EDITED)
+
+struct cobc_picture *
+yylex_picture (char *str)
+{
+  char *p;
+  char category = 0;
+  int idx = 0;
+  int size = 0;
+  int digits = 0;
+  int decimals = 0;
+  int s_count = 0;
+  int v_count = 0;
+  int buff_size = 9;
+  unsigned char *buff = malloc (buff_size);
+  struct cobc_picture *pic = make_picture ();
+
+  for (p = str; *p; p++)
     {
       int n = 1;
       unsigned char c = *p;
@@ -508,11 +517,9 @@ scan_picture (char *text)
     default:				goto error;
     }
 
-  yylval.pict = pic;
-  return PICTURE_TOK;
+  return pic;
 
  error:
   yyerror ("invalid picture string");
-  yylval.pict = pic;
-  return PICTURE_TOK;
+  return pic;
 }

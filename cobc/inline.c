@@ -674,7 +674,6 @@ output_call_statement (cobc_tree name, struct cobc_list *args, cobc_tree ret)
 
   /* local variables */
   output_indent ("{", 2);
-  output_line ("int ret = 0;");
   if (!static_link)
     output_line ("int (*func)();");
 
@@ -709,7 +708,7 @@ output_call_statement (cobc_tree name, struct cobc_list *args, cobc_tree ret)
   if (static_link)
     {
       /* static link */
-      output ("ret = %s", COBC_LITERAL (name)->str);
+      output ("i_RETURN_CODE = %s", COBC_LITERAL (name)->str);
     }
   else
     {
@@ -719,7 +718,7 @@ output_call_statement (cobc_tree name, struct cobc_list *args, cobc_tree ret)
       output (";\n");
       output_line ("if (func)");
       output_prefix ();
-      output ("  ret = func");
+      output ("  i_RETURN_CODE = func");
     }
 
   /* arguments */
@@ -773,7 +772,7 @@ output_call_statement (cobc_tree name, struct cobc_list *args, cobc_tree ret)
       output_prefix ();
       output ("cob_set_int (");
       output_tree (ret);
-      output (", ret);\n");
+      output (", i_RETURN_CODE);\n");
     }
 
   output_indent ("}", -2);

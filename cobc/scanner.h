@@ -31,6 +31,7 @@ extern int cobc_skip_comment;
 extern int cobc_in_procedure;
 
 extern int yylex (void);
+extern struct cobc_picture *yylex_picture (char *str);
 
 extern void yywarn (char *fmt, ...);
 extern void yyerror (char *fmt, ...);

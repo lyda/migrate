@@ -175,6 +175,10 @@ tree_to_string_1 (char *s, cobc_tree x)
       }
       break;
 
+    case cobc_tag_label_name:
+      sprintf (s, "%s:", COBC_LABEL_NAME (x)->word->name);
+      break;
+
     case cobc_tag_expr:
       {
 	struct cobc_expr *p = COBC_EXPR (x);
@@ -252,9 +256,9 @@ cobc_tree cobc_high;
 cobc_tree cobc_quote;
 cobc_tree cobc_param;
 cobc_tree cobc_status;
+cobc_tree cobc_switch[8];
 cobc_tree cobc_int0;
 cobc_tree cobc_int1;
-cobc_tree cobc_switch[8];
 
 static cobc_tree
 make_constant (char class, char *val)

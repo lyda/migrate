@@ -77,7 +77,8 @@ long long cob_exp10LL[19] = {
 };
 
 static struct cob_field_desc x_desc = {1, 'X'};
-static struct cob_field_desc b_desc = {1, 'B', 1, 0};
+static struct cob_field_desc s_desc = {1, 'B', 1, 0, 0};
+static struct cob_field_desc b_desc = {4, 'B', 9, 0, 1};
 
 struct cob_field cob_zero =  {&x_desc, "0"};
 struct cob_field cob_space = {&x_desc, " "};
@@ -87,15 +88,18 @@ struct cob_field cob_quote = {&x_desc, "\""};
 
 static char switch_data[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 struct cob_field cob_switch[8] = {
-  {&b_desc, &switch_data[0]},
-  {&b_desc, &switch_data[1]},
-  {&b_desc, &switch_data[2]},
-  {&b_desc, &switch_data[3]},
-  {&b_desc, &switch_data[4]},
-  {&b_desc, &switch_data[5]},
-  {&b_desc, &switch_data[6]},
-  {&b_desc, &switch_data[7]}
+  {&s_desc, &switch_data[0]},
+  {&s_desc, &switch_data[1]},
+  {&s_desc, &switch_data[2]},
+  {&s_desc, &switch_data[3]},
+  {&s_desc, &switch_data[4]},
+  {&s_desc, &switch_data[5]},
+  {&s_desc, &switch_data[6]},
+  {&s_desc, &switch_data[7]}
 };
+
+int cob_return_code_value = 0;
+struct cob_field cob_return_code = {&b_desc, (char *)&cob_return_code_value};
 
 int
 get_sign (struct cob_field f)
@@ -189,7 +193,7 @@ cob_init (int argc, char **argv)
 void
 cob_stop_run (void)
 {
-  exit (0);
+  exit (cob_return_code_value);
 }
 
 void

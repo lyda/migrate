@@ -246,6 +246,7 @@ program_sequence:
 ;
 program:
   {
+    /* init program spec */
     program_spec.program_id = NULL;
     program_spec.initial_program = 0;
     program_spec.class_list = NULL;
@@ -255,10 +256,19 @@ program:
     program_spec.label_list = NULL;
     program_spec.exec_list = NULL;
     label_check_list = NULL;
+    /* init environment */
     cobc_in_procedure = 0;
     cob_decimal_point = '.';
     cob_currency_symbol = '$';
+    /* init symbol table */
     init_word_table ();
+    {
+      cobc_tree rc = make_field (lookup_user_word ("RETURN-CODE"));
+      COBC_FIELD (rc)->pic = yylex_picture ("S9(9)");
+      COBC_FIELD (rc)->usage = USAGE_BINARY;
+      validate_field (COBC_FIELD (rc));
+      finalize_field_tree (COBC_FIELD (rc));
+    }
   }
   identification_division
   environment_division
