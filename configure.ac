@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(open-cobol, 0.9.7.1)
-AC_CONFIG_SRCDIR(cobc/cobc.c)
+AC_INIT(open-cobol, 0.9.7.3)
 AC_CONFIG_AUX_DIR(config)
+AC_CONFIG_SRCDIR(config.h.in)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
@@ -35,21 +35,18 @@ save_libs="$LIBS"
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_CXX
 AM_PROG_LEX
 AC_PROG_YACC
 AC_PROG_LN_S
+AC_PROG_RANLIB
 AC_PROG_INSTALL
 AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 
-# Checks for header files.
-AC_HEADER_STDC
-AC_CHECK_HEADERS([fcntl.h malloc.h])
-
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
-AC_C_BIGENDIAN
 AC_TYPE_OFF_T
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
@@ -61,12 +58,22 @@ AC_FUNC_ALLOCA
 AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([memmove memset regcomp \
+AC_CHECK_FUNCS([memmove memset regcomp pow setlocale strerror \
 		strcasecmp strchr strrchr strdup strstr strtol])
+UTILS_FUNC_MKSTEMP
+
+# Checks for header files.
+AC_HEADER_STDC
+AC_HEADER_STAT
+AC_HEADER_TIME
+AC_CHECK_HEADERS([fcntl.h malloc.h libintl.h locale.h stddef.h \
+		  sys/time.h wchar.h])
 
 # Checks for getopt_long
-AC_CHECK_FUNC([getopt_long_only], getopt=yes, getopt=no)
-AM_CONDITIONAL(HAVE_GETOPT_LONG_ONLY, test "x$getopt" = "xyes")
+AC_CHECK_FUNC([getopt_long_only], ,
+  [AC_LIBOBJ(getopt)
+   AC_LIBOBJ(getopt1)
+   AC_LIBSOURCE(getopt.h)])
 
 # Checks for db.
 AC_CHECK_HEADERS([db.h], , AC_MSG_ERROR(db.h is required))
