@@ -62,8 +62,8 @@ static char short_options[] = "hvo:DT:I:";
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'v'},
-  {"fixed", no_argument, &cob_file_format, COB_FORMAT_FIXED},
   {"free", no_argument, &cob_file_format, COB_FORMAT_FREE},
+  {"fixed", no_argument, &cob_file_format, COB_FORMAT_FIXED},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
   {0, 0, 0, 0}
@@ -86,8 +86,8 @@ print_usage ()
   puts ("  -o <file>     Place the output into <file>");
   puts ("");
   puts ("COBOL options:");
-  puts ("  -fixed        Use standard fixed column format");
-  puts ("  -free         Use X/Open free format (default)");
+  puts ("  -free         Use free source format");
+  puts ("  -fixed        Use fixed source format");
   puts ("  -D            Compile debug lines (i.e., \"D\" lines)");
   puts ("  -T <n>        Tab width (default 8)");
   puts ("  -I <path>     Add include path");

@@ -152,10 +152,10 @@ static char short_options[] = "hvECScmxgOo:DT:I:";
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'v'},
+  {"free", no_argument, &source_format, format_free},
+  {"fixed", no_argument, &source_format, format_fixed},
   {"static", no_argument, &cobc_link_style, LINK_STATIC},
   {"dynamic", no_argument, &cobc_link_style, LINK_DYNAMIC},
-  {"fixed", no_argument, &source_format, format_fixed},
-  {"free", no_argument, &source_format, format_free},
   {"save-temps", no_argument, &save_temps_flag, 1},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
@@ -193,10 +193,10 @@ print_usage ()
   puts ("  -MF <file>    Place dependency list into <file>");
   puts ("");
   puts ("COBOL options:");
+  puts ("  -free         Use free source format");
+  puts ("  -fixed        Use fixed source format");
   puts ("  -static       Use static link for subprogram calls if possible");
   puts ("  -dynamic      Use dynamic link for all subprogram calls (default)");
-  puts ("  -fixed        Use standard fixed column format");
-  puts ("  -free         Use X/Open free format");
   puts ("  -D            Compile debug lines (i.e., \"D\" lines)");
   puts ("  -I <path>     Add include (copybooks) search path");
 #ifdef COB_DEBUG
