@@ -58,7 +58,7 @@
 #define COB_FIELD_SIGN_SEPARATE(f)  ((f)->attr->flags & COB_FLAG_SIGN_SEPARATE)
 #define COB_FIELD_SIGN_LEADING(f)   ((f)->attr->flags & COB_FLAG_SIGN_LEADING)
 #define COB_FIELD_BLANK_ZERO(f)	    ((f)->attr->flags & COB_FLAG_BLANK_ZERO)
-#define COB_FIELD_JUSTIFIED(f)	    ((f)->attr->flags & COB_FLAG_JUSTIFIED)
+#define COB_FIELD_JUSTIFIED(f)      ((f)->attr->flags & COB_FLAG_JUSTIFIED)
 #define COB_FIELD_BINARY_SWAP(f)    ((f)->attr->flags & COB_FLAG_BINARY_SWAP)
 
 /* field attributes */
