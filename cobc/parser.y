@@ -96,7 +96,7 @@ static cobc_tree resolve_label (cobc_tree x);
 
 static struct cobc_field *build_field (cobc_tree level, cobc_tree name, struct cobc_field *last_field);
 static struct cobc_field *validate_redefines (struct cobc_field *field, cobc_tree redefines);
-static int validate_field_tree (struct cobc_field *p);
+static int validate_field (struct cobc_field *p);
 static void finalize_file (struct cobc_file *f, struct cobc_field *records);
 
 static void field_set_used (struct cobc_field *p);
@@ -184,9 +184,8 @@ static void ambiguous_error (cobc_tree x);
 %type <tree> call_param evaluate_object add_to at_line_column
 %type <tree> call_not_on_exception call_on_exception call_returning class_item
 %type <tree> column_number condition data_name expr expr_1
-%type <tree> expr_item field_description field_description_list
-%type <tree> field_description_list_1 field_description_list_2 field_name
-%type <tree> file_name function group_name integer_label
+%type <tree> expr_item field_description_list
+%type <tree> field_name file_name function group_name integer_label
 %type <tree> integer_value label label_name qualified_name name name_1
 %type <tree> line_number literal mnemonic_name opt_subscript subscript
 %type <tree> numeric_value numeric_edited_name numeric_expr
@@ -861,7 +860,7 @@ working_storage_section:
 ;
 field_description_list:
   /* empty */			{ $$ = NULL; }
-| field_description_list_1	{ $$ = $1; }
+| field_description_list_1	{ $$ = $<tree>1; }
 ;
 field_description_list_1:
   {
@@ -870,19 +869,19 @@ field_description_list_1:
   field_description_list_2
   {
     struct cobc_field *p;
-    for (p = COBC_FIELD ($2); p; p = p->sister)
+    for (p = COBC_FIELD ($<tree>2); p; p = p->sister)
       {
-	if (validate_field_tree (p) != 0)
+	if (validate_field (p) != 0)
 	  YYERROR;
-	finalize_field_tree (p);
+	finalize_field (p);
       }
-    $$ = $2;
+    $<tree>$ = $<tree>2;
   }
 ;
 field_description_list_2:
-  field_description		{ $$ = $1; }
+  field_description		{ $<tree>$ = $<tree>1; }
 | field_description_list_2
-  field_description		{ $$ = $1; }
+  field_description		{ $<tree>$ = $<tree>1; }
 ;
 field_description:
   INTEGER_LITERAL field_name
@@ -893,7 +892,7 @@ field_description:
   }
   field_options '.'
   {
-    $$ = COBC_TREE (current_field);
+    $<tree>$ = COBC_TREE (current_field);
   }
 ;
 field_name:
@@ -956,18 +955,15 @@ picture_clause:
 /* USAGE */
 
 usage_clause:
-  _usage usage
-  {
-    current_field->usage = $<inum>2;
-  }
+  usage
+| USAGE _is usage
 ;
 usage:
-  DISPLAY			{ $<inum>$ = COBC_USAGE_DISPLAY; }
-| BINARY /* or COMP */		{ $<inum>$ = COBC_USAGE_BINARY; }
-| PACKED_DECIMAL /* or COMP-3 */{ $<inum>$ = COBC_USAGE_PACKED; }
-| INDEX				{ $<inum>$ = COBC_USAGE_INDEX; }
+  DISPLAY			{ current_field->usage = COBC_USAGE_DISPLAY; }
+| BINARY /* or COMP */		{ current_field->usage = COBC_USAGE_BINARY; }
+| PACKED_DECIMAL /* or COMP-3 */{ current_field->usage = COBC_USAGE_PACKED; }
+| INDEX				{ current_field->usage = COBC_USAGE_INDEX; }
 ;
-_usage: | USAGE _is ;
 
 
 /* SIGN */
@@ -1099,23 +1095,7 @@ blank_clause:
 /* VALUE */
 
 value_clause:
-  VALUE _is_are value_item_list
-  {
-    struct cobc_list *l = $<list>3;
-    if (current_field->level == 88)
-      {
-	/* 88 condition */
-	current_field->values = l;
-      }
-    else
-      {
-	/* single VALUE */
-	if (l->next != NULL || COBC_PARAMETER_P (l->item))
-	  yyerror (_("only level 88 item may have multiple values"));
-	else
-	  current_field->value = l->item;
-      }
-  }
+  VALUE _is_are value_item_list	{ current_field->values = $<list>3; }
 ;
 value_item_list:
   value_item			{ $<list>$ = list ($<tree>1); }
@@ -1170,7 +1150,7 @@ screen_section:
   {
     struct cobc_field *p;
     for (p = COBC_FIELD ($5); p; p = p->sister)
-      finalize_field_tree (p);
+      finalize_field (p);
     current_program->screen_storage = COBC_FIELD ($5);
     current_program->enable_screen = 1;
   }
@@ -2557,11 +2537,12 @@ set_body:
     for (l = $1; l; l = l->next)
       {
 	struct cobc_field *f = field (l->item);
+	cobc_tree value = f->values->item;
 	set_value (l->item, COBC_TREE (f->parent));
-	if (COBC_PARAMETER_P (f->values->item))
-	  push (build_move (COBC_PARAMETER (f->values->item)->x, l->item));
+	if (COBC_PARAMETER_P (value))
+	  push (build_move (COBC_PARAMETER (value)->x, l->item));
 	else
-	  push (build_move (f->values->item, l->item));
+	  push (build_move (value, l->item));
       }
   }
 | set_on_off_list
@@ -4245,23 +4226,22 @@ validate_redefines (struct cobc_field *field, cobc_tree redefines)
 }
 
 static int
-validate_field_tree (struct cobc_field *f)
+validate_field (struct cobc_field *f)
 {
   cobc_tree x = COBC_TREE (f);
+  char *name = tree_name (x);
 
   if (f->children)
     {
       /* group */
       if (f->pic)
-	yyerror_x (x, _("group name `%s' may not have PICTURE"),
-		   tree_name (x));
+	yyerror_x (x, _("group name `%s' may not have PICTURE"), name);
 
       if (f->flag_justified)
-	yyerror_x (x, _("group name `%s' may not have JUSTIFIED RIGHT"),
-		   tree_name (x));
+	yyerror_x (x, _("group name `%s' may not have JUSTIFIED RIGHT"), name);
 
       for (f = f->children; f; f = f->sister)
-	validate_field_tree (f);
+	validate_field (f);
     }
   else if (f->level == 66)
     {
@@ -4270,8 +4250,7 @@ validate_field_tree (struct cobc_field *f)
     {
       /* conditional variable */
       if (f->pic)
-	yyerror_x (x, _("level 88 field `%s' may not have PICTURE"),
-		   tree_name (x));
+	yyerror_x (x, _("level 88 field `%s' may not have PICTURE"), name);
     }
   else
     {
@@ -4279,8 +4258,7 @@ validate_field_tree (struct cobc_field *f)
       if (!f->pic)
 	if (f->usage != COBC_USAGE_INDEX)
 	  {
-	    yyerror_x (x, _("PICTURE clause required for `%s'"),
-		       tree_name (x));
+	    yyerror_x (x, _("PICTURE clause required for `%s'"), name);
 	    return -1; /* cannot continue */
 	  }
 
@@ -4306,7 +4284,7 @@ validate_field_tree (struct cobc_field *f)
       if (f->flag_occurs)
 	if (f->level < 2 || f->level > 49)
 	  yyerror_x (x, _("level %02d field `%s' cannot have OCCURS"),
-		     f->level, tree_name (x));
+		     f->level, name);
 
       /* validate JUSTIFIED RIGHT */
       if (f->flag_justified)
@@ -4317,8 +4295,7 @@ validate_field_tree (struct cobc_field *f)
 	  case COB_TYPE_NATIONAL:
 	    break;
 	  default:
-	    yyerror_x (x, _("`%s' cannot have JUSTIFIED RIGHT"),
-		       tree_name (x));
+	    yyerror_x (x, _("`%s' cannot have JUSTIFIED RIGHT"), name);
 	    break;
 	  }
 
@@ -4333,20 +4310,25 @@ validate_field_tree (struct cobc_field *f)
       /* validate BLANK ZERO */
 
       /* validate VALUE */
-      if (f->value)
+      if (f->values)
 	{
 	  struct cobc_field *p;
+	  cobc_tree value = f->values->item;
+
+	  if (f->values->next || COBC_PARAMETER_P (value))
+	    yyerror_x (x, _("only level 88 item may have multiple values"));
+
 	  for (p = f; p; p = p->parent)
 	    if (p->redefines)
 	      /* ISO+IEC+1989-2002: 13.16.42.2-10 */
 	      yyerror_x (x, _("entries under REDEFINES cannot have VALUE clause"));
-	  if (f->value == cobc_zero)
+	  if (value == cobc_zero)
 	    {
 	      /* just accept */
 	    }
 	  else if (f->pic->category != COB_TYPE_NUMERIC)
 	    {
-	      if (COBC_TREE_CLASS (f->value) == COB_TYPE_NUMERIC)
+	      if (COBC_TREE_CLASS (value) == COB_TYPE_NUMERIC)
 		yyerror_x (x, _("VALUE should be alphanumeric"));
 	    }
 	}

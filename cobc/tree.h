@@ -265,10 +265,9 @@ struct cobc_field {
   int indexes;			/* the number of parents who have OCCURS */
   char *name;			/* the original name */
   char *cname;			/* the name used in C */
-  cobc_tree value;		/* VALUE */
   cobc_tree occurs_depending;	/* OCCURS ... DEPENDING ON */
   enum cobc_usage usage;	/* USAGE */
-  struct cobc_list *values;	/* VALUES used by level 88 item */
+  struct cobc_list *values;	/* VALUE */
   struct cobc_list *index_list;	/* INDEXED BY */
   struct cobc_field *parent;	/* upper level field (NULL for 01 fields) */
   struct cobc_field *children;	/* top of lower level fields */
@@ -317,7 +316,7 @@ extern int field_size (cobc_tree x);
 extern struct cobc_field *field_founder (struct cobc_field *p);
 extern int field_used_any_parent (struct cobc_field *p);
 extern int field_used_any_child (struct cobc_field *p);
-extern void finalize_field_tree (struct cobc_field *p);
+extern void finalize_field (struct cobc_field *p);
 
 struct cobc_picture *make_picture (void);
 

@@ -490,7 +490,7 @@ make_field_3 (cobc_tree name, char *pic, int usage)
   cobc_tree x = make_field (name);
   COBC_FIELD (x)->pic = yylex_picture (pic);
   COBC_FIELD (x)->usage = usage;
-  finalize_field_tree (COBC_FIELD (x));
+  finalize_field (COBC_FIELD (x));
   return x;
 }
 
@@ -742,7 +742,7 @@ compute_size (struct cobc_field *p)
 }
 
 void
-finalize_field_tree (struct cobc_field *p)
+finalize_field (struct cobc_field *p)
 {
   setup_parameters (p);
 

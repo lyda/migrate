@@ -1988,7 +1988,7 @@ static void
 output_screen_definition (struct cobc_field *p)
 {
   int type = (p->children   ? COB_SCREEN_TYPE_GROUP :
-	      p->value      ? COB_SCREEN_TYPE_VALUE :
+	      p->values     ? COB_SCREEN_TYPE_VALUE :
 	      (p->size > 0) ? COB_SCREEN_TYPE_FIELD :
 			      COB_SCREEN_TYPE_ATTRIBUTE);
 
@@ -2006,8 +2006,8 @@ output_screen_definition (struct cobc_field *p)
       output ("&s_%s", p->children->cname);
       break;
     case COB_SCREEN_TYPE_VALUE:
-      output_quoted_string (COBC_LITERAL (p->value)->data,
-			    COBC_LITERAL (p->value)->size);
+      output_quoted_string (COBC_LITERAL (p->values->item)->data,
+			    COBC_LITERAL (p->values->item)->size);
       break;
       break;
     case COB_SCREEN_TYPE_FIELD:
@@ -2095,7 +2095,7 @@ output_class_definition (struct cobc_class *p)
 static int
 have_value (struct cobc_field *p)
 {
-  if (p->value)
+  if (p->values)
     return 1;
   for (p = p->children; p; p = p->sister)
     if (have_value (p))
@@ -2109,14 +2109,15 @@ output_value (struct cobc_field *f)
   if (!field_used_any_child (f) && !field_used_any_parent (f))
     return;
 
-  if (f->value)
+  if (f->values)
     {
-      if (COBC_CONST_P (f->value)
-	  || COBC_TREE_CLASS (f->value) == COB_TYPE_NUMERIC
-	  || COBC_LITERAL (f->value)->all)
+      cobc_tree value = f->values->item;
+      if (COBC_CONST_P (value)
+	  || COBC_TREE_CLASS (value) == COB_TYPE_NUMERIC
+	  || COBC_LITERAL (value)->all)
 	{
 	  /* figurative literal, numeric literal, or ALL literal */
-	  output_move (f->value, COBC_TREE (f));
+	  output_move (value, COBC_TREE (f));
 	}
       else
 	{
@@ -2124,8 +2125,8 @@ output_value (struct cobc_field *f)
 	  /* We do not use output_move here because
 	     we do not want to have the value be edited. */
 	  char buff[f->size];
-	  char *str = COBC_LITERAL (f->value)->data;
-	  int size = COBC_LITERAL (f->value)->size;
+	  char *str = COBC_LITERAL (value)->data;
+	  int size = COBC_LITERAL (value)->size;
 	  if (size >= f->size)
 	    {
 	      memcpy (buff, str, f->size);
