@@ -344,20 +344,15 @@ opt_special_names_sentences:
     | /*nothing*/
     ;
 special_names_sentences:
-    currency_details_opt
-    decimal_point_details_opt
-    '.'
-    | CONSOLE IS CONSOLE '.'
-        { yywarn ("ignoring setting CONSOLE"); }
+      currency_details_opt decimal_point_details_opt '.'
+    | CONSOLE IS CONSOLE '.' { yywarn ("ignoring setting CONSOLE"); }
     ;
 currency_details_opt:
     currency_details
     | /* nothing */
     ;
 currency_details:
-    CURRENCY opt_sign IS CLITERAL {
-                currency_symbol = $<lval>4->name[0];
-                }
+    CURRENCY opt_sign IS CLITERAL { currency_symbol = $<lval>4->name[0]; }
     ;
 opt_sign:
     SIGN
@@ -368,8 +363,7 @@ decimal_point_details_opt:
     | /* nothing */
     ;
 decimal_point_details:
-    DECIMAL_POINT IS COMMA {
-                decimal_comma=1; }
+    DECIMAL_POINT IS COMMA { decimal_comma=1; }
     ;
 input_output_section:
     input_output_section i_o_option { }
@@ -457,28 +451,18 @@ opt_optional:
     OPTIONAL            { $$=1; }
     | /* nothing */     { $$=0; }
     ;
-opt_is:
-    IS { }
-    | /* nothing */
-    ;
-opt_mode:
-    MODE
-    | /* nothing */
-    ;
 organization_options:
-    INDEXED     { $$=1; }
-    | SEQUENTIAL    { $$=2; }
-    | RELATIVE  { $$=3; }
-    | LINE SEQUENTIAL { $$=4; }
-    | anystring 
-     { yyerror("invalid option, %s",$1->name); }
+      INDEXED		{ $$ = 1; }
+    | SEQUENTIAL	{ $$ = 2; }
+    | RELATIVE		{ $$ = 3; }
+    | LINE SEQUENTIAL	{ $$ = 4; }
+    | anystring { yyerror("invalid option, %s",$1->name); }
     ;
 access_options:
-    SEQUENTIAL  { $$=1; }
-    | DYNAMIC   { $$=2; }
-    | RANDOM    { $$=3; }
-    | anystring 
-     { yyerror("invalid access option, %s", $1->name); }
+      SEQUENTIAL	{ $$ = 1; }
+    | DYNAMIC		{ $$ = 2; }
+    | RANDOM		{ $$ = 3; }
+    | anystring { yyerror("invalid access option, %s", $1->name); }
     ;
 io_control:
     io_control io_ctrl
@@ -492,15 +476,6 @@ name_list:
     | name_list variable { }
     | error { yyerror("variable expected"); }
     ;
-/*
-data_division:
-    opt_file_section
-    opt_working_storage
-    opt_linkage_section
-    opt_screen_section
-    opt_record_section
-        ;
-*/
 data_division_opt: DATA_TOK DIVISION '.' 
     {
      curr_division = CDIV_DATA;
@@ -510,23 +485,22 @@ data_division_opt: DATA_TOK DIVISION '.'
     opt_linkage_section
     opt_screen_section
     opt_record_section
-    { 
-     data_trail(); 
-     curr_division = CINITIAL; 
+    {
+      data_trail();
+      curr_division = CINITIAL;
     }
     | /* nothing */
-;
+    ;
 opt_record_section:
-        REPORT SECTION '.'
-        report_section
-        | /* nothing */
-;
+    REPORT SECTION '.' report_section
+    | /* nothing */
+    ;
 opt_screen_section:
-    SCREEN SECTION '.'  {
-                                        screen_io_enable++;
-                                        curr_field=NULL;
-                                        scr_line = scr_column = 1;
-                        }
+    SCREEN SECTION '.' {
+      screen_io_enable++;
+      curr_field=NULL;
+      scr_line = scr_column = 1;
+    }
     screen_section      { close_fields(); }
     | /* nothing */
     ;
@@ -1060,42 +1034,17 @@ sort_attrib:
       depend_rec_varying 
       { set_rec_varying_info( $<sval>-1,$6,$7,$9 ); }
     ;
-rec_or_recs:
-    RECORD
-    | RECORDS
-    ;
-std_or_omitt:
-    STANDARD
-    | OMITTED
-    ;
-opt_USAGE:
-    /* nothing */
-    | USAGE
-    ;
-opt_TIMES:
-    /* nothing */
-    | TIMES
-    ;
-opt_when:
-    /* nothing */
-    | WHEN
-    ;
-opt_is_are:
-    /* nothing */
-    | IS { }
-    | ARE { }
-    ;
-opt_contains:
-    /* nothing */
-    | CONTAINS
-    ;
-opt_characters:
-        | CHARACTERS
-        ;
-chars_or_recs:
-    CHARACTERS
-    | RECORDS
-    ;
+rec_or_recs: RECORD | RECORDS ;
+std_or_omitt: STANDARD | OMITTED ;
+opt_USAGE: | USAGE ;
+opt_TIMES: | TIMES ;
+opt_when: | WHEN ;
+opt_is: | IS { } ;
+opt_mode: | MODE ;
+opt_is_are: | IS { } | ARE { } ;
+opt_contains: | CONTAINS ;
+opt_characters: | CHARACTERS ;
+chars_or_recs: CHARACTERS | RECORDS ;
 usage:  USAGENUM    { $$=$1; }
     | DISPLAY   { /*$$=9;*/  $$=USAGE_DISPLAY; }
     | POINTER   { /*$$=10;*/ $$=USAGE_POINTER; }
@@ -1112,11 +1061,6 @@ linkage_section:
     | linkage_section
         field_description
     ;
-/*
-procedure_division:
-    | procedure_division procedure_decl
-    ;
-*/
 procedure_division_opt: PROCEDURE_TOK DIVISION 
     { 
      curr_division = CDIV_PROC; 
@@ -1172,6 +1116,10 @@ paragraph:
  * Statements
  */
 
+statement_list:
+    statement _look_ahead_ {stabs_line();}
+    | statement_list statement _look_ahead_ {stabs_line();}
+    ;
 conditional_statement_list:
     statement_list opt_continue
     | CONTINUE {stabs_line();}
@@ -1182,14 +1130,10 @@ opt_continue:
     | CONTINUE {stabs_line();}
     | NEXT SENTENCE {stabs_line();}
     ;
-statement_list:
-    statement opt_dummy {stabs_line();}
-    | statement_list statement opt_dummy {stabs_line();}
-    ;
 /* this token doesn't really exists, but forces look ahead 
    to keep line numbers synchronized with our position
    because we need to generate correct debug stabs */
-opt_dummy: | TOKDUMMY ;
+_look_ahead_: | TOKDUMMY ;
 
 statement:
       accept_statement
@@ -1937,20 +1881,22 @@ opt_end_call:
 /* IF statement */
 
 if_statement:
-      if_part { gen_dstlabel($1); } opt_end_if 
-    | if_part ELSE
-      { $<dval>$=gen_passlabel(); gen_dstlabel($1); }
-        conditional_statement_list { gen_dstlabel($<dval>3); }
-      opt_end_if
+      if_part { gen_dstlabel($1); } end_if 
+    | if_part ELSE {
+	$<dval>$=gen_passlabel();
+	gen_dstlabel($1);
+      }
+      conditional_statement_list {
+	gen_dstlabel($<dval>3);
+      }
+    end_if
 if_part:
     IF  condition  { $<dval>$=gen_testif(); }
-        opt_then
+        then
         conditional_statement_list { $<dval>$=$<dval>3; }
     ;
-opt_end_if:
-    /* nothing */
-    | END_IF
-    ;
+then: | THEN ;
+end_if: | END_IF ;
 
 
 /* SEARCH statement */
@@ -2143,7 +2089,7 @@ opt_end_compute:
 /* ADD statement */
 
 add_statement:
-    ADD add_body opt_end_add
+    ADD add_body end_add
     ;
 add_body:
       var_list_gname TO var_list_name on_size_error
@@ -2181,10 +2127,7 @@ opt_add_to:
     /* nothing */ { $$ = NULL; }
     | TO gname    { $$ = $2; }
     ;
-opt_end_add:
-    /* nothing */
-    | END_ADD
-    ;
+end_add: | END_ADD ;
 
 
 /* SUBTRACT statement */
@@ -3065,7 +3008,6 @@ opt_not:
     /* nothing */ { $$=0; }
     | NOT { $$=1; }
     ;
-opt_then: | THEN ;
 opt_key: | KEY ;
 opt_line: | LINE ;
 opt_advancing: | ADVANCING ;
