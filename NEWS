@@ -1,5 +1,30 @@
 NEWS - user visible changes				-*- outline -*-
 
+
+* Version 0.8.6 での変更点
+
+** 固定形式での `-' による行の接続を実装
+
+** -I オプションを実装
+
+COPY で読み込まれるファイルの置いてあるディレクトリを指定出来る。
+
+** 新しい C 関数 cob_init
+
+メインプログラムを C で書くとき、COBOL プログラムを呼び出す前に
+
+  cob_init (argc, argv);
+
+としてやる。
+
+** 新しい C 関数 cob_set_library_path
+
+環境変数 COB_LIBRARY_PATH を設定するのと同様のことを
+C プログラムから行なう。環境変数よりも優先される。
+
+** 更なるバグ修正
+
+
 * Version 0.8.5 での変更点
 
 ** cobpp を $(PREFIX)/bin にインストール
