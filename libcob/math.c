@@ -238,12 +238,10 @@ cob_num_pow (void)
 int
 cob_num_cmp (void)
 {
-  int val;
   decimal d2 = COB_DECIMAL (POP ());
   decimal d1 = COB_DECIMAL (POP ());
   arrange_decimal (d1, d2);
-  val = mpz_cmp (d1->number, d2->number); /* return value may not be -1,0,1 */
-  return (val < 0) ? -1 : (val > 0) ? 1 : 0;
+  return mpz_cmp (d1->number, d2->number);
 }
 
 
