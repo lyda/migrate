@@ -2920,10 +2920,9 @@ cb_emit_start (cb_tree file, cb_tree op, cb_tree key)
  */
 
 void
-cb_emit_stop_run (void)
+cb_emit_stop_run (cb_tree x)
 {
-  cb_emit (cb_build_funcall_1 ("cob_stop_run",
-			       cb_build_cast_integer (cb_return_code)));
+  cb_emit (cb_build_funcall_1 ("cob_stop_run", cb_build_cast_integer (x)));
 }
 
 

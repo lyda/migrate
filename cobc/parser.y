@@ -2615,14 +2615,20 @@ end_start:
  */
 
 stop_statement:
-  STOP RUN			{ BEGIN_STATEMENT ("STOP"); }
+  STOP RUN		{ BEGIN_STATEMENT ("STOP"); }
+  stop_returning
   {
-    cb_emit_stop_run ();
+    cb_emit_stop_run ($4);
   }
 | STOP literal
   {
     cb_verify (cb_stop_literal_statement, "STOP literal");
   }
+;
+stop_returning:
+  /* empty */		{ $$ = cb_return_code; }
+| RETURNING x		{ $$ = $2; }
+| GIVING x		{ $$ = $2; }
 ;
 
 

@@ -1039,7 +1039,7 @@ extern void cb_emit_sort_finish (cb_tree file);
 
 extern void cb_emit_start (cb_tree file, cb_tree op, cb_tree key);
 
-extern void cb_emit_stop_run (void);
+extern void cb_emit_stop_run (cb_tree x);
 
 extern void cb_emit_string (cb_tree items, cb_tree into, cb_tree pointer);
 

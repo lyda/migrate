@@ -1,3 +1,8 @@
+2004-05-15  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* parser.y (stop_statement): Accept RETURNING/GIVING phrase.
+	* typeck.c, tree.h (cb_emit_stop_run): Take an argument.
+
 2004-05-06  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* parser.y (procedure_division, entry_statement): Use using_clause.
