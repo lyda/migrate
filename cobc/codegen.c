@@ -1450,7 +1450,9 @@ output_stmt (cb_tree x)
 	    last_line = x->source_line;
 	  }
 
-	output_line ("cob_exception_code = 0;");
+	if (p->handler1 || p->handler2
+	    || (p->file && CB_EXCEPTION_ENABLE (COB_EC_I_O)))
+	  output_line ("cob_exception_code = 0;");
 
 	if (p->body)
 	  output_stmt (p->body);
