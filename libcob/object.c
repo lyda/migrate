@@ -156,8 +156,7 @@ void
 cob_push_field (struct cob_field fld)
 {
   struct cob_field *p = COB_FIELD (grab_object (COB_TYPE_FIELD));
-  p->desc = fld.desc;
-  p->data = fld.data;
+  *p = fld;
 }
 
 void
