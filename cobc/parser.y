@@ -158,7 +158,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <sival> screen_clauses
 %type <snval> sort_file_list,sort_input,sort_output
 %type <str> idstring
-%type <tree> field_description,label,filename,noallname,paragraph,assign_clause
+%type <tree> field_description,label,filename,noallname,assign_clause
 %type <tree> file_description,redefines_var,function_call,subscript
 %type <tree> name,gname,number,file,level1_variable,opt_def_name,def_name
 %type <tree> opt_read_into,opt_write_from,field_name,expr,unsafe_expr
@@ -167,7 +167,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <tree> qualified_var,unqualified_var,evaluate_subject
 %type <tree> evaluate_object,evaluate_object_1
 %type <tree> call_returning,screen_to_name,var_or_lit,opt_add_to
-%type <tree> sort_keys,opt_perform_thru,procedure_section
+%type <tree> sort_keys,opt_perform_thru
 %type <tree> opt_read_key,file_name,string_with_pointer
 %type <tree> variable,sort_range,name_or_lit,delimited_by
 %type <tree> indexed_variable,search_opt_varying,opt_key_is
@@ -1162,8 +1162,8 @@ procedure_list:
 | procedure_list procedure
 ;
 procedure:
-  procedure_section		{ close_section(); open_section($1); }
-| paragraph			{ close_paragr(); open_paragr($1); }
+  procedure_section
+| procedure_paragraph
 | statement_list dot
 | error '.'
 | '.'
@@ -1176,10 +1176,12 @@ procedure_section:
       lab = install(COB_FIELD_NAME (lab), SYTB_LAB, 2);
     }
     lab->defined = 1;
-    $$=lab;
+
+    close_section ();
+    open_section(lab);
   }
 ;
-paragraph:
+procedure_paragraph:
   LABELSTR dot
   {
     cob_tree lab=$1;
@@ -1190,7 +1192,8 @@ paragraph:
     }
     lab->parent = curr_section;
     lab->defined=1;
-    $$=lab;
+    close_paragr();
+    open_paragr(lab);
   }
 ;
 
@@ -3007,7 +3010,23 @@ unqualified_var:
 ;
 
 label:
-  LABELSTR
+  INTEGER_TOK
+  {
+    cob_tree lab = install (COB_FIELD_NAME ($1), SYTB_VAR, 0);
+    if (lab->defined == 0)
+      {
+	lab->defined = 2;
+	lab->parent = curr_section;
+      }
+    else if ((lab = lookup_label (lab, curr_section)) == NULL)
+      {
+	lab = install (COB_FIELD_NAME ($1), SYTB_LAB, 2);
+	lab->defined = 2;
+	lab->parent = curr_section;
+      }
+    $$ = lab;
+  }
+| LABELSTR
   {
     cob_tree lab = $1;
     if (lab->defined == 0)
