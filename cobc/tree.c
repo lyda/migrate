@@ -353,8 +353,7 @@ cb_tree cb_int2;
 cb_tree cb_i[8];
 cb_tree cb_error_node;
 cb_tree cb_return_code;
-
-struct cb_label *cb_standard_error_handler;
+cb_tree cb_standard_error_handler;
 
 static cb_tree
 make_constant (enum cb_category category, const char *val)
@@ -365,14 +364,13 @@ make_constant (enum cb_category category, const char *val)
   return CB_TREE (p);
 }
 
-static struct cb_label *
+static cb_tree
 make_constant_label (const char *name)
 {
-  struct cb_label *l =
-    CB_LABEL (cb_build_label (make_reference (name), NULL));
-  l->cname = name;
-  l->need_begin = 1;
-  return l;
+  struct cb_label *p = CB_LABEL (cb_build_label (make_reference (name), NULL));
+  p->cname = name;
+  p->need_begin = 1;
+  return CB_TREE (p);
 }
 
 void
@@ -1524,7 +1522,7 @@ build_file (cb_tree name)
 
   p->organization = COB_ORG_SEQUENTIAL;
   p->access_mode = COB_ACCESS_SEQUENTIAL;
-  p->handler = cb_standard_error_handler;
+  p->handler = CB_LABEL (cb_standard_error_handler);
   return p;
 }
 

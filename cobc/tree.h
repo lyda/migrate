@@ -231,8 +231,7 @@ extern cb_tree cb_int2;
 extern cb_tree cb_i[8];
 extern cb_tree cb_error_node;
 extern cb_tree cb_return_code;
-
-extern struct cb_label *cb_standard_error_handler;
+extern cb_tree cb_standard_error_handler;
 
 struct cb_const {
   struct cb_tree_common common;

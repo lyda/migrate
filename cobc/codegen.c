@@ -2033,7 +2033,7 @@ output_internal_function (struct cb_program *prog, int single,
 
   /* error handlers */
   output_line ("/* error handlers */");
-  output_stmt (CB_TREE (cb_standard_error_handler));
+  output_stmt (cb_standard_error_handler);
   output_line ("switch (cob_error_file->last_open_mode)");
   output_line ("  {");
   for (i = COB_OPEN_INPUT; i <= COB_OPEN_EXTEND; i++)
@@ -2048,7 +2048,7 @@ output_internal_function (struct cb_program *prog, int single,
   output_line ("    cob_default_error_handle ();");
   output_line ("    break;");
   output_line ("  }");
-  output_perform_exit (cb_standard_error_handler);
+  output_perform_exit (CB_LABEL (cb_standard_error_handler));
   output_newline ();
 
   /* PROCEDURE DIVISION */
