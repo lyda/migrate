@@ -53,7 +53,6 @@ enum cb_tag {
   CB_TAG_STATEMENT,		/* general statement */
   /* miscellaneous */
   CB_TAG_LIST,
-  CB_TAG_PARAMETER,
 };
 
 enum cb_alphabet_name_type {
@@ -686,24 +685,6 @@ extern int list_length (cb_tree l);
 #define CB_PAIR_Y(x)		CB_VALUE (x)
 
 #define cb_build_pair(x,y)	cb_build_list (x, y, 0)
-
-
-/*
- * Parameter
- */
-
-struct cb_parameter {
-  struct cb_tree_common common;
-  int type;
-  cb_tree x;
-  cb_tree y;
-};
-
-#define CB_PARAMETER(x)		(CB_TREE_CAST (CB_TAG_PARAMETER, struct cb_parameter, x))
-#define CB_PARAMETER_P(x)	(CB_TREE_TAG (x) == CB_TAG_PARAMETER)
-
-extern cb_tree cb_build_parameter (int type, cb_tree x, cb_tree y);
-#define cb_build_parameter_1(type,x) cb_build_parameter (type, x, 0)
 
 
 /*

@@ -135,7 +135,7 @@ static void terminator_warning (void);
   struct cb_picture *pict;
 }
 
-%token <sval>  FUNCTION_NAME
+%token <sval> FUNCTION_NAME
 %token <pict> PICTURE
 %token <tree> WORD LITERAL CLASS_NAME MNEMONIC_NAME
 
@@ -2147,8 +2147,8 @@ evaluate_object_list:
   evaluate_object		{ $<tree>$ = list_add ($<tree>1, $<tree>3); }
 ;
 evaluate_object:
-  flag_not expr			{ $<tree>$ = cb_build_parameter ($1, $2, 0); }
-| flag_not expr THRU expr	{ $<tree>$ = cb_build_parameter ($1, $2, $4); }
+  flag_not expr			{ $<tree>$ = cb_build_int_list ($1, cb_build_pair ($2, 0)); }
+| flag_not expr THRU expr	{ $<tree>$ = cb_build_int_list ($1, cb_build_pair ($2, $4)); }
 | ANY				{ $<tree>$ = cb_any; }
 | TOK_TRUE			{ $<tree>$ = cb_true; }
 | TOK_FALSE			{ $<tree>$ = cb_false; }

@@ -1877,22 +1877,6 @@ list_length (cb_tree l)
 
 
 /*
- * Parameter
- */
-
-cb_tree
-cb_build_parameter (int type, cb_tree x, cb_tree y)
-{
-  struct cb_parameter *p =
-    make_tree (CB_TAG_PARAMETER, CB_CATEGORY_UNKNOWN, sizeof (struct cb_parameter));
-  p->type = type;
-  p->x = x;
-  p->y = y;
-  return CB_TREE (p);
-}
-
-
-/*
  * Program
  */
 
@@ -2707,7 +2691,8 @@ cb_build_cond (cb_tree x)
 static cb_tree
 evaluate_test (cb_tree s, cb_tree o)
 {
-  struct cb_parameter *p;
+  int flag;
+  cb_tree x, y;
 
   /* ANY is always true */
   if (o == cb_any)
@@ -2719,28 +2704,30 @@ evaluate_test (cb_tree s, cb_tree o)
   if (o == cb_false)
     return cb_build_negation (s);
 
-  p = CB_PARAMETER (o);
+  flag = CB_PURPOSE_INT (o);
+  x = CB_PAIR_X (CB_VALUE (o));
+  y = CB_PAIR_Y (CB_VALUE (o));
 
   /* subject TRUE or FALSE */
   if (s == cb_true)
-    return p->type ? cb_build_negation (p->x) : p->x;
+    return flag ? cb_build_negation (x) : x;
   if (s == cb_false)
-    return p->type ? p->x : cb_build_negation (p->x);
+    return flag ? x : cb_build_negation (x);
 
   /* x THRU y */
-  if (p->y)
+  if (y)
     {
-      cb_tree x = cb_build_binary_op (cb_build_binary_op (p->x, '[', s),
-				     '&',
-				     cb_build_binary_op (s, '[', p->y));
-      return p->type ? cb_build_negation (x) : x;
+      cb_tree t = cb_build_binary_op (cb_build_binary_op (x, '[', s),
+				      '&',
+				      cb_build_binary_op (s, '[', y));
+      return flag ? cb_build_negation (t) : t;
     }
 
   /* regular comparison */
-  if (p->type)
-    return cb_build_binary_op (s, '~', p->x);
+  if (flag)
+    return cb_build_binary_op (s, '~', x);
   else
-    return cb_build_binary_op (s, '=', p->x);
+    return cb_build_binary_op (s, '=', x);
 }
 
 static cb_tree
