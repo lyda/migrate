@@ -6,6 +6,7 @@ cobc_LDADD = -L$(top_srcdir)/libcob -lcob
 cobc_LIBS = $(top_srcdir)/lib/libsupport.a
 EXTRA_cobc_SOURCES = inline.c
 
+BUILT_SOURCES = parser.c parser.h scanner.c
 CLEANFILES = parser.c parser.h scanner.c y.output
 MAINTAINERCLEANFILES = Makefile.in
 

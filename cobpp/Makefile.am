@@ -4,6 +4,7 @@ cobpp_CFLAGS = -I$(top_srcdir)/lib
 cobpp_LDADD = @LTLIBINTL@
 cobpp_LIBS = $(top_srcdir)/lib/libsupport.a
 
+BUILT_SOURCES = parser.c parser.h scanner.c
 CLEANFILES = parser.c parser.h scanner.c
 MAINTAINERCLEANFILES = Makefile.in
 
