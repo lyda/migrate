@@ -349,25 +349,22 @@ cob_unstring_delimited (cob_field *dlm, int all)
   int i;
   unsigned char *p;
 
-  if (unstring_ndlms > 0)
-    strcat (unstring_regexp, "\\|");
-  strcat (unstring_regexp, "\\(");
-
-  /* copy deliminator with regexp quote */
+  /* build regexp, quoting the delimiter */
   p = unstring_regexp + strlen (unstring_regexp);
+  if (unstring_ndlms > 0)
+    *p++ = '|';
+  *p++ = '(';
   for (i = 0; i < dlm->size; i++)
     {
       int c = dlm->data[i];
-      if (c == '.' || c == '\\')
-	*p++ = '\\';
+      if (strchr ("+*?{}[]()\\^$|.", c))
+        *p++ = '\\';
       *p++ = c;
     }
+  *p++ = ')';
+   if(all)
+     *p++ = '+';
   *p = 0;
-
-  strcat (unstring_regexp, "\\)");
-  if (all)
-    strcat (unstring_regexp, "\\+");
-
   unstring_ndlms++;
 }
 
@@ -398,7 +395,7 @@ cob_unstring_into (cob_field *dst, cob_field *dlm, cob_field *cnt)
       /* delimit using regexec */
       if (!unstring_reg_inited)
 	{
-	  regcomp (&unstring_reg, unstring_regexp, 0);
+	  regcomp (&unstring_reg, unstring_regexp, REG_EXTENDED);
 	  unstring_reg_inited = 1;
 	}
       if (regexec (&unstring_reg, start, unstring_ndlms + 1, match, 0) == 0
