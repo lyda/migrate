@@ -39,10 +39,10 @@ make
 %files
 %defattr (-,root,root)
 %doc AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README THANKS VERSION
-%doc /usr/share/info/open-cobol.info.gz
 %{_bindir}
 %{_libdir}
 %{_includedir}
+%{_infodir}/open-cobol.info*
 
 %post
 /sbin/ldconfig
