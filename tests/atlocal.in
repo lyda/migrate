@@ -1,4 +1,4 @@
-AUTOTEST_PATH="${abs_top_builddir}/cobpp:${abs_top_builddir}/cobc"
+AUTOTEST_PATH="${abs_top_builddir}/cobc"
 PATH="$AUTOTEST_PATH:$PATH"
 
 CC="@CC@"
