@@ -2,10 +2,53 @@ NEWS - user visible changes				-*- outline -*-
 
 * Changes in OpenCOBOL 0.24
 
-** Bug fixes
+** We no longer use readline.
 
-*** Refer to the relative key on the REWRITE statement 
-unless the access mode is sequential.
+** New subdirectory `config' will be installed under
+   $prefix/share/open-cobol.
+
+** Binary data items are now big endian.
+COMP-5 data items are native integers.
+
+** COPY statements try to complement the file extension:
+   .CBL, .COB, .cbl, or .cob.
+
+** New environment variable TMPDIR.
+
+** New environment variable COB_LDFLAGS.
+
+** New compiler option `-conf', which specifies the config file.
+
+** New compiler option `-ext', which specifies the copy file extension.
+
+** The compiler option `O' now does C level optimization.
+
+** New compiler option `-O2', which does further C level optimization.
+
+** New compiler option `-fsyntax-only', which does syntax error check
+only without any output.
+
+** New compiler option `-fauto-initialize', which initializes all
+data items at the beginning of program.
+
+** New compiler option `-fdebugging-line', which enables debugging lines.
+
+** New compiler option `-fsource-location', which includes source location
+in the output.
+
+** New compiler option `-fline-directive', which includes line directive
+in the output.
+
+** New compiler option `-fruntime-inlining', which is the replacement
+of obsolete options `-finline-move' and `-finline-get-int'.
+
+** New compiler option `-w', which inhibits warnings.
+
+** The compiler option `-column' removed.
+
+** SHARING clause has been implemented.
+
+** Many bug fixes.
 
 
 * Changes in OpenCOBOL 0.23
