@@ -138,8 +138,6 @@ sequential_read (struct cob_file_desc *f)
     {
       if (read (f->file.fd, &f->record_size, sizeof (f->record_size)) <= 0)
 	return 10;
-      if (f->record_depending.desc)
-	cob_set_int (f->record_depending, f->record_size);
     }
 
   if (read (f->file.fd, f->record_data, f->record_size) <= 0)
@@ -358,9 +356,6 @@ relative_read (struct cob_file_desc *f, struct cob_field k)
   if (f->record_size == 0)
     return 23;
 
-  if (f->record_depending.desc)
-    cob_set_int (f->record_depending, f->record_size);
-
   lseek (f->file.fd, sizeof (f->record_size), SEEK_CUR);
   read (f->file.fd, f->record_data, f->record_max);
   return 00;
@@ -392,9 +387,6 @@ relative_read_next (struct cob_file_desc *f)
 
       if (f->record_size > 0)
 	{
-	  if (f->record_depending.desc)
-	    cob_set_int (f->record_depending, f->record_size);
-
 	  read (f->file.fd, f->record_data, f->record_max);
 	  return 00;
 	}
@@ -644,7 +636,7 @@ indexed_read (struct cob_file_desc *f, struct cob_field k)
     return 23;
 
   f->record_size = data.size;
-  memcpy (f->record_data, data.data, f->record_size);
+  memcpy (f->record_data, data.data, data.size);
 
   return 00;
 }
@@ -677,7 +669,7 @@ indexed_read_next (struct cob_file_desc *f)
     {
     case 0:
       f->record_size = data.size;
-      memcpy (f->record_data, data.data, f->record_size);
+      memcpy (f->record_data, data.data, data.size);
       return 00;
     case DB_NOTFOUND:
       return 10;
@@ -993,6 +985,8 @@ read_common (struct cob_file_desc *f, struct cob_field key)
     case 00:
       f->f.first_read = 0;
       f->f.read_done = 1;
+      if (f->record_depending.desc)
+	cob_set_int (f->record_depending, f->record_size);
       break;
     case 10:
       f->f.end_of_file = 1;
