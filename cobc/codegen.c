@@ -23,6 +23,12 @@
 
 #include "config.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
+#include <ctype.h>
+
 #include "cobc.h"
 #include "codegen.h"
 #include "_libcob.h"
