@@ -54,11 +54,10 @@ static int scan_word (char *text);
 static int scan_reserved_word (char *text);
 %}
 
-digit [0-9]
 white [\r\t ]
 any [!-~]
 
-word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
+word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
 
 %x IDENT_ST ENVIR_ST DATA_ST COMMENT_ST FD_ST REDEF_ST
 %x EXCEPTION_ST PIC_ST
@@ -110,21 +109,6 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   cob_orig_filename = strdup (strchr (endp, '"') + 1);
   strrchr (cob_orig_filename, '"')[0] = '\0';
 }
-
-"," {
-  return ',';
-}
-
-"(" {
-  if (need_subscripts) {
-    need_subscripts=0;
-    return (LPAR);
-  }
-  else
-    return ('(');
-}
-
-{white}+ { /* ignore */ }
 
 <IDENT_ST>{
   [ \t\n]* { }
@@ -248,6 +232,14 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
     yyerror("unknown operator: `%s'", yytext);
   }
 
+  "(" {
+    if (need_subscripts) {
+      need_subscripts=0;
+      return (LPAR);
+    }
+    else
+      return ('(');
+  }
   "**"		{ return '^'; }
   {any}		{ return yytext[0]; }
 }
