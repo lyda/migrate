@@ -33,6 +33,8 @@ COMP-5 data items are native integers.
 
 ** New compiler option `-O2', which does further C level optimization.
 
+** New compiler option `-L' and `-l', which are passed to the C compiler.
+
 ** New compiler option `-fsyntax-only', which does syntax error check
 only without any output.
 
