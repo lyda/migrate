@@ -39,7 +39,6 @@
 
 int cob_stabs_flag = 0;
 int cob_debug_flag = 0;
-int cob_verbose_flag = 0;
 
 int cob_trace_scanner = 0;
 int cob_trace_parser = 0;
@@ -64,7 +63,6 @@ FILE *o_src;
 
 /* Compiler options */
 static int save_temps_flag = 0;
-static int tab_width = 8;
 
 static char *program_name;
 static char *output_filename;
@@ -152,7 +150,7 @@ cob_error (char *s, ...)
  * Command line
  */
 
-static char short_options[] = "hvEScmxgo:FXDI:T:t";
+static char short_options[] = "hvEScmxgo:FXDI:T:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
@@ -193,7 +191,6 @@ print_usage ()
   puts ("  -X            Use X/Open free format");
   puts ("  -D            Compile debug lines (i.e., \"D\" lines)");
   puts ("  -I <path>     Add include (copybooks) search path");
-  puts ("  -T <num>      Expand tabs to <num> spaces (default T=8)");
 #ifdef COB_DEBUG
   puts ("");
   puts ("Debug options:");
@@ -251,7 +248,6 @@ process_command_line (int argc, char *argv[])
 	case 'X': source_format = format_free; break;
 	case 'F': source_format = format_fixed; break;
 	case 'D': cob_debug_flag = 1; break;
-	case 'T': tab_width = atoi (optarg); break;
 
 	case 'a':
 	  cob_trace_scanner = 1;
@@ -404,10 +400,7 @@ preprocess (struct filename *fn)
 {
   char buff[BUFSIZ];
 
-  sprintf (buff, "%s %s-t %d ",
-	   cob_cobpp,
-	   cob_verbose_flag ? "-v " : "",
-	   tab_width);
+  sprintf (buff, "%s ", cob_cobpp);
 
   if (strlen (HTG_COPYDIR) > 0)
     {
@@ -426,7 +419,7 @@ preprocess (struct filename *fn)
   if (source_format == format_unspecified)
     source_format = probe_source_format (fn->source);
 
-  strcat (buff, (source_format == format_fixed) ? "-f " : "-x ");
+  strcat (buff, (source_format == format_fixed) ? "-F " : "-X ");
   strcat (buff, fn->source);
 
   return system (buff);
