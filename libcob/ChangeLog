@@ -1,3 +1,7 @@
+2004-05-04  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* common.c (cob_runtime_error): Flush buffer at the end.
+
 2004-04-07  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* common.h, common.c (cob_table_sort_init, cob_table_sort_init_key)

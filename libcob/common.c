@@ -669,6 +669,7 @@ cob_runtime_error (const char *fmt, ...)
 
   /* postfix */
   fputs ("\n", stderr);
+  fflush (stderr);
 }
 
 void
