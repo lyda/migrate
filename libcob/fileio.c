@@ -369,6 +369,8 @@ relative_read_next (struct cob_file_desc *f)
 	  cob_set_int (f->relative_key, 1);
 	else
 	  cob_add_int (f->relative_key, 1, 0, 0);
+	if (cob_status != 0)
+	  return 14;
       }
   } while (f->record_data[0] == '\0');
 
