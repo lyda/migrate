@@ -1,12 +1,13 @@
+2003-08-30  Keisuke Nishida  <kxn30@yahoo.co.jp>
+
+	* gnu.conf: Removed.
+	* default.conf: Renamed from default.inc.
+
 2003-08-28  Keisuke Nishida  <kxn30@yahoo.co.jp>
 
 	* v023.conf: New file.
 
 2003-08-09  Keisuke Nishida  <knishida@netlab.jp>
 
-	* default.inc: New file.
-
-2003-08-07  Keisuke Nishida  <knishida@netlab.jp>
-
 	* gnu.conf, cobol85.conf, cobol2002.conf, mf.conf, mvs.conf: New files.
-	* Makefile.am: New file.
+	* default.inc, Makefile.am: New files.
