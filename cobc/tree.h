@@ -679,6 +679,14 @@ extern int list_length (cb_tree l);
 #define list(x)			cb_build_list (0, x, 0)
 #define cb_build_int_list(n,x)	cb_build_list (cb_build_integer (n), x, 0)
 
+/* Pair */
+
+#define CB_PAIR_P(x)		CB_LIST_P (x)
+#define CB_PAIR_X(x)		CB_PURPOSE (x)
+#define CB_PAIR_Y(x)		CB_VALUE (x)
+
+#define cb_build_pair(x,y)	cb_build_list (x, y, 0)
+
 
 /*
  * Parameter
@@ -696,7 +704,6 @@ struct cb_parameter {
 
 extern cb_tree cb_build_parameter (int type, cb_tree x, cb_tree y);
 #define cb_build_parameter_1(type,x) cb_build_parameter (type, x, 0)
-#define cb_build_pair(x,y)	 cb_build_parameter (0, x, y)
 
 
 /*

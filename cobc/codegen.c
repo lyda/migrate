@@ -1810,12 +1810,9 @@ output_perform_exit (struct cb_label *l)
 static void
 output_perform_once (struct cb_perform *p)
 {
-  if (CB_PARAMETER_P (p->body))
-    {
-      cb_tree lb = CB_REFERENCE (CB_PARAMETER (p->body)->x)->value;
-      cb_tree le = CB_REFERENCE (CB_PARAMETER (p->body)->y)->value;
-      output_perform_call (CB_LABEL (lb), CB_LABEL (le));
-    }
+  if (CB_PAIR_P (p->body))
+    output_perform_call (CB_LABEL (cb_ref (CB_PAIR_X (p->body))),
+			 CB_LABEL (cb_ref (CB_PAIR_Y (p->body))));
   else
     output_stmt (p->body);
 }
@@ -2127,12 +2124,11 @@ output_class_name_definition (struct cb_class_name *p)
   for (l = p->list; l; l = CB_CHAIN (l))
     {
       cb_tree x = CB_VALUE (l);
-      if (CB_PARAMETER_P (x))
+      if (CB_PAIR_P (x))
 	{
-	  struct cb_parameter *p = CB_PARAMETER (x);
-	  char x = CB_LITERAL (p->x)->data[0];
-	  char y = CB_LITERAL (p->y)->data[0];
-	  output ("(%d <= f->data[i] && f->data[i] <= %d)", x, y);
+	  char lower = CB_LITERAL (CB_PAIR_X (x))->data[0];
+	  char upper = CB_LITERAL (CB_PAIR_Y (x))->data[0];
+	  output ("(%d <= f->data[i] && f->data[i] <= %d)", lower, upper);
 	}
       else
 	{
@@ -2303,9 +2299,8 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   output_line ("  {");
   for (i = 0, l = prog->entry_list; l; l = CB_CHAIN (l))
     {
-      struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
       output_line ("  case %d:", i++);
-      output_line ("    goto lb_%s;", CB_LABEL (p->x)->cname);
+      output_line ("    goto lb_%s;", CB_LABEL (CB_PURPOSE (l))->cname);
     }
   output_line ("  }");
   output_newline ();
@@ -2345,13 +2340,13 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 
 static void
 output_entry_function (struct cb_program *prog,
-		       struct cb_parameter *entry,
+		       cb_tree entry,
 		       cb_tree parameter_list)
 {
   static int id = 0;
 
-  const char *entry_name = CB_LABEL (entry->x)->name;
-  cb_tree using_list = entry->y;
+  const char *entry_name = CB_LABEL (CB_PURPOSE (entry))->name;
+  cb_tree using_list = CB_VALUE (entry);
   cb_tree l, l1, l2;
 
   output ("int\n");
@@ -2444,8 +2439,7 @@ codegen (struct cb_program *prog)
   /* build parameter list */
   for (l = prog->entry_list; l; l = CB_CHAIN (l))
     {
-      struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
-      cb_tree using_list = p->y;
+      cb_tree using_list = CB_VALUE (l);
       cb_tree l1, l2;
       for (l1 = using_list; l1; l1 = CB_CHAIN (l1))
 	{
@@ -2462,8 +2456,8 @@ codegen (struct cb_program *prog)
   output_internal_function (prog, parameter_list);
 
   /* entry functions */
-  for (l = prog->entry_list ; l; l = CB_CHAIN (l))
-    output_entry_function (prog, CB_PARAMETER (CB_VALUE (l)), parameter_list);
+  for (l = prog->entry_list; l; l = CB_CHAIN (l))
+    output_entry_function (prog, l, parameter_list);
 
   /* main function */
   if (cb_flag_main)

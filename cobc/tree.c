@@ -1105,7 +1105,7 @@ validate_field_1 (struct cb_field *f)
 	{
 	  struct cb_field *p;
 
-	  if (CB_CHAIN (f->values) || CB_PARAMETER_P (CB_VALUE (f->values)))
+	  if (CB_PAIR_P (CB_VALUE (f->values)) || CB_CHAIN (f->values))
 	    cb_error_x (x, _("only level 88 item may have multiple values"));
 
 	  /* ISO+IEC+1989-2002: 13.16.42.2-10 */
@@ -2587,19 +2587,19 @@ build_cond_88 (cb_tree x)
   /* build condition */
   for (l = f->values; l; l = CB_CHAIN (l))
     {
+      cb_tree t = CB_VALUE (l);
       cb_tree c2;
-      if (CB_PARAMETER_P (CB_VALUE (l)))
+      if (CB_PAIR_P (t))
 	{
 	  /* VALUE THRU VALUE */
-	  struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
-	  c2 = cb_build_binary_op (cb_build_binary_op (p->x, '[', x),
-				  '&',
-				  cb_build_binary_op (x, '[', p->y));
+	  c2 = cb_build_binary_op (cb_build_binary_op (CB_PAIR_X (t), '[', x),
+				   '&',
+				   cb_build_binary_op (x, '[', CB_PAIR_Y (t)));
 	}
       else
 	{
 	  /* VALUE */
-	  c2 = cb_build_binary_op (x, '=', CB_VALUE (l));
+	  c2 = cb_build_binary_op (x, '=', t);
 	}
       if (c1 == NULL)
 	c1 = c2;

@@ -100,8 +100,8 @@
     push (label);						\
 								\
     current_program->entry_list =				\
-      list_add (current_program->entry_list,			\
-		cb_build_pair (label, CB_TREE (using_list)));	\
+      list_append (current_program->entry_list,			\
+		   cb_build_pair (label, using_list));		\
   }
 
 #define BEGIN_STATEMENT(name)			\
@@ -2836,8 +2836,8 @@ set_to_true_false:
 	struct cb_field *f = cb_field (CB_VALUE (l));
 	cb_tree name = copy_reference (CB_VALUE (l), CB_TREE (f->parent));
 	cb_tree value = CB_VALUE (f->values);
-	if (CB_PARAMETER_P (value))
-	  push (cb_build_move (CB_PARAMETER (value)->x, name));
+	if (CB_PAIR_P (value))
+	  push (cb_build_move (CB_PAIR_X (value), name));
 	else
 	  push (cb_build_move (value, name));
       }
