@@ -88,15 +88,15 @@ static struct reserved reserved_words[] = {
   {"ASCENDING",		ASCENDING, 0},			/* 2002 */
   {"ASSIGN",		ASSIGN, 0},			/* 2002 */
   {"AT",		AT, 0},				/* 2002 */
-  {"AUTO",		AUTO, 0},			/* 2000 (C/S) */
+  {"AUTO",		AUTO, 0},			/* 2002 (C/S) */
   {"B-AND",		-1, 0},				/* 2002 */
   {"B-NOT",		-1, 0},				/* 2002 */
   {"B-OR",		-1, 0},				/* 2002 */
   {"B-XOR",		-1, 0},				/* 2002 */
-  {"BACKGROUND-COLOR",	BACKGROUND_COLOR, 0},		/* 2000 (C/S) */
+  {"BACKGROUND-COLOR",	BACKGROUND_COLOR, 0},		/* 2002 (C/S) */
   {"BASED",		-1, 0},				/* 2002 */
   {"BEFORE",		BEFORE, 0},			/* 2002 */
-  {"BELL",		BELL, 0},			/* 2000 (C/S) */
+  {"BELL",		BELL, 0},			/* 2002 (C/S) */
   {"BINARY",		BINARY, 0},			/* 2002 */
   {"BINARY-CHAR",	-1, 0},				/* 2002 */
   {"BINARY-DOUBLE",	-1, 0},				/* 2002 */
@@ -104,7 +104,7 @@ static struct reserved reserved_words[] = {
   {"BINARY-SHORT",	-1, 0},				/* 2002 */
   {"BIT",		-1, 0},				/* 2002 */
   {"BLANK",		BLANK, 0},			/* 2002 */
-  {"BLINK",		BLINK, 0},			/* 2000 (C/S) */
+  {"BLINK",		BLINK, 0},			/* 2002 (C/S) */
   {"BLOCK",		BLOCK, 0},			/* 2002 */
   {"BOOLEAN",		-1, 0},				/* 2002 */
   {"BOTTOM",		BOTTOM, 0},			/* 2002 */
@@ -219,11 +219,11 @@ static struct reserved reserved_words[] = {
   {"ENVIRONMENT-NAME",	ENVIRONMENT_NAME, 0},		/* extension */
   {"ENVIRONMENT-VALUE",	ENVIRONMENT_VALUE, 0},		/* extension */
   {"EO",		-1, 0},				/* 2002 */
-  {"EOL",		EOL, 0},			/* 2000 (C/S) */
+  {"EOL",		EOL, 0},			/* 2002 (C/S) */
   {"EOP",		EOP, 0},			/* 2002 */
-  {"EOS",		EOS, 0},			/* 2000 (C/S) */
+  {"EOS",		EOS, 0},			/* 2002 (C/S) */
   {"EQUAL",		EQUAL, 0},			/* 2002 */
-  {"ERASE",		ERASE, 0},			/* 2000 (C/S) */
+  {"ERASE",		ERASE, 0},			/* 2002 (C/S) */
   {"ERROR",		ERROR, 0},			/* 2002 */
   {"ESI",		-1, 0},				/* 2002 */
   {"EVALUATE",		EVALUATE, 0},			/* 2002 */
@@ -245,11 +245,11 @@ static struct reserved reserved_words[] = {
   {"FLOAT-SHORT",	-1, 0},				/* 2002 */
   {"FOOTING",		FOOTING, 0},			/* 2002 */
   {"FOR",		FOR, 0},			/* 2002 */
-  {"FOREGROUND-COLOR",	FOREGROUND_COLOR, 0},		/* 2000 (C/S) */
+  {"FOREGROUND-COLOR",	FOREGROUND_COLOR, 0},		/* 2002 (C/S) */
   {"FORMAT",		-1, 0},				/* 2002 */
   {"FREE",		-1, 0},				/* 2002 */
   {"FROM",		FROM, 0},			/* 2002 */
-  {"FULL",		FULL, 0},			/* 2000 (C/S) */
+  {"FULL",		FULL, 0},			/* 2002 (C/S) */
   {"FUNCTION",		0, 0},				/* 2002 */
   {"FUNCTION-ID",	-1, 0},				/* 2002 */
   {"GENERATE",		-1, 0},				/* 2002 */
@@ -264,7 +264,7 @@ static struct reserved reserved_words[] = {
   {"HEADING",		-1, 0},				/* 2002 */
   {"HIGH-VALUE",	HIGH_VALUE, 0},			/* 2002 */
   {"HIGH-VALUES",	HIGH_VALUE, 0},			/* 2002 */
-  {"HIGHLIGHT",		HIGHLIGHT, 0},			/* 2000 (C/S) */
+  {"HIGHLIGHT",		HIGHLIGHT, 0},			/* 2002 (C/S) */
   {"I-O",		I_O, 0},			/* 2002 */
   {"I-O-CONTROL",	I_O_CONTROL, 0},		/* 2002 */
   {"ID",		IDENTIFICATION, 0},		/* extension */
@@ -309,7 +309,7 @@ static struct reserved reserved_words[] = {
   {"LOCK",		LOCK, 0},			/* 2002 */
   {"LOW-VALUE",		LOW_VALUE, 0},			/* 2002 */
   {"LOW-VALUES",	LOW_VALUE, 0},			/* 2002 */
-  {"LOWLIGHT",		LOWLIGHT, 0},			/* 2000 (C/S) */
+  {"LOWLIGHT",		LOWLIGHT, 0},			/* 2002 (C/S) */
   {"MEMORY",		MEMORY, 0},			/* 85 */
   {"MERGE",		MERGE, 0},			/* 2002 */
   {"MESSAGE",		-1, 0},				/* 2002 */
@@ -341,7 +341,7 @@ static struct reserved reserved_words[] = {
   {"OFF",		OFF, 0},			/* 2002 */
   {"OMITTED",		OMITTED, 0},			/* 2002 */
   {"ON",		ON, 0},				/* 2002 */
-  {"ONLY",		ONLY, 0},			/* 2000 (C/S) */
+  {"ONLY",		ONLY, 0},			/* 2002 (C/S) */
   {"OPEN",		OPEN, 0},			/* 2002 */
   {"OPTIONAL",		OPTIONAL, 0},			/* 2002 */
   {"OPTIONS",		-1, 0},				/* 2002 */
@@ -387,7 +387,7 @@ static struct reserved reserved_words[] = {
   {"RECORD",		RECORD, 0},			/* 2002 */
   {"RECORDING",		RECORDING, 0},			/* extension */
   {"RECORDS",		RECORDS, 0},			/* 2002 */
-  {"RECURSIVE",		RECURSIVE, 0},			/* 2000 (C/S) */
+  {"RECURSIVE",		RECURSIVE, 0},			/* 2002 (C/S) */
   {"REDEFINES",		REDEFINES, 0},			/* 2002 */
   {"REEL",		REEL, 0},			/* 2002 */
   {"REFERENCE",		REFERENCE, 0},			/* 2002 */
@@ -402,14 +402,14 @@ static struct reserved reserved_words[] = {
   {"REPORTING",		-1, 0},				/* 2002 */
   {"REPORTS",		-1, 0},				/* 2002 */
   {"REPOSITORY",	-1, 0},				/* 2002 */
-  {"REQUIRED",		REQUIRED, 0},			/* 2000 (C/S) */
+  {"REQUIRED",		REQUIRED, 0},			/* 2002 (C/S) */
   {"RESERVE",		RESERVE, 0},			/* 2002 */
   {"RESET",		-1, 0},				/* 2002 */
   {"RESUME",		-1, 0},				/* 2002 */
   {"RETRY",		-1, 0},				/* 2002 */
   {"RETURN",		RETURN, 0},			/* 2002 */
   {"RETURNING",		RETURNING, 0},			/* 2002 */
-  {"REVERSE-VIDEO",	REVERSE_VIDEO, 0},		/* 2000 (C/S) */
+  {"REVERSE-VIDEO",	REVERSE_VIDEO, 0},		/* 2002 (C/S) */
   {"REWIND",		REWIND, 0},			/* 2002 */
   {"REWRITE",		REWRITE, 0},			/* 2002 */
   {"RF",		-1, 0},				/* 2002 */
@@ -422,7 +422,7 @@ static struct reserved reserved_words[] = {
   {"SD",		SD, 0},				/* 2002 */
   {"SEARCH",		SEARCH, 0},			/* 2002 */
   {"SECTION",		SECTION, 0},			/* 2002 */
-  {"SECURE",		SECURE, 0},			/* 2000 (C/S) */
+  {"SECURE",		SECURE, 0},			/* 2002 (C/S) */
   {"SEGMENT",		-1, 0},				/* 2002 */
   {"SELECT",		SELECT, 0},			/* 2002 */
   {"SELF",		-1, 0},				/* 2002 */
@@ -480,7 +480,7 @@ static struct reserved reserved_words[] = {
   {"TRUE",		TOK_TRUE, 0},			/* 2002 */
   {"TYPE",		-1, 0},				/* 2002 */
   {"TYPEDEF",		-1, 0},				/* 2002 */
-  {"UNDERLINE",		UNDERLINE, 0},			/* 2000 (C/S) */
+  {"UNDERLINE",		UNDERLINE, 0},			/* 2002 (C/S) */
   {"UNIT",		UNIT, 0},			/* 2002 */
   {"UNIVERSAL",		-1, 0},				/* 2002 */
   {"UNLOCK",		-1, 0},				/* 2002 */
@@ -503,6 +503,8 @@ static struct reserved reserved_words[] = {
   {"WITH",		WITH, 0},			/* 2002 */
   {"WORKING-STORAGE",	WORKING_STORAGE, 0},		/* 2002 */
   {"WRITE",		WRITE, 0},			/* 2002 */
+  {"YYYYMMDD",		YYYYMMDD, 0},			/* 2002 (C/S) */
+  {"YYYYDDD",		YYYYDDD, 0},			/* 2002 (C/S) */
   {"ZERO",		ZERO, 0},			/* 2002 */
   {"ZEROES",		ZERO, 0},			/* 2002 */
   {"ZEROS",		ZERO, 0},			/* 2002 */

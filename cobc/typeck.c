@@ -1368,9 +1368,21 @@ cb_emit_accept_date (cb_tree var)
 }
 
 void
+cb_emit_accept_date_yyyymmdd (cb_tree var)
+{
+  cb_emit (cb_build_funcall_1 ("cob_accept_date_yyyymmdd", var));
+}
+
+void
 cb_emit_accept_day (cb_tree var)
 {
   cb_emit (cb_build_funcall_1 ("cob_accept_day", var));
+}
+
+void
+cb_emit_accept_day_yyyyddd (cb_tree var)
+{
+  cb_emit (cb_build_funcall_1 ("cob_accept_day_yyyyddd", var));
 }
 
 void

@@ -955,7 +955,9 @@ extern void cb_emit_corresponding (cb_tree (*func) (), cb_tree x1, cb_tree x2, c
 
 extern void cb_emit_accept (cb_tree var, cb_tree pos);
 extern void cb_emit_accept_date (cb_tree var);
+extern void cb_emit_accept_date_yyyymmdd (cb_tree var);
 extern void cb_emit_accept_day (cb_tree var);
+extern void cb_emit_accept_day_yyyyddd (cb_tree var);
 extern void cb_emit_accept_day_of_week (cb_tree var);
 extern void cb_emit_accept_time (cb_tree var);
 extern void cb_emit_accept_command_line (cb_tree var);

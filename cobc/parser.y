@@ -87,7 +87,7 @@ static void terminator_error (void);
 %token END_DISPLAY END_DIVIDE END_EVALUATE END_IF END_MULTIPLY END_PERFORM
 %token END_READ END_RETURN END_REWRITE END_SEARCH END_START END_STRING
 %token END_SUBTRACT END_UNSTRING END_WRITE ENVIRONMENT
-%token EBCDIC ENVIRONMENT_NAME ENVIRONMENT_VALUE
+%token EBCDIC ENVIRONMENT_NAME ENVIRONMENT_VALUE YYYYMMDD YYYYDDD
 %token EOL EOS EOP EQUAL ERASE ERROR EXCEPTION EXIT EXTEND EXTERNAL FD GOBACK
 %token FILE_CONTROL FILLER FIRST FOR FOREGROUND_COLOR FROM FULL GE GIVING
 %token GLOBAL GO GREATER HIGHLIGHT HIGH_VALUE IDENTIFICATION IN INDEX INDEXED
@@ -1599,7 +1599,9 @@ accept_statement:
 accept_body:
   x opt_at_line_column		{ cb_emit_accept ($1, $2); }
 | x FROM DATE			{ cb_emit_accept_date ($1); }
-| x FROM DAY			{ cb_emit_accept_date ($1); }
+| x FROM DATE YYYYMMDD		{ cb_emit_accept_date_yyyymmdd ($1); }
+| x FROM DAY			{ cb_emit_accept_day ($1); }
+| x FROM DAY YYYYDDD		{ cb_emit_accept_day_yyyyddd ($1); }
 | x FROM DAY_OF_WEEK		{ cb_emit_accept_day_of_week ($1); }
 | x FROM TIME			{ cb_emit_accept_time ($1); }
 | x FROM COMMAND_LINE		{ cb_emit_accept_command_line ($1); }
