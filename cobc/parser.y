@@ -1312,7 +1312,7 @@ screen_section:
   {
     struct cb_field *p;
     for (p = CB_FIELD ($6); p; p = p->sister)
-      finalize_field (p);
+      validate_field (p);
     current_program->screen_storage = CB_FIELD ($6);
     current_program->flag_screen = 1;
   }

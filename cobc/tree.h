@@ -358,7 +358,6 @@ extern struct cb_field *field_founder (struct cb_field *p);
 extern struct cb_field *build_field (int level, cb_tree name, struct cb_field *last_field, enum cb_storage storage);
 extern struct cb_field *validate_redefines (struct cb_field *field, cb_tree redefines);
 extern int validate_field (struct cb_field *p);
-extern void finalize_field (struct cb_field *p);
 
 /* Index */
 
@@ -366,7 +365,7 @@ extern void finalize_field (struct cb_field *p);
   ((CB_FIELD_P (x) || CB_REFERENCE_P (x))	\
    && cb_field (x)->usage == CB_USAGE_INDEX)
 
-#define cb_build_index(name)	make_field_3 (name, "S9(9)", CB_USAGE_INDEX)
+#define cb_build_index(name)	make_field_3 (name, NULL, CB_USAGE_INDEX)
 
 
 /*

@@ -467,7 +467,7 @@ cb_init_constants (void)
     {
       char buff[16];
       sprintf (buff, "switch[%d]", i);
-      cb_switch[i] = make_field_3 (make_reference (buff), "9", CB_USAGE_INDEX);
+      cb_switch[i] = cb_build_index (make_reference (buff));
     }
 
   cb_standard_error_handler = make_constant_label ("standard_error_handler");
@@ -827,9 +827,10 @@ cb_tree
 make_field_3 (cb_tree name, const char *pic, enum cb_usage usage)
 {
   cb_tree x = make_field (name);
-  CB_FIELD (x)->pic = cb_parse_picture (pic);
   CB_FIELD (x)->usage = usage;
-  finalize_field (CB_FIELD (x));
+  if (pic)
+    CB_FIELD (x)->pic = cb_parse_picture (pic);
+  validate_field (CB_FIELD (x));
   return x;
 }
 
@@ -1049,26 +1050,39 @@ validate_redefines (struct cb_field *field, cb_tree redefines)
 }
 
 static void
-group_error (cb_tree x, const char *name, const char *clause)
+group_error (cb_tree x, const char *clause)
 {
-  cb_error_x (x, _("group item `%s' cannot have %s"), name, clause);
+  cb_error_x (x, _("group item `%s' cannot have %s clause"),
+	      cb_name (x), clause);
 }
 
-static int
+static void
+level_error (cb_tree x, const char *clause)
+{
+  cb_error_x (x, _("level %02d item `%s' cannot have %s"),
+	      cb_field (x)->level, cb_name (x), clause);
+}
+
+int
 validate_field_1 (struct cb_field *f)
 {
   cb_tree x = CB_TREE (f);
   char *name = cb_name (x);
 
+  /* validate OCCURS */
+  if (f->flag_occurs)
+    if (f->level < 2 || f->level > 49)
+      level_error (x, "OCCURS");
+
   if (f->children)
     {
       /* group */
       if (f->pic)
-	group_error (x, name, "PICTURE");
+	group_error (x, "PICTURE");
       if (f->flag_justified)
-	group_error (x, name, "JUSTIFIED RIGHT");
+	group_error (x, "JUSTIFIED RIGHT");
       if (f->flag_blank_zero)
-	group_error (x, name, "BLANK WHEN ZERO");
+	group_error (x, "BLANK WHEN ZERO");
 
       for (f = f->children; f; f = f->sister)
 	validate_field_1 (f);
@@ -1109,12 +1123,6 @@ validate_field_1 (struct cb_field *f)
 	  cb_warning_x (x, _("`%s' not numeric item"), name);
 
       /* validate SIGN */
-
-      /* validate OCCURS */
-      if (f->flag_occurs)
-	if (f->level < 2 || f->level > 49)
-	  cb_error_x (x, _("level %02d field `%s' cannot have OCCURS"),
-		     f->level, name);
 
       /* validate JUSTIFIED RIGHT */
       if (f->flag_justified)
@@ -1173,31 +1181,6 @@ validate_field_1 (struct cb_field *f)
 	}
     }
 
-  return 0;
-}
-
-static int validate_move (cb_tree src, cb_tree dst, int value_flag);
-
-static int
-validate_field_value (struct cb_field *f)
-{
-  if (f->values)
-    validate_move (f->values->item, CB_TREE (f), 1);
-
-  if (f->children)
-    for (f = f->children; f; f = f->sister)
-      validate_field_value (f);
-
-  return 0;
-}
-
-int
-validate_field (struct cb_field *f)
-{
-  if (validate_field_1 (f) != 0)
-    return -1;
-  finalize_field (f);
-  validate_field_value (f);
   return 0;
 }
 
@@ -1260,8 +1243,8 @@ compute_size (struct cb_field *f)
     {
       /* groups */
       int size = 0;
-      struct cb_field *c = f->children;
-      for (; c; c = c->sister)
+      struct cb_field *c;
+      for (c = f->children; c; c = c->sister)
 	{
 	  if (c->redefines)
 	    {
@@ -1270,20 +1253,8 @@ compute_size (struct cb_field *f)
 	    }
 	  else
 	    {
-	      if (c->flag_synchronized)
-		{
-		  int csize = compute_size (c);
-		  int border = (csize <= 4) ? 4 : 8;
-		  if (size % border)
-		    size += border - csize % border;
-		  c->offset = f->offset + size;
-		  size += border;
-		}
-	      else
-		{
-		  c->offset = f->offset + size;
-		  size += compute_size (c) * c->occurs_max;
-		}
+	      c->offset = f->offset + size;
+	      size += compute_size (c) * c->occurs_max;
 	    }
 	}
       f->size = size;
@@ -1351,7 +1322,7 @@ compute_size (struct cb_field *f)
   return f->size;
 }
 
-void
+static void
 finalize_field (struct cb_field *f)
 {
   if (f->storage == CB_STORAGE_LOCAL
@@ -1369,6 +1340,31 @@ finalize_field (struct cb_field *f)
     f->memory_size = f->size;
   else if (f->redefines->memory_size < f->size)
     f->redefines->memory_size = f->size;
+}
+
+static int validate_move (cb_tree src, cb_tree dst, int value_flag);
+
+static int
+validate_field_value (struct cb_field *f)
+{
+  if (f->values)
+    validate_move (f->values->item, CB_TREE (f), 1);
+
+  if (f->children)
+    for (f = f->children; f; f = f->sister)
+      validate_field_value (f);
+
+  return 0;
+}
+
+int
+validate_field (struct cb_field *f)
+{
+  if (validate_field_1 (f) != 0)
+    return -1;
+  finalize_field (f);
+  validate_field_value (f);
+  return 0;
 }
 
 
