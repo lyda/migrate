@@ -81,32 +81,37 @@ static void set_buffer (int lineno, const char *filename, struct replacement *re
 "REPLACE"		{ BEGIN COPY_STATE; return REPLACE; }
 
 "AUTHOR." |
-"DATE_WRITTEN." |
-"DATE_COMPILED." |
+"DATE-WRITTEN." |
+"DATE-COMPILED." |
 "INSTALLATION." |
 "SECURITY." {
   if (cob_file_format == COB_FORMAT_FREE)
     yyerror ("obsolete");
   else
     {
-      while (input () != '\n');
+      int c;
+
+      /* skip comments until the end of line */
+      while ((c = input ()) != EOF)
+	if (c == '\n')
+	  break;
       fputs ("\n", yyout);
+
+      /* skip comments on the following lines */
       while (1)
 	{
-	  int i, c;
+	  int i;
 	  for (i = 0; i < 7; i++)
-	    input ();
-	  if ((c = input ()) == ' ')
+	    fputc (input (), yyout);
+	  if ((c = input ()) != ' ')
 	    {
-	      while (input () != '\n');
-	      fputs ("       \n", yyout);
-	    }
-	  else
-	    {
-	      fputs ("       ", yyout);
 	      unput (c);
 	      break;
 	    }
+	  while ((c = input ()) != '\n')
+	    if (c == '\n')
+	      break;
+	  fputs ("\n", yyout);
 	}
     }
 }
