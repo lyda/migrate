@@ -26,13 +26,6 @@ Requirement
 
 OpenCOBOL requires the following external libraries to be installed:
 
-  o GNU MP (libgmp) 3.1.1 or later
-    http://swox.com/gmp/
-
-    libgmp is used to implement decimal arithmetic.
-
-    GNU MP is distributed under GNU Lesser General Public License.
-
   o GNU Libtool (libltdl)
     http://www.gnu.org/software/libtool/libtool.html
 
