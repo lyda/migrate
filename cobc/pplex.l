@@ -71,19 +71,11 @@ static void switch_to_buffer (int lineno, char *filename, struct cb_replacement 
 "DATE-COMPILED" |
 "INSTALLATION" |
 "SECURITY" {
-  if (cb_source_format == CB_FORMAT_FREE)
+  /* these words are treated as comments */
+  if (cb_verify (cb_author_paragraph, yytext))
     {
-      /* These words do not have special meanings in the free form. */
-      ECHO;
-    }
-  else
-    {
-      int c;
-
-      /* These words are obsolete in COBOL 85 */
-      cb_verify (cb_author_paragraph, yytext);
-
       /* skip comments until the end of line */
+      int c;
       while ((c = input ()) != EOF)
 	if (c == '\n')
 	  break;
