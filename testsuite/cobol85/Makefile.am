@@ -11,7 +11,7 @@ test: $(MODULES)
 	perl summary.pl $(MODULES) > summary.txt
 	test -e summary.old && diff summary.old summary.txt
 
-copy:
+save:
 	@for m in $(MODULES); do \
 	  (cp $$m/report.txt $$m.txt) \
 	done
@@ -22,6 +22,9 @@ diff:
 	  (diff $$m.txt $$m/report.txt) \
 	done
 	diff summary.old summary.txt
+
+clean: clean-am
+	rm -rf $(MODULES)
 
 $(MODULES): newcob.val EXEC85 EXEC85.conf.in
 	@echo -n "Building module $@..."
