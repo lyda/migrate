@@ -169,10 +169,8 @@ sequential_rewrite (struct cob_file_desc *f, struct cob_field rec)
   if (COB_FIELD_SIZE (rec) != f->record_size)
     return 44;
 
-  if (lseek (f->file.fd, - f->record_size, SEEK_CUR) == -1
-      || write (f->file.fd, f->record_data, f->record_size) == -1)
-    return 99;
-
+  lseek (f->file.fd, - f->record_size, SEEK_CUR);
+  write (f->file.fd, f->record_data, f->record_size);
   return 00;
 }
 
@@ -294,6 +292,14 @@ static struct cob_fileio_funcs lineseq_funcs = {
  * RELATIVE
  */
 
+#define RELATIVE_SIZE(f) (f->record_max + sizeof (f->record_size))
+
+#define RELATIVE_SEEK(f,i)						   \
+  if (lseek (f->file.fd, RELATIVE_SIZE (f) * (i), SEEK_SET) == -1	   \
+      || read (f->file.fd, &f->record_size, sizeof (f->record_size)) <= 0) \
+    return 23;								   \
+  lseek (f->file.fd, - sizeof (f->record_size), SEEK_CUR);
+
 static int
 relative_open (struct cob_file_desc *f, char *filename, int mode)
 {
@@ -309,11 +315,8 @@ relative_close (struct cob_file_desc *f, int opt)
 static int
 relative_start (struct cob_file_desc *f, int cond, struct cob_field k)
 {
-  char c;
-  int index;
-
   /* get the index */
-  index = cob_to_int (k) - 1;
+  int index = cob_to_int (k) - 1;
   if (cond == COB_LT)
     index--;
   else if (cond == COB_GT)
@@ -322,15 +325,12 @@ relative_start (struct cob_file_desc *f, int cond, struct cob_field k)
   /* seek the index */
   while (1)
     {
-      if (lseek (f->file.fd, f->record_size * index, SEEK_SET) == -1
-	  || read (f->file.fd, &c, 1) <= 0)
-	return 23;
+      RELATIVE_SEEK (f, index);
 
       /* check if a valid record */
-      if (c != '\0')
+      if (f->record_size > 0)
 	{
 	  cob_set_int (k, index + 1);
-	  lseek (f->file.fd, -1, SEEK_CUR);
 	  return 00;
 	}
 
@@ -354,69 +354,81 @@ relative_start (struct cob_file_desc *f, int cond, struct cob_field k)
 static int
 relative_read (struct cob_file_desc *f, struct cob_field k)
 {
-  int index = cob_to_int (k) - 1;
-  char buff[f->record_size];
+  RELATIVE_SEEK (f, cob_to_int (k) - 1);
 
-  if (lseek (f->file.fd, f->record_size * index, SEEK_SET) == -1
-      || read (f->file.fd, buff, f->record_size) <= 0
-      || buff[0] == '\0')
+  if (f->record_size == 0)
     return 23;
 
-  memcpy (f->record_data, buff, f->record_size);
+  if (f->record_depending.desc)
+    cob_set_int (f->record_depending, f->record_size);
+
+  lseek (f->file.fd, sizeof (f->record_size), SEEK_CUR);
+  read (f->file.fd, f->record_data, f->record_max);
   return 00;
 }
 
 static int
 relative_read_next (struct cob_file_desc *f)
 {
-  do {
-    switch (read (f->file.fd, f->record_data, f->record_size))
-      {
-      case 0:
+  while (1)
+    {
+      if (read (f->file.fd, &f->record_size, sizeof (f->record_size)) <= 0)
 	return 10;
-      case -1:
-	return 99;
-      }
 
-    if (f->relative_key.desc)
-      {
-	if (f->f.first_read)
-	  cob_set_int (f->relative_key, 1);
-	else
-	  cob_add_int (f->relative_key, 1, 0, 0);
-	if (cob_status != 0)
-	  return 14;
-      }
-  } while (f->record_data[0] == '\0');
+      if (f->relative_key.desc)
+	{
+	  if (f->f.first_read)
+	    cob_set_int (f->relative_key, 1);
+	  else
+	    cob_add_int (f->relative_key, 1, 0, 0);
+	  if (cob_status != 0)
+	    {
+	      lseek (f->file.fd, - sizeof (f->record_size), SEEK_CUR);
+	      return 14;
+	    }
+	}
 
-  return 00;
+      if (f->record_size > 0)
+	{
+	  if (f->record_depending.desc)
+	    cob_set_int (f->record_depending, f->record_size);
+
+	  read (f->file.fd, f->record_data, f->record_max);
+	  return 00;
+	}
+
+      lseek (f->file.fd, f->record_max, SEEK_CUR);
+    }
 }
 
 static int
 relative_write (struct cob_file_desc *f, struct cob_field rec)
 {
-  char c;
-
   if (f->access_mode != COB_ACCESS_SEQUENTIAL)
     {
       int index = cob_to_int (f->relative_key) - 1;
-      if (lseek (f->file.fd, f->record_size * index, SEEK_SET) < 0)
-	return 23;
+      lseek (f->file.fd, RELATIVE_SIZE (f) * index, SEEK_SET);
     }
 
-  if (read (f->file.fd, &c, 1) == 1)
+  if (read (f->file.fd, &f->record_size, sizeof (f->record_size)) > 0)
     {
-      lseek (f->file.fd, -1, SEEK_CUR);
-      if (c != '\0')
+      lseek (f->file.fd, - sizeof (f->record_size), SEEK_CUR);
+      if (f->record_size > 0)
 	return 22;
     }
 
-  write (f->file.fd, f->record_data, f->record_size);
+  if (f->record_depending.desc)
+    f->record_size = cob_to_int (f->record_depending);
+  else
+    f->record_size = COB_FIELD_SIZE (rec);
+  write (f->file.fd, &f->record_size, sizeof (f->record_size));
+  write (f->file.fd, f->record_data, f->record_max);
 
   /* update RELATIVE KEY */
-  if (f->relative_key.desc)
-    cob_set_int (f->relative_key,
-		 lseek (f->file.fd, 0, SEEK_CUR) / f->record_size);
+  if (f->access_mode == COB_ACCESS_SEQUENTIAL)
+    if (f->relative_key.desc)
+      cob_set_int (f->relative_key,
+		   lseek (f->file.fd, 0, SEEK_CUR) / RELATIVE_SIZE (f));
 
   return 00;
 }
@@ -424,23 +436,19 @@ relative_write (struct cob_file_desc *f, struct cob_field rec)
 static int
 relative_rewrite (struct cob_file_desc *f, struct cob_field rec)
 {
-  if (lseek (f->file.fd, - f->record_size, SEEK_CUR) == -1
-      || write (f->file.fd, f->record_data, f->record_size) == -1)
-    return 99;
+  lseek (f->file.fd, - f->record_max, SEEK_CUR);
+  write (f->file.fd, f->record_data, f->record_max);
   return 00;
 }
 
 static int
 relative_delete (struct cob_file_desc *f)
 {
-  int index = cob_to_int (f->relative_key) - 1;
-  char buff[f->record_size];
-  memset (buff, 0, f->record_size);
+  RELATIVE_SEEK (f, cob_to_int (f->relative_key) - 1);
 
-  if (lseek (f->file.fd, f->record_size * index, SEEK_SET) == -1)
-    return 23;
-
-  write (f->file.fd, buff, f->record_size);
+  f->record_size = 0;
+  write (f->file.fd, &f->record_size, sizeof (f->record_size));
+  lseek (f->file.fd, f->record_max, SEEK_CUR);
   return 00;
 }
 
