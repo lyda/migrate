@@ -172,7 +172,7 @@ terminate (const char *str)
  * Command line
  */
 
-static char short_options[] = "h?VvEPCScmOgso:I:";
+static char short_options[] = "h?VvECScmOgso:I:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
@@ -278,7 +278,6 @@ process_command_line (int argc, char *argv[])
 	case 'V': print_version (); exit (0);
 
 	case 'E': cb_compile_level = CB_LEVEL_PREPROCESS; break;
-	case 'P': cb_compile_level = CB_LEVEL_PARSE; break;
 	case 'C': cb_compile_level = CB_LEVEL_TRANSLATE; break;
 	case 'S': cb_compile_level = CB_LEVEL_COMPILE; break;
 	case 'c': cb_compile_level = CB_LEVEL_ASSEMBLE; break;
@@ -589,7 +588,7 @@ preprocess (struct filename *fn)
 }
 
 static int
-process_parse (struct filename *fn)
+process_translate (struct filename *fn)
 {
   int ret;
 
@@ -611,12 +610,13 @@ process_parse (struct filename *fn)
   ret = yyparse ();
 
   fclose (yyin);
-  return ret;
-}
+  if (ret)
+    return ret;
 
-static int
-process_translate (struct filename *fn)
-{
+  if (cb_flag_syntax_only)
+    return 0;
+
+  /* translate */
   switch (cb_compile_target)
     {
     case CB_TARGET_NATIVE:
@@ -769,15 +769,12 @@ main (int argc, char *argv[])
 	if (preprocess (fn) != 0)
 	  goto cleanup;
 
-      /* Parse */
-      if (cb_compile_level >= CB_LEVEL_PARSE && fn->need_translate)
-	if (process_parse (fn) != 0)
-	  goto cleanup;
-
       /* Translate */
       if (cb_compile_level >= CB_LEVEL_TRANSLATE && fn->need_translate)
 	if (process_translate (fn) != 0)
 	  goto cleanup;
+      if (cb_flag_syntax_only)
+	continue;
 
       /* Compile */
       if (cb_compile_level == CB_LEVEL_COMPILE)
@@ -796,7 +793,8 @@ main (int argc, char *argv[])
     }
 
   /* Link */
-  if (cb_compile_level == CB_LEVEL_EXECUTABLE
+  if (!cb_flag_syntax_only
+      && cb_compile_level == CB_LEVEL_EXECUTABLE
       && cb_compile_target == CB_TARGET_NATIVE)
     if (process_link (file_list) > 0)
       goto cleanup;

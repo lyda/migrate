@@ -30,6 +30,9 @@ CB_FLAG (cb_flag_auto_initialize, "auto-initialize",
 CB_FLAG (cb_flag_source_location, "source-location",
 	 N_("Include source location in the output"))
 
+CB_FLAG (cb_flag_syntax_only, "syntax-only",
+	 N_("Check the code for syntax errors, but don't emit any output"))
+
 CB_FLAG (cb_flag_inline_cmp, "inline-cmp",
 	 N_("Inline cob_cmp"))
 
