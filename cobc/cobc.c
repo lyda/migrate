@@ -143,7 +143,7 @@ cob_error (char *s, ...)
  * Command line
  */
 
-static char short_options[] = "hvECScmxgOo:FXDT:I:M:";
+static char short_options[] = "hvECScmxgOo:FXDT:I:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
@@ -151,6 +151,8 @@ static struct option long_options[] = {
   {"static", no_argument, &cobc_link_style, LINK_STATIC},
   {"dynamic", no_argument, &cobc_link_style, LINK_DYNAMIC},
   {"save-temps", no_argument, &save_temps_flag, 1},
+  {"MT", required_argument, 0, '%'},
+  {"MF", required_argument, 0, '@'},
 #ifdef COB_DEBUG
   {"ts", no_argument, &yy_flex_debug, 1},
   {"tp", no_argument, &yy_bison_debug, 1},
@@ -173,8 +175,6 @@ print_usage ()
   puts ("  --help        Display this information");
   puts ("  --version     Display compiler version");
   puts ("  -save-temps   Do not delete intermediate files");
-  puts ("  -static       Use static link for subprogram calls if possible");
-  puts ("  -dynamic      Use dynamic link for all subprogram calls (default)");
   puts ("  -E            Preprocess only; do not compile, assemble or link");
   puts ("  -C            Translate only; do not compile, assemble or link");
   puts ("  -S            Compile only; do not assemble or link");
@@ -183,13 +183,16 @@ print_usage ()
   puts ("  -g            Generate debug format output");
   puts ("  -O            Do exhaustive optimization");
   puts ("  -o <file>     Place the output into <file>");
+  puts ("  -MT <target>  Set target file used in dependency list");
+  puts ("  -MF <file>    Place dependency list into <file>");
   puts ("");
   puts ("COBOL options:");
+  puts ("  -static       Use static link for subprogram calls if possible");
+  puts ("  -dynamic      Use dynamic link for all subprogram calls (default)");
   puts ("  -F            Use standard fixed column format");
   puts ("  -X            Use X/Open free format");
   puts ("  -D            Compile debug lines (i.e., \"D\" lines)");
   puts ("  -I <path>     Add include (copybooks) search path");
-  puts ("  -M <file>     Place dependency list into <file>");
 #ifdef COB_DEBUG
   puts ("");
   puts ("Debug options:");
@@ -231,13 +234,18 @@ process_command_line (int argc, char *argv[])
 	case 'O': strcat (cob_cflags, " -O2"); cobc_optimize_flag = 1; break;
 	case 'o': output_name = strdup (optarg); break;
 
-	case 'I':
-	  strcat (cobpp_flags, " -I ");
+	case '%':
+	  strcat (cobpp_flags, " -MT ");
 	  strcat (cobpp_flags, optarg);
 	  break;
 
-	case 'M':
-	  strcat (cobpp_flags, " -M ");
+	case '@':
+	  strcat (cobpp_flags, " -MF ");
+	  strcat (cobpp_flags, optarg);
+	  break;
+
+	case 'I':
+	  strcat (cobpp_flags, " -I ");
 	  strcat (cobpp_flags, optarg);
 	  break;
 

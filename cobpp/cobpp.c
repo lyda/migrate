@@ -43,6 +43,7 @@ enum cob_format cob_file_format = COB_FORMAT_FREE;
 struct cob_path *cob_include_path = NULL;
 struct cob_path *cob_depend_list = NULL;
 FILE *cob_depend_file = NULL;
+char *cob_depend_target = NULL;
 
 
 /*
@@ -56,11 +57,13 @@ static const char *program_name;
  * Command line
  */
 
-static char short_options[] = "hvo:FXDT:I:M:";
+static char short_options[] = "hvo:FXDT:I:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'v'},
+  {"MT", required_argument, 0, '%'},
+  {"MF", required_argument, 0, '@'},
   {0, 0, 0, 0}
 };
 
@@ -116,6 +119,16 @@ process_command_line (int argc, char *argv[])
 	    }
 	  break;
 
+	case '%': /* -MT */
+	  cob_depend_target = strdup (optarg);
+	  break;
+
+	case '@': /* -MF */
+	  cob_depend_file = fopen (optarg, "w");
+	  if (!cob_depend_file)
+	    perror (optarg);
+	  break;
+
 	case 'I':
 	  {
 	    struct cob_path *path =
@@ -139,10 +152,6 @@ process_command_line (int argc, char *argv[])
 	case 'F': cob_file_format = COB_FORMAT_FIXED; break;
 	case 'D': cob_debug_flag = 1; break;
 	case 'T': cob_tab_width = atoi (optarg); break;
-	case 'M': cob_depend_file = fopen (optarg, "w");
-	  if (!cob_depend_file)
-	    perror (optarg);
-	  break;
 
 	default: print_usage (); exit (1);
 	}
@@ -189,6 +198,12 @@ main (int argc, char *argv[])
   if (cob_depend_file)
     {
       struct cob_path *l;
+      if (!cob_depend_target)
+	{
+	  fputs ("-MT must be given to specify target file\n", stderr);
+	  exit (1);
+	}
+      fprintf (cob_depend_file, "%s: \\\n", cob_depend_target);
       for (l = cob_depend_list; l; l = l->next)
 	fprintf (cob_depend_file, " %s%s\n", l->dir, l->next ? " \\" : "");
       for (l = cob_depend_list; l; l = l->next)
