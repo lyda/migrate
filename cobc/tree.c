@@ -1073,9 +1073,8 @@ validate_field_1 (struct cb_field *f)
   if (f->redefines)
     {
       /* check OCCURS */
-      if (cb_redefines_occurs_item)
-	if (f->redefines->flag_occurs)
-	  cb_error_x (x, _("the original definition `%s' cannot have OCCURS"),
+      if (f->redefines->flag_occurs)
+	cb_warning_x (x, _("the original definition `%s' should not have OCCURS"),
 		      f->redefines->name);
 
       /* check definition */

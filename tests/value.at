@@ -58,9 +58,9 @@ AT_DATA([prog.cob], [
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:6: invalid VALUE clause
-prog.cob:7: numeric value is expected
-prog.cob:8: value size exceeds data size
-prog.cob:10: value size exceeds data size
+prog.cob:7: warning: numeric value is expected
+prog.cob:8: warning: value size exceeds data size
+prog.cob:10: warning: value size exceeds data size
 ])
 
 AT_CLEANUP
@@ -80,9 +80,9 @@ AT_DATA([prog.cob], [
            STOP RUN.
 ])
 
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:7: value size exceeds data size
-prog.cob:9: value size exceeds data size
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:7: warning: value size exceeds data size
+prog.cob:9: warning: value size exceeds data size
 ])
 
 AT_CLEANUP
@@ -106,11 +106,11 @@ AT_DATA([prog.cob], [
            STOP RUN.
 ])
 
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: value does not fit the picture string
-prog.cob:9: value size exceeds data size
-prog.cob:12: value does not fit the picture string
-prog.cob:13: value size exceeds data size
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:8: warning: value does not fit the picture string
+prog.cob:9: warning: value size exceeds data size
+prog.cob:12: warning: value does not fit the picture string
+prog.cob:13: warning: value size exceeds data size
 ])
 
 AT_CLEANUP
@@ -160,10 +160,10 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:6: alphanumeric value is expected
+[prog.cob:6: warning: alphanumeric value is expected
 prog.cob:7: invalid VALUE clause
-prog.cob:8: value does not fit the picture string
-prog.cob:10: value size exceeds data size
+prog.cob:8: warning: value does not fit the picture string
+prog.cob:10: warning: value size exceeds data size
 ])
 
 AT_CLEANUP
@@ -182,9 +182,9 @@ AT_DATA([prog.cob], [
            STOP RUN.
 ])
 
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:6: alphanumeric value is expected
-prog.cob:8: value size exceeds data size
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:6: warning: alphanumeric value is expected
+prog.cob:8: warning: value size exceeds data size
 ])
 
 AT_CLEANUP
@@ -206,9 +206,9 @@ AT_DATA([prog.cob], [
            STOP RUN.
 ])
 
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:6: alphanumeric value is expected
-prog.cob:10: value size exceeds data size
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:6: warning: alphanumeric value is expected
+prog.cob:10: warning: value size exceeds data size
 ])
 
 AT_CLEANUP
@@ -238,9 +238,9 @@ AT_DATA([prog.cob], [
            STOP RUN.
 ])
 
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:6: alphanumeric value is expected
-prog.cob:9: value size exceeds data size
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:6: warning: alphanumeric value is expected
+prog.cob:9: warning: value size exceeds data size
 ])
 
 AT_CLEANUP
@@ -260,9 +260,9 @@ AT_DATA([prog.cob], [
            STOP RUN.
 ])
 
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:6: alphanumeric value is expected
-prog.cob:9: value size exceeds data size
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:6: warning: alphanumeric value is expected
+prog.cob:9: warning: value size exceeds data size
 ])
 
 AT_CLEANUP

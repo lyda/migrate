@@ -173,8 +173,8 @@ AT_DATA([prog.cob], [
            STOP RUN.
 ])
 
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: the original definition `X' cannot have OCCURS
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:8: warning: the original definition `X' should not have OCCURS
 ])
 
 AT_CLEANUP

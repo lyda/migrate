@@ -132,9 +132,9 @@ AT_DATA([prog.cob], [
        01 X             PIC X.
 ])
 
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:7: redefinition of `X'
-prog.cob:6: `X' previously defined here
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:7: warning: redefinition of `X'
+prog.cob:6: warning: `X' previously defined here
 ])
 
 AT_CLEANUP
@@ -150,9 +150,9 @@ AT_DATA([prog.cob], [
          02 X           PIC X.
 ])
 
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:7: redefinition of `X'
-prog.cob:6: `X' previously defined here
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:7: warning: redefinition of `X'
+prog.cob:6: warning: `X' previously defined here
 ])
 
 AT_CLEANUP
@@ -169,9 +169,9 @@ AT_DATA([prog.cob], [
          02 X           PIC X.
 ])
 
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: redefinition of `X'
-prog.cob:7: `X' previously defined here
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:8: warning: redefinition of `X'
+prog.cob:7: warning: `X' previously defined here
 ])
 
 AT_CLEANUP
@@ -234,9 +234,9 @@ AT_DATA([prog.cob], [
        77 X             PIC X.
 ])
 
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:7: redefinition of `X'
-prog.cob:6: `X' previously defined here
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:7: warning: redefinition of `X'
+prog.cob:6: warning: `X' previously defined here
 ])
 
 AT_CLEANUP
@@ -252,9 +252,9 @@ AT_DATA([prog.cob], [
        77 X             PIC X.
 ])
 
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:7: redefinition of `X'
-prog.cob:6: `X' previously defined here
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:7: warning: redefinition of `X'
+prog.cob:6: warning: `X' previously defined here
 ])
 
 AT_CLEANUP
