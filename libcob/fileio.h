@@ -95,8 +95,8 @@ struct cob_fileio_funcs {
   int (*start) (struct cob_file_desc *f, int cond, struct cob_field key);
   int (*read) (struct cob_file_desc *f, struct cob_field key);
   int (*read_next) (struct cob_file_desc *f);
-  int (*write) (struct cob_file_desc *f);
-  int (*rewrite) (struct cob_file_desc *f);
+  int (*write) (struct cob_file_desc *f, struct cob_field rec);
+  int (*rewrite) (struct cob_file_desc *f, struct cob_field rec);
   int (*delete) (struct cob_file_desc *f);
 };
 
@@ -107,10 +107,10 @@ extern void cob_open (struct cob_file_desc *f, struct cob_field name, int mode);
 extern void cob_close (struct cob_file_desc *f, int opt);
 extern void cob_read (struct cob_file_desc *f, struct cob_field key);
 extern void cob_read_next (struct cob_file_desc *f);
-extern void cob_write (struct cob_file_desc *f);
+extern void cob_write (struct cob_file_desc *f, struct cob_field rec);
 extern void cob_write_page (struct cob_file_desc *f);
 extern void cob_write_lines (struct cob_file_desc *f, int lines);
-extern void cob_rewrite (struct cob_file_desc *f);
+extern void cob_rewrite (struct cob_file_desc *f, struct cob_field rec);
 extern void cob_delete (struct cob_file_desc *f);
 extern void cob_start (struct cob_file_desc *f, int cond, struct cob_field key);
 

@@ -2163,7 +2163,7 @@ rewrite_statement:
     current_file_name = COBC_FIELD ($2)->file;
     if ($3)
       push_move ($3, $2);
-    push_call_1 (COBC_REWRITE, current_file_name);
+    push_call_2 (COBC_REWRITE, current_file_name, $2);
   }
   opt_invalid_key
   _end_rewrite
@@ -2473,7 +2473,7 @@ write_statement:
     /* WRITE */
     if ($3)
       push_move ($3, $2);
-    push_call_1 (COBC_WRITE, current_file_name);
+    push_call_2 (COBC_WRITE, current_file_name, $2);
     /* BEFORE ADVANCING */
     if ($4 && $4->type == COBC_BEFORE)
       {

@@ -135,11 +135,10 @@ sequential_read (struct cob_file_desc *f)
 {
   if (f->record_min != f->record_max)
     {
-      long size;
-      if (read (f->file.fd, &size, sizeof (long)) <= 0)
+      if (read (f->file.fd, &f->record_size, sizeof (f->record_size)) <= 0)
 	return 10;
       if (f->record_depending.desc)
-	cob_set_int (f->record_depending, size);
+	cob_set_int (f->record_depending, f->record_size);
     }
 
   if (read (f->file.fd, f->record_data, f->record_size) <= 0)
@@ -149,16 +148,15 @@ sequential_read (struct cob_file_desc *f)
 }
 
 static int
-sequential_write (struct cob_file_desc *f)
+sequential_write (struct cob_file_desc *f, struct cob_field rec)
 {
   if (f->record_min != f->record_max)
     {
-      long size;
       if (f->record_depending.desc)
-	size = cob_to_int (f->record_depending);
+	f->record_size = cob_to_int (f->record_depending);
       else
-	size = f->record_size;
-      write (f->file.fd, &size, sizeof (long));
+	f->record_size = COB_FIELD_SIZE (rec);
+      write (f->file.fd, &f->record_size, sizeof (f->record_size));
     }
 
   write (f->file.fd, f->record_data, f->record_size);
@@ -166,16 +164,15 @@ sequential_write (struct cob_file_desc *f)
 }
 
 static int
-sequential_rewrite (struct cob_file_desc *f)
+sequential_rewrite (struct cob_file_desc *f, struct cob_field rec)
 {
-  if (f->record_min != f->record_max)
-    {
-      lseek (f->file.fd, - sizeof (long), SEEK_CUR);
-    }
+  if (COB_FIELD_SIZE (rec) != f->record_size)
+    return 44;
 
   if (lseek (f->file.fd, - f->record_size, SEEK_CUR) == -1
       || write (f->file.fd, f->record_data, f->record_size) == -1)
     return 99;
+
   return 00;
 }
 
@@ -263,7 +260,7 @@ lineseq_read (struct cob_file_desc *f)
 }
 
 static int
-lineseq_write (struct cob_file_desc *f)
+lineseq_write (struct cob_file_desc *f, struct cob_field rec)
 {
   int i, size;
 
@@ -396,7 +393,7 @@ relative_read_next (struct cob_file_desc *f)
 }
 
 static int
-relative_write (struct cob_file_desc *f)
+relative_write (struct cob_file_desc *f, struct cob_field rec)
 {
   char c;
 
@@ -425,7 +422,7 @@ relative_write (struct cob_file_desc *f)
 }
 
 static int
-relative_rewrite (struct cob_file_desc *f)
+relative_rewrite (struct cob_file_desc *f, struct cob_field rec)
 {
   if (lseek (f->file.fd, - f->record_size, SEEK_CUR) == -1
       || write (f->file.fd, f->record_data, f->record_size) == -1)
@@ -673,7 +670,7 @@ indexed_read_next (struct cob_file_desc *f)
 }
 
 static int
-indexed_write (struct cob_file_desc *f)
+indexed_write (struct cob_file_desc *f, struct cob_field rec)
 {
   int i;
   DBT key, data;
@@ -763,7 +760,7 @@ indexed_delete (struct cob_file_desc *f)
 }
 
 static int
-indexed_rewrite (struct cob_file_desc *f)
+indexed_rewrite (struct cob_file_desc *f, struct cob_field rec)
 {
   int i, ret;
   DBT key, data;
@@ -986,7 +983,7 @@ cob_read_next (struct cob_file_desc *f)
 }
 
 void
-cob_write (struct cob_file_desc *f)
+cob_write (struct cob_file_desc *f, struct cob_field rec)
 {
   int ret;
 
@@ -1003,7 +1000,7 @@ cob_write (struct cob_file_desc *f)
 	RETURN_STATUS (48);
     }
 
-  ret = fileio_funcs[f->organization]->write (f);
+  ret = fileio_funcs[f->organization]->write (f, rec);
 
   RETURN_STATUS (ret);
 }
@@ -1030,7 +1027,7 @@ cob_write_lines (struct cob_file_desc *f, int lines)
 }
 
 void
-cob_rewrite (struct cob_file_desc *f)
+cob_rewrite (struct cob_file_desc *f, struct cob_field rec)
 {
   int ret;
   int read_done = f->f.read_done;
@@ -1043,7 +1040,7 @@ cob_rewrite (struct cob_file_desc *f)
   if (!read_done)
     RETURN_STATUS (43);
 
-  ret = fileio_funcs[f->organization]->rewrite (f);
+  ret = fileio_funcs[f->organization]->rewrite (f, rec);
 
   RETURN_STATUS (ret);
 }
