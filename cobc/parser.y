@@ -841,9 +841,9 @@ opt_key_is:
 | DESCENDING opt_key opt_is SYMBOL_TOK	{ $4->level = -2; $$ = $4; }
 ;
 index_name_list:
-  def_name { define_implicit_field ($1, $<tree>-2, curr_field->times); }
+  def_name { define_implicit_field ($1, $<tree>-2); }
 | index_name_list
-  def_name { define_implicit_field ($2, $<tree>-2, curr_field->times); }
+  def_name { define_implicit_field ($2, $<tree>-2); }
 ;
 opt_times: | TIMES ;
 

@@ -3250,7 +3250,7 @@ gen_SearchAllLoopCheck (unsigned long lbl3, cob_tree syidx,
 }
 
 void
-define_implicit_field (cob_tree sy, cob_tree sykey, int idxlen)
+define_implicit_field (cob_tree sy, cob_tree sykey)
 {
   cob_tree tmp = NULL;
   struct index_to_table_list *i2t;
