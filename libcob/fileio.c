@@ -805,12 +805,12 @@ cob_init_fileio (void)
   fileio_funcs[COB_ORG_RELATIVE] = &relative_funcs;
   fileio_funcs[COB_ORG_INDEXED] = &indexed_funcs;
 
+#if 0
   db_env_create (&dbenv, 0);
-#ifdef COB_DEBUG
   dbenv->set_errpfx (dbenv, "DB");
   dbenv->set_errfile (dbenv, stderr);
-#endif
   dbenv->open (dbenv, NULL, DB_CREATE | DB_INIT_MPOOL, 0);
+#endif
 }
 
 void
