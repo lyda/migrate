@@ -20,6 +20,8 @@
 #ifndef COB_COMMON_H
 #define COB_COMMON_H
 
+#include <stdio.h>
+
 
 /*
  * Field
