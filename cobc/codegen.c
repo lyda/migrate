@@ -452,20 +452,17 @@ is_variable (struct sym *sy)
 int
 is_subscripted (struct sym *sy)
 {
-  if (sy->occurs_flg)		/* the item itself "occurs" */
-    return 1;
-  while (sy->parent != NULL)
-    {				/* some parenr "occurs" */
-      sy = sy->parent;
-      if (sy->occurs_flg)
-	return 1;
-    }
+  for (; sy; sy = sy->parent)
+    if (sy->occurs_flg)
+      return 1;
   return 0;
 }
 
+
 /*
-**	Code Generating Routines
-*/
+ *	Code Generating Routines
+ */
+
 static char *
 sec_name (short sec_no)
 {
@@ -722,13 +719,10 @@ get_nb_fields (struct sym *sy, int times, int sw_val)
 	init_ctype = '&';
       else if (ftype == '9' && sy->picstr[0] == 'S')
 	init_ctype = '&';
-      else
-	{
-	  if (init_ctype == ' ')
-	    init_ctype = ftype;
-	  if (ftype != init_ctype)
-	    init_ctype = '&';
-	}
+      else if (init_ctype == ' ')
+	init_ctype = ftype;
+      else if (init_ctype != ftype)
+	init_ctype = '&';
       if (sw_val == 1)
 	{
 	  short val = ((sy->value == NULL) ? 0 :
@@ -766,53 +760,28 @@ build_init_str (struct sym *sy, int times)
 	}
       endidx = initp;
       for (i = 1; i < sy->times; i++)
-	{
-	  if (initp >= max_nb_fields)
-	    {
-	      fprintf (stderr,
-		       "**** WARNING invading end of malloced memory, i,sym: %s\n",
-		       sy->name);
-	      break;
-	    }
-	  for (j = stidx; j < endidx; j++)
-	    {
-	      if (j >= max_nb_fields)
-		{
-		  fprintf (stderr,
-			   "**** WARNING invading end of malloced memory, j,sym: %s\n",
-			   sy->name);
-		  break;
-		}
-	      istrp[initp].sy = istrp[j].sy;
-	      istrp[initp].type = istrp[j].type;
-	      istrp[initp].value = istrp[j].value;
-	      istrp[initp].len = istrp[j].len;
-	      istrp[initp].location = init_location;
-	      init_location += istrp[initp].len;
-	      initp++;
-	    }
-	}
+	for (j = stidx; j < endidx; j++)
+	  {
+	    istrp[initp].sy = istrp[j].sy;
+	    istrp[initp].type = istrp[j].type;
+	    istrp[initp].value = istrp[j].value;
+	    istrp[initp].len = istrp[j].len;
+	    istrp[initp].location = init_location;
+	    init_location += istrp[initp].len;
+	    initp++;
+	  }
     }
   else
     {
       if (!sy->flags.in_redefinition)
 	{
-	  if (initp >= max_nb_fields)
-	    {
-	      fprintf (stderr,
-		       "**** WARNING invading end of malloced memory, f,sym: %s\n",
-		       sy->name);
-	    }
-	  else
-	    {
-	      istrp[initp].sy = sy;
-	      istrp[initp].type = sy->type;
-	      istrp[initp].value = sy->value;
-	      istrp[initp].len = symlen (sy);
-	      istrp[initp].location = init_location;
-	      init_location += istrp[initp].len;
-	      initp++;
-	    }
+	  istrp[initp].sy = sy;
+	  istrp[initp].type = sy->type;
+	  istrp[initp].value = sy->value;
+	  istrp[initp].len = symlen (sy);
+	  istrp[initp].location = init_location;
+	  init_location += istrp[initp].len;
+	  initp++;
 	  stidx = initp - 1;
 	  endidx = initp;
 	  for (i = 1; i < sy->times; i++)
@@ -869,7 +838,6 @@ initialize_values (void)
   int i, j;
   char typ;
   int nb_fields;
-  unsigned saved_loc;
 
   for (i = 0; i < HASHLEN; i++)
     for (sy1 = vartab[i]; sy1 != NULL; sy1 = sy1->next)
@@ -910,7 +878,7 @@ initialize_values (void)
 		for (j = 0; j < nb_fields; j++)
 		  if (istrp[j].value != NULL)
 		    {
-		      saved_loc = istrp[j].sy->location;
+		      unsigned saved_loc = istrp[j].sy->location;
 		      istrp[j].sy->location = istrp[j].location;
 		      init_field_val (istrp[j].sy);
 		      istrp[j].sy->location = saved_loc;
@@ -1877,41 +1845,45 @@ alloc_string_from (struct sym *var, struct sym *delim)
   return sf;
 }
 
+static unsigned int
+gen_initialize_1 (struct sym *sy, unsigned int loc)
+{
+  int i;
+
+  if (sy->type == 'G')
+    {
+      struct sym *p;
+      for (i = 0; i < sy->times; i++)
+	for (p = sy->son; p; p = p->brother)
+	  loc = gen_initialize_1 (p, loc);
+    }
+  else
+    {
+      if (!sy->flags.in_redefinition)
+	for (i = 0; i < sy->times; i++)
+	  {
+	    unsigned save_loc = sy->location;
+	    sy->location = loc;
+	    gen_init_str (sy, sy->type);
+	    sy->location = save_loc;
+	    loc += symlen (sy);
+	  }
+    }
+  return loc;
+}
+
 void
 gen_initialize (struct sym *sy)
 {
-  int nb_fields;
-  if (sy == NULL)
-    return;
-
 #ifdef COB_DEBUG
   fprintf (o_src, "# INITIALIZE %s, type %c\n", sy->name, sy->type);
 #endif
   init_ctype = ' ';
-  nb_fields = get_nb_fields (sy, sy->times, 0);
+  get_nb_fields (sy, sy->times, 0);
   if (init_ctype != '&' && init_ctype != ' ')
-    {
-      gen_init_str (sy, init_ctype);
-    }
+    gen_init_str (sy, init_ctype);
   else
-    {
-      int i;
-
-      initp = 0;
-      init_location = sy->location;
-      max_nb_fields = nb_fields;
-      istrp = malloc (nb_fields * sizeof (struct init_str));
-      build_init_str (sy, 1);
-
-      for (i = 0; i < nb_fields; i++)
-	{
-	  unsigned temp_loc = istrp[i].sy->location;
-	  istrp[i].sy->location = istrp[i].location;
-	  gen_init_str (istrp[i].sy, istrp[i].type);
-	  istrp[i].sy->location = temp_loc;
-	}
-      free (istrp);
-    }
+    gen_initialize_1 (sy, sy->location);
 }
 
 void
@@ -2014,6 +1986,11 @@ gen_display (int dupon, int nl)
   int dspflags;
   int first = 1;
   struct sym *sy;
+
+#ifdef COB_DEBUG
+  fprintf (o_src, "### DISPLAY\n");
+#endif
+
   if (disp_list)
     {
       /* separate screen displays from display of regular variables */
