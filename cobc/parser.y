@@ -3228,6 +3228,7 @@ x_list:
 x:
   identifier
 | LENGTH _of identifier_1	{ $$ = cb_build_length ($3); }
+| LENGTH _of literal		{ $$ = cb_build_length ($3); }
 | ADDRESS _of identifier_1	{ $$ = cb_build_address ($3); }
 | literal
 | function
