@@ -67,7 +67,6 @@ extern int screen_io_enable,scr_line,scr_column;
 extern int decimal_comma;
 extern char currency_symbol;
 extern FILE *lexin;
-extern FILE *o_src;
 extern cob_tree curr_paragr, curr_section;
 extern cob_tree curr_field;
 extern int curr_call_mode;

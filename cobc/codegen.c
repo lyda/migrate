@@ -221,6 +221,15 @@ lookup_label (cob_tree sy, cob_tree parent)
     return NULL;
 }
 
+static void
+output (char *fmt, ...)
+{
+  va_list argptr;
+  va_start (argptr, fmt);
+  vfprintf (o_src, fmt, argptr);
+  va_end (argptr);
+}
+
 
 /*****************************************************************************
  * IDENTIFICATION DIVISION.
@@ -335,7 +344,7 @@ init_program (const char *id)
   clear_offsets ();
 
   if (!pgm_segment)
-    fprintf (o_src, "\t.file\t\"%s\"\n", cob_source_filename);
+    output ("\t.file\t\"%s\"\n", cob_source_filename);
   strcpy (program_id, id);
 
   define_special_fields ();
@@ -458,14 +467,14 @@ static void
 push_immed (int i)
 {
   stackframe_cnt += 4;
-  fprintf (o_src, "\tpushl\t$%d\n", i);
+  output ("\tpushl\t$%d\n", i);
 }
 
 static void
 push_eax ()
 {
   stackframe_cnt += 4;
-  fprintf (o_src, "\tpushl\t%%eax\n");
+  output ("\tpushl\t%%eax\n");
 }
 
 static char *
@@ -551,14 +560,14 @@ load_location (cob_tree sy, char *reg)
       while (tmp->linkage_flg == 1)
 	tmp = tmp->parent;
       offset = sy->location - tmp->location;
-      fprintf (o_src, "\tmovl\t%d(%%ebp), %%%s\n", tmp->linkage_flg, reg);
+      output ("\tmovl\t%d(%%ebp), %%%s\n", tmp->linkage_flg, reg);
       if (offset)
-	fprintf (o_src, "\taddl\t$%d, %%%s\n", offset, reg);
+	output ("\taddl\t$%d, %%%s\n", offset, reg);
     }
   else if (sy->sec_no == SEC_STACK)
-    fprintf (o_src, "\tleal\t%s, %%%s\n", memref (sy), reg);
+    output ("\tleal\t%s, %%%s\n", memref (sy), reg);
   else
-    fprintf (o_src, "\tmovl\t%s, %%%s\n", memref (sy), reg);
+    output ("\tmovl\t%s, %%%s\n", memref (sy), reg);
 }
 
 static void
@@ -568,9 +577,9 @@ gen_subscripted (cob_tree ref)
   cob_tree_list ls;
 
 #ifdef COB_DEBUG
-  fprintf (o_src, "# gen_subscripted\n");
+  output ("# gen_subscripted\n");
 #endif
-  fprintf (o_src, "\tpushl\t$0\n");
+  output ("\tpushl\t$0\n");
   for (ls = SUBREF_SUBS (ref); ls; ls = ls->next)
     {
       cob_tree x = ls->tree;
@@ -579,30 +588,30 @@ gen_subscripted (cob_tree ref)
       else
 	{
 	  value_to_eax (EXPR_LEFT (x));
-	  fprintf (o_src, "\tpushl\t%%eax\n");
+	  output ("\tpushl\t%%eax\n");
 	  do {
 	    cob_tree r = EXPR_RIGHT (x);
 	    value_to_eax (EXPR_P (r) ? EXPR_LEFT (r) : r);
-	    fprintf (o_src, "\t%sl\t%%eax,0(%%esp)\n",
+	    output ("\t%sl\t%%eax,0(%%esp)\n",
 		     (EXPR_OP (x) == '+') ? "add" : "sub");
 	    x = r;
 	  } while (EXPR_P (x));
-	  fprintf (o_src, "\tpopl\t%%eax\n");
+	  output ("\tpopl\t%%eax\n");
 	}
-      fprintf (o_src, "\tdecl\t%%eax\n");	/* subscript start at 1 */
+      output ("\tdecl\t%%eax\n");	/* subscript start at 1 */
 
       /* find the first parent var that needs subscripting */
       while (sy->times == 1)
 	sy = sy->parent;
       if (sy->len > 1)
 	{
-	  fprintf (o_src, "\tmovl\t$%d, %%edx\n", symlen (sy));
-	  fprintf (o_src, "\timull\t%%edx\n");
+	  output ("\tmovl\t$%d, %%edx\n", symlen (sy));
+	  output ("\timull\t%%edx\n");
 	}
-      fprintf (o_src, "\taddl\t%%eax,0(%%esp)\n");
+      output ("\taddl\t%%eax,0(%%esp)\n");
       sy = sy->parent;
     }
-  fprintf (o_src, "\tpopl\t%%eax\n");	/* return offset in %eax */
+  output ("\tpopl\t%%eax\n");	/* return offset in %eax */
 }
 
 static void
@@ -624,25 +633,25 @@ loadloc_to_eax (cob_tree sy_p)
 	    tmp = tmp->parent;
 	  offset = var->location - tmp->location;
 	  if (symlen (tmp) > 2)
-	    fprintf (o_src, "\tmovl\t%d(%%ebp), %%ebx\n", tmp->linkage_flg);
+	    output ("\tmovl\t%d(%%ebp), %%ebx\n", tmp->linkage_flg);
 	  else
-	    fprintf (o_src, "\tmovs%cl\t%d(%%ebp), %%ebx\n",
+	    output ("\tmovs%cl\t%d(%%ebp), %%ebx\n",
 		     varsize_ch (tmp), tmp->linkage_flg);
 	  if (offset)
-	    fprintf (o_src, "\taddl\t$%d, %%ebx\n", offset);
-	  fprintf (o_src, "\taddl\t%%ebx, %%eax\n");
+	    output ("\taddl\t$%d, %%ebx\n", offset);
+	  output ("\taddl\t%%ebx, %%eax\n");
 	}
       else
 	{
 	  if (var->sec_no == SEC_STACK)
-	    fprintf (o_src, "\tleal\t%s, %%ebx\n", memref (var));
+	    output ("\tleal\t%s, %%ebx\n", memref (var));
 	  else if (var->sec_no == SEC_DATA)
-	    fprintf (o_src, "\tleal\tw_base%d+%d, %%ebx\n",
+	    output ("\tleal\tw_base%d+%d, %%ebx\n",
 		     pgm_segment, var->location);
 	  else if (var->sec_no == SEC_CONST)
-	    fprintf (o_src, "\tleal\tc_base%d+%d, %%ebx\n",
+	    output ("\tleal\tc_base%d+%d, %%ebx\n",
 		     pgm_segment, var->location);
-	  fprintf (o_src, "\taddl\t%%ebx,%%eax\n");
+	  output ("\taddl\t%%ebx,%%eax\n");
 	}
     }
   else
@@ -654,10 +663,10 @@ loadloc_to_eax (cob_tree sy_p)
   if (SUBSTRING_P (sy_p))
     {
       // should avoid all that if literal 1
-      fprintf (o_src, "\tmovl\t%%eax, %%ebx\n");
+      output ("\tmovl\t%%eax, %%ebx\n");
       value_to_eax (SUBSTRING_OFFSET (sy_p));
-      fprintf (o_src, "\tdecl\t%%eax\n");
-      fprintf (o_src, "\taddl\t%%ebx, %%eax\n");
+      output ("\tdecl\t%%eax\n");
+      output ("\taddl\t%%ebx, %%eax\n");
     }
 }
 
@@ -686,7 +695,7 @@ static void
 gen_temp_storage (int size)
 {
   stackframe_cnt += 4;
-  fprintf (o_src, "\tpushl\t$tv_base%d+%d\n", pgm_segment, tmpvar_offset);
+  output ("\tpushl\t$tv_base%d+%d\n", pgm_segment, tmpvar_offset);
   tmpvar_offset += size;
   if (tmpvar_offset > tmpvar_max)
     tmpvar_max = tmpvar_offset;
@@ -712,30 +721,30 @@ gen_loaddesc1 (cob_tree sy, int variable_length)
       cob_tree len = rflp->len;
       if (len == NULL)
 	{
-	  fprintf (o_src, "#  corrected length EOV\n");
+	  output ("#  corrected length EOV\n");
 	  value_to_eax (rflp->off);
-	  fprintf (o_src, "\tnegl\t%%eax\n");
-	  fprintf (o_src, "\taddl\t$%d, %%eax\n", symlen (var));
-	  fprintf (o_src, "\tincl\t%%eax\n");
-	  fprintf (o_src, "\tmovl\t%%eax, rf_base%d+%d\n",
+	  output ("\tnegl\t%%eax\n");
+	  output ("\taddl\t$%d, %%eax\n", symlen (var));
+	  output ("\tincl\t%%eax\n");
+	  output ("\tmovl\t%%eax, rf_base%d+%d\n",
 		   pgm_segment, rflp->slot * 8);
 	}
       else
 	{
-	  fprintf (o_src, "#  corrected length %s\n", COB_FIELD_NAME (len));
+	  output ("#  corrected length %s\n", COB_FIELD_NAME (len));
 	  if (LITERAL_P (len))
-	    fprintf (o_src, "\tmovl\t$%s, rf_base%d+%d\n",
+	    output ("\tmovl\t$%s, rf_base%d+%d\n",
 		     COB_FIELD_NAME (len), pgm_segment, rflp->slot * 8);
 	  else
 	    {
 	      value_to_eax (len);
-	      fprintf (o_src, "\tmovl\t%%eax, rf_base%d+%d\n",
+	      output ("\tmovl\t%%eax, rf_base%d+%d\n",
 		       pgm_segment, rflp->slot * 8);
 	    }
 	}
-      fprintf (o_src, "\tmovl\t$'%c', rf_base%d+%d\n", 'G',
+      output ("\tmovl\t$'%c', rf_base%d+%d\n", 'G',
 	       pgm_segment, rflp->slot * 8 + 4);
-      fprintf (o_src, "\tmovl\t$rf_base%d+%d, %%eax\n",
+      output ("\tmovl\t$rf_base%d+%d, %%eax\n",
 	       pgm_segment, rflp->slot * 8);
     }
   else
@@ -748,10 +757,10 @@ gen_loaddesc1 (cob_tree sy, int variable_length)
       else
 	{
 #ifdef COB_DEBUG
-	  fprintf (o_src, "\tmovl\t%s, %%eax\t# descriptor of [%s]\n",
+	  output ("\tmovl\t%s, %%eax\t# descriptor of [%s]\n",
 		   memrefd (var), COB_FIELD_NAME (var));
 #else
-	  fprintf (o_src, "\tmovl\t%s, %%eax\n", memrefd (var));
+	  output ("\tmovl\t%s, %%eax\n", memrefd (var));
 #endif
 	}
     }
@@ -784,13 +793,13 @@ value_to_eax (cob_tree sy)
   int stack_save;
   char *s;
 #ifdef COB_DEBUG
-  fprintf (o_src, "# value_to_eax: ");
+  output ("# value_to_eax: ");
   print_tree (sy, o_src);
   fputs ("\n", o_src);
 #endif
   if (sy == NULL)
     {
-      fprintf (o_src, "\txorl\t%%eax,%%eax\n");
+      output ("\txorl\t%%eax,%%eax\n");
       return;
     }
   if (!SYMBOL_P (sy))
@@ -801,10 +810,10 @@ value_to_eax (cob_tree sy)
       s = COB_FIELD_NAME (sy);
       while (*s)
 	value = value * 10 + *s++ - '0';
-      fprintf (o_src, "#bef val\n");
-      fprintf (o_src, "\tmovl\t$%d,%%eax\n", (int) value);
+      output ("#bef val\n");
+      output ("\tmovl\t$%d,%%eax\n", (int) value);
       if ((value2 = value >> 32) != 0)
-	fprintf (o_src, "\tmovl\t$%d,%%edx\n", (int) value2);
+	output ("\tmovl\t$%d,%%edx\n", (int) value2);
     }
   else if (COB_FIELD_TYPE (sy) == 'B' || COB_FIELD_TYPE (sy) == 'U')
     {
@@ -813,8 +822,8 @@ value_to_eax (cob_tree sy)
          so we use %edx to get the most significant part */
       if (symlen (sy) > 4)
 	{
-	  fprintf (o_src, "\tmovl\t%s+4, %%edx\n", memref (sy));
-	  fprintf (o_src, "\tmovl\t%s, %%eax\n", memref (sy));
+	  output ("\tmovl\t%s+4, %%edx\n", memref (sy));
+	  output ("\tmovl\t%s, %%eax\n", memref (sy));
 	}
       else
 	{
@@ -823,15 +832,15 @@ value_to_eax (cob_tree sy)
 	      switch (sy->sec_no)
 		{
 		case SEC_CONST:
-		  fprintf (o_src, "\tmovl\tc_base%d+%d, %%eax\n",
+		  output ("\tmovl\tc_base%d+%d, %%eax\n",
 			   pgm_segment, sy->location);
 		  break;
 		case SEC_DATA:
-		  fprintf (o_src, "\tmovl\tw_base%d+%d, %%eax\n",
+		  output ("\tmovl\tw_base%d+%d, %%eax\n",
 			   pgm_segment, sy->location);
 		  break;
 		case SEC_STACK:
-		  fprintf (o_src, "\tmovl\t-%d(%%ebp), %%eax\n",
+		  output ("\tmovl\t-%d(%%ebp), %%eax\n",
 			   sy->location);
 		  break;
 		}
@@ -841,15 +850,15 @@ value_to_eax (cob_tree sy)
 	      switch (sy->sec_no)
 		{
 		case SEC_CONST:
-		  fprintf (o_src, "\tmovs%cl\tc_base%d+%d, %%eax\n",
+		  output ("\tmovs%cl\tc_base%d+%d, %%eax\n",
 			   varsize_ch (sy), pgm_segment, sy->location);
 		  break;
 		case SEC_DATA:
-		  fprintf (o_src, "\tmovs%cl\tw_base%d+%d, %%eax\n",
+		  output ("\tmovs%cl\tw_base%d+%d, %%eax\n",
 			   varsize_ch (sy), pgm_segment, sy->location);
 		  break;
 		case SEC_STACK:
-		  fprintf (o_src, "\tmovs%cl\t-%d(%%ebp), %%eax\n",
+		  output ("\tmovs%cl\t-%d(%%ebp), %%eax\n",
 			   varsize_ch (sy), sy->location);
 		  break;
 		}
@@ -877,7 +886,7 @@ set_ptr (cob_tree sy)
 	  yyerror ("only level 01 or 77 linkage vars may be set");
 	  return;
 	}
-      fprintf (o_src, "\tmovl\t%%eax,%d(%%ebp)\n", sy->linkage_flg);
+      output ("\tmovl\t%%eax,%d(%%ebp)\n", sy->linkage_flg);
       return;
     }
   else
@@ -885,15 +894,15 @@ set_ptr (cob_tree sy)
       if (SYMBOL_P (sy))
 	{
 	  load_location (sy, "ebx");
-	  fprintf (o_src, "\tmovl\t%%eax,0(%%ebx)\n");
+	  output ("\tmovl\t%%eax,0(%%ebx)\n");
 	}
       else
 	{
-	  fprintf (o_src, "\tpushl\t%%eax\t# saving ptr value\n");
+	  output ("\tpushl\t%%eax\t# saving ptr value\n");
 	  loadloc_to_eax (sy);
-	  fprintf (o_src, "\tmovl\t%%eax,%%ebx\n");
-	  fprintf (o_src, "\tpopl\t%%eax\n");
-	  fprintf (o_src, "\tmovl\t%%eax,0(%%ebx)\n");
+	  output ("\tmovl\t%%eax,%%ebx\n");
+	  output ("\tpopl\t%%eax\n");
+	  output ("\tmovl\t%%eax,0(%%ebx)\n");
 	}
     }
 }
@@ -903,9 +912,9 @@ cleanup_rt_stack ()
 {
   /* generate stack cleanup only if there is something to clean */
   if (stackframe_cnt == 1)
-    fprintf (o_src, "\tpopl\t%%ecx\n");
+    output ("\tpopl\t%%ecx\n");
   else if (stackframe_cnt)
-    fprintf (o_src, "\taddl\t$%d, %%esp\n", stackframe_cnt);
+    output ("\taddl\t$%d, %%esp\n", stackframe_cnt);
   stackframe_cnt = 0;
   if (need_desc_length_cleanup)
     {
@@ -917,7 +926,7 @@ cleanup_rt_stack ()
 static void
 asm_call (const char *name)
 {
-  fprintf (o_src, "\tcall\t%s\n", name);
+  output ("\tcall\t%s\n", name);
   cleanup_rt_stack ();
 }
 
@@ -1019,19 +1028,19 @@ gen_not (void)
 {
   int i = loc_label++;
   int j = loc_label++;
-  fprintf (o_src, "\tjz\t.L%d\n", i);
-  fprintf (o_src, "\txorl\t%%eax,%%eax\n");
-  fprintf (o_src, "\tjmp\t.L%d\n", j);
-  fprintf (o_src, ".L%d:\tincl\t%%eax\n", i);
-  fprintf (o_src, "\t.align 16\n");
-  fprintf (o_src, ".L%d:\n", j);
+  output ("\tjz\t.L%d\n", i);
+  output ("\txorl\t%%eax,%%eax\n");
+  output ("\tjmp\t.L%d\n", j);
+  output (".L%d:\tincl\t%%eax\n", i);
+  output ("\t.align 16\n");
+  output (".L%d:\n", j);
 }
 
 int
 gen_orstart (void)
 {
   int i = loc_label++;
-  fprintf (o_src, "\tjz\t.L%d\n", i);
+  output ("\tjz\t.L%d\n", i);
   return i;
 }
 
@@ -1057,7 +1066,7 @@ gen_condvar (cob_tree sy)
   else
     gen_loadvar (sy->parent);
   asm_call ("check_condition");
-  fprintf (o_src, "\tand\t%%eax,%%eax\n");
+  output ("\tand\t%%eax,%%eax\n");
 }
 
 static void
@@ -1077,24 +1086,24 @@ gen_compare (cob_tree s1, int op, cob_tree s2)
   switch (op)
     {
     case COND_EQ:
-      fprintf (o_src, "\tand\t%%eax,%%eax\n");	/* equal */
+      output ("\tand\t%%eax,%%eax\n");	/* equal */
       break;
     case COND_LT:
-      fprintf (o_src, "\tinc\t%%eax\n");	/* less */
+      output ("\tinc\t%%eax\n");	/* less */
       break;
     case COND_LE:
-      fprintf (o_src, "\tdec\t%%eax\n");	/* less or equal */
+      output ("\tdec\t%%eax\n");	/* less or equal */
       gen_not ();
       break;
     case COND_GT:
-      fprintf (o_src, "\tdec\t%%eax\n");	/* greater */
+      output ("\tdec\t%%eax\n");	/* greater */
       break;
     case COND_GE:
-      fprintf (o_src, "\tinc\t%%eax\n");	/* greater or equal */
+      output ("\tinc\t%%eax\n");	/* greater or equal */
       gen_not ();
       break;
     case COND_NE:
-      fprintf (o_src, "\tand\t%%eax,%%eax\n");	/* not equal */
+      output ("\tand\t%%eax,%%eax\n");	/* not equal */
       gen_not ();
       break;
     }
@@ -1111,19 +1120,19 @@ gen_condition (cob_tree cond)
     {
     case COND_NUMERIC:
       asm_call_1 ("cob_is_numeric", l);
-      fprintf (o_src, "\tdecl\t%%eax\n");
+      output ("\tdecl\t%%eax\n");
       break;
     case COND_ALPHABETIC:
       asm_call_1 ("cob_is_alphabetic", l);
-      fprintf (o_src, "\tdecl\t%%eax\n");
+      output ("\tdecl\t%%eax\n");
       break;
     case COND_LOWER:
       asm_call_1 ("cob_is_lower", l);
-      fprintf (o_src, "\tdecl\t%%eax\n");
+      output ("\tdecl\t%%eax\n");
       break;
     case COND_UPPER:
       asm_call_1 ("cob_is_upper", l);
-      fprintf (o_src, "\tdecl\t%%eax\n");
+      output ("\tdecl\t%%eax\n");
       break;
     case COND_POSITIVE:
       gen_compare (l, COND_GT, spe_lit_ZE);
@@ -1144,11 +1153,11 @@ gen_condition (cob_tree cond)
 	int lab = loc_label++;
 	gen_condition (l);
 	if (type == COND_AND)
-	  fprintf (o_src, "\tjnz\t.L%d\n", lab);
+	  output ("\tjnz\t.L%d\n", lab);
 	else
-	  fprintf (o_src, "\tjz\t.L%d\n", lab);
+	  output ("\tjz\t.L%d\n", lab);
 	gen_condition (r);
-	fprintf (o_src, ".L%d:\n", lab);
+	output (".L%d:\n", lab);
       }
       return;
     case COND_VAR:
@@ -1158,7 +1167,7 @@ gen_condition (cob_tree cond)
       gen_compare (l, type, r);
       return;
     }
-  fprintf (o_src, "\tand\t%%eax,%%eax\n");
+  output ("\tand\t%%eax,%%eax\n");
 }
 
 
@@ -1175,11 +1184,11 @@ emit_lit (char *s, int len)
       {
 	if (bcnt > 1)
 	  putc ('\n', o_src);
-	fprintf (o_src, "\t.byte\t%d", *s++);
+	output ("\t.byte\t%d", *s++);
       }
     else
       {
-	fprintf (o_src, ",%d", *s++);
+	output (",%d", *s++);
       }
 }
 
@@ -1190,11 +1199,11 @@ stabs_line ()
   static char *last_filename = NULL;
 
   if (last_filename != cob_orig_filename)
-    fprintf (o_src, ".stabs\t\"%s\",132,0,0,.LM%d\n",
+    output (".stabs\t\"%s\",132,0,0,.LM%d\n",
 	     cob_orig_filename, label);
-  fprintf (o_src, ".stabn\t68,0,%d,.LM%d-Ltext_%s\n",
+  output (".stabn\t68,0,%d,.LM%d-Ltext_%s\n",
 	   cob_orig_lineno, label, pgm_label);
-  fprintf (o_src, ".LM%d:\n", label++);
+  output (".LM%d:\n", label++);
 
   last_filename = cob_orig_filename;
 }
@@ -1203,7 +1212,7 @@ void
 data_trail (void)
 {
   if (substring_slots > 0)
-    fprintf (o_src, "rf_base%d:\t.space\t%d\n",
+    output ("rf_base%d:\t.space\t%d\n",
 	     pgm_segment, substring_slots * 8);
 }
 
@@ -1237,10 +1246,10 @@ gen_store_fnres (cob_tree sy)
       switch (symlen (sy))
 	{
 	case 4:
-	  fprintf (o_src, "\tmovl\t%%eax, %s\n", memrefat (sy));
+	  output ("\tmovl\t%%eax, %s\n", memrefat (sy));
 	  break;
 	case 2:
-	  fprintf (o_src, "\tmov\t%%ax, %s\n", memrefat (sy));
+	  output ("\tmov\t%%ax, %s\n", memrefat (sy));
 	  break;
 	};
       break;
@@ -1399,7 +1408,7 @@ dump_working ()
   int stabs_type = '3';
   int cur_sec_no = SEC_DATA;
 
-  fprintf (o_src, "w_base%d:\n", pgm_segment);
+  output ("w_base%d:\n", pgm_segment);
   for (list = fields_list; list != NULL; list = list->next)
     {
       v = list->var;
@@ -1414,14 +1423,14 @@ dump_working ()
       if (v->sec_no != cur_sec_no && v->sec_no >= SEC_FIRST_NAMED)
 	{			// switch of sections
 	  if (v->sec_no >= SEC_FIRST_NAMED)
-	    fprintf (o_src, "\t.comm\t%s,%d,4\n",
+	    output ("\t.comm\t%s,%d,4\n",
 		     sec_name (v->sec_no), fld_len);
 	  else
-	    fprintf (o_src, ".text\n");
+	    output (".text\n");
 	  cur_sec_no = v->sec_no;
 	}
 #ifdef COB_DEBUG
-      fprintf (o_src, "# FIELD %s, Data Loc: %d(hex: %x) %c\n",
+      output ("# FIELD %s, Data Loc: %d(hex: %x) %c\n",
 	       COB_FIELD_NAME (v), v->location, v->location,
 	       COB_FIELD_TYPE (v));
 #endif
@@ -1444,18 +1453,18 @@ dump_working ()
 		stabs_type = '7';
 		break;
 	      }
-	    fprintf (o_src, ".stabs\t\"%s:S%c\",38,0,0,w_base%d+%d\n",
+	    output (".stabs\t\"%s:S%c\",38,0,0,w_base%d+%d\n",
 		     COB_FIELD_NAME (sy), stabs_type, pgm_segment,
 		     sy->location);
 	    break;
 
 	  case 'C':
-	    fprintf (o_src, ".stabs\t\"%s:S(1,%d)=ar3;1;%d;4\",38,0,0,w_base%d+%d\n",
+	    output (".stabs\t\"%s:S(1,%d)=ar3;1;%d;4\",38,0,0,w_base%d+%d\n",
 		     COB_FIELD_NAME (sy), sy->len, sy->len, pgm_segment, 0);
 	    break;
 
 	  default:
-	    fprintf (o_src, ".stabs\t\"%s:S(1,%d)=ar3;1;%d;2\",38,0,0,w_base%d+%d\n",
+	    output (".stabs\t\"%s:S(1,%d)=ar3;1;%d;2\",38,0,0,w_base%d+%d\n",
 		     COB_FIELD_NAME (sy), sy->len, sy->len, pgm_segment,
 		     sy->location);
 	    break;
@@ -1465,7 +1474,7 @@ dump_working ()
 	continue;
       if (fld_len)
 	{			/* don't alloc dummy (zero storage) symbols */
-	  fprintf(o_src,"\t.space\t%d\n",fld_len);
+	  output ("\t.space\t%d\n", fld_len);
 	}
       if (fld_len == 0)
 	yyerror ("Invalid picture in %s", COB_FIELD_NAME (v));
@@ -1473,8 +1482,8 @@ dump_working ()
   /* output tmpvar storage */
   if (tmpvar_max > 0)
     {
-      fprintf (o_src, "tv_base%d:\n", pgm_segment);
-      fprintf (o_src, "\t.space\t%d\n", tmpvar_max);
+      output ("tv_base%d:\n", pgm_segment);
+      output ("\t.space\t%d\n", tmpvar_max);
     }
 }
 
@@ -1493,34 +1502,34 @@ proc_header (int using)
     {
       if (cob_stabs_flag)
 	{
-	  fprintf (o_src, ".stabs\t\"%s\",100,0,0,Ltext_%s\n",
+	  output (".stabs\t\"%s\",100,0,0,Ltext_%s\n",
 		   cob_source_filename, pgm_label);
-	  fprintf (o_src, ".stabs\t\"%s:F1\",36,0,0,%s\n",
+	  output (".stabs\t\"%s:F1\",36,0,0,%s\n",
 		   pgm_label, pgm_label);
-	  fprintf (o_src, ".stabs\t\"display:t2=r2;0;255;\",128,0,0,0\n");
-	  fprintf (o_src, ".stabs\t\"comp:t3=r3;-2147483648;2147483647;\",128,0,0,0\n");
-	  fprintf (o_src, ".stabs\t\"comp3:t4=r3;0;255;\",128,0,0,0\n");
-	  fprintf (o_src, ".stabs\t\"compw:t5=r5;-32768;32767;\",128,0,0,0\n");
-	  fprintf (o_src, ".stabs\t\"compb:t6=r6;-128;127;\",128,0,0,0\n");
+	  output (".stabs\t\"display:t2=r2;0;255;\",128,0,0,0\n");
+	  output (".stabs\t\"comp:t3=r3;-2147483648;2147483647;\",128,0,0,0\n");
+	  output (".stabs\t\"comp3:t4=r3;0;255;\",128,0,0,0\n");
+	  output (".stabs\t\"compw:t5=r5;-32768;32767;\",128,0,0,0\n");
+	  output (".stabs\t\"compb:t6=r6;-128;127;\",128,0,0,0\n");
 	  /* compll (comp with 8 bytes size) is wrong. Use a dump instead */
-	  fprintf (o_src, ".stabs\t\"compll:t7=r(0,1);0;01777777777777777777777\",128,0,0,0\n");
+	  output (".stabs\t\"compll:t7=r(0,1);0;01777777777777777777777\",128,0,0,0\n");
 	}
-      fprintf (o_src, "\t.version\t\"01.01\"\n");
-      fprintf (o_src, "cobc_compiled.:\n");
+      output ("\t.version\t\"01.01\"\n");
+      output ("cobc_compiled.:\n");
     }
 
-  fprintf (o_src, ".text\n");
-  fprintf (o_src, "Ltext_%s:\n", pgm_label);
+  output (".text\n");
+  output ("Ltext_%s:\n", pgm_label);
   if (!pgm_segment)
     {
       if (cob_stabs_flag)
-	fprintf (o_src, ".stabs\t\":t1\",128,0,0,0\n");
-      fprintf (o_src, "\t.align 16\n");
+	output (".stabs\t\":t1\",128,0,0,0\n");
+      output ("\t.align 16\n");
     }
-  fprintf (o_src, ".globl %s\n", pgm_label);
-  fprintf (o_src, "\t.type\t%s,@function\n", pgm_label);
-  fprintf (o_src, "%s:\n", pgm_label);
-  fprintf (o_src, "\tpushl\t%%ebp\n\tmovl\t%%esp, %%ebp\n");
+  output (".globl %s\n", pgm_label);
+  output ("\t.type\t%s,@function\n", pgm_label);
+  output ("%s:\n", pgm_label);
+  output ("\tpushl\t%%ebp\n\tmovl\t%%esp, %%ebp\n");
   if (stack_offset & 1)
     stack_offset++;
 
@@ -1535,13 +1544,13 @@ proc_header (int using)
      not arguments of the calling program */
   stack_offset += adjust_linkage_vars (START_STACK_ADJUST);
 
-  fprintf (o_src, "\tsubl\t$%u, %%esp\n", stack_offset);
-  fprintf (o_src, "\tmovl\t%%ebx, -%d(%%ebp)\n", stack_offset - 16);
-  fprintf (o_src, ".Linit_%s:\n", pgm_label);
-  fprintf (o_src, "\tmovl\t$s_base%d+0, %%eax\n", pgm_segment);
-  fprintf (o_src, "\tcmpl\t$0, 0(%%eax)\n");
-  fprintf (o_src, "\tjne\t.Linite_%s\n", pgm_label);
-  fprintf (o_src, "\tmovl\t$1, 0(%%eax)\n");
+  output ("\tsubl\t$%u, %%esp\n", stack_offset);
+  output ("\tmovl\t%%ebx, -%d(%%ebp)\n", stack_offset - 16);
+  output (".Linit_%s:\n", pgm_label);
+  output ("\tmovl\t$s_base%d+0, %%eax\n", pgm_segment);
+  output ("\tcmpl\t$0, 0(%%eax)\n");
+  output ("\tjne\t.Linite_%s\n", pgm_label);
+  output ("\tmovl\t$1, 0(%%eax)\n");
 
   /********** initialize all VALUES of fields **********/
   initialize_values ();
@@ -1565,33 +1574,31 @@ proc_header (int using)
 		  case 4: stabs_type = '3'; break;
 		  case 8: stabs_type = '7'; break;
 		  }
-		fprintf (o_src, ".stabs\t\"%s:%c\",128,0,0,-%d\n",
+		output (".stabs\t\"%s:%c\",128,0,0,-%d\n",
 			 COB_FIELD_NAME (sy), stabs_type, sy->location);
 		break;
 	      case 'C':
-		fprintf (o_src,
-			 ".stabs\t\"%s:(1,%d)=ar3;1;%d;4\",128,0,0,-%d\n",
-			 COB_FIELD_NAME (sy), sy->len, sy->len, sy->location);
+		output (".stabs\t\"%s:(1,%d)=ar3;1;%d;4\",128,0,0,-%d\n",
+			COB_FIELD_NAME (sy), sy->len, sy->len, sy->location);
 		break;
 	      default:
-		fprintf (o_src,
-			 ".stabs\t\"%s:(1,%d)=ar3;1;%d;2\",128,0,0,-%d\n",
-			 COB_FIELD_NAME (sy), sy->len, sy->len, sy->location);
+		output (".stabs\t\"%s:(1,%d)=ar3;1;%d;2\",128,0,0,-%d\n",
+			COB_FIELD_NAME (sy), sy->len, sy->len, sy->location);
 	      }
 
-  fprintf (o_src, ".Linite_%s:\n", pgm_label);
-  fprintf (o_src, "\tleal\t%s, %%eax\n", pgm_label);
-  fprintf (o_src, "\tpushl\t%%eax\n");
-  fprintf (o_src, "\tleal\t.Lend_pgm_%s, %%eax\n", pgm_label);
-  fprintf (o_src, "\tpushl\t%%eax\n");
+  output (".Linite_%s:\n", pgm_label);
+  output ("\tleal\t%s, %%eax\n", pgm_label);
+  output ("\tpushl\t%%eax\n");
+  output ("\tleal\t.Lend_pgm_%s, %%eax\n", pgm_label);
+  output ("\tpushl\t%%eax\n");
   stack_offset += 8;		// length of the 2 pushes above
   if (!decimal_comma)
     {
-      fprintf (o_src, "\txorl\t%%eax,%%eax\n");
-      fprintf (o_src, "\tmovl\t%%eax,decimal_comma\n");
+      output ("\txorl\t%%eax,%%eax\n");
+      output ("\tmovl\t%%eax,decimal_comma\n");
     }
   if (currency_symbol != '$')
-    fprintf (o_src, "\tmovb\t$%d,cCurrencySymbol\n", currency_symbol);
+    output ("\tmovb\t$%d,cCurrencySymbol\n", currency_symbol);
   at_procedure++;
 }
 
@@ -1602,13 +1609,12 @@ dump_alternate_keys (cob_tree r, struct alternate_list *alt)
   for (; alt; alt = alt->next)
     {
       key = alt->key;
-      fprintf (o_src, "# alternate key %s\n", COB_FIELD_NAME (key));
-      fprintf (o_src,
-	       "\t.word\t%d\n\t.long\tc_base%d+%d\n\t.word\t%d\n\t.long\t0\n",
-	       key->location - r->location, pgm_segment,
-	       key->descriptor, alt->duplicates);
+      output ("# alternate key %s\n", COB_FIELD_NAME (key));
+      output ("\t.word\t%d\n\t.long\tc_base%d+%d\n\t.word\t%d\n\t.long\t0\n",
+	      key->location - r->location, pgm_segment,
+	      key->descriptor, alt->duplicates);
     }
-  fprintf (o_src, "# end of alternate keys\n.word\t-1\n");
+  output ("# end of alternate keys\n.word\t-1\n");
 }
 
 static void
@@ -1619,16 +1625,15 @@ dump_fdesc ()
   struct list *list /*,*visited */ ;
   unsigned char fflags;
 
-  fprintf (o_src, "s_base%d:\t.long\t0\n", pgm_segment);
+  output ("s_base%d:\t.long\t0\n", pgm_segment);
   for (list = files_list; list != NULL; list = list->next)
     {
       f = list->var;
       r = f->recordsym;
 #ifdef COB_DEBUG
-      fprintf (o_src,
-	       "# FILE DESCRIPTOR, File: %s, Record: %s, Data Loc: %d(hex: %x), opt: %x\n",
-	       COB_FIELD_NAME (f), COB_FIELD_NAME (r),
-	       f->location, f->location, f->flags.optional);
+      output ("# FILE DESCRIPTOR, File: %s, Record: %s, Data Loc: %d(hex: %x), opt: %x\n",
+	      COB_FIELD_NAME (f), COB_FIELD_NAME (r),
+	      f->location, f->location, f->flags.optional);
 #endif
       if (f->filenamevar == NULL)
 	{
@@ -1637,38 +1642,38 @@ dump_fdesc ()
 	}
       if (COB_FIELD_TYPE (f) == 'K')
 	{
-	  fprintf (o_src, "\t.extern\t_%s:far\n", COB_FIELD_NAME (f));
+	  output ("\t.extern\t_%s:far\n", COB_FIELD_NAME (f));
 	  continue;
 	}
       if (COB_FIELD_TYPE (f) == 'J')
 	{
-	  fprintf (o_src, "\tpublic\t_%s\n", COB_FIELD_NAME (f));
-	  fprintf (o_src, "_%s\tlabel\tbyte\n", COB_FIELD_NAME (f));
+	  output ("\tpublic\t_%s\n", COB_FIELD_NAME (f));
+	  output ("_%s\tlabel\tbyte\n", COB_FIELD_NAME (f));
 	}
       fflags = f->flags.optional;
-      fprintf (o_src, "\t.byte\t%u\n", RTL_FILE_VERSION);
-      fprintf (o_src, "\t.long\tc_base%d+%u\n",
+      output ("\t.byte\t%u\n", RTL_FILE_VERSION);
+      output ("\t.long\tc_base%d+%u\n",
 	       pgm_segment, f->filenamevar->descriptor);
-      fprintf (o_src, "\t.long\t%d\n", r->len);
-      fprintf (o_src, "\t.byte\t%d,%d\n", f->organization, f->access_mode);
-      fprintf (o_src, "\t.long\t0\n");	/* open_mode */
-      fprintf (o_src, "\t.long\t0\n");	/* struct DBT (libdb) */
-      fprintf (o_src, "\t.long\t0\n");	/* start_record */
-      fprintf (o_src, "\t.byte\t%x\n", fflags);	/* flags */
+      output ("\t.long\t%d\n", r->len);
+      output ("\t.byte\t%d,%d\n", f->organization, f->access_mode);
+      output ("\t.long\t0\n");	/* open_mode */
+      output ("\t.long\t0\n");	/* struct DBT (libdb) */
+      output ("\t.long\t0\n");	/* start_record */
+      output ("\t.byte\t%x\n", fflags);	/* flags */
       if (f->organization == 1)
 	{			/* indexed file */
 	  if (f->ix_desc)
 	    {
-	      fprintf (o_src, "\t.word\t%d\n\t.long\tc_base%d+%d\n",
+	      output ("\t.word\t%d\n\t.long\tc_base%d+%d\n",
 		       f->ix_desc->location - r->location,
 		       pgm_segment, f->ix_desc->descriptor);
 	    }
 	  else
 	    {
 	      /* no key field was given for this file */
-	      fprintf (o_src, "\t.word\t0\n\t.long\t0\n");
+	      output ("\t.word\t0\n\t.long\t0\n");
 	    }
-	  fprintf (o_src, "\t.long\t0\n");	/* struct altkey_desc *key_in_use */
+	  output ("\t.long\t0\n");	/* struct altkey_desc *key_in_use */
 	  dump_alternate_keys (r, (struct alternate_list *) f->alternate);
 	}
     }
@@ -1688,7 +1693,7 @@ proc_trail (int using)
     {
       pgm_label = program_id;
     }
-  fprintf (o_src, ".Lend_pgm_%s:\n", pgm_label);
+  output (".Lend_pgm_%s:\n", pgm_label);
 
   //      Screen section io cleanup (curses library).
   if (screen_io_enable != 0)
@@ -1703,41 +1708,41 @@ proc_trail (int using)
 
   if ((sy = lookup_symbol (SVAR_RCODE)) == NULL)
     {
-      fprintf (o_src, "\tmovl\t$0, %%eax\n");
+      output ("\tmovl\t$0, %%eax\n");
     }
   else
     {
       if (sy->sec_no == SEC_STACK)
-	fprintf (o_src, "\tleal\t-%d(%%ebp), %%edx\n", sy->location);
+	output ("\tleal\t-%d(%%ebp), %%edx\n", sy->location);
       else
-	fprintf (o_src, "\tleal\tw_base%d+%d, %%edx\n",
+	output ("\tleal\tw_base%d+%d, %%edx\n",
 		 pgm_segment, sy->location);
-      fprintf (o_src, "\tmovl\t(%%edx), %%eax\n");
+      output ("\tmovl\t(%%edx), %%eax\n");
     }
 
-  fprintf (o_src, "\tjmp\t.LSend_%s\n", pgm_label);
-  fprintf (o_src, "\t.align 16\n");
-  fprintf (o_src, ".LSend_%s:\n", pgm_label);
+  output ("\tjmp\t.LSend_%s\n", pgm_label);
+  output ("\t.align 16\n");
+  output (".LSend_%s:\n", pgm_label);
 
-  fprintf (o_src, "\tmovl\t-%d(%%ebp), %%ebx\n", stack_offset - 8 - 16);
-  fprintf (o_src, "\tmov\t%%ebp,%%esp\n");
-  fprintf (o_src, "\tpopl\t%%ebp\n");
-  fprintf (o_src, "\tret\n");
+  output ("\tmovl\t-%d(%%ebp), %%ebx\n", stack_offset - 8 - 16);
+  output ("\tmov\t%%ebp,%%esp\n");
+  output ("\tpopl\t%%ebp\n");
+  output ("\tret\n");
 
   /********** generate .Lfe statement   ************/
-  fprintf (o_src, ".Lfe1_%s:\n", pgm_label);
-  fprintf (o_src, "\t.size\t%s,.Lfe1_%s-%s\n",
+  output (".Lfe1_%s:\n", pgm_label);
+  output ("\t.size\t%s,.Lfe1_%s-%s\n",
 	   pgm_label, pgm_label, pgm_label);
 
 
   /********** generate data for literals & fields ************/
-  fprintf (o_src, ".data\n\t.align 4\n");
+  output (".data\n\t.align 4\n");
 
   /* generate static working storage */
   dump_working ();
 
   /* predefined data for special literals */
-  fprintf (o_src, "v_base%d:\nc_base%d:\n", pgm_segment, pgm_segment);
+  output ("v_base%d:\nc_base%d:\n", pgm_segment, pgm_segment);
 
   /**************** generate data for fields *****************/
   for (list = fields_list; list != NULL; list = list->next)
@@ -1750,10 +1755,9 @@ proc_trail (int using)
 	  *s++ = 0;		/* final da lista invertida */
 	  sy = list->var;
 #ifdef COB_DEBUG
-	  fprintf (o_src,
-		   "# File: %s, Data loc: v_base+%d, Desc: c_base%d+%d\n",
-		   COB_FIELD_NAME (sy), sy->location, pgm_segment,
-		   sy->descriptor);
+	  output ("# File: %s, Data loc: v_base+%d, Desc: c_base%d+%d\n",
+		  COB_FIELD_NAME (sy), sy->location, pgm_segment,
+		  sy->descriptor);
 #endif
 	  sy = sy->sort_data;
 	  while (sy != NULL)
@@ -1765,9 +1769,9 @@ proc_trail (int using)
 	  s--;
 	  while (*s)
 	    {
-	      fprintf (o_src, "\t.byte\t%u,%u\n", *s--, *s--);
+	      output ("\t.byte\t%u,%u\n", *s--, *s--);
 	    }
-	  fprintf (o_src, "\t.byte\t0\n");
+	  output ("\t.byte\t0\n");
 	}
       else if (!SYMBOL_P (list->var))
 	{
@@ -1776,10 +1780,9 @@ proc_trail (int using)
 	  struct lit *v = LITERAL (list->var);
 	  len = v->nick ? 1 : v->len;
 #ifdef COB_DEBUG
-	  fprintf (o_src,
-		   "# Literal: %s, Data loc: c_base%d+%d, Desc: c_base+%d\n",
-		   COB_FIELD_NAME (v), pgm_segment, v->location,
-		   v->descriptor);
+	  output ("# Literal: %s, Data loc: c_base%d+%d, Desc: c_base+%d\n",
+		  COB_FIELD_NAME (v), pgm_segment, v->location,
+		  v->descriptor);
 
 #endif
 	  if (!v->decimals)
@@ -1798,53 +1801,53 @@ proc_trail (int using)
 		}
 	      emit_lit (s, i);
 	      if (i)
-		fprintf (o_src, ",0\n");
+		output (",0\n");
 	      else
-		fprintf (o_src, "\t.byte\t0\n");	/* null string? */
+		output ("\t.byte\t0\n");	/* null string? */
 	    }
 	  else
 	    {
 	      char *s;
 	      s = COB_FIELD_NAME (v);
-	      fprintf (o_src, "\t.byte\t");
+	      output ("\t.byte\t");
 	      while (*s && (*s != decimal_char ()))
-		fprintf (o_src, "%d,", *s++);
+		output ("%d,", *s++);
 	      s++;
 	      while (*s)
-		fprintf (o_src, "%d,", *s++);
-	      fprintf (o_src, "0\n");
+		output ("%d,", *s++);
+	      output ("0\n");
 	    }
-	  fprintf (o_src, "\t.long\t%d\n", (v->decimals) ? len - 1 : len);
-	  fprintf (o_src, "\t.byte\t'%c',%d,%d\n",
+	  output ("\t.long\t%d\n", (v->decimals) ? len - 1 : len);
+	  output ("\t.byte\t'%c',%d,%d\n",
 		   COB_FIELD_TYPE (v), v->decimals, v->all);
-	  fprintf (o_src, "\t.long\tc_base%d+%d\n",
+	  output ("\t.long\tc_base%d+%d\n",
 		   pgm_segment, v->descriptor + 11);
 
 	  if (v->decimals)
 	    {
 	      if (COB_FIELD_NAME (v)[v->len - 1] > '9')	/* signed too? */
-		fprintf (o_src, "\t.byte\t'S',1,'9',%d,'V',1,'9',%d,0\n",
+		output ("\t.byte\t'S',1,'9',%d,'V',1,'9',%d,0\n",
 			 len - v->decimals - 1, v->decimals);
 	      else
-		fprintf (o_src, "\t.byte\t'9',%d,'V',1,'9',%d,0\n",
+		output ("\t.byte\t'9',%d,'V',1,'9',%d,0\n",
 			 len - v->decimals - 1, v->decimals);
 	    }
 	  else if ((COB_FIELD_TYPE (v) == '9')
 		   && (COB_FIELD_NAME (v)[v->len - 1] > '9'))
 	    {
 	      /* this is a signed literal, so reflect into its picture too */
-	      fprintf (o_src, "\t.byte\t'S',1,'9',%d,0\n", len);
+	      output ("\t.byte\t'S',1,'9',%d,0\n", len);
 	    }
 	  else
 	    {
 	      tmplen = len;
 	      while (tmplen > 255)
 		{
-		  fprintf (o_src, "\t.byte\t\'%c\',%d\n",
+		  output ("\t.byte\t\'%c\',%d\n",
 			   COB_FIELD_TYPE (v), 255);
 		  tmplen -= 255;
 		}
-	      fprintf (o_src, "\t.byte\t\'%c\',%d,0\n",
+	      output ("\t.byte\t\'%c\',%d,0\n",
 		       COB_FIELD_TYPE (v), tmplen);
 
 	    }
@@ -1854,35 +1857,35 @@ proc_trail (int using)
 	/********* it is a normal field ****************/
 	  sy = list->var;
 #ifdef COB_DEBUG
-	  fprintf (o_src, "# Field: %s, Mem loc: %s, Desc: c_base%d+%d\n",
+	  output ("# Field: %s, Mem loc: %s, Desc: c_base%d+%d\n",
 		   COB_FIELD_NAME (sy), memref (sy), pgm_segment,
 		   sy->descriptor);
 #endif
 	  if (sy->redefines != NULL)
 	    sy->location = sy->redefines->location;
 
-	  fprintf (o_src, "\t.long\t%d\n", sy->len);
+	  output ("\t.long\t%d\n", sy->len);
 
 	  flag = sy->flags.just_r ? 2 : 0;
 	  flag |= (sy->flags.separate_sign ? 4 : 0);
 	  flag |= (sy->flags.leading_sign ? 8 : 0);
-	  fprintf (o_src, "\t.byte\t'%c',%d,%d\n",
+	  output ("\t.byte\t'%c',%d,%d\n",
 		   COB_FIELD_TYPE (sy), sy->decimals, flag);
 	  if (COB_FIELD_TYPE (sy) != 'G')
 	    {
-	      fprintf (o_src, "\t.long\tc_base%d+%d\n", pgm_segment, sy->pic);
+	      output ("\t.long\tc_base%d+%d\n", pgm_segment, sy->pic);
 	      for (i = 0; i < strlen (sy->picstr); i += 2)
-		fprintf (o_src, "\t.byte\t\'%c\',%d\n",
+		output ("\t.byte\t\'%c\',%d\n",
 			 *(sy->picstr + i),
 			 *((unsigned char *) sy->picstr + i + 1));
-	      fprintf (o_src, "\t.byte\t0\n");
+	      output ("\t.byte\t0\n");
 	    }
 	}
     }
   /* generate data for files */
   dump_fdesc ();
   data_trail ();
-  fprintf (o_src, "\n\t.ident\t\"%s %s\"\n", COB_PACKAGE, COB_VERSION);
+  output ("\n\t.ident\t\"%s %s\"\n", COB_PACKAGE, COB_VERSION);
 }
 
 void
@@ -1948,7 +1951,6 @@ void
 put_disp_list (cob_tree sy)
 {
   struct list *list, *tmp;
-//fprintf(o_src,"# put_disp_list: %s\n",sy->name);
   list = (struct list *) malloc (sizeof (struct list));
   list->var = sy;
   list->next = NULL;
@@ -2005,7 +2007,7 @@ add_alternate_key (cob_tree sy, int duplicates)
 static void
 gen_init_status (void)
 {
-  fprintf (o_src, "\tmovl\t$%d, cob_status\n", COB_STATUS_SUCCESS);
+  output ("\tmovl\t$%d, cob_status\n", COB_STATUS_SUCCESS);
 }
 
 static void
@@ -2023,11 +2025,11 @@ gen_status_branch (int status, int flag)
 {
   int lbl = loc_label++;
 
-  fprintf (o_src, "\tcmpl\t$%d, cob_status\n", status);
+  output ("\tcmpl\t$%d, cob_status\n", status);
   if (flag)
-    fprintf (o_src, "\tje\t.L%d\n", lbl);
+    output ("\tje\t.L%d\n", lbl);
   else
-    fprintf (o_src, "\tjne\t.L%d\n", lbl);
+    output ("\tjne\t.L%d\n", lbl);
 
   return lbl;
 }
@@ -2181,7 +2183,7 @@ gen_unstring (cob_tree var, struct unstring_delimited *delim,
 	      struct unstring_destinations *dest, cob_tree ptr,
 	      cob_tree tally)
 {
-  fprintf (o_src, "# UNSTRING %s\n", COB_FIELD_NAME (var));
+  output ("# UNSTRING %s\n", COB_FIELD_NAME (var));
   push_immed (0);
   for (; dest; dest = dest->next)
     {
@@ -2201,7 +2203,7 @@ gen_unstring (cob_tree var, struct unstring_delimited *delim,
 void
 gen_string (struct string_from *sf, cob_tree sy, cob_tree ptr)
 {
-  fprintf (o_src, "# STRING into %s\n", COB_FIELD_NAME (sy));
+  output ("# STRING into %s\n", COB_FIELD_NAME (sy));
   push_immed (0);	/* mark the end of variables */
   for (; sf; sf = sf->next)
     {
@@ -2216,10 +2218,10 @@ gen_display_screen (cob_tree sy, int main)
 {
   cob_tree tmp;
   if (main)
-    fprintf (o_src, "# Screen Section: %s\n", COB_FIELD_NAME (sy));
+    output ("# Screen Section: %s\n", COB_FIELD_NAME (sy));
   if (sy->son == NULL)
     {
-      fprintf (o_src, "# Screen Field: %s\n", COB_FIELD_NAME (sy));
+      output ("# Screen Field: %s\n", COB_FIELD_NAME (sy));
       gen_loadvar (sy->scr->to);
       gen_loadvar (sy->scr->from);
       gen_loadvar (sy);
@@ -2317,10 +2319,10 @@ gen_accept (cob_tree sy, int echo, int main)
   if (sy->scr)
     {				/* screen or screen-item accept */
       if (main)
-	fprintf (o_src, "# Screen Section: %s\n", COB_FIELD_NAME (sy));
+	output ("# Screen Section: %s\n", COB_FIELD_NAME (sy));
       if (sy->son == NULL)
 	{
-	  fprintf (o_src, "# Screen Field: %s\n", COB_FIELD_NAME (sy));
+	  output ("# Screen Field: %s\n", COB_FIELD_NAME (sy));
 	  gen_loadvar (sy->scr->to);
 	  gen_loadvar (sy->scr->from);
 	  gen_loadvar (sy);
@@ -2344,7 +2346,7 @@ gen_accept (cob_tree sy, int echo, int main)
   else
     {
       push_immed (echo);
-      fprintf (o_src, "\tmovl\t$c_base%d+%u, %%eax\n",
+      output ("\tmovl\t$c_base%d+%u, %%eax\n",
 	       pgm_segment, sy->descriptor);
       push_eax ();
       gen_loadloc (sy);
@@ -2397,9 +2399,9 @@ gen_accept_from_cmdline (cob_tree sy)
   cob_tree sy1;
 
   gen_loadvar (sy);
-  fprintf (o_src, "\tmovl\t12(%%ebp), %%eax\n");
+  output ("\tmovl\t12(%%ebp), %%eax\n");
   push_eax ();
-  fprintf (o_src, "\tmovl\t8(%%ebp), %%eax\n");
+  output ("\tmovl\t8(%%ebp), %%eax\n");
   push_eax ();
   asm_call ("accept_cmd_line");
 
@@ -2411,14 +2413,14 @@ gen_accept_from_cmdline (cob_tree sy)
     {
       if (sy1->sec_no == SEC_STACK)
 	{
-	  fprintf (o_src, "\tleal\t-%d(%%ebp), %%edx\n", sy1->location);
+	  output ("\tleal\t-%d(%%ebp), %%edx\n", sy1->location);
 	}
       else
 	{
-	  fprintf (o_src, "\tleal\tw_base%d+%d, %%edx\n",
+	  output ("\tleal\tw_base%d+%d, %%edx\n",
 		   pgm_segment, sy1->location);
 	}
-      fprintf (o_src, "\tmovl\t%%eax, (%%edx)\n");
+      output ("\tmovl\t%%eax, (%%edx)\n");
     }
 }
 
@@ -2437,10 +2439,10 @@ gen_accept_env_var (cob_tree sy, cob_tree v)
   if ((sy2 = lookup_symbol (SVAR_RCODE)) != NULL)
     {
       if (sy2->sec_no == SEC_STACK)
-	fprintf (o_src, "\tleal\t-%d(%%ebp), %%edx\n", sy2->location);
+	output ("\tleal\t-%d(%%ebp), %%edx\n", sy2->location);
       else
-	fprintf (o_src, "\tleal\tw_base%d+%d, %%edx\n", pgm_segment, sy2->location);
-      fprintf (o_src, "\tmovl\t%%eax, (%%edx)\n");
+	output ("\tleal\tw_base%d+%d, %%edx\n", pgm_segment, sy2->location);
+      output ("\tmovl\t%%eax, (%%edx)\n");
     }
 }
 
@@ -2875,21 +2877,21 @@ gen_initialize_1 (cob_tree sy)
 	  if (sy->times != 1)
 	    {
 	      lab = loc_label++;
-	      fprintf (o_src, "\tpopl\t%%eax\n");
-	      fprintf (o_src, "\tpushl\t%%ebx\n");
-	      fprintf (o_src, "\tpushl\t%%eax\n");
-	      fprintf (o_src, "\tmovl\t$%d, %%ebx\n", sy->times);
-	      fprintf (o_src, ".L%d:\n", lab);
+	      output ("\tpopl\t%%eax\n");
+	      output ("\tpushl\t%%ebx\n");
+	      output ("\tpushl\t%%eax\n");
+	      output ("\tmovl\t$%d, %%ebx\n", sy->times);
+	      output (".L%d:\n", lab);
 	    }
 	  for (p = sy->son; p; p = p->brother)
 	    gen_initialize_1 (p);
 	  if (sy->times != 1)
 	    {
-	      fprintf (o_src, "\tdecl\t%%ebx\n");
-	      fprintf (o_src, "\tjnz\t.L%d\n", lab);
-	      fprintf (o_src, "\tpopl\t%%eax\n");
-	      fprintf (o_src, "\tpopl\t%%ebx\n");
-	      fprintf (o_src, "\tpushl\t%%eax\n");
+	      output ("\tdecl\t%%ebx\n");
+	      output ("\tjnz\t.L%d\n", lab);
+	      output ("\tpopl\t%%eax\n");
+	      output ("\tpopl\t%%ebx\n");
+	      output ("\tpushl\t%%eax\n");
 	    }
 	}
       else
@@ -2899,7 +2901,7 @@ gen_initialize_1 (cob_tree sy)
 	    {
 	      gen_loaddesc (sy);
 	      gen_move_1 (get_init_symbol (COB_FIELD_TYPE (sy)));
-	      fprintf (o_src, "\taddl\t$%d, 0(%%esp)\n", symlen (sy));
+	      output ("\taddl\t$%d, 0(%%esp)\n", symlen (sy));
 	    }
 	}
     }
@@ -2919,9 +2921,9 @@ gen_initialize (cob_tree sy)
   else
     {
       loadloc_to_eax (sy);
-      fprintf (o_src, "\tpushl\t%%eax\n");
+      output ("\tpushl\t%%eax\n");
       gen_initialize_1 (sy1);
-      fprintf (o_src, "\tpopl\t%%eax\n");
+      output ("\tpopl\t%%eax\n");
     }
 }
 
@@ -2974,12 +2976,12 @@ gen_set (cob_tree idx, enum set_mode mode, cob_tree var,
 	{
 	  if (var == NULL)
 	    {
-	      fprintf (o_src, "\txorl\t%%eax,%%eax\n");
+	      output ("\txorl\t%%eax,%%eax\n");
 	    }
 	  else
 	    {
 	      load_location (var, "ebx");
-	      fprintf (o_src, "\tmovl\t0(%%ebx),%%eax\n");
+	      output ("\tmovl\t0(%%ebx),%%eax\n");
 	    }
 	  set_ptr (idx);
 	}
@@ -2998,15 +3000,15 @@ gen_set (cob_tree idx, enum set_mode mode, cob_tree var,
   switch (mode)
     {
     case SET_TO:		/* just move this value */
-      fprintf (o_src, "\tmov%c\t%%eax, -%d(%%ebp)\n",
+      output ("\tmov%c\t%%eax, -%d(%%ebp)\n",
 	       varsize_ch (idx), idx->location);
       break;
     case SET_UP:		/* we need to add this value to the index */
-      fprintf (o_src, "\tadd%c\t%%eax, -%d(%%ebp)\n",
+      output ("\tadd%c\t%%eax, -%d(%%ebp)\n",
 	       varsize_ch (idx), idx->location);
       break;
     case SET_DOWN:
-      fprintf (o_src, "\tsub%c\t%%eax, -%d(%%ebp)\n",
+      output ("\tsub%c\t%%eax, -%d(%%ebp)\n",
 	       varsize_ch (idx), idx->location);
       break;
     }
@@ -3041,7 +3043,7 @@ int
 gen_evaluate_start ()
 {
   int i = loc_label++;
-  fprintf (o_src, "# EVALUATE statement\n");
+  output ("# EVALUATE statement\n");
   asm_call ("cob_stack_clear");
   return i;
 }
@@ -3079,9 +3081,10 @@ gen_when_check (int level, struct selsubject *ssbj, int type, int endcase)
 {
   int real_type;
 
-  fprintf (o_src,
-	   "# WHEN check: level=%d, subject->type=%d, object type=%d\n",
-	   level, ssbj->type, type);
+#ifdef COB_DEBUG
+  output ("# WHEN check: level=%d, subject->type=%d, object type=%d\n",
+	  level, ssbj->type, type);
+#endif
 
   if (type == SOBJ_ANY)
     return;
@@ -3127,18 +3130,18 @@ gen_when_check (int level, struct selsubject *ssbj, int type, int endcase)
       asm_call ("cob_in_range");
       break;
     }
-  fprintf (o_src, "\tand\t%%eax,%%eax\n");
+  output ("\tand\t%%eax,%%eax\n");
   if (type & 1)
-    fprintf (o_src, "\tjnz\t.L%d\n", endcase);
+    output ("\tjnz\t.L%d\n", endcase);
   else
-    fprintf (o_src, "\tjz\t.L%d\n", endcase);
+    output ("\tjz\t.L%d\n", endcase);
 }
 
 void
 gen_bypass_when_case (int bypass)
 {
   if (bypass)
-    fprintf (o_src, ".L%d:\n", bypass);
+    output (".L%d:\n", bypass);
 }
 
 int
@@ -3147,15 +3150,15 @@ gen_end_when (int n, int endcase, int sentence)
   int lab;
   if (sentence)
     {
-      fprintf (o_src, "\tjmp\t.L%d\t# end WHEN\n", n);
+      output ("\tjmp\t.L%d\t# end WHEN\n", n);
       lab = 0;
     }
   else
     {
       lab = loc_label++;
-      fprintf (o_src, "\tjmp\t.L%d\t# bypass WHEN test\n", lab);
+      output ("\tjmp\t.L%d\t# bypass WHEN test\n", lab);
     }
-  fprintf (o_src, ".L%d:\n", endcase);
+  output (".L%d:\n", endcase);
   return lab;
 }
 
@@ -3170,7 +3173,7 @@ gen_goto (cob_tree_list l, cob_tree x)
   if (x == NULL)
     {
       cob_tree sy = l->tree;
-      fprintf (o_src, "\tjmp\t.LB_%s\n", label_name (sy));
+      output ("\tjmp\t.LB_%s\n", label_name (sy));
       if (l->next)
 	yyerror ("GOTO only allows one target");
     }
@@ -3179,14 +3182,14 @@ gen_goto (cob_tree_list l, cob_tree x)
       cob_tree_list tmp;
       cob_tree sy = x;
       gen_loadloc (sy);
-      fprintf (o_src, "\tmovl $c_base%d+%u, %%eax\n",
+      output ("\tmovl $c_base%d+%u, %%eax\n",
 	       pgm_segment, sy->descriptor);
       push_eax ();
       asm_call ("get_index");	/* this will return %eax with var's value */
       for (tmp = l; tmp != NULL; tmp = tmp->next)
 	{
-	  fprintf (o_src, "\tdecl\t%%eax\n");
-	  fprintf (o_src, "\tjz\t.LB_%s\n", label_name (tmp->tree));
+	  output ("\tdecl\t%%eax\n");
+	  output ("\tjz\t.LB_%s\n", label_name (tmp->tree));
 	}
     }
 }
@@ -3196,8 +3199,8 @@ int
 gen_check_zero ()
 {
   int i = loc_label++;
-  fprintf (o_src, "\tand\t%%eax,%%eax\n");
-  fprintf (o_src, "\tjz\t.L%d\n", i);
+  output ("\tand\t%%eax,%%eax\n");
+  output ("\tjz\t.L%d\n", i);
   return i;
 }
 
@@ -3206,24 +3209,24 @@ gen_testif (void)
 {
   int i = loc_label++;
   int j = loc_label++;
-  fprintf (o_src, "\tjz\t.L%d\n", j);
-  fprintf (o_src, "\tjmp\t.L%d\n", i);
-  fprintf (o_src, "\t.align 16\n");
-  fprintf (o_src, ".L%d:\n", j);
+  output ("\tjz\t.L%d\n", j);
+  output ("\tjmp\t.L%d\n", i);
+  output ("\t.align 16\n");
+  output (".L%d:\n", j);
   return i;
 }
 
 void
 gen_dstlabel (int lbl)
 {
-  fprintf (o_src, ".L%d:\n", lbl);
+  output (".L%d:\n", lbl);
 }
 
 int
 gen_passlabel (void)
 {
   int i = loc_label++;
-  fprintf (o_src, "\tjmp\t.L%d\n", i);
+  output ("\tjmp\t.L%d\n", i);
   return i;
 }
 
@@ -3231,25 +3234,25 @@ int
 gen_marklabel (void)
 {
   int i = loc_label++;
-  fprintf (o_src, ".L%d:\n", i);
+  output (".L%d:\n", i);
   return i;
 }
 
 void
 gen_jmplabel (int lbl)
 {
-  fprintf (o_src, "\tjmp\t.L%d\n", lbl);
+  output ("\tjmp\t.L%d\n", lbl);
 }
 
 void
 gen_push_int (cob_tree sy)
 {
   gen_loadloc (sy);
-  fprintf (o_src, "\tmovl $c_base%d+%u, %%eax\n", pgm_segment, sy->descriptor);
+  output ("\tmovl $c_base%d+%u, %%eax\n", pgm_segment, sy->descriptor);
   push_eax ();
   asm_call ("get_index");
   /* this must be done without calling push_eax */
-  fprintf (o_src, "\tpushl\t%%eax\n");
+  output ("\tpushl\t%%eax\n");
 }
 
 void
@@ -3266,16 +3269,16 @@ gen_cancel (cob_tree sy)
 void
 gen_perform_test_counter (int lbl)
 {
-  fprintf (o_src, "\tcmpl\t$0,0(%%esp)\n");
-  fprintf (o_src, "\tjle\t.L%dE\n", lbl);
+  output ("\tcmpl\t$0,0(%%esp)\n");
+  output ("\tjle\t.L%dE\n", lbl);
 }
 
 void
 gen_perform_times (int lbl)
 {
-  fprintf (o_src, "\tdecl\t0(%%esp)\n");
-  fprintf (o_src, "\tjnz\t.L%d\n", lbl);
-  fprintf (o_src, ".L%dE:\tpopl\t%%ecx\n", lbl);
+  output ("\tdecl\t0(%%esp)\n");
+  output ("\tjnz\t.L%d\n", lbl);
+  output (".L%dE:\tpopl\t%%ecx\n", lbl);
 }
 
 void
@@ -3283,16 +3286,16 @@ gen_perform_thru (cob_tree s1, cob_tree s2)
 {
   if (s2 == NULL)
     s2 = s1;
-  fprintf (o_src, "\tleal\t.L%d, %%eax\n", loc_label);
-  fprintf (o_src, "\tpushl\t%%eax\n");
-  fprintf (o_src, "\tleal\t.LB_%s, %%eax\n", label_name (s1));
-  fprintf (o_src, "\tpushl\t%%eax\n");
-  fprintf (o_src, "\tleal\t.LE_%s, %%eax\n", label_name (s2));
-  fprintf (o_src, "\tpushl\t%%eax\n");
-  fprintf (o_src, "\tjmp\t.LB_%s\n", label_name (s1));
+  output ("\tleal\t.L%d, %%eax\n", loc_label);
+  output ("\tpushl\t%%eax\n");
+  output ("\tleal\t.LB_%s, %%eax\n", label_name (s1));
+  output ("\tpushl\t%%eax\n");
+  output ("\tleal\t.LE_%s, %%eax\n", label_name (s2));
+  output ("\tpushl\t%%eax\n");
+  output ("\tjmp\t.LB_%s\n", label_name (s1));
 
-  fprintf (o_src, "\t.align 16\n");
-  fprintf (o_src, ".L%d:\n", loc_label++);
+  output ("\t.align 16\n");
+  output (".L%d:\n", loc_label++);
 }
 
 void
@@ -3422,7 +3425,7 @@ gen_SearchLoopCheck (unsigned long lbl5, cob_tree syidx, cob_tree sytbl)
   save_literal (x, '9');
 
   gen_compare (syidx, COND_GT, x);
-  fprintf (o_src, "\tjz\t.L%ld\n", lbl5);
+  output ("\tjz\t.L%ld\n", lbl5);
 }
 
 void
@@ -3468,60 +3471,60 @@ gen_SearchAllLoopCheck (unsigned long lbl3, cob_tree syidx,
   /* table sort sequence: '0' = none, '1' = ASCENDING, '2' = DESCENDING */
 
   /*    if ((bu - bl) > 1) */
-  fprintf (o_src, "\tmovl\t-%d(%%ebp), %%eax\n", stack_offset - 12);
-  fprintf (o_src, "\tsubl\t-%d(%%ebp), %%eax\n", stack_offset - 8);
+  output ("\tmovl\t-%d(%%ebp), %%eax\n", stack_offset - 12);
+  output ("\tsubl\t-%d(%%ebp), %%eax\n", stack_offset - 8);
 
-  fprintf (o_src, "\tcmpl $1, %%eax\n");
-  fprintf (o_src, "\tjle .L%ld\n", l1);
+  output ("\tcmpl $1, %%eax\n");
+  output ("\tjle .L%ld\n", l1);
 
-  fprintf (o_src, "\t.align 16\n");
+  output ("\t.align 16\n");
 
 //    if (itbl1 > in) { /* '2' = DESCENDING */
   if (it2->seq == '2')
     {
       gen_compare (sy1, COND_GT, syvar);
-      fprintf (o_src, "\tjnz\t.L%ld\n", l2);
+      output ("\tjnz\t.L%ld\n", l2);
     }
   else
     {
       gen_compare (sy1, COND_LT, syvar);
-      fprintf (o_src, "\tjnz\t.L%ld\n", l2);
+      output ("\tjnz\t.L%ld\n", l2);
     }
-  fprintf (o_src, "\t.align 16\n");
+  output ("\t.align 16\n");
 
 //    bl  = idx + 1;
-  fprintf (o_src, "\tmovl\t-%d(%%ebp), %%eax\n", syidx->location);
-  fprintf (o_src, "\taddl $1, %%eax\n");
-  fprintf (o_src, "\tmovl\t%%eax, -%d(%%ebp)\n", stack_offset - 8);
+  output ("\tmovl\t-%d(%%ebp), %%eax\n", syidx->location);
+  output ("\taddl $1, %%eax\n");
+  output ("\tmovl\t%%eax, -%d(%%ebp)\n", stack_offset - 8);
 
   gen_jmplabel (l3);
-  fprintf (o_src, "\t.align 16\n");
+  output ("\t.align 16\n");
 
 //    else {
   gen_dstlabel (l2);
 
 //    bu  = idx - 1;
-  fprintf (o_src, "\tmovl\t-%d(%%ebp), %%eax\n", syidx->location);
-  fprintf (o_src, "\tsubl $1, %%eax\n");
-  fprintf (o_src, "\tmovl\t%%eax, -%d(%%ebp)\n", stack_offset - 12);
+  output ("\tmovl\t-%d(%%ebp), %%eax\n", syidx->location);
+  output ("\tsubl $1, %%eax\n");
+  output ("\tmovl\t%%eax, -%d(%%ebp)\n", stack_offset - 12);
 
   gen_dstlabel (l3);
 
 //    idx = ((bu - bl)/2 + bl);
-  fprintf (o_src, "\tmovl\t-%d(%%ebp), %%eax\n", stack_offset - 12);
-  fprintf (o_src, "\tsubl\t-%d(%%ebp), %%eax\n", stack_offset - 8);
-  fprintf (o_src, "\tmovl\t%%eax, %%edx\n");
-  fprintf (o_src, "\tsarl\t$31, %%edx\n");
-  fprintf (o_src, "\tmovl\t%%edx, %%ecx\n");
-  fprintf (o_src, "\tsarl\t$31, %%ecx\n");
-  fprintf (o_src, "\tleal\t(%%ecx,%%eax), %%edx\n");
-  fprintf (o_src, "\tmovl\t%%edx, %%eax\n");
-  fprintf (o_src, "\tsarl\t$1, %%eax\n");
-  fprintf (o_src, "\taddl\t-%d(%%ebp), %%eax\n", stack_offset - 8);
-  fprintf (o_src, "\tmovl\t%%eax, -%d(%%ebp)\n", syidx->location);
+  output ("\tmovl\t-%d(%%ebp), %%eax\n", stack_offset - 12);
+  output ("\tsubl\t-%d(%%ebp), %%eax\n", stack_offset - 8);
+  output ("\tmovl\t%%eax, %%edx\n");
+  output ("\tsarl\t$31, %%edx\n");
+  output ("\tmovl\t%%edx, %%ecx\n");
+  output ("\tsarl\t$31, %%ecx\n");
+  output ("\tleal\t(%%ecx,%%eax), %%edx\n");
+  output ("\tmovl\t%%edx, %%eax\n");
+  output ("\tsarl\t$1, %%eax\n");
+  output ("\taddl\t-%d(%%ebp), %%eax\n", stack_offset - 8);
+  output ("\tmovl\t%%eax, -%d(%%ebp)\n", syidx->location);
 
   gen_jmplabel (l6);
-  fprintf (o_src, "\t.align 16\n");
+  output ("\t.align 16\n");
 
 //    else { /* l1 */
   gen_dstlabel (l1);
@@ -3530,41 +3533,41 @@ gen_SearchAllLoopCheck (unsigned long lbl3, cob_tree syidx,
     {
 //       if (itbl1 > in) {
       gen_compare (sy1, COND_GT, syvar);
-      fprintf (o_src, "\tjnz\t.L%ld\n", l4);
+      output ("\tjnz\t.L%ld\n", l4);
     }
   else
     {
 //       if (itbl1 < in) {
       gen_compare (sy1, COND_LT, syvar);
-      fprintf (o_src, "\tjnz\t.L%ld\n", l4);
+      output ("\tjnz\t.L%ld\n", l4);
     }
-  fprintf (o_src, "\t.align 16\n");
+  output ("\t.align 16\n");
 
 
 //    if (bu > idx) {
-  fprintf (o_src, "\tmovl\t-%d(%%ebp), %%eax\n", syidx->location);
-  fprintf (o_src, "\tcmpl\t%%eax, -%d(%%ebp)\n", stack_offset - 12);
+  output ("\tmovl\t-%d(%%ebp), %%eax\n", syidx->location);
+  output ("\tcmpl\t%%eax, -%d(%%ebp)\n", stack_offset - 12);
 
-  fprintf (o_src, "\tjle\t.L%ld\n", l5);
-  fprintf (o_src, "\t.align 16\n");
+  output ("\tjle\t.L%ld\n", l5);
+  output ("\t.align 16\n");
 
 
 //    idx = bu;
-  fprintf (o_src, "\tmovl\t-%d(%%ebp), %%eax\n", stack_offset - 12);
-  fprintf (o_src, "\tmovl %%eax, -%d(%%ebp)\n", syidx->location);
+  output ("\tmovl\t-%d(%%ebp), %%eax\n", stack_offset - 12);
+  output ("\tmovl %%eax, -%d(%%ebp)\n", syidx->location);
 
   gen_jmplabel (l6);
-  fprintf (o_src, "\t.align 16\n");
+  output ("\t.align 16\n");
 
 //    else {
   gen_dstlabel (l5);
 
 
 //    r++;
-  fprintf (o_src, "\taddl\t$1, -%d(%%ebp)\n", stack_offset - 4);
+  output ("\taddl\t$1, -%d(%%ebp)\n", stack_offset - 4);
 
   gen_jmplabel (l6);
-  fprintf (o_src, "\t.align 16\n");
+  output ("\t.align 16\n");
 
 //       }
 //    }
@@ -3572,17 +3575,17 @@ gen_SearchAllLoopCheck (unsigned long lbl3, cob_tree syidx,
   gen_dstlabel (l4);
 
 //    r++;
-  fprintf (o_src, "\taddl\t$1, -%d(%%ebp)\n", stack_offset - 4);
+  output ("\taddl\t$1, -%d(%%ebp)\n", stack_offset - 4);
 
   gen_dstlabel (l6);
 
-  fprintf (o_src, "\tmovl\t-%d(%%ebp), %%eax\n", stack_offset - 4);
-  fprintf (o_src, "\tcmpl $1, %%eax\n");
-  fprintf (o_src, "\tjz\t.L%ld\n", lbl3);
+  output ("\tmovl\t-%d(%%ebp), %%eax\n", stack_offset - 4);
+  output ("\tcmpl $1, %%eax\n");
+  output ("\tjz\t.L%ld\n", lbl3);
 
 
   gen_jmplabel (lstart);
-  fprintf (o_src, "\t.align 16\n");
+  output ("\t.align 16\n");
   gen_dstlabel (lend);
 }
 
@@ -3644,12 +3647,12 @@ Initialize_SearchAll_Boundaries (cob_tree sy, cob_tree syidx)
   save_literal (x, '9');
   gen_move (x, syidx);
 
-  fprintf (o_src, "\tmovl\t$0, %%eax\n");
-  fprintf (o_src, "\tmovl\t%%eax,-%d(%%ebp)\n", stack_offset - 4);
-  fprintf (o_src, "\tmovl\t$1, %%eax\n");
-  fprintf (o_src, "\tmovl\t%%eax,-%d(%%ebp)\n", stack_offset - 8);
-  fprintf (o_src, "\tmovl\t$%d, %%eax\n", sy->times);
-  fprintf (o_src, "\tmovl\t%%eax,-%d(%%ebp)\n", stack_offset - 12);
+  output ("\tmovl\t$0, %%eax\n");
+  output ("\tmovl\t%%eax,-%d(%%ebp)\n", stack_offset - 4);
+  output ("\tmovl\t$1, %%eax\n");
+  output ("\tmovl\t%%eax,-%d(%%ebp)\n", stack_offset - 8);
+  output ("\tmovl\t$%d, %%eax\n", sy->times);
+  output ("\tmovl\t%%eax,-%d(%%ebp)\n", stack_offset - 12);
 
   i2t2 = NULL;
   i2t1 = index2table;
@@ -3797,7 +3800,7 @@ void
 release_sel_subject (int label, struct selsubject *ssbj)
 {
   asm_call ("cob_stack_clear");
-  fprintf (o_src, ".L%d:\t# EVALUATE end\n", label);
+  output (".L%d:\t# EVALUATE end\n", label);
 }
 
 int
@@ -4121,7 +4124,7 @@ resolve_labels ()
 {
   cob_tree sy, sy1, sy2;
   int i, def;
-  fprintf (o_src, "# resolving paragraphs/sections labels\n");
+  output ("# resolving paragraphs/sections labels\n");
   for (i = 0; i < HASHLEN; i++)
     {
       for (sy = labtab[i]; sy; sy = COB_FIELD_NEXT (sy))
@@ -4154,10 +4157,10 @@ resolve_labels ()
 			{
 			  if (sy2->defined == 1 && sy2->parent != sy1->parent)
 			    {
-			      fprintf (o_src, ".LB_%s = ", label_name (sy1));
-			      fprintf (o_src, ".LB_%s\n", label_name (sy2));
-			      fprintf (o_src, ".LE_%s = ", label_name (sy1));
-			      fprintf (o_src, ".LE_%s\n", label_name (sy2));
+			      output (".LB_%s = ", label_name (sy1));
+			      output (".LB_%s\n", label_name (sy2));
+			      output (".LE_%s = ", label_name (sy1));
+			      output (".LE_%s\n", label_name (sy2));
 			      break;
 			    }
 			  sy2 = sy2->clone;
@@ -4174,7 +4177,7 @@ void
 open_section (cob_tree sect)
 {
   COB_FIELD_TYPE (sect) = 'S';
-  fprintf (o_src, ".LB_%s:\n", label_name (sect));
+  output (".LB_%s:\n", label_name (sect));
   curr_section = sect;
 }
 
@@ -4184,7 +4187,7 @@ close_section (void)
   close_paragr ();
   if (curr_section)
     {
-      fprintf (o_src, ".LE_%s:\n", label_name (curr_section));
+      output (".LE_%s:\n", label_name (curr_section));
       gen_exit ();
     }
 }
@@ -4225,7 +4228,7 @@ close_paragr (void)
 {
   if (curr_paragr)
     {
-      fprintf (o_src, ".LE_%s:\n", label_name (curr_paragr));
+      output (".LE_%s:\n", label_name (curr_paragr));
       gen_exit ();
       curr_paragr = NULL;
     }
@@ -4236,15 +4239,15 @@ open_paragr (cob_tree paragr)
 {
   COB_FIELD_TYPE (paragr) = 'P';
   curr_paragr = paragr;
-  fprintf (o_src, ".LB_%s:\n", label_name (paragr));
+  output (".LB_%s:\n", label_name (paragr));
 }
 
 void
 gen_stoprun (void)
 {
-  fprintf (o_src, "\tleal\t.Lend_pgm_%s, %%eax\n", pgm_label);
-  fprintf (o_src, "\tpushl\t%%eax\n");
-  fprintf (o_src, "\tjmp\t.Lend_pgm_%s\n", pgm_label);
+  output ("\tleal\t.Lend_pgm_%s, %%eax\n", pgm_label);
+  output ("\tpushl\t%%eax\n");
+  output ("\tjmp\t.Lend_pgm_%s\n", pgm_label);
 }
 
 void
@@ -4253,26 +4256,26 @@ gen_exit (void)
   int l1 = loc_label++;
   int l2 = loc_label++;
   if (curr_paragr != NULL)
-    fprintf (o_src, "\tleal\t.LE_%s, %%eax\n", label_name (curr_paragr));
+    output ("\tleal\t.LE_%s, %%eax\n", label_name (curr_paragr));
   else
-    fprintf (o_src, "\tleal\t.LE_%s, %%eax\n", label_name (curr_section));
-  fprintf (o_src, "\tcmpl\t4(%%esp), %%eax\n");
-  fprintf (o_src, "\tjb\t\t.L%d\n", l1);
-  fprintf (o_src, "\tcmpl\t0(%%esp), %%eax\n");
-  fprintf (o_src, "\tjb\t\t.L%d\n", l2);
-  fprintf (o_src, ".L%d:\n", l1);
-  fprintf (o_src, "\taddl\t$8,%%esp\n");
-  fprintf (o_src, "\tret\n");
-  fprintf (o_src, ".L%d:\n", l2);
+    output ("\tleal\t.LE_%s, %%eax\n", label_name (curr_section));
+  output ("\tcmpl\t4(%%esp), %%eax\n");
+  output ("\tjb\t\t.L%d\n", l1);
+  output ("\tcmpl\t0(%%esp), %%eax\n");
+  output ("\tjb\t\t.L%d\n", l2);
+  output (".L%d:\n", l1);
+  output ("\taddl\t$8,%%esp\n");
+  output ("\tret\n");
+  output (".L%d:\n", l2);
 }
 
 void
 gen_exit_program (void)
 {
-  fprintf (o_src, "\tmovl\t-%d(%%ebp), %%ebx\n", stack_offset - 8 - 16);
-  fprintf (o_src, "\tmov\t%%ebp,%%esp\n");
-  fprintf (o_src, "\tpop\t%%ebp\n");
-  fprintf (o_src, "\tret\n");
+  output ("\tmovl\t-%d(%%ebp), %%ebx\n", stack_offset - 8 - 16);
+  output ("\tmov\t%%ebp,%%esp\n");
+  output ("\tpop\t%%ebp\n");
+  output ("\tret\n");
 }
 
 /* save variable values, including 88-var range/values list */
@@ -4308,13 +4311,13 @@ gen_save_filevar (cob_tree f, cob_tree buf)
     }
   else
     {
-      fprintf (o_src, "\tmovl\t%s, %%eax\n", memref (f->recordsym));
+      output ("\tmovl\t%s, %%eax\n", memref (f->recordsym));
       push_eax ();
     }
   if (COB_FIELD_TYPE (f) == 'K')
-    fprintf (o_src, "\tmovl\t$_%s, %%eax\n", COB_FIELD_NAME (f));
+    output ("\tmovl\t$_%s, %%eax\n", COB_FIELD_NAME (f));
   else
-    fprintf (o_src, "\tmovl\t$s_base%d+%u, %%eax\n", pgm_segment, f->location);
+    output ("\tmovl\t$s_base%d+%u, %%eax\n", pgm_segment, f->location);
   push_eax ();
 }
 
@@ -4322,9 +4325,9 @@ void
 gen_save_filedesc (cob_tree f)
 {
   if (COB_FIELD_TYPE (f) == 'K')
-    fprintf (o_src, "\tmovl\t$_%s, %%eax\n", COB_FIELD_NAME (f));
+    output ("\tmovl\t$_%s, %%eax\n", COB_FIELD_NAME (f));
   else
-    fprintf (o_src, "\tmovl\t$s_base%d+%u, %%eax\n", pgm_segment, f->location);
+    output ("\tmovl\t$s_base%d+%u, %%eax\n", pgm_segment, f->location);
   push_eax ();
 }
 
@@ -4340,7 +4343,7 @@ gen_save_sort_fields (cob_tree f, cob_tree buf)
       gen_loadloc (datafld);
       datafld = (datafld->sort_data);
     }
-  fprintf (o_src, "\tmovl\t$c_base%d+%u, %%eax\n", pgm_segment,
+  output ("\tmovl\t$c_base%d+%u, %%eax\n", pgm_segment,
 	   f->descriptor);
   push_eax ();
   gen_save_filevar (f, buf);
@@ -4724,10 +4727,10 @@ gen_call (cob_tree v, struct call_parameter *parameter_list,
 	l->sec_no = SEC_STACK;
 	l->location = stack_offset + len;
 	stack_offset += len;
-	fprintf (o_src, "\tsubl\t$%d, %%esp\n", len);
+	output ("\tsubl\t$%d, %%esp\n", len);
 	push_immed (len);		// length
 	gen_loadloc (l->var);	// src address
-	fprintf (o_src, "\tleal\t-%d(%%ebp), %%eax\n", l->location);
+	output ("\tleal\t-%d(%%ebp), %%eax\n", l->location);
 	push_eax ();		// dest address ie on stack
 	asm_call ("memcpy");
       }
@@ -4741,7 +4744,7 @@ gen_call (cob_tree v, struct call_parameter *parameter_list,
 	  gen_loadloc (l->var);
 	  break;
 	case CALL_BY_CONTENT:
-	  fprintf (o_src, "\tleal\t-%d(%%ebp), %%eax\n", l->location);
+	  output ("\tleal\t-%d(%%ebp), %%eax\n", l->location);
 	  push_eax ();
 	  break;
 	}
@@ -4759,15 +4762,15 @@ gen_call (cob_tree v, struct call_parameter *parameter_list,
       stackframe_cnt = 0;
       asm_call_1 ("cob_dyncall_resolve", v);
       stackframe_cnt = stack_save;
-      fprintf (o_src, "\tand\t%%eax,%%eax\n");
-      fprintf (o_src, "\tjz\t.L%d\n", exceplabel);
-      fprintf (o_src, "\tcall\t*%%eax\n");
+      output ("\tand\t%%eax,%%eax\n");
+      output ("\tjz\t.L%d\n", exceplabel);
+      output ("\tcall\t*%%eax\n");
       cleanup_rt_stack ();
       endlabel = loc_label++;
-      fprintf (o_src, "\tjmp\t.L%d\n", notexceplabel);
+      output ("\tjmp\t.L%d\n", notexceplabel);
     }
   if (totlen != 0)
-    fprintf (o_src, "\taddl\t$%d, %%esp\n", totlen);
+    output ("\taddl\t$%d, %%esp\n", totlen);
   stack_offset = saved_stack_offset;
   return endlabel;
 }
@@ -4776,7 +4779,7 @@ int
 begin_on_except ()
 {
   int i = loc_label++;
-  fprintf (o_src, ".L%d:\t# begin_on_except\n", i);
+  output (".L%d:\t# begin_on_except\n", i);
   return i;
 }
 
@@ -4787,18 +4790,18 @@ check_call_except (int excep, int notexcep, int exceplabel,
   /* generate code only if was "call <identifier>" */
   if (endlabel != 0)
     {
-      fprintf (o_src, ".L%d:\t# exceplabel\n", exceplabel);
+      output (".L%d:\t# exceplabel\n", exceplabel);
       if (excep)
-	fprintf (o_src, "\tjmp\t.L%d\n", excep);
+	output ("\tjmp\t.L%d\n", excep);
       /* if no exception phrase was given */
       if (excep == 0)
 	{
-	  fprintf (o_src, "\tcall\tcob_dyncall_error\n");
-	  fprintf (o_src, "\tjmp\t.L%d\n", endlabel);
+	  output ("\tcall\tcob_dyncall_error\n");
+	  output ("\tjmp\t.L%d\n", endlabel);
 	}
-      fprintf (o_src, ".L%d:\t# notexceplabel\n", notexceplabel);
+      output (".L%d:\t# notexceplabel\n", notexceplabel);
       if (notexcep)
-	fprintf (o_src, "\tjmp\t.L%d\n", notexcep);
-      fprintf (o_src, ".L%d:\t# endlabel\n", endlabel);
+	output ("\tjmp\t.L%d\n", notexcep);
+      output (".L%d:\t# endlabel\n", endlabel);
     }
 }
