@@ -1497,6 +1497,7 @@ output_tree (cobc_tree x)
     case cobc_tag_if:
       {
 	struct cobc_if *p = COBC_IF (x);
+	output_line_directive (x);
 	output_prefix ();
 	output ("if (");
 	output_tree (p->test);

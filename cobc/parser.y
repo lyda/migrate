@@ -867,7 +867,7 @@ data_clause:
 codeset_clause:
   CODE_SET _is WORD
   {
-    yyerror ("CODE-SET is not implemented");
+    yywarn ("CODE-SET not implemented");
   }
 ;
 
