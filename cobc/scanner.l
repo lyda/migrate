@@ -156,7 +156,7 @@ X\"[^\"\n]*\" {
     BEGIN INITIAL;
     SAVE_YYTEXT;
     yylval.str = strdup (yytext);
-    return IDSTRING;
+    return ID_TOK;
   }
   .		{ /* ignore */ }
 }
@@ -289,7 +289,7 @@ scan_word (char *text)
       else
 	{
 	  yylval.str = strdup (yytext);
-	  return IDSTRING;
+	  return ID_TOK;
 	}
     }
 }

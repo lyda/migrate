@@ -88,7 +88,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %right NOT
 %right OF
 
-%token <str>  IDSTRING
+%token <str>  ID_TOK
 %token <tree> SYMBOL_TOK,SPECIAL_TOK,CLASS_TOK,VARIABLE,VARCOND,SUBSCVAR
 %token <tree> PICTURE_TOK,INTEGER_TOK,NUMBER_TOK,STRING_TOK
 
@@ -1291,7 +1291,7 @@ label:
 ;
 label_name:
   INTEGER_TOK		{ $$ = install_label (COB_FIELD_NAME ($1)); }
-| IDSTRING		{ $$ = install_label ($1); }
+| ID_TOK		{ $$ = install_label ($1); }
 ;
 in_of: IN | OF ;
 
@@ -2990,7 +2990,7 @@ integer:
 
 
 idstring:
-  { start_condition = START_ID; } IDSTRING { $$ = $2; }
+  { start_condition = START_ID; } ID_TOK { $$ = $2; }
 ;
 
 
