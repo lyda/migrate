@@ -214,6 +214,14 @@ extern int cob_reloading_flag;
 extern long cob_exp10[10];
 extern long long cob_exp10LL[19];
 
+/* input/output stream */
+
+#define COB_STDIN	0
+#define COB_STDOUT	1
+#define COB_STDERR	2
+
+extern FILE *cob_stream[];
+
 /* constants */
 
 extern struct cob_field cob_zero;
@@ -290,8 +298,8 @@ extern void cob_div_reminder (struct cob_field remainder);
 
 /* basicio.c */
 
-extern void cob_display (struct cob_field f);
-extern void cob_newline (void);
+extern void cob_display (struct cob_field f, int fd);
+extern void cob_newline (int fd);
 extern void cob_debug_print (struct cob_field f);
 extern void cob_accept (struct cob_field f);
 extern void cob_accept_date (struct cob_field f);

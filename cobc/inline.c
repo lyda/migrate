@@ -576,7 +576,7 @@ output_inspect_converting (cobc_tree var, cobc_tree list)
  */
 
 static void
-output_display (cobc_tree x)
+output_display (cobc_tree x, cobc_tree fd)
 {
   if (COBC_LITERAL_P (x))
     {
@@ -605,11 +605,14 @@ output_display (cobc_tree x)
 	  /* non-numeric literal */
 	  output_quoted_string (p->str, p->size);
 	}
-      output (", stdout);\n");
+      if (COBC_INTEGER (fd)->val == COB_STDERR)
+	output (", stderr);\n");
+      else
+	output (", stdout);\n");
     }
   else
     {
-      output_call_1 ("cob_display", x);
+      output_call_2 ("cob_display", x, fd);
     }
 }
 

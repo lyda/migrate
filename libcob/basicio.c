@@ -1,7 +1,5 @@
 /*
- * Copyright (C) 2001, 2000, 1999,  Rildo Pragana, Jim Noeth, 
- *               Andrew Cameron, David Essex.
- * Copyright (C) 1993, 1991  Rildo Pragana.
+ * Copyright (C) 2001-2002 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -42,7 +40,7 @@
  */
 
 void
-cob_display (struct cob_field f)
+cob_display (struct cob_field f, int fd)
 {
   if (FIELD_NUMERIC_P (f))
     {
@@ -65,7 +63,7 @@ cob_display (struct cob_field f)
 	sprintf (p, "9%c", f.desc->digits);
       cob_move (f, temp);
       for (i = 0; i < size; i++)
-	fputc (data[i], stdout);
+	fputc (data[i], cob_stream[fd]);
     }
   else
     {
@@ -73,22 +71,22 @@ cob_display (struct cob_field f)
       int size = FIELD_SIZE (f);
       unsigned char *data = FIELD_DATA (f);
       for (i = 0; i < size; i++)
-	fputc (data[i], stdout);
+	fputc (data[i], cob_stream[fd]);
     }
 }
 
 void
-cob_newline (void)
+cob_newline (int fd)
 {
-  putc ('\n', stdout);
-  fflush (stdout);
+  putc ('\n', cob_stream[fd]);
+  fflush (cob_stream[fd]);
 }
 
 void
 cob_debug_print (struct cob_field f)
 {
-  cob_display (f);
-  cob_newline ();
+  cob_display (f, COB_STDOUT);
+  cob_newline (COB_STDOUT);
 }
 
 

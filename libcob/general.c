@@ -101,6 +101,8 @@ struct cob_field cob_switch[8] = {
 int cob_return_code_value = 0;
 struct cob_field cob_return_code = {&b_desc, (char *)&cob_return_code_value};
 
+FILE *cob_stream[3];
+
 int
 get_sign (struct cob_field f)
 {
@@ -188,6 +190,10 @@ cob_init (int argc, char **argv)
   cob_decimal_init (cob_d2);
   cob_decimal_init (cob_d3);
   cob_decimal_init (cob_d4);
+
+  cob_stream[COB_STDIN]  = stdin;
+  cob_stream[COB_STDOUT] = stdout;
+  cob_stream[COB_STDERR] = stderr;
 }
 
 void

@@ -185,7 +185,7 @@ static void ambiguous_error (struct cobc_word *p);
 %type <insi> tallying_item,replacing_item,inspect_before_after
 %type <inum> flag_all,flag_duplicates,flag_optional
 %type <inum> flag_not,flag_next,flag_rounded,flag_separate
-%type <inum> sign,integer,level_number,operator
+%type <inum> sign,integer,level_number,operator,display_upon
 %type <inum> usage,before_or_after,perform_test,replacing_option
 %type <inum> select_organization,select_access_mode,open_mode
 %type <list> occurs_key_list,occurs_index_list,value_item_list
@@ -1531,16 +1531,28 @@ display_statement:
   {
     struct cobc_list *l;
     for (l = $2; l; l = l->next)
-      push_call_1 (COB_DISPLAY, l->item);
+      push_call_2 (COB_DISPLAY, l->item, make_integer ($3));
   }
   display_with_no_advancing
   ;
 display_upon:
-| _upon mnemonic_name		{ /* ignored */ }
+  /* nothing */			{ $$ = COB_STDOUT; }
+| _upon mnemonic_name
+  {
+    switch (COBC_BUILTIN ($2)->id)
+      {
+      case BUILTIN_STDOUT: $$ = COB_STDOUT; break;
+      case BUILTIN_STDERR: $$ = COB_STDERR; break;
+      default:
+	yyerror ("invalid UPON item");
+	$$ = COB_STDOUT;
+	break;
+      }
+  }
 ;
 display_with_no_advancing:
-  /* nothing */			{ push_call_0 (COB_NEWLINE); }
-| _with NO ADVANCING		{ /* nothing */ }
+  /* nothing */ { push_call_1 (COB_NEWLINE, make_integer ($<inum>-1)); }
+| _with NO ADVANCING { /* nothing */ }
 ;
 
 
