@@ -208,11 +208,7 @@ scan_word (char *text)
 {
   struct reserved_word *p = lookup_reserved_word (text);
   if (p != NULL)
-    {
-      /* Reserved word */
-      yylval.ival = p->minor;
-      return p->token;
-    }
+    return p->token;
 
   switch (curr_division)
     {

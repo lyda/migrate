@@ -138,8 +138,8 @@ static void check_decimal_point (struct lit *lit);
 %token EQUAL,GREATER,LESS,TOK_GE,TOK_LE,COMMAND_LINE,ENVIRONMENT_VARIABLE
 %token DATE,DAY,DAY_OF_WEEK,TIME,INKEY,READ,WRITE,OBJECT_COMPUTER,INPUT_OUTPUT
 %token TO,FOR,IS,ARE,THRU,THAN,NO,CANCEL,ASCENDING,DESCENDING,ZEROS,PORT
-%token SOURCE_COMPUTER,BEFORE,AFTER,SCREEN,REVERSEVIDEO,NUMBER,PLUS,MINUS
-%token FOREGROUNDCOLOR,BACKGROUNDCOLOR,UNDERLINE,HIGHLIGHT,LOWLIGHT,SEPARATE
+%token SOURCE_COMPUTER,BEFORE,AFTER,SCREEN,REVERSE_VIDEO,NUMBER,PLUS,MINUS
+%token FOREGROUND_COLOR,BACKGROUND_COLOR,UNDERLINE,HIGHLIGHT,LOWLIGHT,SEPARATE
 %token RIGHT,AUTO,REQUIRED,FULL,JUSTIFIED,BLINK,SECURE,BELL,COLUMN,SYNCHRONIZED
 %token TOK_INITIAL,FIRST,ALL,LEADING,OF,IN,BY,STRING,UNSTRING
 %token START,DELETE,PROGRAM,GLOBAL,EXTERNAL,SIZE,DELIMITED
@@ -966,9 +966,9 @@ screen_clauses:
     integer                 { scr_set_column($1,$5,$4); $$=$1; }
 | screen_clauses
     screen_attrib           { $1->attr |= $2; $$=$1; }
-| screen_clauses FOREGROUNDCOLOR
+| screen_clauses FOREGROUND_COLOR
     integer                 { $1->foreground = $3; $$=$1; }
-| screen_clauses BACKGROUNDCOLOR
+| screen_clauses BACKGROUND_COLOR
     integer                 { $1->background = $3; $$=$1; }
 | screen_clauses
     screen_source_destination
@@ -1018,7 +1018,7 @@ screen_attrib:
 | JUSTIFIED RIGHT               { $$ = SCR_JUST_RIGHT; }
 | JUSTIFIED LEFT                { $$ = SCR_JUST_LEFT; }
 | BLINK                         { $$ = SCR_BLINK; }
-| REVERSEVIDEO                  { $$ = SCR_REVERSE_VIDEO; }
+| REVERSE_VIDEO                  { $$ = SCR_REVERSE_VIDEO; }
 | UNDERLINE                     { $$ = SCR_UNDERLINE; }
 | LOWLIGHT                      { $$ = SCR_LOWLIGHT; }
 | HIGHLIGHT                     { $$ = SCR_HIGHLIGHT; }
