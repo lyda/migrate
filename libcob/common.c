@@ -731,7 +731,7 @@ cob_check_ref_mod (int offset, int length, int size, const char *name)
     }
 
   /* check the length */
-  if (length < 1 || offset + length > size)
+  if (length < 1 || offset + length - 1 > size)
     {
       cob_exception_code = COB_EC_BOUND_REF_MOD;
       cob_runtime_error (_("length of `%s' out of bounds: %d"),

@@ -432,17 +432,21 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 AT_CLEANUP
 
 
-AT_SETUP([Offset out of bounds at runtime (1)])
+###
+### Reference modification at runtime
+###
+
+AT_SETUP([Offset underflow])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION  DIVISION.
        PROGRAM-ID.     prog.
        DATA            DIVISION.
        WORKING-STORAGE SECTION.
-       01 X            PIC X(4).
+       01 X            PIC X(4) VALUE 'abcd'.
        01 I            PIC 9 VALUE 0.
        PROCEDURE       DIVISION.
-         DISPLAY X(I:1).
+         DISPLAY X(I:1) NO ADVANCING.
          STOP RUN.
 ])
 
@@ -453,18 +457,55 @@ AT_CHECK([./prog], [1], ,
 
 AT_CLEANUP
 
-
-AT_SETUP([Offset out of bounds at runtime (2)])
+AT_SETUP([Offset lower limit])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION  DIVISION.
        PROGRAM-ID.     prog.
        DATA            DIVISION.
        WORKING-STORAGE SECTION.
-       01 X            PIC X(4).
+       01 X            PIC X(4) VALUE 'abcd'.
+       01 I            PIC 9 VALUE 1.
+       PROCEDURE       DIVISION.
+         DISPLAY X(I:1) NO ADVANCING.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [a])
+
+AT_CLEANUP
+
+AT_SETUP([Offset upper limit])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X(4) VALUE 'abcd'.
+       01 I            PIC 9 VALUE 4.
+       PROCEDURE       DIVISION.
+         DISPLAY X(I:1) NO ADVANCING.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [d])
+
+AT_CLEANUP
+
+AT_SETUP([Offset overflow])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X(4) VALUE 'abcd'.
        01 I            PIC 9 VALUE 5.
        PROCEDURE       DIVISION.
-         DISPLAY X(I:1).
+         DISPLAY X(I:1) NO ADVANCING.
          STOP RUN.
 ])
 
@@ -475,18 +516,76 @@ AT_CHECK([./prog], [1], ,
 
 AT_CLEANUP
 
-
-AT_SETUP([Length out of bounds at runtime (too long)])
+AT_SETUP([Length underflow])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION  DIVISION.
        PROGRAM-ID.     prog.
        DATA            DIVISION.
        WORKING-STORAGE SECTION.
-       01 X            PIC X(4).
+       01 X            PIC X(4) VALUE 'abcd'.
+       01 I            PIC 9 VALUE 0.
+       PROCEDURE       DIVISION.
+         DISPLAY X(1:I) NO ADVANCING.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [1], ,
+[prog.cob:9: libcob: length of `X' out of bounds: 0
+])
+
+AT_CLEANUP
+
+AT_SETUP([Length lower limit])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X(4) VALUE 'abcd'.
+       01 I            PIC 9 VALUE 1.
+       PROCEDURE       DIVISION.
+         DISPLAY X(1:I) NO ADVANCING.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [a])
+
+AT_CLEANUP
+
+AT_SETUP([Length upper limit])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X(4) VALUE 'abcd'.
+       01 I            PIC 9 VALUE 4.
+       PROCEDURE       DIVISION.
+         DISPLAY X(1:I) NO ADVANCING.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [abcd])
+
+AT_CLEANUP
+
+AT_SETUP([Length overflow])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X(4) VALUE 'abcd'.
        01 I            PIC 9 VALUE 5.
        PROCEDURE       DIVISION.
-         DISPLAY X(2:I).
+         DISPLAY X(1:I) NO ADVANCING.
          STOP RUN.
 ])
 
