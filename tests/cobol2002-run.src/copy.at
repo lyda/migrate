@@ -64,6 +64,34 @@ AT_CHECK([./prog], [0], [OK])
 AT_CLEANUP
 
 
+AT_SETUP([COPY: separators])
+AT_KEYWORDS([copy])
+
+AT_DATA([copy.inc], [
+       01 TEST-VAR PIC X(2) VALUE "OK".
+])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       COPY "copy.inc"
+          REPLACING ==TEST-VAR==, BY ==FIRST-MATCH==,
+                 ,  ==TEST-VAR==; BY ==SECOND-MATCH==;
+                 ;  ==TEST-VAR== , BY ==THIRD-MATCH==
+                    ==TEST-VAR== ; BY ==FOURTH-MATCH==.
+       PROCEDURE        DIVISION.
+           DISPLAY FIRST-MATCH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [OK])
+
+AT_CLEANUP
+
+
 AT_SETUP([COPY: partial replacement])
 AT_KEYWORDS([copy])
 

@@ -303,7 +303,7 @@ at_times_file=$at_suite_dir/at-times
 # List of the tested programs.
 at_tested='cobc'
 # List of the all the test groups.
-at_groups_all=' 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58'
+at_groups_all=' 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59'
 # As many dots as there are digits in the last test group number.
 # Used to normalize the test group numbers so that `ls' lists them in
 # numerical order.
@@ -316,57 +316,58 @@ at_help_all='1;fundamental.at:22;DISPLAY literals;;
 5;fundamental.at:147;DISPLAY data items with MOVE statement;;
 6;copy.at:21;COPY: file not found;copy;
 7;copy.at:41;COPY: replacement order;copy;
-8;copy.at:67;COPY: partial replacement;copy;
-9;copy.at:95;COPY: recursive replacement;copy;
-10;subscripts.at:27;non-numeric subscript;;
-11;subscripts.at:53;The range of subscripts;;
-12;subscripts.at:85;Subscript out of bounds (1);;
-13;subscripts.at:108;Subscript out of bounds (2);;
-14;subscripts.at:131;Value of DEPENDING ON N out of bounds (lower);;
-15;subscripts.at:154;Value of DEPENDING ON N out of bounds (upper);;
-16;subscripts.at:177;Subscript out of bounds with OCCURS DEPENDING ON (lower);;
-17;subscripts.at:199;Subscript out of bounds with OCCURS DEPENDING ON (upper);;
-18;subscripts.at:221;Subscript out of bounds with OCCURS DEPENDING ON;;
-19;subscripts.at:246;Subscript by arithmetic expression;;
-20;ref-mod.at:34;Separate sign positions;;
-21;ref-mod.at:57;Static reference modification;;
-22;ref-mod.at:83;Dynamic reference modification;;
-23;ref-mod.at:110;Static out of bounds;;
-24;ref-mod.at:135;Offset underflow;;
-25;ref-mod.at:156;Offset overflow;;
-26;ref-mod.at:177;Length underflow;;
-27;ref-mod.at:198;Length overflow;;
-28;initialize.at:26;INITIALIZE group entry with OCCURS;;
-29;initialize.at:50;INITIALIZE OCCURS with numeric edited;;
-30;initialize.at:72;INITIALIZE complex group;;
-31;initialize.at:95;INITIALIZE complex group;;
-32;initialize.at:118;INITIALIZE with REDEFINES;;
-33;misc.at:21;Source file not found;;
-34;misc.at:30;Comma separator without space;;
-35;misc.at:46;LOCAL-STORAGE;;
-36;misc.at:84;EXTERNAL data item;;
-37;misc.at:123;MOVE to itself;;
-38;misc.at:142;MOVE with refmod;;
-39;misc.at:161;MOVE with refmod;;
-40;misc.at:182;MOVE with group refmod;;
-41;misc.at:202;MOVE indexes;;
-42;misc.at:223;MOVE X'00';;
-43;misc.at:252;MOVE with intermediate item;;
-44;misc.at:278;Level 01 subscripts;;
-45;misc.at:299;Class check with reference modification;;
-46;misc.at:322;Dynamic call with static linking;;
-47;misc.at:345;CALL m1. CALL m2. CALL m1.;;
-48;misc.at:394;INSPECT REPLACING LEADING ZEROS BY SPACES;;
-49;misc.at:416;Nested PERFORM;;
-50;misc.at:437;88 with FILLER;;
-51;misc.at:462;non-overflow after overflow;;
-52;misc.at:486;PERFORM ... CONTINUE;;
-53;misc.at:502;STRING with subscript reference;;
-54;misc.at:523;READ INTO AT-END sequence;;
-55;misc.at:556;First READ on an empty SEQUENTIAL INDEXED file;;
-56;misc.at:590;REWRITE a RELATIVE file with RANDAM access;;
-57;misc.at:636;SORT nonexistent file;;
-58;misc.at:670;PIC ZZZ-, ZZZ+;;
+8;copy.at:67;COPY: separators;copy;
+9;copy.at:95;COPY: partial replacement;copy;
+10;copy.at:123;COPY: recursive replacement;copy;
+11;subscripts.at:27;non-numeric subscript;;
+12;subscripts.at:53;The range of subscripts;;
+13;subscripts.at:85;Subscript out of bounds (1);;
+14;subscripts.at:108;Subscript out of bounds (2);;
+15;subscripts.at:131;Value of DEPENDING ON N out of bounds (lower);;
+16;subscripts.at:154;Value of DEPENDING ON N out of bounds (upper);;
+17;subscripts.at:177;Subscript out of bounds with OCCURS DEPENDING ON (lower);;
+18;subscripts.at:199;Subscript out of bounds with OCCURS DEPENDING ON (upper);;
+19;subscripts.at:221;Subscript out of bounds with OCCURS DEPENDING ON;;
+20;subscripts.at:246;Subscript by arithmetic expression;;
+21;ref-mod.at:34;Separate sign positions;;
+22;ref-mod.at:57;Static reference modification;;
+23;ref-mod.at:83;Dynamic reference modification;;
+24;ref-mod.at:110;Static out of bounds;;
+25;ref-mod.at:135;Offset underflow;;
+26;ref-mod.at:156;Offset overflow;;
+27;ref-mod.at:177;Length underflow;;
+28;ref-mod.at:198;Length overflow;;
+29;initialize.at:26;INITIALIZE group entry with OCCURS;;
+30;initialize.at:50;INITIALIZE OCCURS with numeric edited;;
+31;initialize.at:72;INITIALIZE complex group;;
+32;initialize.at:95;INITIALIZE complex group;;
+33;initialize.at:118;INITIALIZE with REDEFINES;;
+34;misc.at:21;Source file not found;;
+35;misc.at:30;Comma separator without space;;
+36;misc.at:46;LOCAL-STORAGE;;
+37;misc.at:84;EXTERNAL data item;;
+38;misc.at:123;MOVE to itself;;
+39;misc.at:142;MOVE with refmod;;
+40;misc.at:161;MOVE with refmod;;
+41;misc.at:182;MOVE with group refmod;;
+42;misc.at:202;MOVE indexes;;
+43;misc.at:223;MOVE X'00';;
+44;misc.at:252;MOVE with intermediate item;;
+45;misc.at:278;Level 01 subscripts;;
+46;misc.at:299;Class check with reference modification;;
+47;misc.at:322;Dynamic call with static linking;;
+48;misc.at:345;CALL m1. CALL m2. CALL m1.;;
+49;misc.at:394;INSPECT REPLACING LEADING ZEROS BY SPACES;;
+50;misc.at:416;Nested PERFORM;;
+51;misc.at:437;88 with FILLER;;
+52;misc.at:462;non-overflow after overflow;;
+53;misc.at:486;PERFORM ... CONTINUE;;
+54;misc.at:502;STRING with subscript reference;;
+55;misc.at:523;READ INTO AT-END sequence;;
+56;misc.at:556;First READ on an empty SEQUENTIAL INDEXED file;;
+57;misc.at:590;REWRITE a RELATIVE file with RANDAM access;;
+58;misc.at:636;SORT nonexistent file;;
+59;misc.at:670;PIC ZZZ-, ZZZ+;;
 '
 
 at_keywords=
@@ -1468,10 +1469,10 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  8 ) # 8. copy.at:67: COPY: partial replacement
+  8 ) # 8. copy.at:67: COPY: separators
     at_setup_line='copy.at:67'
-    at_desc='COPY: partial replacement'
-    $at_quiet $ECHO_N "  8: COPY: partial replacement                    $ECHO_C"
+    at_desc='COPY: separators'
+    $at_quiet $ECHO_N "  8: COPY: separators                             $ECHO_C"
     at_xfail=no
     (
       echo "8. copy.at:67: testing ..."
@@ -1481,8 +1482,7 @@ $at_traceon
 
 cat >copy.inc <<'_ATEOF'
 
-       01 :TEST:-VAR PIC X(2) VALUE "OK".
-       01 (TEST)-VAR PIC X(2) VALUE "OK".
+       01 TEST-VAR PIC X(2) VALUE "OK".
 _ATEOF
 
 
@@ -1493,11 +1493,12 @@ cat >prog.cob <<'_ATEOF'
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
        COPY "copy.inc"
-          REPLACING ==:TEST:== BY ==COLON==
-	            ==(TEST)== BY ==PAREN==.
+          REPLACING ==TEST-VAR==, BY ==FIRST-MATCH==,
+                 ,  ==TEST-VAR==; BY ==SECOND-MATCH==;
+                 ;  ==TEST-VAR== , BY ==THIRD-MATCH==
+                    ==TEST-VAR== ; BY ==FOURTH-MATCH==.
        PROCEDURE        DIVISION.
-           DISPLAY COLON-VAR NO ADVANCING.
-           DISPLAY PAREN-VAR NO ADVANCING.
+           DISPLAY FIRST-MATCH NO ADVANCING.
            STOP RUN.
 _ATEOF
 
@@ -1536,7 +1537,7 @@ grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
 $at_diff $at_devnull $at_stderr || at_failed=:
-echo >>$at_stdout; echo "OKOK" | $at_diff - $at_stdout || at_failed=:
+echo >>$at_stdout; echo "OK" | $at_diff - $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
@@ -1559,13 +1560,104 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  9 ) # 9. copy.at:95: COPY: recursive replacement
+  9 ) # 9. copy.at:95: COPY: partial replacement
     at_setup_line='copy.at:95'
-    at_desc='COPY: recursive replacement'
-    $at_quiet $ECHO_N "  9: COPY: recursive replacement                  $ECHO_C"
+    at_desc='COPY: partial replacement'
+    $at_quiet $ECHO_N "  9: COPY: partial replacement                    $ECHO_C"
     at_xfail=no
     (
       echo "9. copy.at:95: testing ..."
+      $at_traceon
+
+
+
+cat >copy.inc <<'_ATEOF'
+
+       01 :TEST:-VAR PIC X(2) VALUE "OK".
+       01 (TEST)-VAR PIC X(2) VALUE "OK".
+_ATEOF
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       COPY "copy.inc"
+          REPLACING ==:TEST:== BY ==COLON==
+	            ==(TEST)== BY ==PAREN==.
+       PROCEDURE        DIVISION.
+           DISPLAY COLON-VAR NO ADVANCING.
+           DISPLAY PAREN-VAR NO ADVANCING.
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "copy.at:117: \${COMPILE} -o prog prog.cob"
+echo copy.at:117 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "copy.at:117: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "copy.at:118: ./prog"
+echo copy.at:118 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "OKOK" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "copy.at:118: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  10 ) # 10. copy.at:123: COPY: recursive replacement
+    at_setup_line='copy.at:123'
+    at_desc='COPY: recursive replacement'
+    $at_quiet $ECHO_N " 10: COPY: recursive replacement                  $ECHO_C"
+    at_xfail=no
+    (
+      echo "10. copy.at:123: testing ..."
       $at_traceon
 
 
@@ -1597,8 +1689,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "copy.at:118: \${COMPILE} -o prog prog.cob"
-echo copy.at:118 >$at_check_line_file
+echo "copy.at:146: \${COMPILE} -o prog prog.cob"
+echo copy.at:146 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1610,7 +1702,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "copy.at:118: exit code was $at_status, expected 0"
+   *) echo "copy.at:146: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1622,8 +1714,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "copy.at:119: ./prog"
-echo copy.at:119 >$at_check_line_file
+echo "copy.at:147: ./prog"
+echo copy.at:147 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1635,7 +1727,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "copy.at:119: exit code was $at_status, expected 0"
+   *) echo "copy.at:147: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1653,13 +1745,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  10 ) # 10. subscripts.at:27: non-numeric subscript
+  11 ) # 11. subscripts.at:27: non-numeric subscript
     at_setup_line='subscripts.at:27'
     at_desc='non-numeric subscript'
-    $at_quiet $ECHO_N " 10: non-numeric subscript                        $ECHO_C"
+    $at_quiet $ECHO_N " 11: non-numeric subscript                        $ECHO_C"
     at_xfail=no
     (
-      echo "10. subscripts.at:27: testing ..."
+      echo "11. subscripts.at:27: testing ..."
       $at_traceon
 
 
@@ -1713,13 +1805,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  11 ) # 11. subscripts.at:53: The range of subscripts
+  12 ) # 12. subscripts.at:53: The range of subscripts
     at_setup_line='subscripts.at:53'
     at_desc='The range of subscripts'
-    $at_quiet $ECHO_N " 11: The range of subscripts                      $ECHO_C"
+    $at_quiet $ECHO_N " 12: The range of subscripts                      $ECHO_C"
     at_xfail=no
     (
-      echo "11. subscripts.at:53: testing ..."
+      echo "12. subscripts.at:53: testing ..."
       $at_traceon
 
 
@@ -1781,13 +1873,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  12 ) # 12. subscripts.at:85: Subscript out of bounds (1)
+  13 ) # 13. subscripts.at:85: Subscript out of bounds (1)
     at_setup_line='subscripts.at:85'
     at_desc='Subscript out of bounds (1)'
-    $at_quiet $ECHO_N " 12: Subscript out of bounds (1)                  $ECHO_C"
+    $at_quiet $ECHO_N " 13: Subscript out of bounds (1)                  $ECHO_C"
     at_xfail=no
     (
-      echo "12. subscripts.at:85: testing ..."
+      echo "13. subscripts.at:85: testing ..."
       $at_traceon
 
 
@@ -1864,13 +1956,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  13 ) # 13. subscripts.at:108: Subscript out of bounds (2)
+  14 ) # 14. subscripts.at:108: Subscript out of bounds (2)
     at_setup_line='subscripts.at:108'
     at_desc='Subscript out of bounds (2)'
-    $at_quiet $ECHO_N " 13: Subscript out of bounds (2)                  $ECHO_C"
+    $at_quiet $ECHO_N " 14: Subscript out of bounds (2)                  $ECHO_C"
     at_xfail=no
     (
-      echo "13. subscripts.at:108: testing ..."
+      echo "14. subscripts.at:108: testing ..."
       $at_traceon
 
 
@@ -1947,13 +2039,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  14 ) # 14. subscripts.at:131: Value of DEPENDING ON N out of bounds (lower)
+  15 ) # 15. subscripts.at:131: Value of DEPENDING ON N out of bounds (lower)
     at_setup_line='subscripts.at:131'
     at_desc='Value of DEPENDING ON N out of bounds (lower)'
-    $at_quiet $ECHO_N " 14: Value of DEPENDING ON N out of bounds (lower)$ECHO_C"
+    $at_quiet $ECHO_N " 15: Value of DEPENDING ON N out of bounds (lower)$ECHO_C"
     at_xfail=no
     (
-      echo "14. subscripts.at:131: testing ..."
+      echo "15. subscripts.at:131: testing ..."
       $at_traceon
 
 
@@ -2030,13 +2122,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  15 ) # 15. subscripts.at:154: Value of DEPENDING ON N out of bounds (upper)
+  16 ) # 16. subscripts.at:154: Value of DEPENDING ON N out of bounds (upper)
     at_setup_line='subscripts.at:154'
     at_desc='Value of DEPENDING ON N out of bounds (upper)'
-    $at_quiet $ECHO_N " 15: Value of DEPENDING ON N out of bounds (upper)$ECHO_C"
+    $at_quiet $ECHO_N " 16: Value of DEPENDING ON N out of bounds (upper)$ECHO_C"
     at_xfail=no
     (
-      echo "15. subscripts.at:154: testing ..."
+      echo "16. subscripts.at:154: testing ..."
       $at_traceon
 
 
@@ -2113,13 +2205,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  16 ) # 16. subscripts.at:177: Subscript out of bounds with OCCURS DEPENDING ON (lower)
+  17 ) # 17. subscripts.at:177: Subscript out of bounds with OCCURS DEPENDING ON (lower)
     at_setup_line='subscripts.at:177'
     at_desc='Subscript out of bounds with OCCURS DEPENDING ON (lower)'
-    $at_quiet $ECHO_N " 16: Subscript out of bounds with OCCURS DEPENDING ON (lower)$ECHO_C"
+    $at_quiet $ECHO_N " 17: Subscript out of bounds with OCCURS DEPENDING ON (lower)$ECHO_C"
     at_xfail=no
     (
-      echo "16. subscripts.at:177: testing ..."
+      echo "17. subscripts.at:177: testing ..."
       $at_traceon
 
 
@@ -2171,13 +2263,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  17 ) # 17. subscripts.at:199: Subscript out of bounds with OCCURS DEPENDING ON (upper)
+  18 ) # 18. subscripts.at:199: Subscript out of bounds with OCCURS DEPENDING ON (upper)
     at_setup_line='subscripts.at:199'
     at_desc='Subscript out of bounds with OCCURS DEPENDING ON (upper)'
-    $at_quiet $ECHO_N " 17: Subscript out of bounds with OCCURS DEPENDING ON (upper)$ECHO_C"
+    $at_quiet $ECHO_N " 18: Subscript out of bounds with OCCURS DEPENDING ON (upper)$ECHO_C"
     at_xfail=no
     (
-      echo "17. subscripts.at:199: testing ..."
+      echo "18. subscripts.at:199: testing ..."
       $at_traceon
 
 
@@ -2229,13 +2321,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  18 ) # 18. subscripts.at:221: Subscript out of bounds with OCCURS DEPENDING ON
+  19 ) # 19. subscripts.at:221: Subscript out of bounds with OCCURS DEPENDING ON
     at_setup_line='subscripts.at:221'
     at_desc='Subscript out of bounds with OCCURS DEPENDING ON'
-    $at_quiet $ECHO_N " 18: Subscript out of bounds with OCCURS DEPENDING ON$ECHO_C"
+    $at_quiet $ECHO_N " 19: Subscript out of bounds with OCCURS DEPENDING ON$ECHO_C"
     at_xfail=no
     (
-      echo "18. subscripts.at:221: testing ..."
+      echo "19. subscripts.at:221: testing ..."
       $at_traceon
 
 
@@ -2312,13 +2404,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  19 ) # 19. subscripts.at:246: Subscript by arithmetic expression
+  20 ) # 20. subscripts.at:246: Subscript by arithmetic expression
     at_setup_line='subscripts.at:246'
     at_desc='Subscript by arithmetic expression'
-    $at_quiet $ECHO_N " 19: Subscript by arithmetic expression           $ECHO_C"
+    $at_quiet $ECHO_N " 20: Subscript by arithmetic expression           $ECHO_C"
     at_xfail=no
     (
-      echo "19. subscripts.at:246: testing ..."
+      echo "20. subscripts.at:246: testing ..."
       $at_traceon
 
 
@@ -2394,13 +2486,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  20 ) # 20. ref-mod.at:34: Separate sign positions
+  21 ) # 21. ref-mod.at:34: Separate sign positions
     at_setup_line='ref-mod.at:34'
     at_desc='Separate sign positions'
-    $at_quiet $ECHO_N " 20: Separate sign positions                      $ECHO_C"
+    $at_quiet $ECHO_N " 21: Separate sign positions                      $ECHO_C"
     at_xfail=no
     (
-      echo "20. ref-mod.at:34: testing ..."
+      echo "21. ref-mod.at:34: testing ..."
       $at_traceon
 
 
@@ -2476,13 +2568,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  21 ) # 21. ref-mod.at:57: Static reference modification
+  22 ) # 22. ref-mod.at:57: Static reference modification
     at_setup_line='ref-mod.at:57'
     at_desc='Static reference modification'
-    $at_quiet $ECHO_N " 21: Static reference modification                $ECHO_C"
+    $at_quiet $ECHO_N " 22: Static reference modification                $ECHO_C"
     at_xfail=no
     (
-      echo "21. ref-mod.at:57: testing ..."
+      echo "22. ref-mod.at:57: testing ..."
       $at_traceon
 
 
@@ -2563,13 +2655,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  22 ) # 22. ref-mod.at:83: Dynamic reference modification
+  23 ) # 23. ref-mod.at:83: Dynamic reference modification
     at_setup_line='ref-mod.at:83'
     at_desc='Dynamic reference modification'
-    $at_quiet $ECHO_N " 22: Dynamic reference modification               $ECHO_C"
+    $at_quiet $ECHO_N " 23: Dynamic reference modification               $ECHO_C"
     at_xfail=no
     (
-      echo "22. ref-mod.at:83: testing ..."
+      echo "23. ref-mod.at:83: testing ..."
       $at_traceon
 
 
@@ -2651,13 +2743,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  23 ) # 23. ref-mod.at:110: Static out of bounds
+  24 ) # 24. ref-mod.at:110: Static out of bounds
     at_setup_line='ref-mod.at:110'
     at_desc='Static out of bounds'
-    $at_quiet $ECHO_N " 23: Static out of bounds                         $ECHO_C"
+    $at_quiet $ECHO_N " 24: Static out of bounds                         $ECHO_C"
     at_xfail=no
     (
-      echo "23. ref-mod.at:110: testing ..."
+      echo "24. ref-mod.at:110: testing ..."
       $at_traceon
 
 
@@ -2713,13 +2805,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  24 ) # 24. ref-mod.at:135: Offset underflow
+  25 ) # 25. ref-mod.at:135: Offset underflow
     at_setup_line='ref-mod.at:135'
     at_desc='Offset underflow'
-    $at_quiet $ECHO_N " 24: Offset underflow                             $ECHO_C"
+    $at_quiet $ECHO_N " 25: Offset underflow                             $ECHO_C"
     at_xfail=no
     (
-      echo "24. ref-mod.at:135: testing ..."
+      echo "25. ref-mod.at:135: testing ..."
       $at_traceon
 
 
@@ -2795,13 +2887,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  25 ) # 25. ref-mod.at:156: Offset overflow
+  26 ) # 26. ref-mod.at:156: Offset overflow
     at_setup_line='ref-mod.at:156'
     at_desc='Offset overflow'
-    $at_quiet $ECHO_N " 25: Offset overflow                              $ECHO_C"
+    $at_quiet $ECHO_N " 26: Offset overflow                              $ECHO_C"
     at_xfail=no
     (
-      echo "25. ref-mod.at:156: testing ..."
+      echo "26. ref-mod.at:156: testing ..."
       $at_traceon
 
 
@@ -2877,13 +2969,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  26 ) # 26. ref-mod.at:177: Length underflow
+  27 ) # 27. ref-mod.at:177: Length underflow
     at_setup_line='ref-mod.at:177'
     at_desc='Length underflow'
-    $at_quiet $ECHO_N " 26: Length underflow                             $ECHO_C"
+    $at_quiet $ECHO_N " 27: Length underflow                             $ECHO_C"
     at_xfail=no
     (
-      echo "26. ref-mod.at:177: testing ..."
+      echo "27. ref-mod.at:177: testing ..."
       $at_traceon
 
 
@@ -2959,13 +3051,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  27 ) # 27. ref-mod.at:198: Length overflow
+  28 ) # 28. ref-mod.at:198: Length overflow
     at_setup_line='ref-mod.at:198'
     at_desc='Length overflow'
-    $at_quiet $ECHO_N " 27: Length overflow                              $ECHO_C"
+    $at_quiet $ECHO_N " 28: Length overflow                              $ECHO_C"
     at_xfail=no
     (
-      echo "27. ref-mod.at:198: testing ..."
+      echo "28. ref-mod.at:198: testing ..."
       $at_traceon
 
 
@@ -3041,13 +3133,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  28 ) # 28. initialize.at:26: INITIALIZE group entry with OCCURS
+  29 ) # 29. initialize.at:26: INITIALIZE group entry with OCCURS
     at_setup_line='initialize.at:26'
     at_desc='INITIALIZE group entry with OCCURS'
-    $at_quiet $ECHO_N " 28: INITIALIZE group entry with OCCURS           $ECHO_C"
+    $at_quiet $ECHO_N " 29: INITIALIZE group entry with OCCURS           $ECHO_C"
     at_xfail=no
     (
-      echo "28. initialize.at:26: testing ..."
+      echo "29. initialize.at:26: testing ..."
       $at_traceon
 
 
@@ -3126,13 +3218,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  29 ) # 29. initialize.at:50: INITIALIZE OCCURS with numeric edited
+  30 ) # 30. initialize.at:50: INITIALIZE OCCURS with numeric edited
     at_setup_line='initialize.at:50'
     at_desc='INITIALIZE OCCURS with numeric edited'
-    $at_quiet $ECHO_N " 29: INITIALIZE OCCURS with numeric edited        $ECHO_C"
+    $at_quiet $ECHO_N " 30: INITIALIZE OCCURS with numeric edited        $ECHO_C"
     at_xfail=no
     (
-      echo "29. initialize.at:50: testing ..."
+      echo "30. initialize.at:50: testing ..."
       $at_traceon
 
 
@@ -3209,13 +3301,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  30 ) # 30. initialize.at:72: INITIALIZE complex group
+  31 ) # 31. initialize.at:72: INITIALIZE complex group
     at_setup_line='initialize.at:72'
     at_desc='INITIALIZE complex group'
-    $at_quiet $ECHO_N " 30: INITIALIZE complex group                     $ECHO_C"
+    $at_quiet $ECHO_N " 31: INITIALIZE complex group                     $ECHO_C"
     at_xfail=no
     (
-      echo "30. initialize.at:72: testing ..."
+      echo "31. initialize.at:72: testing ..."
       $at_traceon
 
 
@@ -3294,13 +3386,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  31 ) # 31. initialize.at:95: INITIALIZE complex group
+  32 ) # 32. initialize.at:95: INITIALIZE complex group
     at_setup_line='initialize.at:95'
     at_desc='INITIALIZE complex group'
-    $at_quiet $ECHO_N " 31: INITIALIZE complex group                     $ECHO_C"
+    $at_quiet $ECHO_N " 32: INITIALIZE complex group                     $ECHO_C"
     at_xfail=no
     (
-      echo "31. initialize.at:95: testing ..."
+      echo "32. initialize.at:95: testing ..."
       $at_traceon
 
 
@@ -3379,13 +3471,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  32 ) # 32. initialize.at:118: INITIALIZE with REDEFINES
+  33 ) # 33. initialize.at:118: INITIALIZE with REDEFINES
     at_setup_line='initialize.at:118'
     at_desc='INITIALIZE with REDEFINES'
-    $at_quiet $ECHO_N " 32: INITIALIZE with REDEFINES                    $ECHO_C"
+    $at_quiet $ECHO_N " 33: INITIALIZE with REDEFINES                    $ECHO_C"
     at_xfail=no
     (
-      echo "32. initialize.at:118: testing ..."
+      echo "33. initialize.at:118: testing ..."
       $at_traceon
 
 
@@ -3463,13 +3555,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  33 ) # 33. misc.at:21: Source file not found
+  34 ) # 34. misc.at:21: Source file not found
     at_setup_line='misc.at:21'
     at_desc='Source file not found'
-    $at_quiet $ECHO_N " 33: Source file not found                        $ECHO_C"
+    $at_quiet $ECHO_N " 34: Source file not found                        $ECHO_C"
     at_xfail=no
     (
-      echo "33. misc.at:21: testing ..."
+      echo "34. misc.at:21: testing ..."
       $at_traceon
 
 
@@ -3506,13 +3598,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  34 ) # 34. misc.at:30: Comma separator without space
+  35 ) # 35. misc.at:30: Comma separator without space
     at_setup_line='misc.at:30'
     at_desc='Comma separator without space'
-    $at_quiet $ECHO_N " 34: Comma separator without space                $ECHO_C"
+    $at_quiet $ECHO_N " 35: Comma separator without space                $ECHO_C"
     at_xfail=no
     (
-      echo "34. misc.at:30: testing ..."
+      echo "35. misc.at:30: testing ..."
       $at_traceon
 
 
@@ -3583,13 +3675,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  35 ) # 35. misc.at:46: LOCAL-STORAGE
+  36 ) # 36. misc.at:46: LOCAL-STORAGE
     at_setup_line='misc.at:46'
     at_desc='LOCAL-STORAGE'
-    $at_quiet $ECHO_N " 35: LOCAL-STORAGE                                $ECHO_C"
+    $at_quiet $ECHO_N " 36: LOCAL-STORAGE                                $ECHO_C"
     at_xfail=no
     (
-      echo "35. misc.at:46: testing ..."
+      echo "36. misc.at:46: testing ..."
       $at_traceon
 
 
@@ -3707,13 +3799,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  36 ) # 36. misc.at:84: EXTERNAL data item
+  37 ) # 37. misc.at:84: EXTERNAL data item
     at_setup_line='misc.at:84'
     at_desc='EXTERNAL data item'
-    $at_quiet $ECHO_N " 36: EXTERNAL data item                           $ECHO_C"
+    $at_quiet $ECHO_N " 37: EXTERNAL data item                           $ECHO_C"
     at_xfail=no
     (
-      echo "36. misc.at:84: testing ..."
+      echo "37. misc.at:84: testing ..."
       $at_traceon
 
 
@@ -3830,13 +3922,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  37 ) # 37. misc.at:123: MOVE to itself
+  38 ) # 38. misc.at:123: MOVE to itself
     at_setup_line='misc.at:123'
     at_desc='MOVE to itself'
-    $at_quiet $ECHO_N " 37: MOVE to itself                               $ECHO_C"
+    $at_quiet $ECHO_N " 38: MOVE to itself                               $ECHO_C"
     at_xfail=no
     (
-      echo "37. misc.at:123: testing ..."
+      echo "38. misc.at:123: testing ..."
       $at_traceon
 
 
@@ -3911,13 +4003,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  38 ) # 38. misc.at:142: MOVE with refmod
+  39 ) # 39. misc.at:142: MOVE with refmod
     at_setup_line='misc.at:142'
     at_desc='MOVE with refmod'
-    $at_quiet $ECHO_N " 38: MOVE with refmod                             $ECHO_C"
+    $at_quiet $ECHO_N " 39: MOVE with refmod                             $ECHO_C"
     at_xfail=no
     (
-      echo "38. misc.at:142: testing ..."
+      echo "39. misc.at:142: testing ..."
       $at_traceon
 
 
@@ -3992,13 +4084,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  39 ) # 39. misc.at:161: MOVE with refmod
+  40 ) # 40. misc.at:161: MOVE with refmod
     at_setup_line='misc.at:161'
     at_desc='MOVE with refmod'
-    $at_quiet $ECHO_N " 39: MOVE with refmod                             $ECHO_C"
+    $at_quiet $ECHO_N " 40: MOVE with refmod                             $ECHO_C"
     at_xfail=no
     (
-      echo "39. misc.at:161: testing ..."
+      echo "40. misc.at:161: testing ..."
       $at_traceon
 
 
@@ -4075,13 +4167,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  40 ) # 40. misc.at:182: MOVE with group refmod
+  41 ) # 41. misc.at:182: MOVE with group refmod
     at_setup_line='misc.at:182'
     at_desc='MOVE with group refmod'
-    $at_quiet $ECHO_N " 40: MOVE with group refmod                       $ECHO_C"
+    $at_quiet $ECHO_N " 41: MOVE with group refmod                       $ECHO_C"
     at_xfail=no
     (
-      echo "40. misc.at:182: testing ..."
+      echo "41. misc.at:182: testing ..."
       $at_traceon
 
 
@@ -4157,13 +4249,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  41 ) # 41. misc.at:202: MOVE indexes
+  42 ) # 42. misc.at:202: MOVE indexes
     at_setup_line='misc.at:202'
     at_desc='MOVE indexes'
-    $at_quiet $ECHO_N " 41: MOVE indexes                                 $ECHO_C"
+    $at_quiet $ECHO_N " 42: MOVE indexes                                 $ECHO_C"
     at_xfail=no
     (
-      echo "41. misc.at:202: testing ..."
+      echo "42. misc.at:202: testing ..."
       $at_traceon
 
 
@@ -4240,13 +4332,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  42 ) # 42. misc.at:223: MOVE X'00'
+  43 ) # 43. misc.at:223: MOVE X'00'
     at_setup_line='misc.at:223'
     at_desc='MOVE X'00''
-    $at_quiet $ECHO_N " 42: MOVE X'00'                                   $ECHO_C"
+    $at_quiet $ECHO_N " 43: MOVE X'00'                                   $ECHO_C"
     at_xfail=no
     (
-      echo "42. misc.at:223: testing ..."
+      echo "43. misc.at:223: testing ..."
       $at_traceon
 
 
@@ -4357,13 +4449,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  43 ) # 43. misc.at:252: MOVE with intermediate item
+  44 ) # 44. misc.at:252: MOVE with intermediate item
     at_setup_line='misc.at:252'
     at_desc='MOVE with intermediate item'
-    $at_quiet $ECHO_N " 43: MOVE with intermediate item                  $ECHO_C"
+    $at_quiet $ECHO_N " 44: MOVE with intermediate item                  $ECHO_C"
     at_xfail=no
     (
-      echo "43. misc.at:252: testing ..."
+      echo "44. misc.at:252: testing ..."
       $at_traceon
 
 
@@ -4442,13 +4534,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  44 ) # 44. misc.at:278: Level 01 subscripts
+  45 ) # 45. misc.at:278: Level 01 subscripts
     at_setup_line='misc.at:278'
     at_desc='Level 01 subscripts'
-    $at_quiet $ECHO_N " 44: Level 01 subscripts                          $ECHO_C"
+    $at_quiet $ECHO_N " 45: Level 01 subscripts                          $ECHO_C"
     at_xfail=no
     (
-      echo "44. misc.at:278: testing ..."
+      echo "45. misc.at:278: testing ..."
       $at_traceon
 
 
@@ -4497,13 +4589,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  45 ) # 45. misc.at:299: Class check with reference modification
+  46 ) # 46. misc.at:299: Class check with reference modification
     at_setup_line='misc.at:299'
     at_desc='Class check with reference modification'
-    $at_quiet $ECHO_N " 45: Class check with reference modification      $ECHO_C"
+    $at_quiet $ECHO_N " 46: Class check with reference modification      $ECHO_C"
     at_xfail=no
     (
-      echo "45. misc.at:299: testing ..."
+      echo "46. misc.at:299: testing ..."
       $at_traceon
 
 
@@ -4579,13 +4671,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  46 ) # 46. misc.at:322: Dynamic call with static linking
+  47 ) # 47. misc.at:322: Dynamic call with static linking
     at_setup_line='misc.at:322'
     at_desc='Dynamic call with static linking'
-    $at_quiet $ECHO_N " 46: Dynamic call with static linking             $ECHO_C"
+    $at_quiet $ECHO_N " 47: Dynamic call with static linking             $ECHO_C"
     at_xfail=no
     (
-      echo "46. misc.at:322: testing ..."
+      echo "47. misc.at:322: testing ..."
       $at_traceon
 
 
@@ -4714,13 +4806,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  47 ) # 47. misc.at:345: CALL m1. CALL m2. CALL m1.
+  48 ) # 48. misc.at:345: CALL m1. CALL m2. CALL m1.
     at_setup_line='misc.at:345'
     at_desc='CALL m1. CALL m2. CALL m1.'
-    $at_quiet $ECHO_N " 47: CALL m1. CALL m2. CALL m1.                   $ECHO_C"
+    $at_quiet $ECHO_N " 48: CALL m1. CALL m2. CALL m1.                   $ECHO_C"
     at_xfail=no
     (
-      echo "47. misc.at:345: testing ..."
+      echo "48. misc.at:345: testing ..."
       $at_traceon
 
 
@@ -4873,13 +4965,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  48 ) # 48. misc.at:394: INSPECT REPLACING LEADING ZEROS BY SPACES
+  49 ) # 49. misc.at:394: INSPECT REPLACING LEADING ZEROS BY SPACES
     at_setup_line='misc.at:394'
     at_desc='INSPECT REPLACING LEADING ZEROS BY SPACES'
-    $at_quiet $ECHO_N " 48: INSPECT REPLACING LEADING ZEROS BY SPACES    $ECHO_C"
+    $at_quiet $ECHO_N " 49: INSPECT REPLACING LEADING ZEROS BY SPACES    $ECHO_C"
     at_xfail=no
     (
-      echo "48. misc.at:394: testing ..."
+      echo "49. misc.at:394: testing ..."
       $at_traceon
 
 
@@ -4954,13 +5046,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  49 ) # 49. misc.at:416: Nested PERFORM
+  50 ) # 50. misc.at:416: Nested PERFORM
     at_setup_line='misc.at:416'
     at_desc='Nested PERFORM'
-    $at_quiet $ECHO_N " 49: Nested PERFORM                               $ECHO_C"
+    $at_quiet $ECHO_N " 50: Nested PERFORM                               $ECHO_C"
     at_xfail=no
     (
-      echo "49. misc.at:416: testing ..."
+      echo "50. misc.at:416: testing ..."
       $at_traceon
 
 
@@ -5036,13 +5128,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  50 ) # 50. misc.at:437: 88 with FILLER
+  51 ) # 51. misc.at:437: 88 with FILLER
     at_setup_line='misc.at:437'
     at_desc='88 with FILLER'
-    $at_quiet $ECHO_N " 50: 88 with FILLER                               $ECHO_C"
+    $at_quiet $ECHO_N " 51: 88 with FILLER                               $ECHO_C"
     at_xfail=no
     (
-      echo "50. misc.at:437: testing ..."
+      echo "51. misc.at:437: testing ..."
       $at_traceon
 
 
@@ -5123,13 +5215,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  51 ) # 51. misc.at:462: non-overflow after overflow
+  52 ) # 52. misc.at:462: non-overflow after overflow
     at_setup_line='misc.at:462'
     at_desc='non-overflow after overflow'
-    $at_quiet $ECHO_N " 51: non-overflow after overflow                  $ECHO_C"
+    $at_quiet $ECHO_N " 52: non-overflow after overflow                  $ECHO_C"
     at_xfail=no
     (
-      echo "51. misc.at:462: testing ..."
+      echo "52. misc.at:462: testing ..."
       $at_traceon
 
 
@@ -5206,13 +5298,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  52 ) # 52. misc.at:486: PERFORM ... CONTINUE
+  53 ) # 53. misc.at:486: PERFORM ... CONTINUE
     at_setup_line='misc.at:486'
     at_desc='PERFORM ... CONTINUE'
-    $at_quiet $ECHO_N " 52: PERFORM ... CONTINUE                         $ECHO_C"
+    $at_quiet $ECHO_N " 53: PERFORM ... CONTINUE                         $ECHO_C"
     at_xfail=no
     (
-      echo "52. misc.at:486: testing ..."
+      echo "53. misc.at:486: testing ..."
       $at_traceon
 
 
@@ -5259,13 +5351,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  53 ) # 53. misc.at:502: STRING with subscript reference
+  54 ) # 54. misc.at:502: STRING with subscript reference
     at_setup_line='misc.at:502'
     at_desc='STRING with subscript reference'
-    $at_quiet $ECHO_N " 53: STRING with subscript reference              $ECHO_C"
+    $at_quiet $ECHO_N " 54: STRING with subscript reference              $ECHO_C"
     at_xfail=no
     (
-      echo "53. misc.at:502: testing ..."
+      echo "54. misc.at:502: testing ..."
       $at_traceon
 
 
@@ -5341,13 +5433,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  54 ) # 54. misc.at:523: READ INTO AT-END sequence
+  55 ) # 55. misc.at:523: READ INTO AT-END sequence
     at_setup_line='misc.at:523'
     at_desc='READ INTO AT-END sequence'
-    $at_quiet $ECHO_N " 54: READ INTO AT-END sequence                    $ECHO_C"
+    $at_quiet $ECHO_N " 55: READ INTO AT-END sequence                    $ECHO_C"
     at_xfail=no
     (
-      echo "54. misc.at:523: testing ..."
+      echo "55. misc.at:523: testing ..."
       $at_traceon
 
 
@@ -5435,13 +5527,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  55 ) # 55. misc.at:556: First READ on an empty SEQUENTIAL INDEXED file
+  56 ) # 56. misc.at:556: First READ on an empty SEQUENTIAL INDEXED file
     at_setup_line='misc.at:556'
     at_desc='First READ on an empty SEQUENTIAL INDEXED file'
-    $at_quiet $ECHO_N " 55: First READ on an empty SEQUENTIAL INDEXED file$ECHO_C"
+    $at_quiet $ECHO_N " 56: First READ on an empty SEQUENTIAL INDEXED file$ECHO_C"
     at_xfail=no
     (
-      echo "55. misc.at:556: testing ..."
+      echo "56. misc.at:556: testing ..."
       $at_traceon
 
 
@@ -5530,13 +5622,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  56 ) # 56. misc.at:590: REWRITE a RELATIVE file with RANDAM access
+  57 ) # 57. misc.at:590: REWRITE a RELATIVE file with RANDAM access
     at_setup_line='misc.at:590'
     at_desc='REWRITE a RELATIVE file with RANDAM access'
-    $at_quiet $ECHO_N " 56: REWRITE a RELATIVE file with RANDAM access   $ECHO_C"
+    $at_quiet $ECHO_N " 57: REWRITE a RELATIVE file with RANDAM access   $ECHO_C"
     at_xfail=no
     (
-      echo "56. misc.at:590: testing ..."
+      echo "57. misc.at:590: testing ..."
       $at_traceon
 
 
@@ -5636,13 +5728,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  57 ) # 57. misc.at:636: SORT nonexistent file
+  58 ) # 58. misc.at:636: SORT nonexistent file
     at_setup_line='misc.at:636'
     at_desc='SORT nonexistent file'
-    $at_quiet $ECHO_N " 57: SORT nonexistent file                        $ECHO_C"
+    $at_quiet $ECHO_N " 58: SORT nonexistent file                        $ECHO_C"
     at_xfail=no
     (
-      echo "57. misc.at:636: testing ..."
+      echo "58. misc.at:636: testing ..."
       $at_traceon
 
 
@@ -5755,13 +5847,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  58 ) # 58. misc.at:670: PIC ZZZ-, ZZZ+
+  59 ) # 59. misc.at:670: PIC ZZZ-, ZZZ+
     at_setup_line='misc.at:670'
     at_desc='PIC ZZZ-, ZZZ+'
-    $at_quiet $ECHO_N " 58: PIC ZZZ-, ZZZ+                               $ECHO_C"
+    $at_quiet $ECHO_N " 59: PIC ZZZ-, ZZZ+                               $ECHO_C"
     at_xfail=no
     (
-      echo "58. misc.at:670: testing ..."
+      echo "59. misc.at:670: testing ..."
       $at_traceon
 
 
