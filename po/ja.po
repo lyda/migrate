@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
-"POT-Creation-Date: 2003-05-18 22:58+0900\n"
-"PO-Revision-Date: 2003-05-18 23:01+0900\n"
+"POT-Creation-Date: 2003-05-19 12:28+0900\n"
+"PO-Revision-Date: 2003-05-19 12:31+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -55,17 +55,19 @@ msgstr ""
 msgid ""
 "COBOL standard:\n"
 "  -std=<standard>       Specify the standard to use:\n"
-"    cobol2002             COBOL 2002 (default)\n"
+"    gnu                   GNU COBOL (default)\n"
 "    cobol85               COBOL 85\n"
+"    cobol2002             COBOL 2002\n"
 "    mvs                   IBM COBOL for MVS & VM\n"
 msgstr ""
 "COBOL 標準:\n"
 "  -std=<standard>       利用する標準を指定する:\n"
-"    cobol2002             COBOL 2002 (default)\n"
+"    gnu                   GNU COBOL (既定値)\n"
 "    cobol85               COBOL 85\n"
+"    cobol2002             COBOL 2002\n"
 "    mvs                   IBM COBOL for MVS & VM\n"
 
-#: cobc/cobc.c:241
+#: cobc/cobc.c:242
 msgid ""
 "COBOL options:\n"
 "  -free                 Use free source format\n"
@@ -83,7 +85,7 @@ msgstr ""
 "  -debug                全ての実行時エラーチェックを有効にする\n"
 "  -column <n>           テキスト領域の桁数を <n> にする (標準: 72)\n"
 
-#: cobc/cobc.c:249
+#: cobc/cobc.c:250
 msgid ""
 "Warning options:\n"
 "  -Wall                 Enable all warnings"
@@ -91,70 +93,70 @@ msgstr ""
 "ワーニングオプション:\n"
 "  -Wall                 すべてのワーニングを有効にする"
 
-#: cobc/cobc.c:256
+#: cobc/cobc.c:257
 msgid "Flag options:"
 msgstr "フラグオプション:"
 
-#: cobc/cobc.c:317
+#: cobc/cobc.c:323
 #, c-format
 msgid "Invalid option -std=%s\n"
 msgstr "不当なオプションです -std=%s\n"
 
-#: cobc/cobc.c:545
+#: cobc/cobc.c:551
 msgid "-MT must be given to specify target file\n"
 msgstr "ターゲット名を -MT で指定して下さい\n"
 
-#: cobc/cobc.c:774
+#: cobc/cobc.c:780
 #, c-format
 msgid "%s: In paragraph `%s':\n"
 msgstr "%s: 段落 `%s':\n"
 
-#: cobc/cobc.c:777
+#: cobc/cobc.c:783
 #, c-format
 msgid "%s: In section `%s':\n"
 msgstr "%s: 節 `%s':\n"
 
-#: cobc/cobc.c:837
+#: cobc/cobc.c:843
 #, c-format
 msgid "%s is archaic in %s"
 msgstr "%s は %s では古い仕様です"
 
-#: cobc/cobc.c:844
+#: cobc/cobc.c:850
 #, c-format
 msgid "%s is obsolete in %s"
 msgstr "%s は %s では廃要素です"
 
-#: cobc/cobc.c:850
+#: cobc/cobc.c:856
 #, c-format
 msgid "%s not conform to %s"
 msgstr "%s は %s に準拠していません"
 
-#: cobc/cobc.c:874
+#: cobc/cobc.c:880
 #, c-format
 msgid "redefinition of `%s'"
 msgstr "`%s' が再定義されています"
 
-#: cobc/cobc.c:875
+#: cobc/cobc.c:881
 #, c-format
 msgid "`%s' previously defined here"
 msgstr "`%s' はここで定義されました"
 
-#: cobc/cobc.c:883
+#: cobc/cobc.c:889
 #, c-format
 msgid "`%s' undefined in `%s'"
 msgstr "`%s' は `%s' の中で定義されていません"
 
-#: cobc/cobc.c:886
+#: cobc/cobc.c:892
 #, c-format
 msgid "`%s' undefined"
 msgstr "`%s' は未定義です"
 
-#: cobc/cobc.c:898
+#: cobc/cobc.c:904
 #, c-format
 msgid "`%s' ambiguous; need qualification"
 msgstr "`%s' は多重定義されています。一意に修飾して下さい"
 
-#: cobc/cobc.c:934
+#: cobc/cobc.c:940
 msgid "defined here"
 msgstr "はここで定義されました"
 
