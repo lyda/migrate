@@ -1,3 +1,14 @@
+2004-11-04  Bernard Giroud <bgiroud@open-cobol.org>
+	* numeric.c (cob_decimal_get_binary) : reverted:
+	  NIST test suite is no mre working.
+
+2004-11-02  Bernard Giroud <bgiroud@open-cobol.org>
+	* numeric.c (cob_decimal_get_binary) :
+	  Worked around what I consider a bug in Gmp for getting
+	  a long signed value.
+	* Added checks for option binary-truncate from a
+	  suggestion of Roger While.
+
 2004-10-31  Roger While <simrw@sim-basis.de>
 
 	* fileio.h : For I/O exceptions, has_status flag and slight
