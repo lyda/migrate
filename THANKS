@@ -2,6 +2,7 @@ Contributors:
 
   Keiichi Takahash      for RPM package
   Noboru Saitou         for Debian package
+  peg@coboler.com       for Cygwin package
   Yoshiki Kusumoto      for test programs
 
 OpenCOBOL was inspired by the TinyCOBOL project.
