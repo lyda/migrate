@@ -132,7 +132,9 @@ AC_SUBST(LIBCOB_LIBS)
 AC_CONFIG_FILES([cob-config libcob/cobconfig.h
 		Makefile lib/Makefile libcob/Makefile
 		cobpp/Makefile cobc/Makefile po/Makefile.in texi/Makefile])
-AC_CONFIG_FILES([redhat/open-cobol.spec])
+if test "$USE_MAINTAINER_MODE" = "yes"; then
+  AC_CONFIG_FILES([redhat/open-cobol.spec])
+fi
 AC_OUTPUT
 
 echo ""
