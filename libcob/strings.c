@@ -469,7 +469,8 @@ cob_unstring (struct cob_field src, ...)
 		  match = alloca ((delms + 1) * sizeof (regmatch_t));
 		  reg_inited = 1;
 		}
-	      if (regexec (&reg, start, delms + 1, match, 0) == 0)
+	      if (regexec (&reg, start, delms + 1, match, 0) == 0
+		  && match[0].rm_so <= src_size - offset)
 		{
 		  match_size = match[0].rm_so;
 		  cob_mem_move (f, start, match_size);
@@ -487,6 +488,7 @@ cob_unstring (struct cob_field src, ...)
 		  match_size = src_size - offset;
 		  cob_mem_move (f, start, match_size);
 		  offset = src_size;
+		  delm_data = NULL;
 		}
 	    }
 	  count++;
@@ -496,7 +498,12 @@ cob_unstring (struct cob_field src, ...)
       case UNSTRING_DELIMITER:
 	{
 	  struct cob_field f = va_arg (ap, struct cob_field);
-	  cob_mem_move (f, delm_data, delm_size);
+	  if (delm_data)
+	    cob_mem_move (f, delm_data, delm_size);
+	  else if (FIELD_TYPE (f) == '9')
+	    cob_move_zero (f);
+	  else
+	    cob_move_space (f);
 	  break;
 	}
 

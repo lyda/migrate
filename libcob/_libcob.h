@@ -213,6 +213,8 @@ extern int picCompDecimals (const char *pic);
 
 extern void cob_move (struct cob_field f1, struct cob_field f2);
 extern void cob_move_2 (struct fld_desc *f1, char *s1, struct fld_desc *f2, char *s2);
+extern void cob_move_zero (struct cob_field f);
+extern void cob_move_space (struct cob_field f);
 extern void cob_mem_move (struct cob_field dst, unsigned char *src, int len);
 extern int get_index (struct cob_field f);
 
