@@ -34,7 +34,7 @@ AC_PROG_MAKE_SET
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([fcntl.h malloc.h libintl.h])
+AC_CHECK_HEADERS([fcntl.h malloc.h])
 
 # Checks for db.
 LIBDB="-ldb"
