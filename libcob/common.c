@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2002 Keisuke Nishida
+ * Copyright (C) 2001-2003 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -311,6 +311,19 @@ cob_module_init (void)
       fputs (_("warning: cob_init expected in the main program\n"), stderr);
       cob_init (0, NULL);
     }
+}
+
+void
+cob_push_environment (cob_environment *env)
+{
+  env->next = cob_env;
+  cob_env = env;
+}
+
+void
+cob_pop_environment (void)
+{
+  cob_env = cob_env->next;
 }
 
 void

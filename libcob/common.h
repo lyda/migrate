@@ -235,10 +235,11 @@ extern int cob_source_line;
 
 /* environment variables */
 
-typedef struct {
+typedef struct __cob_environment {
   unsigned char decimal_point;
   unsigned char currency_symbol;
   unsigned char numeric_separator;
+  struct __cob_environment *next;
 } cob_environment;
 
 extern cob_environment *cob_env;

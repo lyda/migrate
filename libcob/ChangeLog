@@ -1,3 +1,7 @@
+2003-02-25  Keisuke Nishida  <knishida@netlab.jp>
+
+	* common.c (cob_push_environment, cob_pop_environment): New functions.
+
 2003-01-23  Keisuke Nishida  <knishida@netlab.jp>
 
 	* fileio.h (cob_file): Break out flags.
