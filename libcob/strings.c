@@ -94,18 +94,13 @@ inspect_get_region (struct cob_field var, va_list ap, int *offset, int *len)
 static void
 inspect_internal (struct cob_field var, va_list ap, int replacing)
 {
-  int type;
-  char mark[COB_FIELD_LENGTH (var)];
+  int i, type;
+  int var_size = COB_FIELD_LENGTH (var);
   unsigned char *var_data = COB_FIELD_BASE (var);
   int sign = cob_get_sign (var);
-  struct replace {
-    unsigned char *dst;
-    unsigned char *src;
-    size_t size;
-    struct replace *next;
-  } *replace_list = NULL;
+  char mark[var_size];
 
-  memset (mark, 0, COB_FIELD_SIZE (var));
+  memset (mark, 0, var_size);
   while ((type = va_arg (ap, int)) != COB_INSPECT_END)
     {
       int offset, len;
@@ -117,14 +112,12 @@ inspect_internal (struct cob_field var, va_list ap, int replacing)
 	    ap = inspect_get_region (var, ap, &offset, &len);
 	    if (len > 0)
 	      {
-		int i, n = 0;
+		int n = 0;
 		for (i = 0; i < len; i++)
 		  if (mark[offset + i] == 0)
 		    {
 		      n++;
-		      mark[offset + i] = 1;
-		      if (replacing)
-			var_data[offset + i] = COB_FIELD_DATA (f1)[0];
+		      mark[offset + i] = COB_FIELD_DATA (f1)[0];
 		    }
 		if (!replacing)
 		  add_int (f1, n);
@@ -143,12 +136,13 @@ inspect_internal (struct cob_field var, va_list ap, int replacing)
 	    ap = inspect_get_region (var, ap, &offset, &len);
 	    if (len > 0)
 	      {
-		int i, j, n = 0;
+		int n = 0;
 		for (i = 0; i < len - size + 1; i++)
 		  {
 		    /* find matching substring */
 		    if (match (var_data + offset + i, data, size))
 		      {
+			int j;
 			/* check if it is already marked */
 			for (j = 0; j < size; j++)
 			  if (mark[offset + i + j])
@@ -157,17 +151,8 @@ inspect_internal (struct cob_field var, va_list ap, int replacing)
 			if (j == size)
 			  {
 			    n++;
-			    memset (&mark[offset + i], 1, size);
-			    if (replacing)
-			      {
-				/* schedule replacement */
-				struct replace *p = alloca (sizeof (*p));
-				p->dst = var_data + offset + i;
-				p->src = COB_FIELD_DATA (f1);
-				p->size = size;
-				p->next = replace_list;
-				replace_list = p;
-			      }
+			    memcpy (mark + offset + i,
+				    COB_FIELD_DATA (f1), size);
 			    if (type == COB_INSPECT_FIRST)
 			      break;
 			    continue;
@@ -184,9 +169,13 @@ inspect_internal (struct cob_field var, va_list ap, int replacing)
 	  }
 	}
     }
-  /* do actual replacement */
-  for (; replace_list; replace_list = replace_list->next)
-    memcpy (replace_list->dst, replace_list->src, replace_list->size);
+
+  /* do replacement */
+  if (replacing)
+    for (i = 0; i < var_size; i++)
+      if (mark[i])
+	var_data[i] = mark[i];
+
   cob_put_sign (var, sign);
 }
 
