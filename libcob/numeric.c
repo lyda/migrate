@@ -274,7 +274,8 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, int opt)
       if (COB_FIELD_HAVE_SIGN (f))
 	{
 	  long val;
-	  if (!mpz_fits_sint_p (d->value))
+	  if (!mpz_fits_sint_p (d->value) &&
+		  cob_current_module->flag_binary_truncate)
 	    {
 	      /* overflow */
 	      overflow = 1;
@@ -283,8 +284,9 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, int opt)
 	      if (opt & COB_STORE_TRUNC_ON_OVERFLOW)
 		mpz_tdiv_r_ui (d->value, d->value, cob_exp10[digits]);
 	    }
-	  val = mpz_get_si (d->value);
-	  if (val <= -cob_exp10[digits] || val >= cob_exp10[digits])
+	  val = mpz_get_ui (d->value);
+	  if ((val <= -cob_exp10[digits] || val >= cob_exp10[digits]) &&
+		  cob_current_module->flag_binary_truncate)
 	    {
 	      /* overflow */
 	      overflow = 1;
@@ -300,7 +302,7 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, int opt)
 	  unsigned long val;
 	  if (mpz_sgn (d->value) < 0)
 	    mpz_abs (d->value, d->value);
-	  if (!mpz_fits_uint_p (d->value))
+	  if (cob_current_module->flag_binary_truncate == 1 && !mpz_fits_uint_p (d->value))
 	    {
 	      /* overflow */
 	      overflow = 1;
@@ -310,7 +312,7 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, int opt)
 		mpz_tdiv_r_ui (d->value, d->value, cob_exp10[digits]);
 	    }
 	  val = mpz_get_ui (d->value);
-	  if (val >= cob_exp10[digits])
+	  if (cob_current_module->flag_binary_truncate && val >= cob_exp10[digits])
 	    {
 	      /* overflow */
 	      overflow = 1;
