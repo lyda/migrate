@@ -1,3 +1,4 @@
 #!/bin/sh 
 
-COBOL_FLAGS='-fruntime-inlining' ./data-rep
+. atconfig
+COBOL_FLAGS='-fruntime-inlining' ${abs_srcdir}/data-rep
