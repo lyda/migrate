@@ -20,7 +20,7 @@
 
 AC_PREREQ(2.57)
 
-AC_INIT([OpenCOBOL],[0.21],[open-cobol-list@lists.sourceforge.net],[open-cobol])
+AC_INIT([OpenCOBOL],[0.22],[open-cobol-list@lists.sourceforge.net],[open-cobol])
 AC_CONFIG_SRCDIR([libcob.h])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_HEADERS([config.h])
