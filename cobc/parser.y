@@ -97,7 +97,7 @@ static cobc_tree resolve_label (cobc_tree x);
 
 static struct cobc_field *build_field (cobc_tree level, cobc_tree name, struct cobc_field *last_field);
 static struct cobc_field *validate_redefines (struct cobc_field *field, cobc_tree redefines);
-static void validate_field_tree (struct cobc_field *p);
+static int validate_field_tree (struct cobc_field *p);
 static void finalize_file (struct cobc_file *f, struct cobc_field *records);
 
 static void field_set_used (struct cobc_field *p);
@@ -869,7 +869,8 @@ field_description_list_1:
     struct cobc_field *p;
     for (p = COBC_FIELD ($2); p; p = p->sister)
       {
-	validate_field_tree (p);
+	if (validate_field_tree (p) != 0)
+	  YYERROR;
 	finalize_field_tree (p);
       }
     $$ = $2;
@@ -4190,7 +4191,7 @@ validate_redefines (struct cobc_field *field, cobc_tree redefines)
   return f;
 }
 
-static void
+static int
 validate_field_tree (struct cobc_field *f)
 {
   cobc_tree x = COBC_TREE (f);
@@ -4224,7 +4225,10 @@ validate_field_tree (struct cobc_field *f)
       /* validate PICTURE */
       if (!f->pic)
 	if (f->usage != COBC_USAGE_INDEX)
-	  yyerror_x (x, _("PICTURE required for `%s'"), tree_name (x));
+	  {
+	    yyerror_x (x, _("PICTURE required for `%s'"), tree_name (x));
+	    return -1; /* cannot continue */
+	  }
 
       /* validate USAGE */
       switch (f->usage)
@@ -4290,6 +4294,8 @@ validate_field_tree (struct cobc_field *f)
 	    }
 	}
     }
+
+  return 0;
 }
 
 static void
