@@ -14,7 +14,7 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C subref.cob], [1], ,
-[subref.cob:6: `X' level 01 field cannot have OCCURS
+[subref.cob:6: level 01 field `X' cannot have OCCURS
 ])
 
 AT_CLEANUP
