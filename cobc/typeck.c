@@ -34,6 +34,16 @@
 #define cb_emit_list(l) \
   current_statement->body = cb_list_append (current_statement->body, l)
 
+#define VALIDATE(x) \
+  if (x == cb_error_node) return;
+#define VALIDATE_LIST(l)			\
+  {						\
+    cb_tree _l;					\
+    for (_l = l; _l; _l = CB_CHAIN (_l))	\
+      if (CB_VALUE (_l) == cb_error_node)	\
+	return;					\
+  }
+
 
 cb_tree
 cb_check_group_name (cb_tree x)
@@ -201,8 +211,8 @@ cb_build_program_id (cb_tree name, cb_tree alt_name)
 void
 cb_define_switch_name (cb_tree name, cb_tree sname, cb_tree flag, cb_tree ref)
 {
-  if (name == cb_error_node || sname == cb_error_node)
-    return;
+  VALIDATE (name);
+  VALIDATE (sname);
 
   if (CB_SYSTEM_NAME (sname)->category != CB_SWITCH_NAME)
     {
@@ -1112,11 +1122,8 @@ cb_emit_arithmetic (cb_tree vars, char op, cb_tree val)
   else
     cb_list_map (cb_check_numeric_edited_name, vars);
 
-  if (val == cb_error_node)
-    return;
-  for (l = vars; l; l = CB_CHAIN (l))
-    if (CB_VALUE (l) == cb_error_node)
-      return;
+  VALIDATE (val);
+  VALIDATE_LIST (vars);
 
   if (!CB_BINARY_OP_P (val))
     if (op == '+' || op == '-')
@@ -1330,8 +1337,9 @@ cb_emit_corresponding (cb_tree (*func)(), cb_tree x1, cb_tree x2, cb_tree opt)
 {
   x1 = cb_check_group_name (x1);
   x2 = cb_check_group_name (x2);
-  if (x1 == cb_error_node || x2 == cb_error_node)
-    return;
+
+  VALIDATE (x1);
+  VALIDATE (x2);
 
   emit_corresponding (func, x1, x2, opt);
 }
@@ -1613,9 +1621,9 @@ cb_emit_divide (cb_tree dividend, cb_tree divisor,
 {
   CB_VALUE (quotient) = cb_check_numeric_edited_name (CB_VALUE (quotient));
   CB_VALUE (remainder) = cb_check_numeric_edited_name (CB_VALUE (remainder));
-  if (CB_VALUE (quotient) == cb_error_node
-      || CB_VALUE (remainder) == cb_error_node)
-    return;
+
+  VALIDATE (CB_VALUE (quotient));
+  VALIDATE (CB_VALUE (remainder));
 
   cb_emit (cb_build_funcall_4 ("cob_div_quotient", dividend, divisor,
 			       CB_VALUE (quotient), CB_PURPOSE (quotient)));
@@ -2495,11 +2503,8 @@ cb_emit_move (cb_tree src, cb_tree dsts)
 {
   cb_tree l;
 
-  if (src == cb_error_node)
-    return;
-  for (l = dsts; l; l = CB_CHAIN (l))
-    if (CB_VALUE (l) == cb_error_node)
-      return;
+  VALIDATE (src);
+  VALIDATE_LIST (dsts);
 
   for (l = dsts; l; l = CB_CHAIN (l))
     cb_emit (cb_build_move (src, CB_VALUE (l)));
@@ -2725,9 +2730,49 @@ cb_emit_search_all (cb_tree table, cb_tree at_end, cb_tree when, cb_tree stmts)
  */
 
 void
-cb_emit_set_to (cb_tree l, cb_tree x)
+cb_emit_set_to (cb_tree vars, cb_tree x)
 {
-  for (; l; l = CB_CHAIN (l))
+  cb_tree l;
+  enum cb_class class = CB_CLASS_UNKNOWN;
+
+  VALIDATE (x);
+  VALIDATE_LIST (vars);
+
+  /* determine the class of targets */
+  for (l = vars; l; l = CB_CHAIN (l))
+    if (CB_TREE_CLASS (CB_VALUE (l)) != CB_CLASS_UNKNOWN)
+      {
+	if (class == CB_CLASS_UNKNOWN)
+	  class = CB_TREE_CLASS (CB_VALUE (l));
+	else if (class != CB_TREE_CLASS (CB_VALUE (l)))
+	  break;
+      }
+  if (l || (class != CB_CLASS_INDEX && class != CB_CLASS_POINTER))
+    {
+      cb_error_x (CB_TREE (current_statement),
+		  _("the targets of SET must be either indexes or pointers"));
+      return;
+    }
+
+  /* validate the targets */
+  for (l = vars; l; l = CB_CHAIN (l))
+    {
+      cb_tree v = CB_VALUE (l);
+      if (CB_CAST_P (v))
+	{
+	  struct cb_cast *p = CB_CAST (v);
+	  if (p->type == CB_CAST_ADDRESS
+	      && CB_FIELD (cb_ref (p->val))->storage != CB_STORAGE_LINKAGE)
+	    {
+	      cb_error_x (p->val, _("the address of `%s' cannot be changed"),
+			  cb_name (p->val));
+	      CB_VALUE (l) = cb_error_node;
+	    }
+	}
+    }
+  VALIDATE_LIST (vars);
+
+  for (l = vars; l; l = CB_CHAIN (l))
     cb_emit (cb_build_move (x, CB_VALUE (l)));
 }
 
