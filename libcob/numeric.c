@@ -239,7 +239,15 @@ static void
 cob_decimal_set_binary (cob_decimal *d, cob_field *f)
 {
   if (f->size <= 4)
-    cob_decimal_set_int (d, cob_binary_get_int (f));
+    {
+      if (COB_FIELD_HAVE_SIGN (f))
+	cob_decimal_set_int (d, cob_binary_get_int (f));
+      else
+	{
+	  mpz_set_ui (d->value, cob_binary_get_int (f));
+	  d->scale = 0;
+	}
+    }
   else
     {
       long long val = cob_binary_get_int64 (f);
