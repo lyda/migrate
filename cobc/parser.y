@@ -1773,25 +1773,16 @@ evaluate_object_list:
 evaluate_object:
   flag_not evaluate_object_1
   {
+    $$ = $2;
     if ($1)
       {
 	if ($2 == cobc_any || $2 == cobc_true || $2 == cobc_false)
-	  {
-	    yyerror (_("cannot use NOT with TRUE, FALSE, or ANY"));
-	    $$ = $2;
-	  }
+	  yyerror (_("cannot use NOT with TRUE, FALSE, or ANY"));
 	else
-	  {
-	    /* NOTE: $2 is not necessarily a condition, but
-	     * we use COBC_COND_NOT here to store it, which
-	     * is later expanded in output_evaluate_test. */
-	    $$ = make_negative ($2);
-	  }
-      }
-    else
-      {
-	$$ = $2;
-	COBC_TREE_LOC ($$) = @2;
+	  /* NOTE: $2 is not necessarily a condition, but
+	   * we use COBC_COND_NOT here to store it, which
+	   * is later expanded in output_evaluate_test. */
+	  $$ = make_negative ($2);
       }
   }
 ;
