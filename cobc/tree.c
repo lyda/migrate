@@ -1780,8 +1780,12 @@ resolve_mnemonic_name (cb_tree x)
 cb_tree
 make_binary_op (cb_tree left, char op, cb_tree right)
 {
-  struct cb_binary_op *p =
-    make_tree (CB_TAG_BINARY_OP, CB_CLASS_UNKNOWN, sizeof (struct cb_binary_op));
+  struct cb_binary_op *p;
+
+  if (left == cb_error_node || right == cb_error_node)
+    return cb_error_node;
+
+  p = make_tree (CB_TAG_BINARY_OP, CB_CLASS_UNKNOWN, sizeof (struct cb_binary_op));
   p->op = op;
   p->x = left;
   p->y = right;
@@ -2205,13 +2209,21 @@ build_decimal_assign (struct cb_list *vars, char op, cb_tree val)
 cb_tree
 build_assign (struct cb_list *vars, char op, cb_tree val)
 {
+  struct cb_list *l;
+
+  for (l = vars; l; l = l->next)
+    if (l->item == cb_error_node)
+      return cb_error_node;
+
+  if (val == cb_error_node)
+    return cb_error_node;
+
   if (!CB_BINARY_OP_P (val))
     if (op == '+' || op == '-')
       {
-	struct cb_list *l;
 	for (l = vars; l; l = l->next)
 	  {
-	    struct cb_parameter *p = l->item;
+	    struct cb_parameter *p = CB_PARAMETER (l->item);
 	    if (op == '+')
 	      l->item = build_add (p->x, val, p->type);
 	    else
@@ -2281,8 +2293,16 @@ move_error (cb_tree src, cb_tree dst, int value_flag, int flag, const char *msg)
   /* for VALUE clause */
   if (value_flag)
     {
-      cb_error_x (loc, msg);
-      return -1;
+      if (cb_standard == CB_STANDARD_COBOL2002)
+	{
+	  cb_error_x (loc, msg);
+	  return -1;
+	}
+      else if (flag)
+	{
+	  cb_warning_x (loc, msg);
+	  return 0;
+	}
     }
 
   /* for MOVE statement */

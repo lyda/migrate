@@ -102,6 +102,8 @@ static cb_tree validate_record_name (cb_tree x);
 static cb_tree validate_numeric_name (cb_tree x, int rounded);
 static cb_tree validate_numeric_edited_name (cb_tree x, int rounded);
 static cb_tree validate_integer_name (cb_tree x);
+static cb_tree validate_alphanumeric_value (cb_tree x);
+static cb_tree validate_numeric_value (cb_tree x);
 
 static cb_tree build_file_handler (cb_tree file, cb_tree handler);
 static cb_tree build_connective_op (struct cb_list *l, char op);
@@ -3804,28 +3806,18 @@ undefined_word:
 /* Alphanumeric value */
 
 alphanumeric_value:
-  value
-  {
-    if (CB_TREE_CLASS ($1) != CB_CLASS_ALPHABETIC
-	&& CB_TREE_CLASS ($1) != CB_CLASS_ALPHANUMERIC)
-      cb_error_x ($1, _("alphanumeric value is expected `%s'"), tree_name ($1));
-    $$ = $1;
-  }
+  value				{ $$ = validate_alphanumeric_value ($1); }
 ;
 
 /* Numeric value */
 
 numeric_value_list:
-  numeric_value				{ $$ = list ($1); }
-| numeric_value_list numeric_value	{ $$ = list_add ($1, $2); }
+  numeric_value			{ $$ = list ($1); }
+| numeric_value_list
+  numeric_value			{ $$ = list_add ($1, $2); }
 ;
 numeric_value:
-  value
-  {
-    if (CB_TREE_CLASS ($1) != CB_CLASS_NUMERIC)
-      cb_error_x ($1, _("numeric value is expected `%s'"), tree_name ($1));
-    $$ = $1;
-  }
+  value				{ $$ = validate_numeric_value ($1); }
 ;
 
 /* Integer value */
@@ -4103,6 +4095,7 @@ builtin_switch_id (cb_tree x)
     }
 }
 
+
 static cb_tree
 validate_data_name (cb_tree x)
 {
@@ -4191,6 +4184,37 @@ validate_integer_name (cb_tree x)
       || CB_FIELD (cb_ref (x))->pic->expt < 0)
     {
       cb_error_x (x, _("`%s' not integer"), tree_name (x));
+      return cb_error_node;
+    }
+
+  return x;
+}
+
+static cb_tree
+validate_alphanumeric_value (cb_tree x)
+{
+  if (x == cb_error_node)
+    return cb_error_node;
+
+  if (CB_TREE_CLASS (x) != CB_CLASS_ALPHABETIC
+      && CB_TREE_CLASS (x) != CB_CLASS_ALPHANUMERIC)
+    {
+      cb_error_x (x, _("alphanumeric value is expected `%s'"), tree_name (x));
+      return cb_error_node;
+    }
+
+  return x;
+}
+
+static cb_tree
+validate_numeric_value (cb_tree x)
+{
+  if (x == cb_error_node)
+    return cb_error_node;
+
+  if (CB_TREE_CLASS (x) != CB_CLASS_NUMERIC)
+    {
+      cb_error_x (x, _("numeric value is expected `%s'"), tree_name (x));
       return cb_error_node;
     }
 
