@@ -3668,8 +3668,8 @@ static void
 redefinition_error (cobc_tree x)
 {
   struct cobc_field *p = COBC_FIELD (x);
-  yyerror ("redefinition of `%s'", p->word->name);
-  yyerror_loc (&x->loc, "`%s' previously defined here", p->word->name);
+  yywarn ("redefinition of `%s'", p->word->name);
+  yywarn_loc (&x->loc, "`%s' previously defined here", p->word->name);
 }
 
 static void
