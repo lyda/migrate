@@ -250,7 +250,7 @@ cob_is_upper (struct fld_desc *f, char *s)
 {
   int i;
   for (i = 0; i < f->len; i++)
-    if (!isspace (s[i]) && isupper (s[i]))
+    if (!isspace (s[i]) && !isupper (s[i]))
       return 0;
   return 1;
 }
@@ -260,7 +260,7 @@ cob_is_lower (struct fld_desc *f, char *s)
 {
   int i;
   for (i = 0; i < f->len; i++)
-    if (!isspace (s[i]) && islower (s[i]))
+    if (!isspace (s[i]) && !islower (s[i]))
       return 0;
   return 1;
 }
