@@ -43,7 +43,7 @@ AT_DATA([prog.cob], [
            STOP RUN.
 ])
 
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1],
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:10: identifier is expected `456'
 prog.cob:11: numeric value is expected `"a"'
 prog.cob:11: identifier is expected `"b"'
@@ -76,7 +76,7 @@ AT_DATA([prog.cob], [
            STOP RUN.
 ])
 
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1],
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:10: identifier is expected `789'
 prog.cob:11: numeric value is expected `"a"'
 prog.cob:11: numeric value is expected `"b"'
@@ -108,7 +108,7 @@ AT_DATA([prog.cob], [
            STOP RUN.
 ])
 
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1],
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:9: numeric value is expected `"a"'
 prog.cob:11: numeric value is expected `"a"'
 prog.cob:11: numeric value is expected `"b"'
