@@ -1,5 +1,7 @@
 2003-04-19  Keisuke Nishida  <knishida@netlab.jp>
 
+	* cob.pc.in: Removed.
+
 	* cobpp: Removed.
 
 2002-03-01  Keisuke Nishida  <knishida@netlab.jp>

@@ -3,9 +3,6 @@ bin_SCRIPTS=cob-config
 include_HEADERS = libcob.h
 sysconf_DATA = libcob.conf
 
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = cob.pc
-
 SUBDIRS = lib libcob cobc po texi tests
 EXTRA_DIST = libcob.conf
 

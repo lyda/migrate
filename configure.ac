@@ -167,7 +167,7 @@ AC_SUBST(COBC_LIBS)
 AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBS)
 
-AC_CONFIG_FILES([cob.pc cob-config
+AC_CONFIG_FILES([cob-config
 		Makefile lib/Makefile libcob/Makefile
 		cobc/Makefile po/Makefile.in texi/Makefile
 		tests/atlocal tests/Makefile tests/cobol85/Makefile])
