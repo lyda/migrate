@@ -1195,7 +1195,7 @@ cb_build_binary_op (cb_tree left, char op, cb_tree right)
       /* numeric expression */
       if (CB_TREE_CLASS (left) != CB_CLASS_NUMERIC
 	  || CB_TREE_CLASS (right) != CB_CLASS_NUMERIC)
-	goto invalid;
+	ABORT ();
       category = CB_CATEGORY_NUMERIC;
       break;
 
@@ -1208,7 +1208,7 @@ cb_build_binary_op (cb_tree left, char op, cb_tree right)
       /* compound conditional */
       if (CB_TREE_CLASS (left) != CB_CLASS_BOOLEAN
 	  || (right && CB_TREE_CLASS (right) != CB_CLASS_BOOLEAN))
-	goto invalid;
+	ABORT ();
       category = CB_CATEGORY_BOOLEAN;
       break;
 
@@ -1218,7 +1218,6 @@ cb_build_binary_op (cb_tree left, char op, cb_tree right)
       break;
 
     default:
-    invalid:
       ABORT ();
     }
 
