@@ -1436,7 +1436,7 @@ struct cb_field *
 cb_field (cb_tree x)
 {
   if (CB_REFERENCE_P (x))
-    return CB_FIELD (CB_REFERENCE (x)->value);
+    return CB_FIELD (cb_ref (x));
   else
     return CB_FIELD (x);
 }
