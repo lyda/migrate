@@ -41,6 +41,7 @@ unsigned int cob_source_line = 0;
 const char *cob_source_statement = NULL;
 
 int cob_return_code = 0;
+int cob_linage_counter = 0;
 int cob_cmp_result;
 
 cob_field_attr cob_group_attr = {COB_TYPE_GROUP, 0, 0, 0, NULL};
