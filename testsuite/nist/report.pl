@@ -58,6 +58,7 @@ foreach $in (glob("*.CBL")) {
       $compile_error++;
       print LOG "  ===== compile error =====\n";
     } else {
+      system ("rm -f XXXXX*");
       if (system ("$cmd > /dev/null") != 0) {
 	$execute_error++;
 	print LOG "  ***** execute error *****\n";
@@ -94,7 +95,6 @@ foreach $in (glob("*.CBL")) {
 	$total_inspect += $inspect;
 	$total_ok++ if $fail == 0;
 	rename ("report.txt", "$exe.txt");
-	system ("rm -f XXXXX*");
       }
     }
   }
