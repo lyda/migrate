@@ -1025,8 +1025,8 @@ gen_compare (cob_tree s1, int op, cob_tree s2)
 {
   if (EXPR_P (s1) || EXPR_P (s2))
     {
-      push_expr (s2);
       push_expr (s1);
+      push_expr (s2);
       asm_call ("cob_cmp");
     }
   else
@@ -1118,7 +1118,6 @@ gen_condition (cob_tree cond)
       gen_compare (l, type, r);
       return;
     }
-  output ("\tand\t%%eax,%%eax\n");
 }
 
 
