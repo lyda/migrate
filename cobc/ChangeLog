@@ -1,3 +1,12 @@
+2002-06-08  Keisuke Nishida  <knishida@netlab.jp>
+
+	* cobc.c (long_options): Accept '-main' option.
+	* cobc.c, cobc.h (cobc_main_flag): New variable.
+	(cobc_module_flag): Removed.
+	* codegen.c (OUTPUT_HANDLER): Removed.
+	(codegen): Updated.
+	* parser.y (procedure_using): Don't show -m warning.
+
 2002-06-06  Keisuke Nishida  <knishida@netlab.jp>
 
 	* inline.c (search_set_keys): Dont check syntax error.

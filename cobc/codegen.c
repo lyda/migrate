@@ -1620,18 +1620,6 @@ output_tree (cobc_tree x)
 }
 
 
-#define OUTPUT_HANDLER(handler)						\
-  if (spec->handler)							\
-    {									\
-      output ("#define lb_"#handler" lb_%s\n", spec->handler->cname);	\
-      output ("#define le_"#handler" le_%s\n", spec->handler->cname);	\
-    }									\
-  else									\
-    {									\
-      output ("#define lb_"#handler" lb_default_error_handler\n");	\
-      output ("#define le_"#handler" le_default_error_handler\n");	\
-    }
-
 void
 codegen (struct program_spec *spec)
 {
@@ -1645,7 +1633,7 @@ codegen (struct program_spec *spec)
   output ("#include <string.h>\n");
   output ("#include <libcob.h>\n\n");
 
-  if (!cobc_module_flag)
+  if (cobc_main_flag)
     spec->initial_program = 1;
 
   /* fields */
@@ -1670,10 +1658,14 @@ codegen (struct program_spec *spec)
 
   /* error handlers */
   output ("/* Standard error handlers */\n\n");
-  OUTPUT_HANDLER (input_handler);
-  OUTPUT_HANDLER (output_handler);
-  OUTPUT_HANDLER (i_o_handler);
-  OUTPUT_HANDLER (extend_handler);
+  output ("#define lb_input_handler lb_%s\n", spec->input_handler->cname);
+  output ("#define le_input_handler le_%s\n", spec->input_handler->cname);
+  output ("#define lb_output_handler lb_%s\n", spec->output_handler->cname);
+  output ("#define le_output_handler le_%s\n", spec->output_handler->cname);
+  output ("#define lb_i_o_handler lb_%s\n", spec->i_o_handler->cname);
+  output ("#define le_i_o_handler le_%s\n", spec->i_o_handler->cname);
+  output ("#define lb_extend_handler lb_%s\n", spec->extend_handler->cname);
+  output ("#define le_extend_handler le_%s\n", spec->extend_handler->cname);
   output_newline ();
 
   /* labels */
@@ -1790,7 +1782,7 @@ codegen (struct program_spec *spec)
   output_indent ("}", -2);
   output_newline ();
 
-  if (!cobc_module_flag)
+  if (cobc_main_flag)
     {
       output_line ("int");
       output_line ("main (int argc, char **argv)");

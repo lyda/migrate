@@ -46,8 +46,8 @@ extern int yy_bison_debug;
  * Global variables
  */
 
+int cobc_main_flag = 0;
 int cobc_debug_flag = 0;
-int cobc_module_flag = 0;
 int cobc_verbose_flag = 0;
 int cobc_optimize_flag = 0;
 int cobc_failsafe_flag = 1;
@@ -79,7 +79,8 @@ static enum level {
   stage_translate,
   stage_compile,
   stage_assemble,
-  stage_link
+  stage_module,
+  stage_executable
 } compile_level;
 
 static struct filename {
@@ -162,6 +163,7 @@ static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'V'},
   {"verbose", no_argument, 0, 'v'},
+  {"main", no_argument, &cobc_main_flag, 1},
   {"debug", no_argument, 0, 'D'},
   {"free", no_argument, &source_format, format_free},
   {"fixed", no_argument, &source_format, format_fixed},
@@ -225,7 +227,7 @@ process_command_line (int argc, char *argv[])
 
   /* Default options */
   source_format = format_unspecified;
-  compile_level = stage_link;
+  compile_level = stage_executable;
 #ifdef COB_DEBUG
   yy_flex_debug = 0;
   yy_bison_debug = 0;
@@ -246,7 +248,7 @@ process_command_line (int argc, char *argv[])
 	case 'C': compile_level = stage_translate; break;
 	case 'S': compile_level = stage_compile; break;
 	case 'c': compile_level = stage_assemble; break;
-	case 'm': cobc_module_flag = 1; break;
+	case 'm': compile_level = stage_module; break;
 	case 'v': cobc_verbose_flag = 1; break;
 	case 'o': output_name = strdup (optarg); break;
 
@@ -597,13 +599,13 @@ main (int argc, char *argv[])
 	  goto cleanup;
 
       /* Build module */
-      if (compile_level >= stage_link && cobc_module_flag == 1)
+      if (compile_level == stage_module)
 	if (process_module (fn) != 0)
 	  goto cleanup;
     }
 
   /* Link */
-  if (compile_level >= stage_link && cobc_module_flag == 0)
+  if (compile_level == stage_executable)
     if (process_link (file_list) > 0)
       goto cleanup;
 
