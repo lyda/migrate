@@ -182,53 +182,50 @@ get_index (struct cob_field f)
 int
 cob_str_cmp (struct cob_field f1, struct cob_field f2)
 {
-  int sign1, sign2;
+  int i, ret = 0;
   int len1 = f1.desc->size;
   int len2 = f2.desc->size;
+  int min = (len1 < len2) ? len1 : len2;
+  int sign1 = get_sign (f1);
+  int sign2 = get_sign (f1);
 
-  sign1 = get_sign (f1);
-  sign2 = get_sign (f2);
+  /* compare common substring */
+  for (i = 0; i < min; i++)
+    if (f1.data[i] != f2.data[i])
+      {
+	ret = f1.data[i] - f2.data[i];
+	goto end;
+      }
 
-  {
-    int i;
-    int maxi = (len1 < len2) ? len1 : len2;
-    for (i = 0; i < maxi; i++)
-      {
-	if (f1.data[i] == f2.data[i])
-	  continue;
-	if (f1.data[i] > f2.data[i])
-	  goto positive;
-	if (f1.data[i] < f2.data[i])
-	  goto negative;
-      }
-    if (len1 > len2)
-      {
-	while (i < len1)
-	  if (f1.data[i++] != ' ')
-	    goto positive;
-      }
-    else
-      {
-	while (i < len2)
-	  if (f2.data[i++] != ' ')
-	    goto negative;
-      }
-    goto zero;
-  }
+  /* compare the rest (if any) with spaces */
+  if (len1 != len2)
+    {
+      int max = (len1 > len2) ? len1 : len2;
+      unsigned char *data = (len1 > len2) ? f1.data : f2.data;
+      for (; i < max; i++)
+	if (data[i] != ' ')
+	  {
+	    ret = data[i] - ' ';
+	    if (len1 < len2)
+	      ret = -ret;
+	    break;
+	  }
+    }
 
-  {
-    int ret;
-  positive:
-    ret = 1; goto end;
-  zero:
-    ret = 0; goto end;
-  negative:
-    ret = -1; goto end;
-  end:
-    put_sign (f1, sign1);
-    put_sign (f2, sign2);
-    return ret;
-  }
+ end:
+  put_sign (f1, sign1);
+  put_sign (f2, sign2);
+  return ret;
+}
+
+int
+cob_cmp_all (unsigned char *data, unsigned char c, int len)
+{
+  int i;
+  for (i = 0; i < len; i++)
+    if (data[i] != c)
+      return data[i] - c;
+  return 0;
 }
 
 
@@ -301,14 +298,4 @@ cob_is_lower (struct cob_field f)
     if (!isspace (data[i]) && !islower (data[i]))
       return 0;
   return 1;
-}
-
-int
-cob_cmp_zero (unsigned char *data, int len)
-{
-  int i;
-  for (i = 0; i < len; i++)
-    if (data[i] != '0')
-      return data[i] - '0';
-  return 0;
 }

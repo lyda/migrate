@@ -113,154 +113,6 @@ output_line_directive (cobc_tree x)
 
 
 /*
- * Subscripts
- */
-
-static void output_index (cobc_tree x);
-
-static char *
-field_subscripts (struct cobc_field *p)
-{
-  int i;
-  static char subscripts[256];
-  if (p->indexes > 0)
-    {
-      char *s = subscripts + 1;
-      strcpy (subscripts, "(");
-      for (i = 1; i < p->indexes; i++)
-	s += sprintf (s, "i%d,", i);
-      sprintf (s, "i%d)", i);
-    }
-  else
-    strcpy (subscripts, "");
-  return subscripts;
-}
-
-static void
-output_subscripts (cobc_tree x)
-{
-  if (COBC_REFMOD_P (x))
-    x = COBC_REFMOD (x)->field;
-  if (COBC_SUBREF_P (x))
-    {
-      struct cobc_list *l;
-      struct cobc_list *subs = COBC_SUBREF (x)->subs;
-      output (" (");
-      for (l = subs; l; l = l->next)
-	{
-	  output_index (l->item);
-	  if (l->next)
-	    output (", ");
-	}
-      output (")");
-    }
-  else
-    output ("%s", field_subscripts (COBC_FIELD (x)));
-}
-
-
-/*
- * Location/Length
- */
-
-static void
-output_location (cobc_tree x)
-{
-  output ("f_%s_data", COBC_FIELD (x)->cname);
-  output_subscripts (x);
-  if (COBC_REFMOD_P (x))
-    {
-      output (" + ");
-      output_index (COBC_REFMOD (x)->offset);
-    }
-}
-
-static void
-output_length (cobc_tree x)
-{
-  if (COBC_REFMOD_P (x))
-    output_index (COBC_REFMOD (x)->length);
-  else
-    output ("%d", COBC_FIELD (x)->size);
-}
-
-
-/*
- * Index
- */
-
-static void
-output_index (cobc_tree x)
-{
-  switch (COBC_TREE_TAG (x))
-    {
-    case cobc_tag_const:
-      output ("%s", COBC_CONST (x)->val);
-      break;
-
-    case cobc_tag_integer:
-      output ("%d", COBC_INTEGER (x)->val);
-      break;
-
-    case cobc_tag_literal:
-      output ("%lld", literal_to_int (COBC_LITERAL (x)));
-      break;
-
-    case cobc_tag_expr:
-      output_index (COBC_EXPR (x)->left);
-      output (" %c ", COBC_EXPR (x)->op);
-      output_index (COBC_EXPR (x)->right);
-      break;
-
-    default:
-      {
-	struct cobc_field *p = COBC_FIELD (x);
-	switch (p->usage)
-	  {
-	  case USAGE_DISPLAY:
-	  case USAGE_PACKED:
-	    output ("get_index (");
-	    output_tree (x);
-	    output (")");
-	    break;
-	  case USAGE_BINARY:
-	  case USAGE_INDEX:
-	    output ("i_%s", p->cname);
-	    output_subscripts (x);
-	    break;
-	  }
-	break;
-      }
-    }
-}
-
-
-/*
- * Inline functions
- */
-
-static void
-output_memset (cobc_tree x, char c, int size)
-{
-  output_prefix ();
-  output ("memset (");
-  output_location (x);
-  output (", %d, %d);\n", c, size);
-}
-
-static void
-output_memcpy (cobc_tree x, char *s)
-{
-  output_prefix ();
-  output ("memcpy (");
-  output_location (x);
-  output (", ");
-  output_quoted_string (s);
-  output (", %d);\n", strlen (s));
-}
-
-
-/*
  * Function calls
  */
 
@@ -331,6 +183,160 @@ output_call_3 (const char *name, cobc_tree a1, cobc_tree a2, cobc_tree a3)
 
 
 /*
+ * Subscripts
+ */
+
+static void output_index (cobc_tree x);
+
+static char *
+field_subscripts (struct cobc_field *p)
+{
+  int i;
+  static char subscripts[256];
+  if (p->indexes > 0)
+    {
+      char *s = subscripts + 1;
+      strcpy (subscripts, "(");
+      for (i = 1; i < p->indexes; i++)
+	s += sprintf (s, "i%d,", i);
+      sprintf (s, "i%d)", i);
+    }
+  else
+    strcpy (subscripts, "");
+  return subscripts;
+}
+
+static void
+output_subscripts (cobc_tree x)
+{
+  if (COBC_REFMOD_P (x))
+    x = COBC_REFMOD (x)->field;
+  if (COBC_SUBREF_P (x))
+    {
+      struct cobc_list *l;
+      struct cobc_list *subs = COBC_SUBREF (x)->subs;
+      output (" (");
+      for (l = subs; l; l = l->next)
+	{
+	  output_index (l->item);
+	  if (l->next)
+	    output (", ");
+	}
+      output (")");
+    }
+  else
+    output ("%s", field_subscripts (COBC_FIELD (x)));
+}
+
+
+/*
+ * Location/Length
+ */
+
+static void
+output_location (cobc_tree x)
+{
+  if (COBC_LITERAL_P (x))
+    {
+      output_quoted_string (COBC_LITERAL (x)->str);
+    }
+  else
+    {
+      output ("f_%s_data", COBC_FIELD (x)->cname);
+      output_subscripts (x);
+      if (COBC_REFMOD_P (x))
+	{
+	  output (" + ");
+	  output_index (COBC_REFMOD (x)->offset);
+	}
+    }
+}
+
+static void
+output_length (cobc_tree x)
+{
+  if (COBC_LITERAL_P (x))
+    output ("%d", COBC_LITERAL (x)->size);
+  else if (COBC_REFMOD_P (x))
+    output_index (COBC_REFMOD (x)->length);
+  else
+    output ("%d", COBC_FIELD (x)->size);
+}
+
+
+/*
+ * Index
+ */
+
+static void
+output_index (cobc_tree x)
+{
+  switch (COBC_TREE_TAG (x))
+    {
+    case cobc_tag_const:
+      output ("%s", COBC_CONST (x)->val);
+      break;
+    case cobc_tag_integer:
+      output ("%d", COBC_INTEGER (x)->val);
+      break;
+    case cobc_tag_literal:
+      output ("%lld", literal_to_int (COBC_LITERAL (x)));
+      break;
+    case cobc_tag_expr:
+      {
+	struct cobc_expr *p = COBC_EXPR (x);
+	output_index (p->left);
+	output (" %c ", p->op);
+	output_index (p->right);
+	break;
+      }
+    default:
+      {
+	struct cobc_field *p = COBC_FIELD (x);
+	switch (p->usage)
+	  {
+	  case USAGE_DISPLAY:
+	  case USAGE_PACKED:
+	    output_func_1 ("get_index", x);
+	    break;
+	  case USAGE_BINARY:
+	  case USAGE_INDEX:
+	    output ("i_%s", p->cname);
+	    output_subscripts (x);
+	    break;
+	  }
+	break;
+      }
+    }
+}
+
+
+/*
+ * Inline functions
+ */
+
+static void
+output_memset (cobc_tree x, char c, int size)
+{
+  output_prefix ();
+  output ("memset (");
+  output_location (x);
+  output (", %d, %d);\n", c, size);
+}
+
+static void
+output_memcpy (cobc_tree x, char *s)
+{
+  output_prefix ();
+  output ("memcpy (");
+  output_location (x);
+  output (", ");
+  output_quoted_string (s);
+  output (", %d);\n", strlen (s));
+}
+
+
+/*
  * Expression
  */
 
@@ -370,7 +376,7 @@ output_expr (cobc_tree x)
 	struct cobc_literal *p = COBC_LITERAL (x);
 	if (p->size < 10)
 	  output_line ("cob_push_int (%lld, %d);",
-		       literal_to_int (COBC_LITERAL (x)), p->decimals);
+		       literal_to_int (p), p->decimals);
 	else
 	  output_line ("cob_push_str (\"%s%s\", %d);",
 		       (p->sign < 0) ? "-" : "", p->str, p->decimals);
@@ -397,23 +403,51 @@ output_native_assign (cobc_tree x, long long val)
 static void
 output_assign (struct cobc_assign *p)
 {
-  if (COBC_FIELD (p->field)->usage == USAGE_INDEX
-      && COBC_EXPR_P (p->value)
-      && COBC_EXPR (p->value)->left == p->field)
+  if (COBC_FIELD (p->field)->usage == USAGE_INDEX)
     {
+      /* Index */
       output_prefix ();
       output_index (p->field);
       output (" = ");
       output_index (p->value);
       output (";\n");
+      return;
     }
-  else
+
+  if (COBC_EXPR_P (p->value))
     {
-      output_tree (p->value);
-      if (p->rounded)
-	output_call_1 ("cob_round", p->field);
-      output_call_1 ("cob_set", p->field);
+      struct cobc_expr *e = COBC_EXPR (p->value);
+      if (e->left == p->field
+	  && (e->op == '+' || e->op == '-')
+	  && !COBC_EXPR_P (e->right))
+	{
+	  /* X = X +/- Y */
+	  if (COBC_LITERAL_P (e->right))
+	    {
+	      struct cobc_literal *l = COBC_LITERAL (e->right);
+	      char *func = (e->op == '+') ? "cob_add_str" : "cob_sub_str";
+	      output_prefix ();
+	      output ("%s (", func);
+	      output_tree (p->field);
+	      output (", \"%s%s\", %d, %d);\n",
+		      (l->sign < 0) ? "-" : "", l->str, l->decimals,
+		      p->rounded);
+	    }
+	  else
+	    {
+	      char *func = (e->op == '+') ? "cob_add" : "cob_sub";
+	      output_call_3 (func, p->field, e->right,
+			     p->rounded ? cobc_int1 : cobc_int0);
+	    }
+	  return;
+	}
     }
+
+  /* default */
+  output_tree (p->value);
+  if (p->rounded)
+    output_call_1 ("cob_round", p->field);
+  output_call_1 ("cob_set", p->field);
 }
 
 
@@ -439,18 +473,43 @@ output_compare (cobc_tree s1, int op, cobc_tree s2)
       output_call_0 ("cob_num_cmp");
       output ("})");
     }
-  else if (s1 == cobc_zero || s2 == cobc_zero)
+  else if (COBC_CONST_P (s1) || COBC_CONST_P (s2))
     {
-      /* compare ZERO */
-      cobc_tree x = (s1 == cobc_zero) ? s2 : s1;
-      if (s1 == cobc_zero)
+      /* non-numeric figurative comparison */
+      unsigned char c, *neg;
+      cobc_tree x, y;
+      if (COBC_CONST_P (s2))
+	x = s1, y = s2, neg = "";
+      else
+	x = s2, y = s1, neg = "-";
+      c = ((y == cobc_zero) ? '0' :
+	   (y == cobc_space) ? ' ' :
+	   (y == cobc_low) ? '\0' :
+	   (y == cobc_high) ? '\xff' :
+	   (y == cobc_quote) ? '\"' : 0);
+      output ("%scob_cmp_all (", neg);
+      output_location (x);
+      output (", %d, ", c);
+      output_length (x);
+      output (")");
+    }
+#if 0
+  else if (COBC_LITERAL_P (s1) || COBC_LITERAL_P (s2))
+    {
+      /* non-numeric literal comparison */
+      cobc_tree x = COBC_LITERAL_P (s1) ? s2 : s1;
+      struct cobc_literal *p = COBC_LITERAL (COBC_LITERAL_P (s1) ? s1 : s2);
+      if (COBC_LITERAL_P (s1))
 	output ("-");
-      output ("cob_cmp_zero (");
+      output ("cob_cmp_str (");
+      output_tree (x);
+      output (", ");
       output_location (x);
       output (", ");
       output_length (x);
       output (")");
     }
+#endif
   else
     {
       /* non-numeric comparison */
@@ -881,8 +940,7 @@ output_perform (struct cobc_perform *p)
   switch (p->type)
     {
     case COBC_PERFORM_EXIT:
-      output_line ("cob_exit (le_%s);",
-		   COBC_LABEL_NAME (p->cond)->cname);
+      output_line ("cob_exit (le_%s);", COBC_LABEL_NAME (p->cond)->cname);
       break;
     case COBC_PERFORM_ONCE:
       output_perform_once (p);
@@ -1070,13 +1128,9 @@ output_tree (cobc_tree x)
   switch (COBC_TREE_TAG (x))
     {
     case cobc_tag_const:
-      {
-	output ("%s", COBC_CONST (x)->val);
-	break;
-      }
     case cobc_tag_integer:
       {
-	output ("%d", COBC_INTEGER (x)->val);
+	output_index (x);
 	break;
       }
     case cobc_tag_index:
@@ -1090,7 +1144,7 @@ output_tree (cobc_tree x)
 	if (p->sign)
 	  {
 	    struct cob_field_desc src_desc =
-	      {p->size, COBC_TREE_CLASS (p), p->decimals};
+	      {p->size, COBC_TREE_CLASS (p), p->size, p->decimals};
 	    struct cob_field src_fld = {&src_desc, p->str};
 	    src_desc.have_sign = 1;
 	    put_sign (src_fld, (p->sign < 0) ? 1 : 0);
@@ -1275,7 +1329,10 @@ codegen (struct program_spec *spec)
   for (p = spec->linkage_storage; p; p = p->sister)
     output_field_definition (p, p, 1);
   for (l = spec->index_list; l; l = l->next)
-    output_field_definition (l->item, l->item, 0);
+    {
+      struct cobc_field *p = l->item;
+      output ("static int i_%s;\n", p->cname);
+    }
 
   /* files */
   if (spec->file_name_list)

@@ -501,23 +501,45 @@ cob_add_int (struct cob_field f, int n)
 void
 cob_add (struct cob_field f1, struct cob_field f2, int round)
 {
-  cob_push_decimal (f2);
   cob_push_decimal (f1);
+  cob_push_decimal (f2);
   cob_num_add ();
   if (round)
-    cob_round (f2);
-  cob_set (f2);
+    cob_round (f1);
+  cob_set (f1);
+}
+
+void
+cob_add_str (struct cob_field f1, char *s, int decimals, int round)
+{
+  cob_push_decimal (f1);
+  cob_push_str (s, decimals);
+  cob_num_add ();
+  if (round)
+    cob_round (f1);
+  cob_set (f1);
 }
 
 void
 cob_sub (struct cob_field f1, struct cob_field f2, int round)
 {
-  cob_push_decimal (f2);
   cob_push_decimal (f1);
+  cob_push_decimal (f2);
   cob_num_sub ();
   if (round)
-    cob_round (f2);
-  cob_set (f2);
+    cob_round (f1);
+  cob_set (f1);
+}
+
+void
+cob_sub_str (struct cob_field f1, char *s, int decimals, int round)
+{
+  cob_push_decimal (f1);
+  cob_push_str (s, decimals);
+  cob_num_sub ();
+  if (round)
+    cob_round (f1);
+  cob_set (f1);
 }
 
 void

@@ -21,6 +21,7 @@ $skip{"NC109M"} = 1;
 $skip{"NC110M"} = 1;
 $skip{"NC113M"} = 1;
 $skip{"NC204M"} = 1;
+$skip{"NC233A"} = 1;
 $skip{"NC302M"} = 1;
 $skip{"NC303M"} = 1;
 $skip{"NC401M"} = 1;

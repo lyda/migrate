@@ -3375,13 +3375,13 @@ validate_label_name (struct cobc_label_name *p)
 static cobc_tree
 make_add (cobc_tree f1, cobc_tree f2, int round)
 {
-  return make_call_3 (COB_ADD, f1, f2, round ? cobc_int1 : cobc_int0);
+  return make_call_3 (COB_ADD, f2, f1, round ? cobc_int1 : cobc_int0);
 }
 
 static cobc_tree
 make_sub (cobc_tree f1, cobc_tree f2, int round)
 {
-  return make_call_3 (COB_SUB, f1, f2, round ? cobc_int1 : cobc_int0);
+  return make_call_3 (COB_SUB, f2, f1, round ? cobc_int1 : cobc_int0);
 }
 
 static cobc_tree
