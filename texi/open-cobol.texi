@@ -531,11 +531,11 @@ C compiler ("gcc")
 @item COB_COBPP
 COBOL preprocessor ("cobpp")
 @item COB_CFLAGS
-Flags to be used with the C compiler ("-I$(PREFIX)/include")
+Flags given to the C compiler ("-I$(PREFIX)/include")
 @item COB_LIBS
-Libraries to be linked ("-L$(PREFIX)/lib -lcob")
+Libraries linked with the program ("-L$(PREFIX)/lib -lcob")
 @item COB_LIBRARY_PATH
-Library path (".:$(PREFIX)/lib/open-cobol")
+Dynamic library path (".:$(PREFIX)/lib/open-cobol")
 @end table
 
 @bye
