@@ -1,3 +1,8 @@
+2003-06-29  Keisuke Nishida  <knishida@netlab.jp>
+
+	* fileio.h, fileio.c (cob_sort_init): Removed the 3rd argument.
+	(cob_sort_init_key): New function.
+
 2003-06-28  Keisuke Nishida  <knishida@netlab.jp>
 
 	* common.h, common.c (cob_cmp_result): Removed.

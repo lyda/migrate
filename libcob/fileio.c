@@ -1162,11 +1162,19 @@ cob_delete (cob_file *f)
 }
 
 void
-cob_sort_init (cob_file *sort_file, int nkeys, cob_file_key *keys)
+cob_sort_init (cob_file *f, int nkeys)
 {
-  sort_file->file = malloc (sizeof (struct sort_file));
-  sort_file->keys = keys;
-  sort_file->nkeys = nkeys;
+  f->file = malloc (sizeof (struct sort_file));
+  f->keys = malloc (sizeof (cob_file_key) * nkeys);
+  f->nkeys = 0;
+}
+
+void
+cob_sort_init_key (cob_file *f, int flag, cob_field *field)
+{
+  f->keys[f->nkeys].flag = flag;
+  f->keys[f->nkeys].field = field;
+  f->nkeys++;
 }
 
 void
