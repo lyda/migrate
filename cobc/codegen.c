@@ -682,20 +682,21 @@ output_int32 (cb_tree x)
 		    int i, j;
 		    int size = f->size + f->pic->expt;
 		    output ("(");
-		    for (i = 0; i < size - 1; i++)
+		    for (i = 0; i < size; i++)
 		      {
 			output ("((");
 			output_data (x);
 			output (")");
-			output ("[%d] - '0') * 1", i);
-			for (j = 1; j < size - i; j++)
-			  output ("0");
-			output (" + ");
+			output ("[%d] - '0')", i);
+			if (i + 1 == size)
+			  {
+			    output (" * 1");
+			    for (j = 1; j < size - i; j++)
+			      output ("0");
+			    output (" + ");
+			  }
 		      }
-		    output ("((");
-		    output_data (x);
 		    output (")");
-		    output ("[%d] - '0'))", i);
 		    return;
 		  }
 		break;
