@@ -85,12 +85,13 @@ output_indent (char *str, int level)
 }
 
 static void
-output_quoted_string (char *s)
+output_quoted_string (char *s, int size)
 {
+  int i;
   output ("\"");
-  for (; *s; s++)
+  for (i = 0; i < size; i++)
     {
-      int c = *s;
+      int c = s[i];
       if (c == '\"' || c == '\\')
 	output ("\\%c", c);
       else if (isprint (c))
@@ -238,7 +239,7 @@ output_location (cobc_tree x)
 {
   if (COBC_LITERAL_P (x))
     {
-      output_quoted_string (COBC_LITERAL (x)->str);
+      output_quoted_string (COBC_LITERAL (x)->str, COBC_LITERAL (x)->size);
     }
   else
     {
@@ -333,14 +334,14 @@ output_memset (cobc_tree x, char c, int size)
 }
 
 static void
-output_memcpy (cobc_tree x, char *s)
+output_memcpy (cobc_tree x, char *s, int size)
 {
   output_prefix ();
   output ("memcpy (");
   output_location (x);
   output (", ");
-  output_quoted_string (s);
-  output (", %d);\n", strlen (s));
+  output_quoted_string (s, size);
+  output (", %d);\n", size);
 }
 
 
@@ -803,7 +804,8 @@ output_file_name (struct cobc_file_name *f)
   if (COBC_LITERAL_P (f->assign))
     {
       output ("&fn_%s_desc, ", f->cname);
-      output_quoted_string (COBC_LITERAL (f->assign)->str);
+      output_quoted_string (COBC_LITERAL (f->assign)->str,
+			    COBC_LITERAL (f->assign)->size);
     }
   else
     {
@@ -1146,7 +1148,7 @@ output_value (struct cobc_field *p)
 	  }
 	case cobc_tag_literal:
 	  {
-	    if (COBC_TREE_CLASS (p) == COB_NUMERIC)
+	    if (COBC_TREE_CLASS (p->value) == COB_NUMERIC)
 	      {
 		/* numeric literal */
 		output_move (p->value, COBC_TREE (p));
@@ -1156,20 +1158,19 @@ output_value (struct cobc_field *p)
 		/* non-numeric literal */
 		/* We do not use output_move here because
 		   we do not want the value to be edited. */
+		char buff[p->size];
 		char *str = COBC_LITERAL (p->value)->str;
-		char buff[p->size + 1];
-		int len = strlen (str);
-		if (len >= p->size)
+		int size = COBC_LITERAL (p->value)->size;
+		if (size >= p->size)
 		  {
 		    memcpy (buff, str, p->size);
 		  }
 		else
 		  {
-		    memcpy (buff, str, len);
-		    memset (buff + len, ' ', p->size - len);
+		    memcpy (buff, str, size);
+		    memset (buff + size, ' ', p->size - size);
 		  }
-		buff[p->size] = 0;
-		output_memcpy (COBC_TREE (p), buff);
+		output_memcpy (COBC_TREE (p), buff, p->size);
 	      }
 	    break;
 	  }
@@ -1219,7 +1220,7 @@ output_tree (cobc_tree x)
 		p->size, COBC_TREE_CLASS (p),
 		p->size, p->decimals, p->sign ? 1 : 0);
 	output ("(struct cob_field) {&desc, ");
-	output_quoted_string (p->str);
+	output_quoted_string (p->str, p->size);
 	output ("}; })");
 	break;
       }

@@ -59,7 +59,7 @@ output_advance_move (struct cob_field f, cobc_tree dst)
 {
   struct cobc_field *p = COBC_FIELD (dst);
   struct cob_field_desc dst_desc;
-  unsigned char dst_data[p->size + 1];
+  unsigned char dst_data[p->size];
   struct cob_field dst_fld = {&dst_desc, dst_data};
 
   dst_desc.size = p->size;
@@ -81,8 +81,7 @@ output_advance_move (struct cob_field f, cobc_tree dst)
     }
 
   cob_move (f, dst_fld);
-  dst_data[p->size] = 0;
-  output_memcpy (dst, dst_data);
+  output_memcpy (dst, dst_data, p->size);
 }
 
 static void
@@ -104,6 +103,17 @@ output_move_num (cobc_tree x, int high)
 }
 
 static void
+output_move_all (cobc_tree x, char c)
+{
+  struct cobc_field *p = COBC_FIELD (x);
+  struct cob_field_desc desc = {p->size, 'X'};
+  unsigned char data[p->size];
+  struct cob_field fld = {&desc, data};
+  memset (data, c, p->size);
+  output_advance_move (fld, x);
+}
+
+static void
 output_move_zero (cobc_tree x)
 {
   switch (COBC_FIELD (x)->category)
@@ -116,7 +126,7 @@ output_move_zero (cobc_tree x)
       output_memset (x, '0', COBC_FIELD (x)->size);
       break;
     default:
-      output_advance_move (cob_zero, x);
+      output_move_all (x, '0');
       break;
     }
 }
@@ -132,7 +142,7 @@ output_move_space (cobc_tree x)
       output_memset (x, ' ', COBC_FIELD (x)->size);
       break;
     default:
-      output_advance_move (cob_space, x);
+      output_move_all (x, ' ');
       break;
     }
 }
@@ -150,7 +160,7 @@ output_move_high (cobc_tree x)
       output_memset (x, 255, COBC_FIELD (x)->size);
       break;
     default:
-      output_advance_move (cob_high, x);
+      output_move_all (x, '\xff');
       break;
     }
 }
@@ -168,7 +178,7 @@ output_move_low (cobc_tree x)
       output_memset (x, 0, COBC_FIELD (x)->size);
       break;
     default:
-      output_advance_move (cob_low, x);
+      output_move_all (x, '\0');
       break;
     }
 }
@@ -184,7 +194,7 @@ output_move_quote (cobc_tree x)
       output_memset (x, '\"', COBC_FIELD (x)->size);
       break;
     default:
-      output_advance_move (cob_quote, x);
+      output_move_all (x, '\"');
       break;
     }
 }
@@ -197,11 +207,10 @@ output_move_all_literal (cobc_tree src, cobc_tree dst)
   unsigned char *src_data = src_p->str;
   int src_len = strlen (src_data);
   struct cobc_field *dst_p = COBC_FIELD (dst);
-  unsigned char dst_data[dst_p->size + 1];
+  unsigned char dst_data[dst_p->size];
   for (i = 0; i < dst_p->size; i++)
     dst_data[i] = src_data[i % src_len];
-  dst_data[i] = 0;
-  output_memcpy (dst, dst_data);
+  output_memcpy (dst, dst_data, dst_p->size);
 }
 
 static void
@@ -607,7 +616,7 @@ output_display (cobc_tree x)
       else
 	{
 	  /* non-numeric literal */
-	  output_quoted_string (p->str);
+	  output_quoted_string (p->str, p->size);
 	}
       output (", stdout);\n");
     }

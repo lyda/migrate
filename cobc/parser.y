@@ -3235,7 +3235,6 @@ validate_field (struct cobc_field *p)
 	  else if (COBC_TREE_CLASS (p) == COB_NUMERIC
 		   && COBC_TREE_CLASS (p->value) != COB_NUMERIC)
 	    {
-	      yywarn ("VALUE should be numeric");
 	    }
 	  else if (COBC_TREE_CLASS (p) != COB_NUMERIC
 		   && COBC_TREE_CLASS (p->value) == COB_NUMERIC)
