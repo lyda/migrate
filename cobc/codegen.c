@@ -422,19 +422,6 @@ output_assign (struct cobc_assign *p)
  */
 
 static void
-output_compare_zero (cobc_tree s1, cobc_tree s2)
-{
-  cobc_tree x = (s1 == cobc_zero) ? s2 : s1;
-  if (s1 == cobc_zero)
-    output ("-");
-  output ("cob_cmp_zero (");
-  output_location (x);
-  output (", ");
-  output_length (x);
-  output (")");
-}
-
-static void
 output_compare (cobc_tree s1, int op, cobc_tree s2)
 {
   output ("(");
@@ -454,7 +441,15 @@ output_compare (cobc_tree s1, int op, cobc_tree s2)
     }
   else if (s1 == cobc_zero || s2 == cobc_zero)
     {
-      output_compare_zero (s1, s2);
+      /* compare ZERO */
+      cobc_tree x = (s1 == cobc_zero) ? s2 : s1;
+      if (s1 == cobc_zero)
+	output ("-");
+      output ("cob_cmp_zero (");
+      output_location (x);
+      output (", ");
+      output_length (x);
+      output (")");
     }
   else
     {
@@ -479,16 +474,12 @@ output_compare (cobc_tree s1, int op, cobc_tree s2)
   output (")");
 }
 
-void
+static void
 output_condition (cobc_tree x)
 {
-  cobc_tree l, r;
-  enum cobc_cond_type type;
-
- again:
-  type = COND_TYPE (x);
-  l = COND_LEFT (x);
-  r = COND_RIGHT (x);
+  enum cobc_cond_type type = COND_TYPE (x);
+  cobc_tree l = COND_LEFT (x);
+  cobc_tree r = COND_RIGHT (x);
 
   switch (type)
     {
@@ -499,22 +490,19 @@ output_condition (cobc_tree x)
       break;
     case COBC_COND_NOT:
       output ("!");
-      x = l;
-      goto again;
+      output_condition (l);
+      break;
     case COBC_COND_AND:
     case COBC_COND_OR:
       output ("(");
       output_condition (l);
-      if (type == COBC_COND_AND)
-	output (" && ");
-      else
-	output (" || ");
+      output (type == COBC_COND_AND ? " && " : " || ");
       output_condition (r);
       output (")");
       break;
     default:
       output_compare (l, type, r);
-      return;
+      break;
     }
 }
 
