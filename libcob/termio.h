@@ -22,12 +22,10 @@
 
 #include <libcob/common.h>
 
-#define COB_SYSIN	0
-#define COB_SYSOUT	1
-#define COB_SYSERR	2
-
-extern void cob_display (cob_field *f, int fd);
-extern void cob_newline (int fd);
+extern void cob_display (cob_field *f);
+extern void cob_display_error (cob_field *f);
+extern void cob_newline (void);
+extern void cob_newline_error (void);
 extern void cob_field_print (cob_field *f);
 extern void cob_accept (cob_field *f);
 extern void cob_accept_date (cob_field *f);

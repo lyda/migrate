@@ -27,15 +27,13 @@
 #include "move.h"
 #include "termio.h"
 
-FILE *cob_stream[3];
-
 
 /*
  * DISPLAY
  */
 
-void
-cob_display (cob_field *f, int fd)
+static void
+display (cob_field *f, FILE *fp)
 {
   if (cob_current_module->flag_binary_print_full
       && COB_FIELD_TYPE (f) == COB_TYPE_NUMERIC_BINARY)
@@ -68,28 +66,47 @@ cob_display (cob_field *f, int fd)
 	sprintf (p, "9%c", digits);
       cob_move (f, &temp);
       for (i = 0; i < size; i++)
-	fputc (data[i], cob_stream[fd]);
+	fputc (data[i], fp);
     }
   else
     {
       size_t i;
       for (i = 0; i < f->size; i++)
-	fputc (f->data[i], cob_stream[fd]);
+	fputc (f->data[i], fp);
     }
 }
 
 void
-cob_newline (int fd)
+cob_display (cob_field *f)
 {
-  fputc ('\n', cob_stream[fd]);
-  fflush (cob_stream[fd]);
+  display (f, stdout);
+}
+
+void
+cob_display_error (cob_field *f)
+{
+  display (f, stderr);
+}
+
+void
+cob_newline (void)
+{
+  fputc ('\n', stdout);
+  fflush (stdout);
+}
+
+void
+cob_newline_error (void)
+{
+  fputc ('\n', stderr);
+  fflush (stderr);
 }
 
 void
 cob_field_print (cob_field *f)
 {
-  cob_display (f, COB_SYSOUT);
-  cob_newline (COB_SYSOUT);
+  cob_display (f);
+  cob_newline ();
 }
 
 
@@ -195,7 +212,4 @@ cob_accept_environment (cob_field *f)
 void
 cob_init_termio (void)
 {
-  cob_stream[COB_SYSIN]  = stdin;
-  cob_stream[COB_SYSOUT] = stdout;
-  cob_stream[COB_SYSERR] = stderr;
 }
