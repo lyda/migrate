@@ -76,3 +76,85 @@ AT_CHECK([${COMPILE} -o caller caller.cob])
 AT_CHECK([./caller], [0], [abcd])
 
 AT_CLEANUP
+
+
+## LINE SEQUENTIAL
+
+AT_SETUP([LINE SEQUENTIAL write])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       ENVIRONMENT      DIVISION.
+       INPUT-OUTPUT     SECTION.
+       FILE-CONTROL.
+       SELECT TEST-FILE ASSIGN       "./TEST-FILE"
+                        ORGANIZATION IS LINE SEQUENTIAL.
+       DATA             DIVISION.
+       FILE             SECTION.
+       FD TEST-FILE.
+       01 TEST-REC      PIC X(4).
+       PROCEDURE        DIVISION.
+           OPEN OUTPUT TEST-FILE.
+           MOVE "a"    TO TEST-REC. WRITE TEST-REC.
+           MOVE "ab"   TO TEST-REC. WRITE TEST-REC AFTER 1 LINES.
+           MOVE "abc"  TO TEST-REC. WRITE TEST-REC BEFORE 2 LINES.
+           MOVE "abcd" TO TEST-REC. WRITE TEST-REC.
+           CLOSE TEST-FILE.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog])
+AT_CHECK([echo -ne "a\r\n\r\nab\r\nabc\r\n\r\n\r\nabcd\r\n" > output])
+AT_CHECK([cmp TEST-FILE output])
+
+AT_CLEANUP
+
+AT_SETUP([LINE SEQUENTIAL read])
+
+AT_DATA([TEST-FILE],
+[a
+ab
+abc
+abcd
+abcde
+abcdef
+])
+
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       ENVIRONMENT      DIVISION.
+       INPUT-OUTPUT     SECTION.
+       FILE-CONTROL.
+       SELECT TEST-FILE ASSIGN       "./TEST-FILE"
+                        ORGANIZATION IS LINE SEQUENTIAL.
+       DATA             DIVISION.
+       FILE             SECTION.
+       FD TEST-FILE.
+       01 TEST-REC      PIC X(4).
+       PROCEDURE        DIVISION.
+           OPEN INPUT TEST-FILE.
+           READ TEST-FILE. DISPLAY "(" TEST-REC ")".
+           READ TEST-FILE. DISPLAY "(" TEST-REC ")".
+           READ TEST-FILE. DISPLAY "(" TEST-REC ")".
+           READ TEST-FILE. DISPLAY "(" TEST-REC ")".
+           READ TEST-FILE. DISPLAY "(" TEST-REC ")".
+           READ TEST-FILE. DISPLAY "(" TEST-REC ")".
+           CLOSE TEST-FILE.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[(a   )
+(ab  )
+(abc )
+(abcd)
+(abcd)
+(abcd)
+])
+
+AT_CLEANUP
