@@ -2,7 +2,7 @@ bin_PROGRAMS = cobc
 cobc_SOURCES = cobc.c cobc.h tree.c tree.h codegen.c codegen.h functions.h \
 	reserved.c reserved.h parser.y scanner.l scanner.h
 cobc_CFLAGS = -I$(top_srcdir)/lib
-cobc_LDADD = -L$(top_srcdir)/libcob -lcob
+cobc_LDADD = -L$(top_srcdir)/libcob -lcob @LTLIBINTL@
 cobc_LIBS = $(top_srcdir)/lib/libsupport.a
 EXTRA_cobc_SOURCES = inline.c
 
