@@ -1,6 +1,6 @@
 bin_PROGRAMS = cobc
 cobc_SOURCES = cobc.c cobc.h tree.c tree.h reserved.c error.c typeck.c \
-	parser.c parser.h scanner.c codegen.c \
+	parser.c parser.h scanner.c bytegen.c codegen.c \
 	ppparse.c ppparse.h pplex.c flag.def warning.def
 
 AM_CFLAGS = -Wall -Wwrite-strings -Wmissing-prototypes

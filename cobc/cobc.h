@@ -46,6 +46,23 @@ extern enum cb_standard {
 
 extern const char *cb_standard_name;
 
+/* Compile level */
+extern enum cb_compile_level {
+  CB_LEVEL_PREPROCESS,
+  CB_LEVEL_PARSE,
+  CB_LEVEL_TRANSLATE,
+  CB_LEVEL_COMPILE,
+  CB_LEVEL_ASSEMBLE,
+  CB_LEVEL_MODULE,
+  CB_LEVEL_EXECUTABLE
+} cb_compile_level;
+
+/* Compile target */
+extern enum cb_compile_target {
+  CB_TARGET_NATIVE,
+  CB_TARGET_CLASS,
+} cb_compile_target;
+
 /* Binary representation */
 extern enum cb_binary_rep {
   CB_BINARY_REP_1_2_4_8,	/* 1,2,4,8 bytes */
@@ -70,9 +87,6 @@ extern int cb_flag_debugging_line;
 
 /* output line directives */
 extern int cb_flag_line_directive;
-
-/* exit after error check */
-extern int cb_flag_parse_only;
 
 #undef CB_FLAG
 #define CB_FLAG(var,name,doc) extern int var;

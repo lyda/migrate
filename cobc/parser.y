@@ -172,8 +172,6 @@ start:
   {
     if (errorcount > 0)
       YYABORT;
-    if (!cb_flag_parse_only)
-      codegen (current_program);
   }
 ;
 

@@ -835,6 +835,9 @@ extern void cb_validate_program_environment (struct cb_program *prog);
 extern void cb_validate_program_data (struct cb_program *prog);
 extern void cb_validate_program_body (struct cb_program *prog);
 
+/* bytegen.c */
+extern void bytegen (struct cb_program *prog);
+
 /* codegen.c */
 extern void codegen (struct cb_program *prog);
 

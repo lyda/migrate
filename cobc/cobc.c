@@ -44,8 +44,10 @@
  */
 
 enum cb_standard cb_standard = CB_STANDARD_GNU;
-const char *cb_standard_name = "OpenCOBOL";
+const char *cb_standard_name = "GNU COBOL";
 
+enum cb_compile_level cb_compile_level = CB_LEVEL_EXECUTABLE;
+enum cb_compile_target cb_compile_target = CB_TARGET_NATIVE;
 enum cb_binary_rep cb_binary_rep = CB_BINARY_REP_1_2_4_8;
 
 struct cb_exception cb_exception_table[] = {
@@ -59,7 +61,6 @@ struct cb_exception cb_exception_table[] = {
 int cb_flag_call_static = 0;
 int cb_flag_debugging_line = 0;
 int cb_flag_line_directive = 0;
-int cb_flag_parse_only = 0;
 
 #undef CB_FLAG
 #define CB_FLAG(var,name,doc) int var = 0;
@@ -103,15 +104,6 @@ static char *output_name;
 static char cob_cc[FILENAME_MAX];		/* gcc */
 static char cob_cflags[FILENAME_MAX];		/* -I... */
 static char cob_libs[FILENAME_MAX];		/* -L... -lcob */
-
-static enum {
-  stage_preprocess,
-  stage_translate,
-  stage_compile,
-  stage_assemble,
-  stage_module,
-  stage_executable
-} compile_level = stage_executable;
 
 static struct filename {
   int need_preprocess;
@@ -186,6 +178,7 @@ static struct option long_options[] = {
   {"verbose", no_argument, 0, 'v'},
   {"save-temps", no_argument, &save_temps, 1},
   {"std", required_argument, 0, 's'},
+  {"target", required_argument, 0, 't'},
   {"debug", no_argument, 0, 'd'},
   {"static", no_argument, &cb_flag_call_static, 1},
   {"dynamic", no_argument, &cb_flag_call_static, 0},
@@ -281,12 +274,12 @@ process_command_line (int argc, char *argv[])
 	case '?': print_usage (); exit (0);
 	case 'V': print_version (); exit (0);
 
-	case 'E': compile_level = stage_preprocess; break;
-	case 'P': cb_flag_parse_only = 1; /* fall through */
-	case 'C': compile_level = stage_translate; break;
-	case 'S': compile_level = stage_compile; break;
-	case 'c': compile_level = stage_assemble; break;
-	case 'm': compile_level = stage_module; break;
+	case 'E': cb_compile_level = CB_LEVEL_PREPROCESS; break;
+	case 'P': cb_compile_level = CB_LEVEL_PARSE; break;
+	case 'C': cb_compile_level = CB_LEVEL_TRANSLATE; break;
+	case 'S': cb_compile_level = CB_LEVEL_COMPILE; break;
+	case 'c': cb_compile_level = CB_LEVEL_ASSEMBLE; break;
+	case 'm': cb_compile_level = CB_LEVEL_MODULE; break;
 	case 'v': verbose_output = 1; break;
 	case 'o': output_name = strdup (optarg); break;
 
@@ -325,6 +318,18 @@ process_command_line (int argc, char *argv[])
 	  else
 	    {
 	      fprintf (stderr, _("Invalid option -std=%s\n"), optarg);
+	      exit (1);
+	    }
+	  break;
+
+	case 't': /* -target */
+	  if (strcmp (optarg, "native") == 0)
+	    cb_compile_target = CB_TARGET_NATIVE;
+	  else if (strcmp (optarg, "class") == 0)
+	    cb_compile_target = CB_TARGET_CLASS;
+	  else
+	    {
+	      fprintf (stderr, _("Invalid option -target=%s\n"), optarg);
 	      exit (1);
 	    }
 	  break;
@@ -384,7 +389,7 @@ process_command_line (int argc, char *argv[])
 	}
     }
 
-  if (compile_level == stage_executable)
+  if (cb_compile_level == CB_LEVEL_EXECUTABLE)
     cb_flag_main = 1;
 
   return optind;
@@ -482,7 +487,7 @@ process_filename (const char *filename)
   /* Set preprocess filename */
   if (!fn->need_preprocess)
     strcpy (fn->preprocess, fn->source);
-  else if (output_name && compile_level == stage_preprocess)
+  else if (output_name && cb_compile_level == CB_LEVEL_PREPROCESS)
     strcpy (fn->preprocess, output_name);
   else if (save_temps)
     sprintf (fn->preprocess, "%s.i", basename);
@@ -492,9 +497,9 @@ process_filename (const char *filename)
   /* Set translate filename */
   if (!fn->need_translate)
     strcpy (fn->translate, fn->source);
-  else if (output_name && compile_level == stage_translate)
+  else if (output_name && cb_compile_level == CB_LEVEL_TRANSLATE)
     strcpy (fn->translate, output_name);
-  else if (save_temps || compile_level == stage_translate)
+  else if (save_temps || cb_compile_level == CB_LEVEL_TRANSLATE)
     sprintf (fn->translate, "%s.c", basename);
   else
     temp_name (fn->translate, ".c");
@@ -502,9 +507,9 @@ process_filename (const char *filename)
   /* Set object filename */
   if (!fn->need_assemble)
     strcpy (fn->object, fn->source);
-  else if (output_name && compile_level == stage_assemble)
+  else if (output_name && cb_compile_level == CB_LEVEL_ASSEMBLE)
     strcpy (fn->object, output_name);
-  else if (save_temps || compile_level == stage_assemble)
+  else if (save_temps || cb_compile_level == CB_LEVEL_ASSEMBLE)
     sprintf (fn->object, "%s.o", basename);
   else
     temp_name (fn->object, ".o");
@@ -526,7 +531,7 @@ preprocess (struct filename *fn)
   errorcount = 0;
 
   ppout = stdout;
-  if (output_name || compile_level > stage_preprocess)
+  if (output_name || cb_compile_level > CB_LEVEL_PREPROCESS)
     {
       ppout = fopen (fn->preprocess, "w");
       if (!ppout)
@@ -568,48 +573,73 @@ preprocess (struct filename *fn)
 }
 
 static int
-process_translate (struct filename *fn)
+process_parse (struct filename *fn)
 {
   int ret;
 
+  /* initialize */
+  cb_source_file = NULL;
+  cb_source_line = 0;
+  cb_init_constants ();
+  cb_init_reserved ();
+
+  /* open the input file */
   yyin = fopen (fn->preprocess, "r");
   if (!yyin)
     terminate (fn->preprocess);
 
-  cb_storage_file_name = malloc (strlen (fn->translate) + 3);
-  sprintf (cb_storage_file_name, "%s.h", fn->translate);
-
-  if (!cb_flag_parse_only)
-    {
-      /* output file */
-      yyout = fopen (fn->translate, "w");
-      if (!yyout)
-	terminate (fn->translate);
-      /* storage file */
-      cb_storage_file = fopen (cb_storage_file_name, "w");
-      if (!cb_storage_file)
-	terminate (cb_storage_file_name);
-    }
-
-  cb_source_file = NULL;
-  cb_source_line = 0;
-
-  cb_init_constants ();
-  cb_init_reserved ();
-
+  /* parse */
   if (verbose_output)
     fprintf (stderr, "translating %s into %s\n",
 	     fn->preprocess, fn->translate);
   ret = yyparse ();
 
-  if (!cb_flag_parse_only)
-    {
-      fclose (yyout);
-      fclose (cb_storage_file);
-    }
   fclose (yyin);
-
   return ret;
+}
+
+static int
+process_translate (struct filename *fn)
+{
+  switch (cb_compile_target)
+    {
+    case CB_TARGET_NATIVE:
+      {
+	/* open the output file */
+	yyout = fopen (fn->translate, "w");
+	if (!yyout)
+	  terminate (fn->translate);
+
+	/* open the storage file */
+	cb_storage_file_name = malloc (strlen (fn->translate) + 3);
+	sprintf (cb_storage_file_name, "%s.h", fn->translate);
+	cb_storage_file = fopen (cb_storage_file_name, "w");
+	if (!cb_storage_file)
+	  terminate (cb_storage_file_name);
+
+	/* translate to C */
+	codegen (current_program);
+
+	/* close the files */
+	fclose (cb_storage_file);
+	fclose (yyout);
+	break;
+      }
+    case CB_TARGET_CLASS:
+      {
+	/* open the output file */
+	yyout = fopen (fn->translate, "w");
+	if (!yyout)
+	  terminate (fn->translate);
+
+	bytegen (current_program);
+
+	/* close the files */
+	fclose (yyout);
+	break;
+      }
+    }
+  return 0;
 }
 
 static int
@@ -633,8 +663,17 @@ static int
 process_assemble (struct filename *fn)
 {
   char buff[FILENAME_MAX];
-  sprintf (buff, "%s -c -o %s %s %s",
-	   cob_cc, fn->object, cob_cflags, fn->translate);
+
+  switch (cb_compile_target)
+    {
+    case CB_TARGET_NATIVE:
+      sprintf (buff, "%s -c -o %s %s %s",
+	       cob_cc, fn->object, cob_cflags, fn->translate);
+      break;
+    case CB_TARGET_CLASS:
+      sprintf (buff, "java Assemble %s", fn->translate);
+      break;
+    }
   return process (buff);
 }
 
@@ -709,33 +748,39 @@ main (int argc, char *argv[])
       file_list = fn;
 
       /* Preprocess */
-      if (compile_level >= stage_preprocess && fn->need_preprocess)
+      if (cb_compile_level >= CB_LEVEL_PREPROCESS && fn->need_preprocess)
 	if (preprocess (fn) != 0)
 	  goto cleanup;
 
+      /* Parse */
+      if (cb_compile_level >= CB_LEVEL_PARSE && fn->need_translate)
+	if (process_parse (fn) != 0)
+	  goto cleanup;
+
       /* Translate */
-      if (compile_level >= stage_translate && fn->need_translate)
+      if (cb_compile_level >= CB_LEVEL_TRANSLATE && fn->need_translate)
 	if (process_translate (fn) != 0)
 	  goto cleanup;
 
       /* Compile */
-      if (compile_level == stage_compile)
+      if (cb_compile_level == CB_LEVEL_COMPILE)
 	if (process_compile (fn) != 0)
 	  goto cleanup;
 
       /* Assemble */
-      if (compile_level >= stage_assemble && fn->need_assemble)
+      if (cb_compile_level >= CB_LEVEL_ASSEMBLE && fn->need_assemble)
 	if (process_assemble (fn) != 0)
 	  goto cleanup;
 
       /* Build module */
-      if (compile_level == stage_module)
+      if (cb_compile_level == CB_LEVEL_MODULE)
 	if (process_module (fn) != 0)
 	  goto cleanup;
     }
 
   /* Link */
-  if (compile_level == stage_executable)
+  if (cb_compile_level == CB_LEVEL_EXECUTABLE
+      && cb_compile_target == CB_TARGET_NATIVE)
     if (process_link (file_list) > 0)
       goto cleanup;
 
@@ -750,16 +795,16 @@ main (int argc, char *argv[])
       for (fn = file_list; fn; fn = fn->next)
 	{
 	  if (fn->need_preprocess
-	      && (status == 1 || compile_level > stage_preprocess))
+	      && (status == 1 || cb_compile_level > CB_LEVEL_PREPROCESS))
 	    remove (fn->preprocess);
 	  if (fn->need_translate
-	      && (status == 1 || compile_level > stage_translate))
+	      && (status == 1 || cb_compile_level > CB_LEVEL_TRANSLATE))
 	    {
 	      remove (fn->translate);
 	      remove (cb_storage_file_name);
 	    }
 	  if (fn->need_assemble
-	      && (status == 1 || compile_level > stage_assemble))
+	      && (status == 1 || cb_compile_level > CB_LEVEL_ASSEMBLE))
 	    remove (fn->object);
 	}
     }
