@@ -87,13 +87,14 @@ static void process_eol (void);
 "INCLUDE"		{ BEGIN COPY_STATE; return COPY; }
 "REPLACE"		{ BEGIN COPY_STATE; return REPLACE; }
 
+[,;]			{ fputc (' ', yyout); }
+
 . |
 [ \t]* |
 [0-9A-Z_-]+ |
 \'[^\'\n]*\' |
 \"[^\"\n]*\"		{ ECHO; }
 
-<COPY_STATE>","		{ return ','; }
 <COPY_STATE>"."		{ BEGIN INITIAL; return '.'; }
 <COPY_STATE>"BY"	{ return BY; }
 <COPY_STATE>"OFF"	{ return OFF; }

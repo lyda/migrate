@@ -48,15 +48,13 @@ copy_statement:
 ;
 replace_statement:
   REPLACE replacing_list '.'
-| REPLACE OFF '.'	{ remove_replacements (); }
+| REPLACE OFF '.'		{ remove_replacements (); }
 ;
 replacing_list:
-  text BY text		{ $$ = add_replacement (NULL, $1, $3); }
-| replacing_list opt_comma
-  text BY text		{ $$ = add_replacement ($1, $3, $5); }
+  text BY text			{ $$ = add_replacement (NULL, $1, $3); }
+| replacing_list text BY text	{ $$ = add_replacement ($1, $2, $4); }
 ;
 text: NAME | TEXT ;
-opt_comma: | ',' ;
 
 %%
 
