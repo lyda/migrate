@@ -1,5 +1,10 @@
 2002-06-06  Keisuke Nishida  <knishida@netlab.jp>
 
+	* codegen.c (codegen): Always generate program function,
+	putting main() at the end.
+
+2002-06-06  Keisuke Nishida  <knishida@netlab.jp>
+
 	* cobc.c (process_command_line, print_usage): Activate -g.
 
 2002-06-05  Keisuke Nishida  <knishida@netlab.jp>
