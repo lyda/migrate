@@ -1,3 +1,7 @@
+2002-10-07  Keisuke Nishida  <knishida@netlab.jp>
+
+	* scanner.l (read_line): Inhibit column 72 warnings after 4 times.
+
 2002-09-30  Keisuke Nishida  <knishida@netlab.jp>
 
 	* cobpp.h (COBPP_PACKAGE): Use PACKAGE_NAME.
