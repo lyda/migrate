@@ -20,12 +20,6 @@
 #ifndef COB_COMMON_H
 #define COB_COMMON_H
 
-#if (defined __CYGWIN__ || defined __MINGW32__)
-#ifndef _WIN32
-#define _WIN32
-#endif
-#endif
-
 
 /*
  * Field
