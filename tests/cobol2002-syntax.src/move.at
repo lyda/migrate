@@ -279,10 +279,10 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:11: group identifier is expected `X'
-prog.cob:12: group identifier is expected `X'
-prog.cob:13: group identifier is expected `G-1(1:1)'
-prog.cob:14: group identifier is expected `G-2(1:1)'
+[prog.cob:11: `X' is not group name
+prog.cob:12: `X' is not group name
+prog.cob:13: `G-1(1:1)' is not group name
+prog.cob:14: `G-2(1:1)' is not group name
 ])
 
 AT_CLEANUP

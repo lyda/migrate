@@ -41,8 +41,8 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:10: `I' must be an integer value
-prog.cob:11: `I' must be an integer value
+[prog.cob:10: `I' is not integer value
+prog.cob:11: `I' is not numeric value
 ])
 
 AT_CLEANUP
