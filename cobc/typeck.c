@@ -1469,6 +1469,18 @@ cb_emit_accept_environment (cb_tree var)
 }
 
 void
+cb_emit_accept_arg_number (cb_tree var)
+{
+  cb_emit (cb_build_funcall_1 ("cob_accept_arg_number", var));
+}
+
+void
+cb_emit_accept_arg_value (cb_tree var)
+{
+  cb_emit (cb_build_funcall_1 ("cob_accept_arg_value", var));
+}
+
+void
 cb_emit_accept_mnemonic (cb_tree var, cb_tree mnemonic)
 {
   switch (CB_SYSTEM_NAME (cb_ref (mnemonic))->token)
@@ -1599,6 +1611,26 @@ cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
 	  return;
 	}
       cb_emit (cb_build_funcall_1 ("cob_display_environment", CB_VALUE (values)));
+    }
+  else if (upon == cb_int2)
+    {
+      /* DISPLAY x UPON ENVIRONMENT-VALUE */
+      if (cb_list_length (values) != 1)
+	{
+	  cb_error (_("wrong number of data items"));
+	  return;
+	}
+      cb_emit (cb_build_funcall_1 ("cob_display_env_value", CB_VALUE (values)));
+    }
+  else if (upon == cb_int3)
+    {
+      /* DISPLAY x UPON ARGUMENT-NUMBER */
+      if (cb_list_length (values) != 1)
+	{
+	  cb_error (_("wrong number of data items"));
+	  return;
+	}
+      cb_emit (cb_build_funcall_1 ("cob_display_arg_number", CB_VALUE (values)));
     }
   else
     {

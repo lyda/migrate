@@ -391,6 +391,7 @@ cb_tree cb_quote;
 cb_tree cb_int0;
 cb_tree cb_int1;
 cb_tree cb_int2;
+cb_tree cb_int3;
 cb_tree cb_i[8];
 cb_tree cb_error_node;
 cb_tree cb_return_code;
@@ -430,6 +431,7 @@ cb_init_constants (void)
   cb_int0        = cb_int (0);
   cb_int1        = cb_int (1);
   cb_int2        = cb_int (2);
+  cb_int3        = cb_int (3);
   for (i = 1; i < 8; i++)
     {
       char *s = malloc (3);

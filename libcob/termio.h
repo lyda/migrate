@@ -37,6 +37,10 @@ extern void cob_accept_time (cob_field *f);
 extern void cob_accept_command_line (cob_field *f);
 extern void cob_display_environment (cob_field *f);
 extern void cob_accept_environment (cob_field *f);
+extern void cob_display_env_value (cob_field *f);
+extern void cob_display_arg_number (cob_field *f);
+extern void cob_accept_arg_number (cob_field *f);
+extern void cob_accept_arg_value (cob_field *f);
 
 extern void cob_init_termio (void);
 

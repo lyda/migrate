@@ -229,6 +229,7 @@ extern cb_tree cb_quote;
 extern cb_tree cb_int0;
 extern cb_tree cb_int1;
 extern cb_tree cb_int2;
+extern cb_tree cb_int3;
 extern cb_tree cb_i[8];
 extern cb_tree cb_error_node;
 extern cb_tree cb_return_code;
@@ -965,6 +966,8 @@ extern void cb_emit_accept_command_line (cb_tree var);
 extern void cb_emit_accept_environment (cb_tree var);
 extern void cb_emit_accept_mnemonic (cb_tree var, cb_tree mnemonic);
 extern void cb_emit_accept_name (cb_tree var, cb_tree name);
+extern void cb_emit_accept_arg_number (cb_tree var);
+extern void cb_emit_accept_arg_value (cb_tree var);
 
 extern void cb_emit_call (cb_tree prog, cb_tree using, cb_tree returning, cb_tree on_exception, cb_tree not_on_exception);
 

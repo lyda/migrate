@@ -87,6 +87,8 @@ static struct reserved reserved_words[] = {
   {"ARE",		ARE, 0},			/* 2002 */
   {"AREA",		AREA, 0},			/* 2002 */
   {"AREAS",		AREA, 0},			/* 2002 */
+  {"ARGUMENT-NUMBER",	ARGUMENT_NUMBER, 0},		/* extension */
+  {"ARGUMENT-VALUE",	ARGUMENT_VALUE, 0},		/* extension */
   {"AS",		AS, 0},				/* 2002 */
   {"ASCENDING",		ASCENDING, 0},			/* 2002 */
   {"ASSIGN",		ASSIGN, 0},			/* 2002 */
