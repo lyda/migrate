@@ -10,4 +10,4 @@ config.*
 configure
 defaults.h
 libtool
-stamp-h1
+stamp-h*
