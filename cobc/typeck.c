@@ -245,6 +245,9 @@ cb_build_identifier (cb_tree x)
 	}
     }
 
+  if (f->storage == CB_STORAGE_CONSTANT)
+    return CB_VALUE (f->values);
+
   return x;
 }
 
@@ -1198,10 +1201,6 @@ cb_build_cond (cb_tree x)
 	       may be subscripted (i.e., it is not a constant tree). */
 	    return cb_build_cond (build_cond_88 (x));
 	  }
-
-	/* constant condition */
-	if (f->storage == CB_STORAGE_CONSTANT)
-	  return cb_build_cond (CB_VALUE (f->values));
 
 	ABORT ();
       }
