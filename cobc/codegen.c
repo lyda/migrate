@@ -1802,7 +1802,8 @@ codegen (struct program_spec *spec)
 
   output_line ("/* PROCEDURE DIVISION */");
   output_line ("lb_default_handler:");
-  output_line ("cob_runtime_error (\"I/O error\");");
+  output_line ("cob_runtime_error (\"file I/O exited with status %%02d\", "
+	       "cob_file_status);");
   output_line ("cob_exit (le_default_handler);");
 
   for (l = spec->exec_list; l; l = l->next)
