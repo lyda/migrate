@@ -1245,9 +1245,11 @@ field_uniform_class (struct cb_field *f)
     {
       switch (CB_TREE_TYPE (f))
 	{
-	case COB_TYPE_NUMERIC:
+	case COB_TYPE_NUMERIC_DISPLAY:
+	  return COB_TYPE_NUMERIC_DISPLAY;
 	case COB_TYPE_NUMERIC_BINARY:
-	  return CB_TREE_TYPE (f);
+	case COB_TYPE_NUMERIC_PACKED:
+	  return COB_TYPE_NUMERIC_BINARY;
 	case COB_TYPE_ALPHABETIC:
 	case COB_TYPE_ALPHANUMERIC:
 	  return COB_TYPE_ALPHANUMERIC;
@@ -1272,11 +1274,11 @@ output_initialize_uniform (struct cb_field *f, int class, int size, int flag)
   output (", ");
   switch (class)
     {
+    case COB_TYPE_NUMERIC_DISPLAY:
+      output ("'0'");
+      break;
     case COB_TYPE_NUMERIC_BINARY:
       output ("0");
-      break;
-    case COB_TYPE_NUMERIC:
-      output ("'0'");
       break;
     case COB_TYPE_ALPHANUMERIC:
       output ("' '");
