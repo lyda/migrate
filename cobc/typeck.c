@@ -129,7 +129,7 @@ cb_build_identifier (cb_tree x)
   f = CB_FIELD (v);
 
   /* check the number of subscripts */
-  if (list_length (r->subs) != f->indexes)
+  if (cb_list_length (r->subs) != f->indexes)
     {
       switch (f->indexes)
 	{
@@ -186,8 +186,8 @@ cb_build_identifier (cb_tree x)
 						 cb_int (p->occurs_min),
 						 cb_build_cast_integer (p->occurs_depending),
 						 cb_build_string0 (p->name));
-			r->check = list_add (r->check, e1);
-			r->check = list_add (r->check, e2);
+			r->check = cb_list_add (r->check, e1);
+			r->check = cb_list_add (r->check, e2);
 		      }
 		  }
 		else
@@ -200,7 +200,7 @@ cb_build_identifier (cb_tree x)
 						 cb_int1,
 						 cb_int (p->occurs_max),
 						 cb_build_string0 (p->name));
-			r->check = list_add (r->check, e1);
+			r->check = cb_list_add (r->check, e1);
 		      }
 		  }
 	      }
@@ -240,7 +240,7 @@ cb_build_identifier (cb_tree x)
 				       r->length ? cb_build_cast_integer (r->length) : cb_int1,
 				       cb_int (f->size),
 				       cb_build_string0 (f->name));
-	      r->check = list_add (r->check, e1);
+	      r->check = cb_list_add (r->check, e1);
 	    }
 	}
     }
@@ -625,7 +625,7 @@ cb_expr_finish (void)
 
 static cb_tree decimal_stack = NULL;
 
-#define dpush(x) decimal_stack = cons (x, decimal_stack)
+#define dpush(x) decimal_stack = cb_cons (x, decimal_stack)
 
 static cb_tree
 decimal_alloc (void)
@@ -750,7 +750,7 @@ build_decimal_assign (cb_tree vars, char op, cb_tree val)
 	{
 	  /* set VAR, d */
 	  decimal_assign (CB_VALUE (l), d, CB_PURPOSE_INT (l));
-	  s1 = list_add (s1, list_reverse (decimal_stack));
+	  s1 = cb_list_add (s1, cb_list_reverse (decimal_stack));
 	  decimal_stack = NULL;
 	}
     }
@@ -766,7 +766,7 @@ build_decimal_assign (cb_tree vars, char op, cb_tree val)
 	  decimal_expand (t, CB_VALUE (l));
 	  decimal_compute (op, t, d);
 	  decimal_assign (CB_VALUE (l), t, CB_PURPOSE_INT (l));
-	  s1 = list_add (s1, list_reverse (decimal_stack));
+	  s1 = cb_list_add (s1, cb_list_reverse (decimal_stack));
 	  decimal_stack = NULL;
 	}
       decimal_free ();
@@ -1438,7 +1438,7 @@ build_corr_1 (cb_tree (*func)(), cb_tree x1, cb_tree x2, cb_tree opt, cb_tree l)
 	      if (f1->children && f2->children)
 		l = build_corr_1 (func, t1, t2, opt, l);
 	      else
-		l = cons (func (t1, t2, opt), l);
+		l = cb_cons (func (t1, t2, opt), l);
 	    }
   return l;
 }
@@ -1459,10 +1459,10 @@ cb_build_divide (cb_tree dividend, cb_tree divisor,
 		 cb_tree quotient, cb_tree remainder)
 {
   cb_tree l = NULL;
-  l = list_add (l, cb_build_funcall_4 ("cob_div_quotient",
-				       dividend, divisor, CB_VALUE (quotient),
-				       CB_PURPOSE_INT (quotient) ? cb_int1 : cb_int0));
-  l = list_add (l, cb_build_funcall_1 ("cob_div_remainder", CB_VALUE (remainder)));
+  l = cb_list_add (l, cb_build_funcall_4 ("cob_div_quotient",
+					  dividend, divisor, CB_VALUE (quotient),
+					  CB_PURPOSE_INT (quotient) ? cb_int1 : cb_int0));
+  l = cb_list_add (l, cb_build_funcall_1 ("cob_div_remainder", CB_VALUE (remainder)));
   return l;
 }
 
@@ -1556,7 +1556,7 @@ cb_build_cond (cb_tree x)
 		dpush (cb_build_funcall_2 ("cob_decimal_cmp", d1, d2));
 		decimal_free ();
 		decimal_free ();
-		x = list_reverse (decimal_stack);
+		x = cb_list_reverse (decimal_stack);
 		decimal_stack = NULL;
 	      }
 	    else
@@ -1682,7 +1682,7 @@ cb_build_display_statement (cb_tree values, cb_tree upon, cb_tree no_adv,
   /* DISPLAY x UPON ENVIRONMENT-NAME */
   if (upon == cb_true)
     {
-      if (list_length (values) != 1)
+      if (cb_list_length (values) != 1)
 	{
 	  cb_error (_("wrong number of data items"));
 	  return cb_error_node;
@@ -1698,7 +1698,7 @@ cb_build_display_statement (cb_tree values, cb_tree upon, cb_tree no_adv,
     for (l = values; l; l = CB_CHAIN (l))
       CB_VALUE (l) = cb_build_funcall_1 (display, CB_VALUE (l));
     if (no_adv == cb_int0)
-      values = list_add (values, cb_build_funcall_0 (newline));
+      values = cb_list_add (values, cb_build_funcall_0 (newline));
     return values;
   }
 }
@@ -1983,7 +1983,7 @@ cb_validate_program_data (struct cb_program *prog)
       }
 
   /* resolve all references so far */
-  for (l = list_reverse (prog->reference_list); l; l = CB_CHAIN (l))
+  for (l = cb_list_reverse (prog->reference_list); l; l = CB_CHAIN (l))
     cb_ref (CB_VALUE (l));
 }
 
@@ -1992,7 +1992,7 @@ cb_validate_program_body (struct cb_program *prog)
 {
   /* resolve all labels */
   cb_tree l;
-  for (l = list_reverse (prog->label_list); l; l = CB_CHAIN (l))
+  for (l = cb_list_reverse (prog->label_list); l; l = CB_CHAIN (l))
     {
       cb_tree x = CB_VALUE (l);
       cb_tree v = cb_ref (x);
@@ -2006,6 +2006,6 @@ cb_validate_program_body (struct cb_program *prog)
 	cb_error_x (x, _("`%s' not procedure name"), cb_name (x));
     }
 
-  prog->file_list = list_reverse (prog->file_list);
-  prog->exec_list = list_reverse (prog->exec_list);
+  prog->file_list = cb_list_reverse (prog->file_list);
+  prog->exec_list = cb_list_reverse (prog->exec_list);
 }

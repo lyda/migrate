@@ -102,14 +102,14 @@ cb_name_1 (char *s, cb_tree x)
 	s += sprintf (s, "%s", p->word->name);
 	if (p->subs)
 	  {
-	    cb_tree l = p->subs = list_reverse (p->subs);
+	    cb_tree l = p->subs = cb_list_reverse (p->subs);
 	    s += sprintf (s, "(");
 	    for (; l; l = CB_CHAIN (l))
 	      {
 		s += cb_name_1 (s, CB_VALUE (l));
 		s += sprintf (s, CB_CHAIN (l) ? ", " : ")");
 	      }
-	    p->subs = list_reverse (p->subs);
+	    p->subs = cb_list_reverse (p->subs);
 	  }
 	if (p->offset)
 	  {
@@ -366,7 +366,7 @@ make_constant (enum cb_category category, const char *val)
 static cb_tree
 make_constant_label (const char *name)
 {
-  struct cb_label *p = CB_LABEL (cb_build_label (make_reference (name), NULL));
+  struct cb_label *p = CB_LABEL (cb_build_label (cb_build_reference (name), NULL));
   p->cname = name;
   p->need_begin = 1;
   return CB_TREE (p);
@@ -850,7 +850,7 @@ cb_build_constant (cb_tree name, cb_tree value)
   cb_tree x = cb_build_field (name);
   x->category = cb_tree_category (value);
   CB_FIELD (x)->storage = CB_STORAGE_CONSTANT;
-  CB_FIELD (x)->values = list (value);
+  CB_FIELD (x)->values = cb_list (value);
   return x;
 }
 
@@ -1011,7 +1011,7 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 
   /* create record */
   sprintf (buff, "%s$record", f->name);
-  f->record = CB_FIELD (cb_build_field (make_reference (buff)));
+  f->record = CB_FIELD (cb_build_field (cb_build_reference (buff)));
   f->record->usage = CB_USAGE_DISPLAY;
   sprintf (buff, "X(%d)", f->record_max);
   f->record->pic = CB_PICTURE (cb_build_picture (buff));
@@ -1032,16 +1032,16 @@ finalize_file (struct cb_file *f, struct cb_field *records)
  */
 
 cb_tree
-make_filler (void)
+cb_build_filler (void)
 {
   static int id = 1;
   char name[256];
   sprintf (name, "$%d", id++);
-  return make_reference (name);
+  return cb_build_reference (name);
 }
 
 cb_tree
-make_reference (const char *name)
+cb_build_reference (const char *name)
 {
   struct cb_reference *p =
     make_tree (CB_TAG_REFERENCE, CB_CATEGORY_UNKNOWN, sizeof (struct cb_reference));
@@ -1052,7 +1052,7 @@ make_reference (const char *name)
 cb_tree
 cb_build_field_reference (struct cb_field *f, cb_tree ref)
 {
-  cb_tree x = make_reference (f->name);
+  cb_tree x = cb_build_reference (f->name);
   struct cb_word *word = CB_REFERENCE (x)->word;
   if (ref)
     memcpy (x, ref, sizeof (struct cb_reference));
@@ -1066,7 +1066,7 @@ const char *
 cb_define (cb_tree name, cb_tree val)
 {
   struct cb_word *w = CB_REFERENCE (name)->word;
-  w->items = list_add (w->items, val);
+  w->items = cb_list_add (w->items, val);
   w->count++;
   val->source_file = name->source_file;
   val->source_line = name->source_line;
@@ -1077,7 +1077,7 @@ cb_define (cb_tree name, cb_tree val)
 void
 cb_define_system_name (const char *name)
 {
-  cb_tree x = make_reference (name);
+  cb_tree x = cb_build_reference (name);
   if (CB_REFERENCE (x)->word->count == 0)
     cb_define (x, lookup_system_name (name));
 }
@@ -1481,13 +1481,13 @@ cb_build_list (cb_tree purpose, cb_tree value, cb_tree rest)
 }
 
 cb_tree
-list_add (cb_tree l, cb_tree x)
+cb_list_add (cb_tree l, cb_tree x)
 {
-  return list_append (l, list (x));
+  return cb_list_append (l, cb_list (x));
 }
 
 cb_tree
-list_append (cb_tree l1, cb_tree l2)
+cb_list_append (cb_tree l1, cb_tree l2)
 {
   if (l1 == NULL)
     {
@@ -1504,7 +1504,7 @@ list_append (cb_tree l1, cb_tree l2)
 }
 
 cb_tree
-list_reverse (cb_tree l)
+cb_list_reverse (cb_tree l)
 {
   cb_tree next, last = NULL;
   for (; l; l = next)
@@ -1517,7 +1517,7 @@ list_reverse (cb_tree l)
 }
 
 int
-list_length (cb_tree l)
+cb_list_length (cb_tree l)
 {
   int n = 0;
   for (; l; l = CB_CHAIN (l))

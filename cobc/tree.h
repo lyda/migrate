@@ -521,8 +521,8 @@ struct cb_reference {
 
 #define CB_NAME(x)		(CB_REFERENCE (x)->word->name)
 
-extern cb_tree make_filler (void);
-extern cb_tree make_reference (const char *name);
+extern cb_tree cb_build_filler (void);
+extern cb_tree cb_build_reference (const char *name);
 extern cb_tree cb_build_field_reference (struct cb_field *f, cb_tree ref);
 extern const char *cb_define (cb_tree name, cb_tree val);
 extern void cb_define_system_name (const char *name);
@@ -820,13 +820,13 @@ struct cb_list {
 #define CB_PURPOSE_INT(x) (CB_INTEGER (CB_PURPOSE (x))->val)
 
 extern cb_tree cb_build_list (cb_tree purpose, cb_tree value, cb_tree rest);
-extern cb_tree list_add (cb_tree l, cb_tree x);
-extern cb_tree list_append (cb_tree l1, cb_tree l2);
-extern cb_tree list_reverse (cb_tree l);
-extern int list_length (cb_tree l);
+extern cb_tree cb_list_add (cb_tree l, cb_tree x);
+extern cb_tree cb_list_append (cb_tree l1, cb_tree l2);
+extern cb_tree cb_list_reverse (cb_tree l);
+extern int cb_list_length (cb_tree l);
 
-#define cons(x,l)		cb_build_list (0, x, l)
-#define list(x)			cb_build_list (0, x, 0)
+#define cb_list(x)		cb_build_list (0, x, 0)
+#define cb_cons(x,l)		cb_build_list (0, x, l)
 #define cb_build_int_list(n,x)	cb_build_list (cb_int (n), x, 0)
 
 /* Pair */

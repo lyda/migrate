@@ -96,7 +96,7 @@ X\"[^\"\n]*\" {
   if (integer_is_label)
     {
       /* integer label */
-      yylval = make_reference (yytext);
+      yylval = cb_build_reference (yytext);
       SET_LOCATION (yylval);
       return WORD;
     }
@@ -131,7 +131,7 @@ H\"[^\"\n]*\" {
     }
 
   /* user word */
-  yylval = make_reference (yytext);
+  yylval = cb_build_reference (yytext);
   SET_LOCATION (yylval);
 
   /* special name handling */
@@ -166,7 +166,7 @@ H\"[^\"\n]*\" {
 <FUNCTION_STATE>{
   [a-z0-9-]+	{
     BEGIN INITIAL;
-    yylval = make_reference (yytext);
+    yylval = cb_build_reference (yytext);
     SET_LOCATION (yylval);
     return FUNCTION_NAME;
   }

@@ -69,7 +69,7 @@
   }
 
 #define push(x)	\
-  current_program->exec_list = cons (x, current_program->exec_list)
+  current_program->exec_list = cb_cons (x, current_program->exec_list)
 
 #define push_funcall_0(f)	   push (cb_build_funcall_0 (f))
 #define push_funcall_1(f,a)	   push (cb_build_funcall_1 (f, a))
@@ -78,9 +78,9 @@
 #define push_funcall_4(f,a,b,c,d)  push (cb_build_funcall_4 (f, a, b, c, d))
 
 #define emit(x) \
-  current_statement->body = list_add (current_statement->body, x)
+  current_statement->body = cb_list_add (current_statement->body, x)
 #define emit_list(l) \
-  current_statement->body = list_append (current_statement->body, l)
+  current_statement->body = cb_list_append (current_statement->body, l)
 
 #define BEGIN_STATEMENT(name)				\
   current_statement = cb_build_statement (name);	\
@@ -187,13 +187,13 @@ program_id_paragraph:
       char buff[17];
       time_t t = time (NULL);
       strftime (buff, 17, "%m/%d/%y%H.%M.%S", localtime (&t));
-      cb_build_constant (make_reference ("WHEN-COMPILED"),
+      cb_build_constant (cb_build_reference ("WHEN-COMPILED"),
 			 cb_build_alphanumeric_literal (buff, 16));
     }
     /* RETURN-CODE */
-    cb_return_code = make_reference ("RETURN-CODE");
+    cb_return_code = cb_build_reference ("RETURN-CODE");
     current_program->index_list =
-      list_add (current_program->index_list, cb_build_index (cb_return_code));
+      cb_list_add (current_program->index_list, cb_build_index (cb_return_code));
   }
   program_name as_literal program_type '.'
   {
@@ -349,18 +349,18 @@ alphabet_definition:
     cb_tree x = cb_build_alphabet_name ($-1, CB_ALPHABET_CUSTOM);
     CB_ALPHABET_NAME (x)->custom_list = $1;
     current_program->alphabet_name_list =
-      list_add (current_program->alphabet_name_list, x);
+      cb_list_add (current_program->alphabet_name_list, x);
   }
 ;
 alphabet_literal_list:
-  alphabet_literal		{ $$ = list ($1); }
+  alphabet_literal		{ $$ = cb_list ($1); }
 | alphabet_literal_list
-  alphabet_literal		{ $$ = list_add ($1, $2); }
+  alphabet_literal		{ $$ = cb_list_add ($1, $2); }
 ;
 alphabet_literal:
   LITERAL			{ $$ = $1; }
 | LITERAL THRU LITERAL		{ $$ = cb_build_pair ($1, $3); }
-| LITERAL ALSO			{ $$ = list ($1); }
+| LITERAL ALSO			{ $$ = cb_list ($1); }
   alphabet_also_sequence	{ $$ = $3; }
 ;
 alphabet_also_sequence:
@@ -369,7 +369,7 @@ alphabet_also_sequence:
   alphabet_also_literal
 ;
 alphabet_also_literal:
-  LITERAL			{ list_add ($0, $1); }
+  LITERAL			{ cb_list_add ($0, $1); }
 | SPACE				{ /* ignore */ }
 | ZERO				{ /* ignore */ }
 | QUOTE				{ /* ignore */ }
@@ -409,13 +409,13 @@ class_name_clause:
   CLASS undefined_word _is class_item_list
   {
     current_program->class_name_list =
-      list_add (current_program->class_name_list,
-		cb_build_class_name ($2, $4));
+      cb_list_add (current_program->class_name_list,
+		   cb_build_class_name ($2, $4));
   }
 ;
 class_item_list:
-  class_item			{ $$ = list ($1); }
-| class_item_list class_item	{ $$ = list_add ($1, $2); }
+  class_item			{ $$ = cb_list ($1); }
+| class_item_list class_item	{ $$ = cb_list_add ($1, $2); }
 ;
 class_item:
   literal			{ $$ = $1; }
@@ -500,7 +500,7 @@ file_control_entry:
 
     /* register the file */
     current_program->file_list =
-      cons (CB_TREE (current_file), current_program->file_list);
+      cb_cons (CB_TREE (current_file), current_program->file_list);
   }
   select_clause_sequence '.'
   {
@@ -545,7 +545,7 @@ assign_clause:
       {
 	current_file->assign = $3;
 	current_program->reference_list =
-	  list_add (current_program->reference_list, $3);
+	  cb_list_add (current_program->reference_list, $3);
       }
   }
 ;
@@ -895,7 +895,7 @@ linage_clause:
   LINAGE _is reference_or_literal _lines
   linage_footing linage_top linage_bottom
   {
-    cb_build_index (make_reference ("LINAGE-COUNTER"));
+    cb_build_index (cb_build_reference ("LINAGE-COUNTER"));
 
     cb_error ("LINAGE not implemented");
   }
@@ -993,8 +993,8 @@ level_number:
 ;
 
 entry_name:
-  /* empty */			{ $$ = make_filler (); }
-| FILLER			{ $$ = make_filler (); }
+  /* empty */			{ $$ = cb_build_filler (); }
+| FILLER			{ $$ = cb_build_filler (); }
 | WORD				{ $$ = $1; }
 ;
 
@@ -1119,7 +1119,7 @@ occurs_keys:
   {
     if ($1)
       {
-	int i, nkeys = list_length ($1);
+	int i, nkeys = cb_list_length ($1);
 	struct cb_key *keys = malloc (sizeof (struct cb_key) * nkeys);
 	cb_tree l = $1;
 	for (i = 0; i < nkeys; i++)
@@ -1141,7 +1141,7 @@ occurs_key_list:
     cb_tree l;
     for (l = $5; l; l = CB_CHAIN (l))
       CB_PURPOSE (l) = $2;
-    $$ = list_append ($1, $5);
+    $$ = cb_list_append ($1, $5);
   }
 ;
 ascending_or_descending:
@@ -1153,9 +1153,9 @@ occurs_indexed:
 | INDEXED _by occurs_index_list	{ current_field->index_list = $3; }
 ;
 occurs_index_list:
-  occurs_index			{ $$ = list ($1); }
+  occurs_index			{ $$ = cb_list ($1); }
 | occurs_index_list
-  occurs_index			{ $$ = list_add ($1, $2); }
+  occurs_index			{ $$ = cb_list_add ($1, $2); }
 ;
 occurs_index:
   WORD
@@ -1165,7 +1165,7 @@ occurs_index:
     if (CB_REFERENCE (x)->word->count == 0)
       {
 	current_program->index_list =
-	  list_add (current_program->index_list, cb_build_index (x));
+	  cb_list_add (current_program->index_list, cb_build_index (x));
       }
     else if (!CB_INDEX_P (x))
       {
@@ -1207,8 +1207,8 @@ value_clause:
   VALUE _is_are value_item_list	{ current_field->values = $3; }
 ;
 value_item_list:
-  value_item			{ $$ = list ($1); }
-| value_item_list value_item	{ $$ = list_add ($1, $2); }
+  value_item			{ $$ = cb_list ($1); }
+| value_item_list value_item	{ $$ = cb_list_add ($1, $2); }
 ;
 value_item:
   literal			{ $$ = $1; }
@@ -1487,10 +1487,10 @@ procedure:
 	char name[16];
 	cb_tree label;
 	sprintf (name, "L$%d", next_label_id);
-	label = make_reference (name);
+	label = cb_build_reference (name);
 	push (cb_build_label (label, 0));
 	current_program->label_list =
-	  list_append (current_program->label_list, next_label_list);
+	  cb_list_append (current_program->label_list, next_label_list);
 	next_label_list = NULL;
 	next_label_id++;
       }
@@ -1537,7 +1537,7 @@ paragraph_header:
     current_paragraph = CB_LABEL (cb_build_label ($1, current_section));
     if (current_section)
       current_section->children =
-	cons (CB_TREE (current_paragraph), current_section->children);
+	cb_cons (CB_TREE (current_paragraph), current_section->children);
     push (CB_TREE (current_paragraph));
   }
 ;
@@ -1576,7 +1576,7 @@ statement_list:
   }
   statements
   {
-    $$ = list_reverse (current_program->exec_list);
+    $$ = cb_list_reverse (current_program->exec_list);
     current_program->exec_list = $1;
     current_statement = CB_STATEMENT ($2);
   }
@@ -1631,8 +1631,8 @@ statement:
 	char name[16];
 	cb_tree label;
 	sprintf (name, "L$%d", next_label_id);
-	label = make_reference (name);
-	next_label_list = list_add (next_label_list, label);
+	label = cb_build_reference (name);
+	next_label_list = cb_list_add (next_label_list, label);
 	push (cb_build_goto (label, 0));
       }
   }
@@ -1742,7 +1742,7 @@ add_body:
   }
 ;
 add_to:
-| TO numeric_value		{ list_add ($0, $2); }
+| TO numeric_value		{ cb_list_add ($0, $2); }
 ;
 end_add:
   /* empty */			{ terminator_warning (); }
@@ -1790,11 +1790,11 @@ call_using:
 call_param_list:
   call_param		{ $$ = $1; }
 | call_param_list
-  call_param		{ $$ = list_append ($1, $2); }
+  call_param		{ $$ = cb_list_append ($1, $2); }
 ;
 call_param:
   value			{ $$ = cb_build_int_list (current_mode, $1); }
-| _by call_mode value	{ $$ = cb_build_int_list (current_mode, $3);}
+| _by call_mode value	{ $$ = cb_build_int_list (current_mode, $3); }
 ;
 call_mode:
   REFERENCE		{ current_mode = CB_CALL_BY_REFERENCE; }
@@ -2009,9 +2009,9 @@ evaluate_statement:
 ;
 
 evaluate_subject_list:
-  evaluate_subject		{ $$ = list ($1); }
+  evaluate_subject		{ $$ = cb_list ($1); }
 | evaluate_subject_list ALSO
-  evaluate_subject		{ $$ = list_add ($1, $3); }
+  evaluate_subject		{ $$ = cb_list_add ($1, $3); }
 ;
 evaluate_subject:
   expr				{ $$ = $1; }
@@ -2022,23 +2022,23 @@ evaluate_subject:
 evaluate_case_list:
   /* empty */			{ $$ = NULL; }
 | evaluate_case_list
-  evaluate_case			{ $$ = list_add ($1, $2); }
+  evaluate_case			{ $$ = cb_list_add ($1, $2); }
 ;
 evaluate_case:
   evaluate_when_list
-  statement_list		{ $$ = cons ($2, $1); }
+  statement_list		{ $$ = cb_cons ($2, $1); }
 | WHEN OTHER
-  statement_list		{ $$ = cons ($3, NULL); }
+  statement_list		{ $$ = cb_cons ($3, NULL); }
 ;
 evaluate_when_list:
-  WHEN evaluate_object_list	{ $$ = list ($2); }
+  WHEN evaluate_object_list	{ $$ = cb_list ($2); }
 | evaluate_when_list
-  WHEN evaluate_object_list	{ $$ = list_add ($1, $3); }
+  WHEN evaluate_object_list	{ $$ = cb_list_add ($1, $3); }
 ;
 evaluate_object_list:
-  evaluate_object		{ $$ = list ($1); }
+  evaluate_object		{ $$ = cb_list ($1); }
 | evaluate_object_list ALSO
-  evaluate_object		{ $$ = list_add ($1, $3); }
+  evaluate_object		{ $$ = cb_list_add ($1, $3); }
 ;
 evaluate_object:
   flag_not expr			{ $$ = cb_build_pair ($1, cb_build_pair ($2, 0)); }
@@ -2163,7 +2163,7 @@ initialize_replacing:
 initialize_replacing_list:
   initialize_replacing_item		{ $$ = $1; }
 | initialize_replacing_list
-  initialize_replacing_item		{ $$ = list_append ($1, $2); }
+  initialize_replacing_item		{ $$ = cb_list_append ($1, $2); }
 ;
 initialize_replacing_item:
   initialize_category _data BY value	{ $$ = cb_build_pair ($1, $4); }
@@ -2199,22 +2199,22 @@ inspect_item:
   inspect_tallying
   {
     cb_tree l = $1;
-    l = cons (cb_build_funcall_2 ("cob_inspect_init", $-1, cb_int0), l);
-    l = list_add (l, cb_build_funcall_0 ("cob_inspect_finish"));
+    l = cb_cons (cb_build_funcall_2 ("cob_inspect_init", $-1, cb_int0), l);
+    l = cb_list_add (l, cb_build_funcall_0 ("cob_inspect_finish"));
     push (l);
   }
 | inspect_replacing
   {
     cb_tree l = $1;
-    l = cons (cb_build_funcall_2 ("cob_inspect_init", $-1, cb_int1), l);
-    l = list_add (l, cb_build_funcall_0 ("cob_inspect_finish"));
+    l = cb_cons (cb_build_funcall_2 ("cob_inspect_init", $-1, cb_int1), l);
+    l = cb_list_add (l, cb_build_funcall_0 ("cob_inspect_finish"));
     push (l);
   }
 | inspect_converting
   {
     cb_tree l = $1;
-    l = cons (cb_build_funcall_2 ("cob_inspect_init", $-1, cb_int0), l);
-    l = list_add (l, cb_build_funcall_0 ("cob_inspect_finish"));
+    l = cb_cons (cb_build_funcall_2 ("cob_inspect_init", $-1, cb_int0), l);
+    l = cb_list_add (l, cb_build_funcall_0 ("cob_inspect_finish"));
     push (l);
   }
 ;
@@ -2234,7 +2234,7 @@ inspect_tallying:
 ;
 tallying_list:
   tallying_item			{ $$ = $1; }
-| tallying_list tallying_item	{ $$ = list_append ($1, $2); }
+| tallying_list tallying_item	{ $$ = cb_list_append ($1, $2); }
 ;
 tallying_item:
   non_all_value FOR
@@ -2247,7 +2247,7 @@ tallying_item:
     if (current_inspect_data == NULL)
       cb_error (_("data name expected before CHARACTERS"));
     current_inspect_func = NULL;
-    $$ = list_add ($2, cb_build_funcall_1 ("cob_inspect_characters", current_inspect_data));
+    $$ = cb_list_add ($2, cb_build_funcall_1 ("cob_inspect_characters", current_inspect_data));
   }
 | ALL
   {
@@ -2267,7 +2267,7 @@ tallying_item:
   {
     if (current_inspect_func == NULL)
       cb_error_x ($1, _("ALL or LEADING expected before `%s'"), cb_name ($1));
-    $$ = list_add ($2, cb_build_funcall_2 (current_inspect_func, current_inspect_data, $1));
+    $$ = cb_list_add ($2, cb_build_funcall_2 (current_inspect_func, current_inspect_data, $1));
   }
 ;
 
@@ -2280,25 +2280,25 @@ inspect_replacing:
   }
 | inspect_replacing replacing_item
   {
-    $$ = list_append ($1, $2);
+    $$ = cb_list_append ($1, $2);
   }
 ;
 replacing_item:
   CHARACTERS BY value inspect_before_after_list
   {
-    $$ = list_add ($4, cb_build_funcall_1 ("cob_inspect_characters", $3));
+    $$ = cb_list_add ($4, cb_build_funcall_1 ("cob_inspect_characters", $3));
   }
 | ALL value BY value inspect_before_after_list
   {
-    $$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_all", $4, $2));
+    $$ = cb_list_add ($5, cb_build_funcall_2 ("cob_inspect_all", $4, $2));
   }
 | LEADING value BY value inspect_before_after_list
   {
-    $$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_leading", $4, $2));
+    $$ = cb_list_add ($5, cb_build_funcall_2 ("cob_inspect_leading", $4, $2));
   }
 | FIRST value BY value inspect_before_after_list
   {
-    $$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_first", $4, $2));
+    $$ = cb_list_add ($5, cb_build_funcall_2 ("cob_inspect_first", $4, $2));
   }
 ;
 
@@ -2307,7 +2307,7 @@ replacing_item:
 inspect_converting:
   CONVERTING value TO value inspect_before_after_list
   {
-    $$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_converting", $2, $4));
+    $$ = cb_list_add ($5, cb_build_funcall_2 ("cob_inspect_converting", $2, $4));
   }
 ;
 
@@ -2316,14 +2316,14 @@ inspect_converting:
 inspect_before_after_list:
   /* empty */
   {
-    $$ = list (cb_build_funcall_0 ("cob_inspect_start"));
+    $$ = cb_list (cb_build_funcall_0 ("cob_inspect_start"));
   }
 | inspect_before_after_list before_or_after _initial value
   {
     if ($2 == CB_BEFORE)
-      $$ = list_add ($1, cb_build_funcall_1 ("cob_inspect_before", $4));
+      $$ = cb_list_add ($1, cb_build_funcall_1 ("cob_inspect_before", $4));
     else
-      $$ = list_add ($1, cb_build_funcall_1 ("cob_inspect_after", $4));
+      $$ = cb_list_add ($1, cb_build_funcall_1 ("cob_inspect_after", $4));
   }
 ;
 _initial: | TOK_INITIAL ;
@@ -2765,7 +2765,7 @@ sort_body:
   {
     cb_tree l;
     cb_tree file = cb_ref ($1);
-    push_funcall_3 ("cob_sort_init", file, cb_int (list_length ($2)), $4);
+    push_funcall_3 ("cob_sort_init", file, cb_int (cb_list_length ($2)), $4);
     for (l = $2; l; l = CB_CHAIN (l))
       push_funcall_3 ("cob_sort_init_key", file, CB_PURPOSE (l), CB_VALUE (l));
     $$ = file; /* used in sort_input, sort_output */
@@ -2783,7 +2783,7 @@ sort_key_list:
     cb_tree l;
     for (l = $5; l; l = CB_CHAIN (l))
       CB_PURPOSE (l) = $3;
-    $$ = list_append ($1, $5);
+    $$ = cb_list_append ($1, $5);
   }
 ;
 sort_duplicates:
@@ -2915,8 +2915,8 @@ string_statement:
   }
 ;
 string_item_list:
-  string_item			{ $$ = list ($1); }
-| string_item_list string_item	{ $$ = list_add ($1, $2); }
+  string_item			{ $$ = cb_list ($1); }
+| string_item_list string_item	{ $$ = cb_list_add ($1, $2); }
 ;
 string_item:
   value				{ $$ = $1; }
@@ -2949,7 +2949,7 @@ subtract_body:
   }
 | numeric_value_list FROM numeric_value GIVING numeric_edited_name_list
   {
-    emit (cb_build_arithmetic ($5, 0, cb_build_connective_op (cons ($3, $1), '-')));
+    emit (cb_build_arithmetic ($5, 0, cb_build_connective_op (cb_cons ($3, $1), '-')));
   }
 | CORRESPONDING group_name FROM group_name flag_rounded
   {
@@ -2987,9 +2987,9 @@ unstring_delimited:
   unstring_delimited_list	{ $$ = $3; }
 ;
 unstring_delimited_list:
-  unstring_delimited_item	{ $$ = list ($1); }
+  unstring_delimited_item	{ $$ = cb_list ($1); }
 | unstring_delimited_list OR
-  unstring_delimited_item	{ $$ = list_add ($1, $3); }
+  unstring_delimited_item	{ $$ = cb_list_add ($1, $3); }
 ;
 unstring_delimited_item:
   flag_all non_all_value
@@ -2999,9 +2999,9 @@ unstring_delimited_item:
 ;
 
 unstring_into:
-  unstring_into_item		{ $$ = list ($1); }
+  unstring_into_item		{ $$ = cb_list ($1); }
 | unstring_into
-  unstring_into_item		{ $$ = list_add ($1, $2); }
+  unstring_into_item		{ $$ = cb_list_add ($1, $2); }
 ;
 unstring_into_item:
   data_name unstring_delimiter unstring_count
@@ -3379,7 +3379,7 @@ record_name:
 numeric_name_list:
   numeric_name			{ $$ = $1; }
 | numeric_name_list
-  numeric_name			{ $$ = list_append ($1, $2); }
+  numeric_name			{ $$ = cb_list_append ($1, $2); }
 ;
 numeric_name:
   data_name flag_rounded
@@ -3394,7 +3394,7 @@ numeric_name:
 numeric_edited_name_list:
   numeric_edited_name		{ $$ = $1; }
 | numeric_edited_name_list
-  numeric_edited_name		{ $$ = list_append ($1, $2); }
+  numeric_edited_name		{ $$ = cb_list_append ($1, $2); }
 ;
 numeric_edited_name:
   data_name flag_rounded
@@ -3419,8 +3419,8 @@ integer_name:
 /* Data name */
 
 data_name_list:
-  data_name			{ $$ = list ($1); }
-| data_name_list data_name	{ $$ = list_add ($1, $2); }
+  data_name			{ $$ = cb_list ($1); }
+| data_name_list data_name	{ $$ = cb_list_add ($1, $2); }
 ;
 data_name:
   value
@@ -3455,8 +3455,8 @@ table_name:
 /* File name */
 
 file_name_list:
-  file_name			{ $$ = list ($1); }
-| file_name_list file_name	{ $$ = list_add ($1, $2); }
+  file_name			{ $$ = cb_list ($1); }
+| file_name_list file_name	{ $$ = cb_list_add ($1, $2); }
 ;
 file_name:
   qualified_word
@@ -3474,9 +3474,9 @@ file_name:
 /* Mnemonic name */
 
 mnemonic_name_list:
-  mnemonic_name			{ $$ = list ($1); }
+  mnemonic_name			{ $$ = cb_list ($1); }
 | mnemonic_name_list
-  mnemonic_name			{ $$ = list_add ($1, $2); }
+  mnemonic_name			{ $$ = cb_list_add ($1, $2); }
 ;
 mnemonic_name:
   MNEMONIC_NAME			{ $$ = $1; }
@@ -3487,14 +3487,14 @@ mnemonic_name:
 procedure_name_list:
   /* empty */			{ $$ = NULL; }
 | procedure_name_list 
-  label				{ $$ = list_add ($1, $2); }
+  label				{ $$ = cb_list_add ($1, $2); }
 ;
 label:
   label_name
   {
     $$ = $1;
     CB_REFERENCE ($$)->offset = CB_TREE (current_section);
-    current_program->label_list = cons ($$, current_program->label_list);
+    current_program->label_list = cb_cons ($$, current_program->label_list);
   }
 ;
 label_name:
@@ -3505,7 +3505,7 @@ label_name:
 integer_label:
   LITERAL
   {
-    $$ = make_reference (CB_LITERAL ($1)->data);
+    $$ = cb_build_reference (CB_LITERAL ($1)->data);
     $$->source_file = $1->source_file;
     $$->source_line = $1->source_line;
   }
@@ -3514,14 +3514,14 @@ integer_label:
 /* Reference */
 
 reference_list:
-  reference			{ $$ = list ($1); }
-| reference_list reference	{ $$ = list_add ($1, $2); }
+  reference			{ $$ = cb_list ($1); }
+| reference_list reference	{ $$ = cb_list_add ($1, $2); }
 ;
 reference:
   qualified_word
   {
     $$ = $1;
-    current_program->reference_list = cons ($$, current_program->reference_list);
+    current_program->reference_list = cb_cons ($$, current_program->reference_list);
   }
 ;
 
@@ -3563,9 +3563,9 @@ alphanumeric_value:
 /* Numeric value */
 
 numeric_value_list:
-  numeric_value			{ $$ = list ($1); }
+  numeric_value			{ $$ = cb_list ($1); }
 | numeric_value_list
-  numeric_value			{ $$ = list_add ($1, $2); }
+  numeric_value			{ $$ = cb_list_add ($1, $2); }
 ;
 numeric_value:
   value
@@ -3639,8 +3639,8 @@ opt_value_list:
 | value_list			{ $$ = $1; }
 ;
 value_list:
-  value				{ $$ = list ($1); }
-| value_list value		{ $$ = list_add ($1, $2); }
+  value				{ $$ = cb_list ($1); }
+| value_list value		{ $$ = cb_list_add ($1, $2); }
 ;
 value:
   identifier
@@ -3686,8 +3686,8 @@ refmod:
   }
 ;
 subscript_list:
-  subscript			{ $$ = list ($1); }
-| subscript_list subscript	{ $$ = cons ($2, $1); }
+  subscript			{ $$ = cb_list ($1); }
+| subscript_list subscript	{ $$ = cb_cons ($2, $1); }
 ;
 subscript:
   integer_value			{ $$ = $1; }
@@ -3829,14 +3829,14 @@ push_entry (const char *name, cb_tree using_list)
   char buff[256];
   cb_tree label;
   sprintf (buff, "E$%s", name);
-  label = cb_build_label (make_reference (buff), NULL);
+  label = cb_build_label (cb_build_reference (buff), NULL);
   CB_LABEL (label)->name = name;
   CB_LABEL (label)->need_begin = 1;
   push (label);
 
   current_program->entry_list =
-    list_append (current_program->entry_list,
-		 cb_build_pair (label, using_list));
+    cb_list_append (current_program->entry_list,
+		    cb_build_pair (label, using_list));
 }
 
 static void

@@ -1037,7 +1037,7 @@ output_initialize_compound (struct cb_initialize *p, cb_tree x)
 
 		if (f->flag_occurs)
 		  CB_REFERENCE (c)->subs =
-		    cons (cb_int1, CB_REFERENCE (c)->subs);
+		    cb_cons (cb_int1, CB_REFERENCE (c)->subs);
 
 		for (; f->sister; f = f->sister)
 		  if (!f->sister->redefines)
@@ -1063,7 +1063,7 @@ output_initialize_compound (struct cb_initialize *p, cb_tree x)
 	      output_line ("for (i%d = 1; i%d <= %d; i%d++)",
 			   i, i, f->occurs_max, i);
 	      output_indent ("  {");
-	      CB_REFERENCE (c)->subs = cons (cb_i[i], CB_REFERENCE (c)->subs);
+	      CB_REFERENCE (c)->subs = cb_cons (cb_i[i], CB_REFERENCE (c)->subs);
 	    }
 
 	  if (type == INITIALIZE_ONE)
@@ -2192,7 +2192,7 @@ codegen (struct cb_program *prog)
 			    cb_field (CB_VALUE (l2))->cname) == 0)
 		  break;
 	      if (l2 == NULL)
-		parameter_list = list_add (parameter_list, CB_VALUE (l1));
+		parameter_list = cb_list_add (parameter_list, CB_VALUE (l1));
 	    }
 	}
 
