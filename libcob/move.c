@@ -373,7 +373,7 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 	    {
 	    case '0':
 	    case '/': *dst = c; break;
-	    case 'B': *dst = 'B'; break;
+	    case 'B': *dst = suppress_zero ? pad : 'B'; break;
 	    case 'P': break;
 
 	    case '9':
@@ -487,16 +487,14 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
       count = 0;
       for (dst = f2->data; dst < end; dst++)
       {
-	if ( *dst != pad ) {
-		if ( *dst == 'B' ) {
-			if ( count == 0 ) {
-				*dst = pad;
-			} else {
-				*dst = ' ';
-			}
+	if ( *dst == 'B' ) {
+		if ( count == 0 ) {
+			*dst = pad;
 		} else {
-			count++;
+			*dst = ' ';
 		}
+	} else {
+		count++;
 	}
       }
     }
