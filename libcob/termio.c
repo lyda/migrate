@@ -51,7 +51,8 @@ display (cob_field *f, FILE *fp)
       if (COB_FIELD_HAVE_SIGN (f))
 	p += sprintf (p, "+\001");
       if (scale > 0)
-	sprintf (p, "9%c.%c9%c", digits - scale, 1, scale);
+	sprintf (p, "9%c%c%c9%c",
+		 digits - scale, cob_current_module->decimal_point, 1, scale);
       else
 	sprintf (p, "9%c", digits);
       cob_move (f, &temp);
