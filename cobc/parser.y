@@ -1039,7 +1039,6 @@ usage:
 | INDEX
   {
     current_field->usage = COBC_USAGE_INDEX;
-    current_field->pic = yylex_picture ("9(9)");
   }
 ;
 _usage: | USAGE ;
@@ -4272,10 +4271,12 @@ validate_field_tree (struct cobc_field *p)
       COBC_TREE_CLASS (p) = COB_ALPHANUMERIC;
 
       if (p->pic)
-	yyerror (_("group name may not have PICTURE"));
+	yyerror_tree (COBC_TREE (p),
+		      _("group name may not have PICTURE"));
 
       if (p->f.justified)
-	yyerror (_("group name may not have JUSTIFIED RIGHT"));
+	yyerror_tree (COBC_TREE (p),
+		      _("group name may not have JUSTIFIED RIGHT"));
 
       for (p = p->children; p; p = p->sister)
 	validate_field_tree (p);
@@ -4295,6 +4296,8 @@ validate_field_tree (struct cobc_field *p)
 	  break;
 	case COBC_USAGE_INDEX:
 	  COBC_TREE_CLASS (p) = COB_NUMERIC;
+	  if (!p->pic)
+	    p->pic = yylex_picture ("S9(9)");
 	  break;
 	}
 
