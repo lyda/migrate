@@ -3,8 +3,8 @@
 Makefile
 Makefile.in
 cobc
+defaults.h
 parser.c
 parser.h
+parser.output
 scanner.c
-defaults.h
-y.output
