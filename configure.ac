@@ -123,7 +123,7 @@ fi
 
 # Checks for ncurses.
 USE_NCURSES="no"
-AC_CHECK_HEADERS([curses.h])
+AC_CHECK_HEADERS([ncurses.h curses.h])
 AC_CHECK_LIB([ncurses], [initscr])
 if test "x$ac_cv_lib_ncurses_initscr" = "xyes"; then
   USE_NCURSES="yes"
