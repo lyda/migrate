@@ -624,7 +624,7 @@ output_display (cobc_tree x, cobc_tree fd)
     {
       struct cobc_literal *p = COBC_LITERAL (x);
       output_prefix ();
-      output ("fputs (");
+      output ("cob_puts (");
       if (COBC_TREE_CLASS (x) == COB_NUMERIC)
 	{
 	  /* numeric literal */
@@ -647,10 +647,11 @@ output_display (cobc_tree x, cobc_tree fd)
 	  /* non-numeric literal */
 	  output_quoted_string (p->str, p->size);
 	}
-      if (COBC_INTEGER (fd)->val == COB_STDERR)
-	output (", stderr);\n");
-      else
-	output (", stdout);\n");
+      output (", %d);\n", COBC_INTEGER (fd)->val);
+    }
+  else if (COBC_FIELD_P (x) && COBC_FIELD (x)->usage == COBC_USAGE_INDEX)
+    {
+      output_call_2 ("cob_puti", make_index (x), fd);
     }
   else
     {
