@@ -369,13 +369,15 @@ expr_reduce (int token)
    * index: -3  -2  -1   0
    * token: 'x' '*' 'x' '+' ...
    */
-  while (expr_prio[TOKEN (-2)] > 0
-	 && expr_prio[TOKEN (-2)] <= expr_prio[token])
+  while (expr_prio[TOKEN (-2)] <= expr_prio[token])
     {
       /* Reduce the expression depending on the last operator */
       int op = TOKEN (-2);
       switch (op)
 	{
+	case 'x':
+	  return 0;
+
 	case '+': case '-': case '*': case '/': case '^':
 	  /* Arithmetic operators: 'x' op 'x' */
 	  if (TOKEN (-1) != 'x' || TOKEN (-3) != 'x')
@@ -402,8 +404,13 @@ expr_reduce (int token)
 	  if (TOKEN (-1) != 'x' || TOKEN (-3) != 'x')
 	    return -1;
 	  /* 'x' '=' 'x' '|' 'x' */
-	  if (CB_TREE_CLASS (VALUE (-1)) != CB_CLASS_BOOLEAN)
-	    VALUE (-1) = cb_build_binary_op (expr_lh, expr_op, VALUE (-1));
+	  if (expr_lh)
+	    {
+	      if (CB_TREE_CLASS (VALUE (-1)) != CB_CLASS_BOOLEAN)
+		VALUE (-1) = cb_build_binary_op (expr_lh, expr_op, VALUE (-1));
+	      if (CB_TREE_CLASS (VALUE (-3)) != CB_CLASS_BOOLEAN)
+		VALUE (-3) = cb_build_binary_op (expr_lh, expr_op, VALUE (-3));
+	    }
 	  /* warning for complex expressions without explicit parentheses
 	     (i.e., "a OR b AND c" or "a AND b OR c") */
 	  if (cb_warn_parentheses && op == '|')
@@ -431,7 +438,10 @@ expr_reduce (int token)
 	      expr_lh = VALUE (-3);
 	      expr_op = op;
 	      TOKEN (-3) = 'x';
-	      VALUE (-3) = cb_build_binary_op (expr_lh, op, VALUE (-1));
+	      if (CB_TREE_CLASS (VALUE (-1)) != CB_CLASS_BOOLEAN)
+		VALUE (-3) = cb_build_binary_op (expr_lh, op, VALUE (-1));
+	      else
+		VALUE (-3) = VALUE (-1);
 	      expr_index -= 2;
 	      break;
 	    case '&':
@@ -439,7 +449,10 @@ expr_reduce (int token)
 	      /* Complex condition: 'x' '=' 'x' '|' op 'x' */
 	      expr_op = op;
 	      TOKEN (-2) = 'x';
-	      VALUE (-2) = cb_build_binary_op (expr_lh, op, VALUE (-1));
+	      if (CB_TREE_CLASS (VALUE (-1)) != CB_CLASS_BOOLEAN)
+		VALUE (-2) = cb_build_binary_op (expr_lh, op, VALUE (-1));
+	      else
+		VALUE (-2) = VALUE (-1);
 	      expr_index -= 1;
 	      break;
 	    default:
@@ -483,21 +496,22 @@ cb_expr_shift (int token, cb_tree value)
 	}
 
       /* unary sign */
-      if (TOKEN (-1) == '+' || TOKEN (-1) == '-')
-	if (TOKEN (-2) != 'x')
-	  {
-	    if (TOKEN (-1) == '-')
-	      value = cb_build_binary_op (cb_zero, '-', value);
-	    expr_index -= 1;
-	  }
+      if ((TOKEN (-1) == '+' || TOKEN (-1) == '-') && TOKEN (-2) != 'x')
+	{
+	  if (TOKEN (-1) == '-')
+	    value = cb_build_binary_op (cb_zero, '-', value);
+	  expr_index -= 1;
+	}
       break;
 
     case '(':
+      /* 'x' op '(' --> '(' 'x' op */
       switch (TOKEN (-1))
 	{
 	case '=': case '~': case '<': case '>': case '[': case ']':
-	  expr_lh = VALUE (-1);
-	  expr_op = token;
+	  expr_op = TOKEN (-1);
+	  if (TOKEN (-2) == 'x')
+	    expr_lh = VALUE (-2);
 	}
       break;
 
