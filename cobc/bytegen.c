@@ -233,41 +233,6 @@ output_length (cb_tree x)
     }
 }
 
-static int
-tree_type (cb_tree x)
-{
-  struct cb_field *f = cb_field (x);
-
-  if (f->children)
-    return COB_TYPE_GROUP;
-
-  switch (CB_TREE_CATEGORY (x))
-    {
-    case CB_CATEGORY_ALPHABETIC:
-      return COB_TYPE_ALPHABETIC;
-    case CB_CATEGORY_ALPHANUMERIC:
-      return COB_TYPE_ALPHANUMERIC;
-    case CB_CATEGORY_ALPHANUMERIC_EDITED:
-      return COB_TYPE_ALPHANUMERIC_EDITED;
-    case CB_CATEGORY_NUMERIC:
-      switch (cb_field (x)->usage)
-	{
-	case CB_USAGE_DISPLAY:
-	  return COB_TYPE_NUMERIC_DISPLAY;
-	case CB_USAGE_BINARY:
-	  return COB_TYPE_NUMERIC_BINARY;
-	case CB_USAGE_PACKED:
-	  return COB_TYPE_NUMERIC_PACKED;
-	default:
-	  abort ();
-	}
-    case CB_CATEGORY_NUMERIC_EDITED:
-      return COB_TYPE_NUMERIC_EDITED;
-    default:
-      abort ();
-    }
-}
-
 static void
 output_attr_1 (char type, char digits, char expt, char flags, char *pic)
 {
@@ -311,7 +276,7 @@ output_attr (cb_tree x)
       }
     case CB_TAG_FIELD:
       {
-	int type = tree_type (x);
+	int type = cb_tree_type (x);
 	struct cb_field *f = CB_FIELD (x);
 
 	switch (type)
@@ -451,7 +416,7 @@ output_param (cb_tree x)
       output_integer (x);
       break;
     case CB_TAG_STRING:
-      output_line ("\tspush\t\"%s\"", CB_STRING (x)->str);
+      output_line ("\tspush\t\"%s\"", CB_STRING (x)->data);
       break;
     case CB_TAG_CAST:
       switch (CB_CAST (x)->type)
@@ -463,14 +428,12 @@ output_param (cb_tree x)
 	  abort ();
 	}
       break;
-#if 0
     case CB_TAG_DECIMAL:
-      output ("&d[%d]", CB_DECIMAL (x)->id);
+      output_line ("\tvpush\td%d", CB_DECIMAL (x)->id);
       break;
     case CB_TAG_FILE:
-      output ("&%s", CB_FILE (x)->cname);
+      output_line ("\tvpush\t%s", CB_FILE (x)->cname);
       break;
-#endif
     case CB_TAG_LITERAL:
       output_line ("\tcpush\t\"%s\"", CB_LITERAL (x)->data);
       break;
@@ -488,53 +451,13 @@ output_param (cb_tree x)
  * Function call
  */
 
-static struct inline_func {
-  const char *name;
-  void (*func) ();
-} inline_table[] = {
-//  {"@handler", output_handler},
-//  {"@memcmp", output_memcmp},
-//  {"@goto", output_goto},
-//  {"@goto-depending", output_goto_depending},
-//  {"@exit-program", output_exit_program},
-//  {"@initialize", output_initialize},
-//  {"@search", output_search},
-//  {"@search-all", output_search_all},
-//  {"@sort-init", output_sort_init},
-//  {"@call", output_call},
-  {0, 0}
-};
-
 static void
 output_funcall (struct cb_funcall *p)
 {
-  if (p->name[0] == '@')
-    {
-      /* inline function */
-      int i;
-      for (i = 0; inline_table[i].name; i++)
-	if (strcmp (p->name, inline_table[i].name) == 0)
-	  {
-	    void (*func) () = inline_table[i].func;
-	    switch (p->argc)
-	      {
-	      case 0: func (); break;
-	      case 1: func (p->argv[0]); break;
-	      case 2: func (p->argv[0], p->argv[1]); break;
-	      case 3: func (p->argv[0], p->argv[1], p->argv[2]); break;
-	      case 4: func (p->argv[0], p->argv[1], p->argv[2], p->argv[3]); break;
-	      }
-	    break;
-	  }
-    }
-  else
-    {
-      /* regular function call */
-      int i;
-      for (i = 0; i < p->argc; i++)
-	output_param (p->argv[i]);
-      output_line ("\tcall\t%s", p->name);
-    }
+  int i;
+  for (i = 0; i < p->argc; i++)
+    output_param (p->argv[i]);
+  output_line ("\tcall\t%s", p->name);
 }
 
 
@@ -751,15 +674,57 @@ output_stmt (cb_tree x)
     case CB_TAG_STATEMENT:
       {
 	static int last_line = 0;
+	int need_handler = 0;
+	struct cb_statement *p = CB_STATEMENT (x);
+
+	output_line ("; %s:%d: %s", x->source_file, x->source_line, p->name);
 	if (x->source_file && last_line != x->source_line)
 	  {
-	    struct cb_statement *p = CB_STATEMENT (x);
-	    output_line ("; %s:%d: %s",
-			 x->source_file, x->source_line, p->name);
 	    if (cb_flag_source_location)
 	      output_line (".source\t\"%s\" %d",
 			   x->source_file, x->source_line);
 	    last_line = x->source_line;
+	  }
+
+	if (p->handler1 || p->handler2
+	    || (p->file && CB_EXCEPTION_ENABLE (COB_EC_I_O)))
+	  {
+	    output_inst_int (0);
+	    output_line ("\tvstore\tcob_exception_code");
+	    need_handler = 1;
+	  }
+
+	if (p->body)
+	  output_stmt (p->body);
+
+	if (need_handler)
+	  {
+	    int code = CB_EXCEPTION_CODE (p->handler_id);
+	    if (p->handler1)
+	      {
+		if ((code & 0x00ff) == 0)
+		  output_line ("if ((cob_exception_code & 0xff00) == 0x%04x)",
+			       code);
+		else
+		  output_line ("if (cob_exception_code == 0x%04x)", code);
+		output_stmt (p->handler1);
+		if (p->handler2 || p->file)
+		  output_line ("else");
+	      }
+	    if (p->file)
+	      {
+		output_line ("if (cob_exception_code)");
+		output_perform_call (CB_FILE (p->file)->handler,
+				     CB_FILE (p->file)->handler);
+		if (p->handler2)
+		  output_line ("else");
+	      }
+	    if (p->handler2)
+	      {
+		if (p->handler1 == 0 && p->file == 0)
+		  output_line ("if (!cob_exception_code)");
+		output_stmt (p->handler2);
+	      }
 	  }
 	break;
       }
@@ -855,6 +820,7 @@ bytegen (struct cb_program *prog)
 	       toupper (prog->program_id[0]), prog->program_id + 1);
 
   output_line (".static");
+  output_line ("\tdecimal %d", prog->decimal_index_max);
   for (f = prog->working_storage; f; f = f->sister)
     output_line ("\tbase\t%s %d", f->name, f->memory_size);
   output_line ("\treturn");

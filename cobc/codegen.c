@@ -272,41 +272,6 @@ output_size (cb_tree x)
 }
 
 static int
-tree_type (cb_tree x)
-{
-  struct cb_field *f = cb_field (x);
-
-  if (f->children)
-    return COB_TYPE_GROUP;
-
-  switch (CB_TREE_CATEGORY (x))
-    {
-    case CB_CATEGORY_ALPHABETIC:
-      return COB_TYPE_ALPHABETIC;
-    case CB_CATEGORY_ALPHANUMERIC:
-      return COB_TYPE_ALPHANUMERIC;
-    case CB_CATEGORY_ALPHANUMERIC_EDITED:
-      return COB_TYPE_ALPHANUMERIC_EDITED;
-    case CB_CATEGORY_NUMERIC:
-      switch (cb_field (x)->usage)
-	{
-	case CB_USAGE_DISPLAY:
-	  return COB_TYPE_NUMERIC_DISPLAY;
-	case CB_USAGE_BINARY:
-	  return COB_TYPE_NUMERIC_BINARY;
-	case CB_USAGE_PACKED:
-	  return COB_TYPE_NUMERIC_PACKED;
-	default:
-	  abort ();
-	}
-    case CB_CATEGORY_NUMERIC_EDITED:
-      return COB_TYPE_NUMERIC_EDITED;
-    default:
-      abort ();
-    }
-}
-
-static int
 lookup_attr (char type, char digits, char expt, char flags, unsigned char *pic)
 {
   static int id = 0;
@@ -390,7 +355,7 @@ output_attr (cb_tree x)
       }
     case CB_TAG_REFERENCE:
       {
-	int type = tree_type (x);
+	int type = cb_tree_type (x);
 	struct cb_reference *r = CB_REFERENCE (x);
 	struct cb_field *f = CB_FIELD (r->value);
 
@@ -573,7 +538,7 @@ output_integer (cb_tree x)
 		  }
 		break;
 
-	      case CB_USAGE_BINARY:
+	      case CB_USAGE_NATIVE:
 		output ("(*(");
 		switch (f->size)
 		  {
@@ -898,7 +863,7 @@ initialize_uniform_char (struct cb_field *f)
     }
   else
     {
-      switch (tree_type (CB_TREE (f)))
+      switch (cb_tree_type (CB_TREE (f)))
 	{
 	case COB_TYPE_NUMERIC_BINARY:
 	case COB_TYPE_NUMERIC_PACKED:
@@ -1322,15 +1287,17 @@ output_call (struct cb_call *p)
 		output ("%d", CB_LITERAL (x)->data[0]);
 	      break;
 	    default:
-	      if (cb_field (x)->usage == CB_USAGE_BINARY
-		  || cb_field (x)->usage == CB_USAGE_INDEX)
+	      switch (cb_field (x)->usage)
 		{
+		case CB_USAGE_BINARY:
+		case CB_USAGE_NATIVE:
+		case CB_USAGE_INDEX:
 		  output_integer (x);
-		}
-	      else
-		{
+		  break;
+		default:
 		  output ("*");
 		  output_data (x);
+		  break;
 		}
 	      break;
 	    }

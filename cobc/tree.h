@@ -143,6 +143,7 @@ enum cb_usage {
   CB_USAGE_DISPLAY,
   CB_USAGE_FLOAT,
   CB_USAGE_INDEX,
+  CB_USAGE_NATIVE,
   CB_USAGE_NATIONAL,
   CB_USAGE_OBJECT,
   CB_USAGE_PACKED,
@@ -195,6 +196,7 @@ typedef struct cb_tree_common *cb_tree;
 extern char *cb_name (cb_tree x);
 extern enum cb_class cb_tree_class (cb_tree x);
 extern enum cb_category cb_tree_category (cb_tree x);
+extern int cb_tree_type (cb_tree x);
 extern int cb_fits_int (cb_tree x);
 
 

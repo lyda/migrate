@@ -256,6 +256,43 @@ cb_tree_category (cb_tree x)
 }
 
 int
+cb_tree_type (cb_tree x)
+{
+  struct cb_field *f = cb_field (x);
+
+  if (f->children)
+    return COB_TYPE_GROUP;
+
+  switch (CB_TREE_CATEGORY (x))
+    {
+    case CB_CATEGORY_ALPHABETIC:
+      return COB_TYPE_ALPHABETIC;
+    case CB_CATEGORY_ALPHANUMERIC:
+      return COB_TYPE_ALPHANUMERIC;
+    case CB_CATEGORY_ALPHANUMERIC_EDITED:
+      return COB_TYPE_ALPHANUMERIC_EDITED;
+    case CB_CATEGORY_NUMERIC:
+      switch (cb_field (x)->usage)
+	{
+	case CB_USAGE_DISPLAY:
+	  return COB_TYPE_NUMERIC_DISPLAY;
+	case CB_USAGE_BINARY:
+	  return COB_TYPE_NUMERIC_BINARY;
+	case CB_USAGE_NATIVE:
+	  return COB_TYPE_NUMERIC_NATIVE;
+	case CB_USAGE_PACKED:
+	  return COB_TYPE_NUMERIC_PACKED;
+	default:
+	  abort ();
+	}
+    case CB_CATEGORY_NUMERIC_EDITED:
+      return COB_TYPE_NUMERIC_EDITED;
+    default:
+      abort ();
+    }
+}
+
+int
 cb_fits_int (cb_tree x)
 {
   switch (CB_TREE_TAG (x))
@@ -275,6 +312,7 @@ cb_fits_int (cb_tree x)
 	  case CB_USAGE_INDEX:
 	    return 1;
 	  case CB_USAGE_BINARY:
+	  case CB_USAGE_NATIVE:
 	    if (f->pic->expt >= 0 && f->size <= sizeof (int))
 	      return 1;
 	    return 0;
@@ -1068,7 +1106,9 @@ validate_field_1 (struct cb_field *f)
       }
 
       /* validate USAGE */
-      if (f->usage == CB_USAGE_BINARY || f->usage == CB_USAGE_PACKED)
+      if (f->usage == CB_USAGE_BINARY
+	  || f->usage == CB_USAGE_NATIVE
+	  || f->usage == CB_USAGE_PACKED)
 	if (f->pic->category != CB_CATEGORY_NUMERIC)
 	  cb_warning_x (x, _("`%s' not numeric item"), name);
 
@@ -1203,6 +1243,7 @@ compute_size (struct cb_field *f)
       switch (f->usage)
 	{
 	case CB_USAGE_BINARY:
+	case CB_USAGE_NATIVE:
 	  {
 	    int size = f->pic->size;
 	    switch (cb_spec->binary_rep)

@@ -754,6 +754,7 @@ cb_build_move_num (cb_tree x, int high)
   switch (cb_field (x)->usage)
     {
     case CB_USAGE_BINARY:
+    case CB_USAGE_NATIVE:
       return cb_build_assign (x, cb_int (high ? -1 : 0));
     case CB_USAGE_DISPLAY:
       return cb_build_memset (x, high ? '9' : '0');
@@ -915,7 +916,7 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 				 cb_build_string (buff, f->size),
 				 cb_build_cast_length (dst));
     }
-  else if (f->usage == CB_USAGE_BINARY && cb_fits_int (src))
+  else if (f->usage == CB_USAGE_NATIVE && cb_fits_int (src))
     {
       int val = cb_literal_to_int (l);
       int n = l->expt - f->pic->expt;
