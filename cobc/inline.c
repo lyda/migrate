@@ -23,7 +23,7 @@
  */
 
 void
-output_file_handler (struct cobc_file_name *f, int type,
+output_file_handler (struct cobc_file *f, int type,
 		     cobc_tree st1, cobc_tree st2)
 {
   if (st1)

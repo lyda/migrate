@@ -26,7 +26,7 @@ struct cobc_program_spec {
   int enable_screen;
   struct cobc_list *class_list;
   struct cobc_list *index_list;
-  struct cobc_list *file_name_list;
+  struct cobc_list *file_list;
   struct cobc_list *using_list;
   struct cobc_list *exec_list;
   struct cobc_field *working_storage;
@@ -40,7 +40,7 @@ struct cobc_program_spec {
 
 extern void codegen (struct cobc_program_spec *spec);
 
-extern void output_file_handler (struct cobc_file_name *f, int type, cobc_tree st1, cobc_tree st2);
+extern void output_file_handler (struct cobc_file *f, int type, cobc_tree st1, cobc_tree st2);
 extern void output_goto (struct cobc_label *p);
 extern void output_goto_depending (struct cobc_list *labels, cobc_tree index);
 extern void output_move (cobc_tree src, cobc_tree dst);

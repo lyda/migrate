@@ -650,10 +650,10 @@ make_predefined (struct cobc_list *words)
  */
 
 cobc_tree
-make_file_name (struct cobc_word *word)
+make_file (struct cobc_word *word)
 {
-  struct cobc_file_name *p =
-    make_tree (cobc_tag_file_name, COB_VOID, sizeof (struct cobc_file_name));
+  struct cobc_file *p =
+    make_tree (cobc_tag_file, COB_VOID, sizeof (struct cobc_file));
   p->word = set_word_item (word, COBC_TREE (p));
   p->cname = to_cname (word->name);
   return COBC_TREE (p);

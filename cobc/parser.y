@@ -113,7 +113,7 @@
 struct cobc_program_spec program_spec;
 
 static struct cobc_field *current_field;
-static struct cobc_file_name *current_file_name;
+static struct cobc_file *current_file;
 static struct cobc_label *current_section, *current_paragraph;
 
 static int call_mode;
@@ -134,7 +134,7 @@ static void resolve_predefined_names (void);
 
 static struct cobc_field *init_field (int level, struct cobc_field *field);
 static void validate_field_tree (struct cobc_field *p);
-static void finalize_file_name (struct cobc_file_name *f, struct cobc_field *records);
+static void finalize_file (struct cobc_file *f, struct cobc_field *records);
 static void validate_label (struct cobc_label *p);
 
 static void field_set_used (struct cobc_field *p);
@@ -237,7 +237,7 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %type <tree> search_varying search_at_end search_whens search_when
 %type <tree> perform_procedure perform_sentence perform_option start_key
 %type <tree> read_into read_key write_from field_name expr expr_1 expr_item
-%type <tree> file_name opt_with_pointer occurs_index evaluate_subject
+%type <tree> opt_with_pointer occurs_index evaluate_subject
 %type <tree> unstring_delimiter unstring_count unstring_tallying
 %type <tree> at_end_sentence not_at_end_sentence
 %type <tree> invalid_key_sentence not_invalid_key_sentence
@@ -292,7 +292,7 @@ program:
     struct cobc_list *l;
     for (l = list_reverse (label_check_list); l; l = l->next)
       validate_label (l->item);
-    program_spec.file_name_list = list_reverse (program_spec.file_name_list);
+    program_spec.file_list = list_reverse (program_spec.file_list);
     program_spec.exec_list = list_reverse (program_spec.exec_list);
     if (error_count == 0)
       codegen (&program_spec);
@@ -585,31 +585,30 @@ select_sequence:
 | select_sequence
   SELECT flag_optional undefined_word
   {
-    current_file_name = COBC_FILE_NAME (make_file_name ($4));
-    current_file_name->organization = COB_ORG_SEQUENTIAL;
-    current_file_name->access_mode = COB_ACCESS_SEQUENTIAL;
-    current_file_name->optional = $3;
-    current_file_name->handler = cobc_standard_error_handler;
-    COBC_TREE_LOC (current_file_name) = @4;
-    program_spec.file_name_list =
-      cons (current_file_name, program_spec.file_name_list);
+    current_file = COBC_FILE (make_file ($4));
+    current_file->organization = COB_ORG_SEQUENTIAL;
+    current_file->access_mode = COB_ACCESS_SEQUENTIAL;
+    current_file->optional = $3;
+    current_file->handler = cobc_standard_error_handler;
+    COBC_TREE_LOC (current_file) = @4;
+    program_spec.file_list = cons (current_file, program_spec.file_list);
   }
   select_options '.'
   {
     /* check ASSIGN clause */
-    if (current_file_name->assign == NULL)
+    if (current_file->assign == NULL)
       yyerror_loc (&@2, _("ASSIGN required for file `%s'"), $4->name);
 
     /* check KEY clause */
-    switch (current_file_name->organization)
+    switch (current_file->organization)
       {
       case COB_ORG_INDEXED:
-	if (current_file_name->key == NULL)
+	if (current_file->key == NULL)
 	  yyerror_loc (&@2, _("RECORD KEY required for file `%s'"), $4->name);
 	break;
       case COB_ORG_RELATIVE:
-	if (current_file_name->access_mode != COB_ACCESS_SEQUENTIAL
-	    && current_file_name->key == NULL)
+	if (current_file->access_mode != COB_ACCESS_SEQUENTIAL
+	    && current_file->key == NULL)
 	  yyerror_loc (&@2, _("RELATIVE KEY required for file `%s'"), $4->name);
 	break;
       }
@@ -622,9 +621,9 @@ select_option:
   ASSIGN _to literal_or_predefined
   {
     if (COBC_PREDEFINED_P ($3))
-      register_predefined_name (&current_file_name->assign, $3);
+      register_predefined_name (&current_file->assign, $3);
     else
-      current_file_name->assign = $3;
+      current_file->assign = $3;
   }
 | RESERVE integer _area
   {
@@ -632,19 +631,19 @@ select_option:
   }
 | select_organization
   {
-    current_file_name->organization = $1;
+    current_file->organization = $1;
   }
 | ORGANIZATION _is select_organization
   {
-    current_file_name->organization = $3;
+    current_file->organization = $3;
   }
 | ACCESS _mode _is select_access_mode
   {
-    current_file_name->access_mode = $4;
+    current_file->access_mode = $4;
   }
 | _file STATUS _is predefined_name
   {
-    register_predefined_name (&current_file_name->file_status, $4);
+    register_predefined_name (&current_file->file_status, $4);
   }
 | PADDING _character _is literal_or_predefined
   {
@@ -656,11 +655,11 @@ select_option:
   }
 | RELATIVE _key _is predefined_name
   {
-    register_predefined_name (&current_file_name->key, $4);
+    register_predefined_name (&current_file->key, $4);
   }
 | RECORD _key _is predefined_name
   {
-    register_predefined_name (&current_file_name->key, $4);
+    register_predefined_name (&current_file->key, $4);
   }
 | ALTERNATE RECORD _key _is predefined_name flag_duplicates
   {
@@ -670,11 +669,11 @@ select_option:
     p->next = NULL;
 
     /* add to the end of list */
-    if (current_file_name->alt_key_list == NULL)
-      current_file_name->alt_key_list = p;
+    if (current_file->alt_key_list == NULL)
+      current_file->alt_key_list = p;
     else
       {
-	struct cobc_alt_key *l = current_file_name->alt_key_list;
+	struct cobc_alt_key *l = current_file->alt_key_list;
 	for (; l->next; l = l->next);
 	l->next = p;
       }
@@ -786,14 +785,14 @@ file_description_sequence:
 | file_description_sequence
   file_type file_name
   {
-    current_file_name = COBC_FILE_NAME ($3);
+    current_file = COBC_FILE ($3);
     if ($2 != 0)
-      current_file_name->organization = $2;
+      current_file->organization = $2;
   }
   file_options '.'
   field_description_list
   {
-    finalize_file_name (current_file_name, COBC_FIELD ($7));
+    finalize_file (current_file, COBC_FIELD ($7));
   }
 ;
 file_type:
@@ -835,24 +834,24 @@ _records_or_characters: | RECORDS | CHARACTERS ;
 record_clause:
   RECORD _contains integer _characters
   {
-    current_file_name->record_max = $3;
+    current_file->record_max = $3;
   }
 | RECORD _contains integer _to integer _characters
   {
-    current_file_name->record_min = $3;
-    current_file_name->record_max = $5;
+    current_file->record_min = $3;
+    current_file->record_max = $5;
   }
 | RECORD _is VARYING _in _size opt_from_integer opt_to_integer _characters
   record_depending
   {
-    current_file_name->record_min = $6;
-    current_file_name->record_max = $7;
+    current_file->record_min = $6;
+    current_file->record_max = $7;
   }
 ;
 record_depending:
 | DEPENDING _on predefined_name
   {
-    register_predefined_name (&current_file_name->record_depending, $3);
+    register_predefined_name (&current_file->record_depending, $3);
   }
 ;
 opt_from_integer:
@@ -1502,7 +1501,7 @@ use_target:
   {
     struct cobc_list *l;
     for (l = $1; l; l = l->next)
-      COBC_FILE_NAME (l->item)->handler = current_section;
+      COBC_FILE (l->item)->handler = current_section;
   }
 | INPUT		{ program_spec.input_handler = current_section; }
 | OUTPUT	{ program_spec.output_handler = current_section; }
@@ -2336,7 +2335,7 @@ open_list:
     cobc_location = @2;
     for (l = $3; l; l = l->next)
       {
-	struct cobc_file_name *p = COBC_FILE_NAME (l->item);
+	struct cobc_file *p = COBC_FILE (l->item);
 	push_call_2 ("cob_open", p, make_integer ($2));
 	push_handler (p, 0, 0, 0);
       }
@@ -2437,7 +2436,7 @@ perform_sentence:
 read_statement:
   READ file_name flag_next _record read_into read_key
   {
-    struct cobc_file_name *f = COBC_FILE_NAME ($2);
+    struct cobc_file *f = COBC_FILE ($2);
     cobc_location = @1;
     if ($3 || f->access_mode == COB_ACCESS_SEQUENTIAL)
       {
@@ -2502,7 +2501,7 @@ return_statement:
     cobc_location = @1;
     push_call_1 ("cob_read_next", $2);
     if ($4)
-      push_move (COBC_FILE_NAME ($2)->record, $4);
+      push_move (COBC_FILE ($2)->record, $4);
     $<tree>$ = $2;
   }
   at_end
@@ -2736,7 +2735,7 @@ start_statement:
   {
     cobc_location = @1;
     if ($4 == NULL)
-      $4 = COBC_FILE_NAME ($2)->key;
+      $4 = COBC_FILE ($2)->key;
     push_call_3 ("cob_start", $2, make_integer ($<inum>3), $4);
     $<tree>$ = $2;
   }
@@ -3604,7 +3603,7 @@ file_name_list:
 file_name:
   name
   {
-    if (!COBC_FILE_NAME_P ($1))
+    if (!COBC_FILE_P ($1))
       yyerror_loc (&@1, _("`%s' not file name"), tree_to_string ($1));
     $$ = $1;
   }
@@ -4243,7 +4242,7 @@ validate_field_tree (struct cobc_field *p)
 }
 
 static void
-finalize_file_name (struct cobc_file_name *f, struct cobc_field *records)
+finalize_file (struct cobc_file *f, struct cobc_field *records)
 {
   char pic[BUFSIZ];
   struct cobc_field *p;

@@ -1,6 +1,7 @@
 2002-10-02  Keisuke Nishida  <knishida@netlab.jp>
 
 	* Rename `label_name' to `label'.
+	* Rename `file_name' to `file'.
 
 2002-10-01  Keisuke Nishida  <knishida@netlab.jp>
 

@@ -980,7 +980,7 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
  */
 
 static void
-output_file_name (struct cobc_file_name *f)
+output_file (struct cobc_file *f)
 {
   int nkeys = 1;
   struct cobc_field *p;
@@ -1558,9 +1558,9 @@ output_tree (cobc_tree x)
 	output (")");
 	break;
       }
-    case cobc_tag_file_name:
+    case cobc_tag_file:
       {
-	struct cobc_file_name *p = COBC_FILE_NAME (x);
+	struct cobc_file *p = COBC_FILE (x);
 	output ("&%s_desc", p->cname);
 	break;
       }
@@ -1706,11 +1706,11 @@ codegen_1 (struct cobc_program_spec *spec)
     }
 
   /* files */
-  if (spec->file_name_list)
+  if (spec->file_list)
     {
       output ("/* Files */\n\n");
-      for (l = spec->file_name_list; l; l = l->next)
-	output_file_name (l->item);
+      for (l = spec->file_list; l; l = l->next)
+	output_file (l->item);
     }
 
   /* screens */

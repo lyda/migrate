@@ -38,7 +38,7 @@ enum cobc_tag {
   cobc_tag_expr,
   cobc_tag_cond,
   cobc_tag_pair,
-  cobc_tag_file_name,
+  cobc_tag_file,
   cobc_tag_label,
   cobc_tag_call,
   cobc_tag_sequence,
@@ -262,7 +262,7 @@ struct cobc_field {
   struct cobc_field *sister;	/* fields in the same level */
   struct cobc_field *redefines;	/* REDEFIENS */
   struct cobc_field *rename_thru; /* RENAMES THRU */
-  struct cobc_file_name *file;	/* file name associated in FD section */
+  struct cobc_file *file;	/* file name associated in FD section */
   struct cobc_key {
     int dir;			/* ASCENDING or DESCENDING */
     cobc_tree key;		/* KEY */
@@ -381,7 +381,7 @@ extern cobc_tree make_predefined (struct cobc_list *words);
  * File name
  */
 
-struct cobc_file_name {
+struct cobc_file {
   struct cobc_tree_common common;
   struct cobc_word *word;
   char *cname;
@@ -405,10 +405,10 @@ struct cobc_file_name {
   struct cobc_label *handler;	/* error handler */
 };
 
-#define COBC_FILE_NAME(x)	(COBC_TREE_CAST (cobc_tag_file_name, struct cobc_file_name, x))
-#define COBC_FILE_NAME_P(x)	(COBC_TREE_TAG (x) == cobc_tag_file_name)
+#define COBC_FILE(x)	(COBC_TREE_CAST (cobc_tag_file, struct cobc_file, x))
+#define COBC_FILE_P(x)	(COBC_TREE_TAG (x) == cobc_tag_file)
 
-extern cobc_tree make_file_name (struct cobc_word *word);
+extern cobc_tree make_file (struct cobc_word *word);
 
 
 /*
