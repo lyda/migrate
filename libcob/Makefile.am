@@ -11,3 +11,5 @@ pkginclude_HEADERS = cobconfig.h common.h move.h numeric.h \
 
 EXTRA_DIST = cobconfig.h.in
 DISTCLEANFILES = cobconfig.h
+
+AM_CFLAGS = -Wall

@@ -9,7 +9,6 @@ AM_MAINTAINER_MODE
 # enable debug mode by default for now
 AC_DEFINE(COB_DEBUG)
 
-CFLAGS="-Wall"
 COBC_LIBS=""
 COBC_CFLAGS=""
 COBPP_LIBS=""
