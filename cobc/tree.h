@@ -98,7 +98,7 @@ enum cobc_tag {
 };
 
 struct cobc_tree_common {
-  char tag;
+  enum cobc_tag tag;
   char class;			/* A,9,X,N,1 */
   char *source_file;
   int source_line;
@@ -283,7 +283,6 @@ struct cobc_field {
     int sign_separate : 1;	/* SIGN IS SEPARATE */
     int synchronized  : 1;	/* SYNCHRONIZED */
     int have_occurs   : 1;	/* if OCCURS clause exists */
-    int in_redefines  : 1;	/* if any parent has REDEFINES clause */
     int used          : 1;	/* if used more than once */
     int screen        : 1;	/* if defined in SCREEN SECTION */
   } f;
