@@ -1430,7 +1430,6 @@ output_stmt (cb_tree x)
     case CB_TAG_STATEMENT:
       {
 	static int last_line = 0;
-	int need_handler = 0;
 	struct cb_statement *p = CB_STATEMENT (x);
 
 	output_line ("/* %s */", p->name);
@@ -1446,17 +1445,13 @@ output_stmt (cb_tree x)
 	    last_line = x->source_line;
 	  }
 
-	if (p->handler1 || p->handler2
-	    || (p->file && CB_EXCEPTION_ENABLE (COB_EC_I_O)))
-	  {
-	    output_line ("cob_exception_code = 0;");
-	    need_handler = 1;
-	  }
+	output_line ("cob_exception_code = 0;");
 
 	if (p->body)
 	  output_stmt (p->body);
 
-	if (need_handler)
+	if (p->handler1 || p->handler2
+	    || (p->file && CB_EXCEPTION_ENABLE (COB_EC_I_O)))
 	  {
 	    int code = CB_EXCEPTION_CODE (p->handler_id);
 	    if (p->handler1)
