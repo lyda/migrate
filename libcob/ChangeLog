@@ -1,5 +1,10 @@
 2002-06-11  Keisuke Nishida  <knishida@netlab.jp>
 
+	* common.h (COB_FIELD_IS_VALID): New macro.
+	* fileio.c, strings.c: Use `COB_FIELD_IS_VALID'.
+
+2002-06-11  Keisuke Nishida  <knishida@netlab.jp>
+
 	* common.h (cob_field): Field `size' moved from `cob_field_desc'.
 	(COB_FIELD_SIZE, COB_FIELD_DATA): Removed.
 	* common.c, fileio.c, move.c, numeric.c, strings.c, termio.c: Updated.

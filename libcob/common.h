@@ -58,6 +58,8 @@ struct cob_field {
 #define COB_FIELD_LENGTH(f) \
   ((f).size - ((f).desc->sign_separate ? 1 : 0))
 
+#define COB_FIELD_IS_VALID(f)	((f).size > 0)
+
 
 
 extern int cob_initialized;
