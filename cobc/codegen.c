@@ -779,18 +779,24 @@ output_advance_move (cob_field *f, cobc_tree dst)
       || (p->level == 66 && p->redefines->children))
     {
       attr.type = COB_TYPE_GROUP;
-      attr.justified = 0;
+      attr.flags = 0;
     }
   else
     {
       attr.type = get_type (p);
       attr.digits = p->pic->digits;
       attr.decimals = p->pic->decimals;
-      attr.have_sign = p->pic->have_sign;
-      attr.sign_separate = p->f.sign_separate;
-      attr.sign_leading = p->f.sign_leading;
-      attr.blank_zero = p->f.blank_zero;
-      attr.justified = p->f.justified;
+      attr.flags = 0;
+      if (p->pic->have_sign)
+	attr.flags |= COB_FLAG_HAVE_SIGN;
+      if (p->f.sign_separate)
+	attr.flags |= COB_FLAG_SIGN_SEPARATE;
+      if (p->f.sign_leading)
+	attr.flags |= COB_FLAG_SIGN_LEADING;
+      if (p->f.blank_zero)
+	attr.flags |= COB_FLAG_BLANK_ZERO;
+      if (p->f.justified)
+	attr.flags |= COB_FLAG_JUSTFIED;
       attr.pic = p->pic->str;
     }
 
@@ -938,7 +944,8 @@ output_move_literal (struct cobc_literal *l, cobc_tree dst)
   else
     {
       cob_field_attr attr =
-	{COBC_TREE_CLASS (l), l->size, l->decimals, l->sign ? 1 : 0};
+	{COBC_TREE_CLASS (l), l->size, l->decimals,
+	 l->sign ? COB_FLAG_HAVE_SIGN : 0};
       cob_field fld = {l->size, l->data, &attr};
       if (l->sign < 0)
 	l->data[l->size - 1] += 0x10;
@@ -1768,12 +1775,23 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
 	}
       else
 	{
+	  char flags = 0;
+	  if (p->pic->have_sign)
+	    flags |= COB_FLAG_HAVE_SIGN;
+	  if (p->f.sign_separate)
+	    flags |= COB_FLAG_SIGN_SEPARATE;
+	  if (p->f.sign_leading)
+	    flags |= COB_FLAG_SIGN_LEADING;
+	  if (p->f.blank_zero)
+	    flags |= COB_FLAG_BLANK_ZERO;
+	  if (p->f.justified)
+	    flags |= COB_FLAG_JUSTFIED;
+
 	  sprintf (attr_buff, "%s_attr", fname);
 	  output ("static cob_field_attr %s = ", attr);
-	  output ("{%d, %d, %d, %d, %d, %d, %d, %d, ",
-		  type, p->pic->digits, p->pic->decimals,
-		  p->pic->have_sign, p->f.sign_separate, p->f.sign_leading,
-		  p->f.blank_zero, p->f.justified);
+	  output ("{%d, %d, %d, %d, ",
+		  type, p->pic->digits, p->pic->decimals, flags);
+
 	  if (p->pic->str[0] != 0)
 	    {
 	      unsigned char *s;
