@@ -1,5 +1,13 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Version 0.8.7 での変更点
+
+** NIST から配布されている CCVS85 Test Suite をテストに含めた
+
+** USAGE POINTER を排除
+
+** 大量のバグ修正
+
 
 * Version 0.8.6 での変更点
 
