@@ -79,7 +79,7 @@ static void switch_to_buffer (int lineno, char *filename, struct cb_replacement 
       while ((c = input ()) != EOF)
 	if (c == '\n')
 	  break;
-      fputs ("\n", yyout);
+      unput (c);
 
       within_comment = 1;
     }
