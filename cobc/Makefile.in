@@ -207,7 +207,7 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 DIST_SOURCES = $(cobc_SOURCES)
-DIST_COMMON = $(srcdir)/Makefile.in ChangeLog Makefile.am TODO
+DIST_COMMON = $(srcdir)/Makefile.in ChangeLog Makefile.am
 SOURCES = $(cobc_SOURCES)
 
 all: $(BUILT_SOURCES)
