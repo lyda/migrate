@@ -49,13 +49,16 @@ enum cb_config_type {
 		   'skip', 'ignore', 'unconformable' */
 };
 
-struct {
+struct noreserve *norestab = NULL;
+
+static struct {
   enum cb_config_type type;
   const char *name;
   void *var;
   char *val;
 } config_table[] = {
   {STRING, "include", 0, 0},
+  {STRING, "not-reserved", 0, 0},
 #undef CB_CONFIG_ANY
 #undef CB_CONFIG_INT
 #undef CB_CONFIG_STRING
@@ -245,6 +248,18 @@ cb_load_conf (const char *fname, int check_nodef)
 		if (cb_load_conf (fname, 0) != 0)
 		  return -1;
 	      }
+	    else if (strcmp (name, "not-reserved") == 0)
+	      {
+		char *s;
+		struct noreserve *noresptr;
+
+		s = read_string(val);
+		noresptr = (struct noreserve *)malloc(sizeof(struct noreserve));
+		noresptr->noresword = malloc(strlen(s) + 1);
+		strcpy(noresptr->noresword, s);
+		noresptr->next = norestab;
+		norestab = noresptr;
+	      }
 	    else
 	      {
 		*((const char **) var) = val;
@@ -299,7 +314,7 @@ cb_load_conf (const char *fname, int check_nodef)
 
   /* checks for no definition */
   if (check_nodef)
-    for (i = 1; config_table[i].name; i++)
+    for (i = 2; config_table[i].name; i++)
       if (config_table[i].val == NULL)
 	{
 	  fprintf (stderr, "%s: no definition of '%s'\n",

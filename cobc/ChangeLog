@@ -1,3 +1,8 @@
+2005-03-07  Roger While <simrw@sim-basis.de>
+
+	* cobc.h, config.c, reserved.c :
+	  New config variable - not-reserved
+
 2005-03-03  Roger While <simrw@sim-basis.de>
 
 	* cobc.h, tree.h, parser.y, reserved.c, cobc.c,

@@ -548,8 +548,16 @@ lookup_reserved_word (const char *name)
   for (p = reserved_table[hash (name)]; p; p = p->next)
     if (strcasecmp (name, p->name) == 0)
       {
-	if (p->token != -1)
+	if (p->token != -1) {
+	  struct noreserve *noresptr;
+
+	  for ( noresptr = norestab; noresptr; noresptr = noresptr->next) {
+		if (strcasecmp (name, noresptr->noresword) == 0) {
+			return 0;
+		}
+	  }
 	  return p->token;
+	}
 	cb_error (_("`%s' reserved word, but not supported yet"), name);
 	return 0;
       }

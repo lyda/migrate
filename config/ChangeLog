@@ -1,3 +1,10 @@
+2005-03-07  Roger While <simrw@sim-basis.de>
+
+	* default.conf, mvs.conf :
+	  New variable - not-reserved
+	  Document in default.conf
+	  CYCLE as not reserved in mvs.conf 
+
 2003-08-30  Keisuke Nishida  <kxn30@yahoo.co.jp>
 
 	* gnu.conf: Removed.

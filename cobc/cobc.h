@@ -113,6 +113,13 @@ extern struct cb_text_list *cb_text_list_add (struct cb_text_list *list, const c
 
 /* config.c */
 
+struct noreserve {
+	struct	noreserve	*next;
+	char			*noresword;
+};
+
+extern struct noreserve	*norestab;
+
 enum cb_assign_clause {
   CB_ASSIGN_COBOL2002,		/* COBOL 2002 standard */
   CB_ASSIGN_MF,			/* Micro Focus COBOL compatibility */
