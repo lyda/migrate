@@ -102,10 +102,9 @@ l2: return 2;
 ac_computed_goto=yes,
 ac_computed_goto=no)])
 
+COMPUTED_GOTO=0
 if test "$ac_computed_goto" = yes; then
   COMPUTED_GOTO=1
-else
-  COMPUTED_GOTO=0
 fi
 AC_SUBST(COMPUTED_GOTO)
 
