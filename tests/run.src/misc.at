@@ -314,6 +314,26 @@ AT_CHECK([${COMPILE_ONLY} -o prog prog.cob])
 
 AT_CLEANUP
 
+AT_SETUP([Alphanumeric and binary numeric])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X-X           PIC XXXX VALUE "0001".
+       01 X-9           PIC 9999 COMP VALUE 1.
+       PROCEDURE        DIVISION.
+         IF X-X = X-9
+           DISPLAY "OK" NO ADVANCING
+         END-IF.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [OK])
+
+AT_CLEANUP
+
 
 ## CALL statement
 
