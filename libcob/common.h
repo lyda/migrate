@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2003 Keisuke Nishida
+ * Copyright (C) 2002-2004 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -20,7 +20,11 @@
 #ifndef COB_COMMON_H
 #define COB_COMMON_H
 
-#include <stdio.h>
+#if (defined __CYGWIN__ || defined __MINGW32__)
+#ifndef _WIN32
+#define _WIN32
+#endif
+#endif
 
 
 /*

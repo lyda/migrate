@@ -1,3 +1,8 @@
+2004-03-06  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
+
+	* common.h (_WIN32): Ensure to be defined when __CYGWIN__ or
+	__MINGW32__ is defined.
+
 2003-10-01  Keisuke Nishida  <kxn30@yahoo.co.jp>
 
 	* common.h (cob_module): New member `flag_pretty_display'.
