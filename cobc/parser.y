@@ -132,7 +132,7 @@ static void check_decimal_point (struct lit *lit);
 %right OF
 
 %token <str>  IDSTRING
-%token <sval> SYMBOL,VARIABLE,VARCOND,SUBSCVAR,LABELSTR,PICTURE
+%token <sval> SYMBOL,VARIABLE,VARCOND,SUBSCVAR,LABELSTR,PICTURE_TOK
 %token <lval> NLITERAL,CLITERAL
 
 %token EQUAL,GREATER,LESS,TOK_GE,TOK_LE,COMMAND_LINE,ENVIRONMENT_VARIABLE
@@ -282,8 +282,8 @@ identification_division_option:
 | INSTALLATION '.' comment
 | SECURITY '.' comment
 ;
-opt_program: | PROGRAM ;
 comment: { start_condition = START_COMMENT; };
+opt_program: | PROGRAM ;
 
 
 /*****************************************************************************
@@ -665,7 +665,7 @@ global_clause:
  */
 
 picture_clause:
-  PICTURE { start_condition = START_PICTURE; } PICTURE
+  PICTURE { start_condition = START_PICTURE; } PICTURE_TOK
 ;
 
 

@@ -286,9 +286,9 @@ scan_picture (char *text)
 	goto error;
     }
   picture[picix + 2] = 0;
-  return PICTURE;
+  return PICTURE_TOK;
 
  error:
   yyerror ("invalid picture string");
-  return PICTURE;
+  return PICTURE_TOK;
 }
