@@ -74,13 +74,15 @@
 enum cob_screen_type {
   COB_SCREEN_TYPE_GROUP,
   COB_SCREEN_TYPE_FIELD,
-  COB_SCREEN_TYPE_VALUE
+  COB_SCREEN_TYPE_VALUE,
+  COB_SCREEN_TYPE_ATTRIBUTE
 };
 
 union cob_screen_data {
   struct cob_screen *child;	/* for COB_SCREEN_TYPE_GROUP */
   struct cob_field *field;	/* for COB_SCREEN_TYPE_FIELD */
   char *value;			/* for COB_SCREEN_TYPE_VALUE */
+  int dummy;			/* for COB_SCREEN_TYPE_ATTRIBUTE */
 };
 
 union cob_screen_position {
@@ -101,6 +103,7 @@ struct cob_screen {
 
 extern void cob_screen_init (void);
 extern void cob_screen_clear (void);
+extern void cob_screen_attr (int line, int column, long attr);
 extern void cob_screen_puts (const char *data, size_t size, int line, int column, long attr);
 extern void cob_screen_gets (char *data, size_t size, int line, int column, long attr);
 extern void cob_screen_display (struct cob_screen *s, int line, int column);

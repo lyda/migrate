@@ -54,6 +54,11 @@ cob_screen_clear (void)
 }
 
 void
+cob_screen_attr (int line, int column, long attr)
+{
+}
+
+void
 cob_screen_puts (const char *data, size_t size, int line, int column, long attr)
 {
   mvaddnstr (line, column, data, size);
@@ -96,6 +101,13 @@ cob_screen_display (struct cob_screen *s, int line, int column)
 			 line, column, s->attr);
 	break;
       }
+    case COB_SCREEN_TYPE_ATTRIBUTE:
+      {
+	int line = SCREEN_LINE_POS (s);
+	int column = SCREEN_COLUMN_POS (s);
+	cob_screen_attr (line, column, s->attr);
+	break;
+      }
     }
 }
 
@@ -123,6 +135,7 @@ cob_screen_accept (struct cob_screen *s, int line, int column)
 	break;
       }
     case COB_SCREEN_TYPE_VALUE:
+    case COB_SCREEN_TYPE_ATTRIBUTE:
       {
 	/* nothing to accept */
 	break;

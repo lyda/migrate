@@ -1,5 +1,11 @@
 2002-07-05  Keisuke Nishida  <knishida@netlab.jp>
 
+	* screenio.c, screenio.h (cob_screen_attr): New function.
+	* screenio.h (COB_SCREEN_TYPE_ATTRIBUTE): New type.
+	(cob_screen_data): New entry `dummy'.
+
+2002-07-05  Keisuke Nishida  <knishida@netlab.jp>
+
 	* fileio.h (cob_file): Renamed from cob_file_desc.
 	* fileio.c: Updated.
 
