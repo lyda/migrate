@@ -196,10 +196,10 @@ Source format can be explicitly specified by giving one of the
 following compiler options to @code{cobc}:
 
 @table @code
-@item -F
-Fixed format.
-@item -X
+@item -free
 Free format.
+@item -fixed
+Fixed format.
 @end table
 
 @item
