@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2002 Keisuke Nishida
+ * Copyright (C) 2001-2003 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,6 @@ enum builtin_token {
 
 extern int lookup_builtin_word (const char *name);
 extern int lookup_reserved_word (const char *name);
-extern void init_reserved_words (void);
+extern void cb_init_reserved (void);
 
 #endif /* _RESERVED_H_ */

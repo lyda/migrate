@@ -31,8 +31,8 @@
 enum cb_tag {
   /* primitives */
   CB_TAG_CONST,			/* constant value */
-  CB_TAG_INTEGER,		/* native integer */
-  CB_TAG_STRING,		/* native string */
+  CB_TAG_INTEGER,		/* integer constant */
+  CB_TAG_STRING,		/* string constant */
   CB_TAG_LITERAL,		/* numeric/alphanumeric literal */
   CB_TAG_DECIMAL,		/* decimal number */
   CB_TAG_FIELD,			/* user-defined variable */
@@ -136,7 +136,7 @@ typedef struct cb_tree_common *cb_tree;
 #define CB_TREE(x)		((struct cb_tree_common *) (x))
 #define CB_TREE_TAG(x)		(CB_TREE (x)->tag)
 #define CB_TREE_CLASS(x)	(CB_TREE (x)->class)
-#define CB_TREE_CATEGORY(x)	tree_category (x)
+#define CB_TREE_CATEGORY(x)	cb_tree_category (x)
 
 #ifdef COB_DEBUG
 #define CB_TREE_CAST(tg,ty,x)						\
@@ -146,7 +146,7 @@ typedef struct cb_tree_common *cb_tree;
       {									\
 	fprintf (stderr,						\
 		 "%s:%d: invalid type cast from `%s' at %d in %s\n",	\
-		 __FILE__, __LINE__, _x ? tree_name (_x) : "null",	\
+		 __FILE__, __LINE__, _x ? cb_name (_x) : "null",	\
 		 cb_source_line, cb_source_file);			\
 	abort ();							\
       }									\
@@ -156,8 +156,8 @@ typedef struct cb_tree_common *cb_tree;
 #define CB_TREE_CAST(tg,ty,x)	((ty *) (x))
 #endif
 
-extern char *tree_name (cb_tree x);
-extern enum cb_category tree_category (cb_tree x);
+extern char *cb_name (cb_tree x);
+extern enum cb_category cb_tree_category (cb_tree x);
 extern int cb_fits_int (cb_tree x);
 
 
@@ -194,7 +194,7 @@ struct cb_const {
 #define CB_CONST(x)		(CB_TREE_CAST (CB_TAG_CONST, struct cb_const, x))
 #define CB_CONST_P(x)		(CB_TREE_TAG (x) == CB_TAG_CONST)
 
-extern void init_constants (void);
+extern void cb_init_constants (void);
 
 
 /*
@@ -209,7 +209,7 @@ struct cb_integer {
 #define CB_INTEGER(x)		(CB_TREE_CAST (CB_TAG_INTEGER, struct cb_integer, x))
 #define CB_INTEGER_P(x)		(CB_TREE_TAG (x) == CB_TAG_INTEGER)
 
-extern cb_tree make_integer (int val);
+extern cb_tree cb_build_integer (int val);
 
 
 /*
@@ -224,7 +224,7 @@ struct cb_string {
 #define CB_STRING(x)		(CB_TREE_CAST (CB_TAG_STRING, struct cb_string, x))
 #define CB_STRING_P(x)		(CB_TREE_TAG (x) == CB_TAG_STRING)
 
-extern cb_tree make_string (const unsigned char *str);
+extern cb_tree cb_build_string (const unsigned char *str);
 
 
 /*
@@ -240,11 +240,11 @@ struct cb_literal {
   char expt;
 };
 
-#define CB_LITERAL(x)		(CB_TREE_CAST (CB_TAG_LITERAL, struct cb_literal, x))
-#define CB_LITERAL_P(x)		(CB_TREE_TAG (x) == CB_TAG_LITERAL)
+#define CB_LITERAL(x)	(CB_TREE_CAST (CB_TAG_LITERAL, struct cb_literal, x))
+#define CB_LITERAL_P(x)	(CB_TREE_TAG (x) == CB_TAG_LITERAL)
 
-extern cb_tree make_numeric_literal (int sign, unsigned char *digits, int expt);
-extern cb_tree make_nonnumeric_literal (size_t size, unsigned char *data);
+extern cb_tree cb_build_numeric_literal (int sign, unsigned char *digits, int expt);
+extern cb_tree cb_build_alphanumeric_literal (size_t size, unsigned char *data);
 extern long long literal_to_int (struct cb_literal *l);
 
 
@@ -254,13 +254,13 @@ extern long long literal_to_int (struct cb_literal *l);
 
 struct cb_decimal {
   struct cb_tree_common common;
-  char id;
+  int id;
 };
 
-#define CB_DECIMAL(x)		(CB_TREE_CAST (CB_TAG_DECIMAL, struct cb_decimal, x))
-#define CB_DECIMAL_P(x)		(CB_TREE_TAG (x) == CB_TAG_DECIMAL)
+#define CB_DECIMAL(x)	(CB_TREE_CAST (CB_TAG_DECIMAL, struct cb_decimal, x))
+#define CB_DECIMAL_P(x)	(CB_TREE_TAG (x) == CB_TAG_DECIMAL)
 
-extern cb_tree make_decimal (char id);
+extern cb_tree cb_build_decimal (int id);
 
 
 /*
@@ -277,7 +277,7 @@ struct cb_picture {
   char have_sign;		/* have `S' */
 };
 
-extern struct cb_picture *parse_picture (const char *str);
+extern struct cb_picture *cb_parse_picture (const char *str);
 
 
 /*
@@ -340,15 +340,9 @@ struct cb_field {
 #define CB_FIELD(x)		(CB_TREE_CAST (CB_TAG_FIELD, struct cb_field, x))
 #define CB_FIELD_P(x)		(CB_TREE_TAG (x) == CB_TAG_FIELD)
 
-#define CB_INDEX_P(x)				\
-  ((CB_FIELD_P (x) || CB_REFERENCE_P (x))	\
-   && field (x)->usage == cb_usage_index)
-
-#define make_index(name)	make_field_3 (name, "S9(9)", cb_usage_index)
-
 extern cb_tree make_field (cb_tree name);
 extern cb_tree make_field_3 (cb_tree name, const char *pic, struct cb_usage *usage);
-extern struct cb_field *field (cb_tree x);
+extern struct cb_field *cb_field (cb_tree x);
 extern int field_size (cb_tree x);
 extern struct cb_field *field_founder (struct cb_field *p);
 
@@ -356,6 +350,14 @@ extern struct cb_field *build_field (int level, cb_tree name, struct cb_field *l
 extern struct cb_field *validate_redefines (struct cb_field *field, cb_tree redefines);
 extern int validate_field (struct cb_field *p);
 extern void finalize_field (struct cb_field *p);
+
+/* Index */
+
+#define CB_INDEX_P(x)				\
+  ((CB_FIELD_P (x) || CB_REFERENCE_P (x))	\
+   && cb_field (x)->usage == cb_usage_index)
+
+#define cb_build_index(name)	make_field_3 (name, "S9(9)", cb_usage_index)
 
 
 /*

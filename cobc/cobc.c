@@ -590,8 +590,8 @@ process_translate (struct filename *fn)
   cb_source_file = NULL;
   cb_source_line = 0;
 
-  init_constants ();
-  init_reserved_words ();
+  cb_init_constants ();
+  cb_init_reserved ();
 
   if (verbose_output)
     fprintf (stderr, "translating %s into %s\n",

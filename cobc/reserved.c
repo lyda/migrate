@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2002 Keisuke Nishida
+ * Copyright (C) 2001-2003 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -396,7 +396,7 @@ lookup_reserved_word (const char *name)
 }
 
 void
-init_reserved_words (void)
+cb_init_reserved (void)
 {
   int i;
   for (i = 0; i < HASH_SIZE; i++)

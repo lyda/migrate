@@ -47,7 +47,7 @@
       v = cb_error_node;			\
     else if (!(cond))				\
       {						\
-	cb_error_x (x, msg, tree_name (x));	\
+	cb_error_x (x, msg, cb_name (x));	\
 	v = cb_error_node;			\
       }						\
     else					\
@@ -60,7 +60,7 @@
       v = cb_error_node;			\
     else if (!(cond))				\
       {						\
-	cb_error_x (x, msg, tree_name (x));	\
+	cb_error_x (x, msg, cb_name (x));	\
 	v = cb_error_node;			\
       }						\
     else					\
@@ -254,7 +254,7 @@ program_id_paragraph:
   PROGRAM_ID '.'
   {
     current_program = build_program ();
-    make_index (make_reference ("RETURN-CODE"));
+    cb_build_index (make_reference ("RETURN-CODE"));
   }
   program_name as_literal program_type '.'
   {
@@ -941,7 +941,7 @@ linage_clause:
   LINAGE _is integer_value _lines
   linage_footing linage_top linage_bottom
   {
-    make_index (make_reference ("LINAGE-COUNTER"));
+    cb_build_index (make_reference ("LINAGE-COUNTER"));
 
     cb_error ("LINAGE not implemented");
   }
@@ -1030,7 +1030,7 @@ level_number:
       $$ = level;
     else
       {
-	cb_error_x ($1, _("invalid level number `%s'"), tree_name ($1));
+	cb_error_x ($1, _("invalid level number `%s'"), cb_name ($1));
 	YYERROR;
       }
   }
@@ -1198,7 +1198,7 @@ occurs_index_list:
 occurs_index:
   undefined_word
   {
-    $<tree>$ = make_index ($1);
+    $<tree>$ = cb_build_index ($1);
     current_program->index_list =
       list_add (current_program->index_list, $<tree>$);
   }
@@ -1328,7 +1328,7 @@ screen_description:
   screen_options '.'
   {
     if (current_field->pic == NULL)
-      current_field->pic = parse_picture ("X(0)");
+      current_field->pic = cb_parse_picture ("X(0)");
     if (!current_field->screen_line)
       {
 	current_field->screen_line = cb_int1;
@@ -1663,11 +1663,11 @@ accept_body:
 	    push_funcall_3 ("cob_screen_accept", $1, line, column);
 	  }
 	else
-	  cb_error_x ($1, "`%s' not defined in SCREEN SECTION", tree_name ($1));
+	  cb_error_x ($1, "`%s' not defined in SCREEN SECTION", cb_name ($1));
       }
     else
       {
-	push_funcall_2 ("cob_accept", $1, make_integer (COB_SYSIN));
+	push_funcall_2 ("cob_accept", $1, cb_build_integer (COB_SYSIN));
       }
   }
 | data_name FROM DATE
@@ -1700,10 +1700,10 @@ accept_body:
       {
       case BUILTIN_CONSOLE:
       case BUILTIN_SYSIN:
-	push_funcall_2 ("cob_accept", $1, make_integer (COB_SYSIN));
+	push_funcall_2 ("cob_accept", $1, cb_build_integer (COB_SYSIN));
 	break;
       default:
-	cb_error_x ($3, _("invalid input stream `%s'"), tree_name ($3));
+	cb_error_x ($3, _("invalid input stream `%s'"), cb_name ($3));
 	break;
       }
   }
@@ -1862,7 +1862,7 @@ close_list:
     if ($2 != cb_error_node)
       {
 	cb_tree file = cb_ref ($2);
-	push_funcall_2 ("cob_close", file, make_integer ($<ival>3));
+	push_funcall_2 ("cob_close", file, cb_build_integer ($<ival>3));
 	push_file_handler (file, NULL);
       }
   }
@@ -1941,11 +1941,11 @@ display_statement:
 	    }
 	  else
 	    cb_error_x (l->item, "`%s' not defined in SCREEN SECTION",
-			 tree_name (l->item));
+			 cb_name (l->item));
       }
     else
       {
-	cb_tree fd = make_integer ($4);
+	cb_tree fd = cb_build_integer ($4);
 	for (l = $3; l; l = l->next)
 	  push_funcall_2 ("cob_display", l->item, fd);
       }
@@ -1978,7 +1978,7 @@ display_with_no_advancing:
   /* empty */
   {
     if (!current_program->flag_screen)
-      push_funcall_1 ("cob_newline", make_integer ($<ival>-2));
+      push_funcall_1 ("cob_newline", cb_build_integer ($<ival>-2));
   }
 | _with NO ADVANCING { /* nothing */ }
 ;
@@ -2299,7 +2299,7 @@ tallying_item:
 | non_all_value inspect_before_after_list
   {
     if (current_inspect_func == NULL)
-      cb_error_x ($1, _("ALL or LEADING expected before `%s'"), tree_name ($1));
+      cb_error_x ($1, _("ALL or LEADING expected before `%s'"), cb_name ($1));
     $<list>$ = list_add ($2, make_funcall_2 (current_inspect_func, current_inspect_data, $1));
   }
 ;
@@ -2443,7 +2443,7 @@ open_list:
     for (l = $3; l; l = l->next)
       {
 	cb_tree file = cb_ref (l->item);
-	push_funcall_2 ("cob_open", file, make_integer ($<ival>2));
+	push_funcall_2 ("cob_open", file, cb_build_integer ($<ival>2));
 	push_file_handler (file, NULL);
       }
   }
@@ -2775,7 +2775,7 @@ set_to_true_false_1:
     struct cb_list *l;
     for (l = $1; l; l = l->next)
       {
-	struct cb_field *f = field (l->item);
+	struct cb_field *f = cb_field (l->item);
 	cb_tree value = f->values->item;
 	set_value (l->item, CB_TREE (f->parent));
 	if (CB_PARAMETER_P (value))
@@ -2822,16 +2822,16 @@ sort_input:
   USING file_name_list
   {
     struct cb_list *l;
-    push_funcall_2 ("cob_open", $<tree>0, make_integer (COB_OPEN_OUTPUT));
+    push_funcall_2 ("cob_open", $<tree>0, cb_build_integer (COB_OPEN_OUTPUT));
     for (l = $2; l; l = l->next)
       push_funcall_2 ("cob_sort_using", $<tree>0, l->item);
-    push_funcall_2 ("cob_close", $<tree>0, make_integer (COB_CLOSE_NORMAL));
+    push_funcall_2 ("cob_close", $<tree>0, cb_build_integer (COB_CLOSE_NORMAL));
   }
 | INPUT PROCEDURE _is perform_procedure
   {
-    push_funcall_2 ("cob_open", $<tree>0, make_integer (COB_OPEN_OUTPUT));
+    push_funcall_2 ("cob_open", $<tree>0, cb_build_integer (COB_OPEN_OUTPUT));
     push (make_perform_once ($4));
-    push_funcall_2 ("cob_close", $<tree>0, make_integer (COB_CLOSE_NORMAL));
+    push_funcall_2 ("cob_close", $<tree>0, cb_build_integer (COB_CLOSE_NORMAL));
   }
 ;
 
@@ -2841,16 +2841,16 @@ sort_output:
     struct cb_list *l;
     for (l = $2; l; l = l->next)
       {
-	push_funcall_2 ("cob_open", $<tree>-1, make_integer (COB_OPEN_INPUT));
+	push_funcall_2 ("cob_open", $<tree>-1, cb_build_integer (COB_OPEN_INPUT));
 	push_funcall_2 ("cob_sort_giving", $<tree>-1, l->item);
-	push_funcall_2 ("cob_close", $<tree>-1, make_integer (COB_CLOSE_NORMAL));
+	push_funcall_2 ("cob_close", $<tree>-1, cb_build_integer (COB_CLOSE_NORMAL));
       }
   }
 | OUTPUT PROCEDURE _is perform_procedure
   {
-    push_funcall_2 ("cob_open", $<tree>-1, make_integer (COB_OPEN_INPUT));
+    push_funcall_2 ("cob_open", $<tree>-1, cb_build_integer (COB_OPEN_INPUT));
     push (make_perform_once ($4));
-    push_funcall_2 ("cob_close", $<tree>-1, make_integer (COB_CLOSE_NORMAL));
+    push_funcall_2 ("cob_close", $<tree>-1, cb_build_integer (COB_CLOSE_NORMAL));
   }
 ;
 
@@ -2868,7 +2868,7 @@ start_statement:
     cb_tree file = cb_ref ($3);
     if ($<tree>5 == NULL)
       $<tree>5 = CB_FILE (file)->key;
-    push_funcall_3 ("cob_start", file, make_integer ($<ival>4), $<tree>5);
+    push_funcall_3 ("cob_start", file, cb_build_integer ($<ival>4), $<tree>5);
     push_file_handler (file, $6);
   }
 ;
@@ -3319,7 +3319,7 @@ numeric_expr:
   {
     if (CB_TREE_CLASS ($1) != CB_CLASS_NUMERIC)
       {
-	cb_error_x ($1, _("invalid expression `%s'"), tree_name ($1));
+	cb_error_x ($1, _("invalid expression `%s'"), cb_name ($1));
 	YYERROR;
       }
     $$ = $1;
@@ -3603,7 +3603,7 @@ expr_1:
       {
       error:
 	cb_error_x ($1->item, _("invalid expression `%s'"),
-		   tree_name ($1->item));
+		   cb_name ($1->item));
 	YYERROR;
       }
 
@@ -3620,31 +3620,31 @@ expr_item:
   value				{ $$ = $1; }
 | '(' expr_1 ')'		{ $$ = make_parenthesize ($2); }
 /* arithmetic operator */
-| '+'				{ $$ = make_integer ('+'); }
-| '-'				{ $$ = make_integer ('-'); }
-| '*'				{ $$ = make_integer ('*'); }
-| '/'				{ $$ = make_integer ('/'); }
-| '^'				{ $$ = make_integer ('^'); }
+| '+'				{ $$ = cb_build_integer ('+'); }
+| '-'				{ $$ = cb_build_integer ('-'); }
+| '*'				{ $$ = cb_build_integer ('*'); }
+| '/'				{ $$ = cb_build_integer ('/'); }
+| '^'				{ $$ = cb_build_integer ('^'); }
 /* conditional operator */
-| equal				{ $$ = make_integer ('='); }
-| greater			{ $$ = make_integer ('>'); }
-| less				{ $$ = make_integer ('<'); }
-| GE				{ $$ = make_integer (GE); }
-| LE				{ $$ = make_integer (LE); }
+| equal				{ $$ = cb_build_integer ('='); }
+| greater			{ $$ = cb_build_integer ('>'); }
+| less				{ $$ = cb_build_integer ('<'); }
+| GE				{ $$ = cb_build_integer (GE); }
+| LE				{ $$ = cb_build_integer (LE); }
 /* class condition */
-| NUMERIC			{ $$ = make_integer (NUMERIC); }
-| ALPHABETIC			{ $$ = make_integer (ALPHABETIC); }
-| ALPHABETIC_LOWER		{ $$ = make_integer (ALPHABETIC_LOWER); }
-| ALPHABETIC_UPPER		{ $$ = make_integer (ALPHABETIC_UPPER); }
+| NUMERIC			{ $$ = cb_build_integer (NUMERIC); }
+| ALPHABETIC			{ $$ = cb_build_integer (ALPHABETIC); }
+| ALPHABETIC_LOWER		{ $$ = cb_build_integer (ALPHABETIC_LOWER); }
+| ALPHABETIC_UPPER		{ $$ = cb_build_integer (ALPHABETIC_UPPER); }
 | CLASS_NAME			{ $$ = resolve_class_name ($1); }
 /* sign condition */
   /* ZERO is defined in `value' */
-| POSITIVE			{ $$ = make_integer (POSITIVE); }
-| NEGATIVE			{ $$ = make_integer (NEGATIVE); }
+| POSITIVE			{ $$ = cb_build_integer (POSITIVE); }
+| NEGATIVE			{ $$ = cb_build_integer (NEGATIVE); }
 /* logical operator */
-| NOT				{ $$ = make_integer (NOT); }
-| AND				{ $$ = make_integer (AND); }
-| OR				{ $$ = make_integer (OR); }
+| NOT				{ $$ = cb_build_integer (NOT); }
+| AND				{ $$ = cb_build_integer (AND); }
+| OR				{ $$ = cb_build_integer (OR); }
 ;
 
 equal: '=' | EQUAL _to ;
@@ -3664,7 +3664,7 @@ group_name:
   data_name
   {
     VALIDATE ($$, $1, _("group identifier is expected `%s'"),
-	      (field ($1)->children
+	      (cb_field ($1)->children
 	       && CB_REFERENCE ($1)->offset == NULL));
   }
 ;
@@ -3675,7 +3675,7 @@ record_name:
   data_name
   {
     VALIDATE ($$, $1, _("record name is expected `%s'"),
-	      field ($1)->file != NULL);
+	      cb_field ($1)->file != NULL);
   }
 ;
 
@@ -3717,7 +3717,7 @@ integer_name:
   {
     VALIDATE ($$, $1, _("integer identifier is expected `%s'"),
 	      CB_TREE_CLASS ($1) == CB_CLASS_NUMERIC
-	      && field ($1)->pic->expt >= 0);
+	      && cb_field ($1)->pic->expt >= 0);
   }
 ;
 
@@ -3748,8 +3748,8 @@ table_name:
 	cb_tree x = cb_ref ($1);
 	if (!CB_FIELD (x)->index_list)
 	  {
-	    cb_error_x ($1, _("`%s' not indexed"), tree_name ($1));
-	    cb_error_x (x, _("`%s' defined here"), tree_name (x));
+	    cb_error_x ($1, _("`%s' not indexed"), cb_name ($1));
+	    cb_error_x (x, _("`%s' defined here"), cb_name (x));
 	    YYERROR;
 	  }
       }
@@ -3914,7 +3914,7 @@ integer_value:
 	}
       default:
       invalid:
-	cb_error_x ($1, _("`%s' must be an integer value"), tree_name ($1));
+	cb_error_x ($1, _("`%s' must be an integer value"), cb_name ($1));
 	YYERROR;
       }
     $$ = $1;

@@ -165,7 +165,7 @@ make_tree (int tag, enum cb_class class, int size)
 }
 
 static int
-tree_name_1 (char *s, cb_tree x)
+cb_name_1 (char *s, cb_tree x)
 {
   char *orig = s;
 
@@ -207,7 +207,7 @@ tree_name_1 (char *s, cb_tree x)
       {
 	struct cb_reference *p = CB_REFERENCE (x);
 	if (p->value)
-	  s += tree_name_1 (s, p->value);
+	  s += cb_name_1 (s, p->value);
 	else
 	  s += sprintf (s, "#<reference %s>", p->word->name);
 	if (p->subs)
@@ -216,17 +216,17 @@ tree_name_1 (char *s, cb_tree x)
 	    s += sprintf (s, "(");
 	    for (l = p->subs; l; l = l->next)
 	      {
-		s += tree_name_1 (s, l->item);
+		s += cb_name_1 (s, l->item);
 		s += sprintf (s, l->next ? ", " : ")");
 	      }
 	  }
 	if (p->offset)
 	  {
 	    s += sprintf (s, "(");
-	    s += tree_name_1 (s, p->offset);
+	    s += cb_name_1 (s, p->offset);
 	    s += sprintf (s, ":");
 	    if (p->length)
-	      s += tree_name_1 (s, p->length);
+	      s += cb_name_1 (s, p->length);
 	    strcpy (s, ")");
 	  }
       }
@@ -242,20 +242,20 @@ tree_name_1 (char *s, cb_tree x)
 	if (p->op == '@')
 	  {
 	    s += sprintf (s, "(");
-	    s += tree_name_1 (s, p->x);
+	    s += cb_name_1 (s, p->x);
 	    s += sprintf (s, ")");
 	  }
 	else if (p->op == '!')
 	  {
 	    s += sprintf (s, "!");
-	    s += tree_name_1 (s, p->x);
+	    s += cb_name_1 (s, p->x);
 	  }
 	else
 	  {
 	    s += sprintf (s, "(");
-	    s += tree_name_1 (s, p->x);
+	    s += cb_name_1 (s, p->x);
 	    s += sprintf (s, " %c ", p->op);
-	    s += tree_name_1 (s, p->y);
+	    s += cb_name_1 (s, p->y);
 	    strcpy (s, ")");
 	  }
 	break;
@@ -269,7 +269,7 @@ tree_name_1 (char *s, cb_tree x)
 	for (i = 0; i < p->argc; i++)
 	  {
 	    s += sprintf (s, (i == 0) ? "(" : ", ");
-	    s += tree_name_1 (s, p->argv[i]);
+	    s += cb_name_1 (s, p->argv[i]);
 	  }
 	s += sprintf (s, ")");
 	break;
@@ -283,15 +283,15 @@ tree_name_1 (char *s, cb_tree x)
 }
 
 char *
-tree_name (cb_tree x)
+cb_name (cb_tree x)
 {
   static char buff[BUFSIZ];
-  tree_name_1 (buff, x);
+  cb_name_1 (buff, x);
   return buff;
 }
 
 enum cb_category
-tree_category (cb_tree x)
+cb_tree_category (cb_tree x)
 {
   switch (CB_TREE_TAG (x))
     {
@@ -301,7 +301,7 @@ tree_category (cb_tree x)
 	if (r->offset)
 	  return CB_CATEGORY_ALPHANUMERIC;
 	else
-	  return tree_category (r->value);
+	  return cb_tree_category (r->value);
       }
     case CB_TAG_FIELD:
       {
@@ -314,7 +314,7 @@ tree_category (cb_tree x)
 	    if (f->rename_thru)
 	      return CB_CATEGORY_ALPHANUMERIC;
 	    else
-	      return tree_category (CB_TREE (f->redefines));
+	      return cb_tree_category (CB_TREE (f->redefines));
 	  }
 
 	return f->pic->category;
@@ -406,7 +406,7 @@ make_constant_label (const char *name)
 }
 
 void
-init_constants (void)
+cb_init_constants (void)
 {
   int i;
   cb_error_node  = make_constant (CB_CLASS_UNKNOWN, 0);
@@ -419,9 +419,9 @@ init_constants (void)
   cb_low         = make_constant (CB_CLASS_ALPHANUMERIC, "&cob_low");
   cb_high        = make_constant (CB_CLASS_ALPHANUMERIC, "&cob_high");
   cb_quote       = make_constant (CB_CLASS_ALPHANUMERIC, "&cob_quote");
-  cb_int0        = make_integer (0);
-  cb_int1        = make_integer (1);
-  cb_int2        = make_integer (2);
+  cb_int0        = cb_build_integer (0);
+  cb_int1        = cb_build_integer (1);
+  cb_int2        = cb_build_integer (2);
   for (i = 0; i < 8; i++)
     {
       char buff[16];
@@ -438,7 +438,7 @@ init_constants (void)
  */
 
 cb_tree
-make_integer (int val)
+cb_build_integer (int val)
 {
   struct cb_integer *p =
     make_tree (CB_TAG_INTEGER, CB_CLASS_NUMERIC, sizeof (struct cb_integer));
@@ -452,7 +452,7 @@ make_integer (int val)
  */
 
 cb_tree
-make_string (const unsigned char *str)
+cb_build_string (const unsigned char *str)
 {
   struct cb_string *p =
     make_tree (CB_TAG_STRING, CB_CLASS_NUMERIC, sizeof (struct cb_string));
@@ -466,30 +466,31 @@ make_string (const unsigned char *str)
  */
 
 static struct cb_literal *
-make_literal (int class, size_t size, unsigned char *data)
+build_literal (int class, size_t size, unsigned char *data)
 {
   struct cb_literal *p =
     make_tree (CB_TAG_LITERAL, class, sizeof (struct cb_literal));
   p->size = size;
   p->data = malloc (size + 1);
-  memcpy (p->data, data, size + 1);
+  memcpy (p->data, data, size);
+  p->data[size] = 0;
   return p;
 }
 
 cb_tree
-make_numeric_literal (int sign, unsigned char *digits, int expt)
+cb_build_numeric_literal (int sign, unsigned char *digits, int expt)
 {
   struct cb_literal *p =
-    make_literal (CB_CLASS_NUMERIC, strlen (digits), digits);
+    build_literal (CB_CLASS_NUMERIC, strlen (digits), digits);
   p->sign = sign;
   p->expt = expt;
   return CB_TREE (p);
 }
 
 cb_tree
-make_nonnumeric_literal (size_t size, unsigned char *data)
+cb_build_alphanumeric_literal (size_t size, unsigned char *data)
 {
-  return CB_TREE (make_literal (CB_CLASS_ALPHANUMERIC, size, data));
+  return CB_TREE (build_literal (CB_CLASS_ALPHANUMERIC, size, data));
 }
 
 long long
@@ -510,7 +511,7 @@ literal_to_int (struct cb_literal *l)
  */
 
 cb_tree
-make_decimal (char id)
+cb_build_decimal (int id)
 {
   struct cb_decimal *p =
     make_tree (CB_TAG_DECIMAL, CB_CLASS_NUMERIC, sizeof (struct cb_decimal));
@@ -534,7 +535,7 @@ make_decimal (char id)
 #define PIC_NATIONAL_EDITED	(PIC_NATIONAL | PIC_EDITED)
 
 struct cb_picture *
-parse_picture (const char *str)
+cb_parse_picture (const char *str)
 {
   const char *p;
   char category = 0;
@@ -774,14 +775,14 @@ cb_tree
 make_field_3 (cb_tree name, const char *pic, struct cb_usage *usage)
 {
   cb_tree x = make_field (name);
-  CB_FIELD (x)->pic = parse_picture (pic);
+  CB_FIELD (x)->pic = cb_parse_picture (pic);
   CB_FIELD (x)->usage = usage;
   finalize_field (CB_FIELD (x));
   return x;
 }
 
 struct cb_field *
-field (cb_tree x)
+cb_field (cb_tree x)
 {
   if (CB_REFERENCE_P (x))
     return CB_FIELD (CB_REFERENCE (x)->value);
@@ -1006,7 +1007,7 @@ static int
 validate_field_1 (struct cb_field *f)
 {
   cb_tree x = CB_TREE (f);
-  char *name = tree_name (x);
+  char *name = cb_name (x);
 
   if (f->children)
     {
@@ -1180,7 +1181,7 @@ setup_parameters (struct cb_field *p)
     {
       /* regular field */
       if (p->usage == cb_usage_index)
-	p->pic = parse_picture ("S9(9)");
+	p->pic = cb_parse_picture ("S9(9)");
 
       /* set class */
       switch (p->pic->category)
@@ -1818,7 +1819,7 @@ make_binary_op (cb_tree left, char op, cb_tree right)
 
     default:
     invalid:
-      cb_error ("invalid binary-op: %s", tree_name (CB_TREE (p)));
+      cb_error ("invalid binary-op: %s", cb_name (CB_TREE (p)));
       abort ();
     }
   return CB_TREE (p);
@@ -2053,7 +2054,7 @@ build_program (void)
 static cb_tree
 decimal_alloc (void)
 {
-  cb_tree x = make_decimal (current_program->decimal_index++);
+  cb_tree x = cb_build_decimal (current_program->decimal_index++);
   if (current_program->decimal_index > current_program->decimal_index_max)
     current_program->decimal_index_max = current_program->decimal_index;
   return x;
@@ -2110,13 +2111,13 @@ decimal_expand (cb_tree s, cb_tree d, cb_tree x)
     case CB_TAG_REFERENCE:
       {
 	/* set d, X */
-	struct cb_field *f = field (x);
+	struct cb_field *f = cb_field (x);
 
 	/* check numeric */
 	if (CB_EXCEPTION_ENABLE (COB_EC_DATA_INCOMPATIBLE))
 	  if (f->usage == cb_usage_display)
 	    add_stmt (s, make_funcall_2 ("cob_check_numeric",
-					 x, make_string (f->name)));
+					 x, cb_build_string (f->name)));
 
 	if (cb_fits_int (x))
 	  add_stmt (s, make_funcall_2 ("cob_decimal_set_int",
@@ -2242,7 +2243,7 @@ build_assign (struct cb_list *vars, char op, cb_tree val)
 cb_tree
 build_add (cb_tree v, cb_tree n, int round)
 {
-  if (field (v)->usage == cb_usage_index)
+  if (cb_field (v)->usage == cb_usage_index)
     return build_move (make_binary_op (v, '+', n), v);
 
   if (round == 0 && cb_fits_int (n))
@@ -2256,7 +2257,7 @@ build_add (cb_tree v, cb_tree n, int round)
 cb_tree
 build_sub (cb_tree v, cb_tree n, int round)
 {
-  if (field (v)->usage == cb_usage_index)
+  if (cb_field (v)->usage == cb_usage_index)
     return build_move (make_binary_op (v, '-', n), v);
 
   if (round == 0 && cb_fits_int (n))
@@ -2316,7 +2317,7 @@ move_error (cb_tree src, cb_tree dst, int value_flag, int flag, const char *msg)
 static int
 validate_move (cb_tree src, cb_tree dst, int value_flag)
 {
-  struct cb_field *f = field (dst);
+  struct cb_field *f = cb_field (dst);
   cb_tree loc = src->source_line ? src : dst;
 
   switch (CB_TREE_TAG (src))
@@ -2366,7 +2367,7 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 	      least_significant = l->expt + i;
 
 	    /* value check */
-	    switch (tree_category (dst))
+	    switch (CB_TREE_CATEGORY (dst))
 	      {
 	      case CB_CATEGORY_ALPHANUMERIC:
 	      case CB_CATEGORY_ALPHANUMERIC_EDITED:
@@ -2387,7 +2388,7 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 		      if (least_significant < f->pic->expt)
 			goto value_mismatch;
 		    }
-		  else if (f->pic->expt < - f->pic->size)
+		  else if (f->pic->expt < -f->pic->size)
 		    {
 		      /* check for PIC P(n)9(m) */
 		      if (most_significant >= f->pic->expt + f->pic->size)
@@ -2435,7 +2436,7 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 	    /* Alphanumeric literal */
 
 	    /* value check */
-	    switch (tree_category (dst))
+	    switch (CB_TREE_CATEGORY (dst))
 	      {
 	      case CB_CATEGORY_ALPHABETIC:
 		{
@@ -2470,7 +2471,7 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
     case CB_TAG_REFERENCE:
       {
 	/* non-elementary move */
-	if (field (src)->children || field (dst)->children)
+	if (cb_field (src)->children || cb_field (dst)->children)
 	  break;
 
 	/* elementary move */
@@ -2498,7 +2499,7 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 	      case CB_CATEGORY_ALPHANUMERIC:
 	      case CB_CATEGORY_ALPHANUMERIC_EDITED:
 		if (CB_TREE_CATEGORY (src) == CB_CATEGORY_NUMERIC
-		    && field (src)->pic->expt < 0)
+		    && cb_field (src)->pic->expt < 0)
 		  goto invalid;
 	      default:
 		break;
@@ -2552,9 +2553,9 @@ build_corresponding_1 (cb_tree (*func)(), cb_tree x1, cb_tree x2,
 		       int opt, struct cb_list *l)
 {
   struct cb_field *f1, *f2;
-  for (f1 = field (x1)->children; f1; f1 = f1->sister)
+  for (f1 = cb_field (x1)->children; f1; f1 = f1->sister)
     if (!f1->redefines && !f1->flag_occurs)
-      for (f2 = field (x2)->children; f2; f2 = f2->sister)
+      for (f2 = cb_field (x2)->children; f2; f2 = f2->sister)
 	if (!f2->redefines && !f2->flag_occurs)
 	  if (strcmp (f1->name, f2->name) == 0)
 	    {
@@ -2606,7 +2607,7 @@ build_divide (cb_tree dividend, cb_tree divisor,
 static cb_tree
 build_cond_88 (cb_tree x)
 {
-  struct cb_field *f = field (x);
+  struct cb_field *f = cb_field (x);
   struct cb_list *l;
   cb_tree c1 = NULL;
 
@@ -2649,7 +2650,7 @@ build_cond (cb_tree x)
     case CB_TAG_REFERENCE:
       {
 	/* level 88 condition */
-	if (field (x)->level == 88)
+	if (cb_field (x)->level == 88)
 	  {
 	    /* We need to build a 88 condition at every occurrence
 	       instead of once at the beginning, because a 88 item
@@ -2841,14 +2842,14 @@ search_set_keys (struct cb_field *f, cb_tree x)
       {
 	int i;
 	for (i = 0; i < f->nkeys; i++)
-	  if (field (p->x) == field (f->keys[i].key))
+	  if (cb_field (p->x) == cb_field (f->keys[i].key))
 	    {
 	      f->keys[i].ref = p->x;
 	      f->keys[i].val = p->y;
 	      break;
 	    }
 	if (i == f->nkeys)
-	  cb_error_x (x, _("undeclared key `%s'"), field (p->x)->name);
+	  cb_error_x (x, _("undeclared key `%s'"), cb_field (p->x)->name);
 	break;
       }
     default:
@@ -2861,7 +2862,7 @@ cb_tree
 build_search_all (cb_tree table, cb_tree cond)
 {
   int i;
-  struct cb_field *f = field (table);
+  struct cb_field *f = cb_field (table);
   cb_tree c1 = NULL;
 
   /* set keys */

@@ -284,7 +284,7 @@ output_size (cb_tree x)
 static int
 tree_type (cb_tree x)
 {
-  struct cb_field *f = field (x);
+  struct cb_field *f = cb_field (x);
 
   if (f->children)
     return COB_TYPE_GROUP;
@@ -299,7 +299,7 @@ tree_type (cb_tree x)
       return COB_TYPE_ALPHANUMERIC_EDITED;
     case CB_CATEGORY_NUMERIC:
       {
-	struct cb_field *f = field (x);
+	struct cb_field *f = cb_field (x);
 	if (f->usage == cb_usage_display)
 	  return COB_TYPE_NUMERIC_DISPLAY;
 	else if (f->usage == cb_usage_binary)
@@ -578,7 +578,7 @@ output_param (cb_tree x, int id)
 	  }
 
 	f = CB_FIELD (r->value);
-	output_line ("/* %s */", tree_name (x));
+	output_line ("/* %s */", cb_name (x));
 	output ("({");
 
 	/* subscript check */
@@ -603,7 +603,7 @@ output_param (cb_tree x, int id)
 			  output (", %d, %d, ", p->occurs_min, p->occurs);
 			  output_integer (p->occurs_depending);
 			  output (", \"%s\", \"%s\");\n", p->name,
-				  field (p->occurs_depending)->name);
+				  cb_field (p->occurs_depending)->name);
 			}
 		    }
 		  else
@@ -689,7 +689,7 @@ output_integer (cb_tree x)
       }
     default:
       {
-	struct cb_field *f = field (x);
+	struct cb_field *f = cb_field (x);
 	if (f->usage == cb_usage_index)
 	  {
 	    if (f->level == 0)
@@ -960,7 +960,7 @@ output_memcpy (cb_tree x, char *s)
   output ("memcpy (");
   output_data (x);
   output (", ");
-  output_quoted_string (s, field (x)->size);
+  output_quoted_string (s, cb_field (x)->size);
   output (", ");
   output_size (x);
   output (");\n");
@@ -1027,11 +1027,11 @@ output_move_call (cb_tree src, cb_tree dst)
 static void
 output_move_num (cb_tree x, int high)
 {
-  if (field (x)->usage == cb_usage_display)
+  if (cb_field (x)->usage == cb_usage_display)
     output_memset (x, high ? '9' : '0');
-  else if (field (x)->usage == cb_usage_packed)
+  else if (cb_field (x)->usage == cb_usage_packed)
     output_memset (x, high ? 0x99 : 0x00);
-  else if (field (x)->usage == cb_usage_binary)
+  else if (cb_field (x)->usage == cb_usage_binary)
     output_native_assign (x, high ? -1 : 0);
   else
     abort ();
@@ -1059,7 +1059,7 @@ output_move_zero (cb_tree x)
   switch (CB_TREE_CATEGORY (x))
     {
     case CB_CATEGORY_NUMERIC:
-      if (field (x)->flag_blank_zero)
+      if (cb_field (x)->flag_blank_zero)
 	output_move_space (x);
       else
 	output_move_num (x, 0);
@@ -1130,7 +1130,7 @@ static void
 output_move_literal (cb_tree src, cb_tree dst)
 {
   struct cb_literal *l = CB_LITERAL (src);
-  struct cb_field *f = field (dst);
+  struct cb_field *f = cb_field (dst);
 
   if (l->all)
     {
@@ -1193,8 +1193,8 @@ output_move (cb_tree src, cb_tree dst)
 	  int simple_copy = 0;
 	  int src_size = field_size (src);
 	  int dst_size = field_size (dst);
-	  struct cb_field *src_f = field (src);
-	  struct cb_field *dst_f = field (dst);
+	  struct cb_field *src_f = cb_field (src);
+	  struct cb_field *dst_f = cb_field (dst);
 
 	  if (src_size > 0 && dst_size > 0 && src_size >= dst_size)
 	    switch (CB_TREE_CLASS (src))
@@ -1461,11 +1461,11 @@ static void
 output_search (cb_tree table, cb_tree var, cb_tree stmt, cb_tree whens)
 {
   struct cb_list *l;
-  struct cb_field *p = field (table);
+  struct cb_field *p = cb_field (table);
   cb_tree idx = NULL;
 
   /* determine the index to use */
-  var = var ? CB_TREE (field (var)) : NULL;
+  var = var ? CB_TREE (cb_field (var)) : NULL;
   for (l = p->index_list; l; l = l->next)
     if (l->item == var)
       idx = var;
@@ -1507,7 +1507,7 @@ output_search (cb_tree table, cb_tree var, cb_tree stmt, cb_tree whens)
 static void
 output_search_all (cb_tree table, cb_tree stmt, cb_tree when)
 {
-  struct cb_field *p = field (table);
+  struct cb_field *p = cb_field (table);
   cb_tree idx = CB_TREE (p->index_list->item);
 
   /* header */
@@ -1694,8 +1694,8 @@ output_call (cb_tree name, struct cb_list *args,
 		output ("%d", CB_LITERAL (x)->data[0]);
 	      break;
 	    default:
-	      if (field (x)->usage == cb_usage_binary
-		  || field (x)->usage == cb_usage_index)
+	      if (cb_field (x)->usage == cb_usage_binary
+		  || cb_field (x)->usage == cb_usage_index)
 		{
 		  output_integer (x);
 		}

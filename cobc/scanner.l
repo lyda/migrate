@@ -194,7 +194,7 @@ read_literal (char mark)
 	cb_error (_("too large literal"));
     }
   *p = 0;
-  yylval.tree = make_nonnumeric_literal (strlen (buff), buff);
+  yylval.tree = cb_build_alphanumeric_literal (strlen (buff), buff);
   SET_LOCATION (yylval.tree);
   return LITERAL;
 }
@@ -224,11 +224,10 @@ scan_x (char *text)
       src++;
       high = 1 - high;
     }
-  *dst = '\0';
 
   if (high)
     {
-      yylval.tree = make_nonnumeric_literal (dst - buff, buff);
+      yylval.tree = cb_build_alphanumeric_literal (dst - buff, buff);
       SET_LOCATION (yylval.tree);
       return LITERAL;
     }
@@ -260,7 +259,7 @@ scan_h (char *text)
     }
 
   sprintf (buff, "%lld", val);
-  yylval.tree = make_numeric_literal (0, buff, 0);
+  yylval.tree = cb_build_numeric_literal (0, buff, 0);
   SET_LOCATION (yylval.tree);
   return LITERAL;
 
@@ -289,7 +288,7 @@ scan_numeric (char *text)
   if (strchr (text, (current_program->decimal_point == ',') ? '.' : ','))
     cb_error (_("invalid numeric literal"));
 
-  yylval.tree = make_numeric_literal (sign, text, - decimals);
+  yylval.tree = cb_build_numeric_literal (sign, text, - decimals);
   SET_LOCATION (yylval.tree);
   return LITERAL;
 }
@@ -313,6 +312,6 @@ scan_picture (char *text)
       *p = toupper (*p);
     }
 
-  yylval.pict = parse_picture (text);
+  yylval.pict = cb_parse_picture (text);
   return PICTURE;
 }
