@@ -276,8 +276,8 @@ cb_tree_type (cb_tree x)
 	{
 	case CB_USAGE_DISPLAY:
 	  return COB_TYPE_NUMERIC_DISPLAY;
-	case CB_USAGE_BINARY:
-	case CB_USAGE_NATIVE:
+	case CB_USAGE_BINARY_SWAP:
+	case CB_USAGE_BINARY_NATIVE:
 	case CB_USAGE_INDEX:
 	  return COB_TYPE_NUMERIC_BINARY;
 	case CB_USAGE_PACKED:
@@ -311,8 +311,8 @@ cb_fits_int (cb_tree x)
 	  {
 	  case CB_USAGE_INDEX:
 	    return 1;
-	  case CB_USAGE_BINARY:
-	  case CB_USAGE_NATIVE:
+	  case CB_USAGE_BINARY_SWAP:
+	  case CB_USAGE_BINARY_NATIVE:
 	    if (f->pic->expt >= 0 && f->size <= sizeof (int))
 	      return 1;
 	    return 0;
@@ -1133,8 +1133,8 @@ validate_field_1 (struct cb_field *f)
       }
 
       /* validate USAGE */
-      if (f->usage == CB_USAGE_BINARY
-	  || f->usage == CB_USAGE_NATIVE
+      if (f->usage == CB_USAGE_BINARY_SWAP
+	  || f->usage == CB_USAGE_BINARY_NATIVE
 	  || f->usage == CB_USAGE_PACKED)
 	if (f->pic->category != CB_CATEGORY_NUMERIC)
 	  cb_warning_x (x, _("`%s' not numeric item"), name);
@@ -1267,8 +1267,8 @@ compute_size (struct cb_field *f)
       /* elementary item */
       switch (f->usage)
 	{
-	case CB_USAGE_BINARY:
-	case CB_USAGE_NATIVE:
+	case CB_USAGE_BINARY_SWAP:
+	case CB_USAGE_BINARY_NATIVE:
 	  {
 	    int size = f->pic->size;
 	    switch (cb_binary_size)

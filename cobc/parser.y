@@ -101,7 +101,7 @@ static void terminator_warning (void);
 
 %token ACCEPT ADD CALL CANCEL CLOSE COMPUTE DELETE DISPLAY DIVIDE ENTRY
 %token EVALUATE IF INITIALIZE INSPECT MERGE MOVE MULTIPLY OPEN PERFORM
-%token READ RELEASE RETURN REWRITE SEARCH SET SORT START STRING NATIVE_BINARY
+%token READ RELEASE RETURN REWRITE SEARCH SET SORT START STRING
 %token SUBTRACT UNSTRING WRITE WORKING_STORAGE ZERO PACKED_DECIMAL RECURSIVE
 %token LINAGE FOOTING TOP BOTTOM SHARING ONLY RECORDING LOCAL_STORAGE
 %token ACCESS ADVANCING AFTER ALL ALPHABET ALPHABETIC ALPHABETIC_LOWER AS
@@ -133,6 +133,7 @@ static void terminator_warning (void);
 %token STATUS STOP SYMBOLIC SYNCHRONIZED TALLYING TAPE TEST THAN THEN THRU
 %token TIME TIMES TO TOK_FILE TOK_INITIAL TOK_TRUE TOK_FALSE TRAILING
 %token UNDERLINE UNIT UNTIL UP UPON USAGE USE USING VALUE VARYING WHEN WITH
+%token COMP COMP_1 COMP_2 COMP_3 COMP_4 COMP_5
 
 
 %%
@@ -1025,17 +1026,16 @@ usage_clause:
 | USAGE _is usage
 ;
 usage:
-  BINARY
-  {
-    if (cb_binary_order == CB_ORDER_BIG_ENDIAN)
-      current_field->usage = CB_USAGE_BINARY;
-    else
-      current_field->usage = CB_USAGE_NATIVE;
-  }
-| DISPLAY			{ current_field->usage = CB_USAGE_DISPLAY; }
-| INDEX				{ current_field->usage = CB_USAGE_INDEX; }
-| NATIVE_BINARY			{ current_field->usage = CB_USAGE_NATIVE; }
-| PACKED_DECIMAL		{ current_field->usage = CB_USAGE_PACKED; }
+  BINARY		{ current_field->usage = CB_USAGE_BINARY; }
+| COMP			{ current_field->usage = CB_USAGE_BINARY; }
+| COMP_1		{ current_field->usage = CB_USAGE_FLOAT; }
+| COMP_2		{ current_field->usage = CB_USAGE_FLOAT; }
+| COMP_3		{ current_field->usage = CB_USAGE_PACKED; }
+| COMP_4		{ current_field->usage = CB_USAGE_BINARY; }
+| COMP_5		{ current_field->usage = CB_USAGE_BINARY_NATIVE; }
+| DISPLAY		{ current_field->usage = CB_USAGE_DISPLAY; }
+| INDEX			{ current_field->usage = CB_USAGE_INDEX; }
+| PACKED_DECIMAL	{ current_field->usage = CB_USAGE_PACKED; }
 ;
 
 
