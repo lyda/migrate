@@ -212,12 +212,7 @@ void *
 cob_call_resolve (struct cob_field f)
 {
   char buff[FILENAME_MAX];
-  void (*func) () = cob_resolve (cob_field_to_string (f, buff));
-  if (func)
-    cob_status = COB_STATUS_SUCCESS;
-  else
-    cob_status = COB_STATUS_OVERFLOW;
-  return func;
+  return cob_resolve (cob_field_to_string (f, buff));
 }
 
 void
