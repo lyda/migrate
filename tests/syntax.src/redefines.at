@@ -491,3 +491,23 @@ AT_CLEANUP
 # 15) TODO
 
 # 16) TODO
+
+
+AT_SETUP([REDEFINES with already redefined field])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 G.
+         02 A           PIC X(5).
+         02 B           REDEFINES A PIC X(3).
+         02 C           REDEFINES B PIC X(5).
+       PROCEDURE        DIVISION.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
