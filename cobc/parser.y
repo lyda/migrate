@@ -3255,19 +3255,6 @@ validate_field (struct cobc_field *p)
 	}
 
       /* validate USAGE */
-      switch (p->usage)
-	{
-	case USAGE_DISPLAY:
-	  break;
-	case USAGE_BINARY:
-	case USAGE_PACKED:
-	  if (p->category != COB_NUMERIC)
-	    yywarn ("USAGE: should be numeric");
-	  break;
-	case USAGE_INDEX:
-	  COBC_TREE_CLASS (p) = COB_NUMERIC;
-	  break;
-	}
 
       /* validate SIGN */
 
@@ -3344,6 +3331,20 @@ validate_field_tree (struct cobc_field *p)
     }
   else
     {
+      switch (p->usage)
+	{
+	case USAGE_DISPLAY:
+	  break;
+	case USAGE_BINARY:
+	case USAGE_PACKED:
+	  if (p->category != COB_NUMERIC)
+	    yywarn ("field must be numeric");
+	  break;
+	case USAGE_INDEX:
+	  COBC_TREE_CLASS (p) = COB_NUMERIC;
+	  break;
+	}
+
       if (!p->pic)
 	{
 	  if (p->usage != USAGE_INDEX)

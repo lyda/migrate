@@ -23,11 +23,11 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#include <getopt.h>
 #include <unistd.h>
 
 #include "cobc.h"
 #include "tree.h"
+#include "getopt.h"
 #include "codegen.h"
 #include "reserved.h"
 #include "defaults.h"

@@ -1,6 +1,7 @@
 bin_PROGRAMS = cobc
 cobc_SOURCES = cobc.c cobc.h tree.c tree.h codegen.c codegen.h functions.h \
-	reserved.c reserved.h parser.y parser.h scanner.l scanner.h
+	reserved.c reserved.h parser.y parser.h scanner.l scanner.h \
+	getopt.c getopt1.c getopt.h
 cobc_DEPENDENCIES = defaults.h
 cobc_LDADD = -L$(top_srcdir)/libcob -lcob
 BUILT_SOURCES = parser.c parser.h scanner.c defaults.h

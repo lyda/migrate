@@ -23,11 +23,11 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#include <getopt.h>
 #include <unistd.h>
 
 #include "cobpp.h"
 #include "scanner.h"
+#include "getopt.h"
 
 extern int yyparse (void);
 
