@@ -1,5 +1,9 @@
 2004-05-04  Keisuke Nishida  <knishida@open-cobol.org>
 
+	* termio.c (display_numeric): Leading sign for binary.
+
+2004-05-04  Keisuke Nishida  <knishida@open-cobol.org>
+
 	* byteswap.h (COB_BSWAP_32_IA32): Always use bswap.
 	(We no longer support i386.)
 

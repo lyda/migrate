@@ -47,7 +47,8 @@ display_numeric (cob_field *f, FILE *fp)
   if (COB_FIELD_HAVE_SIGN (f))
     {
       attr.flags = COB_FLAG_HAVE_SIGN | COB_FLAG_SIGN_SEPARATE;
-      if (COB_FIELD_SIGN_LEADING (f))
+      if (COB_FIELD_SIGN_LEADING (f)
+	  || COB_FIELD_TYPE (f) == COB_TYPE_NUMERIC_BINARY)
 	attr.flags |= COB_FLAG_SIGN_LEADING;
     }
 
