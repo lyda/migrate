@@ -30,6 +30,3 @@ upload:
 	  ncftpput upload.sourceforge.net /incoming \
 	    ../$(PACKAGE)_$(VERSION)-$(RELEASE).tar.gz \
 	    ../$(PACKAGE)_$(VERSION)-$(RELEASE)_i386.deb
-
-check:
-	@(cd testsuite && $(MAKE) check)
