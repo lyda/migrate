@@ -1521,6 +1521,10 @@ statement:
 | write_statement
 | CONTINUE
 | NEXT SENTENCE
+  {
+    if (cobc_warn_next_sentence)
+      yywarn (_("NEXT SENTENCE is obsolete; use CONTINUE or END-IF"));
+  }
 ;
 
 
