@@ -45,8 +45,6 @@ extern char *cob_orig_filename;
 extern char *cob_source_filename;
 extern char *cob_include_filename;
 
-extern char HTG_COPYDIR[];
-
 extern FILE *yyin;
 extern FILE *o_src;
 

@@ -51,8 +51,6 @@ char *cob_orig_filename = NULL;
 char *cob_source_filename = NULL;
 char *cob_include_filename = NULL;
 
-char HTG_COPYDIR[BUFSIZ];
-
 FILE *o_src;
 
 extern int yy_flex_debug;
@@ -72,6 +70,8 @@ static char *output_filename;
 static char cob_cc[FILENAME_MAX];		/* gcc */
 static char cob_cobpp[FILENAME_MAX];		/* cobpp */
 static char cob_libadd[FILENAME_MAX];		/* -lcob */
+
+static char cob_includepath[FILENAME_MAX];
 
 static enum format {
   format_unspecified,
@@ -118,7 +118,7 @@ init_var (char *var, const char *env, const char *def)
 static void
 init_environment (int argc, char *argv[])
 {
-  strcpy (HTG_COPYDIR, "");
+  strcpy (cob_includepath, "");
 
   /* Initialize program_name */
   program_name = strrchr (argv[0], '/');
@@ -237,13 +237,13 @@ process_command_line (int argc, char *argv[])
 	    static int first = 1;
 	    if (first)
 	      {
-		strcpy (HTG_COPYDIR, optarg);
+		strcpy (cob_includepath, optarg);
 		first = 0;
 	      }
 	    else
 	      {
-		strcat (HTG_COPYDIR, ":");
-		strcat (HTG_COPYDIR, optarg);
+		strcat (cob_includepath, ":");
+		strcat (cob_includepath, optarg);
 	      }
 	  }
 	  break;
@@ -413,10 +413,10 @@ preprocess (struct filename *fn)
 
   sprintf (buff, "%s ", cob_cobpp);
 
-  if (strlen (HTG_COPYDIR) > 0)
+  if (strlen (cob_includepath) > 0)
     {
       strcat (buff, "-I ");
-      strcat (buff, HTG_COPYDIR);
+      strcat (buff, cob_includepath);
       strcat (buff, " ");
     }
 
