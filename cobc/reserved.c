@@ -329,6 +329,7 @@ static struct reserved reserved_words[] = {
   {"NO",		NO, 0},				/* 2002 */
   {"NOT",		NOT, 0},			/* 2002 */
   {"NULL",		TOK_NULL, 0},			/* 2002 */
+  {"NULLS",		TOK_NULL, 0},			/* extension */
   {"NUMBER",		NUMBER, 0},			/* 2002 */
   {"NUMERIC",		NUMERIC, 0},			/* 2002 */
   {"NUMERIC-EDITED",	NUMERIC_EDITED, 0},		/* 2002 */
