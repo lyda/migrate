@@ -1157,7 +1157,7 @@ output_perform_once (struct cobc_perform *p)
 }
 
 static void
-output_perform_before (struct cobc_perform *p, struct cobc_perform_varying *v)
+output_perform_until (struct cobc_perform *p, struct cobc_perform_varying *v)
 {
   /* perform body at the end */
   if (!v)
@@ -1165,52 +1165,31 @@ output_perform_before (struct cobc_perform *p, struct cobc_perform_varying *v)
       output_perform_once (p);
       return;
     }
-
-  /* loop */
-  output_prefix ();
-  output ("while (!");
-  output_tree (v->until);
-  output (")\n");
-  output_indent ("  {", 4);
-  output_perform_before (p, v->next);
-
-  /* step */
-  if (v->name)
-    {
-      output_tree (make_op_assign (v->name, '+', v->by));
-      if (v->next && v->next->name)
-	output_move (v->next->from, v->next->name);
-    }
-  output_indent ("  }", -4);
-}
-
-static void
-output_perform_after (struct cobc_perform *p, struct cobc_perform_varying *v)
-{
-  /* perform body at the end */
-  if (!v)
-    {
-      output_perform_once (p);
-      return;
-    }
-
-  /* init */
-  if (v->name)
-    output_move (v->from, v->name);
 
   /* loop */
   output_line ("while (1)");
   output_indent ("  {", 4);
-  output_perform_after (p, v->next);
 
-  /* step */
+  /* init */
+  if (v->next && v->next->name)
+    output_move (v->next->from, v->next->name);
+
+  if (p->test == COBC_AFTER)
+    output_perform_until (p, v->next);
+
   output_prefix ();
   output ("if (");
   output_tree (v->until);
   output (")\n");
   output_line ("  break;");
+
+  if (p->test == COBC_BEFORE)
+    output_perform_until (p, v->next);
+
+  /* step */
   if (v->name)
     output_tree (make_op_assign (v->name, '+', v->by));
+
   output_indent ("  }", -4);
 }
 
@@ -1240,18 +1219,9 @@ output_perform (struct cobc_perform *p)
       loop_counter++;
       break;
     case COBC_PERFORM_UNTIL:
-      if (p->test == COBC_BEFORE)
-	{
-	  struct cobc_perform_varying *v;
-	  for (v = p->varying; v; v = v->next)
-	    if (v->name)
-	      output_move (v->from, v->name);
-	  output_perform_before (p, p->varying);
-	}
-      else
-	{
-	  output_perform_after (p, p->varying);
-	}
+      if (p->varying->name)
+	output_move (p->varying->from, p->varying->name);
+      output_perform_until (p, p->varying);
       break;
     }
 }

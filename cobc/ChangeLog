@@ -1,3 +1,9 @@
+2002-10-30  Keisuke Nishida  <knishida@netlab.jp>
+
+	* codegen.c (output_perform_until): Merge `output_perform_before'
+	and `output_perform_after'.
+	(output_perform): Call `output_perform_until'.
+
 2002-10-08  Keisuke Nishida  <knishida@netlab.jp>
 
 	* codegen.h (cobc_program_spec): New member `loop_counter'.
