@@ -3040,33 +3040,35 @@ gen_perform (cob_tree sy)
 void
 gen_SearchLoopCheck (unsigned long lbl5, cob_tree syidx, cob_tree sytbl)
 {
-  cob_tree x;
+  cob_tree x, idx;
   char tblmax[21];
-  /*int len, i; */
 
   strcpy (tblmax, "1");
   x = install_literal (tblmax);
   save_literal (x, '9');
 
-  gen_add (x, syidx, 0);
+  idx = determine_table_index_name (sytbl);
+  gen_add (x, idx, 0);
+  if (syidx && syidx != idx)
+    gen_add (x, syidx, 0);
 
   sprintf (tblmax, "%d", sytbl->times);
   x = install_literal (tblmax);
   save_literal (x, '9');
 
-  gen_compare (syidx, COND_GT, x);
+  gen_compare (idx, COND_GT, x);
   gen_branch_true (lbl5);
 }
 
 void
-gen_SearchAllLoopCheck (unsigned long lbl3, cob_tree syidx,
-			cob_tree sytbl, cob_tree syvar,
+gen_SearchAllLoopCheck (unsigned long lbl3, cob_tree sytbl, cob_tree syvar,
 			unsigned long lstart, unsigned long lend)
 {
 
   cob_tree sy1;
   struct index_to_table_list *it1, *it2;
   unsigned long l1, l2, l3, l4, l5, l6;
+  cob_tree syidx = determine_table_index_name (sytbl);
 
   l1 = loc_label++;
   l2 = loc_label++;
@@ -3220,12 +3222,13 @@ gen_SearchAllLoopCheck (unsigned long lbl3, cob_tree syidx,
 }
 
 void
-Initialize_SearchAll_Boundaries (cob_tree sy, cob_tree syidx)
+Initialize_SearchAll_Boundaries (cob_tree sy)
 {
   int i;
   cob_tree x;
   char tblmax[21];
   struct index_to_table_list *i2t1, *i2t2;
+  cob_tree syidx = determine_table_index_name (sy);
 
   i = sy->times / 2;
 
@@ -3264,24 +3267,11 @@ Initialize_SearchAll_Boundaries (cob_tree sy, cob_tree syidx)
 cob_tree 
 determine_table_index_name (cob_tree sy)
 {
-  cob_tree rsy = NULL;
   struct index_to_table_list *i2t;
-
-  i2t = index2table;
-  while (i2t != NULL)
-    {
-      if (strcmp (i2t->tablename, COB_FIELD_NAME (sy)) == 0)
-	{
-	  rsy = lookup_symbol (i2t->idxname);
-	  i2t = NULL;
-	}
-      else
-	{
-	  i2t = i2t->next;
-	}
-    }
-
-  return rsy;
+  for (i2t = index2table; i2t; i2t = i2t->next)
+    if (strcmp (i2t->tablename, COB_FIELD_NAME (sy)) == 0)
+      return lookup_symbol (i2t->idxname);
+  return NULL;
 }
 
 

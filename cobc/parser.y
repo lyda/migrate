@@ -2357,6 +2357,7 @@ opt_end_rewrite: | END_REWRITE ;
 search_statement:
   SEARCH search_body opt_end_search
 | SEARCH ALL search_all_body opt_end_search
+;
 search_body:
   indexed_variable
   {
@@ -2366,13 +2367,6 @@ search_body:
   search_opt_varying
   {
     $<ival>$=loc_label++; /* determine search loop start label */
-    if ($3 == NULL) {
-      $3=determine_table_index_name($1);
-      if ($3 == NULL) {
-         yyerror("Unable to determine search index for table '%s'",
-		 COB_FIELD_NAME ($1));
-      }
-    }
     gen_jmplabel($<ival>$); /* generate GOTO search loop start  */
   }
   search_opt_at_end
@@ -2398,15 +2392,8 @@ search_all_body:
 
      lbstart=loc_label++; /* determine search_all loop start label */
 
-     $<tree>$=determine_table_index_name($1);
-     if ($<tree>$ == NULL) {
-        yyerror("Unable to determine search index for table '%s'",
-		COB_FIELD_NAME ($1));
-     }
-     else {
-       /* Initilize and store search table index boundaries */
-       Initialize_SearchAll_Boundaries($1, $<tree>$);
-     }
+     /* Initilize and store search table index boundaries */
+     Initialize_SearchAll_Boundaries ($1);
 
      gen_jmplabel(lbstart); /* generate GOTO search_all loop start  */
   }
@@ -2418,7 +2405,7 @@ search_all_body:
   search_all_when_list
   {
      /* adjust loop index, check for end */
-     gen_SearchAllLoopCheck($3, $<tree>2, $1, curr_field, lbstart, lbend);
+     gen_SearchAllLoopCheck($3, $1, curr_field, lbstart, lbend);
   }
 ;
 search_opt_varying:
@@ -3129,7 +3116,9 @@ indexed_variable:
   SUBSCVAR
   {
     if ($1->times == 1)
-       yyerror("variable `%s' must be indexed", COB_FIELD_NAME ($1));
+      yyerror ("variable `%s' not OCCURS", COB_FIELD_NAME ($1));
+    if (determine_table_index_name ($1) == NULL)
+      yyerror ("variable `%s' must be indexed", COB_FIELD_NAME ($1));
     $$ = $1;
   }
 ;
