@@ -1,7 +1,7 @@
 #                                                       -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-# Copyright (C) 2001-2002 Keisuke Nishida
+# Copyright (C) 2001-2003 Keisuke Nishida
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 
 AC_PREREQ(2.57)
 
-AC_INIT([OpenCOBOL],[0.11],[knishida@coboler.com],[open-cobol])
+AC_INIT([OpenCOBOL],[0.12],[knishida@coboler.com],[open-cobol])
 AC_CONFIG_SRCDIR([libcob.h])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_HEADERS([config.h])
@@ -146,8 +146,14 @@ fi
 
 # OpenCOBOL Configuration
 
+if test "x$prefix" = "x/usr" \
+     -a "x$includedir" = "x\${prefix}/include"; then
+  COB_CFLAGS=""
+else
+  COB_CFLAGS="-I$includedir"
+fi
+
 COB_COBPP="cobpp"
-COB_CFLAGS="-I$includedir"
 COB_LIBS="-L$libdir -lcob ${LIBCOB_LIBS}"
 COB_CONFIG_FILE="$sysconfdir/libcob.conf"
 COB_LIBRARY_PATH=".:$libdir/$PACKAGE_TARNAME"
