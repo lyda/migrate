@@ -224,3 +224,6 @@ extern void cob_add (void);
 extern void cob_add_int (struct cob_field f, int n);
 extern void cob_set (struct cob_field f, int rnd);
 extern void cob_set_int (struct cob_field f, int n);
+extern int cob_cmp (void);
+extern int cob_between (void);
+extern int cob_compare (struct cob_field f1, struct cob_field f2);

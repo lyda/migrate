@@ -1142,7 +1142,7 @@ gen_condition (cob_tree cond)
       output ("\tcmpl\t$1,%%eax\n");
       break;
     case COND_ALPHABETIC:
-      asm_call_1 ("cob_is_alphabetic", l);
+      asm_call_1 ("cob_is_alpha", l);
       output ("\tcmpl\t$1,%%eax\n");
       break;
     case COND_LOWER:
