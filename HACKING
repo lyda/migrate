@@ -4,7 +4,7 @@ from the CVS repository.
 We use the following extra packages to build OpenCOBOL:
 
   o Autoconf 2.53
-  o Automake 1.6.1
+  o Automake 1.6.3
   o Libtool 1.4.2
   o gettext 0.11.5
   o Bison 1.28
