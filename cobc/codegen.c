@@ -548,9 +548,9 @@ output_integer (cb_tree x)
 	switch (p->type)
 	  {
 	  case CB_CAST_ADDRESS:
-	    output ("((int) (");
+	    output ("(");
 	    output_data (p->val);
-	    output ("))");
+	    output (")");
 	    break;
 	  default:
 	    ABORT ();
@@ -576,7 +576,7 @@ output_integer (cb_tree x)
 	    return;
 
 	  case CB_USAGE_POINTER:
-	    output ("(*(void **) (");
+	    output ("(*(unsigned char **) (");
 	    output_data (x);
 	    output ("))");
 	    return;
@@ -724,7 +724,7 @@ output_param (cb_tree x, int id)
 	    output_size (p->val);
 	    break;
 	  case CB_CAST_DEREFERENCE:
-	    output ("(*(void **) (");
+	    output ("(*(unsigned char **) (");
 	    output_data (p->val);
 	    output ("))");
 	  }
