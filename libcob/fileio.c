@@ -651,7 +651,13 @@ indexed_read_next (cob_file *f)
 {
   struct indexed_file *p = f->file;
 
-  if (f->flag_first_read == 0)
+  if (f->flag_first_read)
+    {
+      /* data is read in indexed_open or indexed_start */
+      if (p->data.data == 0)
+	return COB_FILE_END_OF_FILE;
+    }
+  else
     {
       if (DB_SEQ (p->db[p->key_index], R_NEXT) != 0)
 	return COB_FILE_END_OF_FILE;
