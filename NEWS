@@ -9,6 +9,8 @@ NEWS - user visible changes				-*- outline -*-
 The environment variable `COB_CONFIG_FILE' specifies the file path
 (default to "${prefix}/share/open-cobol/libcob.conf").
 
+** Include test suite in testsuite.
+
 ** Bug fixes and improvements.
 
 
