@@ -148,7 +148,7 @@ identification_division:
     current_program = cb_build_program ();
     cb_build_registers ();
   }
-  PROGRAM_ID '.' program_name as_literal program_type '.'
+  PROGRAM_ID '.' program_name as_literal program_type dot
   {
     current_program->program_id = cb_build_program_id ($7, $8);
   }
@@ -166,6 +166,7 @@ program_type:
 | _is TOK_INITIAL _program	{ current_program->flag_initial = 1; }
 | _is RECURSIVE _program	{ current_program->flag_recursive = 1; }
 ;
+dot: | '.' ;
 
 
 /*****************************************************************************
