@@ -453,17 +453,16 @@ struct occurs
 
 
 /*
- * Pair
+ * Tree list
  */
 
-struct pair {
-  void *car;
-  struct pair *cdr;
+struct cob_tree_list {
+  cob_tree tree;
+  struct cob_tree_list *next;
 };
 
-#define CAR(x)		((x)->car)
-#define CDR(x)		((x)->cdr)
+typedef struct cob_tree_list *cob_tree_list;
 
-extern struct pair *cons (void *car, struct pair *cdr);
+extern cob_tree_list list_append (cob_tree_list l, cob_tree x);
 
 #endif /* _TREE_H_ */

@@ -142,14 +142,23 @@ add_subscript (struct subref *ref, struct subref *subs)
 
 
 /*
- * Pair
+ * Tree list
  */
 
-struct pair *
-cons (void *car, struct pair *cdr)
+cob_tree_list
+list_append (cob_tree_list l, cob_tree x)
 {
-  struct pair *p = malloc (sizeof (struct pair));
-  p->car = car;
-  p->cdr = cdr;
-  return p;
+  cob_tree_list e = malloc (sizeof (struct cob_tree_list));
+  e->tree = x;
+  e->next = NULL;
+
+  if (l == NULL)
+    return e;
+  else
+    {
+      cob_tree_list p;
+      for (p = l; p->next != NULL; p = p->next);
+      p->next = e;
+      return l;
+    }
 }

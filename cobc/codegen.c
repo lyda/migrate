@@ -1787,26 +1787,6 @@ add_alternate_key (cob_tree sy, int duplicates)
   f->alternate = (cob_tree) new;
 }
 
-struct list *
-insert_list (struct list *l, void *item)
-{
-  struct list *tmp;
-  if (l == NULL)
-    {
-      l = malloc (sizeof (struct list));
-      l->var = item;
-      l->next = NULL;
-    }
-  else
-    {
-      for (tmp = l; tmp->next != NULL; tmp = tmp->next);
-      tmp->next = malloc (sizeof (struct list));
-      tmp->next->var = item;
-      tmp->next->next = NULL;
-    }
-  return l;
-}
-
 struct scr_info *
 alloc_scr_info ()
 {
@@ -3625,32 +3605,39 @@ gen_end_when (int n, int endcase, int sentence)
   return lab;
 }
 
+
+/*
+ * GO TO statement
+ */
+
 void
-gen_goto_depending (struct list *l, cob_tree sy)
+gen_goto (cob_tree_list l, cob_tree x)
 {
-  struct list *tmp;
-  gen_loadloc (sy);
-  fprintf (o_src, "\tmovl $c_base%d+%u, %%eax\n", pgm_segment, sy->descriptor);
-  push_eax ();
-  asm_call ("get_index");	/* this will return %eax with var's value */
-  for (tmp = l; tmp != NULL; tmp = tmp->next)
+  if (x == NULL)
     {
-      fprintf (o_src, "\tdecl\t%%eax\n");
-      fprintf (o_src, "\tjz\t.LB_%s\n", label_name (tmp->var));
+      cob_tree sy = l->tree;
+      fprintf (o_src, "\tjmp\t.LB_%s\n", label_name (sy));
+      if (l->next)
+	yyerror ("GOTO only allows one target");
+    }
+  else
+    {
+      cob_tree_list tmp;
+      cob_tree sy = x;
+      gen_loadloc (sy);
+      fprintf (o_src, "\tmovl $c_base%d+%u, %%eax\n",
+	       pgm_segment, sy->descriptor);
+      push_eax ();
+      asm_call ("get_index");	/* this will return %eax with var's value */
+      for (tmp = l; tmp != NULL; tmp = tmp->next)
+	{
+	  fprintf (o_src, "\tdecl\t%%eax\n");
+	  fprintf (o_src, "\tjz\t.LB_%s\n", label_name (tmp->tree));
+	}
     }
 }
 
-void
-gen_goto (struct list *l)
-{
-  cob_tree sy = l->var;
-  fprintf (o_src, "\tjmp\t.LB_%s\n", label_name (sy));
-  if (l->next)
-    {
-      yyerror ("GOTO only allows one target");
-    }
-}
-
+
 int
 gen_check_zero ()
 {
@@ -4776,7 +4763,6 @@ gen_stoprun (void)
 void
 gen_exit (int code)
 {
-  int l1, l2;
   if (code)
     {
       fprintf (o_src, "\tmovl\t-%d(%%ebp), %%ebx\n", stack_offset - 8 - 16);
@@ -4786,18 +4772,12 @@ gen_exit (int code)
     }
   else
     {
-      l1 = loc_label++;
-      l2 = loc_label++;
+      int l1 = loc_label++;
+      int l2 = loc_label++;
       if (curr_paragr != NULL)
-	{
-	  fprintf (o_src, "\tleal\t.LE_%s, %%eax\n",
-		   label_name (curr_paragr));
-	}
+	fprintf (o_src, "\tleal\t.LE_%s, %%eax\n", label_name (curr_paragr));
       else
-	{
-	  fprintf (o_src, "\tleal\t.LE_%s, %%eax\n",
-		   label_name (curr_section));
-	}
+	fprintf (o_src, "\tleal\t.LE_%s, %%eax\n", label_name (curr_section));
       fprintf (o_src, "\tcmpl\t4(%%esp), %%eax\n");
       fprintf (o_src, "\tjb\t\t.L%d\n", l1);
       fprintf (o_src, "\tcmpl\t0(%%esp), %%eax\n");

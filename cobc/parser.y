@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 677
+%expect 678
 
 %{
 #define yydebug		cob_trace_parser
@@ -30,14 +30,9 @@
 #define YYERROR_VERBOSE 1
 
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <stdarg.h>
-#if defined(SunOS)
-va_list __builtin_va_alist;
-#endif
-
 #include <ctype.h>
 
 #include "cobc.h"
@@ -59,6 +54,7 @@ static void assert_numeric_sy (cob_tree sy);
 
 %union {
     cob_tree tree;
+    cob_tree_list list;
     int ival;               /* int */
     struct coord_pair pval; /* lin,col */
     unsigned long dval;     /* label definition, compacted */
@@ -79,7 +75,6 @@ static void assert_numeric_sy (cob_tree sy);
     struct perform_info *pfvals;
     struct sortfile_node *snval;
     struct selsubject *ssbjval;
-    struct list *list;        /* generic container list */
     struct math_var *mval;      /* math variables container list */
     struct math_ose *mose;      /* math ON SIZE ERROR variables container */
     struct ginfo    *gic;       /* generic container */
@@ -159,7 +154,7 @@ static void assert_numeric_sy (cob_tree sy);
 %type <ival> screen_attribs,screen_attrib,screen_sign,opt_separate
 %type <ival> sentence_or_nothing,when_case_list,opt_read_next,usage
 %type <ival> procedure_using,sort_direction,write_options
-%type <list> goto_label_list
+%type <list> label_list
 %type <mose> opt_on_size_error,on_size_error,error_sentence
 %type <mval> var_list_name, var_list_gname
 %type <pair> parameters
@@ -179,7 +174,7 @@ static void assert_numeric_sy (cob_tree sy);
 %type <tree> opt_read_into,opt_write_from,field_name,expr,opt_expr
 %type <tree> opt_unstring_count,opt_unstring_delim,unstring_tallying
 %type <tree> qualified_var,unqualified_var
-%type <tree> call_returning,screen_to_name, opt_goto_depending_on
+%type <tree> call_returning,screen_to_name
 %type <tree> set_variable,set_variable_or_nlit,set_target,opt_add_to
 %type <tree> sort_keys,opt_perform_thru,procedure_section
 %type <tree> var_or_nliteral,opt_read_key,file_name,string_with_pointer
@@ -787,6 +782,7 @@ value_clause:
 ;
 value_list:
   value
+| value_list value
 | value_list ',' value
 ;
 value:
@@ -1538,22 +1534,13 @@ exit_statement:
  */
 
 goto_statement:
-  GO opt_to goto_label_list opt_goto_depending_on
-  {
-    if ($4 == NULL)
-      gen_goto($3);
-    else
-      gen_goto_depending($3, $4);
-  }
+  GO opt_to label_list				 { gen_goto ($3, NULL); }
+| GO opt_to label_list DEPENDING opt_on variable { gen_goto ($3, $6); }
 ;
-goto_label_list:
-  label				{ $$ = insert_list(NULL, $1); }
-| goto_label_list label		{ $$ = insert_list($1, $2); }
-| goto_label_list ',' label	{ $$ = insert_list($1, $3); }
-;
-opt_goto_depending_on:
-  /* nothing */			{ $$ = NULL; }
-| DEPENDING opt_on variable	{ $$ = $3; }
+label_list:
+  label				{ $$ = list_append (NULL, $1); }
+| label_list label		{ $$ = list_append ($1, $2); }
+| label_list ',' label		{ $$ = list_append ($1, $3); }
 ;
 
 
@@ -2835,6 +2822,10 @@ function_call:
     YYABORT;
   }
 ;
+parameters:
+  gname { }
+| parameters opt_sep gname
+;
 numeric_value:
   gname
   {
@@ -2842,10 +2833,6 @@ numeric_value:
       yyerror ("non-numeric value: %s", $1->name);
     $$ = $1;
   }
-;
-parameters:
-  gname				{ $$ = cons ($1, NULL); }
-| parameters opt_sep gname	{ $$ = cons ($3, $1); }
 ;
 name_or_lit:
   name
