@@ -120,7 +120,7 @@ static void terminator_warning (const char *name);
 %token EVALUATE IF INITIALIZE INSPECT MERGE MOVE MULTIPLY OPEN PERFORM
 %token READ RELEASE RETURN REWRITE SEARCH SET SORT START STRING
 %token SUBTRACT UNSTRING WRITE WORKING_STORAGE ZERO PACKED_DECIMAL RECURSIVE
-%token LINAGE FOOTING TOP BOTTOM SHARING ONLY
+%token LINAGE FOOTING TOP BOTTOM SHARING ONLY RECORDING
 %token ACCESS ADVANCING AFTER ALL ALPHABET ALPHABETIC ALPHABETIC_LOWER AS
 %token ALPHABETIC_UPPER ALPHANUMERIC ALPHANUMERIC_EDITED ALSO ALTER ALTERNATE
 %token AND ANY ARE AREA ASCENDING ASSIGN AT AUTO BACKGROUND_COLOR BEFORE BELL
@@ -831,11 +831,12 @@ file_description_clause:
 | _is GLOBAL			{ PENDING ("GLOBAL"); }
 | block_contains_clause
 | record_clause
-| linage_clause
-| code_set_clause
 | label_records_clause
 | value_of_clause
 | data_records_clause
+| linage_clause
+| recording_mode_clause
+| code_set_clause
 ;
 
 
@@ -884,6 +885,31 @@ opt_to_integer:
 ;
 
 
+/* LABEL RECORDS clause */
+
+label_records_clause:
+  LABEL records label_option	{ cb_obsolete_85 ("LABEL RECORDS"); }
+;
+label_option:
+  STANDARD
+| OMITTED
+;
+
+
+/* VALUE OF clause */
+
+value_of_clause:
+  WORD _is WORD			{ cb_obsolete_85 ("VALUE OF"); }
+;
+
+
+/* DATA RECORDS clause */
+
+data_records_clause:
+  DATA records reference_list	{ cb_obsolete_85 ("DATA RECORDS"); }
+;
+
+
 /* LINAGE clause */
 
 linage_clause:
@@ -908,35 +934,17 @@ linage_bottom:
 ;
 
 
+/* RECORDING MODE clause */
+
+recording_mode_clause:
+  RECORDING _mode WORD		{ /* ignore */ }
+;
+
+
 /* CODE-SET clause */
 
 code_set_clause:
   CODE_SET _is WORD		{ PENDING ("CODE-SET"); }
-;
-
-
-/* LABEL RECORDS clause */
-
-label_records_clause:
-  LABEL records label_option	{ cb_obsolete_85 ("LABEL RECORDS"); }
-;
-label_option:
-  STANDARD
-| OMITTED
-;
-
-
-/* VALUE OF clause */
-
-value_of_clause:
-  WORD _is WORD			{ cb_obsolete_85 ("VALUE OF"); }
-;
-
-
-/* DATA RECORDS clause */
-
-data_records_clause:
-  DATA records reference_list	{ cb_obsolete_85 ("DATA RECORDS"); }
 ;
 
 

@@ -272,6 +272,7 @@ static struct reserved reserved_words[] = {
   {"RANDOM",		RANDOM, 0},
   {"READ",		READ, 0},
   {"RECORD",		RECORD, 0},
+  {"RECORDING",		RECORDING, 0},
   {"RECORDS",		RECORDS, 0},
   {"RECURSIVE",		RECURSIVE, 0},
   {"REDEFINES",		REDEFINES, 0},
