@@ -38,6 +38,7 @@
 #define STRING_CLASS   2
 
 #define decimal_char() (decimal_comma ? ',' : '.')
+
 int pgm_segment = 0;
 int screen_io_enable = 0;
 int scr_line, scr_column;
@@ -68,19 +69,12 @@ unsigned tmpvar_max = 0;
 unsigned last_lineno = 0;
 short at_procedure = 0;
 short refmod_slots = 0;
-static char name_buf[MAXNAMEBUF];
 
-#define INIT 1
 struct lit *spe_lit_ZE = NULL;
 struct lit *spe_lit_SP = NULL;
 struct lit *spe_lit_LV = NULL;
 struct lit *spe_lit_HV = NULL;
 struct lit *spe_lit_QU = NULL;
-static char init_ctype;		// hold homogenous type
-static short init_val;		// hold homogenous value
-static struct init_str *istrp;
-static int initp;
-static unsigned curr_01_location;	// hold current root father when set_field_location
 
 struct list *expr_list = NULL;
 struct list *files_list = NULL;
@@ -108,7 +102,13 @@ int stackframe_cnt = 0;
 char program_id[120] = "main";
 char *pgm_label = "main";
 struct list *report_list = NULL;
+
 static int need_desc_length_cleanup = 0;
+static char name_buf[MAXNAMEBUF];
+static char init_ctype;		// hold homogenous type
+static short init_val;		// hold homogenous value
+static unsigned curr_01_location;	// hold current root father when set_field_location
+
 
 /*
 **	Symbol table management routines
@@ -776,12 +776,14 @@ initialize_values_1 (struct sym *sy, unsigned int loc)
       if (!sy->flags.in_redefinition)
 	for (i = 0; i < sy->times; i++)
 	  {
-	    istrp[initp].sy = sy;
-	    istrp[initp].type = sy->type;
-	    istrp[initp].value = sy->value;
-	    istrp[initp].location = loc;
+	    if (sy->value != NULL)
+	      {
+		unsigned saved_loc = sy->location;
+		sy->location = loc;
+		gen_move ((struct sym *) sy->value, sy);
+		sy->location = saved_loc;
+	      }
 	    loc += symlen (sy);
-	    initp++;
 	  }
     }
   return loc;
@@ -791,7 +793,7 @@ static void
 initialize_values (void)
 {
   struct sym *sy, *sy1, *v;
-  int i, j;
+  int i;
   char typ;
   int nb_fields;
 
@@ -822,25 +824,9 @@ initialize_values (void)
 	    init_val = -1;
 	    nb_fields = get_nb_fields (v, v->times, 1);
 	    if (init_ctype != '&' && init_val != 1)
-	      {
-		gen_init_str (v, init_ctype);
-	      }
+	      gen_init_str (v, init_ctype);
 	    else
-	      {
-		initp = 0;
-		istrp = malloc (nb_fields * sizeof (struct init_str));
-		initialize_values_1 (v, v->location);
-		for (j = 0; j < nb_fields; j++)
-		  if (istrp[j].value != NULL)
-		    {
-		      struct sym *sy = istrp[j].sy;
-		      unsigned saved_loc = sy->location;
-		      sy->location = istrp[j].location;
-		      gen_move ((struct sym *) istrp[j].value, sy);
-		      sy->location = saved_loc;
-		    }
-		free (istrp);
-	      }
+	      initialize_values_1 (v, v->location);
 	  }
 }
 
