@@ -3,7 +3,6 @@
 Makefile
 atconfig
 atlocal
-package.m4
 cobol2002-run
 cobol2002-syntax
 data-rep
