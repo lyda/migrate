@@ -91,8 +91,8 @@ from the CVS repository.
 You need to install the following extra packages before building
 OpenCOBOL:
 
-  o Autoconf 2.56
-  o Automake 1.7.1
+  o Autoconf 2.57
+  o Automake 1.7.2
   o Libtool 1.4.3
   o gettext 0.11.5
   o Bison 1.35
