@@ -129,7 +129,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <baval> inspect_before_after
 %type <ival> if_then,search_body,search_all_body,class
 %type <ival> search_when,search_when_list,search_opt_at_end
-%type <gic>  on_end,opt_read_at_end
+%type <gic>  on_end,opt_at_end
 %type <ike>  read_invalid_key ,read_not_invalid_key
 %type <iks>  opt_read_invalid_key
 %type <ival> integer,operator,before_after
@@ -1982,7 +1982,7 @@ read_statement:
   READ read_body opt_end_read
 ;
 read_body:
-  file opt_read_next opt_record opt_read_into opt_read_key opt_read_at_end
+  file opt_read_next opt_record opt_read_into opt_read_key opt_at_end
   {
     gen_reads($1, $4, $5, $2, 1);
     ginfo_container4($6);
@@ -2007,54 +2007,6 @@ opt_read_key:
   /* nothing */			{ $$ = NULL; }
 | KEY opt_is name		{ $$ = $3; }
 ;
-opt_read_at_end:
-  /* nothing */			{ $$ = NULL; }
-| NOT opt_at on_end
-  {
-    ginfo_container2($3, 2);
-    $$=ginfo_container3($3, 2);
-  }
-| AT on_end
-  {
-    ginfo_container2($2, 1);
-    $$=ginfo_container3($2, 1);
-  }
-| on_end
-  {
-    ginfo_container2($1, 1);
-    $$=ginfo_container3($1, 1);
-  }
-| AT on_end NOT opt_at
-  {
-    ginfo_container2($2, 1);
-  }
-  on_end
-  {
-    ginfo_container2($6, 2);
-    $$=ginfo_container3($6, 3);
-  }
-| on_end NOT opt_at
-  {
-    ginfo_container2($1, 1);
-  }
-  on_end
-  {
-    ginfo_container2($5, 2);
-    $$=ginfo_container3($5, 3);
-  }
-;
-on_end:
-  END
-  {
-    if (gic == NULL)
-      gic=ginfo_container0();
-    $$=ginfo_container1(gic);
-  }
-  statement_list
-  {
-    $$=$<gic>2;
-  }
-  ;
 opt_read_invalid_key:
   read_invalid_key		{ $$ = gen_invalid_keys ($1, NULL); }
 | read_not_invalid_key		{ $$ = gen_invalid_keys (NULL, $1); }
@@ -2092,7 +2044,7 @@ return_statement:
   RETURN return_body opt_end_return
 ;
 return_body:
-  name opt_record opt_read_into opt_read_at_end
+  name opt_record opt_read_into opt_at_end
   {
     if ($1->organization != ORG_SEQUENTIAL)
       gen_read_next ($1, $3, 1);
@@ -2535,6 +2487,60 @@ opt_not_on_size_error_sentence:
 error_sentence:
   ERROR statement_list		{ gen_dstlabel ($<ival>0); }
 ;
+
+
+/*
+ * AT END
+ */
+
+opt_at_end:
+  /* nothing */			{ $$ = NULL; }
+| NOT opt_at on_end
+  {
+    ginfo_container2($3, 2);
+    $$=ginfo_container3($3, 2);
+  }
+| AT on_end
+  {
+    ginfo_container2($2, 1);
+    $$=ginfo_container3($2, 1);
+  }
+| on_end
+  {
+    ginfo_container2($1, 1);
+    $$=ginfo_container3($1, 1);
+  }
+| AT on_end NOT opt_at
+  {
+    ginfo_container2($2, 1);
+  }
+  on_end
+  {
+    ginfo_container2($6, 2);
+    $$=ginfo_container3($6, 3);
+  }
+| on_end NOT opt_at
+  {
+    ginfo_container2($1, 1);
+  }
+  on_end
+  {
+    ginfo_container2($5, 2);
+    $$=ginfo_container3($5, 3);
+  }
+;
+on_end:
+  END
+  {
+    if (gic == NULL)
+      gic=ginfo_container0();
+    $$=ginfo_container1(gic);
+  }
+  statement_list
+  {
+    $$=$<gic>2;
+  }
+  ;
 
 
 /*
