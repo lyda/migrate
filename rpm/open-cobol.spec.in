@@ -22,8 +22,7 @@ OpenCOBOL は TinyCOBOL (http://tiny-cobol.sourceforge.net/)から分岐し、
 
 OpenCOBOL に関する情報は、以下のサイトから得られます。
 
-  http://www.coboler.com/
-  http://sourceforge.net/projects/open-cobol/
+  http://open-cobol.sourceforge.net/
 
 %prep
 rm -rf $RPM_BUILD_ROOT
@@ -40,6 +39,7 @@ make
 %files
 %defattr (-,root,root)
 %doc AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README
+%doc doc/*.txt
 %{_bindir}
 %{_includedir}
 %{_libdir}
@@ -52,3 +52,5 @@ make
 /sbin/ldconfig
 
 %changelog
+* Sun Dec 02 2001 Fuhito Suguri <bitwalk@nyc.odn.ne.jp>
+- Add doc directory in document section.
