@@ -697,9 +697,10 @@ cb_expr_shift (int token, cb_tree value)
 	  }
 
       /* class condition */
-      if (CB_CLASS_NAME_P (value))
+      if (CB_REFERENCE_P (value)
+	  && CB_CLASS_NAME_P (cb_ref (value)))
 	{
-	  cb_expr_shift_class (CB_CLASS_NAME (value)->cname);
+	  cb_expr_shift_class (CB_CLASS_NAME (cb_ref (value))->cname);
 	  return;
 	}
 

@@ -73,7 +73,7 @@ static void terminator_warning (void);
 static void terminator_error (void);
 %}
 
-%token WORD LITERAL PICTURE CLASS_NAME MNEMONIC_NAME FUNCTION_NAME
+%token WORD LITERAL PICTURE MNEMONIC_NAME FUNCTION_NAME
 
 %token ACCEPT ADD CALL CANCEL CLOSE COMPUTE DELETE DISPLAY DIVIDE ENTRY
 %token EVALUATE IF INITIALIZE INSPECT MERGE MOVE MULTIPLY OPEN PERFORM
@@ -200,9 +200,16 @@ environment_division:
 
 configuration_section:
 | CONFIGURATION SECTION '.'
+  configuration_list
+;
+configuration_list:
+  configuration_paragraph
+| configuration_list configuration_paragraph
+;
+configuration_paragraph:
   source_computer_paragraph
-  object_computer_paragraph
-  special_names_paragraph
+| object_computer_paragraph
+| special_names_paragraph
 ;
 
 
@@ -211,7 +218,7 @@ configuration_section:
  */
 
 source_computer_paragraph:
-| SOURCE_COMPUTER '.' source_computer_entry
+  SOURCE_COMPUTER '.' source_computer_entry
 ;
 source_computer_entry:
 | '.'
@@ -236,7 +243,7 @@ computer_name:
  */
 
 object_computer_paragraph:
-| OBJECT_COMPUTER '.' computer_name object_computer_phrase_sequence '.'
+  OBJECT_COMPUTER '.' computer_name object_computer_phrase_sequence '.'
 ;
 object_computer_phrase_sequence:
 | object_computer_phrase_sequence object_computer_phrase
@@ -258,7 +265,7 @@ object_computer_phrase:
  */
 
 special_names_paragraph:
-| SPECIAL_NAMES '.' opt_special_names
+  SPECIAL_NAMES '.' opt_special_names
 ;
 opt_special_names:
 | special_name_list '.'
@@ -3004,7 +3011,6 @@ expr_token:
 | ALPHABETIC			{ cb_expr_shift_class ("cob_is_alpha"); }
 | ALPHABETIC_LOWER		{ cb_expr_shift_class ("cob_is_lower"); }
 | ALPHABETIC_UPPER		{ cb_expr_shift_class ("cob_is_upper"); }
-| CLASS_NAME			{ cb_expr_shift ('x', cb_ref ($1)); }
 /* sign condition */
   /* ZERO is defined in `x' */
 | POSITIVE			{ cb_expr_shift_sign ('>'); }

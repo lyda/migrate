@@ -1,5 +1,5 @@
 /*							-*- c -*-
- * Copyright (C) 2001-2003 Keisuke Nishida
+ * Copyright (C) 2001-2004 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,10 +50,19 @@ static int scan_picture (char *text);
 
 %}
 
+%s DECIMAL_IS_PERIOD DECIMAL_IS_COMMA
 %x PICTURE_STATE FUNCTION_STATE
 
 %%
 %{
+  if (current_program)
+    {
+      if (current_program->decimal_point == '.')
+	BEGIN DECIMAL_IS_PERIOD;
+      else
+	BEGIN DECIMAL_IS_COMMA;
+    }
+
   /* We treat integer literals immediately after '.' as labels;
      that is, they must be level numbers or section names. */
   integer_is_label = 0;
@@ -107,7 +116,12 @@ X\"[^\"\n]*\" {
     }
 }
 
-[+-]?[0-9]*[.,]?[0-9]+ {
+<DECIMAL_IS_PERIOD>[+-]?[0-9.]*[0-9]+ {
+  /* numeric literal */
+  return scan_numeric (yytext);
+}
+
+<DECIMAL_IS_COMMA>[+-]?[0-9,]*[0-9]+ {
   /* numeric literal */
   return scan_numeric (yytext);
 }
@@ -139,8 +153,6 @@ H\"[^\"\n]*\" {
   if (word->count > 0)
     {
       cb_tree x = CB_VALUE (word->items);
-      if (CB_CLASS_NAME_P (x))
-	return CLASS_NAME;
       if (CB_SYSTEM_NAME_P (x))
 	return MNEMONIC_NAME;
     }
