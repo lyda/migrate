@@ -189,44 +189,19 @@ tree_to_string_1 (char *s, cobc_tree x)
     case cobc_tag_expr:
       {
 	struct cobc_expr *p = COBC_EXPR (x);
-	s += sprintf (s, "(%c ", p->op);
-	s += tree_to_string_1 (s, p->left);
-	s += sprintf (s, " ");
-	s += tree_to_string_1 (s, p->right);
-	strcpy (s, ")");
-      }
-      break;
-
-    case cobc_tag_cond:
-      {
-	cobc_tree l = COBC_COND (x)->left;
-	cobc_tree r = COBC_COND (x)->right;
-
-	if (COBC_COND (x)->type == COBC_COND_NOT)
+	if (p->op == '!')
 	  {
 	    s += sprintf (s, "!");
-	    s += tree_to_string_1 (s, l);
-	    break;
+	    s += tree_to_string_1 (s, p->left);
 	  }
-
-	s += sprintf (s, "(");
-	s += tree_to_string_1 (s, l);
-	switch (COBC_COND (x)->type)
+	else
 	  {
-	  case COBC_COND_EQ: s += sprintf (s, " = "); break;
-	  case COBC_COND_LT: s += sprintf (s, " < "); break;
-	  case COBC_COND_GT: s += sprintf (s, " > "); break;
-	  case COBC_COND_LE: s += sprintf (s, " <= "); break;
-	  case COBC_COND_GE: s += sprintf (s, " >= "); break;
-	  case COBC_COND_AND: s += sprintf (s, " && "); break;
-	  case COBC_COND_OR: s += sprintf (s, " || "); break;
-	  default:
-	    s += sprintf (s, " %d ", COBC_COND (x)->type);
-	    break;
+	    s += sprintf (s, "(");
+	    s += tree_to_string_1 (s, p->left);
+	    s += sprintf (s, " %c ", p->op);
+	    s += tree_to_string_1 (s, p->right);
+	    strcpy (s, ")");
 	  }
-	if (r)
-	  s += tree_to_string_1 (s, r);
-	strcpy (s, ")");
 	break;
       }
 
@@ -734,10 +709,48 @@ cobc_tree
 make_expr (cobc_tree left, char op, cobc_tree right)
 {
   struct cobc_expr *p =
-    make_tree (cobc_tag_expr, COB_NUMERIC, sizeof (struct cobc_expr));
+    make_tree (cobc_tag_expr, COB_VOID, sizeof (struct cobc_expr));
   p->op = op;
   p->left = left;
   p->right = right;
+  switch (op)
+    {
+    case '+': case '-': case '*': case '/': case '^':
+      /* numeric expression */
+      COBC_TREE_CLASS (p) = COB_NUMERIC;
+      if (COBC_TREE_CLASS (left) != COB_NUMERIC
+	  || COBC_TREE_CLASS (right) != COB_NUMERIC)
+	{
+	  yyerror (tree_to_string (COBC_TREE (p)));
+	  abort ();
+	}
+      break;
+
+    case '=': case '~': case '<': case '>': case '[': case ']':
+      /* comparison conditional */
+      COBC_TREE_CLASS (p) = COB_BOOLEAN;
+      break;
+
+    case '@':
+      /* class conditional */
+      COBC_TREE_CLASS (p) = COB_BOOLEAN;
+      break;
+
+    case '!': case '&': case '|':
+      /* compound conditional */
+      COBC_TREE_CLASS (p) = COB_BOOLEAN;
+      if (COBC_TREE_CLASS (left) != COB_BOOLEAN
+	  || (right && COBC_TREE_CLASS (right) != COB_BOOLEAN))
+	{
+	  yyerror (tree_to_string (COBC_TREE (p)));
+	  abort ();
+	}
+      break;
+
+    default:
+      yyerror ("invalid binary-op");
+      abort ();
+    }
   return COBC_TREE (p);
 }
 
@@ -771,28 +784,6 @@ make_class (struct cobc_word *word, struct cobc_list *list)
   p->list = list;
   set_word_item (word, COBC_TREE (p));
   return COBC_TREE (p);
-}
-
-
-/*
- * Condition
- */
-
-cobc_tree
-make_cond (cobc_tree x, enum cobc_cond_type type, cobc_tree y)
-{
-  struct cobc_cond *p =
-    make_tree (cobc_tag_cond, COB_BOOLEAN, sizeof (struct cobc_cond));
-  p->type  = type;
-  p->left  = x;
-  p->right = y;
-  return COBC_TREE (p);
-}
-
-cobc_tree
-make_negative (cobc_tree x)
-{
-  return make_cond (x, COBC_COND_NOT, 0);
 }
 
 

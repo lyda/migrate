@@ -614,29 +614,27 @@ output_search (cobc_tree table, cobc_tree var,
 static void
 search_set_keys (struct cobc_field *p, cobc_tree x)
 {
-  switch (COBC_COND (x)->type)
+  struct cobc_expr *e = COBC_EXPR (x);
+  switch (e->op)
     {
-    case COBC_COND_AND:
-      search_set_keys (p, COBC_COND (x)->left);
-      search_set_keys (p, COBC_COND (x)->right);
+    case '&':
+      search_set_keys (p, e->left);
+      search_set_keys (p, e->right);
       break;
-    case COBC_COND_EQ:
+    case '=':
       {
 	int i;
-	cobc_tree ref = COBC_COND (x)->left;
-	cobc_tree val = COBC_COND (x)->right;
 	for (i = 0; i < p->nkeys; i++)
-	  if (COBC_FIELD (ref) == COBC_FIELD (p->keys[i].key))
+	  if (COBC_FIELD (e->left) == COBC_FIELD (p->keys[i].key))
 	    {
-	      p->keys[i].ref = ref;
-	      p->keys[i].val = val;
+	      p->keys[i].ref = e->left;
+	      p->keys[i].val = e->right;
 	      break;
 	    }
 	break;
       }
     default:
-      /* cannot happen */
-      break;
+      abort ();
     }
 }
 

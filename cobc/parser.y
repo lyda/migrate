@@ -105,7 +105,7 @@
   push_tree (make_status_sequence (make_corr (func, g1, g2, opt, NULL)))
 
 #define push_status_handler(val,st1,st2) \
-  push_tree (make_if (make_cond (cobc_status, COBC_COND_EQ, val), st1, st2))
+  push_tree (make_if (make_expr (cobc_status, '=', val), st1, st2))
 
 #define inspect_push(tag,a1,a2) \
   inspect_list = list_add (inspect_list, make_parameter (tag, a1, a2))
@@ -144,7 +144,6 @@ static cobc_tree make_add (cobc_tree f1, cobc_tree f2, int round);
 static cobc_tree make_sub (cobc_tree f1, cobc_tree f2, int round);
 static cobc_tree make_move (cobc_tree f1, cobc_tree f2, int round);
 static struct cobc_list *make_corr (cobc_tree (*func)(), cobc_tree g1, cobc_tree g2, int opt, struct cobc_list *l);
-static cobc_tree make_opt_cond (cobc_tree last, int type, cobc_tree this);
 static cobc_tree make_cond_name (cobc_tree x);
 static cobc_tree make_evaluate (struct cobc_list *subject_list, struct cobc_list *case_list);
 
@@ -2530,20 +2529,20 @@ search_statement:
     cobc_location = @1;
     while (next != NULL)
       {
-	if (COBC_COND (next)->type == COBC_COND_AND)
+	if (COBC_EXPR (next)->op == '&')
 	  {
-	    this = COBC_COND (next)->right;
-	    next = COBC_COND (next)->left;
+	    this = COBC_EXPR (next)->right;
+	    next = COBC_EXPR (next)->left;
 	  }
 	else
 	  {
 	    this = next;
 	    next = NULL;
 	  }
-	if (COBC_COND (this)->type == COBC_COND_EQ)
+	if (COBC_EXPR (this)->op == '=')
 	  {
 	    int i;
-	    struct cobc_field *f = COBC_FIELD (COBC_COND (this)->left);
+	    struct cobc_field *f = COBC_FIELD (COBC_EXPR (this)->left);
 	    for (i = 0; i < p->nkeys; i++)
 	      if (f == COBC_FIELD (p->keys[i].key))
 		break;
@@ -2732,22 +2731,22 @@ start_key:
   {
     switch ($3)
       {
-      case COBC_COND_EQ: $<inum>0 = COB_EQ; break;
-      case COBC_COND_LT: $<inum>0 = COB_LT; break;
-      case COBC_COND_LE: $<inum>0 = COB_LE; break;
-      case COBC_COND_GT: $<inum>0 = COB_GT; break;
-      case COBC_COND_GE: $<inum>0 = COB_GE; break;
-      case COBC_COND_NE: $<inum>0 = COB_NE; break;
+      case '=': $<inum>0 = COB_EQ; break;
+      case '<': $<inum>0 = COB_LT; break;
+      case '[': $<inum>0 = COB_LE; break;
+      case '>': $<inum>0 = COB_GT; break;
+      case ']': $<inum>0 = COB_GE; break;
+      case '~': $<inum>0 = COB_NE; break;
       }
     $$ = $4;
   }
 ;
 start_operator:
-  flag_not equal		{ $$ = $1 ? COBC_COND_NE : COBC_COND_EQ; }
-| flag_not greater		{ $$ = $1 ? COBC_COND_LE : COBC_COND_GT; }
-| flag_not less			{ $$ = $1 ? COBC_COND_GE : COBC_COND_LT; }
-| flag_not greater_or_equal	{ $$ = $1 ? COBC_COND_LT : COBC_COND_GE; }
-| flag_not less_or_equal	{ $$ = $1 ? COBC_COND_GT : COBC_COND_LE; }
+  flag_not equal		{ $$ = $1 ? '~' : '='; }
+| flag_not greater		{ $$ = $1 ? '[' : '>'; }
+| flag_not less			{ $$ = $1 ? ']' : '<'; }
+| flag_not greater_or_equal	{ $$ = $1 ? '<' : ']'; }
+| flag_not less_or_equal	{ $$ = $1 ? '>' : '['; }
 ;
 _end_start: | END_START ;
 
@@ -3123,8 +3122,8 @@ expr_1:
 	  {
 	    int token = stack[i-2].token;
 	    if (stack[i-1].token != VALUE
-		&& stack[i-1].token != COBC_COND_AND
-		&& stack[i-1].token != COBC_COND_OR)
+		&& stack[i-1].token != '&'
+		&& stack[i-1].token != '|')
 	      return -1;
 	    switch (token)
 	      {
@@ -3136,34 +3135,33 @@ expr_1:
 		  make_expr (stack[i-3].value, token, stack[i-1].value);
 		i -= 2;
 		break;
-	      case COBC_COND_NOT:
-		if (!COBC_COND_P (stack[i-1].value))
+	      case '!':
+		if (COBC_TREE_CLASS (stack[i-1].value) != COB_BOOLEAN)
 		  stack[i-1].value =
-		    make_cond (last_lefthand, last_operator, stack[i-1].value);
+		    make_expr (last_lefthand, last_operator, stack[i-1].value);
 		stack[i-2].token = VALUE;
 		stack[i-2].value = make_negative (stack[i-1].value);
 		i -= 1;
 		break;
-	      case COBC_COND_AND:
-	      case COBC_COND_OR:
+	      case '&':
+	      case '|':
 		if (i < 3 || stack[i-3].token != VALUE)
 		  return -1;
-		if (!COBC_COND_P (stack[i-1].value))
+		if (COBC_TREE_CLASS (stack[i-1].value) != COB_BOOLEAN)
 		  stack[i-1].value =
-		    make_cond (last_lefthand, last_operator, stack[i-1].value);
+		    make_expr (last_lefthand, last_operator, stack[i-1].value);
 		stack[i-3].token = VALUE;
 		stack[i-3].value =
-		  make_cond (stack[i-3].value, token, stack[i-1].value);
+		  make_expr (stack[i-3].value, token, stack[i-1].value);
 		i -= 2;
 		break;
 	      default:
-		if (stack[i-3].token == COBC_COND_AND
-		    || stack[i-3].token == COBC_COND_OR)
+		if (stack[i-3].token == '&' || stack[i-3].token == '|')
 		  {
 		    last_operator = token;
 		    stack[i-2].token = VALUE;
 		    stack[i-2].value =
-		      make_cond (last_lefthand, token, stack[i-1].value);
+		      make_expr (last_lefthand, token, stack[i-1].value);
 		    i -= 1;
 		  }
 		else
@@ -3172,7 +3170,7 @@ expr_1:
 		    last_operator = token;
 		    stack[i-3].token = VALUE;
 		    stack[i-3].value =
-		      make_cond (last_lefthand, token, stack[i-1].value);
+		      make_expr (last_lefthand, token, stack[i-1].value);
 		    i -= 2;
 		  }
 		break;
@@ -3182,12 +3180,12 @@ expr_1:
 	/* handle special case "cmp OR x AND" */
 	if (i >= 2
 	    && prio == 7
-	    && stack[i-2].token == COBC_COND_OR
-	    && !COBC_COND_P (stack[i-1].value))
+	    && stack[i-2].token == '|'
+	    && COBC_TREE_CLASS (stack[i-1].value) != COB_BOOLEAN)
 	  {
 	    stack[i-1].token = VALUE;
 	    stack[i-1].value =
-	      make_cond (last_lefthand, last_operator, stack[i-1].value);
+	      make_expr (last_lefthand, last_operator, stack[i-1].value);
 	  }
 	return 0;
       }
@@ -3247,35 +3245,35 @@ expr_1:
 
 		  /* conditional operator */
 		case '=':
-		  SHIFT (5, COBC_COND_EQ, 0);
+		  SHIFT (5, '=', 0);
 		  break;
 		case '<':
 		  if (look_ahead (l->next) == OR)
 		    {
 		      if (look_ahead (l->next->next) != '=')
 			goto error;
-		      SHIFT (5, COBC_COND_LE, 0);
+		      SHIFT (5, '[', 0);
 		      l = l->next->next;
 		    }
 		  else
-		    SHIFT (5, COBC_COND_LT, 0);
+		    SHIFT (5, '<', 0);
 		  break;
 		case '>':
 		  if (look_ahead (l->next) == OR)
 		    {
 		      if (look_ahead (l->next->next) != '=')
 			goto error;
-		      SHIFT (5, COBC_COND_GE, 0);
+		      SHIFT (5, ']', 0);
 		      l = l->next->next;
 		    }
 		  else
-		    SHIFT (5, COBC_COND_GT, 0);
+		    SHIFT (5, '>', 0);
 		  break;
 		case LE:
-		  SHIFT (5, COBC_COND_LE, 0);
+		  SHIFT (5, '[', 0);
 		  break;
 		case GE:
-		  SHIFT (5, COBC_COND_GE, 0);
+		  SHIFT (5, ']', 0);
 		  break;
 
 		  /* class condition */
@@ -3300,7 +3298,7 @@ expr_1:
 		unary_cond:
 		  {
 		    int not_flag = 0;
-		    if (i > 0 && stack[i-1].token == COBC_COND_NOT)
+		    if (i > 0 && stack[i-1].token == '!')
 		      {
 			not_flag = 1;
 			i--;
@@ -3313,24 +3311,24 @@ expr_1:
 			switch (token)
 			  {
 			  case ZERO:
-			    cond = COBC_COND_EQ;
+			    cond = '=';
 			    val = cobc_zero;
 			    break;
 			  case POSITIVE:
-			    cond = COBC_COND_GT;
+			    cond = '>';
 			    val = cobc_zero;
 			    break;
 			  case NEGATIVE:
-			    cond = COBC_COND_LT;
+			    cond = '<';
 			    val = cobc_zero;
 			    break;
 			  default:
-			    cond = COBC_COND_CLASS;
+			    cond = '@';
 			    val = COBC_TREE (class_func);
 			    break;
 			  }
 			stack[i-1].value =
-			  make_cond (stack[i-1].value, cond, val);
+			  make_expr (stack[i-1].value, cond, val);
 			if (not_flag)
 			  stack[i-1].value =make_negative (stack[i-1].value);
 			break;
@@ -3342,23 +3340,23 @@ expr_1:
 		case NOT:
 		  switch (look_ahead (l->next))
 		    {
-		    case '=': SHIFT (5, COBC_COND_NE, 0); l = l->next; break;
-		    case '<': SHIFT (5, COBC_COND_GE, 0); l = l->next; break;
-		    case '>': SHIFT (5, COBC_COND_LE, 0); l = l->next; break;
-		    case LE:  SHIFT (5, COBC_COND_GT, 0); l = l->next; break;
-		    case GE:  SHIFT (5, COBC_COND_LT, 0); l = l->next; break;
-		    default:  SHIFT (6, COBC_COND_NOT, 0); break;
+		    case '=': SHIFT (5, '~', 0); l = l->next; break;
+		    case '<': SHIFT (5, ']', 0); l = l->next; break;
+		    case '>': SHIFT (5, '[', 0); l = l->next; break;
+		    case LE:  SHIFT (5, '>', 0); l = l->next; break;
+		    case GE:  SHIFT (5, '<', 0); l = l->next; break;
+		    default:  SHIFT (6, '!', 0); break;
 		    }
 		  break;
-		case AND: SHIFT (7, COBC_COND_AND, 0); break;
-		case OR:  SHIFT (8, COBC_COND_OR, 0); break;
+		case AND: SHIFT (7, '&', 0); break;
+		case OR:  SHIFT (8, '|', 0); break;
 		}
 	      break;
 	    }
 	  default:
 	    if (x == cobc_zero)
 	      if (stack[i-1].token == VALUE
-		  || stack[i-1].token == COBC_COND_NOT)
+		  || stack[i-1].token == '!')
 	      {
 		token = ZERO;
 		goto unary_cond;
@@ -4370,35 +4368,6 @@ make_corr (cobc_tree (*func)(), cobc_tree g1, cobc_tree g2, int opt,
 }
 
 static cobc_tree
-make_opt_cond (cobc_tree last, int type, cobc_tree this)
-{
- again:
-  if (COBC_COND (last)->type == COBC_COND_NOT)
-    {
-      COBC_COND (last)->left =
-	make_opt_cond (COBC_COND (last)->left, type, this);
-      return last;
-    }
-
-  if (!COBC_COND (last)->right)
-    {
-      yyerror (_("broken condition"));
-      return last; /* error recovery */
-    }
-
-  if (COBC_COND (last)->type == COBC_COND_AND
-      || COBC_COND (last)->type == COBC_COND_OR)
-    {
-      last = COBC_COND (last)->left;
-      goto again;
-    }
-
-  if (type == -1)
-    type = COBC_COND (last)->type;
-  return make_cond (COBC_COND (last)->left, type, this);
-}
-
-static cobc_tree
 make_cond_name (cobc_tree x)
 {
   struct cobc_list *l;
@@ -4413,22 +4382,22 @@ make_cond_name (cobc_tree x)
 	{
 	  /* VALUE THRU VALUE */
 	  struct cobc_pair *p = COBC_PAIR (l->item);
-	  c = make_cond (make_cond (p->x, COBC_COND_LE, parent),
-			 COBC_COND_AND,
-			 make_cond (parent, COBC_COND_LE, p->y));
+	  c = make_expr (make_expr (p->x, '[', parent),
+			 '&',
+			 make_expr (parent, '[', p->y));
 	}
       else
 	{
 	  /* VALUE */
-	  c = make_cond (parent, COBC_COND_EQ, l->item);
+	  c = make_expr (parent, '=', l->item);
 	}
       if (!cond)
 	cond = c;
       else
-	cond = make_cond (cond, COBC_COND_OR, c);
+	cond = make_expr (cond, '|', c);
     }
   if (!cond)
-    cond = make_cond (cobc_int0, COBC_COND_EQ, cobc_int0);
+    cond = make_expr (cobc_int0, '=', cobc_int0);
   return cond;
 }
 
@@ -4442,9 +4411,9 @@ make_evaluate_test (cobc_tree s, struct cobc_parameter *p)
   /* x THRU y */
   if (p->y)
     {
-      cobc_tree x = make_cond (make_cond (p->x, COBC_COND_LE, s),
-			       COBC_COND_AND,
-			       make_cond (s, COBC_COND_LE, p->y));
+      cobc_tree x = make_expr (make_expr (p->x, '[', s),
+			       '&',
+			       make_expr (s, '[', p->y));
       return p->type ? make_negative (x) : x;
     }
 
@@ -4460,9 +4429,9 @@ make_evaluate_test (cobc_tree s, struct cobc_parameter *p)
 
   /* regular comparison */
   if (p->type)
-    return make_cond (s, COBC_COND_NE, p->x);
+    return make_expr (s, '~', p->x);
   else
-    return make_cond (s, COBC_COND_EQ, p->x);
+    return make_expr (s, '=', p->x);
 }
 
 static cobc_tree
@@ -4492,7 +4461,7 @@ make_evaluate (struct cobc_list *subject_list, struct cobc_list *case_list)
 	  if (c2 == NULL)
 	    c2 = c3;
 	  else
-	    c2 = make_cond (c2, COBC_COND_AND, c3);
+	    c2 = make_expr (c2, '&', c3);
 	}
       if (subjs || objs)
 	yyerror (_("wrong number of WHEN parameters"));
@@ -4500,7 +4469,7 @@ make_evaluate (struct cobc_list *subject_list, struct cobc_list *case_list)
       if (c1 == NULL)
 	c1 = c2;
       else
-	c1 = make_cond (c1, COBC_COND_OR, c2);
+	c1 = make_expr (c1, '|', c2);
     }
 
   if (c1 == NULL)

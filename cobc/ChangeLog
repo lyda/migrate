@@ -1,5 +1,14 @@
 2002-10-06  Keisuke Nishida  <knishida@netlab.jp>
 
+	* Integrate numeric expressions and conditional expressions.
+	* tree.h (cobc_tag_cond, cobc_cond_type, cobc_cond): Removed.
+	(make_negative): New macro.
+	* tree.c (make_expr): Build conditional as well.
+	(make_cond, make_negative): Removed.
+	* codegen.c, inline.c, parser.y: Updated.
+
+2002-10-06  Keisuke Nishida  <knishida@netlab.jp>
+
 	* tree.h (cobc_evaluate): Removed.
 	* tree.c (make_evaluate): Removed.
 	* codegen.c (output_tree): Do not handle cobc_evaluate.

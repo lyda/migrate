@@ -36,7 +36,6 @@ enum cobc_tag {
   cobc_tag_subref,
   cobc_tag_refmod,
   cobc_tag_expr,
-  cobc_tag_cond,
   cobc_tag_pair,
   cobc_tag_file,
   cobc_tag_label,
@@ -437,6 +436,24 @@ extern void finalize_label (struct cobc_label *p);
  * Expression
  */
 
+/*
+  '+'	x + y
+  '-'	x - y
+  '*'	x * y
+  '/'	x / y
+  '^'	x ** y
+  '='	x = y
+  '>'	x > y
+  '<'	x < y
+  '['	x <= y
+  ']'	x >= y
+  '~'	x != y
+  '@'	x is CLASS
+  '!'	not x
+  '&'	x and y
+  '|'	x or y
+*/
+
 struct cobc_expr {
   struct cobc_tree_common common;
   char op;
@@ -446,6 +463,8 @@ struct cobc_expr {
 
 #define COBC_EXPR(x)		(COBC_TREE_CAST (cobc_tag_expr, struct cobc_expr, x))
 #define COBC_EXPR_P(x)		(COBC_TREE_TAG (x) == cobc_tag_expr)
+
+#define make_negative(x)	make_expr (x, '!', 0)
 
 extern cobc_tree make_expr (cobc_tree left, char op, cobc_tree right);
 extern int is_numeric (cobc_tree x);
@@ -465,38 +484,6 @@ struct cobc_class {
 #define COBC_CLASS_P(x)		(COBC_TREE_TAG (x) == cobc_tag_class)
 
 extern cobc_tree make_class (struct cobc_word *word, struct cobc_list *list);
-
-
-/*
- * Condition
- */
-
-enum cobc_cond_type {
-  COBC_COND_EQ,			/* x = y */
-  COBC_COND_GT,			/* x > y */
-  COBC_COND_LT,			/* x < y */
-  COBC_COND_GE,			/* x >= y */
-  COBC_COND_LE,			/* x <= y */
-  COBC_COND_NE,			/* x != y */
-  COBC_COND_CLASS,		/* x is class */
-  COBC_COND_NOT,		/* not x */
-  COBC_COND_AND,		/* x and y */
-  COBC_COND_OR,			/* x or y */
-};
-
-struct cobc_cond
-{
-  struct cobc_tree_common common;
-  enum cobc_cond_type type;
-  cobc_tree left;
-  cobc_tree right;
-};
-
-#define COBC_COND(x)		(COBC_TREE_CAST (cobc_tag_cond, struct cobc_cond, x))
-#define COBC_COND_P(x)	(COBC_TREE_TAG (x) == cobc_tag_cond)
-
-extern cobc_tree make_cond (cobc_tree x, enum cobc_cond_type type, cobc_tree y);
-extern cobc_tree make_negative (cobc_tree x);
 
 
 /*

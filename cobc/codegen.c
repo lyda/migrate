@@ -716,41 +716,44 @@ output_compare (cobc_tree x, cobc_tree s1, cobc_tree s2)
 static void
 output_condition (cobc_tree x)
 {
-  enum cobc_cond_type type = COBC_COND (x)->type;
-  cobc_tree l = COBC_COND (x)->left;
-  cobc_tree r = COBC_COND (x)->right;
+  struct cobc_expr *p = COBC_EXPR (x);
 
-  switch (type)
+  switch (p->op)
     {
-    case COBC_COND_CLASS:
-      output_func_1 ((char *) r, l);
+    case '@':
+      output_func_1 ((char *) p->right, p->left);
       break;
-    case COBC_COND_NOT:
+
+    case '!':
       output ("!");
-      output_tree (l);
+      output_tree (p->left);
       break;
-    case COBC_COND_AND:
-    case COBC_COND_OR:
+
+    case '&': case '|':
       output ("(");
-      output_tree (l);
-      output (type == COBC_COND_AND ? " && " : " || ");
-      output_tree (r);
+      output_tree (p->left);
+      output (p->op == '&' ? " && " : " || ");
+      output_tree (p->right);
       output (")");
       break;
-    default:
+
+    case '=': case '<': case '[': case '>': case ']': case '~':
       output ("(");
-      output_compare (x, l, r);
-      switch (type)
+      output_compare (x, p->left, p->right);
+      switch (p->op)
 	{
-	case COBC_COND_EQ: output (" == 0"); break;
-	case COBC_COND_LT: output (" <  0"); break;
-	case COBC_COND_LE: output (" <= 0"); break;
-	case COBC_COND_GT: output (" >  0"); break;
-	case COBC_COND_GE: output (" >= 0"); break;
-	case COBC_COND_NE: output (" != 0"); break;
-	default: break;
+	case '=': output (" == 0"); break;
+	case '<': output (" <  0"); break;
+	case '[': output (" <= 0"); break;
+	case '>': output (" >  0"); break;
+	case ']': output (" >= 0"); break;
+	case '~': output (" != 0"); break;
 	}
       output (")");
+      break;
+
+    default:
+      output_expr (x, 1);
       break;
     }
 }
@@ -1455,11 +1458,6 @@ output_tree (cobc_tree x)
 	break;
       }
     case cobc_tag_expr:
-      {
-	output_expr (x, 1);
-	break;
-      }
-    case cobc_tag_cond:
       {
 	output_condition (x);
 	break;
