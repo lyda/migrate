@@ -566,6 +566,17 @@ cb_build_alphanumeric_literal (const unsigned char *data, size_t size)
   return CB_TREE (build_literal (CB_CATEGORY_ALPHANUMERIC, data, size));
 }
 
+cb_tree
+cb_concat_literals (cb_tree x1, cb_tree x2)
+{
+  struct cb_literal *l1 = CB_LITERAL (x1);
+  struct cb_literal *l2 = CB_LITERAL (x2);
+  unsigned char buff[l1->size + l2->size];
+  memcpy (buff, l1->data, l1->size);
+  memcpy (buff + l1->size, l2->data, l2->size);
+  return cb_build_alphanumeric_literal (buff, l1->size + l2->size);
+}
+
 
 /*
  * Decimal

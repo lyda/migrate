@@ -349,6 +349,7 @@ struct cb_literal {
 
 extern cb_tree cb_build_numeric_literal (int sign, const unsigned char *data, int scale);
 extern cb_tree cb_build_alphanumeric_literal (const unsigned char *data, size_t size);
+extern cb_tree cb_concat_literals (cb_tree x1, cb_tree x2);
 
 
 /*

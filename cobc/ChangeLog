@@ -1,5 +1,10 @@
 2004-04-07  Keisuke Nishida  <knishida@open-cobol.org>
 
+	* parser.y (basic_literal, alnum_literal): Literal concatenation.
+	* tree.c, tree.h (cb_concat_literals): New function.
+
+2004-04-07  Keisuke Nishida  <knishida@open-cobol.org>
+
 	* parser.y (sort_statement): Table sort.
 	* typeck.c (cb_emit_sort_init): Updated for table sort.
 

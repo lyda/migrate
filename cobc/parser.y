@@ -502,7 +502,7 @@ assign_clause:
   }
 ;
 assignment_name:
-  LITERAL
+  alnum_literal
 | qualified_word
 ;
 
@@ -2598,7 +2598,7 @@ stop_statement:
   {
     cb_emit_stop_run ();
   }
-| STOP LITERAL
+| STOP literal
   {
     cb_verify (cb_stop_literal_statement, "STOP literal");
   }
@@ -3267,13 +3267,17 @@ literal:
   }
 ;
 basic_literal:
-  LITERAL			{ $$ = $1; }
+  alnum_literal			{ $$ = $1; }
 | SPACE				{ $$ = cb_space; }
 | ZERO				{ $$ = cb_zero; }
 | QUOTE				{ $$ = cb_quote; }
 | HIGH_VALUE			{ $$ = cb_high; }
 | LOW_VALUE			{ $$ = cb_low; }
 | TOK_NULL			{ $$ = cb_null; }
+;
+alnum_literal:
+  LITERAL			{ $$ = $1; }
+| alnum_literal '&' LITERAL	{ $$ = cb_concat_literals ($1, $3); }
 ;
 
 /*
