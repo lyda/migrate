@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 126
+%expect 124
 
 %{
 #include "config.h"
@@ -133,15 +133,15 @@ static cobc_tree make_opt_cond (cobc_tree last, int type, cobc_tree this);
 %left  AND
 %right NOT
 
-%token <word> WORD,LABEL_WORD
 %token <pict> PICTURE_TOK
 %token <tree> INTEGER_LITERAL,NUMERIC_LITERAL,NONNUMERIC_LITERAL
 %token <tree> CONDITION_NAME,MNEMONIC_NAME
+%token <word> WORD,LABEL_WORD
 
 %token EQUAL,GREATER,LESS,GE,LE,COMMAND_LINE,ENVIRONMENT_VARIABLE,ALPHABET
 %token DATE,DAY,DAY_OF_WEEK,TIME,READ,WRITE,OBJECT_COMPUTER,INPUT_OUTPUT
 %token TO,FOR,IS,ARE,THRU,THAN,NO,CANCEL,ASCENDING,DESCENDING,ZERO
-%token SOURCE_COMPUTER,BEFORE,AFTER,RESERVE,BUILTIN_TOK
+%token SOURCE_COMPUTER,BEFORE,AFTER,RESERVE
 %token RIGHT,JUSTIFIED,SYNCHRONIZED,SEPARATE,BLOCK
 %token TOK_INITIAL,FIRST,ALL,LEADING,OF,IN,BY,STRING,UNSTRING,DEBUGGING
 %token START,DELETE,PROGRAM,GLOBAL,EXTERNAL,SIZE,DELIMITED,COLLATING,SEQUENCE
@@ -157,7 +157,7 @@ static cobc_tree make_opt_cond (cobc_tree last, int type, cobc_tree this);
 %token IF,ELSE,SENTENCE,LINE,PAGE,OPEN,CLOSE,REWRITE,SECTION,SYMBOLIC
 %token ADVANCING,INTO,AT,END,NEGATIVE,POSITIVE,SPACE,NOT
 %token CALL,USING,INVALID,CONTENT,QUOTE,LOW_VALUE,HIGH_VALUE
-%token SELECT,ASSIGN,DISPLAY,UPON,CONSOLE,SET,UP,DOWN,SEARCH
+%token SELECT,ASSIGN,DISPLAY,UPON,SET,UP,DOWN,SEARCH
 %token ORGANIZATION,ACCESS,MODE,KEY,STATUS,ALTERNATE,SORT,SORT_MERGE
 %token SEQUENTIAL,INDEXED,DYNAMIC,RANDOM,RELATIVE,WHEN,TEST,PROCEED
 %token END_ADD,END_CALL,END_COMPUTE,END_DELETE,END_DIVIDE,END_EVALUATE
@@ -171,10 +171,11 @@ static cobc_tree make_opt_cond (cobc_tree last, int type, cobc_tree this);
 %token COMMON,NEXT,PACKED_DECIMAL,INPUT,I_O,OUTPUT,EXTEND,BINARY
 %token ALPHANUMERIC,ALPHANUMERIC_EDITED,NUMERIC_EDITED,NATIONAL,NATIONAL_EDITED
 
+%type <call> call_item
 %type <insi> tallying_item,replacing_item,inspect_before_after
 %type <inum> flag_all,flag_duplicates,flag_optional,flag_with_no_advancing
 %type <inum> flag_not,flag_next,flag_rounded,flag_separate
-%type <inum> class,integer,level_number,operator
+%type <inum> class,integer,level_number,operator,on_or_off
 %type <inum> usage,before_or_after,perform_test
 %type <inum> select_organization,select_access_mode,open_mode
 %type <list> occurs_key_list,occurs_index_list,value_item_list
@@ -189,7 +190,6 @@ static cobc_tree make_opt_cond (cobc_tree last, int type, cobc_tree this);
 %type <list> unstring_delimited_item,unstring_into_item
 %type <list> file_name_list,math_name_list,math_edited_name_list
 %type <list> call_item_list,call_using
-%type <call> call_item
 %type <tree> call_returning,add_to,field_description_list,value_item
 %type <tree> field_description_list_1,field_description_list_2
 %type <tree> condition,condition_2,comparative_condition,class_condition
@@ -377,44 +377,40 @@ special_names:
 | special_names special_name
 ;
 special_name:
-  special_name_builtin
+  special_name_mnemonic
 | special_name_alphabet
 | special_name_symbolic
 | special_name_class
 | special_name_currency
 | special_name_decimal_point
-| special_name_console
 ;
 
 
 /* Buildin name */
 
-special_name_builtin:
-  BUILTIN_TOK _is undefined_word { make_field ($3); }
-| BUILTIN_TOK _is undefined_word on_off_names { make_field ($3); }
-| BUILTIN_TOK on_off_names
+special_name_mnemonic:
+  WORD
+  special_name_mnemonic_name
+  special_name_mnemonic_on_off	{ }
 ;
-on_off_names:
-  on_status_is_name
-| on_status_is_name off_status_is_name
-| off_status_is_name
-| off_status_is_name on_status_is_name
-;
-on_status_is_name:
-  ON _status _is undefined_word
+special_name_mnemonic_name:
+| IS undefined_word
   {
-    struct cobc_field *p = COBC_FIELD (make_field ($4));
+    set_word_item ($2, make_integer ($<inum>0));
+  }
+;
+special_name_mnemonic_on_off:
+| special_name_mnemonic_on_off
+  on_or_off _status _is undefined_word
+  {
+    struct cobc_field *p = COBC_FIELD (make_field ($5));
     p->level = 88;
     p->cond = cobc_int1;
   }
 ;
-off_status_is_name:
-  OFF _status _is undefined_word
-  {
-    struct cobc_field *p = COBC_FIELD (make_field ($4));
-    p->level = 88;
-    p->cond = cobc_int0;
-  }
+on_or_off:
+  ON				{ $$ = 1; }
+| OFF				{ $$ = 2; }
 ;
 
 
@@ -512,13 +508,6 @@ special_name_currency:
 
 special_name_decimal_point:
   DECIMAL_POINT _is COMMA	{ cob_decimal_point = ','; }
-;
-
-
-/* CONSOLE */
-
-special_name_console:
-  CONSOLE _is CONSOLE		{ yywarn ("CONSOLE name is ignored"); }
 ;
 
 
@@ -1506,8 +1495,7 @@ display_statement:
   }
   ;
 display_upon:
-| _upon CONSOLE
-| _upon mnemonic_name		{ yywarn ("DISPLAY UPON is not implemented"); }
+| _upon mnemonic_name		{ /* ignored */ }
 ;
 flag_with_no_advancing:
   /* nothing */			{ $$ = 0; }

@@ -27,29 +27,33 @@
 
 #define HASH_SIZE 133
 
+static struct builtin {
+  char *name;
+  int token;
+} builtin_words[] = {
+  {"CONSOLE",		STANDARD_OUTPUT},
+  {"SYSIN",		STANDARD_INPUT},
+  {"SYSOUT",		STANDARD_OUTPUT},
+  {"SYSERR",		STANDARD_ERROR},
+  {"STANDARD-INPUT",	STANDARD_INPUT},
+  {"STANDARD-OUTPUT",	STANDARD_OUTPUT},
+  {"STANDARD-ERROR",	STANDARD_ERROR},
+  {"SWITCH-1",		SWITCH_1},
+  {"SWITCH-2",		SWITCH_2},
+  {"SWITCH-3", 	       	SWITCH_3},
+  {"SWITCH-4",		SWITCH_4},
+  {"SWITCH-5",		SWITCH_5},
+  {"SWITCH-6",		SWITCH_6},
+  {"SWITCH-7",		SWITCH_7},
+  {"SWITCH-8",		SWITCH_8},
+  {0, 0}
+};
+
 static struct reserved {
-  const char *name;
+  char *name;
   int token;
   struct reserved *next;
 } *reserved_table[HASH_SIZE];
-
-static struct reserved builtin_words[] = {
-  {"STDIN",		BUILTIN_TOK},
-  {"STDOUT",		BUILTIN_TOK},
-  {"STDERR",		BUILTIN_TOK},
-  {"STANDARD-INPUT",	BUILTIN_TOK},
-  {"STANDARD-OUTPUT",	BUILTIN_TOK},
-  {"STANDARD-ERROR",	BUILTIN_TOK},
-  {"SWITCH-1",		BUILTIN_TOK},
-  {"SWITCH-2",		BUILTIN_TOK},
-  {"SWITCH-3", 	       	BUILTIN_TOK},
-  {"SWITCH-4",		BUILTIN_TOK},
-  {"SWITCH-5",		BUILTIN_TOK},
-  {"SWITCH-6",		BUILTIN_TOK},
-  {"SWITCH-7",		BUILTIN_TOK},
-  {"SWITCH-8",		BUILTIN_TOK},
-  {0, 0}
-};
 
 static struct reserved reserved_words[] = {
   {"ACCEPT",		ACCEPT},
@@ -97,7 +101,6 @@ static struct reserved reserved_words[] = {
   {"COMPUTATIONAL-3",	PACKED_DECIMAL},
   {"COMPUTE",		COMPUTE},
   {"CONFIGURATION",	CONFIGURATION},
-  {"CONSOLE",		CONSOLE},
   {"CONTAINS",		CONTAINS},
   {"CONTENT",		CONTENT},
   {"CONTINUE",		CONTINUE},
@@ -317,6 +320,16 @@ hash (const char *s)
 }
 
 int
+lookup_builtin_word (const char *name)
+{
+  int i;
+  for (i = 0; builtin_words[i].name != 0; i++)
+    if (strcasecmp (name, builtin_words[i].name) == 0)
+      return builtin_words[i].token;
+  return 0;
+}
+
+int
 lookup_reserved_word (const char *name)
 {
   struct reserved *p;
@@ -333,15 +346,6 @@ init_reserved_words (void)
   for (i = 0; i < HASH_SIZE; i++)
     reserved_table[i] = NULL;
 
-  /* install builtin words */
-  for (i = 0; builtin_words[i].name != 0; i++)
-    {
-      int val = hash (builtin_words[i].name);
-      builtin_words[i].next = reserved_table[val];
-      reserved_table[val] = &builtin_words[i];
-    }
-
-  /* install reserved words */
   for (i = 0; reserved_words[i].name != 0; i++)
     {
       int val = hash (reserved_words[i].name);

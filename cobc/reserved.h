@@ -20,6 +20,22 @@
 #ifndef _RESERVED_H_
 #define _RESERVED_H_
 
+enum builtin_token {
+  BUILTIN_ZERO,
+  STANDARD_INPUT,
+  STANDARD_OUTPUT,
+  STANDARD_ERROR,
+  SWITCH_1,
+  SWITCH_2,
+  SWITCH_3,
+  SWITCH_4,
+  SWITCH_5,
+  SWITCH_6,
+  SWITCH_7,
+  SWITCH_8,
+};
+
+extern int lookup_builtin_word (const char *name);
 extern int lookup_reserved_word (const char *name);
 extern void init_reserved_words (void);
 

@@ -142,6 +142,11 @@ X\"[^\"\n]*\" {
       yylval.tree = yylval.word->item;
       return CONDITION_NAME;
     }
+  else if (yylval.word->item && COBC_INTEGER_P (yylval.word->item))
+    {
+      yylval.tree = yylval.word->item;
+      return MNEMONIC_NAME;
+    }
   else
     return WORD;
 }
