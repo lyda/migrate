@@ -26,10 +26,8 @@
 #define COB_VERSION	VERSION
 #define COB_COPYRIGHT	"Copyright (C) 2001-2002 Keisuke Nishida\n"
 
-enum cob_format {
-  COB_FORMAT_FREE,
-  COB_FORMAT_FIXED
-};
+#define COB_FORMAT_FREE		0
+#define COB_FORMAT_FIXED	1
 
 struct cob_path {
   const char *dir;
@@ -39,7 +37,7 @@ struct cob_path {
 extern int cob_tab_width;
 extern int cob_debug_flag;
 extern int cob_exit_status;
-extern enum cob_format cob_file_format;
+extern int cob_file_format;
 extern struct cob_path *cob_include_path;
 extern struct cob_path *cob_depend_list;
 extern FILE *cob_depend_file;

@@ -39,7 +39,7 @@ extern int yyparse (void);
 int cob_tab_width = 8;
 int cob_debug_flag = 0;
 int cob_exit_status = 0;
-enum cob_format cob_file_format = COB_FORMAT_FREE;
+int cob_file_format = COB_FORMAT_FREE;
 struct cob_path *cob_include_path = NULL;
 struct cob_path *cob_depend_list = NULL;
 FILE *cob_depend_file = NULL;
@@ -57,11 +57,13 @@ static const char *program_name;
  * Command line
  */
 
-static char short_options[] = "hvo:FXDT:I:";
+static char short_options[] = "hvo:DT:I:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'v'},
+  {"fixed", no_argument, &cob_file_format, COB_FORMAT_FIXED},
+  {"free", no_argument, &cob_file_format, COB_FORMAT_FREE},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
   {0, 0, 0, 0}
@@ -84,12 +86,13 @@ print_usage ()
   puts ("  -o <file>     Place the output into <file>");
   puts ("");
   puts ("COBOL options:");
-  puts ("  -X            Use X/Open free format (default)");
-  puts ("  -F            Use standard fixed column format");
+  puts ("  -fixed        Use standard fixed column format");
+  puts ("  -free         Use X/Open free format (default)");
   puts ("  -D            Compile debug lines (i.e., \"D\" lines)");
   puts ("  -T <n>        Tab width (default 8)");
   puts ("  -I <path>     Add include path");
-  puts ("  -M <file>     Place dependency list into <file>");
+  puts ("  -MT <target>  Set target file used in dependency list");
+  puts ("  -MF <file>    Place dependency list into <file>");
 }
 
 static int
@@ -148,8 +151,6 @@ process_command_line (int argc, char *argv[])
 	  }
 	  break;
 
-	case 'X': cob_file_format = COB_FORMAT_FREE; break;
-	case 'F': cob_file_format = COB_FORMAT_FIXED; break;
 	case 'D': cob_debug_flag = 1; break;
 	case 'T': cob_tab_width = atoi (optarg); break;
 

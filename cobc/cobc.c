@@ -66,17 +66,11 @@ static int save_temps_flag = 0;
 static char *program_name;
 static char *output_name;
 
-static char cob_cc[FILENAME_MAX];		/* cc */
+static char cob_cc[FILENAME_MAX];		/* gcc */
 static char cob_cobpp[FILENAME_MAX];		/* cobpp */
 static char cob_cflags[FILENAME_MAX];		/* -I... */
-static char cob_libs[FILENAME_MAX];		/* -lcob */
+static char cob_libs[FILENAME_MAX];		/* -L... -lcob */
 static char cobpp_flags[FILENAME_MAX];
-
-static enum format {
-  format_unspecified,
-  format_fixed,
-  format_free
-} source_format;
 
 static enum level {
   stage_preprocess,
@@ -96,6 +90,12 @@ static struct filename {
   char object[FILENAME_MAX];			/* foo.o */
   struct filename *next;
 } *file_list;
+
+static int source_format;
+
+#define format_unspecified	0
+#define format_fixed		1
+#define format_free		2
 
 
 /*
@@ -147,13 +147,15 @@ cob_error (char *s, ...)
  * Command line
  */
 
-static char short_options[] = "hvECScmxgOo:FXDT:I:";
+static char short_options[] = "hvECScmxgOo:DT:I:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'v'},
   {"static", no_argument, &cobc_link_style, LINK_STATIC},
   {"dynamic", no_argument, &cobc_link_style, LINK_DYNAMIC},
+  {"fixed", no_argument, &source_format, format_fixed},
+  {"free", no_argument, &source_format, format_free},
   {"save-temps", no_argument, &save_temps_flag, 1},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
@@ -193,8 +195,8 @@ print_usage ()
   puts ("COBOL options:");
   puts ("  -static       Use static link for subprogram calls if possible");
   puts ("  -dynamic      Use dynamic link for all subprogram calls (default)");
-  puts ("  -F            Use standard fixed column format");
-  puts ("  -X            Use X/Open free format");
+  puts ("  -fixed        Use standard fixed column format");
+  puts ("  -free         Use X/Open free format");
   puts ("  -D            Compile debug lines (i.e., \"D\" lines)");
   puts ("  -I <path>     Add include (copybooks) search path");
 #ifdef COB_DEBUG
@@ -260,8 +262,6 @@ process_command_line (int argc, char *argv[])
 	  strcat (cobpp_flags, optarg);
 	  break;
 
-	case 'X': source_format = format_free; break;
-	case 'F': source_format = format_fixed; break;
 	case 'D': debug_flag = 1; break;
 
 	default:
@@ -398,7 +398,7 @@ process_filename (const char *filename)
   return fn;
 }
 
-static enum format
+static int
 probe_source_format (const char *filename)
 {
   FILE *fp = fopen (filename, "r");
@@ -434,7 +434,7 @@ preprocess (struct filename *fn)
   if (source_format == format_unspecified)
     source_format = probe_source_format (fn->source);
 
-  strcat (buff, (source_format == format_fixed) ? " -F" : " -X");
+  strcat (buff, (source_format == format_fixed) ? " -fixed" : " -free");
   strcat (buff, " ");
   strcat (buff, fn->source);
   return system (buff);
