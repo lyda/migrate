@@ -170,7 +170,7 @@ static void ambiguous_error (struct cobc_word *p);
 %token WORKING_STORAGE,LINKAGE,DECIMAL_POINT,COMMA,DUPLICATES,WITH,EXIT
 %token LABEL,RECORD,RECORDS,STANDARD,STANDARD_1,STANDARD_2,VARYING,OMITTED
 %token CONTAINS,CHARACTERS,COMPUTE,GO,STOP,RUN,ACCEPT,PERFORM,RENAMES
-%token IF,ELSE,SENTENCE,LINE,PAGE,OPEN,CLOSE,REWRITE,SECTION,SYMBOLIC
+%token IF,ELSE,SENTENCE,LINE,LINES,PAGE,OPEN,CLOSE,REWRITE,SECTION,SYMBOLIC
 %token ADVANCING,INTO,AT,END,NEGATIVE,POSITIVE,SPACE,NOT
 %token CALL,USING,INVALID,CONTENT,QUOTE,LOW_VALUE,HIGH_VALUE
 %token SELECT,ASSIGN,DISPLAY,UPON,SET,UP,DOWN,SEARCH
@@ -2486,7 +2486,7 @@ write_from:
 ;
 write_option:
   /* nothing */			{ $$ = NULL; }
-| before_or_after _advancing integer_value _line
+| before_or_after _advancing integer_value _line_or_lines
   {
     $$ = make_generic_1 ($1, $3);
   }
@@ -2499,6 +2499,7 @@ before_or_after:
   BEFORE			{ $$ = COBC_BEFORE; }
 | AFTER				{ $$ = COBC_AFTER; }
 ;
+_line_or_lines: | LINE | LINES;
 _advancing: | ADVANCING ;
 _end_write: | END_WRITE ;
 
@@ -3252,7 +3253,6 @@ _in: | IN ;
 _is: | IS ;
 _is_are: | IS | ARE ;
 _key: | KEY ;
-_line: | LINE ;
 _mode: | MODE ;
 _on: | ON ;
 _program: | PROGRAM ;
