@@ -37,11 +37,13 @@ extern FILE *o_lst;
 extern char picture[];
 extern struct sym *curr_field;
 extern int picix,piccnt,sign,v_flag;
+extern int curr_division;
+extern int start_condition;
+extern int need_subscripts;
 
 static int read_literal (char mark);
 static int read_literal_x (char mark);
 static int scan_word (char *text);
-static int scan_reserved_word (char *text);
 static int scan_picture (char *text);
 %}
 
@@ -50,22 +52,19 @@ static int scan_picture (char *text);
 %%
 
 %{
-  extern int start_condition;
-  extern int curr_division;
-  extern int need_subscripts;
-
-  switch (start_condition) {
-  case START_ID:
-    BEGIN ID_STATE;
-    break;
-  case START_COMMENT:
-    BEGIN COMMENT_STATE;
-    break;
-  case START_PICTURE:
-    BEGIN PICTURE_STATE;
-    break;
-  }
-  start_condition=0; /* avoid new state switch */
+  switch (start_condition)
+    {
+    case START_ID:
+      BEGIN ID_STATE;
+      break;
+    case START_COMMENT:
+      BEGIN COMMENT_STATE;
+      break;
+    case START_PICTURE:
+      BEGIN PICTURE_STATE;
+      break;
+    }
+  start_condition = 0;
 %}
 
 <*>[ \t\r]*	{ /* ignore */ }
@@ -81,12 +80,6 @@ static int scan_picture (char *text);
   strrchr (cob_orig_filename, '"')[0] = '\0';
 }
 
-[0-9]*[.,]?[0-9]+ {
-  /* numeric literal */
-  yylval.lval = install_literal (yytext);
-  return NLITERAL;
-}
-
 X?[\'\"] {
   /* string literal */
   if (yytext[0] == 'X')
@@ -95,48 +88,15 @@ X?[\'\"] {
     return read_literal (yytext[0]);
 }
 
-[A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)? {
-  /* symbol or label */
-  int tok = scan_word (yytext);
-  if (tok)
-    return tok;
-  switch (curr_division)
-    {
-    case CDIV_ENVIR:
-      yylval.sval = install (yytext, SYTB_VAR, 0);
-      return (STRING);
-    case CDIV_DATA:
-      yylval.sval = install (yytext, SYTB_VAR, 1);
-      return (STRING);
-    case CDIV_FD:
-      if ((yylval.sval = lookup_symbol (yytext)) == NULL)
-	yyerror ("undefined %s at FD/SD", yytext);
-      return (STRING);
-    default:
-      /* if symbol was defined at the data division */
-      if ((yylval.sval = lookup_symbol (yytext)) != NULL)
-	{
-	  if (yylval.sval->type == '8')
-	    return (VARCOND);
-	  else if (is_subscripted (yylval.sval))
-	    return (SUBSCVAR);
-	  else
-	    return (VARIABLE);
-	}
-      /* otherwise, it should be a label */
-      else
-	{
-	  yylval.sval = install_label (yytext);
-	  return (LABELSTR);
-	}
-    }
+[0-9]*[.,]?[0-9]+ {
+  /* numeric literal */
+  yylval.lval = install_literal (yytext);
+  return NLITERAL;
 }
 
-[<>=][>=]? {
-  int tok;
-  if ((tok = scan_reserved_word (yytext)) != 0)
-    return tok;
-  yyerror("unknown operator: `%s'", yytext);
+[A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)? {
+  /* symbol or label */
+  return scan_word (yytext);
 }
 
 "(" {
@@ -147,6 +107,13 @@ X?[\'\"] {
   else
     return '(';
 }
+
+"<"		{ yylval.ival = LESS;	return CONDITIONAL; }
+"<="		{ yylval.ival = LEQ;	return CONDITIONAL; }
+"<>"		{ yylval.ival = NEQ;	return CONDITIONAL; }
+"="		{ yylval.ival = EQUAL;	return CONDITIONAL; }
+">"		{ yylval.ival = GREATER;return CONDITIONAL; }
+">="		{ yylval.ival = GEQ;	return CONDITIONAL; }
 
 "**"		{ return '^'; }
 .		{ return yytext[0]; }
@@ -236,40 +203,49 @@ read_literal_x (char mark)
 }
 
 static int
-is_integer_token (const char *tok)
-{
-  while (*tok)
-    if (!isdigit (*tok++))
-      return 0;
-  return 1;
-}
-
-static int
 scan_word (char *text)
 {
-  int token;
-
-  if (is_integer_token (text))
+  struct reserved_word *p = lookup_reserved_word (text);
+  if (p != NULL)
     {
-      yylval.lval = install_literal (text);
-      return (NLITERAL);
+      /* Reserved word */
+      yylval.ival = p->minor;
+      return p->token;
     }
-  else if ((token = scan_reserved_word (text)) != 0)
-    {
-      return token;
-    }
-  else
-    return 0;
-}
 
-static int
-scan_reserved_word (char *s)
-{
-  struct reserved_word *p = lookup_reserved_word (s);
-  if (!p)
-    return 0;
-  yylval.ival = p->minor;
-  return p->token;
+  switch (curr_division)
+    {
+    case CDIV_ENVIR:
+      yylval.sval = install (yytext, SYTB_VAR, 0);
+      return STRING;
+
+    case CDIV_DATA:
+      yylval.sval = install (yytext, SYTB_VAR, 1);
+      return STRING;
+
+    case CDIV_FD:
+      if ((yylval.sval = lookup_symbol (yytext)) == NULL)
+	yyerror ("undefined %s at FD/SD", yytext);
+      return STRING;
+
+    default:
+      /* if symbol was defined at the data division */
+      if ((yylval.sval = lookup_symbol (yytext)) != NULL)
+	{
+	  if (yylval.sval->type == '8')
+	    return VARCOND;
+	  else if (is_subscripted (yylval.sval))
+	    return SUBSCVAR;
+	  else
+	    return VARIABLE;
+	}
+      /* otherwise, it should be a label */
+      else
+	{
+	  yylval.sval = install_label (yytext);
+	  return (LABELSTR);
+	}
+    }
 }
 
 static int
