@@ -23,7 +23,7 @@ COMP-5 data items are native integers.
 
 ** New compiler option `-ext', which specifies the copy file extension.
 
-** The compiler option `O' now does C level optimization.
+** The compiler option `-O' now does C level optimization.
 
 ** New compiler option `-O2', which does further C level optimization.
 
