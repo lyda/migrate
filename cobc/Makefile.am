@@ -1,6 +1,6 @@
 bin_PROGRAMS = cobc
 cobc_SOURCES = cobc.c cobc.h ppparse.c ppparse.h pplex.c tree.c tree.h \
-	codegen.c reserved.c reserved.h parser.c parser.h scanner.c \
+	parser.c parser.h scanner.c codegen.c reserved.c reserved.h \
 	warning.def
 
 cobc_CFLAGS = $(COBC_CFLAGS) -I$(top_srcdir)
@@ -18,5 +18,5 @@ AM_LFLAGS = -s
 %.c: %.l
 	$(LEX) $(AM_LFLAGS) -o$@ $<
 
-%.c %.h: %.y
+%.c: %.y
 	$(YACC) $(AM_YFLAGS) -o $@ $<
