@@ -58,7 +58,6 @@ extern unsigned global_offset;  /* offset das variaveis globais (DATA) */
 extern int paragr_num;
 extern int loc_label;
 extern char picture[];
-extern int picix,piccnt,decimals,sign,v_flag;
 extern int at_linkage,stack_plus;
 extern char *toktext;
 extern int yylex(void);
@@ -123,8 +122,7 @@ static void assert_numeric_sy (struct sym *sy);
 
 %token <str>  IDSTRING
 %token <sval> STRING,VARIABLE,VARCOND,SUBSCVAR
-%token <sval> LABELSTR,CMD_LINE,ENVIRONMENT_VARIABLE
-%token <ival> CHAR,MULTIPLIER
+%token <sval> LABELSTR,CMD_LINE,ENVIRONMENT_VARIABLE,PICTURE
 %token <ival> USAGENUM,ZERONUM,CONDITIONAL
 %token <ival> TO,FOR,IS,ARE,THRU,THAN,NO
 %token <ival> COMMENTING,DIRECTION,READ,WRITE,INPUT_OUTPUT
@@ -943,23 +941,9 @@ index_name_list:
           define_implicit_field($2,$<sval>-2,curr_field->times);
          }  
         ;
+
 picture_clause:
-    PIC {
-      curr_division = CDIV_PIC;
-      picix=piccnt=v_flag=curr_field->decimals=0;
-      picture[picix]=0;
-    }
-    opt_is picture_spec {
-      picture[picix+2]=0;
-    }
-    ;
-picture_spec:
-    picture_element
-    | picture_spec picture_element
-    ;
-picture_element:
-      CHAR              { if (!save_pic_char ($1, 1)) YYERROR; }
-    | CHAR MULTIPLIER   { if (!save_pic_char ($1, $2)) YYERROR; }
+    PIC PICTURE
     ;
 
 usage_option :
@@ -984,7 +968,6 @@ usage_option :
 	  strcpy(picture,"S\x01\x39\x0f\x56\x01\x39\x0f");
 	  break;
 	case COMP3:
-	  /*curr_field->len = (piccnt/2)+1;*/
 	  curr_field->type='C';
 	  break;
 	case COMP: 

@@ -38,6 +38,10 @@
 #include "reserved.h"
 #include "_libcob.h"
 
+extern char picture[];
+extern struct sym *curr_field;
+extern int picix,piccnt,sign,v_flag;
+
 #define MAX_COPY_DEPTH          10
 #define MAX_CPYNAME_LEN         65
 #define MAXLINEBUF              256
@@ -61,6 +65,7 @@ int stabs_started=0;
 
 static int read_literal (char mark);
 static int read_literal_x (char mark);
+static int read_picture (char *text);
 static int scan_word (char *text);
 static int scan_reserved_word (char *text);
 %}
@@ -75,8 +80,7 @@ any [!-~]
 word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
 
 %x IDENT_ST ENVIR_ST DATA_ST COMMENT_ST FD_ST REDEF_ST
-%x SUBSCRIPTS_ST EXCEPTION_ST
-%x PIC_ST PIC_ST2
+%x SUBSCRIPTS_ST EXCEPTION_ST PIC_ST
 
 %%
 
@@ -369,52 +373,10 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   "\n"   { BEGIN INITIAL; }
 } /* end of COMMENT_ST */
 
-<PIC_ST>{white}* { 
-                BEGIN PIC_ST2;
-                TRACE_PRINT (("<PICS -> PIC_ST2>:\n"));
-        }
-
-<PIC_ST2>{
-  {white}* { 
-		  BEGIN DATA_ST;
-		  TRACE_PRINT (("<PICS -> DATA_ST>:\n"));
-	  }
-  "."/[ \t\n] { 
-		  BEGIN DATA_ST;
-		  TRACE_PRINT (("<PICS -> DATA_ST>: EOS\n"));
-		  return EOS;
-	  }
-}
-
-<PIC_ST,PIC_ST2>{
-  "("[0-9]+")" {
-    {
-      char *p; 
-      int val = 0;
-      for (p = yytext + 1; *p != ')'; p++)
-	val = 10 * val + *p - '0';
-      TRACE_PRINT (("<PICS: MULTIPLIER>: %d\n", val));
-      yylval.ival = val;
-      return MULTIPLIER;
-    }
-  }
-  {word} {
-    int token;
-    if ((token = scan_reserved_word (yytext)) != 0) 
-      {
-	BEGIN PIC_ST;
-	TRACE_PRINT (("<PIC_ST2-> PIC_ST>:\n"));
-	return token;
-      }
-    REJECT;
-  }
-  {any} { 
-    TRACE_PRINT (("<PICS: any char>: %c\n", yytext[0]));
-    yylval.ival=(int)yytext[0];
-    return(CHAR);
-  }
-  "\n" {
-  }
+<PIC_ST>{
+  "IS"		{ /* ignore */ }
+  [ \t\r\n]+	{ /* ignore */ }
+  [^ \t\r\n]+	{ BEGIN DATA_ST; return read_picture (yytext); }
 }
 
 <<EOF>> {
@@ -484,6 +446,44 @@ read_literal_x (char mark)
 }
 
 static int
+read_picture (char *text)
+{
+  char *p;
+  picix=piccnt=v_flag=curr_field->decimals=0;
+  picture[picix]=0;
+
+  for (p = text; *p; p++)
+    {
+      int c = *p;
+      int n = 1;
+
+      if (c == '.' && p[1] == '\0')
+	{
+	  unput (c);
+	  break;
+	}
+      if (p[1] == '(')
+	{
+	  n = 0;
+	  for (p += 2; *p != ')'; p++)
+	    {
+	      if (!('0' <= *p && *p <= '9'))
+		goto error;
+	      n = n * 10 + *p - '0';
+	    }
+	}
+      if (!save_pic_char (c, n))
+	goto error;
+    }
+  picture[picix + 2] = 0;
+  return PICTURE;
+
+ error:
+  yyerror ("syntax error, invalid picture");
+  return PICTURE;
+}
+
+static int
 is_integer_token (const char *tok)
 {
   while (*tok)
@@ -519,7 +519,11 @@ scan_word (char *text)
       return (LABELSTR);
     }
   else if ((token = scan_reserved_word (text)) != 0)
-    return token;
+    {
+      if (token == PIC)
+	BEGIN PIC_ST;
+      return token;
+    }
   else
     return 0;
 }
