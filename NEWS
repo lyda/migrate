@@ -1,5 +1,12 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Changes in OpenCOBOL 0.21
+
+** -fdebugging-line is removed.
+
+Debugging lines are considered to be obsolete in COBOL 2002.
+
+
 * Changes in OpenCOBOL 0.20
 
 ** cobpp has been integrated into cobc.
