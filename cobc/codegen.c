@@ -1557,7 +1557,6 @@ codegen (struct program_spec *spec)
   output_line ("cob_source_file = \"%s\";", cobc_source_file);
   output_line ("cob_decimal_point = '%c';", cob_decimal_point);
   output_line ("cob_currency_symbol = '%c';", cob_currency_symbol);
-  output_line ("cob_reloading_flag = %d;", cob_reloading_flag);
   output_indent ("}", -2);
   output_newline ();
 
