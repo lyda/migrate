@@ -392,7 +392,7 @@ ppinput (char *buff, int max_size)
 	/* invalid indicator */
 	static int last_line = -1;
 	if (last_line < cb_source_line - 1)
-	  cb_warning (_("invalid indicator `%c' at column 7"), buff[6]);
+	  cb_warning (_("invalid indicator '%c' at column 7"), buff[6]);
 	last_line = cb_source_line;
 	bp = buff + 6;
 	break;

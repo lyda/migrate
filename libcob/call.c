@@ -222,7 +222,7 @@ cob_resolve (const char *name)
 	  return NULL;
 	}
     }
-  sprintf (resolve_error_buff, _("cannot find module `%s'"), name);
+  sprintf (resolve_error_buff, _("cannot find module '%s'"), name);
   resolve_error = resolve_error_buff;
   return NULL;
 }

@@ -1067,6 +1067,9 @@ cob_open (cob_file *f, int mode, int opt)
       else
 	RETURN_STATUS (COB_STATUS_00_SUCCESS);
     case ENOENT:
+	if ( mode == COB_OPEN_EXTEND || mode == COB_OPEN_OUTPUT ) {
+		RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
+	}
       if (f->flag_optional)
 	{
 	  f->open_mode = mode;
@@ -1404,55 +1407,55 @@ cob_default_error_handle (void)
   switch (status)
     {
     case COB_STATUS_10_END_OF_FILE:
-      msg = N_("end of file");
+      msg = N_("End of file");
       break;
     case COB_STATUS_14_OUT_OF_KEY_RANGE:
-      msg = N_("out of key range");
+      msg = N_("Key out of range");
       break;
     case COB_STATUS_21_KEY_INVALID:
-      msg = N_("key order not ascending");
+      msg = N_("Key order not ascending");
       break;
     case COB_STATUS_22_KEY_EXISTS:
-      msg = N_("record key already exists");
+      msg = N_("Record key already exists");
       break;
     case COB_STATUS_23_KEY_NOT_EXISTS:
-      msg = N_("record key not exists");
+      msg = N_("Record key does not exist");
       break;
     case COB_STATUS_30_PERMANENT_ERROR:
-      msg = N_("permanent file error");
+      msg = N_("Permanent file error");
       break;
     case COB_STATUS_35_NOT_EXISTS:
-      msg = N_("file not exist");
+      msg = N_("File does not exist");
       break;
     case COB_STATUS_37_PERMISSION_DENIED:
-      msg = N_("permission denied");
+      msg = N_("Permission denied");
       break;
     case COB_STATUS_41_ALREADY_OPEN:
-      msg = N_("file already open");
+      msg = N_("File already open");
       break;
     case COB_STATUS_42_NOT_OPEN:
-      msg = N_("file not open");
+      msg = N_("File not open");
       break;
     case COB_STATUS_43_READ_NOT_DONE:
       msg = N_("READ must be executed first");
       break;
     case COB_STATUS_44_RECORD_OVERFLOW:
-      msg = N_("record overflow");
+      msg = N_("Record overflow");
       break;
     case COB_STATUS_46_READ_ERROR:
-      msg = N_("failed to read");
+      msg = N_("Failed to read");
       break;
     case COB_STATUS_47_INPUT_DENIED:
-      msg = N_("READ and START not allowed");
+      msg = N_("READ/START not allowed");
       break;
     case COB_STATUS_48_OUTPUT_DENIED:
       msg = N_("WRITE not allowed");
       break;
     case COB_STATUS_49_I_O_DENIED:
-      msg = N_("DELETE and REWRITE not allowed");
+      msg = N_("DELETE/REWRITE not allowed");
       break;
     default:
-      msg = N_("unknown file error");
+      msg = N_("Unknown file error");
       break;
     }
 

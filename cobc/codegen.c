@@ -180,7 +180,7 @@ output_base (struct cb_field *f)
     {
       if (!f01->flag_external && !f01->flag_local)
 	output_storage ("static ");
-      output_storage ("unsigned char %s%s[%d]  __attribute__ ((__aligned__));",
+      output_storage ("unsigned char %s%s[%d]  __attribute__ ((__aligned__(4)));",
 		      CB_PREFIX_BASE, name, f01->memory_size);
       output_storage ("\t/* %s */\n", f01->name);
       f01->flag_base = 1;

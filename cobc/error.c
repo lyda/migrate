@@ -41,10 +41,10 @@ print_error (char *file, int line, const char *prefix, const char *fmt, va_list 
       || current_paragraph != last_paragraph)
     {
       if (current_paragraph)
-	fprintf (stderr, _("%s: In paragraph `%s':\n"),
+	fprintf (stderr, _("%s: In paragraph '%s':\n"),
 		 file, current_paragraph->name);
       else
-	fprintf (stderr, _("%s: In section `%s':\n"),
+	fprintf (stderr, _("%s: In section '%s':\n"),
 		 file, current_section->name);
       last_section = current_section;
       last_paragraph = current_paragraph;
@@ -136,16 +136,16 @@ void
 redefinition_error (cb_tree x)
 {
   struct cb_word *w = CB_REFERENCE (x)->word;
-  cb_error_x (x, _("redefinition of `%s'"), w->name);
-  cb_error_x (CB_VALUE (w->items), _("`%s' previously defined here"), w->name);
+  cb_error_x (x, _("redefinition of '%s'"), w->name);
+  cb_error_x (CB_VALUE (w->items), _("'%s' previously defined here"), w->name);
 }
 
 void
 redefinition_warning (cb_tree x)
 {
   struct cb_word *w = CB_REFERENCE (x)->word;
-  cb_warning_x (x, _("redefinition of `%s'"), w->name);
-  cb_warning_x (CB_VALUE (w->items), _("`%s' previously defined here"), w->name);
+  cb_warning_x (x, _("redefinition of '%s'"), w->name);
+  cb_warning_x (CB_VALUE (w->items), _("'%s' previously defined here"), w->name);
 }
 
 void
@@ -155,10 +155,10 @@ undefined_error (cb_tree x)
   char buff[CB_MAX_CNAME];
   cb_tree c;
 
-  sprintf (buff, "`%s'", CB_NAME (x));
+  sprintf (buff, "'%s'", CB_NAME (x));
   for (c = r->chain; c; c = CB_REFERENCE (c)->chain)
     {
-      strcat (buff, " in `");
+      strcat (buff, " in '");
       strcat (buff, CB_NAME (c));
       strcat (buff, "'");
     }
@@ -175,10 +175,10 @@ ambiguous_error (cb_tree x)
       cb_tree l;
 
       /* display error on the first time */
-      sprintf (buff, "`%s'", CB_NAME (x));
+      sprintf (buff, "'%s'", CB_NAME (x));
       for (l = CB_REFERENCE (x)->chain; l; l = CB_REFERENCE (l)->chain)
 	{
-	  strcat (buff, " in `");
+	  strcat (buff, " in '");
 	  strcat (buff, CB_NAME (l));
 	  strcat (buff, "'");
 	}
@@ -189,7 +189,7 @@ ambiguous_error (cb_tree x)
       for (l = w->items; l; l = CB_CHAIN (l))
 	{
 	  cb_tree x = CB_VALUE (l);
-	  sprintf (buff, "`%s' ", w->name);
+	  sprintf (buff, "'%s' ", w->name);
 	  switch (CB_TREE_TAG (x))
 	    {
 	    case CB_TAG_FIELD:
@@ -197,7 +197,7 @@ ambiguous_error (cb_tree x)
 		struct cb_field *p;
 		for (p = CB_FIELD (x)->parent; p; p = p->parent)
 		  {
-		    strcat (buff, "in `");
+		    strcat (buff, "in '");
 		    strcat (buff, p->name);
 		    strcat (buff, "' ");
 		  }
@@ -208,7 +208,7 @@ ambiguous_error (cb_tree x)
 		struct cb_label *l = CB_LABEL (x);
 		if (l->section)
 		  {
-		    strcat (buff, "in `");
+		    strcat (buff, "in '");
 		    strcat (buff, l->section->name);
 		    strcat (buff, "' ");
 		  }
@@ -226,27 +226,27 @@ ambiguous_error (cb_tree x)
 void
 group_error (cb_tree x, const char *clause)
 {
-  cb_error_x (x, _("group item `%s' cannot have %s clause"),
+  cb_error_x (x, _("group item '%s' cannot have %s clause"),
 	      cb_name (x), clause);
 }
 
 void
 level_redundant_error (cb_tree x, const char *clause)
 {
-  cb_error_x (x, _("level %02d item `%s' cannot have %s clause"),
+  cb_error_x (x, _("level %02d item '%s' cannot have %s clause"),
 	      cb_field (x)->level, cb_name (x), clause);
 }
 
 void
 level_require_error (cb_tree x, const char *clause)
 {
-  cb_error_x (x, _("level %02d item `%s' requires %s clause"),
+  cb_error_x (x, _("level %02d item '%s' requires %s clause"),
 	      cb_field (x)->level, cb_name (x), clause);
 }
 
 void
 level_except_error (cb_tree x, const char *clause)
 {
-  cb_error_x (x, _("level %02d item `%s' cannot have other than %s clause"),
+  cb_error_x (x, _("level %02d item '%s' cannot have other than %s clause"),
 	      cb_field (x)->level, cb_name (x), clause);
 }

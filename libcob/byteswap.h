@@ -55,7 +55,7 @@
 
 /* Arch specific stuff for speed
  */
-#if defined (__GNUC__) && (__GNUC__ >= 2) && defined (__OPTIMIZE__)
+#if defined (__GNUC__) && (__GNUC__ >= 2)
 #  if defined (__i386__)
 #    define COB_BSWAP_16_IA32(val)					\
        (__extension__							\

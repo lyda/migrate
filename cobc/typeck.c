@@ -57,7 +57,7 @@ cb_check_group_name (cb_tree x)
       && CB_REFERENCE (x)->offset == NULL)
     return x;
 
-  cb_error_x (x, _("`%s' is not group name"), cb_name (x));
+  cb_error_x (x, _("'%s' is not group name"), cb_name (x));
   return cb_error_node;
 }
 
@@ -72,7 +72,7 @@ cb_check_numeric_name (cb_tree x)
       && CB_TREE_CATEGORY (x) == CB_CATEGORY_NUMERIC)
     return x;
 
-  cb_error_x (x, _("`%s' is not numeric name"), cb_name (x));
+  cb_error_x (x, _("'%s' is not numeric name"), cb_name (x));
   return cb_error_node;
 }
 
@@ -88,7 +88,7 @@ cb_check_numeric_edited_name (cb_tree x)
 	  || CB_TREE_CATEGORY (x) == CB_CATEGORY_NUMERIC_EDITED))
     return x;
 
-  cb_error_x (x, _("`%s' is not numeric or numeric-edited name"), cb_name (x));
+  cb_error_x (x, _("'%s' is not numeric or numeric-edited name"), cb_name (x));
   return cb_error_node;
 }
 
@@ -101,7 +101,7 @@ cb_check_numeric_value (cb_tree x)
   if (CB_TREE_CATEGORY (x) == CB_CATEGORY_NUMERIC)
     return x;
 
-  cb_error_x (x, _("`%s' is not numeric value"), cb_name (x));
+  cb_error_x (x, _("'%s' is not numeric value"), cb_name (x));
   return cb_error_node;
 }
 
@@ -143,7 +143,7 @@ cb_check_integer_value (cb_tree x)
       }
     default:
     invalid:
-      cb_error_x (x, _("`%s' is not integer value"), cb_name (x));
+      cb_error_x (x, _("'%s' is not integer value"), cb_name (x));
       return cb_error_node;
     }
 }
@@ -216,7 +216,7 @@ cb_define_switch_name (cb_tree name, cb_tree sname, cb_tree flag, cb_tree ref)
 
   if (CB_SYSTEM_NAME (sname)->category != CB_SWITCH_NAME)
     {
-      cb_error_x (ref, _("switch-name is expected `%s'"), CB_NAME (ref));
+      cb_error_x (ref, _("switch-name is expected '%s'"), CB_NAME (ref));
     }
   else
     {
@@ -350,12 +350,12 @@ cb_build_identifier (cb_tree x)
     {
       if (r->subs)
 	{
-	  cb_error_x (x, _("`%s' cannot be subscripted"), name);
+	  cb_error_x (x, _("'%s' cannot be subscripted"), name);
 	  return cb_error_node;
 	}
       if (r->offset)
 	{
-	  cb_error_x (x, _("`%s' cannot be reference modified"), name);
+	  cb_error_x (x, _("'%s' cannot be reference modified"), name);
 	  return cb_error_node;
 	}
       return x;
@@ -367,13 +367,13 @@ cb_build_identifier (cb_tree x)
     switch (f->indexes)
       {
       case 0:
-	cb_error_x (x, _("`%s' cannot be subscripted"), name);
+	cb_error_x (x, _("'%s' cannot be subscripted"), name);
 	return cb_error_node;
       case 1:
-	cb_error_x (x, _("`%s' requires 1 subscript"), name);
+	cb_error_x (x, _("'%s' requires 1 subscript"), name);
 	return cb_error_node;
       default:
-	cb_error_x (x, _("`%s' requires %d subscripts"), name, f->indexes);
+	cb_error_x (x, _("'%s' requires %d subscripts"), name, f->indexes);
 	return cb_error_node;
       }
 
@@ -396,7 +396,7 @@ cb_build_identifier (cb_tree x)
 	      {
 		int n = cb_get_int (sub);
 		if (n < p->occurs_min || n > p->occurs_max)
-		  cb_error_x (x, _("subscript of `%s' out of bounds: %d"),
+		  cb_error_x (x, _("subscript of '%s' out of bounds: %d"),
 			     name, n);
 	      }
 
@@ -450,13 +450,13 @@ cb_build_identifier (cb_tree x)
 	{
 	  int offset = cb_get_int (r->offset);
 	  if (offset < 1 || offset > f->size)
-	    cb_error_x (x, _("offset of `%s' out of bounds: %d"),
+	    cb_error_x (x, _("offset of '%s' out of bounds: %d"),
 			name, offset);
 	  else if (r->length && CB_LITERAL_P (r->length))
 	    {
 	      int length = cb_get_int (r->length);
 	      if (length < 1 || length > f->size - offset + 1)
-		cb_error_x (x, _("length of `%s' out of bounds: %d"),
+		cb_error_x (x, _("length of '%s' out of bounds: %d"),
 			    name, length);
 	    }
 	}
@@ -552,7 +552,7 @@ cb_validate_program_environment (struct cb_program *prog)
 
       if (!CB_ALPHABET_NAME_P (x))
 	{
-	  cb_error_x (prog->collating_sequence, _("`%s' not alphabet name"),
+	  cb_error_x (prog->collating_sequence, _("'%s' not alphabet name"),
 		      cb_name (prog->collating_sequence));
 	  prog->collating_sequence = NULL;
 	  return;
@@ -617,7 +617,7 @@ cb_validate_program_body (struct cb_program *prog)
 	    CB_LABEL (v)->need_return = 1;
 	}
       else if (v != cb_error_node)
-	cb_error_x (x, _("`%s' not procedure name"), cb_name (x));
+	cb_error_x (x, _("'%s' not procedure name"), cb_name (x));
     }
 
   prog->file_list = cb_list_reverse (prog->file_list);
@@ -1405,7 +1405,7 @@ cb_emit_accept (cb_tree var, cb_tree pos)
 	  cb_emit (cb_build_funcall_3 ("cob_screen_accept", var, line, column));
 	}
       else
-	cb_error_x (var, "`%s' not defined in SCREEN SECTION", cb_name (var));
+	cb_error_x (var, "'%s' not defined in SCREEN SECTION", cb_name (var));
     }
   else
     {
@@ -1471,7 +1471,7 @@ cb_emit_accept_mnemonic (cb_tree var, cb_tree mnemonic)
       cb_emit (cb_build_funcall_1 ("cob_accept", var));
       break;
     default:
-      cb_error_x (mnemonic, _("invalid input stream `%s'"),
+      cb_error_x (mnemonic, _("invalid input stream '%s'"),
 		  cb_name (mnemonic));
       break;
     }
@@ -1489,7 +1489,7 @@ cb_emit_accept_name (cb_tree var, cb_tree name)
 	    {
 	    case CB_DEVICE_CONSOLE:
 	    case CB_DEVICE_SYSIN:
-	      cb_warning_x (name, _("`%s' undefined in SPECIAL-NAMES"),
+	      cb_warning_x (name, _("'%s' undefined in SPECIAL-NAMES"),
 			    CB_NAME (name));
 	      cb_emit (cb_build_funcall_1 ("cob_accept", var));
 	      return;
@@ -1499,7 +1499,7 @@ cb_emit_accept_name (cb_tree var, cb_tree name)
 	}
     }
 
-  cb_error_x (name, _("`%s' undefined in SPECIAL-NAMES"), CB_NAME (name));
+  cb_error_x (name, _("'%s' undefined in SPECIAL-NAMES"), CB_NAME (name));
 }
 
 
@@ -1578,7 +1578,7 @@ cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
 	    }
 	  else
 	    {
-	      cb_error_x (x, "`%s' not defined in SCREEN SECTION",
+	      cb_error_x (x, "'%s' not defined in SCREEN SECTION",
 			  cb_name (x));
 	    }
 	}
@@ -1639,10 +1639,10 @@ cb_build_display_upon_direct (cb_tree x)
 	    {
 	    case CB_DEVICE_CONSOLE:
 	    case CB_DEVICE_SYSOUT:
-	      cb_warning_x (x, _("`%s' undefined in SPECIAL-NAMES"), name);
+	      cb_warning_x (x, _("'%s' undefined in SPECIAL-NAMES"), name);
 	      return cb_int1;
 	    case CB_DEVICE_SYSERR:
-	      cb_warning_x (x, _("`%s' undefined in SPECIAL-NAMES"), name);
+	      cb_warning_x (x, _("'%s' undefined in SPECIAL-NAMES"), name);
 	      return cb_int2;
 	    default:
 	      break;
@@ -1650,7 +1650,7 @@ cb_build_display_upon_direct (cb_tree x)
 	}
     }
 
-  cb_error_x (x, _("`%s' undefined in SPECIAL-NAMES"), name);
+  cb_error_x (x, _("'%s' undefined in SPECIAL-NAMES"), name);
   return cb_error_node;
 }
 
@@ -1897,7 +1897,7 @@ cb_tree
 cb_build_tarrying_value (cb_tree x, cb_tree l)
 {
   if (inspect_func == NULL)
-    cb_error_x (x, _("ALL or LEADING expected before `%s'"), cb_name (x));
+    cb_error_x (x, _("ALL or LEADING expected before '%s'"), cb_name (x));
   return cb_list_add (l, cb_build_funcall_2 (inspect_func, inspect_data, x));
 }
 
@@ -1962,9 +1962,9 @@ warning_destination (cb_tree x)
     return;
 
   if (f->pic)
-    cb_warning_x (loc, _("`%s' defined here as PIC %s"), f->name, f->pic->orig);
+    cb_warning_x (loc, _("'%s' defined here as PIC %s"), f->name, f->pic->orig);
   else
-    cb_warning_x (loc, _("`%s' defined here as a group of length %d"),
+    cb_warning_x (loc, _("'%s' defined here as a group of length %d"),
 	      f->name, f->size);
 }
 
@@ -2719,7 +2719,7 @@ search_set_keys (struct cb_field *f, cb_tree x)
 	      break;
 	    }
 	if (i == f->nkeys)
-	  cb_error_x (x, _("undeclared key `%s'"), cb_field (p->x)->name);
+	  cb_error_x (x, _("undeclared key '%s'"), cb_field (p->x)->name);
 	break;
       }
     default:
@@ -2816,7 +2816,7 @@ cb_emit_set_to (cb_tree vars, cb_tree x)
 	  if (p->type == CB_CAST_ADDRESS
 	      && CB_FIELD (cb_ref (p->val))->storage != CB_STORAGE_LINKAGE)
 	    {
-	      cb_error_x (p->val, _("the address of `%s' cannot be changed"),
+	      cb_error_x (p->val, _("the address of '%s' cannot be changed"),
 			  cb_name (p->val));
 	      CB_VALUE (l) = cb_error_node;
 	    }

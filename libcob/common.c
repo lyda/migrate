@@ -710,7 +710,7 @@ cob_check_numeric (cob_field *f, const char *name)
 	else
 	  p += sprintf (p, "\\%03o", data[i]);
       *p = '\0';
-      cob_runtime_error (_("`%s' not numeric: `%s'"), name, buff);
+      cob_runtime_error (_("'%s' not numeric: '%s'"), name, buff);
       exit (1);
     }
 }
@@ -722,7 +722,7 @@ cob_check_odo (int i, int min, int max, const char *name)
   if (i < min || max < i)
     {
       COB_SET_EXCEPTION (COB_EC_BOUND_ODO);
-      cob_runtime_error (_("OCCURS DEPENDING ON `%s' out of bounds: %d"),
+      cob_runtime_error (_("OCCURS DEPENDING ON '%s' out of bounds: %d"),
 			 name, i);
       exit (1);
     }
@@ -735,7 +735,7 @@ cob_check_subscript (int i, int min, int max, const char *name)
   if (i < min || max < i)
     {
       COB_SET_EXCEPTION (COB_EC_BOUND_SUBSCRIPT);
-      cob_runtime_error (_("subscript of `%s' out of bounds: %d"), name, i);
+      cob_runtime_error (_("subscript of '%s' out of bounds: %d"), name, i);
       exit (1);
     }
 }
@@ -747,7 +747,7 @@ cob_check_ref_mod (int offset, int length, int size, const char *name)
   if (offset < 1 || offset > size)
     {
       COB_SET_EXCEPTION (COB_EC_BOUND_REF_MOD);
-      cob_runtime_error (_("offset of `%s' out of bounds: %d"),
+      cob_runtime_error (_("offset of '%s' out of bounds: %d"),
 			 name, offset);
       exit (1);
     }
@@ -756,7 +756,7 @@ cob_check_ref_mod (int offset, int length, int size, const char *name)
   if (length < 1 || offset + length - 1 > size)
     {
       COB_SET_EXCEPTION (COB_EC_BOUND_REF_MOD);
-      cob_runtime_error (_("length of `%s' out of bounds: %d"),
+      cob_runtime_error (_("length of '%s' out of bounds: %d"),
 			 name, length);
       exit (1);
     }

@@ -194,7 +194,7 @@ typedef struct cb_tree_common *cb_tree;
     if (!_x || CB_TREE_TAG (_x) != tg)					\
       {									\
 	fprintf (stderr,						\
-		 "%s:%d: invalid type cast from `%s' at %s:%d\n",	\
+		 "%s:%d: invalid type cast from '%s' at %s:%d\n",	\
 		 __FILE__, __LINE__, _x ? cb_name (_x) : "null",	\
 		 cb_source_file, cb_source_line);			\
 	abort ();							\
@@ -379,7 +379,7 @@ struct cb_picture {
   enum cb_category category;	/* field category */
   char digits;			/* the number of digit places */
   char scale;			/* 1/10^scale */
-  char have_sign;		/* have `S' */
+  char have_sign;		/* have 'S' */
 };
 
 #define CB_PICTURE(x)	(CB_TREE_CAST (CB_TAG_PICTURE, struct cb_picture, x))

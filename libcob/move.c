@@ -373,7 +373,7 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 	    {
 	    case '0':
 	    case '/': *dst = c; break;
-	    case 'B': *dst = suppress_zero ? pad : 'B'; break;
+	    case 'B': *dst = 'B'; break;
 	    case 'P': break;
 
 	    case '9':
@@ -483,10 +483,22 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 	  *dst = sign_symbol;
 	}
 
-      /* replace all `B's by pad */
+      /* replace all 'B's by pad */
+      count = 0;
       for (dst = f2->data; dst < end; dst++)
-	if (*dst == 'B')
-	  *dst = pad;
+      {
+	if ( *dst != pad ) {
+		if ( *dst == 'B' ) {
+			if ( count == 0 ) {
+				*dst = pad;
+			} else {
+				*dst = ' ';
+			}
+		} else {
+			count++;
+		}
+	}
+      }
     }
 
   cob_put_sign (f1, sign);

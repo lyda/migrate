@@ -1001,7 +1001,7 @@ build_file (cb_tree name)
 static void
 file_error (cb_tree name, const char *clause)
 {
-  cb_error_x (name, _("%s clause is required for file `%s'"),
+  cb_error_x (name, _("%s clause is required for file '%s'"),
 	      clause, CB_NAME (name));
 }
 
@@ -1033,10 +1033,10 @@ finalize_file (struct cb_file *f, struct cb_field *records)
     {
       if (f->record_min > 0)
 	if (p->size < f->record_min)
-	  cb_error (_("record size too small `%s'"), p->name);
+	  cb_error (_("record size too small '%s'"), p->name);
       if (f->record_max > 0)
 	if (p->size > f->record_max)
-	  cb_error (_("record size too large `%s'"), p->name);
+	  cb_error (_("record size too large '%s'"), p->name);
     }
 
   /* compute the record size */

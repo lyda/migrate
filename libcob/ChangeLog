@@ -1,3 +1,14 @@
+2004-10-30  Roger While <simrw@sim-basis.de>
+
+	* call.c, common.c, move.c : Replace back-tick "`" with 
+	  quote "'"
+	* move.c : Fix to handle PIC ***B***B**9.
+	* byteswap.h : Always generate optimum code, not just with -O
+	* fileio.c : Tidy up file error messages.
+	  In the ENOENT return for OPEN OUTPUT/EXTEND, return status 30.
+	  Note this will not have any effect until we activate error
+	  handling for the OPEN. (Coming up soon)
+
 2004-09-17  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* numeric.h (COB_STORE_TRUNC_ON_OVERFLOW): Define as 0x04, not 0x02.

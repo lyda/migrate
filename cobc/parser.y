@@ -35,7 +35,7 @@
 #define YYDEBUG			COB_DEBUG
 #define YYERROR_VERBOSE		1
 
-#define PENDING(x)		cb_warning (_("`%s' not implemented"), x)
+#define PENDING(x)		cb_warning (_("'%s' not implemented"), x)
 
 #define emit_statement(x) \
   current_program->exec_list = cb_cons (x, current_program->exec_list)
@@ -281,7 +281,7 @@ mnemonic_name_clause:
   {
     $$ = lookup_system_name (CB_NAME ($1));
     if ($$ == cb_error_node)
-      cb_error_x ($1, _("unknown system-name `%s'"), CB_NAME ($1));
+      cb_error_x ($1, _("unknown system-name '%s'"), CB_NAME ($1));
   }
   special_name_mnemonic_define
   special_name_mnemonic_on_off
@@ -404,7 +404,7 @@ currency_sign_clause:
   {
     unsigned char *s = CB_LITERAL ($4)->data;
     if (CB_LITERAL ($4)->size != 1)
-      cb_error_x ($4, _("invalid currency sign `%s'"), s);
+      cb_error_x ($4, _("invalid currency sign '%s'"), s);
     current_program->currency_symbol = s[0];
   }
 ;
@@ -899,7 +899,7 @@ code_set_clause:
       {
 	cb_tree x = cb_ref ($3);
 	if (!CB_ALPHABET_NAME_P (x))
-	  cb_error_x ($3, _("alphabet-name is expected `%s'"), cb_name ($3));
+	  cb_error_x ($3, _("alphabet-name is expected '%s'"), cb_name ($3));
 	else if (CB_ALPHABET_NAME (x)->custom_list)
 	  PENDING ("CODE-SET");
       }
@@ -1328,7 +1328,7 @@ screen_option:
       case 6: current_field->screen_flag |= COB_SCREEN_FG_YELLOW; break;
       case 7: current_field->screen_flag |= COB_SCREEN_FG_WHITE; break;
       default:
-	cb_error (_("invalid color `%d'"), cb_get_int ($3));
+	cb_error (_("invalid color '%d'"), cb_get_int ($3));
       }
   }
 | BACKGROUND_COLOR _is integer
@@ -1345,7 +1345,7 @@ screen_option:
       case 6: current_field->screen_flag |= COB_SCREEN_BG_YELLOW; break;
       case 7: current_field->screen_flag |= COB_SCREEN_BG_WHITE; break;
       default:
-	cb_error (_("invalid color `%d'"), cb_get_int ($3));
+	cb_error (_("invalid color '%d'"), cb_get_int ($3));
       }
   }
 | usage_clause
@@ -1502,7 +1502,7 @@ invalid_statement:
   section_name
   {
     if ($1 != cb_error_node)
-      cb_error_x ($1, _("unknown statement `%s'"), CB_NAME ($1));
+      cb_error_x ($1, _("unknown statement '%s'"), CB_NAME ($1));
     YYERROR;
   }
 ;
@@ -3043,7 +3043,7 @@ expr_token:
 | ALPHABETIC_LOWER		{ cb_expr_shift_class ("cob_is_lower"); }
 | ALPHABETIC_UPPER		{ cb_expr_shift_class ("cob_is_upper"); }
 /* sign condition */
-  /* ZERO is defined in `x' */
+  /* ZERO is defined in 'x' */
 | POSITIVE			{ cb_expr_shift_sign ('>'); }
 | NEGATIVE			{ cb_expr_shift_sign ('<'); }
 ;
@@ -3104,8 +3104,8 @@ table_name:
       $$ = cb_error_node;
     else if (!CB_FIELD (x)->index_list)
       {
-	cb_error_x ($1, _("`%s' not indexed"), cb_name ($1));
-	cb_error_x (x, _("`%s' defined here"), cb_name (x));
+	cb_error_x ($1, _("'%s' not indexed"), cb_name ($1));
+	cb_error_x (x, _("'%s' defined here"), cb_name (x));
 	$$ = cb_error_node;
       }
     else
@@ -3126,7 +3126,7 @@ file_name:
       $$ = $1;
     else
       {
-	cb_error_x ($1, _("`%s' not file name"), CB_NAME ($1));
+	cb_error_x ($1, _("'%s' not file name"), CB_NAME ($1));
 	$$ = cb_error_node;
       }
   }
@@ -3434,7 +3434,7 @@ emit_entry (const char *name, cb_tree using_list)
 	{
 	  struct cb_field *f = CB_FIELD (cb_ref (x));
 	  if (f->level != 01 && f->level != 77)
-	    cb_error_x (x, _("`%s' not level 01 or 77"), cb_name (x));
+	    cb_error_x (x, _("'%s' not level 01 or 77"), cb_name (x));
 	}
       }
 

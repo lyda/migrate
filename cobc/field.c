@@ -48,7 +48,7 @@ get_level (cb_tree x)
 	|| (level == 66 || level == 77 || level == 88)))
     {
     level_error:
-      cb_error_x (x, _("invalid level number `%s'"), name);
+      cb_error_x (x, _("invalid level number '%s'"), name);
       return -1;
     }
 
@@ -185,14 +185,14 @@ cb_resolve_redefines (struct cb_field *field, cb_tree redefines)
   /* check qualification */
   if (r->chain)
     {
-      cb_error_x (x, _("`%s' cannot be qualified here"), name);
+      cb_error_x (x, _("'%s' cannot be qualified here"), name);
       return NULL;
     }
 
   /* check subscripts */
   if (r->subs)
     {
-      cb_error_x (x, _("`%s' cannot be subscripted here"), name);
+      cb_error_x (x, _("'%s' cannot be subscripted here"), name);
       return NULL;
     }
 
@@ -204,7 +204,7 @@ cb_resolve_redefines (struct cb_field *field, cb_tree redefines)
 	  break;
       if (f == NULL)
 	{
-	  cb_error_x (x, _("`%s' undefined in `%s'"),
+	  cb_error_x (x, _("'%s' undefined in '%s'"),
 		      name, field->parent->name);
 	  return NULL;
 	}
@@ -230,7 +230,7 @@ cb_resolve_redefines (struct cb_field *field, cb_tree redefines)
 
   if (!cb_indirect_redefines && f->redefines)
     {
-      cb_error_x (x, _("`%s' not the original definition"), f->name);
+      cb_error_x (x, _("'%s' not the original definition"), f->name);
       return NULL;
     }
 
@@ -276,7 +276,7 @@ validate_field_1 (struct cb_field *f)
 	if (p->flag_occurs)
 	  {
 	    cb_error_x (CB_TREE (p),
-			_("`%s' cannot have the OCCURS clause due to `%s'"),
+			_("'%s' cannot have the OCCURS clause due to '%s'"),
 			p->name, name);
 	    break;
 	  }
@@ -289,7 +289,7 @@ validate_field_1 (struct cb_field *f)
 	    for (; p->sister; p = p->sister)
 	      if (!p->sister->redefines)
 		{
-		  cb_error_x (x, _("`%s' cannot have OCCURS DEPENDING"), name);
+		  cb_error_x (x, _("'%s' cannot have OCCURS DEPENDING"), name);
 		  break;
 		}
 	}
@@ -300,7 +300,7 @@ validate_field_1 (struct cb_field *f)
     {
       /* check OCCURS */
       if (f->redefines->flag_occurs)
-	cb_warning_x (x, _("the original definition `%s' should not have OCCURS"),
+	cb_warning_x (x, _("the original definition '%s' should not have OCCURS"),
 		      f->redefines->name);
 
       /* check definition */
@@ -313,9 +313,9 @@ validate_field_1 (struct cb_field *f)
 
       /* check variable occurrence */
       if (f->occurs_depending || cb_field_variable_size (f))
-	cb_error_x (x, _("`%s' cannot be variable length"), f->name);
+	cb_error_x (x, _("'%s' cannot be variable length"), f->name);
       if (cb_field_variable_size (f->redefines))
-	cb_error_x (x, _("the original definition `%s' cannot be variable length"),
+	cb_error_x (x, _("the original definition '%s' cannot be variable length"),
 		    f->redefines->name);
     }
 
@@ -348,12 +348,12 @@ validate_field_1 (struct cb_field *f)
 	  need_picture = 0;
 	if (f->pic == NULL && need_picture != 0)
 	  {
-	    cb_error_x (x, _("PICTURE clause required for `%s'"), name);
+	    cb_error_x (x, _("PICTURE clause required for '%s'"), name);
 	    return -1; /* cannot continue */
 	  }
 	if (f->pic != NULL && need_picture == 0)
 	  {
-	    cb_error_x (x, _("`%s' cannot have PICTURE clause"), name);
+	    cb_error_x (x, _("'%s' cannot have PICTURE clause"), name);
 	  }
       }
 
@@ -363,7 +363,7 @@ validate_field_1 (struct cb_field *f)
 	case CB_USAGE_BINARY:
 	case CB_USAGE_PACKED:
 	  if (f->pic->category != CB_CATEGORY_NUMERIC)
-	    cb_warning_x (x, _("`%s' not numeric item"), name);
+	    cb_warning_x (x, _("'%s' not numeric item"), name);
 	  break;
 	case CB_USAGE_COMP_5:
 	case CB_USAGE_COMP_X:
@@ -382,7 +382,7 @@ validate_field_1 (struct cb_field *f)
 	  case CB_CATEGORY_ALPHANUMERIC:
 	    break;
 	  default:
-	    cb_error_x (x, _("`%s' cannot have JUSTIFIED RIGHT"), name);
+	    cb_error_x (x, _("'%s' cannot have JUSTIFIED RIGHT"), name);
 	    break;
 	  }
 
@@ -412,7 +412,7 @@ validate_field_1 (struct cb_field *f)
 	  case CB_CATEGORY_NUMERIC_EDITED:
 	    break;
 	  default:
-	    cb_error_x (x, _("`%s' cannot have BLANK WHEN ZERO"), name);
+	    cb_error_x (x, _("'%s' cannot have BLANK WHEN ZERO"), name);
 	    break;
 	  }
 
@@ -628,7 +628,7 @@ compute_size (struct cb_field *f)
       && (f->redefines->level != 01 || f->redefines->flag_external)
       && (f->size * f->occurs_max
 	  > f->redefines->size * f->redefines->occurs_max))
-    cb_error_x (CB_TREE (f), _("size of `%s' larger than size of `%s'"),
+    cb_error_x (CB_TREE (f), _("size of '%s' larger than size of '%s'"),
 		f->name, f->redefines->name);
 
   return f->size;

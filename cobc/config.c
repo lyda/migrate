@@ -44,9 +44,9 @@ enum cb_config_type {
   ANY,
   INT,		/* integer */
   STRING,	/* "..." */
-  BOOLEAN,	/* `yes', `no' */
-  SUPPORT,	/* `ok', `archaic', `obsolete',
-		   `skip', `ignore', `unconformable' */
+  BOOLEAN,	/* 'yes', 'no' */
+  SUPPORT,	/* 'ok', 'archaic', 'obsolete',
+		   'skip', 'ignore', 'unconformable' */
 };
 
 struct {
@@ -148,7 +148,7 @@ cb_load_conf (const char *fname, int check_nodef)
 	  break;
       if (!config_table[i].name)
 	{
-	  fprintf (stderr, "%s:%d: unknown tag `%s'\n", fname, line, buff);
+	  fprintf (stderr, "%s:%d: unknown tag '%s'\n", fname, line, buff);
 	  ret = -1;
 	  continue;
 	}
@@ -284,12 +284,12 @@ cb_load_conf (const char *fname, int check_nodef)
 	    break;
 	  }
 	invalid_value:
-	  fprintf (stderr, _("%s:%d: invalid value for `%s'\n"),
+	  fprintf (stderr, _("%s:%d: invalid value for '%s'\n"),
 		   fname, line, name);
 	  ret = -1;
 	  break;
 	unsupported_value:
-	  fprintf (stderr, _("%s:%d: `%s' not supported yet\n"),
+	  fprintf (stderr, _("%s:%d: '%s' not supported yet\n"),
 		   fname, line, val);
 	  ret = -1;
 	  break;
@@ -302,7 +302,7 @@ cb_load_conf (const char *fname, int check_nodef)
     for (i = 1; config_table[i].name; i++)
       if (config_table[i].val == NULL)
 	{
-	  fprintf (stderr, "%s: no definition of `%s'\n",
+	  fprintf (stderr, "%s: no definition of '%s'\n",
 		   fname, config_table[i].name);
 	  ret = -1;
 	}
