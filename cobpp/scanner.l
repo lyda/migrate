@@ -67,6 +67,8 @@ static void process_eol (void);
 
 <*>^[*/].*		{ /* comment */ }
 
+<*>"*>".*		{ /* comment */ }
+
 <*>^"D ".*		{ if (cob_debug_flag) yyless(2); }
 
 <*>\n			{ process_eol (); }
