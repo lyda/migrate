@@ -223,7 +223,7 @@ open_buffer (const char *name, struct replacement *replacing)
 	}
 
       /* Open the copy file */
-      fp = fopen (name, "r");
+      fp = fopen (name, "rb");
       if (!fp)
 	{
 	  yyerror ("%s: %s", name, strerror (errno));

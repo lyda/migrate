@@ -27,7 +27,7 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:8: level number of REDEFINES entries must be identical
+[prog.cob:8: error: level number of REDEFINES entries must be identical
 ])
 
 AT_CLEANUP
@@ -48,7 +48,7 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:9: level number of REDEFINES entries must be identical
+[prog.cob:9: error: level number of REDEFINES entries must be identical
 ])
 
 AT_CLEANUP
@@ -69,7 +69,7 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:9: level number of REDEFINES entry cannot be 66 or 88
+[prog.cob:9: error: level number of REDEFINES entry cannot be 66 or 88
 ])
 
 AT_CLEANUP
@@ -89,7 +89,7 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:8: level number of REDEFINES entry cannot be 66 or 88
+[prog.cob:8: error: level number of REDEFINES entry cannot be 66 or 88
 ])
 
 AT_CLEANUP
@@ -124,7 +124,7 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:10: `X' undefined in `G3'
+[prog.cob:10: error: `X' undefined in `G3'
 ])
 
 AT_CLEANUP
@@ -154,7 +154,7 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:10: `X' cannot be qualified
+[prog.cob:10: error: `X' cannot be qualified
 ])
 
 AT_CLEANUP
@@ -199,7 +199,7 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:8: size of `A' larger than size of `X'
+[prog.cob:8: error: size of `A' larger than size of `X'
 ])
 
 AT_CLEANUP
@@ -219,7 +219,7 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:8: size of `A' larger than size of `X'
+[prog.cob:8: error: size of `A' larger than size of `X'
 ])
 
 AT_CLEANUP
@@ -238,7 +238,7 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:7: size of `A' larger than size of `X'
+[prog.cob:7: error: size of `A' larger than size of `X'
 ])
 
 AT_CLEANUP
@@ -277,7 +277,7 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:7: entries under REDEFINES cannot have VALUE clause
+[prog.cob:7: error: entries under REDEFINES cannot have VALUE clause
 ])
 
 AT_CLEANUP
@@ -297,7 +297,7 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:8: entries under REDEFINES cannot have VALUE clause
+[prog.cob:8: error: entries under REDEFINES cannot have VALUE clause
 ])
 
 AT_CLEANUP
@@ -338,7 +338,7 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:8: REDEFINES must follow the original definition
+[prog.cob:8: error: REDEFINES must follow the original definition
 ])
 
 AT_CLEANUP
@@ -360,7 +360,7 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:10: REDEFINES must follow the original definition
+[prog.cob:10: error: REDEFINES must follow the original definition
 ])
 
 AT_CLEANUP

@@ -1,3 +1,8 @@
+2003-01-24  Keisuke Nishida  <knishida@netlab.jp>
+
+	* scanner.l (open_buffer): Open copy file in "rb" mode to avoid
+	seek error on MinGW.  (Thanks to peg@coboler.com)
+
 2002-11-01  Keisuke Nishida  <knishida@netlab.jp>
 
 	* scanner.l (read_line): Check newline at the end of file.

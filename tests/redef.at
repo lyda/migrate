@@ -17,8 +17,8 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:7: redefinition of `X'
-prog.cob:6: `X' previously defined here
+[prog.cob:7: error: redefinition of `X'
+prog.cob:6: error: `X' previously defined here
 ])
 
 AT_CLEANUP
@@ -39,8 +39,8 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:8: redefinition of `X'
-prog.cob:6: `X' previously defined here
+[prog.cob:8: error: redefinition of `X'
+prog.cob:6: error: `X' previously defined here
 ])
 
 AT_CLEANUP
@@ -60,8 +60,8 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:7: redefinition of `X'
-prog.cob:6: `X' previously defined here
+[prog.cob:7: error: redefinition of `X'
+prog.cob:6: error: `X' previously defined here
 ])
 
 AT_CLEANUP
@@ -82,8 +82,8 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:8: redefinition of `X'
-prog.cob:7: `X' previously defined here
+[prog.cob:8: error: redefinition of `X'
+prog.cob:7: error: `X' previously defined here
 ])
 
 AT_CLEANUP
@@ -106,9 +106,9 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:11: `X' ambiguous; need qualification
-prog.cob:7: `X' in `G1' defined here
-prog.cob:9: `X' in `G2' defined here
+[prog.cob:11: error: `X' ambiguous; need qualification
+prog.cob:7: error: `X' in `G1' defined here
+prog.cob:9: error: `X' in `G2' defined here
 ])
 
 AT_CLEANUP
@@ -128,8 +128,8 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:7: redefinition of `X'
-prog.cob:6: `X' previously defined here
+[prog.cob:7: error: redefinition of `X'
+prog.cob:6: error: `X' previously defined here
 ])
 
 AT_CLEANUP
@@ -149,8 +149,8 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:7: redefinition of `X'
-prog.cob:6: `X' previously defined here
+[prog.cob:7: error: redefinition of `X'
+prog.cob:6: error: `X' previously defined here
 ])
 
 AT_CLEANUP
