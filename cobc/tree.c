@@ -866,48 +866,20 @@ make_pair (void *x, void *y)
  * Call
  */
 
-static cobc_tree
-make_call (int tag, int argc, void *a1, void *a2, void *a3, void *a4)
+cobc_tree
+make_call (const char *name, void (*func)(),
+	   int argc, void *a1, void *a2, void *a3, void *a4)
 {
   struct cobc_call *p =
     make_tree (cobc_tag_call, COB_VOID, sizeof (struct cobc_call));
-  p->tag = tag;
+  p->name = name;
+  p->func = func;
   p->argc = argc;
   p->argv[0] = a1;
   p->argv[1] = a2;
   p->argv[2] = a3;
   p->argv[3] = a4;
   return COBC_TREE (p);
-}
-
-cobc_tree
-make_call_0 (int tag)
-{
-  return make_call (tag, 0, 0, 0, 0, 0);
-}
-
-cobc_tree
-make_call_1 (int tag, void *a1)
-{
-  return make_call (tag, 1, a1, 0, 0, 0);
-}
-
-cobc_tree
-make_call_2 (int tag, void *a1, void *a2)
-{
-  return make_call (tag, 2, a1, a2, 0, 0);
-}
-
-cobc_tree
-make_call_3 (int tag, void *a1, void *a2, void *a3)
-{
-  return make_call (tag, 3, a1, a2, a3, 0);
-}
-
-cobc_tree
-make_call_4 (int tag, void *a1, void *a2, void *a3, void *a4)
-{
-  return make_call (tag, 4, a1, a2, a3, a4);
 }
 
 

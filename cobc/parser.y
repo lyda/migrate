@@ -49,13 +49,21 @@
 #define push_tree(x) \
   program_spec.exec_list = cons (x, program_spec.exec_list)
 
-#define push_call_0(t)		 push_tree (make_call_0 (t))
-#define push_call_1(t,a)	 push_tree (make_call_1 (t, a))
-#define push_call_2(t,a,b)	 push_tree (make_call_2 (t, a, b))
-#define push_call_3(t,a,b,c)	 push_tree (make_call_3 (t, a, b, c))
-#define push_call_4(t,a,b,c,d)	 push_tree (make_call_4 (t, a, b, c, d))
+#define push_call_0(f)		 push_tree (make_call_0 (f))
+#define push_call_1(f,a)	 push_tree (make_call_1 (f, a))
+#define push_call_1_list(f,a,l)	 push_tree (make_call_1_list (f, a, l))
+#define push_call_2(f,a,b)	 push_tree (make_call_2 (f, a, b))
+#define push_call_3(f,a,b,c)	 push_tree (make_call_3 (f, a, b, c))
+#define push_call_4(f,a,b,c,d)	 push_tree (make_call_4 (f, a, b, c, d))
 
-#define push_move(x,y)		 push_call_2 (COBC_MOVE, x, y)
+#define push_inline_0(f)	 push_tree (make_inline_0 (f))
+#define push_inline_1(f,a)	 push_tree (make_inline_1 (f, a))
+#define push_inline_2(f,a,b)	 push_tree (make_inline_2 (f, a, b))
+#define push_inline_3(f,a,b,c)	 push_tree (make_inline_3 (f, a, b, c))
+#define push_inline_4(f,a,b,c,d) push_tree (make_inline_4 (f, a, b, c, d))
+
+#define push_move(x,y)		 push_inline_2 (output_move, x, y)
+#define push_handler(f,v,a,b)	 push_inline_4 (output_file_handler, f, (void *) v, a, b)
 
 #define push_label(x)				\
   do {						\
@@ -1403,44 +1411,44 @@ accept_statement:
   ACCEPT data_name
   {
     cobc_location = @1;
-    push_call_2 (COBC_ACCEPT, $2, make_integer (COB_SYSIN));
+    push_call_2 ("cob_accept", $2, make_integer (COB_SYSIN));
   }
 | ACCEPT data_name FROM DATE
   {
     cobc_location = @1;
-    push_call_1 (COBC_ACCEPT_DATE, $2);
+    push_call_1 ("cob_accept_date", $2);
   }
 | ACCEPT data_name FROM DAY
   {
     cobc_location = @1;
-    push_call_1 (COBC_ACCEPT_DAY, $2);
+    push_call_1 ("cob_accept_day", $2);
   }
 | ACCEPT data_name FROM DAY_OF_WEEK
   {
     cobc_location = @1;
-    push_call_1 (COBC_ACCEPT_DAY_OF_WEEK, $2);
+    push_call_1 ("cob_accept_day_of_week", $2);
   }
 | ACCEPT data_name FROM TIME
   {
     cobc_location = @1;
-    push_call_1 (COBC_ACCEPT_TIME, $2);
+    push_call_1 ("cob_accept_time", $2);
   }
 | ACCEPT data_name FROM COMMAND_LINE
   {
     cobc_location = @1;
-    push_call_1 (COBC_ACCEPT_COMMAND_LINE, $2);
+    push_call_1 ("cob_accept_command_line", $2);
   }
 | ACCEPT data_name FROM ENVIRONMENT_VARIABLE value
   {
     cobc_location = @1;
-    push_call_2 (COBC_ACCEPT_ENVIRONMENT, $2, $5);
+    push_call_2 ("cob_accept_environment", $2, $5);
   }
 | ACCEPT data_name FROM mnemonic_name
   {
     cobc_location = @1;
     if (COBC_BUILTIN ($4)->id == BUILTIN_CONSOLE
 	|| COBC_BUILTIN ($4)->id == BUILTIN_SYSIN)
-      push_call_2 (COBC_ACCEPT, $2, make_integer (COB_SYSIN));
+      push_call_2 ("cob_accept", $2, make_integer (COB_SYSIN));
     else
       yyerror_tree ($4, _("invalid input stream"));
   }
@@ -1513,7 +1521,7 @@ call_statement:
   call_using
   {
     cobc_location = @1;
-    push_call_2 (COBC_CALL, $2, $4);
+    push_inline_2 (output_call_statement, $2, $4);
   }
   call_returning
   opt_on_exception
@@ -1558,7 +1566,7 @@ cancel_list:
 | cancel_list program_name
   {
     cobc_location = @2;
-    push_call_1 (COBC_CANCEL, $2);
+    push_call_1 ("cob_cancel", $2);
   }
 ;
 program_name:
@@ -1578,8 +1586,8 @@ close_list:
 | close_list file_name close_option
   {
     cobc_location = @2;
-    push_call_2 (COBC_CLOSE, $2, make_integer ($3));
-    push_call_4 (COBC_FILE_HANDLER, $2, 0, 0, 0);
+    push_call_2 ("cob_close", $2, make_integer ($3));
+    push_handler ($2, 0, 0, 0);
   }
 ;
 close_option:
@@ -1629,7 +1637,7 @@ delete_statement:
   {
     cobc_location = @1;
     current_file_name = COBC_FILE_NAME ($2);
-    push_call_1 (COBC_DELETE, $2);
+    push_call_1 ("cob_delete", $2);
   }
   opt_invalid_key
   _end_delete
@@ -1647,7 +1655,7 @@ display_statement:
     struct cobc_list *l;
     cobc_location = @1;
     for (l = $2; l; l = l->next)
-      push_call_2 (COBC_DISPLAY, l->item, make_integer ($3));
+      push_inline_2 (output_display, l->item, make_integer ($3));
   }
   display_with_no_advancing
   ;
@@ -1673,7 +1681,7 @@ display_upon:
   }
 ;
 display_with_no_advancing:
-  /* nothing */ { push_call_1 (COBC_NEWLINE, make_integer ($<inum>-1)); }
+  /* nothing */ { push_call_1 ("cob_newline", make_integer ($<inum>-1)); }
 | _with NO ADVANCING { /* nothing */ }
 ;
 
@@ -1704,14 +1712,14 @@ divide_body:
 | number INTO number GIVING numeric_edited_name flag_rounded REMAINDER numeric_edited_name
   {
     cobc_location = @1;
-    push_call_4 (COBC_DIVIDE_QUOTIENT, $3, $1, $5, make_integer ($6));
-    push_call_1 (COBC_DIVIDE_REMAINDER, $8);
+    push_call_4 ("cob_div_quotient", $3, $1, $5, make_integer ($6));
+    push_call_1 ("cob_div_remainder", $8);
   }
 | number BY number GIVING numeric_edited_name flag_rounded REMAINDER numeric_edited_name
   {
     cobc_location = @1;
-    push_call_4 (COBC_DIVIDE_QUOTIENT, $1, $3, $5, make_integer ($6));
-    push_call_1 (COBC_DIVIDE_REMAINDER, $8);
+    push_call_4 ("cob_div_quotient", $1, $3, $5, make_integer ($6));
+    push_call_1 ("cob_div_remainder", $8);
   }
 ;
 _end_divide: | END_DIVIDE ;
@@ -1805,7 +1813,7 @@ exit_statement:
 | EXIT PROGRAM
   {
     cobc_location = @1;
-    push_call_0 (COBC_EXIT_PROGRAM);
+    push_call_0 ("cob_exit_program");
   }
 ;
 
@@ -1825,7 +1833,7 @@ goto_statement:
       {
 	cobc_location = @1;
 	COBC_LABEL_NAME ($3->item)->need_begin = 1;
-	push_call_1 (COBC_GOTO, $3->item);
+	push_inline_1 (output_goto, $3->item);
       }
   }
 | GO _to label_name_list DEPENDING _on numeric_name
@@ -1834,7 +1842,7 @@ goto_statement:
     cobc_location = @1;
     for (l = $3; l; l = l->next)
       COBC_LABEL_NAME (l->item)->need_begin = 1;
-    push_call_2 (COBC_GOTO_DEPENDING, $3, $6);
+    push_inline_2 (output_goto_depending, $3, $6);
   }
 ;
 
@@ -1870,9 +1878,9 @@ initialize_statement:
     cobc_location = @1;
     for (l = $2; l; l = l->next)
       if (!$3)
-	push_call_1 (COBC_INITIALIZE, l->item);
+	push_inline_1 (output_initialize, l->item);
       else
-	push_call_2 (COBC_INITIALIZE_REPLACING, l->item, $3);
+	push_inline_2 (output_initialize_replacing, l->item, $3);
   }
 ;
 initialize_replacing:
@@ -1923,7 +1931,7 @@ inspect_tallying:
   tallying_list
   {
     cobc_location = @1;
-    push_call_2 (COBC_INSPECT, $<tree>0, inspect_list);
+    push_call_1_list ("cob_inspect", $<tree>0, inspect_list);
   }
 ;
 tallying_list:
@@ -1976,7 +1984,7 @@ inspect_replacing:
   replacing_list
   {
     cobc_location = @1;
-    push_call_2 (COBC_INSPECT, $<tree>0, inspect_list);
+    push_call_1_list ("cob_inspect", $<tree>0, inspect_list);
   }
 ;
 replacing_list:
@@ -2013,7 +2021,7 @@ inspect_converting:
   {
     cobc_location = @1;
     inspect_push (COB_INSPECT_CONVERTING, $3, $5);
-    push_call_2 (COBC_INSPECT, $<tree>0, inspect_list);
+    push_call_1_list ("cob_inspect", $<tree>0, inspect_list);
   }
 ;
 
@@ -2095,8 +2103,8 @@ open_list:
     for (l = $3; l; l = l->next)
       {
 	struct cobc_file_name *p = COBC_FILE_NAME (l->item);
-	push_call_3 (COBC_OPEN, p, p->assign, make_integer ($2));
-	push_call_4 (COBC_FILE_HANDLER, p, 0, 0, 0);
+	push_call_3 ("cob_open", p, p->assign, make_integer ($2));
+	push_handler (p, 0, 0, 0);
       }
   }
 ;
@@ -2194,12 +2202,12 @@ read_statement:
 	/* READ NEXT */
 	if ($6)
 	  yywarn (_("KEY ignored with sequential READ"));
-	push_call_1 (COBC_READ_NEXT, $2);
+	push_call_1 ("cob_read_next", $2);
       }
     else
       {
 	/* READ */
-	push_call_2 (COBC_READ, $2, $6 ? $6 : current_file_name->key);
+	push_call_2 ("cob_read", $2, $6 ? $6 : current_file_name->key);
       }
     if ($5)
       push_move (COBC_TREE (current_file_name->record), $5);
@@ -2218,7 +2226,7 @@ read_key:
 read_handler:
   /* nothing */
   {
-    push_call_4 (COBC_FILE_HANDLER, current_file_name, 0, 0, 0);
+    push_handler (current_file_name, 0, 0, 0);
   }
 | at_end
 | invalid_key
@@ -2237,7 +2245,7 @@ rewrite_statement:
     current_file_name = COBC_FIELD ($2)->file;
     if ($3)
       push_move ($3, $2);
-    push_call_2 (COBC_REWRITE, current_file_name, $2);
+    push_call_2 ("cob_rewrite", current_file_name, $2);
   }
   opt_invalid_key
   _end_rewrite
@@ -2253,12 +2261,12 @@ search_statement:
   SEARCH table_name search_varying search_at_end search_whens _end_search
   {
     cobc_location = @1;
-    push_call_4 (COBC_SEARCH, $2, $3, $4, $5);
+    push_inline_4 (output_search, $2, $3, $4, $5);
   }
 | SEARCH ALL table_name search_at_end search_when _end_search
   {
     cobc_location = @1;
-    push_call_3 (COBC_SEARCH_ALL, $3, $4, $5);
+    push_inline_3 (output_search_all, $3, $4, $5);
   }
 ;
 search_varying:
@@ -2351,7 +2359,7 @@ start_body:
   {
     cobc_location = @1;
     current_file_name = COBC_FILE_NAME ($1);
-    push_call_3 (COBC_START, $1, make_integer (COB_EQ), current_file_name->key);
+    push_call_3 ("cob_start", $1, make_integer (COB_EQ), current_file_name->key);
   }
 | file_name KEY _is start_operator data_name
   {
@@ -2367,7 +2375,7 @@ start_body:
       case COBC_COND_GE: cond = COB_GE; break;
       case COBC_COND_NE: cond = COB_NE; break;
       }
-    push_call_3 (COBC_START, $1, make_integer (cond), $5);
+    push_call_3 ("cob_start", $1, make_integer (cond), $5);
   }
 ;
 start_operator:
@@ -2388,7 +2396,7 @@ stop_statement:
   STOP RUN
   {
     cobc_location = @1;
-    push_call_0 (COBC_STOP_RUN);
+    push_call_0 ("cob_stop_run");
   }
 | STOP program_name
   {
@@ -2407,7 +2415,7 @@ string_statement:
     cobc_location = @1;
     if ($5)
       $2 = cons (make_generic_1 (COB_STRING_WITH_POINTER, $5), $2);
-    push_call_2 (COBC_STRING, $4, $2);
+    push_call_1_list ("cob_string", $4, $2);
   }
   opt_on_overflow
   _end_string
@@ -2497,7 +2505,7 @@ unstring_statement:
       $3 = cons (make_generic_1 (COB_UNSTRING_WITH_POINTER, $6), $3);
     if ($7)
       $5 = list_add ($5, make_generic_1 (COB_UNSTRING_TALLYING, $7));
-    push_call_2 (COBC_UNSTRING, $2, list_append ($3, $5));
+    push_call_1_list ("cob_unstring", $2, list_append ($3, $5));
   }
   opt_on_overflow
   _end_unstring
@@ -2565,23 +2573,23 @@ write_statement:
     if ($4 && $4->type == COBC_AFTER)
       {
 	if ($4->x)
-	  push_call_2 (COBC_WRITE_LINES, current_file_name,
+	  push_call_2 ("cob_write_lines", current_file_name,
 		       make_index ($4->x));
 	else
-	  push_call_1 (COBC_WRITE_PAGE, current_file_name);
+	  push_call_1 ("cob_write_page", current_file_name);
       }
     /* WRITE */
     if ($3)
       push_move ($3, $2);
-    push_call_2 (COBC_WRITE, current_file_name, $2);
+    push_call_2 ("cob_write", current_file_name, $2);
     /* BEFORE ADVANCING */
     if ($4 && $4->type == COBC_BEFORE)
       {
 	if ($4->x)
-	  push_call_2 (COBC_WRITE_LINES, current_file_name,
+	  push_call_2 ("cob_write_lines", current_file_name,
 		       make_index ($4->x));
 	else
-	  push_call_1 (COBC_WRITE_PAGE, current_file_name);
+	  push_call_1 ("cob_write_page", current_file_name);
       }
   }
   opt_invalid_key
@@ -2668,7 +2676,7 @@ opt_on_exception:
   opt_not_on_exception_sentence
   {
     if ($1 == NULL)
-      $1 = make_call_0 (COBC_CALL_ERROR);
+      $1 = make_call_0 ("cob_call_error");
     push_status_handler (cobc_int0, $2, $1);
   }
 ;
@@ -2690,15 +2698,15 @@ opt_not_on_exception_sentence:
 at_end:
   at_end_sentence
   {
-    push_call_4 (COBC_FILE_HANDLER, current_file_name, (void *) 1, $1, 0);
+    push_handler (current_file_name, 1, $1, 0);
   }
 | not_at_end_sentence
   {
-    push_call_4 (COBC_FILE_HANDLER, current_file_name, (void *) 1, 0, $1);
+    push_handler (current_file_name, 1, 0, $1);
   }
 | at_end_sentence not_at_end_sentence
   {
-    push_call_4 (COBC_FILE_HANDLER, current_file_name, (void *) 1, $1, $2);
+    push_handler (current_file_name, 1, $1, $2);
   }
 ;
 at_end_sentence:
@@ -2717,23 +2725,23 @@ not_at_end_sentence:
 opt_invalid_key:
   /* nothing */
   {
-    push_call_4 (COBC_FILE_HANDLER, current_file_name, (void *) 2, 0, 0);
+    push_handler (current_file_name, 2, 0, 0);
   }
 | invalid_key
 ;
 invalid_key:
   invalid_key_sentence
   {
-    push_call_4 (COBC_FILE_HANDLER, current_file_name, (void *) 2, $1, 0);
+    push_handler (current_file_name, 2, $1, 0);
   }
 | not_invalid_key_sentence
   {
-    push_call_4 (COBC_FILE_HANDLER, current_file_name, (void *) 2, 0, $1);
+    push_handler (current_file_name, 2, 0, $1);
   }
 | invalid_key_sentence
   not_invalid_key_sentence
   {
-    push_call_4 (COBC_FILE_HANDLER, current_file_name, (void *) 2, $1, $2);
+    push_handler (current_file_name, 2, $1, $2);
   }
 ;
 invalid_key_sentence:
@@ -4048,19 +4056,19 @@ builtin_switch_id (cobc_tree x)
 static cobc_tree
 make_add (cobc_tree f1, cobc_tree f2, int round)
 {
-  return make_call_3 (COBC_ADD, f2, f1, round ? cobc_int1 : cobc_int0);
+  return make_call_3 ("cob_add", f2, f1, round ? cobc_int1 : cobc_int0);
 }
 
 static cobc_tree
 make_sub (cobc_tree f1, cobc_tree f2, int round)
 {
-  return make_call_3 (COBC_SUB, f2, f1, round ? cobc_int1 : cobc_int0);
+  return make_call_3 ("cob_sub", f2, f1, round ? cobc_int1 : cobc_int0);
 }
 
 static cobc_tree
 make_move (cobc_tree f1, cobc_tree f2, int round)
 {
-  return make_call_2 (COBC_MOVE, f1, f2);
+  return make_inline_2 (output_move, f1, f2);
 }
 
 static struct cobc_list *

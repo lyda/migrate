@@ -22,9 +22,9 @@
  * File error handler
  */
 
-static void
+void
 output_file_handler (struct cobc_file_name *f, int type,
-		     cobc_tree st1, cobc_tree st2)
+		   cobc_tree st1, cobc_tree st2)
 {
   if (st1)
     {
@@ -53,13 +53,13 @@ output_file_handler (struct cobc_file_name *f, int type,
  * GO TO
  */
 
-static void
+void
 output_goto (struct cobc_label_name *p)
 {
   output_line ("goto lb_%s;", p->cname);
 }
 
-static void
+void
 output_goto_depending (struct cobc_list *labels, cobc_tree index)
 {
   int i = 1;
@@ -296,7 +296,7 @@ output_move_index (cobc_tree src, cobc_tree dst)
   output (";\n");
 }
 
-static void
+void
 output_move (cobc_tree src, cobc_tree dst)
 {
   if (src == cobc_zero)
@@ -453,7 +453,7 @@ output_initialize_internal (struct cobc_field *p)
 			       p->offset + p->size - first_field->offset);
 }
 
-static void
+void
 output_initialize (cobc_tree x)
 {
   int class = field_uniform_class (COBC_FIELD (x));
@@ -499,7 +499,7 @@ output_initialize_replacing_internal (struct cobc_field *p)
     }
 }
 
-static void
+void
 output_initialize_replacing (cobc_tree x, struct cobc_list *l)
 {
   initialize_replacing_list = l;
@@ -511,7 +511,7 @@ output_initialize_replacing (cobc_tree x, struct cobc_list *l)
  * DISPLAY
  */
 
-static void
+void
 output_display (cobc_tree x, cobc_tree fd)
 {
   if (COBC_LITERAL_P (x))
@@ -567,9 +567,9 @@ output_occurs (struct cobc_field *p)
     output_index (make_integer (p->occurs));
 }
 
-static void
+void
 output_search (cobc_tree table, cobc_tree var,
-	       cobc_tree sentence, cobc_tree whens)
+	     cobc_tree sentence, cobc_tree whens)
 {
   struct cobc_list *l;
   struct cobc_field *p = COBC_FIELD (table);
@@ -644,7 +644,7 @@ search_set_keys (struct cobc_field *p, cobc_tree x)
     }
 }
 
-static void
+void
 output_search_all (cobc_tree table, cobc_tree sentence, cobc_tree when)
 {
   int i;
@@ -726,7 +726,7 @@ output_search_all (cobc_tree table, cobc_tree sentence, cobc_tree when)
  * CALL
  */
 
-static void
+void
 output_call_statement (cobc_tree name, struct cobc_list *args)
 {
   int static_link = 0;

@@ -20,15 +20,6 @@
 #ifndef _CODEGEN_H_
 #define _CODEGEN_H_
 
-#undef COBC_DEFINE_FUNCTION
-#undef COBC_DEFINE_INLINE
-#define COBC_DEFINE_FUNCTION(tag,func,argc) tag,
-#define COBC_DEFINE_INLINE(tag,func,argc) tag,
-enum {
-#include "functions.h"
-  COBC_FUNCTION_END
-};
-
 struct program_spec {
   char *program_id;
   int initial_program;
@@ -48,5 +39,16 @@ struct program_spec {
 extern struct program_spec program_spec;
 
 extern void codegen (struct program_spec *spec);
+
+extern void output_file_handler (struct cobc_file_name *f, int type, cobc_tree st1, cobc_tree st2);
+extern void output_goto (struct cobc_label_name *p);
+extern void output_goto_depending (struct cobc_list *labels, cobc_tree index);
+extern void output_move (cobc_tree src, cobc_tree dst);
+extern void output_initialize (cobc_tree x);
+extern void output_initialize_replacing (cobc_tree x, struct cobc_list *l);
+extern void output_display (cobc_tree x, cobc_tree fd);
+extern void output_search (cobc_tree table, cobc_tree var, cobc_tree sentence, cobc_tree whens);
+extern void output_search_all (cobc_tree table, cobc_tree sentence, cobc_tree when);
+extern void output_call_statement (cobc_tree name, struct cobc_list *args);
 
 #endif /* _CODEGEN_H_ */

@@ -1,5 +1,5 @@
 bin_PROGRAMS = cobc
-cobc_SOURCES = cobc.c cobc.h tree.c tree.h codegen.c codegen.h functions.h \
+cobc_SOURCES = cobc.c cobc.h tree.c tree.h codegen.c codegen.h \
 	reserved.c reserved.h parser.y scanner.l scanner.h
 cobc_CFLAGS = -I$(top_srcdir)/lib
 cobc_LDADD = -L$(top_srcdir)/libcob -lcob

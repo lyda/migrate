@@ -582,7 +582,8 @@ extern void add_perform_varying (struct cobc_perform *perf, cobc_tree name, cobc
 
 struct cobc_call {
   struct cobc_tree_common common;
-  int tag;
+  const char *name;
+  void (*func) ();
   int argc;
   void *argv[4];
 };
@@ -590,11 +591,20 @@ struct cobc_call {
 #define COBC_CALL(x)		(COBC_TREE_CAST (cobc_tag_call, struct cobc_call, x))
 #define COBC_CALL_P(x)		(COBC_TREE_TAG (x) == cobc_tag_call)
 
-extern cobc_tree make_call_0 (int tag);
-extern cobc_tree make_call_1 (int tag, void *a1);
-extern cobc_tree make_call_2 (int tag, void *a1, void *a2);
-extern cobc_tree make_call_3 (int tag, void *a1, void *a2, void *a3);
-extern cobc_tree make_call_4 (int tag, void *a1, void *a2, void *a3, void *a4);
+extern cobc_tree make_call (const char *name, void (*func)(), int argc, void *a1, void *a2, void *a3, void *a4);
+
+#define make_call_0(f)			make_call (f, 0, 0, 0, 0, 0, 0)
+#define make_call_1(f,a1)		make_call (f, 0, 1, a1, 0, 0, 0)
+#define make_call_1_list(f,a1,ls)	make_call (f, 0, -1, a1, ls, 0, 0)
+#define make_call_2(f,a1,a2)		make_call (f, 0, 2, a1, a2, 0, 0)
+#define make_call_3(f,a1,a2,a3)		make_call (f, 0, 3, a1, a2, a3, 0)
+#define make_call_4(f,a1,a2,a3,a4)	make_call (f, 0, 4, a1, a2, a3, a4)
+
+#define make_inline_0(f)		make_call (0, f, 0, 0, 0, 0, 0)
+#define make_inline_1(f,a1)		make_call (0, f, 1, a1, 0, 0, 0)
+#define make_inline_2(f,a1,a2)		make_call (0, f, 2, a1, a2, 0, 0)
+#define make_inline_3(f,a1,a2,a3)	make_call (0, f, 3, a1, a2, a3, 0)
+#define make_inline_4(f,a1,a2,a3,a4)	make_call (0, f, 4, a1, a2, a3, a4)
 
 
 /*

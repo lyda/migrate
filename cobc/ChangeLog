@@ -1,5 +1,27 @@
 2002-05-31  Keisuke Nishida  <knishida@netlab.jp>
 
+	* functions.h: Removed.
+	* tree.h (cobc_call): New field `name' and `func'.  Remove `tag'.
+	(make_call): Exported
+	(make_call_0, make_call_1, make_call_2, make_call_3, make_call_4):
+	Defined as macros.
+	(make_inline_0, make_inline_1, make_inline_2, make_inline_3,
+	make_inline_4, make_call_1_list): New macros.
+	* tree.c (make_call): Updated and Exported.
+	(make_call_0,make_call_1,make_call_2,make_call_3,make_call_4): Removed.
+	* inline.c, codegen.h: (output_goto, output_goto_depending,
+	output_move, output_initialize, output_initialize_replacing,
+	output_display, output_search, output_search_all,
+	output_call_statement): Exported.
+	* codegen.c, codegen.h: Don't include functions.h.
+	* codegen.c (output_call): Updated.
+	* parser.y: Updated.
+	(push_call_1_list, push_inline_0, push_inline_1, push_inline_2,
+	push_inline_3, push_inline_4): New macros.
+	* Makefile.am (cobc_SOURCES): Updated.
+
+2002-05-31  Keisuke Nishida  <knishida@netlab.jp>
+
 	* Display index name with the error message.
 	* codegen.c (output_refmod_offset, output_length)
 	(output_field_definition): Updated.

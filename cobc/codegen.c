@@ -1090,60 +1090,29 @@ output_class (struct cobc_class *p)
 
 #include "inline.c"
 
-#undef COBC_DEFINE_FUNCTION
-#undef COBC_DEFINE_INLINE
-#define COBC_DEFINE_FUNCTION(tag,name,argc) {argc, name, 0},
-#define COBC_DEFINE_INLINE(tag,func,argc) {argc, 0, func},
-struct {
-  int argc;
-  const char *name;
-  void (*func) ();
-} function_table[] = {
-#include "functions.h"
-  {0, 0, 0}
-};
-
 static void
 output_call (struct cobc_call *p)
 {
-  int argc;
-  const char *name;
-  void (*func)();
-
-  argc = function_table[p->tag].argc;
-  name = function_table[p->tag].name;
-  func = function_table[p->tag].func;
-
-#ifdef COB_DEBUG
-  /* check the number of arguments */
-  if ((argc >= 0 && argc != p->argc)
-      || (argc < 0 && (1 - argc) != p->argc))
-    {
-      puts ("output_call: argc does not match");
-      abort ();
-    }
-#endif
-
-  if (func)
+  if (p->func)
     /* call inline function if exists */
-    switch (argc)
+    switch (p->argc)
       {
-      case 0: func (); break;
-      case 1: func (p->argv[0]); break;
-      case 2: func (p->argv[0], p->argv[1]); break;
-      case 3: func (p->argv[0], p->argv[1], p->argv[2]); break;
-      case 4: func (p->argv[0], p->argv[1], p->argv[2], p->argv[3]); break;
+      case 0: p->func (); break;
+      case 1: p->func (p->argv[0]); break;
+      case 2: p->func (p->argv[0], p->argv[1]); break;
+      case 3: p->func (p->argv[0], p->argv[1], p->argv[2]); break;
+      case 4: p->func (p->argv[0], p->argv[1], p->argv[2], p->argv[3]); break;
       }
   else
     /* regular function call */
-    switch (argc)
+    switch (p->argc)
       {
-      case 0: output_call_0 (name); break;
-      case 1: output_call_1 (name, p->argv[0]); break;
-      case 2: output_call_2 (name, p->argv[0], p->argv[1]); break;
-      case 3: output_call_3 (name, p->argv[0], p->argv[1], p->argv[2]); break;
-      case 4: output_call_4 (name, p->argv[0], p->argv[1], p->argv[2], p->argv[3]); break;
-      case -1: output_call_1_list (name, p->argv[0], p->argv[1]); break;
+      case 0: output_call_0 (p->name); break;
+      case 1: output_call_1 (p->name, p->argv[0]); break;
+      case 2: output_call_2 (p->name, p->argv[0], p->argv[1]); break;
+      case 3: output_call_3 (p->name, p->argv[0], p->argv[1], p->argv[2]); break;
+      case 4: output_call_4 (p->name, p->argv[0], p->argv[1], p->argv[2], p->argv[3]); break;
+      case -1: output_call_1_list (p->name, p->argv[0], p->argv[1]); break;
       }
 }
 
