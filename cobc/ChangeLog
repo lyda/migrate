@@ -1,3 +1,12 @@
+2002-06-26  Keisuke Nishida  <knishida@netlab.jp>
+
+	* cobc.c, cobc.h (cobc_flags): New variable.
+	(LINK_STATIC, LINK_DYNAMIC): Removed.
+	(cobc_main_flag, cobc_debug_flag, cobc_verbose_flag)
+	(cobc_optimize_flag, cobc_failsafe_flag, cobc_link_style): Removed.
+	* codegen.c (codegen, output_expr, output_line_directive): Updated.
+	* inline.c (output_call_statement): Updated.
+
 2002-06-24  Keisuke Nishida  <knishida@netlab.jp>
 
 	* parser.y (delete_statement, read_statement, start_statement)

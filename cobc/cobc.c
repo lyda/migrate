@@ -46,12 +46,7 @@ extern int yy_bison_debug;
  * Global variables
  */
 
-int cobc_main_flag = 0;
-int cobc_debug_flag = 0;
-int cobc_verbose_flag = 0;
-int cobc_optimize_flag = 0;
-int cobc_failsafe_flag = 1;
-int cobc_link_style = LINK_DYNAMIC;
+struct cobc_flags cobc_flags;
 
 char *cobc_index_func;
 char *cobc_index_depending_func;
@@ -63,7 +58,8 @@ FILE *cobc_out;
  * Local variables
  */
 
-static int save_temps_flag = 0;
+static int save_temps = 0;
+static int verbose_output = 0;
 
 static char *program_name;
 static char *output_name;
@@ -74,7 +70,7 @@ static char cob_cflags[FILENAME_MAX];		/* -I... */
 static char cob_libs[FILENAME_MAX];		/* -L... -lcob */
 static char cobpp_flags[FILENAME_MAX];
 
-static enum level {
+static enum {
   stage_preprocess,
   stage_translate,
   stage_compile,
@@ -163,13 +159,13 @@ static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'V'},
   {"verbose", no_argument, 0, 'v'},
-  {"main", no_argument, &cobc_main_flag, 1},
+  {"main", no_argument, &cobc_flags.main, 1},
   {"debug", no_argument, 0, 'D'},
   {"free", no_argument, &source_format, format_free},
   {"fixed", no_argument, &source_format, format_fixed},
-  {"static", no_argument, &cobc_link_style, LINK_STATIC},
-  {"dynamic", no_argument, &cobc_link_style, LINK_DYNAMIC},
-  {"save-temps", no_argument, &save_temps_flag, 1},
+  {"static", no_argument, &cobc_flags.static_call, 1},
+  {"dynamic", no_argument, &cobc_flags.static_call, 0},
+  {"save-temps", no_argument, &save_temps, 1},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
 #ifdef COB_DEBUG
@@ -233,6 +229,9 @@ process_command_line (int argc, char *argv[])
   yy_flex_debug = 0;
   yy_bison_debug = 0;
 #endif
+  memset (&cobc_flags, 0, sizeof (struct cobc_flags));
+  cobc_flags.failsafe = 1;
+  cobc_flags.source_location = 1;
 
   /* Parse the options */
   while ((c = getopt_long_only (argc, argv, short_options,
@@ -250,25 +249,25 @@ process_command_line (int argc, char *argv[])
 	case 'S': compile_level = stage_compile; break;
 	case 'c': compile_level = stage_assemble; break;
 	case 'm': compile_level = stage_module; break;
-	case 'v': cobc_verbose_flag = 1; break;
+	case 'v': verbose_output = 1; break;
 	case 'o': output_name = strdup (optarg); break;
 
 	case 'g':
-	  cobc_debug_flag = 1;
+	  cobc_flags.line_directive = 1;
 	  strcat (cob_cflags, " -g");
 	  break;
 
 	case 'O':
-	  cobc_optimize_flag = 1;
-	  cobc_failsafe_flag = 0;
+	  cobc_flags.failsafe = 0;
+	  cobc_flags.source_location = 0;
 	  break;
 
-	case '%':
+	case '%': /* -MT */
 	  strcat (cobpp_flags, " -MT ");
 	  strcat (cobpp_flags, optarg);
 	  break;
 
-	case '@':
+	case '@': /* -MF */
 	  strcat (cobpp_flags, " -MF ");
 	  strcat (cobpp_flags, optarg);
 	  break;
@@ -288,7 +287,7 @@ process_command_line (int argc, char *argv[])
 	}
     }
 
-  if (cobc_failsafe_flag)
+  if (cobc_flags.failsafe)
     {
       cobc_index_func = "cob_index";
       cobc_index_depending_func = "cob_index_depending";
@@ -388,7 +387,7 @@ process_filename (const char *filename)
     strcpy (fn->preprocess, fn->source);
   else if (output_name && compile_level == stage_preprocess)
     strcpy (fn->preprocess, output_name);
-  else if (save_temps_flag)
+  else if (save_temps)
     sprintf (fn->preprocess, "%s.i", basename);
   else
     temp_name (fn->preprocess, ".cob");
@@ -398,7 +397,7 @@ process_filename (const char *filename)
     strcpy (fn->translate, fn->source);
   else if (output_name && compile_level == stage_translate)
     strcpy (fn->translate, output_name);
-  else if (save_temps_flag || compile_level == stage_translate)
+  else if (save_temps || compile_level == stage_translate)
     sprintf (fn->translate, "%s.c", basename);
   else
     temp_name (fn->translate, ".c");
@@ -408,7 +407,7 @@ process_filename (const char *filename)
     strcpy (fn->object, fn->source);
   else if (output_name && compile_level == stage_assemble)
     strcpy (fn->object, output_name);
-  else if (save_temps_flag || compile_level == stage_assemble)
+  else if (save_temps || compile_level == stage_assemble)
     sprintf (fn->object, "%s.o", basename);
   else
     temp_name (fn->object, ".o");
@@ -437,7 +436,7 @@ probe_source_format (const char *filename)
 static int
 process (const char *cmd)
 {
-  if (cobc_verbose_flag)
+  if (verbose_output)
     fprintf (stderr, "%s\n", cmd);
   return system (cmd);
 }
@@ -615,7 +614,7 @@ main (int argc, char *argv[])
 
   /* Remove unnecessary files */
  cleanup:
-  if (!save_temps_flag)
+  if (!save_temps)
     {
       struct filename *fn;
       for (fn = file_list; fn; fn = fn->next)

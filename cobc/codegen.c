@@ -111,9 +111,9 @@ output_line_directive (cobc_tree x)
   static int last_line = 0;
   if (x->loc.text && last_line != x->loc.first_line)
     {
-      if (cobc_debug_flag)
+      if (cobc_flags.line_directive)
 	output ("#line %d \"%s\"\n", x->loc.first_line, x->loc.text);
-      if (!cobc_optimize_flag)
+      if (cobc_flags.source_location)
 	output_line ("cob_source_line = %d;", x->loc.first_line);
       last_line = x->loc.first_line;
     }
@@ -508,7 +508,7 @@ output_expr (cobc_tree x, int id)
 	  }
 	else
 	  {
-	    if (cobc_failsafe_flag && !COBC_CONST_P (x))
+	    if (cobc_flags.failsafe && !COBC_CONST_P (x))
 	      {
 		struct cobc_field *p = COBC_FIELD (x);
 		output_prefix ();
@@ -1632,7 +1632,7 @@ codegen (struct program_spec *spec)
   output ("#include <string.h>\n");
   output ("#include <libcob.h>\n\n");
 
-  if (cobc_main_flag)
+  if (cobc_flags.main)
     spec->initial_program = 1;
 
   /* fields */
@@ -1781,7 +1781,7 @@ codegen (struct program_spec *spec)
   output_indent ("}", -2);
   output_newline ();
 
-  if (cobc_main_flag)
+  if (cobc_flags.main)
     {
       output_line ("int");
       output_line ("main (int argc, char **argv)");

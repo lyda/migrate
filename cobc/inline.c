@@ -726,7 +726,7 @@ output_call_statement (cobc_tree name, struct cobc_list *args,
   int dynamic_link = 1;
   struct cobc_list *l;
 
-  if (cobc_link_style == LINK_STATIC && COBC_LITERAL_P (name))
+  if (cobc_flags.static_call && COBC_LITERAL_P (name))
     dynamic_link = 0;
 
   /* local variables */
