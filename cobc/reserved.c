@@ -228,6 +228,7 @@ static struct reserved reserved_words[] = {
   {"OUTPUT",		OUTPUT},
   {"OVERFLOW",		OVERFLOW},
   {"PACKED-DECIMAL",	PACKED_DECIMAL},
+  {"PADDING",		PADDING},
   {"PAGE",		PAGE},
   {"PERFORM",		PERFORM},
   {"POINTER",		POINTER},

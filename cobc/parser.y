@@ -162,7 +162,7 @@ static void ambiguous_error (struct cobc_word *p);
 %token GIVING,INSPECT,TALLYING,REPLACING,ON,OFF,POINTER,OVERFLOW,NATIVE
 %token DELIMITER,COUNT,LEFT,TRAILING,CHARACTER,FILLER,OCCURS,TIMES,CLASS
 %token ADD,SUBTRACT,MULTIPLY,DIVIDE,ROUNDED,REMAINDER,ERROR,SIZE,INDEX
-%token REEL,UNIT,REMOVAL,REWIND,LOCK
+%token REEL,UNIT,REMOVAL,REWIND,LOCK,PADDING
 %token FD,REDEFINES,TOK_FILE,USAGE,BLANK,SIGN,VALUE,MOVE
 %token PROGRAM_ID,DIVISION,CONFIGURATION,SPECIAL_NAMES,MEMORY,ALTER
 %token FILE_CONTROL,I_O_CONTROL,FROM,SAME,AREA,EXCEPTION,UNTIL
@@ -617,7 +617,7 @@ select_options:
 | select_options select_option
 ;
 select_option:
-  ASSIGN _to select_file_name
+  ASSIGN _to select_file_name select_assign_reserve
   {
     current_file_name->assign = $3;
   }
@@ -632,6 +632,14 @@ select_option:
 | ACCESS _mode _is select_access_mode
   {
     current_file_name->access_mode = $4;
+  }
+| _file STATUS _is predefined_name
+  {
+    current_file_name->file_status = $4;
+  }
+| PADDING _character _is literal
+  {
+    yywarn ("PADDING not implemented");
   }
 | RELATIVE _key _is predefined_name
   {
@@ -658,11 +666,9 @@ select_option:
 	l->next = p;
       }
   }
-| _file STATUS _is predefined_name
-  {
-    current_file_name->file_status = $4;
-  }
-| RESERVE integer _area		{ /* ignored */ }
+;
+select_assign_reserve:
+| RESERVE integer _area		{ yywarn ("RESERVE not implemented"); }
 ;
 select_organization:
   INDEXED			{ $$ = COB_ORG_INDEXED; }
@@ -802,7 +808,6 @@ opt_to_integer:
   /* nothing */			{ $$ = NULL; }
 | TO INTEGER_LITERAL		{ $$ = $2; }
 ;
-_characters: | CHARACTERS ;
 
 
 /*
@@ -1002,7 +1007,6 @@ flag_separate:
   /* nothing */			{ $$ = 0; }
 | SEPARATE _character		{ $$ = 1; }
 ;
-_character: | CHARACTER ;
 
 
 /* OCCURS */
@@ -3195,6 +3199,8 @@ _are: | ARE ;
 _area: | AREA ;
 _at: | AT ;
 _by: | BY ;
+_character: | CHARACTER ;
+_characters: | CHARACTERS ;
 _file: | TOK_FILE ;
 _for: | FOR ;
 _from: | FROM ;
