@@ -277,9 +277,8 @@ cb_tree_type (cb_tree x)
 	case CB_USAGE_DISPLAY:
 	  return COB_TYPE_NUMERIC_DISPLAY;
 	case CB_USAGE_BINARY:
-	  return COB_TYPE_NUMERIC_BINARY;
 	case CB_USAGE_NATIVE:
-	  return COB_TYPE_NUMERIC_NATIVE;
+	  return COB_TYPE_NUMERIC_BINARY;
 	case CB_USAGE_PACKED:
 	  return COB_TYPE_NUMERIC_PACKED;
 	default:
@@ -1073,7 +1072,7 @@ validate_field_1 (struct cb_field *f)
   if (f->redefines)
     {
       /* check OCCURS */
-      if (!cb_redefines_occurs_item)
+      if (cb_redefines_occurs_item)
 	if (f->redefines->flag_occurs)
 	  cb_error_x (x, _("the original definition `%s' cannot have OCCURS"),
 		      f->redefines->name);
@@ -1273,14 +1272,26 @@ compute_size (struct cb_field *f)
 	    int size = f->pic->size;
 	    switch (cb_binary_size)
 	      {
+	      case CB_BINARY_SIZE_2_4_8:
+		f->size = ((size <= 4) ? 2 :
+			   (size <= 9) ? 4 : 8);
+		break;
 	      case CB_BINARY_SIZE_1_2_4_8:
 		f->size = ((size <= 2) ? 1 :
 			   (size <= 4) ? 2 :
 			   (size <= 9) ? 4 : 8);
 		break;
-	      case CB_BINARY_SIZE_2_4_8:
-		f->size = ((size <= 4) ? 2 :
-			   (size <= 9) ? 4 : 8);
+	      case CB_BINARY_SIZE_1__8:
+		if (f->pic->have_sign)
+		  f->size = ((size <= 2)  ? 1 : (size <= 4)  ? 2 :
+			     (size <= 6)  ? 3 : (size <= 9)  ? 4 :
+			     (size <= 11) ? 5 : (size <= 14) ? 6 :
+			     (size <= 16) ? 7 : 8);
+		else
+		  f->size = ((size <= 2)  ? 1 : (size <= 4)  ? 2 :
+			     (size <= 7)  ? 3 : (size <= 9)  ? 4 :
+			     (size <= 12) ? 5 : (size <= 14) ? 6 :
+			     (size <= 16) ? 7 : 8);
 		break;
 	      }
 	    break;

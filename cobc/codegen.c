@@ -384,6 +384,8 @@ output_attr (cb_tree x)
 		  flags |= COB_FLAG_BLANK_ZERO;
 		if (f->flag_justified)
 		  flags |= COB_FLAG_JUSTIFIED;
+		if (f->usage == CB_USAGE_BINARY)
+		  flags |= COB_FLAG_BINARY_SWAP;
 
 		id = lookup_attr (type, f->pic->digits, f->pic->expt,
 				  flags, f->pic->str);

@@ -192,10 +192,12 @@ cb_load_conf (const char *fname, int check_nodef)
 	      }
 	    else if (strcmp (name, "binary-size") == 0)
 	      {
-		if (strcmp (val, "1-2-4-8") == 0)
-		  cb_binary_size = CB_BINARY_SIZE_1_2_4_8;
-		else if (strcmp (val, "2-4-8") == 0)
+		if (strcmp (val, "2-4-8") == 0)
 		  cb_binary_size = CB_BINARY_SIZE_2_4_8;
+		else if (strcmp (val, "1-2-4-8") == 0)
+		  cb_binary_size = CB_BINARY_SIZE_1_2_4_8;
+		else if (strcmp (val, "1--8") == 0)
+		  cb_binary_size = CB_BINARY_SIZE_1__8;
 		else
 		  goto invalid_value;
 	      }

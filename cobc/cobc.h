@@ -112,8 +112,9 @@ enum cb_binary_ordering {
 };
 
 enum cb_binary_size {
-  CB_BINARY_SIZE_1_2_4_8,	/* 1,2,4,8 bytes */
   CB_BINARY_SIZE_2_4_8,		/* 2,4,8 bytes */
+  CB_BINARY_SIZE_1_2_4_8,	/* 1,2,4,8 bytes */
+  CB_BINARY_SIZE_1__8,		/* 1,2,3,4,5,6,7,8 bytes */
 };
 
 enum cb_support {
