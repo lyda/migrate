@@ -14,7 +14,7 @@ rpmdir = /home/knishida/redhat
 
 rpm: dist
 	cp $(distdir).tar.gz $(rpmdir)/SOURCES/
-	rpm -ba rpm/open-cobol.spec
+	rpm -ba redhat/open-cobol.spec
 	cp $(rpmdir)/RPMS/i386/$(distdir)-$(RELEASE).i386.rpm .
 	cp $(rpmdir)/SRPMS/$(distdir)-$(RELEASE).src.rpm .
 
