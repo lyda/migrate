@@ -434,7 +434,7 @@ output_expr (cobc_tree x, int id)
 #ifdef COB_DEBUG
   if (!is_numeric (x))
     {
-      printf ("output_expr: invalid expr: %s\n", tree_to_string (x));
+      yyerror_loc (&x->loc, "invalid expr `%s'\n", tree_to_string (x));
       abort ();
     }
 #endif
