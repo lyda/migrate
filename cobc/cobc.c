@@ -100,6 +100,7 @@ static struct filename {
   char assembly[FILENAME_MAX];			/* foo.s */
   char object[FILENAME_MAX];			/* foo.o */
   char module[FILENAME_MAX];			/* foo.so */
+  char execute[FILENAME_MAX];			/* foo */
   struct filename *next;
 } *file_list;
 
@@ -384,6 +385,12 @@ process_filename (const char *filename)
   else
     temp_name (fn->module, ".so");
 
+  /* Set execute filename */
+  if (output_filename && compile_level == stage_link)
+    strcpy (fn->execute, output_filename);
+  else
+    strcpy (fn->execute, basename);
+
   return fn;
 }
 
@@ -495,7 +502,7 @@ static int
 process_link (struct filename *file_list)
 {
   char buff[8192], objs[4096] = "";
-  char *exe = output_filename ? output_filename : "a.out";
+  const char *exe = file_list->execute;
 
   for (; file_list; file_list = file_list->next)
     {
