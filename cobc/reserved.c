@@ -185,7 +185,7 @@ static struct reserved_word reserved_words[] = {
   {"IDENTIFICATION",	IDENTIFICATION},
   {"IF",		IF},
   {"IN",		IN},
-  {"INDEX",		BINARY},
+  {"INDEX",		INDEX},
   {"INDEXED",		INDEXED},
   {"INITIAL",		TOK_INITIAL},
   {"INITIALIZE",	INITIALIZE},

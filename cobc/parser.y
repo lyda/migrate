@@ -93,7 +93,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %token START,DELETE,PROGRAM,GLOBAL,EXTERNAL,SIZE,DELIMITED,COLLATING,SEQUENCE
 %token GIVING,ERASE,INSPECT,TALLYING,REPLACING,ON,POINTER,OVERFLOW,NATIVE
 %token DELIMITER,COUNT,LEFT,TRAILING,CHARACTER,FILLER,OCCURS,TIMES
-%token ADD,SUBTRACT,MULTIPLY,DIVIDE,ROUNDED,REMAINDER,ERROR,SIZE
+%token ADD,SUBTRACT,MULTIPLY,DIVIDE,ROUNDED,REMAINDER,ERROR,SIZE,INDEX
 %token FD,SD,REDEFINES,PICTURE,FILEN,USAGE,BLANK,SIGN,VALUE,MOVE,LABEL
 %token PROGRAM_ID,DIVISION,CONFIGURATION,SPECIAL_NAMES
 %token FILE_CONTROL,I_O_CONTROL,FROM,UPDATE,SAME,AREA,EXCEPTION
@@ -685,10 +685,15 @@ usage_clause:
   opt_usage opt_is usage
 ;
 usage:
-  BINARY /* or COMP, COMP-5, INDEX */
+  BINARY /* or COMP, COMP-5 */
   {
     COB_FIELD_TYPE (curr_field) = 'B';
-    curr_field->len  =  0;
+    curr_field->len = 0; /* computed in update_field */
+  }
+| INDEX
+  {
+    COB_FIELD_TYPE (curr_field) = 'B';
+    curr_field->len = 4;
   }
 | DISPLAY
   {
