@@ -1,3 +1,10 @@
+2002-09-05  Keisuke Nishida  <knishida@netlab.jp>
+
+	* Use pkg-config scheme.
+	* cob.pc.in: New file.
+	* cob.m4, cob-config.in: Removed.
+	* Makefile.am, configure.ac: Add cob.pc.  Remove cob-config and cob.m4.
+
 2002-08-30  Keisuke Nishida  <knishida@netlab.jp>
 
 	* configure.ac (AM_INIT_AUTOMAKE): Option `gnu' and `no-texinfo.tex'.

@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libcob
+Description: COBOL run-time library
+Version: @VERSION@
+Libs: @COB_LIBS@
+Cflags: @COB_CFLAGS@
