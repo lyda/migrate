@@ -34,9 +34,7 @@
 #define SYTB_LAB 3
 
 /* set operations */
-#define SET_TO 1
-#define SET_UP_BY 2
-#define SET_DOWN_BY 3
+enum set_mode { SET_TO, SET_UP, SET_DOWN };
 
 /* call modes */
 #define CALL_BY_REFERENCE	1
@@ -200,7 +198,7 @@ extern void gen_move (cob_tree sy_src, cob_tree sy_dst);
 extern void gen_movecorr (cob_tree sy1, cob_tree sy2);
 extern void gen_addcorr (cob_tree sy1, cob_tree sy2, int rnd);
 extern void gen_subtractcorr (cob_tree sy1, cob_tree sy2, int rnd);
-extern void gen_set (cob_tree idx, int which, cob_tree var, int adrof_idx, int adrof_var);
+extern void gen_set (cob_tree idx, enum set_mode mode, cob_tree var, int adrof_idx, int adrof_var);
 extern int gen_evaluate_start (void);
 extern int push_selection_subject_copy (int level, struct selsubject *ssbj, int stkadd, int objtype);
 extern int selection_subject_type (int level, struct selsubject *ssbj);
@@ -209,7 +207,7 @@ extern void gen_bypass_when_case (int bypass);
 extern int gen_end_when (int n, int endcase, int sentence);
 extern void push_boolean (int flag);
 extern void push_condition (void);
-extern void push_field (cob_tree sy);
+extern void push_field (cob_tree x);
 extern void gen_goto (cob_tree_list l, cob_tree x);
 extern int gen_check_zero (void);
 extern int gen_at_end (int status);

@@ -2323,11 +2323,11 @@ set_list:
   }
 | variable UP BY var_or_nliteral
   {
-    gen_set($1,SET_UP_BY,$4,0,0);
+    gen_set($1,SET_UP,$4,0,0);
   }
 | variable DOWN BY var_or_nliteral
   {
-    gen_set($1,SET_DOWN_BY,$4,0,0);
+    gen_set($1,SET_DOWN,$4,0,0);
   }
 | opt_address_of variable TO opt_address_of set_variable
   {

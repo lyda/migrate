@@ -3254,7 +3254,7 @@ gen_subtractcorr (cob_tree sy1, cob_tree sy2, int rnd)
 }
 
 void
-gen_set (cob_tree idx, int which, cob_tree var,
+gen_set (cob_tree idx, enum set_mode mode, cob_tree var,
 	 int adrof_idx, int adrof_var)
 {
   cob_tree sy = idx;
@@ -3284,7 +3284,7 @@ gen_set (cob_tree idx, int which, cob_tree var,
       fprintf (o_src, "# adrof_idx: %d, adrof_var: %d\n",
 	       adrof_idx, adrof_var);
 #endif
-      if (which != SET_TO)
+      if (mode != SET_TO)
 	{
 	  yyerror ("only SET TO work with pointers");
 	  return;
@@ -3325,22 +3325,20 @@ gen_set (cob_tree idx, int which, cob_tree var,
   if (symlen (idx) > 4)
     yyerror ("warning: we don't allow this large index variable");
   value_to_eax (var);
-  switch (which)
+  switch (mode)
     {
     case SET_TO:		/* just move this value */
       fprintf (o_src, "\tmov%c\t%%eax, -%d(%%ebp)\n",
 	       varsize_ch (idx), idx->location);
       break;
-    case SET_UP_BY:		/* we need to add this value to the index */
+    case SET_UP:		/* we need to add this value to the index */
       fprintf (o_src, "\tadd%c\t%%eax, -%d(%%ebp)\n",
 	       varsize_ch (idx), idx->location);
       break;
-    case SET_DOWN_BY:
+    case SET_DOWN:
       fprintf (o_src, "\tsub%c\t%%eax, -%d(%%ebp)\n",
 	       varsize_ch (idx), idx->location);
       break;
-    default:
-      yyerror ("SET option unavailable");
     }
 }
 
@@ -3354,16 +3352,16 @@ push_boolean (int flag)
 }
 
 void
-push_condition ()
+push_condition (void)
 {
   push_eax ();
   asm_call ("cob_push_boolean");
 }
 
 void
-push_field (cob_tree sy)
+push_field (cob_tree x)
 {
-  asm_call_1 ("cob_push_field", sy);
+  asm_call_1 ("cob_push_field", x);
 }
 
 int
