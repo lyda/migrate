@@ -38,10 +38,11 @@ dist:
 	rm -rf $(distdir)
 
 $(MODULES): newcob.val EXEC85 EXEC85.conf.in
+	@echo -n "Building module \`$@'..."
 	@sed 's/@MODULE@/$@/' EXEC85.conf.in > EXEC85.conf
-	./EXEC85
+	@./EXEC85
 	@perl expand.pl newcob.tmp
-	@rm -f newcob.tmp EXEC85.conf
+	@rm -f newcob.tmp newcob.log EXEC85.conf
 	@echo "check:"              > $@/Makefile
 	@echo "	perl ../report.pl" >> $@/Makefile
 	@echo
@@ -54,7 +55,7 @@ EXEC85.cob: newcob.val
 	| sed -e 's/XXXXX001.*/"newcob.val" ORGANIZATION LINE SEQUENTIAL./'  \
 	      -e 's/XXXXX002.*/"newcob.tmp" ORGANIZATION LINE SEQUENTIAL./'  \
 	      -e 's/XXXXX003.*/"unused"./'				     \
-	      -e 's/XXXXX055.*/"\/dev\/tty"./'				     \
+	      -e 's/XXXXX055.*/"newcob.log"./'				     \
 	      -e 's/XXXXX058.*/"EXEC85.conf" ORGANIZATION LINE SEQUENTIAL./' \
 	      -e 's/ORGANIZATION SEQUENTIAL.*//'			     \
 	    > EXEC85.cob
