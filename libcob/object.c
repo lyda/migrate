@@ -398,6 +398,29 @@ cob_push_decimal (struct cob_field f)
 }
 
 void
+cob_set_int (struct cob_field f, int n)
+{
+  int saved_status = cob_status;
+  cob_status = COB_STATUS_SUCCESS;
+  cob_push_int (n);
+  cob_set (f, 0);
+  cob_status = saved_status;
+}
+
+void
+cob_add_int (struct cob_field f, int n)
+{
+  int saved_status = cob_status;
+  if (n == 0) return;
+  cob_status = COB_STATUS_SUCCESS;
+  cob_push_decimal (f);
+  cob_push_int (n);
+  cob_add ();
+  cob_set (f, 0);
+  cob_status = saved_status;
+}
+
+void
 cob_set (struct cob_field f, int round)
 {
   decimal d = COB_DECIMAL (POP ());

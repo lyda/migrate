@@ -81,18 +81,6 @@ inspect_get_region (struct cob_field var, va_list ap, int *offset, int *len)
   return ap;
 }
 
-static void
-inspect_add_counter (struct cob_field f, int n)
-{
-  if (n > 0)
-    {
-      cob_push_decimal (f);
-      cob_push_int (n);
-      cob_add ();
-      cob_set (f, 0);
-    }
-}
-
 int
 cob_inspect_tallying (struct cob_field var, ...)
 {
@@ -122,7 +110,7 @@ cob_inspect_tallying (struct cob_field var, ...)
 		      n++;
 		      mark[offset + i] = 1;
 		    }
-		inspect_add_counter (dst, n);
+		cob_add_int (dst, n);
 	      }
 	    break;
 	  }
@@ -159,7 +147,7 @@ cob_inspect_tallying (struct cob_field var, ...)
 		    if (type == INSPECT_LEADING)
 		      break;
 		  }
-		inspect_add_counter (dst, n);
+		cob_add_int (dst, n);
 	      }
 	    break;
 	  }
@@ -272,17 +260,14 @@ cob_inspect_converting (struct cob_field var, ...)
 	  {
 	    struct cob_field old = va_arg (ap, struct cob_field);
 	    struct cob_field new = va_arg (ap, struct cob_field);
-	    unsigned char *old_data = FIELD_DATA (old);
-	    unsigned char *new_data = FIELD_DATA (new);
-	    int size = FIELD_SIZE (old);
 	    ap = inspect_get_region (var, ap, &offset, &len);
 	    if (len > 0)
 	      {
 		int i, j;
 		for (i = 0; i < len; i++)
-		  for (j = 0; j < size; j++)
-		    if (var_data[offset + i] == old_data[j])
-		      var_data[offset + i] = new_data[j];
+		  for (j = 0; j < FIELD_SIZE (old); j++)
+		    if (var_data[offset + i] == FIELD_DATA (old)[j])
+		      var_data[offset + i] = FIELD_DATA (new)[j];
 	      }
 	    break;
 	  }
@@ -300,16 +285,6 @@ cob_inspect_converting (struct cob_field var, ...)
 /*
  * STRING
  */
-
-static void
-set_pointer (struct cob_field f, int n)
-{
-  int saved_status = cob_status;
-  cob_status = COB_STATUS_SUCCESS;
-  cob_push_int (n);
-  cob_set (f, 0);
-  cob_status = saved_status;
-}
 
 int
 cob_string (struct cob_field dst, ...)
@@ -383,7 +358,7 @@ cob_string (struct cob_field dst, ...)
  end:
   va_end (ap);
   if (ptr.data)
-    set_pointer (ptr, offset + 1);
+    cob_set_int (ptr, offset + 1);
   return cob_status;
 }
 
@@ -510,14 +485,14 @@ cob_unstring (struct cob_field src, ...)
       case UNSTRING_COUNT:
 	{
 	  struct cob_field f = va_arg (ap, struct cob_field);
-	  set_pointer (f, match_size);
+	  cob_set_int (f, match_size);
 	  break;
 	}
 
       case UNSTRING_TALLYING:
 	{
 	  struct cob_field f = va_arg (ap, struct cob_field);
-	  inspect_add_counter (f, count);
+	  cob_add_int (f, count);
 	  break;
 	}
 
@@ -539,6 +514,6 @@ cob_unstring (struct cob_field src, ...)
   if (reg_inited)
     regfree (&reg);
   if (ptr.data)
-    set_pointer (ptr, offset + 1);
+    cob_set_int (ptr, offset + 1);
   return cob_status;
 }

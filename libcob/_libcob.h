@@ -221,4 +221,6 @@ extern int get_index (struct cob_field f);
 extern void cob_push_int (int n);
 extern void cob_push_decimal (struct cob_field f);
 extern void cob_add (void);
+extern void cob_add_int (struct cob_field f, int n);
 extern void cob_set (struct cob_field f, int rnd);
+extern void cob_set_int (struct cob_field f, int n);
