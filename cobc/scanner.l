@@ -216,9 +216,9 @@ scan_x (char *text)
 static int
 scan_word (char *text)
 {
-  struct reserved_word *p = lookup_reserved_word (text);
-  if (p != NULL)
-    return p->token;
+  int token = lookup_reserved_word (text);
+  if (token != NULL)
+    return token;
 
   switch (curr_division)
     {

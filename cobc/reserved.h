@@ -20,12 +20,7 @@
 #ifndef _RESERVED_H_
 #define _RESERVED_H_
 
-struct reserved_word {
-  const char *name;
-  int token;
-};
-
-extern struct reserved_word *lookup_reserved_word (const char *name);
+extern int lookup_reserved_word (const char *name);
 extern void init_reserved_words (void);
 
 #endif /* _RESERVED_H_ */

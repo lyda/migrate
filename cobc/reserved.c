@@ -27,10 +27,10 @@
 
 #define HASH_SIZE 133
 
-static struct reserved_item {
+struct reserved_word {
   const char *name;
-  struct reserved_word *word;
-  struct reserved_item *next;
+  int token;
+  struct reserved_word *next;
 } *reserved_table[HASH_SIZE];
 
 static struct reserved_word reserved_words[] = {
@@ -353,33 +353,27 @@ hash (const char *s)
   return val % HASH_SIZE;
 }
 
-struct reserved_word *
+int
 lookup_reserved_word (const char *name)
 {
-  struct reserved_item *p;
+  struct reserved_word *p;
   for (p = reserved_table[hash (name)]; p; p = p->next)
     if (strcasecmp (name, p->name) == 0)
-      return p->word;
-  return NULL;
+      return p->token;
+  return 0;
 }
 
 void
 init_reserved_words (void)
 {
   int i;
-  struct reserved_item *p;
-
   for (i = 0; i < HASH_SIZE; i++)
     reserved_table[i] = NULL;
 
   for (i = 0; reserved_words[i].name != 0; i++)
     {
-      const char *name = reserved_words[i].name;
-      int val = hash (name);
-      p = malloc (sizeof (struct reserved_item));
-      p->name = name;
-      p->word = &reserved_words[i];
-      p->next = reserved_table[val];
-      reserved_table[val] = p;
+      int val = hash (reserved_words[i].name);
+      reserved_words[i].next = reserved_table[val];
+      reserved_table[val] = &reserved_words[i];
     }
 }
