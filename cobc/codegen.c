@@ -920,7 +920,6 @@ initialize_uniform_char (struct cb_field *f)
 	  return 0;
 	case COB_TYPE_NUMERIC_DISPLAY:
 	  return '0';
-	case COB_TYPE_ALPHABETIC:
 	case COB_TYPE_ALPHANUMERIC:
 	  return ' ';
 	default:

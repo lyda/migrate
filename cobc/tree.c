@@ -266,13 +266,12 @@ cb_tree_type (cb_tree x)
   switch (CB_TREE_CATEGORY (x))
     {
     case CB_CATEGORY_ALPHABETIC:
-      return COB_TYPE_ALPHABETIC;
     case CB_CATEGORY_ALPHANUMERIC:
       return COB_TYPE_ALPHANUMERIC;
     case CB_CATEGORY_ALPHANUMERIC_EDITED:
       return COB_TYPE_ALPHANUMERIC_EDITED;
     case CB_CATEGORY_NUMERIC:
-      switch (cb_field (x)->usage)
+      switch (f->usage)
 	{
 	case CB_USAGE_DISPLAY:
 	  return COB_TYPE_NUMERIC_DISPLAY;
