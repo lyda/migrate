@@ -111,8 +111,10 @@ output_line_directive (cobc_tree x)
   static int last_line = 0;
   if (x->loc.text && last_line != x->loc.first_line)
     {
-      //output ("#line %d \"%s\"\n", x->loc.first_line, x->loc.text);
-      output_line ("cob_source_line = %d;", x->loc.first_line);
+      if (cobc_debug_flag)
+	output ("#line %d \"%s\"\n", x->loc.first_line, x->loc.text);
+      if (!cobc_optimize_flag)
+	output_line ("cob_source_line = %d;", x->loc.first_line);
       last_line = x->loc.first_line;
     }
 }
@@ -1783,6 +1785,7 @@ codegen (struct program_spec *spec)
 
   output_line ("/* PROCEDURE DIVISION */");
   output_line ("lb_default_handler:");
+  output_line ("cob_runtime_error (\"I/O error\");");
   output_line ("cob_exit (le_default_handler);");
 
   for (l = spec->exec_list; l; l = l->next)
