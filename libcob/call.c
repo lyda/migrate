@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#define LT_NON_POSIX_NAMESPACE 1
 #include <ltdl.h>
 
 #include "libcob.h"
@@ -59,7 +60,7 @@ static struct call_hash
 {
   const char *name;
   const char *path;
-  lt_ptr func;
+  lt_ptr_t func;
   lt_dlhandle handle;
   time_t mtime;
   struct call_hash *next;
@@ -75,7 +76,7 @@ hash (const char *s)
 }
 
 static void
-insert (const char *name, const char *path, lt_dlhandle handle, lt_ptr func, time_t mtime)
+insert (const char *name, const char *path, lt_dlhandle handle, lt_ptr_t func, time_t mtime)
 {
   int val = hash (name);
   struct call_hash *p = malloc (sizeof (struct call_hash));
@@ -155,7 +156,7 @@ void *
 cob_resolve (const char *name)
 {
   int i;
-  lt_ptr func;
+  lt_ptr_t func;
   lt_dlhandle handle;
 
   cob_module_init ();
