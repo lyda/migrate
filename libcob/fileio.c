@@ -224,7 +224,7 @@ lineseq_read (struct cob_file *f)
 
   /* remove the newline */
   for (i = 0; i < f->record_size; i++)
-    if (buff[i] == '\r' || buff[i] == '\n' || buff[i] == '\0')
+    if (buff[i] == '\r' || buff[i] == '\n')
       break;
   if (i < f->record_size)
     {
@@ -236,11 +236,11 @@ lineseq_read (struct cob_file *f)
     {
       /* discard input until the next newline */
       int c = getc (p->fp);
-      while (c != '\r' && c != '\n' && c != '\0' && c != EOF)
+      while (c != '\r' && c != '\n' && c != EOF)
 	c = getc (p->fp);
       if (c == '\r')
 	c = getc (p->fp);
-      if (c != '\n' && c != '\0')
+      if (c != '\n' && c != EOF)
 	ungetc (c, p->fp);
     }
 
