@@ -1298,7 +1298,7 @@ cb_build_cond (cb_tree x)
 cb_tree
 cb_build_add (cb_tree v, cb_tree n, cb_tree round)
 {
-  if (CB_INDEX_P (v))
+  if (CB_INDEX_P (v) || CB_TREE_CLASS (v) == CB_CLASS_POINTER)
     return cb_build_move (cb_build_binary_op (v, '+', n), v);
 
   if (round == cb_int0 && cb_fits_int (n))
@@ -1312,7 +1312,7 @@ cb_build_add (cb_tree v, cb_tree n, cb_tree round)
 cb_tree
 cb_build_sub (cb_tree v, cb_tree n, cb_tree round)
 {
-  if (CB_INDEX_P (v))
+  if (CB_INDEX_P (v) || CB_TREE_CLASS (v) == CB_CLASS_POINTER)
     return cb_build_move (cb_build_binary_op (v, '-', n), v);
 
   if (round == cb_int0 && cb_fits_int (n))
@@ -2457,6 +2457,9 @@ cb_build_move_field (cb_tree src, cb_tree dst)
 cb_tree
 cb_build_move (cb_tree src, cb_tree dst)
 {
+  if (src == cb_error_node || dst == cb_error_node)
+    return cb_error_node;
+
   validate_move (src, dst, 0);
 
   if (CB_REFERENCE_P (src))
