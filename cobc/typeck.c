@@ -201,8 +201,9 @@ cb_build_using_list (cb_tree list)
  * Numerical operation
  */
 
-#define add_stmt(s,x) \
-  CB_SEQUENCE (s)->list = list_add (CB_SEQUENCE (s)->list, x)
+static cb_tree decimal_stack = NULL;
+
+#define dpush(x) decimal_stack = cons (x, decimal_stack)
 
 static cb_tree
 decimal_alloc (void)
@@ -220,7 +221,7 @@ decimal_free (void)
 }
 
 static void
-decimal_compute (cb_tree s, char op, cb_tree x, cb_tree y)
+decimal_compute (char op, cb_tree x, cb_tree y)
 {
   const char *func;
   switch (op)
@@ -232,22 +233,20 @@ decimal_compute (cb_tree s, char op, cb_tree x, cb_tree y)
     case '^': func = "cob_decimal_pow"; break;
     default: abort ();
     }
-  add_stmt (s, cb_build_funcall_2 (func, x, y));
+  dpush (cb_build_funcall_2 (func, x, y));
 }
 
 static void
-decimal_expand (cb_tree s, cb_tree d, cb_tree x)
+decimal_expand (cb_tree d, cb_tree x)
 {
   switch (CB_TREE_TAG (x))
     {
     case CB_TAG_CONST:
       {
-	cb_tree e;
 	if (x == cb_zero)
-	  e = cb_build_funcall_2 ("cob_decimal_set_int", d, cb_int0);
+	  dpush (cb_build_funcall_2 ("cob_decimal_set_int", d, cb_int0));
 	else
 	  abort ();
-	add_stmt (s, e);
 	break;
       }
     case CB_TAG_LITERAL:
@@ -255,10 +254,10 @@ decimal_expand (cb_tree s, cb_tree d, cb_tree x)
 	/* set d, N */
 	struct cb_literal *l = CB_LITERAL (x);
 	if (l->size < 10 && l->expt == 0)
-	  add_stmt (s, cb_build_funcall_2 ("cob_decimal_set_int",
-				       d, cb_build_cast_integer (x)));
+	  dpush (cb_build_funcall_2 ("cob_decimal_set_int",
+				     d, cb_build_cast_integer (x)));
 	else
-	  add_stmt (s, cb_build_funcall_2 ("cob_decimal_set_field", d, x));
+	  dpush (cb_build_funcall_2 ("cob_decimal_set_field", d, x));
 	break;
       }
     case CB_TAG_REFERENCE:
@@ -269,14 +268,14 @@ decimal_expand (cb_tree s, cb_tree d, cb_tree x)
 	/* check numeric */
 	if (CB_EXCEPTION_ENABLE (COB_EC_DATA_INCOMPATIBLE))
 	  if (f->usage == CB_USAGE_DISPLAY)
-	    add_stmt (s, cb_build_funcall_2 ("cob_check_numeric",
-					 x, cb_build_string (f->name)));
+	    dpush (cb_build_funcall_2 ("cob_check_numeric",
+				       x, cb_build_string (f->name)));
 
 	if (cb_fits_int (x))
-	  add_stmt (s, cb_build_funcall_2 ("cob_decimal_set_int",
-				       d, cb_build_cast_integer (x)));
+	  dpush (cb_build_funcall_2 ("cob_decimal_set_int",
+				     d, cb_build_cast_integer (x)));
 	else
-	  add_stmt (s, cb_build_funcall_2 ("cob_decimal_set_field", d, x));
+	  dpush (cb_build_funcall_2 ("cob_decimal_set_field", d, x));
 	break;
       }
     case CB_TAG_BINARY_OP:
@@ -284,7 +283,7 @@ decimal_expand (cb_tree s, cb_tree d, cb_tree x)
 	struct cb_binary_op *p = CB_BINARY_OP (x);
 	if (p->op == '@')
 	  {
-	    decimal_expand (s, d, p->x);
+	    decimal_expand (d, p->x);
 	  }
 	else
 	  {
@@ -292,9 +291,9 @@ decimal_expand (cb_tree s, cb_tree d, cb_tree x)
 	     * set t, Y
 	     * OP d, t */
 	    cb_tree t = decimal_alloc ();
-	    decimal_expand (s, d, p->x);
-	    decimal_expand (s, t, p->y);
-	    decimal_compute (s, p->op, d, t);
+	    decimal_expand (d, p->x);
+	    decimal_expand (t, p->y);
+	    decimal_compute (p->op, d, t);
 	    decimal_free ();
 	  }
 	break;
@@ -305,34 +304,32 @@ decimal_expand (cb_tree s, cb_tree d, cb_tree x)
 }
 
 static void
-decimal_assign (cb_tree s, cb_tree x, cb_tree d, int round)
+decimal_assign (cb_tree x, cb_tree d, int round)
 {
   if (round)
-    add_stmt (s, cb_build_funcall_2 ("cob_decimal_get_field_round", d, x));
+    dpush (cb_build_funcall_2 ("cob_decimal_get_field_round", d, x));
   else
-    add_stmt (s, cb_build_funcall_2 ("cob_decimal_get_field", d, x));
+    dpush (cb_build_funcall_2 ("cob_decimal_get_field", d, x));
 }
 
 static cb_tree
 build_decimal_assign (cb_tree vars, char op, cb_tree val)
 {
   cb_tree l;
-  cb_tree s1 = make_sequence (NULL);
-  cb_tree s2 = make_sequence (NULL);
+  cb_tree s1 = NULL;
   cb_tree d = decimal_alloc ();
 
   /* set d, VAL */
-  decimal_expand (s2, d, val);
+  decimal_expand (d, val);
 
   if (op == 0)
     {
       for (l = vars; l; l = CB_CHAIN (l))
 	{
 	  /* set VAR, d */
-	  decimal_assign (s2, CB_VALUE (l), d, CB_PURPOSE_INT (l));
-	  add_stmt (s1, s2);
-	  if (CB_CHAIN (l))
-	    s2 = make_sequence (NULL);
+	  decimal_assign (CB_VALUE (l), d, CB_PURPOSE_INT (l));
+	  s1 = list_add (s1, list_reverse (decimal_stack));
+	  decimal_stack = NULL;
 	}
     }
   else
@@ -344,12 +341,11 @@ build_decimal_assign (cb_tree vars, char op, cb_tree val)
 	   * OP t, d
 	   * set VAR, t
 	   */
-	  decimal_expand (s2, t, CB_VALUE (l));
-	  decimal_compute (s2, op, t, d);
-	  decimal_assign (s2, CB_VALUE (l), t, CB_PURPOSE_INT (l));
-	  add_stmt (s1, s2);
-	  if (CB_CHAIN (l))
-	    s2 = make_sequence (NULL);
+	  decimal_expand (t, CB_VALUE (l));
+	  decimal_compute (op, t, d);
+	  decimal_assign (CB_VALUE (l), t, CB_PURPOSE_INT (l));
+	  s1 = list_add (s1, list_reverse (decimal_stack));
+	  decimal_stack = NULL;
 	}
       decimal_free ();
     }
@@ -380,7 +376,7 @@ cb_build_arithmetic (cb_tree vars, char op, cb_tree val)
 	    else
 	      CB_VALUE (l) = cb_build_sub (CB_VALUE (l), val, CB_PURPOSE (l));
 	  }
-	return make_sequence (vars);
+	return vars;
       }
 
   return build_decimal_assign (vars, op, val);
@@ -950,7 +946,7 @@ build_corr_1 (cb_tree (*func)(), cb_tree x1, cb_tree x2, cb_tree opt, cb_tree l)
 cb_tree
 cb_build_corr (cb_tree (*func)(), cb_tree x1, cb_tree x2, cb_tree opt)
 {
-  return make_sequence (build_corr_1 (func, x1, x2, opt, NULL));
+  return build_corr_1 (func, x1, x2, opt, NULL);
 }
 
 
@@ -967,7 +963,7 @@ cb_build_divide (cb_tree dividend, cb_tree divisor,
 				       dividend, divisor, CB_VALUE (quotient),
 				       CB_PURPOSE_INT (quotient) ? cb_int1 : cb_int0));
   l = list_add (l, cb_build_funcall_1 ("cob_div_remainder", CB_VALUE (remainder)));
-  return make_sequence (l);
+  return l;
 }
 
 
@@ -1059,15 +1055,15 @@ cb_build_cond (cb_tree x)
 	    else if (CB_BINARY_OP_P (p->x) || CB_BINARY_OP_P (p->y))
 	      {
 		/* decimal comparison */
-		cb_tree s = make_sequence (NULL);
 		cb_tree d1 = decimal_alloc ();
 		cb_tree d2 = decimal_alloc ();
-		decimal_expand (s, d1, p->x);
-		decimal_expand (s, d2, p->y);
-		add_stmt (s, cb_build_funcall_2 ("cob_decimal_cmp", d1, d2));
+		decimal_expand (d1, p->x);
+		decimal_expand (d2, p->y);
+		dpush (cb_build_funcall_2 ("cob_decimal_cmp", d1, d2));
 		decimal_free ();
 		decimal_free ();
-		p->x = s;
+		p->x = list_reverse (decimal_stack);
+		decimal_stack = NULL;
 	      }
 	    else
 	      {

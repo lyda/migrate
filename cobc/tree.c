@@ -1904,20 +1904,6 @@ cb_add_perform_varying (struct cb_perform *perf, cb_tree name,
 
 
 /*
- * Sequence
- */
-
-cb_tree
-make_sequence (cb_tree list)
-{
-  struct cb_sequence *p =
-    make_tree (CB_TAG_SEQUENCE, CB_CATEGORY_UNKNOWN, sizeof (struct cb_sequence));
-  p->list = list;
-  return CB_TREE (p);
-}
-
-
-/*
  * Statement
  */
 

@@ -916,15 +916,13 @@ output_cond (cb_tree x, int save_flag)
 	  output (")");
 	break;
       }
-    case CB_TAG_SEQUENCE:
+    case CB_TAG_LIST:
       {
-	struct cb_sequence *p = CB_SEQUENCE (x);
-	cb_tree l = p->list;
 	if (save_flag)
 	  output ("(ret = ");
 	output_indent ("({");
-	for (; l; l = CB_CHAIN (l))
-	  output_stmt (CB_VALUE (l));
+	for (; x; x = CB_CHAIN (x))
+	  output_stmt (CB_VALUE (x));
 	output_indent ("})");
 	if (save_flag)
 	  output (")");
@@ -1546,6 +1544,12 @@ output_perform (struct cb_perform *p)
 static void
 output_stmt (cb_tree x)
 {
+  if (x == NULL)
+    {
+      output_line (";");
+      return;
+    }
+
   switch (CB_TREE_TAG (x))
     {
     case CB_TAG_STATEMENT:
@@ -1685,13 +1689,11 @@ output_stmt (cb_tree x)
 	output_perform (CB_PERFORM (x));
 	break;
       }
-    case CB_TAG_SEQUENCE:
+    case CB_TAG_LIST:
       {
-	struct cb_sequence *p = CB_SEQUENCE (x);
-	cb_tree l = p->list;
 	output_indent ("{");
-	for (; l; l = CB_CHAIN (l))
-	  output_stmt (CB_VALUE (l));
+	for (; x; x = CB_CHAIN (x))
+	  output_stmt (CB_VALUE (x));
 	output_indent ("}");
 	break;
       }

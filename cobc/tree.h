@@ -56,7 +56,6 @@ enum cb_tag {
   CB_TAG_GOTO,			/* GO TO statement */
   CB_TAG_IF,			/* IF statement */
   CB_TAG_PERFORM,		/* PERFORM statement */
-  CB_TAG_SEQUENCE,		/* multiple statements */
   CB_TAG_STATEMENT,		/* general statement */
   /* miscellaneous */
   CB_TAG_PICTURE,
@@ -751,22 +750,6 @@ extern cb_tree cb_build_perform_once (cb_tree body);
 extern cb_tree cb_build_perform_exit (struct cb_label *label);
 extern void cb_add_perform_varying (struct cb_perform *perf, cb_tree name, cb_tree from, cb_tree step, cb_tree until);
 
-
-/*
- * Sequence
- */
-
-struct cb_sequence {
-  struct cb_tree_common common;
-  cb_tree list;
-};
-
-#define CB_SEQUENCE(x)		(CB_TREE_CAST (CB_TAG_SEQUENCE, struct cb_sequence, x))
-#define CB_SEQUENCE_P(x)	(CB_TREE_TAG (x) == CB_TAG_SEQUENCE)
-
-extern cb_tree make_sequence (cb_tree list);
-
-
 /*
  * Statement
  */

@@ -622,12 +622,10 @@ output_cond (cb_tree x, int flag, int target)
 	output_funcall (CB_FUNCALL (x));
 	break;
       }
-    case CB_TAG_SEQUENCE:
+    case CB_TAG_LIST:
       {
-	struct cb_sequence *p = CB_SEQUENCE (x);
-	cb_tree l = p->list;
-	for (; l; l = CB_CHAIN (l))
-	  output_stmt (CB_VALUE (l));
+	for (; x; x = CB_CHAIN (x))
+	  output_stmt (CB_VALUE (x));
 	break;
       }
     default:
@@ -809,12 +807,10 @@ output_stmt (cb_tree x)
 	output_perform (CB_PERFORM (x));
 	break;
       }
-    case CB_TAG_SEQUENCE:
+    case CB_TAG_LIST:
       {
-	struct cb_sequence *p = CB_SEQUENCE (x);
-	cb_tree l = p->list;
-	for (; l; l = CB_CHAIN (l))
-	  output_stmt (CB_VALUE (l));
+	for (; x; x = CB_CHAIN (x))
+	  output_stmt (CB_VALUE (x));
 	break;
       }
     default:

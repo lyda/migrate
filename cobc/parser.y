@@ -1493,7 +1493,7 @@ statement_list:
   }
   statements
   {
-    $$ = make_sequence (list_reverse (current_program->exec_list));
+    $$ = list_reverse (current_program->exec_list);
     current_program->exec_list = $1;
     current_statement = CB_STATEMENT ($2);
   }
@@ -2132,21 +2132,21 @@ inspect_item:
     cb_tree l = $1;
     l = cons (cb_build_funcall_2 ("cob_inspect_init", $-1, cb_int0), l);
     l = list_add (l, cb_build_funcall_0 ("cob_inspect_finish"));
-    push (make_sequence (l));
+    push (l);
   }
 | inspect_replacing
   {
     cb_tree l = $1;
     l = cons (cb_build_funcall_2 ("cob_inspect_init", $-1, cb_int1), l);
     l = list_add (l, cb_build_funcall_0 ("cob_inspect_finish"));
-    push (make_sequence (l));
+    push (l);
   }
 | inspect_converting
   {
     cb_tree l = $1;
     l = cons (cb_build_funcall_2 ("cob_inspect_init", $-1, cb_int0), l);
     l = list_add (l, cb_build_funcall_0 ("cob_inspect_finish"));
-    push (make_sequence (l));
+    push (l);
   }
 ;
 
@@ -2538,7 +2538,7 @@ rewrite_statement:
       l = list_add (l, cb_build_move ($4, $3));
     l = list_add (l, cb_build_funcall_2 ("cob_rewrite", file, $3));
     current_statement->file = file;
-    current_statement->body = make_sequence (l);
+    current_statement->body = l;
   }
 ;
 end_rewrite:
@@ -2833,7 +2833,7 @@ string_statement:
       }
 
     list_add (seq, cb_build_funcall_0 ("cob_string_finish"));
-    current_statement->body = make_sequence (seq);
+    current_statement->body = seq;
   }
 ;
 string_item_list:
@@ -2903,7 +2903,7 @@ unstring_statement:
     if ($8)
       l = list_add (l, cb_build_funcall_1 ("cob_unstring_tallying", $8));
     l = list_add (l, cb_build_funcall_0 ("cob_unstring_finish"));
-    current_statement->body = make_sequence (l);
+    current_statement->body = l;
   }
 ;
 
@@ -3020,7 +3020,7 @@ write_statement:
       l = list_add (l, e);
 
     current_statement->file = file;
-    current_statement->body = make_sequence (l);
+    current_statement->body = l;
   }
 ;
 write_from:
