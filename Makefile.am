@@ -4,7 +4,7 @@ aclocaldir = $(datadir)/aclocal
 aclocal_DATA = cob.m4
 
 SUBDIRS = cobpp cobc libcob texi
-EXTRA_DIST = VERSION cob.m4
+EXTRA_DIST = VERSION cob.m4 debian
 
 MAINTAINERCLEANFILES = config.guess config.sub config.log \
 	Makefile.in aclocal.m4 config.h.in stamp-h.in depcomp ltmain.sh \
@@ -17,6 +17,9 @@ rpm: dist
 	rpm -ba redhat/open-cobol.spec
 	cp $(rpmdir)/RPMS/i386/$(distdir)-$(RELEASE).i386.rpm .
 	cp $(rpmdir)/SRPMS/$(distdir)-$(RELEASE).src.rpm .
+
+deb:
+	dpkg-buildpackage -rfakeroot -us -uc
 
 test:
 	@(cd testsuite && $(MAKE))
