@@ -35,7 +35,6 @@
 #endif /* __MINGW32__ */
 
 #include "cobc.h"
-#include "error.h"
 #include "lib/getopt.h"
 
 

@@ -26,7 +26,6 @@
 #include <libcob.h>
 
 #include "cobc.h"
-#include "error.h"
 
 static struct cb_word *lookup_word (const char *name);
 

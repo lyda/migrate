@@ -34,7 +34,6 @@
 #include <sys/types.h>
 
 #include "cobc.h"
-#include "error.h"
 #include "ppparse.h"
 
 static struct cb_replacement *current_replacement = NULL;
