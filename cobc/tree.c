@@ -1306,9 +1306,7 @@ compute_size (struct cb_field *f)
 	  }
 	case CB_USAGE_PACKED:
 	  {
-	    f->size = f->pic->size / 2;
-	    if (f->pic->size % 2 || f->pic->have_sign)
-	      f->size++;
+	    f->size = f->pic->size / 2 + 1;
 	    break;
 	  }
 	case CB_USAGE_INDEX:
