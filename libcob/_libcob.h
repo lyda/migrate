@@ -103,9 +103,9 @@
 #pragma pack(1)
 struct fld_desc
 {
-  unsigned long int len;
+  unsigned long len;
   char type;
-  unsigned char decimals;
+  char decimals;
   unsigned int all:1;
   unsigned int just_r:1;
   unsigned int separate_sign:1;
