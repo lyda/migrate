@@ -167,7 +167,7 @@ static void assert_numeric_sy (struct sym *sy);
 %token ORGANIZATION,ACCESS,MODE,KEY,STATUS,ALTERNATE
 %token SEQUENTIAL,INDEXED,DYNAMIC,RANDOM,RELATIVE
 %token SECTION,SORT,DUPLICATES,WITH
-%token QUOTES,LOWVALUES,HIGHVALUES,NOTEXCEP
+%token QUOTES,LOWVALUES,HIGHVALUES
 %token SET,UP,DOWN
 %token TRACE,READY,RESET
 %token SEARCH,WHEN,TEST
@@ -2820,7 +2820,7 @@ on_overflow:
     | /* nothing */
     ;
 on_not_overflow:
-    NOTEXCEP ONTOK OVERFLOWTK { $<dval>$ = gen_at_end(0); }
+    NOT ONTOK OVERFLOWTK { $<dval>$ = gen_at_end(0); }
         statement_list            { gen_dstlabel($<dval>4); }
     | /* nothing */
     ;
@@ -2836,7 +2836,7 @@ opt_invalid_key_sentence:
     | /* nothing */
     ;
 opt_not_invalid_key_sentence:
-    NOTEXCEP INVALID opt_key    { $<dval>$ = gen_at_end(0); }
+    NOT INVALID opt_key    { $<dval>$ = gen_at_end(0); }
     statement_list                    { gen_dstlabel($<dval>4); }
     | /* nothing */
     ;

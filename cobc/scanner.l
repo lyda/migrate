@@ -433,8 +433,6 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   if ((reserved_token = reserved (yytext)) != 0)
     {
       TRACE_PRINT ((" <reserved>: %s\n", yytext));
-      if (reserved_token == NOT)
-	reserved_token = NOTEXCEP;
       return reserved_token;
     }
   /* if symbol was defined at the data division */
@@ -588,9 +586,7 @@ X{sdelim}       { return read_literal_x ('\"'); }
         }
 
 {lpar}  {
-                if (function_seen) {
-                        function_seen = 0;
-                        }
+                function_seen = 0;
                 TRACE_PRINT (("<0: lpar>: %s\n", yytext));
                 return(yytext[0]); 
         }
