@@ -30,6 +30,8 @@
 #include "libcob.h"
 #include "defaults.h"
 
+int cob_dynamic_reloading = 0;
+
 static char resolve_error_buff[FILENAME_MAX];
 static char *resolve_error = NULL;
 static int resolve_size = 0;
@@ -109,10 +111,11 @@ lookup (const char *name)
   for (p = call_table[hash (name)]; p; p = p->next)
     if (strcmp (name, p->name) == 0)
       {
-	if (stat (p->path, &st) == 0 && p->mtime == st.st_mtime)
+	if (cob_dynamic_reloading == 0
+	    || (stat (p->path, &st) == 0 && p->mtime == st.st_mtime))
 	  return p->func;
 	drop (name);
-	return NULL;
+	break;
       }
   return NULL;
 }

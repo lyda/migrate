@@ -187,7 +187,7 @@ cob_cmp_str (struct cob_field f1, unsigned char *data2, int len2)
   int i, ret = 0;
   int len1 = f1.desc->size;
   int min = (len1 < len2) ? len1 : len2;
-  int sign1 = cob_get_sign (f1);
+  int sign = cob_get_sign (f1);
 
   /* compare common substring */
   for (i = 0; i < min; i++)
@@ -213,7 +213,7 @@ cob_cmp_str (struct cob_field f1, unsigned char *data2, int len2)
     }
 
  end:
-  cob_put_sign (f1, sign1);
+  cob_put_sign (f1, sign);
   return ret;
 }
 
