@@ -125,7 +125,7 @@ typedef struct cobc_tree_common *cobc_tree;
       {									\
 	fprintf (stderr,						\
 		 "%s:%d: invalid type cast from `%s' at %d in %s\n",	\
-		 __FILE__, __LINE__, _x ? tree_to_string (_x) : "null",	\
+		 __FILE__, __LINE__, _x ? tree_name (_x) : "null",	\
 		 cobc_source_line, cobc_source_file);			\
 	abort ();							\
       }									\
@@ -135,7 +135,7 @@ typedef struct cobc_tree_common *cobc_tree;
 #define COBC_TREE_CAST(x,tg,ty)	((ty *) (x))
 #endif
 
-extern char *tree_to_string (cobc_tree x);
+extern char *tree_name (cobc_tree x);
 
 
 /*

@@ -507,7 +507,7 @@ output_field (cobc_tree x, int id)
 
 	r->id = id;
 	f = COBC_FIELD (r->value);
-	output_line ("/* %s */", tree_to_string (x));
+	output_line ("/* %s */", tree_name (x));
 
 	/* size */
 	output_prefix ();

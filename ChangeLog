@@ -1,3 +1,7 @@
+2002-12-10  Keisuke Nishida  <knishida@netlab.jp>
+
+	* configure.ac: Updated for autoconf-2.57, and automake-1.7.2.
+
 2002-12-01  Keisuke Nishida  <knishida@netlab.jp>
 
 	* configure.ac: Updated for autoconf-2.56, automake-1.7.1,

@@ -263,7 +263,7 @@ identification_division:
 	  *s = '_';
 	}
     if (converted)
-      yywarn_loc ($6, _("PROGRAM-ID is converted to `%s'"), name);
+      yywarn_x ($6, _("PROGRAM-ID is converted to `%s'"), name);
     program_spec.program_id = name;
   }
 ;
@@ -371,7 +371,7 @@ special_name_mnemonic:
   {
     int n = lookup_builtin_word (COBC_NAME ($1));
     if (n == 0)
-      yyerror_loc ($1, _("unknown name `%s'"), COBC_NAME ($1));
+      yyerror_x ($1, _("unknown name `%s'"), COBC_NAME ($1));
     $<tree>$ = make_builtin (n);
   }
   special_name_mnemonic_define
@@ -493,7 +493,7 @@ special_name_currency:
   {
     unsigned char *s = COBC_LITERAL ($3)->data;
     if (COBC_LITERAL ($3)->size != 1)
-      yyerror_loc ($3, _("invalid currency sign `%s'"), s);
+      yyerror_x ($3, _("invalid currency sign `%s'"), s);
     cob_currency_symbol = s[0];
   }
 ;
@@ -541,19 +541,19 @@ select_sequence:
 
     /* check ASSIGN clause */
     if (current_file->assign == NULL)
-      yyerror_loc ($4, _("ASSIGN required for file `%s'"), name);
+      yyerror_x ($4, _("ASSIGN required for file `%s'"), name);
 
     /* check KEY clause */
     switch (current_file->organization)
       {
       case COB_ORG_INDEXED:
 	if (current_file->key == NULL)
-	  yyerror_loc ($4, _("RECORD KEY required for file `%s'"), name);
+	  yyerror_x ($4, _("RECORD KEY required for file `%s'"), name);
 	break;
       case COB_ORG_RELATIVE:
 	if (current_file->key == NULL
 	    && current_file->access_mode != COB_ACCESS_SEQUENTIAL)
-	  yyerror_loc ($4, _("RELATIVE KEY required for file `%s'"), name);
+	  yyerror_x ($4, _("RELATIVE KEY required for file `%s'"), name);
 	break;
       }
   }
@@ -1545,8 +1545,8 @@ accept_statement:
 	    push_funcall_3 ("cob_screen_accept", $2, line, column);
 	  }
 	else
-	  yyerror_loc ($2, "`%s' not defined in SCREEN SECTION",
-		       tree_to_string ($2));
+	  yyerror_x ($2, "`%s' not defined in SCREEN SECTION",
+		       tree_name ($2));
       }
     else
       {
@@ -1587,7 +1587,7 @@ accept_statement:
 	push_funcall_2 ("cob_accept", $2, make_integer (COB_SYSIN));
 	break;
       default:
-	yyerror_tree ($4, _("invalid input stream"));
+	yyerror_x ($4, _("invalid input stream `%s'"), tree_name ($4));
 	break;
       }
   }
@@ -1810,8 +1810,8 @@ display_statement:
 	      push_funcall_3 ("cob_screen_display", l->item, line, column);
 	    }
 	  else
-	    yyerror_loc (l->item, "`%s' not defined in SCREEN SECTION",
-			 tree_to_string (l->item));
+	    yyerror_x (l->item, "`%s' not defined in SCREEN SECTION",
+			 tree_name (l->item));
       }
     else
       {
@@ -2114,7 +2114,7 @@ tallying_item:
 | text_value inspect_before_after_list
   {
     if (current_inspect_func == NULL)
-      yyerror (_("ALL or LEADING expected before `%s'"), tree_to_string ($1));
+      yyerror (_("ALL or LEADING expected before `%s'"), tree_name ($1));
     $<list>$ = list_add ($2, make_funcall_2 (current_inspect_func, current_inspect_data, $1));
   }
 ;
@@ -3244,7 +3244,7 @@ expr_1:
     if (i != 1)
       {
       error:
-	yyerror_tree ($1->item, _("invalid expression"));
+	yyerror_x ($1->item, _("invalid expression"), tree_name ($1->item));
 	YYERROR;
       }
 
@@ -3327,7 +3327,7 @@ numeric_name:
   {
     if (COBC_TREE_CLASS ($1) != COB_TYPE_NUMERIC)
       {
-	yyerror_loc ($1, _("`%s' not numeric"), tree_to_string ($1));
+	yyerror_x ($1, _("`%s' not numeric"), tree_name ($1));
 	YYERROR;
       }
     $$ = $1;
@@ -3342,8 +3342,8 @@ numeric_edited_name:
     int category = COBC_FIELD (cobc_ref ($1))->pic->category;
     if (category != COB_TYPE_NUMERIC && category != COB_TYPE_NUMERIC_EDITED)
       {
-	yyerror_loc ($1, _("`%s' not numeric or numeric edited"),
-		     tree_to_string ($1));
+	yyerror_x ($1, _("`%s' not numeric or numeric edited"),
+		     tree_name ($1));
 	YYERROR;
       }
     $$ = $1;
@@ -3357,7 +3357,7 @@ group_name:
   {
     if (field ($1)->children == NULL)
       {
-	yyerror_loc ($1, _("`%s' not a group"), tree_to_string ($1));
+	yyerror_x ($1, _("`%s' not a group"), tree_name ($1));
 	YYERROR;
       }
     $$ = $1;
@@ -3369,10 +3369,11 @@ group_name:
 table_name:
   qualified_name
   {
-    if (!COBC_FIELD (cobc_ref ($1))->index_list)
+    cobc_tree x = cobc_ref ($1);
+    if (!COBC_FIELD (x)->index_list)
       {
-	yyerror_loc ($1, _("`%s' not indexed"), tree_to_string ($1));
-	yyerror_tree ($1, _("defined here"));
+	yyerror_x ($1, _("`%s' not indexed"), tree_name ($1));
+	yyerror_x (x, _("`%s' defined here"), tree_name (x));
 	YYERROR;
       }
     $$ = $1;
@@ -3419,7 +3420,7 @@ file_name:
 	    $$ = $1;
 	    break;
 	  }
-	yyerror_loc ($1, _("`%s' not file name"), r->word->name);
+	yyerror_x ($1, _("`%s' not file name"), r->word->name);
 	YYERROR;
       }
   }
@@ -3432,7 +3433,7 @@ record_name:
   {
     if (COBC_FIELD (cobc_ref ($1))->file == NULL)
       {
-	yyerror_loc ($1, _("`%s' not record name"), tree_to_string ($1));
+	yyerror_x ($1, _("`%s' not record name"), tree_name ($1));
 	YYERROR;
       }
     $$ = $1;
@@ -3562,8 +3563,8 @@ numeric_value:
   value
   {
     if (COBC_TREE_CLASS ($1) != COB_TYPE_NUMERIC)
-      yyerror_loc ($1, _("numeric value is expected `%s'"),
-		   tree_to_string ($1));
+      yyerror_x ($1, _("numeric value is expected `%s'"),
+		   tree_name ($1));
     $$ = $1;
   }
 ;
@@ -3607,8 +3608,8 @@ integer_value:
 	}
       default:
       invalid:
-	yyerror_loc ($1, _("`%s' must be an integer value"),
-		     tree_to_string ($1));
+	yyerror_x ($1, _("`%s' must be an integer value"),
+		     tree_name ($1));
 	YYERROR;
       }
     $$ = $1;
@@ -3814,13 +3815,13 @@ resolve_field (cobc_tree x)
 	  switch (need)
 	    {
 	    case 0:
-	      yyerror_loc (x, _("`%s' cannot be subscripted"), name);
+	      yyerror_x (x, _("`%s' cannot be subscripted"), name);
 	      break;
 	    case 1:
-	      yyerror_loc (x, _("`%s' requires 1 subscript"), name);
+	      yyerror_x (x, _("`%s' requires 1 subscript"), name);
 	      break;
 	    default:
-	      yyerror_loc (x, _("`%s' requires %d subscripts"), name, need);
+	      yyerror_x (x, _("`%s' requires %d subscripts"), name, need);
 	      break;
 	    }
 	  return NULL;
@@ -3856,7 +3857,7 @@ resolve_label (cobc_tree x)
 	    }
 	  /* fall through */
 	default:
-	  yyerror_loc (x2, _("invalid section name `%s'"), r2->word->name);
+	  yyerror_x (x2, _("invalid section name `%s'"), r2->word->name);
 	  return NULL;
 	}
     }
@@ -3874,7 +3875,7 @@ resolve_label (cobc_tree x)
 	      set_value (x, r->word->items->item);
 	      break;
 	    }
-	  yyerror_loc (x, _("invalid label `%s'"), r->word->name);
+	  yyerror_x (x, _("invalid label `%s'"), r->word->name);
 	  return NULL;
 	default:
 	  section = COBC_LABEL (r->offset);
@@ -3893,7 +3894,7 @@ resolve_label (cobc_tree x)
 	  }
       if (r->value == NULL)
 	{
-	  yyerror_loc (x, _("no such label `%s' IN `%s'"),
+	  yyerror_x (x, _("no such label `%s' IN `%s'"),
 		       r->word->name, section->name);
 	  return NULL;
 	}
@@ -3986,7 +3987,7 @@ build_field (cobc_tree level, cobc_tree name, struct cobc_field *last_field)
     }
   else if (!last_field)
     {
-      yyerror_loc (level, _("level number must begin with 01 or 77"));
+      yyerror_x (level, _("level number must begin with 01 or 77"));
       return NULL;
     }
   else if (f->level == 66)
@@ -4006,7 +4007,7 @@ build_field (cobc_tree level, cobc_tree name, struct cobc_field *last_field)
     }
   else if (f->level > 49)
     {
-      yyerror_loc (level, _("invalid level number `%s'"),
+      yyerror_x (level, _("invalid level number `%s'"),
 		   COBC_LITERAL (level)->data);
       return NULL;
     }
@@ -4039,7 +4040,7 @@ build_field (cobc_tree level, cobc_tree name, struct cobc_field *last_field)
 	    last_field = p;
 	    goto sister;
 	  }
-      yyerror_loc (level, _("field hierarchy broken"));
+      yyerror_x (level, _("field hierarchy broken"));
       return NULL;
     }
 
@@ -4064,10 +4065,12 @@ validate_field_tree (struct cobc_field *p)
     {
       /* group */
       if (p->pic)
-	yyerror_tree (x, _("group name may not have PICTURE"));
+	yyerror_x (x, _("group name `%s' may not have PICTURE"),
+		   tree_name (x));
 
       if (p->f.justified)
-	yyerror_tree (x, _("group name may not have JUSTIFIED RIGHT"));
+	yyerror_x (x, _("group name `%s' may not have JUSTIFIED RIGHT"),
+		   tree_name (x));
 
       for (p = p->children; p; p = p->sister)
 	validate_field_tree (p);
@@ -4079,14 +4082,15 @@ validate_field_tree (struct cobc_field *p)
     {
       /* conditional variable */
       if (p->pic)
-	yyerror_tree (x, _("level 88 field may not have PICTURE"));
+	yyerror_x (x, _("level 88 field `%s' may not have PICTURE"),
+		   tree_name (x));
     }
   else
     {
       /* validate PICTURE */
       if (!p->pic)
 	if (p->usage != COBC_USAGE_INDEX)
-	  yyerror_tree (x, _("PICTURE required"));
+	  yyerror_x (x, _("PICTURE required for `%s'"), tree_name (x));
 
       /* validate USAGE */
       switch (p->usage)
@@ -4106,7 +4110,8 @@ validate_field_tree (struct cobc_field *p)
       /* validate OCCURS */
       if (p->f.have_occurs)
 	if (p->level < 2 || p->level > 49)
-	  yyerror_tree (x, _("level %02d field cannot have OCCURS"), p->level);
+	  yyerror_x (x, _("level %02d field `%s' cannot have OCCURS"),
+		     p->level, tree_name (x));
 
       /* validate JUSTIFIED RIGHT */
       if (p->f.justified)
@@ -4117,7 +4122,8 @@ validate_field_tree (struct cobc_field *p)
 	  case COB_TYPE_NATIONAL:
 	    break;
 	  default:
-	    yyerror_tree (x, _("cannot have JUSTIFIED RIGHT"));
+	    yyerror_x (x, _("`%s' cannot have JUSTIFIED RIGHT"),
+		       tree_name (x));
 	    break;
 	  }
 
@@ -4142,16 +4148,16 @@ validate_field_tree (struct cobc_field *p)
 	{
 	  if (p->f.in_redefines)
 	    {
-	      yyerror_tree (x, _("VALUE not allowed under REDEFINES"));
+	      yyerror_x (x, _("VALUE clause not allowed under REDEFINES"));
 	    }
 	  else if (p->value == cobc_zero)
 	    {
 	      /* just accept */
 	    }
-	  else if (COBC_TREE_CLASS (p->value) == COB_TYPE_NUMERIC)
+	  else if (p->pic->category != COB_TYPE_NUMERIC)
 	    {
-	      if (p->pic->category != COB_TYPE_NUMERIC)
-		yywarn_tree (x, _("VALUE should be alphanumeric"));
+	      if (COBC_TREE_CLASS (p->value) == COB_TYPE_NUMERIC)
+		yyerror_x (x, _("VALUE should be alphanumeric"));
 	    }
 	}
     }
@@ -4735,11 +4741,11 @@ search_set_keys (struct cobc_field *f, cobc_tree x)
 	      break;
 	    }
 	if (i == f->nkeys)
-	  yyerror_loc (x, _("undeclared key `%s'"), field (p->x)->name);
+	  yyerror_x (x, _("undeclared key `%s'"), field (p->x)->name);
 	break;
       }
     default:
-      yyerror_loc (x, _("invalid SEARCH ALL condition"));
+      yyerror_x (x, _("invalid SEARCH ALL condition"));
       break;
     }
 }
@@ -4779,8 +4785,9 @@ static void
 redefinition_error (cobc_tree x)
 {
   struct cobc_word *w = COBC_REFERENCE (x)->word;
-  yyerror_loc (x, _("redefinition of `%s'"), w->name);
-  yyerror_tree (w->items->item, _("previously defined here"));
+  yyerror_x (x, _("redefinition of `%s'"), w->name);
+  yyerror_x (w->items->item, _("`%s' previously defined here"),
+	     tree_name (w->items->item));
 }
 
 static void
@@ -4788,10 +4795,10 @@ undefined_error (cobc_tree x, cobc_tree parent)
 {
   struct cobc_word *w = COBC_REFERENCE (x)->word;
   if (parent)
-    yyerror_loc (x, _("`%s' undefined in `%s'"),
-		 w->name, tree_to_string (parent));
+    yyerror_x (x, _("`%s' undefined in `%s'"),
+		 w->name, tree_name (parent));
   else
-    yyerror_loc (x, _("`%s' undefined"), w->name);
+    yyerror_x (x, _("`%s' undefined"), w->name);
 }
 
 static void
@@ -4803,7 +4810,7 @@ ambiguous_error (cobc_tree x)
       struct cobc_list *l;
 
       /* display error on the first time */
-      yyerror_loc (x, _("`%s' ambiguous; need qualification"), w->name);
+      yyerror_x (x, _("`%s' ambiguous; need qualification"), w->name);
       w->error = 1;
 
       /* display all fields with the same name */
@@ -4821,21 +4828,19 @@ ambiguous_error (cobc_tree x)
 		strcat (buff, "' ");
 	      }
 	  strcat (buff, _("defined here"));
-	  yyerror_loc (x, buff);
+	  yyerror_x (x, buff);
 	}
     }
 }
 
 
 static void
-yyprintf (char *file, int line, char *prefix, char *fmt, va_list ap, char *name)
+yyprintf (char *file, int line, char *prefix, char *fmt, va_list ap)
 {
   fprintf (stderr, "%s:%d: %s",
 	   file ? file : cobc_source_file,
 	   line ? line : cobc_source_line,
 	   prefix);
-  if (name)
-    fprintf (stderr, "`%s' ", name);
   vfprintf (stderr, fmt, ap);
   fputs ("\n", stderr);
 }
@@ -4845,7 +4850,7 @@ yywarn (char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  yyprintf (0, 0, "warning: ", fmt, ap, NULL);
+  yyprintf (0, 0, "warning: ", fmt, ap);
   va_end (ap);
 
   warning_count++;
@@ -4856,51 +4861,29 @@ yyerror (char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  yyprintf (0, 0, "", fmt, ap, NULL);
+  yyprintf (0, 0, "", fmt, ap);
   va_end (ap);
 
   error_count++;
 }
 
 void
-yywarn_loc (cobc_tree x, char *fmt, ...)
+yywarn_x (cobc_tree x, char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  yyprintf (x->loc.text, x->loc.first_line, "warning: ", fmt, ap, NULL);
+  yyprintf (x->loc.text, x->loc.first_line, "warning: ", fmt, ap);
   va_end (ap);
 
   warning_count++;
 }
 
 void
-yyerror_loc (cobc_tree x, char *fmt, ...)
+yyerror_x (cobc_tree x, char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  yyprintf (x->loc.text, x->loc.first_line, "", fmt, ap, NULL);
-  va_end (ap);
-
-  error_count++;
-}
-
-void
-yywarn_tree (cobc_tree x, char *fmt, ...)
-{
-  va_list ap;
-  va_start (ap, fmt);
-  yyprintf (x->loc.text, x->loc.first_line, "warning: ", fmt, ap, tree_to_string (x));
-  va_end (ap);
-
-  warning_count++;
-}
-
-void
-yyerror_tree (cobc_tree x, char *fmt, ...)
-{
-  va_list ap;
-  va_start (ap, fmt);
-  yyprintf (x->loc.text, x->loc.first_line, "", fmt, ap, tree_to_string (x));
+  yyprintf (x->loc.text, x->loc.first_line, "", fmt, ap);
   va_end (ap);
 
   error_count++;

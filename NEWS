@@ -2,13 +2,10 @@ NEWS - user visible changes				-*- outline -*-
 
 * Changes in OpenCOBOL 0.10
 
+** New file cob.pc, which is used by pkg-config script.
+
 ** libcob.conf is now installed under sysconfdir (i.e., $(PREFIX)/etc).
 The default value of COB_CONFIG_FILE has been changed appropriately.
-
-
-* Changes in OpenCOBOL 0.9.8
-
-** New file cob.pc, which is used by pkg-config script.
 
 ** Use db1 again instead of db2 or db3.
 

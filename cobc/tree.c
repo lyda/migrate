@@ -167,7 +167,7 @@ make_tree (int tag, char class, int size)
 }
 
 static int
-tree_to_string_1 (char *s, cobc_tree x)
+tree_name_1 (char *s, cobc_tree x)
 {
   char *orig = s;
 
@@ -209,7 +209,7 @@ tree_to_string_1 (char *s, cobc_tree x)
       {
 	struct cobc_reference *p = COBC_REFERENCE (x);
 	if (p->value)
-	  s += tree_to_string_1 (s, p->value);
+	  s += tree_name_1 (s, p->value);
 	else
 	  s += sprintf (s, "#<reference %s>", p->word->name);
 	if (p->subs)
@@ -218,17 +218,17 @@ tree_to_string_1 (char *s, cobc_tree x)
 	    s += sprintf (s, "(");
 	    for (l = p->subs; l; l = l->next)
 	      {
-		s += tree_to_string_1 (s, l->item);
+		s += tree_name_1 (s, l->item);
 		s += sprintf (s, l->next ? ", " : ")");
 	      }
 	  }
 	if (p->offset)
 	  {
 	    s += sprintf (s, "(");
-	    s += tree_to_string_1 (s, p->offset);
+	    s += tree_name_1 (s, p->offset);
 	    s += sprintf (s, ":");
 	    if (p->length)
-	      s += tree_to_string_1 (s, p->length);
+	      s += tree_name_1 (s, p->length);
 	    strcpy (s, ")");
 	  }
       }
@@ -244,14 +244,14 @@ tree_to_string_1 (char *s, cobc_tree x)
 	if (p->op == '!')
 	  {
 	    s += sprintf (s, "!");
-	    s += tree_to_string_1 (s, p->x);
+	    s += tree_name_1 (s, p->x);
 	  }
 	else
 	  {
 	    s += sprintf (s, "(");
-	    s += tree_to_string_1 (s, p->x);
+	    s += tree_name_1 (s, p->x);
 	    s += sprintf (s, " %c ", p->op);
-	    s += tree_to_string_1 (s, p->y);
+	    s += tree_name_1 (s, p->y);
 	    strcpy (s, ")");
 	  }
 	break;
@@ -265,7 +265,7 @@ tree_to_string_1 (char *s, cobc_tree x)
 	for (i = 0; i < p->argc; i++)
 	  {
 	    s += sprintf (s, (i == 0) ? "(" : ", ");
-	    s += tree_to_string_1 (s, p->argv[i]);
+	    s += tree_name_1 (s, p->argv[i]);
 	  }
 	s += sprintf (s, ")");
 	break;
@@ -279,10 +279,10 @@ tree_to_string_1 (char *s, cobc_tree x)
 }
 
 char *
-tree_to_string (cobc_tree x)
+tree_name (cobc_tree x)
 {
   static char buff[BUFSIZ];
-  tree_to_string_1 (buff, x);
+  tree_name_1 (buff, x);
   return buff;
 }
 
@@ -812,7 +812,7 @@ make_binary_op (cobc_tree left, char op, cobc_tree right)
 
     default:
     invalid:
-      yyerror ("invalid binary-op: %s", tree_to_string (COBC_TREE (p)));
+      yyerror ("invalid binary-op: %s", tree_name (COBC_TREE (p)));
       abort ();
     }
   return COBC_TREE (p);
