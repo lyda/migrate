@@ -1,9 +1,26 @@
 AT_INIT([Redefinition Tests])
 
-AT_TESTED([cobpp cobc])
+AT_TESTED([cobc])
 
 
-AT_SETUP([Redefinition of 01 fields (1)])
+AT_SETUP([Undefined entry])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+PROCEDURE       DIVISION.
+  DISPLAY X.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C prog.cob], [1], ,
+[prog.cob:5: error: `X' undefined
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([Redefinition of 01 entries (1)])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.
@@ -24,7 +41,7 @@ prog.cob:6: error: `X' previously defined here
 AT_CLEANUP
 
 
-AT_SETUP([Redefinition of 01 fields (2)])
+AT_SETUP([Redefinition of 01 entries (2)])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.
@@ -46,7 +63,7 @@ prog.cob:6: error: `X' previously defined here
 AT_CLEANUP
 
 
-AT_SETUP([Redefinition of 01 and 02 fields])
+AT_SETUP([Redefinition of 01 and 02 entries])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.
@@ -67,7 +84,7 @@ prog.cob:6: error: `X' previously defined here
 AT_CLEANUP
 
 
-AT_SETUP([Redefinition of 02 fields (same group)])
+AT_SETUP([Redefinition of 02 entries (same group)])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.
@@ -89,7 +106,7 @@ prog.cob:7: error: `X' previously defined here
 AT_CLEANUP
 
 
-AT_SETUP([Redefinition of 02 fields (different groups with reference)])
+AT_SETUP([Redefinition of 02 entries (different groups with reference)])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.
@@ -114,7 +131,7 @@ prog.cob:9: error: `X' in `G2' defined here
 AT_CLEANUP
 
 
-AT_SETUP([Redefinition of 77 fields])
+AT_SETUP([Redefinition of 77 entries])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.
@@ -135,7 +152,7 @@ prog.cob:6: error: `X' previously defined here
 AT_CLEANUP
 
 
-AT_SETUP([Redefinition of 01 and 77 fields])
+AT_SETUP([Redefinition of 01 and 77 entries])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.

@@ -1,7 +1,11 @@
+2003-02-25  Keisuke Nishida  <knishida@netlab.jp>
+
+	* definition.at, misc.at: New files.
+	* redef.at: Removed.
+
 2002-12-12  Keisuke Nishida  <knishida@netlab.jp>
 
 	* redefines.at: New file.
-	* Makefile.am: Add redefines.at.
 
 2002-12-10  Keisuke Nishida  <knishida@netlab.jp>
 

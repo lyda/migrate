@@ -1,10 +1,11 @@
 SUBDIRS = cobol85
 
 TESTSUITE =			\
-	$(srcdir)/redef		\
+	$(srcdir)/definition	\
 	$(srcdir)/subref	\
 	$(srcdir)/redefines	\
-	$(srcdir)/runtime
+	$(srcdir)/runtime	\
+	$(srcdir)/misc
 
 EXTRA_DIST = $(TESTSUITE:=.at) $(TESTSUITE)
 

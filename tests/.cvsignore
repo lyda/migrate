@@ -4,8 +4,9 @@ Makefile
 Makefile.in
 atconfig
 atlocal
+definition
+misc
 package.m4
-redef
 redefines
 runtime
 subref
