@@ -165,11 +165,11 @@ void *
 cob_resolve (const char *name)
 {
   int i;
-  char buff[FILENAME_MAX];
-  char *p = buff;
+  char *p;
   const char *s = name;
   lt_ptr_t func;
   lt_dlhandle handle;
+  char buff[FILENAME_MAX];
 
   if (!cob_initialized)
     {
@@ -177,7 +177,13 @@ cob_resolve (const char *name)
       exit (1);
     }
 
+  /* search the cache */
+  func = lookup (name);
+  if (func)
+    return func;
+
   /* encode program name */
+  p = buff;
   if (isdigit (*s))
     p += sprintf (p, "$%02X", *s++);
   for (; *s; s++)
@@ -186,11 +192,6 @@ cob_resolve (const char *name)
     else
       p += sprintf (p, "$%02X", *s);
   *p = 0;
-
-  /* search the cache */
-  func = lookup (name);
-  if (func)
-    return func;
 
   /* search the main program */
   if ((handle = lt_dlopen (NULL)) != NULL
@@ -243,7 +244,7 @@ cob_resolve_error (void)
 void *
 cob_call_resolve (cob_field *f)
 {
-  char buff[f->size];
+  char buff[f->size + 1];
   return cob_resolve (cob_field_to_string (f, buff));
 }
 
@@ -257,6 +258,6 @@ cob_call_error (void)
 void
 cob_cancel (cob_field *f)
 {
-  char buff[f->size];
+  char buff[f->size + 1];
   return drop (cob_field_to_string (f, buff));
 }

@@ -1,3 +1,8 @@
+2005-02-11  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : small optimization and module
+	  initialization sequence.
+
 2005-02-09  Roger While <simrw@sim-basis.de>
 
 	* codegen.c : Change order of generating variable

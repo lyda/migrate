@@ -1,3 +1,11 @@
+2005-02-11  Roger While <simrw@sim-basis.de>
+
+	* common.h, common.c, termio.c :
+	  Reorder struct cob_module.
+	  Fixes for ARGUMENT-VALUE/NUMBER -
+	  discovered by Franklin Ankum.
+	  Fix possible too small buffer.
+
 2005-02-09  Roger While <simrw@sim-basis.de>
 
 	* I must be going senile. Finally fix

@@ -114,15 +114,15 @@ enum cob_display_sign {
 };
 
 typedef struct __cob_module {
+  struct __cob_module *next;
+  const unsigned char *collating_sequence;
+  enum cob_display_sign display_sign;
   unsigned char decimal_point;
   unsigned char currency_symbol;
   unsigned char numeric_separator;
-  const unsigned char *collating_sequence;
-  enum cob_display_sign display_sign;
-  unsigned long flag_filename_mapping : 1;
-  unsigned long flag_binary_truncate : 1;
-  unsigned long flag_pretty_display : 1;
-  struct __cob_module *next;
+  unsigned int flag_filename_mapping:1;
+  unsigned int flag_binary_truncate:1;
+  unsigned int flag_pretty_display:1;
 } cob_module;
 
 extern cob_module *cob_current_module;

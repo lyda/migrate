@@ -771,10 +771,10 @@ AT_DATA([prog.cob], [
 
 export TEST_ENV=OK
 AT_CHECK([${COMPILE} -o prog prog.cob])
-AT_CHECK([./prog], [0],
+AT_CHECK([./prog CHECKPAR], [0],
 [(OK  )
 (RXW )
-(./prog  )
+(CHECKPAR)
 (0001)
 ])
 

@@ -1026,9 +1026,15 @@ static void
 output_initialize_uniform (cb_tree x, int c, int size)
 {
   output_prefix ();
-  output ("memset (");
-  output_data (x);
-  output (", %d, %d);\n", c, size);
+  if ( size == 1 ) {
+	output ("*(unsigned char *)(");
+	output_data (x);
+	output (") = %d;\n", c);
+  } else {
+	output ("memset (");
+	output_data (x);
+	output (", %d, %d);\n", c, size);
+  }
 }
 
 static void
@@ -1050,9 +1056,15 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
 	     has VALUE SPACE because cob_build_move doubly checks the value.
 	     We should instead check the value only once.  */
 	  output_prefix ();
-	  output ("memset (");
-	  output_data (x);
-	  output (", ' ', %d);\n", f->size);
+	  if ( f->size == 1 ) {
+		output ("*(unsigned char *)(");
+		output_data (x);
+		output (") = ' ';\n");
+	  } else {
+		output ("memset (");
+		output_data (x);
+		output (", ' ', %d);\n", f->size);
+	  }
 	}
       else if (CB_CONST_P (value)
 	  || CB_TREE_CLASS (value) == CB_CLASS_NUMERIC
@@ -1078,11 +1090,20 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
 	      memset (buff + l->size, ' ', f->size - l->size);
 	    }
 	  output_prefix ();
-	  output ("memcpy (");
-	  output_data (x);
-	  output (", ");
-	  output_string (buff, f->size);
-	  output (", %d);\n", f->size);
+	  if (f->size == 1)
+	    {
+		output ("*(unsigned char *) (");
+		output_data (x);
+		output (") = %d;\n", *(unsigned char *) buff);
+	    }
+	  else
+	    {
+		output ("memcpy (");
+		output_data (x);
+		output (", ");
+		output_string (buff, f->size);
+		output (", %d);\n", f->size);
+	    }
 	}
       return;
     }
@@ -2098,16 +2119,17 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   output_line ("static int initialized = 0;");
   if (prog->decimal_index_max)
 	output_line ("static cob_decimal d[%d];", prog->decimal_index_max);
+
   output_prefix ();
-  output ("static cob_module module = {'%c', '%c', '%c', ",
-	  prog->decimal_point, prog->currency_symbol, prog->numeric_separator);
+  output ("static cob_module module = { NULL, ");
   if (prog->collating_sequence)
-    output_param (cb_ref (prog->collating_sequence), -1);
-  else
-    output ("0");
-  output (", %d, %d, %d, %d, 0};\n",
-	  cb_display_sign, cb_filename_mapping, cb_binary_truncate,
-	  cb_pretty_display);
+	output_param (cb_ref (prog->collating_sequence), -1);
+  else    
+	output ("NULL");
+  output (", %d, '%c', '%c', '%c', %d, %d, %d};\n",
+	cb_display_sign, prog->decimal_point, prog->currency_symbol,
+	prog->numeric_separator, cb_filename_mapping, cb_binary_truncate,
+	cb_pretty_display);
   output_newline ();
 
   /* External items */

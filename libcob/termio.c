@@ -272,7 +272,7 @@ cob_accept_command_line (cob_field *f)
  * Argument number
  */
 
-static int current_arg = 0;
+static int current_arg = 1;
 
 void
 cob_display_arg_number (cob_field *f)
@@ -283,7 +283,7 @@ cob_display_arg_number (cob_field *f)
         cob_field temp = {4, (unsigned char *) &n, &attr};
 
         cob_move (f, &temp);
-	if ( n < 0 || n > cob_argc ) {
+	if ( n < 0 || n >= cob_argc ) {
 		return;
 	}
 	current_arg = n;
@@ -292,7 +292,7 @@ cob_display_arg_number (cob_field *f)
 void
 cob_accept_arg_number (cob_field *f)
 {
-	int n = cob_argc;
+	int n = cob_argc - 1;
 	cob_field_attr attr =
 		{COB_TYPE_NUMERIC_BINARY, 9, 0, 0, 0};
         cob_field temp = {4, (unsigned char *) &n, &attr};
@@ -303,7 +303,7 @@ cob_accept_arg_number (cob_field *f)
 void
 cob_accept_arg_value (cob_field *f)
 {
-	if ( current_arg > cob_argc ) {
+	if ( current_arg >= cob_argc ) {
 		return;
 	}
 	cob_memcpy (f, cob_argv[current_arg], strlen (cob_argv[current_arg]));
@@ -314,11 +314,21 @@ cob_accept_arg_value (cob_field *f)
  * Environment variable
  */
 
-static char env[FILENAME_MAX] = "";
+static char *env = NULL;
 
 void
 cob_display_environment (cob_field *f)
 {
+  if ( !env ) {
+	env = malloc(FILENAME_MAX);
+	if ( !env ) {
+		return;
+	}
+  }
+  memset(env, 0, FILENAME_MAX);
+  if ( f->size > FILENAME_MAX - 1 ) {
+	return;
+  }
   cob_field_to_string (f, env);
 }
 
@@ -329,12 +339,18 @@ cob_display_env_value (cob_field *f)
 	char	env1[FILENAME_MAX];
 	char	env2[FILENAME_MAX];
 
-	if ( !env[0] ) {
+	if ( !env ) {
+		return;
+	}
+	if ( !*env ) {
+		return;
+	}
+	cob_field_to_string(f, env2);
+	if ( strlen(env) + strlen(env2) + 2 > FILENAME_MAX ) {
 		return;
 	}
 	strcpy(env1, env);
 	strcat(env1, "=");
-	cob_field_to_string(f, env2);
 	strcat(env1, env2);
 	p = strdup(env1);
 	putenv(p);
@@ -343,8 +359,14 @@ cob_display_env_value (cob_field *f)
 void
 cob_accept_environment (cob_field *f)
 {
-  char *p = getenv (env);
-  if (!p) p = "";
+  char *p = NULL;
+
+  if ( env ) {
+	p = getenv (env);
+  }
+  if ( !p ) {
+	p = "";
+  }
   cob_memcpy (f, p, strlen (p));
 }
 

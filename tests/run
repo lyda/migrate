@@ -8902,9 +8902,9 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "extensions.at:779: ./prog"
+echo "extensions.at:779: ./prog CHECKPAR"
 echo extensions.at:779 >$at_check_line_file
-( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+( $at_traceon; ./prog CHECKPAR ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -8912,7 +8912,7 @@ at_failed=false
 $at_diff $at_devnull $at_stderr || at_failed=:
 echo >>$at_stdout; echo "(OK  )
 (RXW )
-(./prog  )
+(CHECKPAR)
 (0001)
 " | $at_diff - $at_stdout || at_failed=:
 case $at_status in
