@@ -1,3 +1,8 @@
+2002-09-24  Keisuke Nishida  <knishida@netlab.jp>
+
+	* inline.c (output_call_statement): Output the pointer to the
+	content length for COBC_CALL_BY_LENGTH.
+
 2002-09-23  Keisuke Nishida  <knishida@netlab.jp>
 
 	* cobc.c (process_translate): Verbose output.

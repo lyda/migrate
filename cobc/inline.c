@@ -726,6 +726,7 @@ void
 output_call_statement (cobc_tree name, struct cobc_list *args,
 		       cobc_tree st1, cobc_tree st2)
 {
+  int n;
   int dynamic_link = 1;
   struct cobc_list *l;
 
@@ -738,24 +739,32 @@ output_call_statement (cobc_tree name, struct cobc_list *args,
     output_line ("int (*func)();");
 
   /* setup arguments */
-  for (l = args; l; l = l->next)
+  for (l = args, n = 1; l; l = l->next, n++)
     {
       struct cobc_generic *p = l->item;
-      if (p->type == COBC_CALL_BY_CONTENT)
+      switch (p->type)
 	{
+	case COBC_CALL_BY_CONTENT:
 	  output_prefix ();
-	  output ("char c_%s_data[", COBC_FIELD (p->x)->cname);
+	  output ("char content_%d[", n);
 	  output_length (p->x);
 	  output ("];\n");
+	  break;
+	case COBC_CALL_BY_LENGTH:
+	  output_prefix ();
+	  output ("int length_%d = ", n);
+	  output_length (p->x);
+	  output (";\n");
 	}
     }
-  for (l = args; l; l = l->next)
+  for (l = args, n = 1; l; l = l->next, n++)
     {
       struct cobc_generic *p = l->item;
-      if (p->type == COBC_CALL_BY_CONTENT)
+      switch (p->type)
 	{
+	case COBC_CALL_BY_CONTENT:
 	  output_prefix ();
-	  output ("memcpy (c_%s_data, ", COBC_FIELD (p->x)->cname);
+	  output ("memcpy (content_%d, ", n);
 	  output_location (p->x);
 	  output (", ");
 	  output_length (p->x);
@@ -794,7 +803,7 @@ output_call_statement (cobc_tree name, struct cobc_list *args,
 
   /* arguments */
   output (" (");
-  for (l = args; l; l = l->next)
+  for (l = args, n = 1; l; l = l->next, n++)
     {
       struct cobc_generic *p = l->item;
       cobc_tree x = p->x;
@@ -804,10 +813,10 @@ output_call_statement (cobc_tree name, struct cobc_list *args,
 	  output_location (x);
 	  break;
 	case COBC_CALL_BY_CONTENT:
-	  output ("c_%s_data", COBC_FIELD (x)->cname);
+	  output ("content_%d", n);
 	  break;
 	case COBC_CALL_BY_LENGTH:
-	  output_length (x);
+	  output ("&length_%d", n);
 	  break;
 	case COBC_CALL_BY_VALUE:
 	  switch (COBC_TREE_TAG (x))
