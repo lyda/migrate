@@ -197,7 +197,8 @@ print_usage ()
 	  "  -S            Compile only; output assembly file\n"
 	  "  -c            Compile and assemble, but do not link\n"
 	  "  -m            Build a dynamic-linking module\n"
-	  "  -O            Optimize speed; minimum run-time error checking\n"
+	  "  -g            Produce debugging information in the output\n"
+	  "  -O            Optimize speed; minimize run-time error checking\n"
 	  "  -o <file>     Place the output into <file>\n"
 	  "  -MT <target>  Set target file used in dependency list\n"
 	  "  -MF <file>    Place dependency list into <file>\n"
@@ -250,8 +251,8 @@ process_command_line (int argc, char *argv[])
 	case 'o': output_name = strdup (optarg); break;
 
 	case 'g':
-	  // cobc_debug_flag = 1;
-	  // strcat (cob_cflags, " -g");
+	  cobc_debug_flag = 1;
+	  strcat (cob_cflags, " -g");
 	  break;
 
 	case 'O':
