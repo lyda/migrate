@@ -1069,7 +1069,7 @@ validate_field_1 (struct cb_field *f)
 
   /* validate OCCURS */
   if (f->flag_occurs)
-    if ((!cb_verify (cb_occurs_clause_on_root, "01/77 OCCURS")
+    if ((!cb_verify (cb_top_level_occurs_clause, "01/77 OCCURS")
 	 && (f->level == 01 || f->level == 77))
 	|| (f->level == 66 || f->level == 88))
       level_redundant_error (x, "OCCURS");
