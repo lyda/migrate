@@ -756,24 +756,34 @@ expr_reduce (int token)
 	    {
 	    case 'x':
 	      /* Simple condition: 'x' op 'x' */
-	      expr_lh = VALUE (-3);
-	      expr_op = op;
-	      TOKEN (-3) = 'x';
-	      if (CB_TREE_CLASS (VALUE (-1)) != CB_CLASS_BOOLEAN)
-		VALUE (-3) = cb_build_binary_op (expr_lh, op, VALUE (-1));
+	      if (VALUE (-3) == cb_error_node || VALUE (-1) == cb_error_node)
+		VALUE (-3) = cb_error_node;
 	      else
-		VALUE (-3) = VALUE (-1);
+		{
+		  expr_lh = VALUE (-3);
+		  expr_op = op;
+		  TOKEN (-3) = 'x';
+		  if (CB_TREE_CLASS (VALUE (-1)) != CB_CLASS_BOOLEAN)
+		    VALUE (-3) = cb_build_binary_op (expr_lh, op, VALUE (-1));
+		  else
+		    VALUE (-3) = VALUE (-1);
+		}
 	      expr_index -= 2;
 	      break;
 	    case '&':
 	    case '|':
 	      /* Complex condition: 'x' '=' 'x' '|' op 'x' */
-	      expr_op = op;
-	      TOKEN (-2) = 'x';
-	      if (CB_TREE_CLASS (VALUE (-1)) != CB_CLASS_BOOLEAN)
-		VALUE (-2) = cb_build_binary_op (expr_lh, op, VALUE (-1));
+	      if (VALUE (-1) == cb_error_node)
+		VALUE (-2) = cb_error_node;
 	      else
-		VALUE (-2) = VALUE (-1);
+		{
+		  expr_op = op;
+		  TOKEN (-2) = 'x';
+		  if (CB_TREE_CLASS (VALUE (-1)) != CB_CLASS_BOOLEAN)
+		    VALUE (-2) = cb_build_binary_op (expr_lh, op, VALUE (-1));
+		  else
+		    VALUE (-2) = VALUE (-1);
+		}
 	      expr_index -= 1;
 	      break;
 	    default:
