@@ -123,8 +123,6 @@ static cb_tree current_inspect_data;
 static int last_operator;
 static cb_tree last_lefthand;
 
-static int builtin_switch_id (cb_tree x);
-
 static cb_tree build_file_handler (cb_tree file, cb_tree handler);
 
 static void terminator_warning (void);
@@ -391,10 +389,9 @@ special_name:
 mnemonic_name_clause:
   WORD
   {
-    int n = lookup_builtin_word (CB_NAME ($1));
-    if (n == 0)
-      cb_error_x ($1, _("unknown name `%s'"), CB_NAME ($1));
-    $<tree>$ = make_builtin (n);
+    $<tree>$ = lookup_system_name (CB_NAME ($1));
+    if ($<tree>$ == cb_error_node)
+      cb_error_x ($1, _("unknown system-name `%s'"), CB_NAME ($1));
   }
   special_name_mnemonic_define
   special_name_mnemonic_on_off
@@ -409,13 +406,20 @@ special_name_mnemonic_on_off:
 | special_name_mnemonic_on_off
   on_or_off _status _is undefined_word
   {
-    int id = builtin_switch_id ($<tree>-1);
-    if (id != -1)
+    cb_tree x = $<tree>-1;
+    if (x != cb_error_node)
       {
-	cb_tree x = make_field ($5);
-	CB_FIELD (x)->level = 88;
-	CB_FIELD (x)->parent = CB_FIELD (cb_switch[id]);
-	CB_FIELD (x)->values = list ($2);
+	struct cb_system_name *s = CB_SYSTEM_NAME (x);
+	if (s->category == CB_SWITCH_NAME)
+	  {
+	    cb_tree x = make_field ($5);
+	    CB_FIELD (x)->level = 88;
+	    CB_FIELD (x)->parent = CB_FIELD (cb_switch[s->token]);
+	    CB_FIELD (x)->values = list ($2);
+	  }
+	else
+	  cb_error_x ($<tree>-2, _("switch-name is expected `%s'"),
+		      CB_NAME ($<tree>-2));
       }
   }
 ;
@@ -1712,10 +1716,10 @@ accept_body:
   }
 | data_name FROM mnemonic_name
   {
-    switch (CB_BUILTIN (cb_ref ($3))->id)
+    switch (CB_SYSTEM_NAME (cb_ref ($3))->token)
       {
-      case BUILTIN_CONSOLE:
-      case BUILTIN_SYSIN:
+      case CB_CONSOLE:
+      case CB_SYSIN:
 	push_funcall_2 ("cob_accept", $1, cb_build_integer (COB_SYSIN));
 	break;
       default:
@@ -1973,11 +1977,11 @@ display_upon:
   /* empty */			{ $$ = COB_SYSOUT; }
 | _upon mnemonic_name
   {
-    switch (CB_BUILTIN (cb_ref ($2))->id)
+    switch (CB_SYSTEM_NAME (cb_ref ($2))->token)
       {
-      case BUILTIN_CONSOLE: $$ = COB_SYSOUT; break;
-      case BUILTIN_SYSOUT:  $$ = COB_SYSOUT; break;
-      case BUILTIN_SYSERR:  $$ = COB_SYSERR; break;
+      case CB_CONSOLE: $$ = COB_SYSOUT; break;
+      case CB_SYSOUT:  $$ = COB_SYSOUT; break;
+      case CB_SYSERR:  $$ = COB_SYSERR; break;
       default:
 	cb_error_x ($2, _("invalid UPON item"));
 	$$ = COB_SYSOUT;
@@ -2772,9 +2776,8 @@ set_to_on_off:
     struct cb_list *l;
     for (l = $1; l; l = l->next)
       {
-	int id = builtin_switch_id (cb_ref (l->item));
-	if (id != -1)
-	  push (cb_build_move ($3, cb_switch[id]));
+	struct cb_system_name *s = CB_SYSTEM_NAME (cb_ref (l->item));
+	push (cb_build_move ($3, cb_switch[s->token]));
       }
   }
 ;
@@ -4144,28 +4147,6 @@ _records_or_characters: | RECORDS | CHARACTERS ;
 
 %%
 
-static int
-builtin_switch_id (cb_tree x)
-{
-  int id = CB_BUILTIN (x)->id;
-  switch (id)
-    {
-    case BUILTIN_SWITCH_1:
-    case BUILTIN_SWITCH_2:
-    case BUILTIN_SWITCH_3:
-    case BUILTIN_SWITCH_4:
-    case BUILTIN_SWITCH_5:
-    case BUILTIN_SWITCH_6:
-    case BUILTIN_SWITCH_7:
-    case BUILTIN_SWITCH_8:
-      return id - BUILTIN_SWITCH_1;
-    default:
-      cb_error (_("not switch name"));
-      return -1;
-    }
-}
-
-
 static cb_tree
 build_file_handler (cb_tree file, cb_tree handler)
 {

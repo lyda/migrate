@@ -31,6 +31,7 @@
 enum cb_tag {
   /* primitives */
   CB_TAG_CONST,			/* constant value */
+  CB_TAG_SYSTEM_NAME,		/* system-name identifiers */
   CB_TAG_INTEGER,		/* integer constant */
   CB_TAG_STRING,		/* string constant */
   CB_TAG_LITERAL,		/* numeric/alphanumeric literal */
@@ -50,8 +51,20 @@ enum cb_tag {
   CB_TAG_STATEMENT,		/* general statement */
   /* miscellaneous */
   CB_TAG_PROPOSITION,		/* CLASS definition */
-  CB_TAG_BUILTIN,
   CB_TAG_PARAMETER,
+};
+
+enum cb_system_name_category {
+  CB_CALL_CONVENTION_NAME,
+  CB_CODE_NAME,
+  CB_COMPUTER_NAME,
+  CB_DEVICE_NAME,
+  CB_ENTRY_CONVENTION_NAME,
+  CB_EXTERNAL_LOCALE_NAME,
+  CB_FEATURE_NAME,
+  CB_LIBRARY_NAME,
+  CB_SWITCH_NAME,
+  CB_TEXT_NAME,
 };
 
 enum cb_class {
@@ -208,6 +221,22 @@ struct cb_const {
 #define CB_CONST_P(x)	(CB_TREE_TAG (x) == CB_TAG_CONST)
 
 extern void cb_init_constants (void);
+
+
+/*
+ * System-name
+ */
+
+struct cb_system_name {
+  struct cb_tree_common common;
+  enum cb_system_name_category category;
+  int token;
+};
+
+#define CB_SYSTEM_NAME(x)	(CB_TREE_CAST (CB_TAG_SYSTEM_NAME, struct cb_system_name, x))
+#define CB_SYSTEM_NAME_P(x)	(CB_TREE_TAG (x) == CB_TAG_SYSTEM_NAME)
+
+extern cb_tree cb_build_system_name (enum cb_system_name_category category, int token);
 
 
 /*
@@ -631,21 +660,6 @@ struct cb_proposition {
 #define CB_PROPOSITION_P(x)	(CB_TREE_TAG (x) == CB_TAG_PROPOSITION)
 
 extern cb_tree cb_build_proposition (cb_tree name, struct cb_list *list);
-
-
-/*
- * Builtin
- */
-
-struct cb_builtin {
-  struct cb_tree_common common;
-  int id;
-};
-
-#define CB_BUILTIN(x)		(CB_TREE_CAST (CB_TAG_BUILTIN, struct cb_builtin, x))
-#define CB_BUILTIN_P(x)		(CB_TREE_TAG (x) == CB_TAG_BUILTIN)
-
-extern cb_tree make_builtin (int id);
 
 
 /*

@@ -29,23 +29,25 @@
 
 #define HASH_SIZE 133
 
-static struct builtin {
+static struct {
   const char *name;
+  enum cb_system_name_category category;
   int token;
-} builtin_words[] = {
-  {"CONSOLE",		BUILTIN_CONSOLE},
-  {"SYSIN",		BUILTIN_SYSIN},
-  {"SYSOUT",		BUILTIN_SYSOUT},
-  {"SYSERR",		BUILTIN_SYSERR},
-  {"SWITCH-1",		BUILTIN_SWITCH_1},
-  {"SWITCH-2",		BUILTIN_SWITCH_2},
-  {"SWITCH-3", 	       	BUILTIN_SWITCH_3},
-  {"SWITCH-4",		BUILTIN_SWITCH_4},
-  {"SWITCH-5",		BUILTIN_SWITCH_5},
-  {"SWITCH-6",		BUILTIN_SWITCH_6},
-  {"SWITCH-7",		BUILTIN_SWITCH_7},
-  {"SWITCH-8",		BUILTIN_SWITCH_8},
-  {0, 0}
+  cb_tree node;
+} system_table[] = {
+  {"CONSOLE",		CB_DEVICE_NAME, CB_CONSOLE, 0},
+  {"SWITCH-1",		CB_SWITCH_NAME, CB_SWITCH_1, 0},
+  {"SWITCH-2",		CB_SWITCH_NAME, CB_SWITCH_2, 0},
+  {"SWITCH-3", 	       	CB_SWITCH_NAME, CB_SWITCH_3, 0},
+  {"SWITCH-4",		CB_SWITCH_NAME, CB_SWITCH_4, 0},
+  {"SWITCH-5",		CB_SWITCH_NAME, CB_SWITCH_5, 0},
+  {"SWITCH-6",		CB_SWITCH_NAME, CB_SWITCH_6, 0},
+  {"SWITCH-7",		CB_SWITCH_NAME, CB_SWITCH_7, 0},
+  {"SWITCH-8",		CB_SWITCH_NAME, CB_SWITCH_8, 0},
+  {"SYSERR",		CB_DEVICE_NAME, CB_SYSERR, 0},
+  {"SYSIN",		CB_DEVICE_NAME, CB_SYSIN, 0},
+  {"SYSOUT",		CB_DEVICE_NAME, CB_SYSOUT, 0},
+  {0, 0, 0}
 };
 
 static struct reserved {
@@ -367,6 +369,7 @@ static struct reserved reserved_words[] = {
   {0, 0, 0}
 };
 
+
 static int
 hash (const char *s)
 {
@@ -376,14 +379,14 @@ hash (const char *s)
   return val % HASH_SIZE;
 }
 
-int
-lookup_builtin_word (const char *name)
+cb_tree
+lookup_system_name (const char *name)
 {
   int i;
-  for (i = 0; builtin_words[i].name != 0; i++)
-    if (strcasecmp (name, builtin_words[i].name) == 0)
-      return builtin_words[i].token;
-  return BUILTIN_ZERO;
+  for (i = 0; system_table[i].name != 0; i++)
+    if (strcasecmp (name, system_table[i].name) == 0)
+      return system_table[i].node;
+  return cb_error_node;
 }
 
 int
@@ -400,9 +403,17 @@ void
 cb_init_reserved (void)
 {
   int i;
+
+  /* build system-name table */
+  for (i = 0; system_table[i].name != 0; i++)
+    system_table[i].node =
+      cb_build_system_name (system_table[i].category, system_table[i].token);
+
+  /* initialize reserved-word table */
   for (i = 0; i < HASH_SIZE; i++)
     reserved_table[i] = NULL;
 
+  /* build reserved-word table */
   for (i = 0; reserved_words[i].name != 0; i++)
     {
       int val = hash (reserved_words[i].name);

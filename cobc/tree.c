@@ -476,6 +476,21 @@ cb_init_constants (void)
 
 
 /*
+ * System-name
+ */
+
+cb_tree
+cb_build_system_name (enum cb_system_name_category category, int token)
+{
+  struct cb_system_name *p =
+    make_tree (CB_TAG_SYSTEM_NAME, CB_CATEGORY_UNKNOWN, sizeof (struct cb_system_name));
+  p->category = category;
+  p->token = token;
+  return CB_TREE (p);
+}
+
+
+/*
  * Integer
  */
 
@@ -1788,7 +1803,7 @@ resolve_class_name (cb_tree x)
   return cb_error_node;
 }
 
-/* resolve builtin name */
+/* resolve mnemonic-name */
 
 cb_tree
 resolve_mnemonic_name (cb_tree x)
@@ -1801,7 +1816,7 @@ resolve_mnemonic_name (cb_tree x)
       undefined_error (x);
       break;
     default:
-      if (CB_BUILTIN_P (r->word->items->item))
+      if (CB_SYSTEM_NAME_P (r->word->items->item))
 	{
 	  r->value = r->word->items->item;
 	  return x;
@@ -2047,20 +2062,6 @@ cb_build_proposition (cb_tree name, struct cb_list *list)
   sprintf (buff, "is_%s", to_cname (p->name));
   p->cname = strdup (buff);
   p->list = list;
-  return CB_TREE (p);
-}
-
-
-/*
- * Bulitin
- */
-
-cb_tree
-make_builtin (int id)
-{
-  struct cb_builtin *p =
-    make_tree (CB_TAG_BUILTIN, CB_CATEGORY_UNKNOWN, sizeof (struct cb_builtin));
-  p->id = id;
   return CB_TREE (p);
 }
 

@@ -20,23 +20,27 @@
 #ifndef CB_RESERVED_H
 #define CB_RESERVED_H
 
-enum builtin_token {
-  BUILTIN_ZERO,
-  BUILTIN_CONSOLE,
-  BUILTIN_SYSIN,
-  BUILTIN_SYSOUT,
-  BUILTIN_SYSERR,
-  BUILTIN_SWITCH_1,
-  BUILTIN_SWITCH_2,
-  BUILTIN_SWITCH_3,
-  BUILTIN_SWITCH_4,
-  BUILTIN_SWITCH_5,
-  BUILTIN_SWITCH_6,
-  BUILTIN_SWITCH_7,
-  BUILTIN_SWITCH_8,
+#include "tree.h"
+
+enum cb_device_name {
+  CB_SYSIN,
+  CB_SYSOUT,
+  CB_SYSERR,
+  CB_CONSOLE
 };
 
-extern int lookup_builtin_word (const char *name);
+enum cb_switch_name {
+  CB_SWITCH_1,
+  CB_SWITCH_2,
+  CB_SWITCH_3,
+  CB_SWITCH_4,
+  CB_SWITCH_5,
+  CB_SWITCH_6,
+  CB_SWITCH_7,
+  CB_SWITCH_8
+};
+
+extern cb_tree lookup_system_name (const char *name);
 extern int lookup_reserved_word (const char *name);
 extern void cb_init_reserved (void);
 
