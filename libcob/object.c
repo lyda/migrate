@@ -334,11 +334,17 @@ grab_decimal ()
 }
 
 void
-cob_push_zero (void)
+cob_push_int (int n)
 {
   decimal d = grab_decimal ();
-  mpz_set_ui (d->number, 0);
+  mpz_set_ui (d->number, n);
   d->decimals = 0;
+}
+
+void
+cob_push_zero (void)
+{
+  cob_push_int (0);
 }
 
 void

@@ -33,22 +33,22 @@ init_tree (void)
  */
 
 cob_tree_list
-cons (cob_tree x, cob_tree_list l)
+cons (void *x, cob_tree_list l)
 {
   struct cob_tree_list *p = malloc (sizeof (struct cob_tree_list));
-  p->tree = x;
+  p->item = x;
   p->next = l;
   return p;
 }
 
 cob_tree_list
-make_list (cob_tree x)
+make_list (void *x)
 {
   return cons (x, NULL);
 }
 
 cob_tree_list
-list_append (cob_tree_list l, cob_tree x)
+list_append (cob_tree_list l, void *x)
 {
   if (l == NULL)
     return make_list (x);
@@ -260,6 +260,17 @@ make_parameter (cob_tree var, int mode)
   return p;
 }
 
+struct inspect_item *
+make_inspect_item (int type, cob_tree sy1, cob_tree sy2, cob_tree_list list)
+{
+  struct inspect_item *p = malloc (sizeof (struct inspect_item));
+  p->type = type;
+  p->sy1  = sy1;
+  p->sy2  = sy2;
+  p->list = list;
+  return p;
+}
+
 
 /*
  * Type test
@@ -381,7 +392,7 @@ print_tree (cob_tree x, FILE *fp)
 	fputs ("(", fp);
 	for (ls = SUBREF_SUBS (x); ls; ls = ls->next)
 	  {
-	    print_tree (ls->tree, fp);
+	    print_tree (ls->item, fp);
 	    if (ls->next)
 	      fputs (", ", fp);
 	    else

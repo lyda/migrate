@@ -54,7 +54,7 @@ cob_display_erase (int dupon)
 }
 
 void
-cob_display (struct fld_desc *f, char *s, int dupon)
+cob_display (struct cob_field f, int dupon)
 {
   char *buffer;
   struct fld_desc ftmp;
@@ -62,11 +62,11 @@ cob_display (struct fld_desc *f, char *s, int dupon)
   char szSigned[3];
   int i, len;
 
-  if ((f->type == '9') || (f->type == 'C') || (f->type == 'B')
-      || (f->type == 'U'))
+  if (FIELD_NUMERIC_P (f))
     {
-      len = picCompLength (f->pic);
-      if (f->pic[0] == 'S')
+      int decimals = FIELD_DECIMALS (f);
+      len = picCompLength (f.desc->pic);
+      if (FIELD_SIGNED_P (f))
 	{
 	  szSigned[0] = '+';
 	  szSigned[1] = (char) 1;
@@ -78,23 +78,18 @@ cob_display (struct fld_desc *f, char *s, int dupon)
 	}
 
       buffer = alloca (len + 2);
-      memcpy (&ftmp, f, sizeof (ftmp));
-      if (f->decimals > 0)
+      memcpy (&ftmp, f.desc, sizeof (ftmp));
+      if (decimals > 0)
 	{
-	  if (f->pic[0] == 'P' || f->pic[2] == 'P')
-	    {
-	      sprintf (pictmp, "%s.%c9%c", szSigned, 1, f->decimals);
-	    }
+	  if (f.desc->pic[0] == 'P' || f.desc->pic[2] == 'P')
+	    sprintf (pictmp, "%s.%c9%c", szSigned, 1, decimals);
 	  else
-	    {
-	      sprintf (pictmp, "%s9%c%c%c9%c", szSigned,
-		       (unsigned char) (len - f->decimals),
-		       cob_decimal_point, 1, f->decimals);
-	    }
+	    sprintf (pictmp, "%s9%c%c%c9%c", szSigned,
+		     len - decimals, cob_decimal_point, 1, decimals);
 	}
       else
 	{
-	  sprintf (pictmp, "%s9%c", szSigned, (unsigned char) len);
+	  sprintf (pictmp, "%s9%c", szSigned, len);
 	}
       ftmp.type = 'E';
       ftmp.pic = pictmp;
@@ -104,18 +99,25 @@ cob_display (struct fld_desc *f, char *s, int dupon)
 	  ++ftmp.len;
 	  ++len;
 	}
-      if (f->decimals > 0)
-	len++;			/* accounts for the decimal point */
-      cob_move_2 (f, s, &ftmp, buffer);
+      if (decimals > 0)
+	len++;
+      cob_move (f, (struct cob_field) {&ftmp, buffer});
     }
   else
     {
-      len = f->len;
-      buffer = s;
+      len = f.desc->len;
+      buffer = f.data;
     }
 
   for (i = 0; i < len; i++)
     putc (buffer[i], port (dupon));
+}
+
+void
+cob_debug_display (struct cob_field f)
+{
+  cob_display (f, 1);
+  cob_newline (1);
 }
 
 int

@@ -28,19 +28,10 @@
 
 #include "_libcob.h"
 
+
 /*
- * auxiliary comparands list to walk several times through comparands
- * in cob_inspect_replacing function.
+ * Local functions
  */
-struct comparand
-{
-  struct comparand *next;
-  int opt;
-  struct fld_desc *ffor, *fby, *fbefore, *fafter;
-  char *sfor, *sby, *sbefore, *safter;
-  int stop;			/* -1 -> not yet (only if "after" found), 
-				   0 -> go, 1 -> stop */
-};
 
 /*------------------------------------------------------------------------*\
  |                                                                        |
@@ -81,260 +72,356 @@ offset_substr (char *s1, char *s2, int n1, int n2)
 \*------------------------------------------------------------------------*/
 
 static void
-cob_put_integer (struct fld_desc *fdesc, char *sbuf, int value)
+put_integer (struct cob_field f, int v)
 {
   struct fld_desc fld = { 4, 'B', 0, 0, 0, 0, 0, 0, "S9\x9" };
-  cob_move ((struct cob_field) {&fld, (char *) &value},
-	    (struct cob_field) {fdesc, sbuf});
+  cob_move ((struct cob_field) {&fld, (char *) &v}, f);
 }
 
-/*------------------------------------------------------------------------*\
- |                                                                        |
- |                          alloc_comparand                               |
- |                                                                        |
-\*------------------------------------------------------------------------*/
+
+/*****************************************************************************
+ * INSPECT statement
+ *****************************************************************************/
 
-static struct comparand *
-alloc_comparand (int opt, struct comparand **list)
+static va_list
+inspect_get_region (struct cob_field var, va_list ap, int *offset, int *len)
 {
-  struct comparand *anew, *tmp;
-  anew = (struct comparand *) malloc (sizeof (struct comparand));
-  if ((tmp = *list))
-    {
-      while (tmp->next)
-	tmp = tmp->next;
-      tmp->next = anew;
-    }
-  else
-    *list = anew;
-  anew->next = NULL;
-  anew->opt = opt;
-  anew->ffor = anew->fby = anew->fbefore = anew->fafter = NULL;
-  anew->sfor = anew->sby = anew->sbefore = anew->safter = NULL;
-  anew->stop = -1;
-  return anew;
-};
+  int type;
+  unsigned char *p;
+  unsigned char *start = FIELD_DATA (var);
+  unsigned char *end   = FIELD_DATA (var) + FIELD_SIZE (var);
 
-/*------------------------------------------------------------------------*\
- |                                                                        |
- |                          free_comparands                               |
- |                                                                        |
-\*------------------------------------------------------------------------*/
-
-void
-free_comparands (struct comparand *cmps)
-{
-  struct comparand *tmp;
-  while (cmps)
+  while ((type = va_arg (ap, int)) != INSPECT_END)
     {
-      tmp = cmps;
-      cmps = cmps->next;
-      free (tmp);
+      struct cob_field str = va_arg (ap, struct cob_field);
+      unsigned char *s = FIELD_DATA (str);
+      int size = FIELD_SIZE (str);
+      switch (type)
+	{
+	case INSPECT_BEFORE:
+	case INSPECT_AFTER:
+	  for (p = start; p < end - size; p++)
+	    if (*p == *s && (size == 1 || memcmp (p, s, size) == 0))
+	      {
+		if (type == INSPECT_BEFORE)
+		  end = p;
+		else
+		  start = p + size;
+		break;
+	      }
+	  break;
+
+	default:
+	  /* fatal error */
+	  fputs ("INSPECT data broken!\n", stderr);
+	  abort ();
+	}
     }
+
+  *offset = start - FIELD_DATA (var);
+  *len = end - start;
+  return ap;
 }
 
-/*------------------------------------------------------------------------*\
- |                                                                        |
- |                          cob_inspect_converting                        |
- |                                                                        |
-\*------------------------------------------------------------------------*/
+static void
+inspect_add_counter (struct cob_field f, int n)
+{
+  if (n > 0)
+    {
+      cob_push_decimal (f);
+      cob_push_int (n);
+      cob_add ();
+      cob_set (f, 0);
+    }
+}
 
 int
-cob_inspect_converting (struct fld_desc *fvar, char *svar,
-			struct fld_desc *ffrom, char *sfrom,
-			struct fld_desc *fto, char *sto, ...)
+cob_inspect_tallying (struct cob_field var, ...)
 {
-  /* will receive optional before/after variables, like other
-     inpect statements */
+  int type;
+  char mark[FIELD_SIZE (var)];
+  unsigned char *var_data = FIELD_DATA (var);
+  va_list ap;
 
-  int i, j;
-  for (i = 0; i < fvar->len; i++)
-    for (j = 0; j < ffrom->len; j++)
-      if (svar[i] == sfrom[j])
-	svar[i] = sto[j];
+  va_start (ap, var);
+  memset (mark, 0, FIELD_SIZE (var));
+
+  while ((type = va_arg (ap, int)) != INSPECT_END)
+    {
+      struct cob_field dst = va_arg (ap, struct cob_field);
+      int offset, len;
+      switch (type)
+	{
+	case INSPECT_CHARACTERS:
+	  {
+	    ap = inspect_get_region (var, ap, &offset, &len);
+	    if (len > 0)
+	      {
+		int i, n = 0;
+		for (i = 0; i < len; i++)
+		  if (mark[offset + i] == 0)
+		    {
+		      n++;
+		      mark[offset + i] = 1;
+		    }
+		inspect_add_counter (dst, n);
+	      }
+	    break;
+	  }
+
+	case INSPECT_ALL:
+	case INSPECT_LEADING:
+	  {
+	    struct cob_field str = va_arg (ap, struct cob_field);
+	    unsigned char *str_data = FIELD_DATA (str);
+	    int size = FIELD_SIZE (str);
+	    ap = inspect_get_region (var, ap, &offset, &len);
+	    if (len > 0)
+	      {
+		int i, j, n = 0;
+		for (i = 0; i < len - size + 1; i++)
+		  {
+		    unsigned char *p = var_data + offset + i;
+		    unsigned char *s = str_data;
+		    /* find matching substring */
+		    if (*p == *s && (size == 1 || memcmp (p, s, size) == 0))
+		      {
+			/* check if it is already marked */
+			for (j = 0; j < size; j++)
+			  if (mark[offset + i + j])
+			    break;
+			/* if not, mark and count it */
+			if (j == size)
+			  {
+			    n++;
+			    memset (&mark[offset + i], 1, size);
+			    continue;
+			  }
+		      }
+		    /* not found */
+		    if (type == INSPECT_LEADING)
+		      break;
+		  }
+		inspect_add_counter (dst, n);
+	      }
+	    break;
+	  }
+
+	default:
+	  /* fatal error */
+	  fputs ("INSPECT data broken!\n", stderr);
+	  abort ();
+	}
+    }
+
+  va_end (ap);
   return 0;
 }
 
-/*------------------------------------------------------------------------*\
- |                                                                        |
- |                          cob_inspect_tallying                          |
- |                                                                        |
-\*------------------------------------------------------------------------*/
-
 int
-cob_inspect_tallying (struct fld_desc *fvar, char *svar, ...)
+cob_inspect_replacing (struct cob_field var, ...)
 {
-  struct fld_desc *fcnt;
-  struct comparand *cmp, *comparands;
-  char *scnt, *tscnt;
-  int opt, cnt, cnt_incr, len, clen, rsize;
-  va_list args;
+  int type;
+  char mark[FIELD_SIZE (var)];
+  unsigned char *var_data = FIELD_DATA (var);
+  va_list ap;
 
-  va_start (args, svar);
-  comparands = NULL;
-  while ((fcnt = va_arg (args, struct fld_desc *)))
+  va_start (ap, var);
+  memset (mark, 0, FIELD_SIZE (var));
+
+  while ((type = va_arg (ap, int)) != INSPECT_END)
     {
-      scnt = va_arg (args, char *);
-      clen = fcnt->len;
-      while ((opt = va_arg (args, int)))
+      int offset, len;
+      switch (type)
 	{
-	  cmp = alloc_comparand (opt, &comparands);
-	  if (opt != INSPECT_CHARACTERS)
-	    {
-	      if ((cmp->ffor = va_arg (args, struct fld_desc *)))
-		{
-		  cmp->sfor = va_arg (args, char *);
-		}
-	    }
-	  if ((cmp->fbefore = va_arg (args, struct fld_desc *)))
-	    {
-	      cmp->sbefore = va_arg (args, char *);
-	    }
-	  if ((cmp->fafter = va_arg (args, struct fld_desc *)))
-	      cmp->safter = va_arg (args, char *);
-	  else
-	    cmp->stop = 0;
+	case INSPECT_CHARACTERS:
+	  {
+	    struct cob_field new = va_arg (ap, struct cob_field);
+	    unsigned char new_char = FIELD_DATA (new)[0];
+	    ap = inspect_get_region (var, ap, &offset, &len);
+	    if (len > 0)
+	      {
+		int i;
+		for (i = 0; i < len; i++)
+		  if (mark[offset + i] == 0)
+		    {
+		      var_data[offset + i] = new_char;
+		      mark[offset + i] = 1;
+		    }
+	      }
+	    break;
+	  }
 
+	case INSPECT_ALL:
+	case INSPECT_LEADING:
+	case INSPECT_FIRST:
+	  {
+	    struct cob_field old = va_arg (ap, struct cob_field);
+	    struct cob_field new = va_arg (ap, struct cob_field);
+	    unsigned char *old_data = FIELD_DATA (old);
+	    unsigned char *new_data = FIELD_DATA (new);
+	    int size = FIELD_SIZE (old);
+	    ap = inspect_get_region (var, ap, &offset, &len);
+	    if (len > 0)
+	      {
+		int i, j;
+		for (i = 0; i < len - size + 1; i++)
+		  {
+		    unsigned char *p = var_data + offset + i;
+		    unsigned char *s = old_data;
+		    /* find matching substring */
+		    if (*p == *s && (size == 1 || memcmp (p, s, size) == 0))
+		      {
+			/* check if it is already marked */
+			for (j = 0; j < size; j++)
+			  if (mark[offset + i + j])
+			    break;
+			/* if not, mark and replace it */
+			if (j == size)
+			  {
+			    memcpy (p, new_data, size);
+			    memset (&mark[offset + i], 1, size);
+			    if (type == INSPECT_FIRST)
+			      break;
+			    continue;
+			  }
+		      }
+		    /* not found */
+		    if (type == INSPECT_LEADING)
+		      break;
+		  }
+	      }
+	    break;
+	  }
+
+	default:
+	  /* fatal error */
+	  fputs ("INSPECT data broken!\n", stderr);
+	  abort ();
 	}
     }
 
-  va_end (args);
-  len = fvar->len;
-  cnt = 0;
-  /* do the actual processing */
-  while (len)
-    {
-      cnt_incr = 1;
-      rsize = 1;
-      for (cmp = comparands; cmp; cmp = cmp->next)
-	{			/* reposition comparand list */
-	  if (cmp->stop < 0)
-	    {
-	      if (!offset_substr (svar, cmp->safter, len, cmp->fafter->len))
-		cmp->stop = 0;
-	    }
-	  if (cmp->fbefore != NULL)
-	    {
-	      if (!offset_substr (svar, cmp->sbefore, len, cmp->fbefore->len))
-		cmp->stop = 1;
-	    }
-	  if (!cmp->stop)
-	    {
-	      if (cmp->opt == INSPECT_CHARACTERS)
-		{
-		  cnt += cnt_incr;
-		  break;
-		}
-	      if (!offset_substr (svar, cmp->sfor, len, cmp->ffor->len))
-		{
-		  cnt += cnt_incr;
-		  rsize = cmp->ffor->len;
-		  if (cmp->opt == INSPECT_FIRST)
-		    cmp->stop = 1;
-		  break;
-		}
-	      else if (cmp->opt == INSPECT_LEADING)
-		{
-		  cmp->stop = 1;
-		}
-	    }
-	}
-      svar += rsize;
-      len -= rsize;
-    }
-  tscnt = malloc (clen + 1);
-  sprintf (tscnt, "%0*d", clen, cnt);
-  memmove (scnt, tscnt, clen);
-  free (tscnt);
-  free (comparands);
+  va_end (ap);
   return 0;
 }
 
+int
+cob_inspect_converting (struct cob_field var, ...)
+{
+  int type;
+  unsigned char *var_data = FIELD_DATA (var);
+  va_list ap;
+  va_start (ap, var);
+
+  while ((type = va_arg (ap, int)) != INSPECT_END)
+    {
+      int offset, len;
+      switch (type)
+	{
+	case INSPECT_CHARACTERS:
+	  {
+	    struct cob_field old = va_arg (ap, struct cob_field);
+	    struct cob_field new = va_arg (ap, struct cob_field);
+	    unsigned char *old_data = FIELD_DATA (old);
+	    unsigned char *new_data = FIELD_DATA (new);
+	    int size = FIELD_SIZE (old);
+	    ap = inspect_get_region (var, ap, &offset, &len);
+	    if (len > 0)
+	      {
+		int i, j;
+		for (i = 0; i < len; i++)
+		  for (j = 0; j < size; j++)
+		    if (var_data[offset + i + j] == old_data[i + j])
+		      var_data[offset + i + j] = new_data[i + j];
+	      }
+	    break;
+	  }
+
+	default:
+	  /* fatal error */
+	  fputs ("INSPECT data broken!\n", stderr);
+	  abort ();
+	}
+    }
+
+  va_end (ap);
+  return 0;
+}
+
+
+/*****************************************************************************
+ * STRING statement
+ *****************************************************************************/
+
 /*------------------------------------------------------------------------*\
  |                                                                        |
- |                          cob_inspect_replacing                         |
+ |                          cob_string                                    |
+ |  Cobol string statement.                                               |
+ |  The variables are (in that order):                                    |
+ |     receiving var, pointer (with pointer clause),                      |
+ |     1st. sending var, 2nd sending var,...                              |
+ |  Each variable have it's field descriptor (struct fld_desc) and it's   |
+ |  buffer, except if it's non-existent. In such case, only a NULL is     |
+ |  passed as argument and must be skipped. (not 2 stack positions ever)  |
+ |  The last sending variable is a NULL.                                  |
+ |                                                                        | 
+ |  This function returns -1 in case of overflow found, or 0 if ok.       |
  |                                                                        |
 \*------------------------------------------------------------------------*/
 
 int
-cob_inspect_replacing (struct fld_desc *fvar, char *svar, ...)
+cob_string (struct fld_desc *fdst, char *sdst, ...)
 {
-  struct comparand *cmp, *comparands;
-  int opt, len, rsize;
+  struct fld_desc *fptr, *fsrc, *fdelim;
+  char *sptr, *ssrc, *sdelim;
+  int n, len, i = 0;
   va_list args;
 
-  va_start (args, svar);
-  comparands = NULL;
-  while ((opt = va_arg (args, int)))
+  len = fdst->len;
+  va_start (args, sdst);
+  fptr = va_arg (args, struct fld_desc *);
+  if (fptr)
     {
-      cmp = alloc_comparand (opt, &comparands);
-      if (opt != INSPECT_CHARACTERS)
-	{
-	  if ((cmp->ffor = va_arg (args, struct fld_desc *)))
-	    {
-	      cmp->sfor = va_arg (args, char *);
-	    }
+      sptr = va_arg (args, char *);
+      /* get the integer value of this */
+      i += get_index ((struct cob_field) {fptr, sptr});
+    }
+  fsrc = va_arg (args, struct fld_desc *);
+  while (fsrc)
+    {				/* while there are variables to move */
+      ssrc = va_arg (args, char *);
+      fdelim = va_arg (args, struct fld_desc *);
+      if (fdelim)
+	{			/* if there is a delimiter, get it's buffer */
+	  sdelim = va_arg (args, char *);
 	}
-      if ((cmp->fby = va_arg (args, struct fld_desc *)))
+      n = fsrc->len;
+      if (fdelim)
 	{
-	  cmp->sby = va_arg (args, char *);
+	  n = offset_substr (ssrc, sdelim, n, fdelim->len);
 	}
-      if ((cmp->fbefore = va_arg (args, struct fld_desc *)))
+      if ((len - i) >= n)
 	{
-	  cmp->sbefore = va_arg (args, char *);
-	}
-      if ((cmp->fafter = va_arg (args, struct fld_desc *)))
-	{
-	  cmp->safter = va_arg (args, char *);
+	  memmove (sdst + i, ssrc, n);
+	  i += n;
 	}
       else
-	cmp->stop = 0;
+	{
+	  cob_status = COB_STATUS_OVERFLOW;
+	  return cob_status;
+	}
+      fsrc = va_arg (args, struct fld_desc *);
     }
   va_end (args);
-  len = fvar->len;
-  /* do the actual processing */
-  while (len)
-    {
-      rsize = 1;
-      for (cmp = comparands; cmp; cmp = cmp->next)
-	{			/* reposition comparand list */
-	  if (cmp->stop < 0)
-	    {
-	      if (!offset_substr (svar, cmp->safter, len, cmp->fafter->len))
-		cmp->stop = 0;
-	    }
-	  if (cmp->fbefore)
-	    {
-	      if (!offset_substr (svar, cmp->sbefore, len, cmp->fbefore->len))
-		cmp->stop = 1;
-	    }
-	  if (!cmp->stop)
-	    {
-	      if (cmp->opt == INSPECT_CHARACTERS)
-		{
-		  memmove (svar, cmp->sby, 1);
-		  break;
-		}
-	      if (!offset_substr (svar, cmp->sfor, len, cmp->ffor->len))
-		{
-		  rsize = cmp->ffor->len;
-		  memmove (svar, cmp->sby, rsize);
-		  if (cmp->opt == INSPECT_FIRST)
-		    cmp->stop = 1;
-		  break;
-		}
-	      else if (cmp->opt == INSPECT_LEADING)
-		{
-		  cmp->stop = 1;
-		}
-	    }
-	}
-      svar += rsize;
-      len -= rsize;
-    }
-  free (comparands);
-  return 0;
+  memset (sdst + i, ' ', len - i);
+  cob_status = COB_STATUS_SUCCESS;
+  return cob_status;
 }
+
+
+/*****************************************************************************
+ * UNSTRING statement
+ *****************************************************************************/
 
 /*------------------------------------------------------------------------*\
  |                                                                        |
@@ -449,9 +536,7 @@ cob_unstring (struct fld_desc *fvar, char *svar, ...)
 	    }
 	}
       if (fcnt)
-	{
-	  cob_put_integer (fcnt, scnt, partlen);
-	}
+	put_integer ((struct cob_field) {fcnt, scnt}, partlen);
       if (delimall)
 	{			/* remove all copies of delimiter */
 	  while ((len - i)
@@ -469,20 +554,14 @@ cob_unstring (struct fld_desc *fvar, char *svar, ...)
 	    memset (s1, ' ', n1);
 	}
       if (fcnt)
-	{			/* if count requested */
-	  cob_put_integer (fcnt, scnt, partlen);
-	}
+	put_integer ((struct cob_field) {fcnt, scnt}, partlen);
       nfields++;
     }
   if (ftally)
-    {
-      cob_put_integer (ftally, stally,
-		       nfields + get_index ((struct cob_field) {ftally, stally}));
-    }
+    put_integer ((struct cob_field) {ftally, stally},
+		 nfields + get_index ((struct cob_field) {ftally, stally}));
   if (fptr)
-    {
-      cob_put_integer (fptr, sptr, i + 1);
-    }
+    put_integer ((struct cob_field) {fptr, sptr}, i + 1);
   if (len - i)			/* another way to overflow */
     {
     error:
@@ -493,71 +572,6 @@ cob_unstring (struct fld_desc *fvar, char *svar, ...)
     }
   free (p);
   va_end (args);
-  cob_status = COB_STATUS_SUCCESS;
-  return cob_status;
-}
-
-/*------------------------------------------------------------------------*\
- |                                                                        |
- |                          cob_string                                    |
- |  Cobol string statement.                                               |
- |  The variables are (in that order):                                    |
- |     receiving var, pointer (with pointer clause),                      |
- |     1st. sending var, 2nd sending var,...                              |
- |  Each variable have it's field descriptor (struct fld_desc) and it's   |
- |  buffer, except if it's non-existent. In such case, only a NULL is     |
- |  passed as argument and must be skipped. (not 2 stack positions ever)  |
- |  The last sending variable is a NULL.                                  |
- |                                                                        | 
- |  This function returns -1 in case of overflow found, or 0 if ok.       |
- |                                                                        |
-\*------------------------------------------------------------------------*/
-
-int
-cob_string (struct fld_desc *fdst, char *sdst, ...)
-{
-  struct fld_desc *fptr, *fsrc, *fdelim;
-  char *sptr, *ssrc, *sdelim;
-  int n, len, i = 0;
-  va_list args;
-
-  len = fdst->len;
-  va_start (args, sdst);
-  fptr = va_arg (args, struct fld_desc *);
-  if (fptr)
-    {
-      sptr = va_arg (args, char *);
-      /* get the integer value of this */
-      i += get_index ((struct cob_field) {fptr, sptr});
-    }
-  fsrc = va_arg (args, struct fld_desc *);
-  while (fsrc)
-    {				/* while there are variables to move */
-      ssrc = va_arg (args, char *);
-      fdelim = va_arg (args, struct fld_desc *);
-      if (fdelim)
-	{			/* if there is a delimiter, get it's buffer */
-	  sdelim = va_arg (args, char *);
-	}
-      n = fsrc->len;
-      if (fdelim)
-	{
-	  n = offset_substr (ssrc, sdelim, n, fdelim->len);
-	}
-      if ((len - i) >= n)
-	{
-	  memmove (sdst + i, ssrc, n);
-	  i += n;
-	}
-      else
-	{
-	  cob_status = COB_STATUS_OVERFLOW;
-	  return cob_status;
-	}
-      fsrc = va_arg (args, struct fld_desc *);
-    }
-  va_end (args);
-  memset (sdst + i, ' ', len - i);
   cob_status = COB_STATUS_SUCCESS;
   return cob_status;
 }

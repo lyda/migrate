@@ -60,15 +60,15 @@ extern void init_tree (void);
  */
 
 struct cob_tree_list {
-  cob_tree tree;
+  void *item;
   struct cob_tree_list *next;
 };
 
 typedef struct cob_tree_list *cob_tree_list;
 
-extern cob_tree_list cons (cob_tree x, cob_tree_list l);
-extern cob_tree_list make_list (cob_tree x);
-extern cob_tree_list list_append (cob_tree_list l, cob_tree x);
+extern cob_tree_list cons (void *x, cob_tree_list l);
+extern cob_tree_list make_list (void *x);
+extern cob_tree_list list_append (cob_tree_list l, void *x);
 extern int list_length (cob_tree_list l);
 
 
@@ -419,51 +419,15 @@ struct scr_info
   int label;
 };
 
-struct converting_struct
+struct inspect_item
 {
-  cob_tree fromvar;
-  cob_tree tovar;
-  struct inspect_before_after *before_after;
+  int type;
+  cob_tree sy1;
+  cob_tree sy2;
+  cob_tree_list list;
 };
 
-struct tallying_list
-{
-  struct tallying_list *next;
-  struct tallying_for_list *tflist;
-  cob_tree count;
-};
-
-struct tallying_for_list
-{
-  struct tallying_for_list *next;
-  int options;
-  cob_tree forvar;
-  struct inspect_before_after *before_after;
-};
-
-struct replacing_list
-{
-  struct replacing_list *next;
-  int options;
-  cob_tree byvar;
-  struct replacing_by_list *replbylist;
-  struct inspect_before_after *before_after;
-};
-
-struct replacing_by_list
-{
-  struct replacing_by_list *next;
-  cob_tree replvar;
-  cob_tree byvar;
-  struct inspect_before_after *before_after;
-};
-
-struct inspect_before_after
-{
-  cob_tree before;
-  cob_tree after;
-};
-
+extern struct inspect_item *make_inspect_item (int type, cob_tree sy1, cob_tree sy2, cob_tree_list list);
 
 struct alternate_list
 {

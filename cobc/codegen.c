@@ -654,7 +654,7 @@ gen_subscripted (cob_tree ref)
   output ("\tpushl\t$0\n");
   for (ls = SUBREF_SUBS (ref); ls; ls = ls->next)
     {
-      cob_tree x = ls->tree;
+      cob_tree x = ls->item;
       value_to_eax (x);
       output ("\tdecl\t%%eax\n");	/* subscript start at 1 */
 
@@ -2007,100 +2007,6 @@ alloc_scr_info ()
   return new;
 }
 
-struct inspect_before_after *
-alloc_inspect_before_after (struct inspect_before_after *ba,
-			    int before_after, cob_tree var)
-{
-  if (ba == NULL)
-    {
-      ba = malloc (sizeof (struct inspect_before_after));
-      ba->before = ba->after = NULL;
-    }
-  if (before_after == 1)
-    {				/* before given */
-      if (ba->before)
-	yyerror ("only one BEFORE phrase can be given");
-      else
-	ba->before = var;
-    }
-  else if (before_after == 2)
-    {				/* after given */
-      if (ba->after)
-	yyerror ("only one AFTER phrase can be given");
-      else
-	ba->after = var;
-    }
-  return ba;
-}
-
-struct converting_struct *
-alloc_converting_struct (cob_tree fromvar, cob_tree tovar,
-			 struct inspect_before_after *ba)
-{
-  struct converting_struct *new;
-  new = malloc (sizeof (struct converting_struct));
-  new->fromvar = fromvar;
-  new->tovar = tovar;
-  new->before_after = ba;
-  return new;
-}
-
-struct tallying_list *
-alloc_tallying_list (struct tallying_list *tl, cob_tree count,
-		     struct tallying_for_list *tfl)
-{
-  struct tallying_list *new;
-  new = malloc (sizeof (struct tallying_list));
-  new->next = tl;
-  new->tflist = tfl;
-  new->count = count;
-  return new;
-}
-
-struct tallying_for_list *
-alloc_tallying_for_list (struct tallying_for_list *tfl, int options,
-			 cob_tree forvar, struct inspect_before_after *ba)
-{
-  struct tallying_for_list *new;
-  new = malloc (sizeof (struct tallying_for_list));
-  new->next = tfl;
-  new->options = options;
-  new->forvar = forvar;
-  new->before_after = ba;
-  return new;
-}
-
-struct replacing_list *
-alloc_replacing_list (struct replacing_list *rl, int options,
-		      struct replacing_by_list *rbl, cob_tree byvar,
-		      struct inspect_before_after *ba)
-{
-
-  struct replacing_list *new;
-  new = malloc (sizeof (struct replacing_list));
-  new->next = rl;
-  new->options = options;
-  new->replbylist = rbl;
-  new->byvar = byvar;
-  new->before_after = ba;
-  return new;
-}
-
-struct replacing_by_list *
-alloc_replacing_by_list (struct replacing_by_list *rbl,
-			 cob_tree replvar, cob_tree byvar,
-			 struct inspect_before_after *ba)
-{
-  struct replacing_by_list *new;
-  new = malloc (sizeof (struct replacing_by_list));
-  new->next = rbl;
-  new->replvar = replvar;
-  new->byvar = byvar;
-  new->before_after = ba;
-  return new;
-}
-
-
 struct unstring_delimited *
 alloc_unstring_delimited (int all, cob_tree var)
 {
@@ -2545,7 +2451,7 @@ gen_add_to_1 (cob_tree var, cob_tree_list nums)
   push_expr (var);
   for (; l; l = l->next)
     {
-      push_expr (l->tree);
+      push_expr (l->item);
       asm_call ("cob_add");
     }
 }
@@ -2560,10 +2466,10 @@ static void
 gen_add_giving_1 (cob_tree var, cob_tree_list nums)
 {
   cob_tree_list l = nums;
-  push_expr (l->tree);
+  push_expr (l->item);
   for (l = l->next; l; l = l->next)
     {
-      push_expr (l->tree);
+      push_expr (l->item);
       asm_call ("cob_add");
     }
 }
@@ -2596,7 +2502,7 @@ gen_subtract_from_1 (cob_tree var, cob_tree_list subtrahend_list)
   push_expr (var);
   for (; l; l = l->next)
     {
-      push_expr (l->tree);
+      push_expr (l->item);
       asm_call ("cob_sub");
     }
 }
@@ -2618,7 +2524,7 @@ gen_subtract_giving (cob_tree_list subtrahend_list, cob_tree minuend,
       push_expr (minuend);
       for (l = subtrahend_list; l; l = l->next)
 	{
-	  push_expr (l->tree);
+	  push_expr (l->item);
 	  asm_call ("cob_sub");
 	}
       assign_expr (list->sname, list->rounded);
@@ -2832,9 +2738,9 @@ gen_set (cob_tree_list l, int mode, cob_tree v)
     {
       switch (mode)
 	{
-	case SET_TO: gen_move (v, l->tree); break;
-	case SET_UP: gen_add (v, l->tree, 0); break;
-	case SET_DOWN: gen_sub (v, l->tree, 0); break;
+	case SET_TO: gen_move (v, l->item); break;
+	case SET_UP: gen_add (v, l->item, 0); break;
+	case SET_DOWN: gen_sub (v, l->item, 0); break;
 	}
     }
 }
@@ -2844,7 +2750,7 @@ gen_set_true (cob_tree_list l)
 {
   for (; l; l = l->next)
     {
-      cob_tree x = l->tree;
+      cob_tree x = l->item;
       if (SUBREF_P (x))
 	x = SUBREF_SYM (x);
 
@@ -2852,8 +2758,8 @@ gen_set_true (cob_tree_list l)
 	yyerror ("conditional is not unique");
       else
 	{
-	  if (SUBREF_P (l->tree))
-	    gen_move (x->value, make_subref (x->parent, SUBREF_SUBS (l->tree)));
+	  if (SUBREF_P (l->item))
+	    gen_move (x->value, make_subref (x->parent, SUBREF_SUBS (l->item)));
 	  else
 	    gen_move (x->value, x->parent);
 	}
@@ -2919,13 +2825,13 @@ gen_evaluate_when (cob_tree_list subs, cob_tree_list whens, int next_lbl)
       /* label of the next WHEN to test */
       int next_when_lbl = whens->next ? loc_label++ : next_lbl;
 
-      for (subs = all_subs, objs = (cob_tree_list) whens->tree;
+      for (subs = all_subs, objs = (cob_tree_list) whens->item;
 	   subs && objs;
 	   subs = subs->next, objs = objs->next)
 	{
 	  int not_flag = 0;
-	  cob_tree s = subs->tree;
-	  cob_tree o = objs->tree;
+	  cob_tree s = subs->item;
+	  cob_tree o = objs->item;
 
 	  /* unpack NOT option */
 	  if (COND_P (o)
@@ -3005,7 +2911,7 @@ gen_goto (cob_tree_list l, cob_tree x)
 {
   if (x == NULL)
     {
-      output ("\tjmp\t.LB_%s\n", label_name (l->tree));
+      output ("\tjmp\t.LB_%s\n", label_name (l->item));
     }
   else
     {
@@ -3013,7 +2919,7 @@ gen_goto (cob_tree_list l, cob_tree x)
       for (; l; l = l->next)
 	{
 	  output ("\tdecl\t%%eax\n");
-	  output ("\tjz\t.LB_%s\n", label_name (l->tree));
+	  output ("\tjz\t.LB_%s\n", label_name (l->item));
 	}
     }
 }
@@ -3023,75 +2929,48 @@ gen_goto (cob_tree_list l, cob_tree x)
  * INSPECT statement
  */
 
-void
-gen_inspect (cob_tree var, void *list, int operation)
+static void
+gen_inspect_comon (cob_tree_list list)
 {
-  /*struct inspect_before_after *ba,*ba1; */
-  struct tallying_list *tl;
-  struct tallying_for_list *tfl;
-  struct replacing_list *rl;
-  struct replacing_by_list *rbl;
-  struct converting_struct *cv;
+  push_immed (INSPECT_END);
+  for (; list; list = list->next)
+    {
+      cob_tree_list l;
+      struct inspect_item *p = list->item;
+      /* BEFORE/AFTER */
+      push_immed (INSPECT_END);
+      for (l = p->list; l; l = l->next)
+	{
+	  struct inspect_item *p = l->item;
+	  gen_loadvar (p->sy1);
+	  push_immed (p->type);
+	}
+      /* parameters */
+      if (p->sy2) gen_loadvar (p->sy2);
+      if (p->sy1) gen_loadvar (p->sy1);
+      push_immed (p->type);
+    }
+}
 
-  if (!operation)
-    {
-      if (!list)
-	return;
-      push_immed (0);
-      for (tl = (struct tallying_list *) list; tl; tl = tl->next)
-	{
-	  push_immed (0);
-	  for (tfl = tl->tflist; tfl; tfl = tfl->next)
-	    {
-	      gen_loadvar (tfl->before_after->after);
-	      gen_loadvar (tfl->before_after->before);
-	      if (tfl->options != INSPECT_CHARACTERS)
-		gen_loadvar (tfl->forvar);
-	      push_immed (tfl->options);
-	    }
-	  gen_loadvar (tl->count);
-	}
-      asm_call_1 ("cob_inspect_tallying", var);
-    }
-  else if (operation == 1)
-    {
-      if (!list)
-	return;
-      push_immed (0);
-      for (rl = (struct replacing_list *) list; rl; rl = rl->next)
-	{
-	  if (rl->options == INSPECT_CHARACTERS)
-	    {
-	      gen_loadvar (rl->before_after->after);
-	      gen_loadvar (rl->before_after->before);
-	      gen_loadvar (rl->byvar);
-	      push_immed (rl->options);
-	    }
-	  else
-	    {
-	      
-	      for (rbl = rl->replbylist; rbl; rbl = rbl->next)
-		{
-		  gen_loadvar (rbl->before_after->after);
-		  gen_loadvar (rbl->before_after->before);
-		  gen_loadvar (rbl->byvar);
-		  gen_loadvar (rbl->replvar);
-		  push_immed (rl->options);
-		}
-	    }
-	}
-      asm_call_1 ("cob_inspect_replacing", var);
-    }
-  else
-    {
-      cv = (struct converting_struct *) list;
-      gen_loadvar (cv->before_after->after);
-      gen_loadvar (cv->before_after->before);
-      gen_loadvar (cv->tovar);
-      gen_loadvar (cv->fromvar);
-      gen_loadvar (var);
-      asm_call ("cob_inspect_converting");
-    }
+void
+gen_inspect_tallying (cob_tree var, cob_tree_list list)
+{
+  gen_inspect_comon (list);
+  asm_call_1 ("cob_inspect_tallying", var);
+}
+
+void
+gen_inspect_replacing (cob_tree var, cob_tree_list list)
+{
+  gen_inspect_comon (list);
+  asm_call_1 ("cob_inspect_replacing", var);
+}
+
+void
+gen_inspect_converting (cob_tree var, cob_tree_list list)
+{
+  gen_inspect_comon (list);
+  asm_call_1 ("cob_inspect_converting", var);
 }
 
 

@@ -21,7 +21,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 572
+%expect 571
 
 %{
 #define yydebug		cob_trace_parser
@@ -63,16 +63,12 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
   int ival;
   char *str;
   struct cob_picture *pic;
+  struct inspect_item *insp;
   struct call_parameter *para;
   struct coord_pair pval; /* lin,col */
   struct string_from *sfval; /* variable list in string statement */
   struct unstring_delimited *udval;
   struct unstring_destinations *udstval;
-  struct tallying_list *tlval;
-  struct tallying_for_list *tfval;
-  struct replacing_list *repval;
-  struct replacing_by_list *rbval;
-  struct inspect_before_after *baval;
   struct scr_info *sival;
   struct perf_info *pfval;
   struct perform_info *pfvals;
@@ -131,7 +127,6 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %token COMMON,RETURN,END_RETURN,PREVIOUS,NEXT,PACKED_DECIMAL
 %token INPUT,I_O,OUTPUT,EXTEND,EOL,EOS,BINARY,FLOAT_SHORT,FLOAT_LONG
 
-%type <baval> inspect_before_after
 %type <ival> if_then,search_body,search_all_body,class
 %type <ival> search_when,search_when_list,search_opt_at_end
 %type <ival> integer,operator,before_after,set_mode
@@ -140,8 +135,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <ival> flag_all,opt_with_duplicates,opt_with_test,opt_optional
 %type <ival> flag_not
 %type <ival> flag_rounded,opt_sign_separate,opt_plus_minus
-%type <ival> organization_options,access_options,open_mode
-%type <ival> call_mode,replacing_kind
+%type <ival> organization_options,access_options,open_mode,call_mode
 %type <ival> screen_attribs,screen_attrib,screen_sign,opt_separate
 %type <ival> opt_read_next,usage
 %type <ival> procedure_using,sort_direction,write_options
@@ -154,13 +148,11 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <mval> numeric_variable_list,numeric_edited_variable_list
 %type <pfval> perform_after
 %type <pfvals> opt_perform_after
-%type <rbval> replacing_by_list
-%type <repval> replacing_list,replacing_clause
 %type <sfval> string_from_list,string_from
 %type <sival> screen_clauses
 %type <snval> sort_file_list,sort_input,sort_output
 %type <str> idstring
-%type <tree> field_description,label,label_name,filename,noallname
+%type <tree> field_description,label,label_name,filename
 %type <tree> file_description,redefines_var,function_call,subscript
 %type <tree> name,gname,number,file,level1_variable,opt_def_name,def_name
 %type <tree> opt_read_into,opt_write_from,field_name,expr,unsafe_expr
@@ -171,15 +163,16 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <tree> call_returning,screen_to_name,var_or_lit,opt_add_to
 %type <tree> sort_keys,opt_perform_thru
 %type <tree> opt_read_key,file_name,string_with_pointer
-%type <tree> variable,sort_range,name_or_lit,delimited_by
+%type <tree> variable,sort_range,name_or_lit,name_or_literal,delimited_by
 %type <tree> indexed_variable,search_opt_varying,opt_key_is
 %type <tree> from_rec_varying,to_rec_varying
 %type <tree> literal,gliteral,without_all_literal,all_literal,special_literal
 %type <tree> nliteral
 %type <tree> condition_1,condition_2,comparative_condition,class_condition
 %type <tree> search_all_when_conditional
-%type <tfval> tallying_for_list
-%type <tlval> tallying_list, tallying_clause
+%type <list> inspect_tallying,inspect_replacing,inspect_converting
+%type <list> tallying_list,replacing_list,inspect_before_after_list
+%type <insp> tallying_item,tallying_option,replacing_item,inspect_before_after
 %type <udstval> unstring_destinations,unstring_dest_var
 %type <udval> unstring_delimited_vars,unstring_delimited
 
@@ -1588,7 +1581,6 @@ display_statement:
   }
   ;
 display_varlist:
-  gname				{ put_disp_list ($1); }
 | display_varlist gname		{ put_disp_list ($2); }
 ;
 display_upon:
@@ -1820,81 +1812,93 @@ initialize_vars:
  */
 
 inspect_statement:
-  INSPECT name tallying_clause { gen_inspect($2,(void *)$3,0); }
-  replacing_clause { gen_inspect($2,(void *)$5,1); }
-| INSPECT name CONVERTING noallname TO noallname inspect_before_after
+  INSPECT name inspect_tallying   { gen_inspect_tallying ($2, $3); }
+| INSPECT name inspect_replacing  { gen_inspect_replacing ($2, $3); }
+| INSPECT name inspect_converting { gen_inspect_converting ($2, $3); }
+| INSPECT name inspect_tallying inspect_replacing
   {
-    gen_inspect ($2,alloc_converting_struct($4,$6,$7),2);
+    gen_inspect_tallying ($2, $3);
+    gen_inspect_replacing ($2, $4);
   }
 ;
-tallying_clause:
-  /* nothing */			{ $$=NULL; }
-| TALLYING tallying_list	{ $$=$2; }
+
+/* INSPECT TALLYING */
+
+inspect_tallying:
+  TALLYING tallying_list	{ $$ = $2; }
 ;
 tallying_list:
-  /* nothing */			{ $$ = NULL; }
-| tallying_list
-  name FOR tallying_for_list	{ $$ = alloc_tallying_list($1,$2,$4); }
+  tallying_item			{ $$ = cons ($1, NULL); }
+| tallying_list tallying_item	{ $$ = cons ($2, $1); }
 ;
-tallying_for_list:
-  tallying_for_list
-    CHARACTERS inspect_before_after {
-        $$ = alloc_tallying_for_list($1,INSPECT_CHARACTERS,NULL,$3); }
-| tallying_for_list
-    ALL noallname inspect_before_after {
-        $$ = alloc_tallying_for_list($1,INSPECT_ALL,$3,$4); }
-| tallying_for_list
-    LEADING noallname inspect_before_after {
-        $$ = alloc_tallying_for_list($1,INSPECT_LEADING,$3,$4); }
-| /* nothing */     { $$ = NULL; }
+tallying_item:
+  name FOR tallying_option	{ $$ = $3; }
 ;
-replacing_clause:
-  /* nothing */			{ $$ = NULL; }
-| REPLACING replacing_list	{ $$ = $2; }
+tallying_option:
+  CHARACTERS inspect_before_after_list
+  {
+    $$ = make_inspect_item (INSPECT_CHARACTERS, $<tree>-1, NULL, $2);
+  }
+| ALL name_or_literal inspect_before_after_list
+  {
+    $$ = make_inspect_item (INSPECT_ALL, $<tree>-1, $2, $3);
+  }
+| LEADING name_or_literal inspect_before_after_list
+  {
+    $$ = make_inspect_item (INSPECT_LEADING, $<tree>-1, $2, $3);
+  }
+;
+
+/* INSPECT REPLACING */
+
+inspect_replacing:
+  REPLACING replacing_list	{ $$ = $2; }
 ;
 replacing_list:
-  /* nothing */			{ $$ = NULL; }
-| replacing_list
-  CHARACTERS BY noallname inspect_before_after
-  {
-    $$ = alloc_replacing_list($1,INSPECT_CHARACTERS,NULL,$4,$5);
-  }
-| replacing_list
-  replacing_kind replacing_by_list
-  {
-    $$ = alloc_replacing_list($1,$2,$3,NULL,NULL);
-  }
+  replacing_item		{ $$ = cons ($1, NULL); }
+| replacing_list replacing_item	{ $$ = cons ($2, $1); }
 ;
-replacing_by_list:
-  /* nothing */			{ $$ = NULL; }
-| replacing_by_list
-  noallname BY noallname inspect_before_after
+replacing_item:
+  CHARACTERS BY name_or_literal inspect_before_after_list
   {
-    $$ = alloc_replacing_by_list($1,$2,$4,$5);
+    $$ = make_inspect_item (INSPECT_CHARACTERS, NULL, $3, $4);
   }
-;
-replacing_kind:
-  ALL				{ $$ = INSPECT_ALL; }
-| LEADING			{ $$ = INSPECT_LEADING; }
-| FIRST				{ $$ = INSPECT_FIRST; }
+| ALL name_or_literal BY name_or_literal inspect_before_after_list
+  {
+    $$ = make_inspect_item (INSPECT_ALL, $2, $4, $5);
+  }
+| LEADING name_or_literal BY name_or_literal inspect_before_after_list
+  {
+    $$ = make_inspect_item (INSPECT_LEADING, $2, $4, $5);
+  }
+| FIRST name_or_literal BY name_or_literal inspect_before_after_list
+  {
+    $$ = make_inspect_item (INSPECT_FIRST, $2, $4, $5);
+  }
+
+/* INSPECT CONVERTING */
+
+inspect_converting:
+  CONVERTING name_or_literal TO name_or_literal inspect_before_after_list
+  {
+    $$ = make_list (make_inspect_item (INSPECT_CONVERTING, $2, $4, $5));
+  }
+
+/* INSPECT BEFORE/AFTER */
+
+inspect_before_after_list:
+  /* nothing */					 { $$ = NULL; }
+| inspect_before_after_list inspect_before_after { $$ = list_append ($1, $2); }
 ;
 inspect_before_after:
-  /* nothing */
+  BEFORE opt_initial name_or_literal
   {
-    $$ = alloc_inspect_before_after(NULL,0,NULL);
+    $$ = make_inspect_item (INSPECT_BEFORE, $3, 0, 0);
   }
-| inspect_before_after BEFORE opt_initial noallname
+| AFTER opt_initial name_or_literal
   {
-    $$ = alloc_inspect_before_after($1,1,$4);
+    $$ = make_inspect_item (INSPECT_AFTER, $3, 0, 0);
   }
-| inspect_before_after AFTER opt_initial noallname
-  {
-    $$ = alloc_inspect_before_after($1,2,$4);
-  }
-;
-noallname:
-  name
-| without_all_literal
 ;
 opt_initial: | TOK_INITIAL ;
 
@@ -3040,6 +3044,10 @@ function_args:
 name_or_lit:
   name
 | literal
+;
+name_or_literal:
+  name
+| gliteral
 ;
 
 

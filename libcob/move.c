@@ -383,7 +383,7 @@ cob_move_display_to_binary (struct cob_field f1, struct cob_field f2)
       val = val * 10 + base1[i] - '0';
     else
       val = val * 10;
-  if (sign && FIELD_SIGNED (f2))
+  if (sign && FIELD_SIGNED_P (f2))
     val = -val;
   val %= cob_exp10[picCompLength (f2.desc->pic)];
 

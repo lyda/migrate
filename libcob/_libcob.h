@@ -67,10 +67,14 @@
 #define FMOD_EXTEND 		4
 
 /* inspect options */
+#define INSPECT_END		0
 #define INSPECT_CHARACTERS 	1
 #define INSPECT_ALL        	2
 #define INSPECT_LEADING    	3
 #define INSPECT_FIRST      	4
+#define INSPECT_CONVERTING     	5
+#define INSPECT_BEFORE      	6
+#define INSPECT_AFTER      	7
 
 /* screen attributes */
 #define SCR_BLANK_WHEN_ZERO  0x00000001
@@ -112,14 +116,6 @@ struct fld_desc
   char reserved      : 4;
   char *pic;
 } __attribute__ ((packed));
-
-#define FIELD_TYPE(f)		((f).desc->type)
-#define FIELD_SIGNED(f)		((f).desc->pic[0] == 'S')
-#define FIELD_DECIMALS(f)	((f).desc->decimals)
-#define FIELD_BASE(f) \
-  ((f).data + (((f).desc->separate_sign && (f).desc->leading_sign) ? 1 : 0))
-#define FIELD_LENGTH(f) \
-  ((f).desc->len - ((f).desc->separate_sign ? 1 : 0))
 
 struct file_desc
 {
@@ -170,6 +166,22 @@ struct cob_field {
   unsigned char *data;
 } __attribute__ ((packed));
 
+#define FIELD_TYPE(f)		((f).desc->type)
+#define FIELD_SIZE(f)		((f).desc->len)
+#define FIELD_DECIMALS(f)	((f).desc->decimals)
+#define FIELD_DATA(f)		((f).data)
+#define FIELD_BASE(f) \
+  ((f).data + (((f).desc->separate_sign && (f).desc->leading_sign) ? 1 : 0))
+#define FIELD_LENGTH(f) \
+  ((f).desc->len - ((f).desc->separate_sign ? 1 : 0))
+
+#define FIELD_SIGNED_P(f)		((f).desc->pic[0] == 'S')
+#define FIELD_NUMERIC_P(x)				\
+  ({							\
+    int _t = FIELD_TYPE (x);				\
+    (_t == '9' || _t == 'B' || _t == 'C' || _t == 'U');	\
+  })
+
 #define cob_numeric_separator ((cob_decimal_point == '.') ? ',' : '.')
 
 extern unsigned char cob_decimal_point;
@@ -184,3 +196,8 @@ extern int picCompDecimals (const char *pic);
 extern void cob_move (struct cob_field f1, struct cob_field f2);
 extern void cob_move_2 (struct fld_desc *f1, char *s1, struct fld_desc *f2, char *s2);
 extern int get_index (struct cob_field f);
+
+extern void cob_push_int (int n);
+extern void cob_push_decimal (struct cob_field f);
+extern void cob_add (void);
+extern void cob_set (struct cob_field f, int rnd);
