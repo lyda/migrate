@@ -4252,7 +4252,8 @@ validate_field_tree (struct cobc_field *f)
       if (!f->pic)
 	if (f->usage != COBC_USAGE_INDEX)
 	  {
-	    yyerror_x (x, _("PICTURE required for `%s'"), tree_name (x));
+	    yyerror_x (x, _("PICTURE clause required for `%s'"),
+		       tree_name (x));
 	    return -1; /* cannot continue */
 	  }
 

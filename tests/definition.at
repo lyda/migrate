@@ -15,6 +15,26 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 AT_CLEANUP
 
 
+AT_SETUP([Incomplete 01 definition])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X.
+       PROCEDURE       DIVISION.
+         DISPLAY X.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:6: error: PICTURE clause required for `X'
+])
+
+AT_CLEANUP
+
+
 AT_SETUP([Redefinition of 01 entries (1)])
 
 AT_DATA([prog.cob], [
