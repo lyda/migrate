@@ -462,7 +462,7 @@ cb_build_alphabet_name (cb_tree name, enum cb_alphabet_name_type type)
   struct cb_alphabet_name *p =
     make_tree (CB_TAG_ALPHABET_NAME, CB_CATEGORY_UNKNOWN, sizeof (struct cb_alphabet_name));
   p->name = cb_define (name, CB_TREE (p));
-  sprintf (buff, "table_%s", to_cname (p->name));
+  sprintf (buff, "s_%s", to_cname (p->name));
   p->cname = strdup (buff);
   p->type = type;
   return CB_TREE (p);
