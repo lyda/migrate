@@ -11,16 +11,16 @@ Hot To Run NIST CCVS85 Test Suite
 
 3. Run the test suite:
 
-  % make check
+  % make test
 
-4. Test report summary will be put in summary.log.
+4. Test report summary will be put in summary.txt.
 
 Make Options
 ------------
 
-- make check    run test suite
-- make snap     copy test logs in *.txt
-- make diff     show diff from *.txt
+- make test     run the test suite
+- make copy     copy test reports to *.txt
+- make diff     diff from *.txt to the last reports
 - make clean    remove built files
 
 Test Modules
@@ -39,7 +39,7 @@ File I-O tests:
   IX - Indexed file I-O tests
   ST - SORT sentence tests
 
-Advanced features:
+Advanced facilities:
 
   RW - REPORT SECTION tests
   CM - COMMUNICATION SECTION tests

@@ -29,7 +29,7 @@ my $total_deleted = 0;
 my $total_inspect = 0;
 my $total_ok = 0;
 
-open (LOG, "> report.log") or die;
+open (LOG, "> report.txt") or die;
 print LOG "Filename    total pass fail deleted inspect\n";
 print LOG "--------    ----- ---- ---- ------- -------\n";
 
@@ -71,7 +71,7 @@ foreach $in (sort (glob("*.{CBL,SUB}"))) {
 	my $fail    = 0;
 	my $deleted = 0;
 	my $inspect = 0;
-	if (open (PRT, "report.txt")) {
+	if (open (PRT, "report.log")) {
 	  while (<PRT>) {
 	    if (/^ *([0-9]+) *OF *([0-9]+) *TESTS WERE/) {
 	      $total += $2;
@@ -97,7 +97,7 @@ foreach $in (sort (glob("*.{CBL,SUB}"))) {
 	$total_deleted += $deleted;
 	$total_inspect += $inspect;
 	$total_ok++ if $fail == 0;
-	rename ("report.txt", "$exe.txt");
+	rename ("report.log", "$exe.log");
 	unlink "$exe.out" if (-s "$exe.out" == 0);
       }
     }

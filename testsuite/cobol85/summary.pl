@@ -28,7 +28,7 @@ print ("Module  programs tested executed skipped error crash  details\n");
 print ("------  -------- ------ -------- ------- ----- -----  -------\n");
 
 while ($module = shift) {
-  open(IN, "$module/report.log") or die;
+  open(IN, "$module/report.txt") or die;
   while (<IN>) {
     if (/^Total *(\d+) *(\d+) *(\d+) *(\d+) *(\d+)/) {
       ($test, $pass, $fail, $delete, $inspect) = ($1, $2, $3, $4, $5);
