@@ -427,14 +427,6 @@ struct occurs
 #define LEQ 	3
 #define NEQ 	6
 
-/* COMMENTING */
-
-#define AUTHOR		3
-#define DATE_WRITTEN	4
-#define DATE_COMPILED	5
-#define INSTALLATION	6
-#define SECURITY	7
-
 /* DIRECTION */
 
 #define ASCENDING  1

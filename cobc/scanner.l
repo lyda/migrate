@@ -1,10 +1,5 @@
-/* COBOL scanner 					-*- c -*-
- *
+/*							-*- c -*-
  * Copyright (C) 2001  Keisuke Nishida
- * Copyright (C) 2000  Rildo Pragana, Alan Cox, Andrew Cameron,
- *		      David Essex, Glen Colbert, Jim Noeth.
- * Copyright (C) 1999  Rildo Pragana, Alan Cox, Andrew Cameron, David Essex.
- * Copyright (C) 1991, 1993  Rildo Pragana.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +18,6 @@
  */
 
 %option 8bit
-%option stack
 %option caseless
 %option noyywrap
 %option never-interactive
@@ -39,66 +33,48 @@
 #include "reserved.h"
 #include "_libcob.h"
 
-#define YY_NO_TOP_STATE
-
+extern FILE *o_lst;
 extern char picture[];
 extern struct sym *curr_field;
 extern int picix,piccnt,sign,v_flag;
-
-extern FILE *o_lst;
 
 #define YY_INPUT(buf,result,max_size)  result = yyinput (buf, max_size);
 static int yyinput (char *buf, int maxsize);
 
 static int read_literal (char mark);
 static int read_literal_x (char mark);
-static int scan_picture (char *text);
 static int scan_word (char *text);
 static int scan_reserved_word (char *text);
+static int scan_picture (char *text);
 %}
 
-white [\r\t ]
-any [!-~]
-
-word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
-
-%x ENVIR_ST DATA_ST FD_ST
 %x ID_STATE COMMENT_STATE PICTURE_STATE
 
 %%
 
 %{
+  extern int start_condition;
   extern int curr_division;
   extern int need_subscripts;
 
-  switch (curr_division) {
-  case CDIV_ENVIR:
-    BEGIN ENVIR_ST;
-    break;
-  case CDIV_DATA:
-    BEGIN DATA_ST;
-    break;
-  case CDIV_FD:
-    BEGIN FD_ST;
-    break;
-  case CINITIAL:
-    BEGIN INITIAL;
-    break;
+  switch (start_condition) {
   case START_ID:
-    yy_push_state (ID_STATE);
+    BEGIN ID_STATE;
     break;
   case START_COMMENT:
-    yy_push_state (COMMENT_STATE);
+    BEGIN COMMENT_STATE;
     break;
   case START_PICTURE:
-    yy_push_state (PICTURE_STATE);
+    BEGIN PICTURE_STATE;
     break;
   }
-  curr_division=0; /* avoid new state switch */
+  start_condition=0; /* avoid new state switch */
 %}
 
-<*>^"#".* {
-  /* Parse line directive */
+[ \t\r\n]* { /* ignore */ }
+
+^"#".* {
+  /* line directive */
   char *endp;
   cob_orig_lineno = strtol (yytext + 2, &endp, 10) - 1;
   if (cob_orig_filename)
@@ -107,116 +83,101 @@ word [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)?
   strrchr (cob_orig_filename, '"')[0] = '\0';
 }
 
-<ENVIR_ST>{word} {
-  int tok = scan_word (yytext);
-  if (tok)
-    return tok;
-  yylval.sval = install (yytext, SYTB_VAR, 0);
-  return (STRING);
+[0-9]*[.,]?[0-9]+ {
+  /* numeric literal */
+  yylval.lval = install_literal (yytext);
+  return NLITERAL;
 }
 
-<DATA_ST>{word} {
-  int tok = scan_word (yytext);
-  if (tok)
-    return tok;
-  yylval.sval = install (yytext, SYTB_VAR, 1);
-  return (STRING);
-}
-
-<FD_ST>{word} {
-  int tok = scan_word (yytext);
-  if (tok)
-    return tok;
-  if ((yylval.sval = lookup_symbol (yytext)) == NULL)
-    yyerror ("undefined %s at FD/SD", yytext);
-  return (STRING);
-}
-
-<INITIAL>{word} {
-  struct sym *symbol;
-  int tok = scan_word (yytext);
-  if (tok)
-    return tok;
-
-  /* if symbol was defined at the data division */
-  if ((symbol = lookup_symbol (yytext)) != NULL)
-    {
-      yylval.sval = symbol;
-      if (symbol->type == '8')
-	return (VARCOND);
-      else if (is_subscripted (symbol))
-	return (SUBSCVAR);
-      else
-	return (VARIABLE);
-    }
-  /* otherwise, it should be a label */
+X?[\'\"] {
+  /* string literal */
+  if (yytext[0] == 'X')
+    return read_literal_x (yytext[1]);
   else
+    return read_literal (yytext[0]);
+}
+
+[A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)? {
+  /* symbol or label */
+  int tok = scan_word (yytext);
+  if (tok)
+    return tok;
+  switch (curr_division)
     {
-      yylval.sval = install_label (yytext);
-      return (LABELSTR);
+    case CDIV_ENVIR:
+      yylval.sval = install (yytext, SYTB_VAR, 0);
+      return (STRING);
+    case CDIV_DATA:
+      yylval.sval = install (yytext, SYTB_VAR, 1);
+      return (STRING);
+    case CDIV_FD:
+      if ((yylval.sval = lookup_symbol (yytext)) == NULL)
+	yyerror ("undefined %s at FD/SD", yytext);
+      return (STRING);
+    default:
+      /* if symbol was defined at the data division */
+      if ((yylval.sval = lookup_symbol (yytext)) != NULL)
+	{
+	  if (yylval.sval->type == '8')
+	    return (VARCOND);
+	  else if (is_subscripted (yylval.sval))
+	    return (SUBSCVAR);
+	  else
+	    return (VARIABLE);
+	}
+      /* otherwise, it should be a label */
+      else
+	{
+	  yylval.sval = install_label (yytext);
+	  return (LABELSTR);
+	}
     }
 }
 
-<INITIAL,ENVIR_ST,DATA_ST,FD_ST>{
-  "."/[ \t\n]	{ return '.'; }
-
-  {white}+ { }
-  "\n"   { }
-
-  \'		{ return read_literal ('\''); }
-  \"		{ return read_literal ('\"'); }
-  X\'		{ return read_literal_x ('\''); }
-  X\"		{ return read_literal_x ('\"'); }
-
-  [0-9]*[.,]?[0-9]+ {
-    yylval.lval = install_literal (yytext);
-    return(NLITERAL);
-  }
-
-  [<>=][>=]? {
-    int token;
-    if ((token = scan_reserved_word (yytext)) != 0)
-      return token;
-    yyerror("unknown operator: `%s'", yytext);
-  }
-
-  "(" {
-    if (need_subscripts) {
-      need_subscripts=0;
-      return (LPAR);
-    }
-    else
-      return ('(');
-  }
-  "**"		{ return '^'; }
-  {any}		{ return yytext[0]; }
-  . { }
+[<>=][>=]? {
+  int tok;
+  if ((tok = scan_reserved_word (yytext)) != 0)
+    return tok;
+  yyerror("unknown operator: `%s'", yytext);
 }
+
+"(" {
+  if (need_subscripts) {
+    need_subscripts=0;
+    return LPAR;
+  }
+  else
+    return '(';
+}
+
+"."/[ \t\n]	{ return '.'; }
+"**"		{ return '^'; }
+.		{ return yytext[0]; }
 
 <ID_STATE>{
-  .		{ /* ignore */ }
-  {word}	{
-    yy_pop_state ();
+  [A-Z0-9_-]+ {
+    BEGIN INITIAL;
     yylval.str = strdup (yytext);
     return IDSTRING;
   }
+  .|\n		{ /* ignore */ }
 }
 
 <COMMENT_STATE>{
   .*		{ /* ignore */ }
-  "\n"		{ yy_pop_state (); }
+  "\n"		{ BEGIN INITIAL; }
 }
 
 <PICTURE_STATE>{
   "IS" |
   [ \t\r\n]+	{ /* ignore */ }
   [^ \t\r\n]+	{
-    yy_pop_state ();
+    BEGIN INITIAL;
     return scan_picture (yytext);
   }
 }
 
-<*><<EOF>> {
+<<EOF>> {
   yyterminate();
 }
 
@@ -280,6 +241,43 @@ read_literal_x (char mark)
 }
 
 static int
+is_integer_token (const char *tok)
+{
+  while (*tok)
+    if (!isdigit (*tok++))
+      return 0;
+  return 1;
+}
+
+static int
+scan_word (char *text)
+{
+  int token;
+
+  if (is_integer_token (text))
+    {
+      yylval.lval = install_literal (text);
+      return (NLITERAL);
+    }
+  else if ((token = scan_reserved_word (text)) != 0)
+    {
+      return token;
+    }
+  else
+    return 0;
+}
+
+static int
+scan_reserved_word (char *s)
+{
+  struct reserved_word *p = lookup_reserved_word (s);
+  if (!p)
+    return 0;
+  yylval.ival = p->minor;
+  return p->token;
+}
+
+static int
 scan_picture (char *text)
 {
   char *p;
@@ -318,57 +316,6 @@ scan_picture (char *text)
 }
 
 static int
-is_integer_token (const char *tok)
-{
-  while (*tok)
-    if (!isdigit (*tok++))
-      return 0;
-  return 1;
-}
-
-static int
-is_valid_identifier (const char *tok)
-{
-  while (*tok)
-    if (isalpha (*tok++))
-      return 1;
-  return 0;
-}
-
-static int
-scan_word (char *text)
-{
-  int token;
-
-  if (is_integer_token (text))
-    {
-      yylval.lval = install_literal (text);
-      return (NLITERAL);
-    }
-  else if (!is_valid_identifier (text))
-    {
-      yylval.sval = install_label (text);
-      return (LABELSTR);
-    }
-  else if ((token = scan_reserved_word (text)) != 0)
-    {
-      return token;
-    }
-  else
-    return 0;
-}
-
-static int
-scan_reserved_word (char *s)
-{
-  struct reserved_word *p = lookup_reserved_word (s);
-  if (!p)
-    return 0;
-  yylval.ival = p->minor;
-  return p->token;
-}
-
-static int
 yyinput (char *buf, int maxsize)
 {
   if (fgets (buf, maxsize, yyin) == NULL)
@@ -376,11 +323,4 @@ yyinput (char *buf, int maxsize)
 
   cob_orig_lineno++;
   return strlen (buf);
-}
-
-void
-dummy ()
-{
-  /* This avoids warnings */
-  yy_flex_realloc (0, 0);
 }

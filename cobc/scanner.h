@@ -20,15 +20,13 @@
 #ifndef _SCANNER_H_
 #define _SCANNER_H_
 
-#include <stdio.h>
+#define START_ID 	1
+#define START_COMMENT	2
+#define START_PICTURE	3
 
+#define CDIV_INITIAL 	1
 #define CDIV_ENVIR 	2
 #define CDIV_DATA 	3
-#define CDIV_FD 	6
-#define CINITIAL 	15
-
-#define START_ID 	16
-#define START_COMMENT	5
-#define START_PICTURE	17
+#define CDIV_FD 	4
 
 #endif /* _SCANNER_H_ */

@@ -71,6 +71,7 @@ extern struct lit *spe_lit_QU;
 
 struct sym *curr_file;
 struct sym *alloc_filler( void );
+int start_condition=0;
 int curr_division=0;
 int need_subscripts=0;
 extern char *yytext;
@@ -120,8 +121,6 @@ static void check_decimal_point (struct lit *lit);
     struct pair *pair;
 }
 
-%nonassoc LOW_PREC
-
 %left   '+','-'
 %left   '*','/'
 %left   '^'
@@ -137,7 +136,7 @@ static void check_decimal_point (struct lit *lit);
 %token <sval> STRING,VARIABLE,VARCOND,SUBSCVAR
 %token <sval> LABELSTR,CMD_LINE,ENVIRONMENT_VARIABLE,PICTURE
 %token <ival> USAGENUM,ZERONUM,CONDITIONAL
-%token <ival> COMMENTING,DIRECTION,READ,WRITE
+%token <ival> DIRECTION,READ,WRITE
 %token <lval> NLITERAL,CLITERAL
 %token <ival> PORTNUM,DATE_TIME
 
@@ -155,10 +154,10 @@ static void check_decimal_point (struct lit *lit);
 %token PROGRAM_ID,DIVISION,CONFIGURATION,SPECIAL_NAMES
 %token FILE_CONTROL,I_O_CONTROL
 %token SAME,AREA,EXCEPTION
-%token ECHOT,FROM,UPDATE
+%token FROM,UPDATE
 %token WORKING_STORAGE,LINKAGE,DECIMAL_POINT,COMMA
 %token FILEN,USAGE,BLANK,COMP1,COMP2
-%token SIGN,VALUE,MOVE,LABEL,DARK
+%token SIGN,VALUE,MOVE,LABEL
 %token RECORD,OMITTED,STANDARD,RECORDS,BLOCK
 %token CONTAINS,CHARACTERS,COMPUTE,GO,STOP,RUN
 %token ACCEPT,PERFORM,VARYING,UNTIL,EXIT
@@ -171,22 +170,18 @@ static void check_decimal_point (struct lit *lit);
 %token SEQUENTIAL,INDEXED,DYNAMIC,RANDOM,RELATIVE
 %token SECTION,SORT,SORT_MERGE,DUPLICATES,WITH
 %token QUOTES,LOWVALUES,HIGHVALUES
-%token SET,UP,DOWN
-%token TRACE,READY,RESET
-%token SEARCH,WHEN,TEST
+%token SET,UP,DOWN,TRACE,READY,RESET,SEARCH,WHEN,TEST
 %token END_ADD,END_CALL,END_COMPUTE,END_DELETE,END_DIVIDE,END_EVALUATE
 %token END_IF,END_MULTIPLY,END_PERFORM,END_READ,END_REWRITE,END_SEARCH
 %token END_START,END_STRINGCMD,END_SUBTRACT,END_UNSTRING,END_WRITE
 %token THEN,EVALUATE,OTHER,ALSO,CONTINUE,CURRENCY,REFERENCE,INITIALIZE
 %token NUMERIC,ALPHABETICTOK,ALPHABETICLOWER,ALPHABETICUPPER
 %token RETURNING,TOK_TRUE,TOK_FALSE,ANY,SUBSCVAR,FUNCTION
-%token REPORT,TOKRD,TOKCODE,CONTROL,LIMIT,FINAL
-%token HEADING,FOOTING,TOKLAST,DETAIL,GROUP,INDICATE,TOKSUM
+%token REPORT,TOKRD,CONTROL,LIMIT,FINAL
+%token HEADING,FOOTING,TOKLAST,DETAIL,TOKSUM
 %token TOKPOSITION,FILE_ID,DEPENDING,TOK_TYPE,TOKSOURCE
 %token INITIATE,GENERATE,TERMINATE,NULLTOK,ADDRESS,NOECHO,LPAR
-%token CORRESPONDING,LENGTH
-%token TOKDUMMY
-%token CONVERTING,OPTIONAL
+%token CORRESPONDING,TOKDUMMY,CONVERTING,OPTIONAL
 %token IDENTIFICATION_TOK,ENVIRONMENT_TOK,DATA_TOK,PROCEDURE_TOK
 %token AUTHOR_TOK,DATE_WRITTEN_TOK,DATE_COMPILED_TOK,INSTALLATION_TOK
 %token SECURITY_TOK,COMMONTOK,RETURN_TOK,END_RETURN,PREVIOUS,NEXT
@@ -321,7 +316,7 @@ identification_division_option:
 
 opt_program: | PROGRAM ;
 
-comment: { curr_division = START_COMMENT; };
+comment: { start_condition = START_COMMENT; };
 
 
 /*****************************************************************************
@@ -329,7 +324,7 @@ comment: { curr_division = START_COMMENT; };
  *****************************************************************************/
 
 environment_division:
-    /*nothing */
+    /* nothing */
   | ENVIRONMENT_TOK DIVISION '.'
     {
       curr_division = CDIV_ENVIR;
@@ -337,7 +332,7 @@ environment_division:
     configuration_section
     input_output_section
     {
-     curr_division = CINITIAL; 
+      curr_division = CDIV_INITIAL; 
     }
   ;
 
@@ -347,11 +342,11 @@ environment_division:
  *******************/
 
 configuration_section:
-    /*nothing */
+    /* nothing */
   | CONFIGURATION SECTION '.' configuration_list
   ;
 configuration_list:
-    /*nothing */
+    /* nothing */
   | configuration_list configuration
   ;
 configuration:
@@ -526,7 +521,7 @@ data_division:
     opt_record_section
     {
       data_trail();
-      curr_division = CINITIAL;
+      curr_division = CDIV_INITIAL;
     }
     | /* nothing */
     ;
@@ -559,8 +554,8 @@ opt_linkage_section:
     | /* nothing */
     ;
 report_section:
-        report_section TOKRD { /*curr_division = CDIV_FD;*/ }
-                STRING { $4->type='W'; curr_division = CINITIAL; }
+        report_section TOKRD { }
+                STRING { $4->type='W'; curr_division = CDIV_INITIAL; }
                 report_controls { curr_division = CDIV_DATA; }
                 report_description
         | /* nothing */
@@ -620,11 +615,11 @@ report_item:
 report_clauses:
         /* nothing */
         | report_clauses TOK_TYPE opt_is report_type
-                report_position { curr_division = CINITIAL; }
+                report_position { curr_division = CDIV_INITIAL; }
                 opt_report_name
         | report_clauses report_line
         | report_clauses opt_report_column
-                opt_report_pic { curr_division = CINITIAL; }
+                opt_report_pic { curr_division = CDIV_INITIAL; }
                 report_value
         ;
 opt_report_name:
@@ -709,13 +704,13 @@ screen_clauses:
     | /* nothing */             { $$ = alloc_scr_info(); }
     ;
 screen_source_destination:
-    USING                   { curr_division = CINITIAL; }
+    USING                   { curr_division = CDIV_INITIAL; }
     name_or_lit
     {
       curr_division = CDIV_DATA;
       $<sival>0->from = $<sival>0->to = $3;
     }
-    | FROM                  { curr_division = CINITIAL; }
+    | FROM                  { curr_division = CDIV_INITIAL; }
       name_or_lit
       screen_to_name
       {
@@ -725,7 +720,7 @@ screen_source_destination:
       }
     | TO
       {
-	curr_division = CINITIAL;
+	curr_division = CDIV_INITIAL;
       }
       name
       {
@@ -846,7 +841,7 @@ field_description:
 redefines_clause:
     REDEFINES
     {
-      curr_division = CINITIAL; /* parsing variable */
+      curr_division = CDIV_INITIAL; /* parsing variable */
     }
     redefines_var
     {       
@@ -894,7 +889,7 @@ array_options:  OCCURS integer opt_TIMES
        opt_indexed_by
      | OCCURS integer TO integer opt_TIMES DEPENDING opt_on
        {
-	 curr_division = CINITIAL; /* needed for parsing variable */
+	 curr_division = CDIV_INITIAL; /* needed for parsing variable */
        }
        gname
        {       
@@ -954,7 +949,7 @@ index_name_list:
         ;
 
 picture_clause:
-    PIC { curr_division = START_PICTURE; } PICTURE
+    PIC { start_condition = START_PICTURE; } PICTURE
     ;
 
 usage_option :
@@ -1108,7 +1103,7 @@ linkage_section:
 procedure_division:
      PROCEDURE_TOK DIVISION 
     { 
-     curr_division = CINITIAL; 
+     curr_division = CDIV_INITIAL; 
     }
      using_parameters '.'
     { 
@@ -2955,7 +2950,7 @@ parameters:
     | parameters opt_sep gname	{ $$ = cons ($3, $1); }
     ;
 idstring:
-    { curr_division = START_ID; } IDSTRING { $$ = $2; }
+    { start_condition = START_ID; } IDSTRING { $$ = $2; }
     ;
 
 name_or_lit:
