@@ -32,6 +32,7 @@ enum {
 struct program_spec {
   char *program_id;
   int initial_program;
+  struct cobc_list *class_list;
   struct cobc_list *index_list;
   struct cobc_list *file_name_list;
   struct cobc_list *label_list;

@@ -391,6 +391,7 @@ enum cobc_cond_type {
   COBC_COND_POSITIVE,		/* x is POSITIVE */
   COBC_COND_NEGATIVE,		/* x is NEGATIVE */
   COBC_COND_ZERO,		/* x is ZERO */
+  COBC_COND_CLASS,		/* x is class-name */
   COBC_COND_NOT,		/* not x */
   COBC_COND_AND,		/* x and y */
   COBC_COND_OR,			/* x or y */

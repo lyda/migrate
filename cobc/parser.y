@@ -135,7 +135,7 @@ static cobc_tree make_opt_cond (cobc_tree last, int type, cobc_tree this);
 
 %token <pict> PICTURE_TOK
 %token <tree> INTEGER_LITERAL,NUMERIC_LITERAL,NONNUMERIC_LITERAL
-%token <tree> CONDITION_NAME,MNEMONIC_NAME
+%token <tree> CLASS_NAME,CONDITION_NAME,MNEMONIC_NAME
 %token <word> WORD,LABEL_WORD
 
 %token EQUAL,GREATER,LESS,GE,LE,COMMAND_LINE,ENVIRONMENT_VARIABLE,ALPHABET
@@ -190,6 +190,8 @@ static cobc_tree make_opt_cond (cobc_tree last, int type, cobc_tree this);
 %type <list> unstring_delimited_item,unstring_into_item
 %type <list> file_name_list,math_name_list,math_edited_name_list
 %type <list> call_item_list,call_using
+%type <tree> special_name_class_options,special_name_class_option
+%type <tree> special_name_class_literal
 %type <tree> call_returning,add_to,field_description_list,value_item
 %type <tree> field_description_list_1,field_description_list_2
 %type <tree> condition,condition_2,comparative_condition,class_condition
@@ -206,7 +208,7 @@ static cobc_tree make_opt_cond (cobc_tree last, int type, cobc_tree this);
 %type <tree> invalid_key_sentence,not_invalid_key_sentence
 %type <tree> opt_on_overflow_sentence,opt_not_on_overflow_sentence
 %type <tree> opt_on_size_error_sentence,opt_not_on_size_error_sentence
-%type <tree> numeric_name,numeric_edited_name,group_name,table_name
+%type <tree> numeric_name,numeric_edited_name,group_name,table_name,class_name
 %type <tree> condition_name,data_name,file_name,record_name,label_name
 %type <tree> mnemonic_name,section_name,name,qualified_name
 %type <tree> integer_value,value,number
@@ -232,6 +234,7 @@ program:
   {
     program_spec.program_id = NULL;
     program_spec.initial_program = 0;
+    program_spec.class_list = NULL;
     program_spec.index_list = NULL;
     program_spec.file_name_list = NULL;
     program_spec.using_list = NULL;
@@ -259,6 +262,7 @@ program:
     struct cobc_list *l;
     for (l = list_reverse (label_check_list); l; l = l->next)
       validate_label_name (l->item);
+    program_spec.class_list = list_reverse (program_spec.class_list);
     program_spec.index_list = list_reverse (program_spec.index_list);
     program_spec.label_list = list_reverse (program_spec.label_list);
     program_spec.exec_list = list_reverse (program_spec.exec_list);
@@ -405,7 +409,7 @@ special_name_mnemonic_on_off:
   {
     struct cobc_field *p = COBC_FIELD (make_field ($5));
     p->level = 88;
-    p->cond = cobc_int1;
+    p->cond = make_cond (cobc_int0, COBC_COND_EQ, cobc_int0);
   }
 ;
 on_or_off:
@@ -474,20 +478,34 @@ is_are: IS | ARE ;
 /* CLASS */
 
 special_name_class:
-  CLASS WORD _is special_name_class_options
+  CLASS undefined_word _is special_name_class_options
   {
-    yywarn ("CLASS name is ignored");
+    cobc_tree x = make_field ($2);
+    COBC_FIELD (x)->level = 99; /* class */
+    COBC_FIELD (x)->cond = $4;
+    program_spec.class_list = cons (x, program_spec.class_list);
   }
 ;
 special_name_class_options:
-  special_name_class_option
-| special_name_class_options special_name_class_option
+  special_name_class_option	{ $$ = $1; }
+| special_name_class_options
+  special_name_class_option	{ $$ = make_cond ($1, COBC_COND_OR, $2); }
 ;
 special_name_class_option:
-  NONNUMERIC_LITERAL opt_through_literal { }
+  special_name_class_literal
+  {
+    $$ = make_cond ($1, COBC_COND_EQ, 0);
+  }
+| special_name_class_literal THRU
+  special_name_class_literal
+  {
+    $$ = make_cond (make_cond ($1, COBC_COND_LE, 0),
+		    COBC_COND_AND,
+		    make_cond (0, COBC_COND_LE, $1));
+  }
 ;
-opt_through_literal:
-| THRU NONNUMERIC_LITERAL
+special_name_class_literal:
+  literal
 ;
 
 
@@ -2506,6 +2524,12 @@ class_condition:
     if ($3)
       $$ = make_unary_cond ($$, COBC_COND_NOT);
   }
+| expr _is flag_not class_name
+  {
+    $$ = make_cond ($1, COBC_COND_CLASS, $4);
+    if ($3)
+      $$ = make_unary_cond ($$, COBC_COND_NOT);
+  }
 ;
 class:
   NUMERIC			{ $$ = COBC_COND_NUMERIC; }
@@ -2617,11 +2641,11 @@ alphabet_name:
   name
 ; */
 
-/* Class name
+/* Class name */
 
 class_name:
-  name
-; */
+  CLASS_NAME
+;
 
 /* Condition name */
 

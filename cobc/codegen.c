@@ -321,32 +321,38 @@ output_expr (cobc_tree x)
     }
 #endif
 
-  if (COBC_EXPR_P (x))
+  switch (COBC_TREE_TAG (x))
     {
-      struct cobc_expr *p = COBC_EXPR (x);
-      output_expr (p->left);
-      output_expr (p->right);
-      switch (p->op)
-	{
-	case '+': output_call_0 ("cob_num_add"); break;
-	case '-': output_call_0 ("cob_num_sub"); break;
-	case '*': output_call_0 ("cob_num_mul"); break;
-	case '/': output_call_0 ("cob_num_div"); break;
-	case '^': output_call_0 ("cob_num_pow"); break;
-	}
-    }
-  else if (COBC_LITERAL_P (x))
-    {
-      struct cobc_literal *p = COBC_LITERAL (x);
-      if (p->size < 10)
-	output_line ("cob_push_int (%lld, %d);",
-		     literal_to_int (COBC_LITERAL (x)), p->decimals);
-      else
-	output_line ("cob_push_str (\"%s%s\", %d);",
-		     (p->sign < 0) ? "-" : "", p->str, p->decimals);
-    }
-  else
-    {
+    case cobc_tag_expr:
+      {
+	struct cobc_expr *p = COBC_EXPR (x);
+	output_expr (p->left);
+	output_expr (p->right);
+	switch (p->op)
+	  {
+	  case '+': output_call_0 ("cob_num_add"); break;
+	  case '-': output_call_0 ("cob_num_sub"); break;
+	  case '*': output_call_0 ("cob_num_mul"); break;
+	  case '/': output_call_0 ("cob_num_div"); break;
+	  case '^': output_call_0 ("cob_num_pow"); break;
+	  }
+	break;
+      }
+    case cobc_tag_integer:
+      output_line ("cob_push_int (%d, 0);", COBC_INTEGER (x)->val);
+      break;
+    case cobc_tag_literal:
+      {
+	struct cobc_literal *p = COBC_LITERAL (x);
+	if (p->size < 10)
+	  output_line ("cob_push_int (%lld, %d);",
+		       literal_to_int (COBC_LITERAL (x)), p->decimals);
+	else
+	  output_line ("cob_push_str (\"%s%s\", %d);",
+		       (p->sign < 0) ? "-" : "", p->str, p->decimals);
+	break;
+      }
+    default:
       output_call_1 ("cob_push_decimal", x);
     }
 }
@@ -431,6 +437,10 @@ output_condition (cobc_tree x)
     case COBC_COND_ZERO:
       x = make_cond (l, COBC_COND_EQ, cobc_zero);
       goto again;
+    case COBC_COND_CLASS:
+      puts ("class-name is not implemented");
+      output ("1");
+      break;
     case COBC_COND_NOT:
       output ("!");
       x = l;
