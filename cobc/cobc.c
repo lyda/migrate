@@ -245,6 +245,10 @@ process_command_line (int argc, char *argv[])
   /* Default options */
   compile_level = stage_executable;
 
+  cb_flag_check_numeric = 1;
+  cb_flag_check_subscript = 1;
+  cb_flag_check_ref_mod = 1;
+
   /* Parse the options */
   while ((c = getopt_long_only (argc, argv, short_options,
 				long_options, &index)) >= 0)
