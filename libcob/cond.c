@@ -183,26 +183,34 @@ cob_in_range (struct cob_field low, struct cob_field val, struct cob_field up)
  */
 
 int
-cob_is_numeric (struct fld_desc *f, char *s)
+cob_is_numeric (struct cob_field f)
 {
-  int i;
-
-  if ((f->type == 'B') || (f->type == 'C') || (f->type == 'U'))
-    /* the B and C formats have valid numbers always (?) */
-    return 1;
-
-  for (i = 0; i < f->len; i++)
+  if (FIELD_TYPE (f) == '9')
     {
-      int c = s[i];
-      if (f->type != 'G' && f->pic != NULL)
-	/* take care of signed numbers (non separate sign) */
-	if (i == f->len - 1 && f->pic[0] == 'S')
-	  if (strchr ("}ABCDEFGHI{JKLMNOPQR", c) != NULL)
-	    return 1;
-      if (!isdigit (c))
-	return 0;
+      int i, sign;
+      int ret = 1;
+      int size = FIELD_LENGTH (f);
+      unsigned char *data = FIELD_BASE (f);
+      sign = get_sign (f);
+      for (i = 0; i < size; i++)
+	if (!isdigit (data[i]))
+	  {
+	    ret = 0;
+	    break;
+	  }
+      put_sign (f, sign);
+      return ret;
     }
-  return 1;
+  else
+    {
+      int i;
+      int size = FIELD_SIZE (f);
+      unsigned char *data = FIELD_DATA (f);
+      for (i = 0; i < size; i++)
+	if (!isdigit (data[i]))
+	  return 0;
+      return 1;
+    }
 }
 
 int
