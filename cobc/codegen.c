@@ -989,20 +989,21 @@ output_file_name (struct cobc_file_name *f)
   for (p = f->record; p; p = p->sister)
     output_field_definition (p, p, 1, 0);
 
-  /* output ALTERNATE RECORD KEY's */
-  if (f->organization == COB_ORG_INDEXED)
+  /* output RELATIVE/RECORD KEY's */
+  if (f->organization == COB_ORG_RELATIVE
+      || f->organization == COB_ORG_INDEXED)
     {
       struct cobc_alt_key *l;
-      output ("static struct cob_key %s_keys[] = {\n", f->cname);
+      output ("static struct cob_file_key %s_keys[] = {\n", f->cname);
       output ("  {");
-      output_tree (f->key);
-      output (", 0, 0},\n");
+      output_field (f->key);
+      output (", 0},\n");
       for (l = f->alt_key_list; l; l = l->next)
 	{
 	  nkeys++;
 	  output ("  {");
-	  output_tree (l->key);
-	  output (", %d, 0},\n", l->duplicates);
+	  output_field (l->key);
+	  output (", %d},\n", l->duplicates);
 	}
       output ("};\n");
     }
@@ -1027,16 +1028,14 @@ output_file_name (struct cobc_file_name *f)
   /* record_depending */
   output_field (f->record_depending);
   output (", ");
+  /* flags */
+  output ("{0, %d, 0, 0, 0, 0}, ", f->optional);
   /* file */
   output ("0, ");
-  /* flags */
-  output ("{%d, 0, 0, 0, 0}, ", f->optional);
-  /* relative_key */
-  output_field (f->key);
-  output (", ");
-  /* cursor, keys, nkeys, last_key */
-  if (f->organization == COB_ORG_INDEXED)
-    output ("0, %s_keys, %d, 0", f->cname, nkeys);
+  /* keys, nkeys */
+  if (f->organization == COB_ORG_RELATIVE
+      || f->organization == COB_ORG_INDEXED)
+    output ("%s_keys, %d", f->cname, nkeys);
   output ("};\n\n");
 }
 

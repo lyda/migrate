@@ -2669,7 +2669,7 @@ sort_statement:
 sort_keys:
   sort_key_list
   {
-    push_call_1_list ("cob_sort_keys", $<tree>0, $1);
+    push_call_1_list ("cob_sort_init", $<tree>0, $1);
   }
 ;
 sort_key_list:
