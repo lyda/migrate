@@ -167,7 +167,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <tree> sort_keys,opt_perform_thru,procedure_section
 %type <tree> opt_read_key,file_name,string_with_pointer
 %type <tree> variable,sort_range,name_or_lit,delimited_by
-%type <tree> variable_indexed,search_opt_varying,opt_key_is
+%type <tree> indexed_variable,search_opt_varying,opt_key_is
 %type <tree> from_rec_varying,to_rec_varying
 %type <tree> literal,gliteral,without_all_literal,all_literal,special_literal
 %type <tree> nliteral,subscripted_variable
@@ -888,11 +888,11 @@ value_clause:
   VALUE opt_is_are value_list
 ;
 value_list:
-  value
-| value_list value
-| value_list ',' value
+  value_item
+| value_list value_item
+| value_list ',' value_item
 ;
-value:
+value_item:
   gliteral			{ set_variable_values($1,$1); }
 | gliteral THRU gliteral	{ set_variable_values($1,$3); }
 ;
@@ -2165,7 +2165,7 @@ search_statement:
   SEARCH search_body opt_end_search
 | SEARCH ALL search_all_body opt_end_search
 search_body:
-  variable_indexed
+  indexed_variable
   {
     $<ival>$=loc_label++; /* determine END label name */
     gen_marklabel();
@@ -2198,7 +2198,7 @@ search_body:
   }
 ;
 search_all_body:
-  variable_indexed
+  indexed_variable
   {
      lbend=loc_label++; /* determine END label name */
      gen_marklabel();
@@ -2818,30 +2818,48 @@ number:
   }
 ;
 
+integer:
+  INTEGER_TOK
+  {
+    char *s = COB_FIELD_NAME ($1);
+    $$ = 0;
+    while (*s)
+      $$ = $$ * 10 + *s++ - '0';
+  }
+;
+
 
 idstring:
   { start_condition = START_ID; } IDSTRING { $$ = $2; }
 ;
+
+
 gname:
   name
 | gliteral
 | function_call
 ;
 function_call:
-  FUNCTION idstring '(' parameters ')'
+  FUNCTION idstring '(' function_args ')'
   {
     yyerror ("function call is not supported yet");
     YYABORT;
   }
 ;
-parameters:
+function_args:
   gname { }
-| parameters gname
+| function_args gname
 ;
 name_or_lit:
   name
 | literal
 ;
+
+
+/*
+ * Literals
+ */
+
 gliteral:
   without_all_literal
 | all_literal
@@ -2869,6 +2887,17 @@ nliteral:
   INTEGER_TOK			{ $$ = save_literal ($1, '9'); }
 | NLITERAL			{ $$ = save_literal ($1, '9'); }
 ;
+
+
+
+indexed_variable:
+  SUBSCVAR
+  {
+    if ($1->times == 1)
+       yyerror("variable `%s' must be indexed", COB_FIELD_NAME ($1));
+    $$ = $1;
+  }
+;
 opt_def_name:
   /* nothing */			{ $$ = make_filler(); }
 | def_name			{ $$ = $1; }
@@ -2880,14 +2909,6 @@ def_name:
     if ($1->defined)
       yyerror("variable redefined, %s", COB_FIELD_NAME ($1));
     $1->defined = 1;
-    $$ = $1;
-  }
-;
-variable_indexed:
-  SUBSCVAR
-  {
-    if ($1->times == 1)
-       yyerror("\"%s\" is not an indexed variable ", COB_FIELD_NAME ($1));
     $$ = $1;
   }
 ;
@@ -2921,11 +2942,10 @@ variable:
   }
 ;
 subscripted_variable:
-  qualified_var LPAR		{ need_separator = 1; }
-  subscript_list ')'		{ need_separator = 0; }
+  qualified_var LPAR subscript_list ')'
   {
     int required = count_subscripted ($1);
-    int given = list_length ($4);
+    int given = list_length ($3);
     if (given != required)
       {
 	if (required == 1)
@@ -2935,7 +2955,7 @@ subscripted_variable:
 	  yyerror ("variable `%s' requires %d subscripts",
 		   COB_FIELD_NAME ($1), required);
       }
-    $$ = make_subref ($1, $4);
+    $$ = make_subref ($1, $3);
   }
 subscript_list:
   subscript				{ $$ = cons ($1, NULL); }
@@ -2954,33 +2974,9 @@ unqualified_var:
   VARIABLE			{ $$ = $1; }
 | SUBSCVAR			{ $$ = $1; need_subscripts = 1; }
 ;
-integer:
-  INTEGER_TOK
-  {
-    char *s = COB_FIELD_NAME ($1);
-    $$ = 0;
-    while (*s)
-      $$ = $$ * 10 + *s++ - '0';
-  }
-;
+
 label:
-  LABELSTR in_of LABELSTR
-  {
-    cob_tree lab = $1;
-    if (lab->defined == 0)
-      {
-	lab->defined = 2;
-	lab->parent = $3;
-      }
-    else if ((lab = lookup_label (lab, $3)) == NULL)
-      {
-	lab = install (COB_FIELD_NAME ($1), SYTB_LAB, 2);
-	lab->defined = 2;
-	lab->parent = $3;
-      }
-    $$ = lab;
-  }
-| LABELSTR
+  LABELSTR
   {
     cob_tree lab = $1;
     if (lab->defined == 0)
@@ -2993,6 +2989,22 @@ label:
 	lab = install (COB_FIELD_NAME ($1), SYTB_LAB, 2);
 	lab->defined = 2;
 	lab->parent = curr_section;
+      }
+    $$ = lab;
+  }
+| LABELSTR in_of LABELSTR
+  {
+    cob_tree lab = $1;
+    if (lab->defined == 0)
+      {
+	lab->defined = 2;
+	lab->parent = $3;
+      }
+    else if ((lab = lookup_label (lab, $3)) == NULL)
+      {
+	lab = install (COB_FIELD_NAME ($1), SYTB_LAB, 2);
+	lab->defined = 2;
+	lab->parent = $3;
       }
     $$ = lab;
   }

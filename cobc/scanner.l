@@ -38,7 +38,6 @@ cob_tree curr_file;
 int curr_division = 0;
 int start_condition = 0;
 int need_subscripts = 0;
-int need_separator = 0;
 int in_procedure = 0;
 
 /* save the last yytext */
@@ -80,7 +79,7 @@ static int scan_picture (char *text);
   start_condition = 0;
 %}
 
-<*>[ \t]* { /* ignore */ }
+<*>[ \t,;]* { /* ignore */ }
 
 <*>\n {
   if (cob_stabs_flag && in_procedure)
@@ -138,13 +137,6 @@ X\"[^\"\n]*\" {
   return scan_word (yytext);
 }
 
-[,;] {
-  if (need_separator)
-    return ',';
-  else
-    /* ignore */;
-}
-
 "(" {
   if (need_subscripts) {
     need_subscripts=0;
@@ -174,7 +166,6 @@ X\"[^\"\n]*\" {
 }
 
 <PICTURE_STATE>{
-  ";" |
   "IS"		{ /* ignore */ }
   [^ \t\n;]+	{
     BEGIN INITIAL;
