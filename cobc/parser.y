@@ -198,11 +198,11 @@ static void check_decimal_point (struct lit *lit);
 %type <ival> IF,ELSE,usage,write_options,opt_read_next
 %type <ival> using_options,using_parameters
 %type <dval> if_part
-%type <sval> name,gname,opt_gname,opt_def_name,def_name,procedure_section
+%type <sval> name,gname,numeric_value,opt_gname,opt_def_name,def_name
 %type <sval> field_description,label,filename,noallname,paragraph,assign_clause
 %type <lval> literal,gliteral,without_all_literal,all_literal,special_literal
 %type <lval> nliteral,signed_nliteral
-%type <sval> sort_keys,opt_perform_thru
+%type <sval> sort_keys,opt_perform_thru,procedure_section
 %type <sval> opt_read_into,opt_write_from
 %type <sval> variable,sort_range,perform_options,name_or_lit,delimited_by
 %type <sval> string_with_pointer
@@ -242,7 +242,7 @@ static void check_decimal_point (struct lit *lit);
 %type <ival> sentence_or_nothing,when_case_list
 %type <ival> opt_rounded
 %type <mval> var_list_name, var_list_gname
-%type <mose> on_size_error,error_sentence
+%type <mose> opt_on_size_error,on_size_error,error_sentence
 %type <ival> opt_address_of,display_upon,display_options
 %type <sval> set_variable,set_variable_or_nlit,set_target,opt_add_to
 %type <condval> condition,simple_condition,implied_op_condition
@@ -2103,31 +2103,18 @@ move_statement:
 /* COMPUTE statement */
 
 compute_statement:
-    COMPUTE compute_body opt_end_compute
-    ;
-compute_body:
-      var_list_name CONDITIONAL expr
-      {
-        if ($2 != EQUAL)
-          yyerror("= expected");
-        else
-          gen_compute($1, $3, NULL);
-        delete_mathvar_info($1);
-      }
-    | var_list_name CONDITIONAL expr on_size_error
-      {
-        if ($2 != EQUAL)
-          yyerror("= expected");
-        else
-          gen_compute($1, $3, $4);
-        delete_mathvar_info($1);
-        tmose = NULL;
-      }
-    ;
+    COMPUTE var_list_name CONDITIONAL expr opt_on_size_error opt_end_compute
+    {
+      if ($3 != EQUAL)
+	yyerror("= expected");
+      else
+	gen_compute($2, $4, $5);
+    }
+  ;
 opt_end_compute:
     /* nothing */
-    | END_COMPUTE
-    ;
+  | END_COMPUTE
+  ;
 
 
 /* ADD statement */
@@ -2136,31 +2123,13 @@ add_statement:
     ADD add_body end_add
     ;
 add_body:
-      var_list_gname TO var_list_name on_size_error
+      var_list_gname TO var_list_name opt_on_size_error
       {
         gen_add1($1, $3, $4);
-        delete_mathvar_info($1);
-        delete_mathvar_info($3);
-        tmose = NULL;
       }
-    | var_list_gname opt_add_to GIVING var_list_name on_size_error
+    | var_list_gname opt_add_to GIVING var_list_name opt_on_size_error
       {
         gen_add2($1, $4, $2, $5);
-        delete_mathvar_info($1);
-        delete_mathvar_info($4);
-        tmose = NULL;
-      }
-    | var_list_gname TO var_list_name
-      {
-        gen_add1($1, $3, NULL);
-        delete_mathvar_info($1);
-        delete_mathvar_info($3);
-      }
-    | var_list_gname opt_add_to GIVING var_list_name
-      {
-        gen_add2($1, $4, $2, NULL);
-        delete_mathvar_info($1);
-        delete_mathvar_info($4);
       }
     | CORRESPONDING gname opt_to name opt_rounded
       {
@@ -2180,33 +2149,13 @@ subtract_statement:
     SUBTRACT subtract_body opt_end_subtract
     ;
 subtract_body:
-      var_list_gname FROM var_list_name
-      {
-        gen_subtract1($1, $3, NULL);
-        delete_mathvar_info($1);
-        delete_mathvar_info($3);
-      }
-    | var_list_gname FROM gname GIVING var_list_name
-      {
-        assert_numeric_sy($3);
-        gen_subtract2($1, $5, $3, NULL);
-        delete_mathvar_info($1);
-        delete_mathvar_info($5);
-      }
-    | var_list_gname FROM var_list_name on_size_error
+      var_list_gname FROM var_list_name opt_on_size_error
       {
         gen_subtract1($1, $3, $4);
-        delete_mathvar_info($1);
-        delete_mathvar_info($3);
-        tmose = NULL;
       }
-    | var_list_gname FROM gname GIVING var_list_name on_size_error
+    | var_list_gname FROM numeric_value GIVING var_list_name opt_on_size_error
       {
-        assert_numeric_sy($3);
         gen_subtract2($1, $5, $3, $6);
-        delete_mathvar_info($1);
-        delete_mathvar_info($5);
-        tmose = NULL;
       }
     | CORRESPONDING gname FROM name opt_rounded
       {
@@ -2224,33 +2173,13 @@ multiply_statement:
     MULTIPLY multiply_body opt_end_multiply
     ;
 multiply_body:
-      gname BY gname GIVING var_list_name
+      numeric_value BY var_list_name opt_on_size_error
       {
-        assert_numeric_sy($1);
-        assert_numeric_sy($3);
-        gen_multiply2($5, $1, $3, NULL);
-        delete_mathvar_info($5);
-      }
-    | gname BY var_list_name
-      {
-        assert_numeric_sy($1);
-        gen_multiply1($3, $1, NULL);
-        delete_mathvar_info($3);
-      }
-    | gname BY gname GIVING var_list_name on_size_error
-      {
-        assert_numeric_sy($1);
-        assert_numeric_sy($3);
-        gen_multiply2($5, $1, $3, $6);
-        delete_mathvar_info($5);
-        tmose = NULL;
-      }
-    | gname BY var_list_name on_size_error
-      {
-        assert_numeric_sy($1);
         gen_multiply1($3, $1, $4);
-        delete_mathvar_info($3);
-        tmose = NULL;
+      }
+    | numeric_value BY numeric_value GIVING var_list_name opt_on_size_error
+      {
+        gen_multiply2($5, $1, $3, $6);
       }
     ;
 opt_end_multiply:
@@ -2265,82 +2194,41 @@ divide_statement:
     DIVIDE divide_body opt_end_divide
     ;
 divide_body:
-      gname BY gname GIVING var_list_name
+      numeric_value BY numeric_value GIVING var_list_name opt_on_size_error
       {
-        assert_numeric_sy($1);
-        assert_numeric_sy($3);
-        gen_divide2($5, $1, $3, NULL);
-        delete_mathvar_info($5);
-      }
-    | gname BY gname GIVING name opt_rounded REMAINDER name
-      {
-        assert_numeric_sy($1);
-        assert_numeric_sy($3);
-        assert_numeric_sy($5);
-        gen_divide($1, $3, $5, $8, $6);
-      }
-    | gname INTO gname GIVING name opt_rounded REMAINDER name
-      {
-        assert_numeric_sy($1);
-        assert_numeric_sy($3);
-        assert_numeric_sy($5);
-        gen_divide($3, $1, $5, $8, $6);
-      }
-    | gname INTO gname GIVING var_list_name
-      {
-        assert_numeric_sy($1);
-        assert_numeric_sy($3);
-        gen_divide2($5, $3, $1, NULL);
-        delete_mathvar_info($5);
-      }
-    | gname INTO var_list_name
-      {
-        assert_numeric_sy($1);
-        gen_divide1($3, $1, NULL);
-        delete_mathvar_info($3);
-      }
-    | gname BY gname GIVING var_list_name on_size_error
-      {
-        assert_numeric_sy($1);
-        assert_numeric_sy($3);
         gen_divide2($5, $1, $3, $6);
-        delete_mathvar_info($5);
-        tmose = NULL;
       }
-    | gname BY gname GIVING name opt_rounded REMAINDER name on_size_error
+    | numeric_value BY numeric_value GIVING name opt_rounded REMAINDER name
       {
-        assert_numeric_sy($1);
-        assert_numeric_sy($3);
+        assert_numeric_sy($5);
+        gen_divide($1, $3, $5, $8, $6);
+      }
+    | numeric_value INTO numeric_value GIVING name opt_rounded REMAINDER name
+      {
+        assert_numeric_sy($5);
+        gen_divide($3, $1, $5, $8, $6);
+      }
+    | numeric_value BY numeric_value GIVING name opt_rounded REMAINDER name on_size_error
+      {
         assert_numeric_sy($5);
         gen_dstlabel($9->lbl4); /* generate bypass jump */
         gen_divide($1, $3, $5, $8, $6);
         math_on_size_error3($9);
-        tmose = NULL;
       }
-    | gname INTO gname GIVING name opt_rounded REMAINDER name on_size_error
+    | numeric_value INTO numeric_value GIVING name opt_rounded REMAINDER name on_size_error
       {
-        assert_numeric_sy($1);
-        assert_numeric_sy($3);
         assert_numeric_sy($5);
         gen_dstlabel($9->lbl4); /* generate bypass jump */
         gen_divide($3, $1, $5, $8, $6);
         math_on_size_error3($9);
-        tmose = NULL;
       }
-    | gname INTO gname GIVING var_list_name on_size_error
+    | numeric_value INTO numeric_value GIVING var_list_name opt_on_size_error
       {
-        assert_numeric_sy($1);
-        assert_numeric_sy($3);
         gen_divide2($5, $3, $1, $6);
-        delete_mathvar_info($5);
-        tmose = NULL;
       }
-    | gname INTO var_list_name on_size_error
+    | numeric_value INTO var_list_name opt_on_size_error
       {
-        assert_numeric_sy($1);
         gen_divide1($3, $1, $4);
-        delete_mathvar_info($3);
-        tmose = NULL;
       }
     ;
 opt_end_divide:
@@ -2735,41 +2623,42 @@ opt_rounded: { $$=0; }
     | ROUNDED { $$=1; }
     ;
 
+opt_on_size_error:
+    /* nothing */	{ $$ = NULL; }
+  | on_size_error	{ $$ = $1; }
+  ;
 on_size_error:
-      NOT opt_on SIZE
-      error_sentence
+      NOT opt_on SIZE error_sentence
       {
        $$=math_on_size_error4($4, 2);
       }
-    | opt_on SIZE
-      error_sentence
+    | opt_on SIZE error_sentence
       {
        $$=math_on_size_error4($3, 1);
       }
-    | opt_on SIZE
-      error_sentence
+    | opt_on SIZE error_sentence
       NOT opt_on SIZE
       {
        $3->lbl1=$3->ose;
       }
       error_sentence
       {
-       $$=math_on_size_error4($8, 3);
+	tmose = NULL;
+	$$ = math_on_size_error4($8, 3);
       }
     ;
 
 error_sentence:
      TOK_ERROR
      {
-      if ( tmose == NULL ) {
-         tmose=math_on_size_error0();
-         $$=math_on_size_error1(tmose);
-      }
-      else {
-        $$=math_on_size_error1(tmose);
-      }
-        stabs_line();
-         }
+       if ( tmose == NULL ) {
+         tmose = math_on_size_error0();
+         $$ = math_on_size_error1(tmose);
+       } else {
+	 $$ = math_on_size_error1(tmose);
+       }
+       stabs_line();
+     }
      statement_list
      {
       math_on_size_error2();
@@ -3081,6 +2970,14 @@ function_call:
       YYABORT;
     }
     ;
+numeric_value:
+    gname
+    {
+      if (!is_numeric_sy ($1))
+	yyerror ("non-numeric value: %s", $1->name);
+      $$ = $1;
+    }
+  ;
 parameters:
       gname			{ $$ = cons ($1, NULL); }
     | parameters opt_sep gname	{ $$ = cons ($3, $1); }

@@ -2270,29 +2270,6 @@ create_mathvar_info (struct math_var *mv, struct sym *sy, unsigned int opt)
   return tmp2;
 }
 
-void
-delete_mathvar_info (struct math_var *mv)
-{
-
-  struct math_var *tmp1, *tmp2;
-
-  tmp1 = mv;
-  while (tmp1 != NULL)
-    {
-#ifdef COB_DEBUG
-      if (cob_trace_codegen)
-	fprintf (stderr,
-		 "debug trace : delete_mathvar_info 1: tmp1->sname->name=%s;\n", 
-		 tmp1->sname->name); 
-#endif
-      tmp2 = tmp1->next;
-      tmp1->next = NULL;
-      tmp1->sname = NULL;
-      free (tmp1);
-      tmp1 = tmp2;
-    }
-}
-
 struct math_ose *
 math_on_size_error0 (void)
 {

@@ -577,7 +577,6 @@ extern void free_expr_list (void);
 extern struct math_var *create_mathvar_info (struct math_var *mv,
 					     struct sym *sy,
 					     unsigned int opt);
-extern void delete_mathvar_info (struct math_var *mv);
 extern struct math_ose *math_on_size_error0 (void);
 extern struct math_ose *math_on_size_error1 (struct math_ose *v);
 extern void math_on_size_error2 (void);
