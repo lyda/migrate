@@ -737,7 +737,7 @@ output_search_all (cobc_tree table, cobc_tree sentence, cobc_tree when)
 
   /* header */
   output_indent ("{", 2);
-  output_line ("int head = %d;", p->occurs_min);
+  output_line ("int head = %d - 1;", p->occurs_min);
   output_prefix ();
   output ("int tail = ");
   output_occurs (p);
