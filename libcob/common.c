@@ -326,7 +326,7 @@ cob_index (int i, int max, const char *name)
   if (i < 1 || i > max)
     {
       cob_runtime_error (_("index `%s' out of range: %d"), name, i);
-      return (i < 1) ? 0 : max - 1;
+      exit (1);
     }
   return i - 1;
 }
@@ -337,12 +337,12 @@ cob_index_depending (int i, int min, int max, int dep, const char *name, const c
   if (dep < min || max < dep)
     {
       cob_runtime_error (_("value of `%s' out of range: %d"), depname, dep);
-      dep = (dep < min) ? min : max;
+      exit (1);
     }
   if (i < min || dep < i)
     {
       cob_runtime_error (_("index `%s' out of range: %d"), name, i);
-      return (i < min) ? 0 : dep - 1;
+      exit (1);
     }
   return i - 1;
 }

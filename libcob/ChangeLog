@@ -1,3 +1,8 @@
+2002-12-05  Keisuke Nishida  <knishida@netlab.jp>
+
+	* common.c (cob_index, cob_index_depending): Exit when index is
+	out of range.
+
 2002-11-25  Keisuke Nishida  <knishida@netlab.jp>
 
 	* numeric.c (cob_decimal_get, cob_decimal_get_r): Copy decimal
