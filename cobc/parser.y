@@ -1099,10 +1099,10 @@ usage_clause:
 | USAGE _is usage
 ;
 usage:
-  BINARY /* or COMP[-4|-5] */	{ current_field->usage = cb_usage_binary; }
-| DISPLAY			{ current_field->usage = cb_usage_display; }
-| INDEX				{ current_field->usage = cb_usage_index; }
-| PACKED_DECIMAL /* or COMP-3 */{ current_field->usage = cb_usage_packed; }
+  BINARY			{ current_field->usage = CB_USAGE_BINARY; }
+| DISPLAY			{ current_field->usage = CB_USAGE_DISPLAY; }
+| INDEX				{ current_field->usage = CB_USAGE_INDEX; }
+| PACKED_DECIMAL		{ current_field->usage = CB_USAGE_PACKED; }
 ;
 
 

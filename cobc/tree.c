@@ -332,22 +332,28 @@ cb_fits_int (cb_tree x)
     case CB_TAG_LITERAL:
       {
 	struct cb_literal *l = CB_LITERAL (x);
-	return (l->size < 10 && l->expt == 0);
+	if (l->expt >= 0 && l->size < 10)
+	  return 1;
+	return 0;
       }
     case CB_TAG_FIELD:
       {
 	struct cb_field *f = CB_FIELD (x);
-	if (f->usage == cb_usage_index)
-	  return 1;
-	if (f->usage == cb_usage_binary
-	    && f->size <= sizeof (int)
-	    && f->pic->expt >= 0)
-	  return 1;
-	if (f->usage == cb_usage_display
-	    && f->size < 10
-	    && f->pic->expt >= 0)
-	  return 1;
-	return 0;
+	switch (f->usage)
+	  {
+	  case CB_USAGE_INDEX:
+	    return 1;
+	  case CB_USAGE_BINARY:
+	    if (f->pic->expt >= 0 && f->size <= sizeof (int))
+	      return 1;
+	    return 0;
+	  case CB_USAGE_DISPLAY:
+	    if (f->pic->expt >= 0 && f->size < 10)
+	      return 1;
+	    return 0;
+	  default:
+	    return 0;
+	  }
       }
     case CB_TAG_REFERENCE:
       {
@@ -379,12 +385,6 @@ cb_tree cb_int2;
 cb_tree cb_error_node;
 
 struct cb_label *cb_standard_error_handler;
-
-#undef CB_USAGE
-#define CB_USAGE(var,type,size)				\
- static struct cb_usage var##_data = {type, size};	\
- struct cb_usage *var = &var##_data;
-#include "usage.def"
 
 static cb_tree
 make_constant (enum cb_class class, const char *val)
@@ -426,7 +426,7 @@ cb_init_constants (void)
     {
       char buff[16];
       sprintf (buff, "switch[%d]", i);
-      cb_switch[i] = make_field_3 (make_reference (buff), "9", cb_usage_index);
+      cb_switch[i] = make_field_3 (make_reference (buff), "9", CB_USAGE_INDEX);
     }
 
   cb_standard_error_handler = make_constant_label ("standard_error_handler");
@@ -772,7 +772,7 @@ make_field (cb_tree name)
 }
 
 cb_tree
-make_field_3 (cb_tree name, const char *pic, struct cb_usage *usage)
+make_field_3 (cb_tree name, const char *pic, enum cb_usage usage)
 {
   cb_tree x = make_field (name);
   CB_FIELD (x)->pic = cb_parse_picture (pic);
@@ -873,7 +873,7 @@ build_field (int level, cb_tree name, struct cb_field *last_field,
   /* build the field */
   f = CB_FIELD (make_field (name));
   f->level = level;
-  f->usage = cb_usage_display;
+  f->usage = CB_USAGE_DISPLAY;
   f->occurs = 1;
   f->storage = storage;
 
@@ -1034,18 +1034,26 @@ validate_field_1 (struct cb_field *f)
   else
     {
       /* validate PICTURE */
-      if (f->pic == NULL && f->usage->size == 0)
-	{
-	  cb_error_x (x, _("PICTURE clause required for `%s'"), name);
-	  return -1; /* cannot continue */
-	}
-      if (f->pic != NULL && f->usage->size != 0)
-	{
-	  cb_error_x (x, _("`%s' cannot have PICTURE clause"), name);
-	}
+      {
+	int need_picture = 1;
+	if (f->usage == CB_USAGE_INDEX
+	    || f->usage == CB_USAGE_OBJECT
+	    || f->usage == CB_USAGE_POINTER
+	    || f->usage == CB_USAGE_PROGRAM)
+	  need_picture = 0;
+	if (f->pic == NULL && need_picture != 0)
+	  {
+	    cb_error_x (x, _("PICTURE clause required for `%s'"), name);
+	    return -1; /* cannot continue */
+	  }
+	if (f->pic != NULL && need_picture == 0)
+	  {
+	    cb_error_x (x, _("`%s' cannot have PICTURE clause"), name);
+	  }
+      }
 
       /* validate USAGE */
-      if (f->usage == cb_usage_binary || f->usage == cb_usage_packed)
+      if (f->usage == CB_USAGE_BINARY || f->usage == CB_USAGE_PACKED)
 	if (f->pic->category != CB_CATEGORY_NUMERIC)
 	  cb_warning_x (x, _("`%s' not numeric item"), name);
 
@@ -1180,7 +1188,7 @@ setup_parameters (struct cb_field *p)
   else
     {
       /* regular field */
-      if (p->usage == cb_usage_index)
+      if (p->usage == CB_USAGE_INDEX)
 	p->pic = cb_parse_picture ("S9(9)");
 
       /* set class */
@@ -1259,9 +1267,9 @@ compute_size (struct cb_field *p)
   else
     {
       /* elementary item */
-      switch (p->usage->type)
+      switch (p->usage)
 	{
-	case COB_TYPE_NUMERIC_BINARY:
+	case CB_USAGE_BINARY:
 	  {
 	    int size = p->pic->size;
 	    switch (cb_binary_rep)
@@ -1278,7 +1286,7 @@ compute_size (struct cb_field *p)
 	      }
 	    break;
 	  }
-	case COB_TYPE_NUMERIC_DISPLAY:
+	case CB_USAGE_DISPLAY:
 	  {
 	    p->size = p->pic->size;
 	    if (p->pic->category == CB_CATEGORY_NUMERIC
@@ -1286,18 +1294,27 @@ compute_size (struct cb_field *p)
 	      p->size++;
 	    break;
 	  }
-	case COB_TYPE_NUMERIC_PACKED:
+	case CB_USAGE_PACKED:
 	  {
 	    p->size = p->pic->size / 2;
 	    if (p->pic->size % 2 || p->pic->have_sign)
 	      p->size++;
 	    break;
 	  }
+	case CB_USAGE_INDEX:
+	  {
+	    p->size = sizeof (int);
+	    break;
+	  }
+	case CB_USAGE_OBJECT:
+	case CB_USAGE_POINTER:
+	case CB_USAGE_PROGRAM:
+	  {
+	    p->size = sizeof (void *);
+	    break;
+	  }
 	default:
-	  if (p->usage->size > 0)
-	    p->size = p->usage->size;
-	  else
-	    abort ();
+	  abort ();
 	}
     }
 
@@ -1397,7 +1414,7 @@ finalize_file (struct cb_file *f, struct cb_field *records)
   /* create record */
   sprintf (pic, "X(%d)", f->record_max);
   f->record = CB_FIELD (make_field_3 (make_reference (f->name),
-				      pic, cb_usage_display));
+				      pic, CB_USAGE_DISPLAY));
   f->record->sister = records;
 
   for (p = records; p; p = p->sister)
@@ -2115,7 +2132,7 @@ decimal_expand (cb_tree s, cb_tree d, cb_tree x)
 
 	/* check numeric */
 	if (CB_EXCEPTION_ENABLE (COB_EC_DATA_INCOMPATIBLE))
-	  if (f->usage == cb_usage_display)
+	  if (f->usage == CB_USAGE_DISPLAY)
 	    add_stmt (s, make_funcall_2 ("cob_check_numeric",
 					 x, cb_build_string (f->name)));
 
@@ -2243,7 +2260,7 @@ build_assign (struct cb_list *vars, char op, cb_tree val)
 cb_tree
 build_add (cb_tree v, cb_tree n, int round)
 {
-  if (cb_field (v)->usage == cb_usage_index)
+  if (cb_field (v)->usage == CB_USAGE_INDEX)
     return build_move (make_binary_op (v, '+', n), v);
 
   if (round == 0 && cb_fits_int (n))
@@ -2257,7 +2274,7 @@ build_add (cb_tree v, cb_tree n, int round)
 cb_tree
 build_sub (cb_tree v, cb_tree n, int round)
 {
-  if (cb_field (v)->usage == cb_usage_index)
+  if (cb_field (v)->usage == CB_USAGE_INDEX)
     return build_move (make_binary_op (v, '-', n), v);
 
   if (round == 0 && cb_fits_int (n))

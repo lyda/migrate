@@ -88,6 +88,19 @@ enum cb_storage {
   CB_STORAGE_SCREEN		/* SCREEN SECTION */
 };
 
+enum cb_usage {
+  CB_USAGE_BINARY,
+  CB_USAGE_BIT,
+  CB_USAGE_DISPLAY,
+  CB_USAGE_FLOAT,
+  CB_USAGE_INDEX,
+  CB_USAGE_NATIONAL,
+  CB_USAGE_OBJECT,
+  CB_USAGE_PACKED,
+  CB_USAGE_POINTER,
+  CB_USAGE_PROGRAM,
+};
+
 
 /*
  * List
@@ -181,10 +194,6 @@ extern cb_tree cb_int2;
 extern cb_tree cb_error_node;
 
 extern struct cb_label *cb_standard_error_handler;
-
-#undef CB_USAGE
-#define CB_USAGE(var,type,size) extern struct cb_usage *var;
-#include "usage.def"
 
 struct cb_const {
   struct cb_tree_common common;
@@ -284,11 +293,6 @@ extern struct cb_picture *cb_parse_picture (const char *str);
  * Field
  */
 
-struct cb_usage {
-  char type;
-  int size;
-};
-
 struct cb_field {
   struct cb_tree_common common;
   int size;			/* field size */
@@ -302,7 +306,7 @@ struct cb_field {
   char *cname;			/* the name used in C */
   cb_tree occurs_depending;	/* OCCURS ... DEPENDING ON */
   enum cb_storage storage;
-  struct cb_usage *usage;	/* USAGE */
+  enum cb_usage usage;		/* USAGE */
   struct cb_list *values;	/* VALUE */
   struct cb_list *index_list;	/* INDEXED BY */
   struct cb_field *parent;	/* upper level field (NULL for 01 fields) */
@@ -341,7 +345,7 @@ struct cb_field {
 #define CB_FIELD_P(x)		(CB_TREE_TAG (x) == CB_TAG_FIELD)
 
 extern cb_tree make_field (cb_tree name);
-extern cb_tree make_field_3 (cb_tree name, const char *pic, struct cb_usage *usage);
+extern cb_tree make_field_3 (cb_tree name, const char *pic, enum cb_usage usage);
 extern struct cb_field *cb_field (cb_tree x);
 extern int field_size (cb_tree x);
 extern struct cb_field *field_founder (struct cb_field *p);
@@ -355,9 +359,9 @@ extern void finalize_field (struct cb_field *p);
 
 #define CB_INDEX_P(x)				\
   ((CB_FIELD_P (x) || CB_REFERENCE_P (x))	\
-   && cb_field (x)->usage == cb_usage_index)
+   && cb_field (x)->usage == CB_USAGE_INDEX)
 
-#define cb_build_index(name)	make_field_3 (name, "S9(9)", cb_usage_index)
+#define cb_build_index(name)	make_field_3 (name, "S9(9)", CB_USAGE_INDEX)
 
 
 /*

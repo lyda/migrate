@@ -298,17 +298,17 @@ tree_type (cb_tree x)
     case CB_CATEGORY_ALPHANUMERIC_EDITED:
       return COB_TYPE_ALPHANUMERIC_EDITED;
     case CB_CATEGORY_NUMERIC:
-      {
-	struct cb_field *f = cb_field (x);
-	if (f->usage == cb_usage_display)
+      switch (cb_field (x)->usage)
+	{
+	case CB_USAGE_DISPLAY:
 	  return COB_TYPE_NUMERIC_DISPLAY;
-	else if (f->usage == cb_usage_binary)
+	case CB_USAGE_BINARY:
 	  return COB_TYPE_NUMERIC_BINARY;
-	else if (f->usage == cb_usage_packed)
+	case CB_USAGE_PACKED:
 	  return COB_TYPE_NUMERIC_PACKED;
-	else
+	default:
 	  abort ();
-      }
+	}
     case CB_CATEGORY_NUMERIC_EDITED:
       return COB_TYPE_NUMERIC_EDITED;
     default:
@@ -690,7 +690,7 @@ output_integer (cb_tree x)
     default:
       {
 	struct cb_field *f = cb_field (x);
-	if (f->usage == cb_usage_index)
+	if (f->usage == CB_USAGE_INDEX)
 	  {
 	    if (f->level == 0)
 	      {
@@ -707,34 +707,36 @@ output_integer (cb_tree x)
 
 	if (cb_flag_inline_get_int)
 	  {
-	    if (f->usage == cb_usage_display
-		&& f->pic->expt <= 0
-		&& f->size + f->pic->expt <= 4
-		&& f->pic->have_sign == 0)
+	    switch (f->usage)
 	      {
-		int i, j;
-		int size = f->size + f->pic->expt;
-		output ("(");
-		for (i = 0; i < size; i++)
+	      case CB_USAGE_DISPLAY:
+		if (f->pic->expt <= 0
+		    && f->size + f->pic->expt <= 4
+		    && f->pic->have_sign == 0)
 		  {
-		    output ("((");
-		    output_data (x);
-		    output (")");
-		    output ("[%d] - '0')", i);
-		    if (i + 1 < size)
+		    int i, j;
+		    int size = f->size + f->pic->expt;
+		    output ("(");
+		    for (i = 0; i < size; i++)
 		      {
-			output (" * 1");
-			for (j = 1; j < size - i; j++)
-			  output ("0");
-			output (" + ");
+			output ("((");
+			output_data (x);
+			output (")");
+			output ("[%d] - '0')", i);
+			if (i + 1 < size)
+			  {
+			    output (" * 1");
+			    for (j = 1; j < size - i; j++)
+			      output ("0");
+			    output (" + ");
+			  }
 		      }
+		    output (")");
+		    return;
 		  }
-		output (")");
-		return;
-	      }
+		break;
 
-	    if (f->usage == cb_usage_binary)
-	      {
+	      case CB_USAGE_BINARY:
 		output ("(*(");
 		switch (f->size)
 		  {
@@ -747,6 +749,9 @@ output_integer (cb_tree x)
 		output_data (x);
 		output ("))");
 		return;
+
+	      default:
+		break;
 	      }
 	  }
 
@@ -1027,14 +1032,20 @@ output_move_call (cb_tree src, cb_tree dst)
 static void
 output_move_num (cb_tree x, int high)
 {
-  if (cb_field (x)->usage == cb_usage_display)
-    output_memset (x, high ? '9' : '0');
-  else if (cb_field (x)->usage == cb_usage_packed)
-    output_memset (x, high ? 0x99 : 0x00);
-  else if (cb_field (x)->usage == cb_usage_binary)
-    output_native_assign (x, high ? -1 : 0);
-  else
-    abort ();
+  switch (cb_field (x)->usage)
+    {
+    case CB_USAGE_BINARY:
+      output_native_assign (x, high ? -1 : 0);
+      break;
+    case CB_USAGE_DISPLAY:
+      output_memset (x, high ? '9' : '0');
+      break;
+    case CB_USAGE_PACKED:
+      output_memset (x, high ? 0x99 : 0x00);
+      break;
+    default:
+      abort ();
+    }
 }
 
 static void
@@ -1140,7 +1151,7 @@ output_move_literal (cb_tree src, cb_tree dst)
 	buff[i] = l->data[i % l->size];
       output_memcpy (dst, buff);
     }
-  else if (f->usage == cb_usage_binary || f->usage == cb_usage_index)
+  else if (f->usage == CB_USAGE_BINARY || f->usage == CB_USAGE_INDEX)
     {
       long long val = literal_to_int (l);
       int n = f->pic->expt - l->expt;
@@ -1212,8 +1223,8 @@ output_move (cb_tree src, cb_tree dst)
 		break;
 	      case CB_CLASS_NUMERIC:
 		if (CB_TREE_CLASS (dst) == CB_CLASS_NUMERIC
-		    && src_f->usage == cb_usage_display
-		    && dst_f->usage == cb_usage_display
+		    && src_f->usage == CB_USAGE_DISPLAY
+		    && dst_f->usage == CB_USAGE_DISPLAY
 		    && src_f->pic->size == dst_f->pic->size
 		    && src_f->pic->digits == dst_f->pic->digits
 		    && src_f->pic->expt == dst_f->pic->expt
@@ -1694,8 +1705,8 @@ output_call (cb_tree name, struct cb_list *args,
 		output ("%d", CB_LITERAL (x)->data[0]);
 	      break;
 	    default:
-	      if (cb_field (x)->usage == cb_usage_binary
-		  || cb_field (x)->usage == cb_usage_index)
+	      if (cb_field (x)->usage == CB_USAGE_BINARY
+		  || cb_field (x)->usage == CB_USAGE_INDEX)
 		{
 		  output_integer (x);
 		}
