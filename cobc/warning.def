@@ -39,5 +39,5 @@ COBC_WARNING (3, cobc_warn_end_evaluate, "end-evaluate",
 COBC_WARNING (3, cobc_warn_end_if, "end-if",
 	      N_("Warn lacks of END-IF"))
 
-COBC_WARNING (3, cobc_warn_type_mismatch, "type-mismatch",
-	      N_("Warn type mismatch"))
+COBC_WARNING (3, cobc_warn_strict_typing, "strict-typing",
+	      N_("Warn type mismatch strictly"))

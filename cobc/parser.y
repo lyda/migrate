@@ -4628,6 +4628,56 @@ build_sub (cobc_tree v, cobc_tree n, int round)
     }
 }
 
+static void
+warning_destination (cobc_tree x)
+{
+  struct cobc_reference *r = COBC_REFERENCE (x);
+  struct cobc_field *f = COBC_FIELD (cobc_ref (x));
+  cobc_tree loc = COBC_TREE (f);
+
+  if (r->offset)
+    return;
+
+  if (f->pic)
+    {
+      char str[256];
+
+      /* reconstruct the PICTURE string */
+      if (f->pic->str)
+	{
+	  char *s = str;
+	  char *p = f->pic->str;
+	  while (*p)
+	    {
+	      int c = *p++;
+	      int n = *p++;
+	      if (n == 1)
+		*s++ = c;
+	      else
+		s += sprintf (s, "%c(%d)", c, n);
+	    }
+	  *s = 0;
+	}
+      else
+	{
+	  int c = ((f->pic->category == COB_TYPE_ALPHABETIC) ? 'A' :
+		   (f->pic->category == COB_TYPE_ALPHANUMERIC) ? 'X' :
+		   (f->pic->category == COB_TYPE_NUMERIC) ? '9' : '?');
+	  if (f->pic->size == 1)
+	    sprintf (str, "%c", c);
+	  else
+	    sprintf (str, "%c(%d)", c, f->pic->size);
+	}
+
+      yywarn_x (loc, _("`%s' defined here as PIC %s"), f->name, str);
+    }
+  else
+    {
+      yywarn_x (loc, _("`%s' defined here as a group of length %d"),
+		f->name, f->size);
+    }
+}
+
 static int
 validate_move (cobc_tree src, cobc_tree dst, int value_flag)
 {
@@ -4809,18 +4859,30 @@ validate_move (cobc_tree src, cobc_tree dst, int value_flag)
   return -1;
 
  type_mismatch:
-  if (cobc_warn_type_mismatch)
-    yywarn_x (loc, _("type mismatch"));
+  if (cobc_warn_strict_typing)
+    {
+      yywarn_x (loc, _("type mismatch"));
+      if (!value_flag)
+	warning_destination (dst);
+    }
   return 0;
 
  value_mismatch:
   if (cobc_warn_constant)
-    yywarn_x (loc, _("constant value mismatch"));
+    {
+      yywarn_x (loc, _("constant value mismatch"));
+      if (!value_flag)
+	warning_destination (dst);
+    }
   return 0;
 
  size_overflow:
   if (cobc_warn_constant)
-    yywarn_x (loc, _("constant size overflow"));
+    {
+      yywarn_x (loc, _("constant size overflow"));
+      if (!value_flag)
+	warning_destination (dst);
+    }
   return 0;
 }
 
