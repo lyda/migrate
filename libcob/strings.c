@@ -48,11 +48,12 @@ static size_t inspect_size;
 static unsigned char *inspect_data;
 static unsigned char *inspect_start;
 static unsigned char *inspect_end;
-static unsigned char *inspect_mark;
+static int *inspect_mark;
 
 void
 cob_inspect_init (cob_field *var, int replacing)
 {
+  int i;
   inspect_var_copy = *var;
   inspect_var = &inspect_var_copy;
   inspect_replacing = replacing;
@@ -61,8 +62,9 @@ cob_inspect_init (cob_field *var, int replacing)
   inspect_data = COB_FIELD_DATA (var);
   inspect_start = NULL;
   inspect_end = NULL;
-  inspect_mark = malloc (inspect_size);
-  memset (inspect_mark, 0, inspect_size);
+  inspect_mark = malloc (inspect_size * sizeof (int));
+  for (i = 0; i < inspect_size; i++)
+    inspect_mark[i] = -1;
   cob_exception_code = 0;
 }
 
@@ -103,13 +105,13 @@ cob_inspect_characters (cob_field *f1)
 {
   int i;
   int len = inspect_end - inspect_start;
-  unsigned char *mark = &inspect_mark[inspect_start - inspect_data];
+  int *mark = &inspect_mark[inspect_start - inspect_data];
 
   if (inspect_replacing)
     {
       /* INSPECT REPLACING CHARACTERS f1 */
       for (i = 0; i < len; i++)
-	if (mark[i] == 0)
+	if (mark[i] == -1)
 	  mark[i] = f1->data[0];
     }
   else
@@ -118,7 +120,7 @@ cob_inspect_characters (cob_field *f1)
       int n = 0;
 
       for (i = 0; i < len; i++)
-	if (mark[i] == 0)
+	if (mark[i] == -1)
 	  {
 	    mark[i] = 1;
 	    n++;
@@ -134,7 +136,7 @@ inspect_common (cob_field *f1, cob_field *f2, int type)
 {
   int i, n = 0;
   int len = inspect_end - inspect_start;
-  unsigned char *mark = &inspect_mark[inspect_start - inspect_data];
+  int *mark = &inspect_mark[inspect_start - inspect_data];
 
   if (inspect_replacing && f1->size != f2->size)
     {
@@ -150,15 +152,13 @@ inspect_common (cob_field *f1, cob_field *f2, int type)
 	  int j;
 	  /* check if it is already marked */
 	  for (j = 0; j < f2->size; j++)
-	    if (mark[i + j])
+	    if (mark[i + j] != -1)
 	      break;
 	  /* if not, mark and count it */
 	  if (j == f2->size)
 	    {
-	      if (inspect_replacing)
-		memcpy (mark + i, f1->data, f2->size);
-	      else
-		memset (mark + i, 1, f2->size);
+	      for (j = 0; j < f2->size; j++)
+		mark[i + j] = inspect_replacing ? f1->data[j] : 1;
 	      i += f2->size - 1;
 	      n++;
 	      if (type == INSPECT_FIRST)
@@ -210,7 +210,7 @@ cob_inspect_finish (void)
     {
       int i;
       for (i = 0; i < inspect_size; i++)
-	if (inspect_mark[i] > 1)
+	if (inspect_mark[i] != -1)
 	  inspect_data[i] = inspect_mark[i];
     }
 
