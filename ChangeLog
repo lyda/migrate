@@ -1,3 +1,7 @@
+2004-08-02  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* Version 0.30 released.
+
 2004-03-06  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
 
 	* configure.ac: Checks for fcntl.
