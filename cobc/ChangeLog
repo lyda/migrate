@@ -1,3 +1,7 @@
+2002-06-06  Keisuke Nishida  <knishida@netlab.jp>
+
+	* cobc.c (process_command_line, print_usage): Activate -g.
+
 2002-06-05  Keisuke Nishida  <knishida@netlab.jp>
 
 	* cobc.c (print_usage): Don't show -g.
