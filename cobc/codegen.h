@@ -799,7 +799,6 @@ extern int sort_exref_compare (const void *z1, const void *z2);
 extern int main (int argc, char *argv[]);
 
 /* htcobol.c */
-extern void opt_is (int i);
 extern void yyerror (char *s, ...);
 extern int yyparse (void);
 

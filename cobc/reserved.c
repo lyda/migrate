@@ -162,7 +162,7 @@ static struct reserved_word reserved_words[] = {
   {"EOS", EOS_TOK, 0},
   {"EQUAL", CONDITIONAL, EQUAL},
   {"ERASE", ERASE, 0},
-  {"ERROR", ERRORTOK, 0},
+  {"ERROR", TOK_ERROR, 0},
   {"EVALUATE", EVALUATE, 0},
   {"EXCEPTION", EXCEPTION, 0},
   {"EXIT", EXIT, 0},
