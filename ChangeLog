@@ -1,5 +1,8 @@
 2002-08-30  Keisuke Nishida  <knishida@netlab.jp>
 
+	* configure.ac (AM_INIT_AUTOMAKE): Option `gnu' and `no-texinfo.tex'.
+	(AC_FUNC_STAT, AC_HEADER_STAT): Removed.
+	(LTLIBINTL): Used instead of LIBINTL.
 	* Makefile.am (EXTRA_DIST): Don't include `redhat' and `debian'.
 
 2002-08-28  Keisuke Nishida  <knishida@netlab.jp>

@@ -1,9 +1,9 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(open-cobol, 0.9.7.3)
+AC_INIT(open-cobol, 0.9.7.5)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR(config.h.in)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([gnu no-texinfo.tex])
 AM_MAINTAINER_MODE
 
 # enable debug mode by default for now
@@ -53,7 +53,6 @@ AC_TYPE_SIZE_T
 AC_STRUCT_TM
 
 # Checks for library functions.
-AC_FUNC_STAT
 AC_FUNC_ALLOCA
 AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
@@ -63,7 +62,6 @@ AC_CHECK_FUNCS([memmove memset regcomp pow setlocale strerror \
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_HEADER_STAT
 AC_HEADER_TIME
 AC_CHECK_HEADERS([fcntl.h malloc.h libintl.h locale.h stddef.h \
 		  sys/time.h wchar.h])
@@ -92,8 +90,8 @@ LIBCOB_LIBS="$LIBCOB_LIBS -lltdl"
 # Checks for gettext
 AM_GNU_GETTEXT([external])
 AM_GNU_GETTEXT_VERSION(0.11.5)
-if test "x$LIBINTL" != "x"; then
-  LIBCOB_LIBS="$LIBCOB_LIBS $LIBINTL"
+if test "x$LTLIBINTL" != "x"; then
+  LIBCOB_LIBS="$LIBCOB_LIBS $LTLIBINTL"
 fi
 
 # Checks for readline.
