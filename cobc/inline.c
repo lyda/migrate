@@ -747,7 +747,7 @@ search_set_keys (struct cobc_field *p, cobc_tree x)
 	break;
       }
     default:
-      yyerror_loc (&x->loc, "invalid condition");
+      yyerror_tree (x, "invalid condition");
     }
 }
 

@@ -436,7 +436,7 @@ output_expr (cobc_tree x, int id)
 #ifdef COB_DEBUG
   if (!is_numeric (x))
     {
-      yyerror_loc (&x->loc, "invalid expr `%s'\n", tree_to_string (x));
+      yyerror_tree (x, "invalid expr `%s'\n", tree_to_string (x));
       abort ();
     }
 #endif
@@ -1177,7 +1177,7 @@ output_evaluate_test (cobc_tree s, cobc_tree o)
       if (COBC_TREE_CLASS (s) != COB_BOOLEAN
 	  || COBC_TREE_CLASS (o) != COB_BOOLEAN)
 	{
-	  yyerror_loc (&COBC_TREE (o)->loc, "type mismatch");
+	  yyerror_tree (COBC_TREE (o), "type mismatch");
 	  output_tree (cobc_false);
 	  return;
 	}
