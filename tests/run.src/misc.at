@@ -481,6 +481,51 @@ AT_CHECK([./prog], [0], [XXXX])
 AT_CLEANUP
 
 
+## EXIT PERFORM  see ISO/IEC 1989:2002(E) 14.8.13 Format 5
+## (= the same as in MF-LRM  "EXIT"  FORMAT 2 ... )
+
+AT_SETUP([EXIT PERFORM])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       PROCEDURE        DIVISION.
+           PERFORM 2 TIMES
+             DISPLAY "OK" NO ADVANCING
+             EXIT PERFORM
+             DISPLAY "NOT REACHED"
+           END-PERFORM
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [OK])
+
+AT_CLEANUP
+
+## EXIT PERFORM  see ISO/IEC 1989:2002(E) 14.8.13 Format 5
+## (= the same as in MF-LRM  "EXIT"  FORMAT 2 ... )
+
+AT_SETUP([EXIT PERFORM CYCLE])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       PROCEDURE        DIVISION.
+           PERFORM 2 TIMES
+             DISPLAY "OK" NO ADVANCING
+             EXIT PERFORM CYCLE
+             DISPLAY "NOT REACHED"
+           END-PERFORM
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [OKOK])
+
+AT_CLEANUP
+
+
 AT_SETUP([88 with FILLER])
 
 AT_DATA([prog.cob], [
@@ -680,6 +725,39 @@ C
 AT_CLEANUP
 
 
+AT_SETUP([SORT: table sort])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 G             VALUE "d4b2e1a3c5".
+         02 TBL         OCCURS 5.
+           03 X         PIC X.
+           03 Y         PIC 9.
+       PROCEDURE        DIVISION.
+           SORT TBL ASCENDING KEY X.
+           DISPLAY G.
+           SORT TBL DESCENDING KEY Y.
+           DISPLAY G.
+           SORT TBL ASCENDING KEY TBL.
+           DISPLAY G.
+           SORT TBL DESCENDING KEY.
+           DISPLAY G.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[a3b2c5d4e1
+c5d4a3b2e1
+a3b2c5d4e1
+e1d4c5b2a3
+])
+
+AT_CLEANUP
+
 AT_SETUP([SORT nonexistent file])
 
 AT_DATA([prog.cob], [
