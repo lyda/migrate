@@ -289,8 +289,8 @@ cob_unstring (struct cob_field src, ...)
 {
   int i, type, offset = 0, count = 0, delms = 0;
   struct cob_field ptr = {0};
-  int delm_size;
-  unsigned char *delm_data;
+  int delm_size = 0;
+  unsigned char *delm_data = NULL;
   regex_t reg;
   int reg_inited = 0, match_size = 0;
   char regexp[256] = ""; /* FIXME: should be dynamic */
@@ -339,7 +339,7 @@ cob_unstring (struct cob_field src, ...)
 	{
 	  struct cob_field f = va_arg (ap, struct cob_field);
 	  unsigned char *start = src.data + offset;
-	  regmatch_t *match;
+	  regmatch_t *match = NULL;
 	  if (offset >= src.size)
 	    break;
 	  if (delms == 0)

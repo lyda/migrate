@@ -71,7 +71,7 @@ static struct cob_fileio_funcs *fileio_funcs[COB_ORG_MAX];
 static int
 sequential_open (struct cob_file *f, char *filename, int mode)
 {
-  int flags;
+  int flags = 0;
 
   switch (mode)
     {

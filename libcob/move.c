@@ -307,7 +307,7 @@ void
 cob_move_binary_to_display (struct cob_field f1, struct cob_field f2)
 {
   int i, sign;
-  long long val;
+  long long val = 0;
   char buff[20]; /* long long is at most 20 digits */
 
   /* get value */
