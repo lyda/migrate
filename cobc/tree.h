@@ -43,6 +43,7 @@ struct cob_tree_list {
 
 typedef struct cob_tree_list *cob_tree_list;
 
+extern cob_tree_list make_list (cob_tree x);
 extern cob_tree_list list_append (cob_tree_list l, cob_tree x);
 
 
@@ -204,11 +205,13 @@ struct refmod
   cob_tree off;		/* offset from normal start address */
   cob_tree sym;		/* pointer to original var: must be at the same relative offset as sym in subref */
   cob_tree len;		/* corrected length */
-  short slot;			/* slot in the data section */
+  int slot;			/* slot in the data section */
 };
 
 #define REFMOD(x)	((struct refmod *) (x))
 #define REFMOD_P(x)	(COB_TREE_TYPE (x) == 4)
+
+extern struct refmod *create_refmoded_var (cob_tree sy, cob_tree syoff, cob_tree sylen);
 
 
 /*
@@ -345,8 +348,8 @@ struct scr_info
   int attr;
   int line;
   int column;
-  short int foreground;
-  short int background;
+  int foreground;
+  int background;
   cob_tree from;
   cob_tree to;
   int label;
@@ -408,7 +411,7 @@ struct alternate_list
 struct unstring_delimited
 {
   struct unstring_delimited *next;
-  short int all;
+  int all;
   cob_tree var;
 };
 

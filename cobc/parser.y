@@ -146,9 +146,9 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <ival> screen_attribs,screen_attrib,screen_sign,opt_separate
 %type <ival> sentence_or_nothing,when_case_list,opt_read_next,usage
 %type <ival> procedure_using,sort_direction,write_options
-%type <list> label_list,subscript_list
+%type <list> label_list,subscript_list,number_list
 %type <mose> opt_on_size_error,on_size_error,error_sentence
-%type <mval> var_list_name, var_list_gname
+%type <mval> var_list_name
 %type <pfval> perform_after
 %type <pfvals> opt_perform_after
 %type <rbval> replacing_by_list
@@ -159,8 +159,8 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <ssbjval> selection_subject_set
 %type <str> idstring
 %type <tree> field_description,label,filename,noallname,paragraph,assign_clause
-%type <tree> file_description,redefines_var,function_call,subscript_expr
-%type <tree> name,gname,numeric_value,opt_gname,opt_def_name,def_name
+%type <tree> file_description,redefines_var,function_call,subscript
+%type <tree> name,gname,number,opt_gname,opt_def_name,def_name
 %type <tree> opt_read_into,opt_write_from,field_name,expr
 %type <tree> opt_unstring_count,opt_unstring_delim,unstring_tallying
 %type <tree> qualified_var,unqualified_var
@@ -1170,26 +1170,26 @@ accept_options:
  */
 
 add_statement:
-    ADD add_body end_add
-    ;
+  ADD add_body end_add
+;
 add_body:
-      var_list_gname TO var_list_name opt_on_size_error
-      {
-        gen_add1($1, $3, $4);
-      }
-    | var_list_gname opt_add_to GIVING var_list_name opt_on_size_error
-      {
-        gen_add2($1, $4, $2, $5);
-      }
-    | CORRESPONDING gname opt_to name flag_rounded
-      {
-        gen_addcorr($2, $4, $5);
-      }
-    ;
+  number_list TO var_list_name opt_on_size_error
+  {
+    gen_add1 ($1, $3, $4);
+  }
+| number_list opt_add_to GIVING var_list_name opt_on_size_error
+  {
+    gen_add2 ($2 ? list_append ($1, $2) : $1, $4, $5);
+  }
+| CORRESPONDING gname opt_to name flag_rounded
+  {
+    gen_addcorr ($2, $4, $5);
+  }
+;
 opt_add_to:
-    /* nothing */ { $$ = NULL; }
-    | TO gname    { $$ = $2; }
-    ;
+  /* nothing */			{ $$ = NULL; }
+| TO gname			{ $$ = $2; }
+;
 end_add: | END_ADD ;
 
 
@@ -1371,39 +1371,39 @@ divide_statement:
   DIVIDE divide_body opt_end_divide
 ;
 divide_body:
-  numeric_value BY numeric_value GIVING var_list_name opt_on_size_error
+  number BY number GIVING var_list_name opt_on_size_error
   {
     gen_divide2($5, $1, $3, $6);
   }
-| numeric_value BY numeric_value GIVING name flag_rounded REMAINDER name
+| number BY number GIVING name flag_rounded REMAINDER name
   {
     assert_numeric_sy($5);
     gen_divide($1, $3, $5, $8, $6);
   }
-| numeric_value INTO numeric_value GIVING name flag_rounded REMAINDER name
+| number INTO number GIVING name flag_rounded REMAINDER name
   {
     assert_numeric_sy($5);
     gen_divide($3, $1, $5, $8, $6);
   }
-| numeric_value BY numeric_value GIVING name flag_rounded REMAINDER name on_size_error
+| number BY number GIVING name flag_rounded REMAINDER name on_size_error
   {
     assert_numeric_sy($5);
     gen_dstlabel($9->lbl4); /* generate bypass jump */
     gen_divide($1, $3, $5, $8, $6);
     math_on_size_error3($9);
   }
-| numeric_value INTO numeric_value GIVING name flag_rounded REMAINDER name on_size_error
+| number INTO number GIVING name flag_rounded REMAINDER name on_size_error
   {
     assert_numeric_sy($5);
     gen_dstlabel($9->lbl4); /* generate bypass jump */
     gen_divide($3, $1, $5, $8, $6);
     math_on_size_error3($9);
   }
-| numeric_value INTO numeric_value GIVING var_list_name opt_on_size_error
+| number INTO number GIVING var_list_name opt_on_size_error
   {
     gen_divide2($5, $3, $1, $6);
   }
-| numeric_value INTO var_list_name opt_on_size_error
+| number INTO var_list_name opt_on_size_error
   {
     gen_divide1($3, $1, $4);
   }
@@ -1529,7 +1529,7 @@ goto_statement:
 | GO opt_to label_list DEPENDING opt_on variable { gen_goto ($3, $6); }
 ;
 label_list:
-  label				{ $$ = list_append (NULL, $1); }
+  label				{ $$ = make_list ($1); }
 | label_list label		{ $$ = list_append ($1, $2); }
 | label_list ',' label		{ $$ = list_append ($1, $3); }
 ;
@@ -1677,11 +1677,11 @@ multiply_statement:
   MULTIPLY multiply_body opt_end_multiply
 ;
 multiply_body:
-  numeric_value BY var_list_name opt_on_size_error
+  number BY var_list_name opt_on_size_error
   {
     gen_multiply1($3, $1, $4);
   }
-| numeric_value BY numeric_value GIVING var_list_name opt_on_size_error
+| number BY number GIVING var_list_name opt_on_size_error
   {
     gen_multiply2($5, $1, $3, $6);
   }
@@ -2456,17 +2456,17 @@ subtract_statement:
   SUBTRACT subtract_body opt_end_subtract
 ;
 subtract_body:
-  var_list_gname FROM var_list_name opt_on_size_error
+  number_list FROM var_list_name opt_on_size_error
   {
-    gen_subtract1($1, $3, $4);
+    gen_subtract1 ($1, $3, $4);
   }
-| var_list_gname FROM numeric_value GIVING var_list_name opt_on_size_error
+| number_list FROM number GIVING var_list_name opt_on_size_error
   {
-    gen_subtract2($1, $5, $3, $6);
+    gen_subtract2 ($1, $5, $3, $6);
   }
 | CORRESPONDING gname FROM name flag_rounded
   {
-    gen_subtractcorr($2, $4, $5);
+    gen_subtractcorr ($2, $4, $5);
   }
 ;
 opt_end_subtract: | END_SUBTRACT ;
@@ -2556,6 +2556,28 @@ opt_end_write: | END_WRITE ;
 /*******************
  * Common rules
  *******************/
+
+/*
+ * Number list
+ */
+
+var_list_name:
+  name flag_rounded opt_sep	{ $$ = create_mathvar_info (NULL, $1, $2); }
+| var_list_name
+  name flag_rounded opt_sep	{ $$ = create_mathvar_info ($1, $2, $3); }
+;
+number_list:
+  number			{ $$ = make_list ($1); }
+| number_list opt_sep number	{ $$ = list_append ($1, $3); }
+;
+number:
+  gname
+  {
+    if (!is_numeric_sy ($1))
+      yyerror ("non-numeric value: %s", $1->name);
+    $$ = $1;
+  }
+;
 
 
 /*
@@ -2714,17 +2736,6 @@ expr:
  *****************************************************************************/
 
 
-var_list_gname:
-  gname				{ $$ = create_mathvar_info (NULL, $1, 0); }
-| var_list_gname opt_sep
-  gname				{ $$ = create_mathvar_info ($1, $3, 0); }
-;
-var_list_name:
-  name flag_rounded opt_sep	{ $$ = create_mathvar_info (NULL, $1, $2); }
-| var_list_name
-  name flag_rounded opt_sep	{ $$ = create_mathvar_info ($1, $2, $3); }
-;
-
 idstring:
   { start_condition = START_ID; } IDSTRING { $$ = $2; }
 ;
@@ -2747,14 +2758,6 @@ function_call:
 parameters:
   gname { }
 | parameters opt_sep gname
-;
-numeric_value:
-  gname
-  {
-    if (!is_numeric_sy ($1))
-      yyerror ("non-numeric value: %s", $1->name);
-    $$ = $1;
-  }
 ;
 name_or_lit:
   name
@@ -2853,13 +2856,13 @@ subscripted_variable:
     $$ = make_subref ($1, $3);
   }
 subscript_list:
-  subscript_expr			{ $$ = list_append (NULL, $1); }
-| subscript_list opt_sep subscript_expr	{ $$ = list_append ($1, $3); }
+  subscript				{ $$ = make_list ($1); }
+| subscript_list opt_sep subscript	{ $$ = list_append ($1, $3); }
 ;
-subscript_expr:
+subscript:
   gname				{ $$ = $1; }
-| subscript_expr '+' gname	{ $$ = make_expr ($1, '+', $3); }
-| subscript_expr '-' gname	{ $$ = make_expr ($1, '-', $3); }
+| subscript '+' gname		{ $$ = make_expr ($1, '+', $3); }
+| subscript '-' gname		{ $$ = make_expr ($1, '-', $3); }
 ;
 qualified_var:
   unqualified_var         { $$=$1; }

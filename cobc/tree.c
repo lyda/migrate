@@ -18,21 +18,21 @@
  */
 
 cob_tree_list
+make_list (cob_tree x)
+{
+  struct cob_tree_list *p = malloc (sizeof (struct cob_tree_list));
+  p->tree = x;
+  p->next = NULL;
+  return p;
+}
+
+cob_tree_list
 list_append (cob_tree_list l, cob_tree x)
 {
-  cob_tree_list e = malloc (sizeof (struct cob_tree_list));
-  e->tree = x;
-  e->next = NULL;
-
-  if (l == NULL)
-    return e;
-  else
-    {
-      cob_tree_list p;
-      for (p = l; p->next != NULL; p = p->next);
-      p->next = e;
-      return l;
-    }
+  cob_tree_list p;
+  for (p = l; p->next != NULL; p = p->next);
+  p->next = make_list (x);
+  return l;
 }
 
 
@@ -118,6 +118,24 @@ make_subref (cob_tree sy, cob_tree_list subs)
   p->subs    = subs;
   /* FIXME: error check here!! */
   return (cob_tree) p;
+}
+
+
+/*
+ * refmod
+ */
+
+struct refmod *
+create_refmoded_var (cob_tree sy, cob_tree syoff, cob_tree sylen)
+{
+  struct refmod *ref;
+  ref = malloc (sizeof (struct refmod));
+  ref->litflag = 4;
+  ref->sym = sy;
+  ref->off = syoff;
+  ref->len = sylen;
+  ref->slot = refmod_slots++;
+  return ref;
 }
 
 

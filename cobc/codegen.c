@@ -45,6 +45,7 @@ int at_linkage = 0;
 int loc_label = 1;
 unsigned char picture[4096];
 int picix, piccnt, sign, v_flag, n_flag;
+int refmod_slots = 0;
 
 cob_tree spe_lit_ZE = NULL;
 cob_tree spe_lit_SP = NULL;
@@ -64,7 +65,6 @@ static unsigned using_offset = 8;
 with space reclaimed after the current instruction*/
 static unsigned tmpvar_offset = 0;
 static unsigned tmpvar_max = 0;
-static short refmod_slots = 0;
 
 static struct list *files_list = NULL;
 static struct list *disp_list = NULL;
@@ -85,7 +85,7 @@ static struct list *report_list = NULL;
 static int need_desc_length_cleanup = 0;
 static char name_buf[MAXNAMEBUF];
 static char init_ctype;		// hold homogenous type
-static short init_val;		// hold homogenous value
+static int init_val;		// hold homogenous value
 static unsigned curr_01_location;	// hold current root father when set_field_location
 
 
@@ -509,7 +509,7 @@ push_eax ()
 }
 
 static char *
-sec_name (short sec_no)
+sec_name (int sec_no)
 {
   struct named_sect *nsp;
 
@@ -1267,6 +1267,42 @@ adjust_linkage_vars (int start_offset)
   return offset;
 }
 
+void
+gen_store_fnres (cob_tree sy)
+{
+  if (sy == NULL)
+    return;
+  switch (sy->type)
+    {
+    case 'B':
+      switch (symlen (sy))
+	{
+	case 4:
+	  fprintf (o_src, "\tmovl\t%%eax, %s\n", memrefat (sy));
+	  break;
+	case 2:
+	  fprintf (o_src, "\tmov\t%%ax, %s\n", memrefat (sy));
+	  break;
+	};
+      break;
+    default:
+      break;
+    };
+}
+
+int
+is_numeric_sy (cob_tree sy)
+{
+  char type;
+  if (SUBREF_P (sy))
+    sy = SUBREF_SYM (sy);
+
+  type = sy->type;
+  if ((type == '9') || (type == 'B') || (type == 'C') || (type == 'U'))
+    return 1;
+  return 0;
+}
+
 
 static int
 get_nb_fields (cob_tree sy, int times, int sw_val)
@@ -1298,11 +1334,11 @@ get_nb_fields (cob_tree sy, int times, int sw_val)
 	init_ctype = '&';
       if (sw_val == 1)
 	{
-	  short val = ((sy->value == NULL) ? 0 :
-		       (sy->value == spe_lit_ZE) ? 2 :
-		       (sy->value == spe_lit_SP) ? 3 :
-		       (sy->value == spe_lit_LV) ? 4 :
-		       (sy->value == spe_lit_HV) ? 5 : 1);
+	  int val = ((sy->value == NULL) ? 0 :
+		     (sy->value == spe_lit_ZE) ? 2 :
+		     (sy->value == spe_lit_SP) ? 3 :
+		     (sy->value == spe_lit_LV) ? 4 :
+		     (sy->value == spe_lit_HV) ? 5 : 1);
 	  if (init_val == -1)
 	    init_val = val;
 	  if (sy->type == init_ctype && val != init_val)
@@ -1403,7 +1439,7 @@ dump_working ()
   struct list *list;
   int fld_len;
   int stabs_type = '3';
-  short cur_sec_no = SEC_DATA;
+  int cur_sec_no = SEC_DATA;
 
   fprintf (o_src, "w_base%d:\n", pgm_segment);
   for (list = fields_list; list != NULL; list = list->next)
@@ -2110,7 +2146,7 @@ alloc_replacing_by_list (struct replacing_by_list *rbl,
 
 
 struct unstring_delimited *
-alloc_unstring_delimited (short int all, cob_tree var)
+alloc_unstring_delimited (int all, cob_tree var)
 {
   struct unstring_delimited *ud;
   ud = malloc (sizeof (struct unstring_delimited));
@@ -2816,54 +2852,10 @@ gen_test_invalid_keys (struct invalid_keys *p)
     gen_dstlabel (p->not_invalid_key->lbl3);
 }
 
-/******** functions to generate math verbs ***********/
-
-void
-gen_add (cob_tree sy1, cob_tree sy2, int rnd)
-{
-  push_expr (sy1);
-  push_expr (sy2);
-  asm_call ("cob_add");
-  assign_expr (sy2, rnd);
-}
-
-void
-gen_subtract (cob_tree sy1, cob_tree sy2, int rnd)
-{
-  push_expr (sy1);
-  push_expr (sy2);
-  asm_call ("cob_sub");
-  assign_expr (sy2, rnd);
-}
-
-void
-gen_multiply (cob_tree sy1, cob_tree sy2, cob_tree sy3, int rnd)
-{
-  push_expr (sy1);
-  push_expr (sy2);
-  asm_call ("cob_mul");
-  assign_expr (sy3, rnd);
-}
-
-void
-gen_divide (cob_tree sy1, cob_tree sy2,
-	    cob_tree sy3, cob_tree sy4, int rnd)
-{
-  push_expr (sy1);
-  push_expr (sy2);
-  asm_call ("cob_div");
-  assign_expr (sy3, rnd);
-
-  if (sy4)
-    {
-      push_expr (sy1);
-      push_expr (sy2);
-      push_expr (sy3);
-      asm_call ("cob_mul");
-      asm_call ("cob_sub");
-      assign_expr (sy4, rnd);
-    }
-}
+
+/*
+ * COMPUTE statement
+ */
 
 void
 gen_compute (struct math_var *vl1, cob_tree sy1, struct math_ose *ose)
@@ -2881,20 +2873,33 @@ gen_compute (struct math_var *vl1, cob_tree sy1, struct math_ose *ose)
     }
 }
 
+
+/*
+ * ADD statement
+ */
+
 void
-gen_add1 (struct math_var *vl1, struct math_var *vl2, struct math_ose *ose)
+gen_add (cob_tree sy1, cob_tree sy2, int rnd)
+{
+  push_expr (sy1);
+  push_expr (sy2);
+  asm_call ("cob_add");
+  assign_expr (sy2, rnd);
+}
+
+void
+gen_add1 (cob_tree_list vl1, struct math_var *vl2, struct math_ose *ose)
 {
   if (ose)
     gen_dstlabel (ose->lbl4);
 
   for (; vl2; vl2 = vl2->next)
     {
-      struct math_var *vl;
-
+      cob_tree_list l;
       push_expr (vl2->sname);
-      for (vl = vl1; vl != NULL; vl = vl->next)
+      for (l = vl1; l; l = l->next)
 	{
-	  push_expr (vl->sname);
+	  push_expr (l->tree);
 	  asm_call ("cob_add");
 	}
       assign_expr (vl2->sname, vl2->rounded);
@@ -2905,28 +2910,18 @@ gen_add1 (struct math_var *vl1, struct math_var *vl2, struct math_ose *ose)
 }
 
 void
-gen_add2 (struct math_var *vl1, struct math_var *vl2,
-	  cob_tree sy1, struct math_ose *ose)
+gen_add2 (cob_tree_list vl1, struct math_var *vl2, struct math_ose *ose)
 {
   if (ose != NULL)
     gen_dstlabel (ose->lbl4);
 
   for (; vl2; vl2 = vl2->next)
     {
-      struct math_var *vl = vl1;
-
-      if (sy1)
-	push_expr (sy1);
-      else
+      cob_tree_list l = vl1;
+      push_expr (l->tree);
+      for (l = l->next; l; l = l->next)
 	{
-	  push_expr (vl1->sname);
-	  vl = vl->next;
-	  if (vl == NULL)
-	    yyerror ("At least 2 variables literals required in ADD statement");
-	}
-      for (; vl; vl = vl->next)
-	{
-	  push_expr (vl->sname);
+	  push_expr (l->tree);
 	  asm_call ("cob_add");
 	}
       assign_expr (vl2->sname, vl2->rounded);
@@ -2937,20 +2932,48 @@ gen_add2 (struct math_var *vl1, struct math_var *vl2,
 }
 
 void
-gen_subtract1 (struct math_var *vl1, struct math_var *vl2,
-	       struct math_ose *ose)
+gen_addcorr (cob_tree sy1, cob_tree sy2, int rnd)
+{
+  cob_tree t1, t2;
+  if (!(SYMBOL_P (sy1) && SYMBOL_P (sy2)))
+    {
+      yyerror ("sorry we don't handle this case yet!");
+      return;
+    }
+#ifdef COB_DEBUG
+  fprintf (o_src, "# ADD CORR %s --> %s\n", sy1->name, sy2->name);
+#endif
+  for (t1 = sy1->son; t1 != NULL; t1 = t1->brother)
+    if (!t1->redefines && t1->times == 1)
+      for (t2 = sy2->son; t2 != NULL; t2 = t2->brother)
+	if (!t2->redefines && t2->times == 1)
+	  if (strcmp (t1->name, t2->name) == 0)
+	    {
+	      if ((t1->type != 'G') && (t2->type != 'G'))
+		gen_add (t1, t2, rnd);
+	      else
+		gen_addcorr (t1, t2, rnd);
+	    }
+}
+
+
+/*
+ * SUBTRACT statement
+ */
+
+void
+gen_subtract1 (cob_tree_list vl1, struct math_var *vl2, struct math_ose *ose)
 {
   if (ose)
     gen_dstlabel (ose->lbl4);
 
   for (; vl2; vl2 = vl2->next)
     {
-      struct math_var *vl;
-
+      cob_tree_list l;
       push_expr (vl2->sname);
-      for (vl = vl1; vl; vl = vl->next)
+      for (l = vl1; l; l = l->next)
 	{
-	  push_expr (vl->sname);
+	  push_expr (l->tree);
 	  asm_call ("cob_sub");
 	}
       assign_expr (vl2->sname, vl2->rounded);
@@ -2961,7 +2984,7 @@ gen_subtract1 (struct math_var *vl1, struct math_var *vl2,
 }
 
 void
-gen_subtract2 (struct math_var *vl1, struct math_var *vl2, cob_tree sy1,
+gen_subtract2 (cob_tree_list vl1, struct math_var *vl2, cob_tree sy1,
 	       struct math_ose *ose)
 {
   if (ose)
@@ -2969,12 +2992,11 @@ gen_subtract2 (struct math_var *vl1, struct math_var *vl2, cob_tree sy1,
 
   for (; vl2; vl2 = vl2->next)
     {
-      struct math_var *vl;
-
+      cob_tree_list l;
       push_expr (sy1);
-      for (vl = vl1; vl; vl = vl->next)
+      for (l = vl1; l; l = l->next)
 	{
-	  push_expr (vl->sname);
+	  push_expr (l->tree);
 	  asm_call ("cob_sub");
 	}
       assign_expr (vl2->sname, vl2->rounded);
@@ -2983,6 +3005,46 @@ gen_subtract2 (struct math_var *vl1, struct math_var *vl2, cob_tree sy1,
 	math_on_size_error3 (ose);
     }
 }
+
+void
+gen_subtract (cob_tree sy1, cob_tree sy2, int rnd)
+{
+  push_expr (sy1);
+  push_expr (sy2);
+  asm_call ("cob_sub");
+  assign_expr (sy2, rnd);
+}
+
+void
+gen_subtractcorr (cob_tree sy1, cob_tree sy2, int rnd)
+{
+  cob_tree t1, t2;
+  if (!(SYMBOL_P (sy1) && SYMBOL_P (sy2)))
+    {
+      yyerror ("sorry we don't handle this case yet!");
+      return;
+    }
+#ifdef COB_DEBUG
+  fprintf (o_src, "# ADD CORR %s --> %s\n", sy1->name, sy2->name);
+#endif
+  
+  for (t1 = sy1->son; t1 != NULL; t1 = t1->brother)
+    if (!t1->redefines && t1->times == 1)
+      for (t2 = sy2->son; t2 != NULL; t2 = t2->brother)
+	if (!t2->redefines && t2->times == 1)
+	  if (strcmp (t1->name, t2->name) == 0)
+	    {
+	      if ((t1->type != 'G') && (t2->type != 'G'))
+		gen_subtract (t1, t2, rnd);
+	      else
+		gen_subtractcorr (t1, t2, rnd);
+	    }
+}
+
+
+/*
+ * MULTIPLY statement
+ */
 
 void
 gen_multiply1 (struct math_var *vl1, cob_tree sy1, struct math_ose *ose)
@@ -3018,6 +3080,31 @@ gen_multiply2 (struct math_var *vl1, cob_tree sy1, cob_tree sy2,
 
       if (ose)
 	math_on_size_error3 (ose);
+    }
+}
+
+
+/*
+ * DIVIDE statement
+ */
+
+void
+gen_divide (cob_tree sy1, cob_tree sy2,
+	    cob_tree sy3, cob_tree sy4, int rnd)
+{
+  push_expr (sy1);
+  push_expr (sy2);
+  asm_call ("cob_div");
+  assign_expr (sy3, rnd);
+
+  if (sy4)
+    {
+      push_expr (sy1);
+      push_expr (sy2);
+      push_expr (sy3);
+      asm_call ("cob_mul");
+      asm_call ("cob_sub");
+      assign_expr (sy4, rnd);
     }
 }
 
@@ -3058,56 +3145,10 @@ gen_divide2 (struct math_var *vl1, cob_tree sy1, cob_tree sy2,
     }
 }
 
-/******** functions for refmoded var manipulation ***********/
-
-struct refmod *
-create_refmoded_var (cob_tree sy, cob_tree syoff, cob_tree sylen)
-{
-  struct refmod *ref;
-  ref = malloc (sizeof (struct refmod));
-  ref->litflag = 4;
-  ref->sym = sy;
-  ref->off = syoff;
-  ref->len = sylen;
-  ref->slot = refmod_slots++;
-  return ref;
-}
-
-void
-gen_store_fnres (cob_tree sy)
-{
-  if (sy == NULL)
-    return;
-  switch (sy->type)
-    {
-    case 'B':
-      switch (symlen (sy))
-	{
-	case 4:
-	  fprintf (o_src, "\tmovl\t%%eax, %s\n", memrefat (sy));
-	  break;
-	case 2:
-	  fprintf (o_src, "\tmov\t%%ax, %s\n", memrefat (sy));
-	  break;
-	};
-      break;
-    default:
-      break;
-    };
-}
-
-int
-is_numeric_sy (cob_tree sy)
-{
-  char type;
-  if (SUBREF_P (sy))
-    sy = SUBREF_SYM (sy);
-
-  type = sy->type;
-  if ((type == '9') || (type == 'B') || (type == 'C') || (type == 'U'))
-    return 1;
-  return 0;
-}
+
+/*
+ * INSPECT statement
+ */
 
 void
 gen_inspect (cob_tree var, void *list, int operation)
@@ -3183,6 +3224,11 @@ gen_inspect (cob_tree var, void *list, int operation)
     }
 }
 
+
+/*
+ * MOVE statement
+ */
+
 static void
 gen_move_1 (cob_tree src)
 {
@@ -3240,6 +3286,11 @@ gen_movecorr (cob_tree sy1, cob_tree sy2)
 		gen_movecorr (t1, t2);
 	    }
 }
+
+
+/*
+ * INITIALIZE statement
+ */
 
 static void
 gen_initialize_1 (cob_tree sy)
@@ -3306,56 +3357,10 @@ gen_initialize (cob_tree sy)
     }
 }
 
-void
-gen_addcorr (cob_tree sy1, cob_tree sy2, int rnd)
-{
-  cob_tree t1, t2;
-  if (!(SYMBOL_P (sy1) && SYMBOL_P (sy2)))
-    {
-      yyerror ("sorry we don't handle this case yet!");
-      return;
-    }
-#ifdef COB_DEBUG
-  fprintf (o_src, "# ADD CORR %s --> %s\n", sy1->name, sy2->name);
-#endif
-  for (t1 = sy1->son; t1 != NULL; t1 = t1->brother)
-    if (!t1->redefines && t1->times == 1)
-      for (t2 = sy2->son; t2 != NULL; t2 = t2->brother)
-	if (!t2->redefines && t2->times == 1)
-	  if (strcmp (t1->name, t2->name) == 0)
-	    {
-	      if ((t1->type != 'G') && (t2->type != 'G'))
-		gen_add (t1, t2, rnd);
-	      else
-		gen_addcorr (t1, t2, rnd);
-	    }
-}
-
-void
-gen_subtractcorr (cob_tree sy1, cob_tree sy2, int rnd)
-{
-  cob_tree t1, t2;
-  if (!(SYMBOL_P (sy1) && SYMBOL_P (sy2)))
-    {
-      yyerror ("sorry we don't handle this case yet!");
-      return;
-    }
-#ifdef COB_DEBUG
-  fprintf (o_src, "# ADD CORR %s --> %s\n", sy1->name, sy2->name);
-#endif
-  
-  for (t1 = sy1->son; t1 != NULL; t1 = t1->brother)
-    if (!t1->redefines && t1->times == 1)
-      for (t2 = sy2->son; t2 != NULL; t2 = t2->brother)
-	if (!t2->redefines && t2->times == 1)
-	  if (strcmp (t1->name, t2->name) == 0)
-	    {
-	      if ((t1->type != 'G') && (t2->type != 'G'))
-		gen_subtract (t1, t2, rnd);
-	      else
-		gen_subtractcorr (t1, t2, rnd);
-	    }
-}
+
+/*
+ * SET statement
+ */
 
 void
 gen_set (cob_tree idx, enum set_mode mode, cob_tree var,
@@ -3909,7 +3914,7 @@ gen_SearchAllLoopCheck (unsigned long lbl3, cob_tree syidx,
   if ((it2->seq != '1') && (it2->seq != '2'))
     return;
 
-  sy1 = make_subref (sytbl, list_append (NULL, syidx));
+  sy1 = make_subref (sytbl, make_list (syidx));
 
   /* table sort sequence: '0' = none, '1' = ASCENDING, '2' = DESCENDING */
 
