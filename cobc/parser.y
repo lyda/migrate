@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 86
+%expect 87
 
 %defines
 %verbose
@@ -60,6 +60,8 @@ static enum cb_storage current_storage;
 
 static cb_tree call_mode;
 
+static cb_tree perform_stack = NULL;
+
 static int next_label_id = 0;
 static cb_tree next_label_list = NULL;
 
@@ -78,7 +80,7 @@ static void terminator_error (void);
 %token ACCESS ADVANCING AFTER ALL ALPHABET ALPHABETIC ALPHABETIC_LOWER AS
 %token ALPHABETIC_UPPER ALPHANUMERIC ALPHANUMERIC_EDITED ALSO ALTER ALTERNATE
 %token AND ANY ARE AREA ASCENDING ASSIGN AT AUTO BACKGROUND_COLOR BEFORE BELL
-%token BINARY BLANK BLINK BLOCK BY CHARACTER CHARACTERS CLASS CODE_SET
+%token BINARY BLANK BLINK BLOCK BY CHARACTER CHARACTERS CLASS CODE_SET CYCLE
 %token COLLATING COLUMN COMMA COMMAND_LINE COMMON CONFIGURATION CONTAINS
 %token CONTENT CONTINUE CONVERTING CORRESPONDING COUNT CRT CURRENCY CURSOR
 %token DATA DATE DAY DAY_OF_WEEK DEBUGGING DECIMAL_POINT DECLARATIVES DEFAULT
@@ -1972,6 +1974,24 @@ exit_statement:
 exit_body:
   /* empty */			{ /* nothing */ }
 | PROGRAM			{ cb_emit_exit (); }
+| PERFORM
+  {
+    char name[256];
+    struct cb_perform *p = CB_PERFORM (CB_VALUE (perform_stack));
+    sprintf (name, "PERFORML-EXIT%d", cb_id++);
+    p->exit_label = cb_build_reference (name);
+    CB_LABEL (cb_build_label (p->exit_label, 0))->need_begin = 1;
+    cb_emit_goto (cb_list (p->exit_label), 0);
+  }
+| PERFORM CYCLE
+  {
+    char name[256];
+    struct cb_perform *p = CB_PERFORM (CB_VALUE (perform_stack));
+    sprintf (name, "PERFORML-CYCLE%d", cb_id++);
+    p->cycle_label = cb_build_reference (name);
+    CB_LABEL (cb_build_label (p->cycle_label, 0))->need_begin = 1;
+    cb_emit_goto (cb_list (p->cycle_label), 0);
+  }
 ;
 
 
@@ -2245,9 +2265,14 @@ perform_body:
   {
     cb_emit_perform ($2, $1);
   }
-| perform_option statement_list end_perform
+| perform_option
   {
-    cb_emit_perform ($1, $2);
+    perform_stack = cb_cons ($1, perform_stack);
+  }
+  statement_list end_perform
+  {
+    perform_stack = CB_CHAIN (perform_stack);
+    cb_emit_perform ($1, $3);
   }
 | perform_option END_PERFORM
   {

@@ -1,3 +1,10 @@
+2004-04-19  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* tree.h (cb_perform): New members `exit_label' and `cycle_label'.
+	* reserved.c (CYCLE): New reserved word.
+	* parser.y (exit_statement): EXIT PERFORM [CYCLE] statement.
+	* codegen.c (output_perform_once, output_perform): Output labels.
+
 2004-04-07  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* parser.y (basic_literal, alnum_literal): Literal concatenation.

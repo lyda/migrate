@@ -1526,6 +1526,8 @@ output_perform_once (struct cb_perform *p)
 			 CB_LABEL (cb_ref (CB_PAIR_Y (p->body))));
   else
     output_stmt (p->body);
+  if (p->cycle_label)
+    output_stmt (cb_ref (p->cycle_label));
 }
 
 static void
@@ -1603,6 +1605,8 @@ output_perform (struct cb_perform *p)
 	break;
       }
     }
+  if (p->exit_label)
+    output_stmt (cb_ref (p->exit_label));
 }
 
 
@@ -1692,7 +1696,7 @@ output_stmt (cb_tree x)
 	output_newline ();
 	output_line ("/* %s: */", p->name);
 	if (p->need_begin)
-	  output_line ("%s%d:", CB_PREFIX_LABEL, p->id);
+	  output_line ("%s%d:;", CB_PREFIX_LABEL, p->id);
 	if (cb_flag_trace)
 	  output_line ("puts (\"%s\");", p->name);
 	break;

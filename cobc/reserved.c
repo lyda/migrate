@@ -165,6 +165,7 @@ static struct reserved reserved_words[] = {
   {"CRT",		CRT, 0},			/* 2002 */
   {"CURRENCY",		CURRENCY, 0},			/* 2002 */
   {"CURSOR",		CURSOR, 0},			/* 2002 */
+  {"CYCLE",		CYCLE, 0},			/* 2002 (C/S) */
   {"DATA",		DATA, 0},			/* 2002 */
   {"DATA-POINTER",	-1, 0},				/* 2002 */
   {"DATE",		DATE, 0},			/* 2002 */

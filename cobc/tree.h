@@ -774,6 +774,8 @@ struct cb_perform {
   cb_tree body;
   cb_tree data;
   cb_tree varying;
+  cb_tree exit_label;
+  cb_tree cycle_label;
 };
 
 #define CB_PERFORM_VARYING(x)	(CB_TREE_CAST (CB_TAG_PERFORM_VARYING, struct cb_perform_varying, x))
