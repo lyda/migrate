@@ -1,3 +1,7 @@
+2003-06-12  Keisuke Nishida  <knishida@netlab.jp>
+
+	* fileio.c (SEEK_INIT): New macro.
+
 2003-06-07  Keisuke Nishida  <knishida@netlab.jp>
 
 	* numeric.c, numeric.h: No longer use gmp.

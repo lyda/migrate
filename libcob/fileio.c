@@ -31,6 +31,12 @@
 #define __USE_MINGW_FSEEK	1
 #endif
 
+#ifdef __MINGW32__
+#define SEEK_INIT(f)	fseek (f->file, 0, SEEK_CUR)
+#else
+#define SEEK_INIT(f)
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -89,6 +95,7 @@ file_open (cob_file *f, char *filename, int mode)
       break;
     case COB_OPEN_EXTEND:
       fp = fopen (filename, "ab+");
+      fseek (fp, 0, SEEK_END);
       break;
     }
   if (fp == NULL)
@@ -120,6 +127,8 @@ file_close (cob_file *f, int opt)
 static int
 sequential_read (cob_file *f)
 {
+  SEEK_INIT (f);
+
   /* read the record size */
   if (f->record_min != f->record_max)
     if (fread (&f->record->size, sizeof (f->record->size), 1, f->file) == 0)
@@ -135,6 +144,8 @@ sequential_read (cob_file *f)
 static int
 sequential_write (cob_file *f)
 {
+  SEEK_INIT (f);
+
   /* write the record size */
   if (f->record_min != f->record_max)
     fwrite (&f->record->size, sizeof (f->record->size), 1, f->file);
@@ -303,6 +314,8 @@ relative_read (cob_file *f, cob_field *k)
 static int
 relative_read_next (cob_file *f)
 {
+  SEEK_INIT (f);
+
   while (1)
     {
       if (fread (&f->record->size, sizeof (f->record->size), 1, f->file) == 0)
@@ -341,6 +354,8 @@ relative_write (cob_file *f)
 {
   size_t size;
   FILE *fp = f->file;
+
+  SEEK_INIT (f);
 
   if (f->access_mode != COB_ACCESS_SEQUENTIAL)
     {
