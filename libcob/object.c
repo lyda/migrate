@@ -505,6 +505,30 @@ cob_set (struct cob_field f, int round)
     }
 }
 
+void
+cob_divide_remainder (struct cob_field q, struct cob_field r, int round)
+{
+  decimal d;
+
+  /* duplicate divisor and dividend */
+  cob_push_copy (1);
+  cob_push_copy (1);
+
+  /* compute quotient */
+  cob_div ();
+  cob_push_copy (0);		/* save the quotient */
+  cob_set (q, round);
+
+  /* truncate digits from quotient */
+  d = COB_DECIMAL (TOP ());
+  shift_decimal (d, q.desc->decimals - d->decimals);
+
+  /* compute remainder */
+  cob_mul ();
+  cob_sub ();
+  cob_set (r, 0);
+}
+
 
 
 int
