@@ -5,4 +5,5 @@ Makefile.in
 atconfig
 atlocal
 package.m4
+packed
 testsuite

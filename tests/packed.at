@@ -1,0 +1,333 @@
+AT_INIT([PACKED-DECIMAL tests])
+
+AT_TESTED([cobc])
+
+###
+### Dump tests
+###
+
+AT_SETUP([PACKED-DECIMAL dump tests])
+
+AT_DATA([dump.c], [
+int dump (unsigned char *data, int size)
+{
+  int i;
+  for (i = 0; i < size; i++)
+    printf ("%x%x", data[[i]] >> 4, data[[i]] & 0x0f);
+  return 0;
+}
+])
+
+AT_CHECK([${CC} -shared -o dump.so dump.c])
+
+# dump PIC 99 VALUE 0
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 99 USAGE PACKED-DECIMAL VALUE 0.
+       PROCEDURE       DIVISION.
+         CALL "dump" USING X VALUE 1.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0], [00])
+
+# dump PIC 99 VALUE 99
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 99 USAGE PACKED-DECIMAL VALUE 99.
+       PROCEDURE       DIVISION.
+         CALL "dump" USING X VALUE 1.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0], [99])
+
+# dump PIC S99 VALUE 0
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC S99 USAGE PACKED-DECIMAL VALUE 0.
+       PROCEDURE       DIVISION.
+         CALL "dump" USING X VALUE 1.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0], [00])
+
+# dump PIC S99 VALUE -1
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC S99 USAGE PACKED-DECIMAL VALUE -1.
+       PROCEDURE       DIVISION.
+         CALL "dump" USING X VALUE 2.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0], [0101])
+
+# dump PIC 999 VALUE 123
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 999 USAGE PACKED-DECIMAL VALUE 123.
+       PROCEDURE       DIVISION.
+         CALL "dump" USING X VALUE 2.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0], [1230])
+
+# dump PIC S999 VALUE -123
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC S999 USAGE PACKED-DECIMAL VALUE -123.
+       PROCEDURE       DIVISION.
+         CALL "dump" USING X VALUE 2.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0], [1231])
+
+AT_CLEANUP
+
+
+###
+### DISPLAY tests
+###
+
+AT_SETUP([DISPLAY PIC 99 VALUE 0])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 99 USAGE PACKED-DECIMAL VALUE 0.
+       PROCEDURE       DIVISION.
+         DISPLAY X NO ADVANCING.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0], [00])
+
+AT_CLEANUP
+
+AT_SETUP([DISPLAY PIC 99 VALUE 99])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 99 USAGE PACKED-DECIMAL VALUE 99.
+       PROCEDURE       DIVISION.
+         DISPLAY X NO ADVANCING.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0], [99])
+
+AT_CLEANUP
+
+AT_SETUP([DISPLAY PIC S99 VALUE 0])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC S99 USAGE PACKED-DECIMAL VALUE 0.
+       PROCEDURE       DIVISION.
+         DISPLAY X NO ADVANCING.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0], [+00])
+
+AT_CLEANUP
+
+AT_SETUP([DISPLAY PIC S99 VALUE -1])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC S99 USAGE PACKED-DECIMAL VALUE -1.
+       PROCEDURE       DIVISION.
+         DISPLAY X NO ADVANCING.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0], [-01])
+
+AT_CLEANUP
+
+AT_SETUP([DISPLAY PIC 999 VALUE 0])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 999 USAGE PACKED-DECIMAL VALUE 0.
+       PROCEDURE       DIVISION.
+         DISPLAY X NO ADVANCING.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0], [000])
+
+AT_CLEANUP
+
+AT_SETUP([DISPLAY PIC 999 VLAUE 123])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 999 USAGE PACKED-DECIMAL VALUE 123.
+       PROCEDURE       DIVISION.
+         DISPLAY X NO ADVANCING.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0], [123])
+
+AT_CLEANUP
+
+AT_SETUP([DISPLAY PIC S999 VALUE 0])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC S999 USAGE PACKED-DECIMAL VALUE 0.
+       PROCEDURE       DIVISION.
+         DISPLAY X NO ADVANCING.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0], [+000])
+
+AT_CLEANUP
+
+AT_SETUP([DISPLAY PIC S999 VALUE -123])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC S999 USAGE PACKED-DECIMAL VALUE -123.
+       PROCEDURE       DIVISION.
+         DISPLAY X NO ADVANCING.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0], [-123])
+
+AT_CLEANUP
+
+
+###
+### Arithmetic tests
+###
+
+AT_SETUP([X = 1])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 99 USAGE PACKED-DECIMAL VALUE 9.
+       PROCEDURE       DIVISION.
+         COMPUTE X = 1.
+         DISPLAY X NO ADVANCING.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0], [01])
+
+AT_CLEANUP
+
+AT_SETUP([X = Y])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 99 USAGE PACKED-DECIMAL VALUE 0.
+       01 Y            PIC 99 USAGE PACKED-DECIMAL VALUE 9.
+       PROCEDURE       DIVISION.
+         COMPUTE X = Y.
+         DISPLAY X NO ADVANCING.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0], [09])
+
+AT_CLEANUP
+
+AT_SETUP([X = Y + 1])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC 99 USAGE PACKED-DECIMAL VALUE 0.
+       01 Y            PIC 99 USAGE PACKED-DECIMAL VALUE 9.
+       PROCEDURE       DIVISION.
+         COMPUTE X = Y + 1.
+         DISPLAY X NO ADVANCING.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0], [10])
+
+AT_CLEANUP
+
