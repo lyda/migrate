@@ -1711,13 +1711,14 @@ call_returning:
 | RETURNING data_name		{ $$ = $2; }
 ;
 call_on_exception:
-  /* empty */				{ $$ = NULL; }
-| _on OVERFLOW statement_list		{ $$ = $3; }
-| _on EXCEPTION statement_list		{ $$ = $3; }
+  /* empty */			{ $$ = make_funcall_0 ("cob_call_error"); }
+| _on OVERFLOW statement_list	{ $$ = $3; }
+| _on EXCEPTION statement_list	{ $$ = $3; }
 ;
 call_not_on_exception:
-  /* empty */				{ $$ = NULL; }
-| NOT _on EXCEPTION statement_list	{ $$ = $4; }
+  /* empty */			{ $$ = NULL; }
+| NOT _on EXCEPTION
+  statement_list		{ $$ = $4; }
 ;
 _end_call: | END_CALL ;
 
@@ -4397,11 +4398,11 @@ decimal_expand (cobc_tree s, cobc_tree d, cobc_tree x)
     case cobc_tag_literal:
       {
 	/* set d, N */
-	struct cobc_literal *p = COBC_LITERAL (x);
-	if (p->size < 10)
+	struct cobc_literal *l = COBC_LITERAL (x);
+	if (l->size < 10)
 	  add_stmt (s, make_funcall_3 ("cob_decimal_set_int",
 				       d, make_cast_int32 (x),
-				       make_integer (p->decimals)));
+				       make_integer (l->decimals)));
 	else
 	  add_stmt (s, make_funcall_2 ("cob_decimal_set_field", d, x));
 	break;

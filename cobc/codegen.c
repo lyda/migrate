@@ -1427,10 +1427,7 @@ output_call (cobc_tree name, struct cobc_list *args,
       output (";\n");
       output_line ("if (func == NULL)");
       output_indent_level += 2;
-      if (st1)
-	output_stmt (st1);
-      else
-	output_line ("cob_call_error ();");
+      output_stmt (st1);
       output_indent_level -= 2;
       output_line ("else");
       output_indent ("  {");
