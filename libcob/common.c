@@ -444,6 +444,11 @@ cob_is_lower (struct cob_field f)
  * Common functions
  */
 
+/* {SIGN}
+ * positive: 0123456789
+ * negative: @ABCDEFGHI
+ */
+
 int
 cob_get_sign (struct cob_field f)
 {
