@@ -1,5 +1,5 @@
 # Japanese translations for OpenCOBOL package
-# OpenCOBOL パッケージに対する日本語訳.
+# OpenCOBOL パッケージに対する英訳.
 # Copyright (C) 2002 Keisuke Nishida
 # This file is distributed under the same license as the OpenCOBOL package.
 # Keisuke Nishida <knishida@coboler.com>, 2002.
@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.9.6\n"
 "POT-Creation-Date: 2002-06-11 19:12+0900\n"
-"PO-Revision-Date: 2002-06-11 19:49+0900\n"
+"PO-Revision-Date: 2002-06-09 21:13+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
