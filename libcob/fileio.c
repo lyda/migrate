@@ -122,6 +122,7 @@ sequential_close (struct cob_file_desc *f, int opt)
   switch (opt)
     {
     case COB_CLOSE_NORMAL:
+    case COB_CLOSE_LOCK:
       close (f->file.fd);
       f->file.fd = 0;
       return 00;
