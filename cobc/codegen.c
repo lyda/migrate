@@ -182,7 +182,8 @@ output_data (cb_tree x)
       {
 	struct cb_literal *l = CB_LITERAL (x);
 	if (CB_TREE_CLASS (x) == COB_TYPE_NUMERIC)
-	  output ("\"%s%s\"", l->data, (l->sign < 0) ? "-" : "");
+	  output ("\"%s%s\"", l->data,
+		  (l->sign < 0) ? "-" : (l->sign > 0) ? "+" : "");
 	else
 	  output_quoted_string (l->data, l->size);
 	break;
@@ -246,7 +247,7 @@ output_size (cb_tree x)
     case cb_tag_literal:
       {
 	struct cb_literal *l = CB_LITERAL (x);
-	output ("%d", l->size + ((l->sign < 0) ? 1 : 0));
+	output ("%d", l->size + ((l->sign != 0) ? 1 : 0));
 	break;
       }
     case cb_tag_field:
@@ -347,7 +348,7 @@ output_attr (cb_tree x)
 	if (CB_TREE_CLASS (x) == COB_TYPE_NUMERIC)
 	  {
 	    char flags = 0;
-	    if (l->sign < 0)
+	    if (l->sign != 0)
 	      flags = COB_FLAG_HAVE_SIGN | COB_FLAG_SIGN_SEPARATE;
 	    output ("&a_%d", lookup_attr (COB_TYPE_NUMERIC_DISPLAY,
 					  l->size, l->expt, flags, 0));

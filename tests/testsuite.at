@@ -17,10 +17,14 @@
 ## the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
 ## Boston, MA 02111-1307 USA
 
-AT_INIT([Standard tests])
+AT_INIT([])
 
 AT_TESTED([cobc])
 
+# Fundamental tests before anything else
+m4_include([fundamental.at])
+
+# ISO/IEC 1989:2002(E) COBOL standard tests
 m4_include([subscripts.at])	# 8.4.1.2 Subscripts
 m4_include([ref-mod.at])	# 8.4.2.3 Reference-modification
 
@@ -31,6 +35,7 @@ m4_include([value.at])		# 13.16.61 VALUE clause
 m4_include([initialize.at])	# 14.8.19 INITIALIZE statement
 m4_include([move.at])		# 14.8.24 MOVE statement
 
+# Other tests
 m4_include([definition.at])
 m4_include([entry.at])
 m4_include([misc.at])

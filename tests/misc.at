@@ -347,8 +347,8 @@ AT_DATA([prog.cob], [
                         RECORD KEY   IS  TEST-KEY.
        DATA             DIVISION.
        FILE             SECTION.
-       FD  TEST-FILE.
-       01  TEST-KEY     PIC X(10).
+       FD TEST-FILE.
+       01 TEST-KEY      PIC X(10).
        PROCEDURE        DIVISION.
          OPEN  OUTPUT TEST-FILE.
          CLOSE TEST-FILE.
