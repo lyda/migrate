@@ -101,7 +101,10 @@ file_open (cob_file *f, char *filename, int mode, int opt)
       fp = fopen (filename, "rb");
       break;
     case COB_OPEN_OUTPUT:
-      fp = fopen (filename, "wb+");
+      if (f->organization == COB_ORG_RELATIVE)
+	fp = fopen (filename, "wb+");
+      else
+	fp = fopen (filename, "wb");
       break;
     case COB_OPEN_I_O:
       fp = fopen (filename, "rb+");
