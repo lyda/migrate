@@ -417,11 +417,14 @@ relative_rewrite (struct cob_file_desc *f)
 static int
 relative_delete (struct cob_file_desc *f)
 {
+  int index = cob_to_int (f->relative_key) - 1;
   char buff[f->record_size];
   memset (buff, 0, f->record_size);
 
-  if (lseek (f->file.fd, - f->record_size, SEEK_CUR) == -1
-      || write (f->file.fd, buff, f->record_size) == -1)
+  if (lseek (f->file.fd, f->record_size * index, SEEK_SET) <= 0)
+    return 23;
+
+  if (write (f->file.fd, buff, f->record_size) == -1)
     return 99;
 
   return 00;
@@ -1005,12 +1008,8 @@ void
 cob_delete (struct cob_file_desc *f)
 {
   int ret;
-  int read_done = f->f.read_done;
 
   f->f.read_done = 0;
-
-  if (!read_done)
-    RETURN_STATUS (43);
 
   if (!FILE_OPENED (f) || f->open_mode != COB_OPEN_I_O)
     RETURN_STATUS (49);
