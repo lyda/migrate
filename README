@@ -42,6 +42,13 @@ OpenCOBOL requires the following external libraries to be installed:
 
     Berkeley DB is distributed under the "as is" basis.
 
+  o Ncurses (libncurses) 5.2 or later [optional]
+    http://www.gnu.org/software/ncurses/ncurses.html
+
+    libncurses is used to implement SCREEN SECTION.
+
+    Ncurses is distributed under the "as is" basis.
+
   o GNU Readline (libreadline) [optional]
     http://cnswww.cns.cwru.edu/~chet/readline/rltop.html
 
