@@ -108,10 +108,12 @@ output_quoted_string (char *s, int size)
 static void
 output_line_directive (cobc_tree x)
 {
-  if (x->loc.text)
+  static int last_line = 0;
+  if (x->loc.text && last_line != x->loc.first_line)
     {
       //output ("#line %d \"%s\"\n", x->loc.first_line, x->loc.text);
       output_line ("cob_source_line = %d;", x->loc.first_line);
+      last_line = x->loc.first_line;
     }
 }
 
@@ -1534,11 +1536,13 @@ output_tree (cobc_tree x)
       }
     case cobc_tag_evaluate:
       {
+	output_line_directive (x);
 	output_evaluate (COBC_EVALUATE (x));
 	break;
       }
     case cobc_tag_assign:
       {
+	output_line_directive (x);
 	output_assign (COBC_ASSIGN (x));
 	break;
       }
@@ -1552,6 +1556,7 @@ output_tree (cobc_tree x)
       {
 	struct cobc_sequence *p = COBC_SEQUENCE (x);
 	struct cobc_list *l = p->list;
+	output_line_directive (x);
 	output_indent ("{", 2);
 	if (!l)
 	  {
@@ -1586,6 +1591,7 @@ output_tree (cobc_tree x)
       }
     case cobc_tag_perform:
       {
+	output_line_directive (x);
 	output_perform (COBC_PERFORM (x));
 	break;
       }
