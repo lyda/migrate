@@ -1,3 +1,7 @@
+2005-02-08  Roger While <simrw@sim-basis.de>
+
+	* run.src/misc.at, run : Add cobcrun check
+
 2005-02-04  Roger While <simrw@sim-basis.de>
 
 	* run.src/extensions.at : MF extensions
