@@ -431,20 +431,9 @@ cb_build_length (cb_tree x)
 {
   unsigned char buff[20];
 
-  if (x == cb_error_node
-      || cb_ref (x) == cb_error_node)
+  if (x == cb_error_node || cb_ref (x) == cb_error_node)
     return cb_error_node;
 
-  /* X(I:L) */
-  if (CB_REFERENCE (x)->length)
-    return CB_REFERENCE (x)->length;
-
-  /* X(I:) */
-  if (cb_field_size (x) == -1)
-    return cb_build_binary_op (cb_int (cb_field (x)->size), '-',
-			       CB_REFERENCE (x)->offset);
-
-  /* X */
   sprintf (buff, "%d", cb_field_size (x));
   return cb_build_numeric_literal (0, buff, 0);
 }
@@ -452,8 +441,7 @@ cb_build_length (cb_tree x)
 cb_tree
 cb_build_address (cb_tree x)
 {
-  if (x == cb_error_node
-      || cb_ref (x) == cb_error_node)
+  if (x == cb_error_node || cb_ref (x) == cb_error_node)
     return cb_error_node;
 
   return cb_build_cast_address (x);
@@ -2399,7 +2387,7 @@ cb_build_move (cb_tree src, cb_tree dst)
     return cb_build_assign (cb_build_cast_integer (dst),
 			    cb_build_cast_integer (src));
 
-  if (CB_INDEX_P (src) || CB_BINARY_OP_P (src))
+  if (CB_INDEX_P (src))
     return cb_build_funcall_2 ("cob_set_int", dst,
 			       cb_build_cast_integer (src));
 
