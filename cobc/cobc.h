@@ -94,6 +94,9 @@ extern void cb_warning (const char *fmt, ...);
 extern void cb_error (const char *fmt, ...);
 extern void cb_warning_x (cb_tree x, const char *fmt, ...);
 extern void cb_error_x (cb_tree x, const char *fmt, ...);
+extern void cb_archaic (const char *feature);
+extern void cb_obsolete_85 (const char *feature);
+extern void cb_obsolete_2002 (const char *feature);
 
 extern void redefinition_error (cb_tree x);
 extern void undefined_error (cb_tree x);

@@ -21,6 +21,9 @@
 
 /* CB_WARNING (sig, var, name, doc) */
 
+CB_WARNING (2, cb_warn_archaic, "archaic",
+	    N_("Warn if archaic features are used"))
+
 CB_WARNING (2, cb_warn_column_overflow, "column-overflow",
 	    N_("Warn any text after column 72"))
 
@@ -29,9 +32,6 @@ CB_WARNING (2, cb_warn_constant, "constant",
 
 CB_WARNING (2, cb_warn_parentheses, "parentheses",
 	    N_("Warn lacks of parentheses around AND within OR"))
-
-CB_WARNING (3, cb_warn_next_sentence, "next-sentence",
-	    N_("Warn uses of NEXT SENTENCE"))
 
 CB_WARNING (3, cb_warn_implicit_terminator, "implicit-terminator",
 	    N_("Warn lacks of scope terminator (END-XXX)"))

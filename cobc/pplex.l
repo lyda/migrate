@@ -64,16 +64,22 @@ static void switch_to_buffer (int lineno, char *filename, struct cb_replacement 
 "INCLUDE"		{ BEGIN COPY_STATE; return COPY; }
 "REPLACE"		{ BEGIN COPY_STATE; return REPLACE; }
 
-"AUTHOR." |
-"DATE-WRITTEN." |
-"DATE-COMPILED." |
-"INSTALLATION." |
-"SECURITY." {
+"AUTHOR" |
+"DATE-WRITTEN" |
+"DATE-COMPILED" |
+"INSTALLATION" |
+"SECURITY" {
   if (cb_source_format == CB_FORMAT_FREE)
-    cb_error ("obsolete");
+    {
+      /* These words do not have special meanings in the free form. */
+      ECHO;
+    }
   else
     {
       int c;
+
+      /* These words are obsolete in COBOL 85 */
+      cb_obsolete_85 (yytext);
 
       /* skip comments until the end of line */
       while ((c = input ()) != EOF)

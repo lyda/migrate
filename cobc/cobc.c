@@ -768,6 +768,25 @@ cb_error_x (cb_tree x, const char *fmt, ...)
   errorcount++;
 }
 
+void
+cb_archaic (const char *feature)
+{
+  if (cb_warn_archaic)
+    cb_warning (_("%s is archaic"), feature);
+}
+
+void
+cb_obsolete_85 (const char *feature)
+{
+  cb_warning (_("%s is obsolete"), feature);
+}
+
+void
+cb_obsolete_2002 (const char *feature)
+{
+  cb_obsolete_85 (feature);
+}
+
 
 void
 redefinition_error (cb_tree x)

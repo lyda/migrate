@@ -36,9 +36,7 @@
 #define YYDEBUG		COB_DEBUG
 #define YYERROR_VERBOSE 1
 
-#define IGNORE(x)	/* ignored */
 #define PENDING(x)	cb_warning (_("`%s' not implemented"), x)
-#define OBSOLETE(x)	cb_warning (_("`%s' obsolete"), x)
 
 #define cb_ref(x)	(CB_REFERENCE (x)->value)
 
@@ -155,9 +153,10 @@ static void terminator_warning (const char *name);
 %type <inum> select_organization select_access_mode same_option
 %type <inum> ascending_or_descending opt_from_integer opt_to_integer
 %type <list> occurs_key_list data_name_list value_list opt_value_list
-%type <list> label_list numeric_value_list inspect_before_after_list
+%type <list> numeric_value_list inspect_before_after_list
 %type <list> reference_list mnemonic_name_list file_name_list using_phrase
 %type <list> expr_item_list numeric_name_list numeric_edited_name_list
+%type <list> procedure_name_list
 %type <tree> at_line_column column_number condition expr expr_1
 %type <tree> expr_item field_description_list label line_number literal
 %type <tree> field_name integer_label reference_or_literal basic_literal
@@ -180,6 +179,12 @@ static void terminator_warning (const char *name);
 
 start:
   program
+  {
+    if (errorcount > 0)
+      YYABORT;
+    if (!cb_flag_parse_only)
+      codegen (current_program);
+  }
 ;
 program:
   {
@@ -203,10 +208,6 @@ program:
       resolve_label (l->item);
     current_program->file_list = list_reverse (current_program->file_list);
     current_program->exec_list = list_reverse (current_program->exec_list);
-    if (errorcount > 0)
-      YYABORT;
-    if (!cb_flag_parse_only)
-      codegen (current_program);
   }
 ;
 end_program:
@@ -298,7 +299,7 @@ object_computer_options:
 ;
 object_computer_option:
   _program collating_sequence		{ PENDING ("COLLATING SEQUENCE"); }
-| MEMORY SIZE _is integer CHARACTERS	{ OBSOLETE ("MEMORY SIZE"); }
+| MEMORY SIZE _is integer CHARACTERS	{ cb_obsolete_85 ("MEMORY SIZE"); }
 ;
 collating_sequence:
   _collating SEQUENCE _is WORD
@@ -539,7 +540,7 @@ select_option:
   }
 | RESERVE integer _area
   {
-    IGNORE ("RESERVE");
+    /* ignored */
   }
 | select_organization
   {
@@ -559,7 +560,7 @@ select_option:
   }
 | PADDING _character _is reference_or_literal
   {
-    PENDING ("PADDING");
+    cb_obsolete_2002 ("PADDING CHARACTER");
   }
 | RECORD DELIMITER _is STANDARD_1
   {
@@ -621,7 +622,7 @@ i_o_statement_list:
 ;
 i_o_statement:
   same_statement
-| multiple_statement
+| multiple_file_tape_clause
 ;
 
 /* SAME statement */
@@ -639,13 +640,11 @@ same_option:
 | SORT_MERGE			{ $$ = 3; }
 ;
 
-/* MULTIPLE statment */
+/* MULTIPLE FILE TAPE clause */
 
-multiple_statement:
-  MULTIPLE _file _tape _contains multiple_file_list
-  {
-    PENDING ("MULTIPLE");
-  }
+multiple_file_tape_clause:
+  MULTIPLE _file _tape		{ cb_obsolete_85 ("MULTIPLE FILE TAPE"); }
+  _contains multiple_file_list
 ;
 multiple_file_list:
   multiple_file
@@ -701,31 +700,25 @@ file_options:
 file_option:
   _is GLOBAL			{ PENDING ("GLOBAL"); }
 | _is EXTERNAL			{ PENDING ("EXTERNAL"); }
-| block_clause
+| block_contains_clause
 | record_clause
-| label_clause
-| data_clause
+| label_records_clause
+| data_records_clause
 | codeset_clause
 ;
 
 
-/*
- * BLOCK clause
- */
+/* BLOCK CONTAINS clause */
 
-block_clause:
+block_contains_clause:
   BLOCK _contains integer opt_to_integer _records_or_characters
   {
-    IGNORE ("BLOCK");
+    /* ignored */
   }
 ;
-_contains: | CONTAINS ;
-_records_or_characters: | RECORDS | CHARACTERS ;
 
 
-/*
- * RECORD clause
- */
+/* RECORD clause */
 
 record_clause:
   RECORD _contains integer _characters
@@ -760,41 +753,28 @@ opt_to_integer:
 ;
 
 
-/*
- * LABEL clause
- */
+/* LABEL RECORDS clause */
 
-label_clause:
-  LABEL record_or_records label_option { IGNORE ("LABEL RECORD"); }
+label_records_clause:
+  LABEL records label_option	{ cb_obsolete_85 ("LABEL RECORDS"); }
 ;
 label_option:
   STANDARD
 | OMITTED
 ;
-record_or_records:
-  RECORD _is
-| RECORDS _are
+
+
+/* DATA RECORDS clause */
+
+data_records_clause:
+  DATA records reference_list	{ cb_obsolete_85 ("DATA RECORDS"); }
 ;
 
 
-/*
- * DATA clause
- */
-
-data_clause:
-  DATA record_or_records reference_list { IGNORE ("DATA RECORD"); }
-;
-
-
-/*
- * CODE-SET clause
- */
+/* CODE-SET clause */
 
 codeset_clause:
-  CODE_SET _is WORD
-  {
-    PENDING ("CODE-SET");
-  }
+  CODE_SET _is WORD		{ PENDING ("CODE-SET"); }
 ;
 
 
@@ -1458,11 +1438,7 @@ statement:
 | use_statement
 | write_statement
 | CONTINUE
-| NEXT SENTENCE
-  {
-    if (cb_warn_next_sentence)
-      cb_warning (_("NEXT SENTENCE is obsolete; use CONTINUE or END-IF"));
-  }
+| NEXT SENTENCE			{ cb_archaic ("NEXT SENTENCE"); }
 ;
 
 
@@ -1588,7 +1564,7 @@ end_add:
  */
 
 alter_statement:
-  ALTER alter_options		{  OBSOLETE ("ALTER"); }
+  ALTER alter_options		{ cb_obsolete_85 ("ALTER"); }
 ;
 alter_options:
 | alter_options
@@ -1941,19 +1917,28 @@ exit_statement:
  */
 
 goto_statement:
-  GO _to label_list
+  GO _to save_location procedure_name_list goto_depending
   {
-    if ($3 == NULL)
-      OBSOLETE ("GO TO without label");
-    else if ($3->next)
-      cb_error_x ($3->next->item, _("too many labels with GO TO"));
+    if ($<tree>5)
+      {
+	/* GO TO procedure-name ... DEPENDING ON identifier */
+	push_funcall_2 ("@goto-depending", $4, $<tree>5);
+      }
     else
-      push_funcall_1 ("@goto", $3->item);
+      {
+	/* GO TO procedure-name */
+	if ($4 == NULL)
+	  cb_obsolete_85 ("GO TO without procedure-name");
+	else if ($4->next)
+	  cb_error_x ($3, _("GO TO with multiple procesure-name"));
+	else
+	  push_funcall_1 ("@goto", $4->item);
+      }
   }
-| GO _to label_list DEPENDING _on integer_name
-  {
-    push_funcall_2 ("@goto-depending", $3, $6);
-  }
+;
+goto_depending:
+  /* empty */			{ $<tree>$ = NULL; }
+| DEPENDING _on integer_name	{ $<tree>$ = $3; }
 ;
 
 
@@ -2593,7 +2578,7 @@ sort_key_list:
   }
 ;
 sort_duplicates:
-| _with DUPLICATES _in _order	{ IGNORE ("DUPLICATES"); }
+| _with DUPLICATES _in _order	{ PENDING ("DUPLICATES"); }
 ;
 sort_collating:
 | collating_sequence		{ PENDING ("COLLATING SEQUENCE"); }
@@ -2680,9 +2665,9 @@ stop_statement:
   {
     push_funcall_0 ("cob_stop_run");
   }
-| STOP data_name
+| STOP LITERAL
   {
-    OBSOLETE ("STOP literal");
+    cb_obsolete_85 ("STOP literal");
   }
 ;
 
@@ -3500,9 +3485,10 @@ mnemonic_name:
 
 /* Label name */
 
-label_list:
-  label			{ $$ = list ($1); }
-| label_list label	{ $$ = list_add ($1, $2); }
+procedure_name_list:
+  /* empty */			{ $$ = NULL; }
+| procedure_name_list 
+  label				{ $$ = list_add ($1, $2); }
 ;
 label:
   label_name
@@ -3796,6 +3782,7 @@ flag_rounded:
 
 in_of: IN | OF ;
 is_are: IS | ARE ;
+records: RECORD _is | RECORDS _are ;
 
 _advancing:	| ADVANCING ;
 _are:		| ARE ;
@@ -3804,6 +3791,7 @@ _at:		| AT ;
 _by:		| BY ;
 _character:	| CHARACTER ;
 _characters:	| CHARACTERS ;
+_contains:	| CONTAINS ;
 _file:		| TOK_FILE ;
 _for:		| FOR ;
 _from:		| FROM ;
@@ -3829,6 +3817,7 @@ _to:		| TO ;
 _upon:		| UPON ;
 _when:		| WHEN ;
 _with:		| WITH ;
+_records_or_characters: | RECORDS | CHARACTERS ;
 
 
 %%
