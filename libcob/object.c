@@ -341,12 +341,12 @@ cob_push_decimal (struct cob_field f)
     case 'B':
       switch (f.desc->len)
 	{
-	case 1: mpz_set_si (d->number, *((char *) f.data)); break;
-	case 2: mpz_set_si (d->number, *((short *) f.data)); break;
-	case 4: mpz_set_si (d->number, *((long *) f.data)); break;
+	case 1: mpz_set_si (d->number, *(char *) f.data); break;
+	case 2: mpz_set_si (d->number, *(short *) f.data); break;
+	case 4: mpz_set_si (d->number, *(long *) f.data); break;
 	case 8:
 	  {
-	    long long val = *((long long *) f.data);
+	    long long val = *(long long *) f.data;
 	    mpz_set_si (d->number, val >> 32);
 	    mpz_mul_2exp (d->number, d->number, 32);
 	    mpz_add_ui (d->number, d->number, val & 0xffffffff);
@@ -385,21 +385,19 @@ void
 cob_set (struct cob_field f, int round)
 {
   decimal d = COB_DECIMAL (POP ());
-  int decimals = (f.desc->type != 'E') ?
-    f.desc->decimals : picCompDecimals (f.desc->pic);
 
   /* Just return if something has happened */
   if (cob_status == COB_STATUS_OVERFLOW)
     return;
 
   /* Append or truncate decimal digits */
-  if (round && decimals < d->decimals)
+  if (round && f.desc->decimals < d->decimals)
     {
       /* with rounding */
       int sign = mpz_sgn (d->number);
       if (sign != 0)
 	{
-	  shift_decimal (d, decimals - d->decimals + 1);
+	  shift_decimal (d, f.desc->decimals - d->decimals + 1);
 	  if (sign > 0)
 	    mpz_add_ui (d->number, d->number, 5);
 	  else
@@ -410,7 +408,7 @@ cob_set (struct cob_field f, int round)
   else
     {
       /* without rounding */
-      shift_decimal (d, decimals - d->decimals);
+      shift_decimal (d, f.desc->decimals - d->decimals);
     }
 
   /* Store number */
@@ -429,14 +427,14 @@ cob_set (struct cob_field f, int round)
 	      goto overflow;
 	    switch (f.desc->len)
 	      {
-	      case 1: *((signed char *) f.data) = val; break;
-	      case 2: *((signed short *) f.data) = val; break;
-	      case 4: *((signed long *) f.data) = val; break;
+	      case 1: *(char *) f.data = val; break;
+	      case 2: *(short *) f.data = val; break;
+	      case 4: *(long *) f.data = val; break;
 	      }
 	  }
 	else
 	  {
-	    signed long long val;
+	    long long val;
 	    mpz_t r;
 	    mpz_init (r);
 	    mpz_fdiv_r_2exp (r, d->number, 32);
@@ -451,7 +449,7 @@ cob_set (struct cob_field f, int round)
 	    mpz_clear (r);
 	    if (val <= -cob_exp10[len] || val >= cob_exp10[len])
 	      goto overflow;
-	    *((signed long long *) f.data) = val;
+	    *(long long *) f.data = val;
 	  }
 	return;
       }
@@ -478,27 +476,28 @@ cob_set (struct cob_field f, int round)
 	  {
 	    int len = FIELD_LENGTH (f);
 	    unsigned char *base = FIELD_BASE (f);
+	    if (len < size)
+	      goto overflow;
 	    if (len == size)
 	      memcpy (base, p, size);
-	    else if (len > size)
+	    else
 	      {
 		int pre = len - size;
 		memset (base, '0', pre);
 		memcpy (base + pre, p, size);
 	      }
-	    else
-	      goto overflow;
-
 	    put_sign (f, sign);
 	  }
 	else
 	  {
-	    struct fld_desc desc = {size, '9', decimals, 0, 0, 0, 0, 0, 0};
+	    struct fld_desc desc =
+	      {size, '9', f.desc->decimals, 0, 0, 0, 0, 0, 0};
 	    struct cob_field temp = {&desc, buff};
 	    unsigned char pic[10];
-	    if (decimals > 0)
+	    if (f.desc->decimals > 0)
 	      sprintf (pic, "S\0019%cV\0019%c",
-		       (char) (size - decimals), (char) decimals);
+		       (char) (size - f.desc->decimals),
+		       (char) f.desc->decimals);
 	    else
 	      sprintf (pic, "S\0019%c", (char) size);
 	    desc.pic = pic;

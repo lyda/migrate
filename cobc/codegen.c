@@ -3692,47 +3692,48 @@ pic_digits (cob_tree sy)
     {
       p = sy->picstr;
       while (*p)
-	{
-	  if (*p++ == '9')
-	    {
-	      len += *p++;
-	    }
-	  else
-	    p++;
-	}
+	if (*p++ == '9')
+	  len += *p++;
+	else
+	  p++;
     }
   return len;
-}
-
-static int
-query_comp_len (cob_tree sy)
-{
-  int plen;
-  if ((plen = pic_digits (sy)) <= 2)
-    return 1;
-  if (plen <= 4)
-    return 2;
-  if (plen <= 9)
-    return 4;
-  return 8;
 }
 
 void
 update_field (void)
 {
+  char type = COB_FIELD_TYPE (curr_field);
+
   if (curr_field->level != 88)
-    if (COB_FIELD_TYPE (curr_field) != 'G')
+    if (type != 'G')
       curr_field->picstr = strdup (picture);
 
-  if (COB_FIELD_TYPE (curr_field) != 'B' && COB_FIELD_TYPE (curr_field) != 'U')
+  if (type == 'E')
+    {
+      int decimals = -1;
+      char *p;
+      for (p = picture; *p; p += 2)
+	{
+	  if (*p == '.' || *p == 'V')
+	    decimals = 0;
+	  else if (*p != '0' && *p != 'B' && decimals >= 0)
+	    decimals += p[1];
+	}
+      curr_field->len = piccnt;
+      curr_field->decimals = decimals;
+    }
+  else if (type != 'B' && type != 'U')
     {
       curr_field->len = piccnt;
       if (curr_field->flags.separate_sign)
 	curr_field->len++;
     }
-  /* update COMP field length (but not BINARY-<something>) */
-  if (curr_field->len == 0 && COB_FIELD_TYPE (curr_field) == 'B')
-    curr_field->len = query_comp_len (curr_field);
+  else if (type == 'B' && curr_field->len == 0)
+    {
+      int len = pic_digits (curr_field);
+      curr_field->len = (len <= 2) ? 1 : (len <= 4) ? 2 : (len <= 9) ? 4 : 8;
+    }
 }
 
 void
