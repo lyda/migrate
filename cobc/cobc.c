@@ -40,14 +40,12 @@
 int cob_stabs_flag = 0;
 int cob_debug_flag = 0;
 int cob_module_flag = 0;
-int cob_verbose_flag = 0;
 
 int cob_link_style = LINK_DYNAMIC;
 
 int cob_trace_scanner = 0;
 int cob_trace_parser = 0;
 int cob_trace_codegen = 0;
-int cob_trace_command = 0;
 
 int cob_orig_lineno = 0;
 char *cob_orig_filename = NULL;
@@ -166,7 +164,6 @@ static struct option long_options[] = {
   {"ts", no_argument, &cob_trace_scanner, 1},
   {"tp", no_argument, &cob_trace_parser, 1},
   {"tc", no_argument, &cob_trace_codegen, 1},
-  {"tx", no_argument, &cob_trace_command, 1},
 #endif
   {0, 0, 0, 0}
 };
@@ -207,7 +204,6 @@ print_usage ()
   puts ("  -ts           Trace scanner");
   puts ("  -tp           Trace parser");
   puts ("  -tc           Trace codegen");
-  puts ("  -tx           Trace compiler");
 #endif
 }
 
@@ -263,7 +259,6 @@ process_command_line (int argc, char *argv[])
 	  cob_trace_scanner = 1;
 	  cob_trace_parser = 1;
 	  cob_trace_codegen = 1;
-	  cob_trace_command = 1;
 	  break;
 #endif
 
@@ -414,16 +409,6 @@ probe_source_format (const char *filename)
   return format_free;
 }
 
-static void
-print_command (const char *command)
-{
-  if (cob_trace_command)
-    {
-      fputs (command, stderr);
-      fputc ('\n', stderr);
-    }
-}
-
 static int
 preprocess (struct filename *fn)
 {
@@ -450,7 +435,6 @@ preprocess (struct filename *fn)
 
   strcat (buff, (source_format == format_fixed) ? "-F " : "-X ");
   strcat (buff, fn->source);
-  print_command (buff);
   return system (buff);
 }
 
@@ -485,7 +469,6 @@ process_assemble (struct filename *fn)
   char buff[BUFSIZ];
   sprintf (buff, "%s -c -o %s %s",
 	   cob_cc, fn->object, fn->assembly);
-  print_command (buff);
   return system (buff);
 }
 
@@ -495,7 +478,6 @@ process_module (struct filename *fn)
   char buff[BUFSIZ];
   sprintf (buff, "%s -shared -Wl,-soname,%s -o %s %s %s",
 	   cob_cc, fn->module, fn->module, fn->object, cob_libadd);
-  print_command (buff);
   return system (buff);
 }
 
@@ -513,7 +495,6 @@ process_link (struct filename *file_list)
     }
 
   sprintf (buff, "%s -o %s %s %s", cob_cc, exe, objs, cob_libadd);
-  print_command (buff);
   return system (buff);
 }
 
