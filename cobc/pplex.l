@@ -220,7 +220,7 @@ ppopen (char *name, const char *lib, struct cb_replacement *replacement)
 	}
       if (l == NULL)
 	{
-	  perror (name);
+	  cb_error ("%s: %s", name, strerror (errno));
 	  return -1;
 	}
     }
@@ -229,7 +229,7 @@ ppopen (char *name, const char *lib, struct cb_replacement *replacement)
   ppin = fopen (name, "rb");
   if (!ppin)
     {
-      perror (name);
+      cb_error ("%s: %s", name, strerror (errno));
       return -1;
     }
 
