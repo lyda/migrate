@@ -1338,18 +1338,10 @@ dump_working ()
 	  case 'B':
 	    switch (symlen (sy))
 	      {
-	      case 1:
-		stabs_type = '6';
-		break;
-	      case 2:
-		stabs_type = '5';
-		break;
-	      case 4:
-		stabs_type = '3';
-		break;
-	      case 8:
-		stabs_type = '7';
-		break;
+	      case 1: stabs_type = '6'; break;
+	      case 2: stabs_type = '5'; break;
+	      case 4: stabs_type = '3'; break;
+	      case 8: stabs_type = '7'; break;
 	      }
 	    output (".stabs\t\"%s:S%c\",38,0,0,w_base%d+%d\n",
 		     COB_FIELD_NAME (sy), stabs_type, pgm_segment,
@@ -1500,90 +1492,12 @@ proc_header (int using)
   at_procedure++;
 }
 
-static void
-dump_alternate_keys (cob_tree r, struct alternate_list *alt)
-{
-  cob_tree key;
-  for (; alt; alt = alt->next)
-    {
-      key = alt->key;
-      output ("# alternate key %s\n", COB_FIELD_NAME (key));
-      output ("\t.word\t%d\n\t.long\tc_base%d+%d\n\t.word\t%d\n\t.long\t0\n",
-	      key->location - r->location, pgm_segment,
-	      key->descriptor, alt->duplicates);
-    }
-  output ("# end of alternate keys\n.word\t-1\n");
-}
-
-static void
-dump_fdesc ()
-{
-  cob_tree f;
-  cob_tree r;
-  struct list *list /*,*visited */ ;
-  unsigned char fflags;
-
-  output ("s_base%d:\t.long\t0\n", pgm_segment);
-  for (list = files_list; list != NULL; list = list->next)
-    {
-      f = list->var;
-      r = f->recordsym;
-#ifdef COB_DEBUG
-      output ("# FILE DESCRIPTOR, File: %s, Record: %s, Data Loc: %d(hex: %x), opt: %x\n",
-	      COB_FIELD_NAME (f), COB_FIELD_NAME (r),
-	      f->location, f->location, f->flags.optional);
-#endif
-      if (f->filenamevar == NULL)
-	{
-	  yyerror ("No file name assigned to %s.\n", COB_FIELD_NAME (f));
-	  continue;
-	}
-      if (COB_FIELD_TYPE (f) == 'K')
-	{
-	  output ("\t.extern\t_%s:far\n", COB_FIELD_NAME (f));
-	  continue;
-	}
-      if (COB_FIELD_TYPE (f) == 'J')
-	{
-	  output ("\tpublic\t_%s\n", COB_FIELD_NAME (f));
-	  output ("_%s\tlabel\tbyte\n", COB_FIELD_NAME (f));
-	}
-      fflags = f->flags.optional;
-      output ("\t.byte\t%u\n", RTL_FILE_VERSION);
-      output ("\t.long\tc_base%d+%u\n",
-	       pgm_segment, f->filenamevar->descriptor);
-      output ("\t.long\t%d\n", r->len);
-      output ("\t.byte\t%d,%d\n", f->organization, f->access_mode);
-      output ("\t.long\t0\n");	/* open_mode */
-      output ("\t.long\t0\n");	/* struct DBT (libdb) */
-      output ("\t.long\t0\n");	/* start_record */
-      output ("\t.byte\t%x\n", fflags);	/* flags */
-      if (f->organization == 1)
-	{			/* indexed file */
-	  if (f->ix_desc)
-	    {
-	      output ("\t.word\t%d\n\t.long\tc_base%d+%d\n",
-		       f->ix_desc->location - r->location,
-		       pgm_segment, f->ix_desc->descriptor);
-	    }
-	  else
-	    {
-	      /* no key field was given for this file */
-	      output ("\t.word\t0\n\t.long\t0\n");
-	    }
-	  output ("\t.long\t0\n");	/* struct altkey_desc *key_in_use */
-	  dump_alternate_keys (r, (struct alternate_list *) f->alternate);
-	}
-    }
-}
-
 void
 proc_trail (int using)
 {
   int i;
   struct list *list;
   cob_tree sy;
-  /*char s[9]; */
   char *pgm_label = "main";
   char flag;
 
@@ -1674,9 +1588,8 @@ proc_trail (int using)
       else if (!SYMBOL_P (list->var))
 	{
 	  /***** it is a literal *****/
-	  int len, tmplen;
 	  struct lit *v = LITERAL (list->var);
-	  len = v->nick ? 1 : v->len;
+	  int len = v->nick ? 1 : v->len;
 #ifdef COB_DEBUG
 	  output ("# Literal: %s, Data loc: c_base%d+%d, Desc: c_base+%d\n",
 		  COB_FIELD_NAME (v), pgm_segment, v->location, v->descriptor);
@@ -1736,16 +1649,14 @@ proc_trail (int using)
 	    }
 	  else
 	    {
-	      tmplen = len;
+	      int tmplen = len;
 	      while (tmplen > 255)
 		{
 		  output ("\t.byte\t\'%c\',%d\n",
 			   COB_FIELD_TYPE (v), 255);
 		  tmplen -= 255;
 		}
-	      output ("\t.byte\t\'%c\',%d,0\n",
-		       COB_FIELD_TYPE (v), tmplen);
-
+	      output ("\t.byte\t\'%c\',%d,0\n", COB_FIELD_TYPE (v), tmplen);
 	    }
 	}
       else
@@ -1778,8 +1689,76 @@ proc_trail (int using)
 	    }
 	}
     }
+
   /* generate data for files */
-  dump_fdesc ();
+  {
+    cob_tree f;
+    cob_tree r;
+    struct list *list /*,*visited */ ;
+
+    output ("s_base%d:\t.long\t0\n", pgm_segment);
+    for (list = files_list; list != NULL; list = list->next)
+      {
+	f = list->var;
+	r = f->recordsym;
+#ifdef COB_DEBUG
+	output ("# FILE DESCRIPTOR, File: %s, Record: %s, Data Loc: %d(hex: %x), opt: %x\n",
+		COB_FIELD_NAME (f), COB_FIELD_NAME (r),
+		f->location, f->location, f->flags.optional);
+#endif
+	if (f->filenamevar == NULL)
+	  {
+	    yyerror ("No file name assigned to %s.\n", COB_FIELD_NAME (f));
+	    continue;
+	  }
+	if (COB_FIELD_TYPE (f) == 'K')
+	  {
+	    output ("\t.extern\t_%s:far\n", COB_FIELD_NAME (f));
+	    continue;
+	  }
+	if (COB_FIELD_TYPE (f) == 'J')
+	  {
+	    output ("\tpublic\t_%s\n", COB_FIELD_NAME (f));
+	    output ("_%s\tlabel\tbyte\n", COB_FIELD_NAME (f));
+	  }
+	output ("\t.byte\t%u\n", RTL_FILE_VERSION);
+	output ("\t.long\tc_base%d+%u\n",
+		pgm_segment, f->filenamevar->descriptor);
+	output ("\t.long\t%d\n", r->len);
+	output ("\t.byte\t%d,%d\n", f->organization, f->access_mode);
+	output ("\t.long\t0\n");	/* open_mode */
+	output ("\t.long\t0\n");	/* struct DBT (libdb) */
+	output ("\t.long\t0\n");	/* start_record */
+	output ("\t.byte\t%x\n", f->flags.optional);	/* flags */
+	if (f->organization == 1)
+	  {			/* indexed file */
+	    if (f->ix_desc)
+	      output ("\t.word\t%d\n\t.long\tc_base%d+%d\n",
+		      f->ix_desc->location - r->location,
+		      pgm_segment, f->ix_desc->descriptor);
+	    else
+	      /* no key field was given for this file */
+	      output ("\t.word\t0\n\t.long\t0\n");
+	    output ("\t.long\t0\n");	/* struct altkey_desc *key_in_use */
+	    {
+	      cob_tree key;
+	      struct alternate_list *alt =
+		(struct alternate_list *) f->alternate;
+	      for (; alt; alt = alt->next)
+		{
+		  key = alt->key;
+		  output ("# alternate key %s\n", COB_FIELD_NAME (key));
+		  output ("\t.word\t%d\n\t.long\tc_base%d+%d\n"
+			  "\t.word\t%d\n\t.long\t0\n",
+			  key->location - r->location, pgm_segment,
+			  key->descriptor, alt->duplicates);
+		}
+	      output ("# end of alternate keys\n.word\t-1\n");
+	    }
+	  }
+      }
+  }
+
   data_trail ();
   output ("\n\t.ident\t\"%s %s\"\n", COB_PACKAGE, COB_VERSION);
 }
@@ -4067,7 +4046,7 @@ alloc_file_entry (cob_tree f)
 
 /*
 ** define a file, but don't generate code yet.
-** (will be done later at dump_fdesc())
+** (will be done later at proc_trail())
 */
 void
 gen_fdesc (cob_tree f, cob_tree r)
