@@ -1,9 +1,5 @@
-/* Strings Module
- *
- * Copyright (C) 2000  Rildo Pragana, Alan Cox, Andrew Cameron,
- *		      David Essex, Glen Colbert, Jim Noeth.
- * Copyright (C) 1999  Rildo Pragana, Alan Cox, Andrew Cameron, David Essex.
- * Copyright (C) 1991, 1993  Rildo Pragana.
+/*
+ * Copyright (C) 2002 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -33,56 +29,6 @@
 
 #define match(s1,s2,size) \
   ((*(s1) == *(s2)) && ((size) == 1 || memcmp ((s1), (s2), (size)) == 0))
-
-
-/*
- * Local functions
- */
-
-/*------------------------------------------------------------------------*\
- |                                                                        |
- |                          offset_substr                                 |
- |  return number of characters before found s2 in s1                     |
- |  (C string functions are not useful here, because                      |
- |  the strings are _not_ NULL-terminated)                                |
- |  I would like to see here a better algorithm, but this                 |
- |  "brute-force" method is easier to code now.                           |
- |                                                                        |
-\*------------------------------------------------------------------------*/
-
-static int
-offset_substr (char *s1, char *s2, int n1, int n2)
-{
-  int i, j;
-  for (i = 0; i < n1; i++)
-    {
-      for (j = 0; j < n2; j++)
-	{
-	  if (i + j > n1)
-	    break;		/* past the first string, ignore */
-	  if (s1[i + j] != s2[j])
-	    break;
-	}
-      if (j == n2)
-	break;			/* found! */
-    }
-  return i;
-}
-
-/*------------------------------------------------------------------------*\
- |                                                                        |
- |                          cob_put_integer                               |
- |  this is not the most generic implementation, as we should use a call  |
- |  to cob_move in the future, but it's better than none                  |
- |                                                                        |
-\*------------------------------------------------------------------------*/
-
-static void
-put_integer (struct cob_field f, int v)
-{
-  struct fld_desc fld = { 4, 'B', 0, 0, 0, 0, 0, 0, 0, "S9\x9" };
-  cob_move ((struct cob_field) {&fld, (char *) &v}, f);
-}
 
 
 /*
@@ -154,12 +100,12 @@ cob_inspect_tallying (struct cob_field var, ...)
 
   while ((type = va_arg (ap, int)) != INSPECT_END)
     {
-      struct cob_field dst = va_arg (ap, struct cob_field);
       int offset, len;
       switch (type)
 	{
 	case INSPECT_CHARACTERS:
 	  {
+	    struct cob_field dst = va_arg (ap, struct cob_field);
 	    ap = inspect_get_region (var, ap, &offset, &len);
 	    if (len > 0)
 	      {
@@ -178,6 +124,7 @@ cob_inspect_tallying (struct cob_field var, ...)
 	case INSPECT_ALL:
 	case INSPECT_LEADING:
 	  {
+	    struct cob_field dst = va_arg (ap, struct cob_field);
 	    struct cob_field str = va_arg (ap, struct cob_field);
 	    unsigned char *str_data = FIELD_DATA (str);
 	    int size = FIELD_SIZE (str);
@@ -187,10 +134,8 @@ cob_inspect_tallying (struct cob_field var, ...)
 		int i, j, n = 0;
 		for (i = 0; i < len - size + 1; i++)
 		  {
-		    unsigned char *p = var_data + offset + i;
-		    unsigned char *s = str_data;
 		    /* find matching substring */
-		    if (match (p, s, size))
+		    if (match (var_data + offset + i, str_data, size))
 		      {
 			/* check if it is already marked */
 			for (j = 0; j < size; j++)
@@ -243,7 +188,6 @@ cob_inspect_replacing (struct cob_field var, ...)
 	case INSPECT_CHARACTERS:
 	  {
 	    struct cob_field new = va_arg (ap, struct cob_field);
-	    unsigned char new_char = FIELD_DATA (new)[0];
 	    ap = inspect_get_region (var, ap, &offset, &len);
 	    if (len > 0)
 	      {
@@ -251,7 +195,7 @@ cob_inspect_replacing (struct cob_field var, ...)
 		for (i = 0; i < len; i++)
 		  if (mark[offset + i] == 0)
 		    {
-		      var_data[offset + i] = new_char;
+		      var_data[offset + i] = FIELD_DATA (new)[0];
 		      mark[offset + i] = 1;
 		    }
 	      }
@@ -273,10 +217,8 @@ cob_inspect_replacing (struct cob_field var, ...)
 		int i, j;
 		for (i = 0; i < len - size + 1; i++)
 		  {
-		    unsigned char *p = var_data + offset + i;
-		    unsigned char *s = old_data;
 		    /* find matching substring */
-		    if (match (p, s, size))
+		    if (match (var_data + offset + i, old_data, size))
 		      {
 			/* check if it is already marked */
 			for (j = 0; j < size; j++)
@@ -285,7 +227,7 @@ cob_inspect_replacing (struct cob_field var, ...)
 			/* if not, mark and replace it */
 			if (j == size)
 			  {
-			    memcpy (p, new_data, size);
+			    memcpy (var_data + offset + i, new_data, size);
 			    memset (&mark[offset + i], 1, size);
 			    if (type == INSPECT_FIRST)
 			      break;
@@ -451,6 +393,32 @@ cob_string (struct cob_field dst, ...)
 /*
  * UNSTRING
  */
+
+static int
+offset_substr (char *s1, char *s2, int n1, int n2)
+{
+  int i, j;
+  for (i = 0; i < n1; i++)
+    {
+      for (j = 0; j < n2; j++)
+	{
+	  if (i + j > n1)
+	    break;		/* past the first string, ignore */
+	  if (s1[i + j] != s2[j])
+	    break;
+	}
+      if (j == n2)
+	break;			/* found! */
+    }
+  return i;
+}
+
+static void
+put_integer (struct cob_field f, int v)
+{
+  struct fld_desc fld = { 4, 'B', 0, 0, 0, 0, 0, 0, 0, "S9\x9" };
+  cob_move ((struct cob_field) {&fld, (char *) &v}, f);
+}
 
 int
 cob_unstring (struct fld_desc *fvar, char *svar, ...)
