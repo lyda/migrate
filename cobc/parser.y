@@ -147,7 +147,7 @@ static void check_decimal_point (struct lit *lit);
 %token GIVING,ERASE,INSPECT,TALLYING,REPLACING,ONTOK,POINTER,OVERFLOWTK
 %token DELIMITER,COUNT,LEFT,TRAILING,CHARACTER
 %token ADD,SUBTRACT,MULTIPLY,DIVIDE,ROUNDED,REMAINDER,TOK_ERROR,SIZE
-%token FD,SD,REDEFINES,PIC,FILLER,OCCURS,TIMES
+%token FD,SD,REDEFINES,PICTURE,FILLER,OCCURS,TIMES
 %token PROGRAM_ID,DIVISION,CONFIGURATION,SPECIAL_NAMES
 %token FILE_CONTROL,I_O_CONTROL
 %token SAME,AREA,EXCEPTION
@@ -587,7 +587,6 @@ sort_attrib:
 ;
 rec_or_recs: RECORD | RECORDS ;
 std_or_omitt: STANDARD | OMITTED ;
-opt_TIMES: | TIMES ;
 opt_when: | WHEN ;
 opt_is: | IS ;
 opt_mode: | MODE ;
@@ -684,9 +683,9 @@ global_clause:
  */
 
 occurs_clause:
-  OCCURS integer opt_TIMES { curr_field->times = $2; }
+  OCCURS integer opt_times { curr_field->times = $2; }
   opt_indexed_by
-| OCCURS integer TO integer opt_TIMES DEPENDING opt_on
+| OCCURS integer TO integer opt_times DEPENDING opt_on
   { curr_division = CDIV_INITIAL; }
   gname
   {       
@@ -717,14 +716,22 @@ index_name_list:
 | index_name_list
   def_name { define_implicit_field ($2, $<sval>-2, curr_field->times); }
 ;
+opt_times: | TIMES ;
 
+
+/*
+ * PICTURE clause
+ */
+
+picture_clause:
+  PICTURE { start_condition = START_PICTURE; } PICTURE
+;
+
+
 sync_options:
 | LEFT
 | RIGHT
 ;
-
-picture_clause: PIC { start_condition = START_PICTURE; } PICTURE ;
-opt_picture_clause: | picture_clause ;
 
 usage_option:
   opt_usage opt_is usage
@@ -893,6 +900,7 @@ report_type:
 | CONTROL
 | DETAIL
 ;
+opt_picture_clause: | picture_clause ;
 opt_line: | LINE ;
 opt_final: | FINAL ;
 opt_limit_is: | LIMIT opt_is ;
