@@ -1483,7 +1483,6 @@ output_stmt (cb_tree x)
       {
 	static int last_line = 0;
 	struct cb_statement *p = CB_STATEMENT (x);
-	cb_tree l;
 
 	output_line ("/* %s */", p->name);
 	if (x->source_file && last_line != x->source_line)
@@ -1502,8 +1501,8 @@ output_stmt (cb_tree x)
 	    || (p->file && CB_EXCEPTION_ENABLE (COB_EC_I_O)))
 	  output_line ("cob_exception_code = 0;");
 
-	for (l = p->body; l; l = CB_CHAIN (l))
-	  output_stmt (CB_VALUE (l));
+	if (p->body)
+	  output_stmt (p->body);
 
 	if (p->handler1 || p->handler2
 	    || (p->file && CB_EXCEPTION_ENABLE (COB_EC_I_O)))
