@@ -1146,7 +1146,14 @@ cb_ref (cb_tree x)
 	      if (c && strcasecmp (CB_NAME (c), p->name) == 0)
 		c = CB_REFERENCE (c)->chain;
 
-	    /* TODO: resolve by file */
+	    /* resolve by file */
+	    if (c && CB_REFERENCE (c)->chain == 0)
+	      if (CB_REFERENCE (c)->word->count == 1
+		  && CB_FILE_P (cb_ref (c))
+		  && (CB_FILE (cb_ref (c)) ==
+		      cb_field_founder (CB_FIELD (v))->file))
+		c = CB_REFERENCE (c)->chain;
+
 	    break;
 	  }
 	case CB_TAG_LABEL:

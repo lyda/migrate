@@ -1,3 +1,7 @@
+2004-03-30  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* tree.c (cb_ref): Resolve by file name.
+
 2004-03-29  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* cobc.c (process_link) [__CYGWIN__, __MINGW32__]: Set
