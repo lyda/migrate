@@ -148,7 +148,6 @@ extern const char *cob_source_statement;
 
 extern int cob_return_code;
 extern int cob_linage_counter;
-extern int cob_cmp_result;
 
 extern cob_field cob_zero;		/* ZERO */
 extern cob_field cob_space;		/* SPACE */

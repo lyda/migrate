@@ -42,7 +42,6 @@ const char *cob_source_statement = NULL;
 
 int cob_return_code = 0;
 int cob_linage_counter = 0;
-int cob_cmp_result;
 
 static cob_field_attr all_attr = {COB_TYPE_ALPHANUMERIC_ALL, 0, 0, 0, NULL};
 
@@ -455,29 +454,28 @@ cob_cmp (cob_field *f1, cob_field *f2)
   if (COB_FIELD_TYPE (f2) == COB_TYPE_ALPHANUMERIC_ALL)
     {
       if (f2 == &cob_zero && COB_FIELD_IS_NUMERIC (f1))
-	cob_cmp_result = cob_cmp_int (f1, 0);
+	return cob_cmp_int (f1, 0);
       else if (f2->size == 1)
-	cob_cmp_result = cmp_char (f1, f2->data[0]);
+	return cmp_char (f1, f2->data[0]);
       else
-	cob_cmp_result = cmp_all (f1, f2);
+	return cmp_all (f1, f2);
     }
   else if (COB_FIELD_TYPE (f1) == COB_TYPE_ALPHANUMERIC_ALL)
     {
       if (f1 == &cob_zero && COB_FIELD_IS_NUMERIC (f2))
-	cob_cmp_result = - cob_cmp_int (f2, 0);
+	return -cob_cmp_int (f2, 0);
       else if (f1->size == 1)
-	cob_cmp_result = - cmp_char (f2, f1->data[0]);
+	return -cmp_char (f2, f1->data[0]);
       else
-	cob_cmp_result = - cmp_all (f2, f1);
+	return -cmp_all (f2, f1);
     }
   else
     {
       if (COB_FIELD_IS_NUMERIC (f1) && COB_FIELD_IS_NUMERIC (f2))
-	cob_cmp_result = cob_numeric_cmp (f1, f2);
+	return cob_numeric_cmp (f1, f2);
       else
-	cob_cmp_result = cmp_alnum (f1, f2);
+	return cmp_alnum (f1, f2);
     }
-  return cob_cmp_result;
 }
 
 int
@@ -485,8 +483,7 @@ cob_cmp_int (cob_field *f1, int n)
 {
   cob_field_attr attr = {COB_TYPE_NUMERIC_BINARY, 9, 0, COB_FLAG_HAVE_SIGN};
   cob_field temp = {sizeof (int), (unsigned char *) &n, &attr};
-  cob_cmp_result = cob_numeric_cmp (f1, &temp);
-  return cob_cmp_result;
+  return cob_numeric_cmp (f1, &temp);
 }
 
 
