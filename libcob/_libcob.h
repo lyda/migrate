@@ -117,6 +117,8 @@ struct fld_desc
   ((f).data + (((f).desc->separate_sign && (f).desc->leading_sign) ? 1 : 0))
 #define FIELD_LENGTH(f) \
   ((f).desc->len - ((f).desc->separate_sign ? 1 : 0))
+#define FIELD_DECIMALS(f) \
+  ((f).desc->decimals)
 
 
 struct file_desc
