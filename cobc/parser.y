@@ -1193,6 +1193,7 @@ statement:
     | exit_statement
     | goto_statement
     | if_statement
+    | initialize_statement
     | inspect_statement
     | move_statement
     | multiply_statement
@@ -2072,7 +2073,14 @@ opt_end_search:
 move_statement:
       MOVE gname TO { $<ival>$ = MOVE; } var_list
     | MOVE CORRESPONDING gname TO gname { gen_movecorr($3, $5); }
-    | INITIALIZE { $<ival>$ = INITIALIZE; } var_list
+    ;
+
+
+/* INITILIZE statement */
+
+initialize_statement:
+    INITIALIZE { $<ival>$ = INITIALIZE; } var_list
+    ;
 
 
 /* COMPUTE statement */
