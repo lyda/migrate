@@ -31,6 +31,9 @@ char **cob_argv = NULL;
 int cob_status;
 int cob_status_register;
 
+char *cob_source_file = NULL;
+int cob_source_line = 0;
+
 unsigned char cob_decimal_point = '.';
 unsigned char cob_currency_symbol = '$';
 

@@ -1190,6 +1190,7 @@ stabs_line ()
     output (".stabs\t\"%s\",132,0,0,.LM%d\n", cob_orig_filename, label);
   output (".stabn\t68,0,%d,.LM%d-Ltext_%s\n", cob_orig_lineno, label, pgm_label);
   output (".LM%d:\n", label++);
+  output ("\tmovl\t$%d, cob_source_line\n", cob_orig_lineno);
 
   last_filename = cob_orig_filename;
 }
@@ -1530,6 +1531,8 @@ proc_header (cob_tree_list using)
 
   if (currency_symbol != '$')
     output ("\tmovb\t$%d,cob_currency_symbol\n", currency_symbol);
+  if (cob_stabs_flag)
+    output ("\tmovl\t$.LCsource, cob_source_file\n");
 
   /*  
      Extra 16 bytes holds search all temporary data 
@@ -1625,6 +1628,11 @@ proc_trail (cob_tree_list using)
 
   /********** generate data for literals & fields ************/
   output (".data\n\t.align 4\n");
+  if (cob_stabs_flag)
+    {
+      output (".LCsource:\n");
+      output ("\t.string\t\"%s\"\n", cob_source_filename);
+    }
 
   /* generate static working storage */
   dump_working ();

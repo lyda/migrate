@@ -24,6 +24,8 @@
 #define COB_STATUS_OVERFLOW	1
 
 extern int cob_status;
+extern char *cob_source_file;
+extern int cob_source_line;
 
 extern void cob_init (int argc, char **argv);
 extern int cob_exit (void);
