@@ -21,8 +21,16 @@
 #define COB_FILEIO_H
 
 #include <stdio.h>
-#include <db1/db.h>
+#include <libcob/cobconfig.h>
 #include <libcob/common.h>
+
+#if HAVE_DB1_DB_H
+#include <db1/db.h>
+#else
+#if HAVE_DB_H
+#include <db.h>
+#endif
+#endif
 
 #define COB_EQ	1 	/* x == y */
 #define COB_LT	2 	/* x <  y */

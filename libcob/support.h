@@ -26,10 +26,6 @@
  * Frame stack
  */
 
-#if COB_HAVE_COMPUTED_GOTO
-
-/* GCC's computed-goto version */
-
 struct cob_frame {
   int perform_through;
   void *return_address;
@@ -48,31 +44,6 @@ struct cob_frame {
 #define cob_exit(label)					\
  if (frame_stack[frame_index].perform_through == label)	\
    goto *frame_stack[frame_index].return_address;
-
-#else /* !COB_HAVE_COMPUTED_GOTO */
-
-/* regular switch version */
-
-struct cob_frame {
-  int perform_through;
-  int perform_id;
-};
-
-#define cob_perform(id,from,until)			\
-  do {							\
-    frame_index++;					\
-    frame_stack[frame_index].perform_through = until;	\
-    frame_stack[frame_index].perform_id = id;		\
-    goto from;						\
-    l_##id:						\
-    frame_index--;					\
-  } while (0)
-
-#define cob_exit(label)					\
- if (frame_stack[frame_index].perform_through == label)	\
-   goto l_exit;
-
-#endif /* !COB_HAVE_COMPUTED_GOTO */
 
 #define COB_DEFAULT_ERROR_HANDLE				\
   cob_default_error_handle (cob_last_file);

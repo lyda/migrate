@@ -1,3 +1,12 @@
+2002-09-24  Keisuke Nishida  <knishida@netlab.jp>
+
+	* support.h: Do not support non-computed-goto jump.
+	* cobconfig.h.in: Use AM_CONFIG_HEADER scheme.
+	(COB_HAVE_COMPUTED_GOTO): Removed.
+	(HAVE_DB1_DB_H, HAVE_DB_H): Added.
+	* fileio.h: #include <libcob/cobconfig.h>
+	Include <db1/db.h> or <db.h> which exists.
+
 2002-09-23  Keisuke Nishida  <knishida@netlab.jp>
 
 	* strings.c (cob_unstring): Don't use alloca.
