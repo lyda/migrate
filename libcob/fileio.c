@@ -311,48 +311,49 @@ relative_start (struct cob_file_desc *f, int cond, struct cob_field k)
     index++;
 
   /* seek the index */
- again:
-  if (lseek (f->file.fd, f->record_size * index, SEEK_SET) == -1
-      || read (f->file.fd, &c, 1) == -1)
+  while (1)
     {
-    not_found:
-      return 23;
-    }
+      if (lseek (f->file.fd, f->record_size * index, SEEK_SET) == -1
+	  || read (f->file.fd, &c, 1) == -1)
+	return 23;
 
-  /* check if a valid record */
-  if (c != '\0')
-    {
-      cob_set_int (k, index + 1);
-      lseek (f->file.fd, -1, SEEK_CUR);
-      return 00;
-    }
+      /* check if a valid record */
+      if (c != '\0')
+	{
+	  cob_set_int (k, index + 1);
+	  lseek (f->file.fd, -1, SEEK_CUR);
+	  return 00;
+	}
 
-  /* continue */
-  switch (cond)
-    {
-    case COB_EQ:
-      goto not_found;
-    case COB_LT:
-    case COB_LE:
-      index--;
-      break;
-    case COB_GT:
-    case COB_GE:
-      index++;
-      break;
+      /* continue */
+      switch (cond)
+	{
+	case COB_EQ:
+	  return 23;
+	case COB_LT:
+	case COB_LE:
+	  index--;
+	  break;
+	case COB_GT:
+	case COB_GE:
+	  index++;
+	  break;
+	}
     }
-  goto again;
 }
 
 static int
 relative_read (struct cob_file_desc *f, struct cob_field k)
 {
   int index = cob_to_int (k) - 1;
+  char buff[f->record_size];
 
   if (lseek (f->file.fd, f->record_size * index, SEEK_SET) == -1
-      || read (f->file.fd, f->record_data, f->record_size) == -1)
+      || read (f->file.fd, buff, f->record_size) == -1
+      || buff[0] == '\0')
     return 23;
 
+  memcpy (f->record_data, buff, f->record_size);
   return 00;
 }
 
