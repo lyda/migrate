@@ -33,19 +33,16 @@
 #include "codegen.h"
 #include "_libcob.h"
 
-#define MAXNAMEBUF 	300
 #define START_STACK_ADJUST 20
 #define SYMBUF_SIZE 128
 
-#define decimal_char() (decimal_comma ? ',' : '.')
+#define decimal_char	(decimal_comma ? ',' : '.')
 
 int screen_io_enable = 0;
 int scr_line, scr_column;
 int decimal_comma = 0;
 char currency_symbol = '$';
 cob_tree curr_field;
-int curr_call_mode = 0;
-int at_procedure = 0;
 int at_linkage = 0;
 int loc_label = 1;
 int substring_slots = 0;
@@ -63,8 +60,6 @@ static unsigned literal_offset = 0;
 static unsigned data_offset = 0;
 static unsigned linkage_offset = 0;
 static unsigned using_offset = 8;
-/* tmpvar_offset: for storage of temporary variables, 
-with space reclaimed after the current instruction*/
 static unsigned tmpvar_offset = 0;
 static unsigned tmpvar_max = 0;
 
@@ -83,7 +78,6 @@ static char program_id[120] = "main";
 static char *pgm_label = "main";
 
 static int need_desc_length_cleanup = 0;
-static char name_buf[MAXNAMEBUF];
 static char init_ctype;		// hold homogenous type
 static int init_val;		// hold homogenous value
 static unsigned curr_01_location;	// hold current root father when set_field_location
@@ -319,7 +313,7 @@ save_literal (cob_tree x, int type)
     {
       piclen += 2;		/* we need space for the sign picture char */
     }
-  if (type != 'X' && (dp = strchr (s, decimal_char ())) != NULL)
+  if (type != 'X' && (dp = strchr (s, decimal_char)) != NULL)
     {
       piclen += 4;		/* reserve space for 'V' and decimal part */
       v->decimals = v->len - (int) (dp - s) - 1;
@@ -1631,7 +1625,6 @@ proc_header (int using)
     output ("\tmovl\t$44,cob_decimal_point\n");
   if (currency_symbol != '$')
     output ("\tmovb\t$%d,cob_currency_symbol\n", currency_symbol);
-  at_procedure++;
 }
 
 void
@@ -1749,7 +1742,7 @@ proc_trail (int using)
 	      char *s;
 	      s = COB_FIELD_NAME (v);
 	      output ("\t.byte\t");
-	      while (*s && (*s != decimal_char ()))
+	      while (*s && *s != decimal_char)
 		output ("%d,", *s++);
 	      s++;
 	      while (*s)
@@ -1980,14 +1973,16 @@ gen_status_branch (int status, int flag)
  */
 
 static char *
-label_name (cob_tree lab)
+label_name (cob_tree label)
 {
-  if (lab->parent)
-    sprintf (name_buf, "%s__%s_%d",
-	     COB_FIELD_NAME (lab), COB_FIELD_NAME (lab->parent), pgm_segment);
+  static char buff[BUFSIZ];
+  if (label->parent)
+    sprintf (buff, "%s__%s_%d",
+	     COB_FIELD_NAME (label),
+	     COB_FIELD_NAME (label->parent), pgm_segment);
   else
-    sprintf (name_buf, "%s_%d", COB_FIELD_NAME (lab), pgm_segment);
-  return chg_underline (name_buf);
+    sprintf (buff, "%s_%d", COB_FIELD_NAME (label), pgm_segment);
+  return chg_underline (buff);
 }
 
 void
@@ -3776,9 +3771,7 @@ gen_fdesc (cob_tree f, cob_tree r)
     {
       templist = files_list;
       while (templist->next != NULL)
-	{
-	  templist = templist->next;
-	}
+	templist = templist->next;
       templist->next = list;
     }
   list->var = f;

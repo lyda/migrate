@@ -50,6 +50,7 @@ static unsigned long lbend, lbstart;
 static unsigned int perform_after_sw;
 
 static cob_tree current_section, current_paragraph;
+static int current_call_mode;
 static cob_tree inspect_name;
 
 static int warning_count = 0;
@@ -1457,7 +1458,7 @@ alter_option:
  */
 
 call_statement:
-  CALL gname			{ curr_call_mode = CALL_BY_REFERENCE; }
+  CALL gname			{ current_call_mode = CALL_BY_REFERENCE; }
   call_using call_returning
   {
     gen_call ($2, $4);
@@ -1478,12 +1479,12 @@ call_parameter_list:
 call_parameter:
   gname
   {
-    $$ = make_parameter ($1, curr_call_mode);
+    $$ = make_parameter ($1, current_call_mode);
   }
 | BY call_mode gname
   {
-    curr_call_mode = $2;
-    $$ = make_parameter ($3, curr_call_mode);
+    current_call_mode = $2;
+    $$ = make_parameter ($3, current_call_mode);
   }
 ;
 call_mode:
