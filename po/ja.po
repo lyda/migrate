@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.9.6\n"
-"POT-Creation-Date: 2002-05-29 02:59+0900\n"
+"POT-Creation-Date: 2002-05-29 07:20+0900\n"
 "PO-Revision-Date: 2002-05-29 03:03+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -412,21 +412,21 @@ msgstr "ターゲット名を -MT で指定して下さい\n"
 msgid "source line too long"
 msgstr "一行の行数が長過ぎます"
 
-#: libcob/common.c:125
+#: libcob/common.c:201
 msgid "warning: cob_init expected in the main program\n"
 msgstr "warning: メインプログラムで cob_init 呼ばれていません\n"
 
-#: libcob/common.c:141 libcob/common.c:157
+#: libcob/common.c:217 libcob/common.c:233
 #, c-format
 msgid "index out of range `%d'"
 msgstr "添字の範囲を超えています `%d'"
 
-#: libcob/common.c:152
+#: libcob/common.c:228
 #, c-format
 msgid "value out of range `%d'"
 msgstr "添字の値が範囲を超えています `%d'"
 
-#: libcob/common.c:281
+#: libcob/common.c:357
 #, c-format
 msgid "non-numeric value `%s'"
 msgstr "数字ではありません `%s'"
@@ -496,7 +496,7 @@ msgstr "DELETE、REWRITE は許可されません"
 msgid "unknown file error"
 msgstr "原因不明のファイルエラーです"
 
-#: libcob/call.c:191
+#: libcob/call.c:197
 #, c-format
 msgid "cannot find module `%s'"
 msgstr "モジュールが見付かりません `%s'"

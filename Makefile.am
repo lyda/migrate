@@ -8,7 +8,7 @@ include_HEADERS = libcob.h
 pkgdata_DATA = libcob.conf
 
 SUBDIRS = lib libcob cobpp cobc po texi
-EXTRA_DIST = config.rpath cob.m4 libcob.conf redhat debian
+EXTRA_DIST = HACKING config.rpath cob.m4 libcob.conf redhat debian
 
 BUILT_SOURCES = defaults.h
 CLEANFILES = $(BUILT_SOURCES)
