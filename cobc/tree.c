@@ -440,6 +440,7 @@ print_tree (cob_tree x, FILE *fp)
 	      }
 	    fputs (")", fp);
 	  }
+	break;
       }
 
     default:
