@@ -1,4 +1,5 @@
 SUBDIRS = cobpp cobc libcob doc
+EXTRA_DIST = VERSION
 
 DISTCLEANFILES = defaults.h
 MAINTAINERCLEANFILES = config.guess config.sub config.log \

@@ -969,7 +969,6 @@ extern int yyparse (void);
 /* scan.c */
 extern int yylex (void);
 extern void yyrestart (FILE * input_file);
-extern int lex_fgets (char *buf, int maxsize);
 extern char *copy_strip_spaces (char *s);
 extern void add_copy_replacement (char *orig_value, char *replacement);
 extern void copy_do_replacements (char *buffer);

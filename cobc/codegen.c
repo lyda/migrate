@@ -101,9 +101,8 @@ int block_label = 0;
 int line_label = 0;
 int paragr_num = 1;
 int loc_label = 1;
-unsigned char picture[64];
+unsigned char picture[1024];
 int picix, piccnt, decimals, sign, v_flag, z_flag, n_flag, digits;
-int filler_num = 1;
 int active[37];
 int at_linkage = 0;
 int stackframe_cnt = 0;
@@ -2319,20 +2318,22 @@ check_perform_variables (struct sym *sy1, struct perform_info *pi1)
       if (pi1->pf[i] != NULL)
 	{
 	  j++;
-#ifdef TRACE_COMPILER
-	  fprintf (stderr,
-		   "debug trace: check_perform_variables: var(%d:%d) '%s'\n", 
-		   i, j, pi1->pf[i]->pname2->name); 
+#ifdef COB_DEBUG
+	  if (cob_trace_codegen)
+	    fprintf (stderr,
+		     "trace: check_perform_variables: var(%d:%d) '%s'\n", 
+		     i, j, pi1->pf[i]->pname2->name); 
 #endif
 	}
     }
 
   for (i = 0; i < j; i++)
     {
-#ifdef TRACE_COMPILER
-      fprintf (stderr,
-	       "debug trace: check_perform_variables: var1='%s' var2(%d)='%s'\n", 
-	       sy1->name, i, pi1->pf[i]->pname2->name); 
+#ifdef COB_DEBUG
+      if (cob_trace_codegen)
+	fprintf (stderr,
+		 "debug trace: check_perform_variables: var1='%s' var2(%d)='%s'\n", 
+		 sy1->name, i, pi1->pf[i]->pname2->name); 
 #endif
       if (strcmp (sy1->name, pi1->pf[i]->pname2->name) == 0)
 	{
@@ -2344,10 +2345,11 @@ check_perform_variables (struct sym *sy1, struct perform_info *pi1)
     {
       for (k = i + 1; k < j; k++)
 	{
-#ifdef TRACE_COMPILER
-	  fprintf (stderr,
-		   "trace: check_perform_variables: var1(%d)='%s' var2(%d)='%s'\n", 
-		   i, pi1->pf[i]->pname2->name, k, pi1->pf[k]->pname2->name);
+#ifdef COB_DEBUG
+	  if (cob_trace_codegen)
+	    fprintf (stderr,
+		     "trace: check_perform_variables: var1(%d)='%s' var2(%d)='%s'\n", 
+		     i, pi1->pf[i]->pname2->name, k, pi1->pf[k]->pname2->name);
 #endif
 	  if (strcmp (pi1->pf[i]->pname2->name, pi1->pf[k]->pname2->name) == 0)
 	    return pi1->pf[i]->pname2->name;
@@ -2365,25 +2367,22 @@ create_expr (char op, struct expr *left, struct expr *right)
   struct expr *e = malloc (sizeof (struct expr));
   struct list *list = (struct list *) malloc (sizeof (struct list));
   e->litflag = 5;
-#ifdef TRACE_COMPILER
-  fprintf (stderr, "create_expr: [0x%x] %c ", (int) e, op);
-  if (left->litflag < 2)
+
+#ifdef COB_DEBUG
+  if (cob_trace_codegen)
     {
-      fprintf (stderr, "%s ", ((struct sym *) left)->name);
-    }
-  else
-    {
-      fprintf (stderr, "0x%x ", (int) left);
-    }
-  if (right->litflag < 2)
-    {
-      fprintf (stderr, "%s\n", ((struct sym *) right)->name);
-    }
-  else
-    {
-      fprintf (stderr, "0x%x\n", (int) right);
+      fprintf (stderr, "create_expr: [0x%x] %c ", (int) e, op);
+      if (left->litflag < 2)
+	fprintf (stderr, "%s ", ((struct sym *) left)->name);
+      else
+	fprintf (stderr, "0x%x ", (int) left);
+      if (right->litflag < 2)
+	fprintf (stderr, "%s\n", ((struct sym *) right)->name);
+      else
+	fprintf (stderr, "0x%x\n", (int) right);
     }
 #endif
+
   e->op = op;
   e->left = left;
   e->right = right;
@@ -2398,24 +2397,19 @@ free_expr (struct expr *e)
 {
   if ((e != NULL) && (e->litflag == 5))
     {
-#ifdef TRACE_COMPILER
-      fprintf (stderr, "free_expr: %c (%d,%d) ", e->op,
-	       e->left->litflag, e->right->litflag);
-      if (e->left->litflag < 2)
+#ifdef COB_DEBUG
+      if (cob_trace_codegen)
 	{
-	  fprintf (stderr, "%s ", ((struct sym *) e->left)->name);
-	}
-      else
-	{
-	  fprintf (stderr, "0x%x ", (int) e->left);
-	}
-      if (e->right->litflag < 2)
-	{
-	  fprintf (stderr, "%s\n", ((struct sym *) e->right)->name);
-	}
-      else
-	{
-	  fprintf (stderr, "0x%x\n", (int) e->right);
+	  fprintf (stderr, "free_expr: %c (%d,%d) ", e->op,
+		   e->left->litflag, e->right->litflag);
+	  if (e->left->litflag < 2)
+	    fprintf (stderr, "%s ", ((struct sym *) e->left)->name);
+	  else
+	    fprintf (stderr, "0x%x ", (int) e->left);
+	  if (e->right->litflag < 2)
+	    fprintf (stderr, "%s\n", ((struct sym *) e->right)->name);
+	  else
+	    fprintf (stderr, "0x%x\n", (int) e->right);
 	}
 #endif
       free_expr (e->right);
@@ -2448,12 +2442,15 @@ create_mathvar_info (struct math_var *mv, struct sym *sy, unsigned int opt)
   rf->rounded = opt;
   rf->next = NULL;
 
-#ifdef TRACE_COMPILER
-  fprintf (stderr,
-	   "trace : create_mathvar_info 0: sy->name=%s;\n", sy->name);
-  fprintf (stderr,
-	   "trace : create_mathvar_info 1: rf->sname->name=%s;\n",
-	   rf->sname->name);
+#ifdef COB_DEBUG
+  if (cob_trace_codegen)
+    {
+      fprintf (stderr,
+	       "trace : create_mathvar_info 0: sy->name=%s;\n", sy->name);
+      fprintf (stderr,
+	       "trace : create_mathvar_info 1: rf->sname->name=%s;\n",
+	       rf->sname->name);
+    }
 #endif
 
   if (mv == NULL)
@@ -2467,28 +2464,32 @@ create_mathvar_info (struct math_var *mv, struct sym *sy, unsigned int opt)
       tmp2 = mv;
       while (tmp1->next != NULL)
 	{
-#ifdef TRACE_COMPILER
-	  fprintf (stderr,
-		   "trace : create_mathvar_info 2: tmp1->sname->name=%s;\n", 
-		   tmp1->sname->name); 
+#ifdef COB_DEBUG
+	  if (cob_trace_codegen)
+	    fprintf (stderr,
+		     "trace : create_mathvar_info 2: tmp1->sname->name=%s;\n", 
+		     tmp1->sname->name); 
 #endif
 	  tmp1 = tmp1->next;
 	}
       tmp1->next = rf;
     }
 
-#ifdef TRACE_COMPILER
-  fprintf (stderr,
-	   "trace : create_mathvar_info 3: tmp1->sname->name=%s;\n", 
-	   tmp1->sname->name); 
-
-  tmp1 = tmp2; 
-  while (tmp1 != NULL)
+#ifdef COB_DEBUG
+  if (cob_trace_codegen)
     {
-      fprintf(stderr,
-	      "trace : create_mathvar_info 4: tmp1->sname->name=%s;\n", 
-	      tmp1->sname->name); 
-      tmp1 = tmp1->next;
+      fprintf (stderr,
+	       "trace : create_mathvar_info 3: tmp1->sname->name=%s;\n", 
+	       tmp1->sname->name); 
+      
+      tmp1 = tmp2; 
+      while (tmp1 != NULL)
+	{
+	  fprintf(stderr,
+		  "trace : create_mathvar_info 4: tmp1->sname->name=%s;\n", 
+		  tmp1->sname->name); 
+	  tmp1 = tmp1->next;
+	}
     }
 #endif
 
@@ -2504,10 +2505,11 @@ delete_mathvar_info (struct math_var *mv)
   tmp1 = mv;
   while (tmp1 != NULL)
     {
-#ifdef TRACE_COMPILER
-      fprintf (stderr,
-	       "debug trace : delete_mathvar_info 1: tmp1->sname->name=%s;\n", 
-	       tmp1->sname->name); 
+#ifdef COB_DEBUG
+      if (cob_trace_codegen)
+	fprintf (stderr,
+		 "debug trace : delete_mathvar_info 1: tmp1->sname->name=%s;\n", 
+		 tmp1->sname->name); 
 #endif
       tmp2 = tmp1->next;
       tmp1->next = NULL;
@@ -5346,10 +5348,11 @@ define_implicit_field (struct sym *sy, struct sym *sykey, int idxlen)
       index2table = i2t;
     }
 
-#ifdef TRACE_COMPILER
-  fprintf (stderr,
-	   "trace (define_implicit_field): index '%s' table '%s' tablekey '%s' sequence '%c'\n",
-	   i2t->idxname, i2t->tablename, i2t->keyname, i2t->seq);
+#ifdef COB_DEBUG
+  if (cob_trace_codegen)
+    fprintf (stderr,
+	     "trace (define_implicit_field): index '%s' table '%s' tablekey '%s' sequence '%c'\n",
+	     i2t->idxname, i2t->tablename, i2t->keyname, i2t->seq);
 #endif
 
   i2t = NULL;
@@ -5438,18 +5441,21 @@ determine_table_index_name (struct sym *sy)
 	}
     }
 
-#ifdef TRACE_COMPILER
-  if (rsy == NULL)
+#ifdef COB_DEBUG
+  if (cob_trace_codegen)
     {
-      fprintf (stderr,
-	       "trace (determine_table_index_name): table name '%s' index name '(NULL)'\n",
-	       sy->name);
-    }
-  else
-    {
-      fprintf (stderr,
-	       "trace (determine_table_index_name): table name '%s' index name '%s'\n",
-	       sy->name, rsy->name);
+      if (rsy == NULL)
+	{
+	  fprintf (stderr,
+		   "trace (determine_table_index_name): table name '%s' index name '(NULL)'\n",
+		   sy->name);
+	}
+      else
+	{
+	  fprintf (stderr,
+		   "trace (determine_table_index_name): table name '%s' index name '%s'\n",
+		   sy->name, rsy->name);
+	}
     }
 #endif
   return rsy;
@@ -5549,6 +5555,8 @@ define_field (int level, struct sym *sy)
 struct sym *
 alloc_filler (void)
 {
+  static int filler_num = 1;
+
   char s[15];
   struct sym *sy;
   sprintf (s, "FIL$%05d", filler_num++);

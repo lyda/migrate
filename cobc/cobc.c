@@ -40,6 +40,7 @@ int cob_verbose_flag = 0;
 
 int cob_trace_scanner = 0;
 int cob_trace_parser = 0;
+int cob_trace_codegen = 0;
 
 int cob_warning_count = 0;
 int cob_error_count = 0;
@@ -154,8 +155,10 @@ static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'v'},
   {"save-temps", no_argument, &save_temps_flag, 1},
+  {"ta", no_argument, 0, 'a'},
   {"ts", no_argument, &cob_trace_scanner, 1},
   {"tp", no_argument, &cob_trace_parser, 1},
+  {"tc", no_argument, &cob_trace_codegen, 1},
   {0, 0, 0, 0}
 };
 
@@ -191,8 +194,10 @@ print_usage ()
 #ifdef COB_DEBUG
   puts ("");
   puts ("Debug options:");
+  puts ("  -ta           Trace all");
   puts ("  -ts           Trace scanner");
   puts ("  -tp           Trace parser");
+  puts ("  -tc           Trace codegen");
 #endif
 }
 
@@ -245,6 +250,12 @@ process_command_line (int argc, char *argv[])
 	case 'D': cob_debug_flag = 1; break;
 	case 'T': tab_width = atoi (optarg); break;
 
+	case 'a':
+	  cob_trace_scanner = 1;
+	  cob_trace_parser = 1;
+	  cob_trace_codegen = 1;
+	  break;
+
 	default: print_usage (); exit (1);
 	}
     }
@@ -287,10 +298,18 @@ file_extension (const char *filename)
     return NULL;
 }
 
-static struct filename *
-process_filename (const char *source_filename)
+static void
+temp_name (char *buff, const char *ext)
 {
-  char basename[BUFSIZ];
+  strcpy (buff, "/tmp/fileXXXXXX");
+  close (mkstemp (buff));
+  strcat (buff, ext);
+}
+
+static struct filename *
+process_filename (const char *filename)
+{
+  char basename[FILENAME_MAX];
   const char *extension;
   struct filename *fn = malloc (sizeof (struct filename));
   fn->need_preprocess = 1;
@@ -298,11 +317,11 @@ process_filename (const char *source_filename)
   fn->need_assemble   = 1;
   fn->next = NULL;
 
-  file_basename (source_filename, basename);
-  extension = file_extension (source_filename);
+  file_basename (filename, basename);
+  extension = file_extension (filename);
 
   /* Set source filename */
-  strcpy (fn->source, source_filename);
+  strcpy (fn->source, filename);
 
   /* Set preprocess filename */
   if (strcmp (extension, "i") == 0
@@ -317,7 +336,7 @@ process_filename (const char *source_filename)
   else if (save_temps_flag)
     sprintf (fn->preprocess, "%s.i", basename);
   else
-    strcat (tmpnam (fn->preprocess), ".cob");
+    temp_name (fn->preprocess, ".cob");
 
   /* Set assembly filename */
   if (strcmp (extension, "o") == 0 || strcmp (extension, "s") == 0)
@@ -330,7 +349,7 @@ process_filename (const char *source_filename)
   else if (save_temps_flag || compile_level == stage_compile)
     sprintf (fn->assembly, "%s.s", basename);
   else
-    strcat (tmpnam (fn->assembly), ".s");
+    temp_name (fn->assembly, ".s");
 
   /* Set object filename */
   if (strcmp (extension, "o") == 0)
@@ -343,7 +362,7 @@ process_filename (const char *source_filename)
   else if (save_temps_flag || compile_level == stage_assemble)
     sprintf (fn->object, "%s.o", basename);
   else
-    strcat (tmpnam (fn->object), ".o");
+    temp_name (fn->object, ".o");
 
   /* Set module filename */
   if (output_filename && compile_level == stage_module)
@@ -351,7 +370,7 @@ process_filename (const char *source_filename)
   else if (save_temps_flag || compile_level == stage_module)
     sprintf (fn->module, "%s.so", basename);
   else
-    strcat (tmpnam (fn->module), ".so");
+    temp_name (fn->module, ".so");
 
   return fn;
 }

@@ -25,10 +25,9 @@
 %expect 533
 
 %{
-#define YYDEBUG		COB_DEBUG
-#define YYMAXDEPTH	1000
-
 #define yydebug		cob_trace_parser
+#define YYDEBUG		COB_DEBUG
+#define YYERROR_VERBOSE 1
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -599,15 +598,15 @@ report_description:
         | report_description report_item
         ;
 report_item:
-        integer opt_def_name {
-                        if ($2 == NULL) {
-                                $2 = alloc_filler();
-                                picix=piccnt=v_flag=z_flag=decimals=0;
-                                picture[picix]=0;
-                        }
-                        define_field($1,$2); }
+        integer opt_def_name
+        {
+	  define_field ($1, $2);
+	}
         report_clauses EOS
-                { update_report_field($2); curr_division = CDIV_DATA; }
+        {
+	  update_report_field ($2);
+	  curr_division = CDIV_DATA;
+	}
         ;
 report_clauses:
         /* nothing */
@@ -636,10 +635,7 @@ opt_of:
         ;
 opt_report_pic:
         /* nothing */
-        | PIC {
-                        curr_division = CDIV_PIC;
-         }
-        opt_is picture
+        | pictures
         ;
 opt_report_column:
         COLUMN opt_number integer
@@ -672,14 +668,14 @@ screen_section:
     | /* nothing */
     ;
 screen_item:
-    integer opt_def_name    {
-                        if ($2 == NULL) {
-                                $2 = alloc_filler();
-                                picix=piccnt=v_flag=z_flag=decimals=0;
-                                picture[picix]=0;
-                        }
-                        define_field($1,$2); }
-        screen_clauses EOS  { update_screen_field($2,$4); }
+    integer opt_def_name
+    {
+      define_field($1,$2);
+    }
+    screen_clauses EOS
+    {
+      update_screen_field($2,$4);
+    }
     ;
 screen_clauses:
     screen_clauses LINE
@@ -691,36 +687,44 @@ screen_clauses:
         opt_plus_minus
         integer                 { scr_set_column($1,$5,$4); $$=$1; }
     | screen_clauses
-                screen_attrib           { $1->attr |= $2; $$=$1; }
-        | screen_clauses FOREGROUNDCOLOR
-                integer                         { $1->foreground = $3; $$=$1; }
-        | screen_clauses BACKGROUNDCOLOR
-                integer                         { $1->background = $3; $$=$1; }
-        | screen_clauses
-                screen_source_destination
-        | screen_clauses
-                VALUE opt_is gliteral { curr_field->value = $4; $$=$1; }
-        | screen_clauses pictures
-        | /* nothing */         { $$ = alloc_scr_info(); }
+        screen_attrib           { $1->attr |= $2; $$=$1; }
+    | screen_clauses FOREGROUNDCOLOR
+        integer                 { $1->foreground = $3; $$=$1; }
+    | screen_clauses BACKGROUNDCOLOR
+        integer                 { $1->background = $3; $$=$1; }
+    | screen_clauses
+        screen_source_destination
+    | screen_clauses
+        VALUE opt_is gliteral   { curr_field->value = $4; $$=$1; }
+    | screen_clauses pictures
+    | /* nothing */             { $$ = alloc_scr_info(); }
     ;
 screen_source_destination:
-        USING                   { curr_division = CDIV_PROC; }
-                name_or_lit     {
-                        curr_division = CDIV_DATA;
-                        $<sival>0->from = $<sival>0->to = $3;
-                }
-        | FROM                  { curr_division = CDIV_PROC; }
-                name_or_lit
-                screen_to_name  {
-                        curr_division = CDIV_DATA;
-                        $<sival>0->from = $3; $<sival>0->to = $4;
-                }
-        | TO { curr_division = CDIV_PROC; }
-                name {
-                        curr_division = CDIV_DATA;
-                        $<sival>0->from = NULL; $<sival>0->to = $3;
-                }       
-        ;
+    USING                   { curr_division = CDIV_PROC; }
+    name_or_lit
+    {
+      curr_division = CDIV_DATA;
+      $<sival>0->from = $<sival>0->to = $3;
+    }
+    | FROM                  { curr_division = CDIV_PROC; }
+      name_or_lit
+      screen_to_name
+      {
+	curr_division = CDIV_DATA;
+	$<sival>0->from = $3;
+	$<sival>0->to = $4;
+      }
+    | TO
+      {
+	curr_division = CDIV_PROC;
+      }
+      name
+      {
+	curr_division = CDIV_DATA;
+	$<sival>0->from = NULL;
+	$<sival>0->to = $3;
+      }
+    ;
 screen_to_name:
         /* nothing */ { $$=NULL; }
         | TO name { $$ = $2; }
@@ -732,30 +736,32 @@ screen_attribs:
 screen_attrib:
         BLANK SCREEN                    { $$ = SCR_BLANK_SCREEN; }
         | BLANK LINE                    { $$ = SCR_BLANK_LINE; }
-        | BELL                                  { $$ = SCR_BELL; }
+        | BELL                          { $$ = SCR_BELL; }
         | sign_clause                   { $$ = $1; }
-        | FULL                                  { $$ = SCR_FULL; }
-        | REQUIRED                              { $$ = SCR_REQUIRED; }
-        | SECURE                                { $$ = SCR_SECURE; }
-        | AUTO                                  { $$ = SCR_AUTO; }
+        | FULL                          { $$ = SCR_FULL; }
+        | REQUIRED                      { $$ = SCR_REQUIRED; }
+        | SECURE                        { $$ = SCR_SECURE; }
+        | AUTO                          { $$ = SCR_AUTO; }
         | JUST RIGHT                    { $$ = SCR_JUST_RIGHT; }
-        | JUST LEFT                             { $$ = SCR_JUST_LEFT; }
-        | BLINK                                 { $$ = SCR_BLINK; }
+        | JUST LEFT                     { $$ = SCR_JUST_LEFT; }
+        | BLINK                         { $$ = SCR_BLINK; }
         | REVERSEVIDEO                  { $$ = SCR_REVERSE_VIDEO; }
-        | UNDERLINE                             { $$ = SCR_UNDERLINE; }
-        | LOWLIGHT                              { $$ = SCR_LOWLIGHT; }
-        | HIGHLIGHT                             { $$ = SCR_HIGHLIGHT; }
-        | BLANK opt_when
-                ZERONUM                         { $$ = SCR_BLANK_WHEN_ZERO; }
-        | NOECHO                                { $$ = SCR_NOECHO; }
-        | UPDATE                                { $$ = SCR_UPDATE; }
+        | UNDERLINE                     { $$ = SCR_UNDERLINE; }
+        | LOWLIGHT                      { $$ = SCR_LOWLIGHT; }
+        | HIGHLIGHT                     { $$ = SCR_HIGHLIGHT; }
+        | BLANK opt_when ZERONUM        { $$ = SCR_BLANK_WHEN_ZERO; }
+        | NOECHO                        { $$ = SCR_NOECHO; }
+        | UPDATE                        { $$ = SCR_UPDATE; }
         ;
 sign_clause:
-        SIGN opt_is LEADING
-                opt_separate            { $$ = SCR_SIGN_LEADING |
-                                                                   SCR_SIGN_PRESENT | $4; }
-        | SIGN opt_is TRAILING
-                opt_separate            { $$ = SCR_SIGN_PRESENT | $4; }
+        SIGN opt_is LEADING opt_separate
+        {
+	  $$ = SCR_SIGN_LEADING | SCR_SIGN_PRESENT | $4;
+	}
+        | SIGN opt_is TRAILING opt_separate
+        {
+	  $$ = SCR_SIGN_PRESENT | $4;
+	}
         ;
 opt_separate:
         SEPARATE opt_character  { $$ = SCR_SIGN_SEPARATE; }
@@ -775,15 +781,14 @@ opt_number_is:
         | /* nothing */
         ;
 file_section:
-    file_section FD         { curr_division = CDIV_FD; }
-        STRING              { curr_division = CDIV_DATA; }
-        file_attrib EOS
-            {
-                curr_field=NULL;
-                if ($4->filenamevar == NULL) {
-                   yyerror("External file name not defined for file %s", $4->name);
-                }
-            }
+    file_section FD     { curr_division = CDIV_FD; }
+    STRING              { curr_division = CDIV_DATA; }
+    file_attrib EOS
+    {
+      curr_field=NULL;
+      if ($4->filenamevar == NULL)
+	yyerror("External file name not defined for file %s", $4->name);
+    }
     file_description        {
                 close_fields();
                 alloc_file_entry($4);
@@ -804,42 +809,44 @@ file_section:
     | /* nothing */
     ;
 file_description:
-        field_description       { $$=$1; }
-    | file_description field_description {
-                                if (($2 != NULL) && ($2->level == 1)) {
-                                        /* multiple 01 records (for a file descriptor) */
-                                        $2->redefines=$1;
-                                        $$=$2;
-                                }
-                                else
-                                        $$=$1;
-                        }
+      field_description       { $$=$1; }
+    | file_description field_description
+      {
+	if (($2 != NULL) && ($2->level == 1)) {
+	  /* multiple 01 records (for a file descriptor) */
+	  $2->redefines=$1;
+	  $$=$2;
+	}
+	else
+	  $$=$1;
+      }
     ;
-field_description:   integer opt_def_name   {
-                        if ($2==NULL) {
-                         define_field($1,alloc_filler());
-                        }
-                        else {
-                                define_field($1,$2);
-                        }
-                }
-        redefines_clause
-        data_clauses EOS    { $$=$2; update_field(); }
+field_description:
+    integer opt_def_name
+    {
+      define_field($1,$2);
+    }
+    redefines_clause
+    data_clauses EOS
+    {
+      $$ = $2;
+      update_field();
+    }
     ;
 
 redefines_clause:
     REDEFINES
-                { curr_division = CDIV_PROC; /* parsing variable */ }
-                redefines_var
-                {       
-                        curr_division = CDIV_DATA;
-            if ($<sval>-1 != NULL) { 
-                                $<sval>-1->redefines = lookup_for_redefines($3);
-                }
-                        else {
-                                yyerror("cannot redefine an unnamed field");
-                        }
-                }
+    {
+      curr_division = CDIV_PROC; /* parsing variable */
+    }
+    redefines_var
+    {       
+      curr_division = CDIV_DATA;
+      if ($<sval>-1 != NULL)
+	$<sval>-1->redefines = lookup_for_redefines($3);
+      else
+	yyerror("cannot redefine an unnamed field");
+    }
     |  /* nothing */
     ;
 redefines_var:
@@ -851,16 +858,17 @@ data_clauses:
     /* nothing */
     | data_clauses data_clause
     ;
+
 data_clause:
     array_options
     | pictures
     | usage_option
     | sign_clause       { set_sign_flags($1); }
-        | value_option
+    | value_option
     | SYNC sync_options {curr_field->flags.sync=1;}
     | JUST RIGHT {curr_field->flags.just_r=1;}
     | EXTERNAL {save_named_sect(curr_field);}
-        | BLANK opt_when ZERONUM { curr_field->flags.blank=1; }
+    | BLANK opt_when ZERONUM { curr_field->flags.blank=1; }
     ;
 
 sync_options:
@@ -870,17 +878,22 @@ sync_options:
     ;
 
 array_options:  OCCURS integer opt_TIMES
-        { curr_field->times = $2; curr_field->occurs_flg++; }
-            opt_indexed_by
+       {
+	 curr_field->times = $2;
+	 curr_field->occurs_flg++;
+       }
+       opt_indexed_by
      | OCCURS integer TO integer opt_TIMES DEPENDING opt_on
-                { curr_division = CDIV_PROC; /* needed for parsing variable */ }
-                gname
-                {       
-                        curr_division = CDIV_DATA;
-                        create_occurs_info($2,$4,$9);
-                }
-                opt_indexed_by
-         ;
+       {
+	 curr_division = CDIV_PROC; /* needed for parsing variable */
+       }
+       gname
+       {       
+	 curr_division = CDIV_DATA;
+	 create_occurs_info($2,$4,$9);
+       }
+       opt_indexed_by
+     ;
 
 opt_key_is:
       DIRECTION opt_key opt_is STRING
@@ -2366,10 +2379,6 @@ opt_line_pos:
       push_expr($4);
       gen_gotoxy_expr();
      }
-/* USE with yacc193, otherwise it will overflow the table in YACC (32K) 
-   'yacc: f - maximum table size exceeded'
-   This is an internal limitation (short) in BYACC.
-*/
     | LINE expr COLUMN expr 
      {
       screen_io_enable++;
@@ -2884,24 +2893,24 @@ delimited_by:
 
 expr:
     gname   { $$ = $1; }
-        | expr '*' expr { $$ =
-                (struct sym *)create_expr('*',(struct expr *)$1,(struct expr *)$3); }
+    | expr '*' expr { $$ =
+        (struct sym *)create_expr('*',(struct expr *)$1,(struct expr *)$3); }
     | expr '/' expr { $$ =
-                (struct sym *)create_expr('/',(struct expr *)$1,(struct expr *)$3); }
+        (struct sym *)create_expr('/',(struct expr *)$1,(struct expr *)$3); }
     | expr '+' expr { $$ =
-                (struct sym *)create_expr('+',(struct expr *)$1,(struct expr *)$3); }
+        (struct sym *)create_expr('+',(struct expr *)$1,(struct expr *)$3); }
     | expr '-' expr { $$ =
-                (struct sym *)create_expr('-',(struct expr *)$1,(struct expr *)$3); }
-        | expr POW_OP expr { $$ =
-                (struct sym *)create_expr('^',(struct expr *)$1,(struct expr *)$3); }
-        | '(' expr ')'  { $$=$2; }
+        (struct sym *)create_expr('-',(struct expr *)$1,(struct expr *)$3); }
+    | expr POW_OP expr { $$ =
+        (struct sym *)create_expr('^',(struct expr *)$1,(struct expr *)$3); }
+    | '(' expr ')'  { $$=$2; }
     ;
 /* opt_expr will be NULL or a (struct sym *) pointer if the expression
-        was given, otherwise it will be valued -1 */
+   was given, otherwise it will be valued -1 */
 opt_expr:
-        /* nothing */   { $$ = (struct sym *)-1; }
-        | expr                  { $$ = $1; }
-        ;
+    /* nothing */   { $$ = (struct sym *)-1; }
+    | expr          { $$ = $1; }
+    ;
 using_options:
     /* nothing */   { $$=0; }
     | USING     { $<ival>$=0; /* to save how many parameters */ }
@@ -2916,8 +2925,8 @@ returning_options:
 dummy: /* nothing */ ;
 using_parameters:   /* defined at procedure division */
     /* nothing */       { $$=0; }
-    | USING         { $<ival>$=USING; }
-        var_list    { $$=1; }
+    | USING     { $<ival>$=USING; }
+      var_list  { $$=1; }
     ;
 var_list:
     var_list opt_sep gname
@@ -3029,7 +3038,7 @@ condition:
                         $$.oper=$2;
                 }
     | NOT  condition    { gen_not(); $$=$2; }
-        | condition AND     { $<dval>$=gen_andstart(); }
+    | condition AND     { $<dval>$=gen_andstart(); }
                 implied_op_condition { gen_dstlabel($<dval>3); $$=$4; }
     | condition OR      { $<dval>$=gen_orstart(); }
         implied_op_condition { gen_dstlabel($<dval>3); $$=$4; }
@@ -3045,135 +3054,90 @@ condition:
 implied_op_condition:
         condition               { $$ = $1; }
         | cond_op expr  {
-                                        if ($<condval>-2.sy == NULL) {
-                                                yyerror("invalid implied condition");
-                                        }
-                                        else {
-                                                gen_compare($<condval>-2.sy,$1,$2);
-                                        }
-                                        $$.sy = $<condval>-2.sy;
-                                        $$.oper = $1;
-                        }
+	  if ($<condval>-2.sy == NULL) {
+	    yyerror("invalid implied condition");
+	  } else {
+	    gen_compare($<condval>-2.sy,$1,$2);
+	  }
+	  $$.sy = $<condval>-2.sy;
+	  $$.oper = $1;
+	}
         | expr          { /* implied both the first operand and the operator */
-                                        if (($<condval>-2.sy == NULL)||
-                                                ($<condval>-2.oper & COND_UNARY)) {
-                                                        yyerror("invalid implied condition");
-                                        }
-                                        else {
-                                                gen_compare($<condval>-2.sy,$<condval>-2.oper,$1);
-                                        }
-                                        $$.sy = $<condval>-2.sy;
-                                        $$.oper = $<condval>-2.oper;
-                                }
+	  if (($<condval>-2.sy == NULL)||
+	      ($<condval>-2.oper & COND_UNARY)) {
+	    yyerror("invalid implied condition");
+	  } else {
+	    gen_compare($<condval>-2.sy,$<condval>-2.oper,$1);
+	  }
+	  $$.sy = $<condval>-2.sy;
+	  $$.oper = $<condval>-2.oper;
+	}
         ;
 sign_condition:
-        POSITIVE                { $$=GREATER; }
-        | NEGATIVE              { $$=LESS; }
+    POSITIVE        { $$=GREATER; }
+    | NEGATIVE      { $$=LESS; }
     | ZERONUM       { $$=EQUAL; }
-        ;
+    ;
 class_condition:
-        NUMERIC                         { $$=CLASS_NUMERIC; }
-        | ALPHABETICTOK         { $$=CLASS_ALPHABETIC; }
-        | ALPHABETICLOWER       { $$=CLASS_ALPHABETICLOWER; }
-        | ALPHABETICUPPER       { $$=CLASS_ALPHABETICUPPER; }
-        ;       
+    NUMERIC                     { $$=CLASS_NUMERIC; }
+    | ALPHABETICTOK             { $$=CLASS_ALPHABETIC; }
+    | ALPHABETICLOWER           { $$=CLASS_ALPHABETICLOWER; }
+    | ALPHABETICUPPER           { $$=CLASS_ALPHABETICUPPER; }
+    ;       
 extended_cond_op:
-    IS ext_cond          { $$ = $2; }
-    | IS NOT ext_cond    { $$ = $3 ^ 7; }
-    | IS ext_cond OR ext_cond { $$ = $2 | $4; }
+    IS ext_cond                 { $$ = $2; }
+    | IS NOT ext_cond           { $$ = $3 ^ 7; }
+    | IS ext_cond OR ext_cond   { $$ = $2 | $4; }
     | ext_cond                  { $$ = $1; }
-    | NOT opt_is ext_cond   { $$ = $3 ^ 7; }
+    | NOT opt_is ext_cond       { $$ = $3 ^ 7; }
     | ext_cond OR ext_cond      { $$ = $1 | $3; }
     ;
 ext_cond:
-        conditional                             { $$ = $1; }
-        | class_condition               { $$ = $1 | COND_UNARY | COND_CLASS; }
-        | sign_condition                { $$ = $1 | COND_UNARY; }
-        ;
+    conditional                 { $$ = $1; }
+    | class_condition           { $$ = $1 | COND_UNARY | COND_CLASS; }
+    | sign_condition            { $$ = $1 | COND_UNARY; }
+    ;
 cond_op:
-        conditional          { $$ = $1; }
-    | NOT conditional    { $$ = $2 ^ 7; }
-    | conditional OR conditional
-                        { $$ = $1 | $3; }
+      conditional               { $$ = $1; }
+    | NOT conditional           { $$ = $2 ^ 7; }
+    | conditional OR conditional { $$ = $1 | $3; }
     ;
 conditional:
-                CONDITIONAL     opt_than_to     { $$ = $1; }
-        ;
-opt_sep:
-    /* nothing */
-    | ','
+    CONDITIONAL opt_than_to     { $$ = $1; }
     ;
+opt_sep: | ',' ;
 /* this token doesn't really exists, but forces look ahead 
    to keep line numbers synchronized with our position
    because we need to generate correct debug stabs */
-opt_dummy:
-    /* nothing */
-    | TOKDUMMY
-    ;
-opt_EOS:
-    /* nothing */
-    | EOS
-    ;
+opt_dummy: | TOKDUMMY ;
+opt_EOS: | EOS ;
 opt_not:
     /* nothing */ { $$=0; }
     | NOT { $$=1; }
     ;
-opt_then:
-    /* nothing */
-    | THEN
-    ;
-opt_key:
-        /* nothing */
-        | KEY
-        ;
-opt_line:
-    /* nothing */
-    | LINE
-    ;
-opt_advancing:
-    /* nothing */
-    | ADVANCING
-    ;
+opt_then: | THEN ;
+opt_key: | KEY ;
+opt_line: | LINE ;
+opt_advancing: | ADVANCING ;
 opt_than_to:
     /* nothing */
     | TO { }
     | THAN { }
     ;
-opt_record:
-    /* nothing */
-    | RECORD
-    ;
-opt_at: /* nothing */
-    | AT
-    ;
-opt_in: /* nothing */
-    | IN
-    ;
-in_of:
-    IN
-    | OF
-    ;
-opt_by: /* nothing */
-    | BY
-    ;
-opt_upon: /* nothing */
-    | UPON
-    ;
-opt_with:
-    /* nothing */
-    | WITH
-    ;
-opt_on:
-    /* nothing */
-    | ONTOK
-    ;
+opt_record: | RECORD ;
+opt_at: | AT ;
+opt_in: | IN ;
+in_of: IN | OF ;
+opt_by: | BY ;
+opt_upon: | UPON ;
+opt_with: | WITH ;
+opt_on: | ONTOK ;
 opt_gname:
-    gname        { $$ = $1; }
-    | /* nothing */ { $$ = NULL; }
+    /* nothing */ { $$ = NULL; }
+    | gname       { $$ = $1; }
     ;
 opt_to: /* nothing */
     | TO { }
-    ;
 gname:  name    {       
                   /*if (!is_variable($1)) {
                                 yyerror("The symbol \"%s\" is not an allowed argument here", $1->name);
@@ -3235,7 +3199,7 @@ signed_nliteral:
         ;
 opt_def_name:
     def_name        { $$ = $1; }
-    | /* nothing */ { $$ = NULL; }
+    | /* nothing */ { $$ = alloc_filler(); }
     ;
 def_name:
     STRING  { if ($1->defined)
@@ -3259,47 +3223,54 @@ filename:
     | STRING {$$=$1; }
     ;
 cond_name:
-    VARCOND '(' {  curr_division = CDIV_SUBSCRIPTS; }
-        subscripts  ')' {
-                  curr_division = CDIV_PROC;
-                  $$ = (struct sym *)create_subscripted_var( $1, $4 );
-                    /*check_subscripts($$);*/
-            }
+    VARCOND '('
+    {
+      curr_division = CDIV_SUBSCRIPTS;
+    }
+    subscripts  ')'
+    {
+      curr_division = CDIV_PROC;
+      $$ = (struct sym *)create_subscripted_var( $1, $4 );
+      /*check_subscripts($$);*/
+    }
     | VARCOND  { $<sval>$=$1; }
     ;
 name:
-    variable '(' gname ':' opt_gname ')' {
-     $$=(struct sym *)create_refmoded_var($1, $3, $5); check_refmods((struct sym *)$$);
-     }
+    variable '(' gname ':' opt_gname ')'
+    {
+      $$ = (struct sym *) create_refmoded_var($1, $3, $5);
+      check_refmods((struct sym *)$$);
+    }
     | variable
     ;
 variable:
-        qualified_var {
-                        $$=$1;
-                        if (need_subscripts) {
-                                yyerror("this variable \'%s\' must be subscripted or indexed", $1->name);
-                                need_subscripts=0;
-                        }
-                }
-        | qualified_var LPAR { curr_division = CDIV_SUBSCRIPTS; }
-                subscripts ')' {
-                    curr_division = CDIV_PROC;
-                    $$ = (struct sym *)create_subscripted_var( $1, $4 );
-                      check_subscripts($$);
-            }
-        ;
+    qualified_var {
+      $$=$1;
+      if (need_subscripts) {
+	yyerror("this variable \'%s\' must be subscripted or indexed", $1->name);
+	need_subscripts=0;
+      }
+    }
+    | qualified_var LPAR { curr_division = CDIV_SUBSCRIPTS; }
+      subscripts ')' {
+      curr_division = CDIV_PROC;
+      $$ = (struct sym *)create_subscripted_var( $1, $4 );
+      check_subscripts($$);
+      }
+    ;
 qualified_var:
-        unqualified_var         { $$=$1; }
-        | qualified_var in_of unqualified_var { $$=lookup_variable($1,$3); }
-        ;
+    unqualified_var         { $$=$1; }
+    | qualified_var in_of unqualified_var { $$=lookup_variable($1,$3); }
+    ;
 unqualified_var:
-        VARIABLE        { $$=$1; }
-        | SUBSCVAR      { need_subscripts=1; $$=$1; }
-        ;
+    VARIABLE        { $$=$1; }
+    | SUBSCVAR      { need_subscripts=1; $$=$1; }
+    ;
 subscripts:
-    subscript   { $$ = $1; }
+    subscript           { $$ = $1; }
     | subscripts opt_sep subscript {
-        $$ = add_subscript( $1, $3 ); }
+      $$ = add_subscript($1, $3);
+    }
     ;
 subscript:
     gname                   { $$ = create_subscript( $1 ); }
@@ -3307,47 +3278,49 @@ subscript:
     | subscript '-' gname   { $$ = add_subscript_item( $1, '-', $3 ); }
     ;
 integer:
-    signed_nliteral    {
-              char *s;
-              $$=0;
-              s=$1->name;
-              while (isdigit(*s))
-                $$ = $$ * 10 + *s++ - '0';
-              if (*s)
-                yyerror("only integers accepted here");
-            }
+    signed_nliteral {
+      char *s;
+      $$=0;
+      s=$1->name;
+      while (isdigit(*s))
+	$$ = $$ * 10 + *s++ - '0';
+      if (*s)
+	yyerror("only integers accepted here");
+    }
     ;
 label:
-    LABELSTR in_of LABELSTR {
-            struct sym *lab=$1;
-                        if (lab->defined == 0) {
-                                lab->defined = 2;
-                                lab->parent = $3;
-                        }
-                        else {
-                                if ((lab=lookup_label($1,$3))==NULL) { 
-                                        lab = install($1->name,SYTB_LAB,2);
-                                        lab->defined=2;
-                                        lab->parent = $3;
-                                }
-                        }
-            $$ = lab;
-        }
-    | LABELSTR { 
-            struct sym *lab=$1;
-                        if (lab->defined == 0) {
-                                lab->defined = 2;
-                                lab->parent = curr_section;
-                        }
-                        else {
-                                if ((lab=lookup_label(lab,curr_section))==NULL) { 
-                                        lab = install($1->name,SYTB_LAB,2);
-                                        lab->defined=2;
-                                        lab->parent = curr_section;
-                                }
-                        }
-            $$ = lab;
-                }
+    LABELSTR in_of LABELSTR
+    {
+      struct sym *lab=$1;
+      if (lab->defined == 0)
+	{
+	  lab->defined = 2;
+	  lab->parent = $3;
+	}
+      else if ((lab=lookup_label($1,$3))==NULL)
+	{
+	  lab = install($1->name,SYTB_LAB,2);
+	  lab->defined=2;
+	  lab->parent = $3;
+	}
+      $$ = lab;
+    }
+    | LABELSTR
+    {
+      struct sym *lab=$1;
+      if (lab->defined == 0)
+	{
+	  lab->defined = 2;
+	  lab->parent = curr_section;
+	}
+      else if ((lab=lookup_label(lab,curr_section))==NULL)
+	{
+	  lab = install($1->name,SYTB_LAB,2);
+	  lab->defined=2;
+	  lab->parent = curr_section;
+	}
+      $$ = lab;
+    }
     ;
 anystring:
     STRING
