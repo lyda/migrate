@@ -163,7 +163,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <tree> set_variable,set_variable_or_nlit,set_target,opt_add_to
 %type <tree> sort_keys,opt_perform_thru,procedure_section
 %type <tree> var_or_nliteral,opt_read_key,file_name,string_with_pointer
-%type <tree> variable,sort_range,perform_options,name_or_lit,delimited_by
+%type <tree> variable,sort_range,name_or_lit,delimited_by
 %type <tree> variable_indexed,search_opt_varying,opt_key_is
 %type <tree> from_rec_varying,to_rec_varying
 %type <tree> literal,gliteral,without_all_literal,all_literal,special_literal
@@ -1168,7 +1168,7 @@ add_statement:
   ADD add_body opt_on_size_error end_add
 ;
 add_body:
-  number_list TO var_list_name 
+  number_list TO var_list_name
   {
     gen_add_to ($1, $3);
   }
@@ -1373,7 +1373,7 @@ divide_body:
 | number INTO number GIVING var_list_name
   {
     gen_divide_giving ($1, $3, $5);
-  } 
+  }
 | number BY number GIVING var_list_name
   {
     gen_divide_giving ($3, $1, $5);
@@ -1700,286 +1700,279 @@ perform_statement:
   PERFORM perform_options
   ;
 perform_options:
-      conditional_statement_list END_PERFORM { $$ = NULL; }
-    | gname TIMES
+  conditional_statement_list END_PERFORM
+| gname TIMES
+  {
+    gen_push_int($1);
+    $<ival>$=gen_marklabel();
+    gen_perform_test_counter($<ival>$);
+  }
+  conditional_statement_list
+  {
+    gen_perform_times($<ival>3);
+  }
+  END_PERFORM
+| opt_with_test UNTIL
+  {
+    if ($1 == 2)
+      lbstart = gen_passlabel();
+    $<ival>$ = gen_marklabel();
+  }
+  condition
+  {
+    $<ival>$=gen_orstart();
+    if ($1 == 2)
       {
-        gen_push_int($1);
-        $<ival>$=gen_marklabel();
-        gen_perform_test_counter($<ival>$);
+	lbend=gen_passlabel();
+	gen_dstlabel(lbstart);
       }
-      conditional_statement_list
+  }
+  conditional_statement_list
+  {
+    if ($1 == 2)
       {
-        gen_perform_times($<ival>3);
+	gen_jmplabel($<ival>3);
+	gen_dstlabel(lbend);
+	gen_jmplabel(lbstart);
+	gen_dstlabel($<ival>5);
       }
-      END_PERFORM { $$ = NULL; }
-    | opt_with_test UNTIL
+    else
       {
-        if ($1 == 2) {
-           lbstart=gen_passlabel();
-        }
-        $<ival>$=gen_marklabel();
+	gen_jmplabel($<ival>3);
+	gen_dstlabel($<ival>5);
       }
-      condition
-      {
-        $<ival>$=gen_orstart();
-        if ($1 == 2) {
-           lbend=gen_passlabel();
-           gen_dstlabel(lbstart);
-        }
-      }
-      conditional_statement_list
-      {
-        if ($1 == 2) {
-           gen_jmplabel($<ival>3);
-           gen_dstlabel(lbend);
-           gen_jmplabel(lbstart);
-           gen_dstlabel($<ival>5);
-        }
-        else {
-           gen_jmplabel($<ival>3);
-           gen_dstlabel($<ival>5);
-        }
-      }
-      END_PERFORM { $$ = NULL; }
-    | opt_with_test VARYING name FROM gname opt_by gname UNTIL
-      {
-        gen_move($5,$3);
-        /* BEFORE=1 AFTER=2 */
-        if ($1 == 2) {
-           lbstart=gen_passlabel();
-        }
-        $<ival>$=gen_marklabel();
-      }
-      condition
-      {
-        $<ival>$=gen_orstart();
-        /* BEFORE=1 AFTER=2 */
-        if ($1 == 2) {
-           gen_add($7,$3,0);
-           gen_dstlabel(lbstart);
-        }
-      }
-      opt_perform_after
-      conditional_statement_list
-      {
-        int i;
-        struct perf_info *rf;
-        /*struct perform_info *rpi;*/
-        char *vn;
+  }
+  END_PERFORM
+| opt_with_test VARYING name FROM gname opt_by gname UNTIL
+  {
+    gen_move($5,$3);
+    /* BEFORE=1 AFTER=2 */
+    if ($1 == 2)
+      lbstart=gen_passlabel();
+    $<ival>$=gen_marklabel();
+  }
+  condition
+  {
+    $<ival>$=gen_orstart();
+    /* BEFORE=1 AFTER=2 */
+    if ($1 == 2) {
+      gen_add($7,$3,0);
+      gen_dstlabel(lbstart);
+    }
+  }
+  opt_perform_after
+  conditional_statement_list
+  {
+    int i;
+    struct perf_info *rf;
+    /*struct perform_info *rpi;*/
+    char *vn;
 
-        /* Check for duplicate varaibles in VARYING/AFTER */
-        if ($12 != NULL) {
-           if ((vn = check_perform_variables($3, $12)) != NULL) {
-              yyerror("Duplicate variable '%s' in VARYING/AFTER clause", vn);
-           }
-        }
+    /* Check for duplicate varaibles in VARYING/AFTER */
+    if ($12 != NULL) {
+      if ((vn = check_perform_variables($3, $12)) != NULL) {
+	yyerror("Duplicate variable '%s' in VARYING/AFTER clause", vn);
+      }
+    }
 
-        if ($1 == 2) {
-           if ($12 != NULL) {
-              for (i=3; i>=0; i--) {
-                 rf = $12->pf[i];
-                 if (rf != NULL) {
-                    gen_jmplabel(rf->ljmp);
-                    gen_dstlabel(rf->lend);
-                 }
-              }
-           }
-           gen_jmplabel($<ival>9);
-           gen_dstlabel($<ival>11);
-        }
-        else {
-           if ($12 != NULL) {
-              for (i=3; i>=0; i--) {
-                 rf = $12->pf[i];
-                 if (rf != NULL) {
-                    gen_add(rf->pname1, rf->pname2, 0);
-                    gen_jmplabel(rf->ljmp);
-                    gen_dstlabel(rf->lend);
-                 }
-              }
-           }
-           gen_add($7,$3,0);
-           gen_jmplabel($<ival>9);
-           gen_dstlabel($<ival>11);
-        }
+    if ($1 == 2) {
+      if ($12 != NULL) {
+	for (i=3; i>=0; i--) {
+	  rf = $12->pf[i];
+	  if (rf != NULL) {
+	    gen_jmplabel(rf->ljmp);
+	    gen_dstlabel(rf->lend);
+	  }
+	}
       }
-      END_PERFORM { $$ = NULL; }
-    | label opt_perform_thru
-      {
-        gen_perform_thru($1,$2);
-        $$ = NULL;
+      gen_jmplabel($<ival>9);
+      gen_dstlabel($<ival>11);
+    }
+    else {
+      if ($12 != NULL) {
+	for (i=3; i>=0; i--) {
+	  rf = $12->pf[i];
+	  if (rf != NULL) {
+	    gen_add(rf->pname1, rf->pname2, 0);
+	    gen_jmplabel(rf->ljmp);
+	    gen_dstlabel(rf->lend);
+	  }
+	}
       }
-    | label opt_perform_thru opt_with_test UNTIL
-      {
-        $<ival>$=gen_marklabel();
-        /* BEFORE=1 AFTER=2 */
-        if ($3 == 2) {
-        gen_perform_thru($1,$2);
-        }
-      }
-      condition
-      {
-        unsigned long lbl;
-        lbl=gen_orstart();
-        /* BEFORE=1 AFTER=2 */
-        if ($3 == 1) {
-        gen_perform_thru($1,$2);
-        }
-        gen_jmplabel($<ival>5);
-        gen_dstlabel(lbl);
-      }
-    | label opt_perform_thru gname TIMES
-      {
-        unsigned long lbl;
-        gen_push_int($3);
-        lbl = gen_marklabel();
-        gen_perform_test_counter(lbl);
-        gen_perform_thru($1,$2);
-        gen_perform_times(lbl);
-      }
-    | label opt_perform_thru opt_with_test VARYING name
-      FROM gname opt_by gname UNTIL
-      {
-        gen_move($7,$5);
-        if ($3 == 2) {
-           lbstart=gen_passlabel();
-        }
-        $<ival>$ = gen_marklabel();
-      }
-      condition
-      {
-        $<ival>$ = gen_orstart();
-        /* BEFORE=1 AFTER=2 */
-        if ($3 == 2) {
-           gen_add($9,$5, 0);
-           gen_dstlabel(lbstart);
-        }
-      }
-      opt_perform_after
-      {
-        int i;
-        struct perf_info *rf;
-        /*struct perform_info *rpi;*/
-        char *vn = NULL;
-
-        /* Check for duplicate varaibles in VARYING/AFTER */
-        if ($14 != NULL) {
-           if ((vn = check_perform_variables($5, $14)) != NULL) {
-              yyerror("Duplicate variable '%s' in VARYING/AFTER clause", vn);
-           }
-        }
+      gen_add($7,$3,0);
+      gen_jmplabel($<ival>9);
+      gen_dstlabel($<ival>11);
+    }
+  }
+  END_PERFORM
+| label opt_perform_thru
+  {
     gen_perform_thru($1,$2);
-        /* BEFORE=1 AFTER=2 */
-        if ($3 == 2) {
-           if ($14 != NULL) {
-              for (i=3; i>=0; i--) {
-                 rf = $14->pf[i];
-                 if (rf != NULL) {
-                    gen_jmplabel(rf->ljmp);
-                    gen_dstlabel(rf->lend);
-                 }
-              }
-           }
-           gen_jmplabel($<ival>11);
-           gen_dstlabel($<ival>13);
-        }
-        else {
-           if ($14 != NULL) {
-              for (i=3; i>=0; i--) {
-                 rf = $14->pf[i];
-                 if (rf != NULL) {
-                    gen_add(rf->pname1, rf->pname2, 0);
-                    gen_jmplabel(rf->ljmp);
-                    gen_dstlabel(rf->lend);
-                 }
-              }
-           }
-           gen_add($9,$5,0);
-           gen_jmplabel($<ival>11);
-           gen_dstlabel($<ival>13);
-        }
-        $$ = NULL;
-      }
-    ;
+  }
+| label opt_perform_thru opt_with_test UNTIL
+  {
+    $<ival>$=gen_marklabel();
+    /* BEFORE=1 AFTER=2 */
+    if ($3 == 2) {
+      gen_perform_thru($1,$2);
+    }
+  }
+  condition
+  {
+    unsigned long lbl;
+    lbl=gen_orstart();
+    /* BEFORE=1 AFTER=2 */
+    if ($3 == 1) {
+      gen_perform_thru($1,$2);
+    }
+    gen_jmplabel($<ival>5);
+    gen_dstlabel(lbl);
+  }
+| label opt_perform_thru gname TIMES
+  {
+    unsigned long lbl;
+    gen_push_int($3);
+    lbl = gen_marklabel();
+    gen_perform_test_counter(lbl);
+    gen_perform_thru($1,$2);
+    gen_perform_times(lbl);
+  }
+| label opt_perform_thru opt_with_test VARYING name
+  FROM gname opt_by gname UNTIL
+  {
+    gen_move($7,$5);
+    if ($3 == 2)
+      lbstart=gen_passlabel();
+    $<ival>$ = gen_marklabel();
+  }
+  condition
+  {
+    $<ival>$ = gen_orstart();
+    /* BEFORE=1 AFTER=2 */
+    if ($3 == 2) {
+      gen_add($9,$5, 0);
+      gen_dstlabel(lbstart);
+    }
+  }
+  opt_perform_after
+  {
+    int i;
+    struct perf_info *rf;
+    /*struct perform_info *rpi;*/
+    char *vn = NULL;
 
+    /* Check for duplicate varaibles in VARYING/AFTER */
+    if ($14 != NULL) {
+      if ((vn = check_perform_variables($5, $14)) != NULL) {
+	yyerror("Duplicate variable '%s' in VARYING/AFTER clause", vn);
+      }
+    }
+    gen_perform_thru($1,$2);
+    /* BEFORE=1 AFTER=2 */
+    if ($3 == 2) {
+      if ($14 != NULL) {
+	for (i=3; i>=0; i--) {
+	  rf = $14->pf[i];
+	  if (rf != NULL) {
+	    gen_jmplabel(rf->ljmp);
+	    gen_dstlabel(rf->lend);
+	  }
+	}
+      }
+      gen_jmplabel($<ival>11);
+      gen_dstlabel($<ival>13);
+    }
+    else {
+      if ($14 != NULL) {
+	for (i=3; i>=0; i--) {
+	  rf = $14->pf[i];
+	  if (rf != NULL) {
+	    gen_add(rf->pname1, rf->pname2, 0);
+	    gen_jmplabel(rf->ljmp);
+	    gen_dstlabel(rf->lend);
+	  }
+	}
+      }
+      gen_add($9,$5,0);
+      gen_jmplabel($<ival>11);
+      gen_dstlabel($<ival>13);
+    }
+  }
+;
 opt_perform_thru:
-      /* nothing */ { $$ = NULL; }
-    | THRU label { $$ = $2;}
-    ;
-
-opt_with_test: { $<ival>$=1; perform_after_sw=1; }
-    | opt_with TEST before_after
-      {
-       $$=$3;
-       perform_after_sw=$3;
-      }
-    ;
-
-opt_perform_after:   /* nothing */ { $$=NULL; }
-    | AFTER perform_after
-     {
-      $<pfvals>$=create_perform_info();
-      $<pfvals>$->pf[0] = $2;
-      $$=$<pfvals>$;
-     }
-    | AFTER perform_after AFTER perform_after
-     {
-      $<pfvals>$=create_perform_info();
-      $<pfvals>$->pf[0] = $2;
-      $<pfvals>$->pf[1] = $4;
-      $$=$<pfvals>$;
-     }
-    | AFTER perform_after AFTER perform_after
-      AFTER perform_after
-     {
-      $<pfvals>$=create_perform_info();
-      $<pfvals>$->pf[0] = $2;
-      $<pfvals>$->pf[1] = $4;
-      $<pfvals>$->pf[2] = $6;
-      $$=$<pfvals>$;
-     }
-    | AFTER perform_after AFTER perform_after
-      AFTER perform_after AFTER perform_after
-     {
-      $<pfvals>$=create_perform_info();
-      $<pfvals>$->pf[0] = $2;
-      $<pfvals>$->pf[1] = $4;
-      $<pfvals>$->pf[2] = $6;
-      $<pfvals>$->pf[3] = $8;
-      $$=$<pfvals>$;
-     }
-    ;
-
+  /* nothing */			{ $$ = NULL; }
+| THRU label			{ $$ = $2;}
+;
+opt_with_test:
+  {
+    $<ival>$=1;
+    perform_after_sw=1;
+  }
+| opt_with TEST before_after
+  {
+    $$=$3;
+    perform_after_sw=$3;
+  }
+;
+opt_perform_after:
+  /* nothing */			{ $$ = NULL; }
+| perform_after
+  {
+    $<pfvals>$=create_perform_info();
+    $<pfvals>$->pf[0] = $1;
+    $$=$<pfvals>$;
+  }
+| perform_after perform_after
+  {
+    $<pfvals>$=create_perform_info();
+    $<pfvals>$->pf[0] = $1;
+    $<pfvals>$->pf[1] = $2;
+    $$=$<pfvals>$;
+  }
+| perform_after perform_after perform_after
+  {
+    $<pfvals>$=create_perform_info();
+    $<pfvals>$->pf[0] = $1;
+    $<pfvals>$->pf[1] = $2;
+    $<pfvals>$->pf[2] = $3;
+    $$=$<pfvals>$;
+  }
+| perform_after perform_after perform_after perform_after
+  {
+    $<pfvals>$=create_perform_info();
+    $<pfvals>$->pf[0] = $1;
+    $<pfvals>$->pf[1] = $2;
+    $<pfvals>$->pf[2] = $3;
+    $<pfvals>$->pf[3] = $4;
+    $$=$<pfvals>$;
+  }
+;
 perform_after:
-    name FROM gname
-       opt_by gname UNTIL
-      {
-        gen_move($3,$1);
-        /* BEFORE=1 AFTER=2 */
-        if (perform_after_sw == 2) {
-           lbstart=gen_passlabel();
-        }
-        $<ival>$ = gen_marklabel();
-      }
-       condition
-      {
-        unsigned long lbl;
-        lbl=gen_orstart();
-        /* BEFORE=1 AFTER=2 */
-        if (perform_after_sw == 2) {
-           gen_add($5,$1,0);
-           gen_dstlabel(lbstart);
-           $$ = create_perf_info($5, $1, $<ival>7, lbl);
-        }
-        else {
-           $$ = create_perf_info($5, $1, $<ival>7, lbl);
-        }
-      }
-    ;
+  AFTER name FROM gname opt_by gname UNTIL
+  {
+    gen_move ($4, $2);
+    /* BEFORE=1 AFTER=2 */
+    if (perform_after_sw == 2) {
+      lbstart=gen_passlabel();
+    }
+    $<ival>$ = gen_marklabel();
+  }
+  condition
+  {
+    unsigned long lbl;
+    lbl=gen_orstart();
+    /* BEFORE=1 AFTER=2 */
+    if (perform_after_sw == 2) {
+      gen_add ($6, $2, 0);
+      gen_dstlabel(lbstart);
+    }
+    $$ = create_perf_info($6, $2, $<ival>8, lbl);
+  }
+;
 before_after:
-    BEFORE  { $$=1; }
-    | AFTER { $$=2; }
-    ;
+  BEFORE			{ $$ = 1; }
+| AFTER				{ $$ = 2; }
+;
 
 
 /*
