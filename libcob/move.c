@@ -561,6 +561,19 @@ indirect_move (void (*func) (cob_field *src, cob_field *dst),
 }
 
 void
+cob_move_all (cob_field *src, cob_field *dst)
+{
+  int i;
+  unsigned char data[dst->size];
+  cob_field temp = {dst->size, data, &cob_alnum_attr};
+
+  for (i = 0; i < dst->size; i++)
+    data[i] = src->data[i % src->size];
+
+  cob_move (&temp, dst);
+}
+
+void
 cob_move (cob_field *src, cob_field *dst)
 {
   if (COB_FIELD_TYPE (src) == COB_TYPE_GROUP
@@ -569,6 +582,9 @@ cob_move (cob_field *src, cob_field *dst)
 
   switch (COB_FIELD_TYPE (src))
     {
+    case COB_TYPE_ALPHANUMERIC_ALL:
+      return cob_move_all (src, dst);
+
     case COB_TYPE_NUMERIC_DISPLAY:
       switch (COB_FIELD_TYPE (dst))
 	{
