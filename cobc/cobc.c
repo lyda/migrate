@@ -265,10 +265,10 @@ print_usage (void)
 static int
 process_command_line (int argc, char *argv[])
 {
-  int c, index;
+  int c, idx;
 
   while ((c = getopt_long_only (argc, argv, short_options,
-				long_options, &index)) >= 0)
+				long_options, &idx)) >= 0)
     {
       switch (c)
 	{
@@ -708,17 +708,17 @@ process_module (struct filename *fn)
 }
 
 static int
-process_link (struct filename *file_list)
+process_link (struct filename *l)
 {
   char buff[FILENAME_MAX], objs[FILENAME_MAX] = "";
   char name[FILENAME_MAX];
 
-  for (; file_list; file_list = file_list->next)
+  for (; l; l = l->next)
     {
-      strcat (objs, file_list->object);
+      strcat (objs, l->object);
       strcat (objs, " ");
-      if (!file_list->next)
-	file_basename (file_list->source, name);
+      if (!l->next)
+	file_basename (l->source, name);
     }
   if (output_name)
     strcpy (name, output_name);
@@ -731,7 +731,7 @@ process_link (struct filename *file_list)
 int
 main (int argc, char *argv[])
 {
-  int index;
+  int i;
   int status = 1;
 
 #if ENABLE_NLS
@@ -744,19 +744,19 @@ main (int argc, char *argv[])
   init_environment (argc, argv);
 
   /* Process command line arguments */
-  index = process_command_line (argc, argv);
+  i = process_command_line (argc, argv);
 
   /* Check the filename */
-  if (index == argc)
+  if (i == argc)
     {
       print_usage ();
       exit (1);
     }
 
   file_list = NULL;
-  while (index < argc)
+  while (i < argc)
     {
-      struct filename *fn = process_filename (argv[index++]);
+      struct filename *fn = process_filename (argv[i++]);
       fn->next = file_list;
       file_list = fn;
 
