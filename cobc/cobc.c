@@ -380,7 +380,7 @@ process_command_line (int argc, char *argv[])
 	  break;
 
 	default:
-	  abort ();
+	  ABORT ();
 	}
     }
 

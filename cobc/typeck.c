@@ -325,7 +325,7 @@ decimal_compute (char op, cb_tree x, cb_tree y)
     case '*': func = "cob_decimal_mul"; break;
     case '/': func = "cob_decimal_div"; break;
     case '^': func = "cob_decimal_pow"; break;
-    default: abort ();
+    default: ABORT ();
     }
   dpush (cb_build_funcall_2 (func, x, y));
 }
@@ -340,7 +340,7 @@ decimal_expand (cb_tree d, cb_tree x)
 	if (x == cb_zero)
 	  dpush (cb_build_funcall_2 ("cob_decimal_set_int", d, cb_int0));
 	else
-	  abort ();
+	  ABORT ();
 	break;
       }
     case CB_TAG_LITERAL:
@@ -393,7 +393,7 @@ decimal_expand (cb_tree d, cb_tree x)
 	break;
       }
     default:
-      abort ();
+      ABORT ();
     }
 }
 
@@ -713,7 +713,7 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 	      }
 	    break;
 	  default:
-	    abort ();
+	    ABORT ();
 	  }
 	break;
       }
@@ -722,7 +722,7 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
       /* TODO: check this */
       break;
     default:
-      abort ();
+      ABORT ();
     }
   return 0;
 
@@ -787,7 +787,7 @@ cb_build_move_num (cb_tree x, int high)
     case CB_USAGE_PACKED:
       return cb_build_memset (x, high ? 0x99 : 0x00);
     default:
-      abort ();
+      ABORT ();
     }
 }
 
@@ -915,7 +915,7 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 		{
 		case COB_DISPLAY_SIGN_ASCII: *p += 0x40; break;
 		case COB_DISPLAY_SIGN_ASCII10: *p += 0x10; break;
-		default: abort ();
+		default: ABORT ();
 		}
 	    }
 	}
@@ -1191,7 +1191,7 @@ cb_build_cond (cb_tree x)
 	if (f->storage == CB_STORAGE_CONSTANT)
 	  return cb_build_cond (CB_VALUE (f->values));
 
-	abort ();
+	ABORT ();
       }
     case CB_TAG_BINARY_OP:
       {
@@ -1259,7 +1259,7 @@ cb_build_cond (cb_tree x)
 	return cb_build_binary_op (x, p->op, p->y);
       }
     default:
-      abort ();
+      ABORT ();
     }
 }
 

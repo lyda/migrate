@@ -225,7 +225,7 @@ output_data (cb_tree x)
 	break;
       }
     default:
-      abort ();
+      ABORT ();
     }
 }
 
@@ -271,7 +271,7 @@ output_size (cb_tree x)
 	break;
       }
     default:
-      abort ();
+      ABORT ();
     }
 }
 
@@ -401,7 +401,7 @@ output_attr (cb_tree x)
 	break;
       }
     default:
-      abort ();
+      ABORT ();
     }
 
   output ("&a_%d", id);
@@ -569,7 +569,7 @@ output_integer (cb_tree x)
 	break;
       }
     default:
-      abort ();
+      ABORT ();
     }
 }
 
@@ -714,7 +714,7 @@ output_param (cb_tree x, int id)
 	break;
       }
     default:
-      abort ();
+      ABORT ();
     }
 }
 
@@ -761,7 +761,7 @@ output_cond (cb_tree x, int save_flag)
 	if (x == cb_true)
 	  output ("1");
 	else
-	  abort ();
+	  ABORT ();
 	break;
       }
     case CB_TAG_BINARY_OP:
@@ -825,7 +825,7 @@ output_cond (cb_tree x, int save_flag)
 	break;
       }
     default:
-      abort ();
+      ABORT ();
     }
 }
 
@@ -1660,7 +1660,7 @@ output_stmt (cb_tree x)
 	break;
       }
     default:
-      abort ();
+      ABORT ();
     }
 }
 

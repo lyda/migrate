@@ -28,6 +28,12 @@
 
 #define CB_MAX_CNAME		8096
 
+#define ABORT()								      \
+  do {									      \
+    fprintf (stderr, "%s:%d: internal compiler error\n", __FILE__, __LINE__); \
+    abort ();								      \
+  } while (0)
+
 
 /* Compile level */
 extern enum cb_compile_level {

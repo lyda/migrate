@@ -249,7 +249,7 @@ cb_tree_category (cb_tree x)
 	break;
       }
     default:
-      abort ();
+      ABORT ();
     }
 
   return x->category;
@@ -283,12 +283,12 @@ cb_tree_type (cb_tree x)
 	case CB_USAGE_PACKED:
 	  return COB_TYPE_NUMERIC_PACKED;
 	default:
-	  abort ();
+	  ABORT ();
 	}
     case CB_CATEGORY_NUMERIC_EDITED:
       return COB_TYPE_NUMERIC_EDITED;
     default:
-      abort ();
+      ABORT ();
     }
 }
 
@@ -543,7 +543,7 @@ cb_literal_to_int (struct cb_literal *l)
       break;
 
   if (l->size - i >= 10)
-    abort ();
+    ABORT ();
 
   for (; i < l->size; i++)
     val = val * 10 + l->data[i] - '0';
@@ -1359,7 +1359,7 @@ compute_size (struct cb_field *f)
 	    break;
 	  }
 	default:
-	  abort ();
+	  ABORT ();
 	}
     }
 
@@ -1474,7 +1474,7 @@ cb_field_size (cb_tree x)
 	  }
       }
     default:
-      abort ();
+      ABORT ();
     }
 }
 
@@ -1751,7 +1751,7 @@ cb_ref (cb_tree x)
 	return r->value;
       }
     default:
-      abort ();
+      ABORT ();
     }
 
  error:
@@ -1804,7 +1804,7 @@ cb_build_binary_op (cb_tree left, char op, cb_tree right)
 
     default:
     invalid:
-      abort ();
+      ABORT ();
     }
 
   p = make_tree (CB_TAG_BINARY_OP, category, sizeof (struct cb_binary_op));
