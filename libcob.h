@@ -20,6 +20,7 @@
 #ifndef COB_LIBCOB_H
 #define COB_LIBCOB_H
 
+#include <libcob/byteswap.h>
 #include <libcob/call.h>
 #include <libcob/common.h>
 #include <libcob/fileio.h>
