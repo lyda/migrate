@@ -755,7 +755,8 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 	    iSrcIntDigits = iSrcLength;
 	    if (iSrcDecimals > 0)
 	      iSrcIntDigits -= iSrcDecimals;
-	    memmove (&caWork[j], pSrcData, iSrcIntDigits);
+	    if (iSrcIntDigits > 0)
+	      memmove (&caWork[j], pSrcData, iSrcIntDigits);
 
 	    if (iSrcDecimals > 0)
 	      {
