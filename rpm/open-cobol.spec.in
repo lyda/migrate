@@ -41,7 +41,6 @@ make
 %doc AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README
 %{_bindir}
 %{_includedir}
-%{_infodir}
 %{_libdir}
 %{_libexecdir}
 
