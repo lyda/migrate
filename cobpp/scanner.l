@@ -78,6 +78,12 @@ static void process_eol (void);
       /* Line connection */
       yylineno++;
       display_line = 1;
+      if (yytext[yyleng - 1] == '"' || yytext[yyleng - 1] == '\'')
+	{
+	  int i;
+	  for (i = 0; yytext[i] != '\n'; i++)
+	    fputc (' ', yyout);
+	}
     }
   else
     process_eol ();
