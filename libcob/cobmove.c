@@ -50,56 +50,7 @@ static unsigned long long _iIntValues_[18] = {
   1
 };
 
-static void move_edited (struct fld_desc *pSrcFld, char *pSrcData,
-			 struct fld_desc *pDstFld, char *pDstData);
-static void float2all (struct fld_desc *pSrcFld, char *pSrcData,
-		       struct fld_desc *pDstFld, char *pDstData);
-
 
-int
-get_index (struct fld_desc *f, char *s)
-{
-  int index;
-  struct fld_desc fld = { 4, 'B', 0, 0, 0, 0, 0, 0, "S9\x9" };
-  cob_move (f, s, &fld, (char *) &index);
-  return index;
-}
-
-void
-cob_move_zero (struct fld_desc *f, char *s)
-{
-  switch (f->type)
-    {
-    case 'B':
-      switch (f->len)
-	{
-	case 1: *((char *) s) = 0; return;
-	case 2: *((short *) s) = 0; return;
-	case 4: *((long *) s) = 0; return;
-	default: *((long long *) s) = 0; return;
-	}
-
-    case '9':
-      memset (s, '0', f->len);
-      put_sign (f, s, 0);
-      return;
-
-    default:
-      {
-	static struct fld_desc fld  = { 1, '9', 0, 1, 0, 0, 0, 0, "9\001"};
-	cob_move (&fld, "0", f, s);
-	return;
-      }
-    }
-}
-
-void
-cob_move_space (struct fld_desc *f, char *s)
-{
-  static struct fld_desc fld = { 1, 'X', 0, 1, 0, 0, 0, 0, "X\001"};
-  cob_move (&fld, " ", f, s);
-}
-
 static int
 fldLength (struct fld_desc *f)
 {
@@ -123,15 +74,17 @@ fldLength (struct fld_desc *f)
     }
 }
 
+
 void
-cob_move_to_binary (struct fld_desc *f1desc, unsigned char *f1data,
-		    struct fld_desc *f2desc, unsigned char *f2data)
+cob_move_xxx_to_binary (struct fld_desc *f1desc, unsigned char *f1data,
+			struct fld_desc *f2desc, unsigned char *f2data)
 {
   int i, sign;
   long long val;
+  int len = picCompLength (f2desc);
+  unsigned char data[len];
   struct fld_desc desc;
-  unsigned char data[18];
-  desc.len = picCompLength (f2desc);
+  desc.len = len;
   desc.type = DTYPE_DISPLAY;
   desc.decimals = f2desc->decimals;
   desc.all = 0;
@@ -154,1319 +107,69 @@ cob_move_to_binary (struct fld_desc *f1desc, unsigned char *f1data,
     }
 }
 
+
+
 void
-cob_move (struct fld_desc *f1desc, unsigned char *f1data,
-	  struct fld_desc *f2desc, unsigned char *f2data)
+cob_move_xxx_to_float (struct fld_desc *f1desc, unsigned char *f1data,
+		       struct fld_desc *f2desc, unsigned char *f2data)
 {
-  int i;
-  int iPadLength;
-  int len1, len2;
-  char iSrcDecimals, iDestDecimals;
-  unsigned char *pSrcData, *pDstData;
-  unsigned char caWrkData[20];
-  unsigned char caPic[20];
-
-  struct fld_desc *pSrcFld, *pDstFld;
-  struct fld_desc FldWrk;
-
-  if (f2desc->type == DTYPE_EDITED)
-    return move_edited (f1desc, f1data, f2desc, f2data);
-
-  if (f2desc->type == DTYPE_BININT)
-    return cob_move_to_binary (f1desc, f1data, f2desc, f2data);
-
-  len1 = fldLength (f1desc);
-  len2 = fldLength (f2desc);
-  iSrcDecimals = f1desc->decimals;
-  iDestDecimals = f2desc->decimals;
-  pSrcFld = f1desc;		/* may be changed to point to work area */
-  pDstFld = f2desc;		/* may be changed to point to work area */
-  pSrcData = f1data;		/* may be changed to point to work area */
-  pDstData = f2data;		/* may be changed to point to work area */
-  FldWrk.pic = caPic;
-
-  switch (pSrcFld->type)
-    {				/* source field type */
-    case DTYPE_ALPHA:
-    case DTYPE_ALPHANUMERIC:
-    case DTYPE_EDITED:
-    case DTYPE_GROUP:
-    case DTYPE_ACCEPT_DISPLAY:
-      if (pSrcFld->all	/* handle high/low values for */
-	  && (pSrcData[0] == 0 || pSrcData[0] == 255)
-	  && (pDstFld->type == DTYPE_DISPLAY || pDstFld->type == DTYPE_PACKED))
-	{
-	  char cWork = pSrcFld->type;
-	  pSrcFld->type = DTYPE_DISPLAY;
-	  cob_move (pSrcFld, pSrcData, pDstFld, pDstData);
-	  pSrcFld->type = cWork;
-	  return;
-	}
-      switch (pDstFld->type)
-	{
-	case DTYPE_ALPHA:
-	case DTYPE_ALPHANUMERIC:
-	case DTYPE_GROUP:
-	case DTYPE_ACCEPT_DISPLAY:
-	  if (pSrcFld->all)
-	    {
-	      /* move string repeatedly */
-	      while (len2 > 0)
-		{
-		  int len = min (len1, len2);
-		  memcpy (pDstData, pSrcData, len);
-		  pDstData += len;
-		  len2 -= len;
-		}
-	      return;
-	    }
-
-	  if (len1 >= len2)
-	    {
-	      /* Just move string, truncating if necessary */
-	      if (pDstFld->just_r)
-		memcpy (pDstData, pSrcData + len1 - len2, len2);
-	      else
-		memcpy (pDstData, pSrcData, len2);
-	    }
-	  else
-	    {
-	      /* Move string with padding */
-	      if (pDstFld->just_r)
-		{
-		  memset (pDstData, ' ', len2 - len1);
-		  memcpy (pDstData + len2 - len1, pSrcData, len1);
-		}
-	      else
-		{
-		  memcpy (pDstData, pSrcData, len1);
-		  memset (pDstData + len1, ' ', len2 - len1);
-		}
-	    }
-	  return;
-
-	case DTYPE_DISPLAY:
-	  {
-		    /*----------------------------------------------------*\
-                     |                                                    |
-                     |  Edit and move alphanumeric contents into a        |
-                     |  numeric display destination field.  If the        |
-                     |  source field contains non numeric data, a runtime |
-                     |  error is generated, and the destination field     |
-                     |  is cleared to all zeroes.  The source field may   |
-                     |  contain leading or trailing plus (+) or minus (-) |
-                     |  signs, and if the receiving field is signed, its  |
-                     |  sign will be set accordingly. If no sign is       |
-                     |  present in the source data, it is assumed that    |
-                     |  a positive number is represented.  Spaces and     |
-                     |  tabs are ignored in the conversion.               |
-                     |                                                    |
-                    \*----------------------------------------------------*/
-
-	    char cSign;
-	    char cDecimalPoint;
-	    char cChar;
-	    char *pDecPortion;
-
-	    int iIntCount;
-	    int iDecCount;
-	    int iWork;
-	    int iSrcPtr;
-	    int iWrkLength;
-	    int bInDecPortion;
-	    int bIsSigned;
-	    int bLeadingWhite;
-	    int bTrailingWhite;
-
-		    /*----------------------------------------------------*\
-                     |                                                    |
-                     |  If the source field is scaled (has 'P's in the    |
-                     |  picture clause, move the source data to a like    |
-                     |  sized non scaled numeric field, then call move    |
-                     |  again using this non scaled field as the source   |
-                     |  and the original destination field as the         |
-                     |  destination.  This isn't the most efficient way   | 
-                     |  to handle this type of move, but scaled fields    |
-                     |  aren't heavily used.                              |
-                     |                                                    |
-                    \*----------------------------------------------------*/
-
-	    if (iDestDecimals < 0)
-	      {			/* integer scaling */
-		FldWrk.len = fldLength (pDstFld);
-		FldWrk.len += ((char) pDstFld->decimals * -1);
-		FldWrk.type = DTYPE_DISPLAY;
-		FldWrk.decimals = 0;
-		FldWrk.all = 0;
-		i = 0;
-		if (pDstFld->pic[0] == 'S')
-		  {
-		    FldWrk.pic[0] = 'S';
-		    FldWrk.pic[1] = 1;
-		    i = 2;
-		  }
-		FldWrk.pic[i++] = '9';
-		FldWrk.pic[i++] = (char) FldWrk.len;
-		FldWrk.pic[i] = '\0';
-		cob_move (pSrcFld, pSrcData, &FldWrk, caWrkData);
-		cob_move (&FldWrk, caWrkData, pDstFld, pDstData);
-		return;
-	      }
-	    if (len2 < iDestDecimals)
-	      {			/* fractional scaling */
-		FldWrk.len = pDstFld->decimals;
-		FldWrk.type = DTYPE_DISPLAY;
-		FldWrk.decimals = pDstFld->decimals;
-		FldWrk.all = 0;
-		i = 0;
-		if (pDstFld->pic[0] == 'S')
-		  {
-		    FldWrk.pic[0] = 'S';
-		    FldWrk.pic[1] = 1;
-		    i = 2;
-		  }
-		FldWrk.pic[i++] = 'V';
-		FldWrk.pic[i++] = (char) 1;
-		FldWrk.pic[i++] = '9';
-		FldWrk.pic[i++] = (char) FldWrk.len;
-		FldWrk.pic[i] = '\0';
-		cob_move (pSrcFld, pSrcData, &FldWrk, caWrkData);
-		cob_move (&FldWrk, caWrkData, pDstFld, pDstData);
-		return;
-	      }
-
-	    iDestDecimals = (int) pDstFld->decimals;
-	    iWrkLength = len1;
-	    iDecCount = 0;
-	    iIntCount = 0;
-	    iSrcPtr = 0;
-	    bInDecPortion = 0;
-	    bIsSigned = 0;
-	    bLeadingWhite = 1;
-	    bTrailingWhite = 0;
-	    pDecPortion = (char *) 0;
-	    cDecimalPoint = (decimal_comma) ? ',' : '.';
-	    cSign = 0;
-	    for (i = 0; i < len1; ++i)
-	      {
-		cChar = pSrcData[i];
-		switch (cChar)
-		  {
-		  case '+':
-		    cSign = 0;
-		    break;
-		  case '-':
-		    cSign = 1;
-		    break;
-		  case '.':
-		  case ',':
-		    if (cChar == cDecimalPoint)
-		      {
-			if ((!bInDecPortion) && ((i + 1) < len1))
-			  pDecPortion = &caWrkData[iSrcPtr];
-			bInDecPortion = 1;
-		      }
-		    break;
-		  case '0':
-		  case '1':
-		  case '2':
-		  case '3':
-		  case '4':
-		  case '5':
-		  case '6':
-		  case '7':
-		  case '8':
-		  case '9':
-		    if (!bInDecPortion)
-		      iIntCount++;
-		    else
-		      iDecCount++;
-		    caWrkData[iSrcPtr++] = cChar;
-		    break;
-		  case ' ':
-		  case '\t':
-		    break;
-		  default:
-		    runtime_error (RTERR_INVALID_DATA, f1desc,
-				   (void *) pSrcData);
-		    memset (pDstData, '0', fldLength (pDstFld));
-		    return;
-		  }
-	      }
-
-	    i = 0;
-	    len1 = iSrcPtr;
-	    iSrcPtr = 0;
-	    if (len2 > iDestDecimals)
-	      {
-		iWork = len2 - iDestDecimals;
-		if (iIntCount < iWork)
-		  {		/* move pad first */
-		    i = iWork - iIntCount;
-		    memset (f2data, '0', i);
-		  }
-		if (iIntCount > iWork)	/* truncate */
-		  iSrcPtr = iIntCount - iWork;
-		memmove (&pDstData[i], &caWrkData[iSrcPtr],
-			 iIntCount - iSrcPtr);
-		i += iIntCount - iSrcPtr;
-	      }
-	    if (iDecCount > iDestDecimals)
-	      iDecCount = iDestDecimals;
-
-	    memmove (&pDstData[i], pDecPortion, iDecCount);
-	    i += iDecCount;
-	    memset (&pDstData[i], '0', iDestDecimals - iDecCount);
-
-	    if (pDstFld->pic[0] == 'S')
-	      put_sign (pDstFld, pDstData, (int) cSign);
-	    break;
-	  }
-	case DTYPE_PACKED:
-	  {
-		    /*----------------------------------------------------*\
-                     |                                                    |
-                     |  Moving alphanumeric data to a packed field is a   |
-                     |  two step process, the first process moves it to   |
-                     |  a work area defined like the destination field,   |
-                     |  except that it will be display and contain no     |
-                     |  scaling.  Then the contents of this work area     |
-                     |  will then be moved to the original destination.   |
-                     |  This is pretty inefficient, but, it will work     | 
-                     |  for a first cut.                                  |
-                     |                                                    |
-                    \*----------------------------------------------------*/
-
-	    memcpy (&FldWrk, pSrcFld, sizeof (FldWrk));
-	    FldWrk.type = DTYPE_DISPLAY;
-	    FldWrk.pic[0] = 'S';
-	    FldWrk.pic[1] = 1;
-	    i = 2;
-	    if (iSrcDecimals < 0)
-	      {
-		FldWrk.pic[i++] = '9';
-		FldWrk.pic[i++] = (char) ((int) FldWrk.decimals * -1);
-	      }
-	    else
-	      {
-		if (FldWrk.len > FldWrk.decimals)
-		  {
-		    FldWrk.pic[i++] = '9';
-		    FldWrk.pic[i++] = (char) (FldWrk.len - FldWrk.decimals);
-		  }
-		if (FldWrk.decimals)
-		  {
-		    FldWrk.pic[i++] = 'V';
-		    FldWrk.pic[i++] = (char) 1;
-		    FldWrk.pic[i++] = '9';
-		    FldWrk.pic[i++] = (char) FldWrk.decimals;
-		  }
-	      }
-	    FldWrk.pic[i] = '\0';
-	    cob_move (pSrcFld, pSrcData, &FldWrk, caWrkData);
-	    cob_move (&FldWrk, caWrkData, pDstFld, pDstData);
-	    break;
-	  }
-
-	case DTYPE_FLOAT:
-	  {
-		    /*----------------------------------------------------*\
-		     |  DTYPE_ALPHA                                       |
-		     |  DTYPE_ALPHANUMERIC                                |
-		     |  DTYPE_EDITED                                      |
-		     |  DTYPE_GROUP                                       |
-		     |  DTYPE_ACCEPT_DISPLAY                              |
-                     |   -> DTYPE_FLOAT                                   |
-                     |  Convert the source to a normalized DISPLAY type.  |
-                     |  Then convert the contents of the normalized       |
-                     |  data area to float or double.                     |
-                    \*----------------------------------------------------*/
-	    float fWork;
-	    double dWork;
-	    int bIsNegative, i, k;
-	    char caWork[32], caWork1[2];
-
-	    FldWrk.len = picCompLength (pDstFld);
-	    FldWrk.decimals = pDstFld->decimals;
-	    if (pSrcFld->decimals != 0)
-	      {
-		FldWrk.decimals += 2;
-		FldWrk.len += 2;
-	      }
-
-	    FldWrk.type = DTYPE_DISPLAY;
-	    FldWrk.all = 0;
-	    strcpy (FldWrk.pic, pDstFld->pic);
-	    cob_move (pSrcFld, pSrcData, &FldWrk, caWork);
-	    caWork[FldWrk.len] = '\0';
-
-	    bIsNegative = extract_sign (&FldWrk, caWork);
-
-	    // Add the decimal point
-	    if (FldWrk.decimals != 0)
-	      {
-		caWork1[0] = '.';
-		caWork1[1] = '\0';
-		k = FldWrk.len - FldWrk.decimals;
-		for (i = 0; i < FldWrk.len; i++)
-		  {
-		    if (i >= k)
-		      {
-			caWork1[1] = caWork[i];
-			caWork[i] = caWork1[0];
-			caWork1[0] = caWork1[1];
-			caWork1[1] = '\0';
-		      }
-		  }
-		caWork[i] = caWork1[0];
-		i++;
-		caWork[i] = '\0';
-	      }
-
-	    if (pDstFld->len == 4)
-	      {
-		sscanf (caWork, "%f", &fWork);
-		if (bIsNegative)
-		  fWork *= -1;
-		*(float *) pDstData = fWork;
-	      }
-	    else
-	      {
-		sscanf (caWork, "%lf", &dWork);
-		if (bIsNegative)
-		  dWork *= -1;
-		*(double *) pDstData = dWork;
-	      }
-
-	    break;
-	  }
-
-	}
-      break;
-
-
-/* Source type is Display */
-    case DTYPE_DISPLAY:
-      switch (f2desc->type)
-	{
-	case DTYPE_ALPHA:
-	case DTYPE_GROUP:
-	case DTYPE_ALPHANUMERIC:
-	case DTYPE_ACCEPT_DISPLAY:
-	  {
-	    int j;
-
-		    /*----------------------------------------------------*\
-                     |                                                    |
-                     |  If the source field is scaled (has 'P's in the    |
-                     |  picture clause, move the source data to a like    |
-                     |  sized non scaled numeric field, then call move    |
-                     |  again using this non scaled field as the source   |
-                     |  and the original destination field as the         |
-                     |  destination.  This isn't the most efficient way   | 
-                     |  to handle this type of move, but scaled fields    |
-                     |  aren't heavily used.                              |
-                     |                                                    |
-                    \*----------------------------------------------------*/
-
-	    if (iDestDecimals < 0)
-	      {			/* integer scaling */
-		FldWrk.len = fldLength (pDstFld);
-		FldWrk.len += ((char) pDstFld->decimals * -1);
-		FldWrk.type = DTYPE_DISPLAY;
-		FldWrk.decimals = 0;
-		FldWrk.all = 0;
-		i = 0;
-		if (pDstFld->pic[0] == 'S')
-		  {
-		    FldWrk.pic[0] = 'S';
-		    FldWrk.pic[1] = 1;
-		    i = 2;
-		  }
-		FldWrk.pic[i++] = '9';
-		FldWrk.pic[i++] = (char) FldWrk.len;
-		FldWrk.pic[i] = '\0';
-		cob_move (pSrcFld, pSrcData, &FldWrk, caWrkData);
-		cob_move (&FldWrk, caWrkData, pDstFld, pDstData);
-		return;
-	      }
-	    if (len2 < iDestDecimals)
-	      {			/* fractional scaling */
-		FldWrk.len = pDstFld->decimals;
-		FldWrk.type = DTYPE_DISPLAY;
-		FldWrk.decimals = pDstFld->decimals;
-		FldWrk.all = 0;
-		i = 0;
-		if (pDstFld->pic[0] == 'S')
-		  {
-		    FldWrk.pic[0] = 'S';
-		    FldWrk.pic[1] = 1;
-		    i = 2;
-		  }
-		FldWrk.pic[i++] = 'V';
-		FldWrk.pic[i++] = (char) 1;
-		FldWrk.pic[i++] = '9';
-		FldWrk.pic[i++] = (char) FldWrk.decimals;
-		FldWrk.pic[i] = '\0';
-		cob_move (pSrcFld, pSrcData, &FldWrk, caWrkData);
-		cob_move (&FldWrk, caWrkData, pDstFld, pDstData);
-		return;
-	      }
-
-		    /*----------------------------------------------------*\
-                     |                                                    |
-                     |  Else, just move the data left to right,           |
-                     |  truncating or padding with spaces on the right    |
-                     |  side of the destination field.                    |
-                     |                                                    |
-                    \*----------------------------------------------------*/
-
-	    if (len1 >= len2)
-	      {
-		memcpy (pDstData, pSrcData, len2);
-	      }
-	    else if (pSrcFld->all == 0)
-	      {
-		memcpy (pDstData, pSrcData, len1);
-		iPadLength = len2 - len1;
-		memset (pDstData + len1, ' ', iPadLength);
-	      }
-	    else
-	      {
-		j = 0;
-		for (i = 0; i < len2; ++i)
-		  {
-		    pDstData[i] = pSrcData[j++];
-		    if (j == len1)
-		      j = 0;
-		  }
-	      }
-	    break;
-	  }
-
-	case DTYPE_DISPLAY:
-	  {
-	    int j;
-	    int iSrcSign;
-	    int iSrcIntDigits;
-	    int iDestIntDigits;
-	    char caWork[MAX_DIGITS * 2];
-
-		    /*--------------------------------------------*\
-                     |                                            |
-                     |   If source field is signed, extract the   |
-                     |   value of the sign (zero is positive and  |
-                     |   non zero is negative).  The extract      |
-                     |   routine also 'unsigns' the overpuched    |
-                     |   last digit of the field, so we will      |
-                     |   need to re-sign the field later.         |
-                     |   if the 'all' flag is set on, then set    | 
-                     |   the dest type to alphanumeric, call      |
-                     |   ourselves again, then change the type    |
-                     |   back to numeric.  In the case of the     |
-                     |   'all' flag, scaling and decimal points   |
-                     |   are ignored. The 'all' flag is used      |
-                     |   primarily for zero, high and low vales.  |
-                     |                                            |
-                    \*--------------------------------------------*/
-
-	    iSrcSign = (pSrcFld->pic[0] == 'S') ?
-	      extract_sign (pSrcFld, pSrcData) : 0;
-
-	    if (pSrcFld->all != 0)
-	      {
-		pDstFld->type = DTYPE_ALPHANUMERIC;
-		j = 0;
-		if (pSrcData[0] == 0)
-		  {		/* low values */
-		    j = (int) pSrcData[0] | 0x100;
-		    pSrcData[0] = '0';
-		  }
-		else if (pSrcData[0] == 255)
-		  {		/* high values */
-		    j = pSrcData[0];
-		    pSrcData[0] = '9';
-		  }
-		cob_move (pSrcFld, pSrcData, pDstFld, pDstData);
-		pDstFld->type = DTYPE_DISPLAY;
-		if (j)
-		  pSrcData[0] = (char) j;
-		if (pSrcFld->pic[0] == 'S')
-		  put_sign (pSrcFld, pSrcData, iSrcSign);
-		if (pDstFld->pic[0] == 'S')
-		  put_sign (pDstFld, pDstData, 0);
-		return;
-	      }
-
-		    /*--------------------------------------------*\
-                     |                                            |
-                     |  Move the contents of the source field to  |
-                     |  our work area to create a normalized      | 
-                     |  9(18)v9(18) view of the data.             |
-                     |                                            |
-                    \*--------------------------------------------*/
-
-
-	    memset (caWork, '0', sizeof (caWork));
-
-	    j = MAX_DIGITS + iSrcDecimals - len1;
-	    iSrcIntDigits = len1;
-	    if (iSrcDecimals > 0)
-	      iSrcIntDigits -= iSrcDecimals;
-	    if (iSrcIntDigits > 0)
-	      memmove (&caWork[j], pSrcData, iSrcIntDigits);
-
-	    if (iSrcDecimals > 0)
-	      {
-		j = MAX_DIGITS;
-		if (iSrcDecimals > len1)
-		  j += iSrcDecimals - 1;
-		memmove (&caWork[j], &pSrcData[iSrcIntDigits], iSrcDecimals);
-	      }
-	    if (pSrcFld->pic[0] == 'S')
-	      put_sign (pSrcFld, pSrcData, iSrcSign);
-
-		    /*--------------------------------------------*\
-                     |                                            |
-                     |  Now move the contents of our normalized   |
-                     |  data area to the receiving field.         |
-                     |                                            |
-                    \*--------------------------------------------*/
-
-	    j = MAX_DIGITS + iDestDecimals - len2;
-	    iDestIntDigits = len2;
-	    if (iDestDecimals > 0)
-	      iDestIntDigits -= iDestDecimals;
-
-	    /* Zero the destination */
-	    if (iSrcIntDigits + iSrcDecimals > 0)
-	      memset (pDstData, '0', min (iSrcIntDigits + iSrcDecimals,
-					  fldLength (pDstFld)));
-	    else
-	      memset (pDstData, '0', fldLength (pDstFld));
-
-	    /* Fill in the destination integer part */
-	    if (iDestIntDigits > 0)
-	      memmove (pDstData, &caWork[j], iDestIntDigits);
-
-	    if (iDestDecimals > 0)
-	      {
-		if (iDestDecimals > len2)
-		  {
-		    j = MAX_DIGITS - iDestIntDigits;
-		    /* Source decimal part exceeds destination width, 
-		       insert those digits that
-		       fit into the destination decimal part */
-		    memmove (pDstData, &caWork[j], len2);
-		  }
-		else
-		  {
-		    j = MAX_DIGITS;
-		    /* Source decimal part fits into the destination width,
-		       copy it to the destination */
-		    memmove (&pDstData[iDestIntDigits],
-			     &caWork[j], iDestDecimals);
-		  }
-	      }
-	    if (pDstFld->pic[0] == 'S')
-	      put_sign (pDstFld, pDstData, iSrcSign);
-	    break;
-	  }
-
-	case DTYPE_PACKED:
-	  {
-	    int temp1;
-	    int j, k;
-	    int iSrcSign;
-	    int iSrcIntDigits;
-	    int iDestIntDigits;
-	    char caWork[MAX_DIGITS * 2];
-	    unsigned char cPack;
-
-		    /*--------------------------------------------*\
-                     |                                            |
-                     |   If source field is signed, extract the   |
-                     |   value of the sign (zero is positive and  |
-                     |   non zero is negative).  The extract      |
-                     |   routine also 'unsigns' the overpunched   |
-                     |   last digit of the field, so we will      |
-                     |   need to re-sign the field later.         |
-                     |   If the source field has the 'all' flag   |
-                     |   on, move to work area as type display,   |
-                     |   then change work area type to alpha,     |
-                     |   and call move again, change type back    |
-                     |   to display, then call move using the     |
-                     |   work area as source and the original     |
-                     |   destination. This facilitates moving     |
-                     |   of zero, high and low values.            |
-                     |                                            |
-                    \*--------------------------------------------*/
-
-
-	    iSrcSign = (pSrcFld->pic[0] == 'S') ?
-	      extract_sign (pSrcFld, pSrcData) : 0;
-
-	    if (pSrcFld->all != 0)
-	      {
-		memcpy (&FldWrk, pDstFld, sizeof (FldWrk));
-		FldWrk.type = DTYPE_ALPHANUMERIC;
-		j = 0;
-		if (pSrcData[0] == 0)
-		  {		/* low values */
-		    j = (int) pSrcData[0] | 0x100;
-		    pSrcData[0] = '0';
-		  }
-		else if (pSrcData[0] == 255)
-		  {		/* high values */
-		    j = pSrcData[0];
-		    pSrcData[0] = '9';
-		  }
-		FldWrk.pic[0] = '9';	// mark it as unsigned
-		cob_move (pSrcFld, pSrcData, &FldWrk, caWork);
-		FldWrk.type = DTYPE_DISPLAY;
-		cob_move (&FldWrk, caWork, pDstFld, pDstData);
-		if (j)
-		  pSrcData[0] = (char) j;
-		return;
-	      }
-
-		    /*--------------------------------------------*\
-                     |                                            |
-                     |  Move the contents of the source field to  |
-                     |  our work area to create a normalized      | 
-                     |  9(18)v9(18) view of the data.             |
-                     |                                            |
-                    \*--------------------------------------------*/
-
-	    memset (caWork, '0', sizeof (caWork));
-	    /*
-	       for(i=0; i<sizeof(caWork); i++)
-	       caWork[i] = '0';
-	     */
-
-	    j = MAX_DIGITS + iSrcDecimals - len1;
-	    iSrcIntDigits = len1;
-	    if (iSrcDecimals > 0)
-	      iSrcIntDigits -= iSrcDecimals;
-	    memmove (&caWork[j], pSrcData, iSrcIntDigits);
-
-	    if (iSrcDecimals > 0)
-	      {
-		j = MAX_DIGITS;
-		if (iSrcDecimals > len1)
-		  j += iSrcDecimals - 1;
-		memmove (&caWork[j], &pSrcData[iSrcIntDigits], iSrcDecimals);
-	      }
-	    if (pSrcFld->pic[0] == 'S')
-	      put_sign (pSrcFld, pSrcData, iSrcSign);
-
-
-		    /*--------------------------------------------*\
-                     |                                            |
-                     |  Now move the contents of our normalized   |
-                     |  data area to the receiving field, packing |
-                     |  the data as we go.  Packed fields are (at |
-                     |  least at this time) always considered to  |
-                     |  be signed, so we will also move a         |
-                     |  trailing sign to the receiving area. A    |
-                     |  value of 0xC represents a positive value  |
-                     |  and 0xD represents a negative value.      |
-                     |                                            |
-                    \*--------------------------------------------*/
-
-	    k = 0;
-	    cPack = 0;
-	    j = MAX_DIGITS + iDestDecimals - len2 - 1;
-	    /* j is pointer into work area */
-	    iDestIntDigits = len2;
-	    if (iDestDecimals >= 0)
-	      {
-		iDestIntDigits -= iDestDecimals;
-		j++;
-	      }
-	    /* zero fill destination first */
-	    for (i = 0; i < (iSrcIntDigits + iSrcDecimals); ++i)
-	      {
-		if (i == fldLength (pDstFld))
-		  break;
-		if (i & 1)	/* if lower (right) nibble */
-		  pDstData[k++] = 0;
-	      }
-	    if (i & 1)
-	      pDstData[k] = '\0';
-
-	    for (i = 0; i < iDestIntDigits; i++)
-	      {
-		if (i & 1)
-		  {		/* if lower (right) nibble */
-		    cPack = cPack | ((unsigned char) caWork[j++] & 0xF);
-		    pDstData[i >> 1] = cPack;
-		  }
-		else
-		  {
-		    cPack = (unsigned char) caWork[j++] << 4;
-		  }
-	      }
-	    k = i;
-
-	    if (iDestDecimals > 0)
-	      {
-		j = MAX_DIGITS;
-		temp1 = min (len2, iDestDecimals);
-		if (iDestDecimals > len2)
-		  j += iDestDecimals - len2 - 1;
-		for (i = 0; i < temp1; i++)
-		  {
-		    if (k & 1)
-		      {
-			cPack |= ((unsigned char) caWork[j++] & 0xF);
-			pDstData[k >> 1] = cPack;
-		      }
-		    else
-		      {
-			cPack = (unsigned char) caWork[j++] << 4;
-		      }
-		    k++;
-		  }
-	      }
-	    if (k & 1)
-	      {
-		cPack |= ((unsigned char) caWork[j++] & 0xF);
-		pDstData[k >> 1] = cPack;
-	      }
-	    put_sign (pDstFld, pDstData, iSrcSign);
-	    break;
-	  }
-
-	case DTYPE_FLOAT:
-	  {
-		    /*----------------------------------------------------*\
-                     |  DTYPE_DISPLAY -> DTYPE_FLOAT                      |
-                     |  Convert the source to a normalized DISPLAY type.  |
-                     |  Then convert the contents of the normalized       |
-                     |  data area to float or double.                     |
-                    \*----------------------------------------------------*/
-	    float fWork;
-	    double dWork;
-	    int bIsNegative, i, k;
-	    char caWork[32], caWork1[2];
-
-	    FldWrk.len = picCompLength (pDstFld);
-	    FldWrk.decimals = pDstFld->decimals;
-	    if (pDstFld->decimals != 0)
-	      {
-		FldWrk.decimals += 2;
-		FldWrk.len += 2;
-	      }
-
-	    FldWrk.type = DTYPE_DISPLAY;
-	    FldWrk.all = 0;
-	    strcpy (FldWrk.pic, pDstFld->pic);
-	    cob_move (pSrcFld, pSrcData, &FldWrk, caWork);
-	    caWork[FldWrk.len] = '\0';
-
-	    bIsNegative = extract_sign (&FldWrk, caWork);
-
-	    // Add the decimal point
-	    if (FldWrk.decimals != 0)
-	      {
-		caWork1[0] = '.';
-		caWork1[1] = '\0';
-		k = FldWrk.len - FldWrk.decimals;
-		for (i = 0; i < FldWrk.len; i++)
-		  {
-		    if (i >= k)
-		      {
-			caWork1[1] = caWork[i];
-			caWork[i] = caWork1[0];
-			caWork1[0] = caWork1[1];
-			caWork1[1] = '\0';
-		      }
-		  }
-		caWork[i] = caWork1[0];
-		i++;
-		caWork[i] = '\0';
-	      }
-
-	    if (pDstFld->len == 4)
-	      {
-		sscanf (caWork, "%f", &fWork);
-		if (bIsNegative)
-		  fWork *= -1;
-		*(float *) pDstData = fWork;
-	      }
-	    else
-	      {
-		sscanf (caWork, "%lf", &dWork);
-		if (bIsNegative)
-		  dWork *= -1;
-		*(double *) pDstData = dWork;
-	      }
-	    break;
-	  }
-	}
-      break;
-
-/* Source type is Packed */
-    case DTYPE_PACKED:
-      switch (f2desc->type)
-	{			/* destination field type */
-	case DTYPE_ALPHA:
-	case DTYPE_GROUP:
-	case DTYPE_ACCEPT_DISPLAY:
-	case DTYPE_ALPHANUMERIC:
-	  {
-	    int j;
-	    unsigned char cWork;
-
-		    /*----------------------------------------------------*\
-                     |                                                    |
-                     |  If the source field is scaled (has 'P's in the    |
-                     |  picture clause, move the source data to a like    |
-                     |  sized non scaled numeric field, then call move    |
-                     |  again using this non scaled field as the source   |
-                     |  and the original destination field as the         |
-                     |  destination.  This isn't the most efficient way   | 
-                     |  to handle this type of move, but scaled fields    |
-                     |  aren't heavily used.                              |
-                     |                                                    |
-                    \*----------------------------------------------------*/
-
-	    if (iDestDecimals < 0)
-	      {			/* integer scaling */
-		FldWrk.len = fldLength (pDstFld);
-		FldWrk.len += ((char) pDstFld->decimals * -1);
-		FldWrk.type = DTYPE_DISPLAY;
-		FldWrk.decimals = 0;
-		FldWrk.all = 0;
-		i = 0;
-		if (pDstFld->pic[0] == 'S')
-		  {
-		    FldWrk.pic[0] = 'S';
-		    FldWrk.pic[1] = 1;
-		    i = 2;
-		  }
-		FldWrk.pic[i++] = '9';
-		FldWrk.pic[i++] = (char) FldWrk.len;
-		FldWrk.pic[i] = '\0';
-		cob_move (pSrcFld, pSrcData, &FldWrk, caWrkData);
-		cob_move (&FldWrk, caWrkData, pDstFld, pDstData);
-		return;
-	      }
-	    if (len2 < iDestDecimals)
-	      {			/* fractional scaling */
-		FldWrk.len = pDstFld->decimals;
-		FldWrk.type = DTYPE_DISPLAY;
-		FldWrk.decimals = pDstFld->decimals;
-		FldWrk.all = 0;
-		i = 0;
-		if (pDstFld->pic[0] == 'S')
-		  {
-		    FldWrk.pic[0] = 'S';
-		    FldWrk.pic[1] = 1;
-		    i = 2;
-		  }
-		FldWrk.pic[i++] = 'V';
-		FldWrk.pic[i++] = (char) 1;
-		FldWrk.pic[i++] = '9';
-		FldWrk.pic[i++] = (char) FldWrk.decimals;
-		FldWrk.pic[i] = '\0';
-		cob_move (pSrcFld, pSrcData, &FldWrk, caWrkData);
-		cob_move (&FldWrk, caWrkData, pDstFld, pDstData);
-		return;
-	      }
-
-		    /*----------------------------------------------------*\
-                     |                                                    |
-                     |  Else, just move the data left to right,           |
-                     |  truncating or padding with spaces on the right    |
-                     |  side of the destination field.                    |
-                     |                                                    |
-                    \*----------------------------------------------------*/
-
-	    j = min (len1, len2);
-	    for (i = 0; i < j; i++)
-	      {
-		cWork = (unsigned char) pSrcData[i >> 1];
-		cWork = (i & 1) ? (cWork & 0x0f) : (cWork >> 4);
-		pDstData[i] = cWork + '0';
-	      }
-	    memset (&pDstData[j], ' ', len2 - j);
-	    break;
-	  }
-
-	case DTYPE_DISPLAY:
-	  {
-	    int j;
-	    int iSrcSign;
-	    int iSrcIntDigits;
-	    int iDestIntDigits;
-	    char caWork[MAX_DIGITS * 2];
-	    unsigned char cWork;
-
-		    /*--------------------------------------------------*\
-                     |                                                  |
-                     |   Currently, packed fields are assumed to be     |
-                     |   signed, so extract the value of the sign from  |
-                     |   the source field (zero represents positive,    | 
-                     |   and non zero represents negative).             |
-                     |                                                  |
-                    \*--------------------------------------------------*/
-
-	    iSrcSign = extract_sign (pSrcFld, pSrcData);
-
-		    /*--------------------------------------------*\
-                     |                                            |
-                     |  Move the contents of the source field to  |
-                     |  our work area to create a normalized      | 
-                     |  9(18)v9(18) view of the data.             |
-                     |                                            |
-                    \*--------------------------------------------*/
-
-	    memset (caWork, '0', sizeof (caWork));
-
-	    j = MAX_DIGITS + iSrcDecimals - len1;
-	    iSrcIntDigits = len1;
-	    if (iSrcDecimals > 0)
-	      iSrcIntDigits -= iSrcDecimals;
-	    for (i = 0; i < iSrcIntDigits; i++)
-	      {
-		cWork = (unsigned char) pSrcData[i >> 1];
-		cWork = (i & 1) ? (cWork & 0xF) : (cWork >> 4);
-		caWork[j++] = cWork + '0';
-	      }
-	    if (iSrcDecimals > 0)
-	      {
-		j = MAX_DIGITS;
-		if (iSrcDecimals > len1)
-		  j += iSrcDecimals - len1;
-		for (; i < len1; i++)
-		  {
-		    cWork = (unsigned char) pSrcData[i >> 1];
-		    cWork = (i & 1) ? (cWork & 0xF) : (cWork >> 4);
-		    caWork[j++] = cWork + '0';
-		  }
-	      }
-
-		    /*--------------------------------------------*\
-                     |                                            |
-                     |  Now move the contents of our normalized   |
-                     |  data area to the receiving field.         |
-                     |                                            |
-                    \*--------------------------------------------*/
-
-	    j = MAX_DIGITS + iDestDecimals - len2;
-	    iDestIntDigits = len2;
-	    if (iDestDecimals > 0)
-	      iDestIntDigits -= iDestDecimals;
-
-	    memset (pDstData, '0', min (len1, fldLength (pDstFld)));
-	    memmove (pDstData, &caWork[j], iDestIntDigits);
-
-	    if (iDestDecimals > 0)
-	      {
-		if (iDestDecimals > len2)
-		  {
-		    j = MAX_DIGITS - iDestIntDigits;
-		    memmove (pDstData, &caWork[j], len2);
-		  }
-		else
-		  {
-		    j = MAX_DIGITS;
-		    memmove (&pDstData[iDestIntDigits],
-			     &caWork[j], iDestDecimals);
-		  }
-	      }
-	    if (pDstFld->pic[0] == 'S')
-	      put_sign (pDstFld, pDstData, iSrcSign);
-	    break;
-	  }
-
-	case DTYPE_PACKED:
-	  {
-	    int temp1;
-	    int j, k;
-	    int iSrcSign;
-	    int iSrcIntDigits;
-	    int iDestIntDigits;
-	    char caWork[MAX_DIGITS * 2];
-	    unsigned char cPack;
-
-		    /*--------------------------------------------------*\
-                     |                                                  |
-                     |   Currently, packed fields are assumed to be     |
-                     |   signed, so extract the value of the sign from  |
-                     |   the source field (zero represents positive,    | 
-                     |   and non zero represents negative).             |
-                     |                                                  |
-                    \*--------------------------------------------------*/
-
-	    iSrcSign = extract_sign (pSrcFld, pSrcData);
-
-		    /*--------------------------------------------*\
-                     |                                            |
-                     |  Move the contents of the source field to  |
-                     |  our work area to create a normalized      | 
-                     |  9(18)v9(18) view of the data.             |
-                     |                                            |
-                    \*--------------------------------------------*/
-
-	    memset (caWork, '0', sizeof (caWork));
-
-	    j = MAX_DIGITS + iSrcDecimals - len1;
-	    iSrcIntDigits = len1;
-	    if (iSrcDecimals >= 0)
-	      iSrcIntDigits -= iSrcDecimals;
-	    for (i = 0; i < iSrcIntDigits; ++i)
-	      {
-		cPack = (unsigned char) pSrcData[i >> 1];
-		cPack = ((i & 1) ? (cPack & 0xF) : (cPack >> 4)) + '0';
-		caWork[j++] = cPack;
-	      }
-	    if (iSrcDecimals > 0)
-	      {
-		j = MAX_DIGITS;
-		if (iSrcDecimals > len1)
-		  j += iSrcDecimals - len1;
-		for (; i < len1; ++i)
-		  {
-		    cPack = (unsigned char) pSrcData[i >> 1];
-		    cPack = ((i & 1) ? (cPack & 0xF) : (cPack >> 4)) + '0';
-		    caWork[j++] = cPack;
-		  }
-	      }
-
-		    /*--------------------------------------------*\
-                     |                                            |
-                     |  Now move the contents of our normalized   |
-                     |  data area to the receiving field, packing |
-                     |  the data as we go.  Packed fields are (at |
-                     |  least at this time) always considered to  |
-                     |  be signed, so we will also move a         |
-                     |  trailing sign to the receiving area. A    |
-                     |  value of 0xC represents a positive value  |
-                     |  and 0xD represents a negative value.      |
-                     |                                            |
-                    \*--------------------------------------------*/
-
-	    k = 0;
-	    cPack = 0;
-	    j = MAX_DIGITS + iDestDecimals - len2;
-	    iDestIntDigits = len2;
-	    if (iDestDecimals >= 0)
-	      iDestIntDigits -= iDestDecimals;
-	    /* zero fill destination first */
-	    for (i = 0; i < len1; ++i)
-	      {
-		if (i == fldLength (pDstFld))
-		  break;
-		if (i & 1)	/* if lower (right) nibble */
-		  pDstData[k++] = '\0';
-	      }
-	    if (i & 1)
-	      pDstData[k] = '\0';
-
-	    for (i = 0; i < iDestIntDigits; i++)
-	      {
-		if (i & 1)
-		  {		/* if lower (right) nibble */
-		    cPack = cPack | ((unsigned char) caWork[j++] & 0xF);
-		    pDstData[i >> 1] = cPack;
-		  }
-		else
-		  {
-		    cPack = (unsigned char) caWork[j++] << 4;
-		  }
-	      }
-	    k = i;
-
-	    if (iDestDecimals > 0)
-	      {
-		temp1 = min (len2, iDestDecimals);
-		j = MAX_DIGITS;
-		if (iDestDecimals > len2)
-		  j += iDestDecimals - len2;
-		for (i = 0; i < temp1; i++)
-		  {
-		    if (k & 1)
-		      {
-			cPack |= ((unsigned char) caWork[j++] & 0xF);
-			pDstData[k >> 1] = cPack;
-		      }
-		    else
-		      {
-			cPack = (unsigned char) caWork[j++] << 4;
-		      }
-		    k++;
-		  }
-	      }
-	    if (k & 1)
-	      pDstData[k >> 1] = cPack;
-	    put_sign (pDstFld, pDstData, iSrcSign);
-	    break;
-	  }
-
-	case DTYPE_FLOAT:
-	  {
-		    /*----------------------------------------------------*\
-                     |  DTYPE_PACKED -> DTYPE_FLOAT                       |
-                     |  Convert the source to a normalized DISPLAY type.  |
-                     |  Then convert the contents of the normalized       |
-                     |  data area to float or double.                     |
-                    \*----------------------------------------------------*/
-	    float fWork;
-	    double dWork;
-	    int bIsNegative, i, k;
-	    char caWork[32], caWork1[2];
-
-	    FldWrk.len = picCompLength (pDstFld);
-	    FldWrk.decimals = pDstFld->decimals;
-	    if (pDstFld->decimals != 0)
-	      {
-		FldWrk.decimals += 2;
-		FldWrk.len += 2;
-	      }
-
-	    FldWrk.type = DTYPE_DISPLAY;
-	    FldWrk.all = 0;
-	    strcpy (FldWrk.pic, pDstFld->pic);
-	    cob_move (pSrcFld, pSrcData, &FldWrk, caWork);
-	    caWork[FldWrk.len] = '\0';
-	    bIsNegative = extract_sign (&FldWrk, caWork);
-
-	    // Add the decimal point
-	    if (FldWrk.decimals != 0)
-	      {
-		caWork1[0] = '.';
-		caWork1[1] = '\0';
-		k = FldWrk.len - FldWrk.decimals;
-		for (i = 0; i < FldWrk.len; i++)
-		  {
-		    if (i >= k)
-		      {
-			caWork1[1] = caWork[i];
-			caWork[i] = caWork1[0];
-			caWork1[0] = caWork1[1];
-			caWork1[1] = '\0';
-		      }
-		  }
-		caWork[i] = caWork1[0];
-		i++;
-		caWork[i] = '\0';
-	      }
-
-	    if (pDstFld->len == 4)
-	      {
-		sscanf (caWork, "%f", &fWork);
-		if (bIsNegative)
-		  fWork *= -1;
-		*(float *) pDstData = fWork;
-	      }
-	    else
-	      {
-		sscanf (caWork, "%lf", &dWork);
-		if (bIsNegative)
-		  dWork *= -1;
-		*(double *) pDstData = dWork;
-	      }
-	    break;
-	  }
-	}
-      break;
-
-    case DTYPE_FLOAT:
-      float2all (pSrcFld, pSrcData, pDstFld, pDstData);
-      break;
-
-    case DTYPE_BININT:
-      {
-	long long iWork;
-	int j, k;
-	int bIsNegative = 0;
-	char caWork[19];
-
-	switch (binFldSize (pSrcFld))
-	  {
-	  case 1: iWork = *(char *) pSrcData; break;
-	  case 2: iWork = *(short *) pSrcData; break;
-	  case 4: iWork = *(long *) pSrcData; break;
-	  case 8: iWork = *(long long *) pSrcData; break;
-	  }
-
-	if (iWork < 0)
-	  {
-	    bIsNegative = 1;
-	    iWork *= -1;
-	  }
-
-	k = 18 - fldLength (pSrcFld);
-	for (i = 0; i < fldLength (pSrcFld); ++i)
-	  {
-	    if (iWork >= _iIntValues_[i + k])
-	      {
-		j = iWork / _iIntValues_[i + k];
-		caWork[i] = (char) (j + '0');
-		iWork -= (_iIntValues_[i + k] * j);
-	      }
-	    else
-	      caWork[i] = '0';
-	  }
-
-	FldWrk.len = fldLength (pSrcFld);
-	FldWrk.decimals = pSrcFld->decimals;
-	FldWrk.type = DTYPE_DISPLAY;
-	FldWrk.all = 0;
-	strcpy (FldWrk.pic, pSrcFld->pic);
-	if (FldWrk.pic[0] == 'S')
-	  put_sign (&FldWrk, caWork, bIsNegative);
-	cob_move (&FldWrk, caWork, pDstFld, pDstData);
-      }
+  int sign, i, k;
+  int len = picCompLength (f2desc);
+  unsigned char data[len + 2], data1[2];
+  struct fld_desc desc;
+  desc.len = len;
+  desc.type = DTYPE_DISPLAY;
+  desc.decimals = f2desc->decimals;
+  desc.all = 0;
+  if (f2desc->decimals != 0)
+    {
+      desc.decimals += 2;
+      desc.len += 2;
     }
-  return;
+  desc.pic = f2desc->pic;
+  cob_move (f1desc, f1data, &desc, data);
+  data[desc.len] = '\0';
+
+  sign = extract_sign (&desc, data);
+  if (desc.decimals != 0)
+    {
+      data1[0] = '.';
+      data1[1] = '\0';
+      k = desc.len - desc.decimals;
+      for (i = 0; i < desc.len; i++)
+	{
+	  if (i >= k)
+	    {
+	      data1[1] = data[i];
+	      data[i] = data1[0];
+	      data1[0] = data1[1];
+	      data1[1] = '\0';
+	    }
+	}
+      data[i] = data1[0];
+      i++;
+      data[i] = '\0';
+    }
+
+  if (f2desc->len == 4)
+    {
+      float val;
+      sscanf (data, "%f", &val);
+      if (sign)
+	val *= -1;
+      *(float *) f2data = val;
+    }
+  else
+    {
+      double val;
+      sscanf (data, "%lf", &val);
+      if (sign)
+	val *= -1;
+      *(double *) f2data = val;
+    }
 }
 
-/*-----------------------------------------------------------------------*\
- |                                                                       |
- |       char *pic_expand( struct fld_desc *FieldDesc)                   |
- |                                                                       |
- |  Return a string containing the picture clause for the field          |
- |  described in the field description structure pointed to by the       |
- |  argument FieldDesc.                                                  |
- |                                                                       |
- |  The string pointed to by the field 'pic' in the fld_desc structure   |
- |  has the following format:                                            |
- |         char           cPictChar;                                     |
- |         unsigned char  cLength;                                       |
- |            . . .                                                      |
- |            . . .                                                      |
- |         unsigned char(0);                                             |
- |  Where cPictChar is a character of the picture, for example 'X', '9', |
- |  'Z', etc. and cLength is the number of times that that character is  |
- |  repeated. These two fields repeat as many times as necessary to      |
- |  describe the entire picture clause.                                  |
- |                                                                       |
- |  Example:      PIC   Z(3),Z(2)9.99CR.                                 |
- |  Would be encoded as:                                                 |
- |         char('Z');                                                    |
- |         unsigned char(3);      the 'Z' occurrs 3 times                |
- |         char(',');                                                    |
- |         unsigned char(1);      comma occurs once                      |
- |         char('Z');                                                    |
- |         unsigned char(2);      second Z occurs 2 times                |
- |         char('9');                                                    |
- |         unsigned char(1);      followed by one 9                      |
- |         char('.');                                                    |
- |         unsigned char(1);      one decimal point                      |
- |         char('9');                                                    |
- |         unsigned char(2);      two digits following dec point         |
- |         char('C');                                                    |
- |         unsigned char(1);                                             |
- |         char('R');                                                    |
- |         unsigned char(1);                                             |
- |         unsigned char(0);      terminator for the string              |
- |                                                                       |
-\*-----------------------------------------------------------------------*/
-
+
 static char *
 pic_expand (struct fld_desc *pfldDesc)
 {
@@ -1497,9 +200,9 @@ pic_expand (struct fld_desc *pfldDesc)
   return result;
 }
 
-static void
-move_edited (struct fld_desc *pSrcFld, char *pSrcData,
-	     struct fld_desc *pDstFld, char *pDstData)
+void
+cob_move_xxx_to_edited (struct fld_desc *pSrcFld, char *pSrcData,
+			struct fld_desc *pDstFld, char *pDstData)
 {
   int i, k;
   int iSrcPtr;
@@ -2028,19 +731,10 @@ move_edited (struct fld_desc *pSrcFld, char *pSrcData,
   return;
 }
 
-/*------------------------------------------------------------------------*\
- |                                                                        |
- |                          move float                                    |
- |  DTYPE_FLOAT -> All                                                    |
- |  Convert the source to a normalized DISPLAY type.                      |
- |  Then convert the contents of the normalized                           |
- |  data area to sestination field type  	                          |
- |                                                                        |
-\*------------------------------------------------------------------------*/
-
-static void
-float2all (struct fld_desc *pSrcFld, char *pSrcData, struct fld_desc *pDstFld,
-	   char *pDstData)
+
+void
+cob_move_float_to_xxx (struct fld_desc *pSrcFld, char *pSrcData,
+		       struct fld_desc *pDstFld, char *pDstData)
 {
 
   double dWork;
@@ -2128,6 +822,1119 @@ float2all (struct fld_desc *pSrcFld, char *pSrcData, struct fld_desc *pDstFld,
 	put_sign (&FldWrk, caWork, bIsNegative);
       cob_move (&FldWrk, caWork, pDstFld, pDstData);
     }
+}
+
+
+void
+cob_move (struct fld_desc *f1desc, unsigned char *f1data,
+	  struct fld_desc *f2desc, unsigned char *f2data)
+{
+  int i;
+  int iPadLength;
+  int len1, len2;
+  char iSrcDecimals, iDestDecimals;
+  unsigned char *pSrcData, *pDstData;
+  unsigned char caWrkData[20];
+  unsigned char caPic[20];
+
+  struct fld_desc *pSrcFld, *pDstFld;
+  struct fld_desc FldWrk;
+
+  if (f2desc->type == DTYPE_EDITED)
+    return cob_move_xxx_to_edited (f1desc, f1data, f2desc, f2data);
+
+  if (f2desc->type == DTYPE_BININT)
+    return cob_move_xxx_to_binary (f1desc, f1data, f2desc, f2data);
+
+  if (f2desc->type == DTYPE_FLOAT)
+    return cob_move_xxx_to_float (f1desc, f1data, f2desc, f2data);
+
+  len1 = fldLength (f1desc);
+  len2 = fldLength (f2desc);
+  iSrcDecimals = f1desc->decimals;
+  iDestDecimals = f2desc->decimals;
+  pSrcFld = f1desc;		/* may be changed to point to work area */
+  pDstFld = f2desc;		/* may be changed to point to work area */
+  pSrcData = f1data;		/* may be changed to point to work area */
+  pDstData = f2data;		/* may be changed to point to work area */
+  FldWrk.pic = caPic;
+
+  switch (pSrcFld->type)
+    {				/* source field type */
+    case DTYPE_ALPHA:
+    case DTYPE_ALPHANUMERIC:
+    case DTYPE_EDITED:
+    case DTYPE_GROUP:
+    case DTYPE_ACCEPT_DISPLAY:
+      if (pSrcFld->all	/* handle high/low values for */
+	  && (pSrcData[0] == 0 || pSrcData[0] == 255)
+	  && (pDstFld->type == DTYPE_DISPLAY || pDstFld->type == DTYPE_PACKED))
+	{
+	  char cWork = pSrcFld->type;
+	  pSrcFld->type = DTYPE_DISPLAY;
+	  cob_move (pSrcFld, pSrcData, pDstFld, pDstData);
+	  pSrcFld->type = cWork;
+	  return;
+	}
+      switch (pDstFld->type)
+	{
+	case DTYPE_ALPHA:
+	case DTYPE_ALPHANUMERIC:
+	case DTYPE_GROUP:
+	case DTYPE_ACCEPT_DISPLAY:
+	  if (pSrcFld->all)
+	    {
+	      /* move string repeatedly */
+	      while (len2 > 0)
+		{
+		  int len = min (len1, len2);
+		  memcpy (pDstData, pSrcData, len);
+		  pDstData += len;
+		  len2 -= len;
+		}
+	      return;
+	    }
+
+	  if (len1 >= len2)
+	    {
+	      /* Just move string, truncating if necessary */
+	      if (pDstFld->just_r)
+		memcpy (pDstData, pSrcData + len1 - len2, len2);
+	      else
+		memcpy (pDstData, pSrcData, len2);
+	    }
+	  else
+	    {
+	      /* Move string with padding */
+	      if (pDstFld->just_r)
+		{
+		  memset (pDstData, ' ', len2 - len1);
+		  memcpy (pDstData + len2 - len1, pSrcData, len1);
+		}
+	      else
+		{
+		  memcpy (pDstData, pSrcData, len1);
+		  memset (pDstData + len1, ' ', len2 - len1);
+		}
+	    }
+	  return;
+
+	case DTYPE_DISPLAY:
+	  {
+		    /*----------------------------------------------------*\
+                     |                                                    |
+                     |  Edit and move alphanumeric contents into a        |
+                     |  numeric display destination field.  If the        |
+                     |  source field contains non numeric data, a runtime |
+                     |  error is generated, and the destination field     |
+                     |  is cleared to all zeroes.  The source field may   |
+                     |  contain leading or trailing plus (+) or minus (-) |
+                     |  signs, and if the receiving field is signed, its  |
+                     |  sign will be set accordingly. If no sign is       |
+                     |  present in the source data, it is assumed that    |
+                     |  a positive number is represented.  Spaces and     |
+                     |  tabs are ignored in the conversion.               |
+                     |                                                    |
+                    \*----------------------------------------------------*/
+
+	    char cSign;
+	    char cDecimalPoint;
+	    char cChar;
+	    char *pDecPortion;
+
+	    int iIntCount;
+	    int iDecCount;
+	    int iWork;
+	    int iSrcPtr;
+	    int iWrkLength;
+	    int bInDecPortion;
+	    int bIsSigned;
+	    int bLeadingWhite;
+	    int bTrailingWhite;
+
+		    /*----------------------------------------------------*\
+                     |                                                    |
+                     |  If the source field is scaled (has 'P's in the    |
+                     |  picture clause, move the source data to a like    |
+                     |  sized non scaled numeric field, then call move    |
+                     |  again using this non scaled field as the source   |
+                     |  and the original destination field as the         |
+                     |  destination.  This isn't the most efficient way   | 
+                     |  to handle this type of move, but scaled fields    |
+                     |  aren't heavily used.                              |
+                     |                                                    |
+                    \*----------------------------------------------------*/
+
+	    if (iDestDecimals < 0)
+	      {			/* integer scaling */
+		FldWrk.len = fldLength (pDstFld);
+		FldWrk.len += ((char) pDstFld->decimals * -1);
+		FldWrk.type = DTYPE_DISPLAY;
+		FldWrk.decimals = 0;
+		FldWrk.all = 0;
+		i = 0;
+		if (pDstFld->pic[0] == 'S')
+		  {
+		    FldWrk.pic[0] = 'S';
+		    FldWrk.pic[1] = 1;
+		    i = 2;
+		  }
+		FldWrk.pic[i++] = '9';
+		FldWrk.pic[i++] = (char) FldWrk.len;
+		FldWrk.pic[i] = '\0';
+		cob_move (pSrcFld, pSrcData, &FldWrk, caWrkData);
+		cob_move (&FldWrk, caWrkData, pDstFld, pDstData);
+		return;
+	      }
+	    if (len2 < iDestDecimals)
+	      {			/* fractional scaling */
+		FldWrk.len = pDstFld->decimals;
+		FldWrk.type = DTYPE_DISPLAY;
+		FldWrk.decimals = pDstFld->decimals;
+		FldWrk.all = 0;
+		i = 0;
+		if (pDstFld->pic[0] == 'S')
+		  {
+		    FldWrk.pic[0] = 'S';
+		    FldWrk.pic[1] = 1;
+		    i = 2;
+		  }
+		FldWrk.pic[i++] = 'V';
+		FldWrk.pic[i++] = (char) 1;
+		FldWrk.pic[i++] = '9';
+		FldWrk.pic[i++] = (char) FldWrk.len;
+		FldWrk.pic[i] = '\0';
+		cob_move (pSrcFld, pSrcData, &FldWrk, caWrkData);
+		cob_move (&FldWrk, caWrkData, pDstFld, pDstData);
+		return;
+	      }
+
+	    iDestDecimals = (int) pDstFld->decimals;
+	    iWrkLength = len1;
+	    iDecCount = 0;
+	    iIntCount = 0;
+	    iSrcPtr = 0;
+	    bInDecPortion = 0;
+	    bIsSigned = 0;
+	    bLeadingWhite = 1;
+	    bTrailingWhite = 0;
+	    pDecPortion = (char *) 0;
+	    cDecimalPoint = (decimal_comma) ? ',' : '.';
+	    cSign = 0;
+	    for (i = 0; i < len1; ++i)
+	      {
+		cChar = pSrcData[i];
+		switch (cChar)
+		  {
+		  case '+':
+		    cSign = 0;
+		    break;
+		  case '-':
+		    cSign = 1;
+		    break;
+		  case '.':
+		  case ',':
+		    if (cChar == cDecimalPoint)
+		      {
+			if ((!bInDecPortion) && ((i + 1) < len1))
+			  pDecPortion = &caWrkData[iSrcPtr];
+			bInDecPortion = 1;
+		      }
+		    break;
+		  case '0':
+		  case '1':
+		  case '2':
+		  case '3':
+		  case '4':
+		  case '5':
+		  case '6':
+		  case '7':
+		  case '8':
+		  case '9':
+		    if (!bInDecPortion)
+		      iIntCount++;
+		    else
+		      iDecCount++;
+		    caWrkData[iSrcPtr++] = cChar;
+		    break;
+		  case ' ':
+		  case '\t':
+		    break;
+		  default:
+		    runtime_error (RTERR_INVALID_DATA, f1desc,
+				   (void *) pSrcData);
+		    memset (pDstData, '0', fldLength (pDstFld));
+		    return;
+		  }
+	      }
+
+	    i = 0;
+	    len1 = iSrcPtr;
+	    iSrcPtr = 0;
+	    if (len2 > iDestDecimals)
+	      {
+		iWork = len2 - iDestDecimals;
+		if (iIntCount < iWork)
+		  {		/* move pad first */
+		    i = iWork - iIntCount;
+		    memset (f2data, '0', i);
+		  }
+		if (iIntCount > iWork)	/* truncate */
+		  iSrcPtr = iIntCount - iWork;
+		memmove (&pDstData[i], &caWrkData[iSrcPtr],
+			 iIntCount - iSrcPtr);
+		i += iIntCount - iSrcPtr;
+	      }
+	    if (iDecCount > iDestDecimals)
+	      iDecCount = iDestDecimals;
+
+	    memmove (&pDstData[i], pDecPortion, iDecCount);
+	    i += iDecCount;
+	    memset (&pDstData[i], '0', iDestDecimals - iDecCount);
+
+	    if (pDstFld->pic[0] == 'S')
+	      put_sign (pDstFld, pDstData, (int) cSign);
+	    break;
+	  }
+	case DTYPE_PACKED:
+	  {
+		    /*----------------------------------------------------*\
+                     |                                                    |
+                     |  Moving alphanumeric data to a packed field is a   |
+                     |  two step process, the first process moves it to   |
+                     |  a work area defined like the destination field,   |
+                     |  except that it will be display and contain no     |
+                     |  scaling.  Then the contents of this work area     |
+                     |  will then be moved to the original destination.   |
+                     |  This is pretty inefficient, but, it will work     | 
+                     |  for a first cut.                                  |
+                     |                                                    |
+                    \*----------------------------------------------------*/
+
+	    memcpy (&FldWrk, pSrcFld, sizeof (FldWrk));
+	    FldWrk.type = DTYPE_DISPLAY;
+	    FldWrk.pic[0] = 'S';
+	    FldWrk.pic[1] = 1;
+	    i = 2;
+	    if (iSrcDecimals < 0)
+	      {
+		FldWrk.pic[i++] = '9';
+		FldWrk.pic[i++] = (char) ((int) FldWrk.decimals * -1);
+	      }
+	    else
+	      {
+		if (FldWrk.len > FldWrk.decimals)
+		  {
+		    FldWrk.pic[i++] = '9';
+		    FldWrk.pic[i++] = (char) (FldWrk.len - FldWrk.decimals);
+		  }
+		if (FldWrk.decimals)
+		  {
+		    FldWrk.pic[i++] = 'V';
+		    FldWrk.pic[i++] = (char) 1;
+		    FldWrk.pic[i++] = '9';
+		    FldWrk.pic[i++] = (char) FldWrk.decimals;
+		  }
+	      }
+	    FldWrk.pic[i] = '\0';
+	    cob_move (pSrcFld, pSrcData, &FldWrk, caWrkData);
+	    cob_move (&FldWrk, caWrkData, pDstFld, pDstData);
+	    break;
+	  }
+	}
+      break;
+
+
+/* Source type is Display */
+    case DTYPE_DISPLAY:
+      switch (f2desc->type)
+	{
+	case DTYPE_ALPHA:
+	case DTYPE_GROUP:
+	case DTYPE_ALPHANUMERIC:
+	case DTYPE_ACCEPT_DISPLAY:
+	  {
+	    int j;
+
+		    /*----------------------------------------------------*\
+                     |                                                    |
+                     |  If the source field is scaled (has 'P's in the    |
+                     |  picture clause, move the source data to a like    |
+                     |  sized non scaled numeric field, then call move    |
+                     |  again using this non scaled field as the source   |
+                     |  and the original destination field as the         |
+                     |  destination.  This isn't the most efficient way   | 
+                     |  to handle this type of move, but scaled fields    |
+                     |  aren't heavily used.                              |
+                     |                                                    |
+                    \*----------------------------------------------------*/
+
+	    if (iDestDecimals < 0)
+	      {			/* integer scaling */
+		FldWrk.len = fldLength (pDstFld);
+		FldWrk.len += ((char) pDstFld->decimals * -1);
+		FldWrk.type = DTYPE_DISPLAY;
+		FldWrk.decimals = 0;
+		FldWrk.all = 0;
+		i = 0;
+		if (pDstFld->pic[0] == 'S')
+		  {
+		    FldWrk.pic[0] = 'S';
+		    FldWrk.pic[1] = 1;
+		    i = 2;
+		  }
+		FldWrk.pic[i++] = '9';
+		FldWrk.pic[i++] = (char) FldWrk.len;
+		FldWrk.pic[i] = '\0';
+		cob_move (pSrcFld, pSrcData, &FldWrk, caWrkData);
+		cob_move (&FldWrk, caWrkData, pDstFld, pDstData);
+		return;
+	      }
+	    if (len2 < iDestDecimals)
+	      {			/* fractional scaling */
+		FldWrk.len = pDstFld->decimals;
+		FldWrk.type = DTYPE_DISPLAY;
+		FldWrk.decimals = pDstFld->decimals;
+		FldWrk.all = 0;
+		i = 0;
+		if (pDstFld->pic[0] == 'S')
+		  {
+		    FldWrk.pic[0] = 'S';
+		    FldWrk.pic[1] = 1;
+		    i = 2;
+		  }
+		FldWrk.pic[i++] = 'V';
+		FldWrk.pic[i++] = (char) 1;
+		FldWrk.pic[i++] = '9';
+		FldWrk.pic[i++] = (char) FldWrk.decimals;
+		FldWrk.pic[i] = '\0';
+		cob_move (pSrcFld, pSrcData, &FldWrk, caWrkData);
+		cob_move (&FldWrk, caWrkData, pDstFld, pDstData);
+		return;
+	      }
+
+		    /*----------------------------------------------------*\
+                     |                                                    |
+                     |  Else, just move the data left to right,           |
+                     |  truncating or padding with spaces on the right    |
+                     |  side of the destination field.                    |
+                     |                                                    |
+                    \*----------------------------------------------------*/
+
+	    if (len1 >= len2)
+	      {
+		memcpy (pDstData, pSrcData, len2);
+	      }
+	    else if (pSrcFld->all == 0)
+	      {
+		memcpy (pDstData, pSrcData, len1);
+		iPadLength = len2 - len1;
+		memset (pDstData + len1, ' ', iPadLength);
+	      }
+	    else
+	      {
+		j = 0;
+		for (i = 0; i < len2; ++i)
+		  {
+		    pDstData[i] = pSrcData[j++];
+		    if (j == len1)
+		      j = 0;
+		  }
+	      }
+	    break;
+	  }
+
+	case DTYPE_DISPLAY:
+	  {
+	    int j;
+	    int iSrcSign;
+	    int iSrcIntDigits;
+	    int iDestIntDigits;
+	    char caWork[MAX_DIGITS * 2];
+
+		    /*--------------------------------------------*\
+                     |                                            |
+                     |   If source field is signed, extract the   |
+                     |   value of the sign (zero is positive and  |
+                     |   non zero is negative).  The extract      |
+                     |   routine also 'unsigns' the overpuched    |
+                     |   last digit of the field, so we will      |
+                     |   need to re-sign the field later.         |
+                     |   if the 'all' flag is set on, then set    | 
+                     |   the dest type to alphanumeric, call      |
+                     |   ourselves again, then change the type    |
+                     |   back to numeric.  In the case of the     |
+                     |   'all' flag, scaling and decimal points   |
+                     |   are ignored. The 'all' flag is used      |
+                     |   primarily for zero, high and low vales.  |
+                     |                                            |
+                    \*--------------------------------------------*/
+
+	    iSrcSign = (pSrcFld->pic[0] == 'S') ?
+	      extract_sign (pSrcFld, pSrcData) : 0;
+
+	    if (pSrcFld->all != 0)
+	      {
+		pDstFld->type = DTYPE_ALPHANUMERIC;
+		j = 0;
+		if (pSrcData[0] == 0)
+		  {		/* low values */
+		    j = (int) pSrcData[0] | 0x100;
+		    pSrcData[0] = '0';
+		  }
+		else if (pSrcData[0] == 255)
+		  {		/* high values */
+		    j = pSrcData[0];
+		    pSrcData[0] = '9';
+		  }
+		cob_move (pSrcFld, pSrcData, pDstFld, pDstData);
+		pDstFld->type = DTYPE_DISPLAY;
+		if (j)
+		  pSrcData[0] = (char) j;
+		if (pSrcFld->pic[0] == 'S')
+		  put_sign (pSrcFld, pSrcData, iSrcSign);
+		if (pDstFld->pic[0] == 'S')
+		  put_sign (pDstFld, pDstData, 0);
+		return;
+	      }
+
+		    /*--------------------------------------------*\
+                     |                                            |
+                     |  Move the contents of the source field to  |
+                     |  our work area to create a normalized      | 
+                     |  9(18)v9(18) view of the data.             |
+                     |                                            |
+                    \*--------------------------------------------*/
+
+
+	    memset (caWork, '0', sizeof (caWork));
+
+	    j = MAX_DIGITS + iSrcDecimals - len1;
+	    iSrcIntDigits = len1;
+	    if (iSrcDecimals > 0)
+	      iSrcIntDigits -= iSrcDecimals;
+	    if (iSrcIntDigits > 0)
+	      memmove (&caWork[j], pSrcData, iSrcIntDigits);
+
+	    if (iSrcDecimals > 0)
+	      {
+		j = MAX_DIGITS;
+		if (iSrcDecimals > len1)
+		  j += iSrcDecimals - 1;
+		memmove (&caWork[j], &pSrcData[iSrcIntDigits], iSrcDecimals);
+	      }
+	    if (pSrcFld->pic[0] == 'S')
+	      put_sign (pSrcFld, pSrcData, iSrcSign);
+
+		    /*--------------------------------------------*\
+                     |                                            |
+                     |  Now move the contents of our normalized   |
+                     |  data area to the receiving field.         |
+                     |                                            |
+                    \*--------------------------------------------*/
+
+	    j = MAX_DIGITS + iDestDecimals - len2;
+	    iDestIntDigits = len2;
+	    if (iDestDecimals > 0)
+	      iDestIntDigits -= iDestDecimals;
+
+	    /* Zero the destination */
+	    if (iSrcIntDigits + iSrcDecimals > 0)
+	      memset (pDstData, '0', min (iSrcIntDigits + iSrcDecimals,
+					  fldLength (pDstFld)));
+	    else
+	      memset (pDstData, '0', fldLength (pDstFld));
+
+	    /* Fill in the destination integer part */
+	    if (iDestIntDigits > 0)
+	      memmove (pDstData, &caWork[j], iDestIntDigits);
+
+	    if (iDestDecimals > 0)
+	      {
+		if (iDestDecimals > len2)
+		  {
+		    j = MAX_DIGITS - iDestIntDigits;
+		    /* Source decimal part exceeds destination width, 
+		       insert those digits that
+		       fit into the destination decimal part */
+		    memmove (pDstData, &caWork[j], len2);
+		  }
+		else
+		  {
+		    j = MAX_DIGITS;
+		    /* Source decimal part fits into the destination width,
+		       copy it to the destination */
+		    memmove (&pDstData[iDestIntDigits],
+			     &caWork[j], iDestDecimals);
+		  }
+	      }
+	    if (pDstFld->pic[0] == 'S')
+	      put_sign (pDstFld, pDstData, iSrcSign);
+	    break;
+	  }
+
+	case DTYPE_PACKED:
+	  {
+	    int temp1;
+	    int j, k;
+	    int iSrcSign;
+	    int iSrcIntDigits;
+	    int iDestIntDigits;
+	    char caWork[MAX_DIGITS * 2];
+	    unsigned char cPack;
+
+		    /*--------------------------------------------*\
+                     |                                            |
+                     |   If source field is signed, extract the   |
+                     |   value of the sign (zero is positive and  |
+                     |   non zero is negative).  The extract      |
+                     |   routine also 'unsigns' the overpunched   |
+                     |   last digit of the field, so we will      |
+                     |   need to re-sign the field later.         |
+                     |   If the source field has the 'all' flag   |
+                     |   on, move to work area as type display,   |
+                     |   then change work area type to alpha,     |
+                     |   and call move again, change type back    |
+                     |   to display, then call move using the     |
+                     |   work area as source and the original     |
+                     |   destination. This facilitates moving     |
+                     |   of zero, high and low values.            |
+                     |                                            |
+                    \*--------------------------------------------*/
+
+
+	    iSrcSign = (pSrcFld->pic[0] == 'S') ?
+	      extract_sign (pSrcFld, pSrcData) : 0;
+
+	    if (pSrcFld->all != 0)
+	      {
+		memcpy (&FldWrk, pDstFld, sizeof (FldWrk));
+		FldWrk.type = DTYPE_ALPHANUMERIC;
+		j = 0;
+		if (pSrcData[0] == 0)
+		  {		/* low values */
+		    j = (int) pSrcData[0] | 0x100;
+		    pSrcData[0] = '0';
+		  }
+		else if (pSrcData[0] == 255)
+		  {		/* high values */
+		    j = pSrcData[0];
+		    pSrcData[0] = '9';
+		  }
+		FldWrk.pic[0] = '9';	// mark it as unsigned
+		cob_move (pSrcFld, pSrcData, &FldWrk, caWork);
+		FldWrk.type = DTYPE_DISPLAY;
+		cob_move (&FldWrk, caWork, pDstFld, pDstData);
+		if (j)
+		  pSrcData[0] = (char) j;
+		return;
+	      }
+
+		    /*--------------------------------------------*\
+                     |                                            |
+                     |  Move the contents of the source field to  |
+                     |  our work area to create a normalized      | 
+                     |  9(18)v9(18) view of the data.             |
+                     |                                            |
+                    \*--------------------------------------------*/
+
+	    memset (caWork, '0', sizeof (caWork));
+	    /*
+	       for(i=0; i<sizeof(caWork); i++)
+	       caWork[i] = '0';
+	     */
+
+	    j = MAX_DIGITS + iSrcDecimals - len1;
+	    iSrcIntDigits = len1;
+	    if (iSrcDecimals > 0)
+	      iSrcIntDigits -= iSrcDecimals;
+	    memmove (&caWork[j], pSrcData, iSrcIntDigits);
+
+	    if (iSrcDecimals > 0)
+	      {
+		j = MAX_DIGITS;
+		if (iSrcDecimals > len1)
+		  j += iSrcDecimals - 1;
+		memmove (&caWork[j], &pSrcData[iSrcIntDigits], iSrcDecimals);
+	      }
+	    if (pSrcFld->pic[0] == 'S')
+	      put_sign (pSrcFld, pSrcData, iSrcSign);
+
+
+		    /*--------------------------------------------*\
+                     |                                            |
+                     |  Now move the contents of our normalized   |
+                     |  data area to the receiving field, packing |
+                     |  the data as we go.  Packed fields are (at |
+                     |  least at this time) always considered to  |
+                     |  be signed, so we will also move a         |
+                     |  trailing sign to the receiving area. A    |
+                     |  value of 0xC represents a positive value  |
+                     |  and 0xD represents a negative value.      |
+                     |                                            |
+                    \*--------------------------------------------*/
+
+	    k = 0;
+	    cPack = 0;
+	    j = MAX_DIGITS + iDestDecimals - len2 - 1;
+	    /* j is pointer into work area */
+	    iDestIntDigits = len2;
+	    if (iDestDecimals >= 0)
+	      {
+		iDestIntDigits -= iDestDecimals;
+		j++;
+	      }
+	    /* zero fill destination first */
+	    for (i = 0; i < (iSrcIntDigits + iSrcDecimals); ++i)
+	      {
+		if (i == fldLength (pDstFld))
+		  break;
+		if (i & 1)	/* if lower (right) nibble */
+		  pDstData[k++] = 0;
+	      }
+	    if (i & 1)
+	      pDstData[k] = '\0';
+
+	    for (i = 0; i < iDestIntDigits; i++)
+	      {
+		if (i & 1)
+		  {		/* if lower (right) nibble */
+		    cPack = cPack | ((unsigned char) caWork[j++] & 0xF);
+		    pDstData[i >> 1] = cPack;
+		  }
+		else
+		  {
+		    cPack = (unsigned char) caWork[j++] << 4;
+		  }
+	      }
+	    k = i;
+
+	    if (iDestDecimals > 0)
+	      {
+		j = MAX_DIGITS;
+		temp1 = min (len2, iDestDecimals);
+		if (iDestDecimals > len2)
+		  j += iDestDecimals - len2 - 1;
+		for (i = 0; i < temp1; i++)
+		  {
+		    if (k & 1)
+		      {
+			cPack |= ((unsigned char) caWork[j++] & 0xF);
+			pDstData[k >> 1] = cPack;
+		      }
+		    else
+		      {
+			cPack = (unsigned char) caWork[j++] << 4;
+		      }
+		    k++;
+		  }
+	      }
+	    if (k & 1)
+	      {
+		cPack |= ((unsigned char) caWork[j++] & 0xF);
+		pDstData[k >> 1] = cPack;
+	      }
+	    put_sign (pDstFld, pDstData, iSrcSign);
+	    break;
+	  }
+	}
+      break;
+
+/* Source type is Packed */
+    case DTYPE_PACKED:
+      switch (f2desc->type)
+	{			/* destination field type */
+	case DTYPE_ALPHA:
+	case DTYPE_GROUP:
+	case DTYPE_ACCEPT_DISPLAY:
+	case DTYPE_ALPHANUMERIC:
+	  {
+	    int j;
+	    unsigned char cWork;
+
+		    /*----------------------------------------------------*\
+                     |                                                    |
+                     |  If the source field is scaled (has 'P's in the    |
+                     |  picture clause, move the source data to a like    |
+                     |  sized non scaled numeric field, then call move    |
+                     |  again using this non scaled field as the source   |
+                     |  and the original destination field as the         |
+                     |  destination.  This isn't the most efficient way   | 
+                     |  to handle this type of move, but scaled fields    |
+                     |  aren't heavily used.                              |
+                     |                                                    |
+                    \*----------------------------------------------------*/
+
+	    if (iDestDecimals < 0)
+	      {			/* integer scaling */
+		FldWrk.len = fldLength (pDstFld);
+		FldWrk.len += ((char) pDstFld->decimals * -1);
+		FldWrk.type = DTYPE_DISPLAY;
+		FldWrk.decimals = 0;
+		FldWrk.all = 0;
+		i = 0;
+		if (pDstFld->pic[0] == 'S')
+		  {
+		    FldWrk.pic[0] = 'S';
+		    FldWrk.pic[1] = 1;
+		    i = 2;
+		  }
+		FldWrk.pic[i++] = '9';
+		FldWrk.pic[i++] = (char) FldWrk.len;
+		FldWrk.pic[i] = '\0';
+		cob_move (pSrcFld, pSrcData, &FldWrk, caWrkData);
+		cob_move (&FldWrk, caWrkData, pDstFld, pDstData);
+		return;
+	      }
+	    if (len2 < iDestDecimals)
+	      {			/* fractional scaling */
+		FldWrk.len = pDstFld->decimals;
+		FldWrk.type = DTYPE_DISPLAY;
+		FldWrk.decimals = pDstFld->decimals;
+		FldWrk.all = 0;
+		i = 0;
+		if (pDstFld->pic[0] == 'S')
+		  {
+		    FldWrk.pic[0] = 'S';
+		    FldWrk.pic[1] = 1;
+		    i = 2;
+		  }
+		FldWrk.pic[i++] = 'V';
+		FldWrk.pic[i++] = (char) 1;
+		FldWrk.pic[i++] = '9';
+		FldWrk.pic[i++] = (char) FldWrk.decimals;
+		FldWrk.pic[i] = '\0';
+		cob_move (pSrcFld, pSrcData, &FldWrk, caWrkData);
+		cob_move (&FldWrk, caWrkData, pDstFld, pDstData);
+		return;
+	      }
+
+		    /*----------------------------------------------------*\
+                     |                                                    |
+                     |  Else, just move the data left to right,           |
+                     |  truncating or padding with spaces on the right    |
+                     |  side of the destination field.                    |
+                     |                                                    |
+                    \*----------------------------------------------------*/
+
+	    j = min (len1, len2);
+	    for (i = 0; i < j; i++)
+	      {
+		cWork = (unsigned char) pSrcData[i >> 1];
+		cWork = (i & 1) ? (cWork & 0x0f) : (cWork >> 4);
+		pDstData[i] = cWork + '0';
+	      }
+	    memset (&pDstData[j], ' ', len2 - j);
+	    break;
+	  }
+
+	case DTYPE_DISPLAY:
+	  {
+	    int j;
+	    int iSrcSign;
+	    int iSrcIntDigits;
+	    int iDestIntDigits;
+	    char caWork[MAX_DIGITS * 2];
+	    unsigned char cWork;
+
+		    /*--------------------------------------------------*\
+                     |                                                  |
+                     |   Currently, packed fields are assumed to be     |
+                     |   signed, so extract the value of the sign from  |
+                     |   the source field (zero represents positive,    | 
+                     |   and non zero represents negative).             |
+                     |                                                  |
+                    \*--------------------------------------------------*/
+
+	    iSrcSign = extract_sign (pSrcFld, pSrcData);
+
+		    /*--------------------------------------------*\
+                     |                                            |
+                     |  Move the contents of the source field to  |
+                     |  our work area to create a normalized      | 
+                     |  9(18)v9(18) view of the data.             |
+                     |                                            |
+                    \*--------------------------------------------*/
+
+	    memset (caWork, '0', sizeof (caWork));
+
+	    j = MAX_DIGITS + iSrcDecimals - len1;
+	    iSrcIntDigits = len1;
+	    if (iSrcDecimals > 0)
+	      iSrcIntDigits -= iSrcDecimals;
+	    for (i = 0; i < iSrcIntDigits; i++)
+	      {
+		cWork = (unsigned char) pSrcData[i >> 1];
+		cWork = (i & 1) ? (cWork & 0xF) : (cWork >> 4);
+		caWork[j++] = cWork + '0';
+	      }
+	    if (iSrcDecimals > 0)
+	      {
+		j = MAX_DIGITS;
+		if (iSrcDecimals > len1)
+		  j += iSrcDecimals - len1;
+		for (; i < len1; i++)
+		  {
+		    cWork = (unsigned char) pSrcData[i >> 1];
+		    cWork = (i & 1) ? (cWork & 0xF) : (cWork >> 4);
+		    caWork[j++] = cWork + '0';
+		  }
+	      }
+
+		    /*--------------------------------------------*\
+                     |                                            |
+                     |  Now move the contents of our normalized   |
+                     |  data area to the receiving field.         |
+                     |                                            |
+                    \*--------------------------------------------*/
+
+	    j = MAX_DIGITS + iDestDecimals - len2;
+	    iDestIntDigits = len2;
+	    if (iDestDecimals > 0)
+	      iDestIntDigits -= iDestDecimals;
+
+	    memset (pDstData, '0', min (len1, fldLength (pDstFld)));
+	    memmove (pDstData, &caWork[j], iDestIntDigits);
+
+	    if (iDestDecimals > 0)
+	      {
+		if (iDestDecimals > len2)
+		  {
+		    j = MAX_DIGITS - iDestIntDigits;
+		    memmove (pDstData, &caWork[j], len2);
+		  }
+		else
+		  {
+		    j = MAX_DIGITS;
+		    memmove (&pDstData[iDestIntDigits],
+			     &caWork[j], iDestDecimals);
+		  }
+	      }
+	    if (pDstFld->pic[0] == 'S')
+	      put_sign (pDstFld, pDstData, iSrcSign);
+	    break;
+	  }
+
+	case DTYPE_PACKED:
+	  {
+	    int temp1;
+	    int j, k;
+	    int iSrcSign;
+	    int iSrcIntDigits;
+	    int iDestIntDigits;
+	    char caWork[MAX_DIGITS * 2];
+	    unsigned char cPack;
+
+		    /*--------------------------------------------------*\
+                     |                                                  |
+                     |   Currently, packed fields are assumed to be     |
+                     |   signed, so extract the value of the sign from  |
+                     |   the source field (zero represents positive,    | 
+                     |   and non zero represents negative).             |
+                     |                                                  |
+                    \*--------------------------------------------------*/
+
+	    iSrcSign = extract_sign (pSrcFld, pSrcData);
+
+		    /*--------------------------------------------*\
+                     |                                            |
+                     |  Move the contents of the source field to  |
+                     |  our work area to create a normalized      | 
+                     |  9(18)v9(18) view of the data.             |
+                     |                                            |
+                    \*--------------------------------------------*/
+
+	    memset (caWork, '0', sizeof (caWork));
+
+	    j = MAX_DIGITS + iSrcDecimals - len1;
+	    iSrcIntDigits = len1;
+	    if (iSrcDecimals >= 0)
+	      iSrcIntDigits -= iSrcDecimals;
+	    for (i = 0; i < iSrcIntDigits; ++i)
+	      {
+		cPack = (unsigned char) pSrcData[i >> 1];
+		cPack = ((i & 1) ? (cPack & 0xF) : (cPack >> 4)) + '0';
+		caWork[j++] = cPack;
+	      }
+	    if (iSrcDecimals > 0)
+	      {
+		j = MAX_DIGITS;
+		if (iSrcDecimals > len1)
+		  j += iSrcDecimals - len1;
+		for (; i < len1; ++i)
+		  {
+		    cPack = (unsigned char) pSrcData[i >> 1];
+		    cPack = ((i & 1) ? (cPack & 0xF) : (cPack >> 4)) + '0';
+		    caWork[j++] = cPack;
+		  }
+	      }
+
+		    /*--------------------------------------------*\
+                     |                                            |
+                     |  Now move the contents of our normalized   |
+                     |  data area to the receiving field, packing |
+                     |  the data as we go.  Packed fields are (at |
+                     |  least at this time) always considered to  |
+                     |  be signed, so we will also move a         |
+                     |  trailing sign to the receiving area. A    |
+                     |  value of 0xC represents a positive value  |
+                     |  and 0xD represents a negative value.      |
+                     |                                            |
+                    \*--------------------------------------------*/
+
+	    k = 0;
+	    cPack = 0;
+	    j = MAX_DIGITS + iDestDecimals - len2;
+	    iDestIntDigits = len2;
+	    if (iDestDecimals >= 0)
+	      iDestIntDigits -= iDestDecimals;
+	    /* zero fill destination first */
+	    for (i = 0; i < len1; ++i)
+	      {
+		if (i == fldLength (pDstFld))
+		  break;
+		if (i & 1)	/* if lower (right) nibble */
+		  pDstData[k++] = '\0';
+	      }
+	    if (i & 1)
+	      pDstData[k] = '\0';
+
+	    for (i = 0; i < iDestIntDigits; i++)
+	      {
+		if (i & 1)
+		  {		/* if lower (right) nibble */
+		    cPack = cPack | ((unsigned char) caWork[j++] & 0xF);
+		    pDstData[i >> 1] = cPack;
+		  }
+		else
+		  {
+		    cPack = (unsigned char) caWork[j++] << 4;
+		  }
+	      }
+	    k = i;
+
+	    if (iDestDecimals > 0)
+	      {
+		temp1 = min (len2, iDestDecimals);
+		j = MAX_DIGITS;
+		if (iDestDecimals > len2)
+		  j += iDestDecimals - len2;
+		for (i = 0; i < temp1; i++)
+		  {
+		    if (k & 1)
+		      {
+			cPack |= ((unsigned char) caWork[j++] & 0xF);
+			pDstData[k >> 1] = cPack;
+		      }
+		    else
+		      {
+			cPack = (unsigned char) caWork[j++] << 4;
+		      }
+		    k++;
+		  }
+	      }
+	    if (k & 1)
+	      pDstData[k >> 1] = cPack;
+	    put_sign (pDstFld, pDstData, iSrcSign);
+	    break;
+	  }
+	}
+      break;
+
+    case DTYPE_FLOAT:
+      cob_move_float_to_xxx (pSrcFld, pSrcData, pDstFld, pDstData);
+      break;
+
+    case DTYPE_BININT:
+      {
+	long long iWork;
+	int j, k;
+	int bIsNegative = 0;
+	char caWork[19];
+
+	switch (binFldSize (pSrcFld))
+	  {
+	  case 1: iWork = *(char *) pSrcData; break;
+	  case 2: iWork = *(short *) pSrcData; break;
+	  case 4: iWork = *(long *) pSrcData; break;
+	  case 8: iWork = *(long long *) pSrcData; break;
+	  }
+
+	if (iWork < 0)
+	  {
+	    bIsNegative = 1;
+	    iWork *= -1;
+	  }
+
+	k = 18 - fldLength (pSrcFld);
+	for (i = 0; i < fldLength (pSrcFld); ++i)
+	  {
+	    if (iWork >= _iIntValues_[i + k])
+	      {
+		j = iWork / _iIntValues_[i + k];
+		caWork[i] = (char) (j + '0');
+		iWork -= (_iIntValues_[i + k] * j);
+	      }
+	    else
+	      caWork[i] = '0';
+	  }
+
+	FldWrk.len = fldLength (pSrcFld);
+	FldWrk.decimals = pSrcFld->decimals;
+	FldWrk.type = DTYPE_DISPLAY;
+	FldWrk.all = 0;
+	strcpy (FldWrk.pic, pSrcFld->pic);
+	if (FldWrk.pic[0] == 'S')
+	  put_sign (&FldWrk, caWork, bIsNegative);
+	cob_move (&FldWrk, caWork, pDstFld, pDstData);
+      }
+    }
+  return;
+}
+
+
+int
+get_index (struct fld_desc *f, char *s)
+{
+  int index;
+  struct fld_desc fld = { 4, 'B', 0, 0, 0, 0, 0, 0, "S9\x9" };
+  cob_move_xxx_to_binary (f, s, &fld, (char *) &index);
+  return index;
+}
+
+void
+cob_move_zero (struct fld_desc *f, char *s)
+{
+  switch (f->type)
+    {
+    case 'B':
+      switch (f->len)
+	{
+	case 1: *((char *) s) = 0; return;
+	case 2: *((short *) s) = 0; return;
+	case 4: *((long *) s) = 0; return;
+	default: *((long long *) s) = 0; return;
+	}
+
+    case '9':
+      memset (s, '0', f->len);
+      put_sign (f, s, 0);
+      return;
+
+    default:
+      {
+	static struct fld_desc fld  = { 1, '9', 0, 1, 0, 0, 0, 0, "9\001"};
+	cob_move (&fld, "0", f, s);
+	return;
+      }
+    }
+}
+
+void
+cob_move_space (struct fld_desc *f, char *s)
+{
+  static struct fld_desc fld = { 1, 'X', 0, 1, 0, 0, 0, 0, "X\001"};
+  cob_move (&fld, " ", f, s);
 }
 
 
