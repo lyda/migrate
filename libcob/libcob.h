@@ -20,6 +20,9 @@
 #ifndef _LIBCOB_H_
 #define _LIBCOB_H_
 
+#define COB_STATUS_SUCCESS	0
+#define COB_STATUS_OVERFLOW	1
+
 extern int cob_status;
 
 extern void *cob_resolve (const char *name);

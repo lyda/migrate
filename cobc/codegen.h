@@ -147,7 +147,7 @@ extern struct perf_info *create_perf_info (cob_tree sy1, cob_tree sy2, unsigned 
 extern struct perform_info *create_perform_info (void);
 extern char *check_perform_variables (cob_tree sy1, struct perform_info *pi1);
 extern struct math_var *create_mathvar_info (struct math_var *mv, cob_tree sy, unsigned int opt);
-extern int gen_status_branch (int flag);
+extern int gen_status_branch (int status, int flag);
 extern void gen_compute (struct math_var *vl1, cob_tree sy1);
 extern void gen_add (cob_tree n1, cob_tree n2, int rnd);
 extern void gen_add_to (cob_tree_list nums, struct math_var *list);
@@ -251,11 +251,6 @@ extern int gen_call (cob_tree v, struct call_parameter *parameter_list, int exce
 extern int begin_on_except (void);
 extern void check_call_except (int excep, int notexcep, int exceplabel, int notexceplabel, int endlabel);
 extern void gen_initialize (cob_tree sy_start);
-extern struct ginfo *ginfo_container0 (void);
-extern struct ginfo *ginfo_container1 (struct ginfo *v);
-extern void ginfo_container2 (struct ginfo *v, unsigned long ty);
-extern struct ginfo *ginfo_container3 (struct ginfo *v, unsigned long ty);
-extern void ginfo_container4 (struct ginfo *v);
 
 /* parser.y */
 extern int yyparse (void);

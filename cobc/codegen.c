@@ -2535,7 +2535,7 @@ gen_init_status (void)
 }
 
 int
-gen_status_branch (int flag)
+gen_status_branch (int status, int flag)
 {
   int lbl = loc_label++;
 
@@ -2547,6 +2547,20 @@ gen_status_branch (int flag)
 
   return lbl;
 }
+
+int
+gen_at_end (int status)
+{
+  int i = loc_label++;
+  int j = loc_label++;
+  fprintf (o_src, "\tcmp\t$%d, %%eax\n", status);
+  fprintf (o_src, "\tjz\t.L%d\n", j);
+  fprintf (o_src, "\tjmp\t.L%d\n", i);
+  fprintf (o_src, "\t.align 16\n");
+  fprintf (o_src, ".L%d:\n", j);
+  return i;
+}
+
 
 
 /*
@@ -3237,19 +3251,6 @@ gen_check_zero ()
   int i = loc_label++;
   fprintf (o_src, "\tand\t%%eax,%%eax\n");
   fprintf (o_src, "\tjz\t.L%d\n", i);
-  return i;
-}
-
-int
-gen_at_end (int status)
-{
-  int i = loc_label++;
-  int j = loc_label++;
-  fprintf (o_src, "\tcmp\t$%d, %%eax\n", status);
-  fprintf (o_src, "\tjz\t.L%d\n", j);
-  fprintf (o_src, "\tjmp\t.L%d\n", i);
-  fprintf (o_src, "\t.align 16\n");
-  fprintf (o_src, ".L%d:\n", j);
   return i;
 }
 

@@ -2458,11 +2458,11 @@ opt_on_size_error:
   opt_not_on_size_error_sentence
 ;
 opt_on_size_error_sentence:
-| opt_on SIZE ERROR		{ $<ival>$ = gen_status_branch (0); }
+| opt_on SIZE ERROR { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 0); }
   target_sentence
 ;
 opt_not_on_size_error_sentence:
-| NOT opt_on SIZE ERROR		{ $<ival>$ = gen_status_branch (1); }
+| NOT opt_on SIZE ERROR { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 1); }
   target_sentence
 ;
 
@@ -2480,13 +2480,13 @@ at_end:
 | at_end_sentence not_at_end_sentence
 ;
 at_end_sentence:
-  END				{ $<ival>$ = gen_status_branch (0); }
+  END		 { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 0); }
   target_sentence
-| AT END			{ $<ival>$ = gen_status_branch (0); }
+| AT END	 { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 0); }
   target_sentence
 ;
 not_at_end_sentence:
-  NOT opt_at END		{ $<ival>$ = gen_status_branch (1); }
+  NOT opt_at END { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 1); }
   target_sentence
 ;
 
