@@ -157,22 +157,37 @@ static void
 output_base (struct cb_field *f)
 {
   struct cb_field *f01 = cb_field_founder (f);
+  char name[CB_MAX_CNAME];
 
   if (f01->redefines)
     f01 = f01->redefines;
+
+  /* base name */
+  if (f01->flag_external)
+    {
+      char *p;
+      strcpy (name, f01->name);
+      for (p = name; *p; p++)
+	if (*p == '-')
+	  *p = '_';
+    }
+  else
+    {
+      sprintf (name, "%d", f01->id);
+    }
 
   if (!f01->flag_base)
     {
       if (!f01->flag_external && !f01->flag_local)
 	output_storage ("static ");
-      output_storage ("unsigned char %s%d[%d]",
-		      CB_PREFIX_BASE, f01->id, f01->memory_size);
+      output_storage ("unsigned char %s%s[%d]",
+		      CB_PREFIX_BASE, name, f01->memory_size);
       if (cb_field_need_aligned (f01))
 	output_storage (" __attribute__ ((__aligned__))");
       output_storage ("; /* %s */\n", f01->name);
       f01->flag_base = 1;
     }
-  output ("%s%d", CB_PREFIX_BASE, f01->id);
+  output ("%s%s", CB_PREFIX_BASE, name);
 
   if (cb_field_variable_address (f))
     {
