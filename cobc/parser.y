@@ -146,7 +146,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <ival> at_end_sentence,invalid_key_sentence
 %type <list> label_list,subscript_list,number_list,varcond_list,variable_list
 %type <para> call_using,call_parameter,call_parameter_list
-%type <mval> math_variable_list
+%type <mval> numeric_variable_list,numeric_edited_variable_list
 %type <pfval> perform_after
 %type <pfvals> opt_perform_after
 %type <rbval> replacing_by_list
@@ -161,7 +161,8 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <tree> name,gname,number,file,level1_variable,opt_def_name,def_name
 %type <tree> opt_read_into,opt_write_from,field_name,expr,unsafe_expr
 %type <tree> opt_unstring_count,opt_unstring_delim,unstring_tallying
-%type <tree> numeric_variable,qualified_var,unqualified_var
+%type <tree> numeric_variable,numeric_edited_variable
+%type <tree> qualified_var,unqualified_var
 %type <tree> call_returning,screen_to_name,var_or_lit,opt_add_to
 %type <tree> sort_keys,opt_perform_thru,procedure_section
 %type <tree> opt_read_key,file_name,string_with_pointer
@@ -1286,11 +1287,11 @@ add_statement:
   ADD add_body opt_on_size_error end_add
 ;
 add_body:
-  number_list TO math_variable_list
+  number_list TO numeric_variable_list
   {
     gen_add_to ($1, $3);
   }
-| number_list opt_add_to GIVING math_variable_list
+| number_list opt_add_to GIVING numeric_edited_variable_list
   {
     gen_add_giving ($2 ? list_append ($1, $2) : $1, $4);
   }
@@ -1402,7 +1403,7 @@ compute_statement:
   COMPUTE compute_body opt_on_size_error opt_end_compute
 ;
 compute_body:
-  math_variable_list '=' expr	{ gen_compute ($1, $3); }
+  numeric_edited_variable_list '=' expr	{ gen_compute ($1, $3); }
 ;
 opt_end_compute: | END_COMPUTE ;
 
@@ -1475,23 +1476,23 @@ divide_statement:
   DIVIDE divide_body opt_on_size_error opt_end_divide
 ;
 divide_body:
-  number INTO math_variable_list
+  number INTO numeric_variable_list
   {
     gen_divide_into ($1, $3);
   }
-| number INTO number GIVING math_variable_list
+| number INTO number GIVING numeric_edited_variable_list
   {
     gen_divide_giving ($1, $3, $5);
   }
-| number BY number GIVING math_variable_list
+| number BY number GIVING numeric_edited_variable_list
   {
     gen_divide_giving ($3, $1, $5);
   }
-| number INTO number GIVING numeric_variable flag_rounded REMAINDER numeric_variable
+| number INTO number GIVING numeric_edited_variable flag_rounded REMAINDER numeric_edited_variable
   {
     gen_divide_giving_remainder ($1, $3, $5, $8, $6);
   }
-| number BY number GIVING numeric_variable flag_rounded REMAINDER numeric_variable
+| number BY number GIVING numeric_edited_variable flag_rounded REMAINDER numeric_edited_variable
   {
     gen_divide_giving_remainder ($3, $1, $5, $8, $6);
   }
@@ -1785,11 +1786,11 @@ multiply_statement:
   MULTIPLY multiply_body opt_on_size_error opt_end_multiply
 ;
 multiply_body:
-  number BY math_variable_list
+  number BY numeric_variable_list
   {
     gen_multiply_by ($1, $3);
   }
-| number BY number GIVING math_variable_list
+| number BY number GIVING numeric_edited_variable_list
   {
     gen_multiply_giving ($1, $3, $5);
   }
@@ -2443,11 +2444,11 @@ subtract_statement:
   SUBTRACT subtract_body opt_on_size_error opt_end_subtract
 ;
 subtract_body:
-  number_list FROM math_variable_list
+  number_list FROM numeric_variable_list
   {
     gen_subtract_from ($1, $3);
   }
-| number_list FROM number GIVING math_variable_list
+| number_list FROM number GIVING numeric_edited_variable_list
   {
     gen_subtract_giving ($1, $3, $5);
   }
@@ -2767,17 +2768,33 @@ level1_variable:
 
 /* Numeric variable */
 
-math_variable_list:
+numeric_variable_list:
   numeric_variable flag_rounded	{ $$ = create_mathvar_info (NULL, $1, $2); }
-| math_variable_list
+| numeric_variable_list
   numeric_variable flag_rounded	{ $$ = create_mathvar_info ($1, $2, $3); }
 ;
-
 numeric_variable:
   name
   {
-    if (!is_editable ($1))
+    if (!is_numeric ($1))
       yyerror ("variable `%s' must be numeric", COB_FIELD_NAME ($1));
+    $$ = $1;
+  }
+;
+
+
+/* Numeric edited variable */
+
+numeric_edited_variable_list:
+  numeric_edited_variable flag_rounded { $$ = create_mathvar_info (NULL, $1, $2); }
+| numeric_edited_variable_list
+  numeric_edited_variable flag_rounded { $$ = create_mathvar_info ($1, $2, $3); }
+;
+numeric_edited_variable:
+  name
+  {
+    if (!is_editable ($1))
+      yyerror ("variable `%s' must be numeric edited", COB_FIELD_NAME ($1));
     $$ = $1;
   }
 ;
