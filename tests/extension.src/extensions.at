@@ -192,11 +192,11 @@ AT_CLEANUP
 
 ## ASSIGN
 
-AT_SETUP([ASSIGN data-name])
+AT_SETUP([ASSIGN MF])
 
 AT_DATA([test.conf], [
 include "cobol2002.conf"
-assign-identifier: data-name
+assign-clause: mf
 ])
 
 AT_DATA([prog.cob], [
@@ -222,11 +222,11 @@ AT_CHECK([./prog], [0])
 
 AT_CLEANUP
 
-AT_SETUP([ASSIGN literal])
+AT_SETUP([ASSIGN IBM])
 
 AT_DATA([test.conf], [
 include "cobol2002.conf"
-assign-identifier: literal
+assign-clause: ibm
 ])
 
 AT_DATA([prog.cob], [
@@ -235,7 +235,7 @@ AT_DATA([prog.cob], [
        ENVIRONMENT      DIVISION.
        INPUT-OUTPUT     SECTION.
        FILE-CONTROL.
-       SELECT TEST-FILE ASSIGN FILENAME.
+       SELECT TEST-FILE ASSIGN DA-S-FILENAME.
        DATA             DIVISION.
        FILE             SECTION.
        FD TEST-FILE.
