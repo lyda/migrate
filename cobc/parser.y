@@ -1134,7 +1134,7 @@ procedure_using:
 ;
 using_vars:
   gname				{ gen_save_using ($1); }
-| using_vars gname		{ gen_save_using ($2); }
+| using_vars opt_sep gname	{ gen_save_using ($3); }
 ;
 procedure_list:
 | procedure_list procedure
@@ -1325,8 +1325,8 @@ call_using:
 ;
 call_parameter_list:
   call_parameter		{ $$ = $1; }
-| call_parameter_list
-  call_parameter		{ $2->next = $1; $$ = $2; }
+| call_parameter_list opt_sep
+  call_parameter		{ $3->next = $1; $$ = $3; }
 ;
 call_parameter:
   gname
@@ -1382,11 +1382,8 @@ close_statement:
   CLOSE close_files
 ;
 close_files:
-  close_file
-| close_files close_file
-;
-close_file:
-  name { gen_close($1); }
+  file				{ gen_close ($1); }
+| close_files opt_sep file	{ gen_close ($3); }
 ;
 
 
@@ -1429,7 +1426,7 @@ display_statement:
   }
   ;
 display_varlist:
-| display_varlist gname		{ put_disp_list($2); }
+| display_varlist opt_sep gname	{ put_disp_list ($3); }
 ;
 display_upon:
   /* nothing */			{ $$ = 1; }
@@ -1614,6 +1611,7 @@ goto_statement:
 label_list:
   label				{ $$ = cons ($1, NULL); }
 | label_list label		{ $$ = list_append ($1, $2); }
+| label_list ',' label		{ $$ = list_append ($1, $3); }
 ;
 
 
@@ -1649,7 +1647,7 @@ initialize_statement:
 ;
 initialize_vars:
   gname				{ gen_initialize ($1); }
-| initialize_vars gname		{ gen_initialize ($2); }
+| initialize_vars opt_sep gname	{ gen_initialize ($3); }
 ;
 
 
@@ -1747,7 +1745,7 @@ move_statement:
 ;
 move_vars:
   gname				{ gen_move ($<tree>-1, $1); }
-| move_vars gname		{ gen_move ($<tree>-1, $2); }
+| move_vars opt_sep gname	{ gen_move ($<tree>-1, $3); }
 ;
 
 
@@ -1779,19 +1777,19 @@ open_statement:
   OPEN open_options
 ;
 open_options:
-  open_mode open_varlist { }
-| open_options open_mode open_varlist { }
+  open_mode open_file_list { }
+| open_options open_mode open_file_list
+;
+open_file_list:
+  file				{ gen_open ($<ival>0, $1); }
+| open_file_list opt_sep file	{ gen_open ($<ival>0, $3); }
 ;
 open_mode:
   INPUT  { $$=1; }
 | I_O    { $$=2; }
 | OUTPUT { $$=3; }
 | EXTEND { $$=4; }
-| error  { yyerror("invalid OPEN mode"); }
-;
-open_varlist:
-  name				{ gen_open($<ival>0, $<tree>1); }
-| open_varlist name		{ gen_open($<ival>0, $<tree>3); }
+| error  { yyerror ("invalid OPEN mode"); }
 ;
 
 
@@ -2391,7 +2389,8 @@ string_statement:
 ;
 string_from_list:
   string_from			{ $$ = $1; }
-| string_from_list string_from	{ $2->next = $1; $$ = $2; }
+| string_from_list opt_sep
+  string_from			{ $3->next = $1; $$ = $3; }
 | error				{ yyerror ("variable expected"); }
 ;
 string_from:
@@ -2462,8 +2461,8 @@ unstring_delimited_vars:
 ;
 unstring_destinations:
   unstring_dest_var		{ $$ = $1; }
-| unstring_destinations
-  unstring_dest_var		{ $2->next = $1; $$ = $2; }
+| unstring_destinations opt_sep
+  unstring_dest_var		{ $3->next = $1; $$ = $3; }
 ;
 unstring_dest_var:
   name opt_unstring_delim opt_unstring_count
@@ -2705,12 +2704,12 @@ expr:
 
 var_list_name:
   name flag_rounded		{ $$ = create_mathvar_info (NULL, $1, $2); }
-| var_list_name
-  name flag_rounded		{ $$ = create_mathvar_info ($1, $2, $3); }
+| var_list_name opt_sep
+  name flag_rounded		{ $$ = create_mathvar_info ($1, $3, $4); }
 ;
 number_list:
   number			{ $$ = cons ($1, NULL); }
-| number_list number		{ $$ = list_append ($1, $2); }
+| number_list opt_sep number	{ $$ = list_append ($1, $3); }
 ;
 number:
   gname
@@ -2767,7 +2766,7 @@ function_call:
 ;
 parameters:
   gname { }
-| parameters gname
+| parameters opt_sep gname
 ;
 name_or_lit:
   name
@@ -2869,8 +2868,8 @@ subscripted_variable:
     $$ = make_subref ($1, $3);
   }
 subscript_list:
-  subscript			{ $$ = cons ($1, NULL); }
-| subscript_list subscript	{ $$ = cons ($2, $1); }
+  subscript				{ $$ = cons ($1, NULL); }
+| subscript_list opt_sep subscript	{ $$ = cons ($3, $1); }
 ;
 subscript:
   gname				{ $$ = $1; }
@@ -2974,6 +2973,7 @@ opt_in: | IN ;
 opt_key: | KEY ;
 opt_on: | ON ;
 opt_record: | RECORD ;
+opt_sep: | ',' ;
 opt_than: | THAN ;
 opt_then: | THEN ;
 opt_line: | LINE ;
