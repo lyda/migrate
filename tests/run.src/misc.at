@@ -522,9 +522,9 @@ AT_DATA([prog.cob], [
 AT_CHECK([${COMPILE_MODULE} dump.c])
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0],
-[01000000
-09000000
-04000000
+[00000001
+00000009
+00000004
 ])
 AT_CHECK([${COMPILE} -conf=test.conf -o prog prog.cob])
 AT_CHECK([./prog], [0],

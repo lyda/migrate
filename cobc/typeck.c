@@ -2540,6 +2540,15 @@ cb_build_move (cb_tree src, cb_tree dst)
   if (src == cb_error_node || dst == cb_error_node)
     return cb_error_node;
 
+  if (CB_TREE_CLASS (src) == CB_CLASS_POINTER
+      && CB_REFERENCE_P(src)
+      && cb_field(src)->level > 50 )
+	cb_error_x (src, _("invalid MOVE statement"));
+  if (CB_TREE_CLASS (dst) == CB_CLASS_POINTER
+      && CB_REFERENCE_P(dst)
+      && cb_field(dst)->level > 50 )
+	cb_error_x (dst, _("invalid MOVE statement"));
+
   validate_move (src, dst, 0);
 
   if (CB_REFERENCE_P (src))

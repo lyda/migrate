@@ -1,3 +1,8 @@
+2005-02-22  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Generated C code indnetation
+	  typeck.c : Check usage of 66 level with pointer
+
 2005-02-15  Roger While <simrw@sim-basis.de>
 
 	* codegen.c : Fix incorrect cast check,

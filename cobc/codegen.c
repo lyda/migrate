@@ -128,12 +128,12 @@ output_indent (const char *str)
   for (p = str; *p == ' '; p++)
     level++;
 
-  if (*p == '}')
+  if (*p == '}' && strcmp(str, "})") != 0)
     output_indent_level -= level;
 
   output_line (str);
 
-  if (*p == '{')
+  if (*p == '{' && strcmp(str, ")}") != 0)
     output_indent_level += level;
 }
 
@@ -751,7 +751,7 @@ output_param (cb_tree x, int id)
 	if (r->check)
 	  {
 	    cb_tree l;
-	    output_indent ("({");
+	    output_indent (" ({");
 	    for (l = r->check; l; l = CB_CHAIN (l))
 	      output_stmt (CB_VALUE (l));
 	  }
