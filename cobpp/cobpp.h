@@ -33,6 +33,10 @@
 #define COBPP_FORMAT_FIXED	2
 #define COBPP_FORMAT_SEMI_FIXED	3
 
+#ifdef __MINGW32__
+#define __USE_MINGW_FSEEK 1	/* These are in libmingwex.a */
+#endif
+
 struct cobpp_path {
   const char *dir;
   struct cobpp_path *next;
