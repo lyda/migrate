@@ -94,7 +94,7 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
 "REPLACE"		{ BEGIN COPY_STATE; return REPLACE; }
 
 <COPY_STATE>{
-  \n			{ ECHO; cb_source_line++; }
+  [,;]?\n		{ ECHO; cb_source_line++; }
   [,;]?[ ]+		{ /* ignore */ }
   "."			{ BEGIN INITIAL; return '.'; }
   "=="			{ BEGIN PSEUDO_STATE; return EQEQ; }
@@ -114,9 +114,9 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
 }
 
 <PSEUDO_STATE>{
-  \n			{ ECHO; cb_source_line++; }
-  "=="			{ BEGIN COPY_STATE; return EQEQ; }
+  [,;]?\n		{ ECHO; cb_source_line++; }
   [,;]?[ ]+		{ pplval.s = strdup (" "); return TOKEN; }
+  "=="			{ BEGIN COPY_STATE; return EQEQ; }
   {WORD} |
   {NUMRIC_LITERAL} |
   {ALNUM_LITERAL} |
@@ -157,7 +157,7 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
     }
 }
 
-\n			{ ppecho ("\n"); cb_source_line++; }
+[,;]?\n			{ ppecho ("\n"); cb_source_line++; }
 [,;]?[ ]+		{ ppecho (" "); }
 
 {WORD} |
