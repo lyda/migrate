@@ -8,7 +8,6 @@ cobc_LDADD = $(top_builddir)/lib/libsupport.a \
 
 BUILT_SOURCES = parser.c parser.h scanner.c
 CLEANFILES = parser.output
-MAINTAINERCLEANFILES = Makefile.in
 
 AM_CFLAGS = -Wall
 AM_YFLAGS = -d -v
