@@ -29,6 +29,10 @@ AC_CONFIG_TESTDIR([tests])
 AM_INIT_AUTOMAKE([gnu no-texinfo.tex])
 AM_MAINTAINER_MODE
 
+# Autoheader templates
+AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
+AH_TEMPLATE([WITH_LFS64], [Compile with large file system 64])
+
 # enable debug mode by default for now
 AC_DEFINE(COB_DEBUG)
 
@@ -49,12 +53,13 @@ if test "x${COB_CC}" = "x"; then
   AC_CHECK_PROG([COB_CC], [cc], [cc], AC_MSG_ERROR(cc is required))
 fi
 
+AC_ARG_WITH(lfs64,
+  [  --with-lfs64            compile with large file system],
+  [ AC_DEFINE(WITH_LFS64) ])
+
 AC_ARG_ENABLE(debug,
   [  --enable-debug          enable debugging options],
   [ AC_DEFINE(COB_DEBUG) ])
-
-# Autoheader templates
-AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
 
 save_libs="$LIBS"
 
