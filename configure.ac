@@ -31,25 +31,26 @@ AC_LIBTOOL_DLOPEN
 AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 
-# Checks for libraries.
-AC_LIB_LTDL
-AC_CHECK_LIB([m], [pow])
-
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([alloca.h errno.h fcntl.h limits.h malloc.h stdlib.h \
 		  string.h sys/param.h sys/time.h termios.h unistd.h])
 
+# Checks for ltdl.
+AC_LIB_LTDL
+
 # Checks for db.
-AC_CHECK_DB
+AC_CHECK_HEADERS([db1/db.h], , AC_MSG_ERROR(db1 is required))
+AC_CHECK_LIB([db1], [dbopen], , AC_MSG_ERROR(db1 is required))
 
 # Checks for gmp.
 AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp is required))
 
 # Checks for readline.
+LIBADD_RL=""
 AC_CHECK_HEADERS([readline/readline.h readline/history.h])
-AC_CHECK_LIB([readline], [readline])
+AC_CHECK_LIB([readline], [readline], LIBADD_RL="-lreadline")
 
 # Checks for ncurses.
 AC_CHECK_HEADERS([ncurses.h], , AC_MSG_ERROR(ncurses is required))
@@ -72,9 +73,13 @@ AC_CHECK_FUNCS([atexit memmove memset strcasecmp strchr strdup \
 		strerror strrchr strstr strtol])
 
 LIBS="$save_libs"
-COB_LDADD="-L\${libdir} -lcob -lncurses -ldl -lm -lgmp $DB_LIBS"
+COB_CC="cc"
+COB_COBPP="$libexecdir/$PACKAGE/cobpp"
+COB_LDADD="-L\${libdir} -lcob ${LIBADD_DL} -ldb1 -lgmp -lncurses ${LIBADD_RL}"
 COB_CFLAGS="-I\${includedir}"
 
+AC_SUBST(COB_CC)
+AC_SUBST(COB_COBPP)
 AC_SUBST(COB_LDADD)
 AC_SUBST(COB_CFLAGS)
 

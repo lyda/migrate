@@ -1,5 +1,12 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Version 0.8.2 での変更点
+
+** db の自動判定をやめ、db1 を必須にした。
+
+** いろいろなバグ修正
+
+
 * Version 0.8.1 での変更点
 
 ** OpenCOBOL を使ったコンパイル方法について説明した文書

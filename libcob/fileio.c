@@ -55,37 +55,6 @@
 #include "_libcob.h"
 
 #define bcounter	 5
-#if defined(SunOS)
-va_list __builtin_va_alist;
-#endif
-
-#ifdef WANT_ALL_DYNAMIC_LIBS
-DB *db_open_stub (const char *s, int i, int j, DBTYPE d, const void *p);
-DB *(*db_open) (const char *, int, int, DBTYPE, const void *) = db_open_stub;
-
-/*------------------------------------------------------------------------*\
- |                                                                        |
- |                          db_open_stub                                  |
- |                                                                        |
-\*------------------------------------------------------------------------*/
-
-DB *
-db_open_stub (const char *s, int i, int j, DBTYPE d, const void *p)
-{
-  char *libname = "libdb.so";
-  void *handle = dlopen (libname, RTLD_LAZY);
-  if (!handle)
-    {
-      fprintf (stderr, "*ERROR* loading %s: %s\n", libname, dlerror ());
-      return NULL;
-    }
-  db_open = dlsym (handle, "dbopen");
-  return (*db_open) (s, i, j, d, p);
-}
-#else
-#define db_open dbopen
-#endif
-
 
 /*------------------------------------------------------------------------*\
  |                                                                        |
@@ -307,7 +276,7 @@ cob_open (struct file_desc *f, char *record, char *fname, int mode)
 	    }
 	  sprintf (alt_filename, "%s%d", filename, alt_key_no);
 	  akd->alt_dbp =
-	    db_open (alt_filename, oflags, sflags, type, &alt_key);
+	    dbopen (alt_filename, oflags, sflags, type, &alt_key);
 	  if (!akd->alt_dbp)
 	    {
 	      if (errno == EINVAL)
@@ -325,7 +294,7 @@ cob_open (struct file_desc *f, char *record, char *fname, int mode)
 	    }
 	  alt_key_no++;
 	}
-      f->dbp = db_open (filename, oflags, sflags, type, infop);
+      f->dbp = dbopen (filename, oflags, sflags, type, infop);
     }
   /* otherwise it is sequential or relative, save its file handle, converted */
   else if ((f->organization == ORG_LINESEQUENTIAL) && (mode == FMOD_INPUT))
@@ -1773,7 +1742,7 @@ sort_open (struct file_desc *f, char *record, char *fname)
   while (filename[len] == ' ');
 
   type = DB_BTREE;
-  f->dbp = db_open (NULL, oflags, sflags, type, &b);
+  f->dbp = dbopen (NULL, oflags, sflags, type, &b);
   if (!f->dbp)
     {
       if (errno == EINVAL)

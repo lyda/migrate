@@ -20,45 +20,22 @@
 #include "config.h"
 #include "libcob.h"
 
-#include <sys/param.h>
-#include <sys/stat.h>
-#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
-#include <math.h>
 #include <stdlib.h>
+#include <ctype.h>
+#include <math.h>
 #include <errno.h>
 #include <limits.h>
 #include <fcntl.h>
 #include <time.h>
+#include <sys/param.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <stdarg.h>
 #include <sys/types.h>
 #include <fcntl.h>
-
-/* Set library db headers and version 1.85 compatibility API for versions >= 2.xx */
-#ifdef USE_DB
-#include <db.h>
-#endif
-
-#ifdef USE_DB_1
 #include <db1/db.h>
-#endif
-
-#ifdef USE_DB_23
-#define DB_LIBRARY_COMPATIBILITY_API
-#include <db_185.h>
-#endif
-
-#ifdef USE_DB_2
-#define DB_LIBRARY_COMPATIBILITY_API
-#include <db2/db_185.h>
-#endif
-
-#ifdef USE_DB_3
-#define DB_LIBRARY_COMPATIBILITY_API
-#include <db3/db_185.h>
-#endif
 
 #define min(x,y) ((x)<(y) ? (x) : (y))
 
