@@ -64,16 +64,14 @@ extern cob_tree_list list_append (cob_tree_list l, cob_tree x);
 
 struct cob_field {
   struct cob_tree_common common;
-  cob_tree next;
-  char *name;
-  char type;
-  int decimals;
+  cob_tree next;		/* pointer to next symbol with same hash */
+  char *name;			/* name (value) of literal */
 };
 
-#define FIELD(x)		((struct cob_field *) (x))
-#define FIELD_NEXT(x)		(FIELD (x)->next)
-#define FIELD_NAME(x)		(FIELD (x)->name)
-#define FIELD_TYPE(x)		(FIELD (x)->type)
+#define COB_FIELD(x)		((struct cob_field *) (x))
+#define COB_FIELD_NEXT(x)	(COB_FIELD (x)->next)
+#define COB_FIELD_NAME(x)	(COB_FIELD (x)->name)
+#define COB_FIELD_TYPE(x)	(COB_FIELD (x)->type)
 
 /*
  * Literals
@@ -81,9 +79,7 @@ struct cob_field {
 
 struct lit
 {
-  struct cob_tree_common common;
-  struct lit *next;		/* next in literals list */
-  char *name;			/* name (value) of literal */
+  struct cob_field field;
   char type;
   int decimals;
   unsigned location;		/* data area for literal @lit+n */
@@ -118,9 +114,7 @@ extern cob_tree make_literal (char *name);
 
 struct sym
 {
-  struct cob_tree_common common;
-  struct sym *next;		/* pointer to next symbol with same hash */
-  char *name;			/* symbol (variable) name */
+  struct cob_field field;
   char type;			/* label or elementary item or group item 
 				   9,A,X,B,C=elem; 
 				   G=group;

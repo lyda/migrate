@@ -266,7 +266,10 @@ special_names:
 | special_names special_name
 ;
 special_name:
-  CURRENCY opt_sign opt_is CLITERAL { currency_symbol = $4->name[0]; }
+  CURRENCY opt_sign opt_is CLITERAL
+  {
+    currency_symbol = COB_FIELD_NAME ($4)[0];
+  }
 | DECIMAL_POINT opt_is COMMA	{ decimal_comma = 1; }
 | CONSOLE opt_is CONSOLE	{ yywarn ("CONSOLE name is ignored"); }
 ;
@@ -432,7 +435,8 @@ fd_list:
   {
     curr_field=NULL;
     if ($3->filenamevar == NULL)
-	yyerror("External file name not defined for file %s", $3->name);
+      yyerror("External file name not defined for file %s",
+	      COB_FIELD_NAME ($3));
   }
   file_description
   {
@@ -555,7 +559,7 @@ field_name:
 | SYMBOL_TOK
   {
     if ($1->defined)
-      yyerror ("variable already defined: %s", $1->name);
+      yyerror ("variable already defined: %s", COB_FIELD_NAME ($1));
     $1->defined=1;
     $$ = $1;
   }
@@ -1046,7 +1050,7 @@ procedure_section:
   {
     cob_tree lab=$1;
     if (lab->defined != 0) {
-      lab = install(lab->name,SYTB_LAB,2);
+      lab = install(COB_FIELD_NAME (lab), SYTB_LAB, 2);
     }
     lab->defined = 1;
     $$=lab;
@@ -1058,7 +1062,7 @@ paragraph:
     cob_tree lab=$1;
     if (lab->defined != 0) {
       if ((lab=lookup_label(lab,curr_section))==NULL) {
-	lab = install($1->name,SYTB_LAB,2);
+	lab = install(COB_FIELD_NAME ($1),SYTB_LAB,2);
       }
     }
     lab->parent = curr_section;
@@ -2079,7 +2083,8 @@ release_statement:
   RELEASE name opt_write_from
   {
     if ($2->level != 1)
-      yyerror ("variable %s could not be used for RELEASE", $2->name);
+      yyerror ("variable %s could not be used for RELEASE",
+	       COB_FIELD_NAME ($2));
     gen_release($2, $3);
   }
 ;
@@ -2115,7 +2120,8 @@ rewrite_statement:
   REWRITE name opt_write_from
   {
     if ($2->level != 1)
-      yyerror("variable %s could not be used for REWRITE", $2->name);
+      yyerror("variable %s could not be used for REWRITE",
+	      COB_FIELD_NAME ($2));
     gen_rewrite($2, $3);
   }
   opt_invalid_key
@@ -2143,7 +2149,8 @@ search_body:
     if ($3 == NULL) {
       $3=determine_table_index_name($1);
       if ($3 == NULL) {
-         yyerror("Unable to determine search index for table '%s'", $1->name);
+         yyerror("Unable to determine search index for table '%s'",
+		 COB_FIELD_NAME ($1));
       }
     }
     gen_jmplabel($<ival>$); /* generate GOTO search loop start  */
@@ -2173,7 +2180,8 @@ search_all_body:
 
      $<tree>$=determine_table_index_name($1);
      if ($<tree>$ == NULL) {
-        yyerror("Unable to determine search index for table '%s'", $1->name);
+        yyerror("Unable to determine search index for table '%s'",
+		COB_FIELD_NAME ($1));
      }
      else {
        /* Initilize and store search table index boundaries */
@@ -2499,7 +2507,8 @@ write_statement:
   WRITE name opt_write_from write_options
   {
     if ($2->level != 1)
-      yyerror("variable %s could not be used for WRITE", $2->name);
+      yyerror("variable %s could not be used for WRITE",
+	      COB_FIELD_NAME ($2));
     gen_write($2, $4, $3);
   }
   opt_invalid_key
@@ -2539,7 +2548,7 @@ number:
   gname
   {
     if (!is_numeric_sy ($1))
-      yyerror ("numeric value is expected: %s", $1->name);
+      yyerror ("numeric value is expected: %s", COB_FIELD_NAME ($1));
     $$ = $1;
   }
 ;
@@ -2548,7 +2557,7 @@ file:
   name
   {
     if ($1->type != 'F')
-      yyerror ("file name is expected: %s", $1->name);
+      yyerror ("file name is expected: %s", COB_FIELD_NAME ($1));
     $$ = $1;
   }
 ;
@@ -2764,7 +2773,7 @@ def_name:
 | SYMBOL_TOK
   {
     if ($1->defined)
-      yyerror("variable redefined, %s",$1->name);
+      yyerror("variable redefined, %s", COB_FIELD_NAME ($1));
     $1->defined=1;
     $$=$1;
   }
@@ -2773,7 +2782,7 @@ variable_indexed:
   SUBSCVAR
   {
     if ($1->times == 1)
-       yyerror("\"%s\" is not an indexed variable ", $1->name);
+       yyerror("\"%s\" is not an indexed variable ", COB_FIELD_NAME ($1));
     $$=$1;
   }
 ;
@@ -2794,7 +2803,8 @@ variable:
   {
     $$=$1;
     if (need_subscripts) {
-      yyerror("variable `%s' must be subscripted or indexed", $1->name);
+      yyerror("variable `%s' must be subscripted or indexed",
+	      COB_FIELD_NAME ($1));
       need_subscripts=0;
     }
   }
@@ -2824,7 +2834,7 @@ unqualified_var:
 integer:
   INTEGER_TOK
   {
-    char *s = $1->name;
+    char *s = COB_FIELD_NAME ($1);
     $$ = 0;
     while (*s)
       $$ = $$ * 10 + *s++ - '0';
@@ -2841,7 +2851,7 @@ label:
       }
     else if ((lab = lookup_label (lab, $3)) == NULL)
       {
-	lab = install ($1->name, SYTB_LAB, 2);
+	lab = install (COB_FIELD_NAME ($1), SYTB_LAB, 2);
 	lab->defined = 2;
 	lab->parent = $3;
       }
@@ -2857,7 +2867,7 @@ label:
       }
     else if ((lab = lookup_label (lab, curr_section)) == NULL)
       {
-	lab = install ($1->name, SYTB_LAB, 2);
+	lab = install (COB_FIELD_NAME ($1), SYTB_LAB, 2);
 	lab->defined = 2;
 	lab->parent = curr_section;
       }

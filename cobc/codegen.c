@@ -98,7 +98,7 @@ static cob_tree labtab[HASHLEN] = { NULL };
 static cob_tree littab[HASHLEN] = { NULL };
 
 static int
-hash (char *s)
+hash (const char *s)
 {
   int val = 0;
   for (; *s; s++)
@@ -136,23 +136,23 @@ lookup (char *s, int tab)
   if (tab == SYTB_LIT)
     {				/* literals tab */
       cob_tree x;
-      for (x = littab[hash (s)]; x != NULL; x = x->next)
-	if (strcmp (s, x->name) == 0)
+      for (x = littab[hash (s)]; x; x = COB_FIELD_NEXT (x))
+	if (strcmp (s, COB_FIELD_NAME (x)) == 0)
 	  return x;
       return NULL;
     }
   else
     {
-      cob_tree as;
+      cob_tree x;
       s = upcase (s, sbuf);
       if (tab == SYTB_VAR)
-	as = vartab[hash (s)];
+	x = vartab[hash (s)];
       else
-	as = labtab[hash (s)];
-      for (; as != NULL; as = as->next)
-	if (strcmp (s, as->name) == 0)
-	  return (as);
-      return (NULL);
+	x = labtab[hash (s)];
+      for (; x; x = COB_FIELD_NEXT (x))
+	if (strcmp (s, COB_FIELD_NAME (x)) == 0)
+	  return x;
+      return NULL;
     }
 }
 
@@ -174,22 +174,22 @@ install (char *name, int tab, int cloning)
   if ((as = lookup (name, tab)) == NULL)
     {
       as = make_symbol (strdup (name));
-      val = hash (as->name);
+      val = hash (COB_FIELD_NAME (as));
       if (tab == SYTB_VAR)
 	{
-	  as->next = vartab[val];
+	  COB_FIELD_NEXT (as) = vartab[val];
 	  vartab[val] = as;
 	}
       else
 	{
-	  as->next = labtab[val];
+	  COB_FIELD_NEXT (as) = labtab[val];
 	  labtab[val] = as;
 	}
     }
   else if ((cloning && (as->defined == 1)) || (cloning == 2))
     {
       /* install clone (cloning==2 -> force) */
-      clone = make_symbol (as->name);
+      clone = make_symbol (COB_FIELD_NAME (as));
       clone->clone = as->clone;
       as->clone = clone;
       as = clone;
@@ -207,8 +207,8 @@ cob_tree
 install_literal (const char *name)
 {
   cob_tree p = make_literal (strdup (name));
-  int val = hash (p->name);
-  p->next = littab[val];
+  int val = hash (name);
+  COB_FIELD_NEXT (p) = littab[val];
   littab[val] = p;
   return p;
 }
@@ -232,24 +232,16 @@ lookup_label (cob_tree sy, cob_tree parent)
 static void
 clear_symtab ()
 {
-  cob_tree sy, sy1, tmp;
+  cob_tree sy, sy1;
   int i;
   for (i = 0; i < HASHLEN; i++)
     {
       for (sy1 = vartab[i]; sy1 != NULL;)
 	{
 	  for (sy = sy1->clone; sy;)
-	    {
-	      if (sy)
-		{
-		  tmp = sy;
-		  sy = sy->clone;
-		  free (tmp);
-		}
-	    }
-	  tmp = sy1;
-	  sy1 = sy1->next;
-	  free (tmp);
+	    if (sy)
+	      sy = sy->clone;
+	  sy1 = COB_FIELD_NEXT (sy1);
 	}
       vartab[i] = NULL;
     }
@@ -258,17 +250,9 @@ clear_symtab ()
       for (sy1 = labtab[i]; sy1 != NULL;)
 	{
 	  for (sy = sy1->clone; sy;)
-	    {
-	      if (sy)
-		{
-		  tmp = sy;
-		  sy = sy->clone;
-		  free (tmp);
-		}
-	    }
-	  tmp = sy1;
-	  sy1 = sy1->next;
-	  free (tmp);
+	    if (sy)
+	      sy = sy->clone;
+	  sy1 = COB_FIELD_NEXT (sy1);
 	}
       labtab[i] = NULL;
     }
@@ -392,7 +376,7 @@ cob_tree
 lookup_for_redefines (cob_tree sy)
 {
   if (curr_field->parent == NULL)
-    return lookup_symbol (sy->name);
+    return lookup_symbol (COB_FIELD_NAME (sy));
   else
     return lookup_variable (sy, curr_field->parent);
 }
@@ -402,7 +386,7 @@ save_named_sect (cob_tree sy)
 {
   struct named_sect *nsp = malloc (sizeof (struct named_sect));
   nsp->sec_no = next_available_sec_no++;
-  nsp->os_name = chg_underline (strdup (sy->name));
+  nsp->os_name = chg_underline (strdup (COB_FIELD_NAME (sy)));
   nsp->next = named_sect_list;
   named_sect_list = nsp;
   curr_sec_no = nsp->sec_no;	// Uncomment to activate
@@ -427,7 +411,7 @@ sign_to_char (int digit)
 cob_tree
 invert_literal_sign (cob_tree x)
 {
-  char *s = FIELD_NAME (x);
+  char *s = COB_FIELD_NAME (x);
   s += strlen (s) - 1;
   *s = sign_to_char (-(*s - 0x30));
   return x;
@@ -762,10 +746,10 @@ gen_loaddesc1 (cob_tree sy, int variable_length)
 	}
       else
 	{
-	  fprintf (o_src, "#  corrected length %s\n", syl->name);
+	  fprintf (o_src, "#  corrected length %s\n", COB_FIELD_NAME (syl));
 	  if (LITERAL_P (syl))
 	    fprintf (o_src, "\tmovl\t$%s, rf_base%d+%d\n",
-		     syl->name, pgm_segment, rflp->slot * 8);
+		     COB_FIELD_NAME (syl), pgm_segment, rflp->slot * 8);
 	  else
 	    {
 	      value_to_eax (syl);
@@ -789,7 +773,7 @@ gen_loaddesc1 (cob_tree sy, int variable_length)
 	{
 #ifdef COB_DEBUG
 	  fprintf (o_src, "\tmovl\t%s, %%eax\t# descriptor of [%s]\n",
-		   memrefd (var), sch_convert (var->name));
+		   memrefd (var), sch_convert (COB_FIELD_NAME (var)));
 #else
 	  fprintf (o_src, "\tmovl\t%s, %%eax\n", memrefd (var));
 #endif
@@ -825,7 +809,7 @@ value_to_eax (cob_tree sy)
   char *s;
 #ifdef COB_DEBUG
   if (sy)
-    fprintf (o_src, "# value_to_eax %s\n", sy->name);
+    fprintf (o_src, "# value_to_eax %s\n", COB_FIELD_NAME (sy));
 #endif
   if (sy == NULL)
     {
@@ -836,7 +820,8 @@ value_to_eax (cob_tree sy)
     {
       /* if it's an integer, compute it now, not at runtime! */
       value = 0;
-      s = sy->name;		/* integer's name is just it's value in ascii */
+      /* integer's name is just it's value in ascii */
+      s = COB_FIELD_NAME (sy);
       while (*s)
 	value = value * 10 + *s++ - '0';
       fprintf (o_src, "#bef val\n");
@@ -1036,7 +1021,7 @@ push_expr (cob_tree sy)
     return 0;
 
 #ifdef COB_DEBUG
-  fprintf (o_src, "# push_expr: %s\n", sy->name);
+  fprintf (o_src, "# push_expr: %s\n", COB_FIELD_NAME (sy));
 #endif
   asm_call_1 ("cob_push_decimal", sy);
   return 1;
@@ -1255,7 +1240,7 @@ adjust_linkage_vars (int start_offset)
   int offset = start_offset;
 
   for (i = 0; i < HASHLEN; i++)
-    for (sy1 = vartab[i]; sy1 != NULL; sy1 = sy1->next)
+    for (sy1 = vartab[i]; sy1; sy1 = COB_FIELD_NEXT (sy1))
       for (sy = sy1; sy; sy = sy->clone)
 	if (sy->parent == NULL && sy->linkage_flg == 1)
 	  {
@@ -1399,7 +1384,7 @@ initialize_values (void)
   int nb_fields;
 
   for (i = 0; i < HASHLEN; i++)
-    for (sy1 = vartab[i]; sy1 != NULL; sy1 = sy1->next)
+    for (sy1 = vartab[i]; sy1; sy1 = COB_FIELD_NEXT (sy1))
       for (sy = sy1; sy != NULL; sy = sy->clone)
 	if (sy->type != 'F' && sy->type != '8' &&
 	    sy->type != 'K' && sy->type != 'J')
@@ -1463,7 +1448,7 @@ dump_working ()
 	}
 #ifdef COB_DEBUG
       fprintf (o_src, "# FIELD %s, Data Loc: %d(hex: %x) %c\n",
-	       v->name, v->location, v->location, v->type);
+	       COB_FIELD_NAME (v), v->location, v->location, v->type);
 #endif
       if (cob_stabs_flag)
 	{
@@ -1485,16 +1470,18 @@ dump_working ()
 		  break;
 		}
 	      fprintf (o_src, ".stabs\t\"%s:S%c\",38,0,0,w_base%d+%d\n",
-		       sy->name, stabs_type, pgm_segment, sy->location);
+		       COB_FIELD_NAME (sy), stabs_type, pgm_segment,
+		       sy->location);
 	    }
 	  else if (sy->type == 'C')
 	    fprintf (o_src,
 		     ".stabs\t\"%s:S(1,%d)=ar3;1;%d;4\",38,0,0,w_base%d+%d\n",
-		     sy->name, sy->len, sy->len, pgm_segment, 0);
+		     COB_FIELD_NAME (sy), sy->len, sy->len, pgm_segment, 0);
 	  else
 	    fprintf (o_src,
 		     ".stabs\t\"%s:S(1,%d)=ar3;1;%d;2\",38,0,0,w_base%d+%d\n",
-		     sy->name, sy->len, sy->len, pgm_segment, sy->location);
+		     COB_FIELD_NAME (sy), sy->len, sy->len, pgm_segment,
+		     sy->location);
 	}
 
       if (v->parent)
@@ -1504,7 +1491,7 @@ dump_working ()
 	  fprintf(o_src,"\t.space\t%d\n",fld_len);
 	}
       if (fld_len == 0)
-	yyerror ("Invalid picture in %s", v->name);
+	yyerror ("Invalid picture in %s", COB_FIELD_NAME (v));
     }
   /* output tmpvar storage */
   if (tmpvar_max > 0)
@@ -1585,8 +1572,8 @@ proc_header (int using)
   /********** dump stabs for local variables **********/
   if (cob_stabs_flag)
     for (i = 0; i < HASHLEN; i++)
-      for (sy1 = vartab[i]; sy1 != NULL; sy1 = sy1->next)
-	for (sy = sy1; sy != NULL; sy = sy->clone)
+      for (sy1 = vartab[i]; sy1; sy1 = COB_FIELD_NEXT (sy1))
+	for (sy = sy1; sy; sy = sy->clone)
 	  if (sy->sec_no == SEC_STACK)
 	    switch (sy->type)
 	      {
@@ -1602,17 +1589,17 @@ proc_header (int using)
 		  case 8: stabs_type = '7'; break;
 		  }
 		fprintf (o_src, ".stabs\t\"%s:%c\",128,0,0,-%d\n",
-			 sy->name, stabs_type, sy->location);
+			 COB_FIELD_NAME (sy), stabs_type, sy->location);
 		break;
 	      case 'C':
 		fprintf (o_src,
 			 ".stabs\t\"%s:(1,%d)=ar3;1;%d;4\",128,0,0,-%d\n",
-			 sy->name, sy->len, sy->len, sy->location);
+			 COB_FIELD_NAME (sy), sy->len, sy->len, sy->location);
 		break;
 	      default:
 		fprintf (o_src,
 			 ".stabs\t\"%s:(1,%d)=ar3;1;%d;2\",128,0,0,-%d\n",
-			 sy->name, sy->len, sy->len, sy->location);
+			 COB_FIELD_NAME (sy), sy->len, sy->len, sy->location);
 	      }
 
   fprintf (o_src, ".Linite_%s:\n", pgm_label);
@@ -1638,7 +1625,7 @@ dump_alternate_keys (cob_tree r, struct alternate_list *alt)
   for (; alt; alt = alt->next)
     {
       key = alt->key;
-      fprintf (o_src, "# alternate key %s\n", key->name);
+      fprintf (o_src, "# alternate key %s\n", COB_FIELD_NAME (key));
       fprintf (o_src,
 	       "\t.word\t%d\n\t.long\tc_base%d+%d\n\t.word\t%d\n\t.long\t0\n",
 	       key->location - r->location, pgm_segment,
@@ -1663,22 +1650,23 @@ dump_fdesc ()
 #ifdef COB_DEBUG
       fprintf (o_src,
 	       "# FILE DESCRIPTOR, File: %s, Record: %s, Data Loc: %d(hex: %x), opt: %x\n",
-	       f->name, r->name, f->location, f->location, f->flags.optional);
+	       COB_FIELD_NAME (f), COB_FIELD_NAME (r),
+	       f->location, f->location, f->flags.optional);
 #endif
       if (f->filenamevar == NULL)
 	{
-	  yyerror ("No file name assigned to %s.\n", f->name);
+	  yyerror ("No file name assigned to %s.\n", COB_FIELD_NAME (f));
 	  continue;
 	}
       if (f->type == 'K')
 	{
-	  fprintf (o_src, "\t.extern\t_%s:far\n", f->name);
+	  fprintf (o_src, "\t.extern\t_%s:far\n", COB_FIELD_NAME (f));
 	  continue;
 	}
       if (f->type == 'J')
 	{
-	  fprintf (o_src, "\tpublic\t_%s\n", f->name);
-	  fprintf (o_src, "_%s\tlabel\tbyte\n", f->name);
+	  fprintf (o_src, "\tpublic\t_%s\n", COB_FIELD_NAME (f));
+	  fprintf (o_src, "_%s\tlabel\tbyte\n", COB_FIELD_NAME (f));
 	}
       fflags = f->flags.optional;
       fprintf (o_src, "\t.byte\t%u\n", RTL_FILE_VERSION);
@@ -1787,7 +1775,8 @@ proc_trail (int using)
 #ifdef COB_DEBUG
 	  fprintf (o_src,
 		   "# File: %s, Data loc: v_base+%d, Desc: c_base%d+%d\n",
-		   sy->name, sy->location, pgm_segment, sy->descriptor);
+		   COB_FIELD_NAME (sy), sy->location, pgm_segment,
+		   sy->descriptor);
 #endif
 	  sy = sy->sort_data;
 	  while (sy != NULL)
@@ -1812,7 +1801,7 @@ proc_trail (int using)
 #ifdef COB_DEBUG
 	  fprintf (o_src,
 		   "# Literal: %s, Data loc: c_base%d+%d, Desc: c_base+%d\n",
-		   sch_convert (v->name), pgm_segment, v->location,
+		   sch_convert (COB_FIELD_NAME (v)), pgm_segment, v->location,
 		   v->descriptor);
 
 #endif
@@ -1827,7 +1816,7 @@ proc_trail (int using)
 		}
 	      else
 		{
-		  s = v->name;
+		  s = COB_FIELD_NAME (v);
 		  i = v->len;
 		}
 	      emit_lit (s, i);
@@ -1839,7 +1828,7 @@ proc_trail (int using)
 	  else
 	    {
 	      char *s;
-	      s = v->name;
+	      s = COB_FIELD_NAME (v);
 	      fprintf (o_src, "\t.byte\t");
 	      while (*s && (*s != decimal_char ()))
 		fprintf (o_src, "%d,", *s++);
@@ -1859,14 +1848,14 @@ proc_trail (int using)
 
 	  if (v->decimals)
 	    {
-	      if (v->name[v->len - 1] > '9')	/* signed too? */
+	      if (COB_FIELD_NAME (v)[v->len - 1] > '9')	/* signed too? */
 		fprintf (o_src, "\t.byte\t'S',1,'9',%d,'V',1,'9',%d,0\n",
 			 len - v->decimals - 1, v->decimals);
 	      else
 		fprintf (o_src, "\t.byte\t'9',%d,'V',1,'9',%d,0\n",
 			 len - v->decimals - 1, v->decimals);
 	    }
-	  else if ((v->type == '9') && (v->name[v->len - 1] > '9'))
+	  else if ((v->type == '9') && (COB_FIELD_NAME (v)[v->len - 1] > '9'))
 	    {
 	      /* this is a signed literal, so reflect into its picture too */
 	      fprintf (o_src, "\t.byte\t'S',1,'9',%d,0\n", len);
@@ -1889,7 +1878,8 @@ proc_trail (int using)
 	  sy = list->var;
 #ifdef COB_DEBUG
 	  fprintf (o_src, "# Field: %s, Mem loc: %s, Desc: c_base%d+%d\n",
-		   sy->name, memref (sy), pgm_segment, sy->descriptor);
+		   COB_FIELD_NAME (sy), memref (sy), pgm_segment,
+		   sy->descriptor);
 #endif
 	  if (sy->redefines != NULL)
 	    sy->location = sy->redefines->location;
@@ -1951,9 +1941,9 @@ save_literal (cob_tree x, int type)
   char *dp;
   int piclen;
   struct lit *v = LITERAL (x);
-  s = v->name;
+  s = COB_FIELD_NAME (v);
   piclen = 3;			/* assume 'X'-only literal */
-  if ((type == '9') && (*(v->name + v->len - 1) > '9'))
+  if ((type == '9') && (s[v->len - 1] > '9'))
     {
       piclen += 2;		/* we need space for the sign picture char */
     }
@@ -2183,7 +2173,7 @@ gen_unstring (cob_tree var, struct unstring_delimited *delim,
 	      struct unstring_destinations *dest, cob_tree ptr,
 	      cob_tree tally)
 {
-  fprintf (o_src, "# UNSTRING %s\n", var->name);
+  fprintf (o_src, "# UNSTRING %s\n", COB_FIELD_NAME (var));
   push_immed (0);
   for (; dest; dest = dest->next)
     {
@@ -2203,7 +2193,7 @@ gen_unstring (cob_tree var, struct unstring_delimited *delim,
 void
 gen_string (struct string_from *sf, cob_tree sy, cob_tree ptr)
 {
-  fprintf (o_src, "# STRING into %s\n", sy->name);
+  fprintf (o_src, "# STRING into %s\n", COB_FIELD_NAME (sy));
   push_immed (0);	/* mark the end of variables */
   for (; sf; sf = sf->next)
     {
@@ -2218,12 +2208,10 @@ gen_display_screen (cob_tree sy, int main)
 {
   cob_tree tmp;
   if (main)
-    {
-      fprintf (o_src, "#                      Screen Section: %s\n",
-	       sy->name);}
+    fprintf (o_src, "# Screen Section: %s\n", COB_FIELD_NAME (sy));
   if (sy->son == NULL)
     {
-      fprintf (o_src, "#                      Screen Field: %s\n", sy->name);
+      fprintf (o_src, "# Screen Field: %s\n", COB_FIELD_NAME (sy));
       gen_loadvar (sy->scr->to);
       gen_loadvar (sy->scr->from);
       gen_loadvar (sy);
@@ -2325,14 +2313,10 @@ gen_accept (cob_tree sy, int echo, int main)
   if (sy->scr)
     {				/* screen or screen-item accept */
       if (main)
-	{
-	  fprintf (o_src, "#                      Screen Section: %s\n",
-		   sy->name);
-	}
+	fprintf (o_src, "# Screen Section: %s\n", COB_FIELD_NAME (sy));
       if (sy->son == NULL)
 	{
-	  fprintf (o_src, "#                      Screen Field: %s\n",
-		   sy->name);
+	  fprintf (o_src, "# Screen Field: %s\n", COB_FIELD_NAME (sy));
 	  gen_loadvar (sy->scr->to);
 	  gen_loadvar (sy->scr->from);
 	  gen_loadvar (sy);
@@ -2491,47 +2475,19 @@ check_perform_variables (cob_tree sy1, struct perform_info *pi1)
 
   j = 0;
   for (i = 0; i < 4; i++)
-    {
-      if (pi1->pf[i] != NULL)
-	{
-	  j++;
-#ifdef COB_DEBUG
-	  if (cob_trace_codegen)
-	    fprintf (stderr,
-		     "trace: check_perform_variables: var(%d:%d) '%s'\n", 
-		     i, j, pi1->pf[i]->pname2->name); 
-#endif
-	}
-    }
+    if (pi1->pf[i] != NULL)
+      j++;
 
   for (i = 0; i < j; i++)
-    {
-#ifdef COB_DEBUG
-      if (cob_trace_codegen)
-	fprintf (stderr,
-		 "debug trace: check_perform_variables: var1='%s' var2(%d)='%s'\n", 
-		 sy1->name, i, pi1->pf[i]->pname2->name); 
-#endif
-      if (strcmp (sy1->name, pi1->pf[i]->pname2->name) == 0)
-	{
-	  return sy1->name;
-	}
-    }
+    if (strcmp (COB_FIELD_NAME (sy1),
+		COB_FIELD_NAME (pi1->pf[i]->pname2)) == 0)
+      return COB_FIELD_NAME (sy1);
 
   for (i = 0; i < j; i++)
-    {
-      for (k = i + 1; k < j; k++)
-	{
-#ifdef COB_DEBUG
-	  if (cob_trace_codegen)
-	    fprintf (stderr,
-		     "trace: check_perform_variables: var1(%d)='%s' var2(%d)='%s'\n", 
-		     i, pi1->pf[i]->pname2->name, k, pi1->pf[k]->pname2->name);
-#endif
-	  if (strcmp (pi1->pf[i]->pname2->name, pi1->pf[k]->pname2->name) == 0)
-	    return pi1->pf[i]->pname2->name;
-	}
-    }
+    for (k = i + 1; k < j; k++)
+      if (strcmp (COB_FIELD_NAME (pi1->pf[i]->pname2),
+		  COB_FIELD_NAME (pi1->pf[k]->pname2)) == 0)
+	return COB_FIELD_NAME (pi1->pf[i]->pname2);
 
   return NULL;
 }
@@ -2966,7 +2922,9 @@ gen_inspect (cob_tree var, void *list, int operation)
     {
       if (!list)
 	return;
-      fprintf (o_src, "# INSPECT TALLYING %s\n", var->name);
+#ifdef COB_DEBUG
+      fprintf (o_src, "# INSPECT TALLYING %s\n", COB_FIELD_NAME (var));
+#endif
       push_immed (0);
       for (tl = (struct tallying_list *) list; tl; tl = tl->next)
 	{
@@ -2987,7 +2945,9 @@ gen_inspect (cob_tree var, void *list, int operation)
     {
       if (!list)
 	return;
-      fprintf (o_src, "# INSPECT REPLACING %s\n", var->name);
+#ifdef COB_DEBUG
+      fprintf (o_src, "# INSPECT REPLACING %s\n", COB_FIELD_NAME (var));
+#endif
       push_immed (0);
       for (rl = (struct replacing_list *) list; rl; rl = rl->next)
 	{
@@ -3015,7 +2975,9 @@ gen_inspect (cob_tree var, void *list, int operation)
     }
   else
     {
-      fprintf (o_src, "# INSPECT CONVERTING %s\n", var->name);
+#ifdef COB_DEBUG
+      fprintf (o_src, "# INSPECT CONVERTING %s\n", COB_FIELD_NAME (var));
+#endif
       cv = (struct converting_struct *) list;
       gen_loadvar (cv->before_after->after);
       gen_loadvar (cv->before_after->before);
@@ -3052,8 +3014,8 @@ gen_move (cob_tree src, cob_tree dst)
       esys = ((struct refmod *) esys)->sym;
     if (REFMOD_P (esyd))
       esyd = ((struct refmod *) esyd)->sym;
-    fprintf (o_src, "### MOVE %s TO ", sch_convert (esys->name));
-    fprintf (o_src, "%s\n", sch_convert (esyd->name));
+    fprintf (o_src, "### MOVE %s TO ", sch_convert (COB_FIELD_NAME (esys)));
+    fprintf (o_src, "%s\n", sch_convert (COB_FIELD_NAME (esyd)));
   }
 #endif
 
@@ -3073,14 +3035,15 @@ gen_move_corresponding (cob_tree sy1, cob_tree sy2)
       return;
     }
 #ifdef COB_DEBUG
-  fprintf (o_src, "# MOVE CORR %s --> %s\n", sy1->name, sy2->name);
+  fprintf (o_src, "# MOVE CORR %s --> %s\n",
+	   COB_FIELD_NAME (sy1), COB_FIELD_NAME (sy2));
 #endif
 
   for (t1 = sy1->son; t1 != NULL; t1 = t1->brother)
     if (!t1->redefines && t1->times == 1)
       for (t2 = sy2->son; t2 != NULL; t2 = t2->brother)
 	if (!t2->redefines && t2->times == 1)
-	  if (strcmp (t1->name, t2->name) == 0)
+	  if (strcmp (COB_FIELD_NAME (t1), COB_FIELD_NAME (t2)) == 0)
 	    {
 	      if ((t1->type != 'G') || (t2->type != 'G'))
 		gen_move (t1, t2);
@@ -3144,7 +3107,8 @@ gen_initialize (cob_tree sy)
     sy1 = SUBREF_SYM (sy);
 
 #ifdef COB_DEBUG
-  fprintf (o_src, "# INITIALIZE %s, type %c\n", sy->name, sy->type);
+  fprintf (o_src, "# INITIALIZE %s, type %c\n",
+	   COB_FIELD_NAME (sy), sy->type);
 #endif
   init_ctype = ' ';
   get_nb_fields (sy1, sy1->times, 0);
@@ -3190,8 +3154,9 @@ gen_set (cob_tree idx, enum set_mode mode, cob_tree var,
   if (sy->flags.is_pointer || adrof_idx)
     {				/* pointer? */
 #ifdef COB_DEBUG
-      fprintf (o_src, "# set %s to %s\n", idx ? idx->name : "(null)",
-	       var ? var->name : "(null)");
+      fprintf (o_src, "# set %s to %s\n",
+	       idx ? COB_FIELD_NAME (idx) : "(null)",
+	       var ? COB_FIELD_NAME (var) : "(null)");
       fprintf (o_src, "# adrof_idx: %d, adrof_var: %d\n",
 	       adrof_idx, adrof_var);
 #endif
@@ -3231,7 +3196,9 @@ gen_set (cob_tree idx, enum set_mode mode, cob_tree var,
       yyerror ("only usage comp variables can be used as indices");
       return;
     }
-  fprintf (o_src, "# SET %s \n", idx->name);
+#ifdef COB_DEBUG
+  fprintf (o_src, "# SET %s \n", COB_FIELD_NAME (idx));
+#endif
   /* first get the second operand */
   if (symlen (idx) > 4)
     yyerror ("warning: we don't allow this large index variable");
@@ -3699,7 +3666,7 @@ gen_SearchAllLoopCheck (unsigned long lbl3, cob_tree syidx,
   it2 = NULL;
   while (it1 != NULL)
     {
-      if (strcmp (it1->tablename, sytbl->name) == 0)
+      if (strcmp (it1->tablename, COB_FIELD_NAME (sytbl)) == 0)
 	{
 	  it2 = it1;
 	  it1 = NULL;
@@ -3866,8 +3833,8 @@ define_implicit_field (cob_tree sy, cob_tree sykey, int idxlen)
   curr_field = tmp;
 
   i2t = malloc (sizeof (struct index_to_table_list));
-  i2t->idxname = strdup (sy->name);
-  i2t->tablename = strdup (curr_field->name);
+  i2t->idxname = strdup (COB_FIELD_NAME (sy));
+  i2t->tablename = strdup (COB_FIELD_NAME (curr_field));
   i2t->seq = '0';	/* no sort sequence is yet defined for the table */
   i2t->keyname = NULL;
   if (sykey != NULL)
@@ -3876,7 +3843,7 @@ define_implicit_field (cob_tree sy, cob_tree sykey, int idxlen)
 	i2t->seq = '1';
       if (sykey->level == -2)
 	i2t->seq = '2';
-      i2t->keyname = strdup (sykey->name);
+      i2t->keyname = strdup (COB_FIELD_NAME (sykey));
     }
   i2t->next = index2table;
   index2table = i2t;
@@ -3908,7 +3875,7 @@ Initialize_SearchAll_Boundaries (cob_tree sy, cob_tree syidx)
   i2t1 = index2table;
   while (i2t1 != NULL)
     {
-      if (strcmp (i2t1->tablename, sy->name) == 0)
+      if (strcmp (i2t1->tablename, COB_FIELD_NAME (sy)) == 0)
 	{
 	  if (i2t1->seq != '0')
 	    i2t2 = i2t1;
@@ -3933,7 +3900,7 @@ determine_table_index_name (cob_tree sy)
   i2t = index2table;
   while (i2t != NULL)
     {
-      if (strcmp (i2t->tablename, sy->name) == 0)
+      if (strcmp (i2t->tablename, COB_FIELD_NAME (sy)) == 0)
 	{
 	  rsy = lookup_symbol (i2t->idxname);
 	  i2t = NULL;
@@ -3944,23 +3911,6 @@ determine_table_index_name (cob_tree sy)
 	}
     }
 
-#ifdef COB_DEBUG
-  if (cob_trace_codegen)
-    {
-      if (rsy == NULL)
-	{
-	  fprintf (stderr,
-		   "trace (determine_table_index_name): table name '%s' index name '(NULL)'\n",
-		   sy->name);
-	}
-      else
-	{
-	  fprintf (stderr,
-		   "trace (determine_table_index_name): table name '%s' index name '%s'\n",
-		   sy->name, rsy->name);
-	}
-    }
-#endif
   return rsy;
 }
 
@@ -4085,7 +4035,7 @@ check_fields (cob_tree sy)
 	}
     }
   if (sy->type == '9' && sy->len > 31)
-    yyerror ("Elementary numeric item %s > 31 digits", sy->name);
+    yyerror ("Elementary numeric item %s > 31 digits", COB_FIELD_NAME (sy));
   return 0;
 }
 
@@ -4290,7 +4240,7 @@ update_screen_field (cob_tree sy, struct scr_info *si)
   if (*(sy->picstr) == 0 && sy->value != NULL)
     {
       tmp = sy->value;
-      sy->len = strlen (tmp->name);
+      sy->len = strlen (COB_FIELD_NAME (tmp));
       sy->picstr = malloc (3);
       sy->picstr[0] = 'X';
       sy->picstr[1] = sy->len;
@@ -4307,12 +4257,13 @@ pic_digits (cob_tree sy)
     return 0;
   if (!SYMBOL_P (sy))
     {
-      len = strlen (sy->name);
-      if (strchr (sy->name, decimal_char ()))
+      const char *name = COB_FIELD_NAME (sy);
+      len = strlen (name);
+      if (strchr (name, decimal_char ()))
 	len--;
-      if (strchr (sy->name, '+'))
+      if (strchr (name, '+'))
 	len--;
-      if (strchr (sy->name, '-'))
+      if (strchr (name, '-'))
 	len--;
       return len;
     }
@@ -4376,7 +4327,7 @@ close_fields (void)
   /********** locate level 01 field   **************/
   for (sy = curr_field; sy->parent != NULL; sy = sy->parent);
   if (sy->level != 1 && sy->level != 77)
-    yyerror ("field not subordinate to any other: %s", sy->name);
+    yyerror ("field not subordinate to any other: %s", COB_FIELD_NAME (sy));
 
   /********** propagate value flags  *************/
   sy->flags.spec_value = set_field_value_sw (sy, 1);
@@ -4415,7 +4366,7 @@ resolve_labels ()
   fprintf (o_src, "# resolving paragraphs/sections labels\n");
   for (i = 0; i < HASHLEN; i++)
     {
-      for (sy = labtab[i]; sy != NULL; sy = sy->next)
+      for (sy = labtab[i]; sy; sy = COB_FIELD_NEXT (sy))
 	{
 	  if (sy->type == 'f')
 	    continue;
@@ -4430,7 +4381,8 @@ resolve_labels ()
 		    {
 		      if (sy2->defined == 1 &&
 			  sy2->parent != NULL &&
-			  !strcmp (sy1->parent->name, sy2->parent->name))
+			  !strcmp (COB_FIELD_NAME (sy1->parent),
+				   COB_FIELD_NAME (sy2->parent)))
 			{
 			  def++;
 			  break;
@@ -4483,9 +4435,10 @@ char *
 label_name (cob_tree lab)
 {
   if (lab->parent)
-    sprintf (name_buf, "%s__%s_%d", lab->name, lab->parent->name, pgm_segment);
+    sprintf (name_buf, "%s__%s_%d",
+	     COB_FIELD_NAME (lab), COB_FIELD_NAME (lab->parent), pgm_segment);
   else
-    sprintf (name_buf, "%s_%d", lab->name, pgm_segment);
+    sprintf (name_buf, "%s_%d", COB_FIELD_NAME (lab), pgm_segment);
   return chg_underline (name_buf);
 }
 
@@ -4495,13 +4448,14 @@ var_name (cob_tree sy)
   int n;
   n = MAXNAMEBUF;
   strcpy (name_buf, "");
-  while (n > strlen (sy->name) + 4)
+  while (n > strlen (COB_FIELD_NAME (sy)) + 4)
     {
       if (n < MAXNAMEBUF)
 	strcat (name_buf, " OF ");
-      strcat (name_buf, sy->name);
-      n -= strlen (sy->name) + 4;
-      if ((lookup_symbol (sy->name)->clone == NULL) || (sy->parent == NULL))
+      strcat (name_buf, COB_FIELD_NAME (sy));
+      n -= strlen (COB_FIELD_NAME (sy)) + 4;
+      if ((lookup_symbol (COB_FIELD_NAME (sy))->clone == NULL)
+	  || (sy->parent == NULL))
 	break;
       sy = sy->parent;
     }
@@ -4599,18 +4553,18 @@ gen_save_filevar (cob_tree f, cob_tree buf)
     {
 #ifdef COB_DEBUG
       fprintf (o_src, "# File '%s' Record Description Stack Location\n",
-	       f->name);
+	       COB_FIELD_NAME (f));
 #endif
 
       fprintf (o_src, "\tmovl\t%s, %%eax\n", memref (f->recordsym));
       push_eax ();
     }
   if (f->type == 'K')
-    fprintf (o_src, "\tmovl\t$_%s, %%eax\n", f->name);
+    fprintf (o_src, "\tmovl\t$_%s, %%eax\n", COB_FIELD_NAME (f));
   else
 #ifdef COB_DEBUG
-    fprintf (o_src, "# File name '%s', Record name '%s'\n", f->name,
-	     f->recordsym->name);
+    fprintf (o_src, "# File name '%s', Record name '%s'\n",
+	     COB_FIELD_NAME (f), COB_FIELD_NAME (f->recordsym));
 #endif
   fprintf (o_src, "\tmovl\t$s_base%d+%u, %%eax\n", pgm_segment, f->location);
   push_eax ();
@@ -4620,11 +4574,11 @@ void
 gen_save_filedesc (cob_tree f)
 {
   if (f->type == 'K')
-    fprintf (o_src, "\tmovl\t$_%s, %%eax\n", f->name);
+    fprintf (o_src, "\tmovl\t$_%s, %%eax\n", COB_FIELD_NAME (f));
   else
 #ifdef COB_DEBUG
-    fprintf (o_src, "# File name '%s', Record name '%s'\n", f->name,
-	     f->recordsym->name);
+    fprintf (o_src, "# File name '%s', Record name '%s'\n",
+	     COB_FIELD_NAME (f), COB_FIELD_NAME (f->recordsym));
 #endif
   fprintf (o_src, "\tmovl\t$s_base%d+%u, %%eax\n", pgm_segment, f->location);
   push_eax ();
@@ -4657,7 +4611,7 @@ alloc_file_entry (cob_tree f)
 //      fprintf(o_src,"# Alloc space for file ENTRY, Stack Addr: %d\n",
 //                      stack_offset);
   fprintf (o_src, "# Allocate space for file '%s' Stack Addr: %d\n",
-	   f->name, stack_offset);
+	   COB_FIELD_NAME (f), stack_offset);
 #endif
 }
 
@@ -5067,7 +5021,7 @@ gen_call (cob_tree v, struct call_parameter *parameter_list,
   for (l = parameter_list; l != NULL; l = l->next)
     {
 #ifdef COB_DEBUG
-      fprintf (o_src, "#parm %s by %d\n", FIELD_NAME (l->var), l->mode);
+      fprintf (o_src, "#parm %s by %d\n", COB_FIELD_NAME (l->var), l->mode);
 #endif
       switch (l->mode)
 	{
@@ -5083,7 +5037,7 @@ gen_call (cob_tree v, struct call_parameter *parameter_list,
   if (cob_link_style == LINK_STATIC && LITERAL_P (v))
     {
       /* static call */
-      asm_call (v->name);
+      asm_call (COB_FIELD_NAME (v));
       endlabel = 0;
     }
   else

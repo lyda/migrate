@@ -45,12 +45,12 @@ make_literal (char *name)
 {
   struct lit *p = malloc (sizeof (struct lit));
   COB_TREE_TYPE (p) = cob_tag_literal;
-  p->name = name;
+  COB_FIELD_NEXT (p) = NULL;
+  COB_FIELD_NAME (p) = name;
   p->type = 0;
   p->all = 0;
   p->nick = NULL;
-  p->len = strlen (p->name);
-  p->next = NULL;
+  p->len = strlen (COB_FIELD_NAME (p));
   return COB_TREE (p);
 }
 
@@ -64,8 +64,8 @@ make_symbol (char *name)
 {
   struct sym *p = malloc (sizeof (struct sym));
   COB_TREE_TYPE (p) = cob_tag_symbol;
-  p->name = name;
-  p->next = NULL;
+  COB_FIELD_NEXT (p) = NULL;
+  COB_FIELD_NAME (p) = name;
   p->times = 0;
   p->type = 0;
   p->slack = 0;
@@ -197,7 +197,7 @@ print_tree (cob_tree x)
   if (x == spe_lit_ZE)
     printf ("ZERO");
   else if (SYMBOL_P (x) || LITERAL_P (x))
-    printf (FIELD_NAME (x));
+    printf (COB_FIELD_NAME (x));
   else if (SUBREF_P (x))
     {
       cob_tree_list ls;
