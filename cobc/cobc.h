@@ -31,11 +31,11 @@
 #define CB_VERSION	PACKAGE_VERSION
 #define CB_COPYRIGHT	"Copyright (C) 2001-2003 Keisuke Nishida\n"
 
-#define CB_FORMAT_FREE			1
-#define CB_FORMAT_FIXED			2
+#define CB_FORMAT_FREE		1
+#define CB_FORMAT_FIXED		2
 
-#define CB_DEFAULT_TAB_WIDTH		8
-#define CB_DEFAULT_TEXT_COLUMN		72
+#define CB_DEFAULT_TAB_WIDTH	8
+#define CB_DEFAULT_TEXT_COLUMN	72
 
 #ifdef __MINGW32__
 #define __USE_MINGW_FSEEK 1	/* These are in libmingwex.a */
@@ -90,10 +90,10 @@ extern struct cb_name_list *cb_include_list;
 extern struct cb_program *current_program;
 extern struct cb_label *current_section, *current_paragraph;
 
-extern void yywarn (const char *fmt, ...);
-extern void yyerror (const char *fmt, ...);
-extern void yywarn_x (cb_tree x, const char *fmt, ...);
-extern void yyerror_x (cb_tree x, const char *fmt, ...);
+extern void cb_warning (const char *fmt, ...);
+extern void cb_error (const char *fmt, ...);
+extern void cb_warning_x (cb_tree x, const char *fmt, ...);
+extern void cb_error_x (cb_tree x, const char *fmt, ...);
 
 extern void redefinition_error (cb_tree x);
 extern void undefined_error (cb_tree x);

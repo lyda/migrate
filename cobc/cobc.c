@@ -696,7 +696,7 @@ main (int argc, char *argv[])
 
 
 static void
-yyprintf (char *file, int line, char *prefix, const char *fmt, va_list ap)
+print_error (char *file, int line, char *prefix, const char *fmt, va_list ap)
 {
   static struct cb_label *last_section = NULL;
   static struct cb_label *last_paragraph = NULL;
@@ -725,50 +725,44 @@ yyprintf (char *file, int line, char *prefix, const char *fmt, va_list ap)
 }
 
 void
-yywarn (const char *fmt, ...)
+cb_warning (const char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  yyprintf (0, 0, "warning: ", fmt, ap);
+  print_error (0, 0, "warning: ", fmt, ap);
   va_end (ap);
 
   warningcount++;
 }
 
 void
-yyerror (const char *fmt, ...)
+cb_error (const char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  yyprintf (0, 0, "", fmt, ap);
+  print_error (0, 0, "", fmt, ap);
   va_end (ap);
 
   errorcount++;
 }
 
 void
-pperror (const char *msg)
-{
-  yyerror (msg);
-}
-
-void
-yywarn_x (cb_tree x, const char *fmt, ...)
+cb_warning_x (cb_tree x, const char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  yyprintf (x->source_file, x->source_line, "warning: ", fmt, ap);
+  print_error (x->source_file, x->source_line, "warning: ", fmt, ap);
   va_end (ap);
 
   warningcount++;
 }
 
 void
-yyerror_x (cb_tree x, const char *fmt, ...)
+cb_error_x (cb_tree x, const char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  yyprintf (x->source_file, x->source_line, "", fmt, ap);
+  print_error (x->source_file, x->source_line, "", fmt, ap);
   va_end (ap);
 
   errorcount++;
@@ -779,8 +773,8 @@ void
 redefinition_error (cb_tree x)
 {
   struct cb_word *w = CB_REFERENCE (x)->word;
-  yyerror_x (x, _("redefinition of `%s'"), w->name);
-  yyerror_x (w->items->item, _("`%s' previously defined here"), w->name);
+  cb_error_x (x, _("redefinition of `%s'"), w->name);
+  cb_error_x (w->items->item, _("`%s' previously defined here"), w->name);
 }
 
 void
@@ -788,10 +782,10 @@ undefined_error (cb_tree x)
 {
   struct cb_reference *r = CB_REFERENCE (x);
   if (r->next)
-    yyerror_x (x, _("`%s' undefined in `%s'"),
+    cb_error_x (x, _("`%s' undefined in `%s'"),
 	       r->word->name, r->next->word->name);
   else
-    yyerror_x (x, _("`%s' undefined"), r->word->name);
+    cb_error_x (x, _("`%s' undefined"), r->word->name);
 }
 
 void
@@ -803,7 +797,7 @@ ambiguous_error (cb_tree x)
       struct cb_list *l;
 
       /* display error on the first time */
-      yyerror_x (x, _("`%s' ambiguous; need qualification"), w->name);
+      cb_error_x (x, _("`%s' ambiguous; need qualification"), w->name);
       w->error = 1;
 
       /* display all fields with the same name */
@@ -840,7 +834,7 @@ ambiguous_error (cb_tree x)
 	      break;
 	    }
 	  strcat (buff, _("defined here"));
-	  yyerror_x (x, buff);
+	  cb_error_x (x, buff);
 	}
     }
 }

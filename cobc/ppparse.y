@@ -27,6 +27,8 @@
 
 #include "cobc.h"
 
+#define yyerror cb_error
+
 extern struct cb_replacement *add_replacement (struct cb_replacement *replacement, const char *old_text, const char *new_text);
 %}
 

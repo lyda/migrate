@@ -32,12 +32,13 @@
 #include "cobc.h"
 #include "reserved.h"
 
+#define yyerror		cb_error
 #define YYDEBUG		COB_DEBUG
 #define YYERROR_VERBOSE 1
 
 #define IGNORE(x)	/* ignored */
-#define PENDING(x)	yywarn (_("`%s' not implemented"), x)
-#define OBSOLETE(x)	yywarn (_("`%s' obsolete"), x)
+#define PENDING(x)	cb_warning (_("`%s' not implemented"), x)
+#define OBSOLETE(x)	cb_warning (_("`%s' obsolete"), x)
 
 #define cb_ref(x)	(CB_REFERENCE (x)->value)
 
@@ -230,7 +231,7 @@ identification_division:
 	  *s = '_';
 	}
     if (converted)
-      yywarn_x ($6, _("PROGRAM-ID is converted to `%s'"), name);
+      cb_warning_x ($6, _("PROGRAM-ID is converted to `%s'"), name);
     current_program->program_id = name;
   }
 ;
@@ -279,8 +280,8 @@ source_computer:
 _with_debugging_mode:
 | _with DEBUGGING MODE
   {
-    yywarn (_("DEBUGGING MODE is ignored"));
-    yywarn (_("use compiler option `-debug' instead"));
+    cb_warning (_("DEBUGGING MODE is ignored"));
+    cb_warning (_("use compiler option `-debug' instead"));
   }
 ;
 
@@ -338,7 +339,7 @@ special_name_mnemonic:
   {
     int n = lookup_builtin_word (CB_NAME ($1));
     if (n == 0)
-      yyerror_x ($1, _("unknown name `%s'"), CB_NAME ($1));
+      cb_error_x ($1, _("unknown name `%s'"), CB_NAME ($1));
     $<tree>$ = make_builtin (n);
   }
   special_name_mnemonic_define
@@ -459,7 +460,7 @@ special_name_currency:
   {
     unsigned char *s = CB_LITERAL ($3)->data;
     if (CB_LITERAL ($3)->size != 1)
-      yyerror_x ($3, _("invalid currency sign `%s'"), s);
+      cb_error_x ($3, _("invalid currency sign `%s'"), s);
     current_program->currency_symbol = s[0];
   }
 ;
@@ -511,19 +512,19 @@ select_sequence:
 
     /* check ASSIGN clause */
     if (current_file->assign == NULL)
-      yyerror_x ($4, _("ASSIGN required for file `%s'"), name);
+      cb_error_x ($4, _("ASSIGN required for file `%s'"), name);
 
     /* check KEY clause */
     switch (current_file->organization)
       {
       case COB_ORG_INDEXED:
 	if (current_file->key == NULL)
-	  yyerror_x ($4, _("RECORD KEY required for file `%s'"), name);
+	  cb_error_x ($4, _("RECORD KEY required for file `%s'"), name);
 	break;
       case COB_ORG_RELATIVE:
 	if (current_file->key == NULL
 	    && current_file->access_mode != COB_ACCESS_SEQUENTIAL)
-	  yyerror_x ($4, _("RELATIVE KEY required for file `%s'"), name);
+	  cb_error_x ($4, _("RELATIVE KEY required for file `%s'"), name);
 	break;
       }
   }
@@ -854,7 +855,7 @@ level_number:
       $$ = level;
     else
       {
-	yyerror_x ($1, _("invalid level number `%s'"), tree_name ($1));
+	cb_error_x ($1, _("invalid level number `%s'"), tree_name ($1));
 	YYERROR;
       }
   }
@@ -1210,7 +1211,7 @@ screen_option:
       case 6: current_field->screen_flag |= COB_SCREEN_FG_YELLOW; break;
       case 7: current_field->screen_flag |= COB_SCREEN_FG_WHITE; break;
       default:
-	yyerror (_("invalid color `%d'"), $3);
+	cb_error (_("invalid color `%d'"), $3);
       }
   }
 | BACKGROUND_COLOR _is integer
@@ -1227,7 +1228,7 @@ screen_option:
       case 6: current_field->screen_flag |= COB_SCREEN_BG_YELLOW; break;
       case 7: current_field->screen_flag |= COB_SCREEN_BG_WHITE; break;
       default:
-	yyerror (_("invalid color `%d'"), $3);
+	cb_error (_("invalid color `%d'"), $3);
       }
   }
 | usage_clause
@@ -1301,7 +1302,7 @@ using_phrase:
 	{
 	  struct cb_field *f = CB_FIELD (cb_ref (l->item));
 	  if (f->level != 01 && f->level != 77)
-	    yyerror_x (l->item, _("`%s' not level 01 or 77"), f->name);
+	    cb_error_x (l->item, _("`%s' not level 01 or 77"), f->name);
 	  l->item = cb_ref (l->item);
 	}
     $$ = $2;
@@ -1371,7 +1372,7 @@ paragraph_header:
 invalid_statement:
   section_name
   {
-    yyerror_x ($1, _("unknown statement `%s'"), CB_NAME ($1));
+    cb_error_x ($1, _("unknown statement `%s'"), CB_NAME ($1));
     YYERROR;
   }
 ;
@@ -1460,7 +1461,7 @@ statement:
 | NEXT SENTENCE
   {
     if (cb_warn_next_sentence)
-      yywarn (_("NEXT SENTENCE is obsolete; use CONTINUE or END-IF"));
+      cb_warning (_("NEXT SENTENCE is obsolete; use CONTINUE or END-IF"));
   }
 ;
 
@@ -1484,7 +1485,7 @@ accept_body:
 	    push_funcall_3 ("cob_screen_accept", $1, line, column);
 	  }
 	else
-	  yyerror_x ($1, "`%s' not defined in SCREEN SECTION", tree_name ($1));
+	  cb_error_x ($1, "`%s' not defined in SCREEN SECTION", tree_name ($1));
       }
     else
       {
@@ -1524,7 +1525,7 @@ accept_body:
 	push_funcall_2 ("cob_accept", $1, make_integer (COB_SYSIN));
 	break;
       default:
-	yyerror_x ($3, _("invalid input stream `%s'"), tree_name ($3));
+	cb_error_x ($3, _("invalid input stream `%s'"), tree_name ($3));
 	break;
       }
   }
@@ -1761,7 +1762,7 @@ display_statement:
 	      push_funcall_3 ("cob_screen_display", l->item, line, column);
 	    }
 	  else
-	    yyerror_x (l->item, "`%s' not defined in SCREEN SECTION",
+	    cb_error_x (l->item, "`%s' not defined in SCREEN SECTION",
 			 tree_name (l->item));
       }
     else
@@ -1784,14 +1785,14 @@ display_upon:
       case BUILTIN_SYSOUT:  $$ = COB_SYSOUT; break;
       case BUILTIN_SYSERR:  $$ = COB_SYSERR; break;
       default:
-	yyerror_x ($2, _("invalid UPON item"));
+	cb_error_x ($2, _("invalid UPON item"));
 	$$ = COB_SYSOUT;
 	break;
       }
   }
 | UPON WORD
   {
-    yywarn_x ($2, _("`%s' undefined in SPECIAL-NAMES"), CB_NAME ($2));
+    cb_warning_x ($2, _("`%s' undefined in SPECIAL-NAMES"), CB_NAME ($2));
     $$ = COB_SYSOUT;
   }
 ;
@@ -1945,7 +1946,7 @@ goto_statement:
     if ($3 == NULL)
       OBSOLETE ("GO TO without label");
     else if ($3->next)
-      yyerror_x ($3->next->item, _("too many labels with GO TO"));
+      cb_error_x ($3->next->item, _("too many labels with GO TO"));
     else
       push_funcall_1 ("@goto", $3->item);
   }
@@ -2088,28 +2089,28 @@ tallying_item:
 | CHARACTERS inspect_before_after_list
   {
     if (current_inspect_data == NULL)
-      yyerror (_("data name expected before CHARACTERS"));
+      cb_error (_("data name expected before CHARACTERS"));
     current_inspect_func = NULL;
     $<list>$ = list_add ($2, make_funcall_1 ("cob_inspect_characters", current_inspect_data));
   }
 | ALL
   {
     if (current_inspect_data == NULL)
-      yyerror (_("data name expected before ALL"));
+      cb_error (_("data name expected before ALL"));
     current_inspect_func = "cob_inspect_all";
     $<list>$ = NULL;
   }
 | LEADING
   {
     if (current_inspect_data == NULL)
-      yyerror (_("data name expected before LEADING"));
+      cb_error (_("data name expected before LEADING"));
     current_inspect_func = "cob_inspect_leading";
     $<list>$ = NULL;
   }
 | non_all_value inspect_before_after_list
   {
     if (current_inspect_func == NULL)
-      yyerror_x ($1, _("ALL or LEADING expected before `%s'"), tree_name ($1));
+      cb_error_x ($1, _("ALL or LEADING expected before `%s'"), tree_name ($1));
     $<list>$ = list_add ($2, make_funcall_2 (current_inspect_func, current_inspect_data, $1));
   }
 ;
@@ -2280,7 +2281,7 @@ perform_statement:
 end_perform:
   /* empty */
   {
-    yyerror_x ($<tree>-2, _("%s statement not terminated by END-%s"),
+    cb_error_x ($<tree>-2, _("%s statement not terminated by END-%s"),
 	       "PERFORM", "PERFORM");
   }
 | END_PERFORM
@@ -2358,7 +2359,7 @@ read_statement:
       {
 	/* READ NEXT */
 	if (key)
-	  yywarn (_("KEY ignored with sequential READ"));
+	  cb_warning (_("KEY ignored with sequential READ"));
 	push_funcall_2 ("cob_read", file, cb_int0);
       }
     else
@@ -3062,7 +3063,7 @@ numeric_expr:
   {
     if (CB_TREE_CLASS ($1) != COB_TYPE_NUMERIC)
       {
-	yyerror_x ($1, _("invalid expression `%s'"), tree_name ($1));
+	cb_error_x ($1, _("invalid expression `%s'"), tree_name ($1));
 	YYERROR;
       }
     $$ = $1;
@@ -3128,7 +3129,7 @@ expr_1:
 			 && CB_BINARY_OP (stack[i-3].value)->op == '&')
 			|| (CB_BINARY_OP_P (stack[i-1].value)
 			    && CB_BINARY_OP (stack[i-1].value)->op == '&')))
-		  yywarn (_("suggest parentheses around AND within OR"));
+		  cb_warning (_("suggest parentheses around AND within OR"));
 		stack[i-3].token = VALUE;
 		stack[i-3].value =
 		  make_binary_op (stack[i-3].value, token, stack[i-1].value);
@@ -3345,7 +3346,7 @@ expr_1:
     if (i != 1)
       {
       error:
-	yyerror_x ($1->item, _("invalid expression `%s'"),
+	cb_error_x ($1->item, _("invalid expression `%s'"),
 		   tree_name ($1->item));
 	YYERROR;
       }
@@ -3463,8 +3464,8 @@ table_name:
 	cb_tree x = cb_ref ($1);
 	if (!CB_FIELD (x)->index_list)
 	  {
-	    yyerror_x ($1, _("`%s' not indexed"), tree_name ($1));
-	    yyerror_x (x, _("`%s' defined here"), tree_name (x));
+	    cb_error_x ($1, _("`%s' not indexed"), tree_name ($1));
+	    cb_error_x (x, _("`%s' defined here"), tree_name (x));
 	    YYERROR;
 	  }
       }
@@ -3573,7 +3574,7 @@ numeric_value:
   value
   {
     if (CB_TREE_CLASS ($1) != COB_TYPE_NUMERIC)
-      yyerror_x ($1, _("numeric value is expected `%s'"), tree_name ($1));
+      cb_error_x ($1, _("numeric value is expected `%s'"), tree_name ($1));
     $$ = $1;
   }
 ;
@@ -3617,7 +3618,7 @@ integer_value:
 	}
       default:
       invalid:
-	yyerror_x ($1, _("`%s' must be an integer value"), tree_name ($1));
+	cb_error_x ($1, _("`%s' must be an integer value"), tree_name ($1));
 	YYERROR;
       }
     $$ = $1;
@@ -3848,7 +3849,7 @@ builtin_switch_id (cb_tree x)
     case BUILTIN_SWITCH_8:
       return id - BUILTIN_SWITCH_1;
     default:
-      yyerror (_("not switch name"));
+      cb_error (_("not switch name"));
       return -1;
     }
 }
@@ -3862,7 +3863,7 @@ validate_group_name (cb_tree x)
   if (CB_FIELD (cb_ref (x))->children == NULL
       || CB_REFERENCE (x)->offset != NULL)
     {
-      yyerror_x (x, _("`%s' not a group"), tree_name (x));
+      cb_error_x (x, _("`%s' not a group"), tree_name (x));
       return cb_error_node;
     }
 
@@ -3877,7 +3878,7 @@ validate_record_name (cb_tree x)
 
   if (CB_FIELD (cb_ref (x))->file == NULL)
     {
-      yyerror_x (x, _("`%s' not record name"), tree_name (x));
+      cb_error_x (x, _("`%s' not record name"), tree_name (x));
       return cb_error_node;
     }
 
@@ -3892,7 +3893,7 @@ validate_numeric_name (cb_tree x, int rounded)
 
   if (CB_TREE_CLASS (x) != COB_TYPE_NUMERIC)
     {
-      yyerror_x (x, _("`%s' not numeric"), tree_name (x));
+      cb_error_x (x, _("`%s' not numeric"), tree_name (x));
       return cb_error_node;
     }
 
@@ -3908,7 +3909,7 @@ validate_numeric_edited_name (cb_tree x, int rounded)
   if (CB_TREE_CLASS (x) != COB_TYPE_NUMERIC
       && CB_TREE_TYPE (x) != COB_TYPE_NUMERIC_EDITED)
     {
-      yyerror_x (x, _("`%s' not numeric or numeric edited"), tree_name (x));
+      cb_error_x (x, _("`%s' not numeric or numeric edited"), tree_name (x));
       return cb_error_node;
     }
 
@@ -3924,7 +3925,7 @@ validate_integer_name (cb_tree x)
   if (CB_TREE_CLASS (x) != COB_TYPE_NUMERIC
       || CB_FIELD (cb_ref (x))->pic->expt < 0)
     {
-      yyerror_x (x, _("`%s' not integer"), tree_name (x));
+      cb_error_x (x, _("`%s' not integer"), tree_name (x));
       return cb_error_node;
     }
 
@@ -3955,6 +3956,6 @@ static void
 terminator_warning (const char *name)
 {
   if (cb_warn_implicit_terminator && statement_location)
-    yywarn_x (statement_location,
-	      _("%s statement not terminated by END-%s"), name, name);
+    cb_warning_x (statement_location,
+		  _("%s statement not terminated by END-%s"), name, name);
 }

@@ -70,7 +70,7 @@ static void switch_to_buffer (int lineno, char *filename, struct cb_replacement 
 "INSTALLATION." |
 "SECURITY." {
   if (cb_source_format == CB_FORMAT_FREE)
-    yyerror ("obsolete");
+    cb_error ("obsolete");
   else
     {
       int c;
@@ -313,7 +313,7 @@ ppinput_1 (char *buff, int size)
  end:
   if (n > 0 && buff[n - 1] != '\n')
     {
-      yywarn (_("file unterminated by a newline"));
+      cb_warning (_("file unterminated by a newline"));
       buff[n++] = '\n';
     }
   buff[n] = '\0';
@@ -355,7 +355,7 @@ ppinput_1 (char *buff, int size)
       n = 7;
       break;
     default:
-      yyerror (_("invalid indicator: `%c'"), buff[6]);
+      cb_error (_("invalid indicator: `%c'"), buff[6]);
       exit (1);
     }
 
@@ -370,9 +370,9 @@ ppinput_1 (char *buff, int size)
 	    if (buff[i] != ' ' && buff[i] != '\n')
 	      {
 		/* show warning if it is not whitespaces */
-		yywarn (_("source text after column %d"), cb_text_column);
+		cb_warning (_("source text after column %d"), cb_text_column);
 		if (++count == 4)
-		  yywarn (_("more warnings inhibited"));
+		  cb_warning (_("more warnings inhibited"));
 		break;
 	      }
 	}
@@ -443,7 +443,7 @@ ppinput (char *buff, int max_size)
 	    }
 	  else if (len - old_len + new_len >= max_size)
 	    {
-	      yyerror (_("source line too long"));
+	      cb_error (_("source line too long"));
 	      exit (1);
 	    }
 	  else

@@ -685,7 +685,7 @@ parse_picture (const char *str)
     case PIC_NUMERIC:
       pic->category = COB_TYPE_NUMERIC;
       if (digits > 18)
-	yyerror (_("numeric entry cannot be larger than 18 digits"));
+	cb_error (_("numeric entry cannot be larger than 18 digits"));
       break;
     case PIC_ALPHANUMERIC:
     case PIC_NATIONAL:
@@ -709,7 +709,7 @@ parse_picture (const char *str)
   return pic;
 
  error:
-  yyerror (_("invalid picture string"));
+  cb_error (_("invalid picture string"));
   return pic;
 }
 
@@ -849,7 +849,7 @@ build_field (int level, cb_tree name, struct cb_field *last_field,
     }
   else if (!last_field)
     {
-      yyerror_x (name, _("level number must begin with 01 or 77"));
+      cb_error_x (name, _("level number must begin with 01 or 77"));
       return NULL;
     }
   else if (f->level == 66)
@@ -896,7 +896,7 @@ build_field (int level, cb_tree name, struct cb_field *last_field,
 	    last_field = p;
 	    goto sister;
 	  }
-      yyerror_x (name, _("field hierarchy broken"));
+      cb_error_x (name, _("field hierarchy broken"));
       return NULL;
     }
 
@@ -922,7 +922,7 @@ validate_redefines (struct cb_field *field, cb_tree redefines)
   /* ISO+IEC+1989-2002: 13.16.42.2-7 */
   if (r->next)
     {
-      yyerror_x (x, _("`%s' cannot be qualified"), CB_NAME (redefines));
+      cb_error_x (x, _("`%s' cannot be qualified"), CB_NAME (redefines));
       return NULL;
     }
 
@@ -939,12 +939,12 @@ validate_redefines (struct cb_field *field, cb_tree redefines)
   /* ISO+IEC+1989-2002: 13.16.42.2-2 */
   if (f->level != field->level)
     {
-      yyerror_x (x, _("level number of REDEFINES entries must be identical"));
+      cb_error_x (x, _("level number of REDEFINES entries must be identical"));
       return NULL;
     }
   if (f->level == 66 || f->level == 88)
     {
-      yyerror_x (x, _("level number of REDEFINES entry cannot be 66 or 88"));
+      cb_error_x (x, _("level number of REDEFINES entry cannot be 66 or 88"));
       return NULL;
     }
 
@@ -952,7 +952,7 @@ validate_redefines (struct cb_field *field, cb_tree redefines)
   for (p = f->sister; p && p->redefines; p = p->sister);
   if (p != field)
     {
-      yyerror_x (x, _("REDEFINES must follow the original definition"));
+      cb_error_x (x, _("REDEFINES must follow the original definition"));
       return NULL;
     }
 
@@ -962,7 +962,7 @@ validate_redefines (struct cb_field *field, cb_tree redefines)
 static void
 group_error (cb_tree x, const char *name, const char *clause)
 {
-  yyerror_x (x, _("group item `%s' cannot have %s"), name, clause);
+  cb_error_x (x, _("group item `%s' cannot have %s"), name, clause);
 }
 
 static int
@@ -991,7 +991,7 @@ validate_field_1 (struct cb_field *f)
     {
       /* conditional name */
       if (f->pic)
-	yyerror_x (x, _("level 88 item `%s' may not have PICTURE"), name);
+	cb_error_x (x, _("level 88 item `%s' may not have PICTURE"), name);
     }
   else
     {
@@ -999,7 +999,7 @@ validate_field_1 (struct cb_field *f)
       if (!f->pic)
 	if (f->usage != CB_USAGE_INDEX)
 	  {
-	    yyerror_x (x, _("PICTURE clause required for `%s'"), name);
+	    cb_error_x (x, _("PICTURE clause required for `%s'"), name);
 	    return -1; /* cannot continue */
 	  }
 
@@ -1011,7 +1011,7 @@ validate_field_1 (struct cb_field *f)
 	case CB_USAGE_BINARY:
 	case CB_USAGE_PACKED:
 	  if (f->pic->category != COB_TYPE_NUMERIC)
-	    yywarn_x (x, _("`%s' not numeric item"), name);
+	    cb_warning_x (x, _("`%s' not numeric item"), name);
 	  break;
 	case CB_USAGE_INDEX:
 	  break;
@@ -1024,7 +1024,7 @@ validate_field_1 (struct cb_field *f)
       /* validate OCCURS */
       if (f->flag_occurs)
 	if (f->level < 2 || f->level > 49)
-	  yyerror_x (x, _("level %02d field `%s' cannot have OCCURS"),
+	  cb_error_x (x, _("level %02d field `%s' cannot have OCCURS"),
 		     f->level, name);
 
       /* validate JUSTIFIED RIGHT */
@@ -1035,7 +1035,7 @@ validate_field_1 (struct cb_field *f)
 	  case COB_TYPE_ALPHANUMERIC:
 	    break;
 	  default:
-	    yyerror_x (x, _("`%s' cannot have JUSTIFIED RIGHT"), name);
+	    cb_error_x (x, _("`%s' cannot have JUSTIFIED RIGHT"), name);
 	    break;
 	  }
 
@@ -1043,7 +1043,7 @@ validate_field_1 (struct cb_field *f)
       if (f->flag_synchronized)
 	if (f->usage != CB_USAGE_BINARY)
 	  {
-	    // yywarn ("SYNCHRONIZED here has no effect");
+	    // cb_warning ("SYNCHRONIZED here has no effect");
 	    f->flag_synchronized = 0;
 	  }
 
@@ -1071,7 +1071,7 @@ validate_field_1 (struct cb_field *f)
 	  case COB_TYPE_NUMERIC_EDITED:
 	    break;
 	  default:
-	    yyerror_x (x, _("`%s' cannot have BLANK WHEN ZERO"), name);
+	    cb_error_x (x, _("`%s' cannot have BLANK WHEN ZERO"), name);
 	    break;
 	  }
 
@@ -1081,12 +1081,12 @@ validate_field_1 (struct cb_field *f)
 	  struct cb_field *p;
 
 	  if (f->values->next || CB_PARAMETER_P (f->values->item))
-	    yyerror_x (x, _("only level 88 item may have multiple values"));
+	    cb_error_x (x, _("only level 88 item may have multiple values"));
 
 	  /* ISO+IEC+1989-2002: 13.16.42.2-10 */
 	  for (p = f; p; p = p->parent)
 	    if (p->redefines)
-	      yyerror_x (x, _("entries under REDEFINES cannot have VALUE clause"));
+	      cb_error_x (x, _("entries under REDEFINES cannot have VALUE clause"));
 	}
     }
 
@@ -1294,7 +1294,7 @@ compute_size (struct cb_field *p)
   /* ISO+IEC+1989-2002: 13.16.42.2-9 */
   if (p->redefines && p->size * p->occurs > p->redefines->size)
     if (p->redefines->level != 01 || p->redefines->flag_external)
-      yyerror_x (CB_TREE (p), _("size of `%s' larger than size of `%s'"),
+      cb_error_x (CB_TREE (p), _("size of `%s' larger than size of `%s'"),
 		 p->name, p->redefines->name);
 
   return p->size;
@@ -1339,10 +1339,10 @@ finalize_file (struct cb_file *f, struct cb_field *records)
       /* check the record size */
       if (f->record_min > 0)
 	if (p->size < f->record_min)
-	  yyerror (_("record size too small `%s'"), p->name);
+	  cb_error (_("record size too small `%s'"), p->name);
       if (f->record_max > 0)
 	if (p->size > f->record_max)
-	  yyerror (_("record size too large `%s'"), p->name);
+	  cb_error (_("record size too large `%s'"), p->name);
     }
 
   /* compute the record size */
@@ -1487,7 +1487,7 @@ resolve_data_name (cb_tree x)
       if (v == NULL)
 	{
 	  if (pp->children == NULL)
-	    yyerror_x (px, _("`%s' not a group"), pp->name);
+	    cb_error_x (px, _("`%s' not a group"), pp->name);
 	  else
 	    undefined_error (x);
 	  goto error;
@@ -1497,7 +1497,7 @@ resolve_data_name (cb_tree x)
   /* validate data name */
   if (!CB_FIELD_P (v))
     {
-      yyerror_x (x, _("`%s' not data name"), r->word->name);
+      cb_error_x (x, _("`%s' not data name"), r->word->name);
       abort ();
       goto error;
     }
@@ -1526,13 +1526,13 @@ validate_data_name (cb_tree x)
       switch (f->indexes)
 	{
 	case 0:
-	  yyerror_x (x, _("`%s' cannot be subscripted"), name);
+	  cb_error_x (x, _("`%s' cannot be subscripted"), name);
 	  break;
 	case 1:
-	  yyerror_x (x, _("`%s' requires 1 subscript"), name);
+	  cb_error_x (x, _("`%s' requires 1 subscript"), name);
 	  break;
 	default:
-	  yyerror_x (x, _("`%s' requires %d subscripts"), name, f->indexes);
+	  cb_error_x (x, _("`%s' requires %d subscripts"), name, f->indexes);
 	  break;
 	}
       return -1;
@@ -1552,7 +1552,7 @@ validate_data_name (cb_tree x)
 	      {
 		int n = literal_to_int (CB_LITERAL (sub));
 		if (n < p->occurs_min || n > p->occurs)
-		  yyerror_x (x, _("subscript of `%s' out of bounds: %d"),
+		  cb_error_x (x, _("subscript of `%s' out of bounds: %d"),
 			     name, n);
 	      }
 	    l = l->next;
@@ -1566,12 +1566,12 @@ validate_data_name (cb_tree x)
     {
       int offset = literal_to_int (CB_LITERAL (r->offset));
       if (offset < 1 || offset > f->size)
-	yyerror_x (x, _("offset of `%s' out of bounds: %d"), name, offset);
+	cb_error_x (x, _("offset of `%s' out of bounds: %d"), name, offset);
       else if (r->length && CB_LITERAL_P (r->length))
 	{
 	  int length = literal_to_int (CB_LITERAL (r->length));
 	  if (length < 1 || length > f->size - offset + 1)
-	    yyerror_x (x, _("length of `%s' out of bounds: %d"), name, length);
+	    cb_error_x (x, _("length of `%s' out of bounds: %d"), name, length);
 	}
     }
 
@@ -1638,14 +1638,14 @@ resolve_label (cb_tree x)
 	    }
 	  break;
 	default:
-	  yyerror_x (sx, _("`%s' not section name"), sr->word->name);
+	  cb_error_x (sx, _("`%s' not section name"), sr->word->name);
 	  goto error;
 	}
     }
 
   if (!CB_LABEL_P (v))
     {
-      yyerror_x (x, _("`%s' not label name"), r->word->name);
+      cb_error_x (x, _("`%s' not label name"), r->word->name);
       goto error;
     }
 
@@ -1679,7 +1679,7 @@ resolve_file_name (cb_tree x)
 	  r->value = r->word->items->item;
 	  return r->value;
 	}
-      yyerror_x (x, _("`%s' not file name"), r->word->name);
+      cb_error_x (x, _("`%s' not file name"), r->word->name);
       break;
     }
 
@@ -1705,7 +1705,7 @@ resolve_class_name (cb_tree x)
 	  r->value = r->word->items->item;
 	  return r->value;
 	}
-      yyerror_x (x, _("`%s' not class name"), r->word->name);
+      cb_error_x (x, _("`%s' not class name"), r->word->name);
       break;
     }
 
@@ -1731,7 +1731,7 @@ resolve_mnemonic_name (cb_tree x)
 	  r->value = r->word->items->item;
 	  return x;
 	}
-      yyerror_x (x, _("`%s' not mnemonic name"), r->word->name);
+      cb_error_x (x, _("`%s' not mnemonic name"), r->word->name);
       break;
     }
 
@@ -1782,7 +1782,7 @@ make_binary_op (cb_tree left, char op, cb_tree right)
 
     default:
     invalid:
-      yyerror ("invalid binary-op: %s", tree_name (CB_TREE (p)));
+      cb_error ("invalid binary-op: %s", tree_name (CB_TREE (p)));
       abort ();
     }
   return CB_TREE (p);
@@ -2240,9 +2240,9 @@ warning_destination (cb_tree x)
     return;
 
   if (f->pic)
-    yywarn_x (loc, _("`%s' defined here as PIC %s"), f->name, f->pic->orig);
+    cb_warning_x (loc, _("`%s' defined here as PIC %s"), f->name, f->pic->orig);
   else
-    yywarn_x (loc, _("`%s' defined here as a group of length %d"),
+    cb_warning_x (loc, _("`%s' defined here as a group of length %d"),
 	      f->name, f->size);
 }
 
@@ -2254,14 +2254,14 @@ move_error (cb_tree src, cb_tree dst, int value_flag, int flag, const char *msg)
   /* for VALUE clause */
   if (value_flag)
     {
-      yyerror_x (loc, msg);
+      cb_error_x (loc, msg);
       return -1;
     }
 
   /* for MOVE statement */
   if (flag)
     {
-      yywarn_x (loc, msg);
+      cb_warning_x (loc, msg);
       warning_destination (dst);
     }
   return 0;
@@ -2368,12 +2368,12 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 	      {
 		if (value_flag)
 		  {
-		    yyerror_x (loc, _("data item not signed"));
+		    cb_error_x (loc, _("data item not signed"));
 		    return -1;
 		  }
 		if (cb_warn_constant)
 		  {
-		    yywarn_x (loc, _("ignoring negative sign"));
+		    cb_warning_x (loc, _("ignoring negative sign"));
 		  }
 	      }
 
@@ -2468,9 +2468,9 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 
  invalid:
   if (value_flag)
-    yyerror_x (loc, _("invalid VALUE clause"));
+    cb_error_x (loc, _("invalid VALUE clause"));
   else
-    yyerror_x (loc, _("invalid MOVE statement"));
+    cb_error_x (loc, _("invalid MOVE statement"));
   return -1;
 
  expect_numeric:
@@ -2751,7 +2751,7 @@ build_evaluate_internal (struct cb_list *subject_list, struct cb_list *case_list
 	    c2 = make_binary_op (c2, '&', c3);
 	}
       if (subjs || objs)
-	yyerror (_("wrong number of WHEN parameters"));
+	cb_error (_("wrong number of WHEN parameters"));
       /* connect multiple WHEN's */
       if (c1 == NULL)
 	c1 = c2;
@@ -2803,11 +2803,11 @@ search_set_keys (struct cb_field *f, cb_tree x)
 	      break;
 	    }
 	if (i == f->nkeys)
-	  yyerror_x (x, _("undeclared key `%s'"), field (p->x)->name);
+	  cb_error_x (x, _("undeclared key `%s'"), field (p->x)->name);
 	break;
       }
     default:
-      yyerror_x (x, _("invalid SEARCH ALL condition"));
+      cb_error_x (x, _("invalid SEARCH ALL condition"));
       break;
     }
 }

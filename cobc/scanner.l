@@ -184,7 +184,7 @@ read_literal (char mark)
 	  break;
 	}
       if (p - buff >= BUFSIZ - 1)
-	yyerror (_("too large literal"));
+	cb_error (_("too large literal"));
     }
   *p = 0;
   yylval.tree = make_nonnumeric_literal (strlen (buff), buff);
@@ -227,7 +227,7 @@ scan_x (char *text)
     }
 
  error:
-  yyerror (_("invalid X literal: %s"), text);
+  cb_error (_("invalid X literal: %s"), text);
   yylval.tree = cb_error_node;
   return LITERAL;
 }
@@ -249,7 +249,7 @@ scan_numeric (char *text)
     memmove (s, s + 1, decimals + 1);
   }
   if (strchr (text, (current_program->decimal_point == ',') ? '.' : ','))
-    yyerror (_("invalid numeric literal"));
+    cb_error (_("invalid numeric literal"));
 
   yylval.tree = make_numeric_literal (sign, text, - decimals);
   SET_LOCATION (yylval.tree);
