@@ -2629,6 +2629,12 @@ gen_move_1 (cob_tree src)
     asm_call ("cob_move_zero");
   else if (src == spe_lit_SP)
     asm_call ("cob_move_space");
+  else if (src == spe_lit_HV)
+    asm_call ("cob_move_high");
+  else if (src == spe_lit_LV)
+    asm_call ("cob_move_low");
+  else if (src == spe_lit_LV)
+    asm_call ("cob_move_quote");
   else
     asm_call_1 ("cob_move", src);
 }

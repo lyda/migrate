@@ -668,10 +668,60 @@ cob_move_zero (struct cob_field f)
     }
 }
 
+static struct fld_desc all_desc = {1, 'X', 0, 1, 0, 0, 0, 0, "X\001"};
+
 void
 cob_move_space (struct cob_field f)
 {
-  static struct fld_desc desc = {1, 'X', 0, 1, 0, 0, 0, 0, "X\001"};
-  static struct cob_field space = {&desc, " "};
-  cob_move (space, f);
+  cob_move ((struct cob_field) {&all_desc, " "}, f);
+}
+
+void
+cob_move_high (struct cob_field f)
+{
+  switch (f.desc->type)
+    {
+    case 'B':
+      switch (f.desc->len)
+	{
+	case 1: *(char *) f.data = -1; return;
+	case 2: *(short *) f.data = -1; return;
+	case 4: *(long *) f.data = -1; return;
+	case 8: *(long long *) f.data = -1; return;
+	}
+
+    case '9':
+      memset (f.data, '9', f.desc->len);
+      put_sign (f, 0);
+      return;
+
+    default:
+      {
+	unsigned char c = 255;
+	cob_move ((struct cob_field) {&all_desc, &c}, f);
+      }
+    }
+}
+
+void
+cob_move_low (struct cob_field f)
+{
+  switch (f.desc->type)
+    {
+    case '9':
+    case 'B':
+    case 'C':
+    case 'U':
+      cob_move_zero (f);
+      return;
+
+    default:
+      cob_move ((struct cob_field) {&all_desc, "\0"}, f);
+    }
+}
+
+void
+cob_move_quote (struct cob_field f)
+{
+  cob_move ((struct cob_field) {&all_desc, "\""}, f);
 }
