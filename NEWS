@@ -46,6 +46,8 @@ of obsolete options `-finline-move' and `-finline-get-int'.
 
 ** New compiler option `-w', which inhibits warnings.
 
+** New compiler option `-Wredefinition', which warns redefined names.
+
 ** The compiler option `-column' removed.
 
 ** SHARING clause has been implemented.
