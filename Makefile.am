@@ -9,7 +9,7 @@ pkgconfdir = $(sysconfdir)/$(PACKAGE)
 pkgconf_DATA = libcob.conf
 
 SUBDIRS = lib libcob cobpp cobc po texi testsuite
-EXTRA_DIST = HACKING cob.m4 libcob.conf redhat debian
+EXTRA_DIST = HACKING cob.m4 libcob.conf
 
 BUILT_SOURCES = defaults.h
 DISTCLEANFILES = $(BUILT_SOURCES)
