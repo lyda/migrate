@@ -127,6 +127,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %token AUTHOR,DATE_WRITTEN,DATE_COMPILED,INSTALLATION,SECURITY
 %token COMMON,RETURN,END_RETURN,PREVIOUS,NEXT,PACKED_DECIMAL
 %token INPUT,I_O,OUTPUT,EXTEND,EOL,EOS,BINARY,FLOAT_SHORT,FLOAT_LONG
+%token ALPHANUMERIC,ALPHANUMERIC_EDITED,NUMERIC_EDITED,NATIONAL,NATIONAL_EDITED
 
 %type <ival> if_then,search_body,search_all_body,class
 %type <ival> search_when,search_when_list,search_opt_at_end
@@ -1800,12 +1801,35 @@ opt_end_if: | END_IF ;
  */
 
 initialize_statement:
-  INITIALIZE initialize_vars
+  INITIALIZE initialize_variables opt_initialize_replacing
 ;
-initialize_vars:
+initialize_variables:
   gname				{ gen_initialize ($1); }
-| initialize_vars gname		{ gen_initialize ($2); }
+| initialize_variables gname	{ gen_initialize ($2); }
 ;
+opt_initialize_replacing:
+| REPLACING initialize_replacing_list
+  {
+    yywarn ("INITIALIZE REPLACING is ignored");
+  }
+;
+initialize_replacing_list:
+  initialize_replacing
+| initialize_replacing_list initialize_replacing
+;
+initialize_replacing:
+  replacing_option opt_data BY name_or_literal
+;
+replacing_option:
+  ALPHABETIC
+| ALPHANUMERIC
+| NUMERIC
+| ALPHANUMERIC_EDITED
+| NUMERIC_EDITED
+| NATIONAL
+| NATIONAL_EDITED
+;
+opt_data: | DATA ;
 
 
 /*
