@@ -1,3 +1,8 @@
+2004-11-29  Roger While <simrw@sim-basis.de>
+
+	* New directory bin for cobcrun driver program
+	* configure.ac, Makefile.am
+
 2004-10-30  Roger While <simrw@sim-basis.de>
 
 	* configure.ac, configure (over autoconf) :

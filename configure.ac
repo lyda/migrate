@@ -169,6 +169,7 @@ COB_CONFIG_DIR="$datadir/$PACKAGE_TARNAME/config"
 COB_LIBRARY_PATH=".:$libdir/$PACKAGE_TARNAME"
 COB_MODULE_EXT=`echo "$shlibext" | sed 's/dll\.a/dll/'`
 LIBS="$save_libs"
+COB_EXPORT_DYN=`eval echo $export_dynamic_flag_spec`
 
 AC_SUBST(COB_CC)
 AC_SUBST(COB_CFLAGS)
@@ -180,10 +181,11 @@ AC_SUBST(COBC_CFLAGS)
 AC_SUBST(COBC_LIBS)
 AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBS)
+AC_SUBST(COB_EXPORT_DYN)
 
 AC_CONFIG_FILES([cob-config
 		Makefile lib/Makefile libcob/Makefile
-		cobc/Makefile po/Makefile.in texi/Makefile config/Makefile
+		cobc/Makefile bin/Makefile po/Makefile.in texi/Makefile config/Makefile
 		tests/atlocal tests/Makefile tests/cobol85/Makefile])
 AC_OUTPUT
 

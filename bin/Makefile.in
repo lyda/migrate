@@ -14,8 +14,7 @@
 
 @SET_MAKE@
 
-
-SOURCES = $(libsupport_a_SOURCES)
+SOURCES = $(cobcrun_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -38,9 +37,9 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 host_triplet = @host@
-subdir = lib
-DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in ChangeLog getopt.c getopt.h getopt1.c
+bin_PROGRAMS = cobcrun$(EXEEXT)
+subdir = bin
+DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/gettext.m4 \
 	$(top_srcdir)/m4/iconv.m4 $(top_srcdir)/m4/lib-ld.m4 \
@@ -52,16 +51,25 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
-ARFLAGS = cru
-LIBRARIES = $(noinst_LIBRARIES)
-libsupport_a_AR = $(AR) $(ARFLAGS)
-libsupport_a_DEPENDENCIES = @LIBOBJS@
-am_libsupport_a_OBJECTS =
-libsupport_a_OBJECTS = $(am_libsupport_a_OBJECTS)
+am__installdirs = "$(DESTDIR)$(bindir)"
+binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
+PROGRAMS = $(bin_PROGRAMS)
+am_cobcrun_OBJECTS = cobcrun-cobcrun.$(OBJEXT)
+cobcrun_OBJECTS = $(am_cobcrun_OBJECTS)
+am__DEPENDENCIES_1 =
+cobcrun_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(top_builddir)/libcob/.libs/libcob_la-call.o \
+	$(top_builddir)/libcob/.libs/libcob_la-numeric.o \
+	$(top_builddir)/libcob/.libs/libcob_la-common.o \
+	$(top_builddir)/libcob/.libs/libcob_la-screenio.o \
+	$(top_builddir)/libcob/.libs/libcob_la-fileio.o \
+	$(top_builddir)/libcob/.libs/libcob_la-strings.o \
+	$(top_builddir)/libcob/.libs/libcob_la-move.o \
+	$(top_builddir)/libcob/.libs/libcob_la-termio.o
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/getopt.Po $(DEPDIR)/getopt1.Po
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/cobcrun-cobcrun.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) \
@@ -70,9 +78,8 @@ LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libsupport_a_SOURCES)
-DIST_SOURCES = $(libsupport_a_SOURCES)
-HEADERS = $(noinst_HEADERS)
+SOURCES = $(cobcrun_SOURCES)
+DIST_SOURCES = $(cobcrun_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -203,10 +210,19 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-noinst_HEADERS = gettext.h
-noinst_LIBRARIES = libsupport.a
-libsupport_a_SOURCES = 
-libsupport_a_LIBADD = @LIBOBJS@
+cobcrun_SOURCES = cobcrun.c
+AM_CFLAGS = $(COB_EXPORT_DYN) -Wall -Wwrite-strings -Wmissing-prototypes -Wno-format-y2k
+cobcrun_CFLAGS = $(AM_CFLAGS) $(COBC_CFLAGS) -I$(top_srcdir)
+cobcrun_LDADD = $(LIBCOB_LIBS) \
+$(top_builddir)/libcob/.libs/libcob_la-call.o \
+$(top_builddir)/libcob/.libs/libcob_la-numeric.o \
+$(top_builddir)/libcob/.libs/libcob_la-common.o \
+$(top_builddir)/libcob/.libs/libcob_la-screenio.o \
+$(top_builddir)/libcob/.libs/libcob_la-fileio.o \
+$(top_builddir)/libcob/.libs/libcob_la-strings.o \
+$(top_builddir)/libcob/.libs/libcob_la-move.o \
+$(top_builddir)/libcob/.libs/libcob_la-termio.o
+
 all: all-am
 
 .SUFFIXES:
@@ -220,9 +236,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  lib/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  bin/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  lib/Makefile
+	  $(AUTOMAKE) --gnu  bin/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -240,13 +256,37 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+install-binPROGRAMS: $(bin_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	test -z "$(bindir)" || $(mkdir_p) "$(DESTDIR)$(bindir)"
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  p1=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
+	  if test -f $$p \
+	     || test -f $$p1 \
+	  ; then \
+	    f=`echo "$$p1" | sed 's,^.*/,,;$(transform);s/$$/$(EXEEXT)/'`; \
+	   echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) --mode=install $(binPROGRAMS_INSTALL) '$$p' '$(DESTDIR)$(bindir)/$$f'"; \
+	   $(INSTALL_PROGRAM_ENV) $(LIBTOOL) --mode=install $(binPROGRAMS_INSTALL) "$$p" "$(DESTDIR)$(bindir)/$$f" || exit 1; \
+	  else :; fi; \
+	done
 
-clean-noinstLIBRARIES:
-	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
-libsupport.a: $(libsupport_a_OBJECTS) $(libsupport_a_DEPENDENCIES) 
-	-rm -f libsupport.a
-	$(libsupport_a_AR) libsupport.a $(libsupport_a_OBJECTS) $(libsupport_a_LIBADD)
-	$(RANLIB) libsupport.a
+uninstall-binPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  f=`echo "$$p" | sed 's,^.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/'`; \
+	  echo " rm -f '$(DESTDIR)$(bindir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(bindir)/$$f"; \
+	done
+
+clean-binPROGRAMS:
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
+	  echo " rm -f $$p $$f"; \
+	  rm -f $$p $$f ; \
+	done
+cobcrun$(EXEEXT): $(cobcrun_OBJECTS) $(cobcrun_DEPENDENCIES) 
+	@rm -f cobcrun$(EXEEXT)
+	$(LINK) $(cobcrun_LDFLAGS) $(cobcrun_OBJECTS) $(cobcrun_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -254,8 +294,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/getopt.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/getopt1.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cobcrun-cobcrun.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -280,6 +319,30 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/$*.Plo' tmpdepfile='$(DEPDIR)/$*.TPlo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+cobcrun-cobcrun.o: cobcrun.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cobcrun_CFLAGS) $(CFLAGS) -MT cobcrun-cobcrun.o -MD -MP -MF "$(DEPDIR)/cobcrun-cobcrun.Tpo" -c -o cobcrun-cobcrun.o `test -f 'cobcrun.c' || echo '$(srcdir)/'`cobcrun.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/cobcrun-cobcrun.Tpo" "$(DEPDIR)/cobcrun-cobcrun.Po"; else rm -f "$(DEPDIR)/cobcrun-cobcrun.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cobcrun.c' object='cobcrun-cobcrun.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/cobcrun-cobcrun.Po' tmpdepfile='$(DEPDIR)/cobcrun-cobcrun.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cobcrun_CFLAGS) $(CFLAGS) -c -o cobcrun-cobcrun.o `test -f 'cobcrun.c' || echo '$(srcdir)/'`cobcrun.c
+
+cobcrun-cobcrun.obj: cobcrun.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cobcrun_CFLAGS) $(CFLAGS) -MT cobcrun-cobcrun.obj -MD -MP -MF "$(DEPDIR)/cobcrun-cobcrun.Tpo" -c -o cobcrun-cobcrun.obj `if test -f 'cobcrun.c'; then $(CYGPATH_W) 'cobcrun.c'; else $(CYGPATH_W) '$(srcdir)/cobcrun.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/cobcrun-cobcrun.Tpo" "$(DEPDIR)/cobcrun-cobcrun.Po"; else rm -f "$(DEPDIR)/cobcrun-cobcrun.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cobcrun.c' object='cobcrun-cobcrun.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/cobcrun-cobcrun.Po' tmpdepfile='$(DEPDIR)/cobcrun-cobcrun.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cobcrun_CFLAGS) $(CFLAGS) -c -o cobcrun-cobcrun.obj `if test -f 'cobcrun.c'; then $(CYGPATH_W) 'cobcrun.c'; else $(CYGPATH_W) '$(srcdir)/cobcrun.c'; fi`
+
+cobcrun-cobcrun.lo: cobcrun.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cobcrun_CFLAGS) $(CFLAGS) -MT cobcrun-cobcrun.lo -MD -MP -MF "$(DEPDIR)/cobcrun-cobcrun.Tpo" -c -o cobcrun-cobcrun.lo `test -f 'cobcrun.c' || echo '$(srcdir)/'`cobcrun.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/cobcrun-cobcrun.Tpo" "$(DEPDIR)/cobcrun-cobcrun.Plo"; else rm -f "$(DEPDIR)/cobcrun-cobcrun.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cobcrun.c' object='cobcrun-cobcrun.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/cobcrun-cobcrun.Plo' tmpdepfile='$(DEPDIR)/cobcrun-cobcrun.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cobcrun_CFLAGS) $(CFLAGS) -c -o cobcrun-cobcrun.lo `test -f 'cobcrun.c' || echo '$(srcdir)/'`cobcrun.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -366,8 +429,11 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LIBRARIES) $(HEADERS)
+all-am: Makefile $(PROGRAMS)
 installdirs:
+	for dir in "$(DESTDIR)$(bindir)"; do \
+	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
+	done
 install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
@@ -394,11 +460,10 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-noinstLIBRARIES \
-	mostlyclean-am
+clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf $(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-libtool distclean-tags
@@ -415,7 +480,7 @@ info-am:
 
 install-data-am:
 
-install-exec-am:
+install-exec-am: install-binPROGRAMS
 
 install-info: install-info-am
 
@@ -424,7 +489,7 @@ install-man:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf $(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -441,19 +506,19 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am
+uninstall-am: uninstall-binPROGRAMS uninstall-info-am
 
-.PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libtool clean-noinstLIBRARIES ctags distclean \
-	distclean-compile distclean-generic distclean-libtool \
-	distclean-tags distdir dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am install-exec \
+.PHONY: CTAGS GTAGS all all-am check check-am clean clean-binPROGRAMS \
+	clean-generic clean-libtool ctags distclean distclean-compile \
+	distclean-generic distclean-libtool distclean-tags distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-binPROGRAMS install-data install-data-am install-exec \
 	install-exec-am install-info install-info-am install-man \
 	install-strip installcheck installcheck-am installdirs \
 	maintainer-clean maintainer-clean-generic mostlyclean \
 	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
 	pdf pdf-am ps ps-am tags uninstall uninstall-am \
-	uninstall-info-am
+	uninstall-binPROGRAMS uninstall-info-am
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

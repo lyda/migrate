@@ -1,0 +1,12 @@
+2004-11-29  Roger While <simrw@sim-basis.de>
+
+	* Initial checkout
+	* cobcrun.c, Makefile.am, Makefile.in
+	* syntax : cobcrun MYPROG [ arguments to MYPROG]
+	* This allows complete applications to be compiled
+	  as modules and offers similar functionality to
+	  MF's cobrun and ACU's runcbl.
+	  In fact, you can run all three in the same
+	  directory and, if your scripts use an environment
+	  variable for the driver program (eg. $COBEXEC),
+	  then you can switch easily.
