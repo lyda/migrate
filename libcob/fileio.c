@@ -386,7 +386,16 @@ relative_write (cob_file *f)
 static int
 relative_rewrite (cob_file *f)
 {
-  fseek (f->file, - f->record_max, SEEK_CUR);
+  if (f->access_mode == COB_ACCESS_SEQUENTIAL)
+    {
+      fseek (f->file, - f->record_max, SEEK_CUR);
+    }
+  else
+    {
+      RELATIVE_SEEK (f, cob_get_int (f->keys[0].field) - 1);
+      fseek (f->file, sizeof (f->record->size), SEEK_CUR);
+    }
+
   fwrite (f->record->data, f->record_max, 1, f->file);
   return COB_STATUS_00_SUCCESS;
 }
