@@ -34,68 +34,95 @@
  */
 
 static void
-display (cob_field *f, FILE *fp)
+display_numeric (cob_field *f, FILE *fp)
 {
-  if (COB_FIELD_IS_NUMERIC (f))
+  int i;
+  int digits = COB_FIELD_DIGITS (f);
+  int scale = COB_FIELD_SCALE (f);
+  int size = digits + (COB_FIELD_HAVE_SIGN (f) ? 1 : 0);
+  unsigned char data[size];
+  cob_field_attr attr = {COB_TYPE_NUMERIC_DISPLAY, digits, scale};
+  cob_field temp = {size, data, &attr};
+
+  if (COB_FIELD_HAVE_SIGN (f))
     {
-      if (cob_current_module->flag_pretty_display)
-	{
-	  int i;
-	  int digits = COB_FIELD_DIGITS (f);
-	  int scale = COB_FIELD_SCALE (f);
-	  int size = (digits
-		      + (COB_FIELD_HAVE_SIGN (f) ? 1 : 0)
-		      + (scale > 0 ? 1 : 0));
-	  unsigned char pic[9], *p = pic;
-	  unsigned char data[size];
-	  cob_field_attr attr = {COB_TYPE_NUMERIC_EDITED, digits, scale};
-	  cob_field temp = {size, data, &attr};
-	  attr.pic = pic;
+      attr.flags = COB_FLAG_HAVE_SIGN | COB_FLAG_SIGN_SEPARATE;
+      if (COB_FIELD_SIGN_LEADING (f))
+	attr.flags |= COB_FLAG_SIGN_LEADING;
+    }
 
-	  if (COB_FIELD_HAVE_SIGN (f))
-	    p += sprintf (p, "+\001");
-	  if (scale > 0)
-	    {
-	      p += sprintf (p, "9%c", digits - scale);
-	      p += sprintf (p, "%c%c", cob_current_module->decimal_point, 1);
-	      p += sprintf (p, "9%c", scale);
-	    }
-	  else
-	    {
-	      p += sprintf (p, "9%c", digits);
-	    }
+  cob_move (f, &temp);
+  for (i = 0; i < size; i++)
+    fputc (data[i], fp);
+}
 
-	  cob_move (f, &temp);
-	  for (i = 0; i < size; i++)
-	    fputc (data[i], fp);
-	}
-      else
-	{
-	  int i;
-	  int digits = COB_FIELD_DIGITS (f);
-	  int scale = COB_FIELD_SCALE (f);
-	  int size = digits + (COB_FIELD_HAVE_SIGN (f) ? 1 : 0);
-	  unsigned char data[size];
-	  cob_field_attr attr = {COB_TYPE_NUMERIC_DISPLAY, digits, scale};
-	  cob_field temp = {size, data, &attr};
+static void
+pretty_display_numeric (cob_field *f, FILE *fp)
+{
+  int i;
+  int digits = COB_FIELD_DIGITS (f);
+  int scale = COB_FIELD_SCALE (f);
+  int size = (digits
+	      + (COB_FIELD_HAVE_SIGN (f) ? 1 : 0)
+	      + (scale > 0 ? 1 : 0));
+  unsigned char pic[9], *p = pic;
+  unsigned char data[size];
+  cob_field_attr attr = {COB_TYPE_NUMERIC_EDITED, digits, scale};
+  cob_field temp = {size, data, &attr};
+  attr.pic = pic;
 
-	  if (COB_FIELD_HAVE_SIGN (f))
-	    {
-	      attr.flags = COB_FLAG_HAVE_SIGN | COB_FLAG_SIGN_SEPARATE;
-	      if (COB_FIELD_SIGN_LEADING (f))
-		attr.flags |= COB_FLAG_SIGN_LEADING;
-	    }
-
-	  cob_move (f, &temp);
-	  for (i = 0; i < size; i++)
-	    fputc (data[i], fp);
-	}
+  if (COB_FIELD_HAVE_SIGN (f))
+    p += sprintf (p, "+\001");
+  if (scale > 0)
+    {
+      p += sprintf (p, "9%c", digits - scale);
+      p += sprintf (p, "%c%c", cob_current_module->decimal_point, 1);
+      p += sprintf (p, "9%c", scale);
     }
   else
     {
-      size_t i;
-      for (i = 0; i < f->size; i++)
-	fputc (f->data[i], fp);
+      p += sprintf (p, "9%c", digits);
+    }
+
+  cob_move (f, &temp);
+  for (i = 0; i < size; i++)
+    fputc (data[i], fp);
+}
+
+static void
+display_alnum (cob_field *f, FILE *fp)
+{
+  size_t i;
+  for (i = 0; i < f->size; i++)
+    fputc (f->data[i], fp);
+}
+
+static void
+display (cob_field *f, FILE *fp)
+{
+  if (f->attr->type == COB_TYPE_NUMERIC_BINARY
+      && !cob_current_module->flag_binary_truncate)
+    {
+      static int digits[] = {1, 3, 5, 7, 10, 12, 15, 17, 19};
+      cob_field_attr attr = *f->attr;
+      cob_field temp = *f;
+      attr.digits = digits[f->size];
+      temp.attr = &attr;
+      if (cob_current_module->flag_pretty_display)
+	pretty_display_numeric (&temp, fp);
+      else
+	display_numeric (&temp, fp);
+    }
+  else if (COB_FIELD_IS_NUMERIC (f))
+    {
+      if (cob_current_module->flag_pretty_display)
+	pretty_display_numeric (f, fp);
+      else
+	display_numeric (f, fp);
+    }
+  else
+    {
+      display_alnum (f, fp);
     }
 }
 
