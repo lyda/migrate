@@ -71,7 +71,7 @@ cob_move_all (struct cob_field f1, struct cob_field f2)
 void
 cob_move_zero (struct cob_field f)
 {
-  switch (f.desc->type)
+  switch (FIELD_TYPE (f))
     {
     case '9':
       memset (f.data, '0', f.desc->len);
@@ -114,7 +114,7 @@ cob_move_space (struct cob_field f)
 void
 cob_move_high (struct cob_field f)
 {
-  switch (f.desc->type)
+  switch (FIELD_TYPE (f))
     {
     case 'B':
       switch (f.desc->len)
@@ -141,7 +141,7 @@ cob_move_high (struct cob_field f)
 void
 cob_move_low (struct cob_field f)
 {
-  switch (f.desc->type)
+  switch (FIELD_TYPE (f))
     {
     case '9':
     case 'B':
@@ -727,7 +727,7 @@ void
 cob_move (struct cob_field f1, struct cob_field f2)
 {
   if (f1.desc->all)
-    switch (f2.desc->type)
+    switch (FIELD_TYPE (f2))
       {
       case DTYPE_PACKED:
       case DTYPE_BININT:
@@ -738,10 +738,10 @@ cob_move (struct cob_field f1, struct cob_field f2)
 	return cob_move_all (f1, f2);
       }
 
-  switch (f1.desc->type)
+  switch (FIELD_TYPE (f1))
     {
     case DTYPE_DISPLAY:
-      switch (f2.desc->type)
+      switch (FIELD_TYPE (f2))
 	{
 	case DTYPE_DISPLAY:
 	  return cob_move_display_to_display (f1, f2);
@@ -761,7 +761,7 @@ cob_move (struct cob_field f1, struct cob_field f2)
 	}
 
     case DTYPE_PACKED:
-      switch (f2.desc->type)
+      switch (FIELD_TYPE (f2))
 	{
 	case DTYPE_DISPLAY:
 	  return cob_move_packed_to_display (f1, f2);
@@ -771,7 +771,7 @@ cob_move (struct cob_field f1, struct cob_field f2)
 	}
 
     case DTYPE_BININT:
-      switch (f2.desc->type)
+      switch (FIELD_TYPE (f2))
 	{
 	case DTYPE_DISPLAY:
 	  return cob_move_binary_to_display (f1, f2);
@@ -781,7 +781,7 @@ cob_move (struct cob_field f1, struct cob_field f2)
 	}
 
     case DTYPE_FLOAT:
-      switch (f2.desc->type)
+      switch (FIELD_TYPE (f2))
 	{
 	case DTYPE_DISPLAY:
 	  return cob_move_float_to_display (f1, f2);
@@ -791,7 +791,7 @@ cob_move (struct cob_field f1, struct cob_field f2)
 	}
 
     default:
-      switch (f2.desc->type)
+      switch (FIELD_TYPE (f2))
 	{
 	case DTYPE_DISPLAY:
 	  return cob_move_alphanum_to_display (f1, f2);
