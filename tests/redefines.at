@@ -94,8 +94,8 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01 G.
          02 X           PIC X.
-           66 A           RENAMES X.
-           66 B           REDEFINES A PIC 9.
+         66 A           RENAMES X.
+         66 B           REDEFINES A PIC 9.
        PROCEDURE        DIVISION.
            STOP RUN.
 ])
@@ -114,8 +114,8 @@ AT_DATA([prog.cob], [
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
        01 X             PIC X.
-           88 A           VALUE "A".
-           88 B           REDEFINES A VALUE "B".
+         88 A           VALUE "A".
+         88 B           REDEFINES A VALUE "B".
        PROCEDURE        DIVISION.
            STOP RUN.
 ])
