@@ -33,13 +33,13 @@
 #define cob_tag_cond		8
 
 struct cob_tree_common {
-  int litflag;
+  char litflag;
 };
 
 typedef struct sym *cob_tree;
 
 #define COB_TREE(x)		((struct sym *) (x))
-#define COB_TREE_TYPE(x)	(COB_TREE (x)->litflag)
+#define COB_TREE_TYPE(x)	(((struct cob_tree_common *) (x))->litflag)
 
 extern void print_tree (cob_tree x);
 
@@ -81,7 +81,7 @@ struct cob_field {
 
 struct lit
 {
-  char litflag;			/* 1 for literals */
+  struct cob_tree_common common;
   struct lit *next;		/* next in literals list */
   char *name;			/* name (value) of literal */
   char type;
@@ -118,7 +118,7 @@ extern cob_tree make_literal (char *name);
 
 struct sym
 {
-  char litflag;			/* 1 for literals, 2 for variables */
+  struct cob_tree_common common;
   struct sym *next;		/* pointer to next symbol with same hash */
   char *name;			/* symbol (variable) name */
   char type;			/* label or elementary item or group item 
@@ -200,7 +200,7 @@ extern cob_tree make_filler (void);
  */
 struct subref
 {
-  char litflag;
+  struct cob_tree_common common;
   cob_tree_list subs;
   cob_tree sym;
 };
@@ -217,7 +217,7 @@ extern cob_tree make_subref (cob_tree sy, cob_tree_list subs);
 /* Node for refmod's */
 struct refmod
 {
-  char litflag;			/* 4 = refmod */
+  struct cob_tree_common common;
   cob_tree off;		/* offset from normal start address */
   cob_tree sym;		/* pointer to original var: must be at the same relative offset as sym in subref */
   cob_tree len;		/* corrected length */
@@ -236,7 +236,7 @@ extern cob_tree make_refmod (cob_tree sy, cob_tree syoff, cob_tree sylen);
 
 struct expr
 {
-  char litflag;			/* 5 for expr */
+  struct cob_tree_common common;
   char op;
   cob_tree left;
   cob_tree right;
@@ -277,7 +277,7 @@ enum cond_type {
 
 struct cond
 {
-  char litflag;			/* 8 for condition */
+  struct cob_tree_common common;
   enum cond_type type;
   cob_tree x;
   cob_tree y;
