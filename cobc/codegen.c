@@ -165,7 +165,6 @@ cob_tree
 install (char *name, int tab, int cloning)
 {
   char sbuf[SYMBUF_SIZE];
-  cob_tree clone;
   cob_tree as;
   int val;
 
@@ -188,10 +187,10 @@ install (char *name, int tab, int cloning)
   else if ((cloning && (as->defined == 1)) || (cloning == 2))
     {
       /* install clone (cloning==2 -> force) */
-      clone = make_symbol (COB_FIELD_NAME (as));
-      clone->clone = as->clone;
-      as->clone = clone;
-      as = clone;
+      cob_tree cl = make_symbol (COB_FIELD_NAME (as));
+      cl->clone = as->clone;
+      as->clone = cl;
+      as = cl;
     }
   return (as);
 }
