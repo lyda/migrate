@@ -9,6 +9,11 @@ AM_MAINTAINER_MODE
 AC_DEFINE(COB_DEBUG)
 
 # Configure options.
+COB_CC="gcc"
+AC_ARG_WITH(cc,
+  [  --with-cc=<gcc>          specify C compiler],
+  [ COB_CC=$withval ])
+
 AC_ARG_ENABLE(debug,
   [  --enable-debug           enable debug features],
   [ AC_DEFINE(COB_DEBUG) ])
@@ -77,7 +82,6 @@ AC_CHECK_LIB([readline], [readline], LIBRL="-lreadline")
 # Autoheader templates
 AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
 
-COB_CC="gcc"
 COB_COBPP="cobpp"
 COB_CFLAGS="-I$includedir"
 COB_LIBS="-L$libdir -lcob ${LIBDB} ${LIBGMP} ${LIBLTDL} ${LIBRL}"

@@ -74,7 +74,7 @@ approved by the Free Software Foundation.
 @top OpenCOBOL Manual
 
 OpenCOBOL is an open-source COBOL compiler, which translates COBOL
-programs to C code as the intermediate language.
+programs to C code and compiles it using GCC.
 
 This manual corresponds to OpenCOBOL @value{VERSION}.
 
