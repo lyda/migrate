@@ -69,12 +69,12 @@ AC_CHECK_LIB([db], [db_version], , AC_MSG_ERROR(DB 2.0 or later is required))
 # Checks for gmp.
 LIBGMP="-lgmp"
 AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp.h is required))
-AC_CHECK_LIB([gmp], [__gmp_rand], , AC_MSG_ERROR(gmp3 or higher is required))
+AC_CHECK_LIB([gmp], [__gmp_rand], , AC_MSG_ERROR(gmp3 is required))
 
 # Checks for ltdl.
 LIBLTDL="-lltdl"
 AC_CHECK_HEADERS([ltdl.h], , AC_MSG_ERROR(ltdl.h is required))
-AC_CHECK_LIB([ltdl], [lt_dlopen], , AC_MSG_ERROR(ltdl is required))
+AC_CHECK_LIB([ltdl], [lt_dlopen], , AC_MSG_ERROR(libltdl is required))
 
 # Checks for readline.
 LIBRL=""
@@ -84,7 +84,7 @@ AC_ARG_WITH(readline,
   [AC_CHECK_HEADERS([readline/readline.h readline/history.h])
    AC_CHECK_LIB([readline], [readline],
                 [LIBRL="-lreadline"; USE_READLINE="yes"],
-		[AC_MSG_ERROR(readline is required)])
+		[AC_MSG_ERROR(libreadline is required)])
   ])
 
 # Checks for GCC's computed-goto extension
