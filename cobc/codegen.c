@@ -975,19 +975,6 @@ assign_expr (cob_tree sy, int rnd)
  * Condition
  */
 
-static void
-gen_not (void)
-{
-  int i = loc_label++;
-  int j = loc_label++;
-  output ("\tjz\t.L%d\n", i);
-  output ("\txorl\t%%eax,%%eax\n");
-  output ("\tjmp\t.L%d\n", j);
-  output (".L%d:\tincl\t%%eax\n", i);
-  output ("\t.align 16\n");
-  output (".L%d:\n", j);
-}
-
 int
 gen_orstart (void)
 {
@@ -1024,6 +1011,8 @@ gen_condvar (cob_tree sy)
 static void
 gen_compare (cob_tree s1, int op, cob_tree s2)
 {
+  int lbl;
+
   if (EXPR_P (s1) || EXPR_P (s2))
     {
       push_expr (s1);
@@ -1038,25 +1027,34 @@ gen_compare (cob_tree s1, int op, cob_tree s2)
   switch (op)
     {
     case COND_EQ:
-      output ("\tand\t%%eax,%%eax\n");	/* equal */
+      output ("\tcmpl\t$0,%%eax\n");
       break;
-    case COND_LT:
-      output ("\tinc\t%%eax\n");	/* less */
+    case COND_LT:			/* eax == -1 */
+      output ("\tcmpl\t$-1,%%eax\n");
       break;
-    case COND_LE:
-      output ("\tdec\t%%eax\n");	/* less or equal */
-      gen_not ();
+    case COND_LE:			/* eax <= 0 */
+      lbl = loc_label++;
+      output ("\tcmpl\t$0,%%eax\n");
+      output ("\tjz\t.L%d\n", lbl);
+      output ("\tcmpl\t$-1,%%eax\n");
+      gen_dstlabel (lbl);
       break;
-    case COND_GT:
-      output ("\tdec\t%%eax\n");	/* greater */
+    case COND_GT:			/* eax == 1 */
+      output ("\tcmpl\t$1,%%eax\n");
       break;
-    case COND_GE:
-      output ("\tinc\t%%eax\n");	/* greater or equal */
-      gen_not ();
+    case COND_GE:			/* eax >= 0 */
+      lbl = loc_label++;
+      output ("\tcmpl\t$0,%%eax\n");
+      output ("\tjz\t.L%d\n", lbl);
+      output ("\tcmpl\t$1,%%eax\n");
+      gen_dstlabel (lbl);
       break;
-    case COND_NE:
-      output ("\tand\t%%eax,%%eax\n");	/* not equal */
-      gen_not ();
+    case COND_NE:			/* eax != 0 */
+      lbl = loc_label++;
+      output ("\tcmpl\t$1,%%eax\n");
+      output ("\tjz\t.L%d\n", lbl);
+      output ("\tcmpl\t$-1,%%eax\n");
+      gen_dstlabel (lbl);
       break;
     }
 }
@@ -1072,19 +1070,19 @@ gen_condition (cob_tree cond)
     {
     case COND_NUMERIC:
       asm_call_1 ("cob_is_numeric", l);
-      output ("\tdecl\t%%eax\n");
+      output ("\tcmpl\t$1,%%eax\n");
       break;
     case COND_ALPHABETIC:
       asm_call_1 ("cob_is_alphabetic", l);
-      output ("\tdecl\t%%eax\n");
+      output ("\tcmpl\t$1,%%eax\n");
       break;
     case COND_LOWER:
       asm_call_1 ("cob_is_lower", l);
-      output ("\tdecl\t%%eax\n");
+      output ("\tcmpl\t$1,%%eax\n");
       break;
     case COND_UPPER:
       asm_call_1 ("cob_is_upper", l);
-      output ("\tdecl\t%%eax\n");
+      output ("\tcmpl\t$1,%%eax\n");
       break;
     case COND_POSITIVE:
       gen_compare (l, COND_GT, spe_lit_ZE);
@@ -1096,8 +1094,18 @@ gen_condition (cob_tree cond)
       gen_compare (l, COND_EQ, spe_lit_ZE);
       break;
     case COND_NOT:
-      gen_condition (l);
-      gen_not ();
+      {
+	int i = loc_label++;
+	int j = loc_label++;
+	gen_condition (l);
+	output ("\tjz\t.L%d\n", i);
+	output ("\txorl\t%%eax,%%eax\n");
+	gen_jmplabel (j);
+	gen_dstlabel (i);
+	output ("\tmovl\t$0,%%eax\n");
+	output ("\tcmpl\t$1,%%eax\n");
+	gen_dstlabel (j);
+      }
       return;
     case COND_AND:
     case COND_OR:
@@ -1863,7 +1871,6 @@ gen_testif (void)
   int j = loc_label++;
   output ("\tjz\t.L%d\n", j);
   output ("\tjmp\t.L%d\n", i);
-  output ("\t.align 16\n");
   output (".L%d:\n", j);
   return i;
 }
@@ -2881,10 +2888,20 @@ push_tree (cob_tree x)
       break;
 
     case cob_tag_cond:
-      gen_condition (x);
-      push_eax ();
-      asm_call ("cob_push_boolean");
-      break;
+      {
+	int i = loc_label++;
+	int j = loc_label++;
+	gen_condition (x);
+	output ("\tjz\t.L%d\n", i);
+	push_immed (1);
+	gen_jmplabel (j);
+	gen_dstlabel (i);
+	push_immed (0);
+	gen_dstlabel (j);
+	stackframe_cnt -= 4; /* because we called push_immed twice */
+	asm_call ("cob_push_boolean");
+	break;
+      }
 
     default:
       asm_call_1 ("cob_push_field", x);
