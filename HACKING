@@ -3,24 +3,16 @@ from the CVS repository.
 
 We use the following extra packages to build OpenCOBOL:
 
-  o Autoconf 2.53
-  o Automake 1.6.3
+  o Autoconf 2.54
+  o Automake 1.7
   o Libtool 1.4.2
   o gettext 0.11.5
   o Bison 1.28
   o Flex 2.5.4
 
-After installing these packages, edit (if needed) and run the
-script `autogen.sh', which is in the CVS repository.  This
-script executes the following commands one after another and
-set up the configure script:
+When you modify configure.ac or Makefile.am, run autoreconf
+to regenerate necessary files and commit them.
 
-  % autopoint
-  % aclocal -I m4
-  % autoheader
-  % automake -a
-  % autoconf
-
-Then, run the configure script with option --enable-maintainer-mode,
-which enables some options that facilitates package maintenance and
-development.
+You might want to run your configure script with option
+--enable-maintainer-mode during development so that running
+make will automatically regenerate configure and so on.

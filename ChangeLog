@@ -1,3 +1,7 @@
+2002-09-30  Keisuke Nishida  <knishida@netlab.jp>
+
+	* configure.ac: Updated for autoconf-2.54 and automake-1.7.
+
 2002-09-24  Keisuke Nishida  <knishida@netlab.jp>
 
 	* configure.ac: Generate libcob/cobconfig.h using AM_CONFIG_HEADER.

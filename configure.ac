@@ -1,9 +1,9 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(open-cobol, 0.9.7.9, knishida@coboler.com)
+AC_INIT([open-cobol],[0.9.7.9],[knishida@coboler.com])
 AC_CONFIG_AUX_DIR(config)
-AC_CONFIG_SRCDIR(config.h.in)
-AM_CONFIG_HEADER(config.h)
-AM_CONFIG_HEADER(libcob/cobconfig.h)
+AC_CONFIG_SRCDIR([config.h.in])
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_HEADERS([libcob/cobconfig.h])
 AM_INIT_AUTOMAKE([gnu no-texinfo.tex])
 AM_MAINTAINER_MODE
 
@@ -43,11 +43,14 @@ AC_PROG_CC
 AM_PROG_LEX
 AC_PROG_YACC
 AC_PROG_LN_S
-AC_PROG_RANLIB
 AC_PROG_INSTALL
 AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
 AC_PROG_MAKE_SET
+
+# Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS([fcntl.h malloc.h libintl.h locale.h stddef.h wchar.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -58,13 +61,10 @@ AC_STRUCT_TM
 AC_FUNC_ALLOCA
 AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
+AC_FUNC_REALLOC
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([memmove memset regcomp pow setlocale strerror \
 		strcasecmp strchr strrchr strdup strstr strtol])
-
-# Checks for header files.
-AC_HEADER_STDC
-AC_CHECK_HEADERS([fcntl.h malloc.h libintl.h locale.h stddef.h wchar.h])
 
 # Checks for getopt_long.
 AC_CHECK_FUNC([getopt_long_only], ,
@@ -93,6 +93,7 @@ LIBCOB_LIBS="$LIBCOB_LIBS -lltdl"
 
 # Checks for gettext
 AM_GNU_GETTEXT([external])
+AM_GNU_GETTEXT_VERSION(0.11.5)
 if test "x$LTLIBINTL" != "x"; then
   COBPP_LIBS="$COBPP_LIBS $LTLIBINTL"
   LIBCOB_LIBS="$LIBCOB_LIBS $LTLIBINTL"
