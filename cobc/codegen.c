@@ -275,16 +275,30 @@ output_size (cb_tree x)
 	else
 	  {
 	    struct cb_field *p = cb_field_variable_size (f);
+	    struct cb_field *q = f;
+
+	  again:
 	    if (p && (r->type == CB_SENDING_OPERAND
-		      || !cb_field_subordinate (cb_field (p->occurs_depending), f)))
+		      || !cb_field_subordinate (cb_field (p->occurs_depending), q)))
 	      {
-		output ("%d + ", p->offset - f->offset);
+		if (p->offset - q->offset > 0)
+		  output ("%d + ", p->offset - q->offset);
 		if (p->size != 1)
 		  output ("%d * ", p->size);
 		output_integer (p->occurs_depending);
+		q = p;
 	      }
 	    else
-	      output ("%d", f->size);
+	      output ("%d", q->size);
+
+	    for (; q != f; q = q->parent)
+	      if (q->sister && !q->sister->redefines)
+		{
+		  q = q->sister;
+		  p = q->occurs_depending ? q : cb_field_variable_size (q);
+		  output (" + ");
+		  goto again;
+		}
 	  }
 	break;
       }
