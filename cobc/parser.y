@@ -617,9 +617,13 @@ select_options:
 | select_options select_option
 ;
 select_option:
-  ASSIGN _to select_file_name select_assign_reserve
+  ASSIGN _to select_file_name
   {
     current_file_name->assign = $3;
+  }
+| RESERVE integer _area
+  {
+    yywarn ("RESERVE not implemented");
   }
 | select_organization
   {
@@ -666,9 +670,6 @@ select_option:
 	l->next = p;
       }
   }
-;
-select_assign_reserve:
-| RESERVE integer _area		{ yywarn ("RESERVE not implemented"); }
 ;
 select_organization:
   INDEXED			{ $$ = COB_ORG_INDEXED; }
