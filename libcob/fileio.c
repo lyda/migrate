@@ -506,6 +506,7 @@ indexed_open (struct cob_file_desc *f, char *filename, int mode)
   DB_OPEN (f->file.db, filename, "primary", flags);
   f->file.db->set_errfile (f->file.db, stderr);
   f->keys[0].db = f->file.db;
+  f->cursor = NULL;
 
   if (FILE_OPENED (f))
     for (i = 1; i < f->nkeys; i++)
@@ -540,6 +541,10 @@ static void
 indexed_read (struct cob_file_desc *f)
 {
   DBT key, data;
+
+  /* an error occurred in the previous indexed_start */
+  if (FILE_STATUS (f) != 00)
+    return;
 
   memset (&key, 0, sizeof (DBT));
   memset (&data, 0, sizeof (DBT));
