@@ -20,6 +20,13 @@
 
 #include "config.h"
 
+#if WITH_LFS64
+#define _LFS64_LARGEFILE     	1
+#define _LFS64_STDIO         	1
+#define _FILE_OFFSET_BITS	64
+#define _LARGEFILE64_SOURCE     1
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

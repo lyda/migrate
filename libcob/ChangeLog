@@ -1,5 +1,13 @@
 2003-05-18  Keisuke Nishida  <knishida@netlab.jp>
 
+	* fileio.c: Large file system support.
+	(_LFS64_LARGEFILE) [WITH_LFS64]: Defined.
+	(_LFS64_STDIO) [WITH_LFS64]: Defined.
+	(_FILE_OFFSET_BITS) [WITH_LFS64]: Defined.
+	(_LARGEFILE64_SOURCE) [WITH_LFS64]: Defined.
+
+2003-05-18  Keisuke Nishida  <knishida@netlab.jp>
+
 	* common.h (cob_d2i, cob_i2d): New macros.
 
 2003-05-15  Keisuke Nishida  <knishida@netlab.jp>
