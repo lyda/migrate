@@ -150,7 +150,6 @@ extern const char *cob_source_file;
 extern unsigned int cob_source_line;
 extern const char *cob_source_statement;
 
-extern int cob_return_code;
 extern int cob_linage_counter;
 
 extern cob_field cob_zero;		/* ZERO */
@@ -184,7 +183,7 @@ extern int cob_config_compare (const char *key, const char *val);
 extern void cob_init (int argc, char **argv);
 extern void cob_module_enter (cob_module *module);
 extern void cob_module_leave (cob_module *module);
-extern void cob_stop_run (void);
+extern void cob_stop_run (int status);
 
 /* Utilities */
 

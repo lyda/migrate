@@ -40,7 +40,6 @@ const char *cob_source_file = NULL;
 unsigned int cob_source_line = 0;
 const char *cob_source_statement = NULL;
 
-int cob_return_code = 0;
 int cob_linage_counter = 0;
 
 static cob_field_attr all_attr = {COB_TYPE_ALPHANUMERIC_ALL, 0, 0, 0, NULL};
@@ -233,9 +232,9 @@ cob_module_leave (cob_module *module)
 }
 
 void
-cob_stop_run (void)
+cob_stop_run (int status)
 {
-  exit (cob_return_code);
+  exit (status);
 }
 
 
