@@ -1711,24 +1711,19 @@ codegen (struct program_spec *spec)
   output_indent ("}", -2);
   output_newline ();
 
-  /* main function */
-  if (cobc_module_flag)
-    {
-      output_line ("int");
-      output ("%s (", spec->program_id);
-      for (l = spec->using_list; l; l = l->next)
-	{
-	  output ("unsigned char *f_%s_data", COBC_FIELD (l->item)->cname);
-	  if (l->next)
-	    output (", ");
-	}
-      output (")\n");
-    }
+  /* program function */
+  output_line ("int");
+  output ("%s (", spec->program_id);
+  if (!spec->using_list)
+    output ("void");
   else
-    {
-      output_line ("int");
-      output_line ("main (int argc, char **argv)");
-    }
+    for (l = spec->using_list; l; l = l->next)
+      {
+	output ("unsigned char *f_%s_data", COBC_FIELD (l->item)->cname);
+	if (l->next)
+	  output (", ");
+      }
+  output (")\n");
   output_indent ("{", 2);
 
   /* local variables */
@@ -1738,15 +1733,9 @@ codegen (struct program_spec *spec)
   output_line ("struct cob_frame frame_stack[24];");
   output_newline ();
 
-  if (cobc_module_flag)
-    output_line ("cob_module_init ();");
-  else
-    output_line ("cob_init (argc, argv);");
+  /* initialization */
+  output_line ("cob_module_init ();");
   output_line ("init_environment ();");
-  output_newline ();
-
-  /* initialize values */
-  output_line ("/* initialize values */");
   if (!spec->initial_program)
     {
       output_line ("if (!initialized)");
@@ -1799,4 +1788,15 @@ codegen (struct program_spec *spec)
 
   output_line ("cob_exit_program ();");
   output_indent ("}", -2);
+  output_newline ();
+
+  if (!cobc_module_flag)
+    {
+      output_line ("int");
+      output_line ("main (int argc, char **argv)");
+      output_indent ("{", 2);
+      output_line ("cob_init (argc, argv);");
+      output_line ("%s ();", spec->program_id);
+      output_indent ("}", -2);
+    }
 }
