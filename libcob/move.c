@@ -363,7 +363,7 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 {
   char *p;
   int sign = cob_get_sign (f1);
-  int neg = (sign < 0);
+  int neg = (sign < 0) ? 1 : 0;
   unsigned char *min, *max, *src, *dst, *end;
   unsigned char pad = ' ';
   int count = 0;
