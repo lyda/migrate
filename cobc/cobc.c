@@ -57,6 +57,10 @@ int cobc_flag_main = 0;
 int cobc_flag_call_static = 0;
 int cobc_flag_line_directive = 0;
 
+int cobc_warn_parentheses = 1;
+int cobc_warn_end_if = 0;
+int cobc_warn_end_evaluate = 0;
+
 FILE *cobc_out;
 
 

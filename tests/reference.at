@@ -103,7 +103,7 @@ AT_CHECK([cobc -C prog.cob], [1], ,
 AT_CLEANUP
 
 
-AT_SETUP([Subscript out of range (1)])
+AT_SETUP([Subscript out of bounds (1)])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.
@@ -118,13 +118,13 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:9: error: index of `X' out of range: 5
+[prog.cob:9: error: subscript of `X' out of bounds: 5
 ])
 
 AT_CLEANUP
 
 
-AT_SETUP([Subscript out of range (2)])
+AT_SETUP([Subscript out of bounds (2)])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.
@@ -140,7 +140,7 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:10: error: index of `X' out of range: 20
+[prog.cob:10: error: subscript of `X' out of bounds: 20
 ])
 
 AT_CLEANUP
@@ -190,7 +190,7 @@ AT_CHECK([cobc -C prog.cob], [1], ,
 AT_CLEANUP
 
 
-AT_SETUP([Subscript out of range at run-time (1)])
+AT_SETUP([Subscript out of bounds at run-time (1)])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.
@@ -207,13 +207,13 @@ PROCEDURE       DIVISION.
 
 AT_CHECK([cobc -main prog.cob], [0])
 AT_CHECK([./prog], [1], ,
-[prog.cob:10: libcob: index of `X' out of range: 0
+[prog.cob:10: libcob: subscript of `X' out of bounds: 0
 ])
 
 AT_CLEANUP
 
 
-AT_SETUP([Subscript out of range at runtime (2)])
+AT_SETUP([Subscript out of bounds at runtime (2)])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.
@@ -230,13 +230,13 @@ PROCEDURE       DIVISION.
 
 AT_CHECK([cobc -main prog.cob], [0])
 AT_CHECK([./prog], [1], ,
-[prog.cob:10: libcob: index of `X' out of range: 11
+[prog.cob:10: libcob: subscript of `X' out of bounds: 11
 ])
 
 AT_CLEANUP
 
 
-AT_SETUP([Value of DEPENDING ON N out of range (1)])
+AT_SETUP([Value of DEPENDING ON N out of bounds (1)])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.
@@ -253,13 +253,13 @@ PROCEDURE       DIVISION.
 
 AT_CHECK([cobc -main prog.cob], [0])
 AT_CHECK([./prog], [1], ,
-[prog.cob:10: libcob: value of `N' out of range: 3
+[prog.cob:10: libcob: OCCURS DEPENDING ON `N' out of bounds: 3
 ])
 
 AT_CLEANUP
 
 
-AT_SETUP([Value of DEPENDING ON N out of range (1)])
+AT_SETUP([Value of DEPENDING ON N out of bounds (1)])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.
@@ -276,7 +276,7 @@ PROCEDURE       DIVISION.
 
 AT_CHECK([cobc -main prog.cob], [0])
 AT_CHECK([./prog], [1], ,
-[prog.cob:10: libcob: value of `N' out of range: 7
+[prog.cob:10: libcob: OCCURS DEPENDING ON `N' out of bounds: 7
 ])
 
 AT_CLEANUP
@@ -299,13 +299,13 @@ PROCEDURE       DIVISION.
 
 AT_CHECK([cobc -main prog.cob], [0])
 AT_CHECK([./prog], [1], ,
-[prog.cob:10: libcob: index of `X' out of range: 5
+[prog.cob:10: libcob: subscript of `X' out of bounds: 5
 ])
 
 AT_CLEANUP
 
 
-AT_SETUP([Offset out of range (1)])
+AT_SETUP([Offset out of bounds (1)])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.
@@ -319,13 +319,13 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:8: error: offset of `X' out of range: 0
+[prog.cob:8: error: offset of `X' out of bounds: 0
 ])
 
 AT_CLEANUP
 
 
-AT_SETUP([Offset out of range (2)])
+AT_SETUP([Offset out of bounds (2)])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.
@@ -339,13 +339,13 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:8: error: offset of `X' out of range: 5
+[prog.cob:8: error: offset of `X' out of bounds: 5
 ])
 
 AT_CLEANUP
 
 
-AT_SETUP([Length out of range (too long)])
+AT_SETUP([Length out of bounds (too long)])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.
@@ -359,13 +359,13 @@ PROCEDURE       DIVISION.
 ])
 
 AT_CHECK([cobc -C prog.cob], [1], ,
-[prog.cob:8: error: length of `X' out of range: 4
+[prog.cob:8: error: length of `X' out of bounds: 4
 ])
 
 AT_CLEANUP
 
 
-AT_SETUP([Offset out of range at runtime (1)])
+AT_SETUP([Offset out of bounds at runtime (1)])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.
@@ -381,13 +381,13 @@ PROCEDURE       DIVISION.
 
 AT_CHECK([cobc -main prog.cob], [0])
 AT_CHECK([./prog], [1], ,
-[prog.cob:9: libcob: offset of `X' out of range: 0
+[prog.cob:9: libcob: offset of `X' out of bounds: 0
 ])
 
 AT_CLEANUP
 
 
-AT_SETUP([Offset out of range at runtime (2)])
+AT_SETUP([Offset out of bounds at runtime (2)])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.
@@ -403,13 +403,13 @@ PROCEDURE       DIVISION.
 
 AT_CHECK([cobc -main prog.cob], [0])
 AT_CHECK([./prog], [1], ,
-[prog.cob:9: libcob: offset of `X' out of range: 5
+[prog.cob:9: libcob: offset of `X' out of bounds: 5
 ])
 
 AT_CLEANUP
 
 
-AT_SETUP([Length out of range at runtime (too long)])
+AT_SETUP([Length out of bounds at runtime (too long)])
 
 AT_DATA([prog.cob], [
 IDENTIFICATION  DIVISION.
@@ -425,7 +425,7 @@ PROCEDURE       DIVISION.
 
 AT_CHECK([cobc -main prog.cob], [0])
 AT_CHECK([./prog], [1], ,
-[prog.cob:9: libcob: length of `X' out of range: 5
+[prog.cob:9: libcob: length of `X' out of bounds: 5
 ])
 
 AT_CLEANUP

@@ -1,3 +1,7 @@
+2003-03-25  Keisuke Nishida  <knishida@netlab.jp>
+
+	* exception.def: New file.
+
 2003-03-06  Keisuke Nishida  <knishida@netlab.jp>
 
 	* common.c (cob_field_to_string): Search for ' ' from backward.

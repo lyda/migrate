@@ -37,6 +37,15 @@ extern int cobc_flag_call_static;
 /* output line directives */
 extern int cobc_flag_line_directive;
 
+/* warn of lacks of parentheses around AND within OR */
+extern int cobc_warn_parentheses;
+
+/* warn of lacks of END-EVALUATE */
+extern int cobc_warn_end_evaluate;
+
+/* warn of lacks of END-IF */
+extern int cobc_warn_end_if;
+
 extern FILE *yyin;
 extern FILE *cobc_out;
 

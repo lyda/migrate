@@ -241,6 +241,14 @@ output_int32 (cobc_tree x)
     }
 }
 
+static void
+output_index (cobc_tree x)
+{
+  output ("(");
+  output_int32 (x);
+  output (" - 1)");
+}
+
 
 /*
  * Output parameter
@@ -302,15 +310,6 @@ output_base (struct cobc_field *p)
 }
 
 static void
-output_offset (struct cobc_reference *r)
-{
-  struct cobc_field *f = COBC_FIELD (r->value);
-  output ("cob_index (");
-  output_int32 (r->offset);
-  output (", %d, \"%s\")", f->size, f->name);
-}
-
-static void
 output_data (cobc_tree x)
 {
   switch (COBC_TREE_TAG (x))
@@ -346,21 +345,7 @@ output_data (cobc_tree x)
 	      if (p->f.have_occurs)
 		{
 		  output (" + %d * ", p->size);
-		  if (p->occurs_depending)
-		    {
-		      output ("cob_index_depending (");
-		      output_int32 (l->item);
-		      output (", %d, %d, ", p->occurs_min, p->occurs);
-		      output_int32 (p->occurs_depending);
-		      output (", \"%s\", \"%s\")", p->name,
-			      field (p->occurs_depending)->name);
-		    }
-		  else
-		    {
-		      output ("cob_index (");
-		      output_int32 (l->item);
-		      output (", %d, \"%s\")", p->occurs, p->name);
-		    }
+		  output_index (l->item);
 		  l = l->next;
 		}
 
@@ -371,7 +356,7 @@ output_data (cobc_tree x)
 	if (r->offset)
 	  {
 	    output (" + ");
-	    output_offset (r);
+	    output_index (r->offset);
 	  }
 	break;
       }
@@ -398,16 +383,12 @@ output_size (cobc_tree x)
 
 	if (r->length)
 	  {
-	    output ("cob_index (");
 	    output_int32 (r->length);
-	    output (", %d - ", f->size);
-	    output_offset (r);
-	    output (", \"%s\") + 1", f->name);
 	  }
 	else if (r->offset)
 	  {
 	    output ("%d - ", f->size);
-	    output_offset (r);
+	    output_index (r->offset);
 	  }
 	else
 	  {
@@ -508,6 +489,57 @@ output_field (cobc_tree x, int id)
 	r->id = id;
 	f = COBC_FIELD (r->value);
 	output_line ("/* %s */", tree_name (x));
+
+	/* subscript check */
+	if (r->subs)
+	  {
+	    struct cobc_field *p;
+	    struct cobc_list *l = r->subs = list_reverse (r->subs);
+
+	    for (p = f; p; p = p->parent)
+	      if (p->f.have_occurs)
+		{
+		  if (!COBC_LITERAL_P (l->item))
+		    {
+		      output_prefix ();
+		      if (p->occurs_depending)
+			{
+			  output ("cob_check_subscript_depending (");
+			  output_int32 (l->item);
+			  output (", %d, %d, ", p->occurs_min, p->occurs);
+			  output_int32 (p->occurs_depending);
+			  output (", \"%s\", \"%s\");\n", p->name,
+				  field (p->occurs_depending)->name);
+			}
+		      else
+			{
+			  output ("cob_check_subscript (");
+			  output_int32 (l->item);
+			  output (", %d, \"%s\");\n", p->occurs, p->name);
+			}
+		    }
+		  l = l->next;
+		}
+
+	    r->subs = list_reverse (r->subs);
+	  }
+
+	/* reference modifier check */
+	if (r->offset)
+	  {
+	    if (!COBC_LITERAL_P (r->offset)
+		|| (r->length && !COBC_LITERAL_P (r->length)))
+	      {
+		output ("cob_check_ref_mod (");
+		output_int32 (r->offset);
+		output (", ");
+		if (r->length)
+		  output_int32 (r->length);
+		else
+		  output ("1");
+		output (", %d, \"%s\");\n", f->size, f->name);
+	      }
+	  }
 
 	/* size */
 	output_prefix ();
@@ -682,16 +714,16 @@ output_handler (int ec, cobc_tree st1, cobc_tree st2, struct cobc_label *l)
   if (st1)
     {
       if ((ec & 0x00ff) == 0)
-	output_line ("if ((cob_error_code & 0xff00) == 0x%04x)", ec);
+	output_line ("if ((cob_exception_code & 0xff00) == 0x%04x)", ec);
       else
-	output_line ("if (cob_error_code == 0x%04x)", ec);
+	output_line ("if (cob_exception_code == 0x%04x)", ec);
       output_stmt (st1);
       if (st2 || l)
 	output_line ("else");
     }
   if (l)
     {
-      output_line ("if (cob_error_code)");
+      output_line ("if (cob_exception_code)");
       output_indent ("  {");
       output_perform_call (l, l);
       output_indent ("  }");
@@ -701,7 +733,7 @@ output_handler (int ec, cobc_tree st1, cobc_tree st2, struct cobc_label *l)
   if (st2)
     {
       if (st1 == 0 && l == 0)
-	output_line ("if (!cob_error_code)");
+	output_line ("if (!cob_exception_code)");
       output_stmt (st2);
     }
 }
@@ -814,7 +846,7 @@ output_advance_move (cob_field *f, cobc_tree dst)
       if (p->f.blank_zero)
 	attr.flags |= COB_FLAG_BLANK_ZERO;
       if (p->f.justified)
-	attr.flags |= COB_FLAG_JUSTFIED;
+	attr.flags |= COB_FLAG_JUSTIFIED;
       attr.pic = p->pic->str;
     }
 
@@ -1177,8 +1209,8 @@ output_initialize (cobc_tree x, struct cobc_list *l)
 	  /* FIXME: need boundary check */
 	  output_prefix ();
 	  output ("int i%d = ", i++);
-	  output_int32 (l->item);
-	  output (" - 1;\n");
+	  output_index (l->item);
+	  output (";\n");
 	}
     }
 
@@ -1719,18 +1751,18 @@ output_stmt (cobc_tree x)
 	output_indent ("{");
 	if (p->save_status && l && l->next)
 	  {
-	    /* output with combining multiple cob_error_code */
-	    output_line ("int error_code = 0;");
+	    /* output with combining multiple cob_exception_code */
+	    output_line ("int code = 0;");
 	    for (; l; l = l->next)
 	      {
 		output_stmt (l->item);
-		output_line ("error_code |= cob_error_code;");
+		output_line ("code |= cob_exception_code;");
 	      }
-	    output_line ("cob_error_code = error_code;");
+	    output_line ("cob_exception_code = code;");
 	  }
 	else
 	  {
-	    /* output without using cob_error_code */
+	    /* output without using cob_exception_code */
 	    for (; l; l = l->next)
 	      output_stmt (l->item);
 	  }
@@ -1796,7 +1828,7 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
 	  if (p->f.blank_zero)
 	    flags |= COB_FLAG_BLANK_ZERO;
 	  if (p->f.justified)
-	    flags |= COB_FLAG_JUSTFIED;
+	    flags |= COB_FLAG_JUSTIFIED;
 
 	  sprintf (attr_buff, "%s_attr", fname);
 	  output ("static cob_field_attr %s = ", attr);
@@ -2264,7 +2296,7 @@ codegen (struct cobc_program_spec *spec)
 	output_line ("    break;");
       }
   output_line ("  default:");
-  output_line ("    cob_default_error_handle (cob_error_file);");
+  output_line ("    cob_default_error_handle ();");
   output_line ("    break;");
   output_line ("  }");
   output_line ("cob_exit (le_standard_error_handler);");

@@ -28,32 +28,24 @@
 
 #include "common.h"
 #include "numeric.h"
+#include "termio.h"
+#include "fileio.h"
+#include "call.h"
 #include "lib/gettext.h"
-
-extern void cob_init_numeric (void);
-extern void cob_init_termio (void);
-extern void cob_init_fileio (void);
-extern void cob_init_call (void);
-
-int cob_initialized = 0;
-
-int cob_error_code = 0;
-int cob_return_code = 0;
-int cob_cmp_result;
 
 int cob_argc = 0;
 char **cob_argv = NULL;
 
-char *cob_source_file = NULL;
-int cob_source_line = 0;
+const char *cob_source_file = NULL;
+unsigned int cob_source_line = 0;
+const char *cob_source_statement = NULL;
 
-cob_environment *cob_env = NULL;
-
-/* ZERO,SPACE,HIGH-VALUE,LOW-VALUE,QUOTE */
+int cob_return_code = 0;
+int cob_cmp_result;
 
 cob_field_attr cob_group_attr = {COB_TYPE_GROUP, 0, 0, 0, NULL};
 cob_field_attr cob_alnum_attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
-cob_field_attr cob_just_attr  = {COB_TYPE_ALPHANUMERIC, 0, 0, COB_FLAG_JUSTFIED, NULL};
+cob_field_attr cob_just_attr  = {COB_TYPE_ALPHANUMERIC, 0, 0, COB_FLAG_JUSTIFIED, NULL};
 cob_field_attr cob_all_attr   = {COB_TYPE_ALPHANUMERIC_ALL, 0, 0, 0, NULL};
 
 cob_field_attr cob_uint_attr[] = {
@@ -150,8 +142,6 @@ cob_field cob_high =  {1, "\xff", &cob_all_attr};
 cob_field cob_low =   {1, "\0",   &cob_all_attr};
 cob_field cob_quote = {1, "\"",   &cob_all_attr};
 
-/* SWITCH-1/2/3/4/5/6/7/8 */
-
 int cob_switch[8] = {1, 0, 1, 1, 1, 1, 1, 1};
 
 long cob_exp10[10] = {
@@ -189,7 +179,24 @@ long long cob_exp10LL[19] = {
   1000000000000000000LL
 };
 
+cob_environment *cob_env = NULL;
+
+int cob_exception_code;
+
+static struct exception {
+  enum cob_exception_code code;
+  const char *name;
+  int critical;
+} exception_table[] = {
+#undef COB_EXCEPTION
+#define COB_EXCEPTION(CODE,TAG,NAME,CRITICAL) { TAG, NAME, CRITICAL },
+#include "exception.def"
+  {0, 0, 0}
+};
+
 static int ding_on_error = 0;
+
+static int cob_initialized = 0;
 
 
 /*
@@ -332,31 +339,76 @@ cob_stop_run (void)
   exit (cob_return_code);
 }
 
-int
-cob_index (int i, int max, const char *name)
-{
-  if (i < 1 || i > max)
-    {
-      cob_runtime_error (_("index of `%s' out of range: %d"), name, i);
-      exit (1);
-    }
-  return i - 1;
-}
+
+/*
+ * Utilities
+ */
+
+/* {SIGN}
+ * positive: 0123456789
+ * negative: @ABCDEFGHI
+ */
 
 int
-cob_index_depending (int i, int min, int max, int dep, const char *name, const char *depname)
+cob_get_sign (cob_field *f)
 {
-  if (dep < min || max < dep)
+  if (COB_FIELD_HAVE_SIGN (f))
     {
-      cob_runtime_error (_("value of `%s' out of range: %d"), depname, dep);
-      exit (1);
+      char *p;
+
+      /* locate sign */
+      if (COB_FIELD_SIGN_LEADING (f))
+	p = f->data;
+      else
+	p = f->data + f->size - 1;
+
+      /* get sign */
+      if (COB_FIELD_SIGN_SEPARATE (f))
+	{
+	  return (*p == '+') ? 1 : -1;
+	}
+      else
+	{
+	  if (*p <= '9')
+	    return 1;
+	  *p -= 0x10;
+	  return -1;
+	}
     }
-  if (i < min || dep < i)
+  return 0;
+}
+
+void
+cob_put_sign (cob_field *f, int sign)
+{
+  if (COB_FIELD_HAVE_SIGN (f))
     {
-      cob_runtime_error (_("index of `%s' out of range: %d"), name, i);
-      exit (1);
+      char *p;
+
+      /* locate sign */
+      if (COB_FIELD_SIGN_LEADING (f))
+	p = f->data;
+      else
+	p = f->data + f->size - 1;
+
+      /* put sign */
+      if (COB_FIELD_SIGN_SEPARATE (f))
+	*p = (sign < 0) ? '-' : '+';
+      else if (sign < 0)
+	*p += 0x10;
     }
-  return i - 1;
+}
+
+char *
+cob_field_to_string (cob_field *f, char *s)
+{
+  size_t i;
+  memcpy (s, f->data, f->size);
+  for (i = f->size - 1; i >= 0; i--)
+    if (s[i] != ' ')
+      break;
+  s[i + 1] = '\0';
+  return s;
 }
 
 
@@ -483,25 +535,6 @@ cob_cmp_int (cob_field *f1, int n)
  * Class check
  */
 
-void
-cob_check_numeric (cob_field *f, const char *name)
-{
-  if (!cob_is_numeric (f))
-    {
-      size_t i;
-      unsigned char *data = f->data;
-      char buff[f->size * 4 + 1];
-      char *p = buff;
-      for (i = 0; i < f->size; i++)
-	if (isprint (data[i]))
-	  *p++ = data[i];
-	else
-	  p += sprintf (p, "\\%03o", data[i]);
-      *p = '\0';
-      cob_runtime_error (_("value of `%s' not numeric: `%s'"), name, buff);
-    }
-}
-
 int
 cob_is_numeric (cob_field *f)
 {
@@ -568,84 +601,16 @@ cob_is_lower (cob_field *f)
 
 
 /*
- * Common functions
+ * Run-time error checking
  */
 
-/* {SIGN}
- * positive: 0123456789
- * negative: @ABCDEFGHI
- */
-
-int
-cob_get_sign (cob_field *f)
-{
-  if (COB_FIELD_HAVE_SIGN (f))
-    {
-      char *p;
-
-      /* locate sign */
-      if (COB_FIELD_SIGN_LEADING (f))
-	p = f->data;
-      else
-	p = f->data + f->size - 1;
-
-      /* get sign */
-      if (COB_FIELD_SIGN_SEPARATE (f))
-	{
-	  return (*p == '+') ? 1 : -1;
-	}
-      else
-	{
-	  if (*p <= '9')
-	    return 1;
-	  *p -= 0x10;
-	  return -1;
-	}
-    }
-  return 0;
-}
-
 void
-cob_put_sign (cob_field *f, int sign)
-{
-  if (COB_FIELD_HAVE_SIGN (f))
-    {
-      char *p;
-
-      /* locate sign */
-      if (COB_FIELD_SIGN_LEADING (f))
-	p = f->data;
-      else
-	p = f->data + f->size - 1;
-
-      /* put sign */
-      if (COB_FIELD_SIGN_SEPARATE (f))
-	*p = (sign < 0) ? '-' : '+';
-      else if (sign < 0)
-	*p += 0x10;
-    }
-}
-
-char *
-cob_field_to_string (cob_field *f, char *s)
-{
-  size_t i;
-  memcpy (s, f->data, f->size);
-  for (i = f->size - 1; i >= 0; i--)
-    if (s[i] != ' ')
-      break;
-  s[i + 1] = '\0';
-  return s;
-}
-
-void
-cob_runtime_error (char *fmt, ...)
+cob_runtime_error (const char *fmt, ...)
 {
   va_list ap;
 
   /* prefix */
-  if (cob_source_line)
-    fprintf (stderr, "%s:%d: ", cob_source_file, cob_source_line);
+  fprintf (stderr, "%s:%d: ", cob_source_file, cob_source_line);
   fputs ("libcob: ", stderr);
 
   /* body */
@@ -657,4 +622,90 @@ cob_runtime_error (char *fmt, ...)
   if (ding_on_error)
     fputs ("\a", stderr);
   fputs ("\n", stderr);
+}
+
+void
+cob_exception (void)
+{
+  int i;
+  for (i = 0; exception_table[i].code != 0; i++)
+    if (cob_exception_code == exception_table[i].code)
+      {
+	cob_runtime_error (exception_table[i].name);
+	if (exception_table[i].critical)
+	  exit (1);
+      }
+}
+
+void
+cob_check_numeric (cob_field *f, const char *name)
+{
+  if (!cob_is_numeric (f))
+    {
+      size_t i;
+      unsigned char *data = f->data;
+      char buff[f->size * 4 + 1];
+      char *p = buff;
+      for (i = 0; i < f->size; i++)
+	if (isprint (data[i]))
+	  *p++ = data[i];
+	else
+	  p += sprintf (p, "\\%03o", data[i]);
+      *p = '\0';
+      cob_runtime_error (_("`%s' not numeric: `%s'"), name, buff);
+      exit (1);
+    }
+}
+
+void
+cob_check_subscript (int i, int max, const char *name)
+{
+  cob_check_subscript_depending (i, 1, max, max, name, 0);
+}
+
+void
+cob_check_subscript_depending (int i, int min, int max, int dep, const char *name, const char *depname)
+{
+  cob_exception_code = 0;
+
+  /* check the OCCURS DEPENDING ON item */
+  if (dep < min || max < dep)
+    {
+      cob_exception_code = COB_EC_BOUND_ODO;
+      cob_runtime_error (_("OCCURS DEPENDING ON `%s' out of bounds: %d"),
+			 depname, dep);
+      exit (1);
+    }
+
+  /* check the subscript */
+  if (i < min || dep < i)
+    {
+      cob_exception_code = COB_EC_BOUND_SUBSCRIPT;
+      cob_runtime_error (_("subscript of `%s' out of bounds: %d"), name, i);
+      exit (1);
+    }
+}
+
+void
+cob_check_ref_mod (int offset, int length, int size, const char *name)
+{
+  cob_exception_code = 0;
+
+  /* check the offset */
+  if (offset < 1 || offset > size)
+    {
+      cob_exception_code = COB_EC_BOUND_REF_MOD;
+      cob_runtime_error (_("offset of `%s' out of bounds: %d"),
+			 name, offset);
+      exit (1);
+    }
+
+  /* check the length */
+  if (length < 1 || offset + length > size)
+    {
+      cob_exception_code = COB_EC_BOUND_REF_MOD;
+      cob_runtime_error (_("length of `%s' out of bounds: %d"),
+			 name, length);
+      exit (1);
+    }
 }

@@ -2,7 +2,9 @@ SUBDIRS = cobol85
 
 TESTS =	$(srcdir)/testsuite
 
-EXTRA_DIST = $(TESTS:=.at) $(TESTS)
+TESTSUITE_AT = testsuite.at definition.at reference.at redefines.at misc.at
+
+EXTRA_DIST = $(TESTSUITE_AT) $(TESTS)
 
 DISTCLEANFILES = atconfig
 
@@ -25,3 +27,5 @@ $(srcdir)/package.m4: $(top_srcdir)/configure.ac
 $(srcdir)/%: $(srcdir)/%.at $(srcdir)/package.m4
 	autom4te --language=autotest -I $(srcdir) $< -o $@
 	chmod +x $@
+
+$(srcdir)/testsuite: $(TESTSUITE_AT)

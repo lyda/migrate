@@ -388,7 +388,7 @@ relative_read_next (cob_file *f)
 	  else
 	    {
 	      cob_add_int (f->keys[0].field, 1);
-	      if (cob_error_code)
+	      if (cob_exception_code)
 		{
 		  lseek (p->fd, - sizeof (f->record->size), SEEK_CUR);
 		  return COB_FILE_OUT_OF_KEY_RANGE;
@@ -917,7 +917,7 @@ static void
 save_status (cob_file *f, int status)
 {
   static char dummy_status[2];
-  static int error_code[] = {
+  static int code[] = {
     0,				/* 0x */
     COB_EC_I_O_AT_END,		/* 1x */
     COB_EC_I_O_INVALID_KEY,	/* 2x */
@@ -936,7 +936,7 @@ save_status (cob_file *f, int status)
   f->file_status[0] = status / 10 + '0';
   f->file_status[1] = status % 10 + '0';
   cob_error_file = f;
-  cob_error_code = error_code[status / 10];
+  cob_exception_code = code[status / 10];
 }
 
 void
@@ -1239,10 +1239,12 @@ cob_sort_giving (cob_file *sort_file, cob_file *data_file)
 }
 
 void
-cob_default_error_handle (cob_file *f)
+cob_default_error_handle (void)
 {
   const char *msg = NULL;
-  int status = (f->file_status[0] - '0') * 10 + (f->file_status[1] - '0');
+  char *file_status = cob_error_file->file_status;
+  int status = (file_status[0] - '0') * 10 + (file_status[1] - '0');
+
   switch (status)
     {
     case COB_FILE_END_OF_FILE:

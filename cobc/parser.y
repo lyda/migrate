@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 121
+%expect 122
 
 %{
 #include "config.h"
@@ -1952,7 +1952,14 @@ evaluate_object:
 | TOK_TRUE			{ $$ = make_parameter (0, cobc_true, 0); }
 | TOK_FALSE			{ $$ = make_parameter (0, cobc_false, 0); }
 ;
-_end_evaluate: | END_EVALUATE ;
+_end_evaluate:
+  /* empty */
+  {
+    if (cobc_warn_end_evaluate)
+      yywarn (_("END-EVALUATE is expected here"));
+  }
+| END_EVALUATE
+;
 
 
 /*
@@ -2007,7 +2014,14 @@ if_body:
   }
 | error END_IF
 ;
-_end_if: | END_IF ;
+_end_if:
+  /* empty */
+  {
+    if (cobc_warn_end_if)
+      yywarn (_("END-IF is expected here"));
+  }
+| END_IF
+;
 
 
 /*
@@ -2282,11 +2296,18 @@ perform_statement:
     COBC_PERFORM ($4)->body = $3;
     push ($4);
   }
-| PERFORM save_location perform_option statement_list END_PERFORM
+| PERFORM save_location perform_option statement_list _end_perform
   {
     COBC_PERFORM ($3)->body = $4;
     push ($3);
   }
+;
+_end_perform:
+  /* empty */
+  {
+    yyerror (_("END-PERFORM is expected here"));
+  }
+| END_PERFORM
 ;
 
 perform_procedure:
@@ -3051,7 +3072,8 @@ expr_1:
 		if (COBC_TREE_CLASS (stack[i-1].value) != COB_TYPE_BOOLEAN)
 		  stack[i-1].value =
 		    make_binary_op (last_lefthand, last_operator, stack[i-1].value);
-		if (token == '|'
+		if (cobc_warn_parentheses
+		    && token == '|'
 		    && ((COBC_BINARY_OP_P (stack[i-3].value)
 			 && COBC_BINARY_OP (stack[i-3].value)->op == '&')
 			|| (COBC_BINARY_OP_P (stack[i-1].value)
@@ -3890,7 +3912,7 @@ resolve_field (cobc_tree x)
 		  {
 		    int n = literal_to_int (COBC_LITERAL (sub));
 		    if (n < 1 || n > p->occurs)
-		      yyerror_x (x, _("index of `%s' out of range: %d"),
+		      yyerror_x (x, _("subscript of `%s' out of bounds: %d"),
 				 name, n);
 		  }
 		l = l->next;
@@ -3904,12 +3926,12 @@ resolve_field (cobc_tree x)
 	{
 	  int offset = literal_to_int (COBC_LITERAL (r->offset));
 	  if (offset < 1 || offset > f->size)
-	    yyerror_x (x, _("offset of `%s' out of range: %d"), name, offset);
+	    yyerror_x (x, _("offset of `%s' out of bounds: %d"), name, offset);
 	  else if (r->length && COBC_LITERAL_P (r->length))
 	    {
 	      int length = literal_to_int (COBC_LITERAL (r->length));
 	      if (length < 1 || length > f->size - offset + 1)
-		yyerror_x (x, _("length of `%s' out of range: %d"),
+		yyerror_x (x, _("length of `%s' out of bounds: %d"),
 			   name, length);
 	    }
 	}

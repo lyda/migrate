@@ -205,7 +205,7 @@ cob_decimal_get (cob_decimal *d, cob_field *f)
   if (d->expt == DECIMAL_NAN)
     goto overflow;
 
-  cob_error_code = 0;
+  cob_exception_code = 0;
 
   /* work copy */
   if (d != &cob_d1)
@@ -312,7 +312,7 @@ cob_decimal_get (cob_decimal *d, cob_field *f)
     }
 
  overflow:
-  cob_error_code = COB_EC_SIZE_OVERFLOW;
+  cob_exception_code = COB_EC_SIZE_OVERFLOW;
 }
 
 void

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2002 Keisuke Nishida
+ * Copyright (C) 2001-2003 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -211,8 +211,15 @@ cob_resolve_error (void)
 void *
 cob_call_resolve (cob_field *f)
 {
-  char buff[FILENAME_MAX];
-  return cob_resolve (cob_field_to_string (f, buff));
+  char buff[f->size];
+  void *ptr = cob_resolve (cob_field_to_string (f, buff));
+
+  cob_exception_code = 0;
+
+  if (!ptr)
+    cob_exception_code = COB_EC_PROGRAM_NOT_FOUND;
+
+  return ptr;
 }
 
 void
@@ -224,6 +231,6 @@ cob_call_error (void)
 void
 cob_cancel (cob_field *f)
 {
-  char buff[FILENAME_MAX];
+  char buff[f->size];
   return drop (cob_field_to_string (f, buff));
 }

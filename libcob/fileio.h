@@ -120,7 +120,7 @@ typedef struct {
 extern cob_file *cob_error_file;
 
 extern void cob_init_fileio (void);
-extern void cob_default_error_handle (cob_file *f);
+extern void cob_default_error_handle (void);
 extern void cob_open (cob_file *f, int mode);
 extern void cob_close (cob_file *f, int opt);
 extern void cob_read (cob_file *f, cob_field *key);
