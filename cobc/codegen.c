@@ -34,7 +34,7 @@ static int param_id = 0;
 static void output_stmt (cb_tree x);
 static void output_integer (cb_tree x);
 static void output_index (cb_tree x);
-static void output_funcall (cb_tree x);
+static void output_func_1 (const char *name, cb_tree x);
 
 
 /*
@@ -622,7 +622,7 @@ output_integer (cb_tree x)
 	      }
 	  }
 
-	output_funcall (cb_build_funcall_1 ("cob_get_int", x));
+	output_func_1 ("cob_get_int", x);
 	break;
       }
     default:
@@ -640,11 +640,11 @@ output_index (cb_tree x)
 
 
 /*
- * Expression
+ * Parameter
  */
 
 static void
-output_expr (cb_tree x, int id)
+output_param (cb_tree x, int id)
 {
   char fname[5];
   sprintf (fname, "f[%d]", id);
@@ -692,7 +692,7 @@ output_expr (cb_tree x, int id)
       break;
     case CB_TAG_FIELD:
       /* TODO: remove me */
-      output_expr (cb_build_field_reference (CB_FIELD (x), 0), id);
+      output_param (cb_build_field_reference (CB_FIELD (x), 0), id);
       break;
     case CB_TAG_REFERENCE:
       {
@@ -743,10 +743,18 @@ output_funcall (cb_tree x)
   output ("%s (", p->name);
   for (i = 0; i < p->argc; i++)
     {
-      output_expr (p->argv[i], i);
+      output_param (p->argv[i], i);
       if (i + 1 < p->argc)
 	output (", ");
     }
+  output (")");
+}
+
+static void
+output_func_1 (const char *name, cb_tree x)
+{
+  output ("%s (", name);
+  output_param (x, param_id);
   output (")");
 }
 
@@ -1586,13 +1594,13 @@ output_file_definition (struct cb_file *f)
       struct cb_alt_key *l;
       output ("static cob_file_key %s_keys[] = {\n", f->cname);
       output ("  {");
-      output_expr (f->key, -1);
+      output_param (f->key, -1);
       output (", 0},\n");
       for (l = f->alt_key_list; l; l = l->next)
 	{
 	  nkeys++;
 	  output ("  {");
-	  output_expr (l->key, -1);
+	  output_param (l->key, -1);
 	  output (", %d},\n", l->duplicates);
 	}
       output ("};\n");
@@ -1609,13 +1617,13 @@ output_file_definition (struct cb_file *f)
     output ("0");
   output (", ");
   /* assign */
-  output_expr (f->assign, -1);
+  output_param (f->assign, -1);
   output (", ");
   /* record */
-  output_expr (CB_TREE (f->record), -1);
+  output_param (CB_TREE (f->record), -1);
   output (", ");
   /* record_size */
-  output_expr (f->record_depending, -1);
+  output_param (f->record_depending, -1);
   output (", ");
   /* record_min, record_max */
   output ("%d, %d, ", f->record_min, f->record_max);
