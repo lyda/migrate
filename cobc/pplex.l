@@ -36,12 +36,12 @@
 #include "cobc.h"
 #include "ppparse.h"
 
-static struct cobc_replacement *current_replacement = NULL;
+static struct cb_replacement *current_replacement = NULL;
 
 static struct copy_info {
   int line;
   char *file;
-  struct cobc_replacement *replacement;
+  struct cb_replacement *replacement;
   YY_BUFFER_STATE buffer;
   struct copy_info *next;
 } *copy_stack = NULL;
@@ -50,7 +50,7 @@ static struct copy_info {
 static int ppinput (char *buf, int max_size);
 
 static char *substring (const char *s, int offset);
-static void switch_to_buffer (int lineno, char *filename, struct cobc_replacement *replacing, YY_BUFFER_STATE buffer);
+static void switch_to_buffer (int lineno, char *filename, struct cb_replacement *replacing, YY_BUFFER_STATE buffer);
 
 %}
 
@@ -69,7 +69,7 @@ static void switch_to_buffer (int lineno, char *filename, struct cobc_replacemen
 "DATE-COMPILED." |
 "INSTALLATION." |
 "SECURITY." {
-  if (cobc_source_format == COBC_FORMAT_FREE)
+  if (cb_source_format == CB_FORMAT_FREE)
     yyerror ("obsolete");
   else
     {
@@ -134,7 +134,7 @@ static void switch_to_buffer (int lineno, char *filename, struct cobc_replacemen
 
 <*>"*>".*		{ /* comment */ }
 
-<*>\n			{ ECHO; cobc_source_line++; }
+<*>\n			{ ECHO; cb_source_line++; }
 
 . |
 [0-9A-Z_-]+ |
@@ -176,17 +176,17 @@ substring (const char *s, int offset)
 
 static void
 switch_to_buffer (int line, char *file,
-		  struct cobc_replacement *replacement, YY_BUFFER_STATE buffer)
+		  struct cb_replacement *replacement, YY_BUFFER_STATE buffer)
 {
-  cobc_source_line = line;
-  cobc_source_file = file;
+  cb_source_line = line;
+  cb_source_file = file;
   current_replacement = replacement;
   yy_switch_to_buffer (buffer);
   fprintf (yyout, "# %d \"%s\"\n", line, file);
 }
 
 int
-ppopen (char *name, const char *lib, struct cobc_replacement *replacement)
+ppopen (char *name, const char *lib, struct cb_replacement *replacement)
 {
   struct stat st;
   char buff[FILENAME_MAX];
@@ -201,8 +201,8 @@ ppopen (char *name, const char *lib, struct cobc_replacement *replacement)
   /* Find the file */
   if (name[0] != '/' && stat (name, &st) == -1)
     {
-      struct cobc_name_list *l;
-      for (l = cobc_include_list; l; l = l->next)
+      struct cb_name_list *l;
+      for (l = cb_include_list; l; l = l->next)
 	{
 	  sprintf (buff, "%s/%s", l->name, name);
 	  if (stat (buff, &st) == 0)
@@ -227,17 +227,17 @@ ppopen (char *name, const char *lib, struct cobc_replacement *replacement)
     }
 
   /* Add to dependency list */
-  if (cobc_depend_file)
+  if (cb_depend_file)
     {
-      struct cobc_name_list *p = malloc (sizeof (struct cobc_name_list));
+      struct cb_name_list *p = malloc (sizeof (struct cb_name_list));
       p->name = strdup (name);
       p->next = NULL;
-      if (!cobc_depend_list)
-	cobc_depend_list = p;
+      if (!cb_depend_list)
+	cb_depend_list = p;
       else
 	{
-	  struct cobc_name_list *l;
-	  for (l = cobc_depend_list; l->next; l = l->next);
+	  struct cb_name_list *l;
+	  for (l = cb_depend_list; l->next; l = l->next);
 	  l->next = p;
 	}
     }
@@ -245,8 +245,8 @@ ppopen (char *name, const char *lib, struct cobc_replacement *replacement)
   /* Preserve the current buffer */
   {
     struct copy_info *p = malloc (sizeof (struct copy_info));
-    p->line        = cobc_source_line;
-    p->file        = cobc_source_file;
+    p->line        = cb_source_line;
+    p->file        = cb_source_file;
     p->replacement = current_replacement;
     p->buffer      = YY_CURRENT_BUFFER;
     p->next        = copy_stack;
@@ -259,11 +259,11 @@ ppopen (char *name, const char *lib, struct cobc_replacement *replacement)
   return 0;
 }
 
-struct cobc_replacement *
-add_replacement (struct cobc_replacement *replacement,
+struct cb_replacement *
+add_replacement (struct cb_replacement *replacement,
 		 const char *old_text, const char *new_text)
 {
-  struct cobc_replacement *p = malloc (sizeof (struct cobc_replacement));
+  struct cb_replacement *p = malloc (sizeof (struct cb_replacement));
   p->old_text = old_text;
   p->new_text = new_text;
   p->next = replacement;
@@ -289,10 +289,10 @@ ppinput_1 (char *buff, int size)
       {
       case '\t':
 	/* tab expansion */
-	if (cobc_source_format == COBC_FORMAT_FREE)
+	if (cb_source_format == CB_FORMAT_FREE)
 	  buff[n++] = c;
 	else
-	  while ((n + 1) % cobc_tab_width != 0)
+	  while ((n + 1) % cb_tab_width != 0)
 	    buff[n++] = ' ';
 	break;
 
@@ -325,7 +325,7 @@ ppinput_1 (char *buff, int size)
     return n;
 
   /* nothing to do for free format */
-  if (cobc_source_format == COBC_FORMAT_FREE)
+  if (cb_source_format == CB_FORMAT_FREE)
     return n;
 
   /* clear the first 6 letters */
@@ -341,7 +341,7 @@ ppinput_1 (char *buff, int size)
       break;
     case 'd':
     case 'D':
-      if (cobc_flag_debugging_line)
+      if (cb_flag_debugging_line)
 	{
 	  /* activate debugging line */
 	  buff[6] = ' ';
@@ -359,25 +359,25 @@ ppinput_1 (char *buff, int size)
       exit (1);
     }
 
-  /* check the text after cobc_text_column */
-  if (n > cobc_text_column + 1)
+  /* check the text after cb_text_column */
+  if (n > cb_text_column + 1)
     {
       static int count = 0;
-      if (cobc_warn_column_overflow && count < 4)
+      if (cb_warn_column_overflow && count < 4)
 	{
 	  int i;
-	  for (i = cobc_text_column; i < n; i++)
+	  for (i = cb_text_column; i < n; i++)
 	    if (buff[i] != ' ' && buff[i] != '\n')
 	      {
 		/* show warning if it is not whitespaces */
-		yywarn (_("source text after column %d"), cobc_text_column);
+		yywarn (_("source text after column %d"), cb_text_column);
 		if (++count == 4)
 		  yywarn (_("more warnings inhibited"));
 		break;
 	      }
 	}
       /* remove it */
-      strcpy (buff + cobc_text_column, "\n");
+      strcpy (buff + cb_text_column, "\n");
     }
 
   return strlen (buff);
@@ -386,14 +386,14 @@ ppinput_1 (char *buff, int size)
 static int
 ppinput (char *buff, int max_size)
 {
-  struct cobc_replacement *l;
+  struct cb_replacement *l;
 
   /* Read a line */
   if (ppinput_1 (buff, max_size) == 0)
     return YY_NULL;
 
   /* Line concatenation */
-  if (cobc_source_format != COBC_FORMAT_FREE)
+  if (cb_source_format != CB_FORMAT_FREE)
     {
       char *p;
       int lines = 0;

@@ -27,15 +27,15 @@
 #include "tree.h"
 #include "lib/gettext.h"
 
-#define COBC_PACKAGE	"cobc (" PACKAGE_NAME ")"
-#define COBC_VERSION	PACKAGE_VERSION
-#define COBC_COPYRIGHT	"Copyright (C) 2001-2003 Keisuke Nishida\n"
+#define CB_PACKAGE	"cobc (" PACKAGE_NAME ")"
+#define CB_VERSION	PACKAGE_VERSION
+#define CB_COPYRIGHT	"Copyright (C) 2001-2003 Keisuke Nishida\n"
 
-#define COBC_FORMAT_FREE		1
-#define COBC_FORMAT_FIXED		2
+#define CB_FORMAT_FREE			1
+#define CB_FORMAT_FIXED			2
 
-#define COBC_DEFAULT_TAB_WIDTH		8
-#define COBC_DEFAULT_TEXT_COLUMN	72
+#define CB_DEFAULT_TAB_WIDTH		8
+#define CB_DEFAULT_TEXT_COLUMN		72
 
 #ifdef __MINGW32__
 #define __USE_MINGW_FSEEK 1	/* These are in libmingwex.a */
@@ -43,65 +43,65 @@
 
 
 /* have a main function */
-extern int cobc_flag_main;
+extern int cb_flag_main;
 
 /* CALL statements are static */
-extern int cobc_flag_call_static;
+extern int cb_flag_call_static;
 
 /* enable debugging lines */
-extern int cobc_flag_debugging_line;
+extern int cb_flag_debugging_line;
 
 /* output line directives */
-extern int cobc_flag_line_directive;
+extern int cb_flag_line_directive;
 
-#undef COBC_WARNING
-#define COBC_WARNING(sig,var,name,doc) extern int var;
+#undef CB_WARNING
+#define CB_WARNING(sig,var,name,doc) extern int var;
 #include "warning.def"
 
 
-struct cobc_name_list {
+struct cb_name_list {
   const char *name;
-  struct cobc_name_list *next;
+  struct cb_name_list *next;
 };
 
-struct cobc_replacement {
+struct cb_replacement {
   const char *old_text;
   const char *new_text;
-  struct cobc_replacement *next;
+  struct cb_replacement *next;
 };
 
 extern int errorcount;
 extern int warningcount;
 
-extern char *cobc_source_file;
-extern int cobc_source_line;
-extern int cobc_source_format;
-extern int cobc_tab_width;
-extern int cobc_text_column;
+extern char *cb_source_file;
+extern int cb_source_line;
+extern int cb_source_format;
+extern int cb_tab_width;
+extern int cb_text_column;
 
-extern FILE *cobc_depend_file;
-extern char *cobc_depend_target;
-extern struct cobc_name_list *cobc_depend_list;
-extern struct cobc_name_list *cobc_include_list;
+extern FILE *cb_depend_file;
+extern char *cb_depend_target;
+extern struct cb_name_list *cb_depend_list;
+extern struct cb_name_list *cb_include_list;
 
-extern struct cobc_program *current_program;
-extern struct cobc_label *current_section, *current_paragraph;
+extern struct cb_program *current_program;
+extern struct cb_label *current_section, *current_paragraph;
 
 extern void yywarn (const char *fmt, ...);
 extern void yyerror (const char *fmt, ...);
-extern void yywarn_x (cobc_tree x, const char *fmt, ...);
-extern void yyerror_x (cobc_tree x, const char *fmt, ...);
+extern void yywarn_x (cb_tree x, const char *fmt, ...);
+extern void yyerror_x (cb_tree x, const char *fmt, ...);
 
-extern void redefinition_error (cobc_tree x);
-extern void undefined_error (cobc_tree x);
-extern void ambiguous_error (cobc_tree x);
+extern void redefinition_error (cb_tree x);
+extern void undefined_error (cb_tree x);
+extern void ambiguous_error (cb_tree x);
 
 /* preprocessor (in pplex.l, ppparse.y) */
 extern FILE *ppin;
 extern FILE *ppout;
 extern int pplex (void);
 extern int ppparse (void);
-extern int ppopen (char *name, const char *lib, struct cobc_replacement *replacement);
+extern int ppopen (char *name, const char *lib, struct cb_replacement *replacement);
 
 /* parser (in scanner.l, parser.y) */
 extern FILE *yyin;

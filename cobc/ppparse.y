@@ -27,12 +27,12 @@
 
 #include "cobc.h"
 
-extern struct cobc_replacement *add_replacement (struct cobc_replacement *replacement, const char *old_text, const char *new_text);
+extern struct cb_replacement *add_replacement (struct cb_replacement *replacement, const char *old_text, const char *new_text);
 %}
 
 %union {
   char *s;
-  struct cobc_replacement *r;
+  struct cb_replacement *r;
 }
 
 %token DIRECTIVE SOURCE FORMAT IS FIXED FREE
@@ -54,8 +54,8 @@ source_format:
   SOURCE _format _is format
 ;
 format:
-  FIXED				{ cobc_source_format = COBC_FORMAT_FIXED; }
-| FREE				{ cobc_source_format = COBC_FORMAT_FREE; }
+  FIXED				{ cb_source_format = CB_FORMAT_FIXED; }
+| FREE				{ cb_source_format = CB_FORMAT_FREE; }
 ;
 _format: | FORMAT ;
 _is: | IS ;

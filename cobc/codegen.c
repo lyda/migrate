@@ -36,44 +36,44 @@
 #endif
 #endif /* !PRId64 */
 
-static void output_stmt (cobc_tree x);
-static void output_data (cobc_tree x);
-static void output_func_1 (const char *name, cobc_tree a1);
+static void output_stmt (cb_tree x);
+static void output_data (cb_tree x);
+static void output_func_1 (const char *name, cb_tree a1);
 
 static char *
-field_name (cobc_tree x)
+field_name (cb_tree x)
 {
   static char name[512];
 
-  switch (COBC_TREE_TAG (x))
+  switch (CB_TREE_TAG (x))
     {
-    case cobc_tag_literal:
+    case cb_tag_literal:
       {
-	struct cobc_literal *l = COBC_LITERAL (x);
+	struct cb_literal *l = CB_LITERAL (x);
 	sprintf (name, "f[%d]", l->id - 1);
 	break;
       }
-    case cobc_tag_reference:
+    case cb_tag_reference:
       {
-	struct cobc_reference *r = COBC_REFERENCE (x);
+	struct cb_reference *r = CB_REFERENCE (x);
 	if (r->id > 0)
 	  sprintf (name, "f[%d]", r->id - 1);
 	else
 	  field_name (r->value);
 	break;
       }
-    case cobc_tag_field:
+    case cb_tag_field:
       {
-	struct cobc_field *f = COBC_FIELD (x);
+	struct cb_field *f = CB_FIELD (x);
 	if (f->flag_screen)
 	  sprintf (name, "s_%s", f->cname);
 	else
 	  sprintf (name, "f_%s", f->cname);
 	break;
       }
-    case cobc_tag_file:
+    case cb_tag_file:
       {
-	struct cobc_file *f = COBC_FILE (x);
+	struct cb_file *f = CB_FILE (x);
 	sprintf (name, "%s", f->cname);
 	break;
       }
@@ -167,25 +167,25 @@ output_quoted_string (unsigned char *s, int size)
  */
 
 static void
-output_int32 (cobc_tree x)
+output_int32 (cb_tree x)
 {
-  switch (COBC_TREE_TAG (x))
+  switch (CB_TREE_TAG (x))
     {
-    case cobc_tag_const:
-      if (x == cobc_zero)
+    case cb_tag_const:
+      if (x == cb_zero)
 	output ("0");
       else
-	output ("%s", COBC_CONST (x)->val);
+	output ("%s", CB_CONST (x)->val);
       break;
-    case cobc_tag_integer:
-      output ("%d", COBC_INTEGER (x)->val);
+    case cb_tag_integer:
+      output ("%d", CB_INTEGER (x)->val);
       break;
-    case cobc_tag_literal:
-      output ("%d", (int) literal_to_int (COBC_LITERAL (x)));
+    case cb_tag_literal:
+      output ("%d", (int) literal_to_int (CB_LITERAL (x)));
       break;
-    case cobc_tag_binary_op:
+    case cb_tag_binary_op:
       {
-	struct cobc_binary_op *p = COBC_BINARY_OP (x);
+	struct cb_binary_op *p = CB_BINARY_OP (x);
 	output_int32 (p->x);
 	output (" %c ", p->op);
 	output_int32 (p->y);
@@ -193,11 +193,11 @@ output_int32 (cobc_tree x)
       }
     default:
       {
-	struct cobc_field *f = field (x);
+	struct cb_field *f = field (x);
 	switch (f->usage)
 	  {
-	  case COBC_USAGE_BINARY:
-	  case COBC_USAGE_INDEX:
+	  case CB_USAGE_BINARY:
+	  case CB_USAGE_INDEX:
 	    if (f->level == 0)
 	      {
 		output ("i_%s", f->cname);
@@ -227,7 +227,7 @@ output_int32 (cobc_tree x)
 }
 
 static void
-output_index (cobc_tree x)
+output_index (cb_tree x)
 {
   output ("(");
   output_int32 (x);
@@ -240,7 +240,7 @@ output_index (cobc_tree x)
  */
 
 static void
-output_param (cobc_tree x)
+output_param (cb_tree x)
 {
   if (x == NULL)
     {
@@ -248,27 +248,27 @@ output_param (cobc_tree x)
       return;
     }
 
-  switch (COBC_TREE_TAG (x))
+  switch (CB_TREE_TAG (x))
     {
-    case cobc_tag_const:
-      output ("%s", COBC_CONST (x)->val);
+    case cb_tag_const:
+      output ("%s", CB_CONST (x)->val);
       break;
-    case cobc_tag_integer:
+    case cb_tag_integer:
       output_int32 (x);
       break;
-    case cobc_tag_string:
-      output ("\"%s\"", COBC_STRING (x)->str);
+    case cb_tag_string:
+      output ("\"%s\"", CB_STRING (x)->str);
       break;
-    case cobc_tag_cast_int32:
-      output_int32 (COBC_CAST_INT32 (x)->val);
+    case cb_tag_cast_int32:
+      output_int32 (CB_CAST_INT32 (x)->val);
       break;
-    case cobc_tag_decimal:
-      output ("&d[%d]", COBC_DECIMAL (x)->id);
+    case cb_tag_decimal:
+      output ("&d[%d]", CB_DECIMAL (x)->id);
       break;
-    case cobc_tag_literal:
-    case cobc_tag_field:
-    case cobc_tag_file:
-    case cobc_tag_reference:
+    case cb_tag_literal:
+    case cb_tag_field:
+    case cb_tag_file:
+    case cb_tag_reference:
       output ("&%s", field_name (x));
       break;
     default:
@@ -282,9 +282,9 @@ output_param (cobc_tree x)
  */
 
 static void
-output_base (struct cobc_field *p)
+output_base (struct cb_field *p)
 {
-  struct cobc_field *p01 = field_founder (p);
+  struct cb_field *p01 = field_founder (p);
 
   if (p01->redefines)
     p01 = p01->redefines;
@@ -295,16 +295,16 @@ output_base (struct cobc_field *p)
 }
 
 static void
-output_data (cobc_tree x)
+output_data (cb_tree x)
 {
-  switch (COBC_TREE_TAG (x))
+  switch (CB_TREE_TAG (x))
     {
-    case cobc_tag_literal:
-      output_quoted_string (COBC_LITERAL (x)->data, COBC_LITERAL (x)->size);
+    case cb_tag_literal:
+      output_quoted_string (CB_LITERAL (x)->data, CB_LITERAL (x)->size);
       break;
-    case cobc_tag_field:
+    case cb_tag_field:
       {
-	struct cobc_field *f = COBC_FIELD (x);
+	struct cb_field *f = CB_FIELD (x);
 	int i = f->indexes;
 	output_base (f);
 	for (; f; f = f->parent)
@@ -312,19 +312,19 @@ output_data (cobc_tree x)
 	    output (" + %d * i%d", f->size, i--);
 	break;
       }
-    case cobc_tag_reference:
+    case cb_tag_reference:
       {
-	struct cobc_reference *r = COBC_REFERENCE (x);
-	struct cobc_field *f = COBC_FIELD (r->value);
+	struct cb_reference *r = CB_REFERENCE (x);
+	struct cb_field *f = CB_FIELD (r->value);
 
 	/* base address */
-	output ("%s.data", field_name (COBC_TREE (f)));
+	output ("%s.data", field_name (CB_TREE (f)));
 
 	/* subscript reference */
 	if (r->subs)
 	  {
-	    struct cobc_field *p;
-	    struct cobc_list *l = r->subs = list_reverse (r->subs);
+	    struct cb_field *p;
+	    struct cb_list *l = r->subs = list_reverse (r->subs);
 
 	    for (p = f; p; p = p->parent)
 	      if (p->flag_occurs)
@@ -351,20 +351,20 @@ output_data (cobc_tree x)
 }
 
 static void
-output_size (cobc_tree x)
+output_size (cb_tree x)
 {
-  switch (COBC_TREE_TAG (x))
+  switch (CB_TREE_TAG (x))
     {
-    case cobc_tag_literal:
-      output ("%d", COBC_LITERAL (x)->size);
+    case cb_tag_literal:
+      output ("%d", CB_LITERAL (x)->size);
       break;
-    case cobc_tag_field:
-      output ("%d", COBC_FIELD (x)->size);
+    case cb_tag_field:
+      output ("%d", CB_FIELD (x)->size);
       break;
-    case cobc_tag_reference:
+    case cb_tag_reference:
       {
-	struct cobc_reference *r = COBC_REFERENCE (x);
-	struct cobc_field *f = COBC_FIELD (r->value);
+	struct cb_reference *r = CB_REFERENCE (x);
+	struct cb_field *f = CB_FIELD (r->value);
 
 	if (r->length)
 	  {
@@ -387,7 +387,7 @@ output_size (cobc_tree x)
 }
 
 static void
-output_memset (cobc_tree x, char c)
+output_memset (cb_tree x, char c)
 {
   output_prefix ();
   output ("memset (");
@@ -400,7 +400,7 @@ output_memset (cobc_tree x, char c)
 }
 
 static void
-output_memcpy (cobc_tree x, char *s)
+output_memcpy (cb_tree x, char *s)
 {
   output_prefix ();
   output ("memcpy (");
@@ -413,7 +413,7 @@ output_memcpy (cobc_tree x, char *s)
 }
 
 static void
-output_native_assign (cobc_tree x, long long val)
+output_native_assign (cb_tree x, long long val)
 {
   output_prefix ();
   output_int32 (x);
@@ -426,20 +426,20 @@ output_native_assign (cobc_tree x, long long val)
  */
 
 static void
-output_field (cobc_tree x, int id)
+output_field (cb_tree x, int id)
 {
   char fname[5];
   sprintf (fname, "f[%d]", id - 1);
 
-  switch (COBC_TREE_TAG (x))
+  switch (CB_TREE_TAG (x))
     {
-    case cobc_tag_literal:
+    case cb_tag_literal:
       {
-	struct cobc_literal *l = COBC_LITERAL (x);
+	struct cb_literal *l = CB_LITERAL (x);
 
 	l->id = id;
 
-	if (COBC_TREE_CLASS (x) == COB_TYPE_NUMERIC)
+	if (CB_TREE_CLASS (x) == COB_TYPE_NUMERIC)
 	  {
 	    int flag = 0;
 	    int size = l->size;
@@ -470,23 +470,23 @@ output_field (cobc_tree x, int id)
 	  }
 	break;
       }
-    case cobc_tag_reference:
+    case cb_tag_reference:
       {
-	struct cobc_reference *r = COBC_REFERENCE (x);
-	struct cobc_field *f;
+	struct cb_reference *r = CB_REFERENCE (x);
+	struct cb_field *f;
 
 	if (r->subs == NULL && r->offset == NULL)
 	  return;
 
 	r->id = id;
-	f = COBC_FIELD (r->value);
+	f = CB_FIELD (r->value);
 	output_line ("/* %s */", tree_name (x));
 
 	/* subscript check */
 	if (r->subs)
 	  {
-	    struct cobc_field *p;
-	    struct cobc_list *l = r->subs = list_reverse (r->subs);
+	    struct cb_field *p;
+	    struct cb_list *l = r->subs = list_reverse (r->subs);
 
 	    for (p = f; p; p = p->parent)
 	      if (p->flag_occurs)
@@ -494,8 +494,8 @@ output_field (cobc_tree x, int id)
 		  if (p->occurs_depending)
 		    {
 		      int n = p->occurs;
-		      if (COBC_LITERAL_P (l->item))
-			n = literal_to_int (COBC_LITERAL (l->item));
+		      if (CB_LITERAL_P (l->item))
+			n = literal_to_int (CB_LITERAL (l->item));
 		      if (p->occurs_min <= n && n <= p->occurs)
 			{
 			  output_prefix ();
@@ -509,7 +509,7 @@ output_field (cobc_tree x, int id)
 		    }
 		  else
 		    {
-		      if (!COBC_LITERAL_P (l->item))
+		      if (!CB_LITERAL_P (l->item))
 			{
 			  output_prefix ();
 			  output ("cob_check_subscript (");
@@ -526,8 +526,8 @@ output_field (cobc_tree x, int id)
 	/* reference modifier check */
 	if (r->offset)
 	  {
-	    if (!COBC_LITERAL_P (r->offset)
-		|| (r->length && !COBC_LITERAL_P (r->length)))
+	    if (!CB_LITERAL_P (r->offset)
+		|| (r->length && !CB_LITERAL_P (r->length)))
 	      {
 		output ("cob_check_ref_mod (");
 		output_int32 (r->offset);
@@ -556,7 +556,7 @@ output_field (cobc_tree x, int id)
 	if (r->offset)
 	  output_line ("%s.attr = &cob_group_attr;", fname);
 	else
-	  output_line ("%s.attr = %s.attr;", fname, field_name (COBC_TREE (f)));
+	  output_line ("%s.attr = %s.attr;", fname, field_name (CB_TREE (f)));
 
 	break;
       }
@@ -567,10 +567,10 @@ output_field (cobc_tree x, int id)
 }
 
 static void
-output_func_1 (const char *name, cobc_tree a1)
+output_func_1 (const char *name, cb_tree a1)
 {
   output ("%s (", name);
-  if (COBC_LITERAL_P (a1) || COBC_REFERENCE_P (a1))
+  if (CB_LITERAL_P (a1) || CB_REFERENCE_P (a1))
     {
       output ("({\n");
       output_field (a1, 1);
@@ -588,18 +588,18 @@ output_func_1 (const char *name, cobc_tree a1)
  */
 
 static void
-output_cond (cobc_tree x)
+output_cond (cb_tree x)
 {
-  switch (COBC_TREE_TAG (x))
+  switch (CB_TREE_TAG (x))
     {
-    case cobc_tag_const:
+    case cb_tag_const:
       {
-	output ("%s", COBC_CONST (x)->val);
+	output ("%s", CB_CONST (x)->val);
 	break;
       }
-    case cobc_tag_binary_op:
+    case cb_tag_binary_op:
       {
-	struct cobc_binary_op *p = COBC_BINARY_OP (x);
+	struct cb_binary_op *p = CB_BINARY_OP (x);
 	switch (p->op)
 	  {
 	  case '!':
@@ -617,10 +617,10 @@ output_cond (cobc_tree x)
 
 	  case '=': case '<': case '[': case '>': case ']': case '~':
 	    output ("(");
-	    if ((COBC_REFERENCE_P (p->x)
-		 && field (p->x)->usage == COBC_USAGE_INDEX)
-		|| (COBC_REFERENCE_P (p->y)
-		    && field (p->y)->usage == COBC_USAGE_INDEX))
+	    if ((CB_REFERENCE_P (p->x)
+		 && field (p->x)->usage == CB_USAGE_INDEX)
+		|| (CB_REFERENCE_P (p->y)
+		    && field (p->y)->usage == CB_USAGE_INDEX))
 	      {
 		output_int32 (p->x);
 		switch (p->op)
@@ -657,9 +657,9 @@ output_cond (cobc_tree x)
 	  }
 	break;
       }
-    case cobc_tag_funcall:
+    case cb_tag_funcall:
       {
-	struct cobc_funcall *p = COBC_FUNCALL (x);
+	struct cb_funcall *p = CB_FUNCALL (x);
 	output_func_1 (p->name, p->argv[0]);
 	break;
       }
@@ -674,7 +674,7 @@ output_cond (cobc_tree x)
  */
 
 static void
-output_recursive (void (*func) (struct cobc_field *), struct cobc_field *f)
+output_recursive (void (*func) (struct cb_field *), struct cb_field *f)
 {
   if (f->level != 01 && f->level != 77 && f->redefines)
     return;
@@ -705,10 +705,10 @@ output_recursive (void (*func) (struct cobc_field *), struct cobc_field *f)
  * Exception handler
  */
 
-static void output_perform_call (struct cobc_label *lb, struct cobc_label *le);
+static void output_perform_call (struct cb_label *lb, struct cb_label *le);
 
 static void
-output_handler (int ec, cobc_tree st1, cobc_tree st2, struct cobc_label *l)
+output_handler (int ec, cb_tree st1, cb_tree st2, struct cb_label *l)
 {
   if (st1)
     {
@@ -743,11 +743,11 @@ output_handler (int ec, cobc_tree st1, cobc_tree st2, struct cobc_label *l)
  */
 
 static void
-output_memcmp (cobc_tree x, cobc_tree y)
+output_memcmp (cb_tree x, cb_tree y)
 {
   size_t size = field_size (x);
   unsigned char buff[size];
-  struct cobc_literal *l = COBC_LITERAL (y);
+  struct cb_literal *l = CB_LITERAL (y);
 
   memset (buff, ' ', size);
   memcpy (buff, l->data, l->size);
@@ -766,18 +766,18 @@ output_memcmp (cobc_tree x, cobc_tree y)
  */
 
 static void
-output_goto (cobc_tree x)
+output_goto (cb_tree x)
 {
-  struct cobc_reference *r = COBC_REFERENCE (x);
-  struct cobc_label *l = COBC_LABEL (r->value);
+  struct cb_reference *r = CB_REFERENCE (x);
+  struct cb_label *l = CB_LABEL (r->value);
   output_line ("goto lb_%s;", l->cname);
 }
 
 static void
-output_goto_depending (struct cobc_list *labels, cobc_tree index)
+output_goto_depending (struct cb_list *labels, cb_tree index)
 {
   int i = 1;
-  struct cobc_list *l;
+  struct cb_list *l;
   output_prefix ();
   output ("switch (");
   output_int32 (index);
@@ -805,14 +805,14 @@ output_exit_program (void)
  */
 
 static void
-output_advance_move (cob_field *f, cobc_tree dst)
+output_advance_move (cob_field *f, cb_tree dst)
 {
-  struct cobc_field *p = field (dst);
+  struct cb_field *p = field (dst);
   cob_field_attr attr;
   unsigned char data[p->size];
   cob_field fld = {p->size, data, &attr};
 
-  attr.type = COBC_TREE_TYPE (dst);
+  attr.type = CB_TREE_TYPE (dst);
   attr.flags = 0;
   if (attr.type != COB_TYPE_GROUP)
     {
@@ -839,18 +839,18 @@ output_advance_move (cob_field *f, cobc_tree dst)
 }
 
 static void
-output_move_num (cobc_tree x, int high)
+output_move_num (cb_tree x, int high)
 {
   switch (field (x)->usage)
     {
-    case COBC_USAGE_DISPLAY:
+    case CB_USAGE_DISPLAY:
       output_memset (x, high ? '9' : '0');
       break;
-    case COBC_USAGE_PACKED:
+    case CB_USAGE_PACKED:
       output_memset (x, high ? 0x99 : 0x00);
       break;
-    case COBC_USAGE_BINARY:
-    case COBC_USAGE_INDEX:
+    case CB_USAGE_BINARY:
+    case CB_USAGE_INDEX:
       output_native_assign (x, high ? -1 : 0);
       break;
     default:
@@ -859,9 +859,9 @@ output_move_num (cobc_tree x, int high)
 }
 
 static void
-output_move_all (cobc_tree x, char c)
+output_move_all (cb_tree x, char c)
 {
-  struct cobc_field *p = field (x);
+  struct cb_field *p = field (x);
   unsigned char data[p->size];
   cob_field fld = {p->size, data, &cob_alnum_attr};
   memset (data, c, p->size);
@@ -869,9 +869,9 @@ output_move_all (cobc_tree x, char c)
 }
 
 static void
-output_move_space (cobc_tree x)
+output_move_space (cb_tree x)
 {
-  switch (COBC_TREE_TYPE (x))
+  switch (CB_TREE_TYPE (x))
     {
     case COB_TYPE_NUMERIC:
     case COB_TYPE_ALPHABETIC:
@@ -885,9 +885,9 @@ output_move_space (cobc_tree x)
 }
 
 static void
-output_move_zero (cobc_tree x)
+output_move_zero (cb_tree x)
 {
-  switch (COBC_TREE_TYPE (x))
+  switch (CB_TREE_TYPE (x))
     {
     case COB_TYPE_NUMERIC:
       if (field (x)->flag_blank_zero)
@@ -906,9 +906,9 @@ output_move_zero (cobc_tree x)
 }
 
 static void
-output_move_high (cobc_tree x)
+output_move_high (cb_tree x)
 {
-  switch (COBC_TREE_TYPE (x))
+  switch (CB_TREE_TYPE (x))
     {
     case COB_TYPE_NUMERIC:
       output_move_num (x, 9);
@@ -924,9 +924,9 @@ output_move_high (cobc_tree x)
 }
 
 static void
-output_move_low (cobc_tree x)
+output_move_low (cb_tree x)
 {
-  switch (COBC_TREE_TYPE (x))
+  switch (CB_TREE_TYPE (x))
     {
     case COB_TYPE_NUMERIC:
       output_move_num (x, 0);
@@ -942,9 +942,9 @@ output_move_low (cobc_tree x)
 }
 
 static void
-output_move_quote (cobc_tree x)
+output_move_quote (cb_tree x)
 {
-  switch (COBC_TREE_TYPE (x))
+  switch (CB_TREE_TYPE (x))
     {
     case COB_TYPE_NUMERIC:
     case COB_TYPE_ALPHABETIC:
@@ -958,9 +958,9 @@ output_move_quote (cobc_tree x)
 }
 
 static void
-output_move_literal (struct cobc_literal *l, cobc_tree dst)
+output_move_literal (struct cb_literal *l, cb_tree dst)
 {
-  struct cobc_field *f = field (dst);
+  struct cb_field *f = field (dst);
 
   if (l->all)
     {
@@ -970,7 +970,7 @@ output_move_literal (struct cobc_literal *l, cobc_tree dst)
 	buff[i] = l->data[i % l->size];
       output_memcpy (dst, buff);
     }
-  else if (f->usage == COBC_USAGE_BINARY || f->usage == COBC_USAGE_INDEX)
+  else if (f->usage == CB_USAGE_BINARY || f->usage == CB_USAGE_INDEX)
     {
       long long val = literal_to_int (l);
       int expt = f->pic->expt;
@@ -983,7 +983,7 @@ output_move_literal (struct cobc_literal *l, cobc_tree dst)
   else
     {
       cob_field_attr attr =
-	{COBC_TREE_CLASS (l), l->size, l->expt,
+	{CB_TREE_CLASS (l), l->size, l->expt,
 	 l->sign ? COB_FLAG_HAVE_SIGN : 0};
       cob_field fld = {l->size, l->data, &attr};
       if (l->sign < 0)
@@ -995,7 +995,7 @@ output_move_literal (struct cobc_literal *l, cobc_tree dst)
 }
 
 static void
-output_move_index (cobc_tree src, cobc_tree dst)
+output_move_index (cb_tree src, cb_tree dst)
 {
   output_prefix ();
   output_int32 (dst);
@@ -1005,25 +1005,25 @@ output_move_index (cobc_tree src, cobc_tree dst)
 }
 
 static void
-output_move (cobc_tree src, cobc_tree dst)
+output_move (cb_tree src, cb_tree dst)
 {
-  if (field (dst)->usage == COBC_USAGE_INDEX)
+  if (field (dst)->usage == CB_USAGE_INDEX)
     output_move_index (src, dst);
-  else if (src == cobc_zero)
+  else if (src == cb_zero)
     output_move_zero (dst);
-  else if (src == cobc_space)
+  else if (src == cb_space)
     output_move_space (dst);
-  else if (src == cobc_high)
+  else if (src == cb_high)
     output_move_high (dst);
-  else if (src == cobc_low)
+  else if (src == cb_low)
     output_move_low (dst);
-  else if (src == cobc_quote)
+  else if (src == cb_quote)
     output_move_quote (dst);
-  else if (src == cobc_true || src == cobc_false)
+  else if (src == cb_true || src == cb_false)
     output_move_index (src, dst);
-  else if (COBC_LITERAL_P (src))
-    output_move_literal (COBC_LITERAL (src), dst);
-  else if (field (src)->usage == COBC_USAGE_INDEX)
+  else if (CB_LITERAL_P (src))
+    output_move_literal (CB_LITERAL (src), dst);
+  else if (field (src)->usage == CB_USAGE_INDEX)
     output_stmt (make_funcall_2 ("cob_set_int", dst, make_cast_int32 (src)));
   else
     output_stmt (make_funcall_2 ("cob_move", src, dst));
@@ -1034,12 +1034,12 @@ output_move (cobc_tree src, cobc_tree dst)
  * INITIALIZE
  */
 
-static struct cobc_list *initialize_replacing_list;
+static struct cb_list *initialize_replacing_list;
 
-static void output_initialize_internal (struct cobc_field *f);
+static void output_initialize_internal (struct cb_field *f);
 
 static int
-field_uniform_class (struct cobc_field *f)
+field_uniform_class (struct cb_field *f)
 {
   if (f->children)
     {
@@ -1052,11 +1052,11 @@ field_uniform_class (struct cobc_field *f)
     }
   else
     {
-      switch (COBC_TREE_TYPE (f))
+      switch (CB_TREE_TYPE (f))
 	{
 	case COB_TYPE_NUMERIC:
 	case COB_TYPE_NUMERIC_BINARY:
-	  return COBC_TREE_TYPE (f);
+	  return CB_TREE_TYPE (f);
 	case COB_TYPE_ALPHABETIC:
 	case COB_TYPE_ALPHANUMERIC:
 	  return COB_TYPE_ALPHANUMERIC;
@@ -1067,7 +1067,7 @@ field_uniform_class (struct cobc_field *f)
 }
 
 static void
-output_initialize_uniform (struct cobc_field *f, int class, int size, int flag)
+output_initialize_uniform (struct cb_field *f, int class, int size, int flag)
 {
   if (flag && f->flag_occurs)
     {
@@ -1077,7 +1077,7 @@ output_initialize_uniform (struct cobc_field *f, int class, int size, int flag)
 
   output_prefix ();
   output ("memset (");
-  output_data (COBC_TREE (f));
+  output_data (CB_TREE (f));
   output (", ");
   switch (class)
     {
@@ -1100,10 +1100,10 @@ output_initialize_uniform (struct cobc_field *f, int class, int size, int flag)
 }
 
 static void
-output_initialize_compound (struct cobc_field *f)
+output_initialize_compound (struct cb_field *f)
 {
-  cobc_tree x = COBC_TREE (f);
-  switch (COBC_TREE_TYPE (x))
+  cb_tree x = CB_TREE (f);
+  switch (CB_TREE_TYPE (x))
     {
     case COB_TYPE_NUMERIC_EDITED:
       output_move_zero (x);
@@ -1119,11 +1119,11 @@ output_initialize_compound (struct cobc_field *f)
 }
 
 static void
-output_initialize_internal (struct cobc_field *f)
+output_initialize_internal (struct cb_field *f)
 {
   int last_class = COB_TYPE_UNKNOWN;
-  struct cobc_field *p;
-  struct cobc_field *first_field = NULL;
+  struct cb_field *p;
+  struct cb_field *first_field = NULL;
 
   /* initialize all children, combining uniform sequence into one */
   for (p = f->children; p; p = p->sister)
@@ -1151,7 +1151,7 @@ output_initialize_internal (struct cobc_field *f)
 }
 
 static void
-output_initialize_replacing (struct cobc_field *f)
+output_initialize_replacing (struct cb_field *f)
 {
   if (f->children)
     {
@@ -1160,13 +1160,13 @@ output_initialize_replacing (struct cobc_field *f)
     }
   else
     {
-      struct cobc_list *l;
+      struct cb_list *l;
       for (l = initialize_replacing_list; l; l = l->next)
 	{
-	  struct cobc_parameter *p = l->item;
+	  struct cb_parameter *p = l->item;
 	  if (p->type == f->pic->category)
 	    {
-	      output_move (p->x, COBC_TREE (f));
+	      output_move (p->x, CB_TREE (f));
 	      break;
 	    }
 	}
@@ -1174,16 +1174,16 @@ output_initialize_replacing (struct cobc_field *f)
 }
 
 static void
-output_initialize (cobc_tree x, struct cobc_list *l)
+output_initialize (cb_tree x, struct cb_list *l)
 {
-  struct cobc_reference *r = COBC_REFERENCE (x);
-  struct cobc_field *f = COBC_FIELD (r->value);
+  struct cb_reference *r = CB_REFERENCE (x);
+  struct cb_field *f = CB_FIELD (r->value);
 
   /* output fixed indexes */
   if (r->subs)
     {
       int i = 1;
-      struct cobc_list *l;
+      struct cb_list *l;
       output_indent ("{");
       for (l = r->subs; l; l = l->next)
 	{
@@ -1230,7 +1230,7 @@ output_initialize (cobc_tree x, struct cobc_list *l)
  */
 
 static void
-output_occurs (struct cobc_field *p)
+output_occurs (struct cb_field *p)
 {
   if (p->occurs_depending)
     output_int32 (p->occurs_depending);
@@ -1239,19 +1239,19 @@ output_occurs (struct cobc_field *p)
 }
 
 static void
-output_search (cobc_tree table, cobc_tree var, cobc_tree stmt, cobc_tree whens)
+output_search (cb_tree table, cb_tree var, cb_tree stmt, cb_tree whens)
 {
-  struct cobc_list *l;
-  struct cobc_field *p = field (table);
-  cobc_tree idx = NULL;
+  struct cb_list *l;
+  struct cb_field *p = field (table);
+  cb_tree idx = NULL;
 
   /* determine the index to use */
-  var = var ? COBC_TREE (field (var)) : NULL;
+  var = var ? CB_TREE (field (var)) : NULL;
   for (l = p->index_list; l; l = l->next)
     if (l->item == var)
       idx = var;
   if (!idx)
-    idx = COBC_TREE (p->index_list->item);
+    idx = CB_TREE (p->index_list->item);
 
   /* start loop */
   output_line ("while (1)");
@@ -1286,10 +1286,10 @@ output_search (cobc_tree table, cobc_tree var, cobc_tree stmt, cobc_tree whens)
 }
 
 static void
-output_search_all (cobc_tree table, cobc_tree stmt, cobc_tree when)
+output_search_all (cb_tree table, cb_tree stmt, cb_tree when)
 {
-  struct cobc_field *p = field (table);
-  cobc_tree idx = COBC_TREE (p->index_list->item);
+  struct cb_field *p = field (table);
+  cb_tree idx = CB_TREE (p->index_list->item);
 
   /* header */
   output_indent ("{");
@@ -1343,15 +1343,15 @@ output_search_all (cobc_tree table, cobc_tree stmt, cobc_tree when)
  */
 
 static void
-output_sort_init (cobc_tree file, struct cobc_list *keys)
+output_sort_init (cb_tree file, struct cb_list *keys)
 {
-  struct cobc_list *l;
+  struct cb_list *l;
 
   output_indent ("{");
   output_line ("static cob_file_key keys[] = {");
   for (l = keys; l; l = l->next)
     {
-      struct cobc_parameter *p = l->item;
+      struct cb_parameter *p = l->item;
       output_prefix ();
       output ("  {");
       output_param (p->x);
@@ -1371,14 +1371,14 @@ output_sort_init (cobc_tree file, struct cobc_list *keys)
  */
 
 static void
-output_call (cobc_tree name, struct cobc_list *args,
-	     cobc_tree st1, cobc_tree st2)
+output_call (cb_tree name, struct cb_list *args,
+	     cb_tree st1, cb_tree st2)
 {
   int n;
   int dynamic_link = 1;
-  struct cobc_list *l;
+  struct cb_list *l;
 
-  if (cobc_flag_call_static && COBC_LITERAL_P (name))
+  if (cb_flag_call_static && CB_LITERAL_P (name))
     dynamic_link = 0;
 
   /* local variables */
@@ -1389,17 +1389,17 @@ output_call (cobc_tree name, struct cobc_list *args,
   /* setup arguments */
   for (l = args, n = 1; l; l = l->next, n++)
     {
-      struct cobc_parameter *p = l->item;
-      cobc_tree x = p->x;
+      struct cb_parameter *p = l->item;
+      cb_tree x = p->x;
       switch (p->type)
 	{
-	case COBC_CALL_BY_CONTENT:
+	case CB_CALL_BY_CONTENT:
 	  output_prefix ();
 	  output ("char content_%d[", n);
 	  output_size (x);
 	  output ("];\n");
 	  break;
-	case COBC_CALL_BY_LENGTH:
+	case CB_CALL_BY_LENGTH:
 	  output_prefix ();
 	  output ("int length_%d = ", n);
 	  output_size (x);
@@ -1408,11 +1408,11 @@ output_call (cobc_tree name, struct cobc_list *args,
     }
   for (l = args, n = 1; l; l = l->next, n++)
     {
-      struct cobc_parameter *p = l->item;
-      cobc_tree x = p->x;
+      struct cb_parameter *p = l->item;
+      cb_tree x = p->x;
       switch (p->type)
 	{
-	case COBC_CALL_BY_CONTENT:
+	case CB_CALL_BY_CONTENT:
 	  output_prefix ();
 	  output ("memcpy (content_%d, ", n);
 	  output_data (x);
@@ -1427,14 +1427,14 @@ output_call (cobc_tree name, struct cobc_list *args,
   if (!dynamic_link)
     {
       /* static link */
-      output ("cob_return_code = %s", COBC_LITERAL (name)->data);
+      output ("cob_return_code = %s", CB_LITERAL (name)->data);
     }
   else
     {
       /* dynamic link */
       output ("func = ");
-      if (COBC_LITERAL_P (name))
-	output ("cob_resolve (\"%s\")", COBC_LITERAL (name)->data);
+      if (CB_LITERAL_P (name))
+	output ("cob_resolve (\"%s\")", CB_LITERAL (name)->data);
       else
 	output_func_1 ("cob_call_resolve", name);
       output (";\n");
@@ -1452,33 +1452,33 @@ output_call (cobc_tree name, struct cobc_list *args,
   output (" (");
   for (l = args, n = 1; l; l = l->next, n++)
     {
-      struct cobc_parameter *p = l->item;
-      cobc_tree x = p->x;
+      struct cb_parameter *p = l->item;
+      cb_tree x = p->x;
       switch (p->type)
 	{
-	case COBC_CALL_BY_REFERENCE:
+	case CB_CALL_BY_REFERENCE:
 	  output_data (x);
 	  break;
-	case COBC_CALL_BY_CONTENT:
+	case CB_CALL_BY_CONTENT:
 	  output ("content_%d", n);
 	  break;
-	case COBC_CALL_BY_LENGTH:
+	case CB_CALL_BY_LENGTH:
 	  output ("&length_%d", n);
 	  break;
-	case COBC_CALL_BY_VALUE:
-	  switch (COBC_TREE_TAG (x))
+	case CB_CALL_BY_VALUE:
+	  switch (CB_TREE_TAG (x))
 	    {
-	    case cobc_tag_literal:
-	      if (COBC_TREE_CLASS (x) == COB_TYPE_NUMERIC)
-		output ("%" PRId64, literal_to_int (COBC_LITERAL (x)));
+	    case cb_tag_literal:
+	      if (CB_TREE_CLASS (x) == COB_TYPE_NUMERIC)
+		output ("%" PRId64, literal_to_int (CB_LITERAL (x)));
 	      else
-		output ("%d", COBC_LITERAL (x)->data[0]);
+		output ("%d", CB_LITERAL (x)->data[0]);
 	      break;
 	    default:
-	      switch (COBC_FIELD (x)->usage)
+	      switch (CB_FIELD (x)->usage)
 		{
-		case COBC_USAGE_BINARY:
-		case COBC_USAGE_INDEX:
+		case CB_USAGE_BINARY:
+		case CB_USAGE_INDEX:
 		  output_int32 (x);
 		  break;
 		default:
@@ -1525,7 +1525,7 @@ static struct inline_func {
 };
 
 static void
-output_funcall (struct cobc_funcall *p)
+output_funcall (struct cb_funcall *p)
 {
   if (p->name[0] == '@')
     {
@@ -1574,27 +1574,27 @@ output_funcall (struct cobc_funcall *p)
  */
 
 static void
-output_perform_call (struct cobc_label *lb, struct cobc_label *le)
+output_perform_call (struct cb_label *lb, struct cb_label *le)
 {
   static int id = 1;
   output_line ("cob_perform (%d, lb_%s, le_%s);", id++, lb->cname, le->cname);
 }
 
 static void
-output_perform_once (struct cobc_perform *p)
+output_perform_once (struct cb_perform *p)
 {
-  if (COBC_PARAMETER_P (p->body))
+  if (CB_PARAMETER_P (p->body))
     {
-      cobc_tree lb = COBC_REFERENCE (COBC_PARAMETER (p->body)->x)->value;
-      cobc_tree le = COBC_REFERENCE (COBC_PARAMETER (p->body)->y)->value;
-      output_perform_call (COBC_LABEL (lb), COBC_LABEL (le));
+      cb_tree lb = CB_REFERENCE (CB_PARAMETER (p->body)->x)->value;
+      cb_tree le = CB_REFERENCE (CB_PARAMETER (p->body)->y)->value;
+      output_perform_call (CB_LABEL (lb), CB_LABEL (le));
     }
   else
     output_stmt (p->body);
 }
 
 static void
-output_perform_until (struct cobc_perform *p, struct cobc_perform_varying *v)
+output_perform_until (struct cb_perform *p, struct cb_perform_varying *v)
 {
   if (!v)
     {
@@ -1609,7 +1609,7 @@ output_perform_until (struct cobc_perform *p, struct cobc_perform_varying *v)
   if (v->next && v->next->name)
     output_move (v->next->from, v->next->name);
 
-  if (p->test == COBC_AFTER)
+  if (p->test == CB_AFTER)
     output_perform_until (p, v->next);
 
   output_prefix ();
@@ -1618,7 +1618,7 @@ output_perform_until (struct cobc_perform *p, struct cobc_perform_varying *v)
   output (")\n");
   output_line ("  break;");
 
-  if (p->test == COBC_BEFORE)
+  if (p->test == CB_BEFORE)
     output_perform_until (p, v->next);
 
   if (v->step)
@@ -1628,20 +1628,20 @@ output_perform_until (struct cobc_perform *p, struct cobc_perform_varying *v)
 }
 
 static void
-output_perform (struct cobc_perform *p)
+output_perform (struct cb_perform *p)
 {
   static int loop_counter = 0;
 
   switch (p->type)
     {
-    case COBC_PERFORM_EXIT:
-      if (COBC_LABEL (p->data)->need_return)
-	output_line ("cob_exit (le_%s);", COBC_LABEL (p->data)->cname);
+    case CB_PERFORM_EXIT:
+      if (CB_LABEL (p->data)->need_return)
+	output_line ("cob_exit (le_%s);", CB_LABEL (p->data)->cname);
       break;
-    case COBC_PERFORM_ONCE:
+    case CB_PERFORM_ONCE:
       output_perform_once (p);
       break;
-    case COBC_PERFORM_TIMES:
+    case CB_PERFORM_TIMES:
       output_prefix ();
       output ("for (n[%d] = ", loop_counter);
       output_int32 (p->data);
@@ -1651,7 +1651,7 @@ output_perform (struct cobc_perform *p)
       output_indent ("  }");
       loop_counter++;
       break;
-    case COBC_PERFORM_UNTIL:
+    case CB_PERFORM_UNTIL:
       if (p->varying->name)
 	output_move (p->varying->from, p->varying->name);
       output_perform_until (p, p->varying);
@@ -1665,16 +1665,16 @@ output_perform (struct cobc_perform *p)
  */
 
 static void
-output_stmt (cobc_tree x)
+output_stmt (cb_tree x)
 {
-  switch (COBC_TREE_TAG (x))
+  switch (CB_TREE_TAG (x))
     {
-    case cobc_tag_location:
+    case cb_tag_location:
       {
 	static int last_line = 0;
 	if (x->source_file && last_line != x->source_line)
 	  {
-	    if (cobc_flag_line_directive)
+	    if (cb_flag_line_directive)
 	      output ("#line %d \"%s\"\n", x->source_line, x->source_file);
 	    output_line ("cob_source_file = \"%s\";", x->source_file);
 	    output_line ("cob_source_line = %d;", x->source_line);
@@ -1682,23 +1682,23 @@ output_stmt (cobc_tree x)
 	  }
 	break;
       }
-    case cobc_tag_label:
+    case cb_tag_label:
       {
-	struct cobc_label *p = COBC_LABEL (x);
+	struct cb_label *p = CB_LABEL (x);
 	output_newline ();
 	output_line ("/* %s: */", p->name);
 	if (p->need_begin)
 	  output_line ("lb_%s:", p->cname);
 	break;
       }
-    case cobc_tag_funcall:
+    case cb_tag_funcall:
       {
-	output_funcall (COBC_FUNCALL (x));
+	output_funcall (CB_FUNCALL (x));
 	break;
       }
-    case cobc_tag_if:
+    case cb_tag_if:
       {
-	struct cobc_if *p = COBC_IF (x);
+	struct cb_if *p = CB_IF (x);
 	output_prefix ();
 	output ("if (");
 	output_cond (p->test);
@@ -1720,15 +1720,15 @@ output_stmt (cobc_tree x)
 	  }
 	break;
       }
-    case cobc_tag_perform:
+    case cb_tag_perform:
       {
-	output_perform (COBC_PERFORM (x));
+	output_perform (CB_PERFORM (x));
 	break;
       }
-    case cobc_tag_sequence:
+    case cb_tag_sequence:
       {
-	struct cobc_sequence *p = COBC_SEQUENCE (x);
-	struct cobc_list *l = p->list;
+	struct cb_sequence *p = CB_SEQUENCE (x);
+	struct cb_list *l = p->list;
 	output_indent ("{");
 	if (p->save_status && l && l->next)
 	  {
@@ -1761,23 +1761,23 @@ output_stmt (cobc_tree x)
  */
 
 static void
-output_field_definition (struct cobc_field *p, struct cobc_field *p01,
+output_field_definition (struct cb_field *p, struct cb_field *p01,
 			 int gen_data, int gen_filler)
 {
-  char *fname = field_name (COBC_TREE (p));
+  char *fname = field_name (CB_TREE (p));
   char attr_buff[1024], *attr = attr_buff;
 
   if (!gen_filler)
-    gen_filler = !COBC_FILLER_P (COBC_TREE (p));
+    gen_filler = !CB_FILLER_P (CB_TREE (p));
 
   /* attribute */
-  if (COBC_TREE_TYPE (p) == COB_TYPE_GROUP)
+  if (CB_TREE_TYPE (p) == COB_TYPE_GROUP)
     {
       attr = "cob_group_attr";
     }
   else if (p->flag_used && gen_filler)
     {
-      char type = COBC_TREE_TYPE (p);
+      char type = CB_TREE_TYPE (p);
       if (type == COB_TYPE_ALPHANUMERIC)
 	{
 	  if (p->flag_justified)
@@ -1871,19 +1871,19 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
  */
 
 static void
-output_file_definition (struct cobc_file *f)
+output_file_definition (struct cb_file *f)
 {
   int nkeys = 1;
-  struct cobc_field *p;
+  struct cb_field *p;
 
   /* output record definition */
   for (p = f->record; p; p = p->sister)
     output_field_definition (p, p, 1, 0);
 
   /* output file name */
-  if (COBC_LITERAL_P (f->assign))
+  if (CB_LITERAL_P (f->assign))
     {
-      struct cobc_literal *l = COBC_LITERAL (f->assign);
+      struct cb_literal *l = CB_LITERAL (f->assign);
       output ("static cob_field %s_file = {%d, ", f->cname, l->size);
       output_quoted_string (l->data, l->size);
       output (", &cob_alnum_attr};\n");
@@ -1893,7 +1893,7 @@ output_file_definition (struct cobc_file *f)
   if (f->organization == COB_ORG_RELATIVE
       || f->organization == COB_ORG_INDEXED)
     {
-      struct cobc_alt_key *l;
+      struct cb_alt_key *l;
       output ("static cob_file_key %s_keys[] = {\n", f->cname);
       output ("  {");
       output_param (f->key);
@@ -1919,13 +1919,13 @@ output_file_definition (struct cobc_file *f)
     output ("0");
   output (", ");
   /* assign */
-  if (COBC_LITERAL_P (f->assign))
+  if (CB_LITERAL_P (f->assign))
     output ("&%s_file", f->cname);
   else
     output_param (f->assign);
   output (", ");
   /* record */
-  output_param (COBC_TREE (f->record));
+  output_param (CB_TREE (f->record));
   output (", ");
   /* record_size */
   output_param (f->record_depending);
@@ -1950,7 +1950,7 @@ output_file_definition (struct cobc_file *f)
  */
 
 static void
-output_screen_definition (struct cobc_field *p)
+output_screen_definition (struct cb_field *p)
 {
   int type = (p->children   ? COB_SCREEN_TYPE_GROUP :
 	      p->values     ? COB_SCREEN_TYPE_VALUE :
@@ -1971,8 +1971,8 @@ output_screen_definition (struct cobc_field *p)
       output ("&s_%s", p->children->cname);
       break;
     case COB_SCREEN_TYPE_VALUE:
-      output_quoted_string (COBC_LITERAL (p->values->item)->data,
-			    COBC_LITERAL (p->values->item)->size);
+      output_quoted_string (CB_LITERAL (p->values->item)->data,
+			    CB_LITERAL (p->values->item)->size);
       break;
       break;
     case COB_SCREEN_TYPE_FIELD:
@@ -2008,9 +2008,9 @@ output_screen_definition (struct cobc_field *p)
  */
 
 static void
-output_class_definition (struct cobc_class *p)
+output_class_definition (struct cb_class *p)
 {
-  struct cobc_list *l;
+  struct cb_list *l;
 
   output_line ("static int");
   output_line ("%s (cob_field *f)", p->cname);
@@ -2021,19 +2021,19 @@ output_class_definition (struct cobc_class *p)
   output ("  if (!(");
   for (l = p->list; l; l = l->next)
     {
-      cobc_tree x = l->item;
-      if (COBC_PARAMETER_P (x))
+      cb_tree x = l->item;
+      if (CB_PARAMETER_P (x))
 	{
-	  struct cobc_parameter *p = COBC_PARAMETER (x);
-	  char x = COBC_LITERAL (p->x)->data[0];
-	  char y = COBC_LITERAL (p->y)->data[0];
+	  struct cb_parameter *p = CB_PARAMETER (x);
+	  char x = CB_LITERAL (p->x)->data[0];
+	  char y = CB_LITERAL (p->y)->data[0];
 	  output ("(%d <= f->data[i] && f->data[i] <= %d)", x, y);
 	}
       else
 	{
 	  int i;
-	  size_t size = COBC_LITERAL (x)->size;
-	  unsigned char *data = COBC_LITERAL (x)->data;
+	  size_t size = CB_LITERAL (x)->size;
+	  unsigned char *data = CB_LITERAL (x)->data;
 	  for (i = 0; i < size; i++)
 	    {
 	      output ("f->data[i] == %d", data[i]);
@@ -2058,7 +2058,7 @@ output_class_definition (struct cobc_class *p)
 
 /* return 1 if any child has VALUE clause */
 static int
-have_value (struct cobc_field *p)
+have_value (struct cb_field *p)
 {
   if (p->values)
     return 1;
@@ -2069,20 +2069,20 @@ have_value (struct cobc_field *p)
 }
 
 static void
-output_value (struct cobc_field *f)
+output_value (struct cb_field *f)
 {
   if (!field_used_any_child (f) && !field_used_any_parent (f))
     return;
 
   if (f->values)
     {
-      cobc_tree value = f->values->item;
-      if (COBC_CONST_P (value)
-	  || COBC_TREE_CLASS (value) == COB_TYPE_NUMERIC
-	  || COBC_LITERAL (value)->all)
+      cb_tree value = f->values->item;
+      if (CB_CONST_P (value)
+	  || CB_TREE_CLASS (value) == COB_TYPE_NUMERIC
+	  || CB_LITERAL (value)->all)
 	{
 	  /* figurative literal, numeric literal, or ALL literal */
-	  output_move (value, COBC_TREE (f));
+	  output_move (value, CB_TREE (f));
 	}
       else
 	{
@@ -2090,8 +2090,8 @@ output_value (struct cobc_field *f)
 	  /* We do not use output_move here because
 	     we do not want to have the value be edited. */
 	  char buff[f->size];
-	  char *str = COBC_LITERAL (value)->data;
-	  int size = COBC_LITERAL (value)->size;
+	  char *str = CB_LITERAL (value)->data;
+	  int size = CB_LITERAL (value)->size;
 	  if (size >= f->size)
 	    {
 	      memcpy (buff, str, f->size);
@@ -2101,7 +2101,7 @@ output_value (struct cobc_field *f)
 	      memcpy (buff, str, size);
 	      memset (buff + size, ' ', f->size - size);
 	    }
-	  output_memcpy (COBC_TREE (f), buff);
+	  output_memcpy (CB_TREE (f), buff);
 	}
     }
   else
@@ -2113,7 +2113,7 @@ output_value (struct cobc_field *f)
 }
 
 static void
-output_init_values (struct cobc_field *p)
+output_init_values (struct cb_field *p)
 {
   for (; p; p = p->sister)
     if (have_value (p))
@@ -2122,11 +2122,11 @@ output_init_values (struct cobc_field *p)
 
 
 void
-codegen (struct cobc_program *prog)
+codegen (struct cb_program *prog)
 {
   int i;
-  struct cobc_list *l;
-  struct cobc_field *p;
+  struct cb_list *l;
+  struct cb_field *p;
   cob_environment env;
 
   cob_env = &env;
@@ -2135,13 +2135,13 @@ codegen (struct cobc_program *prog)
   cob_env->numeric_separator = prog->numeric_separator;
 
   output ("/* Generated from %s by cobc %s */\n\n",
-	  cobc_source_file, COBC_VERSION);
+	  cb_source_file, CB_VERSION);
   output ("#include <stdio.h>\n");
   output ("#include <stdlib.h>\n");
   output ("#include <string.h>\n");
   output ("#include <libcob.h>\n\n");
 
-  if (cobc_flag_main)
+  if (cb_flag_main)
     prog->initial_program = 1;
 
   output ("#define cob_perform(id,from,until) \\\n");
@@ -2165,7 +2165,7 @@ codegen (struct cobc_program *prog)
   for (p = prog->working_storage; p; p = p->sister)
     output_field_definition (p, p, 1, 0);
   for (l = prog->index_list; l; l = l->next)
-    output ("static int i_%s;\n", COBC_FIELD (l->item)->cname);
+    output ("static int i_%s;\n", CB_FIELD (l->item)->cname);
   output_newline ();
 
   /* files */
@@ -2194,8 +2194,8 @@ codegen (struct cobc_program *prog)
   output ("enum {\n");
   output ("  le_standard_error_handler,\n");
   for (l = prog->exec_list; l; l = l->next)
-    if (COBC_LABEL_P (l->item) && COBC_LABEL (l->item)->need_return)
-      output ("  le_%s,\n", COBC_LABEL (l->item)->cname);
+    if (CB_LABEL_P (l->item) && CB_LABEL (l->item)->need_return)
+      output ("  le_%s,\n", CB_LABEL (l->item)->cname);
   output ("};\n\n");
 
   /* classes */
@@ -2210,7 +2210,7 @@ codegen (struct cobc_program *prog)
   else
     for (l = prog->using_list; l; l = l->next)
       {
-	output ("unsigned char *f_%s_data", COBC_FIELD (l->item)->cname);
+	output ("unsigned char *f_%s_data", CB_FIELD (l->item)->cname);
 	if (l->next)
 	  output (", ");
       }
@@ -2300,7 +2300,7 @@ codegen (struct cobc_program *prog)
   output_newline ();
 
   /* main function */
-  if (cobc_flag_main)
+  if (cb_flag_main)
     {
       output_line ("int");
       output_line ("main (int argc, char **argv)");

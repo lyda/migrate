@@ -20,43 +20,43 @@
 #ifndef _TREE_H_
 #define _TREE_H_
 
-#define COBC_BEFORE		0
-#define COBC_AFTER		1
+#define CB_BEFORE		0
+#define CB_AFTER		1
 
-#define COBC_CALL_BY_REFERENCE	1
-#define COBC_CALL_BY_CONTENT	2
-#define COBC_CALL_BY_LENGTH	3
-#define COBC_CALL_BY_VALUE	4
+#define CB_CALL_BY_REFERENCE	1
+#define CB_CALL_BY_CONTENT	2
+#define CB_CALL_BY_LENGTH	3
+#define CB_CALL_BY_VALUE	4
 
 
 /*
  * List
  */
 
-struct cobc_list {
+struct cb_list {
   void *item;
-  struct cobc_list *next;
+  struct cb_list *next;
 };
 
-extern struct cobc_list *cons (void *x, struct cobc_list *l);
-extern struct cobc_list *list (void *x);
-extern struct cobc_list *list_last (struct cobc_list *l);
-extern struct cobc_list *list_add (struct cobc_list *l, void *x);
-extern struct cobc_list *list_append (struct cobc_list *l1, struct cobc_list *l2);
-extern struct cobc_list *list_reverse (struct cobc_list *l);
-extern int list_length (struct cobc_list *l);
+extern struct cb_list *cons (void *x, struct cb_list *l);
+extern struct cb_list *list (void *x);
+extern struct cb_list *list_last (struct cb_list *l);
+extern struct cb_list *list_add (struct cb_list *l, void *x);
+extern struct cb_list *list_append (struct cb_list *l1, struct cb_list *l2);
+extern struct cb_list *list_reverse (struct cb_list *l);
+extern int list_length (struct cb_list *l);
 
 
 /*
  * Word table
  */
 
-struct cobc_word {
+struct cb_word {
   const char *name;		/* word name */
   int count;			/* the number of words with the same name */
   int error;			/* set to 1 if error displayed */
-  struct cobc_list *items;	/* objects associated with this word */
-  struct cobc_word *next;	/* next word with the same hash value */
+  struct cb_list *items;	/* objects associated with this word */
+  struct cb_word *next;	/* next word with the same hash value */
 };
 
 
@@ -64,100 +64,100 @@ struct cobc_word {
  * Tree
  */
 
-enum cobc_tag {
+enum cb_tag {
   /* primitives */
-  cobc_tag_const,		/* constant value */
-  cobc_tag_integer,		/* native integer */
-  cobc_tag_string,		/* native string */
-  cobc_tag_literal,		/* numeric/alphanumeric literal */
-  cobc_tag_decimal,		/* decimal number */
-  cobc_tag_field,		/* user-defined variable */
-  cobc_tag_file,		/* file description */
+  cb_tag_const,		/* constant value */
+  cb_tag_integer,		/* native integer */
+  cb_tag_string,		/* native string */
+  cb_tag_literal,		/* numeric/alphanumeric literal */
+  cb_tag_decimal,		/* decimal number */
+  cb_tag_field,		/* user-defined variable */
+  cb_tag_file,		/* file description */
   /* expressions */
-  cobc_tag_reference,		/* reference to a field, file, or label */
-  cobc_tag_binary_op,		/* binary operation */
-  cobc_tag_funcall,		/* run-time function call */
-  cobc_tag_cast_int32,		/* cast to int32 */
+  cb_tag_reference,		/* reference to a field, file, or label */
+  cb_tag_binary_op,		/* binary operation */
+  cb_tag_funcall,		/* run-time function call */
+  cb_tag_cast_int32,		/* cast to int32 */
   /* statements */
-  cobc_tag_location,		/* source location */
-  cobc_tag_label,		/* label statement */
-  cobc_tag_if,			/* IF statement */
-  cobc_tag_perform,		/* PERFORM statement */
-  cobc_tag_sequence,		/* multiple statements */
+  cb_tag_location,		/* source location */
+  cb_tag_label,		/* label statement */
+  cb_tag_if,			/* IF statement */
+  cb_tag_perform,		/* PERFORM statement */
+  cb_tag_sequence,		/* multiple statements */
   /* miscellaneous */
-  cobc_tag_class,		/* CLASS definition */
-  cobc_tag_builtin,
-  cobc_tag_parameter,
+  cb_tag_class,		/* CLASS definition */
+  cb_tag_builtin,
+  cb_tag_parameter,
 };
 
-struct cobc_tree_common {
-  enum cobc_tag tag;
+struct cb_tree_common {
+  enum cb_tag tag;
   char class;
   char type;
   unsigned char *source_file;
   int source_line;
 };
 
-typedef struct cobc_tree_common *cobc_tree;
+typedef struct cb_tree_common *cb_tree;
 
-#define COBC_TREE(x)		((struct cobc_tree_common *) (x))
-#define COBC_TREE_TAG(x)	(COBC_TREE (x)->tag)
-#define COBC_TREE_CLASS(x)	(COBC_TREE (x)->class)
-#define COBC_TREE_TYPE(x)	(COBC_TREE (x)->type)
+#define CB_TREE(x)		((struct cb_tree_common *) (x))
+#define CB_TREE_TAG(x)	(CB_TREE (x)->tag)
+#define CB_TREE_CLASS(x)	(CB_TREE (x)->class)
+#define CB_TREE_TYPE(x)	(CB_TREE (x)->type)
 
 #ifdef COB_DEBUG
-#define COBC_TREE_CAST(tg,ty,x)						\
+#define CB_TREE_CAST(tg,ty,x)						\
   ({									\
-    cobc_tree _x = (x);							\
-    if (!_x || COBC_TREE_TAG (_x) != tg)				\
+    cb_tree _x = (x);							\
+    if (!_x || CB_TREE_TAG (_x) != tg)				\
       {									\
 	fprintf (stderr,						\
 		 "%s:%d: invalid type cast from `%s' at %d in %s\n",	\
 		 __FILE__, __LINE__, _x ? tree_name (_x) : "null",	\
-		 cobc_source_line, cobc_source_file);			\
+		 cb_source_line, cb_source_file);			\
 	abort ();							\
       }									\
     ((ty *) (_x));							\
   })
 #else
-#define COBC_TREE_CAST(x,tg,ty)	((ty *) (x))
+#define CB_TREE_CAST(x,tg,ty)	((ty *) (x))
 #endif
 
-extern char *tree_name (cobc_tree x);
-extern int tree_category (cobc_tree x);
+extern char *tree_name (cb_tree x);
+extern int tree_category (cb_tree x);
 
-extern cobc_tree make_location (char *file, int line);
+extern cb_tree make_location (char *file, int line);
 
 
 /*
  * Constants
  */
 
-extern cobc_tree cobc_any;
-extern cobc_tree cobc_true;
-extern cobc_tree cobc_false;
-extern cobc_tree cobc_zero;
-extern cobc_tree cobc_space;
-extern cobc_tree cobc_low;
-extern cobc_tree cobc_high;
-extern cobc_tree cobc_quote;
-extern cobc_tree cobc_return_code;
-extern cobc_tree cobc_switch[];
-extern cobc_tree cobc_int0;
-extern cobc_tree cobc_int1;
-extern cobc_tree cobc_int2;
-extern cobc_tree cobc_error_node;
+extern cb_tree cb_any;
+extern cb_tree cb_true;
+extern cb_tree cb_false;
+extern cb_tree cb_zero;
+extern cb_tree cb_space;
+extern cb_tree cb_low;
+extern cb_tree cb_high;
+extern cb_tree cb_quote;
+extern cb_tree cb_return_code;
+extern cb_tree cb_switch[];
+extern cb_tree cb_int0;
+extern cb_tree cb_int1;
+extern cb_tree cb_int2;
+extern cb_tree cb_error_node;
 
-extern struct cobc_label *cobc_main_label;
-extern struct cobc_label *cobc_standard_error_handler;
+extern struct cb_label *cb_main_label;
+extern struct cb_label *cb_standard_error_handler;
 
-struct cobc_const {
-  struct cobc_tree_common common;
+struct cb_const {
+  struct cb_tree_common common;
   char *val;
 };
 
-#define COBC_CONST(x)		(COBC_TREE_CAST (cobc_tag_const, struct cobc_const, x))
-#define COBC_CONST_P(x)		(COBC_TREE_TAG (x) == cobc_tag_const)
+#define CB_CONST(x)		(CB_TREE_CAST (cb_tag_const, struct cb_const, x))
+#define CB_CONST_P(x)		(CB_TREE_TAG (x) == cb_tag_const)
 
 extern void init_constants (void);
 
@@ -166,38 +166,38 @@ extern void init_constants (void);
  * Integer
  */
 
-struct cobc_integer {
-  struct cobc_tree_common common;
+struct cb_integer {
+  struct cb_tree_common common;
   int val;
 };
 
-#define COBC_INTEGER(x)		(COBC_TREE_CAST (cobc_tag_integer, struct cobc_integer, x))
-#define COBC_INTEGER_P(x)	(COBC_TREE_TAG (x) == cobc_tag_integer)
+#define CB_INTEGER(x)		(CB_TREE_CAST (cb_tag_integer, struct cb_integer, x))
+#define CB_INTEGER_P(x)	(CB_TREE_TAG (x) == cb_tag_integer)
 
-extern cobc_tree make_integer (int val);
+extern cb_tree make_integer (int val);
 
 
 /*
  * String
  */
 
-struct cobc_string {
-  struct cobc_tree_common common;
+struct cb_string {
+  struct cb_tree_common common;
   const unsigned char *str;
 };
 
-#define COBC_STRING(x)		(COBC_TREE_CAST (cobc_tag_string, struct cobc_string, x))
-#define COBC_STRING_P(x)	(COBC_TREE_TAG (x) == cobc_tag_string)
+#define CB_STRING(x)		(CB_TREE_CAST (cb_tag_string, struct cb_string, x))
+#define CB_STRING_P(x)	(CB_TREE_TAG (x) == cb_tag_string)
 
-extern cobc_tree make_string (const unsigned char *str);
+extern cb_tree make_string (const unsigned char *str);
 
 
 /*
  * Literal
  */
 
-struct cobc_literal {
-  struct cobc_tree_common common;
+struct cb_literal {
+  struct cb_tree_common common;
   size_t size;
   unsigned char *data;
   char id;
@@ -206,34 +206,34 @@ struct cobc_literal {
   char expt;
 };
 
-#define COBC_LITERAL(x)		(COBC_TREE_CAST (cobc_tag_literal, struct cobc_literal, x))
-#define COBC_LITERAL_P(x)	(COBC_TREE_TAG (x) == cobc_tag_literal)
+#define CB_LITERAL(x)		(CB_TREE_CAST (cb_tag_literal, struct cb_literal, x))
+#define CB_LITERAL_P(x)	(CB_TREE_TAG (x) == cb_tag_literal)
 
-extern cobc_tree make_numeric_literal (int sign, unsigned char *digits, int expt);
-extern cobc_tree make_nonnumeric_literal (unsigned char *str);
-extern long long literal_to_int (struct cobc_literal *l);
+extern cb_tree make_numeric_literal (int sign, unsigned char *digits, int expt);
+extern cb_tree make_nonnumeric_literal (unsigned char *str);
+extern long long literal_to_int (struct cb_literal *l);
 
 
 /*
  * Decimal
  */
 
-struct cobc_decimal {
-  struct cobc_tree_common common;
+struct cb_decimal {
+  struct cb_tree_common common;
   char id;
 };
 
-#define COBC_DECIMAL(x)		(COBC_TREE_CAST (cobc_tag_decimal, struct cobc_decimal, x))
-#define COBC_DECIMAL_P(x)	(COBC_TREE_TAG (x) == cobc_tag_decimal)
+#define CB_DECIMAL(x)		(CB_TREE_CAST (cb_tag_decimal, struct cb_decimal, x))
+#define CB_DECIMAL_P(x)	(CB_TREE_TAG (x) == cb_tag_decimal)
 
-extern cobc_tree make_decimal (char id);
+extern cb_tree make_decimal (char id);
 
 
 /*
  * Picture
  */
 
-struct cobc_picture {
+struct cb_picture {
   int size;			/* byte size */
   char *str;			/* picture string */
   char category;		/* field category */
@@ -242,28 +242,28 @@ struct cobc_picture {
   char have_sign;		/* have `S' */
 };
 
-extern struct cobc_picture *parse_picture (const char *str);
+extern struct cb_picture *parse_picture (const char *str);
 
 
 /*
  * Field
  */
 
-enum cobc_usage {
-  COBC_USAGE_BINARY,
-  COBC_USAGE_BIT,		/* not supported yet */
-  COBC_USAGE_DISPLAY,
-  COBC_USAGE_FLOAT,		/* not supported yet */
-  COBC_USAGE_INDEX,
-  COBC_USAGE_NATIONAL,		/* not supported yet */
-  COBC_USAGE_OBJECT,		/* not supported yet */
-  COBC_USAGE_PACKED,		/* not supported yet */
-  COBC_USAGE_POINTER,		/* not supported yet */
-  COBC_USAGE_PROGRAM		/* not supported yet */
+enum cb_usage {
+  CB_USAGE_BINARY,
+  CB_USAGE_BIT,		/* not supported yet */
+  CB_USAGE_DISPLAY,
+  CB_USAGE_FLOAT,		/* not supported yet */
+  CB_USAGE_INDEX,
+  CB_USAGE_NATIONAL,		/* not supported yet */
+  CB_USAGE_OBJECT,		/* not supported yet */
+  CB_USAGE_PACKED,		/* not supported yet */
+  CB_USAGE_POINTER,		/* not supported yet */
+  CB_USAGE_PROGRAM		/* not supported yet */
 };
 
-struct cobc_field {
-  struct cobc_tree_common common;
+struct cb_field {
+  struct cb_tree_common common;
   int size;			/* field size */
   int memory_size;		/* memory size */
   int offset;			/* byte offset from the top (ie, 01 field) */
@@ -273,24 +273,24 @@ struct cobc_field {
   int indexes;			/* the number of parents who have OCCURS */
   const char *name;		/* the original name */
   char *cname;			/* the name used in C */
-  cobc_tree occurs_depending;	/* OCCURS ... DEPENDING ON */
-  enum cobc_usage usage;	/* USAGE */
-  struct cobc_list *values;	/* VALUE */
-  struct cobc_list *index_list;	/* INDEXED BY */
-  struct cobc_field *parent;	/* upper level field (NULL for 01 fields) */
-  struct cobc_field *children;	/* top of lower level fields */
-  struct cobc_field *sister;	/* fields in the same level */
-  struct cobc_field *redefines;	/* REDEFIENS */
-  struct cobc_field *rename_thru; /* RENAMES THRU */
-  struct cobc_file *file;	/* file name associated in FD section */
-  struct cobc_key {
+  cb_tree occurs_depending;	/* OCCURS ... DEPENDING ON */
+  enum cb_usage usage;	/* USAGE */
+  struct cb_list *values;	/* VALUE */
+  struct cb_list *index_list;	/* INDEXED BY */
+  struct cb_field *parent;	/* upper level field (NULL for 01 fields) */
+  struct cb_field *children;	/* top of lower level fields */
+  struct cb_field *sister;	/* fields in the same level */
+  struct cb_field *redefines;	/* REDEFIENS */
+  struct cb_field *rename_thru; /* RENAMES THRU */
+  struct cb_file *file;	/* file name associated in FD section */
+  struct cb_key {
     int dir;			/* ASCENDING or DESCENDING */
-    cobc_tree key;		/* KEY */
-    cobc_tree ref;		/* reference used in SEARCH ALL */
-    cobc_tree val;		/* value to be compared in SEARCH ALL */
+    cb_tree key;		/* KEY */
+    cb_tree ref;		/* reference used in SEARCH ALL */
+    cb_tree val;		/* value to be compared in SEARCH ALL */
   } *keys;
   int nkeys;			/* the number of keys */
-  struct cobc_picture *pic;	/* PICTURE */
+  struct cb_picture *pic;	/* PICTURE */
   /* flags */
   long flag_external      : 1;	/* EXTERNAL */
   long flag_blank_zero    : 1;	/* BLANK WHEN ZERO */
@@ -302,104 +302,104 @@ struct cobc_field {
   long flag_used          : 1;	/* if used more than once */
   long flag_screen        : 1;	/* if defined in SCREEN SECTION */
   /* screen parameters */
-  cobc_tree screen_line;
-  cobc_tree screen_column;
-  struct cobc_field *screen_from;
-  struct cobc_field *screen_to;
+  cb_tree screen_line;
+  cb_tree screen_column;
+  struct cb_field *screen_from;
+  struct cb_field *screen_to;
   long screen_flag;		/* flags used in SCREEN SECTION */
 };
 
-#define COBC_FIELD(x)		(COBC_TREE_CAST (cobc_tag_field, struct cobc_field, x))
-#define COBC_FIELD_P(x)		(COBC_TREE_TAG (x) == cobc_tag_field)
-#define COBC_FILLER_P(x) \
-  (COBC_FIELD_P (x) && COBC_FIELD (x)->cname[0] == '$')
-#define COBC_INDEX_NAME_P(x) \
-  (COBC_FIELD_P (x) && COBC_FIELD (x)->usage == COBC_USAGE_INDEX)
+#define CB_FIELD(x)		(CB_TREE_CAST (cb_tag_field, struct cb_field, x))
+#define CB_FIELD_P(x)		(CB_TREE_TAG (x) == cb_tag_field)
+#define CB_FILLER_P(x) \
+  (CB_FIELD_P (x) && CB_FIELD (x)->cname[0] == '$')
+#define CB_INDEX_NAME_P(x) \
+  (CB_FIELD_P (x) && CB_FIELD (x)->usage == CB_USAGE_INDEX)
 
-extern cobc_tree make_field (cobc_tree name);
-extern cobc_tree make_field_3 (cobc_tree name, const char *pic, int usage);
-extern cobc_tree make_field_x (const char *name, const char *pic, int usage);
-extern struct cobc_field *field (cobc_tree x);
-extern int field_size (cobc_tree x);
-extern struct cobc_field *field_founder (struct cobc_field *p);
-extern int field_used_any_parent (struct cobc_field *p);
-extern int field_used_any_child (struct cobc_field *p);
-extern void field_set_used (struct cobc_field *p);
+extern cb_tree make_field (cb_tree name);
+extern cb_tree make_field_3 (cb_tree name, const char *pic, int usage);
+extern cb_tree make_field_x (const char *name, const char *pic, int usage);
+extern struct cb_field *field (cb_tree x);
+extern int field_size (cb_tree x);
+extern struct cb_field *field_founder (struct cb_field *p);
+extern int field_used_any_parent (struct cb_field *p);
+extern int field_used_any_child (struct cb_field *p);
+extern void field_set_used (struct cb_field *p);
 
-extern struct cobc_field *build_field (cobc_tree level, cobc_tree name, struct cobc_field *last_field);
-extern struct cobc_field *validate_redefines (struct cobc_field *field, cobc_tree redefines);
-extern int validate_field (struct cobc_field *p);
-extern void finalize_field (struct cobc_field *p);
+extern struct cb_field *build_field (cb_tree level, cb_tree name, struct cb_field *last_field);
+extern struct cb_field *validate_redefines (struct cb_field *field, cb_tree redefines);
+extern int validate_field (struct cb_field *p);
+extern void finalize_field (struct cb_field *p);
 
 
 /*
  * File
  */
 
-struct cobc_file {
-  struct cobc_tree_common common;
+struct cb_file {
+  struct cb_tree_common common;
   const char *name;		/* the original name */
   char *cname;			/* the name used in C */
   /* SELECT */
-  cobc_tree assign;		/* ASSIGN */
+  cb_tree assign;		/* ASSIGN */
   int optional;			/* OPTIONAL */
   int organization;		/* ORGANIZATION */
   int access_mode;		/* ACCESS MODE */
-  cobc_tree file_status;	/* FILE STATUS */
-  cobc_tree key;		/* RELATIVE/RECORD KEY */
-  struct cobc_alt_key {
-    cobc_tree key;
+  cb_tree file_status;	/* FILE STATUS */
+  cb_tree key;		/* RELATIVE/RECORD KEY */
+  struct cb_alt_key {
+    cb_tree key;
     int duplicates;
-    struct cobc_alt_key *next;
+    struct cb_alt_key *next;
   } *alt_key_list;		/* ALTERNATE RECORD KEY list */
   /* FD/SD */
-  struct cobc_field *record;	/* record descriptor */
+  struct cb_field *record;	/* record descriptor */
   int record_min, record_max;	/* RECORD CONTAINS */
-  cobc_tree record_depending;	/* RECORD DEPENDING */
+  cb_tree record_depending;	/* RECORD DEPENDING */
   /* STANDARD ERROR PROCEDURE */
-  struct cobc_label *handler;	/* error handler */
+  struct cb_label *handler;	/* error handler */
 };
 
-#define COBC_FILE(x)	(COBC_TREE_CAST (cobc_tag_file, struct cobc_file, x))
-#define COBC_FILE_P(x)	(COBC_TREE_TAG (x) == cobc_tag_file)
+#define CB_FILE(x)	(CB_TREE_CAST (cb_tag_file, struct cb_file, x))
+#define CB_FILE_P(x)	(CB_TREE_TAG (x) == cb_tag_file)
 
-extern cobc_tree make_file (cobc_tree name);
-extern void finalize_file (struct cobc_file *f, struct cobc_field *records);
+extern cb_tree make_file (cb_tree name);
+extern void finalize_file (struct cb_file *f, struct cb_field *records);
 
 
 /*
  * Reference
  */
 
-struct cobc_reference {
-  struct cobc_tree_common common;
-  struct cobc_word *word;
+struct cb_reference {
+  struct cb_tree_common common;
+  struct cb_word *word;
   char id;
-  cobc_tree value;
-  struct cobc_list *subs;
-  cobc_tree offset;
-  cobc_tree length;
-  struct cobc_reference *next;
+  cb_tree value;
+  struct cb_list *subs;
+  cb_tree offset;
+  cb_tree length;
+  struct cb_reference *next;
 };
 
-#define COBC_REFERENCE(x)	(COBC_TREE_CAST (cobc_tag_reference, struct cobc_reference, x))
-#define COBC_REFERENCE_P(x)	(COBC_TREE_TAG (x) == cobc_tag_reference)
+#define CB_REFERENCE(x)	(CB_TREE_CAST (cb_tag_reference, struct cb_reference, x))
+#define CB_REFERENCE_P(x)	(CB_TREE_TAG (x) == cb_tag_reference)
 
-#define COBC_NAME(x)		(COBC_REFERENCE (x)->word->name)
+#define CB_NAME(x)		(CB_REFERENCE (x)->word->name)
 
-extern cobc_tree make_reference (const char *name);
-extern cobc_tree copy_reference (cobc_tree ref, cobc_tree value);
-extern void set_value (cobc_tree ref, cobc_tree value);
-extern const char *associate (cobc_tree name, cobc_tree val);
+extern cb_tree make_reference (const char *name);
+extern cb_tree copy_reference (cb_tree ref, cb_tree value);
+extern void set_value (cb_tree ref, cb_tree value);
+extern const char *associate (cb_tree name, cb_tree val);
 
-extern cobc_tree make_filler (void);
+extern cb_tree make_filler (void);
 
-extern cobc_tree resolve_data_name (cobc_tree x);
-extern int validate_data_name (cobc_tree x);
-extern cobc_tree resolve_label (cobc_tree x);
-extern cobc_tree resolve_file_name (cobc_tree x);
-extern cobc_tree resolve_class_name (cobc_tree x);
-extern cobc_tree resolve_mnemonic_name (cobc_tree x);
+extern cb_tree resolve_data_name (cb_tree x);
+extern int validate_data_name (cb_tree x);
+extern cb_tree resolve_label (cb_tree x);
+extern cb_tree resolve_file_name (cb_tree x);
+extern cb_tree resolve_class_name (cb_tree x);
+extern cb_tree resolve_mnemonic_name (cb_tree x);
 
 
 /*
@@ -424,37 +424,37 @@ extern cobc_tree resolve_mnemonic_name (cobc_tree x);
   '|'	x or y
 */
 
-struct cobc_binary_op {
-  struct cobc_tree_common common;
+struct cb_binary_op {
+  struct cb_tree_common common;
   char op;
-  cobc_tree x;
-  cobc_tree y;
+  cb_tree x;
+  cb_tree y;
 };
 
-#define COBC_BINARY_OP(x)	(COBC_TREE_CAST (cobc_tag_binary_op, struct cobc_binary_op, x))
-#define COBC_BINARY_OP_P(x)	(COBC_TREE_TAG (x) == cobc_tag_binary_op)
+#define CB_BINARY_OP(x)	(CB_TREE_CAST (cb_tag_binary_op, struct cb_binary_op, x))
+#define CB_BINARY_OP_P(x)	(CB_TREE_TAG (x) == cb_tag_binary_op)
 
 #define make_parenthesize(x)	make_binary_op (x, '@', 0)
 #define make_negative(x)	make_binary_op (x, '!', 0)
 
-extern cobc_tree make_binary_op (cobc_tree x, char op, cobc_tree y);
+extern cb_tree make_binary_op (cb_tree x, char op, cb_tree y);
 
 
 /*
  * Function call
  */
 
-struct cobc_funcall {
-  struct cobc_tree_common common;
+struct cb_funcall {
+  struct cb_tree_common common;
   const char *name;
   int argc;
   void *argv[4];
 };
 
-#define COBC_FUNCALL(x)		(COBC_TREE_CAST (cobc_tag_funcall, struct cobc_funcall, x))
-#define COBC_FUNCALL_P(x)	(COBC_TREE_TAG (x) == cobc_tag_funcall)
+#define CB_FUNCALL(x)		(CB_TREE_CAST (cb_tag_funcall, struct cb_funcall, x))
+#define CB_FUNCALL_P(x)	(CB_TREE_TAG (x) == cb_tag_funcall)
 
-extern cobc_tree make_funcall (const char *name, int argc, void *a1, void *a2, void *a3, void *a4);
+extern cb_tree make_funcall (const char *name, int argc, void *a1, void *a2, void *a3, void *a4);
 
 #define make_funcall_0(f)		make_funcall (f, 0, 0, 0, 0, 0)
 #define make_funcall_1(f,a1)		make_funcall (f, 1, a1, 0, 0, 0)
@@ -467,150 +467,150 @@ extern cobc_tree make_funcall (const char *name, int argc, void *a1, void *a2, v
  * Cast to int32
  */
 
-struct cobc_cast_int32 {
-  struct cobc_tree_common common;
-  cobc_tree val;
+struct cb_cast_int32 {
+  struct cb_tree_common common;
+  cb_tree val;
 };
 
-#define COBC_CAST_INT32(x)	(COBC_TREE_CAST (cobc_tag_cast_int32, struct cobc_cast_int32, x))
-#define COBC_CAST_INT32_P(x)	(COBC_TREE_TAG (x) == cobc_tag_cast_int32)
+#define CB_CAST_INT32(x)	(CB_TREE_CAST (cb_tag_cast_int32, struct cb_cast_int32, x))
+#define CB_CAST_INT32_P(x)	(CB_TREE_TAG (x) == cb_tag_cast_int32)
 
-extern cobc_tree make_cast_int32 (cobc_tree val);
+extern cb_tree make_cast_int32 (cb_tree val);
 
 
 /*
  * Label
  */
 
-struct cobc_label {
-  struct cobc_tree_common common;
+struct cb_label {
+  struct cb_tree_common common;
   const char *name;
   char *cname;
-  struct cobc_label *section;
-  struct cobc_list *children;
+  struct cb_label *section;
+  struct cb_list *children;
   char need_begin;
   char need_return;
 };
 
-#define COBC_LABEL(x)		(COBC_TREE_CAST (cobc_tag_label, struct cobc_label, x))
-#define COBC_LABEL_P(x)		(COBC_TREE_TAG (x) == cobc_tag_label)
+#define CB_LABEL(x)		(CB_TREE_CAST (cb_tag_label, struct cb_label, x))
+#define CB_LABEL_P(x)		(CB_TREE_TAG (x) == cb_tag_label)
 
-extern cobc_tree make_label (cobc_tree name, struct cobc_label *section);
+extern cb_tree make_label (cb_tree name, struct cb_label *section);
 
 
 /*
  * IF
  */
 
-struct cobc_if {
-  struct cobc_tree_common common;
-  cobc_tree test;
-  cobc_tree stmt1;
-  cobc_tree stmt2;
+struct cb_if {
+  struct cb_tree_common common;
+  cb_tree test;
+  cb_tree stmt1;
+  cb_tree stmt2;
 };
 
-#define COBC_IF(x)		(COBC_TREE_CAST (cobc_tag_if, struct cobc_if, x))
-#define COBC_IF_P(x)		(COBC_TREE_TAG (x) == cobc_tag_if)
+#define CB_IF(x)		(CB_TREE_CAST (cb_tag_if, struct cb_if, x))
+#define CB_IF_P(x)		(CB_TREE_TAG (x) == cb_tag_if)
 
-extern cobc_tree make_if (cobc_tree test, cobc_tree stmt1, cobc_tree stmt2);
+extern cb_tree make_if (cb_tree test, cb_tree stmt1, cb_tree stmt2);
 
 
 /*
  * PERFORM
  */
 
-#define COBC_PERFORM_EXIT	0
-#define COBC_PERFORM_ONCE	1
-#define COBC_PERFORM_TIMES	2
-#define COBC_PERFORM_UNTIL	3
+#define CB_PERFORM_EXIT	0
+#define CB_PERFORM_ONCE	1
+#define CB_PERFORM_TIMES	2
+#define CB_PERFORM_UNTIL	3
 
-struct cobc_perform {
-  struct cobc_tree_common common;
+struct cb_perform {
+  struct cb_tree_common common;
   int type;
   int test;
-  cobc_tree body;
-  cobc_tree data;
-  struct cobc_perform_varying {
-    cobc_tree name;
-    cobc_tree from;
-    cobc_tree step;
-    cobc_tree until;
-    struct cobc_perform_varying *next;
+  cb_tree body;
+  cb_tree data;
+  struct cb_perform_varying {
+    cb_tree name;
+    cb_tree from;
+    cb_tree step;
+    cb_tree until;
+    struct cb_perform_varying *next;
   } *varying;
 };
 
-#define COBC_PERFORM(x)		(COBC_TREE_CAST (cobc_tag_perform, struct cobc_perform, x))
-#define COBC_PERFORM_P(x)	(COBC_TREE_TAG (x) == cobc_tag_perform)
+#define CB_PERFORM(x)		(CB_TREE_CAST (cb_tag_perform, struct cb_perform, x))
+#define CB_PERFORM_P(x)	(CB_TREE_TAG (x) == cb_tag_perform)
 
-extern cobc_tree make_perform (int type);
-extern cobc_tree make_perform_once (cobc_tree body);
-extern cobc_tree make_perform_exit (struct cobc_label *label);
-extern void add_perform_varying (struct cobc_perform *perf, cobc_tree name, cobc_tree from, cobc_tree step, cobc_tree until);
+extern cb_tree make_perform (int type);
+extern cb_tree make_perform_once (cb_tree body);
+extern cb_tree make_perform_exit (struct cb_label *label);
+extern void add_perform_varying (struct cb_perform *perf, cb_tree name, cb_tree from, cb_tree step, cb_tree until);
 
 
 /*
  * Sequence
  */
 
-struct cobc_sequence {
-  struct cobc_tree_common common;
-  struct cobc_list *list;
+struct cb_sequence {
+  struct cb_tree_common common;
+  struct cb_list *list;
   int save_status;
 };
 
-#define COBC_SEQUENCE(x)	(COBC_TREE_CAST (cobc_tag_sequence, struct cobc_sequence, x))
-#define COBC_SEQUENCE_P(x)	(COBC_TREE_TAG (x) == cobc_tag_sequence)
+#define CB_SEQUENCE(x)	(CB_TREE_CAST (cb_tag_sequence, struct cb_sequence, x))
+#define CB_SEQUENCE_P(x)	(CB_TREE_TAG (x) == cb_tag_sequence)
 
-extern cobc_tree make_sequence (struct cobc_list *list);
+extern cb_tree make_sequence (struct cb_list *list);
 
 
 /*
  * Class
  */
 
-struct cobc_class {
-  struct cobc_tree_common common;
+struct cb_class {
+  struct cb_tree_common common;
   const char *name;
   char *cname;
-  struct cobc_list *list;
+  struct cb_list *list;
 };
 
-#define COBC_CLASS(x)		(COBC_TREE_CAST (cobc_tag_class, struct cobc_class, x))
-#define COBC_CLASS_P(x)		(COBC_TREE_TAG (x) == cobc_tag_class)
+#define CB_CLASS(x)		(CB_TREE_CAST (cb_tag_class, struct cb_class, x))
+#define CB_CLASS_P(x)		(CB_TREE_TAG (x) == cb_tag_class)
 
-extern cobc_tree make_class (cobc_tree name, struct cobc_list *list);
+extern cb_tree make_class (cb_tree name, struct cb_list *list);
 
 
 /*
  * Builtin
  */
 
-struct cobc_builtin {
-  struct cobc_tree_common common;
+struct cb_builtin {
+  struct cb_tree_common common;
   int id;
 };
 
-#define COBC_BUILTIN(x)		(COBC_TREE_CAST (cobc_tag_builtin, struct cobc_builtin, x))
-#define COBC_BUILTIN_P(x)	(COBC_TREE_TAG (x) == cobc_tag_builtin)
+#define CB_BUILTIN(x)		(CB_TREE_CAST (cb_tag_builtin, struct cb_builtin, x))
+#define CB_BUILTIN_P(x)	(CB_TREE_TAG (x) == cb_tag_builtin)
 
-extern cobc_tree make_builtin (int id);
+extern cb_tree make_builtin (int id);
 
 
 /*
  * Parameter
  */
 
-struct cobc_parameter {
-  struct cobc_tree_common common;
+struct cb_parameter {
+  struct cb_tree_common common;
   int type;
-  cobc_tree x;
-  cobc_tree y;
+  cb_tree x;
+  cb_tree y;
 };
 
-#define COBC_PARAMETER(x)		(COBC_TREE_CAST (cobc_tag_parameter, struct cobc_parameter, x))
-#define COBC_PARAMETER_P(x)		(COBC_TREE_TAG (x) == cobc_tag_parameter)
+#define CB_PARAMETER(x)		(CB_TREE_CAST (cb_tag_parameter, struct cb_parameter, x))
+#define CB_PARAMETER_P(x)		(CB_TREE_TAG (x) == cb_tag_parameter)
 
-extern cobc_tree make_parameter (int type, cobc_tree x, cobc_tree y);
+extern cb_tree make_parameter (int type, cb_tree x, cb_tree y);
 #define make_parameter_1(type,x) make_parameter (type, x, 0)
 #define make_pair(x,y)		 make_parameter (0, x, y)
 
@@ -619,7 +619,7 @@ extern cobc_tree make_parameter (int type, cobc_tree x, cobc_tree y);
  * Program
  */
 
-struct cobc_program {
+struct cb_program {
   /* program variables */
   char *program_id;
   int initial_program;
@@ -627,34 +627,34 @@ struct cobc_program {
   unsigned char decimal_point;		/* '.' or ',' */
   unsigned char currency_symbol;	/* '$' or user-specified */
   unsigned char numeric_separator;	/* ',' or '.' */
-  struct cobc_list *class_list;
-  struct cobc_list *index_list;
-  struct cobc_list *file_list;
-  struct cobc_list *using_list;
-  struct cobc_list *exec_list;
-  struct cobc_list *label_list;
-  struct cobc_list *reference_list;
-  struct cobc_field *working_storage;
-  struct cobc_field *linkage_storage;
-  struct cobc_field *screen_storage;
-  struct cobc_label *file_handler[5];
+  struct cb_list *class_list;
+  struct cb_list *index_list;
+  struct cb_list *file_list;
+  struct cb_list *using_list;
+  struct cb_list *exec_list;
+  struct cb_list *label_list;
+  struct cb_list *reference_list;
+  struct cb_field *working_storage;
+  struct cb_field *linkage_storage;
+  struct cb_field *screen_storage;
+  struct cb_label *file_handler[5];
   /* internal variables */
   int loop_counter;
   int decimal_index;
   int decimal_index_max;
-  struct cobc_word **word_table;
+  struct cb_word **word_table;
 };
 
-extern struct cobc_program *build_program (void);
+extern struct cb_program *build_program (void);
 
-extern cobc_tree build_assign (struct cobc_list *vars, char op, cobc_tree val);
-extern cobc_tree build_add (cobc_tree v, cobc_tree n, int round);
-extern cobc_tree build_sub (cobc_tree v, cobc_tree n, int round);
-extern cobc_tree build_move (cobc_tree src, cobc_tree dst);
-extern cobc_tree build_corresponding (cobc_tree (*func)(), cobc_tree x1, cobc_tree x2, int opt);
-extern cobc_tree build_divide (cobc_tree dividend, cobc_tree divisor, cobc_tree quotient, cobc_tree remainder);
-extern cobc_tree build_cond (cobc_tree x);
-extern cobc_tree build_evaluate (struct cobc_list *subject_list, struct cobc_list *case_list);
-extern cobc_tree build_search_all (cobc_tree table, cobc_tree when);
+extern cb_tree build_assign (struct cb_list *vars, char op, cb_tree val);
+extern cb_tree build_add (cb_tree v, cb_tree n, int round);
+extern cb_tree build_sub (cb_tree v, cb_tree n, int round);
+extern cb_tree build_move (cb_tree src, cb_tree dst);
+extern cb_tree build_corresponding (cb_tree (*func)(), cb_tree x1, cb_tree x2, int opt);
+extern cb_tree build_divide (cb_tree dividend, cb_tree divisor, cb_tree quotient, cb_tree remainder);
+extern cb_tree build_cond (cb_tree x);
+extern cb_tree build_evaluate (struct cb_list *subject_list, struct cb_list *case_list);
+extern cb_tree build_search_all (cb_tree table, cb_tree when);
 
 #endif /* _TREE_H_ */

@@ -18,5 +18,5 @@ AM_LFLAGS = -s
 %.c: %.l
 	$(LEX) $(AM_LFLAGS) -o$@ $<
 
-%.c: %.y
+%.c %.h: %.y
 	$(YACC) $(AM_YFLAGS) -o $@ $<

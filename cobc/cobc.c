@@ -43,31 +43,31 @@
  * Global variables
  */
 
-int cobc_flag_main = 0;
-int cobc_flag_call_static = 0;
-int cobc_flag_debugging_line = 0;
-int cobc_flag_line_directive = 0;
+int cb_flag_main = 0;
+int cb_flag_call_static = 0;
+int cb_flag_debugging_line = 0;
+int cb_flag_line_directive = 0;
 
-#undef COBC_WARNING
-#define COBC_WARNING(sig,var,name,doc) int var = 0;
+#undef CB_WARNING
+#define CB_WARNING(sig,var,name,doc) int var = 0;
 #include "warning.def"
 
 int errorcount;
 int warningcount;
 
-char *cobc_source_file = NULL;
-int cobc_source_line = 0;
-int cobc_source_format = COBC_FORMAT_FIXED;
-int cobc_tab_width = COBC_DEFAULT_TAB_WIDTH;
-int cobc_text_column = COBC_DEFAULT_TEXT_COLUMN;
+char *cb_source_file = NULL;
+int cb_source_line = 0;
+int cb_source_format = CB_FORMAT_FIXED;
+int cb_tab_width = CB_DEFAULT_TAB_WIDTH;
+int cb_text_column = CB_DEFAULT_TEXT_COLUMN;
 
-FILE *cobc_depend_file = NULL;
-char *cobc_depend_target = NULL;
-struct cobc_name_list *cobc_depend_list = NULL;
-struct cobc_name_list *cobc_include_list = NULL;
+FILE *cb_depend_file = NULL;
+char *cb_depend_target = NULL;
+struct cb_name_list *cb_depend_list = NULL;
+struct cb_name_list *cb_include_list = NULL;
 
-struct cobc_program *current_program = NULL;
-struct cobc_label *current_section = NULL, *current_paragraph = NULL;
+struct cb_program *current_program = NULL;
+struct cb_label *current_section = NULL, *current_paragraph = NULL;
 
 
 /*
@@ -165,18 +165,18 @@ static struct option long_options[] = {
   {"version", no_argument, 0, 'V'},
   {"verbose", no_argument, 0, 'v'},
   {"save-temps", no_argument, &save_temps, 1},
-  {"static", no_argument, &cobc_flag_call_static, 1},
-  {"dynamic", no_argument, &cobc_flag_call_static, 0},
-  {"free", no_argument, &cobc_source_format, COBC_FORMAT_FREE},
-  {"fixed", no_argument, &cobc_source_format, COBC_FORMAT_FIXED},
+  {"static", no_argument, &cb_flag_call_static, 1},
+  {"dynamic", no_argument, &cb_flag_call_static, 0},
+  {"free", no_argument, &cb_source_format, CB_FORMAT_FREE},
+  {"fixed", no_argument, &cb_source_format, CB_FORMAT_FIXED},
   {"column", required_argument, 0, '*'},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
-  {"fmain", no_argument, &cobc_flag_main, 1},
-  {"fdebugging-line", no_argument, &cobc_flag_debugging_line, 1},
+  {"fmain", no_argument, &cb_flag_main, 1},
+  {"fdebugging-line", no_argument, &cb_flag_debugging_line, 1},
   {"Wall", no_argument, 0, 'W'},
-#undef COBC_WARNING
-#define COBC_WARNING(sig,var,name,doc)		\
+#undef CB_WARNING
+#define CB_WARNING(sig,var,name,doc)		\
   {"W"name, no_argument, &var, 1},		\
   {"Wno-"name, no_argument, &var, 0},
 #include "warning.def"
@@ -186,7 +186,7 @@ static struct option long_options[] = {
 static void
 print_version ()
 {
-  printf ("%s %s\n%s", COBC_PACKAGE, COBC_VERSION, COBC_COPYRIGHT);
+  printf ("%s %s\n%s", CB_PACKAGE, CB_VERSION, CB_COPYRIGHT);
 }
 
 static void
@@ -221,8 +221,8 @@ COBOL options:\n\
 \n\
 Warning options:\n\
   -Wall                 Enable all warnings"));
-#undef COBC_WARNING
-#define COBC_WARNING(sig,var,name,doc)		\
+#undef CB_WARNING
+#define CB_WARNING(sig,var,name,doc)		\
   printf ("  -W%-19s %s\n", name, gettext (doc));
 #include "warning.def"
   puts ("");
@@ -256,50 +256,49 @@ process_command_line (int argc, char *argv[])
 	case 'o': output_name = strdup (optarg); break;
 
 	case 'g':
-	  cobc_flag_line_directive = 1;
+	  cb_flag_line_directive = 1;
 	  strcat (cob_cflags, " -g");
 	  break;
 
 	case '%': /* -MT */
-	  cobc_depend_target = strdup (optarg);
+	  cb_depend_target = strdup (optarg);
 	  break;
 
 	case '@': /* -MF */
-	  cobc_depend_file = fopen (optarg, "w");
-	  if (!cobc_depend_file)
+	  cb_depend_file = fopen (optarg, "w");
+	  if (!cb_depend_file)
 	    perror (optarg);
 	  break;
 
 	case 'I':
 	  {
-	    struct cobc_name_list *list =
-	      malloc (sizeof (struct cobc_name_list));
+	    struct cb_name_list *list = malloc (sizeof (struct cb_name_list));
 	    list->name = strdup (optarg);
 	    list->next = NULL;
 
 	    /* Append at the end */
-	    if (!cobc_include_list)
-	      cobc_include_list = list;
+	    if (!cb_include_list)
+	      cb_include_list = list;
 	    else
 	      {
-		struct cobc_name_list *p;
-		for (p = cobc_include_list; p->next; p = p->next);
+		struct cb_name_list *p;
+		for (p = cb_include_list; p->next; p = p->next);
 		p->next = list;
 	      }
 	  }
 	  break;
 
 	case '*': /* -column */
-	  cobc_text_column = atoi (optarg);
+	  cb_text_column = atoi (optarg);
 	  break;
 
 	case 'T':
-	  cobc_tab_width = atoi (optarg);
+	  cb_tab_width = atoi (optarg);
 	  break;
 
 	case 'W':
-#undef COBC_WARNING
-#define COBC_WARNING(sig,var,name,doc)		\
+#undef CB_WARNING
+#define CB_WARNING(sig,var,name,doc)		\
           var = 1;
 #include "warning.def"
 	  break;
@@ -311,7 +310,7 @@ process_command_line (int argc, char *argv[])
     }
 
   if (compile_level == stage_executable)
-    cobc_flag_main = 1;
+    cb_flag_main = 1;
 
   return optind;
 }
@@ -474,20 +473,20 @@ preprocess (struct filename *fn)
     return -1;
 
   /* Output dependency list */
-  if (cobc_depend_file)
+  if (cb_depend_file)
     {
-      struct cobc_name_list *l;
-      if (!cobc_depend_target)
+      struct cb_name_list *l;
+      if (!cb_depend_target)
 	{
 	  fputs (_("-MT must be given to specify target file\n"), stderr);
 	  exit (1);
 	}
-      fprintf (cobc_depend_file, "%s: \\\n", cobc_depend_target);
-      for (l = cobc_depend_list; l; l = l->next)
-	fprintf (cobc_depend_file, " %s%s\n", l->name, l->next ? " \\" : "");
-      for (l = cobc_depend_list; l; l = l->next)
-	fprintf (cobc_depend_file, "%s:\n", l->name);
-      fclose (cobc_depend_file);
+      fprintf (cb_depend_file, "%s: \\\n", cb_depend_target);
+      for (l = cb_depend_list; l; l = l->next)
+	fprintf (cb_depend_file, " %s%s\n", l->name, l->next ? " \\" : "");
+      for (l = cb_depend_list; l; l = l->next)
+	fprintf (cb_depend_file, "%s:\n", l->name);
+      fclose (cb_depend_file);
     }
 
   return 0;
@@ -506,8 +505,8 @@ process_translate (struct filename *fn)
   if (!yyout)
     terminate (fn->translate);
 
-  cobc_source_file = NULL;
-  cobc_source_line = 0;
+  cb_source_file = NULL;
+  cb_source_line = 0;
 
   init_constants ();
   init_reserved_words ();
@@ -675,11 +674,11 @@ main (int argc, char *argv[])
 static void
 yyprintf (char *file, int line, char *prefix, const char *fmt, va_list ap)
 {
-  static struct cobc_label *last_section = NULL;
-  static struct cobc_label *last_paragraph = NULL;
+  static struct cb_label *last_section = NULL;
+  static struct cb_label *last_paragraph = NULL;
 
-  file = file ? file : cobc_source_file;
-  line = line ? line : cobc_source_line;
+  file = file ? file : cb_source_file;
+  line = line ? line : cb_source_line;
 
   /* print the paragraph or section name */
   if (current_section != last_section
@@ -730,7 +729,7 @@ pperror (const char *msg)
 }
 
 void
-yywarn_x (cobc_tree x, const char *fmt, ...)
+yywarn_x (cb_tree x, const char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
@@ -741,7 +740,7 @@ yywarn_x (cobc_tree x, const char *fmt, ...)
 }
 
 void
-yyerror_x (cobc_tree x, const char *fmt, ...)
+yyerror_x (cb_tree x, const char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
@@ -753,17 +752,17 @@ yyerror_x (cobc_tree x, const char *fmt, ...)
 
 
 void
-redefinition_error (cobc_tree x)
+redefinition_error (cb_tree x)
 {
-  struct cobc_word *w = COBC_REFERENCE (x)->word;
+  struct cb_word *w = CB_REFERENCE (x)->word;
   yyerror_x (x, _("redefinition of `%s'"), w->name);
   yyerror_x (w->items->item, _("`%s' previously defined here"), w->name);
 }
 
 void
-undefined_error (cobc_tree x)
+undefined_error (cb_tree x)
 {
-  struct cobc_reference *r = COBC_REFERENCE (x);
+  struct cb_reference *r = CB_REFERENCE (x);
   if (r->next)
     yyerror_x (x, _("`%s' undefined in `%s'"),
 	       r->word->name, r->next->word->name);
@@ -772,12 +771,12 @@ undefined_error (cobc_tree x)
 }
 
 void
-ambiguous_error (cobc_tree x)
+ambiguous_error (cb_tree x)
 {
-  struct cobc_word *w = COBC_REFERENCE (x)->word;
+  struct cb_word *w = CB_REFERENCE (x)->word;
   if (w->error == 0)
     {
-      struct cobc_list *l;
+      struct cb_list *l;
 
       /* display error on the first time */
       yyerror_x (x, _("`%s' ambiguous; need qualification"), w->name);
@@ -787,14 +786,14 @@ ambiguous_error (cobc_tree x)
       for (l = w->items; l; l = l->next)
 	{
 	  char buff[BUFSIZ];
-	  cobc_tree x = l->item;
+	  cb_tree x = l->item;
 	  sprintf (buff, "`%s' ", w->name);
-	  switch (COBC_TREE_TAG (x))
+	  switch (CB_TREE_TAG (x))
 	    {
-	    case cobc_tag_field:
+	    case cb_tag_field:
 	      {
-		struct cobc_field *p;
-		for (p = COBC_FIELD (x)->parent; p; p = p->parent)
+		struct cb_field *p;
+		for (p = CB_FIELD (x)->parent; p; p = p->parent)
 		  {
 		    strcat (buff, "in `");
 		    strcat (buff, p->name);
@@ -802,9 +801,9 @@ ambiguous_error (cobc_tree x)
 		  }
 		break;
 	      }
-	    case cobc_tag_label:
+	    case cb_tag_label:
 	      {
-		struct cobc_label *l = COBC_LABEL (x);
+		struct cb_label *l = CB_LABEL (x);
 		if (l->section)
 		  {
 		    strcat (buff, "in `");

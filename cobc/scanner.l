@@ -36,8 +36,8 @@
 #include "reserved.h"
 
 #define SET_LOCATION(x)				\
-  (x)->source_file = cobc_source_file;		\
-  (x)->source_line = cobc_source_line
+  (x)->source_file = cb_source_file;		\
+  (x)->source_line = cb_source_line
 
 static int last_token_is_dot = 0;
 static int integer_is_label = 0;
@@ -66,14 +66,14 @@ static int scan_picture (char *text);
 
 <*>[ \t,;]+	{ /* ignore */ }
 
-<*>\n		{ cobc_source_line++; }
+<*>\n		{ cb_source_line++; }
 
 ^"#".* {
   /* line directive */
   char *endp;
-  cobc_source_line = strtol (yytext + 2, &endp, 10) - 1;
-  cobc_source_file = strdup (strchr (endp, '"') + 1);
-  strrchr (cobc_source_file, '"')[0] = '\0';
+  cb_source_line = strtol (yytext + 2, &endp, 10) - 1;
+  cb_source_file = strdup (strchr (endp, '"') + 1);
+  strrchr (cb_source_file, '"')[0] = '\0';
 }
 
 "PIC" |
@@ -113,7 +113,7 @@ X\"[^\"\n]*\" {
 
 [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)? {
   int token;
-  struct cobc_word *word;
+  struct cb_word *word;
 
   /* reserved word */
   token = lookup_reserved_word (yytext);
@@ -125,13 +125,13 @@ X\"[^\"\n]*\" {
   SET_LOCATION (yylval.tree);
 
   /* special name handling */
-  word = COBC_REFERENCE (yylval.tree)->word;
+  word = CB_REFERENCE (yylval.tree)->word;
   if (word->count > 0)
     {
-      cobc_tree x = word->items->item;
-      if (COBC_BUILTIN_P (x))
+      cb_tree x = word->items->item;
+      if (CB_BUILTIN_P (x))
 	return MNEMONIC_NAME;
-      if (COBC_CLASS_P (x))
+      if (CB_CLASS_P (x))
 	return CLASS_NAME;
     }
 

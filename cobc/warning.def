@@ -19,22 +19,22 @@
 
 #include "lib/gettext.h"
 
-/* COBC_WARNING (sig, var, name, doc) */
+/* CB_WARNING (sig, var, name, doc) */
 
-COBC_WARNING (2, cobc_warn_column_overflow, "column-overflow",
-	      N_("Warn any text after column 72"))
+CB_WARNING (2, cb_warn_column_overflow, "column-overflow",
+	    N_("Warn any text after column 72"))
 
-COBC_WARNING (2, cobc_warn_constant, "constant",
-	      N_("Warn inconsistent constant"))
+CB_WARNING (2, cb_warn_constant, "constant",
+	    N_("Warn inconsistent constant"))
 
-COBC_WARNING (2, cobc_warn_parentheses, "parentheses",
-	      N_("Warn lacks of parentheses around AND within OR"))
+CB_WARNING (2, cb_warn_parentheses, "parentheses",
+	    N_("Warn lacks of parentheses around AND within OR"))
 
-COBC_WARNING (3, cobc_warn_next_sentence, "next-sentence",
-	      N_("Warn uses of NEXT SENTENCE"))
+CB_WARNING (3, cb_warn_next_sentence, "next-sentence",
+	    N_("Warn uses of NEXT SENTENCE"))
 
-COBC_WARNING (3, cobc_warn_implicit_terminator, "implicit-terminator",
-	      N_("Warn lacks of scope terminator (END-XXX)"))
+CB_WARNING (3, cb_warn_implicit_terminator, "implicit-terminator",
+	    N_("Warn lacks of scope terminator (END-XXX)"))
 
-COBC_WARNING (3, cobc_warn_strict_typing, "strict-typing",
-	      N_("Warn type mismatch strictly"))
+CB_WARNING (3, cb_warn_strict_typing, "strict-typing",
+	    N_("Warn type mismatch strictly"))
