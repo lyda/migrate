@@ -202,7 +202,7 @@ cob_decimal_set_display (cob_decimal *d, cob_field *f)
   cob_put_sign (f, sign);
 }
 
-static void
+static int
 cob_decimal_get_display (cob_decimal *d, cob_field *f)
 {
   int diff;
@@ -223,13 +223,14 @@ cob_decimal_get_display (cob_decimal *d, cob_field *f)
   if (diff < 0)
     {
       COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
-      return;
+      return cob_exception_code;
     }
 
   /* store number */
   memset (data, '0', diff);
   memcpy (data + diff, p, size);
   cob_put_sign (f, sign);
+  return 0;
 }
 
 /* BINARY */
@@ -254,7 +255,7 @@ cob_decimal_set_binary (cob_decimal *d, cob_field *f)
   d->scale = f->attr->scale;
 }
 
-static void
+static int
 cob_decimal_get_binary (cob_decimal *d, cob_field *f)
 {
   int digits = f->attr->digits;
@@ -296,10 +297,11 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f)
 	val = -val;
       *(long long *) f->data = val;
     }
-  return;
+  return 0;
 
  overflow:
   COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
+  return cob_exception_code;
 }
 
 /* PACKED-DECIMAL */
@@ -349,16 +351,14 @@ cob_decimal_set_field (cob_decimal *d, cob_field *f)
     }
 }
 
-void
+int
 cob_decimal_get_field (cob_decimal *d, cob_field *f)
 {
   if (d->scale == DECIMAL_NAN)
     {
       COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
-      return;
+      return cob_exception_code;
     }
-
-  COB_SET_EXCEPTION (COB_EC_ZERO);
 
   /* work copy */
   if (d != &cob_d1)
@@ -374,11 +374,9 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f)
   switch (COB_FIELD_TYPE (f))
     {
     case COB_TYPE_NUMERIC_DISPLAY:
-      cob_decimal_get_display (d, f);
-      break;
+      return cob_decimal_get_display (d, f);
     case COB_TYPE_NUMERIC_BINARY:
-      cob_decimal_get_binary (d, f);
-      break;
+      return cob_decimal_get_binary (d, f);
     default:
       {
 	cob_field_attr attr = {
@@ -389,15 +387,14 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f)
 	};
 	unsigned char data[f->attr->digits];
 	cob_field temp = {f->attr->digits, data, &attr};
-	cob_decimal_get_display (d, &temp);
-	if (cob_exception_code == 0)
+	if (cob_decimal_get_display (d, &temp) == 0)
 	  cob_move (&temp, f);
-	break;
+	return cob_exception_code;
       }
     }
 }
 
-void
+int
 cob_decimal_get_field_round (cob_decimal *d, cob_field *f)
 {
   if (f->attr->scale < d->scale)
@@ -417,7 +414,7 @@ cob_decimal_get_field_round (cob_decimal *d, cob_field *f)
 	    mpz_sub_ui (d->value, d->value, 5);
 	}
     }
-  cob_decimal_get_field (d, f);
+  return cob_decimal_get_field (d, f);
 }
 
 
@@ -606,15 +603,13 @@ display_sub_int (unsigned char *data, size_t size, unsigned int n)
   return 1;
 }
 
-static void
+static int
 cob_add_int_to_display (cob_field *f, int n)
 {
   int sign = cob_get_sign (f);
   unsigned char *data = COB_FIELD_DATA (f);
   size_t size = COB_FIELD_SIZE (f);
   int scale = COB_FIELD_SCALE (f);
-
-  COB_SET_EXCEPTION (COB_EC_ZERO);
 
   /* -x + n = -(x - n) */
   if (sign < 0)
@@ -661,11 +656,12 @@ cob_add_int_to_display (cob_field *f, int n)
     }
 
   cob_put_sign (f, sign);
-  return;
+  return 0;
 
  overflow:
-  COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
   cob_put_sign (f, sign);
+  COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
+  return cob_exception_code;
 }
 
 
@@ -709,7 +705,7 @@ cob_sub_round (cob_field *f1, cob_field *f2)
   cob_decimal_get_field_round (&cob_d1, f1);
 }
 
-void
+int
 cob_add_int (cob_field *f, int n)
 {
   switch (COB_FIELD_TYPE (f))
@@ -720,18 +716,16 @@ cob_add_int (cob_field *f, int n)
       cob_decimal_set_field (&cob_d1, f);
       cob_decimal_set_int (&cob_d2, n);
       cob_decimal_add (&cob_d1, &cob_d2);
-      cob_decimal_get_field (&cob_d1, f);
-      break;
+      return cob_decimal_get_field (&cob_d1, f);
     default:
-      cob_add_int_to_display (f, n);
-      break;
+      return cob_add_int_to_display (f, n);
     }
 }
 
-void
+int
 cob_sub_int (cob_field *f, int n)
 {
-  cob_add_int (f, -n);
+  return cob_add_int (f, -n);
 }
 
 void

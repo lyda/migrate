@@ -621,8 +621,6 @@ cob_check_numeric (cob_field *f, const char *name)
 void
 cob_check_odo (int i, int min, int max, const char *name)
 {
-  COB_SET_EXCEPTION (COB_EC_ZERO);
-
   /* check the OCCURS DEPENDING ON item */
   if (i < min || max < i)
     {
@@ -636,8 +634,6 @@ cob_check_odo (int i, int min, int max, const char *name)
 void
 cob_check_subscript (int i, int min, int max, const char *name)
 {
-  COB_SET_EXCEPTION (COB_EC_ZERO);
-
   /* check the subscript */
   if (i < min || max < i)
     {
@@ -650,8 +646,6 @@ cob_check_subscript (int i, int min, int max, const char *name)
 void
 cob_check_ref_mod (int offset, int length, int size, const char *name)
 {
-  COB_SET_EXCEPTION (COB_EC_ZERO);
-
   /* check the offset */
   if (offset < 1 || offset > size)
     {

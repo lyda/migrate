@@ -226,7 +226,7 @@ lineseq_write (cob_file *f)
   /* write to the file */
   for (i = 0; i < size; i++)
     putc (f->record->data[i], f->file);
-  fputs ("\r\n", f->file);
+  fputs ("\n", f->file);
 
   return COB_STATUS_00_SUCCESS;
 }
@@ -326,8 +326,7 @@ relative_read_next (cob_file *f)
 	    }
 	  else
 	    {
-	      cob_add_int (f->keys[0].field, 1);
-	      if (cob_exception_code)
+	      if (cob_add_int (f->keys[0].field, 1) != 0)
 		{
 		  fseek (f->file, - sizeof (f->record->size), SEEK_CUR);
 		  return COB_STATUS_14_OUT_OF_KEY_RANGE;
@@ -1113,7 +1112,7 @@ cob_write_lines (cob_file *f, int lines)
     return;
 
   for (i = 0; i < lines; i++)
-    fputs ("\r\n", f->file);
+    fputs ("\n", f->file);
 }
 
 void

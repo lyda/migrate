@@ -226,14 +226,7 @@ void *
 cob_call_resolve (cob_field *f)
 {
   char buff[f->size];
-  void *ptr = cob_resolve (cob_field_to_string (f, buff));
-
-  COB_SET_EXCEPTION (COB_EC_ZERO);
-
-  if (!ptr)
-    COB_SET_EXCEPTION (COB_EC_PROGRAM_NOT_FOUND);
-
-  return ptr;
+  return cob_resolve (cob_field_to_string (f, buff));
 }
 
 void

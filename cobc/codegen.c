@@ -1643,12 +1643,12 @@ output_stmt (cb_tree x)
     case CB_TAG_STATEMENT:
       {
 	static int last_line = 0;
+	struct cb_statement *p = CB_STATEMENT (x);
+	output_line ("/* %s */", p->name);
 	if (x->source_file && last_line != x->source_line)
 	  {
-	    struct cb_statement *p = CB_STATEMENT (x);
 	    if (cb_flag_line_directive)
 	      output ("#line %d \"%s\"\n", x->source_line, x->source_file);
-	    output_line ("/* %s */;", p->name);
 	    if (cb_flag_source_location)
 	      {
 		output_line ("cob_source_file = \"%s\";", x->source_file);
@@ -1656,6 +1656,7 @@ output_stmt (cb_tree x)
 	      }
 	    last_line = x->source_line;
 	  }
+	output_line ("cob_exception_code = 0;");
 	break;
       }
     case CB_TAG_LABEL:
@@ -1718,23 +1719,8 @@ output_stmt (cb_tree x)
 	struct cb_sequence *p = CB_SEQUENCE (x);
 	cb_tree l = p->list;
 	output_indent ("{");
-	if (p->save_status && l && CB_CHAIN (l))
-	  {
-	    /* output with combining multiple cob_exception_code */
-	    output_line ("int code = 0;");
-	    for (; l; l = CB_CHAIN (l))
-	      {
-		output_stmt (CB_VALUE (l));
-		output_line ("code |= cob_exception_code;");
-	      }
-	    output_line ("cob_exception_code = code;");
-	  }
-	else
-	  {
-	    /* output without using cob_exception_code */
-	    for (; l; l = CB_CHAIN (l))
-	      output_stmt (CB_VALUE (l));
-	  }
+	for (; l; l = CB_CHAIN (l))
+	  output_stmt (CB_VALUE (l));
 	output_indent ("}");
 	break;
       }

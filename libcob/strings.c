@@ -63,8 +63,6 @@ cob_inspect_init (cob_field *var, int replacing)
   inspect_end = NULL;
   inspect_mark = malloc (inspect_size);
   memset (inspect_mark, 0, inspect_size);
-
-  COB_SET_EXCEPTION (COB_EC_ZERO);
 }
 
 void
@@ -242,8 +240,6 @@ cob_string_init (cob_field *dst, cob_field *ptr)
     }
   string_offset = 0;
 
-  COB_SET_EXCEPTION (COB_EC_ZERO);
-
   if (string_ptr)
     {
       string_offset = cob_get_int (string_ptr) - 1;
@@ -335,8 +331,6 @@ cob_unstring_init (cob_field *src, cob_field *ptr)
   unstring_ndlms = 0;
   unstring_reg_inited = 0;
   unstring_regexp[0] = 0;
-
-  COB_SET_EXCEPTION (COB_EC_ZERO);
 
   if (unstring_ptr)
     {
