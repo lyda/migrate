@@ -3396,7 +3396,11 @@ make_corr (cobc_tree (*func)(), cobc_tree g1, cobc_tree g2, int opt,
 	      if (p1->children && p2->children)
 		l = make_corr (func, t1, t2, opt, l);
 	      else
-		l = cons (func (t1, t2, opt), l);
+		{
+		  COBC_FIELD (t1)->f.used = 1;
+		  COBC_FIELD (t2)->f.used = 1;
+		  l = cons (func (t1, t2, opt), l);
+		}
 	    }
   return l;
 }
