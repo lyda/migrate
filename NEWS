@@ -1,5 +1,19 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Changes in OpenCOBOL 0.31
+
+** Stability update - See individual ChangeLogs
+
+** New driver program - "cobcrun"
+   This allows all application programs to be compiled as
+   modules and driven by "cobcrun" similar to MF's "cobrun".
+   Syntax - cobcrun <MAINPROG> [Arguments to program "MAINPROG"]
+   As "cobcrun" is linked with the static version of Open Cobol
+   libraries, it is easier to maintain concurrent versions on the
+   same system.
+
+-----------------------------------------------------------------------
+
 * Changes in OpenCOBOL 0.30
 
 ** Installation changes
@@ -12,7 +26,7 @@ NEWS - user visible changes				-*- outline -*-
 Use the new configure option --with-db1 to link with libdb1.
 Use the new configure option --with-db to link with libdb.
 Otherwise, libdb will not be linked, and indexed files and
-SORT/MEGER statements will not work.
+SORT/MERGE statements will not work.
 
 *** New subdirectory `config' will be installed under
 $prefix/share/open-cobol.
@@ -134,7 +148,8 @@ of obsolete options `-finline-move' and `-finline-get-int'.
 
 ** Many many bug fixes.
 
-
+-----------------------------------------------------------------------
+
 * Changes in OpenCOBOL 0.23
 
 ** Installation changes
@@ -151,7 +166,8 @@ of obsolete options `-finline-move' and `-finline-get-int'.
 
 *** fseek issues on the MinGW environment.
 
-
+-----------------------------------------------------------------------
+
 * Changes in OpenCOBOL 0.22
 
 ** Installation changes
@@ -170,7 +186,8 @@ Decimal arithmetic is done by using `long long'.
 
 ** Bug fixes
 
-
+-----------------------------------------------------------------------
+
 * Changes in OpenCOBOL 0.21
 
 ** Installation changes
@@ -200,7 +217,8 @@ Currently the following standards are available:
 
 *** -fdebugging-line has been removed.
 
-
+-----------------------------------------------------------------------
+
 * Changes in OpenCOBOL 0.20
 
 ** cobpp has been integrated into cobc.
@@ -254,7 +272,8 @@ use the option `-column' instead.
 
 ** Bug fixes.
 
-
+-----------------------------------------------------------------------
+
 * Changes in OpenCOBOL 0.12
 
 ** Improved compile-time error check.
@@ -263,14 +282,16 @@ use the option `-column' instead.
 
 ** Bug fixes.
 
-
 * Changes in OpenCOBOL 0.11
+
+-----------------------------------------------------------------------
 
 ** Part of run-time library interface has been redesigned.
 
 ** Bug fixes.
 
-
+-----------------------------------------------------------------------
+
 * Changes in OpenCOBOL 0.10
 
 ** Autoconf 2.57, Automake 1.7.2, Libtool 1.4.3, and Gettext 0.11.5
@@ -292,7 +313,8 @@ The default value of COB_CONFIG_FILE has been changed appropriately.
 
 ** CALL statements now accept CONTENT LENGTH OF clause.
 
-
+-----------------------------------------------------------------------
+
 * Changes in OpenCOBOL 0.9.7
 
 ** The default value of COB_CONFIG_FILE has been changed to
@@ -304,7 +326,8 @@ The default value of COB_CONFIG_FILE has been changed appropriately.
 
 ** Many bug fixes and improvements.
 
-
+-----------------------------------------------------------------------
+
 * Changes in OpenCOBOL 0.9.6
 
 ** cobc now requires `-main' flag to build an executable from a COBOL file.
@@ -323,14 +346,16 @@ The environment variable `COB_CONFIG_FILE' specifies the file name
 
 ** Many bug fixes and improvements.
 
-
+-----------------------------------------------------------------------
+
 * Changes in OpenCOBOL 0.9.5
 
 ** Support Berkeley DB 2.0.
 
 ** Many bug fixes.
 
-
+-----------------------------------------------------------------------
+
 * Changes in OpenCOBOL 0.9.4
 
 ** OpenCOBOL now requires Berkeley DB 3.0 or later.

@@ -1,3 +1,7 @@
+2005-02-01  Roger While <simrw@sim-basis.de>
+
+	* cobc.c : Add help text for -std=
+
 2004-11-05  Roger While <simrw@sim-basis.de>
 
 	* codegen.c : readjust align to 8

@@ -8,6 +8,7 @@ This package contains the following subdirectories:
 
     cobc        COBOL compiler
     libcob      COBOL run-time library
+    bin		COBOL driver program
     lib         static library and common headers
     config      configuration files
     po          international messages
@@ -27,7 +28,7 @@ Requirement
 
 OpenCOBOL requires the following external libraries to be installed:
 
-  o GNU MP (libgmp) 3.1.1 or later
+  o GNU MP (libgmp) 4.1.2 or later
     http://swox.com/gmp/
 
     libgmp is used to implement decimal arithmetic.
@@ -84,14 +85,14 @@ Development
 If you are a developer, consider building the latest OpenCOBOL
 from the CVS repository.
 
-You need to install the following extra packages before building
-OpenCOBOL:
+You need to install the following extra packages with specified
+minumum version before building OpenCOBOL:
 
-  o Autoconf 2.57
-  o Automake 1.7
-  o Libtool 1.5
-  o Gettext 0.12.1
-  o Bison 1.35
+  o Autoconf 2.59
+  o Automake 1.8
+  o Libtool 1.5.2
+  o Gettext 0.14.1
+  o Bison 1.85
   o Flex 2.5.4
 
 After checking out the latest source from the repository, run

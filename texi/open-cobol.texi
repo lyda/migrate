@@ -16,7 +16,7 @@
 
 This file documents OpenCOBOL, a COBOL compiler
 
-Copyright @copyright{} 2002, 2003 Keisuke Nishida
+Copyright @copyright{} 2002, 2003, 2004, 2005 Keisuke Nishida
 
 Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -51,7 +51,7 @@ Edition @value{EDITION} @*
 Updated for OpenCOBOL @value{VERSION} @*
 @value{UPDATED} @*
 
-Copyright @copyright{} 2002, 2003 Keisuke Nishida
+Copyright @copyright{} 2002, 2003, 2004, 2005 Keisuke Nishida
 
 Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are

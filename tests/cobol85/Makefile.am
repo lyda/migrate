@@ -1,7 +1,8 @@
 #MODULES = CM DB IC IF IX NC OB RL RW SG SM SQ ST
 MODULES = NC SM IC SQ RL IX ST
 
-EXTRA_DIST = EXEC85.conf.in expand.pl report.pl summary.pl
+EXTRA_DIST = EXEC85.conf.in expand.pl report.pl summary.pl summary.txt \
+	NC.txt SM.txt IC.txt SQ.txt RL.txt IX.txt ST.txt
 CLEANFILES = EXEC85
 
 COBOL = cobc -std=cobol85
