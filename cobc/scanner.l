@@ -140,9 +140,9 @@ X\"[^\"\n]*\" {
     return '(';
 }
 
+"<="		{ return LE; }
+">="		{ return GE; }
 "**"		{ return '^'; }
-"<="		{ return TOK_LE; }
-">="		{ return TOK_GE; }
 .		{ return yytext[0]; }
 
 <ID_STATE>{

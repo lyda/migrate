@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 675
+%expect 678
 
 %{
 #define yydebug		cob_trace_parser
@@ -49,9 +49,8 @@ static struct ginfo    *gic=NULL;
 static int warning_count = 0;
 static int error_count = 0;
 
-static cob_tree condition_expr = NULL;
-
 static void assert_numeric_sy (cob_tree sy);
+static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %}
 
 %union {
@@ -67,7 +66,6 @@ static void assert_numeric_sy (cob_tree sy);
   struct tallying_for_list *tfval;
   struct replacing_list *repval;
   struct replacing_by_list *rbval;
-  struct converting_struct *cvval;
   struct inspect_before_after *baval;
   struct scr_info *sival;
   struct perf_info *pfval;
@@ -93,7 +91,7 @@ static void assert_numeric_sy (cob_tree sy);
 %token <tree> SYMBOL,VARIABLE,VARCOND,SUBSCVAR,LABELSTR,PICTURE_TOK
 %token <tree> INTEGER_TOK,NLITERAL,CLITERAL
 
-%token EQUAL,GREATER,LESS,TOK_GE,TOK_LE,COMMAND_LINE,ENVIRONMENT_VARIABLE
+%token EQUAL,GREATER,LESS,GE,LE,COMMAND_LINE,ENVIRONMENT_VARIABLE
 %token DATE,DAY,DAY_OF_WEEK,TIME,INKEY,READ,WRITE,OBJECT_COMPUTER,INPUT_OUTPUT
 %token TO,FOR,IS,ARE,THRU,THAN,NO,CANCEL,ASCENDING,DESCENDING,ZEROS,PORT
 %token SOURCE_COMPUTER,BEFORE,AFTER,SCREEN,REVERSE_VIDEO,NUMBER,PLUS,MINUS
@@ -132,7 +130,6 @@ static void assert_numeric_sy (cob_tree sy);
 %token INPUT,I_O,OUTPUT,EXTEND,EOL,EOS,BINARY,FLOAT_SHORT,FLOAT_LONG
 
 %type <baval> inspect_before_after
-%type <cvval> converting_clause
 %type <ival> if_then,search_body,search_all_body,class
 %type <ival> search_when,search_when_list,search_opt_at_end
 %type <gic>  on_end,opt_read_at_end
@@ -176,8 +173,8 @@ static void assert_numeric_sy (cob_tree sy);
 %type <tree> from_rec_varying,to_rec_varying
 %type <tree> literal,gliteral,without_all_literal,all_literal,special_literal
 %type <tree> nliteral,signed_nliteral,subscripted_variable
-%type <tree> condition,condition_1,comparative_condition,class_condition
-%type <tree> variable_condition,search_all_when_conditional
+%type <tree> condition_1,condition_2,comparative_condition,class_condition
+%type <tree> search_all_when_conditional
 %type <tfval> tallying_for_list
 %type <tlval> tallying_list, tallying_clause
 %type <udstval> unstring_destinations,unstring_dest_var
@@ -1581,12 +1578,9 @@ initialize_vars:
 inspect_statement:
   INSPECT name tallying_clause { gen_inspect($2,(void *)$3,0); }
   replacing_clause { gen_inspect($2,(void *)$5,1); }
-| INSPECT name converting_clause { gen_inspect($2,(void *)$3,2); }
-;
-converting_clause:
-  CONVERTING noallname TO noallname inspect_before_after
+| INSPECT name CONVERTING noallname TO noallname inspect_before_after
   {
-    $$ = alloc_converting_struct($2,$4,$5);
+    gen_inspect ($2,alloc_converting_struct($4,$6,$7),2);
   }
 ;
 tallying_clause:
@@ -2628,62 +2622,56 @@ opt_not_invalid_key_sentence:
 ;
 
 
-/*
+/*******************
  * Condition
- */
+ *******************/
 
 condition:
-  condition_1			{ condition_expr = NULL; gen_condition ($1); }
+  condition_1
+  {
+    gen_condition ($1);
+  }
 ;
 condition_1:
-  comparative_condition		{ $$ = $1; }
-| class_condition		{ condition_expr = NULL; $$ = $1; }
-| variable_condition		{ condition_expr = NULL; $$ = $1; }
-| '(' condition_1 ')'		{ condition_expr = NULL; $$ = $2; }
+  VARCOND			{ $$ = make_unary_cond ($1, COND_VAR); }
+| comparative_condition		{ $$ = $1; }
+| class_condition		{ $$ = $1; }
+| '(' condition_1 ')'		{ $$ = $2; }
 | NOT condition_1		{ $$ = make_unary_cond ($2, COND_NOT); }
-| condition_1 AND condition_1	{ $$ = make_cond ($1, COND_AND, $3); }
-| condition_1 OR condition_1	{ $$ = make_cond ($1, COND_OR, $3); }
+| condition_1 AND condition_2	{ $$ = make_cond ($1, COND_AND, $3); }
+| condition_1 OR condition_2	{ $$ = make_cond ($1, COND_OR, $3); }
 ;
-comparative_condition:
-  expr opt_is flag_not operator expr 
-  {
-    if ($3)
-      /* invert the operator */
-      switch ($4)
-	{
-	case COND_EQ: $4 = COND_NE; break;
-	case COND_GT: $4 = COND_LE; break;
-	case COND_LT: $4 = COND_GE; break;
-	case COND_GE: $4 = COND_LT; break;
-	case COND_LE: $4 = COND_GT; break;
-	}
+condition_2:
+  condition_1			{ $$ = $1; }
+| expr opt_is			{ $$ = make_opt_cond ($<tree>-1, -1, $1); }
+| operator expr			{ $$ = make_opt_cond ($<tree>-1, $1, $2); }
+;
 
-    condition_expr = $1;
-    $$ = make_cond (condition_expr, $4, $5);
-  }
-| operator expr
-  {
-    if (condition_expr != NULL)
-      $$ = make_cond (condition_expr, $1, $2);
-    else
-      {
-	yyerror ("broken condition");
-	$$ = make_cond ($2, $1, $2); /* error recovery */
-      }
-  }
+
+/*
+ * Comparative condition
+ */
+
+comparative_condition:
+  expr opt_is operator expr	{ $$ = make_cond ($1, $3, $4); }
 ;
 operator:
-  equal opt_to			{ $$ = COND_EQ; }
-| greater opt_than		{ $$ = COND_GT; }
-| less opt_than			{ $$ = COND_LT; }
-| greater_or_equal		{ $$ = COND_GE; }
-| less_or_equal			{ $$ = COND_LE; }
+  flag_not equal opt_to		{ $$ = $1 ? COND_NE : COND_EQ; }
+| flag_not greater opt_than	{ $$ = $1 ? COND_LE : COND_GT; }
+| flag_not less opt_than	{ $$ = $1 ? COND_GE : COND_LT; }
+| flag_not greater_or_equal	{ $$ = $1 ? COND_LT : COND_GE; }
+| flag_not less_or_equal	{ $$ = $1 ? COND_GT : COND_LE; }
 ;
-equal: EQUAL | '=' ;
-greater: GREATER | '>' ;
-less: LESS | '<' ;
-greater_or_equal: TOK_GE | GREATER opt_than OR EQUAL opt_to ;
-less_or_equal: TOK_LE | LESS opt_than OR EQUAL opt_to ;
+equal: '=' | EQUAL ;
+greater: '>' | GREATER ;
+less: '<' | LESS ;
+greater_or_equal: GE | GREATER opt_than OR EQUAL opt_to ;
+less_or_equal: LE | LESS opt_than OR EQUAL opt_to ;
+
+
+/*
+ * Class condition
+ */
 
 class_condition:
   expr opt_is flag_not class
@@ -2694,6 +2682,7 @@ class_condition:
     if ($3)
       $$ = make_unary_cond ($$, COND_NOT);
   }
+;
 class:
   NUMERIC			{ $$ = COND_NUMERIC; }
 | ALPHABETIC			{ $$ = COND_ALPHABETIC; }
@@ -2704,14 +2693,10 @@ class:
 | ZEROS				{ $$ = COND_ZERO; }
 ;
 
-variable_condition:
-  VARCOND			{ $$ = make_unary_cond ($1, COND_VAR); }
-;
-
 
-/*
+/*******************
  * Expression
- */
+ *******************/
 
 expr:
   gname				{ $$ = $1; }
@@ -2995,6 +2980,27 @@ assert_numeric_sy (cob_tree sy)
 {
   if (!is_numeric_sy (sy))
     yyerror ("non numeric variable: %s", sy->name);
+}
+
+static cob_tree
+make_opt_cond (cob_tree last, int type, cob_tree this)
+{
+ again:
+  if (COND_IS_UNARY (last))
+    {
+      yyerror ("broken condition");
+      return this; /* error recovery */
+    }
+
+  if (COND_TYPE (last) == COND_AND || COND_TYPE (last) == COND_OR)
+    {
+      last = COND_X (last);
+      goto again;
+    }
+
+  if (type == -1)
+    type = COND_TYPE (last);
+  return make_cond (COND_X (last), type, this);
 }
 
 void

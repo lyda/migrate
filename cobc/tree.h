@@ -529,6 +529,8 @@ struct cond
 #define COND_X(c)	(COND (c)->x)
 #define COND_Y(c)	(COND (c)->y)
 
+#define COND_IS_UNARY(c) (COND_Y (c) == 0)
+
 extern cob_tree make_cond (cob_tree x, enum cond_type type, cob_tree y);
 extern cob_tree make_unary_cond (cob_tree x, enum cond_type type);
 
