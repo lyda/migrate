@@ -665,10 +665,13 @@ cob_memcpy (cob_field *dst, unsigned char *src, int size)
   cob_move (&temp , dst);
 }
 
+
 void
 cob_set_int (cob_field *f, int n)
 {
-  cob_field temp = {4, (unsigned char *) &n, &cob_sbin_attr[9]};
+  cob_field_attr attr =
+    {COB_TYPE_NUMERIC_BINARY, 9, 0, COB_FLAG_HAVE_SIGN, NULL};
+  cob_field temp = {4, (unsigned char *) &n, &attr};
   cob_move (&temp, f);
 }
 
@@ -676,7 +679,9 @@ int
 cob_get_int (cob_field *f)
 {
   int n;
-  cob_field temp = {4, (unsigned char *) &n, &cob_sbin_attr[9]};
+  cob_field_attr attr =
+    {COB_TYPE_NUMERIC_BINARY, 9, 0, COB_FLAG_HAVE_SIGN, NULL};
+  cob_field temp = {4, (unsigned char *) &n, &attr};
   cob_move (f, &temp);
   return n;
 }
