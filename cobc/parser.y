@@ -603,6 +603,11 @@ select_sequence:
   }
   select_options '.'
   {
+    /* check ASSIGN clause */
+    if (current_file_name->assign == NULL)
+      yyerror_loc (&@2, _("ASSIGN required for file `%s'"), $4->name);
+
+    /* check KEY clause */
     switch (current_file_name->organization)
       {
       case COB_ORG_INDEXED:
