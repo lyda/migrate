@@ -69,13 +69,13 @@ static char cob_cobpp[FILENAME_MAX];		/* cobpp */
 static char cob_ldadd[BUFSIZ];			/* -lcob -ldb -lm ... */
 static char cob_ldflags[BUFSIZ];		/* -L/usr/lib */
 
-static enum {
+static enum format {
   format_unspecified,
   format_fixed,
   format_free
 } source_format;
 
-static enum {
+static enum level {
   stage_preprocess,
   stage_compile,
   stage_assemble,
@@ -181,7 +181,7 @@ print_usage ()
   puts ("COBOL options:");
   puts ("  -F            Use standard fixed column format");
   puts ("  -X            Use X/Open free format");
-  puts ("  -D            Enable debug source code (i.e., \"D\" lines)");
+  puts ("  -D            Compile debug lines (i.e., \"D\" lines)");
   puts ("  -I <path>     Add include (copybooks) search path");
   puts ("  -T <num>      Expand tabs to <num> spaces (default T=8)");
 #ifdef COB_DEBUG
@@ -197,8 +197,8 @@ process_command_line (int argc, char *argv[])
   int c, index;
 
   /* Default options */
-  source_format = format_free;	/* -F */
-  compile_level = stage_link;	/* -x */
+  source_format = format_unspecified;
+  compile_level = stage_link;
 
   /* Parse the options */
   while ((c = getopt_long_only (argc, argv, short_options,
@@ -353,6 +353,27 @@ process_filename (const char *source_filename)
   return fn;
 }
 
+static enum format
+probe_source_format (const char *filename)
+{
+  FILE *fp = fopen (filename, "r");
+  char buff[8];
+
+  if (!fp)
+    {
+      cob_error ("failed to open file: %s\n", filename);
+      exit (1);
+    }
+
+  if (fgets (buff, 8, fp))
+    if (('0' <= buff[0] && buff[0] <= '9')
+	|| (strncmp (buff, "      *", 7) == 0))
+      return format_fixed;
+
+  /* Assume to be free format by default */
+  return format_free;
+}
+
 static int
 preprocess (struct filename *fn)
 {
@@ -376,6 +397,9 @@ preprocess (struct filename *fn)
       strcat (buff, fn->preprocess);
       strcat (buff, " ");
     }
+
+  if (source_format == format_unspecified)
+    source_format = probe_source_format (fn->source);
 
   strcat (buff, (source_format == format_fixed) ? "-f " : "-x ");
   strcat (buff, fn->source);
@@ -442,22 +466,22 @@ process_link (struct filename *file_list)
 int
 main (int argc, char *argv[])
 {
-  int idx;
+  int index;
 
   /* Initialize the global variables */
   init_environment (argc, argv);
 
   /* Process command line arguments */
-  idx = process_command_line (argc, argv);
+  index = process_command_line (argc, argv);
 
   /* Check the filename */
-  if (idx == argc)
+  if (index == argc)
     cob_error ("No input files\n");
 
   file_list = NULL;
-  while (idx < argc)
+  while (index < argc)
     {
-      struct filename *fn = process_filename (argv[idx++]);
+      struct filename *fn = process_filename (argv[index++]);
       fn->next = file_list;
       file_list = fn;
 
