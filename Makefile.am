@@ -26,7 +26,7 @@ upload:
 	  ncftpput upload.sourceforge.net /incoming \
 	    $(rpmdir)/RPMS/i386/$(distdir)-$(RELEASE).i386.rpm \
 	    $(rpmdir)/SRPMS/$(distdir)-$(RELEASE).src.rpm
-	test ../$(PACKAGE)_$(VERSION)-$(RELEASE)_i386.deb && \
+	test -e ../$(PACKAGE)_$(VERSION)-$(RELEASE)_i386.deb && \
 	  ncftpput upload.sourceforge.net /incoming \
 	    ../$(PACKAGE)_$(VERSION)-$(RELEASE).tar.gz \
 	    ../$(PACKAGE)_$(VERSION)-$(RELEASE)_i386.deb

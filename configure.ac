@@ -17,8 +17,7 @@ AC_ARG_ENABLE(debug,
 AC_ARG_ENABLE(maintainer-mode,
   [  --enable-maintainer-mode enable maintainer mode],
   [ AC_DEFINE(COB_DEBUG)
-    AC_CONFIG_FILES([redhat/open-cobol.spec testsute/nist/Makefile])
-  ])
+    AC_CONFIG_FILES([redhat/open-cobol.spec])])
 
 save_libs="$LIBS"
 
