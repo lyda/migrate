@@ -316,6 +316,25 @@ AT_CHECK([./prog], [0], [OK])
 
 AT_CLEANUP
 
+AT_SETUP([Index and parenthesized expression])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 G.
+         02 X           PIC X OCCURS 1 INDEXED BY I.
+       PROCEDURE        DIVISION.
+         IF I < (I + 2)
+           DISPLAY "OK"
+         END-IF.
+])
+
+AT_CHECK([${COMPILE_ONLY} -o prog prog.cob])
+
+AT_CLEANUP
+
 
 ## CALL statement
 
