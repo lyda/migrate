@@ -49,7 +49,7 @@ cob_display (struct cob_field f)
       int i;
       int size = (f.desc->digits
 		  + (f.desc->have_sign ? 1 : 0)
-		  + (f.desc->decimals ? 1 : 0));
+		  + (f.desc->decimals > 0 ? 1 : 0));
       unsigned char pic[9], *p = pic;
       unsigned char data[size];
       struct cob_field_desc desc =
@@ -58,9 +58,11 @@ cob_display (struct cob_field f)
       desc.pic = pic;
       if (f.desc->have_sign)
 	p += sprintf (p, "+\001");
-      p += sprintf (p, "9%c", f.desc->digits - f.desc->decimals);
       if (f.desc->decimals > 0)
-	p += sprintf (p, ".%c9%c", 1, f.desc->decimals);
+	sprintf (p, "9%c.%c9%c", f.desc->digits - f.desc->decimals,
+		 1, f.desc->decimals);
+      else
+	sprintf (p, "9%c", f.desc->digits);
       cob_move (f, temp);
       for (i = 0; i < size; i++)
 	fputc (data[i], stdout);

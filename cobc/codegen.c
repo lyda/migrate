@@ -654,6 +654,8 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
 		output ("%c\\%03o", s[0], s[1]);
 	      output ("\"");
 	    }
+	  else
+	    output ("0");
 	  output ("};\n");
 	}
     }

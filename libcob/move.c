@@ -514,9 +514,10 @@ cob_move_alphanum_to_edited (struct cob_field f1, struct cob_field f2)
 {
   char *p;
   unsigned char *max, *src, *dst;
+  int sign = get_sign (f1);
 
-  max = f1.data + f1.desc->size;
-  src = f1.data;
+  src = FIELD_BASE (f1);
+  max = src + FIELD_LENGTH (f1);
   dst = f2.data;
   for (p = f2.desc->pic; *p; )
     {
@@ -540,6 +541,7 @@ cob_move_alphanum_to_edited (struct cob_field f1, struct cob_field f2)
 	    }
 	}
     }
+  put_sign (f1, sign);
 }
 
 
@@ -576,7 +578,13 @@ cob_move (struct cob_field f1, struct cob_field f2)
 	case COB_NUMERIC_EDITED:
 	  return cob_move_display_to_edited (f1, f2);
 	case COB_ALPHANUMERIC_EDITED:
-	  return cob_move_alphanum_to_edited (f1, f2);
+	  if (f1.desc->decimals < 0 || f1.desc->decimals > f1.desc->digits)
+	    /* expands P's */
+	    return indirect_move (cob_move_display_to_display, f1, f2,
+				  MAX (f1.desc->digits, f1.desc->decimals),
+				  MAX (0, f1.desc->decimals));
+	  else
+	    return cob_move_alphanum_to_edited (f1, f2);
 	default:
 	  return cob_move_display_to_alphanum (f1, f2);
 	}
