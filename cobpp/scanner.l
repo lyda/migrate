@@ -317,6 +317,11 @@ read_line (char *buff, int size)
 	break;
       }
  end:
+  if (n > 0 && buff[n - 1] != '\n')
+    {
+      yywarn (_("file unterminated by a newline"));
+      buff[n++] = '\n';
+    }
   buff[n] = '\0';
   if (n == 0)
     return 0;
@@ -329,6 +334,25 @@ read_line (char *buff, int size)
   memset (buff, ' ', 6);
   if (n < 6)
     strcpy (buff + 6, " \n");
+
+  /* check the column 7 */
+  switch (buff[6])
+    {
+    case 'D':
+      if (cobpp_debug_flag)
+	{
+	  /* activate debugging line */
+	  buff[6] = ' ';
+	  break;
+	}
+      /* fall through */
+    case '*':
+    case '/':
+      /* remove comments */
+      strcpy (buff + 6, " \n");
+      n = 7;
+      break;
+    }
 
   /* remove letters after column 72 */
   if (cobpp_source_format == COBPP_FORMAT_FIXED && n > 73)
@@ -344,23 +368,6 @@ read_line (char *buff, int size)
 	      yywarn (_("more warnings inhibited"));
 	  }
       strcpy (buff + 72, "\n");
-    }
-
-  switch (buff[6])
-    {
-    case 'D':
-      if (cobpp_debug_flag)
-	{
-	  /* activate debugging line */
-	  buff[6] = ' ';
-	  break;
-	}
-      /* fall through */
-    case '*':
-    case '/':
-      /* remove comments */
-      strcpy (buff + 6, " \n");
-      break;
     }
 
   return strlen (buff);
