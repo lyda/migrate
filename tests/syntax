@@ -303,7 +303,7 @@ at_times_file=$at_suite_dir/at-times
 # List of the tested programs.
 at_tested='cobc'
 # List of the all the test groups.
-at_groups_all=' 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68'
+at_groups_all=' 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69'
 # As many dots as there are digits in the last test group number.
 # Used to normalize the test group numbers so that `ls' lists them in
 # numerical order.
@@ -374,9 +374,10 @@ at_help_all='1;copy.at:21;COPY: file not found;copy;
 63;move.at:198;MOVE numeric (non-integer) TO x;;
 64;move.at:228;MOVE numeric-edited TO x;;
 65;move.at:262;Operands must be groups;;
-66;multiply.at:27;Category check of Format 1;;
-67;multiply.at:60;Category check of Format 2;;
-68;multiply.at:95;Category check of literals;;
+66;move.at:294;MOVE: misc;;
+67;multiply.at:27;Category check of Format 1;;
+68;multiply.at:60;Category check of Format 2;;
+69;multiply.at:95;Category check of literals;;
 '
 
 at_keywords=
@@ -403,7 +404,7 @@ do
 	;;
 
     --version | -V )
-	echo "$as_me (OpenCOBOL 0.23.30a)"
+	echo "$as_me (OpenCOBOL 0.29a)"
 	exit 0
 	;;
 
@@ -559,7 +560,7 @@ fi
 # List of tests.
 if $at_list_p; then
   cat <<_ATEOF
-OpenCOBOL 0.23.30a test suite: Syntax Tests test groups:
+OpenCOBOL 0.29a test suite: Syntax Tests test groups:
 
  NUM: FILENAME:LINE      TEST-GROUP-NAME
       KEYWORDS
@@ -640,15 +641,15 @@ exec 5>$at_suite_log
 
 # Banners and logs.
 cat <<\_ASBOX
-## -------------------------------------------- ##
-## OpenCOBOL 0.23.30a test suite: Syntax Tests. ##
-## -------------------------------------------- ##
+## ----------------------------------------- ##
+## OpenCOBOL 0.29a test suite: Syntax Tests. ##
+## ----------------------------------------- ##
 _ASBOX
 {
   cat <<\_ASBOX
-## -------------------------------------------- ##
-## OpenCOBOL 0.23.30a test suite: Syntax Tests. ##
-## -------------------------------------------- ##
+## ----------------------------------------- ##
+## OpenCOBOL 0.29a test suite: Syntax Tests. ##
+## ----------------------------------------- ##
 _ASBOX
   echo
 
@@ -4872,13 +4873,71 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  66 ) # 66. multiply.at:27: Category check of Format 1
-    at_setup_line='multiply.at:27'
-    at_desc='Category check of Format 1'
-    $at_quiet $ECHO_N " 66: Category check of Format 1                   $ECHO_C"
+  66 ) # 66. move.at:294: MOVE: misc
+    at_setup_line='move.at:294'
+    at_desc='MOVE: misc'
+    $at_quiet $ECHO_N " 66: MOVE: misc                                   $ECHO_C"
     at_xfail=no
     (
-      echo "66. multiply.at:27: testing ..."
+      echo "66. move.at:294: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 INVALID-ITEM.
+       01 I             PIC 9(3).
+       PROCEDURE        DIVISION.
+           MOVE 1 TO INVALID-ITEM.
+           MOVE SPACE TO I(1:2).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "move.at:311: \${COMPILE_ONLY} prog.cob"
+echo move.at:311 >$at_check_line_file
+( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+echo >>$at_stderr; echo "prog.cob:6: PICTURE clause required for \`INVALID-ITEM'
+" | $at_diff - $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   1) ;;
+   *) echo "move.at:311: exit code was $at_status, expected 1"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  67 ) # 67. multiply.at:27: Category check of Format 1
+    at_setup_line='multiply.at:27'
+    at_desc='Category check of Format 1'
+    $at_quiet $ECHO_N " 67: Category check of Format 1                   $ECHO_C"
+    at_xfail=no
+    (
+      echo "67. multiply.at:27: testing ..."
       $at_traceon
 
 
@@ -4940,13 +4999,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  67 ) # 67. multiply.at:60: Category check of Format 2
+  68 ) # 68. multiply.at:60: Category check of Format 2
     at_setup_line='multiply.at:60'
     at_desc='Category check of Format 2'
-    $at_quiet $ECHO_N " 67: Category check of Format 2                   $ECHO_C"
+    $at_quiet $ECHO_N " 68: Category check of Format 2                   $ECHO_C"
     at_xfail=no
     (
-      echo "67. multiply.at:60: testing ..."
+      echo "68. multiply.at:60: testing ..."
       $at_traceon
 
 
@@ -5010,13 +5069,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  68 ) # 68. multiply.at:95: Category check of literals
+  69 ) # 69. multiply.at:95: Category check of literals
     at_setup_line='multiply.at:95'
     at_desc='Category check of literals'
-    $at_quiet $ECHO_N " 68: Category check of literals                   $ECHO_C"
+    $at_quiet $ECHO_N " 69: Category check of literals                   $ECHO_C"
     at_xfail=no
     (
-      echo "68. multiply.at:95: testing ..."
+      echo "69. multiply.at:95: testing ..."
       $at_traceon
 
 
@@ -5339,7 +5398,7 @@ _ASBOX
   echo "Please send \`$as_me.log' and all information you think might help:"
   echo
   echo "   To: <open-cobol-list@lists.sourceforge.net>"
-  echo "   Subject: [OpenCOBOL 0.23.30a] $as_me:$at_fail_list${at_fail_list:+ failed${at_xpass_list:+,}}$at_xpass_list${at_xpass_list:+ passed unexpectedly}"
+  echo "   Subject: [OpenCOBOL 0.29a] $as_me:$at_fail_list${at_fail_list:+ failed${at_xpass_list:+,}}$at_xpass_list${at_xpass_list:+ passed unexpectedly}"
   echo
   if test $at_debug_p = false; then
     echo

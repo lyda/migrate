@@ -289,3 +289,25 @@ AT_CLEANUP
 
 
 # 11) DONE
+
+
+AT_SETUP([MOVE: misc])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 INVALID-ITEM.
+       01 I             PIC 9(3).
+       PROCEDURE        DIVISION.
+           MOVE 1 TO INVALID-ITEM.
+           MOVE SPACE TO I(1:2).
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:6: PICTURE clause required for `INVALID-ITEM'
+])
+
+AT_CLEANUP
