@@ -4380,9 +4380,9 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:358: \${CC} -rdynamic -o prog caller.o callee.o \${COB_LIBS}"
+echo "misc.at:358: \${COMPILE} -o prog caller.o callee.o"
 echo misc.at:358 >$at_check_line_file
-( $at_traceon; ${CC} -rdynamic -o prog caller.o callee.o ${COB_LIBS} ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${COMPILE} -o prog caller.o callee.o ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
