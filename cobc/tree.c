@@ -1692,7 +1692,6 @@ cb_build_binary_op (cb_tree left, char op, cb_tree right)
 
     default:
     invalid:
-      cb_error ("invalid binary-op: %s", cb_name (CB_TREE (p)));
       abort ();
     }
 
