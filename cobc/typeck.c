@@ -484,18 +484,45 @@ cb_build_identifier (cb_tree x)
   return x;
 }
 
+static cb_tree
+cb_build_length_1 (cb_tree x)
+{
+  struct cb_field *f = CB_FIELD (cb_ref (x));
+  if (cb_field_variable_size (f) == NULL)
+    {
+      /* constant size */
+      return cb_int (cb_field_size (x));
+    }
+  else
+    {
+      /* variable size */
+      cb_tree e = NULL;
+      for (f = f->children; f; f = f->sister)
+	{
+	  cb_tree size = cb_build_length_1 (cb_build_field_reference (f, x));
+	  if (f->occurs_depending)
+	    size = cb_build_binary_op (size, '*', f->occurs_depending);
+	  else if (f->occurs_max > 1)
+	    size = cb_build_binary_op (size, '*', cb_int (f->occurs_max));
+	  e = e ? cb_build_binary_op (e, '+', size) : size;
+	}
+      return e;
+    }
+}
+
 cb_tree
 cb_build_length (cb_tree x)
 {
-  unsigned char buff[20];
+  cb_tree temp;
 
   if (x == cb_error_node)
     return cb_error_node;
   if (CB_REFERENCE_P (x) && cb_ref (x) == cb_error_node)
     return cb_error_node;
 
-  sprintf (buff, "%d", cb_field_size (x));
-  return cb_build_numeric_literal (0, buff, 0);
+  temp = cb_build_index (cb_build_filler ());
+  cb_emit (cb_build_assign (temp, cb_build_length_1 (x)));
+  return temp;
 }
 
 cb_tree
