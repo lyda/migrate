@@ -148,30 +148,43 @@ void
 undefined_error (cb_tree x)
 {
   struct cb_reference *r = CB_REFERENCE (x);
-  if (r->chain)
-    cb_error_x (x, _("`%s' undefined in `%s'"),
-		r->word->name, CB_REFERENCE (r->chain)->word->name);
-  else
-    cb_error_x (x, _("`%s' undefined"), r->word->name);
+  char buff[CB_MAX_CNAME];
+  cb_tree c;
+
+  sprintf (buff, "`%s'", CB_NAME (x));
+  for (c = r->chain; c; c = CB_REFERENCE (c)->chain)
+    {
+      strcat (buff, " in `");
+      strcat (buff, CB_NAME (c));
+      strcat (buff, "'");
+    }
+  cb_error_x (x, _("%s undefined"), buff);
 }
 
 void
 ambiguous_error (cb_tree x)
 {
   struct cb_word *w = CB_REFERENCE (x)->word;
+  char buff[CB_MAX_CNAME];
   if (w->error == 0)
     {
-      cb_tree list;
+      cb_tree l;
 
       /* display error on the first time */
-      cb_error_x (x, _("`%s' ambiguous; need qualification"), w->name);
+      sprintf (buff, "`%s'", CB_NAME (x));
+      for (l = CB_REFERENCE (x)->chain; l; l = CB_REFERENCE (l)->chain)
+	{
+	  strcat (buff, " in `");
+	  strcat (buff, CB_NAME (l));
+	  strcat (buff, "'");
+	}
+      cb_error_x (x, _("%s ambiguous; need qualification"), buff);
       w->error = 1;
 
       /* display all fields with the same name */
-      for (list = w->items; list; list = CB_CHAIN (list))
+      for (l = w->items; l; l = CB_CHAIN (l))
 	{
-	  char buff[FILENAME_MAX];
-	  cb_tree x = CB_LIST (list)->value;
+	  cb_tree x = CB_VALUE (l);
 	  sprintf (buff, "`%s' ", w->name);
 	  switch (CB_TREE_TAG (x))
 	    {
