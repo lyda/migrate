@@ -21,7 +21,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 583
+%expect 507
 
 %{
 #define yydebug		cob_trace_parser
@@ -128,7 +128,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <ival> if_then,search_body,search_all_body,class
 %type <ival> search_when,search_when_list,search_opt_at_end
 %type <ival> integer,operator,before_after,set_mode
-%type <ival> on_exception_or_overflow,on_not_exception
+%type <ival> opt_on_exception_or_overflow,opt_on_exception_sentence
 %type <ival> display_upon,display_options
 %type <ival> flag_all,opt_with_duplicates,opt_with_test,opt_optional
 %type <ival> flag_not
@@ -1458,19 +1458,13 @@ alter_option:
  */
 
 call_statement:
-  CALL		{ curr_call_mode = CALL_BY_REFERENCE; }
-  gname call_using call_returning
-  { $<ival>$ = loc_label++; /* exception check */ }
-  { $<ival>$ = loc_label++; /* not exception check */ }
+  CALL gname			{ curr_call_mode = CALL_BY_REFERENCE; }
+  call_using call_returning
   {
-    $<ival>$ = gen_call ($3, $4, $<ival>6, $<ival>7);
-    gen_store_fnres($5);
+    gen_call ($2, $4);
+    gen_store_fnres ($5);
   }
-  on_exception_or_overflow
-  on_not_exception
-  {
-    check_call_except($9,$10,$<ival>6,$<ival>7,$<ival>8);
-  }
+  opt_on_exception_or_overflow
   opt_end_call
 ;
 call_using:
@@ -1502,20 +1496,28 @@ call_returning:
 | RETURNING variable		{ $$ = $2; }
 | GIVING variable		{ $$ = $2; }
 ;
-on_exception_or_overflow:
-  /* nothing */			{ $$ = 0; }
-| ON exception_or_overflow	{ $<ival>$ = gen_marklabel(); }
-  statement_list		{ gen_jmplabel($<ival>0); $$=$<ival>3; }
+
+opt_on_exception_or_overflow:
+  opt_on_exception_sentence
+  opt_not_on_overflow_sentence	{ if ($1) gen_dstlabel ($1); }
+;
+opt_on_exception_sentence:
+  /* nothing */
+  {
+    int lbl = gen_status_branch (COB_STATUS_OVERFLOW, 0);
+    gen_call_error ($<tree>-4);
+    $$ = gen_passlabel ();
+    gen_dstlabel (lbl);
+  }
+| opt_on exception_or_overflow
+  { $<ival>$ = gen_status_branch (COB_STATUS_OVERFLOW, 0); }
+  on_xxx_statement_list		{ $$ = $4; }
 ;
 exception_or_overflow:
   EXCEPTION
 | OVERFLOW
 ;
-on_not_exception:
-  /* nothing */			{ $$ = 0; }
-| NOT ON EXCEPTION		{ $<ival>$ = gen_marklabel(); }
-  statement_list		{ gen_jmplabel($<ival>-1); $$=$<ival>4; }
-;
+
 opt_end_call: | END_CALL ;
 
 
@@ -2742,7 +2744,7 @@ opt_end_write: | END_WRITE ;
 
 
 /*******************
- * Common rules
+ * Status handlers
  *******************/
 
 on_xxx_statement_list:
@@ -2769,8 +2771,9 @@ opt_on_size_error:
   opt_not_on_size_error_sentence { if ($1) gen_dstlabel ($1); }
 ;
 opt_on_size_error_sentence:
-  /* nothing */	    { $$ = 0; }
-| opt_on SIZE ERROR { $<ival>$ = gen_status_branch (COB_STATUS_OVERFLOW, 0); }
+  /* nothing */			{ $$ = 0; }
+| opt_on SIZE ERROR
+  { $<ival>$ = gen_status_branch (COB_STATUS_OVERFLOW, 0); }
   on_xxx_statement_list		{ $$ = $5; }
 ;
 opt_not_on_size_error_sentence:
@@ -2786,11 +2789,12 @@ opt_not_on_size_error_sentence:
 
 opt_on_overflow:
   opt_on_overflow_sentence
-  opt_not_on_overflow_sentence { if ($1) gen_dstlabel ($1); }
+  opt_not_on_overflow_sentence	{ if ($1) gen_dstlabel ($1); }
 ;
 opt_on_overflow_sentence:
-  /* nothing */   { $$ = 0; }
-| opt_on OVERFLOW { $<ival>$ = gen_status_branch (COB_STATUS_OVERFLOW, 0); }
+  /* nothing */			{ $$ = 0; }
+| opt_on OVERFLOW
+  { $<ival>$ = gen_status_branch (COB_STATUS_OVERFLOW, 0); }
   on_xxx_statement_list		{ $$ = $4; }
 ;
 opt_not_on_overflow_sentence:
@@ -2808,18 +2812,22 @@ opt_at_end:
 | at_end
 ;
 at_end:
-  at_end_sentence { gen_dstlabel ($1); }
+  at_end_sentence		{ gen_dstlabel ($1); }
 | not_at_end_sentence
-| at_end_sentence not_at_end_sentence { gen_dstlabel ($1); }
+| at_end_sentence
+  not_at_end_sentence		{ gen_dstlabel ($1); }
 ;
 at_end_sentence:
-  END		  { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 1); }
+  END
+  { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 1); }
   on_xxx_statement_list		{ $$ = $3; }
-| AT END	  { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 1); }
+| AT END
+  { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 1); }
   on_xxx_statement_list		{ $$ = $4; }
 ;
 not_at_end_sentence:
-  NOT opt_at END  { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 0); }
+  NOT opt_at END
+  { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 0); }
   not_on_xxx_statement_list
 ;
 
@@ -2832,16 +2840,19 @@ opt_invalid_key:
 | invalid_key
 ;
 invalid_key:
-  invalid_key_sentence { gen_dstlabel ($1); }
+  invalid_key_sentence		{ gen_dstlabel ($1); }
 | not_invalid_key_sentence
-| invalid_key_sentence not_invalid_key_sentence { gen_dstlabel ($1); }
+| invalid_key_sentence
+  not_invalid_key_sentence	{ gen_dstlabel ($1); }
 ;
 invalid_key_sentence:
-  INVALID opt_key		{ $<ival>$ = gen_status_branch (23, 0); }
+  INVALID opt_key
+  { $<ival>$ = gen_status_branch (23, 0); }
   on_xxx_statement_list		{ $$ = $4; }
 ;
 not_invalid_key_sentence:
-  NOT INVALID opt_key		{ $<ival>$ = gen_status_branch (0, 0); }
+  NOT INVALID opt_key
+  { $<ival>$ = gen_status_branch (0, 0); }
   not_on_xxx_statement_list
 ;
 

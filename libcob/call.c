@@ -183,33 +183,38 @@ cob_resolve_error (void)
  */
 
 static char *
-subrname (struct fld_desc *f, char *s)
+subrname (struct cob_field f)
 {
   int i;
   static char buff[FILENAME_MAX];
-  for (i = 0; i < f->len; i++)
-    if (s[i] == ' ')
+  for (i = 0; i < FIELD_SIZE (f); i++)
+    if (FIELD_DATA (f)[i] == ' ')
       break;
     else
-      buff[i] = s[i];
+      buff[i] = FIELD_DATA (f)[i];
   buff[i] = '\0';
   return buff;
 }
 
 void *
-cob_dyncall_resolve (struct fld_desc *f, char *s)
+cob_call_resolve (struct cob_field f)
 {
-  return cob_resolve (subrname (f, s));
+  void (*func) () = cob_resolve (subrname (f));
+  if (func)
+    cob_status = COB_STATUS_SUCCESS;
+  else
+    cob_status = COB_STATUS_OVERFLOW;
+  return func;
 }
 
 void
-cob_dyncall_error (void)
+cob_call_error (void)
 {
   fprintf (stderr, "%s\n", cob_resolve_error ());
 }
 
 void
-cob_cancel (struct fld_desc *f, char *s)
+cob_cancel (struct cob_field f)
 {
-  return drop (subrname (f, s));
+  return drop (subrname (f));
 }

@@ -4113,15 +4113,12 @@ gen_save_using (cob_tree sy)
   using_offset += 4;
 }
 
-int
-gen_call (cob_tree v, struct call_parameter *parameter_list,
-	  int exceplabel, int notexceplabel)
+void
+gen_call (cob_tree v, struct call_parameter *parameter_list)
 {
   struct call_parameter *l;
   int len, totlen = 0;
   int saved_stack_offset = stack_offset;
-  int stack_save;
-  int endlabel;
 
   /******** prepare all parameters which are passed by content ********/
   for (l = parameter_list; l != NULL; l = l->next)
@@ -4158,47 +4155,28 @@ gen_call (cob_tree v, struct call_parameter *parameter_list,
     {
       /* static call */
       asm_call (COB_FIELD_NAME (v));
-      endlabel = 0;
     }
   else
     {
       /* dynamic call */
-      stack_save = stackframe_cnt;
+      int lbl = loc_label++;
+      int saved_stack = stackframe_cnt;
       stackframe_cnt = 0;
-      asm_call_1 ("cob_dyncall_resolve", v);
-      stackframe_cnt = stack_save;
-      output ("\tand\t%%eax,%%eax\n");
-      gen_branch_true (exceplabel);
+      asm_call_1 ("cob_call_resolve", v);
+      stackframe_cnt = saved_stack;
+      output ("\tcmpl\t$0,%%eax\n");
+      gen_branch_true (lbl);
       output ("\tcall\t*%%eax\n");
+      gen_dstlabel (lbl);
       cleanup_rt_stack ();
-      endlabel = loc_label++;
-      output ("\tjmp\t.L%d\n", notexceplabel);
     }
   if (totlen != 0)
     output ("\taddl\t$%d, %%esp\n", totlen);
   stack_offset = saved_stack_offset;
-  return endlabel;
 }
 
 void
-check_call_except (int excep, int notexcep, int exceplabel,
-		   int notexceplabel, int endlabel)
+gen_call_error (cob_tree v)
 {
-  /* generate code only if was "call <identifier>" */
-  if (endlabel != 0)
-    {
-      output (".L%d:\t# exceplabel\n", exceplabel);
-      if (excep)
-	output ("\tjmp\t.L%d\n", excep);
-      /* if no exception phrase was given */
-      if (excep == 0)
-	{
-	  output ("\tcall\tcob_dyncall_error\n");
-	  output ("\tjmp\t.L%d\n", endlabel);
-	}
-      output (".L%d:\t# notexceplabel\n", notexceplabel);
-      if (notexcep)
-	output ("\tjmp\t.L%d\n", notexcep);
-      output (".L%d:\t# endlabel\n", endlabel);
-    }
+  asm_call_1 ("cob_call_error", v);
 }
