@@ -78,6 +78,7 @@ AC_CHECK_HEADERS([fcntl.h malloc.h libintl.h locale.h stddef.h wchar.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
+AC_C_BIGENDIAN
 AC_TYPE_SIZE_T
 AC_STRUCT_TM
 
