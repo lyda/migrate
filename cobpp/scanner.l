@@ -56,8 +56,7 @@ static struct copybook {
 static int yyinput (char *buf, int max_size);
 
 static char *substring (const char *s, int size);
-static void set_buffer (int lineno, const char *filename,
-			struct replacement *replacing, YY_BUFFER_STATE buffer);
+static void set_buffer (int lineno, const char *filename, struct replacement *replacing, YY_BUFFER_STATE buffer);
 static void process_eol (void);
 
 %}
@@ -75,7 +74,7 @@ static void process_eol (void);
 <*>[ \t]*\n-[ \t]*[\"\']? {
   if (cob_file_format == COB_FORMAT_FIXED)
     {
-      /* Line connection */
+      /* Line concatenation */
       yylineno++;
       display_line = 1;
       if (yytext[yyleng - 1] == '"' || yytext[yyleng - 1] == '\'')
