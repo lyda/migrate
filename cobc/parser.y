@@ -1316,6 +1316,10 @@ opt_use_statement:
 ;
 use_statement:
   USE flag_global AFTER _standard exception_or_error PROCEDURE _on use_target
+  {
+    current_section->need_begin = 1;
+    current_section->need_return = 1;
+  }
 ;
 use_target:
   file_name_list
