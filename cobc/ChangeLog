@@ -1,3 +1,7 @@
+2002-06-05  Keisuke Nishida  <knishida@netlab.jp>
+
+	* cobc.c (print_usage): Don't show -g.
+
 2002-06-04  Keisuke Nishida  <knishida@netlab.jp>
 
 	* codegen.c (output_perform_call): New function.

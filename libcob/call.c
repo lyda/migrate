@@ -42,7 +42,6 @@ static char resolve_error_buff[FILENAME_MAX];
 void
 cob_init_call (void)
 {
-  const char *val;
   const char *path = getenv ("COB_LIBRARY_PATH");
   if (path == NULL)
     path = COB_LIBRARY_PATH;

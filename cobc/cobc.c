@@ -197,7 +197,6 @@ print_usage ()
 	  "  -S            Compile only; output assembly file\n"
 	  "  -c            Compile and assemble, but do not link\n"
 	  "  -m            Build a dynamic-linking module\n"
-	  "  -g            Produce debugging information in the output\n"
 	  "  -O            Optimize speed; minimum run-time error checking\n"
 	  "  -o <file>     Place the output into <file>\n"
 	  "  -MT <target>  Set target file used in dependency list\n"

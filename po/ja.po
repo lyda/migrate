@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.9.6\n"
-"POT-Creation-Date: 2002-06-03 14:56+0900\n"
-"PO-Revision-Date: 2002-06-03 09:34+0900\n"
+"POT-Creation-Date: 2002-06-05 12:07+0900\n"
+"PO-Revision-Date: 2002-06-05 12:07+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -28,7 +28,6 @@ msgid ""
 "  -S            Compile only; output assembly file\n"
 "  -c            Compile and assemble, but do not link\n"
 "  -m            Build a dynamic-linking module\n"
-"  -g            Produce debugging information in the output\n"
 "  -O            Optimize speed; minimum run-time error checking\n"
 "  -o <file>     Place the output into <file>\n"
 "  -MT <target>  Set target file used in dependency list\n"
@@ -52,7 +51,6 @@ msgstr ""
 "  -S            コンパイルのみ。アセンブリファイルを出力する\n"
 "  -c            コンパイルとアセンブル。リンクをしない\n"
 "  -m            動的リンク可能なモジュールを生成する\n"
-"  -g            デバッグ情報を含んだコードを生成する\n"
 "  -O            実行時エラーチェックをせず、速度を最適化する\n"
 "  -o <file>     出力を <file> に保存する\n"
 "  -MT <target>  依存リストの対象ファイルを指定する\n"
@@ -66,7 +64,7 @@ msgstr ""
 "  -D, -debug    デバッグ行を有効にする\n"
 "  -I <path>     コピーファイルを <path> から探す"
 
-#: cobc/cobc.c:214
+#: cobc/cobc.c:213
 msgid ""
 "\n"
 "Debugging options:\n"
@@ -417,21 +415,21 @@ msgstr "ターゲット名を -MT で指定して下さい\n"
 msgid "source line too long"
 msgstr "一行の行数が長過ぎます"
 
-#: libcob/common.c:201
+#: libcob/common.c:214
 msgid "warning: cob_init expected in the main program\n"
 msgstr "warning: メインプログラムで cob_init 呼ばれていません\n"
 
-#: libcob/common.c:217 libcob/common.c:233
+#: libcob/common.c:230 libcob/common.c:246
 #, c-format
 msgid "index `%s' out of range: %d"
 msgstr "添字 `%s' が範囲を超えています `%d'"
 
-#: libcob/common.c:228
+#: libcob/common.c:241
 #, c-format
 msgid "value of `%s' out of range: %d"
 msgstr "添字 '%s' の値が範囲を超えています `%d'"
 
-#: libcob/common.c:365
+#: libcob/common.c:378
 #, c-format
 msgid "value of `%s' not numeric: `%s'"
 msgstr "`%s' の値が数字ではありません: `%s'"
@@ -496,7 +494,7 @@ msgstr "DELETE、REWRITE は許可されません"
 msgid "unknown file error"
 msgstr "原因不明のファイルエラーです"
 
-#: libcob/call.c:197
+#: libcob/call.c:193
 #, c-format
 msgid "cannot find module `%s'"
 msgstr "モジュールが見付かりません `%s'"
