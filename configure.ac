@@ -84,8 +84,13 @@ AC_CHECK_LIB([ltdl], [lt_dlopen], , AC_MSG_ERROR(ltdl is required))
 # Checks for readline.
 LIBRL=""
 USE_READLINE="no"
-AC_CHECK_HEADERS([readline/readline.h readline/history.h])
-AC_CHECK_LIB([readline], [readline], [LIBRL="-lreadline"; USE_READLINE="yes"])
+AC_ARG_WITH(readline,
+  [  --with-readline          use readline for terminal input],
+  [AC_CHECK_HEADERS([readline/readline.h readline/history.h])
+   AC_CHECK_LIB([readline], [readline],
+                [LIBRL="-lreadline"; USE_READLINE="yes"],
+		[AC_MSG_ERROR(readline is required)])
+  ])
 
 # Checks for GCC's computed-goto extension
 AC_CACHE_CHECK([for computed-goto], [ac_computed_goto],
@@ -112,7 +117,7 @@ AC_SUBST(COMPUTED_GOTO)
 # OpenCOBOL Configuration
 
 LIBCOB_CFLAGS=""
-LIBCOB_LIBS="${LIBDB} ${LIBGMP} ${LIBINTL} ${LIBLTDL} ${LIBRL}"
+LIBCOB_LIBS="${LIBDB} ${LIBGMP} ${LIBLTDL} ${LIBINTL} ${LIBRL}"
 COB_COBPP="cobpp"
 COB_CFLAGS="-I$includedir"
 COB_LIBS="-L$libdir -lcob ${LIBCOB_LIBS}"
@@ -144,7 +149,7 @@ echo "  COB_LIBS             ${COB_LIBS}"
 echo "  COB_CONFIG_FILE      ${COB_CONFIG_FILE}"
 echo "  COB_LIBRARY_PATH     ${COB_LIBRARY_PATH}"
 echo ""
-echo "  Use gettext for I17n:                        ${USE_NLS}"
-echo "  Use readline for input:                      ${USE_READLINE}"
+echo "  Use gettext for I18n:                        ${USE_NLS}"
+echo "  Use readline for terminal input:             ${USE_READLINE}"
 echo "  Use computed-goto to implement PERFORM:      ${ac_computed_goto}"
 echo ""

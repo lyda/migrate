@@ -1,5 +1,9 @@
 2002-05-29  Keisuke Nishida  <knishida@netlab.jp>
 
+	* configure.ac: Check readline only when --with-readline is given.
+
+2002-05-29  Keisuke Nishida  <knishida@netlab.jp>
+
 	* libcob.conf: New file.
 	* configure.ac, Makefile.am: Add `COB_CONFIG_FILE'.
 
