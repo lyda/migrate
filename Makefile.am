@@ -1,7 +1,10 @@
 bin_SCRIPTS=cob-config
 
+aclocaldir = $(datadir)/aclocal
+aclocal_DATA = cob.m4
+
 SUBDIRS = cobpp cobc libcob doc
-EXTRA_DIST = VERSION
+EXTRA_DIST = VERSION cob.m4
 
 MAINTAINERCLEANFILES = config.guess config.sub config.log \
 	Makefile.in aclocal.m4 config.h.in stamp-h.in depcomp ltmain.sh \
