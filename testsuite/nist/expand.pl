@@ -27,7 +27,7 @@ while (<IN>) {
     my $name = '';
     if ($subt) {
       if ($subt eq "SUBPRG") {
-	$name = "lib/$subr.CBL";
+	$name = "$subr.SUB";
       } elsif ($subt eq "SUBRTN") {
 	$name = "lib/$subr.CBL";
       }

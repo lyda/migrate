@@ -38,11 +38,11 @@ foreach $in (glob("lib/*.CBL")) {
   system ("cobc -m -I ../copy $in");
 }
 
-foreach $in (glob("*.CBL")) {
+foreach $in (sort (glob("*.{CBL,SUB}"))) {
   my $exe = $in;
-  my $prt = $in;
   my $cmd;
   $exe =~ s/\.CBL//;
+  $exe =~ s/\.SUB//;
   $cmd = "./$exe";
   if (-e "./$exe.DAT") {
     $cmd = "./$exe < $exe.DAT";
@@ -58,7 +58,9 @@ foreach $in (glob("*.CBL")) {
       $compile_error++;
       print LOG "  ===== compile error =====\n";
     } else {
-      system ("rm -f __db* XXXXX*");
+      if ($in =~ /\.CBL/) {
+	system ("rm -f XXXXX*");
+      }
       if (system ("$cmd > /dev/null") != 0) {
 	$execute_error++;
 	print LOG "  ***** execute error *****\n";
