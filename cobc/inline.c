@@ -66,6 +66,7 @@ output_advance_move (struct cob_field f, cobc_tree dst)
   if (p->children)
     {
       dst_desc.type = 'G';
+      dst_desc.just_r = 0;
     }
   else
     {
