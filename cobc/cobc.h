@@ -49,6 +49,9 @@ extern FILE *cobc_out;
 extern char *cobc_source_file;
 extern int cobc_source_line;
 
+extern struct cobc_program *current_program;
+extern struct cobc_label *current_section, *current_paragraph;
+
 extern int errorcount;
 extern int warningcount;
 
@@ -56,6 +59,10 @@ extern void yywarn (char *fmt, ...);
 extern void yyerror (char *fmt, ...);
 extern void yywarn_x (cobc_tree x, char *fmt, ...);
 extern void yyerror_x (cobc_tree x, char *fmt, ...);
+
+extern void redefinition_error (cobc_tree x);
+extern void undefined_error (cobc_tree x);
+extern void ambiguous_error (cobc_tree x);
 
 #undef COBC_WARNING
 #define COBC_WARNING(sig,var,name,doc) extern int var;

@@ -1,3 +1,12 @@
+## Various name definitions and references
+
+
+###
+### Data name
+###
+
+## Undefined
+
 AT_SETUP([Undefined entry])
 
 AT_DATA([prog.cob], [
@@ -14,7 +23,68 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 
 AT_CLEANUP
 
+AT_SETUP([Undefined group])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X.
+       PROCEDURE       DIVISION.
+         DISPLAY X IN G.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:8: error: `G' undefined
+])
+
+AT_CLEANUP
+
+AT_SETUP([Undefined in the group])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G.
+         02 X          PIC X.
+       01 Y            PIC X.
+       PROCEDURE       DIVISION.
+         DISPLAY Y IN G.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:10: error: `Y' undefined in `G'
+])
+
+AT_CLEANUP
+
+AT_SETUP([Reference not a group])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X.
+       PROCEDURE       DIVISION.
+         DISPLAY X IN X.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:8: error: `X' not a group
+])
+
+AT_CLEANUP
+
 
+## Incomplete
+
 AT_SETUP([Incomplete 01 definition])
 
 AT_DATA([prog.cob], [
@@ -23,9 +93,6 @@ AT_DATA([prog.cob], [
        DATA            DIVISION.
        WORKING-STORAGE SECTION.
        01 X.
-       PROCEDURE       DIVISION.
-         DISPLAY X.
-         STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -35,7 +102,9 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 AT_CLEANUP
 
 
-AT_SETUP([Redefinition of 01 entries (1)])
+## Redefinition
+
+AT_SETUP([Redefinition of 01 entries])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION  DIVISION.
@@ -44,8 +113,6 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE SECTION.
        01 X            PIC X.
        01 X            PIC X.
-       PROCEDURE       DIVISION.
-         STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -55,29 +122,6 @@ prog.cob:6: error: `X' previously defined here
 
 AT_CLEANUP
 
-
-AT_SETUP([Redefinition of 01 entries (2)])
-
-AT_DATA([prog.cob], [
-       IDENTIFICATION  DIVISION.
-       PROGRAM-ID.     prog.
-       DATA            DIVISION.
-       WORKING-STORAGE SECTION.
-       01 X            PIC X.
-       01 Y            PIC X.
-       01 X            PIC X.
-       PROCEDURE       DIVISION.
-         STOP RUN.
-])
-
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: error: redefinition of `X'
-prog.cob:6: error: `X' previously defined here
-])
-
-AT_CLEANUP
-
-
 AT_SETUP([Redefinition of 01 and 02 entries])
 
 AT_DATA([prog.cob], [
@@ -87,8 +131,6 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE SECTION.
        01 X.
          02 X          PIC X.
-       PROCEDURE       DIVISION.
-         STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -98,8 +140,7 @@ prog.cob:6: error: `X' previously defined here
 
 AT_CLEANUP
 
-
-AT_SETUP([Redefinition of 02 entries (same group)])
+AT_SETUP([Redefinition of 02 entries in the same group])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION  DIVISION.
@@ -109,8 +150,6 @@ AT_DATA([prog.cob], [
        01 G.
          02 X          PIC X.
          02 X          PIC X.
-       PROCEDURE       DIVISION.
-         STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -120,8 +159,7 @@ prog.cob:7: error: `X' previously defined here
 
 AT_CLEANUP
 
-
-AT_SETUP([Redefinition of 02 entries (different groups with reference)])
+AT_SETUP([Redefinition of 02 entries in different groups])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION  DIVISION.
@@ -145,7 +183,29 @@ prog.cob:9: error: `X' in `G2' defined here
 
 AT_CLEANUP
 
-
+AT_SETUP([Redefinition of 02 and 03 entries])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 G.
+         02 X.
+           03 X        PIC X.
+       PROCEDURE       DIVISION.
+         DISPLAY X.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:10: error: `X' ambiguous; need qualification
+prog.cob:7: error: `X' in `G' defined here
+prog.cob:8: error: `X' in `X' in `G' defined here
+])
+
+AT_CLEANUP
+
 AT_SETUP([Redefinition of 77 entries])
 
 AT_DATA([prog.cob], [
@@ -155,8 +215,24 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE SECTION.
        77 X            PIC X.
        77 X            PIC X.
-       PROCEDURE       DIVISION.
-         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:7: error: redefinition of `X'
+prog.cob:6: error: `X' previously defined here
+])
+
+AT_CLEANUP
+
+AT_SETUP([Redefinition of 01 and 77 entries])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       DATA            DIVISION.
+       WORKING-STORAGE SECTION.
+       01 X            PIC X.
+       77 X            PIC X.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -167,22 +243,118 @@ prog.cob:6: error: `X' previously defined here
 AT_CLEANUP
 
 
-AT_SETUP([Redefinition of 01 and 77 entries])
+###
+### File name
+###
+
+
+###
+### Label name
+###
+
+## Undefined
+
+AT_SETUP([Undefined label])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION  DIVISION.
        PROGRAM-ID.     prog.
-       DATA            DIVISION.
-       WORKING-STORAGE SECTION.
-       01 X            PIC X.
-       77 X            PIC X.
        PROCEDURE       DIVISION.
+         GO TO END-OF-PROGRAM.
          STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:7: error: redefinition of `X'
-prog.cob:6: error: `X' previously defined here
+[prog.cob:5: error: `END-OF-PROGRAM' undefined
 ])
 
 AT_CLEANUP
+
+
+## Redefinition
+
+AT_SETUP([Redefinition of section label])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       PROCEDURE       DIVISION.
+       L SECTION.
+       L SECTION.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob: In section `L':
+prog.cob:6: error: redefinition of `L'
+prog.cob:5: error: `L' previously defined here
+])
+
+AT_CLEANUP
+
+AT_SETUP([Redefinition of section and paragraph label])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       PROCEDURE       DIVISION.
+       L SECTION.
+       L.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob: In section `L':
+prog.cob:6: error: redefinition of `L'
+prog.cob:5: error: `L' previously defined here
+])
+
+AT_CLEANUP
+
+AT_SETUP([Redefinition of paragraph label in the same section])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       PROCEDURE       DIVISION.
+       L.
+       L.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob: In paragraph `L':
+prog.cob:6: error: redefinition of `L'
+prog.cob:5: error: `L' previously defined here
+])
+
+AT_CLEANUP
+
+AT_SETUP([Redefinition of paragraph label in deferent sections])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION  DIVISION.
+       PROGRAM-ID.     prog.
+       PROCEDURE       DIVISION.
+       S-1 SECTION.
+       L.
+       S-2 SECTION.
+       L.
+       S-3 SECTION.
+         GO TO L.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob: In section `S-3':
+prog.cob:10: error: `L' ambiguous; need qualification
+prog.cob:6: error: `L' in `S-1' defined here
+prog.cob:8: error: `L' in `S-2' defined here
+])
+
+AT_CLEANUP
+
+
+###
+### Special name
+###

@@ -1,5 +1,5 @@
 /*							-*- c -*-
- * Copyright (C) 2001-2002 Keisuke Nishida
+ * Copyright (C) 2001-2003 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +39,8 @@
   (x)->source_file = cobc_source_file;		\
   (x)->source_line = cobc_source_line
 
-int cobc_in_procedure = 0;
+static int last_token_is_dot = 0;
+static int integer_is_label = 0;
 
 static int read_literal (char mark);
 static int scan_x (char *text);
@@ -51,6 +52,17 @@ static int scan_picture (char *text);
 %x PICTURE_STATE FUNCTION_STATE
 
 %%
+%{
+  /* We treat integer literals immediately after '.' as labels;
+     that is, they must be level numbers or section names. */
+  integer_is_label = 0;
+  if (last_token_is_dot)
+    {
+      integer_is_label = 1;
+      last_token_is_dot = 0;
+    }
+%}
+
 
 <*>[ \t,;]+	{ /* ignore */ }
 
@@ -80,10 +92,18 @@ X\"[^\"\n]*\" {
 }
 
 [0-9]+ {
-  /* integer literal */
-  yylval.tree = make_numeric_literal (0, yytext, 0);
-  SET_LOCATION (yylval.tree);
-  return INTEGER_LITERAL;
+  if (integer_is_label)
+    {
+      /* integer label */
+      yylval.tree = make_reference (yytext);
+      SET_LOCATION (yylval.tree);
+      return WORD;
+    }
+  else
+    {
+      /* numeric literal */
+      return scan_numeric (yytext);
+    }
 }
 
 [+-]?[0-9]*[.,]?[0-9]+ {
@@ -101,27 +121,27 @@ X\"[^\"\n]*\" {
     return token;
 
   /* user word */
-  word = lookup_word (yytext);
-  yylval.tree = make_reference (word);
+  yylval.tree = make_reference (yytext);
   SET_LOCATION (yylval.tree);
 
-  if (cobc_in_procedure && word->count > 0)
+  /* special name handling */
+  word = COBC_REFERENCE (yylval.tree)->word;
+  if (word->count > 0)
     {
       cobc_tree x = word->items->item;
-
       if (COBC_BUILTIN_P (x))
 	return MNEMONIC_NAME;
-
       if (COBC_CLASS_P (x))
 	return CLASS_NAME;
     }
 
-  return NAME;
+  return WORD;
 }
 
 "<="		{ return LE; }
 ">="		{ return GE; }
 "**"		{ return '^'; }
+"."		{ last_token_is_dot = 1; return '.'; }
 .		{ return yytext[0]; }
 
 <PICTURE_STATE>{
@@ -169,7 +189,7 @@ read_literal (char mark)
   *p = 0;
   yylval.tree = make_nonnumeric_literal (buff);
   SET_LOCATION (yylval.tree);
-  return NONNUMERIC_LITERAL;
+  return LITERAL;
 }
 
 static int
@@ -203,7 +223,7 @@ scan_x (char *text)
     {
       yylval.tree = make_nonnumeric_literal (dst);
       SET_LOCATION (yylval.tree);
-      return NONNUMERIC_LITERAL;
+      return LITERAL;
     }
   else
     {
@@ -211,7 +231,7 @@ scan_x (char *text)
       yyerror (_("invalid X literal: %s"), text);
       yylval.tree = make_nonnumeric_literal (dst);
       SET_LOCATION (yylval.tree);
-      return NONNUMERIC_LITERAL;
+      return LITERAL;
     }
 }
 
@@ -236,7 +256,7 @@ scan_numeric (char *text)
 
   yylval.tree = make_numeric_literal (sign, text, - decimals);
   SET_LOCATION (yylval.tree);
-  return NUMERIC_LITERAL;
+  return LITERAL;
 }
 
 static int
@@ -259,5 +279,5 @@ scan_picture (char *text)
     }
 
   yylval.pict = parse_picture (text);
-  return PICTURE_TOK;
+  return PICTURE;
 }

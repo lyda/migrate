@@ -52,15 +52,12 @@ extern int list_length (struct cobc_list *l);
  */
 
 struct cobc_word {
-  char *name;			/* word name */
+  const char *name;		/* word name */
   int count;			/* the number of words with the same name */
   int error;			/* set to 1 if error displayed */
   struct cobc_list *items;	/* objects associated with this word */
   struct cobc_word *next;	/* next word with the same hash value */
 };
-
-extern struct cobc_word *lookup_word (const char *name);
-extern void init_word_table (void);
 
 
 /*
@@ -149,6 +146,7 @@ extern cobc_tree cobc_switch[];
 extern cobc_tree cobc_int0;
 extern cobc_tree cobc_int1;
 extern cobc_tree cobc_int2;
+extern cobc_tree cobc_error_node;
 
 extern struct cobc_label *cobc_main_label;
 extern struct cobc_label *cobc_standard_error_handler;
@@ -185,13 +183,13 @@ extern cobc_tree make_integer (int val);
 
 struct cobc_string {
   struct cobc_tree_common common;
-  unsigned char *str;
+  const unsigned char *str;
 };
 
 #define COBC_STRING(x)		(COBC_TREE_CAST (cobc_tag_string, struct cobc_string, x))
 #define COBC_STRING_P(x)	(COBC_TREE_TAG (x) == cobc_tag_string)
 
-extern cobc_tree make_string (unsigned char *str);
+extern cobc_tree make_string (const unsigned char *str);
 
 
 /*
@@ -273,7 +271,7 @@ struct cobc_field {
   int occurs;			/* OCCURS */
   int occurs_min;
   int indexes;			/* the number of parents who have OCCURS */
-  char *name;			/* the original name */
+  const char *name;		/* the original name */
   char *cname;			/* the name used in C */
   cobc_tree occurs_depending;	/* OCCURS ... DEPENDING ON */
   enum cobc_usage usage;	/* USAGE */
@@ -319,13 +317,19 @@ struct cobc_field {
   (COBC_FIELD_P (x) && COBC_FIELD (x)->usage == COBC_USAGE_INDEX)
 
 extern cobc_tree make_field (cobc_tree name);
-extern cobc_tree make_field_3 (cobc_tree name, char *pic, int usage);
-extern cobc_tree make_field_x (char *name, char *pic, int usage);
+extern cobc_tree make_field_3 (cobc_tree name, const char *pic, int usage);
+extern cobc_tree make_field_x (const char *name, const char *pic, int usage);
 extern struct cobc_field *field (cobc_tree x);
 extern int field_size (cobc_tree x);
 extern struct cobc_field *field_founder (struct cobc_field *p);
 extern int field_used_any_parent (struct cobc_field *p);
 extern int field_used_any_child (struct cobc_field *p);
+extern void field_set_used (struct cobc_field *p);
+
+extern struct cobc_field *build_field (cobc_tree level, cobc_tree name, struct cobc_field *last_field);
+extern struct cobc_field *validate_redefines (struct cobc_field *field, cobc_tree redefines);
+extern int validate_field (struct cobc_field *p);
+extern int validate_field_value (struct cobc_field *f);
 extern void finalize_field (struct cobc_field *p);
 
 
@@ -335,7 +339,7 @@ extern void finalize_field (struct cobc_field *p);
 
 struct cobc_file {
   struct cobc_tree_common common;
-  char *name;			/* the original name */
+  const char *name;		/* the original name */
   char *cname;			/* the name used in C */
   /* SELECT */
   cobc_tree assign;		/* ASSIGN */
@@ -361,6 +365,7 @@ struct cobc_file {
 #define COBC_FILE_P(x)	(COBC_TREE_TAG (x) == cobc_tag_file)
 
 extern cobc_tree make_file (cobc_tree name);
+extern void finalize_file (struct cobc_file *f, struct cobc_field *records);
 
 
 /*
@@ -383,12 +388,19 @@ struct cobc_reference {
 
 #define COBC_NAME(x)		(COBC_REFERENCE (x)->word->name)
 
-extern cobc_tree make_reference (struct cobc_word *word);
+extern cobc_tree make_reference (const char *name);
 extern cobc_tree copy_reference (cobc_tree ref, cobc_tree value);
 extern void set_value (cobc_tree ref, cobc_tree value);
-extern char *associate (cobc_tree name, cobc_tree val);
+extern const char *associate (cobc_tree name, cobc_tree val);
 
 extern cobc_tree make_filler (void);
+
+extern cobc_tree resolve_data_name (cobc_tree x);
+extern int validate_data_name (cobc_tree x);
+extern cobc_tree resolve_label (cobc_tree x);
+extern cobc_tree resolve_file_name (cobc_tree x);
+extern cobc_tree resolve_class_name (cobc_tree x);
+extern cobc_tree resolve_system_name (cobc_tree x);
 
 
 /*
@@ -473,7 +485,7 @@ extern cobc_tree make_cast_int32 (cobc_tree val);
 
 struct cobc_label {
   struct cobc_tree_common common;
-  char *name;
+  const char *name;
   char *cname;
   struct cobc_label *section;
   struct cobc_list *children;
@@ -559,7 +571,7 @@ extern cobc_tree make_sequence (struct cobc_list *list);
 
 struct cobc_class {
   struct cobc_tree_common common;
-  char *name;
+  const char *name;
   char *cname;
   struct cobc_list *list;
 };
@@ -609,11 +621,9 @@ extern cobc_tree make_parameter (int type, cobc_tree x, cobc_tree y);
  */
 
 struct cobc_program {
+  /* program variables */
   char *program_id;
   int initial_program;
-  int loop_counter;
-  int decimal_index;
-  int decimal_index_max;
   int enable_screen;
   unsigned char decimal_point;		/* '.' or ',' */
   unsigned char currency_symbol;	/* '$' or user-specified */
@@ -629,10 +639,23 @@ struct cobc_program {
   struct cobc_field *linkage_storage;
   struct cobc_field *screen_storage;
   struct cobc_label *file_handler[5];
+  /* internal variables */
+  int loop_counter;
+  int decimal_index;
+  int decimal_index_max;
+  struct cobc_word **word_table;
 };
 
-extern struct cobc_program *current_program;
-
 extern struct cobc_program *build_program (void);
+
+extern cobc_tree build_assign (struct cobc_list *vars, char op, cobc_tree val);
+extern cobc_tree build_add (cobc_tree v, cobc_tree n, int round);
+extern cobc_tree build_sub (cobc_tree v, cobc_tree n, int round);
+extern cobc_tree build_move (cobc_tree src, cobc_tree dst);
+extern cobc_tree build_corresponding (cobc_tree (*func)(), cobc_tree x1, cobc_tree x2, int opt);
+extern cobc_tree build_divide (cobc_tree dividend, cobc_tree divisor, cobc_tree quotient, int round, cobc_tree remainder);
+extern cobc_tree build_cond (cobc_tree x);
+extern cobc_tree build_evaluate (struct cobc_list *subject_list, struct cobc_list *case_list);
+extern cobc_tree build_search_all (cobc_tree table, cobc_tree when);
 
 #endif /* _TREE_H_ */

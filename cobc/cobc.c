@@ -60,6 +60,9 @@ FILE *cobc_out;
 char *cobc_source_file = NULL;
 int cobc_source_line = 0;
 
+struct cobc_program *current_program = NULL;
+struct cobc_label *current_section = NULL, *current_paragraph = NULL;
+
 int errorcount;
 int warningcount;
 
@@ -653,10 +656,28 @@ main (int argc, char *argv[])
 static void
 yyprintf (char *file, int line, char *prefix, char *fmt, va_list ap)
 {
-  fprintf (stderr, "%s:%d: %s",
-	   file ? file : cobc_source_file,
-	   line ? line : cobc_source_line,
-	   prefix);
+  static struct cobc_label *last_section = NULL;
+  static struct cobc_label *last_paragraph = NULL;
+
+  file = file ? file : cobc_source_file;
+  line = line ? line : cobc_source_line;
+
+  /* print the paragraph or section name */
+  if (current_section != last_section
+      || current_paragraph != last_paragraph)
+    {
+      if (current_paragraph)
+	fprintf (stderr, _("%s: In paragraph `%s':\n"),
+		 file, current_paragraph->name);
+      else
+	fprintf (stderr, _("%s: In section `%s':\n"),
+		 file, current_section->name);
+      last_section = current_section;
+      last_paragraph = current_paragraph;
+    }
+
+  /* print the error */
+  fprintf (stderr, "%s:%d: %s", file, line, prefix);
   vfprintf (stderr, fmt, ap);
   fputs ("\n", stderr);
 }
@@ -703,4 +724,75 @@ yyerror_x (cobc_tree x, char *fmt, ...)
   va_end (ap);
 
   errorcount++;
+}
+
+
+void
+redefinition_error (cobc_tree x)
+{
+  struct cobc_word *w = COBC_REFERENCE (x)->word;
+  yyerror_x (x, _("redefinition of `%s'"), w->name);
+  yyerror_x (w->items->item, _("`%s' previously defined here"), w->name);
+}
+
+void
+undefined_error (cobc_tree x)
+{
+  struct cobc_reference *r = COBC_REFERENCE (x);
+  if (r->next)
+    yyerror_x (x, _("`%s' undefined in `%s'"),
+	       r->word->name, r->next->word->name);
+  else
+    yyerror_x (x, _("`%s' undefined"), r->word->name);
+}
+
+void
+ambiguous_error (cobc_tree x)
+{
+  struct cobc_word *w = COBC_REFERENCE (x)->word;
+  if (w->error == 0)
+    {
+      struct cobc_list *l;
+
+      /* display error on the first time */
+      yyerror_x (x, _("`%s' ambiguous; need qualification"), w->name);
+      w->error = 1;
+
+      /* display all fields with the same name */
+      for (l = w->items; l; l = l->next)
+	{
+	  char buff[BUFSIZ];
+	  cobc_tree x = l->item;
+	  sprintf (buff, "`%s' ", w->name);
+	  switch (COBC_TREE_TAG (x))
+	    {
+	    case cobc_tag_field:
+	      {
+		struct cobc_field *p;
+		for (p = COBC_FIELD (x)->parent; p; p = p->parent)
+		  {
+		    strcat (buff, "in `");
+		    strcat (buff, p->name);
+		    strcat (buff, "' ");
+		  }
+		break;
+	      }
+	    case cobc_tag_label:
+	      {
+		struct cobc_label *l = COBC_LABEL (x);
+		if (l->section)
+		  {
+		    strcat (buff, "in `");
+		    strcat (buff, l->section->name);
+		    strcat (buff, "' ");
+		  }
+		break;
+	      }
+	    default:
+	      break;
+	    }
+	  strcat (buff, _("defined here"));
+	  yyerror_x (x, buff);
+	}
+    }
 }
