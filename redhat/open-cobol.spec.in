@@ -49,8 +49,9 @@ make
 %{_bindir}
 %{_libdir}
 %{_includedir}
+%{_datadir}/aclocal
+%{_datadir}/locale
 %{_infodir}/open-cobol.info*
-%{_datadir}/aclocal/*
 
 %post
 /sbin/ldconfig
