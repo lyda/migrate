@@ -1,3 +1,8 @@
+2004-09-17  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* numeric.h (COB_STORE_TRUNC_ON_OVERFLOW): Define as 0x03, not 0x02.
+	(Thanks to Roger While)
+	
 2004-07-06  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* numeric.h (COB_STORE_ROUND, COB_STORE_KEEP_ON_OVERFLOW) 
