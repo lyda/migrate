@@ -3016,7 +3016,7 @@ write_statement:
     /* AFTER ADVANCING */
     if (opt && CB_PAIR_X (opt) == CB_AFTER)
       {
-	if (CB_VALUE (opt))
+	if (CB_PAIR_Y (opt))
 	  push_funcall_2 ("cob_write_lines", file, CB_PAIR_Y (opt));
 	else
 	  push_funcall_1 ("cob_write_page", file);
@@ -3031,7 +3031,7 @@ write_statement:
     /* BEFORE ADVANCING */
     if (opt && CB_PAIR_X (opt) == CB_BEFORE)
       {
-	if (CB_VALUE (opt))
+	if (CB_PAIR_Y (opt))
 	  push_funcall_2 ("cob_write_lines", file, CB_PAIR_Y (opt));
 	else
 	  push_funcall_1 ("cob_write_page", file);
