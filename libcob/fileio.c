@@ -107,7 +107,9 @@ sequential_open (struct cob_file_desc *f, char *filename, int mode)
       flags = O_RDWR;
       break;
     case COB_OPEN_EXTEND:
-      flags = O_CREAT | O_RDWR | O_APPEND;
+      flags = O_RDWR | O_APPEND;
+      if (f->f.optional)
+	flags |= O_CREAT;
       break;
     }
 
@@ -507,7 +509,9 @@ indexed_open (struct cob_file_desc *f, char *filename, int mode)
       flags = DB_CREATE;
       break;
     case COB_OPEN_EXTEND:
-      flags = DB_CREATE;
+      flags = 0;
+      if (f->f.optional)
+	flags = DB_CREATE;
       break;
     }
 
@@ -873,7 +877,7 @@ cob_open (struct cob_file_desc *f, struct cob_field name, int mode)
 
   cob_field_to_string (name, filename);
   if ((mode == COB_OPEN_I_O || mode == COB_OPEN_EXTEND)
-      && f->f.optional
+      && f->f.optional != 0
       && stat (filename, &st) == -1)
     was_not_exist = 1;
 
