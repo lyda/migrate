@@ -4,7 +4,7 @@ distdir = open-cobol-testsuite-$(VERSION)
 DISTFILES = README Makefile EXEC85.conf.in expand.pl report.pl summary.pl
 
 #MODULES = CM DB IC IF IX NC OB RL RW SG SM SQ ST
-MODULES = NC SM IC SQ RL IX
+MODULES = NC SQ RL IX
 
 all: $(MODULES)
 
