@@ -10,20 +10,20 @@ test: $(MODULES)
 	@for m in $(MODULES); do \
 	  (cd $$m && make test) \
 	done
-	perl summary.pl $(MODULES) > summary.txt
-	test -e summary.old && diff summary.old summary.txt
+	perl summary.pl $(MODULES) > summary.log
+	test -e summary.txt && diff summary.txt summary.log
 
 save:
 	@for m in $(MODULES); do \
 	  (cp $$m/report.txt $$m.txt) \
 	done
-	cp summary.txt summary.old
+	cp summary.log summary.txt
 
 diff:
 	@for m in $(MODULES); do \
 	  (diff $$m.txt $$m/report.txt) \
 	done
-	diff summary.old summary.txt
+	diff summary.txt summary.log
 
 clean: clean-am
 	rm -rf copy $(MODULES)

@@ -13,7 +13,7 @@ Hot To Run NIST CCVS85 Test Suite
 
   % make test
 
-4. Test report summary will be put in summary.txt.
+4. Test report summary will be put in summary.log.
 
 Make Options
 ------------
