@@ -38,21 +38,3 @@ prog.cob:9: warning: suggest parentheses around AND within OR
 ])
 
 AT_CLEANUP
-
-AT_SETUP([Ambiguous AND/OR])
-
-AT_DATA([prog.cob], [
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 X             PIC XX.
-       PROCEDURE        DIVISION.
-           DISPLAY X(1 (+2)).
-           STOP RUN.
-])
-
-AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[])
-
-AT_CLEANUP

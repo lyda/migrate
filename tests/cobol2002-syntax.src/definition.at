@@ -231,7 +231,7 @@ prog.cob:7: warning: `A' previously defined here
 
 AT_CLEANUP
 
-AT_SETUP([Ambiguous definition of 02 items])
+AT_SETUP([Ambiguous reference to 02 items])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -255,7 +255,7 @@ prog.cob:9: `X' in `G2' defined here
 
 AT_CLEANUP
 
-AT_SETUP([Ambiguous definition of 02 and 03 items])
+AT_SETUP([Ambiguous reference to 02 and 03 items])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -278,7 +278,7 @@ prog.cob:8: `X' in `X' in `G' defined here
 
 AT_CLEANUP
 
-AT_SETUP([Ambigous qualified definition])
+AT_SETUP([Ambigous reference with qualification])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -416,7 +416,7 @@ prog.cob:5: `L' previously defined here
 
 AT_CLEANUP
 
-AT_SETUP([Ambiguous definition of paragraph names])
+AT_SETUP([Ambiguous reference to paragraph name])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
