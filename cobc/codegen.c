@@ -1144,8 +1144,7 @@ output_move_index (cb_tree src, cb_tree dst)
 static void
 output_move (cb_tree src, cb_tree dst)
 {
-  if (field (dst)->usage == CB_USAGE_INDEX
-      || (src == cb_true || src == cb_false))
+  if (field (dst)->usage == CB_USAGE_INDEX)
     return output_move_index (src, dst);
 
   if ((CB_FIELD_P (src) || CB_REFERENCE_P (src))
