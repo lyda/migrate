@@ -416,13 +416,19 @@ ppinput (char *buff, int max_size)
       int lines = 0;
       while (1)
 	{
+	  int i;
 	  size_t size;
 	  char *bp, *np;
 	  char lookahead[7];
 
 	  /* look ahead the following line */
 	  size = fread (lookahead, 1, 7, ppin);
-	  fseek (ppin, - size, SEEK_CUR);
+	  fseek (ppin, -size, SEEK_CUR);
+	  for (i = 0; i < size; i++)
+	    if (lookahead[i] == '\t')
+	      break;
+	  if (i != size)
+	    break;
 	  if (size != 7 || lookahead[6] != '-')
 	    break;
 
