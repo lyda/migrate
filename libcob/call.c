@@ -233,6 +233,7 @@ void
 cob_call_error (void)
 {
   cob_runtime_error ("%s", cob_resolve_error ());
+  exit (1);
 }
 
 void

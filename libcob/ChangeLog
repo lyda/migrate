@@ -1,3 +1,7 @@
+2003-08-09  Keisuke Nishida  <knishida@netlab.jp>
+
+	* call.c (cob_call_error): Exit with status 1.
+
 2003-08-07  Keisuke Nishida  <knishida@netlab.jp>
 
 	* byteorder.h: New file.
