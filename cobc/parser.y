@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 82
+%expect 86
 
 %defines
 %verbose
@@ -111,6 +111,11 @@ static void terminator_error (void);
 %token TIME TIMES TO TOK_FILE TOK_INITIAL TOK_TRUE TOK_FALSE TOK_NULL TRAILING
 %token UNDERLINE UNIT UNTIL UP UPON USAGE USE USING VALUE VARYING WHEN WITH
 %token COMP COMP_1 COMP_2 COMP_3 COMP_4 COMP_5 COMP_X
+
+%left '+' '-'
+%left '*' '/'
+%left UNARY_SIGN
+%right '^'
 
 
 %%
@@ -3039,6 +3044,24 @@ lt: '<' | LESS _than ;
 ge: GE | GREATER _than OR EQUAL _to ;
 le: LE | LESS _than OR EQUAL _to ;
 
+/* Arithmetic expression */
+
+e_list:
+  e				{ $$ = cb_list ($1); }
+| e_list e			{ $$ = cb_list_add ($1, $2); }
+;
+e:
+  x				{ $$ = $1; }
+| '(' e ')'			{ $$ = $2; }
+| '+' e  %prec UNARY_SIGN	{ $$ = $2; }
+| '-' e  %prec UNARY_SIGN	{ $$ = cb_build_binary_op (cb_zero, '-', $2); }
+| e '+' e			{ $$ = cb_build_binary_op ($1, '+', $3); }
+| e '-' e			{ $$ = cb_build_binary_op ($1, '-', $3); }
+| e '*' e			{ $$ = cb_build_binary_op ($1, '*', $3); }
+| e '/' e			{ $$ = cb_build_binary_op ($1, '/', $3); }
+| e '^' e			{ $$ = cb_build_binary_op ($1, '^', $3); }
+;
+
 
 /*******************
  * Names
@@ -3047,9 +3070,9 @@ le: LE | LESS _than OR EQUAL _to ;
 /* Data name */
 
 arithmetic_x_list:
-  arithmetic_x		{ $$ = $1; }
+  arithmetic_x			{ $$ = $1; }
 | arithmetic_x_list
-  arithmetic_x		{ $$ = cb_list_append ($1, $2); }
+  arithmetic_x			{ $$ = cb_list_append ($1, $2); }
 ;
 arithmetic_x:
   x flag_rounded		{ $$ = cb_build_pair ($2, $1); }
@@ -3225,27 +3248,22 @@ qualified_word:
 | WORD in_of qualified_word	{ $$ = $1; CB_REFERENCE ($1)->chain = $3; }
 ;
 subref:
-  '(' subscript_list ')'	{ $$ = $0; CB_REFERENCE ($0)->subs = $2; }
+  '(' e_list ')'
+  {
+    $$ = $0;
+    CB_REFERENCE ($0)->subs = cb_list_reverse ($2);
+  }
 ;
 refmod:
-  '(' subscript ':' ')'
+  '(' e ':' ')'
   {
     CB_REFERENCE ($0)->offset = $2;
   }
-| '(' subscript ':' subscript ')'
+| '(' e ':' e ')'
   {
     CB_REFERENCE ($0)->offset = $2;
     CB_REFERENCE ($0)->length = $4;
   }
-;
-subscript_list:
-  subscript			{ $$ = cb_list ($1); }
-| subscript_list subscript	{ $$ = cb_cons ($2, $1); }
-;
-subscript:
-  x				{ $$ = $1; }
-| subscript '+' x		{ $$ = cb_build_binary_op ($1, '+', $3); }
-| subscript '-' x		{ $$ = cb_build_binary_op ($1, '-', $3); }
 ;
 
 /*
