@@ -851,8 +851,20 @@ cob_move (struct cob_field f1, struct cob_field f2)
     }
 }
 
+
+/*
+ * Convenience functions
+ */
+
 void
 cob_move_2 (struct fld_desc *f1, char *s1, struct fld_desc *f2, char *s2)
 {
   cob_move ((struct cob_field) {f1, s1}, (struct cob_field) {f2, s2});
+}
+
+void
+cob_mem_move (struct cob_field dst, unsigned char *src, int len)
+{
+  struct fld_desc fld = {len, 'X', 0, 0, 0, 0, 0, 0, 0, "X0"};
+  cob_move ((struct cob_field) {&fld, src}, dst);
 }

@@ -2019,64 +2019,34 @@ alloc_scr_info ()
   return new;
 }
 
-struct unstring_delimited *
-alloc_unstring_delimited (int all, cob_tree var)
-{
-  struct unstring_delimited *ud;
-  ud = malloc (sizeof (struct unstring_delimited));
-  ud->next = NULL;
-  ud->var = var;
-  ud->all = all;
-  return ud;
-}
-
-struct unstring_destinations *
-alloc_unstring_dest (cob_tree var, cob_tree delim, cob_tree count)
-{
-  struct unstring_destinations *ud;
-  ud = malloc (sizeof (struct unstring_destinations));
-  ud->next = NULL;
-  ud->var = var;
-  ud->delim = delim;
-  ud->count = count;
-  return ud;
-}
-
 void
-gen_unstring (cob_tree var, struct unstring_delimited *delim,
-	      struct unstring_destinations *dest, cob_tree ptr,
-	      cob_tree tally)
+gen_string (cob_tree x, cob_tree_list l)
 {
-  output ("# UNSTRING %s\n", COB_FIELD_NAME (var));
+  output ("# STRING into %s\n", COB_FIELD_NAME (x));
   push_immed (0);
-  for (; dest; dest = dest->next)
+  for (l = list_reverse (l); l; l = l->next)
     {
-      gen_loadvar (dest->count);
-      gen_loadvar (dest->delim);
-      gen_loadvar (dest->var);
-    }
-  push_immed (0);
-  for (; delim; delim = delim->next)
-    {
-      push_immed (delim->all);	/* push "all" flag */
-      gen_loadvar (delim->var);
-    }
-  asm_call_3 ("cob_unstring", var, ptr, tally);
-}
-
-extern void
-gen_string (cob_tree sy, cob_tree_list list)
-{
-  output ("# STRING into %s\n", COB_FIELD_NAME (sy));
-  push_immed (0);
-  for (list = list_reverse (list); list; list = list->next)
-    {
-      struct string_item *p = list->item;
+      struct string_item *p = l->item;
       if (p->sy)
 	gen_loadvar (p->sy);
       push_immed (p->type);
     }
-  asm_call_1 ("cob_string", sy);
+  asm_call_1 ("cob_string", x);
+}
+
+void
+gen_unstring (cob_tree x, cob_tree_list l)
+{
+  output ("# UNSTRING %s\n", COB_FIELD_NAME (x));
+  push_immed (0);
+  for (l = list_reverse (l); l; l = l->next)
+    {
+      struct string_item *p = l->item;
+      if (p->sy)
+	gen_loadvar (p->sy);
+      push_immed (p->type);
+    }
+  asm_call_1 ("cob_unstring", x);
 }
 
 void

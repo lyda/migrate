@@ -67,8 +67,6 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
   struct inspect_item *insi;
   struct call_parameter *para;
   struct coord_pair pval; /* lin,col */
-  struct unstring_delimited *udval;
-  struct unstring_destinations *udstval;
   struct scr_info *sival;
   struct perf_info *pfval;
   struct perform_info *pfvals;
@@ -156,13 +154,13 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <tree> file_description,redefines_var,function_call,subscript
 %type <tree> name,gname,number,file,level1_variable,opt_def_name,def_name
 %type <tree> opt_read_into,opt_write_from,field_name,expr,unsafe_expr
-%type <tree> opt_unstring_count,opt_unstring_delim,unstring_tallying
+%type <tree> opt_unstring_count,opt_unstring_delimiter,opt_unstring_tallying
 %type <tree> numeric_variable,group_variable,numeric_edited_variable
 %type <tree> qualified_var,unqualified_var,evaluate_subject
 %type <tree> evaluate_object,evaluate_object_1,assign_clause
 %type <tree> call_returning,screen_to_name,var_or_lit,opt_add_to
 %type <tree> opt_perform_thru
-%type <tree> opt_read_key,file_name,string_pointer
+%type <tree> opt_read_key,file_name,opt_with_pointer
 %type <tree> variable,sort_range,name_or_lit,name_or_literal
 %type <tree> indexed_variable,search_opt_varying,opt_key_is
 %type <tree> from_rec_varying,to_rec_varying
@@ -174,8 +172,8 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <list> tallying_list,replacing_list,inspect_before_after_list
 %type <insi> tallying_item,replacing_item,inspect_before_after
 %type <list> string_list,string_delimited_list,string_name_list
-%type <udstval> unstring_destinations,unstring_dest_var
-%type <udval> unstring_delimited_vars,unstring_delimited
+%type <list> unstring_delimited,unstring_delimited_list,unstring_into
+%type <list> unstring_delimited_item,unstring_into_item
 
 
 %%
@@ -2583,7 +2581,7 @@ stoprun_statement:
  */
 
 string_statement:
-  STRING string_list INTO name string_pointer
+  STRING string_list INTO name opt_with_pointer
   {
     if ($5)
       $2 = cons (make_string_item (STRING_WITH_POINTER, $5), $2);
@@ -2620,7 +2618,7 @@ string_name_list:
     $$ = list_add ($1, make_string_item (STRING_CONCATENATE, $2));
   }
 ;
-string_pointer:
+opt_with_pointer:
   /* nothing */			{ $$ = NULL; }
 | opt_with POINTER name		{ $$ = $3; }
 ;
@@ -2657,49 +2655,63 @@ opt_end_subtract: | END_SUBTRACT ;
 
 unstring_statement:
   UNSTRING name unstring_delimited
-  INTO unstring_destinations string_pointer unstring_tallying
+  INTO unstring_into opt_with_pointer opt_unstring_tallying
   {
-    gen_unstring ($2, $3, $5, $6, $7);
+    if ($6)
+      $3 = cons (make_string_item (UNSTRING_WITH_POINTER, $6), $3);
+    if ($7)
+      $5 = list_add ($5, make_string_item (UNSTRING_TALLYING, $7));
+    gen_unstring ($2, list_append ($3, $5));
   }
   opt_on_overflow
   opt_end_unstring
 ;
+
 unstring_delimited:
-  /* nothing */				   { $$ = NULL; }
-| DELIMITED opt_by unstring_delimited_vars { $$ = $3; }
+  /* nothing */			{ $$ = NULL; }
+| DELIMITED opt_by
+  unstring_delimited_list	{ $$ = $3; }
 ;
-unstring_delimited_vars:
-  flag_all gname		{ $$ = alloc_unstring_delimited ($1,$2); }
-| unstring_delimited_vars OR flag_all gname
+unstring_delimited_list:
+  unstring_delimited_item	{ $$ = $1; }
+| unstring_delimited_list OR 
+  unstring_delimited_item	{ $$ = list_append ($1, $3); }
+;
+unstring_delimited_item:
+  flag_all gname
   {
-    struct unstring_delimited *ud;
-    ud=alloc_unstring_delimited($3,$4);
-    ud->next = $1;
-    $$=ud;
+    int type = $1 ? UNSTRING_DELIMITED_ALL : UNSTRING_DELIMITED_BY;
+    $$ = make_list (make_string_item (type, $2));
   }
 ;
-unstring_destinations:
-  unstring_dest_var		{ $$ = $1; }
-| unstring_destinations
-  unstring_dest_var		{ $2->next = $1; $$ = $2; }
+
+unstring_into:
+  unstring_into_item		{ $$ = $1; }
+| unstring_into
+  unstring_into_item		{ $$ = list_append ($1, $2); }
 ;
-unstring_dest_var:
-  name opt_unstring_delim opt_unstring_count
+unstring_into_item:
+  name opt_unstring_delimiter opt_unstring_count
   {
-    $$ = alloc_unstring_dest( $1, $2, $3 );
+    $$ = make_list (make_string_item (UNSTRING_INTO, $1));
+    if ($2)
+      $$ = list_add ($$, make_string_item (UNSTRING_DELIMITER, $2));
+    if ($3)
+      $$ = list_add ($$, make_string_item (UNSTRING_COUNT, $3));
   }
 ;
-opt_unstring_delim:
-  /* nothing */			{ $$=NULL; }
-| DELIMITER opt_in name		{ $$=$3; }
+opt_unstring_delimiter:
+  /* nothing */			{ $$ = NULL; }
+| DELIMITER opt_in name		{ $$ = $3; }
 ;
 opt_unstring_count:
-  /* nothing */			{ $$=NULL; }
-| COUNT opt_in name		{ $$=$3; }
+  /* nothing */			{ $$ = NULL; }
+| COUNT opt_in name		{ $$ = $3; }
 ;
-unstring_tallying:
-  /* nothing */			{ $$=NULL; }
-| TALLYING opt_in name		{ $$=$3; }
+
+opt_unstring_tallying:
+  /* nothing */			{ $$ = NULL; }
+| TALLYING opt_in name		{ $$ = $3; }
 ;
 opt_end_unstring: | END_UNSTRING ;
 

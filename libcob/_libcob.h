@@ -66,7 +66,7 @@
 #define FMOD_OUTPUT 		3
 #define FMOD_EXTEND 		4
 
-/* inspect options */
+/* INSPECT options */
 #define INSPECT_END		0
 #define INSPECT_CHARACTERS 	1
 #define INSPECT_ALL        	2
@@ -76,12 +76,22 @@
 #define INSPECT_BEFORE      	6
 #define INSPECT_AFTER      	7
 
-/* string options */
+/* STRING options */
 #define STRING_END		0
 #define STRING_CONCATENATE	1
 #define STRING_DELIMITED_NAME	2
 #define STRING_DELIMITED_SIZE	3
 #define STRING_WITH_POINTER	4
+
+/* UNSTRING options */
+#define UNSTRING_END		0
+#define UNSTRING_INTO		1
+#define UNSTRING_DELIMITER	2
+#define UNSTRING_COUNT		3
+#define UNSTRING_DELIMITED_BY	4
+#define UNSTRING_DELIMITED_ALL	5
+#define UNSTRING_WITH_POINTER	6
+#define UNSTRING_TALLYING	7
 
 /* screen attributes */
 #define SCR_BLANK_WHEN_ZERO  0x00000001
@@ -203,6 +213,7 @@ extern int picCompDecimals (const char *pic);
 
 extern void cob_move (struct cob_field f1, struct cob_field f2);
 extern void cob_move_2 (struct fld_desc *f1, char *s1, struct fld_desc *f2, char *s2);
+extern void cob_mem_move (struct cob_field dst, unsigned char *src, int len);
 extern int get_index (struct cob_field f);
 
 extern void cob_push_int (int n);

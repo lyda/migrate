@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <regex.h>
 
 #include "_libcob.h"
 
@@ -391,175 +392,146 @@ cob_string (struct cob_field dst, ...)
  * UNSTRING
  */
 
-static int
-offset_substr (char *s1, char *s2, int n1, int n2)
-{
-  int i, j;
-  for (i = 0; i < n1; i++)
-    {
-      for (j = 0; j < n2; j++)
-	{
-	  if (i + j > n1)
-	    break;		/* past the first string, ignore */
-	  if (s1[i + j] != s2[j])
-	    break;
-	}
-      if (j == n2)
-	break;			/* found! */
-    }
-  return i;
-}
-
-static void
-put_integer (struct cob_field f, int v)
-{
-  struct fld_desc fld = { 4, 'B', 0, 0, 0, 0, 0, 0, 0, "S9\x9" };
-  cob_move ((struct cob_field) {&fld, (char *) &v}, f);
-}
-
 int
-cob_unstring (struct fld_desc *fvar, char *svar, ...)
+cob_unstring (struct cob_field src, ...)
 {
-  struct fld_desc *fptr, *ftally;
-  char *sptr, *stally;
-  struct fld_desc **p;
-  struct fld_desc *fdelim, *fdest, *fdltr, *fcnt;
-  char *sdelim, *sdest, *sdltr, *scnt;
-  char *delimbuf, *s1;
-  int all, n, n1, len, partlen, delimlen, delimall, nfields;
-  int i, ip;		// assorted indexes
-  va_list args;
+  int i, type, offset = 0, count = 0, delms = 0;
+  struct cob_field ptr = {0, 0};
+  int src_size, delm_size;
+  unsigned char *src_data, *delm_data;
+  regex_t reg;
+  int reg_inited = 0, match_size = 0;
+  char regexp[256] = ""; /* FIXME: to be dynamic */
+  va_list ap;
 
-  /* first receive all arguments */
-  va_start (args, svar);
-  if ((fptr = va_arg (args, struct fld_desc *)))
-    {
-      sptr = va_arg (args, char *);
-    }
-  if ((ftally = va_arg (args, struct fld_desc *)))
-    {
-      stally = va_arg (args, char *);
-    }
-  /* setup indirect pointer to the start of delimiters array */
-  i = 0;
-  len = 16;
-  p = malloc (sizeof (struct fld_desc) * len);
-  p[i] = va_arg (args, struct fld_desc *);
-  while (p[i])
-    {
-      if (i + 3 >= len)
-	{
-	  len *= 2;
-	  p = realloc (p, sizeof (struct fld_desc) * len);
-	}
-      p[++i] = va_arg (args, struct fld_desc *);
-      p[++i] = va_arg (args, struct fld_desc *);
-      p[++i] = va_arg (args, struct fld_desc *);
-    }
+  va_start (ap, src);
+  src_size = FIELD_SIZE (src);
+  src_data = FIELD_DATA (src);
 
-  /* now execute the actual unstring command */
-  len = fvar->len;
-  i = 0;
-  if (fptr)
-    {
-      /* if there is a pointer, skip some length at svar */
-      /* get the integer value of this */
-      n = get_index ((struct cob_field) {fptr, sptr}) - 1;
-      if (n >= (len - i) || n < 0)
-	goto error;		/* overflow at the pointer */
-      i += n;
-    }
-  nfields = 0;
-  for (fdest = va_arg (args, struct fld_desc *);
-       fdest;
-       fdest = va_arg (args, struct fld_desc *))
-    {
-      sdest = va_arg (args, char *);
-      if ((fdltr = va_arg (args, struct fld_desc *)))
+  while ((type = va_arg (ap, int)) != UNSTRING_END)
+    switch (type)
+      {
+      case UNSTRING_WITH_POINTER:
+	ptr = va_arg (ap, struct cob_field);
+	offset = get_index (ptr) - 1;
+	if (offset < -1 || offset >= src_size)
+	  goto overflow;
+	break;
+
+      case UNSTRING_DELIMITED_BY:
+      case UNSTRING_DELIMITED_ALL:
 	{
-	  sdltr = va_arg (args, char *);
-	}
-      if ((fcnt = va_arg (args, struct fld_desc *)))
-	{
-	  scnt = va_arg (args, char *);
-	}
-      if ((len - i) <= 0)	/* check if overflow found */
-	goto error;
-      /* find the nearest delimiter */
-      delimall = 0;
-      delimlen = len - i;
-      delimbuf = NULL;
-      ip = 0;
-      fdelim = p[ip++];
-      partlen = (!fdelim) ? (fdest->len) : (len - i);
-      for (; fdelim; fdelim = p[ip++])
-	{
-	  sdelim = (char *) p[ip++];
-	  all = (int) p[ip++];
-	  n1 = offset_substr (svar + i, sdelim, partlen, fdelim->len);
-	  if (n1 < partlen)
+	  int i;
+	  char *p;
+	  struct cob_field dlm = va_arg (ap, struct cob_field);
+	  int size = FIELD_SIZE (dlm);
+	  unsigned char *data = FIELD_DATA (dlm);
+	  if (delms > 0)
+	    strcat (regexp, "\\|");
+	  strcat (regexp, "\\(");
+	  /* copy deliminator with regexp quote */
+	  p = regexp + strlen (regexp);
+	  for (i = 0; i < size; i++)
 	    {
-	      partlen = n1;
-	      delimlen = fdelim->len;
-	      delimbuf = sdelim;
-	      delimall = all;
+	      int c = data[i];
+	      if (c == '.' || c == '\\')
+		*p++ = '\\';
+	      *p++ = c;
 	    }
+	  *p = 0;
+	  strcat (regexp, "\\)");
+	  if (type == UNSTRING_DELIMITED_ALL)
+	    strcat (regexp, "\\+");
+	  delms++;
+	  reg_inited = 0;
+	  break;
 	}
-      /* this should be a call to our cob_move function, 
-         but it's unfinished yet */
-      memmove (sdest, svar + i, min (fdest->len, partlen));
-      if (fdest->len > partlen)
-	memset (sdest + partlen, ' ', fdest->len - partlen);
-      /* adjust for the partial string processed */
-      i += partlen;
-      if (delimbuf)
-	{			/* adjust for delimiter too */
-	  i += delimlen;
-	  if (fdltr)
-	    {			/* if delimiter storage requested */
-	      memset (sdltr, ' ', fdltr->len);
-	      memmove (sdltr, delimbuf, min (fdltr->len, delimlen));
-	      n1 = fdltr->len - delimlen;
-	      s1 = sdltr + delimlen;
-	    }
-	}
-      if (fcnt)
-	put_integer ((struct cob_field) {fcnt, scnt}, partlen);
-      if (delimall)
-	{			/* remove all copies of delimiter */
-	  while ((len - i)
-		 && !offset_substr (svar + i, delimbuf, len - i, delimlen))
+
+      case UNSTRING_INTO:
+	{
+	  struct cob_field f = va_arg (ap, struct cob_field);
+	  unsigned char *start = src_data + offset;
+	  regmatch_t *match;
+	  if (offset >= src_size)
+	    break;
+	  if (delms == 0)
 	    {
-	      i += delimlen;
-	      if (n1 && fdltr)
+	      match_size = MIN (FIELD_LENGTH (f), src_size - offset);
+	      cob_mem_move (f, start, match_size);
+	      offset += match_size;
+	    }
+	  else
+	    {
+	      /* delimit using regexec */
+	      if (!reg_inited)
 		{
-		  memmove (s1, delimbuf, min (n1, delimlen));
-		  n1 -= delimlen;
-		  s1 += delimlen;
+		  regcomp (&reg, regexp, 0);
+		  match = alloca ((delms + 1) * sizeof (regmatch_t));
+		  reg_inited = 1;
+		}
+	      if (regexec (&reg, start, delms + 1, match, 0) == 0)
+		{
+		  match_size = match[0].rm_so;
+		  cob_mem_move (f, start, match_size);
+		  offset += match[0].rm_eo;
+		  for (i = 1; i <= delms; i++)
+		    if (match[i].rm_so >= 0)
+		      {
+			delm_data = start + match[i].rm_so;
+			delm_size = match[i].rm_eo - match[i].rm_so;
+			break;
+		      }
+		}
+	      else
+		{
+		  match_size = src_size - offset;
+		  cob_mem_move (f, start, match_size);
+		  offset = src_size;
 		}
 	    }
-	  if (fdltr)
-	    memset (s1, ' ', n1);
+	  count++;
+	  break;
 	}
-      if (fcnt)
-	put_integer ((struct cob_field) {fcnt, scnt}, partlen);
-      nfields++;
-    }
-  if (ftally)
-    put_integer ((struct cob_field) {ftally, stally},
-		 nfields + get_index ((struct cob_field) {ftally, stally}));
-  if (fptr)
-    put_integer ((struct cob_field) {fptr, sptr}, i + 1);
-  if (len - i)			/* another way to overflow */
-    {
-    error:
-      free (p);
-      va_end (args);
-      cob_status = COB_STATUS_OVERFLOW;
-      return cob_status;
-    }
-  free (p);
-  va_end (args);
+
+      case UNSTRING_DELIMITER:
+	{
+	  struct cob_field f = va_arg (ap, struct cob_field);
+	  cob_mem_move (f, delm_data, delm_size);
+	  break;
+	}
+
+      case UNSTRING_COUNT:
+	{
+	  struct cob_field f = va_arg (ap, struct cob_field);
+	  set_pointer (f, match_size);
+	  break;
+	}
+
+      case UNSTRING_TALLYING:
+	{
+	  struct cob_field f = va_arg (ap, struct cob_field);
+	  inspect_add_counter (f, count);
+	  break;
+	}
+
+      default:
+	fatal_error ("cob_unstring");
+      }
+
+  if (offset < src_size)
+    goto overflow;
+
   cob_status = COB_STATUS_SUCCESS;
+  goto end;
+
+ overflow:
+  cob_status = COB_STATUS_OVERFLOW;
+
+ end:
+  va_end (ap);
+  if (reg_inited)
+    regfree (&reg);
+  if (ptr.data)
+    set_pointer (ptr, offset + 1);
   return cob_status;
 }
