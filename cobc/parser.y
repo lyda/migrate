@@ -2690,18 +2690,12 @@ expr:
 	    if (stack[i-1].token != VALUE
 		&& stack[i-1].token != COBC_COND_AND
 		&& stack[i-1].token != COBC_COND_OR)
-	      {
-		yyerror ("error 1");
-		return -1;
-	      }
+	      return -1;
 	    switch (token)
 	      {
 	      case '+': case '-': case '*': case '/': case '^':
 		if (i < 3 || stack[i-3].token != VALUE)
-		  {
-		    yyerror ("error 2");
-		    return -1;
-		  }
+		  return -1;
 		stack[i-3].token = VALUE;
 		stack[i-3].value =
 		  make_expr (stack[i-3].value, token, stack[i-1].value);
@@ -2719,10 +2713,7 @@ expr:
 	      case COBC_COND_AND:
 	      case COBC_COND_OR:
 		if (i < 3 || stack[i-3].token != VALUE)
-		  {
-		    yyerror ("error 3");
-		    return -1;
-		  }
+		  return -1;
 		if (!COBC_COND_P (stack[i-1].value))
 		  stack[i-1].value =
 		    make_cond (last_lefthand, last_operator, stack[i-1].value);
@@ -2782,6 +2773,8 @@ expr:
     i = 0;
     for (l = $1; l; l = l->next)
       {
+#define SHIFT(prio,token,value) \
+        if (shift (prio, token, value) == -1) goto error
 #define look_ahead(l) \
         ((l && COBC_INTEGER_P (l->item)) ? COBC_INTEGER (l->item)->val : 0)
 
@@ -2798,11 +2791,11 @@ expr:
 		{
 		  /* arithmetic operator */
 		case '^':
-		  shift (2, token, 0);
+		  SHIFT (2, token, 0);
 		  break;
 		case '*':
 		case '/':
-		  shift (3, token, 0);
+		  SHIFT (3, token, 0);
 		  break;
 		case '-':
 		  if (i == 0 || stack[i-1].token != VALUE)
@@ -2814,40 +2807,40 @@ expr:
 		    }
 		  /* fall through */
 		case '+':
-		  shift (4, token, 0);
+		  SHIFT (4, token, 0);
 		  break;
 
 		  /* conditional operator */
 		case '=':
-		  shift (5, COBC_COND_EQ, 0);
+		  SHIFT (5, COBC_COND_EQ, 0);
 		  break;
 		case '<':
 		  if (look_ahead (l->next) == OR)
 		    {
 		      if (look_ahead (l->next->next) != '=')
 			goto error;
-		      shift (5, COBC_COND_LE, 0);
+		      SHIFT (5, COBC_COND_LE, 0);
 		      l = l->next->next;
 		    }
 		  else
-		    shift (5, COBC_COND_LT, 0);
+		    SHIFT (5, COBC_COND_LT, 0);
 		  break;
 		case '>':
 		  if (look_ahead (l->next) == OR)
 		    {
 		      if (look_ahead (l->next->next) != '=')
 			goto error;
-		      shift (5, COBC_COND_GE, 0);
+		      SHIFT (5, COBC_COND_GE, 0);
 		      l = l->next->next;
 		    }
 		  else
-		    shift (5, COBC_COND_GT, 0);
+		    SHIFT (5, COBC_COND_GT, 0);
 		  break;
 		case LE:
-		  shift (5, COBC_COND_LE, 0);
+		  SHIFT (5, COBC_COND_LE, 0);
 		  break;
 		case GE:
-		  shift (5, COBC_COND_GE, 0);
+		  SHIFT (5, COBC_COND_GE, 0);
 		  break;
 
 		  /* class condition */
@@ -2915,16 +2908,16 @@ expr:
 		case NOT:
 		  switch (look_ahead (l->next))
 		    {
-		    case '=': shift (5, COBC_COND_NE, 0); l = l->next; break;
-		    case '<': shift (5, COBC_COND_GE, 0); l = l->next; break;
-		    case '>': shift (5, COBC_COND_LE, 0); l = l->next; break;
-		    case LE:  shift (5, COBC_COND_GT, 0); l = l->next; break;
-		    case GE:  shift (5, COBC_COND_LT, 0); l = l->next; break;
-		    default:  shift (6, COBC_COND_NOT, 0); break;
+		    case '=': SHIFT (5, COBC_COND_NE, 0); l = l->next; break;
+		    case '<': SHIFT (5, COBC_COND_GE, 0); l = l->next; break;
+		    case '>': SHIFT (5, COBC_COND_LE, 0); l = l->next; break;
+		    case LE:  SHIFT (5, COBC_COND_GT, 0); l = l->next; break;
+		    case GE:  SHIFT (5, COBC_COND_LT, 0); l = l->next; break;
+		    default:  SHIFT (6, COBC_COND_NOT, 0); break;
 		    }
 		  break;
-		case AND: shift (7, COBC_COND_AND, 0); break;
-		case OR:  shift (8, COBC_COND_OR, 0); break;
+		case AND: SHIFT (7, COBC_COND_AND, 0); break;
+		case OR:  SHIFT (8, COBC_COND_OR, 0); break;
 		}
 	      break;
 	    }
@@ -2936,7 +2929,7 @@ expr:
 		token = ZERO;
 		goto unary_cond;
 	      }
-	    shift (0, VALUE, x);
+	    SHIFT (0, VALUE, x);
 	  }
       }
     reduce (9); /* reduce all */
