@@ -3055,33 +3055,32 @@ gen_divide2 (struct math_var *vl1, struct sym *sy1, struct sym *sy2,
 
 
 /******** functions for subscripted var manipulation ***********/
-struct vref *
-create_subscripted_var (struct sym *sy, struct vref *subs)
+struct subref *
+make_subref (struct sym *sy, struct subref *next)
 {
-  struct vref *ref;
-  ref = malloc (sizeof (struct vref));
+  struct subref *ref = malloc (sizeof (struct subref));
   ref->litflag = 2;
-  ref->sym = sy;
-  ref->next = subs;
+  ref->sym     = sy;
+  ref->next    = next;
   return ref;
 }
 
-struct vref *
+struct subref *
 create_subscript (struct sym *sy)
 {
-  struct vref *ref;
-  ref = malloc (sizeof (struct vref));
+  struct subref *ref;
+  ref = malloc (sizeof (struct subref));
   ref->litflag = ',';		/* the end of subscript is here */
   ref->sym = sy;		/* this is the actual variable */
   ref->next = NULL;
   return ref;
 }
 
-struct vref *
-add_subscript_item (struct vref *subs, char op, struct sym *item)
+struct subref *
+add_subscript_item (struct subref *subs, char op, struct sym *item)
 {
-  struct vref *ref, *tmp;
-  ref = malloc (sizeof (struct vref));
+  struct subref *ref, *tmp;
+  ref = malloc (sizeof (struct subref));
   tmp = subs;
   while (tmp->next)
     tmp = tmp->next;
@@ -3093,10 +3092,10 @@ add_subscript_item (struct vref *subs, char op, struct sym *item)
   return subs;
 }
 
-struct vref *
-add_subscript (struct vref *ref, struct vref *subs)
+struct subref *
+add_subscript (struct subref *ref, struct subref *subs)
 {
-  struct vref *tmp;
+  struct subref *tmp;
   tmp = subs;
   while (tmp->next)
     tmp = tmp->next;
@@ -3107,10 +3106,10 @@ add_subscript (struct vref *ref, struct vref *subs)
 int
 check_subscripts (struct sym *subs)
 {
-  struct vref *ref;
+  struct subref *ref;
   struct sym *sy;
   sy = SUBREF_SYM (subs);
-  for (ref = (struct vref *) subs; ref; ref = ref->next)
+  for (ref = (struct subref *) subs; ref; ref = ref->next)
     {
       if (ref->litflag == ',')
 	{
@@ -3167,9 +3166,9 @@ check_refmods (struct sym *var)
 }
 
 void
-gen_subscripted (struct vref *subs)
+gen_subscripted (struct subref *subs)
 {
-  struct vref *ref;
+  struct subref *ref;
   struct sym *sy, *var;
   int outer_pushed, eax_in_use;
   char op;
@@ -3457,7 +3456,7 @@ loadloc_to_eax (struct sym *sy_p)
     sy = ((struct refmod *) sy)->sym;	// temp bypass
   if (SUBREF_P (sy))
     {
-      gen_subscripted ((struct vref *) sy);
+      gen_subscripted ((struct subref *) sy);
       var = SUBREF_SYM (sy);
       if (var->linkage_flg)
 	{
@@ -3654,7 +3653,7 @@ gen_loadval (struct sym *sy)
 #endif
   if (SUBREF_P (sy))
     {
-      gen_subscripted ((struct vref *) sy);
+      gen_subscripted ((struct subref *) sy);
       var = SUBREF_SYM (sy);
       if (var->linkage_flg)
 	{
@@ -3705,7 +3704,7 @@ gen_pushval (struct sym *sy)
 #endif
   if (SUBREF_P (sy))
     {
-      gen_subscripted ((struct vref *) sy);
+      gen_subscripted ((struct subref *) sy);
       var = SUBREF_SYM (sy);
       if (var->linkage_flg)
 	{
@@ -4128,8 +4127,6 @@ void
 gen_set (struct sym *idx, int which, struct sym *var,
 	 int adrof_idx, int adrof_var)
 {
-  struct vref *ref;
-  struct vrange *vr;
   struct sym *sy = idx;
   if (idx->litflag == 4)
     sy = ((struct refmod *) idx)->sym;
@@ -4138,18 +4135,14 @@ gen_set (struct sym *idx, int which, struct sym *var,
 
   if (sy->type == '8')
     {				/* conditional? */
-      vr = sy->refmod_redef.vr;
-      if ((vr != NULL) || (sy->value2 != sy->value))
+      if ((sy->refmod_redef.vr != NULL) || (sy->value2 != sy->value))
 	{
 	  yyerror ("conditional is not unique");
 	  return;
 	}
       if (SUBREF_P (idx))
 	{
-	  ref = malloc (sizeof (struct vref));
-	  ref->litflag = 2;
-	  ref->sym = sy->parent;
-	  ref->next = SUBREF_NEXT (idx);
+	  struct subref *ref = make_subref (sy->parent, SUBREF_NEXT (idx));
 	  gen_move ((struct sym *) sy->value, (struct sym *) ref);
 	  free (ref);
 	}
@@ -4853,7 +4846,7 @@ gen_SearchAllLoopCheck (unsigned long lbl3, struct sym *syidx,
 {
 
   struct sym *sy1;
-  struct vref *vr1;
+  struct subref *vr1;
   struct index_to_table_list *it1, *it2;
   unsigned long l1, l2, l3, l4, l5, l6;
 
@@ -4908,7 +4901,7 @@ gen_SearchAllLoopCheck (unsigned long lbl3, struct sym *syidx,
 #endif
 
   vr1 = create_subscript (syidx);
-  sy1 = (struct sym *) create_subscripted_var (sytbl, vr1);
+  sy1 = (struct sym *) make_subref (sytbl, vr1);
 
   /* table sort sequence: '0' = none, '1' = ASCENDING, '2' = DESCENDING */
 
@@ -6023,7 +6016,6 @@ void
 gen_condition (struct sym *sy)
 {
   struct vrange *vr;
-  struct vref *ref;
   struct sym *sy1 = sy;
   /*fprintf(o_src,"# 88 condition (top): (%s , %s)\n",
      sy->value->name,sy->value2->name); */
@@ -6046,10 +6038,7 @@ gen_condition (struct sym *sy)
     {
       /* alloc a tmp node for condition parent 
          so gen_loadvar will be happy */
-      ref = malloc (sizeof (struct vref));
-      ref->litflag = 2;
-      ref->sym = sy1->parent;
-      ref->next = SUBREF_NEXT (sy);
+      struct subref *ref = make_subref (sy1->parent, SUBREF_NEXT (sy));
       gen_loadvar ((struct sym *) ref);
       free (ref);
     }

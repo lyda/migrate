@@ -125,15 +125,15 @@ struct expr
  * where the numbers are (struct lit *) pointers and the variables
  * are (struct sym *) pointers.
  */
-struct vref
+struct subref
 {
   char litflag;			/* ',' = end of subscript, 
 				   '+','-' = subscript arith */
-  struct vref *next;		/* link to next in list or NULL */
+  struct subref *next;		/* link to next in list or NULL */
   void *sym;			/* variable/literal at this node */
 };
 
-#define SUBREF(x)	((struct vref *) (x))
+#define SUBREF(x)	((struct subref *) (x))
 #define SUBREF_P(x)	(SUBREF (x)->litflag == 2)
 #define SUBREF_NEXT(x)	(SUBREF (x)->next)
 #define SUBREF_SYM(x)	(SUBREF (x)->sym)
@@ -143,7 +143,7 @@ struct refmod
 {
   char litflag;			/* 4 = refmod */
   struct sym *off;		/* offset from normal start address */
-  struct sym *sym;		/* pointer to original var: must be at the same relative offset as sym in vref */
+  struct sym *sym;		/* pointer to original var: must be at the same relative offset as sym in subref */
   struct sym *len;		/* corrected length */
   short slot;			/* slot in the data section */
 };
@@ -769,18 +769,17 @@ extern void gen_divide1 (struct math_var *vl1, struct sym *sy1,
 			 struct math_ose *v1);
 extern void gen_divide2 (struct math_var *vl1, struct sym *sy1,
 			 struct sym *sy2, struct math_ose *v1);
-extern struct vref *create_subscripted_var (struct sym *sy,
-					    struct vref *subs);
-extern struct vref *create_subscript (struct sym *sy);
-extern struct vref *add_subscript_item (struct vref *subs, char op,
+extern struct subref *make_subref (struct sym *sy, struct subref *subs);
+extern struct subref *create_subscript (struct sym *sy);
+extern struct subref *add_subscript_item (struct subref *subs, char op,
 					struct sym *item);
-extern struct vref *add_subscript (struct vref *ref, struct vref *subs);
+extern struct subref *add_subscript (struct subref *ref, struct subref *subs);
 extern int check_subscripts (struct sym *subs);
 extern void create_occurs_info (int min, int max, struct sym *depend);
 extern struct refmod *create_refmoded_var (struct sym *sy, struct sym *syoff,
 					   struct sym *sylen);
 extern int check_refmods (struct sym *var);
-extern void gen_subscripted (struct vref *subs);
+extern void gen_subscripted (struct subref *subs);
 extern struct sym *get_variable_item (struct sym *sy);
 extern void gen_temp_storage (int size);
 extern void adjust_desc_length (struct sym *sy);

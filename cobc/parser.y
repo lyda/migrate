@@ -94,7 +94,7 @@ static void assert_numeric_sy (struct sym *sy);
     struct lit *lval;       /* literal */
     unsigned long dval;     /* label definition, compacted */
     char *str;
-    struct vref *rval;      /* variable reference (with subscripts) */
+    struct subref *rval;      /* variable reference (with subscripts) */
     struct refmod *rmval;   /* variable with RefMod specifier */
     struct string_from *sfval; /* variable list in string statement */
     struct unstring_delimited *udval;
@@ -3205,7 +3205,7 @@ cond_name:
     subscripts  ')'
     {
       curr_division = CDIV_PROC;
-      $$ = (struct sym *)create_subscripted_var( $1, $4 );
+      $$ = (struct sym *)make_subref( $1, $4 );
       /*check_subscripts($$);*/
     }
     | VARCOND  { $<sval>$=$1; }
@@ -3229,7 +3229,7 @@ variable:
     | qualified_var LPAR { curr_division = CDIV_SUBSCRIPTS; }
       subscripts ')' {
       curr_division = CDIV_PROC;
-      $$ = (struct sym *)create_subscripted_var( $1, $4 );
+      $$ = (struct sym *)make_subref( $1, $4 );
       check_subscripts($$);
       }
     ;
