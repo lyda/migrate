@@ -93,8 +93,9 @@ static struct filename {
 static int source_format;
 
 #define format_unspecified	0
-#define format_fixed		1
-#define format_free		2
+#define format_free		1
+#define format_fixed		2
+#define format_semi_fixed	3
 
 
 /*
@@ -163,6 +164,7 @@ static struct option long_options[] = {
   {"debug", no_argument, 0, 'D'},
   {"free", no_argument, &source_format, format_free},
   {"fixed", no_argument, &source_format, format_fixed},
+  {"semi-fixed", no_argument, &source_format, format_semi_fixed},
   {"static", no_argument, &cobc_flags.static_call, 1},
   {"dynamic", no_argument, &cobc_flags.static_call, 0},
   {"save-temps", no_argument, &save_temps, 1},
@@ -456,7 +458,9 @@ preprocess (struct filename *fn)
   if (source_format == format_unspecified)
     source_format = probe_source_format (fn->source);
 
-  strcat (buff, (source_format == format_fixed) ? " -fixed" : " -free");
+  strcat (buff,
+	  (source_format == format_free) ? " -free" :
+	  (source_format == format_fixed) ? " -fixed" : " -semi-fixed");
   strcat (buff, " ");
   strcat (buff, fn->source);
   return process (buff);
