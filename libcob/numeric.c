@@ -157,8 +157,8 @@ cob_decimal_get_double (cob_decimal *d)
 {
   int n = d->scale;
   double v = mpz_get_d (d->value);
-  for (; n > 0; n--) v *= 10;
-  for (; n < 0; n++) v /= 10;
+  for (; n > 0; n--) v /= 10;
+  for (; n < 0; n++) v *= 10;
   return v;
 }
 
