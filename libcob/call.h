@@ -22,8 +22,6 @@
 
 #include <libcob/common.h>
 
-extern int cob_dynamic_reloading;
-
 extern void cob_init_call (void);
 extern void cob_set_library_path (const char *path);
 extern void *cob_resolve (const char *name);
