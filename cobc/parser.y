@@ -3130,7 +3130,7 @@ number:
   value
   {
     if (COBC_TREE_CLASS ($1) != COB_NUMERIC)
-      yyerror ("numeric value is expected: %s", tree_to_string ($1));
+      yyerror ("numeric value is expected `%s'", tree_to_string ($1));
     $$ = $1;
   }
 ;

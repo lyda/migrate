@@ -188,14 +188,14 @@ output_move_high (cobc_tree x)
   switch (COBC_FIELD (x)->category)
     {
     case COB_NUMERIC:
-      output_move_num (x, 1);
+      output_move_num (x, 9);
       break;
     case COB_ALPHABETIC:
     case COB_ALPHANUMERIC:
       output_memset (x, 255, COBC_FIELD (x)->size);
       break;
     default:
-      output_move_all (x, '\xff');
+      output_move_all (x, 255);
       break;
     }
 }
@@ -213,7 +213,7 @@ output_move_low (cobc_tree x)
       output_memset (x, 0, COBC_FIELD (x)->size);
       break;
     default:
-      output_move_all (x, '\0');
+      output_move_all (x, 0);
       break;
     }
 }
@@ -226,10 +226,10 @@ output_move_quote (cobc_tree x)
     case COB_NUMERIC:
     case COB_ALPHABETIC:
     case COB_ALPHANUMERIC:
-      output_memset (x, '\"', COBC_FIELD (x)->size);
+      output_memset (x, '"', COBC_FIELD (x)->size);
       break;
     default:
-      output_move_all (x, '\"');
+      output_move_all (x, '"');
       break;
     }
 }

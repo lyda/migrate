@@ -383,7 +383,15 @@ output_memset (cobc_tree x, char c, int size)
   output_prefix ();
   output ("memset (");
   output_location (x);
-  output (", %d, %d);\n", c, size);
+  if (isprint (c))
+    output (", '%c', ", c);
+  else
+    output (", %d, ", c);
+  if (COBC_FIELD_P (x))
+    output ("%d", size);
+  else
+    output_length (x);
+  output (");\n");
 }
 
 static void
@@ -394,7 +402,12 @@ output_memcpy (cobc_tree x, char *s, int size)
   output_location (x);
   output (", ");
   output_quoted_string (s, size);
-  output (", %d);\n", size);
+  output (", ");
+  if (COBC_FIELD_P (x))
+    output ("%d", size);
+  else
+    output_length (x);
+  output (");\n");
 }
 
 
