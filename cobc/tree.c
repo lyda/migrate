@@ -753,7 +753,7 @@ make_expr (cobc_tree left, char op, cobc_tree right)
   p->op = op;
   p->left = left;
   p->right = right;
-  COBC_TREE (p)->loc = left->loc;
+  COBC_TREE_LOC (p) = left->loc;
   return COBC_TREE (p);
 }
 
@@ -802,7 +802,7 @@ make_cond (cobc_tree x, enum cobc_cond_type type, cobc_tree y)
   p->type  = type;
   p->left  = x;
   p->right = y;
-  COBC_TREE (p)->loc = x->loc;
+  COBC_TREE_LOC (p) = x->loc;
   return COBC_TREE (p);
 }
 

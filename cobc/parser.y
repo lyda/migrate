@@ -112,10 +112,12 @@ static struct cobc_list *label_check_list;
 static int warning_count = 0;
 static int error_count = 0;
 
+static void register_predefined_name (cobc_tree *ptr, cobc_tree name);
+static void resolve_predefined_names (void);
+
 static void init_field (int level, cobc_tree field);
 static void validate_field (struct cobc_field *p);
 static void validate_field_tree (struct cobc_field *p);
-static void validate_file_name (struct cobc_file_name *p);
 static void finalize_file_name (struct cobc_file_name *f, struct cobc_field *records);
 static void validate_label_name (struct cobc_label_name *p);
 
@@ -200,13 +202,13 @@ static void ambiguous_error (struct cobc_word *w);
 %type <list> replacing_list,inspect_before_after_list
 %type <list> unstring_delimited,unstring_delimited_list,unstring_into
 %type <list> unstring_delimited_item,unstring_into_item
-%type <list> predefined_name_list,mnemonic_name_list
+%type <list> predefined_name_list,qualified_predefined_word,mnemonic_name_list
 %type <list> file_name_list,math_name_list,math_edited_name_list
 %type <list> call_item_list,call_using,expr_item_list
 %type <list> initialize_replacing,initialize_replacing_list
 %type <list> special_name_class_item_list
 %type <tree> special_name_class_item,special_name_class_literal
-%type <tree> on_or_off,select_file_name,record_depending
+%type <tree> on_or_off,record_depending
 %type <tree> call_returning,add_to,field_description_list,value_item
 %type <tree> field_description_list_1,field_description_list_2
 %type <tree> condition,imperative_statement,field_description
@@ -226,7 +228,6 @@ static void ambiguous_error (struct cobc_word *w);
 %type <tree> program_name,condition_name,qualified_cond_name,data_name
 %type <tree> file_name,record_name,label_name,mnemonic_name,section_name,name
 %type <tree> qualified_name,predefined_name
-%type <list> qualified_predefined_word
 %type <tree> integer_value,text_value,value,number
 %type <tree> literal_or_predefined,literal,basic_literal,figurative_constant
 %type <word> qualified_word,label_word,undefined_word
@@ -276,11 +277,8 @@ program:
   environment_division
   data_division
   {
-    struct cobc_list *l;
     /* check if all required identifiers are defined in DATA DIVISION */
-    program_spec.file_name_list = list_reverse (program_spec.file_name_list);
-    for (l = program_spec.file_name_list; l; l = l->next)
-      validate_file_name (l->item);
+    resolve_predefined_names ();
   }
   procedure_division
   _end_program
@@ -288,6 +286,7 @@ program:
     struct cobc_list *l;
     for (l = list_reverse (label_check_list); l; l = l->next)
       validate_label_name (l->item);
+    program_spec.file_name_list = list_reverse (program_spec.file_name_list);
     program_spec.exec_list = list_reverse (program_spec.exec_list);
     if (error_count == 0)
       codegen (&program_spec);
@@ -591,7 +590,7 @@ select_sequence:
     current_file_name->organization = COB_ORG_SEQUENTIAL;
     current_file_name->access_mode = COB_ACCESS_SEQUENTIAL;
     current_file_name->optional = $3;
-    COBC_TREE (current_file_name)->loc = @4;
+    COBC_TREE_LOC (current_file_name) = @4;
     program_spec.file_name_list =
       cons (current_file_name, program_spec.file_name_list);
   }
@@ -600,28 +599,27 @@ select_sequence:
     switch (current_file_name->organization)
       {
       case COB_ORG_INDEXED:
-	if (!current_file_name->key)
+	if (current_file_name->key == NULL)
 	  yyerror_loc (&@2, "RECORD KEY required for file `%s'", $4->name);
 	break;
       case COB_ORG_RELATIVE:
 	if (current_file_name->access_mode != COB_ACCESS_SEQUENTIAL
-	    && !current_file_name->key)
+	    && current_file_name->key == NULL)
 	  yyerror_loc (&@2, "RELATIVE KEY required for file `%s'", $4->name);
 	break;
       }
   }
 ;
-select_file_name:
-  NONNUMERIC_LITERAL
-| predefined_name
-;
 select_options:
 | select_options select_option
 ;
 select_option:
-  ASSIGN _to select_file_name
+  ASSIGN _to literal_or_predefined
   {
-    current_file_name->assign = $3;
+    if (COBC_PREDEFINED_P ($3))
+      register_predefined_name (&current_file_name->assign, $3);
+    else
+      current_file_name->assign = $3;
   }
 | RESERVE integer _area
   {
@@ -641,7 +639,7 @@ select_option:
   }
 | _file STATUS _is predefined_name
   {
-    current_file_name->file_status = $4;
+    register_predefined_name (&current_file_name->file_status, $4);
   }
 | PADDING _character _is literal_or_predefined
   {
@@ -653,16 +651,16 @@ select_option:
   }
 | RELATIVE _key _is predefined_name
   {
-    current_file_name->key = $4;
+    register_predefined_name (&current_file_name->key, $4);
   }
 | RECORD _key _is predefined_name
   {
-    current_file_name->key = $4;
+    register_predefined_name (&current_file_name->key, $4);
   }
 | ALTERNATE RECORD _key _is predefined_name flag_duplicates
   {
     struct cobc_alt_key *p = malloc (sizeof (struct cobc_alt_key));
-    p->key = $5;
+    register_predefined_name (&p->key, $5);
     p->duplicates = $6;
     p->next = NULL;
 
@@ -810,7 +808,8 @@ record_clause:
   {
     current_file_name->record_min = $6;
     current_file_name->record_max = $7;
-    current_file_name->record_depending = $9;
+    if ($9)
+      register_predefined_name (&current_file_name->record_depending, $9);
   }
 ;
 record_depending:
@@ -1062,7 +1061,7 @@ occurs_keys:
 	  {
 	    struct cobc_generic *p = l->item;
 	    keys[i].dir = p->type;
-	    keys[i].key = p->x;
+	    register_predefined_name (&keys[i].key, p->x);
 	    l = l->next;
 	  }
 	current_field->keys = keys;
@@ -1260,7 +1259,7 @@ procedure_list:
     struct cobc_list *l;
     for (l = program_spec.exec_list; l; l = l->next)
       if (l->next == last_exec_list)
-	COBC_TREE (l->item)->loc = @3;
+	COBC_TREE_LOC (l->item) = @3;
   }
 ;
 procedure:
@@ -1755,7 +1754,7 @@ evaluate_object:
     else
       {
 	$$ = $2;
-	COBC_TREE ($$)->loc = @2;
+	COBC_TREE_LOC ($$) = @2;
       }
   }
 ;
@@ -2939,7 +2938,7 @@ expr:
     if (i != 1)
       {
       error:
-	yyerror_loc (&COBC_TREE ($1->item)->loc, "invalid expression");
+	yyerror_tree ($1->item, "invalid expression");
 	YYERROR;
       }
 
@@ -3527,6 +3526,23 @@ _with: | WITH ;
 
 %%
 
+static struct predefined_record {
+  cobc_tree *ptr;
+  cobc_tree name;
+  struct predefined_record *next;
+} *predefined_list = NULL;
+
+static void
+register_predefined_name (cobc_tree *ptr, cobc_tree name)
+{
+  struct predefined_record *p = malloc (sizeof (struct predefined_record));
+  *ptr = name;
+  p->ptr = ptr;
+  p->name = name;
+  p->next = predefined_list;
+  predefined_list = p;
+}
+
 static cobc_tree
 resolve_predefined_name (cobc_tree x)
 {
@@ -3558,6 +3574,18 @@ resolve_predefined_name (cobc_tree x)
     }
   field_set_used (COBC_FIELD (name));
   return name;
+}
+
+static void
+resolve_predefined_names (void)
+{
+  while (predefined_list)
+    {
+      struct predefined_record *p = predefined_list;
+      *p->ptr = resolve_predefined_name (p->name);
+      predefined_list = p->next;
+      free (p);
+    }
 }
 
 static void
@@ -3744,10 +3772,6 @@ validate_field (struct cobc_field *p)
 static void
 validate_field_tree (struct cobc_field *p)
 {
-  int i;
-  int nkeys = p->nkeys;
-  struct cobc_key *keys = p->keys;
-
   if (p->children)
     {
       /* group */
@@ -3785,25 +3809,6 @@ validate_field_tree (struct cobc_field *p)
 	  p->pic = make_picture ();
 	}
     }
-
-  for (i = 0; i < nkeys; i++)
-    keys[i].key = resolve_predefined_name (keys[i].key);
-}
-
-static void
-validate_file_name (struct cobc_file_name *p)
-{
-  struct cobc_alt_key *l;
-  if (COBC_PREDEFINED_P (p->assign))
-    p->assign = resolve_predefined_name (p->assign);
-  if (p->key)
-    p->key = resolve_predefined_name (p->key);
-  if (p->file_status)
-    p->file_status = resolve_predefined_name (p->file_status);
-  for (l = p->alt_key_list; l; l = l->next)
-    l->key = resolve_predefined_name (l->key);
-  if (p->record_depending)
-    p->record_depending = resolve_predefined_name (p->record_depending);
 }
 
 static void
@@ -4040,7 +4045,7 @@ redefinition_error (cobc_tree x)
 {
   struct cobc_field *p = COBC_FIELD (x);
   yywarn ("redefinition of `%s'", p->word->name);
-  yywarn_loc (&x->loc, "`%s' previously defined here", p->word->name);
+  yywarn_tree (x, "`%s' previously defined here", p->word->name);
 }
 
 static void

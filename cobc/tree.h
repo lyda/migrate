@@ -98,6 +98,7 @@ typedef struct cobc_tree_common *cobc_tree;
 
 #define COBC_TREE(x)		((struct cobc_tree_common *) (x))
 #define COBC_TREE_TAG(x)	(COBC_TREE (x)->tag)
+#define COBC_TREE_LOC(x)	(COBC_TREE (x)->loc)
 #define COBC_TREE_CLASS(x)	(COBC_TREE (x)->class)
 
 #ifdef COB_DEBUG
