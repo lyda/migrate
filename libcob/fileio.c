@@ -675,9 +675,7 @@ cob_read_next (struct file_desc *f, char *record, ...)
       result = 1;
       record[0] = '\0';
       while (record[0] == '\0' && result > 0)
-	{
-	  result = read ((int) f->dbp, record, f->reclen);
-	}
+	result = read ((int) f->dbp, record, f->reclen);
       if (result <= 0)
 	RETURN_STATUS (10);		/* what errors should I return? */
       RETURN_STATUS (0);
@@ -694,7 +692,7 @@ cob_read_next (struct file_desc *f, char *record, ...)
 	  flags = 0;
 	  result = f->dbp->get (f->dbp, &key, &data, flags);
 	  if (result)
-	    RETURN_STATUS (10);		/* should have a better error info here */
+	    RETURN_STATUS (10);	/* should have a better error info here */
 	  if (data.size < f->reclen)
 	    RETURN_STATUS (10);
 	  memmove (record, data.data, f->reclen);
@@ -702,7 +700,7 @@ cob_read_next (struct file_desc *f, char *record, ...)
 	}
       result = f->dbp->seq (f->dbp, &key, &data, flags);
       if (result)
-	RETURN_STATUS (10);		/* should have a better error info here */
+	RETURN_STATUS (10);	/* should have a better error info here */
       if (data.size < f->reclen)
 	RETURN_STATUS (10);
       memmove (record, data.data, f->reclen);
@@ -1606,6 +1604,7 @@ cob_rewrite (struct file_desc *f, char *record, ...)
       result = f->dbp->put (f->dbp, &key, &data, flags);
       if (result)
 	RETURN_STATUS (99);		/* ? error code to be determined */
+      result = f->dbp->seq (f->dbp, &key, &data, R_CURSOR);
       {
 	/* Rewrite the Alternate Keys */
 	struct altkey_desc *akd;
@@ -1616,6 +1615,7 @@ cob_rewrite (struct file_desc *f, char *record, ...)
 	    data.data = record + f->rec_index;
 	    data.size = f->ixd_desc->len;
 	    result = akd->alt_dbp->put (akd->alt_dbp, &key, &data, flags);
+	    result = akd->alt_dbp->seq (akd->alt_dbp, &key, &data, R_CURSOR);
 	  }
       }
       break;
