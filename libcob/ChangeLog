@@ -1,5 +1,9 @@
 2004-03-06  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
 
+	* fileio.c (file_open, file_close): Use fcntl for file locking.
+
+2004-03-06  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
+
 	* common.h (_WIN32): Ensure to be defined when __CYGWIN__ or
 	__MINGW32__ is defined.
 

@@ -31,19 +31,16 @@
 #define __USE_MINGW_FSEEK	1
 #endif
 
-#ifdef __MINGW32__
-#define SEEK_INIT(f)	fseek (f->file, 0, SEEK_CUR)
-#else
-#define SEEK_INIT(f)
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
-#include <sys/file.h>
 #include <sys/stat.h>
+
+#if HAVE_FCNTL_H
+#include <fcntl.h>
+#endif
 
 #if HAVE_DBOPEN
 #include <db.h>
@@ -66,7 +63,13 @@
 #include "fileio.h"
 #include "lib/gettext.h"
 
-#if (defined __CYGWIN__ || defined __MINGW32__)
+#ifdef _WIN32
+#define SEEK_INIT(f)	fseek (f->file, 0, SEEK_CUR)
+#else
+#define SEEK_INIT(f)
+#endif
+
+#ifdef _WIN32
 #define INITIAL_FLAGS	O_BINARY
 #else
 #define INITIAL_FLAGS	0
@@ -95,6 +98,7 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 {
   FILE *fp = NULL;
 
+  /* open the file */
   switch (mode)
     {
     case COB_OPEN_INPUT:
@@ -117,12 +121,21 @@ file_open (cob_file *f, char *filename, int mode, int opt)
   if (fp == NULL)
     return errno;
 
-#if !(defined __CYGWIN__ || defined __MINGW32__)
-  if (flock (fileno (fp), (opt ? LOCK_EX : LOCK_SH) | LOCK_NB) < 0)
-    {
-      fclose (fp);
-      return errno;
-    }
+#if HAVE_FCNTL
+  /* lock the file */
+  {
+    struct flock lock;
+    memset (&lock, 0, sizeof (struct flock));
+    lock.l_type = opt ? F_WRLCK : F_RDLCK;
+    lock.l_whence = SEEK_SET;
+    lock.l_start = 0;
+    lock.l_len = 0;
+    if (fcntl (fileno (fp), F_SETLK, &lock) < 0)
+      {
+	fclose (fp);
+	return errno;
+      }
+  }
 #endif
 
   f->file = fp;
@@ -132,18 +145,23 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 static int
 file_close (cob_file *f, int opt)
 {
-#if !(defined __CYGWIN__ || defined __MINGW32__)
-  struct flock lock;
-#endif
-
   switch (opt)
     {
     case COB_CLOSE_NORMAL:
     case COB_CLOSE_LOCK:
-#if !(defined __CYGWIN__ || defined __MINGW32__)
-      lock.l_type = F_UNLCK;
-      flock (fileno (f->file), LOCK_UN);
+#if HAVE_FCNTL
+      /* unlock the file */
+      {
+	struct flock lock;
+	memset (&lock, 0, sizeof (struct flock));
+	lock.l_type = F_UNLCK;
+	lock.l_whence = SEEK_SET;
+	lock.l_start = 0;
+	lock.l_len = 0;
+	fcntl (fileno (f->file), F_SETLK, &lock);
+      }
 #endif
+      /* close the file */
       fclose (f->file);
       return COB_STATUS_00_SUCCESS;
     default:
@@ -406,7 +424,6 @@ static int
 relative_write (cob_file *f, int opt)
 {
   size_t size;
-  FILE *fp = f->file;
 
   SEEK_INIT (f);
 
@@ -418,7 +435,7 @@ relative_write (cob_file *f, int opt)
 	return COB_STATUS_21_KEY_INVALID;
     }
 
-  if (fread (&size, sizeof (size), 1, fp) > 0)
+  if (fread (&size, sizeof (size), 1, f->file) > 0)
     {
       fseek (f->file, - sizeof (size), SEEK_CUR);
       if (size > 0)
