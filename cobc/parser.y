@@ -44,8 +44,9 @@
 #define PENDING(x)	yywarn (_("`%s' not implemented"), x)
 #define OBSOLETE(x)	yywarn (_("`%s' obsolete"), x)
 
-#define push(x) \
-  program_spec.exec_list = cons (x, program_spec.exec_list)
+#define push(x)	program_spec.exec_list = cons (x, program_spec.exec_list)
+
+#define push_location(x)	   push (x)
 
 #define push_funcall_0(f)	   push (make_funcall_0 (f))
 #define push_funcall_1(f,a)	   push (make_funcall_1 (f, a))
@@ -53,10 +54,7 @@
 #define push_funcall_3(f,a,b,c)	   push (make_funcall_3 (f, a, b, c))
 #define push_funcall_4(f,a,b,c,d)  push (make_funcall_4 (f, a, b, c, d))
 
-#define push_move(x,y)		push_funcall_2 ("@move", x, y)
 #define make_handler(v,a,b)	make_funcall_4 ("@handler", (void *) v, a, b, 0)
-
-#define push_location(x)	push (x)
 
 #define push_file_handler(f,h)					\
   {								\
@@ -1686,14 +1684,13 @@ _proceed_to: | PROCEED TO ;
 
 call_statement:
   CALL program_name		{ current_call_mode = COBC_CALL_BY_REFERENCE; }
-  call_using call_returning call_on_exception call_not_on_exception
+  call_using call_returning call_on_exception call_not_on_exception _end_call
   {
     push_location ($1);
     push_funcall_4 ("@call", $2, $4, $6, $7);
     if ($5)
-      push_move (cobc_return_code, $5);
+      push (build_move (cobc_return_code, $5));
   }
-  _end_call
 ;
 call_using:
   /* empty */			{ $$ = NULL; }
@@ -2239,7 +2236,7 @@ move_statement:
     struct cobc_list *l;
     push_location ($1);
     for (l = $4; l; l = l->next)
-      push_move ($2, l->item);
+      push (build_move ($2, l->item));
   }
 | MOVE CORRESPONDING group_name TO group_name
   {
@@ -2404,7 +2401,7 @@ read_statement:
 	push_funcall_2 ("cob_read", file, key ? key : COBC_FILE (file)->key);
       }
     if ($<tree>5)
-      push_move (COBC_FILE (file)->record, $<tree>5);
+      push (build_move (COBC_TREE (COBC_FILE (file)->record), $<tree>5));
     push_file_handler (file, $<tree>7);
   }
 ;
@@ -2434,7 +2431,7 @@ release_statement:
     cobc_tree file = COBC_TREE (COBC_FIELD (cobc_ref ($2))->file);
     push_location ($1);
     if ($3)
-      push_move ($3, $2);
+      push (build_move ($3, $2));
     push_funcall_2 ("cob_write", file, $2);
   }
 ;
@@ -2451,7 +2448,7 @@ return_statement:
     push_location ($1);
     push_funcall_2 ("cob_read", file, cobc_int0);
     if ($<tree>4)
-      push_move (COBC_FILE (file)->record, $<tree>4);
+      push (build_move (COBC_TREE (COBC_FILE (file)->record), $<tree>4));
     push_file_handler (file, $5);
   }
 ;
@@ -2468,7 +2465,7 @@ rewrite_statement:
     cobc_tree file = COBC_TREE (COBC_FIELD (cobc_ref ($2))->file);
     push_location ($1);
     if ($3)
-      push_move ($3, $2);
+      push (build_move ($3, $2));
     push_funcall_2 ("cob_rewrite", file, $2);
     push_file_handler (file, $4);
   }
@@ -2530,7 +2527,7 @@ set_statement:
     struct cobc_list *l;
     push_location ($1);
     for (l = $2; l; l = l->next)
-      push_move ($4, l->item);
+      push (build_move ($4, l->item));
   }
 | SET data_name_list UP BY numeric_value
   {
@@ -2555,9 +2552,9 @@ set_statement:
 	struct cobc_field *f = field (l->item);
 	set_value (l->item, COBC_TREE (f->parent));
 	if (COBC_PARAMETER_P (f->values->item))
-	  push_move (COBC_PARAMETER (f->values->item)->x, l->item);
+	  push (build_move (COBC_PARAMETER (f->values->item)->x, l->item));
 	else
-	  push_move (f->values->item, l->item);
+	  push (build_move (f->values->item, l->item));
       }
   }
 | SET
@@ -2578,7 +2575,7 @@ set_on_off:
       {
 	int id = builtin_switch_id (cobc_ref (l->item));
 	if (id != -1)
-	  push_move ($3, cobc_switch[id]);
+	  push (build_move ($3, cobc_switch[id]));
       }
   }
 ;
@@ -2865,7 +2862,7 @@ write_statement:
 
     /* WRITE */
     if ($3)
-      push_move ($3, $2);
+      push (build_move ($3, $2));
     push_funcall_2 ("cob_write", file, $2);
     push_file_handler (file, $5);
 
