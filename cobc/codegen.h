@@ -336,22 +336,6 @@ struct occurs
 
 /* minor token numbers */
 
-/* USAGETOK - USAGENUM */
-
-#define COMP 			0
-#define USAGE_COMP1 		1
-#define USAGE_COMP2 		2
-#define COMP3 			3
-#define INDEX 			4
-#define USAGE_BINARY_CHAR 	5
-#define USAGE_BINARY_SHORT 	6
-#define USAGE_BINARY_LONG    	7
-#define USAGE_BINARY_DOUBLE  	8
-#define USAGE_DISPLAY  		9
-#define USAGE_POINTER  		10
-
-/*  DISPLAY  e' um token independente deste grupo */
-
 /* DATE-TIME */
 #define DATE 0
 #define TIME 1

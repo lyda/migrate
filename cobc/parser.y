@@ -182,7 +182,8 @@ static void check_decimal_point (struct lit *lit);
 %token IDENTIFICATION_TOK,ENVIRONMENT_TOK,DATA,PROCEDURE_TOK
 %token AUTHOR_TOK,DATE_WRITTEN_TOK,DATE_COMPILED_TOK,INSTALLATION_TOK
 %token SECURITY_TOK,COMMONTOK,RETURN_TOK,END_RETURN,PREVIOUS,NEXT
-%token INPUT,I_O,OUTPUT,EXTEND,EOL_TOK,EOS_TOK
+%token INPUT,I_O,OUTPUT,EXTEND,EOL_TOK,EOS_TOK,BINARY,FLOAT_SHORT,FLOAT_LONG
+%token PACKED_DECIMAL
 
 %type <str> idstring
 %type <ival> organization_options,access_options,open_mode
@@ -693,65 +694,47 @@ picture_clause:
 
 usage_clause:
   opt_usage opt_is usage
-  {
-    switch ($3)
-      {
-      case USAGE_COMP1:
-	curr_field->len = 4;
-	curr_field->decimals=7;
-	curr_field->type='U';
-	curr_field->sign=1;
-	/* default picture is 14 (max=7->7.7) digits */
-	strcpy(picture,"S\x01\x39\x07\x56\x01\x39\x07");
-	break;
-      case USAGE_COMP2:
-	curr_field->len = 8;
-	curr_field->decimals=15;
-	curr_field->type='U';
-	curr_field->sign=1;
-	/* default picture is 30 (max=15->15.15) digits*/
-	strcpy(picture,"S\x01\x39\x0f\x56\x01\x39\x0f");
-	break;
-      case COMP3:
-	curr_field->type='C';
-	break;
-      case COMP: 
-	/* field length computed by query_comp_length() */
-	curr_field->len = 0;
-	curr_field->type='B'; /* binary field */
-	break;
-      case USAGE_POINTER:
-	curr_field->len=4;
-	curr_field->decimals=0;
-	curr_field->type='B'; /* pointers are binary fields */
-	strcpy(picture,"9\xa"); /* pointer default picture */
-	curr_field->flags.is_pointer=1;
-	break;
-      case USAGE_BINARY_CHAR:
-	curr_field->len = 1;
-	curr_field->type='B'; 
-	break; 
-      case USAGE_BINARY_SHORT:
-	curr_field->len = 2;
-	curr_field->type='B'; 
-	break; 
-      case USAGE_BINARY_LONG:
-	curr_field->len = 4;
-	curr_field->type='B'; 
-	break; 
-      case USAGE_BINARY_DOUBLE:
-	curr_field->len = 8;
-	curr_field->type='B'; 
-	break; 
-      }
-  }
 ;
 usage:
-  USAGENUM  { $$=$1; }
-| DISPLAY   { $$=USAGE_DISPLAY; }
-| POINTER   { $$=USAGE_POINTER; }
-| COMP1     { $$=USAGE_COMP1; }
-| COMP2     { $$=USAGE_COMP2; }
+  BINARY /* including COMP, COMP-5, INDEX */
+  {
+    curr_field->type = 'B';
+    curr_field->len  =  0;	/* computed by query_comp_length() */
+  }
+| DISPLAY
+  {
+    /* do nothing */
+  }
+| FLOAT_SHORT /* including COMP-1 */
+  {
+    curr_field->type     = 'U';
+    curr_field->len      =  4;
+    curr_field->decimals =  7;
+    curr_field->sign     =  1;
+    /* default picture is 14 (max=7->7.7) digits */
+    strcpy (picture,"S\x01\x39\x07\x56\x01\x39\x07");
+  }
+| FLOAT_LONG /* including COMP-2 */
+  {
+    curr_field->type     = 'U';
+    curr_field->len      =  8;
+    curr_field->decimals = 15;
+    curr_field->sign     =  1;
+    /* default picture is 30 (max=15->15.15) digits*/
+    strcpy (picture,"S\x01\x39\x0f\x56\x01\x39\x0f");
+  }
+| PACKED_DECIMAL /* including COMP-3 */
+  {
+    curr_field->type = 'C';
+  }
+| POINTER
+  {
+    curr_field->type     = 'B';
+    curr_field->len      =  4;
+    curr_field->decimals =  0;
+    curr_field->flags.is_pointer = 1;
+    strcpy (picture,"9\xa")
+  }
 ;
 opt_usage: | USAGE ;
 
