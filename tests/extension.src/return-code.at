@@ -29,6 +29,7 @@ AT_DATA([prog.cob], [
        01 I             PIC 99 COMP.
        PROCEDURE        DIVISION.
            INITIALIZE RETURN-CODE.
+           MOVE ZERO TO RETURN-CODE.
            MOVE 1 TO RETURN-CODE.
            MOVE RETURN-CODE TO I.
            DISPLAY I NO ADVANCING.

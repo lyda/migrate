@@ -326,7 +326,7 @@ at_help_all='1;extensions.at:23;COMP-5;;
 15;extensions.at:475;LINE SEQUENTIAL read;;
 16;extensions.at:523;Environment variable;;
 17;return-code.at:22;RETURN-CODE;;
-18;return-code.at:44;RETURN-CODE;;
+18;return-code.at:45;RETURN-CODE;;
 '
 
 at_keywords=
@@ -2688,6 +2688,7 @@ cat >prog.cob <<'_ATEOF'
        01 I             PIC 99 COMP.
        PROCEDURE        DIVISION.
            INITIALIZE RETURN-CODE.
+           MOVE ZERO TO RETURN-CODE.
            MOVE 1 TO RETURN-CODE.
            MOVE RETURN-CODE TO I.
            DISPLAY I NO ADVANCING.
@@ -2696,8 +2697,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "return-code.at:38: \${COMPILE} -o prog prog.cob"
-echo return-code.at:38 >$at_check_line_file
+echo "return-code.at:39: \${COMPILE} -o prog prog.cob"
+echo return-code.at:39 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2709,7 +2710,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "return-code.at:38: exit code was $at_status, expected 0"
+   *) echo "return-code.at:39: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2721,8 +2722,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "return-code.at:39: ./prog"
-echo return-code.at:39 >$at_check_line_file
+echo "return-code.at:40: ./prog"
+echo return-code.at:40 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2734,7 +2735,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "return-code.at:39: exit code was $at_status, expected 1"
+   *) echo "return-code.at:40: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2752,13 +2753,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  18 ) # 18. return-code.at:44: RETURN-CODE
-    at_setup_line='return-code.at:44'
+  18 ) # 18. return-code.at:45: RETURN-CODE
+    at_setup_line='return-code.at:45'
     at_desc='RETURN-CODE'
     $at_quiet $ECHO_N " 18: RETURN-CODE                                  $ECHO_C"
     at_xfail=no
     (
-      echo "18. return-code.at:44: testing ..."
+      echo "18. return-code.at:45: testing ..."
       $at_traceon
 
 
@@ -2797,34 +2798,9 @@ _ATEOF
 
 
 $at_traceoff
-echo "return-code.at:74: \${COMPILE_MODULE} mod1.cob"
-echo return-code.at:74 >$at_check_line_file
-( $at_traceon; ${COMPILE_MODULE} mod1.cob ) >$at_stdout 2>$at_stder1
-at_status=$?
-grep '^ *+' $at_stder1 >&2
-grep -v '^ *+' $at_stder1 >$at_stderr
-at_failed=false
-$at_diff $at_devnull $at_stderr || at_failed=:
-$at_diff $at_devnull $at_stdout || at_failed=:
-case $at_status in
-   77) echo 77 > $at_status_file
-            exit 77;;
-   0) ;;
-   *) echo "return-code.at:74: exit code was $at_status, expected 0"
-      at_failed=:;;
-esac
-if $at_failed; then
-
-  echo 1 > $at_status_file
-  exit 1
-fi
-
-$at_traceon
-
-$at_traceoff
-echo "return-code.at:75: \${COMPILE_MODULE} mod2.cob"
+echo "return-code.at:75: \${COMPILE_MODULE} mod1.cob"
 echo return-code.at:75 >$at_check_line_file
-( $at_traceon; ${COMPILE_MODULE} mod2.cob ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${COMPILE_MODULE} mod1.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -2847,9 +2823,9 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "return-code.at:76: \${COMPILE} -o prog prog.cob"
+echo "return-code.at:76: \${COMPILE_MODULE} mod2.cob"
 echo return-code.at:76 >$at_check_line_file
-( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${COMPILE_MODULE} mod2.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -2872,8 +2848,33 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "return-code.at:77: ./prog"
+echo "return-code.at:77: \${COMPILE} -o prog prog.cob"
 echo return-code.at:77 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "return-code.at:77: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "return-code.at:78: ./prog"
+echo return-code.at:78 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2885,7 +2886,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "return-code.at:77: exit code was $at_status, expected 0"
+   *) echo "return-code.at:78: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
