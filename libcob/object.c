@@ -492,7 +492,11 @@ cob_set (struct cob_field f, int round)
 	  {
 	    /* Overflow */
 	    cob_status = COB_STATUS_OVERFLOW;
+#if 0
 	    memcpy (f.data, p + size - f.desc->len, f.desc->len);
+#else
+	    return;
+#endif
 	  }
 
 	put_sign (f.desc, f.data, sign);
