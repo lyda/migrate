@@ -1,4 +1,21 @@
-## Various name definitions and references
+### OpenCOBOL Test Suite				-*- m4 -*-
+
+## Copyright (C) 2003 Keisuke Nishida
+##
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 2, or (at your option)
+## any later version.
+## 
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU General Public License
+## along with this software; see the file COPYING.  If not, write to
+## the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+## Boston, MA 02111-1307 USA
 
 
 ###
@@ -10,9 +27,9 @@
 AT_SETUP([Undefined entry])
 
 AT_DATA([prog.cob], [
-       IDENTIFICATION  DIVISION.
-       PROGRAM-ID.     prog.
-       PROCEDURE       DIVISION.
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       PROCEDURE        DIVISION.
          DISPLAY X.
          STOP RUN.
 ])
@@ -26,12 +43,12 @@ AT_CLEANUP
 AT_SETUP([Undefined group])
 
 AT_DATA([prog.cob], [
-       IDENTIFICATION  DIVISION.
-       PROGRAM-ID.     prog.
-       DATA            DIVISION.
-       WORKING-STORAGE SECTION.
-       01 X            PIC X.
-       PROCEDURE       DIVISION.
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X.
+       PROCEDURE        DIVISION.
          DISPLAY X IN G.
          STOP RUN.
 ])
@@ -45,14 +62,14 @@ AT_CLEANUP
 AT_SETUP([Undefined in the group])
 
 AT_DATA([prog.cob], [
-       IDENTIFICATION  DIVISION.
-       PROGRAM-ID.     prog.
-       DATA            DIVISION.
-       WORKING-STORAGE SECTION.
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
        01 G.
-         02 X          PIC X.
-       01 Y            PIC X.
-       PROCEDURE       DIVISION.
+         02 X           PIC X.
+       01 Y             PIC X.
+       PROCEDURE        DIVISION.
          DISPLAY Y IN G.
          STOP RUN.
 ])
@@ -66,12 +83,12 @@ AT_CLEANUP
 AT_SETUP([Reference not a group])
 
 AT_DATA([prog.cob], [
-       IDENTIFICATION  DIVISION.
-       PROGRAM-ID.     prog.
-       DATA            DIVISION.
-       WORKING-STORAGE SECTION.
-       01 X            PIC X.
-       PROCEDURE       DIVISION.
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X.
+       PROCEDURE        DIVISION.
          DISPLAY X IN X.
          STOP RUN.
 ])
@@ -88,10 +105,10 @@ AT_CLEANUP
 AT_SETUP([Incomplete 01 definition])
 
 AT_DATA([prog.cob], [
-       IDENTIFICATION  DIVISION.
-       PROGRAM-ID.     prog.
-       DATA            DIVISION.
-       WORKING-STORAGE SECTION.
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
        01 X.
 ])
 
@@ -107,12 +124,12 @@ AT_CLEANUP
 AT_SETUP([Redefinition of 01 entries])
 
 AT_DATA([prog.cob], [
-       IDENTIFICATION  DIVISION.
-       PROGRAM-ID.     prog.
-       DATA            DIVISION.
-       WORKING-STORAGE SECTION.
-       01 X            PIC X.
-       01 X            PIC X.
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X.
+       01 X             PIC X.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -125,12 +142,12 @@ AT_CLEANUP
 AT_SETUP([Redefinition of 01 and 02 entries])
 
 AT_DATA([prog.cob], [
-       IDENTIFICATION  DIVISION.
-       PROGRAM-ID.     prog.
-       DATA            DIVISION.
-       WORKING-STORAGE SECTION.
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
        01 X.
-         02 X          PIC X.
+         02 X           PIC X.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -143,13 +160,13 @@ AT_CLEANUP
 AT_SETUP([Redefinition of 02 entries in the same group])
 
 AT_DATA([prog.cob], [
-       IDENTIFICATION  DIVISION.
-       PROGRAM-ID.     prog.
-       DATA            DIVISION.
-       WORKING-STORAGE SECTION.
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
        01 G.
-         02 X          PIC X.
-         02 X          PIC X.
+         02 X           PIC X.
+         02 X           PIC X.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -162,15 +179,15 @@ AT_CLEANUP
 AT_SETUP([Redefinition of 02 entries in different groups])
 
 AT_DATA([prog.cob], [
-       IDENTIFICATION  DIVISION.
-       PROGRAM-ID.     prog.
-       DATA            DIVISION.
-       WORKING-STORAGE SECTION.
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
        01 G1.
-         02 X          PIC X.
+         02 X           PIC X.
        01 G2.
-         02 X          PIC X.
-       PROCEDURE       DIVISION.
+         02 X           PIC X.
+       PROCEDURE        DIVISION.
          DISPLAY X.
          STOP RUN.
 ])
@@ -186,14 +203,14 @@ AT_CLEANUP
 AT_SETUP([Redefinition of 02 and 03 entries])
 
 AT_DATA([prog.cob], [
-       IDENTIFICATION  DIVISION.
-       PROGRAM-ID.     prog.
-       DATA            DIVISION.
-       WORKING-STORAGE SECTION.
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
        01 G.
          02 X.
-           03 X        PIC X.
-       PROCEDURE       DIVISION.
+           03 X         PIC X.
+       PROCEDURE        DIVISION.
          DISPLAY X.
          STOP RUN.
 ])
@@ -209,12 +226,12 @@ AT_CLEANUP
 AT_SETUP([Redefinition of 77 entries])
 
 AT_DATA([prog.cob], [
-       IDENTIFICATION  DIVISION.
-       PROGRAM-ID.     prog.
-       DATA            DIVISION.
-       WORKING-STORAGE SECTION.
-       77 X            PIC X.
-       77 X            PIC X.
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       77 X             PIC X.
+       77 X             PIC X.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -227,12 +244,12 @@ AT_CLEANUP
 AT_SETUP([Redefinition of 01 and 77 entries])
 
 AT_DATA([prog.cob], [
-       IDENTIFICATION  DIVISION.
-       PROGRAM-ID.     prog.
-       DATA            DIVISION.
-       WORKING-STORAGE SECTION.
-       01 X            PIC X.
-       77 X            PIC X.
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X.
+       77 X             PIC X.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -257,9 +274,9 @@ AT_CLEANUP
 AT_SETUP([Undefined label])
 
 AT_DATA([prog.cob], [
-       IDENTIFICATION  DIVISION.
-       PROGRAM-ID.     prog.
-       PROCEDURE       DIVISION.
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       PROCEDURE        DIVISION.
          GO TO END-OF-PROGRAM.
          STOP RUN.
 ])
@@ -276,9 +293,9 @@ AT_CLEANUP
 AT_SETUP([Redefinition of section label])
 
 AT_DATA([prog.cob], [
-       IDENTIFICATION  DIVISION.
-       PROGRAM-ID.     prog.
-       PROCEDURE       DIVISION.
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       PROCEDURE        DIVISION.
        L SECTION.
        L SECTION.
          STOP RUN.
@@ -295,9 +312,9 @@ AT_CLEANUP
 AT_SETUP([Redefinition of section and paragraph label])
 
 AT_DATA([prog.cob], [
-       IDENTIFICATION  DIVISION.
-       PROGRAM-ID.     prog.
-       PROCEDURE       DIVISION.
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       PROCEDURE        DIVISION.
        L SECTION.
        L.
          STOP RUN.
@@ -314,9 +331,9 @@ AT_CLEANUP
 AT_SETUP([Redefinition of paragraph label in the same section])
 
 AT_DATA([prog.cob], [
-       IDENTIFICATION  DIVISION.
-       PROGRAM-ID.     prog.
-       PROCEDURE       DIVISION.
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       PROCEDURE        DIVISION.
        L.
        L.
          STOP RUN.
@@ -333,9 +350,9 @@ AT_CLEANUP
 AT_SETUP([Redefinition of paragraph label in deferent sections])
 
 AT_DATA([prog.cob], [
-       IDENTIFICATION  DIVISION.
-       PROGRAM-ID.     prog.
-       PROCEDURE       DIVISION.
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       PROCEDURE        DIVISION.
        S-1 SECTION.
        L.
        S-2 SECTION.

@@ -2,8 +2,17 @@ SUBDIRS = cobol85
 
 TESTS =	$(srcdir)/testsuite
 
-TESTSUITE_AT = testsuite.at definition.at reference.at redefines.at \
-	constant.at move.at packed.at misc.at
+TESTSUITE_AT = \
+	testsuite.at \
+	subscripts.at \
+	ref-mod.at \
+	redefines.at \
+	usage.at \
+	value.at \
+	initialize.at \
+	move.at \
+	definition.at \
+	misc.at
 
 EXTRA_DIST = $(TESTS) $(TESTSUITE_AT)
 

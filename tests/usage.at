@@ -1,0 +1,219 @@
+### OpenCOBOL Test Suite				-*- m4 -*-
+
+## Copyright (C) 2003 Keisuke Nishida
+##
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 2, or (at your option)
+## any later version.
+## 
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU General Public License
+## along with this software; see the file COPYING.  If not, write to
+## the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+## Boston, MA 02111-1307 USA
+
+### ISO+IEC+1989-2002 13.16.58 USAGE clause
+
+
+## 13.16.58.2 Syntax rules
+
+# 1) TODO
+
+# 2) TODO
+
+# 3) TODO
+
+# 4) TODO
+
+# 5) TODO
+
+# 6) TODO
+
+# 7) TODO
+
+# 8) TODO
+
+# 9) TODO
+
+# 10) TODO
+
+# 11) TODO
+
+# 12) TODO
+
+# 13) TODO
+
+# 14) TODO
+
+# 15) TODO
+
+# 16) TODO
+
+# 17) TODO
+
+# 18) TODO
+
+# 19) TODO
+
+
+## 13.16.58.3 General rules
+
+# 1) TODO
+
+# 2) TODO
+
+# 3) TODO
+
+# 4) TODO
+
+# 5) TODO
+
+# 6) TODO
+
+# 7) TODO
+
+# 8) TODO
+
+# 9) TODO
+
+
+# 10) DONE
+
+# PACKED-DECIMAL dump tests
+AT_SETUP([PACKED-DECIMAL dump tests])
+
+AT_DATA([dump.c], [
+int dump (unsigned char *data)
+{
+  int i;
+  for (i = 0; i < 4; i++)
+    printf ("%x%x", data[[i]] >> 4, data[[i]] & 0x0f);
+  puts ("");
+  return 0;
+}
+])
+
+AT_CHECK([${CC} -shared -o dump.so dump.c])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 G-99.
+         02 X-99        PIC 99 USAGE PACKED-DECIMAL.
+         02 FILLER      PIC X(4) VALUE "0123".
+       01 G-S99.
+         02 X-S99       PIC S99 USAGE PACKED-DECIMAL.
+         02 FILLER      PIC X(4) VALUE "0123".
+       01 G-999.
+         02 X-999       PIC 999 USAGE PACKED-DECIMAL.
+         02 FILLER      PIC X(4) VALUE "0123".
+       01 G-S999.
+         02 X-S999      PIC S999 USAGE PACKED-DECIMAL.
+         02 FILLER      PIC X(4) VALUE "0123".
+       PROCEDURE        DIVISION.
+         MOVE    0 TO X-99.   CALL "dump" USING G-99.
+         MOVE   99 TO X-99.   CALL "dump" USING G-99.
+         MOVE    0 TO X-S99.  CALL "dump" USING G-S99.
+         MOVE   -1 TO X-S99.  CALL "dump" USING G-S99.
+         MOVE  123 TO X-999.  CALL "dump" USING G-999.
+         MOVE -123 TO X-S999. CALL "dump" USING G-S999.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0],
+[00303132
+99303132
+00003031
+01013031
+12303031
+12313031
+])
+
+AT_CLEANUP
+
+# PACKED-DECIMAL display tests
+AT_SETUP([PACKED-DECIMAL display tests])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X-99          PIC 99   USAGE PACKED-DECIMAL.
+       01 X-S99         PIC S99  USAGE PACKED-DECIMAL.
+       01 X-999         PIC 999  USAGE PACKED-DECIMAL.
+       01 X-S999        PIC S999 USAGE PACKED-DECIMAL.
+       PROCEDURE        DIVISION.
+         MOVE    0 TO X-99.   DISPLAY X-99.
+         MOVE   99 TO X-99.   DISPLAY X-99.
+         MOVE    0 TO X-S99.  DISPLAY X-S99.
+         MOVE   -1 TO X-S99.  DISPLAY X-S99.
+         MOVE    0 TO X-999.  DISPLAY X-999.
+         MOVE  123 TO X-999.  DISPLAY X-999.
+         MOVE    0 TO X-S999. DISPLAY X-S999.
+         MOVE -123 TO X-S999. DISPLAY X-S999.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0],
+[00
+99
++00
+-01
+000
+123
++000
+-123
+])
+
+AT_CLEANUP
+
+# PACKED-DECIMAL arithmetic tests
+AT_SETUP([PACKED-DECIMAL arithmetic tests])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC 99 USAGE PACKED-DECIMAL VALUE 0.
+       01 Y             PIC 99 USAGE PACKED-DECIMAL VALUE 9.
+       PROCEDURE        DIVISION.
+         COMPUTE X = 1.     DISPLAY X.
+         COMPUTE X = Y.     DISPLAY X.
+         COMPUTE X = X + Y. DISPLAY X.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0],
+[01
+09
+18
+])
+
+AT_CLEANUP
+
+
+# 11) TODO
+
+# 12) TODO
+
+# 13) TODO
+
+# 14) TODO
+
+# 15) TODO
+
+# 16) TODO
+
+# 17) TODO

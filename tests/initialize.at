@@ -1,0 +1,97 @@
+### OpenCOBOL Test Suite				-*- m4 -*-
+
+## Copyright (C) 2003 Keisuke Nishida
+##
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 2, or (at your option)
+## any later version.
+## 
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU General Public License
+## along with this software; see the file COPYING.  If not, write to
+## the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+## Boston, MA 02111-1307 USA
+
+### ISO+IEC+1989-2002 14.8.19 INITIALIZE statement
+
+
+## 14.8.19.2 Syntax rules
+
+
+## 14.8.19.3 General rules
+
+
+
+AT_SETUP([INITIALIZE group entry with OCCURS])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  G1.
+         02  G2         OCCURS 2.
+           03  X1       PIC X.
+           03  X2       PIC 9.
+       PROCEDURE        DIVISION.
+         MOVE SPACE TO G1.
+         INITIALIZE G2 (2).
+         DISPLAY G1 NO ADVANCING.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [   0])
+
+AT_CLEANUP
+
+
+AT_SETUP([INITIALIZE OCCURS with numeric edited])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 G1.
+         02 G2          OCCURS 5.
+           03 X         PIC Z9.
+       PROCEDURE        DIVISION.
+         INITIALIZE G1.
+         DISPLAY G1 NO ADVANCING.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [ 0 0 0 0 0])
+
+AT_CLEANUP
+
+
+AT_SETUP([INITIALIZE complex group])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 G1.
+         02 X           PIC X.
+         02 G2          OCCURS 2.
+           03 Y         PIC 9.
+         02 Z           PIC 9.
+       PROCEDURE        DIVISION.
+         INITIALIZE G1.
+         DISPLAY G1 NO ADVANCING.
+         STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [ 000])
+
+AT_CLEANUP
