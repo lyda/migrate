@@ -486,7 +486,6 @@ make_picture (void)
 {
   struct cobc_picture *p = malloc (sizeof (struct cobc_picture));
   memset (p, 0, sizeof (struct cobc_picture));
-  p->str = "";
   return p;
 }
 

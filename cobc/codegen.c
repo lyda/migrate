@@ -1010,7 +1010,9 @@ output_move_index (cobc_tree src, cobc_tree dst)
 static void
 output_move (cobc_tree src, cobc_tree dst)
 {
-  if (src == cobc_zero)
+  if (field (dst)->usage == COBC_USAGE_INDEX)
+    output_move_index (src, dst);
+  else if (src == cobc_zero)
     output_move_zero (dst);
   else if (src == cobc_space)
     output_move_space (dst);
@@ -1024,8 +1026,6 @@ output_move (cobc_tree src, cobc_tree dst)
     output_move_index (src, dst);
   else if (COBC_LITERAL_P (src))
     output_move_literal (COBC_LITERAL (src), dst);
-  else if (field (dst)->usage == COBC_USAGE_INDEX)
-    output_move_index (src, dst);
   else if (field (src)->usage == COBC_USAGE_INDEX)
     output_stmt (make_funcall_2 ("cob_set_int", dst, make_cast_int32 (src)));
   else
@@ -1818,7 +1818,7 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
 	  output ("{%d, %d, %d, %d, ",
 		  type, p->pic->digits, p->pic->expt, flags);
 
-	  if (p->pic->str[0] != 0)
+	  if (p->pic->str)
 	    {
 	      unsigned char *s;
 	      output ("\"");
