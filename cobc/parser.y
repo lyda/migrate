@@ -502,7 +502,7 @@ assign_clause:
 ;
 assignment_name:
   LITERAL
-| WORD
+| qualified_word
 ;
 
 
