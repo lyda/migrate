@@ -202,6 +202,8 @@ static struct option long_options[] = {
   {"ext", required_argument, 0, 'e'},
   {"free", no_argument, &cb_source_format, CB_FORMAT_FREE},
   {"fixed", no_argument, &cb_source_format, CB_FORMAT_FIXED},
+  {"static", no_argument, &cb_flag_static_call, 1},
+  {"dynamic", no_argument, &cb_flag_static_call, 0},
   {"O2", no_argument, 0, '2'},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
