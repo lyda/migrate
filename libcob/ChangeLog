@@ -1,3 +1,9 @@
+2002-08-02  Keisuke Nishida  <knishida@netlab.jp>
+
+	* common.h, common.c (cob_cmp_all): Unify the former cob_cmp_all
+	and cob_cmp_all_str.
+	* common.c (cob_cmp_str, cob_cmp_field): Cleanup.
+
 2002-08-01  Keisuke Nishida  <knishida@netlab.jp>
 
 	* fileio.h (COB_ORG_SORT, COB_ORG_MAX): New macros.

@@ -264,30 +264,27 @@ cob_cmp_field (struct cob_field f1, struct cob_field f2)
 {
   int i, ret = 0;
   int min = (f1.size < f2.size) ? f1.size : f2.size;
+  int max = (f1.size > f2.size) ? f1.size : f2.size;
   int sign1 = cob_get_sign (f1);
   int sign2 = cob_get_sign (f1);
 
   /* compare common substring */
   for (i = 0; i < min; i++)
-    if (f1.data[i] != f2.data[i])
-      {
-	ret = f1.data[i] - f2.data[i];
+    {
+      ret = f1.data[i] - f2.data[i];
+      if (ret != 0)
 	goto end;
-      }
+    }
 
   /* compare the rest (if any) with spaces */
-  if (f1.size != f2.size)
+  for (; i < max; i++)
     {
-      int max = (f1.size > f2.size) ? f1.size : f2.size;
-      unsigned char *data = (f1.size > f2.size) ? f1.data : f2.data;
-      for (; i < max; i++)
-	if (data[i] != ' ')
-	  {
-	    ret = data[i] - ' ';
-	    if (f1.size < f2.size)
-	      ret = -ret;
-	    break;
-	  }
+      if (f1.size > f2.size)
+	ret = f1.data[i] - ' ';
+      else
+	ret = ' ' - f2.data[i];
+      if (ret != 0)
+	goto end;
     }
 
  end:
@@ -301,29 +298,26 @@ cob_cmp_str (struct cob_field f1, unsigned char *data2, size_t size2)
 {
   int i, ret = 0;
   int min = (f1.size < size2) ? f1.size : size2;
+  int max = (f1.size > size2) ? f1.size : size2;
   int sign = cob_get_sign (f1);
 
   /* compare common substring */
   for (i = 0; i < min; i++)
-    if (f1.data[i] != data2[i])
-      {
-	ret = f1.data[i] - data2[i];
+    {
+      ret = f1.data[i] - data2[i];
+      if (ret != 0)
 	goto end;
-      }
+    }
 
   /* compare the rest (if any) with spaces */
-  if (f1.size != size2)
+  for (; i < max; i++)
     {
-      int max = (f1.size > size2) ? f1.size : size2;
-      unsigned char *data = (f1.size > size2) ? f1.data : data2;
-      for (; i < max; i++)
-	if (data[i] != ' ')
-	  {
-	    ret = data[i] - ' ';
-	    if (f1.size < size2)
-	      ret = -ret;
-	    break;
-	  }
+      if (f1.size > size2)
+	ret = f1.data[i] - ' ';
+      else
+	ret = ' ' - data2[i];
+      if (ret != 0)
+	goto end;
     }
 
  end:
@@ -332,28 +326,24 @@ cob_cmp_str (struct cob_field f1, unsigned char *data2, size_t size2)
 }
 
 int
-cob_cmp_all (unsigned char *data, unsigned char c, size_t size)
+cob_cmp_all (struct cob_field f1, unsigned char *str)
 {
-  int i;
-  for (i = 0; i < size; i++)
-    if (data[i] != c)
-      return data[i] - c;
-  return 0;
-}
-
-int
-cob_cmp_all_str (unsigned char *data, unsigned char *str, size_t size)
-{
-  int i;
+  int i, ret = 0;
   unsigned char *s = str;
-  for (i = 0; i < size; i++)
+  int sign = cob_get_sign (f1);
+
+  for (i = 0; i < f1.size; i++)
     {
-      if (data[i] != *s)
-	return data[i] - *s;
+      ret = f1.data[i] - *s;
+      if (ret != 0)
+	goto end;
       if (*++s == 0)
 	s = str;
     }
-  return 0;
+
+ end:
+  cob_put_sign (f1, sign);
+  return ret;
 }
 
 
