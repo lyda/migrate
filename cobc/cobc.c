@@ -385,7 +385,7 @@ process_command_line (int argc, char *argv[])
     }
 
   if (cb_config_name == NULL)
-    if (cb_load_std ("gnu") != 0)
+    if (cb_load_std ("default") != 0)
       {
 	fprintf (stderr, "error: failed to load the initial config file\n");
 	exit (1);
