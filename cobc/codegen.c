@@ -1230,12 +1230,11 @@ adjust_linkage_vars (int start_offset)
 static int
 get_nb_fields (cob_tree sy, int times, int sw_val)
 {
-  cob_tree tmp;
   int nb_fields = 0;
-  char ftype = sy->type;
 
-  if (ftype == 'G')
+  if (sy->type == 'G')
     {
+      cob_tree tmp;
       for (tmp = sy->son; tmp != NULL; tmp = tmp->brother)
 	{
 	  int tmpnf = tmp->times * get_nb_fields (tmp, times, sw_val);
@@ -1248,13 +1247,13 @@ get_nb_fields (cob_tree sy, int times, int sw_val)
       // A type C is considered for the moment as
       // non homogenous
       nb_fields = 1;
-      if (ftype == 'C')
+      if (sy->type == 'C')
 	init_ctype = '&';
-      else if (ftype == '9' && sy->picstr[0] == 'S')
+      else if (sy->type == '9' && sy->picstr[0] == 'S')
 	init_ctype = '&';
       else if (init_ctype == ' ')
-	init_ctype = ftype;
-      else if (init_ctype != ftype)
+	init_ctype = sy->type;
+      else if (init_ctype != sy->type)
 	init_ctype = '&';
       if (sw_val == 1)
 	{
@@ -1265,7 +1264,7 @@ get_nb_fields (cob_tree sy, int times, int sw_val)
 		       (sy->value == spe_lit_HV) ? 5 : 1);
 	  if (init_val == -1)
 	    init_val = val;
-	  if (ftype == init_ctype && val != init_val)
+	  if (sy->type == init_ctype && val != init_val)
 	    init_ctype = '&';
 	}
     }
