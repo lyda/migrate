@@ -503,36 +503,16 @@ output_condition (cobc_tree x)
   enum cobc_cond_type type;
 
  again:
+  type = COND_TYPE (x);
   l = COND_LEFT (x);
   r = COND_RIGHT (x);
-  type = COND_TYPE (x);
 
   switch (type)
     {
-    case COBC_COND_NUMERIC:
-      output_func_1 ("cob_is_numeric", l);
-      break;
-    case COBC_COND_ALPHABETIC:
-      output_func_1 ("cob_is_alpha", l);
-      break;
-    case COBC_COND_LOWER:
-      output_func_1 ("cob_is_lower", l);
-      break;
-    case COBC_COND_UPPER:
-      output_func_1 ("cob_is_upper", l);
-      break;
-    case COBC_COND_POSITIVE:
-      x = make_cond (l, COBC_COND_GT, cobc_zero);
-      goto again;
-    case COBC_COND_NEGATIVE:
-      x = make_cond (l, COBC_COND_LT, cobc_zero);
-      goto again;
-    case COBC_COND_ZERO:
-      x = make_cond (l, COBC_COND_EQ, cobc_zero);
-      goto again;
     case COBC_COND_CLASS:
-      puts ("class-name is not implemented");
-      output ("1");
+      output ("%s (", (char *) r);
+      output_tree (l);
+      output (")");
       break;
     case COBC_COND_NOT:
       output ("!");
@@ -1109,20 +1089,7 @@ output_tree (cobc_tree x)
     {
     case cobc_tag_const:
       {
-	if (x == cobc_true)
-	  output ("1");
-	else if (x == cobc_false)
-	  output ("0");
-	else if (x == cobc_zero)
-	  output ("COB_ZERO");
-	else if (x == cobc_space)
-	  output ("COB_SPACE");
-	else if (x == cobc_high)
-	  output ("COB_HIGH");
-	else if (x == cobc_low)
-	  output ("COB_LOW");
-	else if (x == cobc_quote)
-	  output ("COB_QUOTE");
+	output ("%s", COBC_CONST (x)->val);
 	break;
       }
     case cobc_tag_integer:
@@ -1340,6 +1307,21 @@ codegen (struct program_spec *spec)
   for (l = spec->label_list; l; l = l->next)
     output ("  le_%s,\n", COBC_LABEL_NAME (l->item)->cname);
   output ("};\n\n");
+
+  /* classes */
+  for (l = spec->class_list; l; l = l->next)
+    {
+      struct cobc_class *p = l->item;
+      output_line ("static int");
+      output_line ("%s (struct cob_field x)", p->cname);
+      output_indent ("{", 2);
+      output_prefix ();
+      output ("return ");
+      output_condition (p->cond);
+      output (";\n");
+      output_indent ("}", -2);
+      output_newline ();
+    }
 
   /* environment */
   output_line ("static void");

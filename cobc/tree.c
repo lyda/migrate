@@ -229,28 +229,33 @@ cobc_tree cobc_space;
 cobc_tree cobc_low;
 cobc_tree cobc_high;
 cobc_tree cobc_quote;
+cobc_tree cobc_param;
 cobc_tree cobc_status;
 cobc_tree cobc_int0;
 cobc_tree cobc_int1;
 
 static cobc_tree
-make_constant (char class)
+make_constant (char class, char *val)
 {
-  return make_tree (cobc_tag_const, class, sizeof (struct cobc_tree_common));
+  struct cobc_const *p =
+    make_tree (cobc_tag_const, class, sizeof (struct cobc_const));
+  p->val = val;
+  return COBC_TREE (p);
 }
 
 void
 init_constants (void)
 {
-  cobc_any    = make_constant (COB_VOID);
-  cobc_true   = make_constant (COB_BOOLEAN);
-  cobc_false  = make_constant (COB_BOOLEAN);
-  cobc_zero   = make_constant (COB_NUMERIC);
-  cobc_space  = make_constant (COB_ALPHANUMERIC);
-  cobc_low    = make_constant (COB_ALPHANUMERIC);
-  cobc_high   = make_constant (COB_ALPHANUMERIC);
-  cobc_quote  = make_constant (COB_ALPHANUMERIC);
-  cobc_status = make_constant (COB_NUMERIC);
+  cobc_any    = make_constant (COB_VOID, 0);
+  cobc_true   = make_constant (COB_BOOLEAN, "1");
+  cobc_false  = make_constant (COB_BOOLEAN, "0");
+  cobc_param  = make_constant (COB_NUMERIC, "x");
+  cobc_status = make_constant (COB_NUMERIC, "cob_status");
+  cobc_zero   = make_constant (COB_NUMERIC, "cob_zero");
+  cobc_space  = make_constant (COB_ALPHANUMERIC, "cob_space");
+  cobc_low    = make_constant (COB_ALPHANUMERIC, "cob_low");
+  cobc_high   = make_constant (COB_ALPHANUMERIC, "cob_high");
+  cobc_quote  = make_constant (COB_ALPHANUMERIC, "cob_quote");
   cobc_int0   = make_integer (0);
   cobc_int1   = make_integer (1);
 }
@@ -680,6 +685,24 @@ is_numeric (cobc_tree x)
     return 1;
 
   return 0;
+}
+
+
+/*
+ * Class
+ */
+
+cobc_tree
+make_class (struct cobc_word *word, cobc_tree cond)
+{
+  char name[BUFSIZ];
+  struct cobc_class *p =
+    make_tree (cobc_tag_class, COB_NUMERIC, sizeof (struct cobc_class));
+  sprintf (name, "is_%s", to_cname (word->name));
+  p->cname = strdup (name);
+  p->cond = cond;
+  set_word_item (word, COBC_TREE (p));
+  return COBC_TREE (p);
 }
 
 

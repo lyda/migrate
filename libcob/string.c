@@ -419,9 +419,9 @@ cob_unstring (struct cob_field src, ...)
 	  if (delm_data)
 	    cob_mem_move (f, delm_data, delm_size);
 	  else if (FIELD_TYPE (f) == '9')
-	    cob_move (COB_ZERO, f);
+	    cob_move (cob_zero, f);
 	  else
-	    cob_move (COB_SPACE, f);
+	    cob_move (cob_space, f);
 	  break;
 	}
 

@@ -44,8 +44,6 @@
     memcpy (s2, s1, e1 - s1);			\
 }
 
-struct cob_field_desc cob_all_desc = {1, 'X'};
-
 
 /*
  * Display

@@ -118,6 +118,7 @@ static void redefinition_error (cobc_tree x);
 
 %union {
   int inum;
+  char *str;
   cobc_tree tree;
   struct cobc_word *word;
   struct cobc_list *list;
@@ -172,11 +173,12 @@ static void redefinition_error (cobc_tree x);
 %token COMMON,NEXT,PACKED_DECIMAL,INPUT,I_O,OUTPUT,EXTEND,BINARY
 %token ALPHANUMERIC,ALPHANUMERIC_EDITED,NUMERIC_EDITED,NATIONAL,NATIONAL_EDITED
 
+%type <str> class
 %type <call> call_item
 %type <insi> tallying_item,replacing_item,inspect_before_after
 %type <inum> flag_all,flag_duplicates,flag_optional,flag_with_no_advancing
 %type <inum> flag_not,flag_next,flag_rounded,flag_separate
-%type <inum> class,integer,level_number,operator,on_or_off
+%type <inum> sign,integer,level_number,operator,on_or_off
 %type <inum> usage,before_or_after,perform_test
 %type <inum> select_organization,select_access_mode,open_mode
 %type <list> occurs_key_list,occurs_index_list,value_item_list
@@ -191,11 +193,12 @@ static void redefinition_error (cobc_tree x);
 %type <list> unstring_delimited_item,unstring_into_item
 %type <list> file_name_list,math_name_list,math_edited_name_list
 %type <list> call_item_list,call_using
-%type <tree> special_name_class_options,special_name_class_option
+%type <tree> special_name_class_condition,special_name_class_condition_1
 %type <tree> special_name_class_literal,select_file_name
 %type <tree> call_returning,add_to,field_description_list,value_item
 %type <tree> field_description_list_1,field_description_list_2
 %type <tree> condition,condition_2,comparative_condition,class_condition
+%type <tree> sign_condition
 %type <tree> imperative_statement,field_description
 %type <tree> evaluate_object,evaluate_object_1
 %type <tree> function,subscript,subref,refmod
@@ -480,30 +483,28 @@ is_are: IS | ARE ;
 /* CLASS */
 
 special_name_class:
-  CLASS undefined_word _is special_name_class_options
+  CLASS undefined_word _is special_name_class_condition
   {
-    cobc_tree x = make_field ($2);
-    COBC_FIELD (x)->level = 99; /* class */
-    COBC_FIELD (x)->cond = $4;
-    program_spec.class_list = cons (x, program_spec.class_list);
+    program_spec.class_list = cons (make_class ($2, $4),
+				    program_spec.class_list);
   }
 ;
-special_name_class_options:
-  special_name_class_option	{ $$ = $1; }
-| special_name_class_options
-  special_name_class_option	{ $$ = make_cond ($1, COBC_COND_OR, $2); }
+special_name_class_condition:
+  special_name_class_condition_1 { $$ = $1; }
+| special_name_class_condition
+  special_name_class_condition_1 { $$ = make_cond ($1, COBC_COND_OR, $2); }
 ;
-special_name_class_option:
+special_name_class_condition_1:
   special_name_class_literal
   {
-    $$ = make_cond ($1, COBC_COND_EQ, 0);
+    $$ = make_cond ($1, COBC_COND_EQ, cobc_param);
   }
 | special_name_class_literal THRU
   special_name_class_literal
   {
-    $$ = make_cond (make_cond ($1, COBC_COND_LE, 0),
+    $$ = make_cond (make_cond ($1, COBC_COND_LE, cobc_param),
 		    COBC_COND_AND,
-		    make_cond (0, COBC_COND_LE, $1));
+		    make_cond (cobc_param, COBC_COND_LE, $1));
   }
 ;
 special_name_class_literal:
@@ -2479,6 +2480,7 @@ condition:
   condition_name		{ $$ = COBC_FIELD ($1)->cond; }
 | comparative_condition		{ $$ = $1; }
 | class_condition		{ $$ = $1; }
+| sign_condition		{ $$ = $1; }
 | '(' condition ')'		{ $$ = $2; }
 | NOT condition			{ $$ = make_unary_cond ($2, COBC_COND_NOT); }
 | condition AND condition_2	{ $$ = make_cond ($1, COBC_COND_AND, $3); }
@@ -2526,25 +2528,36 @@ less_or_equal: LE | LESS _than OR EQUAL _to ;
 class_condition:
   expr _is flag_not class
   {
-    $$ = make_unary_cond ($1, $4);
-    if ($3)
-      $$ = make_unary_cond ($$, COBC_COND_NOT);
-  }
-| expr _is flag_not class_name
-  {
-    $$ = make_cond ($1, COBC_COND_CLASS, $4);
+    $$ = make_cond ($1, COBC_COND_CLASS, COBC_TREE ($4));
     if ($3)
       $$ = make_unary_cond ($$, COBC_COND_NOT);
   }
 ;
 class:
-  NUMERIC			{ $$ = COBC_COND_NUMERIC; }
-| ALPHABETIC			{ $$ = COBC_COND_ALPHABETIC; }
-| ALPHABETIC_LOWER		{ $$ = COBC_COND_LOWER; }
-| ALPHABETIC_UPPER		{ $$ = COBC_COND_UPPER; }
-| POSITIVE			{ $$ = COBC_COND_POSITIVE; }
-| NEGATIVE			{ $$ = COBC_COND_NEGATIVE; }
-| ZERO				{ $$ = COBC_COND_ZERO; }
+  NUMERIC			{ $$ = "cob_is_numeric"; }
+| ALPHABETIC			{ $$ = "cob_is_alpha"; }
+| ALPHABETIC_LOWER		{ $$ = "cob_is_lower"; }
+| ALPHABETIC_UPPER		{ $$ = "cob_is_upper"; }
+| CLASS_NAME			{ $$ = COBC_CLASS ($1)->cname; }
+;
+
+
+/*
+ * Sign condition
+ */
+
+sign_condition:
+  expr _is flag_not sign
+  {
+    $$ = make_cond ($1, $4, cobc_zero);
+    if ($3)
+      $$ = make_unary_cond ($$, COBC_COND_NOT);
+  }
+;
+sign:
+  ZERO				{ $$ = COBC_COND_EQ; }
+| POSITIVE			{ $$ = COBC_COND_GT; }
+| NEGATIVE			{ $$ = COBC_COND_LT; }
 ;
 
 

@@ -136,23 +136,24 @@ X\"[^\"\n]*\" {
   if (cobc_in_procedure)
     {
       if (!yylval.word->item || COBC_LABEL_NAME_P (yylval.word->item))
-	return LABEL_WORD;
-      else if (yylval.word->item && COBC_FIELD_P (yylval.word->item))
 	{
-	  switch (COBC_FIELD (yylval.word->item)->level)
-	    {
-	    case 88:
-	      yylval.tree = yylval.word->item;
-	      return CONDITION_NAME;
-	    case 99:
-	      yylval.tree = yylval.word->item;
-	      return CLASS_NAME;
-	    }
+	  return LABEL_WORD;
 	}
-      else if (yylval.word->item && COBC_INTEGER_P (yylval.word->item))
+      if (COBC_INTEGER_P (yylval.word->item))
 	{
 	  yylval.tree = yylval.word->item;
 	  return MNEMONIC_NAME;
+	}
+      if (COBC_CLASS_P (yylval.word->item))
+	{
+	  yylval.tree = yylval.word->item;
+	  return CLASS_NAME;
+	}
+      if (COBC_FIELD_P (yylval.word->item)
+	  && COBC_FIELD (yylval.word->item)->level == 88)
+	{
+	  yylval.tree = yylval.word->item;
+	  return CONDITION_NAME;
 	}
     }
   return WORD;

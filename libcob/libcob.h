@@ -149,16 +149,6 @@ struct cob_file_desc
 };
 
 
-/* figurative constants */
-
-extern struct cob_field_desc cob_all_desc;
-
-#define COB_ZERO	((struct cob_field) {&cob_all_desc, "0"})
-#define COB_SPACE	((struct cob_field) {&cob_all_desc, " "})
-#define COB_HIGH	((struct cob_field) {&cob_all_desc, "\xff"})
-#define COB_LOW		((struct cob_field) {&cob_all_desc, "\0"})
-#define COB_QUOTE	((struct cob_field) {&cob_all_desc, "\""})
-
 /* reference modification */
 
 #define cob_ref(var,off,len) \
@@ -211,6 +201,14 @@ extern unsigned char cob_currency_symbol;
 
 extern long cob_exp10[10];
 extern long long cob_exp10LL[19];
+
+/* figurative constants */
+
+extern struct cob_field cob_zero;
+extern struct cob_field cob_space;
+extern struct cob_field cob_high;
+extern struct cob_field cob_low;
+extern struct cob_field cob_quote;
 
 /* functional macros */
 

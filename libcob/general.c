@@ -73,6 +73,14 @@ long long cob_exp10LL[19] = {
   1000000000000000000
 };
 
+static struct cob_field_desc fig_desc = {1, 'X'};
+
+struct cob_field cob_zero =  {&fig_desc, "0"};
+struct cob_field cob_space = {&fig_desc, " "};
+struct cob_field cob_high =  {&fig_desc, "\xff"};
+struct cob_field cob_low =   {&fig_desc, "\0"};
+struct cob_field cob_quote = {&fig_desc, "\""};
+
 int
 get_sign (struct cob_field f)
 {

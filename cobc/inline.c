@@ -116,7 +116,7 @@ output_move_zero (cobc_tree x)
       output_memset (x, '0', COBC_FIELD (x)->size);
       break;
     default:
-      output_advance_move (COB_ZERO, x);
+      output_advance_move (cob_zero, x);
       break;
     }
 }
@@ -132,7 +132,7 @@ output_move_space (cobc_tree x)
       output_memset (x, ' ', COBC_FIELD (x)->size);
       break;
     default:
-      output_advance_move (COB_SPACE, x);
+      output_advance_move (cob_space, x);
       break;
     }
 }
@@ -150,7 +150,7 @@ output_move_high (cobc_tree x)
       output_memset (x, 255, COBC_FIELD (x)->size);
       break;
     default:
-      output_advance_move (COB_HIGH, x);
+      output_advance_move (cob_high, x);
       break;
     }
 }
@@ -168,7 +168,7 @@ output_move_low (cobc_tree x)
       output_memset (x, 0, COBC_FIELD (x)->size);
       break;
     default:
-      output_advance_move (COB_LOW, x);
+      output_advance_move (cob_low, x);
       break;
     }
 }
@@ -184,7 +184,7 @@ output_move_quote (cobc_tree x)
       output_memset (x, '\"', COBC_FIELD (x)->size);
       break;
     default:
-      output_advance_move (COB_QUOTE, x);
+      output_advance_move (cob_quote, x);
       break;
     }
 }

@@ -40,6 +40,7 @@
 #define cobc_tag_if		22
 #define cobc_tag_evaluate	23
 #define cobc_tag_predefined	24
+#define cobc_tag_class		25
 
 #define USAGE_DISPLAY	'9'
 #define USAGE_BINARY	'B'
@@ -125,9 +126,18 @@ extern cobc_tree cobc_space;
 extern cobc_tree cobc_low;
 extern cobc_tree cobc_high;
 extern cobc_tree cobc_quote;
+extern cobc_tree cobc_param;
 extern cobc_tree cobc_status;
 extern cobc_tree cobc_int0;
 extern cobc_tree cobc_int1;
+
+struct cobc_const {
+  struct cobc_tree_common common;
+  char *val;
+};
+
+#define COBC_CONST(x)		(COBC_TREE_CAST (cobc_tag_const, struct cobc_const, x))
+#define COBC_CONST_P(x)		(COBC_TREE_TAG (x) == cobc_tag_const)
 
 extern void init_constants (void);
 
@@ -400,6 +410,22 @@ extern int is_numeric (cobc_tree x);
 
 
 /*
+ * Class
+ */
+
+struct cobc_class {
+  struct cobc_tree_common common;
+  char *cname;
+  cobc_tree cond;
+};
+
+#define COBC_CLASS(x)		(COBC_TREE_CAST (cobc_tag_class, struct cobc_class, x))
+#define COBC_CLASS_P(x)		(COBC_TREE_TAG (x) == cobc_tag_class)
+
+extern cobc_tree make_class (struct cobc_word *word, cobc_tree cond);
+
+
+/*
  * Condition
  */
 
@@ -410,14 +436,7 @@ enum cobc_cond_type {
   COBC_COND_GE,			/* x >= y */
   COBC_COND_LE,			/* x <= y */
   COBC_COND_NE,			/* x != y */
-  COBC_COND_NUMERIC,		/* x is NUMERIC */
-  COBC_COND_ALPHABETIC,		/* x is ALPHABETIC */
-  COBC_COND_LOWER,		/* x is ALPHABETIC-LOWER */
-  COBC_COND_UPPER,		/* x is ALPHABETIC-UPPER */
-  COBC_COND_POSITIVE,		/* x is POSITIVE */
-  COBC_COND_NEGATIVE,		/* x is NEGATIVE */
-  COBC_COND_ZERO,		/* x is ZERO */
-  COBC_COND_CLASS,		/* x is class-name */
+  COBC_COND_CLASS,		/* x is class */
   COBC_COND_NOT,		/* not x */
   COBC_COND_AND,		/* x and y */
   COBC_COND_OR,			/* x or y */
