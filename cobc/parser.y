@@ -115,8 +115,8 @@ static void terminator_warning (const char *name);
 %token ACCEPT ADD CALL CANCEL CLOSE COMPUTE DELETE DISPLAY DIVIDE ENTRY
 %token EVALUATE IF INITIALIZE INSPECT MERGE MOVE MULTIPLY OPEN PERFORM
 %token READ RELEASE RETURN REWRITE SEARCH SET SORT START STRING
-%token SUBTRACT UNSTRING WRITE WORKING_STORAGE ZERO PACKED_DECIMAL
-%token ACCESS ADVANCING AFTER ALL ALPHABET ALPHABETIC ALPHABETIC_LOWER
+%token SUBTRACT UNSTRING WRITE WORKING_STORAGE ZERO PACKED_DECIMAL RECURSIVE
+%token ACCESS ADVANCING AFTER ALL ALPHABET ALPHABETIC ALPHABETIC_LOWER AS
 %token ALPHABETIC_UPPER ALPHANUMERIC ALPHANUMERIC_EDITED ALSO ALTER ALTERNATE
 %token AND ANY ARE AREA ASCENDING ASSIGN AT AUTO BACKGROUND_COLOR BEFORE BELL
 %token BINARY BLANK BLINK BLOCK BY CHARACTER CHARACTERS CLASS CODE_SET
@@ -168,17 +168,17 @@ static void terminator_warning (const char *name);
 %type <tree> on_size_error on_overflow at_end opt_invalid_key invalid_key
 %type <tree> group_name record_name numeric_name numeric_edited_name
 %type <tree> integer_name data_name file_name table_name mnemonic_name
-%type <tree> label_name undefined_word
+%type <tree> label_name undefined_word program_name
 %type <tree> identifier qualified_word subscript function
 
 
 %%
 /*****************************************************************************
- * COBOL program sequence
+ * COBOL Compilation Unit
  *****************************************************************************/
 
 start:
-  program
+  program_definition
   {
     if (errorcount > 0)
       YYABORT;
@@ -186,12 +186,10 @@ start:
       codegen (current_program);
   }
 ;
-program:
-  {
-    current_program = build_program ();
-    make_field_3 (make_reference ("RETURN-CODE"), "S9(9)", CB_USAGE_INDEX);
-  }
+
+program_definition:
   identification_division
+  program_id_paragraph
   environment_division
   data_division
   {
@@ -211,39 +209,60 @@ program:
   }
 ;
 end_program:
-| END PROGRAM WORD '.'
+| END PROGRAM program_name '.'
 ;
-
-
-/*****************************************************************************
- * IDENTIFICATION DIVISION.
- *****************************************************************************/
 
 identification_division:
-  IDENTIFICATION DIVISION '.'
-  PROGRAM_ID '.' WORD opt_program_parameter '.'
+| IDENTIFICATION DIVISION '.'
+;
+
+
+/*
+ * PROGRAM-ID paragraph
+ */
+
+program_id_paragraph:
+  PROGRAM_ID '.'
   {
-    int converted = 0;
-    char *s, *name = strdup (CB_NAME ($6));
-    for (s = name; *s; s++)
-      if (*s == '-')
-	{
-	  converted = 1;
-	  *s = '_';
-	}
-    if (converted)
-      cb_warning_x ($6, _("PROGRAM-ID is converted to `%s'"), name);
-    current_program->program_id = name;
+    current_program = build_program ();
+    make_field_3 (make_reference ("RETURN-CODE"), "S9(9)", CB_USAGE_INDEX);
+  }
+  program_name program_as program_type '.'
+  {
+    if ($<tree>5)
+      current_program->program_id = CB_LITERAL ($<tree>5)->data;
+    else
+      {
+	int converted = 0;
+	char *s, *name = strdup (CB_NAME ($4));
+	for (s = name; *s; s++)
+	  if (*s == '-')
+	    {
+	      converted = 1;
+	      *s = '_';
+	    }
+	if (converted)
+	  cb_warning_x ($4, _("PROGRAM-ID is converted to `%s'"), name);
+	current_program->program_id = name;
+      }
   }
 ;
-opt_program_parameter:
-| _is TOK_INITIAL _program	{ current_program->initial_program = 1; }
-| _is COMMON _program		{ PENDING ("COMMON"); }
+program_name:
+  WORD
+;
+program_as:
+  /* empty */			{ $<tree>$ = NULL; }
+| AS LITERAL			{ $<tree>$ = $2; }
+;
+program_type:
+| _is COMMON _program		{ current_program->flag_common = 1; }
+| _is TOK_INITIAL _program	{ current_program->flag_initial = 1; }
+| _is RECURSIVE _program	{ current_program->flag_recursive = 1; }
 ;
 
 
 /*****************************************************************************
- * ENVIRONMENT DIVISION.
+ * 12 Environment division
  *****************************************************************************/
 
 environment_division:
@@ -254,65 +273,67 @@ environment_division:
 
 
 /*******************
- * CONFICURATION SECTION
+ * 12.2 Conficuration section
  *******************/
 
 configuration_section:
 | CONFIGURATION SECTION '.'
-  configuration_list
-;
-configuration_list:
-| configuration_list configuration
-;
-configuration:
-  source_computer
-| object_computer
-| special_names
+  source_computer_paragraph
+  object_computer_paragraph
+  special_names_paragraph
 ;
 
 
 /*
- * SOURCE COMPUTER
+ * 12.2.4 SOURCE-COMPUTER paragraph
  */
 
-source_computer:
-  SOURCE_COMPUTER '.' WORD _with_debugging_mode '.'
+source_computer_paragraph:
+| SOURCE_COMPUTER '.' opt_computer_name with_debugging_mode '.'
 ;
-_with_debugging_mode:
-| _with DEBUGGING MODE
-  {
-    cb_warning (_("DEBUGGING MODE is ignored"));
-    cb_warning (_("use compiler option `-debug' instead"));
-  }
+with_debugging_mode:
+| _with DEBUGGING MODE		{ cb_obsolete_2002 ("DEBUGGING MODE"); }
+;
+
+opt_computer_name:
+| WORD { }
 ;
 
 
 /*
- * OBJECT COMPUTER
+ * 12.2.5 OBJECT-COMPUTER paragraph
  */
 
-object_computer:
-  OBJECT_COMPUTER '.' WORD object_computer_options '.'
+object_computer_paragraph:
+| OBJECT_COMPUTER '.' opt_computer_name object_computer_options '.'
 ;
 object_computer_options:
 | object_computer_options object_computer_option
 ;
 object_computer_option:
-  _program collating_sequence		{ PENDING ("COLLATING SEQUENCE"); }
+  _program collating_sequence
 | MEMORY SIZE _is integer CHARACTERS	{ cb_obsolete_85 ("MEMORY SIZE"); }
 ;
+
+/* COLLATING SEQUENCE */
+
 collating_sequence:
-  _collating SEQUENCE _is WORD
+  _collating SEQUENCE _is alphabet_name
+  {
+    PENDING ("COLLATING SEQUENCE");
+  }
 ;
-_collating: | COLLATING ;
+alphabet_name:
+  WORD { }
+;
 
 
 /*
- * SPECIAL-NAMES
+ * 12.2.6 SPECIAL-NAMES paragraph
  */
 
-special_names:
-  SPECIAL_NAMES '.' opt_special_names
+special_names_paragraph:
+| SPECIAL_NAMES '.' opt_special_names
 ;
 opt_special_names:
 | special_name_list '.'
@@ -322,20 +343,20 @@ special_name_list:
 | special_name_list special_name
 ;
 special_name:
-  special_name_mnemonic
-| special_name_alphabet
-| special_name_symbolic
-| special_name_class
-| special_name_currency
-| special_name_decimal_point
-| CURSOR _is reference		{ PENDING ("CURSOR"); }
-| CRT STATUS _is reference	{ PENDING ("CRT STATUS"); }
+  mnemonic_name_clause
+| alphabet_name_clause
+| symbolic_characters_clause
+| class_name_clause
+| currency_sign_clause
+| decimal_point_clause
+| cursor_clause
+| crt_status_clause
 ;
 
 
-/* Buildin name */
+/* Mnemonic name clause */
 
-special_name_mnemonic:
+mnemonic_name_clause:
   WORD
   {
     int n = lookup_builtin_word (CB_NAME ($1));
@@ -373,9 +394,9 @@ on_or_off:
 ;
 
 
-/* ALPHABET */
+/* Alphabet name clause */
 
-special_name_alphabet:
+alphabet_name_clause:
   ALPHABET WORD _is alphabet_group
   {
     PENDING ("ALPHABET");
@@ -404,9 +425,10 @@ also_literal_list:
 | also_literal_list ALSO literal
 ;
 
-/* SYMBOLIC CHARACTER */
+
+/* Symbolic characters clause */
 
-special_name_symbolic:
+symbolic_characters_clause:
   SYMBOLIC _characters symbolic_characters_list
   {
     PENDING ("SYMBOLIC CHARACTERS");
@@ -429,9 +451,9 @@ integer_list:
 ;
 
 
-/* CLASS */
+/* Class name clause */
 
-special_name_class:
+class_name_clause:
   CLASS undefined_word _is class_item_list
   {
     current_program->class_list =
@@ -454,22 +476,22 @@ class_item:
 ;
 
 
-/* CURRENCY */
+/* CURRENCY SIGN clause */
 
-special_name_currency:
-  CURRENCY _sign LITERAL
+currency_sign_clause:
+  CURRENCY _sign _is LITERAL
   {
-    unsigned char *s = CB_LITERAL ($3)->data;
-    if (CB_LITERAL ($3)->size != 1)
-      cb_error_x ($3, _("invalid currency sign `%s'"), s);
+    unsigned char *s = CB_LITERAL ($4)->data;
+    if (CB_LITERAL ($4)->size != 1)
+      cb_error_x ($4, _("invalid currency sign `%s'"), s);
     current_program->currency_symbol = s[0];
   }
 ;
 
 
-/* DECIMAL_POINT */
+/* DECIMAL-POINT clause */
 
-special_name_decimal_point:
+decimal_point_clause:
   DECIMAL_POINT _is COMMA
   {
     current_program->decimal_point = ',';
@@ -478,22 +500,36 @@ special_name_decimal_point:
 ;
 
 
+/* CURSOR clause */
+
+cursor_clause:
+  CURSOR _is reference		{ PENDING ("CURSOR"); }
+;
+
+
+/* CRT STATUS clause */
+
+crt_status_clause:
+  CRT STATUS _is reference	{ PENDING ("CRT STATUS"); }
+;
+
+
 /*******************
- * INPUT-OUTPUT SECTION
+ * 12.3 INPUT-OUTPUT SECTION
  *******************/
 
 input_output_section:
 | INPUT_OUTPUT SECTION '.'
-  file_control
-  i_o_control
+  file_control_paragraph
+  i_o_control_paragraph
 ;
 
 
 /*
- * FILE-CONTROL
+ * 12.3.3 FILE-CONTROL paragraph
  */
 
-file_control:
+file_control_paragraph:
 | FILE_CONTROL '.' select_sequence
 ;
 select_sequence:
@@ -606,28 +642,28 @@ select_access_mode:
 
 
 /*
- * I-O-CONTROL
+ * 12.3.5 I-O-CONTROL paragraph
  */
 
-i_o_control:
-| I_O_CONTROL '.'
-  i_o_statements
+i_o_control_paragraph:
+| I_O_CONTROL '.' opt_i_o_control
 ;
-i_o_statements:
-| i_o_statement_list '.'
+opt_i_o_control:
+| i_o_control_list '.'
 ;
-i_o_statement_list:
-  i_o_statement
-| i_o_statement_list i_o_statement
+i_o_control_list:
+  i_o_control_clause
+| i_o_control_list i_o_control_clause
 ;
-i_o_statement:
-  same_statement
+i_o_control_clause:
+  same_clause
 | multiple_file_tape_clause
 ;
 
-/* SAME statement */
+
+/* 12.3.6 SAME clause */
 
-same_statement:
+same_clause:
   SAME same_option _area _for file_name_list
   {
     PENDING ("SAME");
@@ -640,6 +676,7 @@ same_option:
 | SORT_MERGE			{ $$ = 3; }
 ;
 
+
 /* MULTIPLE FILE TAPE clause */
 
 multiple_file_tape_clause:
@@ -914,12 +951,12 @@ usage:
 /* SIGN */
 
 sign_clause:
-  _sign LEADING flag_separate
+  _sign_is LEADING flag_separate
   {
     current_field->flag_sign_separate = $3;
     current_field->flag_sign_leading  = 1;
   }
-| _sign TRAILING flag_separate
+| _sign_is TRAILING flag_separate
   {
     current_field->flag_sign_separate = $3;
     current_field->flag_sign_leading  = 0;
@@ -1105,7 +1142,7 @@ screen_section:
     for (p = CB_FIELD ($5); p; p = p->sister)
       finalize_field (p);
     current_program->screen_storage = CB_FIELD ($5);
-    current_program->enable_screen = 1;
+    current_program->flag_screen = 1;
   }
 ;
 
@@ -1452,7 +1489,7 @@ accept_statement:
 accept_body:
   data_name at_line_column
   {
-    if (current_program->enable_screen)
+    if (current_program->flag_screen)
       {
 	if (CB_FIELD ($1)->storage == CB_STORAGE_SCREEN)
 	  {
@@ -1728,7 +1765,7 @@ display_statement:
   DISPLAY save_location opt_value_list display_upon at_line_column
   {
     struct cb_list *l;
-    if (current_program->enable_screen)
+    if (current_program->flag_screen)
       {
 	for (l = $3; l; l = l->next)
 	  if (CB_FIELD (l->item)->storage == CB_STORAGE_SCREEN)
@@ -1775,7 +1812,7 @@ display_upon:
 display_with_no_advancing:
   /* empty */
   {
-    if (!current_program->enable_screen)
+    if (!current_program->flag_screen)
       push_funcall_1 ("cob_newline", make_integer ($<inum>-2));
   }
 | _with NO ADVANCING { /* nothing */ }
@@ -3791,6 +3828,7 @@ _at:		| AT ;
 _by:		| BY ;
 _character:	| CHARACTER ;
 _characters:	| CHARACTERS ;
+_collating:	| COLLATING ;
 _contains:	| CONTAINS ;
 _file:		| TOK_FILE ;
 _for:		| FOR ;
@@ -3807,7 +3845,8 @@ _on:		| ON ;
 _order:		| ORDER ;
 _program:	| PROGRAM ;
 _record:	| RECORD ;
-_sign:		| SIGN _is ;
+_sign:		| SIGN ;
+_sign_is:	| SIGN _is ;
 _size:		| SIZE ;
 _status:	| STATUS ;
 _tape:		| TAPE ;

@@ -2140,7 +2140,7 @@ output_internal_function (struct cb_program *prog,
   output_line ("env.currency_symbol = '%c';", prog->currency_symbol);
   output_line ("env.numeric_separator = '%c';", prog->numeric_separator);
   output_newline ();
-  if (!prog->initial_program)
+  if (!prog->flag_initial)
     output_init_values (prog->working_storage);
   output_line ("initialized = 1;");
   output_indent ("  }");
@@ -2152,7 +2152,7 @@ output_internal_function (struct cb_program *prog,
   output_newline ();
   output_line ("/* initialize program */");
   output_line ("cob_push_environment (&env);");
-  if (prog->initial_program)
+  if (prog->flag_initial)
     output_init_values (prog->working_storage);
   output_newline ();
 
@@ -2249,10 +2249,10 @@ output_main_function (struct cb_program *prog)
   output_line ("main (int argc, char **argv)");
   output_indent ("{");
   output_line ("cob_init (argc, argv);");
-  if (prog->enable_screen)
+  if (prog->flag_screen)
     output_line ("cob_screen_init ();");
   output_line ("%s ();", prog->program_id);
-  if (prog->enable_screen)
+  if (prog->flag_screen)
     output_line ("cob_screen_clear ();");
   output_line ("return cob_return_code;");
   output_indent ("}");
@@ -2265,7 +2265,7 @@ codegen (struct cb_program *prog)
   struct cb_list *parameter_list = NULL;
 
   if (cb_flag_main)
-    prog->initial_program = 1;
+    prog->flag_initial = 1;
 
   output_target = yyout;
 

@@ -620,9 +620,7 @@ extern cb_tree make_parameter (int type, cb_tree x, cb_tree y);
 
 struct cb_program {
   /* program variables */
-  char *program_id;
-  int initial_program;
-  int enable_screen;
+  const char *program_id;
   unsigned char decimal_point;		/* '.' or ',' */
   unsigned char currency_symbol;	/* '$' or user-specified */
   unsigned char numeric_separator;	/* ',' or '.' */
@@ -637,6 +635,10 @@ struct cb_program {
   struct cb_field *linkage_storage;
   struct cb_field *screen_storage;
   struct cb_label *file_handler[5];
+  long flag_common      : 1;		/* COMMON PROGRAM */
+  long flag_initial     : 1;		/* INITIAL PROGRAM */
+  long flag_recursive   : 1;		/* RECURSIVE PROGRAM */
+  long flag_screen      : 1;		/* have SCREEN SECTION */
   /* internal variables */
   int loop_counter;
   int decimal_index;
