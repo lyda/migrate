@@ -30,7 +30,9 @@
 extern FILE *cob_stream[];
 
 extern void cob_init_termio (void);
+#ifdef COB_DEBUG
 extern void cob_debug_print (struct cob_field f);
+#endif
 
 extern void cob_display (struct cob_field f, int fd);
 extern void cob_newline (int fd);

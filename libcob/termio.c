@@ -91,12 +91,14 @@ cob_newline (int fd)
   fflush (cob_stream[fd]);
 }
 
+#ifdef COB_DEBUG
 void
 cob_debug_print (struct cob_field f)
 {
   cob_display (f, COB_STDOUT);
   cob_newline (COB_STDOUT);
 }
+#endif
 
 
 /*

@@ -254,8 +254,9 @@ cob_cmp_all (unsigned char *data, unsigned char c, int len)
 void
 cob_check_numeric (struct cob_field f)
 {
+  char s[BUFSIZ];
   if (!cob_is_numeric (f))
-    cob_runtime_error ("non-numeric value `%s'", COB_FIELD_BASE (f));
+    cob_runtime_error ("non-numeric value `%s'", cob_field_to_string (f, s));
 }
 
 int
