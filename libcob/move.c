@@ -658,6 +658,8 @@ cob_move (cob_field *src, cob_field *dst)
 	case COB_TYPE_NUMERIC_DISPLAY:
 	  return cob_move_binary_to_display (src, dst);
 	case COB_TYPE_NUMERIC_BINARY:
+	case COB_TYPE_NUMERIC_PACKED:
+	case COB_TYPE_NUMERIC_EDITED:
 	  return indirect_move (cob_move_binary_to_display, src, dst,
 				20, src->attr->scale);
 	default:

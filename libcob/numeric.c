@@ -688,11 +688,7 @@ display_sub_int (unsigned char *data, size_t size, unsigned int n)
 	  /* check for overflow */
 	  if (--sp < data)
 	    {
-		if ( ! cob_current_module->flag_binary_truncate )
-			return 0;
-	      for (; i >= 0; i--)
-		carry += dp[i];
-	      return carry;
+	      return 1;
 	    }
 
 	  /* perform subtraction */
@@ -712,8 +708,6 @@ display_sub_int (unsigned char *data, size_t size, unsigned int n)
 	return 0;
       *sp = '9';
     }
-  if ( ! cob_current_module->flag_binary_truncate )
-	return 0;
   return 1;
 }
 

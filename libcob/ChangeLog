@@ -1,3 +1,10 @@
+2005-01-07  Roger While <simrw@sim-basis.de>
+
+	* move.c : Fix incorrect truncation when !binary_trunc
+	  and moving binary to packed or edited fields
+	* numeric.c : Fix arithmetic with numeric display
+	  fields when !binary_trunc
+
 2004-11-19  Roger While <simrw@sim-basis.de>
 
 	* move.c : Fix incorrect truncation when !binary_trunc
