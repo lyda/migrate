@@ -94,6 +94,7 @@ foreach $in (glob("*.CBL")) {
 	$total_inspect += $inspect;
 	$total_ok++ if $fail == 0;
 	rename ("report.txt", "$exe.txt");
+	system ("rm -f XXXXX*");
       }
     }
   }
