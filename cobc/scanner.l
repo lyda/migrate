@@ -39,6 +39,10 @@
 #include "reserved.h"
 #include "lib/gettext.h"
 
+#define SET_LOCATION(x)				\
+  (x)->source_file = cobc_source_file;		\
+  (x)->source_line = cobc_source_line
+
 int cobc_in_procedure = 0;
 
 char *cobc_source_file = NULL;
@@ -85,6 +89,7 @@ X\"[^\"\n]*\" {
 [0-9]+ {
   /* integer literal */
   yylval.tree = make_numeric_literal (0, yytext, 0);
+  SET_LOCATION (yylval.tree);
   return INTEGER_LITERAL;
 }
 
@@ -105,8 +110,7 @@ X\"[^\"\n]*\" {
   /* user word */
   word = lookup_word (yytext);
   yylval.tree = make_reference (word);
-  yylval.tree->source_file = cobc_source_file;
-  yylval.tree->source_line = cobc_source_line;
+  SET_LOCATION (yylval.tree);
 
   if (cobc_in_procedure && word->count > 0)
     {
@@ -171,6 +175,7 @@ read_literal (char mark)
     }
   *p = 0;
   yylval.tree = make_nonnumeric_literal (buff);
+  SET_LOCATION (yylval.tree);
   return NONNUMERIC_LITERAL;
 }
 
@@ -204,6 +209,7 @@ scan_x (char *text)
   if (high)
     {
       yylval.tree = make_nonnumeric_literal (dst);
+      SET_LOCATION (yylval.tree);
       return NONNUMERIC_LITERAL;
     }
   else
@@ -211,6 +217,7 @@ scan_x (char *text)
     error:
       yyerror (_("invalid X literal: %s"), text);
       yylval.tree = make_nonnumeric_literal (dst);
+      SET_LOCATION (yylval.tree);
       return NONNUMERIC_LITERAL;
     }
 }
@@ -235,6 +242,7 @@ scan_numeric (char *text)
     yyerror (_("invalid numeric literal"));
 
   yylval.tree = make_numeric_literal (sign, text, - decimals);
+  SET_LOCATION (yylval.tree);
   return NUMERIC_LITERAL;
 }
 

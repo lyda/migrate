@@ -819,10 +819,14 @@ output_advance_move (cob_field *f, cobc_tree dst)
   attr.flags = 0;
   if (attr.type != COB_TYPE_GROUP)
     {
-      attr.digits = p->pic->digits;
-      attr.expt = p->pic->expt;
-      if (p->pic->have_sign)
-	attr.flags |= COB_FLAG_HAVE_SIGN;
+      if (p->pic)
+	{
+	  attr.digits = p->pic->digits;
+	  attr.expt = p->pic->expt;
+	  attr.pic = p->pic->str;
+	  if (p->pic->have_sign)
+	    attr.flags |= COB_FLAG_HAVE_SIGN;
+	}
       if (p->flag_sign_separate)
 	attr.flags |= COB_FLAG_SIGN_SEPARATE;
       if (p->flag_sign_leading)
@@ -831,7 +835,6 @@ output_advance_move (cob_field *f, cobc_tree dst)
 	attr.flags |= COB_FLAG_BLANK_ZERO;
       if (p->flag_justified)
 	attr.flags |= COB_FLAG_JUSTIFIED;
-      attr.pic = p->pic->str;
     }
 
   cob_move (f, &fld);

@@ -4628,6 +4628,7 @@ static int
 validate_move (cobc_tree src, cobc_tree dst, int value_flag)
 {
   struct cobc_field *f = COBC_FIELD (cobc_ref (dst));
+  cobc_tree loc = src->source_line ? src : dst;
 
   switch (COBC_TREE_TAG (src))
     {
@@ -4798,24 +4799,24 @@ validate_move (cobc_tree src, cobc_tree dst, int value_flag)
 
  invalid:
   if (value_flag)
-    yyerror_x (src, _("invalid VALUE clause"));
+    yyerror_x (loc, _("invalid VALUE clause"));
   else
-    yyerror_x (src, _("invalid MOVE statement"));
+    yyerror_x (loc, _("invalid MOVE statement"));
   return -1;
 
  type_mismatch:
   if (cobc_warn_type_mismatch)
-    yywarn_x (src, _("type mismatch"));
+    yywarn_x (loc, _("type mismatch"));
   return 0;
 
  value_mismatch:
   if (cobc_warn_constant)
-    yywarn_x (src, _("constant value mismatch"));
+    yywarn_x (loc, _("constant value mismatch"));
   return 0;
 
  size_overflow:
   if (cobc_warn_constant)
-    yywarn_x (src, _("constant size overflow"));
+    yywarn_x (loc, _("constant size overflow"));
   return 0;
 }
 
