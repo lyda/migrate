@@ -217,7 +217,7 @@ static int
 scan_word (char *text)
 {
   int token = lookup_reserved_word (text);
-  if (token != NULL)
+  if (token != 0)
     return token;
 
   switch (curr_division)
