@@ -50,9 +50,10 @@ foreach $in (sort (glob("*.{CBL,SUB}"))) {
   if (-e "./$exe.DAT") {
     $cmd = "./$exe < $exe.DAT";
   }
+  next if $exe =~ /^..[34]0/;
   $num_progs++;
   printf LOG "%-12s", $in;
-  if ($exe =~ /^..[34]0/ || $skip{$exe}) {
+  if ($skip{$exe}) {
     $test_skipped++;
     print LOG "  ----- test skipped -----\n";
   } else {
