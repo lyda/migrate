@@ -7,6 +7,7 @@ Makefile
 Makefile.in
 aclocal.m4
 cob-config
+config
 config.*
 configure
 defaults.h
