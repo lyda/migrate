@@ -1,3 +1,8 @@
+2002-09-24  Keisuke Nishida  <knishida@netlab.jp>
+
+	* scanner.l (display_line): Removed.
+	(yyinput): Append multiple LF's during concatenating lines.
+
 2002-09-17  Keisuke Nishida  <knishida@netlab.jp>
 
 	* parser.y (yywarn): New function.

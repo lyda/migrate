@@ -40,8 +40,6 @@ int yylineno;
 const char *yyfilename;
 static struct replacement *yyreplacing = NULL;
 
-static int display_line = 0;
-
 static struct copybook {
   int lineno;
   const char *filename;
@@ -64,17 +62,7 @@ static void set_buffer (int lineno, const char *filename, struct replacement *re
 
 <*>"*>".*		{ /* comment */ }
 
-<*>\n {
-  /* end of line */
-  ECHO;
-  yylineno++;
-
-  if (display_line)
-    {
-      fprintf (yyout, "# %d \"%s\"\n", yylineno, yyfilename ? yyfilename : "");
-      display_line = 0;
-    }
-}
+<*>\n			{ ECHO; yylineno++; }
 
 "COPY"			{ BEGIN COPY_STATE; return COPY; }
 "INCLUDE"		{ BEGIN COPY_STATE; return COPY; }
@@ -386,31 +374,39 @@ yyinput (char *buff, int max_size)
 
   /* Line concatenation */
   if (cobpp_source_format != COBPP_FORMAT_FREE)
-    while (1)
-      {
-	int i;
-	size_t size;
-	char lookahead[7];
+    {
+      char *p;
+      int lines = 0;
+      while (1)
+	{
+	  size_t size;
+	  char *bp, *np;
+	  char lookahead[7];
 
-	/* look ahead the following line */
-	size = fread (lookahead, 1, 7, yyin);
-	fseek (yyin, - size, SEEK_CUR);
-	if (size != 7 || lookahead[6] != '-')
-	  break;
+	  /* look ahead the following line */
+	  size = fread (lookahead, 1, 7, yyin);
+	  fseek (yyin, - size, SEEK_CUR);
+	  if (size != 7 || lookahead[6] != '-')
+	    break;
 
-	/* concatenate lines */
-	size = strlen (buff) - 1;
-	read_line (buff + size, max_size - size);
-	for (i = size + 7; buff[i] == ' '; i++);
-	if (buff[i] == '"')
-	  i++;
-	else
-	  for (; buff[size - 1] == ' '; size--);
-	strcpy (buff + size, buff + i);
+	  /* concatenate lines */
+	  bp = buff + strlen (buff) - 1;
+	  read_line (bp, max_size - (bp - buff));
+	  for (np = bp + 7; *np == ' '; np++);
+	  if (*np == '"')
+	    np++;
+	  else
+	    for (; bp[-1] == ' '; bp--);
+	  strcpy (bp, np);
+	  lines++;
+	}
 
-	yylineno++;
-	display_line = 1;
-      }
+      /* append LF's */
+      p = buff + strlen (buff);
+      while (lines-- > 0)
+	*p++ = '\n';
+      *p = '\0';
+    }
 
   /* Do replacement */
   for (ls = yyreplacing; ls; ls = ls->next)
