@@ -85,7 +85,6 @@ struct sym
   char defined;			/* first time defined? */
   unsigned pic;			/* picture offset in data segment */
   /* or record offset in stack (files) */
-  int occurs_flg;
   int linkage_flg;
   struct sym *redefines;	/* points to a redefined field 
 				   or record symbol (files) */

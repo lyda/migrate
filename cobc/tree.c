@@ -21,7 +21,7 @@ check_subscripts (struct sym *subs)
     {
       if (ref->litflag == ',')
 	{
-	  while (sy && !sy->occurs_flg)
+	  while (sy && sy->times == 1)
 	    sy = sy->parent;
 	  if (!sy)
 	    {
@@ -31,7 +31,7 @@ check_subscripts (struct sym *subs)
 	  sy = sy->parent;
 	}
     }
-  while (sy && !sy->occurs_flg)	/* any other subscripts needed ? */
+  while (sy && sy->times == 1)	/* any other subscripts needed ? */
     sy = sy->parent;
   return (sy == NULL) ? 1 : 0;
 }

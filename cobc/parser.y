@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 529
+%expect 546
 
 %{
 #define yydebug		cob_trace_parser
@@ -874,8 +874,12 @@ sync_options:
 
 array_options:  OCCURS integer opt_TIMES
        {
+	 if ($2 < 1)
+	   {
+	     yyerror ("occurs number must be positive integer");
+	     $2 = 1;
+	   }
 	 curr_field->times = $2;
-	 curr_field->occurs_flg++;
        }
        opt_indexed_by
      | OCCURS integer TO integer opt_TIMES DEPENDING opt_on
@@ -3009,7 +3013,7 @@ def_name:
 variable_indexed:
     SUBSCVAR
     {
-      if ($1->occurs_flg == 0)
+      if ($1->times == 1)
          yyerror("\"%s\" is not an indexed variable ", $1->name);
       $$=$1;
     }

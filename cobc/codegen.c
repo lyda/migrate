@@ -451,7 +451,7 @@ int
 is_subscripted (struct sym *sy)
 {
   for (; sy; sy = sy->parent)
-    if (sy->occurs_flg)
+    if (sy->times > 1)
       return 1;
   return 0;
 }
@@ -2874,7 +2874,6 @@ create_occurs_info (int min, int max, struct sym *depend)
   curr_field->occurs->max = max;
   curr_field->occurs->depend = depend;
   curr_field->times = max;
-  curr_field->occurs_flg++;
 }
 
 /******** functions for refmoded var manipulation ***********/
@@ -2940,7 +2939,7 @@ gen_subscripted (struct subref *subs)
 	    fprintf (o_src, "\tsubl\t%%eax,0(%%esp)\n");
 	}
       /* find the first parent var that needs subscripting */
-      while (sy && !sy->occurs_flg)
+      while (sy && sy->times == 1)
 	sy = sy->parent;
       fprintf (o_src, "\tpopl\t%%eax\n");
       fprintf (o_src, "\tdecl\t%%eax\n");	/* subscript start at 1 */
@@ -4535,7 +4534,6 @@ define_special_fields ()
   sy->linkage_flg = at_linkage;
   sy->sec_no = SEC_RETURN_CODE;
   sy->times = 1;
-  sy->occurs_flg = 0;
   sy->flags.just_r = 0;
   sy->flags.separate_sign = 0;
   sy->flags.leading_sign = 0;
@@ -4579,7 +4577,6 @@ define_temp_field (char desired_type, int desired_len)
   sy->sec_no = SEC_DATA;	/* not optimal; should be in stack */
   //sy->sec_no=SEC_STACK;
   sy->times = 1;
-  sy->occurs_flg = 0;
   sy->flags.just_r = 0;
   sy->flags.separate_sign = 0;
   sy->flags.leading_sign = 0;
@@ -4634,7 +4631,6 @@ define_implicit_field (struct sym *sy, struct sym *sykey, int idxlen)
   sy->linkage_flg = 0;		/* should not go in the linkage section, never! */
   sy->sec_no = SEC_STACK;
   sy->times = 1;
-  sy->occurs_flg = 0;
   sy->son = sy->brother = NULL;
   sy->flags.is_pointer = 0;
   sy->flags.blank = 0;
@@ -4851,7 +4847,6 @@ define_field (int level, struct sym *sy)
       sy->linkage_flg = at_linkage;
       sy->sec_no = 0;
       sy->times = 1;
-      sy->occurs_flg = 0;
       sy->flags.just_r = 0;
       sy->flags.separate_sign = 0;
       sy->flags.leading_sign = 0;
@@ -4876,7 +4871,6 @@ define_field (int level, struct sym *sy)
   sy->linkage_flg = at_linkage;
   sy->sec_no = (at_linkage ? SEC_ARGS : curr_sec_no);
   sy->times = 1;
-  sy->occurs_flg = 0;
   sy->flags.just_r = 0;
   sy->flags.separate_sign = 0;
   sy->flags.leading_sign = 0;
@@ -5868,7 +5862,6 @@ create_status_register (char *name)
   sy->type = '9';
   sy->picstr = malloc (strlen (pic) + 1);
   strcpy (sy->picstr, pic);
-  sy->occurs_flg = 0;
   sy->times = 1;
   sy->len = 2;
   sy->son = sy->brother = NULL;
