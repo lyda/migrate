@@ -1576,22 +1576,29 @@ selection_object:
 | TRUE			{ push_boolean (1); $$ = SOBJ_BOOLEAN; }
 | FALSE			{ push_boolean (0); $$ = SOBJ_BOOLEAN; }
 | flag_not condition	{ push_condition (); $$ = SOBJ_BOOLEAN | $1; }
-| flag_not expr
+| flag_not unsafe_expr
   {
     if ($2 == spe_lit_ZE)
       $$ = SOBJ_ZERO | $1;
-    else if (push_expr($2))
-      $$ = SOBJ_EXPR | $1;
+    else if (is_valid_expr ($2))
+      {
+	push_expr ($2);
+	$$ = SOBJ_EXPR | $1;
+      }
     else
       {
 	push_field ($2);
 	$$ = SOBJ_STR | $1;
       }
   }
-| flag_not expr THRU expr
+| flag_not unsafe_expr THRU unsafe_expr
   {
-    if (push_expr($2) && push_expr($4))
-      $$ = SOBJ_RANGE | $1;
+    if (is_valid_expr ($2) && is_valid_expr ($4))
+      {
+	push_expr ($2);
+	push_expr ($4);
+	$$ = SOBJ_RANGE | $1;
+      }
     else
       {
 	push_field ($2);
