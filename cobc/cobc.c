@@ -168,8 +168,8 @@ static struct option long_options[] = {
   {"save-temps", no_argument, &save_temps, 1},
   {"static", no_argument, &cobc_flag_call_static, 1},
   {"dynamic", no_argument, &cobc_flag_call_static, 0},
-  {"FF", no_argument, 0, 'F'},
-  {"FX", no_argument, 0, 'X'},
+  {"free", no_argument, 0, 'F'},
+  {"fixed", no_argument, 0, 'X'},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
   {"fmain", no_argument, &cobc_flag_main, 1},
@@ -203,7 +203,7 @@ print_usage ()
   puts (_("General options:\n\
   --help                Display this message\n\
   --version             Display compiler version\n\
-  -v, --verbose         Display the programs invoked by the compiler\n\
+  --verbose, -v         Display the programs invoked by the compiler\n\
   -save-temps           Do not delete intermediate files\n\
   -E                    Preprocess only; do not compile, assemble or link\n\
   -C                    Translation only; convert COBOL to C\n\
@@ -216,12 +216,12 @@ print_usage ()
   -MF <file>            Place dependency list into <file>\n\
 \n\
 COBOL options:\n\
-  -main                 Include a main function in the output\n\
   -free                 Use free source format\n\
   -fixed                Use fixed source format\n\
   -static               Use static link for subprogram calls if possible\n\
   -dynamic              Use dynamic link for subprogram calls (default)\n\
   -I <path>             Add copybook include path\n\
+  -fmain                Include a main function in the output\n\
   -fdebugging-line      Enable debugging lines\n\
 \n\
 Warning options:\n\
@@ -229,7 +229,7 @@ Warning options:\n\
   -Wcolumn-overflow     Warn any text after column 72\n\
   -Wend-evaluate        Warn lacks of END-EVALUATE\n\
   -Wend-if              Warn lacks of END-IF\n\
-  -Wparentheses         warn lacks of parentheses around AND within OR\n\
+  -Wparentheses         Warn lacks of parentheses around AND within OR\n\
 "));
 #ifdef COB_DEBUG
   puts (_("Debugging options:\n"

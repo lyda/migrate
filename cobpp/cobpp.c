@@ -100,7 +100,7 @@ print_usage ()
 	  "  -FF                   Use free source format\n"
 	  "  -FX                   Use fixed source format\n"
 	  "  -T <n>                Set tab width to <n> (default: 8)\n"
-	  "  -C <n>                Set text column to <n> (default: 72)\n"
+	  "  -C <n>                Set text area column to <n> (default: 72)\n"
 	  "  -I <path>             Add copybook include path\n"
 	  "  -fdebugging-line      Enable debugging lines\n"
 	  "\n"
