@@ -32,9 +32,7 @@
 #include <libcob.h>
 
 #include "cobc.h"
-#include "error.h"
 #include "parser.h"
-#include "reserved.h"
 
 #define SET_LOCATION(x)				\
   (x)->source_file = cb_source_file;		\

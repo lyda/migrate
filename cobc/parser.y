@@ -34,8 +34,6 @@
 
 #include "cobc.h"
 #include "error.h"
-#include "codegen.h"
-#include "reserved.h"
 
 #define yyerror		cb_error
 #define YYDEBUG		COB_DEBUG

@@ -25,7 +25,6 @@
 
 #include "cobc.h"
 #include "parser.h"
-#include "reserved.h"
 
 #define HASH_SIZE 133
 

@@ -27,9 +27,6 @@
 #include "cobc.h"
 #include "error.h"
 
-int errorcount;
-int warningcount;
-
 static void
 print_error (char *file, int line, const char *prefix, const char *fmt, va_list ap)
 {

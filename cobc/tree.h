@@ -75,6 +75,24 @@ enum cb_system_name_category {
   CB_TEXT_NAME,
 };
 
+enum cb_device_name {
+  CB_SYSIN,
+  CB_SYSOUT,
+  CB_SYSERR,
+  CB_CONSOLE
+};
+
+enum cb_switch_name {
+  CB_SWITCH_1,
+  CB_SWITCH_2,
+  CB_SWITCH_3,
+  CB_SWITCH_4,
+  CB_SWITCH_5,
+  CB_SWITCH_6,
+  CB_SWITCH_7,
+  CB_SWITCH_8
+};
+
 enum cb_class {
   CB_CLASS_UNKNOWN,
   CB_CLASS_ALPHABETIC,
@@ -733,6 +751,28 @@ struct cb_program {
 
 extern struct cb_program *cb_build_program (void);
 
+
+/* reserved.c */
+extern cb_tree lookup_system_name (const char *name);
+extern int lookup_reserved_word (const char *name);
+extern void cb_init_reserved (void);
+
+/* error.c */
+extern void cb_warning (const char *fmt, ...);
+extern void cb_error (const char *fmt, ...);
+extern void cb_warning_x (cb_tree x, const char *fmt, ...);
+extern void cb_error_x (cb_tree x, const char *fmt, ...);
+extern void cb_archaic (const char *feature);
+extern void cb_obsolete_85 (const char *feature);
+extern void cb_obsolete_2002 (const char *feature);
+
+extern void redefinition_error (cb_tree x);
+extern void undefined_error (cb_tree x);
+extern void ambiguous_error (cb_tree x);
+
+/* typeck.c */
+extern int validate_move (cb_tree src, cb_tree dst, int value_flag);
+
 extern cb_tree cb_build_identifier (cb_tree x);
 extern cb_tree cb_build_assign (cb_tree vars, char op, cb_tree val);
 extern cb_tree cb_build_add (cb_tree v, cb_tree n, int round);
@@ -743,5 +783,8 @@ extern cb_tree cb_build_divide (cb_tree dividend, cb_tree divisor, cb_tree quoti
 extern cb_tree cb_build_cond (cb_tree x);
 extern cb_tree cb_build_evaluate (cb_tree subject_list, cb_tree case_list);
 extern cb_tree cb_build_search_all (cb_tree table, cb_tree when);
+
+/* codegen.c */
+extern void codegen (struct cb_program *prog);
 
 #endif /* CB_TREE_H */

@@ -95,6 +95,9 @@ struct cb_replacement {
   struct cb_replacement *next;
 };
 
+extern int errorcount;
+extern int warningcount;
+
 extern char *cb_source_file;
 extern int cb_source_line;
 extern int cb_source_format;

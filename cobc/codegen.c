@@ -27,7 +27,6 @@
 #include <libcob.h>
 
 #include "cobc.h"
-#include "codegen.h"
 
 static void output_stmt (cb_tree x);
 static void output_data (cb_tree x);

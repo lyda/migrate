@@ -36,7 +36,6 @@
 
 #include "cobc.h"
 #include "error.h"
-#include "reserved.h"
 #include "lib/getopt.h"
 
 
@@ -69,6 +68,9 @@ int cb_flag_parse_only = 0;
 #undef CB_WARNING
 #define CB_WARNING(sig,var,name,doc) int var = 0;
 #include "warning.def"
+
+int errorcount;
+int warningcount;
 
 char *cb_source_file = NULL;
 int cb_source_line = 0;
