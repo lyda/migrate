@@ -138,11 +138,11 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <ival> opt_on_size_error_sentence,opt_on_overflow_sentence
 %type <ival> on_xxx_statement_list
 %type <ival> at_end_sentence,invalid_key_sentence
-%type <list> label_list,subscript_list,number_list,variable_list
-%type <list> conditional_variable_list,name_list,opt_value_list
+%type <list> label_list,subscript_list,number_list,name_list
+%type <list> conditional_name_list,name_list,opt_value_list
 %type <list> evaluate_subject_list,evaluate_when_list,evaluate_object_list
 %type <para> call_using,call_parameter,call_parameter_list
-%type <mval> numeric_variable_list,numeric_edited_variable_list
+%type <mval> numeric_name_list,numeric_edited_name_list
 %type <pfval> perform_after
 %type <pfvals> opt_perform_after
 %type <list> sort_file_list,procedure_using
@@ -152,7 +152,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <tree> name,value,number,file,level1_variable,opt_def_name,def_name
 %type <tree> opt_read_into,opt_write_from,field_name,expr,unsafe_expr
 %type <tree> opt_unstring_count,opt_unstring_delimiter,opt_unstring_tallying
-%type <tree> numeric_variable,group_variable,numeric_edited_variable
+%type <tree> numeric_name,group_variable,numeric_edited_name
 %type <tree> qualified_var,unqualified_var,evaluate_subject
 %type <tree> evaluate_object,evaluate_object_1,assign_clause
 %type <tree> call_returning,var_or_lit,opt_add_to
@@ -162,7 +162,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <tree> indexed_variable,search_opt_varying,opt_key_is
 %type <tree> from_rec_varying,to_rec_varying
 %type <tree> literal,gliteral,without_all_literal,all_literal,special_literal
-%type <tree> nliteral,conditional_variable
+%type <tree> nliteral,conditional_name
 %type <tree> condition_1,condition_2,comparative_condition,class_condition
 %type <tree> search_all_when_conditional
 %type <list> inspect_tallying,inspect_replacing,inspect_converting
@@ -1268,11 +1268,11 @@ add_statement:
   ADD add_body opt_on_size_error end_add
 ;
 add_body:
-  number_list TO numeric_variable_list
+  number_list TO numeric_name_list
   {
     gen_add_to ($1, $3);
   }
-| number_list opt_add_to GIVING numeric_edited_variable_list
+| number_list opt_add_to GIVING numeric_edited_name_list
   {
     gen_add_giving ($2 ? list_add ($1, $2) : $1, $4);
   }
@@ -1403,7 +1403,7 @@ compute_statement:
   COMPUTE compute_body opt_on_size_error opt_end_compute
 ;
 compute_body:
-  numeric_edited_variable_list '=' expr	{ gen_compute ($1, $3); }
+  numeric_edited_name_list '=' expr	{ gen_compute ($1, $3); }
 ;
 opt_end_compute: | END_COMPUTE ;
 
@@ -1455,23 +1455,23 @@ divide_statement:
   DIVIDE divide_body opt_on_size_error opt_end_divide
 ;
 divide_body:
-  number INTO numeric_variable_list
+  number INTO numeric_name_list
   {
     gen_divide_into ($1, $3);
   }
-| number INTO number GIVING numeric_edited_variable_list
+| number INTO number GIVING numeric_edited_name_list
   {
     gen_divide_giving ($1, $3, $5);
   }
-| number BY number GIVING numeric_edited_variable_list
+| number BY number GIVING numeric_edited_name_list
   {
     gen_divide_giving ($3, $1, $5);
   }
-| number INTO number GIVING numeric_edited_variable flag_rounded REMAINDER numeric_edited_variable
+| number INTO number GIVING numeric_edited_name flag_rounded REMAINDER numeric_edited_name
   {
     gen_divide_giving_remainder ($1, $3, $5, $8, $6);
   }
-| number BY number GIVING numeric_edited_variable flag_rounded REMAINDER numeric_edited_variable
+| number BY number GIVING numeric_edited_name flag_rounded REMAINDER numeric_edited_name
   {
     gen_divide_giving_remainder ($3, $1, $5, $8, $6);
   }
@@ -1788,11 +1788,11 @@ multiply_statement:
   MULTIPLY multiply_body opt_on_size_error opt_end_multiply
 ;
 multiply_body:
-  number BY numeric_variable_list
+  number BY numeric_name_list
   {
     gen_multiply_by ($1, $3);
   }
-| number BY number GIVING numeric_edited_variable_list
+| number BY number GIVING numeric_edited_name_list
   {
     gen_multiply_giving ($1, $3, $5);
   }
@@ -2317,8 +2317,8 @@ opt_end_search: | END_SEARCH ;
  */
 
 set_statement:
-  SET variable_list set_mode number	{ gen_set ($2, $3, $4); }
-| SET conditional_variable_list TO TRUE	{ gen_set_true ($2); }
+  SET name_list set_mode number	{ gen_set ($2, $3, $4); }
+| SET conditional_name_list TO TRUE	{ gen_set_true ($2); }
 | SET set_on_off_list
   {
     yywarn ("SET ON/OFF is not supported");
@@ -2334,12 +2334,12 @@ set_on_off_list:
 | set_on_off_list set_on_off
 ;
 set_on_off:
-  set_name_list TO ON
-| set_name_list TO OFF
+  special_name_list TO ON
+| special_name_list TO OFF
 ;
-set_name_list:
+special_name_list:
   SPECIAL_TOK { }
-| set_name_list SPECIAL_TOK { }
+| special_name_list SPECIAL_TOK { }
 ;
 
 
@@ -2472,11 +2472,11 @@ subtract_statement:
   SUBTRACT subtract_body opt_on_size_error opt_end_subtract
 ;
 subtract_body:
-  number_list FROM numeric_variable_list
+  number_list FROM numeric_name_list
   {
     gen_subtract_from ($1, $3);
   }
-| number_list FROM number GIVING numeric_edited_variable_list
+| number_list FROM number GIVING numeric_edited_name_list
   {
     gen_subtract_giving ($1, $3, $5);
   }
@@ -2824,12 +2824,12 @@ level1_variable:
 
 /* Numeric variable */
 
-numeric_variable_list:
-  numeric_variable flag_rounded	{ $$ = create_mathvar_info (NULL, $1, $2); }
-| numeric_variable_list
-  numeric_variable flag_rounded	{ $$ = create_mathvar_info ($1, $2, $3); }
+numeric_name_list:
+  numeric_name flag_rounded	{ $$ = create_mathvar_info (NULL, $1, $2); }
+| numeric_name_list
+  numeric_name flag_rounded	{ $$ = create_mathvar_info ($1, $2, $3); }
 ;
-numeric_variable:
+numeric_name:
   name
   {
     if (!is_numeric ($1))
@@ -2841,12 +2841,12 @@ numeric_variable:
 
 /* Numeric edited variable */
 
-numeric_edited_variable_list:
-  numeric_edited_variable flag_rounded { $$ = create_mathvar_info (NULL, $1, $2); }
-| numeric_edited_variable_list
-  numeric_edited_variable flag_rounded { $$ = create_mathvar_info ($1, $2, $3); }
+numeric_edited_name_list:
+  numeric_edited_name flag_rounded { $$ = create_mathvar_info (NULL, $1, $2); }
+| numeric_edited_name_list
+  numeric_edited_name flag_rounded { $$ = create_mathvar_info ($1, $2, $3); }
 ;
-numeric_edited_variable:
+numeric_edited_name:
   name
   {
     if (!is_editable ($1))
@@ -2997,17 +2997,13 @@ filename:
   SYMBOL_TOK
 | literal
 ;
-conditional_variable_list:
-  conditional_variable		{ $$ = make_list ($1); }
-| conditional_variable_list
-  conditional_variable		{ $$ = list_add ($1, $2); }
+conditional_name_list:
+  conditional_name		{ $$ = make_list ($1); }
+| conditional_name_list
+  conditional_name		{ $$ = list_add ($1, $2); }
 ;
-conditional_variable:
+conditional_name:
   VARCOND			{ $$ = $1; }
-;
-variable_list:
-  variable			{ $$ = make_list ($1); }
-| variable_list variable	{ $$ = list_add ($1, $2); }
 ;
 name_list:
   name				{ $$ = make_list ($1); }
