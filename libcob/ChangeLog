@@ -1,3 +1,8 @@
+2003-05-20  Keisuke Nishida  <knishida@netlab.jp>
+
+	* strings.c (cob_string_delimited): New function.
+	(cob_string_append): Take only one argument.
+
 2003-05-18  Keisuke Nishida  <knishida@netlab.jp>
 
 	* common.c (ding_on_error): Removed.

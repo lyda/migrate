@@ -226,6 +226,7 @@ cob_inspect_finish (void)
 
 static cob_field *string_dst, string_dst_copy;
 static cob_field *string_ptr, string_ptr_copy;
+static cob_field *string_dlm, string_dlm_copy;
 static int string_offset;
 
 void
@@ -252,19 +253,30 @@ cob_string_init (cob_field *dst, cob_field *ptr)
 }
 
 void
-cob_string_append (cob_field *src, cob_field *dlm)
+cob_string_delimited (cob_field *dlm)
+{
+  string_dlm = 0;
+  if (dlm)
+    {
+      string_dlm_copy = *dlm;
+      string_dlm = &string_dlm_copy;
+    }
+}
+
+void
+cob_string_append (cob_field *src)
 {
   size_t src_size = src->size;
 
   if (cob_exception_code)
     return;
 
-  if (dlm)
+  if (string_dlm)
     {
       int i;
-      int size = src_size - dlm->size + 1;
+      int size = src_size - string_dlm->size + 1;
       for (i = 0; i < size; i++)
-	if (memcmp (src->data + i, dlm->data, dlm->size) == 0)
+	if (memcmp (src->data + i, string_dlm->data, string_dlm->size) == 0)
 	  {
 	    src_size = i;
 	    break;

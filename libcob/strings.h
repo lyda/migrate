@@ -34,7 +34,8 @@ extern void cob_inspect_converting (cob_field *f1, cob_field *f2);
 extern void cob_inspect_finish (void);
 
 extern void cob_string_init (cob_field *dst, cob_field *ptr);
-extern void cob_string_append (cob_field *src, cob_field *dlm);
+extern void cob_string_delimited (cob_field *dlm);
+extern void cob_string_append (cob_field *src);
 extern void cob_string_finish (void);
 
 extern void cob_unstring_init (cob_field *src, cob_field *ptr);
