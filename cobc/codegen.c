@@ -506,8 +506,9 @@ output_integer (cb_tree x)
     case CB_TAG_REFERENCE:
       {
 	struct cb_field *f = cb_field (x);
-	if (f->usage == CB_USAGE_INDEX)
+	switch (f->usage)
 	  {
+	  case CB_USAGE_INDEX:
 	    if (f->level == 0)
 	      {
 		output ("%s%s", CB_PREFIX_INDEX, f->cname);
@@ -519,62 +520,58 @@ output_integer (cb_tree x)
 		output ("))");
 	      }
 	    return;
-	  }
 
-	if (cb_flag_runtime_inlining)
-	  {
-	    switch (f->usage)
+	  case CB_USAGE_DISPLAY:
+	    if (cb_flag_runtime_inlining
+		&& f->pic->scale >= 0
+		&& f->size - f->pic->scale <= 4
+		&& f->pic->have_sign == 0)
 	      {
-	      case CB_USAGE_DISPLAY:
-		if (f->pic->scale >= 0
-		    && f->size - f->pic->scale <= 4
-		    && f->pic->have_sign == 0)
+		int i, j;
+		int size = f->size - f->pic->scale;
+		output ("(");
+		for (i = 0; i < size; i++)
 		  {
-		    int i, j;
-		    int size = f->size - f->pic->scale;
-		    output ("(");
-		    for (i = 0; i < size; i++)
-		      {
-			output ("((");
-			output_data (x);
-			output (")");
-			output ("[%d] - '0')", i);
-			if (i + 1 < size)
-			  {
-			    output (" * 1");
-			    for (j = 1; j < size - i; j++)
-			      output ("0");
-			    output (" + ");
-			  }
-		      }
-		    output (")");
-		    return;
-		  }
-		break;
-
-	      case CB_USAGE_BINARY:
-		if (!f->flag_binary_swap
-		    && (f->size == 1 || f->size == 2
-			|| f->size == 4 || f->size == 8))
-		  {
-		    output ("(*(");
-		    switch (f->size)
-		      {
-		      case 1: output ("char"); break;
-		      case 2: output ("short"); break;
-		      case 4: output ("long"); break;
-		      case 8: output ("long long"); break;
-		      }
-		    output (" *) (");
+		    output ("((");
 		    output_data (x);
-		    output ("))");
-		    return;
+		    output (")");
+		    output ("[%d] - '0')", i);
+		    if (i + 1 < size)
+		      {
+			output (" * 1");
+			for (j = 1; j < size - i; j++)
+			  output ("0");
+			output (" + ");
+		      }
 		  }
-		break;
-
-	      default:
-		break;
+		output (")");
+		return;
 	      }
+	    break;
+
+	  case CB_USAGE_BINARY:
+	    if (cb_flag_runtime_inlining
+		&& !f->flag_binary_swap
+		&& (f->size == 1 || f->size == 2
+		    || f->size == 4 || f->size == 8))
+	      {
+		output ("(*(");
+		switch (f->size)
+		  {
+		  case 1: output ("char"); break;
+		  case 2: output ("short"); break;
+		  case 4: output ("long"); break;
+		  case 8: output ("long long"); break;
+		  }
+		output (" *) (");
+		output_data (x);
+		output ("))");
+		return;
+	      }
+	    break;
+
+	  default:
+	    break;
 	  }
 
 	output_func_1 ("cob_get_int", x);
