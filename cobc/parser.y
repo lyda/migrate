@@ -169,11 +169,9 @@ static void terminator_warning (void);
 
 %type <tree> flag_all flag_duplicates flag_optional flag_global
 %type <tree> flag_not flag_next flag_rounded flag_separate
-%type <ival> integer display_upon screen_plus_minus level_number
-%type <ival> before_or_after perform_test opt_from_integer opt_to_integer
-
+%type <tree> integer opt_from_integer opt_to_integer level_number
 %type <tree> occurs_key_list data_name_list value_list opt_value_list
-%type <tree> numeric_value_list inspect_before_after_list
+%type <tree> numeric_value_list inspect_before_after_list before_or_after
 %type <tree> reference_list mnemonic_name_list file_name_list using_phrase
 %type <tree> expr_item_list numeric_name_list numeric_edited_name_list
 %type <tree> procedure_name_list ascending_or_descending
@@ -904,18 +902,18 @@ block_contains_clause:
 record_clause:
   RECORD _contains integer _characters
   {
-    current_file->record_max = $3;
+    current_file->record_max = cb_get_int ($3);
   }
 | RECORD _contains integer _to integer _characters
   {
-    current_file->record_min = $3;
-    current_file->record_max = $5;
+    current_file->record_min = cb_get_int ($3);
+    current_file->record_max = cb_get_int ($5);
   }
 | RECORD _is VARYING _in _size opt_from_integer opt_to_integer _characters
   record_depending
   {
-    current_file->record_min = $6;
-    current_file->record_max = $7;
+    current_file->record_min = $6 ? cb_get_int ($6) : 0;
+    current_file->record_max = $7 ? cb_get_int ($7) : 0;
   }
 ;
 record_depending:
@@ -925,11 +923,11 @@ record_depending:
   }
 ;
 opt_from_integer:
-  /* empty */			{ $$ = 0; }
+  /* empty */			{ $$ = NULL; }
 | _from integer			{ $$ = $2; }
 ;
 opt_to_integer:
-  /* empty */			{ $$ = 0; }
+  /* empty */			{ $$ = NULL; }
 | TO integer			{ $$ = $2; }
 ;
 
@@ -1048,7 +1046,7 @@ data_description:
 ;
 
 level_number:
-  WORD				{ $$ = cb_build_level_number ($1); }
+  WORD
 ;
 
 entry_name:
@@ -1151,15 +1149,15 @@ occurs_clause:
   occurs_keys occurs_indexed
   {
     current_field->occurs_min = 1;
-    current_field->occurs_max = $2;
+    current_field->occurs_max = cb_get_int ($2);
     current_field->indexes++;
     current_field->flag_occurs = 1;
   }
 | OCCURS integer TO integer _times DEPENDING _on reference
   occurs_keys occurs_indexed
   {
-    current_field->occurs_min = $2;
-    current_field->occurs_max = $4;
+    current_field->occurs_min = cb_get_int ($2);
+    current_field->occurs_max = cb_get_int ($4);
     current_field->occurs_depending = $8;
     current_field->indexes++;
     current_field->flag_occurs = 1;
@@ -1406,7 +1404,7 @@ screen_option:
 | FOREGROUND_COLOR _is integer
   {
     current_field->screen_flag &= ~COB_SCREEN_FG_MASK;
-    switch ($3)
+    switch (cb_get_int ($3))
       {
       case 0: current_field->screen_flag |= COB_SCREEN_FG_BLACK; break;
       case 1: current_field->screen_flag |= COB_SCREEN_FG_BLUE; break;
@@ -1423,7 +1421,7 @@ screen_option:
 | BACKGROUND_COLOR _is integer
   {
     current_field->screen_flag &= ~COB_SCREEN_BG_MASK;
-    switch ($3)
+    switch (cb_get_int ($3))
       {
       case 0: current_field->screen_flag |= COB_SCREEN_BG_BLACK; break;
       case 1: current_field->screen_flag |= COB_SCREEN_BG_BLUE; break;
@@ -1955,40 +1953,39 @@ display_statement:
       }
     else
       {
-	cb_tree fd = cb_build_integer ($4);
 	for (l = $3; l; l = CB_CHAIN (l))
-	  push_funcall_2 ("cob_display", CB_VALUE (l), fd);
+	  push_funcall_2 ("cob_display", CB_VALUE (l), $<tree>4);
       }
   }
   display_with_no_advancing
   end_display
   ;
 display_upon:
-  /* empty */			{ $$ = COB_SYSOUT; }
+  /* empty */			{ $<tree>$ = cb_build_integer (COB_SYSOUT); }
 | _upon mnemonic_name
   {
     switch (CB_SYSTEM_NAME (cb_ref ($2))->token)
       {
-      case CB_CONSOLE: $$ = COB_SYSOUT; break;
-      case CB_SYSOUT:  $$ = COB_SYSOUT; break;
-      case CB_SYSERR:  $$ = COB_SYSERR; break;
+      case CB_CONSOLE: $<tree>$ = cb_build_integer (COB_SYSOUT); break;
+      case CB_SYSOUT:  $<tree>$ = cb_build_integer (COB_SYSOUT); break;
+      case CB_SYSERR:  $<tree>$ = cb_build_integer (COB_SYSERR); break;
       default:
 	cb_error_x ($2, _("invalid UPON item"));
-	$$ = COB_SYSOUT;
+	$<tree>$ = cb_error_node;
 	break;
       }
   }
 | UPON WORD
   {
     cb_warning_x ($2, _("`%s' undefined in SPECIAL-NAMES"), CB_NAME ($2));
-    $$ = COB_SYSOUT;
+    $<tree>$ = cb_build_integer (COB_SYSOUT);
   }
 ;
 display_with_no_advancing:
   /* empty */
   {
     if (!current_program->flag_screen)
-      push_funcall_1 ("cob_newline", cb_build_integer ($<ival>-2));
+      push_funcall_1 ("cob_newline", $<tree>-2);
   }
 | _with NO ADVANCING { /* nothing */ }
 ;
@@ -2522,13 +2519,13 @@ perform_option:
 | perform_test UNTIL condition
   {
     $$ = cb_build_perform (CB_PERFORM_UNTIL);
-    CB_PERFORM ($$)->test = $1;
+    CB_PERFORM ($$)->test = $<tree>1;
     cb_add_perform_varying (CB_PERFORM ($$), 0, 0, 0, $3);
   }
 | perform_test VARYING
   {
     $<tree>$ = cb_build_perform (CB_PERFORM_UNTIL);
-    CB_PERFORM ($<tree>$)->test = $1;
+    CB_PERFORM ($<tree>$)->test = $<tree>1;
   }
   perform_varying_list
   {
@@ -2536,8 +2533,8 @@ perform_option:
   }
 ;
 perform_test:
-  /* empty */			{ $$ = CB_BEFORE; }
-| _with TEST before_or_after	{ $$ = $3; }
+  /* empty */			{ $<tree>$ = CB_BEFORE; }
+| _with TEST before_or_after	{ $<tree>$ = $3; }
 ;
 perform_varying_list:
   perform_varying
@@ -3113,10 +3110,10 @@ write_statement:
     cb_tree file = CB_TREE (f->file);
 
     /* AFTER ADVANCING */
-    if (opt && CB_PURPOSE_INT (opt) == CB_AFTER)
+    if (opt && CB_PAIR_X (opt) == CB_AFTER)
       {
 	if (CB_VALUE (opt))
-	  push_funcall_2 ("cob_write_lines", file, CB_VALUE (opt));
+	  push_funcall_2 ("cob_write_lines", file, CB_PAIR_Y (opt));
 	else
 	  push_funcall_1 ("cob_write_page", file);
       }
@@ -3128,10 +3125,10 @@ write_statement:
     push_file_handler (file, $<tree>6);
 
     /* BEFORE ADVANCING */
-    if (opt && CB_PURPOSE_INT (opt) == CB_BEFORE)
+    if (opt && CB_PAIR_X (opt) == CB_BEFORE)
       {
 	if (CB_VALUE (opt))
-	  push_funcall_2 ("cob_write_lines", file, CB_VALUE (opt));
+	  push_funcall_2 ("cob_write_lines", file, CB_PAIR_Y (opt));
 	else
 	  push_funcall_1 ("cob_write_page", file);
       }
@@ -3148,11 +3145,11 @@ write_option:
   }
 | before_or_after _advancing integer_value _line_or_lines
   {
-    $<tree>$ = cb_build_int_list ($1, cb_build_cast_integer ($3));
+    $<tree>$ = cb_build_pair ($1, cb_build_cast_integer ($3));
   }
 | before_or_after _advancing PAGE
   {
-    $<tree>$ = cb_build_int_list ($1, 0);
+    $<tree>$ = cb_build_pair ($1, 0);
   }
 ;
 before_or_after:
@@ -3892,9 +3889,6 @@ numeric_value:
 
 integer:
   LITERAL
-  {
-    $$ = cb_literal_to_int (CB_LITERAL ($1));
-  }
 ;
 
 integer_value:

@@ -20,8 +20,8 @@
 #ifndef CB_TREE_H
 #define CB_TREE_H
 
-#define CB_BEFORE		0
-#define CB_AFTER		1
+#define CB_BEFORE		cb_int0
+#define CB_AFTER		cb_int1
 
 #define CB_CALL_BY_REFERENCE	1
 #define CB_CALL_BY_CONTENT	2
@@ -414,7 +414,7 @@ struct cb_field {
 
 extern cb_tree cb_build_index (cb_tree name);
 extern cb_tree cb_build_constant (cb_tree name, cb_tree value);
-extern cb_tree cb_build_field (int level, cb_tree name, struct cb_field *last_field, enum cb_storage storage);
+extern cb_tree cb_build_field (cb_tree level, cb_tree name, struct cb_field *last_field, enum cb_storage storage);
 extern struct cb_field *cb_resolve_redefines (struct cb_field *field, cb_tree redefines);
 extern void cb_validate_field (struct cb_field *p);
 extern void cb_validate_88_item (struct cb_field *p);
@@ -618,7 +618,7 @@ extern cb_tree cb_build_if (cb_tree test, cb_tree stmt1, cb_tree stmt2);
 struct cb_perform {
   struct cb_tree_common common;
   int type;
-  int test;
+  cb_tree test;
   cb_tree body;
   cb_tree data;
   struct cb_perform_varying {
@@ -778,7 +778,8 @@ extern void ambiguous_error (cb_tree x);
 /* typeck.c */
 extern int validate_move (cb_tree src, cb_tree dst, int value_flag);
 
-extern int cb_build_level_number (cb_tree name);
+extern int cb_get_level_number (cb_tree name);
+extern int cb_get_int (cb_tree x);
 extern cb_tree cb_build_section_name (cb_tree name);
 extern cb_tree cb_build_identifier (cb_tree x);
 extern cb_tree cb_build_using_list (cb_tree list);

@@ -783,11 +783,12 @@ cb_build_constant (cb_tree name, cb_tree value)
 }
 
 cb_tree
-cb_build_field (int level, cb_tree name, struct cb_field *last_field,
+cb_build_field (cb_tree lv, cb_tree name, struct cb_field *last_field,
 		enum cb_storage storage)
 {
   struct cb_field *f;
   struct cb_reference *r = CB_REFERENCE (name);
+  int level = cb_get_level_number (lv);
 
   if (level < 0)
     return cb_error_node;

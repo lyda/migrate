@@ -28,7 +28,7 @@
 #include "cobc.h"
 
 int
-cb_build_level_number (cb_tree name)
+cb_get_level_number (cb_tree name)
 {
   int level = 0;
   const char *p;
@@ -51,6 +51,12 @@ cb_build_level_number (cb_tree name)
  error:
   cb_error_x (name, _("invalid level number `%s'"), cb_name (name));
   return -1;
+}
+
+int
+cb_get_int (cb_tree x)
+{
+  return cb_literal_to_int (CB_LITERAL (x));
 }
 
 cb_tree
