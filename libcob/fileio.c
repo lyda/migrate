@@ -221,7 +221,7 @@ lineseq_read (struct cob_file *f)
     {
       /* discard input until the next newline */
       int c = getc (f->file.fp);
-      while (c != '\r' && c != '\n' && c != '\0')
+      while (c != '\r' && c != '\n' && c != '\0' && c != EOF)
 	c = getc (f->file.fp);
       if (c == '\r')
 	c = getc (f->file.fp);
