@@ -33,7 +33,6 @@
 
 #define COB_BINARY		'2'
 #define COB_PACKED		'3'
-#define COB_BIGENDIAN		'5'
 #define COB_DISPLAY		'9'
 
 struct cob_field {

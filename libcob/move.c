@@ -568,10 +568,10 @@ cob_move (struct cob_field src, struct cob_field dst)
 
   switch (COB_FIELD_TYPE (src))
     {
-    case COB_NUMERIC:
+    case COB_DISPLAY:
       switch (COB_FIELD_TYPE (dst))
 	{
-	case COB_NUMERIC:
+	case COB_DISPLAY:
 	  return cob_move_display_to_display (src, dst);
 	case COB_PACKED:
 	  return cob_move_display_to_packed (src, dst);
@@ -594,7 +594,7 @@ cob_move (struct cob_field src, struct cob_field dst)
     case COB_PACKED:
       switch (COB_FIELD_TYPE (dst))
 	{
-	case COB_NUMERIC:
+	case COB_DISPLAY:
 	  return cob_move_packed_to_display (src, dst);
 	default:
 	  return indirect_move (cob_move_packed_to_display, src, dst,
@@ -604,7 +604,7 @@ cob_move (struct cob_field src, struct cob_field dst)
     case COB_BINARY:
       switch (COB_FIELD_TYPE (dst))
 	{
-	case COB_NUMERIC:
+	case COB_DISPLAY:
 	  return cob_move_binary_to_display (src, dst);
 	default:
 	  return indirect_move (cob_move_binary_to_display, src, dst,
@@ -614,7 +614,7 @@ cob_move (struct cob_field src, struct cob_field dst)
     default:
       switch (COB_FIELD_TYPE (dst))
 	{
-	case COB_NUMERIC:
+	case COB_DISPLAY:
 	  return cob_move_alphanum_to_display (src, dst);
 	case COB_PACKED:
 	case COB_BINARY:
