@@ -983,7 +983,7 @@ data_description_clause:
 /* REDEFINES clause */
 
 redefines_clause:
-  REDEFINES qualified_word
+  REDEFINES identifier_1
   {
     if ($0 != NULL)
       cb_error_x ($2, _("REDEFINES clause must follow entry-name"));
