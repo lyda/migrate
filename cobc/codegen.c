@@ -4579,7 +4579,6 @@ gen_read_next (cob_tree f, cob_tree buf, int next_prev)
   else
     push_immed (0);
   gen_save_filevar (f, buf);
-  asm_call ("cob_read");
   if (next_prev == 1)
     asm_call ("cob_read_next");
   else

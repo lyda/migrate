@@ -81,9 +81,9 @@ static int scan_picture (char *text);
 <*>[ \t]* { /* ignore */ }
 
 <*>\n {
-  cob_orig_lineno++;
   if (cob_stabs_flag && in_procedure)
     stabs_line ();
+  cob_orig_lineno++;
 }
 
 ^"#".* {
