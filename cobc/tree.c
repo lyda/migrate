@@ -654,10 +654,6 @@ make_file_name (struct cobc_word *word)
     make_tree (cobc_tag_file_name, COB_VOID, sizeof (struct cobc_file_name));
   p->word = set_word_item (word, COBC_TREE (p));
   p->cname = to_cname (word->name);
-  p->handler = NULL;
-  p->record = NULL;
-  p->record_min = 0;
-  p->record_max = 0;
   p->assign = NULL;
   p->optional = 0;
   p->organization = 0;
@@ -665,6 +661,10 @@ make_file_name (struct cobc_word *word)
   p->file_status = NULL;
   p->key = NULL;
   p->alt_key_list = NULL;
+  p->record = NULL;
+  p->record_min = p->record_max = 0;
+  p->record_depending = NULL;
+  p->handler = NULL;
   return COBC_TREE (p);
 }
 

@@ -899,23 +899,32 @@ static void
 output_file_name (struct cobc_file_name *f)
 {
   int nkeys = 1;
-  int max_size = 0;
-  struct cobc_field *p;
-  struct cobc_field *max_record;
+  char pic[BUFSIZ];
+  struct cobc_field *p, *record;
 
-  /* find the largest record */
-  for (p = f->record; p; p = p->sister)
-    if (p->size > max_size)
-      {
-	max_size = p->size;
-	max_record = p;
-      }
-
-  /* output record definition */
+  /* compute the record size */
+  if (f->record_min == 0)
+    f->record_min = f->record->size;
   for (p = f->record; p; p = p->sister)
     {
-      if (p != max_record)
-	p->redefines = max_record;
+      if (p->size < f->record_min)
+	f->record_min = p->size;
+      if (p->size > f->record_max)
+	f->record_max = p->size;
+    }
+
+  /* create record */
+  sprintf (pic, "X(%d)", f->record_max);
+  record = COBC_FIELD (make_field_3 (f->word, pic, COBC_USAGE_DISPLAY));
+  record->category = COB_ALPHANUMERIC;
+  record->f.used = 1;
+  finalize_field_tree (record);
+
+  /* output record definition */
+  output_field_definition (record, record, 0);
+  for (p = f->record; p; p = p->sister)
+    {
+      p->redefines = record;
       output_field_definition (p, p, 0);
     }
 
@@ -948,7 +957,15 @@ output_file_name (struct cobc_file_name *f)
     output ("cob_dummy_status");
   output (", ");
   /* record_size, record_data */
-  output ("%d, f_%s_data, ", max_size, max_record->cname);
+  output ("%d, f_%s_data, ", record->size, record->cname);
+  /* record_min, record_max */
+  output ("%d, %d, ", f->record_min, f->record_max);
+  /* record_depending */
+  if (f->record_depending != NULL)
+    output_tree (f->record_depending);
+  else
+    output ("{0, 0}");
+  output (", ");
   /* file */
   output ("0, ");
   /* flags */
@@ -957,7 +974,8 @@ output_file_name (struct cobc_file_name *f)
   if (f->organization == COB_ORG_RELATIVE && f->key != NULL)
     output_tree (f->key);
   else
-    output ("{0, 0}, ");
+    output ("{0, 0}");
+  output (", ");
   /* cursor, keys, nkeys, last_key */
   if (f->organization == COB_ORG_INDEXED)
     output ("0, %s_keys, %d, 0", f->cname, nkeys);

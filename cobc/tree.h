@@ -374,10 +374,7 @@ struct cobc_file_name {
   struct cobc_tree_common common;
   struct cobc_word *word;
   char *cname;
-  struct cobc_label_name *handler; /* error handler */
-  struct cobc_field *record;	/* record descriptor */
-  int record_min;		/* RECORD CONTAINS */
-  int record_max;		/* RECORD CONTAINS */
+  /* SELECT */
   cobc_tree assign;		/* ASSIGN */
   int optional;			/* OPTIONAL */
   int organization;		/* ORGANIZATION */
@@ -389,6 +386,12 @@ struct cobc_file_name {
     int duplicates;
     struct cobc_alt_key *next;
   } *alt_key_list;		/* ALTERNATE RECORD KEY list */
+  /* FD */
+  struct cobc_field *record;	/* record descriptor */
+  int record_min, record_max;	/* RECORD CONTAINS */
+  cobc_tree record_depending;	/* RECORD DEPENDING */
+  /* STANDARD ERROR PROCEDURE */
+  struct cobc_label_name *handler; /* error handler */
 };
 
 #define COBC_FILE_NAME(x)	(COBC_TREE_CAST (cobc_tag_file_name, struct cobc_file_name, x))

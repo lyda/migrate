@@ -133,28 +133,46 @@ sequential_close (struct cob_file_desc *f, int opt)
 static int
 sequential_read (struct cob_file_desc *f)
 {
-  switch (read (f->file.fd, f->record_data, f->record_size))
+  if (f->record_min != f->record_max)
     {
-    case -1:
-      return 46;
-    case 0:
-      return 10;
-    default:
-      return 00;
+      long size;
+      if (read (f->file.fd, &size, sizeof (long)) <= 0)
+	return 10;
+      if (f->record_depending.desc)
+	cob_set_int (f->record_depending, size);
     }
+
+  if (read (f->file.fd, f->record_data, f->record_size) <= 0)
+    return 10;
+
+  return 00;
 }
 
 static int
 sequential_write (struct cob_file_desc *f)
 {
-  if (write (f->file.fd, f->record_data, f->record_size) == -1)
-    return 99;
+  if (f->record_min != f->record_max)
+    {
+      long size;
+      if (f->record_depending.desc)
+	size = cob_to_int (f->record_depending);
+      else
+	size = f->record_size;
+      write (f->file.fd, &size, sizeof (long));
+    }
+
+  write (f->file.fd, f->record_data, f->record_size);
   return 00;
 }
 
 static int
 sequential_rewrite (struct cob_file_desc *f)
 {
+  if (f->record_min != f->record_max)
+    {
+      lseek (f->file.fd, - sizeof (long), SEEK_CUR);
+    }
+
   if (lseek (f->file.fd, - f->record_size, SEEK_CUR) == -1
       || write (f->file.fd, f->record_data, f->record_size) == -1)
     return 99;
@@ -409,7 +427,10 @@ relative_write (struct cob_file_desc *f)
 static int
 relative_rewrite (struct cob_file_desc *f)
 {
-  return sequential_rewrite (f);
+  if (lseek (f->file.fd, - f->record_size, SEEK_CUR) == -1
+      || write (f->file.fd, f->record_data, f->record_size) == -1)
+    return 99;
+  return 00;
 }
 
 static int

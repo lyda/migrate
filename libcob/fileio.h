@@ -60,6 +60,8 @@ struct cob_file_desc {
   char *file_status;		/* FILE STATUS */
   int record_size;		/* record size */
   unsigned char *record_data;	/* record data address */
+  int record_min, record_max;	/* record min/max size */
+  struct cob_field record_depending; /* record size depending on */
   union {
     int fd;
     FILE *fp;

@@ -194,7 +194,7 @@ static void ambiguous_error (struct cobc_word *p);
 %type <inum> sign,integer,level_number,operator,display_upon,usage
 %type <inum> before_or_after,perform_test,replacing_option,close_option
 %type <inum> select_organization,select_access_mode,open_mode
-%type <inum> ascending_or_descending
+%type <inum> ascending_or_descending,opt_from_integer,opt_to_integer
 %type <list> occurs_key_list,occurs_index_list,value_item_list
 %type <list> data_name_list,condition_name_list,opt_value_list
 %type <list> evaluate_subject_list,evaluate_case,evaluate_case_list
@@ -211,7 +211,7 @@ static void ambiguous_error (struct cobc_word *p);
 %type <list> initialize_replacing,initialize_replacing_list
 %type <list> special_name_class_item_list
 %type <tree> special_name_class_item,special_name_class_literal
-%type <tree> on_or_off,select_file_name
+%type <tree> on_or_off,select_file_name,record_depending
 %type <tree> call_returning,add_to,field_description_list,value_item
 %type <tree> field_description_list_1,field_description_list_2
 %type <tree> condition,condition_2,comparative_condition,class_condition
@@ -219,7 +219,6 @@ static void ambiguous_error (struct cobc_word *p);
 %type <tree> imperative_statement,field_description
 %type <tree> evaluate_object,evaluate_object_1
 %type <tree> function,subscript,subref,refmod
-%type <tree> opt_from_integer,opt_to_integer
 %type <tree> search_varying,search_at_end,search_whens,search_when
 %type <tree> perform_procedure,perform_sentence,perform_option
 %type <tree> read_into,read_key,write_from,field_name,expr
@@ -823,19 +822,22 @@ record_clause:
 | RECORD _is VARYING _in _size opt_from_integer opt_to_integer _characters
   record_depending
   {
-    yywarn ("RECORD VARYING is not implemented");
+    current_file_name->record_min = $6;
+    current_file_name->record_max = $7;
+    current_file_name->record_depending = $9;
   }
 ;
-opt_from_integer:
+record_depending:
   /* nothing */			{ $$ = NULL; }
-| _from INTEGER_LITERAL		{ $$ = $2; }
+| DEPENDING _on predefined_name { $$ = $3; }
+;
+opt_from_integer:
+  /* nothing */			{ $$ = 0; }
+| _from integer			{ $$ = $2; }
 ;
 opt_to_integer:
-  /* nothing */			{ $$ = NULL; }
-| TO INTEGER_LITERAL		{ $$ = $2; }
-;
-record_depending:
-| DEPENDING _on predefined_name
+  /* nothing */			{ $$ = 0; }
+| TO integer			{ $$ = $2; }
 ;
 
 
@@ -3485,7 +3487,7 @@ validate_field_tree (struct cobc_field *p)
       COBC_TREE_CLASS (p) = COB_ALPHANUMERIC;
 
       if (p->f.justified)
-	yyerror ("group item cannot have JUSTFIED RIGHT");
+	yyerror ("group item cannot have JUSTIFIED RIGHT");
 
       for (p = p->children; p; p = p->sister)
 	validate_field_tree (p);
@@ -3533,6 +3535,8 @@ validate_file_name (struct cobc_file_name *p)
     p->file_status = resolve_predefined_name (p->file_status);
   for (l = p->alt_key_list; l; l = l->next)
     l->key = resolve_predefined_name (l->key);
+  if (p->record_depending)
+    p->record_depending = resolve_predefined_name (p->record_depending);
 }
 
 static const char *
