@@ -2686,10 +2686,11 @@ sort_body:
   file_name sort_key_list sort_duplicates sort_collating
   {
     cb_tree l;
-    push_funcall_2 ("cob_sort_init", $1, cb_int (list_length ($2)));
+    cb_tree file = cb_ref ($1);
+    push_funcall_2 ("cob_sort_init", file, cb_int (list_length ($2)));
     for (l = $2; l; l = CB_CHAIN (l))
-      push_funcall_3 ("cob_sort_init_key", $1, CB_PURPOSE (l), CB_VALUE (l));
-    $$ = $1; /* used in sort_input, sort_output */
+      push_funcall_3 ("cob_sort_init_key", file, CB_PURPOSE (l), CB_VALUE (l));
+    $$ = file; /* used in sort_input, sort_output */
   }
   sort_input sort_output
 ;
@@ -2717,7 +2718,7 @@ sort_input:
     cb_tree l;
     push_funcall_2 ("cob_open", $0, cb_int (COB_OPEN_OUTPUT));
     for (l = $2; l; l = CB_CHAIN (l))
-      push_funcall_2 ("cob_sort_using", $0, CB_VALUE (l));
+      push_funcall_2 ("cob_sort_using", $0, cb_ref (CB_VALUE (l)));
     push_funcall_2 ("cob_close", $0, cb_int (COB_CLOSE_NORMAL));
   }
 | INPUT PROCEDURE _is perform_procedure
@@ -2735,7 +2736,7 @@ sort_output:
     for (l = $2; l; l = CB_CHAIN (l))
       {
 	push_funcall_2 ("cob_open", $-1, cb_int (COB_OPEN_INPUT));
-	push_funcall_2 ("cob_sort_giving", $-1, CB_VALUE (l));
+	push_funcall_2 ("cob_sort_giving", $-1, cb_ref (CB_VALUE (l)));
 	push_funcall_2 ("cob_close", $-1, cb_int (COB_CLOSE_NORMAL));
       }
   }

@@ -697,16 +697,8 @@ output_expr (cb_tree x, int id)
     case CB_TAG_REFERENCE:
       {
 	struct cb_reference *r = CB_REFERENCE (x);
-	struct cb_field *f;
+	struct cb_field *f = CB_FIELD (r->value);
 
-      /* TODO: remove me */
-	if (!CB_FIELD_P (r->value))
-	  {
-	    output_expr (r->value, id);
-	    return;
-	  }
-
-	f = CB_FIELD (r->value);
 	if (!r->subs && !r->offset && !cb_field_varying (f))
 	  {
 	    if (!f->flag_field)
