@@ -76,12 +76,14 @@ static void set_buffer (int lineno, const char *filename,
     }
 }
 
+"COPY"			{ BEGIN COPY_STATE; return COPY; }
+"REPLACE"		{ BEGIN COPY_STATE; return REPLACE; }
+
 . |
+[ \t]* |
+[0-9A-Z_-]+ |
 \'[^\'\n]*\' |
 \"[^\"\n]*\" { ECHO; }
-
-"COPY"    { BEGIN COPY_STATE; return COPY; }
-"REPLACE" { BEGIN COPY_STATE; return REPLACE; }
 
 <COPY_STATE>","		{ return ','; }
 <COPY_STATE>"."		{ BEGIN INITIAL; return '.'; }
