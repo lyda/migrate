@@ -1824,7 +1824,7 @@ output_file_definition (struct cb_file *f)
       || f->organization == COB_ORG_INDEXED)
     {
       struct cb_alt_key *l;
-      output ("static cob_file_key %s%s[] = {\n", CB_PREFIX_KEYS, f->cname);
+      output ("  static cob_file_key %s%s[] = {\n", CB_PREFIX_KEYS, f->cname);
       output ("  {");
       output_param (f->key, -1);
       output (", 0},\n");
@@ -1839,7 +1839,7 @@ output_file_definition (struct cb_file *f)
     }
 
   /* output the file descriptor */
-  output ("static cob_file %s%s = {", CB_PREFIX_FILE, f->cname);
+  output ("  static cob_file %s%s = {", CB_PREFIX_FILE, f->cname);
   /* organization, access_mode, open_mode, flag_optional */
   output ("%d, %d, 0, %d, ", f->organization, f->access_mode, f->optional);
   /* file_status */
@@ -2092,7 +2092,8 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 
   /* local variables */
   output_line ("static int initialized = 0;");
-  output_line ("static cob_decimal d[%d];", prog->decimal_index_max);
+  if (prog->decimal_index_max)
+	output_line ("static cob_decimal d[%d];", prog->decimal_index_max);
   output_prefix ();
   output ("static cob_module module = {'%c', '%c', '%c', ",
 	  prog->decimal_point, prog->currency_symbol, prog->numeric_separator);
@@ -2104,12 +2105,19 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	  cb_display_sign, cb_filename_mapping, cb_binary_truncate,
 	  cb_pretty_display);
   output_newline ();
+  /* files */
+  if (prog->file_list)
+    {
+      output ("  /* Files */\n\n");
+      for (l = prog->file_list; l; l = CB_CHAIN (l))
+	output_file_definition (CB_FILE (CB_VALUE (l)));
+      output_newline ();
+    }
+
   output_line ("int i;");
   output_line ("int i1, i2, i3, i4, i5, i6, i7;");
-  output_line ("int n[%d];", prog->loop_counter);
-  output_line ("int frame_index;");
-  output_line ("struct frame { int perform_through; void *return_address; } "
-	       "frame_stack[254];");
+  if ( prog->loop_counter )
+	output_line ("int n[%d];", prog->loop_counter);
   output_line ("cob_field f[4];");
   output_newline ();
 
@@ -2124,15 +2132,6 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
     }
   output_newline ();
 
-  /* files */
-  if (prog->file_list)
-    {
-      output ("/* Files */\n\n");
-      for (l = prog->file_list; l; l = CB_CHAIN (l))
-	output_file_definition (CB_FILE (CB_VALUE (l)));
-      output_newline ();
-    }
-
   /* screens */
   if (prog->screen_storage)
     {
@@ -2142,6 +2141,14 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
       output_newline ();
     }
 
+  output_line ("/* perform frame stack */");
+  output_line ("int frame_index;");
+  output_line ("struct frame { int perform_through; void *return_address; } "
+	       "frame_stack[254];");
+  output_newline ();
+
+  output_line ("/* Start of function code */");
+  output_newline ();
   output_line ("cob_module_enter (&module);");
   output_newline ();
 
@@ -2149,9 +2156,11 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   output_line ("if (!initialized)");
   output_indent ("  {");
   output_stmt (cb_build_assign (cb_return_code, cb_int0));
-  output_line ("/* initialize decimal numbers */");
-  output_line ("for (i = 0; i < %d; i++)", prog->decimal_index_max);
-  output_line ("  cob_decimal_init (&d[i]);");
+  if (prog->decimal_index_max) {
+	output_line ("/* initialize decimal numbers */");
+	output_line ("for (i = 0; i < %d; i++)", prog->decimal_index_max);
+	output_line ("  cob_decimal_init (&d[i]);");
+  }
   output_newline ();
   if (!prog->flag_initial)
     output_initial_values (prog->working_storage);
@@ -2309,7 +2318,7 @@ output_main_function (struct cb_program *prog)
   if (prog->flag_screen)
     output_line ("cob_screen_clear ();");
   output_line ("return ret;");
-  output_indent ("}");
+  output_indent ("}\n");
 }
 
 void
@@ -2357,12 +2366,18 @@ codegen (struct cb_program *prog)
 	}
     }
 
-  /* functions */
-  output_internal_function (prog, parameter_list);
-  for (l = prog->entry_list; l; l = CB_CHAIN (l))
-    output_entry_function (prog, l, parameter_list);
+  /* prototype */
+  output ("static int %s_ (int", prog->program_id);
+  for (l = parameter_list; l; l = CB_CHAIN (l))
+    output (", unsigned char *");
+  output (");\n\n");
 
   /* main function */
   if (cb_flag_main)
     output_main_function (prog);
+
+  /* functions */
+  for (l = prog->entry_list; l; l = CB_CHAIN (l))
+    output_entry_function (prog, l, parameter_list);
+  output_internal_function (prog, parameter_list);
 }

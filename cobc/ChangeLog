@@ -1,3 +1,11 @@
+2005-02-08  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Rearrange generated code slightly
+	  Do not gen stack values we do not need
+	  Generate static function prototype so that we
+	  can gen code in order : main (if appropiate),
+	  entry points, static function
+
 2005-02-07  Roger While <simrw@sim-basis.de>
 
 	* cobc.c : Slight change for Cygwin
