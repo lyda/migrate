@@ -26,15 +26,21 @@ OpenCOBOL requires the following external libraries to be installed:
 
     libgmp is used to implement decimal arithmetic.
 
+    GNU MP is distributed under GNU Lesser General Public License.
+
   o GNU Libtool (libltdl)
     http://www.gnu.org/software/libtool/libtool.html
 
     libltdl is used to implement dynamic CALL statements.
 
+    GNU Libtool is distributed under GNU Lesser General Public License.
+
   o Berkeley DB (libdb) 2.0 or later
     http://www.sleepycat.com/
 
     libdb is used to implement indexed file I/O.
+
+    Berkeley DB is distributed under the "as is" basis.
 
   o GNU Readline (libreadline) [optional]
     http://cnswww.cns.cwru.edu/~chet/readline/rltop.html
@@ -43,8 +49,9 @@ OpenCOBOL requires the following external libraries to be installed:
     ACCEPT statements.  You must give --with-readline
     option to the configure script to activate this.
 
-    Note that Readline is distributed under GPL, not LGPL,
-    so you must distribute your COBOL programs under GPL
+    Note that Readline is distributed under GNU General Public 
+    License (GPL), not Lesser General Public License (LGPL).
+    You must distribute your COBOL programs under GNU GPL
     if you are going to link them with Readline.
 
 See INSTALL for general installation instruction.
