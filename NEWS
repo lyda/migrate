@@ -32,21 +32,26 @@ The config option `binary-byteorder' controls this.
 
 The config option `display-sign' controls this.
 
-*** COPY statements now try to complement the following file extensions:
+*** Data items defined in the working-storage section are
+initialized at the beginning of program by default.
+The config option `auto-initialize' controls this.
+
+*** COPY statements try to complement the following file extensions:
 .CBL, .COB, .cbl, or .cob.
 
 *** SPECIAL-NAMES. FORMFEED IS ...
 
 *** ALPHABET ... IS EBCDIC.
 
-*** SHARING clause has been implemented.
+*** SHARING clause.
 
-*** LENGTH OF operator has been implemented.
+*** USAGE POINTER and ADDRESS OF operator.
+
+*** LENGTH OF operator.
 
 *** COLLATING SEQUENCE in the SORT and MERGE statements.
 
-*** OPEN ... WITH NO REWIND / WITH LOCK is recognized,
-though it does not work.
+*** OPEN ... WITH NO REWIND / WITH LOCK recognized, though not working.
 
 ** Compiler changes
 
@@ -75,10 +80,7 @@ though it does not work.
 *** New compiler option `-fsyntax-only', which does syntax error check
 only without any output.
 
-*** New compiler option `-fauto-initialize', which initializes all
-data items at the beginning of program.
-
-*** New compiler option `-fstatic-call', which is equivalent to old `-static'.
+*** New compiler option `-fstatic-call', which is equivalent to `-static'.
 
 *** New compiler option `-fdebugging-line', which enables debugging lines.
 
@@ -98,6 +100,8 @@ of obsolete options `-finline-move' and `-finline-get-int'.
 *** The compiler options `-static' and `-dynamic' are obsolete.
 
 *** The compiler option `-column' removed.
+
+** Many improvement for compatibility.
 
 ** Many many bug fixes.
 
