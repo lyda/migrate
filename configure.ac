@@ -84,7 +84,10 @@ LIBCOB_LIBS="$LIBCOB_LIBS -lltdl"
 
 # Checks for gettext
 AM_GNU_GETTEXT([external])
-LIBCOB_LIBS="$LIBCOB_LIBS $LIBINTL"
+AM_GNU_GETTEXT_VERSION(0.11.5)
+if test "x$LIBINTL" != "x"; then
+  LIBCOB_LIBS="$LIBCOB_LIBS $LIBINTL"
+fi
 
 # Checks for readline.
 USE_READLINE="no"
@@ -129,7 +132,7 @@ AC_SUBST(COMPUTED_GOTO)
 
 # OpenCOBOL Configuration
 
-COB_COBPP="$bindir/cobpp"
+COB_COBPP="cobpp"
 COB_CFLAGS="-I$includedir"
 COB_LIBS="-L$libdir -lcob ${LIBCOB_LIBS}"
 COB_CONFIG_FILE="$sysconfdir/$PACKAGE/libcob.conf"
