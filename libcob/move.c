@@ -30,19 +30,22 @@
 #define MIN(x,y) ({int _x = (x), _y = (y); (_x < _y) ? _x : _y; })
 #define MAX(x,y) ({int _x = (x), _y = (y); (_x > _y) ? _x : _y; })
 
-#define COPY_COMMON_REGION(b1,l1,d1,b2,l2,d2)	\
-{						\
-  int lf1 = (d1);				\
-  int lf2 = (d2);				\
-  int hf1 = (l1) + lf1;				\
-  int hf2 = (l2) + lf2;				\
-  int lcf = MAX (lf1, lf2);			\
-  int gcf = MIN (hf1, hf2);			\
-  unsigned char *s1 = (b1) + (hf1 - gcf);	\
-  unsigned char *s2 = (b2) + (hf2 - gcf);	\
-  unsigned char *e1 = (b1) + (hf1 - lcf);	\
-  if (s1 < e1)					\
-    memcpy (s2, s1, e1 - s1);			\
+static void
+store_common_region (cob_field *f, unsigned char *data, size_t size, int expt)
+{
+  int lf1 = expt;
+  int lf2 = COB_FIELD_EXPT (f);
+  int hf1 = size + lf1;
+  int hf2 = COB_FIELD_SIZE (f) + lf2;
+  int lcf = MAX (lf1, lf2);
+  int gcf = MIN (hf1, hf2);
+  unsigned char *s1 = data + (hf1 - gcf);
+  unsigned char *s2 = COB_FIELD_DATA (f) + (hf2 - gcf);
+  unsigned char *e1 = data + (hf1 - lcf);
+
+  memset (f->data, '0', f->size);
+  if (s1 < e1)
+    memcpy (s2, s1, e1 - s1);
 }
 
 
@@ -116,11 +119,8 @@ cob_move_display_to_display (cob_field *f1, cob_field *f2)
 {
   int sign = cob_get_sign (f1);
 
-  memset (f2->data, '0', f2->size);
-  COPY_COMMON_REGION (COB_FIELD_DATA (f1), COB_FIELD_SIZE (f1),
-		      COB_FIELD_EXPT (f1),
-		      COB_FIELD_DATA (f2), COB_FIELD_SIZE (f2),
-		      COB_FIELD_EXPT (f2));
+  store_common_region (f2, COB_FIELD_DATA (f1), COB_FIELD_SIZE (f1),
+		       COB_FIELD_EXPT (f1));
 
   cob_put_sign (f1, sign);
   cob_put_sign (f2, sign);
@@ -240,10 +240,7 @@ cob_move_packed_to_display (cob_field *f1, cob_field *f2)
       buff[i] = (data[i/2] & 0x0f) + '0';
 
   /* store */
-  memset (f2->data, '0', f2->size);
-  COPY_COMMON_REGION (buff, f1->attr->digits, f1->attr->expt,
-		      COB_FIELD_DATA (f2), COB_FIELD_SIZE (f2),
-		      COB_FIELD_EXPT (f2));
+  store_common_region (f2, buff, COB_FIELD_DIGITS (f1), COB_FIELD_EXPT (f1));
 
   cob_put_sign (f1, sign);
   cob_put_sign (f2, sign);
@@ -321,10 +318,7 @@ cob_move_binary_to_display (cob_field *f1, cob_field *f2)
     }
 
   /* store */
-  memset (f2->data, '0', f2->size);
-  COPY_COMMON_REGION (buff + i, 20 - i, f1->attr->expt,
-		      COB_FIELD_DATA (f2), COB_FIELD_SIZE (f2),
-		      COB_FIELD_EXPT (f2));
+  store_common_region (f2, buff + i, 20 - i, f1->attr->expt);
 
   cob_put_sign (f2, sign);
 }
@@ -646,7 +640,6 @@ cob_memcpy (cob_field *dst, unsigned char *src, int size)
   cob_move (&temp , dst);
 }
 
-
 void
 cob_set_int (cob_field *f, int n)
 {
@@ -656,13 +649,70 @@ cob_set_int (cob_field *f, int n)
   cob_move (&temp, f);
 }
 
+void
+cob_display_to_int (cob_field *f, int *n)
+{
+  size_t i;
+  int val = 0;
+  int sign = cob_get_sign (f);
+  size_t size = COB_FIELD_SIZE (f);
+  unsigned char *data = COB_FIELD_DATA (f);
+
+  /* skip preceding zeros */
+  for (i = 0; i < size; i++)
+    if (data[i] != '0')
+      break;
+
+  /* get value */
+  if (f->attr->expt > 0)
+    {
+      for (; i < size; ++i)
+	val = val * 10 + data[i] - '0';
+      val *= cob_exp10[f->attr->expt];
+    }
+  else
+    {
+      size += f->attr->expt;
+      for (; i < size; ++i)
+	val = val * 10 + data[i] - '0';
+    }
+  if (sign < 0)
+    val = -val;
+  *n = val;
+
+  cob_put_sign (f, sign);
+}
+
+void
+cob_binary_to_int (cob_field *f, int *n)
+{
+  switch (f->size)
+    {
+    case 1: *n = *(char *) f->data;
+    case 2: *n = *(short *) f->data;
+    default: *n = *(long *) f->data;
+    }
+}
+
 int
 cob_get_int (cob_field *f)
 {
   int n;
-  cob_field_attr attr =
-    {COB_TYPE_NUMERIC_BINARY, 9, 0, COB_FLAG_HAVE_SIGN, NULL};
-  cob_field temp = {4, (unsigned char *) &n, &attr};
-  cob_move (f, &temp);
+  switch (COB_FIELD_TYPE (f))
+    {
+    case COB_TYPE_NUMERIC_DISPLAY:
+      cob_display_to_int (f, &n);
+      break;
+    case COB_TYPE_NUMERIC_BINARY:
+      cob_binary_to_int (f, &n);
+      break;
+    default:
+      {
+	cob_field_attr attr =
+	  {COB_TYPE_NUMERIC_BINARY, 9, 0, COB_FLAG_HAVE_SIGN, NULL};
+	cob_field temp = {4, (unsigned char *) &n, &attr};
+	cob_move (f, &temp);
+      }
+    }
   return n;
 }
