@@ -58,7 +58,7 @@ foreach $in (glob("*.CBL")) {
       $compile_error++;
       print LOG "  ===== compile error =====\n";
     } else {
-      system ("rm -f XXXXX*");
+      system ("rm -f __db* XXXXX*");
       if (system ("$cmd > /dev/null") != 0) {
 	$execute_error++;
 	print LOG "  ***** execute error *****\n";
