@@ -1499,7 +1499,6 @@ static struct inline_func {
   {"@goto", output_goto},
   {"@goto-depending", output_goto_depending},
   {"@exit-program", output_exit_program},
-  {"@move", output_move},
   {"@initialize", output_initialize},
   {"@search", output_search},
   {"@search-all", output_search_all},
