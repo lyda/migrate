@@ -176,6 +176,72 @@ cb_build_identifier (cb_tree x)
 }
 
 cb_tree
+cb_build_check_identifier (cb_tree x)
+{
+  struct cb_reference *r = CB_REFERENCE (x);
+  struct cb_field *f = cb_field (x);
+  cb_tree s = NULL;
+
+  /* subscript check */
+  if (CB_EXCEPTION_ENABLE (COB_EC_BOUND_SUBSCRIPT) && r->subs)
+    {
+      struct cb_field *p;
+      cb_tree l = r->subs;
+
+      for (p = f; p; p = p->parent)
+	if (p->flag_occurs)
+	  {
+	    cb_tree idx = CB_VALUE (l);
+	    if (p->occurs_depending)
+	      {
+		int n = p->occurs_max;
+		if (CB_LITERAL_P (idx))
+		  n = cb_literal_to_int (CB_LITERAL (idx));
+		if (p->occurs_min <= n && n <= p->occurs_max)
+		  {
+		    cb_tree e1, e2;
+		    e1 = cb_build_funcall_4 ("cob_check_odo",
+					     cb_build_cast_integer (p->occurs_depending),
+					     cb_int (p->occurs_min),
+					     cb_int (p->occurs_max),
+					     cb_build_string (cb_field (p->occurs_depending)->name));
+		    e2 = cb_build_funcall_4 ("cob_check_subscript",
+					     cb_build_cast_integer (idx),
+					     cb_int (p->occurs_min),
+					     cb_build_cast_integer (p->occurs_depending),
+					     cb_build_string (p->name));
+		    s = list_add (list (e1), e2);
+		  }
+	      }
+	    else
+	      {
+		if (!CB_LITERAL_P (idx))
+		  s = list (cb_build_funcall_4 ("cob_check_subscript",
+						cb_build_cast_integer (idx),
+						cb_int1,
+						cb_int (p->occurs_max),
+						cb_build_string (p->name)));
+	      }
+	    l = CB_CHAIN (l);
+	  }
+    }
+
+  /* reference modifier check */
+  if (CB_EXCEPTION_ENABLE (COB_EC_BOUND_REF_MOD) && r->offset)
+    {
+      if (!CB_LITERAL_P (r->offset)
+	  || (r->length && !CB_LITERAL_P (r->length)))
+	s = list_add (s, cb_build_funcall_4 ("cob_check_ref_mod",
+					     cb_build_cast_integer (r->offset),
+					     r->length ? cb_build_cast_integer (r->length) : cb_int1,
+					     cb_int (f->size),
+					     cb_build_string (f->name)));
+    }
+
+  return s;
+}
+
+cb_tree
 cb_build_using_list (cb_tree list)
 {
   cb_tree l;

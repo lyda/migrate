@@ -728,74 +728,9 @@ output_expr (cb_tree x, int id)
 	    return;
 	  }
 
-	output ("({");
-
-	/* subscript check */
-	if (CB_EXCEPTION_ENABLE (COB_EC_BOUND_SUBSCRIPT) && r->subs)
-	  {
-	    struct cb_field *p;
-	    cb_tree l = r->subs;
-
-	    for (p = f; p; p = p->parent)
-	      if (p->flag_occurs)
-		{
-		  cb_tree x = CB_VALUE (l);
-		  if (p->occurs_depending)
-		    {
-		      int n = p->occurs_max;
-		      if (CB_LITERAL_P (x))
-			n = cb_literal_to_int (CB_LITERAL (x));
-		      if (p->occurs_min <= n && n <= p->occurs_max)
-			{
-			  output_prefix ();
-			  output ("cob_check_odo (");
-			  output_integer (p->occurs_depending);
-			  output (", %d, %d, \"%s\");\n",
-				  p->occurs_min, p->occurs_max,
-				  cb_field (p->occurs_depending)->name);
-			  output_prefix ();
-			  output ("cob_check_subscript (");
-			  output_integer (x);
-			  output (", %d, ", p->occurs_min);
-			  output_integer (p->occurs_depending);
-			  output (", \"%s\");\n", p->name);
-			}
-		    }
-		  else
-		    {
-		      if (!CB_LITERAL_P (x))
-			{
-			  output_prefix ();
-			  output ("cob_check_subscript (");
-			  output_integer (x);
-			  output (", 1, %d, \"%s\");\n",
-				  p->occurs_max, p->name);
-			}
-		    }
-		  l = CB_CHAIN (l);
-		}
-	  }
-
-	/* reference modifier check */
-	if (CB_EXCEPTION_ENABLE (COB_EC_BOUND_REF_MOD) && r->offset)
-	  {
-	    if (!CB_LITERAL_P (r->offset)
-		|| (r->length && !CB_LITERAL_P (r->length)))
-	      {
-		output ("cob_check_ref_mod (");
-		output_integer (r->offset);
-		output (", ");
-		if (r->length)
-		  output_integer (r->length);
-		else
-		  output ("1");
-		output (", %d, \"%s\");\n", f->size, f->name);
-	      }
-	  }
-
-	output ("%s = (cob_field) ", fname);
+	output ("(%s = (cob_field) ", fname);
 	output_field (x);
-	output ("; &%s; })", fname);
+	output (", &%s)", fname);
 	break;
       }
     default:

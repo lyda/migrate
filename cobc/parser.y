@@ -3857,7 +3857,12 @@ non_all_value:
  */
 
 identifier:
-  identifier_1			{ $$ = cb_build_identifier ($1); }
+  identifier_1
+  {
+    $$ = cb_build_identifier ($1);
+    if ($$ != cb_error_node)
+      push (cb_build_check_identifier ($$));
+  }
 ;
 identifier_1:
   qualified_word		{ $$ = $1; }
