@@ -46,6 +46,7 @@ AC_CHECK_LIB([db1], [dbopen], , AC_MSG_ERROR(db1 is required))
 
 # Checks for gmp.
 AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp is required))
+AC_CHECK_LIB([gmp], [__gmp_rand], , AC_MSG_ERROR(gmp v3 or higher is required))
 
 # Checks for readline.
 LIBRL=""
