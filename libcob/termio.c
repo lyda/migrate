@@ -27,10 +27,7 @@
 #include "move.h"
 #include "termio.h"
 
-void
-cob_init_termio (void)
-{
-}
+FILE *cob_stream[3];
 
 
 /*
@@ -38,7 +35,7 @@ cob_init_termio (void)
  */
 
 void
-cob_display (cob_field *f)
+cob_display (cob_field *f, int fd)
 {
   if (COB_FIELD_IS_NUMERIC (f))
     {
@@ -61,31 +58,29 @@ cob_display (cob_field *f)
 	sprintf (p, "9%c", digits);
       cob_move (f, &temp);
       for (i = 0; i < size; i++)
-	putchar (data[i]);
+	fputc (data[i], cob_stream[fd]);
     }
   else
     {
       size_t i;
       for (i = 0; i < f->size; i++)
-	putchar (f->data[i]);
+	fputc (f->data[i], cob_stream[fd]);
     }
 }
 
 void
-cob_newline ()
+cob_newline (int fd)
 {
-  putchar ('\n');
-  fflush (stdout);
+  fputc ('\n', cob_stream[fd]);
+  fflush (cob_stream[fd]);
 }
 
-#ifdef COB_DEBUG
 void
-cob_debug_print (cob_field *f)
+cob_field_print (cob_field *f)
 {
-  cob_display (f);
-  cob_newline ();
+  cob_display (f, COB_SYSOUT);
+  cob_newline (COB_SYSOUT);
 }
-#endif
 
 
 /*
@@ -172,4 +167,13 @@ cob_accept_environment (cob_field *f, cob_field *env)
   char *p = getenv (cob_field_to_string (env, buff));
   if (!p) p = "";
   cob_memcpy (f, p, strlen (p));
+}
+
+
+void
+cob_init_termio (void)
+{
+  cob_stream[COB_SYSIN]  = stdin;
+  cob_stream[COB_SYSOUT] = stdout;
+  cob_stream[COB_SYSERR] = stderr;
 }

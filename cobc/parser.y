@@ -1846,37 +1846,42 @@ display_statement:
     else
       {
 	for (l = $3; l; l = CB_CHAIN (l))
-	  push_funcall_1 ("cob_display", CB_VALUE (l));
+	  push_funcall_2 ("cob_display", CB_VALUE (l), $4);
       }
   }
   display_with_no_advancing
   end_display
   ;
 display_upon:
-  /* empty */
+  /* empty */			{ $$ = cb_int (COB_SYSOUT); }
 | _upon mnemonic_name
   {
     switch (CB_SYSTEM_NAME (cb_ref ($2))->token)
       {
       case CB_CONSOLE:
       case CB_SYSOUT:
+	$$ = cb_int (COB_SYSOUT);
+	break;
       case CB_SYSERR:
+	$$ = cb_int (COB_SYSERR);
 	break;
       default:
 	cb_error_x ($2, _("invalid UPON item"));
+	$$ = cb_error_node;
 	break;
       }
   }
 | UPON WORD
   {
     cb_warning_x ($2, _("`%s' undefined in SPECIAL-NAMES"), CB_NAME ($2));
+    $$ = cb_error_node;
   }
 ;
 display_with_no_advancing:
   /* empty */
   {
     if (!current_program->flag_screen)
-      push_funcall_0 ("cob_newline");
+      push_funcall_1 ("cob_newline", $-2);
   }
 | _with NO ADVANCING { /* nothing */ }
 ;
@@ -2727,14 +2732,14 @@ sort_input:
   USING file_name_list
   {
     cb_tree l;
-    push_funcall_2 ("cob_open", $0, cb_int (COB_OPEN_OUTPUT));
+    push_funcall_3 ("cob_open", $0, cb_int (COB_OPEN_OUTPUT), cb_int0);
     for (l = $2; l; l = CB_CHAIN (l))
       push_funcall_2 ("cob_sort_using", $0, cb_ref (CB_VALUE (l)));
     push_funcall_2 ("cob_close", $0, cb_int (COB_CLOSE_NORMAL));
   }
 | INPUT PROCEDURE _is perform_procedure
   {
-    push_funcall_2 ("cob_open", $0, cb_int (COB_OPEN_OUTPUT));
+    push_funcall_3 ("cob_open", $0, cb_int (COB_OPEN_OUTPUT), cb_int0);
     push (cb_build_perform_once ($4));
     push_funcall_2 ("cob_close", $0, cb_int (COB_CLOSE_NORMAL));
   }
@@ -2746,14 +2751,14 @@ sort_output:
     cb_tree l;
     for (l = $2; l; l = CB_CHAIN (l))
       {
-	push_funcall_2 ("cob_open", $-1, cb_int (COB_OPEN_INPUT));
+	push_funcall_3 ("cob_open", $-1, cb_int (COB_OPEN_INPUT), cb_int0);
 	push_funcall_2 ("cob_sort_giving", $-1, cb_ref (CB_VALUE (l)));
 	push_funcall_2 ("cob_close", $-1, cb_int (COB_CLOSE_NORMAL));
       }
   }
 | OUTPUT PROCEDURE _is perform_procedure
   {
-    push_funcall_2 ("cob_open", $-1, cb_int (COB_OPEN_INPUT));
+    push_funcall_3 ("cob_open", $-1, cb_int (COB_OPEN_INPUT), cb_int0);
     push (cb_build_perform_once ($4));
     push_funcall_2 ("cob_close", $-1, cb_int (COB_CLOSE_NORMAL));
   }

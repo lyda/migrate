@@ -20,16 +20,15 @@
 #ifndef COB_TERMIO_H
 #define COB_TERMIO_H
 
-#include <stdio.h>
 #include <libcob/common.h>
 
-extern void cob_init_termio (void);
-#ifdef COB_DEBUG
-extern void cob_debug_print (cob_field *f);
-#endif
+#define COB_SYSIN	0
+#define COB_SYSOUT	1
+#define COB_SYSERR	2
 
-extern void cob_display (cob_field *f);
-extern void cob_newline (void);
+extern void cob_display (cob_field *f, int fd);
+extern void cob_newline (int fd);
+extern void cob_field_print (cob_field *f);
 extern void cob_accept (cob_field *f);
 extern void cob_accept_date (cob_field *f);
 extern void cob_accept_day (cob_field *f);
@@ -37,5 +36,7 @@ extern void cob_accept_day_of_week (cob_field *f);
 extern void cob_accept_time (cob_field *f);
 extern void cob_accept_command_line (cob_field *f);
 extern void cob_accept_environment (cob_field *f, cob_field *env);
+
+extern void cob_init_termio (void);
 
 #endif /* COB_TERMIO_H_ */
