@@ -84,13 +84,11 @@ make_filler (void)
 cob_tree
 make_expr (cob_tree left, char op, cob_tree right)
 {
-  struct expr *left_expr = (struct expr *) left;
-  struct expr *right_expr = (struct expr *) right;
   struct expr *e = malloc (sizeof (struct expr));
   e->litflag = 5;
   e->op = op;
-  e->left = left_expr;
-  e->right = right_expr;
+  e->left = left;
+  e->right = right;
   return (cob_tree) e;
 }
 
@@ -99,31 +97,6 @@ make_expr (cob_tree left, char op, cob_tree right)
  * Subscript references
  */
 
-static int
-check_subscripts (cob_tree subs)
-{
-  struct subref *ref;
-  cob_tree sy;
-  sy = SUBREF_SYM (subs);
-  for (ref = (struct subref *) subs; ref; ref = ref->next)
-    {
-      if (ref->litflag == ',')
-	{
-	  while (sy && sy->times == 1)
-	    sy = sy->parent;
-	  if (!sy)
-	    {
-	      yyerror ("check_subscripts: no parent found");
-	      return 0;		/* excess subscripts, error */
-	    }
-	  sy = sy->parent;
-	}
-    }
-  while (sy && sy->times == 1)	/* any other subscripts needed ? */
-    sy = sy->parent;
-  return (sy == NULL) ? 1 : 0;
-}
-
 struct subref *
 make_subref (cob_tree sy, struct subref *next)
 {
@@ -131,7 +104,7 @@ make_subref (cob_tree sy, struct subref *next)
   ref->litflag = 2;
   ref->sym     = sy;
   ref->next    = next;
-  check_subscripts ((cob_tree) ref);
+  /* FIXME: error check here!! */
   return ref;
 }
 

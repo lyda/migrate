@@ -142,8 +142,8 @@ struct expr
 {
   char litflag;			/* 5 for expr */
   char op;
-  struct expr *left;
-  struct expr *right;
+  cob_tree left;
+  cob_tree right;
 };
 
 #define EXPR(x)		((struct expr *) (x))
@@ -169,7 +169,7 @@ struct subref
   char litflag;			/* ',' = end of subscript, 
 				   '+','-' = subscript arith */
   struct subref *next;		/* link to next in list or NULL */
-  void *sym;			/* variable/literal at this node */
+  cob_tree sym;			/* variable/literal at this node */
 };
 
 #define SUBREF(x)	((struct subref *) (x))

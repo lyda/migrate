@@ -938,7 +938,7 @@ screen_clauses:
 | screen_clauses
     screen_source_destination
 | screen_clauses
-    VALUE opt_is gliteral   { curr_field->value = (cob_tree) $4; $$=$1; }
+    VALUE opt_is gliteral   { curr_field->value = $4; $$=$1; }
 | screen_clauses picture_clause
 ;
 screen_source_destination:
@@ -1503,7 +1503,7 @@ selection_object:
   | flag_not condition	{ push_condition (); $$ = SOBJ_BOOLEAN | $1; }
   | flag_not expr
     {
-      if ($2 == (cob_tree) spe_lit_ZE)
+      if ($2 == spe_lit_ZE)
 	$$ = SOBJ_ZERO | $1;
       else if (push_expr($2))
 	$$ = SOBJ_EXPR | $1;
@@ -2758,7 +2758,7 @@ simple_condition:
 	  if ($2 & COND_CLASS)
 	    gen_class_check ($1, $2);
 	  else
-	    gen_compare ($1, $2 & ~COND_UNARY, (cob_tree) spe_lit_ZE);
+	    gen_compare ($1, $2 & ~COND_UNARY, spe_lit_ZE);
 	}
     }
     opt_expr
@@ -2967,7 +2967,7 @@ filename:
 name:
     variable '(' gname ':' opt_gname ')'
     {
-      $$ = (cob_tree) create_refmoded_var($1, $3, $5);
+      $$ = create_refmoded_var($1, $3, $5);
     }
     | variable
     ;

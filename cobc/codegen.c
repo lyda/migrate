@@ -1281,7 +1281,7 @@ dump_working ()
   fprintf (o_src, "w_base%d:\n", pgm_segment);
   for (list = fields_list; list != NULL; list = list->next)
     {
-      v = (cob_tree) list->var;
+      v = list->var;
       sy = v;
       if (!SYMBOL_P (v))
 	continue;
@@ -1537,24 +1537,24 @@ proc_trail (int using)
   /**************** generate data for fields *****************/
   for (list = fields_list; list != NULL; list = list->next)
     {
-      if (((cob_tree) list->var)->type == 'F')
+      if (SYMBOL (list->var)->type == 'F')
 	{			/* sort files */
 	  char sl[21];		/* para inverter a lista */
 	  char *s;
 	  s = sl;
 	  *s++ = 0;		/* final da lista invertida */
-	  sy = (cob_tree) list->var;
+	  sy = list->var;
 #ifdef COB_DEBUG
 	  fprintf (o_src,
 		   "# File: %s, Data loc: v_base+%d, Desc: c_base%d+%d\n",
 		   sy->name, sy->location, pgm_segment, sy->descriptor);
 #endif
-	  sy = (cob_tree) sy->sort_data;
+	  sy = sy->sort_data;
 	  while (sy != NULL)
 	    {
 	      *s++ = (unsigned char) sy->direction;
 	      *s++ = (unsigned char) sy->len;
-	      sy = (cob_tree) (sy->sort_data);
+	      sy = (sy->sort_data);
 	    }
 	  s--;
 	  while (*s)
@@ -1646,7 +1646,7 @@ proc_trail (int using)
       else			/*if ( ((cob_tree)list->var)->type!='D' ) */
 	{
 	/********* it is a normal field ****************/
-	  sy = (cob_tree) list->var;
+	  sy = list->var;
 #ifdef COB_DEBUG
 	  fprintf (o_src, "# Field: %s, Mem loc: %s, Desc: c_base%d+%d\n",
 		   sy->name, memref (sy), pgm_segment, sy->descriptor);
@@ -1729,7 +1729,7 @@ save_literal (cob_tree x, int type)
     piclen += (v->len / 255) * 2;
   v->type = type;
 	/****** save literal in fields list for later *******/
-  save_field_in_list ((cob_tree) v);
+  save_field_in_list (x);
 	/******** save address of const string ************/
   v->location = literal_offset;
   v->sec_no = SEC_CONST;
@@ -2052,7 +2052,7 @@ gen_display (int dupon, int nl)
   if (disp_list)
     {
       /* separate screen displays from display of regular variables */
-      sy = (cob_tree) disp_list->var;
+      sy = disp_list->var;
       if (disp_list && !LITERAL_P (sy))
 	if (!REFMOD_P (sy) && !SUBREF_P (sy) && sy->scr)
 	  {
@@ -2230,7 +2230,7 @@ gen_accept_env_var (cob_tree sy, cob_tree v)
 {
   cob_tree sy2;
 
-  gen_loadloc ((cob_tree) v);
+  gen_loadloc (v);
   asm_call_1 ("accept_env_var", sy);
 
 //      Set RETURN-CODE with the value returned by 
@@ -2933,17 +2933,6 @@ gen_divide2 (struct math_var *vl1, cob_tree sy1, cob_tree sy2,
 }
 
 /******** functions for refmoded var manipulation ***********/
-static int
-check_refmods (cob_tree var)
-{
-  struct refmod *ref = (struct refmod *) var;
-  cob_tree sy = ref->sym;
-
-  if (SUBREF_P (sy))
-    sy = SUBREF_SYM (sy);
-
-  return (sy == NULL) ? 1 : 0;
-}
 
 struct refmod *
 create_refmoded_var (cob_tree sy, cob_tree syoff, cob_tree sylen)
@@ -2955,7 +2944,6 @@ create_refmoded_var (cob_tree sy, cob_tree syoff, cob_tree sylen)
   ref->off = syoff;
   ref->len = sylen;
   ref->slot = refmod_slots++;
-  check_refmods ((cob_tree) ref);
   return ref;
 }
 
@@ -2972,7 +2960,7 @@ gen_subscripted (struct subref *subs)
   eax_in_use = 0;
   while (ref)
     {
-      if (((cob_tree) (ref->sym))->type == 'B' && symlen (ref->sym) > 4)
+      if (ref->sym->type == 'B' && symlen (ref->sym) > 4)
 	yyerror ("warning: we don't handle this large subscript");
       if (eax_in_use && !outer_pushed)
 	{
@@ -3238,9 +3226,9 @@ gen_inspect (cob_tree var, void *list, int operation)
 static void
 gen_move_1 (cob_tree src)
 {
-  if (src == (cob_tree) spe_lit_ZE)
+  if (src == spe_lit_ZE)
     asm_call ("cob_move_zero");
-  else if (src == (cob_tree) spe_lit_SP)
+  else if (src == spe_lit_SP)
     asm_call ("cob_move_space");
   else
     asm_call_1 ("cob_move", src);
@@ -3425,12 +3413,12 @@ gen_set (cob_tree idx, int which, cob_tree var,
       if (SUBREF_P (idx))
 	{
 	  struct subref *ref = make_subref (sy->parent, SUBREF_NEXT (idx));
-	  gen_move ((cob_tree) sy->value, (cob_tree) ref);
+	  gen_move (sy->value, (cob_tree) ref);
 	  free (ref);
 	}
       else
 	{
-	  gen_move ((cob_tree) sy->value, sy->parent);
+	  gen_move (sy->value, sy->parent);
 	}
       return;
     }
@@ -3657,14 +3645,14 @@ gen_goto_depending (struct list *l, cob_tree sy)
   for (tmp = l; tmp != NULL; tmp = tmp->next)
     {
       fprintf (o_src, "\tdecl\t%%eax\n");
-      fprintf (o_src, "\tjz\t.LB_%s\n", label_name ((cob_tree) tmp->var));
+      fprintf (o_src, "\tjz\t.LB_%s\n", label_name (tmp->var));
     }
 }
 
 void
 gen_goto (struct list *l)
 {
-  cob_tree sy = (cob_tree) l->var;
+  cob_tree sy = l->var;
   fprintf (o_src, "\tjmp\t.LB_%s\n", label_name (sy));
   if (l->next)
     {
@@ -4548,7 +4536,7 @@ update_screen_field (cob_tree sy, struct scr_info *si)
      value declared, create its picture from value literal. */
   if (*(sy->picstr) == 0 && sy->value != NULL)
     {
-      tmp = (cob_tree) sy->value;
+      tmp = sy->value;
       sy->len = strlen (tmp->name);
       sy->picstr = malloc (3);
       sy->picstr[0] = 'X';
@@ -4838,8 +4826,8 @@ set_variable_values (cob_tree v1, cob_tree v2)
   if (curr_field->value == NULL)
     {
       curr_field->refmod_redef.vr = NULL;
-      curr_field->value = (cob_tree) v1;
-      curr_field->value2 = (cob_tree) v2;
+      curr_field->value = v1;
+      curr_field->value2 = v2;
       curr_field->flags.value = 1;
       curr_field->flags.spec_value = 1;
     }
@@ -4862,13 +4850,13 @@ gen_condition (cob_tree sy)
   if (SUBREF_P (sy))
     sy1 = SUBREF_SYM (sy);
   push_immed (0);
-  gen_loadvar ((cob_tree) sy1->value2);
-  gen_loadvar ((cob_tree) sy1->value);
+  gen_loadvar (sy1->value2);
+  gen_loadvar (sy1->value);
   vr = sy1->refmod_redef.vr;
   while (vr)
     {
-      gen_loadvar ((cob_tree) vr->value2);
-      gen_loadvar ((cob_tree) vr->value);
+      gen_loadvar (vr->value2);
+      gen_loadvar (vr->value);
       vr = vr->next;
     }
   if (SUBREF_P (sy))
@@ -4985,8 +4973,8 @@ push_expr (cob_tree sy)
 {
   if (EXPR_P (sy))
     {
-      push_expr ((cob_tree) EXPR_LEFT (sy));
-      push_expr ((cob_tree) EXPR_RIGHT (sy));
+      push_expr (EXPR_LEFT (sy));
+      push_expr (EXPR_RIGHT (sy));
       switch (EXPR_OP (sy))
 	{
 	case '+': asm_call ("cob_add"); break;
@@ -5056,11 +5044,11 @@ gen_save_sort_fields (cob_tree f, cob_tree buf)
   cob_tree datafld;
   if (f == NULL)
     return;
-  datafld = (cob_tree) f->sort_data;
+  datafld = f->sort_data;
   while (datafld != NULL)
     {
       gen_loadloc (datafld);
-      datafld = (cob_tree) (datafld->sort_data);
+      datafld = (datafld->sort_data);
     }
   fprintf (o_src, "\tmovl\t$c_base%d+%u, %%eax\n", pgm_segment,
 	   f->descriptor);
@@ -5116,7 +5104,7 @@ dump_fdesc ()
   fprintf (o_src, "s_base%d:\t.long\t0\n", pgm_segment);
   for (list = files_list; list != NULL; list = list->next)
     {
-      f = (cob_tree) list->var;
+      f = list->var;
       r = f->recordsym;
 #ifdef COB_DEBUG
       fprintf (o_src,
@@ -5337,11 +5325,11 @@ gen_close_sort (cob_tree f)
 	/********** allocate memory for SORT descriptor ***********/
   save_field_in_list (f);
   f->descriptor = literal_offset;
-  sortf = (cob_tree) (f->sort_data);
+  sortf = (f->sort_data);
   while (sortf != NULL)
     {
       literal_offset += 2;
-      sortf = (cob_tree) (sortf->sort_data);
+      sortf = (sortf->sort_data);
     }
   literal_offset++;
 }
@@ -5540,8 +5528,8 @@ gen_check_varying (cob_tree f)
   if (rv != NULL)
     {
       gen_loadvar (rv->reclen);
-      gen_loadvar ((cob_tree) rv->lmax);
-      gen_loadvar ((cob_tree) rv->lmin);
+      gen_loadvar (rv->lmax);
+      gen_loadvar (rv->lmin);
       gen_save_filedesc (f);
       asm_call ("cob_check_varying");
     }
@@ -5628,7 +5616,7 @@ gen_call (cob_tree v, int exceplabel, int notexceplabel)
   /******** prepare all parameters which are passed by content ********/
   for (list = parameter_list; list != NULL; list = list->next)
     {
-      cob_tree cp = (cob_tree) list->var;
+      cob_tree cp = list->var;
       if (!LITERAL_P (cp))
 	{
 	  if (cp->call_mode == CM_CONT)
@@ -5651,7 +5639,7 @@ gen_call (cob_tree v, int exceplabel, int notexceplabel)
   /******** get the parameters from the parameter list ********/
   for (list = parameter_list; list != NULL; list = list->next)
     {
-      cob_tree p = (cob_tree) list->var;
+      cob_tree p = list->var;
       int mode = (LITERAL_P (p) ? LITERAL (p)->call_mode : p->call_mode);
 #ifdef COB_DEBUG
       fprintf (o_src, "#parm %s by %d\n", FIELD_NAME (p), mode);
@@ -5659,10 +5647,10 @@ gen_call (cob_tree v, int exceplabel, int notexceplabel)
       switch (mode)
 	{
 	case CM_REF:
-	  gen_loadloc ((cob_tree) list->var);
+	  gen_loadloc (list->var);
 	  break;
 	case CM_VAL:
-	  gen_pushval ((cob_tree) list->var);
+	  gen_pushval (list->var);
 	  break;
 	case CM_CONT:
 	  fprintf (o_src, "\tleal\t-%d(%%ebp), %%eax\n", list->location);
