@@ -195,20 +195,16 @@ lineseq_read (cob_file *f)
       break;
   if (i < f->record->size)
     {
-      /* replace the inline newline by spaces */
-      for (; i < f->record->size; i++)
-	buff[i] = ' ';
+      /* fill the record by spaces */
+      memset (buff + i, ' ', f->record->size - i);
     }
   else
     {
-      /* discard input until the next newline */
-      int c = getc (f->file);
-      while (c != '\r' && c != '\n' && c != EOF)
-	c = getc (f->file);
-      if (c == '\r')
-	c = getc (f->file);
-      if (c != '\n' && c != EOF)
-	ungetc (c, f->file);
+      /* discard input until the newline */
+      char buff[BUFSIZ];
+      while (fgets (buff, BUFSIZ, f->file) != NULL)
+	if (strchr (buff, '\n') != NULL)
+	  break;
     }
 
   memcpy (f->record->data, buff, f->record->size);
@@ -230,7 +226,7 @@ lineseq_write (cob_file *f)
   /* write to the file */
   for (i = 0; i < size; i++)
     putc (f->record->data[i], f->file);
-  putc ('\n', f->file);
+  fputs ("\r\n", f->file);
 
   return COB_STATUS_00_SUCCESS;
 }
@@ -1117,7 +1113,7 @@ cob_write_lines (cob_file *f, int lines)
     return;
 
   for (i = 0; i < lines; i++)
-    fputc ('\n', f->file);
+    fputs ("\r\n", f->file);
 }
 
 void
