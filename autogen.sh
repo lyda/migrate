@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if test ! -e po; then
+if test ! -e config.rpath; then
   echo "Running gettextize..."
   gettextize --force --no-changelog
 fi
