@@ -800,54 +800,17 @@ field_founder (struct cb_field *p)
   return p;
 }
 
-int
-field_used_any_parent (struct cb_field *p)
-{
-  for (; p; p = p->parent)
-    if (p->flag_used)
-      return 1;
-  return 0;
-}
-
-int
-field_used_any_child (struct cb_field *p)
-{
-  if (p->flag_used)
-    return 1;
-  for (p = p->children; p; p = p->sister)
-    if (field_used_any_child (p))
-      return 1;
-  return 0;
-}
-
-void
-field_set_used (struct cb_field *p)
-{
-  p->flag_used = 1;
-  for (; p; p = p->parent)
-    if (p->redefines)
-      {
-	p->redefines->flag_used = 1;
-	break;
-      }
-}
-
 /* build */
 
 struct cb_field *
-build_field (cb_tree level, cb_tree name, struct cb_field *last_field)
+build_field (int level, cb_tree name, struct cb_field *last_field,
+	     enum cb_storage storage)
 {
   struct cb_field *f;
   struct cb_reference *r = CB_REFERENCE (name);
-  int lv = 0;
-  {
-    const char *p = CB_REFERENCE (level)->word->name;
-    for (; *p; p++)
-      lv = lv * 10 + (*p - '0');
-  }
 
   /* checks for redefinition */
-  if (lv == 01 || lv == 77)
+  if (level == 01 || level == 77)
     {
       if (r->word->count > 0)
 	{
@@ -870,9 +833,10 @@ build_field (cb_tree level, cb_tree name, struct cb_field *last_field)
 
   /* build the field */
   f = CB_FIELD (make_field (name));
-  f->level = lv;
+  f->level = level;
   f->usage = CB_USAGE_DISPLAY;
   f->occurs = 1;
+  f->storage = storage;
 
   if (last_field && last_field->level == 88)
     last_field = last_field->parent;
@@ -884,7 +848,7 @@ build_field (cb_tree level, cb_tree name, struct cb_field *last_field)
     }
   else if (!last_field)
     {
-      yyerror_x (level, _("level number must begin with 01 or 77"));
+      yyerror_x (name, _("level number must begin with 01 or 77"));
       return NULL;
     }
   else if (f->level == 66)
@@ -901,12 +865,6 @@ build_field (cb_tree level, cb_tree name, struct cb_field *last_field)
       else
 	f->parent = last_field;
       CB_TREE_CLASS (f) = COB_TYPE_BOOLEAN;
-    }
-  else if (f->level > 49)
-    {
-      yyerror_x (level, _("invalid level number `%s'"),
-		   CB_LITERAL (level)->data);
-      return NULL;
     }
   else if (f->level > last_field->level)
     {
@@ -937,7 +895,7 @@ build_field (cb_tree level, cb_tree name, struct cb_field *last_field)
 	    last_field = p;
 	    goto sister;
 	  }
-      yyerror_x (level, _("field hierarchy broken"));
+      yyerror_x (name, _("field hierarchy broken"));
       return NULL;
     }
 
@@ -1368,14 +1326,12 @@ finalize_file (struct cb_file *f, struct cb_field *records)
   /* create record */
   sprintf (pic, "X(%d)", f->record_max);
   f->record = CB_FIELD (make_field_x (f->name, pic, CB_USAGE_DISPLAY));
-  field_set_used (f->record);
   f->record->sister = records;
 
   for (p = records; p; p = p->sister)
     {
       p->file = f;
       p->redefines = f->record;
-      field_set_used (p);
     }
 }
 
@@ -1516,11 +1472,6 @@ resolve_data_name (cb_tree x)
   f = CB_FIELD (v);
 
   set_value (x, v);
-
-  if (f->level == 88)
-    field_set_used (f->parent);
-  else
-    field_set_used (f);
 
   return x;
 
@@ -2527,8 +2478,6 @@ build_corresponding_1 (cb_tree (*func)(), cb_tree x1, cb_tree x2,
 		l = build_corresponding_1 (func, t1, t2, opt, l);
 	      else
 		{
-		  field (t1)->flag_used = 1;
-		  field (t2)->flag_used = 1;
 		  if (opt < 0)
 		    l = cons (func (t1, t2), l);
 		  else

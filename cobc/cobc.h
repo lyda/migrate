@@ -112,4 +112,9 @@ extern FILE *yyout;
 extern int yylex (void);
 extern int yyparse (void);
 
+/* code generation (in codegen.c) */
+extern FILE *storage_file;
+extern char *storage_file_name;
+extern void codegen (struct cb_program *prog);
+
 #endif /* _COBC_H_ */

@@ -200,7 +200,6 @@ struct cb_literal {
   struct cb_tree_common common;
   size_t size;
   unsigned char *data;
-  char id;
   char all;
   char sign;
   char expt;
@@ -262,6 +261,13 @@ enum cb_usage {
   CB_USAGE_PROGRAM		/* not supported yet */
 };
 
+enum cb_storage {
+  CB_STORAGE_FILE,		/* FILE SECTION */
+  CB_STORAGE_WORKING,		/* WORKING-STORAGE SECTION */
+  CB_STORAGE_LINKAGE,		/* LINKAGE SECTION */
+  CB_STORAGE_SCREEN		/* SCREEN SECTION */
+};
+
 struct cb_field {
   struct cb_tree_common common;
   int size;			/* field size */
@@ -275,6 +281,7 @@ struct cb_field {
   char *cname;			/* the name used in C */
   cb_tree occurs_depending;	/* OCCURS ... DEPENDING ON */
   enum cb_usage usage;	/* USAGE */
+  enum cb_storage storage;
   struct cb_list *values;	/* VALUE */
   struct cb_list *index_list;	/* INDEXED BY */
   struct cb_field *parent;	/* upper level field (NULL for 01 fields) */
@@ -299,8 +306,8 @@ struct cb_field {
   long flag_sign_separate : 1;	/* SIGN IS SEPARATE */
   long flag_synchronized  : 1;	/* SYNCHRONIZED */
   long flag_occurs        : 1;	/* if OCCURS clause exists */
-  long flag_used          : 1;	/* if used more than once */
-  long flag_screen        : 1;	/* if defined in SCREEN SECTION */
+  long flag_base          : 1;
+  long flag_field         : 1;
   /* screen parameters */
   cb_tree screen_line;
   cb_tree screen_column;
@@ -322,11 +329,8 @@ extern cb_tree make_field_x (const char *name, const char *pic, int usage);
 extern struct cb_field *field (cb_tree x);
 extern int field_size (cb_tree x);
 extern struct cb_field *field_founder (struct cb_field *p);
-extern int field_used_any_parent (struct cb_field *p);
-extern int field_used_any_child (struct cb_field *p);
-extern void field_set_used (struct cb_field *p);
 
-extern struct cb_field *build_field (cb_tree level, cb_tree name, struct cb_field *last_field);
+extern struct cb_field *build_field (int level, cb_tree name, struct cb_field *last_field, enum cb_storage storage);
 extern struct cb_field *validate_redefines (struct cb_field *field, cb_tree redefines);
 extern int validate_field (struct cb_field *p);
 extern void finalize_field (struct cb_field *p);
@@ -374,7 +378,6 @@ extern void finalize_file (struct cb_file *f, struct cb_field *records);
 struct cb_reference {
   struct cb_tree_common common;
   struct cb_word *word;
-  char id;
   cb_tree value;
   struct cb_list *subs;
   cb_tree offset;

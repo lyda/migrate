@@ -66,10 +66,9 @@
 
 static cb_tree statement_location;
 
-extern void codegen (struct cb_program *prog);
-
 static struct cb_field *current_field;
 static struct cb_file *current_file;
+static enum cb_storage current_storage;
 
 static int current_call_mode;
 static const char *current_inspect_func;
@@ -139,7 +138,7 @@ static void terminator_warning (const char *name);
 
 %type <inum> flag_all flag_duplicates flag_optional flag_global
 %type <inum> flag_not flag_next flag_rounded flag_separate
-%type <inum> integer display_upon screen_plus_minus
+%type <inum> integer display_upon screen_plus_minus level_number
 %type <inum> before_or_after perform_test replacing_option
 %type <inum> select_organization select_access_mode same_option
 %type <inum> ascending_or_descending opt_from_integer opt_to_integer
@@ -650,11 +649,11 @@ multiple_file:
  *****************************************************************************/
 
 data_division:
-| DATA DIVISION '.'
-  file_section
-  working_storage_section
-  linkage_section
-  screen_section
+| DATA DIVISION '.'		{ current_storage = CB_STORAGE_FILE; }
+  file_section			{ current_storage = CB_STORAGE_WORKING; }
+  working_storage_section	{ current_storage = CB_STORAGE_LINKAGE; }
+  linkage_section		{ current_storage = CB_STORAGE_SCREEN; }
+  screen_section		{ current_storage = CB_STORAGE_WORKING; }
 ;
 
 
@@ -821,15 +820,32 @@ field_description_list_2:
   field_description		{ $<tree>$ = $<tree>1; }
 ;
 field_description:
-  WORD field_name
+  level_number field_name
   {
-    current_field = build_field ($1, $2, current_field);
+    current_field = build_field ($1, $2, current_field, current_storage);
     if (current_field == NULL)
       YYERROR;
   }
   field_options '.'
   {
     $<tree>$ = CB_TREE (current_field);
+  }
+;
+level_number:
+  WORD
+  {
+    int level = 0;
+    const char *p = CB_REFERENCE ($1)->word->name;
+    for (; *p; p++)
+      level = level * 10 + (*p - '0');
+    if ((01 <= level && level <= 49)
+	|| (level == 66 || level == 77 || level == 88))
+      $$ = level;
+    else
+      {
+	yyerror_x ($1, _("invalid level number `%s'"), tree_name ($1));
+	YYERROR;
+      }
   }
 ;
 field_name:
@@ -1111,13 +1127,12 @@ screen_description_list:
   screen_description		{ $$ = $1; }
 ;
 screen_description:
-  WORD field_name
+  level_number field_name
   {
-    current_field = build_field ($1, $2, current_field);
+    current_field = build_field ($1, $2, current_field, current_storage);
     if (current_field == NULL)
       YYERROR;
 
-    current_field->flag_screen = 1;
     current_field->screen_flag |= COB_SCREEN_FG_NONE;
     current_field->screen_flag |= COB_SCREEN_BG_NONE;
     if (current_field->parent)
@@ -1210,9 +1225,6 @@ screen_option:
 | sign_clause
 | value_clause
 | picture_clause
-  {
-    field_set_used (current_field);
-  }
 | USING data_name
   {
     current_field->screen_from = CB_FIELD ($2);
@@ -1471,7 +1483,7 @@ accept_body:
   {
     if (current_program->enable_screen)
       {
-	if (CB_FIELD ($1)->flag_screen)
+	if (CB_FIELD ($1)->storage == CB_STORAGE_SCREEN)
 	  {
 	    cb_tree line = CB_PARAMETER ($2)->x;
 	    cb_tree column = CB_PARAMETER ($2)->y;
@@ -1748,7 +1760,7 @@ display_statement:
     if (current_program->enable_screen)
       {
 	for (l = $3; l; l = l->next)
-	  if (CB_FIELD (l->item)->flag_screen)
+	  if (CB_FIELD (l->item)->storage == CB_STORAGE_SCREEN)
 	    {
 	      cb_tree line = CB_PARAMETER ($5)->x;
 	      cb_tree column = CB_PARAMETER ($5)->y;

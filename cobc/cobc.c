@@ -503,11 +503,19 @@ process_translate (struct filename *fn)
   if (!yyin)
     terminate (fn->preprocess);
 
+  storage_file_name = malloc (strlen (fn->translate) + 3);
+  sprintf (storage_file_name, "%s.h", fn->translate);
+
   if (!cb_flag_parse_only)
     {
+      /* output file */
       yyout = fopen (fn->translate, "w");
       if (!yyout)
 	terminate (fn->translate);
+      /* storage file */
+      storage_file = fopen (storage_file_name, "w");
+      if (!storage_file)
+	terminate (storage_file_name);
     }
 
   cb_source_file = NULL;
@@ -522,7 +530,10 @@ process_translate (struct filename *fn)
   ret = yyparse ();
 
   if (!cb_flag_parse_only)
-    fclose (yyout);
+    {
+      fclose (yyout);
+      fclose (storage_file);
+    }
   fclose (yyin);
 
   return ret;
@@ -598,7 +609,11 @@ main (int argc, char *argv[])
   int index;
   int status = 1;
 
-  cob_init (0, NULL);
+#if ENABLE_NLS
+  setlocale (LC_ALL, "");
+  bindtextdomain (PACKAGE, LOCALEDIR);
+  textdomain (PACKAGE);
+#endif
 
   /* Initialize the global variables */
   init_environment (argc, argv);
@@ -666,7 +681,10 @@ main (int argc, char *argv[])
 	    remove (fn->preprocess);
 	  if (fn->need_translate
 	      && (status == 1 || compile_level > stage_translate))
-	    remove (fn->translate);
+	    {
+	      remove (fn->translate);
+	      remove (storage_file_name);
+	    }
 	  if (fn->need_assemble
 	      && (status == 1 || compile_level > stage_assemble))
 	    remove (fn->object);
