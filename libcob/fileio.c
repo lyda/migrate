@@ -1141,7 +1141,8 @@ cob_read (cob_file *f, cob_field *key)
       RETURN_STATUS (COB_STATUS_10_END_OF_FILE);
     }
 
-  if (f->flag_end_of_file)
+  /* sequential read at the end of file is an error */
+  if (key == NULL && f->flag_end_of_file)
     RETURN_STATUS (COB_STATUS_46_READ_ERROR);
 
   if (f->open_mode == COB_OPEN_CLOSED
