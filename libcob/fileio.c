@@ -545,7 +545,7 @@ indexed_start (struct cob_file_desc *f, int cond, struct cob_field k)
 
   /* look up for the key */
   for (i = 0; i < f->nkeys; i++)
-    if (f->keys[i].field.desc == k.desc)
+    if (f->keys[i].field.data == k.data)
       break;
 #if COB_DEBUG
   if (i == f->nkeys)
