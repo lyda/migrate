@@ -44,41 +44,24 @@ stop_run ()
 int
 fldLength (struct fld_desc *f)
 {
-  int len;
-
   switch (f->type)
     {
     case 'B':
       switch (f->len)
 	{
-	case 1:
-	  len = 3;
-	  break;
-	case 2:
-	  len = 5;
-	  break;
-	case 4:
-	  len = 10;
-	  break;
-	default:
-	  len = 18;
-	  break;
+	case 1: return 3;
+	case 2: return 5;
+	case 4: return 10;
+	default: return 18;
 	}
-      break;
-
     case 'U':
       if (f->len == 4)
-	len = 14;
+	return 14;
       else
-	len = 30;
-      break;
-
+	return 30;
     default:
-      len = f->len;
-      break;
+      return f->len;
     }
-
-  return len;
 }
 
 /*------------------------------------------------------------------------*\
