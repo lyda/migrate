@@ -148,6 +148,21 @@ struct subref
 #define SUBREF_SYM(x)	(SUBREF (x)->sym)
 
 
+
+/* Node for refmod's */
+struct refmod
+{
+  char litflag;			/* 4 = refmod */
+  struct sym *off;		/* offset from normal start address */
+  struct sym *sym;		/* pointer to original var: must be at the same relative offset as sym in subref */
+  struct sym *len;		/* corrected length */
+  short slot;			/* slot in the data section */
+};
+
+#define REFMOD(x)	((struct refmod *) (x))
+#define REFMOD_P(x)	(REFMOD (x)->litflag == 4)
+
+
 /*
  * Pair
  */

@@ -70,16 +70,6 @@
 
 #include "tree.h"
 
-/* Node for refmod's */
-struct refmod
-{
-  char litflag;			/* 4 = refmod */
-  struct sym *off;		/* offset from normal start address */
-  struct sym *sym;		/* pointer to original var: must be at the same relative offset as sym in subref */
-  struct sym *len;		/* corrected length */
-  short slot;			/* slot in the data section */
-};
-
 /*
  * compile-time list for value ranges of 88-level variables.
  * the first range is stored at the "struct sym", with sym->vr

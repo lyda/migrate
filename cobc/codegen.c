@@ -52,15 +52,12 @@ struct sym *curr_paragr = NULL, *curr_section = NULL;
 struct sym *curr_field;
 short curr_call_mode = 0;
 unsigned stack_offset = 0;	/* offset for variables on the stack */
-//#define SAVED_EBX_OFFSET 4    /* relative to %ebp */
 unsigned stack_plus = 0;
 unsigned global_offset = 4;	/* offset for global variables (DATA) */
-//unsigned file_offset=0;
 unsigned literal_offset = 0;
 #define SEC_WORKING SEC_DATA
 #define SEC_RETURN_CODE SEC_DATA
 unsigned data_offset = 0;
-//#define data_offset global_offset
 unsigned linkage_offset = 0;
 unsigned using_offset = 8;
 /* tmpvar_offset: for storage of temporary variables, 
@@ -314,7 +311,6 @@ void
 clear_symtab ()
 {
   struct sym *sy, *sy1, *tmp;
-  //struct lit *lt,*lt1,*ltmp;
   int i;
   for (i = 0; i < HASHLEN; i++)
     {
@@ -819,12 +815,10 @@ proc_header (int using)
   stack_offset = stack_offset + START_STACK_ADJUST;
   /* add space for linkage section variables that are
      not arguments of the calling program */
-  //if (using)
   stack_offset += adjust_linkage_vars (START_STACK_ADJUST);
 
 
   fprintf (o_src, "\tsubl\t$%u, %%esp\n", stack_offset);
-//      fprintf(o_src,"\tmovl\t%%ebx, -%d(%%ebp)\n",SAVED_EBX_OFFSET);
   fprintf (o_src, "\tmovl\t%%ebx, -%d(%%ebp)\n", stack_offset - 16);
   fprintf (o_src, ".Linit_%s:\n", pgm_label);
   fprintf (o_src, "\tmovl\t$s_base%d+0, %%eax\n", pgm_segment);
@@ -951,7 +945,6 @@ proc_trail (int using)
 	}
       else
 	{
-//            fprintf(o_src,"\tmovl\t$w_base+%d, %%edx\n",sy->location);
 	  fprintf (o_src, "\tleal\tw_base%d+%d, %%edx\n",
 		   pgm_segment, sy->location);
 	}
@@ -962,7 +955,6 @@ proc_trail (int using)
   fprintf (o_src, "\t.align 16\n");
   fprintf (o_src, ".LSend_%s:\n", pgm_label);
 
-//      fprintf(o_src,"\tmovl\t-%d(%%ebp), %%ebx\n",SAVED_EBX_OFFSET);
   fprintf (o_src, "\tmovl\t-%d(%%ebp), %%ebx\n", stack_offset - 8 - 16);
   fprintf (o_src, "\tmov\t%%ebp,%%esp\n");
   fprintf (o_src, "\tpopl\t%%ebp\n");
@@ -1200,7 +1192,6 @@ dump_working ()
 	  else if (sy->type == 'C')
 	    fprintf (o_src,
 		     ".stabs\t\"%s:S(1,%d)=ar3;1;%d;4\",38,0,0,w_base%d+%d\n",
-//                              sy->name,sy->len,sy->len,sy->location);
 		     sy->name, sy->len, sy->len, pgm_segment, 0);
 	  else
 	    fprintf (o_src,
@@ -1216,14 +1207,6 @@ dump_working ()
 	}
       if (fld_len == 0)
 	yyerror ("Invalid picture in %s", v->name);
-      /*      
-         if (v->son) continue;                // no space reserved for groups
-         if (v->value != NULL) {
-         gen_init_value(v->value,fld_len);
-         }
-         else 
-         fprintf(o_src,"\t.ds\t%d\n",fld_len);
-       */
     }
   /* output tmpvar storage */
   if (tmpvar_max > 0)
@@ -2045,11 +2028,6 @@ gen_accept_env_var (struct sym *sy, struct lit *v)
   struct sym *sy1, *sy2;
 
   sy1 = (struct sym *) v;
-
-//      gen_loadloc( sy );
-//      fprintf(o_src,"\tmovl\t$c_base+%u, %%eax\n",sy->descriptor);
-//      push_eax();
-
   gen_loadloc (sy1);
 
   gen_loadvar (sy);
@@ -2072,13 +2050,6 @@ gen_accept_env_var (struct sym *sy, struct lit *v)
 	}
       fprintf (o_src, "\tmovl\t%%eax, (%%edx)\n");
     }
-
-//  void save_literal( struct lit *v, int type )
-//  currency_symbol = $<lval>4->name[0];
-//  char *name; /* name (value) of literal */
-//  gen_loadloc( sy );
-//  gen_loaddesc( sy );
-
 }
 
 /******** structure allocation for perform info(s) ***********/
@@ -2898,7 +2869,6 @@ gen_subscripted (struct subref *subs)
 	sy = sy->parent;
       ref = ref->next;
     }
-  //stackframe_cnt += 4;          /* update our stack frame counter */
   if (outer_pushed)
     fprintf (o_src, "\tpopl\t%%eax\n");	/* return offset in %eax */
 }
@@ -3121,7 +3091,7 @@ loadloc_to_eax (struct sym *sy_p)
 #ifdef COB_DEBUG
   fprintf (o_src, "#gen_loadloc litflg %d\n", sy->litflag);
 #endif
-  if (sy->litflag == 4)
+  if (REFMOD_P (sy))
     sy = ((struct refmod *) sy)->sym;	// temp bypass
   if (SUBREF_P (sy))
     {
@@ -3154,7 +3124,6 @@ loadloc_to_eax (struct sym *sy_p)
 		fprintf (o_src, "\tleal\tc_base%d+%d, %%ebx\n",
 			 pgm_segment, var->location);
 	    }
-
 	  fprintf (o_src, "\taddl\t%%ebx,%%eax\n");
 	}
     }
@@ -3164,7 +3133,7 @@ loadloc_to_eax (struct sym *sy_p)
     }
 //      At that stage, the address is ready in %eax; do we need
 //      to correct it because of RefMod's?
-  if (sy_p->litflag == 4)
+  if (REFMOD_P (sy_p))
     {				// should avoid all that if literal 1
       struct refmod *rfp = (struct refmod *) sy_p;
       fprintf (o_src, "\tmovl\t%%eax, %%ebx\n");
@@ -3219,7 +3188,7 @@ void
 gen_loaddesc1 (struct sym *sy, int variable_length)
 {
   struct sym *var;
-  if (SUBREF_P (sy) || sy->litflag == 4)
+  if (SUBREF_P (sy) || REFMOD_P (sy))
     {
       var = SUBREF_SYM (sy);
       if (SUBREF_P (var))
@@ -3229,7 +3198,7 @@ gen_loaddesc1 (struct sym *sy, int variable_length)
     {
       var = sy;
     }
-  if (sy->litflag == 4)
+  if (REFMOD_P (sy))
     {
       struct refmod *rflp = (struct refmod *) sy;
       struct sym *syl = rflp->len;
@@ -3295,7 +3264,7 @@ gen_loadvar (struct sym *sy)
     push_immed (0);
   else
     {
-      if (SUBREF_P (sy) || sy->litflag == 4)
+      if (SUBREF_P (sy) || REFMOD_P (sy))
 	{
 	  var = SUBREF_SYM (sy);
 	  if (SUBREF_P (var))
@@ -3594,9 +3563,9 @@ gen_move (struct sym *sy_src, struct sym *sy_dst)
 #ifdef COB_DEBUG
   {
     struct sym *esys = sy_src, *esyd = sy_dst;
-    if (esys->litflag == 4)
+    if (REFMOD_P (esys))
       esys = ((struct refmod *) esys)->sym;
-    if (esyd->litflag == 4)
+    if (REFMOD_P (esyd))
       esyd = ((struct refmod *) esyd)->sym;
     fprintf (o_src, "### MOVE %s TO ", sch_convert (esys->name));
     fprintf (o_src, "%s\n", sch_convert (esyd->name));
@@ -3701,7 +3670,7 @@ gen_set (struct sym *idx, int which, struct sym *var,
 	 int adrof_idx, int adrof_var)
 {
   struct sym *sy = idx;
-  if (idx->litflag == 4)
+  if (REFMOD_P (idx))
     sy = ((struct refmod *) idx)->sym;
   else if (SUBREF_P (idx))
     sy = SUBREF_SYM (idx);
@@ -3745,7 +3714,6 @@ gen_set (struct sym *idx, int which, struct sym *var,
 	}
       if (adrof_var)
 	{
-	  //load_location(var,"eax");     
 	  loadloc_to_eax (var);
 	  set_ptr (idx);
 	}
@@ -4148,7 +4116,6 @@ gen_perform_thru (struct sym *s1, struct sym *s2)
   fprintf (o_src, "\tleal\t.LB_%s, %%eax\n", label_name (s1));
   fprintf (o_src, "\tpushl\t%%eax\n");
   fprintf (o_src, "\tleal\t.LE_%s, %%eax\n", label_name (s2));
-//      fprintf(o_src,"\tpushl\t%%ax\n");
   fprintf (o_src, "\tpushl\t%%eax\n");
   fprintf (o_src, "\tjmp\t.LB_%s\n", label_name (s1));
 
@@ -4492,7 +4459,6 @@ define_special_fields ()
 
   ly = spe_lit_ZE;
 
-//      sy->len=5; 
   sy->len = 4;
   sy->decimals = 0;
   sy->level = 1;
@@ -4562,8 +4528,6 @@ define_temp_field (char desired_type, int desired_len)
   close_fields ();
   curr_field = tmp;
   tmp = NULL;
-
-//      printf("end define_temp_field:%x\n", sy);
   return sy;
 }
 
@@ -5949,89 +5913,42 @@ int
 gen_reads (struct sym *f, struct sym *buf, struct sym *key, int next_prev,
 	   int sel)
 {
-  int r = 0;
 // NOTE: 
 // While this is functional, it requires to be updated to trap more syntax errors
 
   if (f->type != 'F')
     {
       yyerror ("invalid variable \'%s\', file name expected", f->name);
-      r++;
-      return r;
+      return 1;
     }
 
-  /* READ w/o [NOT] AT END or [NOT] INVALID KEY clauses */
-//         if (sel == 0) {
-//            if ((next_prev != 0) && (key != NULL)) {
-//            yyerror("invalid clause NEXT found in READ statement with KEY IS data-name option");
-//            r++;
-//            }
-//            else {
-//            } 
-//          
-//         }
-
-  /* READ with [NOT] AT END clauses */
-//         if (sel == 1) {          
-//         }
-
-  /* READ with [NOT] INVALID KEY clauses */
-//         if (sel == 2) {
-//           if (next_prev != 0) {
-//           yyerror("invalid clause NEXT found in READ statement with INVALID KEY option");
-//           r++;
-//           }
-//           else {
-//           } 
-//         }
-
-  /* RETURN w/o [NOT] AT END clauses */
-//         if (sel == 4) {          
-//         }
-
-  /* RETURN with [NOT] AT END clauses */
-//         if (sel == 5) {          
-//         }
-
-  if (r == 0)
+  if ((sel > -1) && (sel < 4))
     {
-      if ((sel > -1) && (sel < 4))
-	{
-	  if (next_prev > 0
-	      && (f->organization == ORG_INDEXED
-		  || f->organization == ORG_RELATIVE)
-	      && (f->access_mode == ACC_DYNAMIC
-		  || f->access_mode == ACC_SEQUENTIAL))
-	    {
-	      gen_read_next (f, buf, next_prev);
-	    }
-	  else
-	    {
-	      gen_read (f, buf, key);
-	    }
-	}
+      if (next_prev > 0
+	  && (f->organization == ORG_INDEXED
+	      || f->organization == ORG_RELATIVE)
+	  && (f->access_mode == ACC_DYNAMIC
+	      || f->access_mode == ACC_SEQUENTIAL))
+	gen_read_next (f, buf, next_prev);
       else
-	{
-	  if (f->organization != ORG_SEQUENTIAL)
-	    gen_read_next (f, buf, next_prev);
-	  else
-	    gen_return (f, buf);
-	}
+	gen_read (f, buf, key);
     }
-  return r;
+  else
+    {
+      if (f->organization != ORG_SEQUENTIAL)
+	gen_read_next (f, buf, next_prev);
+      else
+	gen_return (f, buf);
+    }
+  return 0;
 }
 
 void
 gen_read (struct sym *f, struct sym *buf, struct sym *key)
 {
   struct rec_varying *rv = (struct rec_varying *) f->rec_varying;
-//      gen_check_varying(f);
   if (f->organization == ORG_RELATIVE)
     {
-      /*gen_loadloc( f->ix_desc );
-         fprintf(o_src,"\tmovl $c_base+%u, %%eax\n",
-         f->ix_desc->descriptor);
-         push_eax(); */
       gen_loadvar (f->ix_desc);
       asm_call ("get_index");
       push_eax ();
@@ -6072,9 +5989,7 @@ gen_release (struct sym *r, struct sym *buf)
   struct sym *f;
   f = r->ix_desc;
   if (buf != NULL)
-    {
-      gen_move (buf, r);
-    }
+    gen_move (buf, r);
   gen_save_sort_fields (f, buf);
   asm_call ("sort_release");
   gen_status (f);
@@ -6099,7 +6014,6 @@ gen_write (struct sym *r, int opt, struct sym *buf)
       else
 	{
 	  gen_move (buf, r);
-//                      asm_call("cob_write_adv_from");
 	  asm_call ("cob_write_adv");
 	}
     }
@@ -6107,10 +6021,6 @@ gen_write (struct sym *r, int opt, struct sym *buf)
     {
       if (f->organization == ORG_RELATIVE)
 	{
-	  /*gen_loadloc( f->ix_desc );
-	     fprintf(o_src,"\tmovl $c_base+%u, %%eax\n",
-	     f->ix_desc->descriptor);
-	     push_eax(); */
 	  gen_loadvar (f->ix_desc);
 	  asm_call ("get_index");
 	  push_eax ();
@@ -6133,10 +6043,6 @@ gen_rewrite (struct sym *r, struct sym *buf)
   gen_check_varying (f);
   if (f->organization == ORG_RELATIVE)
     {
-      /*gen_loadloc( f->ix_desc );
-         fprintf(o_src,"\tmovl $c_base+%u, %%eax\n",
-         f->ix_desc->descriptor);
-         push_eax(); */
       gen_loadvar (f->ix_desc);
       asm_call ("get_index");
       push_eax ();
@@ -6156,10 +6062,6 @@ gen_start (struct sym *f, int cond, struct sym *key)
   gen_check_varying (f);
   if (f->organization == ORG_RELATIVE)
     {
-      /*gen_loadloc( f->ix_desc );
-         fprintf(o_src,"\tmovl $c_base+%u, %%eax\n",
-         f->ix_desc->descriptor);
-         push_eax(); */
       gen_loadvar (f->ix_desc);
       asm_call ("get_index");
       push_eax ();
@@ -6180,10 +6082,6 @@ gen_delete (struct sym *f)
   gen_check_varying (f);
   if (f->organization == ORG_RELATIVE)
     {
-      /*gen_loadloc( f->ix_desc );
-         fprintf(o_src,"\tmovl $c_base+%u, %%eax\n",
-         f->ix_desc->descriptor);
-         push_eax(); */
       gen_loadvar (f->ix_desc);
       asm_call ("get_index");
       push_eax ();
