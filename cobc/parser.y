@@ -128,9 +128,7 @@ static void check_decimal_point (struct lit *lit);
 %left  OR
 %left  AND
 %right NOT
-
 %right OF
-%nonassoc '.'
 
 %token <str>  IDSTRING
 %token <sval> STRING,VARIABLE,VARCOND,SUBSCVAR
@@ -140,7 +138,7 @@ static void check_decimal_point (struct lit *lit);
 %token <lval> NLITERAL,CLITERAL
 %token <ival> PORTNUM,DATE_TIME
 
-%token TO,FOR,IS,ARE,THRU,THAN,NO
+%token TO,FOR,IS,ARE,THRU,THAN,NO,CANCEL
 %token TOK_SOURCE_COMPUTER, TOK_OBJECT_COMPUTER,INPUT_OUTPUT
 %token BEFORE,AFTER,SCREEN,REVERSEVIDEO,NUMBERTOK,PLUS,MINUS,SEPARATE
 %token FOREGROUNDCOLOR,BACKGROUNDCOLOR,UNDERLINE,HIGHLIGHT,LOWLIGHT
@@ -192,7 +190,7 @@ static void check_decimal_point (struct lit *lit);
 %type <ival> integer,cond_op,conditional,before_after
 %type <ival> IF,ELSE,usage,write_options,opt_read_next
 %type <ival> using_options,procedure_using
-%type <dval> if_part
+%type <dval> if_then
 %type <sval> name,gname,numeric_value,opt_gname,opt_def_name,def_name
 %type <sval> field_description,label,filename,noallname,paragraph,assign_clause
 %type <lval> literal,gliteral,without_all_literal,all_literal,special_literal
@@ -1116,7 +1114,7 @@ procedure_decl:
     procedure_section { close_section(); open_section($1); }
     | paragraph { close_paragr(); open_paragr($1); }
     | {free_expr_list(); stabs_line();} statement_list opt_eos
-    | error { yyerror("unknown or wrong statement"); } '.'
+    | error '.'
     | '.'
     ;
 procedure_section:
@@ -1170,6 +1168,7 @@ statement:
       accept_statement
     | add_statement
     | call_statement
+    | cancel_statement
     | close_statement
     | compute_statement
     | delete_statement
@@ -1236,6 +1235,13 @@ accept_options:
        gen_accept_env_var($<sval>-1, $3);
      }
     ;
+
+
+/* CANCEL statement */
+
+cancel_statement:
+    CANCEL gname { yyerror ("CANCEL statement is not supported yet."); }
+;
 
 
 /* UNSTRING statement */
@@ -1886,22 +1892,23 @@ opt_end_call:
 /* IF statement */
 
 if_statement:
-      if_part { gen_dstlabel($1); } end_if 
-    | if_part ELSE {
-	$<dval>$=gen_passlabel();
-	gen_dstlabel($1);
-      }
-      conditional_statement_list {
-	gen_dstlabel($<dval>3);
-      }
-    end_if
-if_part:
-    IF  condition  { $<dval>$=gen_testif(); }
-        then
-        conditional_statement_list { $<dval>$=$<dval>3; }
-    ;
-then: | THEN ;
-end_if: | END_IF ;
+    if_then { gen_dstlabel($1); } opt_end_if 
+  | if_then ELSE {
+      $<dval>$=gen_passlabel();
+      gen_dstlabel($1);
+    }
+    conditional_statement_list {
+      gen_dstlabel($<dval>3);
+    }
+    opt_end_if
+  | IF error END_IF { }
+;
+if_then:
+    IF condition { $<dval>$ = gen_testif(); } opt_then
+       conditional_statement_list { $$ = $<dval>3; }
+;
+opt_then: | THEN ;
+opt_end_if: | END_IF ;
 
 
 /* SEARCH statement */
@@ -3044,7 +3051,7 @@ unqualified_var:
     ;
 subscript_list:
       subscript                         { $$ = $1; }
-    | subscript_list ',' subscript      { $$ = add_subscript($1, $3); }
+    | subscript_list opt_sep subscript  { $$ = add_subscript($1, $3); }
     ;
 subscript:
       gname                     { $$ = create_subscript( $1 ); }
