@@ -186,7 +186,7 @@ open_buffer (const char *name, struct replacement *replacing)
 	    }
 	  if (!p)
 	    {
-	      fprintf (stderr, "%s:%d: %s: Failed to find file\n",
+	      fprintf (stderr, "%s:%d: %s: failed to find file\n",
 		       yyfilename ? yyfilename : "<stdin>", yylineno, name);
 	      cob_exit_status = 1;
 	      return;

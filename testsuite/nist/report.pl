@@ -43,10 +43,9 @@ foreach $in (glob("*.CBL")) {
   my $prt = $in;
   my $cmd;
   $exe =~ s/\.CBL//;
-  $prt =~ s/\.CBL/\.PRT/;
   $cmd = "./$exe";
-  if (-e "./$exe.DATA") {
-    $cmd = "./$exe < $exe.DATA";
+  if (-e "./$exe.DAT") {
+    $cmd = "./$exe < $exe.DAT";
   }
   $num_progs++;
   printf LOG "%-12s", $in;

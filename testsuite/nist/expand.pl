@@ -38,7 +38,7 @@ while (<IN>) {
       $name = "$prog.DAT";
     } elsif ($type eq "CLBRY") {
       $module = "copy";
-      $name = "$prog.INC";
+      $name = "$prog";
     }
     if ($name) {
       mkdir $module unless (-e $module);

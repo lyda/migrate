@@ -13,8 +13,11 @@ clean:
 
 check:
 	for m in $(MODULES); do \
-	  (cd $$m && perl ../report.pl) \
+	  (cd $$m && make check) \
 	done
+	perl summary.pl $(MODULES) > summary.txt
+
+summary:
 	perl summary.pl $(MODULES) > summary.txt
 
 dist:
