@@ -61,24 +61,6 @@ enum set_mode { SET_TO, SET_UP, SET_DOWN };
 #define SOBJ_BOOLEAN	0x50
 #define SOBJ_TYPE_MASK	0xf0
 
-/* extended condition flags */
-#define COND_UNARY	0x10
-#define COND_CLASS	0x20
-
-/* standard field classes */
-#define CLASS_NUMERIC		0
-#define CLASS_ALPHABETIC	1
-#define CLASS_ALPHABETIC_LOWER	2
-#define CLASS_ALPHABETIC_UPPER	3
-
-/* relation */
-
-#define RELATION_EQ	0x01
-#define RELATION_LT	0x02
-#define RELATION_GT	0x04
-#define RELATION_LE	(RELATION_EQ | RELATION_LT)
-#define RELATION_GE	(RELATION_EQ | RELATION_GT)
-
 /* SPECIAL VARIABLES  */
 
 #define SVAR_RCODE  	"RETURN-CODE"
@@ -212,8 +194,6 @@ extern void gen_goto (cob_tree_list l, cob_tree x);
 extern int gen_check_zero (void);
 extern int gen_at_end (int status);
 extern int gen_testif (void);
-extern void gen_not (void);
-extern int gen_andstart (void);
 extern int gen_orstart (void);
 extern void gen_dstlabel (int lbl);
 extern int gen_passlabel (void);
@@ -255,9 +235,7 @@ extern void open_paragr (cob_tree paragr);
 extern void gen_stoprun (void);
 extern void gen_exit (int code);
 extern void set_variable_values (cob_tree v1, cob_tree v2);
-extern void gen_condition (cob_tree sy);
-extern void gen_compare_exp (int value);
-extern void gen_compare (cob_tree s1, int value, cob_tree s2);
+extern void gen_condition (cob_tree x);
 extern void assign_expr (cob_tree sy, int rnd);
 extern int push_expr (cob_tree sy);
 extern void gen_save_filedesc (cob_tree f);
@@ -289,7 +267,6 @@ extern unsigned long int gen_call (cob_tree v, int exceplabel, int notexceplabel
 extern int begin_on_except (void);
 extern void check_call_except (int excep, int notexcep, int exceplabel, int notexceplabel, int endlabel);
 extern void gen_initialize (cob_tree sy_start);
-extern void mark_actives (int first, int last);
 extern struct ginfo *ginfo_container0 (void);
 extern struct ginfo *ginfo_container1 (struct ginfo *v);
 extern void ginfo_container2 (struct ginfo *v, unsigned long ty);

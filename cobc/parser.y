@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 678
+%expect 675
 
 %{
 #define yydebug		cob_trace_parser
@@ -48,6 +48,8 @@ static struct ginfo    *gic=NULL;
 
 static int warning_count = 0;
 static int error_count = 0;
+
+static cob_tree condition_expr = NULL;
 
 static void assert_numeric_sy (cob_tree sy);
 %}
@@ -77,7 +79,6 @@ static void assert_numeric_sy (cob_tree sy);
   struct ginfo    *gic;       /* generic container */
   struct invalid_keys *iks; /* [NOT] INVALID KEY */
   struct invalid_key_element *ike; /* [NOT] INVALID KEY */
-  struct condition condval;
 }
 
 %left  '+', '-'
@@ -131,22 +132,20 @@ static void assert_numeric_sy (cob_tree sy);
 %token INPUT,I_O,OUTPUT,EXTEND,EOL,EOS,BINARY,FLOAT_SHORT,FLOAT_LONG
 
 %type <baval> inspect_before_after
-%type <condval> condition,simple_condition,implied_op_condition
 %type <cvval> converting_clause
-%type <ival> if_then,search_body,search_all_body
+%type <ival> if_then,search_body,search_all_body,class
 %type <ival> search_when,search_when_list,search_opt_at_end
 %type <gic>  on_end,opt_read_at_end
 %type <ike>  read_invalid_key ,read_not_invalid_key
 %type <iks>  opt_read_invalid_key
-%type <ival> ext_cond,extended_cond_op
-%type <ival> integer,cond_op,conditional,before_after,greater_than,less_than
+%type <ival> integer,operator,before_after
 %type <ival> on_exception_or_overflow,on_not_exception
 %type <ival> opt_address_of,display_upon,display_options
 %type <ival> flag_all,opt_with_duplicates,opt_with_test,opt_optional
 %type <ival> flag_not,selection_subject,selection_object,when_case
 %type <ival> flag_rounded,opt_sign_separate,opt_plus_minus
-%type <ival> organization_options,access_options,open_mode,equal_to
-%type <ival> call_mode,sign_condition,class_condition,replacing_kind
+%type <ival> organization_options,access_options,open_mode
+%type <ival> call_mode,replacing_kind
 %type <ival> screen_attribs,screen_attrib,screen_sign,opt_separate
 %type <ival> sentence_or_nothing,when_case_list,opt_read_next,usage
 %type <ival> procedure_using,sort_direction,write_options
@@ -165,10 +164,10 @@ static void assert_numeric_sy (cob_tree sy);
 %type <tree> field_description,label,filename,noallname,paragraph,assign_clause
 %type <tree> file_description,redefines_var,function_call,subscript_expr
 %type <tree> name,gname,numeric_value,opt_gname,opt_def_name,def_name
-%type <tree> opt_read_into,opt_write_from,field_name,expr,opt_expr
+%type <tree> opt_read_into,opt_write_from,field_name,expr
 %type <tree> opt_unstring_count,opt_unstring_delim,unstring_tallying
 %type <tree> qualified_var,unqualified_var
-%type <tree> call_returning,screen_to_name
+%type <tree> call_returning,screen_to_name,var_or_lit
 %type <tree> set_variable,set_variable_or_nlit,set_target,opt_add_to
 %type <tree> sort_keys,opt_perform_thru,procedure_section
 %type <tree> var_or_nliteral,opt_read_key,file_name,string_with_pointer
@@ -177,6 +176,8 @@ static void assert_numeric_sy (cob_tree sy);
 %type <tree> from_rec_varying,to_rec_varying
 %type <tree> literal,gliteral,without_all_literal,all_literal,special_literal
 %type <tree> nliteral,signed_nliteral,subscripted_variable
+%type <tree> condition,condition_1,comparative_condition,class_condition
+%type <tree> variable_condition,search_all_when_conditional
 %type <tfval> tallying_for_list
 %type <tlval> tallying_list, tallying_clause
 %type <udstval> unstring_destinations,unstring_dest_var
@@ -1976,7 +1977,8 @@ opt_perform_after:   /* nothing */ { $$=NULL; }
      }
     ;
 
-perform_after: name FROM gname
+perform_after:
+    name FROM gname
        opt_by gname UNTIL
       {
         gen_move($3,$1);
@@ -2256,22 +2258,13 @@ search_when_list:
 | search_when_list search_when	{ $$=$1; }
 ;
 search_when:
-  WHEN
-  search_when_conditional
-  { $<ival>$=gen_testif(); }
+  WHEN condition		{ $<ival>$=gen_testif(); }
   conditional_statement_list
   {
      $$ = $<ival>0;
      gen_jmplabel($$); /* generate GOTO END  */
      gen_dstlabel($<ival>3);
   }
-;
-search_when_conditional:
-  name cond_op name { gen_compare($1,$2,$3); }
-| name cond_op nliteral { gen_compare($1,$2,(cob_tree)$3); }
-| nliteral cond_op name { gen_compare((cob_tree)$1,$2,$3); }
-| nliteral cond_op nliteral {
-            gen_compare((cob_tree)$1,$2,(struct sym*)$3); }
 ;
 search_all_when_list:
   search_all_when
@@ -2280,7 +2273,10 @@ search_all_when_list:
 search_all_when:
   WHEN { curr_field = NULL; }
   search_all_when_conditional
-  { $<ival>$=gen_testif(); }
+  {
+    gen_condition ($3);
+    $<ival>$=gen_testif();
+  }
   conditional_statement_list
   {
      gen_jmplabel(lbend); /* generate GOTO END  */
@@ -2288,25 +2284,20 @@ search_all_when:
   }
 ;
 search_all_when_conditional:
-  variable opt_is equal_to variable
+  variable opt_is equal_to var_or_lit
   {
     if (curr_field == NULL)
       curr_field = $1;
-    gen_compare($1,$3,$4);
+    $$ = make_cond ($1, COND_EQ, $4);
   }
-| variable opt_is equal_to literal
+| search_all_when_conditional AND search_all_when_conditional
   {
-    if (curr_field == NULL)
-      curr_field = $1;
-    gen_compare($1,$3,(cob_tree)$4);
+    $$ = make_cond ($1, COND_AND, $3);
   }
-| search_all_when_conditional AND { $<ival>$=gen_andstart(); }
-  search_all_when_conditional  { gen_dstlabel($<ival>3); }
 ;
-opt_end_search:
-    /* nothing */
-    | END_SEARCH
-    ;
+var_or_lit: variable | literal ;
+equal_to: EQUAL opt_to | '=' opt_to ;
+opt_end_search: | END_SEARCH ;
 
 
 /*
@@ -2405,7 +2396,7 @@ start_statement:
 ;
 start_body:
   name				{ gen_start($1,0,NULL); }
-| name KEY opt_is cond_op name	{ gen_start($1,$4,$5); }
+| name KEY opt_is operator name	{ gen_start($1,$4,$5); }
 ;
 opt_end_start: | END_START ;
 
@@ -2638,7 +2629,88 @@ opt_not_invalid_key_sentence:
 
 
 /*
- * Expressions
+ * Condition
+ */
+
+condition:
+  condition_1			{ condition_expr = NULL; gen_condition ($1); }
+;
+condition_1:
+  comparative_condition		{ $$ = $1; }
+| class_condition		{ condition_expr = NULL; $$ = $1; }
+| variable_condition		{ condition_expr = NULL; $$ = $1; }
+| '(' condition_1 ')'		{ condition_expr = NULL; $$ = $2; }
+| NOT condition_1		{ $$ = make_unary_cond ($2, COND_NOT); }
+| condition_1 AND condition_1	{ $$ = make_cond ($1, COND_AND, $3); }
+| condition_1 OR condition_1	{ $$ = make_cond ($1, COND_OR, $3); }
+;
+comparative_condition:
+  expr opt_is flag_not operator expr 
+  {
+    if ($3)
+      /* invert the operator */
+      switch ($4)
+	{
+	case COND_EQ: $4 = COND_NE; break;
+	case COND_GT: $4 = COND_LE; break;
+	case COND_LT: $4 = COND_GE; break;
+	case COND_GE: $4 = COND_LT; break;
+	case COND_LE: $4 = COND_GT; break;
+	}
+
+    condition_expr = $1;
+    $$ = make_cond (condition_expr, $4, $5);
+  }
+| operator expr
+  {
+    if (condition_expr != NULL)
+      $$ = make_cond (condition_expr, $1, $2);
+    else
+      {
+	yyerror ("broken condition");
+	$$ = make_cond ($2, $1, $2); /* error recovery */
+      }
+  }
+;
+operator:
+  equal opt_to			{ $$ = COND_EQ; }
+| greater opt_than		{ $$ = COND_GT; }
+| less opt_than			{ $$ = COND_LT; }
+| greater_or_equal		{ $$ = COND_GE; }
+| less_or_equal			{ $$ = COND_LE; }
+;
+equal: EQUAL | '=' ;
+greater: GREATER | '>' ;
+less: LESS | '<' ;
+greater_or_equal: TOK_GE | GREATER opt_than OR EQUAL opt_to ;
+less_or_equal: TOK_LE | LESS opt_than OR EQUAL opt_to ;
+
+class_condition:
+  expr opt_is flag_not class
+  {
+    /* TODO: do static class check here */
+
+    $$ = make_unary_cond ($1, $4);
+    if ($3)
+      $$ = make_unary_cond ($$, COND_NOT);
+  }
+class:
+  NUMERIC			{ $$ = COND_NUMERIC; }
+| ALPHABETIC			{ $$ = COND_ALPHABETIC; }
+| ALPHABETIC_LOWER		{ $$ = COND_LOWER; }
+| ALPHABETIC_UPPER		{ $$ = COND_UPPER; }
+| POSITIVE			{ $$ = COND_POSITIVE; }
+| NEGATIVE			{ $$ = COND_NEGATIVE; }
+| ZEROS				{ $$ = COND_ZERO; }
+;
+
+variable_condition:
+  VARCOND			{ $$ = make_unary_cond ($1, COND_VAR); }
+;
+
+
+/*
+ * Expression
  */
 
 expr:
@@ -2649,134 +2721,6 @@ expr:
 | expr '*' expr			{ $$ = make_expr ($1, '*', $3); }
 | expr '/' expr			{ $$ = make_expr ($1, '/', $3); }
 | expr '^' expr			{ $$ = make_expr ($1, '^', $3); }
-;
-/* opt_expr will be NULL or a (cob_tree) pointer if the expression
-   was given, otherwise it will be valued -1 */
-opt_expr:
-    /* nothing */   { $$ = (cob_tree)-1; }
-    | expr          { $$ = $1; }
-    ;
-
-
-/*
- * Condition
- */
-
-condition:
-  simple_condition
-| NOT  condition    { gen_not(); $$=$2; }
-| condition AND     { $<ival>$=gen_andstart(); }
-            implied_op_condition { gen_dstlabel($<ival>3); $$=$4; }
-| condition OR      { $<ival>$=gen_orstart(); }
-    implied_op_condition { gen_dstlabel($<ival>3); $$=$4; }
-| '(' condition ')' { $$ = $2; }
-| VARCOND {
-  gen_condition($1);
-  $$.sy=NULL;
-  $$.oper=0;
-}
-;
-simple_condition:
-  expr extended_cond_op
-  {
-    if ($2 & COND_UNARY)
-      {
-	if ($2 & COND_CLASS)
-	  gen_class_check ($1, $2);
-	else
-	  gen_compare ($1, $2 & ~COND_UNARY, spe_lit_ZE);
-      }
-  }
-  opt_expr
-  {
-    if ($2 & COND_UNARY)
-      {
-	if ((int) $4 != -1)
-	  yyerror ("class or sign conditions are unary");
-      }
-    else
-      {
-	if ((int) $4 == -1)
-	  yyerror ("expression expected in a binary condition");
-	else
-	  gen_compare ($1, $2, $4);
-      }
-    $$.sy = $1;			/* for implied operands */
-    $$.oper = $2;
-  }
-;
-implied_op_condition:
-  condition               { $$ = $1; }
-| cond_op expr
-  {
-    if ($<condval>-2.sy == NULL) {
-      yyerror("invalid implied condition");
-    } else {
-      gen_compare($<condval>-2.sy,$1,$2);
-    }
-    $$.sy = $<condval>-2.sy;
-    $$.oper = $1;
-  }
-| expr
-  {
-    /* implied both the first operand and the operator */
-    if (($<condval>-2.sy == NULL)||
-	($<condval>-2.oper & COND_UNARY)) {
-      yyerror("invalid implied condition");
-    } else {
-      gen_compare($<condval>-2.sy,$<condval>-2.oper,$1);
-    }
-    $$.sy = $<condval>-2.sy;
-    $$.oper = $<condval>-2.oper;
-  }
-;
-extended_cond_op:
-  IS ext_cond			{ $$ = $2; }
-| IS NOT ext_cond		{ $$ = $3 ^ 7; }
-| IS ext_cond OR ext_cond	{ $$ = $2 | $4; }
-| ext_cond			{ $$ = $1; }
-| NOT opt_is ext_cond		{ $$ = $3 ^ 7; }
-| ext_cond OR ext_cond		{ $$ = $1 | $3; }
-;
-ext_cond:
-  conditional			{ $$ = $1; }
-| class_condition		{ $$ = $1 | COND_UNARY | COND_CLASS; }
-| sign_condition		{ $$ = $1; }
-;
-cond_op:
-  conditional			{ $$ = $1; }
-| NOT conditional		{ $$ = $2 ^ 7; }
-| conditional OR conditional	{ $$ = $1 | $3; }
-;
-equal_to:
-  EQUAL opt_to			{ $$ = RELATION_EQ; }
-| '=' opt_to			{ $$ = RELATION_EQ; }
-;
-greater_than:
-  GREATER opt_than		{ $$ = RELATION_GT; }
-| '>' opt_than			{ $$ = RELATION_GT; }
-;
-less_than:
-  LESS opt_than			{ $$ = RELATION_LT; }
-| '<' opt_than			{ $$ = RELATION_LT; }
-;
-conditional:
-  equal_to			{ $$ = $1; }
-| greater_than			{ $$ = $1; }
-| less_than			{ $$ = $1; }
-| TOK_GE			{ $$ = RELATION_GE; }
-| TOK_LE			{ $$ = RELATION_LE; }
-;
-class_condition:
-  NUMERIC			{ $$ = CLASS_NUMERIC; }
-| ALPHABETIC			{ $$ = CLASS_ALPHABETIC; }
-| ALPHABETIC_LOWER		{ $$ = CLASS_ALPHABETIC_LOWER; }
-| ALPHABETIC_UPPER		{ $$ = CLASS_ALPHABETIC_UPPER; }
-;
-sign_condition:
-  POSITIVE			{ $$ = RELATION_GT | COND_UNARY; }
-| NEGATIVE			{ $$ = RELATION_LT | COND_UNARY; }
-| ZEROS				{ $$ = RELATION_EQ | COND_UNARY; }
 ;
 
 

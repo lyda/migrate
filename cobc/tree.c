@@ -9,6 +9,11 @@
 
 
 /*
+ * Tree
+ */
+
+
+/*
  * Tree list
  */
 
@@ -101,7 +106,23 @@ make_filler (void)
 
 
 /*
- * Expressions
+ * Subscript references
+ */
+
+cob_tree
+make_subref (cob_tree sy, cob_tree_list subs)
+{
+  struct subref *p = malloc (sizeof (struct subref));
+  p->litflag = 2;
+  p->sym     = sy;
+  p->subs    = subs;
+  /* FIXME: error check here!! */
+  return (cob_tree) p;
+}
+
+
+/*
+ * Expression
  */
 
 cob_tree
@@ -117,16 +138,69 @@ make_expr (cob_tree left, char op, cob_tree right)
 
 
 /*
- * Subscript references
+ * Condition
  */
 
 cob_tree
-make_subref (cob_tree sy, cob_tree_list subs)
+make_cond (cob_tree x, enum cond_type type, cob_tree y)
 {
-  struct subref *p = malloc (sizeof (struct subref));
-  p->litflag = 2;
-  p->sym     = sy;
-  p->subs    = subs;
-  /* FIXME: error check here!! */
+  struct cond *p = malloc (sizeof (struct cond));
+  p->litflag = 8;
+  p->type    = type;
+  p->x       = x;
+  p->y       = y;
   return (cob_tree) p;
+}
+
+cob_tree
+make_unary_cond (cob_tree x, enum cond_type type)
+{
+  return make_cond (x, type, 0);
+}
+
+
+void
+print_tree (cob_tree x)
+{
+  if (LITERAL_P (x))
+    {
+      printf (LITERAL (x)->name);
+    }
+  else if (COND_P (x))
+    {
+      cob_tree l = COND_X (x);
+      cob_tree r = COND_Y (x);
+      enum cond_type type = COND_TYPE (x);
+
+      switch (type)
+	{
+	case COND_EQ:
+	  printf ("(= ");
+	  print_tree (l);
+	  printf (" ");
+	  print_tree (r);
+	  printf (")");
+	  break;
+
+	case COND_AND:
+	  printf ("(and ");
+	  print_tree (l);
+	  printf (" ");
+	  print_tree (r);
+	  printf (")");
+	  break;
+
+	default:
+	  printf ("(cond %d ", type);
+	  print_tree (l);
+	  if (r)
+	    {
+	      printf (" ");
+	      print_tree (r);
+	    }
+	  printf (")");
+	}
+    }
+  else
+    printf ("litflag(%d)", x->litflag);
 }

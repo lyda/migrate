@@ -77,7 +77,6 @@ static int next_available_sec_no = SEC_FIRST_NAMED;
 static int curr_sec_no = SEC_DATA;
 
 static int screen_label = 0;
-static int active[37];
 static int stackframe_cnt = 0;
 static char program_id[120] = "main";
 static char *pgm_label = "main";
@@ -968,6 +967,199 @@ push_index (cob_tree sy)
 {
   asm_call_1 ("get_index", sy);
   push_eax ();
+}
+
+
+/*
+ * Expression
+ */
+
+void
+assign_expr (cob_tree sy, int rnd)
+{
+  push_immed (rnd);
+  gen_loadvar (sy);
+  asm_call ("cob_set");
+}
+
+int
+push_expr (cob_tree sy)
+{
+  if (EXPR_P (sy))
+    {
+      push_expr (EXPR_LEFT (sy));
+      push_expr (EXPR_RIGHT (sy));
+      switch (EXPR_OP (sy))
+	{
+	case '+': asm_call ("cob_add"); break;
+	case '-': asm_call ("cob_sub"); break;
+	case '*': asm_call ("cob_mul"); break;
+	case '/': asm_call ("cob_div"); break;
+	case '^': asm_call ("cob_pow"); break;
+	}
+      return 1;
+    }
+
+  if (!is_numeric_sy (sy))
+    return 0;
+
+#ifdef COB_DEBUG
+  fprintf (o_src, "# push_expr: %s\n", sy->name);
+#endif
+  asm_call_1 ("cob_push_decimal", sy);
+  return 1;
+}
+
+
+/*
+ * Condition
+ */
+
+static void
+gen_not (void)
+{
+  int i = loc_label++;
+  int j = loc_label++;
+  fprintf (o_src, "\tjz\t.L%d\n", i);
+  fprintf (o_src, "\txorl\t%%eax,%%eax\n");
+  fprintf (o_src, "\tjmp\t.L%d\n", j);
+  fprintf (o_src, ".L%d:\tincl\t%%eax\n", i);
+  fprintf (o_src, "\t.align 16\n");
+  fprintf (o_src, ".L%d:\n", j);
+}
+
+int
+gen_orstart (void)
+{
+  int i = loc_label++;
+  fprintf (o_src, "\tjz\t.L%d\n", i);
+  return i;
+}
+
+static void
+gen_condvar (cob_tree sy)
+{
+  struct vrange *vr;
+  cob_tree sy1 = sy;
+  if (SUBREF_P (sy))
+    sy1 = SUBREF_SYM (sy);
+  push_immed (0);
+  gen_loadvar (sy1->value2);
+  gen_loadvar (sy1->value);
+  vr = sy1->refmod_redef.vr;
+  while (vr)
+    {
+      gen_loadvar (vr->value2);
+      gen_loadvar (vr->value);
+      vr = vr->next;
+    }
+  if (SUBREF_P (sy))
+    gen_loadvar (make_subref (sy1->parent, SUBREF_SUBS (sy)));
+  else
+    gen_loadvar (sy->parent);
+  asm_call ("check_condition");
+  fprintf (o_src, "\tand\t%%eax,%%eax\n");
+}
+
+static void
+gen_compare (cob_tree s1, int op, cob_tree s2)
+{
+  if (EXPR_P (s1) || EXPR_P (s2))
+    {
+      push_expr (s2);
+      push_expr (s1);
+      asm_call ("cob_cmp");
+    }
+  else
+    {
+      asm_call_2 ("compare", s1, s2);
+    }
+
+  switch (op)
+    {
+    case COND_EQ:
+      fprintf (o_src, "\tand\t%%eax,%%eax\n");	/* equal */
+      break;
+    case COND_LT:
+      fprintf (o_src, "\tinc\t%%eax\n");	/* less */
+      break;
+    case COND_LE:
+      fprintf (o_src, "\tdec\t%%eax\n");	/* less or equal */
+      gen_not ();
+      break;
+    case COND_GT:
+      fprintf (o_src, "\tdec\t%%eax\n");	/* greater */
+      break;
+    case COND_GE:
+      fprintf (o_src, "\tinc\t%%eax\n");	/* greater or equal */
+      gen_not ();
+      break;
+    case COND_NE:
+      fprintf (o_src, "\tand\t%%eax,%%eax\n");	/* not equal */
+      gen_not ();
+      break;
+    }
+}
+
+void
+gen_condition (cob_tree cond)
+{
+  cob_tree x = COND_X (cond);
+  cob_tree y = COND_Y (cond);
+  enum cond_type type = COND_TYPE (cond);
+
+  switch (type)
+    {
+    case COND_NUMERIC:
+      asm_call_1 ("cob_is_numeric", x);
+      fprintf (o_src, "\tdecl\t%%eax\n");
+      break;
+    case COND_ALPHABETIC:
+      asm_call_1 ("cob_is_alphabetic", x);
+      fprintf (o_src, "\tdecl\t%%eax\n");
+      break;
+    case COND_LOWER:
+      asm_call_1 ("cob_is_lower", x);
+      fprintf (o_src, "\tdecl\t%%eax\n");
+      break;
+    case COND_UPPER:
+      asm_call_1 ("cob_is_upper", x);
+      fprintf (o_src, "\tdecl\t%%eax\n");
+      break;
+    case COND_POSITIVE:
+      gen_compare (x, COND_GT, spe_lit_ZE);
+      break;
+    case COND_NEGATIVE:
+      gen_compare (x, COND_LT, spe_lit_ZE);
+      break;
+    case COND_ZERO:
+      gen_compare (x, COND_EQ, spe_lit_ZE);
+      break;
+    case COND_NOT:
+      gen_condition (x);
+      gen_not ();
+      return;
+    case COND_AND:
+    case COND_OR:
+      {
+	int lab = loc_label++;
+	gen_condition (x);
+	if (type == COND_AND)
+	  fprintf (o_src, "\tjnz\t.L%d\n", lab);
+	else
+	  fprintf (o_src, "\tjz\t.L%d\n", lab);
+	gen_condition (y);
+	fprintf (o_src, ".L%d:\n", lab);
+      }
+      return;
+    case COND_VAR:
+      gen_condvar (x);
+      return;
+    default:
+      gen_compare (x, type, y);
+      return;
+    }
+  fprintf (o_src, "\tand\t%%eax,%%eax\n");
 }
 
 
@@ -2967,49 +3159,6 @@ is_numeric_sy (cob_tree sy)
 }
 
 void
-gen_class_check (cob_tree sy, int class)
-{
-  int invert = 0;
-  class &= ~(COND_UNARY | COND_CLASS);
-  if (class & 4)
-    {				/* was it inverted (NOT) ? */
-      class ^= 7;
-      invert++;
-    }
-  if (class == CLASS_NUMERIC)
-    {
-      if (sy)			/* don't save already pushed variable */
-	gen_loadvar (sy);
-      else
-	stackframe_cnt += 8;
-      asm_call ("cob_check_numeric");
-      fprintf (o_src, "\tand\t%%eax,%%eax\n");
-    }
-  else
-    {
-      /* from now on, only alphabetic tests are allowed */
-      switch (class)
-	{
-	case CLASS_ALPHABETIC:
-	  asm_call_1 ("cob_check_alphabetic", sy);
-	  break;
-	case CLASS_ALPHABETIC_UPPER:
-	  asm_call_1 ("cob_check_upper", sy);
-	  break;
-	case CLASS_ALPHABETIC_LOWER:
-	  asm_call_1 ("cob_check_lower", sy);
-	  break;
-	default:
-	  yyerror ("unknown class condition");
-	  break;
-	}
-      fprintf (o_src, "\tand\t%%eax,%%eax\n");
-    }
-  if (invert)
-    gen_not ();
-}
-
-void
 gen_inspect (cob_tree var, void *list, int operation)
 {
   /*struct inspect_before_after *ba,*ba1; */
@@ -3342,7 +3491,10 @@ gen_set (cob_tree idx, enum set_mode mode, cob_tree var,
     }
 }
 
-/******* short-circuit conditional evaluators ********/
+
+/*
+ * EVALUATE statement
+ */
 
 void
 push_boolean (int flag)
@@ -3554,35 +3706,6 @@ gen_testif (void)
 }
 
 void
-gen_not (void)
-{
-  int i = loc_label++;
-  int j = loc_label++;
-  fprintf (o_src, "\tjz\t.L%d\n", i);
-  fprintf (o_src, "\txorl\t%%eax,%%eax\n");
-  fprintf (o_src, "\tjmp\t.L%d\n", j);
-  fprintf (o_src, ".L%d:\tincl\t%%eax\n", i);
-  fprintf (o_src, "\t.align 16\n");
-  fprintf (o_src, ".L%d:\n", j);
-}
-
-int
-gen_andstart (void)
-{
-  int i = loc_label++;
-  fprintf (o_src, "\tjnz\t.L%d\n", i);
-  return i;
-}
-
-int
-gen_orstart (void)
-{
-  int i = loc_label++;
-  fprintf (o_src, "\tjz\t.L%d\n", i);
-  return i;
-}
-
-void
 gen_dstlabel (int lbl)
 {
   fprintf (o_src, ".L%d:\n", lbl);
@@ -3627,6 +3750,11 @@ gen_cancel (cob_tree sy)
   asm_call_1 ("cob_cancel", sy);
 }
 
+
+/*
+ * PERFORM statement
+ */
+
 void
 gen_perform_test_counter (int lbl)
 {
@@ -3665,6 +3793,7 @@ gen_perform (cob_tree sy)
   gen_perform_thru (sy, sy);
 }
 
+
 int
 save_pic_char (char c, int n)
 {
@@ -3760,6 +3889,11 @@ save_pic_char (char c, int n)
   return 1;
 }
 
+
+/*
+ * SEARCH statement
+ */
+
 /* increment loop index, check for end */
 void
 gen_SearchLoopCheck (unsigned long lbl5, cob_tree syidx, cob_tree sytbl)
@@ -3778,7 +3912,7 @@ gen_SearchLoopCheck (unsigned long lbl5, cob_tree syidx, cob_tree sytbl)
   x = install_literal (tblmax);
   save_literal (x, '9');
 
-  gen_compare (syidx, RELATION_GT, x);
+  gen_compare (syidx, COND_GT, x);
   fprintf (o_src, "\tjz\t.L%ld\n", lbl5);
 }
 
@@ -3836,12 +3970,12 @@ gen_SearchAllLoopCheck (unsigned long lbl3, cob_tree syidx,
 //    if (itbl1 > in) { /* '2' = DESCENDING */
   if (it2->seq == '2')
     {
-      gen_compare (sy1, RELATION_GT, syvar);
+      gen_compare (sy1, COND_GT, syvar);
       fprintf (o_src, "\tjnz\t.L%ld\n", l2);
     }
   else
     {
-      gen_compare (sy1, RELATION_LT, syvar);
+      gen_compare (sy1, COND_LT, syvar);
       fprintf (o_src, "\tjnz\t.L%ld\n", l2);
     }
   fprintf (o_src, "\t.align 16\n");
@@ -3886,13 +4020,13 @@ gen_SearchAllLoopCheck (unsigned long lbl3, cob_tree syidx,
   if (it2->seq == '2')
     {
 //       if (itbl1 > in) {
-      gen_compare (sy1, RELATION_GT, syvar);
+      gen_compare (sy1, COND_GT, syvar);
       fprintf (o_src, "\tjnz\t.L%ld\n", l4);
     }
   else
     {
 //       if (itbl1 < in) {
-      gen_compare (sy1, RELATION_LT, syvar);
+      gen_compare (sy1, COND_LT, syvar);
       fprintf (o_src, "\tjnz\t.L%ld\n", l4);
     }
   fprintf (o_src, "\t.align 16\n");
@@ -4692,152 +4826,6 @@ set_variable_values (cob_tree v1, cob_tree v2)
     }
 }
 
-void
-gen_condition (cob_tree sy)
-{
-  struct vrange *vr;
-  cob_tree sy1 = sy;
-  if (SUBREF_P (sy))
-    sy1 = SUBREF_SYM (sy);
-  push_immed (0);
-  gen_loadvar (sy1->value2);
-  gen_loadvar (sy1->value);
-  vr = sy1->refmod_redef.vr;
-  while (vr)
-    {
-      gen_loadvar (vr->value2);
-      gen_loadvar (vr->value);
-      vr = vr->next;
-    }
-  if (SUBREF_P (sy))
-    gen_loadvar (make_subref (sy1->parent, SUBREF_SUBS (sy)));
-  else
-    gen_loadvar (sy->parent);
-  asm_call ("check_condition");
-  fprintf (o_src, "\tand\t%%eax,%%eax\n");
-}
-
-/* compare for already stacked expressions */
-void
-gen_compare_exp (int value)
-{
-  asm_call ("cob_cmp");
-  switch (value)
-    {
-    case 0:
-      fprintf (o_src, "\txor\t%%eax,%%eax\n\tinc\t%%eax\n");	/* false */
-      break;
-    case RELATION_EQ:
-      fprintf (o_src, "\tand\t%%eax,%%eax\n");	/* equal */
-      break;
-    case RELATION_LT:
-      fprintf (o_src, "\tinc\t%%eax\n");	/* less */
-      break;
-    case RELATION_LE:
-      fprintf (o_src, "\tdec\t%%eax\n");	/* less or equal */
-      gen_not ();
-      break;
-    case RELATION_GT:
-      fprintf (o_src, "\tdec\t%%eax\n");	/* greater */
-      break;
-    case RELATION_GE:
-      fprintf (o_src, "\tinc\t%%eax\n");	/* greater or equal */
-      gen_not ();
-      break;
-    case 6:
-      fprintf (o_src, "\tand\t%%eax,%%eax\n");	/* not equal */
-      gen_not ();
-      break;
-    case 7:
-      fprintf (o_src, "\txor\t%%eax,%%eax\n");	/* true */
-      break;
-    }
-}
-
-void
-gen_compare (cob_tree s1, int op, cob_tree s2)
-{
-  /* if any of sy1 or sy2 is an expression, we must 
-     compare full expressions */
-  if (EXPR_P (s1) || EXPR_P (s2))
-    {
-      push_expr (s2);
-      push_expr (s1);
-      gen_compare_exp (op);
-    }
-  else
-    {
-      asm_call_2 ("compare", s1, s2);
-      switch (op)
-	{
-	case 0:
-	  fprintf (o_src, "\txor\t%%eax,%%eax\n");	/* false */
-	  fprintf (o_src, "\tinc\t%%eax\n");
-	  break;
-	case 1:
-	  fprintf (o_src, "\tand\t%%eax,%%eax\n");	/* equal */
-	  break;
-	case 2:
-	  fprintf (o_src, "\tinc\t%%eax\n");	/* less */
-	  break;
-	case 3:
-	  fprintf (o_src, "\tdec\t%%eax\n");	/* less or equal */
-	  gen_not ();
-	  break;
-	case 4:
-	  fprintf (o_src, "\tdec\t%%eax\n");	/* greater */
-	  break;
-	case 5:
-	  fprintf (o_src, "\tinc\t%%eax\n");	/* greater or equal */
-	  gen_not ();
-	  break;
-	case 6:
-	  fprintf (o_src, "\tand\t%%eax,%%eax\n");	/* not equal */
-	  gen_not ();
-	  break;
-	case 7:
-	  fprintf (o_src, "\txor\t%%eax,%%eax\n");	/* true */
-	  break;
-	}
-    }
-}
-
-void
-assign_expr (cob_tree sy, int rnd)
-{
-  push_immed (rnd);
-  gen_loadvar (sy);
-  asm_call ("cob_set");
-}
-
-int
-push_expr (cob_tree sy)
-{
-  if (EXPR_P (sy))
-    {
-      push_expr (EXPR_LEFT (sy));
-      push_expr (EXPR_RIGHT (sy));
-      switch (EXPR_OP (sy))
-	{
-	case '+': asm_call ("cob_add"); break;
-	case '-': asm_call ("cob_sub"); break;
-	case '*': asm_call ("cob_mul"); break;
-	case '/': asm_call ("cob_div"); break;
-	case '^': asm_call ("cob_pow"); break;
-	}
-      return 1;
-    }
-
-  if (!is_numeric_sy (sy))
-    return 0;
-
-#ifdef COB_DEBUG
-  fprintf (o_src, "# push_expr: %s\n", sy->name);
-#endif
-  asm_call_1 ("cob_push_decimal", sy);
-  return 1;
-}
-
 static void
 gen_save_filevar (cob_tree f, cob_tree buf)
 {
@@ -5417,19 +5405,4 @@ check_call_except (int excep, int notexcep, int exceplabel,
 	fprintf (o_src, "\tjmp\t.L%d\n", notexcep);
       fprintf (o_src, ".L%d:\t# endlabel\n", endlabel);
     }
-}
-
-
-void
-mark_actives (int first, int last)
-{
-  int i;
-  if (last < first)
-    last = first;
-  if (first < 0 || first > 36)
-    first = 0;
-  if (last < 0 || last > 36)
-    last = 0;
-  for (i = first; i <= last; i++)
-    active[i] = 1;
 }

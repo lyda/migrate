@@ -133,18 +133,17 @@ cob_adjust_length (struct fld_desc *dep_desc, char *dep_val,
  */
 
 int
-cob_check_numeric (struct fld_desc *f, char *s)
+cob_is_numeric (struct fld_desc *f, char *s)
 {
   int i, dig = 0;
-  char c;
 
   if ((f->type == 'B') || (f->type == 'C') || (f->type == 'U'))
     /* the B and C formats have valid numbers always (?) */
-    return 0;
+    return 1;
 
   for (i = 0; i < f->len; i++)
     {
-      c = s[i];
+      char c = s[i];
       /* must have at least one digit */
       if (!dig && (c >= '0') && (c <= '9'))
 	dig++;
@@ -156,7 +155,7 @@ cob_check_numeric (struct fld_desc *f, char *s)
 	  while (i < f->len)
 	    {
 	      if (s[i] != ' ')
-		return 1;
+		return 0;
 	      i++;
 	    }
 	  break;
@@ -175,57 +174,41 @@ cob_check_numeric (struct fld_desc *f, char *s)
 	    }
 	}
       if ((c > '9') || (c < '0'))
-	return 1;
+	return 0;
     }
   if (!dig)
-    return 1;
-  return 0;
+    return 0;
+  return 1;
 }
 
 int
-cob_check_alphabetic (struct fld_desc *f, char *s)
+cob_is_alphabetic (struct fld_desc *f, char *s)
 {
   int i;
-  char c;
-
   for (i = 0; i < f->len; i++)
-    {
-      c = s[i];
-      if (!
-	  ((c == ' ') || ((c >= 'a') && (c <= 'z'))
-	   || ((c >= 'A') && (c <= 'Z'))))
-	return 1;
-    }
-  return 0;
+    if (!isspace (s[i]) && !isalpha (s[i]))
+      return 0;
+  return 1;
 }
 
 int
-cob_check_upper (struct fld_desc *f, char *s)
+cob_is_upper (struct fld_desc *f, char *s)
 {
   int i;
-  char c;
-
   for (i = 0; i < f->len; i++)
-    {
-      c = s[i];
-      if (!((c == ' ') || ((c >= 'A') && (c <= 'Z'))))
-	return 1;
-    }
-  return 0;
+    if (!isspace (s[i]) && isupper (s[i]))
+      return 0;
+  return 1;
 }
 
 int
-cob_check_lower (struct fld_desc *f, char *s)
+cob_is_lower (struct fld_desc *f, char *s)
 {
   int i;
-
   for (i = 0; i < f->len; i++)
-    {
-      char c = s[i];
-      if (!((c == ' ') || (('a' <= c) && (c <= 'z'))))
-	return 1;
-    }
-  return 0;
+    if (!isspace (s[i]) && islower (s[i]))
+      return 0;
+  return 1;
 }
 
 
