@@ -806,13 +806,18 @@ output_index (cb_tree x)
  */
 
 static void
-output_cond (cb_tree x)
+output_cond (cb_tree x, int save_flag)
 {
   switch (CB_TREE_TAG (x))
     {
     case CB_TAG_CONST:
       {
+	puts (cb_name (x));
+	if (save_flag)
+	  output ("(ret = ");
 	output ("%s", CB_CONST (x)->val);
+	if (save_flag)
+	  output (")");
 	break;
       }
     case CB_TAG_BINARY_OP:
@@ -822,20 +827,20 @@ output_cond (cb_tree x)
 	  {
 	  case '!':
 	    output ("!");
-	    output_cond (p->x);
+	    output_cond (p->x, save_flag);
 	    break;
 
 	  case '&': case '|':
 	    output ("(");
-	    output_cond (p->x);
+	    output_cond (p->x, save_flag);
 	    output (p->op == '&' ? " && " : " || ");
-	    output_cond (p->y);
+	    output_cond (p->y, save_flag);
 	    output (")");
 	    break;
 
 	  case '=': case '<': case '[': case '>': case ']': case '~':
 	    output ("(");
-	    output_cond (p->x);
+	    output_cond (p->x, save_flag);
 	    switch (p->op)
 	      {
 	      case '=': output (" == 0"); break;
@@ -856,19 +861,25 @@ output_cond (cb_tree x)
       }
     case CB_TAG_FUNCALL:
       {
-	output ("({");
+	if (save_flag)
+	  output ("(ret = ");
 	output_funcall (CB_FUNCALL (x));
-	output (";})");
+	if (save_flag)
+	  output (")");
 	break;
       }
     case CB_TAG_SEQUENCE:
       {
 	struct cb_sequence *p = CB_SEQUENCE (x);
 	cb_tree l = p->list;
+	if (save_flag)
+	  output ("(ret = ");
 	output_indent ("({");
 	for (; l; l = CB_CHAIN (l))
 	  output_stmt (CB_VALUE (l));
 	output_indent ("})");
+	if (save_flag)
+	  output (")");
 	break;
       }
     default:
@@ -1164,13 +1175,14 @@ output_search (cb_tree table, cb_tree var, cb_tree stmt, cb_tree whens)
 }
 
 static void
-output_search_all (cb_tree table, cb_tree stmt, cb_tree when)
+output_search_all (cb_tree table, cb_tree stmt, cb_tree cond, cb_tree when)
 {
   struct cb_field *p = cb_field (table);
   cb_tree idx = CB_TREE (CB_VALUE (p->index_list));
 
   /* header */
   output_indent ("{");
+  output_line ("int ret;");
   output_line ("int head = %d - 1;", p->occurs_min);
   output_prefix ();
   output ("int tail = ");
@@ -1195,10 +1207,15 @@ output_search_all (cb_tree table, cb_tree stmt, cb_tree when)
   output (" = (head + tail) / 2;\n");
 
   /* WHEN test */
+  output ("if (");
+  output_cond (cond, 1);
+  output (")\n");
+  output_indent_level += 2;
   output_stmt (when);
+  output_indent_level -= 2;
   output_line ("else");
   output_indent ("  {");
-  output_line ("if (cob_cmp_result < 0)");
+  output_line ("if (ret < 0)");
   output_prefix ();
   output ("  head = ");
   output_integer (idx);
@@ -1520,7 +1537,7 @@ output_perform_until (struct cb_perform *p, struct cb_perform_varying *v)
 
   output_prefix ();
   output ("if (");
-  output_cond (v->until);
+  output_cond (v->until, 0);
   output (")\n");
   output_line ("  break;");
 
@@ -1673,7 +1690,7 @@ output_stmt (cb_tree x)
 	struct cb_if *p = CB_IF (x);
 	output_prefix ();
 	output ("if (");
-	output_cond (p->test);
+	output_cond (p->test, 0);
 	output (")\n");
 	if (p->stmt1)
 	  {

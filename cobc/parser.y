@@ -2567,9 +2567,9 @@ search_body:
   {
     push_funcall_4 ("@search", $1, $2, $3, $4);
   }
-| ALL table_name search_at_end search_all_when
+| ALL table_name search_at_end WHEN expr statement_list
   {
-    push_funcall_3 ("@search-all", $2, $3, $4);
+    push_funcall_4 ("@search-all", $2, $3, cb_build_search_all ($2, $5), $6);
   }
 ;
 search_varying:
@@ -2590,12 +2590,6 @@ search_whens:
 ;
 search_when:
   WHEN condition statement_list	{ $$ = cb_build_if ($2, $3, 0); }
-;
-search_all_when:
-  WHEN expr statement_list
-  {
-    $$ = cb_build_if (cb_build_search_all ($-1, $2), $3, 0);
-  }
 ;
 end_search:
   /* empty */			{ terminator_warning (); }
