@@ -173,7 +173,6 @@ extern int get_index (struct fld_desc *f, char *s);
 
 extern int picCompLength (struct fld_desc *f);
 
-extern void cob_move (struct fld_desc *pfldDesc1, char *caData1,
-		      struct fld_desc *pfldDesc2, char *caData2);
+extern void cob_move (struct fld_desc *f1desc, unsigned char *f1data, struct fld_desc *f2desc, unsigned char *f2data);
 
 extern void runtime_error (int iErrorNbr, struct fld_desc *pFld, void *pData);

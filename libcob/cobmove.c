@@ -143,17 +143,17 @@ fldLength (struct fld_desc *f)
 \*--------------------------------------------------------------------------*/
 
 void
-cob_move (struct fld_desc *f1desc, char *f1data,
-	  struct fld_desc *f2desc, char *f2data)
+cob_move (struct fld_desc *f1desc, unsigned char *f1data,
+	  struct fld_desc *f2desc, unsigned char *f2data)
 {
   int i;
   int iPadLength;
   int iSrcLength, iDestLength;
   char iSrcDecimals, iDestDecimals;
-  char *pSrcData, *pDstData;
-  char caWrkData[20];
-  char caPic[20];
-  char cWork;
+  unsigned char *pSrcData, *pDstData;
+  unsigned char caWrkData[20];
+  unsigned char caPic[20];
+  unsigned char cWork;
 
   struct fld_desc *pSrcFld, *pDstFld;
   struct fld_desc FldWrk;
@@ -179,7 +179,7 @@ cob_move (struct fld_desc *f1desc, char *f1data,
 	  && ((pDstFld->type == DTYPE_DISPLAY)
 	      || (pDstFld->type == DTYPE_PACKED)))
 	{
-	  if ((pSrcData[0] == '\0') || (pSrcData[0] == '\xFF'))
+	  if ((pSrcData[0] == 0) || (pSrcData[0] == 255))
 	    {
 	      cWork = pSrcFld->type;
 	      pSrcFld->type = DTYPE_DISPLAY;
@@ -742,12 +742,12 @@ cob_move (struct fld_desc *f1desc, char *f1data,
 	      {
 		pDstFld->type = DTYPE_ALPHANUMERIC;
 		j = 0;
-		if (pSrcData[0] == '\0')
+		if (pSrcData[0] == 0)
 		  {		/* low values */
 		    j = (int) pSrcData[0] | 0x100;
 		    pSrcData[0] = '0';
 		  }
-		else if (pSrcData[0] == '\xFF')
+		else if (pSrcData[0] == 255)
 		  {		/* high values */
 		    j = pSrcData[0];
 		    pSrcData[0] = '9';
@@ -876,12 +876,12 @@ cob_move (struct fld_desc *f1desc, char *f1data,
 		memcpy (&FldWrk, pDstFld, sizeof (FldWrk));
 		FldWrk.type = DTYPE_ALPHANUMERIC;
 		j = 0;
-		if (pSrcData[0] == '\0')
+		if (pSrcData[0] == 0)
 		  {		/* low values */
 		    j = (int) pSrcData[0] | 0x100;
 		    pSrcData[0] = '0';
 		  }
-		else if (pSrcData[0] == '\xFF')
+		else if (pSrcData[0] == 255)
 		  {		/* high values */
 		    j = pSrcData[0];
 		    pSrcData[0] = '9';
@@ -1694,7 +1694,7 @@ cob_move (struct fld_desc *f1desc, char *f1data,
  |                                                                       |
 \*-----------------------------------------------------------------------*/
 
-char *
+static char *
 pic_expand (struct fld_desc *pfldDesc)
 {
   char *pic, *result;
@@ -1723,86 +1723,6 @@ pic_expand (struct fld_desc *pfldDesc)
 
   return result;
 }
-
-/*------------------------------------------------------------------------*\
- |                                                                        |
- |                          runtime_error                                 |
- |                                                                        |
-\*------------------------------------------------------------------------*/
-
-static int _iRtErrorNbr[] = {
-  RTERR_INVALID_DATA,
-  RTERR_INVALID_PIC,
-  -1
-};
-
-static char *_szRtErrorDesc[] = {
-  "Invalid Data Content",
-  "Invalid Picture Structure",
-  (char *) 0
-};
-
-void
-runtime_error (int iErrorNum, struct fld_desc *pField, void *pData)
-{
-  int i, j;
-
-  for (i = 0; _iRtErrorNbr[i] != -1; ++i)
-    if (iErrorNum == _iRtErrorNbr[i])
-      break;
-
-  fprintf (stderr, "\n\nRun Time Error - ");
-  if (_iRtErrorNbr[i] != -1)
-    fprintf (stderr, "%s\n", _szRtErrorDesc[i]);
-  else
-    fprintf (stderr, "Unknown Error\n");
-
-  if (pField)
-    {
-      fprintf (stderr, "Field Description: ");
-      fprintf (stderr, "len = %ld, type = %c, decimals = %d, all = %d\n",
-	       pField->len, pField->type, (char) pField->decimals,
-	       pField->all);
-    }
-  if (!pData)
-    {
-      fprintf (stderr, "No data pointer provided\n");
-      return;
-    }
-
-  fprintf (stderr, "Data Dump, Address = %08lX", (unsigned long) pData);
-  j = 0;
-  while (j < fldLength (pField))
-    {
-      fprintf (stderr, "\n%04X: ", (unsigned) j);
-      for (i = 0; i < 24; ++i)
-	{
-	  if ((i + j) == fldLength (pField))
-	    break;
-	  fprintf (stderr, "%02X ", ((unsigned char *) pData)[i]);
-	}
-      fprintf (stderr, "\n      ");
-      for (i = 0; i < 24; ++i)
-	{
-	  if ((i + j) == pField->len)
-	    if ((i + j) == fldLength (pField))
-	      break;
-	  if ((((unsigned char *) pData)[i] >= ' ')
-	      && (((unsigned char *) pData)[i] < 0x7f))
-	    fprintf (stderr, " %c ", ((unsigned char *) pData)[i]);
-	  else
-	    fprintf (stderr, "   ");
-	}
-      j += 24;
-    }
-  fprintf (stderr, "\n\n");
-}
-
-/*------------------------------------------------------------------------*\
- |                                                                        |
- |                          move_edited                                   |
- |                                                                        |
-\*------------------------------------------------------------------------*/
 
 static void
 move_edited (struct fld_desc *pSrcFld, char *pSrcData,
@@ -2335,43 +2255,6 @@ move_edited (struct fld_desc *pSrcFld, char *pSrcData,
   return;
 }
 
-
-/*------------------------------------------------------------------------*\
- |                                                                        |
- |                          _DUMP_                                        |
- |                                                                        |
-\*------------------------------------------------------------------------*/
-
-void
-_DUMP_ (unsigned char *caData, char *szCount, char *caOut)
-{
-  int i, k;
-  unsigned char c;
-
-  k = 0;
-  for (i = 0; i < 4; ++i)
-    {
-      if (szCount[i] == '\0')
-	break;
-      k *= 10;
-      k += (szCount[i] - '0');
-    }
-
-  for (i = 0; i < k; ++i)
-    {
-      c = (caData[i] >> 4) + '0';
-      if (c > '9')
-	c += 7;
-      caOut[i * 2] = c;
-
-      c = (caData[i] & 0xf) + '0';
-      if (c > '9')
-	c += 7;
-      caOut[(i * 2) + 1] = c;
-    }
-}
-
-
 /*------------------------------------------------------------------------*\
  |                                                                        |
  |                          move float                                    |
@@ -2481,4 +2364,109 @@ float2all (struct fld_desc *pSrcFld, char *pSrcData, struct fld_desc *pDstFld,
       cob_move (&FldWrk, caWork, pDstFld, pDstData);
 
     }
+}
+
+
+void
+_DUMP_ (unsigned char *caData, char *szCount, char *caOut)
+{
+  int i, k;
+  unsigned char c;
+
+  k = 0;
+  for (i = 0; i < 4; ++i)
+    {
+      if (szCount[i] == '\0')
+	break;
+      k *= 10;
+      k += (szCount[i] - '0');
+    }
+
+  for (i = 0; i < k; ++i)
+    {
+      c = (caData[i] >> 4) + '0';
+      if (c > '9')
+	c += 7;
+      caOut[i * 2] = c;
+
+      c = (caData[i] & 0xf) + '0';
+      if (c > '9')
+	c += 7;
+      caOut[(i * 2) + 1] = c;
+    }
+}
+
+
+/*------------------------------------------------------------------------*\
+ |                                                                        |
+ |                          runtime_error                                 |
+ |                                                                        |
+\*------------------------------------------------------------------------*/
+
+static int _iRtErrorNbr[] = {
+  RTERR_INVALID_DATA,
+  RTERR_INVALID_PIC,
+  -1
+};
+
+static char *_szRtErrorDesc[] = {
+  "Invalid Data Content",
+  "Invalid Picture Structure",
+  (char *) 0
+};
+
+void
+runtime_error (int iErrorNum, struct fld_desc *pField, void *pData)
+{
+  int i, j;
+
+  for (i = 0; _iRtErrorNbr[i] != -1; ++i)
+    if (iErrorNum == _iRtErrorNbr[i])
+      break;
+
+  fprintf (stderr, "\n\nRun Time Error - ");
+  if (_iRtErrorNbr[i] != -1)
+    fprintf (stderr, "%s\n", _szRtErrorDesc[i]);
+  else
+    fprintf (stderr, "Unknown Error\n");
+
+  if (pField)
+    {
+      fprintf (stderr, "Field Description: ");
+      fprintf (stderr, "len = %ld, type = %c, decimals = %d, all = %d\n",
+	       pField->len, pField->type, (char) pField->decimals,
+	       pField->all);
+    }
+  if (!pData)
+    {
+      fprintf (stderr, "No data pointer provided\n");
+      return;
+    }
+
+  fprintf (stderr, "Data Dump, Address = %08lX", (unsigned long) pData);
+  j = 0;
+  while (j < fldLength (pField))
+    {
+      fprintf (stderr, "\n%04X: ", (unsigned) j);
+      for (i = 0; i < 24; ++i)
+	{
+	  if ((i + j) == fldLength (pField))
+	    break;
+	  fprintf (stderr, "%02X ", ((unsigned char *) pData)[i]);
+	}
+      fprintf (stderr, "\n      ");
+      for (i = 0; i < 24; ++i)
+	{
+	  if ((i + j) == pField->len)
+	    if ((i + j) == fldLength (pField))
+	      break;
+	  if ((((unsigned char *) pData)[i] >= ' ')
+	      && (((unsigned char *) pData)[i] < 0x7f))
+	    fprintf (stderr, " %c ", ((unsigned char *) pData)[i]);
+	  else
+	    fprintf (stderr, "   ");
+	}
+      j += 24;
+    }
+  fprintf (stderr, "\n\n");
 }
