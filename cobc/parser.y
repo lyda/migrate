@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 81
+%expect 82
 
 %defines
 %verbose
@@ -868,7 +868,7 @@ data_records_clause:
 /* LINAGE clause */
 
 linage_clause:
-  LINAGE _is integer_value _lines
+  LINAGE _is reference_or_literal _lines
   linage_footing linage_top linage_bottom
   {
     cb_build_index (make_reference ("LINAGE-COUNTER"));
@@ -877,15 +877,15 @@ linage_clause:
   }
 ;
 linage_footing:
-  _with FOOTING _at integer_value
+| _with FOOTING _at reference_or_literal _lines
 ;
 
 linage_top:
-  _lines _at TOP integer_value
+| _at TOP reference_or_literal _lines
 ;
 
 linage_bottom:
-  _lines _at BOTTOM integer_value
+| _at BOTTOM reference_or_literal
 ;
 
 
