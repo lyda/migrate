@@ -1899,12 +1899,8 @@ gen_jmplabel (int lbl)
 void
 gen_push_int (cob_tree sy)
 {
-#ifdef COB_DEBUG
-  output ("# gen_put_int\n");
-#endif
   asm_call_1 ("get_index", sy);
-  /* this must be done without calling push_eax */
-  output ("\tpushl\t%%eax\n");
+  output ("\tpushl\t%%eax\n"); /* don't use push_eax */
 }
 
 
@@ -2995,23 +2991,15 @@ gen_goto (cob_tree_list l, cob_tree x)
 {
   if (x == NULL)
     {
-      cob_tree sy = l->tree;
-      output ("\tjmp\t.LB_%s\n", label_name (sy));
-      if (l->next)
-	yyerror ("GOTO only allows one target");
+      output ("\tjmp\t.LB_%s\n", label_name (l->tree));
     }
   else
     {
-      cob_tree_list tmp;
-      cob_tree sy = x;
-      gen_loadloc (sy);
-      output ("\tmovl $c_base%d+%u, %%eax\n", pgm_segment, sy->descriptor);
-      push_eax ();
-      asm_call ("get_index");	/* this will return %eax with var's value */
-      for (tmp = l; tmp != NULL; tmp = tmp->next)
+      asm_call_1 ("get_index", x);
+      for (; l; l = l->next)
 	{
 	  output ("\tdecl\t%%eax\n");
-	  output ("\tjz\t.LB_%s\n", label_name (tmp->tree));
+	  output ("\tjz\t.LB_%s\n", label_name (l->tree));
 	}
     }
 }

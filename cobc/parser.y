@@ -1738,9 +1738,14 @@ exit_statement:
  */
 
 goto_statement:
-  GO opt_to label_list				 { gen_goto ($3, NULL); }
+  GO opt_to label_list
+  {
+    if ($3->next)
+      yyerror ("too many labels with GO TO");
+    gen_goto ($3, NULL);
+  }
 | GO opt_to label_list DEPENDING opt_on variable { gen_goto ($3, $6); }
-| GO opt_to { yywarn ("GO TO statement without labels is obsolete"); }
+| GO opt_to { yywarn ("GO TO without label is obsolete"); }
 ;
 label_list:
   label				{ $$ = make_list ($1); }
