@@ -499,8 +499,8 @@ cob_add_int (struct cob_field f, int n)
 void
 cob_add (struct cob_field f1, struct cob_field f2, int round)
 {
-  cob_push_decimal (f1);
   cob_push_decimal (f2);
+  cob_push_decimal (f1);
   cob_num_add ();
   if (round)
     cob_round (f2);
@@ -510,8 +510,8 @@ cob_add (struct cob_field f1, struct cob_field f2, int round)
 void
 cob_sub (struct cob_field f1, struct cob_field f2, int round)
 {
-  cob_push_decimal (f1);
   cob_push_decimal (f2);
+  cob_push_decimal (f1);
   cob_num_sub ();
   if (round)
     cob_round (f2);

@@ -3204,7 +3204,7 @@ validate_field (struct cobc_field *p)
       if (p->f.synchronized)
 	if (p->usage != USAGE_BINARY)
 	  {
-	    yywarn ("SYNCHRONIZED here has no effect");
+	    // yywarn ("SYNCHRONIZED here has no effect");
 	    p->f.synchronized = 0;
 	  }
 
