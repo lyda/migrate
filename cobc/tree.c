@@ -875,12 +875,13 @@ cb_field (cb_tree x)
 struct cb_field *
 cb_field_add (struct cb_field *f, struct cb_field *p)
 {
+  struct cb_field *t;
+
   if (f == NULL)
     return p;
 
-  while (f->sister)
-    f = f->sister;
-  f->sister = p;
+  for (t = f; t->sister; t = t->sister);
+  t->sister = p;
   return f;
 }
 
