@@ -92,7 +92,7 @@ output_inst_mul (void)
 static void
 output_inst_label (int i)
 {
-  output_line (".L%d", i);
+  output_line (".L%d:", i);
 }
 
 static void
