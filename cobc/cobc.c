@@ -314,7 +314,7 @@ file_extension (const char *filename)
 static void
 temp_name (char *buff, const char *ext)
 {
-  strcpy (buff, "/tmp/fileXXXXXX");
+  strcpy (buff, "/tmp/cobXXXXXX");
   close (mkstemp (buff));
   unlink (buff);
   strcat (buff, ext);
