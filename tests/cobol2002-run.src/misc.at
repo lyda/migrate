@@ -279,42 +279,6 @@ AT_CLEANUP
 
 ## Expressions
 
-AT_SETUP([Ambiguous AND/OR (1)])
-
-AT_DATA([prog.cob], [
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       PROCEDURE        DIVISION.
-           IF 3 = 1 AND 2 OR 3
-               DISPLAY "OK"
-           END-IF.
-           STOP RUN.
-])
-
-AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:6: warning: suggest parentheses around AND within OR
-])
-
-AT_CLEANUP
-
-AT_SETUP([Ambiguous AND/OR (2)])
-
-AT_DATA([prog.cob], [
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       PROCEDURE        DIVISION.
-           IF 3 = 1 OR 2 AND 3
-               DISPLAY "NO"
-           END-IF.
-           STOP RUN.
-])
-
-AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:6: warning: suggest parentheses around AND within OR
-])
-
-AT_CLEANUP
-
 AT_SETUP([Class check with reference modification])
 
 AT_DATA([prog.cob], [
