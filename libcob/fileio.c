@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002 Keisuke Nishida
+ * Copyright (C) 2002-2003 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -81,6 +81,10 @@ sequential_open (cob_file *f, char *filename, int mode)
       flags = O_RDWR | O_APPEND | (f->flag_optional ? O_CREAT : 0);
       break;
     }
+
+#ifdef __MINGW32__
+  flags |= O_BINARY;
+#endif
 
   fd = open (filename, flags, COB_FILE_MODE);
   if (fd == -1)
@@ -511,6 +515,10 @@ indexed_open (cob_file *f, char *filename, int mode)
       break;
     }
 
+#ifdef __MINGW32__
+  flags |= O_BINARY;
+#endif
+
   p = malloc (sizeof (struct indexed_file));
   p->db = malloc (sizeof (DB *) * f->nkeys);
   for (i = 0; i < f->nkeys; i++)
@@ -830,6 +838,10 @@ sort_open (cob_file *f, char *filename, int mode)
       flags = O_RDWR | O_CREAT | O_TRUNC;
       break;
     }
+
+#ifdef __MINGW32__
+  flags |= O_BINARY;
+#endif
 
   /* open db */
   memset (&info, 0, sizeof (info));
