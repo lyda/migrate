@@ -156,6 +156,7 @@ static struct reserved reserved_words[] = {
   {"END-SUBTRACT",	END_SUBTRACT, 0},
   {"END-UNSTRING",	END_UNSTRING, 0},
   {"END-WRITE",		END_WRITE, 0},
+  {"ENTRY",		ENTRY, 0},
   {"ENVIRONMENT",	ENVIRONMENT, 0},
   {"ENVIRONMENT-VARIABLE", ENVIRONMENT_VARIABLE, 0},
   {"EOL",		EOL, 0},

@@ -2096,78 +2096,18 @@ output_init_values (struct cb_field *p)
 }
 
 
-void
-codegen (struct cb_program *prog)
+static void
+output_internal_function (struct cb_program *prog,
+			  struct cb_list *parameter_list)
 {
   int i;
   struct cb_list *l;
-  struct cb_field *p;
-
-  output_target = yyout;
-
-  output ("/* Generated from %s by cobc %s */\n\n",
-	  cb_source_file, CB_VERSION);
-  output ("#include <stdio.h>\n");
-  output ("#include <stdlib.h>\n");
-  output ("#include <string.h>\n");
-  output ("#include <libcob.h>\n\n");
-
-  output ("#include \"%s\"\n\n", storage_file_name);
-
-  if (cb_flag_main)
-    prog->initial_program = 1;
-
-  /* fields */
-  output ("/* Fields */\n\n");
-  output ("#define i_SWITCH      cob_switch\n");
-  output ("#define i_RETURN_CODE cob_return_code\n\n");
-  for (l = prog->index_list; l; l = l->next)
-    output ("static int i_%s;\n", CB_FIELD (l->item)->cname);
-  output_newline ();
-
-  /* files */
-  if (prog->file_list)
-    {
-      output ("/* Files */\n\n");
-      for (l = prog->file_list; l; l = l->next)
-	output_file_definition (l->item);
-      output_newline ();
-    }
-
-  /* screens */
-  if (prog->screen_storage)
-    {
-      output ("/* Screens */\n\n");
-      for (p = prog->screen_storage; p; p = p->sister)
-	output_screen_definition (p);
-      output_newline ();
-    }
-
-  /* labels */
-  output ("/* Labels */\n\n");
-  output ("enum {\n");
-  output ("  le_standard_error_handler,\n");
-  for (l = prog->exec_list; l; l = l->next)
-    if (CB_LABEL_P (l->item) && CB_LABEL (l->item)->need_return)
-      output ("  le_%s,\n", CB_LABEL (l->item)->cname);
-  output ("};\n\n");
-
-  /* classes */
-  for (l = prog->class_list; l; l = l->next)
-    output_class_definition (l->item);
 
   /* program function */
-  output_line ("int");
-  output ("%s (", prog->program_id);
-  if (!prog->using_list)
-    output ("void");
-  else
-    for (l = prog->using_list; l; l = l->next)
-      {
-	output ("unsigned char *b_%s", CB_FIELD (l->item)->cname);
-	if (l->next)
-	  output (", ");
-      }
+  output_line ("static int");
+  output ("internal_main (int entry");
+  for (l = parameter_list; l; l = l->next)
+    output (", unsigned char *b_%s", CB_FIELD (l->item)->cname);
   output (")\n");
   output_indent ("{");
 
@@ -2209,13 +2149,22 @@ codegen (struct cb_program *prog)
   output_line ("frame_index = 0;");
   output_line ("frame_stack[0].perform_through = -1;");
   output_newline ();
-  output_line ("/* initialize %s */", prog->program_id);
+  output_line ("/* initialize program */");
   output_line ("cob_push_environment (&env);");
   if (prog->initial_program)
     output_init_values (prog->working_storage);
   output_newline ();
 
-  output_line ("goto lb_main;");
+  /* entry dispatch */
+  output_line ("switch (entry)");
+  output_line ("  {");
+  for (i = 0, l = prog->entry_list; l; l = l->next)
+    {
+      struct cb_parameter *p = CB_PARAMETER (l->item);
+      output_line ("  case %d:", i++);
+      output_line ("    goto lb_%s;", CB_LABEL (p->x)->cname);
+    }
+  output_line ("  }");
   output_newline ();
 
   /* error handlers */
@@ -2249,20 +2198,150 @@ codegen (struct cb_program *prog)
   output_line ("return cob_return_code;");
   output_indent ("}");
   output_newline ();
+}
+
+static void
+output_entry_function (struct cb_parameter *entry,
+		       struct cb_list *parameter_list)
+{
+  static int id = 0;
+
+  const char *entry_name = CB_LABEL (entry->x)->name;
+  struct cb_list *using_list = (struct cb_list *) entry->y;
+  struct cb_list *l, *l1, *l2;
+
+  output ("int\n");
+  output ("%s (", entry_name);
+  if (!using_list)
+    output ("void");
+  else
+    for (l = using_list; l; l = l->next)
+      {
+	output ("unsigned char *b_%s", CB_FIELD (l->item)->cname);
+	if (l->next)
+	  output (", ");
+      }
+  output (")\n");
+  output ("{\n");
+
+  output ("  return internal_main (%d", id++);
+  for (l1 = parameter_list; l1; l1 = l1->next)
+    {
+      for (l2 = using_list; l2; l2 = l2->next)
+	if (strcmp (CB_FIELD (l1->item)->cname,
+		    CB_FIELD (l2->item)->cname) == 0)
+	  {
+	    output (", b_%s", CB_FIELD (l1->item)->cname);
+	    break;
+	  }
+      if (l2 == NULL)
+	output (", 0");
+    }
+  output (");\n");
+  output ("}\n\n");
+}
+
+static void
+output_main_function (struct cb_program *prog)
+{
+  output_line ("int");
+  output_line ("main (int argc, char **argv)");
+  output_indent ("{");
+  output_line ("cob_init (argc, argv);");
+  if (prog->enable_screen)
+    output_line ("cob_screen_init ();");
+  output_line ("%s ();", prog->program_id);
+  if (prog->enable_screen)
+    output_line ("cob_screen_clear ();");
+  output_line ("return cob_return_code;");
+  output_indent ("}");
+}
+
+void
+codegen (struct cb_program *prog)
+{
+  struct cb_list *l;
+  struct cb_list *parameter_list = NULL;
+
+  if (cb_flag_main)
+    prog->initial_program = 1;
+
+  output_target = yyout;
+
+  output ("/* Generated from %s by cobc %s */\n\n",
+	  cb_source_file, CB_VERSION);
+  output ("#include <stdio.h>\n");
+  output ("#include <stdlib.h>\n");
+  output ("#include <string.h>\n");
+  output ("#include <libcob.h>\n\n");
+
+  output ("#include \"%s\"\n\n", storage_file_name);
+
+  /* fields */
+  output ("/* Fields */\n\n");
+  output ("#define i_SWITCH      cob_switch\n");
+  output ("#define i_RETURN_CODE cob_return_code\n\n");
+  for (l = prog->index_list; l; l = l->next)
+    output ("static int i_%s;\n", CB_FIELD (l->item)->cname);
+  output_newline ();
+
+  /* files */
+  if (prog->file_list)
+    {
+      output ("/* Files */\n\n");
+      for (l = prog->file_list; l; l = l->next)
+	output_file_definition (l->item);
+      output_newline ();
+    }
+
+  /* screens */
+  if (prog->screen_storage)
+    {
+      struct cb_field *f;
+      output ("/* Screens */\n\n");
+      for (f = prog->screen_storage; f; f = f->sister)
+	output_screen_definition (f);
+      output_newline ();
+    }
+
+  /* labels */
+  output ("/* Labels */\n\n");
+  output ("enum {\n");
+  output ("  le_standard_error_handler,\n");
+  for (l = prog->exec_list; l; l = l->next)
+    if (CB_LABEL_P (l->item) && CB_LABEL (l->item)->need_return)
+      output ("  le_%s,\n", CB_LABEL (l->item)->cname);
+  output ("};\n\n");
+
+  /* classes */
+  for (l = prog->class_list; l; l = l->next)
+    output_class_definition (l->item);
+
+  /* build parameter list */
+  for (l = prog->entry_list; l; l = l->next)
+    {
+      struct cb_parameter *p = CB_PARAMETER (l->item);
+      struct cb_list *using_list = (struct cb_list *) p->y;
+      struct cb_list *l1, *l2;
+      for (l1 = using_list; l1; l1 = l1->next)
+	{
+	  for (l2 = parameter_list; l2; l2 = l2->next)
+	    if (strcmp (CB_FIELD (l1->item)->cname,
+			CB_FIELD (l2->item)->cname) == 0)
+	      break;
+	  if (l2 == NULL)
+	    parameter_list = list_add (parameter_list, l1->item);
+	}
+    }
+
+  /* internal function */
+  output_internal_function (prog, parameter_list);
+
+  /* entry functions */
+  for (l = prog->entry_list ; l; l = l->next)
+    output_entry_function (CB_PARAMETER (l->item), parameter_list);
 
   /* main function */
   if (cb_flag_main)
-    {
-      output_line ("int");
-      output_line ("main (int argc, char **argv)");
-      output_indent ("{");
-      output_line ("cob_init (argc, argv);");
-      if (prog->enable_screen)
-	output_line ("cob_screen_init ();");
-      output_line ("%s ();", prog->program_id);
-      if (prog->enable_screen)
-	output_line ("cob_screen_clear ();");
-      output_line ("return cob_return_code;");
-      output_indent ("}");
-    }
+    output_main_function (prog);
 }

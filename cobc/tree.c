@@ -340,7 +340,6 @@ cb_tree cb_int1;
 cb_tree cb_int2;
 cb_tree cb_error_node;
 
-struct cb_label *cb_main_label;
 struct cb_label *cb_standard_error_handler;
 
 static cb_tree
@@ -387,7 +386,6 @@ init_constants (void)
       cb_switch[i] = make_field_x (buff, "9", CB_USAGE_INDEX);
     }
 
-  cb_main_label = make_constant_label ("main");
   cb_standard_error_handler = make_constant_label ("standard_error_handler");
 }
 

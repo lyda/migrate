@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 89
+%expect 90
 
 %{
 #include "config.h"
@@ -61,6 +61,17 @@
     if (__h) push (__h);				\
   }
 
+#define push_entry(name,using_list)				\
+  {								\
+    cb_tree label = make_label (make_reference (name), NULL);	\
+    CB_LABEL (label)->need_begin = 1;				\
+    push (label);						\
+								\
+    current_program->entry_list =				\
+      list_add (current_program->entry_list,			\
+		make_pair (label, CB_TREE (using_list)));	\
+  }
+
 #define SET_TERMINATOR(loc,cond)			\
   statement_location = (cond) ? (loc) : NULL
 
@@ -102,7 +113,7 @@ static void terminator_warning (const char *name);
 %token <pict> PICTURE
 %token <tree> WORD LITERAL CLASS_NAME MNEMONIC_NAME
 
-%token ACCEPT ADD CALL CANCEL CLOSE COMPUTE DELETE DISPLAY DIVIDE
+%token ACCEPT ADD CALL CANCEL CLOSE COMPUTE DELETE DISPLAY DIVIDE ENTRY
 %token EVALUATE IF INITIALIZE INSPECT MERGE MOVE MULTIPLY OPEN PERFORM
 %token READ RELEASE RETURN REWRITE SEARCH SET SORT START STRING
 %token SUBTRACT UNSTRING WRITE WORKING_STORAGE ZERO PACKED_DECIMAL
@@ -144,9 +155,9 @@ static void terminator_warning (const char *name);
 %type <inum> ascending_or_descending opt_from_integer opt_to_integer
 %type <list> occurs_key_list data_name_list value_list opt_value_list
 %type <list> label_list numeric_value_list inspect_before_after_list
-%type <list> reference_list mnemonic_name_list file_name_list
+%type <list> reference_list mnemonic_name_list file_name_list using_phrase
 %type <list> expr_item_list numeric_name_list numeric_edited_name_list
-%type <tree> at_line_column column_number condition  expr expr_1
+%type <tree> at_line_column column_number condition expr expr_1
 %type <tree> expr_item field_description_list label line_number literal
 %type <tree> field_name integer_label reference_or_literal basic_literal
 %type <tree> integer_value numeric_value numeric_expr save_location
@@ -1263,14 +1274,14 @@ screen_plus_minus:
  *****************************************************************************/
 
 procedure_division:
-| PROCEDURE DIVISION procedure_using '.'
+| PROCEDURE DIVISION using_phrase '.'
   {
     current_section = NULL;
     current_paragraph = NULL;
   }
   procedure_declaratives
   {
-    push (cb_main_label);
+    push_entry (current_program->program_id, $3); /* main entry point */
   }
   procedure_list
   {
@@ -1280,18 +1291,20 @@ procedure_division:
       push (make_perform_exit (current_section));
   }
 ;
-procedure_using:
+using_phrase:
+  /* empty */			{ $$ = NULL; }
 | USING data_name_list
   {
     struct cb_list *l;
     for (l = $2; l; l = l->next)
-      {
-	struct cb_field *f = CB_FIELD (cb_ref (l->item));
-	if (f->level != 01 && f->level != 77)
-	  yyerror_x (l->item, _("`%s' not level 01 or 77"), f->name);
-	l->item = cb_ref (l->item);
-      }
-    current_program->using_list = $2;
+      if (l->item != cb_error_node)
+	{
+	  struct cb_field *f = CB_FIELD (cb_ref (l->item));
+	  if (f->level != 01 && f->level != 77)
+	    yyerror_x (l->item, _("`%s' not level 01 or 77"), f->name);
+	  l->item = cb_ref (l->item);
+	}
+    $$ = $2;
   }
 ;
 
@@ -1416,6 +1429,7 @@ statement:
 | delete_statement
 | display_statement
 | divide_statement
+| entry_statement
 | evaluate_statement
 | exit_statement
 | goto_statement
@@ -1834,6 +1848,18 @@ divide_body:
 end_divide:
   /* empty */			{ terminator_warning ("DIVIDE"); }
 | END_DIVIDE
+;
+
+
+/*
+ * ENTRY statement
+ */
+
+entry_statement:
+  ENTRY save_location literal using_phrase
+  {
+    push_entry (CB_LITERAL ($3)->data, $4);
+  }
 ;
 
 
@@ -3494,6 +3520,8 @@ integer_label:
   LITERAL
   {
     $$ = make_reference (CB_LITERAL ($1)->data);
+    $$->source_file = $1->source_file;
+    $$->source_line = $1->source_line;
   }
 ;
 

@@ -148,7 +148,6 @@ extern cb_tree cb_int1;
 extern cb_tree cb_int2;
 extern cb_tree cb_error_node;
 
-extern struct cb_label *cb_main_label;
 extern struct cb_label *cb_standard_error_handler;
 
 struct cb_const {
@@ -627,9 +626,9 @@ struct cb_program {
   unsigned char currency_symbol;	/* '$' or user-specified */
   unsigned char numeric_separator;	/* ',' or '.' */
   struct cb_list *class_list;
+  struct cb_list *entry_list;
   struct cb_list *index_list;
   struct cb_list *file_list;
-  struct cb_list *using_list;
   struct cb_list *exec_list;
   struct cb_list *label_list;
   struct cb_list *reference_list;
