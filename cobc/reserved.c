@@ -57,325 +57,449 @@ static struct reserved {
 } *reserved_table[HASH_SIZE];
 
 static struct reserved reserved_words[] = {
-  {"ACCEPT",		ACCEPT, 0},
-  {"ACCESS",		ACCESS, 0},
-  {"ADD",		ADD, 0},
-  {"ADVANCING",		ADVANCING, 0},
-  {"AFTER",		AFTER, 0},
-  {"ALL",		ALL, 0},
-  {"ALPHABET",          ALPHABET, 0},
-  {"ALPHABETIC",	ALPHABETIC, 0},
-  {"ALPHABETIC-LOWER",	ALPHABETIC_LOWER, 0},
-  {"ALPHABETIC-UPPER",	ALPHABETIC_UPPER, 0},
-  {"ALPHANUMERIC",	ALPHANUMERIC, 0},
-  {"ALPHANUMERIC-EDITED", ALPHANUMERIC_EDITED, 0},
-  {"ALSO",		ALSO, 0},
-  {"ALTER",		ALTER, 0},
-  {"ALTERNATE",		ALTERNATE, 0},
-  {"AND",		AND, 0},
-  {"ANY",		ANY, 0},
-  {"ARE",		ARE, 0},
-  {"AREA",		AREA, 0},
-  {"AREAS",		AREA, 0},
-  {"AS",		AS, 0},
-  {"ASCENDING",		ASCENDING, 0},
-  {"ASSIGN",		ASSIGN, 0},
-  {"AT",		AT, 0},
-  {"AUTO",		AUTO, 0},
-  {"BACKGROUND-COLOR",	BACKGROUND_COLOR, 0},
-  {"BEFORE",		BEFORE, 0},
-  {"BELL",		BELL, 0},
-  {"BINARY",		BINARY, 0},
-  {"BLANK",		BLANK, 0},
-  {"BLINK",		BLINK, 0},
-  {"BLOCK",		BLOCK, 0},
-  {"BOTTOM",		BOTTOM, 0},
-  {"BY",		BY, 0},
-  {"CALL",		CALL, 0},
-  {"CANCEL",		CANCEL, 0},
-  {"CHARACTER",		CHARACTER, 0},
-  {"CHARACTERS",	CHARACTERS, 0},
-  {"CLASS",		CLASS, 0},
-  {"CLOSE",		CLOSE, 0},
-  {"CODE-SET",		CODE_SET, 0},
-  {"COL",		COLUMN, 0},
-  {"COLLATING",		COLLATING, 0},
-  {"COLUMN",		COLUMN, 0},
-  {"COMMA",		COMMA, 0},
-  {"COMMAND-LINE",	COMMAND_LINE, 0},
-  {"COMMON",		COMMON, 0},
-  {"COMP",		COMP, 0},
-  {"COMP-1",		COMP_1, 0},
-  {"COMP-2",		COMP_2, 0},
-  {"COMP-3",		COMP_3, 0},
-  {"COMP-4",		COMP_4, 0},
-  {"COMP-5",		COMP_5, 0},
-  {"COMPUTATIONAL",	COMP, 0},
-  {"COMPUTATIONAL-1",	COMP_1, 0},
-  {"COMPUTATIONAL-2",	COMP_2, 0},
-  {"COMPUTATIONAL-3",	COMP_3, 0},
-  {"COMPUTATIONAL-4",	COMP_4, 0},
-  {"COMPUTATIONAL-5",	COMP_5, 0},
-  {"COMPUTE",		COMPUTE, 0},
-  {"CONFIGURATION",	CONFIGURATION, 0},
-  {"CONTAINS",		CONTAINS, 0},
-  {"CONTENT",		CONTENT, 0},
-  {"CONTINUE",		CONTINUE, 0},
-  {"CONVERTING",	CONVERTING, 0},
-  {"CORR",		CORRESPONDING, 0},
-  {"CORRESPONDING",	CORRESPONDING, 0},
-  {"COUNT",		COUNT, 0},
-  {"CRT",		CRT, 0},
-  {"CURRENCY",		CURRENCY, 0},
-  {"CURSOR",		CURSOR, 0},
-  {"DATA",		DATA, 0},
-  {"DATE",		DATE, 0},
-  {"DAY",		DAY, 0},
-  {"DAY-OF-WEEK",	DAY_OF_WEEK, 0},
-  {"DEBUGGING",		DEBUGGING, 0},
-  {"DECIMAL-POINT",	DECIMAL_POINT, 0},
-  {"DECLARATIVES",	DECLARATIVES, 0},
-  {"DEFAULT",		DEFAULT, 0},
-  {"DELETE",		DELETE, 0},
-  {"DELIMITED",		DELIMITED, 0},
-  {"DELIMITER",		DELIMITER, 0},
-  {"DEPENDING",		DEPENDING, 0},
-  {"DESCENDING",	DESCENDING, 0},
-  {"DISPLAY",		DISPLAY, 0},
-  {"DIVIDE",		DIVIDE, 0},
-  {"DIVISION",		DIVISION, 0},
-  {"DOWN",		DOWN, 0},
-  {"DUPLICATES",	DUPLICATES, 0},
-  {"DYNAMIC",		DYNAMIC, 0},
-  {"EBCDIC",		EBCDIC, 0},
-  {"ELSE",		ELSE, 0},
-  {"END",		END, 0},
-  {"END-ACCEPT",	END_ACCEPT, 0},
-  {"END-ADD",		END_ADD, 0},
-  {"END-CALL",		END_CALL, 0},
-  {"END-COMPUTE",	END_COMPUTE, 0},
-  {"END-DELETE",	END_DELETE, 0},
-  {"END-DISPLAY",	END_DISPLAY, 0},
-  {"END-DIVIDE",	END_DIVIDE, 0},
-  {"END-EVALUATE",	END_EVALUATE, 0},
-  {"END-IF",		END_IF, 0},
-  {"END-MULTIPLY",	END_MULTIPLY, 0},
-  {"END-OF-PAGE",	EOP, 0},
-  {"END-PERFORM",	END_PERFORM, 0},
-  {"END-READ",		END_READ, 0},
-  {"END-RETURN",	END_RETURN, 0},
-  {"END-REWRITE",	END_REWRITE, 0},
-  {"END-SEARCH",	END_SEARCH, 0},
-  {"END-START",		END_START, 0},
-  {"END-STRING",	END_STRING, 0},
-  {"END-SUBTRACT",	END_SUBTRACT, 0},
-  {"END-UNSTRING",	END_UNSTRING, 0},
-  {"END-WRITE",		END_WRITE, 0},
-  {"ENTRY",		ENTRY, 0},
-  {"ENVIRONMENT",	ENVIRONMENT, 0},
-  {"ENVIRONMENT-NAME",	ENVIRONMENT_NAME, 0},
-  {"ENVIRONMENT-VALUE",	ENVIRONMENT_VALUE, 0},
-  {"EOL",		EOL, 0},
-  {"EOP",		EOP, 0},
-  {"EOS",		EOS, 0},
-  {"EQUAL",		EQUAL, 0},
-  {"ERASE",		ERASE, 0},
-  {"ERROR",		ERROR, 0},
-  {"EVALUATE",		EVALUATE, 0},
-  {"EXCEPTION",		EXCEPTION, 0},
-  {"EXIT",		EXIT, 0},
-  {"EXTEND",		EXTEND, 0},
-  {"EXTERNAL",		EXTERNAL, 0},
-  {"FALSE",		TOK_FALSE, 0},
-  {"FD",		FD, 0},
-  {"FILE",		TOK_FILE, 0},
-  {"FILE-CONTROL",	FILE_CONTROL, 0},
-  {"FILLER",		FILLER, 0},
-  {"FIRST",		FIRST, 0},
-  {"FOOTING",		FOOTING, 0},
-  {"FOR",		FOR, 0},
-  {"FOREGROUND-COLOR",	FOREGROUND_COLOR, 0},
-  {"FROM",		FROM, 0},
-  {"FULL",		FULL, 0},
-  {"FUNCTION",		0, 0},
-  {"GIVING",		GIVING, 0},
-  {"GLOBAL",		GLOBAL, 0},
-  {"GO",		GO, 0},
-  {"GOBACK",		GOBACK, 0},
-  {"GREATER",		GREATER, 0},
-  {"HIGH-VALUE",	HIGH_VALUE, 0},
-  {"HIGH-VALUES",	HIGH_VALUE, 0},
-  {"HIGHLIGHT",		HIGHLIGHT, 0},
-  {"I-O",		I_O, 0},
-  {"I-O-CONTROL",	I_O_CONTROL, 0},
-  {"ID",		IDENTIFICATION, 0},
-  {"IDENTIFICATION",	IDENTIFICATION, 0},
-  {"IF",		IF, 0},
-  {"IN",		IN, 0},
-  {"INDEX",		INDEX, 0},
-  {"INDEXED",		INDEXED, 0},
-  {"INITIAL",		TOK_INITIAL, 0},
-  {"INITIALIZE",	INITIALIZE, 0},
-  {"INPUT",		INPUT, 0},
-  {"INPUT-OUTPUT",	INPUT_OUTPUT, 0},
-  {"INSPECT",		INSPECT, 0},
-  {"INTO",		INTO, 0},
-  {"INVALID",		INVALID, 0},
-  {"IS",		IS, 0},
-  {"JUST",		JUSTIFIED, 0},
-  {"JUSTIFIED",		JUSTIFIED, 0},
-  {"KEY",		KEY, 0},
-  {"LABEL",		LABEL, 0},
-  {"LEADING",		LEADING, 0},
-  {"LEFT",		LEFT, 0},
-  {"LENGTH",		LENGTH, 0},
-  {"LESS",		LESS, 0},
-  {"LINAGE",		LINAGE, 0},
-  {"LINE",		LINE, 0},
-  {"LINES",		LINES, 0},
-  {"LINKAGE",		LINKAGE, 0},
-  {"LOCAL-STORAGE",	LOCAL_STORAGE, 0},
-  {"LOCK",		LOCK, 0},
-  {"LOW-VALUE",		LOW_VALUE, 0},
-  {"LOW-VALUES",	LOW_VALUE, 0},
-  {"LOWLIGHT",		LOWLIGHT, 0},
-  {"MEMORY",		MEMORY, 0},
-  {"MERGE",		MERGE, 0},
-  {"MINUS",		MINUS, 0},
-  {"MODE",		MODE, 0},
-  {"MOVE",		MOVE, 0},
-  {"MULTIPLE",		MULTIPLE, 0},
-  {"MULTIPLY",		MULTIPLY, 0},
-  {"NATIONAL",		NATIONAL, 0},
-  {"NATIONAL-EDITED",	NATIONAL_EDITED, 0},
-  {"NATIVE",		NATIVE, 0},
-  {"NEGATIVE",		NEGATIVE, 0},
-  {"NEXT",		NEXT, 0},
-  {"NO",		NO, 0},
-  {"NOT",		NOT, 0},
-  {"NUMBER",		NUMBER, 0},
-  {"NUMERIC",		NUMERIC, 0},
-  {"NUMERIC-EDITED",	NUMERIC_EDITED, 0},
-  {"OBJECT-COMPUTER",	OBJECT_COMPUTER, 0},
-  {"OCCURS",		OCCURS, 0},
-  {"OF",		OF, 0},
-  {"OFF",		OFF, 0},
-  {"OMITTED",		OMITTED, 0},
-  {"ON",		ON, 0},
-  {"ONLY",		ONLY, 0},
-  {"OPEN",		OPEN, 0},
-  {"OPTIONAL",		OPTIONAL, 0},
-  {"OR",		OR, 0},
-  {"ORDER",		ORDER, 0},
-  {"ORGANIZATION",	ORGANIZATION, 0},
-  {"OTHER",		OTHER, 0},
-  {"OUTPUT",		OUTPUT, 0},
-  {"OVERFLOW",		OVERFLOW, 0},
-  {"PACKED-DECIMAL",	PACKED_DECIMAL, 0},
-  {"PADDING",		PADDING, 0},
-  {"PAGE",		PAGE, 0},
-  {"PERFORM",		PERFORM, 0},
-  {"PIC",		0, 0},
-  {"PICTURE",		0, 0},
-  {"PLUS",		PLUS, 0},
-  {"POINTER",		POINTER, 0},
-  {"POSITION",		POSITION, 0},
-  {"POSITIVE",		POSITIVE, 0},
-  {"PROCEDURE",		PROCEDURE, 0},
-  {"PROCEED",		PROCEED, 0},
-  {"PROGRAM",		PROGRAM, 0},
-  {"PROGRAM-ID",	PROGRAM_ID, 0},
-  {"QUOTE",		QUOTE, 0},
-  {"QUOTES",		QUOTE, 0},
-  {"RANDOM",		RANDOM, 0},
-  {"READ",		READ, 0},
-  {"RECORD",		RECORD, 0},
-  {"RECORDING",		RECORDING, 0},
-  {"RECORDS",		RECORDS, 0},
-  {"RECURSIVE",		RECURSIVE, 0},
-  {"REDEFINES",		REDEFINES, 0},
-  {"REEL",		REEL, 0},
-  {"REFERENCE",		REFERENCE, 0},
-  {"RELATIVE",		RELATIVE, 0},
-  {"RELEASE",		RELEASE, 0},
-  {"REMAINDER",		REMAINDER, 0},
-  {"REMOVAL",		REMOVAL, 0},
-  {"RENAMES",		RENAMES, 0},
-  {"REPLACING",		REPLACING, 0},
-  {"REQUIRED",		REQUIRED, 0},
-  {"RESERVE",		RESERVE, 0},
-  {"RETURN",		RETURN, 0},
-  {"RETURNING",		RETURNING, 0},
-  {"REVERSE-VIDEO",	REVERSE_VIDEO, 0},
-  {"REWIND",		REWIND, 0},
-  {"REWRITE",		REWRITE, 0},
-  {"RIGHT",		RIGHT, 0},
-  {"ROUNDED",		ROUNDED, 0},
-  {"RUN",		RUN, 0},
-  {"SAME",		SAME, 0},
-  {"SCREEN",		SCREEN, 0},
-  {"SD",		SD, 0},
-  {"SEARCH",		SEARCH, 0},
-  {"SECTION",		SECTION, 0},
-  {"SECURE",		SECURE, 0},
-  {"SELECT",		SELECT, 0},
-  {"SENTENCE",		SENTENCE, 0},
-  {"SEPARATE",		SEPARATE, 0},
-  {"SEQUENCE",		SEQUENCE, 0},
-  {"SEQUENTIAL",	SEQUENTIAL, 0},
-  {"SET",		SET, 0},
-  {"SHARING",		SHARING, 0},
-  {"SIGN",		SIGN, 0},
-  {"SIZE",		SIZE, 0},
-  {"SORT",		SORT, 0},
-  {"SORT-MERGE",	SORT_MERGE, 0},
-  {"SOURCE-COMPUTER",	SOURCE_COMPUTER, 0},
-  {"SPACE",		SPACE, 0},
-  {"SPACES",		SPACE, 0},
-  {"SPECIAL-NAMES",	SPECIAL_NAMES, 0},
-  {"STANDARD",		STANDARD, 0},
-  {"STANDARD-1",	STANDARD_1, 0},
-  {"STANDARD-2",	STANDARD_2, 0},
-  {"START",		START, 0},
-  {"STATUS",		STATUS, 0},
-  {"STOP",		STOP, 0},
-  {"STRING",		STRING, 0},
-  {"SUBTRACT",		SUBTRACT, 0},
-  {"SYMBOLIC",		SYMBOLIC, 0},
-  {"SYNC",		SYNCHRONIZED, 0},
-  {"SYNCHRONIZED",      SYNCHRONIZED, 0},
-  {"TALLYING",	    	TALLYING, 0},
-  {"TAPE",		TAPE, 0},
-  {"TEST",	    	TEST, 0},
-  {"THAN",	    	THAN, 0},
-  {"THEN",	    	THEN, 0},
-  {"THROUGH",	    	THRU, 0},
-  {"THRU",	    	THRU, 0},
-  {"TIME",	    	TIME, 0},
-  {"TIMES",	    	TIMES, 0},
-  {"TO",	    	TO, 0},
-  {"TOP",		TOP, 0},
-  {"TRAILING",	    	TRAILING, 0},
-  {"TRUE",	    	TOK_TRUE, 0},
-  {"UNDERLINE",		UNDERLINE, 0},
-  {"UNIT",		UNIT, 0},
-  {"UNSTRING",	    	UNSTRING, 0},
-  {"UNTIL",	    	UNTIL, 0},
-  {"UP",       	    	UP, 0},
-  {"UPON",     	       	UPON, 0},
-  {"USAGE",		USAGE, 0},
-  {"USE",		USE, 0},
-  {"USING",		USING, 0},
-  {"VALUE",		VALUE, 0},
-  {"VALUES",		VALUE, 0},
-  {"VARYING",		VARYING, 0},
-  {"WHEN",		WHEN, 0},
-  {"WITH",		WITH, 0},
-  {"WORKING-STORAGE",	WORKING_STORAGE, 0},
-  {"WRITE",		WRITE, 0},
-  {"ZERO",		ZERO, 0},
-  {"ZEROES",		ZERO, 0},
-  {"ZEROS",		ZERO, 0},
+  {"ACCEPT",		ACCEPT, 0},			/* 2002 */
+  {"ACCESS",		ACCESS, 0},			/* 2002 */
+  {"ACTIVE-CLASS",	-1, 0},				/* 2002 */
+  {"ADD",		ADD, 0},			/* 2002 */
+  {"ADDRESS",		-1, 0},				/* 2002 */
+  {"ADVANCING",		ADVANCING, 0},			/* 2002 */
+  {"AFTER",		AFTER, 0},			/* 2002 */
+  {"ALIGNED",		-1, 0},				/* 2002 */
+  {"ALL",		ALL, 0},			/* 2002 */
+  {"ALLOCATE",		-1, 0},				/* 2002 */
+  {"ALPHABET",		ALPHABET, 0},			/* 2002 */
+  {"ALPHABETIC",	ALPHABETIC, 0},			/* 2002 */
+  {"ALPHABETIC-LOWER",	ALPHABETIC_LOWER, 0},		/* 2002 */
+  {"ALPHABETIC-UPPER",	ALPHABETIC_UPPER, 0},		/* 2002 */
+  {"ALPHANUMERIC",	ALPHANUMERIC, 0},		/* 2002 */
+  {"ALPHANUMERIC-EDITED", ALPHANUMERIC_EDITED, 0},	/* 2002 */
+  {"ALSO",		ALSO, 0},			/* 2002 */
+  {"ALTER",		ALTER, 0},			/* 85 */
+  {"ALTERNATE",		ALTERNATE, 0},			/* 2002 */
+  {"AND",		AND, 0},			/* 2002 */
+  {"ANY",		ANY, 0},			/* 2002 */
+  {"ANYCASE",		-1, 0},				/* 2002 */
+  {"ARE",		ARE, 0},			/* 2002 */
+  {"AREA",		AREA, 0},			/* 2002 */
+  {"AREAS",		AREA, 0},			/* 2002 */
+  {"AS",		AS, 0},				/* 2002 */
+  {"ASCENDING",		ASCENDING, 0},			/* 2002 */
+  {"ASSIGN",		ASSIGN, 0},			/* 2002 */
+  {"AT",		AT, 0},				/* 2002 */
+  {"AUTO",		AUTO, 0},			/* 2000 (C/S) */
+  {"B-AND",		-1, 0},				/* 2002 */
+  {"B-NOT",		-1, 0},				/* 2002 */
+  {"B-OR",		-1, 0},				/* 2002 */
+  {"B-XOR",		-1, 0},				/* 2002 */
+  {"BACKGROUND-COLOR",	BACKGROUND_COLOR, 0},		/* 2000 (C/S) */
+  {"BASED",		-1, 0},				/* 2002 */
+  {"BEFORE",		BEFORE, 0},			/* 2002 */
+  {"BELL",		BELL, 0},			/* 2000 (C/S) */
+  {"BINARY",		BINARY, 0},			/* 2002 */
+  {"BINARY-CHAR",	-1, 0},				/* 2002 */
+  {"BINARY-DOUBLE",	-1, 0},				/* 2002 */
+  {"BINARY-LONG",	-1, 0},				/* 2002 */
+  {"BINARY-SHORT",	-1, 0},				/* 2002 */
+  {"BIT",		-1, 0},				/* 2002 */
+  {"BLANK",		BLANK, 0},			/* 2002 */
+  {"BLINK",		BLINK, 0},			/* 2000 (C/S) */
+  {"BLOCK",		BLOCK, 0},			/* 2002 */
+  {"BOOLEAN",		-1, 0},				/* 2002 */
+  {"BOTTOM",		BOTTOM, 0},			/* 2002 */
+  {"BY",		BY, 0},				/* 2002 */
+  {"CALL",		CALL, 0},			/* 2002 */
+  {"CANCEL",		CANCEL, 0},			/* 2002 */
+  {"CD",		-1, 0},				/* 2002 */
+  {"CF",		-1, 0},				/* 2002 */
+  {"CH",		-1, 0},				/* 2002 */
+  {"CHARACTER",		CHARACTER, 0},			/* 2002 */
+  {"CHARACTERS",	CHARACTERS, 0},			/* 2002 */
+  {"CLASS",		CLASS, 0},			/* 2002 */
+  {"CLASS-ID",		-1, 0},				/* 2002 */
+  {"CLOSE",		CLOSE, 0},			/* 2002 */
+  {"CODE",		-1, 0},				/* 2002 */
+  {"CODE-SET",		CODE_SET, 0},			/* 2002 */
+  {"CODITION",		-1, 0},				/* 2002 */
+  {"COL",		COLUMN, 0},			/* 2002 */
+  {"COLLATING",		COLLATING, 0},			/* 2002 */
+  {"COLS",		COLUMN, 0},			/* 2002 */
+  {"COLUMN",		COLUMN, 0},			/* 2002 */
+  {"COLUMNS",		COLUMN, 0},			/* 2002 */
+  {"COMMA",		COMMA, 0},			/* 2002 */
+  {"COMMAND-LINE",	COMMAND_LINE, 0},		/* extension */
+  {"COMMON",		COMMON, 0},			/* 2002 */
+  {"COMMUNICATION",	-1, 0},				/* 2002 */
+  {"COMP",		COMP, 0},			/* 2002 */
+  {"COMP-1",		COMP_1, 0},			/* extension */
+  {"COMP-2",		COMP_2, 0},			/* extension */
+  {"COMP-3",		COMP_3, 0},			/* extension */
+  {"COMP-4",		COMP_4, 0},			/* extension */
+  {"COMP-5",		COMP_5, 0},			/* extension */
+  {"COMPUTATIONAL",	COMP, 0},			/* 2002 */
+  {"COMPUTATIONAL-1",	COMP_1, 0},			/* extension */
+  {"COMPUTATIONAL-2",	COMP_2, 0},			/* extension */
+  {"COMPUTATIONAL-3",	COMP_3, 0},			/* extension */
+  {"COMPUTATIONAL-4",	COMP_4, 0},			/* extension */
+  {"COMPUTATIONAL-5",	COMP_5, 0},			/* extension */
+  {"COMPUTE",		COMPUTE, 0},			/* 2002 */
+  {"CONFIGURATION",	CONFIGURATION, 0},		/* 2002 */
+  {"CONSTANT",		-1, 0},				/* 2002 */
+  {"CONTAINS",		CONTAINS, 0},			/* 2002 */
+  {"CONTENT",		CONTENT, 0},			/* 2002 */
+  {"CONTINUE",		CONTINUE, 0},			/* 2002 */
+  {"CONTROL",		-1, 0},				/* 2002 */
+  {"CONTROLS",		-1, 0},				/* 2002 */
+  {"CONVERTING",	CONVERTING, 0},			/* 2002 */
+  {"COPY",		0, 0},				/* 2002 */
+  {"CORR",		CORRESPONDING, 0},		/* 2002 */
+  {"CORRESPONDING",	CORRESPONDING, 0},		/* 2002 */
+  {"COUNT",		COUNT, 0},			/* 2002 */
+  {"CRT",		CRT, 0},			/* 2002 */
+  {"CURRENCY",		CURRENCY, 0},			/* 2002 */
+  {"CURSOR",		CURSOR, 0},			/* 2002 */
+  {"DATA",		DATA, 0},			/* 2002 */
+  {"DATA-POINTER",	-1, 0},				/* 2002 */
+  {"DATE",		DATE, 0},			/* 2002 */
+  {"DAY",		DAY, 0},			/* 2002 */
+  {"DAY-OF-WEEK",	DAY_OF_WEEK, 0},		/* 2002 */
+  {"DE",		-1, 0},				/* 2002 */
+  {"DEBUGGING",		DEBUGGING, 0},			/* 2002 */
+  {"DECIMAL-POINT",	DECIMAL_POINT, 0},		/* 2002 */
+  {"DECLARATIVES",	DECLARATIVES, 0},		/* 2002 */
+  {"DEFAULT",		DEFAULT, 0},			/* 2002 */
+  {"DELETE",		DELETE, 0},			/* 2002 */
+  {"DELIMITED",		DELIMITED, 0},			/* 2002 */
+  {"DELIMITER",		DELIMITER, 0},			/* 2002 */
+  {"DEPENDING",		DEPENDING, 0},			/* 2002 */
+  {"DESCENDING",	DESCENDING, 0},			/* 2002 */
+  {"DESTINATION",	-1, 0},				/* 2002 */
+  {"DETAIL",		-1, 0},				/* 2002 */
+  {"DISABLE",		-1, 0},				/* 2002 */
+  {"DISPLAY",		DISPLAY, 0},			/* 2002 */
+  {"DIVIDE",		DIVIDE, 0},			/* 2002 */
+  {"DIVISION",		DIVISION, 0},			/* 2002 */
+  {"DOWN",		DOWN, 0},			/* 2002 */
+  {"DUPLICATES",	DUPLICATES, 0},			/* 2002 */
+  {"DYNAMIC",		DYNAMIC, 0},			/* 2002 */
+  {"EBCDIC",		EBCDIC, 0},			/* extension */
+  {"EC",		-1, 0},				/* 2002 */
+  {"EGI",		-1, 0},				/* 2002 */
+  {"ELSE",		ELSE, 0},			/* 2002 */
+  {"EMI",		-1, 0},				/* 2002 */
+  {"ENABLE",		-1, 0},				/* 2002 */
+  {"END",		END, 0},			/* 2002 */
+  {"END-ACCEPT",	END_ACCEPT, 0},			/* 2002 */
+  {"END-ADD",		END_ADD, 0},			/* 2002 */
+  {"END-CALL",		END_CALL, 0},			/* 2002 */
+  {"END-COMPUTE",	END_COMPUTE, 0},		/* 2002 */
+  {"END-DELETE",	END_DELETE, 0},			/* 2002 */
+  {"END-DISPLAY",	END_DISPLAY, 0},		/* 2002 */
+  {"END-DIVIDE",	END_DIVIDE, 0},			/* 2002 */
+  {"END-EVALUATE",	END_EVALUATE, 0},		/* 2002 */
+  {"END-IF",		END_IF, 0},			/* 2002 */
+  {"END-MULTIPLY",	END_MULTIPLY, 0},		/* 2002 */
+  {"END-OF-PAGE",	EOP, 0},			/* 2002 */
+  {"END-PERFORM",	END_PERFORM, 0},		/* 2002 */
+  {"END-READ",		END_READ, 0},			/* 2002 */
+  {"END-RECEIVE",	-1, 0},				/* 2002 */
+  {"END-RETURN",	END_RETURN, 0},			/* 2002 */
+  {"END-REWRITE",	END_REWRITE, 0},		/* 2002 */
+  {"END-SEARCH",	END_SEARCH, 0},			/* 2002 */
+  {"END-START",		END_START, 0},			/* 2002 */
+  {"END-STRING",	END_STRING, 0},			/* 2002 */
+  {"END-SUBTRACT",	END_SUBTRACT, 0},		/* 2002 */
+  {"END-UNSTRING",	END_UNSTRING, 0},		/* 2002 */
+  {"END-WRITE",		END_WRITE, 0},			/* 2002 */
+  {"ENTRY",		ENTRY, 0},			/* extension */
+  {"ENVIRONMENT",	ENVIRONMENT, 0},		/* 2002 */
+  {"ENVIRONMENT-NAME",	ENVIRONMENT_NAME, 0},		/* extension */
+  {"ENVIRONMENT-VALUE",	ENVIRONMENT_VALUE, 0},		/* extension */
+  {"EO",		-1, 0},				/* 2002 */
+  {"EOL",		EOL, 0},			/* 2000 (C/S) */
+  {"EOP",		EOP, 0},			/* 2002 */
+  {"EOS",		EOS, 0},			/* 2000 (C/S) */
+  {"EQUAL",		EQUAL, 0},			/* 2002 */
+  {"ERASE",		ERASE, 0},			/* 2000 (C/S) */
+  {"ERROR",		ERROR, 0},			/* 2002 */
+  {"ESI",		-1, 0},				/* 2002 */
+  {"EVALUATE",		EVALUATE, 0},			/* 2002 */
+  {"EXCEPTION",		EXCEPTION, 0},			/* 2002 */
+  {"EXCEPTION-OBJECT",	-1, 0},				/* 2002 */
+  {"EXIT",		EXIT, 0},			/* 2002 */
+  {"EXTEND",		EXTEND, 0},			/* 2002 */
+  {"EXTERNAL",		EXTERNAL, 0},			/* 2002 */
+  {"FACTORY",		-1, 0},				/* 2002 */
+  {"FALSE",		TOK_FALSE, 0},			/* 2002 */
+  {"FD",		FD, 0},				/* 2002 */
+  {"FILE",		TOK_FILE, 0},			/* 2002 */
+  {"FILE-CONTROL",	FILE_CONTROL, 0},		/* 2002 */
+  {"FILLER",		FILLER, 0},			/* 2002 */
+  {"FINAL",		-1, 0},				/* 2002 */
+  {"FIRST",		FIRST, 0},			/* 2002 */
+  {"FLOAT-EXTENDED",	-1, 0},				/* 2002 */
+  {"FLOAT-LONG",	-1, 0},				/* 2002 */
+  {"FLOAT-SHORT",	-1, 0},				/* 2002 */
+  {"FOOTING",		FOOTING, 0},			/* 2002 */
+  {"FOR",		FOR, 0},			/* 2002 */
+  {"FOREGROUND-COLOR",	FOREGROUND_COLOR, 0},		/* 2000 (C/S) */
+  {"FORMAT",		-1, 0},				/* 2002 */
+  {"FREE",		-1, 0},				/* 2002 */
+  {"FROM",		FROM, 0},			/* 2002 */
+  {"FULL",		FULL, 0},			/* 2000 (C/S) */
+  {"FUNCTION",		0, 0},				/* 2002 */
+  {"FUNCTION-ID",	-1, 0},				/* 2002 */
+  {"GENERATE",		-1, 0},				/* 2002 */
+  {"GET",		-1, 0},				/* 2002 */
+  {"GIVING",		GIVING, 0},			/* 2002 */
+  {"GLOBAL",		GLOBAL, 0},			/* 2002 */
+  {"GO",		GO, 0},				/* 2002 */
+  {"GOBACK",		GOBACK, 0},			/* 2002 */
+  {"GREATER",		GREATER, 0},			/* 2002 */
+  {"GROUP",		-1, 0},				/* 2002 */
+  {"GROUP-USAGE",	-1, 0},				/* 2002 */
+  {"HEADING",		-1, 0},				/* 2002 */
+  {"HIGH-VALUE",	HIGH_VALUE, 0},			/* 2002 */
+  {"HIGH-VALUES",	HIGH_VALUE, 0},			/* 2002 */
+  {"HIGHLIGHT",		HIGHLIGHT, 0},			/* 2000 (C/S) */
+  {"I-O",		I_O, 0},			/* 2002 */
+  {"I-O-CONTROL",	I_O_CONTROL, 0},		/* 2002 */
+  {"ID",		IDENTIFICATION, 0},		/* extension */
+  {"IDENTIFICATION",	IDENTIFICATION, 0},		/* 2002 */
+  {"IF",		IF, 0},				/* 2002 */
+  {"IN",		IN, 0},				/* 2002 */
+  {"INDEX",		INDEX, 0},			/* 2002 */
+  {"INDEXED",		INDEXED, 0},			/* 2002 */
+  {"INDICATE",		-1, 0},				/* 2002 */
+  {"INHERITS",		-1, 0},				/* 2002 */
+  {"INITIAL",		TOK_INITIAL, 0},		/* 2002 */
+  {"INITIALIZE",	INITIALIZE, 0},			/* 2002 */
+  {"INITIATE",		-1, 0},				/* 2002 */
+  {"INPUT",		INPUT, 0},			/* 2002 */
+  {"INPUT-OUTPUT",	INPUT_OUTPUT, 0},		/* 2002 */
+  {"INSPECT",		INSPECT, 0},			/* 2002 */
+  {"INTERFACE",		-1, 0},				/* 2002 */
+  {"INTERFACE-ID",	-1, 0},				/* 2002 */
+  {"INTO",		INTO, 0},			/* 2002 */
+  {"INVALID",		INVALID, 0},			/* 2002 */
+  {"INVOKE",		-1, 0},				/* 2002 */
+  {"IS",		IS, 0},				/* 2002 */
+  {"JUST",		JUSTIFIED, 0},			/* 2002 */
+  {"JUSTIFIED",		JUSTIFIED, 0},			/* 2002 */
+  {"KEY",		KEY, 0},			/* 2002 */
+  {"LABEL",		LABEL, 0},			/* 85 */
+  {"LAST",		-1, 0},				/* 2002 */
+  {"LEADING",		LEADING, 0},			/* 2002 */
+  {"LEFT",		LEFT, 0},			/* 2002 */
+  {"LENGTH",		LENGTH, 0},			/* 2002 */
+  {"LESS",		LESS, 0},			/* 2002 */
+  {"LIMIT",		-1, 0},				/* 2002 */
+  {"LIMITS",		-1, 0},				/* 2002 */
+  {"LINAGE",		LINAGE, 0},			/* 2002 */
+  {"LINAGE-COUNTER",	0, 0},				/* 2002 */
+  {"LINE",		LINE, 0},			/* 2002 */
+  {"LINE-COUNTER",	-1, 0},				/* 2002 */
+  {"LINES",		LINES, 0},			/* 2002 */
+  {"LINKAGE",		LINKAGE, 0},			/* 2002 */
+  {"LOCAL-STORAGE",	LOCAL_STORAGE, 0},		/* 2002 */
+  {"LOCALE",		-1, 0},				/* 2002 */
+  {"LOCK",		LOCK, 0},			/* 2002 */
+  {"LOW-VALUE",		LOW_VALUE, 0},			/* 2002 */
+  {"LOW-VALUES",	LOW_VALUE, 0},			/* 2002 */
+  {"LOWLIGHT",		LOWLIGHT, 0},			/* 2000 (C/S) */
+  {"MEMORY",		MEMORY, 0},			/* 85 */
+  {"MERGE",		MERGE, 0},			/* 2002 */
+  {"MESSAGE",		-1, 0},				/* 2002 */
+  {"METHOD",		-1, 0},				/* 2002 */
+  {"METHOD-ID",		-1, 0},				/* 2002 */
+  {"MINUS",		MINUS, 0},			/* 2002 */
+  {"MODE",		MODE, 0},			/* 2002 */
+  {"MOVE",		MOVE, 0},			/* 2002 */
+  {"MULTIPLE",		MULTIPLE, 0},			/* 85 */
+  {"MULTIPLY",		MULTIPLY, 0},			/* 2002 */
+  {"NATIONAL",		NATIONAL, 0},			/* 2002 */
+  {"NATIONAL-EDITED",	NATIONAL_EDITED, 0},		/* 2002 */
+  {"NATIVE",		NATIVE, 0},			/* 2002 */
+  {"NEGATIVE",		NEGATIVE, 0},			/* 2002 */
+  {"NESTED",		-1, 0},				/* 2002 */
+  {"NEXT",		NEXT, 0},			/* 2002 */
+  {"NO",		NO, 0},				/* 2002 */
+  {"NOT",		NOT, 0},			/* 2002 */
+  {"NULL",		-1, 0},				/* 2002 */
+  {"NUMBER",		NUMBER, 0},			/* 2002 */
+  {"NUMERIC",		NUMERIC, 0},			/* 2002 */
+  {"NUMERIC-EDITED",	NUMERIC_EDITED, 0},		/* 2002 */
+  {"OBJECT",		-1, 0},				/* 2002 */
+  {"OBJECT-COMPUTER",	OBJECT_COMPUTER, 0},		/* 2002 */
+  {"OBJECT-REFERENCE",	-1, 0},				/* 2002 */
+  {"OCCURS",		OCCURS, 0},			/* 2002 */
+  {"OF",		OF, 0},				/* 2002 */
+  {"OFF",		OFF, 0},			/* 2002 */
+  {"OMITTED",		OMITTED, 0},			/* 2002 */
+  {"ON",		ON, 0},				/* 2002 */
+  {"ONLY",		ONLY, 0},			/* 2000 (C/S) */
+  {"OPEN",		OPEN, 0},			/* 2002 */
+  {"OPTIONAL",		OPTIONAL, 0},			/* 2002 */
+  {"OPTIONS",		-1, 0},				/* 2002 */
+  {"OR",		OR, 0},				/* 2002 */
+  {"ORDER",		ORDER, 0},			/* 2002 */
+  {"ORGANIZATION",	ORGANIZATION, 0},		/* 2002 */
+  {"OTHER",		OTHER, 0},			/* 2002 */
+  {"OUTPUT",		OUTPUT, 0},			/* 2002 */
+  {"OVERFLOW",		OVERFLOW, 0},			/* 2002 */
+  {"OVERRIDE",		-1, 0},				/* 2002 */
+  {"PACKED-DECIMAL",	PACKED_DECIMAL, 0},		/* 2002 */
+  {"PADDING",		PADDING, 0},			/* 2002 */
+  {"PAGE",		PAGE, 0},			/* 2002 */
+  {"PAGE-COUNTER",	-1, 0},				/* 2002 */
+  {"PERFORM",		PERFORM, 0},			/* 2002 */
+  {"PF",		-1, 0},				/* 2002 */
+  {"PH",		-1, 0},				/* 2002 */
+  {"PIC",		0, 0},				/* 2002 */
+  {"PICTURE",		0, 0},				/* 2002 */
+  {"PLUS",		PLUS, 0},			/* 2002 */
+  {"POINTER",		POINTER, 0},			/* 2002 */
+  {"POSITION",		POSITION, 0},			/* 85 */
+  {"POSITIVE",		POSITIVE, 0},			/* 2002 */
+  {"PRESENT",		-1, 0},				/* 2002 */
+  {"PRINTING",		-1, 0},				/* 2002 */
+  {"PROCEDURE",		PROCEDURE, 0},			/* 2002 */
+  {"PROCEED",		PROCEED, 0},			/* 85 */
+  {"PROGRAM",		PROGRAM, 0},			/* 2002 */
+  {"PROGRAM-ID",	PROGRAM_ID, 0},			/* 2002 */
+  {"PROPERTY",		-1, 0},				/* 2002 */
+  {"PROTOTYPE",		-1, 0},				/* 2002 */
+  {"PURGE",		-1, 0},				/* 2002 */
+  {"QUEUE",		-1, 0},				/* 2002 */
+  {"QUOTE",		QUOTE, 0},			/* 2002 */
+  {"QUOTES",		QUOTE, 0},			/* 2002 */
+  {"RAISE",		-1, 0},				/* 2002 */
+  {"RAISING",		-1, 0},				/* 2002 */
+  {"RANDOM",		RANDOM, 0},			/* 2002 */
+  {"RD",		-1, 0},				/* 2002 */
+  {"READ",		READ, 0},			/* 2002 */
+  {"RECEIVE",		-1, 0},				/* 2002 */
+  {"RECORD",		RECORD, 0},			/* 2002 */
+  {"RECORDING",		RECORDING, 0},			/* extension */
+  {"RECORDS",		RECORDS, 0},			/* 2002 */
+  {"RECURSIVE",		RECURSIVE, 0},			/* 2000 (C/S) */
+  {"REDEFINES",		REDEFINES, 0},			/* 2002 */
+  {"REEL",		REEL, 0},			/* 2002 */
+  {"REFERENCE",		REFERENCE, 0},			/* 2002 */
+  {"RELATIVE",		RELATIVE, 0},			/* 2002 */
+  {"RELEASE",		RELEASE, 0},			/* 2002 */
+  {"REMAINDER",		REMAINDER, 0},			/* 2002 */
+  {"REMOVAL",		REMOVAL, 0},			/* 2002 */
+  {"RENAMES",		RENAMES, 0},			/* 2002 */
+  {"REPLACE",		-1, 0},				/* 2002 */
+  {"REPLACING",		REPLACING, 0},			/* 2002 */
+  {"REPORT",		-1, 0},				/* 2002 */
+  {"REPORTING",		-1, 0},				/* 2002 */
+  {"REPORTS",		-1, 0},				/* 2002 */
+  {"REPOSITORY",	-1, 0},				/* 2002 */
+  {"REQUIRED",		REQUIRED, 0},			/* 2000 (C/S) */
+  {"RESERVE",		RESERVE, 0},			/* 2002 */
+  {"RESET",		-1, 0},				/* 2002 */
+  {"RESUME",		-1, 0},				/* 2002 */
+  {"RETRY",		-1, 0},				/* 2002 */
+  {"RETURN",		RETURN, 0},			/* 2002 */
+  {"RETURNING",		RETURNING, 0},			/* 2002 */
+  {"REVERSE-VIDEO",	REVERSE_VIDEO, 0},		/* 2000 (C/S) */
+  {"REWIND",		REWIND, 0},			/* 2002 */
+  {"REWRITE",		REWRITE, 0},			/* 2002 */
+  {"RF",		-1, 0},				/* 2002 */
+  {"RH",		-1, 0},				/* 2002 */
+  {"RIGHT",		RIGHT, 0},			/* 2002 */
+  {"ROUNDED",		ROUNDED, 0},			/* 2002 */
+  {"RUN",		RUN, 0},			/* 2002 */
+  {"SAME",		SAME, 0},			/* 2002 */
+  {"SCREEN",		SCREEN, 0},			/* 2002 */
+  {"SD",		SD, 0},				/* 2002 */
+  {"SEARCH",		SEARCH, 0},			/* 2002 */
+  {"SECTION",		SECTION, 0},			/* 2002 */
+  {"SECURE",		SECURE, 0},			/* 2000 (C/S) */
+  {"SEGMENT",		-1, 0},				/* 2002 */
+  {"SELECT",		SELECT, 0},			/* 2002 */
+  {"SELF",		-1, 0},				/* 2002 */
+  {"SEND",		-1, 0},				/* 2002 */
+  {"SENTENCE",		SENTENCE, 0},			/* 2002 */
+  {"SEPARATE",		SEPARATE, 0},			/* 2002 */
+  {"SEQUENCE",		SEQUENCE, 0},			/* 2002 */
+  {"SEQUENTIAL",	SEQUENTIAL, 0},			/* 2002 */
+  {"SET",		SET, 0},			/* 2002 */
+  {"SHARING",		SHARING, 0},			/* 2002 */
+  {"SIGN",		SIGN, 0},			/* 2002 */
+  {"SIZE",		SIZE, 0},			/* 2002 */
+  {"SORT",		SORT, 0},			/* 2002 */
+  {"SORT-MERGE",	SORT_MERGE, 0},			/* 2002 */
+  {"SOURCE",		-1, 0},				/* 2002 */
+  {"SOURCE-COMPUTER",	SOURCE_COMPUTER, 0},		/* 2002 */
+  {"SOURCES",		-1, 0},				/* 2002 */
+  {"SPACE",		SPACE, 0},			/* 2002 */
+  {"SPACES",		SPACE, 0},			/* 2002 */
+  {"SPECIAL-NAMES",	SPECIAL_NAMES, 0},		/* 2002 */
+  {"STANDARD",		STANDARD, 0},			/* 2002 */
+  {"STANDARD-1",	STANDARD_1, 0},			/* 2002 */
+  {"STANDARD-2",	STANDARD_2, 0},			/* 2002 */
+  {"START",		START, 0},			/* 2002 */
+  {"STATUS",		STATUS, 0},			/* 2002 */
+  {"STOP",		STOP, 0},			/* 2002 */
+  {"STRING",		STRING, 0},			/* 2002 */
+  {"SUB-QUEUE-1",	-1, 0},				/* 2002 */
+  {"SUB-QUEUE-2",	-1, 0},				/* 2002 */
+  {"SUB-QUEUE-3",	-1, 0},				/* 2002 */
+  {"SUBTRACT",		SUBTRACT, 0},			/* 2002 */
+  {"SUM",		-1, 0},				/* 2002 */
+  {"SUPER",		-1, 0},				/* 2002 */
+  {"SUPPRESS",		-1, 0},				/* 2002 */
+  {"SYMBOLIC",		SYMBOLIC, 0},			/* 2002 */
+  {"SYNC",		SYNCHRONIZED, 0},		/* 2002 */
+  {"SYNCHRONIZED",	SYNCHRONIZED, 0},		/* 2002 */
+  {"SYSTEM-DEFAULT",	-1, 0},				/* 2002 */
+  {"TABLE",		-1, 0},				/* 2002 */
+  {"TALLYING",		TALLYING, 0},			/* 2002 */
+  {"TAPE",		TAPE, 0},			/* 85 */
+  {"TERMINAL",		-1, 0},				/* 2002 */
+  {"TERMINATE",		-1, 0},				/* 2002 */
+  {"TEST",		TEST, 0},			/* 2002 */
+  {"TEXT",		-1, 0},				/* 2002 */
+  {"THAN",		THAN, 0},			/* 2002 */
+  {"THEN",		THEN, 0},			/* 2002 */
+  {"THROUGH",		THRU, 0},			/* 2002 */
+  {"THRU",		THRU, 0},			/* 2002 */
+  {"TIME",		TIME, 0},			/* 2002 */
+  {"TIMES",		TIMES, 0},			/* 2002 */
+  {"TO",		TO, 0},				/* 2002 */
+  {"TOP",		TOP, 0},			/* 2002 */
+  {"TRAILING",		TRAILING, 0},			/* 2002 */
+  {"TRUE",		TOK_TRUE, 0},			/* 2002 */
+  {"TYPE",		-1, 0},				/* 2002 */
+  {"TYPEDEF",		-1, 0},				/* 2002 */
+  {"UNDERLINE",		UNDERLINE, 0},			/* 2000 (C/S) */
+  {"UNIT",		UNIT, 0},			/* 2002 */
+  {"UNIVERSAL",		-1, 0},				/* 2002 */
+  {"UNLOCK",		-1, 0},				/* 2002 */
+  {"UNSTRING",		UNSTRING, 0},			/* 2002 */
+  {"UNTIL",		UNTIL, 0},			/* 2002 */
+  {"UP",		UP, 0},				/* 2002 */
+  {"UPON",		UPON, 0},			/* 2002 */
+  {"USAGE",		USAGE, 0},			/* 2002 */
+  {"USE",		USE, 0},			/* 2002 */
+  {"USER-DEFAULT",	-1, 0},				/* 2002 */
+  {"USING",		USING, 0},			/* 2002 */
+  {"VAL-STATUS",	-1, 0},				/* 2002 */
+  {"VALID",		-1, 0},				/* 2002 */
+  {"VALIDATE",		-1, 0},				/* 2002 */
+  {"VALIDATE-STATUS",	-1, 0},				/* 2002 */
+  {"VALUE",		VALUE, 0},			/* 2002 */
+  {"VALUES",		VALUE, 0},			/* 2002 */
+  {"VARYING",		VARYING, 0},			/* 2002 */
+  {"WHEN",		WHEN, 0},			/* 2002 */
+  {"WITH",		WITH, 0},			/* 2002 */
+  {"WORKING-STORAGE",	WORKING_STORAGE, 0},		/* 2002 */
+  {"WRITE",		WRITE, 0},			/* 2002 */
+  {"ZERO",		ZERO, 0},			/* 2002 */
+  {"ZEROES",		ZERO, 0},			/* 2002 */
+  {"ZEROS",		ZERO, 0},			/* 2002 */
   {0, 0, 0}
 };
 
@@ -405,7 +529,12 @@ lookup_reserved_word (const char *name)
   struct reserved *p;
   for (p = reserved_table[hash (name)]; p; p = p->next)
     if (strcasecmp (name, p->name) == 0)
-      return p->token;
+      {
+	if (p->token != -1)
+	  return p->token;
+	cb_error (_("`%s' reserved word, but not supported yet"), name);
+	return 0;
+      }
   return 0;
 }
 
