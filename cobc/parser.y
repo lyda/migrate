@@ -39,8 +39,10 @@
 #define YYDEBUG		COB_DEBUG
 #define YYERROR_VERBOSE 1
 
+#define YYLTYPE		struct cobc_location
+
 #define IGNORE(x)	/* ignored */
-#define OBSOLETE(x)	yywarn ("keyword `%s' is obsolete", x)
+#define OBSOLETE(x)	yywarn ("`%s' is obsolete", x)
 
 #define push_tree(x) \
   program_spec.exec_list = cons (x, program_spec.exec_list)
@@ -106,7 +108,6 @@ static int inspect_mode;
 static cobc_tree inspect_name;
 static struct cobc_list *inspect_list;
 
-static struct cobc_list *last_exec_list;
 static struct cobc_list *label_check_list;
 
 static int warning_count = 0;
@@ -1253,14 +1254,7 @@ procedure_declaratives:
  *******************/
 
 procedure_list:
-| procedure_list		{ last_exec_list = program_spec.exec_list; }
-  procedure
-  {
-    struct cobc_list *l;
-    for (l = program_spec.exec_list; l; l = l->next)
-      if (l->next == last_exec_list)
-	COBC_TREE_LOC (l->item) = @3;
-  }
+| procedure_list procedure
 ;
 procedure:
   section_header
@@ -1398,39 +1392,47 @@ statement:
 accept_statement:
   ACCEPT data_name
   {
+    cobc_location = @1;
     push_call_2 (COBC_ACCEPT, $2, make_integer (COB_SYSIN));
   }
 | ACCEPT data_name FROM DATE
   {
+    cobc_location = @1;
     push_call_1 (COBC_ACCEPT_DATE, $2);
   }
 | ACCEPT data_name FROM DAY
   {
+    cobc_location = @1;
     push_call_1 (COBC_ACCEPT_DAY, $2);
   }
 | ACCEPT data_name FROM DAY_OF_WEEK
   {
+    cobc_location = @1;
     push_call_1 (COBC_ACCEPT_DAY_OF_WEEK, $2);
   }
 | ACCEPT data_name FROM TIME
   {
+    cobc_location = @1;
     push_call_1 (COBC_ACCEPT_TIME, $2);
   }
 | ACCEPT data_name FROM COMMAND_LINE
   {
+    cobc_location = @1;
     push_call_1 (COBC_ACCEPT_COMMAND_LINE, $2);
   }
 | ACCEPT data_name FROM ENVIRONMENT_VARIABLE value
   {
+    cobc_location = @1;
     push_call_2 (COBC_ACCEPT_ENVIRONMENT, $2, $5);
   }
 | ACCEPT data_name FROM mnemonic_name
   {
+    cobc_location = @1;
     if (COBC_BUILTIN ($4)->id == BUILTIN_CONSOLE
 	|| COBC_BUILTIN ($4)->id == BUILTIN_SYSIN)
       push_call_2 (COBC_ACCEPT, $2, make_integer (COB_SYSIN));
     else
-      yyerror ("invalid input stream");
+      yyerror_tree ($4, "invalid input stream");
   }
 ;
 
@@ -1445,20 +1447,20 @@ add_statement:
 add_body:
   number_list TO math_name_list
   {
-    /* ADD A B C TO X Y -->
-       (let ((t (+ a b c))) (set! x (+ x t)) (set! y (+ y t))) */
+    /* ADD A B C TO X Y  -->  t = a + b + c; x += t; y += t; */
     struct cobc_list *l;
     cobc_tree e = $1->item;
+    cobc_location = @1;
     for (l = $1->next; l; l = l->next)
       e = make_expr (e, '+', l->item);
     push_assign ($3, '+', e);
   }
 | number_list add_to GIVING math_edited_name_list
   {
-    /* ADD A B TO C GIVING X Y -->
-       (let ((t (+ a b c))) (set! x t) (set! y t)) */
+    /* ADD A B TO C GIVING X Y  -->  t = a + b + c; x = t; y = t; */
     struct cobc_list *l;
     cobc_tree e = $1->item;
+    cobc_location = @1;
     for (l = $1->next; l; l = l->next)
       e = make_expr (e, '+', l->item);
     if ($2)
@@ -1467,6 +1469,7 @@ add_body:
   }
 | CORRESPONDING group_name _to group_name flag_rounded
   {
+    cobc_location = @1;
     push_corr (make_add, $2, $4, $5);
   }
 ;
@@ -1482,7 +1485,7 @@ end_add: | END_ADD ;
  */
 
 alter_statement:
-  ALTER alter_options		{  yywarn ("ALTER statement is obsolete"); }
+  ALTER alter_options		{  OBSOLETE ("ALTER"); }
 ;
 alter_options:
 | alter_options
@@ -1499,6 +1502,7 @@ call_statement:
   CALL program_name		{ current_call_mode = COBC_CALL_BY_REFERENCE; }
   call_using call_returning
   {
+    cobc_location = @1;
     push_call_3 (COBC_CALL, $2, $4, $5);
   }
   opt_on_exception
@@ -1539,6 +1543,7 @@ cancel_statement:
 cancel_list:
 | cancel_list program_name
   {
+    cobc_location = @2;
     push_call_1 (COBC_CANCEL, $2);
   }
 ;
@@ -1547,24 +1552,20 @@ program_name:
 | NONNUMERIC_LITERAL
 ;
 
-
 
 /*
  * CLOSE statement
  */
 
 close_statement:
-  CLOSE close_file_list
+  CLOSE close_list
 ;
-close_file_list:
-  close_file
-| close_file_list close_file
-;
-close_file:
-  file_name close_option
+close_list:
+| close_list file_name close_option
   {
-    push_call_2 (COBC_CLOSE, $1, make_integer ($2));
-    push_call_4 (COBC_FILE_HANDLER, $1, 0, 0, 0);
+    cobc_location = @2;
+    push_call_2 (COBC_CLOSE, $2, make_integer ($3));
+    push_call_4 (COBC_FILE_HANDLER, $2, 0, 0, 0);
   }
 ;
 close_option:
@@ -1612,6 +1613,7 @@ _end_compute: | END_COMPUTE ;
 delete_statement:
   DELETE file_name _record
   {
+    cobc_location = @1;
     current_file_name = COBC_FILE_NAME ($2);
     push_call_1 (COBC_DELETE, $2);
   }
@@ -1629,6 +1631,7 @@ display_statement:
   DISPLAY opt_value_list display_upon
   {
     struct cobc_list *l;
+    cobc_location = @1;
     for (l = $2; l; l = l->next)
       push_call_2 (COBC_DISPLAY, l->item, make_integer ($3));
   }
@@ -1666,23 +1669,28 @@ divide_statement:
 divide_body:
   number INTO math_name_list
   {
+    cobc_location = @1;
     push_assign ($3, '/', $1);
   }
 | number INTO number GIVING math_edited_name_list
   {
+    cobc_location = @1;
     push_assign ($5, 0, make_expr ($3, '/', $1));
   }
 | number BY number GIVING math_edited_name_list
   {
+    cobc_location = @1;
     push_assign ($5, 0, make_expr ($1, '/', $3));
   }
 | number INTO number GIVING numeric_edited_name flag_rounded REMAINDER numeric_edited_name
   {
+    cobc_location = @1;
     push_call_4 (COBC_DIVIDE_QUOTIENT, $3, $1, $5, make_integer ($6));
     push_call_1 (COBC_DIVIDE_REMAINDER, $8);
   }
 | number BY number GIVING numeric_edited_name flag_rounded REMAINDER numeric_edited_name
   {
+    cobc_location = @1;
     push_call_4 (COBC_DIVIDE_QUOTIENT, $1, $3, $5, make_integer ($6));
     push_call_1 (COBC_DIVIDE_REMAINDER, $8);
   }
@@ -1697,6 +1705,7 @@ _end_divide: | END_DIVIDE ;
 evaluate_statement:
   EVALUATE evaluate_subject_list evaluate_case_list _end_evaluate
   {
+    cobc_location = @1;
     push_tree (make_evaluate ($2, $3));
   }
 ;
@@ -1773,8 +1782,12 @@ _end_evaluate: | END_EVALUATE ;
  */
 
 exit_statement:
-  EXIT				{ /* do nothing */ }
-| EXIT PROGRAM			{ push_call_0 (COBC_EXIT_PROGRAM); }
+  EXIT				{ /* nothing */ }
+| EXIT PROGRAM
+  {
+    cobc_location = @1;
+    push_call_0 (COBC_EXIT_PROGRAM);
+  }
 ;
 
 
@@ -1785,6 +1798,7 @@ exit_statement:
 goto_statement:
   GO _to label_list
   {
+    cobc_location = @1;
     if ($3->next)
       yyerror ("too many labels with GO TO");
     else
@@ -1792,9 +1806,10 @@ goto_statement:
   }
 | GO _to label_list DEPENDING _on numeric_name
   {
+    cobc_location = @1;
     push_call_2 (COBC_GOTO_DEPENDING, $3, $6);
   }
-| GO _to { yywarn ("GO TO without label is obsolete"); }
+| GO _to { OBSOLETE ("GO TO without label"); }
 ;
 
 
@@ -1805,10 +1820,12 @@ goto_statement:
 if_statement:
   IF condition _then imperative_statement _end_if
   {
+    cobc_location = @1;
     push_tree (make_if ($2, $4, NULL));
   }
 | IF condition _then imperative_statement ELSE imperative_statement _end_if
   {
+    cobc_location = @1;
     push_tree (make_if ($2, $4, $6));
   }
 | IF error END_IF
@@ -1824,6 +1841,7 @@ initialize_statement:
   INITIALIZE data_name_list initialize_replacing
   {
     struct cobc_list *l;
+    cobc_location = @1;
     for (l = $2; l; l = l->next)
       if (!$3)
 	push_call_1 (COBC_INITIALIZE, l->item);
@@ -1862,19 +1880,24 @@ _data: | DATA ;
 inspect_statement:
   INSPECT data_name inspect_tallying
   {
+    cobc_location = @1;
     push_call_2 (COBC_INSPECT_TALLYING, $2, $3);
   }
 | INSPECT data_name inspect_replacing
   {
+    cobc_location = @1;
     push_call_2 (COBC_INSPECT_REPLACING, $2, $3);
   }
 | INSPECT data_name inspect_converting
   {
+    cobc_location = @1;
     push_call_2 (COBC_INSPECT_CONVERTING, $2, $3);
   }
 | INSPECT data_name inspect_tallying inspect_replacing
   {
+    cobc_location = @3;
     push_call_2 (COBC_INSPECT_TALLYING, $2, $3);
+    cobc_location = @4;
     push_call_2 (COBC_INSPECT_REPLACING, $2, $4);
   }
 ;
@@ -1983,11 +2006,13 @@ move_statement:
   MOVE value TO data_name_list
   {
     struct cobc_list *l;
+    cobc_location = @1;
     for (l = $4; l; l = l->next)
       push_move ($2, l->item);
   }
 | MOVE CORRESPONDING group_name TO group_name
   {
+    cobc_location = @1;
     push_corr (make_move, $3, $5, 0);
   }
 ;
@@ -2003,10 +2028,12 @@ multiply_statement:
 multiply_body:
   number BY math_name_list
   {
+    cobc_location = @1;
     push_assign ($3, '*', $1);
   }
 | number BY number GIVING math_edited_name_list
   {
+    cobc_location = @1;
     push_assign ($5, 0, make_expr ($1, '*', $3));
   }
 ;
@@ -2018,20 +2045,17 @@ _end_multiply: | END_MULTIPLY ;
  */
 
 open_statement:
-  OPEN open_options
+  OPEN open_list
 ;
-open_options:
-  open_option
-| open_options open_option
-;
-open_option:
-  open_mode file_name_list
+open_list:
+| open_list open_mode file_name_list
   {
     struct cobc_list *l;
-    for (l = $2; l; l = l->next)
+    cobc_location = @2;
+    for (l = $3; l; l = l->next)
       {
 	struct cobc_file_name *p = COBC_FILE_NAME (l->item);
-	push_call_3 (COBC_OPEN, p, p->assign, make_integer ($1));
+	push_call_3 (COBC_OPEN, p, p->assign, make_integer ($2));
 	push_call_4 (COBC_FILE_HANDLER, p, 0, 0, 0);
       }
   }
@@ -2069,21 +2093,25 @@ perform_procedure:
 perform_option:
   /* nothing */
   {
+    cobc_location = @1;
     $$ = make_perform (COBC_PERFORM_ONCE);
   }
 | integer_value TIMES
   {
+    cobc_location = @1;
     $$ = make_perform (COBC_PERFORM_TIMES);
     COBC_PERFORM ($$)->data = $1;
   }
 | perform_test UNTIL condition
   {
+    cobc_location = @1;
     $$ = make_perform (COBC_PERFORM_UNTIL);
     COBC_PERFORM ($$)->test = $1;
     add_perform_varying (COBC_PERFORM ($$), 0, 0, 0, $3);
   }
 | perform_test VARYING numeric_name FROM value BY value UNTIL condition
   {
+    cobc_location = @1;
     $<tree>$ = make_perform (COBC_PERFORM_UNTIL);
     COBC_PERFORM ($<tree>$)->test = $1;
     add_perform_varying (COBC_PERFORM ($<tree>$), $3, $5, $7, $9);
@@ -2117,6 +2145,7 @@ perform_sentence:
 read_statement:
   READ file_name flag_next _record read_into read_key
   {
+    cobc_location = @1;
     current_file_name = COBC_FILE_NAME ($2);
     if ($3 || current_file_name->access_mode == COB_ACCESS_SEQUENTIAL)
       {
@@ -2162,6 +2191,7 @@ _end_read: | END_READ ;
 rewrite_statement:
   REWRITE record_name write_from
   {
+    cobc_location = @1;
     current_file_name = COBC_FIELD ($2)->file;
     if ($3)
       push_move ($3, $2);
@@ -2180,10 +2210,12 @@ _end_rewrite: | END_REWRITE ;
 search_statement:
   SEARCH table_name search_varying search_at_end search_whens _end_search
   {
+    cobc_location = @1;
     push_call_4 (COBC_SEARCH, $2, $3, $4, $5);
   }
 | SEARCH ALL table_name search_at_end search_when _end_search
   {
+    cobc_location = @1;
     push_call_3 (COBC_SEARCH_ALL, $3, $4, $5);
   }
 ;
@@ -2213,24 +2245,28 @@ set_statement:
   SET data_name_list TO number
   {
     struct cobc_list *l;
+    cobc_location = @1;
     for (l = $2; l; l = l->next)
       push_move ($4, l->item);
   }
 | SET data_name_list UP BY number
   {
     struct cobc_list *l;
+    cobc_location = @1;
     for (l = $2; l; l = l->next)
       push_tree (make_op_assign (l->item, '+', $5));
   }
 | SET data_name_list DOWN BY number
   {
     struct cobc_list *l;
+    cobc_location = @1;
     for (l = $2; l; l = l->next)
       push_tree (make_op_assign (l->item, '-', $5));
   }
 | SET condition_name_list TO TRUE
   {
     struct cobc_list *l;
+    cobc_location = @1;
     for (l = $2; l; l = l->next)
       {
 	cobc_tree x = l->item;
@@ -2250,6 +2286,7 @@ set_on_off:
   mnemonic_name_list TO on_or_off
   {
     struct cobc_list *l;
+    cobc_location = @1;
     for (l = $1; l; l = l->next)
       {
 	int id = builtin_switch_id (l->item);
@@ -2270,12 +2307,14 @@ start_statement:
 start_body:
   file_name
   {
+    cobc_location = @1;
     current_file_name = COBC_FILE_NAME ($1);
     push_call_3 (COBC_START, $1, make_integer (COB_EQ), current_file_name->key);
   }
 | file_name KEY _is start_operator data_name
   {
     int cond = 0;
+    cobc_location = @1;
     current_file_name = COBC_FILE_NAME ($1);
     switch ($4)
       {
@@ -2304,8 +2343,15 @@ _end_start: | END_START ;
  */
 
 stop_statement:
-  STOP RUN			{ push_call_0 (COBC_STOP_RUN); }
-| STOP NONNUMERIC_LITERAL	{ yywarn ("STOP literal is obsolete"); }
+  STOP RUN
+  {
+    cobc_location = @1;
+    push_call_0 (COBC_STOP_RUN);
+  }
+| STOP program_name
+  {
+    OBSOLETE ("STOP literal");
+  }
 ;
 
 
@@ -2316,6 +2362,7 @@ stop_statement:
 string_statement:
   STRING string_list INTO data_name opt_with_pointer
   {
+    cobc_location = @1;
     if ($5)
       $2 = cons (make_generic_1 (COB_STRING_WITH_POINTER, $5), $2);
     push_call_2 (COBC_STRING, $4, $2);
@@ -2368,27 +2415,27 @@ subtract_statement:
 subtract_body:
   number_list FROM math_name_list
   {
-    /* SUBTRACT A B C FROM X Y -->
-       (let ((t (+ a b c))) (set! x (- x t)) (set! y (- y t))) */
+    /* SUBTRACT A B C FROM X Y  -->  t = a + b + c; x -= t; y -= t; */
     struct cobc_list *l;
     cobc_tree e = $1->item;
+    cobc_location = @1;
     for (l = $1->next; l; l = l->next)
       e = make_expr (e, '+', l->item);
     push_assign ($3, '-', e);
   }
 | number_list FROM number GIVING math_edited_name_list
   {
-    /* SUBTRACT A B FROM C GIVING X Y -->
-       (let ((t (- c (+ a b))) (set! x t) (set! y t)) */
+    /* SUBTRACT A B FROM C GIVING X Y  -->  t = c - a - b; x = t; y = t */
     struct cobc_list *l;
-    cobc_tree e = $1->item;
-    for (l = $1->next; l; l = l->next)
-      e = make_expr (e, '+', l->item);
-    e = make_expr ($3, '-', e);
+    cobc_tree e = $3;
+    cobc_location = @1;
+    for (l = $1; l; l = l->next)
+      e = make_expr (e, '-', l->item);
     push_assign ($5, 0, e);
   }
 | CORRESPONDING group_name FROM group_name flag_rounded
   {
+    cobc_location = @1;
     push_corr (make_sub, $2, $4, $5);
   }
 ;
@@ -2403,6 +2450,7 @@ unstring_statement:
   UNSTRING data_name unstring_delimited
   INTO unstring_into opt_with_pointer unstring_tallying
   {
+    cobc_location = @1;
     if ($6)
       $3 = cons (make_generic_1 (COB_UNSTRING_WITH_POINTER, $6), $3);
     if ($7)
@@ -2469,6 +2517,7 @@ _end_unstring: | END_UNSTRING ;
 write_statement:
   WRITE record_name write_from write_option
   {
+    cobc_location = @1;
     current_file_name = COBC_FIELD ($2)->file;
     /* AFTER ADVANCING */
     if ($4 && $4->type == COBC_AFTER)
@@ -2656,10 +2705,6 @@ not_invalid_key_sentence:
 /*******************
  * Expressions
  *******************/
-
-/* We parse arithmetic/conditional expressions with our own parser
- * because COBOL's expression is not LALR(1).
- */
 
 condition:
   expr
@@ -4100,7 +4145,7 @@ yyerror (char *fmt, ...)
 }
 
 void
-yywarn_loc (YYLTYPE *loc, char *fmt, ...)
+yywarn_loc (struct cobc_location *loc, char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
@@ -4111,7 +4156,7 @@ yywarn_loc (YYLTYPE *loc, char *fmt, ...)
 }
 
 void
-yyerror_loc (YYLTYPE *loc, char *fmt, ...)
+yyerror_loc (struct cobc_location *loc, char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);

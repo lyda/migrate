@@ -103,17 +103,15 @@ list_length (struct cobc_list *l)
  * Tree
  */
 
+struct cobc_location cobc_location = { 0 };
+
 static void *
 make_tree (int tag, char class, int size)
 {
   cobc_tree x = malloc (size);
   x->tag = tag;
   x->class = class;
-  x->loc.first_line = 0;
-  x->loc.first_column = 0;
-  x->loc.last_line = 0;
-  x->loc.last_column = 0;
-  x->loc.text = 0;
+  x->loc = cobc_location;
   return x;
 }
 
@@ -753,7 +751,6 @@ make_expr (cobc_tree left, char op, cobc_tree right)
   p->op = op;
   p->left = left;
   p->right = right;
-  COBC_TREE_LOC (p) = left->loc;
   return COBC_TREE (p);
 }
 
@@ -802,7 +799,6 @@ make_cond (cobc_tree x, enum cobc_cond_type type, cobc_tree y)
   p->type  = type;
   p->left  = x;
   p->right = y;
-  COBC_TREE_LOC (p) = x->loc;
   return COBC_TREE (p);
 }
 

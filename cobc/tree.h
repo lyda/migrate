@@ -75,7 +75,7 @@ extern int list_length (struct cobc_list *l);
 
 
 /*
- * Tree
+ * Location
  */
 
 struct cobc_location {
@@ -86,12 +86,17 @@ struct cobc_location {
   char *text;
 };
 
-#define YYLTYPE struct cobc_location
+extern struct cobc_location cobc_location;
+
+
+/*
+ * Tree
+ */
 
 struct cobc_tree_common {
   char tag;
   char class;			/* A,9,X,N,1 */
-  YYLTYPE loc;			/* source location */
+  struct cobc_location loc;	/* source location */
 };
 
 typedef struct cobc_tree_common *cobc_tree;

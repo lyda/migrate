@@ -38,8 +38,6 @@
 #include "codegen.h"
 #include "reserved.h"
 
-extern YYLTYPE yylloc;
-
 int cobc_skip_comment = 0;
 int cobc_in_procedure = 0;
 
