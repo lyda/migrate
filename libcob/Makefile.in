@@ -55,7 +55,7 @@ am__installdirs = $(DESTDIR)$(libdir) $(DESTDIR)$(pkgincludedir)
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-libcob_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+libcob_la_DEPENDENCIES = $(am__DEPENDENCIES_1) ../libpbl/libpbl.a
 am_libcob_la_OBJECTS = libcob_la-common.lo libcob_la-move.lo \
 	libcob_la-numeric.lo libcob_la-termio.lo libcob_la-fileio.lo \
 	libcob_la-screenio.lo libcob_la-strings.lo libcob_la-call.lo
@@ -215,13 +215,13 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 lib_LTLIBRARIES = libcob.la
 libcob_la_SOURCES = common.c move.c numeric.c \
-	termio.c fileio.c screenio.c strings.c call.c byteswap.h
+	termio.c fileio.c screenio.c strings.c call.c
 
 AM_CFLAGS = -Wall -Wstrict-prototypes -Wmissing-prototypes -Wno-format-y2k
 libcob_la_CFLAGS = $(AM_CFLAGS) $(LIBCOB_CFLAGS) -I$(top_srcdir)
-libcob_la_LIBADD = $(LIBCOB_LIBS)
+libcob_la_LIBADD = $(LIBCOB_LIBS) ../libpbl/libpbl.a
 libcob_la_LDFLAGS = -no-undefined -version-info 1:0:0
-pkginclude_HEADERS = common.h move.h numeric.h exception.def \
+pkginclude_HEADERS = byteswap.h common.h move.h numeric.h exception.def \
 	termio.h fileio.h screenio.h strings.h call.h
 
 all: all-am
