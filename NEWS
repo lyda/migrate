@@ -17,6 +17,8 @@ COMP-5 data items are native integers.
 
 ** New environment variable COB_LDFLAGS.
 
+** New compiler option `--list-reserved', which list all reserved words.
+
 ** New compiler option `-conf', which specifies the config file.
 
 ** New compiler option `-ext', which specifies the copy file extension.
