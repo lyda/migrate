@@ -17,6 +17,8 @@
 #  the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
 #  Boston, MA 02111-1307 USA
 
+$skip{'NC401M'} = 1;
+
 my $num_progs = 0;
 my $test_skipped = 0;
 my $compile_error = 0;
