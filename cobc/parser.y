@@ -67,7 +67,6 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
   struct cob_picture *pic;
   struct inspect_item *insi;
   struct call_parameter *para;
-  struct coord_pair pval; /* lin,col */
   struct perf_info *pfval;
   struct perform_info *pfvals;
   struct math_var *mval;      /* math variables container list */

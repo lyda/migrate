@@ -455,13 +455,6 @@ struct call_parameter
 
 extern struct call_parameter * make_parameter (cob_tree var, int mode);
 
-
-struct coord_pair
-{
-  int lin;
-  int col;
-};
-
 struct index_to_table_list
 {
   struct index_to_table_list *next;
