@@ -359,7 +359,7 @@ build_decimal_assign (cb_tree vars, char op, cb_tree val)
 }
 
 cb_tree
-cb_build_assign (cb_tree vars, char op, cb_tree val)
+cb_build_arithmetic_assign (cb_tree vars, char op, cb_tree val)
 {
   cb_tree l;
 
@@ -388,36 +388,8 @@ cb_build_assign (cb_tree vars, char op, cb_tree val)
 
 
 /*
- * ADD/SUBTRACT/MOVE CORRESPONDING
+ * MOVE statement
  */
-
-cb_tree
-cb_build_add (cb_tree v, cb_tree n, cb_tree round)
-{
-  if (cb_field (v)->usage == CB_USAGE_INDEX)
-    return cb_build_move (cb_build_binary_op (v, '+', n), v);
-
-  if (round == cb_int0 && cb_fits_int (n))
-    return cb_build_funcall_2 ("cob_add_int", v, cb_build_cast_integer (n));
-  if (round == cb_int1)
-    return cb_build_funcall_2 ("cob_add_round", v, n);
-  else
-    return cb_build_funcall_2 ("cob_add", v, n);
-}
-
-cb_tree
-cb_build_sub (cb_tree v, cb_tree n, cb_tree round)
-{
-  if (cb_field (v)->usage == CB_USAGE_INDEX)
-    return cb_build_move (cb_build_binary_op (v, '-', n), v);
-
-  if (round == cb_int0 && cb_fits_int (n))
-    return cb_build_funcall_2 ("cob_sub_int", v, cb_build_cast_integer (n));
-  if (round == cb_int1)
-    return cb_build_funcall_2 ("cob_sub_round", v, n);
-  else
-    return cb_build_funcall_2 ("cob_sub", v, n);
-}
 
 static void
 warning_destination (cb_tree x)
@@ -722,7 +694,7 @@ cb_build_move_num (cb_tree x, int high)
   switch (cb_field (x)->usage)
     {
     case CB_USAGE_BINARY:
-      return cb_build_native_assign (x, cb_build_integer (high ? -1 : 0));
+      return cb_build_assign (x, cb_build_integer (high ? -1 : 0));
     case CB_USAGE_DISPLAY:
       return cb_build_memset (x, high ? '9' : '0');
     case CB_USAGE_PACKED:
@@ -832,7 +804,7 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
       int n = l->expt - f->pic->expt;
       for (; n > 0; n--) val *= 10;
       for (; n < 0; n++) val /= 10;
-      return cb_build_native_assign (dst, cb_build_integer (val));
+      return cb_build_assign (dst, cb_build_integer (val));
     }
   else
     {
@@ -895,7 +867,7 @@ cb_build_move (cb_tree src, cb_tree dst)
     CB_REFERENCE (dst)->type = CB_RECEIVING_OPERAND;
 
   if (CB_INDEX_P (dst))
-    return cb_build_native_assign (dst, src);
+    return cb_build_assign (dst, src);
 
   if (CB_INDEX_P (src))
     return cb_build_funcall_2 ("cob_set_int", dst,
@@ -920,6 +892,39 @@ cb_build_move (cb_tree src, cb_tree dst)
     }
 
   return cb_build_move_call (src, dst);
+}
+
+
+/*
+ * ADD/SUBTRACT CORRESPONDING
+ */
+
+cb_tree
+cb_build_add (cb_tree v, cb_tree n, cb_tree round)
+{
+  if (CB_INDEX_P (v))
+    return cb_build_move (cb_build_binary_op (v, '+', n), v);
+
+  if (round == cb_int0 && cb_fits_int (n))
+    return cb_build_funcall_2 ("cob_add_int", v, cb_build_cast_integer (n));
+  if (round == cb_int1)
+    return cb_build_funcall_2 ("cob_add_round", v, n);
+  else
+    return cb_build_funcall_2 ("cob_add", v, n);
+}
+
+cb_tree
+cb_build_sub (cb_tree v, cb_tree n, cb_tree round)
+{
+  if (CB_INDEX_P (v))
+    return cb_build_move (cb_build_binary_op (v, '-', n), v);
+
+  if (round == cb_int0 && cb_fits_int (n))
+    return cb_build_funcall_2 ("cob_sub_int", v, cb_build_cast_integer (n));
+  if (round == cb_int1)
+    return cb_build_funcall_2 ("cob_sub_round", v, n);
+  else
+    return cb_build_funcall_2 ("cob_sub", v, n);
 }
 
 static cb_tree

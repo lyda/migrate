@@ -1766,7 +1766,7 @@ cb_build_label (cb_tree name, struct cb_label *section)
  */
 
 cb_tree
-cb_build_native_assign (cb_tree var, cb_tree val)
+cb_build_assign (cb_tree var, cb_tree val)
 {
   struct cb_assign *p =
     make_tree (CB_TAG_ASSIGN, CB_CATEGORY_UNKNOWN, sizeof (struct cb_assign));
