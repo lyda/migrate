@@ -1558,6 +1558,7 @@ close_file:
   file_name close_option
   {
     push_call_2 (COB_CLOSE, $1, make_integer ($2));
+    push_call_4 (COB_FILE_HANDLER, $1, 0, 0, 0);
   }
 ;
 close_option:
@@ -2010,6 +2011,7 @@ open_option:
       {
 	struct cobc_file_name *p = COBC_FILE_NAME (l->item);
 	push_call_3 (COB_OPEN, p, p->assign, make_integer ($1));
+	push_call_4 (COB_FILE_HANDLER, p, 0, 0, 0);
       }
   }
 ;
