@@ -825,7 +825,7 @@ static struct cob_fileio_funcs indexed_funcs = {
 static struct cob_file *sort_file;
 
 static int
-#if (DB_VERSION_MAJOR == 3 && DB_VERSION_MINOR == 2)
+#if (DB_VERSION_MAJOR == 3 && DB_VERSION_MINOR > 2)
 sort_compare (DB *db, const DBT *k1, const DBT *k2)
 #else
 sort_compare (const DBT *k1, const DBT *k2)
