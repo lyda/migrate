@@ -382,10 +382,19 @@ relative_read_next (struct cob_file_desc *f)
 static int
 relative_write (struct cob_file_desc *f)
 {
+  char c;
+
   if (f->access_mode != COB_ACCESS_SEQUENTIAL)
     {
       int index = cob_to_int (f->relative_key) - 1;
       if (lseek (f->file.fd, f->record_size * index, SEEK_SET) < 0)
+	return 23;
+    }
+
+  if (read (f->file.fd, &c, 1) == 1)
+    {
+      lseek (f->file.fd, -1, SEEK_CUR);
+      if (c != '\0')
 	return 23;
     }
 
