@@ -1588,7 +1588,7 @@ accept_body:
       }
     else
       {
-	push_funcall_2 ("cob_accept", $1, cb_build_integer (COB_SYSIN));
+	push_funcall_1 ("cob_accept", $1);
       }
   }
 | data_name FROM DATE
@@ -1621,7 +1621,7 @@ accept_body:
       {
       case CB_CONSOLE:
       case CB_SYSIN:
-	push_funcall_2 ("cob_accept", $1, cb_build_integer (COB_SYSIN));
+	push_funcall_1 ("cob_accept", $1);
 	break;
       default:
 	cb_error_x ($3, _("invalid input stream `%s'"), cb_name ($3));
@@ -1869,38 +1869,37 @@ display_statement:
     else
       {
 	for (l = $3; l; l = CB_CHAIN (l))
-	  push_funcall_2 ("cob_display", CB_VALUE (l), $4);
+	  push_funcall_1 ("cob_display", CB_VALUE (l));
       }
   }
   display_with_no_advancing
   end_display
   ;
 display_upon:
-  /* empty */			{ $$ = cb_build_integer (COB_SYSOUT); }
+  /* empty */
 | _upon mnemonic_name
   {
     switch (CB_SYSTEM_NAME (cb_ref ($2))->token)
       {
-      case CB_CONSOLE: $$ = cb_build_integer (COB_SYSOUT); break;
-      case CB_SYSOUT:  $$ = cb_build_integer (COB_SYSOUT); break;
-      case CB_SYSERR:  $$ = cb_build_integer (COB_SYSERR); break;
+      case CB_CONSOLE:
+      case CB_SYSOUT:
+      case CB_SYSERR:
+	break;
       default:
 	cb_error_x ($2, _("invalid UPON item"));
-	$$ = cb_error_node;
 	break;
       }
   }
 | UPON WORD
   {
     cb_warning_x ($2, _("`%s' undefined in SPECIAL-NAMES"), CB_NAME ($2));
-    $$ = cb_build_integer (COB_SYSOUT);
   }
 ;
 display_with_no_advancing:
   /* empty */
   {
     if (!current_program->flag_screen)
-      push_funcall_1 ("cob_newline", $-2);
+      push_funcall_0 ("cob_newline");
   }
 | _with NO ADVANCING { /* nothing */ }
 ;

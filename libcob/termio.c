@@ -34,14 +34,9 @@
 #include <readline/history.h>
 #endif
 
-FILE *cob_stream[3];
-
 void
 cob_init_termio (void)
 {
-  cob_stream[COB_SYSIN]  = stdin;
-  cob_stream[COB_SYSOUT] = stdout;
-  cob_stream[COB_SYSERR] = stderr;
 }
 
 
@@ -50,7 +45,7 @@ cob_init_termio (void)
  */
 
 void
-cob_display (cob_field *f, int fd)
+cob_display (cob_field *f)
 {
   if (COB_FIELD_IS_NUMERIC (f))
     {
@@ -73,29 +68,29 @@ cob_display (cob_field *f, int fd)
 	sprintf (p, "9%c", digits);
       cob_move (f, &temp);
       for (i = 0; i < size; i++)
-	fputc (data[i], cob_stream[fd]);
+	putchar (data[i]);
     }
   else
     {
       size_t i;
       for (i = 0; i < f->size; i++)
-	fputc (f->data[i], cob_stream[fd]);
+	putchar (f->data[i]);
     }
 }
 
 void
-cob_newline (int fd)
+cob_newline ()
 {
-  putc ('\n', cob_stream[fd]);
-  fflush (cob_stream[fd]);
+  putchar ('\n');
+  fflush (stdout);
 }
 
 #ifdef COB_DEBUG
 void
 cob_debug_print (cob_field *f)
 {
-  cob_display (f, COB_SYSOUT);
-  cob_newline (COB_SYSOUT);
+  cob_display (f);
+  cob_newline ();
 }
 #endif
 
@@ -105,7 +100,7 @@ cob_debug_print (cob_field *f)
  */
 
 void
-cob_accept (cob_field *f, int fd)
+cob_accept (cob_field *f)
 {
   size_t size;
 

@@ -23,23 +23,14 @@
 #include <stdio.h>
 #include <libcob/common.h>
 
-#define COB_SYSIN	0
-#define COB_SYSOUT	1
-#define COB_SYSERR	2
-
-#define cob_puti(i,fd)	fprintf (cob_stream[fd], "%d", (i))
-#define cob_puts(s,fd)	fputs ((s), cob_stream[fd])
-
-extern FILE *cob_stream[];
-
 extern void cob_init_termio (void);
 #ifdef COB_DEBUG
 extern void cob_debug_print (cob_field *f);
 #endif
 
-extern void cob_display (cob_field *f, int fd);
-extern void cob_newline (int fd);
-extern void cob_accept (cob_field *f, int fd);
+extern void cob_display (cob_field *f);
+extern void cob_newline (void);
+extern void cob_accept (cob_field *f);
 extern void cob_accept_date (cob_field *f);
 extern void cob_accept_day (cob_field *f);
 extern void cob_accept_day_of_week (cob_field *f);
