@@ -939,6 +939,7 @@ cob_start (struct cob_file_desc *f, int cond, struct cob_field key)
   int ret;
 
   f->f.read_done = 0;
+  f->f.first_read = 0;
 
   if (f->f.nonexistent)
     RETURN_STATUS (23);
@@ -951,9 +952,7 @@ cob_start (struct cob_file_desc *f, int cond, struct cob_field key)
 
   ret = fileio_funcs[f->organization]->start (f, cond, key);
   if (ret == 00)
-    {
-      f->f.first_read = 1;
-    }
+    f->f.first_read = 1;
 
   RETURN_STATUS (ret);
 }
@@ -966,7 +965,12 @@ read_common (struct cob_file_desc *f, struct cob_field key)
   f->f.read_done = 0;
 
   if (f->f.nonexistent)
-    RETURN_STATUS (10);
+    {
+      if (!f->f.first_read)
+	RETURN_STATUS (23);
+      f->f.first_read = 0;
+      RETURN_STATUS (10);
+    }
 
   if (f->f.end_of_file)
     RETURN_STATUS (46);
