@@ -1045,6 +1045,12 @@ field_uniform_class (struct cobc_field *f)
 static void
 output_initialize_uniform (struct cobc_field *f, int class, int size)
 {
+  if (f->f.have_occurs)
+    {
+      output_indent ("{");
+      output_line ("int i%d = 0;", f->indexes);
+    }
+
   output_prefix ();
   output ("memset (");
   output_data (COBC_TREE (f));
@@ -1062,6 +1068,11 @@ output_initialize_uniform (struct cobc_field *f, int class, int size)
       break;
     }
   output (", %d);\n", size);
+
+  if (f->f.have_occurs)
+    {
+      output_indent ("}");
+    }
 }
 
 static void
@@ -1104,7 +1115,7 @@ output_initialize_internal (struct cobc_field *f)
 				       p->offset - first_field->offset);
 	  /* if not uniform, initialize the children */
 	  if (class == COB_TYPE_UNKNOWN)
-	    output_initialize_compound (p);
+	    output_recursive (output_initialize_compound, p);
 	  last_class = class;
 	  first_field = (class != COB_TYPE_UNKNOWN) ? p : NULL;
 	}
@@ -1181,7 +1192,7 @@ output_initialize (cobc_tree x, struct cobc_list *l)
 	  /* otherwise, fill the field by spaces first */
 	  output_initialize_uniform (f, COB_TYPE_ALPHANUMERIC, f->size);
 	  /* then initialize the children recursively */
-	  output_initialize_compound (f);
+	  output_recursive (output_initialize_compound, f);
 	}
     }
 

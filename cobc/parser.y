@@ -3337,7 +3337,7 @@ numeric_name:
 numeric_edited_name:
   data_name
   {
-    int category = field ($1)->pic->category;
+    int category = COBC_FIELD (cobc_ref ($1))->pic->category;
     if (category != COB_TYPE_NUMERIC && category != COB_TYPE_NUMERIC_EDITED)
       {
 	yyerror_loc ($1, _("`%s' not numeric or numeric edited"),
