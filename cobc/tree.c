@@ -979,14 +979,21 @@ cb_build_field (cb_tree lv, cb_tree name, struct cb_field *last_field,
 struct cb_field *
 cb_resolve_redefines (struct cb_field *field, cb_tree redefines)
 {
-  struct cb_field *f, *p;
+  struct cb_field *f;
   struct cb_reference *r = CB_REFERENCE (redefines);
   cb_tree x = CB_TREE (field);
 
   /* check qualification */
   if (r->chain)
     {
-      cb_error_x (x, _("`%s' cannot be qualified"), CB_NAME (redefines));
+      cb_error_x (x, _("`%s' cannot be qualified here"), CB_NAME (redefines));
+      return NULL;
+    }
+
+  /* check subscripts */
+  if (r->subs)
+    {
+      cb_error_x (x, _("`%s' cannot be subscripted here"), CB_NAME (redefines));
       return NULL;
     }
 
@@ -1006,14 +1013,6 @@ cb_resolve_redefines (struct cb_field *field, cb_tree redefines)
   if (f->level == 66 || f->level == 88)
     {
       cb_error_x (x, _("level number of REDEFINES entry cannot be 66 or 88"));
-      return NULL;
-    }
-
-  /* check definition */
-  for (p = f->sister; p && p->redefines; p = p->sister);
-  if (p != field)
-    {
-      cb_error_x (x, _("REDEFINES must follow the original definition"));
       return NULL;
     }
 
@@ -1048,7 +1047,7 @@ validate_field_1 (struct cb_field *f)
   /* validate OCCURS DEPENDING */
   if (f->occurs_depending)
     {
-      /* the data item that contains the OCCURS DEPENDING clause shall not
+      /* the data item that contains a OCCURS DEPENDING clause shall not
 	 be subordinate to a data item that has the OCCURS clause */
       for (p = f->parent; p; p = p->parent)
 	if (p->flag_occurs)
@@ -1059,12 +1058,42 @@ validate_field_1 (struct cb_field *f)
 	    break;
 	  }
 
+      /* the data item that contains a OCCURS DEPENDING clause must be
+	 the last data item in the group */
       for (p = f; p->parent; p = p->parent)
-	if (p->sister)
+	for (; p->sister; p = p->sister)
+	  if (!p->sister->redefines)
+	    {
+	      cb_error_x (x, _("`%s' cannot have OCCURS DEPENDING"), name);
+	      break;
+	    }
+    }
+
+  /* validate REDEFINES */
+  if (f->redefines)
+    {
+      /* check OCCURS */
+      if (f->redefines->flag_occurs)
+	{
+	  cb_error_x (x, _("the original definition `%s' cannot have OCCURS"),
+		      f->redefines->name);
+	  return -1;
+	}
+
+      /* check definition */
+      for (p = f->redefines->sister; p && p != f; p = p->sister)
+	if (!p->redefines)
 	  {
-	    cb_error_x (x, _("`%s' cannot have OCCURS DEPENDING"), name);
+	    cb_error_x (x, _("REDEFINES must follow the original definition"));
 	    break;
 	  }
+
+      /* check variable occurrence */
+      if (f->occurs_depending || cb_field_varying (f))
+	cb_error_x (x, _("`%s' cannot be variable length"), f->name);
+      if (cb_field_varying (f->redefines))
+	cb_error_x (x, _("the original definition `%s' cannot be variable length"),
+		    f->redefines->name);
     }
 
   if (f->children)
@@ -1159,8 +1188,6 @@ validate_field_1 (struct cb_field *f)
       /* validate VALUE */
       if (f->values)
 	{
-	  struct cb_field *p;
-
 	  if (CB_PAIR_P (CB_VALUE (f->values)) || CB_CHAIN (f->values))
 	    cb_error_x (x, _("only level 88 item may have multiple values"));
 
