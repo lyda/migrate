@@ -15,6 +15,7 @@ check: all
 	for m in $(MODULES); do \
 	  (cd $$m && make check) \
 	done
+	make summary
 
 summary:
 	perl summary.pl $(MODULES) > summary.log
