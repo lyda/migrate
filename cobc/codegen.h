@@ -109,7 +109,6 @@ extern void data_trail (void);
 extern int adjust_linkage_vars (int start_offset);
 extern void proc_header (int using);
 extern void proc_trail (int using);
-extern void save_field_in_list (cob_tree sy);
 extern cob_tree save_literal (cob_tree x, int type);
 extern void save_named_sect (cob_tree sy);
 extern void put_disp_list (cob_tree sy);

@@ -291,6 +291,66 @@ clear_offsets ()
   tmpvar_max = 0;
 }
 
+static void
+save_field_in_list (cob_tree sy)
+{
+  struct list *list;
+  if (fields_list == NULL)
+    {
+      list = (struct list *) malloc (sizeof (struct list));
+      last_field = fields_list = list;
+      list->next = NULL;
+      list->var = sy;
+    }
+  else
+    {
+      list = (struct list *) malloc (sizeof (struct list));
+      list->var = sy;
+      list->next = NULL;
+      last_field->next = list;
+      last_field = list;
+    }
+}
+
+cob_tree
+save_literal (cob_tree x, int type)
+{
+  char *s;
+  char *dp;
+  int piclen;
+  struct lit *v = LITERAL (x);
+  s = COB_FIELD_NAME (v);
+  piclen = 3;			/* assume 'X'-only literal */
+  if ((type == '9') && (s[v->len - 1] > '9'))
+    {
+      piclen += 2;		/* we need space for the sign picture char */
+    }
+  if (type != 'X' && (dp = strchr (s, decimal_char ())) != NULL)
+    {
+      piclen += 4;		/* reserve space for 'V' and decimal part */
+      v->decimals = v->len - (int) (dp - s) - 1;
+    }
+  else
+    v->decimals = 0;
+  if (type == 'X' && v->len > 255)
+    piclen += (v->len / 255) * 2;
+  COB_FIELD_TYPE (v) = type;
+	/****** save literal in fields list for later *******/
+  save_field_in_list (x);
+	/******** save address of const string ************/
+  v->location = literal_offset;
+  v->sec_no = SEC_CONST;
+  if (v->decimals)
+    literal_offset += v->len;
+  /* it's already one chr larger (decimal point) */
+  else
+    literal_offset += v->len + 1;
+	/******** save address of field descriptor ********/
+  v->descriptor = literal_offset;
+  literal_offset += 11 + piclen;
+  return x;
+}
+
 static cob_tree
 save_special_literal (char *val, char picc, char *nick)
 {
@@ -1738,66 +1798,6 @@ proc_trail (int using)
 
   data_trail ();
   output ("\n\t.ident\t\"%s %s\"\n", COB_PACKAGE, COB_VERSION);
-}
-
-void
-save_field_in_list (cob_tree sy)
-{
-  struct list *list;
-  if (fields_list == NULL)
-    {
-      list = (struct list *) malloc (sizeof (struct list));
-      last_field = fields_list = list;
-      list->next = NULL;
-      list->var = sy;
-    }
-  else
-    {
-      list = (struct list *) malloc (sizeof (struct list));
-      list->var = sy;
-      list->next = NULL;
-      last_field->next = list;
-      last_field = list;
-    }
-}
-
-cob_tree
-save_literal (cob_tree x, int type)
-{
-  char *s;
-  char *dp;
-  int piclen;
-  struct lit *v = LITERAL (x);
-  s = COB_FIELD_NAME (v);
-  piclen = 3;			/* assume 'X'-only literal */
-  if ((type == '9') && (s[v->len - 1] > '9'))
-    {
-      piclen += 2;		/* we need space for the sign picture char */
-    }
-  if (type != 'X' && (dp = strchr (s, decimal_char ())) != NULL)
-    {
-      piclen += 4;		/* reserve space for 'V' and decimal part */
-      v->decimals = v->len - (int) (dp - s) - 1;
-    }
-  else
-    v->decimals = 0;
-  if (type == 'X' && v->len > 255)
-    piclen += (v->len / 255) * 2;
-  COB_FIELD_TYPE (v) = type;
-	/****** save literal in fields list for later *******/
-  save_field_in_list (x);
-	/******** save address of const string ************/
-  v->location = literal_offset;
-  v->sec_no = SEC_CONST;
-  if (v->decimals)
-    literal_offset += v->len;
-  /* it's already one chr larger (decimal point) */
-  else
-    literal_offset += v->len + 1;
-	/******** save address of field descriptor ********/
-  v->descriptor = literal_offset;
-  literal_offset += 11 + piclen;
-  return x;
 }
 
 void
