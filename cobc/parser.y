@@ -21,7 +21,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 569
+%expect 572
 
 %{
 #define yydebug		cob_trace_parser
@@ -110,7 +110,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %token WORKING_STORAGE,LINKAGE,DECIMAL_POINT,COMMA,DUPLICATES,WITH,EXIT
 %token RECORD,OMITTED,STANDARD,STANDARD_1,STANDARD_2,RECORDS,BLOCK,VARYING
 %token CONTAINS,CHARACTERS,COMPUTE,GO,STOP,RUN,ACCEPT,PERFORM,RENAMES
-%token IF,ELSE,SENTENCE,LINE,PAGE,OPEN,CLOSE,REWRITE,SECTION
+%token IF,ELSE,SENTENCE,LINE,PAGE,OPEN,CLOSE,REWRITE,SECTION,SYMBOLIC
 %token ADVANCING,INTO,AT,END,NEGATIVE,POSITIVE,SPACES,NOT
 %token CALL,USING,INVALID,CONTENT,QUOTES,LOW_VALUES,HIGH_VALUES
 %token SELECT,ASSIGN,DISPLAY,UPON,CONSOLE,STD_OUTPUT,STD_ERROR
@@ -312,6 +312,7 @@ special_names:
 special_name:
   special_name_builtin
 | special_name_alphabet
+| special_name_symbolic
 | special_name_class
 | special_name_currency
 | special_name_decimal_point
@@ -370,6 +371,31 @@ also_literal_list:
   ALSO without_all_literal
 | also_literal_list ALSO without_all_literal
 ;
+
+/* SYMBOLIC CHARACTER */
+
+special_name_symbolic:
+  SYMBOLIC opt_characters symbolic_characters_list
+  {
+    yywarn ("SYMBOLIC CHARACTERS is ignored");
+  }
+;
+symbolic_characters_list:
+  symbolic_characters
+| symbolic_characters_list symbolic_characters
+;
+symbolic_characters:
+  char_list is_are integer_list
+;
+char_list:
+  SYMBOL_TOK { }
+| char_list SYMBOL_TOK { }
+;
+integer_list:
+  integer { }
+| integer_list integer { }
+;
+is_are: IS | ARE ;
 
 
 /* CLASS */

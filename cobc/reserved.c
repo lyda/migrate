@@ -339,6 +339,7 @@ static struct word reserved_words[] = {
   {"STRING",		STRING},
   {"SUBTRACT",		SUBTRACT},
   {"SUM",		SUM},
+  {"SYMBOLIC",		SYMBOLIC},
   {"SYNC",		SYNCHRONIZED},
   {"SYNCHRONIZED",      SYNCHRONIZED},
   {"TALLYING",	    	TALLYING},
