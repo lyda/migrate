@@ -969,6 +969,30 @@ cb_field_subordinate (struct cb_field *p, struct cb_field *f)
 }
 
 int
+cb_field_align_size (struct cb_field *f)
+{
+  switch (f->usage)
+    {
+    case CB_USAGE_BINARY:
+    case CB_USAGE_COMP_5:
+    case CB_USAGE_COMP_X:
+    case CB_USAGE_FLOAT:
+      if (f->size == 2 || f->size == 4 || f->size == 8)
+	return f->size;
+      else
+	return 1;
+    case CB_USAGE_INDEX:
+      return sizeof (int);
+    case CB_USAGE_OBJECT:
+    case CB_USAGE_POINTER:
+    case CB_USAGE_PROGRAM:
+      return sizeof (void *);
+    default:
+      return 1;
+    }
+}
+
+int
 cb_field_need_aligned (struct cb_field *f)
 {
   if (f->children)
@@ -979,23 +1003,9 @@ cb_field_need_aligned (struct cb_field *f)
       return 0;
     }
 
-  switch (f->usage)
-    {
-#if 0
-    case CB_USAGE_BINARY:
-    case CB_USAGE_COMP_5:
-    case CB_USAGE_COMP_X:
-    case CB_USAGE_FLOAT:
-      /* shoudl we align these? */
-#endif
-    case CB_USAGE_INDEX:
-    case CB_USAGE_OBJECT:
-    case CB_USAGE_POINTER:
-    case CB_USAGE_PROGRAM:
-      return 1;
-    default:
-      return 0;
-    }
+  if (cb_field_align_size (f) > 1)
+    return 1;
+  return 0;
 }
 
 

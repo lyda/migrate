@@ -526,25 +526,13 @@ compute_size (struct cb_field *f)
 	    }
 	  else
 	    {
-	      int align_size = 1;
+	      int align_size;
 
 	      c->offset = f->offset + size;
 	      size += compute_size (c) * c->occurs_max;
 
 	      /* word alignment */
-	      switch (c->usage)
-		{
-		case CB_USAGE_INDEX:
-		  align_size = sizeof (int);
-		  break;
-		case CB_USAGE_OBJECT:
-		case CB_USAGE_POINTER:
-		case CB_USAGE_PROGRAM:
-		  align_size = sizeof (void *);
-		  break;
-		default:
-		  break;
-		}
+	      align_size = cb_field_align_size (c);
 	      if (c->offset % align_size != 0)
 		{
 		  int pad = align_size - (c->offset % align_size);
