@@ -45,8 +45,6 @@
 
 #define decimal_char	(decimal_comma ? ',' : '.')
 
-#define SVAR_RCODE  	"RETURN-CODE"
-
 int decimal_comma = 0;
 char currency_symbol = '$';
 cob_tree curr_field;
@@ -319,30 +317,11 @@ save_special_literal (char *val, char picc, char *nick)
 static void
 define_special_fields ()
 {
-  cob_tree sy, tmp;
-
   spe_lit_SP = save_special_literal (" ", 'X', "%SPACES%");
   spe_lit_LV = save_special_literal ("\0", 'X', "%LOW-VALUES%");
   spe_lit_HV = save_special_literal ("\xff", 'X', "%HIGH-VALUES%");
   spe_lit_ZE = save_special_literal ("0", '9', "%ZEROS%");
   spe_lit_QU = save_special_literal ("\"", 'X', "%QUOTES%");
-
-  sy = install (SVAR_RCODE, SYTB_VAR, 0);
-  COB_FIELD_TYPE (sy) = 'B';	/* assume numeric "usage is comp" item */
-  sy->len = 4;
-  sy->decimals = 0;
-  sy->level = 1;
-  sy->sec_no = SEC_DATA;
-  sy->times = 1;
-  sy->flags.value = 1;
-  sy->picstr = "9\x05";
-  tmp = curr_field;
-  curr_field = sy;
-  curr_field->value = spe_lit_ZE;
-  curr_field->value2 = spe_lit_ZE;
-  update_field ();
-  close_fields ();
-  curr_field = tmp;
 }
 
 void
@@ -1632,29 +1611,6 @@ proc_trail (cob_tree_list using)
   output (".Lend_pgm_%s:\n", pgm_label);
 
   asm_call ("cob_exit");
-
-//      Program return code is stored in register %eax
-//      Note:
-//        The variable RETURN-CODE is a extention to the 
-//        standard, since ANSI COBOL 85 does not support it.
-
-  if ((sy = lookup_symbol (SVAR_RCODE)) == NULL)
-    {
-      output ("\tmovl\t$0, %%eax\n");
-    }
-  else
-    {
-      if (sy->sec_no == SEC_STACK)
-	output ("\tleal\t-%d(%%ebp), %%edx\n", sy->location);
-      else
-	output ("\tleal\tw_base%d+%d, %%edx\n",
-		 pgm_segment, sy->location);
-      output ("\tmovl\t(%%edx), %%eax\n");
-    }
-
-  output ("\tjmp\t.LSend_%s\n", pgm_label);
-  output ("\t.align 16\n");
-  output (".LSend_%s:\n", pgm_label);
 
   output ("\tmovl\t-%d(%%ebp), %%ebx\n", stack_offset - 8 - 16);
   output ("\tmov\t%%ebp,%%esp\n");

@@ -195,10 +195,10 @@ cob_adjust_length (struct fld_desc *dep_desc, char *dep_val,
  * 
  */
 
-void
+int
 cob_exit ()
 {
-//     do_scrio_finish();
+  return 0;
 }
 
 int
