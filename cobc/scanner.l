@@ -38,9 +38,6 @@ extern char picture[];
 extern struct sym *curr_field;
 extern int picix,piccnt,sign,v_flag;
 
-#define YY_INPUT(buf,result,max_size)  result = yyinput (buf, max_size);
-static int yyinput (char *buf, int maxsize);
-
 static int read_literal (char mark);
 static int read_literal_x (char mark);
 static int scan_word (char *text);
@@ -71,7 +68,8 @@ static int scan_picture (char *text);
   start_condition=0; /* avoid new state switch */
 %}
 
-[ \t\r\n]* { /* ignore */ }
+<*>[ \t\r]*	{ /* ignore */ }
+<*>\n		{ cob_orig_lineno++; }
 
 ^"#".* {
   /* line directive */
@@ -160,17 +158,15 @@ X?[\'\"] {
     yylval.str = strdup (yytext);
     return IDSTRING;
   }
-  .|\n		{ /* ignore */ }
+  .		{ /* ignore */ }
 }
 
 <COMMENT_STATE>{
-  .*		{ /* ignore */ }
-  "\n"		{ BEGIN INITIAL; }
+  .*		{ BEGIN INITIAL; }
 }
 
 <PICTURE_STATE>{
-  "IS" |
-  [ \t\r\n]+	{ /* ignore */ }
+  "IS"		{ /* ignore */ }
   [^ \t\r\n]+	{
     BEGIN INITIAL;
     return scan_picture (yytext);
@@ -313,14 +309,4 @@ scan_picture (char *text)
  error:
   yyerror ("syntax error, invalid picture");
   return PICTURE;
-}
-
-static int
-yyinput (char *buf, int maxsize)
-{
-  if (fgets (buf, maxsize, yyin) == NULL)
-    return YY_NULL;
-
-  cob_orig_lineno++;
-  return strlen (buf);
 }
