@@ -26,19 +26,19 @@
 #include <string.h>
 #include <libcob.h>
 
-#if !(defined __CYGWIN__ || defined __MINGW32__)
+#ifndef _WIN32
 #include <unistd.h>
 #endif
 
-#ifdef __MINGW32__
+#ifdef _WIN32
 #include <windows.h>		/* for GetTempPath, GetTempFileName */
-#endif /* __MINGW32__ */
+#endif
 
 #include "cobc.h"
 #include "tree.h"
 #include "lib/getopt.h"
 
-#if (defined __CYGWIN__ || defined __MINGW32__)
+#ifdef _WIN32
 #define EXEC_LDFLAGS	"-Wl,--export-dynamic -Wl,--enable-auto-import"
 #define MODULE_LDFLAGS	"-Wl,--enable-auto-import"
 #else
@@ -455,18 +455,18 @@ file_extension (const char *filename)
 static void
 temp_name (char *buff, const char *ext)
 {
-#ifdef __MINGW32__
+#ifdef _WIN32
   char temp[MAX_PATH];
   GetTempPath (MAX_PATH, temp);
   GetTempFileName (temp, "cob", 0, buff);
   DeleteFile(buff);
   strcpy (buff + strlen (buff) - 4, ext); /* replace ".tmp" by EXT */
-#else /* not __MINGW32__ */
+#else
   sprintf (buff, "%s/cobXXXXXX", tmpdir);
   close (mkstemp (buff));
   unlink (buff);
   strcat (buff, ext);
-#endif /* not __MINGW32__ */
+#endif
 }
 
 static struct filename *

@@ -1,3 +1,7 @@
+2004-03-06  Keisuke Nishida  <knishida@wind.sannet.ne.jp>
+
+	* cobc.c: Use _WIN32 instead of __CYGWIN__ or __MINGW32__.
+
 2003-05-21  Keisuke Nishida  <knishida@netlab.jp>
 
 	* tree.h (cb_class, cb_category): New enums.
