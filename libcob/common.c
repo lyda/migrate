@@ -631,10 +631,10 @@ cob_field_to_string (cob_field *f, char *s)
 {
   size_t i;
   memcpy (s, f->data, f->size);
-  for (i = 0; i < f->size; i++)
-    if (s[i] == ' ')
+  for (i = f->size - 1; i >= 0; i--)
+    if (s[i] != ' ')
       break;
-  s[i] = '\0';
+  s[i + 1] = '\0';
   return s;
 }
 

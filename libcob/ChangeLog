@@ -1,3 +1,7 @@
+2003-03-06  Keisuke Nishida  <knishida@netlab.jp>
+
+	* common.c (cob_field_to_string): Search for ' ' from backward.
+
 2003-02-25  Keisuke Nishida  <knishida@netlab.jp>
 
 	* common.c (cob_push_environment, cob_pop_environment): New functions.
