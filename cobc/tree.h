@@ -663,7 +663,7 @@ struct cobc_word {
   struct cobc_word *next;	/* next word with the same hash value */
 };
 
-extern struct cobc_word *make_word (char *name);
+extern struct cobc_word *make_word (const char *name);
 extern struct cobc_word *set_word_item (struct cobc_word *word, cobc_tree item);
 extern struct cobc_word *lookup_user_word (const char *name);
 extern struct cobc_word *lookup_qualified_word (struct cobc_word *word, struct cobc_field *parent);

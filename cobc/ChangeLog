@@ -1,3 +1,7 @@
+2002-07-26  Keisuke Nishida  <knishida@netlab.jp>
+
+	* tree.c (make_word): Take constant and duplicate the name.
+
 2002-07-22  Keisuke Nishida  <knishida@netlab.jp>
 
 	* parser.y (FUNCTION_NAME): Defined as the string type.

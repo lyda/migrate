@@ -310,7 +310,7 @@ init_constants (void)
       char buff[16];
       sprintf (buff, "switch[%d]", i);
       cobc_switch[i] =
-	make_field_3 (make_word (strdup (buff)), "9", COBC_USAGE_BINARY);
+	make_field_3 (make_word (buff), "9", COBC_USAGE_BINARY);
     }
 
   cobc_default_error_handler = COBC_LABEL_NAME (make_label_name_nodef (0, 0));
@@ -428,7 +428,7 @@ make_filler (void)
   static int id = 1;
   char name[256];
   sprintf (name, "$%d", id++);
-  return make_field (make_word (strdup (name)));
+  return make_field (make_word (name));
 }
 
 struct cobc_field *
@@ -928,11 +928,11 @@ hash (const char *s)
 }
 
 struct cobc_word *
-make_word (char *name)
+make_word (const char *name)
 {
   struct cobc_word *p = malloc (sizeof (struct cobc_word));
   memset (p, 0, sizeof (struct cobc_word));
-  p->name  = name;
+  p->name  = strdup (name);
   return p;
 }
 
@@ -968,7 +968,7 @@ lookup_user_word (const char *name)
       return p;
 
   /* create new symbol */
-  p = make_word (strdup (name));
+  p = make_word (name);
   p->next = word_table[val];
   word_table[val] = p;
   return p;
