@@ -133,6 +133,14 @@ redefinition_error (cb_tree x)
 }
 
 void
+redefinition_warning (cb_tree x)
+{
+  struct cb_word *w = CB_REFERENCE (x)->word;
+  cb_warning_x (x, _("redefinition of `%s'"), w->name);
+  cb_warning_x (CB_VALUE (w->items), _("`%s' previously defined here"), w->name);
+}
+
+void
 undefined_error (cb_tree x)
 {
   struct cb_reference *r = CB_REFERENCE (x);

@@ -876,10 +876,7 @@ cb_build_field (cb_tree lv, cb_tree name, struct cb_field *last_field,
   if (level == 01 || level == 77)
     {
       if (r->word->count > 0)
-	{
-	  redefinition_error (name);
-	  return cb_error_node;
-	}
+	redefinition_warning (name);
     }
   else
     {
@@ -891,8 +888,8 @@ cb_build_field (cb_tree lv, cb_tree name, struct cb_field *last_field,
 	      || CB_FIELD (x)->level == 01
 	      || CB_FIELD (x)->level == 77)
 	    {
-	      redefinition_error (name);
-	      return cb_error_node;
+	      redefinition_warning (name);
+	      break;
 	    }
 	}
     }
@@ -946,7 +943,10 @@ cb_build_field (cb_tree lv, cb_tree name, struct cb_field *last_field,
 	 in the same level */
       for (p = last_field->parent->children; p; p = p->sister)
 	if (strcasecmp (f->name, p->name) == 0)
-	  redefinition_error (name);
+	  {
+	    redefinition_warning (name);
+	    break;
+	  }
       last_field->sister = f;
       f->parent = last_field->parent;
     }
