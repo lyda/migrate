@@ -17,10 +17,11 @@
 # the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
 # Boston, MA 02111-1307 USA
 
-my $compile = 'cobc -std=cobol85';
+my $compile = 'cobc -P -std=cobol85';
 my $compile_module = 'cobc -std=cobol85 -m';
 
 my $num_progs = 0;
+my $test_skipped = 0;
 my $compile_error = 0;
 my $execute_error = 0;
 
@@ -30,6 +31,8 @@ my $total_fail = 0;
 my $total_deleted = 0;
 my $total_inspect = 0;
 my $total_ok = 0;
+
+$skip{SQ207M} = 1;
 
 open (LOG, "> report.txt") or die;
 print LOG "Filename    total pass fail deleted inspect\n";
@@ -49,11 +52,12 @@ foreach $in (sort (glob("*.{CBL,SUB}"))) {
   if (-e "./$exe.DAT") {
     $cmd = "./$exe < $exe.DAT";
   }
-  next if $exe =~ /^..[34]0/;
-  next if $exe =~ /^SQ207M/;
-  $num_progs++;
   printf LOG "%-12s", $in;
-  {
+  if ($skip{$exe} || $exe =~ /^..[34]0/) {
+    $test_skipped++;
+    print LOG "  ----- test skipped -----\n";
+  } else {
+    $num_progs++;
     $copy = ($exe =~ /^SM/) ? "-I ../copy " : "";
     print "$compile $copy$in && $cmd\n";
     if (system ("$compile $copy$in") != 0) {

@@ -18,14 +18,12 @@
 # Boston, MA 02111-1307 USA
 
 my $total_progs = 0;
-my $total_tested = 0;
 my $total_executed = 0;
-my $total_skipped = 0;
 my $total_error = 0;
 my $total_crash = 0;
 
-print ("Module  programs tested executed skipped error crash  details\n");
-print ("------  -------- ------ -------- ------- ----- -----  -------\n");
+print ("Module  programs executed error crash  details\n");
+print ("------  -------- -------- ----- -----  -------\n");
 
 while ($module = shift) {
   open(IN, "$module/report.txt") or die;
@@ -34,30 +32,23 @@ while ($module = shift) {
       ($test, $pass, $fail, $delete, $inspect) = ($1, $2, $3, $4, $5);
     } elsif (/^Number of programs: *(\d+)/) {
       $progs = $1;
-    } elsif (/^Successfully tested: *(\d+)/) {
-      $tested = $1;
     } elsif (/^Successfully executed: *(\d+)/) {
       $executed = $1;
-    } elsif (/^Test skipped: *(\d+)/) {
-      $skipped = $1;
     } elsif (/^Compile error: *(\d+)/) {
       $error = $1;
     } elsif (/^Execute error: *(\d+)/) {
       $crash = $1;
     }
   }
-  printf ("%-6s  %8d %6d %8d %6d %6d %5d  %d,%d,%d,%d/%d\n",
-	  $module, $progs, $tested, $executed, $skipped, $error, $crash,
+  printf ("%-6s  %8d %8d %5d %5d  %d,%d,%d,%d/%d\n",
+	  $module, $progs, $executed, $error, $crash,
 	  $pass, $fail, $delete, $inspect, $test);
   $total_progs += $progs;
-  $total_tested += $tested;
   $total_executed += $executed;
-  $total_skipped += $skipped;
   $total_error += $error;
   $total_crash += $crash;
 }
 
-print ("------  -------- ------ -------- ------- ----- -----  -------\n");
-printf ("Total   %8d %6d %8d %6d %6d %5d\n",
-	$total_progs, $total_tested, $total_executed, $total_skipped,
-	$total_error, $total_crash);
+print ("------  -------- -------- ----- -----  -------\n");
+printf ("Total   %8d %8d %5d %5d\n",
+	$total_progs, $total_executed, $total_error, $total_crash);
