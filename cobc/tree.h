@@ -375,6 +375,8 @@ struct cobc_file_name {
   char *cname;
   struct cobc_label_name *handler; /* error handler */
   struct cobc_field *record;	/* record descriptor */
+  int record_min;		/* RECORD CONTAINS */
+  int record_max;		/* RECORD CONTAINS */
   cobc_tree assign;		/* ASSIGN */
   int optional;			/* OPTIONAL */
   int organization;		/* ORGANIZATION */

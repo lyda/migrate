@@ -935,15 +935,20 @@ output_file_name (struct cobc_file_name *f)
   else
     output ("cob_dummy_status");
   output (", ");
-  /* record_size, record_data */
-  {
-    int max_size = 0;
-    struct cobc_field *p;
-    for (p = f->record; p; p = p->sister)
-      if (max_size < p->size)
-	max_size = p->size;
-    output ("%d, f_%s_data, ", max_size, f->record->cname);
-  }
+  /* record_size */
+  if (f->record_max > 0)
+    output ("%d, ", f->record_max);
+  else
+    {
+      int max_size = 0;
+      struct cobc_field *p;
+      for (p = f->record; p; p = p->sister)
+	if (max_size < p->size)
+	  max_size = p->size;
+      output ("%d, ", max_size);
+    }
+  /* record_data */
+  output ("f_%s_data, ", f->record->cname);
   /* file */
   output ("0, ");
   /* flags */
@@ -1723,9 +1728,8 @@ codegen (struct program_spec *spec)
 
   output_line ("/* PROCEDURE DIVISION */");
   output_line ("lb_default_handler:");
-  output_line ("cob_runtime_error (\"File I-O error: %d\", cob_status);");
+  output_line ("cob_runtime_error (\"File I-O error\");");
   output_line ("goto l_exit;");
-  output_newline ();
 
   for (l = spec->exec_list; l; l = l->next)
     output_tree (l->item);

@@ -660,6 +660,8 @@ make_file_name (struct cobc_word *word)
   p->cname = to_cname (word->name);
   p->handler = NULL;
   p->record = NULL;
+  p->record_min = 0;
+  p->record_max = 0;
   p->assign = NULL;
   p->optional = 0;
   p->organization = 0;

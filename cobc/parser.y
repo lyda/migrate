@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 128
+%expect 126
 
 %{
 #include "config.h"
@@ -845,7 +845,7 @@ _records_or_characters: | RECORDS | CHARACTERS ;
 record_clause:
   RECORD _contains integer _characters
   {
-    yywarn ("RECORD CONTAINS is not implemented");
+    current_file_name->record_max = $3;
   }
 | RECORD _contains integer _to integer _characters
   {
@@ -1271,36 +1271,11 @@ procedure_using:
   }
 ;
 
-
-/*******************
- * DECLARATIVES
- *******************/
-
 procedure_declaratives:
 | DECLARATIVES dot
-  use_block
+  procedure_list
   END DECLARATIVES
 ;
-use_block:
-| use_block
-  section_header
-  USE flag_global AFTER _standard exception_or_error PROCEDURE _on use_target
-  nonsection_procedure_list
-;
-use_target:
-  file_name_list
-  {
-    struct cobc_list *l;
-    for (l = $1; l; l = l->next)
-      COBC_FILE_NAME (l->item)->handler = current_section;
-  }
-| INPUT		{ program_spec.input_handler = current_section; }
-| OUTPUT	{ program_spec.output_handler = current_section; }
-| I_O		{ program_spec.i_o_handler = current_section; }
-| EXTEND	{ program_spec.extend_handler = current_section; }
-;
-_standard: | STANDARD ;
-exception_or_error: EXCEPTION | ERROR ;
 
 
 /*******************
@@ -1319,15 +1294,7 @@ procedure_list:
 ;
 procedure:
   section_header
-| nonsection_procedure
-;
-
-nonsection_procedure_list:
-| nonsection_procedure_list
-  nonsection_procedure
-;
-nonsection_procedure:
-  paragraph_header
+| paragraph_header
 | statement
 | error '.'
 | '.'
@@ -1352,6 +1319,7 @@ section_header:
     current_paragraph = NULL;
     push_label (current_section);
   }
+  opt_use_statement
 ;
 
 paragraph_header:
@@ -1370,6 +1338,31 @@ paragraph_header:
     push_label (current_paragraph);
   }
 ;
+
+/*
+ * USE statement
+ */
+
+opt_use_statement:
+| use_statement
+;
+use_statement:
+  USE flag_global AFTER _standard exception_or_error PROCEDURE _on use_target
+;
+use_target:
+  file_name_list
+  {
+    struct cobc_list *l;
+    for (l = $1; l; l = l->next)
+      COBC_FILE_NAME (l->item)->handler = current_section;
+  }
+| INPUT		{ program_spec.input_handler = current_section; }
+| OUTPUT	{ program_spec.output_handler = current_section; }
+| I_O		{ program_spec.i_o_handler = current_section; }
+| EXTEND	{ program_spec.extend_handler = current_section; }
+;
+_standard: | STANDARD ;
+exception_or_error: EXCEPTION | ERROR ;
 
 
 /*******************
