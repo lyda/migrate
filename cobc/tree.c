@@ -109,6 +109,7 @@ static void *
 make_tree (int tag, char class, int size)
 {
   cobc_tree x = malloc (size);
+  memset (x, 0, size);
   x->tag = tag;
   x->class = class;
   x->loc = cobc_location;
@@ -356,11 +357,8 @@ make_literal (int class, unsigned char *str)
 {
   struct cobc_literal *p =
     make_tree (cobc_tag_literal, class, sizeof (struct cobc_literal));
-  p->all = 0;
   p->str = strdup (str);
   p->size = strlen (str);
-  p->sign = 0;
-  p->decimals = 0;
   return p;
 }
 
@@ -400,12 +398,8 @@ struct cobc_picture *
 make_picture (void)
 {
   struct cobc_picture *p = malloc (sizeof (struct cobc_picture));
-  p->size = 0;
+  memset (p, 0, sizeof (struct cobc_picture));
   p->str = "";
-  p->category = 0;
-  p->digits = 0;
-  p->decimals = 0;
-  p->have_sign = 0;
   return p;
 }
 
@@ -414,39 +408,7 @@ make_field (struct cobc_word *word)
 {
   struct cobc_field *p =
     make_tree (cobc_tag_field, COB_ALPHANUMERIC, sizeof (struct cobc_field));
-  p->size = 0;
-  p->memory_size = 0;
-  p->offset = 0;
-  p->level = 0;
-  p->occurs = 0;
-  p->occurs_min = 0;
-  p->indexes = 0;
-  p->category = 0;
-  p->usage = 0;
-  p->cname = NULL;
-  p->value = NULL;
-  p->occurs_depending = NULL;
   p->word = set_word_item (word, COBC_TREE (p));
-  p->values = NULL;
-  p->index_list = NULL;
-  p->parent = NULL;
-  p->children = NULL;
-  p->sister = NULL;
-  p->redefines = NULL;
-  p->rename_thru = NULL;
-  p->file = NULL;
-  p->keys = NULL;
-  p->nkeys = 0;
-  p->pic = NULL;
-  p->f.external = 0;
-  p->f.blank_zero = 0;
-  p->f.justified = 0;
-  p->f.sign_separate = 0;
-  p->f.sign_leading = 0;
-  p->f.synchronized = 0;
-  p->f.have_occurs = 0;
-  p->f.used = 0;
-  p->f.referenced = 0;
   return COBC_TREE (p);
 }
 
@@ -646,17 +608,6 @@ make_file_name (struct cobc_word *word)
     make_tree (cobc_tag_file_name, COB_VOID, sizeof (struct cobc_file_name));
   p->word = set_word_item (word, COBC_TREE (p));
   p->cname = to_cname (word->name);
-  p->assign = NULL;
-  p->optional = 0;
-  p->organization = 0;
-  p->access_mode = 0;
-  p->file_status = NULL;
-  p->key = NULL;
-  p->alt_key_list = NULL;
-  p->record = NULL;
-  p->record_min = p->record_max = 0;
-  p->record_depending = NULL;
-  p->handler = NULL;
   return COBC_TREE (p);
 }
 
@@ -670,13 +621,8 @@ make_label_name_nodef (struct cobc_word *word, struct cobc_word *in_word)
 {
   struct cobc_label_name *p =
     make_tree (cobc_tag_label_name, COB_VOID, sizeof (struct cobc_label_name));
-  p->cname = NULL;
   p->word = word;
   p->in_word = in_word;
-  p->section = NULL;
-  p->children = NULL;
-  p->need_begin = 0;
-  p->need_return = 0;
   return COBC_TREE (p);
 }
 
@@ -938,10 +884,6 @@ make_perform (int type)
   struct cobc_perform *p =
     make_tree (cobc_tag_perform, COB_VOID, sizeof (struct cobc_perform));
   p->type = type;
-  p->test = 0;
-  p->body = NULL;
-  p->data = NULL;
-  p->varying = NULL;
   return COBC_TREE (p);
 }
 
@@ -989,12 +931,8 @@ struct cobc_word *
 make_word (char *name)
 {
   struct cobc_word *p = malloc (sizeof (struct cobc_word));
+  memset (p, 0, sizeof (struct cobc_word));
   p->name  = name;
-  p->count = 0;
-  p->error = 0;
-  p->item  = NULL;
-  p->link  = NULL;
-  p->next  = NULL;
   return p;
 }
 
