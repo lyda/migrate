@@ -2,20 +2,26 @@ NEWS - user visible changes				-*- outline -*-
 
 * Changes in OpenCOBOL 0.24
 
-** We no longer use readline.
+** No longer use readline.
 
-** New subdirectory `config' will be installed under
-   $prefix/share/open-cobol.
+** No longer use run-time configuration file (libcob.conf)
+
+** New subdirectory `config', which contains compiler config files,
+will be installed under $prefix/share/open-cobol.
 
 ** Binary data items are now big endian.
 COMP-5 data items are native integers.
 
 ** COPY statements try to complement the file extension:
-   .CBL, .COB, .cbl, or .cob.
+.CBL, .COB, .cbl, or .cob.
 
 ** New environment variable TMPDIR.
 
 ** New environment variable COB_LDFLAGS.
+
+** The environment variable COB_CONFIG_FILE has been removed.
+
+** New environment variable COB_DYNAMIC_RELOADING.
 
 ** New compiler option `--list-reserved', which list all reserved words.
 
