@@ -333,9 +333,7 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
     return ('(');
 }
 
-{white}+ { }
-
-"EJECT"|"SKIP1"|"SKIP2"|"SKIP3" { /* throw away this */ }
+{white}+ { /* ignore */ }
 
 <INITIAL,SUBSCRIPTS_ST>{word} {
   struct sym *symbol;
@@ -474,6 +472,10 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   }
 
   {word} {
+    int tok = scan_word (yytext);
+    if (tok)
+      return tok;
+
     TRACE_PRINT ((" <IDSTRING>: %s\n", yytext));
     yylval.str = strdup (yytext);
     return IDSTRING;
