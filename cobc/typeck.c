@@ -104,11 +104,19 @@ cb_build_section_name (cb_tree name)
 cb_tree
 cb_build_identifier (cb_tree x)
 {
-  struct cb_reference *r = CB_REFERENCE (x);
+  struct cb_reference *r;
   struct cb_field *f;
-  const char *name = r->word->name;
-  cb_tree v = cb_ref (x);
+  const char *name;
+  cb_tree v ;
 
+  if (x == cb_error_node)
+    return cb_error_node;
+
+  r = CB_REFERENCE (x);
+  name = r->word->name;
+
+  /* resolve reference */
+  v = cb_ref (x);
   if (v == cb_error_node)
     return cb_error_node;
 
@@ -138,107 +146,106 @@ cb_build_identifier (cb_tree x)
       return cb_error_node;
     }
 
-  /* check the range of constant subscripts */
+  /* subscript check */
   if (r->subs)
     {
       struct cb_field *p;
       cb_tree l = r->subs;
-
       for (p = f; p; p = p->parent)
 	if (p->flag_occurs)
 	  {
-	    if (CB_LITERAL_P (CB_VALUE (l)))
+	    cb_tree sub = CB_VALUE (l);
+
+	    /* compile-time check */
+	    if (CB_LITERAL_P (sub))
 	      {
-		int n = cb_literal_to_int (CB_LITERAL (CB_VALUE (l)));
+		int n = cb_literal_to_int (CB_LITERAL (sub));
 		if (n < p->occurs_min || n > p->occurs_max)
 		  cb_error_x (x, _("subscript of `%s' out of bounds: %d"),
 			     name, n);
 	      }
+
+	    /* run-time check */
+	    if (CB_EXCEPTION_ENABLE (COB_EC_BOUND_SUBSCRIPT))
+	      {
+		if (p->occurs_depending)
+		  {
+		    int n = p->occurs_max;
+		    if (CB_LITERAL_P (sub))
+		      n = cb_literal_to_int (CB_LITERAL (sub));
+		    if (p->occurs_min <= n && n <= p->occurs_max)
+		      {
+			cb_tree e1, e2;
+			e1 = cb_build_funcall_4 ("cob_check_odo",
+						 cb_build_cast_integer (p->occurs_depending),
+						 cb_int (p->occurs_min),
+						 cb_int (p->occurs_max),
+						 cb_build_string0 (cb_field (p->occurs_depending)->name));
+			e2 = cb_build_funcall_4 ("cob_check_subscript",
+						 cb_build_cast_integer (sub),
+						 cb_int (p->occurs_min),
+						 cb_build_cast_integer (p->occurs_depending),
+						 cb_build_string0 (p->name));
+			r->check = list_add (r->check, e1);
+			r->check = list_add (r->check, e2);
+		      }
+		  }
+		else
+		  {
+		    if (!CB_LITERAL_P (sub))
+		      {
+			cb_tree e1;
+			e1 = cb_build_funcall_4 ("cob_check_subscript",
+						 cb_build_cast_integer (sub),
+						 cb_int1,
+						 cb_int (p->occurs_max),
+						 cb_build_string0 (p->name));
+			r->check = list_add (r->check, e1);
+		      }
+		  }
+	      }
+
 	    l = CB_CHAIN (l);
 	  }
     }
 
-  /* check the range of constant reference modification */
-  if (r->offset && CB_LITERAL_P (r->offset))
+  /* reference modification check */
+  if (r->offset)
     {
-      int offset = cb_literal_to_int (CB_LITERAL (r->offset));
-      if (offset < 1 || offset > f->size)
-	cb_error_x (x, _("offset of `%s' out of bounds: %d"), name, offset);
-      else if (r->length && CB_LITERAL_P (r->length))
+      /* compile-time check */
+      if (CB_LITERAL_P (r->offset))
 	{
-	  int len = cb_literal_to_int (CB_LITERAL (r->length));
-	  if (len < 1 || len > f->size - offset + 1)
-	    cb_error_x (x, _("length of `%s' out of bounds: %d"), name, len);
+	  int offset = cb_literal_to_int (CB_LITERAL (r->offset));
+	  if (offset < 1 || offset > f->size)
+	    cb_error_x (x, _("offset of `%s' out of bounds: %d"),
+			name, offset);
+	  else if (r->length && CB_LITERAL_P (r->length))
+	    {
+	      int length = cb_literal_to_int (CB_LITERAL (r->length));
+	      if (length < 1 || length > f->size - offset + 1)
+		cb_error_x (x, _("length of `%s' out of bounds: %d"),
+			    name, length);
+	    }
+	}
+
+      /* run-time check */
+      if (CB_EXCEPTION_ENABLE (COB_EC_BOUND_REF_MOD))
+	{
+	  if (!CB_LITERAL_P (r->offset)
+	      || (r->length && !CB_LITERAL_P (r->length)))
+	    {
+	      cb_tree e1;
+	      e1 = cb_build_funcall_4 ("cob_check_ref_mod",
+				       cb_build_cast_integer (r->offset),
+				       r->length ? cb_build_cast_integer (r->length) : cb_int1,
+				       cb_int (f->size),
+				       cb_build_string0 (f->name));
+	      r->check = list_add (r->check, e1);
+	    }
 	}
     }
 
   return x;
-}
-
-cb_tree
-cb_build_check_identifier (cb_tree x)
-{
-  struct cb_reference *r = CB_REFERENCE (x);
-  struct cb_field *f = cb_field (x);
-  cb_tree s = NULL;
-
-  /* subscript check */
-  if (CB_EXCEPTION_ENABLE (COB_EC_BOUND_SUBSCRIPT) && r->subs)
-    {
-      struct cb_field *p;
-      cb_tree l = r->subs;
-
-      for (p = f; p; p = p->parent)
-	if (p->flag_occurs)
-	  {
-	    cb_tree idx = CB_VALUE (l);
-	    if (p->occurs_depending)
-	      {
-		int n = p->occurs_max;
-		if (CB_LITERAL_P (idx))
-		  n = cb_literal_to_int (CB_LITERAL (idx));
-		if (p->occurs_min <= n && n <= p->occurs_max)
-		  {
-		    cb_tree e1, e2;
-		    e1 = cb_build_funcall_4 ("cob_check_odo",
-					     cb_build_cast_integer (p->occurs_depending),
-					     cb_int (p->occurs_min),
-					     cb_int (p->occurs_max),
-					     cb_build_string0 (cb_field (p->occurs_depending)->name));
-		    e2 = cb_build_funcall_4 ("cob_check_subscript",
-					     cb_build_cast_integer (idx),
-					     cb_int (p->occurs_min),
-					     cb_build_cast_integer (p->occurs_depending),
-					     cb_build_string0 (p->name));
-		    s = list_add (list (e1), e2);
-		  }
-	      }
-	    else
-	      {
-		if (!CB_LITERAL_P (idx))
-		  s = list (cb_build_funcall_4 ("cob_check_subscript",
-						cb_build_cast_integer (idx),
-						cb_int1,
-						cb_int (p->occurs_max),
-						cb_build_string0 (p->name)));
-	      }
-	    l = CB_CHAIN (l);
-	  }
-    }
-
-  /* reference modifier check */
-  if (CB_EXCEPTION_ENABLE (COB_EC_BOUND_REF_MOD) && r->offset)
-    {
-      if (!CB_LITERAL_P (r->offset)
-	  || (r->length && !CB_LITERAL_P (r->length)))
-	s = list_add (s, cb_build_funcall_4 ("cob_check_ref_mod",
-					     cb_build_cast_integer (r->offset),
-					     r->length ? cb_build_cast_integer (r->length) : cb_int1,
-					     cb_int (f->size),
-					     cb_build_string0 (f->name)));
-    }
-
-  return s;
 }
 
 cb_tree

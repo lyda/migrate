@@ -673,6 +673,14 @@ output_param (cb_tree x, int id)
 	struct cb_reference *r = CB_REFERENCE (x);
 	struct cb_field *f = CB_FIELD (r->value);
 
+	if (r->check)
+	  {
+	    cb_tree l;
+	    output_indent ("({");
+	    for (l = r->check; l; l = CB_CHAIN (l))
+	      output_stmt (CB_VALUE (l));
+	  }
+
 	if (!r->subs && !r->offset && !cb_field_varying (f))
 	  {
 	    if (!f->flag_field)
@@ -691,12 +699,16 @@ output_param (cb_tree x, int id)
 		output_target = yyout;
 	      }
 	    output ("&f_%s", f->cname);
-	    return;
+	  }
+	else
+	  {
+	    output ("(%s = (cob_field) ", fname);
+	    output_field (x);
+	    output (", &%s)", fname);
 	  }
 
-	output ("(%s = (cob_field) ", fname);
-	output_field (x);
-	output (", &%s)", fname);
+	if (r->check)
+	  output ("; })");
 	break;
       }
     default:

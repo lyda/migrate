@@ -76,6 +76,11 @@
 #define push_funcall_3(f,a,b,c)	   push (cb_build_funcall_3 (f, a, b, c))
 #define push_funcall_4(f,a,b,c,d)  push (cb_build_funcall_4 (f, a, b, c, d))
 
+#define emit(x) \
+  current_statement->body = list_add (current_statement->body, x)
+#define emit_list(l) \
+  current_statement->body = list_append (current_statement->body, l)
+
 #define BEGIN_STATEMENT(name)				\
   current_statement = cb_build_statement (name);	\
   push (CB_TREE (current_statement))
@@ -1689,22 +1694,19 @@ add_statement:
   ADD				{ BEGIN_STATEMENT ("ADD"); }
   add_body on_size_error
   end_add
-  {
-    current_statement->body = $3;
-  }
 ;
 add_body:
   numeric_value_list TO numeric_name_list
   {
-    $$ = cb_build_arithmetic ($3, '+', cb_build_connective_op ($1, '+'));
+    emit (cb_build_arithmetic ($3, '+', cb_build_connective_op ($1, '+')));
   }
 | numeric_value_list add_to GIVING numeric_edited_name_list
   {
-    $$ = cb_build_arithmetic ($4, 0, cb_build_connective_op ($1, '+'));
+    emit (cb_build_arithmetic ($4, 0, cb_build_connective_op ($1, '+')));
   }
 | CORRESPONDING group_name _to group_name flag_rounded
   {
-    $$ = cb_build_corr (cb_build_add, $4, $2, $5);
+    emit (cb_build_corr (cb_build_add, $4, $2, $5));
   }
 ;
 add_to:
@@ -1818,7 +1820,7 @@ close_list:
   {
     cb_tree file = cb_ref ($3);
     current_statement->file = file;
-    current_statement->body = cb_build_funcall_2 ("cob_close", file, $4);
+    emit (cb_build_funcall_2 ("cob_close", file, $4));
   }
 ;
 close_option:
@@ -1839,14 +1841,11 @@ compute_statement:
   COMPUTE			{ BEGIN_STATEMENT ("COMPUTE"); }
   compute_body on_size_error
   end_compute
-  {
-    current_statement->body = $3;
-  }
 ;
 compute_body:
   numeric_edited_name_list '=' numeric_expr
   {
-    $$ = cb_build_arithmetic ($1, 0, $3);
+    emit (cb_build_arithmetic ($1, 0, $3));
   }
 ;
 end_compute:
@@ -1875,7 +1874,7 @@ delete_statement:
   {
     cb_tree file = cb_ref ($3);
     current_statement->file = file;
-    current_statement->body = cb_build_funcall_1 ("cob_delete", file);
+    emit (cb_build_funcall_1 ("cob_delete", file));
   }
 ;
 end_delete:
@@ -1919,32 +1918,29 @@ divide_statement:
   DIVIDE			{ BEGIN_STATEMENT ("DIVIDE"); }
   divide_body on_size_error
   end_divide
-  {
-    current_statement->body = $3;
-  }
 ;
 divide_body:
   numeric_value INTO numeric_name_list
   {
-    $$ = cb_build_arithmetic ($3, '/', $1);
+    emit (cb_build_arithmetic ($3, '/', $1));
   }
 | numeric_value INTO numeric_value GIVING numeric_edited_name_list
   {
-    $$ = cb_build_arithmetic ($5, 0, cb_build_binary_op ($3, '/', $1));
+    emit (cb_build_arithmetic ($5, 0, cb_build_binary_op ($3, '/', $1)));
   }
 | numeric_value BY numeric_value GIVING numeric_edited_name_list
   {
-    $$ = cb_build_arithmetic ($5, 0, cb_build_binary_op ($1, '/', $3));
+    emit (cb_build_arithmetic ($5, 0, cb_build_binary_op ($1, '/', $3)));
   }
 | numeric_value INTO numeric_value GIVING numeric_edited_name
   REMAINDER numeric_edited_name
   {
-    $$ = cb_build_divide ($3, $1, $5, $7);
+    emit (cb_build_divide ($3, $1, $5, $7));
   }
 | numeric_value BY numeric_value GIVING numeric_edited_name
   REMAINDER numeric_edited_name
   {
-    $$ = cb_build_divide ($1, $3, $5, $7);
+    emit (cb_build_divide ($1, $3, $5, $7));
   }
 ;
 end_divide:
@@ -2342,18 +2338,15 @@ multiply_statement:
   MULTIPLY			{ BEGIN_STATEMENT ("MULTIPLY"); }
   multiply_body on_size_error
   end_multiply
-  {
-    current_statement->body = $3;
-  }
 ;
 multiply_body:
   numeric_value BY numeric_name_list
   {
-    $$ = cb_build_arithmetic ($3, '*', $1);
+    emit (cb_build_arithmetic ($3, '*', $1));
   }
 | numeric_value BY numeric_value GIVING numeric_edited_name_list
   {
-    $$ = cb_build_arithmetic ($5, 0, cb_build_binary_op ($1, '*', $3));
+    emit (cb_build_arithmetic ($5, 0, cb_build_binary_op ($1, '*', $3)));
   }
 ;
 end_multiply:
@@ -2384,8 +2377,7 @@ open_list:
 	  sharing = cb_int1;
 	BEGIN_STATEMENT ("OPEN");
 	current_statement->file = file;
-	current_statement->body =
-	  cb_build_funcall_3 ("cob_open", file, $2, sharing);
+	emit (cb_build_funcall_3 ("cob_open", file, $2, sharing));
       }
   }
 ;
@@ -2500,25 +2492,22 @@ read_statement:
     cb_tree file = cb_ref ($3);
     cb_tree rec = cb_build_field_reference (CB_FILE (file)->record, $3);
     cb_tree key = $7;
-    cb_tree e, l;
     if ($4 == cb_int1 || CB_FILE (file)->access_mode == COB_ACCESS_SEQUENTIAL)
       {
 	/* READ NEXT */
 	if (key)
 	  cb_warning (_("KEY ignored with sequential READ"));
-	e = cb_build_funcall_2 ("cob_read", file, cb_int0);
+	emit (cb_build_funcall_2 ("cob_read", file, cb_int0));
       }
     else
       {
 	/* READ */
-	e = cb_build_funcall_2 ("cob_read", file,
-				key ? key : CB_FILE (file)->key);
+	emit (cb_build_funcall_2 ("cob_read", file,
+				     key ? key : CB_FILE (file)->key));
       }
-    l = list (e);
     if ($6)
-      l = list_add (l, cb_build_move (rec, $6));
+      emit (cb_build_move (rec, $6));
     current_statement->file = file;
-    current_statement->body = l;
   }
 ;
 read_into:
@@ -2567,9 +2556,9 @@ return_statement:
     cb_tree file = cb_ref ($3);
     cb_tree rec = cb_build_field_reference (CB_FILE (file)->record, $3);
     current_statement->file = file;
-    current_statement->body = cb_build_funcall_2 ("cob_read", file, cb_int0);
+    emit (cb_build_funcall_2 ("cob_read", file, cb_int0));
     if ($5)
-      push (cb_build_move (rec, $5));
+      emit (cb_build_move (rec, $5));
   }
 ;
 end_return:
@@ -2588,12 +2577,10 @@ rewrite_statement:
   end_rewrite
   {
     cb_tree file = CB_TREE (CB_FIELD (cb_ref ($3))->file);
-    cb_tree l = NULL;
-    if ($4)
-      l = list_add (l, cb_build_move ($4, $3));
-    l = list_add (l, cb_build_funcall_2 ("cob_rewrite", file, $3));
     current_statement->file = file;
-    current_statement->body = l;
+    if ($4)
+      emit (cb_build_move ($4, $3));
+    emit (cb_build_funcall_2 ("cob_rewrite", file, $3));
   }
 ;
 end_rewrite:
@@ -2821,7 +2808,7 @@ start_statement:
     cb_tree file = cb_ref ($3);
     cb_tree key = $5 ? $5 : CB_FILE (file)->key;
     current_statement->file = file;
-    current_statement->body = cb_build_funcall_3 ("cob_start", file, $4, key);
+    emit (cb_build_funcall_3 ("cob_start", file, $4, key));
   }
 ;
 start_key:
@@ -2867,11 +2854,8 @@ string_statement:
   string_item_list INTO data_name opt_with_pointer on_overflow
   end_string
   {
-    cb_tree seq;
     cb_tree start = $3;
-
-    seq = list (cb_build_funcall_2 ("cob_string_init", $5, $6));
-
+    emit (cb_build_funcall_2 ("cob_string_init", $5, $6));
     while (start)
       {
 	cb_tree l, end;
@@ -2884,17 +2868,15 @@ string_statement:
 
 	/* cob_string_delimited */
 	dlm = end ? CB_PAIR_X (CB_VALUE (end)) : cb_int0;
-	list_add (seq, cb_build_funcall_1 ("cob_string_delimited", dlm));
+	emit (cb_build_funcall_1 ("cob_string_delimited", dlm));
 
 	/* cob_string_append */
 	for (l = start; l != end; l = CB_CHAIN (l))
-	  list_add (seq, cb_build_funcall_1 ("cob_string_append", CB_VALUE (l)));
+	  emit (cb_build_funcall_1 ("cob_string_append", CB_VALUE (l)));
 
 	start = end ? CB_CHAIN (end) : NULL;
       }
-
-    list_add (seq, cb_build_funcall_0 ("cob_string_finish"));
-    current_statement->body = seq;
+    emit (cb_build_funcall_0 ("cob_string_finish"));
   }
 ;
 string_item_list:
@@ -2924,22 +2906,19 @@ subtract_statement:
   SUBTRACT			{ BEGIN_STATEMENT ("SUBTRACT"); }
   subtract_body on_size_error
   end_subtract
-  {
-    current_statement->body = $3;
-  }
 ;
 subtract_body:
   numeric_value_list FROM numeric_name_list
   {
-    $$ = cb_build_arithmetic ($3, '-', cb_build_connective_op ($1, '+'));
+    emit (cb_build_arithmetic ($3, '-', cb_build_connective_op ($1, '+')));
   }
 | numeric_value_list FROM numeric_value GIVING numeric_edited_name_list
   {
-    $$ = cb_build_arithmetic ($5, 0, cb_build_connective_op (cons ($3, $1), '-'));
+    emit (cb_build_arithmetic ($5, 0, cb_build_connective_op (cons ($3, $1), '-')));
   }
 | CORRESPONDING group_name FROM group_name flag_rounded
   {
-    $$ = cb_build_corr (cb_build_sub, $4, $2, $5);
+    emit (cb_build_corr (cb_build_sub, $4, $2, $5));
   }
 ;
 end_subtract:
@@ -2958,13 +2937,12 @@ unstring_statement:
   opt_with_pointer unstring_tallying on_overflow
   end_unstring
   {
-    cb_tree l = $4;
-    l = cons (cb_build_funcall_2 ("cob_unstring_init", $3, $7), l);
-    l = list_append (l, $6);
+    emit (cb_build_funcall_2 ("cob_unstring_init", $3, $7));
+    emit_list ($4);
+    emit_list ($6);
     if ($8)
-      l = list_add (l, cb_build_funcall_1 ("cob_unstring_tallying", $8));
-    l = list_add (l, cb_build_funcall_0 ("cob_unstring_finish"));
-    current_statement->body = l;
+      emit (cb_build_funcall_1 ("cob_unstring_tallying", $8));
+    emit (cb_build_funcall_0 ("cob_unstring_finish"));
   }
 ;
 
@@ -3055,15 +3033,12 @@ write_statement:
   {
     struct cb_field *f = CB_FIELD (cb_ref ($3));
     cb_tree file = CB_TREE (f->file);
-    cb_tree l = NULL;
+    current_statement->file = file;
 
     /* WRITE */
     if ($4)
-      l = list_add (l, cb_build_move ($4, $3));
-    l = list_add (l, cb_build_funcall_3 ("cob_write", file, $3, $5));
-
-    current_statement->file = file;
-    current_statement->body = l;
+      emit (cb_build_move ($4, $3));
+    emit (cb_build_funcall_3 ("cob_write", file, $3, $5));
   }
 ;
 write_from:
@@ -3929,16 +3904,7 @@ non_all_value:
  */
 
 identifier:
-  identifier_1
-  {
-    $$ = cb_build_identifier ($1);
-    if ($$ != cb_error_node)
-      {
-	cb_tree l = cb_build_check_identifier ($$);
-	if (l)
-	  push (l);
-      }
-  }
+  identifier_1			{ $$ = cb_build_identifier ($1); }
 ;
 identifier_1:
   qualified_word		{ $$ = $1; }
