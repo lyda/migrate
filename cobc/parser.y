@@ -3486,7 +3486,7 @@ opt_subscript:
 subscript:
   integer_value			{ $$ = $1; }
 | subscript '+' integer_value	{ $$ = make_binary_op ($1, '+', $3); }
-| subscript '-' integer_value	{ $$ = make_binary_op ($1, '+', $3); }
+| subscript '-' integer_value	{ $$ = make_binary_op ($1, '-', $3); }
 ;
 
 /* Label name */
@@ -3588,14 +3588,14 @@ integer_value:
       case cobc_tag_literal:
 	{
 	  struct cobc_literal *l = COBC_LITERAL ($1);
-	  if (l->sign || l->decimals)
+	  if (l->sign < 0 || l->decimals > 0)
 	    goto invalid;
 	  break;
 	}
       case cobc_tag_reference:
 	{
 	  struct cobc_field *f = COBC_FIELD (cobc_ref ($1));
-	  if (f->pic->decimals)
+	  if (f->pic->decimals > 0)
 	    goto invalid;
 	  break;
 	}
