@@ -419,12 +419,10 @@ relative_delete (struct cob_file_desc *f)
   char buff[f->record_size];
   memset (buff, 0, f->record_size);
 
-  if (lseek (f->file.fd, f->record_size * index, SEEK_SET) <= 0)
+  if (lseek (f->file.fd, f->record_size * index, SEEK_SET) == -1)
     return 23;
 
-  if (write (f->file.fd, buff, f->record_size) == -1)
-    return 99;
-
+  write (f->file.fd, buff, f->record_size);
   return 00;
 }
 
