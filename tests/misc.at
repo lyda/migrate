@@ -211,7 +211,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:6: level 01 field `X' cannot have OCCURS
+[prog.cob:6: level 01 item `X' cannot have OCCURS
 ])
 
 AT_CLEANUP
