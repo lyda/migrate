@@ -1,5 +1,5 @@
 /*							-*- c -*-
- * Copyright (C) 2001-2003 Keisuke Nishida
+ * Copyright (C) 2001-2004 Keisuke Nishida
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -144,10 +144,10 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
     }
 }
 
-"EJECT" |
-"SKIP1" |
-"SKIP2" |
-"SKIP3" {
+"EJECT"\.? |
+"SKIP1"\.? |
+"SKIP2"\.? |
+"SKIP3"\.? {
   /* these words are comments in IBM COBOL */
   if (cb_verify (cb_eject_statement, yytext))
     {
