@@ -2422,6 +2422,7 @@ gen_compute (struct math_var *vl1, cob_tree sy1)
 void
 gen_add (cob_tree n1, cob_tree n2, int rnd)
 {
+  gen_init_status ();
   push_expr (n2);
   push_expr (n1);
   asm_call ("cob_add");
@@ -2470,6 +2471,7 @@ gen_add_giving (cob_tree_list nums, struct math_var *list)
 void
 gen_sub (cob_tree n1, cob_tree n2, int rnd)
 {
+  gen_init_status ();
   push_expr (n2);
   push_expr (n1);
   asm_call ("cob_sub");
