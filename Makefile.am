@@ -15,17 +15,19 @@ rpmdir = /home/knishida/redhat
 rpm: dist
 	cp $(distdir).tar.gz $(rpmdir)/SOURCES/
 	rpm -ba redhat/open-cobol.spec
-	cp $(rpmdir)/RPMS/i386/$(distdir)-$(RELEASE).i386.rpm .
-	cp $(rpmdir)/SRPMS/$(distdir)-$(RELEASE).src.rpm .
+
+upload-rpm: rpm
+	ncftpput upload.sourceforge.net /incoming \
+	  $(rpmdir)/RPMS/i386/$(distdir)-$(RELEASE).i386.rpm \
+	  $(rpmdir)/SRPMS/$(distdir)-$(RELEASE).src.rpm
 
 deb:
 	dpkg-buildpackage -rfakeroot -us -uc
-	cp ../$(PACKAGE)_$(VERSION)-$(RELEASE).tar.gz .
-	cp ../$(PACKAGE)_$(VERSION)-$(RELEASE)_i386.deb .
 
-upload:
+upload-deb: deb
 	ncftpput upload.sourceforge.net /incoming \
-	  open-cobol*.tar.gz open-cobol*.rpm *.open-cobol*.deb
+	  ../$(PACKAGE)_$(VERSION)-$(RELEASE).tar.gz \
+	  ../$(PACKAGE)_$(VERSION)-$(RELEASE)_i386.deb
 
 test:
 	@(cd testsuite && $(MAKE))
