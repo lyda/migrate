@@ -1076,7 +1076,14 @@ validate_field_1 (struct cb_field *f)
 	  {
 	    cb_error_x (CB_TREE (p),
 			_("`%s' cannot have the OCCURS clause due to `%s'"),
-			p->name, cb_name (x));
+			p->name, name);
+	    break;
+	  }
+
+      for (p = f; p->parent; p = p->parent)
+	if (p->sister)
+	  {
+	    cb_error_x (x, _("`%s' cannot have OCCURS DEPENDING"), name);
 	    break;
 	  }
     }
