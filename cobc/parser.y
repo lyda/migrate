@@ -477,10 +477,10 @@ opt_for: | FOR ;
 data_division:
 | DATA_TOK DIVISION '.' { curr_division = CDIV_DATA; }
   file_section
-  opt_working_storage
-  opt_linkage_section
-  opt_report_section
-  opt_screen_section
+  working_storage_section
+  linkage_section
+  report_section
+  screen_section
   {
     data_trail();
   }
@@ -496,33 +496,32 @@ file_section:
   file_description_list   { close_fields(); }
 ;
 file_description_list:
-    file_description_list FD     { curr_division = CDIV_FD; }
-    STRING              { curr_division = CDIV_DATA; }
-    file_attrib '.'
-    {
-      curr_field=NULL;
-      if ($4->filenamevar == NULL)
+| file_description_list FD     { curr_division = CDIV_FD; }
+  STRING              { curr_division = CDIV_DATA; }
+  file_attrib '.'
+  {
+    curr_field=NULL;
+    if ($4->filenamevar == NULL)
 	yyerror("External file name not defined for file %s", $4->name);
-    }
-    file_description        {
-                close_fields();
-                alloc_file_entry($4);
-                gen_fdesc($4,$9);
-            }
-    | file_description_list SD { curr_division = CDIV_FD; }
-         STRING { curr_division = CDIV_DATA; }
-         sort_attrib '.'
-            {
-                $4->organization=2;
-                curr_field=NULL;
-            }
-    file_description    {
-                close_fields();
-                alloc_file_entry($4);
-                gen_fdesc($4,$9);
-            }
-    | /* nothing */
-    ;
+  }
+  file_description        {
+              close_fields();
+              alloc_file_entry($4);
+              gen_fdesc($4,$9);
+          }
+| file_description_list SD { curr_division = CDIV_FD; }
+       STRING { curr_division = CDIV_DATA; }
+       sort_attrib '.'
+          {
+              $4->organization=2;
+              curr_field=NULL;
+          }
+  file_description    {
+              close_fields();
+              alloc_file_entry($4);
+              gen_fdesc($4,$9);
+          }
+;
 file_description:
       field_description       { $$=$1; }
     | file_description field_description
@@ -599,11 +598,10 @@ chars_or_recs: CHARACTERS | RECORDS ;
  * WORKING-STRAGE SECTION
  *******************/
 
-opt_working_storage:
-    WORKING_STORAGE SECTION '.'     { curr_field=NULL; }
-    field_description_list         { close_fields(); }
-    | /* nothing */
-    ;
+working_storage_section:
+| WORKING_STORAGE SECTION '.'     { curr_field=NULL; }
+  field_description_list         { close_fields(); }
+;
 field_description_list:
     | field_description_list field_description
 ;
@@ -640,7 +638,7 @@ data_clauses:
     | data_clauses data_clause
     ;
 data_clause:
-    array_options
+      array_options
     | picture_clause
     | usage_option
     | sign_clause       { set_sign_flags($1); }
@@ -698,9 +696,8 @@ index_name_list:
     def_name { define_implicit_field ($2, $<sval>-2, curr_field->times); }
 ;
 
-picture_clause:
-    PIC { start_condition = START_PICTURE; } PICTURE
-    ;
+picture_clause: PIC { start_condition = START_PICTURE; } PICTURE ;
+opt_picture_clause: | picture_clause ;
 
 usage_option :
     opt_usage opt_is usage
@@ -782,7 +779,7 @@ value:
  * LINKAGE SECTION
  *******************/
 
-opt_linkage_section:
+linkage_section:
     LINKAGE SECTION '.'     { at_linkage=1; curr_field=NULL; }
     field_description_list         { close_fields(); at_linkage=0; }
     | /* nothing */
@@ -793,95 +790,83 @@ opt_linkage_section:
  * REPORT SECTION
  *******************/
 
-opt_report_section:
-| REPORT SECTION '.' report_section
-;
 report_section:
-  report_section TOKRD
-                STRING { $3->type='W'; curr_division = CDIV_INITIAL; }
-                report_controls { curr_division = CDIV_DATA; }
-                report_description
-        | /* nothing */
-        ;
+| REPORT SECTION '.' rd_statement_list
+;
+rd_statement_list:
+| rd_statement_list rd_statement
+;
+rd_statement:
+  TOKRD STRING { $2->type='W'; curr_division = CDIV_INITIAL; }
+  report_controls { curr_division = CDIV_DATA; }
+  report_description
+;
 report_controls:
-        /* nothing */
-        | report_controls CONTROL opt_is_are opt_final report_break_list
-        | report_controls PAGETOK opt_limit_is integer opt_line
-        | report_controls
-                HEADING opt_is integer
-                opt_first_detail opt_last_detail
-                opt_footing '.'
-        ;
+| report_controls CONTROL opt_is_are opt_final report_break_list
+| report_controls PAGETOK opt_limit_is integer opt_line
+| report_controls
+        HEADING opt_is integer
+        opt_first_detail opt_last_detail
+        opt_footing '.'
+;
 report_break_list:
-        /* nothing */
-        | report_break_list name { $2->defined=1; }
-        ;
+| report_break_list name { $2->defined=1; }
+;
 report_description:
-        report_item
-        | report_description report_item
-        ;
+  report_item
+| report_description report_item
+;
 report_item:
-        integer opt_def_name
-        {
-	  define_field ($1, $2);
-	}
-        report_clauses '.'
-        {
-	  update_report_field ($2);
-	  curr_division = CDIV_DATA;
-	}
-        ;
+  integer opt_def_name
+  {
+    define_field ($1, $2);
+  }
+  report_clauses '.'
+  {
+    update_report_field ($2);
+    curr_division = CDIV_DATA;
+  }
+;
 report_clauses:
-        /* nothing */
-        | report_clauses TOK_TYPE opt_is report_type
-                report_position { curr_division = CDIV_INITIAL; }
-                opt_report_name
-        | report_clauses report_line
-        | report_clauses opt_report_column
-                opt_report_pic { curr_division = CDIV_INITIAL; }
-                report_value
-        ;
+| report_clauses TOK_TYPE opt_is report_type
+        report_position { curr_division = CDIV_INITIAL; }
+        opt_report_name
+| report_clauses LINE opt_number opt_line_rel integer
+| report_clauses opt_report_column
+        opt_picture_clause { curr_division = CDIV_INITIAL; }
+        report_value
+;
 opt_report_name:
-	name { }
-        | FINAL { }
-        | /* NOTHING */
-        ;
+  name { }
+| FINAL { }
+| /* NOTHING */
+;
 report_value:
-        /* nothing */
-        | VALUE opt_is gname
-        | TOKSOURCE opt_is gname
-        | TOKSUM opt_of name
-        ;
-opt_report_pic:
-        /* nothing */
-        | picture_clause
-        ;
+| VALUE opt_is gname
+| TOKSOURCE opt_is gname
+| TOKSUM opt_of name
+;
 opt_report_column:
-        COLUMN opt_number integer
-        | /* nothing */
-        ;
-report_line:
-        LINE opt_number opt_line_rel integer
-        ;
+  COLUMN opt_number integer
+| /* nothing */
+;
 opt_number:
-        /* nothing */
-        | NUMBERTOK
-        ;
+| NUMBERTOK
+;
 opt_line_rel:
-        /* nothing */
-        | '+'
-        | PLUS
-        ;
+| '+'
+| PLUS
+;
 report_position:
-        HEADING
-        | FOOTING
-        | /* nothing */
-        ;
+  HEADING
+| FOOTING
+| /* nothing */
+;
 report_type:
-        PAGETOK
-        | CONTROL
-        | DETAIL
-        ;
+  PAGETOK
+| CONTROL
+| DETAIL
+;
 opt_line: | LINE ;
 opt_final: | FINAL ;
 opt_limit_is: | LIMIT opt_is ;
@@ -895,132 +880,122 @@ opt_of: | OF ;
  * SCREEN SECTION
  *******************/
 
-opt_screen_section:
+screen_section:
 | SCREEN SECTION '.'
   {
     screen_io_enable++;
     curr_field=NULL;
     scr_line = scr_column = 1;
   }
-  screen_section
+  screen_item_list
   {
     close_fields();
   }
 ;
-screen_section:
-    screen_section screen_item
-    | /* nothing */
-    ;
+screen_item_list:
+| screen_item_list screen_item
+;
 screen_item:
-    integer opt_def_name
-    {
-      define_field($1,$2);
-    }
-    screen_clauses '.'
-    {
-      update_screen_field($2,$4);
-    }
-    ;
+  integer opt_def_name { define_field ($1, $2); }
+  screen_clauses '.'
+  {
+    update_screen_field($2,$4);
+  }
+;
 screen_clauses:
-    screen_clauses LINE
-        opt_number_is
-        opt_plus_minus
-        integer                 { scr_set_line($1,$5,$4); $$=$1; }
-    | screen_clauses COLUMN
-        opt_number_is
-        opt_plus_minus
-        integer                 { scr_set_column($1,$5,$4); $$=$1; }
-    | screen_clauses
-        screen_attrib           { $1->attr |= $2; $$=$1; }
-    | screen_clauses FOREGROUNDCOLOR
-        integer                 { $1->foreground = $3; $$=$1; }
-    | screen_clauses BACKGROUNDCOLOR
-        integer                 { $1->background = $3; $$=$1; }
-    | screen_clauses
-        screen_source_destination
-    | screen_clauses
-        VALUE opt_is gliteral   { curr_field->value = $4; $$=$1; }
-    | screen_clauses picture_clause
-    | /* nothing */             { $$ = alloc_scr_info(); }
-    ;
+  /* nothing */             { $$ = alloc_scr_info(); }
+| screen_clauses LINE
+    opt_number_is
+    opt_plus_minus
+    integer                 { scr_set_line($1,$5,$4); $$=$1; }
+| screen_clauses COLUMN
+    opt_number_is
+    opt_plus_minus
+    integer                 { scr_set_column($1,$5,$4); $$=$1; }
+| screen_clauses
+    screen_attrib           { $1->attr |= $2; $$=$1; }
+| screen_clauses FOREGROUNDCOLOR
+    integer                 { $1->foreground = $3; $$=$1; }
+| screen_clauses BACKGROUNDCOLOR
+    integer                 { $1->background = $3; $$=$1; }
+| screen_clauses
+    screen_source_destination
+| screen_clauses
+    VALUE opt_is gliteral   { curr_field->value = $4; $$=$1; }
+| screen_clauses picture_clause
+;
 screen_source_destination:
-    USING { curr_division = CDIV_INITIAL; }
-    name_or_lit
-    {
-      curr_division = CDIV_DATA;
-      $<sival>0->from = $<sival>0->to = $3;
-    }
-    | FROM { curr_division = CDIV_INITIAL; }
-      name_or_lit
-      screen_to_name
-      {
+  USING { curr_division = CDIV_INITIAL; }
+  name_or_lit
+  {
+    curr_division = CDIV_DATA;
+    $<sival>0->from = $<sival>0->to = $3;
+  }
+| FROM { curr_division = CDIV_INITIAL; }
+  name_or_lit
+  screen_to_name
+  {
 	curr_division = CDIV_DATA;
 	$<sival>0->from = $3;
 	$<sival>0->to = $4;
-      }
-    | TO { curr_division = CDIV_INITIAL; }
-      name
-      {
+  }
+| TO { curr_division = CDIV_INITIAL; }
+  name
+  {
 	curr_division = CDIV_DATA;
 	$<sival>0->from = NULL;
 	$<sival>0->to = $3;
-      }
-    ;
+  }
+;
 screen_to_name:
-        /* nothing */ { $$=NULL; }
-        | TO name { $$ = $2; }
-        ;
+  /* nothing */ { $$=NULL; }
+  | TO name { $$ = $2; }
+;
 screen_attribs:
-        /* nothing */                  { $$ = 1; }
-        | screen_attribs screen_attrib { $$ = $1 | $2; }
-        ;
+  /* nothing */                  { $$ = 1; }
+| screen_attribs screen_attrib { $$ = $1 | $2; }
+;
 screen_attrib:
-        BLANK SCREEN                    { $$ = SCR_BLANK_SCREEN; }
-        | BLANK LINE                    { $$ = SCR_BLANK_LINE; }
-        | BELL                          { $$ = SCR_BELL; }
-        | FULL                          { $$ = SCR_FULL; }
-        | REQUIRED                      { $$ = SCR_REQUIRED; }
-        | SECURE                        { $$ = SCR_SECURE; }
-        | AUTO                          { $$ = SCR_AUTO; }
-        | JUST RIGHT                    { $$ = SCR_JUST_RIGHT; }
-        | JUST LEFT                     { $$ = SCR_JUST_LEFT; }
-        | BLINK                         { $$ = SCR_BLINK; }
-        | REVERSEVIDEO                  { $$ = SCR_REVERSE_VIDEO; }
-        | UNDERLINE                     { $$ = SCR_UNDERLINE; }
-        | LOWLIGHT                      { $$ = SCR_LOWLIGHT; }
-        | HIGHLIGHT                     { $$ = SCR_HIGHLIGHT; }
-        | BLANK opt_when ZERONUM        { $$ = SCR_BLANK_WHEN_ZERO; }
-        | NOECHO                        { $$ = SCR_NOECHO; }
-        | UPDATE                        { $$ = SCR_UPDATE; }
-        | sign_clause                   { $$ = $1; }
-        ;
+  BLANK SCREEN                  { $$ = SCR_BLANK_SCREEN; }
+| BLANK LINE                    { $$ = SCR_BLANK_LINE; }
+| BELL                          { $$ = SCR_BELL; }
+| FULL                          { $$ = SCR_FULL; }
+| REQUIRED                      { $$ = SCR_REQUIRED; }
+| SECURE                        { $$ = SCR_SECURE; }
+| AUTO                          { $$ = SCR_AUTO; }
+| JUST RIGHT                    { $$ = SCR_JUST_RIGHT; }
+| JUST LEFT                     { $$ = SCR_JUST_LEFT; }
+| BLINK                         { $$ = SCR_BLINK; }
+| REVERSEVIDEO                  { $$ = SCR_REVERSE_VIDEO; }
+| UNDERLINE                     { $$ = SCR_UNDERLINE; }
+| LOWLIGHT                      { $$ = SCR_LOWLIGHT; }
+| HIGHLIGHT                     { $$ = SCR_HIGHLIGHT; }
+| BLANK opt_when ZERONUM        { $$ = SCR_BLANK_WHEN_ZERO; }
+| NOECHO                        { $$ = SCR_NOECHO; }
+| UPDATE                        { $$ = SCR_UPDATE; }
+| sign_clause                   { $$ = $1; }
+;
 sign_clause:
-        SIGN opt_is LEADING opt_separate
-        {
-	  $$ = SCR_SIGN_LEADING | SCR_SIGN_PRESENT | $4;
-	}
-        | SIGN opt_is TRAILING opt_separate
-        {
-	  $$ = SCR_SIGN_PRESENT | $4;
-	}
-        ;
+  SIGN opt_is LEADING opt_separate
+  {
+    $$ = SCR_SIGN_LEADING | SCR_SIGN_PRESENT | $4;
+  }
+| SIGN opt_is TRAILING opt_separate
+  {
+    $$ = SCR_SIGN_PRESENT | $4;
+  }
+;
 opt_separate:
-        SEPARATE opt_character  { $$ = SCR_SIGN_SEPARATE; }
-        | /* nothing */                 { $$ = 0; }
-        ;
-opt_character:
-        CHARACTER
-        | /* nothing */
-        ;
+  SEPARATE opt_character  { $$ = SCR_SIGN_SEPARATE; }
+| /* nothing */                 { $$ = 0; }
+;
 opt_plus_minus:
-      PLUS          { $$ = 1; }
-    | MINUS         { $$ = -1; }
-    | /* nothing */ { $$ = 0; }
-    ;
-opt_number_is:
-        NUMBERTOK opt_is
-        | /* nothing */
-        ;
+  /* nothing */ { $$ = 0; }
+| PLUS          { $$ = 1; }
+| MINUS         { $$ = -1; }
+;
+opt_character: | CHARACTER ;
+opt_number_is: | NUMBERTOK opt_is ;
 
 
 /*****************************************************************************
