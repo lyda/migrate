@@ -26,9 +26,9 @@
 va_list __builtin_va_alist;
 #endif
 
-int offset_substr (char *s1, char *s2, int n1, int n2);
+static int offset_substr (char *s1, char *s2, int n1, int n2);
 static void cob_put_integer (struct fld_desc *fdesc, char *sbuf, int value);
-struct comparand *alloc_comparand (int opt, struct comparand **list);
+static struct comparand *alloc_comparand (int opt, struct comparand **list);
 void free_comparands (struct comparand *cmps);
 
 /*
@@ -51,7 +51,7 @@ struct comparand
  |                                                                        |
 \*------------------------------------------------------------------------*/
 
-struct comparand *
+static struct comparand *
 alloc_comparand (int opt, struct comparand **list)
 {
   struct comparand *anew, *tmp;
@@ -504,13 +504,15 @@ cob_string (struct fld_desc *fdst, char *sdst, ...)
 	}
       else
 	{
-	  return -1;
+	  cob_status = COB_STATUS_OVERFLOW;
+	  return cob_status;
 	}
       fsrc = va_arg (args, struct fld_desc *);
     }
   va_end (args);
   memset (sdst + i, ' ', len - i);
-  return 0;
+  cob_status = COB_STATUS_SUCCESS;
+  return cob_status;
 }
 
 /*------------------------------------------------------------------------*\
@@ -524,7 +526,7 @@ cob_string (struct fld_desc *fdst, char *sdst, ...)
  |                                                                        |
 \*------------------------------------------------------------------------*/
 
-int
+static int
 offset_substr (char *s1, char *s2, int n1, int n2)
 {
   int i, j;

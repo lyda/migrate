@@ -2364,7 +2364,8 @@ unstring_statement:
   {
     gen_unstring( $2, $3, $5, $6, $7 );
   }
-  opt_on_overflow opt_end_unstring
+  opt_on_overflow
+  opt_end_unstring
 ;
 unstring_delimited:
   /* nothing */				   { $$ = NULL; }
@@ -2853,10 +2854,7 @@ dot:
   '.'
 | /* nothing */
   {
-    int save_lineno = cob_orig_lineno;
-    cob_orig_lineno = last_lineno;
     yywarn ("`.' is expected after `%s'", last_text);
-    cob_orig_lineno = save_lineno;
   }
 ;
 
@@ -2937,7 +2935,7 @@ yywarn (char *fmt, ...)
   va_list argptr;
 
   /* Print warning line */
-  printf ("%s:%d: warning: ", cob_orig_filename, cob_orig_lineno);
+  printf ("%s:%d: warning: ", cob_orig_filename, last_lineno);
 
   /* Print error body */
   va_start (argptr, fmt);
@@ -2955,7 +2953,7 @@ yyerror (char *fmt, ...)
   va_list argptr;
 
   /* Print error line */
-  printf ("%s:%d: ", cob_orig_filename, cob_orig_lineno);
+  printf ("%s:%d: ", cob_orig_filename, last_lineno);
 
   /* Print error body */
   va_start (argptr, fmt);
