@@ -241,7 +241,7 @@ static void check_decimal_point (struct lit *lit);
 %type <mose> on_size_error,error_sentence
 %type <ival> opt_address_of,display_upon,display_options
 %type <sval> set_variable,set_variable_or_nlit,set_target,opt_add_to
-%type <condval> condition,implied_op_condition
+%type <condval> condition,simple_condition,implied_op_condition
 %type <sval> qualified_var,unqualified_var
 %type <ival> opt_end_program,program_sequence
 %type <lval> from_rec_varying,to_rec_varying
@@ -2903,6 +2903,22 @@ intrinsic_parm:
     ;
 
 condition:
+    simple_condition
+    | NOT  condition    { gen_not(); $$=$2; }
+    | condition AND     { $<dval>$=gen_andstart(); }
+                implied_op_condition { gen_dstlabel($<dval>3); $$=$4; }
+    | condition OR      { $<dval>$=gen_orstart(); }
+        implied_op_condition { gen_dstlabel($<dval>3); $$=$4; }
+    | '(' condition ')' { $$ = $2; }
+    | cond_name {
+      /*if ($1->level != 88)
+	yyerror("condition unknown");*/
+      gen_condition($1);
+      $$.sy=NULL;
+      $$.oper=0;
+    }
+    ;
+simple_condition:
     expr extended_cond_op
     {
       if ($2 & COND_UNARY)
@@ -2934,20 +2950,8 @@ condition:
       $$.sy = $1;			/* for implied operands */
       $$.oper = $2;
     }
-    | NOT  condition    { gen_not(); $$=$2; }
-    | condition AND     { $<dval>$=gen_andstart(); }
-                implied_op_condition { gen_dstlabel($<dval>3); $$=$4; }
-    | condition OR      { $<dval>$=gen_orstart(); }
-        implied_op_condition { gen_dstlabel($<dval>3); $$=$4; }
-    | '(' condition ')' { $$ = $2; }
-    | cond_name {
-                                /*if ($1->level != 88)
-                                        yyerror("condition unknown");*/
-                                gen_condition($1);
-                                $$.sy=NULL;
-                                $$.oper=0;
-                        }
-        ;
+    ;
+
 implied_op_condition:
         condition               { $$ = $1; }
         | cond_op expr  {
