@@ -161,7 +161,7 @@ struct file_desc
 {
   unsigned char vers_id;
   struct fld_desc *fname_desc;
-  short signed reclen;		/* length of record */
+  signed long reclen;		/* length of record */
 
   /* 1=INDEXED,2=SEQUENTIAL,3=RELATIVE 4=LINESEQUENTIAL */
   unsigned char organization;
