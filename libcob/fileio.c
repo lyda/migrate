@@ -27,6 +27,10 @@
 #define _LARGEFILE64_SOURCE     1
 #endif
 
+#ifdef __MINGW32__
+#define __USE_MINGW_FSEEK	1
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
