@@ -187,7 +187,7 @@ static void terminator_warning (void);
 %type <list> procedure_name_list
 %type <tree> at_line_column column_number condition expr expr_1
 %type <tree> expr_item record_description_list label line_number literal
-%type <tree> field_name integer_label reference_or_literal basic_literal
+%type <tree> entry_name integer_label reference_or_literal basic_literal
 %type <tree> integer_value numeric_value numeric_expr alphanumeric_value
 %type <tree> on_or_off opt_screen_description_list as_literal
 %type <tree> opt_with_pointer perform_option perform_procedure
@@ -1013,7 +1013,7 @@ record_description_list_2:
   data_description		{ $<tree>$ = $<tree>1; }
 ;
 data_description:
-  level_number field_name
+  level_number entry_name
   {
     current_field = build_field ($1, $2, current_field, current_storage);
     if (current_field == NULL)
@@ -1024,6 +1024,7 @@ data_description:
     $<tree>$ = CB_TREE (current_field);
   }
 ;
+
 level_number:
   WORD
   {
@@ -1041,11 +1042,13 @@ level_number:
       }
   }
 ;
-field_name:
+
+entry_name:
   /* empty */			{ $$ = make_filler (); }
 | FILLER			{ $$ = make_filler (); }
 | WORD				{ $$ = $1; }
 ;
+
 field_options:
 | field_options field_option
 ;
@@ -1334,7 +1337,7 @@ screen_description_list:
   screen_description		{ $$ = $1; }
 ;
 screen_description:
-  level_number field_name
+  level_number entry_name
   {
     current_field = build_field ($1, $2, current_field, current_storage);
     if (current_field == NULL)

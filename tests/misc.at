@@ -354,9 +354,12 @@ AT_DATA([prog.cob], [
        PROGRAM-ID.      prog.
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
-       01 FILLER        PIC X.
-           88 X           VALUE "X".
+       01 FILLER        PIC X VALUE SPACE.
+         88 X           VALUE "X".
        PROCEDURE        DIVISION.
+           IF X
+               DISPLAY "NO" NO ADVANCING
+           END-IF.
            SET X TO TRUE.
            IF X
                DISPLAY "OK" NO ADVANCING
