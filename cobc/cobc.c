@@ -228,7 +228,7 @@ print_usage (void)
   -MF <file>            Place dependency list into <file>\n\
   -F <form>             Use free source format\n\
 \n\
-  -Wall                 Enable all warnings\n"));
+  -Wall                 Enable all warnings"));
 #undef CB_WARNING
 #define CB_WARNING(sig,var,name,doc)		\
   printf ("  -W%-19s %s\n", name, gettext (doc));

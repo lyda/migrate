@@ -993,7 +993,9 @@ cb_build_move (cb_tree src, cb_tree dst)
 
   if (cb_flag_inline_move)
     {
-      if (src == cb_zero)
+      if (cb_field (dst)->usage == CB_USAGE_BINARY)
+	return cb_build_move_call (src, dst);
+      else if (src == cb_zero)
 	return cb_build_move_zero (dst);
       else if (src == cb_space)
 	return cb_build_move_space (dst);
