@@ -78,7 +78,7 @@
   } while (0)
 
 #define push_corr(func,g1,g2,opt) \
-  push_tree (make_status_sequence (make_corr (func, COBC_FIELD (g1), COBC_FIELD (g2), opt, NULL)))
+  push_tree (make_status_sequence (make_corr (func, g1, g2, opt, NULL)))
 
 #define push_status_handler(val,st1,st2) \
   push_tree (make_if (make_cond (cobc_status, COBC_COND_EQ, val), st1, st2))
@@ -111,7 +111,7 @@ static void validate_label_name (struct cobc_label_name *p);
 static cobc_tree make_add (cobc_tree f1, cobc_tree f2, int round);
 static cobc_tree make_sub (cobc_tree f1, cobc_tree f2, int round);
 static cobc_tree make_move (cobc_tree f1, cobc_tree f2, int round);
-static struct cobc_list *make_corr (cobc_tree (*func)(), struct cobc_field *g1, struct cobc_field *g2, int opt, struct cobc_list *l);
+static struct cobc_list *make_corr (cobc_tree (*func)(), cobc_tree g1, cobc_tree g2, int opt, struct cobc_list *l);
 static cobc_tree make_opt_cond (cobc_tree last, int type, cobc_tree this);
 static void redefinition_error (cobc_tree x);
 %}
@@ -1107,11 +1107,16 @@ value_item:
 /* RENAMES */
 
 renames_clause:
-  RENAMES qualified_predefined_word
-  renames_thru			{ yywarn ("RENAMES is not implemented"); }
-;
-renames_thru:
-| THRU qualified_predefined_word
+  RENAMES qualified_name
+  {
+    current_field->redefines = COBC_FIELD ($2);
+    current_field->pic = current_field->redefines->pic;
+  }
+| RENAMES qualified_name THRU qualified_name
+  {
+    current_field->redefines = COBC_FIELD ($2);
+    current_field->rename_thru = COBC_FIELD ($4);
+  }
 ;
 
 
@@ -3252,14 +3257,18 @@ validate_field_tree (struct cobc_field *p)
       for (p = p->children; p; p = p->sister)
 	validate_field_tree (p);
     }
-  else {
-    if (!p->pic)
-      {
-	if (p->usage != USAGE_INDEX)
-	  yyerror ("`%s' must have PICTURE", tree_to_string (COBC_TREE (p)));
-	p->pic = make_picture ();
-      }
-  }
+  else if (p->level == 66)
+    {
+    }
+  else
+    {
+      if (!p->pic)
+	{
+	  if (p->usage != USAGE_INDEX)
+	    yyerror ("`%s' must have PICTURE", tree_to_string (COBC_TREE (p)));
+	  p->pic = make_picture ();
+	}
+    }
 }
 
 static struct cobc_field *
@@ -3362,20 +3371,26 @@ make_move (cobc_tree f1, cobc_tree f2, int round)
 }
 
 static struct cobc_list *
-make_corr (cobc_tree (*func)(), struct cobc_field *g1, struct cobc_field *g2,
-	   int opt, struct cobc_list *l)
+make_corr (cobc_tree (*func)(), cobc_tree g1, cobc_tree g2, int opt,
+	   struct cobc_list *l)
 {
   struct cobc_field *p1, *p2;
-  for (p1 = g1->children; p1; p1 = p1->sister)
+  for (p1 = COBC_FIELD (g1)->children; p1; p1 = p1->sister)
     if (!p1->redefines && !p1->f.have_occurs)
-      for (p2 = g2->children; p2; p2 = p2->sister)
+      for (p2 = COBC_FIELD (g2)->children; p2; p2 = p2->sister)
 	if (!p2->redefines && !p2->f.have_occurs)
 	  if (strcmp (p1->word->name, p2->word->name) == 0)
 	    {
+	      cobc_tree t1 = COBC_TREE (p1);
+	      cobc_tree t2 = COBC_TREE (p2);
+	      if (COBC_SUBREF_P (g1))
+		t1 = make_subref (t1, COBC_SUBREF (g1)->subs);
+	      if (COBC_SUBREF_P (g2))
+		t2 = make_subref (t2, COBC_SUBREF (g2)->subs);
 	      if (p1->children && p2->children)
-		l = make_corr (func, p1, p2, opt, l);
+		l = make_corr (func, t1, t2, opt, l);
 	      else
-		l = cons (func (COBC_TREE (p1), COBC_TREE (p2), opt), l);
+		l = cons (func (t1, t2, opt), l);
 	    }
   return l;
 }

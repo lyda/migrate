@@ -364,6 +364,7 @@ make_field (struct cobc_word *word)
   p->children = NULL;
   p->sister = NULL;
   p->redefines = NULL;
+  p->rename_thru = NULL;
   p->pic = NULL;
   p->f.blank_zero = 0;
   p->f.justified = 0;
@@ -420,11 +421,36 @@ setup_cname (struct cobc_field *p)
 static int
 compute_size (struct cobc_field *p)
 {
-  struct cobc_field *c = p->children;
-  if (c)
+  if (p->level == 66)
+    {
+      /* rename */
+      if (!p->rename_thru)
+	{
+	  p->size = p->redefines->size;
+	}
+      else
+	{
+	  struct cobc_field *c = p->redefines;
+	  p->size = 0;
+	  while (c != p->rename_thru)
+	    {
+	      p->size += c->size;
+	      if (c->sister)
+		c = c->sister;
+	      else if (c->parent)
+		c = c->parent;
+	      else
+		return p->size;
+	    }
+	  p->size += c->size;
+	}
+      return p->size;
+    }
+  else if (p->children)
     {
       /* groups */
       int size = 0;
+      struct cobc_field *c = p->children;
       for (; c; c = c->sister)
 	{
 	  if (c->redefines)

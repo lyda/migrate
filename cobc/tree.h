@@ -217,6 +217,7 @@ struct cobc_field {
   struct cobc_field *children;	/* top of lower level fields */
   struct cobc_field *sister;	/* fields in the same level */
   struct cobc_field *redefines;	/* REDEFIENS */
+  struct cobc_field *rename_thru; /* RENAMES THRU */
   struct cobc_picture {
     int size;			/* byte size */
     char *str;			/* picture string */

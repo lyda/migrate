@@ -568,7 +568,7 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
   char *subscripts = field_subscripts (p);
 
   /* descriptor */
-  if (p->children)
+  if (p->children || p->rename_thru)
     {
       /* field group */
       output ("static struct cob_field_desc f_%s_desc = {%d, 'G'};\n",
@@ -1160,7 +1160,11 @@ output_tree (cobc_tree x)
 	struct cobc_sequence *p = COBC_SEQUENCE (x);
 	struct cobc_list *l = p->list;
 	output_indent ("{", 2);
-	if (!p->save_status)
+	if (!l)
+	  {
+	    /* nothing */
+	  }
+	else if (!p->save_status)
 	  {
 	    /* output without using cob_status */
 	    for (; l; l = l->next)
