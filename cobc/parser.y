@@ -1897,7 +1897,7 @@ display_with_no_advancing:
   /* empty */
   {
     if (!program_spec.enable_screen)
-      push_call_1 ("cob_newline", make_integer ($<inum>-1));
+      push_call_1 ("cob_newline", make_integer ($<inum>-2));
   }
 | _with NO ADVANCING { /* nothing */ }
 ;
