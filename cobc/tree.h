@@ -581,6 +581,7 @@ struct cobc_perform {
 #define COBC_PERFORM_P(x)	(COBC_TREE_TAG (x) == cobc_tag_perform)
 
 extern cobc_tree make_perform (int type);
+extern cobc_tree make_perform_once (cobc_tree body);
 extern void add_perform_varying (struct cobc_perform *perf, cobc_tree name, cobc_tree from, cobc_tree by, cobc_tree until);
 
 

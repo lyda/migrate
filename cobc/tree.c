@@ -887,6 +887,14 @@ make_perform (int type)
   return COBC_TREE (p);
 }
 
+cobc_tree
+make_perform_once (cobc_tree body)
+{
+  cobc_tree x = make_perform (COBC_PERFORM_ONCE);
+  COBC_PERFORM (x)->body = body;
+  return x;
+}
+
 void
 add_perform_varying (struct cobc_perform *perf, cobc_tree name,
 		     cobc_tree from, cobc_tree by, cobc_tree until)
