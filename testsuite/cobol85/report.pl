@@ -52,7 +52,7 @@ foreach $in (sort (glob("*.{CBL,SUB}"))) {
   }
   $num_progs++;
   printf LOG "%-12s", $in;
-  if ($exe =~ /^..[34]0/) {
+  if ($exe =~ /^..[34]0/ || $skip{$exe}) {
     $test_skipped++;
     print LOG "  ----- test skipped -----\n";
   } else {

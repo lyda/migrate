@@ -4,6 +4,8 @@ MODULES = NC SM IC SQ RL IX
 EXTRA_DIST = EXEC85.conf.in expand.pl report.pl summary.pl
 CLEANFILES = EXEC85
 
+COBOL = cobc -main
+
 test: $(MODULES)
 	@for m in $(MODULES); do \
 	  (cd $$m && make test) \
@@ -32,9 +34,9 @@ $(MODULES): newcob.val EXEC85 EXEC85.conf.in
 	@./EXEC85
 	@perl expand.pl newcob.tmp
 	@rm -f newcob.tmp newcob.log EXEC85.conf
-	@echo "test:"                       > $@/Makefile
-	@echo "	perl ../report.pl"         >> $@/Makefile
-	@echo "	diff ../$@.txt report.txt" >> $@/Makefile
+	@echo "test:"               > $@/Makefile
+	@echo "	perl ../report.pl" >> $@/Makefile
+	@echo "	test -f ../$@.txt && diff ../$@.txt report.txt" >> $@/Makefile
 	@echo "done"
 
 EXEC85: newcob.val
@@ -46,5 +48,5 @@ EXEC85: newcob.val
 	      -e 's/XXXXX058.*/"EXEC85.conf" ORGANIZATION LINE SEQUENTIAL./' \
 	      -e 's/ORGANIZATION SEQUENTIAL.*//'			     \
 	    > EXEC85.cob
-	cobc -main EXEC85.cob
+	$(COBOL) EXEC85.cob
 	@rm -f EXEC85.cob
