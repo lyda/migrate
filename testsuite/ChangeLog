@@ -1,3 +1,8 @@
+2002-06-03  Keisuke Nishida  <knishida@netlab.jp>
+
+	* cobol85/Makefile: Run test suite by `make test'
+	* cobol85/README: Updated.
+
 2002-06-02  Keisuke Nishida  <knishida@netlab.jp>
 
 	* cobol85: New test suite.
