@@ -224,8 +224,8 @@ cob_move_display_to_binary (struct cob_field f1, struct cob_field f2)
       val = val * 10 + f1.data[i] - '0';
     else
       val = val * 10;
-  if (sign)
-    val *= -1;
+  if (f2.desc->pic[0] == 'S' && sign)
+    val = -val;
   val %= cob_exp10[picCompLength (f2.desc->pic)];
 
   switch (f2.desc->len)
