@@ -393,20 +393,6 @@ struct ginfo
   unsigned long lbl5;		/* test bypass label name  */
 };
 
-/* information required by [NOT] INVALID KEY clauses */
-struct invalid_key_element
-{
-  unsigned long lbl1;		/* skip label */
-  unsigned long lbl2;		/* start label */
-  unsigned long lbl3;		/* finish label */
-};
-
-struct invalid_keys
-{
-  struct invalid_key_element *invalid_key;
-  struct invalid_key_element *not_invalid_key;
-};
-
 /******* supplemental information for screen items **********/
 /* this is linked at the sym->index (aliased scrinfo) */
 struct scr_info

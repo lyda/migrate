@@ -72,8 +72,6 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
   struct selsubject *ssbjval;
   struct math_var *mval;      /* math variables container list */
   struct ginfo    *gic;       /* generic container */
-  struct invalid_keys *iks; /* [NOT] INVALID KEY */
-  struct invalid_key_element *ike; /* [NOT] INVALID KEY */
 }
 
 %left  '+', '-'
@@ -130,8 +128,6 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <ival> if_then,search_body,search_all_body,class
 %type <ival> search_when,search_when_list,search_opt_at_end
 %type <gic>  on_end,opt_at_end
-%type <ike>  read_invalid_key ,read_not_invalid_key
-%type <iks>  opt_read_invalid_key
 %type <ival> integer,operator,before_after
 %type <ival> on_exception_or_overflow,on_not_exception
 %type <ival> opt_address_of,display_upon,display_options
@@ -1982,17 +1978,19 @@ read_statement:
   READ read_body opt_end_read
 ;
 read_body:
-  file opt_read_next opt_record opt_read_into opt_read_key opt_at_end
+  file opt_read_next opt_record opt_read_into opt_read_key
   {
-    gen_reads($1, $4, $5, $2, 1);
-    ginfo_container4($6);
+    gen_reads($1, $4, $5, $2);
+  }
+  read_option
+;
+read_option:
+  opt_at_end
+  {
+    ginfo_container4 ($1);
     gic = NULL;
   }
-| file opt_read_next opt_record opt_read_into opt_read_key opt_read_invalid_key
-  {
-    gen_reads($1, $4, $5, $2, 2);
-    gen_test_invalid_keys ($6);
-  }
+| read_invalid_key
 ;
 opt_read_next:
   /* nothing */			{ $$ = 0; }
@@ -2007,19 +2005,19 @@ opt_read_key:
   /* nothing */			{ $$ = NULL; }
 | KEY opt_is name		{ $$ = $3; }
 ;
-opt_read_invalid_key:
-  read_invalid_key		{ $$ = gen_invalid_keys ($1, NULL); }
-| read_not_invalid_key		{ $$ = gen_invalid_keys (NULL, $1); }
-| read_invalid_key
-  read_not_invalid_key		{ $$ = gen_invalid_keys ($1, $2); }
-;
 read_invalid_key:
-  INVALID opt_key		{ $<ike>$ = gen_before_invalid_key (); }
-  statement_list		{ $$ = gen_after_invalid_key ($<ike>3); }
+  invalid_key_statement
+| not_invalid_key_statement
+| invalid_key_statement
+  not_invalid_key_statement
 ;
-read_not_invalid_key:
-  NOT INVALID opt_key		{ $<ike>$ = gen_before_invalid_key (); }
-  statement_list		{ $$ = gen_after_invalid_key ($<ike>4); }
+invalid_key_statement:
+  INVALID opt_key		{ $<ival>$ = gen_at_end (23); }
+  statement_list		{ gen_dstlabel ($<ival>3); }
+;
+not_invalid_key_statement:
+  NOT INVALID opt_key		{ $<ival>$ = gen_at_end (0); }
+  statement_list		{ gen_dstlabel ($<ival>4); }
 ;
 opt_end_read: | END_READ ;
 

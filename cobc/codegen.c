@@ -2608,75 +2608,6 @@ ginfo_container4 (struct ginfo *v)
 
 }
 
-struct invalid_key_element *
-gen_before_invalid_key ()
-{
-  struct invalid_key_element *p =
-    malloc (sizeof (struct invalid_key_element));
-  p->lbl1 = loc_label++;
-  p->lbl2 = loc_label++;
-  p->lbl3 = loc_label++;
-  gen_jmplabel (p->lbl1);
-  gen_dstlabel (p->lbl2);
-  return p;
-}
-
-struct invalid_key_element *
-gen_after_invalid_key (struct invalid_key_element *p)
-{
-  gen_jmplabel (p->lbl3);
-  return p;
-}
-
-struct invalid_keys *
-gen_invalid_keys (struct invalid_key_element *p1,
-		  struct invalid_key_element *p2)
-{
-  struct invalid_keys *p = malloc (sizeof (struct invalid_keys));
-  p->invalid_key = p1;
-  p->not_invalid_key = p2;
-  if (p1)
-    gen_dstlabel (p1->lbl1);
-  if (p2)
-    gen_dstlabel (p2->lbl1);
-  return p;
-}
-
-void
-gen_test_invalid_keys (struct invalid_keys *p)
-{
-  if (p->invalid_key)
-    {
-      int lbl = loc_label++;
-#if COB_DEBUG
-      fprintf (o_src, "# Test for INVALID KEY\n");
-#endif
-      fprintf (o_src, "\tcmp\t$23, %%eax\n");
-      fprintf (o_src, "\tjz\t.L%d\n", lbl);
-      gen_jmplabel (p->invalid_key->lbl2);
-      fprintf (o_src, "\t.align 16\n");
-      fprintf (o_src, ".L%d:\n", lbl);
-    }
-
-  if (p->not_invalid_key)
-    {
-      int lbl = loc_label++;
-#if COB_DEBUG
-      fprintf (o_src, "# Test for NOT INVALID KEY\n");
-#endif
-      fprintf (o_src, "\tcmp\t$0, %%eax\n");
-      fprintf (o_src, "\tjz\t.L%d\n", lbl);
-      gen_jmplabel (p->not_invalid_key->lbl2);
-      fprintf (o_src, "\t.align 16\n");
-      fprintf (o_src, ".L%d:\n", lbl);
-    }
-
-  if (p->invalid_key)
-    gen_dstlabel (p->invalid_key->lbl3);
-  if (p->not_invalid_key)
-    gen_dstlabel (p->not_invalid_key->lbl3);
-}
-
 
 /*
  * ON SIZE ERROR
@@ -4663,6 +4594,16 @@ gen_status (cob_tree f)
     }
 }
 
+static void
+gen_set_status (cob_tree f)
+{
+  if (f->parent)
+    {
+      gen_loadloc (f->parent);
+      asm_call ("cob_set_status");
+    }
+}
+
 /****** sort statement related functions *******/
 struct sortfile_node *
 alloc_sortfile_node (cob_tree sy)
@@ -4830,7 +4771,7 @@ gen_read_next (cob_tree f, cob_tree buf, int next_prev)
 }
 
 int
-gen_reads (cob_tree f, cob_tree buf, cob_tree key, int next_prev, int sel)
+gen_reads (cob_tree f, cob_tree buf, cob_tree key, int next_prev)
 {
   if (next_prev > 0
       && (f->organization == ORG_INDEXED

@@ -237,7 +237,7 @@ extern void gen_close_sort (cob_tree f);
 extern void gen_close (cob_tree f);
 extern void gen_read (cob_tree f, cob_tree buf, cob_tree key);
 extern void gen_read_next (cob_tree f, cob_tree buf, int next_prev);
-extern int gen_reads (cob_tree f, cob_tree buf, cob_tree key, int next_prev, int sel);
+extern int gen_reads (cob_tree f, cob_tree buf, cob_tree key, int next_prev);
 extern void gen_return (cob_tree f, cob_tree buf);
 extern void gen_release (cob_tree r, cob_tree buf);
 extern void gen_write (cob_tree r, int opt, cob_tree buf);
@@ -256,10 +256,6 @@ extern struct ginfo *ginfo_container1 (struct ginfo *v);
 extern void ginfo_container2 (struct ginfo *v, unsigned long ty);
 extern struct ginfo *ginfo_container3 (struct ginfo *v, unsigned long ty);
 extern void ginfo_container4 (struct ginfo *v);
-extern struct invalid_key_element *gen_before_invalid_key ();
-extern struct invalid_key_element *gen_after_invalid_key (struct invalid_key_element *p);
-extern struct invalid_keys *gen_invalid_keys (struct invalid_key_element *p1, struct invalid_key_element *p2);
-extern void gen_test_invalid_keys (struct invalid_keys *p);
 
 /* parser.y */
 extern int yyparse (void);
