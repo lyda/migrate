@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(open-cobol, 0.9.5)
+AC_INIT(open-cobol, 0.9.6-devel)
 AC_CONFIG_SRCDIR(cobc/cobc.c)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -80,15 +80,16 @@ AC_CHECK_LIB([ltdl], [lt_dlopen], , AC_MSG_ERROR(ltdl is required))
 
 # Checks for readline.
 LIBRL=""
+USE_READLINE="no"
 AC_CHECK_HEADERS([readline/readline.h readline/history.h])
-AC_CHECK_LIB([readline], [readline], LIBRL="-lreadline")
+AC_CHECK_LIB([readline], [readline], LIBRL="-lreadline", USE_READLINE="yes")
 
 # Autoheader templates
 AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
 
 COB_COBPP="cobpp"
 COB_CFLAGS="-I$includedir"
-COB_LIBS="-L$libdir -lcob ${LIBDB} ${LIBGMP} ${LIBLTDL} ${LIBRL}"
+COB_LDADD="-L$libdir -lcob ${LIBDB} ${LIBGMP} ${LIBLTDL} ${LIBRL}"
 COB_LIBRARY_PATH=".:$libdir/$PACKAGE"
 LIBCOB_CFLAGS=""
 LIBCOB_LIBS="${LIBDB} ${LIBGMP} ${LIBLTDL} ${LIBRL}"
@@ -97,7 +98,7 @@ LIBS="$save_libs"
 AC_SUBST(COB_CC)
 AC_SUBST(COB_COBPP)
 AC_SUBST(COB_CFLAGS)
-AC_SUBST(COB_LIBS)
+AC_SUBST(COB_LDADD)
 AC_SUBST(COB_LIBRARY_PATH)
 AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBS)
@@ -105,3 +106,16 @@ AC_SUBST(LIBCOB_LIBS)
 AC_CONFIG_FILES([cob-config Makefile lib/Makefile libcob/Makefile
 		cobpp/Makefile cobc/Makefile po/Makefile.in texi/Makefile])
 AC_OUTPUT
+
+echo ""
+echo "OpenCOBOL Configuration:"
+echo ""
+echo "  COB_CC               ${COB_CC}"
+echo "  COB_COBPP            ${COB_COBPP}"
+echo "  COB_CFLAGS           ${COB_CFLAGS}"
+echo "  COB_LDADD            ${COB_LDADD}"
+echo "  COB_LIBRARY_PATH     ${COB_LIBRARY_PATH}"
+echo ""
+echo "  Use readline for input:      ${USE_READLINE}"
+echo "  Use gettext for I17n:        ${USE_NLS}"
+echo ""

@@ -70,7 +70,7 @@ static char *output_name;
 static char cob_cc[FILENAME_MAX];		/* gcc */
 static char cob_cobpp[FILENAME_MAX];		/* cobpp */
 static char cob_cflags[FILENAME_MAX];		/* -I... */
-static char cob_libs[FILENAME_MAX];		/* -L... -lcob */
+static char cob_ldadd[FILENAME_MAX];		/* -L... -lcob */
 static char cobpp_flags[FILENAME_MAX];
 
 static enum level {
@@ -128,7 +128,7 @@ init_environment (int argc, char *argv[])
   init_var (cob_cc,     "COB_CC",     COB_CC);
   init_var (cob_cobpp,  "COB_COBPP",  COB_COBPP);
   init_var (cob_cflags, "COB_CFLAGS", COB_CFLAGS);
-  init_var (cob_libs,   "COB_LIBS",   COB_LIBS);
+  init_var (cob_ldadd,  "COB_LDADD",  COB_LDADD);
   strcpy (cobpp_flags, "");
 }
 
@@ -501,7 +501,7 @@ process_module (struct filename *fn)
       strcat (name, ".so");
     }
   sprintf (buff, "%s -shared -Wl,-soname,%s -o %s %s %s",
-	   cob_cc, name, name, fn->object, cob_libs);
+	   cob_cc, name, name, fn->object, cob_ldadd);
   return system (buff);
 }
 
@@ -521,7 +521,7 @@ process_link (struct filename *file_list)
   if (output_name)
     strcpy (name, output_name);
 
-  sprintf (buff, "%s -o %s %s %s", cob_cc, name, objs, cob_libs);
+  sprintf (buff, "%s -o %s %s %s", cob_cc, name, objs, cob_ldadd);
   return system (buff);
 }
 

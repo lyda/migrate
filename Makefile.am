@@ -36,6 +36,6 @@ defaults.h: Makefile.am $(top_builddir)/config.status
 	@echo "#define COB_CC           \"$(COB_CC)\""           >> defaults.h
 	@echo "#define COB_COBPP        \"$(COB_COBPP)\""        >> defaults.h
 	@echo "#define COB_CFLAGS       \"$(COB_CFLAGS)\""       >> defaults.h
-	@echo "#define COB_LIBS         \"$(COB_LIBS)\""         >> defaults.h
+	@echo "#define COB_LDADD        \"$(COB_LDADD)\""        >> defaults.h
 	@echo "#define COB_LIBRARY_PATH \"$(COB_LIBRARY_PATH)\"" >> defaults.h
 	@echo "#define LOCALEDIR        \"$(localedir)\""        >> defaults.h
