@@ -1151,10 +1151,7 @@ ascending_or_descending:
 ;
 
 occurs_indexed:
-| INDEXED _by occurs_index_list
-  {
-    current_field->index_list = $3;
-  }
+| INDEXED _by occurs_index_list	{ current_field->index_list = $3; }
 ;
 occurs_index_list:
   occurs_index			{ $$ = list ($1); }
@@ -1162,11 +1159,20 @@ occurs_index_list:
   occurs_index			{ $$ = list_add ($1, $2); }
 ;
 occurs_index:
-  undefined_word
+  WORD
   {
-    $$ = $1;
-    current_program->index_list =
-      list_add (current_program->index_list, cb_build_index ($1));
+    cb_tree x = $1;
+    $$ = x;
+    if (CB_REFERENCE (x)->word->count == 0)
+      {
+	current_program->index_list =
+	  list_add (current_program->index_list, cb_build_index (x));
+      }
+    else if (!CB_INDEX_P (x))
+      {
+	redefinition_error ($$);
+	$$ = cb_error_node;
+      }
   }
 ;
 
