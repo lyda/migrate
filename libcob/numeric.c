@@ -148,8 +148,8 @@ cob_decimal_get_int (cob_decimal *d)
 void
 cob_decimal_set_double (cob_decimal *d, double v)
 {
-  mpz_set_d (d->value, v * 1.0e18);
-  d->scale = 18;
+  mpz_set_d (d->value, v * 1.0e9);
+  d->scale = 9;
 }
 
 double
