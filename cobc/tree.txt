@@ -5,12 +5,11 @@ note on cobol tree					-*- outline -*-
 Name        USAGE
 ------      -----
 display     DISPLAY                 
-binary      COMP, BINARY
-packed      COMP-3, PACKED-DECIMAL
-float       COMP-1, COMP-2, FLOAT-SHORT, FLOAT-LONG, FLOAT-EXTEND
-ordered     COMP-5
+binary      BINARY, COMP, COMP-4, COMP-5
+packed      PACKED-DECIMAL, COMP-3
+float       FLOAT-SHORT, FLOAT-LONG, FLOAT-EXTEND, COMP-1, COMP-2
 index       INDEX
-pointer     POINTER
+pointer     DATA-POINTER, PROGRAM-POINTER
 
 * Parameter types
 
