@@ -117,13 +117,16 @@ X\"[^\"\n]*\" {
   /* reserved word */
   token = lookup_reserved_word (yytext);
   if (token != 0)
-    return token;
+    {
+      yylval.tree = make_location (cobc_source_file, cobc_source_line);
+      return token;
+    }
 
   /* user word */
   word = lookup_word (yytext);
   yylval.tree = make_reference (word);
-  yylval.tree->loc.text = cobc_source_file;
-  yylval.tree->loc.first_line = cobc_source_line;
+  yylval.tree->source_file = cobc_source_file;
+  yylval.tree->source_line = cobc_source_line;
 
   if (cobc_in_procedure && word->count > 0)
     {

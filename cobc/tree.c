@@ -288,6 +288,21 @@ tree_name (cobc_tree x)
 
 
 /*
+ * Location
+ */
+
+cobc_tree
+make_location (char *file, int line)
+{
+  struct cobc_tree_common *p =
+    make_tree (cobc_tag_location, COB_TYPE_UNKNOWN, sizeof (struct cobc_tree_common));
+  p->source_file = file;
+  p->source_line = line;
+  return COBC_TREE (p);
+}
+
+
+/*
  * Constants
  */
 
@@ -770,7 +785,8 @@ associate (cobc_tree name, cobc_tree val)
   COBC_TREE_CLASS (name) = COBC_TREE_CLASS (val);
   w->items = list_add (w->items, val);
   w->count++;
-  val->loc = name->loc;
+  val->source_file = name->source_file;
+  val->source_line = name->source_line;
   return w->name;
 }
 

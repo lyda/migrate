@@ -86,6 +86,7 @@ enum cobc_tag {
   cobc_tag_funcall,		/* run-time function call */
   cobc_tag_cast_int32,		/* cast to int32 */
   /* statements */
+  cobc_tag_location,		/* source location */
   cobc_tag_label,		/* label statement */
   cobc_tag_if,			/* IF statement */
   cobc_tag_perform,		/* PERFORM statement */
@@ -96,25 +97,17 @@ enum cobc_tag {
   cobc_tag_parameter,
 };
 
-struct cobc_location {
-  int first_line;
-  int first_column;
-  int last_line;
-  int last_column;
-  char *text;
-};
-
 struct cobc_tree_common {
   char tag;
   char class;			/* A,9,X,N,1 */
-  struct cobc_location loc;	/* source location */
+  char *source_file;
+  int source_line;
 };
 
 typedef struct cobc_tree_common *cobc_tree;
 
 #define COBC_TREE(x)		((struct cobc_tree_common *) (x))
 #define COBC_TREE_TAG(x)	(COBC_TREE (x)->tag)
-#define COBC_TREE_LOC(x)	(COBC_TREE (x)->loc)
 #define COBC_TREE_CLASS(x)	(COBC_TREE (x)->class)
 
 #ifdef COB_DEBUG
@@ -136,6 +129,8 @@ typedef struct cobc_tree_common *cobc_tree;
 #endif
 
 extern char *tree_name (cobc_tree x);
+
+extern cobc_tree make_location (char *file, int line);
 
 
 /*

@@ -55,6 +55,9 @@
 
 #define push_move(x,y)		push_funcall_2 ("@move", x, y)
 #define make_handler(v,a,b)	make_funcall_4 ("@handler", (void *) v, a, b, 0)
+
+#define push_location(x)	push (x)
+
 #define push_file_handler(f,h)					\
   {								\
     cobc_tree __f = (f);					\
@@ -131,41 +134,40 @@ static void ambiguous_error (cobc_tree x);
 %token <tree> INTEGER_LITERAL NUMERIC_LITERAL NONNUMERIC_LITERAL
 %token <tree> NAME CLASS_NAME MNEMONIC_NAME
 
-%token ACCEPT ACCESS ADD ADVANCING AFTER ALL ALPHABET ALPHABETIC
-%token ALPHABETIC_LOWER ALPHABETIC_UPPER ALPHANUMERIC ALPHANUMERIC_EDITED ALSO
-%token ALTER ALTERNATE AND ANY ARE AREA ASCENDING ASSIGN AT AUTO
-%token BACKGROUND_COLOR BEFORE BELL BINARY BLANK BLINK BLOCK BY CALL CANCEL
-%token CHARACTER CHARACTERS CLASS CLOSE CODE_SET COLLATING COLUMN COMMA
-%token COMMAND_LINE COMMON COMPUTE CONFIGURATION CONTAINS CONTENT CONTINUE
-%token CONVERTING CORRESPONDING COUNT CRT CURRENCY CURSOR DATA DATE DAY
-%token DAY_OF_WEEK DEBUGGING DECIMAL_POINT DECLARATIVES DELETE DELIMITED
-%token DELIMITER DEPENDING DESCENDING DISPLAY DIVIDE DIVISION DOWN DUPLICATES
+%token <tree> ACCEPT ADD CALL CANCEL CLOSE COMPUTE DELETE DISPLAY DIVIDE
+%token <tree> EVALUATE IF INITIALIZE INSPECT MERGE MOVE MULTIPLY OPEN PERFORM
+%token <tree> READ RELEASE RETURN REWRITE SEARCH SET SORT START STRING
+%token <tree> SUBTRACT UNSTRING WRITE
+
+%token ACCESS ADVANCING AFTER ALL ALPHABET ALPHABETIC ALPHABETIC_LOWER
+%token ALPHABETIC_UPPER ALPHANUMERIC ALPHANUMERIC_EDITED ALSO ALTER ALTERNATE
+%token AND ANY ARE AREA ASCENDING ASSIGN AT AUTO BACKGROUND_COLOR BEFORE BELL
+%token BINARY BLANK BLINK BLOCK BY CHARACTER CHARACTERS CLASS CODE_SET
+%token COLLATING COLUMN COMMA COMMAND_LINE COMMON CONFIGURATION CONTAINS
+%token CONTENT CONTINUE CONVERTING CORRESPONDING COUNT CRT CURRENCY CURSOR
+%token DATA DATE DAY DAY_OF_WEEK DEBUGGING DECIMAL_POINT DECLARATIVES
+%token DELIMITED DELIMITER DEPENDING DESCENDING DIVISION DOWN DUPLICATES
 %token DYNAMIC ELSE END END_ACCEPT END_ADD END_CALL END_COMPUTE END_DELETE
 %token END_DISPLAY END_DIVIDE END_EVALUATE END_IF END_MULTIPLY END_PERFORM
 %token END_READ END_RETURN END_REWRITE END_SEARCH END_START END_STRING
 %token END_SUBTRACT END_UNSTRING END_WRITE ENVIRONMENT ENVIRONMENT_VARIABLE
-%token EOL EOS EQUAL ERASE ERROR EVALUATE EXCEPTION EXIT EXTEND EXTERNAL FALSE
-%token FD FILE_CONTROL FILLER FIRST FOR FOREGROUND_COLOR FROM FULL GE GIVING
-%token GLOBAL GO GREATER HIGHLIGHT HIGH_VALUE IDENTIFICATION IF IN INDEX
-%token INDEXED INITIALIZE INPUT INPUT_OUTPUT INSPECT INTO INVALID IS I_O
-%token I_O_CONTROL JUSTIFIED KEY LABEL LE LEADING LEFT LENGTH LESS LINE LINES
-%token LINKAGE LOCK LOWLIGHT LOW_VALUE MEMORY MERGE MINUS MODE MOVE MULTIPLE
-%token MULTIPLY NATIONAL NATIONAL_EDITED NATIVE NEGATIVE NEXT NO
-%token NUMBER NUMERIC NUMERIC_EDITED OBJECT_COMPUTER OCCURS OF OFF OMITTED ON
-%token OPEN OPTIONAL OR ORDER ORGANIZATION OTHER OUTPUT OVERFLOW PADDING PAGE
-%token PERFORM PLUS POINTER POSITION POSITIVE PROCEDURE PROCEED PROGRAM
-%token PROGRAM_ID QUOTE RANDOM READ RECORD RECORDS REDEFINES REEL REFERENCE
-%token RELATIVE RELEASE REMAINDER REMOVAL RENAMES REPLACING REQUIRED RESERVE
-%token RETURN RETURNING REVERSE_VIDEO REWIND REWRITE RIGHT ROUNDED RUN SAME
-%token SCREEN SD SEARCH SECTION SECURE SELECT SENTENCE SEPARATE SEQUENCE
-%token SEQUENTIAL SET SIGN SIZE SIZE SORT SORT_MERGE SOURCE_COMPUTER SPACE
-%token SPECIAL_NAMES STANDARD STANDARD_1 STANDARD_2 START STATUS STOP STRING
-%token SUBTRACT SYMBOLIC SYNCHRONIZED TALLYING TAPE TEST THAN THEN THRU TIME
-%token TIMES TO TOK_FILE TOK_INITIAL TRAILING TRUE UNDERLINE UNIT UNSTRING
-%token UNTIL UP UPON USAGE USE USING VALUE VARYING WHEN WITH WORKING_STORAGE
-%token WRITE ZERO
-
-%left NOT
+%token EOL EOS EQUAL ERASE ERROR EXCEPTION EXIT EXTEND EXTERNAL FALSE FD
+%token FILE_CONTROL FILLER FIRST FOR FOREGROUND_COLOR FROM FULL GE GIVING
+%token GLOBAL GO GREATER HIGHLIGHT HIGH_VALUE IDENTIFICATION IN INDEX INDEXED
+%token INPUT INPUT_OUTPUT INTO INVALID IS I_O I_O_CONTROL JUSTIFIED KEY LABEL
+%token LE LEADING LEFT LENGTH LESS LINE LINES LINKAGE LOCK LOWLIGHT LOW_VALUE
+%token MEMORY MINUS MODE MULTIPLE NATIONAL NATIONAL_EDITED NATIVE NEGATIVE
+%token NEXT NO NOT NUMBER NUMERIC NUMERIC_EDITED OBJECT_COMPUTER OCCURS OF OFF
+%token OMITTED ON OPTIONAL OR ORDER ORGANIZATION OTHER OUTPUT OVERFLOW PADDING
+%token PAGE PLUS POINTER POSITION POSITIVE PROCEDURE PROCEED PROGRAM
+%token PROGRAM_ID QUOTE RANDOM RECORD RECORDS REDEFINES REEL REFERENCE
+%token RELATIVE REMAINDER REMOVAL RENAMES REPLACING REQUIRED RESERVE RETURNING
+%token REVERSE_VIDEO REWIND RIGHT ROUNDED RUN SAME SCREEN SD SECTION SECURE
+%token SELECT SENTENCE SEPARATE SEQUENCE SEQUENTIAL SIGN SIZE SIZE SORT_MERGE
+%token SOURCE_COMPUTER SPACE SPECIAL_NAMES STANDARD STANDARD_1 STANDARD_2
+%token STATUS STOP SYMBOLIC SYNCHRONIZED TALLYING TAPE TEST THAN THEN THRU
+%token TIME TIMES TO TOK_FILE TOK_INITIAL TRAILING TRUE UNDERLINE UNIT UNTIL
+%token UP UPON USAGE USE USING VALUE VARYING WHEN WITH WORKING_STORAGE ZERO
 
 %type <inum> flag_all flag_duplicates flag_optional flag_global
 %type <inum> flag_not flag_next flag_rounded flag_separate
@@ -183,12 +185,12 @@ static void ambiguous_error (cobc_tree x);
 %type <list> call_param_list call_using expr_item_list initialize_replacing
 %type <list> initialize_replacing_list class_item_list
 %type <tree> call_param evaluate_object
-%type <tree> add_to at_line_column basic_literal
+%type <tree> add_to at_line_column
 %type <tree> call_not_on_exception call_on_exception call_returning class_item
 %type <tree> column_number condition data_name expr expr_1
 %type <tree> expr_item field_description field_description_list
 %type <tree> field_description_list_1 field_description_list_2 field_name
-%type <tree> figurative_constant file_name function group_name integer_label
+%type <tree> file_name function group_name integer_label
 %type <tree> integer_value label label_name qualified_name
 %type <tree> line_number literal mnemonic_name name opt_subscript subscript
 %type <tree> numeric_value numeric_edited_name numeric_expr
@@ -1543,6 +1545,7 @@ statement:
 accept_statement:
   ACCEPT data_name at_line_column
   {
+    push_location ($1);
     if (current_program->enable_screen)
       {
 	if (COBC_FIELD ($2)->f.screen)
@@ -1552,8 +1555,7 @@ accept_statement:
 	    push_funcall_3 ("cob_screen_accept", $2, line, column);
 	  }
 	else
-	  yyerror_x ($2, "`%s' not defined in SCREEN SECTION",
-		       tree_name ($2));
+	  yyerror_x ($2, "`%s' not defined in SCREEN SECTION", tree_name ($2));
       }
     else
       {
@@ -1563,30 +1565,37 @@ accept_statement:
   _end_accept
 | ACCEPT data_name FROM DATE
   {
+    push_location ($1);
     push_funcall_1 ("cob_accept_date", $2);
   }
 | ACCEPT data_name FROM DAY
   {
+    push_location ($1);
     push_funcall_1 ("cob_accept_day", $2);
   }
 | ACCEPT data_name FROM DAY_OF_WEEK
   {
+    push_location ($1);
     push_funcall_1 ("cob_accept_day_of_week", $2);
   }
 | ACCEPT data_name FROM TIME
   {
+    push_location ($1);
     push_funcall_1 ("cob_accept_time", $2);
   }
 | ACCEPT data_name FROM COMMAND_LINE
   {
+    push_location ($1);
     push_funcall_1 ("cob_accept_command_line", $2);
   }
 | ACCEPT data_name FROM ENVIRONMENT_VARIABLE value
   {
+    push_location ($1);
     push_funcall_2 ("cob_accept_environment", $2, $5);
   }
 | ACCEPT data_name FROM mnemonic_name
   {
+    push_location ($1);
     switch (COBC_BUILTIN (cobc_ref ($4))->id)
       {
       case BUILTIN_CONSOLE:
@@ -1621,6 +1630,7 @@ column_number:
 add_statement:
   ADD add_body on_size_error _end_add
   {
+    push_location ($1);
     push_sequence_with_handler ($<tree>2, $3);
   }
 ;
@@ -1679,6 +1689,7 @@ call_statement:
   CALL program_name		{ current_call_mode = COBC_CALL_BY_REFERENCE; }
   call_using call_returning call_on_exception call_not_on_exception
   {
+    push_location ($1);
     push_funcall_4 ("@call", $2, $4, $6, $7);
     if ($5)
       push_move (cobc_return_code, $5);
@@ -1725,7 +1736,11 @@ _end_call: | END_CALL ;
  */
 
 cancel_statement:
-  CANCEL cancel_list
+  CANCEL
+  {
+    push_location ($1);
+  }
+  cancel_list
 ;
 cancel_list:
 | cancel_list program_name
@@ -1744,7 +1759,11 @@ program_name:
  */
 
 close_statement:
-  CLOSE close_list
+  CLOSE
+  {
+    push_location ($1);
+  }
+  close_list
 ;
 close_list:
 | close_list file_name close_option
@@ -1772,6 +1791,7 @@ close_option:
 compute_statement:
   COMPUTE compute_body on_size_error _end_compute
   {
+    push_location ($1);
     push_sequence_with_handler ($<tree>2, $3);
   }
 ;
@@ -1792,6 +1812,7 @@ delete_statement:
   DELETE file_name _record opt_invalid_key _end_delete
   {
     cobc_tree file = cobc_ref ($2);
+    push_location ($1);
     push_funcall_1 ("cob_delete", file);
     push_file_handler (file, $4);
   }
@@ -1807,6 +1828,7 @@ display_statement:
   DISPLAY opt_value_list display_upon at_line_column
   {
     struct cobc_list *l;
+    push_location ($1);
     if (current_program->enable_screen)
       {
 	for (l = $2; l; l = l->next)
@@ -1869,6 +1891,7 @@ _end_display: | END_DISPLAY ;
 divide_statement:
   DIVIDE divide_body on_size_error _end_divide
   {
+    push_location ($1);
     push_sequence_with_handler ($<tree>2, $3);
   }
 ;
@@ -1906,6 +1929,7 @@ _end_divide: | END_DIVIDE ;
 evaluate_statement:
   EVALUATE evaluate_subject_list evaluate_case_list _end_evaluate
   {
+    push_location ($1);
     push (build_evaluate ($<list>2, $3));
   }
 ;
@@ -1993,13 +2017,15 @@ goto_statement:
 if_statement:
   IF condition _then statement_list _end_if
   {
+    push_location ($1);
     push (make_if ($2, $4, NULL));
   }
 | IF condition _then statement_list ELSE statement_list _end_if
   {
+    push_location ($1);
     push (make_if ($2, $4, $6));
   }
-| IF error END_IF
+| IF error END_IF { }
 ;
 _end_if: | END_IF ;
 
@@ -2012,6 +2038,7 @@ initialize_statement:
   INITIALIZE data_name_list initialize_replacing
   {
     struct cobc_list *l;
+    push_location ($1);
     for (l = $2; l; l = l->next)
       push_funcall_2 ("@initialize", l->item, $3);
   }
@@ -2045,7 +2072,11 @@ _data: | DATA ;
  */
 
 inspect_statement:
-  INSPECT data_name inspect_list
+  INSPECT
+  {
+    push_location ($1);
+  }
+  data_name inspect_list
 ;
 inspect_list:
 | inspect_list inspect_item
@@ -2191,6 +2222,7 @@ _initial: | TOK_INITIAL ;
 merge_statement:
   MERGE file_name sort_key_list sort_collating
   {
+    push_location ($1);
     push_funcall_2 ("@sort-init", $2, $<list>3);
     $<tree>$ = $2; /* used in sort_input, sort_output */
   }
@@ -2206,11 +2238,13 @@ move_statement:
   MOVE value TO data_name_list
   {
     struct cobc_list *l;
+    push_location ($1);
     for (l = $4; l; l = l->next)
       push_move ($2, l->item);
   }
 | MOVE CORRESPONDING group_name TO group_name
   {
+    push_location ($1);
     push (build_corresponding (build_move, $3, $5, -1));
   }
 ;
@@ -2223,6 +2257,7 @@ move_statement:
 multiply_statement:
   MULTIPLY multiply_body on_size_error _end_multiply
   {
+    push_location ($1);
     push_sequence_with_handler ($<tree>2, $3);
   }
 ;
@@ -2244,7 +2279,11 @@ _end_multiply: | END_MULTIPLY ;
  */
 
 open_statement:
-  OPEN open_list
+  OPEN
+  {
+    push_location ($1);
+  }
+  open_list
 ;
 open_list:
 | open_list open_mode file_name_list
@@ -2273,11 +2312,13 @@ open_mode:
 perform_statement:
   PERFORM perform_procedure perform_option
   {
+    push_location ($1);
     COBC_PERFORM ($3)->body = $2;
     push ($3);
   }
 | PERFORM perform_option statement_list END_PERFORM
   {
+    push_location ($1);
     COBC_PERFORM ($2)->body = $3;
     push ($2);
   }
@@ -2350,6 +2391,7 @@ read_statement:
   {
     cobc_tree file = cobc_ref ($2);
     cobc_tree key = $<tree>6;
+    push_location ($1);
     if ($3 || COBC_FILE (file)->access_mode == COB_ACCESS_SEQUENTIAL)
       {
 	/* READ NEXT */
@@ -2391,6 +2433,7 @@ release_statement:
   RELEASE record_name write_from
   {
     cobc_tree file = COBC_TREE (COBC_FIELD (cobc_ref ($2))->file);
+    push_location ($1);
     if ($3)
       push_move ($3, $2);
     push_funcall_2 ("cob_write", file, $2);
@@ -2406,6 +2449,7 @@ return_statement:
   RETURN file_name _record read_into at_end _end_return
   {
     cobc_tree file = cobc_ref ($2);
+    push_location ($1);
     push_funcall_2 ("cob_read", file, cobc_int0);
     if ($<tree>4)
       push_move (COBC_FILE (file)->record, $<tree>4);
@@ -2423,6 +2467,7 @@ rewrite_statement:
   REWRITE record_name write_from opt_invalid_key _end_rewrite
   {
     cobc_tree file = COBC_TREE (COBC_FIELD (cobc_ref ($2))->file);
+    push_location ($1);
     if ($3)
       push_move ($3, $2);
     push_funcall_2 ("cob_rewrite", file, $2);
@@ -2439,10 +2484,12 @@ _end_rewrite: | END_REWRITE ;
 search_statement:
   SEARCH table_name search_varying search_at_end search_whens _end_search
   {
+    push_location ($1);
     push_funcall_4 ("@search", $2, $<tree>3, $<tree>4, $<tree>5);
   }
 | SEARCH ALL table_name search_at_end search_all_when _end_search
   {
+    push_location ($1);
     push_funcall_3 ("@search-all", $3, $<tree>4, $<tree>5);
   }
 ;
@@ -2482,24 +2529,28 @@ set_statement:
   SET data_name_list TO numeric_value
   {
     struct cobc_list *l;
+    push_location ($1);
     for (l = $2; l; l = l->next)
       push_move ($4, l->item);
   }
 | SET data_name_list UP BY numeric_value
   {
     struct cobc_list *l;
+    push_location ($1);
     for (l = $2; l; l = l->next)
       push (build_add (l->item, $5, 0));
   }
 | SET data_name_list DOWN BY numeric_value
   {
     struct cobc_list *l;
+    push_location ($1);
     for (l = $2; l; l = l->next)
       push (build_sub (l->item, $5, 0));
   }
 | SET data_name_list TO TRUE
   {
     struct cobc_list *l;
+    push_location ($1);
     for (l = $2; l; l = l->next)
       {
 	struct cobc_field *f = field (l->item);
@@ -2510,7 +2561,11 @@ set_statement:
 	  push_move (f->values->item, l->item);
       }
   }
-| SET set_on_off_list
+| SET
+  {
+    push_location ($1);
+  }
+  set_on_off_list
 ;
 set_on_off_list:
   set_on_off
@@ -2537,6 +2592,7 @@ set_on_off:
 sort_statement:
   SORT file_name sort_key_list sort_duplicates sort_collating
   {
+    push_location ($1);
     push_funcall_2 ("@sort-init", $2, $<list>3);
     $<tree>$ = $2; /* used in sort_input, sort_output */
   }
@@ -2608,6 +2664,7 @@ start_statement:
     cobc_tree file = cobc_ref ($2);
     if ($<tree>4 == NULL)
       $<tree>4 = COBC_FILE (file)->key;
+    push_location ($1);
     push_funcall_3 ("cob_start", file, make_integer ($<inum>3), $<tree>4);
     push_file_handler (file, $5);
   }
@@ -2652,6 +2709,7 @@ string_statement:
     struct cobc_list *l = $2;
     l = cons (make_funcall_2 ("cob_string_init", $4, $5), l);
     l = list_add (l, make_funcall_0 ("cob_string_finish"));
+    push_location ($1);
     push_sequence_with_handler (make_sequence (l), $6);
   }
 ;
@@ -2689,6 +2747,7 @@ _end_string: | END_STRING ;
 subtract_statement:
   SUBTRACT subtract_body on_size_error _end_subtract
   {
+    push_location ($1);
     push_sequence_with_handler ($<tree>2, $3);
   }
 ;
@@ -2733,6 +2792,7 @@ unstring_statement:
     if ($<tree>7)
       l = list_add (l, make_funcall_1 ("cob_unstring_tallying", $<tree>7));
     l = list_add (l, make_funcall_0 ("cob_unstring_finish"));
+    push_location ($1);
     push_sequence_with_handler (make_sequence (l), $8);
   }
 ;
@@ -2793,6 +2853,7 @@ write_statement:
     struct cobc_field *f = COBC_FIELD (cobc_ref ($2));
     struct cobc_parameter *p = $<tree>4 ? COBC_PARAMETER ($<tree>4) : 0;
     cobc_tree file = COBC_TREE (f->file);
+    push_location ($1);
 
     /* AFTER ADVANCING */
     if (p && p->type == COBC_AFTER)
@@ -3251,7 +3312,8 @@ expr_1:
     if (i != 1)
       {
       error:
-	yyerror_x ($1->item, _("invalid expression"), tree_name ($1->item));
+	yyerror_x ($1->item, _("invalid expression `%s'"),
+		   tree_name ($1->item));
 	YYERROR;
       }
 
@@ -3628,7 +3690,7 @@ integer_value:
 text_value:
   data_name
 | NONNUMERIC_LITERAL
-| figurative_constant
+| figurative_constant		{ $$ = $<tree>1; }
 ;
 
 
@@ -3663,22 +3725,23 @@ function:
  */
 
 literal:
-  basic_literal			{ $$ = $1; }
-| figurative_constant		{ $$ = $1; }
-| ALL basic_literal		{ $$ = $2; COBC_LITERAL ($2)->all = 1; }
-| ALL figurative_constant	{ $$ = $2; }
+  basic_literal			{ $$ = $<tree>1; }
+| figurative_constant		{ $$ = $<tree>1; }
+| ALL basic_literal		{ $$ = $<tree>2;
+				  COBC_LITERAL ($<tree>2)->all = 1; }
+| ALL figurative_constant	{ $$ = $<tree>2; }
 ;
 basic_literal:
-  INTEGER_LITERAL
-| NUMERIC_LITERAL
-| NONNUMERIC_LITERAL
+  INTEGER_LITERAL		{ $<tree>$ = $1; }
+| NUMERIC_LITERAL		{ $<tree>$ = $1; }
+| NONNUMERIC_LITERAL		{ $<tree>$ = $1; }
 ;
 figurative_constant:
-  SPACE				{ $$ = cobc_space; }
-| ZERO				{ $$ = cobc_zero; }
-| QUOTE				{ $$ = cobc_quote; }
-| HIGH_VALUE			{ $$ = cobc_high; }
-| LOW_VALUE			{ $$ = cobc_low; }
+  SPACE				{ $<tree>$ = cobc_space; }
+| ZERO				{ $<tree>$ = cobc_zero; }
+| QUOTE				{ $<tree>$ = cobc_quote; }
+| HIGH_VALUE			{ $<tree>$ = cobc_high; }
+| LOW_VALUE			{ $<tree>$ = cobc_low; }
 ;
 
 
@@ -4879,7 +4942,7 @@ yywarn_x (cobc_tree x, char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  yyprintf (x->loc.text, x->loc.first_line, "warning: ", fmt, ap);
+  yyprintf (x->source_file, x->source_line, "warning: ", fmt, ap);
   va_end (ap);
 
   warning_count++;
@@ -4890,7 +4953,7 @@ yyerror_x (cobc_tree x, char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  yyprintf (x->loc.text, x->loc.first_line, "", fmt, ap);
+  yyprintf (x->source_file, x->source_line, "", fmt, ap);
   va_end (ap);
 
   error_count++;

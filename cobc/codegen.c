@@ -167,20 +167,6 @@ output_quoted_string (unsigned char *s, int size)
   output ("\"");
 }
 
-static void
-output_line_directive (cobc_tree x)
-{
-  static int last_line = 0;
-  if (x->loc.text && last_line != x->loc.first_line)
-    {
-      if (cobc_flags.line_directive)
-	output ("#line %d \"%s\"\n", x->loc.first_line, x->loc.text);
-      if (cobc_flags.source_location)
-	output_line ("cob_source_line = %d;", x->loc.first_line);
-      last_line = x->loc.first_line;
-    }
-}
-
 
 /*
  * Convert to int32
@@ -1649,6 +1635,22 @@ output_stmt (cobc_tree x)
 {
   switch (COBC_TREE_TAG (x))
     {
+    case cobc_tag_location:
+      {
+	static int last_line = 0;
+	if (x->source_file && last_line != x->source_line)
+	  {
+	    if (cobc_flags.line_directive)
+	      output ("#line %d \"%s\"\n", x->source_line, x->source_file);
+	    if (cobc_flags.source_location)
+	      {
+		output_line ("cob_source_file = \"%s\";", x->source_file);
+		output_line ("cob_source_line = %d;", x->source_line);
+	      }
+	    last_line = x->source_line;
+	  }
+	break;
+      }
     case cobc_tag_label:
       {
 	struct cobc_label *p = COBC_LABEL (x);
@@ -1696,7 +1698,6 @@ output_stmt (cobc_tree x)
       {
 	struct cobc_sequence *p = COBC_SEQUENCE (x);
 	struct cobc_list *l = p->list;
-	output_line_directive (x);
 	output_indent ("{");
 	if (p->save_status && l && l->next)
 	  {
