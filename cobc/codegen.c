@@ -1625,7 +1625,7 @@ codegen (struct program_spec *spec)
   struct cobc_list *l;
   struct cobc_field *p;
 
-  output ("/* Generated from %s by OpenCOBOL %s */\n\n",
+  output ("/* Generated from %s by cobc %s */\n\n",
 	  cobc_source_file, COBC_VERSION);
   output ("#include <stdio.h>\n");
   output ("#include <stdlib.h>\n");
