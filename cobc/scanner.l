@@ -44,6 +44,7 @@ static int integer_is_label = 0;
 
 static int read_literal (char mark);
 static int scan_x (char *text);
+static int scan_h (char *text);
 static int scan_numeric (char *text);
 static int scan_picture (char *text);
 
@@ -109,6 +110,12 @@ X\"[^\"\n]*\" {
 [+-]?[0-9]*[.,]?[0-9]+ {
   /* numeric literal */
   return scan_numeric (yytext);
+}
+
+H\'[^\'\n]*\' |
+H\"[^\"\n]*\" {
+  /* H numric literal */
+  return scan_h (yytext + 2);
 }
 
 [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)? {
@@ -228,6 +235,37 @@ scan_x (char *text)
 
  error:
   cb_error (_("invalid X literal: %s"), text);
+  yylval.tree = cb_error_node;
+  return LITERAL;
+}
+
+static int
+scan_h (char *text)
+{
+  char *p;
+  char buff[19];
+  long long val = 0;
+
+  for (p = text; *p != '\'' && *p != '\"'; p++)
+    {
+      int c = toupper (*p);
+      if ('0' <= c && c <= '9')
+	c = c - '0';
+      else if ('A' <= c && c <= 'F')
+	c = c - 'A' + 10;
+      else
+	goto error;
+
+      val = (val << 4) + c;
+    }
+
+  sprintf (buff, "%lld", val);
+  yylval.tree = make_numeric_literal (0, buff, 0);
+  SET_LOCATION (yylval.tree);
+  return LITERAL;
+
+ error:
+  cb_error (_("invalid H literal: %s"), text);
   yylval.tree = cb_error_node;
   return LITERAL;
 }
