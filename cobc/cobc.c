@@ -177,8 +177,8 @@ static struct option long_options[] = {
   {"Wall", no_argument, 0, 'W'},
 #undef COBC_WARNING
 #define COBC_WARNING(sig,var,name,doc)		\
-  {"W"#name, no_argument, &var, 1},		\
-  {"Wno-"#name, no_argument, &var, 0},
+  {"W"name, no_argument, &var, 1},		\
+  {"Wno-"name, no_argument, &var, 0},
 #include "warning.def"
 #ifdef COB_DEBUG
   {"ts", no_argument, &yy_flex_debug, 1},
