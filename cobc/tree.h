@@ -344,6 +344,8 @@ struct cb_literal {
 
 #define CB_LITERAL(x)	(CB_TREE_CAST (CB_TAG_LITERAL, struct cb_literal, x))
 #define CB_LITERAL_P(x)	(CB_TREE_TAG (x) == CB_TAG_LITERAL)
+#define CB_NUMERIC_LITERAL_P(x) \
+  (CB_LITERAL_P (x) && CB_TREE_CATEGORY (x) == CB_CATEGORY_NUMERIC)
 
 extern cb_tree cb_build_numeric_literal (int sign, unsigned char *data, int expt);
 extern cb_tree cb_build_alphanumeric_literal (size_t size, unsigned char *data);

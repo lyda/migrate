@@ -1238,7 +1238,7 @@ output_call (struct cb_call *p)
 	case CB_CALL_BY_CONTENT:
 	  output_prefix ();
 	  output ("char content_%d[", n);
-	  if (CB_INTEGER_P (x) || CB_BINARY_OP_P (x))
+	  if (CB_NUMERIC_LITERAL_P (x) || CB_BINARY_OP_P (x))
 	    output ("4");
 	  else
 	    output_size (x);
@@ -1253,7 +1253,7 @@ output_call (struct cb_call *p)
 	{
 	case CB_CALL_BY_CONTENT:
 	  output_prefix ();
-	  if (CB_INTEGER_P (x) || CB_BINARY_OP_P (x))
+	  if (CB_NUMERIC_LITERAL_P (x) || CB_BINARY_OP_P (x))
 	    {
 	      output ("*(int *)content_%d = ", n);
 	      output_integer (x);

@@ -257,7 +257,11 @@ cb_build_length (cb_tree x)
 			       CB_REFERENCE (x)->offset);
 
   /* X */
-  return cb_int (cb_field_size (x));
+  {
+    unsigned char buff[20];
+    sprintf (buff, "%d", cb_field_size (x));
+    return cb_build_numeric_literal (0, buff, 0);
+  }
 }
 
 cb_tree
@@ -1010,7 +1014,7 @@ cb_build_move (cb_tree src, cb_tree dst)
   if (CB_INDEX_P (dst))
     return cb_build_assign (dst, src);
 
-  if (CB_INDEX_P (src) || CB_INTEGER_P (src) || CB_BINARY_OP_P (src))
+  if (CB_INDEX_P (src) || CB_BINARY_OP_P (src))
     return cb_build_funcall_2 ("cob_set_int", dst,
 			       cb_build_cast_integer (src));
 
