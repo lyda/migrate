@@ -35,7 +35,6 @@ static void output_stmt (cb_tree x);
 static void output_data (cb_tree x);
 static void output_integer (cb_tree x);
 static void output_index (cb_tree x);
-static void output_func_1 (const char *name, cb_tree a1);
 static void output_funcall (struct cb_funcall *p);
 
 
@@ -677,14 +676,6 @@ output_param (cb_tree x, int id)
 }
 
 static void
-output_func_1 (const char *name, cb_tree a1)
-{
-  output ("%s (", name);
-  output_param (a1, param_id);
-  output (")");
-}
-
-static void
 output_move (cb_tree src, cb_tree dst)
 {
   output_stmt (cb_build_move (src, dst));
@@ -788,7 +779,7 @@ output_integer (cb_tree x)
 	      }
 	  }
 
-	output_func_1 ("cob_get_int", x);
+	output_funcall (CB_FUNCALL (cb_build_funcall_1 ("cob_get_int", x)));
 	break;
       }
     }
@@ -858,9 +849,7 @@ output_cond (cb_tree x)
       }
     case CB_TAG_FUNCALL:
       {
-	output ("({");
 	output_funcall (CB_FUNCALL (x));
-	output ("})");
 	break;
       }
     case CB_TAG_SEQUENCE:
@@ -1412,7 +1401,7 @@ output_call (cb_tree name, cb_tree args, cb_tree st1, cb_tree st2)
       if (CB_LITERAL_P (name))
 	output ("cob_resolve (\"%s\")", CB_LITERAL (name)->data);
       else
-	output_func_1 ("cob_call_resolve", name);
+	output_funcall (CB_FUNCALL (cb_build_funcall_1 ("cob_call_resolve", name)));
       output (";\n");
       output_line ("if (func == NULL)");
       output_indent_level += 2;
@@ -1523,7 +1512,6 @@ output_funcall (struct cb_funcall *p)
     {
       /* regular function call */
       int i;
-      output_prefix ();
       output ("%s (", p->name);
       for (i = 0; i < p->argc; i++)
 	{
@@ -1531,7 +1519,7 @@ output_funcall (struct cb_funcall *p)
 	  if (i + 1 < p->argc)
 	    output (", ");
 	}
-      output (");\n");
+      output (")");
     }
 }
 
@@ -1675,7 +1663,9 @@ output_stmt (cb_tree x)
       }
     case CB_TAG_FUNCALL:
       {
+	output_prefix ();
 	output_funcall (CB_FUNCALL (x));
+	output (";\n");
 	break;
       }
     case CB_TAG_ASSIGN:
