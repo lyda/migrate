@@ -305,17 +305,32 @@ output_set_true (cobc_tree x)
  * INITIALIZE
  */
 
+static void output_initialize_internal (struct cobc_field *p);
+
 static int
 field_uniform_class (struct cobc_field *p)
 {
   if (!p->children)
     {
-      if (COBC_TREE_CLASS (p) != COB_NUMERIC)
-	return COB_ALPHANUMERIC;
-      else if (p->usage == USAGE_BINARY || p->usage == USAGE_INDEX)
-	return COB_BINARY;
-      else
-	return COB_NUMERIC;
+      switch (p->category)
+	{
+	case COB_NUMERIC:
+	  switch (p->usage)
+	    {
+	    case USAGE_DISPLAY:
+	      return COB_NUMERIC;
+	    case USAGE_BINARY:
+	    case USAGE_INDEX:
+	      return COB_BINARY;
+	    default:
+	      return COB_VOID;
+	    }
+	case COB_ALPHABETIC:
+	case COB_ALPHANUMERIC:
+	  return COB_ALPHANUMERIC;
+	default:
+	  return COB_VOID;
+	}
     }
   else
     {
@@ -328,7 +343,7 @@ field_uniform_class (struct cobc_field *p)
 }
 
 static void
-output_initialize_class (cobc_tree x, int class, int size)
+output_initialize_uniform (cobc_tree x, int class, int size)
 {
   switch (class)
     {
@@ -345,60 +360,106 @@ output_initialize_class (cobc_tree x, int class, int size)
 }
 
 static void
+output_initialize_compound (cobc_tree x)
+{
+  switch (COBC_FIELD (x)->category)
+    {
+    case COB_NUMERIC_EDITED:
+      output_move_zero (x);
+      break;
+    case COB_ALPHANUMERIC_EDITED:
+    case COB_NATIONAL_EDITED:
+      output_move_space (x);
+      break;
+    default:
+      output_recursive (output_initialize_internal, x);
+      break;
+    }
+}
+
+static void
 output_initialize_internal (struct cobc_field *p)
 {
   int last_class = COB_VOID;
   struct cobc_field *c;
   struct cobc_field *first_field = NULL;
+
+  /* initialize all children, combining uniform sequence into one */
   for (c = p->children; c; c = c->sister)
     {
-      if (c->f.have_occurs)
+      /* check if this child is uniform */
+      int class = field_uniform_class (c);
+      if (class == COB_VOID || class != last_class)
 	{
+	  /* if not, or if this child is in a different category,
+	     initialize the last uniform sequence */
 	  if (first_field && last_class != COB_ALPHANUMERIC)
-	    output_initialize_class (COBC_TREE (first_field), last_class,
-				     c->offset - first_field->offset);
-	  output_recursive (output_initialize_internal, COBC_TREE (c));
-	  first_field = NULL;
-	  last_class = COB_VOID;
-	}
-      else
-	{
-	  int class = field_uniform_class (c);
-	  if (class == COB_VOID || class != last_class)
-	    {
-	      if (first_field && last_class != COB_ALPHANUMERIC)
-		output_initialize_class (COBC_TREE (first_field), last_class,
-					 c->offset - first_field->offset);
-	      if (class == COB_VOID)
-		{
-		  first_field = NULL;
-		}
-	      else
-		{
-		  first_field = c;
-		}
-	    }
+	    output_initialize_uniform (COBC_TREE (first_field), last_class,
+				       c->offset - first_field->offset);
+	  /* if not uniform, initialize the children */
+	  if (class == COB_VOID)
+	    output_initialize_compound (COBC_TREE (c));
 	  last_class = class;
+	  first_field = (class != COB_VOID) ? c : NULL;
 	}
     }
+  /* initialize the final uniform sequence */
   if (first_field && last_class != COB_ALPHANUMERIC)
-    output_initialize_class (COBC_TREE (first_field), last_class,
-			     p->offset + p->size - first_field->offset);
+    output_initialize_uniform (COBC_TREE (first_field), last_class,
+			       p->offset + p->size - first_field->offset);
 }
 
 static void
 output_initialize (cobc_tree x)
 {
   int class = field_uniform_class (COBC_FIELD (x));
-  if (class == COB_VOID)
+  if (class != COB_VOID)
     {
-      output_memset (x, ' ', COBC_FIELD (x)->size);
-      output_recursive (output_initialize_internal, x);
+      /* if field is uniform (i.e., all children are the same category),
+	 initialize it at once */
+      output_initialize_uniform (x, class, COBC_FIELD (x)->size);
     }
   else
     {
-      output_initialize_class (x, class, COBC_FIELD (x)->size);
+      /* otherwise, fill the field by spaces first */
+      if (COBC_FIELD (x)->children)
+	output_initialize_uniform (x, COB_ALPHANUMERIC, COBC_FIELD (x)->size);
+      /* then initialize the children recursively */
+      output_initialize_compound (x);
     }
+}
+
+static struct cobc_list *initialize_replacing_list;
+
+static void
+output_initialize_replacing_internal (struct cobc_field *p)
+{
+  if (!p->children)
+    {
+      struct cobc_list *l;
+      for (l = initialize_replacing_list; l; l = l->next)
+	{
+	  struct cobc_pair *pair = l->item;
+	  int category = (int) pair->x;
+	  cobc_tree text = pair->y;
+	  if (category == p->category)
+	    {
+	      output_move (text, COBC_TREE (p));
+	      break;
+	    }
+	}
+      return;
+    }
+
+  for (p = p->children; p; p = p->sister)
+    output_recursive (output_initialize_replacing_internal, COBC_TREE (p));
+}
+
+static void
+output_initialize_replacing (cobc_tree x, struct cobc_list *l)
+{
+  initialize_replacing_list = l;
+  output_recursive (output_initialize_replacing_internal, x);
 }
 
 

@@ -180,7 +180,7 @@ static void ambiguous_error (struct cobc_word *p);
 %type <inum> flag_all,flag_duplicates,flag_optional,flag_with_no_advancing
 %type <inum> flag_not,flag_next,flag_rounded,flag_separate
 %type <inum> sign,integer,level_number,operator,on_or_off
-%type <inum> usage,before_or_after,perform_test
+%type <inum> usage,before_or_after,perform_test,replacing_option
 %type <inum> select_organization,select_access_mode,open_mode
 %type <list> occurs_key_list,occurs_index_list,value_item_list
 %type <list> data_name_list,condition_name_list,opt_value_list
@@ -194,6 +194,7 @@ static void ambiguous_error (struct cobc_word *p);
 %type <list> unstring_delimited_item,unstring_into_item
 %type <list> file_name_list,math_name_list,math_edited_name_list
 %type <list> call_item_list,call_using
+%type <list> initialize_replacing,initialize_replacing_list
 %type <tree> special_name_class_condition,special_name_class_condition_1
 %type <tree> special_name_class_literal,select_file_name
 %type <tree> call_returning,add_to,field_description_list,value_item
@@ -1702,34 +1703,36 @@ _end_if: | END_IF ;
  */
 
 initialize_statement:
-  INITIALIZE data_name_list _initialize_replacing
+  INITIALIZE data_name_list initialize_replacing
   {
     struct cobc_list *l;
     for (l = $2; l; l = l->next)
-      push_call_1 (COB_INITIALIZE, l->item);
+      if (!$3)
+	push_call_1 (COB_INITIALIZE, l->item);
+      else
+	push_call_2 (COB_INITIALIZE_REPLACING, l->item, COBC_TREE ($3));
   }
-;
-_initialize_replacing:
-| REPLACING initialize_replacing_list
-  {
-    yywarn ("INITIALIZE REPLACING is ignored");
-  }
-;
-initialize_replacing_list:
-  initialize_replacing
-| initialize_replacing_list initialize_replacing
 ;
 initialize_replacing:
+  /* nothing */			      { $$ = NULL; }
+| REPLACING initialize_replacing_list { $$ = $2; }
+;
+initialize_replacing_list:
+  /* nothing */			      { $$ = NULL; }
+| initialize_replacing_list
   replacing_option _data BY value
+  {
+    $$ = list_add ($1, make_pair ((void *) $2, $5));
+  }
 ;
 replacing_option:
-  ALPHABETIC
-| ALPHANUMERIC
-| NUMERIC
-| ALPHANUMERIC_EDITED
-| NUMERIC_EDITED
-| NATIONAL
-| NATIONAL_EDITED
+  ALPHABETIC			{ $$ = COB_ALPHABETIC; }
+| ALPHANUMERIC			{ $$ = COB_ALPHANUMERIC; }
+| NUMERIC			{ $$ = COB_NUMERIC; }
+| ALPHANUMERIC_EDITED		{ $$ = COB_ALPHANUMERIC_EDITED; }
+| NUMERIC_EDITED		{ $$ = COB_NUMERIC_EDITED; }
+| NATIONAL			{ $$ = COB_NATIONAL; }
+| NATIONAL_EDITED		{ $$ = COB_NATIONAL_EDITED; }
 ;
 _data: | DATA ;
 
@@ -2543,7 +2546,7 @@ class:
 | ALPHABETIC			{ $$ = "cob_is_alpha"; }
 | ALPHABETIC_LOWER		{ $$ = "cob_is_lower"; }
 | ALPHABETIC_UPPER		{ $$ = "cob_is_upper"; }
-| CLASS_NAME			{ $$ = COBC_CLASS ($1)->cname; }
+| class_name			{ $$ = COBC_CLASS ($1)->cname; }
 ;
 
 
