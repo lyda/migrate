@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2002 Keisuke Nishida
+ * Copyright (C) 2001-2003 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -190,8 +190,8 @@ static void ambiguous_error (cobc_tree x);
 %type <tree> expr_item field_description field_description_list
 %type <tree> field_description_list_1 field_description_list_2 field_name
 %type <tree> file_name function group_name integer_label
-%type <tree> integer_value label label_name qualified_name
-%type <tree> line_number literal mnemonic_name name opt_subscript subscript
+%type <tree> integer_value label label_name qualified_name name name_1
+%type <tree> line_number literal mnemonic_name opt_subscript subscript
 %type <tree> numeric_value numeric_edited_name numeric_expr
 %type <tree> numeric_name occurs_index on_or_off opt_screen_description_list
 %type <tree> opt_with_pointer perform_option perform_procedure
@@ -3528,10 +3528,18 @@ mnemonic_name:
  */
 
 name:
-  qualified_name		{ $$ = resolve_field ($1); if (!$$) YYERROR; }
-| qualified_name subref		{ $$ = resolve_field ($1); if (!$$) YYERROR; }
-| qualified_name refmod		{ $$ = resolve_field ($1); if (!$$) YYERROR; }
-| qualified_name subref refmod	{ $$ = resolve_field ($1); if (!$$) YYERROR; }
+  name_1
+  {
+    $$ = resolve_field ($1);
+    if (!$$)
+      YYERROR;
+  }
+;
+name_1:
+  qualified_name		{ $$ = $1; }
+| qualified_name subref		{ $$ = $1; }
+| qualified_name refmod		{ $$ = $1; }
+| qualified_name subref refmod	{ $$ = $1; }
 ;
 subref:
   '(' subscript_list ')'
@@ -3878,13 +3886,13 @@ resolve_field (cobc_tree x)
   else
     {
       struct cobc_reference *r = COBC_REFERENCE (x);
-      int need = COBC_FIELD (r->value)->indexes;
-      int given = list_length (r->subs);
+      struct cobc_field *f = COBC_FIELD (r->value);
+      const char *name = r->word->name;
 
-      if (given != need)
+      /* check the number of subscripts */
+      if (list_length (r->subs) != f->indexes)
 	{
-	  const char *name = r->word->name;
-	  switch (need)
+	  switch (f->indexes)
 	    {
 	    case 0:
 	      yyerror_x (x, _("`%s' cannot be subscripted"), name);
@@ -3893,10 +3901,47 @@ resolve_field (cobc_tree x)
 	      yyerror_x (x, _("`%s' requires 1 subscript"), name);
 	      break;
 	    default:
-	      yyerror_x (x, _("`%s' requires %d subscripts"), name, need);
+	      yyerror_x (x, _("`%s' requires %d subscripts"), name, f->indexes);
 	      break;
 	    }
-	  return NULL;
+	  return x;
+	}
+
+      /* check the range of constant subscripts */
+      if (r->subs)
+	{
+	  struct cobc_field *p;
+	  struct cobc_list *l = r->subs = list_reverse (r->subs);
+
+	  for (p = f; p; p = p->parent)
+	    if (p->f.have_occurs)
+	      {
+		cobc_tree sub = l->item;
+		if (COBC_LITERAL_P (sub))
+		  {
+		    int n = literal_to_int (COBC_LITERAL (sub));
+		    if (n < 1 || n > p->occurs)
+		      yyerror_x (x, _("index of `%s' out of range: %d"),
+				 name, n);
+		  }
+		l = l->next;
+	      }
+
+	  r->subs = list_reverse (r->subs);
+	}
+
+      /* check the range of constant reference modification */
+      if (r->offset && COBC_LITERAL_P (r->offset))
+	{
+	  int offset = literal_to_int (COBC_LITERAL (r->offset));
+	  if (offset < 1 || offset > f->size)
+	    yyerror_x (x, _("offset out of range: %d"), offset);
+	  else if (r->length && COBC_LITERAL_P (r->length))
+	    {
+	      int length = literal_to_int (COBC_LITERAL (r->length));
+	      if (length < 1 || length > f->size - offset + 1)
+		yyerror_x (x, _("length out of range: %d"), length);
+	    }
 	}
 
       return x;
