@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 127
+%expect 126
 
 %{
 #include "config.h"
@@ -136,7 +136,7 @@ static cobc_tree make_opt_cond (cobc_tree last, int type, cobc_tree this);
 %token <word> WORD,LABEL_WORD
 %token <pict> PICTURE_TOK
 %token <tree> INTEGER_LITERAL,NUMERIC_LITERAL,NONNUMERIC_LITERAL
-%token <tree> SPECIAL_TOK,CONDITION_NAME
+%token <tree> CONDITION_NAME,MNEMONIC_NAME
 
 %token EQUAL,GREATER,LESS,GE,LE,COMMAND_LINE,ENVIRONMENT_VARIABLE,ALPHABET
 %token DATE,DAY,DAY_OF_WEEK,TIME,READ,WRITE,OBJECT_COMPUTER,INPUT_OUTPUT
@@ -401,7 +401,7 @@ on_off_names:
 | off_status_is_name on_status_is_name
 ;
 on_status_is_name:
-  ON _status _is WORD
+  ON _status _is undefined_word
   {
     struct cobc_field *p = COBC_FIELD (make_field ($4));
     p->level = 88;
@@ -409,7 +409,7 @@ on_status_is_name:
   }
 ;
 off_status_is_name:
-  OFF _status _is WORD
+  OFF _status _is undefined_word
   {
     struct cobc_field *p = COBC_FIELD (make_field ($4));
     p->level = 88;
@@ -2096,12 +2096,8 @@ set_on_off_list:
 | set_on_off_list set_on_off
 ;
 set_on_off:
-  special_name_list TO ON
-| special_name_list TO OFF
-;
-special_name_list:
-  SPECIAL_TOK { }
-| special_name_list SPECIAL_TOK { }
+  mnemonic_name_list TO ON
+| mnemonic_name_list TO OFF
 ;
 
 
@@ -2714,8 +2710,12 @@ level_number:
 
 /* Mnemonic name */
 
+mnemonic_name_list:
+  mnemonic_name { }
+| mnemonic_name_list mnemonic_name { }
+;
 mnemonic_name:
-  name
+  MNEMONIC_NAME
 ;
 
 /* Section name */
