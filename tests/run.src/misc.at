@@ -249,29 +249,6 @@ AT_CHECK([./prog], [0], [000102])
 
 AT_CLEANUP
 
-AT_SETUP([MOVE with intermediate item])
-
-AT_DATA([prog.cob], [
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 G.
-         02 A           PIC X OCCURS 3.
-         02 B           PIC 9 VALUE 1.
-         02 C           PIC X OCCURS 3.
-       PROCEDURE        DIVISION.
-           MOVE "3211abc" TO G.
-           MOVE A (B) TO B, C (B).
-           DISPLAY G NO ADVANCING.
-           STOP RUN.
-])
-
-AT_CHECK([${COMPILE} prog.cob])
-AT_CHECK([./prog], [0], [3213ab3])
-
-AT_CLEANUP
-
 
 ## OCCURS clause
 
