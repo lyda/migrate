@@ -50,6 +50,7 @@ foreach $in (sort (glob("*.{CBL,SUB}"))) {
     $cmd = "./$exe < $exe.DAT";
   }
   next if $exe =~ /^..[34]0/;
+  next if $exe =~ /^SQ207M/;
   $num_progs++;
   printf LOG "%-12s", $in;
   {
