@@ -475,9 +475,7 @@ set_sign_flags (int flags)
 void
 check_decimal_point (struct lit *lit)
 {
-  char *s = lit->name;
-  if ((decimal_comma && strchr (s, '.')) ||
-      (!decimal_comma && strchr (s, ',')))
+  if (strchr (lit->name, decimal_comma ? '.' : ','))
     yyerror ("wrong decimal point character in numeric literal");
 }
 
@@ -3079,27 +3077,21 @@ create_subscript (struct sym *sy)
 struct subref *
 add_subscript_item (struct subref *subs, char op, struct sym *item)
 {
-  struct subref *ref, *tmp;
-  ref = malloc (sizeof (struct subref));
-  tmp = subs;
-  while (tmp->next)
-    tmp = tmp->next;
-  tmp->next = ref;
-  ref->litflag = ',';
-  ref->sym = item;
-  ref->next = NULL;
-  tmp->litflag = op;
+  struct subref *p = subs;
+  while (p->next)
+    p = p->next;
+  p->litflag = op;
+  p->next = create_subscript (item);
   return subs;
 }
 
 struct subref *
 add_subscript (struct subref *ref, struct subref *subs)
 {
-  struct subref *tmp;
-  tmp = subs;
-  while (tmp->next)
-    tmp = tmp->next;
-  tmp->next = ref;
+  struct subref *p = subs;
+  while (p->next)
+    p = p->next;
+  p->next = ref;
   return subs;
 }
 
@@ -3169,12 +3161,10 @@ void
 gen_subscripted (struct subref *subs)
 {
   struct subref *ref;
-  struct sym *sy, *var;
+  struct sym *sy;
   int outer_pushed, eax_in_use;
-  char op;
   ref = subs->next;		/* here start the subscripts */
-  var = sy = subs->sym;		/* here our array */
-  op = ref->litflag;
+  sy = subs->sym;		/* here our array */
   fprintf (o_src, "# gen_subscripted\n");
   outer_pushed = 0;
   eax_in_use = 0;
@@ -3184,20 +3174,20 @@ gen_subscripted (struct subref *subs)
 	yyerror ("warning: we don't handle this large subscript");
       if (eax_in_use && !outer_pushed)
 	{
-	  fprintf (o_src, "\tpushl\t%%eax\t# outer_pushed\n");	/* accumulate offsets here */
-	  outer_pushed++;
+	  /* accumulate offsets here */
+	  fprintf (o_src, "\tpushl\t%%eax\t# outer_pushed\n");
+	  outer_pushed = 1;
 	}
       eax_in_use = 1;
       value_to_eax (ref->sym);
       fprintf (o_src, "\tpushl\t%%eax\n");
       while (ref->litflag != ',')
 	{
-	  op = ref->litflag;
 	  ref = ref->next;
 	  if (symlen (ref->sym) > 4)
 	    yyerror ("warning: we don't handle this large subscript");
 	  value_to_eax (ref->sym);
-	  if (op == '+')
+	  if (ref->litflag == '+')
 	    fprintf (o_src, "\taddl\t%%eax,0(%%esp)\n");
 	  else
 	    fprintf (o_src, "\tsubl\t%%eax,0(%%esp)\n");
@@ -3499,7 +3489,7 @@ loadloc_to_eax (struct sym *sy_p)
     {				// should avoid all that if literal 1
       struct refmod *rfp = (struct refmod *) sy_p;
       fprintf (o_src, "\tmovl\t%%eax, %%ebx\n");
-      value_to_eax ((rfp->off));
+      value_to_eax (rfp->off);
       fprintf (o_src, "\tdecl\t%%eax\n");
       fprintf (o_src, "\taddl\t%%ebx, %%eax\n");
     }

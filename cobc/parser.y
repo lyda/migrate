@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 532
+%expect 528
 
 %{
 #define yydebug		cob_trace_parser
@@ -207,7 +207,7 @@ static void assert_numeric_sy (struct sym *sy);
 %type <sval> variable,sort_range,perform_options,name_or_lit,delimited_by
 %type <sval> string_with_pointer
 %type <ival> opt_all,with_duplicates,opt_with_test,opt_optional
-%type <rval> subscript,subscripts
+%type <rval> subscript,subscript_list
 %type <sfval> string_from_list,string_from
 %type <sval> opt_unstring_count,opt_unstring_delim,unstring_tallying
 %type <udval> unstring_delimited_vars,unstring_delimited
@@ -2982,36 +2982,37 @@ intrinsic_parm:
     ;
 
 condition:
-    expr  extended_cond_op {
-                        if ($2 & COND_UNARY) {
-                                if ($2 & COND_CLASS) {
-                                        gen_class_check($1,$2);
-                                }
-                                else {
-                                        struct sym *sy=
-                                                (struct sym *)save_special_literal('0','9', "%ZEROS%");
-                                        gen_compare($1,$2&~COND_UNARY,sy);
-                                }
-                        }
-                                
-                }
-                opt_expr {
-                        if ($2 & COND_UNARY) {
-                                if ((int)$4 != -1) {
-                                        yyerror("class or sign conditions are unary");
-                                }
-                        }
-                        else {
-                                if ((int)$4 == -1) {
-                                        yyerror("expression expected in a binary condition");
-                                }
-                                else {
-                                                gen_compare($1,$2,$4);
-                                }
-                        }
-                        $$.sy=$1; /* for implied operands */
-                        $$.oper=$2;
-                }
+    expr extended_cond_op
+    {
+      if ($2 & COND_UNARY)
+	{
+	  if ($2 & COND_CLASS)
+	    gen_class_check ($1, $2);
+	  else
+	    {
+	      struct sym *sy =
+		(struct sym *) save_special_literal ('0', '9', "%ZEROS%");
+	      gen_compare ($1, $2 & ~COND_UNARY, sy);
+	    }
+	}
+    }
+    opt_expr
+    {
+      if ($2 & COND_UNARY)
+	{
+	  if ((int) $4 != -1)
+	    yyerror ("class or sign conditions are unary");
+	}
+      else
+	{
+	  if ((int) $4 == -1)
+	    yyerror ("expression expected in a binary condition");
+	  else
+	    gen_compare ($1, $2, $4);
+	}
+      $$.sy = $1;			/* for implied operands */
+      $$.oper = $2;
+    }
     | NOT  condition    { gen_not(); $$=$2; }
     | condition AND     { $<dval>$=gen_andstart(); }
                 implied_op_condition { gen_dstlabel($<dval>3); $$=$4; }
@@ -3202,7 +3203,7 @@ cond_name:
     {
       curr_division = CDIV_SUBSCRIPTS;
     }
-    subscripts  ')'
+    subscript_list  ')'
     {
       curr_division = CDIV_PROC;
       $$ = (struct sym *)make_subref( $1, $4 );
@@ -3227,7 +3228,7 @@ variable:
       }
     }
     | qualified_var LPAR { curr_division = CDIV_SUBSCRIPTS; }
-      subscripts ')' {
+      subscript_list ')' {
       curr_division = CDIV_PROC;
       $$ = (struct sym *)make_subref( $1, $4 );
       check_subscripts($$);
@@ -3241,16 +3242,14 @@ unqualified_var:
     VARIABLE        { $$=$1; }
     | SUBSCVAR      { need_subscripts=1; $$=$1; }
     ;
-subscripts:
-    subscript           { $$ = $1; }
-    | subscripts opt_sep subscript {
-      $$ = add_subscript($1, $3);
-    }
+subscript_list:
+      subscript                         { $$ = $1; }
+    | subscript_list ',' subscript      { $$ = add_subscript($1, $3); }
     ;
 subscript:
-    gname                   { $$ = create_subscript( $1 ); }
-    | subscript '+' gname   { $$ = add_subscript_item( $1, '+', $3 ); }
-    | subscript '-' gname   { $$ = add_subscript_item( $1, '-', $3 ); }
+      gname                     { $$ = create_subscript( $1 ); }
+    | subscript '+' gname       { $$ = add_subscript_item( $1, '+', $3 ); }
+    | subscript '-' gname       { $$ = add_subscript_item( $1, '-', $3 ); }
     ;
 integer:
     signed_nliteral {
