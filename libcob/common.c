@@ -300,83 +300,103 @@ cob_set_switch (int n, int flag)
  * Comparison
  */
 
-#define CMP(x,y)					\
-  (cob_current_module->collating_sequence		\
-   ? (cob_current_module->collating_sequence[x]		\
-      - cob_current_module->collating_sequence[y])	\
-   : ((x) - (y)))
-
 static int
-cmp_char (cob_field *f, unsigned char c)
+cmpc (unsigned char *s1, unsigned char c, size_t size)
 {
   size_t i;
   int ret = 0;
-  int sign = cob_get_sign (f);
-
-  for (i = 0; i < f->size; i++)
+  unsigned char *s = cob_current_module->collating_sequence;
+  if (s)
     {
-      ret = CMP (f->data[i], c);
-      if (ret != 0)
-	break;
+      for (i = 0; i < size; i++)
+	if ((ret = s[s1[i]] - s[c]) != 0)
+	  return ret;
     }
+  else
+    {
+      for (i = 0; i < size; i++)
+	if ((ret = s1[i] - c) != 0)
+	  return ret;
+    }
+  return ret;
+}
 
+static int
+cmps (unsigned char *s1, unsigned char *s2, size_t size)
+{
+  size_t i;
+  int ret = 0;
+  unsigned char *s = cob_current_module->collating_sequence;
+  if (s)
+    {
+      for (i = 0; i < size; i++)
+	if ((ret = s[s1[i]] - s[s2[i]]) != 0)
+	  return ret;
+    }
+  else
+    {
+      for (i = 0; i < size; i++)
+	if ((ret = s1[i] - s2[i]) != 0)
+	  return ret;
+    }
+  return ret;
+}
+
+static int
+cob_cmp_char (cob_field *f, unsigned char c)
+{
+  int sign = cob_get_sign (f);
+  int ret = cmpc (f->data, c, f->size);
   cob_put_sign (f, sign);
   return ret;
 }
 
 static int
-cmp_all (cob_field *f1, cob_field *f2)
+cob_cmp_all (cob_field *f1, cob_field *f2)
 {
-  size_t i;
   int ret = 0;
   int sign = cob_get_sign (f1);
-  unsigned char *s = NULL;
+  size_t size = f1->size;
+  unsigned char *data = f1->data;
 
-  for (i = 0; i < f1->size; i++)
+  while (size >= f2->size)
     {
-      if (i % f2->size == 0)
-	s = f2->data;
-      ret = CMP (f1->data[i], *s++);
-      if (ret != 0)
-	break;
+      if ((ret = cmps (data, f2->data, f2->size)) != 0)
+	goto end;
+      size -= f2->size;
+      data += f2->size;
     }
+  if (size > 0)
+    ret = cmps (data, f2->data, size);
 
+ end:
   cob_put_sign (f1, sign);
   return ret;
 }
 
 static int
-cmp_alnum (cob_field *f1, cob_field *f2)
+cob_cmp_alnum (cob_field *f1, cob_field *f2)
 {
-  size_t i;
   int ret = 0;
   int sign1 = cob_get_sign (f1);
   int sign2 = cob_get_sign (f2);
   size_t min = (f1->size < f2->size) ? f1->size : f2->size;
 
   /* compare common substring */
-  for (i = 0; i < min; i++)
-    {
-      ret = CMP (f1->data[i], f2->data[i]);
-      if (ret != 0)
-	goto end;
-    }
+  if ((ret = cmps (f1->data, f2->data, min)) != 0)
+    goto end;
 
   /* compare the rest (if any) with spaces */
   if (f1->size > f2->size)
-    for (; i < f1->size; i++)
-      {
-	ret = CMP (f1->data[i], ' ');
-	if (ret != 0)
-	  goto end;
-      }
+    {
+      if ((ret = cmpc (f1->data + min, ' ', f1->size - min)) != 0)
+	goto end;
+    }
   else
-    for (; i < f2->size; i++)
-      {
-	ret = CMP (' ', f2->data[i]);
-	if (ret != 0)
-	  goto end;
-      }
+    {
+      if ((ret = -cmpc (f2->data + min, ' ', f2->size - min)) != 0)
+	goto end;
+    }
 
  end:
   cob_put_sign (f1, sign1);
@@ -392,25 +412,25 @@ cob_cmp (cob_field *f1, cob_field *f2)
       if (f2 == &cob_zero && COB_FIELD_IS_NUMERIC (f1))
 	return cob_cmp_int (f1, 0);
       else if (f2->size == 1)
-	return cmp_char (f1, f2->data[0]);
+	return cob_cmp_char (f1, f2->data[0]);
       else
-	return cmp_all (f1, f2);
+	return cob_cmp_all (f1, f2);
     }
   else if (COB_FIELD_TYPE (f1) == COB_TYPE_ALPHANUMERIC_ALL)
     {
       if (f1 == &cob_zero && COB_FIELD_IS_NUMERIC (f2))
 	return -cob_cmp_int (f2, 0);
       else if (f1->size == 1)
-	return -cmp_char (f2, f1->data[0]);
+	return -cob_cmp_char (f2, f1->data[0]);
       else
-	return -cmp_all (f2, f1);
+	return -cob_cmp_all (f2, f1);
     }
   else
     {
       if (COB_FIELD_IS_NUMERIC (f1) && COB_FIELD_IS_NUMERIC (f2))
 	return cob_numeric_cmp (f1, f2);
       else
-	return cmp_alnum (f1, f2);
+	return cob_cmp_alnum (f1, f2);
     }
 }
 
