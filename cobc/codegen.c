@@ -449,7 +449,8 @@ output_expr (cobc_tree x, int id)
 		int i = id + 1;
 		output_indent ("{", 2);
 		output_line ("struct cob_decimal cob_d%d_data;", i);
-		output_line ("cob_decimal cob_d%d = &cob_d%d_data;", i, i);
+		output_line ("struct cob_decimal *cob_d%d = &cob_d%d_data;",
+			     i, i);
 		output_line ("cob_decimal_init (cob_d%d);", i);
 	      }
 	    output_expr (p->right, id + 1);
