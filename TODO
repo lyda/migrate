@@ -20,8 +20,6 @@ compilers do?
 
 Need to implement binary truncation and maybe something other.
 
-** Table sort
-
 ** The default action of file exception
 
 If a file does not have FILE STATUS, and if there is no USE AFTER
