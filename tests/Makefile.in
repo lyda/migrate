@@ -199,7 +199,7 @@ EXTRA_DIST = $(srcdir)/package.m4 $(TESTS) \
 	$(data_rep_DEPENDENCIES)
 
 
-DISTCLEANFILES = atconfig
+DISTCLEANFILES = atconfig $(TESTS)
 subdir = tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -577,9 +577,7 @@ uninstall-info: uninstall-info-recursive
 all: $(TESTS)
 
 clean-local:
-	@for x in $(TESTS); do \
-	  test -e $${x} && $(SHELL) $${x} -c; true; \
-	done
+	rm -rf *.dir *.log
 
 $(srcdir)/package.m4: $(top_srcdir)/configure.ac
 	@echo "creating $(srcdir)/package.m4"

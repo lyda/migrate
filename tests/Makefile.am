@@ -37,14 +37,12 @@ EXTRA_DIST = $(srcdir)/package.m4 $(TESTS) \
 	$(run_DEPENDENCIES) \
 	$(data_rep_DEPENDENCIES)
 
-DISTCLEANFILES = atconfig
+DISTCLEANFILES = atconfig $(TESTS)
 
 all: $(TESTS)
 
 clean-local:
-	@for x in $(TESTS); do \
-	  test -e $${x} && $(SHELL) $${x} -c; true; \
-	done
+	rm -rf *.dir *.log
 
 $(srcdir)/package.m4: $(top_srcdir)/configure.ac
 	@echo "creating $(srcdir)/package.m4"
