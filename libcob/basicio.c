@@ -70,7 +70,7 @@ cob_display (struct fld_desc *f, char *s, int dupon)
       len = picCompLength (f->pic);
       if (f->pic[0] == 'S')
 	{
-	  szSigned[0] = '-';
+	  szSigned[0] = '+';
 	  szSigned[1] = (char) 1;
 	  szSigned[2] = '\0';
 	}
