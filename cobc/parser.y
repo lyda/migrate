@@ -1609,7 +1609,7 @@ selection_object:
       {
 	push_field ($2);
 	push_field ($4);
-	$$ = SOBJ_RANGE | $1;
+	$$ = SOBJ_STRRANGE | $1;
       }
   }
 ;
@@ -1617,7 +1617,7 @@ sentence_or_nothing:
   /* nothing */			{ $$ = 0; }
 | conditional_statement_list	{ $$ = 1; }
 ;
-opt_end_evaluate: END_EVALUATE ;
+opt_end_evaluate: | END_EVALUATE ;
 
 
 /*

@@ -2859,7 +2859,7 @@ gen_when_check (int level, struct selsubject *ssbj, int type, int endcase)
     {
     case SSUBJ_STR:
       if (real_type != SOBJ_STR
-	  && real_type != SOBJ_RANGE
+	  && real_type != SOBJ_STRRANGE
 	  && real_type != SOBJ_ZERO)
 	yyerror ("incompatible selection object");
       break;
@@ -2890,6 +2890,10 @@ gen_when_check (int level, struct selsubject *ssbj, int type, int endcase)
       asm_call ("cob_is_equal");
       break;
     case SOBJ_RANGE:
+      push_selection_subject_copy (level, ssbj, 2, type);
+      asm_call ("cob_between");
+      break;
+    case SOBJ_STRRANGE:
       push_selection_subject_copy (level, ssbj, 2, type);
       asm_call ("cob_in_range");
       break;

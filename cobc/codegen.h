@@ -57,6 +57,7 @@
 #define SOBJ_RANGE	0x30
 #define SOBJ_STR	0x40
 #define SOBJ_BOOLEAN	0x50
+#define SOBJ_STRRANGE	0x60
 #define SOBJ_TYPE_MASK	0xf0
 
 /* SPECIAL VARIABLES  */
