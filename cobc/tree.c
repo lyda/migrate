@@ -271,7 +271,7 @@ cb_tree_type (cb_tree x)
     case CB_CATEGORY_ALPHANUMERIC_EDITED:
       return COB_TYPE_ALPHANUMERIC_EDITED;
     case CB_CATEGORY_NUMERIC:
-      switch (cb_field (x)->usage)
+      switch (f->usage)
 	{
 	case CB_USAGE_DISPLAY:
 	  return COB_TYPE_NUMERIC_DISPLAY;
@@ -828,6 +828,7 @@ cb_build_implicit_field (cb_tree name, int len)
   cb_tree x = make_field (name);
   sprintf (pic, "X(%d)", len);
   CB_FIELD (x)->pic = CB_PICTURE (cb_build_picture (pic));
+  CB_FIELD (x)->storage = CB_STORAGE_WORKING;
   CB_FIELD (x)->usage = CB_USAGE_DISPLAY;
   cb_validate_field (CB_FIELD (x));
   return x;
@@ -837,6 +838,7 @@ cb_tree
 cb_build_index (cb_tree name)
 {
   cb_tree x = make_field (name);
+  CB_FIELD (x)->storage = CB_STORAGE_WORKING;
   CB_FIELD (x)->usage = CB_USAGE_INDEX;
   cb_validate_field (CB_FIELD (x));
   return x;
