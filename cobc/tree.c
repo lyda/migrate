@@ -154,7 +154,7 @@ make_expr (cob_tree left, char op, cob_tree right)
 }
 
 int
-is_numeric_value (cob_tree x)
+is_numeric (cob_tree x)
 {
   if (SUBSTRING_P (x))
     x = SUBSTRING_VAR (x);
@@ -179,7 +179,7 @@ is_valid_expr (cob_tree x)
     if (is_valid_expr (EXPR_LEFT (x)) && is_valid_expr (EXPR_RIGHT (x)))
       return 1;
 
-  if (is_numeric_value (x))
+  if (is_numeric (x))
     return 1;
 
   return 0;

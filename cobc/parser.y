@@ -145,7 +145,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <ival> at_end_sentence,invalid_key_sentence
 %type <list> label_list,subscript_list,number_list,varcond_list,variable_list
 %type <para> call_using,call_parameter,call_parameter_list
-%type <mval> var_list_name
+%type <mval> math_variable_list
 %type <pfval> perform_after
 %type <pfvals> opt_perform_after
 %type <rbval> replacing_by_list
@@ -157,10 +157,10 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <str> idstring
 %type <tree> field_description,label,filename,noallname,paragraph,assign_clause
 %type <tree> file_description,redefines_var,function_call,subscript
-%type <tree> name,gname,number,file,level1,opt_def_name,def_name
+%type <tree> name,gname,number,file,level1_variable,opt_def_name,def_name
 %type <tree> opt_read_into,opt_write_from,field_name,expr,unsafe_expr
 %type <tree> opt_unstring_count,opt_unstring_delim,unstring_tallying
-%type <tree> qualified_var,unqualified_var
+%type <tree> numeric_variable,qualified_var,unqualified_var
 %type <tree> call_returning,screen_to_name,var_or_lit,opt_add_to
 %type <tree> sort_keys,opt_perform_thru,procedure_section
 %type <tree> opt_read_key,file_name,string_with_pointer
@@ -1285,15 +1285,15 @@ add_statement:
   ADD add_body opt_on_size_error end_add
 ;
 add_body:
-  number_list TO var_list_name
+  number_list TO math_variable_list
   {
     gen_add_to ($1, $3);
   }
-| number_list opt_add_to GIVING var_list_name
+| number_list opt_add_to GIVING math_variable_list
   {
     gen_add_giving ($2 ? list_append ($1, $2) : $1, $4);
   }
-| CORRESPONDING gname opt_to name flag_rounded
+| CORRESPONDING gname opt_to numeric_variable flag_rounded
   {
     yyerror ("ADD CORRESPONDING is not implemented yet.");
   }
@@ -1401,7 +1401,7 @@ compute_statement:
   COMPUTE compute_body opt_on_size_error opt_end_compute
 ;
 compute_body:
-  var_list_name '=' expr	{ gen_compute ($1, $3); }
+  math_variable_list '=' expr	{ gen_compute ($1, $3); }
 ;
 opt_end_compute: | END_COMPUTE ;
 
@@ -1474,23 +1474,23 @@ divide_statement:
   DIVIDE divide_body opt_on_size_error opt_end_divide
 ;
 divide_body:
-  number INTO var_list_name
+  number INTO math_variable_list
   {
     gen_divide_into ($1, $3);
   }
-| number INTO number GIVING var_list_name
+| number INTO number GIVING math_variable_list
   {
     gen_divide_giving ($1, $3, $5);
   }
-| number BY number GIVING var_list_name
+| number BY number GIVING math_variable_list
   {
     gen_divide_giving ($3, $1, $5);
   }
-| number INTO number GIVING name flag_rounded REMAINDER name
+| number INTO number GIVING numeric_variable flag_rounded REMAINDER numeric_variable
   {
     gen_divide_giving_remainder ($1, $3, $5, $8, $6);
   }
-| number BY number GIVING name flag_rounded REMAINDER name
+| number BY number GIVING numeric_variable flag_rounded REMAINDER numeric_variable
   {
     gen_divide_giving_remainder ($3, $1, $5, $8, $6);
   }
@@ -1772,11 +1772,11 @@ multiply_statement:
   MULTIPLY multiply_body opt_on_size_error opt_end_multiply
 ;
 multiply_body:
-  number BY var_list_name
+  number BY math_variable_list
   {
     gen_multiply_by ($1, $3);
   }
-| number BY number GIVING var_list_name
+| number BY number GIVING math_variable_list
   {
     gen_multiply_giving ($1, $3, $5);
   }
@@ -2130,7 +2130,7 @@ opt_end_read: | END_READ ;
  */
 
 release_statement:
-  RELEASE level1 opt_write_from
+  RELEASE level1_variable opt_write_from
   {
     gen_release ($2, $3);
   }
@@ -2162,7 +2162,7 @@ opt_end_return: | END_RETURN ;
  */
 
 rewrite_statement:
-  REWRITE level1 opt_write_from
+  REWRITE level1_variable opt_write_from
   {
     gen_rewrite ($2, $3);
   }
@@ -2430,15 +2430,15 @@ subtract_statement:
   SUBTRACT subtract_body opt_on_size_error opt_end_subtract
 ;
 subtract_body:
-  number_list FROM var_list_name
+  number_list FROM math_variable_list
   {
     gen_subtract_from ($1, $3);
   }
-| number_list FROM number GIVING var_list_name
+| number_list FROM number GIVING math_variable_list
   {
     gen_subtract_giving ($1, $3, $5);
   }
-| CORRESPONDING gname FROM name flag_rounded
+| CORRESPONDING gname FROM numeric_variable flag_rounded
   {
     yyerror ("SUBTRACT CORRESPONDING is not implemented yet.");
   }
@@ -2504,7 +2504,7 @@ opt_end_unstring: | END_UNSTRING ;
  */
 
 write_statement:
-  WRITE level1 opt_write_from write_options
+  WRITE level1_variable opt_write_from write_options
   {
     gen_write ($2, $4, $3);
   }
@@ -2730,35 +2730,40 @@ unsafe_expr:
  * Special variables
  *******************/
 
-/*
- * Number
- */
+
+/* Level 1 variable */
 
-var_list_name:
-  name flag_rounded		{ $$ = create_mathvar_info (NULL, $1, $2); }
-| var_list_name
-  name flag_rounded		{ $$ = create_mathvar_info ($1, $2, $3); }
-;
-number_list:
-  number			{ $$ = cons ($1, NULL); }
-| number_list number		{ $$ = list_append ($1, $2); }
-;
-number:
-  gname
+level1_variable:
+  name
   {
-    if (!is_numeric_value ($1))
-      yyerror ("numeric value is expected: %s", COB_FIELD_NAME ($1));
+    if ($1->level != 1)
+      yyerror ("variable `%s' must be level 01", COB_FIELD_NAME ($1));
     $$ = $1;
   }
 ;
 
 
-/*
- * File
- */
+/* Numeric variable */
+
+math_variable_list:
+  numeric_variable flag_rounded	{ $$ = create_mathvar_info (NULL, $1, $2); }
+| math_variable_list
+  numeric_variable flag_rounded	{ $$ = create_mathvar_info ($1, $2, $3); }
+;
+numeric_variable:
+  name
+  {
+    if (!is_numeric ($1))
+      yyerror ("variable `%s' must be numeric", COB_FIELD_NAME ($1));
+    $$ = $1;
+  }
+;
+
+
+/* Filename */
 
 file:
-  name
+  variable
   {
     if (COB_FIELD_TYPE ($1) != 'F')
       yyerror ("file name is expected: %s", COB_FIELD_NAME ($1));
@@ -2767,15 +2772,22 @@ file:
 ;
 
 
-/*
- * Level 1 variable
- */
+/*******************
+ * Special values
+ *******************/
 
-level1:
-  name
+
+/* Number */
+
+number_list:
+  number			{ $$ = cons ($1, NULL); }
+| number_list number		{ $$ = list_append ($1, $2); }
+;
+number:
+  gname
   {
-    if ($1->level != 1)
-      yyerror ("variable `%s' must be level 01", COB_FIELD_NAME ($1));
+    if (!is_numeric ($1))
+      yyerror ("numeric value is expected: %s", COB_FIELD_NAME ($1));
     $$ = $1;
   }
 ;
@@ -3049,12 +3061,12 @@ yywarn (char *fmt, ...)
   va_list argptr;
 
   /* Print warning line */
-  printf ("%s:%d: warning: ", cob_orig_filename, last_lineno);
+  fprintf (stderr, "%s:%d: warning: ", cob_orig_filename, last_lineno);
 
   /* Print error body */
   va_start (argptr, fmt);
-  vprintf (fmt, argptr);
-  putchar ('\n');
+  vfprintf (stderr, fmt, argptr);
+  fputs ("\n", stderr);
   va_end (argptr);
 
   /* Count warning */
@@ -3067,12 +3079,12 @@ yyerror (char *fmt, ...)
   va_list argptr;
 
   /* Print error line */
-  printf ("%s:%d: ", cob_orig_filename, last_lineno);
+  fprintf (stderr, "%s:%d: ", cob_orig_filename, last_lineno);
 
   /* Print error body */
   va_start (argptr, fmt);
-  vprintf (fmt, argptr);
-  putchar ('\n');
+  vfprintf (stderr, fmt, argptr);
+  fputs ("\n", stderr);
   va_end (argptr);
 
   /* Count error */
