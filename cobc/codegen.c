@@ -2128,7 +2128,7 @@ gen_display (int dupon, int nl)
 	    dspflags |= 1;	/* allow newline only at the last item */
 	  push_immed (dspflags);
 	  gen_loadvar (sy);
-	  asm_call ("display_curses");
+	  asm_call ("cob_display_curses");
 	}
       disp_list = disp_list->next;
     }
@@ -2186,7 +2186,7 @@ gen_accept (cob_tree sy, int echo, int main)
       push_eax ();
       gen_loadloc (sy);
       if (screen_io_enable == 0)
-	asm_call ("cob_accept_std");
+	asm_call ("cob_accept_console");
       else
 	asm_call ("cob_accept_curses");
     }
@@ -2195,29 +2195,25 @@ gen_accept (cob_tree sy, int echo, int main)
 void
 gen_accept_from_time (cob_tree sy)
 {
-  gen_loadloc (sy);
-  asm_call ("cob_accept_time");
+  asm_call_1 ("cob_accept_time", sy);
 }
 
 void
 gen_accept_from_date (cob_tree sy)
 {
-  gen_loadloc (sy);
-  asm_call ("cob_accept_date");
+  asm_call_1 ("cob_accept_date", sy);
 }
 
 void
 gen_accept_from_day (cob_tree sy)
 {
-  gen_loadloc (sy);
-  asm_call ("cob_accept_day");
+  asm_call_1 ("cob_accept_day", sy);
 }
 
 void
 gen_accept_from_day_of_week (cob_tree sy)
 {
-  gen_loadloc (sy);
-  asm_call ("cob_accept_day_of_week");
+  asm_call_1 ("cob_accept_day_of_week", sy);
 }
 
 void
@@ -2230,7 +2226,7 @@ gen_accept_from_cmdline (cob_tree sy)
   push_eax ();
   output ("\tmovl\t8(%%ebp), %%eax\n");
   push_eax ();
-  asm_call_1 ("cob_accept_cmd_line", sy);
+  asm_call_1 ("cob_accept_command_line", sy);
 
   if ((sy1 = lookup_symbol (SVAR_RCODE)) != NULL)
     {
@@ -2248,7 +2244,7 @@ gen_accept_env_var (cob_tree sy, cob_tree v)
   cob_tree sy2;
 
   gen_loadloc (v);
-  asm_call_1 ("cob_accept_env_var", sy);
+  asm_call_1 ("cob_accept_environment", sy);
 
   if ((sy2 = lookup_symbol (SVAR_RCODE)) != NULL)
     {

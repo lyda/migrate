@@ -134,7 +134,7 @@ cob_debug_print (struct cob_field f)
  */
 
 int
-cob_accept_std (char *buffer, struct fld_desc *f, int flags)
+cob_accept_console (char *buffer, struct fld_desc *f, int flags)
 {
   struct termios attr;
   int r;
@@ -205,7 +205,7 @@ cob_accept_std (char *buffer, struct fld_desc *f, int flags)
 }
 
 int
-cob_accept_cmd_line (struct cob_field f, int argc, char **argv)
+cob_accept_command_line (struct cob_field f, int argc, char **argv)
 {
   int i, size = 0;
   char buff[BUFSIZ];
@@ -226,7 +226,7 @@ cob_accept_cmd_line (struct cob_field f, int argc, char **argv)
 }
 
 int
-cob_accept_env_var (struct fld_desc *f, char *buffer, char *ptevname)
+cob_accept_environment (struct fld_desc *f, char *buffer, char *ptevname)
 {
   int len, r = 0;
   char *pt1;
@@ -252,45 +252,45 @@ cob_accept_env_var (struct fld_desc *f, char *buffer, char *ptevname)
 }
 
 int
-cob_accept_date (char *buffer)
+cob_accept_date (struct cob_field f)
 {
   char s[7];
   time_t t = time (NULL);
   struct tm *tm = localtime (&t);
   sprintf (s, "%02d%02d%02d", tm->tm_year % 100, tm->tm_mon + 1, tm->tm_mday);
-  memcpy (buffer, s, 6);
+  cob_mem_move (f, s, 6);
   return 0;
 }
 
 int
-cob_accept_day (char *buffer)
+cob_accept_day (struct cob_field f)
 {
   char s[6];
   time_t t = time (NULL);
   struct tm *tm = localtime (&t);
   sprintf (s, "%02d%03d", tm->tm_year % 100, tm->tm_yday + 1);
-  memcpy (buffer, s, 5);
+  cob_mem_move (f, s, 5);
   return 0;
 }
 
 int
-cob_accept_day_of_week (char *buffer)
+cob_accept_day_of_week (struct cob_field f)
 {
   char s[2];
   time_t t = time (NULL);
   struct tm *tm = localtime (&t);
   sprintf (s, "%01d", ((tm->tm_wday + 6) % 7) + 1);
-  memcpy (buffer, s, 1);
+  cob_mem_move (f, s, 1);
   return 0;
 }
 
 int
-cob_accept_time (char *buffer)
+cob_accept_time (struct cob_field f)
 {
   char s[9];
   time_t t = time (NULL);
   struct tm *tm = localtime (&t);
   sprintf (s, "%02d%02d%02d%02d", tm->tm_hour, tm->tm_min, tm->tm_sec, 0);
-  memcpy (buffer, s, 8);
+  cob_mem_move (f, s, 8);
   return 0;
 }

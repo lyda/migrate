@@ -27,7 +27,6 @@
 #include <ncurses.h>
 
 #include "_libcob.h"
-#include "screenio.h"
 
 #ifndef HAVE_COLOR_SET
 #define color_set(x,y) start_color ()
@@ -38,6 +37,34 @@
 #define COBKEY_FORWARD 12
 #define COBKEY_HOMECLR 24
 
+struct ScrFld
+{
+  struct ScrFld *pNext;		/* pointer to next field in list */
+  int iAttributes;		/* field attributs */
+  int iFldPos;			/* horizontal position in field */
+  int iScrPos;			/* horizontal position on screen */
+  short int iLine;		/* Line number of start of field */
+  short int iCol;		/* column number of start of field */
+  short int iFgColor;		/* foreground color */
+  short int iBgColor;		/* background color */
+  struct fld_desc *fldFrom;	/* field description of source field */
+  char *caFrom;			/* data area of source field */
+  struct fld_desc *fldTo;	/* field description of dest. field */
+  char *caTo;			/* data are of destination field */
+  struct fld_desc fldScr;	/* field description of screen field */
+  char *caScr;			/* data are of screen field */
+  struct fld_desc fldWk;	/* work field desc for input fields */
+  char *caWk;			/* work data area for input fields */
+  char caPicWk[20];		/* area for picture definition */
+};
+
+struct Colors
+{
+  short iPairNbr;
+  short iBgColor;
+  short iFgColor;
+};
+
 static int _scrio_init_ = 0;
 static struct ScrFld *_Fields_ = (struct ScrFld *) 0;
 static struct Colors *_colors_ = (struct Colors *) 0;
@@ -45,8 +72,195 @@ static attr_t _iDefAttr_ = 0;
 static short _iDefPair_ = 0;
 static char *rlbuff = NULL;
 
-static void cob_init_screen (void);
+
+/*
+ * Local functions
+ */
 
+static void
+cob_init_screen (void)
+{
+  int i, j;
+
+  if (_scrio_init_)
+    return;
+
+  initscr ();
+  noecho ();
+  cbreak ();
+  keypad (stdscr, TRUE);
+  scrollok (stdscr, TRUE);
+  nonl ();
+  start_color ();
+
+#ifdef HAVE_ATTR_GET
+  attr_get (&_iDefAttr_, &_iDefPair_, (void *) 0);
+#endif
+
+  j = COLOR_PAIRS * sizeof (struct Colors);
+  _colors_ = malloc (j);
+  for (i = 0; i < COLOR_PAIRS; i++)
+    _colors_[i].iPairNbr = -1;
+  _colors_[0].iPairNbr = 0;
+  pair_content (1, &_colors_[0].iFgColor, &_colors_[0].iBgColor);
+  _scrio_init_++;
+}
+
+static attr_t
+_GetAttributes (struct ScrFld *pFld)
+{
+  attr_t iAttr;
+
+  iAttr = 0;
+  if ((pFld->iAttributes & SCR_HIGHLIGHT) == SCR_HIGHLIGHT)
+    iAttr |= A_BOLD;
+  if ((pFld->iAttributes & SCR_LOWLIGHT) == SCR_LOWLIGHT)
+    iAttr |= A_DIM;
+  if ((pFld->iAttributes & SCR_UNDERLINE) == SCR_UNDERLINE)
+    iAttr |= A_UNDERLINE;
+  if ((pFld->iAttributes & SCR_REVERSE_VIDEO) == SCR_REVERSE_VIDEO)
+    iAttr |= A_REVERSE;
+  if ((pFld->iAttributes & SCR_BLINK) == SCR_BLINK)
+    iAttr |= A_BLINK;
+  if ((pFld->iAttributes & SCR_BELL) == SCR_BELL)
+    beep ();
+  if ((pFld->iAttributes & SCR_BLANK_SCREEN) == SCR_BLANK_SCREEN)
+    clear ();
+  return (iAttr);
+}
+
+static short
+_GetColor (struct ScrFld *pFld)
+{
+  int i;
+  short int iFgColor;
+  short int iBgColor;
+
+  if ((pFld->iFgColor != 0) || (pFld->iBgColor != 0))
+    {
+      for (i = 0; i < COLOR_PAIRS; ++i)
+	{
+	  if ((_colors_[i].iFgColor == pFld->iFgColor)
+	      && (_colors_[i].iBgColor == pFld->iBgColor))
+	    break;
+	}
+      if (i == COLOR_PAIRS)
+	{
+	  for (i = 0; i < COLOR_PAIRS; ++i)
+	    {
+	      if (_colors_[i].iPairNbr == -1)
+		break;
+	    }
+	  if (i < COLOR_PAIRS)
+	    {
+	      iBgColor = pFld->iBgColor % COLORS;
+	      iFgColor = pFld->iFgColor % COLORS;
+	      _colors_[i].iPairNbr = i;
+	      _colors_[i].iFgColor = iFgColor;
+	      _colors_[i].iBgColor = iBgColor;
+	      init_pair (i, iFgColor, iBgColor);
+	      color_set (i, (void *) 0);
+	    }
+	  else
+	    return (_iDefPair_);
+	}
+      else
+	{
+	  return (i);
+	}
+    }
+  return (_iDefPair_);
+}
+
+static void
+_DisplayField (struct ScrFld *pFld)
+{
+  int i;
+  attr_t iAttr;
+
+  iAttr = _GetAttributes (pFld);
+  attron (iAttr);
+  color_set (_GetColor (pFld), (void *) 0);
+
+  if (pFld->fldTo)
+    cob_move_2 (&pFld->fldWk, pFld->caWk, &pFld->fldScr, pFld->caScr);
+  move (pFld->iLine, pFld->iCol);
+  if ((pFld->iAttributes & SCR_BLANK_LINE) == SCR_BLANK_LINE)
+    clrtoeol ();
+  if ((pFld->iAttributes & SCR_SECURE) == SCR_SECURE)
+    {
+      for (i = 0; i < pFld->fldScr.len; ++i)
+	addch ('*');
+    }
+  else
+    {
+      if ((pFld->iAttributes & SCR_BLANK_WHEN_ZERO) != SCR_BLANK_WHEN_ZERO)
+	{
+	  addnstr (pFld->caScr, pFld->fldScr.len);
+	}
+      else
+	{
+	  move (pFld->iLine, pFld->iCol);
+	  i = get_sign ((struct cob_field) {&pFld->fldWk, pFld->caWk});
+	  for (i = 0; i < pFld->fldWk.len; ++i)
+	    {
+	      if (pFld->caWk[i] != '0')
+		break;
+	    }
+	  put_sign ((struct cob_field) {&pFld->fldWk, pFld->caWk}, i);
+	  if (i == pFld->fldWk.len)
+	    {
+	      for (i = 0; i < pFld->fldScr.len; ++i)
+		addch (' ');
+	    }
+	  else
+	    addnstr (pFld->caScr, pFld->fldScr.len);
+	}
+    }
+  attrset (_iDefAttr_);
+  color_set (_iDefPair_, (void *) 0);
+}
+
+static void
+do_putch_terminal (char c)
+{
+  int x, y;
+  int mx, my;
+
+  getyx (stdscr, y, x);
+  getmaxyx (stdscr, my, mx);
+
+  if (c > 31)
+    addch (c);
+  else if (c == '\t')
+    {
+      do
+	{
+	  addch (' ');
+	  x++;
+	  if (x == mx)
+	    {
+	      x = 0;
+	      if (y < my)
+		y++;
+	      move (y, x);
+	      return;
+	    }
+	}
+      while (x % 8);
+    }
+  else if (c == '\n')
+    {
+      if (y < my)
+	move (y + 1, x);
+    }
+  else if (c == '\r')
+    {
+      move (y, 0);
+    }
+}
+
+
 /*-------------------------------------------------------------------------*\
  |                                                                         |
  |                     accept_curses                                       |
@@ -843,100 +1057,11 @@ cob_scr_process (int iAttr, int iLine, int iColumn,
   return;
 }
 
-
-/*-------------------------------------------------------------------------*\
- |                                                                         |
- |                           cob_scr_initialize                            |
- |                                                                         |
-\*-------------------------------------------------------------------------*/
-
-void
-cob_scr_initialize ()
-{
-}
-
-
 /*-------------------------------------------------------------------------*\
  |                                                                         |
  |                            do_putch_terminal                            |
  |                                                                         |
 \*-------------------------------------------------------------------------*/
-
-void
-do_putch_terminal (char c)
-{
-  int x, y;
-  int mx, my;
-
-  getyx (stdscr, y, x);
-  getmaxyx (stdscr, my, mx);
-
-  if (c > 31)
-    addch (c);
-  else if (c == '\t')
-    {
-      do
-	{
-	  addch (' ');
-	  x++;
-	  if (x == mx)
-	    {
-	      x = 0;
-	      if (y < my)
-		y++;
-	      move (y, x);
-	      return;
-	    }
-	}
-      while (x % 8);
-    }
-  else if (c == '\n')
-    {
-      if (y < my)
-	move (y + 1, x);
-    }
-  else if (c == '\r')
-    {
-      move (y, 0);
-    }
-}
-
-
-/*-------------------------------------------------------------------------*\
- |                                                                         |
- |                             cob_init_screen                             |
- |                                                                         |
-\*-------------------------------------------------------------------------*/
-
-static void
-cob_init_screen (void)
-{
-  int i, j;
-
-  if (_scrio_init_)
-    return;
-
-  initscr ();
-  noecho ();
-  cbreak ();
-  keypad (stdscr, TRUE);
-  scrollok (stdscr, TRUE);
-  nonl ();
-  start_color ();
-
-#ifdef HAVE_ATTR_GET
-  attr_get (&_iDefAttr_, &_iDefPair_, (void *) 0);
-#endif
-
-  j = COLOR_PAIRS * sizeof (struct Colors);
-  _colors_ = malloc (j);
-  for (i = 0; i < COLOR_PAIRS; i++)
-    _colors_[i].iPairNbr = -1;
-  _colors_[0].iPairNbr = 0;
-  pair_content (1, &_colors_[0].iFgColor, &_colors_[0].iBgColor);
-  _scrio_init_++;
-}
-
 
 /*-------------------------------------------------------------------------*\
  |                                                                         |
@@ -1003,47 +1128,7 @@ do_scrio_finish (void)
 
 /*-------------------------------------------------------------------------*\
  |                                                                         |
- |                             outit_terminal                              |
- |                                                                         |
-\*-------------------------------------------------------------------------*/
-
-void
-outit_terminal (void)
-{
-  write (2, "BRK", 3);
-}
-
-
-/*-------------------------------------------------------------------------*\
- |                                                                         |
- |                             outeek_terminal                             |
- |                                                                         |
-\*-------------------------------------------------------------------------*/
-
-void
-outeek_terminal (void)
-{
-  write (2, "CNT", 3);
-}
-
-
-/*-------------------------------------------------------------------------*\
- |                                                                         |
- |                           ep_debug_terminal                             |
- |                                                                         |
-\*-------------------------------------------------------------------------*/
-
-void
-ep_debug_terminal (void *addr, void *low, void *high, void *ret)
-{
-  printf ("ADDR=%p LOW=%p HIGH=%p RET=%p\n", addr, low, high, ret);
-  fflush (stdout);
-}
-
-
-/*-------------------------------------------------------------------------*\
- |                                                                         |
- |                              backspace                                  |
+ |                             cob_accept                                  |
  |                                                                         |
 \*-------------------------------------------------------------------------*/
 
@@ -1056,13 +1141,6 @@ backspace (void)
     x--;
   move (y, x);
 }
-
-
-/*-------------------------------------------------------------------------*\
- |                                                                         |
- |                             cob_accept                                  |
- |                                                                         |
-\*-------------------------------------------------------------------------*/
 
 int
 cob_accept (char *buffer, struct fld_desc *f, int echo)
@@ -1235,140 +1313,3 @@ cob_accept (char *buffer, struct fld_desc *f, int echo)
   printw ("\n");
   return ib;
 }
-
-
-/*-------------------------------------------------------------------------*\
- |                                                                         |
- |                            _DisplayField                                |
- |                                                                         |
-\*-------------------------------------------------------------------------*/
-
-void
-_DisplayField (struct ScrFld *pFld)
-{
-  int i;
-  attr_t iAttr;
-
-  iAttr = _GetAttributes (pFld);
-  attron (iAttr);
-  color_set (_GetColor (pFld), (void *) 0);
-
-  if (pFld->fldTo)
-    cob_move_2 (&pFld->fldWk, pFld->caWk, &pFld->fldScr, pFld->caScr);
-  move (pFld->iLine, pFld->iCol);
-  if ((pFld->iAttributes & SCR_BLANK_LINE) == SCR_BLANK_LINE)
-    clrtoeol ();
-  if ((pFld->iAttributes & SCR_SECURE) == SCR_SECURE)
-    {
-      for (i = 0; i < pFld->fldScr.len; ++i)
-	addch ('*');
-    }
-  else
-    {
-      if ((pFld->iAttributes & SCR_BLANK_WHEN_ZERO) != SCR_BLANK_WHEN_ZERO)
-	{
-	  addnstr (pFld->caScr, pFld->fldScr.len);
-	}
-      else
-	{
-	  move (pFld->iLine, pFld->iCol);
-	  i = get_sign ((struct cob_field) {&pFld->fldWk, pFld->caWk});
-	  for (i = 0; i < pFld->fldWk.len; ++i)
-	    {
-	      if (pFld->caWk[i] != '0')
-		break;
-	    }
-	  put_sign ((struct cob_field) {&pFld->fldWk, pFld->caWk}, i);
-	  if (i == pFld->fldWk.len)
-	    {
-	      for (i = 0; i < pFld->fldScr.len; ++i)
-		addch (' ');
-	    }
-	  else
-	    addnstr (pFld->caScr, pFld->fldScr.len);
-	}
-    }
-  attrset (_iDefAttr_);
-  color_set (_iDefPair_, (void *) 0);
-}
-
-/*-------------------------------------------------------------------------*\
- |                                                                         |
- |                            _GetAttributes                               |
- |                                                                         |
-\*-------------------------------------------------------------------------*/
-
-attr_t
-_GetAttributes (struct ScrFld *pFld)
-{
-  attr_t iAttr;
-
-  iAttr = 0;
-  if ((pFld->iAttributes & SCR_HIGHLIGHT) == SCR_HIGHLIGHT)
-    iAttr |= A_BOLD;
-  if ((pFld->iAttributes & SCR_LOWLIGHT) == SCR_LOWLIGHT)
-    iAttr |= A_DIM;
-  if ((pFld->iAttributes & SCR_UNDERLINE) == SCR_UNDERLINE)
-    iAttr |= A_UNDERLINE;
-  if ((pFld->iAttributes & SCR_REVERSE_VIDEO) == SCR_REVERSE_VIDEO)
-    iAttr |= A_REVERSE;
-  if ((pFld->iAttributes & SCR_BLINK) == SCR_BLINK)
-    iAttr |= A_BLINK;
-  if ((pFld->iAttributes & SCR_BELL) == SCR_BELL)
-    beep ();
-  if ((pFld->iAttributes & SCR_BLANK_SCREEN) == SCR_BLANK_SCREEN)
-    clear ();
-  return (iAttr);
-}
-
-/*-------------------------------------------------------------------------*\
- |                                                                         |
- |                            _GetColor                                    |
- |                                                                         |
-\*-------------------------------------------------------------------------*/
-
-short
-_GetColor (struct ScrFld *pFld)
-{
-  int i;
-  short int iFgColor;
-  short int iBgColor;
-
-  if ((pFld->iFgColor != 0) || (pFld->iBgColor != 0))
-    {
-      for (i = 0; i < COLOR_PAIRS; ++i)
-	{
-	  if ((_colors_[i].iFgColor == pFld->iFgColor)
-	      && (_colors_[i].iBgColor == pFld->iBgColor))
-	    break;
-	}
-      if (i == COLOR_PAIRS)
-	{
-	  for (i = 0; i < COLOR_PAIRS; ++i)
-	    {
-	      if (_colors_[i].iPairNbr == -1)
-		break;
-	    }
-	  if (i < COLOR_PAIRS)
-	    {
-	      iBgColor = pFld->iBgColor % COLORS;
-	      iFgColor = pFld->iFgColor % COLORS;
-	      _colors_[i].iPairNbr = i;
-	      _colors_[i].iFgColor = iFgColor;
-	      _colors_[i].iBgColor = iBgColor;
-	      init_pair (i, iFgColor, iBgColor);
-	      color_set (i, (void *) 0);
-	    }
-	  else
-	    return (_iDefPair_);
-	}
-      else
-	{
-	  return (i);
-	}
-    }
-  return (_iDefPair_);
-}
-
-
-/* screenio.c */
