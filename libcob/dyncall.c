@@ -121,7 +121,7 @@ cob_resolve (const char *name)
       sprintf (filename, "%s/%s.so", path[i], name);
       if (stat (filename, &st) == 0)
 	{
-	  if ((handle = dlopen (filename, RTLD_NOW)) != NULL
+	  if ((handle = dlopen (filename, RTLD_LAZY)) != NULL
 	      && (func = dlsym (handle, name)) != NULL)
 	    {
 	      insert (name, func);
