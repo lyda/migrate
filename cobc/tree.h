@@ -375,8 +375,6 @@ struct cobc_reference {
 #define COBC_REFERENCE_P(x)	(COBC_TREE_TAG (x) == cobc_tag_reference)
 
 #define COBC_NAME(x)		(COBC_REFERENCE (x)->word->name)
-#define COBC_VALUE(x) \
-  (COBC_REFERENCE_P (x) ? COBC_REFERENCE (x)->value : (x))
 
 extern cobc_tree make_reference (struct cobc_word *word);
 extern cobc_tree copy_reference (cobc_tree ref, cobc_tree value);

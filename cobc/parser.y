@@ -71,8 +71,6 @@
     if (__h) push (__h);				\
   }
 
-#define cobc_ref(x)	COBC_VALUE (resolve_name (x))
-
 static struct cobc_program_spec program_spec;
 
 struct cobc_program_spec *current_program = &program_spec;
@@ -91,6 +89,7 @@ static int error_count = 0;
 static int last_operator;
 static cobc_tree last_lefthand;
 
+static cobc_tree cobc_ref (cobc_tree x);
 static cobc_tree resolve_name (cobc_tree x);
 static cobc_tree resolve_field (cobc_tree x);
 static cobc_tree resolve_label (cobc_tree x);
@@ -228,7 +227,11 @@ program:
   {
     struct cobc_list *l;
     for (l = list_reverse (current_program->reference_list); l; l = l->next)
-      field_set_used (COBC_FIELD (cobc_ref (l->item)));
+      {
+	cobc_tree x = cobc_ref (l->item);
+	if (x && COBC_FIELD_P (x))
+	  field_set_used (COBC_FIELD (x));
+      }
   }
   procedure_division
   _end_program
@@ -3816,6 +3819,16 @@ _with: | WITH ;
 
 
 %%
+
+static cobc_tree
+cobc_ref (cobc_tree x)
+{
+  x = resolve_name (x);
+  if (x && COBC_REFERENCE_P (x))
+    return COBC_REFERENCE (x)->value;
+  else
+    return x;
+}
 
 static cobc_tree
 resolve_name (cobc_tree x)
