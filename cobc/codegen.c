@@ -1234,9 +1234,10 @@ output_value (struct cobc_field *p)
 	  }
 	case cobc_tag_literal:
 	  {
-	    if (COBC_TREE_CLASS (p->value) == COB_NUMERIC)
+	    if (COBC_TREE_CLASS (p->value) == COB_NUMERIC
+		|| COBC_LITERAL (p->value)->all)
 	      {
-		/* numeric literal */
+		/* numeric literal or ALL literal */
 		output_move (p->value, COBC_TREE (p));
 	      }
 	    else
