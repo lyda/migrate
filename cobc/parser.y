@@ -132,7 +132,7 @@ static void terminator_error (void);
 %token GLOBAL GO GREATER HIGHLIGHT HIGH_VALUE IDENTIFICATION IN INDEX INDEXED
 %token INPUT INPUT_OUTPUT INTO INVALID IS I_O I_O_CONTROL JUSTIFIED KEY LABEL
 %token LE LEADING LEFT LENGTH LESS LINE LINES LINKAGE LOCK LOWLIGHT LOW_VALUE
-%token MEMORY MINUS MODE MULTIPLE NATIONAL NATIONAL_EDITED NATIVE NEGATIVE
+%token MEMORY MINUS MODE MULTIPLE NATIONAL NATIONAL_EDITED NATIVE NE NEGATIVE
 %token NEXT NO NOT NUMBER NUMERIC NUMERIC_EDITED OBJECT_COMPUTER OCCURS OF OFF
 %token OMITTED ON OPTIONAL OR ORDER ORGANIZATION OTHER OUTPUT OVERFLOW PADDING
 %token PAGE PLUS POINTER POSITION POSITIVE PROCEDURE PROCEED PROGRAM
@@ -973,7 +973,6 @@ record_description_list_2:
 | record_description_list_2
   data_description '.'		{ $$ = $1; }
 | record_description_list_2 '.' { $$ = $1; }
-| error '.'
 ;
 data_description:
   level_number entry_name
@@ -3457,7 +3456,10 @@ expr_1:
 
 		  /* conditional operator */
 		case '=':
-		  SHIFT (5, '=', 0);
+		case '~':
+		case '[':
+		case ']':
+		  SHIFT (5, token, 0);
 		  break;
 		case '<':
 		  if (look_ahead (CB_CHAIN (l)) == OR)
@@ -3480,12 +3482,6 @@ expr_1:
 		    }
 		  else
 		    SHIFT (5, '>', 0);
-		  break;
-		case LE:
-		  SHIFT (5, '[', 0);
-		  break;
-		case GE:
-		  SHIFT (5, ']', 0);
 		  break;
 
 		  /* class condition */
@@ -3548,8 +3544,9 @@ expr_1:
 		    case '=': SHIFT (5, '~', 0); l = CB_CHAIN (l); break;
 		    case '<': SHIFT (5, ']', 0); l = CB_CHAIN (l); break;
 		    case '>': SHIFT (5, '[', 0); l = CB_CHAIN (l); break;
-		    case LE:  SHIFT (5, '>', 0); l = CB_CHAIN (l); break;
-		    case GE:  SHIFT (5, '<', 0); l = CB_CHAIN (l); break;
+		    case '[':  SHIFT (5, '>', 0); l = CB_CHAIN (l); break;
+		    case ']':  SHIFT (5, '<', 0); l = CB_CHAIN (l); break;
+		    case '~':  SHIFT (5, '=', 0); l = CB_CHAIN (l); break;
 		    default:  SHIFT (6, '!', 0); break;
 		    }
 		  break;
@@ -3603,8 +3600,9 @@ expr_item:
 | equal				{ $$ = cb_int ('='); }
 | greater			{ $$ = cb_int ('>'); }
 | less				{ $$ = cb_int ('<'); }
-| GE				{ $$ = cb_int (GE); }
-| LE				{ $$ = cb_int (LE); }
+| GE				{ $$ = cb_int (']'); }
+| LE				{ $$ = cb_int ('['); }
+| NE				{ $$ = cb_int ('~'); }
 /* class condition */
 | NUMERIC			{ $$ = cb_int (NUMERIC); }
 | ALPHABETIC			{ $$ = cb_int (ALPHABETIC); }

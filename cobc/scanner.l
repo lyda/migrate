@@ -150,6 +150,7 @@ H\"[^\"\n]*\" {
 
 "<="		{ yylval = 0; return LE; }
 ">="		{ yylval = 0; return GE; }
+"<>"		{ yylval = 0; return NE; }
 "**"		{ yylval = 0; return '^'; }
 "."		{ last_token_is_dot = 1; yylval = 0; return '.'; }
 .		{ yylval = 0; return yytext[0]; }
