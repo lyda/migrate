@@ -151,6 +151,8 @@ This produces lots of redundant code and should be improved.
 
 ** Using fcntl instead of flock for file locking
 
+** Move reserved word table into the config file
+
 * Optimization
 
 ** More inlining of run-time functions
