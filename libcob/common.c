@@ -92,7 +92,7 @@ long long cob_exp10LL[19] = {
   1000000000000000000LL
 };
 
-cob_environment *cob_env = NULL;
+cob_module *cob_current_module = NULL;
 
 int cob_exception_code;
 
@@ -104,7 +104,7 @@ struct cob_exception cob_exception_table[] = {
   {0, 0, 0}		/* COB_EC_MAX */
 };
 
-static int cob_initialized = 0;
+int cob_initialized = 0;
 
 
 /*
@@ -217,26 +217,22 @@ cob_init (int argc, char **argv)
 }
 
 void
-cob_module_init (void)
+cob_module_enter (cob_module *module)
 {
   if (!cob_initialized)
     {
       fputs (_("warning: cob_init expected in the main program\n"), stderr);
       cob_init (0, NULL);
     }
+
+  module->next = cob_current_module;
+  cob_current_module = module;
 }
 
 void
-cob_push_environment (cob_environment *env)
+cob_module_leave (cob_module *module)
 {
-  env->next = cob_env;
-  cob_env = env;
-}
-
-void
-cob_pop_environment (void)
-{
-  cob_env = cob_env->next;
+  cob_current_module = cob_current_module->next;
 }
 
 void

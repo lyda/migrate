@@ -1,3 +1,12 @@
+2003-05-27  Keisuke Nishida  <knishida@netlab.jp>
+
+	* common.h (cob_module): Renamed from cob_environment.
+	(cob_current_module): Renamed from cob_env.
+	(cob_module_enter): Renamed from cob_push_environment.
+	(cob_module_leave): Renamed from cob_pop_environment.
+	(cob_module_init): Removed.
+	* call.c (cob_resolve): Do not call cob_module_init.
+
 2003-05-20  Keisuke Nishida  <knishida@netlab.jp>
 
 	* strings.c (cob_string_delimited): New function.

@@ -92,17 +92,17 @@ typedef struct {
 
 
 /*
- * Environment
+ * Module
  */
 
-typedef struct __cob_environment {
+typedef struct __cob_module {
   unsigned char decimal_point;
   unsigned char currency_symbol;
   unsigned char numeric_separator;
-  struct __cob_environment *next;
-} cob_environment;
+  struct __cob_module *next;
+} cob_module;
 
-extern cob_environment *cob_env;
+extern cob_module *cob_current_module;
 
 
 /*
@@ -135,6 +135,8 @@ extern int cob_exception_code;
 /*
  * Global variables
  */
+
+extern int cob_initialized;
 
 extern int cob_argc;
 extern char **cob_argv;
@@ -183,9 +185,8 @@ extern int cob_config_compare (const char *key, const char *val);
 /* General functions */
 
 extern void cob_init (int argc, char **argv);
-extern void cob_module_init (void);
-extern void cob_push_environment (cob_environment *env);
-extern void cob_pop_environment (void);
+extern void cob_module_enter (cob_module *module);
+extern void cob_module_leave (cob_module *module);
 extern void cob_stop_run (void);
 
 /* Utilities */

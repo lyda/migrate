@@ -162,7 +162,11 @@ cob_resolve (const char *name)
   lt_ptr_t func;
   lt_dlhandle handle;
 
-  cob_module_init ();
+  if (!cob_initialized)
+    {
+      fputs (_("cob_init() must be called before cob_resolve()"), stderr);
+      exit (1);
+    }
 
   /* search from the cache */
   func = lookup (name);
