@@ -768,12 +768,12 @@ global_clause:
 /* PICTURE */
 
 picture_clause:
-  PICTURE { start_condition = START_PICTURE; } PICTURE_TOK
+  PICTURE_TOK
   {
-    COB_FIELD_TYPE (curr_field) = $3->type;
-    curr_field->picstr   = $3->str;
-    curr_field->len      = $3->size;
-    curr_field->decimals = $3->decimals;
+    COB_FIELD_TYPE (curr_field) = $1->type;
+    curr_field->picstr   = $1->str;
+    curr_field->len      = $1->size;
+    curr_field->decimals = $1->decimals;
   }
 ;
 
@@ -1175,7 +1175,7 @@ label:
   }
 ;
 label_name:
-  INTEGER_LITERAL		{ $$ = install_label (COB_FIELD_NAME ($1)); }
+  INTEGER_LITERAL	{ $$ = install_label (COB_FIELD_NAME ($1)); }
 | SYMBOL_TOK		{ $$ = $1; }
 ;
 in_of: IN | OF ;

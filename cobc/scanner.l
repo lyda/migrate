@@ -72,9 +72,6 @@ static int scan_picture (char *text);
     case START_COMMENT:
       BEGIN COMMENT_STATE;
       break;
-    case START_PICTURE:
-      BEGIN PICTURE_STATE;
-      break;
     }
   start_condition = 0;
 %}
@@ -96,6 +93,9 @@ static int scan_picture (char *text);
   cob_orig_filename = strdup (strchr (endp, '"') + 1);
   strrchr (cob_orig_filename, '"')[0] = '\0';
 }
+
+"PIC" |
+"PICTURE" { BEGIN PICTURE_STATE; }
 
 [\'\"] {
   /* string literal */

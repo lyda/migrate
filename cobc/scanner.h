@@ -24,7 +24,6 @@
 
 #define START_ID 	1
 #define START_COMMENT	2
-#define START_PICTURE	3
 
 #define CDIV_INITIAL 	1
 #define CDIV_ENVIR 	2
