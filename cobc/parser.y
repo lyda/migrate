@@ -95,6 +95,7 @@ static cb_tree last_lefthand;
 
 static void push_entry (const char *name, cb_tree using_list);
 static void terminator_warning (void);
+static void terminator_error (void);
 %}
 
 %token WORD LITERAL PICTURE CLASS_NAME MNEMONIC_NAME FUNCTION_NAME
@@ -2427,11 +2428,7 @@ perform_body:
   }
 ;
 end_perform:
-  /* empty */
-  {
-    cb_error_x ($-2, _("%s statement not terminated by END-%s"),
-	       "PERFORM", "PERFORM");
-  }
+  /* empty */			{ terminator_error (); }
 | END_PERFORM
 ;
 
@@ -4092,7 +4089,6 @@ push_entry (const char *name, cb_tree using_list)
 		 cb_build_pair (label, using_list));
 }
 
-
 static void
 terminator_warning (void)
 {
@@ -4100,4 +4096,12 @@ terminator_warning (void)
     cb_warning_x (CB_TREE (current_statement),
 		  _("%s statement not terminated by END-%s"),
 		  current_statement->name, current_statement->name);
+}
+
+static void
+terminator_error (void)
+{
+  cb_error_x (CB_TREE (current_statement),
+	      _("%s statement not terminated by END-%s"),
+	      current_statement->name, current_statement->name);
 }
