@@ -84,7 +84,7 @@ cob_move_alphanum_to_display (struct cob_field f1, struct cob_field f2)
   /* check for sign */
   sign = 0;
   if (*s1 == '+' || *s1 == '-')
-    sign = (*s1++ == '+') ? 0 : 1;
+    sign = (*s1++ == '+') ? 1 : -1;
 
   /* count the number of digits before decimal point */
   count = 0;
