@@ -51,12 +51,12 @@ struct cob_field {
   } *desc;
 };
 
-#define COB_FIELD_TYPE(f)	((f).desc->type)
+#define COB_FIELD_TYPE(f)	((f).desc ? (f).desc->type : COB_GROUP)
 #define COB_FIELD_DECIMALS(f)	((f).desc->decimals)
 #define COB_FIELD_BASE(f) \
-  ((f).data + (((f).desc->sign_separate && (f).desc->sign_leading) ? 1 : 0))
+  ((f).data + (((f).desc && (f).desc->sign_separate && (f).desc->sign_leading) ? 1 : 0))
 #define COB_FIELD_LENGTH(f) \
-  ((f).size - ((f).desc->sign_separate ? 1 : 0))
+  ((f).size - ((f).desc && (f).desc->sign_separate ? 1 : 0))
 
 #define COB_FIELD_IS_VALID(f)	((f).size > 0)
 

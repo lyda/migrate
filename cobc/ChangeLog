@@ -1,5 +1,10 @@
 2002-06-11  Keisuke Nishida  <knishida@netlab.jp>
 
+	* codegen.c (output_field_definition): Output NULL for
+	cob_field.desc when it is a group.
+
+2002-06-11  Keisuke Nishida  <knishida@netlab.jp>
+
 	* codegen.c, inline.c: Updated for the change in libcob that
 	moved the `size' field from cob_field_desc to cob_field.
 

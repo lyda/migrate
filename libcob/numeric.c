@@ -172,7 +172,7 @@ cob_decimal_set_display (cob_decimal d, struct cob_field f)
   mpz_set_str (d->number, buff, 10);
   if (sign < 0)
     mpz_neg (d->number, d->number);
-  d->decimals = f.desc->decimals;
+  d->decimals = f.desc ? f.desc->decimals : 0;
   cob_put_sign (f, sign);
 }
 

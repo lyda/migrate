@@ -187,7 +187,7 @@ cob_move_alphanum_to_alphanum (struct cob_field f1, struct cob_field f2)
   if (size1 >= size2)
     {
       /* move string with truncation */
-      if (f2.desc->justified)
+      if (f2.desc && f2.desc->justified)
 	memcpy (base2, base1 + size1 - size2, size2);
       else
 	memcpy (base2, base1, size2);
@@ -195,7 +195,7 @@ cob_move_alphanum_to_alphanum (struct cob_field f1, struct cob_field f2)
   else
     {
       /* move string with padding */
-      if (f2.desc->justified)
+      if (f2.desc && f2.desc->justified)
 	{
 	  memset (base2, ' ', size2 - size1);
 	  memcpy (base2 + size2 - size1, base1, size1);
@@ -563,7 +563,7 @@ indirect_move (void (*move_func) (struct cob_field src, struct cob_field dst),
 void
 cob_move (struct cob_field src, struct cob_field dst)
 {
-  if (COB_FIELD_TYPE (src) == COB_GROUP || COB_FIELD_TYPE (dst) == COB_GROUP)
+  if (!src.desc || !dst.desc)
     return cob_move_alphanum_to_alphanum (src, dst);
 
   switch (COB_FIELD_TYPE (src))

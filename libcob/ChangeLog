@@ -1,5 +1,10 @@
 2002-06-11  Keisuke Nishida  <knishida@netlab.jp>
 
+	* Allow cob_field.desc to be NULL.
+	* common.h, common.c, move.c, numeric.c: Updated.
+
+2002-06-11  Keisuke Nishida  <knishida@netlab.jp>
+
 	* common.h (COB_FIELD_IS_VALID): New macro.
 	* fileio.c, strings.c: Use `COB_FIELD_IS_VALID'.
 

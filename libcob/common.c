@@ -51,12 +51,11 @@ int cob_return_code = 0;
 
 /* ZERO,SPACE,HIGH-VALUE,LOW-VALUE,QUOTE */
 
-static struct cob_field_desc x_desc = {COB_ALPHANUMERIC};
-struct cob_field cob_zero =  {1, "0",    &x_desc};
-struct cob_field cob_space = {1, " ",    &x_desc};
-struct cob_field cob_high =  {1, "\xff", &x_desc};
-struct cob_field cob_low =   {1, "\0",   &x_desc};
-struct cob_field cob_quote = {1, "\"",   &x_desc};
+struct cob_field cob_zero =  {1, "0", 0};
+struct cob_field cob_space = {1, " ", 0};
+struct cob_field cob_high =  {1, "\xff", 0};
+struct cob_field cob_low =   {1, "\0", 0};
+struct cob_field cob_quote = {1, "\"", 0};
 
 /* SWITCH-1/2/3/4/5/6/7/8 */
 
@@ -453,7 +452,7 @@ cob_is_lower (struct cob_field f)
 int
 cob_get_sign (struct cob_field f)
 {
-  if (f.desc->have_sign)
+  if (f.desc && f.desc->have_sign)
     {
       if (f.desc->sign_separate)
 	{
@@ -475,7 +474,7 @@ cob_get_sign (struct cob_field f)
 void
 cob_put_sign (struct cob_field f, int sign)
 {
-  if (f.desc->have_sign)
+  if (f.desc && f.desc->have_sign)
     {
       if (f.desc->sign_separate)
 	{
