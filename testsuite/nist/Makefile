@@ -16,6 +16,7 @@ check: all
 	  (cd $$m && make check) \
 	done
 	make summary
+	diff summary.txt summary.log
 
 summary:
 	perl summary.pl $(MODULES) > summary.log
