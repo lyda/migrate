@@ -293,6 +293,21 @@ tree_name (cobc_tree x)
   return buff;
 }
 
+int
+tree_category (cobc_tree x)
+{
+  switch (COBC_TREE_TYPE (x))
+    {
+    case COB_TYPE_GROUP:
+      return COB_TYPE_ALPHANUMERIC;
+    case COB_TYPE_NUMERIC_BINARY:
+    case COB_TYPE_NUMERIC_PACKED:
+      return COB_TYPE_NUMERIC;
+    default:
+      return COBC_TREE_TYPE (x);
+    }
+}
+
 
 /*
  * Location

@@ -439,17 +439,24 @@ output_field (cobc_tree x, int id)
     case cobc_tag_literal:
       {
 	struct cobc_literal *l = COBC_LITERAL (x);
-	char class = COBC_TREE_CLASS (x);
 
 	l->id = id;
 
-	if (class == COB_TYPE_NUMERIC)
+	if (COBC_TREE_CLASS (x) == COB_TYPE_NUMERIC)
 	  {
+	    int flag = 0;
+	    int size = l->size;
+	    if (l->sign < 0)
+	      {
+		flag = COB_FLAG_HAVE_SIGN | COB_FLAG_SIGN_SEPARATE;
+		size++;
+	      }
 	    output_indent ("{");
-	    output_line ("static cob_field_attr attr = {%d, %d, %d, 1};",
-			 COB_TYPE_NUMERIC_BINARY, l->size, l->expt);
-	    output_line ("static long long n = %" PRId64 "LL;", literal_to_int (l));
-	    output_line ("%s = (cob_field) {8, (void *) &n, &attr};", fname);
+	    output_line ("static cob_field_attr attr = {%d, %d, %d, %d};",
+			 COB_TYPE_NUMERIC_DISPLAY, l->size, l->expt, flag);
+	    output_prefix ();
+	    output ("%s = (cob_field) {%d, ", fname, size);
+	    output ("\"%s%s\", &attr};\n", l->data, (l->sign < 0) ? "-" : "");
 	    output_indent ("}");
 	  }
 	else

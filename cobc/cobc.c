@@ -59,8 +59,10 @@ int cobc_flag_debugging_line = 0;
 int cobc_flag_line_directive = 0;
 
 int cobc_warn_column_overflow = 0;
+int cobc_warn_constant = 0;
 int cobc_warn_end_evaluate = 0;
 int cobc_warn_end_if = 0;
+int cobc_warn_type_mismatch = 0;
 int cobc_warn_parentheses = 0;
 
 FILE *cobc_out;
@@ -178,10 +180,14 @@ static struct option long_options[] = {
   {"Wall", no_argument, 0, 'W'},
   {"Wcolumn-overflow", no_argument, &cobc_warn_column_overflow, 1},
   {"Wno-column-overflow", no_argument, &cobc_warn_column_overflow, 0},
+  {"Wconstant", no_argument, &cobc_warn_constant, 1},
+  {"Wno-constant", no_argument, &cobc_warn_constant, 0},
   {"Wend-evaluate", no_argument, &cobc_warn_end_evaluate, 1},
   {"Wno-end-evaluate", no_argument, &cobc_warn_end_evaluate, 0},
   {"Wend-if", no_argument, &cobc_warn_end_if, 1},
   {"Wno-end-if", no_argument, &cobc_warn_end_if, 0},
+  {"Wtype-mismatch", no_argument, &cobc_warn_type_mismatch, 1},
+  {"Wno-type-mismatch", no_argument, &cobc_warn_type_mismatch, 0},
   {"Wparentheses", no_argument, &cobc_warn_parentheses, 1},
   {"Wno-parentheses", no_argument, &cobc_warn_parentheses, 0},
 #ifdef COB_DEBUG
@@ -230,8 +236,10 @@ COBOL options:\n\
 Warning options:\n\
   -Wall                 Enable all warnings\n\
   -Wcolumn-overflow     Warn any text after column 72\n\
+  -Wconstant            Warn inconsistent constants\n\
   -Wend-evaluate        Warn lacks of END-EVALUATE\n\
   -Wend-if              Warn lacks of END-IF\n\
+  -Wtype-mismatch       Warn type mismatch\n\
   -Wparentheses         Warn lacks of parentheses around AND within OR\n\
 "));
 #ifdef COB_DEBUG
@@ -307,8 +315,10 @@ process_command_line (int argc, char *argv[])
 
 	case 'W':
 	  cobc_warn_column_overflow = 1;
+	  cobc_warn_constant = 1;
 	  cobc_warn_end_evaluate = 1;
 	  cobc_warn_end_if = 1;
+	  cobc_warn_type_mismatch = 1;
 	  cobc_warn_parentheses = 1;
 	  break;
 

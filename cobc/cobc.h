@@ -43,11 +43,17 @@ extern int cobc_flag_line_directive;
 /* warn any text after cobpp_text_column */
 extern int cobc_warn_column_overflow;
 
+/* warn inconsistent constant */
+extern int cobc_warn_constant;
+
 /* warn lacks of END-EVALUATE */
 extern int cobc_warn_end_evaluate;
 
 /* warn lacks of END-IF */
 extern int cobc_warn_end_if;
+
+/* warn type mismatch */
+extern int cobc_warn_type_mismatch;
 
 /* warn lacks of parentheses around AND within OR */
 extern int cobc_warn_parentheses;

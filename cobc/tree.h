@@ -127,6 +127,7 @@ typedef struct cobc_tree_common *cobc_tree;
 #endif
 
 extern char *tree_name (cobc_tree x);
+extern int tree_category (cobc_tree x);
 
 extern cobc_tree make_location (char *file, int line);
 

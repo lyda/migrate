@@ -97,6 +97,7 @@ static cobc_tree resolve_label (cobc_tree x);
 static struct cobc_field *build_field (cobc_tree level, cobc_tree name, struct cobc_field *last_field);
 static struct cobc_field *validate_redefines (struct cobc_field *field, cobc_tree redefines);
 static int validate_field (struct cobc_field *p);
+static int validate_field_value (struct cobc_field *f);
 static void finalize_file (struct cobc_file *f, struct cobc_field *records);
 
 static void field_set_used (struct cobc_field *p);
@@ -105,6 +106,7 @@ static int builtin_switch_id (cobc_tree x);
 static cobc_tree build_assign (struct cobc_list *vars, char op, cobc_tree val);
 static cobc_tree build_add (cobc_tree v, cobc_tree n, int round);
 static cobc_tree build_sub (cobc_tree v, cobc_tree n, int round);
+static int validate_move (cobc_tree src, cobc_tree dst, int value_flag);
 static cobc_tree build_move (cobc_tree src, cobc_tree dst);
 static cobc_tree build_corresponding (cobc_tree (*func)(), cobc_tree x1, cobc_tree x2, int opt);
 static cobc_tree build_divide (cobc_tree dividend, cobc_tree divisor, cobc_tree quotient, int round, cobc_tree remainder);
@@ -874,6 +876,7 @@ field_description_list_1:
 	if (validate_field (p) != 0)
 	  YYERROR;
 	finalize_field (p);
+	validate_field_value (p);
       }
     $<tree>$ = $<tree>2;
   }
@@ -3392,11 +3395,11 @@ numeric_name:
 numeric_edited_name:
   data_name
   {
-    int category = COBC_FIELD (cobc_ref ($1))->pic->category;
-    if (category != COB_TYPE_NUMERIC && category != COB_TYPE_NUMERIC_EDITED)
+    if (COBC_TREE_CLASS ($1) != COB_TYPE_NUMERIC
+	&& COBC_TREE_TYPE ($1) != COB_TYPE_NUMERIC_EDITED)
       {
 	yyerror_x ($1, _("`%s' not numeric or numeric edited"),
-		     tree_name ($1));
+		   tree_name ($1));
 	YYERROR;
       }
     $$ = $1;
@@ -3408,7 +3411,8 @@ numeric_edited_name:
 group_name:
   data_name
   {
-    if (field ($1)->children == NULL)
+    cobc_tree x = cobc_ref ($1);
+    if (COBC_REFERENCE ($1)->offset || COBC_FIELD (x)->children == NULL)
       {
 	yyerror_x ($1, _("`%s' not a group"), tree_name ($1));
 	YYERROR;
@@ -4312,26 +4316,29 @@ validate_field (struct cobc_field *f)
       if (f->values)
 	{
 	  struct cobc_field *p;
-	  cobc_tree value = f->values->item;
 
-	  if (f->values->next || COBC_PARAMETER_P (value))
+	  if (f->values->next || COBC_PARAMETER_P (f->values->item))
 	    yyerror_x (x, _("only level 88 item may have multiple values"));
 
+	  /* ISO+IEC+1989-2002: 13.16.42.2-10 */
 	  for (p = f; p; p = p->parent)
 	    if (p->redefines)
-	      /* ISO+IEC+1989-2002: 13.16.42.2-10 */
 	      yyerror_x (x, _("entries under REDEFINES cannot have VALUE clause"));
-	  if (value == cobc_zero)
-	    {
-	      /* just accept */
-	    }
-	  else if (f->pic->category != COB_TYPE_NUMERIC)
-	    {
-	      if (COBC_TREE_CLASS (value) == COB_TYPE_NUMERIC)
-		yyerror_x (x, _("VALUE should be alphanumeric"));
-	    }
 	}
     }
+
+  return 0;
+}
+
+static int
+validate_field_value (struct cobc_field *f)
+{
+  if (f->values)
+    validate_move (f->values->item, COBC_TREE (f), 1);
+
+  if (f->children)
+    for (f = f->children; f; f = f->sister)
+      validate_field_value (f);
 
   return 0;
 }
@@ -4617,9 +4624,202 @@ build_sub (cobc_tree v, cobc_tree n, int round)
     }
 }
 
+static int
+validate_move (cobc_tree src, cobc_tree dst, int value_flag)
+{
+  struct cobc_field *f = COBC_FIELD (cobc_ref (dst));
+
+  switch (COBC_TREE_TAG (src))
+    {
+    case cobc_tag_const:
+      {
+	if (src == cobc_space)
+	  {
+	    if (f->pic)
+	      if (f->pic->category == COB_TYPE_NUMERIC
+		  || f->pic->category == COB_TYPE_NUMERIC_EDITED)
+		goto invalid;
+	  }
+	else if (src == cobc_zero)
+	  {
+	    if (f->pic)
+	      if (f->pic->category == COB_TYPE_ALPHABETIC)
+		goto invalid;
+	  }
+	break;
+      }
+    case cobc_tag_literal:
+      {
+	struct cobc_literal *l = COBC_LITERAL (src);
+
+	/* TODO: ALL literal */
+
+	if (COBC_TREE_CLASS (src) == COB_TYPE_NUMERIC)
+	  {
+	    /* Numeric literal */
+
+	    /* value check */
+	    switch (tree_category (dst))
+	      {
+	      case COB_TYPE_ALPHANUMERIC:
+	      case COB_TYPE_ALPHANUMERIC_EDITED:
+		{
+		  if (l->expt == 0)
+		    goto type_mismatch;
+		  else
+		    goto invalid;
+		}
+	      case COB_TYPE_NUMERIC:
+		{
+		  if (f->pic->expt > 0)
+		    {
+		      /* check for PIC 9..P.. */
+		      int i = 0;
+		      if (l->expt != 0)
+			goto value_mismatch;
+		      if (l->size > f->pic->expt)
+			i = l->size - f->pic->expt;
+		      for (; i < l->size; i++)
+			if (l->data[i] != '0')
+			  goto value_mismatch;
+		    }
+		  else if (f->pic->expt == - f->pic->digits
+			   && f->pic->size < f->pic->digits)
+		    {
+		      /* check for PIC P..9.. */
+		      int i;
+		      int limit = - f->pic->digits - f->pic->size;
+		      if (l->size != - l->expt)
+			goto value_mismatch;
+		      if (limit > l->size)
+			limit = l->size;
+		      for (i = 0; i < limit; i++)
+			if (l->data[i] != '0')
+			  goto value_mismatch;
+		    }
+		  break;
+		}
+	      case COB_TYPE_NUMERIC_EDITED:
+		{
+		  /* TODO */
+		  break;
+		}
+	      default:
+		goto invalid;
+	      }
+
+	    /* sign check */
+	    if (cobc_warn_constant)
+	      if (l->sign < 0 && !f->pic->have_sign)
+		yywarn_x (src, _("ignoring negative sign"));
+
+	    /* size check */
+	    if (l->expt < 0 && l->expt < f->pic->expt)
+	      goto size_overflow;
+	    if (l->size + l->expt > f->pic->digits + f->pic->expt)
+	      goto size_overflow;
+	  }
+	else
+	  {
+	    /* Alphanumeric literal */
+
+	    /* value check */
+	    switch (tree_category (dst))
+	      {
+	      case COB_TYPE_ALPHABETIC:
+		{
+		  int i;
+		  for (i = 0; i < l->size; i++)
+		    if (!isalpha(l->data[i]))
+		      goto value_mismatch;
+		  break;
+		}
+	      case COB_TYPE_NUMERIC:
+	      case COB_TYPE_NUMERIC_EDITED:
+		goto type_mismatch;
+	      default:
+		break;
+	      }
+
+	    /* size check */
+	    {
+	      int size = field_size (dst);
+	      if (size >= 0 && l->size > size)
+		goto size_overflow;
+	    }
+	  }
+	break;
+      }
+    case cobc_tag_field:
+    case cobc_tag_reference:
+      {
+	switch (tree_category (src))
+	  {
+	  case COB_TYPE_ALPHANUMERIC:
+	    break;
+	  case COB_TYPE_ALPHABETIC:
+	  case COB_TYPE_ALPHANUMERIC_EDITED:
+	    switch (tree_category (dst))
+	      {
+	      case COB_TYPE_NUMERIC:
+	      case COB_TYPE_NUMERIC_EDITED:
+		goto invalid;
+	      }
+	    break;
+	  case COB_TYPE_NUMERIC:
+	  case COB_TYPE_NUMERIC_EDITED:
+	    switch (tree_category (dst))
+	      {
+	      case COB_TYPE_ALPHABETIC:
+		goto invalid;
+	      case COB_TYPE_ALPHANUMERIC:
+	      case COB_TYPE_ALPHANUMERIC_EDITED:
+		if (tree_category (src) == COB_TYPE_NUMERIC
+		    && field (src)->pic->expt < 0
+		    /* FIXME: NC105A of NIST testsuite fails
+		       without this.  Why? */
+		    && field (dst)->children == 0)
+		  goto invalid;
+		break;
+	      }
+	    break;
+	  }
+	break;
+      }
+    case cobc_tag_binary_op:
+      break;
+    default:
+      abort ();
+    }
+  return 0;
+
+ invalid:
+  if (value_flag)
+    yyerror_x (src, _("invalid VALUE clause"));
+  else
+    yyerror_x (src, _("invalid MOVE statement"));
+  return -1;
+
+ type_mismatch:
+  if (cobc_warn_type_mismatch)
+    yywarn_x (src, _("type mismatch"));
+  return 0;
+
+ value_mismatch:
+  if (cobc_warn_constant)
+    yywarn_x (src, _("constant value mismatch"));
+  return 0;
+
+ size_overflow:
+  if (cobc_warn_constant)
+    yywarn_x (src, _("constant size overflow"));
+  return 0;
+}
+
 static cobc_tree
 build_move (cobc_tree src, cobc_tree dst)
 {
+  validate_move (src, dst, 0);
   return make_funcall_2 ("@move", src, dst);
 }
 
