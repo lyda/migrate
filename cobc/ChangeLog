@@ -1,5 +1,9 @@
 2002-05-29  Keisuke Nishida  <knishida@netlab.jp>
 
+	* codegen.c (output_recursive): Process top-level redefinition.
+
+2002-05-29  Keisuke Nishida  <knishida@netlab.jp>
+
 	* Keep field names at run-time.
 	* codegen.c (output_field_definition): Output field name.
 

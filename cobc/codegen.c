@@ -766,7 +766,7 @@ output_recursive (void (*func) (struct cobc_field *), cobc_tree x)
 {
   struct cobc_field *p = COBC_FIELD (x);
 
-  if (p->redefines)
+  if (p->level != 01 && p->level != 77 && p->redefines)
     return;
 
   if (COBC_SUBREF_P (x))
