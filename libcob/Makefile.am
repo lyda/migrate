@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libcob.la
 libcob_la_SOURCES = common.c move.c numeric.c \
-	termio.c fileio.c screenio.c strings.c call.c
+	termio.c fileio.c screenio.c strings.c call.c byteorder.h
 
 AM_CFLAGS = -Wall -Wstrict-prototypes -Wmissing-prototypes
 libcob_la_CFLAGS = $(AM_CFLAGS) $(LIBCOB_CFLAGS) -I$(top_srcdir)

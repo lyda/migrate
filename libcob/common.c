@@ -27,6 +27,7 @@
 #include <ctype.h>
 
 #include "common.h"
+#include "byteorder.h"
 #include "numeric.h"
 #include "termio.h"
 #include "fileio.h"
@@ -328,6 +329,20 @@ cob_real_put_sign (cob_field *f, int sign)
     }
 }
 
+void
+cob_binary_convert (cob_field *f)
+{
+#ifndef WORDS_BIGENDIAN
+  switch (f->size)
+    {
+    case 1: break;
+    case 2: *(short *) f->data = COB_UINT16_SWAP_LE_BE (*(short *) f->data); break;
+    case 4: *(long *) f->data = COB_UINT32_SWAP_LE_BE (*(long *) f->data); break;
+    case 8: *(long long *) f->data = COB_UINT64_SWAP_LE_BE (*(long long *) f->data); break;
+    }
+#endif
+}
+
 char *
 cob_field_to_string (cob_field *f, char *s)
 {
@@ -481,7 +496,7 @@ cob_cmp (cob_field *f1, cob_field *f2)
 int
 cob_cmp_int (cob_field *f1, int n)
 {
-  cob_field_attr attr = {COB_TYPE_NUMERIC_BINARY, 9, 0, COB_FLAG_HAVE_SIGN};
+  cob_field_attr attr = {COB_TYPE_NUMERIC_NATIVE, 9, 0, COB_FLAG_HAVE_SIGN};
   cob_field temp = {sizeof (int), (unsigned char *) &n, &attr};
   return cob_numeric_cmp (f1, &temp);
 }
@@ -497,6 +512,7 @@ cob_is_numeric (cob_field *f)
   switch (COB_FIELD_TYPE (f))
     {
     case COB_TYPE_NUMERIC_BINARY:
+    case COB_TYPE_NUMERIC_NATIVE:
     case COB_TYPE_NUMERIC_PACKED:
       return 1;
     case COB_TYPE_NUMERIC_DISPLAY:

@@ -1,3 +1,13 @@
+2003-08-07  Keisuke Nishida  <knishida@netlab.jp>
+
+	* byteorder.h: New file.
+	* common.h (COB_TYPE_NUMERIC_NATIVE): New macro.
+	* common.h, common.c (cob_binary_convert): New function.
+	* move.c (cob_move_display_to_native): New function.
+	(cob_move_native_to_display): New function.
+	* numeric.c (cob_decimal_set_native): New function.
+	(cob_decimal_get_native): New function.
+
 2003-08-05  Keisuke Nishida  <knishida@netlab.jp>
 
 	* fileio.h (COB_WRITE_MASK, COB_WRITE_LINES, COB_WRITE_PAGE)

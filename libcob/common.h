@@ -39,6 +39,7 @@
 #define COB_TYPE_NUMERIC_BINARY		0x11
 #define COB_TYPE_NUMERIC_PACKED		0x12
 #define COB_TYPE_NUMERIC_FLOAT		0x13
+#define COB_TYPE_NUMERIC_NATIVE		0x14
 #define COB_TYPE_NUMERIC_EDITED		0x24
 
 #define COB_TYPE_ALPHABETIC		0x20
@@ -191,6 +192,7 @@ extern void cob_stop_run (void);
 
 extern int cob_real_get_sign (cob_field *f);
 extern void cob_real_put_sign (cob_field *f, int sign);
+extern void cob_binary_convert (cob_field *f);
 extern char *cob_field_to_string (cob_field *f, char *s);
 
 /* Switch */
