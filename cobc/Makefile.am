@@ -1,9 +1,10 @@
-bin_PROGRAMS = cobc
 if HAVE_GETOPT_LONG_ONLY
 getopt_SOURCES = 
 else
 getopt_SOURCES = getopt.c getopt1.c getopt.h
 endif
+
+bin_PROGRAMS = cobc
 cobc_SOURCES = cobc.c cobc.h tree.c tree.h codegen.c codegen.h functions.h \
 	reserved.c reserved.h parser.y parser.h scanner.l scanner.h \
 	$(getopt_SOURCES)
