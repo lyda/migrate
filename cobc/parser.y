@@ -1845,7 +1845,8 @@ end_delete:
 
 display_statement:
   DISPLAY			{ BEGIN_STATEMENT ("DISPLAY"); }
-  opt_value_list display_upon at_line_column
+  opt_value_list display_upon at_line_column display_with_no_advancing
+  end_display
   {
     cb_tree l;
     if (current_program->flag_screen)
@@ -1867,10 +1868,10 @@ display_statement:
       {
 	for (l = $3; l; l = CB_CHAIN (l))
 	  push_funcall_2 ("cob_display", CB_VALUE (l), $4);
+	if ($6 == cb_int0)
+	  push_funcall_1 ("cob_newline", $4);
       }
   }
-  display_with_no_advancing
-  end_display
   ;
 display_upon:
   /* empty */			{ $$ = cb_int (COB_SYSOUT); }
@@ -1893,17 +1894,13 @@ display_upon:
   }
 | UPON WORD
   {
-    cb_warning_x ($2, _("`%s' undefined in SPECIAL-NAMES"), CB_NAME ($2));
+    cb_error_x ($2, _("`%s' undefined in SPECIAL-NAMES"), CB_NAME ($2));
     $$ = cb_error_node;
   }
 ;
 display_with_no_advancing:
-  /* empty */
-  {
-    if (!current_program->flag_screen)
-      push_funcall_1 ("cob_newline", $-2);
-  }
-| _with NO ADVANCING { /* nothing */ }
+  /* empty */			{ $$ = cb_int0; }
+| _with NO ADVANCING		{ $$ = cb_int1; }
 ;
 end_display:
 | END_DISPLAY
