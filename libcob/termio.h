@@ -27,6 +27,9 @@
 #define COB_STDOUT	1
 #define COB_STDERR	2
 
+#define cob_puti(i,fd)	fprintf (cob_stream[fd], "%d", (i))
+#define cob_puts(s,fd)	fputs ((s), cob_stream[fd])
+
 extern FILE *cob_stream[];
 
 extern void cob_init_termio (void);
