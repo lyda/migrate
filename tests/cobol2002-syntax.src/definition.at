@@ -212,6 +212,25 @@ prog.cob:6: warning: `X' previously defined here
 
 AT_CLEANUP
 
+AT_SETUP([Redefinition of 88 items])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X.
+         88 A           VALUE "A".
+         88 A           VALUE "B".
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:8: warning: redefinition of `A'
+prog.cob:7: warning: `A' previously defined here
+])
+
+AT_CLEANUP
+
 AT_SETUP([Ambiguous definition of 02 items])
 
 AT_DATA([prog.cob], [
