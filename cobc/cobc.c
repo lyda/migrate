@@ -473,8 +473,13 @@ process_module (struct filename *fn)
 {
   char buff[BUFSIZ];
   char name[BUFSIZ];
-  file_basename (fn->source, name);
-  strcat (name, ".so");
+  if (output_name)
+    strcpy (name, output_name);
+  else
+    {
+      file_basename (fn->source, name);
+      strcat (name, ".so");
+    }
   sprintf (buff, "%s -shared -Wl,-soname,%s -o %s %s %s",
 	   cob_cc, name, name, fn->object, cob_libadd);
   return system (buff);
@@ -484,17 +489,19 @@ static int
 process_link (struct filename *file_list)
 {
   char buff[8192], objs[4096] = "";
-  char exe[BUFSIZ];
+  char name[BUFSIZ];
 
   for (; file_list; file_list = file_list->next)
     {
       strcat (objs, file_list->object);
       strcat (objs, " ");
       if (!file_list->next)
-	file_basename (file_list->source, exe);
+	file_basename (file_list->source, name);
     }
+  if (output_name)
+    strcpy (name, output_name);
 
-  sprintf (buff, "%s -o %s %s %s", cob_cc, exe, objs, cob_libadd);
+  sprintf (buff, "%s -o %s %s %s", cob_cc, name, objs, cob_libadd);
   return system (buff);
 }
 
