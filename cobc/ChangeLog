@@ -1,3 +1,8 @@
+2004-10-31  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* parser.y (evaluate_object): Print error in the case when the
+	compiler cannot handle the expression correctly.  Need fix.
+
 2004-10-30  Roger While <simrw@sim-basis.de>
 
 	* typeck.c, parser.y, error.c, field.c config.c, tree.c, tree.h,

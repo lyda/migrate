@@ -1947,8 +1947,21 @@ evaluate_object_list:
   evaluate_object		{ $$ = cb_list_add ($1, $3); }
 ;
 evaluate_object:
-  flag_not expr			{ $$ = cb_build_pair ($1, cb_build_pair ($2, 0)); }
-| flag_not expr THRU expr	{ $$ = cb_build_pair ($1, cb_build_pair ($2, $4)); }
+  flag_not expr
+  {
+    if ($1 == cb_int1
+	&& CB_BINARY_OP_P ($2)
+	&& (CB_BINARY_OP ($2)->op == '&' || CB_BINARY_OP ($2)->op == '|'))
+      {
+	cb_error_x ($2, _("FIXME: failed to compile \"WHEN NOT ... AND/OR ...\""));
+	cb_error_x ($2, _("FIXME: change it into \"WHEN (NOT ... AND/OR ...)\" for now"));
+      }
+    $$ = cb_build_pair ($1, cb_build_pair ($2, 0));
+  }
+| flag_not expr THRU expr
+  {
+    $$ = cb_build_pair ($1, cb_build_pair ($2, $4));
+  }
 | ANY				{ $$ = cb_any; }
 | TOK_TRUE			{ $$ = cb_true; }
 | TOK_FALSE			{ $$ = cb_false; }
