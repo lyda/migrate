@@ -4,6 +4,8 @@ OpenCOBOL TODO						-*- outline -*-
 
 ** Check /usr/local for library and header files in configure
 
+** Set COB_CONFIG_DIR properly under MINGW.
+
 ** PROCEDURE DIVISION USING BY CONTENT etc.
 
 ** Parameter passing to the main program
