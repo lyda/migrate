@@ -363,11 +363,13 @@ cob_push_decimal (struct cob_field f)
     default:
       {
 	char *p, buff[32];
-	int sign = extract_sign (f.desc, f.data);
+	int sign = extract_sign (f);
+	int len = FIELD_LENGTH (f);
+	unsigned char *base = FIELD_BASE (f);
 
-	p = (f.desc->len < 32) ? buff : alloca (f.desc->len + 1);
-	memcpy (p, f.data, f.desc->len);
-	p[f.desc->len] = 0;
+	p = (len < 32) ? buff : alloca (len + 1);
+	memcpy (p, base, len);
+	p[len] = 0;
 	mpz_set_str (d->number, p, 10);
 
 	if (sign == 1) /* negative */
@@ -471,13 +473,15 @@ cob_set (struct cob_field f, int round)
 
 	if (f.desc->type == '9')
 	  {
-	    if (f.desc->len == size)
-	      memcpy (f.data, p, size);
-	    else if (f.desc->len > size)
+	    int len = FIELD_LENGTH (f);
+	    unsigned char *base = FIELD_BASE (f);
+	    if (len == size)
+	      memcpy (base, p, size);
+	    else if (len > size)
 	      {
-		int pre = f.desc->len - size;
-		memset (f.data, '0', pre);
-		memcpy (f.data + pre, p, size);
+		int pre = len - size;
+		memset (base, '0', pre);
+		memcpy (base + pre, p, size);
 	      }
 	    else
 	      goto overflow;
@@ -594,8 +598,8 @@ cob_compare (struct cob_field f1, struct cob_field f2)
       return cob_cmp ();
     }
 
-  sign1 = extract_sign (f1.desc, f1.data);
-  sign2 = extract_sign (f2.desc, f2.data);
+  sign1 = extract_sign (f1);
+  sign2 = extract_sign (f2);
 
   if (f1.desc->all || f2.desc->all)
     {

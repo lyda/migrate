@@ -113,6 +113,12 @@ struct fld_desc
   char *pic;
 } __attribute__ ((packed));
 
+#define FIELD_BASE(f) \
+  ((f).data + (((f).desc->separate_sign && (f).desc->leading_sign) ? 1 : 0))
+#define FIELD_LENGTH(f) \
+  ((f).desc->len - ((f).desc->separate_sign ? 1 : 0))
+
+
 struct file_desc
 {
   unsigned char vers_id;

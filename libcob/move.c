@@ -27,11 +27,6 @@
 #define MIN(x,y) ({int _x = (x), _y = (y); (_x < _y) ? _x : _y; })
 #define MAX(x,y) ({int _x = (x), _y = (y); (_x > _y) ? _x : _y; })
 
-#define FIELD_BASE(f) \
-  ((f).data + ((f).desc->separate_sign && (f).leading_sign) ? 1 : 0)
-#define FIELD_LENGTH(f) \
-  ((f).desc->len - (f).desc->separate_sign ? 1 : 0)
-
 void
 print_field (struct cob_field f)
 {
@@ -54,15 +49,15 @@ cob_move_alphanum_to_display (struct cob_field f1, struct cob_field f2)
   int sign, count, size;
   unsigned char *p;
   unsigned char *s1 = f1.data;
-  unsigned char *endp1 = f1.data + f1.desc->len;
-  unsigned char *s2 = f2.data;
-  unsigned char *endp2 = f2.data + f2.desc->len;
+  unsigned char *s2 = FIELD_BASE (f2);
+  unsigned char *e1 = s1 + f1.desc->len;
+  unsigned char *e2 = s2 + FIELD_LENGTH (f2);
 
   /* initialize */
   memset (f2.data, '0', f2.desc->len);
 
   /* skip white spaces */
-  for (; s1 < endp1; s1++)
+  for (; s1 < e1; s1++)
     if (!isspace (*s1))
       break;
 
@@ -73,12 +68,12 @@ cob_move_alphanum_to_display (struct cob_field f1, struct cob_field f2)
 
   /* count the number of digits before decimal point */
   count = 0;
-  for (p = s1; p < endp1 && *p != '.'; p++)
+  for (p = s1; p < e1 && *p != '.'; p++)
     if (isdigit (*p))
       count++;
 
   /* find the start position */
-  size = f2.desc->len - f2.desc->decimals;
+  size = FIELD_LENGTH (f2) - f2.desc->decimals;
   if (count < size)
     s2 += size - count;
   else
@@ -87,7 +82,7 @@ cob_move_alphanum_to_display (struct cob_field f1, struct cob_field f2)
 
   /* move */
   count = 0;
-  for (; s1 < endp1 && s2 < endp2; s1++)
+  for (; s1 < e1 && s2 < e2; s1++)
     {
       unsigned char c = *s1;
       if (isdigit (c))
@@ -112,16 +107,16 @@ cob_move_alphanum_to_display (struct cob_field f1, struct cob_field f2)
 void
 cob_move_display_to_display (struct cob_field f1, struct cob_field f2)
 {
-  int sign = extract_sign (f1.desc, f1.data);
-  int hf1 = f1.desc->len - f1.desc->decimals;
-  int hf2 = f2.desc->len - f2.desc->decimals;
+  int sign = extract_sign (f1);
+  int hf1 = FIELD_LENGTH (f1) - f1.desc->decimals;
+  int hf2 = FIELD_LENGTH (f2) - f2.desc->decimals;
   int lf1 = -f1.desc->decimals;
   int lf2 = -f2.desc->decimals;
   int gcf = MIN (hf1, hf2);
   int lcf = MAX (lf1, lf2);
-  unsigned char *s1 = f1.data + (hf1 - gcf);
-  unsigned char *s2 = f2.data + (hf2 - gcf);
-  unsigned char *e1 = f1.data + (hf1 - lcf);
+  unsigned char *s1 = FIELD_BASE (f1) + (hf1 - gcf);
+  unsigned char *s2 = FIELD_BASE (f2) + (hf2 - gcf);
+  unsigned char *e1 = FIELD_BASE (f1) + (hf1 - lcf);
 
   /* initialize by 0 */
   memset (f2.data, '0', f2.desc->len);
@@ -137,27 +132,31 @@ cob_move_display_to_display (struct cob_field f1, struct cob_field f2)
 void
 cob_move_display_to_alphanum (struct cob_field f1, struct cob_field f2)
 {
-  int sign = extract_sign (f1.desc, f1.data);
+  int sign = extract_sign (f1);
+  int len1 = FIELD_LENGTH (f1);
+  int len2 = f2.desc->len;
+  unsigned char *base1 = FIELD_BASE (f1);
+  unsigned char *base2 = f2.data;
 
-  if (f1.desc->len >= f2.desc->len)
+  if (len1 >= len2)
     {
-      memcpy (f2.data, f1.data, f2.desc->len);
+      memcpy (base2, base1, len2);
     }
   else
     {
-      int diff = f2.desc->len - f1.desc->len;
+      int diff = len2 - len1;
       int zero_len = 0;
       /* move */
-      memcpy (f2.data, f1.data, f1.desc->len);
+      memcpy (base2, base1, len1);
       /* implied 0 ('P's) */
       if (f1.desc->decimals < 0)
 	{
 	  zero_len = MIN (-f1.desc->decimals, diff);
-	  memset (f2.data + f1.desc->len, '0', zero_len);
+	  memset (base2 + len1, '0', zero_len);
 	}
       /* padding */
       if (diff - zero_len > 0)
-	memset (f2.data + f1.desc->len + zero_len, ' ', diff - zero_len);
+	memset (base2 + len1 + zero_len, ' ', diff - zero_len);
     }
 
   put_sign (f1, sign);
@@ -168,26 +167,29 @@ cob_move_alphanum_to_alphanum (struct cob_field f1, struct cob_field f2)
 {
   int len1 = f1.desc->len;
   int len2 = f2.desc->len;
+  unsigned char *base1 = f1.data;
+  unsigned char *base2 = f2.data;
+
   if (len1 >= len2)
     {
       /* just move string, truncating if necessary */
       if (f2.desc->just_r)
-	memcpy (f2.data, f1.data + len1 - len2, len2);
+	memcpy (base2, base1 + len1 - len2, len2);
       else
-	memcpy (f2.data, f1.data, len2);
+	memcpy (base2, base1, len2);
     }
   else
     {
       /* move string with padding */
       if (f2.desc->just_r)
 	{
-	  memset (f2.data, ' ', len2 - len1);
-	  memcpy (f2.data + len2 - len1, f1.data, len1);
+	  memset (base2, ' ', len2 - len1);
+	  memcpy (base2 + len2 - len1, base1, len1);
 	}
       else
 	{
-	  memcpy (f2.data, f1.data, len1);
-	  memset (f2.data + len1, ' ', len2 - len1);
+	  memcpy (base2, base1, len1);
+	  memset (base2 + len1, ' ', len2 - len1);
 	}
     }
 }
@@ -220,25 +222,29 @@ void
 cob_move_display_to_binary (struct cob_field f1, struct cob_field f2)
 {
   int i, len;
-  int sign = extract_sign (f1.desc, f1.data);
   long long val = 0;
+  int sign = extract_sign (f1);
+  int len1 = FIELD_LENGTH (f1);
+  int len2 = f2.desc->len;
+  unsigned char *base1 = FIELD_BASE (f1);
+  unsigned char *base2 = f2.data;
 
-  len = f1.desc->len - f1.desc->decimals + f2.desc->decimals;
+  len = len1 - f1.desc->decimals + f2.desc->decimals;
   for (i = 0; i < len; ++i)
-    if (i < f1.desc->len)
-      val = val * 10 + f1.data[i] - '0';
+    if (i < len1)
+      val = val * 10 + base1[i] - '0';
     else
       val = val * 10;
   if (f2.desc->pic[0] == 'S' && sign)
     val = -val;
   val %= cob_exp10[picCompLength (f2.desc->pic)];
 
-  switch (f2.desc->len)
+  switch (len2)
     {
-    case 1: *(char *) f2.data = val; break;
-    case 2: *(short *) f2.data = val; break;
-    case 4: *(long *) f2.data = val; break;
-    case 8: *(long long *) f2.data = val; break;
+    case 1: *(char *) base2 = val; break;
+    case 2: *(short *) base2 = val; break;
+    case 4: *(long *) base2 = val; break;
+    case 8: *(long long *) base2 = val; break;
     }
 
   put_sign (f1, sign);
@@ -280,13 +286,13 @@ cob_move_binary_to_display (struct cob_field f1, struct cob_field f2)
     int temp_len = 20 - i;
     unsigned char *temp_data = buff + i;
     int hf1 = temp_len - f1.desc->decimals;
-    int hf2 = f2.desc->len - f2.desc->decimals;
+    int hf2 = FIELD_LENGTH (f2) - f2.desc->decimals;
     int lf1 = -f1.desc->decimals;
     int lf2 = -f2.desc->decimals;
     int gcf = MIN (hf1, hf2);
     int lcf = MAX (lf1, lf2);
     unsigned char *s1 = temp_data + (hf1 - gcf);
-    unsigned char *s2 = f2.data + (hf2 - gcf);
+    unsigned char *s2 = FIELD_BASE (f2) + (hf2 - gcf);
     unsigned char *e1 = temp_data + (hf1 - lcf);
 
     memset (f2.data, '0', f2.desc->len);
@@ -342,7 +348,7 @@ void
 cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 {
   char *p;
-  int sign = extract_sign (f1.desc, f1.data);
+  int sign = extract_sign (f1);
   unsigned char *min, *max, *src, *dst, *end;
   unsigned char pad = ' ';
   int count = 0;
@@ -364,8 +370,8 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	break;
     }
 
-  min = f1.data;
-  max = f1.data + f1.desc->len;
+  min = FIELD_BASE (f1);
+  max = min + FIELD_LENGTH (f1);
   src = max - f1.desc->decimals - count;
   dst = f2.data;
   end = f2.data + f2.desc->len;

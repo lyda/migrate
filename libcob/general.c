@@ -84,34 +84,42 @@ char_to_sign (char ch)
 }
 
 int
-extract_sign (struct fld_desc *f, char *s)
+extract_sign (struct cob_field f)
 {
-  char *tmp;
   int digit;
 
-  if (f->type == 'C')
+  switch (f.desc->type)
     {
-      digit = f->len / 2;
-      return (f->len & 1) ?	/* odd number of digits? */
-	(((s[digit] & 0x0f) == 0x0d) ? 1 : 0) :
-	(((s[digit] & 0xf0) == 0xd0) ? 1 : 0);
-    }
-  if (f->type == '9')
-    {
-      if (f->pic[0] != 'S')
+    case 'C':
+      digit = f.desc->len / 2;
+      return (f.desc->len & 1) ?	/* odd number of digits? */
+	(((f.data[digit] & 0x0f) == 0x0d) ? 1 : 0) :
+	(((f.data[digit] & 0xf0) == 0xd0) ? 1 : 0);
+    case '9':
+      if (f.desc->pic[0] != 'S')
 	return 0;
-      tmp = (f->leading_sign) ? s : s + f->len - 1;
-      digit = char_to_sign (*tmp);
-      if (digit == 0x80)
-	*tmp = '0';
-      else if (digit < 0)
-	*tmp = '0' - digit;
+      if (f.desc->separate_sign)
+	{
+	  char *p = f.desc->leading_sign ? f.data : f.data + f.desc->len - 1;
+	  int sign = (*p == '+') ? 0 : 1;
+	  *p = '0';
+	  return sign;
+	}
       else
 	{
-	  *tmp = '0' + digit;
-	  return 0;
+	  char *p = f.desc->leading_sign ? f.data : f.data + f.desc->len - 1;
+	  digit = char_to_sign (*p);
+	  if (digit == 0x80)
+	    *p = '0';
+	  else if (digit < 0)
+	    *p = '0' - digit;
+	  else
+	    {
+	      *p = '0' + digit;
+	      return 0;
+	    }
+	  return 1;
 	}
-      return 1;
     }
   return 0;
 }
@@ -119,7 +127,6 @@ extract_sign (struct fld_desc *f, char *s)
 void
 put_sign (struct cob_field f, int sign)
 {
-  char *tmp;
   int digit;
 
   switch (f.desc->type)
@@ -132,11 +139,19 @@ put_sign (struct cob_field f, int sign)
     case '9':
       if (f.desc->pic[0] != 'S')
 	return;
-      tmp = (f.desc->leading_sign) ? f.data : f.data + f.desc->len - 1;
-      digit = *tmp - '0';
-      if (sign)
-	digit = -digit;
-      *tmp = sign_to_char ((sign && digit == 0) ? 0x80 : digit);
+      if (f.desc->separate_sign)
+	{
+	  char *p = f.desc->leading_sign ? f.data : f.data + f.desc->len - 1;
+	  *p = sign ? '-' : '+';
+	}
+      else
+	{
+	  char *p = f.desc->leading_sign ? f.data : f.data + f.desc->len - 1;
+	  digit = *p - '0';
+	  if (sign)
+	    digit = -digit;
+	  *p = sign_to_char ((sign && digit == 0) ? 0x80 : digit);
+	}
     }
 }
 
