@@ -2266,7 +2266,38 @@ search_statement:
   }
 | SEARCH ALL table_name search_at_end search_when _end_search
   {
+    cobc_tree this, next = COBC_IF ($5)->test;
+    struct cobc_field *p = COBC_FIELD ($3);
     cobc_location = @1;
+    while (next != NULL)
+      {
+	if (COBC_COND (next)->type == COBC_COND_AND)
+	  {
+	    this = COBC_COND (next)->left;
+	    next = COBC_COND (next)->right;
+	  }
+	else
+	  {
+	    this = next;
+	    next = NULL;
+	  }
+	if (COBC_COND (this)->type == COBC_COND_EQ)
+	  {
+	    int i;
+	    struct cobc_field *f = COBC_FIELD (COBC_COND (this)->left);
+	    for (i = 0; i < p->nkeys; i++)
+	      if (f == COBC_FIELD (p->keys[i].key))
+		break;
+	    if (i == p->nkeys)
+	      yyerror_loc (&this->loc, _("undeclared key `%s'"),
+			   tree_to_string (COBC_TREE (f)));
+	  }
+	else
+	  {
+	    yyerror_loc (&this->loc, _("condition not allowed in SEARCH ALL"));
+	    break;
+	  }
+      }
     push_inline_3 (output_search_all, $3, $4, $5);
   }
 ;
@@ -3159,7 +3190,7 @@ table_name:
   {
     if (!COBC_FIELD ($1)->index_list)
       {
-	yyerror_loc (&@1, _("`%s' must be indexed"), tree_to_string ($1));
+	yyerror_loc (&@1, _("`%s' not indexed"), tree_to_string ($1));
 	yyerror_tree ($1, _("defined here"));
       }
     $$ = $1;
@@ -3668,12 +3699,12 @@ resolve_predefined_name (cobc_tree x)
   if (p->count == 0)
     {
       undefined_error (loc, p, 0);
-      return NULL;
+      return make_filler ();
     }
   else if (p->count > 1)
     {
       ambiguous_error (loc, p);
-      return NULL;
+      return make_filler ();
     }
 
   name = p->item;
@@ -3684,7 +3715,7 @@ resolve_predefined_name (cobc_tree x)
       if (!p)
 	{
 	  undefined_error (loc, w, name);
-	  return NULL;
+	  return make_filler ();
 	}
       name = p->item;
     }

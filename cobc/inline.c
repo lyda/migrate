@@ -630,12 +630,11 @@ search_set_keys (struct cobc_field *p, cobc_tree x)
 	      p->keys[i].val = val;
 	      break;
 	    }
-	if (i == p->nkeys)
-	  yyerror ("undeclared key");
 	break;
       }
     default:
-      yyerror_tree (x, "invalid condition");
+      /* cannot happen */
+      break;
     }
 }
 

@@ -1,5 +1,11 @@
 2002-06-06  Keisuke Nishida  <knishida@netlab.jp>
 
+	* inline.c (search_set_keys): Dont check syntax error.
+	* parser.y (search_statement): Check syntax error here.
+	(resolve_predefined_name): Return filler on error.
+
+2002-06-06  Keisuke Nishida  <knishida@netlab.jp>
+
 	* codegen.c (codegen): Always generate program function,
 	putting main() at the end.
 
