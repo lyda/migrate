@@ -1734,7 +1734,6 @@ call_param:
 call_mode:
   REFERENCE		{ current_mode = CB_CALL_BY_REFERENCE; }
 | CONTENT		{ current_mode = CB_CALL_BY_CONTENT; }
-| CONTENT LENGTH _of	{ current_mode = CB_CALL_BY_LENGTH; }
 | VALUE			{ current_mode = CB_CALL_BY_VALUE; }
 ;
 call_returning:
@@ -3894,6 +3893,7 @@ value_list:
 ;
 value:
   identifier
+| LENGTH _of identifier		{ $$ = cb_build_length ($3); }
 | literal
 | function
 ;

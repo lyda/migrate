@@ -1216,14 +1216,12 @@ output_call (struct cb_call *p)
 	case CB_CALL_BY_CONTENT:
 	  output_prefix ();
 	  output ("char content_%d[", n);
-	  output_size (x);
+	  if (CB_INTEGER_P (x) || CB_BINARY_OP_P (x))
+	    output ("4");
+	  else
+	    output_size (x);
 	  output ("];\n");
 	  break;
-	case CB_CALL_BY_LENGTH:
-	  output_prefix ();
-	  output ("int length_%d = ", n);
-	  output_size (x);
-	  output (";\n");
 	}
     }
   for (l = p->args, n = 1; l; l = CB_CHAIN (l), n++)
@@ -1233,11 +1231,20 @@ output_call (struct cb_call *p)
 	{
 	case CB_CALL_BY_CONTENT:
 	  output_prefix ();
-	  output ("memcpy (content_%d, ", n);
-	  output_data (x);
-	  output (", ");
-	  output_size (x);
-	  output (");\n");
+	  if (CB_INTEGER_P (x) || CB_BINARY_OP_P (x))
+	    {
+	      output ("*(int *)content_%d = ", n);
+	      output_integer (x);
+	      output (";\n");
+	    }
+	  else
+	    {
+	      output ("memcpy (content_%d, ", n);
+	      output_data (x);
+	      output (", ");
+	      output_size (x);
+	      output (");\n");
+	    }
 	}
     }
 
@@ -1279,9 +1286,6 @@ output_call (struct cb_call *p)
 	  break;
 	case CB_CALL_BY_CONTENT:
 	  output ("content_%d", n);
-	  break;
-	case CB_CALL_BY_LENGTH:
-	  output ("&length_%d", n);
 	  break;
 	case CB_CALL_BY_VALUE:
 	  switch (CB_TREE_TAG (x))

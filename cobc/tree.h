@@ -27,8 +27,7 @@
 
 #define CB_CALL_BY_REFERENCE	1
 #define CB_CALL_BY_CONTENT	2
-#define CB_CALL_BY_LENGTH	3
-#define CB_CALL_BY_VALUE	4
+#define CB_CALL_BY_VALUE	3
 
 enum cb_tag {
   /* primitives */
@@ -903,6 +902,7 @@ extern void cb_define_switch_name (cb_tree name, cb_tree sname, cb_tree flag, cb
 extern cb_tree cb_build_section_name (cb_tree name);
 extern cb_tree cb_build_identifier (cb_tree x);
 extern cb_tree cb_build_check_identifier (cb_tree x);
+extern cb_tree cb_build_length (cb_tree x);
 extern cb_tree cb_build_using_list (cb_tree list);
 
 extern cb_tree cb_build_arithmetic (cb_tree vars, char op, cb_tree val);

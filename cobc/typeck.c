@@ -242,6 +242,25 @@ cb_build_check_identifier (cb_tree x)
 }
 
 cb_tree
+cb_build_length (cb_tree x)
+{
+  if (!CB_REFERENCE_P (x))
+    return x;
+
+  /* X(I:L) */
+  if (CB_REFERENCE (x)->length)
+    return CB_REFERENCE (x)->length;
+
+  /* X(I:) */
+  if (cb_field_size (x) == -1)
+    return cb_build_binary_op (cb_int (cb_field (x)->size), '-',
+			       CB_REFERENCE (x)->offset);
+
+  /* X */
+  return cb_int (cb_field_size (x));
+}
+
+cb_tree
 cb_build_using_list (cb_tree list)
 {
   cb_tree l;
@@ -687,7 +706,9 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 	  }
 	break;
       }
+    case CB_TAG_INTEGER:
     case CB_TAG_BINARY_OP:
+      /* TODO: check this */
       break;
     default:
       abort ();
@@ -989,7 +1010,7 @@ cb_build_move (cb_tree src, cb_tree dst)
   if (CB_INDEX_P (dst))
     return cb_build_assign (dst, src);
 
-  if (CB_INDEX_P (src))
+  if (CB_INDEX_P (src) || CB_INTEGER_P (src) || CB_BINARY_OP_P (src))
     return cb_build_funcall_2 ("cob_set_int", dst,
 			       cb_build_cast_integer (src));
 
