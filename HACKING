@@ -6,7 +6,7 @@ We use the following extra packages to build OpenCOBOL:
   o Autoconf 2.53
   o Automake 1.6.1
   o Libtool 1.4.2
-  o Gettext 0.11.2
+  o gettext 0.11.2
   o Bison 1.28
   o Flex 2.5.4
 
