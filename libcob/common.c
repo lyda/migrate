@@ -246,6 +246,21 @@ cob_cmp_all (unsigned char *data, unsigned char c, int len)
   return 0;
 }
 
+int
+cob_cmp_all_str (unsigned char *data, unsigned char *str, int len)
+{
+  int i;
+  unsigned char *s = str;
+  for (i = 0; i < len; i++)
+    {
+      if (data[i] != *s)
+	return data[i] - *s;
+      if (*++s == 0)
+	s = str;
+    }
+  return 0;
+}
+
 
 /*
  * Class check

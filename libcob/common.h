@@ -111,6 +111,7 @@ extern int cob_index_depending (int i, int min, int max, int dep);
 extern int cob_cmp_field (struct cob_field f1, struct cob_field f2);
 extern int cob_cmp_str (struct cob_field f1, unsigned char *data2, int len2);
 extern int cob_cmp_all (unsigned char *data, unsigned char c, int len);
+extern int cob_cmp_all_str (unsigned char *data, unsigned char *str, int len);
 
 extern void cob_check_numeric (struct cob_field f);
 extern int cob_is_numeric (struct cob_field f);
