@@ -1105,16 +1105,14 @@ cb_build_cond (cb_tree x)
 	  case '@':
 	    return cb_build_cond (p->x);
 	  case '!':
-	    p->x = cb_build_cond (p->x);
-	    break;
+	    return cb_build_binary_op (cb_build_cond (p->x), '!', 0);
 	  case '&': case '|':
-	    p->x = cb_build_cond (p->x);
-	    p->y = cb_build_cond (p->y);
-	    break;
+	    return cb_build_binary_op (cb_build_cond (p->x), p->op,
+				       cb_build_cond (p->y));
 	  default:
 	    if (CB_INDEX_P (p->x) || CB_INDEX_P (p->y))
 	      {
-		p->x = cb_build_binary_op (p->x, '-', p->y);
+		x = cb_build_binary_op (p->x, '-', p->y);
 	      }
 	    else if (CB_BINARY_OP_P (p->x) || CB_BINARY_OP_P (p->y))
 	      {
@@ -1126,7 +1124,7 @@ cb_build_cond (cb_tree x)
 		dpush (cb_build_funcall_2 ("cob_decimal_cmp", d1, d2));
 		decimal_free ();
 		decimal_free ();
-		p->x = list_reverse (decimal_stack);
+		x = list_reverse (decimal_stack);
 		decimal_stack = NULL;
 	      }
 	    else
@@ -1144,14 +1142,14 @@ cb_build_cond (cb_tree x)
 			    && CB_TREE_CLASS (p->y) == CB_CLASS_NUMERIC
 			    && cb_fits_int (p->y))
 			  {
-			    p->x = cb_build_funcall_2 ("cob_cmp_int",
-						       p->x, cb_build_cast_integer (p->y));
+			    x = cb_build_funcall_2 ("cob_cmp_int",
+						    p->x, cb_build_cast_integer (p->y));
 			    break;
 			  }
 #if 0
 			if (size > 0 && size >= l->size && !l->all)
 			  {
-			    p->x = cb_build_funcall_2 ("@memcmp", p->x, p->y);
+			    x = cb_build_funcall_2 ("@memcmp", p->x, p->y);
 			    break;
 			  }
 #endif
@@ -1159,11 +1157,10 @@ cb_build_cond (cb_tree x)
 		  }
 
 		/* field comparison */
-		p->x = cb_build_funcall_2 ("cob_cmp", p->x, p->y);
+		x = cb_build_funcall_2 ("cob_cmp", p->x, p->y);
 	      }
-	    break;
 	  }
-	return x;
+	return cb_build_binary_op (x, p->op, p->y);
       }
     default:
       abort ();
