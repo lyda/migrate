@@ -794,10 +794,7 @@ make_binary_op (cobc_tree left, char op, cobc_tree right)
       COBC_TREE_CLASS (p) = COB_TYPE_NUMERIC;
       if (COBC_TREE_CLASS (left) != COB_TYPE_NUMERIC
 	  || COBC_TREE_CLASS (right) != COB_TYPE_NUMERIC)
-	{
-	  yyerror (tree_to_string (COBC_TREE (p)));
-	  abort ();
-	}
+	goto invalid;
       break;
 
     case '=': case '~': case '<': case '>': case '[': case ']':
@@ -810,14 +807,12 @@ make_binary_op (cobc_tree left, char op, cobc_tree right)
       COBC_TREE_CLASS (p) = COB_TYPE_BOOLEAN;
       if (COBC_TREE_CLASS (left) != COB_TYPE_BOOLEAN
 	  || (right && COBC_TREE_CLASS (right) != COB_TYPE_BOOLEAN))
-	{
-	  yyerror (tree_to_string (COBC_TREE (p)));
-	  abort ();
-	}
+	goto invalid;
       break;
 
     default:
-      yyerror ("invalid binary-op");
+    invalid:
+      yyerror ("invalid binary-op: %s", tree_to_string (COBC_TREE (p)));
       abort ();
     }
   return COBC_TREE (p);
