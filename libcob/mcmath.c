@@ -462,15 +462,3 @@ compare (struct fld_desc *f1, char *s1, struct fld_desc *f2, char *s2)
     }
   return 0;
 }
-
-/*------------------------------------------------------------------------*\
- |                                                                        |
- |                          cob_assign_int                                |
- |                                                                        |
-\*------------------------------------------------------------------------*/
-
-void
-cob_assign_int (struct fld_desc *desc, char *val, int value)
-{
-  cob_move (&_generic_4comp, (char *) &value, desc, val);
-}
