@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 547
+%expect 560
 
 %{
 #define yydebug		cob_trace_parser
@@ -135,11 +135,10 @@ static void check_decimal_point (struct lit *lit);
 %token <sval> STRING,VARIABLE,VARCOND,SUBSCVAR
 %token <sval> LABELSTR,COMMAND_LINE,ENVIRONMENT_VARIABLE,PICTURE
 %token <ival> USAGENUM,CONDITIONAL
-%token <ival> READ,WRITE
 %token <lval> NLITERAL,CLITERAL
 %token <ival> PORTNUM
 
-%token DATE,DAY,DAY_OF_WEEK,TIME,INKEY
+%token DATE,DAY,DAY_OF_WEEK,TIME,INKEY,READ,WRITE
 %token TO,FOR,IS,ARE,THRU,THAN,NO,CANCEL,ASCENDING,DESCENDING,ZERO
 %token TOK_SOURCE_COMPUTER, TOK_OBJECT_COMPUTER,INPUT_OUTPUT
 %token BEFORE,AFTER,SCREEN,REVERSEVIDEO,NUMBERTOK,PLUS,MINUS,SEPARATE
@@ -167,7 +166,7 @@ static void check_decimal_point (struct lit *lit);
 %token CALL,USING,INVALID,CONTENT
 %token SELECT,ASSIGN,DISPLAY,UPON,CONSOLE,STD_OUTPUT,STD_ERROR
 %token ORGANIZATION,ACCESS,MODE,KEY,STATUS,ALTERNATE
-%token SEQUENTIAL,INDEXED,DYNAMIC,RANDOM,RELATIVE
+%token SEQUENTIAL,INDEXED,DYNAMIC,RANDOM,RELATIVE,RELEASE
 %token SECTION,SORT,SORT_MERGE,DUPLICATES,WITH
 %token QUOTES,LOWVALUES,HIGHVALUES
 %token SET,UP,DOWN,TRACE,READY,RESET,SEARCH,WHEN,TEST
@@ -1186,6 +1185,7 @@ statement:
 | open_statement
 | perform_statement
 | read_statement
+| release_statement
 | return_statement
 | rewrite_statement
 | search_statement
@@ -2096,8 +2096,9 @@ before_after:
  * READ statements
  */
 
-read_statement: READ read_body opt_end_read { }
-    ;
+read_statement:
+  READ read_body opt_end_read
+;
 read_body: 
     name
     opt_read_next
@@ -2219,6 +2220,20 @@ opt_end_return:
     /* nothing */
     | END_RETURN
     ;
+
+
+/*
+ * RELEASE statement
+ */
+
+release_statement:
+  RELEASE name opt_write_from
+  {
+    if ($2->level != 1)
+      yyerror ("variable %s could not be used for RELEASE", $2->name);
+    gen_release($2, $3);
+  }
+;
 
 
 /*
@@ -2661,10 +2676,7 @@ write_statement:
     {
       if ($2->level != 1)
         yyerror("variable %s could not be used for WRITE", $2->name);
-      if ($1 == 1)
-        gen_release($2, $3);
-      else
-        gen_write($2, $4, $3);
+      gen_write($2, $4, $3);
     }
     opt_invalid_key
     opt_end_write

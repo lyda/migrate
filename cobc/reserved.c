@@ -268,7 +268,7 @@ static struct reserved_word reserved_words[] = {
   {"REDEFINES", REDEFINES, 0},
   {"REFERENCE", REFERENCE, 0},
   {"RELATIVE", RELATIVE, 0},
-  {"RELEASE", WRITE, 1},
+  {"RELEASE", RELEASE, 0},
   {"REMAINDER", REMAINDER, 0},
   {"REPLACING", REPLACING, 0},
   {"REPORT", REPORT, 0},
