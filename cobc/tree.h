@@ -182,6 +182,12 @@ struct sym
   struct occurs *occurs;	/* for DEPENDING ON or null if fixed table */
 };
 
+struct occurs
+{
+  cob_tree depend;
+  int min, max;
+};
+
 #define SYMBOL(x)		((struct sym *) (x))
 #define SYMBOL_P(x)		(COB_TREE_TYPE (x) == cob_tag_symbol)
 
@@ -510,19 +516,6 @@ struct index_to_table_list
   char *tablename;
   char *keyname;
   char seq;		/* '0' = none, '1' = ASCENDING, '2' = DESCENDING */
-};
-
-struct condition
-{
-  cob_tree sy;		/* implied first operand */
-  int oper;			/* operator */
-};
-
-/* OCCURS ... DEPENDING ON info */
-struct occurs
-{
-  cob_tree depend;
-  int min, max;
 };
 
 #endif /* _TREE_H_ */
