@@ -2362,9 +2362,7 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 				 cb_build_string (buff, f->size),
 				 cb_build_cast_length (dst));
     }
-  else if (cb_fits_int (src)
-	   && (f->usage == CB_USAGE_BINARY && !f->flag_binary_swap)
-	   && (f->size == 1 || f->size == 2 || f->size == 4 || f->size == 8))
+  else if (cb_fits_int (src) && f->usage == CB_USAGE_BINARY)
     {
       int val = cb_get_int (src);
       int n = f->pic->scale - l->scale;
@@ -2445,6 +2443,8 @@ cb_build_move (cb_tree src, cb_tree dst)
 
   if (cb_flag_runtime_inlining)
     {
+      struct cb_field *f = cb_field (dst);
+
       /* convert "MOVE 0 TO X" into "MOVE ZERO TO X" */
       if (CB_NUMERIC_LITERAL_P (src)
 	  && cb_fits_int (src)
@@ -2452,8 +2452,11 @@ cb_build_move (cb_tree src, cb_tree dst)
 	src = cb_zero;
 
       /* no optimization for binary swap and packed decimal for now */
-      if (cb_field (dst)->flag_binary_swap
-	  || cb_field (dst)->usage == CB_USAGE_PACKED)
+      if (f->flag_binary_swap
+	  || f->usage == CB_USAGE_PACKED
+	  || (f->usage == CB_USAGE_BINARY
+	      && (f->size == 3 || f->size == 5
+		  || f->size == 6 || f->size == 7)))
 	return cb_build_move_call (src, dst);
 
       /* output optimal code */
