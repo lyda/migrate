@@ -27,7 +27,6 @@
 #include <ctype.h>
 
 #include "common.h"
-#include "call.h"
 #include "lib/gettext.h"
 
 extern void cob_init_numeric (void);
