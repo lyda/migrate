@@ -1459,6 +1459,9 @@ proc_header (int using)
   if (stack_offset & 1)
     stack_offset++;
 
+  if (currency_symbol != '$')
+    output ("\tmovb\t$%d,cCurrencySymbol\n", currency_symbol);
+
   /*  
      Extra 16 bytes holds search all temporary data 
      EOT switch, min, max boundaries and saved ebx.

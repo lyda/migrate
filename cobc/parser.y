@@ -336,10 +336,10 @@ on_off_names:
 | off_status_is_name on_status_is_name
 ;
 on_status_is_name:
-  ON opt_status opt_is SYMBOL_TOK
+  ON opt_status opt_is SYMBOL_TOK	{ COB_FIELD_TYPE ($4) = '8'; }
 ;
 off_status_is_name:
-  OFF opt_status opt_is SYMBOL_TOK
+  OFF opt_status opt_is SYMBOL_TOK	{ COB_FIELD_TYPE ($4) = '8'; }
 ;
 sw: SW1 | SW2 | SW3 | SW4 | SW5 | SW6 | SW7 | SW8 ;
 
