@@ -909,76 +909,13 @@ output_recursive (void (*func) (struct cb_field *), struct cb_field *f)
 
 
 /*
- * Exception handler
- */
-
-static void output_perform_call (struct cb_label *lb, struct cb_label *le);
-
-static void
-output_handler (int id, cb_tree st1, cb_tree st2, struct cb_label *l)
-{
-  int code = CB_EXCEPTION_CODE (id);
-  if (st1)
-    {
-      if ((code & 0x00ff) == 0)
-	output_line ("if ((cob_exception_code & 0xff00) == 0x%04x)", code);
-      else
-	output_line ("if (cob_exception_code == 0x%04x)", code);
-      output_stmt (st1);
-      if (st2 || l)
-	output_line ("else");
-    }
-  if (l)
-    {
-      output_line ("if (cob_exception_code)");
-      output_indent ("  {");
-      output_perform_call (l, l);
-      output_indent ("  }");
-      if (st2)
-	output_line ("else");
-    }
-  if (st2)
-    {
-      if (st1 == 0 && l == 0)
-	output_line ("if (!cob_exception_code)");
-      output_stmt (st2);
-    }
-}
-
-
-/*
- * Inline functions
- */
-
-static void
-output_memcmp (cb_tree x, cb_tree y)
-{
-  size_t size = cb_field_size (x);
-  unsigned char buff[size];
-  struct cb_literal *l = CB_LITERAL (y);
-
-  memset (buff, ' ', size);
-  memcpy (buff, l->data, l->size);
-
-  output_prefix ();
-  output ("cob_cmp_result = memcmp (");
-  output_data (x);
-  output (", ");
-  output_string (buff, size);
-  output (", %d);\n", size);
-}
-
-
-/*
  * GO TO
  */
 
 static void
 output_goto (cb_tree x)
 {
-  struct cb_reference *r = CB_REFERENCE (x);
-  struct cb_label *l = CB_LABEL (r->value);
-  output_line ("goto lb_%s;", l->cname);
+  output_line ("goto lb_%s;", CB_LABEL (cb_ref (x))->cname);
 }
 
 static void
@@ -1481,8 +1418,6 @@ static struct inline_func {
   const char *name;
   void (*func) ();
 } inline_table[] = {
-  {"@handler", output_handler},
-  {"@memcmp", output_memcmp},
   {"@goto", output_goto},
   {"@goto-depending", output_goto_depending},
   {"@exit-program", output_exit_program},
@@ -1645,7 +1580,9 @@ output_stmt (cb_tree x)
     case CB_TAG_STATEMENT:
       {
 	static int last_line = 0;
+	int need_handler = 0;
 	struct cb_statement *p = CB_STATEMENT (x);
+
 	output_line ("/* %s */", p->name);
 	if (x->source_file && last_line != x->source_line)
 	  {
@@ -1658,14 +1595,48 @@ output_stmt (cb_tree x)
 	      }
 	    last_line = x->source_line;
 	  }
-	if (p->handler)
-	  output_line ("cob_exception_code = 0;");
+
+	if (p->handler1 || p->handler2
+	    || (p->file && CB_EXCEPTION_ENABLE (COB_EC_I_O)))
+	  {
+	    output_line ("cob_exception_code = 0;");
+	    need_handler = 1;
+	  }
 
 	if (p->body)
 	  output_stmt (p->body);
 
-	if (p->handler)
-	  output_stmt (p->handler);
+	if (need_handler)
+	  {
+	    int code = CB_EXCEPTION_CODE (p->handler_id);
+	    if (p->handler1)
+	      {
+		if ((code & 0x00ff) == 0)
+		  output_line ("if ((cob_exception_code & 0xff00) == 0x%04x)",
+			       code);
+		else
+		  output_line ("if (cob_exception_code == 0x%04x)", code);
+		output_stmt (p->handler1);
+		if (p->handler2 || p->file)
+		  output_line ("else");
+	      }
+	    if (p->file)
+	      {
+		output_line ("if (cob_exception_code)");
+		output_indent ("  {");
+		output_perform_call (CB_FILE (p->file)->handler,
+				     CB_FILE (p->file)->handler);
+		output_indent ("  }");
+		if (p->handler2)
+		  output_line ("else");
+	      }
+	    if (p->handler2)
+	      {
+		if (p->handler1 == 0 && p->file == 0)
+		  output_line ("if (!cob_exception_code)");
+		output_stmt (p->handler2);
+	      }
+	  }
 	break;
       }
     case CB_TAG_LABEL:

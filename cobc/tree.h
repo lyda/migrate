@@ -241,6 +241,8 @@ struct cb_integer {
 
 extern cb_tree cb_build_integer (int val);
 
+#define cb_int(n)	cb_build_integer (n)
+
 
 /*
  * String
@@ -701,7 +703,10 @@ struct cb_statement {
   struct cb_tree_common common;
   const char *name;
   cb_tree body;
-  cb_tree handler;
+  cb_tree file;
+  int handler_id;
+  cb_tree handler1;
+  cb_tree handler2;
   int need_terminator;
 };
 
@@ -739,7 +744,7 @@ extern int list_length (cb_tree l);
 
 #define cons(x,l)		cb_build_list (0, x, l)
 #define list(x)			cb_build_list (0, x, 0)
-#define cb_build_int_list(n,x)	cb_build_list (cb_build_integer (n), x, 0)
+#define cb_build_int_list(n,x)	cb_build_list (cb_int (n), x, 0)
 
 /* Pair */
 

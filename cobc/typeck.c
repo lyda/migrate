@@ -69,7 +69,7 @@ cb_define_switch_name (cb_tree name, cb_tree sname, cb_tree flag, cb_tree ref)
     }
   else
     {
-      cb_tree switch_id = cb_build_integer (CB_SYSTEM_NAME (sname)->token);
+      cb_tree switch_id = cb_int (CB_SYSTEM_NAME (sname)->token);
       cb_tree value = cb_build_funcall_1 ("cob_get_switch", switch_id);
       if (flag == cb_int0)
 	value = cb_build_negation (value);
@@ -669,7 +669,7 @@ cb_build_memset (cb_tree x, char c)
 {
   return cb_build_funcall_3 ("memset",
 			     cb_build_cast_address (x),
-			     cb_build_integer (c),
+			     cb_int (c),
 			     cb_build_cast_length (x));
 }
 
@@ -694,7 +694,7 @@ cb_build_move_num (cb_tree x, int high)
   switch (cb_field (x)->usage)
     {
     case CB_USAGE_BINARY:
-      return cb_build_assign (x, cb_build_integer (high ? -1 : 0));
+      return cb_build_assign (x, cb_int (high ? -1 : 0));
     case CB_USAGE_DISPLAY:
       return cb_build_memset (x, high ? '9' : '0');
     case CB_USAGE_PACKED:
@@ -804,7 +804,7 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
       int n = l->expt - f->pic->expt;
       for (; n > 0; n--) val *= 10;
       for (; n < 0; n++) val /= 10;
-      return cb_build_assign (dst, cb_build_integer (val));
+      return cb_build_assign (dst, cb_int (val));
     }
   else
     {

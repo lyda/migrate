@@ -349,9 +349,9 @@ cb_init_constants (void)
   cb_low         = make_constant (CB_CATEGORY_ALPHANUMERIC, "&cob_low");
   cb_high        = make_constant (CB_CATEGORY_ALPHANUMERIC, "&cob_high");
   cb_quote       = make_constant (CB_CATEGORY_ALPHANUMERIC, "&cob_quote");
-  cb_int0        = cb_build_integer (0);
-  cb_int1        = cb_build_integer (1);
-  cb_int2        = cb_build_integer (2);
+  cb_int0        = cb_int (0);
+  cb_int1        = cb_int (1);
+  cb_int2        = cb_int (2);
   cb_standard_error_handler = make_constant_label ("standard_error_handler");
 }
 

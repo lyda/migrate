@@ -76,12 +76,6 @@
 #define push_funcall_3(f,a,b,c)	   push (cb_build_funcall_3 (f, a, b, c))
 #define push_funcall_4(f,a,b,c,d)  push (cb_build_funcall_4 (f, a, b, c, d))
 
-#define make_handler(v,a,b)	cb_build_funcall_4 ("@handler", (void *) v, a, b, 0)
-
-#define push_file_handler(file,handler)			\
-  if (handler || CB_EXCEPTION_ENABLE (COB_EC_I_O))	\
-    push (build_file_handler (file, handler));
-
 #define push_entry(name,using_list)				\
   {								\
     cb_tree label = cb_build_label (make_reference (name), NULL);	\
@@ -103,14 +97,12 @@ static struct cb_field *current_field;
 static struct cb_file *current_file;
 static enum cb_storage current_storage;
 
-static int current_call_mode;
+static int current_mode;
 static const char *current_inspect_func;
 static cb_tree current_inspect_data;
 
 static int last_operator;
 static cb_tree last_lefthand;
-
-static cb_tree build_file_handler (cb_tree file, cb_tree handler);
 
 static void terminator_warning (void);
 %}
@@ -1102,8 +1094,8 @@ occurs_key_list:
   }
 ;
 ascending_or_descending:
-  ASCENDING			{ $$ = cb_build_integer (COB_ASCENDING); }
-| DESCENDING			{ $$ = cb_build_integer (COB_DESCENDING); }
+  ASCENDING			{ $$ = cb_int (COB_ASCENDING); }
+| DESCENDING			{ $$ = cb_int (COB_DESCENDING); }
 ;
 
 occurs_indexed:
@@ -1702,7 +1694,7 @@ call_statement:
 ;
 call_using:
   /* empty */		{ $$ = NULL; }
-| USING			{ current_call_mode = CB_CALL_BY_REFERENCE; }
+| USING			{ current_mode = CB_CALL_BY_REFERENCE; }
   call_param_list	{ $$ = $3; }
 ;
 call_param_list:
@@ -1711,14 +1703,14 @@ call_param_list:
   call_param		{ $$ = list_append ($1, $2); }
 ;
 call_param:
-  value			{ $$ = cb_build_int_list (current_call_mode, $1); }
-| _by call_mode value	{ $$ = cb_build_int_list (current_call_mode, $3);}
+  value			{ $$ = cb_build_int_list (current_mode, $1); }
+| _by call_mode value	{ $$ = cb_build_int_list (current_mode, $3);}
 ;
 call_mode:
-  REFERENCE		{ current_call_mode = CB_CALL_BY_REFERENCE; }
-| CONTENT		{ current_call_mode = CB_CALL_BY_CONTENT; }
-| CONTENT LENGTH _of	{ current_call_mode = CB_CALL_BY_LENGTH; }
-| VALUE			{ current_call_mode = CB_CALL_BY_VALUE; }
+  REFERENCE		{ current_mode = CB_CALL_BY_REFERENCE; }
+| CONTENT		{ current_mode = CB_CALL_BY_CONTENT; }
+| CONTENT LENGTH _of	{ current_mode = CB_CALL_BY_LENGTH; }
+| VALUE			{ current_mode = CB_CALL_BY_VALUE; }
 ;
 call_returning:
   /* empty */		{ $$ = NULL; }
@@ -1763,26 +1755,23 @@ cancel_list:
  */
 
 close_statement:
-  CLOSE				{ BEGIN_STATEMENT ("CLOSE"); }
-  close_list
+  CLOSE close_list
 ;
 close_list:
-| close_list file_name close_option
+| close_list				{ BEGIN_STATEMENT ("CLOSE"); }
+  file_name close_option
   {
-    if ($2 != cb_error_node)
-      {
-	cb_tree file = cb_ref ($2);
-	push_funcall_2 ("cob_close", file, $3);
-	push_file_handler (file, NULL);
-      }
+    cb_tree file = cb_ref ($3);
+    current_statement->file = file;
+    current_statement->body = cb_build_funcall_2 ("cob_close", file, $4);
   }
 ;
 close_option:
-  /* empty */			{ $$ = cb_build_integer (COB_CLOSE_NORMAL); }
-| reel_or_unit			{ $$ = cb_build_integer (COB_CLOSE_UNIT); }
-| reel_or_unit _for REMOVAL	{ $$ = cb_build_integer (COB_CLOSE_UNIT_REMOVAL); }
-| _with NO REWIND		{ $$ = cb_build_integer (COB_CLOSE_NO_REWIND); }
-| _with LOCK			{ $$ = cb_build_integer (COB_CLOSE_LOCK); }
+  /* empty */			{ $$ = cb_int (COB_CLOSE_NORMAL); }
+| reel_or_unit			{ $$ = cb_int (COB_CLOSE_UNIT); }
+| reel_or_unit _for REMOVAL	{ $$ = cb_int (COB_CLOSE_UNIT_REMOVAL); }
+| _with NO REWIND		{ $$ = cb_int (COB_CLOSE_NO_REWIND); }
+| _with LOCK			{ $$ = cb_int (COB_CLOSE_LOCK); }
 ;
 reel_or_unit: REEL | UNIT ;
 
@@ -1821,8 +1810,8 @@ delete_statement:
   end_delete
   {
     cb_tree file = cb_ref ($3);
-    push_funcall_1 ("cob_delete", file);
-    push_file_handler (file, $5);
+    current_statement->file = file;
+    current_statement->body = cb_build_funcall_1 ("cob_delete", file);
   }
 ;
 end_delete:
@@ -2116,13 +2105,13 @@ initialize_replacing_list:
   }
 ;
 replacing_option:
-  ALPHABETIC			{ $$ = cb_build_integer (CB_CATEGORY_ALPHABETIC); }
-| ALPHANUMERIC			{ $$ = cb_build_integer (CB_CATEGORY_ALPHANUMERIC); }
-| NUMERIC			{ $$ = cb_build_integer (CB_CATEGORY_NUMERIC); }
-| ALPHANUMERIC_EDITED		{ $$ = cb_build_integer (CB_CATEGORY_ALPHANUMERIC_EDITED); }
-| NUMERIC_EDITED		{ $$ = cb_build_integer (CB_CATEGORY_NUMERIC_EDITED); }
-| NATIONAL			{ $$ = cb_build_integer (CB_CATEGORY_NATIONAL); }
-| NATIONAL_EDITED		{ $$ = cb_build_integer (CB_CATEGORY_NATIONAL_EDITED); }
+  ALPHABETIC			{ $$ = cb_int (CB_CATEGORY_ALPHABETIC); }
+| ALPHANUMERIC			{ $$ = cb_int (CB_CATEGORY_ALPHANUMERIC); }
+| NUMERIC			{ $$ = cb_int (CB_CATEGORY_NUMERIC); }
+| ALPHANUMERIC_EDITED		{ $$ = cb_int (CB_CATEGORY_ALPHANUMERIC_EDITED); }
+| NUMERIC_EDITED		{ $$ = cb_int (CB_CATEGORY_NUMERIC_EDITED); }
+| NATIONAL			{ $$ = cb_int (CB_CATEGORY_NATIONAL); }
+| NATIONAL_EDITED		{ $$ = cb_int (CB_CATEGORY_NATIONAL_EDITED); }
 ;
 _data: | DATA ;
 
@@ -2343,26 +2332,26 @@ end_multiply:
  */
 
 open_statement:
-  OPEN				{ BEGIN_STATEMENT ("OPEN"); }
-  open_list
+  OPEN open_mode open_list
 ;
 open_list:
-| open_list open_mode file_name_list
+| open_list			{ BEGIN_STATEMENT ("OPEN"); }
+  opt_open_mode file_name
   {
-    cb_tree l;
-    for (l = $3; l; l = CB_CHAIN (l))
-      {
-	cb_tree file = cb_ref (CB_VALUE (l));
-	push_funcall_2 ("cob_open", file, $2);
-	push_file_handler (file, NULL);
-      }
+    cb_tree file = cb_ref ($4);
+    current_statement->file = file;
+    current_statement->body = cb_build_funcall_2 ("cob_open", file,
+						  cb_int (current_mode));
   }
 ;
+opt_open_mode:
+| open_mode
+;
 open_mode:
-  INPUT				{ $$ = cb_build_integer (COB_OPEN_INPUT); }
-| OUTPUT			{ $$ = cb_build_integer (COB_OPEN_OUTPUT); }
-| I_O				{ $$ = cb_build_integer (COB_OPEN_I_O); }
-| EXTEND			{ $$ = cb_build_integer (COB_OPEN_EXTEND); }
+  INPUT				{ current_mode = COB_OPEN_INPUT; }
+| OUTPUT			{ current_mode = COB_OPEN_OUTPUT; }
+| I_O				{ current_mode = COB_OPEN_I_O; }
+| EXTEND			{ current_mode = COB_OPEN_EXTEND; }
 ;
 
 
@@ -2464,21 +2453,24 @@ read_statement:
   {
     cb_tree file = cb_ref ($3);
     cb_tree key = $7;
+    cb_tree e;
     if ($4 == cb_int1 || CB_FILE (file)->access_mode == COB_ACCESS_SEQUENTIAL)
       {
 	/* READ NEXT */
 	if (key)
 	  cb_warning (_("KEY ignored with sequential READ"));
-	push_funcall_2 ("cob_read", file, cb_int0);
+	e = cb_build_funcall_2 ("cob_read", file, cb_int0);
       }
     else
       {
 	/* READ */
-	push_funcall_2 ("cob_read", file, key ? key : CB_FILE (file)->key);
+	e = cb_build_funcall_2 ("cob_read", file,
+				key ? key : CB_FILE (file)->key);
       }
+    current_statement->file = file;
+    current_statement->body = e;
     if ($6)
       push (cb_build_move (CB_TREE (CB_FILE (file)->record), $6));
-    push_file_handler (file, $8);
   }
 ;
 read_into:
@@ -2490,9 +2482,8 @@ read_key:
 | KEY _is data_name		{ $$ = $3; }
 ;
 read_handler:
-  /* empty */			{ $$ = NULL; }
-| at_end			{ $$ = $1; }
-| invalid_key			{ $$ = $1; }
+| at_end
+| invalid_key
 ;
 end_read:
   /* empty */			{ terminator_warning (); }
@@ -2526,10 +2517,10 @@ return_statement:
   end_return
   {
     cb_tree file = cb_ref ($3);
-    push_funcall_2 ("cob_read", file, cb_int0);
+    current_statement->file = file;
+    current_statement->body = cb_build_funcall_2 ("cob_read", file, cb_int0);
     if ($5)
       push (cb_build_move (CB_TREE (CB_FILE (file)->record), $5));
-    push_file_handler (file, $6);
   }
 ;
 end_return:
@@ -2548,10 +2539,12 @@ rewrite_statement:
   end_rewrite
   {
     cb_tree file = CB_TREE (CB_FIELD (cb_ref ($3))->file);
+    cb_tree l = NULL;
     if ($4)
-      push (cb_build_move ($4, $3));
-    push_funcall_2 ("cob_rewrite", file, $3);
-    push_file_handler (file, $5);
+      l = list_add (l, cb_build_move ($4, $3));
+    l = list_add (l, cb_build_funcall_2 ("cob_rewrite", file, $3));
+    current_statement->file = file;
+    current_statement->body = make_sequence (l);
   }
 ;
 end_rewrite:
@@ -2667,7 +2660,7 @@ set_to_on_off:
     for (l = $1; l; l = CB_CHAIN (l))
       {
 	struct cb_system_name *s = CB_SYSTEM_NAME (cb_ref (CB_VALUE (l)));
-	push_funcall_2 ("cob_set_switch", cb_build_integer (s->token), $3);
+	push_funcall_2 ("cob_set_switch", cb_int (s->token), $3);
       }
   }
 ;
@@ -2731,16 +2724,16 @@ sort_input:
   USING file_name_list
   {
     cb_tree l;
-    push_funcall_2 ("cob_open", $0, cb_build_integer (COB_OPEN_OUTPUT));
+    push_funcall_2 ("cob_open", $0, cb_int (COB_OPEN_OUTPUT));
     for (l = $2; l; l = CB_CHAIN (l))
       push_funcall_2 ("cob_sort_using", $0, CB_VALUE (l));
-    push_funcall_2 ("cob_close", $0, cb_build_integer (COB_CLOSE_NORMAL));
+    push_funcall_2 ("cob_close", $0, cb_int (COB_CLOSE_NORMAL));
   }
 | INPUT PROCEDURE _is perform_procedure
   {
-    push_funcall_2 ("cob_open", $0, cb_build_integer (COB_OPEN_OUTPUT));
+    push_funcall_2 ("cob_open", $0, cb_int (COB_OPEN_OUTPUT));
     push (cb_build_perform_once ($4));
-    push_funcall_2 ("cob_close", $0, cb_build_integer (COB_CLOSE_NORMAL));
+    push_funcall_2 ("cob_close", $0, cb_int (COB_CLOSE_NORMAL));
   }
 ;
 
@@ -2750,16 +2743,16 @@ sort_output:
     cb_tree l;
     for (l = $2; l; l = CB_CHAIN (l))
       {
-	push_funcall_2 ("cob_open", $-1, cb_build_integer (COB_OPEN_INPUT));
+	push_funcall_2 ("cob_open", $-1, cb_int (COB_OPEN_INPUT));
 	push_funcall_2 ("cob_sort_giving", $-1, CB_VALUE (l));
-	push_funcall_2 ("cob_close", $-1, cb_build_integer (COB_CLOSE_NORMAL));
+	push_funcall_2 ("cob_close", $-1, cb_int (COB_CLOSE_NORMAL));
       }
   }
 | OUTPUT PROCEDURE _is perform_procedure
   {
-    push_funcall_2 ("cob_open", $-1, cb_build_integer (COB_OPEN_INPUT));
+    push_funcall_2 ("cob_open", $-1, cb_int (COB_OPEN_INPUT));
     push (cb_build_perform_once ($4));
-    push_funcall_2 ("cob_close", $-1, cb_build_integer (COB_CLOSE_NORMAL));
+    push_funcall_2 ("cob_close", $-1, cb_int (COB_CLOSE_NORMAL));
   }
 ;
 
@@ -2770,15 +2763,14 @@ sort_output:
 
 start_statement:
   START				{ BEGIN_STATEMENT ("START"); }
-  file_name			{ $$ = cb_build_integer (COB_EQ); }
+  file_name			{ $$ = cb_int (COB_EQ); }
   start_key opt_invalid_key
   end_start
   {
     cb_tree file = cb_ref ($3);
-    if ($5 == NULL)
-      $5 = CB_FILE (file)->key;
-    push_funcall_3 ("cob_start", file, $4, $5);
-    push_file_handler (file, $6);
+    cb_tree key = $5 ? $5 : CB_FILE (file)->key;
+    current_statement->file = file;
+    current_statement->body = cb_build_funcall_3 ("cob_start", file, $4, key);
   }
 ;
 start_key:
@@ -2786,11 +2778,11 @@ start_key:
 | KEY _is start_op data_name	{ $0 = $3; $$ = $4; }
 ;
 start_op:
-  flag_not equal		{ $$ = cb_build_integer (($1 == cb_int1) ? COB_NE : COB_EQ); }
-| flag_not greater		{ $$ = cb_build_integer (($1 == cb_int1) ? COB_LE : COB_GT); }
-| flag_not less			{ $$ = cb_build_integer (($1 == cb_int1) ? COB_GE : COB_LT); }
-| flag_not greater_or_equal	{ $$ = cb_build_integer (($1 == cb_int1) ? COB_LT : COB_GE); }
-| flag_not less_or_equal	{ $$ = cb_build_integer (($1 == cb_int1) ? COB_GT : COB_LE); }
+  flag_not equal		{ $$ = cb_int (($1 == cb_int1) ? COB_NE : COB_EQ); }
+| flag_not greater		{ $$ = cb_int (($1 == cb_int1) ? COB_LE : COB_GT); }
+| flag_not less			{ $$ = cb_int (($1 == cb_int1) ? COB_GE : COB_LT); }
+| flag_not greater_or_equal	{ $$ = cb_int (($1 == cb_int1) ? COB_LT : COB_GE); }
+| flag_not less_or_equal	{ $$ = cb_int (($1 == cb_int1) ? COB_GT : COB_LE); }
 ;
 end_start:
   /* empty */			{ terminator_warning (); }
@@ -3006,36 +2998,38 @@ exception_or_error: EXCEPTION | ERROR ;
 
 write_statement:
   WRITE				{ BEGIN_STATEMENT ("WRITE"); }
-  record_name write_from write_option write_exception
+  record_name write_from write_option write_handler
   end_write
   {
     struct cb_field *f = CB_FIELD (cb_ref ($3));
     cb_tree opt = $5;
+    cb_tree e = NULL;
     cb_tree file = CB_TREE (f->file);
+    cb_tree l = NULL;
+
+    if (opt)
+      {
+	if (CB_PAIR_Y (opt))
+	  e = cb_build_funcall_2 ("cob_write_lines", file, CB_PAIR_Y (opt));
+	else
+	  e = cb_build_funcall_1 ("cob_write_page", file);
+      }
 
     /* AFTER ADVANCING */
     if (opt && CB_PAIR_X (opt) == CB_AFTER)
-      {
-	if (CB_PAIR_Y (opt))
-	  push_funcall_2 ("cob_write_lines", file, CB_PAIR_Y (opt));
-	else
-	  push_funcall_1 ("cob_write_page", file);
-      }
+      l = list_add (l, e);
 
     /* WRITE */
     if ($4)
-      push (cb_build_move ($4, $3));
-    push_funcall_2 ("cob_write", file, $3);
-    push_file_handler (file, $6);
+      l = list_add (l, cb_build_move ($4, $3));
+    l = list_add (l, cb_build_funcall_2 ("cob_write", file, $3));
 
     /* BEFORE ADVANCING */
     if (opt && CB_PAIR_X (opt) == CB_BEFORE)
-      {
-	if (CB_PAIR_Y (opt))
-	  push_funcall_2 ("cob_write_lines", file, CB_PAIR_Y (opt));
-	else
-	  push_funcall_1 ("cob_write_page", file);
-      }
+      l = list_add (l, e);
+
+    current_statement->file = file;
+    current_statement->body = make_sequence (l);
   }
 ;
 write_from:
@@ -3060,10 +3054,9 @@ before_or_after:
   BEFORE			{ $$ = CB_BEFORE; }
 | AFTER				{ $$ = CB_AFTER; }
 ;
-write_exception:
-  /* empty */			{ $$ = NULL; }
-| at_eop			{ $$ = $1; }
-| invalid_key			{ $$ = $1; }
+write_handler:
+| at_eop
+| invalid_key
 ;
 end_write:
   /* empty */			{ terminator_warning (); }
@@ -3083,17 +3076,14 @@ on_size_error:
   opt_on_size_error
   opt_not_on_size_error
   {
-    if ($1 || $2)
-      current_statement->handler = make_handler (COB_EC_SIZE, $1, $2);
+    current_statement->handler_id = COB_EC_SIZE;
   }
 ;
 opt_on_size_error:
-  /* empty */				{ $$ = NULL; }
-| _on SIZE ERROR statement_list		{ $$ = $4; }
+| _on SIZE ERROR statement_list		{ current_statement->handler1 = $4; }
 ;
 opt_not_on_size_error:
-  /* empty */				{ $$ = NULL; }
-| NOT _on SIZE ERROR statement_list	{ $$ = $5; }
+| NOT _on SIZE ERROR statement_list	{ current_statement->handler2 = $5; }
 ;
 
 
@@ -3105,17 +3095,14 @@ on_overflow:
   opt_on_overflow
   opt_not_on_overflow
   {
-    if ($1 || $2)
-      current_statement->handler = make_handler (COB_EC_OVERFLOW, $1, $2);
+    current_statement->handler_id = COB_EC_OVERFLOW;
   }
 ;
 opt_on_overflow:
-  /* empty */				{ $$ = NULL; }
-| _on OVERFLOW statement_list		{ $$ = $3; }
+| _on OVERFLOW statement_list		{ current_statement->handler1 = $3; }
 ;
 opt_not_on_overflow:
-  /* empty */				{ $$ = NULL; }
-| NOT _on OVERFLOW statement_list	{ $$ = $4; }
+| NOT _on OVERFLOW statement_list	{ current_statement->handler2 = $4; }
 ;
 
 
@@ -3126,15 +3113,19 @@ opt_not_on_overflow:
 at_end:
   at_end_sentence
   {
-    $$ = make_handler (COB_EC_I_O_AT_END, $1, 0);
+    current_statement->handler_id = COB_EC_I_O_AT_END;
+    current_statement->handler1 = $1;
   }
 | not_at_end_sentence
   {
-    $$ = make_handler (COB_EC_I_O_AT_END, 0, $1);
+    current_statement->handler_id = COB_EC_I_O_AT_END;
+    current_statement->handler2 = $1;
   }
 | at_end_sentence not_at_end_sentence
   {
-    $$ = make_handler (COB_EC_I_O_AT_END, $1, $2);
+    current_statement->handler_id = COB_EC_I_O_AT_END;
+    current_statement->handler1 = $1;
+    current_statement->handler2 = $2;
   }
 ;
 at_end_sentence:
@@ -3153,15 +3144,19 @@ not_at_end_sentence:
 at_eop:
   at_eop_sentence
   {
-    $$ = make_handler (COB_EC_I_O_EOP, $1, 0);
+    current_statement->handler_id = COB_EC_I_O_EOP;
+    current_statement->handler1 = $1;
   }
 | not_at_eop_sentence
   {
-    $$ = make_handler (COB_EC_I_O_EOP, 0, $1);
+    current_statement->handler_id = COB_EC_I_O_EOP;
+    current_statement->handler2 = $1;
   }
 | at_eop_sentence not_at_eop_sentence
   {
-    $$ = make_handler (COB_EC_I_O_EOP, $1, $2);
+    current_statement->handler_id = COB_EC_I_O_EOP;
+    current_statement->handler1 = $1;
+    current_statement->handler2 = $2;
   }
 ;
 at_eop_sentence:
@@ -3177,22 +3172,25 @@ not_at_eop_sentence:
  */
 
 opt_invalid_key:
-  /* empty */			{ $$ = NULL; }
 | invalid_key
 ;
 invalid_key:
   invalid_key_sentence
   {
-    $$ = make_handler (COB_EC_I_O_INVALID_KEY, $1, 0);
+    current_statement->handler_id = COB_EC_I_O_INVALID_KEY;
+    current_statement->handler1 = $1;
   }
 | not_invalid_key_sentence
   {
-    $$ = make_handler (COB_EC_I_O_INVALID_KEY, 0, $1);
+    current_statement->handler_id = COB_EC_I_O_INVALID_KEY;
+    current_statement->handler2 = $1;
   }
 | invalid_key_sentence
   not_invalid_key_sentence
   {
-    $$ = make_handler (COB_EC_I_O_INVALID_KEY, $1, $2);
+    current_statement->handler_id = COB_EC_I_O_INVALID_KEY;
+    current_statement->handler1 = $1;
+    current_statement->handler2 = $2;
   }
 ;
 invalid_key_sentence:
@@ -3525,31 +3523,31 @@ expr_item:
   value				{ $$ = $1; }
 | '(' expr_1 ')'		{ $$ = cb_build_parenthesize ($2); }
 /* arithmetic operator */
-| '+'				{ $$ = cb_build_integer ('+'); }
-| '-'				{ $$ = cb_build_integer ('-'); }
-| '*'				{ $$ = cb_build_integer ('*'); }
-| '/'				{ $$ = cb_build_integer ('/'); }
-| '^'				{ $$ = cb_build_integer ('^'); }
+| '+'				{ $$ = cb_int ('+'); }
+| '-'				{ $$ = cb_int ('-'); }
+| '*'				{ $$ = cb_int ('*'); }
+| '/'				{ $$ = cb_int ('/'); }
+| '^'				{ $$ = cb_int ('^'); }
 /* conditional operator */
-| equal				{ $$ = cb_build_integer ('='); }
-| greater			{ $$ = cb_build_integer ('>'); }
-| less				{ $$ = cb_build_integer ('<'); }
-| GE				{ $$ = cb_build_integer (GE); }
-| LE				{ $$ = cb_build_integer (LE); }
+| equal				{ $$ = cb_int ('='); }
+| greater			{ $$ = cb_int ('>'); }
+| less				{ $$ = cb_int ('<'); }
+| GE				{ $$ = cb_int (GE); }
+| LE				{ $$ = cb_int (LE); }
 /* class condition */
-| NUMERIC			{ $$ = cb_build_integer (NUMERIC); }
-| ALPHABETIC			{ $$ = cb_build_integer (ALPHABETIC); }
-| ALPHABETIC_LOWER		{ $$ = cb_build_integer (ALPHABETIC_LOWER); }
-| ALPHABETIC_UPPER		{ $$ = cb_build_integer (ALPHABETIC_UPPER); }
+| NUMERIC			{ $$ = cb_int (NUMERIC); }
+| ALPHABETIC			{ $$ = cb_int (ALPHABETIC); }
+| ALPHABETIC_LOWER		{ $$ = cb_int (ALPHABETIC_LOWER); }
+| ALPHABETIC_UPPER		{ $$ = cb_int (ALPHABETIC_UPPER); }
 | CLASS_NAME			{ $$ = cb_ref ($1); }
 /* sign condition */
   /* ZERO is defined in `value' */
-| POSITIVE			{ $$ = cb_build_integer (POSITIVE); }
-| NEGATIVE			{ $$ = cb_build_integer (NEGATIVE); }
+| POSITIVE			{ $$ = cb_int (POSITIVE); }
+| NEGATIVE			{ $$ = cb_int (NEGATIVE); }
 /* logical operator */
-| NOT				{ $$ = cb_build_integer (NOT); }
-| AND				{ $$ = cb_build_integer (AND); }
-| OR				{ $$ = cb_build_integer (OR); }
+| NOT				{ $$ = cb_int (NOT); }
+| AND				{ $$ = cb_int (AND); }
+| OR				{ $$ = cb_int (OR); }
 ;
 
 equal: '=' | EQUAL _to ;
@@ -4039,16 +4037,6 @@ _with:		| WITH ;
 
 %%
 
-static cb_tree
-build_file_handler (cb_tree file, cb_tree handler)
-{
-  if (handler == NULL)
-    handler = make_handler (0, 0, 0);
-  CB_FUNCALL (handler)->argv[3] = CB_FILE (file)->handler;
-  return handler;
-}
-
-
 static void
 terminator_warning (void)
 {
