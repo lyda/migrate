@@ -1,7 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 AC_INIT(open-cobol, 0.9.4)
 AC_CONFIG_SRCDIR(cobc/cobc.c)
-AC_CONFIG_SUBDIRS(libltdl)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
@@ -27,7 +26,6 @@ AM_PROG_LEX
 AC_PROG_YACC
 AC_PROG_LN_S
 AC_PROG_INSTALL
-AC_LIBLTDL_CONVENIENCE
 AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
 AC_PROG_MAKE_SET
@@ -39,14 +37,19 @@ AC_CHECK_HEADERS([alloca.h errno.h fcntl.h limits.h malloc.h stdlib.h \
 		  string.h sys/param.h sys/time.h unistd.h])
 
 # Checks for db.
-LIBDB="-ldb1"
-AC_CHECK_HEADERS([db1/db.h], , AC_MSG_ERROR(db1/db.h is required))
-AC_CHECK_LIB([db1], [dbopen], , AC_MSG_ERROR(libdb1 is required))
+LIBDB="-ldb"
+AC_CHECK_HEADERS([db.h], , AC_MSG_ERROR(db.h is required))
+AC_CHECK_LIB([db], [db_create], , AC_MSG_ERROR(DB 3.0 or later is required))
 
 # Checks for gmp.
 LIBGMP="-lgmp"
 AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp.h is required))
 AC_CHECK_LIB([gmp], [__gmp_rand], , AC_MSG_ERROR(gmp3 or higher is required))
+
+# Checks for ltdl.
+LIBLTDL="-lltdl"
+AC_CHECK_HEADERS([ltdl.h], , AC_MSG_ERROR(ltdl.h is required))
+AC_CHECK_LIB([ltdl], [lt_dlopen], , AC_MSG_ERROR(ltdl is required))
 
 # Checks for readline.
 LIBRL=""
@@ -74,10 +77,10 @@ AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
 COB_CC="gcc"
 COB_COBPP="cobpp"
 COB_CFLAGS="-I$includedir"
-COB_LIBS="-L$libdir -lcob ${LIBDB} ${LIBGMP} ${LIBRL}"
+COB_LIBS="-L$libdir -lcob ${LIBDB} ${LIBGMP} ${LIBLTDL} ${LIBRL}"
 COB_LIBRARY_PATH=".:$libdir/$PACKAGE"
-LIBCOB_CFLAGS="${INCLTDL}"
-LIBCOB_LIBS="${LIBLTDL} ${LIBDB} ${LIBGMP} ${LIBRL}"
+LIBCOB_CFLAGS=""
+LIBCOB_LIBS="${LIBDB} ${LIBGMP} ${LIBLTDL} ${LIBRL}"
 LIBS="$save_libs"
 
 AC_SUBST(COB_CC)
