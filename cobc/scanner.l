@@ -79,7 +79,7 @@ static int scan_picture (char *text);
   start_condition = 0;
 %}
 
-<*>[ \t,;]* { /* ignore */ }
+<*>[ \t,;]+ { /* ignore */ }
 
 <*>\n {
   if (cob_stabs_flag && in_procedure)

@@ -890,7 +890,6 @@ value_clause:
 value_list:
   value_item
 | value_list value_item
-| value_list ',' value_item
 ;
 value_item:
   gliteral			{ set_variable_values($1,$1); }
@@ -1611,7 +1610,6 @@ goto_statement:
 label_list:
   label				{ $$ = make_list ($1); }
 | label_list label		{ $$ = list_append ($1, $2); }
-| label_list ',' label		{ $$ = list_append ($1, $3); }
 ;
 
 
@@ -2958,8 +2956,8 @@ subscripted_variable:
     $$ = make_subref ($1, $3);
   }
 subscript_list:
-  subscript				{ $$ = cons ($1, NULL); }
-| subscript_list opt_comma subscript	{ $$ = cons ($3, $1); }
+  subscript			{ $$ = cons ($1, NULL); }
+| subscript_list subscript	{ $$ = cons ($2, $1); }
 ;
 subscript:
   gname				{ $$ = $1; }
@@ -3045,7 +3043,6 @@ flag_rounded:
 opt_area: | AREA ;
 opt_at: | AT ;
 opt_by: | BY ;
-opt_comma: | ',' ;
 opt_final: | FINAL ;
 opt_for: | FOR ;
 opt_in: | IN ;
