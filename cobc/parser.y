@@ -1499,7 +1499,7 @@ call_item_list:
 ;
 call_item:
   value				{ $$ = make_generic_1 (current_call_mode, $1);}
-| BY call_mode value		{ $$ = make_generic_1 (current_call_mode, $3);}
+| _by call_mode value		{ $$ = make_generic_1 (current_call_mode, $3);}
 ;
 call_mode:
   REFERENCE			{ current_call_mode = COBC_CALL_BY_REFERENCE; }
