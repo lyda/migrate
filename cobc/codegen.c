@@ -110,7 +110,7 @@ static struct sym *vartab[HASHLEN] = { NULL };
 static struct sym *labtab[HASHLEN] = { NULL };
 static struct lit *littab[HASHLEN] = { NULL };
 
-int
+static int
 hash (char *s)
 {
   int val = 0;
@@ -119,7 +119,7 @@ hash (char *s)
   return (val % HASHLEN);
 }
 
-char *
+static char *
 upcase (char *s, char *buf)
 {
   char *t;
@@ -131,6 +131,15 @@ upcase (char *s, char *buf)
     yyerror ("Too large symbol");
   *t = 0;
   return buf;
+}
+
+static char *
+chg_underline (char *str)
+{
+  char *p = str;
+  while ((p = strchr (p, '-')) != NULL)
+    *p = '_';
+  return str;
 }
 
 struct sym *
@@ -1273,8 +1282,7 @@ save_named_sect (struct sym *sy)
     (struct named_sect *) malloc (sizeof (struct named_sect));
 
   nsp->sec_no = next_available_sec_no++;
-  nsp->os_name = strdup (sy->name);
-  chg_underline (nsp->os_name);
+  nsp->os_name = chg_underline (strdup (sy->name));
   nsp->next = named_sect_list;
   named_sect_list = nsp;
   curr_sec_no = nsp->sec_no;	// Uncomment to activate
@@ -5015,17 +5023,10 @@ char *
 label_name (struct sym *lab)
 {
   if (lab->parent)
-    {
-      sprintf (name_buf, "%s__%s_%d",
-	       lab->name, lab->parent->name, pgm_segment);
-      chg_underline (name_buf);
-      //fprintf(stderr,"# label_name: %s\n",name_buf);
-      return name_buf;
-    }
-  sprintf (name_buf, "%s_%d", lab->name, pgm_segment);
-  chg_underline (name_buf);
-  //fprintf(stderr,"# label_name: %s\n",name_buf);
-  return name_buf;
+    sprintf (name_buf, "%s__%s_%d", lab->name, lab->parent->name, pgm_segment);
+  else
+    sprintf (name_buf, "%s_%d", lab->name, pgm_segment);
+  return chg_underline (name_buf);
 }
 
 char *
@@ -6050,12 +6051,4 @@ sort_exref_compare (const void *z1, const void *z2)
   strcpy (ss2, str1);
   r = strcmp (ss1, ss2);
   return r;
-}
-
-void
-chg_underline (char *s)
-{
-  char *s1;
-  while ((s1 = strchr (s, '-')) != NULL)
-    *s1 = '_';
 }

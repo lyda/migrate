@@ -384,7 +384,6 @@ struct occurs
 #define SVAR_RCODE  	"RETURN-CODE"
 
 /* htcobgen.c */
-extern char *upcase (char *s, char *buf);
 extern struct sym *lookup_symbol (char *s);
 extern struct sym *lookup (char *s, int tab);
 extern struct sym *install (char *name, int tab, int cloning);
@@ -672,7 +671,6 @@ extern void check_call_except (int excep, int notexcep, int exceplabel,
 extern void gen_initialize (struct sym *sy_start);
 extern void mark_actives (int first, int last);
 extern void dump_symbols (void);
-extern void chg_underline (char *s);
 extern struct ginfo *ginfo_container0 (void);
 extern struct ginfo *ginfo_container1 (struct ginfo *v);
 extern void ginfo_container2 (struct ginfo *v, unsigned long ty);
