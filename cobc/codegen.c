@@ -204,7 +204,9 @@ output_data (cb_tree x)
 	    for (; f; f = f->parent)
 	      if (f->flag_occurs)
 		{
-		  output (" + %d * ", f->size);
+		  output (" + ");
+		  if (f->size != 1)
+		    output ("%d * ", f->size);
 		  output_index (CB_VALUE (l));
 		  l = CB_CHAIN (l);
 		}
@@ -254,7 +256,9 @@ output_size (cb_tree x)
 	    if (p && (r->type == CB_SENDING_OPERAND
 		      || !cb_field_subordinate (cb_field (p->occurs_depending), f)))
 	      {
-		output ("%d + %d * ", p->offset - f->offset, p->size);
+		output ("%d + ", p->offset - f->offset);
+		if (p->size != 1)
+		  output ("%d * ", p->size);
 		output_integer (p->occurs_depending);
 	      }
 	    else
@@ -599,9 +603,20 @@ output_integer (cb_tree x)
 static void
 output_index (cb_tree x)
 {
-  output ("(");
-  output_integer (x);
-  output (" - 1)");
+  switch (CB_TREE_TAG (x))
+    {
+    case CB_TAG_INTEGER:
+      output ("%d", CB_INTEGER (x)->val - 1);
+      break;
+    case CB_TAG_LITERAL:
+      output ("%d", cb_literal_to_int (CB_LITERAL (x)) - 1);
+      break;
+    default:
+      output ("(");
+      output_integer (x);
+      output (" - 1)");
+      break;
+    }
 }
 
 
