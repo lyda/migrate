@@ -59,184 +59,155 @@ add_int (struct cob_field f, int n)
  * INSPECT
  */
 
-static va_list
-inspect_get_region (struct cob_field var, va_list ap, int *offset, int *len)
+void
+cob_inspect (struct cob_field var, ...)
 {
   int type;
-  unsigned char *start = COB_FIELD_BASE (var);
-  unsigned char *end   = COB_FIELD_BASE (var) + COB_FIELD_LENGTH (var);
-
-  while ((type = va_arg (ap, int)) != COB_INSPECT_END)
-    {
-      struct cob_field str = va_arg (ap, struct cob_field);
-      int size = COB_FIELD_SIZE (str);
-      unsigned char *s = COB_FIELD_DATA (str);
-      unsigned char *p;
-      for (p = start; p < end - size; p++)
-	if (match (p, s, size))
-	  {
-	    if (type == COB_INSPECT_BEFORE)
-	      end = p;
-	    else
-	      start = p + size;
-	    goto next;
-	  }
-      if (type == COB_INSPECT_AFTER)
-	start = end;
-    next:
-    }
-
-  *offset = start - COB_FIELD_BASE (var);
-  *len = end - start;
-  return ap;
-}
-
-static void
-inspect_internal (struct cob_field var, va_list ap, int replacing)
-{
-  int i, type;
-  int var_size = COB_FIELD_LENGTH (var);
+  int var_sign = cob_get_sign (var);
+  size_t var_size = COB_FIELD_LENGTH (var);
   unsigned char *var_data = COB_FIELD_BASE (var);
-  int sign = cob_get_sign (var);
-  char mark[var_size];
+  unsigned char *region_start = 0, *region_end = 0;
+  unsigned char region_mark[var_size];
+  int replacing = 0;
+  va_list ap;
 
-  memset (mark, 0, var_size);
+  va_start (ap, var);
+  memset (region_mark, 0, var_size);
+
   while ((type = va_arg (ap, int)) != COB_INSPECT_END)
-    {
-      int offset, len;
-      switch (type)
+    switch (type)
+      {
+      case COB_INSPECT_INIT:
 	{
-	case COB_INSPECT_CHARACTERS:
-	  {
-	    struct cob_field f1 = va_arg (ap, struct cob_field);
-	    ap = inspect_get_region (var, ap, &offset, &len);
-	    if (len > 0)
-	      {
-		int n = 0;
-		for (i = 0; i < len; i++)
-		  if (mark[offset + i] == 0)
-		    {
-		      n++;
-		      if (replacing)
-			mark[offset + i] = COB_FIELD_DATA (f1)[0];
-		      else
-			mark[offset + i] = 1;
-		    }
-		if (!replacing)
-		  add_int (f1, n);
-	      }
-	    break;
-	  }
-
-	case COB_INSPECT_ALL:
-	case COB_INSPECT_LEADING:
-	case COB_INSPECT_FIRST:
-	  {
-	    struct cob_field f1 = va_arg (ap, struct cob_field);
-	    struct cob_field f2 = va_arg (ap, struct cob_field);
-	    int size = COB_FIELD_SIZE (f2);
-	    unsigned char *data = COB_FIELD_DATA (f2);
-	    ap = inspect_get_region (var, ap, &offset, &len);
-	    if (len > 0)
-	      {
-		int n = 0;
-		for (i = 0; i < len - size + 1; i++)
-		  {
-		    /* find matching substring */
-		    if (match (var_data + offset + i, data, size))
-		      {
-			int j;
-			/* check if it is already marked */
-			for (j = 0; j < size; j++)
-			  if (mark[offset + i + j])
-			    break;
-			/* if not, mark and count it */
-			if (j == size)
-			  {
-			    n++;
-			    if (replacing)
-			      memcpy (mark + offset + i,
-				      COB_FIELD_DATA (f1), size);
-			    else
-			      memset (mark + offset + i, 1, size);
-			    if (type == COB_INSPECT_FIRST)
-			      break;
-			    continue;
-			  }
-		      }
-		    /* not found */
-		    if (type == COB_INSPECT_LEADING)
-		      break;
-		  }
-		if (!replacing)
-		  add_int (f1, n);
-	      }
-	    break;
-	  }
+	  /* initialize the region inspected */
+	  region_start = var_data;
+	  region_end   = var_data + var_size;
+	  break;
 	}
-    }
+
+      case COB_INSPECT_BEFORE:
+      case COB_INSPECT_AFTER:
+	{
+	  /* determine the region inspected */
+	  struct cob_field str = va_arg (ap, struct cob_field);
+	  size_t size = COB_FIELD_SIZE (str);
+	  unsigned char *data = COB_FIELD_DATA (str);
+	  unsigned char *p;
+	  for (p = region_start; p < region_end - size; p++)
+	    if (match (p, data, size))
+	      {
+		if (type == COB_INSPECT_BEFORE)
+		  region_end = p;
+		else
+		  region_start = p + size;
+		goto done;
+	      }
+	  if (type == COB_INSPECT_AFTER)
+	    region_start = region_end;
+	done:
+	  break;
+	}
+
+      case COB_INSPECT_TALLYING:
+	replacing = 0;
+	break;
+
+      case COB_INSPECT_REPLACING:
+	replacing = 1;
+	break;
+
+      case COB_INSPECT_CHARACTERS:
+	{
+	  struct cob_field f1 = va_arg (ap, struct cob_field);
+	  unsigned char *mark = &region_mark[region_start - var_data];
+	  int len = region_end - region_start;
+	  if (len > 0)
+	    {
+	      int i, n = 0;
+	      for (i = 0; i < len; i++)
+		if (mark[i] == 0)
+		  {
+		    n++;
+		    if (replacing)
+		      mark[i] = COB_FIELD_DATA (f1)[0];
+		    else
+		      mark[i] = 1;
+		  }
+	      if (!replacing)
+		add_int (f1, n);
+	    }
+	  break;
+	}
+
+      case COB_INSPECT_ALL:
+      case COB_INSPECT_LEADING:
+      case COB_INSPECT_FIRST:
+	{
+	  struct cob_field f1 = va_arg (ap, struct cob_field);
+	  struct cob_field f2 = va_arg (ap, struct cob_field);
+	  int size = COB_FIELD_SIZE (f2);
+	  unsigned char *data = COB_FIELD_DATA (f2);
+	  unsigned char *mark = &region_mark[region_start - var_data];
+	  int len = region_end - region_start;
+	  if (len > 0)
+	    {
+	      int i, n = 0;
+	      for (i = 0; i < len - size + 1; i++)
+		{
+		  /* find matching substring */
+		  if (match (region_start + i, data, size))
+		    {
+		      int j;
+		      /* check if it is already marked */
+		      for (j = 0; j < size; j++)
+			if (mark[i + j])
+			  break;
+		      /* if not, mark and count it */
+		      if (j == size)
+			{
+			  n++;
+			  if (replacing)
+			    memcpy (mark + i, COB_FIELD_DATA (f1), size);
+			  else
+			    memset (mark + i, 1, size);
+			  if (type == COB_INSPECT_FIRST)
+			    break;
+			  continue;
+			}
+		    }
+		  /* not found */
+		  if (type == COB_INSPECT_LEADING)
+		    break;
+		}
+	      if (!replacing)
+		add_int (f1, n);
+	    }
+	  break;
+	}
+
+      case COB_INSPECT_CONVERTING:
+	{
+	  int i, j;
+	  struct cob_field old = va_arg (ap, struct cob_field);
+	  struct cob_field new = va_arg (ap, struct cob_field);
+	  for (i = 0; i < region_end - region_start; i++)
+	    for (j = 0; j < COB_FIELD_SIZE (old); j++)
+	      if (region_start[i] == COB_FIELD_DATA (old)[j])
+		region_start[i] = COB_FIELD_DATA (new)[j];
+	  break;
+	}
+      }
 
   /* do replacement */
   if (replacing)
-    for (i = 0; i < var_size; i++)
-      if (mark[i])
-	var_data[i] = mark[i];
-
-  cob_put_sign (var, sign);
-}
-
-void
-cob_inspect_tallying (struct cob_field var, ...)
-{
-  va_list ap;
-  va_start (ap, var);
-  inspect_internal (var, ap, 0);
-  va_end (ap);
-}
-
-void
-cob_inspect_replacing (struct cob_field var, ...)
-{
-  va_list ap;
-  va_start (ap, var);
-  inspect_internal (var, ap, 1);
-  va_end (ap);
-}
-
-void
-cob_inspect_converting (struct cob_field var, ...)
-{
-  int type;
-  unsigned char *var_data = COB_FIELD_BASE (var);
-  int sign = cob_get_sign (var);
-  va_list ap;
-  va_start (ap, var);
-
-  while ((type = va_arg (ap, int)) != COB_INSPECT_END)
     {
-      int offset, len;
-      switch (type)
-	{
-	case COB_INSPECT_CONVERT:
-	  {
-	    struct cob_field old = va_arg (ap, struct cob_field);
-	    struct cob_field new = va_arg (ap, struct cob_field);
-	    ap = inspect_get_region (var, ap, &offset, &len);
-	    if (len > 0)
-	      {
-		int i, j;
-		for (i = 0; i < len; i++)
-		  for (j = 0; j < COB_FIELD_SIZE (old); j++)
-		    if (var_data[offset + i] == COB_FIELD_DATA (old)[j])
-		      var_data[offset + i] = COB_FIELD_DATA (new)[j];
-	      }
-	    break;
-	  }
-	}
+      int i;
+      for (i = 0; i < var_size; i++)
+	if (region_mark[i])
+	  var_data[i] = region_mark[i];
     }
-  cob_put_sign (var, sign);
 
-  va_end (ap);
+  cob_put_sign (var, var_sign);
 }
 
 

@@ -23,13 +23,16 @@
 #include <libcob/common.h>
 
 #define COB_INSPECT_END			0
-#define COB_INSPECT_CHARACTERS		1
-#define COB_INSPECT_ALL			2
-#define COB_INSPECT_LEADING		3
-#define COB_INSPECT_FIRST	      	4
-#define COB_INSPECT_CONVERT     	5
-#define COB_INSPECT_BEFORE      	6
-#define COB_INSPECT_AFTER		7
+#define COB_INSPECT_INIT	     	1
+#define COB_INSPECT_BEFORE      	2
+#define COB_INSPECT_AFTER		3
+#define COB_INSPECT_TALLYING     	4
+#define COB_INSPECT_REPLACING     	5
+#define COB_INSPECT_CONVERTING     	6
+#define COB_INSPECT_CHARACTERS		7
+#define COB_INSPECT_ALL			8
+#define COB_INSPECT_LEADING		9
+#define COB_INSPECT_FIRST	      	10
 
 #define COB_STRING_END			0
 #define COB_STRING_CONCATENATE		1
@@ -46,9 +49,7 @@
 #define COB_UNSTRING_WITH_POINTER	6
 #define COB_UNSTRING_TALLYING		7
 
-extern void cob_inspect_tallying (struct cob_field var, ...);
-extern void cob_inspect_replacing (struct cob_field var, ...);
-extern void cob_inspect_converting (struct cob_field var, ...);
+extern void cob_inspect (struct cob_field var, ...);
 extern void cob_string (struct cob_field dst, ...);
 extern void cob_unstring (struct cob_field src, ...);
 

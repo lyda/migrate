@@ -54,23 +54,22 @@ output_file_handler (struct cobc_file_name *f, int type,
  */
 
 static void
-output_goto (cobc_tree label)
+output_goto (struct cobc_label_name *p)
 {
-  const char *name = COBC_LABEL_NAME (label)->cname;
-  output_line ("goto lb_%s;", name);
+  output_line ("goto lb_%s;", p->cname);
 }
 
 static void
-output_goto_depending (cobc_tree labels, cobc_tree index)
+output_goto_depending (struct cobc_list *labels, cobc_tree index)
 {
   int i = 1;
-  struct cobc_list *l = (struct cobc_list *) labels;
+  struct cobc_list *l;
   output_prefix ();
   output ("switch (");
   output_index (index);
   output (")\n");
   output_indent ("  {", 4);
-  for (; l; l = l->next)
+  for (l = labels; l; l = l->next)
     {
       output_indent_level -= 2;
       output_line ("case %d:", i++);
@@ -520,23 +519,25 @@ output_initialize_replacing (cobc_tree x, struct cobc_list *l)
  */
 
 static void
-output_string (cobc_tree x, cobc_tree list)
+output_generic_1 (char *name, cobc_tree x, struct cobc_list *list)
 {
-  struct cobc_list *l = (struct cobc_list *) list;
   output_prefix ();
-  output ("cob_string (");
+  output ("%s (", name);
   output_tree (x);
-  for (; l; l = l->next)
+  for (; list; list = list->next)
     {
-      struct cobc_generic *p = l->item;
+      struct cobc_generic *p = list->item;
+      /* parameters */
       output (", %d", p->type);
-      if (p->x)
-	{
-	  output (", ");
-	  output_tree (p->x);
-	}
+      if (p->x) { output (", "); output_tree (p->x); }
     }
   output (", 0);\n");
+}
+
+static void
+output_string (cobc_tree x, struct cobc_list *l)
+{
+  output_generic_1 ("cob_string", x, l);
 }
 
 
@@ -545,23 +546,9 @@ output_string (cobc_tree x, cobc_tree list)
  */
 
 static void
-output_unstring (cobc_tree x, cobc_tree list)
+output_unstring (cobc_tree x, struct cobc_list *l)
 {
-  struct cobc_list *l = (struct cobc_list *) list;
-  output_prefix ();
-  output ("cob_unstring (");
-  output_tree (x);
-  for (; l; l = l->next)
-    {
-      struct cobc_generic *p = l->item;
-      output (", %d", p->type);
-      if (p->x)
-	{
-	  output (", ");
-	  output_tree (p->x);
-	}
-    }
-  output (", 0);\n");
+  output_generic_1 ("cob_unstring", x, l);
 }
 
 
@@ -570,47 +557,28 @@ output_unstring (cobc_tree x, cobc_tree list)
  */
 
 static void
-output_inspect (char *name, cobc_tree var, struct cobc_list *list)
+output_inspect (cobc_tree x, struct cobc_list *list)
 {
   output_prefix ();
-  output ("%s (", name);
-  output_tree (var);
+  output ("cob_inspect (");
+  output_tree (x);
   for (; list; list = list->next)
     {
       struct cobc_list *l;
       struct cobc_generic *p = list->item;
-      /* parameters */
-      output (", %d", p->type);
-      if (p->x) { output (", "); output_tree (p->x); }
-      if (p->y) { output (", "); output_tree (p->y); }
       /* BEFORE/AFTER */
       for (l = p->l; l; l = l->next)
 	{
 	  struct cobc_generic *p = l->item;
-	  output (", %d, ", p->type);
-	  output_tree (p->x);
+	  output (", %d", p->type);
+	  if (p->x) { output (", "); output_tree (p->x); }
 	}
-      output (", 0");
+      /* parameters */
+      output (", %d", p->type);
+      if (p->x) { output (", "); output_tree (p->x); }
+      if (p->y) { output (", "); output_tree (p->y); }
     }
   output (", 0);\n");
-}
-
-static void
-output_inspect_tallying (cobc_tree var, cobc_tree list)
-{
-  output_inspect ("cob_inspect_tallying", var, (struct cobc_list *) list);
-}
-
-static void
-output_inspect_replacing (cobc_tree var, cobc_tree list)
-{
-  output_inspect ("cob_inspect_replacing", var, (struct cobc_list *) list);
-}
-
-static void
-output_inspect_converting (cobc_tree var, cobc_tree list)
-{
-  output_inspect ("cob_inspect_converting", var, (struct cobc_list *) list);
 }
 
 

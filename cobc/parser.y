@@ -97,6 +97,8 @@
 #define push_status_handler(val,st1,st2) \
   push_tree (make_if (make_cond (cobc_status, COBC_COND_EQ, val), st1, st2))
 
+#define inspect_push(x) inspect_list = list_add (inspect_list, (x))
+
 struct program_spec program_spec;
 
 static struct cobc_field *current_field;
@@ -185,7 +187,7 @@ static void ambiguous_error (struct cobc_word *w);
 %token COMMON,NEXT,PACKED_DECIMAL,INPUT,I_O,OUTPUT,EXTEND,BINARY
 %token ALPHANUMERIC,ALPHANUMERIC_EDITED,NUMERIC_EDITED,NATIONAL,NATIONAL_EDITED
 
-%type <gene> replacing_item,inspect_before_after
+%type <gene> inspect_before_after
 %type <gene> call_item,write_option
 %type <inum> flag_all,flag_duplicates,flag_optional,flag_global
 %type <inum> flag_not,flag_next,flag_rounded,flag_separate
@@ -197,10 +199,9 @@ static void ambiguous_error (struct cobc_word *w);
 %type <list> data_name_list,condition_name_list,opt_value_list
 %type <list> evaluate_subject_list,evaluate_case,evaluate_case_list
 %type <list> evaluate_when_list,evaluate_object_list
-%type <list> inspect_tallying,inspect_replacing,inspect_converting
 %type <list> label_list,subscript_list,number_list
 %type <list> string_list,string_delimited_list,string_name_list
-%type <list> replacing_list,inspect_before_after_list
+%type <list> inspect_before_after_list
 %type <list> unstring_delimited,unstring_delimited_list,unstring_into
 %type <list> unstring_delimited_item,unstring_into_item
 %type <list> predefined_name_list,qualified_predefined_word,mnemonic_name_list
@@ -1876,34 +1877,20 @@ _data: | DATA ;
 
 inspect_statement:
   INSPECT data_name inspect_tallying
-  {
-    cobc_location = @1;
-    push_call_2 (COBC_INSPECT_TALLYING, $2, $3);
-  }
 | INSPECT data_name inspect_replacing
-  {
-    cobc_location = @1;
-    push_call_2 (COBC_INSPECT_REPLACING, $2, $3);
-  }
 | INSPECT data_name inspect_converting
-  {
-    cobc_location = @1;
-    push_call_2 (COBC_INSPECT_CONVERTING, $2, $3);
-  }
-| INSPECT data_name inspect_tallying inspect_replacing
-  {
-    cobc_location = @3;
-    push_call_2 (COBC_INSPECT_TALLYING, $2, $3);
-    cobc_location = @4;
-    push_call_2 (COBC_INSPECT_REPLACING, $2, $4);
-  }
+| INSPECT data_name inspect_tallying { $<tree>$ = $2; } inspect_replacing
 ;
 
 /* INSPECT TALLYING */
 
 inspect_tallying:
   TALLYING			{ inspect_list = NULL; }
-  tallying_list			{ $$ = inspect_list; }
+  tallying_list
+  {
+    cobc_location = @1;
+    push_call_2 (COBC_INSPECT, $<tree>0, inspect_list);
+  }
 ;
 tallying_list:
   tallying_item
@@ -1918,9 +1905,7 @@ tallying_item:
 | CHARACTERS inspect_before_after_list
   {
     inspect_mode = 0;
-    inspect_list =
-      list_add (inspect_list,
-		make_generic (COB_INSPECT_CHARACTERS, inspect_name, 0, $2));
+    inspect_push (make_generic (COB_INSPECT_CHARACTERS, inspect_name, 0, $2))
   }
 | ALL
   {
@@ -1935,52 +1920,67 @@ tallying_item:
     if (inspect_mode == 0)
       yyerror ("ALL or LEADING expected");
     else
-      inspect_list =
-	list_add (inspect_list,
-		  make_generic (inspect_mode, inspect_name, $1, $2));
+      inspect_push (make_generic (inspect_mode, inspect_name, $1, $2));
   }
 ;
 
 /* INSPECT REPLACING */
 
 inspect_replacing:
-  REPLACING replacing_list	{ $$ = $2; }
+  REPLACING			{ inspect_list = NULL; }
+  replacing_list
+  {
+    cobc_location = @1;
+    inspect_list = cons (make_generic (COB_INSPECT_REPLACING, 0, 0, 0),
+			 inspect_list);
+    push_call_2 (COBC_INSPECT, $<tree>0, inspect_list);
+  }
 ;
 replacing_list:
-  replacing_item		{ $$ = list ($1); }
-| replacing_list replacing_item	{ $$ = list_add ($1, $2); }
+  replacing_item
+| replacing_list replacing_item
 ;
 replacing_item:
   CHARACTERS BY value inspect_before_after_list
   {
-    $$ = make_generic (COB_INSPECT_CHARACTERS, NULL, $3, $4);
+    inspect_push (make_generic (COB_INSPECT_CHARACTERS, $3, 0, $4));
   }
 | ALL value BY value inspect_before_after_list
   {
-    $$ = make_generic (COB_INSPECT_ALL, $4, $2, $5);
+    inspect_push (make_generic (COB_INSPECT_ALL, $4, $2, $5));
   }
 | LEADING value BY value inspect_before_after_list
   {
-    $$ = make_generic (COB_INSPECT_LEADING, $4, $2, $5);
+    inspect_push (make_generic (COB_INSPECT_LEADING, $4, $2, $5));
   }
 | FIRST value BY value inspect_before_after_list
   {
-    $$ = make_generic (COB_INSPECT_FIRST, $4, $2, $5);
+    inspect_push (make_generic (COB_INSPECT_FIRST, $4, $2, $5));
   }
+;
 
 /* INSPECT CONVERTING */
 
 inspect_converting:
   CONVERTING value TO value inspect_before_after_list
   {
-    $$ = list (make_generic (COB_INSPECT_CONVERT, $2, $4, $5));
+    cobc_location = @1;
+    inspect_list = list (make_generic (COB_INSPECT_CONVERTING, $2, $4, $5));
+    push_call_2 (COBC_INSPECT, $<tree>0, inspect_list);
   }
+;
 
 /* INSPECT BEFORE/AFTER */
 
 inspect_before_after_list:
-  /* nothing */					 { $$ = NULL; }
-| inspect_before_after_list inspect_before_after { $$ = list_add ($1, $2); }
+  /* nothing */
+  {
+    $$ = list (make_generic (COB_INSPECT_INIT, 0, 0, 0));
+  }
+| inspect_before_after_list inspect_before_after
+  {
+    $$ = list_add ($1, $2);
+  }
 ;
 inspect_before_after:
   BEFORE _initial value
