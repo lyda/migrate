@@ -212,7 +212,7 @@ static void redefinition_error (cobc_tree x);
 %type <tree> numeric_name,numeric_edited_name,group_name,table_name,class_name
 %type <tree> condition_name,data_name,file_name,record_name,label_name
 %type <tree> mnemonic_name,section_name,name,qualified_name
-%type <tree> qualified_predefined_name
+%type <tree> predefined_name
 %type <list> qualified_predefined_word
 %type <tree> integer_value,value,number
 %type <tree> literal,basic_literal,figurative_constant
@@ -577,7 +577,7 @@ select_sequence:
 ;
 select_file_name:
   NONNUMERIC_LITERAL
-| qualified_predefined_name
+| predefined_name
 ;
 select_options:
 | select_options select_option
@@ -595,21 +595,21 @@ select_option:
   {
     current_file_name->access_mode = $4;
   }
-| RELATIVE _key _is qualified_predefined_name
+| RELATIVE _key _is predefined_name
   {
     if (current_file_name->organization != COB_ORG_RELATIVE)
       yyerror ("only relative files may have RELATIVE KEY");
     else
       current_file_name->key = $4;
   }
-| RECORD _key _is qualified_predefined_name
+| RECORD _key _is predefined_name
   {
     if (current_file_name->organization != COB_ORG_INDEXED)
       yyerror ("only indexed files may have RECORD KEY");
     else
       current_file_name->key = $4;
   }
-| ALTERNATE RECORD _key _is qualified_predefined_name flag_duplicates
+| ALTERNATE RECORD _key _is predefined_name flag_duplicates
   {
     if (current_file_name->organization != COB_ORG_INDEXED)
       yyerror ("only indexed files may have ALTERNATE RECORD KEY");
@@ -631,7 +631,7 @@ select_option:
 	  }
       }
   }
-| _file STATUS _is qualified_predefined_name
+| _file STATUS _is predefined_name
   {
     current_file_name->status = $4;
   }
@@ -2595,7 +2595,7 @@ math_edited_name_list:
 /* Numeric name */
 
 numeric_name:
-  name
+  data_name
   {
     if (COBC_TREE_CLASS ($1) != COB_NUMERIC)
       yyerror ("`%s' not numeric", tree_to_string ($1));
@@ -2606,7 +2606,7 @@ numeric_name:
 /* Numeric edited name */
 
 numeric_edited_name:
-  name
+  data_name
   {
     int category = COBC_FIELD ($1)->category;
     if (category != COB_NUMERIC && category != COB_NUMERIC_EDITED)
@@ -2618,7 +2618,7 @@ numeric_edited_name:
 /* Group name */
 
 group_name:
-  name
+  data_name
   {
     if (!COBC_FIELD ($1)->children)
       yyerror ("`%s' not a group", tree_to_string ($1));
@@ -2674,16 +2674,16 @@ data_name_list:
 data_name:
   name
   {
+    $$ = $1;
+    if (COBC_REFMOD_P ($1))
+      $1 = COBC_REFMOD ($1)->field;
     if (COBC_FIELD_P ($1))
       {
 	struct cobc_field *p = COBC_FIELD ($1);
 	if (p->indexes > 0)
-	  {
-	    yyerror ("`%s' must be subscripted", p->word->name);
-	    // $1 = make_subref ($1, $2);
-	  }
+	  yyerror ("`%s' must be subscripted", p->word->name);
       }
-    $$ = $1;
+    COBC_FIELD ($1)->f.used = 1;
   }
 ;
 
@@ -2877,7 +2877,7 @@ in_of: IN | OF ;
  * Predefined name
  */
 
-qualified_predefined_name:
+predefined_name:
   qualified_predefined_word	{ $$ = make_predefined ($1); }
 ;
 qualified_predefined_word:
@@ -3299,6 +3299,7 @@ resolve_predefined_name (cobc_tree x)
 	}
       name = p->item;
     }
+  COBC_FIELD (name)->f.used = 1;
   return name;
 }
 

@@ -372,6 +372,7 @@ make_field (struct cobc_word *word)
   p->f.sign_leading = 0;
   p->f.synchronized = 0;
   p->f.have_occurs = 0;
+  p->f.used = 0;
   p->f.referenced = 0;
   return COBC_TREE (p);
 }

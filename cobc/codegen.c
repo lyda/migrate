@@ -603,24 +603,27 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
   char *subscripts;
 
   /* descriptor */
-  if (p->children || p->rename_thru)
+  if (p->f.used)
     {
-      /* field group */
-      output ("static struct cob_field_desc f_%s_desc = {%d, 'G'};\n",
-	      p->cname, p->size);
-    }
-  else if (!COBC_FILLER_P (COBC_TREE (p)))
-    {
-      /* regular field */
-      char *s;
-      output ("static struct cob_field_desc f_%s_desc = ", p->cname);
-      output ("{%d, '%c', %d, %d, %d, %d, %d, %d, \"",
-	      p->size, get_type (p), p->pic->decimals, p->f.justified,
-	      p->pic->have_sign, p->f.sign_separate, p->f.sign_leading,
-	      p->f.blank_zero);
-      for (s = p->pic->str; *s; s += 2)
-	output ("%c\\%03o", s[0], s[1]);
-      output ("\"};\n");
+      if (p->children || p->rename_thru)
+	{
+	  /* field group */
+	  output ("static struct cob_field_desc f_%s_desc = {%d, 'G'};\n",
+		  p->cname, p->size);
+	}
+      else if (!COBC_FILLER_P (COBC_TREE (p)))
+	{
+	  /* regular field */
+	  char *s;
+	  output ("static struct cob_field_desc f_%s_desc = ", p->cname);
+	  output ("{%d, '%c', %d, %d, %d, %d, %d, %d, \"",
+		  p->size, get_type (p), p->pic->decimals, p->f.justified,
+		  p->pic->have_sign, p->f.sign_separate, p->f.sign_leading,
+		  p->f.blank_zero);
+	  for (s = p->pic->str; *s; s += 2)
+	    output ("%c\\%03o", s[0], s[1]);
+	  output ("\"};\n");
+	}
     }
 
   /* data */
@@ -656,8 +659,8 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
     }
 
   /* macro */
-  if (!COBC_FILLER_P (COBC_TREE (p)))
-    output ("#define f_%s%s ((struct cob_field) {&f_%s_desc, f_%s_data%s})\n\n",
+  if (p->f.used && !COBC_FILLER_P (COBC_TREE (p)))
+    output ("#define f_%s%s ((struct cob_field) {&f_%s_desc, f_%s_data%s})\n",
 	    p->cname, subscripts, p->cname, p->cname, subscripts);
 
   /* reference modifier */
@@ -671,6 +674,9 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
 	      p->cname, p->cname, subscripts);
       output ("})\n\n");
     }
+
+  if (p->f.used)
+    output_newline ();
 
   /* children */
   for (p = p->children; p; p = p->sister)
