@@ -191,7 +191,7 @@ cob_move_alphanum_to_display (struct cob_field f1, struct cob_field f2)
 
   /* count the number of digits before decimal point */
   count = 0;
-  for (p = s1; p < e1 && *p != '.'; p++)
+  for (p = s1; p < e1 && *p != cob_decimal_point; p++)
     if (isdigit (*p))
       count++;
 
@@ -210,12 +210,12 @@ cob_move_alphanum_to_display (struct cob_field f1, struct cob_field f2)
       unsigned char c = *s1;
       if (isdigit (c))
 	*s2++ = c;
-      else if (c == '.')
+      else if (c == cob_decimal_point)
 	{
 	  if (count++ > 0)
 	    goto error;
 	}
-      else if (!(isspace (c) || c == ','))
+      else if (!(isspace (c) || c == cob_numeric_separator))
 	goto error;
     }
 
@@ -538,11 +538,12 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
   for (p = f2.desc->pic; *p; p += 2)
     {
       unsigned char c = p[0];
-      if (c == '9' || c == 'P' || c == 'Z' || c == '*' || c == cCurrencySymbol)
+      if (c == '9' || c == 'P' || c == 'Z' || c == '*' ||
+	  c == cob_currency_symbol)
 	count += p[1], count_sign = 0;
       else if (count_sign && (c == '+' || c == '-'))
 	count += p[1];
-      else if (p[0] == '.')
+      else if (p[0] == cob_decimal_point)
 	break;
     }
 
@@ -562,17 +563,27 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	    case '0':
 	    case '/': *dst = c; break;
 	    case 'B': *dst = suppress_zero ? pad : 'B'; break;
-	    case ',': *dst = suppress_zero ? pad : ','; break;
 	    case 'P': break;
-
-	    case 'V':
-	    case '.': *dst = '.'; decimal_point = dst; break;
 
 	    case '9':
 	      *dst = get ();
 	      suppress_zero = 0;
 	      trailing_sign = 1;
 	      break;
+
+	    case 'V':
+	    case '.':
+	    case ',':
+	      if (c == 'V' || c == cob_decimal_point)
+		{
+		  *dst = cob_decimal_point;
+		  decimal_point = dst;
+		  break;
+		}
+	      else
+		{
+		  *dst = suppress_zero ? pad : c; break;
+		}
 
 	    case 'C':
 	    case 'D':
@@ -610,11 +621,11 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	      }
 
 	    default:
-	      if (c == cCurrencySymbol)
+	      if (c == cob_currency_symbol)
 		{
 		  char x = get ();
 		  if (dst == f2.data || (suppress_zero && x == '0'))
-		    *dst = pad, sign_symbol = cCurrencySymbol;
+		    *dst = pad, sign_symbol = cob_currency_symbol;
 		  else
 		    *dst = x, suppress_zero = 0;
 		  break;
@@ -633,7 +644,7 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	memset (f2.data, ' ', f2.desc->len);
       else
 	for (dst = f2.data; dst < f2.data + f2.desc->len; dst++)
-	  if (*dst != '.')
+	  if (*dst != cob_decimal_point)
 	    *dst = pad;
     }
   else

@@ -40,7 +40,6 @@
 #define COBKEY_HOMECLR 24
 
 static int _scrio_init_ = 0;
-static int _decimal_char_ = '.';
 static struct ScrFld *_Fields_ = (struct ScrFld *) 0;
 static struct Colors *_colors_ = (struct Colors *) 0;
 static attr_t _iDefAttr_ = 0;
@@ -209,11 +208,9 @@ display_curses (struct fld_desc *f, char *s, int dspflags)
   char pictmp[64];
   char szSigned[3];
   int domove = 0;
-  int decimal_char;
   int x, y;
   int len = f->len;
   char *pic = f->pic;
-  char decimals;
 
   if (dspflags & 2)
     {				/* erase? */
@@ -248,23 +245,19 @@ display_curses (struct fld_desc *f, char *s, int dspflags)
     }
   if (domove)
     {
-      decimal_char = (decimal_comma) ? ',' : '.';
       buffer = malloc (len + 2);
       memmove (&ftmp, f, sizeof (ftmp));
-      decimals = f->decimals;
-      if (decimals > 0)
+      if (f->decimals > 0)
 	{
 	  if (pic[0] == 'P' || pic[2] == 'P')
 	    {
-	      sprintf (pictmp, "%s.%c9%c", szSigned, 1,
-		       (unsigned char) decimals);
+	      sprintf (pictmp, "%s.%c9%c", szSigned, 1, f->decimals);
 	    }
 	  else
 	    {
 	      sprintf (pictmp, "%s9%c%c%c9%c", szSigned,
-		       (unsigned char) (len - decimals),
-		       (unsigned char) decimal_char, 1,
-		       (unsigned char) decimals);
+		       (unsigned char) (len - f->decimals),
+		       cob_decimal_point, 1, f->decimals);
 	    }
 	}
       else
@@ -279,7 +272,7 @@ display_curses (struct fld_desc *f, char *s, int dspflags)
 	  ++ftmp.len;
 	  ++len;
 	}
-      if (decimals)
+      if (f->decimals)
 	len++;			/* accounts for the decimal point */
       cob_move_2 (f, s, &ftmp, buffer);
     }
@@ -762,7 +755,7 @@ cob_scr_process (int iAttr, int iLine, int iColumn,
 	  break;
 	case '.':
 	case ',':
-	  if (pFld->fldScr.pic[i] == _decimal_char_)
+	  if (pFld->fldScr.pic[i] == cob_decimal_point)
 	    ++bDecPoint;
 	  ++bIsEdited;
 	  break;
@@ -924,8 +917,6 @@ cob_init_screen (void)
   if (_scrio_init_)
     return;
 
-  if (decimal_comma)
-    _decimal_char_ = ',';
   initscr ();
   noecho ();
   cbreak ();
@@ -1099,7 +1090,7 @@ cob_accept (char *buffer, struct fld_desc *f, int echo)
       for (i = 0; i < cnt; i++)
 	addch ('_');
       if (f->decimals)
-	addch (_decimal_char_);
+	addch (cob_decimal_point);
       refresh ();
     }
   if (echo & 8)
@@ -1137,7 +1128,7 @@ cob_accept (char *buffer, struct fld_desc *f, int echo)
 	  if (decimal_flg)
 	    {
 	      if (echo & 2)
-		addch (_decimal_char_);
+		addch (cob_decimal_point);
 	      else if (echo & 8)
 		{
 		}		/* nothing to be done */
@@ -1196,19 +1187,19 @@ cob_accept (char *buffer, struct fld_desc *f, int echo)
 	      if (echo & 4)
 		addch ('*');
 	      else if (echo)
-		addch (_decimal_char_);
+		addch (cob_decimal_point);
 	      decimal_flg++;
 	    }
 	  continue;
 	}
-      if (c == _decimal_char_ && f->type == '9' && !decimal_flg)
+      if (c == cob_decimal_point && f->type == '9' && !decimal_flg)
 	{
 	  decimal_flg++;
 	  cnt = f->decimals;
 	  if (echo & 4)
 	    addch ('*');
 	  else if (echo)
-	    addch (_decimal_char_);
+	    addch (cob_decimal_point);
 	  continue;
 	}
     }

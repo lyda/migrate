@@ -170,8 +170,10 @@ struct cob_field {
   unsigned char *data;
 } __attribute__ ((packed));
 
-extern int decimal_comma;
-extern unsigned char cCurrencySymbol;
+#define cob_numeric_separator ((cob_decimal_point == '.') ? ',' : '.')
+
+extern unsigned char cob_decimal_point;
+extern unsigned char cob_currency_symbol;
 extern long long cob_exp10[19];
 
 extern int get_sign (struct cob_field f);

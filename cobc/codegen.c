@@ -1499,7 +1499,7 @@ proc_header (int using)
     stack_offset++;
 
   if (currency_symbol != '$')
-    output ("\tmovb\t$%d,cCurrencySymbol\n", currency_symbol);
+    output ("\tmovb\t$%d,cob_currency_symbol\n", currency_symbol);
 
   /*  
      Extra 16 bytes holds search all temporary data 
@@ -1560,13 +1560,10 @@ proc_header (int using)
   output ("\tleal\t.Lend_pgm_%s, %%eax\n", pgm_label);
   output ("\tpushl\t%%eax\n");
   stack_offset += 8;		// length of the 2 pushes above
-  if (!decimal_comma)
-    {
-      output ("\txorl\t%%eax,%%eax\n");
-      output ("\tmovl\t%%eax,decimal_comma\n");
-    }
+  if (decimal_comma)
+    output ("\tmovl\t$44,cob_decimal_point\n");
   if (currency_symbol != '$')
-    output ("\tmovb\t$%d,cCurrencySymbol\n", currency_symbol);
+    output ("\tmovb\t$%d,cob_currency_symbol\n", currency_symbol);
   at_procedure++;
 }
 

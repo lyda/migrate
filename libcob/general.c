@@ -29,8 +29,9 @@
 
 int cob_status;
 int cob_status_register;
-int decimal_comma = 0;
-unsigned char cCurrencySymbol = '$';
+
+unsigned char cob_decimal_point = '.';
+unsigned char cob_currency_symbol = '$';
 
 long long cob_exp10[19] = {
   1,

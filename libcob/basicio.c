@@ -61,8 +61,6 @@ cob_display (struct fld_desc *f, char *s, int dupon)
   char pictmp[64];
   char szSigned[3];
   int i, len;
-  char decimals;
-  int decimal_char;
 
   if ((f->type == '9') || (f->type == 'C') || (f->type == 'B')
       || (f->type == 'U'))
@@ -79,27 +77,23 @@ cob_display (struct fld_desc *f, char *s, int dupon)
 	  szSigned[0] = '\0';
 	}
 
-      decimal_char = (decimal_comma) ? ',' : '.';
       buffer = alloca (len + 2);
       memcpy (&ftmp, f, sizeof (ftmp));
-      decimals = f->decimals;
-      if (decimals > 0)
+      if (f->decimals > 0)
 	{
 	  if (f->pic[0] == 'P' || f->pic[2] == 'P')
 	    {
-	      sprintf (pictmp, "%s.%c9%c", szSigned, 1,
-		       (unsigned char) decimals);
+	      sprintf (pictmp, "%s.%c9%c", szSigned, 1, f->decimals);
 	    }
 	  else
 	    {
 	      sprintf (pictmp, "%s9%c%c%c9%c", szSigned,
-		       (unsigned char) (len - decimals),
-		       (unsigned char) decimal_char, 1,
-		       (unsigned char) decimals);
+		       (unsigned char) (len - f->decimals),
+		       cob_decimal_point, 1, f->decimals);
 	    }
 	}
       else
-	{			// decimals <= 0;
+	{
 	  sprintf (pictmp, "%s9%c", szSigned, (unsigned char) len);
 	}
       ftmp.type = 'E';
@@ -110,7 +104,7 @@ cob_display (struct fld_desc *f, char *s, int dupon)
 	  ++ftmp.len;
 	  ++len;
 	}
-      if (decimals > 0)
+      if (f->decimals > 0)
 	len++;			/* accounts for the decimal point */
       cob_move_2 (f, s, &ftmp, buffer);
     }
