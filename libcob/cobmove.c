@@ -160,7 +160,7 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 {
   int i;
   int iPadLength;
-  int iSrcLength, iDestLength;
+  int len1, len2;
   char iSrcDecimals, iDestDecimals;
   unsigned char *pSrcData, *pDstData;
   unsigned char caWrkData[20];
@@ -170,19 +170,13 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
   struct fld_desc FldWrk;
 
   if (f2desc->type == DTYPE_EDITED)
-    {
-      move_edited (f1desc, f1data, f2desc, f2data);
-      return;
-    }
+    return move_edited (f1desc, f1data, f2desc, f2data);
 
   if (f2desc->type == DTYPE_BININT)
-    {
-      cob_move_to_binary (f1desc, f1data, f2desc, f2data);
-      return;
-    }
+    return cob_move_to_binary (f1desc, f1data, f2desc, f2data);
 
-  iSrcLength = fldLength (f1desc);
-  iDestLength = fldLength (f2desc);
+  len1 = fldLength (f1desc);
+  len2 = fldLength (f2desc);
   iSrcDecimals = f1desc->decimals;
   iDestDecimals = f2desc->decimals;
   pSrcFld = f1desc;		/* may be changed to point to work area */
@@ -214,59 +208,43 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 	case DTYPE_ALPHANUMERIC:
 	case DTYPE_GROUP:
 	case DTYPE_ACCEPT_DISPLAY:
-		    /*----------------------------------------------------*\
-                     |                                                    |
-                     |  Just move the source data to the destination area |
-                     |  left to right, padding with spaces on the right   |
-                     |  if the destination is larger than the source, or  |
-                     |  truncating on the right if the destination is     |
-                     |  smaller.  There is also some special logic that   |
-                     |  checks to see if the 'all' attribute of the       |
-                     |  source field is non zero. If it is, the source    |
-                     |  contents are repeated as many times as necessary  |
-                     |  to completely fill the destination area.          |
-                     |                                                    |
-                    \*----------------------------------------------------*/
-
-	  if (iSrcLength >= iDestLength)
+	  if (pSrcFld->all)
 	    {
-	      if (pDstFld->just_r == 0)
+	      /* move string repeatedly */
+	      while (len2 > 0)
 		{
-		  memcpy (pDstData, pSrcData, iDestLength);
+		  int len = min (len1, len2);
+		  memcpy (pDstData, pSrcData, len);
+		  pDstData += len;
+		  len2 -= len;
 		}
-	      else
-		{
-		  /* right justification */
-		  iPadLength = iSrcLength - iDestLength;
-		  memcpy (pDstData, pSrcData + iPadLength, iDestLength);
-		}
+	      return;
 	    }
-	  else if (pSrcFld->all == 0)
+
+	  if (len1 >= len2)
 	    {
-	      iPadLength = iDestLength - iSrcLength;
-	      if (pDstFld->just_r == 0)
-		{
-		  memcpy (pDstData, pSrcData, iSrcLength);
-		  memset (pDstData + iSrcLength, ' ', iPadLength);
-		}
+	      /* Just move string, truncating if necessary */
+	      if (pDstFld->just_r)
+		memcpy (pDstData, pSrcData + len1 - len2, len2);
 	      else
-		{
-		  /* right justification */
-		  memcpy (pDstData + iPadLength, pSrcData, iSrcLength);
-		  memset (pDstData, ' ', iPadLength);	/* pad rest */
-		}
+		memcpy (pDstData, pSrcData, len2);
 	    }
 	  else
 	    {
-	      while (iDestLength)
+	      /* Move string with padding */
+	      if (pDstFld->just_r)
 		{
-		  i = min (iSrcLength, iDestLength);
-		  memcpy (pDstData, pSrcData, i);
-		  pDstData += i;
-		  iDestLength -= i;
+		  memset (pDstData, ' ', len2 - len1);
+		  memcpy (pDstData + len2 - len1, pSrcData, len1);
+		}
+	      else
+		{
+		  memcpy (pDstData, pSrcData, len1);
+		  memset (pDstData + len1, ' ', len2 - len1);
 		}
 	    }
-	  break;
+	  return;
+
 	case DTYPE_DISPLAY:
 	  {
 		    /*----------------------------------------------------*\
@@ -334,7 +312,7 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 		cob_move (&FldWrk, caWrkData, pDstFld, pDstData);
 		return;
 	      }
-	    if (iDestLength < iDestDecimals)
+	    if (len2 < iDestDecimals)
 	      {			/* fractional scaling */
 		FldWrk.len = pDstFld->decimals;
 		FldWrk.type = DTYPE_DISPLAY;
@@ -358,7 +336,7 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 	      }
 
 	    iDestDecimals = (int) pDstFld->decimals;
-	    iWrkLength = iSrcLength;
+	    iWrkLength = len1;
 	    iDecCount = 0;
 	    iIntCount = 0;
 	    iSrcPtr = 0;
@@ -369,7 +347,7 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 	    pDecPortion = (char *) 0;
 	    cDecimalPoint = (decimal_comma) ? ',' : '.';
 	    cSign = 0;
-	    for (i = 0; i < iSrcLength; ++i)
+	    for (i = 0; i < len1; ++i)
 	      {
 		cChar = pSrcData[i];
 		switch (cChar)
@@ -384,7 +362,7 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 		  case ',':
 		    if (cChar == cDecimalPoint)
 		      {
-			if ((!bInDecPortion) && ((i + 1) < iSrcLength))
+			if ((!bInDecPortion) && ((i + 1) < len1))
 			  pDecPortion = &caWrkData[iSrcPtr];
 			bInDecPortion = 1;
 		      }
@@ -417,11 +395,11 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 	      }
 
 	    i = 0;
-	    iSrcLength = iSrcPtr;
+	    len1 = iSrcPtr;
 	    iSrcPtr = 0;
-	    if (iDestLength > iDestDecimals)
+	    if (len2 > iDestDecimals)
 	      {
-		iWork = iDestLength - iDestDecimals;
+		iWork = len2 - iDestDecimals;
 		if (iIntCount < iWork)
 		  {		/* move pad first */
 		    i = iWork - iIntCount;
@@ -612,7 +590,7 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 		cob_move (&FldWrk, caWrkData, pDstFld, pDstData);
 		return;
 	      }
-	    if (iDestLength < iDestDecimals)
+	    if (len2 < iDestDecimals)
 	      {			/* fractional scaling */
 		FldWrk.len = pDstFld->decimals;
 		FldWrk.type = DTYPE_DISPLAY;
@@ -643,23 +621,23 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
                      |                                                    |
                     \*----------------------------------------------------*/
 
-	    if (iSrcLength >= iDestLength)
+	    if (len1 >= len2)
 	      {
-		memcpy (pDstData, pSrcData, iDestLength);
+		memcpy (pDstData, pSrcData, len2);
 	      }
 	    else if (pSrcFld->all == 0)
 	      {
-		memcpy (pDstData, pSrcData, iSrcLength);
-		iPadLength = iDestLength - iSrcLength;
-		memset (pDstData + iSrcLength, ' ', iPadLength);
+		memcpy (pDstData, pSrcData, len1);
+		iPadLength = len2 - len1;
+		memset (pDstData + len1, ' ', iPadLength);
 	      }
 	    else
 	      {
 		j = 0;
-		for (i = 0; i < iDestLength; ++i)
+		for (i = 0; i < len2; ++i)
 		  {
 		    pDstData[i] = pSrcData[j++];
-		    if (j == iSrcLength)
+		    if (j == len1)
 		      j = 0;
 		  }
 	      }
@@ -731,8 +709,8 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 
 	    memset (caWork, '0', sizeof (caWork));
 
-	    j = MAX_DIGITS + iSrcDecimals - iSrcLength;
-	    iSrcIntDigits = iSrcLength;
+	    j = MAX_DIGITS + iSrcDecimals - len1;
+	    iSrcIntDigits = len1;
 	    if (iSrcDecimals > 0)
 	      iSrcIntDigits -= iSrcDecimals;
 	    if (iSrcIntDigits > 0)
@@ -741,7 +719,7 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 	    if (iSrcDecimals > 0)
 	      {
 		j = MAX_DIGITS;
-		if (iSrcDecimals > iSrcLength)
+		if (iSrcDecimals > len1)
 		  j += iSrcDecimals - 1;
 		memmove (&caWork[j], &pSrcData[iSrcIntDigits], iSrcDecimals);
 	      }
@@ -755,8 +733,8 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
                      |                                            |
                     \*--------------------------------------------*/
 
-	    j = MAX_DIGITS + iDestDecimals - iDestLength;
-	    iDestIntDigits = iDestLength;
+	    j = MAX_DIGITS + iDestDecimals - len2;
+	    iDestIntDigits = len2;
 	    if (iDestDecimals > 0)
 	      iDestIntDigits -= iDestDecimals;
 
@@ -773,13 +751,13 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 
 	    if (iDestDecimals > 0)
 	      {
-		if (iDestDecimals > iDestLength)
+		if (iDestDecimals > len2)
 		  {
 		    j = MAX_DIGITS - iDestIntDigits;
 		    /* Source decimal part exceeds destination width, 
 		       insert those digits that
 		       fit into the destination decimal part */
-		    memmove (pDstData, &caWork[j], iDestLength);
+		    memmove (pDstData, &caWork[j], len2);
 		  }
 		else
 		  {
@@ -866,8 +844,8 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 	       caWork[i] = '0';
 	     */
 
-	    j = MAX_DIGITS + iSrcDecimals - iSrcLength;
-	    iSrcIntDigits = iSrcLength;
+	    j = MAX_DIGITS + iSrcDecimals - len1;
+	    iSrcIntDigits = len1;
 	    if (iSrcDecimals > 0)
 	      iSrcIntDigits -= iSrcDecimals;
 	    memmove (&caWork[j], pSrcData, iSrcIntDigits);
@@ -875,7 +853,7 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 	    if (iSrcDecimals > 0)
 	      {
 		j = MAX_DIGITS;
-		if (iSrcDecimals > iSrcLength)
+		if (iSrcDecimals > len1)
 		  j += iSrcDecimals - 1;
 		memmove (&caWork[j], &pSrcData[iSrcIntDigits], iSrcDecimals);
 	      }
@@ -898,9 +876,9 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 
 	    k = 0;
 	    cPack = 0;
-	    j = MAX_DIGITS + iDestDecimals - iDestLength - 1;
+	    j = MAX_DIGITS + iDestDecimals - len2 - 1;
 	    /* j is pointer into work area */
-	    iDestIntDigits = iDestLength;
+	    iDestIntDigits = len2;
 	    if (iDestDecimals >= 0)
 	      {
 		iDestIntDigits -= iDestDecimals;
@@ -934,9 +912,9 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 	    if (iDestDecimals > 0)
 	      {
 		j = MAX_DIGITS;
-		temp1 = min (iDestLength, iDestDecimals);
-		if (iDestDecimals > iDestLength)
-		  j += iDestDecimals - iDestLength - 1;
+		temp1 = min (len2, iDestDecimals);
+		if (iDestDecimals > len2)
+		  j += iDestDecimals - len2 - 1;
 		for (i = 0; i < temp1; i++)
 		  {
 		    if (k & 1)
@@ -1075,7 +1053,7 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 		cob_move (&FldWrk, caWrkData, pDstFld, pDstData);
 		return;
 	      }
-	    if (iDestLength < iDestDecimals)
+	    if (len2 < iDestDecimals)
 	      {			/* fractional scaling */
 		FldWrk.len = pDstFld->decimals;
 		FldWrk.type = DTYPE_DISPLAY;
@@ -1106,14 +1084,14 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
                      |                                                    |
                     \*----------------------------------------------------*/
 
-	    j = min (iSrcLength, iDestLength);
+	    j = min (len1, len2);
 	    for (i = 0; i < j; i++)
 	      {
 		cWork = (unsigned char) pSrcData[i >> 1];
 		cWork = (i & 1) ? (cWork & 0x0f) : (cWork >> 4);
 		pDstData[i] = cWork + '0';
 	      }
-	    memset (&pDstData[j], ' ', iDestLength - j);
+	    memset (&pDstData[j], ' ', len2 - j);
 	    break;
 	  }
 
@@ -1147,8 +1125,8 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 
 	    memset (caWork, '0', sizeof (caWork));
 
-	    j = MAX_DIGITS + iSrcDecimals - iSrcLength;
-	    iSrcIntDigits = iSrcLength;
+	    j = MAX_DIGITS + iSrcDecimals - len1;
+	    iSrcIntDigits = len1;
 	    if (iSrcDecimals > 0)
 	      iSrcIntDigits -= iSrcDecimals;
 	    for (i = 0; i < iSrcIntDigits; i++)
@@ -1160,9 +1138,9 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 	    if (iSrcDecimals > 0)
 	      {
 		j = MAX_DIGITS;
-		if (iSrcDecimals > iSrcLength)
-		  j += iSrcDecimals - iSrcLength;
-		for (; i < iSrcLength; i++)
+		if (iSrcDecimals > len1)
+		  j += iSrcDecimals - len1;
+		for (; i < len1; i++)
 		  {
 		    cWork = (unsigned char) pSrcData[i >> 1];
 		    cWork = (i & 1) ? (cWork & 0xF) : (cWork >> 4);
@@ -1177,20 +1155,20 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
                      |                                            |
                     \*--------------------------------------------*/
 
-	    j = MAX_DIGITS + iDestDecimals - iDestLength;
-	    iDestIntDigits = iDestLength;
+	    j = MAX_DIGITS + iDestDecimals - len2;
+	    iDestIntDigits = len2;
 	    if (iDestDecimals > 0)
 	      iDestIntDigits -= iDestDecimals;
 
-	    memset (pDstData, '0', min (iSrcLength, fldLength (pDstFld)));
+	    memset (pDstData, '0', min (len1, fldLength (pDstFld)));
 	    memmove (pDstData, &caWork[j], iDestIntDigits);
 
 	    if (iDestDecimals > 0)
 	      {
-		if (iDestDecimals > iDestLength)
+		if (iDestDecimals > len2)
 		  {
 		    j = MAX_DIGITS - iDestIntDigits;
-		    memmove (pDstData, &caWork[j], iDestLength);
+		    memmove (pDstData, &caWork[j], len2);
 		  }
 		else
 		  {
@@ -1235,8 +1213,8 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 
 	    memset (caWork, '0', sizeof (caWork));
 
-	    j = MAX_DIGITS + iSrcDecimals - iSrcLength;
-	    iSrcIntDigits = iSrcLength;
+	    j = MAX_DIGITS + iSrcDecimals - len1;
+	    iSrcIntDigits = len1;
 	    if (iSrcDecimals >= 0)
 	      iSrcIntDigits -= iSrcDecimals;
 	    for (i = 0; i < iSrcIntDigits; ++i)
@@ -1248,9 +1226,9 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 	    if (iSrcDecimals > 0)
 	      {
 		j = MAX_DIGITS;
-		if (iSrcDecimals > iSrcLength)
-		  j += iSrcDecimals - iSrcLength;
-		for (; i < iSrcLength; ++i)
+		if (iSrcDecimals > len1)
+		  j += iSrcDecimals - len1;
+		for (; i < len1; ++i)
 		  {
 		    cPack = (unsigned char) pSrcData[i >> 1];
 		    cPack = ((i & 1) ? (cPack & 0xF) : (cPack >> 4)) + '0';
@@ -1273,12 +1251,12 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 
 	    k = 0;
 	    cPack = 0;
-	    j = MAX_DIGITS + iDestDecimals - iDestLength;
-	    iDestIntDigits = iDestLength;
+	    j = MAX_DIGITS + iDestDecimals - len2;
+	    iDestIntDigits = len2;
 	    if (iDestDecimals >= 0)
 	      iDestIntDigits -= iDestDecimals;
 	    /* zero fill destination first */
-	    for (i = 0; i < iSrcLength; ++i)
+	    for (i = 0; i < len1; ++i)
 	      {
 		if (i == fldLength (pDstFld))
 		  break;
@@ -1304,10 +1282,10 @@ cob_move (struct fld_desc *f1desc, unsigned char *f1data,
 
 	    if (iDestDecimals > 0)
 	      {
-		temp1 = min (iDestLength, iDestDecimals);
+		temp1 = min (len2, iDestDecimals);
 		j = MAX_DIGITS;
-		if (iDestDecimals > iDestLength)
-		  j += iDestDecimals - iDestLength;
+		if (iDestDecimals > len2)
+		  j += iDestDecimals - len2;
 		for (i = 0; i < temp1; i++)
 		  {
 		    if (k & 1)
