@@ -40,9 +40,8 @@ make
 %defattr (-,root,root)
 %doc AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README
 %{_bindir}
-%{_includedir}
 %{_libdir}
-%{_libexecdir}
+%{_includedir}
 
 %post
 /sbin/ldconfig
