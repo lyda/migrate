@@ -2,14 +2,15 @@
 %define version @VERSION@
 %define release 1
 
-Summary:     OpenCOBOL - COBOL compiler.
+Summary:     OpenCOBOL - COBOL compiler
+Summary(ja): OpenCOBOL - COBOL コンパイラ
 Name:        %{package}
 Version:     %{version}
 Release:     %{release}
 Source:      http://prdownloads.sourceforge.net/open-cobol/%{package}-%{version}.tar.gz
 Group:       Development/Languages
 Copyright:   GPL, LGPL
-Packager:    Fuhito Suguri <bitwalk@jcom.home.ne.jp>
+Packager:    Keiichi Takahashi <bitwalk@jcom.home.ne.jp>
 Vendor:      bitWalk Co., Ltd.
 Requires:    gmp >= 3
 Buildroot:   %{_tmppath}/%{package}-%{version}-buildroot
