@@ -64,7 +64,7 @@ _format: | FORMAT ;
 _is: | IS ;
 
 copy_statement:
-  COPY NAME copy_in copy_replacing '.'
+  COPY NAME copy_in copy_replacing dot
   {
     fputc ('\n', ppout);
     ppcopy ($2, $3, $4);
@@ -79,11 +79,12 @@ copy_replacing:
 | REPLACING replacing_list	{ $$ = $2; }
 ;
 replace_statement:
-  REPLACE replacing_list '.'
-| REPLACE OFF '.'
+  REPLACE replacing_list dot
+| REPLACE OFF dot
 ;
 replacing_list:
   text BY text			{ $$ = add_replacement (NULL, $1, $3); }
 | replacing_list text BY text	{ $$ = add_replacement ($1, $2, $4); }
 ;
 text: NAME | TEXT ;
+dot: | '.'
