@@ -403,6 +403,7 @@ make_field (struct cobc_word *word)
   struct cobc_field *p =
     make_tree (cobc_tag_field, COB_ALPHANUMERIC, sizeof (struct cobc_field));
   p->size = 0;
+  p->memory = 0;
   p->offset = 0;
   p->level = 0;
   p->occurs = 0;
@@ -619,6 +620,12 @@ finalize_field_tree (struct cobc_field *p)
 {
   setup_cname (p);
   compute_size (p);
+
+  /* compute the memory size */
+  if (!p->redefines)
+    p->memory = p->size;
+  else if (p->size > p->redefines->memory)
+    p->redefines->memory = p->size;
 }
 
 

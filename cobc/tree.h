@@ -236,6 +236,7 @@ extern long long literal_to_int (struct cobc_literal *p);
 struct cobc_field {
   struct cobc_tree_common common;
   int size;			/* byte size */
+  int memory;			/* memory size */
   int offset;			/* byte offset from the top (ie, 01 field) */
   int level;			/* level number */
   int occurs;			/* OCCURS */

@@ -802,13 +802,13 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
 	{
 	  if (p->f.external)
 	    {
-	      output ("unsigned char %s[%d];\n", p->cname, p->size);
+	      output ("unsigned char %s[%d];\n", p->cname, p->memory);
 	      output ("#define f_%s_data %s\n", p->cname, p->cname);
 	    }
 	  else
 	    {
 	      output ("static unsigned char f_%s_data[%d];\n",
-		      p->cname, p->size);
+		      p->cname, p->memory);
 	    }
 	}
     }
