@@ -622,11 +622,11 @@ loadloc_to_eax (cob_tree sy_p)
 	  while (tmp->linkage_flg == 1)
 	    tmp = tmp->parent;
 	  offset = var->location - tmp->location;
-	  if (symlen (var) > 2)
-	    fprintf (o_src, "\tmovl %d(%%ebp), %%ebx\n", tmp->linkage_flg);
+	  if (symlen (tmp) > 2)
+	    fprintf (o_src, "\tmovl\t%d(%%ebp), %%ebx\n", tmp->linkage_flg);
 	  else
-	    fprintf (o_src, "\tmovs%cl %d(%%ebp), %%ebx\n",
-		     varsize_ch (var), tmp->linkage_flg);
+	    fprintf (o_src, "\tmovs%cl\t%d(%%ebp), %%ebx\n",
+		     varsize_ch (tmp), tmp->linkage_flg);
 	  if (offset)
 	    fprintf (o_src, "\taddl\t$%d, %%ebx\n", offset);
 	  fprintf (o_src, "\taddl\t%%ebx, %%eax\n");
