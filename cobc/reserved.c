@@ -24,6 +24,7 @@
 #include <ctype.h>
 
 #include "cobc.h"
+#include "tree.h"
 #include "parser.h"
 
 #define HASH_SIZE 133

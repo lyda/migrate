@@ -25,6 +25,7 @@
 #include <stdarg.h>
 
 #include "cobc.h"
+#include "tree.h"
 
 static void
 print_error (char *file, int line, const char *prefix, const char *fmt, va_list ap)

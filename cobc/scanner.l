@@ -32,6 +32,7 @@
 #include <libcob.h>
 
 #include "cobc.h"
+#include "tree.h"
 #include "parser.h"
 
 #define SET_LOCATION(x)				\
@@ -95,8 +96,8 @@ X\"[^\"\n]*\" {
   if (integer_is_label)
     {
       /* integer label */
-      yylval.tree = make_reference (yytext);
-      SET_LOCATION (yylval.tree);
+      yylval = make_reference (yytext);
+      SET_LOCATION (yylval);
       return WORD;
     }
   else
@@ -124,14 +125,17 @@ H\"[^\"\n]*\" {
   /* reserved word */
   token = lookup_reserved_word (yytext);
   if (token != 0)
-    return token;
+    {
+      yylval = 0;
+      return token;
+    }
 
   /* user word */
-  yylval.tree = make_reference (yytext);
-  SET_LOCATION (yylval.tree);
+  yylval = make_reference (yytext);
+  SET_LOCATION (yylval);
 
   /* special name handling */
-  word = CB_REFERENCE (yylval.tree)->word;
+  word = CB_REFERENCE (yylval)->word;
   if (word->count > 0)
     {
       cb_tree x = CB_VALUE (word->items);
@@ -144,11 +148,11 @@ H\"[^\"\n]*\" {
   return WORD;
 }
 
-"<="		{ return LE; }
-">="		{ return GE; }
-"**"		{ return '^'; }
-"."		{ last_token_is_dot = 1; return '.'; }
-.		{ return yytext[0]; }
+"<="		{ yylval = 0; return LE; }
+">="		{ yylval = 0; return GE; }
+"**"		{ yylval = 0; return '^'; }
+"."		{ last_token_is_dot = 1; yylval = 0; return '.'; }
+.		{ yylval = 0; return yytext[0]; }
 
 <PICTURE_STATE>{
   "IS"		{ /* ignore */ }
@@ -161,11 +165,11 @@ H\"[^\"\n]*\" {
 <FUNCTION_STATE>{
   [a-z0-9-]+	{
     BEGIN INITIAL;
-    yylval.tree = make_reference (yytext);
-    SET_LOCATION (yylval.tree);
+    yylval = make_reference (yytext);
+    SET_LOCATION (yylval);
     return FUNCTION_NAME;
   }
-  .		{ return yytext[0]; }
+  .		{ yylval = 0; return yytext[0]; }
 }
 
 <<EOF>> {
@@ -194,8 +198,8 @@ read_literal (char mark)
 	cb_error (_("too large literal"));
     }
   *p = 0;
-  yylval.tree = cb_build_alphanumeric_literal (strlen (buff), buff);
-  SET_LOCATION (yylval.tree);
+  yylval = cb_build_alphanumeric_literal (strlen (buff), buff);
+  SET_LOCATION (yylval);
   return LITERAL;
 }
 
@@ -227,14 +231,14 @@ scan_x (char *text)
 
   if (high)
     {
-      yylval.tree = cb_build_alphanumeric_literal (dst - buff, buff);
-      SET_LOCATION (yylval.tree);
+      yylval = cb_build_alphanumeric_literal (dst - buff, buff);
+      SET_LOCATION (yylval);
       return LITERAL;
     }
 
  error:
   cb_error (_("invalid X literal: %s"), text);
-  yylval.tree = cb_error_node;
+  yylval = cb_error_node;
   return LITERAL;
 }
 
@@ -259,13 +263,13 @@ scan_h (char *text)
     }
 
   sprintf (buff, "%lld", val);
-  yylval.tree = cb_build_numeric_literal (0, buff, 0);
-  SET_LOCATION (yylval.tree);
+  yylval = cb_build_numeric_literal (0, buff, 0);
+  SET_LOCATION (yylval);
   return LITERAL;
 
  error:
   cb_error (_("invalid H literal: %s"), text);
-  yylval.tree = cb_error_node;
+  yylval = cb_error_node;
   return LITERAL;
 }
 
@@ -288,8 +292,8 @@ scan_numeric (char *text)
   if (strchr (text, (current_program->decimal_point == ',') ? '.' : ','))
     cb_error (_("invalid numeric literal"));
 
-  yylval.tree = cb_build_numeric_literal (sign, text, - decimals);
-  SET_LOCATION (yylval.tree);
+  yylval = cb_build_numeric_literal (sign, text, - decimals);
+  SET_LOCATION (yylval);
   return LITERAL;
 }
 
@@ -312,6 +316,6 @@ scan_picture (char *text)
       *p = toupper (*p);
     }
 
-  yylval.tree = cb_build_picture (text);
+  yylval = cb_build_picture (text);
   return PICTURE;
 }

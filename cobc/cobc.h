@@ -24,7 +24,6 @@
 
 #include <stdio.h>
 
-#include "tree.h"
 #include "lib/gettext.h"
 
 #define CB_FORMAT_FREE		1
@@ -129,5 +128,12 @@ extern FILE *yyin;
 extern FILE *yyout;
 extern int yylex (void);
 extern int yyparse (void);
+
+/* error.c */
+extern void cb_warning (const char *fmt, ...);
+extern void cb_error (const char *fmt, ...);
+extern void cb_archaic (const char *feature);
+extern void cb_obsolete_85 (const char *feature);
+extern void cb_obsolete_2002 (const char *feature);
 
 #endif /* CB_COBC_H */

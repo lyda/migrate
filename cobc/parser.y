@@ -33,12 +33,13 @@
 #include <libcob.h>
 
 #include "cobc.h"
+#include "tree.h"
 
-#define yyerror		cb_error
-#define YYDEBUG		COB_DEBUG
-#define YYERROR_VERBOSE 1
+#define yyerror			cb_error
+#define YYDEBUG			COB_DEBUG
+#define YYERROR_VERBOSE		1
 
-#define PENDING(x)	cb_warning (_("`%s' not implemented"), x)
+#define PENDING(x)		cb_warning (_("`%s' not implemented"), x)
 
 #define VALIDATE(v,x,msg,cond)			\
   {						\
@@ -125,11 +126,7 @@ static cb_tree build_file_handler (cb_tree file, cb_tree handler);
 static void terminator_warning (void);
 %}
 
-%union {
-  cb_tree tree;
-}
-
-%token <tree> WORD LITERAL PICTURE CLASS_NAME MNEMONIC_NAME FUNCTION_NAME
+%token WORD LITERAL PICTURE CLASS_NAME MNEMONIC_NAME FUNCTION_NAME
 
 %token ACCEPT ADD CALL CANCEL CLOSE COMPUTE DELETE DISPLAY DIVIDE ENTRY
 %token EVALUATE IF INITIALIZE INSPECT MERGE MOVE MULTIPLY OPEN PERFORM
@@ -165,28 +162,6 @@ static void terminator_warning (void);
 %token STATUS STOP SYMBOLIC SYNCHRONIZED TALLYING TAPE TEST THAN THEN THRU
 %token TIME TIMES TO TOK_FILE TOK_INITIAL TOK_TRUE TOK_FALSE TRAILING
 %token UNDERLINE UNIT UNTIL UP UPON USAGE USE USING VALUE VARYING WHEN WITH
-
-%type <tree> flag_all flag_duplicates flag_optional flag_global
-%type <tree> flag_not flag_next flag_rounded flag_separate
-%type <tree> integer opt_from_integer opt_to_integer level_number
-%type <tree> occurs_key_list data_name_list value_list opt_value_list
-%type <tree> numeric_value_list inspect_before_after_list before_or_after
-%type <tree> reference_list mnemonic_name_list file_name_list using_phrase
-%type <tree> expr_item_list numeric_name_list numeric_edited_name_list
-%type <tree> procedure_name_list ascending_or_descending
-%type <tree> at_line_column column_number condition expr expr_1
-%type <tree> expr_item record_description_list label line_number literal
-%type <tree> entry_name integer_label reference_or_literal basic_literal
-%type <tree> integer_value numeric_value numeric_expr alphanumeric_value
-%type <tree> on_or_off opt_screen_description_list as_literal
-%type <tree> opt_with_pointer perform_option perform_procedure
-%type <tree> reference screen_description screen_description_list at_eop
-%type <tree> section_name statement_list non_all_value value write_from
-%type <tree> on_size_error on_overflow at_end opt_invalid_key invalid_key
-%type <tree> group_name record_name numeric_name numeric_edited_name
-%type <tree> integer_name data_name file_name table_name mnemonic_name
-%type <tree> label_name undefined_word program_name
-%type <tree> identifier qualified_word subscript function
 
 
 %%
@@ -266,8 +241,8 @@ program_id_paragraph:
   }
   program_name as_literal program_type '.'
   {
-    if ($<tree>5)
-      current_program->program_id = CB_LITERAL ($<tree>5)->data;
+    if ($5)
+      current_program->program_id = CB_LITERAL ($5)->data;
     else
       {
 	int converted = 0;
@@ -392,8 +367,8 @@ special_name:
 mnemonic_name_clause:
   WORD
   {
-    $<tree>$ = lookup_system_name (CB_NAME ($1));
-    if ($<tree>$ == cb_error_node)
+    $$ = lookup_system_name (CB_NAME ($1));
+    if ($$ == cb_error_node)
       cb_error_x ($1, _("unknown system-name `%s'"), CB_NAME ($1));
   }
   special_name_mnemonic_define
@@ -402,14 +377,14 @@ mnemonic_name_clause:
 special_name_mnemonic_define:
 | IS undefined_word
   {
-    cb_define ($2, $<tree>0);
+    cb_define ($2, $0);
   }
 ;
 special_name_mnemonic_on_off:
 | special_name_mnemonic_on_off
   on_or_off _status _is undefined_word
   {
-    cb_tree x = $<tree>-1;
+    cb_tree x = $-1;
     if (x != cb_error_node)
       {
 	struct cb_system_name *s = CB_SYSTEM_NAME (x);
@@ -422,8 +397,7 @@ special_name_mnemonic_on_off:
 	    cb_build_constant ($5, value);
 	  }
 	else
-	  cb_error_x ($<tree>-2, _("switch-name is expected `%s'"),
-		      CB_NAME ($<tree>-2));
+	  cb_error_x ($-2, _("switch-name is expected `%s'"), CB_NAME ($-2));
       }
   }
 ;
@@ -441,31 +415,31 @@ alphabet_name_clause:
 alphabet_definition:
   NATIVE
   {
-    $<tree>$ = cb_define_alphabet_name ($<tree>-1, CB_ALPHABET_NATIVE);
+    $$ = cb_define_alphabet_name ($-1, CB_ALPHABET_NATIVE);
   }
 | STANDARD_1
   {
-    $<tree>$ = cb_define_alphabet_name ($<tree>-1, CB_ALPHABET_STANDARD_1);
+    $$ = cb_define_alphabet_name ($-1, CB_ALPHABET_STANDARD_1);
   }
 | STANDARD_2
   {
-    $<tree>$ = cb_define_alphabet_name ($<tree>-1, CB_ALPHABET_STANDARD_2);
+    $$ = cb_define_alphabet_name ($-1, CB_ALPHABET_STANDARD_2);
   }
 | alphabet_literal_list
   {
-    $<tree>$ = cb_define_alphabet_name ($<tree>-1, CB_ALPHABET_CUSTOM);
-    CB_ALPHABET_NAME ($<tree>$)->custom_list = $<tree>1;
+    $$ = cb_define_alphabet_name ($-1, CB_ALPHABET_CUSTOM);
+    CB_ALPHABET_NAME ($$)->custom_list = $1;
   }
 ;
 alphabet_literal_list:
-  alphabet_literal		{ $<tree>$ = list ($<tree>1); }
+  alphabet_literal		{ $$ = list ($1); }
 | alphabet_literal_list
-  alphabet_literal		{ $<tree>$ = list_add ($<tree>1, $<tree>2); }
+  alphabet_literal		{ $$ = list_add ($1, $2); }
 ;
 alphabet_literal:
-  literal			{ $<tree>$ = $1; }
-| literal THRU literal		{ $<tree>$ = cb_build_pair ($1, $3); }
-| literal alphabet_literal_also	{ $<tree>$ = cb_error_node; }
+  literal			{ $$ = $1; }
+| literal THRU literal		{ $$ = cb_build_pair ($1, $3); }
+| literal alphabet_literal_also	{ $$ = cb_error_node; }
 ;
 alphabet_literal_also:
   ALSO literal
@@ -505,21 +479,21 @@ class_name_clause:
   {
     current_program->class_name_list =
       list_add (current_program->class_name_list,
-		cb_define_class_name ($2, $<tree>4));
+		cb_define_class_name ($2, $4));
   }
 ;
 class_item_list:
-  class_item			{ $<tree>$ = list ($<tree>1); }
-| class_item_list class_item	{ $<tree>$ = list_add ($<tree>1, $<tree>2); }
+  class_item			{ $$ = list ($1); }
+| class_item_list class_item	{ $$ = list_add ($1, $2); }
 ;
 class_item:
-  literal			{ $<tree>$ = $1; }
+  literal			{ $$ = $1; }
 | literal THRU literal
   {
     if (CB_LITERAL ($1)->data[0] < CB_LITERAL ($3)->data[0])
-      $<tree>$ = cb_build_pair ($1, $3);
+      $$ = cb_build_pair ($1, $3);
     else
-      $<tree>$ = cb_build_pair ($3, $1);
+      $$ = cb_build_pair ($3, $1);
   }
 ;
 
@@ -776,7 +750,7 @@ i_o_control_clause:
 same_clause:
   SAME same_option _area _for file_name_list
   {
-    switch (CB_INTEGER ($<tree>2)->val)
+    switch (CB_INTEGER ($2)->val)
       {
       case 0:
 	/* SAME AREA */
@@ -791,10 +765,10 @@ same_clause:
   }
 ;
 same_option:
-  /* empty */			{ $<tree>$ = cb_int0; }
-| RECORD			{ $<tree>$ = cb_int1; }
-| SORT				{ $<tree>$ = cb_int2; }
-| SORT_MERGE			{ $<tree>$ = cb_int2; }
+  /* empty */			{ $$ = cb_int0; }
+| RECORD			{ $$ = cb_int1; }
+| SORT				{ $$ = cb_int2; }
+| SORT_MERGE			{ $$ = cb_int2; }
 ;
 
 /* MULTIPLE FILE TAPE clause */
@@ -860,14 +834,14 @@ file_description_entry:
       YYERROR;
 
     current_file = CB_FILE (cb_ref ($2));
-    if ($<tree>1 == cb_int1)
+    if ($1 == cb_int1)
       current_file->organization = COB_ORG_SORT;
   }
   file_description_clause_sequence '.'
 ;
 file_type:
-  FD				{ $<tree>$ = cb_int0; }
-| SD				{ $<tree>$ = cb_int1; }
+  FD				{ $$ = cb_int0; }
+| SD				{ $$ = cb_int1; }
 ;
 file_description_clause_sequence:
 | file_description_clause_sequence file_description_clause
@@ -1008,7 +982,7 @@ working_storage_section:
 ;
 record_description_list:
   /* empty */			{ $$ = NULL; }
-| record_description_list_1	{ $$ = $<tree>1; }
+| record_description_list_1	{ $$ = $1; }
 ;
 record_description_list_1:
   {
@@ -1017,15 +991,15 @@ record_description_list_1:
   record_description_list_2
   {
     struct cb_field *p;
-    for (p = CB_FIELD ($<tree>2); p; p = p->sister)
+    for (p = CB_FIELD ($2); p; p = p->sister)
       cb_validate_field (p);
-    $<tree>$ = $<tree>2;
+    $$ = $2;
   }
 ;
 record_description_list_2:
-  data_description		{ $<tree>$ = $<tree>1; }
+  data_description		{ $$ = $1; }
 | record_description_list_2
-  data_description		{ $<tree>$ = $<tree>1; }
+  data_description		{ $$ = $1; }
 ;
 data_description:
   level_number entry_name
@@ -1040,7 +1014,7 @@ data_description:
   {
     if (current_field->level == 88)
       cb_validate_88_item (current_field);
-    $<tree>$ = CB_TREE (current_field);
+    $$ = CB_TREE (current_field);
   }
 ;
 
@@ -1201,20 +1175,20 @@ ascending_or_descending:
 occurs_indexed:
 | INDEXED _by occurs_index_list
   {
-    current_field->index_list = $<tree>3;
+    current_field->index_list = $3;
   }
 ;
 occurs_index_list:
-  occurs_index			{ $<tree>$ = list ($<tree>1); }
+  occurs_index			{ $$ = list ($1); }
 | occurs_index_list
-  occurs_index			{ $<tree>$ = list_add ($<tree>1, $<tree>2); }
+  occurs_index			{ $$ = list_add ($1, $2); }
 ;
 occurs_index:
   undefined_word
   {
-    $<tree>$ = cb_build_index ($1);
+    $$ = cb_build_index ($1);
     current_program->index_list =
-      list_add (current_program->index_list, $<tree>$);
+      list_add (current_program->index_list, $$);
   }
 ;
 
@@ -1250,15 +1224,15 @@ blank_clause:
 /* VALUE */
 
 value_clause:
-  VALUE _is_are value_item_list	{ current_field->values = $<tree>3; }
+  VALUE _is_are value_item_list	{ current_field->values = $3; }
 ;
 value_item_list:
-  value_item			{ $<tree>$ = list ($<tree>1); }
-| value_item_list value_item	{ $<tree>$ = list_add ($<tree>1, $<tree>2); }
+  value_item			{ $$ = list ($1); }
+| value_item_list value_item	{ $$ = list_add ($1, $2); }
 ;
 value_item:
-  literal			{ $<tree>$ = $1; }
-| literal THRU literal		{ $<tree>$ = cb_build_pair ($1, $3); }
+  literal			{ $$ = $1; }
+| literal THRU literal		{ $$ = cb_build_pair ($1, $3); }
 ;
 
 
@@ -1586,19 +1560,19 @@ section_name:
 
 statement_list:
   {
-    $<tree>$ = current_program->exec_list;
+    $$ = current_program->exec_list;
     current_program->exec_list = NULL;
   }
   {
-    $<tree>$ = CB_TREE (current_statement);
+    $$ = CB_TREE (current_statement);
     current_statement->need_terminator = 1;
     current_statement = NULL;
   }
   statements
   {
     $$ = make_sequence (list_reverse (current_program->exec_list));
-    current_program->exec_list = $<tree>1;
-    current_statement = CB_STATEMENT ($<tree>2);
+    current_program->exec_list = $1;
+    current_statement = CB_STATEMENT ($2);
   }
 ;
 statements:
@@ -1739,25 +1713,25 @@ add_statement:
   add_body on_size_error
   end_add
   {
-    push_sequence_with_handler ($<tree>3, $4);
+    push_sequence_with_handler ($3, $4);
   }
 ;
 add_body:
   numeric_value_list TO numeric_name_list
   {
-    $<tree>$ = cb_build_assign ($3, '+', cb_build_connective_op ($1, '+'));
+    $$ = cb_build_assign ($3, '+', cb_build_connective_op ($1, '+'));
   }
 | numeric_value_list add_to GIVING numeric_edited_name_list
   {
-    $<tree>$ = cb_build_assign ($4, 0, cb_build_connective_op ($1, '+'));
+    $$ = cb_build_assign ($4, 0, cb_build_connective_op ($1, '+'));
   }
 | CORRESPONDING group_name _to group_name flag_rounded
   {
-    $<tree>$ = cb_build_corr (cb_build_add, $4, $2, $5);
+    $$ = cb_build_corr (cb_build_add, $4, $2, $5);
   }
 ;
 add_to:
-| TO numeric_value		{ list_add ($<tree>0, $2); }
+| TO numeric_value		{ list_add ($0, $2); }
 ;
 end_add:
   /* empty */			{ terminator_warning (); }
@@ -1789,25 +1763,25 @@ call_statement:
   call_on_exception call_not_on_exception
   end_call
   {
-    cb_tree x = $<tree>6 ? $<tree>6 : cb_build_funcall_0 ("cob_call_error");
-    push_funcall_4 ("@call", $3, $<tree>4, x, $<tree>7);
-    if ($<tree>5)
-      push (cb_build_move (cb_return_code, $<tree>5));
+    cb_tree x = $6 ? $6 : cb_build_funcall_0 ("cob_call_error");
+    push_funcall_4 ("@call", $3, $4, x, $7);
+    if ($5)
+      push (cb_build_move (cb_return_code, $5));
   }
 ;
 call_using:
-  /* empty */		{ $<tree>$ = NULL; }
+  /* empty */		{ $$ = NULL; }
 | USING			{ current_call_mode = CB_CALL_BY_REFERENCE; }
-  call_param_list	{ $<tree>$ = $<tree>3; }
+  call_param_list	{ $$ = $3; }
 ;
 call_param_list:
-  call_param		{ $<tree>$ = $<tree>1; }
+  call_param		{ $$ = $1; }
 | call_param_list
-  call_param		{ $<tree>$ = list_append ($<tree>1, $<tree>2); }
+  call_param		{ $$ = list_append ($1, $2); }
 ;
 call_param:
-  value			{ $<tree>$ = cb_build_int_list (current_call_mode, $1); }
-| _by call_mode value	{ $<tree>$ = cb_build_int_list (current_call_mode, $3);}
+  value			{ $$ = cb_build_int_list (current_call_mode, $1); }
+| _by call_mode value	{ $$ = cb_build_int_list (current_call_mode, $3);}
 ;
 call_mode:
   REFERENCE		{ current_call_mode = CB_CALL_BY_REFERENCE; }
@@ -1816,20 +1790,20 @@ call_mode:
 | VALUE			{ current_call_mode = CB_CALL_BY_VALUE; }
 ;
 call_returning:
-  /* empty */		{ $<tree>$ = NULL; }
-| RETURNING data_name	{ $<tree>$ = $2; }
+  /* empty */		{ $$ = NULL; }
+| RETURNING data_name	{ $$ = $2; }
 ;
 call_on_exception:
-  /* empty */		{ $<tree>$ = NULL; }
+  /* empty */		{ $$ = NULL; }
 | _on OVERFLOW
-  statement_list	{ $<tree>$ = $3; }
+  statement_list	{ $$ = $3; }
 | _on EXCEPTION
-  statement_list	{ $<tree>$ = $3; }
+  statement_list	{ $$ = $3; }
 ;
 call_not_on_exception:
-  /* empty */		{ $<tree>$ = NULL; }
+  /* empty */		{ $$ = NULL; }
 | NOT _on EXCEPTION
-  statement_list	{ $<tree>$ = $4; }
+  statement_list	{ $$ = $4; }
 ;
 end_call:
   /* empty */		{ terminator_warning (); }
@@ -1867,17 +1841,17 @@ close_list:
     if ($2 != cb_error_node)
       {
 	cb_tree file = cb_ref ($2);
-	push_funcall_2 ("cob_close", file, $<tree>3);
+	push_funcall_2 ("cob_close", file, $3);
 	push_file_handler (file, NULL);
       }
   }
 ;
 close_option:
-  /* empty */			{ $<tree>$ = cb_build_integer (COB_CLOSE_NORMAL); }
-| reel_or_unit			{ $<tree>$ = cb_build_integer (COB_CLOSE_UNIT); }
-| reel_or_unit _for REMOVAL	{ $<tree>$ = cb_build_integer (COB_CLOSE_UNIT_REMOVAL); }
-| _with NO REWIND		{ $<tree>$ = cb_build_integer (COB_CLOSE_NO_REWIND); }
-| _with LOCK			{ $<tree>$ = cb_build_integer (COB_CLOSE_LOCK); }
+  /* empty */			{ $$ = cb_build_integer (COB_CLOSE_NORMAL); }
+| reel_or_unit			{ $$ = cb_build_integer (COB_CLOSE_UNIT); }
+| reel_or_unit _for REMOVAL	{ $$ = cb_build_integer (COB_CLOSE_UNIT_REMOVAL); }
+| _with NO REWIND		{ $$ = cb_build_integer (COB_CLOSE_NO_REWIND); }
+| _with LOCK			{ $$ = cb_build_integer (COB_CLOSE_LOCK); }
 ;
 reel_or_unit: REEL | UNIT ;
 
@@ -1891,13 +1865,13 @@ compute_statement:
   compute_body on_size_error
   end_compute
   {
-    push_sequence_with_handler ($<tree>3, $4);
+    push_sequence_with_handler ($3, $4);
   }
 ;
 compute_body:
   numeric_edited_name_list '=' numeric_expr
   {
-    $<tree>$ = cb_build_assign ($1, 0, $3);
+    $$ = cb_build_assign ($1, 0, $3);
   }
 ;
 end_compute:
@@ -1953,38 +1927,38 @@ display_statement:
     else
       {
 	for (l = $3; l; l = CB_CHAIN (l))
-	  push_funcall_2 ("cob_display", CB_VALUE (l), $<tree>4);
+	  push_funcall_2 ("cob_display", CB_VALUE (l), $4);
       }
   }
   display_with_no_advancing
   end_display
   ;
 display_upon:
-  /* empty */			{ $<tree>$ = cb_build_integer (COB_SYSOUT); }
+  /* empty */			{ $$ = cb_build_integer (COB_SYSOUT); }
 | _upon mnemonic_name
   {
     switch (CB_SYSTEM_NAME (cb_ref ($2))->token)
       {
-      case CB_CONSOLE: $<tree>$ = cb_build_integer (COB_SYSOUT); break;
-      case CB_SYSOUT:  $<tree>$ = cb_build_integer (COB_SYSOUT); break;
-      case CB_SYSERR:  $<tree>$ = cb_build_integer (COB_SYSERR); break;
+      case CB_CONSOLE: $$ = cb_build_integer (COB_SYSOUT); break;
+      case CB_SYSOUT:  $$ = cb_build_integer (COB_SYSOUT); break;
+      case CB_SYSERR:  $$ = cb_build_integer (COB_SYSERR); break;
       default:
 	cb_error_x ($2, _("invalid UPON item"));
-	$<tree>$ = cb_error_node;
+	$$ = cb_error_node;
 	break;
       }
   }
 | UPON WORD
   {
     cb_warning_x ($2, _("`%s' undefined in SPECIAL-NAMES"), CB_NAME ($2));
-    $<tree>$ = cb_build_integer (COB_SYSOUT);
+    $$ = cb_build_integer (COB_SYSOUT);
   }
 ;
 display_with_no_advancing:
   /* empty */
   {
     if (!current_program->flag_screen)
-      push_funcall_1 ("cob_newline", $<tree>-2);
+      push_funcall_1 ("cob_newline", $-2);
   }
 | _with NO ADVANCING { /* nothing */ }
 ;
@@ -2002,31 +1976,31 @@ divide_statement:
   divide_body on_size_error
   end_divide
   {
-    push_sequence_with_handler ($<tree>3, $4);
+    push_sequence_with_handler ($3, $4);
   }
 ;
 divide_body:
   numeric_value INTO numeric_name_list
   {
-    $<tree>$ = cb_build_assign ($3, '/', $1);
+    $$ = cb_build_assign ($3, '/', $1);
   }
 | numeric_value INTO numeric_value GIVING numeric_edited_name_list
   {
-    $<tree>$ = cb_build_assign ($5, 0, cb_build_binary_op ($3, '/', $1));
+    $$ = cb_build_assign ($5, 0, cb_build_binary_op ($3, '/', $1));
   }
 | numeric_value BY numeric_value GIVING numeric_edited_name_list
   {
-    $<tree>$ = cb_build_assign ($5, 0, cb_build_binary_op ($1, '/', $3));
+    $$ = cb_build_assign ($5, 0, cb_build_binary_op ($1, '/', $3));
   }
 | numeric_value INTO numeric_value GIVING numeric_edited_name
   REMAINDER numeric_edited_name
   {
-    $<tree>$ = cb_build_divide ($3, $1, $5, $7);
+    $$ = cb_build_divide ($3, $1, $5, $7);
   }
 | numeric_value BY numeric_value GIVING numeric_edited_name
   REMAINDER numeric_edited_name
   {
-    $<tree>$ = cb_build_divide ($1, $3, $5, $7);
+    $$ = cb_build_divide ($1, $3, $5, $7);
   }
 ;
 end_divide:
@@ -2057,48 +2031,48 @@ evaluate_statement:
   evaluate_subject_list evaluate_case_list
   end_evaluate
   {
-    push (cb_build_evaluate ($<tree>3, $<tree>4));
+    push (cb_build_evaluate ($3, $4));
   }
 ;
 
 evaluate_subject_list:
-  evaluate_subject		{ $<tree>$ = list ($<tree>1); }
+  evaluate_subject		{ $$ = list ($1); }
 | evaluate_subject_list ALSO
-  evaluate_subject		{ $<tree>$ = list_add ($<tree>1, $<tree>3); }
+  evaluate_subject		{ $$ = list_add ($1, $3); }
 ;
 evaluate_subject:
-  expr				{ $<tree>$ = $1; }
-| TOK_TRUE			{ $<tree>$ = cb_true; }
-| TOK_FALSE			{ $<tree>$ = cb_false; }
+  expr				{ $$ = $1; }
+| TOK_TRUE			{ $$ = cb_true; }
+| TOK_FALSE			{ $$ = cb_false; }
 ;
 
 evaluate_case_list:
-  /* empty */			{ $<tree>$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | evaluate_case_list
-  evaluate_case			{ $<tree>$ = list_add ($<tree>1, $<tree>2); }
+  evaluate_case			{ $$ = list_add ($1, $2); }
 ;
 evaluate_case:
   evaluate_when_list
-  statement_list		{ $<tree>$ = cons ($2, $<tree>1); }
+  statement_list		{ $$ = cons ($2, $1); }
 | WHEN OTHER
-  statement_list		{ $<tree>$ = cons ($3, NULL); }
+  statement_list		{ $$ = cons ($3, NULL); }
 ;
 evaluate_when_list:
-  WHEN evaluate_object_list	{ $<tree>$ = list ($<tree>2); }
+  WHEN evaluate_object_list	{ $$ = list ($2); }
 | evaluate_when_list
-  WHEN evaluate_object_list	{ $<tree>$ = list_add ($<tree>1, $<tree>3); }
+  WHEN evaluate_object_list	{ $$ = list_add ($1, $3); }
 ;
 evaluate_object_list:
-  evaluate_object		{ $<tree>$ = list ($<tree>1); }
+  evaluate_object		{ $$ = list ($1); }
 | evaluate_object_list ALSO
-  evaluate_object		{ $<tree>$ = list_add ($<tree>1, $<tree>3); }
+  evaluate_object		{ $$ = list_add ($1, $3); }
 ;
 evaluate_object:
-  flag_not expr			{ $<tree>$ = cb_build_pair ($1, cb_build_pair ($2, 0)); }
-| flag_not expr THRU expr	{ $<tree>$ = cb_build_pair ($1, cb_build_pair ($2, $4)); }
-| ANY				{ $<tree>$ = cb_any; }
-| TOK_TRUE			{ $<tree>$ = cb_true; }
-| TOK_FALSE			{ $<tree>$ = cb_false; }
+  flag_not expr			{ $$ = cb_build_pair ($1, cb_build_pair ($2, 0)); }
+| flag_not expr THRU expr	{ $$ = cb_build_pair ($1, cb_build_pair ($2, $4)); }
+| ANY				{ $$ = cb_any; }
+| TOK_TRUE			{ $$ = cb_true; }
+| TOK_FALSE			{ $$ = cb_false; }
 ;
 end_evaluate:
   /* empty */			{ terminator_warning (); }
@@ -2128,10 +2102,10 @@ goto_statement:
   GO _to			{ BEGIN_STATEMENT ("GO TO"); }
   procedure_name_list goto_depending
   {
-    if ($<tree>5)
+    if ($5)
       {
 	/* GO TO procedure-name ... DEPENDING ON identifier */
-	push_funcall_2 ("@goto-depending", $4, $<tree>5);
+	push_funcall_2 ("@goto-depending", $4, $5);
       }
     else
       {
@@ -2146,8 +2120,8 @@ goto_statement:
   }
 ;
 goto_depending:
-  /* empty */			{ $<tree>$ = NULL; }
-| DEPENDING _on integer_name	{ $<tree>$ = $3; }
+  /* empty */			{ $$ = NULL; }
+| DEPENDING _on integer_name	{ $$ = $3; }
 ;
 
 
@@ -2172,13 +2146,13 @@ if_statement:
   condition _then statement_list if_else_sentence
   end_if
   {
-    push (cb_build_if ($3, $5, $<tree>6));
+    push (cb_build_if ($3, $5, $6));
   }
 | IF error END_IF
 ;
 if_else_sentence:
-  /* empty */			{ $<tree>$ = NULL; }
-| ELSE statement_list		{ $<tree>$ = $2; }
+  /* empty */			{ $$ = NULL; }
+| ELSE statement_list		{ $$ = $2; }
 ;
 end_if:
   /* empty */			{ terminator_warning (); }
@@ -2196,29 +2170,29 @@ initialize_statement:
   {
     cb_tree l;
     for (l = $3; l; l = CB_CHAIN (l))
-      push_funcall_2 ("@initialize", CB_VALUE (l), $<tree>4);
+      push_funcall_2 ("@initialize", CB_VALUE (l), $4);
   }
 ;
 initialize_replacing:
-  /* empty */			      { $<tree>$ = NULL; }
-| REPLACING initialize_replacing_list { $<tree>$ = $<tree>2; }
+  /* empty */			      { $$ = NULL; }
+| REPLACING initialize_replacing_list { $$ = $2; }
 ;
 initialize_replacing_list:
-  /* empty */			      { $<tree>$ = NULL; }
+  /* empty */			      { $$ = NULL; }
 | initialize_replacing_list
   replacing_option _data BY value
   {
-    $<tree>$ = list_append ($<tree>1, cb_build_pair ($<tree>2, $5));
+    $$ = list_append ($1, cb_build_pair ($2, $5));
   }
 ;
 replacing_option:
-  ALPHABETIC			{ $<tree>$ = cb_build_integer (CB_CATEGORY_ALPHABETIC); }
-| ALPHANUMERIC			{ $<tree>$ = cb_build_integer (CB_CATEGORY_ALPHANUMERIC); }
-| NUMERIC			{ $<tree>$ = cb_build_integer (CB_CATEGORY_NUMERIC); }
-| ALPHANUMERIC_EDITED		{ $<tree>$ = cb_build_integer (CB_CATEGORY_ALPHANUMERIC_EDITED); }
-| NUMERIC_EDITED		{ $<tree>$ = cb_build_integer (CB_CATEGORY_NUMERIC_EDITED); }
-| NATIONAL			{ $<tree>$ = cb_build_integer (CB_CATEGORY_NATIONAL); }
-| NATIONAL_EDITED		{ $<tree>$ = cb_build_integer (CB_CATEGORY_NATIONAL_EDITED); }
+  ALPHABETIC			{ $$ = cb_build_integer (CB_CATEGORY_ALPHABETIC); }
+| ALPHANUMERIC			{ $$ = cb_build_integer (CB_CATEGORY_ALPHANUMERIC); }
+| NUMERIC			{ $$ = cb_build_integer (CB_CATEGORY_NUMERIC); }
+| ALPHANUMERIC_EDITED		{ $$ = cb_build_integer (CB_CATEGORY_ALPHANUMERIC_EDITED); }
+| NUMERIC_EDITED		{ $$ = cb_build_integer (CB_CATEGORY_NUMERIC_EDITED); }
+| NATIONAL			{ $$ = cb_build_integer (CB_CATEGORY_NATIONAL); }
+| NATIONAL_EDITED		{ $$ = cb_build_integer (CB_CATEGORY_NATIONAL_EDITED); }
 ;
 _data: | DATA ;
 
@@ -2237,22 +2211,22 @@ inspect_list:
 inspect_item:
   inspect_tallying
   {
-    cb_tree l = $<tree>1;
-    l = cons (cb_build_funcall_2 ("cob_inspect_init", $<tree>-1, cb_int0), l);
+    cb_tree l = $1;
+    l = cons (cb_build_funcall_2 ("cob_inspect_init", $-1, cb_int0), l);
     l = list_add (l, cb_build_funcall_0 ("cob_inspect_finish"));
     push (make_sequence (l));
   }
 | inspect_replacing
   {
-    cb_tree l = $<tree>1;
-    l = cons (cb_build_funcall_2 ("cob_inspect_init", $<tree>-1, cb_int1), l);
+    cb_tree l = $1;
+    l = cons (cb_build_funcall_2 ("cob_inspect_init", $-1, cb_int1), l);
     l = list_add (l, cb_build_funcall_0 ("cob_inspect_finish"));
     push (make_sequence (l));
   }
 | inspect_converting
   {
-    cb_tree l = $<tree>1;
-    l = cons (cb_build_funcall_2 ("cob_inspect_init", $<tree>-1, cb_int0), l);
+    cb_tree l = $1;
+    l = cons (cb_build_funcall_2 ("cob_inspect_init", $-1, cb_int0), l);
     l = list_add (l, cb_build_funcall_0 ("cob_inspect_finish"));
     push (make_sequence (l));
   }
@@ -2268,45 +2242,45 @@ inspect_tallying:
   }
   tallying_list
   {
-    $<tree>$ = $<tree>3;
+    $$ = $3;
   }
 ;
 tallying_list:
-  tallying_item			{ $<tree>$ = $<tree>1; }
-| tallying_list tallying_item	{ $<tree>$ = list_append ($<tree>1, $<tree>2); }
+  tallying_item			{ $$ = $1; }
+| tallying_list tallying_item	{ $$ = list_append ($1, $2); }
 ;
 tallying_item:
   non_all_value FOR
   {
     current_inspect_data = $1;
-    $<tree>$ = NULL;
+    $$ = NULL;
   }
 | CHARACTERS inspect_before_after_list
   {
     if (current_inspect_data == NULL)
       cb_error (_("data name expected before CHARACTERS"));
     current_inspect_func = NULL;
-    $<tree>$ = list_add ($2, cb_build_funcall_1 ("cob_inspect_characters", current_inspect_data));
+    $$ = list_add ($2, cb_build_funcall_1 ("cob_inspect_characters", current_inspect_data));
   }
 | ALL
   {
     if (current_inspect_data == NULL)
       cb_error (_("data name expected before ALL"));
     current_inspect_func = "cob_inspect_all";
-    $<tree>$ = NULL;
+    $$ = NULL;
   }
 | LEADING
   {
     if (current_inspect_data == NULL)
       cb_error (_("data name expected before LEADING"));
     current_inspect_func = "cob_inspect_leading";
-    $<tree>$ = NULL;
+    $$ = NULL;
   }
 | non_all_value inspect_before_after_list
   {
     if (current_inspect_func == NULL)
       cb_error_x ($1, _("ALL or LEADING expected before `%s'"), cb_name ($1));
-    $<tree>$ = list_add ($2, cb_build_funcall_2 (current_inspect_func, current_inspect_data, $1));
+    $$ = list_add ($2, cb_build_funcall_2 (current_inspect_func, current_inspect_data, $1));
   }
 ;
 
@@ -2315,29 +2289,29 @@ tallying_item:
 inspect_replacing:
   REPLACING replacing_item
   {
-    $<tree>$ = $<tree>2;
+    $$ = $2;
   }
 | inspect_replacing replacing_item
   {
-    $<tree>$ = list_append ($<tree>1, $<tree>2);
+    $$ = list_append ($1, $2);
   }
 ;
 replacing_item:
   CHARACTERS BY value inspect_before_after_list
   {
-    $<tree>$ = list_add ($4, cb_build_funcall_1 ("cob_inspect_characters", $3));
+    $$ = list_add ($4, cb_build_funcall_1 ("cob_inspect_characters", $3));
   }
 | ALL value BY value inspect_before_after_list
   {
-    $<tree>$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_all", $4, $2));
+    $$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_all", $4, $2));
   }
 | LEADING value BY value inspect_before_after_list
   {
-    $<tree>$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_leading", $4, $2));
+    $$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_leading", $4, $2));
   }
 | FIRST value BY value inspect_before_after_list
   {
-    $<tree>$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_first", $4, $2));
+    $$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_first", $4, $2));
   }
 ;
 
@@ -2346,7 +2320,7 @@ replacing_item:
 inspect_converting:
   CONVERTING value TO value inspect_before_after_list
   {
-    $<tree>$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_converting", $2, $4));
+    $$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_converting", $2, $4));
   }
 ;
 
@@ -2376,8 +2350,8 @@ merge_statement:
   MERGE				{ BEGIN_STATEMENT ("MERGE"); }
   file_name sort_key_list sort_collating
   {
-    push_funcall_2 ("@sort-init", $3, $<tree>4);
-    $<tree>$ = $3; /* used in sort_input, sort_output */
+    push_funcall_2 ("@sort-init", $3, $4);
+    $$ = $3; /* used in sort_input, sort_output */
   }
   sort_input sort_output
 ;
@@ -2415,17 +2389,17 @@ multiply_statement:
   multiply_body on_size_error
   end_multiply
   {
-    push_sequence_with_handler ($<tree>3, $4);
+    push_sequence_with_handler ($3, $4);
   }
 ;
 multiply_body:
   numeric_value BY numeric_name_list
   {
-    $<tree>$ = cb_build_assign ($3, '*', $1);
+    $$ = cb_build_assign ($3, '*', $1);
   }
 | numeric_value BY numeric_value GIVING numeric_edited_name_list
   {
-    $<tree>$ = cb_build_assign ($5, 0, cb_build_binary_op ($1, '*', $3));
+    $$ = cb_build_assign ($5, 0, cb_build_binary_op ($1, '*', $3));
   }
 ;
 end_multiply:
@@ -2449,16 +2423,16 @@ open_list:
     for (l = $3; l; l = CB_CHAIN (l))
       {
 	cb_tree file = cb_ref (CB_VALUE (l));
-	push_funcall_2 ("cob_open", file, $<tree>2);
+	push_funcall_2 ("cob_open", file, $2);
 	push_file_handler (file, NULL);
       }
   }
 ;
 open_mode:
-  INPUT				{ $<tree>$ = cb_build_integer (COB_OPEN_INPUT); }
-| OUTPUT			{ $<tree>$ = cb_build_integer (COB_OPEN_OUTPUT); }
-| I_O				{ $<tree>$ = cb_build_integer (COB_OPEN_I_O); }
-| EXTEND			{ $<tree>$ = cb_build_integer (COB_OPEN_EXTEND); }
+  INPUT				{ $$ = cb_build_integer (COB_OPEN_INPUT); }
+| OUTPUT			{ $$ = cb_build_integer (COB_OPEN_OUTPUT); }
+| I_O				{ $$ = cb_build_integer (COB_OPEN_I_O); }
+| EXTEND			{ $$ = cb_build_integer (COB_OPEN_EXTEND); }
 ;
 
 
@@ -2485,7 +2459,7 @@ perform_body:
 end_perform:
   /* empty */
   {
-    cb_error_x ($<tree>-2, _("%s statement not terminated by END-%s"),
+    cb_error_x ($-2, _("%s statement not terminated by END-%s"),
 	       "PERFORM", "PERFORM");
   }
 | END_PERFORM
@@ -2518,33 +2492,33 @@ perform_option:
 | perform_test UNTIL condition
   {
     $$ = cb_build_perform (CB_PERFORM_UNTIL);
-    CB_PERFORM ($$)->test = $<tree>1;
+    CB_PERFORM ($$)->test = $1;
     cb_add_perform_varying (CB_PERFORM ($$), 0, 0, 0, $3);
   }
 | perform_test VARYING
   {
-    $<tree>$ = cb_build_perform (CB_PERFORM_UNTIL);
-    CB_PERFORM ($<tree>$)->test = $<tree>1;
+    $$ = cb_build_perform (CB_PERFORM_UNTIL);
+    CB_PERFORM ($$)->test = $1;
   }
   perform_varying_list
   {
-    $$ = $<tree>3;
+    $$ = $3;
   }
 ;
 perform_test:
-  /* empty */			{ $<tree>$ = CB_BEFORE; }
-| _with TEST before_or_after	{ $<tree>$ = $3; }
+  /* empty */			{ $$ = CB_BEFORE; }
+| _with TEST before_or_after	{ $$ = $3; }
 ;
 perform_varying_list:
   perform_varying
-| perform_varying_list AFTER	{ $<tree>$ = $<tree>0; }
+| perform_varying_list AFTER	{ $$ = $0; }
   perform_varying
 ;
 perform_varying:
   data_name FROM value BY value UNTIL condition
   {
     cb_tree step = cb_build_add ($1, $5, cb_int0);
-    cb_add_perform_varying (CB_PERFORM ($<tree>0), $1, $3, step, $7);
+    cb_add_perform_varying (CB_PERFORM ($0), $1, $3, step, $7);
   }
 ;
 
@@ -2559,7 +2533,7 @@ read_statement:
   end_read
   {
     cb_tree file = cb_ref ($3);
-    cb_tree key = $<tree>7;
+    cb_tree key = $7;
     if ($4 == cb_int1 || CB_FILE (file)->access_mode == COB_ACCESS_SEQUENTIAL)
       {
 	/* READ NEXT */
@@ -2572,23 +2546,23 @@ read_statement:
 	/* READ */
 	push_funcall_2 ("cob_read", file, key ? key : CB_FILE (file)->key);
       }
-    if ($<tree>6)
-      push (cb_build_move (CB_TREE (CB_FILE (file)->record), $<tree>6));
-    push_file_handler (file, $<tree>8);
+    if ($6)
+      push (cb_build_move (CB_TREE (CB_FILE (file)->record), $6));
+    push_file_handler (file, $8);
   }
 ;
 read_into:
-  /* empty */			{ $<tree>$ = NULL; }
-| INTO data_name		{ $<tree>$ = $2; }
+  /* empty */			{ $$ = NULL; }
+| INTO data_name		{ $$ = $2; }
 ;
 read_key:
-  /* empty */			{ $<tree>$ = NULL; }
-| KEY _is data_name		{ $<tree>$ = $3; }
+  /* empty */			{ $$ = NULL; }
+| KEY _is data_name		{ $$ = $3; }
 ;
 read_handler:
-  /* empty */			{ $<tree>$ = NULL; }
-| at_end			{ $<tree>$ = $1; }
-| invalid_key			{ $<tree>$ = $1; }
+  /* empty */			{ $$ = NULL; }
+| at_end			{ $$ = $1; }
+| invalid_key			{ $$ = $1; }
 ;
 end_read:
   /* empty */			{ terminator_warning (); }
@@ -2623,8 +2597,8 @@ return_statement:
   {
     cb_tree file = cb_ref ($3);
     push_funcall_2 ("cob_read", file, cb_int0);
-    if ($<tree>5)
-      push (cb_build_move (CB_TREE (CB_FILE (file)->record), $<tree>5));
+    if ($5)
+      push (cb_build_move (CB_TREE (CB_FILE (file)->record), $5));
     push_file_handler (file, $6);
   }
 ;
@@ -2668,36 +2642,36 @@ search_statement:
 search_body:
   table_name search_varying search_at_end search_whens
   {
-    push_funcall_4 ("@search", $1, $<tree>2, $<tree>3, $<tree>4);
+    push_funcall_4 ("@search", $1, $2, $3, $4);
   }
 | ALL table_name search_at_end search_all_when
   {
-    push_funcall_3 ("@search-all", $2, $<tree>3, $<tree>4);
+    push_funcall_3 ("@search-all", $2, $3, $4);
   }
 ;
 search_varying:
-  /* empty */			{ $<tree>$ = NULL; }
-| VARYING data_name		{ $<tree>$ = $2; }
+  /* empty */			{ $$ = NULL; }
+| VARYING data_name		{ $$ = $2; }
 ;
 search_at_end:
-  /* empty */			{ $<tree>$ = NULL; }
-| _at END statement_list	{ $<tree>$ = $3; }
+  /* empty */			{ $$ = NULL; }
+| _at END statement_list	{ $$ = $3; }
 ;
 search_whens:
-  search_when			{ $<tree>$ = $<tree>1; }
+  search_when			{ $$ = $1; }
 | search_when search_whens
   {
-    $<tree>$ = $<tree>1;
-    CB_IF ($<tree>1)->stmt2 = $<tree>2;
+    $$ = $1;
+    CB_IF ($1)->stmt2 = $2;
   }
 ;
 search_when:
-  WHEN condition statement_list	{ $<tree>$ = cb_build_if ($2, $3, 0); }
+  WHEN condition statement_list	{ $$ = cb_build_if ($2, $3, 0); }
 ;
 search_all_when:
   WHEN expr statement_list
   {
-    $<tree>$ = cb_build_if (cb_build_search_all ($<tree>-1, $2), $3, 0);
+    $$ = cb_build_if (cb_build_search_all ($-1, $2), $3, 0);
   }
 ;
 end_search:
@@ -2739,15 +2713,15 @@ set_up_down:
   {
     cb_tree l;
     for (l = $1; l; l = CB_CHAIN (l))
-      if ($<tree>2 == cb_int0)
+      if ($2 == cb_int0)
 	push (cb_build_add (CB_VALUE (l), $4, cb_int0));
       else
 	push (cb_build_sub (CB_VALUE (l), $4, cb_int0));
   }
 ;
 up_or_down:
-  UP				{ $<tree>$ = cb_int0; }
-| DOWN				{ $<tree>$ = cb_int1; }
+  UP				{ $$ = cb_int0; }
+| DOWN				{ $$ = cb_int1; }
 ;
 
 /* SET mnemonic-name-1 ... TO ON/OFF */
@@ -2800,20 +2774,20 @@ sort_statement:
   SORT				{ BEGIN_STATEMENT ("SORT"); }
   file_name sort_key_list sort_duplicates sort_collating
   {
-    push_funcall_2 ("@sort-init", $3, $<tree>4);
-    $<tree>$ = $3; /* used in sort_input, sort_output */
+    push_funcall_2 ("@sort-init", $3, $4);
+    $$ = $3; /* used in sort_input, sort_output */
   }
   sort_input sort_output
 ;
 sort_key_list:
-  /* empty */			{ $<tree>$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | sort_key_list
   _on ascending_or_descending _key data_name_list
   {
     cb_tree l;
     for (l = $5; l; l = CB_CHAIN (l))
       CB_PURPOSE (l) = $3;
-    $<tree>$ = list_append ($<tree>1, $5);
+    $$ = list_append ($1, $5);
   }
 ;
 sort_duplicates:
@@ -2827,16 +2801,16 @@ sort_input:
   USING file_name_list
   {
     cb_tree l;
-    push_funcall_2 ("cob_open", $<tree>0, cb_build_integer (COB_OPEN_OUTPUT));
+    push_funcall_2 ("cob_open", $0, cb_build_integer (COB_OPEN_OUTPUT));
     for (l = $2; l; l = CB_CHAIN (l))
-      push_funcall_2 ("cob_sort_using", $<tree>0, CB_VALUE (l));
-    push_funcall_2 ("cob_close", $<tree>0, cb_build_integer (COB_CLOSE_NORMAL));
+      push_funcall_2 ("cob_sort_using", $0, CB_VALUE (l));
+    push_funcall_2 ("cob_close", $0, cb_build_integer (COB_CLOSE_NORMAL));
   }
 | INPUT PROCEDURE _is perform_procedure
   {
-    push_funcall_2 ("cob_open", $<tree>0, cb_build_integer (COB_OPEN_OUTPUT));
+    push_funcall_2 ("cob_open", $0, cb_build_integer (COB_OPEN_OUTPUT));
     push (cb_build_perform_once ($4));
-    push_funcall_2 ("cob_close", $<tree>0, cb_build_integer (COB_CLOSE_NORMAL));
+    push_funcall_2 ("cob_close", $0, cb_build_integer (COB_CLOSE_NORMAL));
   }
 ;
 
@@ -2846,16 +2820,16 @@ sort_output:
     cb_tree l;
     for (l = $2; l; l = CB_CHAIN (l))
       {
-	push_funcall_2 ("cob_open", $<tree>-1, cb_build_integer (COB_OPEN_INPUT));
-	push_funcall_2 ("cob_sort_giving", $<tree>-1, CB_VALUE (l));
-	push_funcall_2 ("cob_close", $<tree>-1, cb_build_integer (COB_CLOSE_NORMAL));
+	push_funcall_2 ("cob_open", $-1, cb_build_integer (COB_OPEN_INPUT));
+	push_funcall_2 ("cob_sort_giving", $-1, CB_VALUE (l));
+	push_funcall_2 ("cob_close", $-1, cb_build_integer (COB_CLOSE_NORMAL));
       }
   }
 | OUTPUT PROCEDURE _is perform_procedure
   {
-    push_funcall_2 ("cob_open", $<tree>-1, cb_build_integer (COB_OPEN_INPUT));
+    push_funcall_2 ("cob_open", $-1, cb_build_integer (COB_OPEN_INPUT));
     push (cb_build_perform_once ($4));
-    push_funcall_2 ("cob_close", $<tree>-1, cb_build_integer (COB_CLOSE_NORMAL));
+    push_funcall_2 ("cob_close", $-1, cb_build_integer (COB_CLOSE_NORMAL));
   }
 ;
 
@@ -2866,27 +2840,27 @@ sort_output:
 
 start_statement:
   START				{ BEGIN_STATEMENT ("START"); }
-  file_name			{ $<tree>$ = cb_build_integer (COB_EQ); }
+  file_name			{ $$ = cb_build_integer (COB_EQ); }
   start_key opt_invalid_key
   end_start
   {
     cb_tree file = cb_ref ($3);
-    if ($<tree>5 == NULL)
-      $<tree>5 = CB_FILE (file)->key;
-    push_funcall_3 ("cob_start", file, $<tree>4, $<tree>5);
+    if ($5 == NULL)
+      $5 = CB_FILE (file)->key;
+    push_funcall_3 ("cob_start", file, $4, $5);
     push_file_handler (file, $6);
   }
 ;
 start_key:
-  /* empty */			{ $<tree>$ = NULL; }
-| KEY _is start_op data_name	{ $<tree>0 = $<tree>3; $<tree>$ = $4; }
+  /* empty */			{ $$ = NULL; }
+| KEY _is start_op data_name	{ $0 = $3; $$ = $4; }
 ;
 start_op:
-  flag_not equal		{ $<tree>$ = cb_build_integer (($1 == cb_int1) ? COB_NE : COB_EQ); }
-| flag_not greater		{ $<tree>$ = cb_build_integer (($1 == cb_int1) ? COB_LE : COB_GT); }
-| flag_not less			{ $<tree>$ = cb_build_integer (($1 == cb_int1) ? COB_GE : COB_LT); }
-| flag_not greater_or_equal	{ $<tree>$ = cb_build_integer (($1 == cb_int1) ? COB_LT : COB_GE); }
-| flag_not less_or_equal	{ $<tree>$ = cb_build_integer (($1 == cb_int1) ? COB_GT : COB_LE); }
+  flag_not equal		{ $$ = cb_build_integer (($1 == cb_int1) ? COB_NE : COB_EQ); }
+| flag_not greater		{ $$ = cb_build_integer (($1 == cb_int1) ? COB_LE : COB_GT); }
+| flag_not less			{ $$ = cb_build_integer (($1 == cb_int1) ? COB_GE : COB_LT); }
+| flag_not greater_or_equal	{ $$ = cb_build_integer (($1 == cb_int1) ? COB_LT : COB_GE); }
+| flag_not less_or_equal	{ $$ = cb_build_integer (($1 == cb_int1) ? COB_GT : COB_LE); }
 ;
 end_start:
   /* empty */			{ terminator_warning (); }
@@ -2920,7 +2894,7 @@ string_statement:
   end_string
   {
     cb_tree seq;
-    cb_tree start = $<tree>3;
+    cb_tree start = $3;
 
     seq = list (cb_build_funcall_2 ("cob_string_init", $5, $6));
 
@@ -2950,13 +2924,13 @@ string_statement:
   }
 ;
 string_item_list:
-  string_item			{ $<tree>$ = list ($<tree>1); }
-| string_item_list string_item	{ $<tree>$ = list_add ($<tree>1, $<tree>2); }
+  string_item			{ $$ = list ($1); }
+| string_item_list string_item	{ $$ = list_add ($1, $2); }
 ;
 string_item:
-  value				{ $<tree>$ = $1; }
-| DELIMITED _by SIZE		{ $<tree>$ = cb_build_pair (cb_int0, 0); }
-| DELIMITED _by value		{ $<tree>$ = cb_build_pair ($3, 0); }
+  value				{ $$ = $1; }
+| DELIMITED _by SIZE		{ $$ = cb_build_pair (cb_int0, 0); }
+| DELIMITED _by value		{ $$ = cb_build_pair ($3, 0); }
 ;
 opt_with_pointer:
   /* empty */			{ $$ = cb_int0; }
@@ -2977,21 +2951,21 @@ subtract_statement:
   subtract_body on_size_error
   end_subtract
   {
-    push_sequence_with_handler ($<tree>3, $4);
+    push_sequence_with_handler ($3, $4);
   }
 ;
 subtract_body:
   numeric_value_list FROM numeric_name_list
   {
-    $<tree>$ = cb_build_assign ($3, '-', cb_build_connective_op ($1, '+'));
+    $$ = cb_build_assign ($3, '-', cb_build_connective_op ($1, '+'));
   }
 | numeric_value_list FROM numeric_value GIVING numeric_edited_name_list
   {
-    $<tree>$ = cb_build_assign ($5, 0, cb_build_connective_op (cons ($3, $1), '-'));
+    $$ = cb_build_assign ($5, 0, cb_build_connective_op (cons ($3, $1), '-'));
   }
 | CORRESPONDING group_name FROM group_name flag_rounded
   {
-    $<tree>$ = cb_build_corr (cb_build_sub, $4, $2, $5);
+    $$ = cb_build_corr (cb_build_sub, $4, $2, $5);
   }
 ;
 end_subtract:
@@ -3010,56 +2984,56 @@ unstring_statement:
   opt_with_pointer unstring_tallying on_overflow
   end_unstring
   {
-    cb_tree l = $<tree>4;
+    cb_tree l = $4;
     l = cons (cb_build_funcall_2 ("cob_unstring_init", $3, $7), l);
-    l = list_append (l, $<tree>6);
-    if ($<tree>8)
-      l = list_add (l, cb_build_funcall_1 ("cob_unstring_tallying", $<tree>8));
+    l = list_append (l, $6);
+    if ($8)
+      l = list_add (l, cb_build_funcall_1 ("cob_unstring_tallying", $8));
     l = list_add (l, cb_build_funcall_0 ("cob_unstring_finish"));
     push_sequence_with_handler (make_sequence (l), $9);
   }
 ;
 
 unstring_delimited:
-  /* empty */			{ $<tree>$ = NULL; }
+  /* empty */			{ $$ = NULL; }
 | DELIMITED _by
-  unstring_delimited_list	{ $<tree>$ = $<tree>3; }
+  unstring_delimited_list	{ $$ = $3; }
 ;
 unstring_delimited_list:
-  unstring_delimited_item	{ $<tree>$ = list ($<tree>1); }
+  unstring_delimited_item	{ $$ = list ($1); }
 | unstring_delimited_list OR
-  unstring_delimited_item	{ $<tree>$ = list_add ($<tree>1, $<tree>3); }
+  unstring_delimited_item	{ $$ = list_add ($1, $3); }
 ;
 unstring_delimited_item:
   flag_all value
   {
-    $<tree>$ = cb_build_funcall_2 ("cob_unstring_delimited", $2, $1);
+    $$ = cb_build_funcall_2 ("cob_unstring_delimited", $2, $1);
   }
 ;
 
 unstring_into:
-  unstring_into_item		{ $<tree>$ = list ($<tree>1); }
+  unstring_into_item		{ $$ = list ($1); }
 | unstring_into
-  unstring_into_item		{ $<tree>$ = list_add ($<tree>1, $<tree>2); }
+  unstring_into_item		{ $$ = list_add ($1, $2); }
 ;
 unstring_into_item:
   data_name unstring_delimiter unstring_count
   {
-    $<tree>$ = cb_build_funcall_3 ("cob_unstring_into", $1, $<tree>2, $<tree>3);
+    $$ = cb_build_funcall_3 ("cob_unstring_into", $1, $2, $3);
   }
 ;
 unstring_delimiter:
-  /* empty */			{ $<tree>$ = cb_int0; }
-| DELIMITER _in data_name	{ $<tree>$ = $3; }
+  /* empty */			{ $$ = cb_int0; }
+| DELIMITER _in data_name	{ $$ = $3; }
 ;
 unstring_count:
-  /* empty */			{ $<tree>$ = cb_int0; }
-| COUNT _in data_name		{ $<tree>$ = $3; }
+  /* empty */			{ $$ = cb_int0; }
+| COUNT _in data_name		{ $$ = $3; }
 ;
 
 unstring_tallying:
-  /* empty */			{ $<tree>$ = NULL; }
-| TALLYING _in data_name	{ $<tree>$ = $3; }
+  /* empty */			{ $$ = NULL; }
+| TALLYING _in data_name	{ $$ = $3; }
 ;
 
 end_unstring:
@@ -3105,7 +3079,7 @@ write_statement:
   end_write
   {
     struct cb_field *f = CB_FIELD (cb_ref ($3));
-    cb_tree opt = $<tree>5;
+    cb_tree opt = $5;
     cb_tree file = CB_TREE (f->file);
 
     /* AFTER ADVANCING */
@@ -3121,7 +3095,7 @@ write_statement:
     if ($4)
       push (cb_build_move ($4, $3));
     push_funcall_2 ("cob_write", file, $3);
-    push_file_handler (file, $<tree>6);
+    push_file_handler (file, $6);
 
     /* BEFORE ADVANCING */
     if (opt && CB_PAIR_X (opt) == CB_BEFORE)
@@ -3140,15 +3114,15 @@ write_from:
 write_option:
   /* empty */
   {
-    $<tree>$ = NULL;
+    $$ = NULL;
   }
 | before_or_after _advancing integer_value _line_or_lines
   {
-    $<tree>$ = cb_build_pair ($1, cb_build_cast_integer ($3));
+    $$ = cb_build_pair ($1, cb_build_cast_integer ($3));
   }
 | before_or_after _advancing PAGE
   {
-    $<tree>$ = cb_build_pair ($1, 0);
+    $$ = cb_build_pair ($1, 0);
   }
 ;
 before_or_after:
@@ -3156,9 +3130,9 @@ before_or_after:
 | AFTER				{ $$ = CB_AFTER; }
 ;
 write_exception:
-  /* empty */			{ $<tree>$ = NULL; }
-| at_eop			{ $<tree>$ = $1; }
-| invalid_key			{ $<tree>$ = $1; }
+  /* empty */			{ $$ = NULL; }
+| at_eop			{ $$ = $1; }
+| invalid_key			{ $$ = $1; }
 ;
 end_write:
   /* empty */			{ terminator_warning (); }
@@ -3178,19 +3152,19 @@ on_size_error:
   opt_on_size_error
   opt_not_on_size_error
   {
-    if ($<tree>1 || $<tree>2)
-      $$ = make_handler (COB_EC_SIZE, $<tree>1, $<tree>2);
+    if ($1 || $2)
+      $$ = make_handler (COB_EC_SIZE, $1, $2);
     else
       $$ = NULL;
   }
 ;
 opt_on_size_error:
-  /* empty */				{ $<tree>$ = NULL; }
-| _on SIZE ERROR statement_list		{ $<tree>$ = $4; }
+  /* empty */				{ $$ = NULL; }
+| _on SIZE ERROR statement_list		{ $$ = $4; }
 ;
 opt_not_on_size_error:
-  /* empty */				{ $<tree>$ = NULL; }
-| NOT _on SIZE ERROR statement_list	{ $<tree>$ = $5; }
+  /* empty */				{ $$ = NULL; }
+| NOT _on SIZE ERROR statement_list	{ $$ = $5; }
 ;
 
 
@@ -3202,19 +3176,19 @@ on_overflow:
   opt_on_overflow
   opt_not_on_overflow
   {
-    if ($<tree>1 || $<tree>2)
-      $$ = make_handler (COB_EC_OVERFLOW, $<tree>1, $<tree>2);
+    if ($1 || $2)
+      $$ = make_handler (COB_EC_OVERFLOW, $1, $2);
     else
       $$ = NULL;
   }
 ;
 opt_on_overflow:
-  /* empty */				{ $<tree>$ = NULL; }
-| _on OVERFLOW statement_list		{ $<tree>$ = $3; }
+  /* empty */				{ $$ = NULL; }
+| _on OVERFLOW statement_list		{ $$ = $3; }
 ;
 opt_not_on_overflow:
-  /* empty */				{ $<tree>$ = NULL; }
-| NOT _on OVERFLOW statement_list	{ $<tree>$ = $4; }
+  /* empty */				{ $$ = NULL; }
+| NOT _on OVERFLOW statement_list	{ $$ = $4; }
 ;
 
 
@@ -3225,23 +3199,23 @@ opt_not_on_overflow:
 at_end:
   at_end_sentence
   {
-    $$ = make_handler (COB_EC_I_O_AT_END, $<tree>1, 0);
+    $$ = make_handler (COB_EC_I_O_AT_END, $1, 0);
   }
 | not_at_end_sentence
   {
-    $$ = make_handler (COB_EC_I_O_AT_END, 0, $<tree>1);
+    $$ = make_handler (COB_EC_I_O_AT_END, 0, $1);
   }
 | at_end_sentence not_at_end_sentence
   {
-    $$ = make_handler (COB_EC_I_O_AT_END, $<tree>1, $<tree>2);
+    $$ = make_handler (COB_EC_I_O_AT_END, $1, $2);
   }
 ;
 at_end_sentence:
-  END statement_list		{ $<tree>$ = $2; }
-| AT END statement_list		{ $<tree>$ = $3; }
+  END statement_list		{ $$ = $2; }
+| AT END statement_list		{ $$ = $3; }
 ;
 not_at_end_sentence:
-  NOT _at END statement_list	{ $<tree>$ = $4; }
+  NOT _at END statement_list	{ $$ = $4; }
 ;
 
 
@@ -3252,22 +3226,22 @@ not_at_end_sentence:
 at_eop:
   at_eop_sentence
   {
-    $$ = make_handler (COB_EC_I_O_EOP, $<tree>1, 0);
+    $$ = make_handler (COB_EC_I_O_EOP, $1, 0);
   }
 | not_at_eop_sentence
   {
-    $$ = make_handler (COB_EC_I_O_EOP, 0, $<tree>1);
+    $$ = make_handler (COB_EC_I_O_EOP, 0, $1);
   }
 | at_eop_sentence not_at_eop_sentence
   {
-    $$ = make_handler (COB_EC_I_O_EOP, $<tree>1, $<tree>2);
+    $$ = make_handler (COB_EC_I_O_EOP, $1, $2);
   }
 ;
 at_eop_sentence:
-  _at EOP statement_list		{ $<tree>$ = $3; }
+  _at EOP statement_list		{ $$ = $3; }
 ;
 not_at_eop_sentence:
-  NOT _at EOP statement_list		{ $<tree>$ = $4; }
+  NOT _at EOP statement_list		{ $$ = $4; }
 ;
 
 
@@ -3282,23 +3256,23 @@ opt_invalid_key:
 invalid_key:
   invalid_key_sentence
   {
-    $$ = make_handler (COB_EC_I_O_INVALID_KEY, $<tree>1, 0);
+    $$ = make_handler (COB_EC_I_O_INVALID_KEY, $1, 0);
   }
 | not_invalid_key_sentence
   {
-    $$ = make_handler (COB_EC_I_O_INVALID_KEY, 0, $<tree>1);
+    $$ = make_handler (COB_EC_I_O_INVALID_KEY, 0, $1);
   }
 | invalid_key_sentence
   not_invalid_key_sentence
   {
-    $$ = make_handler (COB_EC_I_O_INVALID_KEY, $<tree>1, $<tree>2);
+    $$ = make_handler (COB_EC_I_O_INVALID_KEY, $1, $2);
   }
 ;
 invalid_key_sentence:
-  INVALID _key statement_list		{ $<tree>$ = $3; }
+  INVALID _key statement_list		{ $$ = $3; }
 ;
 not_invalid_key_sentence:
-  NOT INVALID _key statement_list	{ $<tree>$ = $4; }
+  NOT INVALID _key statement_list	{ $$ = $4; }
 ;
 
 
@@ -3967,13 +3941,13 @@ non_all_value:
  */
 
 identifier:
-  identifier_1			{ $$ = cb_build_identifier ($<tree>1); }
+  identifier_1			{ $$ = cb_build_identifier ($1); }
 ;
 identifier_1:
-  qualified_word		{ $<tree>$ = $1; }
-| qualified_word subref		{ $<tree>$ = $1; }
-| qualified_word refmod		{ $<tree>$ = $1; }
-| qualified_word subref refmod	{ $<tree>$ = $1; }
+  qualified_word		{ $$ = $1; }
+| qualified_word subref		{ $$ = $1; }
+| qualified_word refmod		{ $$ = $1; }
+| qualified_word subref refmod	{ $$ = $1; }
 ;
 qualified_word:
   WORD				{ $$ = $1; }
@@ -3986,24 +3960,24 @@ qualified_word:
 subref:
   '(' subscript_list ')'
   {
-    CB_REFERENCE ($<tree>0)->subs = $<tree>2;
-    $<tree>$ = $<tree>0;
+    CB_REFERENCE ($0)->subs = $2;
+    $$ = $0;
   }
 ;
 refmod:
   '(' subscript ':' ')'
   {
-    CB_REFERENCE ($<tree>0)->offset = $2;
+    CB_REFERENCE ($0)->offset = $2;
   }
 | '(' subscript ':' subscript ')'
   {
-    CB_REFERENCE ($<tree>0)->offset = $2;
-    CB_REFERENCE ($<tree>0)->length = $4;
+    CB_REFERENCE ($0)->offset = $2;
+    CB_REFERENCE ($0)->length = $4;
   }
 ;
 subscript_list:
-  subscript			{ $<tree>$ = list ($1); }
-| subscript_list subscript	{ $<tree>$ = list_add ($<tree>1, $2); }
+  subscript			{ $$ = list ($1); }
+| subscript_list subscript	{ $$ = list_add ($1, $2); }
 ;
 subscript:
   integer_value			{ $$ = $1; }

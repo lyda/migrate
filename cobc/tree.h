@@ -20,6 +20,8 @@
 #ifndef CB_TREE_H
 #define CB_TREE_H
 
+#define YYSTYPE			cb_tree
+
 #define CB_BEFORE		cb_int0
 #define CB_AFTER		cb_int1
 
@@ -763,13 +765,8 @@ extern int lookup_reserved_word (const char *name);
 extern void cb_init_reserved (void);
 
 /* error.c */
-extern void cb_warning (const char *fmt, ...);
-extern void cb_error (const char *fmt, ...);
 extern void cb_warning_x (cb_tree x, const char *fmt, ...);
 extern void cb_error_x (cb_tree x, const char *fmt, ...);
-extern void cb_archaic (const char *feature);
-extern void cb_obsolete_85 (const char *feature);
-extern void cb_obsolete_2002 (const char *feature);
 
 extern void redefinition_error (cb_tree x);
 extern void undefined_error (cb_tree x);

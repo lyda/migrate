@@ -26,6 +26,7 @@
 #include <libcob.h>
 
 #include "cobc.h"
+#include "tree.h"
 
 int
 cb_get_int (cb_tree x)
