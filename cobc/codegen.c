@@ -1760,8 +1760,7 @@ proc_trail (int using)
 	  len = v->nick ? 1 : v->len;
 #ifdef COB_DEBUG
 	  output ("# Literal: %s, Data loc: c_base%d+%d, Desc: c_base+%d\n",
-		  COB_FIELD_NAME (v), pgm_segment, v->location,
-		  v->descriptor);
+		  COB_FIELD_NAME (v), pgm_segment, v->location, v->descriptor);
 
 #endif
 	  if (!v->decimals)
@@ -1799,8 +1798,7 @@ proc_trail (int using)
 	  output ("\t.long\t%d\n", (v->decimals) ? len - 1 : len);
 	  output ("\t.byte\t'%c',%d,%d\n",
 		   COB_FIELD_TYPE (v), v->decimals, v->all);
-	  output ("\t.long\tc_base%d+%d\n",
-		   pgm_segment, v->descriptor + 11);
+	  output ("\t.long\tc_base%d+%d\n", pgm_segment, v->descriptor + 11);
 
 	  if (v->decimals)
 	    {
@@ -2325,8 +2323,7 @@ gen_accept (cob_tree sy, int echo, int main)
   else
     {
       push_immed (echo);
-      output ("\tmovl\t$c_base%d+%u, %%eax\n",
-	       pgm_segment, sy->descriptor);
+      output ("\tmovl\t$c_base%d+%u, %%eax\n", pgm_segment, sy->descriptor);
       push_eax ();
       gen_loadloc (sy);
       if (screen_io_enable == 0)
@@ -3123,8 +3120,7 @@ gen_goto (cob_tree_list l, cob_tree x)
       cob_tree_list tmp;
       cob_tree sy = x;
       gen_loadloc (sy);
-      output ("\tmovl $c_base%d+%u, %%eax\n",
-	       pgm_segment, sy->descriptor);
+      output ("\tmovl $c_base%d+%u, %%eax\n", pgm_segment, sy->descriptor);
       push_eax ();
       asm_call ("get_index");	/* this will return %eax with var's value */
       for (tmp = l; tmp != NULL; tmp = tmp->next)
@@ -3188,10 +3184,10 @@ gen_jmplabel (int lbl)
 void
 gen_push_int (cob_tree sy)
 {
-  gen_loadloc (sy);
-  output ("\tmovl $c_base%d+%u, %%eax\n", pgm_segment, sy->descriptor);
-  push_eax ();
-  asm_call ("get_index");
+#ifdef COB_DEBUG
+  output ("# gen_put_int\n");
+#endif
+  asm_call_1 ("get_index", sy);
   /* this must be done without calling push_eax */
   output ("\tpushl\t%%eax\n");
 }
@@ -3495,7 +3491,7 @@ gen_SearchAllLoopCheck (unsigned long lbl3, cob_tree syidx,
 
 //    idx = bu;
   output ("\tmovl\t-%d(%%ebp), %%eax\n", stack_offset - 12);
-  output ("\tmovl %%eax, -%d(%%ebp)\n", syidx->location);
+  output ("\tmovl\t%%eax, -%d(%%ebp)\n", syidx->location);
 
   gen_jmplabel (l6);
   output ("\t.align 16\n");
@@ -4290,8 +4286,7 @@ gen_save_sort_fields (cob_tree f, cob_tree buf)
       gen_loadloc (datafld);
       datafld = (datafld->sort_data);
     }
-  output ("\tmovl\t$c_base%d+%u, %%eax\n", pgm_segment,
-	   f->descriptor);
+  output ("\tmovl\t$c_base%d+%u, %%eax\n", pgm_segment, f->descriptor);
   push_eax ();
   gen_save_filevar (f, buf);
   /* returns number of stack levels used in storing fields */
