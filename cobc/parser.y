@@ -174,7 +174,7 @@ static void ambiguous_error (cobc_tree x);
 %type <list> occurs_key_list occurs_index_list value_item_list data_name_list
 %type <list> value_list opt_value_list evaluate_case
 %type <list> evaluate_case_list evaluate_when_list evaluate_object_list
-%type <list> label_list number_list string_list
+%type <list> label_list numeric_value_list string_list
 %type <list> string_list_1 inspect_before_after_list
 %type <list> reference_list mnemonic_name_list
 %type <list> file_name_list math_name_list math_edited_name_list
@@ -189,7 +189,7 @@ static void ambiguous_error (cobc_tree x);
 %type <tree> figurative_constant file_name function group_name integer_label
 %type <tree> integer_value label label_name qualified_name
 %type <tree> line_number literal mnemonic_name name opt_subscript subscript
-%type <tree> number numeric_edited_name numeric_expr
+%type <tree> numeric_value numeric_edited_name numeric_expr
 %type <tree> numeric_name occurs_index on_or_off opt_screen_description_list
 %type <tree> opt_with_pointer perform_option perform_procedure
 %type <tree> program_name record_name reference_or_literal
@@ -1618,7 +1618,7 @@ add_statement:
   }
 ;
 add_body:
-  number_list TO math_name_list
+  numeric_value_list TO math_name_list
   {
     /* ADD A B C TO X Y  -->  t = a + b + c; x += t; y += t; */
     struct cobc_list *l;
@@ -1627,7 +1627,7 @@ add_body:
       e = make_binary_op (e, '+', l->item);
     $<tree>$ = build_assign ($3, '+', e);
   }
-| number_list add_to GIVING math_edited_name_list
+| numeric_value_list add_to GIVING math_edited_name_list
   {
     /* ADD A B TO C GIVING X Y  -->  t = a + b + c; x = t; y = t; */
     struct cobc_list *l;
@@ -1866,23 +1866,25 @@ divide_statement:
   }
 ;
 divide_body:
-  number INTO math_name_list
+  numeric_value INTO math_name_list
   {
     $<tree>$ = build_assign ($3, '/', $1);
   }
-| number INTO number GIVING math_edited_name_list
+| numeric_value INTO numeric_value GIVING math_edited_name_list
   {
     $<tree>$ = build_assign ($5, 0, make_binary_op ($3, '/', $1));
   }
-| number BY number GIVING math_edited_name_list
+| numeric_value BY numeric_value GIVING math_edited_name_list
   {
     $<tree>$ = build_assign ($5, 0, make_binary_op ($1, '/', $3));
   }
-| number INTO number GIVING numeric_edited_name flag_rounded REMAINDER numeric_edited_name
+| numeric_value INTO numeric_value GIVING numeric_edited_name flag_rounded
+  REMAINDER numeric_edited_name
   {
     $<tree>$ = build_divide ($3, $1, $5, $6, $8);
   }
-| number BY number GIVING numeric_edited_name flag_rounded REMAINDER numeric_edited_name
+| numeric_value BY numeric_value GIVING numeric_edited_name flag_rounded
+  REMAINDER numeric_edited_name
   {
     $<tree>$ = build_divide ($1, $3, $5, $6, $8);
   }
@@ -2218,11 +2220,11 @@ multiply_statement:
   }
 ;
 multiply_body:
-  number BY math_name_list
+  numeric_value BY math_name_list
   {
     $<tree>$ = build_assign ($3, '*', $1);
   }
-| number BY number GIVING math_edited_name_list
+| numeric_value BY numeric_value GIVING math_edited_name_list
   {
     $<tree>$ = build_assign ($5, 0, make_binary_op ($1, '*', $3));
   }
@@ -2470,19 +2472,19 @@ _end_search: | END_SEARCH ;
  */
 
 set_statement:
-  SET data_name_list TO number
+  SET data_name_list TO numeric_value
   {
     struct cobc_list *l;
     for (l = $2; l; l = l->next)
       push_move ($4, l->item);
   }
-| SET data_name_list UP BY number
+| SET data_name_list UP BY numeric_value
   {
     struct cobc_list *l;
     for (l = $2; l; l = l->next)
       push (build_add (l->item, $5, 0));
   }
-| SET data_name_list DOWN BY number
+| SET data_name_list DOWN BY numeric_value
   {
     struct cobc_list *l;
     for (l = $2; l; l = l->next)
@@ -2684,7 +2686,7 @@ subtract_statement:
   }
 ;
 subtract_body:
-  number_list FROM math_name_list
+  numeric_value_list FROM math_name_list
   {
     /* SUBTRACT A B C FROM X Y  -->  t = a + b + c; x -= t; y -= t; */
     struct cobc_list *l;
@@ -2693,7 +2695,7 @@ subtract_body:
       e = make_binary_op (e, '+', l->item);
     $<tree>$ = build_assign ($3, '-', e);
   }
-| number_list FROM number GIVING math_edited_name_list
+| numeric_value_list FROM numeric_value GIVING math_edited_name_list
   {
     /* SUBTRACT A B FROM C GIVING X Y  -->  t = c - a - b; x = t; y = t */
     struct cobc_list *l;
@@ -3550,13 +3552,13 @@ undefined_name:
  * Special values
  */
 
-/* Number */
+/* Numeric value */
 
-number_list:
-  number			{ $$ = list ($1); }
-| number_list number		{ $$ = list_add ($1, $2); }
+numeric_value_list:
+  numeric_value				{ $$ = list ($1); }
+| numeric_value_list numeric_value	{ $$ = list_add ($1, $2); }
 ;
-number:
+numeric_value:
   value
   {
     if (COBC_TREE_CLASS ($1) != COB_TYPE_NUMERIC)
@@ -3566,7 +3568,7 @@ number:
   }
 ;
 
-/* Integer */
+/* Integer value */
 
 integer:
   INTEGER_LITERAL
