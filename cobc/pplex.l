@@ -226,12 +226,13 @@ int
 ppcopy (char *name, const char *lib, struct cb_replacement *replacement)
 {
   struct stat st;
-  char buff[FILENAME_MAX];
+  char buff1[FILENAME_MAX];
+  char buff2[FILENAME_MAX];
 
   if (lib)
     {
-      sprintf (buff, "%s/%s", lib, name);
-      name = buff;
+      sprintf (buff1, "%s/%s", lib, name);
+      name = buff1;
     }
 
   /* Find the file */
@@ -240,20 +241,20 @@ ppcopy (char *name, const char *lib, struct cb_replacement *replacement)
       struct cb_name_list *il, *el;
       for (el = cb_extension_list; el; el = el->next)
 	{
-	  sprintf (buff, "%s%s", name, el->name);
-	  if (stat (buff, &st) == 0)
+	  sprintf (buff2, "%s%s", name, el->name);
+	  if (stat (buff2, &st) == 0)
 	    {
-	      name = buff;
+	      name = buff2;
 	      goto found;
 	    }
 	}
       for (il = cb_include_list; il; il = il->next)
 	for (el = cb_extension_list; el; el = el->next)
 	  {
-	    sprintf (buff, "%s/%s%s", il->name, name, el->name);
-	    if (stat (buff, &st) == 0)
+	    sprintf (buff2, "%s/%s%s", il->name, name, el->name);
+	    if (stat (buff2, &st) == 0)
 	      {
-		name = buff;
+		name = buff2;
 		goto found;
 	      }
 	  }
