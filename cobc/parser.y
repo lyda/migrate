@@ -2812,7 +2812,7 @@ qualified_cond_name:
     if (COBC_FIELD ($1)->word->count > 1)
       ambiguous_error (COBC_FIELD ($1)->word);
     $$ = $1;
-    // field_set_used (COBC_FIELD ($$)->parent);
+    field_set_used (COBC_FIELD ($$)->parent);
   }
 | CONDITION_NAME in_of qualified_name
   {
@@ -2824,7 +2824,7 @@ qualified_cond_name:
     else
       {
 	$$ = qw->item;
-	// field_set_used (COBC_FIELD ($$)->parent);
+	field_set_used (COBC_FIELD ($$)->parent);
       }
   }
 ;
