@@ -248,6 +248,72 @@ AT_CHECK([test -f FILENAME], [0])
 
 AT_CLEANUP
 
+AT_SETUP([ASSIGN mapping])
+
+AT_DATA([test.conf], [
+include "cobol2002.conf"
+filename-mapping: yes
+])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       ENVIRONMENT      DIVISION.
+       INPUT-OUTPUT     SECTION.
+       FILE-CONTROL.
+       SELECT TEST-FILE ASSIGN "FILENAME".
+       DATA             DIVISION.
+       FILE             SECTION.
+       FD TEST-FILE.
+       01 TEST-REC      PIC X(4).
+       PROCEDURE        DIVISION.
+           OPEN OUTPUT TEST-FILE.
+           CLOSE TEST-FILE.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -conf=test.conf -o prog prog.cob])
+AT_CHECK([DD_FILENAME="x" ./prog], [0])
+AT_CHECK([test -f "x"], [0])
+AT_CHECK([dd_FILENAME="y" ./prog], [0])
+AT_CHECK([test -f "y"], [0])
+AT_CHECK([FILENAME="z" ./prog], [0])
+AT_CHECK([test -f "z"], [0])
+AT_CHECK([./prog], [0])
+AT_CHECK([test -f "FILENAME"], [0])
+
+AT_CLEANUP
+
+AT_SETUP([ASSIGN expansion])
+
+AT_DATA([test.conf], [
+include "cobol2002.conf"
+filename-mapping: yes
+])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       ENVIRONMENT      DIVISION.
+       INPUT-OUTPUT     SECTION.
+       FILE-CONTROL.
+       SELECT TEST-FILE ASSIGN "$DIR/FILENAME".
+       DATA             DIVISION.
+       FILE             SECTION.
+       FD TEST-FILE.
+       01 TEST-REC      PIC X(4).
+       PROCEDURE        DIVISION.
+           OPEN OUTPUT TEST-FILE.
+           CLOSE TEST-FILE.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -conf=test.conf -o prog prog.cob])
+AT_CHECK([DIR="/tmp" ./prog], [0])
+AT_CHECK([test -f "/tmp/FILENAME"], [0])
+
+AT_CLEANUP
+
 
 ## LINE SEQUENTIAL
 

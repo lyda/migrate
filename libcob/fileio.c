@@ -41,6 +41,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <ctype.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 
@@ -955,19 +956,52 @@ cob_open (cob_file *f, int mode, int opt)
   cob_field_to_string (f->assign, filename);
   if (cob_current_module->flag_filename_mapping)
     {
-      int i;
-      char *env;
-      char name[FILENAME_MAX];
-      char *prefix[] = {"DD_", "dd_", "", 0};
+      char buff[FILENAME_MAX];
+      char *p;
+      char *src = filename;
+      char *dst = buff;
+      int simple = 1;
 
-      /* check environment variables */
-      for (i = 0; prefix[i]; i++)
+      /* expand envoronment variables */
+      /* ex. "$TMPDIR/foo" -> "/tmp/foo" */
+      while (*src)
 	{
-	  sprintf (name, "%s%s", prefix[i], filename);
-	  if ((env = getenv (name)) != NULL)
+	  if (!isalnum (*src) && *src != '_')
+	    simple = 0;
+	  if (*src == '$')
 	    {
-	      strcpy (filename, env);
-	      break;
+	      int i = 0;
+	      char env[FILENAME_MAX];
+	      while (isalnum (src[++i]));
+	      memcpy (env, src + 1, i - 1);
+	      env[i - 1] = 0;
+	      if ((p = getenv (env)) != NULL)
+		{
+		  strcpy (dst, p);
+		  dst += strlen (p);
+		}
+	      src += i;
+	    }
+	  else
+	    *dst++ = *src++;
+	}
+      *dst = 0;
+      strcpy (filename, buff);
+
+      /* resolve by envoronment variables */
+      /* ex. "TMPFILE" -> DD_TMPFILE, dd_TMPFILE, or TMPFILE */
+      if (simple)
+	{
+	  int i;
+	  char *prefix[] = {"DD_", "dd_", "", 0};
+	  for (i = 0; prefix[i]; i++)
+	    {
+	      sprintf (buff, "%s%s", prefix[i], filename);
+	      if ((p = getenv (buff)) != NULL)
+		{
+		  strcpy (filename, p);
+		  break;
+		}
 	    }
 	}
     }
