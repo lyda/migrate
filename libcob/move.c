@@ -523,9 +523,9 @@ static int
 is_numeric_edited (const char *pic)
 {
   for (; *pic; pic += 2)
-    if (strchr ("AX9B0/", *pic) == NULL)
-      return 1;
-  return 0;
+    if (*pic == 'A' || *pic == 'X')
+      return 0;
+  return 1;
 }
 
 static void
