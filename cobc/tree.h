@@ -65,7 +65,7 @@ extern cob_tree_list list_append (cob_tree_list l, cob_tree x);
  * Field
  */
 
-struct cob_field {
+struct cob_tree_field {
   struct cob_tree_common common;
   cob_tree next;		/* pointer to next symbol with same hash */
   char *name;			/* name (value) of field */
@@ -79,7 +79,7 @@ struct cob_field {
 				*/
 };
 
-#define COB_FIELD(x)		((struct cob_field *) (x))
+#define COB_FIELD(x)		((struct cob_tree_field *) (x))
 #define COB_FIELD_P(x)		(LITERAL_P (x) || SYMBOL_P (x))
 #define COB_FIELD_NEXT(x)	(COB_FIELD (x)->next)
 #define COB_FIELD_NAME(x)	(COB_FIELD (x)->name)
@@ -92,7 +92,7 @@ struct cob_field {
 
 struct lit
 {
-  struct cob_field field;	/* literal is a field */
+  struct cob_tree_field field;	/* literal is a field */
   int decimals;
   unsigned location;		/* data area for literal @lit+n */
   unsigned descriptor;		/* descriptor @lit+n */
@@ -126,7 +126,7 @@ extern cob_tree make_literal (char *name);
 
 struct sym
 {
-  struct cob_field field;	/* symbol is a field */
+  struct cob_tree_field field;	/* symbol is a field */
   int decimals;			/* decimal places 
 				   or organization (files ) */
   unsigned location;		/* offset of variable in stack area */
