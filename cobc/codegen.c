@@ -492,6 +492,7 @@ is_subscripted (cob_tree sy)
 
 static void asm_call_1 (const char *name, cob_tree sy1);
 static void value_to_eax (cob_tree sy);
+static void adjust_desc_length (cob_tree sy);
 
 static void
 push_immed (int i)
@@ -651,9 +652,6 @@ loadloc_to_eax (cob_tree sy_p)
   unsigned offset;
   cob_tree sy = sy_p, var;
 
-#ifdef COB_DEBUG
-  fprintf (o_src, "#gen_loadloc litflg %d\n", sy->litflag);
-#endif
   if (REFMOD_P (sy))
     sy = ((struct refmod *) sy)->sym;	// temp bypass
   if (SUBREF_P (sy))
@@ -709,6 +707,30 @@ gen_loadloc (cob_tree sy)
 {
   loadloc_to_eax (sy);
   push_eax ();
+}
+
+static cob_tree 
+get_variable_item (cob_tree sy)
+{
+  cob_tree son, item;
+  if (!SYMBOL_P (sy))
+    return NULL;
+  if (sy->occurs != NULL)
+    return sy;
+  for (son = sy->son; son != NULL; son = son->brother)
+    if ((item = get_variable_item (son)))
+      return item;
+  return NULL;
+}
+
+static void
+gen_temp_storage (int size)
+{
+  stackframe_cnt += 4;
+  fprintf (o_src, "\tpushl\t$tv_base%d+%d\n", pgm_segment, tmpvar_offset);
+  tmpvar_offset += size;
+  if (tmpvar_offset > tmpvar_max)
+    tmpvar_max = tmpvar_offset;
 }
 
 static void
@@ -967,6 +989,25 @@ push_index (cob_tree sy)
 {
   asm_call_1 ("get_index", sy);
   push_eax ();
+}
+
+static void
+adjust_desc_length (cob_tree sy)
+{
+  int stack_save = stackframe_cnt;
+  cob_tree item;
+  stackframe_cnt = 0;
+  item = get_variable_item (sy);
+  //push_immed(0);
+  gen_temp_storage (sizeof (struct fld_desc));
+  gen_loaddesc1 (item, 0);
+  gen_loaddesc1 (sy, 0);
+  push_immed (item->occurs->max);
+  push_immed (item->occurs->min);
+  gen_loadvar (item->occurs->depend);
+  asm_call ("cob_adjust_length");
+  stackframe_cnt = stack_save;
+  need_desc_length_cleanup = 1;
 }
 
 
@@ -2466,65 +2507,23 @@ struct math_var *
 create_mathvar_info (struct math_var *mv, cob_tree sy, unsigned int opt)
 {
 
-  struct math_var *rf, *tmp1, *tmp2;
+  struct math_var *rf, *tmp1;
 
   rf = malloc (sizeof (struct math_var));
   rf->sname = sy;
   rf->rounded = opt;
   rf->next = NULL;
 
-#ifdef COB_DEBUG
-  if (cob_trace_codegen)
-    {
-      fprintf (stderr,
-	       "trace : create_mathvar_info 0: sy->name=%s;\n", sy->name);
-      fprintf (stderr,
-	       "trace : create_mathvar_info 1: rf->sname->name=%s;\n",
-	       rf->sname->name);
-    }
-#endif
-
   if (mv == NULL)
-    {
-      tmp2 = rf;
-      tmp1 = rf;
-    }
+    return rf;
   else
     {
       tmp1 = mv;
-      tmp2 = mv;
       while (tmp1->next != NULL)
-	{
-#ifdef COB_DEBUG
-	  if (cob_trace_codegen)
-	    fprintf (stderr,
-		     "trace : create_mathvar_info 2: tmp1->sname->name=%s;\n", 
-		     tmp1->sname->name); 
-#endif
-	  tmp1 = tmp1->next;
-	}
+	tmp1 = tmp1->next;
       tmp1->next = rf;
+      return mv;
     }
-
-#ifdef COB_DEBUG
-  if (cob_trace_codegen)
-    {
-      fprintf (stderr,
-	       "trace : create_mathvar_info 3: tmp1->sname->name=%s;\n", 
-	       tmp1->sname->name); 
-      
-      tmp1 = tmp2; 
-      while (tmp1 != NULL)
-	{
-	  fprintf(stderr,
-		  "trace : create_mathvar_info 4: tmp1->sname->name=%s;\n", 
-		  tmp1->sname->name); 
-	  tmp1 = tmp1->next;
-	}
-    }
-#endif
-
-  return tmp2;
 }
 
 struct math_ose *
@@ -3072,53 +3071,6 @@ create_refmoded_var (cob_tree sy, cob_tree syoff, cob_tree sylen)
   ref->len = sylen;
   ref->slot = refmod_slots++;
   return ref;
-}
-
-cob_tree 
-get_variable_item (cob_tree sy)
-{
-  cob_tree son, item;
-  if (!SYMBOL_P (sy))
-    return NULL;
-  if (sy->occurs != NULL)
-    return sy;
-  for (son = sy->son; son != NULL; son = son->brother)
-    {
-      if ((item = get_variable_item (son)))
-	return item;
-    }
-  return NULL;
-}
-
-void
-gen_temp_storage (int size)
-{
-  stackframe_cnt += 4;
-  fprintf (o_src, "\tpushl\t$tv_base%d+%d\n", pgm_segment, tmpvar_offset);
-  tmpvar_offset += size;
-  if (tmpvar_offset > tmpvar_max)
-    {
-      tmpvar_max = tmpvar_offset;
-    }
-}
-
-void
-adjust_desc_length (cob_tree sy)
-{
-  int stack_save = stackframe_cnt;
-  cob_tree item;
-  stackframe_cnt = 0;
-  item = get_variable_item (sy);
-  //push_immed(0);
-  gen_temp_storage (sizeof (struct fld_desc));
-  gen_loaddesc1 (item, 0);
-  gen_loaddesc1 (sy, 0);
-  push_immed (item->occurs->max);
-  push_immed (item->occurs->min);
-  gen_loadvar (item->occurs->depend);
-  asm_call ("cob_adjust_length");
-  stackframe_cnt = stack_save;
-  need_desc_length_cleanup = 1;
 }
 
 void

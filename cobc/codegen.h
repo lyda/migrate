@@ -169,9 +169,6 @@ extern void gen_multiply2 (struct math_var *vl1, cob_tree sy1, cob_tree sy2, str
 extern void gen_divide1 (struct math_var *vl1, cob_tree sy1, struct math_ose *v1);
 extern void gen_divide2 (struct math_var *vl1, cob_tree sy1, cob_tree sy2, struct math_ose *v1);
 extern struct refmod *create_refmoded_var (cob_tree sy, cob_tree syoff, cob_tree sylen);
-extern cob_tree get_variable_item (cob_tree sy);
-extern void gen_temp_storage (int size);
-extern void adjust_desc_length (cob_tree sy);
 extern void gen_store_fnres (cob_tree sy);
 extern int is_numeric_sy (cob_tree sy);
 extern void gen_class_check (cob_tree sy, int class);
