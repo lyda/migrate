@@ -105,6 +105,8 @@ extern void cob_close (struct cob_file_desc *f, int opt);
 extern void cob_read (struct cob_file_desc *f, struct cob_field key);
 extern void cob_read_next (struct cob_file_desc *f);
 extern void cob_write (struct cob_file_desc *f);
+extern void cob_write_page (struct cob_file_desc *f);
+extern void cob_write_lines (struct cob_file_desc *f, int lines);
 extern void cob_rewrite (struct cob_file_desc *f);
 extern void cob_delete (struct cob_file_desc *f);
 extern void cob_start (struct cob_file_desc *f, int cond, struct cob_field key);
