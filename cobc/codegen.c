@@ -1042,9 +1042,9 @@ field_uniform_class (struct cobc_field *f)
 }
 
 static void
-output_initialize_uniform (struct cobc_field *f, int class, int size)
+output_initialize_uniform (struct cobc_field *f, int class, int size, int flag)
 {
-  if (f->f.have_occurs)
+  if (flag && f->f.have_occurs)
     {
       output_indent ("{");
       output_line ("int i%d = 0;", f->indexes);
@@ -1068,7 +1068,7 @@ output_initialize_uniform (struct cobc_field *f, int class, int size)
     }
   output (", %d);\n", size);
 
-  if (f->f.have_occurs)
+  if (flag && f->f.have_occurs)
     {
       output_indent ("}");
     }
@@ -1111,7 +1111,7 @@ output_initialize_internal (struct cobc_field *f)
 	     initialize the last uniform sequence */
 	  if (first_field && last_class != COB_TYPE_ALPHANUMERIC)
 	    output_initialize_uniform (first_field, last_class,
-				       p->offset - first_field->offset);
+				       p->offset - first_field->offset, 1);
 	  /* if not uniform, initialize the children */
 	  if (class == COB_TYPE_UNKNOWN)
 	    output_recursive (output_initialize_compound, p);
@@ -1122,7 +1122,7 @@ output_initialize_internal (struct cobc_field *f)
   /* initialize the final uniform sequence */
   if (first_field && last_class != COB_TYPE_ALPHANUMERIC)
     output_initialize_uniform (first_field, last_class,
-			       f->offset + f->size - first_field->offset);
+			       f->offset + f->size - first_field->offset, 1);
 }
 
 static void
@@ -1174,7 +1174,7 @@ output_initialize (cobc_tree x, struct cobc_list *l)
     {
       /* INITIALIZE REPLACING */
       initialize_replacing_list = l;
-      output_recursive (output_initialize_replacing, f);
+      output_initialize_replacing (f);
     }
   else
     {
@@ -1184,14 +1184,14 @@ output_initialize (cobc_tree x, struct cobc_list *l)
 	{
 	  /* if field is uniform (i.e., all children are
 	     in the same category), initialize it at once */
-	  output_initialize_uniform (f, class, f->size);
+	  output_initialize_uniform (f, class, f->size, 0);
 	}
       else
 	{
 	  /* otherwise, fill the field by spaces first */
-	  output_initialize_uniform (f, COB_TYPE_ALPHANUMERIC, f->size);
+	  output_initialize_uniform (f, COB_TYPE_ALPHANUMERIC, f->size, 0);
 	  /* then initialize the children recursively */
-	  output_recursive (output_initialize_compound, f);
+	  output_initialize_compound (f);
 	}
     }
 
