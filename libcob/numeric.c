@@ -179,7 +179,7 @@ cob_decimal_set_display (cob_decimal d, struct cob_field f)
 void
 cob_decimal_set_field (cob_decimal d, struct cob_field f)
 {
-  switch (f.desc->type)
+  switch (COB_FIELD_TYPE (f))
     {
     case COB_BINARY:
       {
@@ -193,9 +193,6 @@ cob_decimal_set_field (cob_decimal d, struct cob_field f)
 	  }
 	break;
       }
-    case COB_PACKED:
-      cob_runtime_error ("COB_PACKED: not implemented");
-      break;
     default:
       cob_decimal_set_display (d, f);
       break;
@@ -214,7 +211,7 @@ cob_decimal_get (cob_decimal d, struct cob_field f)
   /* Store number */
   switch (COB_FIELD_TYPE (f))
     {
-    case 'B':
+    case COB_BINARY:
       {
 	int digits = f.desc->digits;
 	if (f.desc->size <= 4)
@@ -257,10 +254,6 @@ cob_decimal_get (cob_decimal d, struct cob_field f)
 	  }
 	return;
       }
-
-    case 'C':
-      puts ("cob_set: not implemented yet");
-      return;
 
     default:
       {
