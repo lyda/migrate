@@ -601,6 +601,21 @@ X = X Y = 56 Z = 34
 AT_CLEANUP
 
 
+AT_SETUP([STOP RUN RETURNING])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       PROCEDURE        DIVISION.
+           STOP RUN RETURNING 1.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [1])
+
+AT_CLEANUP
+
+
 # ENTRY
 
 AT_SETUP([ENTRY])
