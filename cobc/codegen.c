@@ -496,9 +496,11 @@ output_integer (cb_tree x)
     case CB_TAG_BINARY_OP:
       {
 	struct cb_binary_op *p = CB_BINARY_OP (x);
+	output ("(");
 	output_integer (p->x);
 	output (" %c ", p->op);
 	output_integer (p->y);
+	output (")");
 	break;
       }
     case CB_TAG_CAST:
