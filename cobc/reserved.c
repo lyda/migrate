@@ -367,6 +367,7 @@ static struct reserved reserved_words[] = {
   {"PRESENT",		-1, 0},				/* 2002 */
   {"PRINTING",		-1, 0},				/* 2002 */
   {"PROCEDURE",		PROCEDURE, 0},			/* 2002 */
+  {"PROCEDURES",	PROCEDURES, 0},			/* extension */
   {"PROCEED",		PROCEED, 0},			/* 85 */
   {"PROGRAM",		PROGRAM, 0},			/* 2002 */
   {"PROGRAM-ID",	PROGRAM_ID, 0},			/* 2002 */

@@ -101,7 +101,7 @@ static void terminator_error (void);
 %token MEMORY MINUS MODE MULTIPLE NATIONAL NATIONAL_EDITED NATIVE NE NEGATIVE
 %token NEXT NO NOT NUMBER NUMERIC NUMERIC_EDITED OBJECT_COMPUTER OCCURS OF OFF
 %token OMITTED ON OPTIONAL OR ORDER ORGANIZATION OTHER OUTPUT OVERFLOW PADDING
-%token PAGE PLUS POINTER POSITION POSITIVE PROCEDURE PROCEED PROGRAM
+%token PAGE PLUS POINTER POSITION POSITIVE PROCEDURE PROCEDURES PROCEED PROGRAM
 %token PROGRAM_ID QUOTE RANDOM RECORD RECORDS REDEFINES REEL REFERENCE
 %token RELATIVE REMAINDER REMOVAL RENAMES REPLACING REQUIRED RESERVE RETURNING
 %token REVERSE_VIDEO REWIND RIGHT ROUNDED RUN SAME SCREEN SD SECTION SECURE
@@ -2735,14 +2735,20 @@ end_unstring:
  */
 
 use_statement:
-  USE flag_global AFTER _standard exception_or_error PROCEDURE _on use_target
+  use_exception
+| use_debugging
+;
+
+use_exception:
+  USE flag_global AFTER _standard exception_or_error PROCEDURE
+  _on use_exception_target
   {
     current_section->need_begin = 1;
     current_section->need_return = 1;
     CB_EXCEPTION_ENABLE (COB_EC_I_O) = 1;
   }
 ;
-use_target:
+use_exception_target:
   file_name_list
   {
     cb_tree l;
@@ -2757,6 +2763,16 @@ use_target:
 ;
 _standard: | STANDARD ;
 exception_or_error: EXCEPTION | ERROR ;
+
+use_debugging:
+  USE _for DEBUGGING _on use_debugging_target
+  {
+    PENDING ("USE FOR DEBUGGING");
+  }
+;
+use_debugging_target:
+  procedure_name
+| ALL PROCEDURES
 
 
 /*
