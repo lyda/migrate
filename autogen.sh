@@ -7,7 +7,6 @@ fi
 
 echo "Running autopoint..."
 autopoint --force
-rm mkinstalldirs~
 
 echo "Running aclocal..."
 aclocal -I m4

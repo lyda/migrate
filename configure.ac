@@ -64,8 +64,8 @@ AC_CHECK_FUNCS([memmove memset regcomp \
 		strcasecmp strchr strrchr strdup strstr strtol])
 
 # Checks for getopt_long
-AC_CHECK_FUNC([getopt_long_only], getopt=true, getopt=false)
-AM_CONDITIONAL(HAVE_GETOPT_LONG_ONLY, test x$getopt = xtrue)
+AC_CHECK_FUNC([getopt_long_only], getopt=yes, getopt=no)
+AM_CONDITIONAL(HAVE_GETOPT_LONG_ONLY, test "x$getopt" = "xyes")
 
 # Checks for db.
 AC_CHECK_HEADERS([db.h], , AC_MSG_ERROR(db.h is required))
