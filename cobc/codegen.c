@@ -1988,41 +1988,6 @@ gen_unstring (cob_tree x, cob_tree_list l)
   asm_call_1 ("cob_unstring", x);
 }
 
-void
-gen_accept_from_cmdline (cob_tree sy)
-{
-  cob_tree sy1;
-
-  asm_call_1 ("cob_accept_command_line", sy);
-
-  if ((sy1 = lookup_symbol (SVAR_RCODE)) != NULL)
-    {
-      if (sy1->sec_no == SEC_STACK)
-	output ("\tleal\t-%d(%%ebp), %%edx\n", sy1->location);
-      else
-	output ("\tleal\tw_base%d+%d, %%edx\n", pgm_segment, sy1->location);
-      output ("\tmovl\t%%eax, (%%edx)\n");
-    }
-}
-
-void
-gen_accept_env_var (cob_tree sy, cob_tree v)
-{
-  cob_tree sy2;
-
-  gen_loadloc (v);
-  asm_call_1 ("cob_accept_environment", sy);
-
-  if ((sy2 = lookup_symbol (SVAR_RCODE)) != NULL)
-    {
-      if (sy2->sec_no == SEC_STACK)
-	output ("\tleal\t-%d(%%ebp), %%edx\n", sy2->location);
-      else
-	output ("\tleal\tw_base%d+%d, %%edx\n", pgm_segment, sy2->location);
-      output ("\tmovl\t%%eax, (%%edx)\n");
-    }
-}
-
 /******** structure allocation for perform info(s) ***********/
 
 struct perf_info *

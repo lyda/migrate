@@ -1255,11 +1255,10 @@ accept_statement:
 | ACCEPT name FROM DAY		{ asm_call_1 ("cob_accept_day", $2); }
 | ACCEPT name FROM DAY_OF_WEEK	{ asm_call_1 ("cob_accept_day_of_week", $2); }
 | ACCEPT name FROM TIME		{ asm_call_1 ("cob_accept_time", $2); }
-| ACCEPT name FROM COMMAND_LINE	{ gen_accept_from_cmdline($2); }
-| ACCEPT name FROM ENVIRONMENT_VARIABLE NONNUMERIC_LITERAL
+| ACCEPT name FROM COMMAND_LINE	{ asm_call_1 ("cob_accept_command_line", $2); }
+| ACCEPT name FROM ENVIRONMENT_VARIABLE gname
   {
-    save_literal ($5, 'X');
-    gen_accept_env_var ($2, $5);
+    asm_call_2 ("cob_accept_environment", $2, $5)
   }
 | ACCEPT name FROM VARIABLE	{ yywarn ("not supported"); }
 ;

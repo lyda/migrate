@@ -161,30 +161,19 @@ cob_accept_command_line (struct cob_field f)
   return 0;
 }
 
-int
-cob_accept_environment (struct fld_desc *f, char *buffer, char *ptevname)
+void
+cob_accept_environment (struct cob_field f, struct cob_field env)
 {
-  int len, r = 0;
-  char *pt1;
+  char *p, buff[BUFSIZ];
 
-  // Padd variable with blanks 
-  memset (buffer, ' ', f->len);
+  memcpy (buff, FIELD_DATA (env), FIELD_SIZE (env));
+  buff[FIELD_SIZE (env)] = '\0';
 
-  // Get environment variable, if it exists
-  if ((pt1 = getenv (ptevname)) == NULL)
-    r = 1;
+  p = getenv (buff);
+  if (p)
+    cob_mem_move (f, p, strlen (p));
   else
-    {
-      len = strlen (pt1);
-      if (f->len < len)
-	{
-	  len = f->len;
-	  r = 2;
-	}
-      memmove (buffer, pt1, len);
-    }
-
-  return r;
+    cob_move_space (f);
 }
 
 int
