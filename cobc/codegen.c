@@ -948,8 +948,11 @@ output_file_name (struct cobc_file_name *f)
   output ("0, ");
   /* flags */
   output ("{%d, 0, 0, 0, 0}, ", f->optional);
-  /* relative_index */
-  output ("0, ");
+  /* relative_key */
+  if (f->organization == COB_ORG_RELATIVE)
+    output_tree (f->key);
+  else
+    output ("{0, 0}, ");
   /* cursor, keys, nkeys */
   if (f->organization == COB_ORG_INDEXED)
     output ("0, %s_keys, %d", f->cname, nkeys);

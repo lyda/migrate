@@ -392,7 +392,6 @@ cob_write_lineseq (struct cob_file_desc *f)
 }
 
 
-#if 0
 /*
  * RELATIVE
  */
@@ -401,33 +400,34 @@ void
 cob_open_relative (struct cob_file_desc *f, struct cob_field name, int mode)
 {
   cob_open_sequential (f, name, mode);
-  f.relative_index = 1;
+  cob_set_int (f->relative_key, 1);
 }
 
 void
 cob_close_relative (struct cob_file_desc *f)
 {
   cob_close_sequential (f);
-  f.relative_index = 0;
+  cob_set_int (f->relative_key, 0);
 }
 
 void
 cob_read_relative (struct cob_file_desc *f)
 {
-  int size;
+  int size, index;
 
-  if (!FILE_OPENED (f))
-    {
-      if (f->f.optional)
-	RETURN_STATUS (10);
-      else
-	RETURN_STATUS (92);
-    }
+  if (f->f.nonexistent)
+    RETURN_STATUS (10);
 
-  if (!FILE_READABLE (f))
+  if (!FILE_OPENED (f) || !FILE_READABLE (f))
     RETURN_STATUS (47);
 
-  lseek (f->file.fd, f->record_size * recno, SEEK_SET);
+  if (f->f.end_of_file)
+    RETURN_STATUS (46);
+
+  index = cob_to_int (f->relative_key);
+  if (lseek (f->file.fd, f->record_size * index, SEEK_SET) == -1)
+    RETURN_STATUS (99);
+
   size = read (f->file.fd, f->record_data, f->record_size);
   if (size == 0)
     RETURN_STATUS (10);
@@ -442,72 +442,84 @@ cob_read_relative (struct cob_file_desc *f)
 void
 cob_read_next_relative (struct cob_file_desc *f)
 {
-  int result;
+  if (f->f.nonexistent)
+    RETURN_STATUS (10);
 
-  if (!FILE_OPENED (f))
-    {
-      if (f->f.optional)
-	RETURN_STATUS (10);
-      else
-	RETURN_STATUS (92);
-    }
+  if (!FILE_OPENED (f) || !FILE_READABLE (f))
+    RETURN_STATUS (47);
 
-  if (!FILE_READABLE (f))
-    RETURN_STATUS (92);
+  if (f->f.end_of_file)
+    RETURN_STATUS (46);
 
-  result = 1;
-  f->record_data[0] = '\0';
-  while (f->record_data[0] == '\0' && result > 0)
-    result = read (f->file.fd, f->record_data, f->record_size);
-  if (result <= 0)
-    RETURN_STATUS (10);		/* what errors should I return? */
+  do {
+    int size;
+    size = read (f->file.fd, f->record_data, f->record_size);
+    if (size == 0)
+      RETURN_STATUS (10);
+    else if (size == -1)
+      RETURN_STATUS (99);
+  } while (f->record_data[0] == '\0');
+
   RETURN_STATUS (00);
 }
 
 void
-cob_write_relative (struct cob_file_desc *f, recno_t recno)
+cob_write_relative (struct cob_file_desc *f)
 {
-  if (!FILE_OPENED (f) || !FILE_WRITABLE (f))
-    RETURN_STATUS (92);
+  int index;
 
-  lseek (f->file.fd, f->record_size * recno, SEEK_SET);
+  if (!FILE_OPENED (f) || !FILE_WRITABLE (f))
+    RETURN_STATUS (48);
+
+  index = cob_to_int (f->relative_key);
+  lseek (f->file.fd, f->record_size * index, SEEK_SET);
   write (f->file.fd, f->record_data, f->record_size);
+
   RETURN_STATUS (00);
 }
 
 void
 cob_rewrite_relative (struct cob_file_desc *f)
 {
-  if (!FILE_OPENED (f) || !FILE_READWRITE (f))
-    RETURN_STATUS (92);
+  int index;
 
-  lseek (f->file.fd, f->record_size * recno, SEEK_SET);
+  if (!FILE_OPENED (f) || !FILE_READWRITE (f))
+    RETURN_STATUS (49);
+
+  index = cob_to_int (f->relative_key);
+  lseek (f->file.fd, f->record_size * index, SEEK_SET);
   write (f->file.fd, f->record_data, f->record_size);
+
   RETURN_STATUS (00);
 }
 
 void
 cob_delete_relative (struct cob_file_desc *f)
 {
+  int index;
   char buff[f->record_size];
 
   if (!FILE_OPENED (f) || !FILE_READWRITE (f))
     RETURN_STATUS (49);
 
+  index = cob_to_int (f->relative_key);
+  lseek (f->file.fd, f->record_size * index, SEEK_SET);
+
   memset (buff, 0, f->record_size);
-  lseek (f->file.fd, f->record_size * recno, SEEK_SET);
   write (f->file.fd, buff, f->record_size);
+
   RETURN_STATUS (00);
 }
 
 void
-cob_start_relative (struct cob_file_desc *f, int cond, recno_t recno)
+cob_start_relative (struct cob_file_desc *f, int cond, struct cob_field k)
 {
-  if (!FILE_OPENED (f) || !FILE_READABLE (f))
-    RETURN_STATUS (92);
+  int index;
+
+  index = cob_to_int (k);
+  lseek (f->file.fd, f->record_size * index, SEEK_SET);
 }
 
-#endif
 
 /*
  * INDEXED
@@ -646,7 +658,8 @@ cob_read_indexed (struct cob_file_desc *f, struct cob_field k)
   DBT key, data;
 
   set_cursor (f, k.desc, &key);
-  DBC_GET (f->cursor, &key, &data, DB_SET);
+  if (DBC_GET (f->cursor, &key, &data, DB_SET))
+    RETURN_STATUS (23);
   memcpy (f->record_data, data.data, f->record_size);
 
   RETURN_STATUS (00);
@@ -657,7 +670,8 @@ cob_read_next_indexed (struct cob_file_desc *f)
 {
   DBT key, data;
 
-  DBC_GET (f->cursor, &key, &data, DB_NEXT);
+  if (DBC_GET (f->cursor, &key, &data, DB_NEXT))
+    RETURN_STATUS (23);
   memcpy (f->record_data, data.data, f->record_size);
 
   RETURN_STATUS (00);

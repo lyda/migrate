@@ -321,7 +321,7 @@ struct cob_file_desc {
     char secondary   : 1;	/* alternative key is in use (INDEXED files) */
   } f;
   /* fields used in RELATIVE files */
-  int relative_index;		/* relative index */
+  struct cob_field relative_key; /* RELATIVE KEY */
   /* fields used in INDEXED files */
   DBC *cursor;
   struct cob_key {
@@ -345,6 +345,14 @@ extern void cob_close_lineseq (struct cob_file_desc *f);
 extern void cob_read_lineseq (struct cob_file_desc *p);
 extern void cob_write_lineseq (struct cob_file_desc *f);
 
+extern void cob_open_relative (struct cob_file_desc *f, struct cob_field name, int mode);
+extern void cob_close_relative (struct cob_file_desc *f);
+extern void cob_read_relative (struct cob_file_desc *f);
+extern void cob_read_next_relative (struct cob_file_desc *f);
+extern void cob_write_relative (struct cob_file_desc *f);
+extern void cob_rewrite_relative (struct cob_file_desc *f);
+extern void cob_delete_relative (struct cob_file_desc *f);
+extern void cob_start_relative (struct cob_file_desc *f, int cond, struct cob_field k);
 
 extern void cob_open_indexed (struct cob_file_desc *f, struct cob_field name, int mode);
 extern void cob_close_indexed (struct cob_file_desc *f);

@@ -2122,7 +2122,7 @@ read_statement:
   READ file_name flag_next _record read_into read_key
   {
     current_file_name = COBC_FILE_NAME ($2);
-    if ($3)
+    if ($3 || current_file_name->access_mode == COB_ACCESS_SEQUENTIAL)
       {
 	/* READ NEXT */
 	int tag = fileio_tags[current_file_name->organization].read_next;
@@ -2289,32 +2289,24 @@ start_body:
     int tag;
     current_file_name = COBC_FILE_NAME ($1);
     tag = fileio_tags[current_file_name->organization].start;
-    if (current_file_name->organization != COB_ORG_INDEXED)
-      push_call_1 (tag, $1);
-    else
-      push_call_3 (tag, $1, make_integer (COB_EQ), current_file_name->key);
+    push_call_3 (tag, $1, make_integer (COB_EQ), current_file_name->key);
   }
 | file_name KEY _is operator data_name
   {
     int tag;
+    int cond = 0;
     current_file_name = COBC_FILE_NAME ($1);
     tag = fileio_tags[current_file_name->organization].start;
-    if (current_file_name->organization != COB_ORG_INDEXED)
-      yyerror ("KEY can be specified only with INDEXED files");
-    else
+    switch ($4)
       {
-	int cond = 0;
-	switch ($4)
-	  {
-	  case COBC_COND_EQ: cond = COB_EQ; break;
-	  case COBC_COND_LT: cond = COB_LT; break;
-	  case COBC_COND_LE: cond = COB_LE; break;
-	  case COBC_COND_GT: cond = COB_GT; break;
-	  case COBC_COND_GE: cond = COB_GE; break;
-	  case COBC_COND_NE: cond = COB_NE; break;
-	  }
-	push_call_3 (tag, $1, make_integer (cond), $5);
+      case COBC_COND_EQ: cond = COB_EQ; break;
+      case COBC_COND_LT: cond = COB_LT; break;
+      case COBC_COND_LE: cond = COB_LE; break;
+      case COBC_COND_GT: cond = COB_GT; break;
+      case COBC_COND_GE: cond = COB_GE; break;
+      case COBC_COND_NE: cond = COB_NE; break;
       }
+    push_call_3 (tag, $1, make_integer (cond), $5);
   }
 ;
 _end_start: | END_START ;
