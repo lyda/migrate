@@ -3,7 +3,7 @@ PATH="$AUTOTEST_PATH:$PATH"
 
 CC="@CC@"
 
-COMPILE="cobc -main -Wall"
+COMPILE="cobc -Wall"
 COMPILE_ONLY="cobc -C -Wall"
 COMPILE_MODULE="cobc -m -Wall"
 
