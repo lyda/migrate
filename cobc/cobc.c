@@ -43,11 +43,14 @@
  * Global variables
  */
 
-int cb_flag_main = 0;
 int cb_flag_call_static = 0;
 int cb_flag_debugging_line = 0;
 int cb_flag_line_directive = 0;
 int cb_flag_parse_only = 0;
+
+#undef CB_FLAG
+#define CB_FLAG(var,name,doc) int var = 0;
+#include "flag.def"
 
 #undef CB_WARNING
 #define CB_WARNING(sig,var,name,doc) int var = 0;
@@ -173,7 +176,11 @@ static struct option long_options[] = {
   {"column", required_argument, 0, '*'},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
-  {"fmain", no_argument, &cb_flag_main, 1},
+#undef CB_FLAG
+#define CB_FLAG(var,name,doc)			\
+  {"f"name, no_argument, &var, 1},		\
+  {"fno-"name, no_argument, &var, 0},
+#include "flag.def"
   {"Wall", no_argument, 0, 'W'},
 #undef CB_WARNING
 #define CB_WARNING(sig,var,name,doc)		\
@@ -206,24 +213,27 @@ print_usage ()
   -g                    Produce debugging information in the output\n\
   -o <file>             Place the output into <file>\n\
   -MT <target>          Set target file used in dependency list\n\
-  -MF <file>            Place dependency list into <file>\n\
-\n\
-COBOL options:\n\
+  -MF <file>            Place dependency list into <file>\n"));
+  puts (_("COBOL options:\n\
   -free                 Use free source format\n\
   -fixed                Use fixed source format\n\
   -column <n>           Set text area column to <n> (default: 72)\n\
   -static               Use static link for subprogram calls if possible\n\
   -dynamic              Use dynamic link for subprogram calls (default)\n\
   -T <n>                Set tab width to <n> (default: 8)\n\
-  -I <path>             Add copybook include path\n\
-  -fmain                Include a main function in the output\n\
-\n\
-Warning options:\n\
+  -I <path>             Add copybook include path\n"));
+  puts (_("Warning options:\n\
   -Wall                 Enable all warnings"));
 #undef CB_WARNING
 #define CB_WARNING(sig,var,name,doc)		\
   printf ("  -W%-19s %s\n", name, gettext (doc));
 #include "warning.def"
+  puts ("");
+  puts (_("Flag options:"));
+#undef CB_FLAG
+#define CB_FLAG(var,name,doc)			\
+  printf ("  -f%-19s %s\n", name, gettext (doc));
+#include "flag.def"
   puts ("");
 }
 

@@ -547,7 +547,7 @@ output_param (cb_tree x, int id)
 	output ("({");
 
 	/* subscript check */
-	if (r->subs)
+	if (cb_flag_check_subscript && r->subs)
 	  {
 	    struct cb_field *p;
 	    struct cb_list *l = r->subs = list_reverse (r->subs);
@@ -588,7 +588,7 @@ output_param (cb_tree x, int id)
 	  }
 
 	/* reference modifier check */
-	if (r->offset)
+	if (cb_flag_check_ref_mod && r->offset)
 	  {
 	    if (!CB_LITERAL_P (r->offset)
 		|| (r->length && !CB_LITERAL_P (r->length)))

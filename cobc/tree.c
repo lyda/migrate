@@ -2087,9 +2087,13 @@ decimal_expand (cb_tree s, cb_tree d, cb_tree x)
       {
 	/* set d, X */
 	struct cb_field *f = field (x);
-	if (f->usage == CB_USAGE_DISPLAY)
-	  add_stmt (s, make_funcall_2 ("cob_check_numeric",
-				       x, make_string (f->name)));
+
+	/* check numeric */
+	if (cb_flag_check_numeric)
+	  if (f->usage == CB_USAGE_DISPLAY)
+	    add_stmt (s, make_funcall_2 ("cob_check_numeric",
+					 x, make_string (f->name)));
+
 	if (f->usage == CB_USAGE_INDEX)
 	  add_stmt (s, make_funcall_2 ("cob_decimal_set_int",
 				       d, make_cast_int32 (x)));

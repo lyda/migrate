@@ -1,0 +1,34 @@
+/*							-*- c -*-
+ * Copyright (C) 2003 Keisuke Nishida
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
+ * as published by the Free Software Foundation; either version 2.1,
+ * or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; see the file COPYING.LIB.  If
+ * not, write to the Free Software Foundation, Inc., 59 Temple Place,
+ * Suite 330, Boston, MA 02111-1307 USA
+ */
+
+#include "lib/gettext.h"
+
+/* CB_FLAG (var, name, val, doc) */
+
+CB_FLAG (cb_flag_main, "main",
+	 N_("Include a main function in the output"))
+
+CB_FLAG (cb_flag_check_numeric, "check-numeric",
+	 N_("Check the value of numeric data at run time"))
+
+CB_FLAG (cb_flag_check_subscript, "check-subscript",
+	 N_("Check the value of subscript at run time"))
+
+CB_FLAG (cb_flag_check_ref_mod, "check-ref-mod",
+	 N_("Check the range of reference modification at run time"))

@@ -1,3 +1,7 @@
+2003-05-04  Keisuke Nishida  <knishida@netlab.jp>
+
+	* flag.def: New file.
+
 2002-11-01  Keisuke Nishida  <knishida@netlab.jp>
 
 	* parser.y (resolve_predefined_names): Call recursively.
