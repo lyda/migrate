@@ -912,6 +912,70 @@ output_file_name (struct cobc_file_name *f)
 
 
 /*
+ * CALL
+ */
+
+#include "inline.c"
+
+#undef COBC_DEFINE_FUNCTION
+#undef COBC_DEFINE_INLINE
+#define COBC_DEFINE_FUNCTION(tag,name,argc) {argc, name, 0},
+#define COBC_DEFINE_INLINE(tag,func,argc) {argc, 0, func},
+struct {
+  int argc;
+  const char *name;
+  void (*func) ();
+} function_table[] = {
+#include "functions.h"
+  {0, 0, 0}
+};
+
+static void
+output_call (struct cobc_call *p)
+{
+  const char *name;
+  void (*func)();
+
+#ifdef COB_DEBUG
+  /* check the number of arguments */
+  if (p->argc != function_table[p->tag].argc)
+    {
+      puts ("output_call: argc does not match");
+      abort ();
+    }
+#endif
+
+  name = function_table[p->tag].name;
+  func = function_table[p->tag].func;
+
+  if (func)
+    /* call inline function if exists */
+    switch (p->argc)
+      {
+      case 0: func (); break;
+      case 1: func (p->argv[0]); break;
+      case 2: func (p->argv[0], p->argv[1]); break;
+      case 3: func (p->argv[0], p->argv[1], p->argv[2]); break;
+      case 4: func (p->argv[0], p->argv[1], p->argv[2], p->argv[3]); break;
+      case 5: func (p->argv[0], p->argv[1], p->argv[2], p->argv[3], p->argv[4]); break;
+      }
+  else
+    {
+      /* regular function call */
+      switch (p->argc)
+	{
+	case 0: output_call_0 (name); break;
+	case 1: output_call_1 (name, p->argv[0]); break;
+	case 2: output_call_2 (name, p->argv[0], p->argv[1]); break;
+	case 3: output_call_3 (name, p->argv[0], p->argv[1], p->argv[2]); break;
+	case 4: output_call_4 (name, p->argv[0], p->argv[1], p->argv[2], p->argv[3]); break;
+	case 5: output_call_5 (name, p->argv[0], p->argv[1], p->argv[2], p->argv[3], p->argv[4]); break;
+	}
+    }
+}
+
+
+/*
  * EVALUATE
  */
 
@@ -1053,12 +1117,8 @@ output_perform_once (struct cobc_perform *p)
 }
 
 static void
-output_perform_varying (struct cobc_perform *p, struct cobc_perform_varying *v)
+output_perform_before (struct cobc_perform *p, struct cobc_perform_varying *v)
 {
-  cobc_tree init = NULL;
-  cobc_tree step = NULL;
-  cobc_tree cond;
-
   /* perform body at the end */
   if (!v)
     {
@@ -1066,45 +1126,52 @@ output_perform_varying (struct cobc_perform *p, struct cobc_perform_varying *v)
       return;
     }
 
-  /* build operations */
-  if (v->name)
-    {
-      init = make_call_2 (COB_MOVE, v->from, v->name);
-      step = make_op_assign (v->name, '+', v->by);
-    }
-  cond = make_unary_cond (v->until, COBC_COND_NOT);
-
-  /* initialize */
-  if (init)
-    output_tree (init);
-
   /* loop */
   output_prefix ();
-  if (p->test == COBC_BEFORE)
-    {
-      output ("while (");
-      output_condition (cond);
-      output (")\n");
-    }
-  else
-    {
-      output ("do\n");
-    }
+  output ("while (!");
+  output_condition (v->until);
+  output (")\n");
   output_indent ("  {", 4);
+  output_perform_before (p, v->next);
 
-  /* body */
-  output_perform_varying (p, v->next);
-  if (step)
-    output_tree (step);
-
-  /* end loop */
-  output_indent ("  }", -4);
-  if (p->test == COBC_AFTER)
+  /* step */
+  if (v->name)
     {
-      output ("while (");
-      output_condition (cond);
-      output (");\n");
+      output_tree (make_op_assign (v->name, '+', v->by));
+      if (v->next && v->next->name)
+	output_move (v->next->from, v->next->name);
     }
+  output_indent ("  }", -4);
+}
+
+static void
+output_perform_after (struct cobc_perform *p, struct cobc_perform_varying *v)
+{
+  /* perform body at the end */
+  if (!v)
+    {
+      output_perform_once (p);
+      return;
+    }
+
+  /* init */
+  if (v->name)
+    output_move (v->from, v->name);
+
+  /* loop */
+  output_line ("while (1)");
+  output_indent ("  {", 4);
+  output_perform_after (p, v->next);
+
+  /* step */
+  output_prefix ();
+  output ("if (");
+  output_condition (v->until);
+  output (")\n");
+  output_line ("  break;");
+  if (v->name)
+    output_tree (make_op_assign (v->name, '+', v->by));
+  output_indent ("  }", -4);
 }
 
 static void
@@ -1131,72 +1198,19 @@ output_perform (struct cobc_perform *p)
       output_indent ("}", -2);
       break;
     case COBC_PERFORM_UNTIL:
-      output_perform_varying (p, p->varying);
-      break;
-    }
-}
-
-
-/*
- * CALL
- */
-
-#include "inline.c"
-
-#undef COBC_DEFINE_FUNCTION
-#undef COBC_DEFINE_INLINE
-#define COBC_DEFINE_FUNCTION(tag,name,argc) {argc, name, 0},
-#define COBC_DEFINE_INLINE(tag,func,argc) {argc, 0, func},
-struct {
-  int argc;
-  const char *name;
-  void (*func) ();
-} function_table[] = {
-#include "functions.h"
-  {0, 0, 0}
-};
-
-static void
-output_call (struct cobc_call *p)
-{
-  const char *name;
-  void (*func)();
-
-#ifdef COB_DEBUG
-  /* check the number of arguments */
-  if (p->argc != function_table[p->tag].argc)
-    {
-      puts ("output_call: argc does not match");
-      abort ();
-    }
-#endif
-
-  name = function_table[p->tag].name;
-  func = function_table[p->tag].func;
-
-  if (func)
-    /* call inline function if exists */
-    switch (p->argc)
-      {
-      case 0: func (); break;
-      case 1: func (p->argv[0]); break;
-      case 2: func (p->argv[0], p->argv[1]); break;
-      case 3: func (p->argv[0], p->argv[1], p->argv[2]); break;
-      case 4: func (p->argv[0], p->argv[1], p->argv[2], p->argv[3]); break;
-      case 5: func (p->argv[0], p->argv[1], p->argv[2], p->argv[3], p->argv[4]); break;
-      }
-  else
-    {
-      /* regular function call */
-      switch (p->argc)
+      if (p->test == COBC_BEFORE)
 	{
-	case 0: output_call_0 (name); break;
-	case 1: output_call_1 (name, p->argv[0]); break;
-	case 2: output_call_2 (name, p->argv[0], p->argv[1]); break;
-	case 3: output_call_3 (name, p->argv[0], p->argv[1], p->argv[2]); break;
-	case 4: output_call_4 (name, p->argv[0], p->argv[1], p->argv[2], p->argv[3]); break;
-	case 5: output_call_5 (name, p->argv[0], p->argv[1], p->argv[2], p->argv[3], p->argv[4]); break;
+	  struct cobc_perform_varying *v;
+	  for (v = p->varying; v; v = v->next)
+	    if (v->name)
+	      output_move (v->from, v->name);
+	  output_perform_before (p, p->varying);
 	}
+      else
+	{
+	  output_perform_after (p, p->varying);
+	}
+      break;
     }
 }
 
