@@ -2502,7 +2502,7 @@ release_statement:
     cb_tree file = CB_TREE (CB_FIELD (cb_ref ($3))->file);
     if ($4)
       push (cb_build_move ($4, $3));
-    push_funcall_2 ("cob_write", file, $3);
+    push_funcall_3 ("cob_write", file, $3, cb_int0);
   }
 ;
 
@@ -3000,31 +3000,13 @@ write_statement:
   end_write
   {
     struct cb_field *f = CB_FIELD (cb_ref ($3));
-    cb_tree opt = $5;
-    cb_tree e = NULL;
     cb_tree file = CB_TREE (f->file);
     cb_tree l = NULL;
-
-    if (opt)
-      {
-	if (CB_PAIR_Y (opt))
-	  e = cb_build_funcall_2 ("cob_write_lines", file, CB_PAIR_Y (opt));
-	else
-	  e = cb_build_funcall_1 ("cob_write_page", file);
-      }
-
-    /* AFTER ADVANCING */
-    if (opt && CB_PAIR_X (opt) == CB_AFTER)
-      l = list_add (l, e);
 
     /* WRITE */
     if ($4)
       l = list_add (l, cb_build_move ($4, $3));
-    l = list_add (l, cb_build_funcall_2 ("cob_write", file, $3));
-
-    /* BEFORE ADVANCING */
-    if (opt && CB_PAIR_X (opt) == CB_BEFORE)
-      l = list_add (l, e);
+    l = list_add (l, cb_build_funcall_3 ("cob_write", file, $3, $5));
 
     current_statement->file = file;
     current_statement->body = l;
@@ -3037,15 +3019,18 @@ write_from:
 write_option:
   /* empty */
   {
-    $$ = NULL;
+    $$ = cb_int0;
   }
 | before_or_after _advancing integer_value _line_or_lines
   {
-    $$ = cb_build_pair ($1, cb_build_cast_integer ($3));
+    int opt = ($1 == CB_BEFORE) ? COB_WRITE_BEFORE : COB_WRITE_AFTER;
+    cb_tree e = cb_build_binary_op (cb_int (opt | COB_WRITE_LINES), '+', $3);
+    $$ = cb_build_cast_integer (e);
   }
 | before_or_after _advancing PAGE
   {
-    $$ = cb_build_pair ($1, 0);
+    int opt = ($1 == CB_BEFORE) ? COB_WRITE_BEFORE : COB_WRITE_AFTER;
+    $$ = cb_int (opt | COB_WRITE_PAGE);
   }
 ;
 before_or_after:
