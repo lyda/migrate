@@ -55,7 +55,6 @@ unsigned int varnumber;
 int reserved_token;
 int previous_state = 0;
 short function_seen = 0;
-int eos_detect=0;
 int stabs_started=0;
 
 struct {
@@ -240,8 +239,7 @@ static struct intrinsic_sym *intrinsic_tab[ HASHLEN ]={NULL};
 
 static int read_literal (char mark);
 static int read_literal_x (char mark);
-static int is_integer_token (const char *tok);
-static int is_valid_identifier (const char *tok);
+static int scan_word (char *text);
 %}
 
 letters [A-Za-z]
@@ -362,231 +360,164 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
 
 <INITIAL,SUBSCRIPTS_ST>{word} {
   struct sym *symbol;
-  if (is_integer_token (yytext) && !eos_detect)
+  int tok = scan_word (yytext);
+  if (tok)
+    return tok;
+
+  if ((reserved_token = reserved (yytext)) != 0)
     {
-      TRACE_PRINT (("<NLITERAL>: %s\n", yytext));
-      yylval.lval = install_literal (yytext);
-      return (NLITERAL);
+      if (reserved_token == FUNCTION)
+	function_seen = 1;
+      /* special case of 4 intrinsics which are also reserved */
+      if (function_seen && lookup_intrinsic (yytext) != NULL)
+	{
+	  yylval.sval = install (yytext, SYTB_LAB, 0);
+	  TRACE_PRINT ((" <LABELSTR>: %s\n", yytext));
+	  return (LABELSTR);
+	}
+      TRACE_PRINT ((" <reserved>: %s\n", yytext));
+      return reserved_token;
     }
-  eos_detect = 0;
-  if (!is_valid_identifier (yytext))
+  /* if symbol was defined at the data division */
+  if ((symbol = lookup (yytext, 2)) != NULL)
+    {
+      yylval.sval = symbol;
+      if (symbol->type == '8')
+	{
+	  TRACE_PRINT (("<VARCOND>: %s\n", yytext));
+	  update_xreflist (yylval.sval);
+	  return (VARCOND);
+	}
+      else
+	{
+	  if (is_subscripted (symbol))
+	    {
+	      TRACE_PRINT (("<SUBSCVAR>: %s\n", yytext));
+	      return (SUBSCVAR);
+	    }
+	  TRACE_PRINT (("<VARIABLE>: %s\n", yytext));
+	  update_xreflist (yylval.sval);
+	  return (VARIABLE);
+	}
+    }
+  /* otherwise, it should be a label */
+  else
     {
       yylval.sval = install (yytext, SYTB_LAB, 0);
       TRACE_PRINT (("<LABELSTR>: %s\n", yytext));
       return (LABELSTR);
-    }
-  else
-    {
-      if ((reserved_token = reserved (yytext)) != 0)
-	{
-	  if (reserved_token == FUNCTION)
-	    function_seen = 1;
-	  /* special case of 4 intrinsics which are also reserved */
-	  if (function_seen && lookup_intrinsic (yytext) != NULL)
-	    {
-	      yylval.sval = install (yytext, SYTB_LAB, 0);
-	      TRACE_PRINT ((" <LABELSTR>: %s\n", yytext));
-	      return (LABELSTR);
-	    }
-	  TRACE_PRINT ((" <reserved>: %s\n", yytext));
-	  return reserved_token;
-	}
-      /* if symbol was defined at the data division */
-      if ((symbol = lookup (yytext, 2)) != NULL)
-	{
-	  yylval.sval = symbol;
-	  if (symbol->type == '8')
-	    {
-	      TRACE_PRINT (("<VARCOND>: %s\n", yytext));
-	      update_xreflist (yylval.sval);
-	      return (VARCOND);
-	    }
-	  else
-	    {
-	      if (is_subscripted (symbol))
-		{
-		  TRACE_PRINT (("<SUBSCVAR>: %s\n", yytext));
-		  return (SUBSCVAR);
-		}
-	      TRACE_PRINT (("<VARIABLE>: %s\n", yytext));
-	      update_xreflist (yylval.sval);
-	      return (VARIABLE);
-	    }
-	}
-      /* otherwise, it should be a label */
-      else
-	{
-	  yylval.sval = install (yytext, SYTB_LAB, 0);
-	  TRACE_PRINT (("<LABELSTR>: %s\n", yytext));
-	  return (LABELSTR);
-	}
     }
 }
 
 <ENVIR_ST>{word} {
-  if (is_integer_token (yytext))
+  int tok = scan_word (yytext);
+  if (tok)
+    return tok;
+
+  if ((reserved_token = reserved (yytext)) != 0)
     {
-      TRACE_PRINT (("<NLITERAL>: %s\n", yytext));
-      yylval.lval = install_literal (yytext);
-      return (NLITERAL);
+      TRACE_PRINT ((" <reserved>: %s\n", yytext));
+      return reserved_token;
     }
-  if (!is_valid_identifier (yytext))
-    {
-      yylval.sval = install (yytext, SYTB_LAB, 0);
-      TRACE_PRINT (("<LABELSTR>: %s\n", yytext));
-      return (LABELSTR);
-    }
-  else
-    {
-      if ((reserved_token = reserved (yytext)) != 0)
-	{
-	  TRACE_PRINT ((" <reserved>: %s\n", yytext));
-	  return reserved_token;
-	}
-      TRACE_PRINT (("<STRING>: %s\n", yytext));
-      yylval.sval = install (yytext, SYTB_VAR, 0);
-      return (STRING);
-    }
+  TRACE_PRINT (("<STRING>: %s\n", yytext));
+  yylval.sval = install (yytext, SYTB_VAR, 0);
+  return (STRING);
 }
 
 <EXCEPTION_ST>{word} {
   struct sym *symbol;
-  if (is_integer_token (yytext))
+  int tok = scan_word (yytext);
+  if (tok)
+    return tok;
+
+  if ((reserved_token = reserved (yytext)) != 0)
     {
-      TRACE_PRINT (("<NLITERAL>: %s\n", yytext));
-      yylval.lval = install_literal (yytext);
-      return (NLITERAL);
+      TRACE_PRINT ((" <reserved>: %s\n", yytext));
+      if (reserved_token == NOT)
+	reserved_token = NOTEXCEP;
+      return reserved_token;
     }
-  if (!is_valid_identifier (yytext))
+  /* if symbol was defined at the data division */
+  if ((symbol = lookup (yytext, 2)) != NULL)
+    {
+      yylval.sval = symbol;
+      if (symbol->type == '8')
+	{
+	  TRACE_PRINT (("<VARCOND>: %s\n", yytext));
+	  update_xreflist (yylval.sval);
+	  return (VARCOND);
+	}
+      else
+	{
+	  TRACE_PRINT (("<VARIABLE>: %s\n", yytext));
+	  update_xreflist (yylval.sval);
+	  return (VARIABLE);
+	}
+
+    }
+  /* otherwise, it should be a label */
+  else
     {
       yylval.sval = install (yytext, SYTB_LAB, 0);
       TRACE_PRINT (("<LABELSTR>: %s\n", yytext));
       return (LABELSTR);
-    }
-  else
-    {
-      if ((reserved_token = reserved (yytext)) != 0)
-	{
-	  TRACE_PRINT ((" <reserved>: %s\n", yytext));
-	  if (reserved_token == NOT)
-	    reserved_token = NOTEXCEP;
-	  return reserved_token;
-	}
-      /* if symbol was defined at the data division */
-      if ((symbol = lookup (yytext, 2)) != NULL)
-	{
-	  yylval.sval = symbol;
-	  if (symbol->type == '8')
-	    {
-	      TRACE_PRINT (("<VARCOND>: %s\n", yytext));
-	      update_xreflist (yylval.sval);
-	      return (VARCOND);
-	    }
-	  else
-	    {
-	      TRACE_PRINT (("<VARIABLE>: %s\n", yytext));
-	      update_xreflist (yylval.sval);
-	      return (VARIABLE);
-	    }
-
-	}
-      /* otherwise, it should be a label */
-      else
-	{
-	  yylval.sval = install (yytext, SYTB_LAB, 0);
-	  TRACE_PRINT (("<LABELSTR>: %s\n", yytext));
-	  return (LABELSTR);
-	}
     }
 }
 
 
 <FD_ST>{
 {word} {
-  if (is_integer_token (yytext))
+  int tok = scan_word (yytext);
+  if (tok)
+    return tok;
+
+  if ((reserved_token = reserved (yytext)) != 0)
     {
-      TRACE_PRINT (("<NLITERAL>: %s\n", yytext));
-      yylval.lval = install_literal (yytext);
-      return (NLITERAL);
+      TRACE_PRINT ((" <reserved>: %s\n", yytext));
+      return reserved_token;
     }
-  if (!is_valid_identifier (yytext))
-    {
-      yylval.sval = install (yytext, SYTB_LAB, 0);
-      TRACE_PRINT (("<LABELSTR>: %s\n", yytext));
-      return (LABELSTR);
-    }
-  else
-    {
-      if ((reserved_token = reserved (yytext)) != 0)
-	{
-	  TRACE_PRINT ((" <reserved>: %s\n", yytext));
-	  return reserved_token;
-	}
-      TRACE_PRINT (("<STRING>: %s\n", yytext));
-      /* install w/clone if neccessary */
-      if ((yylval.sval = lookup (yytext, SYTB_VAR)) == NULL)
-	yyerror ("undefined %s at FD/SD", yytext);
-      return (STRING);
-    }
+  TRACE_PRINT (("<STRING>: %s\n", yytext));
+  /* install w/clone if neccessary */
+  if ((yylval.sval = lookup_symbol (yytext)) == NULL)
+    yyerror ("undefined %s at FD/SD", yytext);
+  return (STRING);
 }
 
 [ \t]* { }
 }
 
 <REDEF_ST>{word} {
-  if (is_integer_token (yytext))
+  int tok = scan_word (yytext);
+  if (tok)
+    return tok;
+
+  if ((reserved_token = reserved (yytext)) != 0)
     {
-      TRACE_PRINT (("<NLITERAL>: %s\n", yytext));
-      yylval.lval = install_literal (yytext);
-      return (NLITERAL);
+      TRACE_PRINT ((" <reserved>: %s\n", yytext));
+      return reserved_token;
     }
-  if (!is_valid_identifier (yytext))
-    {
-      yylval.sval = install (yytext, SYTB_LAB, 0);
-      TRACE_PRINT (("<LABELSTR>: %s\n", yytext));
-      return (LABELSTR);
-    }
-  else
-    {
-      if ((reserved_token = reserved (yytext)) != 0)
-	{
-	  TRACE_PRINT ((" <reserved>: %s\n", yytext));
-	  return reserved_token;
-	}
-      TRACE_PRINT (("<STRING>: %s\n", yytext));
-      /* don't clone redefined var */
-      yylval.sval = install (yytext, SYTB_VAR, 0);
-      update_xreflist (yylval.sval);
-      return (STRING);
-    }
+  TRACE_PRINT (("<STRING>: %s\n", yytext));
+  /* don't clone redefined var */
+  yylval.sval = install (yytext, SYTB_VAR, 0);
+  update_xreflist (yylval.sval);
+  return (STRING);
 }
 
 <DATA_ST>{word} {
-  if (is_integer_token (yytext))
+  int tok = scan_word (yytext);
+  if (tok)
+    return tok;
+
+  if ((reserved_token = reserved (yytext)) != 0)
     {
-      TRACE_PRINT (("<NLITERAL>: %s\n", yytext));
-      yylval.lval = install_literal (yytext);
-      return (NLITERAL);
+      TRACE_PRINT ((" <reserved>: %s\n", yytext));
+      return reserved_token;
     }
-  if (!is_valid_identifier (yytext))
-    {
-      yylval.sval = install (yytext, SYTB_LAB, 0);
-      TRACE_PRINT (("<LABELSTR>: %s\n", yytext));
-      return (LABELSTR);
-    }
-  else
-    {
-      if ((reserved_token = reserved (yytext)) != 0)
-	{
-	  TRACE_PRINT ((" <reserved>: %s\n", yytext));
-	  return reserved_token;
-	}
-      TRACE_PRINT (("<STRING>: %s\n", yytext));
-      /* install w/clone if neccessary */
-      yylval.sval = install (yytext, SYTB_VAR, 1);
-      update_xreflist (yylval.sval);
-      return (STRING);
-    }
+  TRACE_PRINT (("<STRING>: %s\n", yytext));
+  /* install w/clone if neccessary */
+  yylval.sval = install (yytext, SYTB_VAR, 1);
+  update_xreflist (yylval.sval);
+  return (STRING);
 }
 
 <SUBSCRIPTS_ST>{
@@ -605,29 +536,18 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
 }
 
 {word} {
-  if (is_integer_token (yytext))
+  int tok = scan_word (yytext);
+  if (tok)
+    return tok;
+
+  if ((reserved_token = reserved (yytext)) != 0)
     {
-      TRACE_PRINT (("<NLITERAL>: %s\n", yytext));
-      yylval.lval = install_literal (yytext);
-      return (NLITERAL);
+      TRACE_PRINT ((" <reserved>: %s\n", yytext));
+      return reserved_token;
     }
-  if (!is_valid_identifier (yytext))
-    {
-      yylval.sval = install (yytext, SYTB_LAB, 0);
-      TRACE_PRINT (("<LABELSTR>: %s\n", yytext));
-      return (LABELSTR);
-    }
-  else
-    {
-      if ((reserved_token = reserved (yytext)) != 0)
-	{
-	  TRACE_PRINT ((" <reserved>: %s\n", yytext));
-	  return reserved_token;
-	}
-      TRACE_PRINT ((" <IDSTRING>: %s\n", yytext));
-      yylval.str = strdup (yytext);
-      return IDSTRING;
-    }
+  TRACE_PRINT ((" <IDSTRING>: %s\n", yytext));
+  yylval.str = strdup (yytext);
+  return IDSTRING;
 }
 
 {any}   {
@@ -642,7 +562,6 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
 
 "."/[ \t\n] { 
                 TRACE_PRINT (("<EOS>:\n"));
-                eos_detect++;
                 return(EOS); 
         }
 
@@ -825,6 +744,25 @@ is_valid_identifier (const char *tok)
     if (isalpha (*tok++))
       return 1;
   return 0;
+}
+
+static int
+scan_word (char *text)
+{
+  if (is_integer_token (text))
+    {
+      yylval.lval = install_literal (text);
+      TRACE_PRINT (("<NLITERAL>: %s\n", text));
+      return (NLITERAL);
+    }
+  else if (!is_valid_identifier (text))
+    {
+      yylval.sval = install (text, SYTB_LAB, 0);
+      TRACE_PRINT (("<LABELSTR>: %s\n", text));
+      return (LABELSTR);
+    }
+  else
+    return 0;
 }
 
 static int

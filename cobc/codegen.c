@@ -22,6 +22,8 @@
  * Boston, MA 02111-1307 USA
  */
 
+#include "config.h"
+
 #include "cobc.h"
 #include "codegen.h"
 #include "_libcob.h"
@@ -167,6 +169,12 @@ update_xreflist (struct sym *as)
     }
   as->xrefs.lineno[as->xrefs.pos] = cob_orig_lineno;
   as->xrefs.pos++;
+}
+
+struct sym *
+lookup_symbol (char *s)
+{
+  return lookup (s, SYTB_VAR);
 }
 
 struct sym *
@@ -337,7 +345,7 @@ struct sym *
 lookup_for_redefines (struct sym *sy)
 {
   if (curr_field->parent == NULL)
-    return lookup (sy->name, SYTB_VAR);
+    return lookup_symbol (sy->name);
   else
     return lookup_variable (sy, curr_field->parent);
 }
@@ -1026,7 +1034,7 @@ proc_trail (int using)
 //        The variable RETURN-CODE is a extention to the 
 //        standard, since ANSI COBOL 85 does not support it.
 
-  if ((sy = lookup (SVAR_RCODE, SYTB_VAR)) == NULL)
+  if ((sy = lookup_symbol (SVAR_RCODE)) == NULL)
     {
       fprintf (o_src, "\tmovl\t$0, %%eax\n");
     }
@@ -1222,7 +1230,6 @@ proc_trail (int using)
   /* dump_scr_data(); */
   data_trail ();
   fprintf (o_src, "\n\t.ident\t\"%s %s\"\n", COB_PACKAGE, COB_VERSION);
-  dump_symbols ();
 }
 
 /* 
@@ -1381,8 +1388,6 @@ save_literal (struct lit *v, int type)
 	/******** save address of field descriptor ********/
   v->descriptor = literal_offset;
   literal_offset += 11 + piclen;
-  //printf("save_literal: name=%s, type=%c, offset=%x, piclen=%d\n",
-  //      v->name, v->type, v->descriptor, piclen);
 }
 
 void
@@ -2119,7 +2124,7 @@ gen_accept_from_cmdline (struct sym *sy)
 //      the "accept_cmd_line" function, which is stored 
 //      in register %eax
 
-  if ((sy1 = lookup (SVAR_RCODE, SYTB_VAR)) != NULL)
+  if ((sy1 = lookup_symbol (SVAR_RCODE)) != NULL)
     {
       if (sy1->sec_no == SEC_STACK)
 	{
@@ -2155,7 +2160,7 @@ gen_accept_env_var (struct sym *sy, struct lit *v)
 //      the "accept_cmd_line" function, which is stored 
 //      in register %eax
 
-  if ((sy2 = lookup (SVAR_RCODE, SYTB_VAR)) != NULL)
+  if ((sy2 = lookup_symbol (SVAR_RCODE)) != NULL)
     {
       if (sy2->sec_no == SEC_STACK)
 	{
@@ -2993,75 +2998,6 @@ gen_divide2 (struct math_var *vl1, struct sym *sy1, struct sym *sy2,
       if (ose)
 	math_on_size_error3 (ose);
     }
-}
-
-
-/******** functions for subscripted var manipulation ***********/
-struct subref *
-make_subref (struct sym *sy, struct subref *next)
-{
-  struct subref *ref = malloc (sizeof (struct subref));
-  ref->litflag = 2;
-  ref->sym     = sy;
-  ref->next    = next;
-  return ref;
-}
-
-struct subref *
-create_subscript (struct sym *sy)
-{
-  struct subref *ref;
-  ref = malloc (sizeof (struct subref));
-  ref->litflag = ',';		/* the end of subscript is here */
-  ref->sym = sy;		/* this is the actual variable */
-  ref->next = NULL;
-  return ref;
-}
-
-struct subref *
-add_subscript_item (struct subref *subs, char op, struct sym *item)
-{
-  struct subref *p = subs;
-  while (p->next)
-    p = p->next;
-  p->litflag = op;
-  p->next = create_subscript (item);
-  return subs;
-}
-
-struct subref *
-add_subscript (struct subref *ref, struct subref *subs)
-{
-  struct subref *p = subs;
-  while (p->next)
-    p = p->next;
-  p->next = ref;
-  return subs;
-}
-
-int
-check_subscripts (struct sym *subs)
-{
-  struct subref *ref;
-  struct sym *sy;
-  sy = SUBREF_SYM (subs);
-  for (ref = (struct subref *) subs; ref; ref = ref->next)
-    {
-      if (ref->litflag == ',')
-	{
-	  while (sy && !sy->occurs_flg)
-	    sy = sy->parent;
-	  if (!sy)
-	    {
-	      yyerror ("check_subscripts: no parent found");
-	      return 0;		/* excess subscripts, error */
-	    }
-	  sy = sy->parent;
-	}
-    }
-  while (sy && !sy->occurs_flg)	/* any other subscripts needed ? */
-    sy = sy->parent;
-  return (sy == NULL) ? 1 : 0;
 }
 
 void
@@ -5257,7 +5193,7 @@ determine_table_index_name (struct sym *sy)
     {
       if (strcmp (i2t->tablename, sy->name) == 0)
 	{
-	  rsy = lookup (i2t->idxname, SYTB_VAR);
+	  rsy = lookup_symbol (i2t->idxname);
 	  i2t = NULL;
 	}
       else
@@ -5847,8 +5783,7 @@ var_name (struct sym *sy)
 	strcat (name_buf, " OF ");
       strcat (name_buf, sy->name);
       n -= strlen (sy->name) + 4;
-      if ((lookup (sy->name, SYTB_VAR)->clone == NULL)
-	  || (sy->parent == NULL))
+      if ((lookup_symbol (sy->name)->clone == NULL) || (sy->parent == NULL))
 	break;
       sy = sy->parent;
     }
@@ -6968,9 +6903,7 @@ check_call_except (int excep, int notexcep, int exceplabel,
     {
       fprintf (o_src, ".L%d:\t# exceplabel\n", exceplabel);
       if (excep)
-	{
-	  fprintf (o_src, "\tjmp\t.L%d\n", excep);
-	}
+	fprintf (o_src, "\tjmp\t.L%d\n", excep);
       /* if no exception phrase was given */
       if (excep == 0)
 	{
@@ -6979,9 +6912,7 @@ check_call_except (int excep, int notexcep, int exceplabel,
 	}
       fprintf (o_src, ".L%d:\t# notexceplabel\n", notexceplabel);
       if (notexcep)
-	{
-	  fprintf (o_src, "\tjmp\t.L%d\n", notexcep);
-	}
+	fprintf (o_src, "\tjmp\t.L%d\n", notexcep);
       fprintf (o_src, ".L%d:\t# endlabel\n", endlabel);
     }
 }
@@ -7349,223 +7280,6 @@ sort_exref_compare (const void *z1, const void *z2)
   strcpy (ss2, str1);
   r = strcmp (ss1, ss2);
   return r;
-}
-
-void
-dump_symbols ()
-{
-  int i, j, k, arsize, slen;
-  struct sym *sy, *sy1, **sytable;
-  char t, *s, *str1, sa1[256];
-
-  if (!cob_verbose_flag)
-    return;
-
-  fprintf (stdout,
-	   "\n=======================================================================");
-  fprintf (stdout, "\n\nSymbols of module:%20.20s\n", pgm_label);
-  fprintf (stdout, "--------------------------------------\n");
-  for (i = 0; i < HASHLEN; i++)
-    {
-      for (sy = labtab[i]; sy != NULL; sy = sy->next)
-	{
-	  t = sy->type;
-	  sy1 = sy;
-	  while (sy1)
-	    {
-	      /* check if any variables (but not intrinsic 
-	         functions) are undefined */
-	      if (sy1->defined == 0 && sy->type != 'f')
-		{
-		  yyerror ("Undefined variable \'%s\' found", sy1->name);
-		}
-	      sy1 = sy1->clone;
-	    }
-	}
-    }
-
-  /* Determine size of tree */
-  for (i = 0, j = 0; i < HASHLEN; i++)
-    {
-      for (sy1 = vartab[i]; sy1 != NULL; sy1 = sy1->next)
-	{
-	  for (sy = sy1; sy; sy = sy->clone)
-	    {
-	      if (sy->xrefs.lineno[0] != 0)
-		{
-		  j++;
-		}
-	    }
-	}
-    }
-  arsize = j;
-
-  /* Allocate sort array  */
-  sytable = (struct sym **) malloc (sizeof (struct sym *) * (arsize));
-
-  /* Initialize sort array from hash tree */
-  for (i = 0, j = 0; i < HASHLEN; i++)
-    {
-      for (sy1 = vartab[i]; sy1 != NULL; sy1 = sy1->next)
-	{
-	  for (sy = sy1; sy; sy = sy->clone)
-	    {
-	      if (sy->xrefs.lineno[0] != 0)
-		{
-		  sytable[j] = sy;
-		  str1 = var_name (sytable[j]);
-		  j++;
-		}
-	    }
-	}
-    }
-
-  /* Sort array using the quick sort function */
-  qsort (sytable, arsize, sizeof (struct sym *), sort_exref_compare);
-
-  fprintf (stdout,
-	   "\n---------------------------------------------------- Cross Refrence Listing --------------------------------------------------------\n\n");
-  fprintf (stdout, "Variable Symbol ( Qualifiers )             Locations\n");
-  fprintf (stdout,
-	   "-----------------------------------------+------------------------------------------------------------------------------------------\n");
-  for (i = 0; i < arsize; i++)
-    {
-      sy = sytable[i];
-      if (sy->xrefs.lineno[0] != 0)
-	{
-	  s = var_name (sy);
-
-	  strcpy (sa1, "");
-	  j = 0;
-	  k = 0;
-	  slen = strlen (s);
-	  if (slen > 40)
-	    {
-	      for (j = 0; j < (slen - 40); j = j + k)
-		{
-		  str1 = strstr (s + j, " OF ");
-		  k = strlen (str1 + 4);
-		  k = slen - j - k;
-		  strncpy (sa1, s + j, k);
-		  sa1[k] = '\0';
-		  fprintf (stdout, "%-40s\n", sa1);
-		}
-	      strcpy (sa1, s + j);
-	    }
-	  else
-	    {
-	      strcpy (sa1, s);
-	    }
-	  fprintf (stdout, "%-40s ", sa1);
-
-	  for (j = 0; j < sy->xrefs.pos; j++)
-	    {
-	      if ((j % 8 == 0) && (j > 0))
-		{
-		  fprintf (stdout, "\n%-40s ", "");
-		}
-	      fprintf (stdout, "%06d ", sy->xrefs.lineno[j]);
-	    }
-	  fprintf (stdout, "\n");
-	}
-    }
-
-  fprintf (stdout,
-	   "\n---------------------------------------------------------------+-----------------\n");
-  fprintf (stdout,
-	   "Symbol ( Variables )                    Type Level Len Dec Mul | Desc Loc  Pic  S\n");
-  fprintf (stdout,
-	   "---------------------------------------------------------------+-----------------\n");
-  for (i = 0; i < arsize; i++)
-    {
-      sy = sytable[i];
-      s = var_name (sy);
-
-      strcpy (sa1, "");
-      j = 0;
-      k = 0;
-      slen = strlen (s);
-      if (slen > 40)
-	{
-	  for (j = 0; j < (slen - 40); j = j + k)
-	    {
-	      str1 = strstr (s + j, " OF ");
-	      k = strlen (str1 + 4);
-	      k = slen - j - k;
-	      strncpy (sa1, s + j, k);
-	      sa1[k] = '\0';
-	      fprintf (stdout, "%-40s\n", sa1);
-	    }
-	  strcpy (sa1, s + j);
-	}
-      else
-	{
-	  strcpy (sa1, s);
-	}
-
-      fprintf (stdout,
-	       "%-40s%4c%1c%3d %5d %3d %3d%c| %04X %04X%c%04X %1d\n",
-	       sa1,
-	       sy->type,
-	       sy->flags.just_r ? 'R' : ' ',
-	       sy->level,
-	       sy->len,
-	       sy->decimals,
-	       sy->times,
-	       sy->occurs_flg ? '*' : ' ',
-	       sy->descriptor,
-	       sy->location,
-	       sy->linkage_flg ? '*' : ' ', sy->pic, sy->sec_no);
-    }
-  fprintf (stdout, "\n\n");
-
-
-  fprintf (stdout, "\n-----------------------------------------------\n");
-  fprintf (stdout, "Symbol ( 88-condition )       Variable tested");
-  fprintf (stdout, "\n-----------------------------------------------\n");
-  for (i = 0; i < HASHLEN; i++)
-    {
-      for (sy = vartab[i]; sy != NULL; sy = sy->next)
-	{
-	  t = sy->type;
-	  if (t == '8')
-	    fprintf (stdout, "%22.22s %22.22s\n", sy->name, sy->parent->name);
-	}
-    }
-
-  fprintf (stdout,
-	   "\n-----------------------------------------------------------------------\n");
-  fprintf (stdout, "%s%s%s",
-	   "                       Paragraph ",
-	   "                         Section ", " Type");
-  fprintf (stdout,
-	   "\n-----------------------------------------------------------------------\n");
-  for (i = 0; i < HASHLEN; i++)
-    {
-      for (sy = labtab[i]; sy != NULL; sy = sy->next)
-	{
-	  t = sy->type;
-	  sy1 = sy;
-	  while (sy1)
-	    {
-	      if ((sy1->type == 'P') || (sy1->type == 'S'))
-		{
-		  fprintf (stdout, "%32.32s %32.32s    %c\n",
-			   (sy1->type == 'P') ? sy1->name : "",
-			   (sy1->type == 'S') ? sy1->name :
-			   (sy1->parent ? sy1->parent->name : ""), sy1->type);
-		}
-	      sy1 = sy1->clone;
-	    }
-	}
-    }
-
-  fprintf (stdout, "\n\nTinyCOBOL compile audit summary:\n");
-  fprintf (stdout, "Total lines compiled           : %4d\n", cob_orig_lineno);
-  fprintf (stdout, "Total number of warnings       : %4d\n",
-	   cob_warning_count);
-  fprintf (stdout, "Total number of errors found   : %4d\n", cob_error_count);
-
 }
 
 void

@@ -20,11 +20,7 @@
 #ifndef _COBC_H_
 #define _COBC_H_
 
-#include "config.h"
-
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #define COB_PACKAGE	"OpenCOBOL"
 #define COB_VERSION	VERSION

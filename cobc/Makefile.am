@@ -1,5 +1,6 @@
 bin_PROGRAMS = cobc
-cobc_SOURCES = cobc.c cobc.h codegen.c codegen.h parser.y parser.h scanner.l
+cobc_SOURCES = cobc.c cobc.h tree.c tree.h codegen.c codegen.h \
+	parser.y parser.h scanner.l
 cobc_DEPENDENCIES = defaults.h
 BUILT_SOURCES = parser.c parser.h scanner.c defaults.h
 MAINTAINERCLEANFILES = Makefile.in
