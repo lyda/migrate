@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 109
+%expect 108
 
 %{
 #include "config.h"
@@ -1025,23 +1025,14 @@ picture_clause:
 /* USAGE */
 
 usage_clause:
-  _usage _is usage
+  _usage usage
 ;
 usage:
-  DISPLAY
-  {
-    current_field->usage = COBC_USAGE_DISPLAY;
-  }
-| BINARY /* or COMP */
-  {
-    current_field->usage = COBC_USAGE_BINARY;
-  }
-| INDEX
-  {
-    current_field->usage = COBC_USAGE_INDEX;
-  }
+  DISPLAY			{ current_field->usage = COBC_USAGE_DISPLAY; }
+| BINARY /* or COMP */		{ current_field->usage = COBC_USAGE_BINARY; }
+| INDEX				{ current_field->usage = COBC_USAGE_INDEX; }
 ;
-_usage: | USAGE ;
+_usage: | USAGE _is ;
 
 
 /* SIGN */
