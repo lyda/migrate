@@ -8,5 +8,5 @@ Package: open-cobol
 Architecture: any
 Depends: ${shlibs:Depends}, gcc
 Description: A COBOL compiler
- OpenCOBOL is an open-source COBOL compiler, based on TinyCOBOL.
-
+ OpenCOBOL is an open-source COBOL compiler, which translates COBOL
+ programs to C code as the intermediate language.

@@ -4,6 +4,7 @@ NC
 XXXXX002
 XXXXX055
 copybooks
+logfile.*
 newcob.val
 report.log
 report.old
