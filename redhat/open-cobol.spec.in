@@ -45,7 +45,7 @@ make
 
 %files
 %defattr (-,root,root)
-%doc AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README THANKS VERSION
+%doc AUTHORS COPYING COPYING.LIB ChangeLog NEWS README THANKS
 %{_bindir}
 %{_libdir}
 %{_includedir}
