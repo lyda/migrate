@@ -491,6 +491,8 @@ yylex_picture (char *str)
       break;
     case PIC_NUMERIC:
       pic->category = COB_TYPE_NUMERIC;
+      if (digits > 18)
+	yyerror (_("numeric entry cannot be larger than 18 digits"));
       break;
     case PIC_ALPHANUMERIC:
     case PIC_NATIONAL:
