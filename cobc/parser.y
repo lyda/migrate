@@ -1948,7 +1948,7 @@ replacing_item:
 inspect_converting:
   CONVERTING value TO value inspect_before_after_list
   {
-    $$ = list (make_generic (COBC_INSPECT_CONVERTING, $2, $4, $5));
+    $$ = list (make_generic (COB_INSPECT_CONVERT, $2, $4, $5));
   }
 
 /* INSPECT BEFORE/AFTER */
