@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2002 Keisuke Nishida
+ * Copyright (C) 2001-2003 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -517,6 +517,10 @@ field_size (cobc_tree x)
     case cobc_tag_literal:
       {
 	return COBC_LITERAL (x)->size;
+      }
+    case cobc_tag_field:
+      {
+	return COBC_FIELD (x)->size;
       }
     case cobc_tag_reference:
       {
