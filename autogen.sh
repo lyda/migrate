@@ -1,10 +1,5 @@
 #!/bin/sh
 
-if test ! -e ltmain.sh; then
-  echo "Running libtoolize..."
-  libtoolize --force --automake
-fi
-
 echo "Running autopoint..."
 autopoint --force
 
