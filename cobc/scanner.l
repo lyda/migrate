@@ -102,11 +102,11 @@ static int scan_picture (char *text);
   return read_literal (yytext[0]);
 }
 
-X\'[^\'\n]\' |
-X\"[^\"\n]\" {
+X\'[^\'\n]*\' |
+X\"[^\"\n]*\" {
   /* X string literal */
   SAVE_YYTEXT;
-  return scan_x (yytext);
+  return scan_x (yytext + 2);
 }
 
 [0-9]+ {
@@ -205,7 +205,8 @@ scan_x (char *text)
   int high = 1;
   char *src = text;
   char *dst = alloca (strlen (text));
-  while (*src)
+  char *p = dst;
+  while (isalnum (*src))
     {
       int c = toupper (*src);
       if ('0' <= c && c <= '9')
@@ -216,14 +217,14 @@ scan_x (char *text)
 	goto error;
 
       if (high)
-	*dst = c << 4;
+	*p = c << 4;
       else
-	*dst++ += c;
+	*p++ += c;
 
       src++;
       high = 1 - high;
     }
-  *dst = '\0';
+  *p = '\0';
 
   if (high)
     {
