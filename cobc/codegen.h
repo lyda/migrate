@@ -131,6 +131,7 @@ extern void gen_compute (struct math_var *vl1, cob_tree sy1);
 extern void gen_add (cob_tree n1, cob_tree n2, int rnd);
 extern void gen_add_to (cob_tree_list nums, struct math_var *list);
 extern void gen_add_giving (cob_tree_list nums, struct math_var *list);
+extern void gen_sub (cob_tree n1, cob_tree n2, int rnd);
 extern void gen_subtract_from (cob_tree_list subtrahend_list, struct math_var *list);
 extern void gen_subtract_giving (cob_tree_list subtrahend_list, cob_tree minuend, struct math_var *list);
 extern void gen_multiply_by (cob_tree multiplicand, struct math_var *list);
@@ -141,8 +142,8 @@ extern void gen_divide_giving_remainder (cob_tree divisor, cob_tree dividend, co
 extern void gen_store_fnres (cob_tree sy);
 extern void gen_class_check (cob_tree sy, int class);
 extern void gen_inspect (cob_tree var, void *list, int operation);
-extern void gen_move (cob_tree sy_src, cob_tree sy_dst);
-extern void gen_move_corresponding (cob_tree sy1, cob_tree sy2);
+extern void gen_move (cob_tree src, cob_tree dst);
+extern void gen_corresponding (void (*func)(), cob_tree g1, cob_tree g2, int opt);
 extern void gen_set (cob_tree_list l, int mode, cob_tree v);
 extern void gen_set_true (cob_tree_list l);
 extern void gen_goto (cob_tree_list l, cob_tree x);

@@ -2645,28 +2645,20 @@ gen_move (cob_tree src, cob_tree dst)
   gen_move_1 (src);
 }
 
-/* The following functions will be activated when we change from
-   defining the outermost group to define each elementary item. */
 void
-gen_move_corresponding (cob_tree sy1, cob_tree sy2)
+gen_corresponding (void (*func)(), cob_tree g1, cob_tree g2, int opt)
 {
   cob_tree t1, t2;
-  if (!(SYMBOL_P (sy1) && SYMBOL_P (sy2)))
-    {
-      yyerror ("sorry we don't handle this case yet!");
-      return;
-    }
-
-  for (t1 = sy1->son; t1 != NULL; t1 = t1->brother)
+  for (t1 = g1->son; t1; t1 = t1->brother)
     if (!t1->redefines && t1->times == 1)
-      for (t2 = sy2->son; t2 != NULL; t2 = t2->brother)
+      for (t2 = g2->son; t2; t2 = t2->brother)
 	if (!t2->redefines && t2->times == 1)
 	  if (strcmp (COB_FIELD_NAME (t1), COB_FIELD_NAME (t2)) == 0)
 	    {
-	      if (COB_FIELD_TYPE (t1) != 'G' || COB_FIELD_TYPE (t2) != 'G')
-		gen_move (t1, t2);
+	      if (COB_FIELD_TYPE (t1) == 'G' && COB_FIELD_TYPE (t2) == 'G')
+		gen_corresponding (func, t1, t2, opt);
 	      else
-		gen_move_corresponding (t1, t2);
+		func (t1, t2, opt);
 	    }
 }
 

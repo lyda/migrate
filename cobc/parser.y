@@ -1294,9 +1294,9 @@ add_body:
   {
     gen_add_giving ($2 ? list_append ($1, $2) : $1, $4);
   }
-| CORRESPONDING gname opt_to group_variable flag_rounded
+| CORRESPONDING group_variable opt_to group_variable flag_rounded
   {
-    yyerror ("ADD CORRESPONDING is not implemented yet.");
+    gen_corresponding (gen_add, $2, $4, $5);
   }
 ;
 opt_add_to:
@@ -1739,7 +1739,10 @@ opt_initial: | TOK_INITIAL ;
 
 move_statement:
   MOVE gname TO move_vars
-| MOVE CORRESPONDING gname TO gname { gen_move_corresponding($3, $5); }
+| MOVE CORRESPONDING group_variable TO group_variable
+  {
+    gen_corresponding (gen_move, $3, $5, 0);
+  }
 ;
 move_vars:
   gname				{ gen_move ($<tree>-1, $1); }
@@ -2421,9 +2424,9 @@ subtract_body:
   {
     gen_subtract_giving ($1, $3, $5);
   }
-| CORRESPONDING gname FROM group_variable flag_rounded
+| CORRESPONDING group_variable FROM group_variable flag_rounded
   {
-    yyerror ("SUBTRACT CORRESPONDING is not implemented yet.");
+    gen_corresponding (gen_sub, $2, $4, $5);
   }
 ;
 opt_end_subtract: | END_SUBTRACT ;
