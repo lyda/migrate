@@ -22,6 +22,17 @@
 
 
 /*
+ * External
+ */
+
+typedef struct __cob_external {
+  struct __cob_external *next;
+  char			*ext_alloc;
+  char			*ename;
+  int			esize;
+} cob_external;
+
+/*
  * Field
  */
 
@@ -197,6 +208,8 @@ extern void cob_stop_run (int status);
 extern int cob_real_get_sign (cob_field *f);
 extern void cob_real_put_sign (cob_field *f, int sign);
 extern char *cob_field_to_string (cob_field *f, char *s);
+
+extern char *cob_external_addr (char *, int);
 
 /* Switch */
 

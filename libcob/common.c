@@ -761,3 +761,36 @@ cob_check_ref_mod (int offset, int length, int size, const char *name)
       exit (1);
     }
 }
+
+char *
+cob_external_addr (char *exname, int exlength)
+{
+	static cob_external *basext = NULL;
+
+	cob_external	*eptr;
+	int		n;
+
+	for ( eptr = basext; eptr; eptr = eptr->next ) {
+		if ( !strcmp(exname, eptr->ename) ) {
+			if ( exlength > eptr->esize ) {
+				cob_runtime_error (_("EXTERNAL item '%s' has size > %d"), exname, exlength);
+				exit (1);
+			}
+			return eptr->ext_alloc;
+		}
+	}
+	n = strlen(exname) + 3;
+	eptr = (cob_external *)malloc(sizeof(cob_external));
+	eptr->next = NULL;
+	eptr->esize = exlength;
+	if ( exlength % 8 ) {
+		exlength += 8 - (exlength % 8);
+	}
+	eptr->ename = malloc(n);
+	strcpy(eptr->ename, exname);
+	eptr->ext_alloc = malloc(exlength);
+	if ( !basext ) {
+		basext = eptr;
+	}
+	return eptr->ext_alloc;
+}

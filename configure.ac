@@ -187,6 +187,15 @@ AC_SUBST(COBC_LIBS)
 AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBS)
 AC_SUBST(COB_EXPORT_DYN)
+case $host_os in
+  cygwin* | mingw*)
+	cobcruns=true
+	;;
+  *)
+	cobcruns=false
+	;;
+esac
+AM_CONDITIONAL(COBCRUN_SHARED, test x$cobcruns = xtrue)
 
 AC_CONFIG_FILES([cob-config
 		Makefile lib/Makefile libcob/Makefile

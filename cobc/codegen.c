@@ -178,10 +178,15 @@ output_base (struct cb_field *f)
 
   if (!f01->flag_base)
     {
+      if (f01->flag_external) {
+      output_storage ("static unsigned char *%s%s  __attribute__ ((__aligned__(8)));",
+		      CB_PREFIX_BASE, name);
+	} else {
       if (!f01->flag_external && !f01->flag_local)
 	output_storage ("static ");
       output_storage ("unsigned char %s%s[%d]  __attribute__ ((__aligned__(8)));",
 		      CB_PREFIX_BASE, name, f01->memory_size);
+	}
       output_storage ("\t/* %s */\n", f01->name);
       f01->flag_base = 1;
     }
@@ -761,6 +766,7 @@ output_param (cb_tree x, int id)
 	  }
 
 	if (!r->subs && !r->offset && !f->flag_local && f->count > 0
+	    && !f->flag_external
 	    && !cb_field_variable_size (f) && !cb_field_variable_address (f))
 	  {
 	    if (!f->flag_field)
@@ -925,10 +931,14 @@ output_move (cb_tree src, cb_tree dst)
 #define INITIALIZE_ONE		1
 #define INITIALIZE_DEFAULT	2
 #define INITIALIZE_COMPOUND	3
+#define INITIALIZE_EXTERNAL	4
 
 static int
 initialize_type (struct cb_initialize *p, struct cb_field *f)
 {
+  if (f->flag_external)
+    return INITIALIZE_EXTERNAL;
+
   if (f->redefines)
     return INITIALIZE_NONE;
 
@@ -996,6 +1006,16 @@ initialize_uniform_char (struct cb_field *f)
 	  return -1;
 	}
     }
+}
+
+static void
+output_initialize_external (cb_tree x, int size)
+{
+  output_prefix ();
+  output_data (x);
+  output (" = cob_external_addr (\"");
+  output_data (x);
+  output ("\", %d);\n", size);
 }
 
 static void
@@ -1167,6 +1187,9 @@ output_initialize (struct cb_initialize *p)
       break;
     case INITIALIZE_ONE:
       output_initialize_one (p, p->var);
+      break;
+    case INITIALIZE_EXTERNAL:
+	  output_initialize_external (p->var, f->size);
       break;
     case INITIALIZE_DEFAULT:
       {
@@ -2043,7 +2066,9 @@ output_initial_values (struct cb_field *p)
 {
   cb_tree def = cb_auto_initialize ? cb_true : NULL;
   for (; p; p = p->sister)
+/*
     if (!p->flag_external)
+*/
       {
 	cb_tree x = cb_build_field_reference (p, 0);
 	output_stmt (cb_build_initialize (x, cb_true, NULL, def));
