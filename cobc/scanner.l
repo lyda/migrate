@@ -118,10 +118,15 @@ X\"[^\"\n]*\" {
   return INTEGER_TOK;
 }
 
-[0-9]*[.,][0-9]+ {
+[+-]?[0-9]*[.,]?[0-9]+ {
   /* numeric literal */
+  char sign = yytext[0];
   SAVE_YYTEXT;
+  if (sign == '+' || sign == '-')
+    yytext++;
   yylval.tree = install_literal (yytext);
+  if (sign == '-')
+    invert_literal_sign (yylval.tree);
   if (strchr (yytext, decimal_comma ? '.' : ','))
     yyerror ("wrong decimal point character in numeric literal");
   return NLITERAL;

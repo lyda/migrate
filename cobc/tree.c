@@ -35,6 +35,15 @@ list_append (cob_tree_list l, cob_tree x)
   return l;
 }
 
+int
+list_length (cob_tree_list l)
+{
+  int n = 0;
+  for (; l; l = l->next)
+    n++;
+  return n;
+}
+
 
 /*
  * Literals
@@ -52,6 +61,28 @@ make_literal (char *name)
   p->nick = NULL;
   p->len = strlen (COB_FIELD_NAME (p));
   return COB_TREE (p);
+}
+
+static char
+sign_to_char (int digit)
+{
+  if (!digit)
+    return '}';
+  if (digit == 0x80)
+    return '{';
+  if (digit > 0)
+    return 'A' + (char) (digit - 1);
+  digit = -digit;
+  return 'J' + (char) (digit - 1);
+}
+
+cob_tree
+invert_literal_sign (cob_tree x)
+{
+  char *s = COB_FIELD_NAME (x);
+  s += strlen (s) - 1;
+  *s = sign_to_char (-(*s - 0x30));
+  return x;
 }
 
 
@@ -116,7 +147,6 @@ make_subref (cob_tree sy, cob_tree_list subs)
   COB_TREE_TAG (p) = cob_tag_subref;
   p->sym     = sy;
   p->subs    = subs;
-  /* FIXME: error check here!! */
   return COB_TREE (p);
 }
 
@@ -223,6 +253,16 @@ is_subscripted (cob_tree x)
     if (x->times > 1)
       return 1;
   return 0;
+}
+
+int
+count_subscripted (cob_tree x)
+{
+  int n = 0;
+  for (; x; x = x->parent)
+    if (x->times > 1)
+      n++;
+  return n;
 }
 
 int

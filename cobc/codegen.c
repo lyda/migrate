@@ -406,30 +406,6 @@ save_named_sect (cob_tree sy)
 }
 
 
-/*** we need this because the literal string is already stored ***/
-static char
-sign_to_char (int digit)
-{
-  if (!digit)
-    return '}';
-  if (digit == 0x80)
-    return '{';
-  if (digit > 0)
-    return 'A' + (char) (digit - 1);
-  digit = -digit;
-  return 'J' + (char) (digit - 1);
-}
-
-cob_tree
-invert_literal_sign (cob_tree x)
-{
-  char *s = COB_FIELD_NAME (x);
-  s += strlen (s) - 1;
-  *s = sign_to_char (-(*s - 0x30));
-  return x;
-}
-
-
 /*
  * Local functions
  */
@@ -1829,7 +1805,7 @@ save_field_in_list (cob_tree sy)
     }
 }
 
-void
+cob_tree
 save_literal (cob_tree x, int type)
 {
   char *s;
@@ -1865,6 +1841,7 @@ save_literal (cob_tree x, int type)
 	/******** save address of field descriptor ********/
   v->descriptor = literal_offset;
   literal_offset += 11 + piclen;
+  return x;
 }
 
 void

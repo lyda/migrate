@@ -59,6 +59,7 @@ typedef struct cob_tree_list *cob_tree_list;
 
 extern cob_tree_list cons (cob_tree x, cob_tree_list l);
 extern cob_tree_list list_append (cob_tree_list l, cob_tree x);
+extern int list_length (cob_tree_list l);
 
 
 /*
@@ -107,6 +108,7 @@ struct lit
 #define LITERAL_P(x)		(COB_TREE_TAG (x) == cob_tag_literal)
 
 extern cob_tree make_literal (char *name);
+extern cob_tree invert_literal_sign (cob_tree x);
 
 
 /*
@@ -522,5 +524,7 @@ extern int is_subscripted (cob_tree x);
 extern int is_numeric (cob_tree x);
 extern int is_editable (cob_tree x);
 extern int is_valid_expr (cob_tree x);
+
+extern int count_subscripted (cob_tree x);
 
 #endif /* _TREE_H_ */

@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 459
+%expect 455
 
 %{
 #define yydebug		cob_trace_parser
@@ -169,7 +169,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <tree> variable_indexed,search_opt_varying,opt_key_is
 %type <tree> from_rec_varying,to_rec_varying
 %type <tree> literal,gliteral,without_all_literal,all_literal,special_literal
-%type <tree> nliteral,signed_nliteral,subscripted_variable
+%type <tree> nliteral,subscripted_variable
 %type <tree> condition_1,condition_2,comparative_condition,class_condition
 %type <tree> search_all_when_conditional
 %type <tfval> tallying_for_list
@@ -1273,7 +1273,6 @@ accept_options:
 | FROM ENVIRONMENT_VARIABLE CLITERAL
   {
     save_literal($3, 'X');
-    LITERAL ($3)->all=0;
     gen_accept_env_var($<tree>-1, $3);
   }
 ;
@@ -2848,24 +2847,12 @@ special_literal:
 | LOW_VALUES			{ $$ = spe_lit_LV; }
 ;
 literal:
-  nliteral		{ $$=$1; }
-| CLITERAL		{ save_literal($1,'X'); LITERAL ($1)->all=0; $$=$1; }
+  nliteral			{ $$ = $1; }
+| CLITERAL			{ $$ = save_literal($1,'X'); }
 ;
 nliteral:
-  signed_nliteral
-  {
-    save_literal($1,'9');
-    LITERAL ($1)->all = 0;
-    $$=$1;
-  }
-;
-signed_nliteral:
-      INTEGER_TOK		{ $$ = $1; }
-| '+' INTEGER_TOK		{ $$ = $2; }
-| '-' INTEGER_TOK		{ $$ = invert_literal_sign($2); }
-|     NLITERAL			{ $$ = $1; }
-| '+' NLITERAL			{ $$ = $2; }
-| '-' NLITERAL			{ $$ = invert_literal_sign($2); }
+  INTEGER_TOK			{ $$ = save_literal ($1, '9'); }
+| NLITERAL			{ $$ = save_literal ($1, '9'); }
 ;
 opt_def_name:
   /* nothing */			{ $$ = make_filler(); }
@@ -2922,6 +2909,17 @@ subscripted_variable:
   qualified_var LPAR		{ need_separator = 1; }
   subscript_list ')'		{ need_separator = 0; }
   {
+    int required = count_subscripted ($1);
+    int given = list_length ($4);
+    if (given != required)
+      {
+	if (required == 1)
+	  yyerror ("variable `%s' requires a subscript",
+		   COB_FIELD_NAME ($1));
+	else
+	  yyerror ("variable `%s' requires %d subscripts",
+		   COB_FIELD_NAME ($1), required);
+      }
     $$ = make_subref ($1, $4);
   }
 subscript_list:
