@@ -1,0 +1,100 @@
+This is the TinyCOBOL pre-processor.
+
+What it does.
+- convert from fixed to free-form COBOL format.
+- Process the COPY command.
+- Process the REPLACE command (not functional in current version).
+
+-------------------------------------------------------------------------------
+
+Usage: 
+htcobolpp <options> <input_file> [-o <output_file>]
+where <options> are:
+      -h                Help (display this listing)
+      -V                Display version and exit
+      -v                Verbose mode
+      -d                Turn on debugging mode
+      -t <num>          Expand tabs to <num> space(s)
+      -o <output_file>  Output file name (default: standard output)
+      -p <listing_file> Listing file name 
+      -x <input_file>   Input source is in X/Open free format
+      -f <input_file>   Input source is in standard fixed column format
+      -I <copy_dir>     Copybooks search directories 
+
+Note that the -t <num> command option will expand tabs found in main programs and copybooks. 
+If this option is not used, any tabs in programs and/or copybooks will cause an error.
+
+The 'expand' program can be used to permanently remove these tabs as the following 
+example illustrates.
+expand -t 8 program-name > new-program-name 
+
+-------------------------------------------------------------------------------
+
+Copy statement usage.
+
+COPY { Text-CopyName | Literal } 
+     [ {IN|OFF} { Text-LibName | Literal } ]
+     [ REPLACING
+       ( { Text | Literal | Pseudo-Text } BY { Text | Literal | Pseudo-Text } ) ... 
+     ] 
+Where:
+[ ]   = optional
+{ | } = OR
+...   = repeat
+
+Example:
+COPY 'TEST02.cpy' IN TEST-LIB REPLACING 
+     W01-COMPUTE-0 BY W01-COMPUTE-00
+     'W01-1XXX' BY 'W01-2'
+     ==9(5)== BY ==9(04)== .
+
+-------------------------------------------------------------------------------
+
+Copybook search sequences.
+
+The locations of copybooks can be given in the following ways.
+- Using the -I path(s) command line directives.
+- Using the library name.
+- Using an relative or absolute path in the copybook name.
+
+This results in an complex search sequence which is resolved as follows.
+- If there is an absolute path in the copybook name (i.e. '/usr/share/tc/a.cpy'), then
+  command line and library name paths are ignored.
+- If the library name is given then command line paths are ignored.
+  When the library name is given as a literal, the literal is used a the search paths. 
+  When the library name is given as a text name, the name is used to lookup the 
+  environment variable and if found the result is used a the search paths. 
+  The paths are then contatonated with the copybook name and searched.
+- If only the copybook name is given, then the include command line directives are
+  the search paths.
+  When the copybook name is given as a literal, the literal is used. 
+  When the copybook name is given as a text name, suffixes are added to the name. 
+  The default suffixes are ".cpy:.CPY:.cob:.COB:.cbl:.CBL::". The last entry indicates no suffix.
+  The paths are then concatenated with the copybook name and suffixes and then searched.
+
+
+Notes on valid copybook and library names.
+- Valid copybook names are a valid COBOL words (text) or literals. 
+  Thus t1.cpy is not and 't1.cpy' is valid.
+- Valid library names are a valid COBOL words (text) or literals. 
+  Library name is given as a text and containing '-' are converted to '_' since
+  valid environment variables names can not contain the character '-'.  
+
+Examples:
+- The following are equivalent.
+  COPY 't1.cpy' IN TEST-LIB.
+  COPY 't1.cpy'. - with the -I $TEST_LIB command line option.
+- The text name suffix search sequence.
+  COPY TT1. - will search for TT1.cpy, TT1.CPY, TT1.cob, TT1.COB, TT1.cbl, TT1.CBL, TT1 files.
+  
+-------------------------------------------------------------------------------
+
+Integration with the main compiler.
+- The new pre-processor will be executed by default.
+  To ensure backward compatibility, the original PP has not been removed from
+  the main compiler.
+  Further integration will be done once the pre-processor is deemed to be stable.
+- The main compiler does require that the full path of the pre-processor be known.
+  This is problematic as the test and install directories are different. To circumvent
+  this problem the -t command line option as been added so that the main compiler will 
+  seek the PP in the cobpp directory.

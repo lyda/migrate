@@ -1,0 +1,112 @@
+								-*- outline -*-
+
+* Version 0.7.1 での変更点
+
+** RedHat 7.2 の環境で素直にコンパイルが通るようになった
+
+** C と COBOL をリンクするための枠組みを整理
+
+詳しくは doc/c-cobol.txt を参照。
+
+
+* Version 0.7 での変更点
+
+** cobc がコンパイル済みファイルも受け付けるようになった
+
+複数のファイルがある場合、例えば次のようにしてコンパイル出来る。
+
+  % cobc -c foo.cob
+  % cobc -c bar.cob
+  % cobc -o myapp foo.o bar.o
+
+** コンパイラオプション -D により、デバッグコードを有効化
+
+COBOL コードで行頭に `D' を置くと、コンパイル時にオプション -D を
+指定した場合にのみコンパイルされる。
+
+** 数値処理に関するバグをいくつか修正
+
+しかし、まだ若干のバグがありそう。
+
+
+* Tiny COBOL 0.54 からの変更点
+
+** パッケージの変更点
+
+*** Autoconf 2.52, Automake 1.5, Libtool 1.4 を利用
+
+*** パーサ生成に Bison を利用
+
+*** ソースレイアウトの変更
+
+  open-cobol/cobc/              コンパイラ
+  open-cobol/cobpp/             プリプロセッサ
+  open-cobol/libcob/            実行時ライブラリ
+
+*** インストールディレクトリの変更
+
+標準では次のようにインストールされる。
+
+  $(PREFIX)/bin/cobc                    コンパイラ
+  $(PREFIX)/libexec/open-cobol/cobpp    プリプロセッサ
+  $(PREFIX)/lib/libcob.a                実行時ライブラリ
+  $(PREFIX)/lib/open-cobol/             各種モジュール
+
+*** C プログラムは GNU スタイルでインデント
+
+** コンパイラの変更点
+
+*** コンパイラ名は cobc
+
+以下のオプションを受け付ける。
+
+  cobc <file>...              実行ファイル a.out を生成
+  cobc -o <target> <file>     実行ファイル <target> を生成
+  cobc -E <file>              前処理のみ実行
+  cobc -S <file>              コンパイルのみ実行 (*.s を生成)
+  cobc -c <file>              アセンブルまで実行 (*.o を生成)
+  cobc -m <file>              モジュールを作成 (*.so を生成)
+  cobc -g <file>              デバッグ情報付きでコンパイル
+
+  cobc --help                 ヘルプメッセージの表示
+  cobc --version              バージョン番号を表示
+  cobc --save-temps           中間ファイルを削除しない
+
+*** 動的モジュールのサポート方式を修正
+
+CALL 文では、呼び出すプログラムとして変数が指定された場合、
+プログラムがダイナミックにリンクされて呼び出される。これは
+次のようにして行なう。
+
+1. 呼び出されるプログラム(モジュール)を生成
+
+  cobc -m module.cob
+
+2. メインプログラムを生成
+
+  cobc -o main main.cob
+
+3. 環境変数 COB_LIBRARY_PATH にモジュールのあるディレクトリを
+   セットし、メインプログラムを実行
+
+  COB_LIBRARY_PATH=.
+  export COB_LIBRARY_PATH
+  ./main
+
+*** 以下の環境変数を参照(括弧内はデフォルト値)
+
+COB_CC              利用する C コンパイラ ("gcc")
+COB_COBPP           プリプロセッサ ("$(PREFIX)/libexec/open-cobol/cobpp")
+COB_LDADD           リンクするライブラリ ("-L$(PREFIX)/lib -lcob -lncurses -ldb -ldl -lm")
+COB_LDFLAGS         リンク時のフラグ ("")
+COB_LIBRARY_PATH    ライブラリのパス (".:$(PREFIX)/lib/open-cobol")
+
+** COBOL レベルの変更点
+
+*** PIC の文字として `N' (日本語)を認識
+
+現時点では、内部的に `X' 二つに置き換えるだけの便宜的対応。
+
+*** 数値演算の中間表現として BCD を用い、誤差が発生しないようにした。
+
+若干のバグあり。
