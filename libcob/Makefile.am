@@ -4,7 +4,7 @@ libcob_la_SOURCES = common.c move.c numeric.c \
 
 AM_CFLAGS = -Wall -Wstrict-prototypes -Wmissing-prototypes -Wno-format-y2k
 libcob_la_CFLAGS = $(AM_CFLAGS) $(LIBCOB_CFLAGS) -I$(top_srcdir)
-libcob_la_LIBADD = $(LIBCOB_LIBS) ../libpbl/libpbl.a
+libcob_la_LIBADD = $(LIBCOB_LIBS)
 libcob_la_LDFLAGS = -no-undefined -version-info 1:0:0
 
 pkgincludedir = $(includedir)/libcob
