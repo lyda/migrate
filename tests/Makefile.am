@@ -17,7 +17,7 @@ check-local: atconfig atlocal $(TESTSUITE)
 
 clean-local:
 	@for x in $(TESTSUITE); do \
-	  test -e $${x} && $(SHELL) $${x} -c; \
+	  test -e $${x} && $(SHELL) $${x} -c; true; \
 	done
 
 $(srcdir)/package.m4: $(top_srcdir)/configure.ac
