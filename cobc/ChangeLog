@@ -1,5 +1,13 @@
 2002-05-29  Keisuke Nishida  <knishida@netlab.jp>
 
+	* parser.y (expr_item_list): Better source location.
+	* codegen.c (output_compare): Take additional argument for better
+	source location.
+	(output_condition): Updated.
+	* inline.c (output_search_all): Updated.
+
+2002-05-29  Keisuke Nishida  <knishida@netlab.jp>
+
 	* codegen.c (output_recursive): Process top-level redefinition.
 
 2002-05-29  Keisuke Nishida  <knishida@netlab.jp>

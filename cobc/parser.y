@@ -3038,9 +3038,9 @@ expr_1:
 ;
 
 expr_item_list:
-  expr_item			{ $1->loc = @1; $$ = list ($1); }
+  expr_item			{ cobc_location = @1; $$ = list ($1); }
 | expr_item_list IS		{ $$ = $1; }
-| expr_item_list expr_item	{ $2->loc = @2; $$ = list_add ($1, $2); }
+| expr_item_list expr_item	{ $$ = list_add ($1, $2); }
 ;
 expr_item:
   value				{ $$ = $1; }
@@ -3751,7 +3751,7 @@ init_field (int level, cobc_tree field)
 	  struct cobc_field *p = last_field->parent;
 	  for (p = p->children; p; p = p->sister)
 	    if (strcasecmp (current_field->word->name, p->word->name) == 0)
-	      redefinition_error (&COBC_TREE (current_field)->loc,
+	      redefinition_error (&COBC_TREE_LOC (current_field),
 				  COBC_TREE (p));
 	}
       last_field->sister = current_field;

@@ -631,7 +631,7 @@ output_assign (struct cobc_assign *p)
  */
 
 static void
-output_compare (cobc_tree s1, cobc_tree s2)
+output_compare (cobc_tree x, cobc_tree s1, cobc_tree s2)
 {
   if (COBC_INDEX_NAME_P (s1) || COBC_INDEX_NAME_P (s2)
       || s1 == cobc_status || s2 == cobc_true || s2 == cobc_false)
@@ -643,6 +643,8 @@ output_compare (cobc_tree s1, cobc_tree s2)
       /* numeric comparison */
       output ("({\n");
       output_indent_level += 2;
+      if (x)
+	output_line_directive (x);
       output_expr (s1, 1);
       output_expr (s2, 2);
       output_line ("cob_decimal_cmp (cob_d1, cob_d2);");
@@ -740,7 +742,7 @@ output_condition (cobc_tree x)
       break;
     default:
       output ("(");
-      output_compare (l, r);
+      output_compare (x, l, r);
       switch (type)
 	{
 	case COBC_COND_EQ: output (" == 0"); break;

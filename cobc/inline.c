@@ -701,7 +701,7 @@ output_search_all (cobc_tree table, cobc_tree sentence, cobc_tree when)
       {
 	output_prefix ();
 	output ("cmp%d = ", i);
-	output_compare (p->keys[i].ref, p->keys[i].val);
+	output_compare (0, p->keys[i].ref, p->keys[i].val);
 	output (";\n");
       }
   for (i = 0; i < p->nkeys; i++)
