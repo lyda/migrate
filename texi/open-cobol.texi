@@ -78,9 +78,6 @@ programs to C code and compiles it using GCC.
 
 This manual corresponds to OpenCOBOL @value{VERSION}.
 
-[ I appreciate if someone could kindly correct my English or write
-a better manual than this incomplete one. -- Keisuke ]
-
 @menu
 * Getting Started::             Introduction to OpenCOBOL
 * Compile::                     How to compile COBOL programs
