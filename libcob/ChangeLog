@@ -1,5 +1,13 @@
 2002-05-29  Keisuke Nishida  <knishida@netlab.jp>
 
+	* Keep field names at run-time.
+	* common.h (cob_field_desc): New member `name'.
+	* common.c (cob_check_numeric): Display filed name on error.
+
+	* Makefile.am (libcob_la_DEPENDENCIES): Add defaults.h.
+
+2002-05-29  Keisuke Nishida  <knishida@netlab.jp>
+
 	* termio.c (cob_init_termio): #include <string.h>
 
 2002-05-29  Keisuke Nishida  <knishida@netlab.jp>

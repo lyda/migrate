@@ -351,10 +351,19 @@ cob_check_numeric (struct cob_field f)
 {
   if (!cob_is_numeric (f))
     {
-      char buff[COB_FIELD_SIZE (f) + 1];
-      memcpy (buff, COB_FIELD_DATA (f), COB_FIELD_SIZE (f));
-      buff[COB_FIELD_SIZE (f)] = '\0';
-      cob_runtime_error (_("non-numeric value `%s'"), buff);
+      int i;
+      size_t size = COB_FIELD_SIZE (f);
+      unsigned char *data = COB_FIELD_DATA (f);
+      char buff[size * 4 + 1];
+      char *p = buff;
+      for (i = 0; i < size; i++)
+	if (isprint (data[i]))
+	  *p++ = data[i];
+	else
+	  p += sprintf (p, "\\%03o", data[i]);
+      *p = '\0';
+      cob_runtime_error (_("value of `%s' not numeric: `%s'"),
+			 f.desc->name, buff);
     }
 }
 

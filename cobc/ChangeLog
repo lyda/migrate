@@ -1,5 +1,10 @@
 2002-05-29  Keisuke Nishida  <knishida@netlab.jp>
 
+	* Keep field names at run-time.
+	* codegen.c (output_field_definition): Output field name.
+
+2002-05-29  Keisuke Nishida  <knishida@netlab.jp>
+
 	* cobc.c: Rename `COB_LDADD' to `COB_LIBS'
 
 2002-05-29  Keisuke Nishida  <knishida@netlab.jp>

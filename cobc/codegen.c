@@ -842,7 +842,7 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
 	  || (p->level == 66 && p->redefines->children))
 	{
 	  /* field group */
-	  output ("{%d, '%c'};\n", p->size, COB_GROUP);
+	  output ("{%d, '%c', 0, 0, 0, 0, 0, 0, 0, 0", p->size, COB_GROUP);
 	}
       else
 	{
@@ -862,8 +862,10 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
 	    }
 	  else
 	    output ("0");
-	  output ("};\n");
 	}
+      output (", ");
+      output_quoted_string (p->word->name, strlen (p->word->name));
+      output ("};\n");
     }
 
   /* data */

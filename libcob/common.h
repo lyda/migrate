@@ -48,6 +48,7 @@ struct cob_field {
     char blank_zero    : 1;
     char justified     : 1;
     char *pic;
+    const char *name;
   } *desc;
   unsigned char *data;
 };
