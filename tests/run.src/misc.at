@@ -386,6 +386,36 @@ AT_CHECK([./caller], [0],
 
 AT_CLEANUP
 
+AT_SETUP([CALL: binary literal parameter])
+
+AT_DATA([test.conf], [
+include "default.conf"
+binary-byteorder: native
+])
+
+AT_DATA([dump.c], [
+int dump (int *p)
+{
+  printf ("%08x", *p);
+  return 0;
+}
+])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       PROCEDURE        DIVISION.
+           CALL "dump" USING BY CONTENT 1.
+])
+
+AT_CHECK([${COMPILE_MODULE} dump.c])
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [01000000])
+AT_CHECK([${COMPILE} -conf=test.conf -o prog prog.cob])
+AT_CHECK([./prog], [0], [00000001])
+
+AT_CLEANUP
+
 
 ## INSPECT
 
