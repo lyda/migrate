@@ -1755,7 +1755,7 @@ static int
 literal_value (cb_tree x)
 {
   if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC)
-    return cb_literal_to_int (CB_LITERAL (x));
+    return cb_literal_to_int (CB_LITERAL (x)) - 1;
   else
     return CB_LITERAL (x)->data[0];
 }
@@ -1794,7 +1794,7 @@ output_alphabet_name_definition (struct cb_alphabet_name *p)
 	{
 	  /* literal */
 	  if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC)
-	    table[cb_literal_to_int (CB_LITERAL (x))] = n++;
+	    table[literal_value (x)] = n++;
 	  else
 	    {
 	      size_t size = CB_LITERAL (x)->size;
