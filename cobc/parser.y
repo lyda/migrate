@@ -3043,7 +3043,7 @@ subscript:
 ;
 qualified_var:
   VARIABLE			{ $$ = $1; }
-| qualified_var in_of VARIABLE	{ $$ = lookup_variable($1,$3); }
+| VARIABLE in_of qualified_var	{ $$ = lookup_variable($1,$3); }
 ;
 
 dot:
