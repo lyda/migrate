@@ -3931,10 +3931,10 @@ basic_literal:
  */
 
 function:
-  FUNCTION_NAME '(' opt_value_list ')'
+  FUNCTION_NAME
   {
     PENDING ("FUNCTION");
-    YYABORT;
+    YYERROR;
   }
 ;
 
