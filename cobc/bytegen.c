@@ -468,9 +468,7 @@ output_param (cb_tree x)
       break;
 #endif
     case CB_TAG_LITERAL:
-      output_line ("\tnew\tField");
-      output_line ("\tspush\t\"%s\"", CB_LITERAL (x)->data);
-      output_line ("\tinit\tLiteral");
+      output_line ("\tcpush\t\"%s\"", CB_LITERAL (x)->data);
       break;
     case CB_TAG_FIELD:
     case CB_TAG_REFERENCE:
@@ -712,23 +710,8 @@ output_stmt (cb_tree x)
       {
 	struct cb_sequence *p = CB_SEQUENCE (x);
 	cb_tree l = p->list;
-	if (p->save_status && l && CB_CHAIN (l))
-	  {
-	    /* output with combining multiple cob_exception_code */
-	    output_line ("int code = 0;");
-	    for (; l; l = CB_CHAIN (l))
-	      {
-		output_stmt (CB_VALUE (l));
-		output_line ("code |= cob_exception_code;");
-	      }
-	    output_line ("cob_exception_code = code;");
-	  }
-	else
-	  {
-	    /* output without using cob_exception_code */
-	    for (; l; l = CB_CHAIN (l))
-	      output_stmt (CB_VALUE (l));
-	  }
+	for (; l; l = CB_CHAIN (l))
+	  output_stmt (CB_VALUE (l));
 	break;
       }
     default:

@@ -685,7 +685,6 @@ extern void cb_add_perform_varying (struct cb_perform *perf, cb_tree name, cb_tr
 struct cb_sequence {
   struct cb_tree_common common;
   cb_tree list;
-  int save_status;
 };
 
 #define CB_SEQUENCE(x)		(CB_TREE_CAST (CB_TAG_SEQUENCE, struct cb_sequence, x))
@@ -701,6 +700,8 @@ extern cb_tree make_sequence (cb_tree list);
 struct cb_statement {
   struct cb_tree_common common;
   const char *name;
+  cb_tree body;
+  cb_tree handler;
   int need_terminator;
 };
 
@@ -742,7 +743,7 @@ extern int list_length (cb_tree l);
 
 /* Pair */
 
-#define CB_PAIR_P(x)		CB_LIST_P (x)
+#define CB_PAIR_P(x)		(CB_LIST_P (x) && CB_PAIR_X (x))
 #define CB_PAIR_X(x)		CB_PURPOSE (x)
 #define CB_PAIR_Y(x)		CB_VALUE (x)
 

@@ -1656,7 +1656,14 @@ output_stmt (cb_tree x)
 	      }
 	    last_line = x->source_line;
 	  }
-	output_line ("cob_exception_code = 0;");
+	if (p->handler)
+	  output_line ("cob_exception_code = 0;");
+
+	if (p->body)
+	  output_stmt (p->body);
+
+	if (p->handler)
+	  output_stmt (p->handler);
 	break;
       }
     case CB_TAG_LABEL:
@@ -1877,7 +1884,7 @@ output_alphabet_name_definition (struct cb_alphabet_name *p)
   for (l = p->custom_list; l; l = CB_CHAIN (l))
     {
       cb_tree x = CB_VALUE (l);
-      if (CB_PAIR_P (x) && CB_PAIR_X (x))
+      if (CB_PAIR_P (x))
 	{
 	  /* X THRU Y */
 	  int lower = literal_value (CB_PAIR_X (x));

@@ -82,15 +82,6 @@
   if (handler || CB_EXCEPTION_ENABLE (COB_EC_I_O))	\
     push (build_file_handler (file, handler));
 
-#define push_sequence_with_handler(x,h)			\
-  {							\
-    cb_tree __x = (x);					\
-    cb_tree __h = (h);					\
-    if (__h) CB_SEQUENCE (__x)->save_status = 1;	\
-    push (__x);						\
-    if (__h) push (__h);				\
-  }
-
 #define push_entry(name,using_list)				\
   {								\
     cb_tree label = cb_build_label (make_reference (name), NULL);	\
@@ -1653,7 +1644,7 @@ add_statement:
   add_body on_size_error
   end_add
   {
-    push_sequence_with_handler ($3, $4);
+    current_statement->body = $3;
   }
 ;
 add_body:
@@ -1805,7 +1796,7 @@ compute_statement:
   compute_body on_size_error
   end_compute
   {
-    push_sequence_with_handler ($3, $4);
+    current_statement->body = $3;
   }
 ;
 compute_body:
@@ -1915,7 +1906,7 @@ divide_statement:
   divide_body on_size_error
   end_divide
   {
-    push_sequence_with_handler ($3, $4);
+    current_statement->body = $3;
   }
 ;
 divide_body:
@@ -2328,7 +2319,7 @@ multiply_statement:
   multiply_body on_size_error
   end_multiply
   {
-    push_sequence_with_handler ($3, $4);
+    current_statement->body = $3;
   }
 ;
 multiply_body:
@@ -2859,7 +2850,7 @@ string_statement:
       }
 
     list_add (seq, cb_build_funcall_0 ("cob_string_finish"));
-    push_sequence_with_handler (make_sequence (seq), $7);
+    current_statement->body = make_sequence (seq);
   }
 ;
 string_item_list:
@@ -2890,7 +2881,7 @@ subtract_statement:
   subtract_body on_size_error
   end_subtract
   {
-    push_sequence_with_handler ($3, $4);
+    current_statement->body = $3;
   }
 ;
 subtract_body:
@@ -2929,7 +2920,7 @@ unstring_statement:
     if ($8)
       l = list_add (l, cb_build_funcall_1 ("cob_unstring_tallying", $8));
     l = list_add (l, cb_build_funcall_0 ("cob_unstring_finish"));
-    push_sequence_with_handler (make_sequence (l), $9);
+    current_statement->body = make_sequence (l);
   }
 ;
 
@@ -3092,9 +3083,7 @@ on_size_error:
   opt_not_on_size_error
   {
     if ($1 || $2)
-      $$ = make_handler (COB_EC_SIZE, $1, $2);
-    else
-      $$ = NULL;
+      current_statement->handler = make_handler (COB_EC_SIZE, $1, $2);
   }
 ;
 opt_on_size_error:
@@ -3116,9 +3105,7 @@ on_overflow:
   opt_not_on_overflow
   {
     if ($1 || $2)
-      $$ = make_handler (COB_EC_OVERFLOW, $1, $2);
-    else
-      $$ = NULL;
+      current_statement->handler = make_handler (COB_EC_OVERFLOW, $1, $2);
   }
 ;
 opt_on_overflow:
