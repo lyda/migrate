@@ -1063,27 +1063,31 @@ cb_build_cond (cb_tree x)
 		decimal_free ();
 		p->x = s;
 	      }
-	    else if (CB_LITERAL_P (p->y))
-	      {
-		struct cb_literal *l = CB_LITERAL (p->y);
-		int size = cb_field_size (p->x);
-
-		if (CB_TREE_CLASS (p->x) == CB_CLASS_NUMERIC
-		    && CB_TREE_CLASS (p->y) == CB_CLASS_NUMERIC)
-		  {
-		    if (cb_fits_int (p->y))
-		      p->x = cb_build_funcall_2 ("cob_cmp_int",
-						 p->x, cb_build_cast_integer (p->y));
-		    else
-		      p->x = cb_build_funcall_2 ("cob_cmp", p->x, p->y);
-		  }
-		else if (size > 0 && size >= l->size && !l->all)
-		  p->x = cb_build_funcall_2 ("@memcmp", p->x, p->y);
-		else
-		  p->x = cb_build_funcall_2 ("cob_cmp", p->x, p->y);
-	      }
 	    else
 	      {
+		if (cb_flag_inline_cmp)
+		  {
+		    if (CB_LITERAL_P (p->y))
+		      {
+			struct cb_literal *l = CB_LITERAL (p->y);
+			int size = cb_field_size (p->x);
+
+			if (CB_TREE_CLASS (p->x) == CB_CLASS_NUMERIC
+			    && CB_TREE_CLASS (p->y) == CB_CLASS_NUMERIC
+			    && cb_fits_int (p->y))
+			  {
+			    p->x = cb_build_funcall_2 ("cob_cmp_int",
+						       p->x, cb_build_cast_integer (p->y));
+			    break;
+			  }
+			if (size > 0 && size >= l->size && !l->all)
+			  {
+			    p->x = cb_build_funcall_2 ("@memcmp", p->x, p->y);
+			    break;
+			  }
+		      }
+		  }
+
 		/* field comparison */
 		p->x = cb_build_funcall_2 ("cob_cmp", p->x, p->y);
 	      }

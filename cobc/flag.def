@@ -27,6 +27,9 @@ CB_FLAG (cb_flag_main, "main",
 CB_FLAG (cb_flag_source_location, "source-location",
 	 N_("Include source location in the output"))
 
+CB_FLAG (cb_flag_inline_cmp, "inline-cmp",
+	 N_("Inline cob_cmp"))
+
 CB_FLAG (cb_flag_inline_get_int, "inline-get-int",
 	 N_("Inline cob_get_int"))
 

@@ -1387,10 +1387,10 @@ struct cb_field *
 cb_field_varying (struct cb_field *f)
 {
   struct cb_field *p;
-  if (f->occurs_depending)
-    return f;
   for (f = f->children; f; f = f->sister)
-    if ((p = cb_field_varying (f)) != NULL)
+    if (f->occurs_depending)
+      return f;
+    else if ((p = cb_field_varying (f)) != NULL)
       return p;
   return NULL;
 }

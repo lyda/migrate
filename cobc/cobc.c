@@ -291,6 +291,7 @@ process_command_line (int argc, char *argv[])
 	  /* fall through */
 
 	case 'O':
+	  cb_flag_inline_cmp = 1;
 	  cb_flag_inline_get_int = 1;
 	  cb_flag_inline_move = 1;
 	  break;
