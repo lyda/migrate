@@ -554,13 +554,13 @@ struct cb_funcall {
   struct cb_tree_common common;
   const char *name;
   int argc;
-  void *argv[4];
+  cb_tree argv[4];
 };
 
 #define CB_FUNCALL(x)		(CB_TREE_CAST (CB_TAG_FUNCALL, struct cb_funcall, x))
 #define CB_FUNCALL_P(x)		(CB_TREE_TAG (x) == CB_TAG_FUNCALL)
 
-extern cb_tree cb_build_funcall (const char *name, int argc, void *a1, void *a2, void *a3, void *a4);
+extern cb_tree cb_build_funcall (const char *name, int argc, cb_tree a1, cb_tree a2, cb_tree a3, cb_tree a4);
 
 #define cb_build_funcall_0(f)		cb_build_funcall (f, 0, 0, 0, 0, 0)
 #define cb_build_funcall_1(f,a1)	cb_build_funcall (f, 1, a1, 0, 0, 0)

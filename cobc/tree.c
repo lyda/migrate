@@ -1700,7 +1700,7 @@ cb_build_connective_op (cb_tree list, char op)
 
 cb_tree
 cb_build_funcall (const char *name, int argc,
-	      void *a1, void *a2, void *a3, void *a4)
+		  cb_tree a1, cb_tree a2, cb_tree a3, cb_tree a4)
 {
   struct cb_funcall *p =
     make_tree (CB_TAG_FUNCALL, CB_CATEGORY_BOOLEAN, sizeof (struct cb_funcall));
