@@ -213,11 +213,11 @@ cob_move_display_to_packed (cob_field *f1, cob_field *f2)
   memset (f2->data, 0, f2->size);
   for (i = 0; i < digits2; i++, p++)
     {
-      char n = (data1 <= p && p < data1 + digits1) ? *p - '0' : 0;
+      char n = (data1 <= p && p < data1 + digits1) ? cob_d2i (*p): 0;
       if (i % 2 == 0)
-	data2[i / 2] = n << 4;
+	data2[i/2] = n << 4;
       else
-	data2[i / 2] |= n;
+	data2[i/2] |= n;
     }
 
   cob_put_sign (f1, sign);
@@ -235,14 +235,13 @@ cob_move_packed_to_display (cob_field *f1, cob_field *f2)
   /* unpack string */
   for (i = 0; i < f1->attr->digits; i++)
     if (i % 2 == 0)
-      buff[i] = (data[i/2] >> 4) + '0';
+      buff[i] = cob_i2d (data[i/2] >> 4);
     else
-      buff[i] = (data[i/2] & 0x0f) + '0';
+      buff[i] = cob_i2d (data[i/2] & 0x0f);
 
   /* store */
   store_common_region (f2, buff, COB_FIELD_DIGITS (f1), COB_FIELD_EXPT (f1));
 
-  cob_put_sign (f1, sign);
   cob_put_sign (f2, sign);
 }
 
@@ -266,7 +265,7 @@ cob_move_display_to_binary (cob_field *f1, cob_field *f2)
   size = size1 + f1->attr->expt - f2->attr->expt;
   for (i = 0; i < size; ++i)
     if (i < size1)
-      val = val * 10 + data1[i] - '0';
+      val = val * 10 + cob_d2i (data1[i]);
     else
       val = val * 10;
   if (sign < 0 && COB_FIELD_HAVE_SIGN (f2))
@@ -313,7 +312,7 @@ cob_move_binary_to_display (cob_field *f1, cob_field *f2)
   i = 20;
   while (val > 0)
     {
-      buff[--i] = val % 10 + '0';
+      buff[--i] = cob_i2d (val % 10);
       val /= 10;
     }
 
@@ -660,21 +659,21 @@ cob_display_to_int (cob_field *f, int *n)
 
   /* skip preceding zeros */
   for (i = 0; i < size; i++)
-    if (data[i] != '0')
+    if (cob_d2i (data[i]) != 0)
       break;
 
   /* get value */
   if (f->attr->expt > 0)
     {
       for (; i < size; ++i)
-	val = val * 10 + data[i] - '0';
-      val *= cob_exp10[f->attr->expt];
+	val = val * 10 + cob_d2i (data[i]);
+      val *= cob_exp10[(int) f->attr->expt];
     }
   else
     {
       size += f->attr->expt;
       for (; i < size; ++i)
-	val = val * 10 + data[i] - '0';
+	val = val * 10 + cob_d2i (data[i]);
     }
   if (sign < 0)
     val = -val;

@@ -1,3 +1,7 @@
+2003-05-18  Keisuke Nishida  <knishida@netlab.jp>
+
+	* common.h (cob_d2i, cob_i2d): New macros.
+
 2003-05-15  Keisuke Nishida  <knishida@netlab.jp>
 
 	* move.c (COPY_COMMON_REGION): Removed.

@@ -840,8 +840,8 @@ save_status (cob_file *f, int status)
   if (f->file_status == 0)
     f->file_status = dummy_status;
 
-  f->file_status[0] = status / 10 + '0';
-  f->file_status[1] = status % 10 + '0';
+  f->file_status[0] = cob_i2d (status / 10);
+  f->file_status[1] = cob_i2d (status % 10);
   cob_error_file = f;
   COB_SET_EXCEPTION (exception[status / 10]);
 }
@@ -1186,7 +1186,7 @@ cob_default_error_handle (void)
 {
   const char *msg = NULL;
   char *file_status = cob_error_file->file_status;
-  int status = (file_status[0] - '0') * 10 + (file_status[1] - '0');
+  int status = cob_d2i (file_status[0]) * 10 + cob_d2i (file_status[1]);
 
   switch (status)
     {

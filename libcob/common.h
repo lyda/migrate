@@ -162,6 +162,13 @@ extern long cob_exp10[];
 extern long long cob_exp10LL[];
 
 
+/* convert a digit (e.g., '0') into an integer (e.g., 0) */
+#define cob_d2i(d)	((d) - '0')
+
+/* convert an integer (e.g., 0) into a digit (e.g., '0') */
+#define cob_i2d(d)	((d) + '0')
+
+
 /*
  * Function declaration
  */

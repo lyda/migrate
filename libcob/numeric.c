@@ -170,12 +170,34 @@ void
 cob_decimal_set_display (cob_decimal *d, cob_field *f)
 {
   int sign = cob_get_sign (f);
-  int len = COB_FIELD_SIZE (f);
-  unsigned char *base = COB_FIELD_DATA (f);
-  unsigned char buff[len + 1];
-  memcpy (buff, base, len);
-  buff[len] = 0;
-  mpz_set_str (d->data, buff, 10);
+  size_t size = COB_FIELD_SIZE (f);
+  unsigned char *data = COB_FIELD_DATA (f);
+
+  /* skip leading zeros */
+  while (size > 1 && cob_d2i (data[0]) == 0)
+    {
+      size--;
+      data++;
+    }
+
+  /* set value */
+  if (size < 10)
+    {
+      unsigned char *endp = data + size;
+      int n = cob_d2i (*data++);
+      while (data < endp)
+	n = n * 10 + cob_d2i (*data++);
+      mpz_set_si (d->data, n);
+    }
+  else
+    {
+      unsigned char buff[size + 1];
+      memcpy (buff, data, size);
+      buff[size] = 0;
+      mpz_set_str (d->data, buff, 10);
+    }
+
+  /* set sign and expt */
   if (sign < 0)
     mpz_neg (d->data, d->data);
   d->expt = f->attr->expt;
@@ -634,7 +656,7 @@ cob_add_int_to_display (cob_field *f, int n)
 	  /* if there wes an overflow, inverse the sign */
 	  int i;
 	  for (i = 0; i < size; i++)
-	    data[i] = '0' + ('9' - data[i]);
+	    data[i] = cob_i2d (9 - cob_d2i (data[i]));
 	  display_add_int (data, size, 1);
 	  sign = - sign;
 	}
