@@ -89,10 +89,14 @@ static void switch_to_buffer (int lineno, char *filename, struct cb_replacement 
 "SKIP1" |
 "SKIP2" |
 "SKIP3" {
-  /* these words are treated as comments */
+  /* these words are comments in IBM COBOL */
   if (cb_verify (cb_eject_statement, yytext))
     {
       /* do nothing for now */
+    }
+  else
+    {
+      ECHO;
     }
 }
 

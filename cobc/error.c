@@ -115,6 +115,8 @@ cb_verify (enum cb_support tag, const char *feature)
       if (cb_warn_obsolete)
 	cb_warning (_("%s is obsolete in %s"), feature, cb_config_name);
       return 1;
+    case CB_SKIP:
+      return 0;
     case CB_IGNORE:
       cb_warning (_("%s ignored"), feature);
       return 0;

@@ -127,6 +127,7 @@ enum cb_support {
   CB_OK,
   CB_ARCHAIC,
   CB_OBSOLETE,
+  CB_SKIP,
   CB_IGNORE,
   CB_UNCONFORMABLE,
 };

@@ -45,7 +45,8 @@ enum cb_config_type {
   INT,		/* integer */
   STRING,	/* "..." */
   BOOLEAN,	/* `yes', `no' */
-  SUPPORT,	/* `ok', `archaic', `obsolete', `ignore', `unconformable' */
+  SUPPORT,	/* `ok', `archaic', `obsolete',
+		   `skip', `ignore', `unconformable' */
 };
 
 struct {
@@ -268,6 +269,8 @@ cb_load_conf (const char *fname, int check_nodef)
 	      *((enum cb_support *) var) = CB_ARCHAIC;
 	    else if (strcmp (val, "obsolete") == 0)
 	      *((enum cb_support *) var) = CB_OBSOLETE;
+	    else if (strcmp (val, "skip") == 0)
+	      *((enum cb_support *) var) = CB_SKIP;
 	    else if (strcmp (val, "ignore") == 0)
 	      *((enum cb_support *) var) = CB_IGNORE;
 	    else if (strcmp (val, "unconformable") == 0)
