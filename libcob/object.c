@@ -99,7 +99,7 @@ cob_debug_print (cob_object o)
 	int i;
 	struct cob_field *p = COB_FIELD (o);
 	for (i = 0; i < p->desc->len; i++)
-	  fputc (p->mem[i], stdout);
+	  fputc (p->data[i], stdout);
 	fputc ('\n', stdout);
       }
       break;
@@ -157,7 +157,7 @@ cob_push_field (struct cob_field fld)
 {
   struct cob_field *p = COB_FIELD (grab_object (COB_TYPE_FIELD));
   p->desc = fld.desc;
-  p->mem = fld.mem;
+  p->data = fld.data;
 }
 
 void
@@ -176,7 +176,7 @@ cob_push_copy (int n)
       break;
     case COB_TYPE_FIELD:
       COB_FIELD (dst)->desc = COB_FIELD (src)->desc;
-      COB_FIELD (dst)->mem  = COB_FIELD (src)->mem;
+      COB_FIELD (dst)->data = COB_FIELD (src)->data;
       break;
     }
 }
@@ -335,12 +335,12 @@ cob_push_decimal (struct cob_field f)
     case 'B':
       switch (f.desc->len)
 	{
-	case 1: mpz_set_si (d->number, *((signed char *) f.mem)); break;
-	case 2: mpz_set_si (d->number, *((signed short *) f.mem)); break;
-	case 4: mpz_set_si (d->number, *((signed long *) f.mem)); break;
+	case 1: mpz_set_si (d->number, *((signed char *) f.data)); break;
+	case 2: mpz_set_si (d->number, *((signed short *) f.data)); break;
+	case 4: mpz_set_si (d->number, *((signed long *) f.data)); break;
 	case 8:
 	  {
-	    signed long long val = *((signed long long *) f.mem);
+	    signed long long val = *((signed long long *) f.data);
 	    mpz_set_si (d->number, val >> 32);
 	    mpz_mul_2exp (d->number, d->number, 32);
 	    mpz_add_ui (d->number, d->number, val & 0xffffffff);
@@ -357,17 +357,17 @@ cob_push_decimal (struct cob_field f)
     default:
       {
 	char *p, buff[32];
-	int sign = extract_sign (f.desc, f.mem);
+	int sign = extract_sign (f.desc, f.data);
 
 	p = (f.desc->len < 32) ? buff : alloca (f.desc->len + 1);
-	memcpy (p, f.mem, f.desc->len);
+	memcpy (p, f.data, f.desc->len);
 	p[f.desc->len] = 0;
 	mpz_set_str (d->number, p, 10);
 
 	if (sign == 1) /* negative */
 	  mpz_neg (d->number, d->number);
 
-	put_sign (f.desc, f.mem, sign);
+	put_sign (f.desc, f.data, sign);
 	break;
       }
     }
@@ -416,17 +416,17 @@ cob_set (struct cob_field f, int round)
 	      case 1:
 		if (val < -99 || val > 99)
 		  cob_status = COB_STATUS_OVERFLOW;
-		*((signed char *) f.mem) = val;
+		*((signed char *) f.data) = val;
 		break;
 	      case 2:
 		if (val < -9999 || val > 9999)
 		  cob_status = COB_STATUS_OVERFLOW;
-		*((signed short *) f.mem) = val;
+		*((signed short *) f.data) = val;
 		break;
 	      case 4:
 		if (val < -99999999 || val > 99999999)
 		  cob_status = COB_STATUS_OVERFLOW;
-		*((signed long *) f.mem) = val;
+		*((signed long *) f.data) = val;
 		break;
 	      }
 	  }
@@ -447,7 +447,7 @@ cob_set (struct cob_field f, int round)
 	    mpz_clear (r);
 	    if (val < -999999999999999999 || val > 999999999999999999)
 	      cob_status = COB_STATUS_OVERFLOW;
-	    *((signed long long *) f.mem) = val;
+	    *((signed long long *) f.data) = val;
 	    break;
 	  }
       }
@@ -473,21 +473,21 @@ cob_set (struct cob_field f, int round)
 
 	/* Copy string */
 	if (f.desc->len == size)
-	  memcpy (f.mem, p, size);
+	  memcpy (f.data, p, size);
 	else if (f.desc->len > size)
 	  {
 	    int pre = f.desc->len - size;
-	    memset (f.mem, '0', pre);
-	    memcpy (f.mem + pre, p, size);
+	    memset (f.data, '0', pre);
+	    memcpy (f.data + pre, p, size);
 	  }
 	else
 	  {
 	    /* Overflow */
 	    cob_status = COB_STATUS_OVERFLOW;
-	    memcpy (f.mem, p + size - f.desc->len, f.desc->len);
+	    memcpy (f.data, p + size - f.desc->len, f.desc->len);
 	  }
 
-	put_sign (f.desc, f.mem, sign);
+	put_sign (f.desc, f.data, sign);
 	break;
       }
     }
@@ -505,7 +505,7 @@ check_condition (struct cob_field f1, ...)
   f2.desc = va_arg (args, struct fld_desc *);
   while (f2.desc)
     {
-      f2.mem = va_arg (args, char *);
+      f2.data = va_arg (args, char *);
       f3 = va_arg (args, struct cob_field);
 
       if (f1.desc->type == '9' || f1.desc->type == 'B')
@@ -524,8 +524,8 @@ check_condition (struct cob_field f1, ...)
 	{
 	  int i;
 	  for (i = 0; i < f1.desc->len; i++)
-	    if ((i < f2.desc->len) && (f1.mem[i] >= f2.mem[i]))
-	      if ((i < f3.desc->len) && (f1.mem[i] <= f3.mem[i]))
+	    if ((i < f2.desc->len) && (f1.data[i] >= f2.data[i]))
+	      if ((i < f3.desc->len) && (f1.data[i] <= f3.data[i]))
 		goto success;
 	}
       f2.desc = va_arg (args, struct fld_desc *);
@@ -560,11 +560,11 @@ compare (struct cob_field f1, struct cob_field f2)
 	  k = 0;
 	  for (i = 0; i < maxi; i++)
 	    {
-	      if (f1.mem[j] == f2.mem[k])
+	      if (f1.data[j] == f2.data[k])
 		continue;
-	      if (f1.mem[j] > f2.mem[k])
+	      if (f1.data[j] > f2.data[k])
 		return 1;
-	      if (f1.mem[j] < f2.mem[k])
+	      if (f1.data[j] < f2.data[k])
 		return -1;
 	      j++;
 	      k++;
@@ -577,7 +577,7 @@ compare (struct cob_field f1, struct cob_field f2)
 	  if (len1 > len2)
 	    while (j < len1)
 	      {
-		if (f1.mem[j++] != f2.mem[k++])
+		if (f1.data[j++] != f2.data[k++])
 		  return 1;
 		if (k >= len2)
 		  k = 0;
@@ -585,7 +585,7 @@ compare (struct cob_field f1, struct cob_field f2)
 	  else
 	    while (k < len2)
 	      {
-		if (f1.mem[j++] != f2.mem[k++])
+		if (f1.data[j++] != f2.data[k++])
 		  return -1;
 		if (j >= len1)
 		  j = 0;
@@ -595,23 +595,23 @@ compare (struct cob_field f1, struct cob_field f2)
       maxi = (len1 < len2) ? len1 : len2;
       for (i = 0; i < maxi; i++)
 	{
-	  if (f1.mem[i] == f2.mem[i])
+	  if (f1.data[i] == f2.data[i])
 	    continue;
-	  if (f1.mem[i] > f2.mem[i])
+	  if (f1.data[i] > f2.data[i])
 	    return 1;
-	  if (f1.mem[i] < f2.mem[i])
+	  if (f1.data[i] < f2.data[i])
 	    return -1;
 	}
       if (len1 > len2)
 	{
 	  while (i < len1)
-	    if (f1.mem[i++] != ' ')
+	    if (f1.data[i++] != ' ')
 	      return 1;
 	}
       else
 	{
 	  while (i < len2)
-	    if (f2.mem[i++] != ' ')
+	    if (f2.data[i++] != ' ')
 	      return -1;
 	}
     }
@@ -638,7 +638,7 @@ cob_is_zero ()
 	int i;
 	struct cob_field *p = COB_FIELD (POP ());
 	for (i = 0; i < p->desc->len; i++)
-	  if (p->mem[i] != '0')
+	  if (p->data[i] != '0')
 	    return 0;
 	return 1;
       }

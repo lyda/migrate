@@ -160,7 +160,7 @@ struct scr_desc
 
 struct cob_field {
   struct fld_desc *desc;
-  char *mem;
+  char *data;
 };
 #pragma pack()
 
