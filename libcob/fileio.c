@@ -669,7 +669,7 @@ indexed_write (struct cob_file_desc *f)
     case 0:
       break;
     case DB_KEYEXIST: 
-      return 22;
+      return 21;
     default:
       return 99;
     }
