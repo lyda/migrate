@@ -138,7 +138,7 @@ H\"[^\"\n]*\" {
       cb_tree x = word->items->item;
       if (CB_BUILTIN_P (x))
 	return MNEMONIC_NAME;
-      if (CB_CLASS_P (x))
+      if (CB_PROPOSITION_P (x))
 	return CLASS_NAME;
     }
 

@@ -466,8 +466,8 @@ integer_list:
 class_name_clause:
   CLASS undefined_word _is class_item_list
   {
-    current_program->class_list =
-      list_add (current_program->class_list, make_class ($2, $<list>4));
+    current_program->proposition_list =
+      list_add (current_program->proposition_list, make_proposition ($2, $<list>4));
   }
 ;
 class_item_list:
@@ -481,7 +481,11 @@ class_item:
     if (CB_LITERAL ($1)->data[0] < CB_LITERAL ($3)->data[0])
       $<tree>$ = make_pair ($1, $3);
     else
-      $<tree>$ = make_pair ($3, $1);
+      {
+	cb_error_x ($1, _("%s not smaller than %s"),
+		    tree_name ($1), tree_name ($3));
+	$<tree>$ = cb_error_node;
+      }
   }
 ;
 
@@ -3429,8 +3433,8 @@ expr_1:
 	cb_tree x = l->item;
 	switch (CB_TREE_TAG (x))
 	  {
-	  case cb_tag_class:
-	    class_func = CB_CLASS (x)->cname;
+	  case cb_tag_proposition:
+	    class_func = CB_PROPOSITION (x)->cname;
 	    goto unary_cond;
 	  case cb_tag_integer:
 	    {

@@ -85,7 +85,7 @@ enum cb_tag {
   cb_tag_sequence,		/* multiple statements */
   cb_tag_statement,		/* general statement */
   /* miscellaneous */
-  cb_tag_class,			/* CLASS definition */
+  cb_tag_proposition,		/* CLASS definition */
   cb_tag_builtin,
   cb_tag_parameter,
 };
@@ -581,20 +581,20 @@ extern struct cb_statement *build_statement (const char *name);
 
 
 /*
- * Class
+ * Proposition
  */
 
-struct cb_class {
+struct cb_proposition {
   struct cb_tree_common common;
   const char *name;
   char *cname;
   struct cb_list *list;
 };
 
-#define CB_CLASS(x)		(CB_TREE_CAST (cb_tag_class, struct cb_class, x))
-#define CB_CLASS_P(x)		(CB_TREE_TAG (x) == cb_tag_class)
+#define CB_PROPOSITION(x)	(CB_TREE_CAST (cb_tag_proposition, struct cb_proposition, x))
+#define CB_PROPOSITION_P(x)	(CB_TREE_TAG (x) == cb_tag_proposition)
 
-extern cb_tree make_class (cb_tree name, struct cb_list *list);
+extern cb_tree make_proposition (cb_tree name, struct cb_list *list);
 
 
 /*
@@ -641,13 +641,13 @@ struct cb_program {
   unsigned char decimal_point;		/* '.' or ',' */
   unsigned char currency_symbol;	/* '$' or user-specified */
   unsigned char numeric_separator;	/* ',' or '.' */
-  struct cb_list *class_list;
   struct cb_list *entry_list;
   struct cb_list *index_list;
   struct cb_list *file_list;
   struct cb_list *exec_list;
   struct cb_list *label_list;
   struct cb_list *reference_list;
+  struct cb_list *proposition_list;
   struct cb_field *working_storage;
   struct cb_field *linkage_storage;
   struct cb_field *screen_storage;

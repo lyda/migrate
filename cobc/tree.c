@@ -1733,7 +1733,7 @@ resolve_class_name (cb_tree x)
       undefined_error (x);
       break;
     default:
-      if (CB_CLASS_P (r->word->items->item))
+      if (CB_PROPOSITION_P (r->word->items->item))
 	{
 	  r->value = r->word->items->item;
 	  return r->value;
@@ -1976,15 +1976,15 @@ build_statement (const char *name)
 
 
 /*
- * Class
+ * Proposition
  */
 
 cb_tree
-make_class (cb_tree name, struct cb_list *list)
+make_proposition (cb_tree name, struct cb_list *list)
 {
   char buff[BUFSIZ];
-  struct cb_class *p =
-    make_tree (cb_tag_class, COB_TYPE_NUMERIC, sizeof (struct cb_class));
+  struct cb_proposition *p =
+    make_tree (cb_tag_proposition, COB_TYPE_NUMERIC, sizeof (struct cb_proposition));
   p->name = associate (name, CB_TREE (p));
   sprintf (buff, "is_%s", to_cname (p->name));
   p->cname = strdup (buff);
