@@ -308,7 +308,7 @@ relative_start (struct cob_file_desc *f, int cond, struct cob_field k)
   while (1)
     {
       if (lseek (f->file.fd, f->record_size * index, SEEK_SET) == -1
-	  || read (f->file.fd, &c, 1) == -1)
+	  || read (f->file.fd, &c, 1) <= 0)
 	return 23;
 
       /* check if a valid record */
