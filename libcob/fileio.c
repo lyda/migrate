@@ -740,7 +740,7 @@ indexed_write (struct cob_file_desc *f, struct cob_field rec)
 static int
 indexed_delete (struct cob_file_desc *f)
 {
-  int i;
+  int i, offset;
   DBT key, data;
 
   memset (&key, 0, sizeof (DBT));
@@ -762,29 +762,31 @@ indexed_delete (struct cob_file_desc *f)
     }
 
   /* delete the secondary keys */
+  offset = data.data - (void *) f->record_data;
   for (i = 1; i < f->nkeys; i++)
     {
-      DBT skey, dkey;
+      DBT skey, dkey, pkey;
       memset (&skey, 0, sizeof (DBT));
       memset (&dkey, 0, sizeof (DBT));
+      memset (&pkey, 0, sizeof (DBT));
       DBT_SET (skey, f->keys[i].field);
-      skey.data += data.data - (void *) f->record_data;
+      skey.data += offset;
       if (f->keys[i].duplicates)
 	{
 	  DBC *cursor;
 	  DB_CURSOR (f->keys[i].db, &cursor);
-	  if (cursor->c_get (cursor, &skey, &data, DB_SET) == 0)
+	  if (cursor->c_get (cursor, &skey, &pkey, DB_SET) == 0)
 	    {
 	      do {
-		if (memcmp (data.data, key.data, key.size) == 0)
+		if (memcmp (pkey.data, key.data, key.size) == 0)
 		  cursor->c_del (cursor, 0);
 	      }
 #if DB_VERSION_MAJOR == 2
-	      while (cursor->c_get (cursor, &dkey, &data, DB_NEXT) == 0
+	      while (cursor->c_get (cursor, &dkey, &pkey, DB_NEXT) == 0
 		     && skey.size == dkey.size
 		     && memcmp (dkey.data, skey.data, skey.size) == 0);
 #else
-	      while (cursor->c_get (cursor, &dkey, &data, DB_NEXT_DUP) == 0);
+	      while (cursor->c_get (cursor, &dkey, &pkey, DB_NEXT_DUP) == 0);
 #endif
 	    }
 	  cursor->c_close (cursor);
