@@ -450,7 +450,7 @@ cob_set (struct cob_field f)
 	  }
 	else
 	  {
-	    struct cob_field_desc desc = {size, '9', f.desc->decimals};
+	    struct cob_field_desc desc = {size, '9', f.desc->decimals, 0, 1};
 	    struct cob_field temp = {&desc, buff};
 	    put_sign (temp, sign);
 	    cob_move (temp, f);
