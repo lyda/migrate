@@ -598,6 +598,7 @@ extern cb_tree cb_build_cast (enum cb_cast_type type, cb_tree val);
 
 struct cb_label {
   struct cb_tree_common common;
+  int id;
   const char *name;
   const char *cname;
   struct cb_label *section;

@@ -1767,9 +1767,11 @@ cb_build_cast (enum cb_cast_type type, cb_tree val)
 cb_tree
 cb_build_label (cb_tree name, struct cb_label *section)
 {
+  static int id = 0;
   char buff[CB_MAX_CNAME];
   struct cb_label *p =
     make_tree (CB_TAG_LABEL, CB_CATEGORY_UNKNOWN, sizeof (struct cb_label));
+  p->id = id++;
   p->name = cb_define (name, CB_TREE (p));
   p->section = section;
   if (section)

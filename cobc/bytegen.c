@@ -101,6 +101,12 @@ output_inst_goto (int i)
   output_line ("\tgoto\t.L%d", i);
 }
 
+
+static void
+output_move (cb_tree src, cb_tree dst)
+{
+  output_stmt (cb_build_move (src, dst));
+}
 
 
 /*
@@ -631,6 +637,107 @@ output_cond (cb_tree x, int flag, int target)
 
 
 /*
+ * PERFORM
+ */
+
+static int perform_id = 0;
+
+static void
+output_perform_call (struct cb_label *lb, struct cb_label *le)
+{
+  output_line ("\tperform\t%d %s %d", perform_id++, lb->name, le->id);
+}
+
+static void
+output_perform_exit (struct cb_label *l)
+{
+  output_line ("\tperform-exit\t%d", l->id);
+}
+
+static void
+output_perform_once (struct cb_perform *p)
+{
+  if (CB_PAIR_P (p->body))
+    output_perform_call (CB_LABEL (cb_ref (CB_PAIR_X (p->body))),
+			 CB_LABEL (cb_ref (CB_PAIR_Y (p->body))));
+  else
+    output_stmt (p->body);
+}
+
+static void
+output_perform_until (struct cb_perform *p, struct cb_perform_varying *v)
+{
+  int loop_begin, loop_end;
+
+  if (!v)
+    {
+      /* perform body at the end */
+      output_perform_once (p);
+      return;
+    }
+
+  loop_begin = label_id++;
+  loop_end = label_id++;
+  output_inst_label (loop_begin);
+
+  if (v->next && v->next->name)
+    output_move (v->next->from, v->next->name);
+
+  if (p->test == CB_AFTER)
+    output_perform_until (p, v->next);
+
+  output_cond (v->until, 1, loop_end);
+
+  if (p->test == CB_BEFORE)
+    output_perform_until (p, v->next);
+
+  if (v->step)
+    output_stmt (v->step);
+
+  output_inst_goto (loop_begin);
+  output_inst_label (loop_end);
+}
+
+static void
+output_perform (struct cb_perform *p)
+{
+  static int loop_counter = 0;
+
+  switch (p->type)
+    {
+    case CB_PERFORM_EXIT:
+      if (CB_LABEL (p->data)->need_return)
+	output_perform_exit (CB_LABEL (p->data));
+      break;
+    case CB_PERFORM_ONCE:
+      output_perform_once (p);
+      break;
+    case CB_PERFORM_TIMES:
+      {
+	int loop_start = label_id++;
+	int loop_end = label_id++;
+	output_integer (p->data);
+	output_line ("\tlpop\tn%d", loop_counter);
+	output_inst_goto (loop_end);
+	output_inst_label (loop_start);
+	output_perform_once (p);
+	output_inst_label (loop_end);
+	output_line ("\tldec\tn%d", loop_counter);
+	output_line ("\tlpush\tn%d", loop_counter);
+	output_line ("\tifgt\t.L%d", loop_start);
+	loop_counter++;
+	break;
+      }
+    case CB_PERFORM_UNTIL:
+      if (p->varying->name)
+	output_move (p->varying->from, p->varying->name);
+      output_perform_until (p, p->varying);
+      break;
+    }
+}
+
+
+/*
  * Statement
  */
 
@@ -663,10 +770,8 @@ output_stmt (cb_tree x)
     case CB_TAG_LABEL:
       {
 	struct cb_label *p = CB_LABEL (x);
-	output_newline ();
-	output_line ("; %s:", p->name);
 	if (p->need_begin)
-	  output_line ("%s:", p->cname);
+	  output_line ("%s:", p->name);
 	break;
       }
     case CB_TAG_FUNCALL:
@@ -699,13 +804,11 @@ output_stmt (cb_tree x)
 	output_inst_label (l2);
 	break;
       }
-#if 0
     case CB_TAG_PERFORM:
       {
 	output_perform (CB_PERFORM (x));
 	break;
       }
-#endif
     case CB_TAG_SEQUENCE:
       {
 	struct cb_sequence *p = CB_SEQUENCE (x);
@@ -731,6 +834,13 @@ output_internal_method (struct cb_program *prog, cb_tree parameter_list)
   for (l = prog->exec_list; l; l = CB_CHAIN (l))
     output_stmt (CB_VALUE (l));
 
+  if (perform_id > 0)
+    {
+      output_line ("\tgoto\texit-program");
+      output_line ("\tperform-table\t%d", perform_id);
+    }
+
+  output_line ("exit-program:");
   output_line ("\treturn");
 }
 

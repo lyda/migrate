@@ -1476,8 +1476,8 @@ output_perform_call (struct cb_label *lb, struct cb_label *le)
 {
   static int id = 1;
   output_line ("/* PERFORM %s THRU %s */", lb->name, le->name);
-  output_line ("frame_stack[++frame_index] = (struct frame) {le_%s, &&l_%d};",
-	       le->cname, id);
+  output_line ("frame_stack[++frame_index] = (struct frame) {%d, &&l_%d};",
+	       le->id, id);
   output_line ("goto lb_%s;", lb->cname);
   output_line ("l_%d:", id++);
   output_line ("frame_index--;");
@@ -1486,8 +1486,7 @@ output_perform_call (struct cb_label *lb, struct cb_label *le)
 static void
 output_perform_exit (struct cb_label *l)
 {
-  output_line ("if (frame_stack[frame_index].perform_through == le_%s)",
-	       l->cname);
+  output_line ("if (frame_stack[frame_index].perform_through == %d)", l->id);
   output_line ("  goto *frame_stack[frame_index].return_address;");
 }
 
@@ -2231,15 +2230,6 @@ codegen (struct cb_program *prog)
   for (l = prog->index_list; l; l = CB_CHAIN (l))
     output ("static int i_%s;\n", CB_FIELD (CB_VALUE (l))->cname);
   output_newline ();
-
-  /* labels */
-  output ("/* Labels */\n\n");
-  output ("enum {\n");
-  output ("  le_standard_error_handler,\n");
-  for (l = prog->exec_list; l; l = CB_CHAIN (l))
-    if (CB_LABEL_P (CB_VALUE (l)) && CB_LABEL (CB_VALUE (l))->need_return)
-      output ("  le_%s,\n", CB_LABEL (CB_VALUE (l))->cname);
-  output ("};\n\n");
 
   /* alphabet-names */
   for (l = prog->alphabet_name_list; l; l = CB_CHAIN (l))
