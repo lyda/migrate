@@ -88,10 +88,11 @@ AT_DATA([callee.cob], [
        PROGRAM-ID.      callee.
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
-       01 X             PIC X(5) EXTERNAL.
+       01 WRK-VAR       PIC X(5).
+       01 EXT-VAR       PIC X(5) EXTERNAL.
        PROCEDURE        DIVISION.
-           DISPLAY X.
-           MOVE "World" TO X.
+           DISPLAY EXT-VAR.
+           MOVE "World" TO EXT-VAR.
            EXIT PROGRAM.
 ])
 
@@ -100,11 +101,12 @@ AT_DATA([caller.cob], [
        PROGRAM-ID.      caller.
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
-       01 X             PIC X(5) EXTERNAL.
+       01 EXT-VAR       PIC X(5) EXTERNAL.
+       01 WRK-VAR       PIC X(5).
        PROCEDURE        DIVISION.
-           MOVE "Hello" TO X.
+           MOVE "Hello" TO EXT-VAR.
            CALL "callee".
-           DISPLAY X.
+           DISPLAY EXT-VAR.
            STOP RUN.
 ])
 

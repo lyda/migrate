@@ -342,28 +342,28 @@ at_help_all='1;fundamental.at:22;DISPLAY literals;;
 31;misc.at:30;Comma separator without space;;
 32;misc.at:46;LOCAL-STORAGE;;
 33;misc.at:84;EXTERNAL data item;;
-34;misc.at:123;MOVE to itself;;
-35;misc.at:142;MOVE with refmod;;
-36;misc.at:161;MOVE with refmod;;
-37;misc.at:182;MOVE with group refmod;;
-38;misc.at:202;MOVE indexes;;
-39;misc.at:223;MOVE X'00';;
-40;misc.at:255;Level 01 subscripts;;
-41;misc.at:276;Class check with reference modification;;
-42;misc.at:296;Index and parenthesized expression;;
-43;misc.at:318;Dynamic call with static linking;;
-44;misc.at:341;CALL m1. CALL m2. CALL m1.;;
-45;misc.at:390;INSPECT REPLACING LEADING ZEROS BY SPACES;;
-46;misc.at:412;Nested PERFORM;;
-47;misc.at:433;88 with FILLER;;
-48;misc.at:458;non-overflow after overflow;;
-49;misc.at:482;PERFORM ... CONTINUE;;
-50;misc.at:498;STRING with subscript reference;;
-51;misc.at:519;READ INTO AT-END sequence;;
-52;misc.at:552;First READ on an empty SEQUENTIAL INDEXED file;;
-53;misc.at:586;REWRITE a RELATIVE file with RANDAM access;;
-54;misc.at:632;SORT nonexistent file;;
-55;misc.at:666;PIC ZZZ-, ZZZ+;;
+34;misc.at:125;MOVE to itself;;
+35;misc.at:144;MOVE with refmod;;
+36;misc.at:163;MOVE with refmod;;
+37;misc.at:184;MOVE with group refmod;;
+38;misc.at:204;MOVE indexes;;
+39;misc.at:225;MOVE X'00';;
+40;misc.at:257;Level 01 subscripts;;
+41;misc.at:278;Class check with reference modification;;
+42;misc.at:298;Index and parenthesized expression;;
+43;misc.at:320;Dynamic call with static linking;;
+44;misc.at:343;CALL m1. CALL m2. CALL m1.;;
+45;misc.at:392;INSPECT REPLACING LEADING ZEROS BY SPACES;;
+46;misc.at:414;Nested PERFORM;;
+47;misc.at:435;88 with FILLER;;
+48;misc.at:460;non-overflow after overflow;;
+49;misc.at:484;PERFORM ... CONTINUE;;
+50;misc.at:500;STRING with subscript reference;;
+51;misc.at:521;READ INTO AT-END sequence;;
+52;misc.at:554;First READ on an empty SEQUENTIAL INDEXED file;;
+53;misc.at:588;REWRITE a RELATIVE file with RANDAM access;;
+54;misc.at:634;SORT nonexistent file;;
+55;misc.at:668;PIC ZZZ-, ZZZ+;;
 56;extensions.at:23;COMP-5;;
 57;extensions.at:62;Hexadecimal numeric literal;;
 58;extensions.at:88;Semi-parenthesized condition;;
@@ -3505,10 +3505,11 @@ cat >callee.cob <<'_ATEOF'
        PROGRAM-ID.      callee.
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
-       01 X             PIC X(5) EXTERNAL.
+       01 WRK-VAR       PIC X(5).
+       01 EXT-VAR       PIC X(5) EXTERNAL.
        PROCEDURE        DIVISION.
-           DISPLAY X.
-           MOVE "World" TO X.
+           DISPLAY EXT-VAR.
+           MOVE "World" TO EXT-VAR.
            EXIT PROGRAM.
 _ATEOF
 
@@ -3519,18 +3520,19 @@ cat >caller.cob <<'_ATEOF'
        PROGRAM-ID.      caller.
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
-       01 X             PIC X(5) EXTERNAL.
+       01 EXT-VAR       PIC X(5) EXTERNAL.
+       01 WRK-VAR       PIC X(5).
        PROCEDURE        DIVISION.
-           MOVE "Hello" TO X.
+           MOVE "Hello" TO EXT-VAR.
            CALL "callee".
-           DISPLAY X.
+           DISPLAY EXT-VAR.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "misc.at:111: \${COMPILE_MODULE} callee.cob"
-echo misc.at:111 >$at_check_line_file
+echo "misc.at:113: \${COMPILE_MODULE} callee.cob"
+echo misc.at:113 >$at_check_line_file
 ( $at_traceon; ${COMPILE_MODULE} callee.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3542,7 +3544,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:111: exit code was $at_status, expected 0"
+   *) echo "misc.at:113: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3554,8 +3556,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:112: \${COMPILE} -o prog caller.cob"
-echo misc.at:112 >$at_check_line_file
+echo "misc.at:114: \${COMPILE} -o prog caller.cob"
+echo misc.at:114 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog caller.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3567,7 +3569,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:112: exit code was $at_status, expected 0"
+   *) echo "misc.at:114: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3579,8 +3581,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:116: ./prog"
-echo misc.at:116 >$at_check_line_file
+echo "misc.at:118: ./prog"
+echo misc.at:118 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3594,7 +3596,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:116: exit code was $at_status, expected 0"
+   *) echo "misc.at:118: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3612,13 +3614,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  34 ) # 34. misc.at:123: MOVE to itself
-    at_setup_line='misc.at:123'
+  34 ) # 34. misc.at:125: MOVE to itself
+    at_setup_line='misc.at:125'
     at_desc='MOVE to itself'
     $at_quiet $ECHO_N " 34: MOVE to itself                               $ECHO_C"
     at_xfail=no
     (
-      echo "34. misc.at:123: testing ..."
+      echo "34. misc.at:125: testing ..."
       $at_traceon
 
 
@@ -3637,8 +3639,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:137: \${COMPILE} -o prog prog.cob"
-echo misc.at:137 >$at_check_line_file
+echo "misc.at:139: \${COMPILE} -o prog prog.cob"
+echo misc.at:139 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3650,7 +3652,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:137: exit code was $at_status, expected 0"
+   *) echo "misc.at:139: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3662,8 +3664,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:138: ./prog"
-echo misc.at:138 >$at_check_line_file
+echo "misc.at:140: ./prog"
+echo misc.at:140 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3675,7 +3677,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:138: exit code was $at_status, expected 0"
+   *) echo "misc.at:140: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3693,13 +3695,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  35 ) # 35. misc.at:142: MOVE with refmod
-    at_setup_line='misc.at:142'
+  35 ) # 35. misc.at:144: MOVE with refmod
+    at_setup_line='misc.at:144'
     at_desc='MOVE with refmod'
     $at_quiet $ECHO_N " 35: MOVE with refmod                             $ECHO_C"
     at_xfail=no
     (
-      echo "35. misc.at:142: testing ..."
+      echo "35. misc.at:144: testing ..."
       $at_traceon
 
 
@@ -3718,8 +3720,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:156: \${COMPILE} -o prog prog.cob"
-echo misc.at:156 >$at_check_line_file
+echo "misc.at:158: \${COMPILE} -o prog prog.cob"
+echo misc.at:158 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3731,7 +3733,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:156: exit code was $at_status, expected 0"
+   *) echo "misc.at:158: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3743,8 +3745,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:157: ./prog"
-echo misc.at:157 >$at_check_line_file
+echo "misc.at:159: ./prog"
+echo misc.at:159 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3756,7 +3758,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:157: exit code was $at_status, expected 0"
+   *) echo "misc.at:159: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3774,13 +3776,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  36 ) # 36. misc.at:161: MOVE with refmod
-    at_setup_line='misc.at:161'
+  36 ) # 36. misc.at:163: MOVE with refmod
+    at_setup_line='misc.at:163'
     at_desc='MOVE with refmod'
     $at_quiet $ECHO_N " 36: MOVE with refmod                             $ECHO_C"
     at_xfail=no
     (
-      echo "36. misc.at:161: testing ..."
+      echo "36. misc.at:163: testing ..."
       $at_traceon
 
 
@@ -3801,8 +3803,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:177: \${COMPILE} -o prog prog.cob"
-echo misc.at:177 >$at_check_line_file
+echo "misc.at:179: \${COMPILE} -o prog prog.cob"
+echo misc.at:179 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3814,7 +3816,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:177: exit code was $at_status, expected 0"
+   *) echo "misc.at:179: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3826,8 +3828,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:178: ./prog"
-echo misc.at:178 >$at_check_line_file
+echo "misc.at:180: ./prog"
+echo misc.at:180 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3839,7 +3841,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:178: exit code was $at_status, expected 0"
+   *) echo "misc.at:180: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3857,13 +3859,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  37 ) # 37. misc.at:182: MOVE with group refmod
-    at_setup_line='misc.at:182'
+  37 ) # 37. misc.at:184: MOVE with group refmod
+    at_setup_line='misc.at:184'
     at_desc='MOVE with group refmod'
     $at_quiet $ECHO_N " 37: MOVE with group refmod                       $ECHO_C"
     at_xfail=no
     (
-      echo "37. misc.at:182: testing ..."
+      echo "37. misc.at:184: testing ..."
       $at_traceon
 
 
@@ -3883,8 +3885,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:197: \${COMPILE} -o prog prog.cob"
-echo misc.at:197 >$at_check_line_file
+echo "misc.at:199: \${COMPILE} -o prog prog.cob"
+echo misc.at:199 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3896,7 +3898,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:197: exit code was $at_status, expected 0"
+   *) echo "misc.at:199: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3908,8 +3910,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:198: ./prog"
-echo misc.at:198 >$at_check_line_file
+echo "misc.at:200: ./prog"
+echo misc.at:200 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3921,7 +3923,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:198: exit code was $at_status, expected 0"
+   *) echo "misc.at:200: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3939,13 +3941,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  38 ) # 38. misc.at:202: MOVE indexes
-    at_setup_line='misc.at:202'
+  38 ) # 38. misc.at:204: MOVE indexes
+    at_setup_line='misc.at:204'
     at_desc='MOVE indexes'
     $at_quiet $ECHO_N " 38: MOVE indexes                                 $ECHO_C"
     at_xfail=no
     (
-      echo "38. misc.at:202: testing ..."
+      echo "38. misc.at:204: testing ..."
       $at_traceon
 
 
@@ -3966,8 +3968,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:218: \${COMPILE} -o prog prog.cob"
-echo misc.at:218 >$at_check_line_file
+echo "misc.at:220: \${COMPILE} -o prog prog.cob"
+echo misc.at:220 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3979,7 +3981,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:218: exit code was $at_status, expected 0"
+   *) echo "misc.at:220: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3991,8 +3993,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:219: ./prog"
-echo misc.at:219 >$at_check_line_file
+echo "misc.at:221: ./prog"
+echo misc.at:221 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4004,7 +4006,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:219: exit code was $at_status, expected 0"
+   *) echo "misc.at:221: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -4022,13 +4024,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  39 ) # 39. misc.at:223: MOVE X'00'
-    at_setup_line='misc.at:223'
+  39 ) # 39. misc.at:225: MOVE X'00'
+    at_setup_line='misc.at:225'
     at_desc='MOVE X'00''
     $at_quiet $ECHO_N " 39: MOVE X'00'                                   $ECHO_C"
     at_xfail=no
     (
-      echo "39. misc.at:223: testing ..."
+      echo "39. misc.at:225: testing ..."
       $at_traceon
 
 
@@ -4043,8 +4045,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:233: \${CC} -shared -o dump.\${SHREXT} dump.c"
-echo misc.at:233 >$at_check_line_file
+echo "misc.at:235: \${CC} -shared -o dump.\${SHREXT} dump.c"
+echo misc.at:235 >$at_check_line_file
 ( $at_traceon; ${CC} -shared -o dump.${SHREXT} dump.c ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4056,7 +4058,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:233: exit code was $at_status, expected 0"
+   *) echo "misc.at:235: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -4083,8 +4085,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:247: \${COMPILE} -o prog prog.cob"
-echo misc.at:247 >$at_check_line_file
+echo "misc.at:249: \${COMPILE} -o prog prog.cob"
+echo misc.at:249 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4096,7 +4098,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:247: exit code was $at_status, expected 0"
+   *) echo "misc.at:249: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -4108,8 +4110,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:248: ./prog"
-echo misc.at:248 >$at_check_line_file
+echo "misc.at:250: ./prog"
+echo misc.at:250 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4121,7 +4123,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:248: exit code was $at_status, expected 0"
+   *) echo "misc.at:250: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -4139,13 +4141,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  40 ) # 40. misc.at:255: Level 01 subscripts
-    at_setup_line='misc.at:255'
+  40 ) # 40. misc.at:257: Level 01 subscripts
+    at_setup_line='misc.at:257'
     at_desc='Level 01 subscripts'
     $at_quiet $ECHO_N " 40: Level 01 subscripts                          $ECHO_C"
     at_xfail=no
     (
-      echo "40. misc.at:255: testing ..."
+      echo "40. misc.at:257: testing ..."
       $at_traceon
 
 
@@ -4162,8 +4164,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:269: \${COMPILE_ONLY} prog.cob"
-echo misc.at:269 >$at_check_line_file
+echo "misc.at:271: \${COMPILE_ONLY} prog.cob"
+echo misc.at:271 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4176,7 +4178,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "misc.at:269: exit code was $at_status, expected 1"
+   *) echo "misc.at:271: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -4194,13 +4196,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  41 ) # 41. misc.at:276: Class check with reference modification
-    at_setup_line='misc.at:276'
+  41 ) # 41. misc.at:278: Class check with reference modification
+    at_setup_line='misc.at:278'
     at_desc='Class check with reference modification'
     $at_quiet $ECHO_N " 41: Class check with reference modification      $ECHO_C"
     at_xfail=no
     (
-      echo "41. misc.at:276: testing ..."
+      echo "41. misc.at:278: testing ..."
       $at_traceon
 
 
@@ -4220,8 +4222,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:291: \${COMPILE} -o prog prog.cob"
-echo misc.at:291 >$at_check_line_file
+echo "misc.at:293: \${COMPILE} -o prog prog.cob"
+echo misc.at:293 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4233,7 +4235,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:291: exit code was $at_status, expected 0"
+   *) echo "misc.at:293: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -4245,8 +4247,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:292: ./prog"
-echo misc.at:292 >$at_check_line_file
+echo "misc.at:294: ./prog"
+echo misc.at:294 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4258,7 +4260,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:292: exit code was $at_status, expected 0"
+   *) echo "misc.at:294: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -4276,13 +4278,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  42 ) # 42. misc.at:296: Index and parenthesized expression
-    at_setup_line='misc.at:296'
+  42 ) # 42. misc.at:298: Index and parenthesized expression
+    at_setup_line='misc.at:298'
     at_desc='Index and parenthesized expression'
     $at_quiet $ECHO_N " 42: Index and parenthesized expression           $ECHO_C"
     at_xfail=no
     (
-      echo "42. misc.at:296: testing ..."
+      echo "42. misc.at:298: testing ..."
       $at_traceon
 
 
@@ -4302,8 +4304,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:311: \${COMPILE_ONLY} -o prog prog.cob"
-echo misc.at:311 >$at_check_line_file
+echo "misc.at:313: \${COMPILE_ONLY} -o prog prog.cob"
+echo misc.at:313 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4315,7 +4317,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:311: exit code was $at_status, expected 0"
+   *) echo "misc.at:313: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -4333,13 +4335,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  43 ) # 43. misc.at:318: Dynamic call with static linking
-    at_setup_line='misc.at:318'
+  43 ) # 43. misc.at:320: Dynamic call with static linking
+    at_setup_line='misc.at:320'
     at_desc='Dynamic call with static linking'
     $at_quiet $ECHO_N " 43: Dynamic call with static linking             $ECHO_C"
     at_xfail=no
     (
-      echo "43. misc.at:318: testing ..."
+      echo "43. misc.at:320: testing ..."
       $at_traceon
 
 
@@ -4362,59 +4364,9 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:334: \${COMPILE} -c callee.cob"
-echo misc.at:334 >$at_check_line_file
-( $at_traceon; ${COMPILE} -c callee.cob ) >$at_stdout 2>$at_stder1
-at_status=$?
-grep '^ *+' $at_stder1 >&2
-grep -v '^ *+' $at_stder1 >$at_stderr
-at_failed=false
-$at_diff $at_devnull $at_stderr || at_failed=:
-$at_diff $at_devnull $at_stdout || at_failed=:
-case $at_status in
-   77) echo 77 > $at_status_file
-            exit 77;;
-   0) ;;
-   *) echo "misc.at:334: exit code was $at_status, expected 0"
-      at_failed=:;;
-esac
-if $at_failed; then
-
-  echo 1 > $at_status_file
-  exit 1
-fi
-
-$at_traceon
-
-$at_traceoff
-echo "misc.at:335: \${COMPILE} -c -fmain caller.cob"
-echo misc.at:335 >$at_check_line_file
-( $at_traceon; ${COMPILE} -c -fmain caller.cob ) >$at_stdout 2>$at_stder1
-at_status=$?
-grep '^ *+' $at_stder1 >&2
-grep -v '^ *+' $at_stder1 >$at_stderr
-at_failed=false
-$at_diff $at_devnull $at_stderr || at_failed=:
-$at_diff $at_devnull $at_stdout || at_failed=:
-case $at_status in
-   77) echo 77 > $at_status_file
-            exit 77;;
-   0) ;;
-   *) echo "misc.at:335: exit code was $at_status, expected 0"
-      at_failed=:;;
-esac
-if $at_failed; then
-
-  echo 1 > $at_status_file
-  exit 1
-fi
-
-$at_traceon
-
-$at_traceoff
-echo "misc.at:336: \${COMPILE} -o prog caller.o callee.o"
+echo "misc.at:336: \${COMPILE} -c callee.cob"
 echo misc.at:336 >$at_check_line_file
-( $at_traceon; ${COMPILE} -o prog caller.o callee.o ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${COMPILE} -c callee.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -4437,8 +4389,58 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:337: ./prog"
+echo "misc.at:337: \${COMPILE} -c -fmain caller.cob"
 echo misc.at:337 >$at_check_line_file
+( $at_traceon; ${COMPILE} -c -fmain caller.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "misc.at:337: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "misc.at:338: \${COMPILE} -o prog caller.o callee.o"
+echo misc.at:338 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog caller.o callee.o ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "misc.at:338: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "misc.at:339: ./prog"
+echo misc.at:339 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4450,7 +4452,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:337: exit code was $at_status, expected 0"
+   *) echo "misc.at:339: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -4468,13 +4470,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  44 ) # 44. misc.at:341: CALL m1. CALL m2. CALL m1.
-    at_setup_line='misc.at:341'
+  44 ) # 44. misc.at:343: CALL m1. CALL m2. CALL m1.
+    at_setup_line='misc.at:343'
     at_desc='CALL m1. CALL m2. CALL m1.'
     $at_quiet $ECHO_N " 44: CALL m1. CALL m2. CALL m1.                   $ECHO_C"
     at_xfail=no
     (
-      echo "44. misc.at:341: testing ..."
+      echo "44. misc.at:343: testing ..."
       $at_traceon
 
 
@@ -4517,59 +4519,9 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:375: \${COMPILE_MODULE} m1.cob"
-echo misc.at:375 >$at_check_line_file
-( $at_traceon; ${COMPILE_MODULE} m1.cob ) >$at_stdout 2>$at_stder1
-at_status=$?
-grep '^ *+' $at_stder1 >&2
-grep -v '^ *+' $at_stder1 >$at_stderr
-at_failed=false
-$at_diff $at_devnull $at_stderr || at_failed=:
-$at_diff $at_devnull $at_stdout || at_failed=:
-case $at_status in
-   77) echo 77 > $at_status_file
-            exit 77;;
-   0) ;;
-   *) echo "misc.at:375: exit code was $at_status, expected 0"
-      at_failed=:;;
-esac
-if $at_failed; then
-
-  echo 1 > $at_status_file
-  exit 1
-fi
-
-$at_traceon
-
-$at_traceoff
-echo "misc.at:376: \${COMPILE_MODULE} m2.cob"
-echo misc.at:376 >$at_check_line_file
-( $at_traceon; ${COMPILE_MODULE} m2.cob ) >$at_stdout 2>$at_stder1
-at_status=$?
-grep '^ *+' $at_stder1 >&2
-grep -v '^ *+' $at_stder1 >$at_stderr
-at_failed=false
-$at_diff $at_devnull $at_stderr || at_failed=:
-$at_diff $at_devnull $at_stdout || at_failed=:
-case $at_status in
-   77) echo 77 > $at_status_file
-            exit 77;;
-   0) ;;
-   *) echo "misc.at:376: exit code was $at_status, expected 0"
-      at_failed=:;;
-esac
-if $at_failed; then
-
-  echo 1 > $at_status_file
-  exit 1
-fi
-
-$at_traceon
-
-$at_traceoff
-echo "misc.at:377: \${COMPILE} -o caller caller.cob"
+echo "misc.at:377: \${COMPILE_MODULE} m1.cob"
 echo misc.at:377 >$at_check_line_file
-( $at_traceon; ${COMPILE} -o caller caller.cob ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${COMPILE_MODULE} m1.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -4591,10 +4543,60 @@ fi
 
 $at_traceon
 
+$at_traceoff
+echo "misc.at:378: \${COMPILE_MODULE} m2.cob"
+echo misc.at:378 >$at_check_line_file
+( $at_traceon; ${COMPILE_MODULE} m2.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "misc.at:378: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
 
 $at_traceoff
-echo "misc.at:383: ./caller"
-echo misc.at:383 >$at_check_line_file
+echo "misc.at:379: \${COMPILE} -o caller caller.cob"
+echo misc.at:379 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o caller caller.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "misc.at:379: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+$at_traceoff
+echo "misc.at:385: ./caller"
+echo misc.at:385 >$at_check_line_file
 ( $at_traceon; ./caller ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4609,7 +4611,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:383: exit code was $at_status, expected 0"
+   *) echo "misc.at:385: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -4627,13 +4629,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  45 ) # 45. misc.at:390: INSPECT REPLACING LEADING ZEROS BY SPACES
-    at_setup_line='misc.at:390'
+  45 ) # 45. misc.at:392: INSPECT REPLACING LEADING ZEROS BY SPACES
+    at_setup_line='misc.at:392'
     at_desc='INSPECT REPLACING LEADING ZEROS BY SPACES'
     $at_quiet $ECHO_N " 45: INSPECT REPLACING LEADING ZEROS BY SPACES    $ECHO_C"
     at_xfail=no
     (
-      echo "45. misc.at:390: testing ..."
+      echo "45. misc.at:392: testing ..."
       $at_traceon
 
 
@@ -4652,8 +4654,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:404: \${COMPILE} prog.cob"
-echo misc.at:404 >$at_check_line_file
+echo "misc.at:406: \${COMPILE} prog.cob"
+echo misc.at:406 >$at_check_line_file
 ( $at_traceon; ${COMPILE} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4665,7 +4667,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:404: exit code was $at_status, expected 0"
+   *) echo "misc.at:406: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -4677,8 +4679,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:405: ./prog"
-echo misc.at:405 >$at_check_line_file
+echo "misc.at:407: ./prog"
+echo misc.at:407 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4690,7 +4692,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:405: exit code was $at_status, expected 0"
+   *) echo "misc.at:407: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -4708,13 +4710,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  46 ) # 46. misc.at:412: Nested PERFORM
-    at_setup_line='misc.at:412'
+  46 ) # 46. misc.at:414: Nested PERFORM
+    at_setup_line='misc.at:414'
     at_desc='Nested PERFORM'
     $at_quiet $ECHO_N " 46: Nested PERFORM                               $ECHO_C"
     at_xfail=no
     (
-      echo "46. misc.at:412: testing ..."
+      echo "46. misc.at:414: testing ..."
       $at_traceon
 
 
@@ -4734,8 +4736,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:427: \${COMPILE} -o prog prog.cob"
-echo misc.at:427 >$at_check_line_file
+echo "misc.at:429: \${COMPILE} -o prog prog.cob"
+echo misc.at:429 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4747,7 +4749,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:427: exit code was $at_status, expected 0"
+   *) echo "misc.at:429: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -4759,8 +4761,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:428: ./prog"
-echo misc.at:428 >$at_check_line_file
+echo "misc.at:430: ./prog"
+echo misc.at:430 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4772,7 +4774,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:428: exit code was $at_status, expected 0"
+   *) echo "misc.at:430: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -4790,13 +4792,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  47 ) # 47. misc.at:433: 88 with FILLER
-    at_setup_line='misc.at:433'
+  47 ) # 47. misc.at:435: 88 with FILLER
+    at_setup_line='misc.at:435'
     at_desc='88 with FILLER'
     $at_quiet $ECHO_N " 47: 88 with FILLER                               $ECHO_C"
     at_xfail=no
     (
-      echo "47. misc.at:433: testing ..."
+      echo "47. misc.at:435: testing ..."
       $at_traceon
 
 
@@ -4821,8 +4823,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:453: \${COMPILE} -o prog prog.cob"
-echo misc.at:453 >$at_check_line_file
+echo "misc.at:455: \${COMPILE} -o prog prog.cob"
+echo misc.at:455 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4834,7 +4836,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:453: exit code was $at_status, expected 0"
+   *) echo "misc.at:455: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -4846,8 +4848,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:454: ./prog"
-echo misc.at:454 >$at_check_line_file
+echo "misc.at:456: ./prog"
+echo misc.at:456 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4859,7 +4861,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:454: exit code was $at_status, expected 0"
+   *) echo "misc.at:456: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -4877,13 +4879,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  48 ) # 48. misc.at:458: non-overflow after overflow
-    at_setup_line='misc.at:458'
+  48 ) # 48. misc.at:460: non-overflow after overflow
+    at_setup_line='misc.at:460'
     at_desc='non-overflow after overflow'
     $at_quiet $ECHO_N " 48: non-overflow after overflow                  $ECHO_C"
     at_xfail=no
     (
-      echo "48. misc.at:458: testing ..."
+      echo "48. misc.at:460: testing ..."
       $at_traceon
 
 
@@ -4904,8 +4906,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:474: \${COMPILE} -o prog prog.cob"
-echo misc.at:474 >$at_check_line_file
+echo "misc.at:476: \${COMPILE} -o prog prog.cob"
+echo misc.at:476 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4917,7 +4919,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:474: exit code was $at_status, expected 0"
+   *) echo "misc.at:476: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -4929,8 +4931,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:475: ./prog"
-echo misc.at:475 >$at_check_line_file
+echo "misc.at:477: ./prog"
+echo misc.at:477 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4942,7 +4944,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:475: exit code was $at_status, expected 0"
+   *) echo "misc.at:477: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -4960,13 +4962,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  49 ) # 49. misc.at:482: PERFORM ... CONTINUE
-    at_setup_line='misc.at:482'
+  49 ) # 49. misc.at:484: PERFORM ... CONTINUE
+    at_setup_line='misc.at:484'
     at_desc='PERFORM ... CONTINUE'
     $at_quiet $ECHO_N " 49: PERFORM ... CONTINUE                         $ECHO_C"
     at_xfail=no
     (
-      echo "49. misc.at:482: testing ..."
+      echo "49. misc.at:484: testing ..."
       $at_traceon
 
 
@@ -4982,8 +4984,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:493: \${COMPILE_ONLY} prog.cob"
-echo misc.at:493 >$at_check_line_file
+echo "misc.at:495: \${COMPILE_ONLY} prog.cob"
+echo misc.at:495 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -4995,7 +4997,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:493: exit code was $at_status, expected 0"
+   *) echo "misc.at:495: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5013,13 +5015,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  50 ) # 50. misc.at:498: STRING with subscript reference
-    at_setup_line='misc.at:498'
+  50 ) # 50. misc.at:500: STRING with subscript reference
+    at_setup_line='misc.at:500'
     at_desc='STRING with subscript reference'
     $at_quiet $ECHO_N " 50: STRING with subscript reference              $ECHO_C"
     at_xfail=no
     (
-      echo "50. misc.at:498: testing ..."
+      echo "50. misc.at:500: testing ..."
       $at_traceon
 
 
@@ -5039,8 +5041,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:513: \${COMPILE} -o prog prog.cob"
-echo misc.at:513 >$at_check_line_file
+echo "misc.at:515: \${COMPILE} -o prog prog.cob"
+echo misc.at:515 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5052,7 +5054,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:513: exit code was $at_status, expected 0"
+   *) echo "misc.at:515: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5064,8 +5066,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:514: ./prog"
-echo misc.at:514 >$at_check_line_file
+echo "misc.at:516: ./prog"
+echo misc.at:516 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5077,7 +5079,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:514: exit code was $at_status, expected 0"
+   *) echo "misc.at:516: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5095,13 +5097,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  51 ) # 51. misc.at:519: READ INTO AT-END sequence
-    at_setup_line='misc.at:519'
+  51 ) # 51. misc.at:521: READ INTO AT-END sequence
+    at_setup_line='misc.at:521'
     at_desc='READ INTO AT-END sequence'
     $at_quiet $ECHO_N " 51: READ INTO AT-END sequence                    $ECHO_C"
     at_xfail=no
     (
-      echo "51. misc.at:519: testing ..."
+      echo "51. misc.at:521: testing ..."
       $at_traceon
 
 
@@ -5133,8 +5135,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:546: \${COMPILE} -o prog prog.cob"
-echo misc.at:546 >$at_check_line_file
+echo "misc.at:548: \${COMPILE} -o prog prog.cob"
+echo misc.at:548 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5146,7 +5148,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:546: exit code was $at_status, expected 0"
+   *) echo "misc.at:548: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5158,8 +5160,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:547: ./prog"
-echo misc.at:547 >$at_check_line_file
+echo "misc.at:549: ./prog"
+echo misc.at:549 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5171,7 +5173,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:547: exit code was $at_status, expected 0"
+   *) echo "misc.at:549: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5189,13 +5191,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  52 ) # 52. misc.at:552: First READ on an empty SEQUENTIAL INDEXED file
-    at_setup_line='misc.at:552'
+  52 ) # 52. misc.at:554: First READ on an empty SEQUENTIAL INDEXED file
+    at_setup_line='misc.at:554'
     at_desc='First READ on an empty SEQUENTIAL INDEXED file'
     $at_quiet $ECHO_N " 52: First READ on an empty SEQUENTIAL INDEXED file$ECHO_C"
     at_xfail=no
     (
-      echo "52. misc.at:552: testing ..."
+      echo "52. misc.at:554: testing ..."
       $at_traceon
 
 
@@ -5228,8 +5230,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:580: \${COMPILE} -o prog prog.cob"
-echo misc.at:580 >$at_check_line_file
+echo "misc.at:582: \${COMPILE} -o prog prog.cob"
+echo misc.at:582 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5241,7 +5243,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:580: exit code was $at_status, expected 0"
+   *) echo "misc.at:582: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5253,8 +5255,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:581: ./prog"
-echo misc.at:581 >$at_check_line_file
+echo "misc.at:583: ./prog"
+echo misc.at:583 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5266,7 +5268,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:581: exit code was $at_status, expected 0"
+   *) echo "misc.at:583: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5284,13 +5286,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  53 ) # 53. misc.at:586: REWRITE a RELATIVE file with RANDAM access
-    at_setup_line='misc.at:586'
+  53 ) # 53. misc.at:588: REWRITE a RELATIVE file with RANDAM access
+    at_setup_line='misc.at:588'
     at_desc='REWRITE a RELATIVE file with RANDAM access'
     $at_quiet $ECHO_N " 53: REWRITE a RELATIVE file with RANDAM access   $ECHO_C"
     at_xfail=no
     (
-      echo "53. misc.at:586: testing ..."
+      echo "53. misc.at:588: testing ..."
       $at_traceon
 
 
@@ -5332,8 +5334,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:623: \${COMPILE} -o prog prog.cob"
-echo misc.at:623 >$at_check_line_file
+echo "misc.at:625: \${COMPILE} -o prog prog.cob"
+echo misc.at:625 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5345,7 +5347,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:623: exit code was $at_status, expected 0"
+   *) echo "misc.at:625: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5357,8 +5359,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:627: ./prog"
-echo misc.at:627 >$at_check_line_file
+echo "misc.at:629: ./prog"
+echo misc.at:629 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5372,7 +5374,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:627: exit code was $at_status, expected 0"
+   *) echo "misc.at:629: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5390,13 +5392,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  54 ) # 54. misc.at:632: SORT nonexistent file
-    at_setup_line='misc.at:632'
+  54 ) # 54. misc.at:634: SORT nonexistent file
+    at_setup_line='misc.at:634'
     at_desc='SORT nonexistent file'
     $at_quiet $ECHO_N " 54: SORT nonexistent file                        $ECHO_C"
     at_xfail=no
     (
-      echo "54. misc.at:632: testing ..."
+      echo "54. misc.at:634: testing ..."
       $at_traceon
 
 
@@ -5428,59 +5430,9 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:659: \${COMPILE} -o prog prog.cob"
-echo misc.at:659 >$at_check_line_file
-( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
-at_status=$?
-grep '^ *+' $at_stder1 >&2
-grep -v '^ *+' $at_stder1 >$at_stderr
-at_failed=false
-$at_diff $at_devnull $at_stderr || at_failed=:
-$at_diff $at_devnull $at_stdout || at_failed=:
-case $at_status in
-   77) echo 77 > $at_status_file
-            exit 77;;
-   0) ;;
-   *) echo "misc.at:659: exit code was $at_status, expected 0"
-      at_failed=:;;
-esac
-if $at_failed; then
-
-  echo 1 > $at_status_file
-  exit 1
-fi
-
-$at_traceon
-
-$at_traceoff
-echo "misc.at:660: ./prog"
-echo misc.at:660 >$at_check_line_file
-( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
-at_status=$?
-grep '^ *+' $at_stder1 >&2
-grep -v '^ *+' $at_stder1 >$at_stderr
-at_failed=false
-$at_diff $at_devnull $at_stderr || at_failed=:
-$at_diff $at_devnull $at_stdout || at_failed=:
-case $at_status in
-   77) echo 77 > $at_status_file
-            exit 77;;
-   0) ;;
-   *) echo "misc.at:660: exit code was $at_status, expected 0"
-      at_failed=:;;
-esac
-if $at_failed; then
-
-  echo 1 > $at_status_file
-  exit 1
-fi
-
-$at_traceon
-
-$at_traceoff
-echo "misc.at:661: cat SORT-OUT"
+echo "misc.at:661: \${COMPILE} -o prog prog.cob"
 echo misc.at:661 >$at_check_line_file
-( $at_traceon; cat SORT-OUT ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -5502,6 +5454,56 @@ fi
 
 $at_traceon
 
+$at_traceoff
+echo "misc.at:662: ./prog"
+echo misc.at:662 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "misc.at:662: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "misc.at:663: cat SORT-OUT"
+echo misc.at:663 >$at_check_line_file
+( $at_traceon; cat SORT-OUT ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "misc.at:663: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
 
       $at_traceoff
       $at_times_p && times >$at_times_file
@@ -5509,13 +5511,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  55 ) # 55. misc.at:666: PIC ZZZ-, ZZZ+
-    at_setup_line='misc.at:666'
+  55 ) # 55. misc.at:668: PIC ZZZ-, ZZZ+
+    at_setup_line='misc.at:668'
     at_desc='PIC ZZZ-, ZZZ+'
     $at_quiet $ECHO_N " 55: PIC ZZZ-, ZZZ+                               $ECHO_C"
     at_xfail=no
     (
-      echo "55. misc.at:666: testing ..."
+      echo "55. misc.at:668: testing ..."
       $at_traceon
 
 
@@ -5539,8 +5541,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:685: \${COMPILE} -o prog prog.cob"
-echo misc.at:685 >$at_check_line_file
+echo "misc.at:687: \${COMPILE} -o prog prog.cob"
+echo misc.at:687 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5552,7 +5554,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:685: exit code was $at_status, expected 0"
+   *) echo "misc.at:687: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5564,8 +5566,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:693: ./prog"
-echo misc.at:693 >$at_check_line_file
+echo "misc.at:695: ./prog"
+echo misc.at:695 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5583,7 +5585,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:693: exit code was $at_status, expected 0"
+   *) echo "misc.at:695: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
