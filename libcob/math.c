@@ -77,6 +77,14 @@ static struct cob_object cob_stack[STACK_SIZE];
 #define DROP(n)	(stack_index -= (n))
 
 void
+cob_init_stack (void)
+{
+  int i;
+  for (i = 0; i < STACK_SIZE; i++)
+    mpz_init (COB_DECIMAL (&cob_stack[i])->number);
+}
+
+void
 cob_print_stack (void)
 {
   int i;
@@ -250,11 +258,9 @@ cob_num_cmp (void)
  */
 
 static decimal
-grab_decimal ()
+grab_decimal (void)
 {
-  decimal d = COB_DECIMAL (grab_object (COB_TYPE_DECIMAL));
-  mpz_init (d->number);
-  return d;
+  return COB_DECIMAL (grab_object (COB_TYPE_DECIMAL));
 }
 
 void

@@ -219,6 +219,7 @@ extern long long cob_exp10[19];
 
 /* functions */
 
+extern void cob_init_stack (void);
 extern int get_sign (struct cob_field f);
 extern void put_sign (struct cob_field f, int sign);
 extern int picCompLength (const char *pic);

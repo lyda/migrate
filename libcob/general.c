@@ -170,6 +170,7 @@ cob_init (int argc, char **argv)
   cob_argv = argv;
   cob_source_file = 0;
   cob_source_line = 0;
+  cob_init_stack ();
 }
 
 int
