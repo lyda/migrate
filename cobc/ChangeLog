@@ -1,3 +1,15 @@
+2002-07-31  Keisuke Nishida  <knishida@netlab.jp>
+
+	* codegen.c (codegen): Return cob_return_code from main.
+
+2002-07-30  Keisuke Nishida  <knishida@netlab.jp>
+
+	* tree.c, tree.h (make_perform_once): New function.
+
+2002-07-26  Keisuke Nishida  <knishida@netlab.jp>
+
+	* parser.y: Accept SD clause.
+
 2002-07-26  Keisuke Nishida  <knishida@netlab.jp>
 
 	* tree.c (make_word): Take constant and duplicate the name.
