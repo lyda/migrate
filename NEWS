@@ -2,9 +2,32 @@ NEWS - user visible changes				-*- outline -*-
 
 * Changes in OpenCOBOL 0.21
 
-** -fdebugging-line is removed.
+** Installation changes
 
-Debugging lines are considered to be obsolete in COBOL 2002.
+*** New configure argument --with-lfs64.
+
+** Compiler changes
+
+*** New option -std, which specifies which COBOL standard to use.
+
+Currently the following standards are available:
+
+  gnu           GNU COBOL (default)
+  cobol85       COBOL 85
+  cobol2002     COBOL 2002
+  mvs           IBM COBOL for MVS & VM
+
+*** New option -O, which enables some optimization.
+
+*** New option -debug, which enables run-time error checking.
+
+*** New option -Wobsolete, which reports obsolete features.
+
+*** New option -Warchaic, which reports archaic features.
+
+*** -Wnext-sentence has been removed.  Use -Warchaic instead.
+
+*** -fdebugging-line has been removed.
 
 
 * Changes in OpenCOBOL 0.20
