@@ -1,3 +1,7 @@
+2004-05-03  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* typeck.c (cb_build_length): Handle non-references.
+
 2004-04-19  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* tree.h (cb_perform): New members `exit_label' and `cycle_label'.

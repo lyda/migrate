@@ -489,7 +489,9 @@ cb_build_length (cb_tree x)
 {
   unsigned char buff[20];
 
-  if (x == cb_error_node || cb_ref (x) == cb_error_node)
+  if (x == cb_error_node)
+    return cb_error_node;
+  if (CB_REFERENCE_P (x) && cb_ref (x) == cb_error_node)
     return cb_error_node;
 
   sprintf (buff, "%d", cb_field_size (x));
