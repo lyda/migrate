@@ -411,7 +411,6 @@ save_named_sect (cob_tree sy)
  */
 
 static void asm_call_1 (const char *name, cob_tree sy1);
-static void value_to_eax (cob_tree sy);
 static void adjust_desc_length (cob_tree sy);
 
 static void
@@ -515,6 +514,83 @@ memrefat (cob_tree sy)
 }
 
 static void
+value_to_eax (cob_tree x)
+{
+  char *s;
+
+#ifdef COB_DEBUG
+  output ("# value_to_eax: ");
+  print_tree (x, o_src);
+  fputs ("\n", o_src);
+#endif
+
+  if (x == NULL)
+    {
+      output ("\txorl\t%%eax,%%eax\n");
+      return;
+    }
+
+  /* Subscript */
+  if (EXPR_P (x))
+    {
+      value_to_eax (EXPR_LEFT (x));
+      output ("\tpushl\t%%eax\n");
+      do {
+	cob_tree r = EXPR_RIGHT (x);
+	value_to_eax (EXPR_P (r) ? EXPR_LEFT (r) : r);
+	output ("\t%s\t%%eax,0(%%esp)\n",
+		(EXPR_OP (x) == '+') ? "addl" : "subl");
+	x = r;
+      } while (EXPR_P (x));
+      output ("\tpopl\t%%eax\n");
+      return;
+    }
+
+  /* Literal */
+  if (!SYMBOL_P (x))
+    {
+      /* if it's an integer, compute it now, not at runtime! */
+      long long value = 0;
+      long value2;
+      /* integer's name is just it's value in ascii */
+      s = COB_FIELD_NAME (x);
+      while (*s)
+	value = value * 10 + *s++ - '0';
+      output ("#bef val\n");
+      output ("\tmovl\t$%d,%%eax\n", (int) value);
+      if ((value2 = value >> 32) != 0)
+	output ("\tmovl\t$%d,%%edx\n", (int) value2);
+      return;
+    }
+
+  /* Binary variable */
+  if (COB_FIELD_TYPE (x) == 'B' || COB_FIELD_TYPE (x) == 'U')
+    {
+      /* load binary (comp) value directly */
+      /* %eax doesn't hold greater than 4 bytes binary types
+         so we use %edx to get the most significant part */
+      if (symlen (x) > 4)
+	{
+	  output ("\tmovl\t%s+4, %%edx\n", memrefat (x));
+	  output ("\tmovl\t%s, %%eax\n", memrefat (x));
+	}
+      else
+	{
+	  output ("\t%s\t%s, %%eax\n", varsize_movl (x), memrefat (x));
+	}
+      return;
+    }
+
+  /* Other variable */
+  {
+    int stack_save = stackframe_cnt;
+    stackframe_cnt = 0;
+    asm_call_1 ("get_index", x);
+    stackframe_cnt = stack_save;
+  }
+}
+
+static void
 gen_subscripted (cob_tree ref)
 {
   cob_tree sy = SUBREF_SYM (ref);
@@ -544,28 +620,6 @@ gen_subscripted (cob_tree ref)
   output ("\tpopl\t%%eax\n");	/* return offset in %eax */
 }
 
-/* load in cpureg ("eax","ebx"...) location for normal 
-	(file/working-storage) or linkage variable */
-static void
-load_location (cob_tree sy, char *reg)
-{
-  unsigned offset;
-  if (SYMBOL_P (sy) && sy->linkage_flg)
-    {
-      cob_tree tmp = sy;
-      while (tmp->linkage_flg == 1)
-	tmp = tmp->parent;
-      offset = sy->location - tmp->location;
-      output ("\tmovl\t%d(%%ebp), %%%s\n", tmp->linkage_flg, reg);
-      if (offset)
-	output ("\taddl\t$%d, %%%s\n", offset, reg);
-    }
-  else if (sy->sec_no == SEC_STACK)
-    output ("\tleal\t%s, %%%s\n", memref (sy), reg);
-  else
-    output ("\tmovl\t%s, %%%s\n", memref (sy), reg);
-}
-
 static void
 loadloc_to_eax (cob_tree sy_p)
 {
@@ -588,18 +642,32 @@ loadloc_to_eax (cob_tree sy_p)
 		  varsize_movl (tmp), tmp->linkage_flg);
 	  if (offset)
 	    output ("\taddl\t$%d, %%ebx\n", offset);
-	  output ("\taddl\t%%ebx, %%eax\n");
 	}
       else
 	{
 	  output ("\tleal\t%s, %%ebx\n", memrefat (var));
-	  output ("\taddl\t%%ebx,%%eax\n");
 	}
+      output ("\taddl\t%%ebx, %%eax\n");
     }
   else
     {
-      load_location (sy, "eax");
+      unsigned offset;
+      if (SYMBOL_P (sy) && sy->linkage_flg)
+	{
+	  cob_tree tmp = sy;
+	  while (tmp->linkage_flg == 1)
+	    tmp = tmp->parent;
+	  offset = sy->location - tmp->location;
+	  output ("\tmovl\t%d(%%ebp), %%eax\n", tmp->linkage_flg);
+	  if (offset)
+	    output ("\taddl\t$%d, %%eax\n", offset);
+	}
+      else if (sy->sec_no == SEC_STACK)
+	output ("\tleal\t%s, %%eax\n", memref (sy));
+      else
+	output ("\tmovl\t%s, %%eax\n", memref (sy));
     }
+
   //      At that stage, the address is ready in %eax; do we need
   //      to correct it because of substring's?
   if (SUBSTRING_P (sy_p))
@@ -724,83 +792,6 @@ gen_loadvar (cob_tree sy)
       gen_loadloc (sy);
       gen_loaddesc (sy);
     }
-}
-
-static void
-value_to_eax (cob_tree x)
-{
-  char *s;
-
-#ifdef COB_DEBUG
-  output ("# value_to_eax: ");
-  print_tree (x, o_src);
-  fputs ("\n", o_src);
-#endif
-
-  if (x == NULL)
-    {
-      output ("\txorl\t%%eax,%%eax\n");
-      return;
-    }
-
-  /* Subscript */
-  if (EXPR_P (x))
-    {
-      value_to_eax (EXPR_LEFT (x));
-      output ("\tpushl\t%%eax\n");
-      do {
-	cob_tree r = EXPR_RIGHT (x);
-	value_to_eax (EXPR_P (r) ? EXPR_LEFT (r) : r);
-	output ("\t%s\t%%eax,0(%%esp)\n",
-		(EXPR_OP (x) == '+') ? "addl" : "subl");
-	x = r;
-      } while (EXPR_P (x));
-      output ("\tpopl\t%%eax\n");
-      return;
-    }
-
-  /* Literal */
-  if (!SYMBOL_P (x))
-    {
-      /* if it's an integer, compute it now, not at runtime! */
-      long long value = 0;
-      long value2;
-      /* integer's name is just it's value in ascii */
-      s = COB_FIELD_NAME (x);
-      while (*s)
-	value = value * 10 + *s++ - '0';
-      output ("#bef val\n");
-      output ("\tmovl\t$%d,%%eax\n", (int) value);
-      if ((value2 = value >> 32) != 0)
-	output ("\tmovl\t$%d,%%edx\n", (int) value2);
-      return;
-    }
-
-  /* Binary variable */
-  if (COB_FIELD_TYPE (x) == 'B' || COB_FIELD_TYPE (x) == 'U')
-    {
-      /* load binary (comp) value directly */
-      /* %eax doesn't hold greater than 4 bytes binary types
-         so we use %edx to get the most significant part */
-      if (symlen (x) > 4)
-	{
-	  output ("\tmovl\t%s+4, %%edx\n", memrefat (x));
-	  output ("\tmovl\t%s, %%eax\n", memrefat (x));
-	}
-      else
-	{
-	  output ("\t%s\t%s, %%eax\n", varsize_movl (x), memrefat (x));
-	}
-      return;
-    }
-
-  /* Other variable */
-  {
-    int stack_save = stackframe_cnt;
-    stackframe_cnt = 0;
-    asm_call_1 ("get_index", x);
-    stackframe_cnt = stack_save;
-  }
 }
 
 static void
