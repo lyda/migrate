@@ -38,7 +38,7 @@
 
 struct cob_field {
   struct cob_field_desc {
-    unsigned long size;
+    size_t size;
     char type;
     char digits;
     char decimals;
