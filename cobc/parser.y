@@ -129,7 +129,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <baval> inspect_before_after
 %type <ival> if_then,search_body,search_all_body,class
 %type <ival> search_when,search_when_list,search_opt_at_end
-%type <gic>  on_end,opt_read_at_end
+%type <gic>  on_end,read_at_end,opt_read_at_end
 %type <ike>  read_invalid_key ,read_not_invalid_key
 %type <iks>  opt_read_invalid_key
 %type <ival> integer,operator,before_after
@@ -1986,7 +1986,7 @@ read_body:
   {
     gen_reads($1, $4, $5, $2, 0);
   }
-| file opt_read_next opt_record opt_read_into opt_read_key opt_read_at_end
+| file opt_read_next opt_record opt_read_into opt_read_key read_at_end
   {
     gen_reads($1, $4, $5, $2, 1);
     ginfo_container4($6);
@@ -2011,7 +2011,7 @@ opt_read_key:
   /* nothing */			{ $$ = NULL; }
 | KEY opt_is name		{ $$ = $3; }
 ;
-opt_read_at_end:
+read_at_end:
   NOT opt_at on_end
   {
     ginfo_container2($3, 2);
@@ -2098,16 +2098,20 @@ return_statement:
   RETURN return_body opt_end_return
 ;
 return_body:
-  name opt_record opt_read_into
+  name opt_record opt_read_into opt_read_at_end
   {
-    gen_reads ($1, $3, NULL, 1, 4);
-  }
-| name opt_record opt_read_into opt_read_at_end
-  {
-    gen_reads ($1, $3, NULL, 1, 5);
-    ginfo_container4 ($4);
+    if ($1->organization != ORG_SEQUENTIAL)
+      gen_read_next ($1, $3, 1);
+    else
+      gen_return ($1, $3);
+    if ($4)
+      ginfo_container4 ($4);
     gic = NULL;
   }
+;
+opt_read_at_end:
+  /* nothing */			{ $$ = NULL; }
+| read_at_end			{ $$ = $1; }
 ;
 opt_end_return: | END_RETURN ;
 

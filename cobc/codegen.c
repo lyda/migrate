@@ -4853,24 +4853,14 @@ gen_read_next (cob_tree f, cob_tree buf, int next_prev)
 int
 gen_reads (cob_tree f, cob_tree buf, cob_tree key, int next_prev, int sel)
 {
-  if ((sel > -1) && (sel < 4))
-    {
-      if (next_prev > 0
-	  && (f->organization == ORG_INDEXED
-	      || f->organization == ORG_RELATIVE)
-	  && (f->access_mode == ACC_DYNAMIC
-	      || f->access_mode == ACC_SEQUENTIAL))
-	gen_read_next (f, buf, next_prev);
-      else
-	gen_read (f, buf, key);
-    }
+  if (next_prev > 0
+      && (f->organization == ORG_INDEXED
+	  || f->organization == ORG_RELATIVE)
+      && (f->access_mode == ACC_DYNAMIC
+	  || f->access_mode == ACC_SEQUENTIAL))
+    gen_read_next (f, buf, next_prev);
   else
-    {
-      if (f->organization != ORG_SEQUENTIAL)
-	gen_read_next (f, buf, next_prev);
-      else
-	gen_return (f, buf);
-    }
+    gen_read (f, buf, key);
   return 0;
 }
 
