@@ -5270,7 +5270,6 @@ gen_fdesc (cob_tree f, cob_tree r)
       r = r->redefines;
     }
   len = sizeof (struct file_desc) - 10;	/* suppose without indexes */
-//      f->location = file_offset;
   if (f->organization == 1)
     {				/* indexed file */
       len += 10 + 2;
@@ -5286,7 +5285,6 @@ gen_fdesc (cob_tree f, cob_tree r)
     }
   f->fdesc = global_offset;
   global_offset += len;
-//      file_offset += len;
 }
 
 void
