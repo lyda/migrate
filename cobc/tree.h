@@ -338,8 +338,8 @@ struct cb_literal {
   size_t size;
   unsigned char *data;
   char all;
-  char sign;
-  char expt;
+  char sign;			/* unsigned: 0 negative: -1 positive: 1 */
+  char scale;
 };
 
 #define CB_LITERAL(x)	(CB_TREE_CAST (CB_TAG_LITERAL, struct cb_literal, x))
@@ -347,7 +347,7 @@ struct cb_literal {
 #define CB_NUMERIC_LITERAL_P(x) \
   (CB_LITERAL_P (x) && CB_TREE_CATEGORY (x) == CB_CATEGORY_NUMERIC)
 
-extern cb_tree cb_build_numeric_literal (int sign, const unsigned char *data, int expt);
+extern cb_tree cb_build_numeric_literal (int sign, const unsigned char *data, int scale);
 extern cb_tree cb_build_alphanumeric_literal (const unsigned char *data, size_t size);
 extern int cb_literal_to_int (struct cb_literal *l);
 
@@ -378,7 +378,7 @@ struct cb_picture {
   char *str;			/* packed picture string */
   enum cb_category category;	/* field category */
   char digits;			/* the number of digit places */
-  char expt;			/* 10 ^ expt */
+  char scale;			/* 1/10^scale */
   char have_sign;		/* have `S' */
 };
 

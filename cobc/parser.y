@@ -3674,7 +3674,7 @@ integer_name:
   {
     VALIDATE ($$, $1, _("integer identifier is expected `%s'"),
 	      CB_TREE_CLASS ($1) == CB_CLASS_NUMERIC
-	      && cb_field ($1)->pic->expt >= 0);
+	      && cb_field ($1)->pic->scale <= 0);
   }
 ;
 
@@ -3863,14 +3863,14 @@ integer_value:
       case CB_TAG_LITERAL:
 	{
 	  struct cb_literal *l = CB_LITERAL ($1);
-	  if (l->sign < 0 || l->expt < 0)
+	  if (l->sign < 0 || l->scale > 0)
 	    goto invalid;
 	  break;
 	}
       case CB_TAG_REFERENCE:
 	{
 	  struct cb_field *f = CB_FIELD (cb_ref ($1));
-	  if (f->pic->expt < 0)
+	  if (f->pic->scale > 0)
 	    goto invalid;
 	  break;
 	}

@@ -276,14 +276,14 @@ output_size (cb_tree x)
 }
 
 static int
-lookup_attr (char type, char digits, char expt, char flags, unsigned char *pic)
+lookup_attr (char type, char digits, char scale, char flags, unsigned char *pic)
 {
   static int id = 0;
   static struct attr_list {
     int id;
     char type;
     char digits;
-    char expt;
+    char scale;
     char flags;
     unsigned char *pic;
     struct attr_list *next;
@@ -295,7 +295,7 @@ lookup_attr (char type, char digits, char expt, char flags, unsigned char *pic)
   for (l = attr_cache; l; l = l->next)
     if (type == l->type
 	&& digits == l->digits
-	&& expt == l->expt
+	&& scale == l->scale
 	&& flags == l->flags
 	&& ((pic == l->pic)
 	    || (pic && l->pic && strcmp (pic, l->pic) == 0)))
@@ -303,7 +303,7 @@ lookup_attr (char type, char digits, char expt, char flags, unsigned char *pic)
 
   /* output new attribute */
   output_storage ("static cob_field_attr a_%d = ", ++id);
-  output_storage ("{%d, %d, %d, %d, ", type, digits, -expt, flags);
+  output_storage ("{%d, %d, %d, %d, ", type, digits, scale, flags);
   if (pic)
     {
       unsigned char *s;
@@ -321,7 +321,7 @@ lookup_attr (char type, char digits, char expt, char flags, unsigned char *pic)
   l->id = id;
   l->type = type;
   l->digits = digits;
-  l->expt = expt;
+  l->scale = scale;
   l->flags = flags;
   l->pic = pic;
   l->next = attr_cache;
@@ -346,7 +346,7 @@ output_attr (cb_tree x)
 	    if (l->sign != 0)
 	      flags = COB_FLAG_HAVE_SIGN | COB_FLAG_SIGN_SEPARATE;
 	    id = lookup_attr (COB_TYPE_NUMERIC_DISPLAY,
-			      l->size, l->expt, flags, 0);
+			      l->size, l->scale, flags, 0);
 	  }
 	else
 	  {
@@ -391,7 +391,7 @@ output_attr (cb_tree x)
 		if (f->usage == CB_USAGE_BINARY_SWAP)
 		  flags |= COB_FLAG_BINARY_SWAP;
 
-		id = lookup_attr (type, f->pic->digits, f->pic->expt,
+		id = lookup_attr (type, f->pic->digits, f->pic->scale,
 				  flags, f->pic->str);
 		break;
 	      }
@@ -441,7 +441,7 @@ lookup_literal (cb_tree x)
 	&& literal->size == l->literal->size
 	&& literal->all  == l->literal->all
 	&& literal->sign == l->literal->sign
-	&& literal->expt == l->literal->expt
+	&& literal->scale == l->literal->scale
 	&& strcmp (literal->data, l->literal->data) == 0)
       return l->id;
 
@@ -518,12 +518,12 @@ output_integer (cb_tree x)
 	    switch (f->usage)
 	      {
 	      case CB_USAGE_DISPLAY:
-		if (f->pic->expt <= 0
-		    && f->size + f->pic->expt <= 4
+		if (f->pic->scale >= 0
+		    && f->size - f->pic->scale <= 4
 		    && f->pic->have_sign == 0)
 		  {
 		    int i, j;
-		    int size = f->size + f->pic->expt;
+		    int size = f->size - f->pic->scale;
 		    output ("(");
 		    for (i = 0; i < size; i++)
 		      {

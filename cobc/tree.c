@@ -300,7 +300,7 @@ cb_fits_int (cb_tree x)
     case CB_TAG_LITERAL:
       {
 	struct cb_literal *l = CB_LITERAL (x);
-	if (l->expt >= 0 && l->size < 10)
+	if (l->scale <= 0 && l->size < 10)
 	  return 1;
 	return 0;
       }
@@ -313,11 +313,11 @@ cb_fits_int (cb_tree x)
 	    return 1;
 	  case CB_USAGE_BINARY_SWAP:
 	  case CB_USAGE_BINARY_NATIVE:
-	    if (f->pic->expt >= 0 && f->size <= sizeof (int))
+	    if (f->pic->scale <= 0 && f->size <= sizeof (int))
 	      return 1;
 	    return 0;
 	  case CB_USAGE_DISPLAY:
-	    if (f->pic->expt >= 0 && f->size < 10)
+	    if (f->pic->scale <= 0 && f->size < 10)
 	      return 1;
 	    return 0;
 	  default:
@@ -517,12 +517,12 @@ build_literal (enum cb_category category, const unsigned char *data, size_t size
 }
 
 cb_tree
-cb_build_numeric_literal (int sign, const unsigned char *data, int expt)
+cb_build_numeric_literal (int sign, const unsigned char *data, int scale)
 {
   struct cb_literal *p =
     build_literal (CB_CATEGORY_NUMERIC, data, strlen (data));
   p->sign = sign;
-  p->expt = expt;
+  p->scale = scale;
   return CB_TREE (p);
 }
 
@@ -591,7 +591,7 @@ cb_build_picture (const char *str)
   int idx = 0;
   int size = 0;
   int digits = 0;
-  int decimals = 0;
+  int scale = 0;
   int s_count = 0;
   int v_count = 0;
   int buff_size = 9;
@@ -636,7 +636,7 @@ cb_build_picture (const char *str)
 	  category |= PIC_NUMERIC;
 	  digits += n;
 	  if (v_count)
-	    decimals += n;
+	    scale += n;
 	  break;
 
 	case 'N':
@@ -684,9 +684,9 @@ cb_build_picture (const char *str)
 	      v_count++;		/* implicit V */
 	    digits += n;
 	    if (v_count)
-	      decimals += n;
+	      scale += n;
 	    else
-	      decimals -= n;
+	      scale -= n;
 	  }
 	  break;
 
@@ -700,7 +700,7 @@ cb_build_picture (const char *str)
 	    goto error;
 	  digits += n;
 	  if (v_count)
-	    decimals += n;
+	    scale += n;
 	  break;
 
 	case '+': case '-':
@@ -767,7 +767,7 @@ cb_build_picture (const char *str)
   pic->orig = strdup (str);
   pic->size = size;
   pic->digits = digits;
-  pic->expt = - decimals;
+  pic->scale = scale;
   pic->have_sign = s_count;
 
   /* set picture category */
@@ -1189,12 +1189,12 @@ validate_field_1 (struct cb_field *f)
 	  {
 	  case CB_CATEGORY_NUMERIC:
 	    /* reconstruct the picture string */
-	    if (f->pic->expt < 0)
+	    if (f->pic->scale > 0)
 	      {
 		f->pic->str = malloc (7);
 		sprintf (f->pic->str, "9%cV%c9%c",
-			 f->pic->digits + f->pic->expt, 1,
-			 - f->pic->expt);
+			 f->pic->digits - f->pic->scale, 1,
+			 f->pic->scale);
 		f->pic->size++;
 	      }
 	    else

@@ -284,7 +284,7 @@ scan_h (char *text)
 static int
 scan_numeric (char *text)
 {
-  int sign, decimals = 0;
+  int sign, scale = 0;
   unsigned char *s;
   /* get sign */
   sign = (*text == '+') ? 1 : (*text == '-') ? -1 : 0;
@@ -294,13 +294,13 @@ scan_numeric (char *text)
   /* get decimal point */
   s = strchr (text, current_program->decimal_point);
   if (s) {
-    decimals = strlen (s) - 1;
-    memmove (s, s + 1, decimals + 1);
+    scale = strlen (s) - 1;
+    memmove (s, s + 1, scale + 1);
   }
   if (strchr (text, (current_program->decimal_point == ',') ? '.' : ','))
     cb_error (_("invalid numeric literal"));
 
-  yylval = cb_build_numeric_literal (sign, text, - decimals);
+  yylval = cb_build_numeric_literal (sign, text, scale);
   SET_LOCATION (yylval);
   return LITERAL;
 }

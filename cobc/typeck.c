@@ -347,7 +347,7 @@ decimal_expand (cb_tree d, cb_tree x)
       {
 	/* set d, N */
 	struct cb_literal *l = CB_LITERAL (x);
-	if (l->size < 10 && l->expt == 0)
+	if (l->size < 10 && l->scale == 0)
 	  dpush (cb_build_funcall_2 ("cob_decimal_set_int",
 				     d, cb_build_cast_integer (x)));
 	else
@@ -564,14 +564,14 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 	      if (l->data[i] != '0')
 		break;
 	    if (i != l->size)
-	      most_significant = l->size + l->expt - i - 1;
+	      most_significant = l->size - l->scale - i - 1;
 
 	    /* compute the least significant figure place */
 	    for (i = 0; i < l->size; i++)
 	      if (l->data[l->size - i - 1] != '0')
 		break;
 	    if (i != l->size)
-	      least_significant = l->expt + i;
+	      least_significant = -l->scale + i;
 
 	    /* value check */
 	    switch (CB_TREE_CATEGORY (dst))
@@ -582,23 +582,23 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 		  if (value_flag)
 		    goto expect_alphanumeric;
 
-		  if (l->expt == 0)
+		  if (l->scale == 0)
 		    goto expect_alphanumeric;
 		  else
 		    goto invalid;
 		}
 	      case CB_CATEGORY_NUMERIC:
 		{
-		  if (f->pic->expt > 0)
+		  if (f->pic->scale < 0)
 		    {
 		      /* check for PIC 9(n)P(m) */
-		      if (least_significant < f->pic->expt)
+		      if (least_significant < -f->pic->scale)
 			goto value_mismatch;
 		    }
-		  else if (f->pic->expt < -f->pic->size)
+		  else if (f->pic->scale > f->pic->size)
 		    {
 		      /* check for PIC P(n)9(m) */
-		      if (most_significant >= f->pic->expt + f->pic->size)
+		      if (most_significant >= f->pic->size - f->pic->scale)
 			goto value_mismatch;
 		    }
 		  break;
@@ -632,10 +632,10 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 	      }
 
 	    /* size check */
-	    if (least_significant < f->pic->expt)
+	    if (least_significant < -f->pic->scale)
 	      goto size_overflow;
-	    if (most_significant >= (f->pic->digits
-				     + (f->pic->expt < 0 ? f->pic->expt : 0)))
+	    if (most_significant >=
+		f->pic->digits - (f->pic->scale > 0 ? f->pic->scale : 0))
 	      goto size_overflow;
 	  }
 	else
@@ -706,7 +706,7 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 	      case CB_CATEGORY_ALPHANUMERIC:
 	      case CB_CATEGORY_ALPHANUMERIC_EDITED:
 		if (CB_TREE_CATEGORY (src) == CB_CATEGORY_NUMERIC
-		    && cb_field (src)->pic->expt < 0)
+		    && cb_field (src)->pic->scale > 0)
 		  goto invalid;
 	      default:
 		break;
@@ -887,7 +887,7 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
     }
   else if ((cat == CB_CATEGORY_NUMERIC
 	    && f->usage == CB_USAGE_DISPLAY
-	    && f->pic->expt == l->expt
+	    && f->pic->scale == l->scale
 	    && !f->flag_sign_leading
 	    && !f->flag_sign_separate)
 	   || ((cat == CB_CATEGORY_ALPHABETIC
@@ -953,7 +953,7 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
   else if (f->usage == CB_USAGE_BINARY_NATIVE && cb_fits_int (src))
     {
       int val = cb_literal_to_int (l);
-      int n = l->expt - f->pic->expt;
+      int n = f->pic->scale - l->scale;
       for (; n > 0; n--) val *= 10;
       for (; n < 0; n++) val /= 10;
       return cb_build_assign (dst, cb_int (val));
@@ -992,7 +992,7 @@ cb_build_move_field (cb_tree src, cb_tree dst)
 	    && dst_f->usage == CB_USAGE_DISPLAY
 	    && src_f->pic->size == dst_f->pic->size
 	    && src_f->pic->digits == dst_f->pic->digits
-	    && src_f->pic->expt == dst_f->pic->expt
+	    && src_f->pic->scale == dst_f->pic->scale
 	    && src_f->pic->have_sign == dst_f->pic->have_sign
 	    && src_f->flag_sign_leading == dst_f->flag_sign_leading
 	    && src_f->flag_sign_separate == dst_f->flag_sign_separate)
