@@ -73,7 +73,7 @@ AC_CHECK_FUNCS([atexit memmove memset strcasecmp strchr strdup \
 		strerror strrchr strstr strtol])
 
 COB_CC="cc"
-COB_COBPP="$libexecdir/$PACKAGE/cobpp"
+COB_COBPP="cobpp"
 COB_CFLAGS="-I$includedir"
 COB_LIBADD="-L$libdir -lcob"
 COB_LIBRARY_PATH=".:$libdir/$PACKAGE"
