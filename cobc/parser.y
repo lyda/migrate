@@ -1440,7 +1440,7 @@ procedure:
  *******************/
 
 section_header:
-  section_name SECTION '.'
+  section_name SECTION opt_segment '.'
   {
     if ($1 == cb_error_node)
       YYERROR;
@@ -1488,6 +1488,10 @@ invalid_statement:
 
 section_name:
   WORD				{ $$ = cb_build_section_name ($1); }
+;
+
+opt_segment:
+| value				{ /* ignore */ }
 ;
 
 
