@@ -619,27 +619,27 @@ cob_check_numeric (cob_field *f, const char *name)
 }
 
 void
-cob_check_subscript (int i, int max, const char *name)
-{
-  cob_check_subscript_depending (i, 1, max, max, name, 0);
-}
-
-void
-cob_check_subscript_depending (int i, int min, int max, int dep, const char *name, const char *depname)
+cob_check_odo (int i, int min, int max, const char *name)
 {
   COB_SET_EXCEPTION (COB_EC_ZERO);
 
   /* check the OCCURS DEPENDING ON item */
-  if (dep < min || max < dep)
+  if (i < min || max < i)
     {
       COB_SET_EXCEPTION (COB_EC_BOUND_ODO);
       cob_runtime_error (_("OCCURS DEPENDING ON `%s' out of bounds: %d"),
-			 depname, dep);
+			 name, i);
       exit (1);
     }
+}
+
+void
+cob_check_subscript (int i, int min, int max, const char *name)
+{
+  COB_SET_EXCEPTION (COB_EC_ZERO);
 
   /* check the subscript */
-  if (i < min || dep < i)
+  if (i < min || max < i)
     {
       COB_SET_EXCEPTION (COB_EC_BOUND_SUBSCRIPT);
       cob_runtime_error (_("subscript of `%s' out of bounds: %d"), name, i);

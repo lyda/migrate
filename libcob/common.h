@@ -219,8 +219,8 @@ extern int cob_is_lower (cob_field *f);
 extern void cob_runtime_error (const char *fmt, ...);
 extern void cob_exception (void);
 extern void cob_check_numeric (cob_field *f, const char *name);
-extern void cob_check_subscript (int i, int max, const char *name);
-extern void cob_check_subscript_depending (int i, int min, int max, int dep, const char *name, const char *depname);
+extern void cob_check_odo (int i, int min, int max, const char *name);
+extern void cob_check_subscript (int i, int min, int max, const char *name);
 extern void cob_check_ref_mod (int offset, int length, int size, const char *name);
 
 #endif /* COB_COMMON_H_ */

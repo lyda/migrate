@@ -1,3 +1,8 @@
+2003-06-19  Keisuke Nishida  <knishida@netlab.jp>
+
+	* common.c, common.h (cob_check_odo): New function.
+	(cob_check_subscript_depending): Removed.
+
 2003-06-18  Keisuke Nishida  <knishida@netlab.jp>
 
 	* fileio.c (relative_rewrite): Refer to the relative key unless
