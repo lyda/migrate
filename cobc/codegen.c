@@ -1199,10 +1199,8 @@ stabs_line ()
   static char *last_filename = NULL;
 
   if (last_filename != cob_orig_filename)
-    output (".stabs\t\"%s\",132,0,0,.LM%d\n",
-	     cob_orig_filename, label);
-  output (".stabn\t68,0,%d,.LM%d-Ltext_%s\n",
-	   cob_orig_lineno, label, pgm_label);
+    output (".stabs\t\"%s\",132,0,0,.LM%d\n", cob_orig_filename, label);
+  output (".stabn\t68,0,%d,.LM%d-Ltext_%s\n", cob_orig_lineno, label, pgm_label);
   output (".LM%d:\n", label++);
 
   last_filename = cob_orig_filename;
@@ -1212,8 +1210,7 @@ void
 data_trail (void)
 {
   if (substring_slots > 0)
-    output ("rf_base%d:\t.space\t%d\n",
-	     pgm_segment, substring_slots * 8);
+    output ("rf_base%d:\t.space\t%d\n", pgm_segment, substring_slots * 8);
 }
 
 int
