@@ -561,7 +561,7 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	    {
 	    case '0':
 	    case '/': *dst = c; break;
-	    case 'B': *dst = pad; break;
+	    case 'B': *dst = suppress_zero ? pad : 'B'; break;
 	    case ',': *dst = suppress_zero ? pad : ','; break;
 	    case 'P': break;
 
@@ -621,7 +621,7 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 		}
 
 	      *dst = '?';
-	      fprintf (stderr, "invalid PIC char: `%c'\n", c);
+	      fprintf (stderr, "cob_move: invalid PIC char: `%c'\n", c);
 	    }
 	}
     }
@@ -641,7 +641,7 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
       /* put zero after the decimal point if necessary */
       if (decimal_point)
 	for (dst = decimal_point + 1; dst < end; dst++)
-	  if (!isdigit (*dst) && *dst != ',')
+	  if (!isdigit (*dst) && !strchr (",+-", *dst))
 	    *dst = '0';
 
       /* put sign or currency symbol at the beginning */
@@ -652,6 +652,11 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	      break;
 	  *dst = sign_symbol;
 	}
+
+      /* replace all `B's by pad */
+      for (dst = f2.data; dst < end; dst++)
+	if (*dst == 'B')
+	  *dst = pad;
     }
 
   put_sign (f1, sign);
