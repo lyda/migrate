@@ -60,7 +60,6 @@ AC_FUNC_MEMCMP
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([memmove memset regcomp pow setlocale strerror \
 		strcasecmp strchr strrchr strdup strstr strtol])
-UTILS_FUNC_MKSTEMP
 
 # Checks for header files.
 AC_HEADER_STDC
