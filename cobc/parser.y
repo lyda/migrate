@@ -1133,8 +1133,9 @@ occurs_index_list:
   occurs_index			{ $$ = list_add ($1, $2); }
 ;
 occurs_index:
-  WORD
+  undefined_word
   {
+    cobc_location = @1;
     $$ = make_field_3 ($1, "S9(9)", COBC_USAGE_INDEX);
     validate_field (COBC_FIELD ($$));
     program_spec.index_list = list_add (program_spec.index_list, $$);
