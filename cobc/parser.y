@@ -211,7 +211,7 @@ static void check_decimal_point (struct lit *lit);
 %type <ssbjval> selection_subject_set
 %type <str> idstring
 %type <sval> field_description,label,filename,noallname,paragraph,assign_clause
-%type <sval> file_description,redefines_var,cond_name,function_call
+%type <sval> file_description,redefines_var,function_call
 %type <sval> name,gname,numeric_value,opt_gname,opt_def_name,def_name
 %type <sval> opt_read_into,opt_write_from,field_name,expr,opt_expr
 %type <sval> opt_unstring_count,opt_unstring_delim,unstring_tallying
@@ -1706,10 +1706,11 @@ inspect_before_after:
             { $$ = alloc_inspect_before_after($1,2,$4); }
     | /* nothing */  { $$ = alloc_inspect_before_after(NULL,0,NULL); }
     ;
-opt_initial:
-    TOK_INITIAL
-    | /* nothing */
+noallname:
+    name      { $$ = $1; }
+    | without_all_literal { $$ = (cob_tree)$1; }
     ;
+opt_initial: | TOK_INITIAL ;
 
 
 /*
@@ -2386,7 +2387,7 @@ set_list:
   ;
 set_target:
     variable  { $$ = $1; }
-  | cond_name { $$ = $1; }
+  | VARCOND   { $$ = $1; }
   ;
 set_variable:
    variable	   { $$ = $1; }
@@ -2777,7 +2778,7 @@ condition:
     | condition OR      { $<dval>$=gen_orstart(); }
         implied_op_condition { gen_dstlabel($<dval>3); $$=$4; }
     | '(' condition ')' { $$ = $2; }
-    | cond_name {
+    | VARCOND {
       gen_condition($1);
       $$.sy=NULL;
       $$.oper=0;
@@ -2928,10 +2929,6 @@ name_or_lit:
     name      { $$ = $1; }
     | literal { $$ = (cob_tree)$1; }
     ;
-noallname:
-    name      { $$ = $1; }
-    | without_all_literal { $$ = (cob_tree)$1; }
-    ;
 gliteral:
     without_all_literal
     | all_literal
@@ -2945,12 +2942,12 @@ all_literal:
     | ALL special_literal { $$=$2; }
     ;
 special_literal:
-      SPACES        { $$=spe_lit_SP; }
-    | ZEROS         { $$=spe_lit_ZE; }
-    | QUOTES        { $$=spe_lit_QU; }
-    | HIGH_VALUES   { $$=spe_lit_HV; }
-    | LOW_VALUES    { $$=spe_lit_LV; }
-    ;
+  SPACES        { $$=spe_lit_SP; }
+| ZEROS         { $$=spe_lit_ZE; }
+| QUOTES        { $$=spe_lit_QU; }
+| HIGH_VALUES   { $$=spe_lit_HV; }
+| LOW_VALUES    { $$=spe_lit_LV; }
+;
 var_or_nliteral:
     variable        { $$ = $1; }
     | nliteral      { $$ = (cob_tree)$1; }
@@ -2996,9 +2993,6 @@ variable_indexed:
 filename:
     literal { $$=(cob_tree)$1; }
     | SYMBOL {$$=$1; }
-    ;
-cond_name:
-    VARCOND  { $<sval>$=$1; }
     ;
 name:
     variable '(' gname ':' opt_gname ')'
@@ -3048,39 +3042,39 @@ integer:
     }
     ;
 label:
-    LABELSTR in_of LABELSTR
-    {
-      cob_tree lab=$1;
-      if (lab->defined == 0)
-	{
-	  lab->defined = 2;
-	  lab->parent = $3;
-	}
-      else if ((lab=lookup_label($1,$3))==NULL)
-	{
-	  lab = install($1->name,SYTB_LAB,2);
-	  lab->defined=2;
-	  lab->parent = $3;
-	}
-      $$ = lab;
-    }
-    | LABELSTR
-    {
-      cob_tree lab=$1;
-      if (lab->defined == 0)
-	{
-	  lab->defined = 2;
-	  lab->parent = curr_section;
-	}
-      else if ((lab=lookup_label(lab,curr_section))==NULL)
-	{
-	  lab = install($1->name,SYTB_LAB,2);
-	  lab->defined=2;
-	  lab->parent = curr_section;
-	}
-      $$ = lab;
-    }
-    ;
+  LABELSTR in_of LABELSTR
+  {
+    cob_tree lab = $1;
+    if (lab->defined == 0)
+      {
+	lab->defined = 2;
+	lab->parent = $3;
+      }
+    else if ((lab = lookup_label ($1, $3)) == NULL)
+      {
+	lab = install ($1->name, SYTB_LAB, 2);
+	lab->defined = 2;
+	lab->parent = $3;
+      }
+    $$ = lab;
+  }
+| LABELSTR
+  {
+    cob_tree lab = $1;
+    if (lab->defined == 0)
+      {
+	lab->defined = 2;
+	lab->parent = curr_section;
+      }
+    else if ((lab = lookup_label (lab, curr_section)) == NULL)
+      {
+	lab = install ($1->name, SYTB_LAB, 2);
+	lab->defined = 2;
+	lab->parent = curr_section;
+      }
+    $$ = lab;
+  }
+;
 in_of: IN | OF ;
 
 
