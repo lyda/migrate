@@ -2246,7 +2246,7 @@ gen_display (int dupon, int nl)
 	if (screen_io_enable == 0)
 	  {
 	    push_immed (dupon);
-	    asm_call ("display_erase");
+	    asm_call ("cob_display_erase");
 	  }
     }
   while (disp_list)
@@ -2257,7 +2257,7 @@ gen_display (int dupon, int nl)
 	{
 	  push_immed (dupon);
 	  gen_loadvar (sy);
-	  asm_call ("display");
+	  asm_call ("cob_display");
 	}
       else
 	{
@@ -2278,7 +2278,7 @@ gen_display (int dupon, int nl)
     if (screen_io_enable == 0)
       {
 	push_immed (dupon);
-	asm_call ("newline");
+	asm_call ("cob_newline");
       }
 }
 

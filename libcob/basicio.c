@@ -40,20 +40,26 @@ static char *rlbuf = NULL;
 #define port(dupon) ((dupon == 1) ? stdout : stderr)
 
 void
-newline (int dupon)
+cob_newline (int dupon)
 {
-  fputc ('\n', port(dupon));
-  fflush (port(dupon));
+  fputc ('\n', port (dupon));
+  fflush (port (dupon));
 }
 
 void
-display (struct fld_desc *f, char *s, int dupon)
+cob_display_erase (int dupon)
+{
+  fputc ('\f', port (dupon));
+  fflush (port (dupon));
+}
+
+void
+cob_display (struct fld_desc *f, char *s, int dupon)
 {
   char *buffer;
   struct fld_desc ftmp;
   char pictmp[64];
   char szSigned[3];
-  int moved = 0;
   int i, len;
   char decimals;
   int decimal_char;
@@ -62,7 +68,7 @@ display (struct fld_desc *f, char *s, int dupon)
       || (f->type == 'U'))
     {
       len = picCompLength (f);
-      if ((f->pic[0] == 'S') || (f->pic[0] == 's'))
+      if (f->pic[0] == 'S')
 	{
 	  szSigned[0] = '-';
 	  szSigned[1] = (char) 1;
@@ -74,8 +80,8 @@ display (struct fld_desc *f, char *s, int dupon)
 	}
 
       decimal_char = (decimal_comma) ? ',' : '.';
-      buffer = malloc (len + 2);
-      memmove (&ftmp, f, sizeof (ftmp));
+      buffer = alloca (len + 2);
+      memcpy (&ftmp, f, sizeof (ftmp));
       decimals = f->decimals;
       if (decimals > 0)
 	{
@@ -107,7 +113,6 @@ display (struct fld_desc *f, char *s, int dupon)
       if (decimals > 0)
 	len++;			/* accounts for the decimal point */
       cob_move (f, s, &ftmp, buffer);
-      moved++;
     }
   else
     {
@@ -116,17 +121,7 @@ display (struct fld_desc *f, char *s, int dupon)
     }
 
   for (i = 0; i < len; i++)
-    putc (buffer[i], port(dupon));
-
-  if (moved)
-    free (buffer);
-}
-
-void
-display_erase (int dupon)
-{
-  fputc ('\f', port (dupon));
-  fflush (port(dupon));
+    putc (buffer[i], port (dupon));
 }
 
 int
