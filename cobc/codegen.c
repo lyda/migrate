@@ -452,6 +452,27 @@ push_eax ()
   output ("\tpushl\t%%eax\n");
 }
 
+static int
+symlen (cob_tree x)
+{
+  if (COB_FIELD_TYPE (x) == 'C')
+    return x->len / 2 + 1;
+  else if (LITERAL_P (x))
+    return LITERAL (x)->len;
+  return x->len;
+}
+
+static int
+varsize_ch (cob_tree sy)
+{
+  switch (symlen (sy))
+    {
+    case 1:  return 'b';
+    case 2:  return 'w';
+    default: return 'l';
+    }
+}
+
 static char *
 sec_name (int sec_no)
 {
@@ -597,7 +618,7 @@ loadloc_to_eax (cob_tree sy_p)
 	    output ("\tmovl\t%d(%%ebp), %%ebx\n", tmp->linkage_flg);
 	  else
 	    output ("\tmovs%cl\t%d(%%ebp), %%ebx\n",
-		     varsize_ch (tmp), tmp->linkage_flg);
+		    varsize_ch (tmp), tmp->linkage_flg);
 	  if (offset)
 	    output ("\taddl\t$%d, %%ebx\n", offset);
 	  output ("\taddl\t%%ebx, %%eax\n");
@@ -807,43 +828,40 @@ value_to_eax (cob_tree x)
 	  output ("\tmovl\t%s+4, %%edx\n", memref (x));
 	  output ("\tmovl\t%s, %%eax\n", memref (x));
 	}
+      else if (symlen (x) == 4)
+	{
+	  switch (x->sec_no)
+	    {
+	    case SEC_CONST:
+	      output ("\tmovl\tc_base%d+%d, %%eax\n",
+		      pgm_segment, x->location);
+	      break;
+	    case SEC_DATA:
+	      output ("\tmovl\tw_base%d+%d, %%eax\n",
+		      pgm_segment, x->location);
+	      break;
+	    case SEC_STACK:
+	      output ("\tmovl\t-%d(%%ebp), %%eax\n",
+		      x->location);
+	      break;
+	    }
+	}
       else
 	{
-	  if (symlen (x) >= 4)
+	  switch (x->sec_no)
 	    {
-	      switch (x->sec_no)
-		{
-		case SEC_CONST:
-		  output ("\tmovl\tc_base%d+%d, %%eax\n",
-			   pgm_segment, x->location);
-		  break;
-		case SEC_DATA:
-		  output ("\tmovl\tw_base%d+%d, %%eax\n",
-			   pgm_segment, x->location);
-		  break;
-		case SEC_STACK:
-		  output ("\tmovl\t-%d(%%ebp), %%eax\n",
-			   x->location);
-		  break;
-		}
-	    }
-	  else
-	    {
-	      switch (x->sec_no)
-		{
-		case SEC_CONST:
-		  output ("\tmovs%cl\tc_base%d+%d, %%eax\n",
-			   varsize_ch (x), pgm_segment, x->location);
-		  break;
-		case SEC_DATA:
-		  output ("\tmovs%cl\tw_base%d+%d, %%eax\n",
-			   varsize_ch (x), pgm_segment, x->location);
-		  break;
-		case SEC_STACK:
-		  output ("\tmovs%cl\t-%d(%%ebp), %%eax\n",
-			   varsize_ch (x), x->location);
-		  break;
-		}
+	    case SEC_CONST:
+	      output ("\tmovs%cl\tc_base%d+%d, %%eax\n",
+		      varsize_ch (x), pgm_segment, x->location);
+	      break;
+	    case SEC_DATA:
+	      output ("\tmovs%cl\tw_base%d+%d, %%eax\n",
+		      varsize_ch (x), pgm_segment, x->location);
+	      break;
+	    case SEC_STACK:
+	      output ("\tmovs%cl\t-%d(%%ebp), %%eax\n",
+		      varsize_ch (x), x->location);
+	      break;
 	    }
 	}
       return;
@@ -1898,27 +1916,6 @@ put_disp_list (cob_tree sy)
       while (tmp->next != NULL)
 	tmp = tmp->next;
       tmp->next = list;
-    }
-}
-
-int
-symlen (cob_tree x)
-{
-  if (COB_FIELD_TYPE (x) == 'C')
-    return x->len / 2 + 1;
-  else if (LITERAL_P (x))
-    return LITERAL (x)->len;
-  return x->len;
-}
-
-int
-varsize_ch (cob_tree sy)
-{
-  switch (symlen (sy))
-    {
-    case 1:  return 'b';
-    case 2:  return 'w';
-    default: return 'l';
     }
 }
 
