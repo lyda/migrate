@@ -302,7 +302,7 @@ lookup_attr (char type, char digits, char scale, char flags, unsigned char *pic)
       return l->id;
 
   /* output new attribute */
-  output_storage ("static cob_field_attr a_%d = ", ++id);
+  output_storage ("static const cob_field_attr a_%d = ", ++id);
   output_storage ("{%d, %d, %d, %d, ", type, digits, scale, flags);
   if (pic)
     {
