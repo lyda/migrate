@@ -1,0 +1,4 @@
+@set UPDATED 26 June 2002
+@set UPDATED-MONTH June 2002
+@set EDITION 0.9.7.9
+@set VERSION 0.9.7.9

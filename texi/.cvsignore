@@ -1,7 +1,3 @@
 *.info*
 Makefile
-Makefile.in
-mdate-sh
 stamp-vti
-texinfo.tex
-version.texi

@@ -2,7 +2,6 @@
 .deps
 .libs
 Makefile
-Makefile.in
 cobc
 parser.c
 parser.h

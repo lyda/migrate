@@ -2,5 +2,4 @@
 *.pot
 *.sed
 Makefile
-Makefile.in
 POTFILES
