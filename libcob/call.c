@@ -84,7 +84,7 @@ insert (const char *name, const char *path, lt_dlhandle handle, lt_ptr_t func, t
   int val = hash (name);
   struct call_hash *p = malloc (sizeof (struct call_hash));
   p->name = strdup (name);
-  p->path = strdup (path);
+  p->path = path ? strdup (path) : NULL;
   p->func = func;
   p->handle = handle;
   p->mtime = mtime;
@@ -115,8 +115,9 @@ lookup (const char *name)
   for (p = call_table[hash (name)]; p; p = p->next)
     if (strcmp (name, p->name) == 0)
       {
-	if (dynamic_reloading == 0
-	    || (stat (p->path, &st) == 0 && p->mtime == st.st_mtime))
+	if (dynamic_reloading == 0 || !p->path)
+	  return p->func;
+	if (stat (p->path, &st) == 0 && p->mtime == st.st_mtime)
 	  return p->func;
 	drop (name);
 	break;
@@ -168,12 +169,21 @@ cob_resolve (const char *name)
       exit (1);
     }
 
-  /* search from the cache */
+  /* search the cache */
   func = lookup (name);
   if (func)
     return func;
 
-  /* search module */
+  /* search the main program */
+  if ((handle = lt_dlopen (NULL)) != NULL
+      && (func = lt_dlsym (handle, name)) != NULL)
+    {
+      insert (name, NULL, handle, func, 0);
+      resolve_error = NULL;
+      return func;
+    }
+
+  /* search external modules */
   for (i = 0; i < resolve_size; i++)
     {
       struct stat st;
