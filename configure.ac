@@ -1,6 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 AC_INIT(open-cobol, 0.9.7.1)
 AC_CONFIG_SRCDIR(cobc/cobc.c)
+AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
