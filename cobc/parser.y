@@ -40,8 +40,6 @@
 #define YYDEBUG		COB_DEBUG
 #define YYERROR_VERBOSE 1
 
-#define YYLTYPE		struct cobc_location
-
 #define IGNORE(x)	/* ignored */
 #define PENDING(x)	yywarn (_("`%s' not implemented"), x)
 #define OBSOLETE(x)	yywarn (_("`%s' obsolete"), x)
@@ -110,7 +108,13 @@
 #define inspect_push(tag,a1,a2) \
   inspect_list = list_add (inspect_list, make_parameter (tag, a1, a2))
 
-struct cobc_program_spec program_spec;
+static struct predefined_record {
+  cobc_tree *ptr;
+  cobc_tree name;
+  struct predefined_record *next;
+} *predefined_list = NULL;
+
+static struct cobc_program_spec program_spec;
 
 static struct cobc_field *current_field;
 static struct cobc_file *current_file;
@@ -130,7 +134,7 @@ static int last_operator;
 static cobc_tree last_lefthand;
 
 static void register_predefined_name (cobc_tree *ptr, cobc_tree name);
-static void resolve_predefined_names (void);
+static void resolve_predefined_names (struct predefined_record *p);
 
 static struct cobc_field *init_field (int level, struct cobc_field *field);
 static void validate_field_tree (struct cobc_field *p);
@@ -283,7 +287,7 @@ program:
   data_division
   {
     /* check if all required identifiers are defined in DATA DIVISION */
-    resolve_predefined_names ();
+    resolve_predefined_names (predefined_list);
   }
   procedure_division
   _end_program
@@ -3953,12 +3957,6 @@ _with: | WITH ;
 
 %%
 
-static struct predefined_record {
-  cobc_tree *ptr;
-  cobc_tree name;
-  struct predefined_record *next;
-} *predefined_list = NULL;
-
 static void
 register_predefined_name (cobc_tree *ptr, cobc_tree name)
 {
@@ -4005,15 +4003,17 @@ resolve_predefined_name (cobc_tree x)
 }
 
 static void
-resolve_predefined_names (void)
+resolve_predefined_names (struct predefined_record *p)
 {
-  while (predefined_list)
-    {
-      struct predefined_record *p = predefined_list;
-      *p->ptr = resolve_predefined_name (p->name);
-      predefined_list = p->next;
-      free (p);
-    }
+  if (p == NULL)
+    return;
+
+  /* recursive call for reverse process */
+  if (p->next)
+    resolve_predefined_names (p->next);
+
+  *p->ptr = resolve_predefined_name (p->name);
+  free (p);
 }
 
 static struct cobc_field *

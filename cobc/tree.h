@@ -82,6 +82,8 @@ struct cobc_location {
 
 extern struct cobc_location cobc_location;
 
+#define YYLTYPE struct cobc_location
+
 
 /*
  * Tree
