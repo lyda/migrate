@@ -41,8 +41,6 @@ const char *yyfilename;
 static struct replacement *yyreplacing = NULL;
 
 static int display_line = 0;
-static const char *copybook_name = NULL;
-static struct replacement *copybook_replacing = NULL;
 
 static struct copybook {
   int lineno;
@@ -240,9 +238,8 @@ open_buffer (const char *name, struct replacement *replacing)
 void
 include_copybook (const char *name, struct replacement *replacing)
 {
-  /* delay copying until the end of line */
-  copybook_name = name;
-  copybook_replacing = replacing;
+  fputc ('\n', yyout);
+  open_buffer (name, replacing);
 }
 
 static void
@@ -251,12 +248,7 @@ process_eol (void)
   ECHO;
   yylineno++;
 
-  if (copybook_name)
-    {
-      open_buffer (copybook_name, copybook_replacing);
-      copybook_name = NULL;
-    }
-  else if (display_line)
+  if (display_line)
     {
       fprintf (yyout, "# %d \"%s\"\n", yylineno, yyfilename ? yyfilename : "");
       display_line = 0;
