@@ -7,6 +7,7 @@ TESTS = $(srcdir)/syntax \
 	$(srcdir)/data-rep-O
 
 syntax_DEPENDENCIES = \
+	syntax.at \
 	syntax.src/copy.at \
 	syntax.src/definition.at \
 	syntax.src/multiply.at \
@@ -18,6 +19,7 @@ syntax_DEPENDENCIES = \
 	syntax.src/subscripts.at
 
 run_DEPENDENCIES = \
+	run.at \
 	run.src/fundamental.at \
 	run.src/accept.at \
 	run.src/initialize.at \
@@ -28,6 +30,7 @@ run_DEPENDENCIES = \
 	run.src/return-code.at
 
 data_rep_DEPENDENCIES = \
+	data-rep.at \
 	data-rep.src/binary.at \
 	data-rep.src/display.at \
 	data-rep.src/packed.at \
