@@ -274,6 +274,14 @@ output_subscripts (cobc_tree x)
  */
 
 static void
+output_refmod_offset (cobc_tree x)
+{
+  output ("%s (", cobc_index_func);
+  output_index (COBC_REFMOD (x)->offset);
+  output (", %d)", COBC_FIELD (x)->size);
+}
+
+static void
 output_location (cobc_tree x)
 {
   if (COBC_LITERAL_P (x))
@@ -287,7 +295,7 @@ output_location (cobc_tree x)
       if (COBC_REFMOD_P (x))
 	{
 	  output (" + ");
-	  output_index (COBC_REFMOD (x)->offset);
+	  output_refmod_offset (x);
 	}
     }
 }
@@ -304,7 +312,7 @@ output_length (cobc_tree x)
       else
 	{
 	  output ("%d - ", COBC_FIELD (x)->size);
-	  output_index (COBC_REFMOD (x)->offset);
+	  output_refmod_offset (x);
 	}
     }
   else
@@ -807,12 +815,8 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
 	      p->cname, subscripts, p01->cname, p->offset);
       for (f = p; f; f = f->parent)
 	if (f->f.have_occurs)
-	  {
-	    if (cobc_failsafe_flag)
-	      output (" + cob_index (i%d, %d) * %d", i--, f->occurs, f->size);
-	    else
-	      output (" + (i%d - 1) * %d", i--, f->size);
-	  }
+	  output (" + %s (i%d, %d) * %d",
+		  cobc_index_func, i--, f->occurs, f->size);
       output (")\n");
     }
 

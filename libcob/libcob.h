@@ -226,6 +226,8 @@ extern struct cob_field cob_return_code;
 
 /* functional macros */
 
+#define COB_INDEX(i,max) ((i) - 1)
+
 #define cob_cmp(x,y) ((x) - (y))
 
 #define cob_exit_program() return 0

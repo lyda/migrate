@@ -50,6 +50,8 @@ int cobc_optimize_flag = 0;
 int cobc_failsafe_flag = 1;
 int cobc_link_style = LINK_DYNAMIC;
 
+char *cobc_index_func;
+
 FILE *cobc_out;
 
 
@@ -268,6 +270,8 @@ process_command_line (int argc, char *argv[])
 	  exit (1);
 	}
     }
+
+  cobc_index_func = cobc_failsafe_flag ? "cob_index" : "COB_INDEX";
 
   return optind;
 }
