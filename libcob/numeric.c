@@ -138,19 +138,10 @@ cob_decimal_set (cob_decimal *dst, cob_decimal *src)
 }
 
 void
-cob_decimal_set_int (cob_decimal *d, int n, int decimals)
+cob_decimal_set_int (cob_decimal *d, int n)
 {
   mpz_set_si (d->data, n);
-  d->expt = - decimals;
-}
-
-void
-cob_decimal_set_int64 (cob_decimal *d, long long n, int decimals)
-{
-  mpz_set_si (d->data, n >> 32);
-  mpz_mul_2exp (d->data, d->data, 32);
-  mpz_add_ui (d->data, d->data, n & 0xffffffff);
-  d->expt = - decimals;
+  d->expt = 0;
 }
 
 void
@@ -183,14 +174,21 @@ cob_decimal_set_field (cob_decimal *d, cob_field *f)
     {
     case COB_TYPE_NUMERIC_BINARY:
       {
-	int n = f->attr->decimals;
 	switch (f->size)
 	  {
-	  case 1: cob_decimal_set_int (d, *(char *) f->data, n); break;
-	  case 2: cob_decimal_set_int (d, *(short *) f->data, n); break;
-	  case 4: cob_decimal_set_int (d, *(long *) f->data, n); break;
-	  case 8: cob_decimal_set_int64 (d, *(long long *) f->data, n); break;
+	  case 1: cob_decimal_set_int (d, *(char *) f->data); break;
+	  case 2: cob_decimal_set_int (d, *(short *) f->data); break;
+	  case 4: cob_decimal_set_int (d, *(long *) f->data); break;
+	  case 8:
+	    {
+	      long long val = *(long long *) f->data;
+	      mpz_set_si (d->data, val >> 32);
+	      mpz_mul_2exp (d->data, d->data, 32);
+	      mpz_add_ui (d->data, d->data, val & 0xffffffff);
+	      break;
+	    }
 	  }
+	d->expt = - f->attr->decimals;
 	break;
       }
     default:
@@ -464,7 +462,7 @@ void
 cob_add_int (cob_field *f, int n)
 {
   cob_decimal_set_field (&cob_d1, f);
-  cob_decimal_set_int (&cob_d2, n, 0);
+  cob_decimal_set_int (&cob_d2, n);
   cob_decimal_add (&cob_d1, &cob_d2);
   cob_decimal_get (&cob_d1, f);
 }
@@ -473,7 +471,7 @@ void
 cob_sub_int (cob_field *f, int n)
 {
   cob_decimal_set_field (&cob_d1, f);
-  cob_decimal_set_int (&cob_d2, n, 0);
+  cob_decimal_set_int (&cob_d2, n);
   cob_decimal_sub (&cob_d1, &cob_d2);
   cob_decimal_get (&cob_d1, f);
 }

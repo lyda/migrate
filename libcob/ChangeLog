@@ -1,3 +1,8 @@
+2003-03-30  Keisuke Nishida  <knishida@netlab.jp>
+
+	* numeric.c (cob_decimal_set_int): Remove the 3rd argument `decimals'.
+	(cob_decimal_set_int64): Removed.
+
 2003-03-25  Keisuke Nishida  <knishida@netlab.jp>
 
 	* exception.def: New file.

@@ -39,7 +39,7 @@ extern void cob_decimal_init (cob_decimal *d);
 extern void cob_decimal_clear (cob_decimal *d);
 extern void cob_decimal_print (cob_decimal *d);
 extern void cob_decimal_set (cob_decimal *dst, cob_decimal *src);
-extern void cob_decimal_set_int (cob_decimal *d, int n, int decimals);
+extern void cob_decimal_set_int (cob_decimal *d, int n);
 extern void cob_decimal_set_double (cob_decimal *d, double v);
 extern void cob_decimal_set_display (cob_decimal *d, cob_field *f);
 extern void cob_decimal_set_field (cob_decimal *d, cob_field *f);
