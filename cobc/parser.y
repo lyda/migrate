@@ -3658,14 +3658,14 @@ integer_value:
       case cobc_tag_literal:
 	{
 	  struct cobc_literal *l = COBC_LITERAL ($1);
-	  if (l->sign < 0 || l->decimals > 0)
+	  if (l->sign < 0 || l->expt < 0)
 	    goto invalid;
 	  break;
 	}
       case cobc_tag_reference:
 	{
 	  struct cobc_field *f = COBC_FIELD (cobc_ref ($1));
-	  if (f->pic->decimals > 0)
+	  if (f->pic->expt < 0)
 	    goto invalid;
 	  break;
 	}
@@ -4426,7 +4426,7 @@ decimal_expand (cobc_tree s, cobc_tree d, cobc_tree x)
       {
 	/* set d, N */
 	struct cobc_literal *l = COBC_LITERAL (x);
-	if (l->size < 10 && l->decimals == 0)
+	if (l->size < 10 && l->expt == 0)
 	  add_stmt (s, make_funcall_2 ("cob_decimal_set_int",
 				       d, make_cast_int32 (x)));
 	else
@@ -4565,7 +4565,7 @@ build_add (cobc_tree v, cobc_tree n, int round)
     case cobc_tag_literal:
       {
 	struct cobc_literal *l = COBC_LITERAL (n);
-	if (l->size < 10 && l->decimals == 0 && round == 0)
+	if (l->size < 10 && l->expt == 0 && round == 0)
 	  return make_funcall_2 ("cob_add_int", v, make_cast_int32 (n));
 	/* fall through */
       }
@@ -4592,7 +4592,7 @@ build_sub (cobc_tree v, cobc_tree n, int round)
     case cobc_tag_literal:
       {
 	struct cobc_literal *l = COBC_LITERAL (n);
-	if (l->size < 10 && l->decimals == 0 && round == 0)
+	if (l->size < 10 && l->expt == 0 && round == 0)
 	  return make_funcall_2 ("cob_sub_int", v, make_cast_int32 (n));
 	/* fall through */
       }
@@ -4767,7 +4767,7 @@ build_cond (cobc_tree x)
 		if (COBC_TREE_CLASS (p->x) == COB_TYPE_NUMERIC
 		    && COBC_TREE_CLASS (p->y) == COB_TYPE_NUMERIC)
 		  {
-		    if (l->size < 10 && l->decimals == 0)
+		    if (l->size < 10 && l->expt == 0)
 		      p->x = make_funcall_2 ("cob_cmp_int",
 					     p->x, make_cast_int32 (p->y));
 		    else

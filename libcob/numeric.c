@@ -163,7 +163,7 @@ cob_decimal_set_display (cob_decimal *d, cob_field *f)
   mpz_set_str (d->data, buff, 10);
   if (sign < 0)
     mpz_neg (d->data, d->data);
-  d->expt = f->attr ? - f->attr->decimals : 0;
+  d->expt = f->attr ? f->attr->expt : 0;
   cob_put_sign (f, sign);
 }
 
@@ -188,7 +188,7 @@ cob_decimal_set_field (cob_decimal *d, cob_field *f)
 	      break;
 	    }
 	  }
-	d->expt = - f->attr->decimals;
+	d->expt = f->attr->expt;
 	break;
       }
     default:
@@ -213,7 +213,7 @@ cob_decimal_get (cob_decimal *d, cob_field *f)
     }
 
   /* append or truncate decimal digits */
-  shift_decimal (d, f->attr->decimals + d->expt);
+  shift_decimal (d, d->expt - f->attr->expt);
 
   /* store number */
   switch (COB_FIELD_TYPE (f))
@@ -296,7 +296,7 @@ cob_decimal_get (cob_decimal *d, cob_field *f)
 	    cob_field_attr attr = {
 	      COB_TYPE_NUMERIC_DISPLAY,
 	      f->attr->digits,
-	      f->attr->decimals,
+	      f->attr->expt,
 	      COB_FLAG_HAVE_SIGN
 	    };
 	    cob_field temp = {size, buff, &attr};
@@ -316,7 +316,7 @@ cob_decimal_get (cob_decimal *d, cob_field *f)
 void
 cob_decimal_get_r (cob_decimal *d, cob_field *f)
 {
-  if (f->attr->decimals < - d->expt)
+  if (f->attr->expt > d->expt)
     {
       int sign = mpz_sgn (d->data);
       if (sign != 0)
@@ -326,7 +326,7 @@ cob_decimal_get_r (cob_decimal *d, cob_field *f)
 	  d = &cob_d1;
 
 	  /* rounding */
-	  shift_decimal (d, f->attr->decimals + d->expt + 1);
+	  shift_decimal (d, d->expt - f->attr->expt + 1);
 	  if (sign > 0)
 	    mpz_add_ui (d->data, d->data, 5);
 	  else
@@ -500,7 +500,7 @@ cob_div_quotient (cob_field *dividend, cob_field *divisor,
     cob_decimal_get (&cob_d1, quotient);
 
   /* truncate digits from the quotient */
-  shift_decimal (&cob_d4, quotient->attr->decimals + cob_d4.expt);
+  shift_decimal (&cob_d4, cob_d4.expt - quotient->attr->expt);
 
   /* compute remainder */
   cob_decimal_mul (&cob_d4, &cob_d2);

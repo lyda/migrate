@@ -32,8 +32,8 @@
 
 #define COPY_COMMON_REGION(b1,l1,d1,b2,l2,d2)	\
 {						\
-  int lf1 = -(d1);				\
-  int lf2 = -(d2);				\
+  int lf1 = (d1);				\
+  int lf2 = (d2);				\
   int hf1 = (l1) + lf1;				\
   int hf2 = (l2) + lf2;				\
   int lcf = MAX (lf1, lf2);			\
@@ -94,7 +94,7 @@ cob_move_alphanum_to_display (cob_field *f1, cob_field *f2)
       count++;
 
   /* find the start position */
-  size = COB_FIELD_SIZE (f2) - f2->attr->decimals;
+  size = COB_FIELD_SIZE (f2) + f2->attr->expt;
   if (count < size)
     s2 += size - count;
   else
@@ -134,9 +134,9 @@ cob_move_display_to_display (cob_field *f1, cob_field *f2)
 
   memset (f2->data, '0', f2->size);
   COPY_COMMON_REGION (COB_FIELD_DATA (f1), COB_FIELD_SIZE (f1),
-		      COB_FIELD_DECIMALS (f1),
+		      COB_FIELD_EXPT (f1),
 		      COB_FIELD_DATA (f2), COB_FIELD_SIZE (f2),
-		      COB_FIELD_DECIMALS (f2));
+		      COB_FIELD_EXPT (f2));
 
   cob_put_sign (f1, sign);
   cob_put_sign (f2, sign);
@@ -163,9 +163,9 @@ cob_move_display_to_alphanum (cob_field *f1, cob_field *f2)
       /* move */
       memcpy (base2, base1, len1);
       /* implied 0 ('P's) */
-      if (f1->attr->decimals < 0)
+      if (f1->attr->expt > 0)
 	{
-	  zero_len = MIN (-f1->attr->decimals, diff);
+	  zero_len = MIN (f1->attr->expt, diff);
 	  memset (base2 + len1, '0', zero_len);
 	}
       /* padding */
@@ -220,11 +220,11 @@ cob_move_display_to_packed (cob_field *f1, cob_field *f2)
   int sign = cob_get_sign (f1);
   size_t len1 = COB_FIELD_SIZE (f1);
   size_t len2 = f2->size;
-  int dec1 = COB_FIELD_DECIMALS (f1);
-  int dec2 = COB_FIELD_DECIMALS (f2);
+  int exp1 = COB_FIELD_EXPT (f1);
+  int exp2 = COB_FIELD_EXPT (f2);
   unsigned char *base1 = COB_FIELD_DATA (f1);
   unsigned char *base2 = f2->data;
-  unsigned char *p = base1 + (len1 - dec1) - (len2 - dec2);
+  unsigned char *p = base1 + (len1 + exp1) - (len2 + exp2);
 
   /* pack string */
   memset (f2->data, 0, f2->size);
@@ -255,9 +255,9 @@ cob_move_packed_to_display (cob_field *f1, cob_field *f2)
 
   /* store */
   memset (f2->data, '0', f2->size);
-  COPY_COMMON_REGION (buff, f1->size, f1->attr->decimals,
+  COPY_COMMON_REGION (buff, f1->size, f1->attr->expt,
 		      COB_FIELD_DATA (f2), COB_FIELD_SIZE (f2),
-		      COB_FIELD_DECIMALS (f2));
+		      COB_FIELD_EXPT (f2));
 
   cob_put_sign (f1, sign);
   cob_put_sign (f2, sign);
@@ -281,7 +281,7 @@ cob_move_display_to_binary (cob_field *f1, cob_field *f2)
   unsigned char *base2 = f2->data;
 
   /* get value */
-  len = len1 - f1->attr->decimals + f2->attr->decimals;
+  len = len1 + f1->attr->expt - f2->attr->expt;
   for (i = 0; i < len; ++i)
     if (i < len1)
       val = val * 10 + base1[i] - '0';
@@ -337,9 +337,9 @@ cob_move_binary_to_display (cob_field *f1, cob_field *f2)
 
   /* store */
   memset (f2->data, '0', f2->size);
-  COPY_COMMON_REGION (buff + i, 20 - i, f1->attr->decimals,
+  COPY_COMMON_REGION (buff + i, 20 - i, f1->attr->expt,
 		      COB_FIELD_DATA (f2), COB_FIELD_SIZE (f2),
-		      COB_FIELD_DECIMALS (f2));
+		      COB_FIELD_EXPT (f2));
 
   cob_put_sign (f2, sign);
   finalize_display (f2);
@@ -389,7 +389,7 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 
   min = COB_FIELD_DATA (f1);
   max = min + COB_FIELD_SIZE (f1);
-  src = max - f1->attr->decimals - count;
+  src = max + f1->attr->expt - count;
   dst = f2->data;
   end = f2->data + f2->size;
   for (p = f2->attr->pic; *p; )
@@ -551,11 +551,11 @@ cob_move_alphanum_to_edited (cob_field *f1, cob_field *f2)
 static void
 indirect_move (void (*func) (cob_field *src, cob_field *dst),
 	       cob_field *src, cob_field *dst,
-	       unsigned int size, char decimals)
+	       unsigned int size, char expt)
 {
   unsigned char data[size];
   cob_field_attr attr =
-    {COB_TYPE_NUMERIC_DISPLAY, size, decimals, COB_FLAG_HAVE_SIGN};
+    {COB_TYPE_NUMERIC_DISPLAY, size, expt, COB_FLAG_HAVE_SIGN};
   cob_field temp = {size, data, &attr};
   func (src, &temp);
   cob_move (&temp, dst);
@@ -582,7 +582,7 @@ cob_move (cob_field *src, cob_field *dst)
     {
       if (COB_FIELD_TYPE (src) == COB_TYPE_NUMERIC_BINARY)
 	return indirect_move (cob_move_binary_to_display, src, dst,
-			      src->attr->digits, src->attr->decimals);
+			      src->attr->digits, src->attr->expt);
       else
 	return cob_move_alphanum_to_alphanum (src, dst);
     }
@@ -604,12 +604,12 @@ cob_move (cob_field *src, cob_field *dst)
 	case COB_TYPE_NUMERIC_EDITED:
 	  return cob_move_display_to_edited (src, dst);
 	case COB_TYPE_ALPHANUMERIC_EDITED:
-	  if (src->attr->decimals < 0
-	      || src->attr->decimals > src->attr->digits)
+	  if (src->attr->expt > 0
+	      || - src->attr->expt > src->attr->digits)
 	    /* expand P's */
 	    return indirect_move (cob_move_display_to_display, src, dst,
-				  MAX (src->attr->digits, src->attr->decimals),
-				  MAX (0, src->attr->decimals));
+				  MAX (src->attr->digits, - src->attr->expt),
+				  MAX (0, - src->attr->expt));
 	  else
 	    return cob_move_alphanum_to_edited (src, dst);
 	default:
@@ -623,7 +623,7 @@ cob_move (cob_field *src, cob_field *dst)
 	  return cob_move_packed_to_display (src, dst);
 	default:
 	  return indirect_move (cob_move_packed_to_display, src, dst,
-				src->attr->digits, src->attr->decimals);
+				src->attr->digits, src->attr->expt);
 	}
 
     case COB_TYPE_NUMERIC_BINARY:
@@ -633,7 +633,7 @@ cob_move (cob_field *src, cob_field *dst)
 	  return cob_move_binary_to_display (src, dst);
 	default:
 	  return indirect_move (cob_move_binary_to_display, src, dst,
-				src->attr->digits, src->attr->decimals);
+				src->attr->digits, src->attr->expt);
 	}
 
     default:
@@ -645,7 +645,7 @@ cob_move (cob_field *src, cob_field *dst)
 	case COB_TYPE_NUMERIC_BINARY:
 	case COB_TYPE_NUMERIC_EDITED:
 	  return indirect_move (cob_move_alphanum_to_display,
-				src, dst, 36, 18);
+				src, dst, 32, -16);
 	case COB_TYPE_ALPHANUMERIC_EDITED:
 	  return cob_move_alphanum_to_edited (src, dst);
 	default:

@@ -462,7 +462,7 @@ output_field (cobc_tree x, int id)
 	  {
 	    output_indent ("{");
 	    output_line ("static cob_field_attr attr = {%d, %d, %d, 1};",
-			 COB_TYPE_NUMERIC_BINARY, l->size, l->decimals);
+			 COB_TYPE_NUMERIC_BINARY, l->size, l->expt);
 	    output_line ("static long long n = %" PRId64 "LL;", literal_to_int (l));
 	    output_line ("%s = (cob_field) {8, (void *) &n, &attr};", fname);
 	    output_indent ("}");
@@ -845,7 +845,7 @@ output_advance_move (cob_field *f, cobc_tree dst)
       else
 	attr.type = get_type (p);
       attr.digits = p->pic->digits;
-      attr.decimals = p->pic->decimals;
+      attr.expt = p->pic->expt;
       attr.flags = 0;
       if (p->pic->have_sign)
 	attr.flags |= COB_FLAG_HAVE_SIGN;
@@ -996,17 +996,17 @@ output_move_literal (struct cobc_literal *l, cobc_tree dst)
   else if (f->usage == COBC_USAGE_BINARY || f->usage == COBC_USAGE_INDEX)
     {
       long long val = literal_to_int (l);
-      int decs = f->pic->decimals;
-      if (decs > l->decimals)
-	val *= cob_exp10[decs - l->decimals];
-      else if (decs < l->decimals)
-	val /= cob_exp10[l->decimals - decs];
+      int expt = f->pic->expt;
+      if (expt > l->expt)
+	val /= cob_exp10[expt - l->expt];
+      else if (expt < l->expt)
+	val *= cob_exp10[l->expt - expt];
       output_native_assign (dst, val);
     }
   else
     {
       cob_field_attr attr =
-	{COBC_TREE_CLASS (l), l->size, l->decimals,
+	{COBC_TREE_CLASS (l), l->size, l->expt,
 	 l->sign ? COB_FLAG_HAVE_SIGN : 0};
       cob_field fld = {l->size, l->data, &attr};
       if (l->sign < 0)
@@ -1818,7 +1818,7 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
 	    attr = "cob_alnum_attr";
 	}
       else if (type == COB_TYPE_NUMERIC
-	       && p->pic->decimals == 0
+	       && p->pic->expt == 0
 	       && p->flag_sign_separate == 0
 	       && p->flag_sign_leading == 0
 	       && p->flag_blank_zero == 0)
@@ -1845,7 +1845,7 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
 	  sprintf (attr_buff, "%s_attr", fname);
 	  output ("static cob_field_attr %s = ", attr);
 	  output ("{%d, %d, %d, %d, ",
-		  type, p->pic->digits, p->pic->decimals, flags);
+		  type, p->pic->digits, p->pic->expt, flags);
 
 	  if (p->pic->str[0] != 0)
 	    {

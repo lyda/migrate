@@ -56,19 +56,19 @@ cob_display (cob_field *f, int fd)
     {
       int i;
       int digits = COB_FIELD_DIGITS (f);
-      int decimals = COB_FIELD_DECIMALS (f);
+      int expt = COB_FIELD_EXPT (f);
       int size = (digits
 		  + (COB_FIELD_HAVE_SIGN (f) ? 1 : 0)
-		  + (decimals > 0 ? 1 : 0));
+		  + (expt < 0 ? 1 : 0));
       unsigned char pic[9], *p = pic;
       unsigned char data[size];
-      cob_field_attr attr = {COB_TYPE_NUMERIC_EDITED, digits, decimals};
+      cob_field_attr attr = {COB_TYPE_NUMERIC_EDITED, digits, expt};
       cob_field temp = {size, data, &attr};
       attr.pic = pic;
       if (COB_FIELD_HAVE_SIGN (f))
 	p += sprintf (p, "+\001");
-      if (decimals > 0)
-	sprintf (p, "9%c.%c9%c", digits - decimals, 1, decimals);
+      if (expt < 0)
+	sprintf (p, "9%c.%c9%c", digits + expt, 1, expt);
       else
 	sprintf (p, "9%c", digits);
       cob_move (f, &temp);

@@ -421,11 +421,11 @@ make_literal (int class, unsigned char *str)
 }
 
 cobc_tree
-make_numeric_literal (int sign, unsigned char *digits, int decimals)
+make_numeric_literal (int sign, unsigned char *digits, int expt)
 {
   struct cobc_literal *p = make_literal (COB_TYPE_NUMERIC, digits);
   p->sign = sign;
-  p->decimals = decimals;
+  p->expt = expt;
   return COBC_TREE (p);
 }
 

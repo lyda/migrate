@@ -254,7 +254,7 @@ scan_numeric (char *text)
   if (strchr (text, (current_program->env.decimal_point == ',') ? '.' : ','))
     yyerror (_("invalid numeric literal"));
 
-  yylval.tree = make_numeric_literal (sign, text, decimals);
+  yylval.tree = make_numeric_literal (sign, text, - decimals);
   return NUMERIC_LITERAL;
 }
 
@@ -477,7 +477,7 @@ yylex_picture (char *str)
   /* set picture */
   pic->size = size;
   pic->digits = digits;
-  pic->decimals = decimals;
+  pic->expt = - decimals;
   pic->have_sign = s_count;
 
   /* set picture category */

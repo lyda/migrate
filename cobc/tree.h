@@ -202,13 +202,13 @@ struct cobc_literal {
   char id;
   char all;
   char sign;
-  char decimals;
+  char expt;
 };
 
 #define COBC_LITERAL(x)		(COBC_TREE_CAST (cobc_tag_literal, struct cobc_literal, x))
 #define COBC_LITERAL_P(x)	(COBC_TREE_TAG (x) == cobc_tag_literal)
 
-extern cobc_tree make_numeric_literal (int sign, unsigned char *digits, int decimals);
+extern cobc_tree make_numeric_literal (int sign, unsigned char *digits, int expt);
 extern cobc_tree make_nonnumeric_literal (unsigned char *str);
 extern long long literal_to_int (struct cobc_literal *l);
 
@@ -250,7 +250,7 @@ struct cobc_picture {
   char *str;			/* picture string */
   char category;		/* field category */
   char digits;			/* the number of digit places */
-  char decimals;		/* the number of decimal digits */
+  char expt;			/* 10 ^ expt */
   char have_sign;		/* have `S' */
 };
 
