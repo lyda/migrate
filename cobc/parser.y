@@ -438,25 +438,25 @@ on_or_off:
 
 alphabet_name_clause:
   ALPHABET undefined_word _is alphabet_definition
-  {
-    cb_define ($2, $<tree>4);
-  }
 ;
 alphabet_definition:
-  alphabet_symbol
+  NATIVE
   {
-    $<tree>$ = cb_build_alphabet_name ($<ival>1);
+    $<tree>$ = cb_define_alphabet_name ($<tree>-1, CB_ALPHABET_NATIVE);
+  }
+| STANDARD_1
+  {
+    $<tree>$ = cb_define_alphabet_name ($<tree>-1, CB_ALPHABET_STANDARD_1);
+  }
+| STANDARD_2
+  {
+    $<tree>$ = cb_define_alphabet_name ($<tree>-1, CB_ALPHABET_STANDARD_2);
   }
 | alphabet_literal_list
   {
-    $<tree>$ = cb_build_alphabet_name (CB_ALPHABET_CUSTOM);
+    $<tree>$ = cb_define_alphabet_name ($<tree>-1, CB_ALPHABET_CUSTOM);
     CB_ALPHABET_NAME ($<tree>$)->custom_list = $<tree>1;
   }
-;
-alphabet_symbol:
-  NATIVE			{ $<ival>$ = CB_ALPHABET_NATIVE; }
-| STANDARD_1			{ $<ival>$ = CB_ALPHABET_STANDARD_1; }
-| STANDARD_2			{ $<ival>$ = CB_ALPHABET_STANDARD_2; }
 ;
 alphabet_literal_list:
   alphabet_literal		{ $<tree>$ = list ($<tree>1); }
@@ -506,7 +506,7 @@ class_name_clause:
   {
     current_program->class_name_list =
       list_add (current_program->class_name_list,
-		cb_build_class_name ($2, $<tree>4));
+		cb_define_class_name ($2, $<tree>4));
   }
 ;
 class_item_list:
