@@ -49,6 +49,14 @@ list (void *x)
 }
 
 struct cobc_list *
+list_last (struct cobc_list *l)
+{
+  if (l != NULL)
+    for (; l->next != NULL; l = l->next);
+  return l;
+}
+
+struct cobc_list *
 list_add (struct cobc_list *l, void *x)
 {
   return list_append (l, list (x));
@@ -58,13 +66,12 @@ struct cobc_list *
 list_append (struct cobc_list *l1, struct cobc_list *l2)
 {
   if (l1 == NULL)
-    return l2;
+    {
+      return l2;
+    }
   else
     {
-      /* this is not the most efficient but fine with our compiler */
-      struct cobc_list *p;
-      for (p = l1; p->next != NULL; p = p->next);
-      p->next = l2;
+      list_last (l1)->next = l2;
       return l1;
     }
 }
@@ -764,7 +771,6 @@ make_expr (cobc_tree left, char op, cobc_tree right)
   p->op = op;
   p->left = left;
   p->right = right;
-  COBC_TREE (p)->loc = left->loc;
   return COBC_TREE (p);
 }
 

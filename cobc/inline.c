@@ -721,51 +721,50 @@ output_search (cobc_tree table, cobc_tree var,
 }
 
 static void
+search_set_keys (struct cobc_field *p, cobc_tree x)
+{
+  switch (COBC_COND (x)->type)
+    {
+    case COBC_COND_AND:
+      search_set_keys (p, COBC_COND (x)->left);
+      search_set_keys (p, COBC_COND (x)->right);
+      break;
+    case COBC_COND_EQ:
+      {
+	int i;
+	cobc_tree ref = COBC_COND (x)->left;
+	cobc_tree val = COBC_COND (x)->right;
+	for (i = 0; i < p->nkeys; i++)
+	  if (COBC_FIELD (ref) == COBC_FIELD (p->keys[i].key))
+	    {
+	      p->keys[i].ref = ref;
+	      p->keys[i].val = val;
+	      break;
+	    }
+	if (i == p->nkeys)
+	  yyerror ("undeclared key");
+	break;
+      }
+    default:
+      yyerror_loc (&x->loc, "invalid condition");
+    }
+}
+
+static void
 output_search_all (cobc_tree table, cobc_tree sentence, cobc_tree when)
 {
   int i;
   struct cobc_field *p = COBC_FIELD (table);
   struct cobc_if *ifp = COBC_IF (when);
   cobc_tree idx = COBC_TREE (p->index_list->item);
-  cobc_tree x;
 
+  /* set keys */
   for (i = 0; i < p->nkeys; i++)
     {
       p->keys[i].ref = 0;
       p->keys[i].val = 0;
     }
-
-  x = ifp->test;
-  do
-    {
-      cobc_tree eq;
-      if (COBC_COND (x)->type == COBC_COND_AND)
-	{
-	  eq = COBC_COND (x)->left;
-	  x = COBC_COND (x)->right;
-	}
-      else
-	{
-	  eq = x;
-	  x = 0;
-	}
-      if (COBC_COND (eq)->type == COBC_COND_EQ)
-	{
-	  cobc_tree ref = COBC_COND (eq)->left;
-	  cobc_tree val = COBC_COND (eq)->right;
-	  for (i = 0; i < p->nkeys; i++)
-	    if (COBC_FIELD (ref) == COBC_FIELD (p->keys[i].key))
-	      {
-		p->keys[i].ref = ref;
-		p->keys[i].val = val;
-		break;
-	      }
-	  if (i == p->nkeys)
-	    yyerror ("undeclared key");
-	}
-      else
-	yyerror ("invalid condition");
-    } while (x);
+  search_set_keys (p, ifp->test);
 
   /* header */
   output_indent ("{", 2);
