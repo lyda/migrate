@@ -92,7 +92,7 @@ int dump (unsigned char *data)
 {
   int i;
   for (i = 0; i < 4; i++)
-    printf ("%x%x", data[[i]] >> 4, data[[i]] & 0x0f);
+    printf ("%02x", data[[i]]);
   puts ("");
   return 0;
 }
