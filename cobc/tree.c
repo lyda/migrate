@@ -661,6 +661,7 @@ cb_parse_picture (const char *str)
 	  if (category & PIC_ALPHABETIC)
 	    goto error;
 	  digits += n - 1;
+	  s_count++;
 	  /* FIXME: need more check */
 	  break;
 
@@ -669,6 +670,7 @@ cb_parse_picture (const char *str)
 	  if (!(p[1] == 'R' && p[2] == 0))
 	    goto error;
 	  p++;
+	  s_count++;
 	  break;
 
 	case 'D':
@@ -676,6 +678,7 @@ cb_parse_picture (const char *str)
 	  if (!(p[1] == 'B' && p[2] == 0))
 	    goto error;
 	  p++;
+	  s_count++;
 	  break;
 
 	default:

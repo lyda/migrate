@@ -53,7 +53,7 @@ store_common_region (cob_field *f, unsigned char *data, size_t size, int expt)
  * Display
  */
 
-void
+static void
 cob_move_alphanum_to_display (cob_field *f1, cob_field *f2)
 {
   int sign, count, size;
@@ -114,7 +114,7 @@ cob_move_alphanum_to_display (cob_field *f1, cob_field *f2)
   cob_put_sign (f2, 0);
 }
 
-void
+static void
 cob_move_display_to_display (cob_field *f1, cob_field *f2)
 {
   int sign = cob_get_sign (f1);
@@ -126,7 +126,7 @@ cob_move_display_to_display (cob_field *f1, cob_field *f2)
   cob_put_sign (f2, sign);
 }
 
-void
+static void
 cob_move_display_to_alphanum (cob_field *f1, cob_field *f2)
 {
   int sign = cob_get_sign (f1);
@@ -159,7 +159,7 @@ cob_move_display_to_alphanum (cob_field *f1, cob_field *f2)
   cob_put_sign (f1, sign);
 }
 
-void
+static void
 cob_move_alphanum_to_alphanum (cob_field *f1, cob_field *f2)
 {
   size_t size1 = f1->size;
@@ -196,7 +196,7 @@ cob_move_alphanum_to_alphanum (cob_field *f1, cob_field *f2)
  * Packed decimal
  */
 
-void
+static void
 cob_move_display_to_packed (cob_field *f1, cob_field *f2)
 {
   size_t i;
@@ -224,7 +224,7 @@ cob_move_display_to_packed (cob_field *f1, cob_field *f2)
   cob_put_sign (f2, sign);
 }
 
-void
+static void
 cob_move_packed_to_display (cob_field *f1, cob_field *f2)
 {
   size_t i;
@@ -250,7 +250,7 @@ cob_move_packed_to_display (cob_field *f1, cob_field *f2)
  * Binary integer
  */
 
-void
+static void
 cob_move_display_to_binary (cob_field *f1, cob_field *f2)
 {
   size_t i, size;
@@ -284,7 +284,7 @@ cob_move_display_to_binary (cob_field *f1, cob_field *f2)
   cob_put_sign (f1, sign);
 }
 
-void
+static void
 cob_move_binary_to_display (cob_field *f1, cob_field *f2)
 {
   int i, sign;
@@ -335,7 +335,7 @@ cob_move_binary_to_display (cob_field *f1, cob_field *f2)
     _x;									\
   })
 
-void
+static void
 cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 {
   const char *p;
@@ -490,7 +490,7 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
   cob_put_sign (f1, sign);
 }
 
-void
+static void
 cob_move_alphanum_to_edited (cob_field *f1, cob_field *f2)
 {
   const char *p;
@@ -539,7 +539,7 @@ indirect_move (void (*func) (cob_field *src, cob_field *dst),
   cob_move (&temp, dst);
 }
 
-void
+static void
 cob_move_all (cob_field *src, cob_field *dst)
 {
   int i;
@@ -649,7 +649,7 @@ cob_set_int (cob_field *f, int n)
   cob_move (&temp, f);
 }
 
-void
+static void
 cob_display_to_int (cob_field *f, int *n)
 {
   size_t i;
@@ -683,7 +683,7 @@ cob_display_to_int (cob_field *f, int *n)
   cob_put_sign (f, sign);
 }
 
-void
+static void
 cob_binary_to_int (cob_field *f, int *n)
 {
   switch (f->size)
