@@ -62,7 +62,7 @@ static void process_eol (void);
 
 %}
 
-%x COPY_STATE
+%x PIC_STATE COPY_STATE
 
 %%
 
@@ -83,6 +83,8 @@ static void process_eol (void);
     process_eol ();
 }
 
+"PIC"			{ BEGIN PIC_STATE; ECHO; }
+"PICTURE"		{ BEGIN PIC_STATE; ECHO; }
 "COPY"			{ BEGIN COPY_STATE; return COPY; }
 "INCLUDE"		{ BEGIN COPY_STATE; return COPY; }
 "REPLACE"		{ BEGIN COPY_STATE; return REPLACE; }
@@ -92,25 +94,34 @@ static void process_eol (void);
 . |
 [ \t]* |
 [0-9A-Z_-]+ |
+[+-]?[0-9][0-9,]+[0-9] |
 \'[^\'\n]*\' |
 \"[^\"\n]*\"		{ ECHO; }
 
-<COPY_STATE>"."		{ BEGIN INITIAL; return '.'; }
-<COPY_STATE>"BY"	{ return BY; }
-<COPY_STATE>"OFF"	{ return OFF; }
-<COPY_STATE>"REPLACING"	{ return REPLACING; }
-<COPY_STATE>[0-9A-Z_-]+ { yylval.s = strdup (yytext); return NAME; }
-<COPY_STATE>.		{ }
-
-<COPY_STATE>\'[^\'\n]*\' |
-<COPY_STATE>\"[^\"\n]*\" {
-  yylval.s = substring (yytext, 1);
-  return NAME;
+<PIC_STATE>{
+  [ \t]* |
+  "IS"			{ ECHO; }
+  .*			{ ECHO; BEGIN INITIAL; }
 }
 
-<COPY_STATE>"=="[^=\n]*"==" {
-  yylval.s = substring (yytext, 2);
-  return TEXT;
+<COPY_STATE>{
+  "."			{ BEGIN INITIAL; return '.'; }
+  "BY"			{ return BY; }
+  "OFF"			{ return OFF; }
+  "REPLACING"		{ return REPLACING; }
+  [0-9A-Z_-]+		{ yylval.s = strdup (yytext); return NAME; }
+  .			{ }
+
+  \'[^\'\n]*\' |
+  \"[^\"\n]*\" {
+    yylval.s = substring (yytext, 1);
+    return NAME;
+  }
+
+  "=="[^=\n]*"==" {
+    yylval.s = substring (yytext, 2);
+    return TEXT;
+  }
 }
 
 <<EOF>> {
