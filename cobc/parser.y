@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 113
+%expect 89
 
 %{
 #include "config.h"
@@ -1298,7 +1298,7 @@ procedure_using:
 procedure_declaratives:
 | DECLARATIVES '.'
   procedure_list
-  END DECLARATIVES
+  END DECLARATIVES '.'
 ;
 
 
@@ -1312,7 +1312,8 @@ procedure_list:
 procedure:
   section_header
 | paragraph_header
-| statement
+| invalid_statement
+| statements '.'
 | error '.'
 | '.'
 ;
@@ -1336,7 +1337,6 @@ section_header:
     current_paragraph = NULL;
     push (current_section);
   }
-  opt_use_statement
 ;
 
 paragraph_header:
@@ -1352,6 +1352,14 @@ paragraph_header:
       current_section->children =
 	cons (current_paragraph, current_section->children);
     push (current_paragraph);
+  }
+;
+
+invalid_statement:
+  section_name
+  {
+    yyerror_x ($1, _("unknown statement `%s'"), CB_NAME ($1));
+    YYERROR;
   }
 ;
 
@@ -1377,35 +1385,6 @@ section_name:
   }
 ;
 
-/*
- * USE statement
- */
-
-opt_use_statement:
-| use_statement
-;
-use_statement:
-  USE flag_global AFTER _standard exception_or_error PROCEDURE _on use_target
-  {
-    current_section->need_begin = 1;
-    current_section->need_return = 1;
-  }
-;
-use_target:
-  file_name_list
-  {
-    struct cb_list *l;
-    for (l = $1; l; l = l->next)
-      CB_FILE (cb_ref (l->item))->handler = current_section;
-  }
-| INPUT	 { current_program->file_handler[COB_OPEN_INPUT]  = current_section; }
-| OUTPUT { current_program->file_handler[COB_OPEN_OUTPUT] = current_section; }
-| I_O	 { current_program->file_handler[COB_OPEN_I_O]    = current_section; }
-| EXTEND { current_program->file_handler[COB_OPEN_EXTEND] = current_section; }
-;
-_standard: | STANDARD ;
-exception_or_error: EXCEPTION | ERROR ;
-
 
 /*******************
  * Statements
@@ -1416,15 +1395,15 @@ statement_list:
     $<list>$ = current_program->exec_list;
     current_program->exec_list = NULL;
   }
-  statement_list_1
+  statements
   {
     $$ = make_sequence (list_reverse (current_program->exec_list));
     current_program->exec_list = $<list>1;
   }
 ;
-statement_list_1:
+statements:
   statement
-| statement_list_1 statement
+| statements statement
 ;
 statement:
   accept_statement
@@ -1461,6 +1440,7 @@ statement:
 | string_statement
 | subtract_statement
 | unstring_statement
+| use_statement
 | write_statement
 | CONTINUE
 | NEXT SENTENCE
@@ -2829,6 +2809,32 @@ end_unstring:
   /* empty */			{ terminator_warning ("UNSTRING"); }
 | END_UNSTRING
 ;
+
+/*
+ * USE statement
+ */
+
+use_statement:
+  USE flag_global AFTER _standard exception_or_error PROCEDURE _on use_target
+  {
+    current_section->need_begin = 1;
+    current_section->need_return = 1;
+  }
+;
+use_target:
+  file_name_list
+  {
+    struct cb_list *l;
+    for (l = $1; l; l = l->next)
+      CB_FILE (cb_ref (l->item))->handler = current_section;
+  }
+| INPUT	 { current_program->file_handler[COB_OPEN_INPUT]  = current_section; }
+| OUTPUT { current_program->file_handler[COB_OPEN_OUTPUT] = current_section; }
+| I_O	 { current_program->file_handler[COB_OPEN_I_O]    = current_section; }
+| EXTEND { current_program->file_handler[COB_OPEN_EXTEND] = current_section; }
+;
+_standard: | STANDARD ;
+exception_or_error: EXCEPTION | ERROR ;
 
 
 /*
