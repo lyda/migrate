@@ -34,10 +34,7 @@
 #define CDIV_COMMENT 	5
 #define CDIV_FD 	6
 #define CDIV_REDEF 	7
-#define CDIV_COPY 	9
-#define CDIV_COPYFILE 	10
 #define CDIV_EXCEPTION 	11
-#define CDIV_PIC 	12
 #define CINITIAL 	15
 
 /* symbol table selector */
@@ -491,7 +488,6 @@ extern void emit_lit (char *s, int len);
 extern void emit_lit_fill (int c, int len);
 extern void gen_init_value (struct lit *sy, int var_len);
 extern void stabs_line (void);
-extern void stabs_block (int end);
 extern void pgm_header (char *id);
 extern void data_trail (void);
 extern int adjust_linkage_vars (int start_offset);

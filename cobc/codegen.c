@@ -120,7 +120,6 @@ char *pgm_label = "_main";
 #endif
 struct list *report_list = NULL;
 static int need_desc_length_cleanup = 0;
-extern int stabs_started;
 
 /*
 **	Symbol table management routines
@@ -382,14 +381,6 @@ clear_symtab ()
 	}
       labtab[i] = NULL;
     }
-  /*for (i=0;i<HASHLEN;i++) {
-     for (lt1=littab[i];lt1!=NULL;) {
-     ltmp = lt1;
-     lt1 = lt1->next;
-     free(ltmp);
-     }
-     littab[i] = NULL;
-     } */
 }
 
 /* clear_offset() is called when starting a new program segment */
@@ -414,7 +405,6 @@ clear_offsets ()
   /* free tmpvar storage */
   tmpvar_offset = 0;
   tmpvar_max = 0;
-  stabs_started = 0;
 }
 
 /*** we need this because the literal string is already stored ***/
@@ -709,24 +699,6 @@ stabs_line ()
 }
 
 void
-stabs_block (int end)
-{
-/*	I just can't get this working. Let's forget it for some time. */
-  if (!end)
-    {
-      fprintf (o_src, ".stabs\t\".LSB%d:F(0,1)\",36,0,1,.LSB%d\n",
-	       block_label, block_label);
-      fprintf (o_src, ".LSB%d:\n", block_label);
-    }
-  else
-    {
-      fprintf (o_src, ".LSE%d:\n", block_label);
-      fprintf (o_src, ".stabs\t\"\",100,0,0,.LSE%d-.LSB%d\n",
-	       block_label, block_label);
-    }
-}
-
-void
 pgm_header (char *id)
 {
   if (!pgm_segment)
@@ -741,7 +713,6 @@ pgm_header (char *id)
 void
 data_trail (void)
 {
-//      fprintf(o_src,"_DATA    ends\n\n");
   if (refmod_slots > 0)
     fprintf (o_src, "rf_base%d:\t.space\t%d\n",
 	     pgm_segment, refmod_slots * 8);
@@ -985,7 +956,6 @@ proc_header (int using)
 #endif
     }
   at_procedure++;
-  stabs_started++;
 }
 
 void
@@ -4552,7 +4522,6 @@ gen_perform_times (unsigned long lbl)
 void
 gen_perform_thru (struct sym *s1, struct sym *s2)
 {
-  //stabs_block(0);
   if (s2 == NULL)
     s2 = s1;
   fprintf (o_src, "\tleal\t.L%d, %%eax\n", loc_label);
@@ -4566,7 +4535,6 @@ gen_perform_thru (struct sym *s1, struct sym *s2)
 
   fprintf (o_src, "\t.align 16\n");
   fprintf (o_src, ".L%d:\n", loc_label++);
-  //stabs_block(1);
   //stabs_line(); 
 }
 

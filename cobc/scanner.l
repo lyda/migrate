@@ -42,23 +42,14 @@ extern char picture[];
 extern struct sym *curr_field;
 extern int picix,piccnt,sign,v_flag;
 
-#define MAX_COPY_DEPTH          10
-#define MAX_CPYNAME_LEN         65
-#define MAXLINEBUF              256
-
 extern FILE *o_lst;
-static int lex_fgets (char *buf, int maxsize);
 
-#define YY_INPUT(buf,result,max_size) \
-  result = lex_fgets (buf, max_size);
-
-unsigned int varnumber;
-int previous_state = 0;
-int stabs_started=0;
+#define YY_INPUT(buf,result,max_size)  result = yyinput (buf, max_size);
+static int yyinput (char *buf, int maxsize);
 
 static int read_literal (char mark);
 static int read_literal_x (char mark);
-static int read_picture (char *text);
+static int scan_picture (char *text);
 static int scan_word (char *text);
 static int scan_reserved_word (char *text);
 %}
@@ -89,7 +80,6 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
                 BEGIN DATA_ST;
                 break;
         case CDIV_PROC:
-                //stabs_started=1;
                 BEGIN INITIAL;
                 break;
         case CDIV_COMMENT:
@@ -104,9 +94,6 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
         case CDIV_EXCEPTION:
                 BEGIN EXCEPTION_ST;
                 break;
-        case CDIV_PIC:
-                BEGIN PIC_ST;
-                break;
         case CINITIAL:
                 BEGIN INITIAL;
                 break;
@@ -115,6 +102,7 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
 %}
 
 <*>^"#".* {
+  /* Parse line directive */
   char *endp;
   cob_orig_lineno = strtol (yytext + 2, &endp, 10) - 1;
   if (cob_orig_filename)
@@ -137,6 +125,26 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
 }
 
 {white}+ { /* ignore */ }
+
+<IDENT_ST>{
+  [ \t\n]* { }
+  "."/[ \t\n] { 
+    return '.'; 
+  }
+
+  {word} {
+    int tok = scan_word (yytext);
+    if (tok)
+      return tok;
+
+    yylval.str = strdup (yytext);
+    return IDSTRING;
+  }
+
+  {any}   {
+    return(yytext[0]); 
+  }
+}
 
 <INITIAL,EXCEPTION_ST>{word} {
   struct sym *symbol;
@@ -216,29 +224,9 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   return (STRING);
 }
 
-<IDENT_ST>{
-  [ \t\n]* { }
-  "."/[ \t\n] { 
-    return(EOS); 
-  }
-
-  {word} {
-    int tok = scan_word (yytext);
-    if (tok)
-      return tok;
-
-    yylval.str = strdup (yytext);
-    return IDSTRING;
-  }
-
-  {any}   {
-    return(yytext[0]); 
-  }
-}
-
 <INITIAL,ENVIR_ST,DATA_ST,REDEF_ST,EXCEPTION_ST>{
 
-  "."/[ \t\n]	{ return EOS; }
+  "."/[ \t\n]	{ return '.'; }
 
   {white}+ { }
   "\n"   { }
@@ -267,7 +255,7 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
 <PIC_ST>{
   "IS"		{ /* ignore */ }
   [ \t\r\n]+	{ /* ignore */ }
-  [^ \t\r\n]+	{ BEGIN DATA_ST; return read_picture (yytext); }
+  [^ \t\r\n]+	{ BEGIN DATA_ST; return scan_picture (yytext); }
 }
 
 <COMMENT_ST>{
@@ -339,7 +327,7 @@ read_literal_x (char mark)
 }
 
 static int
-read_picture (char *text)
+scan_picture (char *text)
 {
   char *p;
   picix=piccnt=v_flag=curr_field->decimals=0;
@@ -430,7 +418,7 @@ scan_reserved_word (char *s)
 }
 
 static int
-lex_fgets (char *buf, int maxsize)
+yyinput (char *buf, int maxsize)
 {
   if (fgets (buf, maxsize, yyin) == NULL)
     return YY_NULL;

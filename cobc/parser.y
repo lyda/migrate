@@ -189,7 +189,7 @@ static void assert_numeric_sy (struct sym *sy);
 
  
 %right OF
-%nonassoc EOS
+%nonassoc '.'
 
 %type <ival> organization_options,access_options,open_mode
 %type <ival> integer,cond_op,conditional,before_after
@@ -278,11 +278,11 @@ program: identification_division
          data_division_opt
          procedure_division_opt
         ;
-identification_division: IDENTIFICATION_TOK DIVISION EOS
+identification_division: IDENTIFICATION_TOK DIVISION '.'
     {
      curr_division = CDIV_IDENT;
     }
-    PROGRAM_ID EOS IDSTRING programid_opts_opt EOS 
+    PROGRAM_ID '.' IDSTRING programid_opts_opt '.' 
     {
      curr_division = CINITIAL; 
      pgm_header($7); 
@@ -303,13 +303,13 @@ programid_opts_opt:  /*nothing */
 identification_division_options_opt:  /*nothing */
     | identification_division_options_opt identification_division_option
 ;
-identification_division_option: AUTHOR_TOK EOS { curr_division = CDIV_COMMENT; }
-    | DATE_WRITTEN_TOK EOS  { curr_division = CDIV_COMMENT; }
-    | DATE_COMPILED_TOK EOS { curr_division = CDIV_COMMENT; }
-    | INSTALLATION_TOK EOS  { curr_division = CDIV_COMMENT; }
-    | SECURITY_TOK EOS { curr_division = CDIV_COMMENT; }
+identification_division_option: AUTHOR_TOK '.' { curr_division = CDIV_COMMENT; }
+    | DATE_WRITTEN_TOK '.'  { curr_division = CDIV_COMMENT; }
+    | DATE_COMPILED_TOK '.' { curr_division = CDIV_COMMENT; }
+    | INSTALLATION_TOK '.'  { curr_division = CDIV_COMMENT; }
+    | SECURITY_TOK '.' { curr_division = CDIV_COMMENT; }
     ;
-environment_division_opt: ENVIRONMENT_TOK DIVISION EOS
+environment_division_opt: ENVIRONMENT_TOK DIVISION '.'
     {
      curr_division = CDIV_ENVIR;
     }
@@ -320,11 +320,11 @@ environment_division_opt: ENVIRONMENT_TOK DIVISION EOS
     | /*nothing */
     ;
 opt_configuration:
-    CONFIGURATION SECTION EOS configuration_section
+    CONFIGURATION SECTION '.' configuration_section
     | /*nothing */
     ;
 opt_input_output:
-    INPUT_OUTPUT SECTION EOS input_output_section { }
+    INPUT_OUTPUT SECTION '.' input_output_section { }
     | /*nothing */
     ;
 configuration_section:
@@ -332,13 +332,13 @@ configuration_section:
     | /* nothing */                 { }
     ;
 configuration_option:
-    COMMENTING EOS STRING EOS {
+    COMMENTING '.' STRING '.' {
                         if ($1 != SOURCE_COMPUTER && $1 != OBJECT_COMPUTER) {
                                 yyerror("expecting SOURCE-COMPUTER or OBJECT-COMPUTER");
                         }
                         $3->type = ';';
                 }
-    | SPECIAL_NAMES EOS opt_special_names_sentences
+    | SPECIAL_NAMES '.' opt_special_names_sentences
     | error { yyerror("invalid format in CONFIGURATION SECTION"); }
     ;
 opt_special_names_sentences:
@@ -348,8 +348,8 @@ opt_special_names_sentences:
 special_names_sentences:
     currency_details_opt
     decimal_point_details_opt
-    EOS
-    | CONSOLE IS CONSOLE EOS
+    '.'
+    | CONSOLE IS CONSOLE '.'
         { yywarn ("ignoring setting CONSOLE"); }
     ;
 currency_details_opt:
@@ -378,8 +378,8 @@ input_output_section:
     | /* nothing */     { }
     ;
 i_o_option:
-    FILE_CONTROL EOS file_control
-    | I_O_CONTROL EOS io_control
+    FILE_CONTROL '.' file_control
+    | I_O_CONTROL '.' io_control
     | error { yyerror("I-O SECTION format wrong"); }
     ;
 file_control:
@@ -408,7 +408,7 @@ file_select:
       assign_clause {
             $3->filenamevar=$7; /* this is the variable w/filename */
       }
-      select_clauses EOS {
+      select_clauses '.' {
                         if ((curr_file->organization==ORG_INDEXED) &&
                                 !(curr_file->ix_desc)) {
                                 yyerror("indexed file must have a record key");
@@ -487,7 +487,7 @@ io_control:
     | /* nothing */
     ;
 io_ctrl:
-    SAME AREA FOR name_list EOS
+    SAME AREA FOR name_list '.'
     ;
 name_list:
     variable { }
@@ -503,7 +503,7 @@ data_division:
     opt_record_section
         ;
 */
-data_division_opt: DATA_TOK DIVISION EOS 
+data_division_opt: DATA_TOK DIVISION '.' 
     {
      curr_division = CDIV_DATA;
     }
@@ -519,12 +519,12 @@ data_division_opt: DATA_TOK DIVISION EOS
     | /* nothing */
 ;
 opt_record_section:
-        REPORT SECTION EOS
+        REPORT SECTION '.'
         report_section
         | /* nothing */
 ;
 opt_screen_section:
-    SCREEN SECTION EOS  {
+    SCREEN SECTION '.'  {
                                         screen_io_enable++;
                                         curr_field=NULL;
                                         scr_line = scr_column = 1;
@@ -533,17 +533,17 @@ opt_screen_section:
     | /* nothing */
     ;
 opt_file_section:
-    FILEN SECTION EOS  { curr_field=NULL; }
+    FILEN SECTION '.'  { curr_field=NULL; }
     file_section   { close_fields();  }
     | /* nothing */
     ;
 opt_working_storage:
-    WORKING_STORAGE SECTION EOS     { curr_field=NULL; }
+    WORKING_STORAGE SECTION '.'     { curr_field=NULL; }
     working_storage_section         { close_fields(); }
     | /* nothing */
     ;
 opt_linkage_section:
-    LINKAGE SECTION EOS     { at_linkage=1; curr_field=NULL; }
+    LINKAGE SECTION '.'     { at_linkage=1; curr_field=NULL; }
     linkage_section         { close_fields(); at_linkage=0; }
     | /* nothing */
     ;
@@ -561,7 +561,7 @@ report_controls:
         | report_controls
                 HEADING opt_is integer
                 opt_first_detail opt_last_detail
-                opt_footing EOS
+                opt_footing '.'
         ;
 opt_lines:
         /* nothing */
@@ -600,7 +600,7 @@ report_item:
         {
 	  define_field ($1, $2);
 	}
-        report_clauses EOS
+        report_clauses '.'
         {
 	  update_report_field ($2);
 	  curr_division = CDIV_DATA;
@@ -670,7 +670,7 @@ screen_item:
     {
       define_field($1,$2);
     }
-    screen_clauses EOS
+    screen_clauses '.'
     {
       update_screen_field($2,$4);
     }
@@ -781,7 +781,7 @@ opt_number_is:
 file_section:
     file_section FD     { curr_division = CDIV_FD; }
     STRING              { curr_division = CDIV_DATA; }
-    file_attrib EOS
+    file_attrib '.'
     {
       curr_field=NULL;
       if ($4->filenamevar == NULL)
@@ -794,7 +794,7 @@ file_section:
             }
     | file_section SD { curr_division = CDIV_FD; }
          STRING { curr_division = CDIV_DATA; }
-         sort_attrib EOS
+         sort_attrib '.'
             {
                 $4->organization=2;
                 curr_field=NULL;
@@ -825,7 +825,7 @@ field_description:
       define_field($1,$2);
     }
     redefines_clause
-    data_clauses EOS
+    data_clauses '.'
     {
       $$ = $2;
       update_field();
@@ -1123,7 +1123,7 @@ procedure_division_opt: PROCEDURE_TOK DIVISION
     { 
      curr_division = CDIV_PROC; 
     }
-     using_parameters EOS
+     using_parameters '.'
     { 
      proc_header($4);
     }
@@ -1142,12 +1142,12 @@ procedure_division:
 procedure_decl:
     procedure_section { close_section(); open_section($1); }
     | paragraph { close_paragr(); open_paragr($1); }
-    | {free_expr_list(); stabs_line();} statement_list opt_EOS
-    | error { yyerror("unknown or wrong statement"); } EOS
-    | EOS
+    | {free_expr_list(); stabs_line();} statement_list opt_eos
+    | error { yyerror("unknown or wrong statement"); } '.'
+    | '.'
     ;
 procedure_section:
-     LABELSTR SECTION EOS {
+     LABELSTR SECTION '.' {
             struct sym *lab=$1;
                         if (lab->defined != 0) {
                                 lab = install(lab->name,SYTB_LAB,2);
@@ -1157,7 +1157,7 @@ procedure_section:
         }
     ;
 paragraph:
-    LABELSTR dot_or_eos {
+    LABELSTR '.' {
             struct sym *lab=$1;
                         if (lab->defined != 0) {
                                 if ((lab=lookup_label(lab,curr_section))==NULL) {
@@ -1168,10 +1168,6 @@ paragraph:
                         lab->defined=1;
                         $$=lab;
         }
-    ;
-dot_or_eos:
-    '.'
-    | EOS
     ;
 
 /*
@@ -3068,7 +3064,7 @@ opt_sep: | ',' ;
    to keep line numbers synchronized with our position
    because we need to generate correct debug stabs */
 opt_dummy: | TOKDUMMY ;
-opt_EOS: | EOS ;
+opt_eos: | '.' ;
 opt_not:
     /* nothing */ { $$=0; }
     | NOT { $$=1; }
