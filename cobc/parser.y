@@ -899,7 +899,17 @@ recording_mode_clause:
 /* CODE-SET clause */
 
 code_set_clause:
-  CODE_SET _is WORD		{ PENDING ("CODE-SET"); }
+  CODE_SET _is WORD
+  {
+    if ($3 != cb_error_node)
+      {
+	cb_tree x = cb_ref ($3);
+	if (!CB_ALPHABET_NAME_P (x))
+	  cb_error_x ($3, _("alphabet-name is expected `%s'"), cb_name ($3));
+	else if (CB_ALPHABET_NAME (x)->custom_list)
+	  PENDING ("CODE-SET");
+      }
+  }
 ;
 
 
