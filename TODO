@@ -16,10 +16,6 @@ compilers do?
 
 ** Handling of EBCDIC files
 
-** Full implementation of COMP-5 and COMP-X
-
-Need to implement binary truncation and maybe something other.
-
 ** The default action of file exception
 
 If a file does not have FILE STATUS, and if there is no USE AFTER
