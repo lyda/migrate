@@ -282,9 +282,6 @@ clear_offsets ()
   substring_slots = 0;
   fields_list = NULL;
   files_list = NULL;
-  /* clear all current paragraphs/sections and fields */
-  curr_paragr = NULL;
-  curr_section = NULL;
   curr_field = NULL;
   /* free tmpvar storage */
   tmpvar_offset = 0;
