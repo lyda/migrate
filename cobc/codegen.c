@@ -2097,7 +2097,7 @@ gen_unstring (struct sym *var, struct unstring_delimited *delim,
 }
 
 void
-gen_stringcmd (struct string_from *sf, struct sym *sy, struct sym *ptr)
+gen_string (struct string_from *sf, struct sym *sy, struct sym *ptr)
 {
   struct string_from *sf1;
   fprintf (o_src, "# STRING into %s\n", sy->name);
@@ -2110,7 +2110,7 @@ gen_stringcmd (struct string_from *sf, struct sym *sy, struct sym *ptr)
       sf = sf->next;
       free (sf1);
     }
-  asm_call_2 ("cob_stringcmd", sy, ptr);
+  asm_call_2 ("cob_string", sy, ptr);
 }
 
 void

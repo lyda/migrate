@@ -50,6 +50,8 @@ attr_t _iDefAttr_ = 0;
 short _iDefPair_ = 0;
 char *rlbuff = NULL;
 
+static void cob_init_screen (void);
+
 /*-------------------------------------------------------------------------*\
  |                                                                         |
  |                     accept_curses                                       |
@@ -935,42 +937,42 @@ do_putch_terminal (char c)
  |                                                                         |
 \*-------------------------------------------------------------------------*/
 
-void
+static void
 cob_init_screen (void)
 {
   int i, j;
   extern attr_t _iDefAttr_;
   extern short _iDefPair_;
 
-  if (!_scrio_init_)
-    {
-      if (decimal_comma)
-	_decimal_char_ = ',';
-      initscr ();
-      noecho ();
-      cbreak ();
-      keypad (stdscr, TRUE);
-      scrollok (stdscr, TRUE);
-      nonl ();
-      start_color ();
+  if (_scrio_init_)
+    return;
+
+  if (decimal_comma)
+    _decimal_char_ = ',';
+  initscr ();
+  noecho ();
+  cbreak ();
+  keypad (stdscr, TRUE);
+  scrollok (stdscr, TRUE);
+  nonl ();
+  start_color ();
 
 #ifdef HAVE_ATTR_GET
-      attr_get (&_iDefAttr_, &_iDefPair_, (void *) 0);
+  attr_get (&_iDefAttr_, &_iDefPair_, (void *) 0);
 #endif
 
-      j = COLOR_PAIRS * sizeof (struct Colors);
-      _colors_ = (struct Colors *) malloc (j);
-      if (!_colors_)
-	{
-	  runtime_error (RTERR_NO_MEM, (struct fld_desc *) 0, (void *) 0);
-	  return;
-	}
-      for (i = 0; i < COLOR_PAIRS; i++)
-	_colors_[i].iPairNbr = -1;
-      _colors_[0].iPairNbr = 0;
-      pair_content (1, &_colors_[0].iFgColor, &_colors_[0].iBgColor);
-      _scrio_init_++;
+  j = COLOR_PAIRS * sizeof (struct Colors);
+  _colors_ = (struct Colors *) malloc (j);
+  if (!_colors_)
+    {
+      runtime_error (RTERR_NO_MEM, (struct fld_desc *) 0, (void *) 0);
+      return;
     }
+  for (i = 0; i < COLOR_PAIRS; i++)
+    _colors_[i].iPairNbr = -1;
+  _colors_[0].iPairNbr = 0;
+  pair_content (1, &_colors_[0].iFgColor, &_colors_[0].iBgColor);
+  _scrio_init_++;
 }
 
 

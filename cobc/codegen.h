@@ -176,7 +176,7 @@ extern struct string_from *alloc_string_from (struct sym *var,
 extern void gen_unstring (struct sym *var, struct unstring_delimited *delim,
 			  struct unstring_destinations *dest, struct sym *ptr,
 			  struct sym *tally);
-extern void gen_stringcmd (struct string_from *sf, struct sym *sy,
+extern void gen_string (struct string_from *sf, struct sym *sy,
 			   struct sym *ptr);
 extern void gen_display_screen (struct sym *sy, int main);
 extern void gen_display (int dupon, int nl);

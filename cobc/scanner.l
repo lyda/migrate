@@ -217,16 +217,16 @@ scan_word (char *text)
     {
     case CDIV_ENVIR:
       yylval.sval = install (yytext, SYTB_VAR, 0);
-      return STRING;
+      return SYMBOL;
 
     case CDIV_DATA:
       yylval.sval = install (yytext, SYTB_VAR, 1);
-      return STRING;
+      return SYMBOL;
 
     case CDIV_FD:
       if ((yylval.sval = lookup_symbol (yytext)) == NULL)
 	yyerror ("undefined %s at FD/SD", yytext);
-      return STRING;
+      return SYMBOL;
 
     default:
       /* if symbol was defined at the data division */

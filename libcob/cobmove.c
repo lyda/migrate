@@ -28,6 +28,11 @@
 static struct fld_desc zero_fld  = { 1, '9', 0, 1, 0, 0, 0, 0, "9\001"};
 static struct fld_desc space_fld = { 1, 'X', 0, 1, 0, 0, 0, 0, "X\001"};
 
+static void move_edited (struct fld_desc *pSrcFld, char *pSrcData,
+			 struct fld_desc *pDstFld, char *pDstData);
+static void float2all (struct fld_desc *pSrcFld, char *pSrcData,
+		       struct fld_desc *pDstFld, char *pDstData);
+
 void
 cob_move_zero (struct fld_desc *f, char *s)
 {
@@ -1791,7 +1796,7 @@ runtime_error (int iErrorNum, struct fld_desc *pField, void *pData)
  |                                                                        |
 \*------------------------------------------------------------------------*/
 
-void
+static void
 move_edited (struct fld_desc *pSrcFld, char *pSrcData,
 	     struct fld_desc *pDstFld, char *pDstData)
 {
@@ -2411,7 +2416,7 @@ long long _iIntValues_[18] = {
  |                                                                        |
 \*------------------------------------------------------------------------*/
 
-void
+static void
 float2all (struct fld_desc *pSrcFld, char *pSrcData, struct fld_desc *pDstFld,
 	   char *pDstData)
 {

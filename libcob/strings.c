@@ -445,7 +445,7 @@ cob_unstring (struct fld_desc *fvar, char *svar, ...)
 
 /*------------------------------------------------------------------------*\
  |                                                                        |
- |                          cob_stringcmd                                 |
+ |                          cob_string                                    |
  |  Cobol string statement.                                               |
  |  The variables are (in that order):                                    |
  |     receiving var, pointer (with pointer clause),                      |
@@ -460,7 +460,7 @@ cob_unstring (struct fld_desc *fvar, char *svar, ...)
 \*------------------------------------------------------------------------*/
 
 int
-cob_stringcmd (struct fld_desc *fdst, char *sdst, ...)
+cob_string (struct fld_desc *fdst, char *sdst, ...)
 {
   struct fld_desc *fptr, *fsrc, *fdelim;
   char *sptr, *ssrc, *sdelim;

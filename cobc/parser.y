@@ -132,7 +132,7 @@ static void check_decimal_point (struct lit *lit);
 %right OF
 
 %token <str>  IDSTRING
-%token <sval> STRING,VARIABLE,VARCOND,SUBSCVAR
+%token <sval> SYMBOL,VARIABLE,VARCOND,SUBSCVAR
 %token <sval> LABELSTR,COMMAND_LINE,ENVIRONMENT_VARIABLE,PICTURE
 %token <ival> USAGENUM,CONDITIONAL
 %token <lval> NLITERAL,CLITERAL
@@ -144,7 +144,7 @@ static void check_decimal_point (struct lit *lit);
 %token BEFORE,AFTER,SCREEN,REVERSEVIDEO,NUMBERTOK,PLUS,MINUS,SEPARATE
 %token FOREGROUNDCOLOR,BACKGROUNDCOLOR,UNDERLINE,HIGHLIGHT,LOWLIGHT
 %token RIGHT,AUTO,REQUIRED,FULL,JUSTIFIED,BLINK,SECURE,BELL,COLUMN,SYNCHRONIZED
-%token INITIALTOK,FIRSTTOK,ALL,LEADING,OF,IN,BY,STRINGCMD,UNSTRING
+%token INITIALTOK,FIRSTTOK,ALL,LEADING,OF,IN,BY,STRING,UNSTRING
 %token START,DELETE,PROGRAM,GLOBAL,EXTERNAL,SIZE,DELIMITED
 %token GIVING,ERASE,INSPECT,TALLYING,REPLACING,ONTOK,POINTER,OVERFLOWTK
 %token DELIMITER,COUNT,LEFT,TRAILING,CHARACTER
@@ -172,7 +172,7 @@ static void check_decimal_point (struct lit *lit);
 %token SET,UP,DOWN,TRACE,READY,RESET,SEARCH,WHEN,TEST
 %token END_ADD,END_CALL,END_COMPUTE,END_DELETE,END_DIVIDE,END_EVALUATE
 %token END_IF,END_MULTIPLY,END_PERFORM,END_READ,END_REWRITE,END_SEARCH
-%token END_START,END_STRINGCMD,END_SUBTRACT,END_UNSTRING,END_WRITE
+%token END_START,END_STRING,END_SUBTRACT,END_UNSTRING,END_WRITE
 %token THEN,EVALUATE,OTHER,ALSO,CONTINUE,CURRENCY,REFERENCE,INITIALIZE
 %token NUMERIC,ALPHABETIC,ALPHABETIC_LOWER,ALPHABETIC_UPPER
 %token RETURNING,TOK_TRUE,TOK_FALSE,ANY,SUBSCVAR,FUNCTION
@@ -421,10 +421,10 @@ select_clause:
       curr_file->access_mode = $4 + 5; 
     }
   }
-| FILEN STATUS opt_is STRING { curr_file->parent=$4; }
-| RECORD KEY opt_is STRING { curr_file->ix_desc=$4; }
-| RELATIVE KEY opt_is STRING { curr_file->ix_desc=$4; }
-| ALTERNATE RECORD KEY opt_is STRING with_duplicates
+| FILEN STATUS opt_is SYMBOL { curr_file->parent=$4; }
+| RECORD KEY opt_is SYMBOL { curr_file->ix_desc=$4; }
+| RELATIVE KEY opt_is SYMBOL { curr_file->ix_desc=$4; }
+| ALTERNATE RECORD KEY opt_is SYMBOL with_duplicates
   { add_alternate_key($5,$6); }
 | error         { yyerror("invalid clause in select"); }
 ;
@@ -532,7 +532,7 @@ fd_list:
 ;
 file_name:
   { curr_division = CDIV_FD; }
-  STRING
+  SYMBOL
   { curr_division = CDIV_DATA; $$ = $2; }
 ;
 file_description:
@@ -550,7 +550,7 @@ file_description:
   }
 ;
 file_attrib:
-| file_attrib REPORT opt_is STRING { save_report( $4,$<sval>0 ); }
+| file_attrib REPORT opt_is SYMBOL { save_report( $4,$<sval>0 ); }
 | file_attrib opt_is GLOBAL     { $<sval>0->type = 'J'; }
 | file_attrib opt_is EXTERNAL   { $<sval>0->type = 'K'; }
 | file_attrib LABEL rec_or_recs opt_is_are std_or_omitt
@@ -567,14 +567,14 @@ file_attrib:
   }
 | file_attrib RECORD opt_is VARYING opt_in_size
   from_rec_varying to_rec_varying opt_characters
-  DEPENDING opt_on STRING
+  DEPENDING opt_on SYMBOL
   {
     set_rec_varying_info ($<sval>-1, $6, $7, $11);
   }
 ;
 var_strings:
-  STRING { }
-| var_strings STRING { }
+  SYMBOL { }
+| var_strings SYMBOL { }
 ; 
 opt_to_integer:
 | TO integer { }
@@ -591,7 +591,7 @@ sort_attrib:
 | sort_attrib DATA rec_or_recs  opt_is_are var_strings { }  
 | sort_attrib RECORD opt_is VARYING opt_in_size
   from_rec_varying to_rec_varying opt_characters
-  DEPENDING opt_on STRING
+  DEPENDING opt_on SYMBOL
   {
     set_rec_varying_info( $<sval>-1,$6,$7,$11 );
   }
@@ -628,7 +628,7 @@ field_description:
 field_name:
   /* nothing */		{ $$ = make_filler (); }
 | FILLER		{ $$ = make_filler (); }
-| STRING
+| SYMBOL
   {
     if ($1->defined)
       yyerror ("variable already defined: %s", $1->name);
@@ -799,8 +799,8 @@ opt_indexed_by:
 ;
 opt_key_is:
   /* nothing */				{ $$ = NULL; }
-| ASCENDING opt_key opt_is STRING	{ $4->level = -1; $$ = $4; }
-| DESCENDING opt_key opt_is STRING	{ $4->level = -2; $$ = $4; }
+| ASCENDING opt_key opt_is SYMBOL	{ $4->level = -1; $$ = $4; }
+| DESCENDING opt_key opt_is SYMBOL	{ $4->level = -2; $$ = $4; }
 ;
 index_name_list:
   def_name { define_implicit_field ($1, $<sval>-2, curr_field->times); }
@@ -881,7 +881,7 @@ rd_statement_list:
 | rd_statement_list rd_statement
 ;
 rd_statement:
-  RD STRING { $2->type='W'; curr_division = CDIV_INITIAL; }
+  RD SYMBOL { $2->type='W'; curr_division = CDIV_INITIAL; }
   report_controls { curr_division = CDIV_DATA; }
   report_description
 ;
@@ -2557,15 +2557,15 @@ stoprun_statement:
  */
 
 string_statement:
-  STRINGCMD string_from_list
+  STRING string_from_list
   INTO name string_with_pointer {
-    gen_stringcmd( $2, $4, $5 );
+    gen_string( $2, $4, $5 );
   }
   opt_on_overflow
-  opt_end_stringcmd
+  opt_end_string
   ;
-opt_end_stringcmd:
-    | END_STRINGCMD
+opt_end_string:
+    | END_STRING
     ;
 
 
@@ -3082,7 +3082,7 @@ opt_def_name:
     | /* nothing */ { $$ = make_filler(); }
     ;
 def_name:
-    STRING  { if ($1->defined)
+    SYMBOL  { if ($1->defined)
                 yyerror("variable redefined, %s",$1->name);
               $1->defined=1;
               $$=$1;
@@ -3100,7 +3100,7 @@ variable_indexed:
 
 filename:
     literal { $$=(struct sym *)$1; }
-    | STRING {$$=$1; }
+    | SYMBOL {$$=$1; }
     ;
 cond_name:
     VARCOND  { $<sval>$=$1; }

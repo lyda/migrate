@@ -206,57 +206,13 @@ extern int extract_sign (struct fld_desc *f, char *s);
 extern void put_sign (struct fld_desc *f, char *s, int sign);
 extern int get_index (struct fld_desc *f, char *s);
 
+extern void stop_run (void);
+extern int fldLength (struct fld_desc *f);
+extern int picCompLength (struct fld_desc *f);
 
-/* cobmove.c */
-void cob_move (struct fld_desc *f1, char *s1, struct fld_desc *f2, char *s2);
-void move_edited (struct fld_desc *f1, char *s1, struct fld_desc *f2,
-		  char *s2);
-void _DUMP_ (unsigned char *caData, char *szCount, char *caOut);
-void _FLDDUMP_(struct fld_desc *f, char *c, char *szMsg);
-void float2all (struct fld_desc *f1, char *s1, struct fld_desc *f2, char *s2);
+extern void cob_move (struct fld_desc *pfldDesc1, char *caData1,
+		      struct fld_desc *pfldDesc2, char *caData2);
 
-/* general.c */
-void stop_run (void);
-int fldLength (struct fld_desc *f);
-int picCompLength (struct fld_desc *f);
-
-/* basicio.c */
-void newline (int dupon);
-void display (struct fld_desc *f, char *s, int dupon);
-void display_erase (int dupon);
-int accept_time (char *buffer);
-int accept_date (char *buffer);
-int accept_day (char *buffer);
-int accept_day_of_week (char *buffer);
-int accept_std (char *buffer, struct fld_desc *f, int echo);
-int accept_cmd_line1 (int ac, char **av, struct fld_desc *f, char *buffer);
-int accept_env_var1 (struct fld_desc *f, char *buffer);
-int accept_cmd_line (int ac, char **av, struct fld_desc *f, char *buffer);
-int accept_env_var (struct fld_desc *f, char *buffer, char *evname);
-
-/* fileio.c */
-int cob_open (struct file_desc *f, char *record, char *fname, int mode);
-int cob_close (struct file_desc *f, char *record);
-int cob_read (struct file_desc *f, char *record, ...);
-int cob_read_into (struct file_desc *f, char *record, char *buf, ...);
-int cob_read_next (struct file_desc *f, char *record, ...);
-int cob_read_prev (struct file_desc *f, char *record, ...);
-int cob_read_next_into (struct file_desc *f, char *record, char *buf);
-int cob_read_prev_into (struct file_desc *f, char *record, char *buf);
-int cob_write (struct file_desc *f, char *record, ...);
-int cob_save_status (char *status, int rt);
-
-/* screenio.c */
-void cob_accept_screen ();
-void cob_display_screen ();
-void cob_scr_process (int iAttr, int iLine, int iColumn,
-		      int iFgColor, int iBgColor,
-		      struct fld_desc *fldScr, char *caScr, void *pInfo, ...);
-void cob_scr_initialize ();
-void cob_init_screen (void);
-void do_scrio_finish ();
-
-/* Run Time Error Routines */
-void runtime_error (int iErrorNbr, struct fld_desc *pFld, void *pData);
+extern void runtime_error (int iErrorNbr, struct fld_desc *pFld, void *pData);
 
 /* EOF _libcob.h */
