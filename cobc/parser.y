@@ -204,7 +204,7 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %type <list> data_name_list,condition_name_list,opt_value_list
 %type <list> evaluate_subject_list,evaluate_case,evaluate_case_list
 %type <list> evaluate_when_list,evaluate_object_list
-%type <list> label_list,subscript_list,number_list
+%type <list> label_name_list,subscript_list,number_list
 %type <list> string_list,string_delimited_list,string_name_list
 %type <list> unstring_delimited,unstring_delimited_list,unstring_into
 %type <list> unstring_delimited_item,unstring_into_item
@@ -1213,7 +1213,10 @@ procedure_division:
   }
   procedure_declaratives
   {
-    push_label (COBC_LABEL_NAME (make_label_name (make_word ("$MAIN$"))));
+    struct cobc_label_name *label =
+      COBC_LABEL_NAME (make_label_name (make_word ("$MAIN$")));
+    label->need_begin = 1;
+    push_label (label);
   }
   procedure_list
   {
@@ -1802,19 +1805,25 @@ exit_statement:
  */
 
 goto_statement:
-  GO _to label_list
+  GO _to label_name_list
   {
-    cobc_location = @1;
     if ($3 == NULL)
       OBSOLETE ("GO TO without label");
     else if ($3->next)
       yyerror_loc (&@1, _("too many labels with GO TO"));
     else
-      push_call_1 (COBC_GOTO, $3->item);
+      {
+	cobc_location = @1;
+	COBC_LABEL_NAME ($3->item)->need_begin = 1;
+	push_call_1 (COBC_GOTO, $3->item);
+      }
   }
-| GO _to label_list DEPENDING _on numeric_name
+| GO _to label_name_list DEPENDING _on numeric_name
   {
+    struct cobc_list *l;
     cobc_location = @1;
+    for (l = $3; l; l = l->next)
+      COBC_LABEL_NAME (l->item)->need_begin = 1;
     push_call_2 (COBC_GOTO_DEPENDING, $3, $6);
   }
 ;
@@ -2096,6 +2105,8 @@ open_mode:
 perform_statement:
   PERFORM perform_procedure perform_option
   {
+    COBC_LABEL_NAME (COBC_PAIR ($2)->x)->need_begin = 1;
+    COBC_LABEL_NAME (COBC_PAIR ($2)->y)->need_return = 1;
     COBC_PERFORM ($3)->body = $2;
     push_tree ($3);
   }
@@ -2107,7 +2118,7 @@ perform_statement:
 ;
 
 perform_procedure:
-  label_name			{ $$ = make_pair ($1, 0); }
+  label_name			{ $$ = make_pair ($1, $1); }
 | label_name THRU label_name	{ $$ = make_pair ($1, $3); }
 ;
 
@@ -3280,7 +3291,10 @@ section_name:
 	$$ = $1->item;
       }
     else
-      $$ = make_label_name ($1);
+      {
+	cobc_location = @1;
+	$$ = make_label_name ($1);
+      }
   }
 ;
 
@@ -3372,19 +3386,21 @@ subscript:
  * Label name
  */
 
-label_list:
+label_name_list:
   label_name			{ $$ = list ($1); }
-| label_list label_name		{ $$ = list_add ($1, $2); }
+| label_name_list label_name	{ $$ = list_add ($1, $2); }
 ;
 label_name:
   label_word
   {
+    cobc_location = @1;
     $$ = make_label_name_nodef ($1, 0);
     COBC_LABEL_NAME ($$)->section = current_section;
     label_check_list = cons ($$, label_check_list);
   }
 | label_word in_of label_word
   {
+    cobc_location = @1;
     $$ = make_label_name_nodef ($1, $3);
     label_check_list = cons ($$, label_check_list);
   }
@@ -3938,14 +3954,14 @@ finalize_file_name (struct cobc_file_name *f, struct cobc_field *records)
     }
 }
 
-static const char *
+static struct cobc_label_name *
 lookup_label (struct cobc_word *w, struct cobc_label_name *section)
 {
   for (; w; w = w->link)
     if (w->item
 	&& COBC_LABEL_NAME_P (w->item)
 	&& section == COBC_LABEL_NAME (w->item)->section)
-      return COBC_LABEL_NAME (w->item)->cname;
+      return COBC_LABEL_NAME (w->item);
 
   yyerror (_("`%s' undefined in section `%s'"), w->name, section->word->name);
   return NULL;
@@ -3954,6 +3970,8 @@ lookup_label (struct cobc_word *w, struct cobc_label_name *section)
 static void
 validate_label_name (struct cobc_label_name *p)
 {
+  struct cobc_label_name *label = NULL;
+
   if (p->in_word)
     {
       /* LABEL IN LABEL */
@@ -3962,17 +3980,24 @@ validate_label_name (struct cobc_label_name *p)
       else if (!COBC_LABEL_NAME_P (p->in_word->item))
 	yyerror (_("invalid section name `%s'"), p->in_word->name);
       else
-	p->cname = lookup_label (p->word, COBC_LABEL_NAME (p->in_word->item));
+	label = lookup_label (p->word, COBC_LABEL_NAME (p->in_word->item));
     }
   else
     {
       /* LABEL */
       if (p->word->count == 1 && COBC_LABEL_NAME_P (p->word->item))
-	p->cname = COBC_LABEL_NAME (p->word->item)->cname;
+	label = COBC_LABEL_NAME (p->word->item);
       else if (p->word->count > 0 && p->section)
-	p->cname = lookup_label (p->word, p->section);
+	label = lookup_label (p->word, p->section);
       else
 	yyerror (_("no such section `%s'"), p->word->name);
+    }
+
+  if (label != NULL)
+    {
+      p->cname = label->cname;
+      label->need_begin |= p->need_begin;
+      label->need_return |= p->need_return;
     }
 }
 

@@ -417,6 +417,8 @@ struct cobc_label_name {
   struct cobc_word *in_word;
   struct cobc_label_name *section;
   struct cobc_list *children;
+  char need_begin;
+  char need_return;
 };
 
 #define COBC_LABEL_NAME(x)	(COBC_TREE_CAST (cobc_tag_label_name, struct cobc_label_name, x))

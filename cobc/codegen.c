@@ -1275,11 +1275,10 @@ output_perform_once (struct cobc_perform *p)
   else
     {
       struct cobc_pair *pair = COBC_PAIR (p->body);
-      struct cobc_label_name *from = COBC_LABEL_NAME (pair->x);
-      struct cobc_label_name *until =
-	pair->y ? COBC_LABEL_NAME (pair->y) : from;
       output_line ("cob_perform (l_%d, lb_%s, le_%s);",
-		   global_label++, from->cname, until->cname);
+		   global_label++,
+		   COBC_LABEL_NAME (pair->x)->cname,
+		   COBC_LABEL_NAME (pair->y)->cname);
     }
 }
 
@@ -1347,7 +1346,8 @@ output_perform (struct cobc_perform *p)
   switch (p->type)
     {
     case COBC_PERFORM_EXIT:
-      output_line ("cob_exit (le_%s);", COBC_LABEL_NAME (p->data)->cname);
+      if (COBC_LABEL_NAME (p->data)->need_return)
+	output_line ("cob_exit (le_%s);", COBC_LABEL_NAME (p->data)->cname);
       break;
     case COBC_PERFORM_ONCE:
       output_perform_once (p);
@@ -1541,7 +1541,8 @@ output_tree (cobc_tree x)
       {
 	struct cobc_label_name *p = COBC_LABEL_NAME (x);
 	output_newline ();
-	output_line ("lb_%s:", p->cname);
+	if (p->need_begin)
+	  output_line ("lb_%s:", p->cname);
 	break;
       }
     case cobc_tag_expr:
@@ -1709,7 +1710,8 @@ codegen (struct program_spec *spec)
   output ("enum {\n");
   output ("  le_default_handler,\n");
   for (l = spec->exec_list; l; l = l->next)
-    if (COBC_LABEL_NAME_P (l->item))
+    if (COBC_LABEL_NAME_P (l->item)
+	&& COBC_LABEL_NAME (l->item)->need_return)
       output ("  le_%s,\n", COBC_LABEL_NAME (l->item)->cname);
   output ("};\n\n");
 
@@ -1789,7 +1791,7 @@ codegen (struct program_spec *spec)
   /* frame stack */
   output_line ("/* initialize frame stack */");
   output_line ("frame_index = 0;");
-  output_line ("frame_stack[0].perform_through = le_$MAIN$;");
+  output_line ("frame_stack[0].perform_through = -1;");
   output_line ("goto lb_$MAIN$;");
   output_newline ();
 

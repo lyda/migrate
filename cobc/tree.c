@@ -670,6 +670,8 @@ make_label_name_nodef (struct cobc_word *word, struct cobc_word *in_word)
   p->in_word = in_word;
   p->section = NULL;
   p->children = NULL;
+  p->need_begin = 0;
+  p->need_return = 0;
   return COBC_TREE (p);
 }
 
