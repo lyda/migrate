@@ -695,15 +695,7 @@ compute_size (struct cobc_field *p)
       /* terminals */
       switch (p->usage)
 	{
-	case COBC_USAGE_DISPLAY:
-	  {
-	    p->size = p->pic->size;
-	    if (p->pic->category == COB_TYPE_NUMERIC && p->flag_sign_separate)
-	      p->size++;
-	    break;
-	  }
 	case COBC_USAGE_BINARY:
-	case COBC_USAGE_INDEX:
 	  {
 	    int len = p->pic->size;
 	    if (len <= 2)
@@ -714,8 +706,27 @@ compute_size (struct cobc_field *p)
 	      p->size = 4;
 	    else
 	      p->size = 8;
+	    break;
 	  }
-	  break;
+	case COBC_USAGE_DISPLAY:
+	  {
+	    p->size = p->pic->size;
+	    if (p->pic->category == COB_TYPE_NUMERIC && p->flag_sign_separate)
+	      p->size++;
+	    break;
+	  }
+	case COBC_USAGE_INDEX:
+	  {
+	    p->size = sizeof (int);
+	    break;
+	  }
+	case COBC_USAGE_PACKED:
+	  {
+	    p->size = p->pic->size / 2;
+	    if (p->pic->size % 2 || p->pic->have_sign)
+	      p->size++;
+	    break;
+	  }
 	default:
 	  abort ();
 	}
