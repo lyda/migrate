@@ -27,10 +27,9 @@ va_list __builtin_va_alist;
 #endif
 
 int offset_substr (char *s1, char *s2, int n1, int n2);
-void cob_put_integer (struct fld_desc *fdesc, char *sbuf, int value);
+static void cob_put_integer (struct fld_desc *fdesc, char *sbuf, int value);
 struct comparand *alloc_comparand (int opt, struct comparand **list);
 void free_comparands (struct comparand *cmps);
-extern struct fld_desc _generic_4comp;
 
 /*
  * auxiliary comparands list to walk several times through comparands
@@ -544,10 +543,11 @@ offset_substr (char *s1, char *s2, int n1, int n2)
  |                                                                        |
 \*------------------------------------------------------------------------*/
 
-void
+static void
 cob_put_integer (struct fld_desc *fdesc, char *sbuf, int value)
 {
-  cob_move (&_generic_4comp, (char *) &value, fdesc, sbuf);
+  struct fld_desc fld = { 4, 'B', 0, 0, 0, 0, 0, 0, "S9\x9" };
+  cob_move (&fld, (char *) &value, fdesc, sbuf);
 /*	char *s;
 	s = malloc(fdesc->len+1);
 	sprintf(s,"%0*d",(int)fdesc->len,value);

@@ -17,45 +17,36 @@
  * Suite 330, Boston, MA 02111-1307 USA
  */
 
-#ifndef _DECIMAL_H_
-#define _DECIMAL_H_
+#ifndef _COB_DECIMAL_H_
+#define _COB_DECIMAL_H_
 
-enum decimal_sign { DECIMAL_POSITIVE, DECIMAL_NEGATIVE, DECIMAL_NAN };
+#include <gmp.h>
 
-struct decimal_num
-{
-  enum decimal_sign sign;		/* sign */
-  int ndigits;			/* the number of digits */
-  int weight;			/* weight of the first digit */
-  char *base;			/* decimal digits base address */
-  char *digits;			/* decimal digits start address */
+struct decimal_number {
+  mpz_t number;
+  int decimals;
 };
 
-#define DECIMAL_SIGN(num)		((num)->sign)
-#define DECIMAL_NDIGITS(num)	((num)->ndigits)
-#define DECIMAL_WEIGHT(num)		((num)->weight)
-#define DECIMAL_PRECISION(num)	((num)->ndigits - (num)->weight - 1)
-#define DECIMAL_BASE(num)		((num)->base)
-#define DECIMAL_DIGITS(num)		((num)->digits)
-#define DECIMAL_REF(num,i)		((num)->digits[i])
-#define DECIMAL_SET(num,i,n)	((num)->digits[i] = (n))
+typedef struct decimal_number *decimal;
 
-typedef struct decimal_num *decimal;
+union numeric_type {
+  double n_double;
+  decimal n_decimal;
+};
 
-extern decimal decimal_new (int ndigits, int weight);
-extern void decimal_free (decimal num);
-extern decimal long_to_decimal (long val);
-extern long decimal_to_long (decimal num);
-extern decimal long_long_to_decimal (long long val);
-extern long long decimal_to_long_long (decimal num);
-extern decimal double_to_decimal (double val);
-extern double decimal_to_double (decimal num);
-extern decimal string_to_decimal (const char *str);
-extern char *decimal_to_string (decimal num, char *buf);
-extern int decimal_cmp (decimal n1, decimal n2);
-extern decimal decimal_add (decimal n1, decimal n2);
-extern decimal decimal_sub (decimal n1, decimal n2);
-extern decimal decimal_mul (decimal n1, decimal n2);
-extern decimal decimal_div (decimal n1, decimal n2);
+extern int cob_size_error_flag;
 
-#endif /* _DECIMAL_H_ */
+extern void cob_fld_to_decimal (struct fld_desc *f, unsigned char *s, union numeric_type *p);
+extern void cob_decimal_to_fld (struct fld_desc *f, char *s, int round, union numeric_type val);
+
+extern decimal make_decimal (void);
+extern void free_decimal (decimal d);
+extern void print_decimal (decimal d);
+extern void add_decimal (union numeric_type *v1, union numeric_type v2);
+extern void subtract_decimal (union numeric_type *v1, union numeric_type v2);
+extern void multiply_decimal (union numeric_type *v1, union numeric_type v2);
+extern void divide_decimal (union numeric_type *v1, union numeric_type v2);
+extern void pow_decimal (union numeric_type *v1, union numeric_type v2);
+extern int compare_decimal (union numeric_type v1, union numeric_type v2);
+
+#endif /* _COB_DECIMAL_H_ */

@@ -17,10 +17,6 @@
  * Suite 330, Boston, MA 02111-1307 USA
  */
 
-/* Global variables */
-
-extern int cob_math_size_error_flag;
-
 /* Exported functions */
 
 extern void *cob_resolve (const char *name);

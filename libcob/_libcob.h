@@ -60,19 +60,11 @@
 #include <db3/db_185.h>
 #endif
 
-#include "decimal.h"
-
-union numeric_type {
-  double n_double;
-  decimal n_decimal;
-};
-
 #define min(x,y) ((x)<(y) ? (x) : (y))
 
 #ifdef WANT_DYNAMIC_LIBS
 #include <dlfcn.h>
 #endif
-
 
 #define RTL_FILE_VERSION	3
 
@@ -233,9 +225,10 @@ struct scr_desc
 };
 #pragma pack()
 
+extern int extract_sign (struct fld_desc *f, char *s);
+extern void put_sign (struct fld_desc *f, char *s, int sign);
+extern int get_index (struct fld_desc *f, char *s);
 
-/* mccntrl.s */
-void exit_paragraph (unsigned, unsigned, unsigned);
 
 /* cobmove.c */
 void cob_move (struct fld_desc *f1, char *s1, struct fld_desc *f2, char *s2);
@@ -243,18 +236,12 @@ void move_edited (struct fld_desc *f1, char *s1, struct fld_desc *f2,
 		  char *s2);
 void _DUMP_ (unsigned char *caData, char *szCount, char *caOut);
 void _FLDDUMP_(struct fld_desc *f, char *c, char *szMsg);
-char *mc_picexpand (struct fld_desc *f);
 void float2all (struct fld_desc *f1, char *s1, struct fld_desc *f2, char *s2);
 
 /* general.c */
 void stop_run (void);
 int fldLength (struct fld_desc *f);
 int picCompLength (struct fld_desc *f);
-
-/* mcmath.c */
-extern char extract_sign (struct fld_desc *f, char *s);
-extern void put_sign (struct fld_desc *f, char *s, char sign);
-extern int get_index (struct fld_desc *f, char *s);
 
 /* basicio.c */
 void newline (int dupon);
