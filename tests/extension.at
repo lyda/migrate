@@ -83,6 +83,39 @@ AT_CHECK([./prog], [0],
 AT_CLEANUP
 
 
+## LENGTH OF
+
+AT_SETUP([LENGTH OF])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X(100).
+       01 L             PIC 9(4).
+       01 I             PIC 9(2) VALUE 10.
+       PROCEDURE        DIVISION.
+           MOVE LENGTH OF X TO L.      DISPLAY L.
+           MOVE LENGTH OF X(2:) TO L.  DISPLAY L.
+           MOVE LENGTH OF X(I:) TO L.  DISPLAY L.
+           MOVE LENGTH OF X(1:2) TO L. DISPLAY L.
+           MOVE LENGTH OF X(1:I) TO L. DISPLAY L.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[0100
+0099
+0090
+0002
+0010
+])
+
+AT_CLEANUP
+
+
 AT_SETUP([RETURN-CODE])
 
 AT_DATA([mod1.cob], [
