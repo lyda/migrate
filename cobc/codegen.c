@@ -638,17 +638,13 @@ output_compare (cobc_tree s1, cobc_tree s2)
   else if (COBC_CONST_P (s1) || COBC_CONST_P (s2))
     {
       /* non-numeric figurative comparison */
-      cobc_tree x, y;
-      unsigned char c;
-      if (COBC_CONST_P (s2))
-	x = s1, y = s2;
-      else
-	x = s2, y = s1;
-      c = ((y == cobc_zero) ? '0' :
-	   (y == cobc_space) ? ' ' :
-	   (y == cobc_low) ? '\0' :
-	   (y == cobc_high) ? '\xff' :
-	   (y == cobc_quote) ? '\"' : 0);
+      cobc_tree x = COBC_CONST_P (s2) ? s1 : s2;
+      cobc_tree y = COBC_CONST_P (s2) ? s2 : s1;
+      unsigned char c = ((y == cobc_zero) ? '0' :
+			 (y == cobc_space) ? ' ' :
+			 (y == cobc_low) ? '\0' :
+			 (y == cobc_high) ? '\xff' :
+			 (y == cobc_quote) ? '\"' : 0);
       if (COBC_CONST_P (s1))
 	output ("-");
       output ("cob_cmp_all (");
@@ -660,22 +656,33 @@ output_compare (cobc_tree s1, cobc_tree s2)
   else if (COBC_LITERAL_P (s1) || COBC_LITERAL_P (s2))
     {
       /* non-numeric literal comparison */
-      cobc_tree x = COBC_LITERAL_P (s1) ? s2 : s1;
-      cobc_tree y = COBC_LITERAL_P (s1) ? s1 : s2;
+      cobc_tree x = COBC_LITERAL_P (s2) ? s1 : s2;
+      cobc_tree y = COBC_LITERAL_P (s2) ? s2 : s1;
       if (COBC_LITERAL_P (s1))
 	output ("-");
-      output ("cob_cmp_str (");
-      output_tree (x);
-      output (", ");
-      output_location (y);
-      output (", ");
-      output_length (y);
-      output (")");
+      if (COBC_LITERAL (y)->all)
+	{
+	  output ("cob_cmp_all (");
+	  output_location (x);
+	  output (", %d, ", COBC_LITERAL (y)->str[0]);
+	  output_length (x);
+	  output (")");
+	}
+      else
+	{
+	  output ("cob_cmp_str (");
+	  output_tree (x);
+	  output (", ");
+	  output_location (y);
+	  output (", ");
+	  output_length (y);
+	  output (")");
+	}
     }
   else
     {
       /* non-numeric comparison */
-      output_func_2 ("cob_str_cmp", s1, s2);
+      output_func_2 ("cob_cmp_field", s1, s2);
     }
 }
 
