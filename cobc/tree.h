@@ -155,7 +155,7 @@ enum cb_usage {
 #define CB_USAGE_BINARY		CB_USAGE_BINARY_NATIVE
 #else
 #define CB_USAGE_BINARY					\
-  ((cb_binary_order == CB_ORDER_BIG_ENDIAN)		\
+  ((cb_binary_byteorder == CB_BYTEORDER_BIG_ENDIAN)	\
    ? CB_USAGE_BINARY_SWAP : CB_USAGE_BINARY_NATIVE)
 #endif
 

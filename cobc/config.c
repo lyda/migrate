@@ -181,12 +181,12 @@ cb_load_conf (const char *fname, int check_nodef)
 		else
 		  goto invalid_value;
 	      }
-	    else if (strcmp (name, "binary-order") == 0)
+	    else if (strcmp (name, "binary-byteorder") == 0)
 	      {
 		if (strcmp (val, "native") == 0)
-		  cb_binary_order = CB_ORDER_NATIVE;
+		  cb_binary_byteorder = CB_BYTEORDER_NATIVE;
 		else if (strcmp (val, "big-endian") == 0)
-		  cb_binary_order = CB_ORDER_BIG_ENDIAN;
+		  cb_binary_byteorder = CB_BYTEORDER_BIG_ENDIAN;
 		else
 		  goto invalid_value;
 	      }
