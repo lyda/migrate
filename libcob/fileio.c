@@ -549,8 +549,11 @@ indexed_start (struct cob_file_desc *f, int cond, struct cob_field k)
       break;
 #if COB_DEBUG
   if (i == f->nkeys)
-    cob_runtime_error ("cob_start_indexed: key not found "
-		       "(should have been detected by cobc)");
+    {
+      cob_runtime_error ("cob_start_indexed: key not found "
+			 "(should have been detected by cobc)");
+      return 24;
+    }
 #endif
 
   /* close the current cursor */
@@ -716,6 +719,7 @@ indexed_delete (struct cob_file_desc *f)
   for (i = 1; i < f->nkeys; i++)
     {
       DBT skey;
+      memset (&skey, 0, sizeof (DBT));
       DBT_SET (skey, data.data, i);
       if (f->keys[i].duplicates)
 	{
