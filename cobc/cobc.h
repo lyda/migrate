@@ -29,8 +29,9 @@
 #define LINK_STATIC	0
 #define LINK_DYNAMIC	1
 
-extern int cobc_module_flag;
 extern int cobc_debug_flag;
+extern int cobc_module_flag;
+extern int cobc_verbose_flag;
 extern int cobc_optimize_flag;
 extern int cobc_failsafe_flag;
 extern int cobc_link_style;

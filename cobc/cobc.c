@@ -46,8 +46,9 @@ extern int yy_bison_debug;
  * Global variables
  */
 
-int cobc_module_flag = 0;
 int cobc_debug_flag = 0;
+int cobc_module_flag = 0;
+int cobc_verbose_flag = 0;
 int cobc_optimize_flag = 0;
 int cobc_failsafe_flag = 1;
 int cobc_link_style = LINK_DYNAMIC;
@@ -145,11 +146,12 @@ error (const char *str)
  * Command line
  */
 
-static char short_options[] = "hvECScmxgOo:DT:I:";
+static char short_options[] = "h?VvECScmxgOo:DT:I:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
-  {"version", no_argument, 0, 'v'},
+  {"version", no_argument, 0, 'V'},
+  {"verbose", no_argument, 0, 'v'},
   {"debug", no_argument, 0, 'D'},
   {"free", no_argument, &source_format, format_free},
   {"fixed", no_argument, &source_format, format_fixed},
@@ -178,6 +180,7 @@ print_usage ()
   puts (_("General options:\n"
 	  "  --help        Display this message\n"
 	  "  --version     Display compiler version\n"
+	  "  -v, --verbose Display the programs invoked by the compiler\n"
 	  "  -save-temps   Do not delete intermediate files\n"
 	  "  -E            Preprocess only; do not compile, assemble or link\n"
 	  "  -C            Translate only; convert COBOL to C\n"
@@ -225,14 +228,16 @@ process_command_line (int argc, char *argv[])
       switch (c)
 	{
 	case 0: break;
-	case 'h': print_usage (); exit (0);
-	case 'v': print_version (); exit (0);
+	case 'h':
+	case '?': print_usage (); exit (0);
+	case 'V': print_version (); exit (0);
 
 	case 'E': compile_level = stage_preprocess; break;
 	case 'C': compile_level = stage_translate; break;
 	case 'S': compile_level = stage_compile; break;
 	case 'c': compile_level = stage_assemble; break;
 	case 'm': cobc_module_flag = 1; break;
+	case 'v': cobc_verbose_flag = 1; break;
 	case 'o': output_name = strdup (optarg); break;
 
 	case 'g':
@@ -418,6 +423,14 @@ probe_source_format (const char *filename)
 }
 
 static int
+process (const char *cmd)
+{
+  if (cobc_verbose_flag)
+    fprintf (stderr, "%s\n", cmd);
+  return system (cmd);
+}
+
+static int
 preprocess (struct filename *fn)
 {
   char buff[BUFSIZ];
@@ -435,7 +448,7 @@ preprocess (struct filename *fn)
   strcat (buff, (source_format == format_fixed) ? " -fixed" : " -free");
   strcat (buff, " ");
   strcat (buff, fn->source);
-  return system (buff);
+  return process (buff);
 }
 
 static int
@@ -476,7 +489,7 @@ process_compile (struct filename *fn)
     }
   sprintf (buff, "%s -S -o %s %s %s",
 	   cob_cc, name, cob_cflags, fn->translate);
-  return system (buff);
+  return process (buff);
 }
 
 static int
@@ -485,7 +498,7 @@ process_assemble (struct filename *fn)
   char buff[BUFSIZ];
   sprintf (buff, "%s -c -o %s %s %s",
 	   cob_cc, fn->object, cob_cflags, fn->translate);
-  return system (buff);
+  return process (buff);
 }
 
 static int
@@ -502,7 +515,7 @@ process_module (struct filename *fn)
     }
   sprintf (buff, "%s -shared -Wl,-soname,%s -o %s %s %s",
 	   cob_cc, name, name, fn->object, cob_ldadd);
-  return system (buff);
+  return process (buff);
 }
 
 static int
@@ -522,7 +535,7 @@ process_link (struct filename *file_list)
     strcpy (name, output_name);
 
   sprintf (buff, "%s -o %s %s %s", cob_cc, name, objs, cob_ldadd);
-  return system (buff);
+  return process (buff);
 }
 
 int
@@ -584,7 +597,7 @@ main (int argc, char *argv[])
     if (process_link (file_list) > 0)
       goto cleanup;
 
-  /* We successfully completed */
+  /* We have successfully completed */
   status = 0;
 
   /* Remove unnecessary files */
