@@ -1200,21 +1200,21 @@ output_move (cb_tree src, cb_tree dst)
 	  struct cb_field *dst_f = cb_field (dst);
 
 	  if (src_size > 0 && dst_size > 0 && src_size >= dst_size)
-	    switch (CB_TREE_CLASS (src))
+	    switch (CB_TREE_CATEGORY (src))
 	      {
-	      case CB_CLASS_ALPHABETIC:
-		if (CB_TREE_CLASS (dst) == CB_CLASS_ALPHABETIC
-		    || CB_TREE_CLASS (dst) == CB_CLASS_ALPHANUMERIC)
+	      case CB_CATEGORY_ALPHABETIC:
+		if (CB_TREE_CATEGORY (dst) == CB_CATEGORY_ALPHABETIC
+		    || CB_TREE_CATEGORY (dst) == CB_CATEGORY_ALPHANUMERIC)
 		  if (dst_f->flag_justified == 0)
 		    simple_copy = 1;
 		break;
-	      case CB_CLASS_ALPHANUMERIC:
-		if (CB_TREE_CLASS (dst) == CB_CLASS_ALPHANUMERIC)
+	      case CB_CATEGORY_ALPHANUMERIC:
+		if (CB_TREE_CATEGORY (dst) == CB_CATEGORY_ALPHANUMERIC)
 		  if (dst_f->flag_justified == 0)
 		    simple_copy = 1;
 		break;
-	      case CB_CLASS_NUMERIC:
-		if (CB_TREE_CLASS (dst) == CB_CLASS_NUMERIC
+	      case CB_CATEGORY_NUMERIC:
+		if (CB_TREE_CATEGORY (dst) == CB_CATEGORY_NUMERIC
 		    && src_f->usage == CB_USAGE_DISPLAY
 		    && dst_f->usage == CB_USAGE_DISPLAY
 		    && src_f->pic->size == dst_f->pic->size
@@ -1224,7 +1224,7 @@ output_move (cb_tree src, cb_tree dst)
 		    && src_f->flag_sign_leading == dst_f->flag_sign_leading
 		    && src_f->flag_sign_separate == dst_f->flag_sign_separate)
 		  simple_copy = 1;
-		else if (CB_TREE_CLASS (dst) == CB_CLASS_ALPHANUMERIC
+		else if (CB_TREE_CATEGORY (dst) == CB_CATEGORY_ALPHANUMERIC
 			 && src_f->pic->have_sign == 0)
 		  simple_copy = 1;
 		break;
