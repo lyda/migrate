@@ -1723,51 +1723,6 @@ alloc_string_from (struct sym *var, struct sym *delim)
   return sf;
 }
 
-static unsigned int
-gen_initialize_1 (struct sym *sy, unsigned int loc)
-{
-  int i;
-
-  if (sy->type == 'G')
-    {
-      struct sym *p;
-      for (i = 0; i < sy->times; i++)
-	for (p = sy->son; p; p = p->brother)
-	  loc = gen_initialize_1 (p, loc);
-    }
-  else
-    {
-      if (!sy->flags.in_redefinition)
-	for (i = 0; i < sy->times; i++)
-	  {
-	    unsigned save_loc = sy->location;
-	    sy->location = loc;
-	    load_location (sy, "eax");
-	    push_eax ();
-	    gen_loaddesc (sy);
-	    gen_loadvar (get_init_symbol (sy->type));
-	    asm_call ("cob_move");
-	    sy->location = save_loc;
-	    loc += symlen (sy);
-	  }
-    }
-  return loc;
-}
-
-void
-gen_initialize (struct sym *sy)
-{
-#ifdef COB_DEBUG
-  fprintf (o_src, "# INITIALIZE %s, type %c\n", sy->name, sy->type);
-#endif
-  init_ctype = ' ';
-  get_nb_fields (sy, sy->times, 0);
-  if (init_ctype != '&')
-    gen_move (get_init_symbol (init_ctype), sy);
-  else
-    gen_initialize_1 (sy, sy->location);
-}
-
 void
 gen_unstring (struct sym *var, struct unstring_delimited *delim,
 	      struct unstring_destinations *dest, struct sym *ptr,
@@ -3479,6 +3434,24 @@ gen_inspect (struct sym *var, void *list, int operation)
     }
 }
 
+static void
+gen_move_1 (struct sym *sy_src)
+{
+  if (sy_src == (struct sym *) spe_lit_ZE)
+    {
+      asm_call ("cob_move_zero");
+    }
+  else if (sy_src == (struct sym *) spe_lit_SP)
+    {
+      asm_call ("cob_move_space");
+    }
+  else
+    {
+      gen_loadvar (sy_src);
+      asm_call ("cob_move");
+    }
+}
+
 void
 gen_move (struct sym *sy_src, struct sym *sy_dst)
 {
@@ -3495,19 +3468,7 @@ gen_move (struct sym *sy_src, struct sym *sy_dst)
 #endif
 
   gen_loadvar (sy_dst);
-  if (sy_src == (struct sym *) spe_lit_ZE)
-    {
-      asm_call ("cob_move_zero");
-    }
-  else if (sy_src == (struct sym *) spe_lit_SP)
-    {
-      asm_call ("cob_move_space");
-    }
-  else
-    {
-      gen_loadvar (sy_src);
-      asm_call ("cob_move");
-    }
+  gen_move_1 (sy_src);
 }
 
 /* The following functions will be activated when we change from
@@ -3536,6 +3497,61 @@ gen_movecorr (struct sym *sy1, struct sym *sy2)
 	      else
 		gen_movecorr (t1, t2);
 	    }
+}
+
+static void
+gen_initialize_1 (struct sym *sy)
+{
+  if (!sy->flags.in_redefinition)
+    {
+      if (sy->type == 'G')
+	{
+	  int lab = 0;
+	  struct sym *p;
+	  if (sy->times != 1)
+	    {
+	      lab = loc_label++;
+	      fprintf (o_src, "\tmovl\t$%d, %%ebx\n", sy->times);
+	      fprintf (o_src, ".L%d:\n", lab);
+	    }
+	  for (p = sy->son; p; p = p->brother)
+	    gen_initialize_1 (p);
+	  if (sy->times != 1)
+	    {
+	      fprintf (o_src, "\tdecl\t%%ebx\n");
+	      fprintf (o_src, "\tjnz\t.L%d\n", lab);
+	    }
+	}
+      else
+	{
+	  int i;
+	  for (i = 0; i < sy->times; i++)
+	    {
+	      gen_loaddesc (sy);
+	      gen_move_1 (get_init_symbol (sy->type));
+	      fprintf (o_src, "\taddl\t$%d, 0(%%esp)\n", symlen (sy));
+	    }
+	}
+    }
+}
+
+void
+gen_initialize (struct sym *sy)
+{
+#ifdef COB_DEBUG
+  fprintf (o_src, "# INITIALIZE %s, type %c\n", sy->name, sy->type);
+#endif
+  init_ctype = ' ';
+  get_nb_fields (sy, sy->times, 0);
+  if (init_ctype != '&')
+    gen_move (get_init_symbol (init_ctype), sy);
+  else
+    {
+      loadloc_to_eax (sy);
+      fprintf (o_src, "\tpushl\t%%eax\n");
+      gen_initialize_1 (sy);
+      fprintf (o_src, "\tpopl\t%%eax\n");
+    }
 }
 
 void
