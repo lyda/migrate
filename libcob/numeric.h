@@ -29,7 +29,7 @@
  *   n = number * 10^expt
  */
 typedef struct {
-  mpz_t number;		/* multi-byte binary integer */
+  mpz_t data;		/* multi-byte binary integer */
   char expt;		/* exponent */
 } cob_decimal;
 
