@@ -333,32 +333,10 @@ read_line (char *buff, int size)
   if (cobpp_source_format == COBPP_FORMAT_FREE)
     return n;
 
-  /* check the first 6 letters */
-  {
-    int i;
-    int (*func) (int c) = NULL;
-    if (n < 7)
-      strcat (buff, "       \n");
-    if (isspace (buff[0]))
-      func = isspace;
-    else if (isdigit (buff[0]))
-      func = isdigit;
-    if (func)
-      for (i = 1; i < 6; i++)
-	if (!func (buff[i]))
-	  {
-	    func = NULL;
-	    break;
-	  }
-    if (!func)
-      {
-	yyerror (_("invalid sequence number: \"%c%c%c%c%c%c\""),
-		 buff[0], buff[1], buff[2],
-		 buff[3], buff[4], buff[5]);
-	exit (1);
-      }
-    memset (buff, ' ', 6);
-  }
+  /* clear the first 6 letters */
+  memset (buff, ' ', 6);
+  if (n < 8)
+    strcpy (buff + 6, " \n");
 
   /* check the indicator (column 7) */
   switch (buff[6])

@@ -105,7 +105,7 @@ print_usage ()
 	  "  -fdebugging-line      Enable debugging lines\n"
 	  "\n"
 	  "Warning options:\n"
-	  "  -Wcolumn-overflow     Warn if any text after column 72\n"
+	  "  -Wcolumn-overflow     Warn any text after column 72\n"
 	  ));
 }
 

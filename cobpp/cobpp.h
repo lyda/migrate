@@ -46,11 +46,10 @@ struct cobpp_name_list {
 /* enable debugging lines */
 extern int cobpp_flag_debugging_line;
 
-/* warn if any text after cobpp_text_column */
+/* warn any text after cobpp_text_column */
 extern int cobpp_warn_column_overflow;
 
-int cobpp_source_format;
-
+extern int cobpp_source_format;
 extern int cobpp_tab_width;
 extern int cobpp_text_column;
 extern int cobpp_exit_status;

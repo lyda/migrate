@@ -13,7 +13,6 @@
 	* scanner.l (read_line): Use it.
 
 	* cobpp.c (main): Do not infer the source format.
-	* scanner.l (read_line): Check the first 6 letters.
 
 2003-01-24  Keisuke Nishida  <knishida@netlab.jp>
 
