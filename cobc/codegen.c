@@ -529,6 +529,7 @@ memrefat (cob_tree sy)
       break;
     case SEC_STACK:
       sprintf (memref_buf, "-%d(%%ebp)", sy->location);
+      break;
     default:
       // Make sure we have an error at assembly stage
       sprintf (memref_buf, "ww_base%d+%d #sec:%d", pgm_segment,
@@ -827,21 +828,7 @@ value_to_eax (cob_tree x)
 	}
       else
 	{
-	  switch (x->sec_no)
-	    {
-	    case SEC_CONST:
-	      output ("\t%s\tc_base%d+%d, %%eax\n",
-		      varsize_movl (x), pgm_segment, x->location);
-	      break;
-	    case SEC_DATA:
-	      output ("\t%s\tw_base%d+%d, %%eax\n",
-		      varsize_movl (x), pgm_segment, x->location);
-	      break;
-	    case SEC_STACK:
-	      output ("\t%s\t-%d(%%ebp), %%eax\n",
-		      varsize_movl (x), x->location);
-	      break;
-	    }
+	  output ("\t%s\t%s, %%eax\n", varsize_movl (x), memrefat (x));
 	}
       return;
     }
