@@ -1,3 +1,7 @@
+2003-08-26  Keisuke Nishida  <kxn30@yahoo.co.jp>
+
+	* common.h, common.c (cob_a2e, cob_e2a): New variables.
+
 2003-08-25  Keisuke Nishida  <kxn30@yahoo.co.jp>
 
 	* fileio.c (sort_read): Bug fix of first read.

@@ -110,7 +110,7 @@ typedef struct __cob_module {
   unsigned char decimal_point;
   unsigned char currency_symbol;
   unsigned char numeric_separator;
-  unsigned char *collating_sequence;
+  const unsigned char *collating_sequence;
   enum cob_display_sign display_sign;
   unsigned long flag_binary_print_full : 1;
   struct __cob_module *next;
@@ -167,8 +167,10 @@ extern cob_field cob_high;		/* HIGH-VALUE */
 extern cob_field cob_low;		/* LOW-VALUE */
 extern cob_field cob_quote;		/* QUOTE */
 
-extern long cob_exp10[];
-extern long long cob_exp10LL[];
+extern const long cob_exp10[];
+extern const long long cob_exp10LL[];
+extern const unsigned char cob_a2e[];	/* ASCII -> EBCDIC */
+extern const unsigned char cob_e2a[];	/* EBCDIC -> ASCII */
 
 
 /* convert a digit (e.g., '0') into an integer (e.g., 0) */
