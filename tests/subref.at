@@ -106,6 +106,49 @@ AT_CHECK([cobc -C prog.cob], [1], ,
 AT_CLEANUP
 
 
+AT_SETUP([Subscript out of range (1)])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G.
+  02 X          PIC X OCCURS 3.
+PROCEDURE       DIVISION.
+  MOVE "X" TO X (5).
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C prog.cob], [1], ,
+[prog.cob:9: error: index of `X' out of range: 5
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([Subscript out of range (2)])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G1.
+  02 G2         OCCURS 10.
+    03 X        PIC X OCCURS 10.
+PROCEDURE       DIVISION.
+  MOVE "X" TO X (10, 20).
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C prog.cob], [1], ,
+[prog.cob:10: error: index of `X' out of range: 20
+])
+
+AT_CLEANUP
+
+
 AT_SETUP([non-numeric subscript])
 
 AT_DATA([prog.cob], [
