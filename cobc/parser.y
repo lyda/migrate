@@ -2750,10 +2750,11 @@ math_variable_list:
 | math_variable_list
   numeric_variable flag_rounded	{ $$ = create_mathvar_info ($1, $2, $3); }
 ;
+
 numeric_variable:
   name
   {
-    if (!is_numeric ($1))
+    if (!is_editable ($1))
       yyerror ("variable `%s' must be numeric", COB_FIELD_NAME ($1));
     $$ = $1;
   }

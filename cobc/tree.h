@@ -517,9 +517,10 @@ struct index_to_table_list
  * Type test
  */
 
-extern int is_variable (cob_tree sy);
-extern int is_subscripted (cob_tree sy);
-extern int is_numeric (cob_tree sy);
+extern int is_variable (cob_tree x);
+extern int is_subscripted (cob_tree x);
+extern int is_numeric (cob_tree x);
+extern int is_editable (cob_tree x);
 extern int is_valid_expr (cob_tree x);
 
 #endif /* _TREE_H_ */

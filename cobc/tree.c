@@ -195,20 +195,20 @@ make_parameter (cob_tree var, int mode)
  */
 
 int
-is_variable (cob_tree sy)
+is_variable (cob_tree x)
 {
-  if (SYMBOL_P (sy))
-    switch (COB_FIELD_TYPE (sy))
+  if (SYMBOL_P (x))
+    switch (COB_FIELD_TYPE (x))
       {
       case '8':		/* 88 field */
       case '9':		/* numeric */
       case 'A':		/* alpha */
-      case 'B':		/* binary (comp/computational) */
-      case 'C':		/* compacted (comp-3/comptational-3) */
+      case 'B':		/* binary */
+      case 'C':		/* packed decimal */
       case 'D':		/* screen data */
       case 'E':		/* edited */
       case 'G':		/* group */
-      case 'U':		/* float(comp-1 4 bytes) / double(comp-2 8 bytes) */
+      case 'U':		/* float or double */
       case 'X':		/* alphanum */
 	return 1;
       }
@@ -217,10 +217,10 @@ is_variable (cob_tree sy)
 }
 
 int
-is_subscripted (cob_tree sy)
+is_subscripted (cob_tree x)
 {
-  for (; sy; sy = sy->parent)
-    if (sy->times > 1)
+  for (; x; x = x->parent)
+    if (x->times > 1)
       return 1;
   return 0;
 }
@@ -236,8 +236,27 @@ is_numeric (cob_tree x)
 
   if (COB_FIELD_P (x))
     {
-      char type = COB_FIELD_TYPE (x);
-      if ((type == '9') || (type == 'B') || (type == 'C') || (type == 'U'))
+      char ty = COB_FIELD_TYPE (x);
+      if (ty == '9' || ty == 'B' || ty == 'C' || ty == 'U')
+	return 1;
+    }
+
+  return 0;
+}
+
+int
+is_editable (cob_tree x)
+{
+  if (SUBSTRING_P (x))
+    x = SUBSTRING_VAR (x);
+
+  if (SUBREF_P (x))
+    x = SUBREF_SYM (x);
+
+  if (COB_FIELD_P (x))
+    {
+      char ty = COB_FIELD_TYPE (x);
+      if (ty == '9' || ty == 'B' || ty == 'C' || ty == 'U' || ty == 'E')
 	return 1;
     }
 

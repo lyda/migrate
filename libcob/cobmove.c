@@ -750,10 +750,6 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 
 
 	    memset (caWork, '0', sizeof (caWork));
-	    /*
-	       for(i = 0; i < sizeof(caWork); ++i)
-	       caWork[i] = '0';
-	     */
 
 	    j = MAX_DIGITS + iSrcDecimals - iSrcLength;
 	    iSrcIntDigits = iSrcLength;
@@ -791,7 +787,8 @@ cob_move (struct fld_desc *pfldDesc1, char *caData1,
 	      memset (pDstData, '0', fldLength (pDstFld));
 
 	    /* Fill in the destination integer part */
-	    memmove (pDstData, &caWork[j], iDestIntDigits);
+	    if (iDestIntDigits > 0)
+	      memmove (pDstData, &caWork[j], iDestIntDigits);
 
 	    if (iDestDecimals > 0)
 	      {
