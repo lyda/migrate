@@ -6,6 +6,7 @@ This package contains the following subdirectories:
   cobc      COBOL compiler
   cobpp     COBOL preprocessor
   libcob    COBOL run-time library
+  lib       static libraries
   texi      Texinfo files
 
 See the following page for more information about OpenCOBOL:
