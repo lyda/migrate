@@ -31,7 +31,6 @@
 extern int cob_stabs_flag;
 extern int cob_debug_flag;
 extern int cob_module_flag;
-extern int cob_verbose_flag;
 
 #define LINK_STATIC	0
 #define LINK_DYNAMIC	1
