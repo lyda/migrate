@@ -52,9 +52,7 @@ static int lex_fgets (char *buf, int maxsize);
   result = lex_fgets (buf, max_size);
 
 unsigned int varnumber;
-int reserved_token;
 int previous_state = 0;
-short function_seen = 0;
 int stabs_started=0;
 
 struct {
@@ -217,29 +215,10 @@ struct reserved_sym {
 #define HASHLEN 100
 static struct reserved_sym *reserved_tab[ HASHLEN ]={NULL};
 
-#define ANY_NUMBER 32767
-struct {
-        char *name;
-        char function_type;
-        short args;
-} intrinsic_symbols[] = {
-        {"ABS",'*',1},
-	{"LENGTH",'9',ANY_NUMBER},
-	{"MAX",'*',ANY_NUMBER},
-	{"MIN",'*',ANY_NUMBER},
-        {"RANDOM",'*',-1},
-        {"",0,0}
-};
-struct intrinsic_sym {
-        char *name;
-        struct intrinsic_sym *next;
-        int i; /* index on intrinsic symbol table */
-};
-static struct intrinsic_sym *intrinsic_tab[ HASHLEN ]={NULL};
-
 static int read_literal (char mark);
 static int read_literal_x (char mark);
 static int scan_word (char *text);
+static int scan_reserved_word (char *text);
 %}
 
 letters [A-Za-z]
@@ -364,22 +343,8 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   if (tok)
     return tok;
 
-  if ((reserved_token = reserved (yytext)) != 0)
-    {
-      if (reserved_token == FUNCTION)
-	function_seen = 1;
-      /* special case of 4 intrinsics which are also reserved */
-      if (function_seen && lookup_intrinsic (yytext) != NULL)
-	{
-	  yylval.sval = install (yytext, SYTB_LAB, 0);
-	  TRACE_PRINT ((" <LABELSTR>: %s\n", yytext));
-	  return (LABELSTR);
-	}
-      TRACE_PRINT ((" <reserved>: %s\n", yytext));
-      return reserved_token;
-    }
   /* if symbol was defined at the data division */
-  if ((symbol = lookup (yytext, 2)) != NULL)
+  if ((symbol = lookup_symbol (yytext)) != NULL)
     {
       yylval.sval = symbol;
       if (symbol->type == '8')
@@ -414,11 +379,6 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   if (tok)
     return tok;
 
-  if ((reserved_token = reserved (yytext)) != 0)
-    {
-      TRACE_PRINT ((" <reserved>: %s\n", yytext));
-      return reserved_token;
-    }
   TRACE_PRINT (("<STRING>: %s\n", yytext));
   yylval.sval = install (yytext, SYTB_VAR, 0);
   return (STRING);
@@ -430,13 +390,8 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   if (tok)
     return tok;
 
-  if ((reserved_token = reserved (yytext)) != 0)
-    {
-      TRACE_PRINT ((" <reserved>: %s\n", yytext));
-      return reserved_token;
-    }
   /* if symbol was defined at the data division */
-  if ((symbol = lookup (yytext, 2)) != NULL)
+  if ((symbol = lookup_symbol (yytext)) != NULL)
     {
       yylval.sval = symbol;
       if (symbol->type == '8')
@@ -469,11 +424,6 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   if (tok)
     return tok;
 
-  if ((reserved_token = reserved (yytext)) != 0)
-    {
-      TRACE_PRINT ((" <reserved>: %s\n", yytext));
-      return reserved_token;
-    }
   TRACE_PRINT (("<STRING>: %s\n", yytext));
   /* install w/clone if neccessary */
   if ((yylval.sval = lookup_symbol (yytext)) == NULL)
@@ -489,11 +439,6 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   if (tok)
     return tok;
 
-  if ((reserved_token = reserved (yytext)) != 0)
-    {
-      TRACE_PRINT ((" <reserved>: %s\n", yytext));
-      return reserved_token;
-    }
   TRACE_PRINT (("<STRING>: %s\n", yytext));
   /* don't clone redefined var */
   yylval.sval = install (yytext, SYTB_VAR, 0);
@@ -506,11 +451,6 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   if (tok)
     return tok;
 
-  if ((reserved_token = reserved (yytext)) != 0)
-    {
-      TRACE_PRINT ((" <reserved>: %s\n", yytext));
-      return reserved_token;
-    }
   TRACE_PRINT (("<STRING>: %s\n", yytext));
   /* install w/clone if neccessary */
   yylval.sval = install (yytext, SYTB_VAR, 1);
@@ -538,11 +478,6 @@ word [A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9]+)?
   if (tok)
     return tok;
 
-  if ((reserved_token = reserved (yytext)) != 0)
-    {
-      TRACE_PRINT ((" <reserved>: %s\n", yytext));
-      return reserved_token;
-    }
   TRACE_PRINT ((" <IDSTRING>: %s\n", yytext));
   yylval.str = strdup (yytext);
   return IDSTRING;
@@ -578,15 +513,15 @@ X{sdelim}       { return read_literal_x ('\"'); }
 
 
 {relop}{relop}? {
-                if ((reserved_token=reserved(yytext))!=0) {
+		int token;
+                if ((token = scan_reserved_word (yytext)) != 0) {
                         TRACE_PRINT ((" <reserved>: %s\n", yytext));
-                        return reserved_token;
+                        return token;
                 }
                 yyerror("relational operator unknown");
         }
 
 {lpar}  {
-                function_seen = 0;
                 TRACE_PRINT (("<0: lpar>: %s\n", yytext));
                 return(yytext[0]); 
         }
@@ -640,12 +575,13 @@ X{sdelim}       { return read_literal_x ('\"'); }
     }
   }
   {word} {
-    if ((reserved_token=reserved(yytext))!=0) 
+    int token;
+    if ((token = scan_reserved_word (yytext)) != 0) 
       {
 	TRACE_PRINT ((" <reserved>: %s\n", yytext));
 	BEGIN PIC_ST;
 	TRACE_PRINT (("<PIC_ST2-> PIC_ST>:\n"));
-	return reserved_token;
+	return token;
       }
     REJECT;
   }
@@ -745,6 +681,8 @@ is_valid_identifier (const char *tok)
 static int
 scan_word (char *text)
 {
+  int token;
+
   if (is_integer_token (text))
     {
       yylval.lval = install_literal (text);
@@ -757,8 +695,37 @@ scan_word (char *text)
       TRACE_PRINT (("<LABELSTR>: %s\n", text));
       return (LABELSTR);
     }
+  else if ((token = scan_reserved_word (text)) != 0)
+    {
+      TRACE_PRINT ((" <reserved>: %s\n", yytext));
+      return token;
+    }
   else
     return 0;
+}
+
+static struct reserved_sym *
+lookup_reserved (char *s)
+{
+  struct reserved_sym *as;
+  for (as = reserved_tab[hash (s)]; as != NULL; as = as->next)
+    if (strcasecmp (s, as->name) == 0)
+      {
+	return (as);
+      }
+  return (NULL);
+}
+
+static int
+scan_reserved_word (char *s)
+{
+  struct reserved_sym *r;
+  if ((r = lookup_reserved (s)) != NULL)
+    {
+      yylval.ival = reserved_symbols[r->i].minor;
+      return reserved_symbols[r->i].token;
+    }
+  return 0;
 }
 
 static int
@@ -773,23 +740,10 @@ lex_fgets (char *buf, int maxsize)
 
 int hash (char *name);
 
-struct reserved_sym *
-lookup_reserved (char *s)
-{
-  struct reserved_sym *as;
-  for (as = reserved_tab[hash (s)]; as != NULL; as = as->next)
-    if (strcasecmp (s, as->name) == 0)
-      {
-	return (as);
-      }
-  return (NULL);
-}
-
 void
 install_reserved (void)
 {
   struct reserved_sym *as;
-  struct intrinsic_sym *is;
   int val, i;
   for (i = 0; strcmp (reserved_symbols[i].name, ""); i++)
     {
@@ -800,37 +754,6 @@ install_reserved (void)
       reserved_tab[val] = as;
       as->i = i;
     }
-  for (i = 0; strcmp (intrinsic_symbols[i].name, ""); i++)
-    {
-      is = (struct intrinsic_sym *) malloc (sizeof (struct intrinsic_sym));
-      is->name = strdup (intrinsic_symbols[i].name);
-      val = hash (is->name);
-      is->next = intrinsic_tab[val];
-      intrinsic_tab[val] = is;
-      is->i = i;
-    }
-}
-
-int
-reserved (char *s)
-{
-  struct reserved_sym *r;
-  if ((r = lookup_reserved (s)) != NULL)
-    {
-      yylval.ival = reserved_symbols[r->i].minor;
-      return reserved_symbols[r->i].token;
-    }
-  return 0;
-}
-
-struct intrinsic_sym *
-lookup_intrinsic (char *s)
-{
-  struct intrinsic_sym *is;
-  for (is = intrinsic_tab[hash (s)]; is != NULL; is = is->next)
-    if (strcasecmp (s, is->name) == 0)
-      return is;
-  return NULL;
 }
 
 #ifdef COB_DEBUG

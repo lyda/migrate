@@ -6917,84 +6917,24 @@ check_call_except (int excep, int notexcep, int exceplabel,
     }
 }
 
-void
-gen_inline_intrinsic (struct sym *v, short name_len, struct sym *temporary)
-{
-  struct parm_list *list, *tmp;
-  struct sym *cp = (struct sym *) parameter_list->var;
-
-  if (v->name[0] == 'L')
-    {
-      // Must be LENGTH
-      fprintf (o_src, "\tmovl\t$%d, %s #%s\n", set_field_length (cp, 1),
-	       memrefat (temporary), cp->name);
-    }
-  else if (v->name[0] == 'O')
-    {
-      // Must be ORD
-      fprintf (o_src, "\tmovsbl\t%s, %%eax\n", memrefat (cp));
-      fprintf (o_src, "\taddl\t$1, %%eax\n"	/*, memrefat(cp),
-						   memrefat(temporary), cp->name */ );
-      fprintf (o_src, "\tmovl\t%%eax, %s\n", memrefat (temporary));
-    }
-  else if (v->name[0] == 'C')
-    {
-      // Must be CHAR
-      gen_loadval (cp);
-      fprintf (o_src, "\tsubl\t$1, %%eax\n"	/*,memrefat(cp),
-						   memrefat(temporary), cp->name */ );
-      fprintf (o_src, "\tmovb\t%%al, %s\n", memrefat (temporary));
-    }
-  // Free parameter list
-  for (list = parameter_list; list != NULL;)
-    {
-      tmp = list;
-      list = list->next;
-      free (tmp);
-    }
-  parameter_list = NULL;
-}
-
 struct sym *
 gen_intrinsic_call (struct sym *v)
 {
-  short name_len = strlen (v->name);
+  int i;
   struct parm_list *list, *tmp;
   struct sym *cp;
   struct lit *lp;
-  char intrinsic_name[40] = "cob_i_";
-  short inp;
+  char function_name[40] = "cob_function_";
   struct sym *temporary;
 
-  if (name_len == 6 && strcmp ("LENGTH", v->name) == 0)
-    {
-      //temporary=define_temp_field('B',9);
-      temporary = define_temp_field ('B', 4);
-      gen_inline_intrinsic (v, name_len, temporary);
-      return temporary;
-    }
-  if (name_len == 3 && strcmp ("ORD", v->name) == 0)
-    {
-      temporary = define_temp_field ('B', 4);
-      gen_inline_intrinsic (v, name_len, temporary);
-      return temporary;
-    }
-  if (name_len == 4 && strcmp ("CHAR", v->name) == 0)
-    {
-      temporary = define_temp_field ('X', 1);
-      gen_inline_intrinsic (v, name_len, temporary);
-      return temporary;
-    }
   temporary = define_temp_field ('B', 4);
+
   /* construct the routine name */
-  strcat (intrinsic_name, v->name);
-  // Force to lowercase
-  for (inp = 6; inp <= (strlen (v->name) + 6); inp++)
-    {
-      if (intrinsic_name[inp] >= 'A' && intrinsic_name[inp] <= 'Z')
-	intrinsic_name[inp] += 32;
-    }
-	/******** get the parameters from the parameter list ********/
+  strcat (function_name, v->name);
+  for (i = 0; i < strlen (function_name); i++)
+    function_name[i] = tolower (function_name[i]);
+
+  /******** get the parameters from the parameter list ********/
   for (list = parameter_list; list != NULL;)
     {
       cp = (struct sym *) list->var;
@@ -7035,7 +6975,7 @@ gen_intrinsic_call (struct sym *v)
       free (tmp);
     }
   parameter_list = NULL;
-  asm_call (intrinsic_name);
+  asm_call (function_name);
   gen_store_fnres (temporary);
   return temporary;
 }

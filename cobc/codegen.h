@@ -811,14 +811,6 @@ extern int yyparse (void);
 /* scan.c */
 extern int yylex (void);
 extern void yyrestart (FILE * input_file);
-extern char *copy_strip_spaces (char *s);
-extern void add_copy_replacement (char *orig_value, char *replacement);
-extern void copy_do_replacements (char *buffer);
-extern int find_copybook_file (const char *filename, char *fullname);
-extern void copy_switch (char *filename);
-extern struct reserved_sym *lookup_reserved (char *s);
 extern void install_reserved (void);
-extern int reserved (char *s);
-extern struct intrinsic_sym *lookup_intrinsic (char *s);
 
 #endif /* _CODEGEN_H_ */
