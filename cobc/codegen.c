@@ -205,14 +205,14 @@ output_data (cb_tree x)
 	/* subscripts */
 	if (r->subs)
 	  {
-	    struct cb_list *l = r->subs = list_reverse (r->subs);
+	    cb_tree l = r->subs = list_reverse (r->subs);
 
 	    for (; f; f = f->parent)
 	      if (f->flag_occurs)
 		{
 		  output (" + %d * ", f->size);
-		  output_index (l->item);
-		  l = l->next;
+		  output_index (CB_VALUE (l));
+		  l = CB_CHAIN (l);
 		}
 
 	    r->subs = list_reverse (r->subs);
@@ -579,21 +579,22 @@ output_param (cb_tree x, int id)
 	if (CB_EXCEPTION_ENABLE (COB_EC_BOUND_SUBSCRIPT) && r->subs)
 	  {
 	    struct cb_field *p;
-	    struct cb_list *l = r->subs = list_reverse (r->subs);
+	    cb_tree l = r->subs = list_reverse (r->subs);
 
 	    for (p = f; p; p = p->parent)
 	      if (p->flag_occurs)
 		{
+		  cb_tree x = CB_VALUE (l);
 		  if (p->occurs_depending)
 		    {
 		      int n = p->occurs_max;
-		      if (CB_LITERAL_P (l->item))
-			n = cb_literal_to_int (CB_LITERAL (l->item));
+		      if (CB_LITERAL_P (x))
+			n = cb_literal_to_int (CB_LITERAL (x));
 		      if (p->occurs_min <= n && n <= p->occurs_max)
 			{
 			  output_prefix ();
 			  output ("cob_check_subscript_depending (");
-			  output_integer (l->item);
+			  output_integer (x);
 			  output (", %d, %d, ", p->occurs_min, p->occurs_max);
 			  output_integer (p->occurs_depending);
 			  output (", \"%s\", \"%s\");\n", p->name,
@@ -602,15 +603,15 @@ output_param (cb_tree x, int id)
 		    }
 		  else
 		    {
-		      if (!CB_LITERAL_P (l->item))
+		      if (!CB_LITERAL_P (x))
 			{
 			  output_prefix ();
 			  output ("cob_check_subscript (");
-			  output_integer (l->item);
+			  output_integer (x);
 			  output (", %d, \"%s\");\n", p->occurs_max, p->name);
 			}
 		    }
-		  l = l->next;
+		  l = CB_CHAIN (l);
 		}
 
 	    r->subs = list_reverse (r->subs);
@@ -991,21 +992,21 @@ output_goto (cb_tree x)
 }
 
 static void
-output_goto_depending (struct cb_list *labels, cb_tree index)
+output_goto_depending (cb_tree labels, cb_tree index)
 {
   int i = 1;
-  struct cb_list *l;
+  cb_tree l;
   output_prefix ();
   output ("switch (");
   output_integer (index);
   output (")\n");
   output_indent ("  {");
-  for (l = labels; l; l = l->next)
+  for (l = labels; l; l = CB_CHAIN (l))
     {
       output_indent_level -= 2;
       output_line ("case %d:", i++);
       output_indent_level += 2;
-      output_goto (l->item);
+      output_goto (CB_VALUE (l));
     }
   output_indent ("  }");
 }
@@ -1260,7 +1261,7 @@ output_move (cb_tree src, cb_tree dst)
  * INITIALIZE
  */
 
-static struct cb_list *initialize_replacing_list;
+static cb_tree initialize_replacing_list;
 
 static void output_initialize_internal (struct cb_field *f);
 
@@ -1388,10 +1389,10 @@ output_initialize_replacing (struct cb_field *f)
     }
   else
     {
-      struct cb_list *l;
-      for (l = initialize_replacing_list; l; l = l->next)
+      cb_tree l;
+      for (l = initialize_replacing_list; l; l = CB_CHAIN (l))
 	{
-	  struct cb_parameter *p = l->item;
+	  struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
 	  if (p->type == f->pic->category)
 	    {
 	      output_move (p->x, CB_TREE (f));
@@ -1402,7 +1403,7 @@ output_initialize_replacing (struct cb_field *f)
 }
 
 static void
-output_initialize (cb_tree x, struct cb_list *l)
+output_initialize (cb_tree x, cb_tree l)
 {
   struct cb_reference *r = CB_REFERENCE (x);
   struct cb_field *f = CB_FIELD (r->value);
@@ -1411,14 +1412,14 @@ output_initialize (cb_tree x, struct cb_list *l)
   if (r->subs)
     {
       int i = 1;
-      struct cb_list *l;
+      cb_tree subs;
       output_indent ("{");
-      for (l = r->subs; l; l = l->next)
+      for (subs = r->subs; subs; subs = CB_CHAIN (subs))
 	{
 	  /* FIXME: need boundary check */
 	  output_prefix ();
 	  output ("int i%d = ", i++);
-	  output_index (l->item);
+	  output_index (CB_VALUE (subs));
 	  output (";\n");
 	}
     }
@@ -1469,17 +1470,17 @@ output_occurs (struct cb_field *p)
 static void
 output_search (cb_tree table, cb_tree var, cb_tree stmt, cb_tree whens)
 {
-  struct cb_list *l;
+  cb_tree l;
   struct cb_field *p = cb_field (table);
   cb_tree idx = NULL;
 
   /* determine the index to use */
   var = var ? CB_TREE (cb_field (var)) : NULL;
-  for (l = p->index_list; l; l = l->next)
-    if (l->item == var)
+  for (l = p->index_list; l; l = CB_CHAIN (l))
+    if (CB_VALUE (l) == var)
       idx = var;
   if (!idx)
-    idx = CB_TREE (p->index_list->item);
+    idx = CB_VALUE (p->index_list);
 
   /* start loop */
   output_line ("while (1)");
@@ -1517,7 +1518,7 @@ static void
 output_search_all (cb_tree table, cb_tree stmt, cb_tree when)
 {
   struct cb_field *p = cb_field (table);
-  cb_tree idx = CB_TREE (p->index_list->item);
+  cb_tree idx = CB_TREE (CB_VALUE (p->index_list));
 
   /* header */
   output_indent ("{");
@@ -1571,15 +1572,15 @@ output_search_all (cb_tree table, cb_tree stmt, cb_tree when)
  */
 
 static void
-output_sort_init (cb_tree file, struct cb_list *keys)
+output_sort_init (cb_tree file, cb_tree keys)
 {
-  struct cb_list *l;
+  cb_tree l;
 
   output_indent ("{");
   output_line ("static cob_file_key keys[] = {");
-  for (l = keys; l; l = l->next)
+  for (l = keys; l; l = CB_CHAIN (l))
     {
-      struct cb_parameter *p = l->item;
+      struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
       output_prefix ();
       output ("  {");
       output_param (p->x, -1);
@@ -1599,12 +1600,11 @@ output_sort_init (cb_tree file, struct cb_list *keys)
  */
 
 static void
-output_call (cb_tree name, struct cb_list *args,
-	     cb_tree st1, cb_tree st2)
+output_call (cb_tree name, cb_tree args, cb_tree st1, cb_tree st2)
 {
   int n;
   int dynamic_link = 1;
-  struct cb_list *l;
+  cb_tree l;
 
   if (cb_flag_call_static && CB_LITERAL_P (name))
     dynamic_link = 0;
@@ -1615,9 +1615,9 @@ output_call (cb_tree name, struct cb_list *args,
     output_line ("int (*func)();");
 
   /* setup arguments */
-  for (l = args, n = 1; l; l = l->next, n++)
+  for (l = args, n = 1; l; l = CB_CHAIN (l), n++)
     {
-      struct cb_parameter *p = l->item;
+      struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
       cb_tree x = p->x;
       switch (p->type)
 	{
@@ -1634,9 +1634,9 @@ output_call (cb_tree name, struct cb_list *args,
 	  output (";\n");
 	}
     }
-  for (l = args, n = 1; l; l = l->next, n++)
+  for (l = args, n = 1; l; l = CB_CHAIN (l), n++)
     {
-      struct cb_parameter *p = l->item;
+      struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
       cb_tree x = p->x;
       switch (p->type)
 	{
@@ -1678,9 +1678,9 @@ output_call (cb_tree name, struct cb_list *args,
 
   /* arguments */
   output (" (");
-  for (l = args, n = 1; l; l = l->next, n++)
+  for (l = args, n = 1; l; l = CB_CHAIN (l), n++)
     {
-      struct cb_parameter *p = l->item;
+      struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
       cb_tree x = p->x;
       switch (p->type)
 	{
@@ -1717,7 +1717,7 @@ output_call (cb_tree name, struct cb_list *args,
 	    }
 	  break;
 	}
-      if (l->next)
+      if (CB_CHAIN (l))
 	output (", ");
     }
   output (");\n");
@@ -1967,15 +1967,15 @@ output_stmt (cb_tree x)
     case CB_TAG_SEQUENCE:
       {
 	struct cb_sequence *p = CB_SEQUENCE (x);
-	struct cb_list *l = p->list;
+	cb_tree l = p->list;
 	output_indent ("{");
-	if (p->save_status && l && l->next)
+	if (p->save_status && l && CB_CHAIN (l))
 	  {
 	    /* output with combining multiple cob_exception_code */
 	    output_line ("int code = 0;");
-	    for (; l; l = l->next)
+	    for (; l; l = CB_CHAIN (l))
 	      {
-		output_stmt (l->item);
+		output_stmt (CB_VALUE (l));
 		output_line ("code |= cob_exception_code;");
 	      }
 	    output_line ("cob_exception_code = code;");
@@ -1983,8 +1983,8 @@ output_stmt (cb_tree x)
 	else
 	  {
 	    /* output without using cob_exception_code */
-	    for (; l; l = l->next)
-	      output_stmt (l->item);
+	    for (; l; l = CB_CHAIN (l))
+	      output_stmt (CB_VALUE (l));
 	  }
 	output_indent ("}");
 	break;
@@ -2083,8 +2083,8 @@ output_screen_definition (struct cb_field *p)
       output ("&s_%s", p->children->cname);
       break;
     case COB_SCREEN_TYPE_VALUE:
-      output_quoted_string (CB_LITERAL (p->values->item)->data,
-			    CB_LITERAL (p->values->item)->size);
+      output_quoted_string (CB_LITERAL (CB_VALUE (p->values))->data,
+			    CB_LITERAL (CB_VALUE (p->values))->size);
       break;
       break;
     case COB_SCREEN_TYPE_FIELD:
@@ -2122,7 +2122,7 @@ output_screen_definition (struct cb_field *p)
 static void
 output_class_name_definition (struct cb_class_name *p)
 {
-  struct cb_list *l;
+  cb_tree l;
 
   output_line ("static int");
   output_line ("%s (cob_field *f)", p->cname);
@@ -2131,9 +2131,9 @@ output_class_name_definition (struct cb_class_name *p)
   output_line ("for (i = 0; i < f->size; i++)");
   output_prefix ();
   output ("  if (!(");
-  for (l = p->list; l; l = l->next)
+  for (l = p->list; l; l = CB_CHAIN (l))
     {
-      cb_tree x = l->item;
+      cb_tree x = CB_VALUE (l);
       if (CB_PARAMETER_P (x))
 	{
 	  struct cb_parameter *p = CB_PARAMETER (x);
@@ -2153,7 +2153,7 @@ output_class_name_definition (struct cb_class_name *p)
 		output (" || ");
 	    }
 	}
-      if (l->next)
+      if (CB_CHAIN (l))
 	output (" || ");
     }
   output ("))\n");
@@ -2185,7 +2185,7 @@ output_value (struct cb_field *f)
 {
   if (f->values)
     {
-      cb_tree value = f->values->item;
+      cb_tree value = CB_VALUE (f->values);
       if (CB_CONST_P (value)
 	  || CB_TREE_CLASS (value) == CB_CLASS_NUMERIC
 	  || CB_LITERAL (value)->all)
@@ -2231,17 +2231,16 @@ output_init_values (struct cb_field *p)
 
 
 static void
-output_internal_function (struct cb_program *prog,
-			  struct cb_list *parameter_list)
+output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 {
   int i;
-  struct cb_list *l;
+  cb_tree l;
 
   /* program function */
   output_line ("static int");
   output ("__%s (int entry", prog->program_id);
-  for (l = parameter_list; l; l = l->next)
-    output (", unsigned char *b_%s", CB_FIELD (l->item)->cname);
+  for (l = parameter_list; l; l = CB_CHAIN (l))
+    output (", unsigned char *b_%s", CB_FIELD (CB_VALUE (l))->cname);
   output (")\n");
   output_indent ("{");
 
@@ -2267,8 +2266,8 @@ output_internal_function (struct cb_program *prog,
   if (prog->file_list)
     {
       output ("/* Files */\n\n");
-      for (l = prog->file_list; l; l = l->next)
-	output_file_definition (l->item);
+      for (l = prog->file_list; l; l = CB_CHAIN (l))
+	output_file_definition (CB_FILE (CB_VALUE (l)));
       output_newline ();
     }
 
@@ -2309,9 +2308,9 @@ output_internal_function (struct cb_program *prog,
   /* entry dispatch */
   output_line ("switch (entry)");
   output_line ("  {");
-  for (i = 0, l = prog->entry_list; l; l = l->next)
+  for (i = 0, l = prog->entry_list; l; l = CB_CHAIN (l))
     {
-      struct cb_parameter *p = CB_PARAMETER (l->item);
+      struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
       output_line ("  case %d:", i++);
       output_line ("    goto lb_%s;", CB_LABEL (p->x)->cname);
     }
@@ -2340,8 +2339,8 @@ output_internal_function (struct cb_program *prog,
 
   /* PROCEDURE DIVISION */
   output_line ("/* PROCEDURE DIVISION */");
-  for (l = prog->exec_list; l; l = l->next)
-    output_stmt (l->item);
+  for (l = prog->exec_list; l; l = CB_CHAIN (l))
+    output_stmt (CB_VALUE (l));
   output_newline ();
 
   output_line ("exit_program:");
@@ -2354,36 +2353,36 @@ output_internal_function (struct cb_program *prog,
 static void
 output_entry_function (struct cb_program *prog,
 		       struct cb_parameter *entry,
-		       struct cb_list *parameter_list)
+		       cb_tree parameter_list)
 {
   static int id = 0;
 
   const char *entry_name = CB_LABEL (entry->x)->name;
-  struct cb_list *using_list = (struct cb_list *) entry->y;
-  struct cb_list *l, *l1, *l2;
+  cb_tree using_list = entry->y;
+  cb_tree l, l1, l2;
 
   output ("int\n");
   output ("%s (", entry_name);
   if (!using_list)
     output ("void");
   else
-    for (l = using_list; l; l = l->next)
+    for (l = using_list; l; l = CB_CHAIN (l))
       {
-	output ("unsigned char *b_%s", CB_FIELD (l->item)->cname);
-	if (l->next)
+	output ("unsigned char *b_%s", CB_FIELD (CB_VALUE (l))->cname);
+	if (CB_CHAIN (l))
 	  output (", ");
       }
   output (")\n");
   output ("{\n");
 
   output ("  return __%s (%d", prog->program_id, id++);
-  for (l1 = parameter_list; l1; l1 = l1->next)
+  for (l1 = parameter_list; l1; l1 = CB_CHAIN (l1))
     {
-      for (l2 = using_list; l2; l2 = l2->next)
-	if (strcmp (CB_FIELD (l1->item)->cname,
-		    CB_FIELD (l2->item)->cname) == 0)
+      for (l2 = using_list; l2; l2 = CB_CHAIN (l2))
+	if (strcmp (CB_FIELD (CB_VALUE (l1))->cname,
+		    CB_FIELD (CB_VALUE (l2))->cname) == 0)
 	  {
-	    output (", b_%s", CB_FIELD (l1->item)->cname);
+	    output (", b_%s", CB_FIELD (CB_VALUE (l1))->cname);
 	    break;
 	  }
       if (l2 == NULL)
@@ -2412,8 +2411,8 @@ output_main_function (struct cb_program *prog)
 void
 codegen (struct cb_program *prog)
 {
-  struct cb_list *l;
-  struct cb_list *parameter_list = NULL;
+  cb_tree l;
+  cb_tree parameter_list = NULL;
 
   if (cb_flag_main)
     prog->flag_initial = 1;
@@ -2432,37 +2431,37 @@ codegen (struct cb_program *prog)
   output ("#define i_SWITCH         cob_switch\n");
   output ("#define i_RETURN_CODE    cob_return_code\n");
   output ("#define i_LINAGE_COUNTER cob_linage_counter\n\n");
-  for (l = prog->index_list; l; l = l->next)
-    output ("static int i_%s;\n", CB_FIELD (l->item)->cname);
+  for (l = prog->index_list; l; l = CB_CHAIN (l))
+    output ("static int i_%s;\n", CB_FIELD (CB_VALUE (l))->cname);
   output_newline ();
 
   /* labels */
   output ("/* Labels */\n\n");
   output ("enum {\n");
   output ("  le_standard_error_handler,\n");
-  for (l = prog->exec_list; l; l = l->next)
-    if (CB_LABEL_P (l->item) && CB_LABEL (l->item)->need_return)
-      output ("  le_%s,\n", CB_LABEL (l->item)->cname);
+  for (l = prog->exec_list; l; l = CB_CHAIN (l))
+    if (CB_LABEL_P (CB_VALUE (l)) && CB_LABEL (CB_VALUE (l))->need_return)
+      output ("  le_%s,\n", CB_LABEL (CB_VALUE (l))->cname);
   output ("};\n\n");
 
   /* class-names */
-  for (l = prog->class_name_list; l; l = l->next)
-    output_class_name_definition (l->item);
+  for (l = prog->class_name_list; l; l = CB_CHAIN (l))
+    output_class_name_definition (CB_CLASS_NAME (CB_VALUE (l)));
 
   /* build parameter list */
-  for (l = prog->entry_list; l; l = l->next)
+  for (l = prog->entry_list; l; l = CB_CHAIN (l))
     {
-      struct cb_parameter *p = CB_PARAMETER (l->item);
-      struct cb_list *using_list = (struct cb_list *) p->y;
-      struct cb_list *l1, *l2;
-      for (l1 = using_list; l1; l1 = l1->next)
+      struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
+      cb_tree using_list = p->y;
+      cb_tree l1, l2;
+      for (l1 = using_list; l1; l1 = CB_CHAIN (l1))
 	{
-	  for (l2 = parameter_list; l2; l2 = l2->next)
-	    if (strcmp (CB_FIELD (l1->item)->cname,
-			CB_FIELD (l2->item)->cname) == 0)
+	  for (l2 = parameter_list; l2; l2 = CB_CHAIN (l2))
+	    if (strcmp (CB_FIELD (CB_VALUE (l1))->cname,
+			CB_FIELD (CB_VALUE (l2))->cname) == 0)
 	      break;
 	  if (l2 == NULL)
-	    parameter_list = list_add (parameter_list, l1->item);
+	    parameter_list = list_add (parameter_list, CB_VALUE (l1));
 	}
     }
 
@@ -2470,8 +2469,8 @@ codegen (struct cb_program *prog)
   output_internal_function (prog, parameter_list);
 
   /* entry functions */
-  for (l = prog->entry_list ; l; l = l->next)
-    output_entry_function (prog, CB_PARAMETER (l->item), parameter_list);
+  for (l = prog->entry_list ; l; l = CB_CHAIN (l))
+    output_entry_function (prog, CB_PARAMETER (CB_VALUE (l)), parameter_list);
 
   /* main function */
   if (cb_flag_main)

@@ -52,6 +52,7 @@ enum cb_tag {
   CB_TAG_SEQUENCE,		/* multiple statements */
   CB_TAG_STATEMENT,		/* general statement */
   /* miscellaneous */
+  CB_TAG_LIST,
   CB_TAG_PARAMETER,
 };
 
@@ -123,37 +124,6 @@ enum cb_usage {
   CB_USAGE_PACKED,
   CB_USAGE_POINTER,
   CB_USAGE_PROGRAM,
-};
-
-
-/*
- * List
- */
-
-struct cb_list {
-  void *item;
-  struct cb_list *next;
-};
-
-extern struct cb_list *cons (void *x, struct cb_list *l);
-extern struct cb_list *list (void *x);
-extern struct cb_list *list_last (struct cb_list *l);
-extern struct cb_list *list_add (struct cb_list *l, void *x);
-extern struct cb_list *list_append (struct cb_list *l1, struct cb_list *l2);
-extern struct cb_list *list_reverse (struct cb_list *l);
-extern int list_length (struct cb_list *l);
-
-
-/*
- * Word table
- */
-
-struct cb_word {
-  const char *name;		/* word name */
-  int count;			/* the number of words with the same name */
-  int error;			/* set to 1 if error displayed */
-  struct cb_list *items;	/* objects associated with this word */
-  struct cb_word *next;		/* next word with the same hash value */
 };
 
 
@@ -269,7 +239,7 @@ extern cb_tree cb_build_string (const unsigned char *str);
 struct cb_alphabet_name {
   struct cb_tree_common common;
   enum cb_alphabet_name_type type;
-  struct cb_list *custom_list;
+  cb_tree custom_list;
 };
 
 #define CB_ALPHABET_NAME(x)	(CB_TREE_CAST (CB_TAG_ALPHABET_NAME, struct cb_alphabet_name, x))
@@ -286,13 +256,13 @@ struct cb_class_name {
   struct cb_tree_common common;
   const char *name;
   char *cname;
-  struct cb_list *list;
+  cb_tree list;
 };
 
 #define CB_CLASS_NAME(x)	(CB_TREE_CAST (CB_TAG_CLASS_NAME, struct cb_class_name, x))
 #define CB_CLASS_NAME_P(x)	(CB_TREE_TAG (x) == CB_TAG_CLASS_NAME)
 
-extern cb_tree cb_build_class_name (cb_tree name, struct cb_list *list);
+extern cb_tree cb_build_class_name (cb_tree name, cb_tree list);
 
 
 /*
@@ -382,8 +352,8 @@ struct cb_field {
   cb_tree occurs_depending;	/* OCCURS ... DEPENDING ON */
   enum cb_storage storage;
   enum cb_usage usage;		/* USAGE */
-  struct cb_list *values;	/* VALUE */
-  struct cb_list *index_list;	/* INDEXED BY */
+  cb_tree values;		/* VALUE */
+  cb_tree index_list;		/* INDEXED BY */
   struct cb_field *parent;	/* upper level field (NULL for 01 fields) */
   struct cb_field *children;	/* top of lower level fields */
   struct cb_field *sister;	/* fields in the same level */
@@ -482,7 +452,7 @@ struct cb_reference {
   struct cb_tree_common common;
   struct cb_word *word;
   cb_tree value;
-  struct cb_list *subs;
+  cb_tree subs;
   cb_tree offset;
   cb_tree length;
   cb_tree chain;
@@ -536,7 +506,7 @@ struct cb_binary_op {
 #define cb_build_negation(x)	cb_build_binary_op (x, '!', 0)
 
 extern cb_tree cb_build_binary_op (cb_tree x, char op, cb_tree y);
-extern cb_tree cb_build_connective_op (struct cb_list *l, char op);
+extern cb_tree cb_build_connective_op (cb_tree list, char op);
 
 
 /*
@@ -586,7 +556,7 @@ struct cb_label {
   const char *name;
   const char *cname;
   struct cb_label *section;
-  struct cb_list *children;
+  cb_tree children;
   char need_begin;
   char need_return;
 };
@@ -653,14 +623,14 @@ extern void cb_add_perform_varying (struct cb_perform *perf, cb_tree name, cb_tr
 
 struct cb_sequence {
   struct cb_tree_common common;
-  struct cb_list *list;
+  cb_tree list;
   int save_status;
 };
 
 #define CB_SEQUENCE(x)		(CB_TREE_CAST (CB_TAG_SEQUENCE, struct cb_sequence, x))
 #define CB_SEQUENCE_P(x)	(CB_TREE_TAG (x) == CB_TAG_SEQUENCE)
 
-extern cb_tree make_sequence (struct cb_list *list);
+extern cb_tree make_sequence (cb_tree list);
 
 
 /*
@@ -677,6 +647,36 @@ struct cb_statement {
 #define CB_STATEMENT_P(x)	(CB_TREE_TAG (x) == CB_TAG_STATEMENT)
 
 extern struct cb_statement *cb_build_statement (const char *name);
+
+
+/*
+ * List
+ */
+
+struct cb_list {
+  struct cb_tree_common common;
+  int type;
+  cb_tree value;
+  cb_tree purpose;
+  cb_tree chain;
+};
+
+#define CB_LIST(x)	(CB_TREE_CAST (CB_TAG_LIST, struct cb_list, x))
+#define CB_LIST_P(x)	(CB_TREE_TAG (x) == CB_TAG_LIST)
+
+#define CB_VALUE(x)	(CB_LIST (x)->value)
+#define CB_PURPOSE(x)	(CB_LIST (x)->purpose)
+#define CB_CHAIN(x)	(CB_LIST (x)->chain)
+
+extern cb_tree cb_build_list (int type, cb_tree value, cb_tree purpose, cb_tree rest);
+extern cb_tree list_add (cb_tree l, cb_tree x);
+extern cb_tree list_append (cb_tree l1, cb_tree l2);
+extern cb_tree list_reverse (cb_tree l);
+extern int list_length (cb_tree l);
+
+#define cons(x,l)		cb_build_list (0, x, 0, l)
+#define list(x)			cb_build_list (0, x, 0, 0)
+#define cb_build_pair(x,y)	cb_build_list (0, x, y, NULL)
 
 
 /*
@@ -702,19 +702,29 @@ extern cb_tree cb_build_parameter (int type, cb_tree x, cb_tree y);
  * Program
  */
 
+#define CB_WORD_HASH_SIZE	133
+
+struct cb_word {
+  const char *name;		/* word name */
+  int count;			/* the number of words with the same name */
+  int error;			/* set to 1 if error displayed */
+  cb_tree items;		/* objects associated with this word */
+  struct cb_word *next;		/* next word with the same hash value */
+};
+
 struct cb_program {
   /* program variables */
   const char *program_id;
   unsigned char decimal_point;		/* '.' or ',' */
   unsigned char currency_symbol;	/* '$' or user-specified */
   unsigned char numeric_separator;	/* ',' or '.' */
-  struct cb_list *entry_list;
-  struct cb_list *index_list;
-  struct cb_list *file_list;
-  struct cb_list *exec_list;
-  struct cb_list *label_list;
-  struct cb_list *reference_list;
-  struct cb_list *class_name_list;
+  cb_tree entry_list;
+  cb_tree index_list;
+  cb_tree file_list;
+  cb_tree exec_list;
+  cb_tree label_list;
+  cb_tree reference_list;
+  cb_tree class_name_list;
   struct cb_field *working_storage;
   struct cb_field *local_storage;
   struct cb_field *linkage_storage;
@@ -729,20 +739,20 @@ struct cb_program {
   int loop_counter;
   int decimal_index;
   int decimal_index_max;
-  struct cb_word **word_table;
+  struct cb_word *word_table[CB_WORD_HASH_SIZE];
 };
 
 extern struct cb_program *cb_build_program (void);
 
 extern cb_tree cb_build_identifier (cb_tree x);
-extern cb_tree cb_build_assign (struct cb_list *vars, char op, cb_tree val);
+extern cb_tree cb_build_assign (cb_tree vars, char op, cb_tree val);
 extern cb_tree cb_build_add (cb_tree v, cb_tree n, int round);
 extern cb_tree cb_build_sub (cb_tree v, cb_tree n, int round);
 extern cb_tree cb_build_move (cb_tree src, cb_tree dst);
 extern cb_tree cb_build_corr (cb_tree (*func)(), cb_tree x1, cb_tree x2, int opt);
 extern cb_tree cb_build_divide (cb_tree dividend, cb_tree divisor, cb_tree quotient, cb_tree remainder);
 extern cb_tree cb_build_cond (cb_tree x);
-extern cb_tree cb_build_evaluate (struct cb_list *subject_list, struct cb_list *case_list);
+extern cb_tree cb_build_evaluate (cb_tree subject_list, cb_tree case_list);
 extern cb_tree cb_build_search_all (cb_tree table, cb_tree when);
 
 #endif /* CB_TREE_H */

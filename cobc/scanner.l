@@ -136,7 +136,7 @@ H\"[^\"\n]*\" {
   word = CB_REFERENCE (yylval.tree)->word;
   if (word->count > 0)
     {
-      cb_tree x = word->items->item;
+      cb_tree x = CB_VALUE (word->items);
       if (CB_CLASS_NAME_P (x))
 	return CLASS_NAME;
       if (CB_SYSTEM_NAME_P (x))

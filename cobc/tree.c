@@ -28,6 +28,8 @@
 #include "cobc.h"
 #include "error.h"
 
+static struct cb_word *lookup_word (const char *name);
+
 static char *
 to_cname (const char *s)
 {
@@ -36,128 +38,6 @@ to_cname (const char *s)
   for (p = copy; *p; p++)
     *p = (*p == '-') ? '_' : toupper (*p);
   return copy;
-}
-
-
-/*
- * List
- */
-
-struct cb_list *
-cons (void *x, struct cb_list *l)
-{
-  struct cb_list *p = malloc (sizeof (struct cb_list));
-  p->item = x;
-  p->next = l;
-  return p;
-}
-
-struct cb_list *
-list (void *x)
-{
-  return cons (x, NULL);
-}
-
-struct cb_list *
-list_last (struct cb_list *l)
-{
-  if (l != NULL)
-    for (; l->next != NULL; l = l->next);
-  return l;
-}
-
-struct cb_list *
-list_add (struct cb_list *l, void *x)
-{
-  return list_append (l, list (x));
-}
-
-struct cb_list *
-list_append (struct cb_list *l1, struct cb_list *l2)
-{
-  if (l1 == NULL)
-    {
-      return l2;
-    }
-  else
-    {
-      list_last (l1)->next = l2;
-      return l1;
-    }
-}
-
-struct cb_list *
-list_reverse (struct cb_list *l)
-{
-  struct cb_list *next, *last = NULL;
-  for (; l; l = next)
-    {
-      next = l->next;
-      l->next = last;
-      last = l;
-    }
-  return last;
-}
-
-int
-list_length (struct cb_list *l)
-{
-  int n = 0;
-  for (; l; l = l->next)
-    n++;
-  return n;
-}
-
-
-/*
- * Word table
- */
-
-#define HASH_SIZE	133
-
-static int
-hash (const char *s)
-{
-  int val = 0;
-  for (; *s; s++)
-    val += toupper (*s);
-  return val % HASH_SIZE;
-}
-
-static struct cb_word *
-lookup_word (const char *name)
-{
-  struct cb_word *p;
-  int val = hash (name);
-
-  /* find the existing word */
-  if (current_program)
-    for (p = current_program->word_table[val]; p; p = p->next)
-      if (strcasecmp (p->name, name) == 0)
-	return p;
-
-  /* create new word */
-  p = malloc (sizeof (struct cb_word));
-  memset (p, 0, sizeof (struct cb_word));
-  p->name = strdup (name);
-
-  /* insert it into the table */
-  if (current_program)
-    {
-      p->next = current_program->word_table[val];
-      current_program->word_table[val] = p;
-    }
-
-  return p;
-}
-
-static struct cb_word **
-make_word_table (void)
-{
-  size_t size = sizeof (struct cb_word *) * HASH_SIZE;
-  struct cb_word **p = malloc (size);
-  memset (p, 0, size);
-  return p;
 }
 
 
@@ -225,12 +105,12 @@ cb_name_1 (char *s, cb_tree x)
 	  s += sprintf (s, "#<reference %s>", p->word->name);
 	if (p->subs)
 	  {
-	    struct cb_list *l;
+	    cb_tree l;
 	    s += sprintf (s, "(");
-	    for (l = p->subs; l; l = l->next)
+	    for (l = p->subs; l; l = CB_CHAIN (l))
 	      {
-		s += cb_name_1 (s, l->item);
-		s += sprintf (s, l->next ? ", " : ")");
+		s += cb_name_1 (s, CB_VALUE (l));
+		s += sprintf (s, CB_CHAIN (l) ? ", " : ")");
 	      }
 	  }
 	if (p->offset)
@@ -532,7 +412,7 @@ cb_build_alphabet_name (enum cb_alphabet_name_type type)
  */
 
 cb_tree
-cb_build_class_name (cb_tree name, struct cb_list *list)
+cb_build_class_name (cb_tree name, cb_tree list)
 {
   char buff[BUFSIZ];
   struct cb_class_name *p =
@@ -918,15 +798,18 @@ cb_build_field (int level, cb_tree name, struct cb_field *last_field,
     }
   else
     {
-      struct cb_list *l;
-      for (l = r->word->items; l; l = l->next)
-	if (!CB_FIELD_P (l->item)
-	    || CB_FIELD (l->item)->level == 01
-	    || CB_FIELD (l->item)->level == 77)
-	  {
-	    redefinition_error (name);
-	    return cb_error_node;
-	  }
+      cb_tree l;
+      for (l = r->word->items; l; l = CB_CHAIN (l))
+	{
+	  cb_tree x = CB_VALUE (l);
+	  if (!CB_FIELD_P (x)
+	      || CB_FIELD (x)->level == 01
+	      || CB_FIELD (x)->level == 77)
+	    {
+	      redefinition_error (name);
+	      return cb_error_node;
+	    }
+	}
     }
 
   /* build the field */
@@ -1222,7 +1105,7 @@ validate_field_1 (struct cb_field *f)
 	{
 	  struct cb_field *p;
 
-	  if (f->values->next || CB_PARAMETER_P (f->values->item))
+	  if (CB_CHAIN (f->values) || CB_PARAMETER_P (CB_VALUE (f->values)))
 	    cb_error_x (x, _("only level 88 item may have multiple values"));
 
 	  /* ISO+IEC+1989-2002: 13.16.42.2-10 */
@@ -1387,7 +1270,7 @@ static int
 validate_field_value (struct cb_field *f)
 {
   if (f->values)
-    validate_move (f->values->item, CB_TREE (f), 1);
+    validate_move (CB_VALUE (f->values), CB_TREE (f), 1);
 
   if (f->children)
     for (f = f->children; f; f = f->sister)
@@ -1612,10 +1495,10 @@ cb_define (cb_tree name, cb_tree val)
 static cb_tree
 resolve_label (const char *name, struct cb_label *section)
 {
-  struct cb_list *l;
-  for (l = section->children; l; l = l->next)
-    if (strcasecmp (name, CB_LABEL (l->item)->name) == 0)
-      return l->item;
+  cb_tree l;
+  for (l = section->children; l; l = CB_CHAIN (l))
+    if (strcasecmp (name, CB_LABEL (CB_VALUE (l))->name) == 0)
+      return CB_VALUE (l);
   return cb_error_node;
 }
 
@@ -1636,7 +1519,7 @@ cb_ref (cb_tree x)
 	  undefined_error (x);
 	  goto error;
 	case 1:
-	  r->value = r->word->items->item;
+	  r->value = CB_VALUE (r->word->items);
 	  return r->value;
 	default:
 	  if (r->offset && CB_LABEL_P (r->offset))
@@ -1664,15 +1547,15 @@ cb_ref (cb_tree x)
       /* fall through */
     case CB_TAG_FIELD:
       {
-	struct cb_list *l;
+	cb_tree l;
 	struct cb_field *p, *pp;
 	cb_tree v = NULL;
 
 	/* find the definition in the parent */
 	pp = CB_FIELD (pv);
-	for (l = r->word->items; l; l = l->next)
-	  if (CB_FIELD_P (l->item))
-	    for (p = CB_FIELD (l->item)->parent; p; p = p->parent)
+	for (l = r->word->items; l; l = CB_CHAIN (l))
+	  if (CB_FIELD_P (CB_VALUE (l)))
+	    for (p = CB_FIELD (CB_VALUE (l))->parent; p; p = p->parent)
 	      if (p == pp)
 		{
 		  if (v)
@@ -1680,7 +1563,7 @@ cb_ref (cb_tree x)
 		      ambiguous_error (x);
 		      goto error;
 		    }
-		  v = l->item;
+		  v = CB_VALUE (l);
 		}
 	if (v == NULL)
 	  {
@@ -1770,11 +1653,11 @@ cb_build_binary_op (cb_tree left, char op, cb_tree right)
 }
 
 cb_tree
-cb_build_connective_op (struct cb_list *l, char op)
+cb_build_connective_op (cb_tree list, char op)
 {
-  cb_tree e = l->item;
-  for (l = l->next; l; l = l->next)
-    e = cb_build_binary_op (e, op, l->item);
+  cb_tree e = CB_VALUE (list);
+  for (list = CB_CHAIN (list); list; list = CB_CHAIN (list))
+    e = cb_build_binary_op (e, op, CB_VALUE (list));
   return e;
 }
 
@@ -1907,7 +1790,7 @@ cb_add_perform_varying (struct cb_perform *perf, cb_tree name,
  */
 
 cb_tree
-make_sequence (struct cb_list *list)
+make_sequence (cb_tree list)
 {
   struct cb_sequence *p =
     make_tree (CB_TAG_SEQUENCE, CB_CATEGORY_UNKNOWN, sizeof (struct cb_sequence));
@@ -1933,6 +1816,68 @@ cb_build_statement (const char *name)
 
 
 /*
+ * List
+ */
+
+cb_tree
+cb_build_list (int type, cb_tree value, cb_tree purpose, cb_tree rest)
+{
+  struct cb_list *p =
+    make_tree (CB_TAG_LIST, CB_CATEGORY_UNKNOWN, sizeof (struct cb_list));
+  p->type = type;
+  p->value = value;
+  p->purpose = purpose;
+  p->chain = rest;
+  return CB_TREE (p);
+}
+
+cb_tree
+list_add (cb_tree l, cb_tree x)
+{
+  return list_append (l, list (x));
+}
+
+cb_tree
+list_append (cb_tree l1, cb_tree l2)
+{
+  if (l1 == NULL)
+    {
+      return l2;
+    }
+  else
+    {
+      cb_tree l = l1;
+      while (CB_CHAIN (l))
+	l = CB_CHAIN (l);
+      CB_CHAIN (l) = l2;
+      return l1;
+    }
+}
+
+cb_tree
+list_reverse (cb_tree l)
+{
+  cb_tree next, last = NULL;
+  for (; l; l = next)
+    {
+      next = CB_CHAIN (l);
+      CB_CHAIN (l) = last;
+      last = l;
+    }
+  return last;
+}
+
+int
+list_length (cb_tree l)
+{
+  int n = 0;
+  for (; l; l = CB_CHAIN (l))
+    n++;
+  return n;
+}
+
+
+/*
  * Parameter
  */
 
@@ -1952,6 +1897,42 @@ cb_build_parameter (int type, cb_tree x, cb_tree y)
  * Program
  */
 
+static int
+hash (const char *s)
+{
+  int val = 0;
+  for (; *s; s++)
+    val += toupper (*s);
+  return val % CB_WORD_HASH_SIZE;
+}
+
+static struct cb_word *
+lookup_word (const char *name)
+{
+  struct cb_word *p;
+  int val = hash (name);
+
+  /* find the existing word */
+  if (current_program)
+    for (p = current_program->word_table[val]; p; p = p->next)
+      if (strcasecmp (p->name, name) == 0)
+	return p;
+
+  /* create new word */
+  p = malloc (sizeof (struct cb_word));
+  memset (p, 0, sizeof (struct cb_word));
+  p->name = strdup (name);
+
+  /* insert it into the table */
+  if (current_program)
+    {
+      p->next = current_program->word_table[val];
+      current_program->word_table[val] = p;
+    }
+
+  return p;
+}
+
 struct cb_program *
 cb_build_program (void)
 {
@@ -1960,11 +1941,9 @@ cb_build_program (void)
   p->decimal_point = '.';
   p->currency_symbol = '$';
   p->numeric_separator = ',';
-  p->word_table = make_word_table ();
   return p;
 }
 
-
 cb_tree
 cb_build_identifier (cb_tree x)
 {
@@ -2006,19 +1985,19 @@ cb_build_identifier (cb_tree x)
   if (r->subs)
     {
       struct cb_field *p;
-      struct cb_list *l = r->subs = list_reverse (r->subs);
+      cb_tree l = r->subs = list_reverse (r->subs);
 
       for (p = f; p; p = p->parent)
 	if (p->flag_occurs)
 	  {
-	    if (CB_LITERAL_P (l->item))
+	    if (CB_LITERAL_P (CB_VALUE (l)))
 	      {
-		int n = cb_literal_to_int (CB_LITERAL (l->item));
+		int n = cb_literal_to_int (CB_LITERAL (CB_VALUE (l)));
 		if (n < p->occurs_min || n > p->occurs_max)
 		  cb_error_x (x, _("subscript of `%s' out of bounds: %d"),
 			     name, n);
 	      }
-	    l = l->next;
+	    l = CB_CHAIN (l);
 	  }
 
       r->subs = list_reverse (r->subs);
@@ -2158,9 +2137,9 @@ decimal_assign (cb_tree s, cb_tree x, cb_tree d, int round)
 }
 
 static cb_tree
-build_decimal_assign (struct cb_list *vars, char op, cb_tree val)
+build_decimal_assign (cb_tree vars, char op, cb_tree val)
 {
-  struct cb_list *l;
+  cb_tree l;
   cb_tree s1 = make_sequence (NULL);
   cb_tree s2 = make_sequence (NULL);
   cb_tree d = decimal_alloc ();
@@ -2170,31 +2149,31 @@ build_decimal_assign (struct cb_list *vars, char op, cb_tree val)
 
   if (op == 0)
     {
-      for (l = vars; l; l = l->next)
+      for (l = vars; l; l = CB_CHAIN (l))
 	{
 	  /* set VAR, d */
-	  struct cb_parameter *p = l->item;
+	  struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
 	  decimal_assign (s2, p->x, d, p->type);
 	  add_stmt (s1, s2);
-	  if (l->next)
+	  if (CB_CHAIN (l))
 	    s2 = make_sequence (NULL);
 	}
     }
   else
     {
       cb_tree t = decimal_alloc ();
-      for (l = vars; l; l = l->next)
+      for (l = vars; l; l = CB_CHAIN (l))
 	{
 	  /* set t, VAR
 	   * OP t, d
 	   * set VAR, t
 	   */
-	  struct cb_parameter *p = l->item;
+	  struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
 	  decimal_expand (s2, t, p->x);
 	  decimal_compute (s2, op, t, d);
 	  decimal_assign (s2, p->x, t, p->type);
 	  add_stmt (s1, s2);
-	  if (l->next)
+	  if (CB_CHAIN (l))
 	    s2 = make_sequence (NULL);
 	}
       decimal_free ();
@@ -2205,12 +2184,12 @@ build_decimal_assign (struct cb_list *vars, char op, cb_tree val)
 }
 
 cb_tree
-cb_build_assign (struct cb_list *vars, char op, cb_tree val)
+cb_build_assign (cb_tree vars, char op, cb_tree val)
 {
-  struct cb_list *l;
+  cb_tree l;
 
-  for (l = vars; l; l = l->next)
-    if (l->item == cb_error_node)
+  for (l = vars; l; l = CB_CHAIN (l))
+    if (CB_VALUE (l) == cb_error_node)
       return cb_error_node;
 
   if (val == cb_error_node)
@@ -2219,13 +2198,13 @@ cb_build_assign (struct cb_list *vars, char op, cb_tree val)
   if (!CB_BINARY_OP_P (val))
     if (op == '+' || op == '-')
       {
-	for (l = vars; l; l = l->next)
+	for (l = vars; l; l = CB_CHAIN (l))
 	  {
-	    struct cb_parameter *p = CB_PARAMETER (l->item);
+	    struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
 	    if (op == '+')
-	      l->item = cb_build_add (p->x, val, p->type);
+	      CB_VALUE (l) = cb_build_add (p->x, val, p->type);
 	    else
-	      l->item = cb_build_sub (p->x, val, p->type);
+	      CB_VALUE (l) = cb_build_sub (p->x, val, p->type);
 	  }
 	return make_sequence (vars);
       }
@@ -2546,9 +2525,8 @@ cb_build_move (cb_tree src, cb_tree dst)
   return cb_build_funcall_2 ("@move", src, dst);
 }
 
-static struct cb_list *
-build_corr_1 (cb_tree (*func)(), cb_tree x1, cb_tree x2,
-	      int opt, struct cb_list *l)
+static cb_tree
+build_corr_1 (cb_tree (*func)(), cb_tree x1, cb_tree x2, int opt, cb_tree l)
 {
   struct cb_field *f1, *f2;
   for (f1 = cb_field (x1)->children; f1; f1 = f1->sister)
@@ -2587,7 +2565,7 @@ cb_tree
 cb_build_divide (cb_tree dividend, cb_tree divisor,
 		 cb_tree quotient, cb_tree remainder)
 {
-  struct cb_list *l = NULL;
+  cb_tree l = NULL;
   struct cb_parameter *pq = CB_PARAMETER (quotient);
   struct cb_parameter *pr = CB_PARAMETER (remainder);
   l = list_add (l, cb_build_funcall_4 ("cob_div_quotient",
@@ -2606,20 +2584,20 @@ static cb_tree
 build_cond_88 (cb_tree x)
 {
   struct cb_field *f = cb_field (x);
-  struct cb_list *l;
+  cb_tree l;
   cb_tree c1 = NULL;
 
   /* refer to parent's data storage */
   x = copy_reference (x, CB_TREE (f->parent));
 
   /* build condition */
-  for (l = f->values; l; l = l->next)
+  for (l = f->values; l; l = CB_CHAIN (l))
     {
       cb_tree c2;
-      if (CB_PARAMETER_P (l->item))
+      if (CB_PARAMETER_P (CB_VALUE (l)))
 	{
 	  /* VALUE THRU VALUE */
-	  struct cb_parameter *p = CB_PARAMETER (l->item);
+	  struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
 	  c2 = cb_build_binary_op (cb_build_binary_op (p->x, '[', x),
 				  '&',
 				  cb_build_binary_op (x, '[', p->y));
@@ -2627,7 +2605,7 @@ build_cond_88 (cb_tree x)
       else
 	{
 	  /* VALUE */
-	  c2 = cb_build_binary_op (x, '=', l->item);
+	  c2 = cb_build_binary_op (x, '=', CB_VALUE (l));
 	}
       if (c1 == NULL)
 	c1 = c2;
@@ -2660,7 +2638,7 @@ cb_build_cond (cb_tree x)
 
 	/* constant condition */
 	if (f->storage == CB_STORAGE_CONSTANT)
-	  return cb_build_cond (f->values->item);
+	  return cb_build_cond (CB_VALUE (f->values));
 
 	abort ();
       }
@@ -2772,29 +2750,29 @@ evaluate_test (cb_tree s, cb_tree o)
 }
 
 static cb_tree
-evaluate_internal (struct cb_list *subject_list, struct cb_list *case_list)
+evaluate_internal (cb_tree subject_list, cb_tree case_list)
 {
   cb_tree stmt;
   cb_tree c1 = NULL;
-  struct cb_list *subjs, *whens, *objs;
+  cb_tree subjs, whens, objs;
 
   if (case_list == NULL)
     return NULL;
 
-  whens = case_list->item;
-  stmt = whens->item;
-  whens = whens->next;
+  whens = CB_VALUE (case_list);
+  stmt = CB_VALUE (whens);
+  whens = CB_CHAIN (whens);
 
   /* for each WHEN sequence */
-  for (; whens; whens = whens->next)
+  for (; whens; whens = CB_CHAIN (whens))
     {
       cb_tree c2 = NULL;
       /* single WHEN test */
-      for (subjs = subject_list, objs = whens->item;
+      for (subjs = subject_list, objs = CB_VALUE (whens);
 	   subjs && objs;
-	   subjs = subjs->next, objs = objs->next)
+	   subjs = CB_CHAIN (subjs), objs = CB_CHAIN (objs))
 	{
-	  cb_tree c3 = evaluate_test (subjs->item, objs->item);
+	  cb_tree c3 = evaluate_test (CB_VALUE (subjs), CB_VALUE (objs));
 	  if (c2 == NULL)
 	    c2 = c3;
 	  else
@@ -2813,11 +2791,12 @@ evaluate_internal (struct cb_list *subject_list, struct cb_list *case_list)
     return stmt;
   else
     return cb_build_if (cb_build_cond (c1), stmt,
-			evaluate_internal (subject_list, case_list->next));
+			evaluate_internal (subject_list,
+					   CB_CHAIN (case_list)));
 }
 
 cb_tree
-cb_build_evaluate (struct cb_list *subject_list, struct cb_list *case_list)
+cb_build_evaluate (cb_tree subject_list, cb_tree case_list)
 {
   return evaluate_internal (subject_list, case_list);
 }

@@ -106,7 +106,7 @@
 
 #define BEGIN_STATEMENT(name)			\
   current_statement = cb_build_statement (name);	\
-  push (current_statement)
+  push (CB_TREE (current_statement))
 
 static struct cb_statement *current_statement = NULL;
 
@@ -132,7 +132,6 @@ static void terminator_warning (void);
   int ival;
   char *sval;
   cb_tree tree;
-  struct cb_list *list;
   struct cb_picture *pict;
 }
 
@@ -180,11 +179,11 @@ static void terminator_warning (void);
 %type <ival> integer display_upon screen_plus_minus level_number
 %type <ival> before_or_after perform_test replacing_option
 %type <ival> ascending_or_descending opt_from_integer opt_to_integer
-%type <list> occurs_key_list data_name_list value_list opt_value_list
-%type <list> numeric_value_list inspect_before_after_list
-%type <list> reference_list mnemonic_name_list file_name_list using_phrase
-%type <list> expr_item_list numeric_name_list numeric_edited_name_list
-%type <list> procedure_name_list
+%type <tree> occurs_key_list data_name_list value_list opt_value_list
+%type <tree> numeric_value_list inspect_before_after_list
+%type <tree> reference_list mnemonic_name_list file_name_list using_phrase
+%type <tree> expr_item_list numeric_name_list numeric_edited_name_list
+%type <tree> procedure_name_list
 %type <tree> at_line_column column_number condition expr expr_1
 %type <tree> expr_item record_description_list label line_number literal
 %type <tree> entry_name integer_label reference_or_literal basic_literal
@@ -222,9 +221,9 @@ program_definition:
   data_division
   {
     /* resolve all references so far */
-    struct cb_list *l;
-    for (l = list_reverse (current_program->reference_list); l; l = l->next)
-      cb_ref (l->item);
+    cb_tree l = list_reverse (current_program->reference_list);
+    for (; l; l = CB_CHAIN (l))
+      cb_ref (CB_VALUE (l));
 
     /* resolve the program collating sequence */
     if (current_program->collating_sequence)
@@ -237,19 +236,19 @@ program_definition:
   end_program
   {
     /* resolve all labels */
-    struct cb_list *l;
-    for (l = list_reverse (current_program->label_list); l; l = l->next)
+    cb_tree l;
+    for (l = list_reverse (current_program->label_list); l; l = CB_CHAIN (l))
       {
-	cb_tree v = cb_ref (l->item);
+	cb_tree x = CB_VALUE (l);
+	cb_tree v = cb_ref (x);
 	if (CB_LABEL_P (v))
 	  {
 	    CB_LABEL (v)->need_begin = 1;
-	    if (CB_REFERENCE (l->item)->length)
+	    if (CB_REFERENCE (x)->length)
 	      CB_LABEL (v)->need_return = 1;
 	  }
 	else if (v != cb_error_node)
-	  cb_error_x (l->item, _("`%s' not procedure name"),
-		      cb_name (l->item));
+	  cb_error_x (x, _("`%s' not procedure name"), cb_name (x));
       }
 
     current_program->file_list = list_reverse (current_program->file_list);
@@ -460,7 +459,7 @@ alphabet_definition:
 | alphabet_literal_list
   {
     $<tree>$ = cb_build_alphabet_name (CB_ALPHABET_CUSTOM);
-    CB_ALPHABET_NAME ($<tree>$)->custom_list = $<list>1;
+    CB_ALPHABET_NAME ($<tree>$)->custom_list = $<tree>1;
   }
 ;
 alphabet_symbol:
@@ -469,9 +468,9 @@ alphabet_symbol:
 | STANDARD_2			{ $<ival>$ = CB_ALPHABET_STANDARD_2; }
 ;
 alphabet_literal_list:
-  alphabet_literal		{ $<list>$ = list ($<tree>1); }
+  alphabet_literal		{ $<tree>$ = list ($<tree>1); }
 | alphabet_literal_list
-  alphabet_literal		{ $<list>$ = list_add ($<list>1, $<tree>2); }
+  alphabet_literal		{ $<tree>$ = list_add ($<tree>1, $<tree>2); }
 ;
 alphabet_literal:
   literal			{ $<tree>$ = $1; }
@@ -516,12 +515,12 @@ class_name_clause:
   {
     current_program->class_name_list =
       list_add (current_program->class_name_list,
-		cb_build_class_name ($2, $<list>4));
+		cb_build_class_name ($2, $<tree>4));
   }
 ;
 class_item_list:
-  class_item			{ $<list>$ = list ($<tree>1); }
-| class_item_list class_item	{ $<list>$ = list_add ($<list>1, $<tree>2); }
+  class_item			{ $<tree>$ = list ($<tree>1); }
+| class_item_list class_item	{ $<tree>$ = list_add ($<tree>1, $<tree>2); }
 ;
 class_item:
   literal			{ $<tree>$ = $1; }
@@ -606,7 +605,7 @@ file_control_entry:
 
     /* register the file */
     current_program->file_list =
-      cons (current_file, current_program->file_list);
+      cons (CB_TREE (current_file), current_program->file_list);
   }
   select_clause_sequence '.'
   {
@@ -1199,13 +1198,13 @@ occurs_keys:
       {
 	int i, nkeys = list_length ($1);
 	struct cb_key *keys = malloc (sizeof (struct cb_key) * nkeys);
-	struct cb_list *l = $1;
+	cb_tree l = $1;
 	for (i = 0; i < nkeys; i++)
 	  {
-	    struct cb_parameter *p = l->item;
+	    struct cb_parameter *p = CB_PARAMETER (CB_VALUE (l));
 	    keys[i].dir = p->type;
 	    keys[i].key = p->x;
-	    l = l->next;
+	    l = CB_CHAIN (l);
 	  }
 	current_field->keys = keys;
 	current_field->nkeys = nkeys;
@@ -1217,9 +1216,9 @@ occurs_key_list:
 | occurs_key_list
   ascending_or_descending _key _is reference_list
   {
-    struct cb_list *l;
-    for (l = $5; l; l = l->next)
-      l->item = cb_build_parameter_1 ($2, l->item);
+    cb_tree l;
+    for (l = $5; l; l = CB_CHAIN (l))
+      CB_VALUE (l) = cb_build_parameter_1 ($2, CB_VALUE (l));
     $$ = list_append ($1, $5);
   }
 ;
@@ -1231,13 +1230,13 @@ ascending_or_descending:
 occurs_indexed:
 | INDEXED _by occurs_index_list
   {
-    current_field->index_list = $<list>3;
+    current_field->index_list = $<tree>3;
   }
 ;
 occurs_index_list:
-  occurs_index			{ $<list>$ = list ($<tree>1); }
+  occurs_index			{ $<tree>$ = list ($<tree>1); }
 | occurs_index_list
-  occurs_index			{ $<list>$ = list_add ($<list>1, $<tree>2); }
+  occurs_index			{ $<tree>$ = list_add ($<tree>1, $<tree>2); }
 ;
 occurs_index:
   undefined_word
@@ -1280,11 +1279,11 @@ blank_clause:
 /* VALUE */
 
 value_clause:
-  VALUE _is_are value_item_list	{ current_field->values = $<list>3; }
+  VALUE _is_are value_item_list	{ current_field->values = $<tree>3; }
 ;
 value_item_list:
-  value_item			{ $<list>$ = list ($<tree>1); }
-| value_item_list value_item	{ $<list>$ = list_add ($<list>1, $<tree>2); }
+  value_item			{ $<tree>$ = list ($<tree>1); }
+| value_item_list value_item	{ $<tree>$ = list_add ($<tree>1, $<tree>2); }
 ;
 value_item:
   literal			{ $<tree>$ = $1; }
@@ -1529,14 +1528,16 @@ using_phrase:
   /* empty */			{ $$ = NULL; }
 | USING data_name_list
   {
-    struct cb_list *l;
-    for (l = $2; l; l = l->next)
-      if (l->item != cb_error_node)
+    cb_tree l;
+    for (l = $2; l; l = CB_CHAIN (l))
+      if (CB_VALUE (l) != cb_error_node)
 	{
-	  struct cb_field *f = CB_FIELD (cb_ref (l->item));
+	  cb_tree x = CB_VALUE (l);
+	  cb_tree v = cb_ref (x);
+	  struct cb_field *f = CB_FIELD (v);
 	  if (f->level != 01 && f->level != 77)
-	    cb_error_x (l->item, _("`%s' not level 01 or 77"), f->name);
-	  l->item = cb_ref (l->item);
+	    cb_error_x (x, _("`%s' not level 01 or 77"), f->name);
+	  CB_VALUE (l) = v; /* TODO: remove this */
 	}
     $$ = $2;
   }
@@ -1582,7 +1583,7 @@ section_header:
     /* Begin a new section */
     current_section = CB_LABEL (cb_build_label ($1, NULL));
     current_paragraph = NULL;
-    push (current_section);
+    push (CB_TREE (current_section));
   }
 ;
 
@@ -1597,8 +1598,8 @@ paragraph_header:
     current_paragraph = CB_LABEL (cb_build_label ($1, current_section));
     if (current_section)
       current_section->children =
-	cons (current_paragraph, current_section->children);
-    push (current_paragraph);
+	cons (CB_TREE (current_paragraph), current_section->children);
+    push (CB_TREE (current_paragraph));
   }
 ;
 
@@ -1616,7 +1617,7 @@ section_name:
     struct cb_word *w = CB_REFERENCE ($1)->word;
     if (w->count > 0)
       {
-	cb_tree item = w->items->item;
+	cb_tree item = CB_VALUE (w->items);
 	if (/* used as a non-label name */
 	    !CB_LABEL_P (item)
 	    /* used as a section name */
@@ -1639,7 +1640,7 @@ section_name:
 
 statement_list:
   {
-    $<list>$ = current_program->exec_list;
+    $<tree>$ = current_program->exec_list;
     current_program->exec_list = NULL;
   }
   {
@@ -1650,7 +1651,7 @@ statement_list:
   statements
   {
     $$ = make_sequence (list_reverse (current_program->exec_list));
-    current_program->exec_list = $<list>1;
+    current_program->exec_list = $<tree>1;
     current_statement = CB_STATEMENT ($<tree>2);
   }
 ;
@@ -1810,7 +1811,7 @@ add_body:
   }
 ;
 add_to:
-| TO numeric_value		{ list_add ($<list>0, $2); }
+| TO numeric_value		{ list_add ($<tree>0, $2); }
 ;
 end_add:
   /* empty */			{ terminator_warning (); }
@@ -1843,20 +1844,20 @@ call_statement:
   end_call
   {
     cb_tree x = $<tree>6 ? $<tree>6 : cb_build_funcall_0 ("cob_call_error");
-    push_funcall_4 ("@call", $3, $<list>4, x, $<tree>7);
+    push_funcall_4 ("@call", $3, $<tree>4, x, $<tree>7);
     if ($<tree>5)
       push (cb_build_move (cb_return_code, $<tree>5));
   }
 ;
 call_using:
-  /* empty */		{ $<list>$ = NULL; }
+  /* empty */		{ $<tree>$ = NULL; }
 | USING			{ current_call_mode = CB_CALL_BY_REFERENCE; }
-  call_param_list	{ $<list>$ = $<list>3; }
+  call_param_list	{ $<tree>$ = $<tree>3; }
 ;
 call_param_list:
-  call_param		{ $<list>$ = list ($<tree>1); }
+  call_param		{ $<tree>$ = list ($<tree>1); }
 | call_param_list
-  call_param		{ $<list>$ = list_add ($<list>1, $<tree>2); }
+  call_param		{ $<tree>$ = list_add ($<tree>1, $<tree>2); }
 ;
 call_param:
   value			{ $<tree>$ = cb_build_parameter_1 (current_call_mode, $1);}
@@ -1987,25 +1988,27 @@ display_statement:
   DISPLAY			{ BEGIN_STATEMENT ("DISPLAY"); }
   opt_value_list display_upon at_line_column
   {
-    struct cb_list *l;
+    cb_tree l;
     if (current_program->flag_screen)
       {
-	for (l = $3; l; l = l->next)
-	  if (CB_FIELD (l->item)->storage == CB_STORAGE_SCREEN)
-	    {
-	      cb_tree line = CB_PARAMETER ($5)->x;
-	      cb_tree column = CB_PARAMETER ($5)->y;
-	      push_funcall_3 ("cob_screen_display", l->item, line, column);
-	    }
-	  else
-	    cb_error_x (l->item, "`%s' not defined in SCREEN SECTION",
-			 cb_name (l->item));
+	for (l = $3; l; l = CB_CHAIN (l))
+	  {
+	    cb_tree x = CB_VALUE (l);
+	    if (CB_FIELD (x)->storage == CB_STORAGE_SCREEN)
+	      {
+		cb_tree line = CB_PARAMETER ($5)->x;
+		cb_tree column = CB_PARAMETER ($5)->y;
+		push_funcall_3 ("cob_screen_display", x, line, column);
+	      }
+	    else
+	      cb_error_x (x, "`%s' not defined in SCREEN SECTION", cb_name (x));
+	  }
       }
     else
       {
 	cb_tree fd = cb_build_integer ($4);
-	for (l = $3; l; l = l->next)
-	  push_funcall_2 ("cob_display", l->item, fd);
+	for (l = $3; l; l = CB_CHAIN (l))
+	  push_funcall_2 ("cob_display", CB_VALUE (l), fd);
       }
   }
   display_with_no_advancing
@@ -2109,14 +2112,14 @@ evaluate_statement:
   evaluate_subject_list evaluate_case_list
   end_evaluate
   {
-    push (cb_build_evaluate ($<list>3, $<list>4));
+    push (cb_build_evaluate ($<tree>3, $<tree>4));
   }
 ;
 
 evaluate_subject_list:
-  evaluate_subject		{ $<list>$ = list ($<tree>1); }
+  evaluate_subject		{ $<tree>$ = list ($<tree>1); }
 | evaluate_subject_list ALSO
-  evaluate_subject		{ $<list>$ = list_add ($<list>1, $<tree>3); }
+  evaluate_subject		{ $<tree>$ = list_add ($<tree>1, $<tree>3); }
 ;
 evaluate_subject:
   expr				{ $<tree>$ = $1; }
@@ -2125,25 +2128,25 @@ evaluate_subject:
 ;
 
 evaluate_case_list:
-  /* empty */			{ $<list>$ = NULL; }
+  /* empty */			{ $<tree>$ = NULL; }
 | evaluate_case_list
-  evaluate_case			{ $<list>$ = list_add ($<list>1, $<list>2); }
+  evaluate_case			{ $<tree>$ = list_add ($<tree>1, $<tree>2); }
 ;
 evaluate_case:
   evaluate_when_list
-  statement_list		{ $<list>$ = cons ($2, $<list>1); }
+  statement_list		{ $<tree>$ = cons ($2, $<tree>1); }
 | WHEN OTHER
-  statement_list		{ $<list>$ = cons ($3, NULL); }
+  statement_list		{ $<tree>$ = cons ($3, NULL); }
 ;
 evaluate_when_list:
-  WHEN evaluate_object_list	{ $<list>$ = list ($<list>2); }
+  WHEN evaluate_object_list	{ $<tree>$ = list ($<tree>2); }
 | evaluate_when_list
-  WHEN evaluate_object_list	{ $<list>$ = list_add ($<list>1, $<list>3); }
+  WHEN evaluate_object_list	{ $<tree>$ = list_add ($<tree>1, $<tree>3); }
 ;
 evaluate_object_list:
-  evaluate_object		{ $<list>$ = list ($<tree>1); }
+  evaluate_object		{ $<tree>$ = list ($<tree>1); }
 | evaluate_object_list ALSO
-  evaluate_object		{ $<list>$ = list_add ($<list>1, $<tree>3); }
+  evaluate_object		{ $<tree>$ = list_add ($<tree>1, $<tree>3); }
 ;
 evaluate_object:
   flag_not expr			{ $<tree>$ = cb_build_parameter ($1, $2, 0); }
@@ -2190,10 +2193,10 @@ goto_statement:
 	/* GO TO procedure-name */
 	if ($4 == NULL)
 	  cb_obsolete_85 ("GO TO without procedure-name");
-	else if ($4->next)
+	else if (CB_CHAIN ($4))
 	  cb_error (_("GO TO with multiple procesure-name"));
 	else
-	  push_funcall_1 ("@goto", $4->item);
+	  push_funcall_1 ("@goto", CB_VALUE ($4));
       }
   }
 ;
@@ -2246,21 +2249,21 @@ initialize_statement:
   INITIALIZE			{ BEGIN_STATEMENT ("INITIALIZE"); }
   data_name_list initialize_replacing
   {
-    struct cb_list *l;
-    for (l = $3; l; l = l->next)
-      push_funcall_2 ("@initialize", l->item, $<list>4);
+    cb_tree l;
+    for (l = $3; l; l = CB_CHAIN (l))
+      push_funcall_2 ("@initialize", CB_VALUE (l), $<tree>4);
   }
 ;
 initialize_replacing:
-  /* empty */			      { $<list>$ = NULL; }
-| REPLACING initialize_replacing_list { $<list>$ = $<list>2; }
+  /* empty */			      { $<tree>$ = NULL; }
+| REPLACING initialize_replacing_list { $<tree>$ = $<tree>2; }
 ;
 initialize_replacing_list:
-  /* empty */			      { $<list>$ = NULL; }
+  /* empty */			      { $<tree>$ = NULL; }
 | initialize_replacing_list
   replacing_option _data BY value
   {
-    $<list>$ = list_add ($<list>1, cb_build_parameter_1 ($2, $5));
+    $<tree>$ = list_add ($<tree>1, cb_build_parameter_1 ($2, $5));
   }
 ;
 replacing_option:
@@ -2289,21 +2292,21 @@ inspect_list:
 inspect_item:
   inspect_tallying
   {
-    struct cb_list *l = $<list>1;
+    cb_tree l = $<tree>1;
     l = cons (cb_build_funcall_2 ("cob_inspect_init", $<tree>-1, cb_int0), l);
     l = list_add (l, cb_build_funcall_0 ("cob_inspect_finish"));
     push (make_sequence (l));
   }
 | inspect_replacing
   {
-    struct cb_list *l = $<list>1;
+    cb_tree l = $<tree>1;
     l = cons (cb_build_funcall_2 ("cob_inspect_init", $<tree>-1, cb_int1), l);
     l = list_add (l, cb_build_funcall_0 ("cob_inspect_finish"));
     push (make_sequence (l));
   }
 | inspect_converting
   {
-    struct cb_list *l = $<list>1;
+    cb_tree l = $<tree>1;
     l = cons (cb_build_funcall_2 ("cob_inspect_init", $<tree>-1, cb_int0), l);
     l = list_add (l, cb_build_funcall_0 ("cob_inspect_finish"));
     push (make_sequence (l));
@@ -2320,45 +2323,45 @@ inspect_tallying:
   }
   tallying_list
   {
-    $<list>$ = $<list>3;
+    $<tree>$ = $<tree>3;
   }
 ;
 tallying_list:
-  tallying_item			{ $<list>$ = $<list>1; }
-| tallying_list tallying_item	{ $<list>$ = list_append ($<list>1, $<list>2); }
+  tallying_item			{ $<tree>$ = $<tree>1; }
+| tallying_list tallying_item	{ $<tree>$ = list_append ($<tree>1, $<tree>2); }
 ;
 tallying_item:
   non_all_value FOR
   {
     current_inspect_data = $1;
-    $<list>$ = NULL;
+    $<tree>$ = NULL;
   }
 | CHARACTERS inspect_before_after_list
   {
     if (current_inspect_data == NULL)
       cb_error (_("data name expected before CHARACTERS"));
     current_inspect_func = NULL;
-    $<list>$ = list_add ($2, cb_build_funcall_1 ("cob_inspect_characters", current_inspect_data));
+    $<tree>$ = list_add ($2, cb_build_funcall_1 ("cob_inspect_characters", current_inspect_data));
   }
 | ALL
   {
     if (current_inspect_data == NULL)
       cb_error (_("data name expected before ALL"));
     current_inspect_func = "cob_inspect_all";
-    $<list>$ = NULL;
+    $<tree>$ = NULL;
   }
 | LEADING
   {
     if (current_inspect_data == NULL)
       cb_error (_("data name expected before LEADING"));
     current_inspect_func = "cob_inspect_leading";
-    $<list>$ = NULL;
+    $<tree>$ = NULL;
   }
 | non_all_value inspect_before_after_list
   {
     if (current_inspect_func == NULL)
       cb_error_x ($1, _("ALL or LEADING expected before `%s'"), cb_name ($1));
-    $<list>$ = list_add ($2, cb_build_funcall_2 (current_inspect_func, current_inspect_data, $1));
+    $<tree>$ = list_add ($2, cb_build_funcall_2 (current_inspect_func, current_inspect_data, $1));
   }
 ;
 
@@ -2367,29 +2370,29 @@ tallying_item:
 inspect_replacing:
   REPLACING replacing_item
   {
-    $<list>$ = $<list>2;
+    $<tree>$ = $<tree>2;
   }
 | inspect_replacing replacing_item
   {
-    $<list>$ = list_append ($<list>1, $<list>2);
+    $<tree>$ = list_append ($<tree>1, $<tree>2);
   }
 ;
 replacing_item:
   CHARACTERS BY value inspect_before_after_list
   {
-    $<list>$ = list_add ($4, cb_build_funcall_1 ("cob_inspect_characters", $3));
+    $<tree>$ = list_add ($4, cb_build_funcall_1 ("cob_inspect_characters", $3));
   }
 | ALL value BY value inspect_before_after_list
   {
-    $<list>$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_all", $4, $2));
+    $<tree>$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_all", $4, $2));
   }
 | LEADING value BY value inspect_before_after_list
   {
-    $<list>$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_leading", $4, $2));
+    $<tree>$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_leading", $4, $2));
   }
 | FIRST value BY value inspect_before_after_list
   {
-    $<list>$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_first", $4, $2));
+    $<tree>$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_first", $4, $2));
   }
 ;
 
@@ -2398,7 +2401,7 @@ replacing_item:
 inspect_converting:
   CONVERTING value TO value inspect_before_after_list
   {
-    $<list>$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_converting", $2, $4));
+    $<tree>$ = list_add ($5, cb_build_funcall_2 ("cob_inspect_converting", $2, $4));
   }
 ;
 
@@ -2428,7 +2431,7 @@ merge_statement:
   MERGE				{ BEGIN_STATEMENT ("MERGE"); }
   file_name sort_key_list sort_collating
   {
-    push_funcall_2 ("@sort-init", $3, $<list>4);
+    push_funcall_2 ("@sort-init", $3, $<tree>4);
     $<tree>$ = $3; /* used in sort_input, sort_output */
   }
   sort_input sort_output
@@ -2446,9 +2449,9 @@ move_statement:
 move_body:
   value TO data_name_list
   {
-    struct cb_list *l;
-    for (l = $3; l; l = l->next)
-      push (cb_build_move ($1, l->item));
+    cb_tree l;
+    for (l = $3; l; l = CB_CHAIN (l))
+      push (cb_build_move ($1, CB_VALUE (l)));
   }
 | CORRESPONDING group_name TO group_name
   {
@@ -2497,10 +2500,10 @@ open_statement:
 open_list:
 | open_list open_mode file_name_list
   {
-    struct cb_list *l;
-    for (l = $3; l; l = l->next)
+    cb_tree l;
+    for (l = $3; l; l = CB_CHAIN (l))
       {
-	cb_tree file = cb_ref (l->item);
+	cb_tree file = cb_ref (CB_VALUE (l));
 	push_funcall_2 ("cob_open", file, cb_build_integer ($<ival>2));
 	push_file_handler (file, NULL);
       }
@@ -2778,9 +2781,9 @@ set_body:
 set_to:
   data_name_list TO value
   {
-    struct cb_list *l;
-    for (l = $1; l; l = l->next)
-      push (cb_build_move ($3, l->item));
+    cb_tree l;
+    for (l = $1; l; l = CB_CHAIN (l))
+      push (cb_build_move ($3, CB_VALUE (l)));
   }
 ;
 
@@ -2789,12 +2792,12 @@ set_to:
 set_up_down:
   data_name_list up_or_down BY numeric_value
   {
-    struct cb_list *l;
-    for (l = $1; l; l = l->next)
+    cb_tree l;
+    for (l = $1; l; l = CB_CHAIN (l))
       if ($<ival>2 == 0)
-	push (cb_build_add (l->item, $4, 0));
+	push (cb_build_add (CB_VALUE (l), $4, 0));
       else
-	push (cb_build_sub (l->item, $4, 0));
+	push (cb_build_sub (CB_VALUE (l), $4, 0));
   }
 ;
 up_or_down:
@@ -2811,10 +2814,10 @@ set_to_on_off_sequence:
 set_to_on_off:
   mnemonic_name_list TO on_or_off
   {
-    struct cb_list *l;
-    for (l = $1; l; l = l->next)
+    cb_tree l;
+    for (l = $1; l; l = CB_CHAIN (l))
       {
-	struct cb_system_name *s = CB_SYSTEM_NAME (cb_ref (l->item));
+	struct cb_system_name *s = CB_SYSTEM_NAME (cb_ref (CB_VALUE (l)));
 	push_funcall_2 ("cob_set_switch", cb_build_integer (s->token), $3);
       }
   }
@@ -2829,12 +2832,12 @@ set_to_true_false_sequence:
 set_to_true_false:
   data_name_list TO TOK_TRUE
   {
-    struct cb_list *l;
-    for (l = $1; l; l = l->next)
+    cb_tree l;
+    for (l = $1; l; l = CB_CHAIN (l))
       {
-	struct cb_field *f = cb_field (l->item);
-	cb_tree name = copy_reference (l->item, CB_TREE (f->parent));
-	cb_tree value = f->values->item;
+	struct cb_field *f = cb_field (CB_VALUE (l));
+	cb_tree name = copy_reference (CB_VALUE (l), CB_TREE (f->parent));
+	cb_tree value = CB_VALUE (f->values);
 	if (CB_PARAMETER_P (value))
 	  push (cb_build_move (CB_PARAMETER (value)->x, name));
 	else
@@ -2852,20 +2855,20 @@ sort_statement:
   SORT				{ BEGIN_STATEMENT ("SORT"); }
   file_name sort_key_list sort_duplicates sort_collating
   {
-    push_funcall_2 ("@sort-init", $3, $<list>4);
+    push_funcall_2 ("@sort-init", $3, $<tree>4);
     $<tree>$ = $3; /* used in sort_input, sort_output */
   }
   sort_input sort_output
 ;
 sort_key_list:
-  /* empty */			{ $<list>$ = NULL; }
+  /* empty */			{ $<tree>$ = NULL; }
 | sort_key_list
   _on ascending_or_descending _key data_name_list
   {
-    struct cb_list *l;
-    for (l = $5; l; l = l->next)
-      l->item = cb_build_parameter_1 ($3, l->item);
-    $<list>$ = list_append ($<list>1, $5);
+    cb_tree l;
+    for (l = $5; l; l = CB_CHAIN (l))
+      CB_VALUE (l) = cb_build_parameter_1 ($3, CB_VALUE (l));
+    $<tree>$ = list_append ($<tree>1, $5);
   }
 ;
 sort_duplicates:
@@ -2878,10 +2881,10 @@ sort_collating:
 sort_input:
   USING file_name_list
   {
-    struct cb_list *l;
+    cb_tree l;
     push_funcall_2 ("cob_open", $<tree>0, cb_build_integer (COB_OPEN_OUTPUT));
-    for (l = $2; l; l = l->next)
-      push_funcall_2 ("cob_sort_using", $<tree>0, l->item);
+    for (l = $2; l; l = CB_CHAIN (l))
+      push_funcall_2 ("cob_sort_using", $<tree>0, CB_VALUE (l));
     push_funcall_2 ("cob_close", $<tree>0, cb_build_integer (COB_CLOSE_NORMAL));
   }
 | INPUT PROCEDURE _is perform_procedure
@@ -2895,11 +2898,11 @@ sort_input:
 sort_output:
   GIVING file_name_list
   {
-    struct cb_list *l;
-    for (l = $2; l; l = l->next)
+    cb_tree l;
+    for (l = $2; l; l = CB_CHAIN (l))
       {
 	push_funcall_2 ("cob_open", $<tree>-1, cb_build_integer (COB_OPEN_INPUT));
-	push_funcall_2 ("cob_sort_giving", $<tree>-1, l->item);
+	push_funcall_2 ("cob_sort_giving", $<tree>-1, CB_VALUE (l));
 	push_funcall_2 ("cob_close", $<tree>-1, cb_build_integer (COB_CLOSE_NORMAL));
       }
   }
@@ -2971,30 +2974,30 @@ string_statement:
   string_item_list INTO data_name opt_with_pointer on_overflow
   end_string
   {
-    struct cb_list *seq;
-    struct cb_list *start = $<list>3;
+    cb_tree seq;
+    cb_tree start = $<tree>3;
 
     seq = list (cb_build_funcall_2 ("cob_string_init", $5, $6));
 
     while (start)
       {
-	struct cb_list *l, *end;
+	cb_tree l, end;
 	cb_tree dlm;
 
 	/* find DELIMITED item */
-	for (end = start; end; end = end->next)
-	  if (CB_PARAMETER_P (end->item))
+	for (end = start; end; end = CB_CHAIN (end))
+	  if (CB_PARAMETER_P (CB_VALUE (end)))
 	    break;
 
 	/* cob_string_delimited */
-	dlm = end ? CB_PARAMETER (end->item)->x : cb_int0;
+	dlm = end ? CB_PARAMETER (CB_VALUE (end))->x : cb_int0;
 	list_add (seq, cb_build_funcall_1 ("cob_string_delimited", dlm));
 
 	/* cob_string_append */
-	for (l = start; l != end; l = l->next)
-	  list_add (seq, cb_build_funcall_1 ("cob_string_append", l->item));
+	for (l = start; l != end; l = CB_CHAIN (l))
+	  list_add (seq, cb_build_funcall_1 ("cob_string_append", CB_VALUE (l)));
 
-	start = end ? end->next : NULL;
+	start = end ? CB_CHAIN (end) : NULL;
       }
 
     list_add (seq, cb_build_funcall_0 ("cob_string_finish"));
@@ -3002,8 +3005,8 @@ string_statement:
   }
 ;
 string_item_list:
-  string_item			{ $<list>$ = list ($<tree>1); }
-| string_item_list string_item	{ $<list>$ = list_add ($<list>1, $<tree>2); }
+  string_item			{ $<tree>$ = list ($<tree>1); }
+| string_item_list string_item	{ $<tree>$ = list_add ($<tree>1, $<tree>2); }
 ;
 string_item:
   value				{ $<tree>$ = $1; }
@@ -3062,9 +3065,9 @@ unstring_statement:
   opt_with_pointer unstring_tallying on_overflow
   end_unstring
   {
-    struct cb_list *l = $<list>4;
+    cb_tree l = $<tree>4;
     l = cons (cb_build_funcall_2 ("cob_unstring_init", $3, $7), l);
-    l = list_append (l, $<list>6);
+    l = list_append (l, $<tree>6);
     if ($<tree>8)
       l = list_add (l, cb_build_funcall_1 ("cob_unstring_tallying", $<tree>8));
     l = list_add (l, cb_build_funcall_0 ("cob_unstring_finish"));
@@ -3073,14 +3076,14 @@ unstring_statement:
 ;
 
 unstring_delimited:
-  /* empty */			{ $<list>$ = NULL; }
+  /* empty */			{ $<tree>$ = NULL; }
 | DELIMITED _by
-  unstring_delimited_list	{ $<list>$ = $<list>3; }
+  unstring_delimited_list	{ $<tree>$ = $<tree>3; }
 ;
 unstring_delimited_list:
-  unstring_delimited_item	{ $<list>$ = list ($<tree>1); }
+  unstring_delimited_item	{ $<tree>$ = list ($<tree>1); }
 | unstring_delimited_list OR
-  unstring_delimited_item	{ $<list>$ = list_add ($<list>1, $<tree>3); }
+  unstring_delimited_item	{ $<tree>$ = list_add ($<tree>1, $<tree>3); }
 ;
 unstring_delimited_item:
   flag_all value
@@ -3091,9 +3094,9 @@ unstring_delimited_item:
 ;
 
 unstring_into:
-  unstring_into_item		{ $<list>$ = list ($<tree>1); }
+  unstring_into_item		{ $<tree>$ = list ($<tree>1); }
 | unstring_into
-  unstring_into_item		{ $<list>$ = list_add ($<list>1, $<tree>2); }
+  unstring_into_item		{ $<tree>$ = list_add ($<tree>1, $<tree>2); }
 ;
 unstring_into_item:
   data_name unstring_delimiter unstring_count
@@ -3135,9 +3138,9 @@ use_statement:
 use_target:
   file_name_list
   {
-    struct cb_list *l;
-    for (l = $1; l; l = l->next)
-      CB_FILE (cb_ref (l->item))->handler = current_section;
+    cb_tree l;
+    for (l = $1; l; l = CB_CHAIN (l))
+      CB_FILE (cb_ref (CB_VALUE (l)))->handler = current_section;
   }
 | INPUT	 { current_program->file_handler[COB_OPEN_INPUT]  = current_section; }
 | OUTPUT { current_program->file_handler[COB_OPEN_OUTPUT] = current_section; }
@@ -3395,7 +3398,7 @@ expr_1:
   {
     int i;
     const char *class_func = NULL;
-    struct cb_list *l;
+    cb_tree l;
     struct stack_item {
       int prio;
       int token;
@@ -3496,15 +3499,15 @@ expr_1:
       }
 
     i = 0;
-    for (l = $1; l; l = l->next)
+    for (l = $1; l; l = CB_CHAIN (l))
       {
 #define SHIFT(prio,token,value) \
         if (shift (prio, token, value) == -1) goto error
 #define look_ahead(l) \
-        ((l && CB_INTEGER_P (l->item)) ? CB_INTEGER (l->item)->val : 0)
+        ((l && CB_INTEGER_P (CB_VALUE (l))) ? CB_INTEGER (CB_VALUE (l))->val : 0)
 
 	int token = 0;
-	cb_tree x = l->item;
+	cb_tree x = CB_VALUE (l);
 	switch (CB_TREE_TAG (x))
 	  {
 	  case CB_TAG_CLASS_NAME:
@@ -3527,8 +3530,9 @@ expr_1:
 		  if (i == 0 || stack[i-1].token != VALUE)
 		    {
 		      /* unary negative */
-		      l->next->item =
-			cb_build_binary_op (cb_zero, '-', l->next->item);
+		      CB_VALUE (CB_CHAIN (l)) =
+			cb_build_binary_op (cb_zero, '-',
+					    CB_VALUE (CB_CHAIN (l)));
 		      break;
 		    }
 		  /* fall through */
@@ -3541,23 +3545,23 @@ expr_1:
 		  SHIFT (5, '=', 0);
 		  break;
 		case '<':
-		  if (look_ahead (l->next) == OR)
+		  if (look_ahead (CB_CHAIN (l)) == OR)
 		    {
-		      if (look_ahead (l->next->next) != '=')
+		      if (look_ahead (CB_CHAIN (CB_CHAIN (l))) != '=')
 			goto error;
 		      SHIFT (5, '[', 0);
-		      l = l->next->next;
+		      l = CB_CHAIN (CB_CHAIN (l));
 		    }
 		  else
 		    SHIFT (5, '<', 0);
 		  break;
 		case '>':
-		  if (look_ahead (l->next) == OR)
+		  if (look_ahead (CB_CHAIN (l)) == OR)
 		    {
-		      if (look_ahead (l->next->next) != '=')
+		      if (look_ahead (CB_CHAIN (CB_CHAIN (l))) != '=')
 			goto error;
 		      SHIFT (5, ']', 0);
-		      l = l->next->next;
+		      l = CB_CHAIN (CB_CHAIN (l));
 		    }
 		  else
 		    SHIFT (5, '>', 0);
@@ -3624,13 +3628,13 @@ expr_1:
 
 		  /* logical operator */
 		case NOT:
-		  switch (look_ahead (l->next))
+		  switch (look_ahead (CB_CHAIN (l)))
 		    {
-		    case '=': SHIFT (5, '~', 0); l = l->next; break;
-		    case '<': SHIFT (5, ']', 0); l = l->next; break;
-		    case '>': SHIFT (5, '[', 0); l = l->next; break;
-		    case LE:  SHIFT (5, '>', 0); l = l->next; break;
-		    case GE:  SHIFT (5, '<', 0); l = l->next; break;
+		    case '=': SHIFT (5, '~', 0); l = CB_CHAIN (l); break;
+		    case '<': SHIFT (5, ']', 0); l = CB_CHAIN (l); break;
+		    case '>': SHIFT (5, '[', 0); l = CB_CHAIN (l); break;
+		    case LE:  SHIFT (5, '>', 0); l = CB_CHAIN (l); break;
+		    case GE:  SHIFT (5, '<', 0); l = CB_CHAIN (l); break;
 		    default:  SHIFT (6, '!', 0); break;
 		    }
 		  break;
@@ -3658,8 +3662,8 @@ expr_1:
     if (i != 1)
       {
       error:
-	cb_error_x ($1->item, _("invalid expression `%s'"),
-		   cb_name ($1->item));
+	cb_error_x (CB_VALUE ($1), _("invalid expression `%s'"),
+		    cb_name (CB_VALUE ($1)));
 	YYERROR;
       }
 
@@ -4041,7 +4045,7 @@ qualified_word:
 subref:
   '(' subscript_list ')'
   {
-    CB_REFERENCE ($<tree>0)->subs = $<list>2;
+    CB_REFERENCE ($<tree>0)->subs = $<tree>2;
     $<tree>$ = $<tree>0;
   }
 ;
@@ -4057,8 +4061,8 @@ refmod:
   }
 ;
 subscript_list:
-  subscript			{ $<list>$ = list ($1); }
-| subscript_list subscript	{ $<list>$ = list_add ($<list>1, $2); }
+  subscript			{ $<tree>$ = list ($1); }
+| subscript_list subscript	{ $<tree>$ = list_add ($<tree>1, $2); }
 ;
 subscript:
   integer_value			{ $$ = $1; }

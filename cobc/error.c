@@ -145,7 +145,7 @@ redefinition_error (cb_tree x)
 {
   struct cb_word *w = CB_REFERENCE (x)->word;
   cb_error_x (x, _("redefinition of `%s'"), w->name);
-  cb_error_x (w->items->item, _("`%s' previously defined here"), w->name);
+  cb_error_x (CB_VALUE (w->items), _("`%s' previously defined here"), w->name);
 }
 
 void
@@ -165,17 +165,17 @@ ambiguous_error (cb_tree x)
   struct cb_word *w = CB_REFERENCE (x)->word;
   if (w->error == 0)
     {
-      struct cb_list *l;
+      cb_tree list;
 
       /* display error on the first time */
       cb_error_x (x, _("`%s' ambiguous; need qualification"), w->name);
       w->error = 1;
 
       /* display all fields with the same name */
-      for (l = w->items; l; l = l->next)
+      for (list = w->items; list; list = CB_CHAIN (list))
 	{
 	  char buff[BUFSIZ];
-	  cb_tree x = l->item;
+	  cb_tree x = CB_LIST (list)->value;
 	  sprintf (buff, "`%s' ", w->name);
 	  switch (CB_TREE_TAG (x))
 	    {
