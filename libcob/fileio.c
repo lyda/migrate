@@ -601,9 +601,14 @@ indexed_start (struct cob_file_desc *f, int cond, struct cob_field k)
   switch (cond)
     {
     case COB_EQ:
-      ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET_RANGE);
-      if (ret == 0)
-	ret = memcmp (key.data, COB_FIELD_DATA (k), COB_FIELD_SIZE (k));
+      if (COB_FIELD_SIZE (k) == COB_FIELD_SIZE (f->keys[i].field))
+	ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET);
+      else
+	{
+	  ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET_RANGE);
+	  if (ret == 0)
+	    ret = memcmp (key.data, COB_FIELD_DATA (k), COB_FIELD_SIZE (k));
+	}
       break;
     case COB_LT:
     case COB_LE:
