@@ -15,12 +15,12 @@ script `autogen.sh', which is in the CVS repository.  This
 script executes the following commands one after another and
 set up the configure script:
 
-  gettextize
-  libtoolize
-  aclocal
-  autoheader
-  automake
-  autoconf
+  % gettextize --no-changelog
+  % libtoolize
+  % aclocal
+  % autoheader
+  % automake -a
+  % autoconf
 
 Then, run the configure script with option --enable-maintainer-mode,
 which enables some options that facilitates package maintenance and
