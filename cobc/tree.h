@@ -252,13 +252,16 @@ extern cb_tree cb_int (int n);
 
 struct cb_string {
   struct cb_tree_common common;
-  const unsigned char *str;
+  size_t size;
+  const unsigned char *data;
 };
 
 #define CB_STRING(x)	(CB_TREE_CAST (CB_TAG_STRING, struct cb_string, x))
 #define CB_STRING_P(x)	(CB_TREE_TAG (x) == CB_TAG_STRING)
 
-extern cb_tree cb_build_string (const unsigned char *str);
+#define cb_build_string0(str) cb_build_string (str, strlen (str))
+
+extern cb_tree cb_build_string (const unsigned char *data, size_t size);
 
 
 /*

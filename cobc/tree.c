@@ -403,11 +403,12 @@ cb_int (int n)
  */
 
 cb_tree
-cb_build_string (const unsigned char *str)
+cb_build_string (const unsigned char *data, size_t size)
 {
   struct cb_string *p =
     make_tree (CB_TAG_STRING, CB_CATEGORY_ALPHANUMERIC, sizeof (struct cb_string));
-  p->str = str;
+  p->size = size;
+  p->data = data;
   return CB_TREE (p);
 }
 

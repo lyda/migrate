@@ -631,7 +631,7 @@ output_param (cb_tree x, int id)
       output_integer (x);
       break;
     case CB_TAG_STRING:
-      output_string (CB_STRING (x)->str, strlen (CB_STRING (x)->str));
+      output_string (CB_STRING (x)->data, CB_STRING (x)->size);
       break;
     case CB_TAG_CAST:
       switch (CB_CAST (x)->type)

@@ -204,12 +204,12 @@ cb_build_check_identifier (cb_tree x)
 					     cb_build_cast_integer (p->occurs_depending),
 					     cb_int (p->occurs_min),
 					     cb_int (p->occurs_max),
-					     cb_build_string (cb_field (p->occurs_depending)->name));
+					     cb_build_string0 (cb_field (p->occurs_depending)->name));
 		    e2 = cb_build_funcall_4 ("cob_check_subscript",
 					     cb_build_cast_integer (idx),
 					     cb_int (p->occurs_min),
 					     cb_build_cast_integer (p->occurs_depending),
-					     cb_build_string (p->name));
+					     cb_build_string0 (p->name));
 		    s = list_add (list (e1), e2);
 		  }
 	      }
@@ -220,7 +220,7 @@ cb_build_check_identifier (cb_tree x)
 						cb_build_cast_integer (idx),
 						cb_int1,
 						cb_int (p->occurs_max),
-						cb_build_string (p->name)));
+						cb_build_string0 (p->name)));
 	      }
 	    l = CB_CHAIN (l);
 	  }
@@ -235,7 +235,7 @@ cb_build_check_identifier (cb_tree x)
 					     cb_build_cast_integer (r->offset),
 					     r->length ? cb_build_cast_integer (r->length) : cb_int1,
 					     cb_int (f->size),
-					     cb_build_string (f->name)));
+					     cb_build_string0 (f->name)));
     }
 
   return s;
@@ -333,7 +333,7 @@ decimal_expand (cb_tree d, cb_tree x)
 	if (CB_EXCEPTION_ENABLE (COB_EC_DATA_INCOMPATIBLE))
 	  if (f->usage == CB_USAGE_DISPLAY)
 	    dpush (cb_build_funcall_2 ("cob_check_numeric",
-				       x, cb_build_string (f->name)));
+				       x, cb_build_string0 (f->name)));
 
 	if (cb_fits_int (x))
 	  dpush (cb_build_funcall_2 ("cob_decimal_set_int",
@@ -845,17 +845,74 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 {
   struct cb_literal *l = CB_LITERAL (src);
   struct cb_field *f = cb_field (dst);
+  enum cb_category cat = CB_TREE_CATEGORY (dst);
 
   if (l->all)
     {
       int i;
-      unsigned char buff[f->size + 1];
+      unsigned char *buff = malloc (f->size);
       for (i = 0; i < f->size; i++)
 	buff[i] = l->data[i % l->size];
-      buff[i] = 0;
       return cb_build_funcall_3 ("memcpy",
 				 cb_build_cast_address (dst),
-				 cb_build_string (strdup (buff)),
+				 cb_build_string (buff, f->size),
+				 cb_build_cast_length (dst));
+    }
+  else if ((cat == CB_CATEGORY_NUMERIC
+	    && f->usage == CB_USAGE_DISPLAY
+	    && f->pic->expt == l->expt
+	    && !f->flag_sign_leading
+	    && !f->flag_sign_separate)
+	   || ((cat == CB_CATEGORY_ALPHABETIC
+		|| cat == CB_CATEGORY_ALPHANUMERIC)
+	       && f->size < l->size + 16))
+    {
+      unsigned char *buff = malloc (f->size);
+      int diff = f->size - l->size;
+      if (cat == CB_CATEGORY_NUMERIC)
+	{
+	  if (diff <= 0)
+	    {
+	      memcpy (buff, l->data - diff, f->size);
+	    }
+	  else
+	    {
+	      memset (buff, '0', diff);
+	      memcpy (buff + diff, l->data, l->size);
+	    }
+	  if (l->sign < 0)
+	    buff[f->size - 1] += 0x10;
+	}
+      else
+	{
+	  if (f->flag_justified)
+	    {
+	      if (diff <= 0)
+		{
+		  memcpy (buff, l->data - diff, f->size);
+		}
+	      else
+		{
+		  memset (buff, ' ', diff);
+		  memcpy (buff + diff, l->data, l->size);
+		}
+	    }
+	  else
+	    {
+	      if (diff <= 0)
+		{
+		  memcpy (buff, l->data, f->size);
+		}
+	      else
+		{
+		  memcpy (buff, l->data, l->size);
+		  memset (buff + l->size, ' ', diff);
+		}
+	    }
+	}
+      return cb_build_funcall_3 ("memcpy",
+				 cb_build_cast_address (dst),
+				 cb_build_string (buff, f->size),
 				 cb_build_cast_length (dst));
     }
   else if (f->usage == CB_USAGE_BINARY && cb_fits_int (src))
