@@ -1,5 +1,12 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Changes in OpenCOBOL 0.9.5
+
+** Support Berkeley DB 2.0.
+
+** Many bug fixes.
+
+
 * Changes in OpenCOBOL 0.9.4
 
 ** OpenCOBOL now requires Berkeley DB 3.0 or later.
