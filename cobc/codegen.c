@@ -1,5 +1,4 @@
-/* COBOL Code Generator
- *
+/*
  * Copyright (C) 2001  Keisuke Nishida
  * Copyright (C) 2000  Rildo Pragana, Alan Cox, Andrew Cameron,
  *		      David Essex, Glen Colbert, Jim Noeth.
@@ -3041,8 +3040,8 @@ load_address (struct sym *sy)
       struct sym *tmp = sy;
       while (tmp->linkage_flg == 1)
 	tmp = tmp->parent;
-      fprintf (o_src, "\tmovl\t%d(%%ebp), %%eax\n", tmp->linkage_flg);
       offset = sy->location - tmp->location;
+      fprintf (o_src, "\tmovl\t%d(%%ebp), %%eax\n", tmp->linkage_flg);
       if (offset)
 	fprintf (o_src, "\taddl\t$%d, %%eax\n", offset);
     }
@@ -3067,8 +3066,8 @@ load_location (struct sym *sy, char *reg)
       struct sym *tmp = sy;
       while (tmp->linkage_flg == 1)
 	tmp = tmp->parent;
-      fprintf (o_src, "\tmovl\t%d(%%ebp), %%%s\n", tmp->linkage_flg, reg);
       offset = sy->location - tmp->location;
+      fprintf (o_src, "\tmovl\t%d(%%ebp), %%%s\n", tmp->linkage_flg, reg);
       if (offset)
 	fprintf (o_src, "\taddl\t$%d, %%%s\n", offset, reg);
     }
@@ -3258,59 +3257,10 @@ gen_loadvar (struct sym *sy)
 }
 
 void
-gen_loadval (struct sym *sy)
-{
-  unsigned offset;
-  struct sym *var;
-  struct sym *tmp = NULL;
-
-#ifdef COB_DEBUG
-  fprintf (o_src, "#gen_loadval\n");
-#endif
-  if (SUBREF_P (sy))
-    {
-      gen_subscripted ((struct subref *) sy);
-      var = SUBREF_SYM (sy);
-      if (var->linkage_flg)
-	{
-	  tmp = var;
-	  while (tmp->linkage_flg == 1)
-	    tmp = tmp->parent;
-	  offset = tmp->location - var->location;
-	  if (symlen (var) >= 4)
-	    fprintf (o_src, "\tmovl %d(%%ebp), %%ebx\n", tmp->linkage_flg);
-	  else
-	    fprintf (o_src, "\tmovs%cl %d(%%ebp), %%ebx\n",
-		     varsize_ch (var), tmp->linkage_flg);
-	  if (offset)
-	    fprintf (o_src, "\taddl\t$%d, %%ebx\n", offset);
-	  fprintf (o_src, "\taddl\t%%eax, %%ebx\n");
-	  fprintf (o_src, "\tmovl\t%%ebx, %%eax\n");
-	  tmp = var;
-	}
-      else
-	{
-	  fprintf (o_src, "\tleal\t-%d(%%ebp), %%ebx\n", var->location);
-	  fprintf (o_src, "\taddl\t%%ebx,%%eax\n");
-	  tmp = var;
-	}
-    }
-  else if (SYMBOL_P (sy))
-    {
-      tmp = sy;
-      load_address (tmp);
-    }
-  if (LITERAL_P (sy))
-    value_to_eax (sy);
-  else
-    load_at_eax (tmp);
-}
-
-void
 gen_pushval (struct sym *sy)
 {
   unsigned offset;
-  struct sym *var, *tmp;
+  struct sym *var;
 
 #ifdef COB_DEBUG
   fprintf (o_src, "#gen_pushval\n");
@@ -3321,10 +3271,10 @@ gen_pushval (struct sym *sy)
       var = SUBREF_SYM (sy);
       if (var->linkage_flg)
 	{
-	  tmp = var;
+	  struct sym *tmp = var;
 	  while (tmp->linkage_flg == 1)
 	    tmp = tmp->parent;
-	  offset = tmp->location - var->location;
+	  offset = var->location - tmp->location;
 	  if (symlen (var) >= 4)
 	    fprintf (o_src, "\tmovl %d(%%ebp), %%ebx\n", tmp->linkage_flg);
 	  else
@@ -3349,6 +3299,7 @@ gen_pushval (struct sym *sy)
     }
   else
     {
+      abort ();
       /*value_to_eax(sy); */
     }
 }
@@ -3692,7 +3643,6 @@ gen_set (struct sym *idx, int which, struct sym *var,
 	}
       else
 	{
-	  /* value_to_eax(var); <-- this is not working! */
 	  if (var == NULL)
 	    {
 	      fprintf (o_src, "\txorl\t%%eax,%%eax\n");
@@ -6010,21 +5960,21 @@ gen_call (struct lit *v, int stack_size, int exceplabel, int notexceplabel)
       else
 	{
 #ifdef COB_DEBUG
-	  fprintf (o_src, "#call %s by %d\n", cp->name, cp->call_mode);
+	  fprintf (o_src, "### CALL %s BY %d\n", cp->name, cp->call_mode);
 #endif
-	  if (cp->call_mode == CM_REF)
-	    gen_loadloc ((struct sym *) list->var);
-	  else if (cp->call_mode == CM_VAL)
+	  switch (cp->call_mode)
 	    {
+	    case CM_REF:
+	      gen_loadloc ((struct sym *) list->var);
+	      break;
+	    case CM_VAL:
 	      gen_pushval ((struct sym *) list->var);
-	    }
-	  else if (cp->call_mode == CM_CONT)
-	    {
+	      break;
+	    case CM_CONT:
 	      fprintf (o_src, "\tleal\t-%d(%%ebp), %%eax\n", list->location);
 	      push_eax ();
+	      break;
 	    }
-	  else
-	    gen_loadvar ((struct sym *) list->var);
 	}
       tmp = list;
       list = list->next;

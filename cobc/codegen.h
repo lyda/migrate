@@ -568,7 +568,6 @@ extern void set_ptr (struct sym *sy);
 extern void gen_loaddesc1 (struct sym *sy, int variable_length);
 extern void gen_loaddesc (struct sym *sy);
 extern void gen_loadvar (struct sym *sy);
-extern void gen_loadval (struct sym *sy);
 extern void gen_pushval (struct sym *sy);
 extern void gen_store_fnres (struct sym *sy);
 extern int is_numeric_sy (struct sym *sy);
