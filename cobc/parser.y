@@ -1070,22 +1070,24 @@ sign_clause:
 /* OCCURS clause */
 
 occurs_clause:
-  OCCURS integer _times
-  occurs_keys occurs_indexed
+  OCCURS integer occurs_to_integer _times
+  occurs_depending occurs_keys occurs_indexed
   {
-    current_field->occurs_min = 1;
-    current_field->occurs_max = cb_get_int ($2);
+    current_field->occurs_min = $3 ? cb_get_int ($2) : 1;
+    current_field->occurs_max = $3 ? cb_get_int ($3) : cb_get_int ($2);
     current_field->indexes++;
     current_field->flag_occurs = 1;
   }
-| OCCURS integer TO integer _times DEPENDING _on reference
-  occurs_keys occurs_indexed
+;
+occurs_to_integer:
+  /* empty */			{ $$ = NULL; }
+| TO integer			{ $$ = $2; }
+;
+
+occurs_depending:
+| DEPENDING _on reference
   {
-    current_field->occurs_min = cb_get_int ($2);
-    current_field->occurs_max = cb_get_int ($4);
-    current_field->occurs_depending = $8;
-    current_field->indexes++;
-    current_field->flag_occurs = 1;
+    current_field->occurs_depending = $3;
   }
 ;
 
