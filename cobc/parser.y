@@ -2488,13 +2488,13 @@ at_end:
 | at_end_sentence not_at_end_sentence
 ;
 at_end_sentence:
-  END		 { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 0); }
+  END		 { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 1); }
   target_sentence
-| AT END	 { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 0); }
+| AT END	 { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 1); }
   target_sentence
 ;
 not_at_end_sentence:
-  NOT opt_at END { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 1); }
+  NOT opt_at END { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 0); }
   target_sentence
 ;
 
