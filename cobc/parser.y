@@ -101,7 +101,10 @@ static struct cobc_field *current_field;
 static struct cobc_file_name *current_file_name;
 static struct cobc_label_name *current_section, *current_paragraph;
 static int current_call_mode;
+
+static int inspect_mode;
 static cobc_tree inspect_name;
+static struct cobc_list *inspect_list;
 
 static struct cobc_list *last_exec_list;
 static struct cobc_list *label_check_list;
@@ -179,7 +182,7 @@ static void ambiguous_error (struct cobc_word *w);
 %token COMMON,NEXT,PACKED_DECIMAL,INPUT,I_O,OUTPUT,EXTEND,BINARY,BIGENDIAN
 %token ALPHANUMERIC,ALPHANUMERIC_EDITED,NUMERIC_EDITED,NATIONAL,NATIONAL_EDITED
 
-%type <gene> tallying_item,replacing_item,inspect_before_after
+%type <gene> replacing_item,inspect_before_after
 %type <gene> call_item,write_option
 %type <inum> flag_all,flag_duplicates,flag_optional,flag_global
 %type <inum> flag_not,flag_next,flag_rounded,flag_separate
@@ -194,7 +197,7 @@ static void ambiguous_error (struct cobc_word *w);
 %type <list> inspect_tallying,inspect_replacing,inspect_converting
 %type <list> label_list,subscript_list,number_list
 %type <list> string_list,string_delimited_list,string_name_list
-%type <list> tallying_list,replacing_list,inspect_before_after_list
+%type <list> replacing_list,inspect_before_after_list
 %type <list> unstring_delimited,unstring_delimited_list,unstring_into
 %type <list> unstring_delimited_item,unstring_into_item
 %type <list> predefined_name_list,mnemonic_name_list
@@ -224,7 +227,7 @@ static void ambiguous_error (struct cobc_word *w);
 %type <tree> file_name,record_name,label_name,mnemonic_name,section_name,name
 %type <tree> qualified_name,predefined_name
 %type <list> qualified_predefined_word
-%type <tree> integer_value,value,number
+%type <tree> integer_value,text_value,value,number
 %type <tree> literal_or_predefined,literal,basic_literal,figurative_constant
 %type <word> qualified_word,label_word,undefined_word
 
@@ -1882,28 +1885,44 @@ inspect_statement:
 /* INSPECT TALLYING */
 
 inspect_tallying:
-  TALLYING tallying_list	{ $$ = $2; }
+  TALLYING			{ inspect_list = NULL; }
+  tallying_list			{ $$ = inspect_list; }
 ;
 tallying_list:
-  data_name FOR			{ inspect_name = $1; }
-  tallying_item			{ $$ = list ($4); }
-| tallying_list data_name FOR	{ inspect_name = $2; }
-  tallying_item			{ $$ = list_add ($1, $5); }
-| tallying_list tallying_item	{ $$ = list_add ($1, $2); }
+  tallying_item
+| tallying_list tallying_item
 ;
 tallying_item:
-  CHARACTERS inspect_before_after_list
+  data_name FOR
   {
-    $$ = make_generic (COB_INSPECT_CHARACTERS, inspect_name, 0, $2);
+    inspect_name = $1;
+    inspect_mode = 0;
   }
-| ALL value inspect_before_after_list
+| CHARACTERS inspect_before_after_list
   {
-    $$ = make_generic (COB_INSPECT_ALL, inspect_name, $2, $3);
+    inspect_mode = 0;
+    inspect_list =
+      list_add (inspect_list,
+		make_generic (COB_INSPECT_CHARACTERS, inspect_name, 0, $2));
   }
-| LEADING value inspect_before_after_list
+| ALL
   {
-    $$ = make_generic (COB_INSPECT_LEADING, inspect_name, $2, $3);
+    inspect_mode = COB_INSPECT_ALL;
   }
+| LEADING
+  {
+    inspect_mode = COB_INSPECT_LEADING;
+  }
+| text_value inspect_before_after_list
+  {
+    if (inspect_mode == 0)
+      yyerror ("ALL or LEADING expected");
+    else
+      inspect_list =
+	list_add (inspect_list,
+		  make_generic (inspect_mode, inspect_name, $1, $2));
+  }
+;
 
 /* INSPECT REPLACING */
 
@@ -3382,6 +3401,14 @@ integer:
 
 integer_value:
   value
+;
+
+/* Text */
+
+text_value:
+  data_name
+| NONNUMERIC_LITERAL
+| figurative_constant
 ;
 
 
