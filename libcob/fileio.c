@@ -318,7 +318,8 @@ cob_close_lineseq (struct cob_file_desc *f)
 void
 cob_read_lineseq (struct cob_file_desc *f)
 {
-  char *p, buff[f->record_size + 1];
+  int i;
+  char buff[f->record_size + 1];
 
   f->f.read_done = 0;
 
@@ -331,16 +332,35 @@ cob_read_lineseq (struct cob_file_desc *f)
   if (f->f.end_of_file)
     RETURN_STATUS (46);
 
-  memset (buff, ' ', f->record_size);
-  if (fgets (buff, f->record_size, f->file.fp) == NULL)
+  /* read the file */
+  if (fgets (buff, f->record_size + 1, f->file.fp) == NULL)
     {
       f->f.end_of_file = 1;
       RETURN_STATUS (10);
     }
 
-  p = strchr (buff, '\n');
-  if (p)
-    memcpy (p, "  ", 2);
+  /* remove the newline */
+  for (i = 0; i < f->record_size; i++)
+    if (buff[i] == '\r' || buff[i] == '\n' || buff[i] == '\0')
+      break;
+  if (i < f->record_size)
+    {
+      /* replace the inline newline by spaces */
+      for (; i < f->record_size; i++)
+	buff[i] = ' ';
+    }
+  else
+    {
+      /* discard input until the next newline */
+      int c = getc (f->file.fp);
+      while (c != '\r' && c != '\n' && c != '\0')
+	c = getc (f->file.fp);
+      if (c == '\r')
+	c = getc (f->file.fp);
+      if (c != '\n' && c != '\0')
+	ungetc (c, f->file.fp);
+    }
+
   memcpy (f->record_data, buff, f->record_size);
 
   f->f.read_done = 1;
