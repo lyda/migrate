@@ -2,12 +2,18 @@ NEWS - user visible changes				-*- outline -*-
 
 * Changes in OpenCOBOL 0.10
 
+** Autoconf 2.57, Automake 1.7.2, Libtool 1.4.3, and Gettext 0.11.5
+are used for packaging.
+
 ** New file cob.pc, which is used by pkg-config script.
 
 ** libcob.conf is now installed under sysconfdir (i.e., $(PREFIX)/etc).
 The default value of COB_CONFIG_FILE has been changed appropriately.
 
-** Use db1 again instead of db2 or db3.
+** The directory `tests' includes new testsuites.
+"make check" will run the tests.
+
+** We use db1 again instead of db2 or db3.
 
 ** New option -semi-fixed.
 

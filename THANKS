@@ -1,6 +1,6 @@
 Contributors:
 
-  Keiichi Takahash      for RPM package
+  Keiichi Takahash      for RPM, MinGW packages
   Noboru Saitou         for Debian package
   peg@coboler.com       for Cygwin package
   Yoshiki Kusumoto      for test programs
