@@ -1,5 +1,9 @@
 2002-07-04  Keisuke Nishida  <knishida@netlab.jp>
 
+	* codegen.c (output_file_name): Rename `cob_file_desc' to `cob_file'.
+
+2002-07-04  Keisuke Nishida  <knishida@netlab.jp>
+
 	* codegen.c (output_field_definition): New arguments `gen_data'
 	and `gen_filler'.
 	(output_file_name, codegen): Updated.

@@ -1000,7 +1000,7 @@ output_file_name (struct cobc_file_name *f)
     }
 
   /* output the file descriptor */
-  output ("static struct cob_file_desc %s_desc = {", f->cname);
+  output ("static struct cob_file %s_desc = {", f->cname);
   /* organization, access_mode, open_mode */
   output ("%d, %d, 0, ", f->organization, f->access_mode);
   /* file_status */
