@@ -181,12 +181,12 @@ cob_resolve (const char *name)
 	      resolve_error = NULL;
 	      return func;
 	    }
-	  sprintf (resolve_error_buff, "libcob: %s", lt_dlerror ());
+	  strcpy (resolve_error_buff, lt_dlerror ());
 	  resolve_error = resolve_error_buff;
 	  return NULL;
 	}
     }
-  sprintf (resolve_error_buff, "libcob: cannot find module `%s'", name);
+  sprintf (resolve_error_buff, "cannot find module `%s'", name);
   resolve_error = resolve_error_buff;
   return NULL;
 }

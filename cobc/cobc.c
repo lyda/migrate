@@ -83,7 +83,6 @@ static enum level {
   stage_translate,
   stage_compile,
   stage_assemble,
-  stage_module,
   stage_link
 } compile_level;
 
@@ -233,7 +232,7 @@ process_command_line (int argc, char *argv[])
 	case 'C': compile_level = stage_translate; break;
 	case 'S': compile_level = stage_compile; break;
 	case 'c': compile_level = stage_assemble; break;
-	case 'm': compile_level = stage_module; cobc_module_flag = 1; break;
+	case 'm': cobc_module_flag = 1; break;
 	case 'o': output_name = strdup (optarg); break;
 
 	case 'g':
@@ -572,7 +571,7 @@ main (int argc, char *argv[])
 	  goto cleanup;
 
       /* Build module */
-      if (compile_level >= stage_module && cobc_module_flag == 1)
+      if (cobc_module_flag == 1)
 	if (process_module (fn) != 0)
 	  goto cleanup;
     }
