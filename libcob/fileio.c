@@ -930,7 +930,7 @@ save_status (cob_file *f, int status)
 }
 
 void
-cob_open (cob_file *f, int mode, int flag)
+cob_open (cob_file *f, int mode, int opt)
 {
   int was_not_exist = 0;
   char filename[FILENAME_MAX];
@@ -981,7 +981,7 @@ cob_open (cob_file *f, int mode, int flag)
     }
 
   /* open the file */
-  switch (fileio_funcs[(int) f->organization]->open (f, filename, mode, flag))
+  switch (fileio_funcs[(int) f->organization]->open (f, filename, mode, opt))
     {
     case 0:
       f->open_mode = mode;

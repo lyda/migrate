@@ -2377,7 +2377,7 @@ open_statement:
 ;
 open_list:
 | open_list
-  open_mode open_sharing file_name_list
+  open_mode open_sharing file_name_list open_option
   {
     cb_tree l;
     for (l = $4; l; l = CB_CHAIN (l))
@@ -2404,6 +2404,10 @@ open_mode:
 open_sharing:
   /* empty */			{ $$ = NULL; }
 | SHARING _with sharing_option	{ $$ = $3; }
+;
+open_option:
+| _with NO REWIND		{ /* ignored */ }
+| _with LOCK			{ PENDING ("OPEN ... WITH LOCK"); }
 ;
 
 
