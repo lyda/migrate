@@ -1,15 +1,14 @@
 Contributors:
 
-Yoshiki Kusumoto                for test suite
-Keiichi Takahashi               for RPM package
-Noboru Saitou                   for Debian package
+  Keiichi Takahash      for RPM package
+  Noboru Saitou         for Debian package
+  Yoshiki Kusumoto      for test programs
 
-Tiny COBOL authors:
+OpenCOBOL branched from the TinyCOBOL project.
+Thanks to the TinyCOBOL authors and maintainers.
 
-Andrew Cameron 
-Bernard Giroud 
-David Essex 
-Jeff Smith
-Jim Noeth
-Rildo Pragana
-Stephen Connolly
+  Andrew Cameron 
+  Bernard Giroud 
+  David Essex 
+  Jeff Smith
+  Rildo Pragana
