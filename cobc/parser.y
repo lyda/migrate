@@ -126,7 +126,6 @@ static void terminator_warning (void);
 %}
 
 %union {
-  int ival;
   cb_tree tree;
 }
 
@@ -692,14 +691,14 @@ lock_mode_clause:
 /* ORGANIZATION clause */
 
 organization_clause:
-  ORGANIZATION _is organization	{ current_file->organization = $<ival>3; }
-| organization			{ current_file->organization = $<ival>1; }
+  ORGANIZATION _is organization
+| organization
 ;
 organization:
-  INDEXED			{ $<ival>$ = COB_ORG_INDEXED; }
-| SEQUENTIAL			{ $<ival>$ = COB_ORG_SEQUENTIAL; }
-| RELATIVE			{ $<ival>$ = COB_ORG_RELATIVE; }
-| LINE SEQUENTIAL		{ $<ival>$ = COB_ORG_LINE_SEQUENTIAL; }
+  INDEXED		{ current_file->organization = COB_ORG_INDEXED; }
+| SEQUENTIAL		{ current_file->organization = COB_ORG_SEQUENTIAL; }
+| RELATIVE		{ current_file->organization = COB_ORG_RELATIVE; }
+| LINE SEQUENTIAL	{ current_file->organization = COB_ORG_LINE_SEQUENTIAL; }
 ;
 
 
@@ -777,7 +776,7 @@ i_o_control_clause:
 same_clause:
   SAME same_option _area _for file_name_list
   {
-    switch ($<ival>2)
+    switch (CB_INTEGER ($<tree>2)->val)
       {
       case 0:
 	/* SAME AREA */
@@ -786,16 +785,16 @@ same_clause:
 	/* SAME RECORD */
 	break;
       case 2:
-	/* SAME sort-MERGE */
+	/* SAME SORT-MERGE */
 	break;
       }
   }
 ;
 same_option:
-  /* empty */			{ $<ival>$ = 0; }
-| RECORD			{ $<ival>$ = 1; }
-| SORT				{ $<ival>$ = 2; }
-| SORT_MERGE			{ $<ival>$ = 2; }
+  /* empty */			{ $<tree>$ = cb_int0; }
+| RECORD			{ $<tree>$ = cb_int1; }
+| SORT				{ $<tree>$ = cb_int2; }
+| SORT_MERGE			{ $<tree>$ = cb_int2; }
 ;
 
 /* MULTIPLE FILE TAPE clause */
@@ -861,14 +860,14 @@ file_description_entry:
       YYERROR;
 
     current_file = CB_FILE (cb_ref ($2));
-    if ($<ival>1 != 0)
-      current_file->organization = $<ival>1;
+    if ($<tree>1 == cb_int1)
+      current_file->organization = COB_ORG_SORT;
   }
   file_description_clause_sequence '.'
 ;
 file_type:
-  FD				{ $<ival>$ = 0; }
-| SD				{ $<ival>$ = COB_ORG_SORT; }
+  FD				{ $<tree>$ = cb_int0; }
+| SD				{ $<tree>$ = cb_int1; }
 ;
 file_description_clause_sequence:
 | file_description_clause_sequence file_description_clause
@@ -1868,17 +1867,17 @@ close_list:
     if ($2 != cb_error_node)
       {
 	cb_tree file = cb_ref ($2);
-	push_funcall_2 ("cob_close", file, cb_build_integer ($<ival>3));
+	push_funcall_2 ("cob_close", file, $<tree>3);
 	push_file_handler (file, NULL);
       }
   }
 ;
 close_option:
-  /* empty */			{ $<ival>$ = COB_CLOSE_NORMAL; }
-| reel_or_unit			{ $<ival>$ = COB_CLOSE_UNIT; }
-| reel_or_unit _for REMOVAL	{ $<ival>$ = COB_CLOSE_UNIT_REMOVAL; }
-| _with NO REWIND		{ $<ival>$ = COB_CLOSE_NO_REWIND; }
-| _with LOCK			{ $<ival>$ = COB_CLOSE_LOCK; }
+  /* empty */			{ $<tree>$ = cb_build_integer (COB_CLOSE_NORMAL); }
+| reel_or_unit			{ $<tree>$ = cb_build_integer (COB_CLOSE_UNIT); }
+| reel_or_unit _for REMOVAL	{ $<tree>$ = cb_build_integer (COB_CLOSE_UNIT_REMOVAL); }
+| _with NO REWIND		{ $<tree>$ = cb_build_integer (COB_CLOSE_NO_REWIND); }
+| _with LOCK			{ $<tree>$ = cb_build_integer (COB_CLOSE_LOCK); }
 ;
 reel_or_unit: REEL | UNIT ;
 
@@ -2209,17 +2208,17 @@ initialize_replacing_list:
 | initialize_replacing_list
   replacing_option _data BY value
   {
-    $<tree>$ = list_append ($<tree>1, cb_build_int_list ($<ival>2, $5));
+    $<tree>$ = list_append ($<tree>1, cb_build_pair ($<tree>2, $5));
   }
 ;
 replacing_option:
-  ALPHABETIC			{ $<ival>$ = CB_CATEGORY_ALPHABETIC; }
-| ALPHANUMERIC			{ $<ival>$ = CB_CATEGORY_ALPHANUMERIC; }
-| NUMERIC			{ $<ival>$ = CB_CATEGORY_NUMERIC; }
-| ALPHANUMERIC_EDITED		{ $<ival>$ = CB_CATEGORY_ALPHANUMERIC_EDITED; }
-| NUMERIC_EDITED		{ $<ival>$ = CB_CATEGORY_NUMERIC_EDITED; }
-| NATIONAL			{ $<ival>$ = CB_CATEGORY_NATIONAL; }
-| NATIONAL_EDITED		{ $<ival>$ = CB_CATEGORY_NATIONAL_EDITED; }
+  ALPHABETIC			{ $<tree>$ = cb_build_integer (CB_CATEGORY_ALPHABETIC); }
+| ALPHANUMERIC			{ $<tree>$ = cb_build_integer (CB_CATEGORY_ALPHANUMERIC); }
+| NUMERIC			{ $<tree>$ = cb_build_integer (CB_CATEGORY_NUMERIC); }
+| ALPHANUMERIC_EDITED		{ $<tree>$ = cb_build_integer (CB_CATEGORY_ALPHANUMERIC_EDITED); }
+| NUMERIC_EDITED		{ $<tree>$ = cb_build_integer (CB_CATEGORY_NUMERIC_EDITED); }
+| NATIONAL			{ $<tree>$ = cb_build_integer (CB_CATEGORY_NATIONAL); }
+| NATIONAL_EDITED		{ $<tree>$ = cb_build_integer (CB_CATEGORY_NATIONAL_EDITED); }
 ;
 _data: | DATA ;
 
@@ -2450,16 +2449,16 @@ open_list:
     for (l = $3; l; l = CB_CHAIN (l))
       {
 	cb_tree file = cb_ref (CB_VALUE (l));
-	push_funcall_2 ("cob_open", file, cb_build_integer ($<ival>2));
+	push_funcall_2 ("cob_open", file, $<tree>2);
 	push_file_handler (file, NULL);
       }
   }
 ;
 open_mode:
-  INPUT				{ $<ival>$ = COB_OPEN_INPUT; }
-| OUTPUT			{ $<ival>$ = COB_OPEN_OUTPUT; }
-| I_O				{ $<ival>$ = COB_OPEN_I_O; }
-| EXTEND			{ $<ival>$ = COB_OPEN_EXTEND; }
+  INPUT				{ $<tree>$ = cb_build_integer (COB_OPEN_INPUT); }
+| OUTPUT			{ $<tree>$ = cb_build_integer (COB_OPEN_OUTPUT); }
+| I_O				{ $<tree>$ = cb_build_integer (COB_OPEN_I_O); }
+| EXTEND			{ $<tree>$ = cb_build_integer (COB_OPEN_EXTEND); }
 ;
 
 
@@ -2740,15 +2739,15 @@ set_up_down:
   {
     cb_tree l;
     for (l = $1; l; l = CB_CHAIN (l))
-      if ($<ival>2 == 0)
+      if ($<tree>2 == cb_int0)
 	push (cb_build_add (CB_VALUE (l), $4, cb_int0));
       else
 	push (cb_build_sub (CB_VALUE (l), $4, cb_int0));
   }
 ;
 up_or_down:
-  UP				{ $<ival>$ = 0; }
-| DOWN				{ $<ival>$ = 1; }
+  UP				{ $<tree>$ = cb_int0; }
+| DOWN				{ $<tree>$ = cb_int1; }
 ;
 
 /* SET mnemonic-name-1 ... TO ON/OFF */
@@ -2867,27 +2866,27 @@ sort_output:
 
 start_statement:
   START				{ BEGIN_STATEMENT ("START"); }
-  file_name			{ $<ival>$ = COB_EQ; }
+  file_name			{ $<tree>$ = cb_build_integer (COB_EQ); }
   start_key opt_invalid_key
   end_start
   {
     cb_tree file = cb_ref ($3);
     if ($<tree>5 == NULL)
       $<tree>5 = CB_FILE (file)->key;
-    push_funcall_3 ("cob_start", file, cb_build_integer ($<ival>4), $<tree>5);
+    push_funcall_3 ("cob_start", file, $<tree>4, $<tree>5);
     push_file_handler (file, $6);
   }
 ;
 start_key:
   /* empty */			{ $<tree>$ = NULL; }
-| KEY _is start_op data_name	{ $<ival>0 = $<ival>3; $<tree>$ = $4; }
+| KEY _is start_op data_name	{ $<tree>0 = $<tree>3; $<tree>$ = $4; }
 ;
 start_op:
-  flag_not equal		{ $<ival>$ = ($1 == cb_int1) ? COB_NE : COB_EQ; }
-| flag_not greater		{ $<ival>$ = ($1 == cb_int1) ? COB_LE : COB_GT; }
-| flag_not less			{ $<ival>$ = ($1 == cb_int1) ? COB_GE : COB_LT; }
-| flag_not greater_or_equal	{ $<ival>$ = ($1 == cb_int1) ? COB_LT : COB_GE; }
-| flag_not less_or_equal	{ $<ival>$ = ($1 == cb_int1) ? COB_GT : COB_LE; }
+  flag_not equal		{ $<tree>$ = cb_build_integer (($1 == cb_int1) ? COB_NE : COB_EQ); }
+| flag_not greater		{ $<tree>$ = cb_build_integer (($1 == cb_int1) ? COB_LE : COB_GT); }
+| flag_not less			{ $<tree>$ = cb_build_integer (($1 == cb_int1) ? COB_GE : COB_LT); }
+| flag_not greater_or_equal	{ $<tree>$ = cb_build_integer (($1 == cb_int1) ? COB_LT : COB_GE); }
+| flag_not less_or_equal	{ $<tree>$ = cb_build_integer (($1 == cb_int1) ? COB_GT : COB_LE); }
 ;
 end_start:
   /* empty */			{ terminator_warning (); }
