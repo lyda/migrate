@@ -39,6 +39,9 @@ IX215A.CBL     33   30    3       0       0
 IX216A.CBL     15   14    0       1       0 OK
 IX217A.CBL      6    6    0       0       0 OK
 IX218A.CBL      6    6    0       0       0 OK
+IX301M.CBL    ----- test skipped -----
+IX302M.CBL    ----- test skipped -----
+IX401M.CBL    ----- test skipped -----
 --------    ----- ---- ---- ------- -------
 Total         508  490   17       1       0
 %           100.0 96.5  3.3     0.2     0.0

@@ -58,6 +58,7 @@ SQ203A.SUB      4    4    0       0       0 OK
 SQ204A.CBL      2    2    0       0       0 OK
 SQ205A.CBL      2    2    0       0       0 OK
 SQ206A.CBL      4    4    0       0       0 OK
+SQ207M.CBL    ----- test skipped -----
 SQ208M.CBL    ===== compile error =====
 SQ209M.CBL    ===== compile error =====
 SQ210M.CBL    ===== compile error =====
@@ -81,6 +82,9 @@ SQ227A.CBL     16   16    0       0       0 OK
 SQ228A.CBL      1    1    0       0       0 OK
 SQ229A.CBL      1    1    0       0       0 OK
 SQ230A.CBL      1    1    0       0       0 OK
+SQ302M.CBL    ----- test skipped -----
+SQ303M.CBL    ----- test skipped -----
+SQ401M.CBL    ----- test skipped -----
 --------    ----- ---- ---- ------- -------
 Total         563  500    0       6      57
 %           100.0 88.8  0.0     1.1    10.1

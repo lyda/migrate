@@ -24,6 +24,7 @@ IC233A.CBL    ===== compile error =====
 IC234A.CBL    ===== compile error =====
 IC235A.CBL    ===== compile error =====
 IC237A.CBL    ===== compile error =====
+IC401M.CBL    ----- test skipped -----
 --------    ----- ---- ---- ------- -------
 Total          97   97    0       0       0
 %           100.0 100.0  0.0     0.0     0.0

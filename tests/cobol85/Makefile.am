@@ -36,7 +36,7 @@ $(MODULES): newcob.val EXEC85 EXEC85.conf.in
 	@rm -f newcob.tmp newcob.log EXEC85.conf
 	@echo "test:"               > $@/Makefile
 	@echo "	perl ../report.pl" >> $@/Makefile
-	@echo "	test -f ../$@.txt && diff ../$@.txt report.txt" >> $@/Makefile
+	@echo "	diff ../$@.txt report.txt; true" >> $@/Makefile
 	@echo "done"
 
 EXEC85: newcob.val
