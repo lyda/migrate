@@ -615,7 +615,6 @@ extern void gen_SearchAllLoopCheck (unsigned long lbl3, struct sym *syidx,
 				    struct sym *sytbl, struct sym *syvar,
 				    unsigned long lstart, unsigned long lend);
 extern void define_special_fields (void);
-extern struct sym *define_temp_field (char desired_type, int desired_len);
 extern void define_implicit_field (struct sym *sy, struct sym *sykey, int idxlen);
 extern void Initialize_SearchAll_Boundaries (struct sym *sy,
 					     struct sym *syidx);

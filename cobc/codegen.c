@@ -178,7 +178,7 @@ install (char *name, int tab, int cloning)
   name = upcase (name, sbuf);
   if ((as = lookup (name, tab)) == NULL)
     {
-      as = make_symbol (name);
+      as = make_symbol (strdup (name));
       val = hash (as->name);
       if (tab == SYTB_VAR)
 	{
@@ -4412,11 +4412,8 @@ gen_SearchAllLoopCheck (unsigned long lbl3, struct sym *syidx,
 void
 define_special_fields ()
 {
-
   struct sym *sy, *tmp;
-  struct lit *ly;
 
-  sy = install (SVAR_RCODE, SYTB_VAR, 0);
   spe_lit_SP = save_special_literal (' ', 'X', "%SPACES%");
   spe_lit_LV = save_special_literal ('\0', 'X', "%LOW-VALUES%");
   spe_lit_HV = save_special_literal ('\xff', 'X', "%HIGH-VALUES%");
@@ -4428,75 +4425,25 @@ define_special_fields ()
   spe_lit_ZE->all = 1;
   spe_lit_QU->all = 1;
 
-  ly = spe_lit_ZE;
-
+  sy = install (SVAR_RCODE, SYTB_VAR, 0);
+  sy->type = 'B';		/* assume numeric "usage is comp" item */
   sy->len = 4;
   sy->decimals = 0;
   sy->level = 1;
-  sy->type = 'B';		/* assume numeric "usage is comp" item */
-  sy->redefines = NULL;
-  sy->linkage_flg = at_linkage;
   sy->sec_no = SEC_DATA;
   sy->times = 1;
-  sy->flags.just_r = 0;
-  sy->flags.separate_sign = 0;
-  sy->flags.leading_sign = 0;
   sy->flags.value = 1;
-  sy->son = sy->brother = NULL;
   picture[0] = '9';
   picture[1] = 5;
   picture[2] = 0;
+
   tmp = curr_field;
   curr_field = sy;
-
-  curr_field->value = ly;
-  curr_field->value2 = ly;
-
+  curr_field->value = spe_lit_ZE;
+  curr_field->value2 = spe_lit_ZE;
   update_field ();
   close_fields ();
   curr_field = tmp;
-
-  tmp = NULL;
-  ly = NULL;
-
-}
-
-
-struct sym *
-define_temp_field (char desired_type, int desired_len)
-{
-  struct sym *sy, *tmp;
-#ifdef COB_DEBUG
-  fprintf (o_src, "#define_temp_field:%c,%d,SO:%d\n",
-	   desired_type, desired_len, stack_offset);
-#endif
-  sy = malloc (sizeof (struct sym));
-  sy->name = "%noname%";
-  sy->len = desired_len;
-  sy->decimals = 0;		/* suppose no decimals yet */
-  sy->level = 1;
-  sy->type = desired_type;
-  sy->redefines = NULL;
-  sy->linkage_flg = 0;
-  sy->sec_no = SEC_DATA;	/* not optimal; should be in stack */
-  sy->times = 1;
-  sy->flags.just_r = 0;
-  sy->flags.separate_sign = 0;
-  sy->flags.leading_sign = 0;
-  sy->son = sy->brother = NULL;
-  if (desired_type == 'X')
-    picture[0] = 'X';
-  else
-    picture[0] = '9';
-  picture[1] = (char) sy->len;
-  picture[2] = 0;
-  tmp = curr_field;
-  curr_field = sy;
-  update_field ();
-  close_fields ();
-  curr_field = tmp;
-  tmp = NULL;
-  return sy;
 }
 
 void

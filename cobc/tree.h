@@ -87,8 +87,7 @@ struct sym
   int len;			/* length of item */
   char defined;			/* first time defined? */
   unsigned pic;			/* picture offset in data segment */
-  /* or record offset in stack (files) */
-  int linkage_flg;
+  int linkage_flg;		/* or record offset in stack (files) */
   struct sym *redefines;	/* points to a redefined field 
 				   or record symbol (files) */
   struct
@@ -113,7 +112,7 @@ struct sym
 #define SYMBOL(x)		((struct sym *) (x))
 #define SYMBOL_P(x)		(SYMBOL (x)->litflag == 0)
 
-extern struct sym *make_symbol (const char *name);
+extern struct sym *make_symbol (char *name);
 
 
 /*

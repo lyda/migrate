@@ -13,14 +13,18 @@
  */
 
 struct sym *
-make_symbol (const char *name)
+make_symbol (char *name)
 {
   struct sym *sy = malloc (sizeof (struct sym));
-  sy->name = strdup (name);
+  sy->name = name;
   sy->next = NULL;
+  sy->times = 0;
   sy->type = 0;
   sy->slack = 0;
+  sy->level = 0;
   sy->defined = 0;
+  sy->decimals = 0;
+  sy->redefines = NULL;
   sy->value = NULL;
   sy->sort_data = NULL;
   sy->linkage_flg = 0;
@@ -29,6 +33,7 @@ make_symbol (const char *name)
   sy->clone = NULL;
   sy->parent = NULL;
   sy->son = NULL;
+  sy->brother = NULL;
   sy->occurs = NULL;
   sy->flags.is_pointer = 0;
   sy->flags.just_r = 0;
