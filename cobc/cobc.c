@@ -168,7 +168,7 @@ terminate (const char *str)
  * Command line
  */
 
-static char short_options[] = "h?VvECScmOgso:I:";
+static char short_options[] = "h?VvECScmOgwo:I:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
@@ -180,7 +180,6 @@ static struct option long_options[] = {
   {"debug", no_argument, 0, 'd'},
   {"free", no_argument, &cb_source_format, CB_FORMAT_FREE},
   {"fixed", no_argument, &cb_source_format, CB_FORMAT_FIXED},
-  {"column", required_argument, 0, '*'},
   {"O2", no_argument, 0, '2'},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
@@ -298,10 +297,6 @@ process_command_line (int argc, char *argv[])
 	  strcat (cob_cflags, " -g");
 	  break;
 
-	case 's':
-	  strcat (cob_ldflags, " -s");
-	  break;
-
 	case '$': /* -std */
 	  if (strcmp (optarg, "gnu") == 0)
 	    {
@@ -381,8 +376,11 @@ process_command_line (int argc, char *argv[])
 	  }
 	  break;
 
-	case '*': /* -column */
-	  cb_text_column = atoi (optarg);
+	case 'w':
+#undef CB_WARNING
+#define CB_WARNING(sig,var,name,doc)		\
+          var = 0;
+#include "warning.def"
 	  break;
 
 	case 'W':
