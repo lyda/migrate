@@ -1,8 +1,5 @@
 #!/bin/sh
 
-echo "Running autopoint..."
-autopoint --force
-
 echo "Running aclocal..."
 aclocal -I m4
 

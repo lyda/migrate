@@ -1,5 +1,4 @@
 *.tar.gz
-ABOUT-NLS
 INSTALL
 Makefile
 Makefile.in
