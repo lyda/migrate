@@ -1273,7 +1273,7 @@ cb_build_binary_op (cb_tree x, char op, cb_tree y)
     case '+': case '-': case '*': case '/': case '^':
       /* arithmetic operators */
       if (CB_TREE_CLASS (x) == CB_CLASS_POINTER
-	  && CB_TREE_CLASS (y) == CB_CLASS_POINTER)
+	  || CB_TREE_CLASS (y) == CB_CLASS_POINTER)
 	{
 	  category = CB_CATEGORY_DATA_POINTER;
 	  break;
