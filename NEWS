@@ -1,149 +1,149 @@
 NEWS - user visible changes				-*- outline -*-
 
-* Version 0.8 $B$G$NJQ99E@(B
+* Version 0.8 ¤Ç¤ÎÊÑ¹¹ÅÀ
 
-** cobpp $B$r40A4$K=q$-D>$7$?(B
+** cobpp ¤ò´°Á´¤Ë½ñ¤­Ä¾¤·¤¿
 
-$B8=:_$N$H$3$m!"(B-I $B%*%W%7%g%s$O$^$@<BAu$7$F$$$J$$!#(B
+¸½ºß¤Î¤È¤³¤í¡¢-I ¥ª¥×¥·¥ç¥ó¤Ï¤Þ¤À¼ÂÁõ¤·¤Æ¤¤¤Ê¤¤¡£
 
-** $B?tCM=hM}$r(B GMP $B$r;H$C$F=q$-D>$7$?(B
+** ¿ôÃÍ½èÍý¤ò GMP ¤ò»È¤Ã¤Æ½ñ¤­Ä¾¤·¤¿
 
-$B$^$@0lIt$N5!G=$,IT40A4!#(B
+¤Þ¤À°ìÉô¤Îµ¡Ç½¤¬ÉÔ´°Á´¡£
 
-** $BAH$_9~$_4X?t5!G=(B(FUNCTION ...)$B$rL58z$K$7$?(B
+** ÁÈ¤ß¹þ¤ß´Ø¿ôµ¡Ç½(FUNCTION ...)¤òÌµ¸ú¤Ë¤·¤¿
 
-$B>-MhE*$K:F@_7W!&:F<BAu$9$k!#(B
+¾­ÍèÅª¤ËºÆÀß·×¡¦ºÆ¼ÂÁõ¤¹¤ë¡£
 
-** $B$$$/$D$+$N%P%0=$@5(B
-
-
-* Version 0.7.3 $B$G$NJQ99E@(B
-
-** $B$$$/$D$+$N%P%0=$@5(B
+** ¤¤¤¯¤Ä¤«¤Î¥Ð¥°½¤Àµ
 
 
-* Version 0.7.2 $B$G$NJQ99E@(B
+* Version 0.7.3 ¤Ç¤ÎÊÑ¹¹ÅÀ
 
-** $B%=!<%9$N%U%)!<%^%C%H(B(fixed/free)$B$r4J0WE*$K<+F0H=Dj(B
-
-$B0l9TL\$N@hF,(B 6 $BJ8;z$r8+$F!"$=$l$,?t;z$G;O$^$C$F$$$k$+!"(B
-$B$b$7$/$O$9$Y$F6uGr$N>l9g!"8GDj%U%)!<%^%C%H$H$_$J$9!#(B
-$B$=$l0J30$N>l9g!"<+M3%U%)!<%^%C%H$H$_$J$9!#(B
-
-** configure $B$G(B --enable-debug $B%*%W%7%g%s$rIU$1$F%3%s%Q%$%k(B
-$B$7$?>l9g!"(Bcobc $B$N%*%W%7%g%s(B -ts$B!"(B-tp $B$K$h$j!"$=$l$>$l(B scanner
-$B$H(B parser $B$N%H%l!<%9$,0lItM-8z$K$J$k!#(B
-
-** $B$$$/$D$+$N%P%0=$@5(B
+** ¤¤¤¯¤Ä¤«¤Î¥Ð¥°½¤Àµ
 
 
-* Version 0.7.1 $B$G$NJQ99E@(B
+* Version 0.7.2 ¤Ç¤ÎÊÑ¹¹ÅÀ
 
-** RedHat 7.2 $B$N4D6-$GAGD>$K%3%s%Q%$%k$,DL$k$h$&$K$J$C$?(B
+** ¥½¡¼¥¹¤Î¥Õ¥©¡¼¥Þ¥Ã¥È(fixed/free)¤ò´Ê°×Åª¤Ë¼«Æ°È½Äê
 
-** C $B$H(B COBOL $B$r%j%s%/$9$k$?$a$NOHAH$_$r@0M}(B
+°ì¹ÔÌÜ¤ÎÀèÆ¬ 6 Ê¸»ú¤ò¸«¤Æ¡¢¤½¤ì¤¬¿ô»ú¤Ç»Ï¤Þ¤Ã¤Æ¤¤¤ë¤«¡¢
+¤â¤·¤¯¤Ï¤¹¤Ù¤Æ¶õÇò¤Î¾ì¹ç¡¢¸ÇÄê¥Õ¥©¡¼¥Þ¥Ã¥È¤È¤ß¤Ê¤¹¡£
+¤½¤ì°Ê³°¤Î¾ì¹ç¡¢¼«Í³¥Õ¥©¡¼¥Þ¥Ã¥È¤È¤ß¤Ê¤¹¡£
 
-$B>\$7$/$O(B doc/c-cobol.txt $B$r;2>H!#(B
+** configure ¤Ç --enable-debug ¥ª¥×¥·¥ç¥ó¤òÉÕ¤±¤Æ¥³¥ó¥Ñ¥¤¥ë
+¤·¤¿¾ì¹ç¡¢cobc ¤Î¥ª¥×¥·¥ç¥ó -ts¡¢-tp ¤Ë¤è¤ê¡¢¤½¤ì¤¾¤ì scanner
+¤È parser ¤Î¥È¥ì¡¼¥¹¤¬°ìÉôÍ­¸ú¤Ë¤Ê¤ë¡£
+
+** ¤¤¤¯¤Ä¤«¤Î¥Ð¥°½¤Àµ
 
 
-* Version 0.7 $B$G$NJQ99E@(B
+* Version 0.7.1 ¤Ç¤ÎÊÑ¹¹ÅÀ
 
-** cobc $B$,%3%s%Q%$%k:Q$_%U%!%$%k$b<u$1IU$1$k$h$&$K$J$C$?(B
+** RedHat 7.2 ¤Î´Ä¶­¤ÇÁÇÄ¾¤Ë¥³¥ó¥Ñ¥¤¥ë¤¬ÄÌ¤ë¤è¤¦¤Ë¤Ê¤Ã¤¿
 
-$BJ#?t$N%U%!%$%k$,$"$k>l9g!"Nc$($P<!$N$h$&$K$7$F%3%s%Q%$%k=PMh$k!#(B
+** C ¤È COBOL ¤ò¥ê¥ó¥¯¤¹¤ë¤¿¤á¤ÎÏÈÁÈ¤ß¤òÀ°Íý
+
+¾Ü¤·¤¯¤Ï doc/c-cobol.txt ¤ò»²¾È¡£
+
+
+* Version 0.7 ¤Ç¤ÎÊÑ¹¹ÅÀ
+
+** cobc ¤¬¥³¥ó¥Ñ¥¤¥ëºÑ¤ß¥Õ¥¡¥¤¥ë¤â¼õ¤±ÉÕ¤±¤ë¤è¤¦¤Ë¤Ê¤Ã¤¿
+
+Ê£¿ô¤Î¥Õ¥¡¥¤¥ë¤¬¤¢¤ë¾ì¹ç¡¢Îã¤¨¤Ð¼¡¤Î¤è¤¦¤Ë¤·¤Æ¥³¥ó¥Ñ¥¤¥ë½ÐÍè¤ë¡£
 
   % cobc -c foo.cob
   % cobc -c bar.cob
   % cobc -o myapp foo.o bar.o
 
-** $B%3%s%Q%$%i%*%W%7%g%s(B -D $B$K$h$j!"%G%P%C%0%3!<%I$rM-8z2=(B
+** ¥³¥ó¥Ñ¥¤¥é¥ª¥×¥·¥ç¥ó -D ¤Ë¤è¤ê¡¢¥Ç¥Ð¥Ã¥°¥³¡¼¥É¤òÍ­¸ú²½
 
-COBOL $B%3!<%I$G9TF,$K(B `D' $B$rCV$/$H!"%3%s%Q%$%k;~$K%*%W%7%g%s(B -D $B$r(B
-$B;XDj$7$?>l9g$K$N$_%3%s%Q%$%k$5$l$k!#(B
+COBOL ¥³¡¼¥É¤Ç¹ÔÆ¬¤Ë `D' ¤òÃÖ¤¯¤È¡¢¥³¥ó¥Ñ¥¤¥ë»þ¤Ë¥ª¥×¥·¥ç¥ó -D ¤ò
+»ØÄê¤·¤¿¾ì¹ç¤Ë¤Î¤ß¥³¥ó¥Ñ¥¤¥ë¤µ¤ì¤ë¡£
 
-** $B?tCM=hM}$K4X$9$k%P%0$r$$$/$D$+=$@5(B
+** ¿ôÃÍ½èÍý¤Ë´Ø¤¹¤ë¥Ð¥°¤ò¤¤¤¯¤Ä¤«½¤Àµ
 
-$B$7$+$7!"$^$@<c43$N%P%0$,$"$j$=$&!#(B
+¤·¤«¤·¡¢¤Þ¤À¼ã´³¤Î¥Ð¥°¤¬¤¢¤ê¤½¤¦¡£
 
 
-* Tiny COBOL 0.54 $B$+$i$NJQ99E@(B
+* Tiny COBOL 0.54 ¤«¤é¤ÎÊÑ¹¹ÅÀ
 
-** $B%Q%C%1!<%8$NJQ99E@(B
+** ¥Ñ¥Ã¥±¡¼¥¸¤ÎÊÑ¹¹ÅÀ
 
-*** Autoconf 2.52, Automake 1.5, Libtool 1.4 $B$rMxMQ(B
+*** Autoconf 2.52, Automake 1.5, Libtool 1.4 ¤òÍøÍÑ
 
-*** $B%Q!<%5@8@.$K(B Bison $B$rMxMQ(B
+*** ¥Ñ¡¼¥µÀ¸À®¤Ë Bison ¤òÍøÍÑ
 
-*** $B%=!<%9%l%$%"%&%H$NJQ99(B
+*** ¥½¡¼¥¹¥ì¥¤¥¢¥¦¥È¤ÎÊÑ¹¹
 
-  open-cobol/cobc/              $B%3%s%Q%$%i(B
-  open-cobol/cobpp/             $B%W%j%W%m%;%C%5(B
-  open-cobol/libcob/            $B<B9T;~%i%$%V%i%j(B
+  open-cobol/cobc/              ¥³¥ó¥Ñ¥¤¥é
+  open-cobol/cobpp/             ¥×¥ê¥×¥í¥»¥Ã¥µ
+  open-cobol/libcob/            ¼Â¹Ô»þ¥é¥¤¥Ö¥é¥ê
 
-*** $B%$%s%9%H!<%k%G%#%l%/%H%j$NJQ99(B
+*** ¥¤¥ó¥¹¥È¡¼¥ë¥Ç¥£¥ì¥¯¥È¥ê¤ÎÊÑ¹¹
 
-$BI8=`$G$O<!$N$h$&$K%$%s%9%H!<%k$5$l$k!#(B
+É¸½à¤Ç¤Ï¼¡¤Î¤è¤¦¤Ë¥¤¥ó¥¹¥È¡¼¥ë¤µ¤ì¤ë¡£
 
-  $(PREFIX)/bin/cobc                    $B%3%s%Q%$%i(B
-  $(PREFIX)/libexec/open-cobol/cobpp    $B%W%j%W%m%;%C%5(B
-  $(PREFIX)/lib/libcob.a                $B<B9T;~%i%$%V%i%j(B
-  $(PREFIX)/lib/open-cobol/             $B3F<o%b%8%e!<%k(B
+  $(PREFIX)/bin/cobc                    ¥³¥ó¥Ñ¥¤¥é
+  $(PREFIX)/libexec/open-cobol/cobpp    ¥×¥ê¥×¥í¥»¥Ã¥µ
+  $(PREFIX)/lib/libcob.a                ¼Â¹Ô»þ¥é¥¤¥Ö¥é¥ê
+  $(PREFIX)/lib/open-cobol/             ³Æ¼ï¥â¥¸¥å¡¼¥ë
 
-*** C $B%W%m%0%i%`$O(B GNU $B%9%?%$%k$G%$%s%G%s%H(B
+*** C ¥×¥í¥°¥é¥à¤Ï GNU ¥¹¥¿¥¤¥ë¤Ç¥¤¥ó¥Ç¥ó¥È
 
-** $B%3%s%Q%$%i$NJQ99E@(B
+** ¥³¥ó¥Ñ¥¤¥é¤ÎÊÑ¹¹ÅÀ
 
-*** $B%3%s%Q%$%iL>$O(B cobc
+*** ¥³¥ó¥Ñ¥¤¥éÌ¾¤Ï cobc
 
-$B0J2<$N%*%W%7%g%s$r<u$1IU$1$k!#(B
+°Ê²¼¤Î¥ª¥×¥·¥ç¥ó¤ò¼õ¤±ÉÕ¤±¤ë¡£
 
-  cobc <file>...              $B<B9T%U%!%$%k(B a.out $B$r@8@.(B
-  cobc -o <target> <file>     $B<B9T%U%!%$%k(B <target> $B$r@8@.(B
-  cobc -E <file>              $BA0=hM}$N$_<B9T(B
-  cobc -S <file>              $B%3%s%Q%$%k$N$_<B9T(B (*.s $B$r@8@.(B)
-  cobc -c <file>              $B%"%;%s%V%k$^$G<B9T(B (*.o $B$r@8@.(B)
-  cobc -m <file>              $B%b%8%e!<%k$r:n@.(B (*.so $B$r@8@.(B)
-  cobc -g <file>              $B%G%P%C%0>pJsIU$-$G%3%s%Q%$%k(B
+  cobc <file>...              ¼Â¹Ô¥Õ¥¡¥¤¥ë a.out ¤òÀ¸À®
+  cobc -o <target> <file>     ¼Â¹Ô¥Õ¥¡¥¤¥ë <target> ¤òÀ¸À®
+  cobc -E <file>              Á°½èÍý¤Î¤ß¼Â¹Ô
+  cobc -S <file>              ¥³¥ó¥Ñ¥¤¥ë¤Î¤ß¼Â¹Ô (*.s ¤òÀ¸À®)
+  cobc -c <file>              ¥¢¥»¥ó¥Ö¥ë¤Þ¤Ç¼Â¹Ô (*.o ¤òÀ¸À®)
+  cobc -m <file>              ¥â¥¸¥å¡¼¥ë¤òºîÀ® (*.so ¤òÀ¸À®)
+  cobc -g <file>              ¥Ç¥Ð¥Ã¥°¾ðÊóÉÕ¤­¤Ç¥³¥ó¥Ñ¥¤¥ë
 
-  cobc --help                 $B%X%k%W%a%C%;!<%8$NI=<((B
-  cobc --version              $B%P!<%8%g%sHV9f$rI=<((B
-  cobc --save-temps           $BCf4V%U%!%$%k$r:o=|$7$J$$(B
+  cobc --help                 ¥Ø¥ë¥×¥á¥Ã¥»¡¼¥¸¤ÎÉ½¼¨
+  cobc --version              ¥Ð¡¼¥¸¥ç¥óÈÖ¹æ¤òÉ½¼¨
+  cobc --save-temps           Ãæ´Ö¥Õ¥¡¥¤¥ë¤òºï½ü¤·¤Ê¤¤
 
-*** $BF0E*%b%8%e!<%k$N%5%]!<%HJ}<0$r=$@5(B
+*** Æ°Åª¥â¥¸¥å¡¼¥ë¤Î¥µ¥Ý¡¼¥ÈÊý¼°¤ò½¤Àµ
 
-CALL $BJ8$G$O!"8F$S=P$9%W%m%0%i%`$H$7$FJQ?t$,;XDj$5$l$?>l9g!"(B
-$B%W%m%0%i%`$,%@%$%J%_%C%/$K%j%s%/$5$l$F8F$S=P$5$l$k!#$3$l$O(B
-$B<!$N$h$&$K$7$F9T$J$&!#(B
+CALL Ê¸¤Ç¤Ï¡¢¸Æ¤Ó½Ð¤¹¥×¥í¥°¥é¥à¤È¤·¤ÆÊÑ¿ô¤¬»ØÄê¤µ¤ì¤¿¾ì¹ç¡¢
+¥×¥í¥°¥é¥à¤¬¥À¥¤¥Ê¥ß¥Ã¥¯¤Ë¥ê¥ó¥¯¤µ¤ì¤Æ¸Æ¤Ó½Ð¤µ¤ì¤ë¡£¤³¤ì¤Ï
+¼¡¤Î¤è¤¦¤Ë¤·¤Æ¹Ô¤Ê¤¦¡£
 
-1. $B8F$S=P$5$l$k%W%m%0%i%`(B($B%b%8%e!<%k(B)$B$r@8@.(B
+1. ¸Æ¤Ó½Ð¤µ¤ì¤ë¥×¥í¥°¥é¥à(¥â¥¸¥å¡¼¥ë)¤òÀ¸À®
 
   cobc -m module.cob
 
-2. $B%a%$%s%W%m%0%i%`$r@8@.(B
+2. ¥á¥¤¥ó¥×¥í¥°¥é¥à¤òÀ¸À®
 
   cobc -o main main.cob
 
-3. $B4D6-JQ?t(B COB_LIBRARY_PATH $B$K%b%8%e!<%k$N$"$k%G%#%l%/%H%j$r(B
-   $B%;%C%H$7!"%a%$%s%W%m%0%i%`$r<B9T(B
+3. ´Ä¶­ÊÑ¿ô COB_LIBRARY_PATH ¤Ë¥â¥¸¥å¡¼¥ë¤Î¤¢¤ë¥Ç¥£¥ì¥¯¥È¥ê¤ò
+   ¥»¥Ã¥È¤·¡¢¥á¥¤¥ó¥×¥í¥°¥é¥à¤ò¼Â¹Ô
 
   COB_LIBRARY_PATH=.
   export COB_LIBRARY_PATH
   ./main
 
-*** $B0J2<$N4D6-JQ?t$r;2>H(B($B3g8LFb$O%G%U%)%k%HCM(B)
+*** °Ê²¼¤Î´Ä¶­ÊÑ¿ô¤ò»²¾È(³ç¸ÌÆâ¤Ï¥Ç¥Õ¥©¥ë¥ÈÃÍ)
 
-COB_CC              $BMxMQ$9$k(B C $B%3%s%Q%$%i(B ("gcc")
-COB_COBPP           $B%W%j%W%m%;%C%5(B ("$(PREFIX)/libexec/open-cobol/cobpp")
-COB_LDADD           $B%j%s%/$9$k%i%$%V%i%j(B ("-L$(PREFIX)/lib -lcob -lncurses -ldb -ldl -lm")
-COB_LDFLAGS         $B%j%s%/;~$N%U%i%0(B ("")
-COB_LIBRARY_PATH    $B%i%$%V%i%j$N%Q%9(B (".:$(PREFIX)/lib/open-cobol")
+COB_CC              ÍøÍÑ¤¹¤ë C ¥³¥ó¥Ñ¥¤¥é ("gcc")
+COB_COBPP           ¥×¥ê¥×¥í¥»¥Ã¥µ ("$(PREFIX)/libexec/open-cobol/cobpp")
+COB_LDADD           ¥ê¥ó¥¯¤¹¤ë¥é¥¤¥Ö¥é¥ê ("-L$(PREFIX)/lib -lcob -lncurses -ldb -ldl -lm")
+COB_LDFLAGS         ¥ê¥ó¥¯»þ¤Î¥Õ¥é¥° ("")
+COB_LIBRARY_PATH    ¥é¥¤¥Ö¥é¥ê¤Î¥Ñ¥¹ (".:$(PREFIX)/lib/open-cobol")
 
-** COBOL $B%l%Y%k$NJQ99E@(B
+** COBOL ¥ì¥Ù¥ë¤ÎÊÑ¹¹ÅÀ
 
-*** PIC $B$NJ8;z$H$7$F(B `N' ($BF|K\8l(B)$B$rG'<1(B
+*** PIC ¤ÎÊ¸»ú¤È¤·¤Æ `N' (ÆüËÜ¸ì)¤òÇ§¼±
 
-$B8=;~E@$G$O!"FbItE*$K(B `X' $BFs$D$KCV$-49$($k$@$1$NJX59E*BP1~!#(B
+¸½»þÅÀ¤Ç¤Ï¡¢ÆâÉôÅª¤Ë `X' Æó¤Ä¤ËÃÖ¤­´¹¤¨¤ë¤À¤±¤ÎÊØµ¹ÅªÂÐ±þ¡£
 
-*** $B?tCM1i;;$NCf4VI=8=$H$7$F(B BCD $B$rMQ$$!"8m:9$,H/@8$7$J$$$h$&$K$7$?!#(B
+*** ¿ôÃÍ±é»»¤ÎÃæ´ÖÉ½¸½¤È¤·¤Æ BCD ¤òÍÑ¤¤¡¢¸íº¹¤¬È¯À¸¤·¤Ê¤¤¤è¤¦¤Ë¤·¤¿¡£
 
-$B<c43$N%P%0$"$j!#(B
+¼ã´³¤Î¥Ð¥°¤¢¤ê¡£
