@@ -825,8 +825,6 @@ get_type (struct cobc_field *p)
     case COBC_USAGE_BINARY:
     case COBC_USAGE_INDEX:
       return COB_BINARY;
-    case COBC_USAGE_BIGENDIAN:
-      return COB_BIGENDIAN;
     case COBC_USAGE_PACKED:
       return COB_PACKED;
     default:

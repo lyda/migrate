@@ -182,7 +182,7 @@ static void ambiguous_error (struct cobc_word *w);
 %token DEPENDING,CORRESPONDING,CONVERTING,FUNCTION_NAME,OPTIONAL,RETURNING
 %token IDENTIFICATION,ENVIRONMENT,DATA,PROCEDURE,TRUE,FALSE,ANY
 %token AUTHOR,DATE_WRITTEN,DATE_COMPILED,INSTALLATION,SECURITY
-%token COMMON,NEXT,PACKED_DECIMAL,INPUT,I_O,OUTPUT,EXTEND,BINARY,BIGENDIAN
+%token COMMON,NEXT,PACKED_DECIMAL,INPUT,I_O,OUTPUT,EXTEND,BINARY
 %token ALPHANUMERIC,ALPHANUMERIC_EDITED,NUMERIC_EDITED,NATIONAL,NATIONAL_EDITED
 
 %type <gene> replacing_item,inspect_before_after
@@ -624,7 +624,7 @@ select_option:
   }
 | RESERVE integer _area
   {
-    yywarn ("RESERVE not implemented");
+    IGNORE ("RESERVE");
   }
 | select_organization
   {
@@ -993,18 +993,14 @@ usage:
   {
     current_field->usage = COBC_USAGE_BINARY;
   }
-| BIGENDIAN /* COMP-5 */
+| PACKED_DECIMAL /* or COMP-3 */
   {
-    current_field->usage = COBC_USAGE_BIGENDIAN;
+    current_field->usage = COBC_USAGE_PACKED;
   }
 | INDEX
   {
     current_field->usage = COBC_USAGE_INDEX;
     current_field->pic = yylex_picture ("9(9)");
-  }
-| PACKED_DECIMAL /* or COMP-3 */
-  {
-    current_field->usage = COBC_USAGE_PACKED;
   }
 ;
 _usage: | USAGE ;

@@ -23,7 +23,6 @@
 #define COBC_USAGE_BINARY	'2'
 #define COBC_USAGE_PACKED	'3'
 #define COBC_USAGE_FLOAT	'4'
-#define COBC_USAGE_BIGENDIAN	'5'
 #define COBC_USAGE_INDEX	'6'
 #define COBC_USAGE_DISPLAY	'9'
 
