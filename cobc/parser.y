@@ -3433,10 +3433,10 @@ expr_1:
 	cb_tree x = l->item;
 	switch (CB_TREE_TAG (x))
 	  {
-	  case cb_tag_proposition:
+	  case CB_TAG_PROPOSITION:
 	    class_func = CB_PROPOSITION (x)->cname;
 	    goto unary_cond;
-	  case cb_tag_integer:
+	  case CB_TAG_INTEGER:
 	    {
 	      token = CB_INTEGER (x)->val;
 	      switch (token)
@@ -3857,20 +3857,20 @@ integer_value:
 
     switch (CB_TREE_TAG ($1))
       {
-      case cb_tag_const:
+      case CB_TAG_CONST:
 	{
 	  if ($1 != cb_zero)
 	    goto invalid;
 	  break;
 	}
-      case cb_tag_literal:
+      case CB_TAG_LITERAL:
 	{
 	  struct cb_literal *l = CB_LITERAL ($1);
 	  if (l->sign < 0 || l->expt < 0)
 	    goto invalid;
 	  break;
 	}
-      case cb_tag_reference:
+      case CB_TAG_REFERENCE:
 	{
 	  struct cb_field *f = CB_FIELD (cb_ref ($1));
 	  if (f->pic->expt < 0)

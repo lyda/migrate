@@ -178,7 +178,7 @@ output_data (cb_tree x)
 {
   switch (CB_TREE_TAG (x))
     {
-    case cb_tag_literal:
+    case CB_TAG_LITERAL:
       {
 	struct cb_literal *l = CB_LITERAL (x);
 	if (CB_TREE_CLASS (x) == COB_TYPE_NUMERIC)
@@ -188,7 +188,7 @@ output_data (cb_tree x)
 	  output_quoted_string (l->data, l->size);
 	break;
       }
-    case cb_tag_field:
+    case CB_TAG_FIELD:
       {
 	struct cb_field *f = CB_FIELD (x);
 	int i = f->indexes;
@@ -202,7 +202,7 @@ output_data (cb_tree x)
 	    output (" + %d * i%d", f->size, i--);
 	break;
       }
-    case cb_tag_reference:
+    case CB_TAG_REFERENCE:
       {
 	struct cb_reference *r = CB_REFERENCE (x);
 	struct cb_field *f = CB_FIELD (r->value);
@@ -244,19 +244,19 @@ output_size (cb_tree x)
 {
   switch (CB_TREE_TAG (x))
     {
-    case cb_tag_literal:
+    case CB_TAG_LITERAL:
       {
 	struct cb_literal *l = CB_LITERAL (x);
 	output ("%d", l->size + ((l->sign != 0) ? 1 : 0));
 	break;
       }
-    case cb_tag_field:
+    case CB_TAG_FIELD:
       {
 	struct cb_field *f = CB_FIELD (x);
 	output ("%d", f->size);
 	break;
       }
-    case cb_tag_reference:
+    case CB_TAG_REFERENCE:
       {
 	struct cb_reference *r = CB_REFERENCE (x);
 	struct cb_field *f = CB_FIELD (r->value);
@@ -341,7 +341,7 @@ output_attr (cb_tree x)
 {
   switch (CB_TREE_TAG (x))
     {
-    case cb_tag_literal:
+    case CB_TAG_LITERAL:
       {
 	struct cb_literal *l = CB_LITERAL (x);
 
@@ -362,7 +362,7 @@ output_attr (cb_tree x)
 	  }
 	break;
       }
-    case cb_tag_field:
+    case CB_TAG_FIELD:
       {
 	struct cb_field *f = CB_FIELD (x);
 
@@ -399,7 +399,7 @@ output_attr (cb_tree x)
 	  }
 	break;
       }
-    case cb_tag_reference:
+    case CB_TAG_REFERENCE:
       {
 	struct cb_reference *r = CB_REFERENCE (x);
 	if (r->offset)
@@ -482,28 +482,28 @@ output_param (cb_tree x, int id)
 
   switch (CB_TREE_TAG (x))
     {
-    case cb_tag_const:
+    case CB_TAG_CONST:
       output ("%s", CB_CONST (x)->val);
       break;
-    case cb_tag_integer:
+    case CB_TAG_INTEGER:
       output_integer (x);
       break;
-    case cb_tag_string:
+    case CB_TAG_STRING:
       output ("\"%s\"", CB_STRING (x)->str);
       break;
-    case cb_tag_cast_integer:
+    case CB_TAG_CAST_INTEGER:
       output_integer (CB_CAST_INTEGER (x)->val);
       break;
-    case cb_tag_decimal:
+    case CB_TAG_DECIMAL:
       output ("&d[%d]", CB_DECIMAL (x)->id);
       break;
-    case cb_tag_file:
+    case CB_TAG_FILE:
       output ("&%s", CB_FILE (x)->cname);
       break;
-    case cb_tag_literal:
+    case CB_TAG_LITERAL:
       output ("&c_%d", lookup_literal (x));
       break;
-    case cb_tag_field:
+    case CB_TAG_FIELD:
       {
 	struct cb_field *f = CB_FIELD (x);
 	if (f->indexes > 0 || f->storage == CB_STORAGE_LINKAGE)
@@ -531,7 +531,7 @@ output_param (cb_tree x, int id)
 	  }
 	break;
       }
-    case cb_tag_reference:
+    case CB_TAG_REFERENCE:
       {
 	struct cb_reference *r = CB_REFERENCE (x);
 	struct cb_field *f;
@@ -632,19 +632,19 @@ output_integer (cb_tree x)
 {
   switch (CB_TREE_TAG (x))
     {
-    case cb_tag_const:
+    case CB_TAG_CONST:
       if (x == cb_zero)
 	output ("0");
       else
 	output ("%s", CB_CONST (x)->val);
       break;
-    case cb_tag_integer:
+    case CB_TAG_INTEGER:
       output ("%d", CB_INTEGER (x)->val);
       break;
-    case cb_tag_literal:
+    case CB_TAG_LITERAL:
       output ("%d", (int) literal_to_int (CB_LITERAL (x)));
       break;
-    case cb_tag_binary_op:
+    case CB_TAG_BINARY_OP:
       {
 	struct cb_binary_op *p = CB_BINARY_OP (x);
 	output_integer (p->x);
@@ -742,12 +742,12 @@ output_cond (cb_tree x)
 {
   switch (CB_TREE_TAG (x))
     {
-    case cb_tag_const:
+    case CB_TAG_CONST:
       {
 	output ("%s", CB_CONST (x)->val);
 	break;
       }
-    case cb_tag_binary_op:
+    case CB_TAG_BINARY_OP:
       {
 	struct cb_binary_op *p = CB_BINARY_OP (x);
 	switch (p->op)
@@ -804,7 +804,7 @@ output_cond (cb_tree x)
 	  }
 	break;
       }
-    case cb_tag_funcall:
+    case CB_TAG_FUNCALL:
       {
 	struct cb_funcall *p = CB_FUNCALL (x);
 	output_func_1 (p->name, p->argv[0]);
@@ -1650,7 +1650,7 @@ output_call (cb_tree name, struct cb_list *args,
 	case CB_CALL_BY_VALUE:
 	  switch (CB_TREE_TAG (x))
 	    {
-	    case cb_tag_literal:
+	    case CB_TAG_LITERAL:
 	      if (CB_TREE_CLASS (x) == COB_TYPE_NUMERIC)
 		output ("%d", (int) literal_to_int (CB_LITERAL (x)));
 	      else
@@ -1857,7 +1857,7 @@ output_stmt (cb_tree x)
 {
   switch (CB_TREE_TAG (x))
     {
-    case cb_tag_statement:
+    case CB_TAG_STATEMENT:
       {
 	static int last_line = 0;
 	if (x->source_file && last_line != x->source_line)
@@ -1872,7 +1872,7 @@ output_stmt (cb_tree x)
 	  }
 	break;
       }
-    case cb_tag_label:
+    case CB_TAG_LABEL:
       {
 	struct cb_label *p = CB_LABEL (x);
 	output_newline ();
@@ -1881,12 +1881,12 @@ output_stmt (cb_tree x)
 	  output_line ("lb_%s:", p->cname);
 	break;
       }
-    case cb_tag_funcall:
+    case CB_TAG_FUNCALL:
       {
 	output_funcall (CB_FUNCALL (x));
 	break;
       }
-    case cb_tag_if:
+    case CB_TAG_IF:
       {
 	struct cb_if *p = CB_IF (x);
 	output_prefix ();
@@ -1910,12 +1910,12 @@ output_stmt (cb_tree x)
 	  }
 	break;
       }
-    case cb_tag_perform:
+    case CB_TAG_PERFORM:
       {
 	output_perform (CB_PERFORM (x));
 	break;
       }
-    case cb_tag_sequence:
+    case CB_TAG_SEQUENCE:
       {
 	struct cb_sequence *p = CB_SEQUENCE (x);
 	struct cb_list *l = p->list;

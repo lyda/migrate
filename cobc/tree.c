@@ -171,7 +171,7 @@ tree_name_1 (char *s, cb_tree x)
 
   switch (CB_TREE_TAG (x))
     {
-    case cb_tag_const:
+    case CB_TAG_CONST:
       if (x == cb_any)
 	strcpy (s, "ANY");
       else if (x == cb_true)
@@ -192,18 +192,18 @@ tree_name_1 (char *s, cb_tree x)
 	strcpy (s, "#<unknown constant>");
       break;
 
-    case cb_tag_literal:
+    case CB_TAG_LITERAL:
       if (CB_TREE_CLASS (x) == COB_TYPE_NUMERIC)
 	strcpy (s, CB_LITERAL (x)->data);
       else
 	sprintf (s, "\"%s\"", CB_LITERAL (x)->data);
       break;
 
-    case cb_tag_field:
+    case CB_TAG_FIELD:
       strcpy (s, CB_FIELD (x)->name);
       break;
 
-    case cb_tag_reference:
+    case CB_TAG_REFERENCE:
       {
 	struct cb_reference *p = CB_REFERENCE (x);
 	if (p->value)
@@ -232,11 +232,11 @@ tree_name_1 (char *s, cb_tree x)
       }
       break;
 
-    case cb_tag_label:
+    case CB_TAG_LABEL:
       sprintf (s, "%s", CB_LABEL (x)->name);
       break;
 
-    case cb_tag_binary_op:
+    case CB_TAG_BINARY_OP:
       {
 	struct cb_binary_op *p = CB_BINARY_OP (x);
 	if (p->op == '@')
@@ -261,7 +261,7 @@ tree_name_1 (char *s, cb_tree x)
 	break;
       }
 
-    case cb_tag_funcall:
+    case CB_TAG_FUNCALL:
       {
 	int i;
 	struct cb_funcall *p = CB_FUNCALL (x);
@@ -310,12 +310,12 @@ cb_fits_int (cb_tree x)
 {
   switch (CB_TREE_TAG (x))
     {
-    case cb_tag_literal:
+    case CB_TAG_LITERAL:
       {
 	struct cb_literal *l = CB_LITERAL (x);
 	return (l->size < 10 && l->expt == 0);
       }
-    case cb_tag_field:
+    case CB_TAG_FIELD:
       {
 	struct cb_field *f = CB_FIELD (x);
 	if (f->usage == cb_usage_index)
@@ -330,7 +330,7 @@ cb_fits_int (cb_tree x)
 	  return 1;
 	return 0;
       }
-    case cb_tag_reference:
+    case CB_TAG_REFERENCE:
       {
 	return cb_fits_int (CB_REFERENCE (x)->value);
       }
@@ -371,7 +371,7 @@ static cb_tree
 make_constant (char class, char *val)
 {
   struct cb_const *p =
-    make_tree (cb_tag_const, class, sizeof (struct cb_const));
+    make_tree (CB_TAG_CONST, class, sizeof (struct cb_const));
   p->val = val;
   return CB_TREE (p);
 }
@@ -423,7 +423,7 @@ cb_tree
 make_integer (int val)
 {
   struct cb_integer *p =
-    make_tree (cb_tag_integer, COB_TYPE_NUMERIC, sizeof (struct cb_integer));
+    make_tree (CB_TAG_INTEGER, COB_TYPE_NUMERIC, sizeof (struct cb_integer));
   p->val = val;
   return CB_TREE (p);
 }
@@ -437,7 +437,7 @@ cb_tree
 make_string (const unsigned char *str)
 {
   struct cb_string *p =
-    make_tree (cb_tag_string, COB_TYPE_NUMERIC, sizeof (struct cb_string));
+    make_tree (CB_TAG_STRING, COB_TYPE_NUMERIC, sizeof (struct cb_string));
   p->str = str;
   return CB_TREE (p);
 }
@@ -451,7 +451,7 @@ static struct cb_literal *
 make_literal (int class, size_t size, unsigned char *data)
 {
   struct cb_literal *p =
-    make_tree (cb_tag_literal, class, sizeof (struct cb_literal));
+    make_tree (CB_TAG_LITERAL, class, sizeof (struct cb_literal));
   p->size = size;
   p->data = malloc (size + 1);
   memcpy (p->data, data, size + 1);
@@ -495,7 +495,7 @@ cb_tree
 make_decimal (char id)
 {
   struct cb_decimal *p =
-    make_tree (cb_tag_decimal, COB_TYPE_NUMERIC, sizeof (struct cb_decimal));
+    make_tree (CB_TAG_DECIMAL, COB_TYPE_NUMERIC, sizeof (struct cb_decimal));
   p->id = id;
   return CB_TREE (p);
 }
@@ -747,7 +747,7 @@ cb_tree
 make_field (cb_tree name)
 {
   struct cb_field *p =
-    make_tree (cb_tag_field, COB_TYPE_ALPHANUMERIC, sizeof (struct cb_field));
+    make_tree (CB_TAG_FIELD, COB_TYPE_ALPHANUMERIC, sizeof (struct cb_field));
   p->name = associate (name, CB_TREE (p));
   return CB_TREE (p);
 }
@@ -776,15 +776,15 @@ field_size (cb_tree x)
 {
   switch (CB_TREE_TAG (x))
     {
-    case cb_tag_literal:
+    case CB_TAG_LITERAL:
       {
 	return CB_LITERAL (x)->size;
       }
-    case cb_tag_field:
+    case CB_TAG_FIELD:
       {
 	return CB_FIELD (x)->size;
       }
-    case cb_tag_reference:
+    case CB_TAG_REFERENCE:
       {
 	struct cb_reference *r = CB_REFERENCE (x);
 	struct cb_field *f = CB_FIELD (r->value);
@@ -1326,7 +1326,7 @@ struct cb_file *
 build_file (cb_tree name)
 {
   struct cb_file *p =
-    make_tree (cb_tag_file, COB_TYPE_UNKNOWN, sizeof (struct cb_file));
+    make_tree (CB_TAG_FILE, COB_TYPE_UNKNOWN, sizeof (struct cb_file));
   p->name = associate (name, CB_TREE (p));
   p->cname = to_cname (p->name);
 
@@ -1410,7 +1410,7 @@ cb_tree
 make_reference (const char *name)
 {
   struct cb_reference *p =
-    make_tree (cb_tag_reference, COB_TYPE_UNKNOWN, sizeof (struct cb_reference));
+    make_tree (CB_TAG_REFERENCE, COB_TYPE_UNKNOWN, sizeof (struct cb_reference));
   p->word = lookup_word (name);
   return CB_TREE (p);
 }
@@ -1781,7 +1781,7 @@ cb_tree
 make_binary_op (cb_tree left, char op, cb_tree right)
 {
   struct cb_binary_op *p =
-    make_tree (cb_tag_binary_op, COB_TYPE_UNKNOWN, sizeof (struct cb_binary_op));
+    make_tree (CB_TAG_BINARY_OP, COB_TYPE_UNKNOWN, sizeof (struct cb_binary_op));
   p->op = op;
   p->x = left;
   p->y = right;
@@ -1831,7 +1831,7 @@ make_funcall (const char *name, int argc,
 	      void *a1, void *a2, void *a3, void *a4)
 {
   struct cb_funcall *p =
-    make_tree (cb_tag_funcall, COB_TYPE_UNKNOWN, sizeof (struct cb_funcall));
+    make_tree (CB_TAG_FUNCALL, COB_TYPE_UNKNOWN, sizeof (struct cb_funcall));
   p->name = name;
   p->argc = argc;
   p->argv[0] = a1;
@@ -1850,7 +1850,7 @@ cb_tree
 make_cast_integer (cb_tree val)
 {
   struct cb_cast_integer *p =
-    make_tree (cb_tag_cast_integer, COB_TYPE_NUMERIC, sizeof (struct cb_cast_integer));
+    make_tree (CB_TAG_CAST_INTEGER, COB_TYPE_NUMERIC, sizeof (struct cb_cast_integer));
   p->val = val;
   return CB_TREE (p);
 }
@@ -1865,7 +1865,7 @@ make_label (cb_tree name, struct cb_label *section)
 {
   char buff[BUFSIZ];
   struct cb_label *p =
-    make_tree (cb_tag_label, COB_TYPE_UNKNOWN, sizeof (struct cb_label));
+    make_tree (CB_TAG_LABEL, COB_TYPE_UNKNOWN, sizeof (struct cb_label));
   p->name = associate (name, CB_TREE (p));
   p->section = section;
   if (section)
@@ -1885,7 +1885,7 @@ cb_tree
 make_if (cb_tree test, cb_tree stmt1, cb_tree stmt2)
 {
   struct cb_if *p =
-    make_tree (cb_tag_if, COB_TYPE_UNKNOWN, sizeof (struct cb_if));
+    make_tree (CB_TAG_IF, COB_TYPE_UNKNOWN, sizeof (struct cb_if));
   p->test  = test;
   p->stmt1 = stmt1;
   p->stmt2 = stmt2;
@@ -1901,7 +1901,7 @@ cb_tree
 make_perform (int type)
 {
   struct cb_perform *p =
-    make_tree (cb_tag_perform, COB_TYPE_UNKNOWN, sizeof (struct cb_perform));
+    make_tree (CB_TAG_PERFORM, COB_TYPE_UNKNOWN, sizeof (struct cb_perform));
   p->type = type;
   return CB_TREE (p);
 }
@@ -1953,7 +1953,7 @@ cb_tree
 make_sequence (struct cb_list *list)
 {
   struct cb_sequence *p =
-    make_tree (cb_tag_sequence, COB_TYPE_UNKNOWN, sizeof (struct cb_sequence));
+    make_tree (CB_TAG_SEQUENCE, COB_TYPE_UNKNOWN, sizeof (struct cb_sequence));
   p->list = list;
   return CB_TREE (p);
 }
@@ -1967,7 +1967,7 @@ struct cb_statement *
 build_statement (const char *name)
 {
   struct cb_statement *p =
-    make_tree (cb_tag_statement, COB_TYPE_UNKNOWN, sizeof (struct cb_statement));
+    make_tree (CB_TAG_STATEMENT, COB_TYPE_UNKNOWN, sizeof (struct cb_statement));
   p->name = name;
   CB_TREE (p)->source_file = cb_source_file;
   CB_TREE (p)->source_line = cb_source_line;
@@ -1984,7 +1984,7 @@ make_proposition (cb_tree name, struct cb_list *list)
 {
   char buff[BUFSIZ];
   struct cb_proposition *p =
-    make_tree (cb_tag_proposition, COB_TYPE_NUMERIC, sizeof (struct cb_proposition));
+    make_tree (CB_TAG_PROPOSITION, COB_TYPE_NUMERIC, sizeof (struct cb_proposition));
   p->name = associate (name, CB_TREE (p));
   sprintf (buff, "is_%s", to_cname (p->name));
   p->cname = strdup (buff);
@@ -2001,7 +2001,7 @@ cb_tree
 make_builtin (int id)
 {
   struct cb_builtin *p =
-    make_tree (cb_tag_builtin, COB_TYPE_NUMERIC, sizeof (struct cb_builtin));
+    make_tree (CB_TAG_BUILTIN, COB_TYPE_NUMERIC, sizeof (struct cb_builtin));
   p->id = id;
   return CB_TREE (p);
 }
@@ -2015,7 +2015,7 @@ cb_tree
 make_parameter (int type, cb_tree x, cb_tree y)
 {
   struct cb_parameter *p =
-    make_tree (cb_tag_parameter, COB_TYPE_UNKNOWN, sizeof (struct cb_parameter));
+    make_tree (CB_TAG_PARAMETER, COB_TYPE_UNKNOWN, sizeof (struct cb_parameter));
   p->type = type;
   p->x = x;
   p->y = y;
@@ -2083,7 +2083,7 @@ decimal_expand (cb_tree s, cb_tree d, cb_tree x)
 {
   switch (CB_TREE_TAG (x))
     {
-    case cb_tag_const:
+    case CB_TAG_CONST:
       {
 	cb_tree e;
 	if (x == cb_zero)
@@ -2093,7 +2093,7 @@ decimal_expand (cb_tree s, cb_tree d, cb_tree x)
 	add_stmt (s, e);
 	break;
       }
-    case cb_tag_literal:
+    case CB_TAG_LITERAL:
       {
 	/* set d, N */
 	struct cb_literal *l = CB_LITERAL (x);
@@ -2104,7 +2104,7 @@ decimal_expand (cb_tree s, cb_tree d, cb_tree x)
 	  add_stmt (s, make_funcall_2 ("cob_decimal_set_field", d, x));
 	break;
       }
-    case cb_tag_reference:
+    case CB_TAG_REFERENCE:
       {
 	/* set d, X */
 	struct cb_field *f = field (x);
@@ -2122,7 +2122,7 @@ decimal_expand (cb_tree s, cb_tree d, cb_tree x)
 	  add_stmt (s, make_funcall_2 ("cob_decimal_set_field", d, x));
 	break;
       }
-    case cb_tag_binary_op:
+    case CB_TAG_BINARY_OP:
       {
 	struct cb_binary_op *p = CB_BINARY_OP (x);
 	if (p->op == '@')
@@ -2302,7 +2302,7 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 
   switch (CB_TREE_TAG (src))
     {
-    case cb_tag_const:
+    case CB_TAG_CONST:
       {
 	if (src == cb_space)
 	  {
@@ -2319,7 +2319,7 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 	  }
 	break;
       }
-    case cb_tag_literal:
+    case CB_TAG_LITERAL:
       {
 	struct cb_literal *l = CB_LITERAL (src);
 
@@ -2447,8 +2447,8 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 	  }
 	break;
       }
-    case cb_tag_field:
-    case cb_tag_reference:
+    case CB_TAG_FIELD:
+    case CB_TAG_REFERENCE:
       {
 	/* non-elementary move */
 	if (CB_TREE_TYPE (src) == COB_TYPE_GROUP
@@ -2486,7 +2486,7 @@ validate_move (cb_tree src, cb_tree dst, int value_flag)
 	  }
 	break;
       }
-    case cb_tag_binary_op:
+    case CB_TAG_BINARY_OP:
       break;
     default:
       abort ();
@@ -2620,10 +2620,10 @@ build_cond (cb_tree x)
 {
   switch (CB_TREE_TAG (x))
     {
-    case cb_tag_const:
-    case cb_tag_funcall:
+    case CB_TAG_CONST:
+    case CB_TAG_FUNCALL:
       return x;
-    case cb_tag_reference:
+    case CB_TAG_REFERENCE:
       {
 	/* level 88 condition */
 	if (field (x)->level == 88)
@@ -2636,7 +2636,7 @@ build_cond (cb_tree x)
 
 	abort ();
       }
-    case cb_tag_binary_op:
+    case CB_TAG_BINARY_OP:
       {
 	struct cb_binary_op *p = CB_BINARY_OP (x);
 	switch (p->op)

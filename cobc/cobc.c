@@ -913,7 +913,7 @@ ambiguous_error (cb_tree x)
 	  sprintf (buff, "`%s' ", w->name);
 	  switch (CB_TREE_TAG (x))
 	    {
-	    case cb_tag_field:
+	    case CB_TAG_FIELD:
 	      {
 		struct cb_field *p;
 		for (p = CB_FIELD (x)->parent; p; p = p->parent)
@@ -924,7 +924,7 @@ ambiguous_error (cb_tree x)
 		  }
 		break;
 	      }
-	    case cb_tag_label:
+	    case CB_TAG_LABEL:
 	      {
 		struct cb_label *l = CB_LABEL (x);
 		if (l->section)

@@ -66,28 +66,28 @@ struct cb_word {
 
 enum cb_tag {
   /* primitives */
-  cb_tag_const,			/* constant value */
-  cb_tag_integer,		/* native integer */
-  cb_tag_string,		/* native string */
-  cb_tag_literal,		/* numeric/alphanumeric literal */
-  cb_tag_decimal,		/* decimal number */
-  cb_tag_field,			/* user-defined variable */
-  cb_tag_file,			/* file description */
+  CB_TAG_CONST,			/* constant value */
+  CB_TAG_INTEGER,		/* native integer */
+  CB_TAG_STRING,		/* native string */
+  CB_TAG_LITERAL,		/* numeric/alphanumeric literal */
+  CB_TAG_DECIMAL,		/* decimal number */
+  CB_TAG_FIELD,			/* user-defined variable */
+  CB_TAG_FILE,			/* file description */
   /* expressions */
-  cb_tag_reference,		/* reference to a field, file, or label */
-  cb_tag_binary_op,		/* binary operation */
-  cb_tag_funcall,		/* run-time function call */
-  cb_tag_cast_integer,		/* cast to integer */
+  CB_TAG_REFERENCE,		/* reference to a field, file, or label */
+  CB_TAG_BINARY_OP,		/* binary operation */
+  CB_TAG_FUNCALL,		/* run-time function call */
+  CB_TAG_CAST_INTEGER,		/* cast to integer */
   /* statements */
-  cb_tag_label,			/* label statement */
-  cb_tag_if,			/* IF statement */
-  cb_tag_perform,		/* PERFORM statement */
-  cb_tag_sequence,		/* multiple statements */
-  cb_tag_statement,		/* general statement */
+  CB_TAG_LABEL,			/* label statement */
+  CB_TAG_IF,			/* IF statement */
+  CB_TAG_PERFORM,		/* PERFORM statement */
+  CB_TAG_SEQUENCE,		/* multiple statements */
+  CB_TAG_STATEMENT,		/* general statement */
   /* miscellaneous */
-  cb_tag_proposition,		/* CLASS definition */
-  cb_tag_builtin,
-  cb_tag_parameter,
+  CB_TAG_PROPOSITION,		/* CLASS definition */
+  CB_TAG_BUILTIN,
+  CB_TAG_PARAMETER,
 };
 
 struct cb_tree_common {
@@ -158,8 +158,8 @@ struct cb_const {
   char *val;
 };
 
-#define CB_CONST(x)		(CB_TREE_CAST (cb_tag_const, struct cb_const, x))
-#define CB_CONST_P(x)		(CB_TREE_TAG (x) == cb_tag_const)
+#define CB_CONST(x)		(CB_TREE_CAST (CB_TAG_CONST, struct cb_const, x))
+#define CB_CONST_P(x)		(CB_TREE_TAG (x) == CB_TAG_CONST)
 
 extern void init_constants (void);
 
@@ -173,8 +173,8 @@ struct cb_integer {
   int val;
 };
 
-#define CB_INTEGER(x)		(CB_TREE_CAST (cb_tag_integer, struct cb_integer, x))
-#define CB_INTEGER_P(x)		(CB_TREE_TAG (x) == cb_tag_integer)
+#define CB_INTEGER(x)		(CB_TREE_CAST (CB_TAG_INTEGER, struct cb_integer, x))
+#define CB_INTEGER_P(x)		(CB_TREE_TAG (x) == CB_TAG_INTEGER)
 
 extern cb_tree make_integer (int val);
 
@@ -188,8 +188,8 @@ struct cb_string {
   const unsigned char *str;
 };
 
-#define CB_STRING(x)		(CB_TREE_CAST (cb_tag_string, struct cb_string, x))
-#define CB_STRING_P(x)		(CB_TREE_TAG (x) == cb_tag_string)
+#define CB_STRING(x)		(CB_TREE_CAST (CB_TAG_STRING, struct cb_string, x))
+#define CB_STRING_P(x)		(CB_TREE_TAG (x) == CB_TAG_STRING)
 
 extern cb_tree make_string (const unsigned char *str);
 
@@ -207,8 +207,8 @@ struct cb_literal {
   char expt;
 };
 
-#define CB_LITERAL(x)		(CB_TREE_CAST (cb_tag_literal, struct cb_literal, x))
-#define CB_LITERAL_P(x)		(CB_TREE_TAG (x) == cb_tag_literal)
+#define CB_LITERAL(x)		(CB_TREE_CAST (CB_TAG_LITERAL, struct cb_literal, x))
+#define CB_LITERAL_P(x)		(CB_TREE_TAG (x) == CB_TAG_LITERAL)
 
 extern cb_tree make_numeric_literal (int sign, unsigned char *digits, int expt);
 extern cb_tree make_nonnumeric_literal (size_t size, unsigned char *data);
@@ -224,8 +224,8 @@ struct cb_decimal {
   char id;
 };
 
-#define CB_DECIMAL(x)		(CB_TREE_CAST (cb_tag_decimal, struct cb_decimal, x))
-#define CB_DECIMAL_P(x)		(CB_TREE_TAG (x) == cb_tag_decimal)
+#define CB_DECIMAL(x)		(CB_TREE_CAST (CB_TAG_DECIMAL, struct cb_decimal, x))
+#define CB_DECIMAL_P(x)		(CB_TREE_TAG (x) == CB_TAG_DECIMAL)
 
 extern cb_tree make_decimal (char id);
 
@@ -311,8 +311,8 @@ struct cb_field {
   long screen_flag;		/* flags used in SCREEN SECTION */
 };
 
-#define CB_FIELD(x)		(CB_TREE_CAST (cb_tag_field, struct cb_field, x))
-#define CB_FIELD_P(x)		(CB_TREE_TAG (x) == cb_tag_field)
+#define CB_FIELD(x)		(CB_TREE_CAST (CB_TAG_FIELD, struct cb_field, x))
+#define CB_FIELD_P(x)		(CB_TREE_TAG (x) == CB_TAG_FIELD)
 
 #define CB_INDEX_P(x)				\
   ((CB_FIELD_P (x) || CB_REFERENCE_P (x))	\
@@ -360,8 +360,8 @@ struct cb_file {
   struct cb_label *handler;	/* error handler */
 };
 
-#define CB_FILE(x)	(CB_TREE_CAST (cb_tag_file, struct cb_file, x))
-#define CB_FILE_P(x)	(CB_TREE_TAG (x) == cb_tag_file)
+#define CB_FILE(x)	(CB_TREE_CAST (CB_TAG_FILE, struct cb_file, x))
+#define CB_FILE_P(x)	(CB_TREE_TAG (x) == CB_TAG_FILE)
 
 extern struct cb_file *build_file (cb_tree name);
 extern void validate_file (struct cb_file *f, cb_tree name);
@@ -382,8 +382,8 @@ struct cb_reference {
   struct cb_reference *next;
 };
 
-#define CB_REFERENCE(x)		(CB_TREE_CAST (cb_tag_reference, struct cb_reference, x))
-#define CB_REFERENCE_P(x)	(CB_TREE_TAG (x) == cb_tag_reference)
+#define CB_REFERENCE(x)		(CB_TREE_CAST (CB_TAG_REFERENCE, struct cb_reference, x))
+#define CB_REFERENCE_P(x)	(CB_TREE_TAG (x) == CB_TAG_REFERENCE)
 
 #define CB_NAME(x)		(CB_REFERENCE (x)->word->name)
 
@@ -431,8 +431,8 @@ struct cb_binary_op {
   cb_tree y;
 };
 
-#define CB_BINARY_OP(x)		(CB_TREE_CAST (cb_tag_binary_op, struct cb_binary_op, x))
-#define CB_BINARY_OP_P(x)	(CB_TREE_TAG (x) == cb_tag_binary_op)
+#define CB_BINARY_OP(x)		(CB_TREE_CAST (CB_TAG_BINARY_OP, struct cb_binary_op, x))
+#define CB_BINARY_OP_P(x)	(CB_TREE_TAG (x) == CB_TAG_BINARY_OP)
 
 #define make_parenthesize(x)	make_binary_op (x, '@', 0)
 #define make_negative(x)	make_binary_op (x, '!', 0)
@@ -451,8 +451,8 @@ struct cb_funcall {
   void *argv[4];
 };
 
-#define CB_FUNCALL(x)		(CB_TREE_CAST (cb_tag_funcall, struct cb_funcall, x))
-#define CB_FUNCALL_P(x)		(CB_TREE_TAG (x) == cb_tag_funcall)
+#define CB_FUNCALL(x)		(CB_TREE_CAST (CB_TAG_FUNCALL, struct cb_funcall, x))
+#define CB_FUNCALL_P(x)		(CB_TREE_TAG (x) == CB_TAG_FUNCALL)
 
 extern cb_tree make_funcall (const char *name, int argc, void *a1, void *a2, void *a3, void *a4);
 
@@ -472,8 +472,8 @@ struct cb_cast_integer {
   cb_tree val;
 };
 
-#define CB_CAST_INTEGER(x)	(CB_TREE_CAST (cb_tag_cast_integer, struct cb_cast_integer, x))
-#define CB_CAST_INTEGER_P(x)	(CB_TREE_TAG (x) == cb_tag_cast_integer)
+#define CB_CAST_INTEGER(x)	(CB_TREE_CAST (CB_TAG_CAST_INTEGER, struct cb_cast_integer, x))
+#define CB_CAST_INTEGER_P(x)	(CB_TREE_TAG (x) == CB_TAG_CAST_INTEGER)
 
 extern cb_tree make_cast_integer (cb_tree val);
 
@@ -492,8 +492,8 @@ struct cb_label {
   char need_return;
 };
 
-#define CB_LABEL(x)		(CB_TREE_CAST (cb_tag_label, struct cb_label, x))
-#define CB_LABEL_P(x)		(CB_TREE_TAG (x) == cb_tag_label)
+#define CB_LABEL(x)		(CB_TREE_CAST (CB_TAG_LABEL, struct cb_label, x))
+#define CB_LABEL_P(x)		(CB_TREE_TAG (x) == CB_TAG_LABEL)
 
 extern cb_tree make_label (cb_tree name, struct cb_label *section);
 
@@ -509,8 +509,8 @@ struct cb_if {
   cb_tree stmt2;
 };
 
-#define CB_IF(x)		(CB_TREE_CAST (cb_tag_if, struct cb_if, x))
-#define CB_IF_P(x)		(CB_TREE_TAG (x) == cb_tag_if)
+#define CB_IF(x)		(CB_TREE_CAST (CB_TAG_IF, struct cb_if, x))
+#define CB_IF_P(x)		(CB_TREE_TAG (x) == CB_TAG_IF)
 
 extern cb_tree make_if (cb_tree test, cb_tree stmt1, cb_tree stmt2);
 
@@ -539,8 +539,8 @@ struct cb_perform {
   } *varying;
 };
 
-#define CB_PERFORM(x)		(CB_TREE_CAST (cb_tag_perform, struct cb_perform, x))
-#define CB_PERFORM_P(x)		(CB_TREE_TAG (x) == cb_tag_perform)
+#define CB_PERFORM(x)		(CB_TREE_CAST (CB_TAG_PERFORM, struct cb_perform, x))
+#define CB_PERFORM_P(x)		(CB_TREE_TAG (x) == CB_TAG_PERFORM)
 
 extern cb_tree make_perform (int type);
 extern cb_tree make_perform_once (cb_tree body);
@@ -558,8 +558,8 @@ struct cb_sequence {
   int save_status;
 };
 
-#define CB_SEQUENCE(x)		(CB_TREE_CAST (cb_tag_sequence, struct cb_sequence, x))
-#define CB_SEQUENCE_P(x)	(CB_TREE_TAG (x) == cb_tag_sequence)
+#define CB_SEQUENCE(x)		(CB_TREE_CAST (CB_TAG_SEQUENCE, struct cb_sequence, x))
+#define CB_SEQUENCE_P(x)	(CB_TREE_TAG (x) == CB_TAG_SEQUENCE)
 
 extern cb_tree make_sequence (struct cb_list *list);
 
@@ -574,8 +574,8 @@ struct cb_statement {
   int need_terminator;
 };
 
-#define CB_STATEMENT(x)		(CB_TREE_CAST (cb_tag_statement, struct cb_statement, x))
-#define CB_STATEMENT_P(x)	(CB_TREE_TAG (x) == cb_tag_statement)
+#define CB_STATEMENT(x)		(CB_TREE_CAST (CB_TAG_STATEMENT, struct cb_statement, x))
+#define CB_STATEMENT_P(x)	(CB_TREE_TAG (x) == CB_TAG_STATEMENT)
 
 extern struct cb_statement *build_statement (const char *name);
 
@@ -591,8 +591,8 @@ struct cb_proposition {
   struct cb_list *list;
 };
 
-#define CB_PROPOSITION(x)	(CB_TREE_CAST (cb_tag_proposition, struct cb_proposition, x))
-#define CB_PROPOSITION_P(x)	(CB_TREE_TAG (x) == cb_tag_proposition)
+#define CB_PROPOSITION(x)	(CB_TREE_CAST (CB_TAG_PROPOSITION, struct cb_proposition, x))
+#define CB_PROPOSITION_P(x)	(CB_TREE_TAG (x) == CB_TAG_PROPOSITION)
 
 extern cb_tree make_proposition (cb_tree name, struct cb_list *list);
 
@@ -606,8 +606,8 @@ struct cb_builtin {
   int id;
 };
 
-#define CB_BUILTIN(x)		(CB_TREE_CAST (cb_tag_builtin, struct cb_builtin, x))
-#define CB_BUILTIN_P(x)		(CB_TREE_TAG (x) == cb_tag_builtin)
+#define CB_BUILTIN(x)		(CB_TREE_CAST (CB_TAG_BUILTIN, struct cb_builtin, x))
+#define CB_BUILTIN_P(x)		(CB_TREE_TAG (x) == CB_TAG_BUILTIN)
 
 extern cb_tree make_builtin (int id);
 
@@ -623,8 +623,8 @@ struct cb_parameter {
   cb_tree y;
 };
 
-#define CB_PARAMETER(x)		(CB_TREE_CAST (cb_tag_parameter, struct cb_parameter, x))
-#define CB_PARAMETER_P(x)	(CB_TREE_TAG (x) == cb_tag_parameter)
+#define CB_PARAMETER(x)		(CB_TREE_CAST (CB_TAG_PARAMETER, struct cb_parameter, x))
+#define CB_PARAMETER_P(x)	(CB_TREE_TAG (x) == CB_TAG_PARAMETER)
 
 extern cb_tree make_parameter (int type, cb_tree x, cb_tree y);
 #define make_parameter_1(type,x) make_parameter (type, x, 0)
