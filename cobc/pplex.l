@@ -365,18 +365,14 @@ ppinput_1 (char *buff, int size)
     case '*':
     case '/':
       /* remove comments */
-      strcpy (buff + 6, " \n");
-      n = 7;
+      memset (buff + 6, ' ', n - 1);
       break;
     default:
       {
-	static int count = 0;
-	if (count < 4)
-	  {
-	    cb_warning (_("invalid indicator `%c' at column 7"), buff[6]);
-	    if (++count == 4)
-	      cb_warning (_("more warnings inhibited"));
-	  }
+	static int last_line = -1;
+	if (last_line < cb_source_line - 1)
+	  cb_warning (_("invalid indicator `%c' at column 7"), buff[6]);
+	last_line = cb_source_line;
       }
       break;
     }
@@ -384,8 +380,8 @@ ppinput_1 (char *buff, int size)
   /* check the text after cb_text_column */
   if (n > cb_text_column + 1)
     {
-      static int count = 0;
-      if (cb_warn_column_overflow && count < 4)
+      static int last_line = -1;
+      if (cb_warn_column_overflow && last_line < cb_source_line - 1)
 	{
 	  int i;
 	  for (i = cb_text_column; i < n; i++)
@@ -393,13 +389,12 @@ ppinput_1 (char *buff, int size)
 	      {
 		/* show warning if it is not whitespaces */
 		cb_warning (_("source text after column %d"), cb_text_column);
-		if (++count == 4)
-		  cb_warning (_("more warnings inhibited"));
 		break;
 	      }
 	}
       /* remove it */
       strcpy (buff + cb_text_column, "\n");
+      last_line = cb_source_line;
     }
 
   return strlen (buff);
@@ -432,6 +427,7 @@ ppinput (char *buff, int max_size)
 	    break;
 
 	  /* concatenate lines */
+	  cb_source_line++;
 	  bp = buff + strlen (buff) - 1;
 	  ppinput_1 (bp, max_size - (bp - buff));
 	  for (np = bp + 7; *np == ' '; np++);
@@ -442,6 +438,7 @@ ppinput (char *buff, int max_size)
 	  strcpy (bp, np);
 	  lines++;
 	}
+      cb_source_line -= lines;
 
       /* append LF's */
       p = buff + strlen (buff);
