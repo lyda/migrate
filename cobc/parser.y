@@ -2107,12 +2107,9 @@ read_statement:
     else
       {
 	/* READ */
-	if (current_file_name->organization == COB_ORG_INDEXED)
-	  {
-	    if (!$6)
-	      $6 = current_file_name->key;
-	    push_call_3 (COB_START, $2, make_integer (COB_EQ), $6);
-	  }
+	if (!$6)
+	  $6 = current_file_name->key;
+	push_call_3 (COB_START, $2, make_integer (COB_EQ), $6);
 	push_call_1 (COB_READ, $2);
       }
     if ($5)

@@ -74,6 +74,7 @@ struct cob_file_desc {
     char secondary   : 1;	/* alternative key is in use (INDEXED files) */
   } f;
   /* fields used in RELATIVE files */
+  int relative_index;		/* relative index */
   struct cob_field relative_key; /* RELATIVE KEY */
   /* fields used in INDEXED files */
   DBC *cursor;
