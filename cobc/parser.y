@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 574
+%expect 584
 
 %{
 #define yydebug		cob_trace_parser
@@ -88,8 +88,8 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %right NOT
 %right OF
 
-%token <str>  IDSTRING
-%token <tree> SYMBOL_TOK,VARIABLE,VARCOND,SUBSCVAR,LABELSTR,PICTURE_TOK
+%token <str>  STRING_TOK
+%token <tree> SYMBOL_TOK,VARIABLE,VARCOND,SUBSCVAR,PICTURE_TOK
 %token <tree> INTEGER_TOK,NLITERAL,CLITERAL
 
 %token EQUAL,GREATER,LESS,GE,LE,COMMAND_LINE,ENVIRONMENT_VARIABLE,ALPHABET
@@ -160,14 +160,14 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %type <sival> screen_clauses
 %type <snval> sort_file_list,sort_input,sort_output
 %type <str> idstring
-%type <tree> field_description,label,filename,noallname,assign_clause
+%type <tree> field_description,label,label_name,filename,noallname
 %type <tree> file_description,redefines_var,function_call,subscript
 %type <tree> name,gname,number,file,level1_variable,opt_def_name,def_name
 %type <tree> opt_read_into,opt_write_from,field_name,expr,unsafe_expr
 %type <tree> opt_unstring_count,opt_unstring_delim,unstring_tallying
 %type <tree> numeric_variable,group_variable,numeric_edited_variable
 %type <tree> qualified_var,unqualified_var,evaluate_subject
-%type <tree> evaluate_object,evaluate_object_1
+%type <tree> evaluate_object,evaluate_object_1,assign_clause
 %type <tree> call_returning,screen_to_name,var_or_lit,opt_add_to
 %type <tree> sort_keys,opt_perform_thru
 %type <tree> opt_read_key,file_name,string_with_pointer
@@ -217,8 +217,6 @@ identification_division:
   PROGRAM_ID '.' idstring opt_program_parameter dot
   identification_division_options
   {
-    current_section = NULL;
-    current_paragraph = NULL;
     init_program ($6);
   }
 ;
@@ -1136,13 +1134,15 @@ opt_number_is: | NUMBER opt_is ;
 
 
 /*****************************************************************************
- * PROCEDURE DIVISION.
+ * PROCEDURE DIVISION
  *****************************************************************************/
 
 procedure_division:
 | PROCEDURE DIVISION { in_procedure = 1; curr_division = CDIV_INITIAL; }
   procedure_using dot
   {
+    current_section = NULL;
+    current_paragraph = NULL;
     proc_header ($4);
   }
   procedure_list
@@ -1157,6 +1157,9 @@ procedure_division:
     in_procedure = 0;
   }
 ;
+
+/* USING clause */
+
 procedure_using:
   /* nothing */			{ $$ = 0; }
 | USING using_vars		{ $$ = 1; }
@@ -1165,53 +1168,117 @@ using_vars:
   gname				{ gen_save_using ($1); }
 | using_vars gname		{ gen_save_using ($2); }
 ;
+
+/* Procedures */
+
 procedure_list:
 | procedure_list procedure
 ;
 procedure:
-  procedure_section
-| procedure_paragraph
+  procedure_section dot
+| procedure_paragraph dot
 | statement_list dot
 | error '.'
 | '.'
 ;
+
+
+/*******************
+ * Section/Paragraph
+ *******************/
+
 procedure_section:
-  LABELSTR SECTION dot
+  label_name SECTION
   {
     cob_tree label = $1;
-    if (label->defined != 0)
-      label = install(COB_FIELD_NAME (label), SYTB_LAB, 2);
-    COB_FIELD_TYPE (label) = 'S';
+    if (label->defined)
+      {
+	label = install (COB_FIELD_NAME (label), SYTB_LAB, 2);
+      }
     label->defined = 1;
+    COB_FIELD_TYPE (label) = 'S';
 
-    /* Begin a new section */
+    /* End the last section */
     if (current_paragraph)
       gen_end_label (current_paragraph);
     if (current_section)
       gen_end_label (current_section);
-    current_paragraph = NULL;
+
+    /* Begin a new section */
     current_section = label;
+    current_paragraph = NULL;
     gen_begin_label (current_section);
   }
 ;
-procedure_paragraph:
-  LABELSTR dot
-  {
-    cob_tree lab=$1;
-    if (lab->defined != 0)
-      if ((lab=lookup_label(lab,current_section))==NULL)
-	lab = install(COB_FIELD_NAME ($1),SYTB_LAB,2);
-    COB_FIELD_TYPE (lab) = 'P';
-    lab->parent = current_section;
-    lab->defined=1;
 
-    /* Begin a new paragraph */
+procedure_paragraph:
+  label_name
+  {
+    cob_tree lab = $1;
+    if (lab->defined)
+      {
+	lab = lookup_label (lab, current_section);
+	if (!lab)
+	  lab = install (COB_FIELD_NAME ($1), SYTB_LAB, 2);
+      }
+    lab->defined = 1;
+    lab->parent = current_section;
+    COB_FIELD_TYPE (lab) = 'P';
+
+    /* End the last paragraph */
     if (current_paragraph)
       gen_end_label (current_paragraph);
+
+    /* Begin a new paragraph */
     current_paragraph = lab;
     gen_begin_label (current_paragraph);
   }
 ;
+
+
+/*
+ * Label
+ */
+
+label:
+  label_name
+  {
+    cob_tree lab = $1;
+    if (lab->defined == 0)
+      {
+	lab->defined = 2;
+	lab->parent = current_section;
+      }
+    else if ((lab = lookup_label (lab, current_section)) == NULL)
+      {
+	lab = install (COB_FIELD_NAME ($1), SYTB_LAB, 2);
+	lab->defined = 2;
+	lab->parent = current_section;
+      }
+    $$ = lab;
+  }
+| label_name in_of label_name
+  {
+    cob_tree lab = $1;
+    if (lab->defined == 0)
+      {
+	lab->defined = 2;
+	lab->parent = $3;
+      }
+    else if ((lab = lookup_label (lab, $3)) == NULL)
+      {
+	lab = install (COB_FIELD_NAME ($1), SYTB_LAB, 2);
+	lab->defined = 2;
+	lab->parent = $3;
+      }
+    $$ = lab;
+  }
+;
+label_name:
+  INTEGER_TOK		{ $$ = install_label (COB_FIELD_NAME ($1)); }
+| STRING_TOK		{ $$ = install_label ($1); }
+;
+in_of: IN | OF ;
 
 
 /*******************
@@ -2891,7 +2958,7 @@ integer:
 
 
 idstring:
-  { start_condition = START_ID; } IDSTRING { $$ = $2; }
+  { start_condition = START_ID; } STRING_TOK { $$ = $2; }
 ;
 
 
@@ -3032,58 +3099,6 @@ unqualified_var:
   VARIABLE			{ $$ = $1; }
 | SUBSCVAR			{ $$ = $1; need_subscripts = 1; }
 ;
-
-label:
-  INTEGER_TOK
-  {
-    cob_tree lab = install (COB_FIELD_NAME ($1), SYTB_VAR, 0);
-    if (lab->defined == 0)
-      {
-	lab->defined = 2;
-	lab->parent = current_section;
-      }
-    else if ((lab = lookup_label (lab, current_section)) == NULL)
-      {
-	lab = install (COB_FIELD_NAME ($1), SYTB_LAB, 2);
-	lab->defined = 2;
-	lab->parent = current_section;
-      }
-    $$ = lab;
-  }
-| LABELSTR
-  {
-    cob_tree lab = $1;
-    if (lab->defined == 0)
-      {
-	lab->defined = 2;
-	lab->parent = current_section;
-      }
-    else if ((lab = lookup_label (lab, current_section)) == NULL)
-      {
-	lab = install (COB_FIELD_NAME ($1), SYTB_LAB, 2);
-	lab->defined = 2;
-	lab->parent = current_section;
-      }
-    $$ = lab;
-  }
-| LABELSTR in_of LABELSTR
-  {
-    cob_tree lab = $1;
-    if (lab->defined == 0)
-      {
-	lab->defined = 2;
-	lab->parent = $3;
-      }
-    else if ((lab = lookup_label (lab, $3)) == NULL)
-      {
-	lab = install (COB_FIELD_NAME ($1), SYTB_LAB, 2);
-	lab->defined = 2;
-	lab->parent = $3;
-      }
-    $$ = lab;
-  }
-;
-in_of: IN | OF ;
 
 dot:
   '.'

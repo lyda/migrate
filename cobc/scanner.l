@@ -156,7 +156,7 @@ X\"[^\"\n]*\" {
     BEGIN INITIAL;
     SAVE_YYTEXT;
     yylval.str = strdup (yytext);
-    return IDSTRING;
+    return STRING_TOK;
   }
   .		{ /* ignore */ }
 }
@@ -284,8 +284,8 @@ scan_word (char *text)
       /* otherwise, it should be a label */
       else
 	{
-	  yylval.tree = install_label (yytext);
-	  return LABELSTR;
+	  yylval.str = strdup (yytext);
+	  return STRING_TOK;
 	}
     }
 }
