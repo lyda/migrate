@@ -187,6 +187,7 @@ static struct option long_options[] = {
   {"free", no_argument, &cb_source_format, CB_FORMAT_FREE},
   {"fixed", no_argument, &cb_source_format, CB_FORMAT_FIXED},
   {"column", required_argument, 0, '*'},
+  {"O2", no_argument, 0, '2'},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
 #undef CB_FLAG
@@ -284,6 +285,10 @@ process_command_line (int argc, char *argv[])
 	case 'm': cb_compile_level = CB_LEVEL_MODULE; break;
 	case 'v': verbose_output = 1; break;
 	case 'o': output_name = strdup (optarg); break;
+
+	case '2': /* -O2 */
+	  strcat (cob_cflags, " -O2");
+	  /* fall through */
 
 	case 'O':
 	  cb_flag_inline_get_int = 1;
