@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 536
+%expect 574
 
 %{
 #define yydebug		cob_trace_parser
@@ -38,6 +38,8 @@
 #include "cobc.h"
 #include "codegen.h"
 #include "_libcob.h"
+
+#define OBSOLETE(x)	yywarn ("keyword `%s' is obsolete", x)
 
 #define ASSERT_VALID_EXPR(x)			\
   do {						\
@@ -100,7 +102,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %token DELIMITER,COUNT,LEFT,TRAILING,CHARACTER,FILLER,OCCURS,TIMES
 %token ADD,SUBTRACT,MULTIPLY,DIVIDE,ROUNDED,REMAINDER,ERROR,SIZE,INDEX
 %token FD,SD,REDEFINES,PICTURE,FILEN,USAGE,BLANK,SIGN,VALUE,MOVE,LABEL
-%token PROGRAM_ID,DIVISION,CONFIGURATION,SPECIAL_NAMES
+%token PROGRAM_ID,DIVISION,CONFIGURATION,SPECIAL_NAMES,MEMORY,ALTER
 %token FILE_CONTROL,I_O_CONTROL,FROM,UPDATE,SAME,AREA,EXCEPTION,UNTIL
 %token WORKING_STORAGE,LINKAGE,DECIMAL_POINT,COMMA,DUPLICATES,WITH,EXIT
 %token RECORD,OMITTED,STANDARD,STANDARD_1,STANDARD_2,RECORDS,BLOCK,VARYING
@@ -125,6 +127,7 @@ static cob_tree make_opt_cond (cob_tree last, int type, cob_tree this);
 %token AUTHOR,DATE_WRITTEN,DATE_COMPILED,INSTALLATION,SECURITY
 %token COMMON,RETURN,END_RETURN,PREVIOUS,NEXT,PACKED_DECIMAL
 %token INPUT,I_O,OUTPUT,EXTEND,EOL,EOS,BINARY,FLOAT_SHORT,FLOAT_LONG
+%token SW1,SW2,SW3,SW4,SW5,SW6,SW7,SW8
 
 %type <baval> inspect_before_after
 %type <ival> if_then,search_body,search_all_body,class
@@ -217,17 +220,17 @@ identification_division:
 ;
 opt_program_parameter:
 | opt_is TOK_INITIAL opt_program { yywarn ("INITIAL is not supported yet"); }
-| opt_is COMMON opt_program  { yywarn ("COMMON is not supported yet"); }
+| opt_is COMMON opt_program	 { yywarn ("COMMON is not supported yet"); }
 ;
 identification_division_options:
 | identification_division_options identification_division_option
 ;
 identification_division_option:
-  AUTHOR '.' comment
-| DATE_WRITTEN '.' comment
-| DATE_COMPILED '.' comment
-| INSTALLATION '.' comment
-| SECURITY '.' comment
+  AUTHOR '.' comment		{ OBSOLETE ("AUTHOR"); }
+| DATE_WRITTEN '.' comment	{ OBSOLETE ("DATE-WRITTEN"); }
+| DATE_COMPILED '.' comment	{ OBSOLETE ("DATE-COMPILED"); }
+| INSTALLATION '.' comment	{ OBSOLETE ("INSTALLATION"); }
+| SECURITY '.' comment		{ OBSOLETE ("SECURITY"); }
 ;
 comment: { start_condition = START_COMMENT; };
 
@@ -278,10 +281,14 @@ opt_with_debugging_mode:
  */
 
 object_computer:
-  OBJECT_COMPUTER '.' idstring opt_collating_sequence dot
+  OBJECT_COMPUTER '.' idstring object_computer_options dot
 ;
-opt_collating_sequence:
-| opt_program opt_collating SEQUENCE opt_is idstring
+object_computer_options:
+| object_computer_options object_computer_option
+;
+object_computer_option:
+  opt_program opt_collating SEQUENCE opt_is SYMBOL_TOK
+| MEMORY SIZE opt_is integer CHARACTERS { OBSOLETE ("MEMORY SIZE"); }
 ;
 opt_collating: | COLLATING ;
 
@@ -302,6 +309,7 @@ special_names:
 ;
 special_name:
   special_name_defined
+| special_name_switch
 | special_name_alphabet
 | special_name_currency
 | special_name_decimal_point
@@ -313,8 +321,13 @@ special_name:
 
 special_name_defined:
   SYMBOL_TOK opt_is SYMBOL_TOK { }
-| SYMBOL_TOK opt_is SYMBOL_TOK on_off_names { }
-| SYMBOL_TOK on_off_names { }
+;
+
+
+/* SW1, ..., SW8 */
+special_name_switch:
+  sw opt_is SYMBOL_TOK on_off_names { }
+| sw on_off_names { }
 ;
 on_off_names:
   on_status_is_name
@@ -328,6 +341,7 @@ on_status_is_name:
 off_status_is_name:
   OFF opt_status opt_is SYMBOL_TOK
 ;
+sw: SW1 | SW2 | SW3 | SW4 | SW5 | SW6 | SW7 | SW8 ;
 
 
 /* ALPHABET */
@@ -1192,6 +1206,7 @@ statement_list:
 statement:
   accept_statement
 | add_statement
+| alter_statement
 | call_statement
 | cancel_statement
 | close_statement
@@ -1238,7 +1253,6 @@ conditional_statement:
 | CONTINUE
 | NEXT SENTENCE
 ;
-
 
 
 /*
@@ -1304,6 +1318,23 @@ opt_add_to:
 | TO gname			{ $$ = $2; }
 ;
 end_add: | END_ADD ;
+
+
+/*
+ * ALTER statement
+ */
+
+alter_statement:
+  ALTER alter_options		{ yywarn ("ALTER statement is obsolete"); }
+;
+alter_options:
+  alter_option
+| alter_options alter_option
+;
+alter_option:
+  label TO idstring { }
+| label TO idstring TO label { }
+;
 
 
 /*
@@ -1606,6 +1637,7 @@ exit_statement:
 goto_statement:
   GO opt_to label_list				 { gen_goto ($3, NULL); }
 | GO opt_to label_list DEPENDING opt_on variable { gen_goto ($3, $6); }
+| GO opt_to { yywarn ("GO TO statement without labels is obsolete"); }
 ;
 label_list:
   label				{ $$ = make_list ($1); }
@@ -2372,7 +2404,8 @@ opt_end_start: | END_START ;
  */
 
 stoprun_statement:
-  STOP RUN { gen_stoprun (); }
+  STOP RUN			{ gen_stoprun (); }
+| STOP CLITERAL			{ yywarn ("STOP \"name\" is obsolete"); }
 ;
 
 
