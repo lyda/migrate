@@ -2671,7 +2671,7 @@ condition:
 expr:
   expr_item_list
   {
-    int i, token;
+    int i;
     int last_operator = 0;
     cobc_tree last_lefthand = NULL;
     char *class_func = NULL;
@@ -2778,6 +2778,7 @@ expr:
 #define look_ahead(l) \
         ((l && COBC_INTEGER_P (l->item)) ? COBC_INTEGER (l->item)->val : 0)
 
+	int token = 0;
 	cobc_tree x = l->item;
 	switch (COBC_TREE_TAG (x))
 	  {
