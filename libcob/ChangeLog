@@ -1,3 +1,7 @@
+2003-09-29  Keisuke Nishida  <kxn30@yahoo.co.jp>
+
+	* common.c (cob_is_numeric): Test packed decimal.
+
 2003-08-30  Keisuke Nishida  <kxn30@yahoo.co.jp>
 
 	* common.h (cob_module): Replace `flag_binary_print_full' by

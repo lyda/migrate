@@ -523,8 +523,26 @@ cob_is_numeric (cob_field *f)
   switch (COB_FIELD_TYPE (f))
     {
     case COB_TYPE_NUMERIC_BINARY:
-    case COB_TYPE_NUMERIC_PACKED:
       return 1;
+    case COB_TYPE_NUMERIC_PACKED:
+      {
+	int i;
+	int sign;
+	/* check digits */
+	for (i = 0; i < f->size - 1; i++)
+	  if ((f->data[i] & 0xf0) > 0x90 || (f->data[i] & 0x0f) > 0x09)
+	    return 0;
+	if ((f->data[i] & 0xf0) > 0x90)
+	  return 0;
+	/* check sign */
+	sign = f->data[i] & 0x0f;
+	if (sign == 0x0f)
+	  return 1;
+	if (COB_FIELD_HAVE_SIGN (f))
+	  if (sign == 0x0c || sign == 0x0d)
+	    return 1;
+	return 0;
+      }
     case COB_TYPE_NUMERIC_DISPLAY:
       {
 	int i;
