@@ -601,7 +601,6 @@ enum cb_cast_type {
   CB_CAST_INTEGER,
   CB_CAST_ADDRESS,
   CB_CAST_LENGTH,
-  CB_CAST_DEREFERENCE,
 };
 
 struct cb_cast {
@@ -618,7 +617,6 @@ extern cb_tree cb_build_cast (enum cb_cast_type type, cb_tree val);
 #define cb_build_cast_integer(x)	cb_build_cast (CB_CAST_INTEGER, x)
 #define cb_build_cast_address(x)	cb_build_cast (CB_CAST_ADDRESS, x)
 #define cb_build_cast_length(x)		cb_build_cast (CB_CAST_LENGTH, x)
-#define cb_build_dereference(x)		cb_build_cast (CB_CAST_DEREFERENCE, x)
 
 
 /*

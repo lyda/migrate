@@ -2138,8 +2138,7 @@ cb_build_move_num (cb_tree x, int high)
   switch (cb_field (x)->usage)
     {
     case CB_USAGE_BINARY:
-      return cb_build_assign (cb_build_cast_integer (x),
-			      cb_int (high ? -1 : 0));
+      return cb_build_assign (x, cb_int (high ? -1 : 0));
     case CB_USAGE_DISPLAY:
       return cb_build_memset (x, high ? '9' : '0');
     case CB_USAGE_PACKED:
@@ -2317,7 +2316,7 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
       int n = f->pic->scale - l->scale;
       for (; n > 0; n--) val *= 10;
       for (; n < 0; n++) val /= 10;
-      return cb_build_assign (cb_build_cast_integer (dst), cb_int (val));
+      return cb_build_assign (dst, cb_int (val));
     }
   else
     {
@@ -2381,17 +2380,10 @@ cb_build_move (cb_tree src, cb_tree dst)
     CB_REFERENCE (dst)->type = CB_RECEIVING_OPERAND;
 
   if (CB_TREE_CLASS (dst) == CB_CLASS_POINTER)
-    {
-      if (CB_REFERENCE_P (dst) && CB_TREE_CLASS (dst) == CB_CLASS_POINTER)
-	dst = cb_build_dereference (dst);
-      if (CB_REFERENCE_P (src) && CB_TREE_CLASS (src) == CB_CLASS_POINTER)
-	src = cb_build_dereference (src);
-      return cb_build_assign (dst, src);
-    }
+    return cb_build_assign (dst, src);
 
   if (CB_INDEX_P (dst))
-    return cb_build_assign (cb_build_cast_integer (dst),
-			    cb_build_cast_integer (src));
+    return cb_build_assign (dst, src);
 
   if (CB_INDEX_P (src))
     return cb_build_funcall_2 ("cob_set_int", dst,

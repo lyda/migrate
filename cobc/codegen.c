@@ -723,10 +723,6 @@ output_param (cb_tree x, int id)
 	  case CB_CAST_LENGTH:
 	    output_size (p->val);
 	    break;
-	  case CB_CAST_DEREFERENCE:
-	    output ("(*(unsigned char **) (");
-	    output_data (p->val);
-	    output ("))");
 	  }
 	break;
       }
@@ -1702,9 +1698,9 @@ output_stmt (cb_tree x)
       {
 	struct cb_assign *p = CB_ASSIGN (x);
 	output_prefix ();
-	output_param (p->var, 0);
+	output_integer (p->var);
 	output (" = ");
-	output_param (p->val, 1);
+	output_integer (p->val);
 	output (";\n");
 	break;
       }
@@ -2108,8 +2104,7 @@ output_internal_function (struct cb_program *prog, int single,
   /* initialization */
   output_line ("if (!initialized)");
   output_indent ("  {");
-  output_stmt (cb_build_assign (cb_build_cast_integer (cb_return_code),
-				cb_int0));
+  output_stmt (cb_build_assign (cb_return_code, cb_int0));
   output_line ("/* initialize decimal numbers */");
   output_line ("for (i = 0; i < %d; i++)", prog->decimal_index_max);
   output_line ("  cob_decimal_init (&d[i]);");
