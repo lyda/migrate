@@ -21,6 +21,7 @@ $skip{"NC109M"} = 1;
 $skip{"NC110M"} = 1;
 $skip{"NC113M"} = 1;
 $skip{"NC204M"} = 1;
+$skip{"NC401M"} = 1;
 
 my $num_progs = 0;
 my $test_skipped = 0;

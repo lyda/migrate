@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001 Keisuke Nishida
+ * Copyright (C) 2001-2002 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,33 +21,25 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "codegen.h"
+#include "tree.h"
 #include "parser.h"
 #include "reserved.h"
 
 #define HASH_SIZE 133
 
-static struct word {
+static struct reserved {
   const char *name;
   int token;
-  struct word *next;
+  struct reserved *next;
 } *reserved_table[HASH_SIZE];
 
-static struct word builtin_words[] = {
+static struct reserved builtin_words[] = {
   {"STDIN",		BUILTIN_TOK},
   {"STDOUT",		BUILTIN_TOK},
   {"STDERR",		BUILTIN_TOK},
   {"STANDARD-INPUT",	BUILTIN_TOK},
   {"STANDARD-OUTPUT",	BUILTIN_TOK},
   {"STANDARD-ERROR",	BUILTIN_TOK},
-  {"SW1",		BUILTIN_TOK},
-  {"SW2",		BUILTIN_TOK},
-  {"SW3", 	       	BUILTIN_TOK},
-  {"SW4",		BUILTIN_TOK},
-  {"SW5",		BUILTIN_TOK},
-  {"SW6",		BUILTIN_TOK},
-  {"SW7",		BUILTIN_TOK},
-  {"SW8",		BUILTIN_TOK},
   {"SWITCH-1",		BUILTIN_TOK},
   {"SWITCH-2",		BUILTIN_TOK},
   {"SWITCH-3", 	       	BUILTIN_TOK},
@@ -59,7 +51,7 @@ static struct word builtin_words[] = {
   {0, 0}
 };
 
-static struct word reserved_words[] = {
+static struct reserved reserved_words[] = {
   {"ACCEPT",		ACCEPT},
   {"ACCESS",		ACCESS},
   {"ADD",		ADD},
@@ -79,6 +71,7 @@ static struct word reserved_words[] = {
   {"ANY",		ANY},
   {"ARE",		ARE},
   {"AREA",		AREA},
+  {"AREAS",		AREA},
   {"ASCENDING",		ASCENDING},
   {"ASSIGN",		ASSIGN},
   {"AT",		AT},
@@ -94,34 +87,20 @@ static struct word reserved_words[] = {
   {"CHARACTERS",	CHARACTERS},
   {"CLASS",		CLASS},
   {"CLOSE",		CLOSE},
-  {"COL",		COLUMN},
   {"COLLATING",		COLLATING},
-  {"COLUMN",		COLUMN},
-  {"COM1",		PORT},
-  {"COM2",		PORT},
-  {"COM3",		PORT},
-  {"COM4",		PORT},
   {"COMMA",		COMMA},
   {"COMMAND-LINE",	COMMAND_LINE},
   {"COMMON",		COMMON},
   {"COMP",		BINARY},
-  {"COMP-1",		FLOAT_SHORT},
-  {"COMP-2",		FLOAT_LONG},
   {"COMP-3",		PACKED_DECIMAL},
-  {"COMP-5",		BINARY},
   {"COMPUTATIONAL",	BINARY},
-  {"COMPUTATIONAL-1",	FLOAT_SHORT},
-  {"COMPUTATIONAL-2",	FLOAT_LONG},
   {"COMPUTATIONAL-3",	PACKED_DECIMAL},
-  {"COMPUTATIONAL-5",	BINARY},
   {"COMPUTE",		COMPUTE},
   {"CONFIGURATION",	CONFIGURATION},
   {"CONSOLE",		CONSOLE},
   {"CONTAINS",		CONTAINS},
   {"CONTENT",		CONTENT},
   {"CONTINUE",		CONTINUE},
-  {"CONTROL",		CONTROL},
-  {"CONTROLS",		CONTROL},
   {"CONVERTING",	CONVERTING},
   {"CORR",		CORRESPONDING},
   {"CORRESPONDING",	CORRESPONDING},
@@ -140,8 +119,6 @@ static struct word reserved_words[] = {
   {"DELIMITER",		DELIMITER},
   {"DEPENDING",		DEPENDING},
   {"DESCENDING",	DESCENDING},
-  {"DETAIL",		DETAIL},
-  {"DISK",		PORT},
   {"DISPLAY",		DISPLAY},
   {"DIVIDE",		DIVIDE},
   {"DIVISION",		DIVISION},
@@ -160,7 +137,6 @@ static struct word reserved_words[] = {
   {"END-MULTIPLY",	END_MULTIPLY},
   {"END-PERFORM",	END_PERFORM},
   {"END-READ",		END_READ},
-  {"END-RETURN",	END_RETURN},
   {"END-REWRITE",	END_REWRITE},
   {"END-SEARCH",	END_SEARCH},
   {"END-START",		END_START},
@@ -179,26 +155,18 @@ static struct word reserved_words[] = {
   {"EXTERNAL",		EXTERNAL},
   {"FALSE",		FALSE},
   {"FD",		FD},
-  {"FILE",		FILEN},
+  {"FILE",		TOK_FILE},
   {"FILE-CONTROL",	FILE_CONTROL},
-  {"FILE-ID",		FILE_ID},
   {"FILLER",		FILLER},
-  {"FINAL",		FINAL},
   {"FIRST",		FIRST},
-  {"FLOAT-LONG",	FLOAT_LONG},
-  {"FLOAT-SHORT",	FLOAT_SHORT},
-  {"FOOTING",		FOOTING},
   {"FOR",		FOR},
   {"FROM",		FROM},
-  {"FUNCTION",		FUNCTION},
-  {"GENERATE",		GENERATE},
   {"GIVING",		GIVING},
   {"GLOBAL",		GLOBAL},
   {"GO",		GO},
   {"GREATER",		GREATER},
-  {"HEADING",		HEADING},
-  {"HIGH-VALUE",	HIGH_VALUES},
-  {"HIGH-VALUES",	HIGH_VALUES},
+  {"HIGH-VALUE",	HIGH_VALUE},
+  {"HIGH-VALUES",	HIGH_VALUE},
   {"I-O",		I_O},
   {"I-O-CONTROL",	I_O_CONTROL},
   {"IDENTIFICATION",	IDENTIFICATION},
@@ -208,7 +176,6 @@ static struct word reserved_words[] = {
   {"INDEXED",		INDEXED},
   {"INITIAL",		TOK_INITIAL},
   {"INITIALIZE",	INITIALIZE},
-  {"INITIATE",		INITIATE},
   {"INPUT",		INPUT},
   {"INPUT-OUTPUT",	INPUT_OUTPUT},
   {"INSPECT",		INSPECT},
@@ -220,20 +187,14 @@ static struct word reserved_words[] = {
   {"JUSTIFIED",		JUSTIFIED},
   {"KEY",		KEY},
   {"LABEL",		LABEL},
-  {"LAST",		LAST},
   {"LEADING",		LEADING},
   {"LEFT",		LEFT},
   {"LESS",		LESS},
-  {"LIMIT",		LIMIT},
   {"LINE",		LINE},
   {"LINES",		LINE},
   {"LINKAGE",		LINKAGE},
-  {"LOW-VALUE",		LOW_VALUES},
-  {"LOW-VALUES",	LOW_VALUES},
-  {"LPT1",		PORT},
-  {"LPT2",		PORT},
-  {"LPT3",		PORT},
-  {"LPT4",		PORT},
+  {"LOW-VALUE",		LOW_VALUE},
+  {"LOW-VALUES",	LOW_VALUE},
   {"MEMORY",		MEMORY},
   {"MODE",		MODE},
   {"MOVE",		MOVE},
@@ -245,7 +206,6 @@ static struct word reserved_words[] = {
   {"NATIONAL-EDITED",	NATIONAL_EDITED},
   {"NO",		NO},
   {"NOT",		NOT},
-  {"NUMBER",		NUMBER},
   {"NUMERIC",		NUMERIC},
   {"NUMERIC-EDITED",	NUMERIC_EDITED},
   {"OBJECT-COMPUTER",	OBJECT_COMPUTER},
@@ -264,40 +224,31 @@ static struct word reserved_words[] = {
   {"PACKED-DECIMAL",	PACKED_DECIMAL},
   {"PAGE",		PAGE},
   {"PERFORM",		PERFORM},
-  {"PLUS",		PLUS},
   {"POINTER",		POINTER},
   {"POSITIVE",		POSITIVE},
-  {"PREV",		PREVIOUS},
-  {"PREVIOUS",		PREVIOUS},
-  {"PRINTER",		PORT},
+  {"PROCEED",		PROCEED},
   {"PROCEDURE",		PROCEDURE},
   {"PROGRAM",		PROGRAM},
   {"PROGRAM-ID",	PROGRAM_ID},
-  {"QUOTE",		QUOTES},
-  {"QUOTES",		QUOTES},
+  {"QUOTE",		QUOTE},
+  {"QUOTES",		QUOTE},
   {"RANDOM",		RANDOM},
-  {"RD",		RD},
   {"READ",		READ},
-  {"READY",		READY},
   {"RECORD",		RECORD},
   {"RECORDS",		RECORDS},
   {"REDEFINES",		REDEFINES},
   {"REFERENCE",		REFERENCE},
   {"RELATIVE",		RELATIVE},
-  {"RELEASE",		RELEASE},
   {"REMAINDER",		REMAINDER},
   {"RENAMES",		RENAMES},
   {"REPLACING",		REPLACING},
-  {"REPORT",		REPORT},
-  {"RESET",		RESET},
-  {"RETURN",		RETURN},
+  {"RESERVE",		RESERVE},
   {"RETURNING",		RETURNING},
   {"REWRITE",		REWRITE},
   {"RIGHT",		RIGHT},
   {"ROUNDED",		ROUNDED},
   {"RUN",		RUN},
   {"SAME",		SAME},
-  {"SD",		SD},
   {"SEARCH",		SEARCH},
   {"SECTION",		SECTION},
   {"SECURITY",		SECURITY},
@@ -311,10 +262,9 @@ static struct word reserved_words[] = {
   {"SIZE",		SIZE},
   {"SORT",		SORT},
   {"SORT-MERGE",	SORT_MERGE},
-  {"SOURCE",		SOURCE},
   {"SOURCE-COMPUTER",	SOURCE_COMPUTER},
-  {"SPACE",		SPACES},
-  {"SPACES",		SPACES},
+  {"SPACE",		SPACE},
+  {"SPACES",		SPACE},
   {"SPECIAL-NAMES",	SPECIAL_NAMES},
   {"STANDARD",		STANDARD},
   {"STANDARD-1",	STANDARD_1},
@@ -324,12 +274,10 @@ static struct word reserved_words[] = {
   {"STOP",		STOP},
   {"STRING",		STRING},
   {"SUBTRACT",		SUBTRACT},
-  {"SUM",		SUM},
   {"SYMBOLIC",		SYMBOLIC},
   {"SYNC",		SYNCHRONIZED},
   {"SYNCHRONIZED",      SYNCHRONIZED},
   {"TALLYING",	    	TALLYING},
-  {"TERMINATE",	    	TERMINATE},
   {"TEST",	    	TEST},
   {"THAN",	    	THAN},
   {"THEN",	    	THEN},
@@ -338,10 +286,8 @@ static struct word reserved_words[] = {
   {"TIME",	    	TIME},
   {"TIMES",	    	TIMES},
   {"TO",	    	TO},
-  {"TRACE",	    	TRACE},
   {"TRAILING",	    	TRAILING},
   {"TRUE",	    	TRUE},
-  {"TYPE",	    	TYPE},
   {"UNSTRING",	    	UNSTRING},
   {"UNTIL",	    	UNTIL},
   {"UP",       	    	UP},
@@ -355,9 +301,9 @@ static struct word reserved_words[] = {
   {"WITH",		WITH},
   {"WORKING-STORAGE",	WORKING_STORAGE},
   {"WRITE",		WRITE},
-  {"ZERO",		ZEROS},
-  {"ZEROES",		ZEROS},
-  {"ZEROS",		ZEROS},
+  {"ZERO",		ZERO},
+  {"ZEROES",		ZERO},
+  {"ZEROS",		ZERO},
   {0, 0}
 };
 
@@ -373,7 +319,7 @@ hash (const char *s)
 int
 lookup_reserved_word (const char *name)
 {
-  struct word *p;
+  struct reserved *p;
   for (p = reserved_table[hash (name)]; p; p = p->next)
     if (strcasecmp (name, p->name) == 0)
       return p->token;

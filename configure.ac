@@ -9,6 +9,9 @@ AM_MAINTAINER_MODE
 AM_CONFIG_HEADER(config.h)
 AC_SUBST(RELEASE)
 
+# enable debug mode by default for now
+AC_DEFINE(COB_DEBUG)
+
 # Configure options.
 AC_ARG_ENABLE(debug,
   [  --enable-debug           enable debug features],
@@ -17,8 +20,7 @@ AC_ARG_ENABLE(debug,
 AC_ARG_ENABLE(maintainer-mode,
   [  --enable-maintainer-mode enable maintainer mode],
   [ AC_DEFINE(COB_DEBUG)
-    AC_CONFIG_FILES([redhat/open-cobol.spec])
-  ])
+    AC_CONFIG_FILES([redhat/open-cobol.spec])])
 
 save_libs="$LIBS"
 
@@ -91,6 +93,6 @@ AC_SUBST(COB_LIBRARY_PATH)
 AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBADD)
 
-AC_CONFIG_FILES([Makefile cobpp/Makefile cobc/Makefile libcob/Makefile
+AC_CONFIG_FILES([Makefile libcob/Makefile cobpp/Makefile cobc/Makefile
 		texi/Makefile cob-config])
 AC_OUTPUT

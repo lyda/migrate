@@ -17,6 +17,8 @@
  * Suite 330, Boston, MA 02111-1307 USA
  */
 
+#include "config.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,7 +27,7 @@
 #include <sys/stat.h>
 #include <dlfcn.h>
 
-#include "_libcob.h"
+#include "libcob.h"
 #include "defaults.h"
 
 
@@ -182,24 +184,11 @@ cob_resolve_error (void)
  * COBOL interface
  */
 
-static char *
-subrname (struct cob_field f)
-{
-  int i;
-  static char buff[FILENAME_MAX];
-  for (i = 0; i < FIELD_SIZE (f); i++)
-    if (FIELD_DATA (f)[i] == ' ')
-      break;
-    else
-      buff[i] = FIELD_DATA (f)[i];
-  buff[i] = '\0';
-  return buff;
-}
-
 void *
 cob_call_resolve (struct cob_field f)
 {
-  void (*func) () = cob_resolve (subrname (f));
+  char buff[FILENAME_MAX];
+  void (*func) () = cob_resolve (cob_field_to_string (f, buff));
   if (func)
     cob_status = COB_STATUS_SUCCESS;
   else
@@ -216,5 +205,6 @@ cob_call_error (void)
 void
 cob_cancel (struct cob_field f)
 {
-  return drop (subrname (f));
+  char buff[FILENAME_MAX];
+  return drop (cob_field_to_string (f, buff));
 }

@@ -19,17 +19,21 @@
  * Suite 330, Boston, MA 02111-1307 USA
  */
 
+#include "config.h"
+
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-#include "_libcob.h"
+#include "libcob.h"
 
+int cob_status;
 int cob_argc = 0;
 char **cob_argv = NULL;
 
-int cob_status;
-int cob_status_register;
+char *cob_source_file;
+int cob_source_line;
 
 char *cob_source_file = NULL;
 int cob_source_line = 0;
@@ -58,13 +62,6 @@ long long cob_exp10[19] = {
   100000000000000000,
   1000000000000000000
 };
-
-void
-cob_init (int argc, char **argv)
-{
-  cob_argc = argc;
-  cob_argv = argv;
-}
 
 char
 sign_to_char (int digit)
@@ -104,7 +101,7 @@ get_sign (struct cob_field f)
 	(((f.data[digit] & 0x0f) == 0x0d) ? 1 : 0) :
 	(((f.data[digit] & 0xf0) == 0xd0) ? 1 : 0);
     case '9':
-      if (f.desc->pic[0] != 'S')
+      if (!f.desc->have_sign)
 	return 0;
       if (f.desc->separate_sign)
 	{
@@ -145,7 +142,7 @@ put_sign (struct cob_field f, int sign)
 	((f.data[digit] & 0xf0) | (sign ? 0x0d : 0x0c)) : (sign ? 0xd0 : 0xc0);
       return;
     case '9':
-      if (f.desc->pic[0] != 'S')
+      if (!f.desc->have_sign)
 	return;
       if (f.desc->separate_sign)
 	{
@@ -161,47 +158,6 @@ put_sign (struct cob_field f, int sign)
 	  *p = sign_to_char ((sign && digit == 0) ? 0x80 : digit);
 	}
     }
-}
-
-int
-get_index (struct cob_field f)
-{
-  int index;
-  struct fld_desc desc = { 4, 'B', 0, 0, 0, 0, 0, 0, 0, "S9\x9" };
-  struct cob_field d = {&desc, (unsigned char *) &index};
-  cob_move (f, d);
-  return index;
-}
-
-struct fld_desc *
-cob_adjust_length (struct fld_desc *dep_desc, char *dep_val,
-		   int min, int max, struct fld_desc *var_desc,
-		   struct fld_desc *item, struct fld_desc *copy)
-{
-  int itocc = get_index ((struct cob_field) {dep_desc, dep_val});
-  if (itocc < min || itocc > max)
-    {
-      /* should generate exception, for now just a warning */
-      fprintf (stderr, "*** Warning: table size out of bounds ");
-      fprintf (stderr, "(requested = %d, min = %d, max = %d)\n",
-	       itocc, min, max);
-      itocc = max;
-    }
-
-  memmove (copy, var_desc, sizeof (struct fld_desc));
-  copy->len -= (max - itocc) * item->len;
-  return copy;
-}
-
-
-/*
- * 
- */
-
-int
-cob_exit ()
-{
-  return 0;
 }
 
 int
@@ -226,6 +182,165 @@ picCompDecimals (const char *pic)
 	decimals += pic[1];
     }
   return (decimals < 0) ? 0 : decimals;
+}
+
+char *
+cob_field_to_string (struct cob_field f, char *s)
+{
+  int i, size = FIELD_SIZE (f);
+  memcpy (s, FIELD_DATA (f), size);
+  for (i = 0; i < size; i++)
+    if (s[i] == ' ')
+      break;
+  s[i] = '\0';
+  return s;
+}
+
+
+
+void
+cob_init (int argc, char **argv)
+{
+  cob_argc = argc;
+  cob_argv = argv;
+  cob_source_file = 0;
+  cob_source_line = 0;
+}
+
+int
+get_index (struct cob_field f)
+{
+  int index;
+  struct cob_field_desc desc =
+    { 4, 'B', f.desc->decimals, 0, f.desc->have_sign, 0, 0, 0, "S9\x9" };
+  struct cob_field d = {&desc, (unsigned char *) &index};
+  cob_dis_check (f);
+  cob_move (f, d);
+  return index;
+}
+
+int
+cob_str_cmp (struct cob_field f1, struct cob_field f2)
+{
+  int sign1, sign2;
+  int len1 = f1.desc->len;
+  int len2 = f2.desc->len;
+
+  sign1 = get_sign (f1);
+  sign2 = get_sign (f2);
+
+  {
+    int i;
+    int maxi = (len1 < len2) ? len1 : len2;
+    for (i = 0; i < maxi; i++)
+      {
+	if (f1.data[i] == f2.data[i])
+	  continue;
+	if (f1.data[i] > f2.data[i])
+	  goto positive;
+	if (f1.data[i] < f2.data[i])
+	  goto negative;
+      }
+    if (len1 > len2)
+      {
+	while (i < len1)
+	  if (f1.data[i++] != ' ')
+	    goto positive;
+      }
+    else
+      {
+	while (i < len2)
+	  if (f2.data[i++] != ' ')
+	    goto negative;
+      }
+    goto zero;
+  }
+
+  {
+    int ret;
+  positive:
+    ret = 1; goto end;
+  zero:
+    ret = 0; goto end;
+  negative:
+    ret = -1; goto end;
+  end:
+    put_sign (f1, sign1);
+    put_sign (f2, sign2);
+    return ret;
+  }
+}
+
+
+/*
+ * Class check
+ */
+
+int
+cob_is_numeric (struct cob_field f)
+{
+  if (FIELD_TYPE (f) == '9')
+    {
+      int i, sign;
+      int ret = 1;
+      int size = FIELD_LENGTH (f);
+      unsigned char *data = FIELD_BASE (f);
+      sign = get_sign (f);
+      for (i = 0; i < size; i++)
+	if (!isdigit (data[i]))
+	  {
+	    ret = 0;
+	    break;
+	  }
+      put_sign (f, sign);
+      return ret;
+    }
+  else
+    {
+      int i;
+      int size = FIELD_SIZE (f);
+      unsigned char *data = FIELD_DATA (f);
+      for (i = 0; i < size; i++)
+	if (!isdigit (data[i]))
+	  return 0;
+      return 1;
+    }
+}
+
+int
+cob_is_alpha (struct cob_field f)
+{
+  int i;
+  int size = FIELD_SIZE (f);
+  unsigned char *data = FIELD_DATA (f);
+  for (i = 0; i < size; i++)
+    if (!isspace (data[i]) && !isalpha (data[i]))
+      return 0;
+  return 1;
+}
+
+int
+cob_is_upper (struct cob_field f)
+{
+  int i;
+  int size = FIELD_SIZE (f);
+  unsigned char *data = FIELD_DATA (f);
+  for (i = 0; i < size; i++)
+    if (!isspace (data[i]) && !isupper (data[i]))
+      return 0;
+  return 1;
+}
+
+int
+cob_is_lower (struct cob_field f)
+{
+  int i;
+  int size = FIELD_SIZE (f);
+  unsigned char *data = FIELD_DATA (f);
+  for (i = 0; i < size; i++)
+    if (!isspace (data[i]) && !islower (data[i]))
+      return 0;
+  return 1;
 }
 
 

@@ -3,7 +3,7 @@ bin_SCRIPTS=cob-config
 aclocaldir = $(datadir)/aclocal
 aclocal_DATA = cob.m4
 
-SUBDIRS = cobpp cobc libcob texi
+SUBDIRS = libcob cobpp cobc texi
 EXTRA_DIST = VERSION cob.m4 debian
 
 MAINTAINERCLEANFILES = config.guess config.sub config.log \

@@ -1,6 +1,5 @@
-/* COBOL Compiler
- *
- * Copyright (C) 2001  Keisuke Nishida
+/*
+ * Copyright (C) 2001-2002 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,50 +27,45 @@
 #include <unistd.h>
 
 #include "cobc.h"
+#include "tree.h"
 #include "codegen.h"
 #include "reserved.h"
 #include "defaults.h"
+
+/* from parser.c */
+extern int yyparse (void);
+#ifdef COB_DEBUG
+extern int yy_flex_debug;
+extern int yy_bison_debug;
+#endif
 
 
 /*
  * Global variables
  */
 
-int cob_stabs_flag = 0;
-int cob_debug_flag = 0;
-int cob_module_flag = 0;
+int cobc_module_flag = 0;
+int cobc_optimize_flag = 1;
+int cobc_link_style = LINK_DYNAMIC;
 
-int cob_link_style = LINK_DYNAMIC;
-
-int cob_trace_scanner = 0;
-int cob_trace_parser = 0;
-
-int cob_orig_lineno = 0;
-char *cob_orig_filename = NULL;
-char *cob_source_filename = NULL;
-char *cob_include_filename = NULL;
-
-FILE *o_src;
-
-extern int yy_flex_debug;
+FILE *cobc_out;
 
 
 /*
  * Local variables
  */
 
-/* Compiler options */
+static int debug_flag = 0;
 static int save_temps_flag = 0;
 
 static char *program_name;
-static char *output_filename;
+static char *output_name;
 
-/* Environment variables */
-static char cob_cc[FILENAME_MAX];		/* gcc */
+static char cob_cc[FILENAME_MAX];		/* cc */
 static char cob_cobpp[FILENAME_MAX];		/* cobpp */
+static char cob_cflags[FILENAME_MAX];		/* -I... */
 static char cob_libadd[FILENAME_MAX];		/* -lcob */
-
-static char cob_includepath[FILENAME_MAX];
+static char include_path[FILENAME_MAX];
 
 static enum format {
   format_unspecified,
@@ -81,6 +75,7 @@ static enum format {
 
 static enum level {
   stage_preprocess,
+  stage_translate,
   stage_compile,
   stage_assemble,
   stage_module,
@@ -89,14 +84,12 @@ static enum level {
 
 static struct filename {
   int need_preprocess;
-  int need_compile;
+  int need_translate;
   int need_assemble;
   char source[FILENAME_MAX];			/* foo.cob */
   char preprocess[FILENAME_MAX];		/* foo.i */
-  char assembly[FILENAME_MAX];			/* foo.s */
+  char translate[FILENAME_MAX];			/* foo.c */
   char object[FILENAME_MAX];			/* foo.o */
-  char module[FILENAME_MAX];			/* foo.so */
-  char execute[FILENAME_MAX];			/* foo */
   struct filename *next;
 } *file_list;
 
@@ -118,7 +111,7 @@ init_var (char *var, const char *env, const char *def)
 static void
 init_environment (int argc, char *argv[])
 {
-  strcpy (cob_includepath, "");
+  strcpy (include_path, "");
 
   /* Initialize program_name */
   program_name = strrchr (argv[0], '/');
@@ -127,10 +120,11 @@ init_environment (int argc, char *argv[])
   else
     program_name = argv[0];
 
-  output_filename = NULL;
+  output_name = NULL;
 
   init_var (cob_cc,      "COB_CC",      COB_CC);
   init_var (cob_cobpp,   "COB_COBPP",   COB_COBPP);
+  init_var (cob_cflags,  "COB_CFLAGS",  COB_CFLAGS);
   init_var (cob_libadd,  "COB_LIBADD",  COB_LIBADD);
 }
 
@@ -150,18 +144,17 @@ cob_error (char *s, ...)
  * Command line
  */
 
-static char short_options[] = "hvEScmxgo:FXDI:T:";
+static char short_options[] = "hvECScmxgOo:FXDI:T:";
 
 static struct option long_options[] = {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'v'},
-  {"static", no_argument, &cob_link_style, LINK_STATIC},
-  {"dynamic", no_argument, &cob_link_style, LINK_DYNAMIC},
+  {"static", no_argument, &cobc_link_style, LINK_STATIC},
+  {"dynamic", no_argument, &cobc_link_style, LINK_DYNAMIC},
   {"save-temps", no_argument, &save_temps_flag, 1},
-#if COB_DEBUG
-  {"ta", no_argument, 0, 'a'},
-  {"ts", no_argument, &cob_trace_scanner, 1},
-  {"tp", no_argument, &cob_trace_parser, 1},
+#ifdef COB_DEBUG
+  {"ts", no_argument, &yy_flex_debug, 1},
+  {"tp", no_argument, &yy_bison_debug, 1},
 #endif
   {0, 0, 0, 0}
 };
@@ -169,7 +162,7 @@ static struct option long_options[] = {
 static void
 print_version ()
 {
-  printf ("%s %s\n%s", COB_PACKAGE, COB_VERSION, COB_COPYRIGHT);
+  printf ("%s %s\n%s", COBC_PACKAGE, COBC_VERSION, COBC_COPYRIGHT);
 }
 
 static void
@@ -184,10 +177,12 @@ print_usage ()
   puts ("  -static       Use static link for subprogram calls if possible");
   puts ("  -dynamic      Use dynamic link for all subprogram calls (default)");
   puts ("  -E            Preprocess only; do not compile, assemble or link");
+  puts ("  -C            Translate only; do not compile, assemble or link");
   puts ("  -S            Compile only; do not assemble or link");
   puts ("  -c            Compile and assemble, but do not link");
   puts ("  -m            Compile, assemble, and build a .so module");
-  puts ("  -g            Generate debugging output");
+  puts ("  -g            Generate debug format output");
+  puts ("  -O            Do exhaustive optimization");
   puts ("  -o <file>     Place the output into <file>");
   puts ("");
   puts ("COBOL options:");
@@ -198,10 +193,8 @@ print_usage ()
 #ifdef COB_DEBUG
   puts ("");
   puts ("Debug options:");
-  puts ("  -ta           Trace all");
   puts ("  -ts           Trace scanner");
   puts ("  -tp           Trace parser");
-  puts ("  -tc           Trace codegen");
 #endif
 }
 
@@ -213,6 +206,10 @@ process_command_line (int argc, char *argv[])
   /* Default options */
   source_format = format_unspecified;
   compile_level = stage_link;
+#ifdef COB_DEBUG
+  yy_flex_debug = 0;
+  yy_bison_debug = 0;
+#endif
 
   /* Parse the options */
   while ((c = getopt_long_only (argc, argv, short_options,
@@ -225,41 +222,38 @@ process_command_line (int argc, char *argv[])
 	case 'v': print_version (); exit (0);
 
 	case 'E': compile_level = stage_preprocess; break;
+	case 'C': compile_level = stage_translate; break;
 	case 'S': compile_level = stage_compile; break;
 	case 'c': compile_level = stage_assemble; break;
-	case 'm': compile_level = stage_module; cob_module_flag = 1; break;
+	case 'm': compile_level = stage_module; cobc_module_flag = 1; break;
 
-	case 'g': cob_stabs_flag = 1; break;
-	case 'o': output_filename = strdup (optarg); break;
+	case 'g': strcat (cob_cflags, " -g"); break;
+	case 'O': strcat (cob_cflags, " -O2"); cobc_optimize_flag = 1; break;
+	case 'o': output_name = strdup (optarg); break;
 
 	case 'I':
 	  {
 	    static int first = 1;
 	    if (first)
 	      {
-		strcpy (cob_includepath, optarg);
+		strcpy (include_path, optarg);
 		first = 0;
 	      }
 	    else
 	      {
-		strcat (cob_includepath, ":");
-		strcat (cob_includepath, optarg);
+		strcat (include_path, ":");
+		strcat (include_path, optarg);
 	      }
 	  }
 	  break;
 
 	case 'X': source_format = format_free; break;
 	case 'F': source_format = format_fixed; break;
-	case 'D': cob_debug_flag = 1; break;
+	case 'D': debug_flag = 1; break;
 
-#if COB_DEBUG
-	case 'a':
-	  cob_trace_scanner = 1;
-	  cob_trace_parser = 1;
-	  break;
-#endif
-
-	default: print_usage (); exit (1);
+	default:
+	  print_usage ();
+	  exit (1);
 	}
     }
 
@@ -317,70 +311,65 @@ process_filename (const char *filename)
   const char *extension;
   struct filename *fn = malloc (sizeof (struct filename));
   fn->need_preprocess = 1;
-  fn->need_compile    = 1;
+  fn->need_translate  = 1;
   fn->need_assemble   = 1;
   fn->next = NULL;
 
   file_basename (filename, basename);
   extension = file_extension (filename);
 
+  /* Check input file type */
+  if (strcmp (extension, "i") == 0)
+    {
+      /* already preprocessed */
+      fn->need_preprocess = 0;
+    }
+  else if (strcmp (extension, "c") == 0 || strcmp (extension, "s") == 0)
+    {
+      /* already compiled */
+      fn->need_preprocess = 0;
+      fn->need_translate  = 0;
+    }
+  else if (strcmp (extension, "o") == 0)
+    {
+      /* already assembled */
+      fn->need_preprocess = 0;
+      fn->need_translate  = 0;
+      fn->need_assemble   = 0;
+    }
+
   /* Set source filename */
   strcpy (fn->source, filename);
 
   /* Set preprocess filename */
-  if (strcmp (extension, "i") == 0
-      || strcmp (extension, "s") == 0
-      || strcmp (extension, "o") == 0)
-    {
-      fn->need_preprocess = 0;
-      strcpy (fn->preprocess, fn->source);
-    }
-  else if (output_filename && compile_level == stage_preprocess)
-    strcpy (fn->preprocess, output_filename);
+  if (!fn->need_preprocess)
+    strcpy (fn->preprocess, fn->source);
+  else if (output_name && compile_level == stage_preprocess)
+    strcpy (fn->preprocess, output_name);
   else if (save_temps_flag)
     sprintf (fn->preprocess, "%s.i", basename);
   else
     temp_name (fn->preprocess, ".cob");
 
-  /* Set assembly filename */
-  if (strcmp (extension, "o") == 0 || strcmp (extension, "s") == 0)
-    {
-      fn->need_compile = 0;
-      strcpy (fn->assembly, fn->source);
-    }
-  else if (output_filename && compile_level == stage_compile)
-    strcpy (fn->assembly, output_filename);
-  else if (save_temps_flag || compile_level == stage_compile)
-    sprintf (fn->assembly, "%s.s", basename);
+  /* Set translate filename */
+  if (!fn->need_translate)
+    strcpy (fn->translate, fn->source);
+  else if (output_name && compile_level == stage_translate)
+    strcpy (fn->translate, output_name);
+  else if (save_temps_flag || compile_level == stage_translate)
+    sprintf (fn->translate, "%s.c", basename);
   else
-    temp_name (fn->assembly, ".s");
+    temp_name (fn->translate, ".c");
 
   /* Set object filename */
-  if (strcmp (extension, "o") == 0)
-    {
-      fn->need_assemble = 0;
-      strcpy (fn->object, fn->source);
-    }
-  else if (output_filename && compile_level == stage_assemble)
-    strcpy (fn->object, output_filename);
+  if (!fn->need_assemble)
+    strcpy (fn->object, fn->source);
+  else if (output_name && compile_level == stage_assemble)
+    strcpy (fn->object, output_name);
   else if (save_temps_flag || compile_level == stage_assemble)
     sprintf (fn->object, "%s.o", basename);
   else
     temp_name (fn->object, ".o");
-
-  /* Set module filename */
-  if (output_filename && compile_level == stage_module)
-    strcpy (fn->module, output_filename);
-  else if (save_temps_flag || compile_level == stage_module)
-    sprintf (fn->module, "%s.so", basename);
-  else
-    temp_name (fn->module, ".so");
-
-  /* Set execute filename */
-  if (output_filename && compile_level == stage_link)
-    strcpy (fn->execute, output_filename);
-  else
-    strcpy (fn->execute, basename);
 
   return fn;
 }
@@ -413,14 +402,14 @@ preprocess (struct filename *fn)
 
   sprintf (buff, "%s ", cob_cobpp);
 
-  if (strlen (cob_includepath) > 0)
+  if (strlen (include_path) > 0)
     {
       strcat (buff, "-I ");
-      strcat (buff, cob_includepath);
+      strcat (buff, include_path);
       strcat (buff, " ");
     }
 
-  if (output_filename || compile_level > stage_preprocess)
+  if (output_name || compile_level > stage_preprocess)
     {
       strcat (buff, "-o ");
       strcat (buff, fn->preprocess);
@@ -436,7 +425,7 @@ preprocess (struct filename *fn)
 }
 
 static int
-process_compile (struct filename *fn)
+process_translate (struct filename *fn)
 {
   int ret;
 
@@ -444,29 +433,44 @@ process_compile (struct filename *fn)
   if (!yyin)
     cob_error ("cannot open file: %s\n", fn->preprocess);
 
-  o_src = fopen (fn->assembly, "w");
-  if (!o_src)
-    cob_error ("cannot open file: %s\n", fn->assembly);
+  cobc_out = fopen (fn->translate, "w");
+  if (!cobc_out)
+    cob_error ("cannot open file: %s\n", fn->translate);
 
-  init_tree ();
+  init_constants ();
   init_reserved_words ();
 
-  cob_source_filename = fn->source;
-  yy_flex_debug = cob_trace_scanner;
   ret = yyparse ();
 
-  fclose (o_src);
+  fclose (cobc_out);
   fclose (yyin);
 
   return ret;
 }
 
 static int
+process_compile (struct filename *fn)
+{
+  char buff[BUFSIZ];
+  char name[BUFSIZ];
+  if (output_name)
+    strcpy (name, output_name);
+  else
+    {
+      file_basename (fn->source, name);
+      strcat (name, ".s");
+    }
+  sprintf (buff, "%s -S -o %s %s %s",
+	   cob_cc, name, cob_cflags, fn->translate);
+  return system (buff);
+}
+
+static int
 process_assemble (struct filename *fn)
 {
   char buff[BUFSIZ];
-  sprintf (buff, "%s -c -o %s %s",
-	   cob_cc, fn->object, fn->assembly);
+  sprintf (buff, "%s -c -o %s %s %s",
+	   cob_cc, fn->object, cob_cflags, fn->translate);
   return system (buff);
 }
 
@@ -474,8 +478,11 @@ static int
 process_module (struct filename *fn)
 {
   char buff[BUFSIZ];
+  char name[BUFSIZ];
+  file_basename (fn->source, name);
+  strcat (name, ".so");
   sprintf (buff, "%s -shared -Wl,-soname,%s -o %s %s %s",
-	   cob_cc, fn->module, fn->module, fn->object, cob_libadd);
+	   cob_cc, name, name, fn->object, cob_libadd);
   return system (buff);
 }
 
@@ -483,13 +490,14 @@ static int
 process_link (struct filename *file_list)
 {
   char buff[8192], objs[4096] = "";
-  const char *exe = NULL;
+  char exe[BUFSIZ];
 
   for (; file_list; file_list = file_list->next)
     {
       strcat (objs, file_list->object);
       strcat (objs, " ");
-      exe = file_list->execute;
+      if (!file_list->next)
+	file_basename (file_list->source, exe);
     }
 
   sprintf (buff, "%s -o %s %s %s", cob_cc, exe, objs, cob_libadd);
@@ -521,27 +529,32 @@ main (int argc, char *argv[])
 
       /* Preprocess */
       if (compile_level >= stage_preprocess && fn->need_preprocess)
-	if (preprocess (fn) > 0)
+	if (preprocess (fn) != 0)
+	  goto cleanup;
+
+      /* Translate */
+      if (compile_level >= stage_translate && fn->need_translate)
+	if (process_translate (fn) != 0)
 	  goto cleanup;
 
       /* Compile */
-      if (compile_level >= stage_compile && fn->need_compile)
-	if (process_compile (fn) > 0)
+      if (compile_level == stage_compile)
+	if (process_compile (fn) != 0)
 	  goto cleanup;
 
       /* Assemble */
       if (compile_level >= stage_assemble && fn->need_assemble)
-	if (process_assemble (fn) > 0)
+	if (process_assemble (fn) != 0)
 	  goto cleanup;
 
       /* Build module */
-      if (compile_level == stage_module)
-	if (process_module (fn) > 0)
+      if (compile_level >= stage_module && cobc_module_flag == 1)
+	if (process_module (fn) != 0)
 	  goto cleanup;
     }
 
   /* Link */
-  if (compile_level >= stage_link)
+  if (compile_level >= stage_link && cobc_module_flag == 0)
     if (process_link (file_list) > 0)
       goto cleanup;
 
@@ -555,11 +568,14 @@ main (int argc, char *argv[])
       struct filename *fn;
       for (fn = file_list; fn; fn = fn->next)
 	{
-	  if (compile_level > stage_preprocess && fn->need_preprocess)
+	  if (fn->need_preprocess
+	      && (status == 1 || compile_level > stage_preprocess))
 	    remove (fn->preprocess);
-	  if (compile_level > stage_compile && fn->need_compile)
-	    remove (fn->assembly);
-	  if (compile_level > stage_assemble && fn->need_assemble)
+	  if (fn->need_translate
+	      && (status == 1 || compile_level > stage_translate))
+	    remove (fn->translate);
+	  if (fn->need_assemble
+	      && (status == 1 || compile_level > stage_assemble))
 	    remove (fn->object);
 	}
     }

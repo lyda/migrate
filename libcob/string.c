@@ -17,13 +17,15 @@
  * Suite 330, Boston, MA 02111-1307 USA
  */
 
+#include "config.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 #include <regex.h>
 
-#include "_libcob.h"
+#include "libcob.h"
 
 #define MIN(x,y) ({int _x = (x), _y = (y); (_x < _y) ? _x : _y; })
 #define MAX(x,y) ({int _x = (x), _y = (y); (_x > _y) ? _x : _y; })
@@ -417,9 +419,9 @@ cob_unstring (struct cob_field src, ...)
 	  if (delm_data)
 	    cob_mem_move (f, delm_data, delm_size);
 	  else if (FIELD_TYPE (f) == '9')
-	    cob_move_zero (f);
+	    cob_move (COB_ZERO, f);
 	  else
-	    cob_move_space (f);
+	    cob_move (COB_SPACE, f);
 	  break;
 	}
 

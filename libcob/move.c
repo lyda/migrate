@@ -17,12 +17,14 @@
  * Suite 330, Boston, MA 02111-1307 USA
  */
 
-#include "_libcob.h"
+#include "config.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+
+#include "libcob.h"
 
 #define MIN(x,y) ({int _x = (x), _y = (y); (_x < _y) ? _x : _y; })
 #define MAX(x,y) ({int _x = (x), _y = (y); (_x > _y) ? _x : _y; })
@@ -42,124 +44,7 @@
     memcpy (s2, s1, e1 - s1);			\
 }
 
-
-/*
- * ALL literal
- */
-
-static struct fld_desc all_desc = {1, 'X', 0, 1, 0, 0, 0, 0, 0, "X\001"};
-
-void
-cob_move_all (struct cob_field f1, struct cob_field f2)
-{
-  if (f1.desc->len == 1)
-    memset (f2.data, f1.data[0], f2.desc->len);
-  else
-    {
-      int rest = f2.desc->len;
-      unsigned char *data = f2.data;
-      while (rest > 0)
-	{
-	  int len = MIN (f1.desc->len, rest);
-	  memcpy (data, f1.data, len);
-	  data += len;
-	  rest -= len;
-	}
-    }
-}
-
-void
-cob_move_zero (struct cob_field f)
-{
-  switch (FIELD_TYPE (f))
-    {
-    case '9':
-      memset (f.data, f.desc->blank_zero ? ' ' : '0', f.desc->len);
-      put_sign (f, 0);
-      return;
-
-    case 'C':
-      memset (f.data, 0, f.desc->len);
-      put_sign (f, 0);
-      break;
-
-    case 'B':
-      switch (f.desc->len)
-	{
-	case 1: *(char *) f.data = 0; return;
-	case 2: *(short *) f.data = 0; return;
-	case 4: *(long *) f.data = 0; return;
-	case 8: *(long long *) f.data = 0; return;
-	}
-
-    case 'U':
-      switch (f.desc->len)
-	{
-	case 4: *(float *) f.data = 0; return;
-	case 8: *(double *) f.data = 0; return;
-	}
-
-    default:
-      cob_move ((struct cob_field) {&all_desc, "0"}, f);
-      return;
-    }
-}
-
-void
-cob_move_space (struct cob_field f)
-{
-  cob_move ((struct cob_field) {&all_desc, " "}, f);
-}
-
-void
-cob_move_high (struct cob_field f)
-{
-  switch (FIELD_TYPE (f))
-    {
-    case 'B':
-      switch (f.desc->len)
-	{
-	case 1: *(char *) f.data = -1; return;
-	case 2: *(short *) f.data = -1; return;
-	case 4: *(long *) f.data = -1; return;
-	case 8: *(long long *) f.data = -1; return;
-	}
-
-    case '9':
-      memset (f.data, '9', f.desc->len);
-      put_sign (f, 0);
-      return;
-
-    default:
-      {
-	unsigned char c = 255;
-	cob_move ((struct cob_field) {&all_desc, &c}, f);
-      }
-    }
-}
-
-void
-cob_move_low (struct cob_field f)
-{
-  switch (FIELD_TYPE (f))
-    {
-    case '9':
-    case 'B':
-    case 'C':
-    case 'U':
-      cob_move_zero (f);
-      return;
-
-    default:
-      cob_move ((struct cob_field) {&all_desc, "\0"}, f);
-    }
-}
-
-void
-cob_move_quote (struct cob_field f)
-{
-  cob_move ((struct cob_field) {&all_desc, "\""}, f);
-}
+struct cob_field_desc cob_all_desc = {1, 'X', 0, 0, 0, 0, 0, 0, 0};
 
 
 /*
@@ -175,9 +60,8 @@ finalize_display (struct cob_field f)
       unsigned char *base = FIELD_BASE (f);
       for (i = 0; i < len; i++)
 	if (base[i] != '0')
-	  break;
-      if (i == len)
-	memset (base, ' ', len);
+	  return;
+      memset (base, ' ', len);
     }
 }
 
@@ -461,81 +345,6 @@ cob_move_binary_to_display (struct cob_field f1, struct cob_field f2)
 
 
 /*
- * Floating point
- */
-
-void
-cob_move_display_to_float (struct cob_field f1, struct cob_field f2)
-{
-  int i;
-  double val = 0;
-  int sign = get_sign (f1);
-  int len1 = FIELD_LENGTH (f1);
-  int len2 = f2.desc->len;
-  unsigned char *base1 = FIELD_BASE (f1);
-  unsigned char *base2 = f2.data;
-
-  /* get value as long long */
-  for (i = 0; i < len1; ++i)
-    val = val * 10 + base1[i] - '0';
-  if (sign)
-    val = -val;
-  val /= cob_exp10[(int) FIELD_DECIMALS (f1)];
-  // FIXME: we need modulo here
-  // val = fmod (val, cob_exp10[picCompLength (f2.desc->pic)]);
-
-  /* store */
-  switch (len2)
-    {
-    case 4: *(float *) base2 = val; break;
-    case 8: *(double *) base2 = val; break;
-    }
-
-  put_sign (f1, sign);
-}
-
-void
-cob_move_float_to_display (struct cob_field f1, struct cob_field f2)
-{
-  int sign = 0;
-  double val;
-  char buff[40];
-  int len = FIELD_LENGTH (f2);
-  int decimals = FIELD_DECIMALS (f2);
-  unsigned char *base = FIELD_BASE (f2);
-
-  /* get value */
-  switch (f1.desc->len)
-    {
-    case 4: val = *(float *) f1.data; break;
-    case 8: val = *(double *) f1.data; break;
-    }
-
-  /* get sign */
-  if (val < 0)
-    {
-      sign = 1;
-      val = -val;
-    }
-
-  /* convert to string */
-  if (decimals > 0)
-    sprintf (buff, "%%0%d.%df", len, decimals);
-  else
-    sprintf (buff, "%%0%df", len - decimals);
-  sprintf (buff, buff, val);
-  memmove (buff + len - decimals - 1, buff + len - decimals, decimals + 1);
-
-  /* store */
-  memset (f2.data, '0', f2.desc->len);
-  COPY_COMMON_REGION (buff, len, decimals, base, len, decimals);
-
-  put_sign (f2, sign);
-  finalize_display (f2);
-}
-
-
-/*
  * Edited
  */
 
@@ -571,7 +380,7 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	count += p[1], count_sign = 0;
       else if (count_sign && (c == '+' || c == '-'))
 	count += p[1];
-      else if (p[0] == cob_decimal_point)
+      else if (p[0] == 'V' || p[0] == cob_decimal_point)
 	break;
     }
 
@@ -634,7 +443,10 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	      {
 		char x = get ();
 		if (trailing_sign)
-		  *dst = sign ? '-' : (c == '+') ? '+' : ' ';
+		  {
+		    *dst = sign ? '-' : (c == '+') ? '+' : ' ';
+		    end--;
+		  }
 		else if (dst == f2.data || suppress_zero)
 		  {
 		    *dst = pad;
@@ -736,22 +548,14 @@ cob_move_alphanum_to_edited (struct cob_field f1, struct cob_field f2)
  * MOVE dispatcher
  */
 
-static int
-is_numeric_edited (const char *pic)
-{
-  for (; *pic; pic += 2)
-    if (*pic == 'A' || *pic == 'X')
-      return 0;
-  return 1;
-}
-
 static void
 indirect_move (void (*move_func) (struct cob_field f1, struct cob_field f2),
 	       struct cob_field f1, struct cob_field f2, char *pic)
 {
   static unsigned char temp_data[36];
-  static struct fld_desc temp_desc = {36, '9', 0, 0, 0, 0, 0, 0, 0};
-  static struct cob_field temp = {&temp_desc, temp_data};
+  struct cob_field_desc temp_desc =
+    {0, '9', 0, 0, f1.desc->have_sign, 0, 0, 0};
+  struct cob_field temp = {&temp_desc, temp_data};
   temp.desc->pic = pic;
   temp.desc->len = picCompLength (pic);
   temp.desc->decimals = picCompDecimals (pic);
@@ -762,89 +566,57 @@ indirect_move (void (*move_func) (struct cob_field f1, struct cob_field f2),
 void
 cob_move (struct cob_field f1, struct cob_field f2)
 {
-  if (f1.desc->all)
-    switch (FIELD_TYPE (f2))
-      {
-      case DTYPE_PACKED:
-      case DTYPE_BININT:
-      case DTYPE_FLOAT:
-      case DTYPE_EDITED:
-	return indirect_move (cob_move_all, f1, f2, f2.desc->pic);
-      default:
-	return cob_move_all (f1, f2);
-      }
-
   switch (FIELD_TYPE (f1))
     {
-    case DTYPE_DISPLAY:
+    case COB_NUMERIC:
       switch (FIELD_TYPE (f2))
 	{
-	case DTYPE_DISPLAY:
+	case COB_NUMERIC:
 	  return cob_move_display_to_display (f1, f2);
-	case DTYPE_PACKED:
+	case COB_PACKED:
 	  return cob_move_display_to_packed (f1, f2);
-	case DTYPE_BININT:
+	case COB_BINARY:
 	  return cob_move_display_to_binary (f1, f2);
-	case DTYPE_FLOAT:
-	  return cob_move_display_to_float (f1, f2);
-	case DTYPE_EDITED:
-	  if (is_numeric_edited (f2.desc->pic))
-	    return cob_move_display_to_edited (f1, f2);
-	  else
-	    return cob_move_alphanum_to_edited (f1, f2);
+	case COB_NUMERIC_EDITED:
+	  return cob_move_display_to_edited (f1, f2);
+	case COB_ALPHANUMERIC_EDITED:
+	  return cob_move_alphanum_to_edited (f1, f2);
 	default:
 	  return cob_move_display_to_alphanum (f1, f2);
 	}
 
-    case DTYPE_PACKED:
+    case COB_PACKED:
       switch (FIELD_TYPE (f2))
 	{
-	case DTYPE_DISPLAY:
+	case COB_NUMERIC:
 	  return cob_move_packed_to_display (f1, f2);
 	default:
 	  return indirect_move (cob_move_packed_to_display,
 				f1, f2, f1.desc->pic);
 	}
 
-    case DTYPE_BININT:
+    case COB_BINARY:
       switch (FIELD_TYPE (f2))
 	{
-	case DTYPE_DISPLAY:
+	case COB_NUMERIC:
 	  return cob_move_binary_to_display (f1, f2);
 	default:
 	  return indirect_move (cob_move_binary_to_display,
 				f1, f2, f1.desc->pic);
 	}
 
-    case DTYPE_FLOAT:
-      switch (FIELD_TYPE (f2))
-	{
-	case DTYPE_DISPLAY:
-	  return cob_move_float_to_display (f1, f2);
-	default:
-	  return indirect_move (cob_move_float_to_display,
-				f1, f2, f1.desc->pic);
-	}
-
-    case DTYPE_GROUP:
-      return cob_move_alphanum_to_alphanum (f1, f2);
-
     default:
       switch (FIELD_TYPE (f2))
 	{
-	case DTYPE_DISPLAY:
+	case COB_NUMERIC:
 	  return cob_move_alphanum_to_display (f1, f2);
-	case DTYPE_PACKED:
-	case DTYPE_BININT:
-	case DTYPE_FLOAT:
-	indirect:
+	case COB_PACKED:
+	case COB_BINARY:
+	case COB_NUMERIC_EDITED:
 	  return indirect_move (cob_move_alphanum_to_display,
 				f1, f2, "S\0019\022V\0019\022");
-	case DTYPE_EDITED:
-	  if (is_numeric_edited (f2.desc->pic))
-	    goto indirect;
-	  else
-	    return cob_move_alphanum_to_edited (f1, f2);
+	case COB_ALPHANUMERIC_EDITED:
+	  return cob_move_alphanum_to_edited (f1, f2);
 	default:
 	  return cob_move_alphanum_to_alphanum (f1, f2);
 	}
@@ -857,14 +629,8 @@ cob_move (struct cob_field f1, struct cob_field f2)
  */
 
 void
-cob_move_2 (struct fld_desc *f1, char *s1, struct fld_desc *f2, char *s2)
-{
-  cob_move ((struct cob_field) {f1, s1}, (struct cob_field) {f2, s2});
-}
-
-void
 cob_mem_move (struct cob_field dst, unsigned char *src, int len)
 {
-  struct fld_desc fld = {len, 'X', 0, 0, 0, 0, 0, 0, 0, "X0"};
+  struct cob_field_desc fld = {len, 'X'};
   cob_move ((struct cob_field) {&fld, src}, dst);
 }

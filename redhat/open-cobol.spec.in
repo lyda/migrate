@@ -14,11 +14,11 @@ Vendor:      bitWalk Co., Ltd.
 Buildroot:   %{_tmppath}/%{package}-%{version}-buildroot
 
 %description
-OpenCOBOL is a COBOL compiler, branched from TinyCOBOL.
+OpenCOBOL is an open-source COBOL compiler, translating COBOL to C.
 
 %description -l ja
-OpenCOBOL は TinyCOBOL (http://tiny-cobol.sourceforge.net/)から分岐し、
-独自に拡張、メンテナンスされている COBOL コンパイラです。
+OpenCOBOL はオープンソースな COBOL コンパイラです。
+COBOL で書かれたプログラムを C 言語に変換して実行します。
 
 OpenCOBOL に関する情報は、以下のサイトから得られます。
 
@@ -38,10 +38,11 @@ make
 
 %files
 %defattr (-,root,root)
-%doc AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README
+%doc AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README THANKS VERSION
 %{_bindir}
 %{_libdir}
 %{_includedir}
+%{_datadir}
 
 %post
 /sbin/ldconfig
@@ -50,5 +51,3 @@ make
 /sbin/ldconfig
 
 %changelog
-* Sun Dec 02 2001 Fuhito Suguri <bitwalk@nyc.odn.ne.jp>
-- Add doc directory in document section.

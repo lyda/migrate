@@ -22,27 +22,19 @@
 
 #include "tree.h"
 
-#define START_ID 	1
-#define START_COMMENT	2
+extern char *cobc_source_file;
+extern int cobc_source_line;
+extern int cobc_last_line;
+extern char cobc_last_text[];
 
-#define CDIV_INITIAL 	1
-#define CDIV_ENVIR 	2
-#define CDIV_DATA 	3
+extern int cobc_skip_comment;
+extern int cobc_in_procedure;
 
-struct cob_picture {
-  unsigned char *str;		/* picture string */
-  char type;			/* field type */
-  int size;			/* byte size */
-  int decimals;			/* the number of decimal digits */
-};
+extern int yylex (void);
 
-extern cob_tree curr_file;
-extern int curr_division;
-extern int start_condition;
-extern int need_subscripts;
-extern int need_separator;
-extern int in_procedure;
-extern int last_lineno;
-extern char last_text[];
+extern void yywarn (char *fmt, ...);
+extern void yyerror (char *fmt, ...);
+extern void yywarn_loc (struct cobc_location *loc, char *fmt, ...);
+extern void yyerror_loc (struct cobc_location *loc, char *fmt, ...);
 
 #endif /* _SCANNER_H_ */

@@ -1,5 +1,5 @@
 /*							-*- c -*-
- * Copyright (C) 2001  Keisuke Nishida
+ * Copyright (C) 2001-2002 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,79 +23,77 @@
 %option never-interactive
 
 %{
+#include "config.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
 #include "cobc.h"
-#include "codegen.h"
+#include "tree.h"
 #include "parser.h"
 #include "scanner.h"
+#include "codegen.h"
 #include "reserved.h"
 
-cob_tree curr_file;
-int curr_division = 0;
-int start_condition = 0;
-int in_procedure = 0;
+extern YYLTYPE yylloc;
 
-/* save the last yytext */
-int last_lineno;
-char last_text[YY_BUF_SIZE];
+int cobc_skip_comment = 0;
+int cobc_in_procedure = 0;
+
+char *cobc_source_file = NULL;
+int cobc_source_line = 0;
+
+int cobc_last_line;
+char cobc_last_text[YY_BUF_SIZE];
 static int this_lineno = 0;
 static char this_text[YY_BUF_SIZE] = "";
 #define SAVE_YYTEXT				\
 {						\
-  last_lineno = this_lineno;			\
-  this_lineno = cob_orig_lineno;		\
-  strcpy (last_text, this_text);		\
+  cobc_last_line = this_lineno;			\
+  this_lineno = cobc_source_line;		\
+  strcpy (cobc_last_text, this_text);		\
   strcpy (this_text, yytext);			\
 }
 
 static int read_literal (char mark);
 static int scan_x (char *text);
-static int scan_word (char *text);
+static int scan_numeric (char *text);
 static int scan_picture (char *text);
 
 %}
 
-%x ID_STATE COMMENT_STATE PICTURE_STATE
+%x COMMENT_STATE PICTURE_STATE FUNCTION_STATE
 
 %%
 
 %{
-  switch (start_condition)
+  if (cobc_skip_comment)
     {
-    case START_ID:
-      BEGIN ID_STATE;
-      break;
-    case START_COMMENT:
       BEGIN COMMENT_STATE;
-      break;
+      cobc_skip_comment = 0;
     }
-  start_condition = 0;
 %}
 
 <*>[ \t,;]+ { /* ignore */ }
 
-<*>\n {
-  cob_orig_lineno++;
-  if (in_procedure)
-    stabs_line ();
-}
+<*>\n { yylloc.first_line = ++cobc_source_line; }
 
 ^"#".* {
   /* line directive */
   char *endp;
-  cob_orig_lineno = strtol (yytext + 2, &endp, 10) - 1;
-  if (cob_orig_filename)
-    free (cob_orig_filename);
-  cob_orig_filename = strdup (strchr (endp, '"') + 1);
-  strrchr (cob_orig_filename, '"')[0] = '\0';
+  cobc_source_line = strtol (yytext + 2, &endp, 10) - 1;
+  if (cobc_source_file)
+    free (cobc_source_file);
+  cobc_source_file = strdup (strchr (endp, '"') + 1);
+  strrchr (cobc_source_file, '"')[0] = '\0';
+  yylloc.text = cobc_source_file;
 }
 
 "PIC" |
-"PICTURE" { BEGIN PICTURE_STATE; }
+"PICTURE"	{ BEGIN PICTURE_STATE; }
+"FUNCTION"	{ BEGIN FUNCTION_STATE; }
 
 [\'\"] {
   /* string literal */
@@ -113,44 +111,41 @@ X\"[^\"\n]*\" {
 [0-9]+ {
   /* integer literal */
   SAVE_YYTEXT;
-  yylval.tree = install_literal (yytext);
+  yylval.tree = make_numeric_literal (0, yytext, 0);
   return INTEGER_LITERAL;
 }
 
 [+-]?[0-9]*[.,]?[0-9]+ {
   /* numeric literal */
-  char sign = yytext[0];
   SAVE_YYTEXT;
-  if (sign == '+' || sign == '-')
-    yytext++;
-  yylval.tree = install_literal (yytext);
-  if (sign == '-')
-    invert_literal_sign (yylval.tree);
-  if (strchr (yytext, decimal_comma ? '.' : ','))
-    yyerror ("wrong decimal point character in numeric literal");
-  return NUMERIC_LITERAL;
+  return scan_numeric (yytext);
 }
 
 [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)? {
-  /* symbol or label */
+  int token;
   SAVE_YYTEXT;
-  return scan_word (yytext);
+
+  /* reserved word */
+  token = lookup_reserved_word (yytext);
+  if (token != 0)
+    return token;
+
+  /* user word */
+  yylval.word = lookup_user_word (yytext);
+  if (cobc_in_procedure
+      && (!yylval.word->item || COBC_LABEL_NAME_P (yylval.word->item)))
+    return LABEL_WORD;
+  else if (yylval.word->item && COBC_FIELD_P (yylval.word->item)
+	   && COBC_FIELD (yylval.word->item)->level == 88)
+    return VARCOND;
+  else
+    return WORD;
 }
 
 "<="		{ return LE; }
 ">="		{ return GE; }
 "**"		{ return '^'; }
 .		{ return yytext[0]; }
-
-<ID_STATE>{
-  [A-Z0-9_-]+ {
-    BEGIN INITIAL;
-    SAVE_YYTEXT;
-    yylval.str = strdup (yytext);
-    return ID_TOK;
-  }
-  .		{ /* ignore */ }
-}
 
 <COMMENT_STATE>{
   .*		{ BEGIN INITIAL; }
@@ -165,9 +160,17 @@ X\"[^\"\n]*\" {
   }
 }
 
+<FUNCTION_STATE>{
+  [^ \t\n;]+	{
+    BEGIN INITIAL;
+    SAVE_YYTEXT;
+    return FUNCTION_NAME;
+  }
+}
+
 <<EOF>> {
   SAVE_YYTEXT;
-  yyterminate();
+  yyterminate ();
 }
 
 %%
@@ -192,7 +195,7 @@ read_literal (char mark)
 	yyerror ("too large literal");
     }
   *p = 0;
-  yylval.tree = install_literal (buff);
+  yylval.tree = make_nonnumeric_literal (buff);
   return NONNUMERIC_LITERAL;
 }
 
@@ -225,50 +228,39 @@ scan_x (char *text)
 
   if (high)
     {
-      yylval.tree = install_literal (dst);
+      yylval.tree = make_nonnumeric_literal (dst);
       return NONNUMERIC_LITERAL;
     }
   else
     {
     error:
       yyerror ("invalid X literal: %s", text);
-      yylval.tree = install_literal (dst);
+      yylval.tree = make_nonnumeric_literal (dst);
       return NONNUMERIC_LITERAL;
     }
 }
 
 static int
-scan_word (char *text)
+scan_numeric (char *text)
 {
-  int token = lookup_reserved_word (text);
-  if (token != 0)
-    return token;
+  int sign, decimals = 0;
+  unsigned char *s;
+  /* get sign */
+  sign = (*text == '+') ? 1 : (*text == '-') ? -1 : 0;
+  if (sign)
+    text++;
 
-  switch (curr_division)
-    {
-    case CDIV_ENVIR:
-    case CDIV_DATA:
-      yylval.tree = install (yytext, SYTB_VAR, 1);
-      return SYMBOL_TOK;
+  /* get decimal point */
+  s = strchr (text, program_spec.decimal_point);
+  if (s) {
+    decimals = strlen (s) - 1;
+    memmove (s, s + 1, decimals + 1);
+  }
+  if (strchr (text, (program_spec.decimal_point == ',') ? '.' : ','))
+    yyerror ("invalid numeric literal");
 
-    default:
-      /* if symbol was defined at the data division */
-      if ((yylval.tree = lookup_symbol (yytext)) != NULL)
-	{
-	  if (COB_FIELD_TYPE (yylval.tree) == '8')
-	    return VARCOND;
-	  else if (COB_FIELD_TYPE (yylval.tree) == '!')
-	    return SPECIAL_TOK;
-	  else
-	    return VARIABLE;
-	}
-      /* otherwise, it should be a label */
-      else
-	{
-	  yylval.tree = install_label (yytext);
-	  return SYMBOL_TOK;
-	}
-    }
+  yylval.tree = make_numeric_literal (sign, text, decimals);
+  return NUMERIC_LITERAL;
 }
 
 
@@ -289,7 +281,7 @@ static int
 scan_picture (char *text)
 {
   char *p;
-  unsigned char type = 0;
+  char category = 0;
   int idx = 0;
   int size = 0;
   int decimals = 0;
@@ -297,13 +289,7 @@ scan_picture (char *text)
   int v_count = 0;
   int buff_size = 9;
   unsigned char *buff = malloc (buff_size);
-
-  /* allocate new picture */
-  struct cob_picture *pic = malloc (sizeof (struct cob_picture));
-  pic->str = "";
-  pic->type = 0;
-  pic->size = 0;
-  pic->decimals = 0;
+  struct cobc_picture *pic = make_picture ();
 
   /* normalize the input */
   for (p = text; *p; p++)
@@ -342,46 +328,46 @@ scan_picture (char *text)
 	  goto repeat;
 	}
 
-      /* check grammar and type */
+      /* check grammar and category */
       /* FIXME: need more error check */
       switch (c)
 	{
 	case 'A':
-	  type |= PIC_ALPHABETIC;
+	  category |= PIC_ALPHABETIC;
 	  break;
 
 	case 'X':
-	  type |= PIC_ALPHANUMERIC;
+	  category |= PIC_ALPHANUMERIC;
 	  break;
 
 	case '9':
-	  type |= PIC_NUMERIC;
+	  category |= PIC_NUMERIC;
 	  if (v_count)
 	    decimals += n;
 	  break;
 
 	case 'N':
-	  type |= PIC_NATIONAL;
+	  category |= PIC_NATIONAL;
 	  break;
 
 	case 'S':
-	  type |= PIC_NUMERIC;
-	  if (type & PIC_ALPHABETIC)
+	  category |= PIC_NUMERIC;
+	  if (category & PIC_ALPHABETIC)
 	    goto error;
 	  s_count += n;
 	  if (s_count > 1 || idx != 0)
 	    goto error;
-	  break;
+	  continue;
 
 	case ',':
 	case '.':
-	  type |= PIC_NUMERIC_EDITED;
-	  if ((decimal_comma && c == '.') || (!decimal_comma && c == ','))
+	  category |= PIC_NUMERIC_EDITED;
+	  if (c != program_spec.decimal_point)
 	    break;
 	  /* fall through */
 	case 'V':
-	  type |= PIC_NUMERIC;
-	  if (type & PIC_ALPHABETIC)
+	  category |= PIC_NUMERIC;
+	  if (category & PIC_ALPHABETIC)
 	    goto error;
 	  v_count += n;
 	  if (v_count > 1)
@@ -389,15 +375,13 @@ scan_picture (char *text)
 	  break;
 
 	case 'P':
-	  type |= PIC_NUMERIC;
-	  if (type & PIC_ALPHABETIC)
+	  category |= PIC_NUMERIC;
+	  if (category & PIC_ALPHABETIC)
 	    goto error;
 	  {
 	    int at_beginning =
 	         (idx == 0)					 /* P... */
-	      || (idx == 2 && buff[0] == 'S')			 /* SP... */
-	      || (idx == 2 && buff[0] == 'V')			 /* VP... */
-	      || (idx == 4 && buff[0] == 'V' && buff[2] == 'V'); /* SVP... */
+	      || (idx == 2 && buff[0] == 'V');			 /* VP... */
 	    int at_end =
 	         (p[1] == 0)					 /* ...P */
 	      || (p[1] == 'V' && p[2] == 0);			 /* ...PV */
@@ -413,26 +397,26 @@ scan_picture (char *text)
 	  break;
 
 	case '0': case 'B': case '/':
-	  type |= PIC_EDITED;
+	  category |= PIC_EDITED;
 	  break;
 
 	case '*': case 'Z':
-	  type |= PIC_NUMERIC_EDITED;
-	  if (type & PIC_ALPHABETIC)
+	  category |= PIC_NUMERIC_EDITED;
+	  if (category & PIC_ALPHABETIC)
 	    goto error;
 	  if (v_count)
 	    decimals += n;
 	  break;
 
 	case '+': case '-':
-	  type |= PIC_NUMERIC_EDITED;
-	  if (type & PIC_ALPHABETIC)
+	  category |= PIC_NUMERIC_EDITED;
+	  if (category & PIC_ALPHABETIC)
 	    goto error;
 	  /* FIXME: need more check */
 	  break;
 
 	case 'C':
-	  type |= PIC_NUMERIC_EDITED;
+	  category |= PIC_NUMERIC_EDITED;
 	  if (!(p[1] == 'R' && p[2] == 0))
 	    goto error;
 	  break;
@@ -441,15 +425,15 @@ scan_picture (char *text)
 	  break;
 
 	case 'D':
-	  type |= PIC_NUMERIC_EDITED;
+	  category |= PIC_NUMERIC_EDITED;
 	  if (!(p[1] == 'B' && p[2] == 0))
 	    goto error;
 	  break;
 
 	default:
-	  if (c == currency_symbol)
+	  if (c == program_spec.currency_symbol)
 	    {
-	      type |= PIC_NUMERIC_EDITED;
+	      category |= PIC_NUMERIC_EDITED;
 	      /* FIXME: need more check */
 	      break;
 	    }
@@ -458,7 +442,7 @@ scan_picture (char *text)
 	}
 
       /* calculate size */
-      if (c != 'S' && c != 'V' && c != 'P')
+      if (c != 'V' && c != 'P')
 	size += n;
       if (c == 'N')
 	size += n;
@@ -484,27 +468,28 @@ scan_picture (char *text)
   pic->str = buff;
   pic->size = size;
   pic->decimals = decimals;
+  pic->have_sign = s_count;
 
-  /* set picture type */
-  switch (type)
+  /* set picture category */
+  switch (category)
     {
-    case PIC_ALPHABETIC:		pic->type = 'A'; break;
-    case PIC_NUMERIC:			pic->type = '9'; break;
+    case PIC_ALPHABETIC:		pic->category = 'A'; break;
+    case PIC_NUMERIC:			pic->category = '9'; break;
     case PIC_ALPHANUMERIC:
-    case PIC_NATIONAL:			pic->type = 'X'; break;
+    case PIC_NATIONAL:			pic->category = 'X'; break;
+    case PIC_NUMERIC_EDITED:		pic->category = '0'; break;
     case PIC_EDITED:
-    case PIC_NUMERIC_EDITED:
     case PIC_ALPHABETIC | PIC_EDITED:
     case PIC_ALPHANUMERIC_EDITED:
-    case PIC_NATIONAL_EDITED:		pic->type = 'E'; break;
+    case PIC_NATIONAL_EDITED:		pic->category = 'E'; break;
     default:				goto error;
     }
 
-  yylval.pic = pic;
+  yylval.pict = pic;
   return PICTURE_TOK;
 
  error:
   yyerror ("invalid picture string");
-  yylval.pic = pic;
+  yylval.pict = pic;
   return PICTURE_TOK;
 }

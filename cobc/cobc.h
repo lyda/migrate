@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2002  Keisuke Nishida
+ * Copyright (C) 2001-2002 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,30 +22,18 @@
 
 #include <stdio.h>
 
-#define COB_PACKAGE	"OpenCOBOL"
-#define COB_VERSION	VERSION
-#define COB_COPYRIGHT					\
-  "Copyright (C) 2001-2002 Keisuke Nishida\n"		\
-  "Copyright (C) 1999-2001 Rildo Pragana et. al.\n"
-
-extern int cob_stabs_flag;
-extern int cob_debug_flag;
-extern int cob_module_flag;
+#define COBC_PACKAGE	"OpenCOBOL"
+#define COBC_VERSION	VERSION
+#define COBC_COPYRIGHT	"Copyright (C) 2001-2002 Keisuke Nishida\n"
 
 #define LINK_STATIC	0
 #define LINK_DYNAMIC	1
 
-extern int cob_link_style;
-
-extern int cob_trace_scanner;
-extern int cob_trace_parser;
-
-extern int cob_orig_lineno;
-extern char *cob_orig_filename;
-extern char *cob_source_filename;
-extern char *cob_include_filename;
+extern int cobc_module_flag;
+extern int cobc_optimize_flag;
+extern int cobc_link_style;
 
 extern FILE *yyin;
-extern FILE *o_src;
+extern FILE *cobc_out;
 
 #endif /* _COBC_H_ */

@@ -17,7 +17,7 @@
  * Suite 330, Boston, MA 02111-1307 USA
  */
 
-#include "_libcob.h"
+#include "config.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,14 +25,7 @@
 #include <ctype.h>
 #include <gmp.h>
 
-
-/*
- * Objects
- */
-
-struct cob_boolean {
-  enum { cob_false = 0, cob_true = 1 } value;
-};
+#include "libcob.h"
 
 struct cob_decimal {
   mpz_t number;
@@ -44,9 +37,7 @@ typedef struct cob_decimal *decimal;
 struct cob_object {
   int type;
   union {
-    struct cob_boolean boolean;
     struct cob_decimal decimal;
-    struct cob_field field;
   } data;
 };
 
@@ -58,13 +49,7 @@ typedef struct cob_object *cob_object;
 
 #define COB_TYPE(x)		((x)->type)
 
-#define COB_BOOLEAN_P(x)	(COB_TYPE (x) == COB_BOOLEAN)
-#define COB_DECIMAL_P(x)	(COB_TYPE (x) == COB_DECIMAL)
-#define COB_FIELD_P(x)		(COB_TYPE (x) == COB_FIELD)
-
-#define COB_BOOLEAN(x)		(&((x)->data.boolean))
 #define COB_DECIMAL(x)		(&((x)->data.decimal))
-#define COB_FIELD(x)		(&((x)->data.field))
 
 void
 cob_print_decimal (decimal d)
@@ -74,36 +59,6 @@ cob_print_decimal (decimal d)
   if (d->decimals)
     fprintf (stdout, " * 10^-%d", d->decimals);
   fputs (")\n", stdout);
-}
-
-void
-cob_print_object (cob_object o)
-{
-  switch (COB_TYPE (o))
-    {
-    case COB_TYPE_BOOLEAN:
-      {
-	if (COB_BOOLEAN (o)->value)
-	  fputs ("true\n", stdout);
-	else
-	  fputs ("false\n", stdout);
-      }
-      break;
-
-    case COB_TYPE_DECIMAL:
-      cob_print_decimal (COB_DECIMAL (o));
-      break;
-
-    case COB_TYPE_FIELD:
-      {
-	int i;
-	struct cob_field *p = COB_FIELD (o);
-	for (i = 0; i < p->desc->len; i++)
-	  fputc (p->data[i], stdout);
-	fputc ('\n', stdout);
-      }
-      break;
-    }
 }
 
 
@@ -120,6 +75,15 @@ static struct cob_object cob_stack[STACK_SIZE];
 #define TOP()	(&cob_stack[stack_index])
 #define REF(n)	(&cob_stack[stack_index - (n)])
 #define DROP(n)	(stack_index -= (n))
+
+void
+cob_print_stack (void)
+{
+  int i;
+  printf ("%d:\n", stack_index);
+  for (i = 0; i <= stack_index; i++)
+    cob_print_decimal (COB_DECIMAL (&cob_stack[i]));
+}
 
 static cob_object
 grab_object (int type)
@@ -140,37 +104,15 @@ grab_object (int type)
 }
 
 void
-cob_push_boolean (int flag)
-{
-  struct cob_boolean *p = COB_BOOLEAN (grab_object (COB_TYPE_BOOLEAN));
-  p->value = (flag == 0) ? cob_true : cob_false;
-}
-
-void
-cob_push_field (struct cob_field fld)
-{
-  struct cob_field *p = COB_FIELD (grab_object (COB_TYPE_FIELD));
-  p->desc = fld.desc;
-  p->data = fld.data;
-}
-
-void
 cob_push_copy (int n)
 {
   cob_object src = REF (n);
   cob_object dst = grab_object (src->type);
   switch (src->type)
     {
-    case COB_TYPE_BOOLEAN:
-      COB_BOOLEAN (dst)->value = COB_BOOLEAN (src)->value;
-      break;
     case COB_TYPE_DECIMAL:
       mpz_set (COB_DECIMAL (dst)->number, COB_DECIMAL (src)->number);
       COB_DECIMAL (dst)->decimals = COB_DECIMAL (src)->decimals;
-      break;
-    case COB_TYPE_FIELD:
-      COB_FIELD (dst)->desc = COB_FIELD (src)->desc;
-      COB_FIELD (dst)->data = COB_FIELD (src)->data;
       break;
     }
 }
@@ -230,7 +172,7 @@ arrange_decimal (decimal d1, decimal d2)
 }
 
 void
-cob_add (void)
+cob_num_add (void)
 {
   decimal d2 = COB_DECIMAL (POP ());
   decimal d1 = COB_DECIMAL (TOP ());
@@ -239,7 +181,7 @@ cob_add (void)
 }
 
 void
-cob_sub (void)
+cob_num_sub (void)
 {
   decimal d2 = COB_DECIMAL (POP ());
   decimal d1 = COB_DECIMAL (TOP ());
@@ -248,7 +190,7 @@ cob_sub (void)
 }
 
 void
-cob_mul (void)
+cob_num_mul (void)
 {
   decimal d2 = COB_DECIMAL (POP ());
   decimal d1 = COB_DECIMAL (TOP ());
@@ -257,7 +199,7 @@ cob_mul (void)
 }
 
 void
-cob_div (void)
+cob_num_div (void)
 {
   decimal d2 = COB_DECIMAL (POP ());
   decimal d1 = COB_DECIMAL (TOP ());
@@ -275,7 +217,7 @@ cob_div (void)
 }
 
 void
-cob_pow (void)
+cob_num_pow (void)
 {
   decimal d2 = COB_DECIMAL (POP ());
   decimal d1 = COB_DECIMAL (TOP ());
@@ -294,7 +236,7 @@ cob_pow (void)
 }
 
 int
-cob_cmp (void)
+cob_num_cmp (void)
 {
   int val;
   decimal d2 = COB_DECIMAL (POP ());
@@ -302,22 +244,6 @@ cob_cmp (void)
   arrange_decimal (d1, d2);
   val = mpz_cmp (d1->number, d2->number); /* return value may not be -1,0,1 */
   return (val < 0) ? -1 : (val > 0) ? 1 : 0;
-}
-
-int
-cob_between (void)
-{
-  decimal upper = COB_DECIMAL (POP ());
-  decimal value = COB_DECIMAL (POP ());
-  decimal lower = COB_DECIMAL (POP ());
-  arrange_decimal (lower, value);
-  if (mpz_cmp (lower->number, value->number) <= 0)
-    {
-      arrange_decimal (value, upper);
-      if (mpz_cmp (value->number, upper->number) <= 0)
-	return 1;
-    }
-  return 0;
 }
 
 
@@ -334,17 +260,35 @@ grab_decimal ()
 }
 
 void
-cob_push_int (int n)
+cob_push_int (int n, int decimals)
 {
   decimal d = grab_decimal ();
-  mpz_set_ui (d->number, n);
-  d->decimals = 0;
+  mpz_set_si (d->number, n);
+  d->decimals = decimals;
 }
 
 void
-cob_push_zero (void)
+cob_push_str (char *s, int decimals)
 {
-  cob_push_int (0);
+  decimal d = grab_decimal ();
+  mpz_set_str (d->number, s, 10);
+  d->decimals = decimals;
+}
+
+void
+cob_dis_check (struct cob_field f)
+{
+  int i;
+  int sign = get_sign (f);
+  int len = FIELD_LENGTH (f);
+  unsigned char *p = FIELD_BASE (f);
+  for (i = 0; i < len; i++)
+    if (!isdigit (p[i]))
+      {
+	fprintf (stderr, "\007ERROR: non-numeric value: `%s'\n", p);
+	break;
+      }
+  put_sign (f, sign);
 }
 
 void
@@ -372,13 +316,11 @@ cob_push_decimal (struct cob_field f)
       break;
 
     case 'C':
-    case 'U':
       puts ("cob_push: not implemented yet");
       break;
 
     default:
       {
-	int i;
 	char *p, buff[32];
 	int sign = get_sign (f);
 	int len = FIELD_LENGTH (f);
@@ -387,16 +329,6 @@ cob_push_decimal (struct cob_field f)
 	p = (len < 32) ? buff : alloca (len + 1);
 	memcpy (p, base, len);
 	p[len] = 0;
-
-	for (i = 0; i < len; i++)
-	  if (!isdigit (p[i]))
-	    {
-	      if (cob_source_file)
-		fprintf (stderr, "%s:%d: ", cob_source_file, cob_source_line);
-	      fprintf (stderr, "\aerror: non-numeric value `%s'\n", p);
-	      break;
-	    }
-
 	mpz_set_str (d->number, p, 10);
 	if (sign == 1) /* negative */
 	  mpz_neg (d->number, d->number);
@@ -409,41 +341,11 @@ cob_push_decimal (struct cob_field f)
 }
 
 void
-cob_set_int (struct cob_field f, int n)
+cob_round (struct cob_field f)
 {
-  int saved_status = cob_status;
-  cob_status = COB_STATUS_SUCCESS;
-  cob_push_int (n);
-  cob_set (f, 0);
-  cob_status = saved_status;
-}
-
-void
-cob_add_int (struct cob_field f, int n)
-{
-  int saved_status = cob_status;
-  if (n == 0) return;
-  cob_status = COB_STATUS_SUCCESS;
-  cob_push_decimal (f);
-  cob_push_int (n);
-  cob_add ();
-  cob_set (f, 0);
-  cob_status = saved_status;
-}
-
-void
-cob_set (struct cob_field f, int round)
-{
-  decimal d = COB_DECIMAL (POP ());
-
-  /* Just return if something has happened */
-  if (cob_status == COB_STATUS_OVERFLOW)
-    return;
-
-  /* Append or truncate decimal digits */
-  if (round && f.desc->decimals < d->decimals)
+  decimal d = COB_DECIMAL (TOP ());
+  if (f.desc->decimals < d->decimals)
     {
-      /* with rounding */
       int sign = mpz_sgn (d->number);
       if (sign != 0)
 	{
@@ -452,14 +354,21 @@ cob_set (struct cob_field f, int round)
 	    mpz_add_ui (d->number, d->number, 5);
 	  else
 	    mpz_sub_ui (d->number, d->number, 5);
-	  mpz_tdiv_q_ui (d->number, d->number, 10);
 	}
     }
-  else
-    {
-      /* without rounding */
-      shift_decimal (d, f.desc->decimals - d->decimals);
-    }
+}
+
+void
+cob_set (struct cob_field f)
+{
+  decimal d = COB_DECIMAL (POP ());
+
+  /* Just return if something has happened */
+  if (cob_status == COB_STATUS_OVERFLOW)
+    return;
+
+  /* Append or truncate decimal digits */
+  shift_decimal (d, f.desc->decimals - d->decimals);
 
   /* Store number */
   switch (FIELD_TYPE (f))
@@ -467,6 +376,8 @@ cob_set (struct cob_field f, int round)
     case 'B':
       {
 	int len = picCompLength (f.desc->pic);
+	if (!len)
+	  len = 4;
 	if (f.desc->len <= 4)
 	  {
 	    int val;
@@ -505,7 +416,6 @@ cob_set (struct cob_field f, int round)
       }
 
     case 'C':
-    case 'U':
       puts ("cob_decimal_to_fld: not implemented yet");
       return;
 
@@ -540,17 +450,8 @@ cob_set (struct cob_field f, int round)
 	  }
 	else
 	  {
-	    struct fld_desc desc =
-	      {size, '9', f.desc->decimals, 0, 0, 0, 0, 0, 0};
+	    struct cob_field_desc desc = {size, '9', f.desc->decimals};
 	    struct cob_field temp = {&desc, buff};
-	    unsigned char pic[10];
-	    if (f.desc->decimals > 0)
-	      sprintf (pic, "S\0019%cV\0019%c",
-		       (char) (size - f.desc->decimals),
-		       (char) f.desc->decimals);
-	    else
-	      sprintf (pic, "S\0019%c", (char) size);
-	    desc.pic = pic;
 	    put_sign (temp, sign);
 	    cob_move (temp, f);
 	  }
@@ -564,7 +465,52 @@ cob_set (struct cob_field f, int round)
 }
 
 void
-cob_divide_remainder (struct cob_field q, struct cob_field r, int round)
+cob_set_int (struct cob_field f, int n)
+{
+  int saved_status = cob_status;
+  cob_status = COB_STATUS_SUCCESS;
+  cob_push_int (n, 0);
+  cob_set (f);
+  cob_status = saved_status;
+}
+
+void
+cob_add_int (struct cob_field f, int n)
+{
+  int saved_status = cob_status;
+  if (n == 0) return;
+  cob_status = COB_STATUS_SUCCESS;
+  cob_push_decimal (f);
+  cob_push_int (n, 0);
+  cob_num_add ();
+  cob_set (f);
+  cob_status = saved_status;
+}
+
+void
+cob_add (struct cob_field f1, struct cob_field f2, int round)
+{
+  cob_push_decimal (f1);
+  cob_push_decimal (f2);
+  cob_num_add ();
+  if (round)
+    cob_round (f2);
+  cob_set (f2);
+}
+
+void
+cob_sub (struct cob_field f1, struct cob_field f2, int round)
+{
+  cob_push_decimal (f1);
+  cob_push_decimal (f2);
+  cob_num_sub ();
+  if (round)
+    cob_round (f2);
+  cob_set (f2);
+}
+
+void
+cob_divide (struct cob_field q, struct cob_field r, int round)
 {
   decimal d;
 
@@ -573,72 +519,18 @@ cob_divide_remainder (struct cob_field q, struct cob_field r, int round)
   cob_push_copy (1);
 
   /* compute quotient */
-  cob_div ();
+  cob_num_div ();
   cob_push_copy (0);		/* save the quotient */
-  cob_set (q, round);
+  if (round)
+    cob_round (q);
+  cob_set (q);
 
   /* truncate digits from quotient */
   d = COB_DECIMAL (TOP ());
   shift_decimal (d, q.desc->decimals - d->decimals);
 
   /* compute remainder */
-  cob_mul ();
-  cob_sub ();
-  cob_set (r, 0);
-}
-
-
-int
-cob_is_zero ()
-{
-  switch (COB_TYPE (TOP ()))
-    {
-    case COB_TYPE_DECIMAL:
-      cob_push_zero ();
-      return (cob_cmp () == 0) ? 1 : 0;
-
-    case COB_TYPE_FIELD:
-      {
-	int i;
-	struct cob_field *p = COB_FIELD (POP ());
-	for (i = 0; i < p->desc->len; i++)
-	  if (p->data[i] != '0')
-	    return 0;
-	return 1;
-      }
-
-    default:
-      abort ();
-    }
-}
-
-int
-cob_is_equal ()
-{
-  cob_object o1 = REF (0);
-  cob_object o2 = REF (1);
-
-  if (COB_TYPE (o1) == COB_TYPE (o2))
-    switch (COB_TYPE (o1))
-      {
-      case COB_TYPE_BOOLEAN:
-	DROP (2);
-	return (COB_BOOLEAN (o1)->value == COB_BOOLEAN (o2)->value) ? 1 : 0;
-
-      case COB_TYPE_DECIMAL:
-	return (cob_cmp () == 0) ? 1 : 0;
-
-      case COB_TYPE_FIELD:
-	DROP (2);
-	return (cob_compare (*COB_FIELD (o1), *COB_FIELD (o2)) == 0) ? 1 : 0;
-      }
-  /* A trick that allows 88 variables */
-  else if (COB_TYPE (o2) == COB_TYPE_BOOLEAN
-	   && COB_BOOLEAN (o2)->value == cob_true)
-    {
-      DROP (2);
-      return 1;
-    }
-  DROP (2);
-  return 0;
+  cob_num_mul ();
+  cob_num_sub ();
+  cob_set (r);
 }

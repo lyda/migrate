@@ -19,13 +19,15 @@
  * Suite 330, Boston, MA 02111-1307 USA
  */
 
-#include "_libcob.h"
+#include "config.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
 #include <termios.h>
+
+#include "libcob.h"
 
 #ifdef HAVE_READLINE_READLINE_H
 #include <readline/readline.h>
@@ -42,67 +44,41 @@
 void
 cob_display (struct cob_field f)
 {
-  char *buffer;
-  struct fld_desc ftmp;
-  char pictmp[64];
-  char szSigned[3];
-  int i, len;
-
   if (FIELD_NUMERIC_P (f))
     {
-      int decimals = FIELD_DECIMALS (f);
-      len = picCompLength (f.desc->pic);
-      if (FIELD_SIGNED_P (f))
+      int i;
+      int size = (picCompLength (f.desc->pic)
+		  + (f.desc->have_sign ? 1 : 0)
+		  + (f.desc->decimals ? 1 : 0));
+      unsigned char *pic = alloca (strlen (f.desc->pic) + 3);
+      unsigned char *data = alloca (size);
+      struct cob_field_desc desc = {size, '0', f.desc->decimals};
+      struct cob_field fld = {&desc, data};
+      desc.pic = pic;
+      if (f.desc->have_sign)
 	{
-	  szSigned[0] = '+';
-	  szSigned[1] = (char) 1;
-	  szSigned[2] = '\0';
+	  strcpy (pic, "+\001");
+	  pic += 2;
 	}
-      else
-	{
-	  szSigned[0] = '\0';
-	}
-
-      buffer = alloca (len + 2);
-      memcpy (&ftmp, f.desc, sizeof (ftmp));
-      if (decimals > 0)
-	{
-	  if (f.desc->pic[0] == 'P' || f.desc->pic[2] == 'P')
-	    sprintf (pictmp, "%s.%c9%c", szSigned, 1, decimals);
-	  else
-	    sprintf (pictmp, "%s9%c%c%c9%c", szSigned,
-		     len - decimals, cob_decimal_point, 1, decimals);
-	}
-      else
-	{
-	  sprintf (pictmp, "%s9%c", szSigned, len);
-	}
-      ftmp.type = 'E';
-      ftmp.pic = pictmp;
-      ftmp.len = len;
-      if (strlen (szSigned))
-	{
-	  ++ftmp.len;
-	  ++len;
-	}
-      if (decimals > 0)
-	len++;
-      cob_move (f, (struct cob_field) {&ftmp, buffer});
+      strcpy (pic, f.desc->pic);
+      cob_move (f, fld);
+      for (i = 0; i < size; i++)
+	fputc (data[i], stdout);
     }
   else
     {
-      len = f.desc->len;
-      buffer = f.data;
+      int i;
+      int size = FIELD_SIZE (f);
+      unsigned char *data = FIELD_DATA (f);
+      for (i = 0; i < size; i++)
+	fputc (data[i], stdout);
     }
-
-  for (i = 0; i < len; i++)
-    fputc (buffer[i], stdout);
 }
 
 void
 cob_newline (void)
 {
-  fputc ('\n', stdout);
+  putc ('\n', stdout);
   fflush (stdout);
 }
 
@@ -138,42 +114,6 @@ cob_accept (struct cob_field f)
       cob_mem_move (f, buff, strlen (buff) - 1);
     }
 
-}
-
-int
-cob_accept_command_line (struct cob_field f)
-{
-  int i, size = 0;
-  char buff[BUFSIZ];
-
-  for (i = 0; i < cob_argc; i++)
-    {
-      int len = strlen (cob_argv[i]);
-      if (size + len >= BUFSIZ)
-	/* overflow */
-	return 1;
-      memcpy (buff + size, cob_argv[i], len);
-      size += len;
-      buff[size++] = ' ';
-    }
-
-  cob_mem_move (f, buff, size);
-  return 0;
-}
-
-void
-cob_accept_environment (struct cob_field f, struct cob_field env)
-{
-  char *p, buff[BUFSIZ];
-
-  memcpy (buff, FIELD_DATA (env), FIELD_SIZE (env));
-  buff[FIELD_SIZE (env)] = '\0';
-
-  p = getenv (buff);
-  if (p)
-    cob_mem_move (f, p, strlen (p));
-  else
-    cob_move_space (f);
 }
 
 int
@@ -218,4 +158,34 @@ cob_accept_time (struct cob_field f)
   sprintf (s, "%02d%02d%02d%02d", tm->tm_hour, tm->tm_min, tm->tm_sec, 0);
   cob_mem_move (f, s, 8);
   return 0;
+}
+
+int
+cob_accept_command_line (struct cob_field f)
+{
+  int i, size = 0;
+  char buff[BUFSIZ];
+
+  for (i = 0; i < cob_argc; i++)
+    {
+      int len = strlen (cob_argv[i]);
+      if (size + len >= BUFSIZ)
+	/* overflow */
+	return 1;
+      memcpy (buff + size, cob_argv[i], len);
+      size += len;
+      buff[size++] = ' ';
+    }
+
+  cob_mem_move (f, buff, size);
+  return 0;
+}
+
+void
+cob_accept_environment (struct cob_field f, struct cob_field env)
+{
+  char buff[FIELD_SIZE (env) + 1];
+  char *p = getenv (cob_field_to_string (env, buff));
+  if (!p) p = "";
+  cob_mem_move (f, p, strlen (p));
 }
