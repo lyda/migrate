@@ -28,7 +28,7 @@ Test Modules
 
 Core tests:
 
-  NC - COBOL core tests
+  NC - COBOL nucleus tests
   SM - COPY sentence tests
   IC - CALL sentence tests
 
