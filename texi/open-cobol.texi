@@ -6,9 +6,7 @@
 @setchapternewpage odd
 @c %**end of header
 
-@set UPDATED 2002-01-05
-@set EDITION 0.8.7
-@set VERSION 0.8.7
+@include version.texi
 
 @ifinfo
 @dircategory COBOL
@@ -18,7 +16,7 @@
 
 This file documents OpenCOBOL, a COBOL compiler
 
-Copyright @copyright{} 2001 Keisuke Nishida
+Copyright @copyright{} 2002 Keisuke Nishida
 
 Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -43,9 +41,9 @@ approved by the Free Software Foundation.
 @end ifinfo
 
 @titlepage
-@title OpenCOBOL マニュアル
+@title OpenCOBOL Manual
 @subtitle for OpenCOBOL @value{VERSION}
-@author 西田 圭介
+@author Keisuke Nishida
 
 @page
 @vskip 0pt plus 1filll
@@ -53,7 +51,7 @@ Edition @value{EDITION} @*
 Updated for OpenCOBOL @value{VERSION} @*
 @value{UPDATED} @*
 
-Copyright @copyright{} 2001 Keisuke Nishida
+Copyright @copyright{} 2002 Keisuke Nishida
 
 Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -72,299 +70,76 @@ approved by the Free Software Foundation.
 
 @contents
 
-@node Top, Changes, (dir), (dir)
+@node Top, Getting Started, (dir), (dir)
 @top OpenCOBOL Manual
 
-このマニュアルは OpenCOBOL @value{VERSION} について説明します。
+OpenCOBOL is an open-source COBOL compiler, which translates COBOL
+programs to C code as the intermediate language.
+
+This manual corresponds to OpenCOBOL @value{VERSION}.
 
 @menu
-* Changes::                     TinyCOBOL 0.54 からの変更点
-* Compile::                     コンパイル方法
-* C Interface::                 C プログラムとのリンク
+* Getting Started::             Introduction to OpenCOBOL
+* Compile::                     How to compile COBOL programs
+* C Interface::                 Using COBOL Programs with C Programs
+* Customize::                   Customize options
 
 @detailmenu
  --- The Detailed Node Listing ---
 
-TinyCOBOL 0.54 からの変更点
-
-* Package Changes::             パッケージの変更点
-* Compiler Changes::            コンパイラの変更点
-* COBOL Changes::               COBOL レベルの変更点
-* C Changes::                   C レベルの変更点
-
-コンパイル方法
+Getting Started
 
 * Hello World!::                Hello World!
-* Multiple Files::              複数ファイルのコンパイル
-* Static Linking::              静的リンク
-* Makefile::                    Makefile の作成
 
-C プログラムとのリンク
+How to Compile
 
-* C to COBOL::                  C から COBOL プログラムを呼び出す
-* COBOL to C::                  COBOL から C プログラムを呼び出す
+* Source Format::               Source Format
+* Dynamic Linking::             Dynamic Linking
+* Static Linking::              Static Linking
 
-C から COBOL プログラムを呼び出す
+C Interface
 
-* Static C to COBOL::           静的リンクの場合
-* Dynamic C to COBOL::          動的リンクの場合
+* Main C Program::              Writing Main Program in C
+* C to COBOL::                  Using COBOL Programs from C
+* COBOL to C::                  Using C Programs from COBOL
 
-COBOL から C プログラムを呼び出す
+Using COBOL Programs from C
 
-* Static COBOL to C::           静的リンクの場合
-* Dynamic COBOL to C::          動的リンクの場合
+* Static C to COBOL::           Static linking with COBOL programs
+* Dynamic C to COBOL::          Dynamic linking with COBOL programs
+
+Using C Programs from COBOL
+
+* Static COBOL to C::           Static linking with C programs
+* Dynamic COBOL to C::          Static linking with C programs
 
 @end detailmenu
 @end menu
 
-@node Changes, Compile, Top, Top
-@chapter TinyCOBOL 0.54 からの変更点
-
-@menu
-* Package Changes::             パッケージの変更点
-* Compiler Changes::            コンパイラの変更点
-* COBOL Changes::               COBOL レベルの変更点
-* C Changes::                   C レベルの変更点
-@end menu
-
-@node Package Changes, Compiler Changes, Changes, Changes
-@section パッケージの変更点
-
-@itemize @bullet
-@item Autoconf 2.52, Automake 1.5, Libtool 1.4 を利用
-
-@item パーサ生成に Bison を利用
-
-@item Bison/Flex によって生成された C ソースを配布
-
-@samp{configure; make} するときに Bison/Flex は必要ない。
-
-@item スクリプト @code{cob-config} を作成
-
-@code{cobc} によって生成されたファイルを gcc でリンクするとき、
-必要となるオプションを出力する。次のようにして使う。
-
-@example
-% cobc -c foo.cob
-% gcc -o foo foo.o `cob-config --libs`
-@end example
-
-@item ソースレイアウトの変更
-
-@example
-open-cobol/cobc/        コンパイラ
-open-cobol/cobpp/       プリプロセッサ
-open-cobol/libcob/      実行時ライブラリ
-open-cobol/texi/        マニュアル
-@end example
-
-@item インストールディレクトリの変更
-
-標準では次のようにインストールされる。
-
-@example
-$(PREFIX)/bin/cobc                    コンパイラ
-$(PREFIX)/bin/cobpp                   プリプロセッサ
-$(PREFIX)/lib/libcob.a                実行時ライブラリ
-$(PREFIX)/info/open-cobol.info        マニュアル
-@end example
-
-@item db ライブラリの自動判定を止め、db1 を必須とした
-
-ヘッダファイル @file{db1/db.h}、及びライブラリ @file{libdb1} が
-インストールされている必要がある。
-
-@item 数値計算のために GMP ライブラリに依存するようになった
-
-@item C プログラムを GNU スタイルでインデント
-@end itemize
-
-@node Compiler Changes, COBOL Changes, Package Changes, Changes
-@section コンパイラの変更点
-
-@itemize @bullet
-@item コンパイラ名は @code{cobc}
-
-@example
-cobc [options] file...
-@end example
-
-オプションなしで実行した場合、実行ファイルが生成される。
-指定出来るオプションは次の通り:
-
-@example
---help          ヘルプメッセージを表示
---version       バージョン番号を表示
--save-temps     中間ファイルを削除しない
--static         CALL 文で静的呼び出しを行なう。
--dynamic        CALL 文で動的呼び出しを行なう。
-
--E              前処理(COPY, REPLACE 等)のみ実行
--S              コンパイルのみ実行 (*.s を生成)
--c              アセンブルまで実行 (*.o を生成)
--m              モジュールを作成 (*.so を生成)
--g              デバッグ情報付きでコンパイル
--o <file>       出力を指定したファイルに書き出す
-
--F              ソースを固定幅フォーマットとして扱う
--X              ソースを自由フォーマットとして扱う
--D              デバッグ行(`D' で始まる行)を有効にする
--I <path>       COPY ファイルの検索に <path> を追加
-@end example
-
-@item CALL 文が標準で動的呼び出しを行なうようにした
-
-TinyCOBOL のように定数の呼び出しで静的リンクを行なうには、
-コンパイラオプション @code{-static} を指定する。
-
-@item 動的モジュールの扱いを整理
-
-CALL 文で動的呼び出しが指定された場合、プログラムがダイナ
-ミックにリンクされる。これは次のようにして行なう。
-
-@enumerate
-@item
-呼び出されるプログラム(モジュール)を生成する。
-@example
-cobc -m module.cob
-@end example
-
-@item
-メインプログラムを生成する。
-@example
-cobc -o main main.cob
-@end example
-
-@item
-環境変数 @code{COB_LIBRARY_PATH} にモジュールのあるディレクトリを
-セットし、メインプログラムを実行。
-
-@example
-COB_LIBRARY_PATH=. ./main
-@end example
-
-なお、@code{COB_LIBRARY_PATH} の初期値は @file{.:$(PREFIX)/lib/open-cobol}
-となっている。
-@end enumerate
-
-@item ソースのフォーマット(fixed/free)を簡易的に自動判定
-
-一行目の先頭 6 文字を見て、それが数字で始まっているか、
-もしくはすべて空白の場合、固定フォーマットとみなす。
-それ以外の場合、自由フォーマットとみなす。
-
-@item 以下の環境変数を指定可能 (括弧内はデフォルト値)
-
-@example
-COB_CC            利用する C コンパイラ ("cc")
-COB_COBPP         プリプロセッサ ("$(PREFIX)/bin/cobpp")
-COB_LIBADD        リンクするライブラリ ("-L$(PREFIX)/lib -lcob")
-COB_LIBRARY_PATH  ライブラリのパス (".:$(PREFIX)/lib/open-cobol")
-@end example
-@end itemize
-
-@node COBOL Changes, C Changes, Compiler Changes, Changes
-@section COBOL レベルの変更点
-
-@itemize @bullet
-@item PIC の文字として @samp{N} (日本語)を認識
-
-ただし現時点では、内部的に @samp{X} 二つに置き換えるだけの便宜的対応。
-
-@item 数値計算の内部処理を見直し
-
-@itemize @minus
-@item 内部処理に多バイト整数を使い、誤差が出ないようにした
-
-@item 割り算で小数点以下 18 桁までの精度で計算するようにした
-
-@item オーバーフロー時に有効桁数分の値をセットするようにした
-@end itemize
-
-@item CANCEL を実装
-
-@item 組み込み関数機能(FUNCTION ...)を無効にした
-
-将来的に再設計・再実装する。
-@end itemize
-
-@node C Changes,  , COBOL Changes, Changes
-@section C レベルの変更点
-
-@itemize @bullet
-@item ヘッダファイル @file{libcob.h} を用意
-
-C から COBOL の機能を呼ぶときに使える関数を定義している。
-
-@item 関数 @code{cob_init}
-
-最初に次のようにして COBOL ランタイムを初期化する必要がある。
-
-@example
-int
-main (int argc, char **argv)
-@{
-  /* initialize of your program */
-  ...
-
-  /* initialize COBOL runtime library */
-  cob_init (argc, argv);
-
-  /* rest of your program */
-  ...
-@}
-@end example
-
-@item 関数 @code{cob_set_library_path}
-
-環境変数 @code{COB_LIBRARY_PATH} を設定するのと同様のことを
-C プログラムから行なう。環境変数よりも優先される。
-
-@item 関数 @code{cob_resolve}, @code{cob_resolve_error}
-
-@code{cob_resolve} は、COBOL モジュールを動的に探して見付かった関数を返す。
-@code{cob_resolve_error} は、モジュールが見付からなかったときに、その原因を
-示す文字列を返す。
-@end itemize
-
-@node Compile, C Interface, Changes, Top
-@chapter コンパイル方法
-
-この章では、OpenCOBOL を使って COBOL プログラムをコンパイルする
-方法について説明します。
+@node Getting Started, Compile, Top, Top
+@chapter Getting Started
 
 @menu
 * Hello World!::                Hello World!
-* Multiple Files::              複数ファイルのコンパイル
-* Static Linking::              静的リンク
-* Makefile::                    Makefile の作成
 @end menu
 
-@node Hello World!, Multiple Files, Compile, Compile
+@node Hello World!,  , Getting Started, Getting Started
 @section Hello World!
 
-単純な例として、@samp{Hello World!} と表示する次のプログラムを
-コンパイルします。
+This is a sample code that displays ``Hello World'':
 
 @example
 ---- hello.cob -------------------------
-* プログラム例
- IDENTIFICATION DIVISION.
- PROGRAM-ID. hello.
- PROCEDURE DIVISION.
- DISPLAY "Hello World!".
- STOP RUN.
+*> Hello World Program
+IDENTIFICATION DIVISION.
+PROGRAM-ID. hello.
+PROCEDURE DIVISION.
+DISPLAY "Hello World!".
+STOP RUN.
 ----------------------------------------
 @end example
 
-OpenCOBOL は自由書式に対応しているので、A 領域や B 領域といった
-桁数に関係なくプログラムを書くことが出来ます。ただしコメント行を
-示す @samp{*} は行頭に置かねばなりません。@samp{*} を 7 桁目に置く
-固定書式で書く場合には、オプション @code{-F} を付けてコンパイラを
-実行して下さい。
-
-コンパイラの名前は @code{cobc} です。次のように実行します。
-(@samp{%} はシェルプロンプト)
+The compiler program is @code{cobc}, which is executed as follows:
 
 @example
 % cobc hello.cob
@@ -372,9 +147,12 @@ OpenCOBOL は自由書式に対応しているので、A 領域や B 領域といった
 Hello World!
 @end example
 
-実行ファイルは上のように、ソースファイルを元に名前が決まります。
-実行ファイルの名前を指定するには、次のようにオプション @code{-o}
-を与えます。
+The executable program name (i.e., @file{hello} in this case) is
+determined from the source file name (i.e., @file{hello.cob}) by
+removing the file extension.
+
+You can specify the executable name by giving option @code{-o} to
+@code{cobc} as follows:
 
 @example
 % cobc -o hello-world hello.cob 
@@ -382,425 +160,383 @@ Hello World!
 Hello World!
 @end example
 
-@node Multiple Files, Static Linking, Hello World!, Compile
-@section 複数ファイルのコンパイル
+@node Compile, C Interface, Getting Started, Top
+@chapter How to Compile
 
-一つのプログラムが別のプログラムを呼び出す次のような例を考えます。
+This chapter describes how to compile COBOL programs using OpenCOBOL.
 
-@example
----- caller.cob ------------------------
- IDENTIFICATION DIVISION.
- PROGRAM-ID. caller.
- DATA DIVISION.
- WORKING-STORAGE SECTION.
- 01 HELLO PIC X(12) VALUE "Hello World!".
+@menu
+* Source Format::               Source Format
+* Dynamic Linking::             Dynamic Linking
+* Static Linking::              Static Linking
+@end menu
 
- PROCEDURE DIVISION.
- CALL "callee" USING HELLO.
- STOP RUN.
-----------------------------------------
-@end example
+@node Source Format, Dynamic Linking, Compile, Compile
+@section Source Format
 
-@example
----- callee.cob ---------------------------
- IDENTIFICATION DIVISION.
- PROGRAM-ID. callee.
- DATA DIVISION.
- LINKAGE SECTION.
- 01 HELLO PIC X(12).
+OpenCOBOL is able to handle two source format: the traditional
+@samp{fixed format} and the new @samp{free format}.
 
- PROCEDURE DIVISION USING HELLO.
- DISPLAY HELLO.
- EXIT PROGRAM.
-----------------------------------------
-@end example
-
-呼ぶ側のプログラムのコンパイルは先程と同じですが、呼ばれる側は
-次のようにオプション @code{-m} を付けてコンパイルします。
-
-@example
-% cobc -o hello caller.cob
-% cobc -m callee.cob
-% ./hello
-Hello World!
-@end example
-
-@code{-m} を付けてコンパイルを行なうと @file{.so} という拡張子を
-持ったモジュールファイル(上の場合は @file{callee.so})が生成され、
-プログラムの実行時に動的にリンクされます。
-
-モジュールの呼び出しにはいくつかの注意が必要です。
+There are three methods of specifying a format:
 
 @enumerate
 @item
-生成したモジュールは、メインプログラムを実行するときの
-カレントディレクトリか、もしくは OpenCOBOL のライブラリ
-ディレクトリ(標準では @file{/usr/local/lib/open-cobol/})に置く。
+Automatic determination
 
-環境変数 @code{COB_LIBRARY_PATH} により、モジュールを検索する
-パスを変更することが出来る。環境変数 @code{PATH} と同様に、
-@samp{:} で区切られたディレクトリのリストを指定する。
+OpenCOBOL determines the source format of a given file by inspecting
+the first six characters in the source file.
+
+If the first six characters are all digits or spaces, the format will
+be considered to be fixed format.  Otherwise, it will be free format.
 
 @item
-モジュールの名前は、@code{CALL} に与えるプログラム名に拡張子
-@file{.so} を付けたものとし、そのソースコードの @code{PROGRAM-ID} は
-プログラム名と同一にしておく。
+Compiler option
 
-例えば @code{CALL "foo"} というコードを実行する場合、
-呼ばれる側のプログラムでは @code{PROGRAM-ID. foo.} と宣言し、
-@file{foo.so} というファイルにコンパイルする。大文字・小文字は
-区別される。
+Source format can be explicitly specified by giving one of the
+following compiler options to @code{cobc}:
+
+@table @code
+@item -F
+Fixed format.
+@item -X
+Free format.
+@end table
+
+@item
+Compile-time option (not implemented)
+
+OpenCOBOL supports COBOL2002 compile-time option @code{SOURCE FORMAT},
+which is specified within the source file as follows:
+
+@example
+>>SOURCE FORMAT IS FREE
+IDENTIFICATION DIVISION.
+...
+@end example
 @end enumerate
 
-@node Static Linking, Makefile, Multiple Files, Compile
-@section 静的リンク
+@node Dynamic Linking, Static Linking, Source Format, Compile
+@section Dynamic Linking
 
-コンパイル時にオプション @code{-static} を指定することで、
-サブプログラムを静的にリンクすることも可能です。最も簡単
-なのは、次のように全てのファイルをまとめてコンパイルする
-ことです。
+CALL statement is implemented by dynamic linking by default.
+Follow these steps to run multiple programs:
+
+@enumerate
+@item
+Compile module programs with option @code{-m}:
+@example
+% cobc -m module.cob
+@end example
+
+@item
+Compile the main program:
+@example
+% cobc main.cob
+@end example
+
+@item
+Set the environment variable @code{COB_LIBRARY_PATH},
+put the module file (i.e., @file{module.so}) there,
+and run the main program.
 
 @example
-% cobc -static -o hello caller.cob callee.cob
+% export COB_LIBRARY_PATH=/somewhere
+% cp module.so /somewhere
+% ./main
+@end example
+@end enumerate
+
+Note that the module's file name without extension (i.e.,
+@file{module} in this case) must be identical to PROGRAM-ID.
+
+@node Static Linking,  , Dynamic Linking, Compile
+@section Static Linking
+
+Subprograms can be statically linked with the main program
+with option @code{-static}.
+
+@example
+% cobc -c -static main.cob
+% cobc -c -static module.cob
+% cobc -o hello main.o module.o
 % ./hello
 Hello World!
 @end example
 
-別な方法として、それぞれを別々にコンパイルしてから、最後に
-リンクしてやる方法もあります。
+@node C Interface, Customize, Compile, Top
+@chapter C Interface
 
-@example
-% cobc -static -c caller.cob
-% cobc -static -c callee.cob
-% cobc -o hello caller.o callee.o
-% ./hello
-Hello World!
-@end example
-
-オプション @code{-c} を付けるのを忘れないで下さい。これは
-プログラムのリンクを後で行なうように指示します。@code{-c} を
-忘れると、呼ばれるべきプログラムが見付からずに次のような
-エラーになります。
-
-@example
-% cobc -static caller.cob
-/tmp/filezBF4hG.o: In function `main':
-/tmp/filezBF4hG.o(.text+0x77): undefined reference to `callee'
-collect2: ld returned 1 exit status
-@end example
-
-オプション @code{-static} を与えた場合にも、@code{CALL} に変数を
-与えて呼び出しを行なった場合には、例外的に動的リンクが行なわれます。
-これは例えば次のような場合です。
-
-@example
----- caller.cob ------------------------
- IDENTIFICATION DIVISION.
- PROGRAM-ID. caller.
- DATA DIVISION.
- WORKING-STORAGE SECTION.
- 01 PROG  PIC X(6)  VALUE "callee".
- 01 HELLO PIC X(12) VALUE "Hello World!".
-
- PROCEDURE DIVISION.
- CALL PROG USING HELLO.
- STOP RUN.
-----------------------------------------
-@end example
-
-@node Makefile,  , Static Linking, Compile
-@section Makefile の作成
-
-ソースファイルが複数になると、Makefile を書くと便利です。
-例えば動的リンクの例では、次のような Makefile を書きます。
-
-@example
----- Makefile --------------------------
-PROGRAM = hello
-SOURCES = caller.cob callee.cob 
-OBJECTS = caller.o
-MODULES = callee.so
-
-all: $(PROGRAM) $(MODULES)
-
-clean:
-	rm -f *.o *.so $(PROGRAM)
-
-$(PROGRAM): $(OBJECTS)
-	cobc -o $@ $(OBJECTS)
-
-%.o: %.cob
-	cobc -c $<
-
-%.so: %.cob
-	cobc -m $<
-----------------------------------------
-@end example
-
-これで @samp{make} と打つだけで必要な作業が全て行なわれ、
-@samp{make clean} で生成されたファイルが削除されます。
-
-@example
-% make
-cobc -c caller.cob
-cobc -o hello caller.o
-cobc -m callee.cob
-% make clean
-rm -f *.o *.so hello
-@end example
-
-静的リンクの例では、次のように書きます。
-
-@example
----- Makefile --------------------------
-PROGRAM = hello
-SOURCES = caller.cob callee.cob
-OBJECTS = caller.o   callee.o
-
-all: $(PROGRAM)
-
-clean:
-	rm -f *.o $(PROGRAM)
-
-$(PROGRAM): $(OBJECTS)
-	cobc -o $@ $(OBJECTS)
-
-%.o: %.cob
-	cobc -static -c $<
-----------------------------------------
-@end example
-
-次のようになります。
-
-@example
-% make
-cobc -static -c caller.cob
-cobc -static -c callee.cob
-cobc -o hello caller.o   callee.o
-% make clean
-rm -f *.o hello
-@end example
-
-@node C Interface,  , Compile, Top
-@chapter C プログラムとのリンク
-
-この章では、OpenCOBOL でコンパイルした COBOL プログラムを、
-C で書かれたプログラムとリンクする方法について説明します。
+This chapter describes how to combine C programs with COBOL programs.
 
 @menu
-* C to COBOL::                  C から COBOL プログラムを呼び出す
-* COBOL to C::                  COBOL から C プログラムを呼び出す
+* Main C Program::              Writing Main Program in C
+* C to COBOL::                  Using COBOL Programs from C
+* COBOL to C::                  Using C Programs from COBOL
 @end menu
 
-@node C to COBOL, COBOL to C, C Interface, C Interface
-@section C から COBOL プログラムを呼び出す
+@node Main C Program, C to COBOL, C Interface, C Interface
+@section Writing Main Program in C
+
+Include @file{libcob.h} in your C program, and call cob_init before
+using any COBOL module:
+
+@example
+#include <libcob.h>
+
+int
+main (int argc, char **argv)
+@{
+  /* initialize your program */
+  ...
+
+  /* initialize the COBOL run-time library */
+  cob_init (argc, argv);
+
+  /* rest of your program */
+  ...
+@}
+@end example
+
+You can give 0 and NULL to cob_init if you do not want to pass command
+line arguments to COBOL.
+
+The function @code{cob_set_library_path} can be used to set the
+library path, which is equivalent to setting the environment variable
+@code{COB_LIBRARY_PATH}.
+
+C programs are compiled as follows:
+
+@example
+gcc -c `cob-config --cflags` main.c
+@end example
+
+The compiled code must be linked with libcob as follows:
+
+@example
+cc -o main main.o `cob-config --libs`
+@end example
+
+@node C to COBOL, COBOL to C, Main C Program, C Interface
+@section Using COBOL Programs from C
 
 @menu
-* Static C to COBOL::           静的リンクの場合
-* Dynamic C to COBOL::          動的リンクの場合
+* Static C to COBOL::           Static linking with COBOL programs
+* Dynamic C to COBOL::          Dynamic linking with COBOL programs
 @end menu
 
 @node Static C to COBOL, Dynamic C to COBOL, C to COBOL, C to COBOL
-@subsection 静的リンクの場合
+@subsection Static linking with COBOL programs
 
-例として、次の COBOL プログラムを考えます。
+Let's think about calling the following COBOL module from C:
 
 @example
 ---- say.cob ---------------------------
- IDENTIFICATION DIVISION.
- PROGRAM-ID. say.
- ENVIRONMENT DIVISION.
- DATA DIVISION.
- LINKAGE SECTION.
- 01 HELLO PIC X(6).
- 01 WORLD PIC X(6).
+IDENTIFICATION DIVISION.
+PROGRAM-ID. say.
+ENVIRONMENT DIVISION.
+DATA DIVISION.
+LINKAGE SECTION.
+01 HELLO PIC X(6).
+01 WORLD PIC X(6).
 
- PROCEDURE DIVISION USING HELLO WORLD.
- DISPLAY HELLO WORLD.
- STOP RUN.
+PROCEDURE DIVISION USING HELLO WORLD.
+DISPLAY HELLO WORLD.
+EXIT PROGRAM.
 ----------------------------------------
 @end example
 
-このプログラムは二つの引数を受け取り、それを表示して終了します。
+This program accepts two arguments, displays them, and exit.
 
-C から見ると、これは二つの文字列引数を受け取り @code{void} を返す、
-@code{say} という名前を持った関数として見えます。プロトタイプは次の
-ようになります。
+From the viewpoint of C, the above program is equivalent to a function
+with name @code{say} that accepts two @code{char *} arguments and
+returns @code{int}.  That is, the prototype is declared as follows:
 
 @example
-extern void say (char *hello, char *world);
+extern int say (char *hello, char *world);
 @end example
 
-これを C から呼ぶためには、次のようなコードを書くだけで十分です。
+Thus, you can use the COBOL module from the following C program:
 
 @example
 ---- hello.c ---------------------------
-extern void say (char *hello, char *world);
+#include <libcob.h>
+
+extern int say (char *hello, char *world);
 
 int
 main ()
 @{
+  int ret;
   char hello[6] = "Hello ";
   char world[6] = "World!";
 
-  say (hello, world);
-  return 0;
+  cob_init (0, NULL);
+
+  ret = say (hello, world);
+
+  return ret;
 @}
 ----------------------------------------
 @end example
 
-データの受け渡しは全て文字列(@code{char *})によって行なわれます。
-整数や実数の値を渡すときにも、文字列に変換した上で渡してやるのが
-安全です。
-
-受け渡す文字列の長さはチェックされないので気を付けて下さい。
-COBOL 側で宣言されたデータ領域と長さが異なる場合には、
-データを破壊したり Segmentation error を引き起こす可能性が
-あります。特に、C の文字列には @samp{\0} が付加されており、
-見た目よりも一文字多いことに注意して下さい。
-
-コンパイルは次のように行ないます。
+Compile them as follows:
 
 @example
-% cc -c hello.c
-% cobc -c say.cob
+% cc -c `cob-config --cflags` hello.c
+% cobc -c -m say.cob
 % cobc -o hello hello.o say.o
 % ./hello
 Hello World!
 @end example
 
 @node Dynamic C to COBOL,  , Static C to COBOL, C to COBOL
-@subsection 動的リンクの場合
+@subsection Dynamic linking with COBOL programs
 
-COBOL プログラムをモジュールとしてコンパイルし、それを名前に
-よって動的に呼び出したい場合、C のコードは次のようになります。
+You can find a COBOL module having a specific PROGRAM-ID by using a C
+function @code{cob_resolve}, which takes a string argument and returns
+the pointer to the COBOL module.
+
+@code{cob_resolve} returns NULL if there is no module.  In this case,
+the function @code{cob_resolve_error} gives the error message.
+
+The following is an example:
 
 @example
 ---- hello-dynamic.c -------------------
-#include "libcob.h"
+#include <libcob.h>
 
-void (*say) (char *, char *);
+int (*say) (char *hello, char *world);
 
 int
 main ()
 @{
+  int ret;
   char hello[6] = "Hello ";
   char world[6] = "World!";
 
+  cob_init (0, NULL);
+
+  /* find the module with PROGRAM-ID "say". */
   say = cob_resolve ("say");
-  if (say)
-    say (hello, world);
-  else
-    puts (cob_resolve_error ());
-  return 0;
+
+  /* if there is no such module, show error and exit */
+  if (say == NULL) @{
+    fprintf (stderr, "%s\n", cob_resolve_error ());
+    exit (1);
+  @}
+
+  /* call the module found and exit with the return code */
+  ret = say (hello, world);
+
+  return ret;
 @}
 ----------------------------------------
 @end example
 
-ヘッダファイル @file{libcob.h} で宣言された関数 @code{cob_resolve}
-により、指定された名前を持つ COBOL プログラムを実行時に見付ける
-ことが出来ます。モジュールが見付かった場合にはそれを呼び出す関数
-ポインタを、見付からなければ @code{NULL} を返します。
-
-モジュールが見つからなかった場合、関数 @code{cob_resolve_error} を
-呼び出すことでその原因を示す文字列を得ることが出来ます。
-
-呼び出される COBOL プログラムは @code{-m} オプションを付けて
-コンパイルし、環境変数 @code{COB_LIBRARY_PATH} によって指定された
-ディレクトリに置いておきます。
-
-コンパイルは次のように行ないます。
+Compile them as follows:
 
 @example
-% cc -c hello-dynamic.c 
-% cobc -m say.cob
+% cc -c `cob-config --cflags` hello-dynamic.c 
 % cobc -o hello hello-dynamic.o
+% cobc -m say.cob
+% export COB_LIBRARY_PATH=.
 % ./hello
 Hello World!
 @end example
 
 @node COBOL to C,  , C to COBOL, C Interface
-@section COBOL から C プログラムを呼び出す
+@section Using C Programs from COBOL
 
 @menu
-* Static COBOL to C::           静的リンクの場合
-* Dynamic COBOL to C::          動的リンクの場合
+* Static COBOL to C::           Static linking with C programs
+* Dynamic COBOL to C::          Static linking with C programs
 @end menu
 
 @node Static COBOL to C, Dynamic COBOL to C, COBOL to C, COBOL to C
-@subsection 静的リンクの場合
+@subsection Static linking with C programs
 
-例として、次の C プログラムを考えます。
+Let's think about calling the following C function from COBOL:
 
 @example
 ---- say.c -----------------------------
-void
+int
 say (char *hello, char *world)
 @{
-  char hello0[] = "______";
-  char world0[] = "______";
-  strncpy (hello0, hello, 6);
-  strncpy (world0, world, 6);
-  printf ("%s%s\n", hello0, world0);
+  int i;
+  for (i = 0; i < 6; i++)
+    putchar (hello[i]);
+  for (i = 0; i < 6; i++)
+    putchar (world[i]);
+  putchar ('\n');
+  return 0;
 @}
 ----------------------------------------
 @end example
 
-このプログラムは、先の @file{say.cob} の C バージョンになります。
+This program is equivalent to the foregoing @file{say.cob}.
 
-COBOL から C の関数が呼ばれる場合、データの受け渡しは先と
-同様に文字列によって行なわれます。気を付けるべきこととして、
-渡される文字列は @samp{\0} では終わっていないので、それを C の
-文字列として扱ってやるには、例えば上のようにコピーを作る
-必要があります。そのまま単純に元のデータに @samp{\0} を付加すると、
-COBOL 側のデータを破壊してしまうので注意して下さい。
+Note that the arguments passed from COBOL programs are not terminated
+with the null character (i.e., @code{\0}).
 
-このようにして作られた C 関数は、COBOL からは普通に CALL に
-よって呼び出すことが可能です。例えば次のようにします。
+This program can be used in the same way with ordinary COBOL programs:
 
 @example
 ---- hello.cob -------------------------
- IDENTIFICATION DIVISION.
- PROGRAM-ID. hello.
- ENVIRONMENT DIVISION.
- DATA DIVISION.
- WORKING-STORAGE SECTION.
- 01 HELLO PIC X(6) VALUE "Hello ".
- 01 WORLD PIC X(6) VALUE "World!".
+IDENTIFICATION DIVISION.
+PROGRAM-ID. hello.
+ENVIRONMENT DIVISION.
+DATA DIVISION.
+WORKING-STORAGE SECTION.
+01 HELLO PIC X(6) VALUE "Hello ".
+01 WORLD PIC X(6) VALUE "World!".
 
- PROCEDURE DIVISION.
- CALL "say" USING HELLO WORLD.
- STOP RUN.
+PROCEDURE DIVISION.
+CALL "say" USING HELLO WORLD.
+STOP RUN.
 ----------------------------------------
 @end example
 
-コンパイルは次のように行ないます。
+Compile them as follows:
 
 @example
 % cc -c say.c
-% cobc -static -c hello.cob
+% cobc -c -static hello.cob
 % cobc -o hello hello.o say.o
 % ./hello
 Hello World!
 @end example
 
 @node Dynamic COBOL to C,  , Static COBOL to C, COBOL to C
-@subsection 動的リンクの場合
+@subsection Dynamic linking with C programs
 
-C プログラムをモジュールとしてコンパイルし、それを動的に呼び出す
-ことも可能です。この場合、呼び出される C プログラムは
-@code{-shared} オプションを付けてコンパイルし、出来上がった
-@file{.so} ファイルを @code{COB_LIBRARY_PATH} の指すディレクトリに
-置いておきます。
-
-コンパイルは次のように行ないます。
+If you want to create a dynamic module from the C program,
+compile it with option @code{-shared}:
 
 @example
 % cc -shared -o say.so say.c
 % cobc -o hello hello.cob
+% export COB_LIBRARY_PATH=.
 % ./hello
 Hello World!
 @end example
+
+@node Customize,  , C Interface, Top
+@chapter Customize
+
+Environment variables (default value):
+
+@table @code
+@item COB_CC
+C compiler ("gcc")
+@item COB_COBPP
+COBOL preprocessor ("cobpp")
+@item COB_CFLAGS
+Flags to be used with the C compiler ("-I$(PREFIX)/include")
+@item COB_LIBS
+Libraries to be linked ("-L$(PREFIX)/lib -lcob")
+@item COB_LIBRARY_PATH
+Library path (".:$(PREFIX)/lib/open-cobol")
+@end table
 
 @bye
 
