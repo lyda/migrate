@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 104
+%expect 109
 
 %{
 #include "config.h"
@@ -180,7 +180,8 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %token DELIMITER COUNT LEFT TRAILING CHARACTER FILLER OCCURS TIMES CLASS
 %token ADD SUBTRACT MULTIPLY DIVIDE ROUNDED REMAINDER ERROR SIZE INDEX
 %token REEL UNIT REMOVAL REWIND LOCK PADDING CRT CURSOR
-%token FD REDEFINES TOK_FILE USAGE BLANK SIGN VALUE MOVE
+%token FD SD REDEFINES TOK_FILE USAGE BLANK SIGN VALUE MOVE POSITION
+%token ORDER RELEASE RETURN MULTIPLE TAPE MERGE
 %token PROGRAM_ID DIVISION CONFIGURATION SPECIAL_NAMES MEMORY ALTER
 %token FILE_CONTROL I_O_CONTROL FROM SAME AREA EXCEPTION UNTIL
 %token WORKING_STORAGE LINKAGE DECIMAL_POINT COMMA DUPLICATES WITH EXIT
@@ -195,7 +196,7 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %token END_ACCEPT END_ADD END_CALL END_COMPUTE END_DELETE END_DISPLAY
 %token END_DIVIDE END_EVALUATE END_IF END_MULTIPLY END_PERFORM END_READ
 %token END_REWRITE END_SEARCH END_START END_STRING END_SUBTRACT END_UNSTRING
-%token END_WRITE
+%token END_WRITE END_RETURN
 %token THEN EVALUATE OTHER ALSO CONTINUE CURRENCY REFERENCE INITIALIZE
 %token NUMERIC ALPHABETIC ALPHABETIC_LOWER ALPHABETIC_UPPER
 %token DEPENDING CORRESPONDING CONVERTING OPTIONAL RETURNING
@@ -214,11 +215,12 @@ static void ambiguous_error (struct cobc_location *loc, struct cobc_word *w);
 %type <inum> before_or_after perform_test replacing_option close_option
 %type <inum> select_organization select_access_mode open_mode same_option
 %type <inum> ascending_or_descending opt_from_integer opt_to_integer usage
+%type <inum> file_type
 %type <list> occurs_key_list occurs_index_list value_item_list
 %type <list> data_name_list condition_name_list opt_value_list
 %type <list> evaluate_subject_list evaluate_case evaluate_case_list
 %type <list> evaluate_when_list evaluate_object_list
-%type <list> label_name_list subscript_list number_list
+%type <list> label_name_list subscript_list number_list sort_key_list
 %type <list> string_list string_delimited_list string_name_list
 %type <list> unstring_delimited unstring_delimited_list unstring_into
 %type <list> unstring_delimited_item unstring_into_item
@@ -402,8 +404,11 @@ object_computer_options:
 | object_computer_options object_computer_option
 ;
 object_computer_option:
-  _program _collating SEQUENCE _is WORD	{ OBSOLETE ("COLLATING SEQUENCE"); }
+  _program collating_sequence		{ PENDING ("COLLATING SEQUENCE"); }
 | MEMORY SIZE _is integer CHARACTERS	{ OBSOLETE ("MEMORY SIZE"); }
+;
+collating_sequence:
+  _collating SEQUENCE _is WORD
 ;
 _collating: | COLLATING ;
 
@@ -724,11 +729,22 @@ flag_duplicates:
 
 i_o_control:
 | I_O_CONTROL '.'
-  same_statement_list dot
+  i_o_statements
 ;
-same_statement_list:
-| same_statement_list same_statement
+i_o_statements:
+| i_o_statement_list dot
 ;
+i_o_statement_list:
+  i_o_statement
+| i_o_statement_list i_o_statement
+;
+i_o_statement:
+  same_statement
+| multiple_statement
+;
+
+/* SAME statement */
+
 same_statement:
   SAME same_option _area _for file_name_list
   {
@@ -747,6 +763,19 @@ same_option:
 | RECORD			{ $$ = 1; }
 | SORT				{ $$ = 2; }
 | SORT_MERGE			{ $$ = 3; }
+;
+
+/* MULTIPLE statment */
+
+multiple_statement:
+  MULTIPLE _file _tape _contains multiple_file_list
+;
+multiple_file_list:
+  multiple_file
+| multiple_file_list multiple_file
+;
+multiple_file:
+  file_name POSITION integer { }
 ;
 
 
@@ -773,12 +802,21 @@ file_section:
 ;
 file_description_sequence:
 | file_description_sequence
-  FD file_name			{ current_file_name = COBC_FILE_NAME ($3); }
+  file_type file_name
+  {
+    current_file_name = COBC_FILE_NAME ($3);
+    if ($2 != 0)
+      current_file_name->organization = $2;
+  }
   file_options '.'
   field_description_list
   {
     finalize_file_name (current_file_name, COBC_FIELD ($7));
   }
+;
+file_type:
+  FD				{ $$ = 0; }
+| SD				{ $$ = COB_ORG_SORT; }
 ;
 file_options:
 | file_options file_option
@@ -1537,14 +1575,18 @@ statement:
 | if_statement
 | initialize_statement
 | inspect_statement
+| merge_statement
 | move_statement
 | multiply_statement
 | open_statement
 | perform_statement
 | read_statement
+| release_statement
+| return_statement
 | rewrite_statement
 | search_statement
 | set_statement
+| sort_statement
 | start_statement
 | stop_statement
 | string_statement
@@ -2250,6 +2292,19 @@ _initial: | TOK_INITIAL ;
 
 
 /*
+ * MERGE statement
+ */
+
+merge_statement:
+  MERGE file_name sort_keys sort_collating
+  {
+    $<tree>$ = $2; /* used in sort_input, sort_output */
+  }
+  sort_input sort_output
+;
+
+
+/*
  * MOVE statement
  */
 
@@ -2326,8 +2381,6 @@ open_mode:
 perform_statement:
   PERFORM perform_procedure perform_option
   {
-    COBC_LABEL_NAME (COBC_PAIR ($2)->x)->need_begin = 1;
-    COBC_LABEL_NAME (COBC_PAIR ($2)->y)->need_return = 1;
     COBC_PERFORM ($3)->body = $2;
     push_tree ($3);
   }
@@ -2339,8 +2392,18 @@ perform_statement:
 ;
 
 perform_procedure:
-  label_name			{ $$ = make_pair ($1, $1); }
-| label_name THRU label_name	{ $$ = make_pair ($1, $3); }
+  label_name
+  {
+    COBC_LABEL_NAME ($1)->need_begin = 1;
+    COBC_LABEL_NAME ($1)->need_return = 1;
+    $$ = make_pair ($1, $1);
+  }
+| label_name THRU label_name
+  {
+    COBC_LABEL_NAME ($1)->need_begin = 1;
+    COBC_LABEL_NAME ($3)->need_return = 1;
+    $$ = make_pair ($1, $3);
+  }
 ;
 
 perform_option:
@@ -2413,7 +2476,7 @@ read_statement:
 	push_call_2 ("cob_read", $2, $6 ? $6 : f->key);
       }
     if ($5)
-      push_move (COBC_TREE (f->record), $5);
+      push_move (f->record, $5);
     $<tree>$ = $2;
   }
   read_handler
@@ -2436,6 +2499,40 @@ read_handler:
 | invalid_key
 ;
 _end_read: | END_READ ;
+
+
+/*
+ * RELEASE statement
+ */
+
+release_statement:
+  RELEASE record_name write_from
+  {
+    cobc_location = @1;
+    if ($3)
+      push_move ($3, $2);
+    push_call_2 ("cob_write", COBC_FIELD ($2)->file, $2);
+  }
+;
+
+
+/*
+ * RETURN statement
+ */
+
+return_statement:
+  RETURN file_name _record read_into
+  {
+    cobc_location = @1;
+    push_call_1 ("cob_read_next", $2);
+    if ($4)
+      push_move (COBC_FILE_NAME ($2)->record, $4);
+    $<tree>$ = $2;
+  }
+  at_end
+  _end_return
+;
+_end_return: | END_RETURN ;
 
 
 /*
@@ -2578,6 +2675,78 @@ set_on_off:
 	if (id != -1)
 	  push_move ($3, cobc_switch[id]);
       }
+  }
+;
+
+
+/*
+ * SORT statement
+ */
+
+sort_statement:
+  SORT file_name sort_keys sort_duplicates sort_collating
+  {
+    $<tree>$ = $2; /* used in sort_input, sort_output */
+  }
+  sort_input sort_output
+;
+sort_keys:
+  sort_key_list
+  {
+    push_call_1_list ("cob_sort_keys", $<tree>0, $1);
+  }
+;
+sort_key_list:
+  /* empty */			{ $$ = NULL; }
+| sort_key_list
+  _on ascending_or_descending _key data_name_list
+  {
+    struct cobc_list *l;
+    for (l = $5; l; l = l->next)
+      l->item = make_generic_1 ($3, l->item);
+    $$ = list_append ($1, $5);
+  }
+;
+sort_duplicates:
+| _with DUPLICATES _in _order	{ /* ignored */ }
+;
+sort_collating:
+| collating_sequence		{ PENDING ("COLLATING SEQUENCE"); }
+;
+
+sort_input:
+  USING file_name_list
+  {
+    struct cobc_list *l;
+    push_call_2 ("cob_open", $<tree>0, make_integer (COB_OPEN_OUTPUT));
+    for (l = $2; l; l = l->next)
+      push_call_2 ("cob_sort_using", $<tree>0, l->item);
+    push_call_2 ("cob_close", $<tree>0, make_integer (COB_CLOSE_NORMAL));
+  }
+| INPUT PROCEDURE _is perform_procedure
+  {
+    push_call_2 ("cob_open", $<tree>0, make_integer (COB_OPEN_OUTPUT));
+    push_tree (make_perform_once ($4));
+    push_call_2 ("cob_close", $<tree>0, make_integer (COB_CLOSE_NORMAL));
+  }
+;
+
+sort_output:
+  GIVING file_name_list
+  {
+    struct cobc_list *l;
+    for (l = $2; l; l = l->next)
+      {
+	push_call_2 ("cob_open", $<tree>-1, make_integer (COB_OPEN_INPUT));
+	push_call_2 ("cob_sort_giving", $<tree>-1, l->item);
+	push_call_2 ("cob_close", $<tree>-1, make_integer (COB_CLOSE_NORMAL));
+      }
+  }
+| OUTPUT PROCEDURE _is perform_procedure
+  {
+    push_call_2 ("cob_open", $<tree>-1, make_integer (COB_OPEN_INPUT));
+    push_tree (make_perform_once ($4));
+    push_call_2 ("cob_close", $<tree>-1, make_integer (COB_CLOSE_NORMAL));
   }
 ;
 
@@ -3836,11 +4005,13 @@ _key: | KEY ;
 _mode: | MODE ;
 _number: | NUMBER ;
 _on: | ON ;
+_order: | ORDER ;
 _program: | PROGRAM ;
 _record: | RECORD ;
 _sign: | SIGN _is ;
 _size: | SIZE ;
 _status: | STATUS ;
+_tape: | TAPE ;
 _than: | THAN ;
 _then: | THEN ;
 _to: | TO ;

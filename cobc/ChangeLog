@@ -1,5 +1,9 @@
 2002-08-01  Keisuke Nishida  <knishida@netlab.jp>
 
+	* parser.y, reserved.c: SORT and MERGE support.
+
+2002-08-01  Keisuke Nishida  <knishida@netlab.jp>
+
 	* tree.h (cobc_key): Define `dir' as int.
 	Use COB_ASCENDING or COB_DESCENDING for this.
 	* inline.c (output_search_all): Updated.
