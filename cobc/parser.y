@@ -45,12 +45,14 @@
     program_spec.exec_list = cons ((x), program_spec.exec_list);	\
   } while (0)
 
-#define push_call_0(t)		push_tree (make_call_0 (t))
-#define push_call_1(t,x)	push_tree (make_call_1 (t, x))
-#define push_call_2(t,x,y)	push_tree (make_call_2 (t, x, y))
-#define push_call_3(t,x,y,z)	push_tree (make_call_3 (t, x, y, z))
+#define push_call_0(t)		 push_tree (make_call_0 (t))
+#define push_call_1(t,a)	 push_tree (make_call_1 (t, a))
+#define push_call_2(t,a,b)	 push_tree (make_call_2 (t, a, b))
+#define push_call_3(t,a,b,c)	 push_tree (make_call_3 (t, a, b, c))
+#define push_call_4(t,a,b,c,d)	 push_tree (make_call_4 (t, a, b, c, d))
+#define push_call_5(t,a,b,c,d,e) push_tree (make_call_5 (t, a, b, c, d, e))
 
-#define push_move(x,y)		push_call_2 (COB_MOVE, (x), (y))
+#define push_move(x,y)		 push_call_2 (COB_MOVE, (x), (y))
 
 #define push_label(x)							\
   do {									\
@@ -1552,19 +1554,11 @@ divide_body:
   }
 | number INTO number GIVING numeric_edited_name flag_rounded REMAINDER numeric_edited_name
   {
-    struct cobc_list *l;
-    l = list (make_call_3 (COB_DIVIDE, $5, $8, make_integer ($6)));
-    l = cons (make_call_1 (COB_PUSH, $1), l);
-    l = cons (make_call_1 (COB_PUSH, $3), l);
-    push_tree (make_status_sequence (l));
+    push_call_5 (COB_DIVIDE, $3, $1, $5, $8, make_integer ($6));
   }
 | number BY number GIVING numeric_edited_name flag_rounded REMAINDER numeric_edited_name
   {
-    struct cobc_list *l;
-    l = list (make_call_3 (COB_DIVIDE, $5, $8, make_integer ($6)));
-    l = cons (make_call_1 (COB_PUSH, $3), l);
-    l = cons (make_call_1 (COB_PUSH, $1), l);
-    push_tree (make_status_sequence (l));
+    push_call_5 (COB_DIVIDE, $1, $3, $5, $8, make_integer ($6));
   }
 ;
 _end_divide: | END_DIVIDE ;
@@ -2105,7 +2099,13 @@ set_statement:
   {
     struct cobc_list *l;
     for (l = $2; l; l = l->next)
-      push_call_1 (COB_SET_TRUE, l->item);
+      {
+	cobc_tree x = l->item;
+	cobc_tree p = COBC_TREE (COBC_FIELD (x)->parent);
+	if (COBC_SUBREF_P (x))
+	  p = make_subref (p, COBC_SUBREF (x)->subs);
+	push_move (COBC_TREE (COBC_FIELD (x)->value), p);
+      }
   }
 | SET set_on_off_list
   {

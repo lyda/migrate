@@ -36,8 +36,30 @@
 static void
 fatal_error (const char *func)
 {
-  fprintf (stderr, "%s: fatal error\n", func);
+  cob_runtime_error ("%s: fatal error\n", func);
   abort ();
+}
+
+#define FATAL_ERROR() fatal_error (__FUNCTION__)
+
+static void
+set_int (struct cob_field f, int n)
+{
+  int saved_status = cob_status;
+  cob_status = COB_STATUS_SUCCESS;
+  cob_set_int (f, n);
+  cob_status = saved_status;
+}
+
+static void
+add_int (struct cob_field f, int n)
+{
+  int saved_status;
+  if (n == 0) return;
+  saved_status = cob_status;
+  cob_status = COB_STATUS_SUCCESS;
+  cob_add_int (f, n, 0, 0);
+  cob_status = saved_status;
 }
 
 
@@ -74,7 +96,7 @@ inspect_get_region (struct cob_field var, va_list ap, int *offset, int *len)
 	  break;
 
 	default:
-	  fatal_error ("inspect_get_region");
+	  FATAL_ERROR ();
 	}
     }
 
@@ -112,7 +134,7 @@ inspect_internal (struct cob_field var, va_list ap, int replacing)
 			var_data[offset + i] = FIELD_DATA (f1)[0];
 		    }
 		if (!replacing)
-		  cob_add_int (f1, n);
+		  add_int (f1, n);
 	      }
 	    break;
 	  }
@@ -155,13 +177,13 @@ inspect_internal (struct cob_field var, va_list ap, int replacing)
 		      break;
 		  }
 		if (!replacing)
-		  cob_add_int (f1, n);
+		  add_int (f1, n);
 	      }
 	    break;
 	  }
 
 	default:
-	  fatal_error ("cob_inspect_tallying");
+	  FATAL_ERROR ();
 	}
     }
 }
@@ -216,7 +238,7 @@ cob_inspect_converting (struct cob_field var, ...)
 	  }
 
 	default:
-	  fatal_error ("cob_inspect_converting");
+	  FATAL_ERROR ();
 	}
     }
 
@@ -289,7 +311,7 @@ cob_string (struct cob_field dst, ...)
 	break;
 
       default:
-	fatal_error ("cob_string");
+	FATAL_ERROR ();
       }
 
   cob_status = COB_STATUS_SUCCESS;
@@ -301,7 +323,7 @@ cob_string (struct cob_field dst, ...)
  end:
   va_end (ap);
   if (ptr.data)
-    cob_set_int (ptr, offset + 1);
+    set_int (ptr, offset + 1);
   return cob_status;
 }
 
@@ -319,7 +341,7 @@ cob_unstring (struct cob_field src, ...)
   unsigned char *src_data, *delm_data;
   regex_t reg;
   int reg_inited = 0, match_size = 0;
-  char regexp[256] = ""; /* FIXME: to be dynamic */
+  char regexp[256] = ""; /* FIXME: should be dynamic */
   va_list ap;
 
   va_start (ap, src);
@@ -428,19 +450,19 @@ cob_unstring (struct cob_field src, ...)
       case UNSTRING_COUNT:
 	{
 	  struct cob_field f = va_arg (ap, struct cob_field);
-	  cob_set_int (f, match_size);
+	  set_int (f, match_size);
 	  break;
 	}
 
       case UNSTRING_TALLYING:
 	{
 	  struct cob_field f = va_arg (ap, struct cob_field);
-	  cob_add_int (f, count);
+	  add_int (f, count);
 	  break;
 	}
 
       default:
-	fatal_error ("cob_unstring");
+	FATAL_ERROR ();
       }
 
   if (offset < src_size)
@@ -457,6 +479,6 @@ cob_unstring (struct cob_field src, ...)
   if (reg_inited)
     regfree (&reg);
   if (ptr.data)
-    cob_set_int (ptr, offset + 1);
+    set_int (ptr, offset + 1);
   return cob_status;
 }

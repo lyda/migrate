@@ -97,7 +97,7 @@ output_move_num (cobc_tree x, int high)
       output_native_assign (x, high ? -1 : 0);
       break;
     case USAGE_PACKED:
-      puts ("not implemented");
+      printf ("%s: not implemented\n", __FUNCTION__);
       abort ();
     }
 }
@@ -295,20 +295,6 @@ output_move (cobc_tree src, cobc_tree dst)
 	  output_call_2 ("cob_move", src, dst);
 	}
     }
-}
-
-
-/*
- * SET
- */
-
-void
-output_set_true (cobc_tree x)
-{
-  cobc_tree parent = COBC_TREE (COBC_FIELD (x)->parent);
-  if (COBC_SUBREF_P (x))
-    parent = make_subref (parent, COBC_SUBREF (x)->subs);
-  output_move (COBC_TREE (COBC_FIELD (x)->value), parent);
 }
 
 

@@ -1,16 +1,16 @@
 /*
  * Copyright (C) 2001-2002 Keisuke Nishida
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1,
  * or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; see the file COPYING.LIB.  If
  * not, write to the Free Software Foundation, Inc., 59 Temple Place,
@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <db1/db.h>
+#include <gmp.h>
 
 #define COB_VOID		 0
 #define COB_ALPHABETIC		'A'
@@ -84,8 +85,7 @@
  */
 
 struct cob_field {
-  struct cob_field_desc
-  {
+  struct cob_field_desc {
     unsigned long size;
     char type;
     char digits;
@@ -121,8 +121,7 @@ struct cob_field {
  * File structure
  */
 
-struct cob_file_desc
-{
+struct cob_file_desc {
   struct cob_field_desc *filename_desc;
   unsigned char *filename_data;
   signed long reclen;		/* length of record */
@@ -139,14 +138,25 @@ struct cob_file_desc
   short unsigned rec_index;	/* offset of index field in record */
   struct cob_field_desc *ixd_desc;	/* offset (DGROUP) index field descriptor */
   struct altkey_desc *key_in_use;
-  struct altkey_desc
-  {
+  struct altkey_desc {
     short int offset;		/* offset of alternate key field in record */
     struct cob_field_desc *descriptor;	/* descriptor for this field */
     short int duplicates;		/* = 1 if duplicates allowed */
     DB *alt_dbp;			/* handle for the alternate key file */
   } *altkeys;
 };
+
+
+/*
+ * Decimal number
+ */
+
+struct cob_decimal {
+  mpz_t number;
+  int decimals;
+};
+
+typedef struct cob_decimal *cob_decimal;
 
 
 /* reference modification */
@@ -218,37 +228,78 @@ extern struct cob_field cob_quote;
 
 #define cob_exit_program() return 0
 
-/* functions */
+
+/*
+ * Functions
+ */
+
+/* general.c */
 
 extern void cob_init (int argc, char **argv);
 extern void cob_stop_run (void);
 extern void cob_runtime_error (char *fmt, ...);
 
-extern int cob_index (int i, int max);
-extern void cob_check_numeric (struct cob_field f);
-
 extern int get_sign (struct cob_field f);
 extern void put_sign (struct cob_field f, int sign);
 extern char *cob_field_to_string (struct cob_field f, char *s);
 
-extern void cob_display (struct cob_field f);
-extern void cob_newline (void);
-extern void cob_move (struct cob_field f1, struct cob_field f2);
+extern int cob_index (int i, int max);
+extern void cob_check_numeric (struct cob_field f);
+extern int cob_str_cmp (struct cob_field f1, struct cob_field f2);
+
+/* move.c */
+
+extern void cob_move (struct cob_field src, struct cob_field dst);
 extern void cob_mem_move (struct cob_field dst, unsigned char *src, int len);
 extern int cob_to_int (struct cob_field f);
-
-extern void cob_push_int (int n, int decimals);
-extern void cob_push_decimal (struct cob_field f);
-extern void cob_num_add (void);
-extern void cob_add_int (struct cob_field f, int n);
-extern void cob_set (struct cob_field f);
 extern void cob_set_int (struct cob_field f, int n);
-extern int cob_num_cmp (void);
-extern int cob_str_cmp (struct cob_field f1, struct cob_field f2);
+
+/* math.c */
+
+extern cob_decimal cob_d1, cob_d2, cob_d3, cob_d4;
+
+extern void cob_decimal_init (cob_decimal d);
+extern void cob_decimal_print (cob_decimal d);
+extern cob_decimal cob_decimal_add (cob_decimal d1, cob_decimal d2);
+extern cob_decimal cob_decimal_sub (cob_decimal d1, cob_decimal d2);
+extern cob_decimal cob_decimal_mul (cob_decimal d1, cob_decimal d2);
+extern cob_decimal cob_decimal_div (cob_decimal d1, cob_decimal d2);
+extern cob_decimal cob_decimal_pow (cob_decimal d1, cob_decimal d2);
+extern int cob_decimal_cmp (cob_decimal d1, cob_decimal d2);
+extern cob_decimal cob_decimal_set_int (cob_decimal d, int n, int decimals);
+extern cob_decimal cob_decimal_set_int64 (cob_decimal d, long long n, int decimals);
+extern cob_decimal cob_decimal_set_display (cob_decimal d, struct cob_field f);
+extern cob_decimal cob_decimal_set (cob_decimal d, struct cob_field f);
+extern void cob_decimal_get (cob_decimal d, struct cob_field f);
+extern void cob_decimal_get_rounded (cob_decimal d, struct cob_field f);
+
+extern void cob_add_int (struct cob_field f, int n, int decimals, int round);
+extern void cob_add_int64 (struct cob_field f, long long n, int decimals, int round);
+extern void cob_add (struct cob_field f1, struct cob_field f2, int round);
+extern void cob_sub_int (struct cob_field f, int n, int decimals, int round);
+extern void cob_sub_int64 (struct cob_field f, long long n, int decimals, int round);
+extern void cob_sub (struct cob_field f1, struct cob_field f2, int round);
+extern void cob_div (struct cob_field dividend, struct cob_field divisor, struct cob_field quotient, struct cob_field remainder, int round);
+
+/* basicio.c */
+
+extern void cob_display (struct cob_field f);
+extern void cob_newline (void);
+extern void cob_debug_print (struct cob_field f);
+extern void cob_accept (struct cob_field f);
+extern void cob_accept_date (struct cob_field f);
+extern void cob_accept_day (struct cob_field f);
+extern void cob_accept_day_of_week (struct cob_field f);
+extern void cob_accept_time (struct cob_field f);
+extern void cob_accept_command_line (struct cob_field f);
+extern void cob_accept_environment (struct cob_field f, struct cob_field env);
+
+/* call.c */
 
 extern void cob_set_library_path (const char *path);
 extern void *cob_resolve (const char *name);
 extern const char *cob_resolve_error (void);
+
 extern void *cob_call_resolve (struct cob_field f);
 extern void cob_call_error (void);
 extern void cob_cancel (struct cob_field f);

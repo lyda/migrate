@@ -167,6 +167,11 @@ cob_init (int argc, char **argv)
   cob_argv = argv;
   cob_source_file = 0;
   cob_source_line = 0;
+
+  cob_decimal_init (cob_d1);
+  cob_decimal_init (cob_d2);
+  cob_decimal_init (cob_d3);
+  cob_decimal_init (cob_d4);
 }
 
 void

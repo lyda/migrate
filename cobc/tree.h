@@ -538,7 +538,7 @@ struct cobc_call {
   struct cobc_tree_common common;
   int tag;
   int argc;
-  cobc_tree argv[3];
+  cobc_tree argv[5];
 };
 
 #define COBC_CALL(x)		(COBC_TREE_CAST (cobc_tag_call, struct cobc_call, x))
@@ -548,6 +548,8 @@ extern cobc_tree make_call_0 (int tag);
 extern cobc_tree make_call_1 (int tag, cobc_tree a1);
 extern cobc_tree make_call_2 (int tag, cobc_tree a1, cobc_tree a2);
 extern cobc_tree make_call_3 (int tag, cobc_tree a1, cobc_tree a2, cobc_tree a3);
+extern cobc_tree make_call_4 (int tag, cobc_tree a1, cobc_tree a2, cobc_tree a3, cobc_tree a4);
+extern cobc_tree make_call_5 (int tag, cobc_tree a1, cobc_tree a2, cobc_tree a3, cobc_tree a4, cobc_tree a5);
 
 
 /*

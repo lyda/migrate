@@ -118,7 +118,7 @@ cob_accept (struct cob_field f)
 
 }
 
-int
+void
 cob_accept_date (struct cob_field f)
 {
   char s[7];
@@ -126,10 +126,9 @@ cob_accept_date (struct cob_field f)
   struct tm *tm = localtime (&t);
   sprintf (s, "%02d%02d%02d", tm->tm_year % 100, tm->tm_mon + 1, tm->tm_mday);
   cob_mem_move (f, s, 6);
-  return 0;
 }
 
-int
+void
 cob_accept_day (struct cob_field f)
 {
   char s[6];
@@ -137,10 +136,9 @@ cob_accept_day (struct cob_field f)
   struct tm *tm = localtime (&t);
   sprintf (s, "%02d%03d", tm->tm_year % 100, tm->tm_yday + 1);
   cob_mem_move (f, s, 5);
-  return 0;
 }
 
-int
+void
 cob_accept_day_of_week (struct cob_field f)
 {
   char s[2];
@@ -148,10 +146,9 @@ cob_accept_day_of_week (struct cob_field f)
   struct tm *tm = localtime (&t);
   sprintf (s, "%01d", ((tm->tm_wday + 6) % 7) + 1);
   cob_mem_move (f, s, 1);
-  return 0;
 }
 
-int
+void
 cob_accept_time (struct cob_field f)
 {
   char s[9];
@@ -159,10 +156,9 @@ cob_accept_time (struct cob_field f)
   struct tm *tm = localtime (&t);
   sprintf (s, "%02d%02d%02d%02d", tm->tm_hour, tm->tm_min, tm->tm_sec, 0);
   cob_mem_move (f, s, 8);
-  return 0;
 }
 
-int
+void
 cob_accept_command_line (struct cob_field f)
 {
   int i, size = 0;
@@ -173,14 +169,13 @@ cob_accept_command_line (struct cob_field f)
       int len = strlen (cob_argv[i]);
       if (size + len >= BUFSIZ)
 	/* overflow */
-	return 1;
+	break;
       memcpy (buff + size, cob_argv[i], len);
       size += len;
       buff[size++] = ' ';
     }
 
   cob_mem_move (f, buff, size);
-  return 0;
 }
 
 void

@@ -548,81 +548,82 @@ cob_move_alphanum_to_edited (struct cob_field f1, struct cob_field f2)
  */
 
 static void
-indirect_move (void (*move_func) (struct cob_field f1, struct cob_field f2),
-	       struct cob_field f1, struct cob_field f2,
+indirect_move (void (*move_func) (struct cob_field src, struct cob_field dst),
+	       struct cob_field src, struct cob_field dst,
 	       unsigned int size, char decimals)
 {
   unsigned char data[size];
   struct cob_field_desc desc = {size, '9', size, decimals, 1};
   struct cob_field temp = {&desc, data};
-  move_func (f1, temp);
-  cob_move (temp, f2);
+  move_func (src, temp);
+  cob_move (temp, dst);
 }
 
 void
-cob_move (struct cob_field f1, struct cob_field f2)
+cob_move (struct cob_field src, struct cob_field dst)
 {
-  switch (FIELD_TYPE (f1))
+  switch (FIELD_TYPE (src))
     {
     case COB_NUMERIC:
-      switch (FIELD_TYPE (f2))
+      switch (FIELD_TYPE (dst))
 	{
 	case COB_NUMERIC:
-	  return cob_move_display_to_display (f1, f2);
+	  return cob_move_display_to_display (src, dst);
 	case COB_PACKED:
-	  return cob_move_display_to_packed (f1, f2);
+	  return cob_move_display_to_packed (src, dst);
 	case COB_BINARY:
-	  return cob_move_display_to_binary (f1, f2);
+	  return cob_move_display_to_binary (src, dst);
 	case COB_NUMERIC_EDITED:
-	  return cob_move_display_to_edited (f1, f2);
+	  return cob_move_display_to_edited (src, dst);
 	case COB_ALPHANUMERIC_EDITED:
-	  if (f1.desc->decimals < 0 || f1.desc->decimals > f1.desc->digits)
-	    /* expands P's */
-	    return indirect_move (cob_move_display_to_display, f1, f2,
-				  MAX (f1.desc->digits, f1.desc->decimals),
-				  MAX (0, f1.desc->decimals));
+	  if (src.desc->decimals < 0 || src.desc->decimals > src.desc->digits)
+	    /* expand P's */
+	    return indirect_move (cob_move_display_to_display, src, dst,
+				  MAX (src.desc->digits, src.desc->decimals),
+				  MAX (0, src.desc->decimals));
 	  else
-	    return cob_move_alphanum_to_edited (f1, f2);
+	    return cob_move_alphanum_to_edited (src, dst);
 	default:
-	  return cob_move_display_to_alphanum (f1, f2);
+	  return cob_move_display_to_alphanum (src, dst);
 	}
 
     case COB_PACKED:
-      switch (FIELD_TYPE (f2))
+      switch (FIELD_TYPE (dst))
 	{
 	case COB_NUMERIC:
-	  return cob_move_packed_to_display (f1, f2);
+	  return cob_move_packed_to_display (src, dst);
 	default:
-	  return indirect_move (cob_move_packed_to_display, f1, f2,
-				f1.desc->digits, f1.desc->decimals);
+	  return indirect_move (cob_move_packed_to_display, src, dst,
+				src.desc->digits, src.desc->decimals);
 	}
 
     case COB_BINARY:
-      switch (FIELD_TYPE (f2))
+      switch (FIELD_TYPE (dst))
 	{
 	case COB_NUMERIC:
-	  return cob_move_binary_to_display (f1, f2);
+	  return cob_move_binary_to_display (src, dst);
 	default:
-	  return indirect_move (cob_move_binary_to_display, f1, f2,
-				f1.desc->digits, f1.desc->decimals);
+	  return indirect_move (cob_move_binary_to_display, src, dst,
+				src.desc->digits, src.desc->decimals);
 	}
 
     case 'G':
-      return cob_move_alphanum_to_alphanum (f1, f2);
+      return cob_move_alphanum_to_alphanum (src, dst);
 
     default:
-      switch (FIELD_TYPE (f2))
+      switch (FIELD_TYPE (dst))
 	{
 	case COB_NUMERIC:
-	  return cob_move_alphanum_to_display (f1, f2);
+	  return cob_move_alphanum_to_display (src, dst);
 	case COB_PACKED:
 	case COB_BINARY:
 	case COB_NUMERIC_EDITED:
-	  return indirect_move (cob_move_alphanum_to_display, f1, f2, 36, 18);
+	  return indirect_move (cob_move_alphanum_to_display,
+				src, dst, 36, 18);
 	case COB_ALPHANUMERIC_EDITED:
-	  return cob_move_alphanum_to_edited (f1, f2);
+	  return cob_move_alphanum_to_edited (src, dst);
 	default:
-	  return cob_move_alphanum_to_alphanum (f1, f2);
+	  return cob_move_alphanum_to_alphanum (src, dst);
 	}
     }
 }
