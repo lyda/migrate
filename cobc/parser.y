@@ -115,7 +115,8 @@ static void terminator_warning (void);
 %token DYNAMIC ELSE END END_ACCEPT END_ADD END_CALL END_COMPUTE END_DELETE
 %token END_DISPLAY END_DIVIDE END_EVALUATE END_IF END_MULTIPLY END_PERFORM
 %token END_READ END_RETURN END_REWRITE END_SEARCH END_START END_STRING
-%token END_SUBTRACT END_UNSTRING END_WRITE ENVIRONMENT ENVIRONMENT_VARIABLE
+%token END_SUBTRACT END_UNSTRING END_WRITE ENVIRONMENT
+%token ENVIRONMENT_NAME ENVIRONMENT_VALUE
 %token EOL EOS EOP EQUAL ERASE ERROR EXCEPTION EXIT EXTEND EXTERNAL FD GOBACK
 %token FILE_CONTROL FILLER FIRST FOR FOREGROUND_COLOR FROM FULL GE GIVING
 %token GLOBAL GO GREATER HIGHLIGHT HIGH_VALUE IDENTIFICATION IN INDEX INDEXED
@@ -1613,9 +1614,9 @@ accept_body:
   {
     push_funcall_1 ("cob_accept_command_line", $1);
   }
-| data_name FROM ENVIRONMENT_VARIABLE value
+| data_name FROM ENVIRONMENT_VALUE
   {
-    push_funcall_2 ("cob_accept_environment", $1, $4);
+    push_funcall_1 ("cob_accept_environment", $1);
   }
 | data_name FROM mnemonic_name
   {
@@ -1853,7 +1854,11 @@ display_statement:
   end_display
   {
     cb_tree l;
-    if (current_program->flag_screen)
+    if ($4 == cb_true)
+      {
+	push_funcall_1 ("cob_display_environment", CB_VALUE ($3));
+      }
+    else if (current_program->flag_screen)
       {
 	for (l = $3; l; l = CB_CHAIN (l))
 	  {
@@ -1896,6 +1901,7 @@ display_upon:
 	break;
       }
   }
+| _upon ENVIRONMENT_NAME	{ $$ = cb_true; }
 | UPON WORD
   {
     cb_error_x ($2, _("`%s' undefined in SPECIAL-NAMES"), CB_NAME ($2));
