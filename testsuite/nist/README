@@ -1,0 +1,14 @@
+Hot To Test NIST CCVS85 Test Suite
+----------------------------------
+
+1. Download the test archive `newcob.val.Z' from
+
+  http://www.itl.nist.gov/div897/ctg/cobol_form.htm
+
+2. Uncompress it
+
+  % uncompress newcob.val.Z
+
+3. Try "make check"
+
+4. Test report summary is stored in "report.log"

@@ -11,13 +11,14 @@ AC_SUBST(RELEASE)
 
 # Configure options.
 AC_ARG_ENABLE(debug,
-	[  --enable-debug           enable debug features],
-	[ AC_DEFINE(COB_DEBUG) ])
+  [  --enable-debug           enable debug features],
+  [ AC_DEFINE(COB_DEBUG) ])
 
 AC_ARG_ENABLE(maintainer-mode,
-	[  --enable-maintainer-mode enable maintainer mode],
-	[ AC_DEFINE(COB_DEBUG)
-	  AC_CONFIG_FILES([redhat/open-cobol.spec]) ])
+  [  --enable-maintainer-mode enable maintainer mode],
+  [ AC_DEFINE(COB_DEBUG)
+    AC_CONFIG_FILES([redhat/open-cobol.spec testsute/nist/Makefile])
+  ])
 
 save_libs="$LIBS"
 

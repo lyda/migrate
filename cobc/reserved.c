@@ -34,8 +34,8 @@ struct word {
 } *reserved_table[HASH_SIZE];
 
 static struct word builtin_words[] = {
-  {"COB$INPUT",		BUILTIN_TOK},
-  {"COB$DISPLAY",	BUILTIN_TOK},
+  {"STDIN",		BUILTIN_TOK},
+  {"STDOUT",		BUILTIN_TOK},
   {"SW1",		BUILTIN_TOK},
   {"SW2",		BUILTIN_TOK},
   {"SW3", 	       	BUILTIN_TOK},
