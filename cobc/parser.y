@@ -744,7 +744,11 @@ usage_clause:
   opt_usage opt_is usage
 ;
 usage:
-  BINARY /* or COMP, COMP-5 */
+  DISPLAY
+  {
+    /* do nothing */
+  }
+| BINARY /* or COMP, COMP-5 */
   {
     COB_FIELD_TYPE (curr_field) = 'B';
     curr_field->len = 0; /* computed in update_field */
@@ -754,10 +758,7 @@ usage:
     COB_FIELD_TYPE (curr_field) = 'B';
     curr_field->len      = 4;
     curr_field->decimals = 0;
-  }
-| DISPLAY
-  {
-    /* do nothing */
+    strcpy (picture, "S\x01\x39\x04");
   }
 | FLOAT_SHORT /* or COMP-1 */
   {
@@ -766,7 +767,7 @@ usage:
     curr_field->decimals =  7;
     curr_field->sign     =  1;
     /* default picture is 14 (max=7->7.7) digits */
-    strcpy (picture,"S\x01\x39\x07\x56\x01\x39\x07");
+    strcpy (picture, "S\x01\x39\x07\x56\x01\x39\x07");
   }
 | FLOAT_LONG /* or COMP-2 */
   {
@@ -775,7 +776,7 @@ usage:
     curr_field->decimals = 15;
     curr_field->sign     =  1;
     /* default picture is 30 (max=15->15.15) digits*/
-    strcpy (picture,"S\x01\x39\x0f\x56\x01\x39\x0f");
+    strcpy (picture, "S\x01\x39\x0f\x56\x01\x39\x0f");
   }
 | PACKED_DECIMAL /* or COMP-3 */
   {
