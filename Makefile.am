@@ -16,8 +16,10 @@ rpm: dist
 	cp $(distdir).tar.gz $(rpmdir)/SOURCES/
 	rpm -ba redhat/open-cobol.spec
 
-deb:
-	dpkg-buildpackage -rfakeroot -us -uc
+deb: dist
+	tar xfz $(distdir).tar.gz
+	(cd $(distdir) && dpkg-buildpackage -rfakeroot -us -uc)
+	rm -rf $(distdir)
 
 upload:
 	if test -e $(distdir).tar.gz; then \
@@ -28,8 +30,8 @@ upload:
 	    $(rpmdir)/RPMS/i386/$(distdir)-$(RELEASE).i386.rpm \
 	    $(rpmdir)/SRPMS/$(distdir)-$(RELEASE).src.rpm; \
 	fi
-	if test -e ../$(PACKAGE)_$(VERSION)-$(RELEASE)_i386.deb; then \
+	if test -e $(PACKAGE)_$(VERSION)-$(RELEASE)_i386.deb; then \
 	  ncftpput upload.sourceforge.net /incoming \
-	    ../$(PACKAGE)_$(VERSION)-$(RELEASE).tar.gz \
-	    ../$(PACKAGE)_$(VERSION)-$(RELEASE)_i386.deb; \
+	    $(PACKAGE)_$(VERSION)-$(RELEASE).tar.gz \
+	    $(PACKAGE)_$(VERSION)-$(RELEASE)_i386.deb; \
 	fi
