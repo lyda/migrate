@@ -1,25 +1,28 @@
-/* File Handling Module
- *
- * Copyright (C) 2000  Rildo Pragana, Alan Cox, Andrew Cameron,
- *		      David Essex, Glen Colbert, Jim Noeth.
- * Copyright (C) 1999  Rildo Pragana, Alan Cox, Andrew Cameron, David Essex.
- * Copyright (C) 1991, 1993  Rildo Pragana.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public License
- * as published by the Free Software Foundation; either version 2.1,
- * or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; see the file COPYING.LIB.  If
- * not, write to the Free Software Foundation, Inc., 59 Temple Place,
- * Suite 330, Boston, MA 02111-1307 USA
- */
+// 
+// Copyright (C) 2001, 2000, 1999,  Rildo Pragana, Jim Noeth, 
+//               Andrew Cameron, David Essex.
+// Copyright (C) 1993, 1991  Rildo Pragana.
+// 
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1,
+// or (at your option) any later version.
+// 
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// 
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; see the file COPYING.LIB.  If
+// not, write to the Free Software Foundation, Inc., 59 Temple Place,
+// Suite 330, Boston, MA 02111-1307 USA
+
+// 
+// 
+//   Cobol Compiler Library -- File Handling Module
+// 
+// 
 
 // Permissible statements -- table from CD-1.2 (cobol draft) pp. 450
 //   ----------------------------------------------------------------- 
@@ -131,7 +134,7 @@ cob_open (struct file_desc *f, char *record, char *fname, int mode)
   DBTYPE type = DB_BTREE;
   void *infop = NULL;
   int sflags = S_IRUSR | S_IWUSR;
-  int oflags;
+  int oflags = 0;
   char *filename, *evname, *pt;
   char alt_filename[128];
   int alt_key_no;
@@ -394,6 +397,24 @@ cob_close (struct file_desc *f, char *record)
 
 /*------------------------------------------------------------------------*\
  |                                                                        |
+ |                          cob_file_init                                 |
+ |                                                                        |
+\*------------------------------------------------------------------------*/
+
+int
+cob_file_init (struct file_desc *f, char *record)
+{
+#ifdef DEBUG_RTS
+  fprintf (stderr, "file_init: \n");
+#endif
+  cob_close (f, record);
+  f->open_mode = 0;
+  f->file_missing = 0;
+  return 0;
+}
+
+/*------------------------------------------------------------------------*\
+ |                                                                        |
  |                          cob_read                                      |
  |                                                                        |
 \*------------------------------------------------------------------------*/
@@ -406,7 +427,7 @@ cob_read (struct file_desc *f, char *record, ...)
   struct fld_desc *fkey;
   char *keybuf;
   struct fld_desc *reclen_desc;
-  char *reclen_buf;
+  char *reclen_buf = NULL;
   off_t file_pos;
   DBT key, data;
   DBT save_key;
@@ -828,8 +849,7 @@ cob_write (struct file_desc *f, char *record, ...)
 
   /* Check the mode the file is opened in to make sure that write
      is Allowed */
-  if (
-      ((f->open_mode != FMOD_OUTPUT) && (f->open_mode != FMOD_IO)
+  if (((f->open_mode != FMOD_OUTPUT) && (f->open_mode != FMOD_IO)
        && (f->open_mode != FMOD_EXTEND)))
     return 92;
 
@@ -1650,8 +1670,7 @@ cob_write_adv (struct file_desc *f, char *record, int opt, ...)
 
   /* Check the mode the file is opened in to make sure that write
      is Allowed */
-  if (
-      ((f->open_mode != FMOD_OUTPUT) && (f->open_mode != FMOD_IO)
+  if (((f->open_mode != FMOD_OUTPUT) && (f->open_mode != FMOD_IO)
        && (f->open_mode != FMOD_EXTEND)))
     return 92;
 
