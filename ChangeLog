@@ -1,3 +1,8 @@
+2002-06-11  Keisuke Nishida  <knishida@netlab.jp>
+
+	* configure.ac (COB_MODULE_EXT): New variable.
+	* Makefile.am (defaults.h): Output COB_MODULE_EXT.
+
 2002-06-08  Keisuke Nishida  <knishida@netlab.jp>
 
 	* configure.ac: Check the existence of gcc (or cc).

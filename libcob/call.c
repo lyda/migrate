@@ -175,7 +175,7 @@ cob_resolve (const char *name)
       struct stat st;
       char filename[FILENAME_MAX];
 
-      sprintf (filename, "%s/%s.so", resolve_path[i], name);
+      sprintf (filename, "%s/%s.%s", resolve_path[i], name, COB_MODULE_EXT);
       if (stat (filename, &st) == 0)
 	{
 	  if ((handle = lt_dlopen (filename)) != NULL

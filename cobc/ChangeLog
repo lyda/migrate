@@ -1,5 +1,10 @@
 2002-06-11  Keisuke Nishida  <knishida@netlab.jp>
 
+	* cobc.c (process_module): Use COB_MODULE_EXT.
+	Don't use -soname.
+
+2002-06-11  Keisuke Nishida  <knishida@netlab.jp>
+
 	* codegen.c: Use `cob_alnum_desc' where appropriate.
 
 2002-06-11  Keisuke Nishida  <knishida@netlab.jp>

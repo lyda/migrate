@@ -39,4 +39,5 @@ defaults.h: Makefile.am $(top_builddir)/config.status
 	@echo "#define COB_LIBS         \"$(COB_LIBS)\""         >> defaults.h
 	@echo "#define COB_CONFIG_FILE  \"$(COB_CONFIG_FILE)\""  >> defaults.h
 	@echo "#define COB_LIBRARY_PATH \"$(COB_LIBRARY_PATH)\"" >> defaults.h
+	@echo "#define COB_MODULE_EXT   \"$(COB_MODULE_EXT)\""   >> defaults.h
 	@echo "#define LOCALEDIR        \"$(datadir)/locale\""   >> defaults.h

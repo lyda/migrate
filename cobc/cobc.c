@@ -523,10 +523,11 @@ process_module (struct filename *fn)
   else
     {
       file_basename (fn->source, name);
-      strcat (name, ".so");
+      strcat (name, ".");
+      strcat (name, COB_MODULE_EXT);
     }
-  sprintf (buff, "%s -shared -Wl,-soname,%s -o %s %s %s",
-	   cob_cc, name, name, fn->object, cob_libs);
+  sprintf (buff, "%s -shared -o %s %s %s",
+	   cob_cc, name, fn->object, cob_libs);
   return process (buff);
 }
 

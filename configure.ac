@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(open-cobol, 0.9.5.92)
+AC_INIT(open-cobol, 0.9.5.94)
 AC_CONFIG_SRCDIR(cobc/cobc.c)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -123,6 +123,7 @@ COB_CFLAGS="-I$includedir"
 COB_LIBS="-L$libdir -lcob ${LIBCOB_LIBS}"
 COB_CONFIG_FILE="$datadir/$PACKAGE/libcob.conf"
 COB_LIBRARY_PATH=".:$libdir/$PACKAGE"
+COB_MODULE_EXT="$shlibext"
 LIBS="$save_libs"
 
 AC_SUBST(COB_CC)
@@ -131,6 +132,7 @@ AC_SUBST(COB_CFLAGS)
 AC_SUBST(COB_LIBS)
 AC_SUBST(COB_CONFIG_FILE)
 AC_SUBST(COB_LIBRARY_PATH)
+AC_SUBST(COB_MODULE_EXT)
 AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBS)
 
@@ -152,6 +154,7 @@ echo "  COB_CFLAGS           ${COB_CFLAGS}"
 echo "  COB_LIBS             ${COB_LIBS}"
 echo "  COB_CONFIG_FILE      ${COB_CONFIG_FILE}"
 echo "  COB_LIBRARY_PATH     ${COB_LIBRARY_PATH}"
+echo "  COB_MODULE_EXT       ${COB_MODULE_EXT}"
 echo ""
 echo "  Use gettext for I18n:                        ${USE_NLS}"
 echo "  Use readline for terminal input:             ${USE_READLINE}"
