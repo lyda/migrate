@@ -20,7 +20,7 @@ check:
 summary:
 	perl summary.pl $(MODULES) > summary.txt
 
-keep:
+snap:
 	for m in $(MODULES); do \
 	  (cp $$m/report.log $$m.old) \
 	done
