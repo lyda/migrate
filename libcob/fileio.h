@@ -78,7 +78,7 @@ struct cob_file_desc {
 };
 
 struct cob_fileio_funcs {
-  void (*open) (struct cob_file_desc *f, struct cob_field name, int mode);
+  void (*open) (struct cob_file_desc *f, char *filename, int mode);
   void (*close) (struct cob_file_desc *f);
   void (*read) (struct cob_file_desc *f);
   void (*read_next) (struct cob_file_desc *f);
