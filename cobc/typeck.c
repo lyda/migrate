@@ -1887,7 +1887,8 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
 	  {
 	    if (f->pic)
 	      if (f->pic->category == CB_CATEGORY_NUMERIC
-		  || f->pic->category == CB_CATEGORY_NUMERIC_EDITED)
+		  || (f->pic->category == CB_CATEGORY_NUMERIC_EDITED
+		      && !is_value))
 		goto invalid;
 	  }
 	else if (src == cb_zero)

@@ -997,7 +997,18 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
       struct cb_field *f = cb_field (x);
       cb_tree value = CB_VALUE (f->values);
 
-      if (CB_CONST_P (value)
+      if (value == cb_space)
+	{
+	  /* SPACE */
+	  /* FIXME: This is to avoid an error when a numeric-edited item
+	     has VALUE SPACE because cob_build_move doubly checks the value.
+	     We should instead check the value only once.  */
+	  output_prefix ();
+	  output ("memset (");
+	  output_data (x);
+	  output (", ' ', %d);\n", f->size);
+	}
+      else if (CB_CONST_P (value)
 	  || CB_TREE_CLASS (value) == CB_CLASS_NUMERIC
 	  || CB_LITERAL (value)->all)
 	{
