@@ -638,6 +638,7 @@ indexed_read (struct cob_file_desc *f, struct cob_field k)
   if (DBC_GET (f->cursor, &key, &data, DB_CURRENT) != 0)
     return 23;
 
+  f->record_size = data.size;
   memcpy (f->record_data, data.data, f->record_size);
 
   return 00;
@@ -670,6 +671,7 @@ indexed_read_next (struct cob_file_desc *f)
   switch (ret)
     {
     case 0:
+      f->record_size = data.size;
       memcpy (f->record_data, data.data, f->record_size);
       return 00;
     case DB_NOTFOUND:
@@ -696,6 +698,11 @@ indexed_write (struct cob_file_desc *f, struct cob_field rec)
   else if (memcmp (f->last_key, key.data, key.size) > 0)
     return 21;
   memcpy (f->last_key, key.data, key.size);
+
+  if (f->record_depending.desc)
+    f->record_size = cob_to_int (f->record_depending);
+  else
+    f->record_size = COB_FIELD_SIZE (rec);
 
   /* write data */
   data.data = f->record_data;
@@ -782,6 +789,11 @@ indexed_rewrite (struct cob_file_desc *f, struct cob_field rec)
   /* delete the current record */
   if ((ret = indexed_delete (f)) != 00)
     return ret;
+
+  if (f->record_depending.desc)
+    f->record_size = cob_to_int (f->record_depending);
+  else
+    f->record_size = COB_FIELD_SIZE (rec);
 
   /* write data */
   DBT_SET (key, f->record_data, 0);
