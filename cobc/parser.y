@@ -128,7 +128,7 @@ static cobc_tree make_cond_name (cobc_tree x);
 
 static void redefinition_error (cobc_tree x);
 static void undefined_error (struct cobc_word *w, cobc_tree parent);
-static void ambiguous_error (struct cobc_word *p);
+static void ambiguous_error (struct cobc_word *w);
 %}
 
 %union {
@@ -601,6 +601,7 @@ select_sequence:
     current_file_name->organization = COB_ORG_SEQUENTIAL;
     current_file_name->access_mode = COB_ACCESS_SEQUENTIAL;
     current_file_name->optional = $3;
+    COBC_TREE (current_file_name)->loc = @4;
     program_spec.file_name_list =
       cons (current_file_name, program_spec.file_name_list);
   }
@@ -914,6 +915,7 @@ field_description:
   level_number field_name
   {
     init_field ($1, $2);
+    COBC_TREE (current_field)->loc = @2;
   }
   field_options dot
   {
@@ -3284,7 +3286,10 @@ resolve_predefined_name (cobc_tree x)
       return NULL;
     }
   else if (p->count > 1)
-    ambiguous_error (p);
+    {
+      ambiguous_error (p);
+      return NULL;
+    }
 
   name = p->item;
   for (l = l->next; l; l = l->next)
@@ -3781,9 +3786,9 @@ undefined_error (struct cobc_word *w, cobc_tree parent)
 }
 
 static void
-ambiguous_error (struct cobc_word *p)
+ambiguous_error (struct cobc_word *w)
 {
-  yyerror ("`%s' ambiguous; need qualification", p->name);
+  yyerror ("`%s' ambiguous; need qualification", w->name);
 }
 
 
