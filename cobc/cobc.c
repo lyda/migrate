@@ -76,7 +76,6 @@ static char *output_filename;
 static char cob_cc[FILENAME_MAX];		/* gcc */
 static char cob_cobpp[FILENAME_MAX];		/* cobpp */
 static char cob_ldadd[BUFSIZ];			/* -lcob -ldb -lm ... */
-static char cob_ldflags[BUFSIZ];		/* -L/usr/lib */
 
 static enum format {
   format_unspecified,
@@ -136,7 +135,6 @@ init_environment (int argc, char *argv[])
   init_var (cob_cc,      "COB_CC",      COB_CC);
   init_var (cob_cobpp,   "COB_COBPP",   COB_COBPP);
   init_var (cob_ldadd,   "COB_LDADD",   COB_LDADD);
-  init_var (cob_ldflags, "COB_LDFLAGS", COB_LDFLAGS);
 }
 
 static void
@@ -487,8 +485,8 @@ static int
 process_module (struct filename *fn)
 {
   char buff[BUFSIZ];
-  sprintf (buff, "%s -shared -Wl,-soname,%s -o %s %s %s %s",
-	   cob_cc, fn->module, fn->module, fn->object, cob_ldflags, cob_ldadd);
+  sprintf (buff, "%s -shared -Wl,-soname,%s -o %s %s %s",
+	   cob_cc, fn->module, fn->module, fn->object, cob_ldadd);
   print_command (buff);
   return system (buff);
 }
@@ -505,8 +503,7 @@ process_link (struct filename *file_list)
       strcat (objs, " ");
     }
 
-  sprintf (buff, "%s -o %s %s %s %s",
-	   cob_cc, exe, objs, cob_ldflags, cob_ldadd);
+  sprintf (buff, "%s -o %s %s %s", cob_cc, exe, objs, cob_ldadd);
   print_command (buff);
   return system (buff);
 }

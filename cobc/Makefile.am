@@ -16,4 +16,3 @@ defaults.h: Makefile.am $(top_builddir)/config.status
 	@echo "#define COB_CC           \"@CC@\""           >> defaults.h
 	@echo "#define COB_COBPP        \"$(libexecdir)/@PACKAGE@/cobpp\"" >> defaults.h
 	@echo "#define COB_LDADD        \"@COB_LDADD@\""    >> defaults.h
-	@echo "#define COB_LDFLAGS      \"@COB_LDFLAGS@\""  >> defaults.h
