@@ -348,7 +348,8 @@ temp_name (char *buff, const char *ext)
 #ifdef __MINGW32__
   char temp[MAX_PATH];
   GetTempPath (MAX_PATH, temp);
-  GetTempFileName (temp, "cob", 1, buff);
+  GetTempFileName (temp, "cob", 0, buff);
+  DeleteFile(buff);
   strcpy (buff + strlen (buff) - 4, ext); /* replace ".tmp" by EXT */
 #else /* not __MINGW32__ */
   strcpy (buff, "/tmp/cobXXXXXX");

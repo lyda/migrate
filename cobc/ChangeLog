@@ -1,5 +1,10 @@
 2002-09-12  Keisuke Nishida  <knishida@netlab.jp>
 
+	* cobc.c (temp_name): Call GetTempFileName with 3rd argument 0.
+	Call DeleteFile to remove the temporary file.
+
+2002-09-12  Keisuke Nishida  <knishida@netlab.jp>
+
 	* parser.y (validate_field_tree): Validate groups not having PICTURE.
 	(validate_field_tree): Create PICTURE of INDEX here, not in USAGE.
 
