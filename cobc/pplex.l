@@ -431,54 +431,83 @@ ppinput (char *buff, int max_size)
       while (1)
 	{
 	  int i;
+	  int mark = 0;
+	  int consecutive = 0;
 	  size_t size;
 	  char *bp, *np;
 	  char lookahead[7];
 
-	  /* look ahead the following line */
+	  /* look ahead the next line */
 	  size = fread (lookahead, 1, 7, ppin);
 	  fseek (ppin, -size, SEEK_CUR);
 	  for (i = 0; i < size; i++)
 	    if (lookahead[i] == '\t')
-	      break;
-	  if (i != size)
-	    break;
+	      goto finish;
 	  if (size != 7 || lookahead[6] != '-')
-	    break;
+	    goto finish;
 
-	  /* concatenate lines */
+	  /* check if string literal is to be continued */
+	  size = strlen (buff);
+	  for (i = 0; i < size; i++)
+	    if (buff[i] == '\'' || buff[i] == '\"')
+	      {
+		if (mark == 0)
+		  {
+		    /* literal start */
+		    mark = buff[i];
+		  }
+		else if (mark == buff[i])
+		  {
+		    if (i == cb_text_column - 1)
+		      /* consecutive quotation */
+		      consecutive = 1;
+		    else
+		      /* litaral end */
+		      mark = 0;
+		  }
+	      }
+
+	  /* read the next line */
 	  cb_source_line++;
 	  bp = buff + strlen (buff) - 1;
 	  ppinput_1 (bp, max_size - (bp - buff));
 	  for (np = bp + 7; *np == ' '; np++);
-	  if (*np == '\'' || *np == '\"')
+
+	  /* validate concatenation */
+	  if (consecutive)
 	    {
-	      /* concatenate string literal */
-	      int c = 0;
-	      for (i = 0; buff + i < bp; i++)
-		if (buff[i] == '\'' || buff[i] == '\"')
-		  {
-		    if (c == 0)
-		      c = buff[i];
-		    else if (c == buff[i])
-		      c = 0;
-		  }
-	      if (c == 0)
+	      if (np[0] == mark && np[1] == mark)
+		np++;
+	      else
 		{
-		  for (i = -1; bp[i] == ' '; i--);
-		  if (bp[i] == *np)
-		    bp += i;
+		invalid:
+		  cb_error (_("invalid line concatenation"));
+		  return YY_NULL;
 		}
-	      np++;
+	    }
+	  else if (mark)
+	    {
+	      /* literal concatenation */
+	      if (*np == mark)
+		np++;
+	      else
+		goto invalid;
+	    }
+	  else if (*np == '\'' || *np == '\"')
+	    {
+	      /* separate literals */
+	      *bp++;
 	    }
 	  else
 	    {
-	      /* concatenate word */
+	      /* word concatenation */
 	      for (; bp[-1] == ' '; bp--);
 	    }
+
 	  strcpy (bp, np);
 	  lines++;
 	}
+    finish:
       cb_source_line -= lines;
 
       /* append LF's */
@@ -504,7 +533,7 @@ ppinput (char *buff, int max_size)
 	  else if (len - old_len + new_len >= max_size)
 	    {
 	      cb_error (_("source line too long"));
-	      exit (1);
+	      return YY_NULL;
 	    }
 	  else
 	    {
