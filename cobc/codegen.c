@@ -564,13 +564,14 @@ value_to_eax (cob_tree x)
     }
 
   /* Binary variable */
-  if (COB_FIELD_TYPE (x) == 'B' || COB_FIELD_TYPE (x) == 'U')
+  if ((COB_FIELD_TYPE (x) == 'B' || COB_FIELD_TYPE (x) == 'U')
+      && x->linkage_flg == 0)
     {
       /* load binary (comp) value directly */
-      /* %eax doesn't hold greater than 4 bytes binary types
-         so we use %edx to get the most significant part */
       if (symlen (x) > 4)
 	{
+	  /* %eax doesn't hold greater than 4 bytes binary types
+	     so we use %edx to get the most significant part */
 	  output ("\tmovl\t%s+4, %%edx\n", memrefat (x));
 	  output ("\tmovl\t%s, %%eax\n", memrefat (x));
 	}
