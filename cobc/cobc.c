@@ -193,7 +193,9 @@ static struct option long_options[] = {
   {"save-temps", no_argument, &save_temps, 1},
   {"std", required_argument, 0, '$'},
   {"conf", required_argument, 0, '&'},
+#if 0
   {"target", required_argument, 0, 't'},
+#endif
   {"debug", no_argument, 0, 'd'},
   {"ext", required_argument, 0, 'e'},
   {"free", no_argument, (int *) &cb_source_format, CB_FORMAT_FREE},
