@@ -166,7 +166,7 @@ extern int decimal_comma;
 extern unsigned char cCurrencySymbol;
 extern long long cob_exp10[19];
 
-extern int extract_sign (struct fld_desc *f, char *s);
+extern int extract_sign (struct cob_field f);
 extern void put_sign (struct cob_field f, int sign);
 extern int picCompLength (const char *pic);
 extern int picCompDecimals (const char *pic);
