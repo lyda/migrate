@@ -1715,8 +1715,8 @@ accept_body:
       {
 	if (CB_FIELD ($1)->storage == CB_STORAGE_SCREEN)
 	  {
-	    cb_tree line = CB_PARAMETER ($2)->x;
-	    cb_tree column = CB_PARAMETER ($2)->y;
+	    cb_tree line = CB_PAIR_X ($2);
+	    cb_tree column = CB_PAIR_Y ($2);
 	    push_funcall_3 ("cob_screen_accept", $1, line, column);
 	  }
 	else
@@ -1994,8 +1994,8 @@ display_statement:
 	    cb_tree x = CB_VALUE (l);
 	    if (CB_FIELD (x)->storage == CB_STORAGE_SCREEN)
 	      {
-		cb_tree line = CB_PARAMETER ($5)->x;
-		cb_tree column = CB_PARAMETER ($5)->y;
+		cb_tree line = CB_PAIR_X ($5);
+		cb_tree column = CB_PAIR_Y ($5);
 		push_funcall_3 ("cob_screen_display", x, line, column);
 	      }
 	    else
@@ -2984,11 +2984,11 @@ string_statement:
 
 	/* find DELIMITED item */
 	for (end = start; end; end = CB_CHAIN (end))
-	  if (CB_PARAMETER_P (CB_VALUE (end)))
+	  if (CB_PAIR_P (CB_VALUE (end)))
 	    break;
 
 	/* cob_string_delimited */
-	dlm = end ? CB_PARAMETER (CB_VALUE (end))->x : cb_int0;
+	dlm = end ? CB_PAIR_X (CB_VALUE (end)) : cb_int0;
 	list_add (seq, cb_build_funcall_1 ("cob_string_delimited", dlm));
 
 	/* cob_string_append */
@@ -3008,8 +3008,8 @@ string_item_list:
 ;
 string_item:
   value				{ $<tree>$ = $1; }
-| DELIMITED _by SIZE		{ $<tree>$ = cb_build_parameter_1 (0, cb_int0); }
-| DELIMITED _by value		{ $<tree>$ = cb_build_parameter_1 (0, $3); }
+| DELIMITED _by SIZE		{ $<tree>$ = cb_build_pair (cb_int0, 0); }
+| DELIMITED _by value		{ $<tree>$ = cb_build_pair ($3, 0); }
 ;
 opt_with_pointer:
   /* empty */			{ $$ = cb_int0; }
@@ -3159,14 +3159,14 @@ write_statement:
   end_write
   {
     struct cb_field *f = CB_FIELD (cb_ref ($3));
-    struct cb_parameter *p = $<tree>5 ? CB_PARAMETER ($<tree>5) : 0;
+    cb_tree opt = $<tree>5;
     cb_tree file = CB_TREE (f->file);
 
     /* AFTER ADVANCING */
-    if (p && p->type == CB_AFTER)
+    if (opt && CB_PURPOSE_INT (opt) == CB_AFTER)
       {
-	if (p->x)
-	  push_funcall_2 ("cob_write_lines", file, p->x);
+	if (CB_VALUE (opt))
+	  push_funcall_2 ("cob_write_lines", file, CB_VALUE (opt));
 	else
 	  push_funcall_1 ("cob_write_page", file);
       }
@@ -3178,10 +3178,10 @@ write_statement:
     push_file_handler (file, $<tree>6);
 
     /* BEFORE ADVANCING */
-    if (p && p->type == CB_BEFORE)
+    if (opt && CB_PURPOSE_INT (opt) == CB_BEFORE)
       {
-	if (p->x)
-	  push_funcall_2 ("cob_write_lines", file, p->x);
+	if (CB_VALUE (opt))
+	  push_funcall_2 ("cob_write_lines", file, CB_VALUE (opt));
 	else
 	  push_funcall_1 ("cob_write_page", file);
       }
@@ -3198,11 +3198,11 @@ write_option:
   }
 | before_or_after _advancing integer_value _line_or_lines
   {
-    $<tree>$ = cb_build_parameter_1 ($1, cb_build_cast_integer ($3));
+    $<tree>$ = cb_build_int_list ($1, cb_build_cast_integer ($3));
   }
 | before_or_after _advancing PAGE
   {
-    $<tree>$ = cb_build_parameter_1 ($1, 0);
+    $<tree>$ = cb_build_int_list ($1, 0);
   }
 ;
 before_or_after:
