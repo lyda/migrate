@@ -1,3 +1,8 @@
+2002-07-31  Keisuke Nishida  <knishida@netlab.jp>
+
+	* common.c (cob_init_config): New function.
+	(cob_init): Updated.  Load the config file first.
+
 2002-07-30  Keisuke Nishida  <knishida@netlab.jp>
 
 	* fileio.c (indexed_write_internal): New function.

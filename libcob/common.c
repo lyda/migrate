@@ -177,6 +177,14 @@ config_load (void)
   fclose (fp);
 }
 
+static void
+cob_init_config (void)
+{
+  config_load ();
+
+  ding_on_error = cob_config_compare ("ding-on-error", "yes");
+}
+
 
 /*
  * General functions
@@ -194,14 +202,11 @@ cob_init (int argc, char **argv)
   textdomain (PACKAGE);
 #endif
 
+  cob_init_config ();
   cob_init_numeric ();
   cob_init_termio ();
   cob_init_fileio ();
   cob_init_call ();
-
-  config_load ();
-
-  ding_on_error = cob_config_compare ("ding-on-error", "yes");
 
   cob_initialized = 1;
 }
