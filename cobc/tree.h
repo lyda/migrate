@@ -373,6 +373,7 @@ struct cobc_file_name {
   struct cobc_tree_common common;
   struct cobc_word *word;
   char *cname;
+  struct cobc_label_name *handler; /* error handler */
   struct cobc_field *record;	/* record descriptor */
   cobc_tree assign;		/* ASSIGN */
   int optional;			/* OPTIONAL */
@@ -567,18 +568,17 @@ struct cobc_call {
   struct cobc_tree_common common;
   int tag;
   int argc;
-  cobc_tree argv[5];
+  void *argv[5];
 };
 
 #define COBC_CALL(x)		(COBC_TREE_CAST (cobc_tag_call, struct cobc_call, x))
 #define COBC_CALL_P(x)		(COBC_TREE_TAG (x) == cobc_tag_call)
 
 extern cobc_tree make_call_0 (int tag);
-extern cobc_tree make_call_1 (int tag, cobc_tree a1);
-extern cobc_tree make_call_2 (int tag, cobc_tree a1, cobc_tree a2);
-extern cobc_tree make_call_3 (int tag, cobc_tree a1, cobc_tree a2, cobc_tree a3);
-extern cobc_tree make_call_4 (int tag, cobc_tree a1, cobc_tree a2, cobc_tree a3, cobc_tree a4);
-extern cobc_tree make_call_5 (int tag, cobc_tree a1, cobc_tree a2, cobc_tree a3, cobc_tree a4, cobc_tree a5);
+extern cobc_tree make_call_1 (int tag, void *a1);
+extern cobc_tree make_call_2 (int tag, void *a1, void *a2);
+extern cobc_tree make_call_3 (int tag, void *a1, void *a2, void *a3);
+extern cobc_tree make_call_4 (int tag, void *a1, void *a2, void *a3, void *a4);
 
 
 /*

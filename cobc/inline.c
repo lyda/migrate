@@ -19,6 +19,37 @@
 
 
 /*
+ * File error handler
+ */
+
+static void
+output_file_handler (struct cobc_file_name *f, int type,
+		     cobc_tree st1, cobc_tree st2)
+{
+  if (st1)
+    {
+      output_line ("if (%s_desc.file_status[0] == '%d')", f->cname, type);
+      output_tree (st1);
+      output_line ("else");
+    }
+  output_line ("if (%s_desc.file_status[0] != '0')", f->cname);
+  output_line ("  {");
+  if (f->handler)
+    output_line ("    cob_perform (lp_%d, lb_%s, le_%s);",
+		 global_label++, f->handler->cname, f->handler->cname);
+  else
+    output_line ("    cob_standard_error_handle (%d, %s_desc);",
+		 global_label++, f->cname);
+  output_line ("  }");
+  if (st2)
+    {
+      output_line ("else");
+      output_tree (st2);
+    }
+}
+
+
+/*
  * GO TO
  */
 

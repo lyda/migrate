@@ -658,6 +658,7 @@ make_file_name (struct cobc_word *word)
     make_tree (cobc_tag_file_name, COB_VOID, sizeof (struct cobc_file_name));
   p->word = set_word_item (word, COBC_TREE (p));
   p->cname = to_cname (word->name);
+  p->handler = NULL;
   p->record = NULL;
   p->assign = NULL;
   p->optional = 0;
@@ -690,8 +691,8 @@ make_label_name_nodef (struct cobc_word *word, struct cobc_word *in_word)
 cobc_tree
 make_label_name (struct cobc_word *word)
 {
-  cobc_tree x = make_label_name_nodef (NULL, NULL);
-  COBC_LABEL_NAME (x)->word = set_word_item (word, x);
+  cobc_tree x = make_label_name_nodef (word, NULL);
+  set_word_item (word, x);
   return x;
 }
 
@@ -875,7 +876,7 @@ make_pair (void *x, void *y)
  */
 
 static cobc_tree
-make_call (int tag, int argc, cobc_tree a1, cobc_tree a2, cobc_tree a3, cobc_tree a4, cobc_tree a5)
+make_call (int tag, int argc, void *a1, void *a2, void *a3, void *a4)
 {
   struct cobc_call *p =
     make_tree (cobc_tag_call, COB_VOID, sizeof (struct cobc_call));
@@ -885,44 +886,37 @@ make_call (int tag, int argc, cobc_tree a1, cobc_tree a2, cobc_tree a3, cobc_tre
   p->argv[1] = a2;
   p->argv[2] = a3;
   p->argv[3] = a4;
-  p->argv[4] = a5;
   return COBC_TREE (p);
 }
 
 cobc_tree
 make_call_0 (int tag)
 {
-  return make_call (tag, 0, 0, 0, 0, 0, 0);
+  return make_call (tag, 0, 0, 0, 0, 0);
 }
 
 cobc_tree
-make_call_1 (int tag, cobc_tree a1)
+make_call_1 (int tag, void *a1)
 {
-  return make_call (tag, 1, a1, 0, 0, 0, 0);
+  return make_call (tag, 1, a1, 0, 0, 0);
 }
 
 cobc_tree
-make_call_2 (int tag, cobc_tree a1, cobc_tree a2)
+make_call_2 (int tag, void *a1, void *a2)
 {
-  return make_call (tag, 2, a1, a2, 0, 0, 0);
+  return make_call (tag, 2, a1, a2, 0, 0);
 }
 
 cobc_tree
-make_call_3 (int tag, cobc_tree a1, cobc_tree a2, cobc_tree a3)
+make_call_3 (int tag, void *a1, void *a2, void *a3)
 {
-  return make_call (tag, 3, a1, a2, a3, 0, 0);
+  return make_call (tag, 3, a1, a2, a3, 0);
 }
 
 cobc_tree
-make_call_4 (int tag, cobc_tree a1, cobc_tree a2, cobc_tree a3, cobc_tree a4)
+make_call_4 (int tag, void *a1, void *a2, void *a3, void *a4)
 {
-  return make_call (tag, 4, a1, a2, a3, a4, 0);
-}
-
-cobc_tree
-make_call_5 (int tag, cobc_tree a1, cobc_tree a2, cobc_tree a3, cobc_tree a4, cobc_tree a5)
-{
-  return make_call (tag, 5, a1, a2, a3, a4, a5);
+  return make_call (tag, 4, a1, a2, a3, a4);
 }
 
 

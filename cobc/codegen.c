@@ -35,6 +35,7 @@
 
 static void output_tree (cobc_tree x);
 
+static int global_label = 1;
 
 /*
  * Output routine
@@ -1204,13 +1205,12 @@ output_perform_once (struct cobc_perform *p)
     }
   else
     {
-      static int perform_label = 1;
       struct cobc_pair *pair = COBC_PAIR (p->body);
       struct cobc_label_name *from = COBC_LABEL_NAME (pair->x);
       struct cobc_label_name *until =
 	pair->y ? COBC_LABEL_NAME (pair->y) : from;
-      output_line ("cob_perform (lp%d, lb_%s, le_%s);",
-		   perform_label++, from->cname, until->cname);
+      output_line ("cob_perform (l_%d, lb_%s, le_%s);",
+		   global_label++, from->cname, until->cname);
     }
 }
 
@@ -1575,6 +1575,18 @@ output_tree (cobc_tree x)
 }
 
 
+#define OUTPUT_HANDLER(handler)						\
+  if (spec->handler)							\
+    {									\
+      output ("#define lb_"#handler" lb_%s\n", spec->handler->cname);	\
+      output ("#define le_"#handler" le_%s\n", spec->handler->cname);	\
+    }									\
+  else									\
+    {									\
+      output ("#define lb_"#handler" lb_default_handler\n");		\
+      output ("#define le_"#handler" le_default_handler\n");		\
+    }
+
 void
 codegen (struct program_spec *spec)
 {
@@ -1612,12 +1624,21 @@ codegen (struct program_spec *spec)
   for (l = spec->file_name_list; l; l = l->next)
     output_file_name (l->item);
 
+  /* error handlers */
+  output ("/* Standard error handlers */\n\n");
+  OUTPUT_HANDLER (input_handler);
+  OUTPUT_HANDLER (output_handler);
+  OUTPUT_HANDLER (i_o_handler);
+  OUTPUT_HANDLER (extend_handler);
+  output_newline ();
+
   /* labels */
   output ("/* Labels */\n\n");
   output ("enum {\n");
-  output ("  COB_INITIAL_LABEL,\n");
-  for (l = spec->label_list; l; l = l->next)
-    output ("  le_%s,\n", COBC_LABEL_NAME (l->item)->cname);
+  output ("  le_default_handler,\n");
+  for (l = spec->exec_list; l; l = l->next)
+    if (COBC_LABEL_NAME_P (l->item))
+      output ("  le_%s,\n", COBC_LABEL_NAME (l->item)->cname);
   output ("};\n\n");
 
   /* classes */
@@ -1696,10 +1717,16 @@ codegen (struct program_spec *spec)
   /* frame stack */
   output_line ("/* initialize frame stack */");
   output_line ("frame_index = 0;");
-  output_line ("frame_stack[0].perform_through = COB_INITIAL_LABEL;");
+  output_line ("frame_stack[0].perform_through = le_$MAIN$;");
+  output_line ("goto lb_$MAIN$;");
   output_newline ();
 
   output_line ("/* PROCEDURE DIVISION */");
+  output_line ("lb_default_handler:");
+  output_line ("cob_runtime_error (\"File I-O error: %d\", cob_status);");
+  output_line ("goto l_exit;");
+  output_newline ();
+
   for (l = spec->exec_list; l; l = l->next)
     output_tree (l->item);
   output_newline ();

@@ -35,11 +35,14 @@ struct program_spec {
   struct cobc_list *class_list;
   struct cobc_list *index_list;
   struct cobc_list *file_name_list;
-  struct cobc_list *label_list;
   struct cobc_list *using_list;
   struct cobc_list *exec_list;
   struct cobc_field *working_storage;
   struct cobc_field *linkage_storage;
+  struct cobc_label_name *input_handler;
+  struct cobc_label_name *output_handler;
+  struct cobc_label_name *i_o_handler;
+  struct cobc_label_name *extend_handler;
 };
 
 extern struct program_spec program_spec;

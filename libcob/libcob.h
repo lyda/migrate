@@ -94,12 +94,12 @@ struct cob_frame {
   void *return_address;
 };
 
-#define cob_perform(label,from,until)			\
+#define cob_perform(lbl,from,until)			\
   frame_index++;					\
   frame_stack[frame_index].perform_through = until;	\
-  frame_stack[frame_index].return_address = &&label;	\
+  frame_stack[frame_index].return_address = &&lbl;	\
   goto from;						\
-  label:						\
+  lbl:							\
   frame_index--
 
 #define cob_exit(label)					\
@@ -279,6 +279,24 @@ extern void cob_accept_environment (struct cob_field f, struct cob_field env);
 #define COB_OPEN_OUTPUT		2
 #define COB_OPEN_I_O 		3
 #define COB_OPEN_EXTEND		4
+
+#define cob_standard_error_handle(lbl,f)				\
+  if (f.open_mode == COB_OPEN_INPUT)					\
+    {									\
+      cob_perform (lfi_##lbl, lb_input_handler, le_input_handler);	\
+    }									\
+  else if (f.open_mode == COB_OPEN_OUTPUT)				\
+    {									\
+      cob_perform (lfo_##lbl, lb_output_handler, le_output_handler);	\
+    }									\
+  else if (f.open_mode == COB_OPEN_I_O)					\
+    {									\
+      cob_perform (lfx_##lbl, lb_i_o_handler, le_i_o_handler);		\
+    }									\
+  else if (f.open_mode == COB_OPEN_EXTEND)				\
+    {									\
+      cob_perform (lfe_##lbl, lb_extend_handler, le_extend_handler);	\
+    }
 
 extern char cob_dummy_status[];
 
