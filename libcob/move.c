@@ -491,6 +491,45 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 }
 
 static void
+cob_move_edited_to_display (cob_field *f1, cob_field *f2)
+{
+  int i;
+  int sign = 0;
+  int expt = 0;
+  int have_point = 0;
+  unsigned char buff[f1->size];
+  unsigned char *p = buff;
+
+  /* de-edit */
+  for (i = 0; i < f1->size; i++)
+    {
+      int c = f1->data[i];
+      switch (c)
+	{
+	case '0': case '1': case '2': case '3': case '4':
+	case '5': case '6': case '7': case '8': case '9':
+	  *p++ = c;
+	  if (have_point)
+	    expt--;
+	  break;
+	case '.': case ',':
+	  if (c == cob_current_module->decimal_point)
+	    have_point = 1;
+	  break;
+	case '-':
+	case 'C':
+	  sign = -1;
+	  break;
+	}
+    }
+
+  /* store */
+  store_common_region (f2, buff, p - buff, expt);
+
+  cob_put_sign (f2, sign);
+}
+
+static void
 cob_move_alphanum_to_edited (cob_field *f1, cob_field *f2)
 {
   const char *p;
@@ -608,6 +647,22 @@ cob_move (cob_field *src, cob_field *dst)
 	default:
 	  return indirect_move (cob_move_binary_to_display, src, dst,
 				src->attr->digits, src->attr->expt);
+	}
+
+    case COB_TYPE_NUMERIC_EDITED:
+      switch (COB_FIELD_TYPE (dst))
+	{
+	case COB_TYPE_NUMERIC_DISPLAY:
+	  return cob_move_edited_to_display (src, dst);
+	case COB_TYPE_NUMERIC_PACKED:
+	case COB_TYPE_NUMERIC_BINARY:
+	case COB_TYPE_NUMERIC_EDITED:
+	  return indirect_move (cob_move_edited_to_display,
+				src, dst, 16, -8);
+	case COB_TYPE_ALPHANUMERIC_EDITED:
+	  return cob_move_alphanum_to_edited (src, dst);
+	default:
+	  return cob_move_alphanum_to_alphanum (src, dst);
 	}
 
     default:
