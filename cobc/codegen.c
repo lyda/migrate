@@ -1333,7 +1333,10 @@ output_call (struct cb_call *p)
       switch (CB_PURPOSE_INT (l))
 	{
 	case CB_CALL_BY_REFERENCE:
-	  output_data (x);
+	  if (CB_REFERENCE_P (x) && CB_FILE_P (cb_ref (x)))
+	    output_param (cb_ref (x), -1);
+	  else
+	    output_data (x);
 	  break;
 	case CB_CALL_BY_CONTENT:
 	  output ("content_%d", n);
