@@ -512,15 +512,21 @@ struct cobc_perform {
   int type;
   int test;
   cobc_tree body;
-  cobc_tree init;
-  cobc_tree step;
-  cobc_tree cond;
+  cobc_tree data;
+  struct cobc_perform_varying {
+    cobc_tree name;
+    cobc_tree from;
+    cobc_tree by;
+    cobc_tree until;
+    struct cobc_perform_varying *next;
+  } *varying;
 };
 
 #define COBC_PERFORM(x)		(COBC_TREE_CAST (cobc_tag_perform, struct cobc_perform, x))
 #define COBC_PERFORM_P(x)	(COBC_TREE_TAG (x) == cobc_tag_perform)
 
 extern cobc_tree make_perform (int type);
+extern void add_perform_varying (struct cobc_perform *perf, cobc_tree name, cobc_tree from, cobc_tree by, cobc_tree until);
 
 
 /*

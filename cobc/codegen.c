@@ -969,12 +969,67 @@ output_perform_once (struct cobc_perform *p)
 }
 
 static void
+output_perform_varying (struct cobc_perform *p, struct cobc_perform_varying *v)
+{
+  cobc_tree init = NULL;
+  cobc_tree step = NULL;
+  cobc_tree cond;
+
+  /* perform body at the end */
+  if (!v)
+    {
+      output_perform_once (p);
+      return;
+    }
+
+  /* build operations */
+  if (v->name)
+    {
+      init = make_call_2 (COB_MOVE, v->from, v->name);
+      step = make_op_assign (v->name, '+', v->by);
+    }
+  cond = make_unary_cond (v->until, COBC_COND_NOT);
+
+  /* initialize */
+  if (init)
+    output_tree (init);
+
+  /* loop */
+  output_prefix ();
+  if (p->test == COBC_BEFORE)
+    {
+      output ("while (");
+      output_condition (cond);
+      output (")\n");
+    }
+  else
+    {
+      output ("do\n");
+    }
+  output_indent ("  {", 4);
+
+  /* body */
+  output_perform_varying (p, v->next);
+  if (step)
+    output_tree (step);
+
+  /* end loop */
+  output_indent ("  }", -4);
+  if (p->test == COBC_AFTER)
+    {
+      output ("while (");
+      output_condition (cond);
+      output (");\n");
+    }
+}
+
+static void
 output_perform (struct cobc_perform *p)
 {
   switch (p->type)
     {
     case COBC_PERFORM_EXIT:
-      output_line ("cob_exit (le_%s);", COBC_LABEL_NAME (p->cond)->cname);
+      output_line ("cob_exit (le_%s);", COBC_LABEL_NAME (p->data)->cname);
       break;
     case COBC_PERFORM_ONCE:
       output_perform_once (p);
@@ -983,7 +1038,7 @@ output_perform (struct cobc_perform *p)
       output_indent ("{", 2);
       output_prefix ();
       output ("int i, n = ");
-      output_index (p->cond);
+      output_index (p->data);
       output (";\n");
       output_line ("for (i = 0; i < n; i++)");
       output_indent ("  {", 4);
@@ -992,30 +1047,7 @@ output_perform (struct cobc_perform *p)
       output_indent ("}", -2);
       break;
     case COBC_PERFORM_UNTIL:
-      if (p->init)
-	output_tree (p->init);
-      output_prefix ();
-      if (p->test == COBC_BEFORE)
-	{
-	  output ("while (!");
-	  output_condition (p->cond);
-	  output (")\n");
-	}
-      else
-	{
-	  output ("do\n");
-	}
-      output_indent ("  {", 4);
-      output_perform_once (p);
-      if (p->step)
-	output_tree (p->step);
-      output_indent ("  }", -4);
-      if (p->test == COBC_AFTER)
-	{
-	  output ("while (!");
-	  output_condition (p->cond);
-	  output (");\n");
-	}
+      output_perform_varying (p, p->varying);
       break;
     }
 }

@@ -901,10 +901,31 @@ make_perform (int type)
   p->type = type;
   p->test = 0;
   p->body = NULL;
-  p->init = NULL;
-  p->step = NULL;
-  p->cond = NULL;
+  p->data = NULL;
+  p->varying = NULL;
   return COBC_TREE (p);
+}
+
+void
+add_perform_varying (struct cobc_perform *perf, cobc_tree name,
+		     cobc_tree from, cobc_tree by, cobc_tree until)
+{
+  struct cobc_perform_varying *p =
+    malloc (sizeof (struct cobc_perform_varying));
+  p->name = name;
+  p->from = from;
+  p->by = by;
+  p->until = until;
+  p->next = NULL;
+  if (perf->varying == NULL)
+    perf->varying = p;
+  else
+    {
+      struct cobc_perform_varying *l = perf->varying;
+      while (l->next)
+	l = l->next;
+      l->next = p;
+    }
 }
 
 

@@ -62,7 +62,7 @@
 #define push_exit_section(x)				\
   do {							\
     cobc_tree p = make_perform (COBC_PERFORM_EXIT);	\
-    COBC_PERFORM (p)->cond = COBC_TREE (x);		\
+    COBC_PERFORM (p)->data = COBC_TREE (x);		\
     push_tree (p);					\
   } while (0)
 
@@ -1933,22 +1933,23 @@ perform_option:
 | integer_value TIMES
   {
     $$ = make_perform (COBC_PERFORM_TIMES);
-    COBC_PERFORM ($$)->cond = $1;
+    COBC_PERFORM ($$)->data = $1;
   }
 | perform_test UNTIL condition
   {
     $$ = make_perform (COBC_PERFORM_UNTIL);
     COBC_PERFORM ($$)->test = $1;
-    COBC_PERFORM ($$)->cond = $3;
+    add_perform_varying (COBC_PERFORM ($$), 0, 0, 0, $3);
   }
 | perform_test VARYING numeric_name FROM value BY value UNTIL condition
+  {
+    $<tree>$ = make_perform (COBC_PERFORM_UNTIL);
+    COBC_PERFORM ($<tree>$)->test = $1;
+    add_perform_varying (COBC_PERFORM ($<tree>$), $3, $5, $7, $9);
+  }
   perform_after_list
   {
-    $$ = make_perform (COBC_PERFORM_UNTIL);
-    COBC_PERFORM ($$)->test = $1;
-    COBC_PERFORM ($$)->init = make_call_2 (COB_MOVE, $5, $3);
-    COBC_PERFORM ($$)->step = make_op_assign ($3, '+', $7);
-    COBC_PERFORM ($$)->cond = $9;
+    $$ = $<tree>10;
   }
 ;
 perform_test:
@@ -1959,6 +1960,9 @@ perform_test:
 perform_after_list:
 | perform_after_list
   AFTER numeric_name FROM value BY value UNTIL condition
+  {
+    add_perform_varying (COBC_PERFORM ($<tree>0), $3, $5, $7, $9);
+  }
 ;
 
 perform_sentence:
