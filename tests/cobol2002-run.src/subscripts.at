@@ -239,3 +239,26 @@ AT_CHECK([./prog], [1], ,
 ])
 
 AT_CLEANUP
+
+
+##
+
+AT_SETUP([Subscript by arithmetic expression])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 G             VALUE "1234".
+         02 X           PIC X OCCURS 4.
+       PROCEDURE        DIVISION.
+           DISPLAY X((3 + 1) / 2) NO ADVANCING.
+           DISPLAY X(2 ** 2) NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0], [24])
+
+AT_CLEANUP
