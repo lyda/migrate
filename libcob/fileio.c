@@ -494,9 +494,9 @@ static struct cob_fileio_funcs relative_funcs = {
     ret;						\
   })
 
-#define DBT_SET(k,base,i)						\
-  k.data = COB_FIELD_DATA (f->keys[i].field) - f->record_data + (base);	\
-  k.size = COB_FIELD_SIZE (f->keys[i].field);
+#define DBT_SET(k,fld)				\
+  k.data = COB_FIELD_DATA (fld);		\
+  k.size = COB_FIELD_SIZE (fld);
 
 static DB_ENV *dbenv = NULL;
 
@@ -597,11 +597,13 @@ indexed_start (struct cob_file_desc *f, int cond, struct cob_field k)
   f->f.secondary = (i > 0);
 
   /* search */
-  DBT_SET (key, f->record_data, i);
+  DBT_SET (key, k);
   switch (cond)
     {
     case COB_EQ:
-      ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET);
+      ret = f->cursor->c_get (f->cursor, &key, &data, DB_SET_RANGE);
+      if (ret == 0)
+	ret = memcmp (key.data, COB_FIELD_DATA (k), COB_FIELD_SIZE (k));
       break;
     case COB_LT:
     case COB_LE:
@@ -692,7 +694,7 @@ indexed_write (struct cob_file_desc *f, struct cob_field rec)
   memset (&data, 0, sizeof (DBT));
 
   /* check record key */
-  DBT_SET (key, f->record_data, 0);
+  DBT_SET (key, f->keys[0].field);
   if (!f->last_key)
     f->last_key = malloc (key.size);
   else if (memcmp (f->last_key, key.data, key.size) > 0)
@@ -714,7 +716,7 @@ indexed_write (struct cob_file_desc *f, struct cob_field rec)
   data = key;
   for (i = 1; i < f->nkeys; i++)
     {
-      DBT_SET (key, f->record_data, i);
+      DBT_SET (key, f->keys[i].field);
       if (DB_PUT (f->keys[i].db, &key, &data,
 		  f->keys[i].duplicates ? 0 : DB_NOOVERWRITE) != 0)
 	return 22;
@@ -741,7 +743,7 @@ indexed_delete (struct cob_file_desc *f)
       break;
     case COB_ACCESS_RANDOM:
     case COB_ACCESS_DYNAMIC:
-      DBT_SET (key, f->record_data, 0);
+      DBT_SET (key, f->keys[0].field);
       if (DB_GET (f->file.db, &key, &data, 0) != 0)
 	return 23;
       break;
@@ -752,7 +754,8 @@ indexed_delete (struct cob_file_desc *f)
     {
       DBT skey;
       memset (&skey, 0, sizeof (DBT));
-      DBT_SET (skey, data.data, i);
+      DBT_SET (skey, f->keys[i].field);
+      skey.data += data.data - (void *) f->record_data;
       if (f->keys[i].duplicates)
 	{
 	  DBC *cursor;
@@ -796,7 +799,7 @@ indexed_rewrite (struct cob_file_desc *f, struct cob_field rec)
     f->record_size = COB_FIELD_SIZE (rec);
 
   /* write data */
-  DBT_SET (key, f->record_data, 0);
+  DBT_SET (key, f->keys[0].field);
   data.data = f->record_data;
   data.size = f->record_size;
   if (DB_PUT (f->keys[0].db, &key, &data, DB_NOOVERWRITE) != 0)
@@ -806,7 +809,7 @@ indexed_rewrite (struct cob_file_desc *f, struct cob_field rec)
   data = key;
   for (i = 1; i < f->nkeys; i++)
     {
-      DBT_SET (key, f->record_data, i);
+      DBT_SET (key, f->keys[i].field);
       if (DB_PUT (f->keys[i].db, &key, &data,
 		  f->keys[i].duplicates ? 0 : DB_NOOVERWRITE) != 0)
 	return 22;
