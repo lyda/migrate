@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(open-cobol, 0.9.7.7)
+AC_INIT(open-cobol, 0.9.7.9)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR(config.h.in)
 AM_CONFIG_HEADER(config.h)
@@ -50,8 +50,6 @@ AC_PROG_MAKE_SET
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
-AC_TYPE_OFF_T
-AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_STRUCT_TM
 
@@ -65,9 +63,7 @@ AC_CHECK_FUNCS([memmove memset regcomp pow setlocale strerror \
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_HEADER_TIME
-AC_CHECK_HEADERS([fcntl.h malloc.h libintl.h locale.h stddef.h \
-		  sys/time.h wchar.h])
+AC_CHECK_HEADERS([fcntl.h malloc.h libintl.h locale.h stddef.h wchar.h])
 
 # Checks for getopt_long.
 AC_CHECK_FUNC([getopt_long_only], ,
