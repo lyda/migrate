@@ -4,7 +4,7 @@ MODULES = NC SM IC SQ RL IX ST
 EXTRA_DIST = EXEC85.conf.in expand.pl report.pl summary.pl
 CLEANFILES = EXEC85
 
-COBOL = cobc
+COBOL = cobc -std=cobol85
 
 test: $(MODULES)
 	@for m in $(MODULES); do \
