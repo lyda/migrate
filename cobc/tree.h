@@ -67,6 +67,7 @@ struct cobc_list {
 
 extern struct cobc_list *cons (void *x, struct cobc_list *l);
 extern struct cobc_list *list (void *x);
+extern struct cobc_list *list_last (struct cobc_list *l);
 extern struct cobc_list *list_add (struct cobc_list *l, void *x);
 extern struct cobc_list *list_append (struct cobc_list *l1, struct cobc_list *l2);
 extern struct cobc_list *list_reverse (struct cobc_list *l);
