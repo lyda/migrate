@@ -37,21 +37,21 @@
     (((unsigned long) (val) & (unsigned long) 0xff000000U) >> 24)))
 #define COB_BSWAP_64_CONSTANT(val)	((unsigned long long) (	\
     (((unsigned long long) (val) &				\
-      (unsigned long long) 0x00000000000000ffU) << 56) |	\
+      (unsigned long long) 0x00000000000000ffULL) << 56) |	\
     (((unsigned long long) (val) &				\
-      (unsigned long long) 0x000000000000ff00U) << 40) |	\
+      (unsigned long long) 0x000000000000ff00ULL) << 40) |	\
     (((unsigned long long) (val) &				\
-      (unsigned long long) 0x0000000000ff0000U) << 24) |	\
+      (unsigned long long) 0x0000000000ff0000ULL) << 24) |	\
     (((unsigned long long) (val) &				\
-      (unsigned long long) 0x00000000ff000000U) <<  8) |	\
+      (unsigned long long) 0x00000000ff000000ULL) <<  8) |	\
     (((unsigned long long) (val) &				\
-      (unsigned long long) 0x000000ff00000000U) >>  8) |	\
+      (unsigned long long) 0x000000ff00000000ULL) >>  8) |	\
     (((unsigned long long) (val) &				\
-      (unsigned long long) 0x0000ff0000000000U) >> 24) |	\
+      (unsigned long long) 0x0000ff0000000000ULL) >> 24) |	\
     (((unsigned long long) (val) &				\
-      (unsigned long long) 0x00ff000000000000U) >> 40) |	\
+      (unsigned long long) 0x00ff000000000000ULL) >> 40) |	\
     (((unsigned long long) (val) &				\
-      (unsigned long long) 0xff00000000000000U) >> 56)))
+      (unsigned long long) 0xff00000000000000ULL) >> 56)))
 
 /* Arch specific stuff for speed
  */
