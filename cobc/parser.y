@@ -1250,20 +1250,18 @@ conditional_statement:
  */
 
 accept_statement:
-  ACCEPT name accept_options
-;
-accept_options:
-| FROM DATE			{ gen_accept_from_date($<tree>0); }
-| FROM DAY			{ gen_accept_from_day($<tree>0); }
-| FROM DAY_OF_WEEK		{ gen_accept_from_day_of_week($<tree>0); }
-| FROM TIME			{ gen_accept_from_time($<tree>0); }
-| FROM COMMAND_LINE		{ gen_accept_from_cmdline($<tree>0); }
-| FROM ENVIRONMENT_VARIABLE NONNUMERIC_LITERAL
+  ACCEPT name			{ asm_call_1 ("cob_accept", $2); }
+| ACCEPT name FROM DATE		{ asm_call_1 ("cob_accept_date", $2); }
+| ACCEPT name FROM DAY		{ asm_call_1 ("cob_accept_day", $2); }
+| ACCEPT name FROM DAY_OF_WEEK	{ asm_call_1 ("cob_accept_day_of_week", $2); }
+| ACCEPT name FROM TIME		{ asm_call_1 ("cob_accept_time", $2); }
+| ACCEPT name FROM COMMAND_LINE	{ gen_accept_from_cmdline($2); }
+| ACCEPT name FROM ENVIRONMENT_VARIABLE NONNUMERIC_LITERAL
   {
-    save_literal($3, 'X');
-    gen_accept_env_var($<tree>0, $3);
+    save_literal ($5, 'X');
+    gen_accept_env_var ($2, $5);
   }
-| FROM VARIABLE			{ yywarn ("not supported"); }
+| ACCEPT name FROM VARIABLE	{ yywarn ("not supported"); }
 ;
 
 

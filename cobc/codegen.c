@@ -1989,40 +1989,6 @@ gen_unstring (cob_tree x, cob_tree_list l)
 }
 
 void
-gen_accept (cob_tree sy, int echo, int main)
-{
-  push_immed (echo);
-  output ("\tmovl\t$c_base%d+%u, %%eax\n", pgm_segment, sy->descriptor);
-  push_eax ();
-  gen_loadloc (sy);
-  asm_call ("cob_accept_console");
-}
-
-void
-gen_accept_from_time (cob_tree sy)
-{
-  asm_call_1 ("cob_accept_time", sy);
-}
-
-void
-gen_accept_from_date (cob_tree sy)
-{
-  asm_call_1 ("cob_accept_date", sy);
-}
-
-void
-gen_accept_from_day (cob_tree sy)
-{
-  asm_call_1 ("cob_accept_day", sy);
-}
-
-void
-gen_accept_from_day_of_week (cob_tree sy)
-{
-  asm_call_1 ("cob_accept_day_of_week", sy);
-}
-
-void
 gen_accept_from_cmdline (cob_tree sy)
 {
   cob_tree sy1;
