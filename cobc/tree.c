@@ -405,7 +405,6 @@ static cb_tree
 make_constant_label (const char *name)
 {
   struct cb_label *p = CB_LABEL (cb_build_label (cb_build_reference (name), NULL));
-  p->cname = name;
   p->need_begin = 1;
   return CB_TREE (p);
 }
@@ -835,6 +834,7 @@ cb_build_field (cb_tree name)
 {
   struct cb_field *p =
     make_tree (CB_TAG_FIELD, CB_CATEGORY_UNKNOWN, sizeof (struct cb_field));
+  p->id = cb_id++;
   p->name = cb_define (name, CB_TREE (p));
   p->usage = CB_USAGE_DISPLAY;
   p->storage = CB_STORAGE_WORKING;
@@ -1358,18 +1358,11 @@ cb_build_cast (enum cb_cast_type type, cb_tree val)
 cb_tree
 cb_build_label (cb_tree name, struct cb_label *section)
 {
-  static int id = 0;
-  char buff[CB_MAX_CNAME];
   struct cb_label *p =
     make_tree (CB_TAG_LABEL, CB_CATEGORY_UNKNOWN, sizeof (struct cb_label));
-  p->id = id++;
+  p->id = cb_id++;
   p->name = cb_define (name, CB_TREE (p));
   p->section = section;
-  if (section)
-    sprintf (buff, "%s$%s", section->cname, p->name);
-  else
-    sprintf (buff, "%s", p->name);
-  p->cname = to_cname (buff);
   return CB_TREE (p);
 }
 

@@ -68,6 +68,8 @@ struct cb_exception cb_exception_table[] = {
 #define CB_WARNING(sig,var,name,doc) int var = 0;
 #include "warning.def"
 
+int cb_id = 1;
+
 int errorcount;
 int warningcount;
 

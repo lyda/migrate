@@ -165,14 +165,14 @@ output_base (struct cb_field *f)
     {
       if (!f01->flag_external && !f01->flag_local)
 	output_storage ("static ");
-      output_storage ("unsigned char %s%s[%d]",
-		      CB_PREFIX_BASE, f01->cname, f01->memory_size);
+      output_storage ("unsigned char %s%d[%d]",
+		      CB_PREFIX_BASE, f01->id, f01->memory_size);
       if (cb_field_need_aligned (f01))
 	output_storage (" __attribute__ ((__aligned__))");
-      output_storage (";\n");
+      output_storage ("; /* %s */\n", f01->name);
       f01->flag_base = 1;
     }
-  output ("%s%s", CB_PREFIX_BASE, f01->cname);
+  output ("%s%d", CB_PREFIX_BASE, f01->id);
 
   if (cb_field_variable_address (f))
     {
@@ -310,7 +310,6 @@ output_size (cb_tree x)
 static int
 lookup_attr (char type, char digits, char scale, char flags, unsigned char *pic)
 {
-  static int id = 0;
   static struct attr_list {
     int id;
     char type;
@@ -334,7 +333,7 @@ lookup_attr (char type, char digits, char scale, char flags, unsigned char *pic)
       return l->id;
 
   /* output new attribute */
-  output_storage ("static cob_field_attr %s%d = ", CB_PREFIX_ATTR, ++id);
+  output_storage ("static cob_field_attr %s%d = ", CB_PREFIX_ATTR, cb_id);
   output_storage ("{%d, %d, %d, %d, ", type, digits, scale, flags);
   if (pic)
     {
@@ -350,7 +349,7 @@ lookup_attr (char type, char digits, char scale, char flags, unsigned char *pic)
 
   /* cache it */
   l = malloc (sizeof (struct attr_list));
-  l->id = id;
+  l->id = cb_id;
   l->type = type;
   l->digits = digits;
   l->scale = scale;
@@ -359,7 +358,7 @@ lookup_attr (char type, char digits, char scale, char flags, unsigned char *pic)
   l->next = attr_cache;
   attr_cache = l;
 
-  return id;
+  return cb_id++;
 }
 
 static void
@@ -459,7 +458,6 @@ output_field (cb_tree x)
 static int
 lookup_literal (cb_tree x)
 {
-  static int id = 0;
   static struct literal_list {
     int id;
     struct cb_literal *literal;
@@ -484,19 +482,19 @@ lookup_literal (cb_tree x)
   output_field (x);
 
   output_target = cb_storage_file;
-  output ("static cob_field %s%d = ", CB_PREFIX_CONST, ++id);
+  output ("static cob_field %s%d = ", CB_PREFIX_CONST, cb_id);
   output_field (x);
   output (";\n");
   output_target = yyout;
 
   /* cache it */
   l = malloc (sizeof (struct literal_list));
-  l->id = id;
+  l->id = cb_id;
   l->literal = literal;
   l->next = literal_cache;
   literal_cache = l;
 
-  return id;
+  return cb_id++;
 }
 
 
@@ -754,14 +752,14 @@ output_param (cb_tree x, int id)
 		output_field (x);
 
 		output_target = cb_storage_file;
-		output ("static cob_field %s%s = ", CB_PREFIX_FIELD, f->cname);
+		output ("static cob_field %s%d = ", CB_PREFIX_FIELD, f->id);
 		output_field (x);
-		output (";\n");
+		output ("; /* %s */\n", f->name);
 
 		f->flag_field = 1;
 		output_target = yyout;
 	      }
-	    output ("&%s%s", CB_PREFIX_FIELD, f->cname);
+	    output ("&%s%d", CB_PREFIX_FIELD, f->id);
 	  }
 	else
 	  {
@@ -1447,7 +1445,7 @@ output_call (struct cb_call *p)
 static void
 output_goto_1 (cb_tree x)
 {
-  output_line ("goto %s%s;", CB_PREFIX_LABEL, CB_LABEL (cb_ref (x))->cname);
+  output_line ("goto %s%d;", CB_PREFIX_LABEL, CB_LABEL (cb_ref (x))->id);
 }
 
 static void
@@ -1485,12 +1483,11 @@ output_goto (struct cb_goto *p)
 static void
 output_perform_call (struct cb_label *lb, struct cb_label *le)
 {
-  static int id = 1;
   output_line ("/* PERFORM %s THRU %s */", lb->name, le->name);
-  output_line ("frame_stack[++frame_index] = (struct frame) {%d, &&%s$%d};",
-	       le->id, CB_PREFIX_LABEL, id);
-  output_line ("goto %s%s;", CB_PREFIX_LABEL, lb->cname);
-  output_line ("%s$%d:", CB_PREFIX_LABEL, id++);
+  output_line ("frame_stack[++frame_index] = (struct frame) {%d, &&%s%d};",
+	       le->id, CB_PREFIX_LABEL, cb_id);
+  output_line ("goto %s%d;", CB_PREFIX_LABEL, lb->id);
+  output_line ("%s%d:", CB_PREFIX_LABEL, cb_id++);
   output_line ("frame_index--;");
 }
 
@@ -1675,7 +1672,7 @@ output_stmt (cb_tree x)
 	output_newline ();
 	output_line ("/* %s: */", p->name);
 	if (p->need_begin)
-	  output_line ("%s%s:", CB_PREFIX_LABEL, p->cname);
+	  output_line ("%s%d:", CB_PREFIX_LABEL, p->id);
 	if (cb_flag_trace)
 	  output_line ("puts (\"%s\");", p->name);
 	break;
@@ -1839,13 +1836,13 @@ output_screen_definition (struct cb_field *p)
   if (p->children)
     output_screen_definition (p->children);
 
-  output ("struct cob_screen s_%s = {%d, ", p->cname, type);
+  output ("struct cob_screen s_%d = {%d, ", p->id, type);
 
   output ("(union cob_screen_data) ");
   switch (type)
     {
     case COB_SCREEN_TYPE_GROUP:
-      output ("&s_%s", p->children->cname);
+      output ("&s_%d", p->children->id);
       break;
     case COB_SCREEN_TYPE_VALUE:
       output_string (CB_LITERAL (CB_VALUE (p->values))->data,
@@ -1853,7 +1850,7 @@ output_screen_definition (struct cb_field *p)
       break;
       break;
     case COB_SCREEN_TYPE_FIELD:
-      output ("&f_%s", p->cname);
+      output ("&f_%d", p->id);
       break;
     case COB_SCREEN_TYPE_ATTRIBUTE:
       output ("0");
@@ -1862,15 +1859,15 @@ output_screen_definition (struct cb_field *p)
   output (", ");
 
   if (p->sister)
-    output ("&s_%s, ", p->sister->cname);
+    output ("&s_%d, ", p->sister->id);
   else
     output ("0, ");
   if (p->screen_from)
-    output ("&f_%s, ", cb_field (p->screen_from)->cname);
+    output ("&f_%d, ", cb_field (p->screen_from)->id);
   else
     output ("0, ");
   if (p->screen_to)
-    output ("&f_%s, ", cb_field (p->screen_to)->cname);
+    output ("&f_%d, ", cb_field (p->screen_to)->id);
   else
     output ("0, ");
   output_integer (p->screen_line);
@@ -2033,8 +2030,8 @@ output_internal_function (struct cb_program *prog, int single,
     {
       if (!single || l != parameter_list)
 	output (", ");
-      output ("unsigned char *%s%s",
-	      CB_PREFIX_BASE, cb_field (CB_VALUE (l))->cname);
+      output ("unsigned char *%s%d",
+	      CB_PREFIX_BASE, cb_field (CB_VALUE (l))->id);
     }
   output (")\n");
   output_indent ("{");
@@ -2069,7 +2066,7 @@ output_internal_function (struct cb_program *prog, int single,
 	if (f == cb_field (CB_VALUE (l)))
 	  break;
       if (l == NULL)
-	output_line ("unsigned char *%s%s = NULL;", CB_PREFIX_BASE, f->cname);
+	output_line ("unsigned char *%s%d = NULL;", CB_PREFIX_BASE, f->id);
     }
   output_newline ();
 
@@ -2119,9 +2116,9 @@ output_internal_function (struct cb_program *prog, int single,
   /* entry dispatch */
   if (single)
     {
-      output_line ("goto %s%s;",
+      output_line ("goto %s%d;",
 		   CB_PREFIX_LABEL,
-		   CB_LABEL (CB_PURPOSE (prog->entry_list))->cname);
+		   CB_LABEL (CB_PURPOSE (prog->entry_list))->id);
     }
   else
     {
@@ -2130,8 +2127,8 @@ output_internal_function (struct cb_program *prog, int single,
       for (i = 0, l = prog->entry_list; l; l = CB_CHAIN (l))
 	{
 	  output_line ("  case %d:", i++);
-	  output_line ("    goto %s%s;",
-		       CB_PREFIX_LABEL, CB_LABEL (CB_PURPOSE (l))->cname);
+	  output_line ("    goto %s%d;",
+		       CB_PREFIX_LABEL, CB_LABEL (CB_PURPOSE (l))->id);
 	}
       output_line ("  }");
     }
@@ -2188,7 +2185,7 @@ output_entry_function (struct cb_program *prog,
   output ("%s (", entry_name);
   for (l = using_list; l; l = CB_CHAIN (l))
     {
-      output ("unsigned char *b_%s", cb_field (CB_VALUE (l))->cname);
+      output ("unsigned char *b_%d", cb_field (CB_VALUE (l))->id);
       if (CB_CHAIN (l))
 	output (", ");
     }
@@ -2199,10 +2196,10 @@ output_entry_function (struct cb_program *prog,
   for (l1 = parameter_list; l1; l1 = CB_CHAIN (l1))
     {
       for (l2 = using_list; l2; l2 = CB_CHAIN (l2))
-	if (strcmp (cb_field (CB_VALUE (l1))->cname,
-		    cb_field (CB_VALUE (l2))->cname) == 0)
+	if (strcasecmp (cb_field (CB_VALUE (l1))->name,
+			cb_field (CB_VALUE (l2))->name) == 0)
 	  {
-	    output (", b_%s", cb_field (CB_VALUE (l1))->cname);
+	    output (", b_%d", cb_field (CB_VALUE (l1))->id);
 	    break;
 	  }
       if (l2 == NULL)
@@ -2280,8 +2277,8 @@ codegen (struct cb_program *prog)
 	  for (l1 = using_list; l1; l1 = CB_CHAIN (l1))
 	    {
 	      for (l2 = parameter_list; l2; l2 = CB_CHAIN (l2))
-		if (strcmp (cb_field (CB_VALUE (l1))->cname,
-			    cb_field (CB_VALUE (l2))->cname) == 0)
+		if (strcasecmp (cb_field (CB_VALUE (l1))->name,
+				cb_field (CB_VALUE (l2))->name) == 0)
 		  break;
 	      if (l2 == NULL)
 		parameter_list = cb_list_add (parameter_list, CB_VALUE (l1));

@@ -393,8 +393,8 @@ extern cb_tree cb_build_picture (const char *str);
 
 struct cb_field {
   struct cb_tree_common common;
+  int id;			/* field id */
   const char *name;		/* the original name */
-  char *cname;			/* the name used in C */
   int size;			/* field size */
   int memory_size;		/* memory size */
   int offset;			/* byte offset from the top (ie, 01 field) */
@@ -628,7 +628,6 @@ struct cb_label {
   struct cb_tree_common common;
   int id;
   const char *name;
-  const char *cname;
   struct cb_label *section;
   cb_tree children;
   char need_begin;

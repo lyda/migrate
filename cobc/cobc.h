@@ -81,6 +81,8 @@ struct cb_replace_list {
   struct cb_replace_list *next;
 };
 
+extern int cb_id;
+
 extern int errorcount;
 extern int warningcount;
 

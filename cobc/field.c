@@ -28,16 +28,6 @@
 #include "cobc.h"
 #include "tree.h"
 
-static char *
-to_cname (const char *s)
-{
-  char *copy = strdup (s);
-  char *p;
-  for (p = copy; *p; p++)
-    *p = (*p == '-') ? '_' : toupper (*p);
-  return copy;
-}
-
 static int
 get_level (cb_tree x)
 {
@@ -436,18 +426,6 @@ validate_field_1 (struct cb_field *f)
 static void
 setup_parameters (struct cb_field *f)
 {
-  /* setup cname */
-  if (f->parent)
-    {
-      char name[CB_MAX_CNAME];
-      snprintf (name, CB_MAX_CNAME, "%s$%s", f->parent->cname, f->name);
-      f->cname = to_cname (name);
-    }
-  else
-    {
-      f->cname = to_cname (f->name);
-    }
-
   /* determine the class */
   if (f->children)
     {
