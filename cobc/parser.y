@@ -763,11 +763,8 @@ file_description_sequence:
   {
     struct cobc_field *p = COBC_FIELD ($7);
     current_file_name->record = p;
-    p->file = current_file_name;
-    field_set_used (p);
-    for (p = p->sister; p; p = p->sister)
+    for (; p; p = p->sister)
       {
-	p->redefines = current_file_name->record;
 	p->file = current_file_name;
 	field_set_used (p);
       }

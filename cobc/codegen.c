@@ -898,12 +898,30 @@ output_field_definition (struct cobc_field *p, struct cobc_field *p01,
 static void
 output_file_name (struct cobc_file_name *f)
 {
-  struct cobc_field *p;
   int nkeys = 1;
+  int max_size = 0;
+  struct cobc_field *p;
+  struct cobc_field *max_record;
 
+  /* find the largest record */
   for (p = f->record; p; p = p->sister)
-    output_field_definition (p, p, 0);
+    if (p->size > max_size)
+      {
+	max_size = p->size;
+	max_record = p;
+      }
+  if (f->record_max == 0)
+    f->record_max = max_size;
 
+  /* output record definition */
+  for (p = f->record; p; p = p->sister)
+    {
+      if (p != max_record)
+	p->redefines = max_record;
+      output_field_definition (p, p, 0);
+    }
+
+  /* output ALTERNATE RECORD KEY's */
   if (f->organization == COB_ORG_INDEXED)
     {
       struct cobc_alt_key *l;
@@ -921,6 +939,7 @@ output_file_name (struct cobc_file_name *f)
       output ("};\n");
     }
 
+  /* output the file descriptor */
   output ("static struct cob_file_desc %s_desc = {", f->cname);
   /* organization, access_mode, open_mode */
   output ("%d, %d, 0, ", f->organization, f->access_mode);
@@ -930,20 +949,8 @@ output_file_name (struct cobc_file_name *f)
   else
     output ("cob_dummy_status");
   output (", ");
-  /* record_size */
-  if (f->record_max > 0)
-    output ("%d, ", f->record_max);
-  else
-    {
-      int max_size = 0;
-      struct cobc_field *p;
-      for (p = f->record; p; p = p->sister)
-	if (max_size < p->size)
-	  max_size = p->size;
-      output ("%d, ", max_size);
-    }
-  /* record_data */
-  output ("f_%s_data, ", f->record->cname);
+  /* record_size, record_data */
+  output ("%d, f_%s_data, ", f->record_max, f->record->cname);
   /* file */
   output ("0, ");
   /* flags */
