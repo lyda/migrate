@@ -24,7 +24,7 @@ diff:
 	diff summary.old summary.txt
 
 clean: clean-am
-	rm -rf $(MODULES)
+	rm -rf copy $(MODULES)
 
 $(MODULES): newcob.val EXEC85 EXEC85.conf.in
 	@echo -n "Building module $@..."
