@@ -542,12 +542,12 @@ opt_file_section:
     ;
 opt_working_storage:
     WORKING_STORAGE SECTION '.'     { curr_field=NULL; }
-    working_storage_section         { close_fields(); }
+    field_description_list         { close_fields(); }
     | /* nothing */
     ;
 opt_linkage_section:
     LINKAGE SECTION '.'     { at_linkage=1; curr_field=NULL; }
-    linkage_section         { close_fields(); at_linkage=0; }
+    field_description_list         { close_fields(); at_linkage=0; }
     | /* nothing */
     ;
 report_section:
@@ -819,6 +819,9 @@ file_description:
 	  $$=$1;
       }
     ;
+field_description_list:
+    | field_description_list field_description
+;
 field_description:
     integer opt_def_name
     {
@@ -1052,16 +1055,6 @@ opt_is_are: | IS { } | ARE { } ;
 opt_contains: | CONTAINS ;
 opt_characters: | CHARACTERS ;
 chars_or_recs: CHARACTERS | RECORDS ;
-working_storage_section:
-    working_storage_section
-        field_description
-    | /* nothing */
-    ;
-linkage_section:
-    /* nothing */
-    | linkage_section
-        field_description
-    ;
 
 
 /*****************************************************************************
