@@ -45,5 +45,5 @@ Advanced facilities:
   CM - COMMUNICATION SECTION tests
   IF - Intrinsic Function tests
   SG - Segment tests
-  DB - Debugging feature tests
-  OB - Obsolete feature tests
+  DB - Debugging facilities tests
+  OB - Obsolete facilities tests
