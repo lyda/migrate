@@ -9,5 +9,5 @@ COMPILE_ONLY="cobc -P ${FLAGS} ${COBOL_FLAGS}"
 COMPILE_MODULE="cobc -m ${FLAGS} ${COBOL_FLAGS}"
 
 export COB_CFLAGS="-I${abs_top_srcdir}"
-export COB_LIBS="-L${abs_top_builddir}/libcob/.libs -lcob"
+export COB_LIBS="-L${abs_top_builddir}/libcob/.libs -lcob @LIBCOB_LIBS@"
 export LD_LIBRARY_PATH="${abs_top_builddir}/libcob/.libs"
