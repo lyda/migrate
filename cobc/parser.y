@@ -49,10 +49,10 @@ extern int decimal_comma;
 extern char currency_symbol;
 extern FILE *lexin;
 extern FILE *o_src;
-extern struct sym *curr_paragr,*curr_section;
-extern struct sym *curr_field;
+extern cob_tree curr_paragr, curr_section;
+extern cob_tree curr_field;
 extern short curr_call_mode;
-extern struct sym *pgm_id;
+extern cob_tree pgm_id;
 extern unsigned stack_offset;   /* offset das variaveis na pilha */
 extern unsigned global_offset;  /* offset das variaveis globais (DATA) */
 extern int paragr_num;
@@ -69,7 +69,7 @@ extern struct lit *spe_lit_LV;
 extern struct lit *spe_lit_HV;
 extern struct lit *spe_lit_QU;
 
-struct sym *curr_file;
+cob_tree curr_file;
 int start_condition=0;
 int curr_division=0;
 int need_subscripts=0;
@@ -86,12 +86,12 @@ struct ginfo    *gic=NULL;
 static int warning_count = 0;
 static int error_count = 0;
 
-static void assert_numeric_sy (struct sym *sy);
+static void assert_numeric_sy (cob_tree sy);
 static void check_decimal_point (struct lit *lit);
 %}
 
 %union {
-    struct sym *sval;       /* symbol */
+    cob_tree sval;       /* symbol */
     int ival;               /* int */
     struct coord_pair pval; /* lin,col */
     struct lit *lval;       /* literal */
@@ -1089,7 +1089,7 @@ procedure:
 procedure_section:
   LABELSTR SECTION '.'
   {
-    struct sym *lab=$1;
+    cob_tree lab=$1;
     if (lab->defined != 0) {
       lab = install(lab->name,SYTB_LAB,2);
     }
@@ -1100,7 +1100,7 @@ procedure_section:
 paragraph:
   LABELSTR '.'
   {
-    struct sym *lab=$1;
+    cob_tree lab=$1;
     if (lab->defined != 0) {
       if ((lab=lookup_label(lab,curr_section))==NULL) {
 	lab = install($1->name,SYTB_LAB,2);
@@ -1537,7 +1537,7 @@ selection_object:
   | flag_not condition	{ push_condition (); $$ = SOBJ_BOOLEAN | $1; }
   | flag_not expr
     {
-      if ($2 == (struct sym *) spe_lit_ZE)
+      if ($2 == (cob_tree) spe_lit_ZE)
 	$$ = SOBJ_ZERO | $1;
       else if (push_expr($2))
 	$$ = SOBJ_EXPR | $1;
@@ -2326,10 +2326,10 @@ search_when:
      ;
 search_when_conditional:
     name cond_op name { gen_compare($1,$2,$3); }
-    | name cond_op nliteral { gen_compare($1,$2,(struct sym *)$3); }
-    | nliteral cond_op name { gen_compare((struct sym *)$1,$2,$3); }
+    | name cond_op nliteral { gen_compare($1,$2,(cob_tree)$3); }
+    | nliteral cond_op name { gen_compare((cob_tree)$1,$2,$3); }
     | nliteral cond_op nliteral {
-                gen_compare((struct sym *)$1,$2,(struct sym*)$3); }
+                gen_compare((cob_tree)$1,$2,(struct sym*)$3); }
     ;
 search_all_when_list:
      search_all_when
@@ -2356,7 +2356,7 @@ search_all_when_conditional:
   {
     if (curr_field == NULL)
       curr_field = $1;
-    gen_compare($1,$3,(struct sym *)$4);
+    gen_compare($1,$3,(cob_tree)$4);
   }
 | search_all_when_conditional AND { $<dval>$=gen_andstart(); }
   search_all_when_conditional  { gen_dstlabel($<dval>3); }
@@ -2401,8 +2401,8 @@ set_variable_or_nlit:
   | TOK_NULL	  { $$ = NULL; }
   | TOK_TRUE
     {
-      $$ = (struct sym *)1;
-      /* no (struct sym *) may have this value! */
+      $$ = (cob_tree)1;
+      /* no (cob_tree) may have this value! */
     }
   ;
 
@@ -2419,9 +2419,9 @@ sort_keys:
     | sort_keys sort_direction KEY name
         {
             $4->direction = $2;
-            (struct sym *)$4->sort_data =
-                (struct sym *)($<sval>0->sort_data);
-            (struct sym *)($<sval>0->sort_data) = $4;
+            (cob_tree)$4->sort_data =
+                (cob_tree)($<sval>0->sort_data);
+            (cob_tree)($<sval>0->sort_data) = $4;
             $$ = $4;
         }
     ;
@@ -2639,16 +2639,16 @@ opt_advancing: | ADVANCING ;
 expr:
       gname            { $$ = $1; }
     | '(' expr ')'     { $$ = $2; }
-    | expr '+' expr    { $$ = create_expr ($1, '+', $3); }
-    | expr '-' expr    { $$ = create_expr ($1, '-', $3); }
-    | expr '*' expr    { $$ = create_expr ($1, '*', $3); }
-    | expr '/' expr    { $$ = create_expr ($1, '/', $3); }
-    | expr '^' expr    { $$ = create_expr ($1, '^', $3); }
+    | expr '+' expr    { $$ = make_expr ($1, '+', $3); }
+    | expr '-' expr    { $$ = make_expr ($1, '-', $3); }
+    | expr '*' expr    { $$ = make_expr ($1, '*', $3); }
+    | expr '/' expr    { $$ = make_expr ($1, '/', $3); }
+    | expr '^' expr    { $$ = make_expr ($1, '^', $3); }
     ;
-/* opt_expr will be NULL or a (struct sym *) pointer if the expression
+/* opt_expr will be NULL or a (cob_tree) pointer if the expression
    was given, otherwise it will be valued -1 */
 opt_expr:
-    /* nothing */   { $$ = (struct sym *)-1; }
+    /* nothing */   { $$ = (cob_tree)-1; }
     | expr          { $$ = $1; }
     ;
 
@@ -2791,7 +2791,7 @@ simple_condition:
 	  if ($2 & COND_CLASS)
 	    gen_class_check ($1, $2);
 	  else
-	    gen_compare ($1, $2 & ~COND_UNARY, (struct sym *) spe_lit_ZE);
+	    gen_compare ($1, $2 & ~COND_UNARY, (cob_tree) spe_lit_ZE);
 	}
     }
     opt_expr
@@ -2898,7 +2898,7 @@ opt_gname:
     | gname       { $$ = $1; }
     ;
 gname:  name    { $$ = $1; }
-    | gliteral      { $$ = (struct sym *)$1;}
+    | gliteral      { $$ = (cob_tree)$1;}
     | function_call
     ;
 function_call:
@@ -2926,11 +2926,11 @@ idstring:
 
 name_or_lit:
     name      { $$ = $1; }
-    | literal { $$ = (struct sym *)$1; }
+    | literal { $$ = (cob_tree)$1; }
     ;
 noallname:
     name      { $$ = $1; }
-    | without_all_literal { $$ = (struct sym *)$1; }
+    | without_all_literal { $$ = (cob_tree)$1; }
     ;
 gliteral:
     without_all_literal
@@ -2953,7 +2953,7 @@ special_literal:
     ;
 var_or_nliteral:
     variable        { $$ = $1; }
-    | nliteral      { $$ = (struct sym *)$1; }
+    | nliteral      { $$ = (cob_tree)$1; }
     ;
 literal:
     nliteral		{ $$=$1; }
@@ -2994,7 +2994,7 @@ variable_indexed:
     ;
 
 filename:
-    literal { $$=(struct sym *)$1; }
+    literal { $$=(cob_tree)$1; }
     | SYMBOL {$$=$1; }
     ;
 cond_name:
@@ -3003,7 +3003,7 @@ cond_name:
 name:
     variable '(' gname ':' opt_gname ')'
     {
-      $$ = (struct sym *) create_refmoded_var($1, $3, $5);
+      $$ = (cob_tree) create_refmoded_var($1, $3, $5);
     }
     | variable
     ;
@@ -3016,7 +3016,7 @@ variable:
       }
     }
     | qualified_var LPAR subscript_list ')' {
-      $$ = (struct sym *)make_subref( $1, $3 );
+      $$ = (cob_tree)make_subref( $1, $3 );
       }
     ;
 qualified_var:
@@ -3050,7 +3050,7 @@ integer:
 label:
     LABELSTR in_of LABELSTR
     {
-      struct sym *lab=$1;
+      cob_tree lab=$1;
       if (lab->defined == 0)
 	{
 	  lab->defined = 2;
@@ -3066,7 +3066,7 @@ label:
     }
     | LABELSTR
     {
-      struct sym *lab=$1;
+      cob_tree lab=$1;
       if (lab->defined == 0)
 	{
 	  lab->defined = 2;
@@ -3135,7 +3135,7 @@ opt_when: | WHEN ;
 %%
 
 static void
-assert_numeric_sy (struct sym *sy)
+assert_numeric_sy (cob_tree sy)
 {
   if (!is_numeric_sy (sy))
     yyerror ("non numeric variable: %s", sy->name);

@@ -35,7 +35,7 @@
 
 extern FILE *o_lst;
 extern char picture[];
-extern struct sym *curr_field;
+extern cob_tree curr_field;
 extern int picix,piccnt,sign,v_flag;
 extern int curr_division;
 extern int start_condition;

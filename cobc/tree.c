@@ -31,10 +31,10 @@ make_literal (char *name)
  * Symbols
  */
 
-struct sym *
+cob_tree 
 make_symbol (char *name)
 {
-  struct sym *sy = malloc (sizeof (struct sym));
+  cob_tree sy = malloc (sizeof (struct sym));
   sy->litflag = 0;
   sy->name = name;
   sy->next = NULL;
@@ -63,13 +63,13 @@ make_symbol (char *name)
   return sy;
 }
 
-struct sym *
+cob_tree 
 make_filler (void)
 {
   static int filler_num = 1;
 
   char s[15];
-  struct sym *sy;
+  cob_tree sy;
   sprintf (s, "FIL$%05d", filler_num++);
   sy = install (s, SYTB_VAR, 0);
   sy->defined = 1;
@@ -78,14 +78,32 @@ make_filler (void)
 
 
 /*
+ * Expressions
+ */
+
+cob_tree
+make_expr (cob_tree left, char op, cob_tree right)
+{
+  struct expr *left_expr = (struct expr *) left;
+  struct expr *right_expr = (struct expr *) right;
+  struct expr *e = malloc (sizeof (struct expr));
+  e->litflag = 5;
+  e->op = op;
+  e->left = left_expr;
+  e->right = right_expr;
+  return (cob_tree) e;
+}
+
+
+/*
  * Subscript references
  */
 
 static int
-check_subscripts (struct sym *subs)
+check_subscripts (cob_tree subs)
 {
   struct subref *ref;
-  struct sym *sy;
+  cob_tree sy;
   sy = SUBREF_SYM (subs);
   for (ref = (struct subref *) subs; ref; ref = ref->next)
     {
@@ -107,18 +125,18 @@ check_subscripts (struct sym *subs)
 }
 
 struct subref *
-make_subref (struct sym *sy, struct subref *next)
+make_subref (cob_tree sy, struct subref *next)
 {
   struct subref *ref = malloc (sizeof (struct subref));
   ref->litflag = 2;
   ref->sym     = sy;
   ref->next    = next;
-  check_subscripts ((struct sym *) ref);
+  check_subscripts ((cob_tree) ref);
   return ref;
 }
 
 struct subref *
-create_subscript (struct sym *sy)
+create_subscript (cob_tree sy)
 {
   struct subref *ref;
   ref = malloc (sizeof (struct subref));
@@ -129,7 +147,7 @@ create_subscript (struct sym *sy)
 }
 
 struct subref *
-add_subscript_item (struct subref *subs, char op, struct sym *item)
+add_subscript_item (struct subref *subs, char op, cob_tree item)
 {
   struct subref *p = subs;
   while (p->next)

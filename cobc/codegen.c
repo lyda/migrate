@@ -41,10 +41,10 @@ char currency_symbol = '$';
 char sch_convert_buf[512];
 
 extern struct lextab literal;
-extern struct sym *curr_file;
+extern cob_tree curr_file;
 
-struct sym *curr_paragr = NULL, *curr_section = NULL;
-struct sym *curr_field;
+cob_tree curr_paragr = NULL, curr_section = NULL;
+cob_tree curr_field;
 short curr_call_mode = 0;
 unsigned stack_offset = 0;	/* offset for variables on the stack */
 unsigned stack_plus = 0;
@@ -104,8 +104,8 @@ static unsigned curr_01_location;	// hold current root father when set_field_loc
 */
 
 #define HASHLEN 100
-static struct sym *vartab[HASHLEN] = { NULL };
-static struct sym *labtab[HASHLEN] = { NULL };
+static cob_tree vartab[HASHLEN] = { NULL };
+static cob_tree labtab[HASHLEN] = { NULL };
 static struct lit *littab[HASHLEN] = { NULL };
 
 static int
@@ -140,7 +140,7 @@ chg_underline (char *str)
   return str;
 }
 
-struct sym *
+cob_tree 
 lookup (char *s, int tab)
 {
   char sbuf[SYMBUF_SIZE];
@@ -149,12 +149,12 @@ lookup (char *s, int tab)
       struct lit *as;
       for (as = littab[hash (s)]; as != NULL; as = as->next)
 	if (strcmp (s, as->name) == 0)
-	  return ((struct sym *) as);
+	  return ((cob_tree) as);
       return (NULL);
     }
   else
     {
-      struct sym *as;
+      cob_tree as;
       s = upcase (s, sbuf);
       if (tab == SYTB_VAR)
 	as = vartab[hash (s)];
@@ -167,18 +167,18 @@ lookup (char *s, int tab)
     }
 }
 
-struct sym *
+cob_tree 
 lookup_symbol (char *s)
 {
   return lookup (s, SYTB_VAR);
 }
 
-struct sym *
+cob_tree 
 install (char *name, int tab, int cloning)
 {
   char sbuf[SYMBUF_SIZE];
-  struct sym *clone;
-  struct sym *as;
+  cob_tree clone;
+  cob_tree as;
   int val;
 
   name = upcase (name, sbuf);
@@ -208,7 +208,7 @@ install (char *name, int tab, int cloning)
   return (as);
 }
 
-struct sym *
+cob_tree 
 install_label (char *name)
 {
   return install (name, SYTB_LAB, 0);
@@ -224,8 +224,8 @@ install_literal (const char *name)
   return p;
 }
 
-struct sym *
-lookup_label (struct sym *sy, struct sym *parent)
+cob_tree 
+lookup_label (cob_tree sy, cob_tree parent)
 {
   while (sy->clone && (sy->parent != parent))
     sy = sy->clone;
@@ -243,7 +243,7 @@ lookup_label (struct sym *sy, struct sym *parent)
 static void
 clear_symtab ()
 {
-  struct sym *sy, *sy1, *tmp;
+  cob_tree sy, sy1, tmp;
   int i;
   for (i = 0; i < HASHLEN; i++)
     {
@@ -316,7 +316,7 @@ save_special_literal (char *val, char picc, char *nick)
   v->type = picc;
   v->nick = val;
   v->all = 1;
-  save_field_in_list ((struct sym *) v);
+  save_field_in_list ((cob_tree) v);
   v->location = literal_offset;
   v->sec_no = SEC_CONST;
   literal_offset += 2;		/* we have only 1-char special literals */
@@ -328,7 +328,7 @@ save_special_literal (char *val, char picc, char *nick)
 static void
 define_special_fields ()
 {
-  struct sym *sy, *tmp;
+  cob_tree sy, tmp;
 
   spe_lit_SP = save_special_literal (" ", 'X', "%SPACES%");
   spe_lit_LV = save_special_literal ("\0", 'X', "%LOW-VALUES%");
@@ -380,15 +380,15 @@ init_program (const char *id)
  * WORKING-STRAGE SECTION
  *******************/
 
-struct sym *
-lookup_variable (struct sym *sy, struct sym *parent)
+cob_tree 
+lookup_variable (cob_tree sy, cob_tree parent)
 {
   if (SUBREF_P (parent))
     parent = SUBREF_SYM (parent);
 
   for (;;)
     {
-      struct sym *p;
+      cob_tree p;
       for (p = sy; p != NULL; p = p->parent)
 	if (p->parent == parent)
 	  return sy;
@@ -399,8 +399,8 @@ lookup_variable (struct sym *sy, struct sym *parent)
     }
 }
 
-struct sym *
-lookup_for_redefines (struct sym *sy)
+cob_tree 
+lookup_for_redefines (cob_tree sy)
 {
   if (curr_field->parent == NULL)
     return lookup_symbol (sy->name);
@@ -409,7 +409,7 @@ lookup_for_redefines (struct sym *sy)
 }
 
 void
-save_named_sect (struct sym *sy)
+save_named_sect (cob_tree sy)
 {
   struct named_sect *nsp = malloc (sizeof (struct named_sect));
   nsp->sec_no = next_available_sec_no++;
@@ -466,7 +466,7 @@ sch_convert (char *s)
 }
 
 int
-is_variable (struct sym *sy)
+is_variable (cob_tree sy)
 {
   if (SYMBOL_P (sy))
     switch (sy->type)
@@ -488,7 +488,7 @@ is_variable (struct sym *sy)
 }
 
 int
-is_subscripted (struct sym *sy)
+is_subscripted (cob_tree sy)
 {
   for (; sy; sy = sy->parent)
     if (sy->times > 1)
@@ -501,8 +501,8 @@ is_subscripted (struct sym *sy)
  * Local functions
  */
 
-static void asm_call_1 (const char *name, struct sym *sy1);
-static void value_to_eax (struct sym *sy);
+static void asm_call_1 (const char *name, cob_tree sy1);
+static void value_to_eax (cob_tree sy);
 
 static void
 push_immed (int i)
@@ -533,7 +533,7 @@ push_ebx ()
 }
 
 static void
-push_at_eax (struct sym *sy)
+push_at_eax (cob_tree sy)
 {
 #ifdef COB_DEBUG
   fprintf (stderr, "push_at_eax:\n");
@@ -574,7 +574,7 @@ sec_name (short sec_no)
 
 static char memref_buf[20];
 static char *
-memref (struct sym *sy)
+memref (cob_tree sy)
 {
   if (sy->sec_no < SEC_FIRST_NAMED)
     {
@@ -602,7 +602,7 @@ memref (struct sym *sy)
 }
 
 static char *
-memrefat (struct sym *sy)
+memrefat (cob_tree sy)
 {
   switch (sy->sec_no)
     {
@@ -623,7 +623,7 @@ memrefat (struct sym *sy)
 }
 
 static char *
-memrefd (struct sym *sy)
+memrefd (cob_tree sy)
 {
   sprintf (memref_buf, "$c_base%d+%d", pgm_segment, sy->descriptor);
   return memref_buf;
@@ -631,12 +631,12 @@ memrefd (struct sym *sy)
 
 /* load address for normal (file/working-storage) or linkage variable */
 static void
-load_address (struct sym *sy)
+load_address (cob_tree sy)
 {
   unsigned offset;
   if (SYMBOL_P (sy) && sy->linkage_flg)
     {
-      struct sym *tmp = sy;
+      cob_tree tmp = sy;
       while (tmp->linkage_flg == 1)
 	tmp = tmp->parent;
       offset = sy->location - tmp->location;
@@ -657,12 +657,12 @@ load_address (struct sym *sy)
 /* load in cpureg ("eax","ebx"...) location for normal 
 	(file/working-storage) or linkage variable */
 static void
-load_location (struct sym *sy, char *reg)
+load_location (cob_tree sy, char *reg)
 {
   unsigned offset;
   if (SYMBOL_P (sy) && sy->linkage_flg)
     {
-      struct sym *tmp = sy;
+      cob_tree tmp = sy;
       while (tmp->linkage_flg == 1)
 	tmp = tmp->parent;
       offset = sy->location - tmp->location;
@@ -677,10 +677,10 @@ load_location (struct sym *sy, char *reg)
 }
 
 static void
-loadloc_to_eax (struct sym *sy_p)
+loadloc_to_eax (cob_tree sy_p)
 {
   unsigned offset;
-  struct sym *sy = sy_p, *var, *tmp;
+  cob_tree sy = sy_p, var, tmp;
 
 #ifdef COB_DEBUG
   fprintf (o_src, "#gen_loadloc litflg %d\n", sy->litflag);
@@ -732,16 +732,16 @@ loadloc_to_eax (struct sym *sy_p)
 }
 
 static void
-gen_loadloc (struct sym *sy)
+gen_loadloc (cob_tree sy)
 {
   loadloc_to_eax (sy);
   push_eax ();
 }
 
 static void
-gen_loaddesc1 (struct sym *sy, int variable_length)
+gen_loaddesc1 (cob_tree sy, int variable_length)
 {
-  struct sym *var;
+  cob_tree var;
   if (SUBREF_P (sy) || REFMOD_P (sy))
     {
       var = SUBREF_SYM (sy);
@@ -755,7 +755,7 @@ gen_loaddesc1 (struct sym *sy, int variable_length)
   if (REFMOD_P (sy))
     {
       struct refmod *rflp = (struct refmod *) sy;
-      struct sym *syl = rflp->len;
+      cob_tree syl = rflp->len;
       if (syl == NULL)
 	{
 	  fprintf (o_src, "#  corrected length EOV\n");
@@ -805,13 +805,13 @@ gen_loaddesc1 (struct sym *sy, int variable_length)
 }
 
 static void
-gen_loaddesc (struct sym *sy)
+gen_loaddesc (cob_tree sy)
 {
   gen_loaddesc1 (sy, 1);
 }
 
 void
-gen_loadvar (struct sym *sy)
+gen_loadvar (cob_tree sy)
 {
   if (sy == NULL)
     push_immed (0);
@@ -823,7 +823,7 @@ gen_loadvar (struct sym *sy)
 }
 
 static void
-value_to_eax (struct sym *sy)
+value_to_eax (cob_tree sy)
 {
   long long value;
   long value2;
@@ -912,7 +912,7 @@ value_to_eax (struct sym *sy)
 /* store variable pointer in eax to sy.
    sy must be a pointer or a linkage section 01/77 variable */
 static void
-set_ptr (struct sym *sy)
+set_ptr (cob_tree sy)
 {
   if (SYMBOL_P (sy) && sy->linkage_flg)
     {
@@ -966,14 +966,14 @@ asm_call (const char *name)
 }
 
 static void
-asm_call_1 (const char *name, struct sym *s1)
+asm_call_1 (const char *name, cob_tree s1)
 {
   gen_loadvar (s1);
   asm_call (name);
 }
 
 static void
-asm_call_2 (const char *name, struct sym *s1, struct sym *s2)
+asm_call_2 (const char *name, cob_tree s1, cob_tree s2)
 {
   gen_loadvar (s2);
   gen_loadvar (s1);
@@ -981,7 +981,7 @@ asm_call_2 (const char *name, struct sym *s1, struct sym *s2)
 }
 
 static void
-asm_call_3 (const char *name, struct sym *s1, struct sym *s2, struct sym *s3)
+asm_call_3 (const char *name, cob_tree s1, cob_tree s2, cob_tree s3)
 {
   gen_loadvar (s3);
   gen_loadvar (s2);
@@ -990,7 +990,7 @@ asm_call_3 (const char *name, struct sym *s1, struct sym *s2, struct sym *s3)
 }
 
 static void
-push_index (struct sym *sy)
+push_index (cob_tree sy)
 {
   asm_call_1 ("get_index", sy);
   push_eax ();
@@ -1121,7 +1121,7 @@ data_trail (void)
 int
 adjust_linkage_vars (int start_offset)
 {
-  struct sym *sy, *sy1;
+  cob_tree sy, sy1;
   int i;
   int offset = start_offset;
 
@@ -1139,9 +1139,9 @@ adjust_linkage_vars (int start_offset)
 
 
 static int
-get_nb_fields (struct sym *sy, int times, int sw_val)
+get_nb_fields (cob_tree sy, int times, int sw_val)
 {
-  struct sym *tmp;
+  cob_tree tmp;
   int nb_fields = 0;
   char ftype = sy->type;
 
@@ -1183,28 +1183,28 @@ get_nb_fields (struct sym *sy, int times, int sw_val)
   return nb_fields * times;
 }
 
-static struct sym *
+static cob_tree 
 get_init_symbol (char type)
 {
   switch (type)
     {
     case '9': case 'C':
-      return (struct sym *) spe_lit_ZE;
+      return (cob_tree) spe_lit_ZE;
     case 'B':
-      return (struct sym *) spe_lit_LV;
+      return (cob_tree) spe_lit_LV;
     default:
-      return (struct sym *) spe_lit_SP;
+      return (cob_tree) spe_lit_SP;
     }
 }
 
 static unsigned int
-initialize_values_1 (struct sym *sy, unsigned int loc)
+initialize_values_1 (cob_tree sy, unsigned int loc)
 {
   int i;
 
   if (sy->type == 'G')
     {
-      struct sym *p;
+      cob_tree p;
       for (i = 0; i < sy->times; i++)
 	for (p = sy->son; p != NULL; p = p->brother)
 	  loc = initialize_values_1 (p, loc);
@@ -1218,7 +1218,7 @@ initialize_values_1 (struct sym *sy, unsigned int loc)
 	      {
 		unsigned saved_loc = sy->location;
 		sy->location = loc;
-		gen_move ((struct sym *) sy->value, sy);
+		gen_move ((cob_tree) sy->value, sy);
 		sy->location = saved_loc;
 	      }
 	    loc += symlen (sy);
@@ -1230,7 +1230,7 @@ initialize_values_1 (struct sym *sy, unsigned int loc)
 static void
 initialize_values (void)
 {
-  struct sym *sy, *sy1, *v;
+  cob_tree sy, sy1, v;
   int i;
   char typ;
   int nb_fields;
@@ -1255,7 +1255,7 @@ initialize_values (void)
 	    if (v->level == 77 || (v->level == 1 && v->son == NULL))
 	      {
 		if (v->value)
-		  gen_move ((struct sym *) v->value, v);
+		  gen_move ((cob_tree) v->value, v);
 		continue;
 	      }
 	    init_ctype = ' ';
@@ -1272,7 +1272,7 @@ static void
 dump_working ()
 {
 
-  struct sym *v, *sy;
+  cob_tree v, sy;
   struct list *list;
   int fld_len;
   int stabs_type = '3';
@@ -1281,7 +1281,7 @@ dump_working ()
   fprintf (o_src, "w_base%d:\n", pgm_segment);
   for (list = fields_list; list != NULL; list = list->next)
     {
-      v = (struct sym *) list->var;
+      v = (cob_tree) list->var;
       sy = v;
       if (!SYMBOL_P (v))
 	continue;
@@ -1355,7 +1355,7 @@ dump_working ()
 void
 proc_header (int using)
 {
-  struct sym *sy, *sy1;
+  cob_tree sy, sy1;
   int i;
   int stabs_type = '3';
   chg_underline (program_id);
@@ -1475,7 +1475,7 @@ proc_trail (int using)
   int i;
   struct lit *v;
   struct list *list;
-  struct sym *sy;
+  cob_tree sy;
   /*char s[9]; */
   char *pgm_label = "main";
   char flag;
@@ -1538,24 +1538,24 @@ proc_trail (int using)
   /**************** generate data for fields *****************/
   for (list = fields_list; list != NULL; list = list->next)
     {
-      if (((struct sym *) list->var)->type == 'F')
+      if (((cob_tree) list->var)->type == 'F')
 	{			/* sort files */
 	  char sl[21];		/* para inverter a lista */
 	  char *s;
 	  s = sl;
 	  *s++ = 0;		/* final da lista invertida */
-	  sy = (struct sym *) list->var;
+	  sy = (cob_tree) list->var;
 #ifdef COB_DEBUG
 	  fprintf (o_src,
 		   "# File: %s, Data loc: v_base+%d, Desc: c_base%d+%d\n",
 		   sy->name, sy->location, pgm_segment, sy->descriptor);
 #endif
-	  sy = (struct sym *) sy->sort_data;
+	  sy = (cob_tree) sy->sort_data;
 	  while (sy != NULL)
 	    {
 	      *s++ = (unsigned char) sy->direction;
 	      *s++ = (unsigned char) sy->len;
-	      sy = (struct sym *) (sy->sort_data);
+	      sy = (cob_tree) (sy->sort_data);
 	    }
 	  s--;
 	  while (*s)
@@ -1644,10 +1644,10 @@ proc_trail (int using)
 
 	    }
 	}
-      else			/*if ( ((struct sym *)list->var)->type!='D' ) */
+      else			/*if ( ((cob_tree)list->var)->type!='D' ) */
 	{
 	/********* it is a normal field ****************/
-	  sy = (struct sym *) list->var;
+	  sy = (cob_tree) list->var;
 #ifdef COB_DEBUG
 	  fprintf (o_src, "# Field: %s, Mem loc: %s, Desc: c_base%d+%d\n",
 		   sy->name, memref (sy), pgm_segment, sy->descriptor);
@@ -1686,7 +1686,7 @@ proc_trail (int using)
 }
 
 void
-save_field_in_list (struct sym *sy)
+save_field_in_list (cob_tree sy)
 {
   struct list *list;
   if (fields_list == NULL)
@@ -1729,7 +1729,7 @@ save_literal (struct lit *v, int type)
     piclen += (v->len / 255) * 2;
   v->type = type;
 	/****** save literal in fields list for later *******/
-  save_field_in_list ((struct sym *) v);
+  save_field_in_list ((cob_tree) v);
 	/******** save address of const string ************/
   v->location = literal_offset;
   v->sec_no = SEC_CONST;
@@ -1744,7 +1744,7 @@ save_literal (struct lit *v, int type)
 }
 
 void
-put_disp_list (struct sym *sy)
+put_disp_list (cob_tree sy)
 {
   struct list *list, *tmp;
 //fprintf(o_src,"# put_disp_list: %s\n",sy->name);
@@ -1763,7 +1763,7 @@ put_disp_list (struct sym *sy)
 }
 
 int
-symlen (struct sym *sy)
+symlen (cob_tree sy)
 {
   /*int plen; */
   if (sy->type == 'C')
@@ -1774,7 +1774,7 @@ symlen (struct sym *sy)
 }
 
 int
-varsize_ch (struct sym *sy)
+varsize_ch (cob_tree sy)
 {
   switch (symlen (sy))
     {
@@ -1785,16 +1785,16 @@ varsize_ch (struct sym *sy)
 }
 
 void
-add_alternate_key (struct sym *sy, int duplicates)
+add_alternate_key (cob_tree sy, int duplicates)
 {
-  struct sym *f = curr_file;
+  cob_tree f = curr_file;
   struct alternate_list *alt, *new;
   alt = (struct alternate_list *) f->alternate;
   new = malloc (sizeof (struct alternate_list));
   new->next = alt;
   new->key = sy;
   new->duplicates = duplicates;
-  f->alternate = (struct sym *) new;
+  f->alternate = (cob_tree) new;
 }
 
 struct list *
@@ -1834,7 +1834,7 @@ alloc_scr_info ()
 
 struct inspect_before_after *
 alloc_inspect_before_after (struct inspect_before_after *ba,
-			    int before_after, struct sym *var)
+			    int before_after, cob_tree var)
 {
   if (ba == NULL)
     {
@@ -1859,7 +1859,7 @@ alloc_inspect_before_after (struct inspect_before_after *ba,
 }
 
 struct converting_struct *
-alloc_converting_struct (struct sym *fromvar, struct sym *tovar,
+alloc_converting_struct (cob_tree fromvar, cob_tree tovar,
 			 struct inspect_before_after *ba)
 {
   struct converting_struct *new;
@@ -1871,7 +1871,7 @@ alloc_converting_struct (struct sym *fromvar, struct sym *tovar,
 }
 
 struct tallying_list *
-alloc_tallying_list (struct tallying_list *tl, struct sym *count,
+alloc_tallying_list (struct tallying_list *tl, cob_tree count,
 		     struct tallying_for_list *tfl)
 {
   struct tallying_list *new;
@@ -1884,7 +1884,7 @@ alloc_tallying_list (struct tallying_list *tl, struct sym *count,
 
 struct tallying_for_list *
 alloc_tallying_for_list (struct tallying_for_list *tfl, int options,
-			 struct sym *forvar, struct inspect_before_after *ba)
+			 cob_tree forvar, struct inspect_before_after *ba)
 {
   struct tallying_for_list *new;
   new = malloc (sizeof (struct tallying_for_list));
@@ -1897,7 +1897,7 @@ alloc_tallying_for_list (struct tallying_for_list *tfl, int options,
 
 struct replacing_list *
 alloc_replacing_list (struct replacing_list *rl, int options,
-		      struct replacing_by_list *rbl, struct sym *byvar,
+		      struct replacing_by_list *rbl, cob_tree byvar,
 		      struct inspect_before_after *ba)
 {
 
@@ -1913,7 +1913,7 @@ alloc_replacing_list (struct replacing_list *rl, int options,
 
 struct replacing_by_list *
 alloc_replacing_by_list (struct replacing_by_list *rbl,
-			 struct sym *replvar, struct sym *byvar,
+			 cob_tree replvar, cob_tree byvar,
 			 struct inspect_before_after *ba)
 {
   struct replacing_by_list *new;
@@ -1927,7 +1927,7 @@ alloc_replacing_by_list (struct replacing_by_list *rbl,
 
 
 struct unstring_delimited *
-alloc_unstring_delimited (short int all, struct sym *var)
+alloc_unstring_delimited (short int all, cob_tree var)
 {
   struct unstring_delimited *ud;
   ud = malloc (sizeof (struct unstring_delimited));
@@ -1938,7 +1938,7 @@ alloc_unstring_delimited (short int all, struct sym *var)
 }
 
 struct unstring_destinations *
-alloc_unstring_dest (struct sym *var, struct sym *delim, struct sym *count)
+alloc_unstring_dest (cob_tree var, cob_tree delim, cob_tree count)
 {
   struct unstring_destinations *ud;
   ud = malloc (sizeof (struct unstring_destinations));
@@ -1950,7 +1950,7 @@ alloc_unstring_dest (struct sym *var, struct sym *delim, struct sym *count)
 }
 
 struct string_from *
-alloc_string_from (struct sym *var, struct sym *delim)
+alloc_string_from (cob_tree var, cob_tree delim)
 {
   struct string_from *sf;
   sf = malloc (sizeof (struct string_from));
@@ -1961,9 +1961,9 @@ alloc_string_from (struct sym *var, struct sym *delim)
 }
 
 void
-gen_unstring (struct sym *var, struct unstring_delimited *delim,
-	      struct unstring_destinations *dest, struct sym *ptr,
-	      struct sym *tally)
+gen_unstring (cob_tree var, struct unstring_delimited *delim,
+	      struct unstring_destinations *dest, cob_tree ptr,
+	      cob_tree tally)
 {
   fprintf (o_src, "# UNSTRING %s\n", var->name);
   push_immed (0);
@@ -1983,7 +1983,7 @@ gen_unstring (struct sym *var, struct unstring_delimited *delim,
 }
 
 void
-gen_string (struct string_from *sf, struct sym *sy, struct sym *ptr)
+gen_string (struct string_from *sf, cob_tree sy, cob_tree ptr)
 {
   struct string_from *sf1;
   fprintf (o_src, "# STRING into %s\n", sy->name);
@@ -2000,9 +2000,9 @@ gen_string (struct string_from *sf, struct sym *sy, struct sym *ptr)
 }
 
 void
-gen_display_screen (struct sym *sy, int main)
+gen_display_screen (cob_tree sy, int main)
 {
-  struct sym *tmp;
+  cob_tree tmp;
   struct list *tmpl;
   if (main)
     {
@@ -2044,7 +2044,7 @@ gen_display (int dupon, int nl)
   /*int len; */
   int dspflags;
   int first = 1;
-  struct sym *sy;
+  cob_tree sy;
 
 #ifdef COB_DEBUG
   fprintf (o_src, "### DISPLAY\n");
@@ -2053,7 +2053,7 @@ gen_display (int dupon, int nl)
   if (disp_list)
     {
       /* separate screen displays from display of regular variables */
-      sy = (struct sym *) disp_list->var;
+      sy = (cob_tree) disp_list->var;
       if (disp_list && !LITERAL_P (sy))
 	if (!REFMOD_P (sy) && !SUBREF_P (sy) && sy->scr)
 	  {
@@ -2111,9 +2111,9 @@ gen_gotoxy_expr ()
 }
 
 void
-gen_accept (struct sym *sy, int echo, int main)
+gen_accept (cob_tree sy, int echo, int main)
 {
-  struct sym *tmp;
+  cob_tree tmp;
   if (sy->scr)
     {				/* screen or screen-item accept */
       if (main)
@@ -2160,45 +2160,45 @@ gen_accept (struct sym *sy, int echo, int main)
 }
 
 void
-gen_accept_from_time (struct sym *sy)
+gen_accept_from_time (cob_tree sy)
 {
   gen_loadloc (sy);
   asm_call ("accept_time");
 }
 
 void
-gen_accept_from_date (struct sym *sy)
+gen_accept_from_date (cob_tree sy)
 {
   gen_loadloc (sy);
   asm_call ("accept_date");
 }
 
 void
-gen_accept_from_day (struct sym *sy)
+gen_accept_from_day (cob_tree sy)
 {
   gen_loadloc (sy);
   asm_call ("accept_day");
 }
 
 void
-gen_accept_from_day_of_week (struct sym *sy)
+gen_accept_from_day_of_week (cob_tree sy)
 {
   gen_loadloc (sy);
   asm_call ("accept_day_of_week");
 }
 
 void
-gen_accept_from_inkey (struct sym *sy)
+gen_accept_from_inkey (cob_tree sy)
 {
   gen_loadloc (sy);
   asm_call ("accept_inkey");
 }
 
 void
-gen_accept_from_cmdline (struct sym *sy)
+gen_accept_from_cmdline (cob_tree sy)
 {
 
-  struct sym *sy1;
+  cob_tree sy1;
 
   gen_loadvar (sy);
   fprintf (o_src, "\tmovl\t12(%%ebp), %%eax\n");
@@ -2227,12 +2227,12 @@ gen_accept_from_cmdline (struct sym *sy)
 }
 
 void
-gen_accept_env_var (struct sym *sy, struct lit *v)
+gen_accept_env_var (cob_tree sy, struct lit *v)
 {
 
-  struct sym *sy2;
+  cob_tree sy2;
 
-  gen_loadloc ((struct sym *) v);
+  gen_loadloc ((cob_tree) v);
   asm_call_1 ("accept_env_var", sy);
 
 //      Set RETURN-CODE with the value returned by 
@@ -2252,7 +2252,7 @@ gen_accept_env_var (struct sym *sy, struct lit *v)
 /******** structure allocation for perform info(s) ***********/
 
 struct perf_info *
-create_perf_info (struct sym *sy1, struct sym *sy2, unsigned long lj,
+create_perf_info (cob_tree sy1, cob_tree sy2, unsigned long lj,
 		  unsigned long le)
 {
   struct perf_info *rf;
@@ -2277,7 +2277,7 @@ create_perform_info (void)
 }
 
 char *
-check_perform_variables (struct sym *sy1, struct perform_info *pi1)
+check_perform_variables (cob_tree sy1, struct perform_info *pi1)
 {
 
   int i, j, k;
@@ -2332,7 +2332,7 @@ check_perform_variables (struct sym *sy1, struct perform_info *pi1)
 /******** structure allocation for math verbs variables ***********/
 
 struct math_var *
-create_mathvar_info (struct math_var *mv, struct sym *sy, unsigned int opt)
+create_mathvar_info (struct math_var *mv, cob_tree sy, unsigned int opt)
 {
 
   struct math_var *rf, *tmp1, *tmp2;
@@ -2694,21 +2694,8 @@ gen_test_invalid_keys (struct invalid_keys *p)
 
 /******** functions to generate math verbs ***********/
 
-struct sym *
-create_expr (struct sym *left, char op, struct sym *right)
-{
-  struct expr *left_expr = (struct expr *) left;
-  struct expr *right_expr = (struct expr *) right;
-  struct expr *e = malloc (sizeof (struct expr));
-  e->litflag = 5;
-  e->op = op;
-  e->left = left_expr;
-  e->right = right_expr;
-  return (struct sym *) e;
-}
-
 void
-gen_add (struct sym *sy1, struct sym *sy2, int rnd)
+gen_add (cob_tree sy1, cob_tree sy2, int rnd)
 {
   push_expr (sy2);
   push_expr (sy1);
@@ -2717,7 +2704,7 @@ gen_add (struct sym *sy1, struct sym *sy2, int rnd)
 }
 
 void
-gen_subtract (struct sym *sy1, struct sym *sy2, int rnd)
+gen_subtract (cob_tree sy1, cob_tree sy2, int rnd)
 {
   push_expr (sy2);
   push_expr (sy1);
@@ -2726,7 +2713,7 @@ gen_subtract (struct sym *sy1, struct sym *sy2, int rnd)
 }
 
 void
-gen_multiply (struct sym *sy1, struct sym *sy2, struct sym *sy3, int rnd)
+gen_multiply (cob_tree sy1, cob_tree sy2, cob_tree sy3, int rnd)
 {
   push_expr (sy2);
   push_expr (sy1);
@@ -2735,8 +2722,8 @@ gen_multiply (struct sym *sy1, struct sym *sy2, struct sym *sy3, int rnd)
 }
 
 void
-gen_divide (struct sym *sy1, struct sym *sy2,
-	    struct sym *sy3, struct sym *sy4, int rnd)
+gen_divide (cob_tree sy1, cob_tree sy2,
+	    cob_tree sy3, cob_tree sy4, int rnd)
 {
   push_expr (sy2);
   push_expr (sy1);
@@ -2755,7 +2742,7 @@ gen_divide (struct sym *sy1, struct sym *sy2,
 }
 
 void
-gen_compute (struct math_var *vl1, struct sym *sy1, struct math_ose *ose)
+gen_compute (struct math_var *vl1, cob_tree sy1, struct math_ose *ose)
 {
   if (ose)
     gen_dstlabel (ose->lbl4);
@@ -2795,7 +2782,7 @@ gen_add1 (struct math_var *vl1, struct math_var *vl2, struct math_ose *ose)
 
 void
 gen_add2 (struct math_var *vl1, struct math_var *vl2,
-	  struct sym *sy1, struct math_ose *ose)
+	  cob_tree sy1, struct math_ose *ose)
 {
   if (ose != NULL)
     gen_dstlabel (ose->lbl4);
@@ -2850,7 +2837,7 @@ gen_subtract1 (struct math_var *vl1, struct math_var *vl2,
 }
 
 void
-gen_subtract2 (struct math_var *vl1, struct math_var *vl2, struct sym *sy1,
+gen_subtract2 (struct math_var *vl1, struct math_var *vl2, cob_tree sy1,
 	       struct math_ose *ose)
 {
   if (ose)
@@ -2874,7 +2861,7 @@ gen_subtract2 (struct math_var *vl1, struct math_var *vl2, struct sym *sy1,
 }
 
 void
-gen_multiply1 (struct math_var *vl1, struct sym *sy1, struct math_ose *ose)
+gen_multiply1 (struct math_var *vl1, cob_tree sy1, struct math_ose *ose)
 {
   if (ose)
     gen_dstlabel (ose->lbl4);
@@ -2892,7 +2879,7 @@ gen_multiply1 (struct math_var *vl1, struct sym *sy1, struct math_ose *ose)
 }
 
 void
-gen_multiply2 (struct math_var *vl1, struct sym *sy1, struct sym *sy2,
+gen_multiply2 (struct math_var *vl1, cob_tree sy1, cob_tree sy2,
 	       struct math_ose *ose)
 {
   if (ose)
@@ -2911,7 +2898,7 @@ gen_multiply2 (struct math_var *vl1, struct sym *sy1, struct sym *sy2,
 }
 
 void
-gen_divide1 (struct math_var *vl1, struct sym *sy1, struct math_ose *ose)
+gen_divide1 (struct math_var *vl1, cob_tree sy1, struct math_ose *ose)
 {
   if (ose)
     gen_dstlabel (ose->lbl4);
@@ -2929,7 +2916,7 @@ gen_divide1 (struct math_var *vl1, struct sym *sy1, struct math_ose *ose)
 }
 
 void
-gen_divide2 (struct math_var *vl1, struct sym *sy1, struct sym *sy2,
+gen_divide2 (struct math_var *vl1, cob_tree sy1, cob_tree sy2,
 	     struct math_ose *ose)
 {
   if (ose)
@@ -2949,10 +2936,10 @@ gen_divide2 (struct math_var *vl1, struct sym *sy1, struct sym *sy2,
 
 /******** functions for refmoded var manipulation ***********/
 static int
-check_refmods (struct sym *var)
+check_refmods (cob_tree var)
 {
   struct refmod *ref = (struct refmod *) var;
-  struct sym *sy = ref->sym;
+  cob_tree sy = ref->sym;
 
   if (SUBREF_P (sy))
     sy = SUBREF_SYM (sy);
@@ -2961,7 +2948,7 @@ check_refmods (struct sym *var)
 }
 
 struct refmod *
-create_refmoded_var (struct sym *sy, struct sym *syoff, struct sym *sylen)
+create_refmoded_var (cob_tree sy, cob_tree syoff, cob_tree sylen)
 {
   struct refmod *ref;
   ref = malloc (sizeof (struct refmod));
@@ -2970,7 +2957,7 @@ create_refmoded_var (struct sym *sy, struct sym *syoff, struct sym *sylen)
   ref->off = syoff;
   ref->len = sylen;
   ref->slot = refmod_slots++;
-  check_refmods ((struct sym *) ref);
+  check_refmods ((cob_tree) ref);
   return ref;
 }
 
@@ -2978,7 +2965,7 @@ void
 gen_subscripted (struct subref *subs)
 {
   struct subref *ref;
-  struct sym *sy;
+  cob_tree sy;
   int outer_pushed, eax_in_use;
   ref = subs->next;		/* here start the subscripts */
   sy = subs->sym;		/* here our array */
@@ -2987,7 +2974,7 @@ gen_subscripted (struct subref *subs)
   eax_in_use = 0;
   while (ref)
     {
-      if (((struct sym *) (ref->sym))->type == 'B' && symlen (ref->sym) > 4)
+      if (((cob_tree) (ref->sym))->type == 'B' && symlen (ref->sym) > 4)
 	yyerror ("warning: we don't handle this large subscript");
       if (eax_in_use && !outer_pushed)
 	{
@@ -3031,10 +3018,10 @@ gen_subscripted (struct subref *subs)
     fprintf (o_src, "\tpopl\t%%eax\n");	/* return offset in %eax */
 }
 
-struct sym *
-get_variable_item (struct sym *sy)
+cob_tree 
+get_variable_item (cob_tree sy)
 {
-  struct sym *son, *item;
+  cob_tree son, item;
   if (!SYMBOL_P (sy))
     return NULL;
   if (sy->occurs != NULL)
@@ -3060,10 +3047,10 @@ gen_temp_storage (int size)
 }
 
 void
-adjust_desc_length (struct sym *sy)
+adjust_desc_length (cob_tree sy)
 {
   int stack_save = stackframe_cnt;
-  struct sym *item;
+  cob_tree item;
   stackframe_cnt = 0;
   item = get_variable_item (sy);
   //push_immed(0);
@@ -3079,10 +3066,10 @@ adjust_desc_length (struct sym *sy)
 }
 
 static void
-gen_pushval (struct sym *sy)
+gen_pushval (cob_tree sy)
 {
   unsigned offset;
-  struct sym *var;
+  cob_tree var;
 
 #ifdef COB_DEBUG
   fprintf (o_src, "#gen_pushval\n");
@@ -3093,7 +3080,7 @@ gen_pushval (struct sym *sy)
       var = SUBREF_SYM (sy);
       if (var->linkage_flg)
 	{
-	  struct sym *tmp = var;
+	  cob_tree tmp = var;
 	  while (tmp->linkage_flg == 1)
 	    tmp = tmp->parent;
 	  offset = var->location - tmp->location;
@@ -3126,7 +3113,7 @@ gen_pushval (struct sym *sy)
 }
 
 void
-gen_store_fnres (struct sym *sy)
+gen_store_fnres (cob_tree sy)
 {
   if (sy == NULL)
     return;
@@ -3149,7 +3136,7 @@ gen_store_fnres (struct sym *sy)
 }
 
 int
-is_numeric_sy (struct sym *sy)
+is_numeric_sy (cob_tree sy)
 {
   char type;
   if (SUBREF_P (sy))
@@ -3162,7 +3149,7 @@ is_numeric_sy (struct sym *sy)
 }
 
 void
-gen_class_check (struct sym *sy, int class)
+gen_class_check (cob_tree sy, int class)
 {
   int invert = 0;
   class &= ~(COND_UNARY | COND_CLASS);
@@ -3205,7 +3192,7 @@ gen_class_check (struct sym *sy, int class)
 }
 
 void
-gen_inspect (struct sym *var, void *list, int operation)
+gen_inspect (cob_tree var, void *list, int operation)
 {
   /*struct inspect_before_after *ba,*ba1; */
   struct tallying_list *tl, *tl1;
@@ -3298,22 +3285,22 @@ gen_inspect (struct sym *var, void *list, int operation)
 }
 
 static void
-gen_move_1 (struct sym *src)
+gen_move_1 (cob_tree src)
 {
-  if (src == (struct sym *) spe_lit_ZE)
+  if (src == (cob_tree) spe_lit_ZE)
     asm_call ("cob_move_zero");
-  else if (src == (struct sym *) spe_lit_SP)
+  else if (src == (cob_tree) spe_lit_SP)
     asm_call ("cob_move_space");
   else
     asm_call_1 ("cob_move", src);
 }
 
 void
-gen_move (struct sym *src, struct sym *dst)
+gen_move (cob_tree src, cob_tree dst)
 {
 #ifdef COB_DEBUG
   {
-    struct sym *esys = src, *esyd = dst;
+    cob_tree esys = src, esyd = dst;
     if (REFMOD_P (esys))
       esys = ((struct refmod *) esys)->sym;
     if (REFMOD_P (esyd))
@@ -3330,9 +3317,9 @@ gen_move (struct sym *src, struct sym *dst)
 /* The following functions will be activated when we change from
    defining the outermost group to define each elementary item. */
 void
-gen_movecorr (struct sym *sy1, struct sym *sy2)
+gen_movecorr (cob_tree sy1, cob_tree sy2)
 {
-  struct sym *t1, *t2;
+  cob_tree t1, t2;
   if (!(SYMBOL_P (sy1) && SYMBOL_P (sy2)))
     {
       yyerror ("sorry we don't handle this case yet!");
@@ -3356,14 +3343,14 @@ gen_movecorr (struct sym *sy1, struct sym *sy2)
 }
 
 static void
-gen_initialize_1 (struct sym *sy)
+gen_initialize_1 (cob_tree sy)
 {
   if (!sy->flags.in_redefinition)
     {
       if (sy->type == 'G')
 	{
 	  int lab = 0;
-	  struct sym *p;
+	  cob_tree p;
 	  if (sy->times != 1)
 	    {
 	      lab = loc_label++;
@@ -3398,7 +3385,7 @@ gen_initialize_1 (struct sym *sy)
 }
 
 void
-gen_initialize (struct sym *sy)
+gen_initialize (cob_tree sy)
 {
 #ifdef COB_DEBUG
   fprintf (o_src, "# INITIALIZE %s, type %c\n", sy->name, sy->type);
@@ -3417,9 +3404,9 @@ gen_initialize (struct sym *sy)
 }
 
 void
-gen_addcorr (struct sym *sy1, struct sym *sy2, int rnd)
+gen_addcorr (cob_tree sy1, cob_tree sy2, int rnd)
 {
-  struct sym *t1, *t2;
+  cob_tree t1, t2;
   if (!(SYMBOL_P (sy1) && SYMBOL_P (sy2)))
     {
       yyerror ("sorry we don't handle this case yet!");
@@ -3442,9 +3429,9 @@ gen_addcorr (struct sym *sy1, struct sym *sy2, int rnd)
 }
 
 void
-gen_subtractcorr (struct sym *sy1, struct sym *sy2, int rnd)
+gen_subtractcorr (cob_tree sy1, cob_tree sy2, int rnd)
 {
-  struct sym *t1, *t2;
+  cob_tree t1, t2;
   if (!(SYMBOL_P (sy1) && SYMBOL_P (sy2)))
     {
       yyerror ("sorry we don't handle this case yet!");
@@ -3468,10 +3455,10 @@ gen_subtractcorr (struct sym *sy1, struct sym *sy2, int rnd)
 }
 
 void
-gen_set (struct sym *idx, int which, struct sym *var,
+gen_set (cob_tree idx, int which, cob_tree var,
 	 int adrof_idx, int adrof_var)
 {
-  struct sym *sy = idx;
+  cob_tree sy = idx;
   if (REFMOD_P (idx))
     sy = ((struct refmod *) idx)->sym;
   else if (SUBREF_P (idx))
@@ -3487,12 +3474,12 @@ gen_set (struct sym *idx, int which, struct sym *var,
       if (SUBREF_P (idx))
 	{
 	  struct subref *ref = make_subref (sy->parent, SUBREF_NEXT (idx));
-	  gen_move ((struct sym *) sy->value, (struct sym *) ref);
+	  gen_move ((cob_tree) sy->value, (cob_tree) ref);
 	  free (ref);
 	}
       else
 	{
-	  gen_move ((struct sym *) sy->value, sy->parent);
+	  gen_move ((cob_tree) sy->value, sy->parent);
 	}
       return;
     }
@@ -3581,7 +3568,7 @@ push_condition ()
 }
 
 void
-push_field (struct sym *sy)
+push_field (cob_tree sy)
 {
   asm_call_1 ("cob_push_field", sy);
 }
@@ -3709,7 +3696,7 @@ gen_end_when (int n, int endcase, int sentence)
 }
 
 void
-gen_goto_depending (struct list *l, struct sym *sy)
+gen_goto_depending (struct list *l, cob_tree sy)
 {
   struct list *tmp;
   gen_loadloc (sy);
@@ -3719,14 +3706,14 @@ gen_goto_depending (struct list *l, struct sym *sy)
   for (tmp = l; tmp != NULL; tmp = tmp->next)
     {
       fprintf (o_src, "\tdecl\t%%eax\n");
-      fprintf (o_src, "\tjz\t.LB_%s\n", label_name ((struct sym *) tmp->var));
+      fprintf (o_src, "\tjz\t.LB_%s\n", label_name ((cob_tree) tmp->var));
     }
 }
 
 void
 gen_goto (struct list *l)
 {
-  struct sym *sy = (struct sym *) l->var;
+  cob_tree sy = (cob_tree) l->var;
   fprintf (o_src, "\tjmp\t.LB_%s\n", label_name (sy));
   if (l->next)
     {
@@ -3826,7 +3813,7 @@ gen_jmplabel (int lbl)
 }
 
 void
-gen_push_int (struct sym *sy)
+gen_push_int (cob_tree sy)
 {
   gen_loadloc (sy);
   fprintf (o_src, "\tmovl $c_base%d+%u, %%eax\n", pgm_segment, sy->descriptor);
@@ -3837,7 +3824,7 @@ gen_push_int (struct sym *sy)
 }
 
 void
-gen_cancel (struct sym *sy)
+gen_cancel (cob_tree sy)
 {
   asm_call_1 ("cob_cancel", sy);
 }
@@ -3858,7 +3845,7 @@ gen_perform_times (int lbl)
 }
 
 void
-gen_perform_thru (struct sym *s1, struct sym *s2)
+gen_perform_thru (cob_tree s1, cob_tree s2)
 {
   if (s2 == NULL)
     s2 = s1;
@@ -3875,7 +3862,7 @@ gen_perform_thru (struct sym *s1, struct sym *s2)
 }
 
 void
-gen_perform (struct sym *sy)
+gen_perform (cob_tree sy)
 {
   gen_perform_thru (sy, sy);
 }
@@ -3977,10 +3964,8 @@ save_pic_char (char c, int n)
 
 /* increment loop index, check for end */
 void
-gen_SearchLoopCheck (unsigned long lbl5, struct sym *syidx, struct sym *sytbl)
+gen_SearchLoopCheck (unsigned long lbl5, cob_tree syidx, cob_tree sytbl)
 {
-
-  /*struct sym *sy1, *sy2; */
   struct lit *v;
   char tblmax[21];
   /*int len, i; */
@@ -3989,23 +3974,23 @@ gen_SearchLoopCheck (unsigned long lbl5, struct sym *syidx, struct sym *sytbl)
   v = install_literal (tblmax);
   save_literal (v, '9');
 
-  gen_add ((struct sym *) v, syidx, 0);
+  gen_add ((cob_tree) v, syidx, 0);
 
   sprintf (tblmax, "%d", sytbl->times);
   v = install_literal (tblmax);
   save_literal (v, '9');
 
-  gen_compare (syidx, RELATION_GT, (struct sym *) v);
+  gen_compare (syidx, RELATION_GT, (cob_tree) v);
   fprintf (o_src, "\tjz\t.L%ld\n", lbl5);
 }
 
 void
-gen_SearchAllLoopCheck (unsigned long lbl3, struct sym *syidx,
-			struct sym *sytbl, struct sym *syvar,
+gen_SearchAllLoopCheck (unsigned long lbl3, cob_tree syidx,
+			cob_tree sytbl, cob_tree syvar,
 			unsigned long lstart, unsigned long lend)
 {
 
-  struct sym *sy1;
+  cob_tree sy1;
   struct subref *vr1;
   struct index_to_table_list *it1, *it2;
   unsigned long l1, l2, l3, l4, l5, l6;
@@ -4039,7 +4024,7 @@ gen_SearchAllLoopCheck (unsigned long lbl3, struct sym *syidx,
     return;
 
   vr1 = create_subscript (syidx);
-  sy1 = (struct sym *) make_subref (sytbl, vr1);
+  sy1 = (cob_tree) make_subref (sytbl, vr1);
 
   /* table sort sequence: '0' = none, '1' = ASCENDING, '2' = DESCENDING */
 
@@ -4163,9 +4148,9 @@ gen_SearchAllLoopCheck (unsigned long lbl3, struct sym *syidx,
 }
 
 void
-define_implicit_field (struct sym *sy, struct sym *sykey, int idxlen)
+define_implicit_field (cob_tree sy, cob_tree sykey, int idxlen)
 {
-  struct sym *tmp = NULL;
+  cob_tree tmp = NULL;
   struct index_to_table_list *i2t;
 
   sy->len = 4;
@@ -4206,7 +4191,7 @@ define_implicit_field (struct sym *sy, struct sym *sykey, int idxlen)
 }
 
 void
-Initialize_SearchAll_Boundaries (struct sym *sy, struct sym *syidx)
+Initialize_SearchAll_Boundaries (cob_tree sy, cob_tree syidx)
 {
   int i;
   struct lit *v;
@@ -4233,7 +4218,7 @@ Initialize_SearchAll_Boundaries (struct sym *sy, struct sym *syidx)
 #endif
 
   save_literal (v, '9');
-  gen_move ((struct sym *) v, syidx);
+  gen_move ((cob_tree) v, syidx);
 
   fprintf (o_src, "\tmovl\t$0, %%eax\n");
   fprintf (o_src, "\tmovl\t%%eax,-%d(%%ebp)\n", stack_offset - 4);
@@ -4266,10 +4251,10 @@ Initialize_SearchAll_Boundaries (struct sym *sy, struct sym *syidx)
     yyerror ("Undefined sort order and key for table ");
 }
 
-struct sym *
-determine_table_index_name (struct sym *sy)
+cob_tree 
+determine_table_index_name (cob_tree sy)
 {
-  struct sym *rsy = NULL;
+  cob_tree rsy = NULL;
   struct index_to_table_list *i2t;
 
   i2t = index2table;
@@ -4307,10 +4292,10 @@ determine_table_index_name (struct sym *sy)
 }
 
 void
-define_field (int level, struct sym *sy)
+define_field (int level, cob_tree sy)
 {
-  struct sym *tmp;
-  struct sym *tmp1 = NULL;
+  cob_tree tmp;
+  cob_tree tmp1 = NULL;
 
   if (level == 88)
     {
@@ -4413,9 +4398,9 @@ release_sel_subject (int label, struct selsubject *ssbj)
 }
 
 int
-check_fields (struct sym *sy)
+check_fields (cob_tree sy)
 {
-  struct sym *tmp;
+  cob_tree tmp;
   int len;
 
   if (sy->son != NULL)
@@ -4432,9 +4417,9 @@ check_fields (struct sym *sy)
 }
 
 int
-set_field_value_sw (struct sym *sy, int times)
+set_field_value_sw (cob_tree sy, int times)
 {
-  struct sym *tmp;
+  cob_tree tmp;
   unsigned int res;
   struct
   {
@@ -4462,9 +4447,9 @@ set_field_value_sw (struct sym *sy, int times)
 }
 
 int
-set_field_length (struct sym *sy, int times)
+set_field_length (cob_tree sy, int times)
 {
-  struct sym *tmp;
+  cob_tree tmp;
   int len, tmplen;
   if (sy->son != NULL)
     {
@@ -4484,7 +4469,7 @@ set_field_length (struct sym *sy, int times)
 }
 
 unsigned
-field_alignment (struct sym *sy, unsigned location)
+field_alignment (cob_tree sy, unsigned location)
 {
   unsigned slack_bytes = 0, mod_loc;
 
@@ -4505,9 +4490,9 @@ field_alignment (struct sym *sy, unsigned location)
 }
 
 void
-set_field_location (struct sym *sy, unsigned location)
+set_field_location (cob_tree sy, unsigned location)
 {
-  struct sym *tmp;
+  cob_tree tmp;
 
   //fprintf(stderr,"set_field_location: %s -> %d\n",sy->name,location);
   if (sy->level == 1)
@@ -4596,7 +4581,7 @@ scr_set_line (struct scr_info *si, int val, int plus_minus)
 /*************** report section ******************/
 
 void
-save_report (struct sym *rep, struct sym *file)
+save_report (cob_tree rep, cob_tree file)
 {
   struct rd *rd = (struct rd *) rep;
   struct list *item = malloc (sizeof (struct list));
@@ -4613,16 +4598,16 @@ save_report (struct sym *rep, struct sym *file)
 }
 
 void
-update_report_field (struct sym *sy)
+update_report_field (cob_tree sy)
 {
   update_field ();
   sy->type = 'Q';
 }
 
 void
-update_screen_field (struct sym *sy, struct scr_info *si)
+update_screen_field (cob_tree sy, struct scr_info *si)
 {
-  struct sym *tmp;
+  cob_tree tmp;
   update_field ();
   sy->type = 'D';
   sy->scr = si;
@@ -4631,7 +4616,7 @@ update_screen_field (struct sym *sy, struct scr_info *si)
      value declared, create its picture from value literal. */
   if (*(sy->picstr) == 0 && sy->value != NULL)
     {
-      tmp = (struct sym *) sy->value;
+      tmp = (cob_tree) sy->value;
       sy->len = strlen (tmp->name);
       sy->picstr = malloc (3);
       sy->picstr[0] = 'X';
@@ -4641,7 +4626,7 @@ update_screen_field (struct sym *sy, struct scr_info *si)
 }
 
 static int
-pic_digits (struct sym *sy)
+pic_digits (cob_tree sy)
 {
   char *p = NULL;
   int len = 0;
@@ -4675,7 +4660,7 @@ pic_digits (struct sym *sy)
 }
 
 static int
-query_comp_len (struct sym *sy)
+query_comp_len (cob_tree sy)
 {
   int plen;
   if ((plen = pic_digits (sy)) <= 2)
@@ -4708,7 +4693,7 @@ update_field (void)
 void
 close_fields (void)
 {
-  struct sym *sy;
+  cob_tree sy;
   int saved_length;
   int ns_offset = 0;
 
@@ -4752,7 +4737,7 @@ close_fields (void)
 void
 resolve_labels ()
 {
-  struct sym *sy, *sy1, *sy2;
+  cob_tree sy, sy1, sy2;
   int i, def;
   fprintf (o_src, "# resolving paragraphs/sections labels\n");
   for (i = 0; i < HASHLEN; i++)
@@ -4803,7 +4788,7 @@ resolve_labels ()
 }
 
 void
-open_section (struct sym *sect)
+open_section (cob_tree sect)
 {
   sect->type = 'S';
   fprintf (o_src, ".LB_%s:\n", label_name (sect));
@@ -4822,7 +4807,7 @@ close_section (void)
 }
 
 char *
-label_name (struct sym *lab)
+label_name (cob_tree lab)
 {
   if (lab->parent)
     sprintf (name_buf, "%s__%s_%d", lab->name, lab->parent->name, pgm_segment);
@@ -4832,7 +4817,7 @@ label_name (struct sym *lab)
 }
 
 char *
-var_name (struct sym *sy)
+var_name (cob_tree sy)
 {
   int n;
   n = MAXNAMEBUF;
@@ -4862,7 +4847,7 @@ close_paragr (void)
 }
 
 void
-open_paragr (struct sym *paragr)
+open_paragr (cob_tree paragr)
 {
   paragr->type = 'P';
   curr_paragr = paragr;
@@ -4938,20 +4923,20 @@ set_variable_values (struct lit *v1, struct lit *v2)
 }
 
 void
-gen_condition (struct sym *sy)
+gen_condition (cob_tree sy)
 {
   struct vrange *vr;
-  struct sym *sy1 = sy;
+  cob_tree sy1 = sy;
   if (SUBREF_P (sy))
     sy1 = SUBREF_SYM (sy);
   push_immed (0);
-  gen_loadvar ((struct sym *) sy1->value2);
-  gen_loadvar ((struct sym *) sy1->value);
+  gen_loadvar ((cob_tree) sy1->value2);
+  gen_loadvar ((cob_tree) sy1->value);
   vr = sy1->refmod_redef.vr;
   while (vr)
     {
-      gen_loadvar ((struct sym *) vr->value2);
-      gen_loadvar ((struct sym *) vr->value);
+      gen_loadvar ((cob_tree) vr->value2);
+      gen_loadvar ((cob_tree) vr->value);
       vr = vr->next;
     }
   if (SUBREF_P (sy))
@@ -4959,7 +4944,7 @@ gen_condition (struct sym *sy)
       /* alloc a tmp node for condition parent 
          so gen_loadvar will be happy */
       struct subref *ref = make_subref (sy1->parent, SUBREF_NEXT (sy));
-      gen_loadvar ((struct sym *) ref);
+      gen_loadvar ((cob_tree) ref);
       free (ref);
     }
   else
@@ -5008,7 +4993,7 @@ gen_compare_exp (int value)
 }
 
 void
-gen_compare (struct sym *s1, int op, struct sym *s2)
+gen_compare (cob_tree s1, int op, cob_tree s2)
 {
   /* if any of sy1 or sy2 is an expression, we must 
      compare full expressions */
@@ -5056,7 +5041,7 @@ gen_compare (struct sym *s1, int op, struct sym *s2)
 }
 
 void
-assign_expr (struct sym *sy, int rnd)
+assign_expr (cob_tree sy, int rnd)
 {
   push_immed (rnd);
   gen_loadvar (sy);
@@ -5064,12 +5049,12 @@ assign_expr (struct sym *sy, int rnd)
 }
 
 int
-push_expr (struct sym *sy)
+push_expr (cob_tree sy)
 {
   if (EXPR_P (sy))
     {
-      push_expr ((struct sym *) EXPR_LEFT (sy));
-      push_expr ((struct sym *) EXPR_RIGHT (sy));
+      push_expr ((cob_tree) EXPR_LEFT (sy));
+      push_expr ((cob_tree) EXPR_RIGHT (sy));
       switch (EXPR_OP (sy))
 	{
 	case '+': asm_call ("cob_add"); break;
@@ -5092,7 +5077,7 @@ push_expr (struct sym *sy)
 }
 
 static void
-gen_save_filevar (struct sym *f, struct sym *buf)
+gen_save_filevar (cob_tree f, cob_tree buf)
 {
   if (buf != NULL)
     {
@@ -5120,7 +5105,7 @@ gen_save_filevar (struct sym *f, struct sym *buf)
 }
 
 void
-gen_save_filedesc (struct sym *f)
+gen_save_filedesc (cob_tree f)
 {
   if (f->type == 'K')
     fprintf (o_src, "\tmovl\t$_%s, %%eax\n", f->name);
@@ -5134,16 +5119,16 @@ gen_save_filedesc (struct sym *f)
 }
 
 static void
-gen_save_sort_fields (struct sym *f, struct sym *buf)
+gen_save_sort_fields (cob_tree f, cob_tree buf)
 {
-  struct sym *datafld;
+  cob_tree datafld;
   if (f == NULL)
     return;
-  datafld = (struct sym *) f->sort_data;
+  datafld = (cob_tree) f->sort_data;
   while (datafld != NULL)
     {
       gen_loadloc (datafld);
-      datafld = (struct sym *) (datafld->sort_data);
+      datafld = (cob_tree) (datafld->sort_data);
     }
   fprintf (o_src, "\tmovl\t$c_base%d+%u, %%eax\n", pgm_segment,
 	   f->descriptor);
@@ -5153,7 +5138,7 @@ gen_save_sort_fields (struct sym *f, struct sym *buf)
 }
 
 void
-alloc_file_entry (struct sym *f)
+alloc_file_entry (cob_tree f)
 {
   f->record = stack_offset;
 #ifdef COB_DEBUG
@@ -5165,10 +5150,10 @@ alloc_file_entry (struct sym *f)
 }
 
 void
-dump_alternate_keys (struct sym *r, struct alternate_list *alt)
+dump_alternate_keys (cob_tree r, struct alternate_list *alt)
 {
   struct alternate_list *tmp;
-  struct sym *key;
+  cob_tree key;
   while (alt)
     {
       key = alt->key;
@@ -5191,15 +5176,15 @@ void
 dump_fdesc ()
 {
 
-  struct sym *f;
-  struct sym *r;
+  cob_tree f;
+  cob_tree r;
   struct list *list /*,*visited */ ;
   unsigned char fflags;
 
   fprintf (o_src, "s_base%d:\t.long\t0\n", pgm_segment);
   for (list = files_list; list != NULL; list = list->next)
     {
-      f = (struct sym *) list->var;
+      f = (cob_tree) list->var;
       r = f->recordsym;
 #ifdef COB_DEBUG
       fprintf (o_src,
@@ -5255,7 +5240,7 @@ dump_fdesc ()
 ** (will be done later at dump_fdesc())
 */
 void
-gen_fdesc (struct sym *f, struct sym *r)
+gen_fdesc (cob_tree f, cob_tree r)
 {
   int len;
   struct list *list, *templist;
@@ -5305,7 +5290,7 @@ gen_fdesc (struct sym *f, struct sym *r)
 }
 
 void
-gen_status (struct sym *f)
+gen_status (cob_tree f)
 {
   if (f->parent)
     {
@@ -5317,7 +5302,7 @@ gen_status (struct sym *f)
 
 /****** sort statement related functions *******/
 struct sortfile_node *
-alloc_sortfile_node (struct sym *sy)
+alloc_sortfile_node (cob_tree sy)
 {
   struct sortfile_node *sn;
   if (sy->type != 'F')
@@ -5331,10 +5316,10 @@ alloc_sortfile_node (struct sym *sy)
   return sn;
 }
 
-struct sym *
+cob_tree 
 create_status_register (char *name)
 {
-  struct sym *sy;
+  cob_tree sy;
   char pic[] = { '9', 2, 0 };
   sy = install (name, SYTB_VAR, 0);
   if (sy->type)
@@ -5358,9 +5343,9 @@ create_status_register (char *name)
 }
 
 void
-gen_sort_using (struct sym *f, struct sortfile_node *sn)
+gen_sort_using (cob_tree f, struct sortfile_node *sn)
 {
-  struct sym *vstatus = create_status_register ("SORT-RETURN");
+  cob_tree vstatus = create_status_register ("SORT-RETURN");
   gen_save_sort_fields (f, NULL);
   push_immed (0);
   while (sn)
@@ -5377,9 +5362,9 @@ gen_sort_using (struct sym *f, struct sortfile_node *sn)
 }
 
 void
-gen_sort_giving (struct sym *f, struct sortfile_node *sn)
+gen_sort_giving (cob_tree f, struct sortfile_node *sn)
 {
-  struct sym *vstatus = create_status_register ("SORT-RETURN");
+  cob_tree vstatus = create_status_register ("SORT-RETURN");
   gen_save_sort_fields (f, NULL);
   push_immed (0);
   while (sn)
@@ -5396,7 +5381,7 @@ gen_sort_giving (struct sym *f, struct sortfile_node *sn)
 }
 
 void
-gen_sort (struct sym *f)
+gen_sort (cob_tree f)
 {
   gen_loadloc (f->filenamevar);
   gen_save_filevar (f, NULL);
@@ -5406,7 +5391,7 @@ gen_sort (struct sym *f)
 }
 
 void
-gen_open (int mode, struct sym *f)
+gen_open (int mode, cob_tree f)
 {
   push_immed (mode);
   gen_loadloc (f->filenamevar);
@@ -5416,23 +5401,23 @@ gen_open (int mode, struct sym *f)
 }
 
 void
-gen_close_sort (struct sym *f)
+gen_close_sort (cob_tree f)
 {
-  struct sym *sortf;
+  cob_tree sortf;
 	/********** allocate memory for SORT descriptor ***********/
   save_field_in_list (f);
   f->descriptor = literal_offset;
-  sortf = (struct sym *) (f->sort_data);
+  sortf = (cob_tree) (f->sort_data);
   while (sortf != NULL)
     {
       literal_offset += 2;
-      sortf = (struct sym *) (sortf->sort_data);
+      sortf = (cob_tree) (sortf->sort_data);
     }
   literal_offset++;
 }
 
 void
-gen_close (struct sym *f)
+gen_close (cob_tree f)
 {
   gen_save_filevar (f, NULL);
   asm_call ("cob_close");
@@ -5440,7 +5425,7 @@ gen_close (struct sym *f)
 }
 
 void
-gen_return (struct sym *f, struct sym *buf)
+gen_return (cob_tree f, cob_tree buf)
 {
   gen_save_filevar (f, buf);
   asm_call ("sort_return");
@@ -5448,7 +5433,7 @@ gen_return (struct sym *f, struct sym *buf)
 }
 
 int
-gen_reads (struct sym *f, struct sym *buf, struct sym *key, int next_prev,
+gen_reads (cob_tree f, cob_tree buf, cob_tree key, int next_prev,
 	   int sel)
 {
 // NOTE: 
@@ -5482,7 +5467,7 @@ gen_reads (struct sym *f, struct sym *buf, struct sym *key, int next_prev,
 }
 
 void
-gen_read (struct sym *f, struct sym *buf, struct sym *key)
+gen_read (cob_tree f, cob_tree buf, cob_tree key)
 {
   struct rec_varying *rv = (struct rec_varying *) f->rec_varying;
   if (f->organization == ORG_RELATIVE)
@@ -5502,7 +5487,7 @@ gen_read (struct sym *f, struct sym *buf, struct sym *key)
 }
 
 void
-gen_read_next (struct sym *f, struct sym *buf, int next_prev)
+gen_read_next (cob_tree f, cob_tree buf, int next_prev)
 {
   struct rec_varying *rv = (struct rec_varying *) f->rec_varying;
   if (rv != NULL)
@@ -5518,9 +5503,9 @@ gen_read_next (struct sym *f, struct sym *buf, int next_prev)
 }
 
 void
-gen_release (struct sym *r, struct sym *buf)
+gen_release (cob_tree r, cob_tree buf)
 {
-  struct sym *f;
+  cob_tree f;
   f = r->ix_desc;
   if (buf != NULL)
     gen_move (buf, r);
@@ -5530,9 +5515,9 @@ gen_release (struct sym *r, struct sym *buf)
 }
 
 void
-gen_write (struct sym *r, int opt, struct sym *buf)
+gen_write (cob_tree r, int opt, cob_tree buf)
 {
-  struct sym *f = r->ix_desc;
+  cob_tree f = r->ix_desc;
   struct rec_varying *rv = (struct rec_varying *) f->rec_varying;
   gen_check_varying (f);
   if (opt)
@@ -5566,9 +5551,9 @@ gen_write (struct sym *r, int opt, struct sym *buf)
 }
 
 void
-gen_rewrite (struct sym *r, struct sym *buf)
+gen_rewrite (cob_tree r, cob_tree buf)
 {
-  struct sym *f = r->ix_desc;
+  cob_tree f = r->ix_desc;
   struct rec_varying *rv = (struct rec_varying *) f->rec_varying;
   gen_check_varying (f);
   if (f->organization == ORG_RELATIVE)
@@ -5583,7 +5568,7 @@ gen_rewrite (struct sym *r, struct sym *buf)
 }
 
 void
-gen_start (struct sym *f, int cond, struct sym *key)
+gen_start (cob_tree f, int cond, cob_tree key)
 {
   gen_check_varying (f);
   if (f->organization == ORG_RELATIVE)
@@ -5597,7 +5582,7 @@ gen_start (struct sym *f, int cond, struct sym *key)
 }
 
 void
-gen_delete (struct sym *f)
+gen_delete (cob_tree f)
 {
   gen_check_varying (f);
   if (f->organization == ORG_RELATIVE)
@@ -5608,8 +5593,8 @@ gen_delete (struct sym *f)
 }
 
 void
-set_rec_varying_info (struct sym *f, struct lit *lmin,
-		      struct lit *lmax, struct sym *reclen)
+set_rec_varying_info (cob_tree f, struct lit *lmin,
+		      struct lit *lmax, cob_tree reclen)
 {
   struct rec_varying *rv = malloc (sizeof (struct rec_varying));
   f->rec_varying = (char *) rv;
@@ -5619,21 +5604,21 @@ set_rec_varying_info (struct sym *f, struct lit *lmin,
 }
 
 void
-gen_check_varying (struct sym *f)
+gen_check_varying (cob_tree f)
 {
   struct rec_varying *rv = (struct rec_varying *) f->rec_varying;
   if (rv != NULL)
     {
       gen_loadvar (rv->reclen);
-      gen_loadvar ((struct sym *) rv->lmax);
-      gen_loadvar ((struct sym *) rv->lmin);
+      gen_loadvar ((cob_tree) rv->lmax);
+      gen_loadvar ((cob_tree) rv->lmin);
       gen_save_filedesc (f);
       asm_call ("cob_check_varying");
     }
 }
 
 void
-gen_push_using (struct sym *sy)
+gen_push_using (cob_tree sy)
 {
   struct parm_list *list;
   list = (struct parm_list *) malloc (sizeof (struct parm_list));
@@ -5645,7 +5630,7 @@ gen_push_using (struct sym *sy)
 }
 
 void
-gen_save_using (struct sym *sy)
+gen_save_using (cob_tree sy)
 {
   sy->linkage_flg = using_offset;
   using_offset += 4;
@@ -5656,7 +5641,7 @@ unsigned long int
 gen_call (struct lit *v, int exceplabel, int notexceplabel)
 {
   struct parm_list *list, *tmp;
-  struct sym *cp;
+  cob_tree cp;
   struct lit *lp;
   int len, totlen = 0;
   int saved_stack_offset = stack_offset;
@@ -5666,7 +5651,7 @@ gen_call (struct lit *v, int exceplabel, int notexceplabel)
 	/******** prepare all parameters which are passed by content ********/
   for (list = parameter_list; list != NULL; list = list->next)
     {
-      cp = (struct sym *) list->var;
+      cp = (cob_tree) list->var;
       if (!LITERAL_P (cp))
 	{
 	  if (cp->call_mode == CM_CONT)
@@ -5688,7 +5673,7 @@ gen_call (struct lit *v, int exceplabel, int notexceplabel)
 	/******** get the parameters from the parameter list ********/
   for (list = parameter_list; list != NULL;)
     {
-      cp = (struct sym *) list->var;
+      cp = (cob_tree) list->var;
       if (LITERAL_P (cp))
 	{
 	  lp = (struct lit *) cp;
@@ -5696,7 +5681,7 @@ gen_call (struct lit *v, int exceplabel, int notexceplabel)
 	  fprintf (o_src, "#call %s by %d\n", lp->name, lp->call_mode);
 #endif
 	  if (lp->call_mode == CM_REF)
-	    gen_loadloc ((struct sym *) list->var);
+	    gen_loadloc ((cob_tree) list->var);
 	  else if (lp->call_mode == CM_VAL)
 	    {
 	      value_to_eax (cp);
@@ -5715,10 +5700,10 @@ gen_call (struct lit *v, int exceplabel, int notexceplabel)
 	  switch (cp->call_mode)
 	    {
 	    case CM_REF:
-	      gen_loadloc ((struct sym *) list->var);
+	      gen_loadloc ((cob_tree) list->var);
 	      break;
 	    case CM_VAL:
-	      gen_pushval ((struct sym *) list->var);
+	      gen_pushval ((cob_tree) list->var);
 	      break;
 	    case CM_CONT:
 	      fprintf (o_src, "\tleal\t-%d(%%ebp), %%eax\n", list->location);
@@ -5742,7 +5727,7 @@ gen_call (struct lit *v, int exceplabel, int notexceplabel)
       /* dynamic call */
       stack_save = stackframe_cnt;
       stackframe_cnt = 0;
-      asm_call_1 ("cob_dyncall_resolve", (struct sym *) v);
+      asm_call_1 ("cob_dyncall_resolve", (cob_tree) v);
       stackframe_cnt = stack_save;
       fprintf (o_src, "\tand\t%%eax,%%eax\n");
       fprintf (o_src, "\tjz\t.L%d\n", exceplabel);
@@ -5801,21 +5786,4 @@ mark_actives (int first, int last)
     last = 0;
   for (i = first; i <= last; i++)
     active[i] = 1;
-}
-
-int
-sort_exref_compare (const void *z1, const void *z2)
-{
-  char *str1, ss1[256], ss2[256];
-  struct sym **zz1, **zz2;
-  int r;
-
-  zz1 = (struct sym **) z1;
-  zz2 = (struct sym **) z2;
-  str1 = var_name (*zz1);
-  strcpy (ss1, str1);
-  str1 = var_name (*zz2);
-  strcpy (ss2, str1);
-  r = strcmp (ss1, ss2);
-  return r;
 }

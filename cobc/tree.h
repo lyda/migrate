@@ -1,3 +1,5 @@
+typedef struct sym *cob_tree;
+
 /*
  * Literals
  */
@@ -42,7 +44,7 @@ extern struct lit *make_literal (char *name);
 struct sym
 {
   char litflag;			/* 1 for literals, 2 for variables */
-  struct sym *next;		/* pointer to next symbol with same hash */
+  cob_tree next;		/* pointer to next symbol with same hash */
   char *name;			/* symbol (variable) name */
   char type;			/* label or elementary item or group item 
 				   9,A,X,B,C=elem; 
@@ -57,19 +59,19 @@ struct sym
   unsigned descriptor;		/* field descriptor offset in data seg */
   /* or index field descriptor (files) */
   short sec_no;			/* asm section number */
-  struct sym *clone;		/* NULL if this symbol is unique
+  cob_tree clone;		/* NULL if this symbol is unique
 				   otherwise, it must be further qualified */
   int times;			/* occurs times */
   char *picstr;			/* pointer to picture string saved or 
 				   pointer to rec_varying (files) */
-  struct sym *parent;		/* pointer to parent node (level)
+  cob_tree parent;		/* pointer to parent node (level)
 				   pointer to STATUS var (files) */
-  struct sym *son;		/* used in field hierarchy
+  cob_tree son;		/* used in field hierarchy
 				   for files this is the assign 
 				   variable (filename) */
-  struct sym *brother;		/* field variable at the same level or
+  cob_tree brother;		/* field variable at the same level or
 				   alternate key list pointer (for indexed files) */
-  struct sym *ix_desc;		/* key variable (in file descriptor)
+  cob_tree ix_desc;		/* key variable (in file descriptor)
 				   pointer to fdesc (in record) */
   struct scr_info *scr;		/*  screen info in screen items */
   struct report_info *ri;	/*  report info in report items */
@@ -90,7 +92,7 @@ struct sym
   char defined;			/* first time defined? */
   unsigned pic;			/* picture offset in data segment */
   int linkage_flg;		/* or record offset in stack (files) */
-  struct sym *redefines;	/* points to a redefined field 
+  cob_tree redefines;	/* points to a redefined field 
 				   or record symbol (files) */
   struct
   {
@@ -111,11 +113,11 @@ struct sym
   struct occurs *occurs;	/* for DEPENDING ON or null if fixed table */
 };
 
-#define SYMBOL(x)		((struct sym *) (x))
+#define SYMBOL(x)		((cob_tree) (x))
 #define SYMBOL_P(x)		(SYMBOL (x)->litflag == 0)
 
-extern struct sym *make_symbol (char *name);
-extern struct sym *make_filler (void);
+extern cob_tree make_symbol (char *name);
+extern cob_tree make_filler (void);
 
 
 /*
@@ -135,6 +137,9 @@ struct expr
 #define EXPR_LEFT(x)	(EXPR (x)->left)
 #define EXPR_RIGHT(x)	(EXPR (x)->right)
 
+extern cob_tree make_expr (cob_tree left, char op, cob_tree right);
+
+
 /*
  * Storage for subscripted variable references.
  * First node is the variable, other are subscripts as 
@@ -142,7 +147,7 @@ struct expr
  * For instance: VAR ( SUB1 - 5, SUB2 + 3 ) is represented as
  * 5 nodes: (sy,op) = (VAR,0) (SUB1,'-') (5,',') (SUB2,'+') (3,',')
  * where the numbers are (struct lit *) pointers and the variables
- * are (struct sym *) pointers.
+ * are (cob_tree) pointers.
  */
 struct subref
 {
@@ -163,9 +168,9 @@ struct subref
 struct refmod
 {
   char litflag;			/* 4 = refmod */
-  struct sym *off;		/* offset from normal start address */
-  struct sym *sym;		/* pointer to original var: must be at the same relative offset as sym in subref */
-  struct sym *len;		/* corrected length */
+  cob_tree off;		/* offset from normal start address */
+  cob_tree sym;		/* pointer to original var: must be at the same relative offset as sym in subref */
+  cob_tree len;		/* corrected length */
   short slot;			/* slot in the data section */
 };
 
@@ -202,7 +207,7 @@ struct rd
   struct rd *next;
   char *name;
   char type;			/* 'W' for report (RD) */
-  struct sym *file;		/* file for writing this report */
+  cob_tree file;		/* file for writing this report */
   struct list *controls;	/* list of controls (listing breaks) */
   struct list *items;		/* list of all report items */
   int page_limit;
@@ -219,7 +224,7 @@ struct report_info
   int line_offset;		/* PLUS <offset> given */
   int column;
   int value_source;		/* SUM, SOURCE (from a variable), literal */
-  /* the actual source symbol is in (struct sym *)->value */
+  /* the actual source symbol is in (cob_tree)->value */
 };
 
 /* varying record range and actual size */
@@ -227,7 +232,7 @@ struct rec_varying
 {
   struct lit *lmin;
   struct lit *lmax;
-  struct sym *reclen;
+  cob_tree reclen;
 };
 
 /* selection subject set (evaluate statement) */
@@ -241,14 +246,14 @@ struct selsubject
 struct sortfile_node
 {
   struct sortfile_node *next;
-  struct sym *sy;
+  cob_tree sy;
 };
 
 /* information required by the 'perform ... varying ... after' statements */
 struct perf_info
 {
-  struct sym *pname1;		/* symbol name */
-  struct sym *pname2;		/* symbol name */
+  cob_tree pname1;		/* symbol name */
+  cob_tree pname2;		/* symbol name */
   unsigned long ljmp;		/* jump label  */
   unsigned long lend;		/* end  label  */
 };
@@ -261,7 +266,7 @@ struct perform_info
 /* information required by the math verbs statements */
 struct math_var
 {
-  struct sym *sname;		/* symbol name */
+  cob_tree sname;		/* symbol name */
   unsigned int rounded;		/* rounded option: 0=false, 1=true */
   struct math_var *next;
 };
@@ -309,15 +314,15 @@ struct scr_info
   int column;
   short int foreground;
   short int background;
-  struct sym *from;
-  struct sym *to;
+  cob_tree from;
+  cob_tree to;
   int label;
 };
 
 struct converting_struct
 {
-  struct sym *fromvar;
-  struct sym *tovar;
+  cob_tree fromvar;
+  cob_tree tovar;
   struct inspect_before_after *before_after;
 };
 
@@ -325,14 +330,14 @@ struct tallying_list
 {
   struct tallying_list *next;
   struct tallying_for_list *tflist;
-  struct sym *count;
+  cob_tree count;
 };
 
 struct tallying_for_list
 {
   struct tallying_for_list *next;
   int options;
-  struct sym *forvar;
+  cob_tree forvar;
   struct inspect_before_after *before_after;
 };
 
@@ -340,7 +345,7 @@ struct replacing_list
 {
   struct replacing_list *next;
   int options;
-  struct sym *byvar;
+  cob_tree byvar;
   struct replacing_by_list *replbylist;
   struct inspect_before_after *before_after;
 };
@@ -348,22 +353,22 @@ struct replacing_list
 struct replacing_by_list
 {
   struct replacing_by_list *next;
-  struct sym *replvar;
-  struct sym *byvar;
+  cob_tree replvar;
+  cob_tree byvar;
   struct inspect_before_after *before_after;
 };
 
 struct inspect_before_after
 {
-  struct sym *before;
-  struct sym *after;
+  cob_tree before;
+  cob_tree after;
 };
 
 
 struct alternate_list
 {
   struct alternate_list *next;
-  struct sym *key;
+  cob_tree key;
   int duplicates;
 };
 
@@ -371,22 +376,22 @@ struct unstring_delimited
 {
   struct unstring_delimited *next;
   short int all;
-  struct sym *var;
+  cob_tree var;
 };
 
 struct unstring_destinations
 {
   struct unstring_destinations *next;
-  struct sym *var;
-  struct sym *delim;
-  struct sym *count;
+  cob_tree var;
+  cob_tree delim;
+  cob_tree count;
 };
 
 struct string_from
 {
   struct string_from *next;
-  struct sym *var;
-  struct sym *delim;
+  cob_tree var;
+  cob_tree delim;
 };
 
 struct list
@@ -420,14 +425,14 @@ struct index_to_table_list
 
 struct condition
 {
-  struct sym *sy;		/* implied first operand */
+  cob_tree sy;		/* implied first operand */
   int oper;			/* operator */
 };
 
 /* OCCURS ... DEPENDING ON info */
 struct occurs
 {
-  struct sym *depend;
+  cob_tree depend;
   int min, max;
 };
 
