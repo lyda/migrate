@@ -2589,45 +2589,8 @@ opt_end_write: | END_WRITE ;
 
 
 /*******************
- * Substructures
- *******************/
-
-
-/*
- * Expressions
- */
-
-expr:
-  gname				{ $$ = $1; }
-| '(' expr ')'			{ $$ = $2; }
-| expr '+' expr			{ $$ = make_expr ($1, '+', $3); }
-| expr '-' expr			{ $$ = make_expr ($1, '-', $3); }
-| expr '*' expr			{ $$ = make_expr ($1, '*', $3); }
-| expr '/' expr			{ $$ = make_expr ($1, '/', $3); }
-| expr '^' expr			{ $$ = make_expr ($1, '^', $3); }
-;
-/* opt_expr will be NULL or a (cob_tree) pointer if the expression
-   was given, otherwise it will be valued -1 */
-opt_expr:
-    /* nothing */   { $$ = (cob_tree)-1; }
-    | expr          { $$ = $1; }
-    ;
-
-
-/*******************
  * Common rules
  *******************/
-
-var_list_gname:
-  gname				{ $$ = create_mathvar_info (NULL, $1, 0); }
-| var_list_gname opt_sep
-  gname				{ $$ = create_mathvar_info ($1, $3, 0); }
-;
-var_list_name:
-  name flag_rounded opt_sep	{ $$ = create_mathvar_info (NULL, $1, $2); }
-| var_list_name
-  name flag_rounded opt_sep	{ $$ = create_mathvar_info ($1, $2, $3); }
-;
 
 
 /*
@@ -2695,6 +2658,27 @@ opt_not_invalid_key_sentence:
 
 
 /*
+ * Expressions
+ */
+
+expr:
+  gname				{ $$ = $1; }
+| '(' expr ')'			{ $$ = $2; }
+| expr '+' expr			{ $$ = make_expr ($1, '+', $3); }
+| expr '-' expr			{ $$ = make_expr ($1, '-', $3); }
+| expr '*' expr			{ $$ = make_expr ($1, '*', $3); }
+| expr '/' expr			{ $$ = make_expr ($1, '/', $3); }
+| expr '^' expr			{ $$ = make_expr ($1, '^', $3); }
+;
+/* opt_expr will be NULL or a (cob_tree) pointer if the expression
+   was given, otherwise it will be valued -1 */
+opt_expr:
+    /* nothing */   { $$ = (cob_tree)-1; }
+    | expr          { $$ = $1; }
+    ;
+
+
+/*
  * Condition
  */
 
@@ -2741,7 +2725,6 @@ simple_condition:
     $$.oper = $2;
   }
 ;
-
 implied_op_condition:
   condition               { $$ = $1; }
 | cond_op expr
@@ -2818,12 +2801,20 @@ sign_condition:
 
 
 /*****************************************************************************
- * Common rules
+ * Basic rules
  *****************************************************************************/
 
-/*
- *
- */
+
+var_list_gname:
+  gname				{ $$ = create_mathvar_info (NULL, $1, 0); }
+| var_list_gname opt_sep
+  gname				{ $$ = create_mathvar_info ($1, $3, 0); }
+;
+var_list_name:
+  name flag_rounded opt_sep	{ $$ = create_mathvar_info (NULL, $1, $2); }
+| var_list_name
+  name flag_rounded opt_sep	{ $$ = create_mathvar_info ($1, $2, $3); }
+;
 
 idstring:
   { start_condition = START_ID; } IDSTRING { $$ = $2; }
