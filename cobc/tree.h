@@ -459,6 +459,7 @@ struct cb_file {
   int organization;		/* ORGANIZATION */
   int access_mode;		/* ACCESS MODE */
   cb_tree file_status;		/* FILE STATUS */
+  cb_tree sharing;		/* SHARING */
   cb_tree key;			/* RELATIVE/RECORD KEY */
   struct cb_alt_key {
     cb_tree key;

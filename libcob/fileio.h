@@ -93,6 +93,7 @@
 #define COB_STATUS_47_INPUT_DENIED		47
 #define COB_STATUS_48_OUTPUT_DENIED		48
 #define COB_STATUS_49_I_O_DENIED		49
+#define COB_STATUS_61_FILE_SHARING		61
 
 
 /* File connector */
@@ -127,7 +128,7 @@ typedef struct {
 /* File I-O functions */
 
 typedef struct {
-  int (*open) (cob_file *f, char *filename, int mode);
+  int (*open) (cob_file *f, char *filename, int mode, int flag);
   int (*close) (cob_file *f, int opt);
   int (*start) (cob_file *f, int cond, cob_field *key);
   int (*read) (cob_file *f, cob_field *key);
@@ -141,7 +142,7 @@ extern cob_file *cob_error_file;
 
 extern void cob_init_fileio (void);
 extern void cob_default_error_handle (void);
-extern void cob_open (cob_file *f, int mode);
+extern void cob_open (cob_file *f, int mode, int flag);
 extern void cob_close (cob_file *f, int opt);
 extern void cob_read (cob_file *f, cob_field *key);
 extern void cob_write (cob_file *f, cob_field *rec);

@@ -40,8 +40,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fcntl.h>
 #include <errno.h>
+#include <sys/file.h>
 #include <sys/stat.h>
 
 #if HAVE_DB1_DB_H
@@ -78,7 +78,7 @@ static cob_fileio_funcs *fileio_funcs[COB_ORG_MAX];
  */
 
 static int
-file_open (cob_file *f, char *filename, int mode)
+file_open (cob_file *f, char *filename, int mode, int flag)
 {
   FILE *fp = NULL;
 
@@ -101,6 +101,12 @@ file_open (cob_file *f, char *filename, int mode)
   if (fp == NULL)
     return errno;
 
+  if (flock (fileno (fp), (flag ? LOCK_EX : LOCK_SH) | LOCK_NB) < 0)
+    {
+      fclose (fp);
+      return errno;
+    }
+
   f->file = fp;
   return 0;
 }
@@ -108,10 +114,14 @@ file_open (cob_file *f, char *filename, int mode)
 static int
 file_close (cob_file *f, int opt)
 {
+  struct flock lock;
+
   switch (opt)
     {
     case COB_CLOSE_NORMAL:
     case COB_CLOSE_LOCK:
+      lock.l_type = F_UNLCK;
+      flock (fileno (f->file), LOCK_UN);
       fclose (f->file);
       return COB_STATUS_00_SUCCESS;
     default:
@@ -158,7 +168,7 @@ sequential_write (cob_file *f)
 static int
 sequential_rewrite (cob_file *f)
 {
-  fseek (f->file, - f->record->size, SEEK_CUR);
+  fseek (f->file, -f->record->size, SEEK_CUR);
   fwrite (f->record->data, f->record->size, 1, f->file);
   return COB_STATUS_00_SUCCESS;
 }
@@ -439,7 +449,7 @@ struct indexed_file {
 };
 
 static int
-indexed_open (cob_file *f, char *filename, int mode)
+indexed_open (cob_file *f, char *filename, int mode, int flag)
 {
   int i, j;
   int flags = INITIAL_FLAGS;
@@ -767,7 +777,7 @@ sort_compare (const DBT *k1, const DBT *k2)
 }
 
 static int
-sort_open (cob_file *f, char *filename, int mode)
+sort_open (cob_file *f, char *filename, int mode, int flag)
 {
   BTREEINFO info;
   struct sort_file *p = f->file;
@@ -874,7 +884,7 @@ save_status (cob_file *f, int status)
 }
 
 void
-cob_open (cob_file *f, int mode)
+cob_open (cob_file *f, int mode, int flag)
 {
   int was_not_exist = 0;
   char filename[FILENAME_MAX];
@@ -903,7 +913,7 @@ cob_open (cob_file *f, int mode)
 	RETURN_STATUS (COB_STATUS_35_NOT_EXISTS);
     }
 
-  switch (fileio_funcs[(int) f->organization]->open (f, filename, mode))
+  switch (fileio_funcs[(int) f->organization]->open (f, filename, mode, flag))
     {
     case 0:
       f->open_mode = mode;
@@ -927,6 +937,9 @@ cob_open (cob_file *f, int mode)
     case EISDIR:
     case EROFS:
       RETURN_STATUS (COB_STATUS_37_PERMISSION_DENIED);
+      //case EACCES:
+    case EAGAIN:
+      RETURN_STATUS (COB_STATUS_61_FILE_SHARING);
     default:
       RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
     }
@@ -1180,7 +1193,7 @@ void
 cob_sort_using (cob_file *sort_file, cob_file *data_file)
 {
   cob_field temp = {0, 0, 0};
-  cob_open (data_file, COB_OPEN_INPUT);
+  cob_open (data_file, COB_OPEN_INPUT, 0);
   while (1)
     {
       cob_read (data_file, 0);
@@ -1199,7 +1212,7 @@ void
 cob_sort_giving (cob_file *sort_file, cob_file *data_file)
 {
   cob_field temp = {0, 0, 0};
-  cob_open (data_file, COB_OPEN_OUTPUT);
+  cob_open (data_file, COB_OPEN_OUTPUT, 0);
   while (1)
     {
       cob_read (sort_file, 0);

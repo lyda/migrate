@@ -634,12 +634,12 @@ reserve_clause:
 /* SHARING clause */
 
 sharing_clause:
-  SHARING _with sharing_option	{ PENDING ("SHARING"); }
+  SHARING _with sharing_option	{ current_file->sharing = $3; }
 ;
 sharing_option:
-  ALL _other
-| NO _other
-| READ ONLY
+  ALL _other			{ $$ = NULL; PENDING ("SHARING ALL OTHER"); }
+| NO _other			{ $$ = cb_int1; }
+| READ ONLY			{ $$ = cb_int0; }
 ;
 
 
@@ -2326,26 +2326,37 @@ end_multiply:
  */
 
 open_statement:
-  OPEN open_mode open_list
+  OPEN open_list
 ;
 open_list:
-| open_list			{ BEGIN_STATEMENT ("OPEN"); }
-  opt_open_mode file_name
+| open_list
+  open_mode open_sharing file_name_list
   {
-    cb_tree file = cb_ref ($4);
-    current_statement->file = file;
-    current_statement->body = cb_build_funcall_2 ("cob_open", file,
-						  cb_int (current_mode));
+    cb_tree l;
+    for (l = $4; l; l = CB_CHAIN (l))
+      {
+	cb_tree file = cb_ref (CB_VALUE (l));
+	struct cb_file *p = CB_FILE (file);
+	cb_tree sharing = $3 ? $3 : p->sharing ? p->sharing : cb_int0;
+	if (sharing == cb_int0 /* READ ONLY */
+	    && CB_INTEGER ($2)->val != COB_OPEN_INPUT)
+	  sharing = cb_int1;
+	BEGIN_STATEMENT ("OPEN");
+	current_statement->file = file;
+	current_statement->body =
+	  cb_build_funcall_3 ("cob_open", file, $2, sharing);
+      }
   }
 ;
-opt_open_mode:
-| open_mode
-;
 open_mode:
-  INPUT				{ current_mode = COB_OPEN_INPUT; }
-| OUTPUT			{ current_mode = COB_OPEN_OUTPUT; }
-| I_O				{ current_mode = COB_OPEN_I_O; }
-| EXTEND			{ current_mode = COB_OPEN_EXTEND; }
+  INPUT				{ $$ = cb_int (COB_OPEN_INPUT); }
+| OUTPUT			{ $$ = cb_int (COB_OPEN_OUTPUT); }
+| I_O				{ $$ = cb_int (COB_OPEN_I_O); }
+| EXTEND			{ $$ = cb_int (COB_OPEN_EXTEND); }
+;
+open_sharing:
+  /* empty */			{ $$ = NULL; }
+| SHARING _with sharing_option	{ $$ = $3; }
 ;
 
 
