@@ -1,0 +1,388 @@
+## ISO+IEC+1989-2002 13.16.42
+
+AT_INIT([REDEFINES clause])
+
+AT_TESTED([cobc])
+
+
+## 13.16.42.2-1
+
+# TO BE TESTED
+
+
+## 13.16.42.2-2
+
+AT_SETUP([REDEFINES 02 by 01])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G.
+  02 X          PIC X.
+01 Y            REDEFINES X PIC 9.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C prog.cob], [1], ,
+[prog.cob:8: level number of REDEFINES entries must be identical
+])
+
+AT_CLEANUP
+
+AT_SETUP([REDEFINES 03 by 02])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G1.
+  02 G2.
+    03 X        PIC X.
+  02 Y          REDEFINES X PIC 9.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C prog.cob], [1], ,
+[prog.cob:9: level number of REDEFINES entries must be identical
+])
+
+AT_CLEANUP
+
+AT_SETUP([REDEFINES 66])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G.
+  02 X          PIC X.
+  66 A          RENAMES X.
+  66 B          REDEFINES A PIC 9.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C prog.cob], [1], ,
+[prog.cob:9: level number of REDEFINES entry cannot be 66 or 88
+])
+
+AT_CLEANUP
+
+AT_SETUP([REDEFINES 88])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 X            PIC X.
+  88 A          VALUE "A".
+  88 B          REDEFINES A VALUE "B".
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C prog.cob], [1], ,
+[prog.cob:8: level number of REDEFINES entry cannot be 66 or 88
+])
+
+AT_CLEANUP
+
+
+## 13.16.42.2-3
+
+# TO BE TESTED
+
+
+## 13.16.42.2-4
+
+# TO BE TESTED
+
+
+## 13.16.42.2-5
+
+AT_SETUP([Lower level number than REDEFINES entry])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G1.
+  02 G2.
+    03 X        PIC X.
+  02 G3.
+    03 A        REDEFINES X PIC 9.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C prog.cob], [1], ,
+[prog.cob:10: `X' undefined in `G3'
+])
+
+AT_CLEANUP
+
+
+## 13.16.42.2-6
+
+# TO BE TESTED
+
+
+## 13.16.42.2-7
+
+AT_SETUP([Lower level number than REDEFINES entry])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G1.
+  02 X          PIC X.
+01 G2.
+  02 X          PIC X.
+  02 A          REDEFINES X IN G1.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C prog.cob], [1], ,
+[prog.cob:10: `X' cannot be qualified
+])
+
+AT_CLEANUP
+
+
+## 13.16.42.2-8
+
+AT_SETUP([Multiple redefinition of the same storage (OK)])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G1.
+  02 X          PIC X.
+  02 A          REDEFINES X PIC 9.
+  02 B          REDEFINES X PIC 9.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C prog.cob], [0])
+
+AT_CLEANUP
+
+
+## 13.16.42.2-9
+
+AT_SETUP([Redefined size exceeds the storage size (1)])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G1.
+  02 X          PIC X.
+  02 A          REDEFINES X PIC 99.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C prog.cob], [1], ,
+[prog.cob:8: size of `A' larger than size of `X'
+])
+
+AT_CLEANUP
+
+AT_SETUP([Redefined size exceeds the storage size (2)])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 X            PIC X EXTERNAL.
+01 A            REDEFINES X PIC 99.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C prog.cob], [1], ,
+[prog.cob:7: size of `A' larger than size of `X'
+])
+
+AT_CLEANUP
+
+AT_SETUP([Redefined size exceeds the storage size (OK)])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 X            PIC X.
+01 A            REDEFINES X PIC 99.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C prog.cob], [0])
+
+AT_CLEANUP
+
+
+## 13.16.42.2-10
+
+AT_SETUP([VALUE clause under REDEFIENS (1)])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 X            PIC X.
+01 A            REDEFINES X PIC X VALUE 'A'.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C prog.cob], [1], ,
+[prog.cob:7: entries under REDEFINES cannot have VALUE clause
+])
+
+AT_CLEANUP
+
+AT_SETUP([VALUE clause under REDEFIENS (2)])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 X            PIC X.
+01 G            REDEFINES X.
+  02 A          PIC X VALUE 'A'.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C prog.cob], [1], ,
+[prog.cob:8: entries under REDEFINES cannot have VALUE clause
+])
+
+AT_CLEANUP
+
+AT_SETUP([VALUE clause under REDEFIENS (OK)])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 X            PIC X.
+01 Y            REDEFINES X PIC X.
+  88 A          VALUE 'A'.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C prog.cob], [0])
+
+AT_CLEANUP
+
+
+## 13.16.42.2-11
+
+AT_SETUP([REDEFINES with intervention (1)])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 X            PIC X.
+01 Y            PIC X.
+01 A            REDEFINES X PIC X.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C prog.cob], [1], ,
+[prog.cob:8: REDEFINES must follow the original definition
+])
+
+AT_CLEANUP
+
+AT_SETUP([REDEFINES with intervention (2)])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 G1.
+  02 G2.
+    03 X        PIC X.
+  02 Y          PIC X.
+  02 A          REDEFINES G2 PIC X.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C prog.cob], [1], ,
+[prog.cob:10: REDEFINES must follow the original definition
+])
+
+AT_CLEANUP
+
+
+## 13.16.42.2-12
+
+AT_SETUP([REDEFINES under REDEFINES (OK)])
+
+AT_DATA([prog.cob], [
+IDENTIFICATION  DIVISION.
+PROGRAM-ID.     prog.
+DATA            DIVISION.
+WORKING-STORAGE SECTION.
+01 X            PIC X.
+01 G1           REDEFINES X.
+  02 A          PIC X.
+  02 B          REDEFINES A PIC X.
+PROCEDURE       DIVISION.
+  STOP RUN.
+])
+
+AT_CHECK([cobc -C prog.cob], [0])
+
+AT_CLEANUP
+
+
+## 13.16.42.2-13
+
+# TO BE TESTED
+
+
+## 13.16.42.2-14
+
+# TO BE TESTED
+
+
+## 13.16.42.2-15
+
+# TO BE TESTED
+
+
+## 13.16.42.2-16
+
+# TO BE TESTED

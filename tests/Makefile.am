@@ -1,19 +1,24 @@
 SUBDIRS = cobol85
 
-TESTSUITE = $(srcdir)/redef $(srcdir)/subref $(srcdir)/runtime
+TESTSUITE =			\
+	$(srcdir)/redef		\
+	$(srcdir)/subref	\
+	$(srcdir)/redefines	\
+	$(srcdir)/runtime
 
 EXTRA_DIST = $(TESTSUITE:=.at) $(TESTSUITE)
+
+DISTCLEANFILES = atconfig
 
 check-local: atconfig atlocal $(TESTSUITE)
 	@for x in $(TESTSUITE); do \
 	  $(SHELL) $${x}; \
 	done
 
-distclean-local:
-	rm -f atconfig
-	rm -rf redef.dir redef.log
-	rm -rf runtime.dir runtime.log
-	rm -rf subref.dir subref.log
+clean-local:
+	@for x in $(TESTSUITE); do \
+	  test -e $${x} && $(SHELL) $${x} -c; \
+	done
 
 $(srcdir)/package.m4: $(top_srcdir)/configure.ac
 	@echo "creating $(srcdir)/package.m4"
