@@ -157,7 +157,79 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 AT_CLEANUP
 
 
-# 6) TODO
+# 6) DONE
+
+AT_SETUP([REDEFINES to OCCURS])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 G.
+         02 X           PIC X OCCURS 2.
+         02 Y           REDEFINES X PIC XX.
+       PROCEDURE        DIVISION.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:8: the original definition `X' cannot have OCCURS
+])
+
+AT_CLEANUP
+
+AT_SETUP([REDEFINES with subscript])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 G1.
+         02 G2          OCCURS 2.
+           03 X         PIC X.
+           03 Y         REDEFINES X(1) PIC X.
+       PROCEDURE        DIVISION.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:9: `X' cannot be subscripted here
+])
+
+AT_CLEANUP
+
+AT_SETUP([REDEFINES with variable occurrence])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 G1.
+         02 X           PIC XX.
+         02 Y           REDEFINES X PIC X OCCURS 1 TO 2 DEPENDING ON I.
+       01 G2.
+         02 X           PIC XX.
+         02 Y           REDEFINES X.
+           03 A         PIC X OCCURS 1 TO 2 DEPENDING ON I.
+       01 G3.
+         02 X.
+           03 A         PIC X OCCURS 1 TO 2 DEPENDING ON I.
+         02 Y           REDEFINES X PIC X.
+       01 I             PIC 9.
+       PROCEDURE        DIVISION.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:8: `Y' cannot be variable length
+prog.cob:11: `Y' cannot be variable length
+prog.cob:16: the original definition `X' cannot be variable length
+])
+
+AT_CLEANUP
 
 
 # 7) DONE
@@ -179,7 +251,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:10: `X' cannot be qualified
+[prog.cob:10: `X' cannot be qualified here
 ])
 
 AT_CLEANUP
