@@ -111,18 +111,20 @@ AC_SUBST(COMPUTED_GOTO)
 
 # OpenCOBOL Configuration
 
+LIBCOB_CFLAGS=""
+LIBCOB_LIBS="${LIBDB} ${LIBGMP} ${LIBINTL} ${LIBLTDL} ${LIBRL}"
 COB_COBPP="cobpp"
 COB_CFLAGS="-I$includedir"
-COB_LIBS="-L$libdir -lcob ${LIBDB} ${LIBGMP} ${LIBLTDL} ${LIBRL}"
+COB_LIBS="-L$libdir -lcob ${LIBCOB_LIBS}"
+COB_CONFIG_FILE="$datadir/$PACKAGE/libcob.conf"
 COB_LIBRARY_PATH=".:$libdir/$PACKAGE"
-LIBCOB_CFLAGS=""
-LIBCOB_LIBS="${LIBDB} ${LIBGMP} ${LIBLTDL} ${LIBRL}"
 LIBS="$save_libs"
 
 AC_SUBST(COB_CC)
 AC_SUBST(COB_COBPP)
 AC_SUBST(COB_CFLAGS)
 AC_SUBST(COB_LIBS)
+AC_SUBST(COB_CONFIG_FILE)
 AC_SUBST(COB_LIBRARY_PATH)
 AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBS)
@@ -139,6 +141,7 @@ echo "  COB_CC               ${COB_CC}"
 echo "  COB_COBPP            ${COB_COBPP}"
 echo "  COB_CFLAGS           ${COB_CFLAGS}"
 echo "  COB_LIBS             ${COB_LIBS}"
+echo "  COB_CONFIG_FILE      ${COB_CONFIG_FILE}"
 echo "  COB_LIBRARY_PATH     ${COB_LIBRARY_PATH}"
 echo ""
 echo "  Use gettext for I17n:                        ${USE_NLS}"

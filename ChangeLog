@@ -1,5 +1,10 @@
 2002-05-29  Keisuke Nishida  <knishida@netlab.jp>
 
+	* libcob.conf: New file.
+	* configure.ac, Makefile.am: Add `COB_CONFIG_FILE'.
+
+2002-05-29  Keisuke Nishida  <knishida@netlab.jp>
+
 	* configure.ac, Makefile.am: Rename `COB_LDADD' to `COB_LIBS'
 
 2002-05-19  Keisuke Nishida  <knishida@netlab.jp>
