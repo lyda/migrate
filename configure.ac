@@ -34,8 +34,6 @@ AC_DEFINE(COB_DEBUG)
 
 COBC_LIBS=""
 COBC_CFLAGS=""
-COBPP_LIBS=""
-COBPP_CFLAGS=""
 LIBCOB_LIBS="-lm"
 LIBCOB_CFLAGS=""
 
@@ -120,7 +118,6 @@ LIBCOB_LIBS="$LIBCOB_LIBS -lltdl"
 AM_GNU_GETTEXT([external])
 AM_GNU_GETTEXT_VERSION(0.11.5)
 if test "x$LTLIBINTL" != "x"; then
-  COBPP_LIBS="$COBPP_LIBS $LTLIBINTL"
   LIBCOB_LIBS="$LIBCOB_LIBS $LTLIBINTL"
 fi
 
@@ -153,7 +150,6 @@ else
   COB_CFLAGS="-I$includedir"
 fi
 
-COB_COBPP="cobpp"
 COB_LIBS="-L$libdir -lcob ${LIBCOB_LIBS}"
 COB_CONFIG_FILE="$sysconfdir/libcob.conf"
 COB_LIBRARY_PATH=".:$libdir/$PACKAGE_TARNAME"
@@ -161,7 +157,6 @@ COB_MODULE_EXT=`echo "$shlibext" | sed 's/dll\.a/dll/'`
 LIBS="$save_libs"
 
 AC_SUBST(COB_CC)
-AC_SUBST(COB_COBPP)
 AC_SUBST(COB_CFLAGS)
 AC_SUBST(COB_LIBS)
 AC_SUBST(COB_CONFIG_FILE)
@@ -169,14 +164,12 @@ AC_SUBST(COB_LIBRARY_PATH)
 AC_SUBST(COB_MODULE_EXT)
 AC_SUBST(COBC_CFLAGS)
 AC_SUBST(COBC_LIBS)
-AC_SUBST(COBPP_CFLAGS)
-AC_SUBST(COBPP_LIBS)
 AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBS)
 
 AC_CONFIG_FILES([cob.pc cob-config
 		Makefile lib/Makefile libcob/Makefile
-		cobpp/Makefile cobc/Makefile po/Makefile.in texi/Makefile
+		cobc/Makefile po/Makefile.in texi/Makefile
 		tests/atlocal tests/Makefile tests/cobol85/Makefile])
 AC_OUTPUT
 
@@ -184,7 +177,6 @@ echo ""
 echo "OpenCOBOL Configuration:"
 echo ""
 echo "  COB_CC               ${COB_CC}"
-echo "  COB_COBPP            ${COB_COBPP}"
 echo "  COB_CFLAGS           ${COB_CFLAGS}"
 echo "  COB_LIBS             ${COB_LIBS}"
 echo "  COB_CONFIG_FILE      ${COB_CONFIG_FILE}"

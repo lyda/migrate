@@ -38,12 +38,7 @@
 #include "reserved.h"
 #include "lib/getopt.h"
 
-/* from parser.c */
-extern int yyparse (void);
-#ifdef COB_DEBUG
-extern int yy_flex_debug;
-extern int yy_bison_debug;
-#endif
+struct cobc_replacement *cobc_replacement = NULL;
 
 
 /*
@@ -55,20 +50,28 @@ int cobc_flag_call_static = 0;
 int cobc_flag_debugging_line = 0;
 int cobc_flag_line_directive = 0;
 
-FILE *cobc_out;
-
-char *cobc_source_file = NULL;
-int cobc_source_line = 0;
-
-struct cobc_program *current_program = NULL;
-struct cobc_label *current_section = NULL, *current_paragraph = NULL;
+#undef COBC_WARNING
+#define COBC_WARNING(sig,var,name,doc) int var = 0;
+#include "warning.def"
 
 int errorcount;
 int warningcount;
 
-#undef COBC_WARNING
-#define COBC_WARNING(sig,var,name,doc) int var = 0;
-#include "warning.def"
+FILE *cobc_out;
+
+char *cobc_source_file = NULL;
+int cobc_source_line = 0;
+int cobc_source_format = COBC_FORMAT_FIXED;
+int cobc_tab_width = COBC_DEFAULT_TAB_WIDTH;
+int cobc_text_column = COBC_DEFAULT_TEXT_COLUMN;
+
+FILE *cobc_depend_file = NULL;
+char *cobc_depend_target = NULL;
+struct cobc_name_list *cobc_depend_list = NULL;
+struct cobc_name_list *cobc_include_list = NULL;
+
+struct cobc_program *current_program = NULL;
+struct cobc_label *current_section = NULL, *current_paragraph = NULL;
 
 
 /*
@@ -82,10 +85,8 @@ static char *program_name;
 static char *output_name;
 
 static char cob_cc[FILENAME_MAX];		/* gcc */
-static char cob_cobpp[FILENAME_MAX];		/* cobpp */
 static char cob_cflags[FILENAME_MAX];		/* -I... */
 static char cob_libs[FILENAME_MAX];		/* -L... -lcob */
-static char cobpp_flags[FILENAME_MAX];
 
 static enum {
   stage_preprocess,
@@ -137,7 +138,6 @@ init_environment (int argc, char *argv[])
   output_name = NULL;
 
   init_var (cob_cc,     "COB_CC",     COB_CC);
-  init_var (cob_cobpp,  "COB_COBPP",  COB_COBPP);
   init_var (cob_cflags, "COB_CFLAGS", COB_CFLAGS);
   init_var (cob_libs,   "COB_LIBS",   COB_LIBS);
 
@@ -147,8 +147,6 @@ init_environment (int argc, char *argv[])
       strcat (cob_libs, " ");
       strcat (cob_libs, p);
     }
-
-  strcpy (cobpp_flags, "");
 }
 
 static void
@@ -173,8 +171,8 @@ static struct option long_options[] = {
   {"save-temps", no_argument, &save_temps, 1},
   {"static", no_argument, &cobc_flag_call_static, 1},
   {"dynamic", no_argument, &cobc_flag_call_static, 0},
-  {"free", no_argument, 0, 'F'},
-  {"fixed", no_argument, 0, 'X'},
+  {"free", no_argument, &cobc_source_format, COBC_FORMAT_FREE},
+  {"fixed", no_argument, &cobc_source_format, COBC_FORMAT_FIXED},
   {"column", required_argument, 0, '*'},
   {"MT", required_argument, 0, '%'},
   {"MF", required_argument, 0, '@'},
@@ -186,10 +184,6 @@ static struct option long_options[] = {
   {"W"name, no_argument, &var, 1},		\
   {"Wno-"name, no_argument, &var, 0},
 #include "warning.def"
-#ifdef COB_DEBUG
-  {"ts", no_argument, &yy_flex_debug, 1},
-  {"tp", no_argument, &yy_bison_debug, 1},
-#endif
   {0, 0, 0, 0}
 };
 
@@ -236,12 +230,6 @@ Warning options:\n\
   printf ("  -W%-19s %s\n", name, gettext (doc));
 #include "warning.def"
   puts ("");
-
-#ifdef COB_DEBUG
-  puts (_("Debugging options:\n"
-	  "  -ts           Trace scanner\n"
-	  "  -tp           Trace parser\n"));
-#endif
 }
 
 static int
@@ -251,10 +239,6 @@ process_command_line (int argc, char *argv[])
 
   /* Default options */
   compile_level = stage_executable;
-#ifdef COB_DEBUG
-  yy_flex_debug = 0;
-  yy_bison_debug = 0;
-#endif
 
   /* Parse the options */
   while ((c = getopt_long_only (argc, argv, short_options,
@@ -281,32 +265,41 @@ process_command_line (int argc, char *argv[])
 	  break;
 
 	case '%': /* -MT */
-	  strcat (cobpp_flags, " -MT ");
-	  strcat (cobpp_flags, optarg);
+	  cobc_depend_target = strdup (optarg);
 	  break;
 
 	case '@': /* -MF */
-	  strcat (cobpp_flags, " -MF ");
-	  strcat (cobpp_flags, optarg);
+	  cobc_depend_file = fopen (optarg, "w");
+	  if (!cobc_depend_file)
+	    perror (optarg);
 	  break;
 
 	case 'I':
-	  strcat (cobpp_flags, " -I ");
-	  strcat (cobpp_flags, optarg);
+	  {
+	    struct cobc_name_list *list =
+	      malloc (sizeof (struct cobc_name_list));
+	    list->name = strdup (optarg);
+	    list->next = NULL;
+
+	    /* Append at the end */
+	    if (!cobc_include_list)
+	      cobc_include_list = list;
+	    else
+	      {
+		struct cobc_name_list *p;
+		for (p = cobc_include_list; p->next; p = p->next);
+		p->next = list;
+	      }
+	  }
 	  break;
 
 	case '*': /* -column */
-	  strcat (cobpp_flags, " -C ");
-	  strcat (cobpp_flags, optarg);
+	  cobc_text_column = atoi (optarg);
 	  break;
 
 	case 'T':
-	  strcat (cobpp_flags, " -T ");
-	  strcat (cobpp_flags, optarg);
+	  cobc_tab_width = atoi (optarg);
 	  break;
-
-	case 'F': strcat (cobpp_flags, " -FF"); break;
-	case 'X': strcat (cobpp_flags, " -FX"); break;
 
 	case 'W':
 #undef COBC_WARNING
@@ -320,11 +313,6 @@ process_command_line (int argc, char *argv[])
 	  exit (1);
 	}
     }
-
-  if (cobc_flag_debugging_line)
-    strcat (cobpp_flags, " -fdebugging-line");
-  if (cobc_warn_column_overflow)
-    strcat (cobpp_flags, " -Wcolumn-overflow");
 
   if (compile_level == stage_executable)
     cobc_flag_main = 1;
@@ -465,16 +453,48 @@ process (const char *cmd)
 static int
 preprocess (struct filename *fn)
 {
-  char buff[BUFSIZ];
+  errorcount = 0;
 
+  ppout = stdout;
   if (output_name || compile_level > stage_preprocess)
     {
-      strcat (cobpp_flags, " -o ");
-      strcat (cobpp_flags, fn->preprocess);
+      ppout = fopen (fn->preprocess, "w");
+      if (!ppout)
+	terminate (fn->preprocess);
     }
 
-  sprintf (buff, "%s%s %s", cob_cobpp, cobpp_flags, fn->source);
-  return process (buff);
+  if (ppopen (fn->source, NULL, NULL) != 0)
+    exit (1);
+
+  if (verbose_output)
+    fprintf (stderr, "preprocessing %s into %s\n",
+	     fn->source, fn->preprocess);
+  ppparse ();
+
+  fclose (ppin);
+  fclose (ppout);
+
+  if (errorcount > 0)
+    return -1;
+
+  /* Output dependency list */
+  if (cobc_depend_file)
+    {
+      struct cobc_name_list *l;
+      if (!cobc_depend_target)
+	{
+	  fputs (_("-MT must be given to specify target file\n"), stderr);
+	  exit (1);
+	}
+      fprintf (cobc_depend_file, "%s: \\\n", cobc_depend_target);
+      for (l = cobc_depend_list; l; l = l->next)
+	fprintf (cobc_depend_file, " %s%s\n", l->name, l->next ? " \\" : "");
+      for (l = cobc_depend_list; l; l = l->next)
+	fprintf (cobc_depend_file, "%s:\n", l->name);
+      fclose (cobc_depend_file);
+    }
+
+  return 0;
 }
 
 static int
@@ -489,6 +509,9 @@ process_translate (struct filename *fn)
   cobc_out = fopen (fn->translate, "w");
   if (!cobc_out)
     terminate (fn->translate);
+
+  cobc_source_file = NULL;
+  cobc_source_line = 0;
 
   init_constants ();
   init_reserved_words ();
@@ -654,7 +677,7 @@ main (int argc, char *argv[])
 
 
 static void
-yyprintf (char *file, int line, char *prefix, char *fmt, va_list ap)
+yyprintf (char *file, int line, char *prefix, const char *fmt, va_list ap)
 {
   static struct cobc_label *last_section = NULL;
   static struct cobc_label *last_paragraph = NULL;
@@ -683,7 +706,7 @@ yyprintf (char *file, int line, char *prefix, char *fmt, va_list ap)
 }
 
 void
-yywarn (char *fmt, ...)
+yywarn (const char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
@@ -694,7 +717,7 @@ yywarn (char *fmt, ...)
 }
 
 void
-yyerror (char *fmt, ...)
+yyerror (const char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
@@ -705,7 +728,13 @@ yyerror (char *fmt, ...)
 }
 
 void
-yywarn_x (cobc_tree x, char *fmt, ...)
+pperror (const char *msg)
+{
+  yyerror (msg);
+}
+
+void
+yywarn_x (cobc_tree x, const char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
@@ -716,7 +745,7 @@ yywarn_x (cobc_tree x, char *fmt, ...)
 }
 
 void
-yyerror_x (cobc_tree x, char *fmt, ...)
+yyerror_x (cobc_tree x, const char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);

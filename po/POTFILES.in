@@ -1,16 +1,13 @@
 # List of source files containing translatable strings.
-# Copyright (C) 2002 Keisuke Nishida
 
 # cobc
 cobc/cobc.c
+cobc/tree.c
+cobc/pplex.l
+cobc/ppparse.y
 cobc/parser.y
 cobc/scanner.l
 cobc/warning.def
-
-# cobpp
-cobpp/cobpp.c
-cobpp/parser.y
-cobpp/scanner.l
 
 # libcob
 libcob/call.c

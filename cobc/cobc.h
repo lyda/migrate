@@ -31,6 +31,17 @@
 #define COBC_VERSION	PACKAGE_VERSION
 #define COBC_COPYRIGHT	"Copyright (C) 2001-2003 Keisuke Nishida\n"
 
+#define COBC_FORMAT_FREE		1
+#define COBC_FORMAT_FIXED		2
+
+#define COBC_DEFAULT_TAB_WIDTH		8
+#define COBC_DEFAULT_TEXT_COLUMN	72
+
+#ifdef __MINGW32__
+#define __USE_MINGW_FSEEK 1	/* These are in libmingwex.a */
+#endif
+
+
 /* have a main function */
 extern int cobc_flag_main;
 
@@ -43,29 +54,59 @@ extern int cobc_flag_debugging_line;
 /* output line directives */
 extern int cobc_flag_line_directive;
 
-extern FILE *yyin;
-extern FILE *cobc_out;
+#undef COBC_WARNING
+#define COBC_WARNING(sig,var,name,doc) extern int var;
+#include "warning.def"
 
-extern char *cobc_source_file;
-extern int cobc_source_line;
+
+struct cobc_name_list {
+  const char *name;
+  struct cobc_name_list *next;
+};
 
-extern struct cobc_program *current_program;
-extern struct cobc_label *current_section, *current_paragraph;
+struct cobc_replacement {
+  const char *old_text;
+  const char *new_text;
+  struct cobc_replacement *next;
+};
 
 extern int errorcount;
 extern int warningcount;
 
-extern void yywarn (char *fmt, ...);
-extern void yyerror (char *fmt, ...);
-extern void yywarn_x (cobc_tree x, char *fmt, ...);
-extern void yyerror_x (cobc_tree x, char *fmt, ...);
+extern char *cobc_source_file;
+extern int cobc_source_line;
+extern int cobc_source_format;
+extern int cobc_tab_width;
+extern int cobc_text_column;
+
+extern FILE *cobc_depend_file;
+extern char *cobc_depend_target;
+extern struct cobc_name_list *cobc_depend_list;
+extern struct cobc_name_list *cobc_include_list;
+
+extern struct cobc_program *current_program;
+extern struct cobc_label *current_section, *current_paragraph;
+
+extern void yywarn (const char *fmt, ...);
+extern void yyerror (const char *fmt, ...);
+extern void yywarn_x (cobc_tree x, const char *fmt, ...);
+extern void yyerror_x (cobc_tree x, const char *fmt, ...);
 
 extern void redefinition_error (cobc_tree x);
 extern void undefined_error (cobc_tree x);
 extern void ambiguous_error (cobc_tree x);
 
-#undef COBC_WARNING
-#define COBC_WARNING(sig,var,name,doc) extern int var;
-#include "warning.def"
+/* preprocessor (in pplex.l, ppparse.y) */
+extern FILE *ppin;
+extern FILE *ppout;
+extern int pplex (void);
+extern int ppparse (void);
+extern int ppopen (char *name, const char *lib, struct cobc_replacement *replacement);
+
+/* parser (in scanner.l, parser.y) */
+extern FILE *yyin;
+extern FILE *cobc_out;
+extern int yylex (void);
+extern int yyparse (void);
 
 #endif /* _COBC_H_ */

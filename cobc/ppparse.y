@@ -17,25 +17,29 @@
  * Boston, MA 02111-1307 USA
 */ 
 
+%name-prefix="pp"
+
 %{
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
 
-#include "cobpp.h"
-#include "scanner.h"
+#include "cobc.h"
+
+extern struct cobc_replacement *add_replacement (struct cobc_replacement *replacement, const char *old_text, const char *new_text);
 %}
 
 %union {
-  const char *s;
-  struct replacement *r;
+  char *s;
+  struct cobc_replacement *r;
 }
 
 %token DIRECTIVE SOURCE FORMAT IS FIXED FREE
-%token COPY, REPLACE, REPLACING, OFF, IN, BY
-%token <s> NAME, TEXT
-%type <s> text,copy_in
-%type <r> copy_replacing,replacing_list
+%token COPY REPLACE REPLACING OFF IN BY
+%token <s> NAME TEXT
+%type <s> text copy_in
+%type <r> copy_replacing replacing_list
 
 %%
 
@@ -50,15 +54,18 @@ source_format:
   SOURCE _format _is format
 ;
 format:
-  FIXED				{ cobpp_source_format = COBPP_FORMAT_FIXED; }
-| FREE				{ cobpp_source_format = COBPP_FORMAT_FREE; }
+  FIXED				{ cobc_source_format = COBC_FORMAT_FIXED; }
+| FREE				{ cobc_source_format = COBC_FORMAT_FREE; }
 ;
 _format: | FORMAT ;
 _is: | IS ;
 
 copy_statement:
-  COPY NAME copy_in
-  copy_replacing '.'		{ include_copybook ($2, $3, $4); }
+  COPY NAME copy_in copy_replacing '.'
+  {
+    fputc ('\n', ppout);
+    ppopen ($2, $3, $4);
+  }
 ;
 copy_in:
   /* nothing */			{ $$ = NULL; }
@@ -70,38 +77,10 @@ copy_replacing:
 ;
 replace_statement:
   REPLACE replacing_list '.'
-| REPLACE OFF '.'		{ remove_replacements (); }
+| REPLACE OFF '.'
 ;
 replacing_list:
   text BY text			{ $$ = add_replacement (NULL, $1, $3); }
 | replacing_list text BY text	{ $$ = add_replacement ($1, $2, $4); }
 ;
 text: NAME | TEXT ;
-
-%%
-
-void
-yywarn (const char *fmt, ...)
-{
-  const char *filename = yyfilename ? yyfilename : "<stdin>";
-  va_list ap;
-  va_start (ap, fmt);
-  fprintf (stderr, "%s:%d: warning: ", filename, yylineno);
-  vfprintf (stderr, fmt, ap);
-  fputs ("\n", stderr);
-  va_end (ap);
-}
-
-void
-yyerror (const char *fmt, ...)
-{
-  const char *filename = yyfilename ? yyfilename : "<stdin>";
-  va_list ap;
-  va_start (ap, fmt);
-  fprintf (stderr, "%s:%d: ", filename, yylineno);
-  vfprintf (stderr, fmt, ap);
-  fputs ("\n", stderr);
-  va_end (ap);
-  cobpp_exit_status = 1;
-}
-
