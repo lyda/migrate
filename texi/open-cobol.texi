@@ -533,7 +533,11 @@ COBOL preprocessor ("cobpp")
 @item COB_CFLAGS
 Flags given to the C compiler ("-I$(PREFIX)/include")
 @item COB_LIBS
-Libraries linked with the program ("-L$(PREFIX)/lib -lcob")
+Standard libraries linked with the program ("-L$(PREFIX)/lib -lcob")
+@item COB_LDADD
+Additional libraries linked with the program ("")
+@item COB_CONFIG_FILE
+Run-time configuration file ("$(PREFIX)/share/open-cobol/libcob.conf")
 @item COB_LIBRARY_PATH
 Dynamic library path (".:$(PREFIX)/lib/open-cobol")
 @end table
