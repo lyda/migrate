@@ -10,6 +10,9 @@ MAINTAINERCLEANFILES = config.guess config.sub config.log \
 	Makefile.in aclocal.m4 config.h.in stamp-h.in depcomp ltmain.sh \
 	INSTALL configure missing mkinstalldirs install-sh texinfo.tex
 
+upload-src:
+	ncftpput upload.sourceforge.net /incoming $(distdir).tar.gz
+
 rpmdir = /home/knishida/redhat
 
 rpm: dist
