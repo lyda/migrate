@@ -1648,6 +1648,11 @@ display_upon:
 	break;
       }
   }
+| UPON LABEL_WORD
+  {
+    yywarn ("`%s' undefined in SPECIAL-NAMES", $2->name);
+    $$ = COB_SYSOUT;
+  }
 ;
 display_with_no_advancing:
   /* nothing */ { push_call_1 (COBC_NEWLINE, make_integer ($<inum>-1)); }
@@ -4101,7 +4106,7 @@ redefinition_error (cobc_tree x)
 {
   struct cobc_field *p = COBC_FIELD (x);
   yywarn ("redefinition of `%s'", p->word->name);
-  yywarn_tree (x, "`%s' previously defined here", p->word->name);
+  yywarn_tree (x, "previously defined here", p->word->name);
 }
 
 static void
