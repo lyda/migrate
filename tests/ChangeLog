@@ -1,3 +1,10 @@
+2003-04-26  Keisuke Nishida  <knishida@netlab.jp>
+
+	* subscripts.at, ref-mod.at: Divided from reference.at.
+	* value.at: Renamed from constant.at.
+	* usage.at: Renamed from packed.at.
+	* initialize.at: New file.
+
 2003-04-10  Keisuke Nishida  <knishida@netlab.jp>
 
 	* constant.at, move.at: New files.

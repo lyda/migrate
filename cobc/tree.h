@@ -56,7 +56,7 @@ struct cb_word {
   int count;			/* the number of words with the same name */
   int error;			/* set to 1 if error displayed */
   struct cb_list *items;	/* objects associated with this word */
-  struct cb_word *next;	/* next word with the same hash value */
+  struct cb_word *next;		/* next word with the same hash value */
 };
 
 
@@ -66,13 +66,13 @@ struct cb_word {
 
 enum cb_tag {
   /* primitives */
-  cb_tag_const,		/* constant value */
+  cb_tag_const,			/* constant value */
   cb_tag_integer,		/* native integer */
   cb_tag_string,		/* native string */
   cb_tag_literal,		/* numeric/alphanumeric literal */
   cb_tag_decimal,		/* decimal number */
-  cb_tag_field,		/* user-defined variable */
-  cb_tag_file,		/* file description */
+  cb_tag_field,			/* user-defined variable */
+  cb_tag_file,			/* file description */
   /* expressions */
   cb_tag_reference,		/* reference to a field, file, or label */
   cb_tag_binary_op,		/* binary operation */
@@ -80,12 +80,12 @@ enum cb_tag {
   cb_tag_cast_int32,		/* cast to int32 */
   /* statements */
   cb_tag_location,		/* source location */
-  cb_tag_label,		/* label statement */
+  cb_tag_label,			/* label statement */
   cb_tag_if,			/* IF statement */
   cb_tag_perform,		/* PERFORM statement */
   cb_tag_sequence,		/* multiple statements */
   /* miscellaneous */
-  cb_tag_class,		/* CLASS definition */
+  cb_tag_class,			/* CLASS definition */
   cb_tag_builtin,
   cb_tag_parameter,
 };
@@ -101,15 +101,15 @@ struct cb_tree_common {
 typedef struct cb_tree_common *cb_tree;
 
 #define CB_TREE(x)		((struct cb_tree_common *) (x))
-#define CB_TREE_TAG(x)	(CB_TREE (x)->tag)
+#define CB_TREE_TAG(x)		(CB_TREE (x)->tag)
 #define CB_TREE_CLASS(x)	(CB_TREE (x)->class)
-#define CB_TREE_TYPE(x)	(CB_TREE (x)->type)
+#define CB_TREE_TYPE(x)		(CB_TREE (x)->type)
 
 #ifdef COB_DEBUG
 #define CB_TREE_CAST(tg,ty,x)						\
   ({									\
     cb_tree _x = (x);							\
-    if (!_x || CB_TREE_TAG (_x) != tg)				\
+    if (!_x || CB_TREE_TAG (_x) != tg)					\
       {									\
 	fprintf (stderr,						\
 		 "%s:%d: invalid type cast from `%s' at %d in %s\n",	\
@@ -172,7 +172,7 @@ struct cb_integer {
 };
 
 #define CB_INTEGER(x)		(CB_TREE_CAST (cb_tag_integer, struct cb_integer, x))
-#define CB_INTEGER_P(x)	(CB_TREE_TAG (x) == cb_tag_integer)
+#define CB_INTEGER_P(x)		(CB_TREE_TAG (x) == cb_tag_integer)
 
 extern cb_tree make_integer (int val);
 
@@ -187,7 +187,7 @@ struct cb_string {
 };
 
 #define CB_STRING(x)		(CB_TREE_CAST (cb_tag_string, struct cb_string, x))
-#define CB_STRING_P(x)	(CB_TREE_TAG (x) == cb_tag_string)
+#define CB_STRING_P(x)		(CB_TREE_TAG (x) == cb_tag_string)
 
 extern cb_tree make_string (const unsigned char *str);
 
@@ -206,7 +206,7 @@ struct cb_literal {
 };
 
 #define CB_LITERAL(x)		(CB_TREE_CAST (cb_tag_literal, struct cb_literal, x))
-#define CB_LITERAL_P(x)	(CB_TREE_TAG (x) == cb_tag_literal)
+#define CB_LITERAL_P(x)		(CB_TREE_TAG (x) == cb_tag_literal)
 
 extern cb_tree make_numeric_literal (int sign, unsigned char *digits, int expt);
 extern cb_tree make_nonnumeric_literal (unsigned char *str);
@@ -223,7 +223,7 @@ struct cb_decimal {
 };
 
 #define CB_DECIMAL(x)		(CB_TREE_CAST (cb_tag_decimal, struct cb_decimal, x))
-#define CB_DECIMAL_P(x)	(CB_TREE_TAG (x) == cb_tag_decimal)
+#define CB_DECIMAL_P(x)		(CB_TREE_TAG (x) == cb_tag_decimal)
 
 extern cb_tree make_decimal (char id);
 
@@ -250,7 +250,7 @@ extern struct cb_picture *parse_picture (const char *str);
 
 enum cb_usage {
   CB_USAGE_BINARY,
-  CB_USAGE_BIT,		/* not supported yet */
+  CB_USAGE_BIT,			/* not supported yet */
   CB_USAGE_DISPLAY,
   CB_USAGE_FLOAT,		/* not supported yet */
   CB_USAGE_INDEX,
@@ -280,7 +280,7 @@ struct cb_field {
   const char *name;		/* the original name */
   char *cname;			/* the name used in C */
   cb_tree occurs_depending;	/* OCCURS ... DEPENDING ON */
-  enum cb_usage usage;	/* USAGE */
+  enum cb_usage usage;		/* USAGE */
   enum cb_storage storage;
   struct cb_list *values;	/* VALUE */
   struct cb_list *index_list;	/* INDEXED BY */
@@ -289,7 +289,7 @@ struct cb_field {
   struct cb_field *sister;	/* fields in the same level */
   struct cb_field *redefines;	/* REDEFIENS */
   struct cb_field *rename_thru; /* RENAMES THRU */
-  struct cb_file *file;	/* file name associated in FD section */
+  struct cb_file *file;		/* file name associated in FD section */
   struct cb_key {
     int dir;			/* ASCENDING or DESCENDING */
     cb_tree key;		/* KEY */
@@ -349,8 +349,8 @@ struct cb_file {
   int optional;			/* OPTIONAL */
   int organization;		/* ORGANIZATION */
   int access_mode;		/* ACCESS MODE */
-  cb_tree file_status;	/* FILE STATUS */
-  cb_tree key;		/* RELATIVE/RECORD KEY */
+  cb_tree file_status;		/* FILE STATUS */
+  cb_tree key;			/* RELATIVE/RECORD KEY */
   struct cb_alt_key {
     cb_tree key;
     int duplicates;
@@ -385,7 +385,7 @@ struct cb_reference {
   struct cb_reference *next;
 };
 
-#define CB_REFERENCE(x)	(CB_TREE_CAST (cb_tag_reference, struct cb_reference, x))
+#define CB_REFERENCE(x)		(CB_TREE_CAST (cb_tag_reference, struct cb_reference, x))
 #define CB_REFERENCE_P(x)	(CB_TREE_TAG (x) == cb_tag_reference)
 
 #define CB_NAME(x)		(CB_REFERENCE (x)->word->name)
@@ -434,7 +434,7 @@ struct cb_binary_op {
   cb_tree y;
 };
 
-#define CB_BINARY_OP(x)	(CB_TREE_CAST (cb_tag_binary_op, struct cb_binary_op, x))
+#define CB_BINARY_OP(x)		(CB_TREE_CAST (cb_tag_binary_op, struct cb_binary_op, x))
 #define CB_BINARY_OP_P(x)	(CB_TREE_TAG (x) == cb_tag_binary_op)
 
 #define make_parenthesize(x)	make_binary_op (x, '@', 0)
@@ -455,7 +455,7 @@ struct cb_funcall {
 };
 
 #define CB_FUNCALL(x)		(CB_TREE_CAST (cb_tag_funcall, struct cb_funcall, x))
-#define CB_FUNCALL_P(x)	(CB_TREE_TAG (x) == cb_tag_funcall)
+#define CB_FUNCALL_P(x)		(CB_TREE_TAG (x) == cb_tag_funcall)
 
 extern cb_tree make_funcall (const char *name, int argc, void *a1, void *a2, void *a3, void *a4);
 
@@ -522,8 +522,8 @@ extern cb_tree make_if (cb_tree test, cb_tree stmt1, cb_tree stmt2);
  * PERFORM
  */
 
-#define CB_PERFORM_EXIT	0
-#define CB_PERFORM_ONCE	1
+#define CB_PERFORM_EXIT		0
+#define CB_PERFORM_ONCE		1
 #define CB_PERFORM_TIMES	2
 #define CB_PERFORM_UNTIL	3
 
@@ -543,7 +543,7 @@ struct cb_perform {
 };
 
 #define CB_PERFORM(x)		(CB_TREE_CAST (cb_tag_perform, struct cb_perform, x))
-#define CB_PERFORM_P(x)	(CB_TREE_TAG (x) == cb_tag_perform)
+#define CB_PERFORM_P(x)		(CB_TREE_TAG (x) == cb_tag_perform)
 
 extern cb_tree make_perform (int type);
 extern cb_tree make_perform_once (cb_tree body);
@@ -561,7 +561,7 @@ struct cb_sequence {
   int save_status;
 };
 
-#define CB_SEQUENCE(x)	(CB_TREE_CAST (cb_tag_sequence, struct cb_sequence, x))
+#define CB_SEQUENCE(x)		(CB_TREE_CAST (cb_tag_sequence, struct cb_sequence, x))
 #define CB_SEQUENCE_P(x)	(CB_TREE_TAG (x) == cb_tag_sequence)
 
 extern cb_tree make_sequence (struct cb_list *list);
@@ -594,7 +594,7 @@ struct cb_builtin {
 };
 
 #define CB_BUILTIN(x)		(CB_TREE_CAST (cb_tag_builtin, struct cb_builtin, x))
-#define CB_BUILTIN_P(x)	(CB_TREE_TAG (x) == cb_tag_builtin)
+#define CB_BUILTIN_P(x)		(CB_TREE_TAG (x) == cb_tag_builtin)
 
 extern cb_tree make_builtin (int id);
 
@@ -611,7 +611,7 @@ struct cb_parameter {
 };
 
 #define CB_PARAMETER(x)		(CB_TREE_CAST (cb_tag_parameter, struct cb_parameter, x))
-#define CB_PARAMETER_P(x)		(CB_TREE_TAG (x) == cb_tag_parameter)
+#define CB_PARAMETER_P(x)	(CB_TREE_TAG (x) == cb_tag_parameter)
 
 extern cb_tree make_parameter (int type, cb_tree x, cb_tree y);
 #define make_parameter_1(type,x) make_parameter (type, x, 0)
