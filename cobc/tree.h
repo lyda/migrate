@@ -778,7 +778,6 @@ extern void ambiguous_error (cb_tree x);
 /* typeck.c */
 extern int validate_move (cb_tree src, cb_tree dst, int value_flag);
 
-extern int cb_get_level_number (cb_tree name);
 extern int cb_get_int (cb_tree x);
 extern cb_tree cb_build_section_name (cb_tree name);
 extern cb_tree cb_build_identifier (cb_tree x);

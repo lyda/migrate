@@ -28,32 +28,6 @@
 #include "cobc.h"
 
 int
-cb_get_level_number (cb_tree name)
-{
-  int level = 0;
-  const char *p;
-
-  if (name == cb_error_node)
-    return -1;
-
-  /* get level number */
-  for (p = CB_REFERENCE (name)->word->name; *p; p++)
-    {
-      if (!isdigit (*p))
-	goto error;
-      level = level * 10 + (*p - '0');
-    }
-
-  if ((01 <= level && level <= 49)
-      || (level == 66 || level == 77 || level == 88))
-    return level;
-
- error:
-  cb_error_x (name, _("invalid level number `%s'"), cb_name (name));
-  return -1;
-}
-
-int
 cb_get_int (cb_tree x)
 {
   return cb_literal_to_int (CB_LITERAL (x));

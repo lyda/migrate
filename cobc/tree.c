@@ -786,12 +786,28 @@ cb_tree
 cb_build_field (cb_tree lv, cb_tree name, struct cb_field *last_field,
 		enum cb_storage storage)
 {
+  const char *p;
   struct cb_field *f;
   struct cb_reference *r = CB_REFERENCE (name);
-  int level = cb_get_level_number (lv);
+  int level = 0;
 
-  if (level < 0)
+  if (lv == cb_error_node || name == cb_error_node)
     return cb_error_node;
+
+  /* get level number */
+  for (p = CB_REFERENCE (lv)->word->name; *p; p++)
+    {
+      if (!isdigit (*p))
+	goto level_error;
+      level = level * 10 + (*p - '0');
+    }
+  if (!((01 <= level && level <= 49)
+	|| (level == 66 || level == 77 || level == 88)))
+    {
+    level_error:
+      cb_error_x (lv, _("invalid level number `%s'"), cb_name (lv));
+      return cb_error_node;
+    }
 
   /* checks for redefinition */
   if (level == 01 || level == 77)
