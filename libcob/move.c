@@ -55,12 +55,12 @@ finalize_display (cob_field *f)
 {
   if (COB_FIELD_BLANK_ZERO (f))
     {
-      int i, len = COB_FIELD_SIZE (f);
-      unsigned char *base = COB_FIELD_DATA (f);
-      for (i = 0; i < len; i++)
-	if (base[i] != '0')
+      int i, size = COB_FIELD_SIZE (f);
+      unsigned char *data = COB_FIELD_DATA (f);
+      for (i = 0; i < size; i++)
+	if (data[i] != '0')
 	  return;
-      memset (base, ' ', len);
+      memset (data, ' ', size);
     }
 }
 
@@ -147,30 +147,30 @@ void
 cob_move_display_to_alphanum (cob_field *f1, cob_field *f2)
 {
   int sign = cob_get_sign (f1);
-  size_t len1 = COB_FIELD_SIZE (f1);
-  size_t len2 = f2->size;
-  unsigned char *base1 = COB_FIELD_DATA (f1);
-  unsigned char *base2 = f2->data;
+  size_t size1 = COB_FIELD_SIZE (f1);
+  size_t size2 = f2->size;
+  unsigned char *data1 = COB_FIELD_DATA (f1);
+  unsigned char *data2 = f2->data;
 
-  if (len1 >= len2)
+  if (size1 >= size2)
     {
-      memcpy (base2, base1, len2);
+      memcpy (data2, data1, size2);
     }
   else
     {
-      int diff = len2 - len1;
-      int zero_len = 0;
+      int diff = size2 - size1;
+      int zero_size = 0;
       /* move */
-      memcpy (base2, base1, len1);
+      memcpy (data2, data1, size1);
       /* implied 0 ('P's) */
       if (f1->attr->expt > 0)
 	{
-	  zero_len = MIN (f1->attr->expt, diff);
-	  memset (base2 + len1, '0', zero_len);
+	  zero_size = MIN (f1->attr->expt, diff);
+	  memset (data2 + size1, '0', zero_size);
 	}
       /* padding */
-      if (diff - zero_len > 0)
-	memset (base2 + len1 + zero_len, ' ', diff - zero_len);
+      if (diff - zero_size > 0)
+	memset (data2 + size1 + zero_size, ' ', diff - zero_size);
     }
 
   cob_put_sign (f1, sign);
@@ -181,29 +181,29 @@ cob_move_alphanum_to_alphanum (cob_field *f1, cob_field *f2)
 {
   size_t size1 = f1->size;
   size_t size2 = f2->size;
-  unsigned char *base1 = f1->data;
-  unsigned char *base2 = f2->data;
+  unsigned char *data1 = f1->data;
+  unsigned char *data2 = f2->data;
 
   if (size1 >= size2)
     {
       /* move string with truncation */
       if (COB_FIELD_JUSTIFIED (f2))
-	memcpy (base2, base1 + size1 - size2, size2);
+	memcpy (data2, data1 + size1 - size2, size2);
       else
-	memcpy (base2, base1, size2);
+	memcpy (data2, data1, size2);
     }
   else
     {
       /* move string with padding */
       if (COB_FIELD_JUSTIFIED (f2))
 	{
-	  memset (base2, ' ', size2 - size1);
-	  memcpy (base2 + size2 - size1, base1, size1);
+	  memset (data2, ' ', size2 - size1);
+	  memcpy (data2 + size2 - size1, data1, size1);
 	}
       else
 	{
-	  memcpy (base2, base1, size1);
-	  memset (base2 + size1, ' ', size2 - size1);
+	  memcpy (data2, data1, size1);
+	  memset (data2 + size1, ' ', size2 - size1);
 	}
     }
 }
@@ -218,23 +218,23 @@ cob_move_display_to_packed (cob_field *f1, cob_field *f2)
 {
   size_t i;
   int sign = cob_get_sign (f1);
-  size_t len1 = COB_FIELD_SIZE (f1);
-  size_t len2 = f2->size;
+  size_t size1 = COB_FIELD_SIZE (f1);
+  size_t size2 = f2->size;
   int exp1 = COB_FIELD_EXPT (f1);
   int exp2 = COB_FIELD_EXPT (f2);
-  unsigned char *base1 = COB_FIELD_DATA (f1);
-  unsigned char *base2 = f2->data;
-  unsigned char *p = base1 + (len1 + exp1) - (len2 + exp2);
+  unsigned char *data1 = COB_FIELD_DATA (f1);
+  unsigned char *data2 = f2->data;
+  unsigned char *p = data1 + (size1 + exp1) - (size2 + exp2);
 
   /* pack string */
   memset (f2->data, 0, f2->size);
-  for (i = 0; i < len1; i++, p++)
+  for (i = 0; i < size1; i++, p++)
     {
-      char n = (base1 <= p && p < base1 + len1) ? *p - '0' : 0;
+      char n = (data1 <= p && p < data1 + size1) ? *p - '0' : 0;
       if (i % 2 == 0)
-	base2[i / 2] = n << 4;
+	data2[i / 2] = n << 4;
       else
-	base2[i / 2] |= n;
+	data2[i / 2] |= n;
     }
 
   cob_put_sign (f1, sign);
@@ -246,12 +246,15 @@ cob_move_packed_to_display (cob_field *f1, cob_field *f2)
 {
   size_t i;
   int sign = cob_get_sign (f1);
-  unsigned char *base = f1->data;
+  unsigned char *data = f1->data;
   unsigned char buff[f1->size];
 
   /* unpack string */
   for (i = 0; i < f1->size; i++)
-    buff[i] = ((i % 2 == 0) ? (base[i/2] >> 4) : (base[i/2] & 0x0f)) + '0';
+    if (i % 2 == 0)
+      buff[i] = (data[i/2] >> 4) + '0';
+    else
+      buff[i] = (data[i/2] & 0x0f) + '0';
 
   /* store */
   memset (f2->data, '0', f2->size);
@@ -272,19 +275,19 @@ cob_move_packed_to_display (cob_field *f1, cob_field *f2)
 void
 cob_move_display_to_binary (cob_field *f1, cob_field *f2)
 {
-  size_t i, len;
+  size_t i, size;
   long long val = 0;
   int sign = cob_get_sign (f1);
-  size_t len1 = COB_FIELD_SIZE (f1);
-  size_t len2 = f2->size;
-  unsigned char *base1 = COB_FIELD_DATA (f1);
-  unsigned char *base2 = f2->data;
+  size_t size1 = COB_FIELD_SIZE (f1);
+  size_t size2 = f2->size;
+  unsigned char *data1 = COB_FIELD_DATA (f1);
+  unsigned char *data2 = f2->data;
 
   /* get value */
-  len = len1 + f1->attr->expt - f2->attr->expt;
-  for (i = 0; i < len; ++i)
-    if (i < len1)
-      val = val * 10 + base1[i] - '0';
+  size = size1 + f1->attr->expt - f2->attr->expt;
+  for (i = 0; i < size; ++i)
+    if (i < size1)
+      val = val * 10 + data1[i] - '0';
     else
       val = val * 10;
   if (sign < 0 && COB_FIELD_HAVE_SIGN (f2))
@@ -292,12 +295,12 @@ cob_move_display_to_binary (cob_field *f1, cob_field *f2)
   val %= cob_exp10LL[(int) f2->attr->digits];
 
   /* store */
-  switch (len2)
+  switch (size2)
     {
-    case 1: *(char *) base2 = val; break;
-    case 2: *(short *) base2 = val; break;
-    case 4: *(long *) base2 = val; break;
-    case 8: *(long long *) base2 = val; break;
+    case 1: *(char *) data2 = val; break;
+    case 2: *(short *) data2 = val; break;
+    case 4: *(long *) data2 = val; break;
+    case 8: *(long long *) data2 = val; break;
     }
 
   cob_put_sign (f1, sign);
@@ -660,9 +663,9 @@ cob_move (cob_field *src, cob_field *dst)
  */
 
 void
-cob_memcpy (cob_field *dst, unsigned char *src, int len)
+cob_memcpy (cob_field *dst, unsigned char *src, int size)
 {
-  cob_field temp = {len, src, &cob_alnum_attr};
+  cob_field temp = {size, src, &cob_alnum_attr};
   cob_move (&temp , dst);
 }
 

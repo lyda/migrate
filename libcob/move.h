@@ -34,7 +34,7 @@ extern void cob_move_binary_to_display (cob_field *f1, cob_field *f2);
 extern void cob_move_display_to_edited (cob_field *f1, cob_field *f2);
 extern void cob_move_alphanum_to_edited (cob_field *f1, cob_field *f2);
 
-extern void cob_memcpy (cob_field *dst, unsigned char *src, int len);
+extern void cob_memcpy (cob_field *dst, unsigned char *src, int size);
 extern int cob_to_int (cob_field *f);
 extern void cob_set_int (cob_field *f, int n);
 
