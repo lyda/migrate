@@ -47,11 +47,15 @@
 #if HAVE_DBOPEN
 #include <db.h>
 #else
+#if HAVE_DB1_DB_H
+#include <db1/db.h>
+#else
 #if HAVE_DB_185_H
 #include <db_185.h>
 #else
 #if HAVE_DB3_DB_185_H
 #include <db3/db_185.h>
+#endif
 #endif
 #endif
 #endif
@@ -472,6 +476,8 @@ static cob_fileio_funcs relative_funcs = {
  * INDEXED
  */
 
+#if defined(HAVE_DBOPEN) | defined(WITH_DB)
+
 #define DB_PUT(db,flags)	db->put (db, &p->key, &p->data, flags)
 #define DB_GET(db,flags)	db->get (db, &p->key, &p->data, flags)
 #define DB_SEQ(db,flags)	db->seq (db, &p->key, &p->data, flags)
@@ -783,10 +789,14 @@ static cob_fileio_funcs indexed_funcs = {
   indexed_delete
 };
 
+#endif /* defined(HAVE_DBOPEN) | defined(WITH_DB) */
+
 
 /*
  * SORT
  */
+
+#if defined(HAVE_DBOPEN) | defined(WITH_DB)
 
 struct sort_file {
   DB *db;
@@ -884,6 +894,8 @@ static cob_fileio_funcs sort_funcs = {
   0,
   0
 };
+
+#endif /* defined(HAVE_DBOPEN) | defined(WITH_DB) */
 
 
 /*
@@ -1205,6 +1217,8 @@ cob_delete (cob_file *f)
 }
 
 
+#if defined(HAVE_DBOPEN) | defined(WITH_DB)
+
 static const unsigned char *old_sequence;
 
 void
@@ -1267,6 +1281,8 @@ cob_sort_giving (cob_file *sort_file, cob_file *data_file)
     };
   cob_close (data_file, COB_CLOSE_NORMAL);
 }
+
+#endif /* defined(HAVE_DBOPEN) | defined(WITH_DB) */
 
 
 void
@@ -1342,6 +1358,8 @@ cob_init_fileio (void)
   fileio_funcs[COB_ORG_SEQUENTIAL] = &sequential_funcs;
   fileio_funcs[COB_ORG_LINE_SEQUENTIAL] = &lineseq_funcs;
   fileio_funcs[COB_ORG_RELATIVE] = &relative_funcs;
+#if defined(HAVE_DBOPEN) | defined(WITH_DB)
   fileio_funcs[COB_ORG_INDEXED] = &indexed_funcs;
   fileio_funcs[COB_ORG_SORT] = &sort_funcs;
+#endif
 }

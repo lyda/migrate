@@ -1,3 +1,8 @@
+2003-08-27  Keisuke Nishida  <kxn30@yahoo.co.jp>
+
+	* fileio.c: Compile indexed and sort i/o only when either of
+	HAVE_DBOPEN or WITH_DB is defined.
+
 2003-08-26  Keisuke Nishida  <kxn30@yahoo.co.jp>
 
 	* common.h (cob_module): New member `flag_filename_mapping'.
