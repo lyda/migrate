@@ -277,8 +277,8 @@ cob_div (void)
 {
   decimal d2 = COB_DECIMAL (POP ());
   decimal d1 = COB_DECIMAL (TOP ());
-  shift_decimal (d1, 15 - d1->decimals);
   d1->decimals -= d2->decimals;
+  shift_decimal (d1, 19 + ((d1->decimals < 0) ? -d1->decimals : 0));
   mpz_tdiv_q (d1->number, d1->number, d2->number);
 }
 
