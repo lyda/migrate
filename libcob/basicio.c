@@ -205,18 +205,18 @@ cob_accept_console (char *buffer, struct fld_desc *f, int flags)
 }
 
 int
-cob_accept_command_line (struct cob_field f, int argc, char **argv)
+cob_accept_command_line (struct cob_field f)
 {
   int i, size = 0;
   char buff[BUFSIZ];
 
-  for (i = 0; i < argc; i++)
+  for (i = 0; i < cob_argc; i++)
     {
-      int len = strlen (argv[i]);
+      int len = strlen (cob_argv[i]);
       if (size + len >= BUFSIZ)
 	/* overflow */
 	return 1;
-      memcpy (buff + size, argv[i], len);
+      memcpy (buff + size, cob_argv[i], len);
       size += len;
       buff[size++] = ' ';
     }

@@ -33,10 +33,19 @@
 #include "codegen.h"
 #include "_libcob.h"
 
+/* asm sections or pseudo-sections */
+#define SEC_CONST 2
+#define SEC_DATA 3
+#define SEC_STACK 4
+#define SEC_ARGS 5
+#define SEC_FIRST_NAMED 7
+
 #define START_STACK_ADJUST 20
 #define SYMBUF_SIZE 128
 
 #define decimal_char	(decimal_comma ? ',' : '.')
+
+#define SVAR_RCODE  	"RETURN-CODE"
 
 int screen_io_enable = 0;
 int scr_line, scr_column;
@@ -1519,11 +1528,10 @@ proc_header (int using)
   cob_tree sy, sy1;
   int i;
   int stabs_type = '3';
-  chg_underline (program_id);
+
   if (using || cob_module_flag)
-    {
-      pgm_label = program_id;
-    }
+    pgm_label = chg_underline (program_id);
+
   if (!pgm_segment)
     {
       if (cob_stabs_flag)
@@ -1555,7 +1563,17 @@ proc_header (int using)
   output (".globl %s\n", pgm_label);
   output ("\t.type\t%s,@function\n", pgm_label);
   output ("%s:\n", pgm_label);
-  output ("\tpushl\t%%ebp\n\tmovl\t%%esp, %%ebp\n");
+  output ("\tpushl\t%%ebp\n");
+  output ("\tmovl\t%%esp, %%ebp\n");
+
+  if (!pgm_segment && !cob_module_flag)
+    {
+      output ("\tpushl\t12(%%ebp)\n");
+      output ("\tpushl\t8(%%ebp)\n");
+      output ("\tcall\tcob_init\n");
+      output ("\taddl\t$8, %%esp\n");
+    }
+
   if (stack_offset & 1)
     stack_offset++;
 
@@ -2214,13 +2232,8 @@ gen_accept_from_day_of_week (cob_tree sy)
 void
 gen_accept_from_cmdline (cob_tree sy)
 {
-
   cob_tree sy1;
 
-  output ("\tmovl\t12(%%ebp), %%eax\n");
-  push_eax ();
-  output ("\tmovl\t8(%%ebp), %%eax\n");
-  push_eax ();
   asm_call_1 ("cob_accept_command_line", sy);
 
   if ((sy1 = lookup_symbol (SVAR_RCODE)) != NULL)

@@ -27,6 +27,7 @@
 #include <stdio.h>
 
 #include "scanner.h"
+#include "tree.h"
 
 /* symbol table selector */
 #define SYTB_LIT 1
@@ -37,19 +38,6 @@
 #define SET_TO		0
 #define SET_UP		1
 #define SET_DOWN	2
-
-/* asm sections or pseudo-sections */
-#define SEC_CONST 2
-#define SEC_DATA 3
-#define SEC_STACK 4
-#define SEC_ARGS 5
-#define SEC_FIRST_NAMED 7
-
-/* SPECIAL VARIABLES  */
-
-#define SVAR_RCODE  	"RETURN-CODE"
-
-#include "tree.h"
 
 extern int screen_io_enable,scr_line,scr_column;
 extern int decimal_comma;

@@ -202,6 +202,9 @@ struct cob_field {
 
 #define cob_numeric_separator ((cob_decimal_point == '.') ? ',' : '.')
 
+extern int cob_argc;
+extern char **cob_argv;
+
 extern unsigned char cob_decimal_point;
 extern unsigned char cob_currency_symbol;
 extern long long cob_exp10[19];

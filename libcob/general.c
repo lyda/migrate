@@ -25,6 +25,9 @@
 
 #include "_libcob.h"
 
+int cob_argc = 0;
+char **cob_argv = NULL;
+
 int cob_status;
 int cob_status_register;
 
@@ -56,6 +59,8 @@ long long cob_exp10[19] = {
 void
 cob_init (int argc, char **argv)
 {
+  cob_argc = argc;
+  cob_argv = argv;
 }
 
 char
