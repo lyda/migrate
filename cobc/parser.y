@@ -1051,12 +1051,12 @@ occurs_clause:
     current_field->occurs_min = 1;
     current_field->f.have_occurs = 1;
   }
-| OCCURS integer TO integer _times DEPENDING _on data_name
+| OCCURS integer TO integer _times DEPENDING _on predefined_name
   occurs_keys occurs_indexed
   {
     current_field->occurs = $4;
     current_field->occurs_min = $2;
-    current_field->occurs_depending = $8;
+    register_predefined_name (&current_field->occurs_depending, $8);
     current_field->f.have_occurs = 1;
   }
 ;
