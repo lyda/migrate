@@ -29,8 +29,9 @@ AM_INIT_AUTOMAKE([gnu no-texinfo.tex])
 AM_MAINTAINER_MODE
 
 # Autoheader templates
-AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
+AH_TEMPLATE([WITH_DB],   [Compile with the Berkeley DB library])
 AH_TEMPLATE([WITH_LFS64], [Compile with large file system 64])
+AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
 
 # enable debug mode by default for now
 AC_DEFINE(COB_DEBUG)
@@ -43,7 +44,7 @@ LIBCOB_CFLAGS=""
 # Configure options.
 COB_CC=""
 AC_ARG_WITH(cc,
-  [  --with-cc=<cc>          specify C compiler command used by cobc],
+  [  --with-cc=<cc>          specify the C compiler used by cobc],
   [ COB_CC=$withval ])
 if test "x${COB_CC}" = "x"; then
   AC_CHECK_PROG([COB_CC], [gcc], [gcc])
@@ -51,6 +52,17 @@ fi
 if test "x${COB_CC}" = "x"; then
   AC_CHECK_PROG([COB_CC], [cc], [cc], AC_MSG_ERROR(cc is required))
 fi
+
+LIBDB=""
+AC_ARG_WITH(db1,
+  [  --with-db1              use Berkeley DB 1.85 (libdb-1.85)],
+  [ LIBDB="1"
+    AC_DEFINE(WITH_DB, 1) ])
+
+AC_ARG_WITH(db,
+  [  --with-db               use Berkeley DB 3.0 or later (libdb)],
+  [ LIBDB="3"
+    AC_DEFINE(WITH_DB, 3) ])
 
 AC_ARG_WITH(lfs64,
   [  --with-lfs64            use large file system for file I/O],
@@ -62,31 +74,6 @@ AC_ARG_ENABLE(debug,
 
 save_libs="$LIBS"
 
-# Checks for programs.
-AC_PROG_CC
-AC_PROG_LN_S
-AC_PROG_INSTALL
-AC_LIBTOOL_DLOPEN
-#AC_LIBTOOL_WIN32_DLL
-AC_PROG_LIBTOOL
-AC_PROG_MAKE_SET
-
-# Checks for header files.
-AC_HEADER_STDC
-AC_CHECK_HEADERS([fcntl.h malloc.h locale.h stddef.h wchar.h])
-
-# Checks for typedefs, structures, and compiler characteristics.
-AC_C_CONST
-AC_C_BIGENDIAN
-AC_TYPE_SIZE_T
-AC_STRUCT_TM
-
-# Checks for library functions.
-AC_FUNC_ALLOCA
-AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([memmove memset regcomp pow setlocale strerror \
-		strcasecmp strchr strrchr strdup strstr strtol])
-
 # Checks for getopt_long.
 AC_CHECK_FUNC([getopt_long_only], ,
   [AC_LIBOBJ(getopt)
@@ -97,11 +84,23 @@ AC_CHECK_FUNC([getopt_long_only], ,
 AC_CHECK_LIB([regex], [regcomp], [LIBCOB_LIBS="$LIBCOB_LIBS -lregex"])
 
 # Checks for db.
-AC_CHECK_FUNCS([dbopen], ,
-  [AC_CHECK_HEADERS([db_185.h db3/db_185.h])
-   AC_CHECK_LIB([db], [__db_dbopen],
-    [LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
-    [AC_MSG_ERROR(libdb is required)])])
+USE_DB="no"
+AC_CHECK_FUNCS([dbopen],
+  [USE_DB="yes" AC_DEFINE(HAVE_DBOPEN)],
+  [case $LIBDB in
+    1) AC_CHECK_HEADERS([db1/db.h],
+         [AC_DEFINE(HAVE_DB1_DB_H)],
+         [AC_MSG_ERROR([db1/db.h is required])])
+       AC_CHECK_LIB([db1], [dbopen],
+         [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb1"],
+         [AC_MSG_ERROR(libdb1 is required)])
+       ;;
+    3) AC_CHECK_HEADERS([db_185.h db3/db_185.h])
+       AC_CHECK_LIB([db], [__db_dbopen],
+         [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
+         [AC_MSG_ERROR(libdb is required)])
+       ;;
+   esac])
 
 # Checks for gmp.
 AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp.h is required))
@@ -129,6 +128,31 @@ if test "x$ac_cv_lib_ncurses_initscr" = "xyes"; then
   USE_NCURSES="yes"
   LIBCOB_LIBS="$LIBCOB_LIBS -lncurses"
 fi
+
+# Checks for programs.
+AC_PROG_CC
+AC_PROG_LN_S
+AC_PROG_INSTALL
+AC_LIBTOOL_DLOPEN
+#AC_LIBTOOL_WIN32_DLL
+AC_PROG_LIBTOOL
+AC_PROG_MAKE_SET
+
+# Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS([fcntl.h malloc.h locale.h stddef.h wchar.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_C_BIGENDIAN
+AC_TYPE_SIZE_T
+AC_STRUCT_TM
+
+# Checks for library functions.
+AC_FUNC_ALLOCA
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS([memmove memset regcomp pow setlocale strerror \
+		strcasecmp strchr strrchr strdup strstr strtol])
 
 # OpenCOBOL Configuration
 
@@ -173,5 +197,26 @@ echo "  COB_LIBRARY_PATH     ${COB_LIBRARY_PATH}"
 echo "  COB_MODULE_EXT       ${COB_MODULE_EXT}"
 echo ""
 echo "  Use gettext for international messages:      ${USE_NLS}"
+echo "  Use Berkeley DB for file I/O:                ${USE_DB}"
 echo "  Use ncurses for screen I/O:                  ${USE_NCURSES}"
 echo ""
+
+case $LIBDB in
+  1) echo "NOTICE: You chose to link Berkeley DB 1.85, which is distributed"
+     echo "NOTICE: under the BSD license.  In accordance with the license,"
+     echo "NOTICE: all advertising materials mentioning features or use of"
+     echo "NOTICE: Berkeley DB must display the following acknowledgement:"
+     echo ""
+     echo "    This product includes software developed by the University"
+     echo "    of California, Berkeley and its contributors."
+     echo ""
+     ;;
+  3) echo "NOTICE: You chose to link Berkeley DB 3.0 or later, which is"
+     echo "NOTICE: distributed under their own open-source license.  In"
+     echo "NOTICE: accordance with the license, you must distribute the"
+     echo "NOTICE: source code of your software along with your software,"
+     echo "NOTICE: or you have to pay royalty to Sleepycat Software, Inc."
+     echo "NOTICE: See http://www.sleepycat.com/ for details."
+     echo ""
+     ;;
+esac
