@@ -444,7 +444,7 @@ lookup_literal (cb_tree x)
 	&& literal->all  == l->literal->all
 	&& literal->sign == l->literal->sign
 	&& literal->scale == l->literal->scale
-	&& strcmp (literal->data, l->literal->data) == 0)
+	&& memcmp (literal->data, l->literal->data, literal->size) == 0)
       return l->id;
 
   /* output new literal */
