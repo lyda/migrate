@@ -259,7 +259,6 @@ process_command_line (int argc, char *argv[])
 	  break;
 
 	case 'O':
-	  strcat (cob_cflags, " -O2");
 	  cobc_optimize_flag = 1;
 	  cobc_failsafe_flag = 0;
 	  break;
