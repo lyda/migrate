@@ -5,5 +5,9 @@ Contributors:
   peg@coboler.com       for Cygwin package
   Yoshiki Kusumoto      for test programs
 
+Bug reports and patches by:
+
+  Richard A. Painter
+
 OpenCOBOL was inspired by the TinyCOBOL project.
 Thanks to the TinyCOBOL authors and maintainers.
