@@ -1,5 +1,12 @@
 2002-06-09  Keisuke Nishida  <knishida@netlab.jp>
 
+	* tree.h (cobc_field): New member `in_redefines'.
+	* parser.y (validate_field): Set `in_redefines' and validate REDEFINES.
+	Display error if a field under REDEFINES has VALUE clause.
+	(init_field): Inherit the `in_redefines' flag.
+
+2002-06-09  Keisuke Nishida  <knishida@netlab.jp>
+
 	* tree.c (make_tree, make_picture, make_word): Use memset to
 	initialize the memory allocated.
 	(make_literal, make_field, make_file_name, make_label_name_nodef) 
