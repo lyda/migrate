@@ -51,6 +51,30 @@ static void output_func_1 (const char *name, cb_tree x);
 static int output_indent_level = 0;
 static FILE *output_target;
 
+static struct attr_list {
+	struct attr_list	*next;
+	int			id;
+	char			type;
+	char			digits;
+	char			scale;
+	char			flags;
+	unsigned char		*pic;
+} *attr_cache = NULL;
+
+static struct literal_list {
+	struct literal_list	*next;
+	int			id;
+	struct cb_literal	*literal;
+	cb_tree			x;
+} *literal_cache = NULL;
+
+static struct field_list {
+	struct field_list	*next;
+	struct cb_field		*f;
+	cb_tree			x;
+} *field_cache = NULL;
+
+
 static void
 output (const char *fmt, ...)
 {
@@ -178,17 +202,14 @@ output_base (struct cb_field *f)
 
   if (!f01->flag_base)
     {
-      if (f01->flag_external) {
-      output_storage ("static unsigned char *%s%s  __attribute__ ((__aligned__(8)));",
-		      CB_PREFIX_BASE, name);
-	} else {
-      if (!f01->flag_external && !f01->flag_local)
-	output_storage ("static ");
-      output_storage ("unsigned char %s%s[%d]  __attribute__ ((__aligned__(8)));",
-		      CB_PREFIX_BASE, name, f01->memory_size);
+	if ( !f01->flag_external ) {
+		if (!f01->flag_local)
+			output_storage ("static ");
+		output_storage ("unsigned char %s%s[%d]\t__attribute__ ((__aligned__(8)));",
+				CB_PREFIX_BASE, name, f01->memory_size);
+		output_storage ("  /* %s */\n", f01->name);
 	}
-      output_storage ("\t/* %s */\n", f01->name);
-      f01->flag_base = 1;
+	f01->flag_base = 1;
     }
   output ("%s%s", CB_PREFIX_BASE, name);
 
@@ -328,16 +349,6 @@ output_size (cb_tree x)
 static int
 lookup_attr (char type, char digits, char scale, char flags, unsigned char *pic)
 {
-  static struct attr_list {
-    int id;
-    char type;
-    char digits;
-    char scale;
-    char flags;
-    unsigned char *pic;
-    struct attr_list *next;
-  } *attr_cache = NULL;
-
   struct attr_list *l;
 
   /* search attribute cache */
@@ -351,19 +362,6 @@ lookup_attr (char type, char digits, char scale, char flags, unsigned char *pic)
       return l->id;
 
   /* output new attribute */
-  output_storage ("static cob_field_attr %s%d = ", CB_PREFIX_ATTR, cb_id);
-  output_storage ("{%d, %d, %d, %d, ", type, digits, scale, flags);
-  if (pic)
-    {
-      unsigned char *s;
-      output_storage ("\"");
-      for (s = pic; *s; s += 2)
-	output_storage ("%c\\%03o", s[0], s[1]);
-      output_storage ("\"");
-    }
-  else
-    output_storage ("0");
-  output_storage ("};\n");
 
   /* cache it */
   l = malloc (sizeof (struct attr_list));
@@ -476,11 +474,6 @@ output_field (cb_tree x)
 static int
 lookup_literal (cb_tree x)
 {
-  static struct literal_list {
-    int id;
-    struct cb_literal *literal;
-    struct literal_list *next;
-  } *literal_cache = NULL;
   
   struct cb_literal *literal = CB_LITERAL (x);
   struct literal_list *l;
@@ -499,16 +492,13 @@ lookup_literal (cb_tree x)
   output_target = 0;
   output_field (x);
 
-  output_target = cb_storage_file;
-  output ("static cob_field %s%d = ", CB_PREFIX_CONST, cb_id);
-  output_field (x);
-  output (";\n");
   output_target = yyout;
 
   /* cache it */
   l = malloc (sizeof (struct literal_list));
   l->id = cb_id;
   l->literal = literal;
+  l->x = x;
   l->next = literal_cache;
   literal_cache = l;
 
@@ -771,13 +761,16 @@ output_param (cb_tree x, int id)
 	  {
 	    if (!f->flag_field)
 	      {
+		struct field_list *l;
+
 		output_target = 0;
 		output_field (x);
 
-		output_target = cb_storage_file;
-		output ("static cob_field %s%d = ", CB_PREFIX_FIELD, f->id);
-		output_field (x);
-		output ("; /* %s */\n", f->name);
+		l = malloc (sizeof (struct field_list));
+		l->x = x;
+		l->f = f;
+		l->next = field_cache;
+		field_cache = l;
 
 		f->flag_field = 1;
 		output_target = yyout;
@@ -2116,6 +2109,25 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	  cb_display_sign, cb_filename_mapping, cb_binary_truncate,
 	  cb_pretty_display);
   output_newline ();
+
+  /* External items */
+  for (f = prog->working_storage; f; f = f->sister) {
+	if ( f->flag_external ) {
+		char name[CB_MAX_CNAME];
+		char *p;
+
+		strcpy (name, f->name);
+		for (p = name; *p; p++) {
+			if (*p == '-')
+				*p = '_';
+		}
+		output ("  static unsigned char *%s%s = NULL;",
+			CB_PREFIX_BASE, name);
+		output ("  /* %s */\n", f->name);
+	}
+  }
+  output_newline ();
+
   /* files */
   if (prog->file_list)
     {
@@ -2337,6 +2349,9 @@ codegen (struct cb_program *prog)
 {
   cb_tree l;
   cb_tree parameter_list = NULL;
+  struct attr_list *j;
+  struct literal_list *m;
+  struct field_list *k;
 
   if (cb_flag_main)
     prog->flag_initial = 1;
@@ -2391,4 +2406,36 @@ codegen (struct cb_program *prog)
   for (l = prog->entry_list; l; l = CB_CHAIN (l))
     output_entry_function (prog, l, parameter_list);
   output_internal_function (prog, parameter_list);
+
+  output_target = cb_storage_file;
+  for (j = attr_cache; j; j = j->next) {
+	output_storage ("static cob_field_attr %s%d\t= ", CB_PREFIX_ATTR, j->id);
+	output_storage ("{%d, %d, %d, %d, ", j->type, j->digits, j->scale, j->flags);
+	if (j->pic)
+	    {
+	      unsigned char *s;
+	      output_storage ("\"");
+	      for (s = j->pic; *s; s += 2)
+		output_storage ("%c\\%03o", s[0], s[1]);
+	      output_storage ("\"");
+	    }
+	else
+	output_storage ("0");
+	output_storage ("};\n");
+  }
+
+  for (k = field_cache; k; k = k->next) {
+	output ("static cob_field %s%d\t= ", CB_PREFIX_FIELD, k->f->id);
+	output_field (k->x);
+	output (";\t/* %s */\n", k->f->name);
+  }
+
+  for (m = literal_cache; m; m = m->next) {
+	output ("static cob_field %s%d\t= ", CB_PREFIX_CONST, m->id);
+	output_field (m->x);
+	output (";\n");
+  }
+
+  output_target = yyout;
+
 }

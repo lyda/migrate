@@ -768,7 +768,6 @@ cob_external_addr (char *exname, int exlength)
 	static cob_external *basext = NULL;
 
 	cob_external	*eptr;
-	int		n;
 
 	for ( eptr = basext; eptr; eptr = eptr->next ) {
 		if ( !strcmp(exname, eptr->ename) ) {
@@ -778,25 +777,13 @@ cob_external_addr (char *exname, int exlength)
 			}
 			return eptr->ext_alloc;
 		}
-		if ( !eptr->next ) {
-			break;
-		}
 	}
-	n = strlen(exname) + 3;
-	if ( !basext ) {
-		eptr = (cob_external *)malloc(sizeof(cob_external));
-		basext = eptr;
-	} else {
-		eptr->next = (cob_external *)malloc(sizeof(cob_external));
-		eptr = eptr->next;
-	}
-	eptr->next = NULL;
+	eptr = (cob_external *)malloc(sizeof(cob_external));
+	eptr->next = basext;
 	eptr->esize = exlength;
-	if ( exlength % 8 ) {
-		exlength += 8 - (exlength % 8);
-	}
-	eptr->ename = malloc(n);
+	eptr->ename = malloc(strlen(exname) + 1);
 	strcpy(eptr->ename, exname);
 	eptr->ext_alloc = malloc(exlength);
+	basext = eptr;
 	return eptr->ext_alloc;
 }

@@ -1,3 +1,14 @@
+2005-02-09  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Change order of generating variable
+	  assignment. In the generated C header, we now
+	  have firstly the item definitions, then the
+	  attributes and finally the cob_field items.
+	  EXTERNAL variable pointers are generated local
+	  to the static prog function.
+	  We are fairly close to acieving Keisuke's
+	  wish for generating just one source file.
+ 
 2005-02-08  Roger While <simrw@sim-basis.de>
 
 	* parser.y, codegen.c, tree.h, tree.c

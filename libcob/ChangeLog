@@ -1,3 +1,8 @@
+2005-02-09  Roger While <simrw@sim-basis.de>
+
+	* I must be going senile. Finally fix
+	  cob_external_addr.
+
 2005-02-08  Roger While <simrw@sim-basis.de>
 
 	* Fix my cob_external_addr routine
