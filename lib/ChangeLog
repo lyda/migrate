@@ -1,3 +1,7 @@
+2002-08-29  Keisuke Nishida  <knishida@netlab.jp>
+
+	* mkstemp.c, tempname.c: Removed.
+
 2002-08-28  Keisuke Nishida  <knishida@netlab.jp>
 
 	* Makefile.am: Use AC_LIBOBJ scheme.
