@@ -261,7 +261,7 @@ cob_decimal_get (cob_decimal d, struct cob_field f)
 	mpz_get_str (p, 10, d->number);
 	size = strlen (p);
 
-	if (COB_FIELD_TYPE (f) == '9')
+	if (COB_FIELD_TYPE (f) == COB_DISPLAY)
 	  {
 	    int len = COB_FIELD_LENGTH (f);
 	    unsigned char *base = COB_FIELD_BASE (f);

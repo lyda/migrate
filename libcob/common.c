@@ -46,7 +46,7 @@ int cob_status;
 
 /* ZERO,SPACE,HIGH-VALUE,LOW-VALUE,QUOTE */
 
-static struct cob_field_desc x_desc = {1, 'X'};
+static struct cob_field_desc x_desc = {1, COB_ALPHANUMERIC};
 struct cob_field cob_zero =  {&x_desc, "0"};
 struct cob_field cob_space = {&x_desc, " "};
 struct cob_field cob_high =  {&x_desc, "\xff"};
@@ -56,7 +56,7 @@ struct cob_field cob_quote = {&x_desc, "\""};
 /* RETURN-CODE */
 
 int cob_return_code_value = 0;
-static struct cob_field_desc rc_desc = {4, 'B', 9, 0, 1};
+static struct cob_field_desc rc_desc = {4, COB_BINARY, 9, 0, 1};
 struct cob_field cob_return_code = {&rc_desc, (char *)&cob_return_code_value};
 
 /* SWITCH-1/2/3/4/5/6/7/8 */
@@ -264,10 +264,10 @@ cob_is_numeric (struct cob_field f)
 {
   switch (COB_FIELD_TYPE (f))
     {
-    case 'B':
-    case 'C':
+    case COB_BINARY:
+    case COB_PACKED:
       return 1;
-    case '9':
+    case COB_DISPLAY:
       {
 	int i;
 	int ret = 1;

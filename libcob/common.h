@@ -31,8 +31,10 @@
 #define COB_NATIONAL_EDITED	'M'
 #define COB_BOOLEAN		'1'
 
-#define COB_BINARY		'B'
-#define COB_PACKED		'C'
+#define COB_BINARY		'2'
+#define COB_PACKED		'3'
+#define COB_BIGENDIAN		'5'
+#define COB_DISPLAY		'9'
 
 struct cob_field {
   struct cob_field_desc {
@@ -58,13 +60,6 @@ struct cob_field {
   ((f).data + (((f).desc->sign_separate && (f).desc->sign_leading) ? 1 : 0))
 #define COB_FIELD_LENGTH(f) \
   ((f).desc->size - ((f).desc->sign_separate ? 1 : 0))
-
-#define COB_FIELD_SIGNED_P(f)	((f).desc->have_sign)
-#define COB_FIELD_NUMERIC_P(x)				\
-  ({							\
-    int _t = COB_FIELD_TYPE (x);			\
-    (_t == '9' || _t == 'B' || _t == 'C');		\
-  })
 
 
 

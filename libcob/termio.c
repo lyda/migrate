@@ -51,36 +51,42 @@ cob_init_termio (void)
 void
 cob_display (struct cob_field f, int fd)
 {
-  if (COB_FIELD_NUMERIC_P (f))
+  switch (COB_FIELD_TYPE (f))
     {
-      int i;
-      int size = (f.desc->digits
-		  + (f.desc->have_sign ? 1 : 0)
-		  + (f.desc->decimals > 0 ? 1 : 0));
-      unsigned char pic[9], *p = pic;
-      unsigned char data[size];
-      struct cob_field_desc desc =
-	{size, '0', f.desc->digits, f.desc->decimals};
-      struct cob_field temp = {&desc, data};
-      desc.pic = pic;
-      if (f.desc->have_sign)
-	p += sprintf (p, "+\001");
-      if (f.desc->decimals > 0)
-	sprintf (p, "9%c.%c9%c", f.desc->digits - f.desc->decimals,
-		 1, f.desc->decimals);
-      else
-	sprintf (p, "9%c", f.desc->digits);
-      cob_move (f, temp);
-      for (i = 0; i < size; i++)
-	fputc (data[i], cob_stream[fd]);
-    }
-  else
-    {
-      int i;
-      int size = COB_FIELD_SIZE (f);
-      unsigned char *data = COB_FIELD_DATA (f);
-      for (i = 0; i < size; i++)
-	fputc (data[i], cob_stream[fd]);
+    case COB_BINARY:
+    case COB_PACKED:
+    case COB_DISPLAY:
+      {
+	int i;
+	int size = (f.desc->digits
+		    + (f.desc->have_sign ? 1 : 0)
+		    + (f.desc->decimals > 0 ? 1 : 0));
+	unsigned char pic[9], *p = pic;
+	unsigned char data[size];
+	struct cob_field_desc desc =
+	  {size, '0', f.desc->digits, f.desc->decimals};
+	struct cob_field temp = {&desc, data};
+	desc.pic = pic;
+	if (f.desc->have_sign)
+	  p += sprintf (p, "+\001");
+	if (f.desc->decimals > 0)
+	  sprintf (p, "9%c.%c9%c", f.desc->digits - f.desc->decimals,
+		   1, f.desc->decimals);
+	else
+	  sprintf (p, "9%c", f.desc->digits);
+	cob_move (f, temp);
+	for (i = 0; i < size; i++)
+	  fputc (data[i], cob_stream[fd]);
+      }
+      break;
+    default:
+      {
+	int i;
+	int size = COB_FIELD_SIZE (f);
+	unsigned char *data = COB_FIELD_DATA (f);
+	for (i = 0; i < size; i++)
+	  fputc (data[i], cob_stream[fd]);
+      }
     }
 }
 
@@ -110,7 +116,7 @@ cob_accept (struct cob_field f)
 {
   int size;
   char buff[BUFSIZ];
-  struct cob_field_desc fld = {0, 'X'};
+  struct cob_field_desc fld = {0, COB_ALPHANUMERIC};
 
 #ifdef HAVE_LIBREADLINE
   if (isatty (fileno (stdin)))

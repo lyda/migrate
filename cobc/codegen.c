@@ -757,9 +757,9 @@ get_type (struct cobc_field *p)
 {
   int type = p->category;
   if (p->usage == COBC_USAGE_BINARY || p->usage == COBC_USAGE_INDEX)
-    type = 'B';
+    type = COB_BINARY;
   else if (p->usage == COBC_USAGE_PACKED)
-    type = 'C';
+    type = COB_PACKED;
   return type;
 }
 

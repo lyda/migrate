@@ -20,11 +20,12 @@
 #ifndef _TREE_H_
 #define _TREE_H_
 
+#define COBC_USAGE_BINARY	'2'
+#define COBC_USAGE_PACKED	'3'
+#define COBC_USAGE_FLOAT	'4'
+#define COBC_USAGE_BIGENDIAN	'5'
+#define COBC_USAGE_INDEX	'6'
 #define COBC_USAGE_DISPLAY	'9'
-#define COBC_USAGE_BINARY	'B'
-#define COBC_USAGE_PACKED	'C'
-#define COBC_USAGE_FLOAT	'U'
-#define COBC_USAGE_INDEX	'I'
 
 #define COBC_BEFORE		0
 #define COBC_AFTER		1

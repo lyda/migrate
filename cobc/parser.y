@@ -51,7 +51,7 @@
 #define push_call_3(t,a,b,c)	 push_tree (make_call_3 (t, a, b, c))
 #define push_call_4(t,a,b,c,d)	 push_tree (make_call_4 (t, a, b, c, d))
 
-#define push_move(x,y)		 push_call_2 (COB_MOVE, x, y)
+#define push_move(x,y)		 push_call_2 (COBC_MOVE, x, y)
 
 #define push_label(x)				\
   do {						\
@@ -183,7 +183,7 @@ static void ambiguous_error (struct cobc_word *p);
 %token DEPENDING,CORRESPONDING,CONVERTING,FUNCTION_NAME,OPTIONAL,RETURNING
 %token IDENTIFICATION,ENVIRONMENT,DATA,PROCEDURE,TRUE,FALSE,ANY
 %token AUTHOR,DATE_WRITTEN,DATE_COMPILED,INSTALLATION,SECURITY
-%token COMMON,NEXT,PACKED_DECIMAL,INPUT,I_O,OUTPUT,EXTEND,BINARY
+%token COMMON,NEXT,PACKED_DECIMAL,INPUT,I_O,OUTPUT,EXTEND,BINARY,BIGENDIAN
 %token ALPHANUMERIC,ALPHANUMERIC_EDITED,NUMERIC_EDITED,NATIONAL,NATIONAL_EDITED
 
 %type <str> class
@@ -987,6 +987,10 @@ usage:
   {
     current_field->usage = COBC_USAGE_BINARY;
   }
+| BIGENDIAN /* COMP-5 */
+  {
+    current_field->usage = COBC_USAGE_BIGENDIAN;
+  }
 | INDEX
   {
     current_field->usage = COBC_USAGE_INDEX;
@@ -1389,36 +1393,36 @@ statement:
 accept_statement:
   ACCEPT data_name
   {
-    push_call_1 (COB_ACCEPT, $2);
+    push_call_1 (COBC_ACCEPT, $2);
   }
 | ACCEPT data_name FROM DATE
   {
-    push_call_1 (COB_ACCEPT_DATE, $2);
+    push_call_1 (COBC_ACCEPT_DATE, $2);
   }
 | ACCEPT data_name FROM DAY
   {
-    push_call_1 (COB_ACCEPT_DAY, $2);
+    push_call_1 (COBC_ACCEPT_DAY, $2);
   }
 | ACCEPT data_name FROM DAY_OF_WEEK
   {
-    push_call_1 (COB_ACCEPT_DAY_OF_WEEK, $2);
+    push_call_1 (COBC_ACCEPT_DAY_OF_WEEK, $2);
   }
 | ACCEPT data_name FROM TIME
   {
-    push_call_1 (COB_ACCEPT_TIME, $2);
+    push_call_1 (COBC_ACCEPT_TIME, $2);
   }
 | ACCEPT data_name FROM COMMAND_LINE
   {
-    push_call_1 (COB_ACCEPT_COMMAND_LINE, $2);
+    push_call_1 (COBC_ACCEPT_COMMAND_LINE, $2);
   }
 | ACCEPT data_name FROM ENVIRONMENT_VARIABLE value
   {
-    push_call_2 (COB_ACCEPT_ENVIRONMENT, $2, $5);
+    push_call_2 (COBC_ACCEPT_ENVIRONMENT, $2, $5);
   }
 | ACCEPT data_name FROM mnemonic_name
   {
     if (COBC_BUILTIN ($4)->id == BUILTIN_STDIN)
-      push_call_1 (COB_ACCEPT, $2);
+      push_call_1 (COBC_ACCEPT, $2);
     else
       yyerror ("ACCEPT FROM is allowed only from STDIN");
   }
@@ -1489,7 +1493,7 @@ call_statement:
   CALL program_name		{ current_call_mode = COBC_CALL_BY_REFERENCE; }
   call_using call_returning
   {
-    push_call_3 (COB_CALL, $2, $4, $5);
+    push_call_3 (COBC_CALL, $2, $4, $5);
   }
   opt_on_exception_or_overflow
   _end_call
@@ -1525,7 +1529,7 @@ opt_on_exception_or_overflow:
   }
 ;
 opt_on_exception_sentence:
-  /* nothing */			{ $$ = make_call_0 (COB_CALL_ERROR); }
+  /* nothing */			{ $$ = make_call_0 (COBC_CALL_ERROR); }
 | _on exception_or_overflow
   imperative_statement		{ $$ = $3; }
 ;
@@ -1547,7 +1551,7 @@ cancel_statement:
 cancel_list:
 | cancel_list program_name
   {
-    push_call_1 (COB_CANCEL, $2);
+    push_call_1 (COBC_CANCEL, $2);
   }
 ;
 program_name:
@@ -1571,8 +1575,8 @@ close_file_list:
 close_file:
   file_name close_option
   {
-    push_call_2 (COB_CLOSE, $1, make_integer ($2));
-    push_call_4 (COB_FILE_HANDLER, $1, 0, 0, 0);
+    push_call_2 (COBC_CLOSE, $1, make_integer ($2));
+    push_call_4 (COBC_FILE_HANDLER, $1, 0, 0, 0);
   }
 ;
 close_option:
@@ -1621,7 +1625,7 @@ delete_statement:
   DELETE file_name _record
   {
     current_file_name = COBC_FILE_NAME ($2);
-    push_call_1 (COB_DELETE, $2);
+    push_call_1 (COBC_DELETE, $2);
   }
   opt_invalid_key
   _end_delete
@@ -1638,7 +1642,7 @@ display_statement:
   {
     struct cobc_list *l;
     for (l = $2; l; l = l->next)
-      push_call_2 (COB_DISPLAY, l->item, make_integer ($3));
+      push_call_2 (COBC_DISPLAY, l->item, make_integer ($3));
   }
   display_with_no_advancing
   ;
@@ -1658,7 +1662,7 @@ display_upon:
   }
 ;
 display_with_no_advancing:
-  /* nothing */ { push_call_1 (COB_NEWLINE, make_integer ($<inum>-1)); }
+  /* nothing */ { push_call_1 (COBC_NEWLINE, make_integer ($<inum>-1)); }
 | _with NO ADVANCING { /* nothing */ }
 ;
 
@@ -1685,13 +1689,13 @@ divide_body:
   }
 | number INTO number GIVING numeric_edited_name flag_rounded REMAINDER numeric_edited_name
   {
-    push_call_4 (COB_DIVIDE_QUOTIENT, $3, $1, $5, make_integer ($6));
-    push_call_1 (COB_DIVIDE_REMAINDER, $8);
+    push_call_4 (COBC_DIVIDE_QUOTIENT, $3, $1, $5, make_integer ($6));
+    push_call_1 (COBC_DIVIDE_REMAINDER, $8);
   }
 | number BY number GIVING numeric_edited_name flag_rounded REMAINDER numeric_edited_name
   {
-    push_call_4 (COB_DIVIDE_QUOTIENT, $1, $3, $5, make_integer ($6));
-    push_call_1 (COB_DIVIDE_REMAINDER, $8);
+    push_call_4 (COBC_DIVIDE_QUOTIENT, $1, $3, $5, make_integer ($6));
+    push_call_1 (COBC_DIVIDE_REMAINDER, $8);
   }
 ;
 _end_divide: | END_DIVIDE ;
@@ -1783,7 +1787,7 @@ _end_evaluate: | END_EVALUATE ;
 
 exit_statement:
   EXIT				{ /* do nothing */ }
-| EXIT PROGRAM			{ push_call_0 (COB_EXIT_PROGRAM); }
+| EXIT PROGRAM			{ push_call_0 (COBC_EXIT_PROGRAM); }
 ;
 
 
@@ -1797,11 +1801,11 @@ goto_statement:
     if ($3->next)
       yyerror ("too many labels with GO TO");
     else
-      push_call_1 (COB_GOTO, $3->item);
+      push_call_1 (COBC_GOTO, $3->item);
   }
 | GO _to label_list DEPENDING _on numeric_name
   {
-    push_call_2 (COB_GOTO_DEPENDING, $3, $6);
+    push_call_2 (COBC_GOTO_DEPENDING, $3, $6);
   }
 | GO _to { yywarn ("GO TO without label is obsolete"); }
 ;
@@ -1835,9 +1839,9 @@ initialize_statement:
     struct cobc_list *l;
     for (l = $2; l; l = l->next)
       if (!$3)
-	push_call_1 (COB_INITIALIZE, l->item);
+	push_call_1 (COBC_INITIALIZE, l->item);
       else
-	push_call_2 (COB_INITIALIZE_REPLACING, l->item, $3);
+	push_call_2 (COBC_INITIALIZE_REPLACING, l->item, $3);
   }
 ;
 initialize_replacing:
@@ -1871,20 +1875,20 @@ _data: | DATA ;
 inspect_statement:
   INSPECT data_name inspect_tallying
   {
-    push_call_2 (COB_INSPECT_TALLYING, $2, $3);
+    push_call_2 (COBC_INSPECT_TALLYING, $2, $3);
   }
 | INSPECT data_name inspect_replacing
   {
-    push_call_2 (COB_INSPECT_REPLACING, $2, $3);
+    push_call_2 (COBC_INSPECT_REPLACING, $2, $3);
   }
 | INSPECT data_name inspect_converting
   {
-    push_call_2 (COB_INSPECT_CONVERTING, $2, $3);
+    push_call_2 (COBC_INSPECT_CONVERTING, $2, $3);
   }
 | INSPECT data_name inspect_tallying inspect_replacing
   {
-    push_call_2 (COB_INSPECT_TALLYING, $2, $3);
-    push_call_2 (COB_INSPECT_REPLACING, $2, $4);
+    push_call_2 (COBC_INSPECT_TALLYING, $2, $3);
+    push_call_2 (COBC_INSPECT_REPLACING, $2, $4);
   }
 ;
 
@@ -1946,7 +1950,7 @@ replacing_item:
 inspect_converting:
   CONVERTING value TO value inspect_before_after_list
   {
-    $$ = list (make_generic (COB_INSPECT_CONVERTING, $2, $4, $5));
+    $$ = list (make_generic (COBC_INSPECT_CONVERTING, $2, $4, $5));
   }
 
 /* INSPECT BEFORE/AFTER */
@@ -2024,8 +2028,8 @@ open_option:
     for (l = $2; l; l = l->next)
       {
 	struct cobc_file_name *p = COBC_FILE_NAME (l->item);
-	push_call_3 (COB_OPEN, p, p->assign, make_integer ($1));
-	push_call_4 (COB_FILE_HANDLER, p, 0, 0, 0);
+	push_call_3 (COBC_OPEN, p, p->assign, make_integer ($1));
+	push_call_4 (COBC_FILE_HANDLER, p, 0, 0, 0);
       }
   }
 ;
@@ -2116,12 +2120,12 @@ read_statement:
 	/* READ NEXT */
 	if ($6)
 	  yywarn ("KEY ignored with sequential READ");
-	push_call_1 (COB_READ_NEXT, $2);
+	push_call_1 (COBC_READ_NEXT, $2);
       }
     else
       {
 	/* READ */
-	push_call_2 (COB_READ, $2, $6 ? $6 : current_file_name->key);
+	push_call_2 (COBC_READ, $2, $6 ? $6 : current_file_name->key);
       }
     if ($5)
       push_move (COBC_TREE (current_file_name->record), $5);
@@ -2140,7 +2144,7 @@ read_key:
 read_option:
   /* nothing */
   {
-    push_call_4 (COB_FILE_HANDLER, current_file_name, 0, 0, 0);
+    push_call_4 (COBC_FILE_HANDLER, current_file_name, 0, 0, 0);
   }
 | at_end
 | invalid_key
@@ -2159,7 +2163,7 @@ rewrite_statement:
     current_file_name = COBC_FILE_NAME (file);
     if ($3)
       push_move ($3, $2);
-    push_call_1 (COB_REWRITE, file);
+    push_call_1 (COBC_REWRITE, file);
   }
   opt_invalid_key
   _end_rewrite
@@ -2174,11 +2178,11 @@ _end_rewrite: | END_REWRITE ;
 search_statement:
   SEARCH table_name search_varying search_at_end search_whens _end_search
   {
-    push_call_4 (COB_SEARCH, $2, $3, $4, $5);
+    push_call_4 (COBC_SEARCH, $2, $3, $4, $5);
   }
 | SEARCH ALL table_name search_at_end search_when _end_search
   {
-    push_call_3 (COB_SEARCH_ALL, $3, $4, $5);
+    push_call_3 (COBC_SEARCH_ALL, $3, $4, $5);
   }
 ;
 search_varying:
@@ -2265,7 +2269,7 @@ start_body:
   file_name
   {
     current_file_name = COBC_FILE_NAME ($1);
-    push_call_3 (COB_START, $1, make_integer (COB_EQ), current_file_name->key);
+    push_call_3 (COBC_START, $1, make_integer (COB_EQ), current_file_name->key);
   }
 | file_name KEY _is operator data_name
   {
@@ -2280,7 +2284,7 @@ start_body:
       case COBC_COND_GE: cond = COB_GE; break;
       case COBC_COND_NE: cond = COB_NE; break;
       }
-    push_call_3 (COB_START, $1, make_integer (cond), $5);
+    push_call_3 (COBC_START, $1, make_integer (cond), $5);
   }
 ;
 _end_start: | END_START ;
@@ -2291,7 +2295,7 @@ _end_start: | END_START ;
  */
 
 stoprun_statement:
-  STOP RUN			{ push_call_0 (COB_STOP_RUN); }
+  STOP RUN			{ push_call_0 (COBC_STOP_RUN); }
 | STOP NONNUMERIC_LITERAL	{ yywarn ("STOP literal is obsolete"); }
 ;
 
@@ -2305,7 +2309,7 @@ string_statement:
   {
     if ($5)
       $2 = cons (make_generic_1 (COB_STRING_WITH_POINTER, $5), $2);
-    push_call_2 (COB_STRING, $4, $2);
+    push_call_2 (COBC_STRING, $4, $2);
   }
   opt_on_overflow
   _end_string
@@ -2394,7 +2398,7 @@ unstring_statement:
       $3 = cons (make_generic_1 (COB_UNSTRING_WITH_POINTER, $6), $3);
     if ($7)
       $5 = list_add ($5, make_generic_1 (COB_UNSTRING_TALLYING, $7));
-    push_call_2 (COB_UNSTRING, $2, list_append ($3, $5));
+    push_call_2 (COBC_UNSTRING, $2, list_append ($3, $5));
   }
   opt_on_overflow
   _end_unstring
@@ -2462,21 +2466,21 @@ write_statement:
     if ($4 && $4->type == COBC_AFTER)
       {
 	if ($4->x)
-	  push_call_2 (COB_WRITE_LINES, file, make_index ($4->x));
+	  push_call_2 (COBC_WRITE_LINES, file, make_index ($4->x));
 	else
-	  push_call_1 (COB_WRITE_PAGE, file);
+	  push_call_1 (COBC_WRITE_PAGE, file);
       }
     /* WRITE */
     if ($3)
       push_move ($3, $2);
-    push_call_1 (COB_WRITE, file);
+    push_call_1 (COBC_WRITE, file);
     /* BEFORE ADVANCING */
     if ($4 && $4->type == COBC_BEFORE)
       {
 	if ($4->x)
-	  push_call_2 (COB_WRITE_LINES, file, make_index ($4->x));
+	  push_call_2 (COBC_WRITE_LINES, file, make_index ($4->x));
 	else
-	  push_call_1 (COB_WRITE_PAGE, file);
+	  push_call_1 (COBC_WRITE_PAGE, file);
       }
   }
   opt_invalid_key
@@ -2560,15 +2564,15 @@ opt_not_on_overflow_sentence:
 at_end:
   at_end_sentence
   {
-    push_call_4 (COB_FILE_HANDLER, current_file_name, (void *) 1, $1, 0);
+    push_call_4 (COBC_FILE_HANDLER, current_file_name, (void *) 1, $1, 0);
   }
 | not_at_end_sentence
   {
-    push_call_4 (COB_FILE_HANDLER, current_file_name, (void *) 1, 0, $1);
+    push_call_4 (COBC_FILE_HANDLER, current_file_name, (void *) 1, 0, $1);
   }
 | at_end_sentence not_at_end_sentence
   {
-    push_call_4 (COB_FILE_HANDLER, current_file_name, (void *) 1, $1, $2);
+    push_call_4 (COBC_FILE_HANDLER, current_file_name, (void *) 1, $1, $2);
   }
 ;
 at_end_sentence:
@@ -2587,23 +2591,23 @@ not_at_end_sentence:
 opt_invalid_key:
   /* nothing */
   {
-    push_call_4 (COB_FILE_HANDLER, current_file_name, (void *) 2, 0, 0);
+    push_call_4 (COBC_FILE_HANDLER, current_file_name, (void *) 2, 0, 0);
   }
 | invalid_key
 ;
 invalid_key:
   invalid_key_sentence
   {
-    push_call_4 (COB_FILE_HANDLER, current_file_name, (void *) 2, $1, 0);
+    push_call_4 (COBC_FILE_HANDLER, current_file_name, (void *) 2, $1, 0);
   }
 | not_invalid_key_sentence
   {
-    push_call_4 (COB_FILE_HANDLER, current_file_name, (void *) 2, 0, $1);
+    push_call_4 (COBC_FILE_HANDLER, current_file_name, (void *) 2, 0, $1);
   }
 | invalid_key_sentence
   not_invalid_key_sentence
   {
-    push_call_4 (COB_FILE_HANDLER, current_file_name, (void *) 2, $1, $2);
+    push_call_4 (COBC_FILE_HANDLER, current_file_name, (void *) 2, $1, $2);
   }
 ;
 invalid_key_sentence:
@@ -3584,19 +3588,19 @@ builtin_switch_id (cobc_tree x)
 static cobc_tree
 make_add (cobc_tree f1, cobc_tree f2, int round)
 {
-  return make_call_3 (COB_ADD, f2, f1, round ? cobc_int1 : cobc_int0);
+  return make_call_3 (COBC_ADD, f2, f1, round ? cobc_int1 : cobc_int0);
 }
 
 static cobc_tree
 make_sub (cobc_tree f1, cobc_tree f2, int round)
 {
-  return make_call_3 (COB_SUB, f2, f1, round ? cobc_int1 : cobc_int0);
+  return make_call_3 (COBC_SUB, f2, f1, round ? cobc_int1 : cobc_int0);
 }
 
 static cobc_tree
 make_move (cobc_tree f1, cobc_tree f2, int round)
 {
-  return make_call_2 (COB_MOVE, f1, f2);
+  return make_call_2 (COBC_MOVE, f1, f2);
 }
 
 static struct cobc_list *

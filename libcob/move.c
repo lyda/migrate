@@ -641,7 +641,7 @@ cob_move (struct cob_field src, struct cob_field dst)
 void
 cob_mem_move (struct cob_field dst, unsigned char *src, int len)
 {
-  struct cob_field_desc fld = {len, 'X'};
+  struct cob_field_desc fld = {len, COB_ALPHANUMERIC};
   cob_move ((struct cob_field) {&fld, src}, dst);
 }
 
@@ -650,7 +650,7 @@ cob_to_int (struct cob_field f)
 {
   int val;
   struct cob_field_desc desc =
-    {4, 'B', f.desc->digits, f.desc->decimals, f.desc->have_sign};
+    {4, COB_BINARY, f.desc->digits, f.desc->decimals, f.desc->have_sign};
   struct cob_field temp = {&desc, (unsigned char *) &val};
   cob_move (f, temp);
   return val;
