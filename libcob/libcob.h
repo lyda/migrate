@@ -38,47 +38,6 @@
 #define COB_BINARY		'B'
 #define COB_PACKED		'C'
 
-#define COB_ORG_INDEXED		1
-#define COB_ORG_SEQUENTIAL	2
-#define COB_ORG_RELATIVE	3
-#define COB_ORG_LINE_SEQUENTIAL	4
-
-#define COB_ACCESS_SEQUENTIAL	1
-#define COB_ACCESS_DYNAMIC	2
-#define COB_ACCESS_RANDOM	3
-
-#define FMOD_INPUT 		1
-#define FMOD_IO 		2
-#define FMOD_OUTPUT 		3
-#define FMOD_EXTEND 		4
-
-/* INSPECT options */
-#define INSPECT_END		0
-#define INSPECT_CHARACTERS 	1
-#define INSPECT_ALL        	2
-#define INSPECT_LEADING    	3
-#define INSPECT_FIRST      	4
-#define INSPECT_CONVERTING     	5
-#define INSPECT_BEFORE      	6
-#define INSPECT_AFTER      	7
-
-/* STRING options */
-#define STRING_END		0
-#define STRING_CONCATENATE	1
-#define STRING_DELIMITED_NAME	2
-#define STRING_DELIMITED_SIZE	3
-#define STRING_WITH_POINTER	4
-
-/* UNSTRING options */
-#define UNSTRING_END		0
-#define UNSTRING_INTO		1
-#define UNSTRING_DELIMITER	2
-#define UNSTRING_COUNT		3
-#define UNSTRING_DELIMITED_BY	4
-#define UNSTRING_DELIMITED_ALL	5
-#define UNSTRING_WITH_POINTER	6
-#define UNSTRING_TALLYING	7
-
 
 /*
  * Field structure
@@ -91,72 +50,30 @@ struct cob_field {
     char digits;
     char decimals;
     char have_sign     : 1;
-    char separate_sign : 1;
-    char leading_sign  : 1;
+    char sign_separate : 1;
+    char sign_leading  : 1;
     char blank_zero    : 1;
-    char just_r        : 1;
+    char justified     : 1;
     char *pic;
   } *desc;
   unsigned char *data;
 };
 
-#define FIELD_TYPE(f)		((f).desc->type)
-#define FIELD_SIZE(f)		((f).desc->size)
-#define FIELD_DECIMALS(f)	((f).desc->decimals)
-#define FIELD_DATA(f)		((f).data)
-#define FIELD_BASE(f) \
-  ((f).data + (((f).desc->separate_sign && (f).desc->leading_sign) ? 1 : 0))
-#define FIELD_LENGTH(f) \
-  ((f).desc->size - ((f).desc->separate_sign ? 1 : 0))
+#define COB_FIELD_TYPE(f)	((f).desc->type)
+#define COB_FIELD_SIZE(f)	((f).desc->size)
+#define COB_FIELD_DECIMALS(f)	((f).desc->decimals)
+#define COB_FIELD_DATA(f)	((f).data)
+#define COB_FIELD_BASE(f) \
+  ((f).data + (((f).desc->sign_separate && (f).desc->sign_leading) ? 1 : 0))
+#define COB_FIELD_LENGTH(f) \
+  ((f).desc->size - ((f).desc->sign_separate ? 1 : 0))
 
-#define FIELD_SIGNED_P(f)	((f).desc->have_sign)
-#define FIELD_NUMERIC_P(x)				\
+#define COB_FIELD_SIGNED_P(f)	((f).desc->have_sign)
+#define COB_FIELD_NUMERIC_P(x)				\
   ({							\
-    int _t = FIELD_TYPE (x);				\
+    int _t = COB_FIELD_TYPE (x);			\
     (_t == '9' || _t == 'B' || _t == 'C');		\
   })
-
-
-/*
- * File structure
- */
-
-struct cob_file_desc {
-  struct cob_field_desc *filename_desc;
-  unsigned char *filename_data;
-  signed long reclen;		/* length of record */
-  char *record;
-  unsigned char organization;
-  unsigned char access_mode;
-  char *status;
-  int open_mode;
-  DB *dbp;			/* pointer for libdb operations */
-  char *start_record;		/* record for start verb control (Andrew Cameron) */
-  int optional:1;
-  int file_missing:1;
-	/******* from now on, only present for indexed files *********/
-  short unsigned rec_index;	/* offset of index field in record */
-  struct cob_field_desc *ixd_desc;	/* offset (DGROUP) index field descriptor */
-  struct altkey_desc *key_in_use;
-  struct altkey_desc {
-    short int offset;		/* offset of alternate key field in record */
-    struct cob_field_desc *descriptor;	/* descriptor for this field */
-    short int duplicates;		/* = 1 if duplicates allowed */
-    DB *alt_dbp;			/* handle for the alternate key file */
-  } *altkeys;
-};
-
-
-/*
- * Decimal number
- */
-
-struct cob_decimal {
-  mpz_t number;
-  int decimals;
-};
-
-typedef struct cob_decimal *cob_decimal;
 
 
 /* reference modification */
@@ -234,10 +151,6 @@ extern char cob_switch[];
 #define cob_exit_program() goto l_exit;
 
 
-/*
- * Functions
- */
-
 /* general.c */
 
 extern void cob_init (int argc, char **argv);
@@ -252,6 +165,7 @@ extern int cob_index (int i, int max);
 extern void cob_check_numeric (struct cob_field f);
 extern int cob_str_cmp (struct cob_field f1, struct cob_field f2);
 
+
 /* move.c */
 
 extern void cob_move (struct cob_field src, struct cob_field dst);
@@ -269,7 +183,15 @@ extern void cob_mem_move (struct cob_field dst, unsigned char *src, int len);
 extern int cob_to_int (struct cob_field f);
 extern void cob_set_int (struct cob_field f, int n);
 
+
 /* math.c */
+
+struct cob_decimal {
+  mpz_t number;
+  int decimals;
+};
+
+typedef struct cob_decimal *cob_decimal;
 
 extern cob_decimal cob_d1, cob_d2, cob_d3, cob_d4, cob_dt;
 
@@ -299,6 +221,7 @@ extern void cob_sub (struct cob_field f1, struct cob_field f2, int round);
 extern void cob_div (struct cob_field dividend, struct cob_field divisor, struct cob_field quotient, int round);
 extern void cob_div_reminder (struct cob_field remainder);
 
+
 /* basicio.c */
 
 #define COB_STDIN	0
@@ -319,6 +242,85 @@ extern void cob_accept_time (struct cob_field f);
 extern void cob_accept_command_line (struct cob_field f);
 extern void cob_accept_environment (struct cob_field f, struct cob_field env);
 
+
+/* fileio.c */
+
+#define COB_ORG_INDEXED		1
+#define COB_ORG_SEQUENTIAL	2
+#define COB_ORG_RELATIVE	3
+#define COB_ORG_LINE_SEQUENTIAL	4
+
+#define COB_ACCESS_SEQUENTIAL	1
+#define COB_ACCESS_DYNAMIC	2
+#define COB_ACCESS_RANDOM	3
+
+#define FMOD_INPUT 		1
+#define FMOD_IO 		2
+#define FMOD_OUTPUT 		3
+#define FMOD_EXTEND 		4
+
+struct cob_file_desc {
+  struct cob_field_desc *filename_desc;
+  unsigned char *filename_data;
+  signed long reclen;		/* length of record */
+  char *record;
+  unsigned char organization;
+  unsigned char access_mode;
+  char *status;
+  int open_mode;
+  DB *dbp;			/* pointer for libdb operations */
+  char *start_record;		/* record for start verb control (Andrew Cameron) */
+  int optional:1;
+  int file_missing:1;
+	/******* from now on, only present for indexed files *********/
+  short unsigned rec_index;	/* offset of index field in record */
+  struct cob_field_desc *ixd_desc;	/* offset (DGROUP) index field descriptor */
+  struct altkey_desc *key_in_use;
+  struct altkey_desc {
+    short int offset;		/* offset of alternate key field in record */
+    struct cob_field_desc *descriptor;	/* descriptor for this field */
+    short int duplicates;		/* = 1 if duplicates allowed */
+    DB *alt_dbp;			/* handle for the alternate key file */
+  } *altkeys;
+};
+
+
+/* string.c */
+
+/* INSPECT options */
+#define COB_INSPECT_END			0
+#define COB_INSPECT_CHARACTERS		1
+#define COB_INSPECT_ALL			2
+#define COB_INSPECT_LEADING		3
+#define COB_INSPECT_FIRST	      	4
+#define COB_INSPECT_CONVERTING     	5
+#define COB_INSPECT_BEFORE      	6
+#define COB_INSPECT_AFTER		7
+
+/* STRING options */
+#define COB_STRING_END			0
+#define COB_STRING_CONCATENATE		1
+#define COB_STRING_DELIMITED_NAME	2
+#define COB_STRING_DELIMITED_SIZE	3
+#define COB_STRING_WITH_POINTER		4
+
+/* UNSTRING options */
+#define COB_UNSTRING_END		0
+#define COB_UNSTRING_INTO		1
+#define COB_UNSTRING_DELIMITER		2
+#define COB_UNSTRING_COUNT		3
+#define COB_UNSTRING_DELIMITED_BY	4
+#define COB_UNSTRING_DELIMITED_ALL	5
+#define COB_UNSTRING_WITH_POINTER	6
+#define COB_UNSTRING_TALLYING		7
+
+extern void cob_inspect_tallying (struct cob_field var, ...);
+extern void cob_inspect_replacing (struct cob_field var, ...);
+extern void cob_inspect_converting (struct cob_field var, ...);
+extern void cob_string (struct cob_field dst, ...);
+extern void cob_unstring (struct cob_field src, ...);
+
+
 /* call.c */
 
 extern void cob_set_library_path (const char *path);

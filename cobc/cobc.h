@@ -22,7 +22,7 @@
 
 #include <stdio.h>
 
-#define COBC_PACKAGE	"OpenCOBOL"
+#define COBC_PACKAGE	"cobc (OpenCOBOL)"
 #define COBC_VERSION	VERSION
 #define COBC_COPYRIGHT	"Copyright (C) 2001-2002 Keisuke Nishida\n"
 

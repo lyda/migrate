@@ -99,16 +99,16 @@ char cob_switch[8] = {1, 0, 1, 1, 1, 1, 1, 1};
 int
 cob_get_sign (struct cob_field f)
 {
-  if (FIELD_TYPE (f) == '9' && f.desc->have_sign)
+  if (COB_FIELD_TYPE (f) == '9' && f.desc->have_sign)
     {
-      if (f.desc->separate_sign)
+      if (f.desc->sign_separate)
 	{
-	  char *p = f.desc->leading_sign ? f.data : f.data + f.desc->size - 1;
+	  char *p = f.desc->sign_leading ? f.data : f.data + f.desc->size - 1;
 	  return (*p == '+') ? 0 : 1;
 	}
       else
 	{
-	  char *p = f.desc->leading_sign ? f.data : f.data + f.desc->size - 1;
+	  char *p = f.desc->sign_leading ? f.data : f.data + f.desc->size - 1;
 	  if (*p <= '9')
 	    return 0;
 	  *p -= 0x10;
@@ -121,16 +121,16 @@ cob_get_sign (struct cob_field f)
 void
 cob_put_sign (struct cob_field f, int sign)
 {
-  if (FIELD_TYPE (f) == '9' && f.desc->have_sign)
+  if (COB_FIELD_TYPE (f) == '9' && f.desc->have_sign)
     {
-      if (f.desc->separate_sign)
+      if (f.desc->sign_separate)
 	{
-	  char *p = f.desc->leading_sign ? f.data : f.data + f.desc->size - 1;
+	  char *p = f.desc->sign_leading ? f.data : f.data + f.desc->size - 1;
 	  *p = sign ? '-' : '+';
 	}
       else if (sign)
 	{
-	  char *p = f.desc->leading_sign ? f.data : f.data + f.desc->size - 1;
+	  char *p = f.desc->sign_leading ? f.data : f.data + f.desc->size - 1;
 	  *p += 0x10;
 	}
     }
@@ -139,8 +139,8 @@ cob_put_sign (struct cob_field f, int sign)
 char *
 cob_field_to_string (struct cob_field f, char *s)
 {
-  int i, size = FIELD_SIZE (f);
-  memcpy (s, FIELD_DATA (f), size);
+  int i, size = COB_FIELD_SIZE (f);
+  memcpy (s, COB_FIELD_DATA (f), size);
   for (i = 0; i < size; i++)
     if (s[i] == ' ')
       break;
@@ -289,12 +289,12 @@ cob_cmp_all (unsigned char *data, unsigned char c, int len)
 int
 cob_is_numeric (struct cob_field f)
 {
-  if (FIELD_TYPE (f) == '9')
+  if (COB_FIELD_TYPE (f) == '9')
     {
       int i, sign;
       int ret = 1;
-      int size = FIELD_LENGTH (f);
-      unsigned char *data = FIELD_BASE (f);
+      int size = COB_FIELD_LENGTH (f);
+      unsigned char *data = COB_FIELD_BASE (f);
       sign = cob_get_sign (f);
       for (i = 0; i < size; i++)
 	if (!isdigit (data[i]))
@@ -308,8 +308,8 @@ cob_is_numeric (struct cob_field f)
   else
     {
       int i;
-      int size = FIELD_SIZE (f);
-      unsigned char *data = FIELD_DATA (f);
+      int size = COB_FIELD_SIZE (f);
+      unsigned char *data = COB_FIELD_DATA (f);
       for (i = 0; i < size; i++)
 	if (!isdigit (data[i]))
 	  return 0;
@@ -321,15 +321,15 @@ void
 cob_check_numeric (struct cob_field f)
 {
   if (!cob_is_numeric (f))
-    cob_runtime_error ("non-numeric value `%s'", FIELD_BASE (f));
+    cob_runtime_error ("non-numeric value `%s'", COB_FIELD_BASE (f));
 }
 
 int
 cob_is_alpha (struct cob_field f)
 {
   int i;
-  int size = FIELD_SIZE (f);
-  unsigned char *data = FIELD_DATA (f);
+  int size = COB_FIELD_SIZE (f);
+  unsigned char *data = COB_FIELD_DATA (f);
   for (i = 0; i < size; i++)
     if (!isspace (data[i]) && !isalpha (data[i]))
       return 0;
@@ -340,8 +340,8 @@ int
 cob_is_upper (struct cob_field f)
 {
   int i;
-  int size = FIELD_SIZE (f);
-  unsigned char *data = FIELD_DATA (f);
+  int size = COB_FIELD_SIZE (f);
+  unsigned char *data = COB_FIELD_DATA (f);
   for (i = 0; i < size; i++)
     if (!isspace (data[i]) && !isupper (data[i]))
       return 0;
@@ -352,8 +352,8 @@ int
 cob_is_lower (struct cob_field f)
 {
   int i;
-  int size = FIELD_SIZE (f);
-  unsigned char *data = FIELD_DATA (f);
+  int size = COB_FIELD_SIZE (f);
+  unsigned char *data = COB_FIELD_DATA (f);
   for (i = 0; i < size; i++)
     if (!isspace (data[i]) && !islower (data[i]))
       return 0;

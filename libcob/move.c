@@ -54,8 +54,8 @@ finalize_display (struct cob_field f)
 {
   if (f.desc->blank_zero)
     {
-      int i, len = FIELD_LENGTH (f);
-      unsigned char *base = FIELD_BASE (f);
+      int i, len = COB_FIELD_LENGTH (f);
+      unsigned char *base = COB_FIELD_BASE (f);
       for (i = 0; i < len; i++)
 	if (base[i] != '0')
 	  return;
@@ -68,10 +68,10 @@ cob_move_alphanum_to_display (struct cob_field f1, struct cob_field f2)
 {
   int sign, count, size;
   unsigned char *p;
-  unsigned char *s1 = FIELD_DATA (f1);
-  unsigned char *s2 = FIELD_BASE (f2);
-  unsigned char *e1 = s1 + FIELD_SIZE (f1);
-  unsigned char *e2 = s2 + FIELD_LENGTH (f2);
+  unsigned char *s1 = COB_FIELD_DATA (f1);
+  unsigned char *s2 = COB_FIELD_BASE (f2);
+  unsigned char *e1 = s1 + COB_FIELD_SIZE (f1);
+  unsigned char *e2 = s2 + COB_FIELD_LENGTH (f2);
 
   /* initialize */
   memset (f2.data, '0', f2.desc->size);
@@ -93,7 +93,7 @@ cob_move_alphanum_to_display (struct cob_field f1, struct cob_field f2)
       count++;
 
   /* find the start position */
-  size = FIELD_LENGTH (f2) - f2.desc->decimals;
+  size = COB_FIELD_LENGTH (f2) - f2.desc->decimals;
   if (count < size)
     s2 += size - count;
   else
@@ -132,8 +132,10 @@ cob_move_display_to_display (struct cob_field f1, struct cob_field f2)
   int sign = cob_get_sign (f1);
 
   memset (f2.data, '0', f2.desc->size);
-  COPY_COMMON_REGION (FIELD_BASE (f1), FIELD_LENGTH (f1), FIELD_DECIMALS (f1),
-		      FIELD_BASE (f2), FIELD_LENGTH (f2), FIELD_DECIMALS (f2));
+  COPY_COMMON_REGION (COB_FIELD_BASE (f1), COB_FIELD_LENGTH (f1),
+		      COB_FIELD_DECIMALS (f1),
+		      COB_FIELD_BASE (f2), COB_FIELD_LENGTH (f2),
+		      COB_FIELD_DECIMALS (f2));
 
   cob_put_sign (f1, sign);
   cob_put_sign (f2, sign);
@@ -144,10 +146,10 @@ void
 cob_move_display_to_alphanum (struct cob_field f1, struct cob_field f2)
 {
   int sign = cob_get_sign (f1);
-  int len1 = FIELD_LENGTH (f1);
-  int len2 = FIELD_SIZE (f2);
-  unsigned char *base1 = FIELD_BASE (f1);
-  unsigned char *base2 = FIELD_DATA (f2);
+  int len1 = COB_FIELD_LENGTH (f1);
+  int len2 = COB_FIELD_SIZE (f2);
+  unsigned char *base1 = COB_FIELD_BASE (f1);
+  unsigned char *base2 = COB_FIELD_DATA (f2);
 
   if (len1 >= len2)
     {
@@ -184,7 +186,7 @@ cob_move_alphanum_to_alphanum (struct cob_field f1, struct cob_field f2)
   if (size1 >= size2)
     {
       /* move string with truncating */
-      if (f2.desc->just_r)
+      if (f2.desc->justified)
 	memcpy (base2, base1 + size1 - size2, size2);
       else
 	memcpy (base2, base1, size2);
@@ -192,7 +194,7 @@ cob_move_alphanum_to_alphanum (struct cob_field f1, struct cob_field f2)
   else
     {
       /* move string with padding */
-      if (f2.desc->just_r)
+      if (f2.desc->justified)
 	{
 	  memset (base2, ' ', size2 - size1);
 	  memcpy (base2 + size2 - size1, base1, size1);
@@ -215,11 +217,11 @@ cob_move_display_to_packed (struct cob_field f1, struct cob_field f2)
 {
   int i;
   int sign = cob_get_sign (f1);
-  int len1 = FIELD_LENGTH (f1);
-  int dec1 = FIELD_DECIMALS (f1);
+  int len1 = COB_FIELD_LENGTH (f1);
+  int dec1 = COB_FIELD_DECIMALS (f1);
   int len2 = f2.desc->size;
   int dec2 = f2.desc->decimals;
-  unsigned char *base1 = FIELD_BASE (f1);
+  unsigned char *base1 = COB_FIELD_BASE (f1);
   unsigned char *base2 = f2.data;
   unsigned char *p = base1 + (len1 - dec1) - (len2 - dec2);
 
@@ -254,7 +256,8 @@ cob_move_packed_to_display (struct cob_field f1, struct cob_field f2)
   /* store */
   memset (f2.data, '0', f2.desc->size);
   COPY_COMMON_REGION (buff, len, f1.desc->decimals,
-		      FIELD_BASE (f2), FIELD_LENGTH (f2), FIELD_DECIMALS (f2));
+		      COB_FIELD_BASE (f2), COB_FIELD_LENGTH (f2),
+		      COB_FIELD_DECIMALS (f2));
 
   cob_put_sign (f1, sign);
   cob_put_sign (f2, sign);
@@ -272,9 +275,9 @@ cob_move_display_to_binary (struct cob_field f1, struct cob_field f2)
   int i, len;
   long long val = 0;
   int sign = cob_get_sign (f1);
-  int len1 = FIELD_LENGTH (f1);
+  int len1 = COB_FIELD_LENGTH (f1);
   int len2 = f2.desc->size;
-  unsigned char *base1 = FIELD_BASE (f1);
+  unsigned char *base1 = COB_FIELD_BASE (f1);
   unsigned char *base2 = f2.data;
 
   /* get value */
@@ -284,7 +287,7 @@ cob_move_display_to_binary (struct cob_field f1, struct cob_field f2)
       val = val * 10 + base1[i] - '0';
     else
       val = val * 10;
-  if (sign && FIELD_SIGNED_P (f2))
+  if (sign && f2.desc->have_sign)
     val = -val;
   val %= cob_exp10LL[(int) f2.desc->digits];
 
@@ -335,7 +338,8 @@ cob_move_binary_to_display (struct cob_field f1, struct cob_field f2)
   /* store */
   memset (f2.data, '0', f2.desc->size);
   COPY_COMMON_REGION (buff + i, 20 - i, f1.desc->decimals,
-		      FIELD_BASE (f2), FIELD_LENGTH (f2), FIELD_DECIMALS (f2));
+		      COB_FIELD_BASE (f2), COB_FIELD_LENGTH (f2),
+		      COB_FIELD_DECIMALS (f2));
 
   cob_put_sign (f2, sign);
   finalize_display (f2);
@@ -382,8 +386,8 @@ cob_move_display_to_edited (struct cob_field f1, struct cob_field f2)
 	break;
     }
 
-  min = FIELD_BASE (f1);
-  max = min + FIELD_LENGTH (f1);
+  min = COB_FIELD_BASE (f1);
+  max = min + COB_FIELD_LENGTH (f1);
   src = max - f1.desc->decimals - count;
   dst = f2.data;
   end = f2.data + f2.desc->size;
@@ -514,8 +518,8 @@ cob_move_alphanum_to_edited (struct cob_field f1, struct cob_field f2)
   unsigned char *max, *src, *dst;
   int sign = cob_get_sign (f1);
 
-  src = FIELD_BASE (f1);
-  max = src + FIELD_LENGTH (f1);
+  src = COB_FIELD_BASE (f1);
+  max = src + COB_FIELD_LENGTH (f1);
   dst = f2.data;
   for (p = f2.desc->pic; *p; )
     {
@@ -562,10 +566,10 @@ indirect_move (void (*move_func) (struct cob_field src, struct cob_field dst),
 void
 cob_move (struct cob_field src, struct cob_field dst)
 {
-  switch (FIELD_TYPE (src))
+  switch (COB_FIELD_TYPE (src))
     {
     case COB_NUMERIC:
-      switch (FIELD_TYPE (dst))
+      switch (COB_FIELD_TYPE (dst))
 	{
 	case COB_NUMERIC:
 	  return cob_move_display_to_display (src, dst);
@@ -588,7 +592,7 @@ cob_move (struct cob_field src, struct cob_field dst)
 	}
 
     case COB_PACKED:
-      switch (FIELD_TYPE (dst))
+      switch (COB_FIELD_TYPE (dst))
 	{
 	case COB_NUMERIC:
 	  return cob_move_packed_to_display (src, dst);
@@ -598,7 +602,7 @@ cob_move (struct cob_field src, struct cob_field dst)
 	}
 
     case COB_BINARY:
-      switch (FIELD_TYPE (dst))
+      switch (COB_FIELD_TYPE (dst))
 	{
 	case COB_NUMERIC:
 	  return cob_move_binary_to_display (src, dst);
@@ -611,7 +615,7 @@ cob_move (struct cob_field src, struct cob_field dst)
       return cob_move_alphanum_to_alphanum (src, dst);
 
     default:
-      switch (FIELD_TYPE (dst))
+      switch (COB_FIELD_TYPE (dst))
 	{
 	case COB_NUMERIC:
 	  return cob_move_alphanum_to_display (src, dst);

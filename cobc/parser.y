@@ -1801,15 +1801,15 @@ tallying_list:
 tallying_item:
   CHARACTERS inspect_before_after_list
   {
-    $$ = make_inspect_item (INSPECT_CHARACTERS, inspect_name, 0, $2);
+    $$ = make_inspect_item (COB_INSPECT_CHARACTERS, inspect_name, 0, $2);
   }
 | ALL value inspect_before_after_list
   {
-    $$ = make_inspect_item (INSPECT_ALL, inspect_name, $2, $3);
+    $$ = make_inspect_item (COB_INSPECT_ALL, inspect_name, $2, $3);
   }
 | LEADING value inspect_before_after_list
   {
-    $$ = make_inspect_item (INSPECT_LEADING, inspect_name, $2, $3);
+    $$ = make_inspect_item (COB_INSPECT_LEADING, inspect_name, $2, $3);
   }
 
 /* INSPECT REPLACING */
@@ -1824,19 +1824,19 @@ replacing_list:
 replacing_item:
   CHARACTERS BY value inspect_before_after_list
   {
-    $$ = make_inspect_item (INSPECT_CHARACTERS, NULL, $3, $4);
+    $$ = make_inspect_item (COB_INSPECT_CHARACTERS, NULL, $3, $4);
   }
 | ALL value BY value inspect_before_after_list
   {
-    $$ = make_inspect_item (INSPECT_ALL, $4, $2, $5);
+    $$ = make_inspect_item (COB_INSPECT_ALL, $4, $2, $5);
   }
 | LEADING value BY value inspect_before_after_list
   {
-    $$ = make_inspect_item (INSPECT_LEADING, $4, $2, $5);
+    $$ = make_inspect_item (COB_INSPECT_LEADING, $4, $2, $5);
   }
 | FIRST value BY value inspect_before_after_list
   {
-    $$ = make_inspect_item (INSPECT_FIRST, $4, $2, $5);
+    $$ = make_inspect_item (COB_INSPECT_FIRST, $4, $2, $5);
   }
 
 /* INSPECT CONVERTING */
@@ -1844,7 +1844,7 @@ replacing_item:
 inspect_converting:
   CONVERTING value TO value inspect_before_after_list
   {
-    $$ = list (make_inspect_item (INSPECT_CONVERTING, $2, $4, $5));
+    $$ = list (make_inspect_item (COB_INSPECT_CONVERTING, $2, $4, $5));
   }
 
 /* INSPECT BEFORE/AFTER */
@@ -1856,11 +1856,11 @@ inspect_before_after_list:
 inspect_before_after:
   BEFORE _initial value
   {
-    $$ = make_inspect_item (INSPECT_BEFORE, $3, 0, 0);
+    $$ = make_inspect_item (COB_INSPECT_BEFORE, $3, 0, 0);
   }
 | AFTER _initial value
   {
-    $$ = make_inspect_item (INSPECT_AFTER, $3, 0, 0);
+    $$ = make_inspect_item (COB_INSPECT_AFTER, $3, 0, 0);
   }
 ;
 _initial: | TOK_INITIAL ;
@@ -2200,7 +2200,7 @@ string_statement:
   STRING string_list INTO data_name opt_with_pointer
   {
     if ($5)
-      $2 = cons (make_string_item (STRING_WITH_POINTER, $5), $2);
+      $2 = cons (make_string_item (COB_STRING_WITH_POINTER, $5), $2);
     push_call_2 (COB_STRING, $4, COBC_TREE ($2));
   }
   opt_on_overflow
@@ -2217,21 +2217,21 @@ string_delimited_list:
   }
 | string_name_list DELIMITED _by value
   {
-    $$ = cons (make_string_item (STRING_DELIMITED_NAME, $4), $1);
+    $$ = cons (make_string_item (COB_STRING_DELIMITED_NAME, $4), $1);
   }
 | string_name_list DELIMITED _by SIZE
   {
-    $$ = cons (make_string_item (STRING_DELIMITED_SIZE, 0), $1);
+    $$ = cons (make_string_item (COB_STRING_DELIMITED_SIZE, 0), $1);
   }
 ;
 string_name_list:
   value
   {
-    $$ = list (make_string_item (STRING_CONCATENATE, $1));
+    $$ = list (make_string_item (COB_STRING_CONCATENATE, $1));
   }
 | string_name_list value
   {
-    $$ = list_add ($1, make_string_item (STRING_CONCATENATE, $2));
+    $$ = list_add ($1, make_string_item (COB_STRING_CONCATENATE, $2));
   }
 ;
 opt_with_pointer:
@@ -2287,9 +2287,9 @@ unstring_statement:
   INTO unstring_into opt_with_pointer unstring_tallying
   {
     if ($6)
-      $3 = cons (make_string_item (UNSTRING_WITH_POINTER, $6), $3);
+      $3 = cons (make_string_item (COB_UNSTRING_WITH_POINTER, $6), $3);
     if ($7)
-      $5 = list_add ($5, make_string_item (UNSTRING_TALLYING, $7));
+      $5 = list_add ($5, make_string_item (COB_UNSTRING_TALLYING, $7));
     push_call_2 (COB_UNSTRING, $2, COBC_TREE (list_append ($3, $5)));
   }
   opt_on_overflow
@@ -2309,7 +2309,7 @@ unstring_delimited_list:
 unstring_delimited_item:
   flag_all value
   {
-    int type = $1 ? UNSTRING_DELIMITED_ALL : UNSTRING_DELIMITED_BY;
+    int type = $1 ? COB_UNSTRING_DELIMITED_ALL : COB_UNSTRING_DELIMITED_BY;
     $$ = list (make_string_item (type, $2));
   }
 ;
@@ -2322,11 +2322,11 @@ unstring_into:
 unstring_into_item:
   data_name unstring_delimiter unstring_count
   {
-    $$ = list (make_string_item (UNSTRING_INTO, $1));
+    $$ = list (make_string_item (COB_UNSTRING_INTO, $1));
     if ($2)
-      $$ = list_add ($$, make_string_item (UNSTRING_DELIMITER, $2));
+      $$ = list_add ($$, make_string_item (COB_UNSTRING_DELIMITER, $2));
     if ($3)
-      $$ = list_add ($$, make_string_item (UNSTRING_COUNT, $3));
+      $$ = list_add ($$, make_string_item (COB_UNSTRING_COUNT, $3));
   }
 ;
 unstring_delimiter:

@@ -47,6 +47,7 @@ cob_init_math (void)
   cob_decimal_init (cob_d4);
   cob_decimal_init (cob_dt);
 }
+
 
 /*
  * Decimal number
@@ -209,8 +210,8 @@ void
 cob_decimal_set_display (cob_decimal d, struct cob_field f)
 {
   int sign = cob_get_sign (f);
-  int len = FIELD_LENGTH (f);
-  unsigned char *base = FIELD_BASE (f);
+  int len = COB_FIELD_LENGTH (f);
+  unsigned char *base = COB_FIELD_BASE (f);
   unsigned char buff[len + 1];
   memcpy (buff, base, len);
   buff[len] = 0;
@@ -257,7 +258,7 @@ cob_decimal_get (cob_decimal d, struct cob_field f)
   shift_decimal (d, f.desc->decimals - d->decimals);
 
   /* Store number */
-  switch (FIELD_TYPE (f))
+  switch (COB_FIELD_TYPE (f))
     {
     case 'B':
       {
@@ -320,10 +321,10 @@ cob_decimal_get (cob_decimal d, struct cob_field f)
 	mpz_get_str (p, 10, d->number);
 	size = strlen (p);
 
-	if (FIELD_TYPE (f) == '9')
+	if (COB_FIELD_TYPE (f) == '9')
 	  {
-	    int len = FIELD_LENGTH (f);
-	    unsigned char *base = FIELD_BASE (f);
+	    int len = COB_FIELD_LENGTH (f);
+	    unsigned char *base = COB_FIELD_BASE (f);
 	    if (len < size)
 	      goto overflow;
 	    if (len == size)

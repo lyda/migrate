@@ -52,7 +52,7 @@ cob_init_basicio (void)
 void
 cob_display (struct cob_field f, int fd)
 {
-  if (FIELD_NUMERIC_P (f))
+  if (COB_FIELD_NUMERIC_P (f))
     {
       int i;
       int size = (f.desc->digits
@@ -78,8 +78,8 @@ cob_display (struct cob_field f, int fd)
   else
     {
       int i;
-      int size = FIELD_SIZE (f);
-      unsigned char *data = FIELD_DATA (f);
+      int size = COB_FIELD_SIZE (f);
+      unsigned char *data = COB_FIELD_DATA (f);
       for (i = 0; i < size; i++)
 	fputc (data[i], cob_stream[fd]);
     }
@@ -194,7 +194,7 @@ cob_accept_command_line (struct cob_field f)
 void
 cob_accept_environment (struct cob_field f, struct cob_field env)
 {
-  char buff[FIELD_SIZE (env) + 1];
+  char buff[COB_FIELD_SIZE (env) + 1];
   char *p = getenv (cob_field_to_string (env, buff));
   if (!p) p = "";
   cob_mem_move (f, p, strlen (p));

@@ -66,7 +66,7 @@ output_advance_move (struct cob_field f, cobc_tree dst)
   if (p->children)
     {
       dst_desc.type = 'G';
-      dst_desc.just_r = 0;
+      dst_desc.justified = 0;
     }
   else
     {
@@ -74,10 +74,10 @@ output_advance_move (struct cob_field f, cobc_tree dst)
       dst_desc.digits = p->pic->digits;
       dst_desc.decimals = p->pic->decimals;
       dst_desc.have_sign = p->pic->have_sign;
-      dst_desc.separate_sign = p->f.sign_separate;
-      dst_desc.leading_sign = p->f.sign_leading;
+      dst_desc.sign_separate = p->f.sign_separate;
+      dst_desc.sign_leading = p->f.sign_leading;
       dst_desc.blank_zero = p->f.blank_zero;
-      dst_desc.just_r = p->f.justified;
+      dst_desc.justified = p->f.justified;
       dst_desc.pic = p->pic->str;
     }
 
