@@ -106,6 +106,7 @@ static void set_buffer (int lineno, const char *filename, struct replacement *re
 
 . |
 [0-9A-Z_-]+ |
+\'[^\'\n]*\' |
 \"[^\"\n]*\"		{ ECHO; }
 
 <COPY_STATE>{

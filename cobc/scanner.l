@@ -84,12 +84,13 @@ static int scan_picture (char *text);
 "PICTURE"	{ BEGIN PICTURE_STATE; }
 "FUNCTION"	{ BEGIN FUNCTION_STATE; }
 
-[\"] {
+[\'\"] {
   /* string literal */
   SAVE_YYTEXT;
   return read_literal (yytext[0]);
 }
 
+X\'[^\'\n]*\' |
 X\"[^\"\n]*\" {
   /* X string literal */
   SAVE_YYTEXT;
