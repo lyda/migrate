@@ -4271,8 +4271,11 @@ validate_field_tree (struct cobc_field *p)
       /* group */
       COBC_TREE_CLASS (p) = COB_ALPHANUMERIC;
 
+      if (p->pic)
+	yyerror (_("group name may not have PICTURE"));
+
       if (p->f.justified)
-	yyerror (_("group item cannot have JUSTIFIED RIGHT"));
+	yyerror (_("group name may not have JUSTIFIED RIGHT"));
 
       for (p = p->children; p; p = p->sister)
 	validate_field_tree (p);
