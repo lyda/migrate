@@ -332,6 +332,7 @@ process_command_line (int argc, char *argv[])
 	    enum cob_exception_id i;
 	    for (i = 1; i < COB_EC_MAX; i++)
 	      CB_EXCEPTION_ENABLE (i) = 1;
+	    cb_flag_source_location = 1;
 	    break;
 	  }
 

@@ -1906,8 +1906,11 @@ output_stmt (cb_tree x)
 	    if (cb_flag_line_directive)
 	      output ("#line %d \"%s\"\n", x->source_line, x->source_file);
 	    output_line ("/* %s */;", p->name);
-	    output_line ("cob_source_file = \"%s\";", x->source_file);
-	    output_line ("cob_source_line = %d;", x->source_line);
+	    if (cb_flag_source_location)
+	      {
+		output_line ("cob_source_file = \"%s\";", x->source_file);
+		output_line ("cob_source_line = %d;", x->source_line);
+	      }
 	    last_line = x->source_line;
 	  }
 	break;
