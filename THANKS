@@ -4,11 +4,5 @@ Contributors:
   Noboru Saitou         for Debian package
   Yoshiki Kusumoto      for test programs
 
-OpenCOBOL branched from the TinyCOBOL project.
+OpenCOBOL was inspired by the TinyCOBOL project.
 Thanks to the TinyCOBOL authors and maintainers.
-
-  Andrew Cameron 
-  Bernard Giroud 
-  David Essex 
-  Jeff Smith
-  Rildo Pragana
