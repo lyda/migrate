@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 483
+%expect 409
 
 %{
 #define yydebug		cob_trace_parser
@@ -2327,17 +2327,6 @@ string_with_pointer:
   /* nothing */			{ $$ = NULL; }
 | opt_with POINTER name		{ $$ = $3; }
 ;
-opt_on_overflow:
-  on_overflow on_not_overflow
-;
-on_overflow:
-| ON OVERFLOW			{ $<ival>$ = gen_at_end(-1); }
-  statement_list		{ gen_dstlabel($<ival>3); }
-;
-on_not_overflow:
-| NOT ON OVERFLOW		{ $<ival>$ = gen_at_end(0); }
-  statement_list		{ gen_dstlabel($<ival>4); }
-;
 opt_end_string: | END_STRING ;
 
 
@@ -2448,6 +2437,7 @@ opt_end_write: | END_WRITE ;
 target_sentence:
   statement_list		{ gen_dstlabel ($<ival>0); }
 ;
+
 
 /*
  * ON SIZE ERROR
@@ -2463,6 +2453,24 @@ opt_on_size_error_sentence:
 ;
 opt_not_on_size_error_sentence:
 | NOT opt_on SIZE ERROR { $<ival>$ = gen_status_branch (COB_STATUS_SUCCESS, 1); }
+  target_sentence
+;
+
+
+/*
+ * ON OVERFLOW
+ */
+
+opt_on_overflow:
+  opt_on_overflow_sentence
+  opt_not_on_overflow_sentence
+;
+opt_on_overflow_sentence:
+| ON OVERFLOW			{ $<ival>$ = gen_at_end(-1); }
+  target_sentence
+;
+opt_not_on_overflow_sentence:
+| NOT ON OVERFLOW		{ $<ival>$ = gen_at_end(0); }
   target_sentence
 ;
 
