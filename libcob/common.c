@@ -199,19 +199,22 @@ cob_init (int argc, char **argv)
   cob_argc = argc;
   cob_argv = argv;
 
+  if (!cob_initialized)
+    {
 #if ENABLE_NLS
-  setlocale (LC_ALL, "");
-  bindtextdomain (PACKAGE, LOCALEDIR);
-  textdomain (PACKAGE);
+      setlocale (LC_ALL, "");
+      bindtextdomain (PACKAGE, LOCALEDIR);
+      textdomain (PACKAGE);
 #endif
 
-  cob_init_config ();
-  cob_init_numeric ();
-  cob_init_termio ();
-  cob_init_fileio ();
-  cob_init_call ();
+      cob_init_config ();
+      cob_init_numeric ();
+      cob_init_termio ();
+      cob_init_fileio ();
+      cob_init_call ();
 
-  cob_initialized = 1;
+      cob_initialized = 1;
+    }
 }
 
 void
