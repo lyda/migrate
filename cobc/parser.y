@@ -164,7 +164,7 @@ static void ambiguous_error (cobc_tree x);
 %token STATUS STOP SYMBOLIC SYNCHRONIZED TALLYING TAPE TEST THAN THEN THRU
 %token TIME TIMES TO TOK_FILE TOK_INITIAL TOK_TRUE TOK_FALSE TRAILING
 %token UNDERLINE UNIT UNTIL UP UPON USAGE USE USING VALUE VARYING WHEN WITH
-%token WORKING_STORAGE ZERO
+%token WORKING_STORAGE ZERO PACKED_DECIMAL
 
 %type <inum> flag_all flag_duplicates flag_optional flag_global
 %type <inum> flag_not flag_next flag_rounded flag_separate
@@ -964,6 +964,7 @@ usage_clause:
 usage:
   DISPLAY			{ $<inum>$ = COBC_USAGE_DISPLAY; }
 | BINARY /* or COMP */		{ $<inum>$ = COBC_USAGE_BINARY; }
+| PACKED_DECIMAL /* or COMP-3 */{ $<inum>$ = COBC_USAGE_PACKED; }
 | INDEX				{ $<inum>$ = COBC_USAGE_INDEX; }
 ;
 _usage: | USAGE _is ;
@@ -4289,6 +4290,7 @@ validate_field_tree (struct cobc_field *f)
 	case COBC_USAGE_DISPLAY:
 	  break;
 	case COBC_USAGE_BINARY:
+	case COBC_USAGE_PACKED:
 	  if (f->pic->category != COB_TYPE_NUMERIC)
 	    yywarn (_("field must be numeric"));
 	  break;
@@ -4502,7 +4504,8 @@ decimal_expand (cobc_tree s, cobc_tree d, cobc_tree x)
 static void
 decimal_assign (cobc_tree s, cobc_tree x, cobc_tree d, int round)
 {
-  const char *func = round ? "cob_decimal_get_r" : "cob_decimal_get";
+  const char *func =
+    round ? "cob_decimal_get_field_r" : "cob_decimal_get_field";
   add_stmt (s, make_funcall_2 (func, d, x));
 }
 

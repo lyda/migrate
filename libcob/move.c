@@ -218,19 +218,19 @@ cob_move_display_to_packed (cob_field *f1, cob_field *f2)
 {
   size_t i;
   int sign = cob_get_sign (f1);
-  size_t size1 = COB_FIELD_SIZE (f1);
-  size_t size2 = f2->size;
+  int digits1 = COB_FIELD_DIGITS (f1);
+  int digits2 = COB_FIELD_DIGITS (f2);
   int exp1 = COB_FIELD_EXPT (f1);
   int exp2 = COB_FIELD_EXPT (f2);
   unsigned char *data1 = COB_FIELD_DATA (f1);
   unsigned char *data2 = f2->data;
-  unsigned char *p = data1 + (size1 + exp1) - (size2 + exp2);
+  unsigned char *p = data1 + (digits1 + exp1) - (digits2 + exp2);
 
   /* pack string */
   memset (f2->data, 0, f2->size);
-  for (i = 0; i < size1; i++, p++)
+  for (i = 0; i < digits2; i++, p++)
     {
-      char n = (data1 <= p && p < data1 + size1) ? *p - '0' : 0;
+      char n = (data1 <= p && p < data1 + digits1) ? *p - '0' : 0;
       if (i % 2 == 0)
 	data2[i / 2] = n << 4;
       else
@@ -250,7 +250,7 @@ cob_move_packed_to_display (cob_field *f1, cob_field *f2)
   unsigned char buff[f1->size];
 
   /* unpack string */
-  for (i = 0; i < f1->size; i++)
+  for (i = 0; i < f1->attr->digits; i++)
     if (i % 2 == 0)
       buff[i] = (data[i/2] >> 4) + '0';
     else
@@ -258,7 +258,7 @@ cob_move_packed_to_display (cob_field *f1, cob_field *f2)
 
   /* store */
   memset (f2->data, '0', f2->size);
-  COPY_COMMON_REGION (buff, f1->size, f1->attr->expt,
+  COPY_COMMON_REGION (buff, f1->attr->digits, f1->attr->expt,
 		      COB_FIELD_DATA (f2), COB_FIELD_SIZE (f2),
 		      COB_FIELD_EXPT (f2));
 

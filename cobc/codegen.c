@@ -95,6 +95,8 @@ get_type (struct cobc_field *p)
     case COBC_USAGE_BINARY:
     case COBC_USAGE_INDEX:
       return COB_TYPE_NUMERIC_BINARY;
+    case COBC_USAGE_PACKED:
+      return COB_TYPE_NUMERIC_PACKED;
     default:
       return p->pic->category;
     }
@@ -869,6 +871,9 @@ output_move_num (cobc_tree x, int high)
     {
     case COBC_USAGE_DISPLAY:
       output_memset (x, high ? '9' : '0');
+      break;
+    case COBC_USAGE_PACKED:
+      output_memset (x, high ? 0x99 : 0x00);
       break;
     case COBC_USAGE_BINARY:
     case COBC_USAGE_INDEX:

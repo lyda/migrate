@@ -352,50 +352,80 @@ cob_stop_run (void)
 int
 cob_get_sign (cob_field *f)
 {
-  if (COB_FIELD_HAVE_SIGN (f))
+  if (!COB_FIELD_HAVE_SIGN (f))
+    return 0;
+
+  switch (COB_FIELD_TYPE (f))
     {
-      char *p;
+    case COB_TYPE_NUMERIC_DISPLAY:
+      {
+	unsigned char *p;
 
-      /* locate sign */
-      if (COB_FIELD_SIGN_LEADING (f))
-	p = f->data;
-      else
-	p = f->data + f->size - 1;
+	/* locate sign */
+	if (COB_FIELD_SIGN_LEADING (f))
+	  p = f->data;
+	else
+	  p = f->data + f->size - 1;
 
-      /* get sign */
-      if (COB_FIELD_SIGN_SEPARATE (f))
-	{
-	  return (*p == '+') ? 1 : -1;
-	}
-      else
-	{
-	  if (*p <= '9')
-	    return 1;
-	  *p -= 0x10;
-	  return -1;
-	}
+	/* get sign */
+	if (COB_FIELD_SIGN_SEPARATE (f))
+	  {
+	    return (*p == '+') ? 1 : -1;
+	  }
+	else
+	  {
+	    if (*p <= '9')
+	      return 1;
+	    *p -= 0x10;
+	    return -1;
+	  }
+      }
+    case COB_TYPE_NUMERIC_PACKED:
+      {
+	unsigned char *p = f->data + f->attr->digits / 2;
+	return (*p & 0x0f) ? -1 : 1;
+      }
+    default:
+      abort ();
     }
-  return 0;
 }
 
 void
 cob_put_sign (cob_field *f, int sign)
 {
-  if (COB_FIELD_HAVE_SIGN (f))
+  if (!COB_FIELD_HAVE_SIGN (f))
+    return;
+
+  switch (COB_FIELD_TYPE (f))
     {
-      char *p;
+    case COB_TYPE_NUMERIC_DISPLAY:
+      {
+	unsigned char *p;
 
-      /* locate sign */
-      if (COB_FIELD_SIGN_LEADING (f))
-	p = f->data;
-      else
-	p = f->data + f->size - 1;
+	/* locate sign */
+	if (COB_FIELD_SIGN_LEADING (f))
+	  p = f->data;
+	else
+	  p = f->data + f->size - 1;
 
-      /* put sign */
-      if (COB_FIELD_SIGN_SEPARATE (f))
-	*p = (sign < 0) ? '-' : '+';
-      else if (sign < 0)
-	*p += 0x10;
+	/* put sign */
+	if (COB_FIELD_SIGN_SEPARATE (f))
+	  *p = (sign < 0) ? '-' : '+';
+	else if (sign < 0)
+	  *p += 0x10;
+	return;
+      }
+    case COB_TYPE_NUMERIC_PACKED:
+      {
+	unsigned char *p = f->data + f->attr->digits / 2;
+	if (sign < 0)
+	  *p |= 0x01;
+	else
+	  *p &= 0xf0;
+	return;
+      }
+    default:
+      abort ();
     }
 }
 

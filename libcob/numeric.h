@@ -26,7 +26,7 @@
 /*
  * Internal representation of decimal numbers.
  *
- *   n = number * 10^expt
+ *   n = data * 10^expt
  */
 typedef struct {
   mpz_t data;		/* multi-byte binary integer */
@@ -40,12 +40,17 @@ extern void cob_decimal_clear (cob_decimal *d);
 extern void cob_decimal_print (cob_decimal *d);
 extern void cob_decimal_set (cob_decimal *dst, cob_decimal *src);
 extern void cob_decimal_set_int (cob_decimal *d, int n);
+extern int cob_decimal_get_int (cob_decimal *d);
 extern void cob_decimal_set_double (cob_decimal *d, double v);
-extern void cob_decimal_set_display (cob_decimal *d, cob_field *f);
-extern void cob_decimal_set_field (cob_decimal *d, cob_field *f);
-extern void cob_decimal_get (cob_decimal *d, cob_field *f);
-extern void cob_decimal_get_r (cob_decimal *d, cob_field *f);
 extern double cob_decimal_get_double (cob_decimal *d);
+extern void cob_decimal_set_display (cob_decimal *d, cob_field *f);
+extern void cob_decimal_get_display (cob_decimal *d, cob_field *f);
+extern void cob_decimal_set_binary (cob_decimal *d, cob_field *f);
+extern void cob_decimal_get_binary (cob_decimal *d, cob_field *f);
+extern void cob_decimal_set_packed (cob_decimal *d, cob_field *f);
+extern void cob_decimal_set_field (cob_decimal *d, cob_field *f);
+extern void cob_decimal_get_field (cob_decimal *d, cob_field *f);
+extern void cob_decimal_get_field_r (cob_decimal *d, cob_field *f);
 extern void cob_decimal_add (cob_decimal *d1, cob_decimal *d2);
 extern void cob_decimal_sub (cob_decimal *d1, cob_decimal *d2);
 extern void cob_decimal_mul (cob_decimal *d1, cob_decimal *d2);
