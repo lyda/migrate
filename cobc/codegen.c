@@ -1264,6 +1264,90 @@ initialize_values (void)
 	  }
 }
 
+static void
+dump_working ()
+{
+
+  struct sym *v, *sy;
+  struct list *list;
+  int fld_len;
+  int stabs_type = '3';
+  short cur_sec_no = SEC_DATA;
+
+  fprintf (o_src, "w_base%d:\n", pgm_segment);
+  for (list = fields_list; list != NULL; list = list->next)
+    {
+      v = (struct sym *) list->var;
+      sy = v;
+      if (!SYMBOL_P (v))
+	continue;
+      if (v->sec_no == SEC_STACK)
+	continue;
+      if (v->type == 'F' || v->type == 'R')
+	continue;
+      fld_len = set_field_length (v, 1);
+      if (v->sec_no != cur_sec_no && v->sec_no >= SEC_FIRST_NAMED)
+	{			// switch of sections
+	  if (v->sec_no >= SEC_FIRST_NAMED)
+	    fprintf (o_src, "\t.comm\t%s,%d,4\n",
+		     sec_name (v->sec_no), fld_len);
+	  else
+	    fprintf (o_src, ".text\n");
+	  cur_sec_no = v->sec_no;
+	}
+#ifdef COB_DEBUG
+      fprintf (o_src, "# FIELD %s, Data Loc: %d(hex: %x) %c\n",
+	       v->name, v->location, v->location, v->type);
+#endif
+      if (cob_stabs_flag)
+	{
+	  if (sy->type == 'B')
+	    {
+	      switch (symlen (sy))
+		{
+		case 1:
+		  stabs_type = '6';
+		  break;
+		case 2:
+		  stabs_type = '5';
+		  break;
+		case 4:
+		  stabs_type = '3';
+		  break;
+		case 8:
+		  stabs_type = '7';
+		  break;
+		}
+	      fprintf (o_src, ".stabs\t\"%s:S%c\",38,0,0,w_base%d+%d\n",
+		       sy->name, stabs_type, pgm_segment, sy->location);
+	    }
+	  else if (sy->type == 'C')
+	    fprintf (o_src,
+		     ".stabs\t\"%s:S(1,%d)=ar3;1;%d;4\",38,0,0,w_base%d+%d\n",
+		     sy->name, sy->len, sy->len, pgm_segment, 0);
+	  else
+	    fprintf (o_src,
+		     ".stabs\t\"%s:S(1,%d)=ar3;1;%d;2\",38,0,0,w_base%d+%d\n",
+		     sy->name, sy->len, sy->len, pgm_segment, sy->location);
+	}
+
+      if (v->parent)
+	continue;
+      if (fld_len)
+	{			/* don't alloc dummy (zero storage) symbols */
+	  fprintf(o_src,"\t.space\t%d\n",fld_len);
+	}
+      if (fld_len == 0)
+	yyerror ("Invalid picture in %s", v->name);
+    }
+  /* output tmpvar storage */
+  if (tmpvar_max > 0)
+    {
+      fprintf (o_src, "tv_base%d:\n", pgm_segment);
+      fprintf (o_src, "\t.space\t%d\n", tmpvar_max);
+    }
+}
+
 void
 proc_header (int using)
 {
@@ -1596,93 +1680,6 @@ proc_trail (int using)
   /* dump_scr_data(); */
   data_trail ();
   fprintf (o_src, "\n\t.ident\t\"%s %s\"\n", COB_PACKAGE, COB_VERSION);
-}
-
-/* 
-** dump all static working storage
-*/
-void
-dump_working ()
-{
-
-  struct sym *v, *sy;
-  struct list *list;
-  int fld_len;
-  int stabs_type = '3';
-  short cur_sec_no = SEC_DATA;
-
-  fprintf (o_src, "w_base%d:\n", pgm_segment);
-  for (list = fields_list; list != NULL; list = list->next)
-    {
-      v = (struct sym *) list->var;
-      sy = v;
-      if (!SYMBOL_P (v))
-	continue;
-      if (v->sec_no == SEC_STACK)
-	continue;
-      if (v->type == 'F' || v->type == 'R')
-	continue;
-      fld_len = set_field_length (v, 1);
-      if (v->sec_no != cur_sec_no && v->sec_no >= SEC_FIRST_NAMED)
-	{			// switch of sections
-	  if (v->sec_no >= SEC_FIRST_NAMED)
-	    fprintf (o_src, "\t.comm\t%s,%d,4\n",
-		     sec_name (v->sec_no), fld_len);
-	  else
-	    fprintf (o_src, ".text\n");
-	  cur_sec_no = v->sec_no;
-	}
-#ifdef COB_DEBUG
-      fprintf (o_src, "# FIELD %s, Data Loc: %d(hex: %x) %c\n",
-	       v->name, v->location, v->location, v->type);
-#endif
-      if (cob_stabs_flag)
-	{
-	  if (sy->type == 'B')
-	    {
-	      switch (symlen (sy))
-		{
-		case 1:
-		  stabs_type = '6';
-		  break;
-		case 2:
-		  stabs_type = '5';
-		  break;
-		case 4:
-		  stabs_type = '3';
-		  break;
-		case 8:
-		  stabs_type = '7';
-		  break;
-		}
-	      fprintf (o_src, ".stabs\t\"%s:S%c\",38,0,0,w_base%d+%d\n",
-		       sy->name, stabs_type, pgm_segment, sy->location);
-	    }
-	  else if (sy->type == 'C')
-	    fprintf (o_src,
-		     ".stabs\t\"%s:S(1,%d)=ar3;1;%d;4\",38,0,0,w_base%d+%d\n",
-		     sy->name, sy->len, sy->len, pgm_segment, 0);
-	  else
-	    fprintf (o_src,
-		     ".stabs\t\"%s:S(1,%d)=ar3;1;%d;2\",38,0,0,w_base%d+%d\n",
-		     sy->name, sy->len, sy->len, pgm_segment, sy->location);
-	}
-
-      if (v->parent)
-	continue;
-      if (fld_len)
-	{			/* don't alloc dummy (zero storage) symbols */
-	  fprintf(o_src,"\t.space\t%d\n",fld_len);
-	}
-      if (fld_len == 0)
-	yyerror ("Invalid picture in %s", v->name);
-    }
-  /* output tmpvar storage */
-  if (tmpvar_max > 0)
-    {
-      fprintf (o_src, "tv_base%d:\n", pgm_segment);
-      fprintf (o_src, "\t.space\t%d\n", tmpvar_max);
-    }
 }
 
 void

@@ -118,7 +118,6 @@ extern void proc_trail (int using);
 extern void save_field_in_list (struct sym *sy);
 extern void save_literal (struct lit *v, int type);
 extern void save_named_sect (struct sym *sy);
-extern struct lit *save_special_literal (char val, char picc, char *nick);
 extern void put_disp_list (struct sym *sy);
 extern int pic_digits (struct sym *sy);
 extern int query_comp_len (struct sym *sy);
