@@ -800,10 +800,9 @@ file_description_clause:
 
 block_contains_clause:
   BLOCK _contains integer opt_to_integer _records_or_characters
-  {
-    /* ignored */
-  }
+  { /* ignored */ }
 ;
+_records_or_characters: | RECORDS | CHARACTERS ;
 
 
 /* RECORD clause */
@@ -985,7 +984,7 @@ data_description_clause:
 ;
 
 
-/* REDEFINES */
+/* REDEFINES clause */
 
 redefines_clause:
   REDEFINES qualified_word
@@ -1000,28 +999,28 @@ redefines_clause:
 ;
 
 
-/* EXTERNAL */
+/* EXTERNAL clause */
 
 external_clause:
   _is EXTERNAL			{ current_field->flag_external = 1; }
 ;
 
 
-/* GLOBAL */
+/* GLOBAL clause */
 
 global_clause:
   _is GLOBAL			{ PENDING ("GLOBAL"); }
 ;
 
 
-/* PICTURE */
+/* PICTURE clause */
 
 picture_clause:
   PICTURE			{ current_field->pic = CB_PICTURE ($1); }
 ;
 
 
-/* USAGE */
+/* USAGE clause */
 
 usage_clause:
   usage
@@ -1035,7 +1034,7 @@ usage:
 ;
 
 
-/* SIGN */
+/* SIGN clause */
 
 sign_clause:
   _sign_is LEADING flag_separate
@@ -1051,7 +1050,7 @@ sign_clause:
 ;
 
 
-/* OCCURS */
+/* OCCURS clause */
 
 occurs_clause:
   OCCURS integer _times
@@ -1128,18 +1127,15 @@ occurs_index:
   }
 ;
 
-_times: | TIMES ;
-
 
-/* JUSTIFIED RIGHT */
+/* JUSTIFIED clause */
 
 justified_clause:
   JUSTIFIED _right		{ current_field->flag_justified = 1; }
 ;
-_right: | RIGHT ;
 
 
-/* SYNCHRONIZED */
+/* SYNCHRONIZED clause */
 
 synchronized_clause:
   SYNCHRONIZED left_or_right	{ current_field->flag_synchronized = 1; }
@@ -1150,14 +1146,14 @@ left_or_right:
 ;
 
 
-/* BLANK */
+/* BLANK clause */
 
 blank_clause:
   BLANK _when ZERO		{ current_field->flag_blank_zero = 1; }
 ;
 
 
-/* VALUE */
+/* VALUE clause */
 
 value_clause:
   VALUE _is_are value_item_list	{ current_field->values = $3; }
@@ -1172,7 +1168,7 @@ value_item:
 ;
 
 
-/* RENAMES */
+/* RENAMES clause */
 
 renames_clause:
   RENAMES qualified_word
@@ -4021,8 +4017,8 @@ _in:		| IN ;
 _is:		| IS ;
 _is_are:	| IS | ARE ;
 _key:		| KEY ;
-_lines:		| LINES ;
 _line_or_lines:	| LINE | LINES ;
+_lines:		| LINES ;
 _mode:		| MODE ;
 _number:	| NUMBER ;
 _of:		| OF ;
@@ -4031,6 +4027,7 @@ _order:		| ORDER ;
 _other:		| OTHER ;
 _program:	| PROGRAM ;
 _record:	| RECORD ;
+_right:		| RIGHT ;
 _sign:		| SIGN ;
 _sign_is:	| SIGN _is ;
 _size:		| SIZE ;
@@ -4038,11 +4035,11 @@ _status:	| STATUS ;
 _tape:		| TAPE ;
 _than:		| THAN ;
 _then:		| THEN ;
+_times:		| TIMES ;
 _to:		| TO ;
 _upon:		| UPON ;
 _when:		| WHEN ;
 _with:		| WITH ;
-_records_or_characters: | RECORDS | CHARACTERS ;
 
 
 %%
