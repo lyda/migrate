@@ -415,6 +415,7 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 		char x = get ();
 		pad = (c == '*') ? '*' : ' ';
 		*dst = suppress_zero ? pad : x;
+		trailing_sign = 1;
 		break;
 	      }
 
