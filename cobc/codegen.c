@@ -82,7 +82,6 @@ int curr_sec_no = SEC_DATA;
 int screen_label = 0;
 int para_label = 0;
 int block_label = 0;
-int line_label = 0;
 int paragr_num = 1;
 int loc_label = 1;
 unsigned char picture[4096];
@@ -1095,25 +1094,17 @@ gen_init_value (struct lit *sy, int var_len)
 void
 stabs_line ()
 {
-  static int last_orig_lineno = 0;
-  static char *last_orig_filename = NULL;
+  static int label = 1;
+  static char *last_filename = NULL;
 
-  if (!cob_stabs_flag)
-    return;
+  if (last_filename != cob_orig_filename)
+    fprintf (o_src, ".stabs\t\"%s\",132,0,0,.LM%d\n",
+	     cob_orig_filename, label);
+  fprintf (o_src, ".stabn\t68,0,%d,.LM%d-Ltext_%s\n",
+	   cob_orig_lineno, label, pgm_label);
+  fprintf (o_src, ".LM%d:\n", label++);
 
-  if (last_orig_lineno == cob_orig_lineno
-      && last_orig_filename == cob_orig_filename)
-    return;
-
-  if (last_orig_filename != cob_orig_filename)
-    fprintf (o_src, ".stabs\t\"%s\",132,0,0,.LS%d\n",
-	     cob_orig_filename, line_label);
-  fprintf (o_src, ".stabn\t68,0,%d,.LS%d-Ltext_%s\n",
-	   cob_orig_lineno, line_label, pgm_label);
-  fprintf (o_src, ".LS%d:\n", line_label++);
-
-  last_orig_lineno = cob_orig_lineno;
-  last_orig_filename = cob_orig_filename;
+  last_filename = cob_orig_filename;
 }
 
 void
@@ -1375,15 +1366,6 @@ proc_header (int using)
 	      }
 
   fprintf (o_src, ".Linite_%s:\n", pgm_label);
-  if (cob_stabs_flag)
-    {
-      fprintf (o_src, ".stabn\t192,0,0,.LS%d-Ltext_%s\n",
-	       line_label, pgm_label);
-      fprintf (o_src, ".stabn\t224,0,0,.LSend_%s-Ltext_%s\n",
-	       pgm_label, pgm_label);
-
-    }
-
   fprintf (o_src, "\tleal\t%s, %%eax\n", pgm_label);
   fprintf (o_src, "\tpushl\t%%eax\n");
   fprintf (o_src, "\tleal\t.Lend_pgm_%s, %%eax\n", pgm_label);
@@ -3884,58 +3866,45 @@ gen_check_zero ()
   int i = loc_label++;
   fprintf (o_src, "\tand\t%%eax,%%eax\n");
   fprintf (o_src, "\tjz\t.L%d\n", i);
-  stabs_line ();
   return i;
 }
 
 int
 gen_at_end (int status)
 {
-  int i, j;
-  i = loc_label++;
-  j = loc_label++;
-
+  int i = loc_label++;
+  int j = loc_label++;
   fprintf (o_src, "\tcmp\t$%d, %%eax\n", status);
   fprintf (o_src, "\tjz\t.L%d\n", j);
   fprintf (o_src, "\tjmp\t.L%d\n", i);
-
-//      fprintf(o_src,"L%d:\n",j);
   fprintf (o_src, "\t.align 16\n");
   fprintf (o_src, ".L%d:\n", j);
-
-  stabs_line ();
   return i;
 }
 
 int
 gen_testif (void)
 {
-  int i, j;
-  i = loc_label++;
-  j = loc_label++;
+  int i = loc_label++;
+  int j = loc_label++;
   fprintf (o_src, "\tjz\t.L%d\n", j);
   fprintf (o_src, "\tjmp\t.L%d\n", i);
   fprintf (o_src, "\t.align 16\n");
   fprintf (o_src, ".L%d:\n", j);
-  stabs_line ();
   return i;
 }
 
 void
 gen_not (void)
 {
-  int i, j;
-  i = loc_label++;
-  j = loc_label++;
-
+  int i = loc_label++;
+  int j = loc_label++;
   fprintf (o_src, "\tjz\t.L%d\n", i);
   fprintf (o_src, "\txorl\t%%eax,%%eax\n");
   fprintf (o_src, "\tjmp\t.L%d\n", j);
   fprintf (o_src, ".L%d:\tincl\t%%eax\n", i);
   fprintf (o_src, "\t.align 16\n");
   fprintf (o_src, ".L%d:\n", j);
-
-  stabs_line ();
 }
 
 int
@@ -3958,7 +3927,6 @@ void
 gen_dstlabel (int lbl)
 {
   fprintf (o_src, ".L%d:\n", lbl);
-  stabs_line ();
 }
 
 int
@@ -3974,7 +3942,6 @@ gen_marklabel (void)
 {
   int i = loc_label++;
   fprintf (o_src, ".L%d:\n", i);
-  stabs_line ();
   return i;
 }
 
@@ -3995,7 +3962,8 @@ gen_push_int (struct sym *sy)
   fprintf (o_src, "\tpushl\t%%eax\n");
 }
 
-void gen_cancel (struct sym *sy)
+void
+gen_cancel (struct sym *sy)
 {
   asm_call_1 ("cob_cancel", sy);
 }
@@ -4030,7 +3998,6 @@ gen_perform_thru (struct sym *s1, struct sym *s2)
 
   fprintf (o_src, "\t.align 16\n");
   fprintf (o_src, ".L%d:\n", loc_label++);
-  //stabs_line(); 
 }
 
 void
@@ -4156,8 +4123,6 @@ gen_SearchLoopCheck (unsigned long lbl5, struct sym *syidx, struct sym *sytbl)
 
   gen_compare (syidx, GREATER, (struct sym *) v);
   fprintf (o_src, "\tjz\t.L%ld\n", lbl5);
-
-  stabs_line ();
 }
 
 void
@@ -4321,8 +4286,6 @@ gen_SearchAllLoopCheck (unsigned long lbl3, struct sym *syidx,
   gen_jmplabel (lstart);
   fprintf (o_src, "\t.align 16\n");
   gen_dstlabel (lend);
-
-  stabs_line ();
 }
 
 void
@@ -5879,10 +5842,9 @@ gen_call (struct lit *v, int stack_size, int exceplabel, int notexceplabel)
 int
 begin_on_except ()
 {
-  int lab = loc_label++;
-  fprintf (o_src, ".L%d:\t# begin_on_except\n", lab);
-  stabs_line ();
-  return lab;
+  int i = loc_label++;
+  fprintf (o_src, ".L%d:\t# begin_on_except\n", i);
+  return i;
 }
 
 void

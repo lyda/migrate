@@ -22,7 +22,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 560
+%expect 558
 
 %{
 #define yydebug		cob_trace_parser
@@ -73,6 +73,7 @@ struct sym *curr_file;
 int start_condition=0;
 int curr_division=0;
 int need_subscripts=0;
+int in_procedure = 0;
 extern char *yytext;
 
 unsigned long lbend, lbstart;
@@ -1088,7 +1089,7 @@ opt_number_is: | NUMBERTOK opt_is ;
  *****************************************************************************/
 
 procedure_division:
-| PROCEDURE_TOK DIVISION { curr_division = CDIV_INITIAL; }
+| PROCEDURE_TOK DIVISION { in_procedure = 1; curr_division = CDIV_INITIAL; }
   procedure_using '.'
   {
     proc_header ($4);
@@ -1098,7 +1099,8 @@ procedure_division:
     /* close procedure_list sections & paragraphs */
     close_section (); /* this also closes paragraph */
     resolve_labels ();
-    proc_trail ($4); 
+    proc_trail ($4);
+    in_procedure = 0;
   }
 ;
 procedure_using:
@@ -1111,7 +1113,7 @@ procedure_list:
 procedure_decl:
   procedure_section { close_section(); open_section($1); }
 | paragraph { close_paragr(); open_paragr($1); }
-| {free_expr_list(); stabs_line();} statement_list opt_eos
+| {free_expr_list(); } statement_list opt_eos
 | error '.'
 | '.'
 ;
@@ -1147,22 +1149,18 @@ paragraph:
  *******************/
 
 statement_list:
-  statement _look_ahead_ {stabs_line();}
-| statement_list statement _look_ahead_ {stabs_line();}
+  statement
+| statement_list statement
 ;
 conditional_statement_list:
   statement_list opt_continue
-| CONTINUE {stabs_line();}
-| NEXT SENTENCE {stabs_line();}
+| CONTINUE
+| NEXT SENTENCE
 ;
 opt_continue:
-| CONTINUE {stabs_line();}
-| NEXT SENTENCE {stabs_line();}
+| CONTINUE
+| NEXT SENTENCE
 ;
-/* this token doesn't really exists, but forces look ahead 
-   to keep line numbers synchronized with our position
-   because we need to generate correct debug stabs */
-_look_ahead_: | TOKDUMMY ;
 
 statement:
   accept_statement
@@ -2192,7 +2190,6 @@ on_end:
          gic=ginfo_container0();
       }
       $$=ginfo_container1(gic);
-      stabs_line();
     }
     statement_list
     { 
@@ -2761,7 +2758,6 @@ error_sentence:
        } else {
 	 $$ = math_on_size_error1(tmose);
        }
-       stabs_line();
      }
      statement_list
      {

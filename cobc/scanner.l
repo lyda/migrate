@@ -40,6 +40,7 @@ extern int picix,piccnt,sign,v_flag;
 extern int curr_division;
 extern int start_condition;
 extern int need_subscripts;
+extern int in_procedure;
 
 static int read_literal (char mark);
 static int read_literal_x (char mark);
@@ -67,8 +68,13 @@ static int scan_picture (char *text);
   start_condition = 0;
 %}
 
-<*>[ \t]*	{ /* ignore */ }
-<*>\n		{ cob_orig_lineno++; }
+<*>[ \t]* { /* ignore */ }
+
+<*>\n {
+  cob_orig_lineno++;
+  if (cob_stabs_flag && in_procedure)
+    stabs_line ();
+}
 
 ^"#".* {
   /* line directive */
