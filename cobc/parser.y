@@ -1079,7 +1079,7 @@ procedure_list:
 procedure_decl:
   procedure_section { close_section(); open_section($1); }
 | paragraph { close_paragr(); open_paragr($1); }
-| {free_expr_list(); } statement_list opt_dot
+| statement_list opt_dot
 | error '.'
 | '.'
 ;

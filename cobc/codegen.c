@@ -68,7 +68,6 @@ struct lit *spe_lit_LV = NULL;
 struct lit *spe_lit_HV = NULL;
 struct lit *spe_lit_QU = NULL;
 
-struct list *expr_list = NULL;
 struct list *files_list = NULL;
 struct list *disp_list = NULL;
 struct parm_list *parameter_list = NULL;
@@ -296,9 +295,7 @@ clear_offsets ()
   linkage_offset = 0;
   using_offset = 8;
   refmod_slots = 0;
-  free_list (fields_list);
   fields_list = NULL;
-  free_list (files_list);
   files_list = NULL;
   /* clear all current paragraphs/sections and fields */
   curr_paragr = NULL;
@@ -1820,18 +1817,6 @@ insert_list (struct list *l, void *item)
   return l;
 }
 
-void
-free_list (struct list *l)
-{
-  struct list *tmp;
-  while (l != NULL)
-    {
-      tmp = l->next;
-      free (l);
-      l = tmp;
-    }
-}
-
 struct scr_info *
 alloc_scr_info ()
 {
@@ -2715,39 +2700,11 @@ create_expr (struct sym *left, char op, struct sym *right)
   struct expr *left_expr = (struct expr *) left;
   struct expr *right_expr = (struct expr *) right;
   struct expr *e = malloc (sizeof (struct expr));
-  struct list *list = malloc (sizeof (struct list));
   e->litflag = 5;
   e->op = op;
   e->left = left_expr;
   e->right = right_expr;
-  expr_list = list;
-  list->next = NULL;
-  list->var = e;
   return (struct sym *) e;
-}
-
-void
-free_expr (struct expr *e)
-{
-  if (e && EXPR_P (e))
-    {
-      free_expr (EXPR_LEFT (e));
-      free_expr (EXPR_RIGHT (e));
-      free (e);
-    }
-}
-
-void
-free_expr_list ()
-{
-  struct list *list;
-  struct expr *e;
-  for (list = expr_list; list != NULL; list = list->next)
-    {
-      e = (struct expr *) list->var;
-      free_expr (e);
-    }
-  expr_list = NULL;
 }
 
 void
@@ -3764,7 +3721,6 @@ gen_goto_depending (struct list *l, struct sym *sy)
       fprintf (o_src, "\tdecl\t%%eax\n");
       fprintf (o_src, "\tjz\t.LB_%s\n", label_name ((struct sym *) tmp->var));
     }
-  free_list (l);
 }
 
 void
@@ -3776,7 +3732,6 @@ gen_goto (struct list *l)
     {
       yyerror ("GOTO only allows one target");
     }
-  free_list (l);
 }
 
 int

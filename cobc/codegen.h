@@ -120,7 +120,6 @@ extern int symlen (struct sym *sy);
 extern int varsize_ch (struct sym *sy);
 extern void add_alternate_key (struct sym *sy, int duplicates);
 extern struct list *insert_list (struct list *l, void *item);
-extern void free_list (struct list *l);
 extern struct scr_info *alloc_scr_info (void);
 extern struct inspect_before_after *alloc_inspect_before_after (struct inspect_before_after *ba, int before_after, struct sym *var);
 extern struct converting_struct *alloc_converting_struct (struct sym *fromvar, struct sym *tovar, struct inspect_before_after *ba);
@@ -148,8 +147,6 @@ extern struct perf_info *create_perf_info (struct sym *sy1, struct sym *sy2, uns
 extern struct perform_info *create_perform_info (void);
 extern char *check_perform_variables (struct sym *sy1, struct perform_info *pi1);
 extern struct sym *create_expr (struct sym *left, char op, struct sym *right);
-extern void free_expr (struct expr *e);
-extern void free_expr_list (void);
 extern struct math_var *create_mathvar_info (struct math_var *mv, struct sym *sy, unsigned int opt);
 extern struct math_ose *math_on_size_error0 (void);
 extern struct math_ose *math_on_size_error1 (struct math_ose *v);
