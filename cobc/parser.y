@@ -147,7 +147,7 @@ static void check_decimal_point (struct lit *lit);
 %token RIGHT,AUTO,REQUIRED,FULL,JUSTIFIED,BLINK,SECURE,BELL,COLUMN,SYNCHRONIZED
 %token INITIALTOK,FIRSTTOK,ALL,LEADING,OF,IN,BY,STRING,UNSTRING
 %token START,DELETE,PROGRAM,GLOBAL,EXTERNAL,SIZE,DELIMITED
-%token GIVING,ERASE,INSPECT,TALLYING,REPLACING,ONTOK,POINTER,OVERFLOWTK
+%token GIVING,ERASE,INSPECT,TALLYING,REPLACING,ON,POINTER,OVERFLOWTK
 %token DELIMITER,COUNT,LEFT,TRAILING,CHARACTER
 %token ADD,SUBTRACT,MULTIPLY,DIVIDE,ROUNDED,REMAINDER,TOK_ERROR,SIZE
 %token FD,SD,REDEFINES,PICTURE,FILLER,OCCURS,TIMES
@@ -190,8 +190,8 @@ static void check_decimal_point (struct lit *lit);
 
 %type <str> idstring
 %type <ival> organization_options,access_options,open_mode,equal_to
-%type <ival> integer,cond_op,conditional,before_after
-%type <ival> IF,ELSE,usage,write_options,opt_read_next
+%type <ival> integer,cond_op,conditional,before_after,greater_than,less_than
+%type <ival> usage,write_options,opt_read_next
 %type <ival> using_options,procedure_using,sort_direction
 %type <dval> if_then
 %type <sval> name,gname,numeric_value,opt_gname,opt_def_name,def_name
@@ -556,7 +556,7 @@ file_attrib:
 | file_attrib opt_is EXTERNAL   { $<sval>0->type = 'K'; }
 | file_attrib LABEL rec_or_recs opt_is_are std_or_omitt
 | file_attrib BLOCK opt_contains integer opt_to_integer chars_or_recs
-| file_attrib DATA rec_or_recs  opt_is_are var_strings { }
+| file_attrib DATA rec_or_recs  opt_is_are var_strings
 | file_attrib VALUE OF FILE_ID opt_is filename
   {
     if ($<sval>-1->filenamevar != NULL) {
@@ -578,7 +578,7 @@ var_strings:
 | var_strings SYMBOL { }
 ; 
 opt_to_integer:
-| TO integer { }
+| TO integer
 ;
 from_rec_varying:
   /* nothing */ { $$ = NULL; }
@@ -589,7 +589,7 @@ to_rec_varying:
 | TO nliteral   { $$ = $2; }
 ;
 sort_attrib:
-| sort_attrib DATA rec_or_recs  opt_is_are var_strings { }  
+| sort_attrib DATA rec_or_recs  opt_is_are var_strings
 | sort_attrib RECORD opt_is VARYING opt_in_size
   from_rec_varying to_rec_varying opt_characters
   DEPENDING opt_on SYMBOL
@@ -1212,7 +1212,7 @@ accept_statement:
     ;
 accept_options:
   screen_attribs		{ gen_accept($<sval>-1, $1, 1); }
-| screen_attribs ONTOK EXCEPTION
+| screen_attribs ON EXCEPTION
   {
     screen_io_enable++; 
     gen_accept($<sval>-1, $1, 1);
@@ -1338,7 +1338,7 @@ parm_type:
 ;
 on_exception_or_overflow:
     /* nothing */ { $$ = 0; }
-    | ONTOK exception_or_overflow { $<ival>$ = begin_on_except(); } 
+    | ON exception_or_overflow { $<ival>$ = begin_on_except(); } 
       statement_list            { gen_jmplabel($<dval>0); $$=$<ival>3; }
     ;
 exception_or_overflow:
@@ -1645,7 +1645,7 @@ if_statement:
       gen_dstlabel($<dval>3);
     }
     opt_end_if
-  | IF error END_IF { }
+  | IF error END_IF
 ;
 if_then:
     IF condition { $<dval>$ = gen_testif(); } opt_then
@@ -2643,12 +2643,12 @@ opt_on_overflow:
     on_not_overflow
     ;
 on_overflow:
-    ONTOK OVERFLOWTK          { $<dval>$ = gen_at_end(-1); }
+    ON OVERFLOWTK          { $<dval>$ = gen_at_end(-1); }
         statement_list            { gen_dstlabel($<dval>3); }
     | /* nothing */
     ;
 on_not_overflow:
-    NOT ONTOK OVERFLOWTK { $<dval>$ = gen_at_end(0); }
+    NOT ON OVERFLOWTK { $<dval>$ = gen_at_end(0); }
         statement_list            { gen_dstlabel($<dval>4); }
     | /* nothing */
     ;
@@ -2767,7 +2767,7 @@ opt_all:
     | ALL                   { $$=1; }
     ;
 on_not_exception:
-    NOT ONTOK EXCEPTION { $<ival>$ = begin_on_except(); } 
+    NOT ON EXCEPTION { $<ival>$ = begin_on_except(); } 
         statement_list            { gen_jmplabel($<dval>-1); $$=$<ival>4; }
     | /* nothing */ { $$ = 0; }
     ;
@@ -2950,13 +2950,21 @@ cond_op:
     | conditional OR conditional { $$ = $1 | $3; }
     ;
 equal_to:
-  EQUAL opt_to			{ $$ = 0x01; }
-| '=' opt_to			{ $$ = 0x01; }
+  EQUAL opt_to			{ $$ = RELATION_EQ; }
+| '=' opt_to			{ $$ = RELATION_EQ; }
+;
+greater_than:
+  GREATER opt_than		{ $$ = RELATION_GT; }
+| '>' opt_than			{ $$ = RELATION_GT; }
+;
+less_than:
+  LESS opt_than			{ $$ = RELATION_LT; }
+| '<' opt_than			{ $$ = RELATION_LT; }
 ;
 conditional:
   equal_to			{ $$ = $1; }
-| GREATER opt_than		{ $$ = RELATION_GT; }
-| LESS opt_than			{ $$ = RELATION_LT; }
+| greater_than			{ $$ = $1; }
+| less_than			{ $$ = $1; }
 | TOK_GE			{ $$ = RELATION_GE; }
 | TOK_LE			{ $$ = RELATION_LE; }
 ;
@@ -2987,13 +2995,11 @@ in_of: IN | OF ;
 opt_by: | BY ;
 opt_upon: | UPON ;
 opt_with: | WITH ;
-opt_on: | ONTOK ;
+opt_on: | ON ;
+opt_to: | TO ;
 opt_gname:
     /* nothing */ { $$ = NULL; }
     | gname       { $$ = $1; }
-    ;
-opt_to: /* nothing */
-    | TO { }
     ;
 gname:  name    { $$ = $1; }
     | gliteral      { $$ = (struct sym *)$1;}

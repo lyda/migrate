@@ -234,7 +234,7 @@ static struct reserved_word reserved_words[] = {
   {"OCCURS", OCCURS, 0},
   {"OF", OF, 0},
   {"OMITTED", OMITTED, 0},
-  {"ON", ONTOK, 0},
+  {"ON", ON, 0},
   {"OPEN", OPEN, 0},
   {"OPTIONAL", OPTIONAL, 0},
   {"OR", OR, 0},
