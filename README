@@ -9,6 +9,7 @@ This package contains the following subdirectories:
     cobc        COBOL compiler
     libcob      COBOL run-time library
     lib         static library and common headers
+    config      configuration files
     po          international messages
     texi        Texinfo files
     tests       Test suite
@@ -40,30 +41,38 @@ OpenCOBOL requires the following external libraries to be installed:
 
     GNU Libtool is distributed under GNU Lesser General Public License.
 
+The following libraries are optional:
+
   o Berkeley DB (libdb) 1.85 or later
     http://www.sleepycat.com/
 
-    libdb is used to implement indexed file I/O.
+    libdb can be used to implement indexed file I/O and SORT/MERGE.
 
-    Berkeley DB is distributed under the "as is" basis.
+    Berkeley DB is distributed under the BSD License (1.85) or their
+    own license (2.x or later).  Note that, as of 2.x, they requires
+    royalty for non-free software.
 
-  o Ncurses (libncurses) 5.2 or later [optional]
+  o Ncurses (libncurses) 5.2 or later
     http://www.gnu.org/software/ncurses/ncurses.html
 
-    libncurses is used to implement SCREEN SECTION.
+    libncurses can be used to implement SCREEN SECTION.
 
-    Ncurses is distributed under the "as is" basis.
+    Ncurses is distributed under a BSD style license.
 
 Installation
 ============
 
-Installing OpenCOBOL is typically done by the following commands:
+See INSTALL for general installation instruction.  Typically,
+this is done by the following commands:
 
     ./configure
     make
     make install
 
-See INSTALL for general installation instruction.
+There are the following configure options:
+
+  --with-cc=<cc>    specify C compiler command used by cobc
+  --with-lfs64      use large file system for file I/O
 
 Development
 ===========
@@ -75,7 +84,7 @@ You need to install the following extra packages before building
 OpenCOBOL:
 
   o Autoconf 2.57
-  o Automake 1.7.3
+  o Automake 1.7
   o Libtool 1.5
   o Gettext 0.12.1
   o Bison 1.35

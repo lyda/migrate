@@ -43,7 +43,7 @@ LIBCOB_CFLAGS=""
 # Configure options.
 COB_CC=""
 AC_ARG_WITH(cc,
-  [  --with-cc=<gcc>         specify C compiler],
+  [  --with-cc=<cc>          specify C compiler command used by cobc],
   [ COB_CC=$withval ])
 if test "x${COB_CC}" = "x"; then
   AC_CHECK_PROG([COB_CC], [gcc], [gcc])
@@ -53,7 +53,7 @@ if test "x${COB_CC}" = "x"; then
 fi
 
 AC_ARG_WITH(lfs64,
-  [  --with-lfs64            compile with large file system],
+  [  --with-lfs64            use large file system for file I/O],
   [ AC_DEFINE(WITH_LFS64) ])
 
 AC_ARG_ENABLE(debug,
@@ -73,7 +73,7 @@ AC_PROG_MAKE_SET
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([fcntl.h malloc.h libintl.h locale.h stddef.h wchar.h])
+AC_CHECK_HEADERS([fcntl.h malloc.h locale.h stddef.h wchar.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
