@@ -174,7 +174,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:8: warning: the original definition `X' should not have OCCURS
+[prog.cob:8: warning: the original definition `X' cannot have OCCURS
 ])
 
 AT_CLEANUP
