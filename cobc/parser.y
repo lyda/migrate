@@ -1241,12 +1241,6 @@ procedure_using:
 | USING data_name_list
   {
     struct cobc_list *l;
-    if (!cobc_module_flag)
-      {
-	yywarn (_("compiled as a module due to USING clause"));
-	yywarn (_("use compiler option `-m' explicitly"));
-	cobc_module_flag = 1;
-      }
     for (l = $2; l; l = l->next)
       {
 	struct cobc_field *p = COBC_FIELD (l->item);
