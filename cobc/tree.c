@@ -1073,7 +1073,7 @@ validate_field_1 (struct cb_field *f)
   if (f->redefines)
     {
       /* check OCCURS */
-      if (!cb_spec.flag_redefines_occurs)
+      if (!cb_redefines_occurs_item)
 	if (f->redefines->flag_occurs)
 	  cb_error_x (x, _("the original definition `%s' cannot have OCCURS"),
 		      f->redefines->name);
@@ -1271,14 +1271,14 @@ compute_size (struct cb_field *f)
 	case CB_USAGE_NATIVE:
 	  {
 	    int size = f->pic->size;
-	    switch (cb_spec.binary_rep)
+	    switch (cb_binary_size)
 	      {
-	      case CB_BINARY_REP_1_2_4_8:
+	      case CB_BINARY_SIZE_1_2_4_8:
 		f->size = ((size <= 2) ? 1 :
 			   (size <= 4) ? 2 :
 			   (size <= 9) ? 4 : 8);
 		break;
-	      case CB_BINARY_REP_2_4_8:
+	      case CB_BINARY_SIZE_2_4_8:
 		f->size = ((size <= 4) ? 2 :
 			   (size <= 9) ? 4 : 8);
 		break;

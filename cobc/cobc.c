@@ -45,7 +45,6 @@
 
 enum cb_compile_level cb_compile_level = CB_LEVEL_EXECUTABLE;
 enum cb_compile_target cb_compile_target = CB_TARGET_NATIVE;
-struct cb_spec cb_spec;
 
 struct cb_exception cb_exception_table[] = {
   {0, 0, 0},		/* CB_EC_ZERO */
@@ -68,9 +67,6 @@ int warningcount;
 
 char *cb_source_file = NULL;
 int cb_source_line = 0;
-int cb_source_format = CB_FORMAT_FIXED;
-int cb_tab_width = CB_DEFAULT_TAB_WIDTH;
-int cb_text_column = CB_DEFAULT_TEXT_COLUMN;
 
 FILE *cb_storage_file;
 char *cb_storage_file_name;
@@ -100,7 +96,7 @@ static char cob_cc[FILENAME_MAX];		/* gcc */
 static char cob_cflags[FILENAME_MAX];		/* -I... */
 static char cob_libs[FILENAME_MAX];		/* -L... -lcob */
 static char cob_ldflags[FILENAME_MAX];
-char cob_specs_dir[FILENAME_MAX];
+char cob_config_dir[FILENAME_MAX];
 
 static struct filename {
   int need_preprocess;
@@ -165,7 +161,7 @@ init_environment (int argc, char *argv[])
   init_var (cob_cflags,  "COB_CFLAGS", COB_CFLAGS);
   init_var (cob_libs,    "COB_LIBS",   COB_LIBS);
   init_var (cob_ldflags, "COB_LDFLAGS", "");
-  init_var (cob_specs_dir, "COB_SPECS_DIR", COB_SPECS_DIR);
+  init_var (cob_config_dir, "COB_CONFIG_DIR", COB_CONFIG_DIR);
 
   p = getenv ("COB_LDADD");
   if (p)
@@ -196,12 +192,12 @@ static struct option long_options[] = {
   {"verbose", no_argument, 0, 'v'},
   {"save-temps", no_argument, &save_temps, 1},
   {"std", required_argument, 0, '$'},
-  {"spec", required_argument, 0, '&'},
+  {"conf", required_argument, 0, '&'},
   {"target", required_argument, 0, 't'},
   {"debug", no_argument, 0, 'd'},
   {"ext", required_argument, 0, 'e'},
-  {"free", no_argument, &cb_source_format, CB_FORMAT_FREE},
-  {"fixed", no_argument, &cb_source_format, CB_FORMAT_FIXED},
+  {"free", no_argument, (int *) &cb_source_format, CB_FORMAT_FREE},
+  {"fixed", no_argument, (int *) &cb_source_format, CB_FORMAT_FIXED},
   {"static", no_argument, &cb_flag_static_call, 1},
   {"dynamic", no_argument, &cb_flag_static_call, 0},
   {"O2", no_argument, 0, '2'},
@@ -274,6 +270,9 @@ process_command_line (int argc, char *argv[])
   /* default extension list */
   cb_extension_list = cb_name_list_add (cb_extension_list, "");
   cb_extension_list = cb_name_list_add (cb_extension_list, ".CBL");
+  cb_extension_list = cb_name_list_add (cb_extension_list, ".COB");
+  cb_extension_list = cb_name_list_add (cb_extension_list, ".cbl");
+  cb_extension_list = cb_name_list_add (cb_extension_list, ".cob");
 
   while ((c = getopt_long_only (argc, argv, short_options,
 				long_options, &idx)) >= 0)
@@ -320,12 +319,9 @@ process_command_line (int argc, char *argv[])
 	    }
 	  break;
 
-	case '&': /* -spec */
-	  if (cb_load_spec (optarg) != 0)
-	    {
-	      perror (optarg);
-	      exit (1);
-	    }
+	case '&': /* -conf */
+	  if (cb_load_conf (optarg, 1) != 0)
+	    exit (1);
 	  break;
 
 	case 't': /* -target */
@@ -392,10 +388,10 @@ process_command_line (int argc, char *argv[])
 	}
     }
 
-  if (cb_spec.name == NULL)
+  if (cb_config_name == NULL)
     if (cb_load_std ("gnu") != 0)
       {
-	fprintf (stderr, "error: failed to load initial spec file\n");
+	fprintf (stderr, "error: failed to load the initial config file\n");
 	exit (1);
       }
 

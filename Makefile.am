@@ -3,7 +3,7 @@ bin_SCRIPTS=cob-config
 include_HEADERS = libcob.h
 sysconf_DATA = libcob.conf
 
-SUBDIRS = lib libcob cobc po texi specs tests
+SUBDIRS = lib libcob cobc po texi config tests
 EXTRA_DIST = libcob.conf
 
 BUILT_SOURCES = defaults.h
@@ -15,7 +15,7 @@ defaults.h: Makefile.am $(top_builddir)/config.status
 	@echo "#define COB_CC           \"$(COB_CC)\""           >> defaults.h
 	@echo "#define COB_CFLAGS       \"$(COB_CFLAGS)\""       >> defaults.h
 	@echo "#define COB_LIBS         \"$(COB_LIBS)\""         >> defaults.h
-	@echo "#define COB_SPECS_DIR    \"$(COB_SPECS_DIR)\""    >> defaults.h
+	@echo "#define COB_CONFIG_DIR   \"$(COB_CONFIG_DIR)\""   >> defaults.h
 	@echo "#define COB_CONFIG_FILE  \"$(COB_CONFIG_FILE)\""  >> defaults.h
 	@echo "#define COB_LIBRARY_PATH \"$(COB_LIBRARY_PATH)\"" >> defaults.h
 	@echo "#define COB_MODULE_EXT   \"$(COB_MODULE_EXT)\""   >> defaults.h

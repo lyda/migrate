@@ -229,7 +229,7 @@ source_computer_entry:
 with_debugging_mode:
   _with DEBUGGING MODE
   {
-    cb_verify (cb_spec.debugging_mode, "DEBUGGING MODE");
+    cb_verify (cb_debugging_line, "DEBUGGING MODE");
   }
 ;
 
@@ -255,7 +255,7 @@ object_computer_phrase:
   }
 | MEMORY SIZE _is integer CHARACTERS
   {
-    cb_verify (cb_spec.memory_size, "MEMORY SIZE");
+    cb_verify (cb_memory_size_clause, "MEMORY SIZE");
   }
 ;
 
@@ -591,7 +591,7 @@ organization:
 padding_character_clause:
   PADDING _character _is reference_or_literal
   {
-    cb_verify (cb_spec.padding_character, "PADDING CHARACTER");
+    cb_verify (cb_padding_character_clause, "PADDING CHARACTER");
   }
 ;
 
@@ -686,7 +686,7 @@ same_option:
 multiple_file_tape_clause:
   MULTIPLE _file _tape
   {
-    cb_verify (cb_spec.multiple_file_tape, "MULTIPLE FILE TAPE");
+    cb_verify (cb_multiple_file_tape_clause, "MULTIPLE FILE TAPE");
   }
   _contains multiple_file_list
 ;
@@ -822,7 +822,7 @@ opt_to_integer:
 label_records_clause:
   LABEL records label_option
   {
-    cb_verify (cb_spec.label_records, "LABEL RECORDS");
+    cb_verify (cb_label_records_clause, "LABEL RECORDS");
   }
 ;
 label_option:
@@ -836,7 +836,7 @@ label_option:
 value_of_clause:
   WORD _is WORD
   {
-    cb_verify (cb_spec.value_of, "VALUE OF");
+    cb_verify (cb_value_of_clause, "VALUE OF");
   }
 ;
 
@@ -846,7 +846,7 @@ value_of_clause:
 data_records_clause:
   DATA records reference_list
   {
-    cb_verify (cb_spec.data_records, "DATA RECORDS");
+    cb_verify (cb_data_records_clause, "DATA RECORDS");
   }
 ;
 
@@ -1025,7 +1025,7 @@ usage_clause:
 usage:
   BINARY
   {
-    if (cb_flag_binary_bigendian)
+    if (cb_binary_ordering == CB_ORDERING_BIG_ENDIAN)
       current_field->usage = CB_USAGE_BINARY;
     else
       current_field->usage = CB_USAGE_NATIVE;
@@ -1555,7 +1555,7 @@ statement:
 | CONTINUE
 | NEXT SENTENCE
   {
-    cb_verify (cb_spec.next_sentence, "NEXT SENTENCE");
+    cb_verify (cb_next_sentence_phrase, "NEXT SENTENCE");
   }
 ;
 
@@ -1684,7 +1684,7 @@ end_add:
 alter_statement:
   ALTER alter_options
   {
-    cb_verify (cb_spec.alter, "ALTER");
+    cb_verify (cb_alter_statement, "ALTER");
   }
 ;
 alter_options:
@@ -2052,7 +2052,7 @@ goto_statement:
       {
 	/* GO TO procedure-name */
 	if ($4 == NULL)
-	  cb_verify (cb_spec.goto_without_name,
+	  cb_verify (cb_goto_statement_without_name,
 		     "GO TO without procedure-name");
 	else if (CB_CHAIN ($4))
 	  cb_error (_("GO TO with multiple procesure-name"));
@@ -2843,7 +2843,7 @@ stop_statement:
   }
 | STOP LITERAL
   {
-    cb_verify (cb_spec.stop_literal, "STOP literal");
+    cb_verify (cb_stop_literal_statement, "STOP literal");
   }
 ;
 

@@ -1,7 +1,7 @@
 bin_PROGRAMS = cobc
-cobc_SOURCES = cobc.c cobc.h spec.c tree.c tree.h reserved.c error.c \
+cobc_SOURCES = cobc.c cobc.h config.c tree.c tree.h reserved.c error.c \
 	parser.c parser.h scanner.c typeck.c bytegen.c codegen.c \
-	ppparse.c ppparse.h pplex.c flag.def warning.def
+	ppparse.c ppparse.h pplex.c config.def flag.def warning.def
 
 AM_CFLAGS = -Wall -Wwrite-strings -Wmissing-prototypes
 cobc_CFLAGS = $(AM_CFLAGS) $(COBC_CFLAGS) -I$(top_srcdir)

@@ -26,12 +26,6 @@
 
 #include "lib/gettext.h"
 
-#define CB_FORMAT_FREE		1
-#define CB_FORMAT_FIXED		2
-
-#define CB_DEFAULT_TAB_WIDTH	8
-#define CB_DEFAULT_TEXT_COLUMN	72
-
 #define CB_MAX_CNAME		8096
 
 
@@ -70,44 +64,6 @@ extern struct cb_exception {
 #define CB_WARNING(sig,var,name,doc) extern int var;
 #include "warning.def"
 
-
-/* spec */
-
-extern char cob_specs_dir[];
-
-enum cb_support {
-  CB_OK,
-  CB_ARCHAIC,
-  CB_OBSOLETE,
-  CB_UNCONFORMABLE,
-};
-
-extern struct cb_spec {
-  const char *name;
-  enum {
-    CB_BINARY_REP_1_2_4_8,	/* 1,2,4,8 bytes */
-    CB_BINARY_REP_2_4_8,	/* 2,4,8 bytes */
-  } binary_rep;
-  int flag_value_error;
-  int flag_redefines_occurs;
-  enum cb_support memory_size;
-  enum cb_support multiple_file_tape;
-  enum cb_support label_records;
-  enum cb_support value_of;
-  enum cb_support data_records;
-  enum cb_support alter;
-  enum cb_support goto_without_name;
-  enum cb_support stop_literal;
-  enum cb_support author_paragraph;
-  enum cb_support debugging_mode;
-  enum cb_support padding_character;
-  enum cb_support next_sentence;
-} cb_spec;
-
-extern int cb_load_std (const char *name);
-extern int cb_load_spec (const char *fname);
-
-
 struct cb_name_list {
   const char *name;
   struct cb_name_list *next;
@@ -124,9 +80,8 @@ extern int warningcount;
 
 extern char *cb_source_file;
 extern int cb_source_line;
-extern int cb_source_format;
-extern int cb_tab_width;
-extern int cb_text_column;
+
+extern char cob_config_dir[];
 
 extern FILE *cb_storage_file;
 extern char *cb_storage_file_name;
@@ -141,6 +96,49 @@ extern struct cb_program *current_program;
 extern struct cb_label *current_section, *current_paragraph;
 
 extern struct cb_name_list *cb_name_list_add (struct cb_name_list *list, const char *name);
+
+
+/* config.c */
+
+enum cb_source_format {
+  CB_FORMAT_AUTO,
+  CB_FORMAT_FREE,
+  CB_FORMAT_FIXED,
+};
+
+enum cb_binary_ordering {
+  CB_ORDERING_NATIVE,
+  CB_ORDERING_BIG_ENDIAN,
+};
+
+enum cb_binary_size {
+  CB_BINARY_SIZE_1_2_4_8,	/* 1,2,4,8 bytes */
+  CB_BINARY_SIZE_2_4_8,		/* 2,4,8 bytes */
+};
+
+enum cb_support {
+  CB_OK,
+  CB_ARCHAIC,
+  CB_OBSOLETE,
+  CB_UNCONFORMABLE,
+};
+
+#undef CB_CONFIG_ANY
+#undef CB_CONFIG_INT
+#undef CB_CONFIG_STRING
+#undef CB_CONFIG_BOOLEAN
+#undef CB_CONFIG_ERROR
+#undef CB_CONFIG_SUPPORT
+#define CB_CONFIG_ANY(type,var,name)	extern type var;
+#define CB_CONFIG_INT(var,name)		extern int var;
+#define CB_CONFIG_STRING(var,name)	extern const char *var;
+#define CB_CONFIG_BOOLEAN(var,name)	extern int var;
+#define CB_CONFIG_ERROR(var,name)	extern int var;
+#define CB_CONFIG_SUPPORT(var,name)	extern enum cb_support var;
+#include "config.def"
+
+extern int cb_load_std (const char *name);
+extern int cb_load_conf (const char *fname, int check_nodef);
 
 /* preprocessor (in pplex.l, ppparse.y) */
 extern FILE *ppin;

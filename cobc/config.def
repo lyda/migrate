@@ -1,0 +1,39 @@
+/*							-*- c -*-
+ * Copyright (C) 2003 Keisuke Nishida
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this software; see the file COPYING.  If not, write to
+ * the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ * Boston, MA 02111-1307 USA
+ */
+
+CB_CONFIG_STRING  (cb_config_name, "name")
+CB_CONFIG_INT (cb_tab_width, "tab-width")
+CB_CONFIG_INT (cb_text_column, "text-column")
+CB_CONFIG_ANY (enum cb_source_format, cb_source_format, "source-format")
+CB_CONFIG_ANY (enum cb_binary_ordering, cb_binary_ordering, "binary-ordering")
+CB_CONFIG_ANY (enum cb_binary_size, cb_binary_size, "binary-size")
+CB_CONFIG_ERROR (cb_invalid_value, "invalid-value")
+CB_CONFIG_ERROR (cb_redefines_occurs_item, "redefines-occurs-item")
+CB_CONFIG_SUPPORT (cb_author_paragraph, "author-paragraph")
+CB_CONFIG_SUPPORT (cb_memory_size_clause, "memory-size-clause")
+CB_CONFIG_SUPPORT (cb_multiple_file_tape_clause, "multiple-file-tape-clause")
+CB_CONFIG_SUPPORT (cb_label_records_clause, "label-records-clause")
+CB_CONFIG_SUPPORT (cb_value_of_clause, "value-of-clause")
+CB_CONFIG_SUPPORT (cb_data_records_clause, "data-records-clause")
+CB_CONFIG_SUPPORT (cb_alter_statement, "alter-statement")
+CB_CONFIG_SUPPORT (cb_goto_statement_without_name, "goto-statement-without-name")
+CB_CONFIG_SUPPORT (cb_stop_literal_statement, "stop-literal-statement")
+CB_CONFIG_SUPPORT (cb_debugging_line, "debugging-line")
+CB_CONFIG_SUPPORT (cb_padding_character_clause, "padding-character-clause")
+CB_CONFIG_SUPPORT (cb_next_sentence_phrase, "next-sentence-phrase")
