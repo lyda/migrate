@@ -4397,11 +4397,11 @@ decimal_expand (cobc_tree s, cobc_tree d, cobc_tree x)
     case cobc_tag_literal:
       {
 	/* set d, N */
-	struct cobc_literal *l = COBC_LITERAL (x);
-	if (l->size < 10)
+	struct cobc_literal *p = COBC_LITERAL (x);
+	if (p->size < 10)
 	  add_stmt (s, make_funcall_3 ("cob_decimal_set_int",
 				       d, make_cast_int32 (x),
-				       make_integer (l->decimals)));
+				       make_integer (p->decimals)));
 	else
 	  add_stmt (s, make_funcall_2 ("cob_decimal_set_field", d, x));
 	break;
