@@ -133,7 +133,7 @@ cob_inspect_characters (cob_field *f1)
 static void
 inspect_common (cob_field *f1, cob_field *f2, int type)
 {
-  int i, last, n = 0;
+  int i, n = 0;
   int len = inspect_end - inspect_start;
   unsigned char *mark = &inspect_mark[inspect_start - inspect_data];
 
@@ -143,9 +143,7 @@ inspect_common (cob_field *f1, cob_field *f2, int type)
       return;
     }
 
-  last = (type == INSPECT_LEADING) ? 1 : len - f2->size + 1;
-
-  for (i = 0; i < last; i++)
+  for (i = 0; i < len - f2->size + 1; i++)
     {
       /* find matching substring */
       if (memcmp (inspect_start + i, f2->data, f2->size) == 0)
@@ -162,11 +160,14 @@ inspect_common (cob_field *f1, cob_field *f2, int type)
 		memcpy (mark + i, f1->data, f2->size);
 	      else
 		memset (mark + i, 1, f2->size);
+	      i += f2->size - 1;
 	      n++;
 	      if (type == INSPECT_FIRST)
 		break;
 	    }
 	}
+      else if (type == INSPECT_LEADING)
+	break;
     }
 
   if (n > 0 && !inspect_replacing)
