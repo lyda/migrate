@@ -582,7 +582,7 @@ indirect_move (void (*func) (cob_field *src, cob_field *dst),
 	       cob_field *src, cob_field *dst,
 	       unsigned int size, char scale)
 {
-  unsigned char data[size];
+  unsigned char data[64];
   cob_field_attr attr =
     {COB_TYPE_NUMERIC_DISPLAY, size, scale, COB_FLAG_HAVE_SIGN};
   cob_field temp = {size, data, &attr};
@@ -657,6 +657,9 @@ cob_move (cob_field *src, cob_field *dst)
 	{
 	case COB_TYPE_NUMERIC_DISPLAY:
 	  return cob_move_binary_to_display (src, dst);
+	case COB_TYPE_NUMERIC_BINARY:
+	  return indirect_move (cob_move_binary_to_display, src, dst,
+				20, src->attr->scale);
 	default:
 	  return indirect_move (cob_move_binary_to_display, src, dst,
 				src->attr->digits, src->attr->scale);

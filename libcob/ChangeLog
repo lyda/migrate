@@ -1,3 +1,7 @@
+2004-11-19  Roger While <simrw@sim-basis.de>
+
+	* move.c : Fix incorrect truncation when !binary_trunc
+
 2004-11-05  Roger While <simrw@sim-basis.de>
 
 	* numeric.c : Handle arithmetic for !binary_trunc.
