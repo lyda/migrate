@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.9.6\n"
-"POT-Creation-Date: 2002-12-10 18:05+0900\n"
+"POT-Creation-Date: 2002-12-10 23:04+0900\n"
 "PO-Revision-Date: 2002-12-01 12:28+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -97,301 +97,302 @@ msgstr "`%s' は実装されていません"
 msgid "`%s' obsolete"
 msgstr "`%s' は利用できません"
 
-#: cobc/parser.y:266
+#: cobc/parser.y:271
 #, c-format
 msgid "PROGRAM-ID is converted to `%s'"
 msgstr "PROGRAM-ID を `%s' に変換します"
 
-#: cobc/parser.y:315
+#: cobc/parser.y:320
 msgid "DEBUGGING MODE is ignored"
 msgstr "DEBUGGING MODE は利用できません"
 
-#: cobc/parser.y:316
+#: cobc/parser.y:321
 msgid "use compiler option `-debug' instead"
 msgstr "コンパイラオプション `-debug' を用いて下さい"
 
-#: cobc/parser.y:374
+#: cobc/parser.y:379
 #, c-format
 msgid "unknown name `%s'"
 msgstr "不当な名前です `%s'"
 
-#: cobc/parser.y:496
+#: cobc/parser.y:501
 #, c-format
 msgid "invalid currency sign `%s'"
 msgstr "不当な通貨記号です `%s'"
 
-#: cobc/parser.y:544
+#: cobc/parser.y:553
 #, c-format
 msgid "ASSIGN required for file `%s'"
 msgstr "`%s' には ASSIGN が必要です"
 
-#: cobc/parser.y:551
+#: cobc/parser.y:560
 #, c-format
 msgid "RECORD KEY required for file `%s'"
 msgstr "`%s' には RECORD KEY が必要です"
 
-#: cobc/parser.y:556
+#: cobc/parser.y:565
 #, c-format
 msgid "RELATIVE KEY required for file `%s'"
 msgstr "`%s' には RELATIVE KEY が必要です"
 
-#: cobc/parser.y:1103
+#: cobc/parser.y:1112
 msgid "only level 88 item may have multiple values"
 msgstr "複数の値はレベル 88 項目のみに許されます"
 
-#: cobc/parser.y:1251 cobc/parser.y:1268
+#: cobc/parser.y:1260 cobc/parser.y:1277
 #, c-format
 msgid "invalid color `%d'"
 msgstr "不当な色です `%d'"
 
-#: cobc/parser.y:1344
+#: cobc/parser.y:1353
 #, c-format
 msgid "`%s' not level 01 or 77"
 msgstr "`%s' はレベル 01 か 77 でなければなりません"
 
-#: cobc/parser.y:1590
+#: cobc/parser.y:1606
 #, c-format
 msgid "invalid input stream `%s'"
 msgstr "`%s' は不当な入力ストリームです"
 
-#: cobc/parser.y:1836
+#: cobc/parser.y:1865
 msgid "invalid UPON item"
 msgstr "不当な UPON 項目です"
 
-#: cobc/parser.y:1843
+#: cobc/parser.y:1872
 #, c-format
 msgid "`%s' undefined in SPECIAL-NAMES"
 msgstr "`%s' は SPECIAL-NAMES で定義されていません"
 
-#: cobc/parser.y:1971
+#: cobc/parser.y:2002
 msgid "too many labels with GO TO"
 msgstr "GO TO のラベルが多過ぎます"
 
-#: cobc/parser.y:2096
+#: cobc/parser.y:2134
 msgid "data name expected before CHARACTERS"
 msgstr "CHARACTERS の前にデータ名が必要です"
 
-#: cobc/parser.y:2103
+#: cobc/parser.y:2141
 msgid "data name expected before ALL"
 msgstr "ALL の前にデータ名が必要です<"
 
-#: cobc/parser.y:2110
+#: cobc/parser.y:2148
 msgid "data name expected before LEADING"
 msgstr "LEADING の前にデータ名が必要です<"
 
-#: cobc/parser.y:2117
+#: cobc/parser.y:2155
 #, c-format
 msgid "ALL or LEADING expected before `%s'"
 msgstr "`%s' の前に ALL または LEADINGが必要です"
 
-#: cobc/parser.y:2350
+#: cobc/parser.y:2399
 msgid "KEY ignored with sequential READ"
 msgstr "順読み込みの READ であるため KEY は無視されます"
 
-#: cobc/parser.y:2971 cobc/parser.y:3247
-msgid "invalid expression"
-msgstr "不当な式です"
+#: cobc/parser.y:3039 cobc/parser.y:3315
+#, c-format
+msgid "invalid expression `%s'"
+msgstr "不当な式です `%s'"
 
-#: cobc/parser.y:3330
+#: cobc/parser.y:3399
 #, c-format
 msgid "`%s' not numeric"
 msgstr "`%s' は数字ではありません"
 
-#: cobc/parser.y:3345
+#: cobc/parser.y:3414
 #, c-format
 msgid "`%s' not numeric or numeric edited"
 msgstr "`%s' は数字でも数字編集でもありません"
 
-#: cobc/parser.y:3360
+#: cobc/parser.y:3429
 #, c-format
 msgid "`%s' not a group"
 msgstr "`%s' はグループ名ではありません"
 
-#: cobc/parser.y:3375
+#: cobc/parser.y:3444
 #, c-format
 msgid "`%s' not indexed"
 msgstr "`%s' には INDEXED BY が必要です"
 
-#: cobc/parser.y:3376
+#: cobc/parser.y:3445
 #, c-format
 msgid "`%s' defined here"
 msgstr "`%s' はここで定義されました"
 
-#: cobc/parser.y:3423
+#: cobc/parser.y:3492
 #, c-format
 msgid "`%s' not file name"
 msgstr "`%s' はファイル名ではありません"
 
-#: cobc/parser.y:3436
+#: cobc/parser.y:3505
 #, c-format
 msgid "`%s' not record name"
 msgstr "`%s' はレコード名ではありません"
 
-#: cobc/parser.y:3566
+#: cobc/parser.y:3635
 #, c-format
 msgid "numeric value is expected `%s'"
 msgstr "`%s' は数値ではありません"
 
-#: cobc/parser.y:3611
+#: cobc/parser.y:3680
 #, c-format
 msgid "`%s' must be an integer value"
 msgstr "`%s' は整数でなければなりません"
 
-#: cobc/parser.y:3818
+#: cobc/parser.y:3888
 #, c-format
 msgid "`%s' cannot be subscripted"
 msgstr "`%s' は添字付け出来ません"
 
-#: cobc/parser.y:3821
+#: cobc/parser.y:3891
 #, c-format
 msgid "`%s' requires 1 subscript"
 msgstr "`%s' は 1 つの添字を必要とします"
 
-#: cobc/parser.y:3824
+#: cobc/parser.y:3894
 #, c-format
 msgid "`%s' requires %d subscripts"
 msgstr "`%s' は %d つの添字を必要とします"
 
-#: cobc/parser.y:3860
+#: cobc/parser.y:3930
 #, c-format
 msgid "invalid section name `%s'"
 msgstr "段落名が不当です `%s'"
 
-#: cobc/parser.y:3878
+#: cobc/parser.y:3948
 #, c-format
 msgid "invalid label `%s'"
 msgstr "不当なラベルです `%s'"
 
-#: cobc/parser.y:3897
+#: cobc/parser.y:3967
 #, c-format
 msgid "no such label `%s' IN `%s'"
 msgstr "そのような段落はありません `%s' IN `%s'"
 
-#: cobc/parser.y:3939
+#: cobc/parser.y:4009
 msgid "not switch name"
 msgstr "スイッチ名ではありません"
 
-#: cobc/parser.y:3990
+#: cobc/parser.y:4060
 msgid "level number must begin with 01 or 77"
 msgstr "レベル番号は 01 か 77 で始まらなければなりません"
 
-#: cobc/parser.y:4010
+#: cobc/parser.y:4080
 #, c-format
 msgid "invalid level number `%s'"
 msgstr "不当なレベル番号です `%s'"
 
-#: cobc/parser.y:4043
+#: cobc/parser.y:4113
 msgid "field hierarchy broken"
 msgstr "項目のレベル番号が不当です"
 
-#: cobc/parser.y:4068
+#: cobc/parser.y:4138
 #, c-format
 msgid "group name `%s' may not have PICTURE"
 msgstr "グループ名 `%s' は PICTURE 句を持つことが出来ません"
 
-#: cobc/parser.y:4072
+#: cobc/parser.y:4142
 #, c-format
 msgid "group name `%s' may not have JUSTIFIED RIGHT"
 msgstr "グループ名 `%s' は JUSTIFIED RIGHT を持つことが出来ません"
 
-#: cobc/parser.y:4085
+#: cobc/parser.y:4155
 #, c-format
 msgid "level 88 field `%s' may not have PICTURE"
 msgstr "レベル 88 項目 `%s' は PICTURE 句を持つことが出来ません"
 
-#: cobc/parser.y:4093
+#: cobc/parser.y:4163
 #, c-format
 msgid "PICTURE required for `%s'"
 msgstr "`%s' には PICTURE 句が必要です"
 
-#: cobc/parser.y:4102
+#: cobc/parser.y:4172
 msgid "field must be numeric"
 msgstr "この項目は数字ではありません"
 
-#: cobc/parser.y:4113
+#: cobc/parser.y:4183
 #, c-format
 msgid "level %02d field `%s' cannot have OCCURS"
 msgstr "レベル %02d 項目 `%s' は OCCURS 句を持つことが出来ません"
 
-#: cobc/parser.y:4125
+#: cobc/parser.y:4195
 #, c-format
 msgid "`%s' cannot have JUSTIFIED RIGHT"
 msgstr "`%s' は JUSTIFIED RIGHT を持つことが出来ません"
 
-#: cobc/parser.y:4151
+#: cobc/parser.y:4221
 msgid "VALUE clause not allowed under REDEFINES"
 msgstr "REDEFINES に含まれる項目は VALUE 句を持つことが出来ません"
 
-#: cobc/parser.y:4160
+#: cobc/parser.y:4230
 msgid "VALUE should be alphanumeric"
 msgstr "VALUE の値は英数字でなければなりません"
 
-#: cobc/parser.y:4177
+#: cobc/parser.y:4247
 #, c-format
 msgid "record size too small `%s'"
 msgstr "レコード長が短か過ぎます `%s'"
 
-#: cobc/parser.y:4180
+#: cobc/parser.y:4250
 #, c-format
 msgid "record size too large `%s'"
 msgstr "レコード長が長過ぎます `%s'"
 
-#: cobc/parser.y:4692
+#: cobc/parser.y:4762
 msgid "wrong number of WHEN parameters"
 msgstr "WHEN 句の引数の数が不当です"
 
-#: cobc/parser.y:4744
+#: cobc/parser.y:4814
 #, c-format
 msgid "undeclared key `%s'"
 msgstr "`%s' はキー宣言されていません"
 
-#: cobc/parser.y:4748
+#: cobc/parser.y:4818
 msgid "invalid SEARCH ALL condition"
 msgstr "SEARCH ALL の条件式が不当です"
 
-#: cobc/parser.y:4788
+#: cobc/parser.y:4858
 #, c-format
 msgid "redefinition of `%s'"
 msgstr "`%s' が再定義されています"
 
-#: cobc/parser.y:4789
+#: cobc/parser.y:4859
 #, c-format
 msgid "`%s' previously defined here"
 msgstr "`%s' はここで定義されました"
 
-#: cobc/parser.y:4798
+#: cobc/parser.y:4868
 #, c-format
 msgid "`%s' undefined in `%s'"
 msgstr "`%s' は `%s' の中で定義されていません"
 
-#: cobc/parser.y:4801
+#: cobc/parser.y:4871
 #, c-format
 msgid "`%s' undefined"
 msgstr "`%s' は未定義です"
 
-#: cobc/parser.y:4813
+#: cobc/parser.y:4883
 #, c-format
 msgid "`%s' ambiguous; need qualification"
 msgstr "`%s' は多重定義されています。一意に修飾して下さい"
 
-#: cobc/parser.y:4830
+#: cobc/parser.y:4900
 msgid "defined here"
 msgstr "はここで定義されました"
 
-#: cobc/scanner.l:190
+#: cobc/scanner.l:193
 msgid "too large literal"
 msgstr "定数が大き過ぎます"
 
-#: cobc/scanner.l:232
+#: cobc/scanner.l:235
 #, c-format
 msgid "invalid X literal: %s"
 msgstr "不当な X 定数です: %s"
 
-#: cobc/scanner.l:255
+#: cobc/scanner.l:258
 msgid "invalid numeric literal"
 msgstr "不当な数字定数です"
 
-#: cobc/scanner.l:514
+#: cobc/scanner.l:517
 msgid "invalid picture string"
 msgstr "不当な PICTURE 定義です"
 
@@ -462,21 +463,21 @@ msgstr "これ以上のワーニングは抑制されます"
 msgid "source line too long"
 msgstr "一行の行数が長過ぎます"
 
-#: libcob/common.c:312
+#: libcob/common.c:311
 msgid "warning: cob_init expected in the main program\n"
 msgstr "warning: メインプログラムで cob_init 呼ばれていません\n"
 
-#: libcob/common.c:328 libcob/common.c:344
+#: libcob/common.c:327 libcob/common.c:343
 #, c-format
-msgid "index `%s' out of range: %d"
-msgstr "添字 `%s' が範囲を超えています `%d'"
+msgid "index of `%s' out of range: %d"
+msgstr "`%s' の添字が範囲を超えています: %d"
 
-#: libcob/common.c:339
+#: libcob/common.c:338
 #, c-format
 msgid "value of `%s' out of range: %d"
-msgstr "添字 '%s' の値が範囲を超えています `%d'"
+msgstr "'%s' の値が範囲を超えています: %d"
 
-#: libcob/common.c:489
+#: libcob/common.c:488
 #, c-format
 msgid "value of `%s' not numeric: `%s'"
 msgstr "`%s' の値が数字ではありません: `%s'"
