@@ -1,5 +1,14 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Changes in OpenCOBOL 0.9.8
+
+** New file cob.pc, which is used by pkg-config script.
+
+** Use db1 again instead of db2 or db3.
+
+** New option -semi-fixed.
+
+
 * Changes in OpenCOBOL 0.9.7
 
 ** The default value of COB_CONFIG_FILE has been changed to
