@@ -51,14 +51,14 @@ extern void cob_decimal_div (cob_decimal *d1, cob_decimal *d2);
 extern void cob_decimal_pow (cob_decimal *d1, cob_decimal *d2);
 extern int cob_decimal_cmp (cob_decimal *d1, cob_decimal *d2);
 
-extern void cob_add (cob_field *f1, cob_field *f2);
-extern void cob_sub (cob_field *f1, cob_field *f2);
-extern void cob_add_round (cob_field *f1, cob_field *f2);
-extern void cob_sub_round (cob_field *f1, cob_field *f2);
+extern int cob_add (cob_field *f1, cob_field *f2);
+extern int cob_sub (cob_field *f1, cob_field *f2);
+extern int cob_add_round (cob_field *f1, cob_field *f2);
+extern int cob_sub_round (cob_field *f1, cob_field *f2);
 extern int cob_add_int (cob_field *f, int n);
 extern int cob_sub_int (cob_field *f, int n);
-extern void cob_div_quotient (cob_field *dividend, cob_field *divisor, cob_field *quotient, int round);
-extern void cob_div_remainder (cob_field *remainder);
+extern int cob_div_quotient (cob_field *dividend, cob_field *divisor, cob_field *quotient, int round);
+extern int cob_div_remainder (cob_field *remainder);
 
 extern int cob_numeric_cmp (cob_field *f1, cob_field *f2);
 

@@ -455,6 +455,7 @@ cob_decimal_div (cob_decimal *d1, cob_decimal *d2)
   if (mpz_sgn (d2->value) == 0)
     {
       d1->scale = DECIMAL_NAN;
+      COB_SET_EXCEPTION (COB_EC_SIZE_ZERO_DIVIDE);
       return;
     }
 
@@ -669,40 +670,40 @@ cob_add_int_to_display (cob_field *f, int n)
  * Convenience functions
  */
 
-void
+int
 cob_add (cob_field *f1, cob_field *f2)
 {
   cob_decimal_set_field (&cob_d1, f1);
   cob_decimal_set_field (&cob_d2, f2);
   cob_decimal_add (&cob_d1, &cob_d2);
-  cob_decimal_get_field (&cob_d1, f1);
+  return cob_decimal_get_field (&cob_d1, f1);
 }
 
-void
+int
 cob_sub (cob_field *f1, cob_field *f2)
 {
   cob_decimal_set_field (&cob_d1, f1);
   cob_decimal_set_field (&cob_d2, f2);
   cob_decimal_sub (&cob_d1, &cob_d2);
-  cob_decimal_get_field (&cob_d1, f1);
+  return cob_decimal_get_field (&cob_d1, f1);
 }
 
-void
+int
 cob_add_round (cob_field *f1, cob_field *f2)
 {
   cob_decimal_set_field (&cob_d1, f1);
   cob_decimal_set_field (&cob_d2, f2);
   cob_decimal_add (&cob_d1, &cob_d2);
-  cob_decimal_get_field_round (&cob_d1, f1);
+  return cob_decimal_get_field_round (&cob_d1, f1);
 }
 
-void
+int
 cob_sub_round (cob_field *f1, cob_field *f2)
 {
   cob_decimal_set_field (&cob_d1, f1);
   cob_decimal_set_field (&cob_d2, f2);
   cob_decimal_sub (&cob_d1, &cob_d2);
-  cob_decimal_get_field_round (&cob_d1, f1);
+  return cob_decimal_get_field_round (&cob_d1, f1);
 }
 
 int
@@ -728,10 +729,12 @@ cob_sub_int (cob_field *f, int n)
   return cob_add_int (f, -n);
 }
 
-void
+int
 cob_div_quotient (cob_field *dividend, cob_field *divisor,
 		  cob_field *quotient, int round)
 {
+  int ret;
+
   cob_decimal_set_field (&cob_d1, dividend);
   cob_decimal_set_field (&cob_d2, divisor);
   cob_decimal_set (&cob_d3, &cob_d1);
@@ -741,15 +744,15 @@ cob_div_quotient (cob_field *dividend, cob_field *divisor,
   if (cob_d1.scale == DECIMAL_NAN)
     {
       cob_d3.scale = DECIMAL_NAN;
-      return;
+      return cob_exception_code;
     }
 
   /* set quotient */
   cob_decimal_set (&cob_d4, &cob_d1);
   if (round)
-    cob_decimal_get_field_round (&cob_d1, quotient);
+    ret = cob_decimal_get_field_round (&cob_d1, quotient);
   else
-    cob_decimal_get_field (&cob_d1, quotient);
+    ret = cob_decimal_get_field (&cob_d1, quotient);
 
   /* truncate digits from the quotient */
   shift_decimal (&cob_d4, quotient->attr->scale - cob_d4.scale);
@@ -757,12 +760,14 @@ cob_div_quotient (cob_field *dividend, cob_field *divisor,
   /* compute remainder */
   cob_decimal_mul (&cob_d4, &cob_d2);
   cob_decimal_sub (&cob_d3, &cob_d4);
+
+  return ret;
 }
 
-void
+int
 cob_div_remainder (cob_field *remainder)
 {
-  cob_decimal_get_field (&cob_d3, remainder);
+  return cob_decimal_get_field (&cob_d3, remainder);
 }
 
 int
