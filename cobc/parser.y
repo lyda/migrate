@@ -1,5 +1,4 @@
-/* COBOL Parser
- *
+/*
  * Copyright (C) 2001  Keisuke Nishida
  * Copyright (C) 2000  Rildo Pragana, Alan Cox, Andrew Cameron,
  *		      David Essex, Glen Colbert, Jim Noeth.
@@ -484,13 +483,10 @@ select_clause:
   ORGANIZATION opt_is organization_options { curr_file->organization=$3; }
 | ACCESS opt_mode opt_is access_options
   {
-    /*{ curr_file->access_mode=$4; }*/
-    if (curr_file->access_mode < 5) {
+    if (curr_file->access_mode < 5)
       curr_file->access_mode=$4;
-    }
-    else {
+    else
       curr_file->access_mode = $4 + 5;
-    }
   }
 | FILEN STATUS opt_is SYMBOL_TOK { curr_file->parent=$4; }
 | RECORD KEY opt_is SYMBOL_TOK { curr_file->ix_desc=$4; }
@@ -2102,7 +2098,6 @@ perform_options:
   {
     int i;
     struct perf_info *rf;
-    /*struct perform_info *rpi;*/
     char *vn = NULL;
 
     /* Check for duplicate varaibles in VARYING/AFTER */
@@ -2192,7 +2187,7 @@ opt_perform_after:
   }
 ;
 perform_after:
-  AFTER name FROM gname opt_by gname UNTIL
+  AFTER name FROM gname BY gname UNTIL
   {
     gen_move ($4, $2);
     /* BEFORE=1 AFTER=2 */
