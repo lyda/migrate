@@ -384,16 +384,17 @@ cob_push_decimal (struct cob_field f)
 	int len = FIELD_LENGTH (f);
 	unsigned char *base = FIELD_BASE (f);
 
-	for (i = 0; i < len; i++)
-	  if (!isdigit (base[i]))
-	    {
-	      fputs ("ERROR: non-numeric char found\007\n", stderr);
-	      break;
-	    }
-
 	p = (len < 32) ? buff : alloca (len + 1);
 	memcpy (p, base, len);
 	p[len] = 0;
+
+	for (i = 0; i < len; i++)
+	  if (!isdigit (p[i]))
+	    {
+	      fprintf (stderr, "ERROR: non-numeric value: %s\007\n", p);
+	      break;
+	    }
+
 	mpz_set_str (d->number, p, 10);
 	if (sign == 1) /* negative */
 	  mpz_neg (d->number, d->number);
