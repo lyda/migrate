@@ -99,19 +99,18 @@ LCL-X = abc
 AT_CLEANUP
 
 
-AT_SETUP([External data])
+AT_SETUP([EXTERNAL])
 
-AT_DATA([callee.c], [
-unsigned char X[[2]];
-
-int callee (unsigned char *s)
-{
-  if (*s == '0')
-    memcpy (X, "OK", 2);
-  else
-    memcpy (X, "NG", 2);
-  return 0;
-}
+AT_DATA([callee.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      callee.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X(5) EXTERNAL.
+       PROCEDURE        DIVISION.
+           DISPLAY X.
+           MOVE "World" TO X.
+           EXIT PROGRAM.
 ])
 
 AT_DATA([caller.cob], [
@@ -119,22 +118,19 @@ AT_DATA([caller.cob], [
        PROGRAM-ID.      caller.
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
-       01 X             PIC XX EXTERNAL.
+       01 X             PIC X(5) EXTERNAL.
        PROCEDURE        DIVISION.
-           MOVE SPACE TO X.
-           CALL "callee" USING "0".
-           DISPLAY X.
-           CALL "callee" USING "1".
+           MOVE "Hello" TO X.
+           CALL "callee".
            DISPLAY X.
            STOP RUN.
 ])
 
-AT_CHECK([${CC} -c callee.c])
-AT_CHECK([${COMPILE} -c -fmain caller.cob])
-AT_CHECK([${COMPILE} -o prog caller.o callee.o])
+AT_CHECK([${COMPILE_MODULE} callee.cob])
+AT_CHECK([${COMPILE} -o prog caller.cob])
 AT_CHECK([./prog], [0],
-[OK
-NG
+[Hello
+World
 ])
 
 AT_CLEANUP
