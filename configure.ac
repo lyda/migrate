@@ -44,7 +44,7 @@ AC_DEFINE(COB_DEBUG)
 COBC_LIBS=""
 COBC_CFLAGS=""
 LIBCOB_LIBS="-lm"
-LIBCOB_CFLAGS=""
+LIBCOB_CFLAGS="$lt_prog_compiler_pic"
 
 # Configure options.
 COB_CC=""
@@ -208,6 +208,7 @@ AC_SUBST(COBC_LIBS)
 AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBS)
 AC_SUBST(COB_EXPORT_DYN)
+AC_SUBST(COB_PIC_FLAGS)
 
 AC_CONFIG_FILES([cob-config
 		Makefile lib/Makefile libcob/Makefile

@@ -1,4 +1,4 @@
-CC="@CC@"
+CC="@CC@ @COB_PIC_FLAGS@"
 SHREXT="@COB_MODULE_EXT@"
 PATH="${abs_top_builddir}/cobc:${PATH}"
 COBC="${abs_top_builddir}/cobc/cobc"

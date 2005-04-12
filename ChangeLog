@@ -1,3 +1,7 @@
+2005-04-13  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* configure.ac (LIBCOB_CFLAGS): Set -fPIC when necessary.
+
 2005-03-03  Roger While <simrw@sim-basis.de>
 
 	* configure.ac, configure, config.h.in :
