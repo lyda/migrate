@@ -1558,8 +1558,16 @@ static void
 output_perform_call (struct cb_label *lb, struct cb_label *le)
 {
   output_line ("/* PERFORM %s THRU %s */", lb->name, le->name);
+#if 0
+  /* This code does not work with GCC 3.3.x on PowerPC because of GCC bug. */
   output_line ("frame_stack[++frame_index] = (struct frame) {%d, &&%s%d};",
 	       le->id, CB_PREFIX_LABEL, cb_id);
+#else
+  output_line ("++frame_index;");
+  output_line ("frame_stack[frame_index].perform_through = %d;", le->id);
+  output_line ("frame_stack[frame_index].return_address = &&%s%d;",
+	       CB_PREFIX_LABEL, cb_id);
+#endif
   output_line ("goto %s%d;", CB_PREFIX_LABEL, lb->id);
   output_line ("%s%d:", CB_PREFIX_LABEL, cb_id++);
   output_line ("frame_index--;");

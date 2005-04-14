@@ -1,3 +1,8 @@
+2005-04-15  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* codegen.c (output_perform_call): Work around the GCC bug on ppc.
+	(Thanks to Tristan Gingold and Tom Murtagh)
+
 2005-03-07  Roger While <simrw@sim-basis.de>
 
 	* cobc.h, config.c, reserved.c :
