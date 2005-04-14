@@ -1,5 +1,7 @@
 2005-04-15  Keisuke Nishida  <knishida@open-cobol.org>
 
+	* Makefile.am (cobc_CFLAGS): Add -fsigned-char.
+
 	* codegen.c (output_perform_call): Work around the GCC bug on ppc.
 	(Thanks to Tristan Gingold and Tom Murtagh)
 

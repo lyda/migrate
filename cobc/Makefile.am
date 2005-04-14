@@ -4,7 +4,7 @@ cobc_SOURCES = cobc.c cobc.h config.c tree.c tree.h reserved.c error.c \
 	ppparse.c ppparse.h pplex.c config.def flag.def warning.def
 
 AM_CFLAGS = -Wall -Wwrite-strings -Wmissing-prototypes -Wno-format-y2k
-cobc_CFLAGS = $(AM_CFLAGS) $(COBC_CFLAGS) -I$(top_srcdir)
+cobc_CFLAGS = $(AM_CFLAGS) $(COBC_CFLAGS) -I$(top_srcdir) -fsigned-char
 cobc_LDADD = $(COBC_LIBS) $(top_builddir)/lib/libsupport.a
 
 BUILT_SOURCES = parser.c parser.h scanner.c ppparse.c ppparse.h pplex.c
