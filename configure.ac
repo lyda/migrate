@@ -210,6 +210,10 @@ AC_SUBST(LIBCOB_LIBS)
 AC_SUBST(COB_EXPORT_DYN)
 AC_SUBST(COB_PIC_FLAGS)
 
+# Used in tests/aclocal
+WORDS_BIGENDIAN="$ac_cv_c_bigendian"
+AC_SUBST(WORDS_BIGENDIAN)
+
 AC_CONFIG_FILES([cob-config
 		Makefile lib/Makefile libcob/Makefile
 		cobc/Makefile bin/Makefile po/Makefile.in texi/Makefile config/Makefile

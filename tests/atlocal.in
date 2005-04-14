@@ -1,5 +1,6 @@
 CC="@CC@ @COB_PIC_FLAGS@"
 SHREXT="@COB_MODULE_EXT@"
+BIGENDIAN="@WORDS_BIGENDIAN@"
 PATH="${abs_top_builddir}/cobc:${PATH}"
 COBC="${abs_top_builddir}/cobc/cobc"
 

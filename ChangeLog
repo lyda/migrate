@@ -1,3 +1,7 @@
+2005-04-15  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* configure.ac (WORDS_BIGENDIAN): New variable.
+
 2005-04-13  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* configure.ac (LIBCOB_CFLAGS): Set -fPIC when necessary.
