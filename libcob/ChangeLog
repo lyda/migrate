@@ -1,3 +1,7 @@
+2005-04-15  Keisuke Nishida  <knishida@open-cobol.org>
+
+	* Makefile.am (libcob_la_CFLAGS): Add -fsigned-char.
+
 2005-04-13  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* byteswap.h: #include <sys/types.h>.  Use u_int16_t, u_int32_t, and
