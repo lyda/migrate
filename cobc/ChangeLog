@@ -1,3 +1,29 @@
+2005-05-03  Roger While <simrw@sim-basis.de>
+
+	* tree.h :     bit fields are unsigned. Round to boundaries.
+	  typeck.c :   Internal register NUMBER-OF-CALL-PARAMETERSa.
+	  tree.c :     Fix ambiguous paragraph erros.
+	  scanner.l :  Move some syntax from the parser to here in the lexxer.
+	  pplex.l :    Initialize variables.
+	  parser.y :   Move some syntax to the lexxer.
+		       Initialize variables.
+		       Allow MF relaxed syntax.
+		       SORT DUPLICATES is default. No need for warning.
+	  field.c :     Allow larger redefines than original field for
+		        -std=cobol2002 and -std=mf.
+	  config.def : New variables - larger-redefines-ok and
+		       relaxed-syntax-check.
+	  codegen.c :  Do not generate unnecessary code eg. switch
+		       statement for only one entry point, loop counters.
+		       Cater for NUMBER-OF-CALL-PARAMETERS.
+		       Initialize variables.
+		       Restructure generated C code.
+		       Use builtin_expect.
+	  cobc.c :     Initialize variables.
+		       Pass -fsigned-char to the compiler.
+		       Fix dangling file with multiple compile.
+	  cobc.h :     Extern definitions.
+
 2005-04-15  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* Makefile.am (cobc_CFLAGS): Add -fsigned-char.

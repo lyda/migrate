@@ -109,6 +109,9 @@ COB_EXPORT_DYN = @COB_EXPORT_DYN@
 COB_LIBRARY_PATH = @COB_LIBRARY_PATH@
 COB_LIBS = @COB_LIBS@
 COB_MODULE_EXT = @COB_MODULE_EXT@
+COB_PIC_FLAGS = @COB_PIC_FLAGS@
+COB_SHARED_OPT = @COB_SHARED_OPT@
+COB_STRIP_CMD = @COB_STRIP_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -214,7 +217,8 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 cobcrun_SOURCES = cobcrun.c
-AM_CFLAGS = $(COB_EXPORT_DYN) -Wall -Wwrite-strings -Wmissing-prototypes -Wno-format-y2k
+AM_CFLAGS = -fsigned-char -Wall -Wwrite-strings -Wmissing-prototypes -Wno-format-y2k
+AM_LDFLAGS = $(COB_EXPORT_DYN)
 cobcrun_CFLAGS = $(AM_CFLAGS) $(COBC_CFLAGS) -I$(top_srcdir)
 @COBCRUN_SHARED_FALSE@cobcrun_LDADD = $(LIBCOB_LIBS) \
 @COBCRUN_SHARED_FALSE@$(top_builddir)/libcob/.libs/libcob_la-call.o \
@@ -226,7 +230,7 @@ cobcrun_CFLAGS = $(AM_CFLAGS) $(COBC_CFLAGS) -I$(top_srcdir)
 @COBCRUN_SHARED_FALSE@$(top_builddir)/libcob/.libs/libcob_la-move.o \
 @COBCRUN_SHARED_FALSE@$(top_builddir)/libcob/.libs/libcob_la-termio.o
 
-@COBCRUN_SHARED_TRUE@cobcrun_LDADD = $(LIBCOB_LIBS) -L$(top_builddir)/libcob -lcob
+@COBCRUN_SHARED_TRUE@cobcrun_LDADD = $(LIBCOB_LIBS) -L$(top_builddir)/libcob/.libs -lcob
 all: all-am
 
 .SUFFIXES:

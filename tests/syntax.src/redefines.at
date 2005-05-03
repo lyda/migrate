@@ -319,10 +319,10 @@ AT_DATA([prog.cob], [
            STOP RUN.
 ])
 
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: size of 'A' larger than size of 'X'
-prog.cob:11: size of 'A' larger than size of 'X'
-prog.cob:15: size of 'EXT-X-REDEF' larger than size of 'EXT-X'
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[prog.cob:8: warning: size of 'A' larger than size of 'X'
+prog.cob:11: warning: size of 'A' larger than size of 'X'
+prog.cob:15: warning: size of 'EXT-X-REDEF' larger than size of 'EXT-X'
 ])
 
 AT_CLEANUP

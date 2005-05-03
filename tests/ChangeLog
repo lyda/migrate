@@ -1,3 +1,14 @@
+2005-05-03  Roger While <simrw@sim-basis.de>
+
+	* tests/cobol85/* :    Allow to run without a "make install".
+			       Update expected results.
+			       EXEC85.conf.in - Change 2 params.
+	  Makexx :	       Due to autoreconf.
+	  run-O, data-rep-O :  Use -O instead of -fruntime-inlining
+	  run.src,syntax.src : Add tests for duplicate paras and larger
+			       redefines.
+			       Adjust for endianness.
+
 2005-04-15  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* atlocal.in (BIGENDIAN): New variable.

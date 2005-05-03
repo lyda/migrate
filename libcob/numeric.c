@@ -54,12 +54,6 @@ cob_decimal_init (cob_decimal *d)
 }
 
 void
-cob_decimal_clear (cob_decimal *d)
-{
-  mpz_clear (d->value);
-}
-
-void
 cob_decimal_print (cob_decimal *d)
 {
   mpz_out_str (stdout, 10, d->value);
@@ -269,11 +263,11 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, int opt)
 {
   int overflow = 0;
   int digits = f->attr->digits;
-  if (f->size <= sizeof (long))
+  if (f->size <= 4)
     {
       if (COB_FIELD_HAVE_SIGN (f))
 	{
-	  long val;
+	  int val;
 	  if (!mpz_fits_sint_p (d->value))
 	    {
 	      if ( cob_current_module->flag_binary_truncate ) {
@@ -309,7 +303,7 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, int opt)
 	}
       else
 	{
-	  unsigned long val;
+	  unsigned int val;
 	  if (mpz_sgn (d->value) < 0)
 	    mpz_abs (d->value, d->value);
 	  if (!mpz_fits_uint_p (d->value))
@@ -344,7 +338,7 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, int opt)
     }
   else
     {
-      unsigned long lo;
+      unsigned int lo;
       mpz_fdiv_r_2exp (cob_d2.value, d->value, 32);
       mpz_fdiv_q_2exp (d->value, d->value, 32);
       lo = mpz_get_ui (cob_d2.value);

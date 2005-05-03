@@ -37,11 +37,17 @@
 int cob_argc = 0;
 char **cob_argv = NULL;
 
+int cob_initialized = 0;
+int cob_exception_code = 0;
+
+cob_module *cob_current_module = NULL;
+
 const char *cob_source_file = NULL;
 unsigned int cob_source_line = 0;
 const char *cob_source_statement = NULL;
 
 int cob_linage_counter = 0;
+int cob_call_params = 0;
 
 static cob_field_attr all_attr = {COB_TYPE_ALPHANUMERIC_ALL, 0, 0, 0, NULL};
 
@@ -51,7 +57,7 @@ cob_field cob_high =  {1, "\xff", &all_attr};
 cob_field cob_low =   {1, "\0",   &all_attr};
 cob_field cob_quote = {1, "\"",   &all_attr};
 
-const long cob_exp10[10] = {
+const int cob_exp10[10] = {
   1,
   10,
   100,
@@ -158,10 +164,6 @@ const unsigned char cob_e2a[256] = {
 };
 end of comment out */
 
-cob_module *cob_current_module = NULL;
-
-int cob_exception_code;
-
 struct cob_exception cob_exception_table[] = {
   {0, 0, 0},		/* COB_EC_ZERO */
 #undef COB_EXCEPTION
@@ -169,8 +171,6 @@ struct cob_exception cob_exception_table[] = {
 #include "exception.def"
   {0, 0, 0}		/* COB_EC_MAX */
 };
-
-int cob_initialized = 0;
 
 
 /*

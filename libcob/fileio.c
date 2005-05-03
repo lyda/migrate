@@ -1026,7 +1026,7 @@ sort_compare (const DBT *k1, const DBT *k2)
       if (cmp != 0)
 	return (f->keys[i].flag == COB_ASCENDING) ? cmp : - cmp;
     }
-  return 0;
+  return 1;
 }
 
 static int

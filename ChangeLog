@@ -1,3 +1,9 @@
+2005-05-03  Roger While <simrw@sim-basis.de>
+
+	* configure.ac : Revert WORDS_BIGENDIAN. We do not need it.
+	  configure.ac, configure, Mak** : Fix missing variables.
+	  Run autoreconf
+
 2005-04-15  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* configure.ac (WORDS_BIGENDIAN): New variable.

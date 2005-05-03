@@ -111,6 +111,7 @@ static struct filename {
   char source[FILENAME_MAX];			/* foo.cob */
   char preprocess[FILENAME_MAX];		/* foo.i */
   char translate[FILENAME_MAX];			/* foo.c */
+  char trstorage[FILENAME_MAX];			/* foo.c.h */
   char object[FILENAME_MAX];			/* foo.o */
   struct filename *next;
 } *file_list;
@@ -118,7 +119,7 @@ static struct filename {
 
 #if defined (__GNUC__) && (__GNUC__ >= 3)
 static const char	fcopts[] =
-	" -finline-functions -fno-gcse -fno-guess-branch-probability -fno-reorder-blocks -fno-align-functions -fno-align-labels -fno-align-loops -fno-align-jumps";
+	" -finline-functions -fno-gcse -freorder-blocks";
 #else
 static const char	fcopts[] = " ";
 #endif
@@ -438,6 +439,8 @@ process_command_line (int argc, char *argv[])
 	exit (1);
       }
 
+  strcat (cob_cflags, " -fsigned-char");
+
   if (cb_compile_level == CB_LEVEL_EXECUTABLE)
     cb_flag_main = 1;
 
@@ -675,6 +678,7 @@ process_translate (struct filename *fn)
   /* open the storage file */
   cb_storage_file_name = malloc (strlen (fn->translate) + 3);
   sprintf (cb_storage_file_name, "%s.h", fn->translate);
+  strcpy(fn->trstorage, cb_storage_file_name);
   cb_storage_file = fopen (cb_storage_file_name, "w");
   if (!cb_storage_file)
     terminate (cb_storage_file_name);
@@ -825,6 +829,7 @@ main (int argc, char *argv[])
       fn->next = file_list;
       file_list = fn;
 
+      cb_id = 1;
       /* Preprocess */
       if (cb_compile_level >= CB_LEVEL_PREPROCESS && fn->need_preprocess)
 	if (preprocess (fn) != 0)
@@ -875,7 +880,7 @@ main (int argc, char *argv[])
 	      && (status == 1 || cb_compile_level > CB_LEVEL_TRANSLATE))
 	    {
 	      remove (fn->translate);
-	      remove (cb_storage_file_name);
+	      remove (fn->trstorage);
 	    }
 	  if (fn->need_assemble
 	      && (status == 1 || cb_compile_level > CB_LEVEL_ASSEMBLE))

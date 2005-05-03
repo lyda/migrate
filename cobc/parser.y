@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 86
+%expect 88
 
 %defines
 %verbose
@@ -64,6 +64,7 @@ static cb_tree perform_stack = NULL;
 
 static int next_label_id = 0;
 static int current_linage = 0;
+static int check_eval = 0;
 static struct cb_file *linage_file;
 static cb_tree next_label_list = NULL;
 
@@ -113,6 +114,8 @@ static void terminator_error (void);
 %token MANUAL AUTOMATIC EXCLUSIVE ROLLBACK
 %token COMP COMP_1 COMP_2 COMP_3 COMP_4 COMP_5 COMP_X
 %token LINAGE_COUNTER
+%token NOT_EXCEPTION SIZE_ERROR NOT_SIZE_ERROR NOT_OVERFLOW NOT_EOP
+%token INVALID_KEY NOT_INVALID_KEY
 
 %left '+' '-'
 %left '*' '/'
@@ -126,6 +129,23 @@ static void terminator_error (void);
  *****************************************************************************/
 
 start:
+  {
+    perform_stack = NULL;
+    next_label_id = 0;
+    current_linage = 0;
+    check_eval = 0;
+    entry_number = 0;
+    linage_file = NULL;
+    next_label_list = NULL;
+    i_counters[0] = 0;
+    i_counters[1] = 0;
+    i_counters[2] = 0;
+    i_counters[3] = 0;
+    i_counters[4] = 0;
+    i_counters[5] = 0;
+    i_counters[6] = 0;
+    i_counters[7] = 0;
+  }
   program_definition
   {
     if (errorcount > 0)
@@ -737,16 +757,39 @@ data_division:
 file_section:
 | TOK_FILE SECTION '.'		{ current_storage = CB_STORAGE_FILE; }
   file_description_sequence
+| file_type
+  {
+    /* hack for MF compatibility */
+    if ( cb_relaxed_syntax_check ) {
+       cb_warning ("FILE SECTION header missing - assumed");
+    } else {
+       cb_error ("FILE SECTION header missing");
+    }
+    current_storage = CB_STORAGE_FILE;
+  }
+  file_description_sequence_without_type
 ;
 file_description_sequence:
 | file_description_sequence file_description
 ;
 file_description:
+  file_type file_description_entry
+  record_description_list
+  {
+    finalize_file (current_file, CB_FIELD ($3));
+  }
+;
+file_description_sequence_without_type:
   file_description_entry
   record_description_list
   {
     finalize_file (current_file, CB_FIELD ($2));
   }
+| file_description_sequence_without_type file_description
+;
+file_type:
+  FD                           { $$ = cb_int0; }
+| SD                           { $$ = cb_int1; }
 ;
 
 
@@ -755,20 +798,16 @@ file_description:
  */
 
 file_description_entry:
-  file_type file_name
+  file_name
   {
-    if ($2 == cb_error_node)
+    if ($1 == cb_error_node)
       YYERROR;
 
-    current_file = CB_FILE (cb_ref ($2));
-    if ($1 == cb_int1)
+    current_file = CB_FILE (cb_ref ($1));
+    if ($0 == cb_int1)
       current_file->organization = COB_ORG_SORT;
   }
   file_description_clause_sequence '.'
-;
-file_type:
-  FD				{ $$ = cb_int0; }
-| SD				{ $$ = cb_int1; }
 ;
 file_description_clause_sequence:
 | file_description_clause_sequence file_description_clause
@@ -1116,6 +1155,7 @@ occurs_clause:
     current_field->occurs_min = $3 ? cb_get_int ($2) : 1;
     current_field->occurs_max = $3 ? cb_get_int ($3) : cb_get_int ($2);
     current_field->indexes++;
+    i_counters[current_field->indexes] = 1;
     current_field->flag_occurs = 1;
   }
 ;
@@ -1766,13 +1806,13 @@ call_returning:
 ;
 call_on_exception:
   /* empty */			{ $$ = cb_build_funcall_0 ("cob_call_error"); }
-| _on OVERFLOW statement_list	{ $$ = $3; }
-| _on EXCEPTION statement_list	{ $$ = $3; }
+| OVERFLOW statement_list	{ $$ = $2; }
+| EXCEPTION statement_list	{ $$ = $2; }
 ;
 call_not_on_exception:
   /* empty */			{ $$ = NULL; }
-| NOT _on EXCEPTION
-  statement_list		{ $$ = $4; }
+| NOT_EXCEPTION
+  statement_list		{ $$ = $2; }
 ;
 end_call:
   /* empty */			{ terminator_warning (); }
@@ -1968,9 +2008,17 @@ evaluate_subject_list:
   evaluate_subject		{ $$ = cb_list_add ($1, $3); }
 ;
 evaluate_subject:
-  expr				{ $$ = $1; }
-| TOK_TRUE			{ $$ = cb_true; }
-| TOK_FALSE			{ $$ = cb_false; }
+  expr
+  {
+	$$ = $1;
+	if ( CB_REFERENCE_P($1) ) {
+		check_eval = 1;
+	} else {
+		check_eval = 0;
+	}
+  }
+| TOK_TRUE			{ $$ = cb_true; check_eval = 0; }
+| TOK_FALSE			{ $$ = cb_false; check_eval = 0; }
 ;
 evaluate_case_list:
   /* empty */			{ $$ = NULL; }
@@ -1996,6 +2044,11 @@ evaluate_object_list:
 evaluate_object:
   flag_not expr
   {
+    if ( check_eval && CB_REFERENCE_P($2) && CB_FIELD_P(CB_REFERENCE($2)->value) ) {
+	if ( CB_FIELD(CB_REFERENCE($2)->value)->level == 88 ) {
+		cb_error_x ($2, _("88 level invalid here"));
+	}
+    }
     if ($1 == cb_int1
 	&& CB_BINARY_OP_P ($2)
 	&& (CB_BINARY_OP ($2)->op == '&' || CB_BINARY_OP ($2)->op == '|'))
@@ -2610,7 +2663,7 @@ opt_key_list:
 | opt_key_list qualified_word	{ $$ = cb_list_add ($1, $2); }
 ;
 sort_duplicates:
-| _with DUPLICATES _in _order		{ PENDING ("DUPLICATES"); }
+| _with DUPLICATES _in _order		{ /* nothing */ }
 ;
 sort_collating:
   /* empty */				{ $$ = cb_int0; }
@@ -2924,10 +2977,10 @@ on_size_error:
   }
 ;
 opt_on_size_error:
-| _on SIZE ERROR statement_list		{ current_statement->handler1 = $4; }
+| SIZE_ERROR statement_list		{ current_statement->handler1 = $2; }
 ;
 opt_not_on_size_error:
-| NOT _on SIZE ERROR statement_list	{ current_statement->handler2 = $5; }
+| NOT_SIZE_ERROR statement_list		{ current_statement->handler2 = $2; }
 ;
 
 
@@ -2943,10 +2996,10 @@ on_overflow:
   }
 ;
 opt_on_overflow:
-| _on OVERFLOW statement_list		{ current_statement->handler1 = $3; }
+| OVERFLOW statement_list		{ current_statement->handler1 = $2; }
 ;
 opt_not_on_overflow:
-| NOT _on OVERFLOW statement_list	{ current_statement->handler2 = $4; }
+| NOT_OVERFLOW statement_list		{ current_statement->handler2 = $2; }
 ;
 
 
@@ -3004,10 +3057,10 @@ at_eop:
   }
 ;
 at_eop_sentence:
-  _at EOP statement_list		{ $$ = $3; }
+  EOP statement_list		{ $$ = $2; }
 ;
 not_at_eop_sentence:
-  NOT _at EOP statement_list		{ $$ = $4; }
+  NOT_EOP statement_list	{ $$ = $2; }
 ;
 
 
@@ -3038,10 +3091,10 @@ invalid_key:
   }
 ;
 invalid_key_sentence:
-  INVALID _key statement_list		{ $$ = $3; }
+  INVALID_KEY statement_list		{ $$ = $2; }
 ;
 not_invalid_key_sentence:
-  NOT INVALID _key statement_list	{ $$ = $4; }
+  NOT_INVALID_KEY statement_list	{ $$ = $2; }
 ;
 
 
@@ -3521,7 +3574,8 @@ emit_entry (const char *name, cb_tree using_list)
 	  if (f->level != 01 && f->level != 77)
 	    cb_error_x (x, _("'%s' not level 01 or 77"), cb_name (x));
 	}
-      }
+    }
+  entry_number++;
 
   current_program->entry_list =
     cb_list_append (current_program->entry_list,

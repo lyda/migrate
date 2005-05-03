@@ -518,6 +518,19 @@ compute_size (struct cb_field *f)
 	    {
 	      c->offset = c->redefines->offset;
 	      compute_size (c);
+	      /* increase the size if redefinition is larger */
+	      if (c->level != 66 &&
+		c->size * c->occurs_max > c->redefines->size * c->redefines->occurs_max )
+	      {
+		if ( cb_larger_redefines_ok ) {
+		   cb_warning_x (CB_TREE (c), _("size of '%s' larger than size of '%s'"),
+			c->name, c->redefines->name);
+		   size += (c->size * c->occurs_max) - (c->redefines->size * c->redefines->occurs_max);
+		} else {
+		   cb_error_x (CB_TREE (c), _("size of '%s' larger than size of '%s'"),
+			c->name, c->redefines->name);
+		}
+	      }
 	    }
 	  else
 	    {
@@ -630,14 +643,20 @@ compute_size (struct cb_field *f)
     }
 
   /* the size of redefining field should not be larger than
-     the size of redefined field unless the redefined filed
+     the size of redefined field unless the redefined field
      is level 01 and non-external */
-  if (f->redefines
-      && (f->redefines->level != 01 || f->redefines->flag_external)
+  if (f->redefines && f->redefines->flag_external
       && (f->size * f->occurs_max
 	  > f->redefines->size * f->redefines->occurs_max))
-    cb_error_x (CB_TREE (f), _("size of '%s' larger than size of '%s'"),
+  {
+    if ( cb_larger_redefines_ok ) {
+	cb_warning_x (CB_TREE (f), _("size of '%s' larger than size of '%s'"),
 		f->name, f->redefines->name);
+    } else {
+	cb_error_x (CB_TREE (f), _("size of '%s' larger than size of '%s'"),
+		f->name, f->redefines->name);
+    }
+  }
 
   return f->size;
 }

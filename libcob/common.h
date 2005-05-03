@@ -169,6 +169,7 @@ extern unsigned int cob_source_line;
 extern const char *cob_source_statement;
 
 extern int cob_linage_counter;
+extern int cob_call_params;
 
 extern cob_field cob_zero;		/* ZERO */
 extern cob_field cob_space;		/* SPACE */
@@ -176,7 +177,7 @@ extern cob_field cob_high;		/* HIGH-VALUE */
 extern cob_field cob_low;		/* LOW-VALUE */
 extern cob_field cob_quote;		/* QUOTE */
 
-extern const long cob_exp10[];
+extern const int cob_exp10[];
 extern const long long cob_exp10LL[];
 extern const unsigned char cob_a2e[];	/* ASCII -> EBCDIC */
 extern const unsigned char cob_e2a[];	/* EBCDIC -> ASCII */

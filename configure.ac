@@ -100,7 +100,7 @@ AC_CHECK_FUNCS([dbopen],
          [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb1"],
          [AC_MSG_ERROR(libdb1 is required)])
        ;;
-    3) AC_CHECK_HEADERS([db_185.h db3/db_185.h])
+    3) AC_CHECK_HEADERS([db.h db_185.h db3/db_185.h])
        AC_CHECK_LIB([db], [__db_open],
          [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
          [AC_MSG_ERROR(libdb is required)])
@@ -196,6 +196,7 @@ AC_DEFINE_UNQUOTED(COB_PIC_FLAGS, "$COB_PIC_FLAGS")
 AC_DEFINE_UNQUOTED(COB_SHARED_OPT, "$COB_SHARED_OPT")
 if test "x$striplib" != "x"; then
  AC_DEFINE_UNQUOTED(COB_STRIP_CMD, "$striplib")
+ AC_SUBST(COB_STRIP_CMD)
 fi
 AC_SUBST(COB_CC)
 AC_SUBST(COB_CFLAGS)
@@ -209,10 +210,7 @@ AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBS)
 AC_SUBST(COB_EXPORT_DYN)
 AC_SUBST(COB_PIC_FLAGS)
-
-# Used in tests/aclocal
-WORDS_BIGENDIAN="$ac_cv_c_bigendian"
-AC_SUBST(WORDS_BIGENDIAN)
+AC_SUBST(COB_SHARED_OPT)
 
 AC_CONFIG_FILES([cob-config
 		Makefile lib/Makefile libcob/Makefile

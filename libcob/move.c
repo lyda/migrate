@@ -750,6 +750,7 @@ long long
 cob_binary_get_int64 (cob_field *f)
 {
   long long n = 0;
+  int fsiz = 8 - f->size;
 #ifndef WORDS_BIGENDIAN
   if (COB_FIELD_BINARY_SWAP (f))
     {
@@ -757,11 +758,11 @@ cob_binary_get_int64 (cob_field *f)
 	{
 	  memcpy (&n, f->data, f->size);
 	  n = COB_BSWAP_64 (n);
-	  n >>= 8 * (8 - f->size); /* shift with sign */
+	  n >>= 8 * fsiz; /* shift with sign */
 	}
       else
 	{
-	  memcpy (((unsigned char *) &n) + 8 - f->size, f->data, f->size);
+	  memcpy (((unsigned char *) &n) + fsiz, f->data, f->size);
 	  n = COB_BSWAP_64 (n);
 	}
     }
@@ -769,8 +770,8 @@ cob_binary_get_int64 (cob_field *f)
     {
       if (COB_FIELD_HAVE_SIGN (f))
 	{
-	  memcpy (((unsigned char *) &n) + 8 - f->size, f->data, f->size);
-	  n >>= 8 * (8 - f->size); /* shift with sign */
+	  memcpy (((unsigned char *) &n) + fsiz, f->data, f->size);
+	  n >>= 8 * fsiz; /* shift with sign */
 	}
       else
 	{

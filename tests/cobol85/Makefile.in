@@ -75,6 +75,9 @@ COB_EXPORT_DYN = @COB_EXPORT_DYN@
 COB_LIBRARY_PATH = @COB_LIBRARY_PATH@
 COB_LIBS = @COB_LIBS@
 COB_MODULE_EXT = @COB_MODULE_EXT@
+COB_PIC_FLAGS = @COB_PIC_FLAGS@
+COB_SHARED_OPT = @COB_SHARED_OPT@
+COB_STRIP_CMD = @COB_STRIP_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -374,13 +377,13 @@ clean-local:
 $(MODULES): newcob.val EXEC85 EXEC85.conf.in
 	@echo -n "Building module $@..."
 	@sed 's/@MODULE@/$@/' EXEC85.conf.in > EXEC85.conf
-	@./EXEC85
+	@. ../atconfig; . ../atlocal; export PATH; ./EXEC85
 	@perl expand.pl newcob.tmp
 	@rm -f newcob.tmp newcob.log EXEC85.conf
 	@echo "test:"               > $@/Makefile
-	@echo "	perl ../report.pl" >> $@/Makefile
+	@echo "	. ../../atconfig; . ../../atlocal; export PATH; perl ../report.pl" >> $@/Makefile
 	@echo "	diff ../$@.txt report.txt" >> $@/Makefile
-	@echo "	perl ../report.pl -- --fruntime-inlining" >> $@/Makefile
+	@echo "	. ../../atconfig; . ../../atlocal; export PATH; perl ../report.pl -- -O" >> $@/Makefile
 	@echo "	diff ../$@.txt report.txt" >> $@/Makefile
 	@echo "done"
 
@@ -393,7 +396,7 @@ EXEC85: newcob.val
 	      -e 's/XXXXX058.*/"EXEC85.conf" ORGANIZATION LINE SEQUENTIAL./' \
 	      -e 's/ORGANIZATION SEQUENTIAL.*//'			     \
 	    > EXEC85.cob
-	$(COBOL) EXEC85.cob
+	. ../atconfig; . ../atlocal; export PATH; $(COBOL) EXEC85.cob
 	@rm -f EXEC85.cob
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

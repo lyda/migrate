@@ -119,6 +119,30 @@ AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 AT_CLEANUP
 
 
+## Same labels in different sections
+
+AT_SETUP([Same labels in different sections])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       PROCEDURE        DIVISION.
+       S-1 SECTION.
+       L.
+
+       S-2 SECTION.
+       L.
+
+       S-3 SECTION.
+            GO TO L.
+       L.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0])
+
+AT_CLEANUP
+
+
 ## Redefinition
 
 AT_SETUP([Redefinition of 01 items])

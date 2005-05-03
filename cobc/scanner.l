@@ -47,6 +47,7 @@ static int scan_x (char *text);
 static int scan_h (char *text);
 static int scan_numeric (char *text);
 static int scan_picture (char *text);
+static void count_lines (char *text);
 
 %}
 
@@ -132,6 +133,78 @@ H\"[^\"\n]*\" {
   return scan_h (yytext + 2);
 }
 
+"NOT"+[ \t\n]+"ON"+[ \t\n]+"SIZE"+[ \t\n]+"ERROR" |
+"NOT"+[ \t\n]+"SIZE"+[ \t\n]+"ERROR" {	
+	count_lines(yytext);
+	return NOT_SIZE_ERROR;
+	}
+
+"ON"+[ \t\n]+"SIZE"+[ \t\n]+"ERROR" |
+"SIZE"+[ \t\n]+"ERROR" {	
+	count_lines(yytext);
+	return SIZE_ERROR;
+	}
+
+"NOT"+[ \t\n]+"ON"+[ \t\n]+"EXCEPTION" |
+"NOT"+[ \t\n]+"EXCEPTION" {	
+	count_lines(yytext);
+	return NOT_EXCEPTION;
+	}
+
+"ON"+[ \t\n]+"EXCEPTION" |
+"EXCEPTION" {	
+	count_lines(yytext);
+	return EXCEPTION;
+	}
+
+"NOT"+[ \t\n]+"ON"+[ \t\n]+"OVERFLOW" |
+"NOT"+[ \t\n]+"OVERFLOW" {	
+	count_lines(yytext);
+	return NOT_OVERFLOW;
+	}
+
+"ON"+[ \t\n]+"OVERFLOW" |
+"OVERFLOW" {	
+	count_lines(yytext);
+	return OVERFLOW;
+	}
+
+"NOT"+[ \t\n]+"AT"+[ \t\n]+"END-OF-PAGE" |
+"NOT"+[ \t\n]+"AT"+[ \t\n]+"EOP" |
+"NOT"+[ \t\n]+"END-OF-PAGE" |
+"NOT"+[ \t\n]+"EOP" {	
+	count_lines(yytext);
+	return NOT_EOP;
+	}
+
+"AT"+[ \t\n]+"END-OF-PAGE" |
+"AT"+[ \t\n]+"EOP" |
+"END-OF-PAGE" |
+"EOP" {	
+	count_lines(yytext);
+	return EOP;
+	}
+
+"NOT"+[ \t\n]+"INVALID"+[ \t\n]+"KEY" {
+	count_lines(yytext);
+	return NOT_INVALID_KEY;
+	}
+
+"NOT"+[ \t\n]+"INVALID" {
+	count_lines(yytext);
+	return NOT_INVALID_KEY;
+	}
+
+"INVALID"+[ \t\n]+"KEY" {
+	count_lines(yytext);
+	return INVALID_KEY;
+	}
+
+"INVALID" {
+	count_lines(yytext);
+	return INVALID_KEY;
+	}
+
 [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)? {
   int token;
   struct cb_word *word;
@@ -186,7 +259,9 @@ H\"[^\"\n]*\" {
 }
 
 <<EOF>> {
-  yyterminate ();
+	last_token_is_dot = 0;
+	integer_is_label = 0;
+	yyterminate ();
 }
 
 %%
@@ -343,4 +418,16 @@ scan_picture (char *text)
 
   yylval = cb_build_picture (text);
   return PICTURE;
+}
+
+static void
+count_lines (char *text)
+{
+	char *p;
+
+	for ( p = text; *p; p++ ) {
+		if ( *p == '\n' ) {
+			cb_source_line++;
+		}
+	}
 }

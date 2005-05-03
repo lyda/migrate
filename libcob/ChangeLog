@@ -1,3 +1,14 @@
+2005-05-03  Roger While <simrw@sim-basis.de>
+
+	* Mak* :      Due to autoreconf
+	  common.c :  Slight restructure.
+		      cob_exp10 must be int not long.
+	  common.h :  extern definitions. 
+	  fileio.c :  Force SORT to put duplicates in order.
+	  move.c :    Performance.
+	  numeric.c : Remove unused function.
+		      Change long to int (64-bitters where long = 8 bytes).
+
 2005-04-15  Keisuke Nishida  <knishida@open-cobol.org>
 
 	* Makefile.am (libcob_la_CFLAGS): Add -fsigned-char.

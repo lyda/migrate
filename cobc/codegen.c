@@ -30,6 +30,12 @@
 #include "tree.h"
 
 static int param_id = 0;
+static int loop_counter = 0;
+static int progid = 0;
+static int last_line = 0;
+static int needs_exit_prog = 0;
+int i_counters[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+int entry_number = 0;
 
 static void output (const char *fmt, ...)
      __attribute__ ((__format__ (__printf__, 1, 2)));
@@ -90,8 +96,9 @@ output (const char *fmt, ...)
 static void
 output_newline (void)
 {
-  if (output_target)
+  if (output_target) {
     fputs ("\n", output_target);
+  }
 }
 
 static void
@@ -1121,7 +1128,7 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
 	}
 
   /* initialize by defualt */
-  if (p->def)
+  if (p->def) {
     switch (CB_TREE_CATEGORY (x))
       {
       case CB_CATEGORY_NUMERIC:
@@ -1135,6 +1142,7 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
       default:
 	ABORT ();
       }
+  }
 }
 
 static void
@@ -1428,6 +1436,13 @@ output_call (struct cb_call *p)
 
   /* function name */
   output_prefix ();
+  n = 0;
+  for (l = p->args; l; l = CB_CHAIN (l))
+    {
+	n++;
+    }
+  output ("cob_call_params = %d;\n", n);
+  output_prefix ();
   if (!dynamic_link)
     {
       /* static link */
@@ -1443,7 +1458,11 @@ output_call (struct cb_call *p)
       else
 	output_funcall (cb_build_funcall_1 ("cob_call_resolve", p->name));
       output (";\n");
+#if defined (__GNUC__) && (__GNUC__ >= 3)
+      output_line ("if ( __builtin_expect((func == NULL), 0) )");
+#else
       output_line ("if (func == NULL)");
+#endif
       output_indent_level += 2;
       output_stmt (p->stmt1);
       output_indent_level -= 2;
@@ -1544,7 +1563,10 @@ output_goto (struct cb_goto *p)
       output_indent ("  }");
     }
   else if (p->target == NULL)
-    output_line ("goto exit_program;");
+    {
+       needs_exit_prog = 1;
+       output_line ("goto exit_program;");
+    }
   else
     output_goto_1 (p->target);
 }
@@ -1558,18 +1580,14 @@ static void
 output_perform_call (struct cb_label *lb, struct cb_label *le)
 {
   output_line ("/* PERFORM %s THRU %s */", lb->name, le->name);
-#if 0
-  /* This code does not work with GCC 3.3.x on PowerPC because of GCC bug. */
-  output_line ("frame_stack[++frame_index] = (struct frame) {%d, &&%s%d};",
-	       le->id, CB_PREFIX_LABEL, cb_id);
-#else
-  output_line ("++frame_index;");
-  output_line ("frame_stack[frame_index].perform_through = %d;", le->id);
+  output_line ("frame_index++;");
+  output_line ("frame_stack[frame_index].perform_through = %d;",
+	       le->id);
   output_line ("frame_stack[frame_index].return_address = &&%s%d;",
 	       CB_PREFIX_LABEL, cb_id);
-#endif
   output_line ("goto %s%d;", CB_PREFIX_LABEL, lb->id);
-  output_line ("%s%d:", CB_PREFIX_LABEL, cb_id++);
+  output_line ("%s%d:", CB_PREFIX_LABEL, cb_id);
+  cb_id++;
   output_line ("frame_index--;");
 }
 
@@ -1636,7 +1654,6 @@ output_perform_until (struct cb_perform *p, cb_tree l)
 static void
 output_perform (struct cb_perform *p)
 {
-  static int loop_counter = 0;
 
   switch (p->type)
     {
@@ -1689,7 +1706,6 @@ output_stmt (cb_tree x)
     {
     case CB_TAG_STATEMENT:
       {
-	static int last_line = 0;
 	struct cb_statement *p = CB_STATEMENT (x);
 
 	/* output source location as a comment */
@@ -1733,17 +1749,29 @@ output_stmt (cb_tree x)
 	    if (p->handler1)
 	      {
 		if ((code & 0x00ff) == 0)
+#if defined (__GNUC__) && (__GNUC__ >= 3)
+		  output_line ("if ( __builtin_expect(((cob_exception_code & 0xff00) == 0x%04x), 0) )",
+#else
 		  output_line ("if ((cob_exception_code & 0xff00) == 0x%04x)",
+#endif
 			       code);
 		else
+#if defined (__GNUC__) && (__GNUC__ >= 3)
+		  output_line ("if ( __builtin_expect((cob_exception_code == 0x%04x), 0) )", code);
+#else
 		  output_line ("if (cob_exception_code == 0x%04x)", code);
+#endif
 		output_stmt (p->handler1);
 		if (p->handler2 || p->file)
 		  output_line ("else");
 	      }
 	    if (p->file)
 	      {
+#if defined (__GNUC__) && (__GNUC__ >= 3)
+		output_line ("if ( __builtin_expect(cob_exception_code, 0) )");
+#else
 		output_line ("if (cob_exception_code)");
+#endif
 		output_indent ("  {");
 		output_perform_call (CB_FILE (p->file)->handler,
 				     CB_FILE (p->file)->handler);
@@ -2157,8 +2185,8 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   /* program function */
   output ("static int\n%s_ (int entry", prog->program_id);
   for (l = parameter_list; l; l = CB_CHAIN (l))
-    output (", unsigned char *%s%d",
-	    CB_PREFIX_BASE, cb_field (CB_VALUE (l))->id);
+	output (", unsigned char *%s%d",
+		CB_PREFIX_BASE, cb_field (CB_VALUE (l))->id);
   output (")\n");
   output_indent ("{");
 
@@ -2206,8 +2234,12 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
       output_newline ();
     }
 
-  output_line ("int i;");
-  output_line ("int i1, i2, i3, i4, i5, i6, i7;");
+  for ( i = 0; i < 8; i++ ) {
+	if ( i_counters[i] ) {
+		output_line ("int i%d;", i);
+	}
+  }
+
   if ( prog->loop_counter )
 	output_line ("int n[%d];", prog->loop_counter);
   output_line ("cob_field f[4];");
@@ -2245,15 +2277,21 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   output_newline ();
 
   /* initialization */
+#if defined (__GNUC__) && (__GNUC__ >= 3)
+  output_line ("if ( __builtin_expect(!initialized, 0) )");
+#else
   output_line ("if (!initialized)");
+#endif
   output_indent ("  {");
-  output_stmt (cb_build_assign (cb_return_code, cb_int0));
+  /* output_stmt (cb_build_assign (cb_return_code, cb_int0)); */
   if (prog->decimal_index_max) {
 	output_line ("/* initialize decimal numbers */");
+	output_line ("{ int i;");
 	output_line ("for (i = 0; i < %d; i++)", prog->decimal_index_max);
 	output_line ("  cob_decimal_init (&d[i]);");
+	output_line ("}");
+	output_newline ();
   }
-  output_newline ();
   if (!prog->flag_initial) {
     output_initial_values (prog->working_storage);
     output_newline ();
@@ -2267,21 +2305,49 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   output_newline ();
 
   output_line ("/* initialize frame stack */");
-  output_line ("frame_index = 0;");
+  output_line ("frame_index = -1;");
   output_line ("frame_stack[0].perform_through = -1;");
   output_newline ();
 
-  /* entry dispatch */
-  output_line ("switch (entry)");
-  output_line ("  {");
-  for (i = 0, l = prog->entry_list; l; l = CB_CHAIN (l))
-    {
-      output_line ("  case %d:", i++);
-      output_line ("    goto %s%d;",
-		   CB_PREFIX_LABEL, CB_LABEL (CB_PURPOSE (l))->id);
-    }
-  output_line ("  }");
+  output_line ("/* initialize number of call params */");
+  output ("  ");
+  output_integer (cb_call_params);
+  output_line (" = cob_call_params;");
   output_newline ();
+
+  /* entry dispatch */
+  if ( entry_number > 1 ) {
+	output_line ("switch (entry)");
+	output_line ("  {");
+	for (i = 0, l = prog->entry_list; l; l = CB_CHAIN (l))
+	  {
+	    output_line ("  case %d:", i++);
+	    output_line ("    goto %s%d;",
+			 CB_PREFIX_LABEL, CB_LABEL (CB_PURPOSE (l))->id);
+	  }
+	output_line ("  }");
+	output_newline ();
+  } else {
+	l = prog->entry_list;
+	output_line ("goto %s%d;",
+		CB_PREFIX_LABEL, CB_LABEL (CB_PURPOSE (l))->id);
+	output_newline ();
+  }
+
+  /* PROCEDURE DIVISION */
+  output_line ("/* PROCEDURE DIVISION */");
+  for (l = prog->exec_list; l; l = CB_CHAIN (l))
+    output_stmt (CB_VALUE (l));
+  output_newline ();
+
+  if ( needs_exit_prog ) {
+	output_line ("exit_program:");
+  }
+  output_line ("cob_module_leave (&module);");
+  output_prefix ();
+  output ("return ");
+  output_integer (cb_return_code);
+  output (";\n\n");
 
   /* error handlers */
   output_line ("/* error handlers */");
@@ -2304,20 +2370,10 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   output_line ("    break;");
   output_line ("  }");
   output_perform_exit (CB_LABEL (cb_standard_error_handler));
+  output_line ("fprintf(stderr, \"Codegen error\\n\");");
+  output_line ("exit(1);");
   output_newline ();
 
-  /* PROCEDURE DIVISION */
-  output_line ("/* PROCEDURE DIVISION */");
-  for (l = prog->exec_list; l; l = CB_CHAIN (l))
-    output_stmt (CB_VALUE (l));
-  output_newline ();
-
-  output_line ("exit_program:");
-  output_line ("cob_module_leave (&module);");
-  output_prefix ();
-  output ("return ");
-  output_integer (cb_return_code);
-  output (";\n");
   output_indent ("}");
   output_newline ();
 }
@@ -2327,7 +2383,6 @@ output_entry_function (struct cb_program *prog,
 		       cb_tree entry,
 		       cb_tree parameter_list)
 {
-  static int id = 0;
 
   const char *entry_name = CB_LABEL (CB_PURPOSE (entry))->name;
   cb_tree using_list = CB_VALUE (entry);
@@ -2370,7 +2425,7 @@ output_entry_function (struct cb_program *prog,
 		     f->id, CB_PREFIX_BASE, f->id, f->size);
       }
 
-  output ("  return %s_ (%d", prog->program_id, id++);
+  output ("  return %s_ (%d", prog->program_id, progid++);
   for (l1 = parameter_list; l1; l1 = CB_CHAIN (l1))
     {
       for (l2 = using_list; l2; l2 = CB_CHAIN (l2))
@@ -2425,6 +2480,16 @@ codegen (struct cb_program *prog)
   struct literal_list *m;
   struct field_list *k;
 
+  param_id = 0;
+  progid = 0;
+  loop_counter = 0;
+  output_indent_level = 0;
+  last_line = 0;
+  needs_exit_prog = 0;
+  field_cache = NULL;
+  attr_cache = NULL;
+  literal_cache = NULL;
+
   if (cb_flag_main)
     prog->flag_initial = 1;
 
@@ -2467,7 +2532,7 @@ codegen (struct cb_program *prog)
   /* prototype */
   output ("static int %s_ (int", prog->program_id);
   for (l = parameter_list; l; l = CB_CHAIN (l))
-    output (", unsigned char *");
+	output (", unsigned char *");
   output (");\n\n");
 
   /* main function */

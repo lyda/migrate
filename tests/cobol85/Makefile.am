@@ -32,13 +32,13 @@ clean-local:
 $(MODULES): newcob.val EXEC85 EXEC85.conf.in
 	@echo -n "Building module $@..."
 	@sed 's/@MODULE@/$@/' EXEC85.conf.in > EXEC85.conf
-	@./EXEC85
+	@. ../atconfig; . ../atlocal; export PATH; ./EXEC85
 	@perl expand.pl newcob.tmp
 	@rm -f newcob.tmp newcob.log EXEC85.conf
 	@echo "test:"               > $@/Makefile
-	@echo "	perl ../report.pl" >> $@/Makefile
+	@echo "	. ../../atconfig; . ../../atlocal; export PATH; perl ../report.pl" >> $@/Makefile
 	@echo "	diff ../$@.txt report.txt" >> $@/Makefile
-	@echo "	perl ../report.pl -- --fruntime-inlining" >> $@/Makefile
+	@echo "	. ../../atconfig; . ../../atlocal; export PATH; perl ../report.pl -- -O" >> $@/Makefile
 	@echo "	diff ../$@.txt report.txt" >> $@/Makefile
 	@echo "done"
 
@@ -51,5 +51,5 @@ EXEC85: newcob.val
 	      -e 's/XXXXX058.*/"EXEC85.conf" ORGANIZATION LINE SEQUENTIAL./' \
 	      -e 's/ORGANIZATION SEQUENTIAL.*//'			     \
 	    > EXEC85.cob
-	$(COBOL) EXEC85.cob
+	. ../atconfig; . ../atlocal; export PATH; $(COBOL) EXEC85.cob
 	@rm -f EXEC85.cob

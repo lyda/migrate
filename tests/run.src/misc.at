@@ -497,7 +497,7 @@ binary-byteorder: native
 AT_DATA([dump.c], [
 int dump (int *p)
 {
-  printf ("%08x\n", *p);
+  printf ("%8.8d\n", *p);
   return 0;
 }
 ])
@@ -938,6 +938,42 @@ AT_CHECK([./prog], [0],
 (  1-)
 (    )
 (  1+)
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([Larger REDEFINES lengths])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  XMAIN        PIC X(8).
+       01  XMAINRED REDEFINES XMAIN.
+           03  FILLER         PIC X(4).
+           03  XMAIN03.
+               05  XMAIN0501  PIC X(4).
+               05  XMAIN0502 REDEFINES XMAIN0501 PIC X(5).
+       PROCEDURE        DIVISION.
+           DISPLAY LENGTH OF XMAIN.
+           DISPLAY LENGTH OF XMAINRED.
+           DISPLAY LENGTH OF XMAIN03.
+           DISPLAY LENGTH OF XMAIN0501.
+           DISPLAY LENGTH OF XMAIN0502.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob], [0], ,
+[prog.cob:11: warning: size of 'XMAIN0502' larger than size of 'XMAIN0501'
+])
+AT_CHECK([./prog], [0], 
+[8
+9
+5
+4
+5
 ])
 
 AT_CLEANUP

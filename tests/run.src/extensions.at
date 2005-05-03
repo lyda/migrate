@@ -19,6 +19,48 @@
 
 ### Non-standard extensions
 
+
+AT_SETUP([COMP-5])
+
+AT_DATA([dump.c], [
+int dump (unsigned char *data, int *p)
+{
+  int i;
+  if ( *p == 1 ) {
+     for (i = 0; i < 4; i++)
+       printf ("%02x", data[[i]]);
+  } else {
+       printf ("%8.8d", *((int *)data));
+  }
+  puts ("");
+  return 0;
+}
+])
+
+AT_CHECK([${CC} -shared -o dump.${SHREXT} dump.c])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X-1           PIC 9(9) VALUE 4660 COMP.
+       01 X-2           PIC 9(9) VALUE 4660 COMP-5.
+       PROCEDURE        DIVISION.
+           CALL "dump" USING X-1 BY CONTENT 1.
+           CALL "dump" USING X-2 BY CONTENT 2.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[00001234
+00004660
+])
+
+AT_CLEANUP
+
+
 ## H literal
 
 AT_SETUP([Hexadecimal numeric literal])
@@ -509,8 +551,58 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE} -conf=test.conf -o prog prog.cob])
-AT_CHECK([DIR="/tmp" ./prog], [0])
-AT_CHECK([test -f "/tmp/FILENAME" && rm -f "/tmp/FILENAME"], [0])
+AT_CHECK([DIR="." ./prog], [0])
+AT_CHECK([test -f "./FILENAME" && rm -f "./FILENAME"], [0])
+
+AT_CLEANUP
+
+
+# Number of call parameters
+
+AT_SETUP([NUMBER-OF-CALL-PARAMTERS])
+
+AT_DATA([callee.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      callee.
+       DATA             DIVISION.
+       LINKAGE          SECTION.
+       01 W             PIC X.
+       01 X             PIC X.
+       01 Y             PIC X.
+       01 Z             PIC X.
+       PROCEDURE        DIVISION
+           USING W X Y Z.
+           DISPLAY NUMBER-OF-CALL-PARAMETERS.
+           EXIT PROGRAM.
+])
+
+AT_DATA([caller.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      caller.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 W             PIC X.
+       01 X             PIC X.
+       01 Y             PIC X.
+       01 Z             PIC X.
+       PROCEDURE        DIVISION.
+           CALL "callee".
+           CALL "callee" USING W.
+           CALL "callee" USING W X.
+           CALL "callee" USING W X Y.
+           CALL "callee" USING W X Y Z.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} caller.cob])
+AT_CHECK([${COMPILE} -m callee.cob])
+AT_CHECK([./caller], [0],
+[+000000000
++000000001
++000000002
++000000003
++000000004
+])
 
 AT_CLEANUP
 

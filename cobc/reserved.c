@@ -127,7 +127,6 @@ static struct reserved reserved_words[] = {
   {"CLOSE",		CLOSE, 0},			/* 2002 */
   {"CODE",		-1, 0},				/* 2002 */
   {"CODE-SET",		CODE_SET, 0},			/* 2002 */
-  {"CODITION",		-1, 0},				/* 2002 */
   {"COL",		COLUMN, 0},			/* 2002 */
   {"COLLATING",		COLLATING, 0},			/* 2002 */
   {"COLS",		COLUMN, 0},			/* 2002 */
@@ -152,6 +151,7 @@ static struct reserved reserved_words[] = {
   {"COMPUTATIONAL-5",	COMP_5, 0},			/* extension */
   {"COMPUTATIONAL-X",	COMP_X, 0},			/* extension */
   {"COMPUTE",		COMPUTE, 0},			/* 2002 */
+  {"CONDITION",		-1, 0},				/* 2002 */
   {"CONFIGURATION",	CONFIGURATION, 0},		/* 2002 */
   {"CONSTANT",		-1, 0},				/* 2002 */
   {"CONTAINS",		CONTAINS, 0},			/* 2002 */

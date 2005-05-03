@@ -154,6 +154,11 @@ cb_build_registers (void)
 {
   /* RETURN-CODE */
   cb_return_code = cb_build_index (cb_build_reference ("RETURN-CODE"));
+  CB_FIELD (cb_ref (cb_return_code))->values = cb_list (cb_zero);
+
+  /* NUMBER-OF-CALL-PARAMETERS */
+  cb_call_params = cb_build_index (cb_build_reference ("NUMBER-OF-CALL-PARAMETERS"));
+  CB_FIELD (cb_ref (cb_call_params))->values = cb_list (cb_zero);
 
   /* TALLY */
   {

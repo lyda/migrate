@@ -397,6 +397,7 @@ cb_tree cb_int3;
 cb_tree cb_i[8];
 cb_tree cb_error_node;
 cb_tree cb_return_code;
+cb_tree cb_call_params;
 cb_tree cb_standard_error_handler;
 
 static cb_tree
@@ -551,9 +552,9 @@ build_literal (enum cb_category category, const unsigned char *data, size_t size
 {
   struct cb_literal *p =
     make_tree (CB_TAG_LITERAL, category, sizeof (struct cb_literal));
-  p->data = malloc (size + 1);
+  p->data = malloc ((size_t)(size + 1));
   p->size = size;
-  memcpy (p->data, data, size);
+  memcpy (p->data, data, (size_t)size);
   p->data[size] = 0;
   return p;
 }
@@ -1150,6 +1151,7 @@ cb_tree
 cb_ref (cb_tree x)
 {
   struct cb_reference *r = CB_REFERENCE (x);
+  int ambiguous = 0;
   cb_tree candidate = NULL;
   cb_tree items;
 
@@ -1222,9 +1224,10 @@ cb_ref (cb_tree x)
 	    }
 	  else
 	    {
-	      /* there are several candidates */
-	      ambiguous_error (x);
-	      goto error;
+	      /* there are several candidates and possibly ambiguous */
+	      ambiguous = 1;
+	      /* continue search because the reference might not ambiguous
+		and exit loop by "goto end" later on */
 	    }
 	}
     }
@@ -1233,6 +1236,13 @@ cb_ref (cb_tree x)
   if (candidate == NULL)
     {
       undefined_error (x);
+      goto error;
+    }
+
+  /* the reference is ambiguous */
+  if (ambiguous)
+    {
+      ambiguous_error (x);
       goto error;
     }
 

@@ -234,6 +234,7 @@ extern cb_tree cb_int3;
 extern cb_tree cb_i[8];
 extern cb_tree cb_error_node;
 extern cb_tree cb_return_code;
+extern cb_tree cb_call_params;
 extern cb_tree cb_standard_error_handler;
 
 struct cb_const {
@@ -342,6 +343,7 @@ struct cb_literal {
   char all;
   char sign;			/* unsigned: 0 negative: -1 positive: 1 */
   char scale;
+  char spare;			/* spare */
 };
 
 #define CB_LITERAL(x)	(CB_TREE_CAST (CB_TAG_LITERAL, struct cb_literal, x))
@@ -382,6 +384,7 @@ struct cb_picture {
   char digits;			/* the number of digit places */
   char scale;			/* 1/10^scale */
   char have_sign;		/* have 'S' */
+  char spare;			/* spare */
 };
 
 #define CB_PICTURE(x)	(CB_TREE_CAST (CB_TAG_PICTURE, struct cb_picture, x))
@@ -433,19 +436,19 @@ struct cb_field {
   cb_tree screen_to;
   long screen_flag;		/* flags used in SCREEN SECTION */
   /* flags */
-  int flag_external      : 1;	/* EXTERNAL */
-  int flag_blank_zero    : 1;	/* BLANK WHEN ZERO */
-  int flag_justified     : 1;	/* JUSTIFIED RIGHT */
-  int flag_sign_leading  : 1;	/* SIGN IS LEADING */
-  int flag_sign_separate : 1;	/* SIGN IS SEPARATE */
-  int flag_synchronized  : 1;	/* SYNCHRONIZED */
-  int flag_occurs        : 1;	/* OCCURS */
-  int flag_invalid       : 1;	/* is broken */
-  int flag_binary_swap   : 1;	/* binary byteswap */
-  int flag_local         : 1;	/* has local scope */
-  int flag_base          : 1;
-  int flag_field         : 1;
-  int flag_spare	 : 20;
+  unsigned int flag_external      : 1;	/* EXTERNAL */
+  unsigned int flag_blank_zero    : 1;	/* BLANK WHEN ZERO */
+  unsigned int flag_justified     : 1;	/* JUSTIFIED RIGHT */
+  unsigned int flag_sign_leading  : 1;	/* SIGN IS LEADING */
+  unsigned int flag_sign_separate : 1;	/* SIGN IS SEPARATE */
+  unsigned int flag_synchronized  : 1;	/* SYNCHRONIZED */
+  unsigned int flag_occurs        : 1;	/* OCCURS */
+  unsigned int flag_invalid       : 1;	/* is broken */
+  unsigned int flag_binary_swap   : 1;	/* binary byteswap */
+  unsigned int flag_local         : 1;	/* has local scope */
+  unsigned int flag_base          : 1;
+  unsigned int flag_field         : 1;
+  unsigned int flag_spare	 : 20;
 };
 
 #define CB_FIELD(x)		(CB_TREE_CAST (CB_TAG_FIELD, struct cb_field, x))
@@ -874,6 +877,7 @@ struct cb_program {
   unsigned char decimal_point;		/* '.' or ',' */
   unsigned char currency_symbol;	/* '$' or user-specified */
   unsigned char numeric_separator;	/* ',' or '.' */
+  unsigned char spare;			/* spare */
   cb_tree entry_list;
   cb_tree file_list;
   cb_tree exec_list;

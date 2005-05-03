@@ -40,6 +40,10 @@
 
 static int within_comment = 0;
 static int newline_count = 0;
+static int quotation_mark = 0;
+static int consecutive_quotation = 0;
+static int last_line_1 = -1;
+static int last_line_2 = -1;
 
 static struct cb_replace_list *current_replace_list = NULL;
 
@@ -173,8 +177,18 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
   yy_delete_buffer (YY_CURRENT_BUFFER);
 
   /* Terminate at the end of all input */
-  if (p->next == NULL)
-    yyterminate ();
+  if (p->next == NULL) {
+	within_comment = 0;
+	newline_count = 0;
+	current_replace_list = NULL;
+	text_queue = NULL;
+	copy_stack = NULL;
+	quotation_mark = 0;
+	consecutive_quotation = 0;
+	last_line_1 = -1;
+	last_line_2 = -1;
+	yyterminate ();
+  }
 
   /* Close the current file */
   fclose (ppin);
@@ -296,8 +310,6 @@ ppcopy (char *name, const char *lib, struct cb_replace_list *replace_list)
 static int
 ppinput (char *buff, int max_size)
 {
-  static int quotation_mark;
-  static int consecutive_quotation;
 
   int i, n;
   int continuation = 0;
@@ -390,10 +402,9 @@ ppinput (char *buff, int max_size)
     default:
       {
 	/* invalid indicator */
-	static int last_line = -1;
-	if (last_line < cb_source_line - 1)
+	if (last_line_1 < cb_source_line - 1)
 	  cb_warning (_("invalid indicator '%c' at column 7"), buff[6]);
-	last_line = cb_source_line;
+	last_line_1 = cb_source_line;
 	bp = buff + 6;
 	break;
       }
@@ -411,10 +422,9 @@ ppinput (char *buff, int max_size)
   if (n > cb_text_column + 1)
     {
       int i;
-      static int last_line = -1;
 
       /* show warning if it is not whitespaces */
-      if (cb_warn_column_overflow && last_line < cb_source_line - 1)
+      if (cb_warn_column_overflow && last_line_2 < cb_source_line - 1)
 	for (i = cb_text_column; i < n; i++)
 	  if (buff[i] != ' ' && buff[i] != '\n')
 	    {
@@ -424,7 +434,7 @@ ppinput (char *buff, int max_size)
 
       /* remove it */
       strcpy (buff + cb_text_column, "\n");
-      last_line = cb_source_line;
+      last_line_2 = cb_source_line;
       n = cb_text_column + 1;
     }
 
