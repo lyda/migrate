@@ -1,3 +1,8 @@
+2005-05-12  Roger While <simrw@sim-basis.de>
+
+	* Adjust tests for larger redefines
+	  (not allowed for cobol2002)
+
 2005-05-03  Roger While <simrw@sim-basis.de>
 
 	* tests/cobol85/* :    Allow to run without a "make install".

@@ -965,7 +965,7 @@ AT_DATA([prog.cob], [
            STOP RUN.
 ])
 
-AT_CHECK([${COMPILE} -o prog prog.cob], [0], ,
+AT_CHECK([${COMPILE} -std=mf -o prog prog.cob], [0], ,
 [prog.cob:11: warning: size of 'XMAIN0502' larger than size of 'XMAIN0501'
 ])
 AT_CHECK([./prog], [0], 

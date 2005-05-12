@@ -3606,16 +3606,16 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:8: warning: size of 'A' larger than size of 'X'
-prog.cob:11: warning: size of 'A' larger than size of 'X'
-prog.cob:15: warning: size of 'EXT-X-REDEF' larger than size of 'EXT-X'
+echo >>$at_stderr; echo "prog.cob:8: size of 'A' larger than size of 'X'
+prog.cob:11: size of 'A' larger than size of 'X'
+prog.cob:15: size of 'EXT-X-REDEF' larger than size of 'EXT-X'
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
-   0) ;;
-   *) echo "redefines.at:326: exit code was $at_status, expected 0"
+   1) ;;
+   *) echo "redefines.at:326: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then

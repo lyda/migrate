@@ -6504,9 +6504,9 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:970: \${COMPILE} -o prog prog.cob"
+echo "misc.at:970: \${COMPILE} -std=mf -o prog prog.cob"
 echo misc.at:970 >$at_check_line_file
-( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${COMPILE} -std=mf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr

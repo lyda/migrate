@@ -1,3 +1,13 @@
+2005-05-12  Roger While <simrw@sim-basis.de>
+
+	* Revert cobol2002.conf
+
+2005-05-03  Roger While <simrw@sim-basis.de>
+
+	* default.conf, cobol2002.conf, mf.conf
+	  New variable - larger-redefines-ok
+	  New variable - relaxed-syntax-check
+
 2005-03-07  Roger While <simrw@sim-basis.de>
 
 	* default.conf, mvs.conf :
