@@ -422,7 +422,7 @@ do
 	;;
 
     --version | -V )
-	echo "$as_me (OpenCOBOL 0.32)"
+	echo "$as_me (OpenCOBOL 0.33)"
 	exit 0
 	;;
 
@@ -578,7 +578,7 @@ fi
 # List of tests.
 if $at_list_p; then
   cat <<_ATEOF
-OpenCOBOL 0.32 test suite: Run Tests test groups:
+OpenCOBOL 0.33 test suite: Run Tests test groups:
 
  NUM: FILENAME:LINE      TEST-GROUP-NAME
       KEYWORDS
@@ -660,13 +660,13 @@ exec 5>$at_suite_log
 # Banners and logs.
 cat <<\_ASBOX
 ## ------------------------------------- ##
-## OpenCOBOL 0.32 test suite: Run Tests. ##
+## OpenCOBOL 0.33 test suite: Run Tests. ##
 ## ------------------------------------- ##
 _ASBOX
 {
   cat <<\_ASBOX
 ## ------------------------------------- ##
-## OpenCOBOL 0.32 test suite: Run Tests. ##
+## OpenCOBOL 0.33 test suite: Run Tests. ##
 ## ------------------------------------- ##
 _ASBOX
   echo
@@ -9691,7 +9691,7 @@ _ASBOX
   echo "Please send \`$as_me.log' and all information you think might help:"
   echo
   echo "   To: <open-cobol-list@lists.sourceforge.net>"
-  echo "   Subject: [OpenCOBOL 0.32] $as_me:$at_fail_list${at_fail_list:+ failed${at_xpass_list:+,}}$at_xpass_list${at_xpass_list:+ passed unexpectedly}"
+  echo "   Subject: [OpenCOBOL 0.33] $as_me:$at_fail_list${at_fail_list:+ failed${at_xpass_list:+,}}$at_xpass_list${at_xpass_list:+ passed unexpectedly}"
   echo
   if test $at_debug_p = false; then
     echo

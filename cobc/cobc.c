@@ -801,6 +801,8 @@ int
 main (int argc, char *argv[])
 {
   int i;
+  int iparams = 0;
+  enum cb_compile_level local_level = 0;
   int status = 1;
 
 #if ENABLE_NLS
@@ -830,6 +832,13 @@ main (int argc, char *argv[])
       file_list = fn;
 
       cb_id = 1;
+      iparams++;
+      if ( iparams > 1 && cb_compile_level == CB_LEVEL_EXECUTABLE &&
+	   !cb_flag_syntax_only ) {
+		local_level = cb_compile_level;
+		cb_flag_main = 0;
+		cb_compile_level = CB_LEVEL_ASSEMBLE;
+      }
       /* Preprocess */
       if (cb_compile_level >= CB_LEVEL_PREPROCESS && fn->need_preprocess)
 	if (preprocess (fn) != 0)
@@ -859,6 +868,10 @@ main (int argc, char *argv[])
     }
 
   /* Link */
+  if ( !cb_flag_syntax_only && local_level == CB_LEVEL_EXECUTABLE ) {
+	cb_compile_level = local_level;
+	cb_flag_main = 1;
+  }
   if (!cb_flag_syntax_only && cb_compile_level == CB_LEVEL_EXECUTABLE)
     if (process_link (file_list) > 0)
       goto cleanup;

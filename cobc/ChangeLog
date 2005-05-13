@@ -1,8 +1,12 @@
+2005-05-13  Roger While <simrw@sim-basis.de>
+
+	* cobc.c : Allow multiple input files when producing executable.
+
 2005-05-03  Roger While <simrw@sim-basis.de>
 
 	* tree.h :     bit fields are unsigned. Round to boundaries.
 	  typeck.c :   Internal register NUMBER-OF-CALL-PARAMETERSa.
-	  tree.c :     Fix ambiguous paragraph erros.
+	  tree.c :     Fix ambiguous paragraph errors.
 	  scanner.l :  Move some syntax from the parser to here in the lexxer.
 	  pplex.l :    Initialize variables.
 	  parser.y :   Move some syntax to the lexxer.

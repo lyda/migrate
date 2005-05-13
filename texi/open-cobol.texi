@@ -304,7 +304,14 @@ COBOL programs.
 The easiest way of combining multiple files is to compile them into a
 single executable.
 
-Compile each file with the option @code{-c}, and link them at the end.
+One way is to specify all files on the command line:
+
+@example
+$ cobc -o prog main.cob subr1.cob subr2.cob
+@end example
+
+Another way is to compile each file with the option @code{-c},
+and link them at the end.
 The top-level program must be compiled with the option @code{-fmain}:
 
 @example
@@ -314,8 +321,14 @@ $ cobc -c -fmain main.cob
 $ cobc -o prog main.o subr1.o subr2.o
 @end example
 
-You can link C routines as well:
+You can link C routines as well using either method:
 
+Method 1:
+@example
+$ cobc -o prog main.cob subrs.c
+@end example
+
+Method 2:
 @example
 $ cc -c subrs.c
 $ cobc -c -fmain main.cob
@@ -354,6 +367,34 @@ is a literal (like @code{CALL "subr".}).  With a data name (like
 @node Dynamic Linking, Building Library, Static Linking, Multiple Sources
 @subsection Dynamic Linking
 
+There are two methods to achieve this.
+Method 1 (Using driver program).
+Compile all programs with the option @code{-m}:
+@example
+$ cobc -m main.cob subr.cob
+@end example
+This creates shared object files @file{main.so subr.so}
+@footnote{The extension varies depending on your host.}.
+
+Before running the main program, install the module files in your
+library directory:
+@example
+$ cp subr.so /your/cobol/lib
+@end example
+Set the environment variable @code{COB_LIBRARY_PATH}
+to your library directory, and run the main program:
+@example
+$ export COB_LIBRARY_PATH=/your/cobol/lib
+@end example
+Note: You may set the variable to directly point to the
+directory where you compiled the sources.
+
+Now execute your program:
+@example
+$ cobcrun main
+@end example
+
+Method 2.
 The main program and subprograms can be compiled separately.
 
 The main program is compiled as usual:
