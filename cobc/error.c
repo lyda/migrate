@@ -61,7 +61,7 @@ cb_warning (const char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  print_error (0, 0, "warning: ", fmt, ap);
+  print_error (0, 0, "Warning: ", fmt, ap);
   va_end (ap);
 
   warningcount++;
@@ -72,7 +72,7 @@ cb_error (const char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  print_error (0, 0, "", fmt, ap);
+  print_error (0, 0, "Error: ", fmt, ap);
   va_end (ap);
 
   errorcount++;
@@ -83,7 +83,7 @@ cb_warning_x (cb_tree x, const char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  print_error (x->source_file, x->source_line, "warning: ", fmt, ap);
+  print_error (x->source_file, x->source_line, "Warning: ", fmt, ap);
   va_end (ap);
 
   warningcount++;
@@ -94,7 +94,7 @@ cb_error_x (cb_tree x, const char *fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  print_error (x->source_file, x->source_line, "", fmt, ap);
+  print_error (x->source_file, x->source_line, "Error: ", fmt, ap);
   va_end (ap);
 
   errorcount++;

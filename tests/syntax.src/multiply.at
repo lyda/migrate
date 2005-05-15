@@ -44,13 +44,13 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:10: '456' is not numeric name
-prog.cob:11: '"a"' is not numeric value
-prog.cob:11: '"b"' is not numeric name
-prog.cob:12: 'X-X' is not numeric value
-prog.cob:13: 'X-09' is not numeric name
-prog.cob:14: 'X-09' is not numeric value
-prog.cob:14: 'X-X' is not numeric name
+[prog.cob:10: Error: '456' is not numeric name
+prog.cob:11: Error: '"a"' is not numeric value
+prog.cob:11: Error: '"b"' is not numeric name
+prog.cob:12: Error: 'X-X' is not numeric value
+prog.cob:13: Error: 'X-09' is not numeric name
+prog.cob:14: Error: 'X-09' is not numeric value
+prog.cob:14: Error: 'X-X' is not numeric name
 ])
 
 AT_CLEANUP
@@ -77,15 +77,15 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:10: '789' is not numeric or numeric-edited name
-prog.cob:11: '"a"' is not numeric value
-prog.cob:11: '"b"' is not numeric value
-prog.cob:11: '"c"' is not numeric or numeric-edited name
-prog.cob:12: 'X-X' is not numeric value
-prog.cob:13: 'X-09' is not numeric value
-prog.cob:13: 'X-X' is not numeric or numeric-edited name
-prog.cob:14: 'X-09' is not numeric value
-prog.cob:14: 'X-X' is not numeric value
+[prog.cob:10: Error: '789' is not numeric or numeric-edited name
+prog.cob:11: Error: '"a"' is not numeric value
+prog.cob:11: Error: '"b"' is not numeric value
+prog.cob:11: Error: '"c"' is not numeric or numeric-edited name
+prog.cob:12: Error: 'X-X' is not numeric value
+prog.cob:13: Error: 'X-09' is not numeric value
+prog.cob:13: Error: 'X-X' is not numeric or numeric-edited name
+prog.cob:14: Error: 'X-09' is not numeric value
+prog.cob:14: Error: 'X-X' is not numeric value
 ])
 
 AT_CLEANUP
@@ -109,9 +109,9 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:9: '"a"' is not numeric value
-prog.cob:11: '"a"' is not numeric value
-prog.cob:11: '"b"' is not numeric value
+[prog.cob:9: Error: '"a"' is not numeric value
+prog.cob:11: Error: '"a"' is not numeric value
+prog.cob:11: Error: '"b"' is not numeric value
 ])
 
 AT_CLEANUP

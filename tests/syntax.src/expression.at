@@ -33,8 +33,8 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:6: warning: suggest parentheses around AND within OR
-prog.cob:9: warning: suggest parentheses around AND within OR
+[prog.cob:6: Warning: suggest parentheses around AND within OR
+prog.cob:9: Warning: suggest parentheses around AND within OR
 ])
 
 AT_CLEANUP

@@ -874,7 +874,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:6: copy.inc: No such file or directory
+echo >>$at_stderr; echo "prog.cob:6: Error: copy.inc: No such file or directory
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1292,7 +1292,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:5: 'X' undefined
+echo >>$at_stderr; echo "prog.cob:5: Error: 'X' undefined
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1348,7 +1348,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:8: 'X' in 'G' undefined
+echo >>$at_stderr; echo "prog.cob:8: Error: 'X' in 'G' undefined
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1406,7 +1406,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:10: 'Y' in 'G' undefined
+echo >>$at_stderr; echo "prog.cob:10: Error: 'Y' in 'G' undefined
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1462,7 +1462,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:8: 'X' in 'X' undefined
+echo >>$at_stderr; echo "prog.cob:8: Error: 'X' in 'X' undefined
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1515,7 +1515,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:6: PICTURE clause required for 'X'
+echo >>$at_stderr; echo "prog.cob:6: Error: PICTURE clause required for 'X'
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1628,8 +1628,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:7: warning: redefinition of 'X'
-prog.cob:6: warning: 'X' previously defined here
+echo >>$at_stderr; echo "prog.cob:7: Warning: redefinition of 'X'
+prog.cob:6: Warning: 'X' previously defined here
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1683,8 +1683,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:7: warning: redefinition of 'X'
-prog.cob:6: warning: 'X' previously defined here
+echo >>$at_stderr; echo "prog.cob:7: Warning: redefinition of 'X'
+prog.cob:6: Warning: 'X' previously defined here
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1739,8 +1739,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:8: warning: redefinition of 'X'
-prog.cob:7: warning: 'X' previously defined here
+echo >>$at_stderr; echo "prog.cob:8: Warning: redefinition of 'X'
+prog.cob:7: Warning: 'X' previously defined here
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1794,8 +1794,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:7: warning: redefinition of 'X'
-prog.cob:6: warning: 'X' previously defined here
+echo >>$at_stderr; echo "prog.cob:7: Warning: redefinition of 'X'
+prog.cob:6: Warning: 'X' previously defined here
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1849,8 +1849,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:7: warning: redefinition of 'X'
-prog.cob:6: warning: 'X' previously defined here
+echo >>$at_stderr; echo "prog.cob:7: Warning: redefinition of 'X'
+prog.cob:6: Warning: 'X' previously defined here
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1905,8 +1905,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:8: warning: redefinition of 'A'
-prog.cob:7: warning: 'A' previously defined here
+echo >>$at_stderr; echo "prog.cob:8: Warning: redefinition of 'A'
+prog.cob:7: Warning: 'A' previously defined here
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1965,9 +1965,9 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:11: 'X' ambiguous; need qualification
-prog.cob:7: 'X' in 'G1' defined here
-prog.cob:9: 'X' in 'G2' defined here
+echo >>$at_stderr; echo "prog.cob:11: Error: 'X' ambiguous; need qualification
+prog.cob:7: Error: 'X' in 'G1' defined here
+prog.cob:9: Error: 'X' in 'G2' defined here
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -2025,9 +2025,9 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:10: 'X' ambiguous; need qualification
-prog.cob:7: 'X' in 'G' defined here
-prog.cob:8: 'X' in 'X' in 'G' defined here
+echo >>$at_stderr; echo "prog.cob:10: Error: 'X' ambiguous; need qualification
+prog.cob:7: Error: 'X' in 'G' defined here
+prog.cob:8: Error: 'X' in 'X' in 'G' defined here
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -2088,9 +2088,9 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:13: 'Y' in 'X' ambiguous; need qualification
-prog.cob:8: 'Y' in 'X' in 'G1' defined here
-prog.cob:11: 'Y' in 'X' in 'G2' defined here
+echo >>$at_stderr; echo "prog.cob:13: Error: 'Y' in 'X' ambiguous; need qualification
+prog.cob:8: Error: 'Y' in 'X' in 'G1' defined here
+prog.cob:11: Error: 'Y' in 'X' in 'G2' defined here
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -2203,7 +2203,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:5: 'END-OF-PROGRAM' undefined
+echo >>$at_stderr; echo "prog.cob:5: Error: 'END-OF-PROGRAM' undefined
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -2258,8 +2258,8 @@ grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
 echo >>$at_stderr; echo "prog.cob: In section 'L':
-prog.cob:6: redefinition of 'L'
-prog.cob:5: 'L' previously defined here
+prog.cob:6: Error: redefinition of 'L'
+prog.cob:5: Error: 'L' previously defined here
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -2314,8 +2314,8 @@ grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
 echo >>$at_stderr; echo "prog.cob: In section 'L':
-prog.cob:6: redefinition of 'L'
-prog.cob:5: 'L' previously defined here
+prog.cob:6: Error: redefinition of 'L'
+prog.cob:5: Error: 'L' previously defined here
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -2370,8 +2370,8 @@ grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
 echo >>$at_stderr; echo "prog.cob: In paragraph 'L':
-prog.cob:6: redefinition of 'L'
-prog.cob:5: 'L' previously defined here
+prog.cob:6: Error: redefinition of 'L'
+prog.cob:5: Error: 'L' previously defined here
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -2430,9 +2430,9 @@ grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
 echo >>$at_stderr; echo "prog.cob: In section 'S-3':
-prog.cob:10: 'L' ambiguous; need qualification
-prog.cob:6: 'L' in 'S-1' defined here
-prog.cob:8: 'L' in 'S-2' defined here
+prog.cob:10: Error: 'L' ambiguous; need qualification
+prog.cob:6: Error: 'L' in 'S-1' defined here
+prog.cob:8: Error: 'L' in 'S-2' defined here
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -2490,8 +2490,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:6: warning: suggest parentheses around AND within OR
-prog.cob:9: warning: suggest parentheses around AND within OR
+echo >>$at_stderr; echo "prog.cob:6: Warning: suggest parentheses around AND within OR
+prog.cob:9: Warning: suggest parentheses around AND within OR
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -2549,8 +2549,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:9: 'G' cannot be subscripted
-prog.cob:10: 'X' cannot be subscripted
+echo >>$at_stderr; echo "prog.cob:9: Error: 'G' cannot be subscripted
+prog.cob:10: Error: 'X' cannot be subscripted
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -2613,10 +2613,10 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:10: 'X' requires 1 subscript
-prog.cob:12: 'X' requires 1 subscript
-prog.cob:13: 'Y' requires 2 subscripts
-prog.cob:15: 'Y' requires 2 subscripts
+echo >>$at_stderr; echo "prog.cob:10: Error: 'X' requires 1 subscript
+prog.cob:12: Error: 'X' requires 1 subscript
+prog.cob:13: Error: 'Y' requires 2 subscripts
+prog.cob:15: Error: 'Y' requires 2 subscripts
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -2674,11 +2674,11 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:11: level 88 item 'X-88' cannot have other than VALUE clause
-prog.cob:6: level 01 item 'X-01' cannot have OCCURS clause
-prog.cob:7: level 01 item 'G' cannot have OCCURS clause
-prog.cob:9: level 66 item 'X-66' cannot have other than RENAMES clause
-prog.cob:10: level 77 item 'X-77' cannot have OCCURS clause
+echo >>$at_stderr; echo "prog.cob:11: Error: level 88 item 'X-88' cannot have other than VALUE clause
+prog.cob:6: Error: level 01 item 'X-01' cannot have OCCURS clause
+prog.cob:7: Error: level 01 item 'G' cannot have OCCURS clause
+prog.cob:9: Error: level 66 item 'X-66' cannot have other than RENAMES clause
+prog.cob:10: Error: level 77 item 'X-77' cannot have OCCURS clause
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -2734,7 +2734,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:7: 'G-2' cannot have the OCCURS clause due to 'X'
+echo >>$at_stderr; echo "prog.cob:7: Error: 'G-2' cannot have the OCCURS clause due to 'X'
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -2858,9 +2858,9 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:7: 'X' cannot have OCCURS DEPENDING
-prog.cob:10: 'G-3' cannot have OCCURS DEPENDING
-prog.cob:15: 'X' cannot have OCCURS DEPENDING
+echo >>$at_stderr; echo "prog.cob:7: Error: 'X' cannot have OCCURS DEPENDING
+prog.cob:10: Error: 'G-3' cannot have OCCURS DEPENDING
+prog.cob:15: Error: 'X' cannot have OCCURS DEPENDING
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -2915,7 +2915,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:7: REDEFINES clause must follow entry-name
+echo >>$at_stderr; echo "prog.cob:7: Error: REDEFINES clause must follow entry-name
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -2973,7 +2973,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:8: level number of REDEFINES entries must be identical
+echo >>$at_stderr; echo "prog.cob:8: Error: level number of REDEFINES entries must be identical
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -3032,7 +3032,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:9: 'X' undefined in 'G1'
+echo >>$at_stderr; echo "prog.cob:9: Error: 'X' undefined in 'G1'
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -3091,7 +3091,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:9: level number of REDEFINES entry cannot be 66 or 88
+echo >>$at_stderr; echo "prog.cob:9: Error: level number of REDEFINES entry cannot be 66 or 88
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -3149,7 +3149,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:8: level number of REDEFINES entry cannot be 66 or 88
+echo >>$at_stderr; echo "prog.cob:8: Error: level number of REDEFINES entry cannot be 66 or 88
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -3209,7 +3209,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:10: 'X' undefined in 'G3'
+echo >>$at_stderr; echo "prog.cob:10: Error: 'X' undefined in 'G3'
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -3267,7 +3267,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:8: warning: the original definition 'X' should not have OCCURS
+echo >>$at_stderr; echo "prog.cob:8: Warning: the original definition 'X' should not have OCCURS
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -3326,7 +3326,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:9: 'X' cannot be subscripted here
+echo >>$at_stderr; echo "prog.cob:9: Error: 'X' cannot be subscripted here
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -3393,9 +3393,9 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:8: 'Y' cannot be variable length
-prog.cob:11: 'Y' cannot be variable length
-prog.cob:16: the original definition 'X' cannot be variable length
+echo >>$at_stderr; echo "prog.cob:8: Error: 'Y' cannot be variable length
+prog.cob:11: Error: 'Y' cannot be variable length
+prog.cob:16: Error: the original definition 'X' cannot be variable length
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -3455,7 +3455,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:10: 'X' cannot be qualified here
+echo >>$at_stderr; echo "prog.cob:10: Error: 'X' cannot be qualified here
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -3515,7 +3515,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:10: 'B' not the original definition
+echo >>$at_stderr; echo "prog.cob:10: Error: 'B' not the original definition
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -3606,9 +3606,9 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:8: size of 'A' larger than size of 'X'
-prog.cob:11: size of 'A' larger than size of 'X'
-prog.cob:15: size of 'EXT-X-REDEF' larger than size of 'EXT-X'
+echo >>$at_stderr; echo "prog.cob:8: Error: size of 'A' larger than size of 'X'
+prog.cob:11: Error: size of 'A' larger than size of 'X'
+prog.cob:15: Error: size of 'EXT-X-REDEF' larger than size of 'EXT-X'
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -3669,8 +3669,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:7: entries under REDEFINES cannot have VALUE clause
-prog.cob:9: entries under REDEFINES cannot have VALUE clause
+echo >>$at_stderr; echo "prog.cob:7: Error: entries under REDEFINES cannot have VALUE clause
+prog.cob:9: Error: entries under REDEFINES cannot have VALUE clause
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -3732,8 +3732,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:8: REDEFINES must follow the original definition
-prog.cob:12: REDEFINES must follow the original definition
+echo >>$at_stderr; echo "prog.cob:8: Error: REDEFINES must follow the original definition
+prog.cob:12: Error: REDEFINES must follow the original definition
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -3850,10 +3850,10 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:6: invalid VALUE clause
-prog.cob:7: warning: numeric value is expected
-prog.cob:8: warning: value size exceeds data size
-prog.cob:10: warning: value size exceeds data size
+echo >>$at_stderr; echo "prog.cob:6: Error: invalid VALUE clause
+prog.cob:7: Warning: numeric value is expected
+prog.cob:8: Warning: value size exceeds data size
+prog.cob:10: Warning: value size exceeds data size
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -3911,8 +3911,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:7: warning: value size exceeds data size
-prog.cob:9: warning: value size exceeds data size
+echo >>$at_stderr; echo "prog.cob:7: Warning: value size exceeds data size
+prog.cob:9: Warning: value size exceeds data size
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -3974,10 +3974,10 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:8: warning: value does not fit the picture string
-prog.cob:9: warning: value size exceeds data size
-prog.cob:12: warning: value does not fit the picture string
-prog.cob:13: warning: value size exceeds data size
+echo >>$at_stderr; echo "prog.cob:8: Warning: value does not fit the picture string
+prog.cob:9: Warning: value size exceeds data size
+prog.cob:12: Warning: value does not fit the picture string
+prog.cob:13: Warning: value size exceeds data size
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -4035,8 +4035,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:6: data item not signed
-prog.cob:7: data item not signed
+echo >>$at_stderr; echo "prog.cob:6: Error: data item not signed
+prog.cob:7: Error: data item not signed
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -4095,10 +4095,10 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:6: warning: alphanumeric value is expected
-prog.cob:7: invalid VALUE clause
-prog.cob:8: warning: value does not fit the picture string
-prog.cob:10: warning: value size exceeds data size
+echo >>$at_stderr; echo "prog.cob:6: Warning: alphanumeric value is expected
+prog.cob:7: Error: invalid VALUE clause
+prog.cob:8: Warning: value does not fit the picture string
+prog.cob:10: Warning: value size exceeds data size
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -4155,8 +4155,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:6: warning: alphanumeric value is expected
-prog.cob:8: warning: value size exceeds data size
+echo >>$at_stderr; echo "prog.cob:6: Warning: alphanumeric value is expected
+prog.cob:8: Warning: value size exceeds data size
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -4216,8 +4216,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:6: warning: alphanumeric value is expected
-prog.cob:10: warning: value size exceeds data size
+echo >>$at_stderr; echo "prog.cob:6: Warning: alphanumeric value is expected
+prog.cob:10: Warning: value size exceeds data size
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -4276,8 +4276,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:7: warning: alphanumeric value is expected
-prog.cob:10: warning: value size exceeds data size
+echo >>$at_stderr; echo "prog.cob:7: Warning: alphanumeric value is expected
+prog.cob:10: Warning: value size exceeds data size
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -4335,8 +4335,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:6: warning: alphanumeric value is expected
-prog.cob:9: warning: value size exceeds data size
+echo >>$at_stderr; echo "prog.cob:6: Warning: alphanumeric value is expected
+prog.cob:9: Warning: value size exceeds data size
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -4394,8 +4394,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:9: invalid MOVE statement
-prog.cob:10: invalid MOVE statement
+echo >>$at_stderr; echo "prog.cob:9: Error: invalid MOVE statement
+prog.cob:10: Error: invalid MOVE statement
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -4451,7 +4451,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:8: invalid MOVE statement
+echo >>$at_stderr; echo "prog.cob:8: Error: invalid MOVE statement
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -4516,8 +4516,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:16: invalid MOVE statement
-prog.cob:17: invalid MOVE statement
+echo >>$at_stderr; echo "prog.cob:16: Error: invalid MOVE statement
+prog.cob:17: Error: invalid MOVE statement
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -4646,8 +4646,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:16: invalid MOVE statement
-prog.cob:17: invalid MOVE statement
+echo >>$at_stderr; echo "prog.cob:16: Error: invalid MOVE statement
+prog.cob:17: Error: invalid MOVE statement
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -4712,7 +4712,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:13: invalid MOVE statement
+echo >>$at_stderr; echo "prog.cob:13: Error: invalid MOVE statement
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -4777,9 +4777,9 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:13: invalid MOVE statement
-prog.cob:14: invalid MOVE statement
-prog.cob:15: invalid MOVE statement
+echo >>$at_stderr; echo "prog.cob:13: Error: invalid MOVE statement
+prog.cob:14: Error: invalid MOVE statement
+prog.cob:15: Error: invalid MOVE statement
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -4844,7 +4844,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:13: invalid MOVE statement
+echo >>$at_stderr; echo "prog.cob:13: Error: invalid MOVE statement
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -4906,10 +4906,10 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:11: 'X' is not group name
-prog.cob:12: 'X' is not group name
-prog.cob:13: 'G-1(1:1)' is not group name
-prog.cob:14: 'G-2(1:1)' is not group name
+echo >>$at_stderr; echo "prog.cob:11: Error: 'X' is not group name
+prog.cob:12: Error: 'X' is not group name
+prog.cob:13: Error: 'G-1(1:1)' is not group name
+prog.cob:14: Error: 'G-2(1:1)' is not group name
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -4967,7 +4967,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:6: PICTURE clause required for 'INVALID-ITEM'
+echo >>$at_stderr; echo "prog.cob:6: Error: PICTURE clause required for 'INVALID-ITEM'
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -5029,13 +5029,13 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:10: '456' is not numeric name
-prog.cob:11: '\"a\"' is not numeric value
-prog.cob:11: '\"b\"' is not numeric name
-prog.cob:12: 'X-X' is not numeric value
-prog.cob:13: 'X-09' is not numeric name
-prog.cob:14: 'X-09' is not numeric value
-prog.cob:14: 'X-X' is not numeric name
+echo >>$at_stderr; echo "prog.cob:10: Error: '456' is not numeric name
+prog.cob:11: Error: '\"a\"' is not numeric value
+prog.cob:11: Error: '\"b\"' is not numeric name
+prog.cob:12: Error: 'X-X' is not numeric value
+prog.cob:13: Error: 'X-09' is not numeric name
+prog.cob:14: Error: 'X-09' is not numeric value
+prog.cob:14: Error: 'X-X' is not numeric name
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -5097,15 +5097,15 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:10: '789' is not numeric or numeric-edited name
-prog.cob:11: '\"a\"' is not numeric value
-prog.cob:11: '\"b\"' is not numeric value
-prog.cob:11: '\"c\"' is not numeric or numeric-edited name
-prog.cob:12: 'X-X' is not numeric value
-prog.cob:13: 'X-09' is not numeric value
-prog.cob:13: 'X-X' is not numeric or numeric-edited name
-prog.cob:14: 'X-09' is not numeric value
-prog.cob:14: 'X-X' is not numeric value
+echo >>$at_stderr; echo "prog.cob:10: Error: '789' is not numeric or numeric-edited name
+prog.cob:11: Error: '\"a\"' is not numeric value
+prog.cob:11: Error: '\"b\"' is not numeric value
+prog.cob:11: Error: '\"c\"' is not numeric or numeric-edited name
+prog.cob:12: Error: 'X-X' is not numeric value
+prog.cob:13: Error: 'X-09' is not numeric value
+prog.cob:13: Error: 'X-X' is not numeric or numeric-edited name
+prog.cob:14: Error: 'X-09' is not numeric value
+prog.cob:14: Error: 'X-X' is not numeric value
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -5164,9 +5164,9 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:9: '\"a\"' is not numeric value
-prog.cob:11: '\"a\"' is not numeric value
-prog.cob:11: '\"b\"' is not numeric value
+echo >>$at_stderr; echo "prog.cob:9: Error: '\"a\"' is not numeric value
+prog.cob:11: Error: '\"a\"' is not numeric value
+prog.cob:11: Error: '\"b\"' is not numeric value
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -5222,7 +5222,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:8: the address of 'X' cannot be changed
+echo >>$at_stderr; echo "prog.cob:8: Error: the address of 'X' cannot be changed
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in

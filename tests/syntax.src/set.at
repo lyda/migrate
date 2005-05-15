@@ -34,7 +34,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: the address of 'X' cannot be changed
+[prog.cob:8: Error: the address of 'X' cannot be changed
 ])
 
 AT_CLEANUP

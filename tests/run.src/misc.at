@@ -348,7 +348,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:6: level 01 item 'X' cannot have OCCURS clause
+[prog.cob:6: Error: level 01 item 'X' cannot have OCCURS clause
 ])
 
 AT_CLEANUP
@@ -966,7 +966,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE} -std=mf -o prog prog.cob], [0], ,
-[prog.cob:11: warning: size of 'XMAIN0502' larger than size of 'XMAIN0501'
+[prog.cob:11: Warning: size of 'XMAIN0502' larger than size of 'XMAIN0501'
 ])
 AT_CHECK([./prog], [0], 
 [8

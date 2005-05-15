@@ -49,8 +49,8 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:9: invalid MOVE statement
-prog.cob:10: invalid MOVE statement
+[prog.cob:9: Error: invalid MOVE statement
+prog.cob:10: Error: invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -72,7 +72,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: invalid MOVE statement
+[prog.cob:8: Error: invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -106,8 +106,8 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:16: invalid MOVE statement
-prog.cob:17: invalid MOVE statement
+[prog.cob:16: Error: invalid MOVE statement
+prog.cob:17: Error: invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -161,8 +161,8 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:16: invalid MOVE statement
-prog.cob:17: invalid MOVE statement
+[prog.cob:16: Error: invalid MOVE statement
+prog.cob:17: Error: invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -190,7 +190,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:13: invalid MOVE statement
+[prog.cob:13: Error: invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -218,9 +218,9 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:13: invalid MOVE statement
-prog.cob:14: invalid MOVE statement
-prog.cob:15: invalid MOVE statement
+[prog.cob:13: Error: invalid MOVE statement
+prog.cob:14: Error: invalid MOVE statement
+prog.cob:15: Error: invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -248,7 +248,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:13: invalid MOVE statement
+[prog.cob:13: Error: invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -279,10 +279,10 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:11: 'X' is not group name
-prog.cob:12: 'X' is not group name
-prog.cob:13: 'G-1(1:1)' is not group name
-prog.cob:14: 'G-2(1:1)' is not group name
+[prog.cob:11: Error: 'X' is not group name
+prog.cob:12: Error: 'X' is not group name
+prog.cob:13: Error: 'G-1(1:1)' is not group name
+prog.cob:14: Error: 'G-2(1:1)' is not group name
 ])
 
 AT_CLEANUP
@@ -307,7 +307,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:6: PICTURE clause required for 'INVALID-ITEM'
+[prog.cob:6: Error: PICTURE clause required for 'INVALID-ITEM'
 ])
 
 AT_CLEANUP

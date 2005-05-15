@@ -1,3 +1,9 @@
+2005-05-15  Roger While <simrw@sim-basis.de>
+
+	* Do not nest includes. All config files include
+	  default.conf. We will need this for individual
+	  "not-resrved" words.
+
 2005-05-12  Roger While <simrw@sim-basis.de>
 
 	* Revert cobol2002.conf

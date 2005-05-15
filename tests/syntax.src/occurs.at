@@ -40,11 +40,11 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:11: level 88 item 'X-88' cannot have other than VALUE clause
-prog.cob:6: level 01 item 'X-01' cannot have OCCURS clause
-prog.cob:7: level 01 item 'G' cannot have OCCURS clause
-prog.cob:9: level 66 item 'X-66' cannot have other than RENAMES clause
-prog.cob:10: level 77 item 'X-77' cannot have OCCURS clause
+[prog.cob:11: Error: level 88 item 'X-88' cannot have other than VALUE clause
+prog.cob:6: Error: level 01 item 'X-01' cannot have OCCURS clause
+prog.cob:7: Error: level 01 item 'G' cannot have OCCURS clause
+prog.cob:9: Error: level 66 item 'X-66' cannot have other than RENAMES clause
+prog.cob:10: Error: level 77 item 'X-77' cannot have OCCURS clause
 ])
 
 AT_CLEANUP
@@ -63,7 +63,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:7: 'G-2' cannot have the OCCURS clause due to 'X'
+[prog.cob:7: Error: 'G-2' cannot have the OCCURS clause due to 'X'
 ])
 
 AT_CLEANUP
@@ -154,9 +154,9 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:7: 'X' cannot have OCCURS DEPENDING
-prog.cob:10: 'G-3' cannot have OCCURS DEPENDING
-prog.cob:15: 'X' cannot have OCCURS DEPENDING
+[prog.cob:7: Error: 'X' cannot have OCCURS DEPENDING
+prog.cob:10: Error: 'G-3' cannot have OCCURS DEPENDING
+prog.cob:15: Error: 'X' cannot have OCCURS DEPENDING
 ])
 
 AT_CLEANUP
