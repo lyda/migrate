@@ -41,8 +41,6 @@ AH_TEMPLATE([COB_STRIP_CMD], [Strip command])
 # enable debug mode by default for now
 AC_DEFINE(COB_DEBUG)
 
-COBC_LIBS=""
-COBC_CFLAGS=""
 LIBCOB_LIBS="-lm"
 LIBCOB_CFLAGS="$lt_prog_compiler_pic"
 
@@ -167,8 +165,17 @@ if test "x$prefix" = "x/usr" \
 else
   COB_CFLAGS="-I$includedir"
 fi
+if test "x$CPPFLAGS" != "x"
+then
+  COB_CFLAGS="$CPPFLAGS $COB_CFLAGS"
+fi
 
 COB_LIBS="-L$libdir -lcob ${LIBCOB_LIBS}"
+if test "x$LDFLAGS" != "x"
+then
+  COB_LIBS="$LDFLAGS $COB_LIBS"
+fi
+
 COB_CONFIG_DIR="$datadir/$PACKAGE_TARNAME/config"
 COB_LIBRARY_PATH=".:$libdir/$PACKAGE_TARNAME"
 COB_MODULE_EXT=`echo "$shlibext" | sed 's/dll\.a/dll/'`
@@ -204,8 +211,8 @@ AC_SUBST(COB_LIBS)
 AC_SUBST(COB_CONFIG_DIR)
 AC_SUBST(COB_LIBRARY_PATH)
 AC_SUBST(COB_MODULE_EXT)
-AC_SUBST(COBC_CFLAGS)
-AC_SUBST(COBC_LIBS)
+AC_SUBST(COB_CFLAGS)
+AC_SUBST(COB_LIBS)
 AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBS)
 AC_SUBST(COB_EXPORT_DYN)

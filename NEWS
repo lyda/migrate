@@ -1,5 +1,17 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Changes in OpenCOBOL 0.32
+
+** Stability update - See individual ChangeLogs
+
+** New internal register - NUMBER-OF-CALL-PARAMETERS
+
+** New config variables - larger-redefines-ok, relaxed-syntax-check
+
+** Powerpc changes - We now pass all OC and Cobol85 tests
+
+-----------------------------------------------------------------------
+
 * Changes in OpenCOBOL 0.31
 
 ** Stability update - See individual ChangeLogs

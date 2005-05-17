@@ -1,3 +1,10 @@
+2005-05-17  Roger While <simrw@sim-basis.de>
+
+	* configure, configure.ac, all Makefile.in
+	  Fix up COB_CFLAGS and COB_LIBS.
+	  Cater for defining CPPFLAGS and LDFLAGS.
+	  We have to propogate these to the compiler.
+
 2005-05-13  Roger While <simrw@sim-basis.de>
 
 	* CVS Version bumped to 0.33
