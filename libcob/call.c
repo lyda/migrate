@@ -27,8 +27,19 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifdef	USE_LIBDL
+#include <dlfcn.h>
+#define lt_dlopen(x)	dlopen(x, RTLD_LAZY | RTLD_GLOBAL)
+#define lt_dlsym(x, y)	dlsym(x, y)
+#define lt_dlclose(x)	dlclose(x)
+#define lt_dlerror()	dlerror()
+#define lt_ptr_t	void *
+#define lt_dlhandle	void *
+#else
 #define LT_NON_POSIX_NAMESPACE 1
 #include <ltdl.h>
+#endif
 
 #include "call.h"
 #include "lib/gettext.h"
@@ -39,24 +50,6 @@ static int resolve_size = 0;
 static char **resolve_path = NULL;
 static char *resolve_error = NULL;
 static char resolve_error_buff[FILENAME_MAX];
-
-void
-cob_init_call (void)
-{
-  const char *s;
-
-  lt_dlinit ();
-
-  s = getenv ("COB_LIBRARY_PATH");
-  if (s == NULL)
-    s = COB_LIBRARY_PATH;
-  cob_set_library_path (s);
-
-  s = getenv ("COB_DYNAMIC_RELOADING");
-  if (s != NULL && strcmp (s, "yes") == 0)
-    dynamic_reloading = 1;
-}
-
 
 /*
  * Call table
@@ -74,7 +67,52 @@ static struct call_hash
   struct call_hash *next;
 } *call_table[HASH_SIZE];
 
-static int
+static void
+cob_set_library_path (const char *path)
+{
+  int i;
+  char *p;
+
+  /* clear the previous path */
+  if (resolve_path)
+    {
+      free (resolve_path[0]);
+      free (resolve_path);
+    }
+
+  /* count the number of ':'s */
+  resolve_size = 1;
+  for (p = strchr (path, ':'); p; p = strchr (p + 1, ':'))
+    resolve_size++;
+
+  /* build path array */
+  p = strdup (path);
+  resolve_path = malloc (sizeof (char *) * resolve_size);
+  resolve_path[0] = strtok (p, ":");
+  for (i = 1; i < resolve_size; i++)
+    resolve_path[i] = strtok (NULL, ":");
+}
+
+void
+cob_init_call (void)
+{
+  const char *s;
+
+#ifndef	USE_LIBDL
+  lt_dlinit ();
+#endif
+
+  s = getenv ("COB_LIBRARY_PATH");
+  if (s == NULL)
+    s = COB_LIBRARY_PATH;
+  cob_set_library_path (s);
+
+  s = getenv ("COB_DYNAMIC_RELOADING");
+  if (s != NULL && strcmp (s, "yes") == 0)
+    dynamic_reloading = 1;
+}
+
+static int inline
 hash (const char *s)
 {
   int val = 0;
@@ -130,52 +168,27 @@ lookup (const char *name)
   return NULL;
 }
 
-
 /*
  * C interface
  */
-
-void
-cob_set_library_path (const char *path)
-{
-  int i;
-  char *p;
-
-  /* clear the previous path */
-  if (resolve_path)
-    {
-      free (resolve_path[0]);
-      free (resolve_path);
-    }
-
-  /* count the number of ':'s */
-  resolve_size = 1;
-  for (p = strchr (path, ':'); p; p = strchr (p + 1, ':'))
-    resolve_size++;
-
-  /* build path array */
-  p = strdup (path);
-  resolve_path = malloc (sizeof (char *) * resolve_size);
-  resolve_path[0] = strtok (p, ":");
-  for (i = 1; i < resolve_size; i++)
-    resolve_path[i] = strtok (NULL, ":");
-}
 
 void *
 cob_resolve (const char *name)
 {
   int i;
   char *p;
-  const char *s = name;
+  const char *s;
   lt_ptr_t func;
   lt_dlhandle handle;
   char buff[FILENAME_MAX];
 
+/* Checked in generated code
   if (!cob_initialized)
     {
       fputs (_("cob_init() must be called before cob_resolve()"), stderr);
       exit (1);
     }
+*/
 
   /* search the cache */
   func = lookup (name);
@@ -184,6 +197,7 @@ cob_resolve (const char *name)
 
   /* encode program name */
   p = buff;
+  s = name;
   if (isdigit (*s))
     p += sprintf (p, "$%02X", *s++);
   for (; *s; s++)

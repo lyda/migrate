@@ -494,9 +494,6 @@ main(int argc, char **argv)
 You can write @code{cobc_init(0, NULL);} if you do not want to pass
 command line arguments to COBOL.
 
-The function @code{cob_set_library_path} will overwrite the user
-setting of the environment variable @code{COB_LIBRARY_PATH}.
-
 You can compile your C program as follows:
 
 @example

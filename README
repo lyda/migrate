@@ -78,6 +78,7 @@ There are the following configure options:
   --with-db1        use Berkeley DB 1.85 (libdb-1.85)
   --with-db         use Berkeley DB 3.0 or later (libdb)
   --with-lfs64      use large file system for file I/O
+  --with-dl         use the system dynamic linker instead of ltdl
 
 Development
 ===========
@@ -96,7 +97,7 @@ minumum version before building OpenCOBOL:
   o Flex 2.5.4
 
 After checking out the latest source from the repository, run
-"autoreconf -i" to generate configure script.  You need to run
+"autoreconf -i -I m4" to generate configure script.  You need to run
 autoreconf whenever you modify configure.ac or Makefile.am.
 
 You might want to run your configure script with option

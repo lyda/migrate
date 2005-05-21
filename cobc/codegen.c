@@ -28,6 +28,7 @@
 
 #include "cobc.h"
 #include "tree.h"
+#include "call.def"
 
 static int param_id = 0;
 static int loop_counter = 0;
@@ -1383,6 +1384,19 @@ output_call (struct cb_call *p)
   int dynamic_link = 1;
   cb_tree l;
 
+  /* User defined entry points */
+  if (CB_LITERAL_P (p->name))
+  {
+    for ( n = 0; n < CALLTABSIZE && calltab[n]; n++ )
+    {
+      if ( strcmp(CB_LITERAL(p->name)->data, calltab[n]) == 0 )
+      {
+        dynamic_link = 0;
+        break;
+      }
+    }
+  }
+
   if (cb_flag_static_call && CB_LITERAL_P (p->name))
     dynamic_link = 0;
 
@@ -2273,7 +2287,8 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 
   output_line ("/* Start of function code */");
   output_newline ();
-  output_line ("cob_module_enter (&module);");
+  output_line ("module.next = cob_current_module;");
+  output_line ("cob_current_module = &module;");
   output_newline ();
 
   /* initialization */
@@ -2284,6 +2299,10 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 #endif
   output_indent ("  {");
   /* output_stmt (cb_build_assign (cb_return_code, cb_int0)); */
+  output_line ("if (!cob_initialized) {");
+  output_line ("  fputs(\"cob_init() has not been called\\n\", stderr);");
+  output_line ("  exit (1);");
+  output_line ("}");
   if (prog->decimal_index_max) {
 	output_line ("/* initialize decimal numbers */");
 	output_line ("{ int i;");
@@ -2343,7 +2362,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   if ( needs_exit_prog ) {
 	output_line ("exit_program:");
   }
-  output_line ("cob_module_leave (&module);");
+  output_line ("cob_current_module = cob_current_module->next;");
   output_prefix ();
   output ("return ");
   output_integer (cb_return_code);

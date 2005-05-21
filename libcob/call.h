@@ -23,12 +23,15 @@
 #include <libcob/common.h>
 
 extern void cob_init_call (void);
-extern void cob_set_library_path (const char *path);
 extern void *cob_resolve (const char *name);
 extern const char *cob_resolve_error (void);
 
 extern void *cob_call_resolve (cob_field *f);
+#ifdef __GNUC__
+extern void cob_call_error (void) __attribute__ ((noreturn));
+#else
 extern void cob_call_error (void);
+#endif
 extern void cob_cancel (cob_field *f);
 
 #endif /* COB_CALL_H_ */

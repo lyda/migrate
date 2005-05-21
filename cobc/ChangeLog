@@ -1,3 +1,14 @@
+2005-05-21  Roger While <simrw@sim-basis.de>
+
+	* New file call.def : Defines entry points that will be
+	  generated as static calls in Cobol programs.
+	  eg. Own C routines or other software entry points that are
+	  linked to the main program (or cobcrun).
+
+	* codegen.c : Inline cob_module_xxx
+		      Cater for above call.def
+		      Check for cob_initialized in initialization path
+
 2005-05-15  Roger While <simrw@sim-basis.de>
 
 	* error.c - Change "warning: " to "Warning: " and insert

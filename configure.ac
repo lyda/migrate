@@ -37,6 +37,7 @@ AH_TEMPLATE([COB_EXPORT_DYN], [Compile/link option for exporting symbols])
 AH_TEMPLATE([COB_PIC_FLAGS], [Compile/link option for PIC code])
 AH_TEMPLATE([COB_SHARED_OPT], [Compile/link option for shared code])
 AH_TEMPLATE([COB_STRIP_CMD], [Strip command])
+AH_TEMPLATE([USE_LIBDL],   [Use system dynamic loader])
 
 # enable debug mode by default for now
 AC_DEFINE(COB_DEBUG)
@@ -70,6 +71,12 @@ AC_ARG_WITH(db,
 AC_ARG_WITH(lfs64,
   [  --with-lfs64            use large file system for file I/O],
   [ AC_DEFINE(WITH_LFS64) ])
+
+DEFINEDL="no"
+
+AC_ARG_WITH(dl,
+  [  --with-dl            use system dynamic loader],
+  [ DEFINEDL="yes" ])
 
 AC_ARG_ENABLE(debug,
   [  --enable-debug          enable debugging options],
@@ -110,10 +117,18 @@ AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp.h is required))
 AC_CHECK_LIB([gmp], [__gmp_rand], , AC_MSG_ERROR(GMP 3 or later is required))
 LIBCOB_LIBS="$LIBCOB_LIBS -lgmp"
 
-# Checks for ltdl.
-AC_CHECK_HEADERS([ltdl.h], , AC_MSG_ERROR(ltdl.h is required))
-AC_CHECK_LIB([ltdl], [lt_dlopen], , AC_MSG_ERROR(libltdl is required))
-LIBCOB_LIBS="$LIBCOB_LIBS -lltdl"
+# Checks for dl/ltdl.
+if test "${DEFINEDL}" = "yes"
+then
+  AC_CHECK_HEADERS([dlfcn.h], , AC_MSG_ERROR(dlfcn.h is required))
+  AC_CHECK_LIB([dl], [dlopen], , AC_MSG_ERROR(libdl is required))
+  AC_DEFINE(USE_LIBDL)
+  LIBCOB_LIBS="$LIBCOB_LIBS -ldl"
+else
+  AC_CHECK_HEADERS([ltdl.h], , AC_MSG_ERROR(ltdl.h is required))
+  AC_CHECK_LIB([ltdl], [lt_dlopen], , AC_MSG_ERROR(libltdl is required))
+  LIBCOB_LIBS="$LIBCOB_LIBS -lltdl"
+fi
 
 # Checks for gettext.
 AM_GNU_GETTEXT([external])
@@ -240,6 +255,12 @@ echo "  COB_PIC_FLAGS        ${COB_PIC_FLAGS}"
 echo "  COB_EXPORT_DYN       ${COB_EXPORT_DYN}"
 if test "x$striplib" != "x"; then
  echo "  COB_STRIP_CMD        ${striplib}"
+fi
+if test "${DEFINEDL}" = "yes" 
+then
+echo "  Dynamic loading      System"
+else
+echo "  Dynamic loading      Libtool"
 fi
 echo ""
 echo "  Use gettext for international messages:      ${USE_NLS}"

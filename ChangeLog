@@ -1,3 +1,9 @@
+2005-05-21  Roger While <simrw@sim-basis.de>
+
+	* Allow configure option --with-dl for native dynamic
+	  linking instead of ltdl. This is a win eg. on Linux
+	  as native dl is anyway used.
+
 2005-05-17  Roger While <simrw@sim-basis.de>
 
 	* configure, configure.ac, all Makefile.in

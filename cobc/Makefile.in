@@ -222,7 +222,8 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 cobc_SOURCES = cobc.c cobc.h config.c tree.c tree.h reserved.c error.c \
 	parser.c parser.h scanner.c field.c typeck.c codegen.c \
-	ppparse.c ppparse.h pplex.c config.def flag.def warning.def
+	ppparse.c ppparse.h pplex.c config.def flag.def warning.def \
+	call.def
 
 AM_CFLAGS = -fsigned-char -Wall -Wwrite-strings -Wmissing-prototypes -Wno-format-y2k
 cobc_CFLAGS = $(AM_CFLAGS) $(COBC_CFLAGS) -I$(top_srcdir)

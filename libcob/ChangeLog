@@ -1,3 +1,10 @@
+2005-05-21  Roger While <simrw@sim-basis.de>
+
+	* call.h, call.c : Cater for call.def
+			   Cater for --with-dl
+			   Restructure code slightly
+			   Take out check for cob_initialized
+
 2005-05-03  Roger While <simrw@sim-basis.de>
 
 	* Mak* :      Due to autoreconf
