@@ -1,3 +1,10 @@
+2005-05-23  Roger While <simrw@sim-basis.de>
+
+	* call.h, call.c : New functions cob_resolve_1
+			   cob_call_resolve_1.
+			   These are wrappers for optimized dynamic
+			   calls.
+
 2005-05-21  Roger While <simrw@sim-basis.de>
 
 	* call.h, call.c : Cater for call.def

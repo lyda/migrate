@@ -1805,7 +1805,7 @@ call_returning:
 | GIVING x			{ $$ = $2; }
 ;
 call_on_exception:
-  /* empty */			{ $$ = cb_build_funcall_0 ("cob_call_error"); }
+  /* empty */			{ $$ = NULL; }
 | OVERFLOW statement_list	{ $$ = $2; }
 | EXCEPTION statement_list	{ $$ = $2; }
 ;

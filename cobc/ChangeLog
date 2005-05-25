@@ -1,3 +1,13 @@
+2005-05-23  Roger While <simrw@sim-basis.de>
+
+	* cobc.c : New option -dynopt
+	  codegen.c : Cater for -dynopt
+		      Optimize dynamic calling
+		      Move the include of the c.h down into the
+		      internal function. This is necessary for
+		      upcoming nested programs.
+	  parser.y : Cater for optimized dynamic calling.
+
 2005-05-21  Roger While <simrw@sim-basis.de>
 
 	* New file call.def : Defines entry points that will be

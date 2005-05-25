@@ -81,6 +81,28 @@ static struct field_list {
 	cb_tree			x;
 } *field_cache = NULL;
 
+static struct call_list {
+	struct call_list	*next;
+	const char		*callname;
+	const char		*callorig;
+} *call_cache = NULL;
+
+static void
+lookup_call (const char *p, const char *q)
+{
+	struct call_list	*clp;
+
+	for ( clp = call_cache; clp; clp = clp->next ) {
+		if ( strcmp (p, clp->callname) == 0 ) {
+			return;
+		}
+	}
+	clp = malloc( sizeof(struct call_list) );
+	clp->callname = p;
+	clp->callorig = q;
+	clp->next = call_cache;
+	call_cache = clp;
+}
 
 static void
 output (const char *fmt, ...)
@@ -1381,6 +1403,7 @@ static void
 output_call (struct cb_call *p)
 {
   int n;
+  char	*callp;
   int dynamic_link = 1;
   cb_tree l;
 
@@ -1397,7 +1420,7 @@ output_call (struct cb_call *p)
     }
   }
 
-  if (cb_flag_static_call && CB_LITERAL_P (p->name))
+  if ((cb_flag_static_call == 1) && CB_LITERAL_P (p->name))
     dynamic_link = 0;
 
   /* local variables */
@@ -1467,21 +1490,37 @@ output_call (struct cb_call *p)
     {
       /* dynamic link */
       output ("func = ");
-      if (CB_LITERAL_P (p->name))
-	output ("cob_resolve (\"%s\")", CB_LITERAL (p->name)->data);
-      else
-	output_funcall (cb_build_funcall_1 ("cob_call_resolve", p->name));
-      output (";\n");
+      if ( !p->stmt1 ) {
+	if (CB_LITERAL_P (p->name)) {
+	   if ( cb_flag_static_call == 2 ) {
+		callp = cb_encode_program_id (CB_LITERAL (p->name)->data);
+		lookup_call(callp, CB_LITERAL(p->name)->data);
+		output ("call_%s", callp);
+	   } else {
+		output ("cob_resolve_1 (\"%s\")", CB_LITERAL (p->name)->data);
+	   }
+	} else {
+		output_funcall (cb_build_funcall_1 ("cob_call_resolve_1", p->name));
+	}
+	output (";\n");
+      } else {
+	if (CB_LITERAL_P (p->name)) {
+		output ("cob_resolve (\"%s\")", CB_LITERAL (p->name)->data);
+	} else {
+		output_funcall (cb_build_funcall_1 ("cob_call_resolve", p->name));
+	}
+	output (";\n");
 #if defined (__GNUC__) && (__GNUC__ >= 3)
-      output_line ("if ( __builtin_expect((func == NULL), 0) )");
+	output_line ("if ( __builtin_expect((func == NULL), 0) )");
 #else
-      output_line ("if (func == NULL)");
+	output_line ("if (func == NULL)");
 #endif
-      output_indent_level += 2;
-      output_stmt (p->stmt1);
-      output_indent_level -= 2;
-      output_line ("else");
-      output_indent ("  {");
+	output_indent_level += 2;
+	output_stmt (p->stmt1);
+	output_indent_level -= 2;
+	output_line ("else");
+	output_indent ("  {");
+      }
       output_prefix ();
       output_integer (cb_return_code);
       output (" = func");
@@ -1539,7 +1578,7 @@ output_call (struct cb_call *p)
   output (");\n");
   if (p->stmt2)
     output_stmt (p->stmt2);
-  if (dynamic_link)
+  if (dynamic_link && p->stmt1)
     output_indent ("  }");
   output_indent ("}");
 }
@@ -2195,6 +2234,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   int i;
   cb_tree l;
   struct cb_field *f;
+  struct call_list	*clp;
 
   /* program function */
   output ("static int\n%s_ (int entry", prog->program_id);
@@ -2203,6 +2243,8 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 		CB_PREFIX_BASE, cb_field (CB_VALUE (l))->id);
   output (")\n");
   output_indent ("{");
+
+  output ("#include \"%s\"\n\n", cb_storage_file_name);
 
   /* local variables */
   output_line ("static int initialized = 0;");
@@ -2286,6 +2328,9 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   output_newline ();
 
   output_line ("/* Start of function code */");
+  if ( cb_flag_static_call == 2 ) {
+	output_line("auto void init$%s(void);", prog->program_id);
+  }
   output_newline ();
   output_line ("module.next = cob_current_module;");
   output_line ("cob_current_module = &module;");
@@ -2303,6 +2348,9 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   output_line ("  fputs(\"cob_init() has not been called\\n\", stderr);");
   output_line ("  exit (1);");
   output_line ("}");
+  if ( cb_flag_static_call == 2 ) {
+	output_line("init$%s();", prog->program_id);
+  }
   if (prog->decimal_index_max) {
 	output_line ("/* initialize decimal numbers */");
 	output_line ("{ int i;");
@@ -2393,6 +2441,16 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   output_line ("exit(1);");
   output_newline ();
 
+  if ( cb_flag_static_call == 2 ) {
+	output_line("void init$%s(void)", prog->program_id);
+	output_line("{");
+	for ( clp = call_cache; clp; clp = clp->next ) {
+	output_line("	call_%s = cob_resolve(\"%s\");",
+			clp->callname, clp->callorig);
+	}
+	output_line("}");
+  }
+	
   output_indent ("}");
   output_newline ();
 }
@@ -2498,6 +2556,7 @@ codegen (struct cb_program *prog)
   struct attr_list *j;
   struct literal_list *m;
   struct field_list *k;
+  struct call_list *clp;
 
   param_id = 0;
   progid = 0;
@@ -2508,6 +2567,7 @@ codegen (struct cb_program *prog)
   field_cache = NULL;
   attr_cache = NULL;
   literal_cache = NULL;
+  call_cache = NULL;
 
   if (cb_flag_main)
     prog->flag_initial = 1;
@@ -2522,7 +2582,9 @@ codegen (struct cb_program *prog)
   output ("#include <math.h>\n");
   output ("#include <libcob.h>\n\n");
 
+/*
   output ("#include \"%s\"\n\n", cb_storage_file_name);
+*/
 
   /* alphabet-names */
   for (l = prog->alphabet_name_list; l; l = CB_CHAIN (l))
@@ -2555,8 +2617,10 @@ codegen (struct cb_program *prog)
   output (");\n\n");
 
   /* main function */
-  if (cb_flag_main)
-    output_main_function (prog);
+  if (cb_flag_main) {
+	output ("int %s (void);\n", prog->program_id);
+	output_main_function (prog);
+  }
 
   /* functions */
   for (l = prog->entry_list; l; l = CB_CHAIN (l))
@@ -2590,6 +2654,10 @@ codegen (struct cb_program *prog)
 	output ("static cob_field %s%d\t= ", CB_PREFIX_CONST, m->id);
 	output_field (m->x);
 	output (";\n");
+  }
+
+  for (clp = call_cache; clp; clp = clp->next) {
+	output ("static int (*call_%s)();\n", clp->callname);
   }
 
   output_target = yyout;

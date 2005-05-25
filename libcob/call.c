@@ -173,6 +173,28 @@ lookup (const char *name)
  */
 
 void *
+cob_resolve_1 (const char *name)
+{
+	void	*p;
+	p = cob_resolve(name);
+	if ( !p ) {
+		cob_call_error();
+	}
+	return p;
+}
+
+void *
+cob_call_resolve_1 (cob_field *f)
+{
+	void	*p;
+	p = cob_call_resolve(f);
+	if ( !p ) {
+		cob_call_error();
+	}
+	return p;
+}
+
+void *
 cob_resolve (const char *name)
 {
   int i;

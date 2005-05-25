@@ -1558,6 +1558,9 @@ cb_emit_call (cb_tree prog, cb_tree using, cb_tree returning,
 void
 cb_emit_cancel (cb_tree prog)
 {
+  if ( cb_flag_static_call == 2 ) {
+	return;
+  }
   cb_emit (cb_build_funcall_1 ("cob_cancel", prog));
 }
 
