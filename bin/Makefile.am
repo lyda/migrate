@@ -5,7 +5,7 @@ AM_CFLAGS = -fsigned-char -Wall -Wwrite-strings -Wmissing-prototypes -Wno-format
 AM_LDFLAGS = $(COB_EXPORT_DYN)
 cobcrun_CFLAGS = $(AM_CFLAGS) $(COBC_CFLAGS) -I$(top_srcdir)
 if COBCRUN_SHARED
-cobcrun_LDADD = $(LIBCOB_LIBS) -L$(top_builddir)/libcob/.libs -lcob
+cobcrun_LDADD = $(LIBCOB_LIBS) -L$(top_builddir)/libcob -lcob
 else
 cobcrun_LDADD = $(LIBCOB_LIBS) \
 $(top_builddir)/libcob/.libs/libcob_la-call.o \

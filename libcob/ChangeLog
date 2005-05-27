@@ -3,6 +3,7 @@
 	* byteswap.h : u_int16_t etc. are not necessarily defined
 	  in sys/types.h (eg. MinGW). So ifndef on __BIT_TYPES_DEFINED__
 	  and typedef them.
+	  fileio.c : Cater for extended DB headers db4/ db4.1/ db4.2/ db4.3/
 
 2005-05-23  Roger While <simrw@sim-basis.de>
 

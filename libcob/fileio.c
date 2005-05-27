@@ -47,9 +47,6 @@
 #include <fcntl.h>
 #endif
 
-#if HAVE_DBOPEN
-#include <db.h>
-#else
 #if HAVE_DB1_DB_H
 #include <db1/db.h>
 #else
@@ -58,6 +55,25 @@
 #else
 #if HAVE_DB3_DB_185_H
 #include <db3/db_185.h>
+#else
+#if HAVE_DB4_DB_185_H
+#include <db4/db_185.h>
+#else
+#if HAVE_DB4_1_DB_185_H
+#include <db4.1/db_185.h>
+#else
+#if HAVE_DB4_2_DB_185_H
+#include <db4.2/db_185.h>
+#else
+#if HAVE_DB4_3_DB_185_H
+#include <db4.3/db_185.h>
+#else
+#if HAVE_DBOPEN
+#include <db.h>
+#endif
+#endif
+#endif
+#endif
 #endif
 #endif
 #endif

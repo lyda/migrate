@@ -228,7 +228,7 @@ cobcrun_CFLAGS = $(AM_CFLAGS) $(COBC_CFLAGS) -I$(top_srcdir)
 @COBCRUN_SHARED_FALSE@$(top_builddir)/libcob/.libs/libcob_la-move.o \
 @COBCRUN_SHARED_FALSE@$(top_builddir)/libcob/.libs/libcob_la-termio.o
 
-@COBCRUN_SHARED_TRUE@cobcrun_LDADD = $(LIBCOB_LIBS) -L$(top_builddir)/libcob/.libs -lcob
+@COBCRUN_SHARED_TRUE@cobcrun_LDADD = $(LIBCOB_LIBS) -L$(top_builddir)/libcob -lcob
 all: all-am
 
 .SUFFIXES:

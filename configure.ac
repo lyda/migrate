@@ -105,7 +105,7 @@ AC_CHECK_FUNCS([dbopen],
          [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb1"],
          [AC_MSG_ERROR(libdb1 is required)])
        ;;
-    3) AC_CHECK_HEADERS([db.h db_185.h db3/db_185.h])
+    3) AC_CHECK_HEADERS([db.h db_185.h db3/db_185.h db4/db_185.h db4.1/db_185.h db4.2/db_185.h db4.3/db_185.h])
        AC_CHECK_LIB([db], [__db_open],
          [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
          [AC_MSG_ERROR(libdb is required)])

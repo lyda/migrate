@@ -1,3 +1,7 @@
+2005-05-27  Roger While <simrw@sim-basis.de>
+
+	* DB headers can also be in db4/ db4.1/ db4.2/ db4.3/
+
 2005-05-21  Roger While <simrw@sim-basis.de>
 
 	* Allow configure option --with-dl for native dynamic
