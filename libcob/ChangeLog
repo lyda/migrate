@@ -1,3 +1,9 @@
+2005-05-27  Roger While <simrw@sim-basis.de>
+
+	* byteswap.h : u_int16_t etc. are not necessarily defined
+	  in sys/types.h (eg. MinGW). So ifndef on __BIT_TYPES_DEFINED__
+	  and typedef them.
+
 2005-05-23  Roger While <simrw@sim-basis.de>
 
 	* call.h, call.c : New functions cob_resolve_1
