@@ -3846,9 +3846,9 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:199: cobcrun caller"
+echo "misc.at:199: \${COBCRUN} caller"
 echo misc.at:199 >$at_check_line_file
-( $at_traceon; cobcrun caller ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${COBCRUN} caller ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr

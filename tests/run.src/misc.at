@@ -193,7 +193,7 @@ AT_DATA([caller.cob], [
 
 AT_CHECK([${COMPILE_MODULE} callee.cob])
 AT_CHECK([${COMPILE_MODULE} caller.cob])
-AT_CHECK([cobcrun caller], [0],
+AT_CHECK([${COBCRUN} caller], [0],
 [Hello
 World
 ])
