@@ -1,3 +1,7 @@
+2005-05-31  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Fix false placement of the c.h file.
+
 2005-05-23  Roger While <simrw@sim-basis.de>
 
 	* cobc.c : New option -dynopt

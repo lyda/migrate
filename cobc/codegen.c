@@ -2244,8 +2244,6 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   output (")\n");
   output_indent ("{");
 
-  output ("#include \"%s\"\n\n", cb_storage_file_name);
-
   /* local variables */
   output_line ("static int initialized = 0;");
   if (prog->decimal_index_max)
@@ -2279,6 +2277,9 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 		output ("  /* %s */\n", f->name);
 	}
   }
+  output_newline ();
+
+  output ("#include \"%s\"\n\n", cb_storage_file_name);
   output_newline ();
 
   /* files */
