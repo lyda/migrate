@@ -548,6 +548,8 @@ cob_is_numeric (cob_field *f)
   switch (COB_FIELD_TYPE (f))
     {
     case COB_TYPE_NUMERIC_BINARY:
+    case COB_TYPE_NUMERIC_FLOAT:
+    case COB_TYPE_NUMERIC_DOUBLE:
       return 1;
     case COB_TYPE_NUMERIC_PACKED:
       {

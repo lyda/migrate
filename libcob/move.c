@@ -254,6 +254,90 @@ cob_move_packed_to_display (cob_field *f1, cob_field *f2)
   cob_put_sign (f2, sign);
 }
 
+/*
+ * Floating point
+ */
+
+static void
+cob_move_display_to_fp (cob_field *f1, cob_field *f2)
+{
+	double		val;
+	size_t		size;
+	int		sign = cob_get_sign (f1);
+	size_t		size1 = COB_FIELD_SIZE (f1);
+	char		*data1;
+	char		buff2[64];
+
+	memset(buff2, 0, sizeof(buff2));
+	size = size1 - f1->attr->scale;
+	if ( sign < 0 ) {
+		buff2[0] = '-';
+		data1 = &buff2[1];
+	} else {
+		data1 = buff2;
+	}
+	if ( f1->attr->scale <= 0 ) {
+		sprintf(data1, "%*.*s.0", size, size, f1->data);
+	} else {
+		sprintf(data1, "%*.*s.%*.*s", size, size, f1->data,
+			f1->attr->scale, f1->attr->scale,
+			f1->data + size);
+	}
+	sscanf(buff2, "%lf", &val);
+	if ( COB_FIELD_TYPE (f2) == COB_TYPE_NUMERIC_FLOAT ) {
+		float	flval = val;
+		*(float *)f2->data = flval;
+	} else {
+		*(double *)f2->data = val;
+	}
+}
+
+static void
+cob_move_fp_to_display (cob_field *f1, cob_field *f2)
+{
+	double		val;
+	double		frac;
+	double		intgr;
+	int		sign;
+	int		decs;
+	long long	res;
+	char		*x, *y;
+	char		buff[64];
+	char		buff2[64];
+
+	memset(buff, 0, sizeof(buff));
+	memset(buff2, 0, sizeof(buff2));
+	if ( COB_FIELD_TYPE (f1) == COB_TYPE_NUMERIC_FLOAT ) {
+		val = (double)(*(float *)f1->data);
+	} else {
+		val = *(double *)f1->data;
+	}
+	sign = 1;
+	if (val < 0) {
+		sign = -1;
+		val = -val;
+	}
+	frac = modf(val, &intgr);
+	res = intgr;
+	decs = 0;
+	for ( ; res ; res /= 10 ) {
+		decs++;
+	}
+	sprintf(buff2, "%-18.*lf", 18 - decs, val);
+	y = buff;
+	for ( x = buff2; *x; x++ ) {
+		if ( *x == '.' ) {
+			continue;
+		}
+		if ( *x == ' ' ) {
+			continue;
+		}
+		*y++ = *x;
+	}
+		
+	store_common_region (f2, buff, strlen(buff), 18 - decs);
+	cob_put_sign (f2, sign);
+}
 
 /*
  * Binary integer
@@ -618,9 +702,15 @@ cob_move (cob_field *src, cob_field *dst)
   /* elementary move */
   switch (COB_FIELD_TYPE (src))
     {
+    case COB_TYPE_NUMERIC_FLOAT:
+    case COB_TYPE_NUMERIC_DOUBLE:
+	return indirect_move (cob_move_fp_to_display, src, dst, 40, 20);
     case COB_TYPE_NUMERIC_DISPLAY:
       switch (COB_FIELD_TYPE (dst))
 	{
+	case COB_TYPE_NUMERIC_FLOAT:
+	case COB_TYPE_NUMERIC_DOUBLE:
+		return cob_move_display_to_fp (src, dst);
 	case COB_TYPE_NUMERIC_DISPLAY:
 	  return cob_move_display_to_display (src, dst);
 	case COB_TYPE_NUMERIC_PACKED:
@@ -660,6 +750,8 @@ cob_move (cob_field *src, cob_field *dst)
 	case COB_TYPE_NUMERIC_BINARY:
 	case COB_TYPE_NUMERIC_PACKED:
 	case COB_TYPE_NUMERIC_EDITED:
+	case COB_TYPE_NUMERIC_FLOAT:
+	case COB_TYPE_NUMERIC_DOUBLE:
 	  return indirect_move (cob_move_binary_to_display, src, dst,
 				20, src->attr->scale);
 	default:
@@ -675,6 +767,8 @@ cob_move (cob_field *src, cob_field *dst)
 	case COB_TYPE_NUMERIC_PACKED:
 	case COB_TYPE_NUMERIC_BINARY:
 	case COB_TYPE_NUMERIC_EDITED:
+	case COB_TYPE_NUMERIC_FLOAT:
+	case COB_TYPE_NUMERIC_DOUBLE:
 	  return indirect_move (cob_move_edited_to_display,
 				src, dst, 36, 18);
 	case COB_TYPE_ALPHANUMERIC_EDITED:
@@ -691,6 +785,8 @@ cob_move (cob_field *src, cob_field *dst)
 	case COB_TYPE_NUMERIC_PACKED:
 	case COB_TYPE_NUMERIC_BINARY:
 	case COB_TYPE_NUMERIC_EDITED:
+	case COB_TYPE_NUMERIC_FLOAT:
+	case COB_TYPE_NUMERIC_DOUBLE:
 	  return indirect_move (cob_move_alphanum_to_display,
 				src, dst, 36, 18);
 	case COB_TYPE_ALPHANUMERIC_EDITED:

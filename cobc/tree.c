@@ -296,6 +296,10 @@ cb_tree_type (cb_tree x)
 	case CB_USAGE_INDEX:
 	case CB_USAGE_LENGTH:
 	  return COB_TYPE_NUMERIC_BINARY;
+	case CB_USAGE_FLOAT:
+	  return COB_TYPE_NUMERIC_FLOAT;
+	case CB_USAGE_DOUBLE:
+	  return COB_TYPE_NUMERIC_DOUBLE;
 	case CB_USAGE_PACKED:
 	  return COB_TYPE_NUMERIC_PACKED;
 	default:

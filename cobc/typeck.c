@@ -2590,6 +2590,8 @@ cb_build_move (cb_tree src, cb_tree dst)
       /* no optimization for binary swap and packed decimal for now */
       if (f->flag_binary_swap
 	  || f->usage == CB_USAGE_PACKED
+	  || f->usage == CB_USAGE_FLOAT
+	  || f->usage == CB_USAGE_DOUBLE
 	  || ( (f->usage == CB_USAGE_BINARY ||
 		f->usage == CB_USAGE_COMP_5 ||
 		f->usage == CB_USAGE_COMP_X)

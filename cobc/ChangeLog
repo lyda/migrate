@@ -1,5 +1,11 @@
 2005-05-31  Roger While <simrw@sim-basis.de>
 
+	* codegen.c : Fix code for children of external items.
+	  field.c, tree.h, tree.c, typeck.c, reserved.c :
+	    Rough implementation of COMP-1/2.
+
+2005-05-31  Roger While <simrw@sim-basis.de>
+
 	* codegen.c : Fix false placement of the c.h file.
 
 2005-05-23  Roger While <simrw@sim-basis.de>

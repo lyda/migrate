@@ -249,8 +249,8 @@ static struct reserved reserved_words[] = {
   {"FINAL",		-1, 0},				/* 2002 */
   {"FIRST",		FIRST, 0},			/* 2002 */
   {"FLOAT-EXTENDED",	-1, 0},				/* 2002 */
-  {"FLOAT-LONG",	-1, 0},				/* 2002 */
-  {"FLOAT-SHORT",	-1, 0},				/* 2002 */
+  {"FLOAT-LONG",	COMP_2, 0},				/* 2002 */
+  {"FLOAT-SHORT",	COMP_1, 0},				/* 2002 */
   {"FOOTING",		FOOTING, 0},			/* 2002 */
   {"FOR",		FOR, 0},			/* 2002 */
   {"FOREGROUND-COLOR",	FOREGROUND_COLOR, 0},		/* 2002 (C/S) */

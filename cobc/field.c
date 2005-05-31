@@ -345,6 +345,8 @@ validate_field_1 (struct cb_field *f)
 	    || f->usage == CB_USAGE_LENGTH
 	    || f->usage == CB_USAGE_OBJECT
 	    || f->usage == CB_USAGE_POINTER
+	    || f->usage == CB_USAGE_FLOAT
+	    || f->usage == CB_USAGE_DOUBLE
 	    || f->usage == CB_USAGE_PROGRAM)
 	  need_picture = 0;
 	if (f->pic == NULL && need_picture != 0)
@@ -470,6 +472,12 @@ setup_parameters (struct cb_field *f)
 	case CB_USAGE_POINTER:
 	  f->pic = CB_PICTURE (cb_build_picture ("9(10)"));
 	  break;
+	case CB_USAGE_FLOAT:
+	  f->pic = CB_PICTURE (cb_build_picture ("S9(7)V9(7)"));
+	  break;
+	case CB_USAGE_DOUBLE:
+	  f->pic = CB_PICTURE (cb_build_picture ("S9(9)V9(9)"));
+	  break;
 
 	case CB_USAGE_COMP_5:
 	case CB_USAGE_COMP_X:
@@ -548,6 +556,7 @@ compute_size (struct cb_field *f)
 		    case CB_USAGE_COMP_5:
 		    case CB_USAGE_COMP_X:
 		    case CB_USAGE_FLOAT:
+		    case CB_USAGE_DOUBLE:
 		      if (c->size == 2 || c->size == 4 || c->size == 8)
 			align_size = c->size;
 		      break;
@@ -628,6 +637,16 @@ compute_size (struct cb_field *f)
 	case CB_USAGE_LENGTH:
 	  {
 	    f->size = sizeof (int);
+	    break;
+	  }
+	case CB_USAGE_FLOAT:
+	  {
+	    f->size = sizeof (float);
+	    break;
+	  }
+	case CB_USAGE_DOUBLE:
+	  {
+	    f->size = sizeof (double);
 	    break;
 	  }
 	case CB_USAGE_OBJECT:

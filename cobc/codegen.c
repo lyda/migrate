@@ -777,6 +777,8 @@ output_param (cb_tree x, int id)
       {
 	struct cb_reference *r = CB_REFERENCE (x);
 	struct cb_field *f = CB_FIELD (r->value);
+	int	extrefs = 0;
+	struct cb_field *pechk;
 
 	if (r->check)
 	  {
@@ -786,8 +788,13 @@ output_param (cb_tree x, int id)
 	      output_stmt (CB_VALUE (l));
 	  }
 
+	for ( pechk = f->parent; pechk; pechk = pechk->parent ) {
+		if ( pechk->flag_external ) {
+			extrefs = 1;
+		}
+	}
 	if (!r->subs && !r->offset && !f->flag_local && f->count > 0
-	    && !f->flag_external
+	    && !f->flag_external && !extrefs
 	    && !cb_field_variable_size (f) && !cb_field_variable_address (f))
 	  {
 	    if (!f->flag_field)
@@ -989,7 +996,10 @@ initialize_type (struct cb_initialize *p, struct cb_field *f)
 	  return INITIALIZE_ONE;
     }
 
-  if (p->def)
+  if (p->def) {
+    if (f->usage == CB_USAGE_FLOAT || f->usage == CB_USAGE_DOUBLE) {
+        return INITIALIZE_ONE;
+    }
     switch (CB_TREE_CATEGORY (f))
       {
       case CB_CATEGORY_NUMERIC_EDITED:
@@ -1002,6 +1012,7 @@ initialize_type (struct cb_initialize *p, struct cb_field *f)
 	else
 	  return INITIALIZE_DEFAULT;
       }
+  }
 
   return INITIALIZE_NONE;
 }
@@ -1032,6 +1043,20 @@ initialize_uniform_char (struct cb_field *f)
 	  return -1;
 	}
     }
+}
+
+static void
+output_initialize_fp (cb_tree x, struct cb_field *f)
+{
+  output_prefix ();
+  if ( f->usage == CB_USAGE_FLOAT ) {
+	output ("{float temp = 0.0;");
+  } else {
+	output ("{double temp = 0.0;");
+  }
+  output (" memcpy(");
+  output_data (x);
+  output (", (char *)&temp, sizeof(temp));}\n");
 }
 
 static void
@@ -1152,6 +1177,10 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
 
   /* initialize by defualt */
   if (p->def) {
+    if (f->usage == CB_USAGE_FLOAT || f->usage == CB_USAGE_DOUBLE) {
+      output_initialize_fp(x, f);
+      return;
+    }
     switch (CB_TREE_CATEGORY (x))
       {
       case CB_CATEGORY_NUMERIC:

@@ -101,7 +101,17 @@ display_alnum (cob_field *f, FILE *fp)
 static void
 display (cob_field *f, FILE *fp)
 {
-  if (f->attr->type == COB_TYPE_NUMERIC_BINARY
+  if ( COB_FIELD_TYPE (f) == COB_TYPE_NUMERIC_DOUBLE ) {
+	double	f1doub;
+	memcpy((char *)&f1doub, f->data, sizeof(double));
+	fprintf(fp, "%-.18lf", f1doub);
+    }
+  else if ( COB_FIELD_TYPE (f) == COB_TYPE_NUMERIC_FLOAT ) {
+	float	f1float;
+	memcpy((char *)&f1float, f->data, sizeof(float));
+	fprintf(fp, "%-.18lf", (double)f1float);
+    }
+  else if (f->attr->type == COB_TYPE_NUMERIC_BINARY
       && !cob_current_module->flag_pretty_display)
     {
       static int digits[] = {1, 3, 5, 7, 10, 12, 15, 17, 19};

@@ -452,6 +452,12 @@ cob_decimal_set_field (cob_decimal *d, cob_field *f)
     case COB_TYPE_NUMERIC_PACKED:
       cob_decimal_set_packed (d, f);
       break;
+    case COB_TYPE_NUMERIC_FLOAT:
+      cob_decimal_set_double (d, (double) *(float *)f->data);
+      break;
+    case COB_TYPE_NUMERIC_DOUBLE:
+      cob_decimal_set_double (d, (double) *(double *)f->data);
+      break;
     default:
       cob_decimal_set_display (d, f);
       break;
@@ -499,6 +505,26 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f, int opt)
       return cob_decimal_get_display (d, f, opt);
     case COB_TYPE_NUMERIC_BINARY:
       return cob_decimal_get_binary (d, f, opt);
+    case COB_TYPE_NUMERIC_FLOAT:
+	{
+		float	val;
+		val = cob_decimal_get_double (d);
+		memcpy(f->data, (char *)&val, sizeof(float));
+/*
+		*(float *)f->data = val;
+*/
+		return 0;
+	}
+    case COB_TYPE_NUMERIC_DOUBLE:
+	{
+		double	val;
+		val = cob_decimal_get_double (d);
+		memcpy(f->data, (char *)&val, sizeof(double));
+/*
+		*(double *)f->data = val;
+*/
+		return 0;
+	}
     default:
       {
 	cob_field_attr attr = {
