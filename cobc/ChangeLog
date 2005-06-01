@@ -1,3 +1,8 @@
+2005-06-01  Roger While <simrw@sim-basis.de>
+
+	* cobc.c : Include unistd.h for MinGW.
+	  field.c : Warning for VALUE on EXTERNAL field.
+
 2005-05-31  Roger While <simrw@sim-basis.de>
 
 	* codegen.c : Fix code for children of external items.

@@ -426,9 +426,12 @@ validate_field_1 (struct cb_field *f)
 	    cb_error_x (x, _("only level 88 item may have multiple values"));
 
 	  /* ISO+IEC+1989-2002: 13.16.42.2-10 */
-	  for (p = f; p; p = p->parent)
+	  for (p = f; p; p = p->parent) {
 	    if (p->redefines)
 	      cb_error_x (x, _("entries under REDEFINES cannot have VALUE clause"));
+	    if ( p->flag_external )
+	      cb_warning_x (x, _("VALUE clause ignored for EXTERNAL items"));
+	  }
 	}
     }
 

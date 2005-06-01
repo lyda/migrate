@@ -68,7 +68,7 @@
 #if HAVE_DB4_3_DB_185_H
 #include <db4.3/db_185.h>
 #else
-#if HAVE_DBOPEN
+#if HAVE_DB_H
 #include <db.h>
 #endif
 #endif
@@ -198,29 +198,37 @@ file_open (cob_file *f, char *filename, int mode, int opt)
   switch (mode)
     {
     case COB_OPEN_INPUT:
+#ifndef	__MINGW32__
       if (f->organization == COB_ORG_LINE_SEQUENTIAL)
 	fp = fopen (filename, "r");
       else
+#endif
 	fp = fopen (filename, "rb");
       break;
     case COB_OPEN_OUTPUT:
       if (f->organization == COB_ORG_RELATIVE)
 	fp = fopen (filename, "wb+");
+#ifndef	__MINGW32__
       else if (f->organization == COB_ORG_LINE_SEQUENTIAL)
 	fp = fopen (filename, "w");
       else
+#endif
 	fp = fopen (filename, "wb");
       break;
     case COB_OPEN_I_O:
+#ifndef	__MINGW32__
       if (f->organization == COB_ORG_LINE_SEQUENTIAL)
 	fp = fopen (filename, "r+");
       else
+#endif
 	fp = fopen (filename, "rb+");
       break;
     case COB_OPEN_EXTEND:
+#ifndef	__MINGW32__
       if (f->organization == COB_ORG_LINE_SEQUENTIAL)
 	fp = fopen (filename, "a+");
       else
+#endif
 	fp = fopen (filename, "ab+");
       break;
     }

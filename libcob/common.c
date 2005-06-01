@@ -25,6 +25,10 @@
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
+#ifdef	__MINGW32__
+#include <io.h>
+#include <fcntl.h>
+#endif
 
 #include "common.h"
 #include "move.h"
@@ -189,6 +193,13 @@ cob_init (int argc, char **argv)
       setlocale (LC_ALL, "");
       bindtextdomain (PACKAGE, LOCALEDIR);
       textdomain (PACKAGE);
+#endif
+
+/* Dirty hack until we implement something better */
+#ifdef	__MINGW32__
+	_setmode(_fileno(stdin), _O_BINARY);
+	_setmode(_fileno(stdout), _O_BINARY);
+	_setmode(_fileno(stderr), _O_BINARY);
 #endif
 
       cob_init_numeric ();

@@ -24,11 +24,8 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#include <libcob.h>
-
-#ifndef __MINGW32__
 #include <unistd.h>
-#endif
+#include <libcob.h>
 
 #ifdef _WIN32
 #include <windows.h>		/* for GetTempPath, GetTempFileName */
