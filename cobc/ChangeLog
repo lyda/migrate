@@ -1,3 +1,8 @@
+2005-06-04  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : disbale optimization until we
+	  can do it really.
+
 2005-06-01  Roger While <simrw@sim-basis.de>
 
 	* cobc.c : Include unistd.h for MinGW.

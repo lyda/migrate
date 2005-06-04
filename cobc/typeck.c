@@ -1360,8 +1360,10 @@ cb_build_add (cb_tree v, cb_tree n, cb_tree round)
     return cb_build_move (cb_build_binary_op (v, '+', n), v);
 
   opt = build_store_option (v, round);
+#ifdef  RXW_TO_CHECK
   if (opt == cb_int0 && cb_fits_int (n))
     return cb_build_funcall_2 ("cob_add_int", v, cb_build_cast_integer (n));
+#endif
   return cb_build_funcall_3 ("cob_add", v, n, opt);
 }
 
@@ -1374,8 +1376,10 @@ cb_build_sub (cb_tree v, cb_tree n, cb_tree round)
     return cb_build_move (cb_build_binary_op (v, '-', n), v);
 
   opt = build_store_option (v, round);
+#ifdef	RXW_TO_CHECK
   if (opt == cb_int0 && cb_fits_int (n))
     return cb_build_funcall_2 ("cob_sub_int", v, cb_build_cast_integer (n));
+#endif
   return cb_build_funcall_3 ("cob_sub", v, n, opt);
 }
 
