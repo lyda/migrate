@@ -1887,13 +1887,17 @@ cb_emit_if (cb_tree cond, cb_tree stmt1, cb_tree stmt2)
  */
 
 void
-cb_emit_initialize (cb_tree vars, cb_tree value, cb_tree replacing, cb_tree def)
+cb_emit_initialize (cb_tree vars, cb_tree fillinit, cb_tree value, cb_tree replacing, cb_tree def)
 {
   cb_tree l;
+  int fill_init = 1;
+
   if (value == NULL && replacing == NULL)
     def = cb_true;
+  if ( fillinit == cb_true )
+	fill_init = 0;
   for (l = vars; l; l = CB_CHAIN (l))
-    cb_emit (cb_build_initialize (CB_VALUE (l), value, replacing, def));
+    cb_emit (cb_build_initialize (CB_VALUE (l), value, replacing, def, fill_init));
 }
 
 

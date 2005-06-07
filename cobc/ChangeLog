@@ -1,3 +1,9 @@
+2005-06-07  Roger While <simrw@sim-basis.de>
+
+	* parser.y : INITIALIZE WITH FILLER
+	* tree.h, tree.c, typeck.c, codegen.c : Handle above and
+	  also handle an INITIALIZE on a REDEFINE.
+
 2005-06-04  Roger While <simrw@sim-basis.de>
 
 	* typeck.c : disable optimization until we

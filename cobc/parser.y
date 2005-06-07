@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 88
+%expect 89
 
 %defines
 %verbose
@@ -2162,10 +2162,15 @@ end_if:
 
 initialize_statement:
   INITIALIZE			{ BEGIN_STATEMENT ("INITIALIZE"); }
-  x_list initialize_value initialize_replacing initialize_default
+  x_list initialize_filler initialize_value initialize_replacing initialize_default
   {
-    cb_emit_initialize ($3, $4, $5, $6);
+    cb_emit_initialize ($3, $4, $5, $6, $7);
   }
+;
+
+initialize_filler:
+  /* empty */			{ $$ = NULL; }
+| _with FILLER			{ $$ = cb_true; }
 ;
 
 initialize_value:

@@ -1406,7 +1406,7 @@ cb_build_assign (cb_tree var, cb_tree val)
  */
 
 cb_tree
-cb_build_initialize (cb_tree var, cb_tree val, cb_tree rep, cb_tree def)
+cb_build_initialize (cb_tree var, cb_tree val, cb_tree rep, cb_tree def, int flag)
 {
   struct cb_initialize *p =
     make_tree (CB_TAG_INITIALIZE, CB_CATEGORY_UNKNOWN, sizeof (struct cb_initialize));
@@ -1414,6 +1414,7 @@ cb_build_initialize (cb_tree var, cb_tree val, cb_tree rep, cb_tree def)
   p->val = val;
   p->rep = rep;
   p->def = def;
+  p->flag_statement = flag;
   return CB_TREE (p);
 }
 

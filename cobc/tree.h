@@ -679,12 +679,13 @@ struct cb_initialize {
   cb_tree val;
   cb_tree rep;
   cb_tree def;
+  int flag_statement;
 };
 
 #define CB_INITIALIZE(x)	(CB_TREE_CAST (CB_TAG_INITIALIZE, struct cb_initialize, x))
 #define CB_INITIALIZE_P(x)	(CB_TREE_TAG (x) == CB_TAG_INITIALIZE)
 
-extern cb_tree cb_build_initialize (cb_tree var, cb_tree val, cb_tree rep, cb_tree def);
+extern cb_tree cb_build_initialize (cb_tree var, cb_tree val, cb_tree rep, cb_tree def, int flag);
 
 
 /*
@@ -1003,7 +1004,7 @@ extern void cb_emit_exit (void);
 
 extern void cb_emit_if (cb_tree cond, cb_tree stmt1, cb_tree stmt2);
 
-extern void cb_emit_initialize (cb_tree vars, cb_tree value, cb_tree replacing, cb_tree def);
+extern void cb_emit_initialize (cb_tree vars, cb_tree fillinit, cb_tree value, cb_tree replacing, cb_tree def);
 
 extern void cb_emit_inspect (cb_tree var, cb_tree body, cb_tree replacing);
 extern void cb_init_tarrying (void);

@@ -967,24 +967,27 @@ output_move (cb_tree src, cb_tree dst)
 #define INITIALIZE_EXTERNAL	4
 
 static int
-initialize_type (struct cb_initialize *p, struct cb_field *f)
+initialize_type (struct cb_initialize *p, struct cb_field *f, int topfield)
 {
   if (f->flag_external)
     return INITIALIZE_EXTERNAL;
 
-  if (f->redefines)
+  if (f->redefines && (!topfield || !p->flag_statement))
     return INITIALIZE_NONE;
 
   if (p->val && f->values)
     return INITIALIZE_ONE;
 
+  if ( *f->name == '$' && p->flag_statement && !f->children )
+    return INITIALIZE_NONE;
+
   if (f->children)
     {
-      int type = initialize_type (p, f->children);
+      int type = initialize_type (p, f->children, 0);
       if (type == INITIALIZE_ONE)
 	return INITIALIZE_COMPOUND;
       for (f = f->children->sister; f; f = f->sister)
-	if (type != initialize_type (p, f))
+	if (type != initialize_type (p, f, 0))
 	  return INITIALIZE_COMPOUND;
       return type;
     }
@@ -1205,7 +1208,7 @@ output_initialize_compound (struct cb_initialize *p, cb_tree x)
 
   for (f = ff->children; f; f = f->sister)
     {
-      int type = initialize_type (p, f);
+      int type = initialize_type (p, f, 0);
       cb_tree c = cb_build_field_reference (f, x);
       switch (type)
 	{
@@ -1225,7 +1228,7 @@ output_initialize_compound (struct cb_initialize *p, cb_tree x)
 
 		for (; f->sister; f = f->sister)
 		  if (!f->sister->redefines)
-		    if (initialize_type (p, f->sister) != INITIALIZE_DEFAULT
+		    if (initialize_type (p, f->sister, 0) != INITIALIZE_DEFAULT
 			|| initialize_uniform_char (f->sister) != last_char)
 		      break;
 
@@ -1269,7 +1272,7 @@ static void
 output_initialize (struct cb_initialize *p)
 {
   struct cb_field *f = cb_field (p->var);
-  switch (initialize_type (p, f))
+  switch (initialize_type (p, f, 1))
     {
     case INITIALIZE_NONE:
       break;
@@ -2253,7 +2256,7 @@ output_initial_values (struct cb_field *p)
 */
       {
 	cb_tree x = cb_build_field_reference (p, 0);
-	output_stmt (cb_build_initialize (x, cb_true, NULL, def));
+	output_stmt (cb_build_initialize (x, cb_true, NULL, def, 0));
       }
 }
 
