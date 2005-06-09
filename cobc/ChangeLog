@@ -1,3 +1,7 @@
+2005-06-09  Roger While <simrw@sim-basis.de>
+
+	* parser.y : Fix 88 level check for nested EVALUATE's.
+
 2005-06-07  Roger While <simrw@sim-basis.de>
 
 	* parser.y : INITIALIZE WITH FILLER

@@ -145,6 +145,9 @@ drop (const char *name)
 	struct call_hash *p = *pp;
 	lt_dlclose (p->handle);
 	*pp = p->next;
+	free(p->name);
+	if ( p->path )
+		free(p->path);
 	free (p);
 	return;
       }

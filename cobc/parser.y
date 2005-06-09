@@ -26,6 +26,7 @@
 #include "config.h"
 
 #include <stdlib.h>
+#include <string.h>
 #include <libcob.h>
 
 #include "cobc.h"
@@ -64,7 +65,8 @@ static cb_tree perform_stack = NULL;
 
 static int next_label_id = 0;
 static int current_linage = 0;
-static int check_eval = 0;
+static int eval_level = 0;
+static int eval_check[64] = { 0 };
 static struct cb_file *linage_file;
 static cb_tree next_label_list = NULL;
 
@@ -133,7 +135,8 @@ start:
     perform_stack = NULL;
     next_label_id = 0;
     current_linage = 0;
-    check_eval = 0;
+    eval_level = 0;
+    memset((char *)eval_check, 0, sizeof(eval_check));
     entry_number = 0;
     linage_file = NULL;
     next_label_list = NULL;
@@ -2000,6 +2003,8 @@ evaluate_statement:
   end_evaluate
   {
     cb_emit_evaluate ($3, $4);
+    eval_check[eval_level] = 0;
+    eval_level--;
   }
 ;
 evaluate_subject_list:
@@ -2012,13 +2017,13 @@ evaluate_subject:
   {
 	$$ = $1;
 	if ( CB_REFERENCE_P($1) ) {
-		check_eval = 1;
+		eval_check[eval_level++] = 1;
 	} else {
-		check_eval = 0;
+		eval_check[eval_level++] = 0;
 	}
   }
-| TOK_TRUE			{ $$ = cb_true; check_eval = 0; }
-| TOK_FALSE			{ $$ = cb_false; check_eval = 0; }
+| TOK_TRUE			{ $$ = cb_true; eval_check[eval_level++] = 0; }
+| TOK_FALSE			{ $$ = cb_false; eval_check[eval_level++] = 0; }
 ;
 evaluate_case_list:
   /* empty */			{ $$ = NULL; }
@@ -2044,7 +2049,7 @@ evaluate_object_list:
 evaluate_object:
   flag_not expr
   {
-    if ( check_eval && CB_REFERENCE_P($2) && CB_FIELD_P(CB_REFERENCE($2)->value) ) {
+    if ( eval_check[eval_level - 1] && CB_REFERENCE_P($2) && CB_FIELD_P(CB_REFERENCE($2)->value) ) {
 	if ( CB_FIELD(CB_REFERENCE($2)->value)->level == 88 ) {
 		cb_error_x ($2, _("88 level invalid here"));
 	}
