@@ -1,3 +1,7 @@
+2005-06-11  Roger While <simrw@sim-basis.de>
+
+	* Add in INSPECT BEFORE/AFTER tests
+
 2005-05-28  Roger While <simrw@sim-basis.de>
 
 	* Use absolute path for cobcrun; seems that some
