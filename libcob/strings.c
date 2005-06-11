@@ -79,7 +79,7 @@ void
 cob_inspect_before (cob_field *str)
 {
   unsigned char *p;
-  for (p = inspect_start; p < inspect_end - str->size; p++)
+  for (p = inspect_start; p < inspect_end - str->size + 1; p++)
     if (memcmp (p, str->data, str->size) == 0)
       {
 	inspect_end = p;
@@ -91,7 +91,7 @@ void
 cob_inspect_after (cob_field *str)
 {
   unsigned char *p;
-  for (p = inspect_start; p < inspect_end - str->size; p++)
+  for (p = inspect_start; p < inspect_end - str->size + 1; p++)
     if (memcmp (p, str->data, str->size) == 0)
       {
 	inspect_start = p + str->size;

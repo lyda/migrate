@@ -1,3 +1,8 @@
+2005-06-11  Roger While <simrw@sim-basis.de>
+
+	* strings.c : Fix INSPECT
+	  fileio.c : Mistake in LINAGE
+
 2005-06-09  Roger While <simrw@sim-basis.de>
 
 	* call.c : Fix memory leak in drop function.

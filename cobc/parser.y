@@ -211,7 +211,7 @@ environment_division:
 
 
 /*******************
- * Conficuration section
+ * Configuration section
  *******************/
 
 configuration_section:
@@ -985,7 +985,7 @@ code_set_clause:
 
 
 /*******************
- * WORKING-STRAGE SECTION
+ * WORKING-STORAGE SECTION
  *******************/
 
 working_storage_section:

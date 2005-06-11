@@ -351,7 +351,7 @@ cob_real_put_sign (cob_field *f, int sign)
 char *
 cob_field_to_string (cob_field *f, char *s)
 {
-  size_t i;
+  int i;
   memcpy (s, f->data, f->size);
   for (i = f->size - 1; i >= 0; i--)
     if (s[i] != ' ')
@@ -543,7 +543,7 @@ cob_cmp (cob_field *f1, cob_field *f2)
 int
 cob_cmp_int (cob_field *f1, int n)
 {
-  cob_field_attr attr = {COB_TYPE_NUMERIC_BINARY, 9, 0, COB_FLAG_HAVE_SIGN};
+  cob_field_attr attr = {COB_TYPE_NUMERIC_BINARY, 9, 0, COB_FLAG_HAVE_SIGN, NULL};
   cob_field temp = {sizeof (int), (unsigned char *) &n, &attr};
   return cob_numeric_cmp (f1, &temp);
 }
@@ -682,7 +682,7 @@ void
 cob_table_sort (cob_field *f, int n)
 {
   sort_base = f;
-  qsort (f->data, n, f->size, sort_compare);
+  qsort (f->data, (size_t)n, f->size, sort_compare);
 }
 
 

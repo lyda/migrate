@@ -274,7 +274,7 @@ output_data (cb_tree x)
       {
 	struct cb_literal *l = CB_LITERAL (x);
 	if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC)
-	  output ("\"%s%s\"", l->data,
+	  output ("(unsigned char *)\"%s%s\"", l->data,
 		  (l->sign < 0) ? "-" : (l->sign > 0) ? "+" : "");
 	else
 	  output_string (l->data, l->size);
@@ -875,6 +875,8 @@ output_cond (cb_tree x, int save_flag)
       {
 	if (x == cb_true)
 	  output ("1");
+	else if (x == cb_false)
+	  output ("0");
 	else
 	  ABORT ();
 	break;
@@ -1178,7 +1180,7 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
 	  return;
 	}
 
-  /* initialize by defualt */
+  /* initialize by default */
   if (p->def) {
     if (f->usage == CB_USAGE_FLOAT || f->usage == CB_USAGE_DOUBLE) {
       output_initialize_fp(x, f);

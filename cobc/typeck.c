@@ -1344,6 +1344,8 @@ cb_build_cond (cb_tree x)
     default:
       ABORT ();
     }
+/* NOT REACHED */
+    return x;
 }
 
 
@@ -2338,6 +2340,8 @@ cb_build_move_num (cb_tree x, int high)
     default:
       ABORT ();
     }
+/* NOT REACHED */
+    return x;
 }
 
 static cb_tree

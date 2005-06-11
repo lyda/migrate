@@ -669,7 +669,7 @@ indirect_move (void (*func) (cob_field *src, cob_field *dst),
 {
   unsigned char data[64];
   cob_field_attr attr =
-    {COB_TYPE_NUMERIC_DISPLAY, size, scale, COB_FLAG_HAVE_SIGN};
+    {COB_TYPE_NUMERIC_DISPLAY, size, scale, COB_FLAG_HAVE_SIGN, NULL};
   cob_field temp = {size, data, &attr};
   func (src, &temp);
   cob_move (&temp, dst);

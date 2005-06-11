@@ -351,7 +351,7 @@ file_write_opt (cob_file *f, int opt)
 				if ( cob_check_eop ) {
 					eop_status = 1;
 				}
-				for ( ; n < f->lin_lines; i++ ) {
+				for ( ; n < f->lin_lines; n++ ) {
 					fputc ('\n', f->file);
 				}
 				for ( i = 0; i < f->lin_bot; i++ ) {

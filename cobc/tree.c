@@ -87,7 +87,7 @@ cb_name_1 (char *s, cb_tree x)
 
     case CB_TAG_LITERAL:
       if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC)
-	strcpy (s, CB_LITERAL (x)->data);
+	strcpy (s, (char *)CB_LITERAL (x)->data);
       else
 	sprintf (s, "\"%s\"", CB_LITERAL (x)->data);
       break;
@@ -314,6 +314,8 @@ cb_tree_type (cb_tree x)
     default:
       ABORT ();
     }
+/* NOT REACHED */
+    return 0;
 }
 
 int
@@ -567,9 +569,9 @@ cb_tree
 cb_build_numeric_literal (int sign, const unsigned char *data, int scale)
 {
   struct cb_literal *p =
-    build_literal (CB_CATEGORY_NUMERIC, data, strlen (data));
-  p->sign = sign;
-  p->scale = scale;
+    build_literal (CB_CATEGORY_NUMERIC, data, strlen ((char *)data));
+  p->sign = (char)sign;
+  p->scale = (char)scale;
   return CB_TREE (p);
 }
 
@@ -795,7 +797,7 @@ cb_build_picture (const char *str)
       while (n > 0)
 	{
 	  buff[idx++] = c;
-	  buff[idx++] = (n < 256) ? n : 255;
+	  buff[idx++] = (unsigned char)((n < 256) ? n : 255);
 	  n -= 255;
 	}
     }
@@ -804,9 +806,9 @@ cb_build_picture (const char *str)
   /* set picture */
   pic->orig = strdup (str);
   pic->size = size;
-  pic->digits = digits;
-  pic->scale = scale;
-  pic->have_sign = s_count;
+  pic->digits = (char)digits;
+  pic->scale = (char)scale;
+  pic->have_sign = (char)s_count;
 
   /* set picture category */
   switch (category)
@@ -824,14 +826,14 @@ cb_build_picture (const char *str)
       pic->category = CB_CATEGORY_ALPHANUMERIC;
       break;
     case PIC_NUMERIC_EDITED:
-      pic->str = buff;
+      pic->str = (char *)buff;
       pic->category = CB_CATEGORY_NUMERIC_EDITED;
       break;
     case PIC_EDITED:
     case PIC_ALPHABETIC_EDITED:
     case PIC_ALPHANUMERIC_EDITED:
     case PIC_NATIONAL_EDITED:
-      pic->str = buff;
+      pic->str = (char *)buff;
       pic->category = CB_CATEGORY_ALPHANUMERIC_EDITED;
       break;
     default:
@@ -949,6 +951,8 @@ cb_field_size (cb_tree x)
     default:
       ABORT ();
     }
+/* NOT REACHED */
+    return 0;
 }
 
 struct cb_field *

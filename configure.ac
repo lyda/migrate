@@ -168,6 +168,7 @@ AC_C_CONST
 AC_C_BIGENDIAN
 AC_TYPE_SIZE_T
 AC_STRUCT_TM
+AX_C___ATTRIBUTE__
 
 # Checks for library functions.
 AC_FUNC_ALLOCA

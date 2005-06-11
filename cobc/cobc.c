@@ -570,9 +570,10 @@ process_filename (const char *filename)
 static int
 process (const char *cmd)
 {
+  char *p;
   char buff[BUFSIZ];
-  char *p = buff;
 
+  p = buff;
   /* quote '$' */
   for (; *cmd; cmd++)
     if (*cmd == '$')

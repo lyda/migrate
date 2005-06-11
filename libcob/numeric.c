@@ -754,9 +754,9 @@ cob_display_add_int (cob_field *f, int n)
   else
     {
       /* PIC 9(n)V9(m) */
-      size -= scale;
-      if (size < 0)
+      if ( scale > size )
 	goto overflow;
+      size -= scale;
     }
 
   if (n > 0)

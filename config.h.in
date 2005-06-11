@@ -185,6 +185,9 @@
 /* Define to 1 if you have the <wchar.h> header file. */
 #undef HAVE_WCHAR_H
 
+/* define if your compiler has __attribute__ */
+#undef HAVE___ATTRIBUTE__
+
 /* Name of package */
 #undef PACKAGE
 
