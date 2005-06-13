@@ -24,8 +24,12 @@
 #if HAVE_NCURSES_H
 #include <ncurses.h>
 #else
+#if HAVE_PDCURSES_H
+#include <pdcurses.h>
+#else
 #if HAVE_CURSES_H
 #include <curses.h>
+#endif
 #endif
 #endif
 
@@ -37,14 +41,14 @@
 #define SCREEN_COLUMN_POS(s) \
   ((COB_SCREEN_COLUMN_CONST ? s->column.val : cob_get_int (s->column.ptr)) - 1)
 
-#if HAVE_LIBNCURSES
+#if HAVE_LIBNCURSES || HAVE_LIBPDCURSES
 static int screen_initialized = 0;
 #endif
 
 void
 cob_screen_init (void)
 {
-#if HAVE_LIBNCURSES
+#if HAVE_LIBNCURSES || HAVE_LIBPDCURSES
   if (!screen_initialized)
     {
       initscr ();
@@ -60,7 +64,7 @@ cob_screen_init (void)
 void
 cob_screen_clear (void)
 {
-#if HAVE_LIBNCURSES
+#if HAVE_LIBNCURSES || HAVE_LIBPDCURSES
   if (screen_initialized)
     endwin ();
 #endif
@@ -74,7 +78,7 @@ cob_screen_attr (int line, int column, long attr)
 void
 cob_screen_puts (const char *data, size_t size, int line, int column, long attr)
 {
-#if HAVE_LIBNCURSES
+#if HAVE_LIBNCURSES || HAVE_LIBPDCURSES
   mvaddnstr (line, column, data, size);
 #endif
 }
@@ -84,6 +88,9 @@ cob_screen_gets (char *data, size_t size, int line, int column, long attr)
 {
 #if HAVE_LIBNCURSES
   mvgetnstr (line, column, data, size);
+#endif
+#if HAVE_LIBPDCURSES
+  mvgetstr (line, column, data);
 #endif
 }
 

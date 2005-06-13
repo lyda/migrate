@@ -177,6 +177,8 @@ struct cob_exception cob_exception_table[] = {
 };
 
 
+static int cob_switch[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
 /*
  * General functions
  */
@@ -184,6 +186,10 @@ struct cob_exception cob_exception_table[] = {
 void
 cob_init (int argc, char **argv)
 {
+  char	*s;
+  int i;
+  char buff[32];
+
   cob_argc = argc;
   cob_argv = argv;
 
@@ -207,6 +213,15 @@ cob_init (int argc, char **argv)
       cob_init_fileio ();
       cob_init_call ();
 
+      for ( i = 0; i < 8; i++ ) {
+	memset(buff, 0, sizeof(buff));
+	sprintf(buff, "COB_SWITCH_%d", i + 1);
+	s = getenv(buff);
+	if ( s && strcasecmp(s, "ON") == 0 ) {
+		cob_switch[i] = 1;
+	}
+      }
+	
       cob_initialized = 1;
     }
 }
@@ -364,8 +379,6 @@ cob_field_to_string (cob_field *f, char *s)
 /*
  * Switch
  */
-
-static int cob_switch[8] = {1, 0, 1, 1, 1, 1, 1, 1};
 
 int
 cob_get_switch (int n)

@@ -1,3 +1,8 @@
+2005-06-13  Roger While <simrw@sim-basis.de>
+
+	* common.c : Handle new COB_SWITCH_n=ON/OFF
+	  screenio.c : Handle pdcurses
+
 2005-06-11  Roger While <simrw@sim-basis.de>
 
 	* strings.c : Fix INSPECT
