@@ -1779,6 +1779,9 @@ cb_build_intrinsic (cb_tree name, cb_tree args)
 		case CB_INTR_PRESENT_VALUE:
 		case CB_INTR_ORD_MIN:
 		case CB_INTR_ORD_MAX:
+		case CB_INTR_YEAR_TO_YYYY:
+		case CB_INTR_DATE_TO_YYYYMMDD:
+		case CB_INTR_DAY_TO_YYYYDDD:
 			return make_intrinsic (name, cbp, args, cb_int1);
 
 		default:

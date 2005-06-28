@@ -1435,7 +1435,6 @@ cob_intr_variance (int params, ...)
 	cob_field	*f;
 	va_list		args;
 
-
 	va_start (args, params);
 	make_double_entry();
 
@@ -1487,7 +1486,6 @@ cob_intr_standard_deviation (int params, ...)
 	int		i;
 	cob_field	*f;
 	va_list		args;
-
 
 	va_start (args, params);
 	make_double_entry();
@@ -1554,7 +1552,6 @@ cob_intr_present_value (int params, ...)
 	cob_field	*f;
 	va_list		args;
 
-
 	va_start (args, params);
 	make_double_entry();
 
@@ -1589,5 +1586,186 @@ cob_intr_present_value (int params, ...)
 	va_end (args);
 
 	cob_decimal_get_field (&d4, curr_field, 0);
+	return curr_field;
+}
+
+cob_field *
+cob_intr_year_to_yyyy (int params, ...)
+{
+	int		year;
+	int		interval;
+	int		xqtyear;
+	int		maxyear;
+	cob_field	*f;
+	va_list		args;
+	time_t		t;
+	struct tm	*timeptr;
+	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL};
+	cob_field	field = {4, NULL, &attr};
+
+	make_field_entry (&field);
+
+	va_start (args, params);
+	f = va_arg (args, cob_field *);
+	year = cob_get_int (f);
+	if ( params > 1 ) {
+		f = va_arg (args, cob_field *);
+		interval = cob_get_int (f);
+	} else {
+		interval = 50;
+	}
+	if ( params > 2 ) {
+		f = va_arg (args, cob_field *);
+		xqtyear = cob_get_int (f);
+	} else {
+		t = time(NULL);
+		timeptr = localtime (&t);
+		xqtyear = 1900 + timeptr->tm_year;
+	}
+	va_end (args);
+
+	if ( year < 0 || year > 99 ) {
+		cob_set_int (curr_field, 0);
+		return curr_field;
+	}
+	if ( xqtyear < 1601 || xqtyear > 9999 ) {
+		cob_set_int (curr_field, 0);
+		return curr_field;
+	}
+	maxyear = xqtyear + interval;
+	if ( maxyear < 1700 || maxyear > 9999 ) {
+		cob_set_int (curr_field, 0);
+		return curr_field;
+	}
+	if ( maxyear % 100 >= year ) {
+		year += 100 * ( maxyear / 100 );
+	} else {
+		year += 100 * ( (maxyear / 100) - 1 );
+	}
+	cob_set_int (curr_field, year);
+	return curr_field;
+}
+
+cob_field *
+cob_intr_date_to_yyyymmdd (int params, ...)
+{
+	int		year;
+	int		mmdd;
+	int		interval;
+	int		xqtyear;
+	int		maxyear;
+	cob_field	*f;
+	va_list		args;
+	time_t		t;
+	struct tm	*timeptr;
+	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL};
+	cob_field	field = {4, NULL, &attr};
+
+	make_field_entry (&field);
+
+	va_start (args, params);
+	f = va_arg (args, cob_field *);
+	year = cob_get_int (f);
+	mmdd = year % 10000;
+	year /= 10000;
+	if ( params > 1 ) {
+		f = va_arg (args, cob_field *);
+		interval = cob_get_int (f);
+	} else {
+		interval = 50;
+	}
+	if ( params > 2 ) {
+		f = va_arg (args, cob_field *);
+		xqtyear = cob_get_int (f);
+	} else {
+		t = time(NULL);
+		timeptr = localtime (&t);
+		xqtyear = 1900 + timeptr->tm_year;
+	}
+	va_end (args);
+
+	if ( year < 0 || year > 999999 ) {
+		cob_set_int (curr_field, 0);
+		return curr_field;
+	}
+	if ( xqtyear < 1601 || xqtyear > 9999 ) {
+		cob_set_int (curr_field, 0);
+		return curr_field;
+	}
+	maxyear = xqtyear + interval;
+	if ( maxyear < 1700 || maxyear > 9999 ) {
+		cob_set_int (curr_field, 0);
+		return curr_field;
+	}
+	if ( maxyear % 100 >= year ) {
+		year += 100 * ( maxyear / 100 );
+	} else {
+		year += 100 * ( (maxyear / 100) - 1 );
+	}
+	year *= 10000;
+	year += mmdd;
+	cob_set_int (curr_field, year);
+	return curr_field;
+}
+
+cob_field *
+cob_intr_day_to_yyyyddd (int params, ...)
+{
+	int		year;
+	int		days;
+	int		interval;
+	int		xqtyear;
+	int		maxyear;
+	cob_field	*f;
+	va_list		args;
+	time_t		t;
+	struct tm	*timeptr;
+	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL};
+	cob_field	field = {4, NULL, &attr};
+
+	make_field_entry (&field);
+
+	va_start (args, params);
+	f = va_arg (args, cob_field *);
+	year = cob_get_int (f);
+	days = year % 1000;
+	year /= 1000;
+	if ( params > 1 ) {
+		f = va_arg (args, cob_field *);
+		interval = cob_get_int (f);
+	} else {
+		interval = 50;
+	}
+	if ( params > 2 ) {
+		f = va_arg (args, cob_field *);
+		xqtyear = cob_get_int (f);
+	} else {
+		t = time(NULL);
+		timeptr = localtime (&t);
+		xqtyear = 1900 + timeptr->tm_year;
+	}
+	va_end (args);
+
+	if ( year < 0 || year > 999999 ) {
+		cob_set_int (curr_field, 0);
+		return curr_field;
+	}
+	if ( xqtyear < 1601 || xqtyear > 9999 ) {
+		cob_set_int (curr_field, 0);
+		return curr_field;
+	}
+	maxyear = xqtyear + interval;
+	if ( maxyear < 1700 || maxyear > 9999 ) {
+		cob_set_int (curr_field, 0);
+		return curr_field;
+	}
+	if ( maxyear % 100 >= year ) {
+		year += 100 * ( maxyear / 100 );
+	} else {
+		year += 100 * ( (maxyear / 100) - 1 );
+	}
+	year *= 1000;
+	year += days;
+	cob_set_int (curr_field, year);
 	return curr_field;
 }

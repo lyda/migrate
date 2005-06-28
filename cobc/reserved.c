@@ -596,13 +596,13 @@ static struct cb_intrinsic_table function_list[] = {
   { "DATE-OF-INTEGER",		 1, 1, CB_INTR_DATE_OF_INTEGER,
 				 "cob_intr_date_of_integer",
 				 CB_CATEGORY_NUMERIC},
-  { "DATE-TO-YYYYMMDD",		-1, 0, CB_INTR_DATE_TO_YYYYMMDD,
+  { "DATE-TO-YYYYMMDD",		-1, 1, CB_INTR_DATE_TO_YYYYMMDD,
 				 "cob_intr_date_to_yyyymmdd",
 				 CB_CATEGORY_NUMERIC},
   { "DAY-OF-INTEGER",		 1, 1, CB_INTR_DAY_OF_INTEGER,
 				 "cob_intr_day_of_integer",
 				 CB_CATEGORY_NUMERIC},
-  { "DAY-TO-YYYYDDD",		-1, 0, CB_INTR_DAY_TO_YYYYDDD,
+  { "DAY-TO-YYYYDDD",		-1, 1, CB_INTR_DAY_TO_YYYYDDD,
 				 "cob_intr_day_to_yyyyddd",
 				 CB_CATEGORY_NUMERIC},
   { "DISPLAY-OF",		-1, 0, CB_INTR_DISPLAY_OF,
@@ -785,8 +785,8 @@ static struct cb_intrinsic_table function_list[] = {
   { "WHEN-COMPILED",		 0, 1, CB_INTR_WHEN_COMPILED,
 				 NULL,
 				 CB_CATEGORY_ALPHANUMERIC},
-  { "YEAR-TO-YYYY",		-1, 0, CB_INTR_YEAR_TO_YYYY,
-				 NULL,
+  { "YEAR-TO-YYYY",		-1, 1, CB_INTR_YEAR_TO_YYYY,
+				 "cob_intr_year_to_yyyy",
 				 CB_CATEGORY_NUMERIC}
 };
 #define	NUM_INTRINSICS	sizeof(function_list) / sizeof(struct cb_intrinsic_table)

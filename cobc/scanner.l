@@ -41,6 +41,7 @@
 
 static int last_token_is_dot = 0;
 static int integer_is_label = 0;
+static int inside_function = 0;
 
 static int read_literal (char mark);
 static int scan_x (char *text);
@@ -261,6 +262,7 @@ H\"[^\"\n]*\" {
 <<EOF>> {
 	last_token_is_dot = 0;
 	integer_is_label = 0;
+	inside_function = 0;
 	yyterminate ();
 }
 
