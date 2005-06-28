@@ -1,5 +1,5 @@
 #MODULES = CM DB IC IF IX NC OB RL RW SG SM SQ ST
-MODULES = NC SM IC SQ RL IX ST
+MODULES = NC SM IC SQ RL IX ST IF
 
 EXTRA_DIST = EXEC85.conf.in expand.pl report.pl summary.pl summary.txt \
 	NC.txt SM.txt IC.txt SQ.txt RL.txt IX.txt ST.txt
@@ -33,6 +33,7 @@ $(MODULES): newcob.val EXEC85 EXEC85.conf.in
 	@echo -n "Building module $@..."
 	@sed 's/@MODULE@/$@/' EXEC85.conf.in > EXEC85.conf
 	@. ../atconfig; . ../atlocal; export PATH; ./EXEC85
+	@./ifedit.sh
 	@perl expand.pl newcob.tmp
 	@rm -f newcob.tmp newcob.log EXEC85.conf
 	@echo "test:"               > $@/Makefile

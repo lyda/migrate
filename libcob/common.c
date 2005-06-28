@@ -36,6 +36,7 @@
 #include "termio.h"
 #include "fileio.h"
 #include "call.h"
+#include "intrinsic.h"
 #include "lib/gettext.h"
 
 int cob_argc = 0;
@@ -212,6 +213,7 @@ cob_init (int argc, char **argv)
       cob_init_termio ();
       cob_init_fileio ();
       cob_init_call ();
+      cob_init_intrinsic ();
 
       for ( i = 0; i < 8; i++ ) {
 	memset(buff, 0, sizeof(buff));
@@ -526,13 +528,18 @@ cob_cmp (cob_field *f1, cob_field *f2)
     {
       cob_field temp;
       cob_field_attr attr;
-      unsigned char buff[18];
+      unsigned char buff[48];
       if (COB_FIELD_IS_NUMERIC (f1) && COB_FIELD_IS_NUMERIC (f2))
 	return cob_numeric_cmp (f1, f2);
       if (COB_FIELD_IS_NUMERIC (f1)
 	  && COB_FIELD_TYPE (f1) != COB_TYPE_NUMERIC_DISPLAY)
 	{
+/* Seems like struct inits generate worse code
 	  temp = (cob_field) {f1->attr->digits, buff, &attr};
+*/
+	  temp.size = f1->attr->digits;
+	  temp.data = buff;
+	  temp.attr = &attr;
 	  attr = *f1->attr;
 	  attr.type = COB_TYPE_NUMERIC_DISPLAY;
 	  attr.flags &= ~COB_FLAG_HAVE_SIGN;
@@ -542,7 +549,12 @@ cob_cmp (cob_field *f1, cob_field *f2)
       if (COB_FIELD_IS_NUMERIC (f2)
 	  && COB_FIELD_TYPE (f2) != COB_TYPE_NUMERIC_DISPLAY)
 	{
+/* Seems like struct inits generate worse code
 	  temp = (cob_field) {f2->attr->digits, buff, &attr};
+*/
+	  temp.size = f2->attr->digits;
+	  temp.data = buff;
+	  temp.attr = &attr;
 	  attr = *f2->attr;
 	  attr.type = COB_TYPE_NUMERIC_DISPLAY;
 	  attr.flags &= ~COB_FLAG_HAVE_SIGN;
@@ -558,6 +570,7 @@ cob_cmp_int (cob_field *f1, int n)
 {
   cob_field_attr attr = {COB_TYPE_NUMERIC_BINARY, 9, 0, COB_FLAG_HAVE_SIGN, NULL};
   cob_field temp = {sizeof (int), (unsigned char *) &n, &attr};
+
   return cob_numeric_cmp (f1, &temp);
 }
 

@@ -29,5 +29,6 @@
 #include <libcob/screenio.h>
 #include <libcob/strings.h>
 #include <libcob/termio.h>
+#include <libcob/intrinsic.h>
 
 #endif /* COB_LIBCOB_H_ */

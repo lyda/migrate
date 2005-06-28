@@ -15,6 +15,7 @@ $(top_builddir)/libcob/.libs/libcob_la-screenio.o \
 $(top_builddir)/libcob/.libs/libcob_la-fileio.o \
 $(top_builddir)/libcob/.libs/libcob_la-strings.o \
 $(top_builddir)/libcob/.libs/libcob_la-move.o \
-$(top_builddir)/libcob/.libs/libcob_la-termio.o
+$(top_builddir)/libcob/.libs/libcob_la-termio.o \
+$(top_builddir)/libcob/.libs/libcob_la-intrinsic.o
 endif
 

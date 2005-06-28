@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <unistd.h>
 #include <time.h>
 
@@ -132,6 +133,31 @@ display (cob_field *f, FILE *fp)
     {
       display_alnum (f, fp);
     }
+}
+
+void
+cob_new_display (int outorerr, int newline, int varcnt, ...)
+{
+	FILE		*fp;
+	cob_field	*f;
+	int		i;
+	va_list		args;
+
+	if ( !outorerr ) {
+		fp = stdout;
+	} else {
+		fp = stderr;
+	}
+	va_start (args, varcnt);
+	for ( i = 0; i < varcnt; i++ ) {
+		f = va_arg (args, cob_field *);
+		display (f, fp);
+	}
+	va_end (args);
+	if ( newline ) {
+		fputc ('\n', fp);
+		fflush (fp);
+	}
 }
 
 void

@@ -49,7 +49,7 @@ static cob_decimal cob_d4;
 void
 cob_decimal_init (cob_decimal *d)
 {
-  mpz_init (d->value);
+  mpz_init2 (d->value, 256);
   d->scale = 0;
 }
 
@@ -151,6 +151,7 @@ cob_decimal_get_double (cob_decimal *d)
 {
   int n = d->scale;
   double v = mpz_get_d (d->value);
+
   for (; n > 0; n--) v /= 10;
   for (; n < 0; n++) v *= 10;
   return v;
@@ -527,14 +528,22 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f, int opt)
 	}
     default:
       {
+	cob_field temp;
 	cob_field_attr attr = {
 	  COB_TYPE_NUMERIC_DISPLAY,
 	  f->attr->digits,
 	  f->attr->scale,
-	  COB_FLAG_HAVE_SIGN
+	  COB_FLAG_HAVE_SIGN,
+	  NULL
 	};
+	unsigned char data[64];
+/* Worse code
 	unsigned char data[f->attr->digits];
 	cob_field temp = {f->attr->digits, data, &attr};
+*/
+	temp.size = f->attr->digits;
+	temp.data = data;
+	temp.attr = &attr;
 	if (cob_decimal_get_display (d, &temp, opt) == 0)
 	  cob_move (&temp, f);
 	return cob_exception_code;
@@ -619,59 +628,30 @@ cob_decimal_cmp (cob_decimal *d1, cob_decimal *d2)
  * Optimized arithmetic for DISPLAY
  */
 
-/* Array of three digits: {"\0\0\0", "\0\0\1", ..., "\9\9\9"} */
-static unsigned char digit_table[1000][3];
-
-static void
-init_digit_table (void)
-{
-  int n = 0;
-  int i, j, k;
-
-  for (i = 0; i < 10; i++)
-    for (j = 0; j < 10; j++)
-      for (k = 0; k < 10; k++)
-	{
-	  digit_table[n][0] = i;
-	  digit_table[n][1] = j;
-	  digit_table[n][2] = k;
-	  n++;
-	}
-}
-
 static int
 display_add_int (unsigned char *data, size_t size, unsigned int n)
 {
   int carry = 0;
-  unsigned char *dp;
   unsigned char *sp = data + size;
 
   while (n > 0)
     {
-      /* get the least significant 3 digits from n */
-      int i = n;
-      n = n / 1000;
-      dp = digit_table[i % 1000];
+	int i = n % 10;
+	n = n / 10;
 
-      /* add it to the string */
-      for (i = 2; i >= 0; i--)
-	{
-	  /* check for overflow */
-	  if (--sp < data)
-	    {
+	/* check for overflow */
+	if (--sp < data)
+	  {
 		if ( ! cob_current_module->flag_binary_truncate )
 			return 0;
-	      for (; i >= 0; i--)
-		carry += dp[i];
-	      return carry;
-	    }
+		return 1;
+	  }
 
-	  /* perform addition */
-	  if ((*sp += dp[i] + carry) > '9')
-	    carry = 1, *sp -= 10;
-	  else
-	    carry = 0;
-	}
+	/* perform addition */
+	if ((*sp += i + carry) > '9')
+	  carry = 1, *sp -= 10;
+	else
+	  carry = 0;
     }
   if (carry == 0)
     return 0;
@@ -692,31 +672,22 @@ static int
 display_sub_int (unsigned char *data, size_t size, unsigned int n)
 {
   int carry = 0;
-  unsigned char *dp;
   unsigned char *sp = data + size;
 
   while (n > 0)
     {
-      /* get the least significant 3 digits from n */
-      int i = n;
-      n = n / 1000;
-      dp = digit_table[i % 1000];
+	int i = n % 10;
+	n = n / 10;
 
-      /* subtract it from the string */
-      for (i = 2; i >= 0; i--)
-	{
-	  /* check for overflow */
-	  if (--sp < data)
-	    {
-	      return 1;
-	    }
+	/* check for overflow */
+	if (--sp < data)
+		return 1;
 
-	  /* perform subtraction */
-	  if ((*sp -= dp[i] + carry) < '0')
-	    carry = 1, *sp += 10;
-	  else
-	    carry = 0;
-	}
+	/* perform subtraction */
+	if ((*sp -= i + carry) < '0')
+	  carry = 1, *sp += 10;
+	else
+	  carry = 0;
     }
   if (carry == 0)
     return 0;
@@ -734,11 +705,16 @@ display_sub_int (unsigned char *data, size_t size, unsigned int n)
 static int
 cob_display_add_int (cob_field *f, int n)
 {
-  int sign = cob_get_sign (f);
+  int sign;
+  size_t osize;
   unsigned char *data = COB_FIELD_DATA (f);
   size_t size = COB_FIELD_SIZE (f);
   int scale = COB_FIELD_SCALE (f);
+  unsigned char	tfield[64];
 
+  osize = size;
+  memcpy(tfield, data, osize);
+  sign = cob_get_sign (f);
   /* -x + n = -(x - n) */
   if (sign < 0)
     n = -n;
@@ -754,9 +730,11 @@ cob_display_add_int (cob_field *f, int n)
   else
     {
       /* PIC 9(n)V9(m) */
-      if ( scale > size )
-	goto overflow;
       size -= scale;
+      if (size < 0) {
+	cob_put_sign (f, sign);
+	goto overflow;
+      }
     }
 
   if (n > 0)
@@ -764,8 +742,8 @@ cob_display_add_int (cob_field *f, int n)
       /* add n to the field */
       if (display_add_int (data, size, n) != 0)
 	{
-	  /* if there wes an overflow, recover the last value */
-	  display_sub_int (data, size, n);
+	  /* if there was an overflow, recover the last value */
+	  memcpy(data, tfield, osize);
 	  goto overflow;
 	}
     }
@@ -774,12 +752,12 @@ cob_display_add_int (cob_field *f, int n)
       /* subtract n from the field */
       if (display_sub_int (data, size, -n) != 0)
 	{
-	  /* if there wes an overflow, inverse the sign */
-	  int i;
-	  for (i = 0; i < size; i++)
-	    data[i] = cob_i2d (9 - cob_d2i (data[i]));
-	  display_add_int (data, size, 1);
-	  sign = -sign;
+		int i;
+		for ( i = 0; i < size; i++ ) {
+			data[i] = cob_i2d (9 - cob_d2i(data[i]));
+		}
+		display_add_int (data, size, 1);
+		sign = -sign;
 	}
     }
 
@@ -891,6 +869,4 @@ cob_init_numeric (void)
   cob_decimal_init (&cob_d2);
   cob_decimal_init (&cob_d3);
   cob_decimal_init (&cob_d4);
-
-  init_digit_table ();
 }

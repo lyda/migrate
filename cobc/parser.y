@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 89
+%expect 92
 
 %defines
 %verbose
@@ -1121,7 +1121,7 @@ usage:
   BINARY			{ current_field->usage = CB_USAGE_BINARY; }
 | COMP				{ current_field->usage = CB_USAGE_BINARY; }
 | COMP_1			{ current_field->usage = CB_USAGE_FLOAT; }
-| COMP_2			{ current_field->usage = CB_USAGE_FLOAT; }
+| COMP_2			{ current_field->usage = CB_USAGE_DOUBLE; }
 | COMP_3			{ current_field->usage = CB_USAGE_PACKED; }
 | COMP_4			{ current_field->usage = CB_USAGE_BINARY; }
 | COMP_5			{ current_field->usage = CB_USAGE_COMP_5; }
@@ -3461,11 +3461,18 @@ alnum_literal:
  */
 
 function:
-  FUNCTION_NAME
+  FUNCTION_NAME func_args
   {
-    PENDING ("FUNCTION");
-    YYERROR;
+    $$ = cb_build_intrinsic ($1, $2);
   }
+;
+func_args:
+  /* empty */			{ $$ = NULL }
+| '(' list_func_args ')'	{ $$ = $2   }
+;
+list_func_args:
+  /* empty */			{ $$ = NULL }
+| e_list			{ $$ = $1   }
 ;
 
 

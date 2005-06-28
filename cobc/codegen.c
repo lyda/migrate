@@ -31,10 +31,14 @@
 #include "call.def"
 
 static int param_id = 0;
+static int stack_id = 0;
+static int num_cob_fields = 0;
 static int loop_counter = 0;
 static int progid = 0;
 static int last_line = 0;
 static int needs_exit_prog = 0;
+static int need_double = 0;
+
 int i_counters[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 int entry_number = 0;
 
@@ -235,8 +239,13 @@ output_base (struct cb_field *f)
 	if ( !f01->flag_external ) {
 		if (!f01->flag_local)
 			output_storage ("static ");
+#if defined (__GNUC__)
 		output_storage ("unsigned char %s%s[%d]\t__attribute__ ((__aligned__(8)));",
 				CB_PREFIX_BASE, name, f01->memory_size);
+#else
+		output_storage ("unsigned char %s%s[%d];",
+				CB_PREFIX_BASE, name, f01->memory_size);
+#endif
 		output_storage ("  /* %s */\n", f01->name);
 	}
 	f01->flag_base = 1;
@@ -311,6 +320,14 @@ output_data (cb_tree x)
 	  }
 	break;
       }
+/* Leave in
+    case CB_TAG_CAST:
+      {
+	output("&");
+	output_param(x,0);
+	break;
+      }
+*/
     default:
       ABORT ();
     }
@@ -372,6 +389,8 @@ output_size (cb_tree x)
 	break;
       }
     default:
+	fprintf(stderr, "Unexpected tree tag %d\n", CB_TREE_TAG(x));
+	fflush(stderr);
       ABORT ();
     }
 }
@@ -549,7 +568,7 @@ output_integer (cb_tree x)
       if (x == cb_zero)
 	output ("0");
       else if ( x == cb_null )
-	output ("(unsigned char *)0");
+	output ("(unsigned char *)NULL");
       else
 	output ("%s", CB_CONST (x)->val);
       break;
@@ -573,8 +592,12 @@ output_integer (cb_tree x)
 	else
 	  {
 	    output ("(");
+	    if ( need_double )
+		output("(double)");
 	    output_integer (p->x);
 	    output (" %c ", p->op);
+	    if ( need_double )
+		output("(double)");
 	    output_integer (p->y);
 	    output (")");
 	  }
@@ -703,7 +726,8 @@ output_index (cb_tree x)
 static void
 output_param (cb_tree x, int id)
 {
-  char fname[5];
+  char fname[8];
+
   sprintf (fname, "f[%d]", id);
   param_id = id;
 
@@ -817,13 +841,80 @@ output_param (cb_tree x, int id)
 	  }
 	else
 	  {
+	    if ( id >= num_cob_fields ) {
+		num_cob_fields = id + 1;
+	    }
+/* Worse code
 	    output ("(%s = (cob_field) ", fname);
 	    output_field (x);
+	    output (", &%s)", fname);
+*/
+	    if ( stack_id >= num_cob_fields ) {
+		num_cob_fields = stack_id + 1;
+	    }
+	    sprintf (fname, "f[%d]", stack_id++);
+	    output ("(%s.size = ", fname);
+	    output_size (x);
+	    output (", %s.data = ", fname);
+	    output_data (x);
+	    output (", %s.attr = ", fname);
+	    output_attr (x);
 	    output (", &%s)", fname);
 	  }
 
 	if (r->check)
 	  output ("; })");
+	break;
+      }
+/* RXW */
+    case CB_TAG_BINARY_OP:
+      {
+	struct cb_binary_op *p = CB_BINARY_OP (x);
+
+	output("cob_intr_binop ( ");
+	output_param(p->x, id);
+	output(", ");
+	output("%d", p->op);
+	output(", ");
+	output_param(p->y, id);
+	output(")");
+	break;
+      }
+    case CB_TAG_INTRINSIC:
+      {
+	int			n = 0;
+	cb_tree			l;
+	struct cb_intrinsic	*i = CB_INTRINSIC(x);
+
+	output("%s (", i->intr_tab->intr_routine);
+	if ( i->intr_field ) {
+		if ( i->intr_field == cb_int0 ) {
+			output ("NULL");
+		} else if ( i->intr_field == cb_int1 ) {
+			for ( l = i->args; l; l = CB_CHAIN(l) ) {
+				n++;
+			}
+			output ("%d", n);
+		} else {
+			output_param (i->intr_field, id);
+		}
+		if ( i->args ) {
+			output(", ");
+		}
+	}
+	for ( l = i->args; l; l = CB_CHAIN(l) ) {
+		output_param(CB_VALUE(l), id);
+		id++;
+		param_id++;
+		/* Hack until sorted out */
+		if ( i->intr_tab->intr_enum == CB_INTR_NUMVAL_C ) {
+			break;
+		}
+		if ( CB_CHAIN(l) ) {
+			output(", ");
+		}
+	}
+	output(")");
 	break;
       }
     default:
@@ -842,13 +933,27 @@ static void
 output_funcall (cb_tree x)
 {
   int i;
+  cb_tree l;
   struct cb_funcall *p = CB_FUNCALL (x);
+
   output ("%s (", p->name);
   for (i = 0; i < p->argc; i++)
     {
-      output_param (p->argv[i], i);
-      if (i + 1 < p->argc)
-	output (", ");
+	if ( p->varcnt && i + 1 == p->argc ) {
+		output ("%d, ", p->varcnt);
+		for (l = p->argv[i]; l; l = CB_CHAIN (l)) {
+			output_param (CB_VALUE (l), i);
+			i++;
+			if ( CB_CHAIN (l) ) {
+				output (", ");
+			}
+		}
+	} else {
+		output_param (p->argv[i], i);
+		if (i + 1 < p->argc) {
+			output (", ");
+		}
+	} 
     }
   output (")");
 }
@@ -1783,6 +1888,7 @@ output_perform (struct cb_perform *p)
 static void
 output_stmt (cb_tree x)
 {
+  stack_id = 0;
   if (x == NULL)
     {
       output_line (";");
@@ -2333,7 +2439,12 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 
   if ( prog->loop_counter )
 	output_line ("int n[%d];", prog->loop_counter);
-  output_line ("cob_field f[4];");
+
+/*
+  if ( num_cob_fields ) {
+	output_line ("cob_field f[%d];", num_cob_fields + 1);
+  }
+*/
   output_newline ();
 
   /* linkage section */
@@ -2594,6 +2705,8 @@ codegen (struct cb_program *prog)
   struct call_list *clp;
 
   param_id = 0;
+  stack_id = 0;
+  num_cob_fields = 0;
   progid = 0;
   loop_counter = 0;
   output_indent_level = 0;
@@ -2663,6 +2776,7 @@ codegen (struct cb_program *prog)
   output_internal_function (prog, parameter_list);
 
   output_target = cb_storage_file;
+  output_storage ("\n");
   for (j = attr_cache; j; j = j->next) {
 	output_storage ("static cob_field_attr %s%d\t= ", CB_PREFIX_ATTR, j->id);
 	output_storage ("{%d, %d, %d, %d, ", j->type, j->digits, j->scale, j->flags);
@@ -2675,24 +2789,32 @@ codegen (struct cb_program *prog)
 	      output_storage ("\"");
 	    }
 	else
-	output_storage ("0");
+		output_storage ("0");
 	output_storage ("};\n");
   }
 
+  output_storage ("\n");
   for (k = field_cache; k; k = k->next) {
 	output ("static cob_field %s%d\t= ", CB_PREFIX_FIELD, k->f->id);
 	output_field (k->x);
 	output (";\t/* %s */\n", k->f->name);
   }
 
+  output_storage ("\n");
   for (m = literal_cache; m; m = m->next) {
 	output ("static cob_field %s%d\t= ", CB_PREFIX_CONST, m->id);
 	output_field (m->x);
 	output (";\n");
   }
 
+  output_storage ("\n");
   for (clp = call_cache; clp; clp = clp->next) {
 	output ("static int (*call_%s)();\n", clp->callname);
+  }
+
+  output_storage ("\n");
+  if ( num_cob_fields ) {
+	output ("cob_field f[%d];\n", num_cob_fields);
   }
 
   output_target = yyout;

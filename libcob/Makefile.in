@@ -58,8 +58,9 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 libcob_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am_libcob_la_OBJECTS = libcob_la-common.lo libcob_la-move.lo \
-	libcob_la-numeric.lo libcob_la-termio.lo libcob_la-fileio.lo \
-	libcob_la-screenio.lo libcob_la-strings.lo libcob_la-call.lo
+	libcob_la-numeric.lo libcob_la-intrinsic.lo \
+	libcob_la-termio.lo libcob_la-fileio.lo libcob_la-screenio.lo \
+	libcob_la-strings.lo libcob_la-call.lo
 libcob_la_OBJECTS = $(am_libcob_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -67,6 +68,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/libcob_la-call.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/libcob_la-common.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/libcob_la-fileio.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/libcob_la-intrinsic.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/libcob_la-move.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/libcob_la-numeric.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/libcob_la-screenio.Plo \
@@ -219,7 +221,7 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 lib_LTLIBRARIES = libcob.la
-libcob_la_SOURCES = common.c move.c numeric.c \
+libcob_la_SOURCES = common.c move.c numeric.c intrinsic.c \
 	termio.c fileio.c screenio.c strings.c call.c
 
 AM_CFLAGS = -fsigned-char -Wall -Wstrict-prototypes -Wmissing-prototypes -Wno-format-y2k
@@ -228,7 +230,7 @@ libcob_la_LIBADD = $(LIBCOB_LIBS)
 libcob_la_LDFLAGS = -version-info 1:0:0 -no-undefined
 @COBCRUN_SHARED_TRUE@AM_LDFLAGS = -Wl,--export-all-symbols -Wl,--enable-auto-import
 pkginclude_HEADERS = byteswap.h common.h move.h numeric.h exception.def \
-	termio.h fileio.h screenio.h strings.h call.h
+	termio.h fileio.h screenio.h strings.h call.h intrinsic.h
 
 all: all-am
 
@@ -302,6 +304,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcob_la-call.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcob_la-common.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcob_la-fileio.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcob_la-intrinsic.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcob_la-move.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcob_la-numeric.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcob_la-screenio.Plo@am__quote@
@@ -403,6 +406,30 @@ libcob_la-numeric.lo: numeric.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcob_la-numeric.Plo' tmpdepfile='$(DEPDIR)/libcob_la-numeric.TPlo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -c -o libcob_la-numeric.lo `test -f 'numeric.c' || echo '$(srcdir)/'`numeric.c
+
+libcob_la-intrinsic.o: intrinsic.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -MT libcob_la-intrinsic.o -MD -MP -MF "$(DEPDIR)/libcob_la-intrinsic.Tpo" -c -o libcob_la-intrinsic.o `test -f 'intrinsic.c' || echo '$(srcdir)/'`intrinsic.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcob_la-intrinsic.Tpo" "$(DEPDIR)/libcob_la-intrinsic.Po"; else rm -f "$(DEPDIR)/libcob_la-intrinsic.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='intrinsic.c' object='libcob_la-intrinsic.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcob_la-intrinsic.Po' tmpdepfile='$(DEPDIR)/libcob_la-intrinsic.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -c -o libcob_la-intrinsic.o `test -f 'intrinsic.c' || echo '$(srcdir)/'`intrinsic.c
+
+libcob_la-intrinsic.obj: intrinsic.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -MT libcob_la-intrinsic.obj -MD -MP -MF "$(DEPDIR)/libcob_la-intrinsic.Tpo" -c -o libcob_la-intrinsic.obj `if test -f 'intrinsic.c'; then $(CYGPATH_W) 'intrinsic.c'; else $(CYGPATH_W) '$(srcdir)/intrinsic.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcob_la-intrinsic.Tpo" "$(DEPDIR)/libcob_la-intrinsic.Po"; else rm -f "$(DEPDIR)/libcob_la-intrinsic.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='intrinsic.c' object='libcob_la-intrinsic.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcob_la-intrinsic.Po' tmpdepfile='$(DEPDIR)/libcob_la-intrinsic.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -c -o libcob_la-intrinsic.obj `if test -f 'intrinsic.c'; then $(CYGPATH_W) 'intrinsic.c'; else $(CYGPATH_W) '$(srcdir)/intrinsic.c'; fi`
+
+libcob_la-intrinsic.lo: intrinsic.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -MT libcob_la-intrinsic.lo -MD -MP -MF "$(DEPDIR)/libcob_la-intrinsic.Tpo" -c -o libcob_la-intrinsic.lo `test -f 'intrinsic.c' || echo '$(srcdir)/'`intrinsic.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcob_la-intrinsic.Tpo" "$(DEPDIR)/libcob_la-intrinsic.Plo"; else rm -f "$(DEPDIR)/libcob_la-intrinsic.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='intrinsic.c' object='libcob_la-intrinsic.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libcob_la-intrinsic.Plo' tmpdepfile='$(DEPDIR)/libcob_la-intrinsic.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -c -o libcob_la-intrinsic.lo `test -f 'intrinsic.c' || echo '$(srcdir)/'`intrinsic.c
 
 libcob_la-termio.o: termio.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -MT libcob_la-termio.o -MD -MP -MF "$(DEPDIR)/libcob_la-termio.Tpo" -c -o libcob_la-termio.o `test -f 'termio.c' || echo '$(srcdir)/'`termio.c; \

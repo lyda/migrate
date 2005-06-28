@@ -66,7 +66,8 @@ am__DEPENDENCIES_1 =
 @COBCRUN_SHARED_FALSE@	$(top_builddir)/libcob/.libs/libcob_la-fileio.o \
 @COBCRUN_SHARED_FALSE@	$(top_builddir)/libcob/.libs/libcob_la-strings.o \
 @COBCRUN_SHARED_FALSE@	$(top_builddir)/libcob/.libs/libcob_la-move.o \
-@COBCRUN_SHARED_FALSE@	$(top_builddir)/libcob/.libs/libcob_la-termio.o
+@COBCRUN_SHARED_FALSE@	$(top_builddir)/libcob/.libs/libcob_la-termio.o \
+@COBCRUN_SHARED_FALSE@	$(top_builddir)/libcob/.libs/libcob_la-intrinsic.o
 @COBCRUN_SHARED_TRUE@cobcrun_DEPENDENCIES = $(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -227,7 +228,8 @@ cobcrun_CFLAGS = $(AM_CFLAGS) $(COBC_CFLAGS) -I$(top_srcdir)
 @COBCRUN_SHARED_FALSE@$(top_builddir)/libcob/.libs/libcob_la-fileio.o \
 @COBCRUN_SHARED_FALSE@$(top_builddir)/libcob/.libs/libcob_la-strings.o \
 @COBCRUN_SHARED_FALSE@$(top_builddir)/libcob/.libs/libcob_la-move.o \
-@COBCRUN_SHARED_FALSE@$(top_builddir)/libcob/.libs/libcob_la-termio.o
+@COBCRUN_SHARED_FALSE@$(top_builddir)/libcob/.libs/libcob_la-termio.o \
+@COBCRUN_SHARED_FALSE@$(top_builddir)/libcob/.libs/libcob_la-intrinsic.o
 
 @COBCRUN_SHARED_TRUE@cobcrun_LDADD = $(LIBCOB_LIBS) -L$(top_builddir)/libcob -lcob
 all: all-am

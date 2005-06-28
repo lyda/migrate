@@ -1,5 +1,5 @@
 lib_LTLIBRARIES = libcob.la
-libcob_la_SOURCES = common.c move.c numeric.c \
+libcob_la_SOURCES = common.c move.c numeric.c intrinsic.c \
 	termio.c fileio.c screenio.c strings.c call.c
 
 AM_CFLAGS = -fsigned-char -Wall -Wstrict-prototypes -Wmissing-prototypes -Wno-format-y2k
@@ -12,4 +12,4 @@ endif
 
 pkgincludedir = $(includedir)/libcob
 pkginclude_HEADERS = byteswap.h common.h move.h numeric.h exception.def \
-	termio.h fileio.h screenio.h strings.h call.h
+	termio.h fileio.h screenio.h strings.h call.h intrinsic.h

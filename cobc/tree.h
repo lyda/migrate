@@ -37,35 +37,36 @@
 
 enum cb_tag {
   /* primitives */
-  CB_TAG_CONST,			/* constant value */
-  CB_TAG_INTEGER,		/* integer constant */
-  CB_TAG_STRING,		/* string constant */
-  CB_TAG_ALPHABET_NAME,		/* alphabet-name */
-  CB_TAG_CLASS_NAME,		/* class-name */
-  CB_TAG_SYSTEM_NAME,		/* system-name */
-  CB_TAG_LITERAL,		/* numeric/alphanumeric literal */
-  CB_TAG_DECIMAL,		/* decimal number */
-  CB_TAG_FIELD,			/* user-defined variable */
-  CB_TAG_FILE,			/* file description */
+  CB_TAG_CONST,			/* 0 constant value */
+  CB_TAG_INTEGER,		/* 1 integer constant */
+  CB_TAG_STRING,		/* 2 string constant */
+  CB_TAG_ALPHABET_NAME,		/* 3 alphabet-name */
+  CB_TAG_CLASS_NAME,		/* 4 class-name */
+  CB_TAG_SYSTEM_NAME,		/* 5 system-name */
+  CB_TAG_LITERAL,		/* 6 numeric/alphanumeric literal */
+  CB_TAG_DECIMAL,		/* 7 decimal number */
+  CB_TAG_FIELD,			/* 8 user-defined variable */
+  CB_TAG_FILE,			/* 9 file description */
   /* expressions */
-  CB_TAG_REFERENCE,		/* reference to a field, file, or label */
-  CB_TAG_BINARY_OP,		/* binary operation */
-  CB_TAG_FUNCALL,		/* run-time function call */
-  CB_TAG_CAST,			/* type cast */
+  CB_TAG_REFERENCE,		/* 10 reference to a field, file, or label */
+  CB_TAG_BINARY_OP,		/* 11 binary operation */
+  CB_TAG_FUNCALL,		/* 12 run-time function call */
+  CB_TAG_CAST,			/* 13 type cast */
+  CB_TAG_INTRINSIC,		/* 14 intrinsic function */
   /* statements */
-  CB_TAG_LABEL,			/* label statement */
-  CB_TAG_ASSIGN,		/* assignment statement */
-  CB_TAG_INITIALIZE,		/* INITIALIZE statement */
-  CB_TAG_SEARCH,		/* SEARCH statement */
-  CB_TAG_CALL,			/* CALL statement */
-  CB_TAG_GOTO,			/* GO TO statement */
-  CB_TAG_IF,			/* IF statement */
-  CB_TAG_PERFORM,		/* PERFORM statement */
-  CB_TAG_STATEMENT,		/* general statement */
+  CB_TAG_LABEL,			/* 15 label statement */
+  CB_TAG_ASSIGN,		/* 16 assignment statement */
+  CB_TAG_INITIALIZE,		/* 17 INITIALIZE statement */
+  CB_TAG_SEARCH,		/* 18 SEARCH statement */
+  CB_TAG_CALL,			/* 19 CALL statement */
+  CB_TAG_GOTO,			/* 20 GO TO statement */
+  CB_TAG_IF,			/* 21 IF statement */
+  CB_TAG_PERFORM,		/* 22 PERFORM statement */
+  CB_TAG_STATEMENT,		/* 23 general statement */
   /* miscellaneous */
-  CB_TAG_PERFORM_VARYING,	/* PERFORM VARYING parameter */
-  CB_TAG_PICTURE,
-  CB_TAG_LIST,
+  CB_TAG_PERFORM_VARYING,	/* 24 PERFORM VARYING parameter */
+  CB_TAG_PICTURE,		/* 25 PICTURE clause */
+  CB_TAG_LIST,			/* 26 list */
 };
 
 enum cb_alphabet_name_type {
@@ -195,6 +196,7 @@ typedef struct cb_tree_common *cb_tree;
     cb_tree _x = (x);							\
     if (!_x || CB_TREE_TAG (_x) != tg)					\
       {									\
+	fprintf(stderr, "Tag 1 %d Tag 2 %d\n", CB_TREE_TAG(_x), tg);	\
 	fprintf (stderr,						\
 		 "%s:%d: invalid type cast from '%s' at %s:%d\n",	\
 		 __FILE__, __LINE__, _x ? cb_name (_x) : "null",	\
@@ -236,6 +238,11 @@ extern cb_tree cb_i[8];
 extern cb_tree cb_error_node;
 extern cb_tree cb_return_code;
 extern cb_tree cb_call_params;
+
+extern cb_tree cb_intr_whencomp;
+extern cb_tree cb_intr_pi;
+extern cb_tree cb_intr_e;
+
 extern cb_tree cb_standard_error_handler;
 
 struct cb_const {
@@ -530,6 +537,7 @@ struct cb_reference {
   cb_tree length;		/* 2nd operand of reference modification */
   cb_tree check;
   cb_tree chain;		/* next qualified name */
+  int all;
 };
 
 #define CB_REFERENCE(x)		(CB_TREE_CAST (CB_TAG_REFERENCE, struct cb_reference, x))
@@ -592,6 +600,7 @@ struct cb_funcall {
   struct cb_tree_common common;
   const char *name;
   int argc;
+  int varcnt;
   cb_tree argv[4];
 };
 
@@ -667,6 +676,113 @@ struct cb_assign {
 #define CB_ASSIGN_P(x)		(CB_TREE_TAG (x) == CB_TAG_ASSIGN)
 
 extern cb_tree cb_build_assign (cb_tree var, cb_tree val);
+
+
+/*
+ * Intrinsic FUNCTION
+ */
+
+enum cb_intr_enum {
+	CB_INTR_ABS = 1,
+	CB_INTR_ACOS,
+	CB_INTR_ANNUITY,
+	CB_INTR_ASIN,
+	CB_INTR_ATAN,
+	CB_INTR_BOOLEAN_OF_INTEGER,
+	CB_INTR_BYTE_LENGTH,
+	CB_INTR_CHAR,
+	CB_INTR_CHAR_NATIONAL,
+	CB_INTR_COS,
+	CB_INTR_CURRENT_DATE,
+	CB_INTR_DATE_OF_INTEGER,
+	CB_INTR_DATE_TO_YYYYMMDD,
+	CB_INTR_DAY_OF_INTEGER,
+	CB_INTR_DAY_TO_YYYYDDD,
+	CB_INTR_DISPLAY_OF,
+	CB_INTR_E,
+	CB_INTR_EXCEPTION_FILE,
+	CB_INTR_EXCEPTION_FILE_N,
+	CB_INTR_EXCEPTION_LOCATION,
+	CB_INTR_EXCEPTION_LOCATION_N,
+	CB_INTR_EXCEPTION_STATEMENT,
+	CB_INTR_EXCEPTION_STATUS,
+	CB_INTR_EXP,
+	CB_INTR_EXP10,
+	CB_INTR_FACTORIAL,
+	CB_INTR_FRACTION_PART,
+	CB_INTR_HIGHEST_ALGEBRAIC,
+	CB_INTR_INTEGER,
+	CB_INTR_INTEGER_OF_BOOLEAN,
+	CB_INTR_INTEGER_OF_DATE,
+	CB_INTR_INTEGER_OF_DAY,
+	CB_INTR_INTEGER_PART,
+	CB_INTR_LENGTH,
+	CB_INTR_LOCALE_COMPARE,
+	CB_INTR_LOCALE_DATE,
+	CB_INTR_LOCALE_TIME,
+	CB_INTR_LOG,
+	CB_INTR_LOG10,
+	CB_INTR_LOWER_CASE,
+	CB_INTR_LOWEST_ALGEBRAIC,
+	CB_INTR_MAX,
+	CB_INTR_MEAN,
+	CB_INTR_MEDIAN,
+	CB_INTR_MIDRANGE,
+	CB_INTR_MIN,
+	CB_INTR_MOD,
+	CB_INTR_NATIONAL_OF,
+	CB_INTR_NUMVAL,
+	CB_INTR_NUMVAL_C,
+	CB_INTR_NUMVAL_F,
+	CB_INTR_ORD,
+	CB_INTR_ORD_MAX,
+	CB_INTR_ORD_MIN,
+	CB_INTR_PI,
+	CB_INTR_PRESENT_VALUE,
+	CB_INTR_RANDOM,
+	CB_INTR_RANGE,
+	CB_INTR_REM,
+	CB_INTR_REVERSE,
+	CB_INTR_SIGN,
+	CB_INTR_SIN,
+	CB_INTR_SQRT,
+	CB_INTR_STANDARD_COMPARE,
+	CB_INTR_STANDARD_DEVIATION,
+	CB_INTR_SUM,
+	CB_INTR_TAN,
+	CB_INTR_TEST_DATE_YYYYMMDD,
+	CB_INTR_TEST_DAY_YYYYDDD,
+	CB_INTR_TEST_NUMVAL,
+	CB_INTR_TEST_NUMVAL_C,
+	CB_INTR_TEST_NUMVAL_F,
+	CB_INTR_UPPER_CASE,
+	CB_INTR_VARIANCE,
+	CB_INTR_WHEN_COMPILED,
+	CB_INTR_YEAR_TO_YYYY
+};
+
+struct cb_intrinsic_table {
+	const char		*name;		/* FUNCTION NAME */
+	int			args;		/* 0-n, negative = variable */
+	int			implemented;	/* Have we implemented it? */
+	enum cb_intr_enum	intr_enum;	/* Enum intrinsic */
+	const char		*intr_routine;	/* Routine name */
+	enum cb_category	category;	/* Category */
+};
+
+struct cb_intrinsic {
+	struct cb_tree_common		common;
+	cb_tree				name;
+	cb_tree				args;
+	cb_tree				intr_field;	/* Field to use */
+	struct cb_intrinsic_table	*intr_tab;
+};
+
+#define CB_INTRINSIC(x)		(CB_TREE_CAST (CB_TAG_INTRINSIC, struct cb_intrinsic, x))
+#define CB_INTRINSIC_P(x)	(CB_TREE_TAG (x) == CB_TAG_INTRINSIC)
+
+extern struct cb_intrinsic_table	*lookup_intrinsic (const char *name);
+extern cb_tree			cb_build_intrinsic (cb_tree name, cb_tree args);
 
 
 /*

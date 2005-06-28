@@ -49,11 +49,10 @@ extern enum cb_compile_level {
   CB_LEVEL_EXECUTABLE
 } cb_compile_level;
 
-extern enum cb_source_format {
-  CB_FORMAT_AUTO,
-  CB_FORMAT_FREE,
-  CB_FORMAT_FIXED,
-} cb_source_format;
+#define CB_FORMAT_AUTO	0
+#define CB_FORMAT_FREE	1
+#define CB_FORMAT_FIXED	2
+extern int	cb_source_format;
 
 extern struct cb_exception {
   int code;			/* exception code */

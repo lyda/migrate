@@ -41,7 +41,10 @@
  */
 
 enum cb_compile_level cb_compile_level = CB_LEVEL_EXECUTABLE;
+/*
 enum cb_source_format cb_source_format = CB_FORMAT_FIXED;
+*/
+int cb_source_format = CB_FORMAT_FIXED;
 
 struct cb_exception cb_exception_table[] = {
   {0, 0, 0},		/* CB_EC_ZERO */
@@ -210,8 +213,8 @@ static struct option long_options[] = {
   {"conf", required_argument, 0, '&'},
   {"debug", no_argument, 0, 'd'},
   {"ext", required_argument, 0, 'e'},
-  {"free", no_argument, (int *) &cb_source_format, CB_FORMAT_FREE},
-  {"fixed", no_argument, (int *) &cb_source_format, CB_FORMAT_FIXED},
+  {"free", no_argument, &cb_source_format, CB_FORMAT_FREE},
+  {"fixed", no_argument, &cb_source_format, CB_FORMAT_FIXED},
   {"static", no_argument, &cb_flag_static_call, 1},
   {"dynamic", no_argument, &cb_flag_static_call, 0},
   {"dynopt", no_argument, &cb_flag_static_call, 2},

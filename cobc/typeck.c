@@ -152,6 +152,9 @@ cb_check_integer_value (cb_tree x)
 void
 cb_build_registers (void)
 {
+  time_t	t;
+  char		buff[24];
+
   /* RETURN-CODE */
   cb_return_code = cb_build_index (cb_build_reference ("RETURN-CODE"));
   CB_FIELD (cb_ref (cb_return_code))->values = cb_list (cb_zero);
@@ -161,26 +164,43 @@ cb_build_registers (void)
   CB_FIELD (cb_ref (cb_call_params))->values = cb_list (cb_zero);
 
   /* TALLY */
+  /* 01 TALLY GLOBAL PICTURE 9(9) USAGE COMP-5 VALUE ZERO. */
+  /* As TALLY only has relevance together with EXAMINE which
+     is not standard and not supported, comment this out
   {
-    /* 01 TALLY GLOBAL PICTURE 9(9) USAGE COMP-5 VALUE ZERO. */
     cb_tree x = cb_build_field (cb_build_reference ("TALLY"));
     CB_FIELD (x)->pic = CB_PICTURE (cb_build_picture ("9(9)"));
     CB_FIELD (x)->usage = CB_USAGE_COMP_5;
     CB_FIELD (x)->values = cb_list (cb_zero);
     cb_validate_field (CB_FIELD (x));
-
     current_program->working_storage =
       cb_field_add (current_program->working_storage, CB_FIELD (x));
   }
+  */
+
+  t = time (NULL);
 
   /* WHEN-COMPILED */
-  {
-    char buff[17];
-    time_t t = time (NULL);
-    strftime (buff, 17, "%m/%d/%y%H.%M.%S", localtime (&t));
-    cb_build_constant (cb_build_reference ("WHEN-COMPILED"),
-		       cb_build_alphanumeric_literal (buff, 16));
-  }
+  memset(buff, 0, sizeof(buff));
+  strftime (buff, 17, "%m/%d/%y%H.%M.%S", localtime (&t));
+  cb_build_constant (cb_build_reference ("WHEN-COMPILED"),
+		     cb_build_alphanumeric_literal (buff, 16));
+
+  /* FUNCTION WHEN-COMPILED */
+  memset(buff, 0, sizeof(buff));
+  strftime (buff, 22, "%Y%m%d%H%M%S00%z", localtime (&t));
+  cb_intr_whencomp = cb_build_alphanumeric_literal (buff, 21);
+
+  /* FUNCTION PI */
+  memset(buff, 0, sizeof(buff));
+  strcpy(buff, "314159265358979323");
+  cb_intr_pi = cb_build_numeric_literal (0, buff, 17);
+
+  /* FUNCTION E */
+  memset(buff, 0, sizeof(buff));
+  strcpy(buff, "271828182845904523");
+  cb_intr_e = cb_build_numeric_literal (0, buff, 17);
+
 }
 
 char *
@@ -368,7 +388,7 @@ cb_build_identifier (cb_tree x)
   f = CB_FIELD (v);
 
   /* check the number of subscripts */
-  if (cb_list_length (r->subs) != f->indexes)
+  if (!r->all && cb_list_length (r->subs) != f->indexes)
     switch (f->indexes)
       {
       case 0:
@@ -383,7 +403,7 @@ cb_build_identifier (cb_tree x)
       }
 
   /* subscript check */
-  if (r->subs)
+  if (!r->all && r->subs)
     {
       struct cb_field *p;
       cb_tree l = r->subs;
@@ -520,21 +540,30 @@ cb_build_length (cb_tree x)
 {
   cb_tree temp;
   struct cb_field *f;
+  char buff[64];
 
   if (x == cb_error_node)
     return cb_error_node;
   if (CB_REFERENCE_P (x) && cb_ref (x) == cb_error_node)
     return cb_error_node;
 
-  f = CB_FIELD (cb_ref (x));
-  if (cb_field_variable_size (f) == NULL)
-    {
-	char buff[64];
-	sprintf(buff, "%d", cb_field_size(x));
-      return cb_build_numeric_literal (0, buff, 0);
-    }
+  memset(buff, 0, sizeof(buff));
+  if ( CB_LITERAL_P (x) ) {
+	struct cb_literal	*l = CB_LITERAL (x);
+	sprintf(buff, "%d", l->size);
+	return cb_build_numeric_literal (0, buff, 0);
+  }
+  if ( CB_FIELD_P (x) || CB_REFERENCE_P(x)) {
+	f = CB_FIELD (cb_ref (x));
+	if (cb_field_variable_size (f) == NULL)
+	{
+		sprintf(buff, "%d", cb_field_size(x));
+		return cb_build_numeric_literal (0, buff, 0);
+	}
+  }
   temp = cb_build_index (cb_build_filler ());
   CB_FIELD (cb_ref (temp))-> usage = CB_USAGE_LENGTH;
+  CB_FIELD (cb_ref (temp))-> count++;
   cb_emit (cb_build_assign (temp, cb_build_length_1 (x)));
   return temp;
 }
@@ -1123,7 +1152,13 @@ decimal_expand (cb_tree d, cb_tree x)
 	decimal_free ();
 	break;
       }
+/* RXW */
+    case CB_TAG_INTRINSIC:
+	  dpush (cb_build_funcall_2 ("cob_decimal_set_field", d, x));
+	break;
     default:
+	fprintf(stderr, "Unexpected tree tag %d\n", CB_TREE_TAG (x));
+	fflush(stderr);
       ABORT ();
     }
 }
@@ -1362,10 +1397,8 @@ cb_build_add (cb_tree v, cb_tree n, cb_tree round)
     return cb_build_move (cb_build_binary_op (v, '+', n), v);
 
   opt = build_store_option (v, round);
-#ifdef  RXW_TO_CHECK
   if (opt == cb_int0 && cb_fits_int (n))
     return cb_build_funcall_2 ("cob_add_int", v, cb_build_cast_integer (n));
-#endif
   return cb_build_funcall_3 ("cob_add", v, n, opt);
 }
 
@@ -1378,10 +1411,8 @@ cb_build_sub (cb_tree v, cb_tree n, cb_tree round)
     return cb_build_move (cb_build_binary_op (v, '-', n), v);
 
   opt = build_store_option (v, round);
-#ifdef	RXW_TO_CHECK
   if (opt == cb_int0 && cb_fits_int (n))
     return cb_build_funcall_2 ("cob_sub_int", v, cb_build_cast_integer (n));
-#endif
   return cb_build_funcall_3 ("cob_sub", v, n, opt);
 }
 
@@ -1659,13 +1690,40 @@ cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
   else
     {
       /* DISPLAY x ... [UPON device-name] */
-      int is_stdout = (upon == cb_int1);
-      const char *display = is_stdout ? "cob_display" : "cob_display_error";
-      const char *newline = is_stdout ? "cob_newline" : "cob_newline_error";
-      for (l = values; l; l = CB_CHAIN (l))
-	cb_emit (cb_build_funcall_1 (display, CB_VALUE (l)));
-      if (no_adv == cb_int0)
-	cb_emit (cb_build_funcall_0 (newline));
+
+	/* Possible implementation using varargs */
+/* Start comment out
+	cb_tree	p, outorerr, newline;
+	if ( upon == cb_int1 ) {
+		outorerr = cb_int0;
+	} else {
+		outorerr = cb_int1;
+	}
+	if ( no_adv == cb_int0 ) {
+		newline = cb_int1;
+	} else {
+		newline = cb_int0;
+	}
+	p = cb_build_funcall_3 ("cob_new_display", outorerr, newline, values);
+	CB_FUNCALL(p)->varcnt = cb_list_length (values);
+	cb_emit(p);
+End comment out */
+	/* End possible implementation */
+
+	/* Original multiple call implementation */
+	int is_stdout = (upon == cb_int1);
+	const char *display = is_stdout ? "cob_display" : "cob_display_error";
+	const char *newline = is_stdout ? "cob_newline" : "cob_newline_error";
+
+	for (l = values; l; l = CB_CHAIN (l)) {
+		cb_emit (cb_build_funcall_1 (display, CB_VALUE (l)));
+		if ( CB_FIELD_P (l) ) {
+			CB_FIELD (l)->count++;
+		}
+	}
+	if (no_adv == cb_int0)
+		cb_emit (cb_build_funcall_0 (newline));
+	/* End Original multiple call implementation */
     }
 }
 
@@ -1839,7 +1897,6 @@ cb_emit_evaluate (cb_tree subject_list, cb_tree case_list)
 {
   cb_emit (build_evaluate (subject_list, case_list));
 }
-
 
 /*
  * GO TO statement
@@ -2269,9 +2326,12 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
       }
     case CB_TAG_INTEGER:
     case CB_TAG_BINARY_OP:
+    case CB_TAG_INTRINSIC:
       /* TODO: check this */
       break;
     default:
+	fprintf(stderr, "Invalid tree tag %d\n", CB_TREE_TAG(src));
+	fflush(stdout);
       ABORT ();
     }
   return 0;
@@ -2595,6 +2655,9 @@ cb_build_move (cb_tree src, cb_tree dst)
     return cb_build_funcall_2 ("cob_set_int", dst,
 			       cb_build_cast_integer (src));
 
+  if ( CB_INTRINSIC_P (src) || CB_INTRINSIC_P (dst) )
+	return cb_build_move_call (src, dst);
+	
   if (cb_flag_runtime_inlining)
     {
       struct cb_field *f = cb_field (dst);

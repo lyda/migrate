@@ -28,6 +28,34 @@
 #include "cobc.h"
 #include "tree.h"
 
+/*
+ * Constants
+ */
+
+cb_tree cb_any;
+cb_tree cb_true;
+cb_tree cb_false;
+cb_tree cb_null;
+cb_tree cb_zero;
+cb_tree cb_space;
+cb_tree cb_low;
+cb_tree cb_high;
+cb_tree cb_quote;
+cb_tree cb_int0;
+cb_tree cb_int1;
+cb_tree cb_int2;
+cb_tree cb_int3;
+cb_tree cb_i[8];
+cb_tree cb_error_node;
+cb_tree cb_return_code;
+cb_tree cb_call_params;
+
+cb_tree cb_intr_whencomp;
+cb_tree cb_intr_pi;
+cb_tree cb_intr_e;
+
+cb_tree cb_standard_error_handler;
+
 static struct cb_word *lookup_word (const char *name);
 
 static char *
@@ -264,6 +292,8 @@ cb_tree_category (cb_tree x)
 	break;
       }
     default:
+	fprintf(stderr, "Unknown tree tag %d Category %d\n", CB_TREE_TAG(x), x->category);
+	fflush(stderr);
       ABORT ();
     }
 
@@ -381,30 +411,6 @@ cb_get_int (cb_tree x)
     val = -val;
   return val;
 }
-
-
-/*
- * Constants
- */
-
-cb_tree cb_any;
-cb_tree cb_true;
-cb_tree cb_false;
-cb_tree cb_null;
-cb_tree cb_zero;
-cb_tree cb_space;
-cb_tree cb_low;
-cb_tree cb_high;
-cb_tree cb_quote;
-cb_tree cb_int0;
-cb_tree cb_int1;
-cb_tree cb_int2;
-cb_tree cb_int3;
-cb_tree cb_i[8];
-cb_tree cb_error_node;
-cb_tree cb_return_code;
-cb_tree cb_call_params;
-cb_tree cb_standard_error_handler;
 
 static cb_tree
 make_constant (enum cb_category category, const char *val)
@@ -1108,8 +1114,9 @@ cb_tree
 cb_build_filler (void)
 {
   static int id = 1;
-  char name[256];
-  sprintf (name, "$%d", id++);
+  char name[32];
+
+  sprintf (name, "WORK$%d", id++);
   return cb_build_reference (name);
 }
 
@@ -1349,6 +1356,7 @@ cb_build_funcall (const char *name, int argc,
     make_tree (CB_TAG_FUNCALL, CB_CATEGORY_BOOLEAN, sizeof (struct cb_funcall));
   p->name = name;
   p->argc = argc;
+  p->varcnt = 0;
   p->argv[0] = a1;
   p->argv[1] = a2;
   p->argv[2] = a3;
@@ -1648,3 +1656,137 @@ cb_build_program (void)
   p->numeric_separator = ',';
   return p;
 }
+
+/*
+ * FUNCTION
+ */
+
+static cb_tree
+make_intrinsic (cb_tree name, struct cb_intrinsic_table *cbp, cb_tree args, cb_tree field)
+{
+	struct cb_intrinsic	*x;
+
+/* Leave in, we may need this
+	cb_tree			l;
+	for ( l = args; l; l = CB_CHAIN(l) ) {
+		switch (CB_TREE_TAG (CB_VALUE(l)) ) {
+		case CB_TAG_CONST:
+		case CB_TAG_INTEGER:
+		case CB_TAG_LITERAL:
+		case CB_TAG_DECIMAL:
+		case CB_TAG_FIELD:
+		case CB_TAG_REFERENCE:
+		case CB_TAG_INTRINSIC:
+			break;
+		default:
+			cb_error (_("FUNCTION %s has invalid/not supported arguments - Tag %d"), cbp->name, CB_TREE_TAG(l));
+			return cb_error_node;
+
+		}
+	}
+*/
+	x = make_tree (CB_TAG_INTRINSIC, cbp->category, sizeof(struct cb_intrinsic));
+	x->name = name;
+	x->args = args;
+	x->intr_tab = cbp;
+	x->intr_field = field;
+	return CB_TREE(x);
+}
+
+cb_tree
+cb_build_intrinsic (cb_tree name, cb_tree args)
+{
+	struct cb_intrinsic_table	*cbp;
+	int				numargs;
+
+	numargs = cb_list_length (args);
+
+	cbp = lookup_intrinsic(CB_NAME(name));
+	if (cbp) {
+		if ( (cbp->args != -1 && numargs != cbp->args) ||
+		     (cbp->args == -1 && cbp->intr_enum != CB_INTR_RANDOM && numargs < 1) ) {
+			cb_error_x (name,_("FUNCTION %s has wrong number of arguments"),
+				cbp->name);
+			return cb_error_node;
+		}
+		/* cb_tree	x; */
+		switch(cbp->intr_enum) {
+		case CB_INTR_LENGTH:
+			if ( CB_INTRINSIC_P (CB_VALUE(args)) ) {
+				return make_intrinsic (name, cbp, args, NULL);
+			} else {
+				return cb_build_length (CB_VALUE(args));
+			}
+
+		case CB_INTR_WHEN_COMPILED:
+			return cb_intr_whencomp;
+		case CB_INTR_PI:
+			return cb_intr_pi;
+		case CB_INTR_E:
+			return cb_intr_e;
+
+		case CB_INTR_LOWER_CASE:
+		case CB_INTR_UPPER_CASE:
+		case CB_INTR_REVERSE:
+			if ( CB_INTRINSIC_P (CB_VALUE(args)) ) {
+				return make_intrinsic (name, cbp, args, cb_int0);
+			} else {
+				return make_intrinsic (name, cbp, args, cb_build_length(CB_VALUE(args)));
+			}
+
+		case CB_INTR_NUMVAL:
+		case CB_INTR_NUMVAL_C:
+			return make_intrinsic (name, cbp, args, NULL);
+		case CB_INTR_CURRENT_DATE:
+		case CB_INTR_CHAR:
+		case CB_INTR_DATE_OF_INTEGER:
+		case CB_INTR_DAY_OF_INTEGER:
+		case CB_INTR_INTEGER_OF_DATE:
+		case CB_INTR_INTEGER_OF_DAY:
+		case CB_INTR_TEST_DATE_YYYYMMDD:
+		case CB_INTR_TEST_DAY_YYYYDDD:
+		case CB_INTR_FACTORIAL:
+		case CB_INTR_ABS:
+		case CB_INTR_ACOS:
+		case CB_INTR_ASIN:
+		case CB_INTR_ATAN:
+		case CB_INTR_COS:
+		case CB_INTR_EXP:
+		case CB_INTR_EXP10:
+		case CB_INTR_LOG:
+		case CB_INTR_LOG10:
+		case CB_INTR_SIN:
+		case CB_INTR_SQRT:
+		case CB_INTR_TAN:
+		case CB_INTR_ORD:
+		case CB_INTR_INTEGER:
+		case CB_INTR_INTEGER_PART:
+		case CB_INTR_ANNUITY:
+		case CB_INTR_MOD:
+		case CB_INTR_REM:
+			return make_intrinsic (name, cbp, args, NULL);
+
+		case CB_INTR_SUM:
+		case CB_INTR_MIN:
+		case CB_INTR_MAX:
+		case CB_INTR_MIDRANGE:
+		case CB_INTR_MEDIAN:
+		case CB_INTR_MEAN:
+		case CB_INTR_RANGE:
+		case CB_INTR_RANDOM:
+		case CB_INTR_VARIANCE:
+		case CB_INTR_STANDARD_DEVIATION:
+		case CB_INTR_PRESENT_VALUE:
+		case CB_INTR_ORD_MIN:
+		case CB_INTR_ORD_MAX:
+			return make_intrinsic (name, cbp, args, cb_int1);
+
+		default:
+			break;
+		}
+	}
+	cb_error_x (name,_("FUNCTION %s not implemented"), CB_NAME(name));
+	return cb_error_node;
+}
+
+

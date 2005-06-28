@@ -1,3 +1,8 @@
+2005-06-28  Roger While <simrw@sim-basis.de>
+
+	* New files : intrinsic.h, intrinsic.c
+	* Fix cob_add/sub_int
+
 2005-06-13  Roger While <simrw@sim-basis.de>
 
 	* common.c : Handle new COB_SWITCH_n=ON/OFF

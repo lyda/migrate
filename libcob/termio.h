@@ -23,6 +23,7 @@
 #include <libcob/common.h>
 
 extern void cob_display (cob_field *f);
+extern void cob_new_display (int outorerr, int newline, int varcnt, ...);
 extern void cob_display_error (cob_field *f);
 extern void cob_newline (void);
 extern void cob_newline_error (void);

@@ -376,7 +376,7 @@ cob_move_binary_to_display (cob_field *f1, cob_field *f2)
 {
   int i, sign;
   long long val = 0;
-  char buff[20]; /* long long is at most 20 digits */
+  char buff[32]; /* long long is at most 20 digits */
 
   /* get value */
   val = cob_binary_get_int64 (f1);
@@ -667,10 +667,17 @@ indirect_move (void (*func) (cob_field *src, cob_field *dst),
 	       cob_field *src, cob_field *dst,
 	       unsigned int size, char scale)
 {
-  unsigned char data[64];
+  cob_field temp;
   cob_field_attr attr =
     {COB_TYPE_NUMERIC_DISPLAY, size, scale, COB_FLAG_HAVE_SIGN, NULL};
+/* Worse code
   cob_field temp = {size, data, &attr};
+*/
+  unsigned char data[64];
+
+  temp.size = size;
+  temp.data = data;
+  temp.attr = &attr;
   func (src, &temp);
   cob_move (&temp, dst);
 }
@@ -679,10 +686,16 @@ static void
 cob_move_all (cob_field *src, cob_field *dst)
 {
   int i;
-  unsigned char data[dst->size];
-  cob_field_attr attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, 0};
+  cob_field temp;
+  cob_field_attr attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
+/* Worse code
   cob_field temp = {dst->size, data, &attr};
+*/
+  unsigned char data[dst->size];
 
+  temp.size = dst->size;
+  temp.data = data;
+  temp.attr = &attr;
   for (i = 0; i < dst->size; i++)
     data[i] = src->data[i % src->size];
 
@@ -916,8 +929,15 @@ cob_binary_set_int64 (cob_field *f, long long n)
 void
 cob_set_int (cob_field *f, int n)
 {
+  cob_field temp;
   cob_field_attr attr = {COB_TYPE_NUMERIC_BINARY, 9, 0, COB_FLAG_HAVE_SIGN, 0};
+
+/* Generates worse code
   cob_field temp = {4, (unsigned char *) &n, &attr};
+*/
+  temp.size = 4;
+  temp.data = (unsigned char *) &n;
+  temp.attr = &attr;
   cob_move (&temp, f);
 }
 
@@ -933,9 +953,15 @@ cob_get_int (cob_field *f)
     default:
       {
 	int n;
+	cob_field temp;
 	cob_field_attr attr =
-	  {COB_TYPE_NUMERIC_BINARY, 9, 0, COB_FLAG_HAVE_SIGN, 0};
+	  {COB_TYPE_NUMERIC_BINARY, 9, 0, COB_FLAG_HAVE_SIGN, NULL};
+	/* Worse code 
 	cob_field temp = {4, (unsigned char *) &n, &attr};
+	*/
+	temp.size = 4;
+	temp.data = (unsigned char *) &n;
+	temp.attr = &attr;
 	cob_move (f, &temp);
 	return n;
       }
@@ -945,7 +971,14 @@ cob_get_int (cob_field *f)
 void
 cob_memcpy (cob_field *dst, unsigned char *src, int size)
 {
-  cob_field_attr attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, 0};
+  cob_field temp;
+  cob_field_attr attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
+
+/* Worse code
   cob_field temp = {size, src, &attr};
+*/
+  temp.size = size;
+  temp.data = src;
+  temp.attr = &attr;
   cob_move (&temp , dst);
 }
