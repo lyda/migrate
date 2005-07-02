@@ -2,5 +2,5 @@
 echo
 echo "## Run time tests with -O option ##"
 echo
-. atconfig
+. ./atconfig
 COBOL_FLAGS='-O' ${abs_srcdir}/run

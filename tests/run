@@ -303,11 +303,11 @@ at_times_file=$at_suite_dir/at-times
 # List of the tested programs.
 at_tested='cobc'
 # List of the all the test groups.
-at_groups_all=' 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90'
+at_groups_all=' 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 127 128 129 130'
 # As many dots as there are digits in the last test group number.
 # Used to normalize the test group numbers so that `ls' lists them in
 # numerical order.
-at_format='..'
+at_format='...'
 # Description of all the test groups.
 at_help_all='1;fundamental.at:22;DISPLAY literals;;
 2;fundamental.at:52;DISPLAY literals, Decimal Point is COMMA;;
@@ -399,6 +399,46 @@ at_help_all='1;fundamental.at:22;DISPLAY literals;;
 88;extensions.at:802;Environment/Argument variable;;
 89;return-code.at:22;RETURN-CODE moving;;
 90;return-code.at:45;RETURN-CODE passing;;
+91;functions.at:22;FUNCTION ABS;;
+92;functions.at:42;FUNCTION ACOS;;
+93;functions.at:62;FUNCTION ANNUITY;;
+94;functions.at:83;FUNCTION ASIN;;
+95;functions.at:103;FUNCTION ATAN;;
+96;functions.at:123;FUNCTION CHAR;;
+97;functions.at:143;FUNCTION COS;;
+98;functions.at:163;FUNCTION DATE-OF-INTEGER;;
+99;functions.at:182;FUNCTION DATE-TO-YYYYMMDD;;
+100;functions.at:201;FUNCTION DAY-OF-INTEGER;;
+101;functions.at:220;FUNCTION DAY-TO-YYYYDDD;;
+102;functions.at:239;FUNCTION EXP;;
+103;functions.at:258;FUNCTION FACTORIAL;;
+104;functions.at:277;FUNCTION INTEGER;;
+105;functions.at:297;FUNCTION INTEGER-OF-DATE;;
+106;functions.at:316;FUNCTION INTEGER-OF-DAY;;
+107;functions.at:335;FUNCTION INTEGER-PART;;
+108;functions.at:355;FUNCTION LENGTH;;
+109;functions.at:375;FUNCTION LOG;;
+110;functions.at:395;FUNCTION LOG10;;
+111;functions.at:415;FUNCTION LOWER-CASE;;
+112;functions.at:435;FUNCTION MAX;;
+113;functions.at:454;FUNCTION MEAN;;
+114;functions.at:473;FUNCTION MEDIAN;;
+115;functions.at:492;FUNCTION MIDRANGE;;
+116;functions.at:511;FUNCTION MIN;;
+117;functions.at:530;FUNCTION MOD;;
+118;functions.at:549;FUNCTION NUMVAL;;
+119;functions.at:569;FUNCTION ORD;;
+120;functions.at:588;FUNCTION ORD-MAX;;
+121;functions.at:607;FUNCTION ORD-MIN;;
+122;functions.at:626;FUNCTION PRESENT-VALUE;;
+123;functions.at:645;FUNCTION RANGE;;
+124;functions.at:664;FUNCTION REM;;
+125;functions.at:683;FUNCTION REVERSE;;
+126;functions.at:703;FUNCTION SIN;;
+127;functions.at:723;FUNCTION SQRT;;
+128;functions.at:743;FUNCTION STANDARD-DEVIATION;;
+129;functions.at:762;FUNCTION TAN;;
+130;functions.at:782;FUNCTION VARIANCE;;
 '
 
 at_keywords=
@@ -9696,6 +9736,3225 @@ case $at_status in
             exit 77;;
    0) ;;
    *) echo "return-code.at:78: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  91 ) # 91. functions.at:22: FUNCTION ABS
+    at_setup_line='functions.at:22'
+    at_desc='FUNCTION ABS'
+    $at_quiet $ECHO_N " 91: FUNCTION ABS                                 $ECHO_C"
+    at_xfail=no
+    (
+      echo "91. functions.at:22: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC   S9(4)V9(4) VALUE -1.2345.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION ABS ( X ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:35: \${COMPILE} -o prog prog.cob"
+echo functions.at:35 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:35: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:38: ./prog"
+echo functions.at:38 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "+0001.2345
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:38: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  92 ) # 92. functions.at:42: FUNCTION ACOS
+    at_setup_line='functions.at:42'
+    at_desc='FUNCTION ACOS'
+    $at_quiet $ECHO_N " 92: FUNCTION ACOS                                $ECHO_C"
+    at_xfail=no
+    (
+      echo "92. functions.at:42: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC   S9(4)V9(4) VALUE -0.2345.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION ACOS ( X ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:55: \${COMPILE} -o prog prog.cob"
+echo functions.at:55 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:55: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:58: ./prog"
+echo functions.at:58 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "1.80750052110824332
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:58: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  93 ) # 93. functions.at:62: FUNCTION ANNUITY
+    at_setup_line='functions.at:62'
+    at_desc='FUNCTION ANNUITY'
+    $at_quiet $ECHO_N " 93: FUNCTION ANNUITY                             $ECHO_C"
+    at_xfail=no
+    (
+      echo "93. functions.at:62: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC   S9(4) VALUE 3.
+       01  Y   PIC   S9(4) VALUE 5.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION ANNUITY ( X, Y ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:76: \${COMPILE} -o prog prog.cob"
+echo functions.at:76 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:76: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:79: ./prog"
+echo functions.at:79 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "3.002932551319648091
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:79: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  94 ) # 94. functions.at:83: FUNCTION ASIN
+    at_setup_line='functions.at:83'
+    at_desc='FUNCTION ASIN'
+    $at_quiet $ECHO_N " 94: FUNCTION ASIN                                $ECHO_C"
+    at_xfail=no
+    (
+      echo "94. functions.at:83: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC   S9(4)V9(4) VALUE -0.2345.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION ASIN ( X ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:96: \${COMPILE} -o prog prog.cob"
+echo functions.at:96 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:96: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:99: ./prog"
+echo functions.at:99 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "-0.23670419431334679
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:99: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  95 ) # 95. functions.at:103: FUNCTION ATAN
+    at_setup_line='functions.at:103'
+    at_desc='FUNCTION ATAN'
+    $at_quiet $ECHO_N " 95: FUNCTION ATAN                                $ECHO_C"
+    at_xfail=no
+    (
+      echo "95. functions.at:103: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC   S9(4)V9(4) VALUE 1.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION ATAN ( X ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:116: \${COMPILE} -o prog prog.cob"
+echo functions.at:116 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:116: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:119: ./prog"
+echo functions.at:119 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "+0.78539816339744830
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:119: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  96 ) # 96. functions.at:123: FUNCTION CHAR
+    at_setup_line='functions.at:123'
+    at_desc='FUNCTION CHAR'
+    $at_quiet $ECHO_N " 96: FUNCTION CHAR                                $ECHO_C"
+    at_xfail=no
+    (
+      echo "96. functions.at:123: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC   S9(4)V9(4) VALUE 108.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION CHAR ( X ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:136: \${COMPILE} -o prog prog.cob"
+echo functions.at:136 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:136: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:139: ./prog"
+echo functions.at:139 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "k
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:139: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  97 ) # 97. functions.at:143: FUNCTION COS
+    at_setup_line='functions.at:143'
+    at_desc='FUNCTION COS'
+    $at_quiet $ECHO_N " 97: FUNCTION COS                                 $ECHO_C"
+    at_xfail=no
+    (
+      echo "97. functions.at:143: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC   S9(4)V9(4) VALUE -0.2345.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION COS ( X ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:156: \${COMPILE} -o prog prog.cob"
+echo functions.at:156 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:156: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:159: ./prog"
+echo functions.at:159 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "+0.97263064125625818
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:159: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  98 ) # 98. functions.at:163: FUNCTION DATE-OF-INTEGER
+    at_setup_line='functions.at:163'
+    at_desc='FUNCTION DATE-OF-INTEGER'
+    $at_quiet $ECHO_N " 98: FUNCTION DATE-OF-INTEGER                     $ECHO_C"
+    at_xfail=no
+    (
+      echo "98. functions.at:163: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION DATE-OF-INTEGER ( 146000 ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:175: \${COMPILE} -o prog prog.cob"
+echo functions.at:175 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:175: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:178: ./prog"
+echo functions.at:178 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "20000925
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:178: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  99 ) # 99. functions.at:182: FUNCTION DATE-TO-YYYYMMDD
+    at_setup_line='functions.at:182'
+    at_desc='FUNCTION DATE-TO-YYYYMMDD'
+    $at_quiet $ECHO_N " 99: FUNCTION DATE-TO-YYYYMMDD                    $ECHO_C"
+    at_xfail=no
+    (
+      echo "99. functions.at:182: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION DATE-TO-YYYYMMDD ( 981002, -10, 1994 ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:194: \${COMPILE} -o prog prog.cob"
+echo functions.at:194 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:194: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:197: ./prog"
+echo functions.at:197 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "18981002
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:197: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  100 ) # 100. functions.at:201: FUNCTION DAY-OF-INTEGER
+    at_setup_line='functions.at:201'
+    at_desc='FUNCTION DAY-OF-INTEGER'
+    $at_quiet $ECHO_N "100: FUNCTION DAY-OF-INTEGER                      $ECHO_C"
+    at_xfail=no
+    (
+      echo "100. functions.at:201: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION DAY-OF-INTEGER ( 146000 ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:213: \${COMPILE} -o prog prog.cob"
+echo functions.at:213 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:213: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:216: ./prog"
+echo functions.at:216 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "2000269
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:216: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  101 ) # 101. functions.at:220: FUNCTION DAY-TO-YYYYDDD
+    at_setup_line='functions.at:220'
+    at_desc='FUNCTION DAY-TO-YYYYDDD'
+    $at_quiet $ECHO_N "101: FUNCTION DAY-TO-YYYYDDD                      $ECHO_C"
+    at_xfail=no
+    (
+      echo "101. functions.at:220: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION DAY-TO-YYYYDDD ( 95005, -10, 2013 ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:232: \${COMPILE} -o prog prog.cob"
+echo functions.at:232 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:232: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:235: ./prog"
+echo functions.at:235 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "01995005
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:235: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  102 ) # 102. functions.at:239: FUNCTION EXP
+    at_setup_line='functions.at:239'
+    at_desc='FUNCTION EXP'
+    $at_quiet $ECHO_N "102: FUNCTION EXP                                 $ECHO_C"
+    at_xfail=no
+    (
+      echo "102. functions.at:239: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION EXP ( 3 ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:251: \${COMPILE} -o prog prog.cob"
+echo functions.at:251 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:251: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:254: ./prog"
+echo functions.at:254 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "20.085536923187664371
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:254: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  103 ) # 103. functions.at:258: FUNCTION FACTORIAL
+    at_setup_line='functions.at:258'
+    at_desc='FUNCTION FACTORIAL'
+    $at_quiet $ECHO_N "103: FUNCTION FACTORIAL                           $ECHO_C"
+    at_xfail=no
+    (
+      echo "103. functions.at:258: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION FACTORIAL ( 6 ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:270: \${COMPILE} -o prog prog.cob"
+echo functions.at:270 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:270: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:273: ./prog"
+echo functions.at:273 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "000000000000000720
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:273: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  104 ) # 104. functions.at:277: FUNCTION INTEGER
+    at_setup_line='functions.at:277'
+    at_desc='FUNCTION INTEGER'
+    $at_quiet $ECHO_N "104: FUNCTION INTEGER                             $ECHO_C"
+    at_xfail=no
+    (
+      echo "104. functions.at:277: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC   S9(4)V9(4) VALUE -1.5.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION INTEGER ( x ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:290: \${COMPILE} -o prog prog.cob"
+echo functions.at:290 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:290: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:293: ./prog"
+echo functions.at:293 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "-000000000000000002
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:293: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  105 ) # 105. functions.at:297: FUNCTION INTEGER-OF-DATE
+    at_setup_line='functions.at:297'
+    at_desc='FUNCTION INTEGER-OF-DATE'
+    $at_quiet $ECHO_N "105: FUNCTION INTEGER-OF-DATE                     $ECHO_C"
+    at_xfail=no
+    (
+      echo "105. functions.at:297: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION INTEGER-OF-DATE ( 20000925 ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:309: \${COMPILE} -o prog prog.cob"
+echo functions.at:309 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:309: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:312: ./prog"
+echo functions.at:312 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "00146000
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:312: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  106 ) # 106. functions.at:316: FUNCTION INTEGER-OF-DAY
+    at_setup_line='functions.at:316'
+    at_desc='FUNCTION INTEGER-OF-DAY'
+    $at_quiet $ECHO_N "106: FUNCTION INTEGER-OF-DAY                      $ECHO_C"
+    at_xfail=no
+    (
+      echo "106. functions.at:316: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION INTEGER-OF-DAY ( 2000269 ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:328: \${COMPILE} -o prog prog.cob"
+echo functions.at:328 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:328: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:331: ./prog"
+echo functions.at:331 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "00146000
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:331: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  107 ) # 107. functions.at:335: FUNCTION INTEGER-PART
+    at_setup_line='functions.at:335'
+    at_desc='FUNCTION INTEGER-PART'
+    $at_quiet $ECHO_N "107: FUNCTION INTEGER-PART                        $ECHO_C"
+    at_xfail=no
+    (
+      echo "107. functions.at:335: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC   S9(4)V9(4) VALUE -1.5.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION INTEGER-PART ( x ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:348: \${COMPILE} -o prog prog.cob"
+echo functions.at:348 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:348: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:351: ./prog"
+echo functions.at:351 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "-000000000000000001
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:351: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  108 ) # 108. functions.at:355: FUNCTION LENGTH
+    at_setup_line='functions.at:355'
+    at_desc='FUNCTION LENGTH'
+    $at_quiet $ECHO_N "108: FUNCTION LENGTH                              $ECHO_C"
+    at_xfail=no
+    (
+      echo "108. functions.at:355: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC   S9(4)V9(4) VALUE -1.5.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION LENGTH ( x ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:368: \${COMPILE} -o prog prog.cob"
+echo functions.at:368 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:368: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:371: ./prog"
+echo functions.at:371 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "8
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:371: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  109 ) # 109. functions.at:375: FUNCTION LOG
+    at_setup_line='functions.at:375'
+    at_desc='FUNCTION LOG'
+    $at_quiet $ECHO_N "109: FUNCTION LOG                                 $ECHO_C"
+    at_xfail=no
+    (
+      echo "109. functions.at:375: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC   S9(4)V9(4) VALUE 1.5.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION LOG ( x ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:388: \${COMPILE} -o prog prog.cob"
+echo functions.at:388 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:388: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:391: ./prog"
+echo functions.at:391 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "0.405465108108164385
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:391: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  110 ) # 110. functions.at:395: FUNCTION LOG10
+    at_setup_line='functions.at:395'
+    at_desc='FUNCTION LOG10'
+    $at_quiet $ECHO_N "110: FUNCTION LOG10                               $ECHO_C"
+    at_xfail=no
+    (
+      echo "110. functions.at:395: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC   S9(4)V9(4) VALUE 1.5.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION LOG10 ( x ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:408: \${COMPILE} -o prog prog.cob"
+echo functions.at:408 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:408: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:411: ./prog"
+echo functions.at:411 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "0.176091259055681237
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:411: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  111 ) # 111. functions.at:415: FUNCTION LOWER-CASE
+    at_setup_line='functions.at:415'
+    at_desc='FUNCTION LOWER-CASE'
+    $at_quiet $ECHO_N "111: FUNCTION LOWER-CASE                          $ECHO_C"
+    at_xfail=no
+    (
+      echo "111. functions.at:415: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC   X(10) VALUE "A#B.C%D+E$".
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION LOWER-CASE ( x ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:428: \${COMPILE} -o prog prog.cob"
+echo functions.at:428 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:428: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:431: ./prog"
+echo functions.at:431 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "a#b.c%d+e\$
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:431: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  112 ) # 112. functions.at:435: FUNCTION MAX
+    at_setup_line='functions.at:435'
+    at_desc='FUNCTION MAX'
+    $at_quiet $ECHO_N "112: FUNCTION MAX                                 $ECHO_C"
+    at_xfail=no
+    (
+      echo "112. functions.at:435: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION MAX ( 3 -14 0 8 -3 ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:447: \${COMPILE} -o prog prog.cob"
+echo functions.at:447 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:447: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:450: ./prog"
+echo functions.at:450 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "8
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:450: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  113 ) # 113. functions.at:454: FUNCTION MEAN
+    at_setup_line='functions.at:454'
+    at_desc='FUNCTION MEAN'
+    $at_quiet $ECHO_N "113: FUNCTION MEAN                                $ECHO_C"
+    at_xfail=no
+    (
+      echo "113. functions.at:454: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION MEAN ( 3 -14 0 8 -3 ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:466: \${COMPILE} -o prog prog.cob"
+echo functions.at:466 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:466: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:469: ./prog"
+echo functions.at:469 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "-1.199999999999999956
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:469: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  114 ) # 114. functions.at:473: FUNCTION MEDIAN
+    at_setup_line='functions.at:473'
+    at_desc='FUNCTION MEDIAN'
+    $at_quiet $ECHO_N "114: FUNCTION MEDIAN                              $ECHO_C"
+    at_xfail=no
+    (
+      echo "114. functions.at:473: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION MEDIAN ( 3 -14 0 8 -3 ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:485: \${COMPILE} -o prog prog.cob"
+echo functions.at:485 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:485: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:488: ./prog"
+echo functions.at:488 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "0
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:488: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  115 ) # 115. functions.at:492: FUNCTION MIDRANGE
+    at_setup_line='functions.at:492'
+    at_desc='FUNCTION MIDRANGE'
+    $at_quiet $ECHO_N "115: FUNCTION MIDRANGE                            $ECHO_C"
+    at_xfail=no
+    (
+      echo "115. functions.at:492: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION MIDRANGE ( 3 -14 0 8 -3 ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:504: \${COMPILE} -o prog prog.cob"
+echo functions.at:504 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:504: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:507: ./prog"
+echo functions.at:507 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "-3.000000000000000000
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:507: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  116 ) # 116. functions.at:511: FUNCTION MIN
+    at_setup_line='functions.at:511'
+    at_desc='FUNCTION MIN'
+    $at_quiet $ECHO_N "116: FUNCTION MIN                                 $ECHO_C"
+    at_xfail=no
+    (
+      echo "116. functions.at:511: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION MIN ( 3 -14 0 8 -3 ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:523: \${COMPILE} -o prog prog.cob"
+echo functions.at:523 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:523: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:526: ./prog"
+echo functions.at:526 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "-14
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:526: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  117 ) # 117. functions.at:530: FUNCTION MOD
+    at_setup_line='functions.at:530'
+    at_desc='FUNCTION MOD'
+    $at_quiet $ECHO_N "117: FUNCTION MOD                                 $ECHO_C"
+    at_xfail=no
+    (
+      echo "117. functions.at:530: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION MOD ( -11 5 ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:542: \${COMPILE} -o prog prog.cob"
+echo functions.at:542 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:542: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:545: ./prog"
+echo functions.at:545 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "+000000000000000004
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:545: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  118 ) # 118. functions.at:549: FUNCTION NUMVAL
+    at_setup_line='functions.at:549'
+    at_desc='FUNCTION NUMVAL'
+    $at_quiet $ECHO_N "118: FUNCTION NUMVAL                              $ECHO_C"
+    at_xfail=no
+    (
+      echo "118. functions.at:549: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC   X(12) VALUE " -9876.1234 ".
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION NUMVAL ( X ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:562: \${COMPILE} -o prog prog.cob"
+echo functions.at:562 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:562: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:565: ./prog"
+echo functions.at:565 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "-00000000009876.1234
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:565: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  119 ) # 119. functions.at:569: FUNCTION ORD
+    at_setup_line='functions.at:569'
+    at_desc='FUNCTION ORD'
+    $at_quiet $ECHO_N "119: FUNCTION ORD                                 $ECHO_C"
+    at_xfail=no
+    (
+      echo "119. functions.at:569: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION ORD ( "k" ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:581: \${COMPILE} -o prog prog.cob"
+echo functions.at:581 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:581: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:584: ./prog"
+echo functions.at:584 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "00000108
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:584: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  120 ) # 120. functions.at:588: FUNCTION ORD-MAX
+    at_setup_line='functions.at:588'
+    at_desc='FUNCTION ORD-MAX'
+    $at_quiet $ECHO_N "120: FUNCTION ORD-MAX                             $ECHO_C"
+    at_xfail=no
+    (
+      echo "120. functions.at:588: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION ORD-MAX ( 3 -14 0 8 -3 ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:600: \${COMPILE} -o prog prog.cob"
+echo functions.at:600 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:600: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:603: ./prog"
+echo functions.at:603 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "00000004
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:603: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  121 ) # 121. functions.at:607: FUNCTION ORD-MIN
+    at_setup_line='functions.at:607'
+    at_desc='FUNCTION ORD-MIN'
+    $at_quiet $ECHO_N "121: FUNCTION ORD-MIN                             $ECHO_C"
+    at_xfail=no
+    (
+      echo "121. functions.at:607: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION ORD-MIN ( 3 -14 0 8 -3 ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:619: \${COMPILE} -o prog prog.cob"
+echo functions.at:619 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:619: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:622: ./prog"
+echo functions.at:622 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "00000002
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:622: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  122 ) # 122. functions.at:626: FUNCTION PRESENT-VALUE
+    at_setup_line='functions.at:626'
+    at_desc='FUNCTION PRESENT-VALUE'
+    $at_quiet $ECHO_N "122: FUNCTION PRESENT-VALUE                       $ECHO_C"
+    at_xfail=no
+    (
+      echo "122. functions.at:626: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION PRESENT-VALUE ( 3 2 1 ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:638: \${COMPILE} -o prog prog.cob"
+echo functions.at:638 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:638: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:641: ./prog"
+echo functions.at:641 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "0.562500000000000000
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:641: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  123 ) # 123. functions.at:645: FUNCTION RANGE
+    at_setup_line='functions.at:645'
+    at_desc='FUNCTION RANGE'
+    $at_quiet $ECHO_N "123: FUNCTION RANGE                               $ECHO_C"
+    at_xfail=no
+    (
+      echo "123. functions.at:645: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION RANGE ( 3 -14 0 8 -3 ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:657: \${COMPILE} -o prog prog.cob"
+echo functions.at:657 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:657: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:660: ./prog"
+echo functions.at:660 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "+000000000000000022
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:660: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  124 ) # 124. functions.at:664: FUNCTION REM
+    at_setup_line='functions.at:664'
+    at_desc='FUNCTION REM'
+    $at_quiet $ECHO_N "124: FUNCTION REM                                 $ECHO_C"
+    at_xfail=no
+    (
+      echo "124. functions.at:664: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION REM ( -11 5 ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:676: \${COMPILE} -o prog prog.cob"
+echo functions.at:676 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:676: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:679: ./prog"
+echo functions.at:679 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "-000000000000000001
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:679: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  125 ) # 125. functions.at:683: FUNCTION REVERSE
+    at_setup_line='functions.at:683'
+    at_desc='FUNCTION REVERSE'
+    $at_quiet $ECHO_N "125: FUNCTION REVERSE                             $ECHO_C"
+    at_xfail=no
+    (
+      echo "125. functions.at:683: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC   X(10) VALUE "A#B.C%D+E$".
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION REVERSE ( x ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:696: \${COMPILE} -o prog prog.cob"
+echo functions.at:696 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:696: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:699: ./prog"
+echo functions.at:699 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "\$E+D%C.B#A
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:699: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  126 ) # 126. functions.at:703: FUNCTION SIN
+    at_setup_line='functions.at:703'
+    at_desc='FUNCTION SIN'
+    $at_quiet $ECHO_N "126: FUNCTION SIN                                 $ECHO_C"
+    at_xfail=no
+    (
+      echo "126. functions.at:703: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC   S9(4)V9(4) VALUE 1.5.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION SIN ( x ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:716: \${COMPILE} -o prog prog.cob"
+echo functions.at:716 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:716: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:719: ./prog"
+echo functions.at:719 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "+0.99749498660405443
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:719: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  127 ) # 127. functions.at:723: FUNCTION SQRT
+    at_setup_line='functions.at:723'
+    at_desc='FUNCTION SQRT'
+    $at_quiet $ECHO_N "127: FUNCTION SQRT                                $ECHO_C"
+    at_xfail=no
+    (
+      echo "127. functions.at:723: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC   S9(4)V9(4) VALUE 1.5.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION SQRT ( x ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:736: \${COMPILE} -o prog prog.cob"
+echo functions.at:736 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:736: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:739: ./prog"
+echo functions.at:739 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "1.224744871391588941
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:739: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  128 ) # 128. functions.at:743: FUNCTION STANDARD-DEVIATION
+    at_setup_line='functions.at:743'
+    at_desc='FUNCTION STANDARD-DEVIATION'
+    $at_quiet $ECHO_N "128: FUNCTION STANDARD-DEVIATION                  $ECHO_C"
+    at_xfail=no
+    (
+      echo "128. functions.at:743: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION STANDARD-DEVIATION ( 3 -14 0 8 -3 ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:755: \${COMPILE} -o prog prog.cob"
+echo functions.at:755 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:755: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:758: ./prog"
+echo functions.at:758 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "7.359347797189639273
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:758: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  129 ) # 129. functions.at:762: FUNCTION TAN
+    at_setup_line='functions.at:762'
+    at_desc='FUNCTION TAN'
+    $at_quiet $ECHO_N "129: FUNCTION TAN                                 $ECHO_C"
+    at_xfail=no
+    (
+      echo "129. functions.at:762: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC   S9(4)V9(4) VALUE 1.5.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION TAN ( x ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:775: \${COMPILE} -o prog prog.cob"
+echo functions.at:775 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:775: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:778: ./prog"
+echo functions.at:778 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "14.101419947171718761
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:778: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  130 ) # 130. functions.at:782: FUNCTION VARIANCE
+    at_setup_line='functions.at:782'
+    at_desc='FUNCTION VARIANCE'
+    $at_quiet $ECHO_N "130: FUNCTION VARIANCE                            $ECHO_C"
+    at_xfail=no
+    (
+      echo "130. functions.at:782: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION VARIANCE ( 3 -14 0 8 -3 ).
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "functions.at:794: \${COMPILE} -o prog prog.cob"
+echo functions.at:794 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:794: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "functions.at:797: ./prog"
+echo functions.at:797 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "54.159999999999996589
+" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "functions.at:797: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then

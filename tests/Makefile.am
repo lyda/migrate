@@ -28,7 +28,8 @@ run_DEPENDENCIES = \
 	run.src/ref-mod.at \
 	run.src/subscripts.at \
 	run.src/extensions.at \
-	run.src/return-code.at
+	run.src/return-code.at \
+	run.src/functions.at
 
 data_rep_DEPENDENCIES = \
 	data-rep.at \

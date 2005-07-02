@@ -2395,7 +2395,9 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_param (cb_ref (prog->collating_sequence), -1);
   else    
 	output ("NULL");
-  output (", %d, '%c', '%c', '%c', %d, %d, %d};\n",
+
+  /* Note 2 spare bytes at end */
+  output (", %d, '%c', '%c', '%c', %d, %d, %d, 0, 0};\n",
 	cb_display_sign, prog->decimal_point, prog->currency_symbol,
 	prog->numeric_separator, cb_filename_mapping, cb_binary_truncate,
 	cb_pretty_display);

@@ -134,74 +134,74 @@ H\"[^\"\n]*\" {
   return scan_h (yytext + 2);
 }
 
-"NOT"+[ \t\n]+"ON"+[ \t\n]+"SIZE"+[ \t\n]+"ERROR" |
-"NOT"+[ \t\n]+"SIZE"+[ \t\n]+"ERROR" {	
+"NOT"+[ \t\n]+"ON"+[ \t\n]+"SIZE"+[ \t\n]+"ERROR"+[ \t\n] |
+"NOT"+[ \t\n]+"SIZE"+[ \t\n]+"ERROR"+[ \t\n] {	
 	count_lines(yytext);
 	return NOT_SIZE_ERROR;
 	}
 
-"ON"+[ \t\n]+"SIZE"+[ \t\n]+"ERROR" |
-"SIZE"+[ \t\n]+"ERROR" {	
+"ON"+[ \t\n]+"SIZE"+[ \t\n]+"ERROR"+[ \t\n] |
+"SIZE"+[ \t\n]+"ERROR"+[ \t\n] {	
 	count_lines(yytext);
 	return SIZE_ERROR;
 	}
 
-"NOT"+[ \t\n]+"ON"+[ \t\n]+"EXCEPTION" |
-"NOT"+[ \t\n]+"EXCEPTION" {	
+"NOT"+[ \t\n]+"ON"+[ \t\n]+"EXCEPTION"+[ \t\n] |
+"NOT"+[ \t\n]+"EXCEPTION"+[ \t\n] {	
 	count_lines(yytext);
 	return NOT_EXCEPTION;
 	}
 
-"ON"+[ \t\n]+"EXCEPTION" |
-"EXCEPTION" {	
+"ON"+[ \t\n]+"EXCEPTION"+[ \t\n] |
+"EXCEPTION"+[ \t\n] {	
 	count_lines(yytext);
 	return EXCEPTION;
 	}
 
-"NOT"+[ \t\n]+"ON"+[ \t\n]+"OVERFLOW" |
-"NOT"+[ \t\n]+"OVERFLOW" {	
+"NOT"+[ \t\n]+"ON"+[ \t\n]+"OVERFLOW"+[ \t\n] |
+"NOT"+[ \t\n]+"OVERFLOW"+[ \t\n] {	
 	count_lines(yytext);
 	return NOT_OVERFLOW;
 	}
 
-"ON"+[ \t\n]+"OVERFLOW" |
-"OVERFLOW" {	
+"ON"+[ \t\n]+"OVERFLOW"+[ \t\n] |
+"OVERFLOW"+[ \t\n] {	
 	count_lines(yytext);
 	return OVERFLOW;
 	}
 
-"NOT"+[ \t\n]+"AT"+[ \t\n]+"END-OF-PAGE" |
-"NOT"+[ \t\n]+"AT"+[ \t\n]+"EOP" |
-"NOT"+[ \t\n]+"END-OF-PAGE" |
-"NOT"+[ \t\n]+"EOP" {	
+"NOT"+[ \t\n]+"AT"+[ \t\n]+"END-OF-PAGE"+[ \t\n] |
+"NOT"+[ \t\n]+"AT"+[ \t\n]+"EOP"+[ \t\n] |
+"NOT"+[ \t\n]+"END-OF-PAGE"+[ \t\n] |
+"NOT"+[ \t\n]+"EOP"+[ \t\n] {	
 	count_lines(yytext);
 	return NOT_EOP;
 	}
 
-"AT"+[ \t\n]+"END-OF-PAGE" |
-"AT"+[ \t\n]+"EOP" |
-"END-OF-PAGE" |
-"EOP" {	
+"AT"+[ \t\n]+"END-OF-PAGE"+[ \t\n] |
+"AT"+[ \t\n]+"EOP"+[ \t\n] |
+"END-OF-PAGE"+[ \t\n] |
+"EOP"+[ \t\n] {	
 	count_lines(yytext);
 	return EOP;
 	}
 
-"NOT"+[ \t\n]+"INVALID"+[ \t\n]+"KEY" {
+"NOT"+[ \t\n]+"INVALID"+[ \t\n]+"KEY"+[ \t\n] {
 	count_lines(yytext);
 	return NOT_INVALID_KEY;
 	}
 
-"NOT"+[ \t\n]+"INVALID" {
+"NOT"+[ \t\n]+"INVALID"+[ \t\n] {
 	count_lines(yytext);
 	return NOT_INVALID_KEY;
 	}
 
-"INVALID"+[ \t\n]+"KEY" {
+"INVALID"+[ \t\n]+"KEY"+[ \t\n] {
 	count_lines(yytext);
 	return INVALID_KEY;
 	}
 
-"INVALID" {
+"INVALID"+[ \t\n] {
 	count_lines(yytext);
 	return INVALID_KEY;
 	}

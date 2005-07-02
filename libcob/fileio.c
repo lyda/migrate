@@ -236,7 +236,7 @@ file_open (cob_file *f, char *filename, int mode, int opt)
     return errno;
 
   if (mode == COB_OPEN_EXTEND)
-    fseek (fp, 0, SEEK_END);
+    fseek (fp, (off_t)0, SEEK_END);
 
 #if HAVE_FCNTL
   /* lock the file */
@@ -421,7 +421,7 @@ sequential_write (cob_file *f, int opt)
 static int
 sequential_rewrite (cob_file *f)
 {
-  fseek (f->file, -f->record->size, SEEK_CUR);
+  fseek (f->file, -(off_t)f->record->size, SEEK_CUR);
   fwrite (f->record->data, f->record->size, 1, f->file);
   return COB_STATUS_00_SUCCESS;
 }
@@ -531,13 +531,13 @@ static cob_fileio_funcs lineseq_funcs = {
  * RELATIVE
  */
 
-#define RELATIVE_SIZE(f) (f->record_max + sizeof (f->record->size))
+#define RELATIVE_SIZE(f) ((off_t)(f->record_max + sizeof (f->record->size)))
 
 #define RELATIVE_SEEK(f,i)						      \
-  if (fseek (f->file, RELATIVE_SIZE (f) * (i), SEEK_SET) == -1		      \
+  if (fseek (f->file, (off_t)(RELATIVE_SIZE (f) * (i)), SEEK_SET) == -1		      \
       || fread (&f->record->size, sizeof (f->record->size), 1, f->file) == 0) \
     return COB_STATUS_23_KEY_NOT_EXISTS;				      \
-  fseek (f->file, - sizeof (f->record->size), SEEK_CUR);
+  fseek (f->file, - (off_t)sizeof (f->record->size), SEEK_CUR);
 
 static int
 relative_start (cob_file *f, int cond, cob_field *k)
@@ -586,7 +586,7 @@ relative_read (cob_file *f, cob_field *k)
   if (f->record->size == 0)
     return COB_STATUS_23_KEY_NOT_EXISTS;
 
-  fseek (f->file, sizeof (f->record->size), SEEK_CUR);
+  fseek (f->file, (off_t)sizeof (f->record->size), SEEK_CUR);
   fread (f->record->data, f->record_max, 1, f->file);
   return COB_STATUS_00_SUCCESS;
 }
@@ -612,7 +612,7 @@ relative_read_next (cob_file *f)
 	    {
 	      if (cob_add_int (f->keys[0].field, 1) != 0)
 		{
-		  fseek (f->file, - sizeof (f->record->size), SEEK_CUR);
+		  fseek (f->file, - (off_t) sizeof (f->record->size), SEEK_CUR);
 		  return COB_STATUS_14_OUT_OF_KEY_RANGE;
 		}
 	    }
@@ -624,7 +624,7 @@ relative_read_next (cob_file *f)
 	  return COB_STATUS_00_SUCCESS;
 	}
 
-      fseek (f->file, f->record_max, SEEK_CUR);
+      fseek (f->file, (off_t)f->record_max, SEEK_CUR);
     }
 }
 
@@ -639,13 +639,13 @@ relative_write (cob_file *f, int opt)
     {
       int index = cob_get_int (f->keys[0].field) - 1;
       if (index < 0
-	  || fseek (f->file, RELATIVE_SIZE (f) * index, SEEK_SET) < 0)
+	  || fseek (f->file, (off_t)(RELATIVE_SIZE (f) * index), SEEK_SET) < 0)
 	return COB_STATUS_21_KEY_INVALID;
     }
 
   if (fread (&size, sizeof (size), 1, f->file) > 0)
     {
-      fseek (f->file, - sizeof (size), SEEK_CUR);
+      fseek (f->file, - (off_t)sizeof (size), SEEK_CUR);
       if (size > 0)
 	return COB_STATUS_22_KEY_EXISTS;
     }
@@ -666,12 +666,12 @@ relative_rewrite (cob_file *f)
 {
   if (f->access_mode == COB_ACCESS_SEQUENTIAL)
     {
-      fseek (f->file, - f->record_max, SEEK_CUR);
+      fseek (f->file, - (off_t)f->record_max, SEEK_CUR);
     }
   else
     {
       RELATIVE_SEEK (f, cob_get_int (f->keys[0].field) - 1);
-      fseek (f->file, sizeof (f->record->size), SEEK_CUR);
+      fseek (f->file, (off_t)sizeof (f->record->size), SEEK_CUR);
     }
 
   fwrite (f->record->data, f->record_max, 1, f->file);
@@ -685,7 +685,7 @@ relative_delete (cob_file *f)
 
   f->record->size = 0;
   fwrite (&f->record->size, sizeof (f->record->size), 1, f->file);
-  fseek (f->file, f->record_max, SEEK_CUR);
+  fseek (f->file, (off_t)f->record_max, SEEK_CUR);
   return COB_STATUS_00_SUCCESS;
 }
 
@@ -1142,6 +1142,9 @@ cob_open (cob_file *f, int mode, int opt)
 
   f->flag_read_done = 0;
 
+  if ( !fileio_funcs[(int) f->organization] ) {
+	RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
+  }
   /* file was previously closed with lock */
   if (f->open_mode == COB_OPEN_LOCKED)
     RETURN_STATUS (COB_STATUS_38_CLOSED_WITH_LOCK);
@@ -1263,6 +1266,10 @@ cob_close (cob_file *f, int opt)
 
   f->flag_read_done = 0;
 
+  if ( !fileio_funcs[(int) f->organization] ) {
+	RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
+  }
+
   if (f->open_mode == COB_OPEN_CLOSED)
     RETURN_STATUS (COB_STATUS_42_NOT_OPEN);
 
@@ -1313,6 +1320,10 @@ cob_start (cob_file *f, int cond, cob_field *key)
   f->flag_read_done = 0;
   f->flag_first_read = 0;
 
+  if ( !fileio_funcs[(int) f->organization] ) {
+	RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
+  }
+
   if (f->flag_nonexistent)
     RETURN_STATUS (COB_STATUS_23_KEY_NOT_EXISTS);
 
@@ -1338,6 +1349,10 @@ cob_read (cob_file *f, cob_field *key)
   int ret;
 
   f->flag_read_done = 0;
+
+  if ( !fileio_funcs[(int) f->organization] ) {
+	RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
+  }
 
   if (f->flag_nonexistent)
     {
@@ -1384,6 +1399,10 @@ cob_write (cob_file *f, cob_field *rec, int opt)
 
   f->flag_read_done = 0;
 
+  if ( !fileio_funcs[(int) f->organization] ) {
+	RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
+  }
+
   if (f->access_mode == COB_ACCESS_SEQUENTIAL)
     {
       if (f->open_mode == COB_OPEN_CLOSED
@@ -1420,6 +1439,10 @@ cob_rewrite (cob_file *f, cob_field *rec)
 
   f->flag_read_done = 0;
 
+  if ( !fileio_funcs[(int) f->organization] ) {
+	RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
+  }
+
   if (f->open_mode == COB_OPEN_CLOSED || f->open_mode != COB_OPEN_I_O)
     RETURN_STATUS (COB_STATUS_49_I_O_DENIED);
 
@@ -1448,6 +1471,10 @@ cob_delete (cob_file *f)
   int read_done = f->flag_read_done;
 
   f->flag_read_done = 0;
+
+  if ( !fileio_funcs[(int) f->organization] ) {
+	RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
+  }
 
   if (f->open_mode == COB_OPEN_CLOSED || f->open_mode != COB_OPEN_I_O)
     RETURN_STATUS (COB_STATUS_49_I_O_DENIED);

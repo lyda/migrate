@@ -1,3 +1,7 @@
+2005-07-02  Roger While <simrw@sim-basis.de>
+
+	* run.src/functions.at : New Intrinsic Function tests
+
 2005-06-13  Roger While <simrw@sim-basis.de>
 
 	* atlocal.in : Export COB_SWITCH_1/2 for OC

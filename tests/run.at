@@ -32,3 +32,4 @@ m4_include([initialize.at])	# 14.8.19 INITIALIZE statement
 m4_include([misc.at])
 m4_include([extensions.at])
 m4_include([return-code.at])
+m4_include([functions.at])

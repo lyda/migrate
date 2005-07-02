@@ -32,6 +32,24 @@
 #define MIN(x,y) ({int _x = (x), _y = (y); (_x < _y) ? _x : _y; })
 #define MAX(x,y) ({int _x = (x), _y = (y); (_x > _y) ? _x : _y; })
 
+static inline void
+own_memcpy (unsigned char *x, const unsigned char *y, size_t count)
+{
+	while ( count-- ) {
+		*x++ = *y++;
+	}
+	return;
+}
+
+static inline void
+own_memset (unsigned char *x, const int y, size_t count)
+{
+	while ( count-- ) {
+		*x++ = y;
+	}
+	return;
+}
+
 static void
 store_common_region (cob_field *f, unsigned char *data, size_t size, int scale)
 {
@@ -44,12 +62,12 @@ store_common_region (cob_field *f, unsigned char *data, size_t size, int scale)
 
   if (gcf > lcf)
     {
-      memset (COB_FIELD_DATA (f), '0', hf2 - gcf);
-      memcpy (COB_FIELD_DATA (f) + hf2 - gcf, data + hf1 - gcf, gcf - lcf);
-      memset (COB_FIELD_DATA (f) + hf2 - lcf, '0', lcf - lf2);
+      own_memset (COB_FIELD_DATA (f), '0', hf2 - gcf);
+      own_memcpy (COB_FIELD_DATA (f) + hf2 - gcf, data + hf1 - gcf, gcf - lcf);
+      own_memset (COB_FIELD_DATA (f) + hf2 - lcf, '0', lcf - lf2);
     }
   else
-    memset (f->data, '0', f->size);
+    own_memset (f->data, '0', f->size);
 }
 
 
@@ -68,7 +86,7 @@ cob_move_alphanum_to_display (cob_field *f1, cob_field *f2)
   unsigned char *e2 = s2 + COB_FIELD_SIZE (f2);
 
   /* initialize */
-  memset (f2->data, '0', f2->size);
+  own_memset (f2->data, '0', f2->size);
 
   /* skip white spaces */
   for (; s1 < e1; s1++)
@@ -114,7 +132,7 @@ cob_move_alphanum_to_display (cob_field *f1, cob_field *f2)
   return;
 
  error:
-  memset (f2->data, '0', f2->size);
+  own_memset (f2->data, '0', f2->size);
   cob_put_sign (f2, 0);
 }
 
@@ -141,23 +159,23 @@ cob_move_display_to_alphanum (cob_field *f1, cob_field *f2)
 
   if (size1 >= size2)
     {
-      memcpy (data2, data1, size2);
+      own_memcpy (data2, data1, size2);
     }
   else
     {
       int diff = size2 - size1;
       int zero_size = 0;
       /* move */
-      memcpy (data2, data1, size1);
+      own_memcpy (data2, data1, size1);
       /* implied 0 ('P's) */
       if (f1->attr->scale < 0)
 	{
 	  zero_size = MIN (-f1->attr->scale, diff);
-	  memset (data2 + size1, '0', zero_size);
+	  own_memset (data2 + size1, '0', zero_size);
 	}
       /* padding */
       if (diff - zero_size > 0)
-	memset (data2 + size1 + zero_size, ' ', diff - zero_size);
+	own_memset (data2 + size1 + zero_size, ' ', diff - zero_size);
     }
 
   cob_put_sign (f1, sign);
@@ -175,22 +193,22 @@ cob_move_alphanum_to_alphanum (cob_field *f1, cob_field *f2)
     {
       /* move string with truncation */
       if (COB_FIELD_JUSTIFIED (f2))
-	memcpy (data2, data1 + size1 - size2, size2);
+	own_memcpy (data2, data1 + size1 - size2, size2);
       else
-	memcpy (data2, data1, size2);
+	own_memcpy (data2, data1, size2);
     }
   else
     {
       /* move string with padding */
       if (COB_FIELD_JUSTIFIED (f2))
 	{
-	  memset (data2, ' ', size2 - size1);
-	  memcpy (data2 + size2 - size1, data1, size1);
+	  own_memset (data2, ' ', size2 - size1);
+	  own_memcpy (data2 + size2 - size1, data1, size1);
 	}
       else
 	{
-	  memcpy (data2, data1, size1);
-	  memset (data2 + size1, ' ', size2 - size1);
+	  own_memcpy (data2, data1, size1);
+	  own_memset (data2 + size1, ' ', size2 - size1);
 	}
     }
 }
@@ -215,7 +233,7 @@ cob_move_display_to_packed (cob_field *f1, cob_field *f2)
   unsigned char *p = data1 + (digits1 - scale1) - (digits2 - scale2);
 
   /* pack string */
-  memset (f2->data, 0, f2->size);
+  own_memset (f2->data, 0, f2->size);
   offset = 1 - (digits2 % 2);
   for (i = offset; i < digits2 + offset; i++, p++)
     {
@@ -269,7 +287,7 @@ cob_move_display_to_fp (cob_field *f1, cob_field *f2)
 	char		*data1;
 	char		buff2[64];
 
-	memset(buff2, 0, sizeof(buff2));
+	own_memset(buff2, 0, sizeof(buff2));
 	size = size1 - f1->attr->scale;
 	if ( sign < 0 ) {
 		buff2[0] = '-';
@@ -306,8 +324,8 @@ cob_move_fp_to_display (cob_field *f1, cob_field *f2)
 	char		buff[64];
 	char		buff2[64];
 
-	memset(buff, 0, sizeof(buff));
-	memset(buff2, 0, sizeof(buff2));
+	own_memset(buff, 0, sizeof(buff));
+	own_memset(buff2, 0, sizeof(buff2));
 	if ( COB_FIELD_TYPE (f1) == COB_TYPE_NUMERIC_FLOAT ) {
 		val = (double)(*(float *)f1->data);
 	} else {
@@ -545,7 +563,7 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
     {
       /* all digits are zeros */
       if (pad == ' ' || COB_FIELD_BLANK_ZERO (f2))
-	memset (f2->data, ' ', f2->size);
+	own_memset (f2->data, ' ', f2->size);
       else
 	for (dst = f2->data; dst < f2->data + f2->size; dst++)
 	  if (*dst != cob_current_module->decimal_point)
@@ -866,13 +884,13 @@ cob_binary_get_int64 (cob_field *f)
     {
       if (COB_FIELD_HAVE_SIGN (f))
 	{
-	  memcpy (&n, f->data, f->size);
+	  own_memcpy ((unsigned char *)&n, f->data, f->size);
 	  n = COB_BSWAP_64 (n);
 	  n >>= 8 * fsiz; /* shift with sign */
 	}
       else
 	{
-	  memcpy (((unsigned char *) &n) + fsiz, f->data, f->size);
+	  own_memcpy (((unsigned char *) &n) + fsiz, f->data, f->size);
 	  n = COB_BSWAP_64 (n);
 	}
     }
@@ -880,23 +898,23 @@ cob_binary_get_int64 (cob_field *f)
     {
       if (COB_FIELD_HAVE_SIGN (f))
 	{
-	  memcpy (((unsigned char *) &n) + fsiz, f->data, f->size);
+	  own_memcpy (((unsigned char *) &n) + fsiz, f->data, f->size);
 	  n >>= 8 * fsiz; /* shift with sign */
 	}
       else
 	{
-	  memcpy (&n, f->data, f->size);
+	  own_memcpy ((unsigned char *)&n, f->data, f->size);
 	}
     }
 #else /* WORDS_BIGENDIAN */
   if (COB_FIELD_HAVE_SIGN (f))
     {
-      memcpy (&n, f->data, f->size);
+      own_memcpy (&n, f->data, f->size);
       n >>= 8 * (8 - f->size); /* shift with sign */
     }
   else
     {
-      memcpy (((unsigned char *) &n) + 8 - f->size, f->data, f->size);
+      own_memcpy (((unsigned char *) &n) + 8 - f->size, f->data, f->size);
     }
 #endif /* WORDS_BIGENDIAN */
   return n;
@@ -915,14 +933,14 @@ cob_binary_set_int64 (cob_field *f, long long n)
   if (COB_FIELD_BINARY_SWAP (f))
     {
       n = COB_BSWAP_64 (n);
-      memcpy (f->data, ((unsigned char *) &n) + 8 - f->size, f->size);
+      own_memcpy (f->data, ((unsigned char *) &n) + 8 - f->size, f->size);
     }
   else
     {
-      memcpy (f->data, &n, f->size);
+      own_memcpy (f->data, (unsigned char *)&n, f->size);
     }
 #else /* WORDS_BIGENDIAN */
-  memcpy (f->data, ((unsigned char *) &n) + 8 - f->size, f->size);
+  own_memcpy (f->data, ((unsigned char *) &n) + 8 - f->size, f->size);
 #endif /* WORDS_BIGENDIAN */
 }
 

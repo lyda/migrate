@@ -121,9 +121,11 @@ typedef struct __cob_module {
   unsigned char decimal_point;
   unsigned char currency_symbol;
   unsigned char numeric_separator;
-  unsigned int flag_filename_mapping:1;
-  unsigned int flag_binary_truncate:1;
-  unsigned int flag_pretty_display:1;
+  unsigned char flag_filename_mapping;
+  unsigned char flag_binary_truncate;
+  unsigned char flag_pretty_display;
+  unsigned char spare7;
+  unsigned char spare8;
 } cob_module;
 
 extern cob_module *cob_current_module;

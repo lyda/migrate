@@ -63,7 +63,7 @@ static int	comp_field (const void *m1, const void *m2);
 /* Initialization routine */
 
 void
-cob_init_intrinsic()
+cob_init_intrinsic ()
 {
 	int		i;
 
@@ -73,8 +73,8 @@ cob_init_intrinsic()
 	cob_decimal_init (&d4);
 	cob_decimal_init (&d5);
 	/* mpz_init2 (mp, 256); */
-	memset ((char *)&calc_field[0], 0, sizeof(calc_field));
-	memset ((char *)&calc_attr[0], 0, sizeof(calc_attr));
+	memset ((char *)&calc_field[0], 0, sizeof (calc_field));
+	memset ((char *)&calc_attr[0], 0, sizeof (calc_attr));
 	for ( i = 0; i < DEPTH_LEVEL; i++ ) {
 		calc_field[i].data = malloc (1024);
 		memset (calc_field[i].data, 0, 1024);
@@ -87,22 +87,22 @@ cob_init_intrinsic()
 /* Low level routines */
 
 static void
-make_double_entry()
+make_double_entry ()
 {
 	unsigned char		*s;
 
 	curr_field = &calc_field[curr_entry];
 	curr_attr = &calc_attr[curr_entry];
-	if ( curr_field->size < sizeof(double) ) {
+	if ( curr_field->size < sizeof (double) ) {
 		if ( curr_field->size == 0 ) {
-			s = malloc (sizeof(double) + 3);
+			s = malloc (sizeof (double) + 3);
 		} else {
-			s = realloc (curr_field->data, sizeof(double) + 3);
+			s = realloc (curr_field->data, sizeof (double) + 3);
 		}
-		memset(s, 0, sizeof(double) + 3);
+		memset (s, 0, sizeof (double) + 3);
 	} else {
 		s = curr_field->data;
-		memset(s, 0, curr_field->size);
+		memset (s, 0, curr_field->size);
 	}
 
 	curr_attr->type = COB_TYPE_NUMERIC_DOUBLE;
@@ -111,7 +111,7 @@ make_double_entry()
 	curr_attr->flags = COB_FLAG_HAVE_SIGN;
 	curr_attr->pic = NULL;
 
-	curr_field->size = sizeof(double);
+	curr_field->size = sizeof (double);
 	curr_field->data = s;
 	curr_field->attr = curr_attr;
 		
@@ -134,10 +134,10 @@ make_field_entry (cob_field *f)
 		} else {
 			s = realloc (curr_field->data, f->size + 3);
 		}
-		memset(s, 0, f->size + 3);
+		memset (s, 0, f->size + 3);
 	} else {
 		s = curr_field->data;
-		memset(s, 0, curr_field->size);
+		memset (s, 0, curr_field->size);
 	}
 	*curr_field = *f;
 	*curr_attr = *(f->attr);
@@ -189,7 +189,7 @@ comp_field (const void *m1, const void *m2)
 cob_field *
 cob_intr_binop (cob_field *f1, int op, cob_field *f2)
 {
-	make_double_entry();
+	make_double_entry ();
 
 	cob_decimal_set_field (&d1, f1);
 	cob_decimal_set_field (&d2, f2);
@@ -339,7 +339,7 @@ cob_intr_current_date ()
 
 	make_field_entry (&field);
 
-	curtime = time(NULL);
+	curtime = time (NULL);
 	strftime (buff, 22, "%Y%m%d%H%M%S00%z", localtime (&curtime));
 	memcpy (curr_field->data, buff, 21);
 	return curr_field;
@@ -354,7 +354,7 @@ cob_intr_char (cob_field *srcfield)
 
 	make_field_entry (&field);
 
-	i = cob_get_int(srcfield);
+	i = cob_get_int (srcfield);
 	if ( i < 1 || i > 256 ) {
 		*curr_field->data = 0;
 	} else {
@@ -391,7 +391,7 @@ cob_intr_date_of_integer (cob_field *srcdays)
 	/* Base 1601-01-01 */
 	days = cob_get_int (srcdays);
 	if ( days < 1 || days > 3067671 ) {
-		memset(curr_field->data, '0', 8);
+		memset (curr_field->data, '0', 8);
 		return curr_field;
 	}
 	while ( days > leapyear ) {
@@ -416,7 +416,7 @@ cob_intr_date_of_integer (cob_field *srcdays)
 			}
 		}
 	}
-	sprintf(buff, "%4.4d%2.2d%2.2d", baseyear, i, days);
+	sprintf (buff, "%4.4d%2.2d%2.2d", baseyear, i, days);
 	memcpy (curr_field->data, buff, 8);
 	return curr_field;
 }
@@ -436,7 +436,7 @@ cob_intr_day_of_integer (cob_field *srcdays)
 	/* Base 1601-01-01 */
 	days = cob_get_int (srcdays);
 	if ( days < 1 || days > 3067671 ) {
-		memset(curr_field->data, '0', 7);
+		memset (curr_field->data, '0', 7);
 		return curr_field;
 	}
 	while ( days > leapyear ) {
@@ -448,7 +448,7 @@ cob_intr_day_of_integer (cob_field *srcdays)
 			leapyear = 365;
 		}
 	}
-	sprintf(buff, "%4.4d%3.3d", baseyear, days);
+	sprintf (buff, "%4.4d%3.3d", baseyear, days);
 	memcpy (curr_field->data, buff, 7);
 	return curr_field;
 }
@@ -652,15 +652,15 @@ cob_intr_exp (cob_field *srcfield)
 	double		mathd2;
 
 	cob_decimal_set_field (&d1, srcfield);
-	make_double_entry();
+	make_double_entry ();
 
 	errno = 0;
-	mathd2 = pow(2.7182818284590452354, intr_get_double (&d1));
+	mathd2 = pow (2.7182818284590452354, intr_get_double (&d1));
 	if ( errno ) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
-	memcpy(curr_field->data, (char *)&mathd2, 8);
+	memcpy (curr_field->data, (char *)&mathd2, 8);
 	return curr_field;
 }
 
@@ -670,15 +670,15 @@ cob_intr_exp10 (cob_field *srcfield)
 	double		mathd2;
 
 	cob_decimal_set_field (&d1, srcfield);
-	make_double_entry();
+	make_double_entry ();
 
 	errno = 0;
-	mathd2 = pow(10.0, intr_get_double (&d1));
+	mathd2 = pow (10.0, intr_get_double (&d1));
 	if ( errno ) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
-	memcpy(curr_field->data, (char *)&mathd2, 8);
+	memcpy (curr_field->data, (char *)&mathd2, 8);
 	return curr_field;
 }
 
@@ -706,7 +706,7 @@ cob_intr_acos (cob_field *srcfield)
 	make_field_entry (&field);
 	
 	errno = 0;
-	mathd2 = acos(intr_get_double (&d1));
+	mathd2 = acos (intr_get_double (&d1));
 	if ( errno ) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
@@ -721,7 +721,7 @@ cob_intr_acos (cob_field *srcfield)
 		result += tempres;
 		mathd2 -= tempres;
 	}
-	memcpy(curr_field->data, (char *)&result, 8);
+	memcpy (curr_field->data, (char *)&result, 8);
 	return curr_field;
 }
 
@@ -738,7 +738,7 @@ cob_intr_asin (cob_field *srcfield)
 	make_field_entry (&field);
 
 	errno = 0;
-	mathd2 = asin(intr_get_double (&d1));
+	mathd2 = asin (intr_get_double (&d1));
 	if ( errno ) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
@@ -752,7 +752,7 @@ cob_intr_asin (cob_field *srcfield)
 		result += tempres;
 		mathd2 -= tempres;
 	}
-	memcpy(curr_field->data, (char *)&result, 8);
+	memcpy (curr_field->data, (char *)&result, 8);
 	return curr_field;
 }
 
@@ -769,7 +769,7 @@ cob_intr_atan (cob_field *srcfield)
 	make_field_entry (&field);
 
 	errno = 0;
-	mathd2 = atan(intr_get_double (&d1));
+	mathd2 = atan (intr_get_double (&d1));
 	if ( errno ) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
@@ -783,7 +783,7 @@ cob_intr_atan (cob_field *srcfield)
 		result += tempres;
 		mathd2 -= tempres;
 	}
-	memcpy(curr_field->data, (char *)&result, 8);
+	memcpy (curr_field->data, (char *)&result, 8);
 	return curr_field;
 }
 
@@ -800,7 +800,7 @@ cob_intr_cos (cob_field *srcfield)
 	make_field_entry (&field);
 
 	errno = 0;
-	mathd2 = cos(intr_get_double (&d1));
+	mathd2 = cos (intr_get_double (&d1));
 	if ( errno ) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
@@ -814,7 +814,7 @@ cob_intr_cos (cob_field *srcfield)
 		result += tempres;
 		mathd2 -= tempres;
 	}
-	memcpy(curr_field->data, (char *)&result, 8);
+	memcpy (curr_field->data, (char *)&result, 8);
 	return curr_field;
 }
 
@@ -824,15 +824,15 @@ cob_intr_log (cob_field *srcfield)
 	double		mathd2;
 
 	cob_decimal_set_field (&d1, srcfield);
-	make_double_entry();
+	make_double_entry ();
 
 	errno = 0;
-	mathd2 = log(intr_get_double (&d1));
+	mathd2 = log (intr_get_double (&d1));
 	if ( errno ) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
-	memcpy(curr_field->data, (char *)&mathd2, 8);
+	memcpy (curr_field->data, (char *)&mathd2, 8);
 	return curr_field;
 }
 
@@ -842,7 +842,7 @@ cob_intr_log10 (cob_field *srcfield)
 	double		mathd2;
 
 	cob_decimal_set_field (&d1, srcfield);
-	make_double_entry();
+	make_double_entry ();
 
 	errno = 0;
 	mathd2 = log10(intr_get_double (&d1));
@@ -850,7 +850,7 @@ cob_intr_log10 (cob_field *srcfield)
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
-	memcpy(curr_field->data, (char *)&mathd2, 8);
+	memcpy (curr_field->data, (char *)&mathd2, 8);
 	return curr_field;
 }
 
@@ -867,7 +867,7 @@ cob_intr_sin (cob_field *srcfield)
 	make_field_entry (&field);
 
 	errno = 0;
-	mathd2 = sin(intr_get_double (&d1));
+	mathd2 = sin (intr_get_double (&d1));
 	if ( errno ) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
@@ -881,7 +881,7 @@ cob_intr_sin (cob_field *srcfield)
 		result += tempres;
 		mathd2 -= tempres;
 	}
-	memcpy(curr_field->data, (char *)&result, 8);
+	memcpy (curr_field->data, (char *)&result, 8);
 	return curr_field;
 }
 
@@ -891,15 +891,15 @@ cob_intr_sqrt (cob_field *srcfield)
 	double		mathd2;
 
 	cob_decimal_set_field (&d1, srcfield);
-	make_double_entry();
+	make_double_entry ();
 
 	errno = 0;
-	mathd2 = sqrt(intr_get_double (&d1));
+	mathd2 = sqrt (intr_get_double (&d1));
 	if ( errno ) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
-	memcpy(curr_field->data, (char *)&mathd2, 8);
+	memcpy (curr_field->data, (char *)&mathd2, 8);
 	return curr_field;
 }
 
@@ -909,15 +909,15 @@ cob_intr_tan (cob_field *srcfield)
 	double		mathd2;
 
 	cob_decimal_set_field (&d1, srcfield);
-	make_double_entry();
+	make_double_entry ();
 
 	errno = 0;
-	mathd2 = tan(intr_get_double (&d1));
+	mathd2 = tan (intr_get_double (&d1));
 	if ( errno ) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
-	memcpy(curr_field->data, (char *)&mathd2, 8);
+	memcpy (curr_field->data, (char *)&mathd2, 8);
 	return curr_field;
 }
 
@@ -929,16 +929,19 @@ cob_intr_numval (cob_field *srcfield)
 	int		decimal_digits = 0;
 	int		sign = 0;
 	int		decimal_seen = 0;
+	long long	llval = 0;
 	double		val;
+	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL};
+	cob_field	field = {8, NULL, &attr};
 	unsigned char	rec_buff[64];
 	unsigned char	integer_buff[64];
 	unsigned char	decimal_buff[64];
 	unsigned char	final_buff[64];
 
-	memset (rec_buff, 0, sizeof(rec_buff));
-	memset (integer_buff, 0, sizeof(integer_buff));
-	memset (decimal_buff, 0, sizeof(decimal_buff));
-	memset (final_buff, 0, sizeof(final_buff));
+	memset (rec_buff, 0, sizeof (rec_buff));
+	memset (integer_buff, 0, sizeof (integer_buff));
+	memset (decimal_buff, 0, sizeof (decimal_buff));
+	memset (final_buff, 0, sizeof (final_buff));
 
 	memcpy (rec_buff, srcfield->data, srcfield->size);
 	for ( i = 0; i < srcfield->size; i++ ) {
@@ -962,6 +965,8 @@ cob_intr_numval (cob_field *srcfield)
 			continue;
 		}
 		if ( rec_buff[i] >= '0' && rec_buff[i] <= '9' ) {
+			llval *= 10;
+			llval += rec_buff[i] - '0';
 			if ( decimal_seen ) {
 				decimal_buff[decimal_digits++] = rec_buff[i];
 			} else {
@@ -975,10 +980,19 @@ cob_intr_numval (cob_field *srcfield)
 	if ( !decimal_digits ) {
 		decimal_buff[0] = '0';
 	}
-	sprintf (final_buff, "%s%s.%s", sign ? "-" : "", integer_buff, decimal_buff);
-	sscanf (final_buff, "%lf", &val);
-	make_double_entry();
-	memcpy (curr_field->data, (char *)&val, sizeof(double));
+	if ( sign ) {
+		llval = -llval;
+	}
+	if ( (integer_digits + decimal_digits) <= 18 ) {
+		attr.scale = decimal_digits;
+		make_field_entry (&field);
+		memcpy (curr_field->data, (char *)&llval, 8);
+	} else {
+		sprintf (final_buff, "%s%s.%s", sign ? "-" : "", integer_buff, decimal_buff);
+		sscanf (final_buff, "%lf", &val);
+		make_double_entry ();
+		memcpy (curr_field->data, (char *)&val, sizeof (double));
+	}
 	return curr_field;
 }
 
@@ -990,16 +1004,19 @@ cob_intr_numval_c (cob_field *srcfield)
 	int		decimal_digits = 0;
 	int		sign = 0;
 	int		decimal_seen = 0;
+	long long	llval = 0;
 	double		val;
+	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL};
+	cob_field	field = {8, NULL, &attr};
 	unsigned char	rec_buff[64];
 	unsigned char	integer_buff[64];
 	unsigned char	decimal_buff[64];
 	unsigned char	final_buff[64];
 
-	memset (rec_buff, 0, sizeof(rec_buff));
-	memset (integer_buff, 0, sizeof(integer_buff));
-	memset (decimal_buff, 0, sizeof(decimal_buff));
-	memset (final_buff, 0, sizeof(final_buff));
+	memset (rec_buff, 0, sizeof (rec_buff));
+	memset (integer_buff, 0, sizeof (integer_buff));
+	memset (decimal_buff, 0, sizeof (decimal_buff));
+	memset (final_buff, 0, sizeof (final_buff));
 
 	memcpy (rec_buff, srcfield->data, srcfield->size);
 	for ( i = 0; i < srcfield->size; i++ ) {
@@ -1023,6 +1040,8 @@ cob_intr_numval_c (cob_field *srcfield)
 			continue;
 		}
 		if ( rec_buff[i] >= '0' && rec_buff[i] <= '9' ) {
+			llval *= 10;
+			llval += rec_buff[i] - '0';
 			if ( decimal_seen ) {
 				decimal_buff[decimal_digits++] = rec_buff[i];
 			} else {
@@ -1036,10 +1055,19 @@ cob_intr_numval_c (cob_field *srcfield)
 	if ( !decimal_digits ) {
 		decimal_buff[0] = '0';
 	}
-	sprintf (final_buff, "%s%s.%s", sign ? "-" : "", integer_buff, decimal_buff);
-	sscanf (final_buff, "%lf", &val);
-	make_double_entry();
-	memcpy (curr_field->data, (char *)&val, sizeof(double));
+	if ( sign ) {
+		llval = -llval;
+	}
+	if ( (integer_digits + decimal_digits) <= 18 ) {
+		attr.scale = decimal_digits;
+		make_field_entry (&field);
+		memcpy (curr_field->data, (char *)&llval, 8);
+	} else {
+		sprintf (final_buff, "%s%s.%s", sign ? "-" : "", integer_buff, decimal_buff);
+		sscanf (final_buff, "%lf", &val);
+		make_double_entry ();
+		memcpy (curr_field->data, (char *)&val, sizeof (double));
+	}
 	return curr_field;
 }
 
@@ -1048,7 +1076,7 @@ cob_intr_annuity (cob_field *srcfield1, cob_field *srcfield2)
 {
 	double		mathd1, mathd2;
 
-	make_double_entry();
+	make_double_entry ();
 
 	cob_decimal_set_field (&d1, srcfield1);
 	cob_decimal_set_field (&d2, srcfield2);
@@ -1057,11 +1085,11 @@ cob_intr_annuity (cob_field *srcfield1, cob_field *srcfield2)
 	mathd2 = intr_get_double (&d2);
 	if ( mathd1 == 0 ) {
 		mathd1 = 1.0 / mathd2;
-		memcpy (curr_field->data, (char *)&mathd1, sizeof(double));
+		memcpy (curr_field->data, (char *)&mathd1, sizeof (double));
 		return curr_field;
 	}
 	mathd1 /= (1.0 - pow (mathd1 + 1.0, 0.0 - mathd2));
-	memcpy (curr_field->data, (char *)&mathd1, sizeof(double));
+	memcpy (curr_field->data, (char *)&mathd1, sizeof (double));
 	return curr_field;
 }
 
@@ -1216,7 +1244,7 @@ cob_intr_midrange (int params, ...)
 	cob_field	*f, *basemin, *basemax;
 	va_list		args;
 
-	make_double_entry();
+	make_double_entry ();
 	va_start (args, params);
 
 	basemin = va_arg (args, cob_field *);
@@ -1257,7 +1285,7 @@ cob_intr_median (int params, ...)
 		return f;
 	}
 
-	field_alloc = malloc (params * sizeof(cob_field *));
+	field_alloc = malloc (params * sizeof (cob_field *));
 	field_alloc[0] = f;
 
 	for ( i = 1; i < params; i++ ) {
@@ -1265,13 +1293,13 @@ cob_intr_median (int params, ...)
 	}
 	va_end (args);
 
-	qsort (field_alloc, (size_t)params, (size_t)sizeof(cob_field *), comp_field);
+	qsort (field_alloc, (size_t)params, (size_t)sizeof (cob_field *), comp_field);
 
 	i = params / 2;
 	if ( params % 2 ) {
 		f = field_alloc[i];
 	} else {
-		make_double_entry();
+		make_double_entry ();
 		cob_decimal_set_field (&d1, field_alloc[i-1]);
 		cob_decimal_set_field (&d2, field_alloc[i]);
 		cob_decimal_add (&d1, &d2);
@@ -1295,7 +1323,7 @@ cob_intr_mean (int params, ...)
 
 
 	va_start (args, params);
-	make_double_entry();
+	make_double_entry ();
 	mpz_set_ui (d1.value, 0);
 	d1.scale = 0;
 
@@ -1322,7 +1350,7 @@ cob_intr_mod (cob_field *srcfield1, cob_field *srcfield2)
 
 	make_field_entry (&field);
 
-	f1 = cob_intr_integer(cob_intr_binop(srcfield1, '/', srcfield2));
+	f1 = cob_intr_integer (cob_intr_binop (srcfield1, '/', srcfield2));
 	cob_decimal_set_field (&d1, srcfield2);
 	cob_decimal_set_field (&d2, f1);
 	cob_decimal_mul (&d2, &d1);
@@ -1375,7 +1403,7 @@ cob_intr_rem (cob_field *srcfield1, cob_field *srcfield2)
 	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL};
 	cob_field	field = {8, NULL, &attr};
 
-	f1 = cob_intr_integer_part(cob_intr_binop(srcfield1, '/', srcfield2));
+	f1 = cob_intr_integer_part (cob_intr_binop (srcfield1, '/', srcfield2));
 	cob_decimal_set_field (&d1, srcfield2);
 	cob_decimal_set_field (&d2, f1);
 	cob_decimal_mul (&d2, &d1);
@@ -1413,7 +1441,7 @@ cob_intr_random (int params, ...)
 	}
 	va_end (args);
 
-	randnum = rand();
+	randnum = rand ();
 	for ( i = 0; i < 10; i++ ) {
 		if ( (randnum / cob_exp10[i]) == 0 ) {
 			break;
@@ -1436,7 +1464,7 @@ cob_intr_variance (int params, ...)
 	va_list		args;
 
 	va_start (args, params);
-	make_double_entry();
+	make_double_entry ();
 
 	if ( params == 1 ) {
 		cob_set_int (curr_field, 0);
@@ -1488,7 +1516,7 @@ cob_intr_standard_deviation (int params, ...)
 	va_list		args;
 
 	va_start (args, params);
-	make_double_entry();
+	make_double_entry ();
 
 	if ( params == 1 ) {
 		cob_set_int (curr_field, 0);
@@ -1553,11 +1581,11 @@ cob_intr_present_value (int params, ...)
 	va_list		args;
 
 	va_start (args, params);
-	make_double_entry();
+	make_double_entry ();
 
 	if ( params < 2 ) {
-		fprintf(stderr, "Wrong number of parameters for FUNCTION PRESENT-VALUE\n");
-		fflush(stderr);
+		fprintf (stderr, "Wrong number of parameters for FUNCTION PRESENT-VALUE\n");
+		fflush (stderr);
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
@@ -1618,7 +1646,7 @@ cob_intr_year_to_yyyy (int params, ...)
 		f = va_arg (args, cob_field *);
 		xqtyear = cob_get_int (f);
 	} else {
-		t = time(NULL);
+		t = time (NULL);
 		timeptr = localtime (&t);
 		xqtyear = 1900 + timeptr->tm_year;
 	}
@@ -1678,7 +1706,7 @@ cob_intr_date_to_yyyymmdd (int params, ...)
 		f = va_arg (args, cob_field *);
 		xqtyear = cob_get_int (f);
 	} else {
-		t = time(NULL);
+		t = time (NULL);
 		timeptr = localtime (&t);
 		xqtyear = 1900 + timeptr->tm_year;
 	}
@@ -1740,7 +1768,7 @@ cob_intr_day_to_yyyyddd (int params, ...)
 		f = va_arg (args, cob_field *);
 		xqtyear = cob_get_int (f);
 	} else {
-		t = time(NULL);
+		t = time (NULL);
 		timeptr = localtime (&t);
 		xqtyear = 1900 + timeptr->tm_year;
 	}

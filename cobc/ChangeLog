@@ -1,7 +1,14 @@
+2005-07-02  Roger While <simrw@sim-basis.de>
+
+	* scanner.l : Fix bugs in early parsing (Bug list)
+	* pplex.l : Fix REPLACING (Bug list)
+	* codegen.c : Change cob_module bit fields to char
+
 2005-06-28  Roger While <simrw@sim-basis.de>
 
 	* Cater for FUNCTION's
 	* Fix a LENGTH bug
+	* Fix the 2 compile warnings in cobc.c
 
 2005-06-13  Roger While <simrw@sim-basis.de>
 

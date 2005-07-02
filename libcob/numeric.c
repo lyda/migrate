@@ -42,6 +42,25 @@ static cob_decimal cob_d3;
 static cob_decimal cob_d4;
 
 
+static inline void
+own_memcpy (unsigned char *x, const unsigned char *y, size_t count)
+{
+	while ( count-- ) {
+		*x++ = *y++;
+	}
+	return;
+}
+
+static inline void
+own_memset (unsigned char *x, const unsigned int y, size_t count)
+{
+	while ( count-- ) {
+		*x++ = y;
+	}
+	return;
+}
+
+
 /*
  * Decimal number
  */
@@ -185,7 +204,7 @@ cob_decimal_set_display (cob_decimal *d, cob_field *f)
   else
     {
       unsigned char buff[size + 1];
-      memcpy (buff, data, size);
+      own_memcpy (buff, data, size);
       buff[size] = 0;
       mpz_set_str (d->value, buff, 10);
     }
@@ -224,13 +243,13 @@ cob_decimal_get_display (cob_decimal *d, cob_field *f, int opt)
 	return cob_exception_code;
 
       /* othersize, truncate digits */
-      memcpy (data, buff - diff, COB_FIELD_SIZE (f));
+      own_memcpy (data, buff - diff, COB_FIELD_SIZE (f));
     }
   else
     {
       /* no overflow */
-      memset (data, '0', diff);
-      memcpy (data + diff, buff, size);
+      own_memset (data, '0', diff);
+      own_memcpy (data + diff, buff, size);
     }
 
   cob_put_sign (f, sign);
@@ -510,7 +529,7 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f, int opt)
 	{
 		float	val;
 		val = cob_decimal_get_double (d);
-		memcpy(f->data, (char *)&val, sizeof(float));
+		own_memcpy(f->data, (char *)&val, sizeof(float));
 /*
 		*(float *)f->data = val;
 */
@@ -520,7 +539,7 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f, int opt)
 	{
 		double	val;
 		val = cob_decimal_get_double (d);
-		memcpy(f->data, (char *)&val, sizeof(double));
+		own_memcpy(f->data, (char *)&val, sizeof(double));
 /*
 		*(double *)f->data = val;
 */
@@ -713,7 +732,7 @@ cob_display_add_int (cob_field *f, int n)
   unsigned char	tfield[64];
 
   osize = size;
-  memcpy(tfield, data, osize);
+  own_memcpy(tfield, data, osize);
   sign = cob_get_sign (f);
   /* -x + n = -(x - n) */
   if (sign < 0)
@@ -743,7 +762,7 @@ cob_display_add_int (cob_field *f, int n)
       if (display_add_int (data, size, n) != 0)
 	{
 	  /* if there was an overflow, recover the last value */
-	  memcpy(data, tfield, osize);
+	  own_memcpy(data, tfield, osize);
 	  goto overflow;
 	}
     }

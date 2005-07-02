@@ -570,8 +570,11 @@ ppecho (const char *text)
 	      /* match */
 	      for (l = r->new_text; l; l = l->next)
 		fputs (l->text, ppout);
+/*
 	      text_queue = queue ? queue->next : NULL;
-	      return;
+*/
+	      text_queue = queue;
+	      continue;
 	    }
 	}
 
