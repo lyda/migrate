@@ -1,5 +1,10 @@
 2005-07-14  Roger While <simrw@sim-basis.de>
 
+	* pplex.l : Carriage-return must be ignored if not
+	  followed by new-line.
+
+2005-07-14  Roger While <simrw@sim-basis.de>
+
 	* parser.y : Check for START on SEQ file
 	* All : Do malloc's through own new routine cob_malloc
 	  This will produce an error and terminate if memory

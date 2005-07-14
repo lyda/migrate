@@ -346,9 +346,11 @@ ppinput (char *buff, int max_size)
 	break;
 
       case '\r':
-	/* end-of-line */
+	/* end-of-line if followed by new-line */
 	if (line[i + 1] == '\n')
 	  i++;
+	else
+	  break;
 	/* fall through */
       case '\n':
 	buff[n++] = '\n';
