@@ -1,3 +1,9 @@
+2005-07-14  Roger While <simrw@sim-basis.de>
+
+	* New test for START of SEQ file.
+	* Tweak the IF tests a bit. This should cater
+	  for the precison vagueries of doubles.
+
 2005-07-02  Roger While <simrw@sim-basis.de>
 
 	* run.src/functions.at : New Intrinsic Function tests

@@ -108,14 +108,21 @@ AT_DATA([prog.cob], [
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
        01  X   PIC   S9(4)V9(4) VALUE 1.
+       01  Y   PIC   S9V9(17)   COMP.
        PROCEDURE        DIVISION.
-           DISPLAY FUNCTION ATAN ( X ).
+           MOVE FUNCTION ATAN ( X ) TO Y.
+           IF Y >= 0.78539816339744825 AND
+              Y <= 0.78539816339744835
+                   DISPLAY "OK"
+           ELSE
+                   DISPLAY "NOT OK"
+           END-IF.
            STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0],
-[+0.78539816339744830
+[OK
 ])
 
 AT_CLEANUP
@@ -148,14 +155,21 @@ AT_DATA([prog.cob], [
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
        01  X   PIC   S9(4)V9(4) VALUE -0.2345.
+       01  Y   PIC   S9V9(17)   COMP.
        PROCEDURE        DIVISION.
-           DISPLAY FUNCTION COS ( X ).
+           MOVE FUNCTION COS ( X ) TO Y.
+           IF Y >= 0.97263064125625815 AND
+              Y <= 0.97263064125625825
+                   DISPLAY "OK"
+           ELSE
+                   DISPLAY "NOT OK"
+           END-IF.
            STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0],
-[+0.97263064125625818
+[OK
 ])
 
 AT_CLEANUP
@@ -283,7 +297,7 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01  X   PIC   S9(4)V9(4) VALUE -1.5.
        PROCEDURE        DIVISION.
-           DISPLAY FUNCTION INTEGER ( x ).
+           DISPLAY FUNCTION INTEGER ( X ).
            STOP RUN.
 ])
 
@@ -341,7 +355,7 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01  X   PIC   S9(4)V9(4) VALUE -1.5.
        PROCEDURE        DIVISION.
-           DISPLAY FUNCTION INTEGER-PART ( x ).
+           DISPLAY FUNCTION INTEGER-PART ( X ).
            STOP RUN.
 ])
 
@@ -361,7 +375,7 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01  X   PIC   S9(4)V9(4) VALUE -1.5.
        PROCEDURE        DIVISION.
-           DISPLAY FUNCTION LENGTH ( x ).
+           DISPLAY FUNCTION LENGTH ( X ).
            STOP RUN.
 ])
 
@@ -381,7 +395,7 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01  X   PIC   S9(4)V9(4) VALUE 1.5.
        PROCEDURE        DIVISION.
-           DISPLAY FUNCTION LOG ( x ).
+           DISPLAY FUNCTION LOG ( X ).
            STOP RUN.
 ])
 
@@ -401,7 +415,7 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01  X   PIC   S9(4)V9(4) VALUE 1.5.
        PROCEDURE        DIVISION.
-           DISPLAY FUNCTION LOG10 ( x ).
+           DISPLAY FUNCTION LOG10 ( X ).
            STOP RUN.
 ])
 
@@ -421,7 +435,7 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01  X   PIC   X(10) VALUE "A#B.C%D+E$".
        PROCEDURE        DIVISION.
-           DISPLAY FUNCTION LOWER-CASE ( x ).
+           DISPLAY FUNCTION LOWER-CASE ( X ).
            STOP RUN.
 ])
 
@@ -689,7 +703,7 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01  X   PIC   X(10) VALUE "A#B.C%D+E$".
        PROCEDURE        DIVISION.
-           DISPLAY FUNCTION REVERSE ( x ).
+           DISPLAY FUNCTION REVERSE ( X ).
            STOP RUN.
 ])
 
@@ -708,14 +722,21 @@ AT_DATA([prog.cob], [
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
        01  X   PIC   S9(4)V9(4) VALUE 1.5.
+       01  Y   PIC   S9V9(17)   COMP.
        PROCEDURE        DIVISION.
-           DISPLAY FUNCTION SIN ( x ).
+           MOVE FUNCTION SIN ( X ) TO Y.
+           IF Y >= 0.99749498660405440 AND
+              Y <= 0.99749498660405450
+                   DISPLAY "OK"
+           ELSE
+                   DISPLAY "NOT OK"
+           END-IF.
            STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0],
-[+0.99749498660405443
+[OK
 ])
 
 AT_CLEANUP
@@ -729,7 +750,7 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01  X   PIC   S9(4)V9(4) VALUE 1.5.
        PROCEDURE        DIVISION.
-           DISPLAY FUNCTION SQRT ( x ).
+           DISPLAY FUNCTION SQRT ( X ).
            STOP RUN.
 ])
 
@@ -768,7 +789,7 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01  X   PIC   S9(4)V9(4) VALUE 1.5.
        PROCEDURE        DIVISION.
-           DISPLAY FUNCTION TAN ( x ).
+           DISPLAY FUNCTION TAN ( X ).
            STOP RUN.
 ])
 

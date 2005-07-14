@@ -356,7 +356,7 @@ void
 cob_display_environment (cob_field *f)
 {
   if ( !env ) {
-	env = malloc(FILENAME_MAX);
+	env = cob_malloc(FILENAME_MAX);
 	if ( !env ) {
 		return;
 	}

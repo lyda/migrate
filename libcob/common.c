@@ -693,7 +693,7 @@ void
 cob_table_sort_init (int nkeys)
 {
   sort_nkeys = 0;
-  sort_keys = malloc (nkeys * sizeof (cob_file_key));
+  sort_keys = cob_malloc (nkeys * sizeof (cob_file_key));
 }
 
 void
@@ -819,12 +819,26 @@ cob_external_addr (char *exname, int exlength)
 			return eptr->ext_alloc;
 		}
 	}
-	eptr = (cob_external *)malloc(sizeof(cob_external));
+	eptr = (cob_external *)cob_malloc(sizeof(cob_external));
 	eptr->next = basext;
 	eptr->esize = exlength;
-	eptr->ename = malloc(strlen(exname) + 1);
+	eptr->ename = cob_malloc(strlen(exname) + 1);
 	strcpy(eptr->ename, exname);
-	eptr->ext_alloc = malloc(exlength);
+	eptr->ext_alloc = cob_malloc(exlength);
 	basext = eptr;
 	return eptr->ext_alloc;
+}
+
+void *
+cob_malloc (const size_t size)
+{
+	void	*mptr;
+
+	mptr = malloc (size);
+	if ( !mptr ) {
+		cob_runtime_error (_("Cannot acquire %d bytes of memory - Aborting"), size);
+		exit (1);
+	}
+	memset (mptr, 0, size);
+	return mptr;
 }

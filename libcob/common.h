@@ -203,6 +203,7 @@ extern void cob_init (int argc, char **argv);
 extern void cob_module_enter (cob_module *module);
 extern void cob_module_leave (cob_module *module);
 extern void cob_stop_run (int status);
+extern void *cob_malloc (const size_t size);
 
 /* Utilities */
 

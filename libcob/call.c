@@ -87,7 +87,7 @@ cob_set_library_path (const char *path)
 
   /* build path array */
   p = strdup (path);
-  resolve_path = malloc (sizeof (char *) * resolve_size);
+  resolve_path = cob_malloc (sizeof (char *) * resolve_size);
   resolve_path[0] = strtok (p, ":");
   for (i = 1; i < resolve_size; i++)
     resolve_path[i] = strtok (NULL, ":");
@@ -125,7 +125,7 @@ static void
 insert (const char *name, const char *path, lt_dlhandle handle, lt_ptr_t func, time_t mtime)
 {
   int val = hash (name);
-  struct call_hash *p = malloc (sizeof (struct call_hash));
+  struct call_hash *p = cob_malloc (sizeof (struct call_hash));
   p->name = strdup (name);
   p->path = path ? strdup (path) : NULL;
   p->func = func;

@@ -84,6 +84,7 @@ struct cb_program *current_program = NULL;
 struct cb_statement *current_statement = NULL;
 struct cb_label *current_section = NULL, *current_paragraph = NULL;
 
+jmp_buf	cob_jmpbuf;
 
 /*
  * Local variables
@@ -124,10 +125,25 @@ static const char	fcopts[] =
 static const char	fcopts[] = " ";
 #endif
 
+void *
+cob_malloc (const size_t size)
+{
+	void	*mptr;
+
+	mptr = malloc (size);
+	if ( !mptr ) {
+		fprintf (stderr, "Cannot acquire %d bytes of memory - Aborting\n", size);
+		fflush (stderr);
+		(void)longjmp (cob_jmpbuf, 1);
+	}
+	memset (mptr, 0, size);
+	return mptr;
+}
+
 struct cb_text_list *
 cb_text_list_add (struct cb_text_list *list, const char *text)
 {
-  struct cb_text_list *p = malloc (sizeof (struct cb_text_list));
+  struct cb_text_list *p = cob_malloc (sizeof (struct cb_text_list));
   p->text = strdup (text);
   p->next = NULL;
   if (!list)
@@ -505,7 +521,7 @@ process_filename (const char *filename)
 {
   char basename[FILENAME_MAX];
   const char *extension;
-  struct filename *fn = malloc (sizeof (struct filename));
+  struct filename *fn = cob_malloc (sizeof (struct filename));
   fn->need_preprocess = 1;
   fn->need_translate  = 1;
   fn->need_assemble   = 1;
@@ -678,7 +694,7 @@ process_translate (struct filename *fn)
     terminate (fn->translate);
 
   /* open the storage file */
-  cb_storage_file_name = malloc (strlen (fn->translate) + 3);
+  cb_storage_file_name = cob_malloc (strlen (fn->translate) + 3);
   sprintf (cb_storage_file_name, "%s.h", fn->translate);
   strcpy(fn->trstorage, cb_storage_file_name);
   cb_storage_file = fopen (cb_storage_file_name, "w");
@@ -827,6 +843,18 @@ main (int argc, char *argv[])
     }
 
   file_list = NULL;
+  if ( setjmp (cob_jmpbuf) != 0 ) {
+	fprintf (stderr, "Aborting compile of %s at line %d\n", cb_source_file, cb_source_line);
+	fflush (stderr);
+	if ( yyout ) {
+		fflush(yyout);
+	}
+	if ( cb_storage_file ) {
+		fflush(cb_storage_file);
+	}
+	status = 99;
+	goto cleanup;
+  }
   while (i < argc)
     {
       struct filename *fn = process_filename (argv[i++]);

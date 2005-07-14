@@ -242,7 +242,7 @@ ppopen (char *name, struct cb_replace_list *replace_list)
 
   /* Preserve the current buffer */
   {
-    struct copy_info *p = malloc (sizeof (struct copy_info));
+    struct copy_info *p = cob_malloc (sizeof (struct copy_info));
     p->line      = cb_source_line;
     p->file      = cb_source_file;
     p->replacing = replace_list ? 1 : 0;
@@ -318,6 +318,7 @@ ppinput (char *buff, int max_size)
 
  start:
   /* read a line */
+  memset (line, 0, sizeof (line));
   if (fgets (line, BUFSIZ, ppin) == NULL)
     {
       if (newline_count == 0)
@@ -516,7 +517,7 @@ ppinput (char *buff, int max_size)
     }
   else
     {
-      /* insert newlines at the begging of the buffer */
+      /* insert newlines at the start of the buffer */
       memmove (buff + newline_count, bp, strlen (bp) + 1);
       memset (buff, '\n', newline_count);
       newline_count = 1;

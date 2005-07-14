@@ -553,7 +553,7 @@ access_mode:
 alternative_record_key_clause:
   ALTERNATE RECORD _key _is reference flag_duplicates
   {
-    struct cb_alt_key *p = malloc (sizeof (struct cb_alt_key));
+    struct cb_alt_key *p = cob_malloc (sizeof (struct cb_alt_key));
     p->key = $5;
     p->duplicates = CB_INTEGER ($6)->val;
     p->next = NULL;
@@ -1180,7 +1180,7 @@ occurs_keys:
     if ($1)
       {
 	int i, nkeys = cb_list_length ($1);
-	struct cb_key *keys = malloc (sizeof (struct cb_key) * nkeys);
+	struct cb_key *keys = cob_malloc (sizeof (struct cb_key) * nkeys);
 	cb_tree l = $1;
 	for (i = 0; i < nkeys; i++)
 	  {
@@ -2713,7 +2713,18 @@ start_statement:
   start_key opt_invalid_key
   end_start
   {
-    cb_emit_start ($3, $4, $5);
+	if (CB_FILE_P (cb_ref ($3))) {
+		if ( CB_FILE (cb_ref ($3))->organization != COB_ORG_INDEXED &&
+		     CB_FILE (cb_ref ($3))->organization != COB_ORG_RELATIVE ) {
+			cb_error ("START not allowed on SEQUENTIAL files");
+			$$ = cb_error_node;
+		} else {
+			cb_emit_start ($3, $4, $5);
+		}
+	} else {
+		cb_error_x ($3, _("'%s' not file name"), CB_NAME ($3));
+		$$ = cb_error_node;
+	}
   }
 ;
 start_key:

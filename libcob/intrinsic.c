@@ -29,9 +29,11 @@
 #include <math.h>
 
 #include "byteswap.h"
+#include "common.h"
 #include "move.h"
 #include "numeric.h"
 #include "intrinsic.h"
+#include "lib/gettext.h"
 
 /* Stacked field level */
 #define DEPTH_LEVEL	8
@@ -76,8 +78,10 @@ cob_init_intrinsic ()
 	memset ((char *)&calc_field[0], 0, sizeof (calc_field));
 	memset ((char *)&calc_attr[0], 0, sizeof (calc_attr));
 	for ( i = 0; i < DEPTH_LEVEL; i++ ) {
-		calc_field[i].data = malloc (1024);
+		calc_field[i].data = cob_malloc (1024);
+/* Done by cob_malloc
 		memset (calc_field[i].data, 0, 1024);
+*/
 		calc_field[i].size = 1024;
 	}
 	return;
@@ -95,7 +99,7 @@ make_double_entry ()
 	curr_attr = &calc_attr[curr_entry];
 	if ( curr_field->size < sizeof (double) ) {
 		if ( curr_field->size == 0 ) {
-			s = malloc (sizeof (double) + 3);
+			s = cob_malloc (sizeof (double) + 3);
 		} else {
 			s = realloc (curr_field->data, sizeof (double) + 3);
 		}
@@ -130,9 +134,13 @@ make_field_entry (cob_field *f)
 	curr_attr = &calc_attr[curr_entry];
 	if ( f->size > curr_field->size ) {
 		if ( curr_field->size == 0 ) {
-			s = malloc (f->size + 3);
+			s = cob_malloc (f->size + 3);
 		} else {
 			s = realloc (curr_field->data, f->size + 3);
+			if ( !s ) {
+				cob_runtime_error (_("Cannot acquire %d bytes of memory - Aborting"), f->size + 3);
+				exit (1);
+			}
 		}
 		memset (s, 0, f->size + 3);
 	} else {
@@ -1285,7 +1293,7 @@ cob_intr_median (int params, ...)
 		return f;
 	}
 
-	field_alloc = malloc (params * sizeof (cob_field *));
+	field_alloc = cob_malloc (params * sizeof (cob_field *));
 	field_alloc[0] = f;
 
 	for ( i = 1; i < params; i++ ) {

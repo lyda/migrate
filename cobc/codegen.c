@@ -101,7 +101,7 @@ lookup_call (const char *p, const char *q)
 			return;
 		}
 	}
-	clp = malloc( sizeof(struct call_list) );
+	clp = cob_malloc( sizeof(struct call_list) );
 	clp->callname = p;
 	clp->callorig = q;
 	clp->next = call_cache;
@@ -413,7 +413,7 @@ lookup_attr (char type, char digits, char scale, char flags, unsigned char *pic)
   /* output new attribute */
 
   /* cache it */
-  l = malloc (sizeof (struct attr_list));
+  l = cob_malloc (sizeof (struct attr_list));
   l->id = cb_id;
   l->type = type;
   l->digits = digits;
@@ -544,7 +544,7 @@ lookup_literal (cb_tree x)
   output_target = yyout;
 
   /* cache it */
-  l = malloc (sizeof (struct literal_list));
+  l = cob_malloc (sizeof (struct literal_list));
   l->id = cb_id;
   l->literal = literal;
   l->x = x;
@@ -828,7 +828,7 @@ output_param (cb_tree x, int id)
 		output_target = 0;
 		output_field (x);
 
-		l = malloc (sizeof (struct field_list));
+		l = cob_malloc (sizeof (struct field_list));
 		l->x = x;
 		l->f = f;
 		l->next = field_cache;

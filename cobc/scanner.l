@@ -271,14 +271,14 @@ H\"[^\"\n]*\" {
 static int
 read_literal (char mark)
 {
-  static size_t size = 64;
+  static size_t size = 192;
   static char *buff = NULL;
 
   int c;
   int i = 0;
 
   if (!buff)
-    buff = malloc (size);
+    buff = cob_malloc (size);
 
   while ((c = input ()) != EOF)
     {
@@ -293,6 +293,11 @@ read_literal (char mark)
 	{
 	  size *= 2;
 	  buff = realloc (buff, size);
+	  if ( !buff ) {
+		fprintf (stderr, "Memory realloc failed - Aborting\n");
+		fflush (stderr);
+		(void)longjmp (cob_jmpbuf, 1);
+	  }
 	}
     }
   buff[i] = 0;

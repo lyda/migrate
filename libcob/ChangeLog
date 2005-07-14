@@ -1,3 +1,14 @@
+2005-07-14  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : Dummy routines for read,write, etc.
+	  Always generate the function jump table, even if
+	  DB not configured. Jumps to the dummy routines
+	  result in status 30.
+
+	* All : Do malloc's through own new routine cob_malloc
+	  This will produce an error and terminate if memory
+	  can not be acquired.
+
 2005-07-02  Roger While <simrw@sim-basis.de>
 
 	* common.h : cob_module bit fields to char

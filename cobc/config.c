@@ -254,8 +254,8 @@ cb_load_conf (const char *fname, int check_nodef)
 		struct noreserve *noresptr;
 
 		s = read_string(val);
-		noresptr = (struct noreserve *)malloc(sizeof(struct noreserve));
-		noresptr->noresword = malloc(strlen(s) + 1);
+		noresptr = (struct noreserve *)cob_malloc(sizeof(struct noreserve));
+		noresptr->noresword = cob_malloc(strlen(s) + 1);
 		strcpy(noresptr->noresword, s);
 		noresptr->next = norestab;
 		norestab = noresptr;

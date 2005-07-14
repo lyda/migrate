@@ -106,6 +106,8 @@ int		cob_check_eop = 0;
 
 /* Need some value that does not conflict with errno for OPEN/LINAGE */
 #define	COB_LINAGE_INVALID	16384
+/* Need value that does not conflict with errno 30 (EROFS) for OPEN */
+#define	COB_NOT_CONFIGURED	32768
 
 #define RETURN_STATUS(x)	do { save_status (f, x); return; } while (0)
 
@@ -126,8 +128,11 @@ save_status (cob_file *f, int status)
   };
 
   if (f->file_status == 0)
-    f->file_status = malloc (2);
+    f->file_status = cob_malloc (2);
 
+  if ( status == COB_NOT_CONFIGURED ) {
+	status = COB_STATUS_30_PERMANENT_ERROR;
+  }
   f->file_status[0] = cob_i2d (status / 10);
   f->file_status[1] = cob_i2d (status % 10);
   cob_error_file = f;
@@ -187,6 +192,39 @@ file_linage_check (cob_file *f)
 		f->lin_bot = 0;
 	}
 	return 0;
+}
+
+#if defined(HAVE_DBOPEN) | defined(WITH_DB)
+#else
+static int
+dummy_open (cob_file *f, char *filename, int mode, int opt)
+{
+	return COB_NOT_CONFIGURED;
+}
+
+static int
+dummy_write_close (cob_file *f, int opt)
+{
+	return COB_NOT_CONFIGURED;
+}
+#endif
+
+static int
+dummy_rn_rew_del (cob_file *f)
+{
+	return COB_NOT_CONFIGURED;
+}
+
+static int
+dummy_read (cob_file *f, cob_field *key)
+{
+	return COB_NOT_CONFIGURED;
+}
+
+static int
+dummy_start (cob_file *f, int cond, cob_field *key)
+{
+	return COB_NOT_CONFIGURED;
 }
 
 static int
@@ -429,12 +467,12 @@ sequential_rewrite (cob_file *f)
 static cob_fileio_funcs sequential_funcs = {
   file_open,
   file_close,
-  0,
-  0,
+  dummy_start,
+  dummy_read,
   sequential_read,
   sequential_write,
   sequential_rewrite,
-  0
+  dummy_rn_rew_del
 };
 
 
@@ -518,12 +556,12 @@ lineseq_write (cob_file *f, int opt)
 static cob_fileio_funcs lineseq_funcs = {
   file_open,
   file_close,
-  0,
-  0,
+  dummy_start,
+  dummy_read,
   lineseq_read,
   lineseq_write,
-  0,
-  0
+  dummy_rn_rew_del,
+  dummy_rn_rew_del
 };
 
 
@@ -745,8 +783,8 @@ indexed_open (cob_file *f, char *filename, int mode, int flag)
       break;
     }
 
-  p = malloc (sizeof (struct indexed_file));
-  p->db = malloc (sizeof (DB *) * f->nkeys);
+  p = cob_malloc (sizeof (struct indexed_file));
+  p->db = cob_malloc (sizeof (DB *) * f->nkeys);
   for (i = 0; i < f->nkeys; i++)
     {
       BTREEINFO info;
@@ -934,7 +972,7 @@ indexed_write (cob_file *f, int opt)
   /* check record key */
   DBT_SET (p->key, f->keys[0].field);
   if (!p->last_key)
-    p->last_key = malloc (p->key.size);
+    p->last_key = cob_malloc (p->key.size);
   else if (f->access_mode == COB_ACCESS_SEQUENTIAL
 	   && memcmp (p->last_key, p->key.data, p->key.size) > 0)
     return COB_STATUS_21_KEY_INVALID;
@@ -1018,14 +1056,9 @@ static cob_fileio_funcs indexed_funcs = {
   indexed_delete
 };
 
-#endif /* defined(HAVE_DBOPEN) | defined(WITH_DB) */
-
-
 /*
  * SORT
  */
-
-#if defined(HAVE_DBOPEN) | defined(WITH_DB)
 
 struct sort_file {
   DB *db;
@@ -1118,12 +1151,35 @@ sort_write (cob_file *f, int opt)
 static cob_fileio_funcs sort_funcs = {
   sort_open,
   sort_close,
-  0,
-  0,
+  dummy_start,
+  dummy_read,
   sort_read,
   sort_write,
-  0,
-  0
+  dummy_rn_rew_del,
+  dummy_rn_rew_del
+};
+
+#else
+
+static cob_fileio_funcs indexed_funcs = {
+  dummy_open,
+  dummy_write_close,
+  dummy_start,
+  dummy_read,
+  dummy_rn_rew_del,
+  dummy_write_close,
+  dummy_rn_rew_del,
+  dummy_rn_rew_del
+};
+static cob_fileio_funcs sort_funcs = {
+  dummy_open,
+  dummy_write_close,
+  dummy_start,
+  dummy_read,
+  dummy_rn_rew_del,
+  dummy_write_close,
+  dummy_rn_rew_del,
+  dummy_rn_rew_del
 };
 
 #endif /* defined(HAVE_DBOPEN) | defined(WITH_DB) */
@@ -1142,9 +1198,6 @@ cob_open (cob_file *f, int mode, int opt)
 
   f->flag_read_done = 0;
 
-  if ( !fileio_funcs[(int) f->organization] ) {
-	RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
-  }
   /* file was previously closed with lock */
   if (f->open_mode == COB_OPEN_LOCKED)
     RETURN_STATUS (COB_STATUS_38_CLOSED_WITH_LOCK);
@@ -1266,10 +1319,6 @@ cob_close (cob_file *f, int opt)
 
   f->flag_read_done = 0;
 
-  if ( !fileio_funcs[(int) f->organization] ) {
-	RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
-  }
-
   if (f->open_mode == COB_OPEN_CLOSED)
     RETURN_STATUS (COB_STATUS_42_NOT_OPEN);
 
@@ -1320,10 +1369,6 @@ cob_start (cob_file *f, int cond, cob_field *key)
   f->flag_read_done = 0;
   f->flag_first_read = 0;
 
-  if ( !fileio_funcs[(int) f->organization] ) {
-	RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
-  }
-
   if (f->flag_nonexistent)
     RETURN_STATUS (COB_STATUS_23_KEY_NOT_EXISTS);
 
@@ -1349,10 +1394,6 @@ cob_read (cob_file *f, cob_field *key)
   int ret;
 
   f->flag_read_done = 0;
-
-  if ( !fileio_funcs[(int) f->organization] ) {
-	RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
-  }
 
   if (f->flag_nonexistent)
     {
@@ -1399,10 +1440,6 @@ cob_write (cob_file *f, cob_field *rec, int opt)
 
   f->flag_read_done = 0;
 
-  if ( !fileio_funcs[(int) f->organization] ) {
-	RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
-  }
-
   if (f->access_mode == COB_ACCESS_SEQUENTIAL)
     {
       if (f->open_mode == COB_OPEN_CLOSED
@@ -1439,10 +1476,6 @@ cob_rewrite (cob_file *f, cob_field *rec)
 
   f->flag_read_done = 0;
 
-  if ( !fileio_funcs[(int) f->organization] ) {
-	RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
-  }
-
   if (f->open_mode == COB_OPEN_CLOSED || f->open_mode != COB_OPEN_I_O)
     RETURN_STATUS (COB_STATUS_49_I_O_DENIED);
 
@@ -1471,10 +1504,6 @@ cob_delete (cob_file *f)
   int read_done = f->flag_read_done;
 
   f->flag_read_done = 0;
-
-  if ( !fileio_funcs[(int) f->organization] ) {
-	RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
-  }
 
   if (f->open_mode == COB_OPEN_CLOSED || f->open_mode != COB_OPEN_I_O)
     RETURN_STATUS (COB_STATUS_49_I_O_DENIED);
@@ -1524,8 +1553,8 @@ cob_sort_init (cob_file *f, int nkeys, const unsigned char *collating_sequence)
 
   f->assign->size = strlen (filename);
   f->assign->data = strdup (filename);
-  f->file = malloc (sizeof (struct sort_file));
-  f->keys = malloc (sizeof (cob_file_key) * nkeys);
+  f->file = cob_malloc (sizeof (struct sort_file));
+  f->keys = cob_malloc (sizeof (cob_file_key) * nkeys);
   f->nkeys = 0;
 
   old_sequence = cob_current_module->collating_sequence;
@@ -1667,8 +1696,6 @@ cob_init_fileio (void)
   fileio_funcs[COB_ORG_SEQUENTIAL] = &sequential_funcs;
   fileio_funcs[COB_ORG_LINE_SEQUENTIAL] = &lineseq_funcs;
   fileio_funcs[COB_ORG_RELATIVE] = &relative_funcs;
-#if defined(HAVE_DBOPEN) | defined(WITH_DB)
   fileio_funcs[COB_ORG_INDEXED] = &indexed_funcs;
   fileio_funcs[COB_ORG_SORT] = &sort_funcs;
-#endif
 }

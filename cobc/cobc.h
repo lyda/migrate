@@ -23,6 +23,7 @@
 #include "config.h"
 
 #include <stdio.h>
+#include <setjmp.h>
 
 #include "lib/gettext.h"
 
@@ -30,13 +31,10 @@
 
 #define ABORT()								      \
   do {									      \
-    fprintf (stderr, "Aborting compile of %s at line %d\n", cb_source_file, cb_source_line); \
     fprintf (stderr, "%s:%d: internal compiler error\n", __FILE__, __LINE__); \
-    if ( yyout ) fflush(yyout);						      \
-    if ( cb_storage_file ) fflush(cb_storage_file);			      \
-    abort ();								      \
+    fflush (stderr);							\
+    (void)longjmp (cob_jmpbuf, 1);					\
   } while (0)
-
 
 /* Compile level */
 extern enum cb_compile_level {
@@ -109,7 +107,10 @@ extern struct cb_program *current_program;
 extern struct cb_statement *current_statement;
 extern struct cb_label *current_section, *current_paragraph;
 
+extern jmp_buf	cob_jmpbuf;
+
 extern struct cb_text_list *cb_text_list_add (struct cb_text_list *list, const char *name);
+extern void	*cob_malloc (const size_t size);
 
 
 /* config.c */

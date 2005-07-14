@@ -62,7 +62,7 @@ cob_inspect_init (cob_field *var, int replacing)
   inspect_data = COB_FIELD_DATA (var);
   inspect_start = NULL;
   inspect_end = NULL;
-  inspect_mark = malloc (inspect_size * sizeof (int));
+  inspect_mark = cob_malloc (inspect_size * sizeof (int));
   for (i = 0; i < inspect_size; i++)
     inspect_mark[i] = -1;
   cob_exception_code = 0;

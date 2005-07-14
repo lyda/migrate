@@ -399,7 +399,7 @@ validate_field_1 (struct cb_field *f)
 	    /* reconstruct the picture string */
 	    if (f->pic->scale > 0)
 	      {
-		f->pic->str = malloc (7);
+		f->pic->str = cob_malloc (7);
 		sprintf (f->pic->str, "9%cV%c9%c",
 			 f->pic->digits - f->pic->scale, 1,
 			 f->pic->scale);
@@ -407,7 +407,7 @@ validate_field_1 (struct cb_field *f)
 	      }
 	    else
 	      {
-		f->pic->str = malloc (3);
+		f->pic->str = cob_malloc (3);
 		sprintf (f->pic->str, "9%c", f->pic->digits);
 	      }
 	    f->pic->category = CB_CATEGORY_NUMERIC_EDITED;

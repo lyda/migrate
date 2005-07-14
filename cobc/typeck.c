@@ -725,7 +725,7 @@ cb_expr_init (void)
       expr_prio[0] = 10;
       /* init stack */
       expr_stack_size = 8;
-      expr_stack = malloc (sizeof (struct expr_node) * expr_stack_size);
+      expr_stack = cob_malloc (sizeof (struct expr_node) * expr_stack_size);
       expr_stack[0].token = 0; /* dummy */
       expr_stack[1].token = 0; /* dummy */
       expr_stack[2].token = 0; /* dummy */
@@ -943,9 +943,14 @@ cb_expr_shift (int token, cb_tree value)
   /* allocate sufficient stack memory */
   if (expr_index >= expr_stack_size)
     {
-      expr_stack_size *= 2;
-      expr_stack = realloc (expr_stack,
-			    sizeof (struct expr_node) * expr_stack_size);
+	expr_stack_size *= 2;
+	expr_stack = realloc (expr_stack,
+			      sizeof (struct expr_node) * expr_stack_size);
+	if ( !expr_stack ) {
+		fprintf (stderr, "Memory realloc failed - Aborting\n");
+		fflush (stderr);
+		(void)longjmp (cob_jmpbuf, 1);
+	}
     }
 
   /* put on the stack */
@@ -2488,7 +2493,7 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
   if (l->all)
     {
       int i;
-      unsigned char *buff = malloc (f->size);
+      unsigned char *buff = cob_malloc (f->size);
       for (i = 0; i < f->size; i++)
 	buff[i] = l->data[i % l->size];
       return cb_build_funcall_3 ("memcpy",
@@ -2506,7 +2511,7 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 	       && f->size < l->size + 16
 	       && !cb_field_variable_size (f)))
     {
-      unsigned char *buff = malloc (f->size);
+      unsigned char *buff = cob_malloc (f->size);
       int diff = f->size - l->size;
       if (cat == CB_CATEGORY_NUMERIC)
 	{

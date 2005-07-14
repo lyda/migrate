@@ -76,7 +76,7 @@ to_cname (const char *s)
 static void *
 make_tree (int tag, enum cb_category category, int size)
 {
-  cb_tree x = malloc (size);
+  cb_tree x = cob_malloc (size);
   memset (x, 0, size);
   x->tag = tag;
   x->category = category;
@@ -449,7 +449,7 @@ cb_init_constants (void)
   cb_int3        = cb_int (3);
   for (i = 1; i < 8; i++)
     {
-      char *s = malloc (3);
+      char *s = cob_malloc (3);
       sprintf (s, "i%d", i);
       cb_i[i] = make_constant (CB_CATEGORY_NUMERIC, s);
     }
@@ -482,7 +482,7 @@ cb_int (int n)
   x = make_tree (CB_TAG_INTEGER, CB_CATEGORY_NUMERIC, sizeof (struct cb_integer));
   x->val = n;
 
-  p = malloc (sizeof (struct int_node));
+  p = cob_malloc (sizeof (struct int_node));
   p->n = n;
   p->node = CB_TREE (x);
   p->next = int_node_table[n % INT_NODE_TABLE_SIZE];
@@ -564,7 +564,7 @@ build_literal (enum cb_category category, const unsigned char *data, size_t size
 {
   struct cb_literal *p =
     make_tree (CB_TAG_LITERAL, category, sizeof (struct cb_literal));
-  p->data = malloc ((size_t)(size + 1));
+  p->data = cob_malloc ((size_t)(size + 1));
   p->size = size;
   memcpy (p->data, data, (size_t)size);
   p->data[size] = 0;
@@ -640,8 +640,8 @@ cb_build_picture (const char *str)
   int scale = 0;
   int s_count = 0;
   int v_count = 0;
-  int buff_size = 9;
-  unsigned char *buff = malloc (buff_size);
+  int buff_size = 12;
+  unsigned char *buff = cob_malloc (buff_size);
 
   for (p = str; *p; p++)
     {
@@ -793,11 +793,17 @@ cb_build_picture (const char *str)
 	size += n;
 
       /* allocate enough pic buffer */
-      while (idx + n / 64 + 1 > buff_size)
-	{
-	  buff_size *= 2;
-	  buff = realloc (buff, buff_size);
+      if (idx + n / 64 + 1 > buff_size) {
+	while (idx + n / 64 + 1 > buff_size) {
+		buff_size *= 2;
 	}
+	buff = realloc (buff, buff_size);
+	if ( !buff ) {
+		fprintf (stderr, "Memory realloc failed - Aborting\n");
+		fflush (stderr);
+		(void)longjmp (cob_jmpbuf, 1);
+	}
+      }
 
       /* store in the buffer */
       while (n > 0)
@@ -1632,7 +1638,7 @@ lookup_word (const char *name)
 	return p;
 
   /* create new word */
-  p = malloc (sizeof (struct cb_word));
+  p = cob_malloc (sizeof (struct cb_word));
   memset (p, 0, sizeof (struct cb_word));
   p->name = strdup (name);
 
@@ -1649,7 +1655,7 @@ lookup_word (const char *name)
 struct cb_program *
 cb_build_program (void)
 {
-  struct cb_program *p = malloc (sizeof (struct cb_program));
+  struct cb_program *p = cob_malloc (sizeof (struct cb_program));
   memset (p, 0, sizeof (struct cb_program));
   p->decimal_point = '.';
   p->currency_symbol = '$';
