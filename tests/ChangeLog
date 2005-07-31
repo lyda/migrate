@@ -1,3 +1,9 @@
+2005-07-31  Roger While <simrw@sim-basis.de>
+
+	* Tests for SIGN, FRACTION-PART.
+	* Tweak the tests a bit more to cater for the
+	  abysmal precision of MingW.
+
 2005-07-14  Roger While <simrw@sim-basis.de>
 
 	* New test for START of SEQ file.

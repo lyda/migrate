@@ -45,6 +45,7 @@ cb_tree cb_int0;
 cb_tree cb_int1;
 cb_tree cb_int2;
 cb_tree cb_int3;
+cb_tree cb_int4;
 cb_tree cb_i[8];
 cb_tree cb_error_node;
 cb_tree cb_return_code;
@@ -447,6 +448,7 @@ cb_init_constants (void)
   cb_int1        = cb_int (1);
   cb_int2        = cb_int (2);
   cb_int3        = cb_int (3);
+  cb_int4        = cb_int (4);
   for (i = 1; i < 8; i++)
     {
       char *s = cob_malloc (3);
@@ -1740,54 +1742,55 @@ cb_build_intrinsic (cb_tree name, cb_tree args)
 				return make_intrinsic (name, cbp, args, cb_build_length(CB_VALUE(args)));
 			}
 
-		case CB_INTR_NUMVAL:
-		case CB_INTR_NUMVAL_C:
-			return make_intrinsic (name, cbp, args, NULL);
-		case CB_INTR_CURRENT_DATE:
-		case CB_INTR_CHAR:
-		case CB_INTR_DATE_OF_INTEGER:
-		case CB_INTR_DAY_OF_INTEGER:
-		case CB_INTR_INTEGER_OF_DATE:
-		case CB_INTR_INTEGER_OF_DAY:
-		case CB_INTR_TEST_DATE_YYYYMMDD:
-		case CB_INTR_TEST_DAY_YYYYDDD:
-		case CB_INTR_FACTORIAL:
 		case CB_INTR_ABS:
 		case CB_INTR_ACOS:
+		case CB_INTR_ANNUITY:
 		case CB_INTR_ASIN:
 		case CB_INTR_ATAN:
+		case CB_INTR_CHAR:
 		case CB_INTR_COS:
+		case CB_INTR_CURRENT_DATE:
+		case CB_INTR_DATE_OF_INTEGER:
+		case CB_INTR_DAY_OF_INTEGER:
 		case CB_INTR_EXP:
 		case CB_INTR_EXP10:
+		case CB_INTR_FACTORIAL:
+		case CB_INTR_FRACTION_PART:
+		case CB_INTR_INTEGER:
+		case CB_INTR_INTEGER_OF_DATE:
+		case CB_INTR_INTEGER_OF_DAY:
+		case CB_INTR_INTEGER_PART:
 		case CB_INTR_LOG:
 		case CB_INTR_LOG10:
+		case CB_INTR_MOD:
+		case CB_INTR_NUMVAL:
+		case CB_INTR_NUMVAL_C:
+		case CB_INTR_ORD:
+		case CB_INTR_REM:
+		case CB_INTR_SIGN:
 		case CB_INTR_SIN:
 		case CB_INTR_SQRT:
 		case CB_INTR_TAN:
-		case CB_INTR_ORD:
-		case CB_INTR_INTEGER:
-		case CB_INTR_INTEGER_PART:
-		case CB_INTR_ANNUITY:
-		case CB_INTR_MOD:
-		case CB_INTR_REM:
+		case CB_INTR_TEST_DATE_YYYYMMDD:
+		case CB_INTR_TEST_DAY_YYYYDDD:
 			return make_intrinsic (name, cbp, args, NULL);
 
-		case CB_INTR_SUM:
-		case CB_INTR_MIN:
-		case CB_INTR_MAX:
-		case CB_INTR_MIDRANGE:
-		case CB_INTR_MEDIAN:
-		case CB_INTR_MEAN:
-		case CB_INTR_RANGE:
-		case CB_INTR_RANDOM:
-		case CB_INTR_VARIANCE:
-		case CB_INTR_STANDARD_DEVIATION:
-		case CB_INTR_PRESENT_VALUE:
-		case CB_INTR_ORD_MIN:
-		case CB_INTR_ORD_MAX:
-		case CB_INTR_YEAR_TO_YYYY:
 		case CB_INTR_DATE_TO_YYYYMMDD:
 		case CB_INTR_DAY_TO_YYYYDDD:
+		case CB_INTR_MAX:
+		case CB_INTR_MEAN:
+		case CB_INTR_MEDIAN:
+		case CB_INTR_MIDRANGE:
+		case CB_INTR_MIN:
+		case CB_INTR_ORD_MAX:
+		case CB_INTR_ORD_MIN:
+		case CB_INTR_PRESENT_VALUE:
+		case CB_INTR_RANDOM:
+		case CB_INTR_RANGE:
+		case CB_INTR_STANDARD_DEVIATION:
+		case CB_INTR_SUM:
+		case CB_INTR_VARIANCE:
+		case CB_INTR_YEAR_TO_YYYY:
 			return make_intrinsic (name, cbp, args, cb_int1);
 
 		default:

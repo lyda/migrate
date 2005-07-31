@@ -194,7 +194,7 @@ file_linage_check (cob_file *f)
 	return 0;
 }
 
-#if defined(HAVE_DBOPEN) | defined(WITH_DB)
+#if defined(HAVE_DBOPEN) || defined(WITH_DB)
 #else
 static int
 dummy_open (cob_file *f, char *filename, int mode, int opt)
@@ -743,7 +743,7 @@ static cob_fileio_funcs relative_funcs = {
  * INDEXED
  */
 
-#if defined(HAVE_DBOPEN) | defined(WITH_DB)
+#if defined(HAVE_DBOPEN) || defined(WITH_DB)
 
 #define DB_PUT(db,flags)	db->put (db, &p->key, &p->data, flags)
 #define DB_GET(db,flags)	db->get (db, &p->key, &p->data, flags)
@@ -1182,7 +1182,7 @@ static cob_fileio_funcs sort_funcs = {
   dummy_rn_rew_del
 };
 
-#endif /* defined(HAVE_DBOPEN) | defined(WITH_DB) */
+#endif /* defined(HAVE_DBOPEN) || defined(WITH_DB) */
 
 
 /*
@@ -1517,7 +1517,7 @@ cob_delete (cob_file *f)
 }
 
 
-#if defined(HAVE_DBOPEN) | defined(WITH_DB)
+#if defined(HAVE_DBOPEN) || defined(WITH_DB)
 
 static const unsigned char *old_sequence;
 
@@ -1613,7 +1613,7 @@ cob_sort_giving (cob_file *sort_file, cob_file *data_file)
   cob_close (data_file, COB_CLOSE_NORMAL);
 }
 
-#endif /* defined(HAVE_DBOPEN) | defined(WITH_DB) */
+#endif /* defined(HAVE_DBOPEN) || defined(WITH_DB) */
 
 
 void

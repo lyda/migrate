@@ -1,3 +1,9 @@
+2005-07-31  Roger While <simrw@sim-basis.de>
+
+	* intrinsic.c, intrinsic.h : Add SIGN, FRACTION-PART, clean up
+	* common.c, common.h : cob_check_version - Program versioning
+	* move.c, numeric.c : Some preliminary assembler stuff
+
 2005-07-14  Roger While <simrw@sim-basis.de>
 
 	* fileio.c : Dummy routines for read,write, etc.
@@ -12,7 +18,7 @@
 2005-07-02  Roger While <simrw@sim-basis.de>
 
 	* common.h : cob_module bit fields to char
-	* intrinsi.c : Clean up and fixes
+	* intrinsic.c : Clean up and fixes
 	* move.c, numeric.c : Experiment with own_mem(cpy,set)
 	* fileio.c : Cast fseek offsets to off_t
 		     Return correctly if DB not defined

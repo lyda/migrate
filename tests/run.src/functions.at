@@ -68,14 +68,21 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01  X   PIC   S9(4) VALUE 3.
        01  Y   PIC   S9(4) VALUE 5.
+       01  Z   PIC   S9V9(17)   COMP.
        PROCEDURE        DIVISION.
-           DISPLAY FUNCTION ANNUITY ( X, Y ).
+           MOVE FUNCTION ANNUITY ( X, Y ) TO Z.
+           IF Z >= 3.002932551319648080 AND
+              Z <= 3.002932551319648110
+                   DISPLAY "OK"
+           ELSE
+                   DISPLAY "NOT OK"
+           END-IF.
            STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0],
-[3.002932551319648091
+[OK
 ])
 
 AT_CLEANUP
@@ -257,14 +264,21 @@ AT_DATA([prog.cob], [
        PROGRAM-ID.      prog.
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
+       01  Y   PIC   S99V9(16)   COMP.
        PROCEDURE        DIVISION.
-           DISPLAY FUNCTION EXP ( 3 ).
+           MOVE FUNCTION EXP ( 3 ) TO Y.
+           IF Y >= 20.0855369231876643 AND
+              Y <= 20.0855369231876644
+                   DISPLAY "OK"
+           ELSE
+                   DISPLAY "NOT OK"
+           END-IF.
            STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0],
-[20.085536923187664371
+[OK
 ])
 
 AT_CLEANUP
@@ -394,14 +408,21 @@ AT_DATA([prog.cob], [
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
        01  X   PIC   S9(4)V9(4) VALUE 1.5.
+       01  Y   PIC   S9V9(17)   COMP.
        PROCEDURE        DIVISION.
-           DISPLAY FUNCTION LOG ( X ).
+           MOVE FUNCTION LOG ( X ) TO Y.
+           IF Y >= 0.40546510810816435 AND
+              Y <= 0.40546510810816445
+                   DISPLAY "OK"
+           ELSE
+                   DISPLAY "NOT OK"
+           END-IF.
            STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0],
-[0.405465108108164385
+[OK
 ])
 
 AT_CLEANUP
@@ -414,14 +435,21 @@ AT_DATA([prog.cob], [
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
        01  X   PIC   S9(4)V9(4) VALUE 1.5.
+       01  Y   PIC   S9V9(17)   COMP.
        PROCEDURE        DIVISION.
-           DISPLAY FUNCTION LOG10 ( X ).
+           MOVE FUNCTION LOG10 ( X ) TO Y.
+           IF Y >= 0.17609125905568120 AND
+              Y <= 0.17609125905568125
+                   DISPLAY "OK"
+           ELSE
+                   DISPLAY "NOT OK"
+           END-IF.
            STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0],
-[0.176091259055681237
+[OK
 ])
 
 AT_CLEANUP
@@ -479,7 +507,7 @@ AT_DATA([prog.cob], [
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0],
-[-1.199999999999999956
+[-1.20000000000000000
 ])
 
 AT_CLEANUP
@@ -749,14 +777,21 @@ AT_DATA([prog.cob], [
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
        01  X   PIC   S9(4)V9(4) VALUE 1.5.
+       01  Y   PIC   S9V9(17)   COMP.
        PROCEDURE        DIVISION.
-           DISPLAY FUNCTION SQRT ( X ).
+           MOVE FUNCTION SQRT ( X ) TO Y.
+           IF Y >= 1.22474487139158890 AND
+              Y <= 1.22474487139158899
+                   DISPLAY "OK"
+           ELSE
+                   DISPLAY "NOT OK"
+           END-IF.
            STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0],
-[1.224744871391588941
+[OK
 ])
 
 AT_CLEANUP
@@ -768,14 +803,21 @@ AT_DATA([prog.cob], [
        PROGRAM-ID.      prog.
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
+       01  Y   PIC   S9V9(17)   COMP.
        PROCEDURE        DIVISION.
-           DISPLAY FUNCTION STANDARD-DEVIATION ( 3 -14 0 8 -3 ).
+           MOVE FUNCTION STANDARD-DEVIATION ( 3 -14 0 8 -3 ) TO Y.
+           IF Y >= 7.35934779718963925 AND
+              Y <= 7.35934779718963935
+                   DISPLAY "OK"
+           ELSE
+                   DISPLAY "NOT OK"
+           END-IF.
            STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0],
-[7.359347797189639273
+[OK
 ])
 
 AT_CLEANUP
@@ -788,14 +830,21 @@ AT_DATA([prog.cob], [
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
        01  X   PIC   S9(4)V9(4) VALUE 1.5.
+       01  Y   PIC   S99V9(16)   COMP.
        PROCEDURE        DIVISION.
-           DISPLAY FUNCTION TAN ( X ).
+           MOVE FUNCTION TAN ( X ) TO Y.
+           IF Y >= 14.1014199471717185 AND
+              Y <= 14.1014199471717195
+                   DISPLAY "OK"
+           ELSE
+                   DISPLAY "NOT OK"
+           END-IF.
            STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0],
-[14.101419947171718761
+[OK
 ])
 
 AT_CLEANUP
@@ -814,7 +863,53 @@ AT_DATA([prog.cob], [
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0],
-[54.159999999999996589
+[+54.1600000000000000
+])
+
+AT_CLEANUP
+
+AT_SETUP([FUNCTION SIGN])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION SIGN ( 3.12345 ).
+           DISPLAY FUNCTION SIGN ( -0.0 ).
+           DISPLAY FUNCTION SIGN ( 0.0 ).
+           DISPLAY FUNCTION SIGN ( -3.12345 ).
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[+00000001
++00000000
++00000000
+-00000001
+])
+
+AT_CLEANUP
+
+AT_SETUP([FUNCTION FRACTION-PART])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION FRACTION-PART ( 3.12345 ).
+           DISPLAY FUNCTION FRACTION-PART ( -3.12345 ).
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[+.123450000000000000
+-.123450000000000000
 ])
 
 AT_CLEANUP

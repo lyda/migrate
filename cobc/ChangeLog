@@ -1,3 +1,13 @@
+2005-07-31  Roger While <simrw@sim-basis.de>
+
+	* parser.y : Fix a DISPLAY usage clash
+	* typeck.c : Bump the ref count for the field referred to by an 88
+	* codegen.c : Implement program versioning
+	  Change the aligned attribute again - Let the compiler do it
+	  except if the field is >= 64; then align 64 - Only for
+	  Intel/AMD 32-bit (Intel Optimization Manual)
+	* cobc.c : Allow -g when optimizing with -Os or -O2
+
 2005-07-14  Roger While <simrw@sim-basis.de>
 
 	* pplex.l : Carriage-return must be ignored if not

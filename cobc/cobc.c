@@ -94,6 +94,7 @@ static int save_temps = 0;
 static int verbose_output = 0;
 
 static int	strip_output = 0;
+static int	gflag_set = 0;
 
 static char *program_name;
 static char *output_name;
@@ -256,7 +257,7 @@ static void
 print_version (void)
 {
   puts ("cobc (" PACKAGE_NAME ") " PACKAGE_VERSION);
-  puts ("Copyright (C) 2001-2004 Keisuke Nishida");
+  puts ("Copyright (C) 2001-2005 Keisuke Nishida");
 }
 
 static void
@@ -366,6 +367,7 @@ process_command_line (int argc, char *argv[])
 
 	case 'g':
 	  cb_flag_line_directive = 1;
+	  gflag_set = 1;
 	  strcat (cob_cflags, " -g");
 	  break;
 
@@ -460,6 +462,16 @@ process_command_line (int argc, char *argv[])
 
   if (cb_compile_level == CB_LEVEL_EXECUTABLE)
     cb_flag_main = 1;
+
+  if ( gflag_set ) {
+	strip_output = 0;
+  }
+
+#if defined (__GNUC__) && (__GNUC__ >= 3)
+  if ( strip_output ) {
+	strcat (cob_cflags, " -fomit-frame-pointer");
+  }
+#endif
 
   return optind;
 }

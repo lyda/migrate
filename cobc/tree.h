@@ -234,6 +234,7 @@ extern cb_tree cb_int0;
 extern cb_tree cb_int1;
 extern cb_tree cb_int2;
 extern cb_tree cb_int3;
+extern cb_tree cb_int4;
 extern cb_tree cb_i[8];
 extern cb_tree cb_error_node;
 extern cb_tree cb_return_code;
@@ -426,7 +427,7 @@ struct cb_field {
   struct cb_field *parent;	/* upper level field (NULL for 01 fields) */
   struct cb_field *children;	/* top of lower level fields */
   struct cb_field *sister;	/* fields in the same level */
-  struct cb_field *redefines;	/* REDEFIENS */
+  struct cb_field *redefines;	/* REDEFINES */
   struct cb_field *rename_thru; /* RENAMES THRU */
   struct cb_file *file;		/* file name associated in FD section */
   struct cb_key {

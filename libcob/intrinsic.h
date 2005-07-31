@@ -52,6 +52,8 @@ extern cob_field	*cob_intr_reverse (cob_field *sizefield, cob_field *srcfield);
 extern cob_field	*cob_intr_length (cob_field *srcfield);
 extern cob_field	*cob_intr_integer (cob_field *srcfield);
 extern cob_field	*cob_intr_integer_part (cob_field *srcfield);
+extern cob_field	*cob_intr_fraction_part (cob_field *srcfield);
+extern cob_field	*cob_intr_sign (cob_field *srcfield);
 extern cob_field	*cob_intr_numval (cob_field *srcfield);
 extern cob_field	*cob_intr_numval_c (cob_field *srcfield);
 extern cob_field	*cob_intr_annuity (cob_field *srcfield1, cob_field *srcfield2);

@@ -239,9 +239,14 @@ output_base (struct cb_field *f)
 	if ( !f01->flag_external ) {
 		if (!f01->flag_local)
 			output_storage ("static ");
-#if defined (__GNUC__)
-		output_storage ("unsigned char %s%s[%d]\t__attribute__ ((__aligned__(8)));",
+#if defined (__GNUC__) && defined (__i386__)
+		if ( f01->memory_size > 63 ) {
+			output_storage ("unsigned char %s%s[%d]\t__attribute__ ((__aligned__(64)));",
 				CB_PREFIX_BASE, name, f01->memory_size);
+		} else {
+			output_storage ("unsigned char %s%s[%d];",
+				CB_PREFIX_BASE, name, f01->memory_size);
+		}
 #else
 		output_storage ("unsigned char %s%s[%d];",
 				CB_PREFIX_BASE, name, f01->memory_size);
@@ -2496,6 +2501,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   output_line ("  fputs(\"cob_init() has not been called\\n\", stderr);");
   output_line ("  exit (1);");
   output_line ("}");
+  output_line ("cob_check_version (COB_SOURCE_FILE, COB_PACKAGE_VERSION, COB_PATCH_LEVEL);");
   if ( cb_flag_static_call == 2 ) {
 	output_line("init$%s();", prog->program_id);
   }
@@ -2724,13 +2730,17 @@ codegen (struct cb_program *prog)
 
   output_target = yyout;
 
-  output ("/* Generated from %s by cobc %s */\n\n",
-	  cb_source_file, PACKAGE_VERSION);
+  output ("/* Generated from %s by cobc version %s patch level %d */\n\n",
+	  cb_source_file, PACKAGE_VERSION, PATCH_LEVEL);
   output ("#include <stdio.h>\n");
   output ("#include <stdlib.h>\n");
   output ("#include <string.h>\n");
   output ("#include <math.h>\n");
   output ("#include <libcob.h>\n\n");
+
+  output ("#define COB_SOURCE_FILE		\"%s\"\n", cb_source_file);
+  output ("#define COB_PACKAGE_VERSION	\"%s\"\n", PACKAGE_VERSION);
+  output ("#define COB_PATCH_LEVEL		%d\n\n", PATCH_LEVEL);
 
 /*
   output ("#include \"%s\"\n\n", cb_storage_file_name);
@@ -2768,7 +2778,7 @@ codegen (struct cb_program *prog)
 
   /* main function */
   if (cb_flag_main) {
-	output ("int %s (void);\n", prog->program_id);
+	output ("int %s (void);\n\n", prog->program_id);
 	output_main_function (prog);
   }
 

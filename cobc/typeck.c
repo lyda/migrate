@@ -1262,6 +1262,7 @@ build_cond_88 (cb_tree x)
 
   /* refer to parent's data storage */
   x = cb_build_field_reference (f->parent, x);
+  f->parent->count++;
 
   /* build condition */
   for (l = f->values; l; l = CB_CHAIN (l))
@@ -1642,7 +1643,37 @@ cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
 {
   cb_tree l;
 
-  if (current_program->flag_screen)
+  if (upon == cb_true)
+    {
+      /* DISPLAY x UPON ENVIRONMENT-NAME */
+      if (cb_list_length (values) != 1)
+	{
+	  cb_error (_("wrong number of data items"));
+	  return;
+	}
+      cb_emit (cb_build_funcall_1 ("cob_display_environment", CB_VALUE (values)));
+    }
+  else if (upon == cb_int3)
+    {
+      /* DISPLAY x UPON ENVIRONMENT-VALUE */
+      if (cb_list_length (values) != 1)
+	{
+	  cb_error (_("wrong number of data items"));
+	  return;
+	}
+      cb_emit (cb_build_funcall_1 ("cob_display_env_value", CB_VALUE (values)));
+    }
+  else if (upon == cb_int4)
+    {
+      /* DISPLAY x UPON ARGUMENT-NUMBER */
+      if (cb_list_length (values) != 1)
+	{
+	  cb_error (_("wrong number of data items"));
+	  return;
+	}
+      cb_emit (cb_build_funcall_1 ("cob_display_arg_number", CB_VALUE (values)));
+    }
+  else if (current_program->flag_screen)
     {
       /* screen mode */
       for (l = values; l; l = CB_CHAIN (l))
@@ -1661,36 +1692,6 @@ cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
 			  cb_name (x));
 	    }
 	}
-    }
-  else if (upon == cb_true)
-    {
-      /* DISPLAY x UPON ENVIRONMENT-NAME */
-      if (cb_list_length (values) != 1)
-	{
-	  cb_error (_("wrong number of data items"));
-	  return;
-	}
-      cb_emit (cb_build_funcall_1 ("cob_display_environment", CB_VALUE (values)));
-    }
-  else if (upon == cb_int2)
-    {
-      /* DISPLAY x UPON ENVIRONMENT-VALUE */
-      if (cb_list_length (values) != 1)
-	{
-	  cb_error (_("wrong number of data items"));
-	  return;
-	}
-      cb_emit (cb_build_funcall_1 ("cob_display_env_value", CB_VALUE (values)));
-    }
-  else if (upon == cb_int3)
-    {
-      /* DISPLAY x UPON ARGUMENT-NUMBER */
-      if (cb_list_length (values) != 1)
-	{
-	  cb_error (_("wrong number of data items"));
-	  return;
-	}
-      cb_emit (cb_build_funcall_1 ("cob_display_arg_number", CB_VALUE (values)));
     }
   else
     {
@@ -3035,11 +3036,15 @@ cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree dup, cb_tree col)
 
   if (CB_FILE_P (cb_ref (name)))
     {
+#if defined(HAVE_DBOPEN) || defined(WITH_DB)
       cb_emit (cb_build_funcall_3 ("cob_sort_init", cb_ref (name),
 				   cb_int (cb_list_length (keys)), col));
       for (l = keys; l; l = CB_CHAIN (l))
 	cb_emit (cb_build_funcall_3 ("cob_sort_init_key", cb_ref (name),
 				     CB_PURPOSE (l), CB_VALUE (l)));
+#else
+	cb_error_x (name, "SORT invalid - DB not configured");
+#endif
     }
   else
     {

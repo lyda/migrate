@@ -1930,8 +1930,8 @@ display_upon:
 | _upon mnemonic_name		{ $$ = cb_build_display_upon ($2); }
 | UPON WORD			{ $$ = cb_build_display_upon_direct ($2); }
 | _upon ENVIRONMENT_NAME	{ $$ = cb_true; }
-| _upon ENVIRONMENT_VALUE	{ $$ = cb_int2; }
-| _upon ARGUMENT_NUMBER		{ $$ = cb_int3; }
+| _upon ENVIRONMENT_VALUE	{ $$ = cb_int3; }
+| _upon ARGUMENT_NUMBER		{ $$ = cb_int4; }
 ;
 display_no_advancing:
   /* empty */			{ $$ = cb_int0; }

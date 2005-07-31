@@ -1,7 +1,7 @@
 #                                                       -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-# Copyright (C) 2001-2004 Keisuke Nishida
+# Copyright (C) 2001-2005 Keisuke Nishida
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,6 +19,9 @@
 # 02111-1307, USA.
 
 AC_PREREQ(2.59)
+
+CXX=no
+F77=no
 
 AC_INIT([OpenCOBOL],[0.33],[open-cobol-list@lists.sourceforge.net],[open-cobol])
 AC_CONFIG_SRCDIR([libcob.h])
@@ -38,7 +41,14 @@ AH_TEMPLATE([COB_PIC_FLAGS], [Compile/link option for PIC code])
 AH_TEMPLATE([COB_SHARED_OPT], [Compile/link option for shared code])
 AH_TEMPLATE([COB_STRIP_CMD], [Strip command])
 AH_TEMPLATE([USE_LIBDL],   [Use system dynamic loader])
+AH_TEMPLATE([PATCH_LEVEL],   [Define a patch level])
 
+if test "x$CFLAGS" = "x"
+then
+	COB_HAS_CFLAGS=no
+else
+	COB_HAS_CFLAGS=yes
+fi
 # enable debug mode by default for now
 AC_DEFINE(COB_DEBUG)
 
@@ -61,15 +71,28 @@ LIBDB=""
 AC_ARG_WITH(db1,
   [  --with-db1              use Berkeley DB 1.85 (libdb-1.85)],
   [ LIBDB="1"
-    AC_DEFINE(WITH_DB, 1) ])
+    AC_DEFINE(WITH_DB, 1) ],
+	[ AC_ARG_WITH(db,
+		[  --with-db               use Berkeley DB 3.0 or later (libdb)],
+		[ if test "$with_db" = "yes"
+		  then
+		  LIBDB="3"
+		  AC_DEFINE(WITH_DB, 3)
+		  fi ],
+		[ LIBDB="3"
+		  AC_DEFINE(WITH_DB, 3) ]) ])
 
-AC_ARG_WITH(db,
-  [  --with-db               use Berkeley DB 3.0 or later (libdb)],
-  [ LIBDB="3"
-    AC_DEFINE(WITH_DB, 3) ])
+#AC_ARG_WITH(db,
+#  [  --with-db               use Berkeley DB 3.0 or later (libdb)],
+#  [ LIBDB="3"
+#    AC_DEFINE(WITH_DB, 3) ])
 
 AC_ARG_WITH(lfs64,
   [  --with-lfs64            use large file system for file I/O],
+  [ if test "$with_lfs64" = "yes"
+    then
+	AC_DEFINE(WITH_LFS64)
+    fi ],
   [ AC_DEFINE(WITH_LFS64) ])
 
 DEFINEDL="no"
@@ -81,6 +104,20 @@ AC_ARG_WITH(dl,
 AC_ARG_ENABLE(debug,
   [  --enable-debug          enable debugging options],
   [ AC_DEFINE(COB_DEBUG) ])
+
+PATCH_LEVEL=0
+AC_ARG_WITH(patch-level, [  --with-patch-level     Define a patch level (default 0)],
+[case $with_patch_level in  
+    yes)	AC_MSG_ERROR(["You must give --with-patch-level an argument."])
+		;;
+    no)		AC_MSG_ERROR(["--without-patch-level not supported."])
+		;;
+    [[0-9]]*)	PATCH_LEVEL=$with_patch_level
+		;;
+    *)		AC_MSG_ERROR(["You must use a numeric patch level"])
+		;;
+esac])
+AC_DEFINE_UNQUOTED(PATCH_LEVEL, $PATCH_LEVEL)
 
 save_libs="$LIBS"
 
@@ -119,19 +156,6 @@ AC_CHECK_FUNCS([dbopen],
 AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp.h is required))
 AC_CHECK_LIB([gmp], [__gmp_rand], , AC_MSG_ERROR(GMP 3 or later is required))
 LIBCOB_LIBS="$LIBCOB_LIBS -lgmp"
-
-# Checks for dl/ltdl.
-if test "${DEFINEDL}" = "yes"
-then
-  AC_CHECK_HEADERS([dlfcn.h], , AC_MSG_ERROR(dlfcn.h is required))
-  AC_CHECK_LIB([dl], [dlopen], , AC_MSG_ERROR(libdl is required))
-  AC_DEFINE(USE_LIBDL)
-  LIBCOB_LIBS="$LIBCOB_LIBS -ldl"
-else
-  AC_CHECK_HEADERS([ltdl.h], , AC_MSG_ERROR(ltdl.h is required))
-  AC_CHECK_LIB([ltdl], [lt_dlopen], , AC_MSG_ERROR(libltdl is required))
-  LIBCOB_LIBS="$LIBCOB_LIBS -lltdl"
-fi
 
 # Checks for gettext.
 AM_GNU_GETTEXT([external])
@@ -184,6 +208,37 @@ AC_CHECK_FUNCS([memmove memset regcomp pow setlocale fcntl strerror \
 
 # OpenCOBOL Configuration
 
+# Checks for dl/ltdl.
+case $host_os in
+  cygwin*)
+	AC_CHECK_HEADERS([dlfcn.h], , AC_MSG_ERROR(dlfcn.h is required))
+	AC_CHECK_LIB([c], [dlopen], , AC_MSG_ERROR(libdl is required))
+#	AC_CHECK_LIB([intl], [bindtextdomain], [LIBCOB_LIBS="$LIBCOB_LIBS -lintl" COBC_LIBS="$COBC_LIBS -lintl"], AC_MSG_ERROR(libintl is required))
+	AC_DEFINE(USE_LIBDL)
+	DEFINEDL="yes"
+	;;
+  linux*)
+	AC_CHECK_HEADERS([dlfcn.h], , AC_MSG_ERROR(dlfcn.h is required))
+	AC_CHECK_LIB([dl], [dlopen], , AC_MSG_ERROR(libdl is required))
+	AC_DEFINE(USE_LIBDL)
+	LIBCOB_LIBS="$LIBCOB_LIBS -ldl"
+	DEFINEDL="yes"
+	;;
+  *)
+	if test "${DEFINEDL}" = "yes"
+	then
+	  AC_CHECK_HEADERS([dlfcn.h], , AC_MSG_ERROR(dlfcn.h is required))
+	  AC_CHECK_LIB([dl], [dlopen], , AC_MSG_ERROR(libdl is required))
+	  AC_DEFINE(USE_LIBDL)
+	  LIBCOB_LIBS="$LIBCOB_LIBS -ldl"
+	else
+	  AC_CHECK_HEADERS([ltdl.h], , AC_MSG_ERROR(ltdl.h is required))
+	  AC_CHECK_LIB([ltdl], [lt_dlopen], , AC_MSG_ERROR(libltdl is required))
+	  LIBCOB_LIBS="$LIBCOB_LIBS -lltdl"
+	fi
+	;;
+esac
+
 if test "x$prefix" = "x/usr" \
      -a "x$includedir" = "x\${prefix}/include"; then
   COB_CFLAGS=""
@@ -209,6 +264,17 @@ COB_EXPORT_DYN="`eval echo $export_dynamic_flag_spec`"
 COB_PIC_FLAGS="$lt_prog_compiler_pic"
 COB_SHARED_OPT="-shared"
 
+if test "$COB_HAS_CFLAGS" = "no"
+then
+	CFLAGS=`echo $CFLAGS | sed -e 's/-g //'`
+	if test "$COB_CC" = "gcc"
+	then
+		cob_temp_flags="`gcc cpucheck.c -o cpucheck 1>/dev/null 2>&1 && ./cpucheck 2>/dev/null`"
+		CFLAGS="$CFLAGS $cob_temp_flags -finline-functions -finline-limit=1200 -fomit-frame-pointer"
+		COB_CFLAGS="$COB_CFLAGS $cob_temp_flags"
+	fi
+fi
+
 case $host_os in
   cygwin* | mingw*)
 	cobcruns=true
@@ -226,9 +292,10 @@ AM_CONDITIONAL(COBCRUN_SHARED, test x$cobcruns = xtrue)
 AC_DEFINE_UNQUOTED(COB_EXPORT_DYN, "$COB_EXPORT_DYN")
 AC_DEFINE_UNQUOTED(COB_PIC_FLAGS, "$COB_PIC_FLAGS")
 AC_DEFINE_UNQUOTED(COB_SHARED_OPT, "$COB_SHARED_OPT")
-if test "x$striplib" != "x"; then
- AC_DEFINE_UNQUOTED(COB_STRIP_CMD, "$striplib")
- AC_SUBST(COB_STRIP_CMD)
+if test "x$striplib" != "x"
+then
+  AC_DEFINE_UNQUOTED(COB_STRIP_CMD, "$striplib")
+# AC_SUBST(COB_STRIP_CMD)
 fi
 AC_SUBST(COB_CC)
 AC_SUBST(COB_CFLAGS)
@@ -237,12 +304,12 @@ AC_SUBST(COB_CONFIG_DIR)
 AC_SUBST(COB_LIBRARY_PATH)
 AC_SUBST(COB_MODULE_EXT)
 AC_SUBST(COB_CFLAGS)
-AC_SUBST(COB_LIBS)
+AC_SUBST(COBC_LIBS)
 AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBS)
 AC_SUBST(COB_EXPORT_DYN)
-AC_SUBST(COB_PIC_FLAGS)
-AC_SUBST(COB_SHARED_OPT)
+# AC_SUBST(COB_PIC_FLAGS)
+# AC_SUBST(COB_SHARED_OPT)
 
 AC_CONFIG_FILES([cob-config
 		Makefile lib/Makefile libcob/Makefile
@@ -256,6 +323,10 @@ echo ""
 echo "  COB_CC               ${COB_CC}"
 echo "  CFLAGS               ${CFLAGS}"
 echo "  COB_CFLAGS           ${COB_CFLAGS}"
+if test "x$COBC_LIBS" != "x"
+then
+  echo "  COBC_LIBS            ${COBC_LIBS}"
+fi
 echo "  COB_LIBS             ${COB_LIBS}"
 echo "  COB_CONFIG_DIR       ${COB_CONFIG_DIR}"
 echo "  COB_LIBRARY_PATH     ${COB_LIBRARY_PATH}"
@@ -264,13 +335,13 @@ echo "  COB_SHARED_OPT       ${COB_SHARED_OPT}"
 echo "  COB_PIC_FLAGS        ${COB_PIC_FLAGS}"
 echo "  COB_EXPORT_DYN       ${COB_EXPORT_DYN}"
 if test "x$striplib" != "x"; then
- echo "  COB_STRIP_CMD        ${striplib}"
+  echo "  COB_STRIP_CMD        ${striplib}"
 fi
 if test "${DEFINEDL}" = "yes" 
 then
-echo "  Dynamic loading      System"
+  echo "  Dynamic loading      System"
 else
-echo "  Dynamic loading      Libtool"
+  echo "  Dynamic loading      Libtool"
 fi
 echo ""
 echo "  Use gettext for international messages:      ${USE_NLS}"

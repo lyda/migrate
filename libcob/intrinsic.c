@@ -284,6 +284,38 @@ cob_intr_integer_part (cob_field *srcfield)
 }
 
 cob_field *
+cob_intr_fraction_part (cob_field *srcfield)
+{
+	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 18, COB_FLAG_HAVE_SIGN, NULL};
+	cob_field	field = {8, NULL, &attr};
+
+	make_field_entry (&field);
+
+	cob_move (srcfield, curr_field);
+	return curr_field;
+}
+
+cob_field *
+cob_intr_sign (cob_field *srcfield)
+{
+	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, COB_FLAG_HAVE_SIGN, NULL};
+	cob_field	field = {4, NULL, &attr};
+	int		n;
+
+	make_field_entry (&field);
+
+	cob_set_int (curr_field, 0);
+	n = cob_cmp (srcfield, curr_field);
+	if ( n < 0 ) {
+		cob_set_int (curr_field, -1);
+	} else if ( n > 0 ) {
+		cob_set_int (curr_field, 1);
+	}
+
+	return curr_field;
+}
+
+cob_field *
 cob_intr_upper_case (cob_field *sizefield, cob_field *srcfield)
 {
 	int		i, size;
@@ -1327,11 +1359,14 @@ cob_intr_mean (int params, ...)
 {
 	int		i;
 	cob_field	*f;
+	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL};
+	cob_field	field = {8, NULL, &attr};
+	unsigned char	data[16];
+	long long	n;
 	va_list		args;
 
 
 	va_start (args, params);
-	make_double_entry ();
 	mpz_set_ui (d1.value, 0);
 	d1.scale = 0;
 
@@ -1345,6 +1380,16 @@ cob_intr_mean (int params, ...)
 	mpz_set_ui (d2.value, params);
 	d2.scale = 0;
 	cob_decimal_div (&d1, &d2);
+	field.data = data;
+	cob_decimal_get_field (&d1, &field, 0);
+	n = *(long long *)data;
+	i = 0;
+	for ( ; n; n /= 10, i++ ) ;
+	field.data = NULL;
+	if ( i <= 18 ) {
+		attr.scale = 18 - i;
+	}
+	make_field_entry (&field);
 	cob_decimal_get_field (&d1, curr_field, 0);
 	return curr_field;
 }
@@ -1469,15 +1514,19 @@ cob_intr_variance (int params, ...)
 {
 	int		i;
 	cob_field	*f;
+	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL};
+	cob_field	field = {8, NULL, &attr};
+	long long	n;
+	unsigned char	data[16];
 	va_list		args;
 
-	va_start (args, params);
-	make_double_entry ();
-
 	if ( params == 1 ) {
+		make_field_entry (&field);
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
+
+	va_start (args, params);
 
 	/* MEAN for all params */
 	mpz_set_ui (d1.value, 0);
@@ -1512,6 +1561,16 @@ cob_intr_variance (int params, ...)
 	mpz_set_ui (d3.value, params);
 	d3.scale = 0;
 	cob_decimal_div (&d4, &d3);
+	field.data = data;
+	cob_decimal_get_field (&d4, &field, 0);
+	n = *(long long *)data;
+	i = 0;
+	for ( ; n; n /= 10, i++ ) ;
+	field.data = NULL;
+	if ( i <= 18 ) {
+		attr.scale = 18 - i;
+	}
+	make_field_entry (&field);
 	cob_decimal_get_field (&d4, curr_field, 0);
 	return curr_field;
 }

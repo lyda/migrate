@@ -38,6 +38,9 @@ OpenCOBOL requires the following external libraries to be installed:
   o GNU Libtool (libltdl)
     http://www.gnu.org/software/libtool/libtool.html
 
+    *** Note - libltdl is NOT needed when installing on Linux
+        or Cygwin ***
+
     libltdl is used to implement dynamic CALL statements.
 
     GNU Libtool is distributed under GNU Lesser General Public License.
@@ -74,11 +77,26 @@ this is done by the following commands:
 
 There are the following configure options:
 
-  --with-cc=<cc>    specify C compiler command used by cobc
-  --with-db1        use Berkeley DB 1.85 (libdb-1.85)
-  --with-db         use Berkeley DB 3.0 or later (libdb)
-  --with-lfs64      use large file system for file I/O
-  --with-dl         use the system dynamic linker instead of ltdl
+  --with-cc=<cc>		specify C compiler command used by cobc
+
+  --with-db1			use Berkeley DB 1.85 (libdb-1.85)
+				This overrides --with-db/--without-db
+
+  --with-db			use Berkeley DB 3.0 or later (libdb)
+				This is the default
+
+  --without-db			Do not use Berkeley DB
+				You will not be able to use SORT/indexed I/O
+
+  --with-lfs64			use large file system for file I/O
+				This is the default
+
+  --without-lfs64		Do not use large file system I/O
+
+  --with-dl			use the system dynamic linker instead of ltdl
+				This is the default on Linux/Cygwin
+
+  --with-patch-level=<n>	Set internal patch level to n
 
 Development
 ===========

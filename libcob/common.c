@@ -253,6 +253,17 @@ cob_stop_run (int status)
   exit (status);
 }
 
+void
+cob_check_version (const char *prog, const char *packver, const int patchlev)
+{
+	if ( strcmp (packver, PACKAGE_VERSION) || patchlev != PATCH_LEVEL ) {
+		cob_runtime_error (_("Error - Version mismatch"));
+		cob_runtime_error (_("%s has version/patch level %s/%d"), prog, packver, patchlev);
+		cob_runtime_error (_("Library has version/patch level %s/%d"), PACKAGE_VERSION, PATCH_LEVEL);
+		exit (1);
+	}
+	return;
+}
 
 /*
  * Sign
