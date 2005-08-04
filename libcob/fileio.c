@@ -96,7 +96,6 @@
 #define INITIAL_FLAGS	0
 #endif
 
-char cob_error_open_mode;
 cob_file *cob_error_file;
 
 static cob_fileio_funcs *fileio_funcs[COB_ORG_MAX];
@@ -317,7 +316,7 @@ file_close (cob_file *f, int opt)
       if (f->organization == COB_ORG_LINE_SEQUENTIAL) {
 	if ( f->flag_needs_nl && !f->linage ) {
 		f->flag_needs_nl = 0;
-		fputc ('\n', f->file);
+		putc ('\n', f->file);
 	}
       }
 #if HAVE_FCNTL
@@ -353,21 +352,21 @@ file_write_opt (cob_file *f, int opt)
 			}
 			n = f->lin_lines;
 			for ( ; i < n; i++ ) {
-				fputc ('\n', f->file);
+				putc ('\n', f->file);
 			}
 			for ( i = 0; i < f->lin_bot; i++ ) {
-				fputc ('\n', f->file);
+				putc ('\n', f->file);
 			}
 			if ( file_linage_check (f) ) {
 				cob_set_int(f->linage_ctr, 0);
 				return COB_STATUS_57_I_O_LINAGE;
 			}
 			for ( i = 0; i < f->lin_top; i++ ) {
-				fputc ('\n', f->file);
+				putc ('\n', f->file);
 			}
 			cob_set_int(f->linage_ctr, 1);
 		} else {
-			fputc ('\f', f->file);
+			putc ('\f', f->file);
 		}
 	}
 	else if (opt & COB_WRITE_LINES)
@@ -390,10 +389,10 @@ file_write_opt (cob_file *f, int opt)
 					eop_status = 1;
 				}
 				for ( ; n < f->lin_lines; n++ ) {
-					fputc ('\n', f->file);
+					putc ('\n', f->file);
 				}
 				for ( i = 0; i < f->lin_bot; i++ ) {
-					fputc ('\n', f->file);
+					putc ('\n', f->file);
 				}
 				if ( file_linage_check (f) ) {
 					cob_set_int(f->linage_ctr, 0);
@@ -401,15 +400,15 @@ file_write_opt (cob_file *f, int opt)
 				}
 				cob_set_int(f->linage_ctr, 1);
 				for ( i = 0; i < f->lin_top; i++ ) {
-					fputc ('\n', f->file);
+					putc ('\n', f->file);
 				}
 			} else {
 				for (i = (opt & COB_WRITE_MASK) - 1; i > 0; i--)
-					fputc ('\n', f->file);
+					putc ('\n', f->file);
 			}
 		} else {
 			for (i = opt & COB_WRITE_MASK; i > 0; i--)
-				fputc ('\n', f->file);
+				putc ('\n', f->file);
 		}
 	}
 	return 0;
@@ -426,13 +425,24 @@ sequential_read (cob_file *f)
   SEEK_INIT (f);
 
   /* read the record size */
-  if (f->record_min != f->record_max)
-    if (fread (&f->record->size, sizeof (f->record->size), 1, f->file) == 0)
-      return COB_STATUS_10_END_OF_FILE;
+  if (f->record_min != f->record_max) {
+    if (fread (&f->record->size, sizeof (f->record->size), 1, f->file) != 1) {
+	if ( ferror (f->file) ) {
+		return COB_STATUS_30_PERMANENT_ERROR;
+	} else {
+		return COB_STATUS_10_END_OF_FILE;
+	}
+    }
+  }
 
   /* read the record */
-  if (fread (f->record->data, f->record->size, 1, f->file) == 0)
-    return COB_STATUS_10_END_OF_FILE;
+  if (fread (f->record->data, f->record->size, 1, f->file) != 1) {
+	if ( ferror (f->file) ) {
+		return COB_STATUS_30_PERMANENT_ERROR;
+	} else {
+		return COB_STATUS_10_END_OF_FILE;
+	}
+  }
 
   return COB_STATUS_00_SUCCESS;
 }
@@ -445,11 +455,16 @@ sequential_write (cob_file *f, int opt)
   FILE_WRITE_AFTER (f, opt);
 
   /* write the record size */
-  if (f->record_min != f->record_max)
-    fwrite (&f->record->size, sizeof (f->record->size), 1, f->file);
+  if (f->record_min != f->record_max) {
+    if ( fwrite (&f->record->size, sizeof (f->record->size), 1, f->file) != 1 ) {
+	return COB_STATUS_30_PERMANENT_ERROR;
+    }
+  }
 
   /* write the record */
-  fwrite (f->record->data, f->record->size, 1, f->file);
+  if ( fwrite (f->record->data, f->record->size, 1, f->file) != 1 ) {
+	return COB_STATUS_30_PERMANENT_ERROR;
+  }
 
   FILE_WRITE_BEFORE (f, opt);
 
@@ -459,8 +474,12 @@ sequential_write (cob_file *f, int opt)
 static int
 sequential_rewrite (cob_file *f)
 {
-  fseek (f->file, -(off_t)f->record->size, SEEK_CUR);
-  fwrite (f->record->data, f->record->size, 1, f->file);
+  if ( fseek (f->file, -(off_t)f->record->size, SEEK_CUR) ) {
+	return COB_STATUS_30_PERMANENT_ERROR;
+  }
+  if ( fwrite (f->record->data, f->record->size, 1, f->file) != 1 ) {
+	return COB_STATUS_30_PERMANENT_ERROR;
+  }
   return COB_STATUS_00_SUCCESS;
 }
 
@@ -530,17 +549,17 @@ lineseq_write (cob_file *f, int opt)
   if ( f->linage && f->flag_needs_top ) {
 	f->flag_needs_top = 0;
 	for ( i = 0; i < f->lin_top; i++ ) {
-		fputc ('\n', f->file);
+		putc ('\n', f->file);
 	}
   }
   FILE_WRITE_AFTER (f, opt);
 
   /* write to the file */
   for (i = 0; i < size; i++)
-    fputc (f->record->data[i], f->file);
+    putc (f->record->data[i], f->file);
 
   if ( f->linage ) {
-	fputc ('\n', f->file);
+	putc ('\n', f->file);
   }
 
   FILE_WRITE_BEFORE (f, opt);
@@ -573,7 +592,7 @@ static cob_fileio_funcs lineseq_funcs = {
 
 #define RELATIVE_SEEK(f,i)						      \
   if (fseek (f->file, (off_t)(RELATIVE_SIZE (f) * (i)), SEEK_SET) == -1		      \
-      || fread (&f->record->size, sizeof (f->record->size), 1, f->file) == 0) \
+      || fread (&f->record->size, sizeof (f->record->size), 1, f->file) != 1) \
     return COB_STATUS_23_KEY_NOT_EXISTS;				      \
   fseek (f->file, - (off_t)sizeof (f->record->size), SEEK_CUR);
 
@@ -625,7 +644,9 @@ relative_read (cob_file *f, cob_field *k)
     return COB_STATUS_23_KEY_NOT_EXISTS;
 
   fseek (f->file, (off_t)sizeof (f->record->size), SEEK_CUR);
-  fread (f->record->data, f->record_max, 1, f->file);
+  if ( fread (f->record->data, f->record_max, 1, f->file) != 1 ) {
+	return COB_STATUS_30_PERMANENT_ERROR;
+  }
   return COB_STATUS_00_SUCCESS;
 }
 
@@ -636,8 +657,13 @@ relative_read_next (cob_file *f)
 
   while (1)
     {
-      if (fread (&f->record->size, sizeof (f->record->size), 1, f->file) == 0)
-	return COB_STATUS_10_END_OF_FILE;
+      if (fread (&f->record->size, sizeof (f->record->size), 1, f->file) != 1) {
+	if ( ferror (f->file) ) {
+		return COB_STATUS_30_PERMANENT_ERROR;
+	} else {
+		return COB_STATUS_10_END_OF_FILE;
+	}
+      }
 
       if (f->keys[0].field)
 	{
@@ -658,7 +684,9 @@ relative_read_next (cob_file *f)
 
       if (f->record->size > 0)
 	{
-	  fread (f->record->data, f->record_max, 1, f->file);
+	  if ( fread (f->record->data, f->record_max, 1, f->file) != 1 ) {
+		return COB_STATUS_30_PERMANENT_ERROR;
+	  }
 	  return COB_STATUS_00_SUCCESS;
 	}
 
@@ -688,8 +716,12 @@ relative_write (cob_file *f, int opt)
 	return COB_STATUS_22_KEY_EXISTS;
     }
 
-  fwrite (&f->record->size, sizeof (f->record->size), 1, f->file);
-  fwrite (f->record->data, f->record_max, 1, f->file);
+  if ( fwrite (&f->record->size, sizeof (f->record->size), 1, f->file) != 1 ) {
+	return COB_STATUS_30_PERMANENT_ERROR;
+  }
+  if ( fwrite (f->record->data, f->record_max, 1, f->file) != 1 ) {
+	return COB_STATUS_30_PERMANENT_ERROR;
+  }
 
   /* update RELATIVE KEY */
   if (f->access_mode == COB_ACCESS_SEQUENTIAL)
@@ -712,7 +744,9 @@ relative_rewrite (cob_file *f)
       fseek (f->file, (off_t)sizeof (f->record->size), SEEK_CUR);
     }
 
-  fwrite (f->record->data, f->record_max, 1, f->file);
+  if ( fwrite (f->record->data, f->record_max, 1, f->file) != 1 ) {
+	return COB_STATUS_30_PERMANENT_ERROR;
+  }
   return COB_STATUS_00_SUCCESS;
 }
 
@@ -722,7 +756,9 @@ relative_delete (cob_file *f)
   RELATIVE_SEEK (f, cob_get_int (f->keys[0].field) - 1);
 
   f->record->size = 0;
-  fwrite (&f->record->size, sizeof (f->record->size), 1, f->file);
+  if ( fwrite (&f->record->size, sizeof (f->record->size), 1, f->file) != 1 ) {
+	return COB_STATUS_30_PERMANENT_ERROR;
+  }
   fseek (f->file, (off_t)f->record_max, SEEK_CUR);
   return COB_STATUS_00_SUCCESS;
 }
@@ -1144,7 +1180,9 @@ sort_write (cob_file *f, int opt)
   current_sort_file = f;
   p->key.data = f->record->data;
   p->key.size = f->record->size;
-  DB_PUT (p->db, 0);
+  if ( DB_PUT (p->db, 0) ) {
+	return COB_STATUS_30_PERMANENT_ERROR;
+  }
   return COB_STATUS_00_SUCCESS;
 }
 

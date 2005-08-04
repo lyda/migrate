@@ -1923,7 +1923,7 @@ cb_emit_goto (cb_tree target, cb_tree depending)
 	cb_verify (cb_goto_statement_without_name,
 		   "GO TO without procedure-name");
       else if (CB_CHAIN (target))
-	cb_error (_("GO TO with multiple procesure-name"));
+	cb_error (_("GO TO with multiple procedure-names"));
       else
 	cb_emit (cb_build_goto (CB_VALUE (target), 0));
     }

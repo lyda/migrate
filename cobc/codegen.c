@@ -2499,9 +2499,12 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   /* output_stmt (cb_build_assign (cb_return_code, cb_int0)); */
   output_line ("if (!cob_initialized) {");
   output_line ("  fputs(\"cob_init() has not been called\\n\", stderr);");
-  output_line ("  exit (1);");
+  output_line ("  cob_stop_run (1);");
   output_line ("}");
   output_line ("cob_check_version (COB_SOURCE_FILE, COB_PACKAGE_VERSION, COB_PATCH_LEVEL);");
+  if (prog->flag_screen) {
+	output_line ("cob_screen_init ();");
+  }
   if ( cb_flag_static_call == 2 ) {
 	output_line("init$%s();", prog->program_id);
   }
@@ -2586,13 +2589,13 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   output_line ("  default:");
   output_line ("    if ( !cob_error_file->flag_has_status ) {");
   output_line ("        cob_default_error_handle ();");
-  output_line ("        exit(1);");
+  output_line ("        cob_stop_run (1);");
   output_line ("    }");
   output_line ("    break;");
   output_line ("  }");
   output_perform_exit (CB_LABEL (cb_standard_error_handler));
   output_line ("fprintf(stderr, \"Codegen error\\n\");");
-  output_line ("exit(1);");
+  output_line ("cob_stop_run (1);");
   output_newline ();
 
   if ( cb_flag_static_call == 2 ) {
@@ -2691,14 +2694,8 @@ output_main_function (struct cb_program *prog)
   output_line ("int");
   output_line ("main (int argc, char **argv)");
   output_indent ("{");
-  output_line ("int ret;");
   output_line ("cob_init (argc, argv);");
-  if (prog->flag_screen)
-    output_line ("cob_screen_init ();");
-  output_line ("ret = %s ();", prog->program_id);
-  if (prog->flag_screen)
-    output_line ("cob_screen_clear ();");
-  output_line ("return ret;");
+  output_line ("cob_stop_run ( %s() );", prog->program_id);
   output_indent ("}\n");
 }
 

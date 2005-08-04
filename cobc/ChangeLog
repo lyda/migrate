@@ -1,3 +1,9 @@
+2005-08-04  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Change initialization point of cob_screen_init
+	  Change generated exit to cob_stop_run
+	* typeck.c : Typo
+
 2005-07-31  Roger While <simrw@sim-basis.de>
 
 	* parser.y : Fix a DISPLAY usage clash

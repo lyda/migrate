@@ -202,7 +202,11 @@ extern const unsigned char cob_e2a[];	/* EBCDIC -> ASCII */
 extern void cob_init (int argc, char **argv);
 extern void cob_module_enter (cob_module *module);
 extern void cob_module_leave (cob_module *module);
-extern void cob_stop_run (int status);
+#ifdef __GNUC__
+extern void cob_stop_run (const int status) __attribute__ ((noreturn));
+#else
+extern void cob_stop_run (const int status);
+#endif
 extern void *cob_malloc (const size_t size);
 extern void cob_check_version (const char *prog, const char *packver, const int patchlev);
 

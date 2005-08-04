@@ -36,6 +36,7 @@
 #include "termio.h"
 #include "fileio.h"
 #include "call.h"
+#include "screenio.h"
 #include "intrinsic.h"
 #include "lib/gettext.h"
 
@@ -248,8 +249,9 @@ cob_module_leave (cob_module *module)
 }
 
 void
-cob_stop_run (int status)
+cob_stop_run (const int status)
 {
+  cob_screen_terminate ();
   exit (status);
 }
 
@@ -260,7 +262,7 @@ cob_check_version (const char *prog, const char *packver, const int patchlev)
 		cob_runtime_error (_("Error - Version mismatch"));
 		cob_runtime_error (_("%s has version/patch level %s/%d"), prog, packver, patchlev);
 		cob_runtime_error (_("Library has version/patch level %s/%d"), PACKAGE_VERSION, PATCH_LEVEL);
-		exit (1);
+		cob_stop_run (1);
 	}
 	return;
 }
@@ -763,7 +765,7 @@ cob_check_numeric (cob_field *f, const char *name)
 	  p += sprintf (p, "\\%03o", data[i]);
       *p = '\0';
       cob_runtime_error (_("'%s' not numeric: '%s'"), name, buff);
-      exit (1);
+      cob_stop_run (1);
     }
 }
 
@@ -776,7 +778,7 @@ cob_check_odo (int i, int min, int max, const char *name)
       COB_SET_EXCEPTION (COB_EC_BOUND_ODO);
       cob_runtime_error (_("OCCURS DEPENDING ON '%s' out of bounds: %d"),
 			 name, i);
-      exit (1);
+      cob_stop_run (1);
     }
 }
 
@@ -788,7 +790,7 @@ cob_check_subscript (int i, int min, int max, const char *name)
     {
       COB_SET_EXCEPTION (COB_EC_BOUND_SUBSCRIPT);
       cob_runtime_error (_("subscript of '%s' out of bounds: %d"), name, i);
-      exit (1);
+      cob_stop_run (1);
     }
 }
 
@@ -801,7 +803,7 @@ cob_check_ref_mod (int offset, int length, int size, const char *name)
       COB_SET_EXCEPTION (COB_EC_BOUND_REF_MOD);
       cob_runtime_error (_("offset of '%s' out of bounds: %d"),
 			 name, offset);
-      exit (1);
+      cob_stop_run (1);
     }
 
   /* check the length */
@@ -810,7 +812,7 @@ cob_check_ref_mod (int offset, int length, int size, const char *name)
       COB_SET_EXCEPTION (COB_EC_BOUND_REF_MOD);
       cob_runtime_error (_("length of '%s' out of bounds: %d"),
 			 name, length);
-      exit (1);
+      cob_stop_run (1);
     }
 }
 
@@ -825,7 +827,7 @@ cob_external_addr (char *exname, int exlength)
 		if ( !strcmp(exname, eptr->ename) ) {
 			if ( exlength > eptr->esize ) {
 				cob_runtime_error (_("EXTERNAL item '%s' has size > %d"), exname, exlength);
-				exit (1);
+				cob_stop_run (1);
 			}
 			return eptr->ext_alloc;
 		}
@@ -848,7 +850,7 @@ cob_malloc (const size_t size)
 	mptr = malloc (size);
 	if ( !mptr ) {
 		cob_runtime_error (_("Cannot acquire %d bytes of memory - Aborting"), size);
-		exit (1);
+		cob_stop_run (1);
 	}
 	memset (mptr, 0, size);
 	return mptr;

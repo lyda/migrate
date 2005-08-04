@@ -34,5 +34,5 @@ main (int argc, char **argv)
 	if (func == NULL) {
 		cob_call_error ();
 	}
-	return func();
+	cob_stop_run ( func() );
 }

@@ -42,6 +42,7 @@
 #endif
 
 #include "call.h"
+#include "common.h"
 #include "lib/gettext.h"
 
 static int dynamic_reloading = 0;
@@ -211,7 +212,7 @@ cob_resolve (const char *name)
   if (!cob_initialized)
     {
       fputs (_("cob_init() must be called before cob_resolve()"), stderr);
-      exit (1);
+      cob_stop_run (1);
     }
 */
 
@@ -291,7 +292,7 @@ void
 cob_call_error (void)
 {
   cob_runtime_error ("%s", cob_resolve_error ());
-  exit (1);
+  cob_stop_run (1);
 }
 
 void

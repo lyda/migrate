@@ -62,7 +62,7 @@ cob_screen_init (void)
 }
 
 void
-cob_screen_clear (void)
+cob_screen_terminate (void)
 {
 #if HAVE_LIBNCURSES || HAVE_LIBPDCURSES
   if (screen_initialized)

@@ -1,3 +1,12 @@
+2005-08-04  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : Harden I/O error checking
+	  Replace fputc with putc
+	* screenio.c,h : Rename cob_screen_clear to cob_screen_terminate
+	* common.c,h : Call cob_screen_terminate in cob_stop_run
+	  Define cob_stop_run as noreturn (gnuc)
+	* All : Change occurrences of exit to cob_stop_run
+
 2005-07-31  Roger While <simrw@sim-basis.de>
 
 	* intrinsic.c, intrinsic.h : Add SIGN, FRACTION-PART, clean up

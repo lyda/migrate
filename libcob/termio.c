@@ -55,7 +55,7 @@ display_numeric (cob_field *f, FILE *fp)
 
   cob_move (f, &temp);
   for (i = 0; i < size; i++)
-    fputc (data[i], fp);
+    putc (data[i], fp);
 }
 
 static void
@@ -88,7 +88,7 @@ pretty_display_numeric (cob_field *f, FILE *fp)
 
   cob_move (f, &temp);
   for (i = 0; i < size; i++)
-    fputc (data[i], fp);
+    putc (data[i], fp);
 }
 
 static void
@@ -96,7 +96,7 @@ display_alnum (cob_field *f, FILE *fp)
 {
   size_t i;
   for (i = 0; i < f->size; i++)
-    fputc (f->data[i], fp);
+    putc (f->data[i], fp);
 }
 
 static void
@@ -155,7 +155,7 @@ cob_new_display (int outorerr, int newline, int varcnt, ...)
 	}
 	va_end (args);
 	if ( newline ) {
-		fputc ('\n', fp);
+		putc ('\n', fp);
 		fflush (fp);
 	}
 }
@@ -175,14 +175,14 @@ cob_display_error (cob_field *f)
 void
 cob_newline (void)
 {
-  fputc ('\n', stdout);
+  putc ('\n', stdout);
   fflush (stdout);
 }
 
 void
 cob_newline_error (void)
 {
-  fputc ('\n', stderr);
+  putc ('\n', stderr);
   fflush (stderr);
 }
 

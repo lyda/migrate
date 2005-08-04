@@ -104,7 +104,7 @@ struct __cob_screen {
 };
 
 extern void cob_screen_init (void);
-extern void cob_screen_clear (void);
+extern void cob_screen_terminate (void);
 extern void cob_screen_attr (int line, int column, long attr);
 extern void cob_screen_puts (const char *data, size_t size, int line, int column, long attr);
 extern void cob_screen_gets (char *data, size_t size, int line, int column, long attr);

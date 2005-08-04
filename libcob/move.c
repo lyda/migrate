@@ -296,7 +296,7 @@ cob_move_packed_to_display (cob_field *f1, cob_field *f2)
   int offset;
   int sign = cob_get_sign (f1);
   unsigned char *data = f1->data;
-  unsigned char buff[f1->attr->digits];
+  unsigned char buff[64];
 
   /* unpack string */
   offset = 1 - (f1->attr->digits % 2);
@@ -651,7 +651,7 @@ cob_move_edited_to_display (cob_field *f1, cob_field *f2)
   int sign = 0;
   int scale = 0;
   int have_point = 0;
-  unsigned char buff[f1->size];
+  unsigned char buff[64];
   unsigned char *p = buff;
 
   /* de-edit */

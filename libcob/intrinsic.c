@@ -139,7 +139,7 @@ make_field_entry (cob_field *f)
 			s = realloc (curr_field->data, f->size + 3);
 			if ( !s ) {
 				cob_runtime_error (_("Cannot acquire %d bytes of memory - Aborting"), f->size + 3);
-				exit (1);
+				cob_stop_run (1);
 			}
 		}
 		memset (s, 0, f->size + 3);

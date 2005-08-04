@@ -242,7 +242,10 @@ cob_decimal_set_display (cob_decimal *d, cob_field *f)
     }
   else
     {
+/*
       unsigned char buff[size + 1];
+*/
+      unsigned char buff[64];
       own_memcpy (buff, data, size);
       buff[size] = 0;
       mpz_set_str (d->value, buff, 10);
