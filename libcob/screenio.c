@@ -42,22 +42,21 @@
   ((COB_SCREEN_COLUMN_CONST ? s->column.val : cob_get_int (s->column.ptr)) - 1)
 
 #if HAVE_LIBNCURSES || HAVE_LIBPDCURSES
-static int screen_initialized = 0;
+static int	screen_initialized = 0;
 #endif
 
 void
 cob_screen_init (void)
 {
 #if HAVE_LIBNCURSES || HAVE_LIBPDCURSES
-  if (!screen_initialized)
-    {
-      initscr ();
-      keypad (stdscr, TRUE);
-      nonl ();
-      cbreak ();
-      echo ();
-      screen_initialized = 1;
-    }
+	if (!screen_initialized) {
+		initscr ();
+		keypad (stdscr, TRUE);
+		nonl ();
+		cbreak ();
+		echo ();
+		screen_initialized = 1;
+	}
 #endif
 }
 
@@ -65,8 +64,9 @@ void
 cob_screen_terminate (void)
 {
 #if HAVE_LIBNCURSES || HAVE_LIBPDCURSES
-  if (screen_initialized)
-    endwin ();
+	if (screen_initialized) {
+		endwin ();
+	}
 #endif
 }
 
@@ -79,7 +79,7 @@ void
 cob_screen_puts (const char *data, size_t size, int line, int column, long attr)
 {
 #if HAVE_LIBNCURSES || HAVE_LIBPDCURSES
-  mvaddnstr (line, column, data, size);
+	mvaddnstr (line, column, data, size);
 #endif
 }
 
@@ -87,82 +87,83 @@ void
 cob_screen_gets (char *data, size_t size, int line, int column, long attr)
 {
 #if HAVE_LIBNCURSES
-  mvgetnstr (line, column, data, size);
+	mvgetnstr (line, column, data, size);
 #endif
 #if HAVE_LIBPDCURSES
-  mvgetstr (line, column, data);
+	mvgetstr (line, column, data);
 #endif
 }
 
 void
 cob_screen_display (cob_screen *s, int line, int column)
 {
-  switch (s->type)
-    {
-    case COB_SCREEN_TYPE_GROUP:
-      {
-	for (s = s->data.child; s; s = s->next)
-	  cob_screen_display (s, line, column);
-	break;
-      }
-    case COB_SCREEN_TYPE_FIELD:
-      {
-	if (s->from)
-	  {
-	    int line = SCREEN_LINE_POS (s);
-	    int column = SCREEN_COLUMN_POS (s);
-	    cob_move (s->from, s->data.field);
-	    cob_screen_puts (s->data.field->data, s->data.field->size,
-			     line, column, s->attr);
-	  }
-	break;
-      }
-    case COB_SCREEN_TYPE_VALUE:
-      {
-	int line = SCREEN_LINE_POS (s);
-	int column = SCREEN_COLUMN_POS (s);
-	cob_screen_puts (s->data.value, strlen (s->data.value),
-			 line, column, s->attr);
-	break;
-      }
-    case COB_SCREEN_TYPE_ATTRIBUTE:
-      {
-	int line = SCREEN_LINE_POS (s);
-	int column = SCREEN_COLUMN_POS (s);
-	cob_screen_attr (line, column, s->attr);
-	break;
-      }
-    }
+	switch (s->type) {
+	case COB_SCREEN_TYPE_GROUP:
+	{
+		for (s = s->data.child; s; s = s->next) {
+			cob_screen_display (s, line, column);
+		}
+		break;
+	}
+	case COB_SCREEN_TYPE_FIELD:
+	{
+		if (s->from) {
+			int line = SCREEN_LINE_POS (s);
+			int column = SCREEN_COLUMN_POS (s);
+
+			cob_move (s->from, s->data.field);
+			cob_screen_puts (s->data.field->data, s->data.field->size,
+					 line, column, s->attr);
+		}
+		break;
+	}
+	case COB_SCREEN_TYPE_VALUE:
+	{
+		int line = SCREEN_LINE_POS (s);
+		int column = SCREEN_COLUMN_POS (s);
+
+		cob_screen_puts (s->data.value, strlen (s->data.value), line, column, s->attr);
+		break;
+	}
+	case COB_SCREEN_TYPE_ATTRIBUTE:
+	{
+		int line = SCREEN_LINE_POS (s);
+		int column = SCREEN_COLUMN_POS (s);
+
+		cob_screen_attr (line, column, s->attr);
+		break;
+	}
+	}
 }
 
 void
 cob_screen_accept (cob_screen *s, int line, int column)
 {
-  switch (s->type)
-    {
-    case COB_SCREEN_TYPE_GROUP:
-      {
-	for (s = s->data.child; s; s = s->next)
-	  cob_screen_accept (s, line, column);
-	break;
-      }
-    case COB_SCREEN_TYPE_FIELD:
-      {
-	if (s->to)
-	  {
-	    int line = SCREEN_LINE_POS (s);
-	    int column = SCREEN_COLUMN_POS (s);
-	    cob_screen_gets (s->data.field->data, s->data.field->size,
-			     line, column, s->attr);
-	    cob_move (s->data.field, s->to);
-	  }
-	break;
-      }
-    case COB_SCREEN_TYPE_VALUE:
-    case COB_SCREEN_TYPE_ATTRIBUTE:
-      {
-	/* nothing to accept */
-	break;
-      }
-    }
+	switch (s->type) {
+	case COB_SCREEN_TYPE_GROUP:
+	{
+		for (s = s->data.child; s; s = s->next) {
+			cob_screen_accept (s, line, column);
+		}
+		break;
+	}
+	case COB_SCREEN_TYPE_FIELD:
+	{
+		if (s->to) {
+			int line = SCREEN_LINE_POS (s);
+			int column = SCREEN_COLUMN_POS (s);
+
+			cob_screen_gets (s->data.field->data, s->data.field->size,
+					 line, column, s->attr);
+			cob_move (s->data.field, s->to);
+		}
+		break;
+	}
+	case COB_SCREEN_TYPE_VALUE:
+	case COB_SCREEN_TYPE_ATTRIBUTE:
+	{
+		/* nothing to accept */
+		break;
+	}
+	}
 }

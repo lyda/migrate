@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2005-07-31 10:39+0200\n"
+"POT-Creation-Date: 2005-08-07 21:13+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -335,17 +335,17 @@ msgstr ""
 msgid "'%s' requires %d subscripts"
 msgstr ""
 
-#: cobc/typeck.c:424 libcob/common.c:790
+#: cobc/typeck.c:424 libcob/common.c:818
 #, c-format
 msgid "subscript of '%s' out of bounds: %d"
 msgstr ""
 
-#: cobc/typeck.c:478 libcob/common.c:802
+#: cobc/typeck.c:478 libcob/common.c:829
 #, c-format
 msgid "offset of '%s' out of bounds: %d"
 msgstr ""
 
-#: cobc/typeck.c:484 libcob/common.c:811
+#: cobc/typeck.c:484 libcob/common.c:836
 #, c-format
 msgid "length of '%s' out of bounds: %d"
 msgstr ""
@@ -392,7 +392,7 @@ msgid "wrong number of WHEN parameters"
 msgstr ""
 
 #: cobc/typeck.c:1926
-msgid "GO TO with multiple procesure-name"
+msgid "GO TO with multiple procedure-names"
 msgstr ""
 
 #: cobc/typeck.c:2002
@@ -511,68 +511,68 @@ msgstr ""
 msgid "'%s' not implemented"
 msgstr ""
 
-#: cobc/parser.y:311
+#: cobc/parser.y:303
 #, c-format
 msgid "unknown system-name '%s'"
 msgstr ""
 
-#: cobc/parser.y:434
+#: cobc/parser.y:426
 #, c-format
 msgid "invalid currency sign '%s'"
 msgstr ""
 
-#: cobc/parser.y:979
+#: cobc/parser.y:971
 #, c-format
 msgid "alphabet-name is expected '%s'"
 msgstr ""
 
-#: cobc/parser.y:1076
+#: cobc/parser.y:1068
 msgid "REDEFINES clause must follow entry-name"
 msgstr ""
 
-#: cobc/parser.y:1417 cobc/parser.y:1434
+#: cobc/parser.y:1408 cobc/parser.y:1425
 #, c-format
 msgid "invalid color '%d'"
 msgstr ""
 
-#: cobc/parser.y:1591
+#: cobc/parser.y:1582
 #, c-format
 msgid "unknown statement '%s'"
 msgstr ""
 
-#: cobc/parser.y:2054
+#: cobc/parser.y:2045
 msgid "88 level invalid here"
 msgstr ""
 
-#: cobc/parser.y:2061
+#: cobc/parser.y:2052
 msgid "FIXME: failed to compile \"WHEN NOT ... AND/OR ...\""
 msgstr ""
 
-#: cobc/parser.y:2062
+#: cobc/parser.y:2053
 msgid "FIXME: change it into \"WHEN (NOT ... AND/OR ...)\" for now"
 msgstr ""
 
-#: cobc/parser.y:2725 cobc/parser.y:3231 cobc/parser.y:3287
+#: cobc/parser.y:2716 cobc/parser.y:3222 cobc/parser.y:3278
 #, c-format
 msgid "'%s' not file name"
 msgstr ""
 
-#: cobc/parser.y:3265
+#: cobc/parser.y:3256
 #, c-format
 msgid "'%s' not indexed"
 msgstr ""
 
-#: cobc/parser.y:3266
+#: cobc/parser.y:3257
 #, c-format
 msgid "'%s' defined here"
 msgstr ""
 
-#: cobc/parser.y:3603
+#: cobc/parser.y:3594
 #, c-format
 msgid "'%s' not level 01 or 77"
 msgstr ""
 
-#: cobc/parser.y:3618 cobc/parser.y:3626
+#: cobc/parser.y:3609 cobc/parser.y:3617
 #, c-format
 msgid "%s statement not terminated by END-%s"
 msgstr ""
@@ -655,20 +655,20 @@ msgstr ""
 msgid "Warn type mismatch strictly"
 msgstr ""
 
-#: libcob/call.c:265
+#: libcob/call.c:294
 #, c-format
 msgid "cannot find module '%s'"
 msgstr ""
 
-#: libcob/common.c:236
+#: libcob/common.c:234
 msgid "warning: cob_init expected in the main program\n"
 msgstr ""
 
-#: libcob/common.c:260
+#: libcob/common.c:259
 msgid "Error - Version mismatch"
 msgstr ""
 
-#: libcob/common.c:261
+#: libcob/common.c:260
 #, c-format
 msgid "%s has version/patch level %s/%d"
 msgstr ""
@@ -678,94 +678,94 @@ msgstr ""
 msgid "Library has version/patch level %s/%d"
 msgstr ""
 
-#: libcob/common.c:765
+#: libcob/common.c:796
 #, c-format
 msgid "'%s' not numeric: '%s'"
 msgstr ""
 
-#: libcob/common.c:777
+#: libcob/common.c:807
 #, c-format
 msgid "OCCURS DEPENDING ON '%s' out of bounds: %d"
 msgstr ""
 
-#: libcob/common.c:827
+#: libcob/common.c:851
 #, c-format
 msgid "EXTERNAL item '%s' has size > %d"
 msgstr ""
 
-#: libcob/common.c:850
+#: libcob/common.c:875
 #, c-format
 msgid "Cannot acquire %d bytes of memory - Aborting"
 msgstr ""
 
-#: libcob/fileio.c:1629
+#: libcob/fileio.c:1653
 msgid "End of file"
 msgstr ""
 
-#: libcob/fileio.c:1632
+#: libcob/fileio.c:1656
 msgid "Key out of range"
 msgstr ""
 
-#: libcob/fileio.c:1635
+#: libcob/fileio.c:1659
 msgid "Key order not ascending"
 msgstr ""
 
-#: libcob/fileio.c:1638
+#: libcob/fileio.c:1662
 msgid "Record key already exists"
 msgstr ""
 
-#: libcob/fileio.c:1641
+#: libcob/fileio.c:1665
 msgid "Record key does not exist"
 msgstr ""
 
-#: libcob/fileio.c:1644
+#: libcob/fileio.c:1668
 msgid "Permanent file error"
 msgstr ""
 
-#: libcob/fileio.c:1647
+#: libcob/fileio.c:1671
 msgid "File does not exist"
 msgstr ""
 
-#: libcob/fileio.c:1650
+#: libcob/fileio.c:1674
 msgid "Permission denied"
 msgstr ""
 
-#: libcob/fileio.c:1653
+#: libcob/fileio.c:1677
 msgid "File already open"
 msgstr ""
 
-#: libcob/fileio.c:1656
+#: libcob/fileio.c:1680
 msgid "File not open"
 msgstr ""
 
-#: libcob/fileio.c:1659
+#: libcob/fileio.c:1683
 msgid "READ must be executed first"
 msgstr ""
 
-#: libcob/fileio.c:1662
+#: libcob/fileio.c:1686
 msgid "Record overflow"
 msgstr ""
 
-#: libcob/fileio.c:1665
+#: libcob/fileio.c:1689
 msgid "Failed to read"
 msgstr ""
 
-#: libcob/fileio.c:1668
+#: libcob/fileio.c:1692
 msgid "READ/START not allowed"
 msgstr ""
 
-#: libcob/fileio.c:1671
+#: libcob/fileio.c:1695
 msgid "WRITE not allowed"
 msgstr ""
 
-#: libcob/fileio.c:1674
+#: libcob/fileio.c:1698
 msgid "DELETE/REWRITE not allowed"
 msgstr ""
 
-#: libcob/fileio.c:1681
+#: libcob/fileio.c:1705
 msgid "LINAGE values invalid"
 msgstr ""
 
-#: libcob/fileio.c:1684
+#: libcob/fileio.c:1708
 msgid "Unknown file error"
 msgstr ""

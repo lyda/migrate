@@ -1,3 +1,8 @@
+2005-08-07  Roger While <simrw@sim-basis.de>
+
+	* All .c : indent, braces
+	* call.c : Dynamically allocate areas, const allocation
+
 2005-08-04  Roger While <simrw@sim-basis.de>
 
 	* fileio.c : Harden I/O error checking

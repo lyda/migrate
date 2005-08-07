@@ -140,14 +140,6 @@ start:
     entry_number = 0;
     linage_file = NULL;
     next_label_list = NULL;
-    i_counters[0] = 0;
-    i_counters[1] = 0;
-    i_counters[2] = 0;
-    i_counters[3] = 0;
-    i_counters[4] = 0;
-    i_counters[5] = 0;
-    i_counters[6] = 0;
-    i_counters[7] = 0;
   }
   program_definition
   {
@@ -1158,7 +1150,6 @@ occurs_clause:
     current_field->occurs_min = $3 ? cb_get_int ($2) : 1;
     current_field->occurs_max = $3 ? cb_get_int ($3) : cb_get_int ($2);
     current_field->indexes++;
-    i_counters[current_field->indexes] = 1;
     current_field->flag_occurs = 1;
   }
 ;

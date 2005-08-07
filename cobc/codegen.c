@@ -30,6 +30,8 @@
 #include "tree.h"
 #include "call.def"
 
+#define NUM_I_COUNTERS	8
+
 static int param_id = 0;
 static int stack_id = 0;
 static int num_cob_fields = 0;
@@ -39,7 +41,8 @@ static int last_line = 0;
 static int needs_exit_prog = 0;
 static int need_double = 0;
 
-int i_counters[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+static int i_counters[NUM_I_COUNTERS];
+
 int entry_number = 0;
 
 static void output (const char *fmt, ...)
@@ -291,6 +294,7 @@ output_data (cb_tree x)
 	  output ("(unsigned char *)\"%s%s\"", l->data,
 		  (l->sign < 0) ? "-" : (l->sign > 0) ? "+" : "");
 	else
+	  output ("(unsigned char *)");
 	  output_string (l->data, l->size);
 	break;
       }
@@ -1359,6 +1363,8 @@ output_initialize_compound (struct cb_initialize *p, cb_tree x)
 	    {
 	      /* begin occurs loop */
 	      int i = f->indexes;
+
+	      i_counters [i] = 1;
 	      output_line ("for (i%d = 1; i%d <= %d; i%d++)",
 			   i, i, f->occurs_max, i);
 	      output_indent ("  {");
@@ -1932,8 +1938,6 @@ output_stmt (cb_tree x)
 /* RXW - Dirty must be some other way */
 		if ( p->handler_id == COB_EC_I_O_EOP ) {
 			output_line ("cob_check_eop = 1;");
-		} else {
-			output_line ("cob_check_eop = 0;");
 		}
 	}
 
@@ -2438,12 +2442,6 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
       output_newline ();
     }
 
-  for ( i = 0; i < 8; i++ ) {
-	if ( i_counters[i] ) {
-		output_line ("int i%d;", i);
-	}
-  }
-
   if ( prog->loop_counter )
 	output_line ("int n[%d];", prog->loop_counter);
 
@@ -2574,29 +2572,31 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   output (";\n\n");
 
   /* error handlers */
-  output_line ("/* error handlers */");
-  output_stmt (cb_standard_error_handler);
-  output_line ("switch (cob_error_file->last_open_mode)");
-  output_line ("  {");
-  for (i = COB_OPEN_INPUT; i <= COB_OPEN_EXTEND; i++)
-    if (prog->file_handler[i])
-      {
-	output_line ("  case %d:", i);
-	output ("    ");
-	output_perform_call (prog->file_handler[i], prog->file_handler[i]);
+  if (prog->file_list) {
+	output_line ("/* error handlers */");
+	output_stmt (cb_standard_error_handler);
+	output_line ("switch (cob_error_file->last_open_mode)");
+	output_line ("  {");
+	for (i = COB_OPEN_INPUT; i <= COB_OPEN_EXTEND; i++) {
+		if (prog->file_handler[i]) {
+			output_line ("  case %d:", i);
+			output ("    ");
+			output_perform_call (prog->file_handler[i], prog->file_handler[i]);
+			output_line ("    break;");
+		}
+	}
+	output_line ("  default:");
+	output_line ("    if ( !cob_error_file->flag_has_status ) {");
+	output_line ("        cob_default_error_handle ();");
+	output_line ("        cob_stop_run (1);");
+	output_line ("    }");
 	output_line ("    break;");
-      }
-  output_line ("  default:");
-  output_line ("    if ( !cob_error_file->flag_has_status ) {");
-  output_line ("        cob_default_error_handle ();");
-  output_line ("        cob_stop_run (1);");
-  output_line ("    }");
-  output_line ("    break;");
-  output_line ("  }");
-  output_perform_exit (CB_LABEL (cb_standard_error_handler));
-  output_line ("fprintf(stderr, \"Codegen error\\n\");");
-  output_line ("cob_stop_run (1);");
-  output_newline ();
+	output_line ("  }");
+	output_perform_exit (CB_LABEL (cb_standard_error_handler));
+	output_line ("fprintf(stderr, \"Codegen error\\n\");");
+	output_line ("cob_stop_run (1);");
+	output_newline ();
+  }
 
   if ( cb_flag_static_call == 2 ) {
 	output_line("void init$%s(void)", prog->program_id);
@@ -2615,15 +2615,25 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 static void
 output_entry_function (struct cb_program *prog,
 		       cb_tree entry,
-		       cb_tree parameter_list)
+		       cb_tree parameter_list,
+		       const int gencode)
 {
 
   const char *entry_name = CB_LABEL (CB_PURPOSE (entry))->name;
   cb_tree using_list = CB_VALUE (entry);
   cb_tree l, l1, l2;
 
-  output ("int\n");
+  output ("int");
+  if ( gencode ) {
+	output ("\n");
+  } else {
+	output (" ");
+  }
   output ("%s (", entry_name);
+  if ( !gencode && !using_list ) {
+	output ("void);\n");
+	return;
+  }
   for (l = using_list; l; l = CB_CHAIN (l))
     {
       struct cb_field *f = cb_field (CB_VALUE (l));
@@ -2631,31 +2641,49 @@ output_entry_function (struct cb_program *prog,
 	{
 	case CB_CALL_BY_REFERENCE:
 	case CB_CALL_BY_CONTENT:
-	  output ("unsigned char *%s%d", CB_PREFIX_BASE, f->id);
+	  if ( gencode ) {
+		output ("unsigned char *%s%d", CB_PREFIX_BASE, f->id);
+	  } else {
+		output ("unsigned char *");
+	  }
 	  break;
 	case CB_CALL_BY_VALUE:
-	  if (CB_TREE_CLASS (CB_VALUE (l)) == CB_CLASS_NUMERIC)
-	    output ("int i_%d", f->id);
-	  else
-	    output ("unsigned char i_%d", f->id);
+	  if (CB_TREE_CLASS (CB_VALUE (l)) == CB_CLASS_NUMERIC) {
+		if ( gencode ) {
+			output ("int i_%d", f->id);
+		} else {
+			output ("int");
+		}
+	  } else {
+		if ( gencode ) {
+			output ("unsigned char i_%d", f->id);
+		} else {
+			output ("unsigned char");
+		}
+	  }
 	  break;
 	}
       if (CB_CHAIN (l))
 	output (", ");
     }
-  output (")\n");
+  if ( gencode ) {
+	output (")\n");
+  } else {
+	output (");\n");
+	return;
+  }
   output ("{\n");
   for (l = using_list; l; l = CB_CHAIN (l))
     if (CB_PURPOSE_INT (l) == CB_CALL_BY_CONTENT)
       {
 	struct cb_field *f = cb_field (CB_VALUE (l));
-	output_line ("unsigned char copy_%d[%d];", f->id, f->size);
+	output ("unsigned char copy_%d[%d];\n", f->id, f->size);
       }
   for (l = using_list; l; l = CB_CHAIN (l))
     if (CB_PURPOSE_INT (l) == CB_CALL_BY_CONTENT)
       {
 	struct cb_field *f = cb_field (CB_VALUE (l));
-	output_line ("memcpy (copy_%d, %s%d, %d);",
+	output ("memcpy (copy_%d, %s%d, %d);\n",
 		     f->id, CB_PREFIX_BASE, f->id, f->size);
       }
 
@@ -2682,7 +2710,7 @@ output_entry_function (struct cb_program *prog,
 	    break;
 	  }
       if (l2 == NULL)
-	output (", 0");
+	output (", NULL");
     }
   output (");\n");
   output ("}\n\n");
@@ -2702,8 +2730,9 @@ output_main_function (struct cb_program *prog)
 void
 codegen (struct cb_program *prog)
 {
+  int	i;
   cb_tree l;
-  cb_tree parameter_list = NULL;
+  cb_tree parameter_list;
   struct attr_list *j;
   struct literal_list *m;
   struct field_list *k;
@@ -2721,6 +2750,8 @@ codegen (struct cb_program *prog)
   attr_cache = NULL;
   literal_cache = NULL;
   call_cache = NULL;
+  parameter_list = NULL;
+  memset ((char *)i_counters, 0, sizeof (i_counters));
 
   if (cb_flag_main)
     prog->flag_initial = 1;
@@ -2739,6 +2770,8 @@ codegen (struct cb_program *prog)
   output ("#define COB_PACKAGE_VERSION	\"%s\"\n", PACKAGE_VERSION);
   output ("#define COB_PATCH_LEVEL		%d\n\n", PATCH_LEVEL);
 
+  output_storage ("/* Generated from %s by cobc version %s patch level %d */\n\n",
+	  cb_source_file, PACKAGE_VERSION, PATCH_LEVEL);
 /*
   output ("#include \"%s\"\n\n", cb_storage_file_name);
 */
@@ -2768,20 +2801,28 @@ codegen (struct cb_program *prog)
     }
 
   /* prototype */
+  output ("/* function prototypes */\n");
   output ("static int %s_ (int", prog->program_id);
   for (l = parameter_list; l; l = CB_CHAIN (l))
 	output (", unsigned char *");
-  output (");\n\n");
+  output (");\n");
 
   /* main function */
   if (cb_flag_main) {
 	output ("int %s (void);\n\n", prog->program_id);
 	output_main_function (prog);
+  } else {
+	for (l = prog->entry_list; l; l = CB_CHAIN (l)) {
+		output_entry_function (prog, l, parameter_list, 0);
+	}
+	output ("\n\n");
   }
 
   /* functions */
+  output ("/* functions */\n\n");
   for (l = prog->entry_list; l; l = CB_CHAIN (l))
-    output_entry_function (prog, l, parameter_list);
+    output_entry_function (prog, l, parameter_list, 1);
+
   output_internal_function (prog, parameter_list);
 
   output_target = cb_storage_file;
@@ -2822,6 +2863,12 @@ codegen (struct cb_program *prog)
   }
 
   output_storage ("\n");
+  for ( i = 0; i < NUM_I_COUNTERS; i++ ) {
+	if ( i_counters[i] ) {
+		output ("int i%d;\n", i);
+	}
+  }
+
   if ( num_cob_fields ) {
 	output ("cob_field f[%d];\n", num_cob_fields);
   }

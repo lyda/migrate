@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2005-07-31 10:39+0200\n"
+"POT-Creation-Date: 2005-08-07 21:13+0200\n"
 "PO-Revision-Date: 2004-08-01 23:55+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -362,17 +362,17 @@ msgstr "`%s' は 1 つの添字を必要とします"
 msgid "'%s' requires %d subscripts"
 msgstr "`%s' は %d つの添字を必要とします"
 
-#: cobc/typeck.c:424 libcob/common.c:790
+#: cobc/typeck.c:424 libcob/common.c:818
 #, fuzzy, c-format
 msgid "subscript of '%s' out of bounds: %d"
 msgstr "'%s' の添字が範囲を超えています: %d"
 
-#: cobc/typeck.c:478 libcob/common.c:802
+#: cobc/typeck.c:478 libcob/common.c:829
 #, fuzzy, c-format
 msgid "offset of '%s' out of bounds: %d"
 msgstr "'%s' の開始位置が範囲を超えています: %d"
 
-#: cobc/typeck.c:484 libcob/common.c:811
+#: cobc/typeck.c:484 libcob/common.c:836
 #, fuzzy, c-format
 msgid "length of '%s' out of bounds: %d"
 msgstr "'%s' の長さが範囲を超えています: %d"
@@ -419,7 +419,8 @@ msgid "wrong number of WHEN parameters"
 msgstr "WHEN 句の引数の数が不当です"
 
 #: cobc/typeck.c:1926
-msgid "GO TO with multiple procesure-name"
+#, fuzzy
+msgid "GO TO with multiple procedure-names"
 msgstr "GO TO に複数の手続き名が指定されています"
 
 #: cobc/typeck.c:2002
@@ -538,68 +539,68 @@ msgstr "不当な行連結です"
 msgid "'%s' not implemented"
 msgstr "`%s' は実装されていません"
 
-#: cobc/parser.y:311
+#: cobc/parser.y:303
 #, fuzzy, c-format
 msgid "unknown system-name '%s'"
 msgstr "不当なシステム名です `%s'"
 
-#: cobc/parser.y:434
+#: cobc/parser.y:426
 #, fuzzy, c-format
 msgid "invalid currency sign '%s'"
 msgstr "不当な通貨記号です `%s'"
 
-#: cobc/parser.y:979
+#: cobc/parser.y:971
 #, fuzzy, c-format
 msgid "alphabet-name is expected '%s'"
 msgstr "アルファベット名が必要です `%s'"
 
-#: cobc/parser.y:1076
+#: cobc/parser.y:1068
 msgid "REDEFINES clause must follow entry-name"
 msgstr "REDEFINES 句は項目名の直後になければなりません"
 
-#: cobc/parser.y:1417 cobc/parser.y:1434
+#: cobc/parser.y:1408 cobc/parser.y:1425
 #, fuzzy, c-format
 msgid "invalid color '%d'"
 msgstr "不当な色です `%d'"
 
-#: cobc/parser.y:1591
+#: cobc/parser.y:1582
 #, fuzzy, c-format
 msgid "unknown statement '%s'"
 msgstr "そのような文はありません `%s'"
 
-#: cobc/parser.y:2054
+#: cobc/parser.y:2045
 msgid "88 level invalid here"
 msgstr ""
 
-#: cobc/parser.y:2061
+#: cobc/parser.y:2052
 msgid "FIXME: failed to compile \"WHEN NOT ... AND/OR ...\""
 msgstr ""
 
-#: cobc/parser.y:2062
+#: cobc/parser.y:2053
 msgid "FIXME: change it into \"WHEN (NOT ... AND/OR ...)\" for now"
 msgstr ""
 
-#: cobc/parser.y:2725 cobc/parser.y:3231 cobc/parser.y:3287
+#: cobc/parser.y:2716 cobc/parser.y:3222 cobc/parser.y:3278
 #, fuzzy, c-format
 msgid "'%s' not file name"
 msgstr "`%s' はファイル名ではありません"
 
-#: cobc/parser.y:3265
+#: cobc/parser.y:3256
 #, fuzzy, c-format
 msgid "'%s' not indexed"
 msgstr "`%s' には INDEXED BY が必要です"
 
-#: cobc/parser.y:3266
+#: cobc/parser.y:3257
 #, fuzzy, c-format
 msgid "'%s' defined here"
 msgstr "`%s' はここで定義されました"
 
-#: cobc/parser.y:3603
+#: cobc/parser.y:3594
 #, fuzzy, c-format
 msgid "'%s' not level 01 or 77"
 msgstr "`%s' はレベル 01 か 77 でなければなりません"
 
-#: cobc/parser.y:3618 cobc/parser.y:3626
+#: cobc/parser.y:3609 cobc/parser.y:3617
 #, c-format
 msgid "%s statement not terminated by END-%s"
 msgstr "%s 文が END-%s で終わっていません"
@@ -682,20 +683,20 @@ msgstr "終止符(END-XXX)がなければ警告する"
 msgid "Warn type mismatch strictly"
 msgstr "タイプの不適合を厳密に警告する"
 
-#: libcob/call.c:265
+#: libcob/call.c:294
 #, fuzzy, c-format
 msgid "cannot find module '%s'"
 msgstr "モジュールが見付かりません `%s'"
 
-#: libcob/common.c:236
+#: libcob/common.c:234
 msgid "warning: cob_init expected in the main program\n"
 msgstr "warning: メインプログラムで cob_init 呼ばれていません\n"
 
-#: libcob/common.c:260
+#: libcob/common.c:259
 msgid "Error - Version mismatch"
 msgstr ""
 
-#: libcob/common.c:261
+#: libcob/common.c:260
 #, c-format
 msgid "%s has version/patch level %s/%d"
 msgstr ""
@@ -705,109 +706,109 @@ msgstr ""
 msgid "Library has version/patch level %s/%d"
 msgstr ""
 
-#: libcob/common.c:765
+#: libcob/common.c:796
 #, fuzzy, c-format
 msgid "'%s' not numeric: '%s'"
 msgstr "`%s' は数字ではありません: `%s'"
 
-#: libcob/common.c:777
+#: libcob/common.c:807
 #, fuzzy, c-format
 msgid "OCCURS DEPENDING ON '%s' out of bounds: %d"
 msgstr "OCCURS DEPENDING ON `%s' が範囲を越えています: %d"
 
-#: libcob/common.c:827
+#: libcob/common.c:851
 #, c-format
 msgid "EXTERNAL item '%s' has size > %d"
 msgstr ""
 
-#: libcob/common.c:850
+#: libcob/common.c:875
 #, c-format
 msgid "Cannot acquire %d bytes of memory - Aborting"
 msgstr ""
 
-#: libcob/fileio.c:1629
+#: libcob/fileio.c:1653
 #, fuzzy
 msgid "End of file"
 msgstr "ファイルの終わりです"
 
-#: libcob/fileio.c:1632
+#: libcob/fileio.c:1656
 #, fuzzy
 msgid "Key out of range"
 msgstr "キーの範囲が不当です"
 
-#: libcob/fileio.c:1635
+#: libcob/fileio.c:1659
 #, fuzzy
 msgid "Key order not ascending"
 msgstr "キーが昇順ではありません"
 
-#: libcob/fileio.c:1638
+#: libcob/fileio.c:1662
 #, fuzzy
 msgid "Record key already exists"
 msgstr "レコードキーが既に存在します"
 
-#: libcob/fileio.c:1641
+#: libcob/fileio.c:1665
 #, fuzzy
 msgid "Record key does not exist"
 msgstr "レコードキーが存在しません"
 
-#: libcob/fileio.c:1644
+#: libcob/fileio.c:1668
 #, fuzzy
 msgid "Permanent file error"
 msgstr "永続ファイルエラーです"
 
-#: libcob/fileio.c:1647
+#: libcob/fileio.c:1671
 #, fuzzy
 msgid "File does not exist"
 msgstr "ファイルが存在しません"
 
-#: libcob/fileio.c:1650
+#: libcob/fileio.c:1674
 #, fuzzy
 msgid "Permission denied"
 msgstr "利用許可がありません"
 
-#: libcob/fileio.c:1653
+#: libcob/fileio.c:1677
 #, fuzzy
 msgid "File already open"
 msgstr "ファイルは既に開いています"
 
-#: libcob/fileio.c:1656
+#: libcob/fileio.c:1680
 #, fuzzy
 msgid "File not open"
 msgstr "ファイルが開いていません"
 
-#: libcob/fileio.c:1659
+#: libcob/fileio.c:1683
 msgid "READ must be executed first"
 msgstr "READ を先に実行しなければなりません"
 
-#: libcob/fileio.c:1662
+#: libcob/fileio.c:1686
 #, fuzzy
 msgid "Record overflow"
 msgstr "レコードの領域を超えています"
 
-#: libcob/fileio.c:1665
+#: libcob/fileio.c:1689
 #, fuzzy
 msgid "Failed to read"
 msgstr "読み込みに失敗しました"
 
-#: libcob/fileio.c:1668
+#: libcob/fileio.c:1692
 #, fuzzy
 msgid "READ/START not allowed"
 msgstr "READ、START は許可されません"
 
-#: libcob/fileio.c:1671
+#: libcob/fileio.c:1695
 msgid "WRITE not allowed"
 msgstr "WRITE は許可されません"
 
-#: libcob/fileio.c:1674
+#: libcob/fileio.c:1698
 #, fuzzy
 msgid "DELETE/REWRITE not allowed"
 msgstr "DELETE、REWRITE は許可されません"
 
-#: libcob/fileio.c:1681
+#: libcob/fileio.c:1705
 msgid "LINAGE values invalid"
 msgstr ""
 
-#: libcob/fileio.c:1684
+#: libcob/fileio.c:1708
 #, fuzzy
 msgid "Unknown file error"
 msgstr "原因不明のファイルエラーです"

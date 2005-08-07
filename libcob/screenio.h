@@ -74,33 +74,33 @@
 typedef struct __cob_screen cob_screen;
 
 typedef enum {
-  COB_SCREEN_TYPE_GROUP,
-  COB_SCREEN_TYPE_FIELD,
-  COB_SCREEN_TYPE_VALUE,
-  COB_SCREEN_TYPE_ATTRIBUTE
+	COB_SCREEN_TYPE_GROUP,
+	COB_SCREEN_TYPE_FIELD,
+	COB_SCREEN_TYPE_VALUE,
+	COB_SCREEN_TYPE_ATTRIBUTE
 } cob_screen_type;
 
 typedef union {
-  cob_screen *child;		/* for COB_SCREEN_TYPE_GROUP */
-  cob_field *field;		/* for COB_SCREEN_TYPE_FIELD */
-  char *value;			/* for COB_SCREEN_TYPE_VALUE */
-  int dummy;			/* for COB_SCREEN_TYPE_ATTRIBUTE */
+	cob_screen	*child;		/* for COB_SCREEN_TYPE_GROUP */
+	cob_field	*field;		/* for COB_SCREEN_TYPE_FIELD */
+	char		*value;		/* for COB_SCREEN_TYPE_VALUE */
+	int		dummy;		/* for COB_SCREEN_TYPE_ATTRIBUTE */
 } cob_screen_data;
 
 typedef union {
-  int val;
-  cob_field *ptr;
+	int		val;
+	cob_field	*ptr;
 } cob_screen_position;
 
 struct __cob_screen {
-  cob_screen_type type;
-  cob_screen_data data;
-  cob_screen *next;
-  cob_field *from;
-  cob_field *to;
-  cob_screen_position line;
-  cob_screen_position column;
-  long attr;
+	cob_screen_type		type;
+	cob_screen_data		data;
+	cob_screen		*next;
+	cob_field		*from;
+	cob_field		*to;
+	cob_screen_position	line;
+	cob_screen_position	column;
+	long			attr;
 };
 
 extern void cob_screen_init (void);
