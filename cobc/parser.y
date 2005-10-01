@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Keisuke Nishida
+ * Copyright (C) 2001-2005 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -3469,12 +3469,12 @@ function:
   }
 ;
 func_args:
-  /* empty */			{ $$ = NULL }
-| '(' list_func_args ')'	{ $$ = $2   }
+  /* empty */			{ $$ = NULL; }
+| '(' list_func_args ')'	{ $$ = $2;   }
 ;
 list_func_args:
-  /* empty */			{ $$ = NULL }
-| e_list			{ $$ = $1   }
+  /* empty */			{ $$ = NULL; }
+| e_list			{ $$ = $1;   }
 ;
 
 

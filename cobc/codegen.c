@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2004 Keisuke Nishida
+ * Copyright (C) 2002-2005 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -290,12 +290,13 @@ output_data (cb_tree x)
     case CB_TAG_LITERAL:
       {
 	struct cb_literal *l = CB_LITERAL (x);
-	if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC)
+	if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC) {
 	  output ("(unsigned char *)\"%s%s\"", l->data,
 		  (l->sign < 0) ? "-" : (l->sign > 0) ? "+" : "");
-	else
+	} else {
 	  output ("(unsigned char *)");
 	  output_string (l->data, l->size);
+	}
 	break;
       }
     case CB_TAG_REFERENCE:
@@ -646,55 +647,85 @@ output_integer (cb_tree x)
 	    return;
 
 	  case CB_USAGE_DISPLAY:
-	    if (cb_flag_runtime_inlining
-		&& f->pic->scale >= 0
-		&& f->size - f->pic->scale <= 4
-		&& f->pic->have_sign == 0)
-	      {
-		int i, j;
-		int size = f->size - f->pic->scale;
-		output ("(");
-		for (i = 0; i < size; i++)
-		  {
-		    output ("((");
-		    output_data (x);
-		    output (")");
-		    output ("[%d] - '0')", i);
-		    if (i + 1 < size)
-		      {
-			output (" * 1");
-			for (j = 1; j < size - i; j++)
-			  output ("0");
-			output (" + ");
-		      }
-		  }
-		output (")");
-		return;
-	      }
-	    break;
+		if ( f->pic->scale >= 0
+		  && f->size - f->pic->scale <= 9
+		  && f->pic->have_sign == 0) {
+			output ("cob_get_numdisp (");
+			output_data (x);
+			output (", %d)", f->size - f->pic->scale);
+			return;
+		}
+		break;
 
 	  case CB_USAGE_BINARY:
 	  case CB_USAGE_COMP_5:
 	  case CB_USAGE_COMP_X:
-	    if (cb_flag_runtime_inlining
-		&& !f->flag_binary_swap
-		&& (f->size == 1 || f->size == 2
-		    || f->size == 4 || f->size == 8))
-	      {
-		output ("(*(");
-		switch (f->size)
-		  {
-		  case 1: output ("char"); break;
-		  case 2: output ("short"); break;
-		  case 4: output ("int"); break;
-		  case 8: output ("long long"); break;
-		  }
-		output (" *) (");
-		output_data (x);
-		output ("))");
-		return;
-	      }
-	    break;
+		if ( f->size == 1 ) {
+			output ("(*(");
+			if ( !f->pic->have_sign ) {
+				output ("unsigned ");
+			}
+			output ("char *) (");
+			output_data (x);
+			output ("))");
+			return;
+		}
+#if defined(__i386__) || defined(__x86_64__) || defined(__powerpc__) || defined(__powerpc64__) ||defined(__ppc__) || defined(__amd64__)
+		if ( f->size == 2 || f->size == 4 || f->size == 8 ) {
+			if ( f->flag_binary_swap ) {
+				output ("((");
+				if ( !f->pic->have_sign ) {
+					output ("unsigned ");
+				}
+				switch (f->size) {
+					case 2:
+						output ("short)COB_BSWAP_16(");
+						break;
+					case 4:
+						output ("int)COB_BSWAP_32(");
+						break;
+					case 8:
+						output ("long long)COB_BSWAP_64(");
+						break;
+				}
+				output ("*(");
+				switch (f->size) {
+					case 2:
+						output ("short *)(");
+						break;
+					case 4:
+						output ("int *)(");
+						break;
+					case 8:
+						output ("long long *)(");
+						break;
+				}
+				output_data (x);
+				output (")))");
+				return;
+			} else {
+				output ("(*(");
+				if ( !f->pic->have_sign ) {
+					output ("unsigned ");
+				}
+				switch (f->size) {
+					case 2:
+						output ("short *)(");
+						break;
+					case 4:
+						output ("int *)(");
+						break;
+					case 8:
+						output ("long long *)(");
+						break;
+				}
+				output_data (x);
+				output ("))");
+				return;
+			}
+		}
+#endif
+		break;
 
 	  default:
 	    break;
@@ -826,7 +857,7 @@ output_param (cb_tree x, int id)
 			extrefs = 1;
 		}
 	}
-	if (!r->subs && !r->offset && !f->flag_local && f->count > 0
+	if (!r->subs && !r->offset && f->count > 0
 	    && !f->flag_external && !extrefs
 	    && !cb_field_variable_size (f) && !cb_field_variable_address (f))
 	  {
@@ -846,7 +877,13 @@ output_param (cb_tree x, int id)
 		f->flag_field = 1;
 		output_target = yyout;
 	      }
-	    output ("&%s%d", CB_PREFIX_FIELD, f->id);
+		if ( f->flag_local ) {
+			output ("(%s%d.data = ", CB_PREFIX_FIELD, f->id);
+			output_data (x);
+			output (", &%s%d)", CB_PREFIX_FIELD, f->id);
+		} else {
+			output ("&%s%d", CB_PREFIX_FIELD, f->id);
+		}
 	  }
 	else
 	  {
@@ -945,6 +982,39 @@ output_funcall (cb_tree x)
   cb_tree l;
   struct cb_funcall *p = CB_FUNCALL (x);
 
+  if (p->name[0] == '$') {
+/*
+	struct cb_field *f = cb_field (p->argv[0]);
+*/
+	switch (p->name[1]) {
+	case 'E':
+		/* Set of one character */
+		output ("*(");
+		output_data (p->argv[0]);
+		output (") = ");
+		output_param (p->argv[1], 1);
+		break;
+	case 'F':
+		/* Move of one character */
+		output ("*(");
+		output_data (p->argv[0]);
+		output (") = *(");
+		output_data (p->argv[1]);
+		output (")");
+		break;
+	case 'G':
+		/* Test of one character */
+		output ("(int)(*(");
+		output_data (p->argv[0]);
+		output (") - *(");
+		output_data (p->argv[1]);
+		output ("))");
+		break;
+	default:
+		ABORT();
+	}
+	return;
+  }
   output ("%s (", p->name);
   for (i = 0; i < p->argc; i++)
     {
@@ -2802,11 +2872,26 @@ codegen (struct cb_program *prog)
 
   /* prototype */
   output ("/* function prototypes */\n");
+  output ("static int cob_get_numdisp (unsigned char *data, int size);\n");
   output ("static int %s_ (int", prog->program_id);
   for (l = parameter_list; l; l = CB_CHAIN (l))
 	output (", unsigned char *");
-  output (");\n");
+  output (");\n\n");
 
+  output ("static int\n");
+  output ("cob_get_numdisp (unsigned char *data, int size)\n");
+  output ("{\n");
+  output ("	int	retval = 0;\n");
+  output ("\n");
+  output ("	if ( size > 0 ) {\n");
+  output ("		while ( size-- ) {\n");
+  output ("			retval *= 10;\n");
+  output ("			retval += (*data - '0');\n");
+  output ("			data++;;\n");
+  output ("		}\n");
+  output ("	}\n");
+  output ("	return retval;\n");
+  output ("}\n\n");
   /* main function */
   if (cb_flag_main) {
 	output ("int %s (void);\n\n", prog->program_id);
@@ -2845,9 +2930,11 @@ codegen (struct cb_program *prog)
 
   output_storage ("\n");
   for (k = field_cache; k; k = k->next) {
-	output ("static cob_field %s%d\t= ", CB_PREFIX_FIELD, k->f->id);
-	output_field (k->x);
-	output (";\t/* %s */\n", k->f->name);
+	if ( !k->f->flag_local ) {
+		output ("static cob_field %s%d\t= ", CB_PREFIX_FIELD, k->f->id);
+		output_field (k->x);
+		output (";\t/* %s */\n", k->f->name);
+	}
   }
 
   output_storage ("\n");
@@ -2855,6 +2942,19 @@ codegen (struct cb_program *prog)
 	output ("static cob_field %s%d\t= ", CB_PREFIX_CONST, m->id);
 	output_field (m->x);
 	output (";\n");
+  }
+
+  output_storage ("\n");
+  for (k = field_cache; k; k = k->next) {
+	if ( k->f->flag_local ) {
+		output ("static cob_field %s%d\t= ", CB_PREFIX_FIELD, k->f->id);
+		output ("{");
+		output_size (k->x);
+		output (", NULL, ");
+		output_attr (k->x);
+		output ("}");
+		output (";\t/* %s */\n", k->f->name);
+	}
   }
 
   output_storage ("\n");

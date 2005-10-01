@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2004 Keisuke Nishida
+ * Copyright (C) 2002-2005 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -26,10 +26,10 @@
  */
 
 typedef struct __cob_external {
-  struct __cob_external *next;
-  char			*ext_alloc;
-  char			*ename;
-  int			esize;
+	struct __cob_external	*next;
+	char			*ext_alloc;
+	char			*ename;
+	int			esize;
 } cob_external;
 
 /*
@@ -76,19 +76,19 @@ typedef struct __cob_external {
 /* field attributes */
 
 typedef struct {
-  char type;
-  char digits;
-  char scale;
-  char flags;
-  const char *pic;
+	char		type;
+	char		digits;
+	char		scale;
+	char		flags;
+	const char	*pic;
 } cob_field_attr;
 
 /* field structure */
 
 typedef struct {
-  size_t size;
-  unsigned char *data;
-  cob_field_attr *attr;
+	size_t		size;
+	unsigned char	*data;
+	cob_field_attr	*attr;
 } cob_field;
 
 #define COB_FIELD_TYPE(f)	((f)->attr->type)
@@ -108,27 +108,27 @@ typedef struct {
  */
 
 enum cob_display_sign {
-  COB_DISPLAY_SIGN_ASCII,
-  COB_DISPLAY_SIGN_EBCDIC,
-  COB_DISPLAY_SIGN_ASCII10,
-  COB_DISPLAY_SIGN_ASCII20,
+	COB_DISPLAY_SIGN_ASCII,
+	COB_DISPLAY_SIGN_EBCDIC,
+	COB_DISPLAY_SIGN_ASCII10,
+	COB_DISPLAY_SIGN_ASCII20
 };
 
 typedef struct __cob_module {
-  struct __cob_module *next;
-  const unsigned char *collating_sequence;
-  enum cob_display_sign display_sign;
-  unsigned char decimal_point;
-  unsigned char currency_symbol;
-  unsigned char numeric_separator;
-  unsigned char flag_filename_mapping;
-  unsigned char flag_binary_truncate;
-  unsigned char flag_pretty_display;
-  unsigned char spare7;
-  unsigned char spare8;
+struct __cob_module *next;
+	const unsigned char	*collating_sequence;
+	enum cob_display_sign	display_sign;
+	unsigned char		decimal_point;
+	unsigned char		currency_symbol;
+	unsigned char		numeric_separator;
+	unsigned char		flag_filename_mapping;
+	unsigned char		flag_binary_truncate;
+	unsigned char		flag_pretty_display;
+	unsigned char		spare7;
+	unsigned char		spare8;
 } cob_module;
 
-extern cob_module *cob_current_module;
+extern cob_module	*cob_current_module;
 
 
 /*
@@ -137,60 +137,60 @@ extern cob_module *cob_current_module;
 
 /* Exception identifier */
 enum cob_exception_id {
-  COB_EC_ZERO,
+	COB_EC_ZERO,
 #undef COB_EXCEPTION
 #define COB_EXCEPTION(CODE,TAG,NAME,CRITICAL) TAG,
 #include <libcob/exception.def>
-  COB_EC_MAX
+	COB_EC_MAX
 };
 
 /* Exception data table */
 extern struct cob_exception {
-  int code;
-  const char *name;
-  int critical;
+	int		code;
+	const char	*name;
+	int		critical;
 } cob_exception_table[];
 
 /* Set cob_exception_code from an exception id */
 #define COB_SET_EXCEPTION(id) \
-  cob_exception_code = cob_exception_table[id].code
+	cob_exception_code = cob_exception_table[id].code
 
-extern int cob_exception_code;
+extern int	cob_exception_code;
 
 
 /*
  * Global variables
  */
 
-extern int cob_initialized;
+extern int			cob_initialized;
 
-extern int cob_argc;
-extern char **cob_argv;
+extern int			cob_argc;
+extern char			**cob_argv;
 
-extern const char *cob_source_file;
-extern unsigned int cob_source_line;
-extern const char *cob_source_statement;
+extern const char		*cob_source_file;
+extern unsigned int		cob_source_line;
+extern const char		*cob_source_statement;
 
-extern int cob_linage_counter;
-extern int cob_call_params;
+extern int			cob_linage_counter;
+extern int			cob_call_params;
 
-extern cob_field cob_zero;		/* ZERO */
-extern cob_field cob_space;		/* SPACE */
-extern cob_field cob_high;		/* HIGH-VALUE */
-extern cob_field cob_low;		/* LOW-VALUE */
-extern cob_field cob_quote;		/* QUOTE */
+extern cob_field		cob_zero;		/* ZERO */
+extern cob_field		cob_space;		/* SPACE */
+extern cob_field		cob_high;		/* HIGH-VALUE */
+extern cob_field		cob_low;		/* LOW-VALUE */
+extern cob_field		cob_quote;		/* QUOTE */
 
-extern const int cob_exp10[];
-extern const long long cob_exp10LL[];
-extern const unsigned char cob_a2e[];	/* ASCII -> EBCDIC */
-extern const unsigned char cob_e2a[];	/* EBCDIC -> ASCII */
+extern const int		cob_exp10[];
+extern const long long		cob_exp10LL[];
+extern const unsigned char	cob_a2e[];	/* ASCII -> EBCDIC */
+extern const unsigned char	cob_e2a[];	/* EBCDIC -> ASCII */
 
 
 /* convert a digit (e.g., '0') into an integer (e.g., 0) */
-#define cob_d2i(x)	((x) - '0')
+#define cob_d2i(x)		((x) - '0')
 
 /* convert an integer (e.g., 0) into a digit (e.g., '0') */
-#define cob_i2d(x)	((x) + '0')
+#define cob_i2d(x)		((x) + '0')
 
 
 /*

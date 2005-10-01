@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Keisuke Nishida
+ * Copyright (C) 2001-2005 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,6 @@
 #include "tree.h"
 #include "lib/getopt.h"
 
-
 /*
  * Global variables
  */
@@ -47,11 +46,11 @@ enum cb_source_format cb_source_format = CB_FORMAT_FIXED;
 int cb_source_format = CB_FORMAT_FIXED;
 
 struct cb_exception cb_exception_table[] = {
-  {0, 0, 0},		/* CB_EC_ZERO */
+	{0, 0, 0},		/* CB_EC_ZERO */
 #undef COB_EXCEPTION
 #define COB_EXCEPTION(code,tag,name,critical) {0x##code, name, 0},
 #include <libcob/exception.def>
-  {0, 0, 0}		/* CB_EC_MAX */
+	{0, 0, 0}		/* CB_EC_MAX */
 };
 
 #undef CB_FLAG
@@ -64,75 +63,73 @@ struct cb_exception cb_exception_table[] = {
 
 int cb_id = 1;
 
-int errorcount;
-int warningcount;
+int			errorcount = 0;
+int			warningcount = 0;
 
-char *cb_source_file = NULL;
-int cb_source_line = 0;
+char			*cb_source_file = NULL;
+int			cb_source_line = 0;
 
-FILE *cb_storage_file;
-char *cb_storage_file_name;
+FILE			*cb_storage_file;
+char			*cb_storage_file_name;
 
-FILE *cb_listing_file = NULL;
-FILE *cb_depend_file = NULL;
-char *cb_depend_target = NULL;
-struct cb_text_list *cb_depend_list = NULL;
-struct cb_text_list *cb_include_list = NULL;
-struct cb_text_list *cb_extension_list = NULL;
+FILE			*cb_listing_file = NULL;
+FILE			*cb_depend_file = NULL;
+char			*cb_depend_target = NULL;
+struct cb_text_list	*cb_depend_list = NULL;
+struct cb_text_list	*cb_include_list = NULL;
+struct cb_text_list	*cb_extension_list = NULL;
 
-struct cb_program *current_program = NULL;
-struct cb_statement *current_statement = NULL;
-struct cb_label *current_section = NULL, *current_paragraph = NULL;
+struct cb_program	*current_program = NULL;
+struct cb_statement	*current_statement = NULL;
+struct cb_label		*current_section = NULL, *current_paragraph = NULL;
 
-jmp_buf	cob_jmpbuf;
+jmp_buf			cob_jmpbuf;
 
 /*
  * Local variables
  */
 
-static int save_temps = 0;
-static int verbose_output = 0;
+static int		save_temps = 0;
+static int		verbose_output = 0;
 
-static int	strip_output = 0;
-static int	gflag_set = 0;
+static int		strip_output = 0;
+static int		gflag_set = 0;
 
-static char *program_name;
-static char *output_name;
+static char		*program_name;
+static char		*output_name;
 
-static char tmpdir[FILENAME_MAX];		/* /tmp */
-static char cob_cc[FILENAME_MAX];		/* gcc */
-static char cob_cflags[FILENAME_MAX];		/* -I... */
-static char cob_libs[FILENAME_MAX];		/* -L... -lcob */
-static char cob_ldflags[FILENAME_MAX];
-char cob_config_dir[FILENAME_MAX];
+static char		tmpdir[FILENAME_MAX];	/* /tmp */
+static char		cob_cc[FILENAME_MAX];	/* gcc */
+static char		cob_cflags[FILENAME_MAX];	/* -I... */
+static char		cob_libs[FILENAME_MAX];	/* -L... -lcob */
+static char		cob_ldflags[FILENAME_MAX];
+char			cob_config_dir[FILENAME_MAX];
 
 static struct filename {
-  int need_preprocess;
-  int need_translate;
-  int need_assemble;
-  char source[FILENAME_MAX];			/* foo.cob */
-  char preprocess[FILENAME_MAX];		/* foo.i */
-  char translate[FILENAME_MAX];			/* foo.c */
-  char trstorage[FILENAME_MAX];			/* foo.c.h */
-  char object[FILENAME_MAX];			/* foo.o */
-  struct filename *next;
+	int		need_preprocess;
+	int		need_translate;
+	int		need_assemble;
+	char		source[FILENAME_MAX];		/* foo.cob */
+	char		preprocess[FILENAME_MAX];	/* foo.i */
+	char		translate[FILENAME_MAX];	/* foo.c */
+	char		trstorage[FILENAME_MAX];	/* foo.c.h */
+	char		object[FILENAME_MAX];		/* foo.o */
+	struct filename *next;
 } *file_list;
 
-
 #if defined (__GNUC__) && (__GNUC__ >= 3)
-static const char	fcopts[] =
-	" -finline-functions -fno-gcse -freorder-blocks";
+static const char fcopts[] = " -finline-functions -fno-gcse -freorder-blocks";
 #else
-static const char	fcopts[] = " ";
+static const char fcopts[] = " ";
 #endif
 
 void *
 cob_malloc (const size_t size)
 {
-	void	*mptr;
+	void *mptr;
 
 	mptr = malloc (size);
-	if ( !mptr ) {
+	if (!mptr) {
 		fprintf (stderr, "Cannot acquire %d bytes of memory - Aborting\n", size);
 		fflush (stderr);
 		(void)longjmp (cob_jmpbuf, 1);
@@ -144,20 +141,18 @@ cob_malloc (const size_t size)
 struct cb_text_list *
 cb_text_list_add (struct cb_text_list *list, const char *text)
 {
-  struct cb_text_list *p = cob_malloc (sizeof (struct cb_text_list));
-  p->text = strdup (text);
-  p->next = NULL;
-  if (!list)
-    return p;
-  else
-    {
-      struct cb_text_list *l;
-      for (l = list; l->next; l = l->next);
-      l->next = p;
-      return list;
-    }
+	struct cb_text_list *p = cob_malloc (sizeof (struct cb_text_list));
+	p->text = strdup (text);
+	p->next = NULL;
+	if (!list) {
+		return p;
+	} else {
+		struct cb_text_list *l;
+		for (l = list; l->next; l = l->next) { ; }
+		l->next = p;
+		return list;
+	}
 }
-
 
 /*
  * Local functions
@@ -166,53 +161,54 @@ cb_text_list_add (struct cb_text_list *list, const char *text)
 static void
 init_var (char *var, const char *env, const char *def)
 {
-  char *p = getenv (env);
-  if (p)
-    strcpy (var, p);
-  else
-    strcpy (var, def);
+	char *p = getenv (env);
+
+	if (p) {
+		strcpy (var, p);
+	} else {
+		strcpy (var, def);
+	}
 }
 
 static void
 init_environment (int argc, char *argv[])
 {
-  char *p;
+	char *p;
 
-  /* Initialize program_name */
-  program_name = strrchr (argv[0], '/');
-  if (program_name)
-    program_name++;
-  else
-    program_name = argv[0];
+	/* Initialize program_name */
+	program_name = strrchr (argv[0], '/');
+	if (program_name) {
+		program_name++;
+	} else {
+		program_name = argv[0];
+	}
 
-  output_name = NULL;
+	output_name = NULL;
 
-  init_var (tmpdir,      "TMPDIR",     "/tmp");
-  init_var (cob_cc,      "COB_CC",     COB_CC);
+	init_var (tmpdir, "TMPDIR", "/tmp");
+	init_var (cob_cc, "COB_CC", COB_CC);
 #if defined (__GNUC__) && (__GNUC__ >= 3)
-  strcat (cob_cc, " -pipe");
+	strcat (cob_cc, " -pipe");
 #endif
-  init_var (cob_cflags,  "COB_CFLAGS", COB_CFLAGS);
-  init_var (cob_libs,    "COB_LIBS",   COB_LIBS);
-  init_var (cob_ldflags, "COB_LDFLAGS", "");
-  init_var (cob_config_dir, "COB_CONFIG_DIR", COB_CONFIG_DIR);
+	init_var (cob_cflags, "COB_CFLAGS", COB_CFLAGS);
+	init_var (cob_libs, "COB_LIBS", COB_LIBS);
+	init_var (cob_ldflags, "COB_LDFLAGS", "");
+	init_var (cob_config_dir, "COB_CONFIG_DIR", COB_CONFIG_DIR);
 
-  p = getenv ("COB_LDADD");
-  if (p)
-    {
-      strcat (cob_libs, " ");
-      strcat (cob_libs, p);
-    }
+	p = getenv ("COB_LDADD");
+	if (p) {
+		strcat (cob_libs, " ");
+		strcat (cob_libs, p);
+	}
 }
 
 static void
 terminate (const char *str)
 {
-  fprintf (stderr, "%s: ", program_name);
-  perror (str);
-  exit (1);
+	fprintf (stderr, "%s: ", program_name);
+	perror (str);
+	exit (1);
 }
-
 
 /*
  * Command line
@@ -221,575 +217,607 @@ terminate (const char *str)
 static char short_options[] = "hVvECScmOgwo:t:I:L:l:";
 
 static struct option long_options[] = {
-  {"help", no_argument, 0, 'h'},
-  {"version", no_argument, 0, 'V'},
-  {"verbose", no_argument, 0, 'v'},
-  {"list-reserved", no_argument, 0, 'R'},
-  {"save-temps", no_argument, &save_temps, 1},
-  {"std", required_argument, 0, '$'},
-  {"conf", required_argument, 0, '&'},
-  {"debug", no_argument, 0, 'd'},
-  {"ext", required_argument, 0, 'e'},
-  {"free", no_argument, &cb_source_format, CB_FORMAT_FREE},
-  {"fixed", no_argument, &cb_source_format, CB_FORMAT_FIXED},
-  {"static", no_argument, &cb_flag_static_call, 1},
-  {"dynamic", no_argument, &cb_flag_static_call, 0},
-  {"dynopt", no_argument, &cb_flag_static_call, 2},
-  {"O2", no_argument, 0, '2'},
-  {"Os", no_argument, 0, 's'},
-  {"MT", required_argument, 0, '%'},
-  {"MF", required_argument, 0, '@'},
+	{"help", no_argument, 0, 'h'},
+	{"version", no_argument, 0, 'V'},
+	{"verbose", no_argument, 0, 'v'},
+	{"list-reserved", no_argument, 0, 'R'},
+	{"save-temps", no_argument, &save_temps, 1},
+	{"std", required_argument, 0, '$'},
+	{"conf", required_argument, 0, '&'},
+	{"debug", no_argument, 0, 'd'},
+	{"ext", required_argument, 0, 'e'},
+	{"free", no_argument, &cb_source_format, CB_FORMAT_FREE},
+	{"fixed", no_argument, &cb_source_format, CB_FORMAT_FIXED},
+	{"static", no_argument, &cb_flag_static_call, 1},
+	{"dynamic", no_argument, &cb_flag_static_call, 0},
+	{"dynopt", no_argument, &cb_flag_static_call, 2},
+	{"O2", no_argument, 0, '2'},
+	{"Os", no_argument, 0, 's'},
+	{"MT", required_argument, 0, '%'},
+	{"MF", required_argument, 0, '@'},
 #undef CB_FLAG
 #define CB_FLAG(var,name,doc)			\
-  {"f"name, no_argument, &var, 1},		\
-  {"fno-"name, no_argument, &var, 0},
+	{"f"name, no_argument, &var, 1},	\
+	{"fno-"name, no_argument, &var, 0},
 #include "flag.def"
-  {"Wall", no_argument, 0, 'W'},
+	{"Wall", no_argument, 0, 'W'},
 #undef CB_WARNING
 #define CB_WARNING(sig,var,name,doc)		\
-  {"W"name, no_argument, &var, 1},		\
-  {"Wno-"name, no_argument, &var, 0},
+	{"W"name, no_argument, &var, 1},	\
+	{"Wno-"name, no_argument, &var, 0},
 #include "warning.def"
-  {0, 0, 0, 0}
+	{0, 0, 0, 0}
 };
 
 static void
 print_version (void)
 {
-  puts ("cobc (" PACKAGE_NAME ") " PACKAGE_VERSION);
-  puts ("Copyright (C) 2001-2005 Keisuke Nishida");
+	printf ("cobc (%s) %s.%d\n", PACKAGE_NAME, PACKAGE_VERSION, PATCH_LEVEL);
+	puts ("Copyright (C) 2001-2005 Keisuke Nishida");
 }
 
 static void
 print_usage (void)
 {
-  printf ("Usage: %s [options] file...\n\n", program_name);
-  puts (_("Options:\n"
-"  --help                Display this message\n"
-"  --version             Display compiler version\n"
-"  --verbose, -v         Display the programs invoked by the compiler\n"
-"  --list-reserved       Display all reserved words\n"
-"  -save-temps           Do not delete intermediate files\n"
-"  -E                    Preprocess only; do not compile, assemble or link\n"
-"  -C                    Translation only; convert COBOL to C\n"
-"  -S                    Compile only; output assembly file\n"
-"  -c                    Compile and assemble, but do not link\n"
-"  -m                    Build a dynamic-linking module\n"
-"  -std=<dialect>        Compile for a specific dialect :\n"
-"                          cobol2002   Cobol 2002\n"
-"                          cobol85     Cobol 85\n"
-"                          ibm         IBM Compatible\n"
-"                          mvs         MVS Compatible\n"
-"                          mf          Micro Focus Compatible\n"
-"                          v023        Open Cobol V23 Compatible (deprecated)\n"
-"                          default     When not specified\n"
-"                        See config/default.conf and config/*.conf\n"
-"  -O, -O2, -Os          Enable optimization\n"
-"  -g                    Produce debugging information in the output\n"
-"  -debug                Enable all run-time error checking\n"
-"  -o <file>             Place the output into <file>\n"
-"  -t <file>             Place the listing into <file>\n"
-"  -I <directory>        Add <directory> to copybook search path\n"
-"  -L <directory>        Add <directory> to library search path\n"
-"  -l <lib>              Link the library <lib>\n"
-"  -MT <target>          Set target file used in dependency list\n"
-"  -MF <file>            Place dependency list into <file>\n"
-"  -free                 Use free source format\n"
-"  -fixed                Use fixed source format\n"
-"  -ext <extension>      Add default file extension\n"
-"\n"
-"  -Wall                 Enable all warnings"));
+	printf ("Usage: %s [options] file...\n\n", program_name);
+	puts (_("Options:\n"
+		"  --help                Display this message\n"
+		"  --version             Display compiler version\n"
+		"  --verbose, -v         Display the programs invoked by the compiler\n"
+		"  --list-reserved       Display all reserved words\n"
+		"  -save-temps           Do not delete intermediate files\n"
+		"  -E                    Preprocess only; do not compile, assemble or link\n"
+		"  -C                    Translation only; convert COBOL to C\n"
+		"  -S                    Compile only; output assembly file\n"
+		"  -c                    Compile and assemble, but do not link\n"
+		"  -m                    Build a dynamic-linking module\n"
+		"  -std=<dialect>        Compile for a specific dialect :\n"
+		"                          cobol2002   Cobol 2002\n"
+		"                          cobol85     Cobol 85\n"
+		"                          ibm         IBM Compatible\n"
+		"                          mvs         MVS Compatible\n"
+		"                          mf          Micro Focus Compatible\n"
+		"                          v023        Open Cobol V23 Compatible (deprecated)\n"
+		"                          default     When not specified\n"
+		"                        See config/default.conf and config/*.conf\n"
+		"  -O, -O2, -Os          Enable optimization\n"
+		"  -g                    Produce debugging information in the output\n"
+		"  -debug                Enable all run-time error checking\n"
+		"  -o <file>             Place the output into <file>\n"
+		"  -t <file>             Place the listing into <file>\n"
+		"  -I <directory>        Add <directory> to copybook search path\n"
+		"  -L <directory>        Add <directory> to library search path\n"
+		"  -l <lib>              Link the library <lib>\n"
+		"  -MT <target>          Set target file used in dependency list\n"
+		"  -MF <file>            Place dependency list into <file>\n"
+		"  -free                 Use free source format\n"
+		"  -fixed                Use fixed source format\n"
+		"  -ext <extension>      Add default file extension\n"
+		"\n" "  -Wall                 Enable all warnings"));
 #undef CB_WARNING
 #define CB_WARNING(sig,var,name,doc)		\
-  printf ("  -W%-19s %s\n", name, gettext (doc));
+	printf ("  -W%-19s %s\n", name, gettext (doc));
 #include "warning.def"
-  puts ("");
+	puts ("");
 #undef CB_FLAG
 #define CB_FLAG(var,name,doc)			\
-  printf ("  -f%-19s %s\n", name, gettext (doc));
+	printf ("  -f%-19s %s\n", name, gettext (doc));
 #include "flag.def"
-  puts ("");
+	puts ("");
 }
 
 static int
 process_command_line (int argc, char *argv[])
 {
-  int c, idx;
+	int c, idx;
 
-  /* default extension list */
-  cb_extension_list = cb_text_list_add (cb_extension_list, "");
-  cb_extension_list = cb_text_list_add (cb_extension_list, ".CBL");
-  cb_extension_list = cb_text_list_add (cb_extension_list, ".COB");
-  cb_extension_list = cb_text_list_add (cb_extension_list, ".cbl");
-  cb_extension_list = cb_text_list_add (cb_extension_list, ".cob");
+	/* default extension list */
+	cb_extension_list = cb_text_list_add (cb_extension_list, "");
+	cb_extension_list = cb_text_list_add (cb_extension_list, ".CBL");
+	cb_extension_list = cb_text_list_add (cb_extension_list, ".COB");
+	cb_extension_list = cb_text_list_add (cb_extension_list, ".cbl");
+	cb_extension_list = cb_text_list_add (cb_extension_list, ".cob");
 
-  /* Enable default I/O exceptions */
-  CB_EXCEPTION_ENABLE (COB_EC_I_O) = 1;
+	/* Enable default I/O exceptions */
+	CB_EXCEPTION_ENABLE (COB_EC_I_O) = 1;
 
-  while ((c = getopt_long_only (argc, argv, short_options,
-				long_options, &idx)) >= 0)
-    {
-      switch (c)
-	{
-	case 0: break;
-	case '?': break;
-	case 'h': print_usage (); exit (0);
-	case 'V': print_version (); exit (0);
-	case 'R': cb_list_reserved (); exit (0);
+	while ((c = getopt_long_only (argc, argv, short_options, long_options, &idx)) >= 0) {
+		switch (c) {
+		case 0:
+			break;
+		case '?':
+			break;
+		case 'h':
+			print_usage ();
+			exit (0);
+		case 'V':
+			print_version ();
+			exit (0);
+		case 'R':
+			cb_list_reserved ();
+			exit (0);
 
-	case 'E': cb_compile_level = CB_LEVEL_PREPROCESS; break;
-	case 'C': cb_compile_level = CB_LEVEL_TRANSLATE; break;
-	case 'S': cb_compile_level = CB_LEVEL_COMPILE; break;
-	case 'c': cb_compile_level = CB_LEVEL_ASSEMBLE; break;
-	case 'm': cb_compile_level = CB_LEVEL_MODULE; break;
-	case 'v': verbose_output = 1; break;
-	case 'o': output_name = strdup (optarg); break;
+		case 'E':
+			cb_compile_level = CB_LEVEL_PREPROCESS;
+			break;
+		case 'C':
+			cb_compile_level = CB_LEVEL_TRANSLATE;
+			break;
+		case 'S':
+			cb_compile_level = CB_LEVEL_COMPILE;
+			break;
+		case 'c':
+			cb_compile_level = CB_LEVEL_ASSEMBLE;
+			break;
+		case 'm':
+			cb_compile_level = CB_LEVEL_MODULE;
+			break;
+		case 'v':
+			verbose_output = 1;
+			break;
+		case 'o':
+			output_name = strdup (optarg);
+			break;
 
-	case 'O':
-	  cb_flag_runtime_inlining = 1;
-	  strcat (cob_cflags, " -O");
-	  strcat (cob_cflags, fcopts);
-	  break;
+		case 'O':
+			cb_flag_runtime_inlining = 1;
+			strcat (cob_cflags, " -O");
+			strcat (cob_cflags, fcopts);
+			break;
 
-	case '2': /* -O2 */
-	  cb_flag_runtime_inlining = 1;
-	  strip_output = 1;
-	  strcat (cob_cflags, " -O2");
-	  strcat (cob_cflags, fcopts);
-	  break;
+		case '2':	/* -O2 */
+			cb_flag_runtime_inlining = 1;
+			strip_output = 1;
+			strcat (cob_cflags, " -O2");
+			strcat (cob_cflags, fcopts);
+			break;
 
-	case 's': /* -Os */
-	  cb_flag_runtime_inlining = 1;
-	  strip_output = 1;
-	  strcat (cob_cflags, " -Os");
-	  strcat (cob_cflags, fcopts);
-	  break;
+		case 's':	/* -Os */
+			cb_flag_runtime_inlining = 1;
+			strip_output = 1;
+			strcat (cob_cflags, " -Os");
+			strcat (cob_cflags, fcopts);
+			break;
 
-	case 'g':
-	  cb_flag_line_directive = 1;
-	  gflag_set = 1;
-	  strcat (cob_cflags, " -g");
-	  break;
+		case 'g':
+			cb_flag_line_directive = 1;
+			gflag_set = 1;
+			strcat (cob_cflags, " -g");
+			break;
 
-	case '$': /* -std */
-	  if (cb_load_std (optarg) != 0)
-	    {
-	      fprintf (stderr, _("Invalid option -std=%s\n"), optarg);
-	      exit (1);
-	    }
-	  break;
+		case '$':	/* -std */
+			if (cb_load_std (optarg) != 0) {
+				fprintf (stderr, _("Invalid option -std=%s\n"), optarg);
+				exit (1);
+			}
+			break;
 
-	case '&': /* -conf */
-	  if (cb_load_conf (optarg, 1) != 0)
-	    exit (1);
-	  break;
+		case '&':	/* -conf */
+			if (cb_load_conf (optarg, 1) != 0) {
+				exit (1);
+			}
+			break;
 
-	case 'd': /* -debug */
-	  {
-	    /* Turn on all exception conditions */
-	    enum cob_exception_id i;
-	    for (i = 1; i < COB_EC_MAX; i++)
-	      CB_EXCEPTION_ENABLE (i) = 1;
-	    cb_flag_source_location = 1;
-	    break;
-	  }
+		case 'd':	/* -debug */
+		{
+			/* Turn on all exception conditions */
+			enum cob_exception_id i;
+			for (i = 1; i < COB_EC_MAX; i++) {
+				CB_EXCEPTION_ENABLE (i) = 1;
+			}
+			cb_flag_source_location = 1;
+			break;
+		}
 
-	case 't':
-	  cb_listing_file = fopen (optarg, "w");
-	  if (!cb_listing_file)
-	    perror (optarg);
-	  break;
+		case 't':
+			cb_listing_file = fopen (optarg, "w");
+			if (!cb_listing_file) {
+				perror (optarg);
+			}
+			break;
 
-	case '%': /* -MT */
-	  cb_depend_target = strdup (optarg);
-	  break;
+		case '%':	/* -MT */
+			cb_depend_target = strdup (optarg);
+			break;
 
-	case '@': /* -MF */
-	  cb_depend_file = fopen (optarg, "w");
-	  if (!cb_depend_file)
-	    perror (optarg);
-	  break;
+		case '@':	/* -MF */
+			cb_depend_file = fopen (optarg, "w");
+			if (!cb_depend_file) {
+				perror (optarg);
+			}
+			break;
 
-	case 'I':
-	  cb_include_list = cb_text_list_add (cb_include_list, optarg);
-	  break;
+		case 'I':
+			cb_include_list = cb_text_list_add (cb_include_list, optarg);
+			break;
 
-	case 'L':
-	  strcat (cob_libs, " -L");
-	  strcat (cob_libs, optarg);
-	  break;
+		case 'L':
+			strcat (cob_libs, " -L");
+			strcat (cob_libs, optarg);
+			break;
 
-	case 'l':
-	  strcat (cob_libs, " -l");
-	  strcat (cob_libs, optarg);
-	  break;
+		case 'l':
+			strcat (cob_libs, " -l");
+			strcat (cob_libs, optarg);
+			break;
 
-	case 'e':
-	  {
-	    char ext[strlen (optarg) + 2];
-	    sprintf (ext, ".%s", optarg);
-	    cb_extension_list = cb_text_list_add (cb_extension_list, ext);
-	    break;
-	  }
+		case 'e':
+		{
+			char ext[strlen (optarg) + 2];
+			sprintf (ext, ".%s", optarg);
+			cb_extension_list = cb_text_list_add (cb_extension_list, ext);
+			break;
+		}
 
-	case 'w':
+		case 'w':
 #undef CB_WARNING
 #define CB_WARNING(sig,var,name,doc)		\
           var = 0;
 #include "warning.def"
-	  break;
+			break;
 
-	case 'W':
+		case 'W':
 #undef CB_WARNING
 #define CB_WARNING(sig,var,name,doc)		\
           var = 1;
 #include "warning.def"
-	  break;
+			break;
 
-	default:
-	  ABORT ();
+		default:
+			ABORT ();
+		}
 	}
-    }
 
-  if (cb_config_name == NULL)
-    if (cb_load_std ("default") != 0)
-      {
-	fprintf (stderr, "error: failed to load the initial config file\n");
-	exit (1);
-      }
+	if (cb_config_name == NULL) {
+		if (cb_load_std ("default") != 0) {
+			fprintf (stderr, "error: failed to load the initial config file\n");
+			exit (1);
+		}
+	}
 
-  strcat (cob_cflags, " -fsigned-char");
+	strcat (cob_cflags, " -fsigned-char");
 
-  if (cb_compile_level == CB_LEVEL_EXECUTABLE)
-    cb_flag_main = 1;
+	if (cb_compile_level == CB_LEVEL_EXECUTABLE) {
+		cb_flag_main = 1;
+	}
 
-  if ( gflag_set ) {
-	strip_output = 0;
-  }
-
+	if (gflag_set) {
+		strip_output = 0;
+	}
 #if defined (__GNUC__) && (__GNUC__ >= 3)
-  if ( strip_output ) {
-	strcat (cob_cflags, " -fomit-frame-pointer");
-  }
+	if (strip_output) {
+		strcat (cob_cflags, " -fomit-frame-pointer");
+	}
 #endif
 
-  return optind;
+	return optind;
 }
 
 static void
 file_basename (const char *filename, char *buff)
 {
-  int len;
-  const char *startp, *endp;
+	int		len;
+	const char	*startp, *endp;
 
-  /* Remove directory name */
-  startp = strrchr (filename, '/');
-  if (startp)
-    startp++;
-  else
-    startp = filename;
+	/* Remove directory name */
+	startp = strrchr (filename, '/');
+	if (startp) {
+		startp++;
+	} else {
+		startp = filename;
+	}
 
-  /* Remove extension */
-  endp = strrchr (filename, '.');
-  if (endp > startp)
-    len = endp - startp;
-  else
-    len = strlen (startp);
+	/* Remove extension */
+	endp = strrchr (filename, '.');
+	if (endp > startp) {
+		len = endp - startp;
+	} else {
+		len = strlen (startp);
+	}
 
-  /* Copy base name */
-  strncpy (buff, startp, len);
-  buff[len] = '\0';
+	/* Copy base name */
+	strncpy (buff, startp, len);
+	buff[len] = '\0';
 }
 
 static const char *
 file_extension (const char *filename)
 {
-  const char *p = strrchr (filename, '.');
-  if (p)
-    return p + 1;
-  else
-    return "";
+	const char *p = strrchr (filename, '.');
+
+	if (p) {
+		return p + 1;
+	} else {
+		return "";
+	}
 }
 
 static void
 temp_name (char *buff, const char *ext)
 {
 #ifdef _WIN32
-  char temp[MAX_PATH];
-  GetTempPath (MAX_PATH, temp);
-  GetTempFileName (temp, "cob", 0, buff);
-  DeleteFile(buff);
-  strcpy (buff + strlen (buff) - 4, ext); /* replace ".tmp" by EXT */
+	char	temp[MAX_PATH];
+
+	GetTempPath (MAX_PATH, temp);
+	GetTempFileName (temp, "cob", 0, buff);
+	DeleteFile (buff);
+	strcpy (buff + strlen (buff) - 4, ext);	/* replace ".tmp" by EXT */
 #else
-  sprintf (buff, "%s/cobXXXXXX", tmpdir);
-  close (mkstemp (buff));
-  unlink (buff);
-  strcat (buff, ext);
+	sprintf (buff, "%s/cobXXXXXX", tmpdir);
+	close (mkstemp (buff));
+	unlink (buff);
+	strcat (buff, ext);
 #endif
 }
 
 static struct filename *
 process_filename (const char *filename)
 {
-  char basename[FILENAME_MAX];
-  const char *extension;
-  struct filename *fn = cob_malloc (sizeof (struct filename));
-  fn->need_preprocess = 1;
-  fn->need_translate  = 1;
-  fn->need_assemble   = 1;
-  fn->next = NULL;
+	const char	*extension;
+	struct filename	*fn = cob_malloc (sizeof (struct filename));
+	char		basename[FILENAME_MAX];
 
-  file_basename (filename, basename);
-  extension = file_extension (filename);
+	fn->need_preprocess = 1;
+	fn->need_translate = 1;
+	fn->need_assemble = 1;
+	fn->next = NULL;
 
-  /* Check input file type */
-  if (strcmp (extension, "i") == 0)
-    {
-      /* already preprocessed */
-      fn->need_preprocess = 0;
-    }
-  else if (strcmp (extension, "c") == 0 || strcmp (extension, "s") == 0)
-    {
-      /* already compiled */
-      fn->need_preprocess = 0;
-      fn->need_translate  = 0;
-    }
-  else if (strcmp (extension, "o") == 0)
-    {
-      /* already assembled */
-      fn->need_preprocess = 0;
-      fn->need_translate  = 0;
-      fn->need_assemble   = 0;
-    }
+	file_basename (filename, basename);
+	extension = file_extension (filename);
 
-  /* Set source filename */
-  strcpy (fn->source, filename);
+	/* Check input file type */
+	if (strcmp (extension, "i") == 0) {
+		/* already preprocessed */
+		fn->need_preprocess = 0;
+	} else if (strcmp (extension, "c") == 0 || strcmp (extension, "s") == 0) {
+		/* already compiled */
+		fn->need_preprocess = 0;
+		fn->need_translate = 0;
+	} else if (strcmp (extension, "o") == 0) {
+		/* already assembled */
+		fn->need_preprocess = 0;
+		fn->need_translate = 0;
+		fn->need_assemble = 0;
+	}
 
-  /* Set preprocess filename */
-  if (!fn->need_preprocess)
-    strcpy (fn->preprocess, fn->source);
-  else if (output_name && cb_compile_level == CB_LEVEL_PREPROCESS)
-    strcpy (fn->preprocess, output_name);
-  else if (save_temps)
-    sprintf (fn->preprocess, "%s.i", basename);
-  else
-    temp_name (fn->preprocess, ".cob");
+	/* Set source filename */
+	strcpy (fn->source, filename);
 
-  /* Set translate filename */
-  if (!fn->need_translate)
-    strcpy (fn->translate, fn->source);
-  else if (output_name && cb_compile_level == CB_LEVEL_TRANSLATE)
-    strcpy (fn->translate, output_name);
-  else if (save_temps || cb_compile_level == CB_LEVEL_TRANSLATE)
-    sprintf (fn->translate, "%s.c", basename);
-  else
-    temp_name (fn->translate, ".c");
+	/* Set preprocess filename */
+	if (!fn->need_preprocess) {
+		strcpy (fn->preprocess, fn->source);
+	} else if (output_name && cb_compile_level == CB_LEVEL_PREPROCESS) {
+		strcpy (fn->preprocess, output_name);
+	} else if (save_temps) {
+		sprintf (fn->preprocess, "%s.i", basename);
+	} else {
+		temp_name (fn->preprocess, ".cob");
+	}
 
-  /* Set object filename */
-  if (!fn->need_assemble)
-    strcpy (fn->object, fn->source);
-  else if (output_name && cb_compile_level == CB_LEVEL_ASSEMBLE)
-    strcpy (fn->object, output_name);
-  else if (save_temps || cb_compile_level == CB_LEVEL_ASSEMBLE)
-    sprintf (fn->object, "%s.o", basename);
-  else
-    temp_name (fn->object, ".o");
+	/* Set translate filename */
+	if (!fn->need_translate) {
+		strcpy (fn->translate, fn->source);
+	} else if (output_name && cb_compile_level == CB_LEVEL_TRANSLATE) {
+		strcpy (fn->translate, output_name);
+	} else if (save_temps || cb_compile_level == CB_LEVEL_TRANSLATE) {
+		sprintf (fn->translate, "%s.c", basename);
+	} else {
+		temp_name (fn->translate, ".c");
+	}
 
-  return fn;
+	/* Set object filename */
+	if (!fn->need_assemble) {
+		strcpy (fn->object, fn->source);
+	} else if (output_name && cb_compile_level == CB_LEVEL_ASSEMBLE) {
+		strcpy (fn->object, output_name);
+	} else if (save_temps || cb_compile_level == CB_LEVEL_ASSEMBLE) {
+		sprintf (fn->object, "%s.o", basename);
+	} else {
+		temp_name (fn->object, ".o");
+	}
+
+	return fn;
 }
 
 static int
 process (const char *cmd)
 {
-  char *p;
-  char buff[BUFSIZ];
+	char *p;
+	char buff[BUFSIZ];
 
-  p = buff;
-  /* quote '$' */
-  for (; *cmd; cmd++)
-    if (*cmd == '$')
-      p += sprintf (p, "\\$");
-    else
-      *p++ = *cmd;
-  *p = 0;
+	p = buff;
+	/* quote '$' */
+	for (; *cmd; cmd++) {
+		if (*cmd == '$') {
+			p += sprintf (p, "\\$");
+		} else {
+			*p++ = *cmd;
+		}
+	}
+	*p = 0;
 
-  if (verbose_output)
-    fprintf (stderr, "%s\n", buff);
-  return system (buff);
+	if (verbose_output) {
+		fprintf (stderr, "%s\n", buff);
+	}
+	return system (buff);
 }
 
 static int
 preprocess (struct filename *fn)
 {
-  errorcount = 0;
+	errorcount = 0;
 
-  ppout = stdout;
-  if (output_name || cb_compile_level > CB_LEVEL_PREPROCESS)
-    {
-      ppout = fopen (fn->preprocess, "w");
-      if (!ppout)
-	terminate (fn->preprocess);
-    }
-
-  if (ppopen (fn->source, NULL) != 0) {
-    if ( ppout != stdout ) {
-	fclose(ppout);
-	unlink(fn->preprocess);
-    }
-    exit (1);
-  }
-
-  if (verbose_output)
-    fprintf (stderr, "preprocessing %s into %s\n",
-	     fn->source, fn->preprocess);
-  ppparse ();
-
-  fclose (ppout);
-  fclose (ppin);
-
-  if (errorcount > 0)
-    return -1;
-
-  /* Output dependency list */
-  if (cb_depend_file)
-    {
-      struct cb_text_list *l;
-      if (!cb_depend_target)
-	{
-	  fputs (_("-MT must be given to specify target file\n"), stderr);
-	  exit (1);
+	ppout = stdout;
+	if (output_name || cb_compile_level > CB_LEVEL_PREPROCESS) {
+		ppout = fopen (fn->preprocess, "w");
+		if (!ppout) {
+			terminate (fn->preprocess);
+		}
 	}
-      fprintf (cb_depend_file, "%s: \\\n", cb_depend_target);
-      for (l = cb_depend_list; l; l = l->next)
-	fprintf (cb_depend_file, " %s%s\n", l->text, l->next ? " \\" : "");
-      for (l = cb_depend_list; l; l = l->next)
-	fprintf (cb_depend_file, "%s:\n", l->text);
-      fclose (cb_depend_file);
-    }
 
-  return 0;
+	if (ppopen (fn->source, NULL) != 0) {
+		if (ppout != stdout) {
+			fclose (ppout);
+			unlink (fn->preprocess);
+		}
+		exit (1);
+	}
+
+	if (verbose_output) {
+		fprintf (stderr, "preprocessing %s into %s\n", fn->source, fn->preprocess);
+	}
+	ppparse ();
+
+	fclose (ppout);
+	fclose (ppin);
+
+	if (errorcount > 0) {
+		return -1;
+	}
+
+	/* Output dependency list */
+	if (cb_depend_file) {
+		struct cb_text_list *l;
+
+		if (!cb_depend_target) {
+			fputs (_("-MT must be given to specify target file\n"), stderr);
+			exit (1);
+		}
+		fprintf (cb_depend_file, "%s: \\\n", cb_depend_target);
+		for (l = cb_depend_list; l; l = l->next) {
+			fprintf (cb_depend_file, " %s%s\n", l->text, l->next ? " \\" : "");
+		}
+		for (l = cb_depend_list; l; l = l->next) {
+			fprintf (cb_depend_file, "%s:\n", l->text);
+		}
+		fclose (cb_depend_file);
+	}
+
+	return 0;
 }
 
 static int
 process_translate (struct filename *fn)
 {
-  int ret;
+	int ret;
 
-  /* initialize */
-  cb_source_file = NULL;
-  cb_source_line = 0;
-  cb_init_constants ();
-  cb_init_reserved ();
+	/* initialize */
+	cb_source_file = NULL;
+	cb_source_line = 0;
+	cb_init_constants ();
+	cb_init_reserved ();
 
-  /* open the input file */
-  yyin = fopen (fn->preprocess, "r");
-  if (!yyin)
-    terminate (fn->preprocess);
+	/* open the input file */
+	yyin = fopen (fn->preprocess, "r");
+	if (!yyin) {
+		terminate (fn->preprocess);
+	}
 
-  /* parse */
-  if (verbose_output)
-    fprintf (stderr, "translating %s into %s\n",
-	     fn->preprocess, fn->translate);
-  ret = yyparse ();
+	/* parse */
+	if (verbose_output) {
+		fprintf (stderr, "translating %s into %s\n", fn->preprocess, fn->translate);
+	}
+	ret = yyparse ();
 
-  fclose (yyin);
-  if (ret)
-    return ret;
+	fclose (yyin);
+	if (ret) {
+		return ret;
+	}
 
-  if (cb_flag_syntax_only
-      || current_program->entry_list == NULL)
-    return 0;
+	if (cb_flag_syntax_only || current_program->entry_list == NULL) {
+		return 0;
+	}
 
-  /* open the output file */
-  yyout = fopen (fn->translate, "w");
-  if (!yyout)
-    terminate (fn->translate);
+	/* open the output file */
+	yyout = fopen (fn->translate, "w");
+	if (!yyout) {
+		terminate (fn->translate);
+	}
 
-  /* open the storage file */
-  cb_storage_file_name = cob_malloc (strlen (fn->translate) + 3);
-  sprintf (cb_storage_file_name, "%s.h", fn->translate);
-  strcpy(fn->trstorage, cb_storage_file_name);
-  cb_storage_file = fopen (cb_storage_file_name, "w");
-  if (!cb_storage_file)
-    terminate (cb_storage_file_name);
+	/* open the storage file */
+	cb_storage_file_name = cob_malloc (strlen (fn->translate) + 3);
+	sprintf (cb_storage_file_name, "%s.h", fn->translate);
+	strcpy (fn->trstorage, cb_storage_file_name);
+	cb_storage_file = fopen (cb_storage_file_name, "w");
+	if (!cb_storage_file) {
+		terminate (cb_storage_file_name);
+	}
 
-  /* translate to C */
-  codegen (current_program);
+	/* translate to C */
+	codegen (current_program);
 
-  /* close the files */
-  fclose (cb_storage_file);
-  fclose (yyout);
-  return 0;
+	/* close the files */
+	fclose (cb_storage_file);
+	fclose (yyout);
+	return 0;
 }
 
 static int
 process_compile (struct filename *fn)
 {
-  char buff[FILENAME_MAX];
-  char name[FILENAME_MAX];
-  if (output_name)
-    strcpy (name, output_name);
-  else
-    {
-      file_basename (fn->source, name);
-      strcat (name, ".s");
-    }
-  sprintf (buff, "%s -S -o %s %s %s",
-	   cob_cc, name, cob_cflags, fn->translate);
-  return process (buff);
+	char buff[FILENAME_MAX];
+	char name[FILENAME_MAX];
+
+	if (output_name) {
+		strcpy (name, output_name);
+	} else {
+		file_basename (fn->source, name);
+		strcat (name, ".s");
+	}
+	sprintf (buff, "%s -S -o %s %s %s", cob_cc, name, cob_cflags, fn->translate);
+	return process (buff);
 }
 
 static int
 process_assemble (struct filename *fn)
 {
-  char buff[FILENAME_MAX];
+	char buff[FILENAME_MAX];
 
-  if (cb_compile_level == CB_LEVEL_MODULE) {
-	sprintf (buff, "%s -c %s %s -o %s %s",
-		cob_cc, cob_cflags, COB_PIC_FLAGS, fn->object, fn->translate);
-  } else {
-	sprintf (buff, "%s -c %s -o %s %s",
-		cob_cc, cob_cflags, fn->object, fn->translate);
-  }
-  return process (buff);
+	if (cb_compile_level == CB_LEVEL_MODULE) {
+		sprintf (buff, "%s -c %s %s -o %s %s",
+			 cob_cc, cob_cflags, COB_PIC_FLAGS, fn->object, fn->translate);
+	} else {
+		sprintf (buff, "%s -c %s -o %s %s",
+			 cob_cc, cob_cflags, fn->object, fn->translate);
+	}
+	return process (buff);
 }
 
 static int
 process_module (struct filename *fn)
 {
 #ifdef	COB_STRIP_CMD
-  int	ret;
+	int ret;
 #endif
-  char buff[FILENAME_MAX];
-  char name[FILENAME_MAX];
+	char buff[FILENAME_MAX];
+	char name[FILENAME_MAX];
 
-  if (output_name)
-    strcpy (name, output_name);
-  else
-    {
-      file_basename (fn->source, name);
-      strcat (name, ".");
-      strcat (name, COB_MODULE_EXT);
-    }
+	if (output_name) {
+		strcpy (name, output_name);
+	} else {
+		file_basename (fn->source, name);
+		strcat (name, ".");
+		strcat (name, COB_MODULE_EXT);
+	}
 #if (defined __CYGWIN__ || defined __MINGW32__)
-  sprintf (buff, "%s %s %s %s %s -o %s %s %s",
-	cob_cc, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
-	COB_EXPORT_DYN, name, fn->object, cob_libs);
+	sprintf (buff, "%s %s %s %s %s -o %s %s %s",
+		 cob_cc, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
+		 COB_EXPORT_DYN, name, fn->object, cob_libs);
 #else
-  sprintf (buff, "%s %s %s %s %s -o %s %s",
-	cob_cc, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
-	COB_EXPORT_DYN, name, fn->object);
+	sprintf (buff, "%s %s %s %s %s -o %s %s",
+		 cob_cc, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
+		 COB_EXPORT_DYN, name, fn->object);
 #endif
 
 #ifdef	COB_STRIP_CMD
-  ret  = process (buff);
-  if ( strip_output && ret == 0 ) {
-	sprintf(buff, "%s %s", COB_STRIP_CMD, name);
-  	ret  = process (buff);
-  }
-  return ret;
+	ret = process (buff);
+	if (strip_output && ret == 0) {
+		sprintf (buff, "%s %s", COB_STRIP_CMD, name);
+		ret = process (buff);
+	}
+	return ret;
 #else
-  return process (buff);
+	return process (buff);
 #endif
 }
 
@@ -797,151 +825,164 @@ static int
 process_link (struct filename *l)
 {
 #ifdef	COB_STRIP_CMD
-  int	ret;
+	int ret;
 #endif
-  char buff[FILENAME_MAX], objs[FILENAME_MAX] = "";
-  char name[FILENAME_MAX];
+	char buff[FILENAME_MAX], objs[FILENAME_MAX] = "";
+	char name[FILENAME_MAX];
 
-  for (; l; l = l->next)
-    {
-      strcat (objs, l->object);
-      strcat (objs, " ");
-      if (!l->next)
-	file_basename (l->source, name);
-    }
-  if (output_name)
-    strcpy (name, output_name);
+	for (; l; l = l->next) {
+		strcat (objs, l->object);
+		strcat (objs, " ");
+		if (!l->next) {
+			file_basename (l->source, name);
+		}
+	}
+	if (output_name) {
+		strcpy (name, output_name);
+	}
 
-  sprintf (buff, "%s %s %s -o %s %s %s",
-	   cob_cc, cob_ldflags, COB_EXPORT_DYN, name, objs, cob_libs);
+	sprintf (buff, "%s %s %s -o %s %s %s",
+		 cob_cc, cob_ldflags, COB_EXPORT_DYN, name, objs, cob_libs);
 
 #ifdef	COB_STRIP_CMD
-  ret  = process (buff);
-  if ( strip_output && ret == 0 ) {
-	sprintf(buff, "%s %s", COB_STRIP_CMD, name);
-  	ret  = process (buff);
-  }
-  return ret;
+	ret = process (buff);
+	if (strip_output && ret == 0) {
+		sprintf (buff, "%s %s", COB_STRIP_CMD, name);
+		ret = process (buff);
+	}
+	return ret;
 #else
-  return process (buff);
+	return process (buff);
 #endif
 }
 
 int
 main (int argc, char *argv[])
 {
-  int i;
-  int iparams = 0;
-  enum cb_compile_level local_level = 0;
-  int status = 1;
+	int			i;
+	int			iparams = 0;
+	enum cb_compile_level	local_level = 0;
+	int			status = 1;
 
 #if ENABLE_NLS
-  setlocale (LC_ALL, "");
-  bindtextdomain (PACKAGE, LOCALEDIR);
-  textdomain (PACKAGE);
+	setlocale (LC_ALL, "");
+	bindtextdomain (PACKAGE, LOCALEDIR);
+	textdomain (PACKAGE);
 #endif
 
-  /* Initialize the global variables */
-  init_environment (argc, argv);
+	/* Initialize the global variables */
+	init_environment (argc, argv);
 
-  /* Process command line arguments */
-  i = process_command_line (argc, argv);
+	/* Process command line arguments */
+	i = process_command_line (argc, argv);
 
-  /* Check the filename */
-  if (i == argc)
-    {
-      fprintf (stderr, "%s: No input files\n", program_name);
-      exit (1);
-    }
-
-  file_list = NULL;
-  if ( setjmp (cob_jmpbuf) != 0 ) {
-	fprintf (stderr, "Aborting compile of %s at line %d\n", cb_source_file, cb_source_line);
-	fflush (stderr);
-	if ( yyout ) {
-		fflush(yyout);
+	/* Check the filename */
+	if (i == argc) {
+		fprintf (stderr, "%s: No input files\n", program_name);
+		exit (1);
 	}
-	if ( cb_storage_file ) {
-		fflush(cb_storage_file);
+
+	file_list = NULL;
+	if (setjmp (cob_jmpbuf) != 0) {
+		fprintf (stderr, "Aborting compile of %s at line %d\n", cb_source_file,
+			 cb_source_line);
+		fflush (stderr);
+		if (yyout) {
+			fflush (yyout);
+		}
+		if (cb_storage_file) {
+			fflush (cb_storage_file);
+		}
+		status = 99;
+		goto cleanup;
 	}
-	status = 99;
-	goto cleanup;
-  }
-  while (i < argc)
-    {
-      struct filename *fn = process_filename (argv[i++]);
-      fn->next = file_list;
-      file_list = fn;
+	while (i < argc) {
+		struct filename *fn = process_filename (argv[i++]);
 
-      cb_id = 1;
-      iparams++;
-      if ( iparams > 1 && cb_compile_level == CB_LEVEL_EXECUTABLE &&
-	   !cb_flag_syntax_only ) {
-		local_level = cb_compile_level;
-		cb_flag_main = 0;
-		cb_compile_level = CB_LEVEL_ASSEMBLE;
-      }
-      /* Preprocess */
-      if (cb_compile_level >= CB_LEVEL_PREPROCESS && fn->need_preprocess)
-	if (preprocess (fn) != 0)
-	  goto cleanup;
+		fn->next = file_list;
+		file_list = fn;
+		cb_id = 1;
+		iparams++;
+		if (iparams > 1 && cb_compile_level == CB_LEVEL_EXECUTABLE &&
+		    !cb_flag_syntax_only) {
+			local_level = cb_compile_level;
+			cb_flag_main = 0;
+			cb_compile_level = CB_LEVEL_ASSEMBLE;
+		}
+		/* Preprocess */
+		if (cb_compile_level >= CB_LEVEL_PREPROCESS && fn->need_preprocess) {
+			if (preprocess (fn) != 0) {
+				goto cleanup;
+			}
+		}
 
-      /* Translate */
-      if (cb_compile_level >= CB_LEVEL_TRANSLATE && fn->need_translate)
-	if (process_translate (fn) != 0)
-	  goto cleanup;
-      if (cb_flag_syntax_only)
-	continue;
+		/* Translate */
+		if (cb_compile_level >= CB_LEVEL_TRANSLATE && fn->need_translate) {
+			if (process_translate (fn) != 0) {
+				goto cleanup;
+			}
+		}
+		if (cb_flag_syntax_only) {
+			continue;
+		}
 
-      /* Compile */
-      if (cb_compile_level == CB_LEVEL_COMPILE)
-	if (process_compile (fn) != 0)
-	  goto cleanup;
+		/* Compile */
+		if (cb_compile_level == CB_LEVEL_COMPILE) {
+			if (process_compile (fn) != 0) {
+				goto cleanup;
+			}
+		}
 
-      /* Assemble */
-      if (cb_compile_level >= CB_LEVEL_ASSEMBLE && fn->need_assemble)
-	if (process_assemble (fn) != 0)
-	  goto cleanup;
+		/* Assemble */
+		if (cb_compile_level >= CB_LEVEL_ASSEMBLE && fn->need_assemble) {
+			if (process_assemble (fn) != 0) {
+				goto cleanup;
+			}
+		}
 
-      /* Build module */
-      if (cb_compile_level == CB_LEVEL_MODULE)
-	if (process_module (fn) != 0)
-	  goto cleanup;
-    }
-
-  /* Link */
-  if ( !cb_flag_syntax_only && local_level == CB_LEVEL_EXECUTABLE ) {
-	cb_compile_level = local_level;
-	cb_flag_main = 1;
-  }
-  if (!cb_flag_syntax_only && cb_compile_level == CB_LEVEL_EXECUTABLE)
-    if (process_link (file_list) > 0)
-      goto cleanup;
-
-  /* We have successfully completed */
-  status = 0;
-
-  /* Remove unnecessary files */
- cleanup:
-  if (!save_temps)
-    {
-      struct filename *fn;
-      for (fn = file_list; fn; fn = fn->next)
-	{
-	  if (fn->need_preprocess
-	      && (status == 1 || cb_compile_level > CB_LEVEL_PREPROCESS))
-	    remove (fn->preprocess);
-	  if (fn->need_translate
-	      && (status == 1 || cb_compile_level > CB_LEVEL_TRANSLATE))
-	    {
-	      remove (fn->translate);
-	      remove (fn->trstorage);
-	    }
-	  if (fn->need_assemble
-	      && (status == 1 || cb_compile_level > CB_LEVEL_ASSEMBLE))
-	    remove (fn->object);
+		/* Build module */
+		if (cb_compile_level == CB_LEVEL_MODULE) {
+			if (process_module (fn) != 0) {
+				goto cleanup;
+			}
+		}
 	}
-    }
 
-  return status;
+	/* Link */
+	if (!cb_flag_syntax_only && local_level == CB_LEVEL_EXECUTABLE) {
+		cb_compile_level = local_level;
+		cb_flag_main = 1;
+	}
+	if (!cb_flag_syntax_only && cb_compile_level == CB_LEVEL_EXECUTABLE) {
+		if (process_link (file_list) > 0) {
+			goto cleanup;
+		}
+	}
+
+	/* We have successfully completed */
+	status = 0;
+
+	/* Remove unnecessary files */
+      cleanup:
+	if (!save_temps) {
+		struct filename	*fn;
+
+		for (fn = file_list; fn; fn = fn->next) {
+			if (fn->need_preprocess
+			    && (status == 1 || cb_compile_level > CB_LEVEL_PREPROCESS)) {
+				remove (fn->preprocess);
+			}
+			if (fn->need_translate
+			    && (status == 1 || cb_compile_level > CB_LEVEL_TRANSLATE)) {
+				remove (fn->translate);
+				remove (fn->trstorage);
+			}
+			if (fn->need_assemble
+			    && (status == 1 || cb_compile_level > CB_LEVEL_ASSEMBLE)) {
+				remove (fn->object);
+			}
+		}
+	}
+
+	return status;
 }

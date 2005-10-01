@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2003 Keisuke Nishida
+ * Copyright (C) 2001-2005 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,10 +30,10 @@
 #define HASH_SIZE 133
 
 static struct {
-  const char *name;
-  enum cb_system_name_category category;
-  int token;
-  cb_tree node;
+	const char			*name;
+	enum cb_system_name_category	category;
+	int				token;
+	cb_tree				node;
 } system_table[] = {
   {"SYSIN",		CB_DEVICE_NAME,  CB_DEVICE_SYSIN, 0},
   {"SYSIPT",		CB_DEVICE_NAME,  CB_DEVICE_SYSIN, 0},
@@ -56,9 +56,9 @@ static struct {
 };
 
 static struct reserved {
-  const char *name;
-  int token;
-  struct reserved *next;
+	const char	*name;
+	int		token;
+	struct reserved *next;
 } *reserved_table[HASH_SIZE];
 
 static struct reserved reserved_words[] = {
@@ -794,29 +794,33 @@ static struct cb_intrinsic_table function_list[] = {
 static int
 hash (const char *s)
 {
-  int val = 0;
-  for (; *s; s++)
-    val += toupper (*s);
-  return val % HASH_SIZE;
+	int	val = 0;
+	for (; *s; s++) {
+		val += toupper (*s);
+	}
+	return val % HASH_SIZE;
 }
 
 cb_tree
 lookup_system_name (const char *name)
 {
-  int i;
-  for (i = 0; system_table[i].name != 0; i++)
-    if (strcasecmp (name, system_table[i].name) == 0)
-      return system_table[i].node;
-  return cb_error_node;
+	int	i;
+
+	for (i = 0; system_table[i].name != 0; i++) {
+		if (strcasecmp (name, system_table[i].name) == 0) {
+			return system_table[i].node;
+		}
+	}
+	return cb_error_node;
 }
 
 int
 lookup_reserved_word (const char *name)
 {
-  struct reserved *p;
-  for (p = reserved_table[hash (name)]; p; p = p->next)
-    if (strcasecmp (name, p->name) == 0)
-      {
+  struct reserved	*p;
+
+  for (p = reserved_table[hash (name)]; p; p = p->next) {
+    if (strcasecmp (name, p->name) == 0) {
 	if (p->token != -1) {
 	  struct noreserve *noresptr;
 
@@ -829,7 +833,8 @@ lookup_reserved_word (const char *name)
 	}
 	cb_error (_("`%s' reserved word, but not supported yet"), name);
 	return 0;
-      }
+    }
+  }
   return 0;
 }
 
@@ -856,30 +861,33 @@ lookup_intrinsic (const char *name)
 void
 cb_list_reserved (void)
 {
-  int i;
-  for (i = 0; reserved_words[i].name; i++)
-    puts (reserved_words[i].name);
+	int	i;
+	for (i = 0; reserved_words[i].name; i++) {
+		puts (reserved_words[i].name);
+	}
 }
 
 void
 cb_init_reserved (void)
 {
-  int i;
+	int	i;
 
-  /* build system-name table */
-  for (i = 0; system_table[i].name != 0; i++)
-    system_table[i].node =
-      cb_build_system_name (system_table[i].category, system_table[i].token);
+	/* build system-name table */
+	for (i = 0; system_table[i].name != 0; i++) {
+		system_table[i].node =
+		  cb_build_system_name (system_table[i].category, system_table[i].token);
+	}
 
-  /* initialize reserved-word table */
-  for (i = 0; i < HASH_SIZE; i++)
-    reserved_table[i] = NULL;
+	/* initialize reserved-word table */
+	for (i = 0; i < HASH_SIZE; i++) {
+		reserved_table[i] = NULL;
+	}
 
-  /* build reserved-word table */
-  for (i = 0; reserved_words[i].name != 0; i++)
-    {
-      int val = hash (reserved_words[i].name);
-      reserved_words[i].next = reserved_table[val];
-      reserved_table[val] = &reserved_words[i];
-    }
+	/* build reserved-word table */
+	for (i = 0; reserved_words[i].name != 0; i++) {
+		int	val = hash (reserved_words[i].name);
+
+		reserved_words[i].next = reserved_table[val];
+		reserved_table[val] = &reserved_words[i];
+	}
 }

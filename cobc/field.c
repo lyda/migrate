@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2003 Keisuke Nishida
+ * Copyright (C) 2001-2005 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,8 @@
 
 #include "cobc.h"
 #include "tree.h"
+
+static const int pic_digits[] = {2, 4, 7, 9, 12, 14, 16, 18};
 
 static int
 get_level (cb_tree x)
@@ -399,7 +401,7 @@ validate_field_1 (struct cb_field *f)
 	    /* reconstruct the picture string */
 	    if (f->pic->scale > 0)
 	      {
-		f->pic->str = cob_malloc (7);
+		f->pic->str = cob_malloc (8);
 		sprintf (f->pic->str, "9%cV%c9%c",
 			 f->pic->digits - f->pic->scale, 1,
 			 f->pic->scale);
@@ -407,7 +409,7 @@ validate_field_1 (struct cb_field *f)
 	      }
 	    else
 	      {
-		f->pic->str = cob_malloc (3);
+		f->pic->str = cob_malloc (4);
 		sprintf (f->pic->str, "9%c", f->pic->digits);
 	      }
 	    f->pic->category = CB_CATEGORY_NUMERIC_EDITED;
@@ -486,9 +488,9 @@ setup_parameters (struct cb_field *f)
 	case CB_USAGE_COMP_X:
 	  if (f->pic->category == CB_CATEGORY_ALPHANUMERIC)
 	    {
-	      char pic[6];
-	      static int digits[] = {2, 4, 7, 9, 12, 14, 16, 18};
-	      sprintf (pic, "9(%d)", digits[f->pic->size - 1]);
+	      char pic[8];
+
+	      sprintf (pic, "9(%d)", pic_digits[f->pic->size - 1]);
 	      f->pic = CB_PICTURE (cb_build_picture (pic));
 	    }
 	  

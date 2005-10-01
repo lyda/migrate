@@ -39,17 +39,17 @@ main ()
 			if (model <= 2) {
 				printf ("-march=pentiumpro");
 			} else if (model >= 3 && model <= 6) {
-				printf ("-march=pentium2");
+				printf ("-march=pentium2 -mno-sse");
 			} else {
-				printf ("-march=pentium3");
+				printf ("-march=pentium3 -mno-sse");
 			}
 		}
 		else if (family == 15) {
-			printf ("-march=pentium4");
+			printf ("-march=pentium4 -mno-sse");
 		}
 	} else if (strcmp (vendor_string, "AuthenticAMD") == 0) {
 		if (family == 6) {
-			printf ("-march=athlon");
+			printf ("-march=athlon -mno-sse");
 		}
 	}
 #endif

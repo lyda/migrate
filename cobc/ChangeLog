@@ -1,3 +1,14 @@
+2005-10-01  Roger While <simrw@sim-basis.de>
+
+	* Indent run on most source
+	* Start optimizing in typeck/codegen -
+		Unsigned numeric (Pic 9) field optimize
+		Retrieval of binary-swap 2,4,8 byte fields
+		Retrieval of 1 byte binary fields always optimized
+		Optimize referencing linkage section items
+		Test/set of 1 byte fields
+	* cobc.c : Print patch level for -V (eg. 0.33.0)
+
 2005-08-07  Roger While <simrw@sim-basis.de>
 
 	* codegen.c : Prototypes, unneeded fields

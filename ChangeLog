@@ -1,3 +1,9 @@
+2005-10-01  Roger While <simrw@sim-basis.de>
+
+	* cpucheck.c : Some versions of GCC generate wrong SSE code
+	  when compiling with P3/4 options. Stop this by also
+	  specifying -mno-sse.
+
 2005-07-31  Roger While <simrw@sim-basis.de>
 
 	* Change configure default options for db, lfs64, ltdl

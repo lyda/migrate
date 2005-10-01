@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Keisuke Nishida
+ * Copyright (C) 2001-2005 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1292,6 +1292,8 @@ build_cond_88 (cb_tree x)
 cb_tree
 cb_build_cond (cb_tree x)
 {
+  int	size1, size2;
+
   switch (CB_TREE_TAG (x))
     {
     case CB_TAG_CONST:
@@ -1377,7 +1379,25 @@ cb_build_cond (cb_tree x)
 		  }
 
 		/* field comparison */
-		x = cb_build_funcall_2 ("cob_cmp", p->x, p->y);
+		if ( (CB_LITERAL_P (p->x) || CB_FIELD_P (p->x) ||
+		      CB_REFERENCE_P (p->x)) &&
+		     (CB_LITERAL_P (p->y) || CB_FIELD_P (p->y) ||
+		      CB_REFERENCE_P (p->y)) ) {
+			size1 = cb_field_size (p->x);
+			size2 = cb_field_size (p->y);
+		} else {
+			size1 = 0;
+			size2 = 0;
+		}
+		if ( !current_program->alphabet_name_list && size1 == 1 && size2 == 1 &&
+		     (CB_TREE_CATEGORY (p->x) == CB_CATEGORY_ALPHANUMERIC ||
+		      CB_TREE_CATEGORY (p->x) == CB_CATEGORY_ALPHABETIC) &&
+		     (CB_TREE_CATEGORY (p->y) == CB_CATEGORY_ALPHANUMERIC ||
+		      CB_TREE_CATEGORY (p->y) == CB_CATEGORY_ALPHABETIC) ) {
+			x = cb_build_funcall_2 ("$G", p->x, p->y);
+		} else {
+			x = cb_build_funcall_2 ("cob_cmp", p->x, p->y);
+		}
 	      }
 	  }
 	return cb_build_binary_op (x, p->op, p->y);
@@ -2369,7 +2389,12 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
 static cb_tree
 cb_build_memset (cb_tree x, char c)
 {
-  return cb_build_funcall_3 ("memset",
+  int size = cb_field_size(x);  
+                                
+  if (size == 1)                
+    return cb_build_funcall_2 ("$E", x, cb_int (c));
+  else
+    return cb_build_funcall_3 ("memset",
 			     cb_build_cast_address (x),
 			     cb_int (c),
 			     cb_build_cast_length (x));
@@ -2378,7 +2403,12 @@ cb_build_memset (cb_tree x, char c)
 static cb_tree
 cb_build_move_copy (cb_tree src, cb_tree dst)
 {
-  return cb_build_funcall_3 ("memcpy",
+  int size = cb_field_size(dst);
+
+  if (size == 1)
+    return cb_build_funcall_2 ("$F", dst, src);
+  else
+    return cb_build_funcall_3 ("memcpy",
 			     cb_build_cast_address (dst),
 			     cb_build_cast_address (src),
 			     cb_build_cast_length (dst));

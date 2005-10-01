@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2003 Keisuke Nishida
+ * Copyright (C) 2002-2005 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -22,12 +22,12 @@
 
 #include <libcob/common.h>
 
-#define COB_EQ	1 	/* x == y */
-#define COB_LT	2 	/* x <  y */
-#define COB_LE	3 	/* x <= y */
-#define COB_GT	4 	/* x >  y */
-#define COB_GE	5 	/* x >= y */
-#define COB_NE	6 	/* x != y */
+#define COB_EQ			1 	/* x == y */
+#define COB_LT			2 	/* x <  y */
+#define COB_LE			3 	/* x <= y */
+#define COB_GT			4 	/* x >  y */
+#define COB_GE			5 	/* x >= y */
+#define COB_NE			6 	/* x != y */
 
 #define COB_ASCENDING		1
 #define COB_DESCENDING		2
@@ -110,58 +110,58 @@
 /* File connector */
 
 typedef struct {
-  cob_field *field;		/* key field */
-  int flag;			/* WITH DUPLICATES (for RELATIVE/INDEXED) */
+	cob_field	*field;	/* key field */
+	int		flag;	/* WITH DUPLICATES (for RELATIVE/INDEXED) */
 				/* ASCENDING/DESCENDING (for SORT) */
 } cob_file_key;
 
 typedef struct {
-  char organization;		/* ORGANIZATION */
-  char access_mode;		/* ACCESS MODE */
-  char open_mode;		/* OPEN MODE */
-  char flag_optional;		/* OPTIONAL */
-  char *file_status;		/* FILE STATUS */
-  cob_field *assign;		/* ASSIGN TO */
-  cob_field *record;		/* record area */
-  cob_field *record_size;	/* record size depending on */
-  size_t record_min;		/* record min size */
-  size_t record_max;		/* record max size */
-  int nkeys;			/* the number of keys */
-  cob_file_key *keys;		/* RELATIVE/RECORD/SORT keys */
-  void *file;			/* file type specific data pointer */
-  cob_field *linage;		/* LINAGE */
-  cob_field *linage_ctr;	/* LINAGE-COUNTER */
-  cob_field *latfoot;		/* LINAGE FOOTING */
-  cob_field *lattop;		/* LINAGE AT TOP */
-  cob_field *latbot;		/* LINAGE AT BOTTOM */
-  int lin_lines;		/* Current Linage */
-  int lin_foot;			/* Current Footage */
-  int lin_top;			/* Current Top */
-  int lin_bot;			/* Current Bottom */
-  char last_open_mode;		/* open mode given by OPEN */
-  char flag_nonexistent;	/* nonexistent file */
-  char flag_end_of_file;	/* reached the end of file */
-  char flag_first_read;		/* first READ after OPEN or START */
-  char flag_read_done;		/* last READ successfully done */
-  char flag_has_status;		/* has FILE STATUS clause */
-  char flag_needs_nl;		/* LS file needs NL at close */
-  char flag_needs_top;		/* Linage needs top */
+	char		organization;		/* ORGANIZATION */
+	char		access_mode;		/* ACCESS MODE */
+	char		open_mode;		/* OPEN MODE */
+	char		flag_optional;		/* OPTIONAL */
+	char		*file_status;		/* FILE STATUS */
+	cob_field	*assign;		/* ASSIGN TO */
+	cob_field	*record;		/* record area */
+	cob_field	*record_size;		/* record size depending on */
+	size_t		record_min;		/* record min size */
+	size_t		record_max;		/* record max size */
+	int		nkeys;			/* the number of keys */
+	cob_file_key	*keys;			/* RELATIVE/RECORD/SORT keys */
+	void		*file;			/* file type specific data pointer */
+	cob_field	*linage;		/* LINAGE */
+	cob_field	*linage_ctr;		/* LINAGE-COUNTER */
+	cob_field	*latfoot;		/* LINAGE FOOTING */
+	cob_field	*lattop;		/* LINAGE AT TOP */
+	cob_field	*latbot;		/* LINAGE AT BOTTOM */
+	int		lin_lines;		/* Current Linage */
+	int		lin_foot;		/* Current Footage */
+	int		lin_top;		/* Current Top */
+	int		lin_bot;		/* Current Bottom */
+	char		last_open_mode;		/* open mode given by OPEN */
+	char		flag_nonexistent;	/* nonexistent file */
+	char		flag_end_of_file;	/* reached the end of file */
+	char		flag_first_read;	/* first READ after OPEN or START */
+	char		flag_read_done;		/* last READ successfully done */
+	char		flag_has_status;	/* has FILE STATUS clause */
+	char		flag_needs_nl;		/* LS file needs NL at close */
+	char		flag_needs_top;		/* Linage needs top */
 } cob_file;
 
 /* File I-O functions */
 
 typedef struct {
-  int (*open) (cob_file *f, char *filename, int mode, int opt);
-  int (*close) (cob_file *f, int opt);
-  int (*start) (cob_file *f, int cond, cob_field *key);
-  int (*read) (cob_file *f, cob_field *key);
-  int (*read_next) (cob_file *f);
-  int (*write) (cob_file *f, int opt);
-  int (*rewrite) (cob_file *f);
-  int (*delete) (cob_file *f);
+	int	(*open) (cob_file *f, char *filename, int mode, int opt);
+	int	(*close) (cob_file *f, int opt);
+	int	(*start) (cob_file *f, int cond, cob_field *key);
+	int	(*read) (cob_file *f, cob_field *key);
+	int	(*read_next) (cob_file *f);
+	int	(*write) (cob_file *f, int opt);
+	int	(*rewrite) (cob_file *f);
+	int	(*delete) (cob_file *f);
 } cob_fileio_funcs;
 
-extern cob_file *cob_error_file;
+extern cob_file	*cob_error_file;
 
 extern int	cob_check_eop;
 

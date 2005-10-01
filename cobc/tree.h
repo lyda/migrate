@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Keisuke Nishida
+ * Copyright (C) 2001-2005 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,139 +36,139 @@
 #define CB_PREFIX_SEQUENCE	"s_"	/* collating sequence */
 
 enum cb_tag {
-  /* primitives */
-  CB_TAG_CONST,			/* 0 constant value */
-  CB_TAG_INTEGER,		/* 1 integer constant */
-  CB_TAG_STRING,		/* 2 string constant */
-  CB_TAG_ALPHABET_NAME,		/* 3 alphabet-name */
-  CB_TAG_CLASS_NAME,		/* 4 class-name */
-  CB_TAG_SYSTEM_NAME,		/* 5 system-name */
-  CB_TAG_LITERAL,		/* 6 numeric/alphanumeric literal */
-  CB_TAG_DECIMAL,		/* 7 decimal number */
-  CB_TAG_FIELD,			/* 8 user-defined variable */
-  CB_TAG_FILE,			/* 9 file description */
-  /* expressions */
-  CB_TAG_REFERENCE,		/* 10 reference to a field, file, or label */
-  CB_TAG_BINARY_OP,		/* 11 binary operation */
-  CB_TAG_FUNCALL,		/* 12 run-time function call */
-  CB_TAG_CAST,			/* 13 type cast */
-  CB_TAG_INTRINSIC,		/* 14 intrinsic function */
-  /* statements */
-  CB_TAG_LABEL,			/* 15 label statement */
-  CB_TAG_ASSIGN,		/* 16 assignment statement */
-  CB_TAG_INITIALIZE,		/* 17 INITIALIZE statement */
-  CB_TAG_SEARCH,		/* 18 SEARCH statement */
-  CB_TAG_CALL,			/* 19 CALL statement */
-  CB_TAG_GOTO,			/* 20 GO TO statement */
-  CB_TAG_IF,			/* 21 IF statement */
-  CB_TAG_PERFORM,		/* 22 PERFORM statement */
-  CB_TAG_STATEMENT,		/* 23 general statement */
-  /* miscellaneous */
-  CB_TAG_PERFORM_VARYING,	/* 24 PERFORM VARYING parameter */
-  CB_TAG_PICTURE,		/* 25 PICTURE clause */
-  CB_TAG_LIST,			/* 26 list */
+	/* primitives */
+	CB_TAG_CONST,		/* 0 constant value */
+	CB_TAG_INTEGER,		/* 1 integer constant */
+	CB_TAG_STRING,		/* 2 string constant */
+	CB_TAG_ALPHABET_NAME,	/* 3 alphabet-name */
+	CB_TAG_CLASS_NAME,	/* 4 class-name */
+	CB_TAG_SYSTEM_NAME,	/* 5 system-name */
+	CB_TAG_LITERAL,		/* 6 numeric/alphanumeric literal */
+	CB_TAG_DECIMAL,		/* 7 decimal number */
+	CB_TAG_FIELD,		/* 8 user-defined variable */
+	CB_TAG_FILE,		/* 9 file description */
+	/* expressions */
+	CB_TAG_REFERENCE,	/* 10 reference to a field, file, or label */
+	CB_TAG_BINARY_OP,	/* 11 binary operation */
+	CB_TAG_FUNCALL,		/* 12 run-time function call */
+	CB_TAG_CAST,		/* 13 type cast */
+	CB_TAG_INTRINSIC,	/* 14 intrinsic function */
+	/* statements */
+	CB_TAG_LABEL,		/* 15 label statement */
+	CB_TAG_ASSIGN,		/* 16 assignment statement */
+	CB_TAG_INITIALIZE,	/* 17 INITIALIZE statement */
+	CB_TAG_SEARCH,		/* 18 SEARCH statement */
+	CB_TAG_CALL,		/* 19 CALL statement */
+	CB_TAG_GOTO,		/* 20 GO TO statement */
+	CB_TAG_IF,		/* 21 IF statement */
+	CB_TAG_PERFORM,		/* 22 PERFORM statement */
+	CB_TAG_STATEMENT,	/* 23 general statement */
+	/* miscellaneous */
+	CB_TAG_PERFORM_VARYING,	/* 24 PERFORM VARYING parameter */
+	CB_TAG_PICTURE,		/* 25 PICTURE clause */
+	CB_TAG_LIST		/* 26 list */
 };
 
 enum cb_alphabet_name_type {
-  CB_ALPHABET_NATIVE,
-  CB_ALPHABET_STANDARD_1,
-  CB_ALPHABET_STANDARD_2,
-  CB_ALPHABET_EBCDIC,
-  CB_ALPHABET_CUSTOM,
+	CB_ALPHABET_NATIVE,
+	CB_ALPHABET_STANDARD_1,
+	CB_ALPHABET_STANDARD_2,
+	CB_ALPHABET_EBCDIC,
+	CB_ALPHABET_CUSTOM
 };
 
 enum cb_system_name_category {
-  CB_CALL_CONVENTION_NAME,
-  CB_CODE_NAME,
-  CB_COMPUTER_NAME,
-  CB_DEVICE_NAME,
-  CB_ENTRY_CONVENTION_NAME,
-  CB_EXTERNAL_LOCALE_NAME,
-  CB_FEATURE_NAME,
-  CB_LIBRARY_NAME,
-  CB_SWITCH_NAME,
-  CB_TEXT_NAME,
+	CB_CALL_CONVENTION_NAME,
+	CB_CODE_NAME,
+	CB_COMPUTER_NAME,
+	CB_DEVICE_NAME,
+	CB_ENTRY_CONVENTION_NAME,
+	CB_EXTERNAL_LOCALE_NAME,
+	CB_FEATURE_NAME,
+	CB_LIBRARY_NAME,
+	CB_SWITCH_NAME,
+	CB_TEXT_NAME
 };
 
 enum cb_device_name {
-  CB_DEVICE_SYSIN,
-  CB_DEVICE_SYSOUT,
-  CB_DEVICE_SYSERR,
-  CB_DEVICE_CONSOLE,
+	CB_DEVICE_SYSIN,
+	CB_DEVICE_SYSOUT,
+	CB_DEVICE_SYSERR,
+	CB_DEVICE_CONSOLE
 };
 
 enum cb_feature_name {
-  CB_FEATURE_FORMFEED,
+	CB_FEATURE_FORMFEED
 };
 
 enum cb_switch_name {
-  CB_SWITCH_1,
-  CB_SWITCH_2,
-  CB_SWITCH_3,
-  CB_SWITCH_4,
-  CB_SWITCH_5,
-  CB_SWITCH_6,
-  CB_SWITCH_7,
-  CB_SWITCH_8,
+	CB_SWITCH_1,
+	CB_SWITCH_2,
+	CB_SWITCH_3,
+	CB_SWITCH_4,
+	CB_SWITCH_5,
+	CB_SWITCH_6,
+	CB_SWITCH_7,
+	CB_SWITCH_8
 };
 
 enum cb_class {
-  CB_CLASS_UNKNOWN,
-  CB_CLASS_ALPHABETIC,
-  CB_CLASS_ALPHANUMERIC,
-  CB_CLASS_BOOLEAN,
-  CB_CLASS_INDEX,
-  CB_CLASS_NATIONAL,
-  CB_CLASS_NUMERIC,
-  CB_CLASS_OBJECT,
-  CB_CLASS_POINTER,
+	CB_CLASS_UNKNOWN,
+	CB_CLASS_ALPHABETIC,
+	CB_CLASS_ALPHANUMERIC,
+	CB_CLASS_BOOLEAN,
+	CB_CLASS_INDEX,
+	CB_CLASS_NATIONAL,
+	CB_CLASS_NUMERIC,
+	CB_CLASS_OBJECT,
+	CB_CLASS_POINTER
 };
 
 enum cb_category {
-  CB_CATEGORY_UNKNOWN,
-  CB_CATEGORY_ALPHABETIC,
-  CB_CATEGORY_ALPHANUMERIC,
-  CB_CATEGORY_ALPHANUMERIC_EDITED,
-  CB_CATEGORY_BOOLEAN,
-  CB_CATEGORY_INDEX,
-  CB_CATEGORY_NATIONAL,
-  CB_CATEGORY_NATIONAL_EDITED,
-  CB_CATEGORY_NUMERIC,
-  CB_CATEGORY_NUMERIC_EDITED,
-  CB_CATEGORY_OBJECT_REFERENCE,
-  CB_CATEGORY_DATA_POINTER,
-  CB_CATEGORY_PROGRAM_POINTER,
+	CB_CATEGORY_UNKNOWN,
+	CB_CATEGORY_ALPHABETIC,
+	CB_CATEGORY_ALPHANUMERIC,
+	CB_CATEGORY_ALPHANUMERIC_EDITED,
+	CB_CATEGORY_BOOLEAN,
+	CB_CATEGORY_INDEX,
+	CB_CATEGORY_NATIONAL,
+	CB_CATEGORY_NATIONAL_EDITED,
+	CB_CATEGORY_NUMERIC,
+	CB_CATEGORY_NUMERIC_EDITED,
+	CB_CATEGORY_OBJECT_REFERENCE,
+	CB_CATEGORY_DATA_POINTER,
+	CB_CATEGORY_PROGRAM_POINTER
 };
 
 enum cb_storage {
-  CB_STORAGE_CONSTANT,		/* Constants */
-  CB_STORAGE_FILE,		/* FILE SECTION */
-  CB_STORAGE_WORKING,		/* WORKING-STORAGE SECTION */
-  CB_STORAGE_LOCAL,		/* LOCAL-STORAGE SECTION */
-  CB_STORAGE_LINKAGE,		/* LINKAGE SECTION */
-  CB_STORAGE_SCREEN		/* SCREEN SECTION */
+	CB_STORAGE_CONSTANT,		/* Constants */
+	CB_STORAGE_FILE,		/* FILE SECTION */
+	CB_STORAGE_WORKING,		/* WORKING-STORAGE SECTION */
+	CB_STORAGE_LOCAL,		/* LOCAL-STORAGE SECTION */
+	CB_STORAGE_LINKAGE,		/* LINKAGE SECTION */
+	CB_STORAGE_SCREEN		/* SCREEN SECTION */
 };
 
 enum cb_usage {
-  CB_USAGE_BINARY,
-  CB_USAGE_BIT,
-  CB_USAGE_COMP_5,
-  CB_USAGE_COMP_X,
-  CB_USAGE_DISPLAY,
-  CB_USAGE_FLOAT,
-  CB_USAGE_DOUBLE,
-  CB_USAGE_INDEX,
-  CB_USAGE_NATIONAL,
-  CB_USAGE_OBJECT,
-  CB_USAGE_PACKED,
-  CB_USAGE_POINTER,
-  CB_USAGE_PROGRAM,
-  CB_USAGE_LENGTH
+	CB_USAGE_BINARY,
+	CB_USAGE_BIT,
+	CB_USAGE_COMP_5,
+	CB_USAGE_COMP_X,
+	CB_USAGE_DISPLAY,
+	CB_USAGE_FLOAT,
+	CB_USAGE_DOUBLE,
+	CB_USAGE_INDEX,
+	CB_USAGE_NATIONAL,
+	CB_USAGE_OBJECT,
+	CB_USAGE_PACKED,
+	CB_USAGE_POINTER,
+	CB_USAGE_PROGRAM,
+	CB_USAGE_LENGTH
 };
 
 enum cb_operand_type {
-  CB_SENDING_OPERAND,
-  CB_RECEIVING_OPERAND
+	CB_SENDING_OPERAND,
+	CB_RECEIVING_OPERAND
 };
 
 
@@ -177,13 +177,13 @@ enum cb_operand_type {
  */
 
 struct cb_tree_common {
-  enum cb_tag tag;
-  enum cb_category category;
-  unsigned char *source_file;
-  int source_line;
+	enum cb_tag		tag;
+	enum cb_category	category;
+	unsigned char		*source_file;
+	int			source_line;
 };
 
-typedef struct cb_tree_common *cb_tree;
+typedef struct cb_tree_common	*cb_tree;
 
 #define CB_TREE(x)		((struct cb_tree_common *) (x))
 #define CB_TREE_TAG(x)		(CB_TREE (x)->tag)
@@ -209,12 +209,12 @@ typedef struct cb_tree_common *cb_tree;
 #define CB_TREE_CAST(tg,ty,x)	((ty *) (x))
 #endif
 
-extern char *cb_name (cb_tree x);
-extern enum cb_class cb_tree_class (cb_tree x);
+extern char		*cb_name (cb_tree x);
+extern enum cb_class	cb_tree_class (cb_tree x);
 extern enum cb_category cb_tree_category (cb_tree x);
-extern int cb_tree_type (cb_tree x);
-extern int cb_fits_int (cb_tree x);
-extern int cb_get_int (cb_tree x);
+extern int		cb_tree_type (cb_tree x);
+extern int		cb_fits_int (cb_tree x);
+extern int		cb_get_int (cb_tree x);
 
 
 /*
@@ -247,8 +247,8 @@ extern cb_tree cb_intr_e;
 extern cb_tree cb_standard_error_handler;
 
 struct cb_const {
-  struct cb_tree_common common;
-  const char *val;
+	struct cb_tree_common	common;
+	const char		*val;
 };
 
 #define CB_CONST(x)	(CB_TREE_CAST (CB_TAG_CONST, struct cb_const, x))
@@ -269,7 +269,7 @@ struct cb_integer {
 #define CB_INTEGER(x)	(CB_TREE_CAST (CB_TAG_INTEGER, struct cb_integer, x))
 #define CB_INTEGER_P(x)	(CB_TREE_TAG (x) == CB_TAG_INTEGER)
 
-extern cb_tree cb_int (int n);
+extern cb_tree		cb_int (int n);
 
 
 /*
@@ -277,9 +277,9 @@ extern cb_tree cb_int (int n);
  */
 
 struct cb_string {
-  struct cb_tree_common common;
-  size_t size;
-  const unsigned char *data;
+	struct cb_tree_common	common;
+	size_t			size;
+	const unsigned char	*data;
 };
 
 #define CB_STRING(x)	(CB_TREE_CAST (CB_TAG_STRING, struct cb_string, x))
@@ -295,11 +295,11 @@ extern cb_tree cb_build_string (const unsigned char *data, size_t size);
  */
 
 struct cb_alphabet_name {
-  struct cb_tree_common common;
-  const char *name;
-  char *cname;
-  enum cb_alphabet_name_type type;
-  cb_tree custom_list;
+	struct cb_tree_common		common;
+	const char			*name;
+	char				*cname;
+	enum cb_alphabet_name_type	type;
+	cb_tree				custom_list;
 };
 
 #define CB_ALPHABET_NAME(x)	(CB_TREE_CAST (CB_TAG_ALPHABET_NAME, struct cb_alphabet_name, x))
@@ -313,10 +313,10 @@ extern cb_tree cb_build_alphabet_name (cb_tree name, enum cb_alphabet_name_type 
  */
 
 struct cb_class_name {
-  struct cb_tree_common common;
-  const char *name;
-  char *cname;
-  cb_tree list;
+	struct cb_tree_common	common;
+	const char		*name;
+	char			*cname;
+	cb_tree			list;
 };
 
 #define CB_CLASS_NAME(x)	(CB_TREE_CAST (CB_TAG_CLASS_NAME, struct cb_class_name, x))
@@ -330,9 +330,9 @@ extern cb_tree cb_build_class_name (cb_tree name, cb_tree list);
  */
 
 struct cb_system_name {
-  struct cb_tree_common common;
-  enum cb_system_name_category category;
-  int token;
+	struct cb_tree_common		common;
+	enum cb_system_name_category	category;
+	int				token;
 };
 
 #define CB_SYSTEM_NAME(x)	(CB_TREE_CAST (CB_TAG_SYSTEM_NAME, struct cb_system_name, x))
@@ -346,13 +346,13 @@ extern cb_tree cb_build_system_name (enum cb_system_name_category category, int 
  */
 
 struct cb_literal {
-  struct cb_tree_common common;
-  size_t size;
-  unsigned char *data;
-  char all;
-  char sign;			/* unsigned: 0 negative: -1 positive: 1 */
-  char scale;
-  char spare;			/* spare */
+	struct cb_tree_common	common;
+	size_t			size;
+	unsigned char		*data;
+	char			all;
+	char			sign;	/* unsigned: 0 negative: -1 positive: 1 */
+	char			scale;
+	char			spare;	/* spare */
 };
 
 #define CB_LITERAL(x)	(CB_TREE_CAST (CB_TAG_LITERAL, struct cb_literal, x))
@@ -370,8 +370,8 @@ extern cb_tree cb_concat_literals (cb_tree x1, cb_tree x2);
  */
 
 struct cb_decimal {
-  struct cb_tree_common common;
-  int id;
+	struct cb_tree_common	common;
+	int			id;
 };
 
 #define CB_DECIMAL(x)	(CB_TREE_CAST (CB_TAG_DECIMAL, struct cb_decimal, x))
@@ -385,15 +385,15 @@ extern cb_tree cb_build_decimal (int id);
  */
 
 struct cb_picture {
-  struct cb_tree_common common;
-  int size;			/* byte size */
-  char *orig;			/* original picture string */
-  char *str;			/* packed picture string */
-  enum cb_category category;	/* field category */
-  char digits;			/* the number of digit places */
-  char scale;			/* 1/10^scale */
-  char have_sign;		/* have 'S' */
-  char spare;			/* spare */
+	struct cb_tree_common	common;
+	int			size;		/* byte size */
+	char			*orig;		/* original picture string */
+	char			*str;		/* packed picture string */
+	enum cb_category	category;	/* field category */
+	char			digits;		/* the number of digit places */
+	char			scale;		/* 1/10^scale */
+	char			have_sign;	/* have 'S' */
+	char			spare;		/* spare */
 };
 
 #define CB_PICTURE(x)	(CB_TREE_CAST (CB_TAG_PICTURE, struct cb_picture, x))
@@ -407,58 +407,58 @@ extern cb_tree cb_build_picture (const char *str);
  */
 
 struct cb_field {
-  struct cb_tree_common common;
-  int id;			/* field id */
-  const char *name;		/* the original name */
-  const char *ename;		/* the externalized name */
-  int size;			/* field size */
-  int memory_size;		/* memory size */
-  int offset;			/* byte offset from the top (ie, 01 field) */
-  int level;			/* level number */
-  int occurs_min;		/* OCCURS <max> */
-  int occurs_max;		/* or OCCURS <min> TO <max> */
-  int indexes;			/* the number of parents who have OCCURS */
-  int count;			/* reference count */
-  cb_tree occurs_depending;	/* OCCURS ... DEPENDING ON */
-  enum cb_storage storage;
-  enum cb_usage usage;		/* USAGE */
-  cb_tree values;		/* VALUE */
-  cb_tree index_list;		/* INDEXED BY */
-  struct cb_field *parent;	/* upper level field (NULL for 01 fields) */
-  struct cb_field *children;	/* top of lower level fields */
-  struct cb_field *sister;	/* fields in the same level */
-  struct cb_field *redefines;	/* REDEFINES */
-  struct cb_field *rename_thru; /* RENAMES THRU */
-  struct cb_file *file;		/* file name associated in FD section */
-  struct cb_key {
-    int dir;			/* ASCENDING or DESCENDING */
-    cb_tree key;		/* KEY */
-    cb_tree ref;		/* reference used in SEARCH ALL */
-    cb_tree val;		/* value to be compared in SEARCH ALL */
-  } *keys;
-  int nkeys;			/* the number of keys */
-  struct cb_picture *pic;	/* PICTURE */
-  /* screen parameters */
-  cb_tree screen_line;
-  cb_tree screen_column;
-  cb_tree screen_from;
-  cb_tree screen_to;
-  long screen_flag;		/* flags used in SCREEN SECTION */
-  /* flags */
-  unsigned int flag_external      : 1;	/* EXTERNAL */
-  unsigned int flag_blank_zero    : 1;	/* BLANK WHEN ZERO */
-  unsigned int flag_justified     : 1;	/* JUSTIFIED RIGHT */
-  unsigned int flag_sign_leading  : 1;	/* SIGN IS LEADING */
-  unsigned int flag_sign_separate : 1;	/* SIGN IS SEPARATE */
-  unsigned int flag_synchronized  : 1;	/* SYNCHRONIZED */
-  unsigned int flag_occurs        : 1;	/* OCCURS */
-  unsigned int flag_invalid       : 1;	/* is broken */
-  unsigned int flag_binary_swap   : 1;	/* binary byteswap */
-  unsigned int flag_local         : 1;	/* has local scope */
-  unsigned int flag_base          : 1;
-  unsigned int flag_field         : 1;
-  unsigned int flag_spare	 : 20;
-};
+struct cb_tree_common common;
+	int		id;		/* field id */
+	const char	*name;		/* the original name */
+	const char	*ename;		/* the externalized name */
+	int		size;		/* field size */
+	int		memory_size;	/* memory size */
+	int		offset;		/* byte offset from top (01 field) */
+	int		level;		/* level number */
+	int		occurs_min;	/* OCCURS <max> */
+	int		occurs_max;	/* or OCCURS <min> TO <max> */
+	int		indexes;	/* number of parents who have OCCURS */
+	int		count;			/* reference count */
+	cb_tree		occurs_depending;	/* OCCURS ... DEPENDING ON */
+	enum cb_storage storage;
+	enum cb_usage	usage;		/* USAGE */
+	cb_tree		values;		/* VALUE */
+	cb_tree		index_list;	/* INDEXED BY */
+	struct cb_field *parent;	/* upper level field (NULL for 01 fields) */
+	struct cb_field *children;	/* top of lower level fields */
+	struct cb_field *sister;	/* fields in the same level */
+	struct cb_field *redefines;	/* REDEFINES */
+	struct cb_field *rename_thru;	/* RENAMES THRU */
+	struct cb_file	*file;		/* file name associated in FD section */
+	struct cb_key {
+		int	dir;		/* ASCENDING or DESCENDING */
+		cb_tree key;		/* KEY */
+		cb_tree ref;		/* reference used in SEARCH ALL */
+		cb_tree val;		/* value to be compared in SEARCH ALL */
+	} *keys;
+	int			nkeys;	/* the number of keys */
+	struct cb_picture	*pic;	/* PICTURE */
+	/* screen parameters */
+	cb_tree			screen_line;
+	cb_tree			screen_column;
+	cb_tree			screen_from;
+	cb_tree			screen_to;
+	long			screen_flag; /* flags used in SCREEN SECTION */
+	/* flags */
+	unsigned int flag_external      : 1;	/* EXTERNAL */
+	unsigned int flag_blank_zero    : 1;	/* BLANK WHEN ZERO */
+	unsigned int flag_justified     : 1;	/* JUSTIFIED RIGHT */
+	unsigned int flag_sign_leading  : 1;	/* SIGN IS LEADING */
+	unsigned int flag_sign_separate : 1;	/* SIGN IS SEPARATE */
+	unsigned int flag_synchronized  : 1;	/* SYNCHRONIZED */
+	unsigned int flag_occurs        : 1;	/* OCCURS */
+	unsigned int flag_invalid       : 1;	/* is broken */
+	unsigned int flag_binary_swap   : 1;	/* binary byteswap */
+	unsigned int flag_local         : 1;	/* has local scope */
+	unsigned int flag_base          : 1;
+	unsigned int flag_field         : 1;
+	unsigned int flag_spare		: 20;
+	};
 
 #define CB_FIELD(x)		(CB_TREE_CAST (CB_TAG_FIELD, struct cb_field, x))
 #define CB_FIELD_P(x)		(CB_TREE_TAG (x) == CB_TAG_FIELD)
@@ -487,33 +487,33 @@ extern int cb_field_subordinate (struct cb_field *p, struct cb_field *f);
  */
 
 struct cb_file {
-  struct cb_tree_common common;
-  const char *name;		/* the original name */
-  char *cname;			/* the name used in C */
-  /* SELECT */
-  cb_tree assign;		/* ASSIGN */
-  int optional;			/* OPTIONAL */
-  int organization;		/* ORGANIZATION */
-  int access_mode;		/* ACCESS MODE */
-  cb_tree file_status;		/* FILE STATUS */
-  cb_tree sharing;		/* SHARING */
-  cb_tree key;			/* RELATIVE/RECORD KEY */
-  struct cb_alt_key {
-    cb_tree key;
-    int duplicates;
-    struct cb_alt_key *next;
-  } *alt_key_list;		/* ALTERNATE RECORD KEY list */
-  /* FD/SD */
-  struct cb_field *record;	/* record descriptor */
-  int record_min, record_max;	/* RECORD CONTAINS */
-  cb_tree record_depending;	/* RECORD DEPENDING */
-  cb_tree linage_ctr;
-  cb_tree linage;
-  cb_tree latfoot;
-  cb_tree lattop;
-  cb_tree latbot;
-  /* STANDARD ERROR PROCEDURE */
-  struct cb_label *handler;	/* error handler */
+	struct cb_tree_common	common;
+	const char		*name;			/* the original name */
+	char			*cname;			/* the name used in C */
+	/* SELECT */
+	cb_tree			assign;			/* ASSIGN */
+	int			optional;		/* OPTIONAL */
+	int			organization;		/* ORGANIZATION */
+	int			access_mode;		/* ACCESS MODE */
+	cb_tree			file_status;		/* FILE STATUS */
+	cb_tree			sharing;		/* SHARING */
+	cb_tree			key;			/* RELATIVE/RECORD KEY */
+	struct cb_alt_key {
+		cb_tree			key;
+		int			duplicates;
+		struct cb_alt_key	*next;
+	}			*alt_key_list;		/* ALTERNATE RECORD KEY */
+	/* FD/SD */
+	struct cb_field		*record;		/* record descriptor */
+	int			record_min, record_max;	/* RECORD CONTAINS */
+	cb_tree			record_depending;	/* RECORD DEPENDING */
+	cb_tree			linage_ctr;
+	cb_tree			linage;
+	cb_tree			latfoot;
+	cb_tree			lattop;
+	cb_tree			latbot;
+	/* STANDARD ERROR PROCEDURE */
+	struct cb_label		*handler;	/* error handler */
 };
 
 #define CB_FILE(x)	(CB_TREE_CAST (CB_TAG_FILE, struct cb_file, x))
@@ -529,16 +529,16 @@ extern void finalize_file (struct cb_file *f, struct cb_field *records);
  */
 
 struct cb_reference {
-  struct cb_tree_common common;
-  struct cb_word *word;
-  enum cb_operand_type type;
-  cb_tree value;		/* the item referred by this reference */
-  cb_tree subs;			/* the list of subscripts */
-  cb_tree offset;		/* 1st operand of reference modification */
-  cb_tree length;		/* 2nd operand of reference modification */
-  cb_tree check;
-  cb_tree chain;		/* next qualified name */
-  int all;
+	struct cb_tree_common	common;
+	struct cb_word		*word;
+	enum cb_operand_type	type;
+	cb_tree			value;		/* item referred by this reference */
+	cb_tree			subs;		/* the list of subscripts */
+	cb_tree			offset;		/* 1st operand of reference modification */
+	cb_tree			length;		/* 2nd operand of reference modification */
+	cb_tree			check;
+	cb_tree			chain;		/* next qualified name */
+	int all;
 };
 
 #define CB_REFERENCE(x)		(CB_TREE_CAST (CB_TAG_REFERENCE, struct cb_reference, x))
@@ -577,10 +577,10 @@ extern cb_tree cb_ref (cb_tree x);
 */
 
 struct cb_binary_op {
-  struct cb_tree_common common;
-  char op;
-  cb_tree x;
-  cb_tree y;
+	struct cb_tree_common	common;
+	int			op;
+	cb_tree			x;
+	cb_tree			y;
 };
 
 #define CB_BINARY_OP(x)		(CB_TREE_CAST (CB_TAG_BINARY_OP, struct cb_binary_op, x))
@@ -598,11 +598,11 @@ extern cb_tree cb_build_binary_list (cb_tree l, char op);
  */
 
 struct cb_funcall {
-  struct cb_tree_common common;
-  const char *name;
-  int argc;
-  int varcnt;
-  cb_tree argv[4];
+	struct cb_tree_common	common;
+	const char		*name;
+	int			argc;
+	int			varcnt;
+	cb_tree			argv[4];
 };
 
 #define CB_FUNCALL(x)		(CB_TREE_CAST (CB_TAG_FUNCALL, struct cb_funcall, x))
@@ -622,15 +622,15 @@ extern cb_tree cb_build_funcall (const char *name, int argc, cb_tree a1, cb_tree
  */
 
 enum cb_cast_type {
-  CB_CAST_INTEGER,
-  CB_CAST_ADDRESS,
-  CB_CAST_LENGTH,
+	CB_CAST_INTEGER,
+	CB_CAST_ADDRESS,
+	CB_CAST_LENGTH
 };
 
 struct cb_cast {
-  struct cb_tree_common common;
-  enum cb_cast_type type;
-  cb_tree val;
+	struct cb_tree_common	common;
+	enum cb_cast_type	type;
+	cb_tree			val;
 };
 
 #define CB_CAST(x)	(CB_TREE_CAST (CB_TAG_CAST, struct cb_cast, x))
@@ -648,13 +648,13 @@ extern cb_tree cb_build_cast (enum cb_cast_type type, cb_tree val);
  */
 
 struct cb_label {
-  struct cb_tree_common common;
-  int id;
-  const char *name;
-  struct cb_label *section;
-  cb_tree children;
-  char need_begin;
-  char need_return;
+	struct cb_tree_common	common;
+	int			id;
+	const char		*name;
+	struct cb_label		*section;
+	cb_tree			children;
+	int			need_begin;
+	int			need_return;
 };
 
 #define CB_LABEL(x)		(CB_TREE_CAST (CB_TAG_LABEL, struct cb_label, x))
@@ -668,9 +668,9 @@ extern cb_tree cb_build_label (cb_tree name, struct cb_label *section);
  */
 
 struct cb_assign {
-  struct cb_tree_common common;
-  cb_tree var;
-  cb_tree val;
+	struct cb_tree_common	common;
+	cb_tree			var;
+	cb_tree			val;
 };
 
 #define CB_ASSIGN(x)		(CB_TREE_CAST (CB_TAG_ASSIGN, struct cb_assign, x))
@@ -791,12 +791,12 @@ extern cb_tree			cb_build_intrinsic (cb_tree name, cb_tree args);
  */
 
 struct cb_initialize {
-  struct cb_tree_common common;
-  cb_tree var;
-  cb_tree val;
-  cb_tree rep;
-  cb_tree def;
-  int flag_statement;
+	struct cb_tree_common	common;
+	cb_tree			var;
+	cb_tree			val;
+	cb_tree			rep;
+	cb_tree			def;
+	int			flag_statement;
 };
 
 #define CB_INITIALIZE(x)	(CB_TREE_CAST (CB_TAG_INITIALIZE, struct cb_initialize, x))
@@ -810,12 +810,12 @@ extern cb_tree cb_build_initialize (cb_tree var, cb_tree val, cb_tree rep, cb_tr
  */
 
 struct cb_search {
-  struct cb_tree_common common;
-  int flag_all;
-  cb_tree table;
-  cb_tree var;
-  cb_tree end_stmt;
-  cb_tree whens;
+	struct cb_tree_common	common;
+	int			flag_all;
+	cb_tree			table;
+	cb_tree			var;
+	cb_tree			end_stmt;
+	cb_tree			whens;
 };
 
 #define CB_SEARCH(x)		(CB_TREE_CAST (CB_TAG_SEARCH, struct cb_search, x))
@@ -833,11 +833,11 @@ extern cb_tree cb_build_search (int flag_all, cb_tree table, cb_tree var, cb_tre
 #define CB_CALL_BY_VALUE	3
 
 struct cb_call {
-  struct cb_tree_common common;
-  cb_tree name;
-  cb_tree args;
-  cb_tree stmt1;
-  cb_tree stmt2;
+	struct cb_tree_common	common;
+	cb_tree			name;
+	cb_tree			args;
+	cb_tree			stmt1;
+	cb_tree			stmt2;
 };
 
 #define CB_CALL(x)		(CB_TREE_CAST (CB_TAG_CALL, struct cb_call, x))
@@ -851,9 +851,9 @@ extern cb_tree cb_build_call (cb_tree name, cb_tree args, cb_tree stmt1, cb_tree
  */
 
 struct cb_goto {
-  struct cb_tree_common common;
-  cb_tree target;
-  cb_tree depending;
+	struct cb_tree_common	common;
+	cb_tree			target;
+	cb_tree			depending;
 };
 
 #define CB_GOTO(x)		(CB_TREE_CAST (CB_TAG_GOTO, struct cb_goto, x))
@@ -867,10 +867,10 @@ extern cb_tree cb_build_goto (cb_tree target, cb_tree depending);
  */
 
 struct cb_if {
-  struct cb_tree_common common;
-  cb_tree test;
-  cb_tree stmt1;
-  cb_tree stmt2;
+	struct cb_tree_common	common;
+	cb_tree			test;
+	cb_tree			stmt1;
+	cb_tree			stmt2;
 };
 
 #define CB_IF(x)		(CB_TREE_CAST (CB_TAG_IF, struct cb_if, x))
@@ -884,29 +884,29 @@ extern cb_tree cb_build_if (cb_tree test, cb_tree stmt1, cb_tree stmt2);
  */
 
 enum cb_perform_type {
-  CB_PERFORM_EXIT,
-  CB_PERFORM_ONCE,
-  CB_PERFORM_TIMES,
-  CB_PERFORM_UNTIL
+	CB_PERFORM_EXIT,
+	CB_PERFORM_ONCE,
+	CB_PERFORM_TIMES,
+	CB_PERFORM_UNTIL
 };
 
 struct cb_perform_varying {
-  struct cb_tree_common common;
-  cb_tree name;
-  cb_tree from;
-  cb_tree step;
-  cb_tree until;
+	struct cb_tree_common	common;
+	cb_tree			name;
+	cb_tree			from;
+	cb_tree			step;
+	cb_tree			until;
 };
 
 struct cb_perform {
-  struct cb_tree_common common;
-  enum cb_perform_type type;
-  cb_tree test;
-  cb_tree body;
-  cb_tree data;
-  cb_tree varying;
-  cb_tree exit_label;
-  cb_tree cycle_label;
+	struct cb_tree_common	common;
+	enum cb_perform_type	type;
+	cb_tree			test;
+	cb_tree			body;
+	cb_tree			data;
+	cb_tree			varying;
+	cb_tree			exit_label;
+	cb_tree			cycle_label;
 };
 
 #define CB_PERFORM_VARYING(x)	(CB_TREE_CAST (CB_TAG_PERFORM_VARYING, struct cb_perform_varying, x))
@@ -922,14 +922,14 @@ extern cb_tree cb_build_perform_varying (cb_tree name, cb_tree from, cb_tree ste
  */
 
 struct cb_statement {
-  struct cb_tree_common common;
-  const char *name;
-  cb_tree body;
-  cb_tree file;
-  int handler_id;
-  cb_tree handler1;
-  cb_tree handler2;
-  int need_terminator;
+	struct cb_tree_common	common;
+	const char		*name;
+	cb_tree			body;
+	cb_tree			file;
+	int			handler_id;
+	cb_tree			handler1;
+	cb_tree			handler2;
+	int			need_terminator;
 };
 
 #define CB_STATEMENT(x)		(CB_TREE_CAST (CB_TAG_STATEMENT, struct cb_statement, x))
@@ -943,10 +943,10 @@ extern struct cb_statement *cb_build_statement (const char *name);
  */
 
 struct cb_list {
-  struct cb_tree_common common;
-  cb_tree purpose;
-  cb_tree value;
-  cb_tree chain;
+	struct cb_tree_common	common;
+	cb_tree			purpose;
+	cb_tree			value;
+	cb_tree			chain;
 };
 
 #define CB_LIST(x)	(CB_TREE_CAST (CB_TAG_LIST, struct cb_list, x))
@@ -983,42 +983,42 @@ extern int cb_list_length (cb_tree l);
 #define CB_WORD_HASH_SIZE	133
 
 struct cb_word {
-  const char *name;		/* word name */
-  int count;			/* the number of words with the same name */
-  int error;			/* set to 1 if error displayed */
-  cb_tree items;		/* objects associated with this word */
-  struct cb_word *next;		/* next word with the same hash value */
+	const char	*name;		/* word name */
+	int		count;		/* number of words with the same name */
+	int		error;		/* set to 1 if error displayed */
+	cb_tree		items;		/* objects associated with this word */
+	struct cb_word	*next;		/* next word with the same hash value */
 };
 
 struct cb_program {
-  /* program variables */
-  const char *program_id;
-  unsigned char decimal_point;		/* '.' or ',' */
-  unsigned char currency_symbol;	/* '$' or user-specified */
-  unsigned char numeric_separator;	/* ',' or '.' */
-  unsigned char spare;			/* spare */
-  cb_tree entry_list;
-  cb_tree file_list;
-  cb_tree exec_list;
-  cb_tree label_list;
-  cb_tree reference_list;
-  cb_tree alphabet_name_list;
-  cb_tree class_name_list;
-  struct cb_field *working_storage;
-  struct cb_field *local_storage;
-  struct cb_field *linkage_storage;
-  struct cb_field *screen_storage;
-  struct cb_label *file_handler[5];
-  cb_tree collating_sequence;
-  char flag_common;		/* COMMON PROGRAM */
-  char flag_initial;		/* INITIAL PROGRAM */
-  char flag_recursive;		/* RECURSIVE PROGRAM */
-  char flag_screen;		/* have SCREEN SECTION */
-  /* internal variables */
-  int loop_counter;
-  int decimal_index;
-  int decimal_index_max;
-  struct cb_word *word_table[CB_WORD_HASH_SIZE];
+	/* program variables */
+	const char		*program_id;
+	unsigned char		decimal_point;		/* '.' or ',' */
+	unsigned char		currency_symbol;	/* '$'/user-specified */
+	unsigned char		numeric_separator;	/* ',' or '.' */
+	unsigned char		spare;			/* spare */
+	cb_tree			entry_list;
+	cb_tree			file_list;
+	cb_tree			exec_list;
+	cb_tree			label_list;
+	cb_tree			reference_list;
+	cb_tree			alphabet_name_list;
+	cb_tree			class_name_list;
+	struct cb_field		*working_storage;
+	struct cb_field		*local_storage;
+	struct cb_field		*linkage_storage;
+	struct cb_field		*screen_storage;
+	struct cb_label		*file_handler[5];
+	cb_tree			collating_sequence;
+	char			flag_common;	/* COMMON PROGRAM */
+	char			flag_initial;	/* INITIAL PROGRAM */
+	char			flag_recursive;	/* RECURSIVE PROGRAM */
+	char			flag_screen;	/* have SCREEN SECTION */
+	/* internal variables */
+	int			loop_counter;
+	int			decimal_index;
+	int			decimal_index_max;
+	struct cb_word		*word_table[CB_WORD_HASH_SIZE];
 };
 
 extern struct cb_program *cb_build_program (void);
@@ -1187,7 +1187,7 @@ extern cb_tree cb_build_write_advancing_mnemonic (cb_tree pos, cb_tree mnemonic)
 extern cb_tree cb_build_write_advancing_page (cb_tree pos);
 
 /* bytegen.c */
-extern void bytegen (struct cb_program *prog);
+/* extern void bytegen (struct cb_program *prog); */
 
 /* codegen.c */
 extern void codegen (struct cb_program *prog);
