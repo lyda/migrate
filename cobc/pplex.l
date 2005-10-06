@@ -132,6 +132,7 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
 
 "AUTHOR" |
 "DATE-WRITTEN" |
+"DATE-MODIFIED" |
 "DATE-COMPILED" |
 "INSTALLATION" |
 "SECURITY" {

@@ -1,5 +1,9 @@
 2005-10-06  Roger While <simrw@sim-basis.de>
 
+	pplex.l : Ignore DATE-MODIFIED
+
+2005-10-06  Roger While <simrw@sim-basis.de>
+
 	* Indent again - typeck.c
 	  indents too far - need to look at cb_build_identifier
 
