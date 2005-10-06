@@ -1,3 +1,8 @@
+2005-10-06  Roger While <simrw@sim-basis.de>
+
+	* Indent again - typeck.c
+	  indents too far - need to look at cb_build_identifier
+
 2005-10-01  Roger While <simrw@sim-basis.de>
 
 	* Indent run on most source

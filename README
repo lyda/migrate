@@ -111,7 +111,7 @@ minumum version before building OpenCOBOL:
   o Automake 1.8
   o Libtool 1.5.2
   o Gettext 0.14.1
-  o Bison 1.85
+  o Bison 1.875
   o Flex 2.5.4
 
 After checking out the latest source from the repository, run
