@@ -24,6 +24,7 @@
 AT_SETUP([PACKED-DECIMAL dump])
 
 AT_DATA([dump.c], [
+#include <stdio.h>
 int dump (unsigned char *data)
 {
   int i;

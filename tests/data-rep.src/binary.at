@@ -29,6 +29,7 @@ binary-byteorder: big-endian
 ])
 
 AT_DATA([dump.c], [
+#include <stdio.h>
 int dump (unsigned char *data)
 {
   int i;
@@ -211,6 +212,7 @@ binary-byteorder: native
 ])
 
 AT_DATA([dump.c], [
+#include <stdio.h>
 int dump (unsigned char *data)
 {
   int i;
@@ -393,6 +395,7 @@ binary-byteorder: big-endian
 ])
 
 AT_DATA([dump.c], [
+#include <stdio.h>
 int dump (unsigned char *data)
 {
   int i;
@@ -575,6 +578,7 @@ binary-byteorder: native
 ])
 
 AT_DATA([dump.c], [
+#include <stdio.h>
 int dump (unsigned char *data)
 {
   int i;
@@ -757,6 +761,7 @@ binary-byteorder: big-endian
 ])
 
 AT_DATA([dump.c], [
+#include <stdio.h>
 int dump (unsigned char *data)
 {
   int i;
@@ -939,6 +944,7 @@ binary-byteorder: native
 ])
 
 AT_DATA([dump.c], [
+#include <stdio.h>
 int dump (unsigned char *data)
 {
   int i;
