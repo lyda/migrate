@@ -477,6 +477,10 @@ process_command_line (int argc, char *argv[])
 
 	strcat (cob_cflags, " -fsigned-char");
 
+#if defined (__GNUC__) && (__GNUC__ >= 4)
+	strcat (cob_cflags, " -Wno-pointer-sign");
+#endif
+
 	if (cb_compile_level == CB_LEVEL_EXECUTABLE) {
 		cb_flag_main = 1;
 	}

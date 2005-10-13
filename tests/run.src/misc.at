@@ -306,6 +306,7 @@ AT_CLEANUP
 AT_SETUP([MOVE X'00'])
 
 AT_DATA([dump.c], [
+#include <stdio.h>
 int dump (unsigned char *data)
 {
   printf ("%02x%02x%02x", data[[0]], data[[1]], data[[2]]);
@@ -495,6 +496,7 @@ binary-byteorder: native
 ])
 
 AT_DATA([dump.c], [
+#include <stdio.h>
 int dump (int *p)
 {
   printf ("%8.8d\n", *p);

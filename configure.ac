@@ -267,7 +267,7 @@ COB_SHARED_OPT="-shared"
 if test "$COB_HAS_CFLAGS" = "no"
 then
 	CFLAGS=`echo $CFLAGS | sed -e 's/-g //'`
-	if test "$COB_CC" = "gcc"
+	if test "`basename $COB_CC`" = "gcc"
 	then
 		cob_temp_flags="`gcc cpucheck.c -o cpucheck 1>/dev/null 2>&1 && ./cpucheck 2>/dev/null`"
 		CFLAGS="$CFLAGS $cob_temp_flags -finline-functions -finline-limit=1200 -fomit-frame-pointer"

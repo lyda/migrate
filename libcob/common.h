@@ -219,7 +219,7 @@ extern int cob_real_get_sign (cob_field *f);
 extern void cob_real_put_sign (cob_field *f, int sign);
 extern char *cob_field_to_string (cob_field *f, char *s);
 
-extern char *cob_external_addr (char *, int);
+extern unsigned char *cob_external_addr (char *, int);
 
 /* Switch */
 

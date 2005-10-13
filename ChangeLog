@@ -1,3 +1,7 @@
+2005-10-13  Roger While <simrw@sim-basis.de>
+
+	* configure.ac : Use basename for gcc
+
 2005-10-06  Roger While <simrw@sim-basis.de>
 
 	* README : Typo for Bison

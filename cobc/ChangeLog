@@ -1,3 +1,7 @@
+2005-10-13  Roger While <simrw@sim-basis.de>
+
+	cobc.c : For GCC >= 4, add -Wnopointer-sign
+
 2005-10-06  Roger While <simrw@sim-basis.de>
 
 	pplex.l : Ignore DATE-MODIFIED

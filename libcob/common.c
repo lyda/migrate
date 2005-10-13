@@ -838,7 +838,7 @@ cob_check_ref_mod (int offset, int length, int size, const char *name)
 	}
 }
 
-char *
+unsigned char *
 cob_external_addr (char *exname, int exlength)
 {
 	static cob_external *basext = NULL;
