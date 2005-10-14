@@ -371,7 +371,7 @@ at_help_all='1;fundamental.at:22;DISPLAY literals;;
 60;misc.at:819;STRING with subscript reference;;
 61;misc.at:840;READ INTO AT-END sequence;;
 62;misc.at:873;First READ on empty SEQUENTIAL INDEXED file;;
-63;misc.at:907;REWRITE a RELATIVE file with RANDAM access;;
+63;misc.at:907;REWRITE a RELATIVE file with RANDOM access;;
 64;misc.at:953;SORT: table sort;;
 65;misc.at:986;SORT nonexistent file;;
 66;misc.at:1020;PIC ZZZ-, ZZZ+;;
@@ -6395,10 +6395,10 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  63 ) # 63. misc.at:907: REWRITE a RELATIVE file with RANDAM access
+  63 ) # 63. misc.at:907: REWRITE a RELATIVE file with RANDOM access
     at_setup_line='misc.at:907'
-    at_desc='REWRITE a RELATIVE file with RANDAM access'
-    $at_quiet $ECHO_N " 63: REWRITE a RELATIVE file with RANDAM access   $ECHO_C"
+    at_desc='REWRITE a RELATIVE file with RANDOM access'
+    $at_quiet $ECHO_N " 63: REWRITE a RELATIVE file with RANDOM access   $ECHO_C"
     at_xfail=no
     (
       echo "63. misc.at:907: testing ..."

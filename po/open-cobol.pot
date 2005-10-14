@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2005-10-13 19:33+0200\n"
+"POT-Creation-Date: 2005-10-14 18:34+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -340,147 +340,147 @@ msgstr ""
 msgid "subscript of '%s' out of bounds: %d"
 msgstr ""
 
-#: cobc/typeck.c:495 libcob/common.c:829
+#: cobc/typeck.c:488 libcob/common.c:829
 #, c-format
 msgid "offset of '%s' out of bounds: %d"
 msgstr ""
 
-#: cobc/typeck.c:500 libcob/common.c:836
+#: cobc/typeck.c:493 libcob/common.c:836
 #, c-format
 msgid "length of '%s' out of bounds: %d"
 msgstr ""
 
-#: cobc/typeck.c:608
+#: cobc/typeck.c:601
 #, c-format
 msgid "'%s' not alphabet name"
 msgstr ""
 
-#: cobc/typeck.c:668
+#: cobc/typeck.c:661
 #, c-format
 msgid "'%s' not procedure name"
 msgstr ""
 
-#: cobc/typeck.c:778
+#: cobc/typeck.c:771
 msgid "suggest parentheses around AND within OR"
 msgstr ""
 
-#: cobc/typeck.c:1009
+#: cobc/typeck.c:1002
 msgid "invalid expression"
 msgstr ""
 
-#: cobc/typeck.c:1537
+#: cobc/typeck.c:1516
 #, c-format
 msgid "invalid input stream '%s'"
 msgstr ""
 
-#: cobc/typeck.c:1552 cobc/typeck.c:1561 cobc/typeck.c:1728 cobc/typeck.c:1731
-#: cobc/typeck.c:1739
+#: cobc/typeck.c:1531 cobc/typeck.c:1540 cobc/typeck.c:1707 cobc/typeck.c:1710
+#: cobc/typeck.c:1718
 #, c-format
 msgid "'%s' undefined in SPECIAL-NAMES"
 msgstr ""
 
-#: cobc/typeck.c:1626 cobc/typeck.c:1633 cobc/typeck.c:1640
+#: cobc/typeck.c:1605 cobc/typeck.c:1612 cobc/typeck.c:1619
 msgid "wrong number of data items"
 msgstr ""
 
-#: cobc/typeck.c:1711
+#: cobc/typeck.c:1690
 msgid "invalid output stream"
 msgstr ""
 
-#: cobc/typeck.c:1838
+#: cobc/typeck.c:1817
 msgid "wrong number of WHEN parameters"
 msgstr ""
 
-#: cobc/typeck.c:1874
+#: cobc/typeck.c:1853
 msgid "GO TO with multiple procedure-names"
 msgstr ""
 
-#: cobc/typeck.c:1947
+#: cobc/typeck.c:1926
 msgid "data name expected before CHARACTERS"
 msgstr ""
 
-#: cobc/typeck.c:1956
+#: cobc/typeck.c:1935
 msgid "data name expected before ALL"
 msgstr ""
 
-#: cobc/typeck.c:1965
+#: cobc/typeck.c:1944
 msgid "data name expected before LEADING"
 msgstr ""
 
-#: cobc/typeck.c:1974
+#: cobc/typeck.c:1953
 #, c-format
 msgid "ALL or LEADING expected before '%s'"
 msgstr ""
 
-#: cobc/typeck.c:2038
+#: cobc/typeck.c:2017
 #, c-format
 msgid "'%s' defined here as PIC %s"
 msgstr ""
 
-#: cobc/typeck.c:2040
+#: cobc/typeck.c:2019
 #, c-format
 msgid "'%s' defined here as a group of length %d"
 msgstr ""
 
-#: cobc/typeck.c:2158
+#: cobc/typeck.c:2137
 msgid "data item not signed"
 msgstr ""
 
-#: cobc/typeck.c:2162
+#: cobc/typeck.c:2141
 msgid "ignoring negative sign"
 msgstr ""
 
-#: cobc/typeck.c:2239
+#: cobc/typeck.c:2218
 msgid "move non-integer to alphanumeric"
 msgstr ""
 
-#: cobc/typeck.c:2265
+#: cobc/typeck.c:2244
 msgid "invalid VALUE clause"
 msgstr ""
 
-#: cobc/typeck.c:2267 cobc/typeck.c:2540 cobc/typeck.c:2543
+#: cobc/typeck.c:2246 cobc/typeck.c:2519 cobc/typeck.c:2522
 msgid "invalid MOVE statement"
 msgstr ""
 
-#: cobc/typeck.c:2271
+#: cobc/typeck.c:2250
 msgid "numeric value is expected"
 msgstr ""
 
-#: cobc/typeck.c:2275
+#: cobc/typeck.c:2254
 msgid "alphanumeric value is expected"
 msgstr ""
 
-#: cobc/typeck.c:2279
+#: cobc/typeck.c:2258
 msgid "value does not fit the picture string"
 msgstr ""
 
-#: cobc/typeck.c:2282
+#: cobc/typeck.c:2261
 msgid "value size exceeds data size"
 msgstr ""
 
-#: cobc/typeck.c:2695
+#: cobc/typeck.c:2669
 msgid "KEY ignored with sequential READ"
 msgstr ""
 
-#: cobc/typeck.c:2766
+#: cobc/typeck.c:2740
 #, c-format
 msgid "undeclared key '%s'"
 msgstr ""
 
-#: cobc/typeck.c:2770
+#: cobc/typeck.c:2744
 msgid "invalid SEARCH ALL condition"
 msgstr ""
 
-#: cobc/typeck.c:2844
+#: cobc/typeck.c:2818
 msgid "the targets of SET must be either indexes or pointers"
 msgstr ""
 
-#: cobc/typeck.c:2858
+#: cobc/typeck.c:2832
 #, c-format
 msgid "the address of '%s' cannot be changed"
 msgstr ""
 
-#: cobc/typeck.c:3112
+#: cobc/typeck.c:3086
 msgid "invalid mnemonic name"
 msgstr ""
 
@@ -620,7 +620,7 @@ msgid "Include line directive in the output"
 msgstr ""
 
 #: cobc/flag.def:46
-msgid "Inline runtime functions in the most common cases"
+msgid "Inline runtime functions (deprecated)"
 msgstr ""
 
 #: cobc/warning.def:25

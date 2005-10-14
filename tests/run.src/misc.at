@@ -904,7 +904,7 @@ AT_CHECK([./prog], [0], [OK])
 AT_CLEANUP
 
 
-AT_SETUP([REWRITE a RELATIVE file with RANDAM access])
+AT_SETUP([REWRITE a RELATIVE file with RANDOM access])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.

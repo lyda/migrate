@@ -1320,28 +1320,14 @@ cb_build_cond (cb_tree x)
 				x = cb_list_reverse (decimal_stack);
 				decimal_stack = NULL;
 			} else {
-				if (cb_flag_runtime_inlining) {
-					if (CB_LITERAL_P (p->y)) {
-#if 0
-						struct cb_literal *l = CB_LITERAL (p->y);
-						int size = cb_field_size (p->x);
-#endif
-
-						if (CB_TREE_CLASS (p->x) == CB_CLASS_NUMERIC
-						    && CB_TREE_CLASS (p->y) == CB_CLASS_NUMERIC
-						    && cb_fits_int (p->y)) {
-							x = cb_build_funcall_2 ("cob_cmp_int",
-										p->x,
-										cb_build_cast_integer (p->
-												       y));
-							break;
-						}
-#if 0
-						if (size > 0 && size >= l->size && !l->all) {
-							x = cb_build_funcall_2 ("@memcmp", p->x, p->y);
-							break;
-						}
-#endif
+				if (CB_LITERAL_P (p->y)) {
+					if (CB_TREE_CLASS (p->x) == CB_CLASS_NUMERIC
+					    && CB_TREE_CLASS (p->y) == CB_CLASS_NUMERIC
+					    && cb_fits_int (p->y)) {
+						x = cb_build_funcall_2 ("cob_cmp_int",
+							p->x,
+							cb_build_cast_integer (p->y));
+						break;
 					}
 				}
 
@@ -2554,38 +2540,33 @@ cb_build_move (cb_tree src, cb_tree dst)
 	if (CB_INTRINSIC_P (src) || CB_INTRINSIC_P (dst))
 		return cb_build_move_call (src, dst);
 
-	if (cb_flag_runtime_inlining) {
-		f = cb_field (dst);
+	f = cb_field (dst);
 
-		/* no optimization for binary swap and packed decimal for now */
-		if (f->flag_binary_swap
-		    || f->usage == CB_USAGE_PACKED
-		    || f->usage == CB_USAGE_FLOAT
-		    || f->usage == CB_USAGE_DOUBLE
-		    || ((f->usage == CB_USAGE_BINARY ||
-			 f->usage == CB_USAGE_COMP_5 || f->usage == CB_USAGE_COMP_X)
-			&& (f->size == 3 || f->size == 5 || f->size == 6 || f->size == 7)))
-			return cb_build_move_call (src, dst);
+	/* no optimization for binary swap and packed decimal for now */
+	if (f->flag_binary_swap
+	    || f->usage == CB_USAGE_PACKED
+	    || f->usage == CB_USAGE_FLOAT
+	    || f->usage == CB_USAGE_DOUBLE
+	    || ((f->usage == CB_USAGE_BINARY ||
+		 f->usage == CB_USAGE_COMP_5 || f->usage == CB_USAGE_COMP_X)
+		&& (f->size == 3 || f->size == 5 || f->size == 6 || f->size == 7)))
+		return cb_build_move_call (src, dst);
 
-		/* output optimal code */
-		if (src == cb_zero)
-			return cb_build_move_zero (dst);
-		else if (src == cb_space)
-			return cb_build_move_space (dst);
-		else if (src == cb_high)
-			return cb_build_move_high (dst);
-		else if (src == cb_low)
-			return cb_build_move_low (dst);
-		else if (src == cb_quote)
-			return cb_build_move_quote (dst);
-		else if (CB_LITERAL_P (src))
-			return cb_build_move_literal (src, dst);
-		else
-			return cb_build_move_field (src, dst);
-	}
+	/* output optimal code */
+	if (src == cb_zero)
+		return cb_build_move_zero (dst);
+	else if (src == cb_space)
+		return cb_build_move_space (dst);
+	else if (src == cb_high)
+		return cb_build_move_high (dst);
+	else if (src == cb_low)
+		return cb_build_move_low (dst);
+	else if (src == cb_quote)
+		return cb_build_move_quote (dst);
+	else if (CB_LITERAL_P (src))
+		return cb_build_move_literal (src, dst);
 
-	/* output runtime call */
-	return cb_build_move_call (src, dst);
+	return cb_build_move_field (src, dst);
 }
 
 void
