@@ -352,7 +352,7 @@ cob_unstring_delimited (cob_field *dlm, int all)
 	unsigned char	*p;
 
 	/* build regexp, quoting the delimiter */
-	p = unstring_regexp + strlen (unstring_regexp);
+	p = unstring_regexp + strlen ((char *)unstring_regexp);
 	if (unstring_ndlms > 0) {
 		*p++ = '|';
 	}
@@ -397,10 +397,10 @@ cob_unstring_into (cob_field *dst, cob_field *dlm, cob_field *cnt)
 	} else {
 		/* delimit using regexec */
 		if (!unstring_reg_inited) {
-			regcomp (&unstring_reg, unstring_regexp, REG_EXTENDED);
+			regcomp (&unstring_reg, (char *)unstring_regexp, REG_EXTENDED);
 			unstring_reg_inited = 1;
 		}
-		if (regexec (&unstring_reg, start, unstring_ndlms + 1, match, 0) == 0
+		if (regexec (&unstring_reg, (char *)start, unstring_ndlms + 1, match, 0) == 0
 		    && match[0].rm_so <= unstring_src->size - unstring_offset) {
 			/* match */
 			int	i;

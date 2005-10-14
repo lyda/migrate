@@ -208,22 +208,22 @@ cb_build_registers (void)
 	memset (buff, 0, sizeof (buff));
 	strftime (buff, 17, "%m/%d/%y%H.%M.%S", localtime (&t));
 	cb_build_constant (cb_build_reference ("WHEN-COMPILED"),
-			   cb_build_alphanumeric_literal (buff, 16));
+			   cb_build_alphanumeric_literal ((ucharptr)buff, 16));
 
 	/* FUNCTION WHEN-COMPILED */
 	memset (buff, 0, sizeof (buff));
 	strftime (buff, 22, "%Y%m%d%H%M%S00%z", localtime (&t));
-	cb_intr_whencomp = cb_build_alphanumeric_literal (buff, 21);
+	cb_intr_whencomp = cb_build_alphanumeric_literal ((ucharptr)buff, 21);
 
 	/* FUNCTION PI */
 	memset (buff, 0, sizeof (buff));
 	strcpy (buff, "314159265358979323");
-	cb_intr_pi = cb_build_numeric_literal (0, buff, 17);
+	cb_intr_pi = cb_build_numeric_literal (0, (ucharptr)buff, 17);
 
 	/* FUNCTION E */
 	memset (buff, 0, sizeof (buff));
 	strcpy (buff, "271828182845904523");
-	cb_intr_e = cb_build_numeric_literal (0, buff, 17);
+	cb_intr_e = cb_build_numeric_literal (0, (ucharptr)buff, 17);
 
 }
 
@@ -251,9 +251,9 @@ const char *
 cb_build_program_id (cb_tree name, cb_tree alt_name)
 {
 	if (alt_name)
-		return CB_LITERAL (alt_name)->data;
+		return (char *)CB_LITERAL (alt_name)->data;
 	else if (CB_LITERAL_P (name))
-		return cb_encode_program_id (CB_LITERAL (name)->data);
+		return cb_encode_program_id ((char *)CB_LITERAL (name)->data);
 	else
 		return cb_encode_program_id (CB_NAME (name));
 }
@@ -336,7 +336,7 @@ cb_build_assignment_name (cb_tree name)
 				s = strchr (s, '-') + 1;
 			}
 			/* convert the name into literal */
-			return cb_build_alphanumeric_literal (s, strlen (s));
+			return cb_build_alphanumeric_literal ((ucharptr)s, strlen (s));
 		}
 		}
 
@@ -448,22 +448,16 @@ cb_build_identifier (cb_tree x)
 							cb_tree e1, e2;
 
 							e1 = cb_build_funcall_4 ("cob_check_odo",
-										 cb_build_cast_integer
-										 (p->occurs_depending),
-										 cb_int (p->occurs_min),
-										 cb_int (p->occurs_max),
-										 cb_build_string0
-										 (cb_field
-										  (p->occurs_depending)->
-										  name));
+								 cb_build_cast_integer(p->occurs_depending),
+								 cb_int (p->occurs_min),
+								 cb_int (p->occurs_max),
+								 cb_build_string0
+								 ((ucharptr)(cb_field (p->occurs_depending)->name)));
 							e2 = cb_build_funcall_4 ("cob_check_subscript",
-										 cb_build_cast_integer
-										 (sub),
-										 cb_int (p->occurs_min),
-										 cb_build_cast_integer
-										 (p->occurs_depending),
-										 cb_build_string0 (p->
-												   name));
+								 cb_build_cast_integer(sub),
+								 cb_int (p->occurs_min),
+								 cb_build_cast_integer(p->occurs_depending),
+								 cb_build_string0 ((ucharptr)p->name));
 							r->check = cb_list_add (r->check, e1);
 							r->check = cb_list_add (r->check, e2);
 						}
@@ -472,11 +466,10 @@ cb_build_identifier (cb_tree x)
 							cb_tree e1;
 
 							e1 = cb_build_funcall_4 ("cob_check_subscript",
-										 cb_build_cast_integer
-										 (sub), cb_int1,
-										 cb_int (p->occurs_max),
-										 cb_build_string0 (p->
-												   name));
+									 cb_build_cast_integer
+									 (sub), cb_int1,
+									 cb_int (p->occurs_max),
+									 cb_build_string0 ((ucharptr)p->name));
 							r->check = cb_list_add (r->check, e1);
 						}
 					}
@@ -512,7 +505,7 @@ cb_build_identifier (cb_tree x)
 							 cb_build_cast_integer (r->offset),
 							 r->length ? cb_build_cast_integer (r->length) :
 							 cb_int1, cb_int (f->size),
-							 cb_build_string0 (f->name));
+							 cb_build_string0 ((ucharptr)f->name));
 				r->check = cb_list_add (r->check, e1);
 			}
 		}
@@ -565,13 +558,13 @@ cb_build_length (cb_tree x)
 		struct cb_literal *l = CB_LITERAL (x);
 
 		sprintf (buff, "%d", l->size);
-		return cb_build_numeric_literal (0, buff, 0);
+		return cb_build_numeric_literal (0, (ucharptr)buff, 0);
 	}
 	if (CB_FIELD_P (x) || CB_REFERENCE_P (x)) {
 		f = CB_FIELD (cb_ref (x));
 		if (cb_field_variable_size (f) == NULL) {
 			sprintf (buff, "%d", cb_field_size (x));
-			return cb_build_numeric_literal (0, buff, 0);
+			return cb_build_numeric_literal (0, (ucharptr)buff, 0);
 		}
 	}
 	temp = cb_build_index (cb_build_filler ());
@@ -1129,7 +1122,7 @@ decimal_expand (cb_tree d, cb_tree x)
 		if (CB_EXCEPTION_ENABLE (COB_EC_DATA_INCOMPATIBLE))
 			if (f->usage == CB_USAGE_DISPLAY)
 				dpush (cb_build_funcall_2 ("cob_check_numeric",
-							   x, cb_build_string0 (f->name)));
+							   x, cb_build_string0 ((ucharptr)(f->name))));
 
 		if (cb_fits_int (x))
 			dpush (cb_build_funcall_2 ("cob_decimal_set_int", d, cb_build_cast_integer (x)));

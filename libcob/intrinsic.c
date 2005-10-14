@@ -985,8 +985,8 @@ cob_intr_numval (cob_field *srcfield)
 
 	memcpy (rec_buff, srcfield->data, srcfield->size);
 	for ( i = 0; i < srcfield->size; i++ ) {
-		if ( strcasecmp (&rec_buff[i], "CR") == 0
-		     || strcasecmp (&rec_buff[i], "DB") == 0 ) {
+		if ( strcasecmp ((char *)&rec_buff[i], "CR") == 0
+		     || strcasecmp ((char *)&rec_buff[i], "DB") == 0 ) {
 			sign = 1;
 			break;
 		}
@@ -1028,8 +1028,8 @@ cob_intr_numval (cob_field *srcfield)
 		make_field_entry (&field);
 		memcpy (curr_field->data, (char *)&llval, 8);
 	} else {
-		sprintf (final_buff, "%s%s.%s", sign ? "-" : "", integer_buff, decimal_buff);
-		sscanf (final_buff, "%lf", &val);
+		sprintf ((char *)final_buff, "%s%s.%s", sign ? "-" : "", integer_buff, decimal_buff);
+		sscanf ((char *)final_buff, "%lf", &val);
 		make_double_entry ();
 		memcpy (curr_field->data, (char *)&val, sizeof (double));
 	}
@@ -1060,8 +1060,8 @@ cob_intr_numval_c (cob_field *srcfield)
 
 	memcpy (rec_buff, srcfield->data, srcfield->size);
 	for ( i = 0; i < srcfield->size; i++ ) {
-		if ( strcasecmp (&rec_buff[i], "CR") == 0
-		     || strcasecmp (&rec_buff[i], "DB") == 0 ) {
+		if ( strcasecmp ((char *)&rec_buff[i], "CR") == 0
+		     || strcasecmp ((char *)&rec_buff[i], "DB") == 0 ) {
 			sign = 1;
 			break;
 		}
@@ -1103,8 +1103,8 @@ cob_intr_numval_c (cob_field *srcfield)
 		make_field_entry (&field);
 		memcpy (curr_field->data, (char *)&llval, 8);
 	} else {
-		sprintf (final_buff, "%s%s.%s", sign ? "-" : "", integer_buff, decimal_buff);
-		sscanf (final_buff, "%lf", &val);
+		sprintf ((char *)final_buff, "%s%s.%s", sign ? "-" : "", integer_buff, decimal_buff);
+		sscanf ((char *)final_buff, "%lf", &val);
 		make_double_entry ();
 		memcpy (curr_field->data, (char *)&val, sizeof (double));
 	}

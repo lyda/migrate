@@ -326,7 +326,7 @@ cob_move_display_to_fp (cob_field *f1, cob_field *f2)
 	char		*data1;
 	char		buff2[64];
 
-	own_memset (buff2, 0, sizeof (buff2));
+	own_memset ((ucharptr)buff2, 0, sizeof (buff2));
 	size = size1 - f1->attr->scale;
 	if (sign < 0) {
 		buff2[0] = '-';
@@ -363,8 +363,8 @@ cob_move_fp_to_display (cob_field *f1, cob_field *f2)
 	char		buff[64];
 	char		buff2[64];
 
-	own_memset (buff, 0, sizeof (buff));
-	own_memset (buff2, 0, sizeof (buff2));
+	own_memset ((ucharptr)buff, 0, sizeof (buff));
+	own_memset ((ucharptr)buff2, 0, sizeof (buff2));
 	if (COB_FIELD_TYPE (f1) == COB_TYPE_NUMERIC_FLOAT) {
 		val = (double)(*(float *)f1->data);
 	} else {
@@ -393,7 +393,7 @@ cob_move_fp_to_display (cob_field *f1, cob_field *f2)
 		*y++ = *x;
 	}
 
-	store_common_region (f2, buff, strlen (buff), 18 - decs);
+	store_common_region (f2, (ucharptr)buff, strlen (buff), 18 - decs);
 	cob_put_sign (f2, sign);
 }
 
@@ -455,7 +455,7 @@ cob_move_binary_to_display (cob_field *f1, cob_field *f2)
 	}
 
 	/* store */
-	store_common_region (f2, buff + i, 20 - i, f1->attr->scale);
+	store_common_region (f2, (ucharptr)buff + i, 20 - i, f1->attr->scale);
 
 	cob_put_sign (f2, sign);
 }

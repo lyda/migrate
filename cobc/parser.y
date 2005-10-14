@@ -42,8 +42,8 @@
   current_program->exec_list = cb_cons (x, current_program->exec_list)
 
 #define BEGIN_STATEMENT(name)					\
-  current_statement = cb_build_statement (name);		\
-  CB_TREE (current_statement)->source_file = cb_source_file;	\
+  current_statement = cb_build_statement ((char *)name);		\
+  CB_TREE (current_statement)->source_file = (unsigned char *)cb_source_file;	\
   CB_TREE (current_statement)->source_line = cb_source_line;	\
   emit_statement (CB_TREE (current_statement));			\
   main_statement = current_statement
@@ -1084,7 +1084,7 @@ as_extname:
   /* empty */			{ current_field->ename = NULL; }
 | AS LITERAL
  {
-      struct cb_field *x = CB_FIELD(cb_build_field (cb_build_reference (CB_LITERAL ($2)->data)));
+      struct cb_field *x = CB_FIELD(cb_build_field (cb_build_reference ((char *)(CB_LITERAL ($2)->data))));
       current_field->ename = x->name;
  }
 ;
@@ -1979,7 +1979,7 @@ entry_statement:
   literal call_using
   {
     if (cb_verify (cb_entry_statement, "ENTRY"))
-      emit_entry (CB_LITERAL ($3)->data, $4);
+      emit_entry ((char *)(CB_LITERAL ($3)->data), $4);
   }
 ;
 
@@ -3315,7 +3315,7 @@ label:
 integer_label:
   LITERAL
   {
-    $$ = cb_build_reference (CB_LITERAL ($1)->data);
+    $$ = cb_build_reference ((char *)(CB_LITERAL ($1)->data));
     $$->source_file = $1->source_file;
     $$->source_line = $1->source_line;
   }

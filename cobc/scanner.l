@@ -36,7 +36,7 @@
 #include "parser.h"
 
 #define SET_LOCATION(x)				\
-  (x)->source_file = cb_source_file;		\
+  (x)->source_file = (unsigned char *)cb_source_file;		\
   (x)->source_line = cb_source_line
 
 static int last_token_is_dot = 0;
@@ -301,7 +301,7 @@ read_literal (char mark)
 	}
     }
   buff[i] = 0;
-  yylval = cb_build_alphanumeric_literal (buff, i);
+  yylval = cb_build_alphanumeric_literal ((unsigned char *)buff, i);
   SET_LOCATION (yylval);
   return LITERAL;
 }
@@ -334,7 +334,7 @@ scan_x (char *text)
 
   if (high)
     {
-      yylval = cb_build_alphanumeric_literal (buff, dst - buff);
+      yylval = cb_build_alphanumeric_literal ((unsigned char *)buff, dst - buff);
       SET_LOCATION (yylval);
       return LITERAL;
     }
@@ -370,7 +370,7 @@ scan_h (char *text)
 #else
   sprintf (buff, "%lld", val);
 #endif
-  yylval = cb_build_numeric_literal (0, buff, 0);
+  yylval = cb_build_numeric_literal (0, (unsigned char *)buff, 0);
   SET_LOCATION (yylval);
   return LITERAL;
 
@@ -391,15 +391,15 @@ scan_numeric (char *text)
     text++;
 
   /* get decimal point */
-  s = strchr (text, current_program->decimal_point);
+  s = (unsigned char *)strchr (text, current_program->decimal_point);
   if (s) {
-    scale = strlen (s) - 1;
+    scale = strlen ((char *)s) - 1;
     memmove (s, s + 1, scale + 1);
   }
   if (strchr (text, (current_program->decimal_point == ',') ? '.' : ','))
     cb_error (_("invalid numeric literal"));
 
-  yylval = cb_build_numeric_literal (sign, text, scale);
+  yylval = cb_build_numeric_literal (sign, (unsigned char *)text, scale);
   SET_LOCATION (yylval);
   return LITERAL;
 }

@@ -285,7 +285,7 @@ struct cb_string {
 #define CB_STRING(x)	(CB_TREE_CAST (CB_TAG_STRING, struct cb_string, x))
 #define CB_STRING_P(x)	(CB_TREE_TAG (x) == CB_TAG_STRING)
 
-#define cb_build_string0(str) cb_build_string (str, strlen (str))
+#define cb_build_string0(str) cb_build_string (str, strlen ((char *)str))
 
 extern cb_tree cb_build_string (const unsigned char *data, size_t size);
 

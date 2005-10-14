@@ -417,7 +417,7 @@ lookup_attr (char type, char digits, char scale, char flags, unsigned char *pic)
 	&& scale == l->scale
 	&& flags == l->flags
 	&& ((pic == l->pic)
-	    || (pic && l->pic && strcmp (pic, l->pic) == 0)))
+	    || (pic && l->pic && strcmp ((char *)pic, (char *)(l->pic)) == 0)))
       return l->id;
 
   /* output new attribute */
@@ -500,7 +500,7 @@ output_attr (cb_tree x)
 		  flags |= COB_FLAG_BINARY_SWAP;
 
 		id = lookup_attr (type, f->pic->digits, f->pic->scale,
-				  flags, f->pic->str);
+				  flags, (ucharptr)f->pic->str);
 		break;
 	      }
 	    }
@@ -1348,7 +1348,7 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
 		output ("memcpy (");
 		output_data (x);
 		output (", ");
-		output_string (buff, f->size);
+		output_string ((ucharptr)buff, f->size);
 		output (", %d);\n", f->size);
 	    }
 	}
@@ -1632,7 +1632,7 @@ output_call (struct cb_call *p)
   {
     for ( n = 0; n < CALLTABSIZE && calltab[n]; n++ )
     {
-      if ( strcmp(CB_LITERAL(p->name)->data, calltab[n]) == 0 )
+      if ( strcmp((char *)(CB_LITERAL(p->name)->data), calltab[n]) == 0 )
       {
         dynamic_link = 0;
         break;
@@ -1704,7 +1704,7 @@ output_call (struct cb_call *p)
     {
       /* static link */
       output_integer (cb_return_code);
-      output (" = %s", cb_encode_program_id (CB_LITERAL (p->name)->data));
+      output (" = %s", cb_encode_program_id ((char *)(CB_LITERAL (p->name)->data)));
     }
   else
     {
@@ -1713,8 +1713,8 @@ output_call (struct cb_call *p)
       if ( !p->stmt1 ) {
 	if (CB_LITERAL_P (p->name)) {
 	   if ( cb_flag_static_call == 2 ) {
-		callp = cb_encode_program_id (CB_LITERAL (p->name)->data);
-		lookup_call(callp, CB_LITERAL(p->name)->data);
+		callp = cb_encode_program_id ((char *)(CB_LITERAL (p->name)->data));
+		lookup_call(callp, (char *)(CB_LITERAL(p->name)->data));
 		output ("call_%s", callp);
 	   } else {
 		output ("cob_resolve_1 (\"%s\")", CB_LITERAL (p->name)->data);

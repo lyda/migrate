@@ -112,7 +112,7 @@ cob_screen_display (cob_screen *s, int line, int column)
 			int column = SCREEN_COLUMN_POS (s);
 
 			cob_move (s->from, s->data.field);
-			cob_screen_puts (s->data.field->data, s->data.field->size,
+			cob_screen_puts ((char *)s->data.field->data, s->data.field->size,
 					 line, column, s->attr);
 		}
 		break;
@@ -153,7 +153,7 @@ cob_screen_accept (cob_screen *s, int line, int column)
 			int line = SCREEN_LINE_POS (s);
 			int column = SCREEN_COLUMN_POS (s);
 
-			cob_screen_gets (s->data.field->data, s->data.field->size,
+			cob_screen_gets ((char *)s->data.field->data, s->data.field->size,
 					 line, column, s->attr);
 			cob_move (s->data.field, s->to);
 		}

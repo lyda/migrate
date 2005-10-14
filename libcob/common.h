@@ -20,6 +20,7 @@
 #ifndef COB_COMMON_H
 #define COB_COMMON_H
 
+typedef unsigned char *	ucharptr;
 
 /*
  * External

@@ -1578,7 +1578,7 @@ cob_sort_init (cob_file *f, int nkeys, const unsigned char *collating_sequence)
 #endif
 
 	f->assign->size = strlen (filename);
-	f->assign->data = strdup (filename);
+	f->assign->data = (ucharptr)strdup (filename);
 	f->file = cob_malloc (sizeof (struct sort_file));
 	f->keys = cob_malloc (sizeof (cob_file_key) * nkeys);
 	f->nkeys = 0;
@@ -1592,7 +1592,7 @@ cob_sort_init (cob_file *f, int nkeys, const unsigned char *collating_sequence)
 void
 cob_sort_finish (cob_file *f)
 {
-	unlink (f->assign->data);
+	unlink ((char *)f->assign->data);
 	free (f->assign->data);
 	free (f->file);
 	free (f->keys);

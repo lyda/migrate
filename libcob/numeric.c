@@ -243,7 +243,7 @@ cob_decimal_set_display (cob_decimal *d, cob_field *f)
 		unsigned char buff[64];
 		own_memcpy (buff, data, size);
 		buff[size] = 0;
-		mpz_set_str (d->value, buff, 10);
+		mpz_set_str (d->value, (char *)buff, 10);
 	}
 
 	/* set sign and scale */
@@ -265,8 +265,8 @@ cob_decimal_get_display (cob_decimal *d, cob_field *f, int opt)
 
 	/* build string */
 	mpz_abs (d->value, d->value);
-	mpz_get_str (buff, 10, d->value);
-	size = strlen (buff);
+	mpz_get_str ((char *)buff, 10, d->value);
+	size = strlen ((char *)buff);
 
 	/* store number */
 	diff = COB_FIELD_SIZE (f) - size;
@@ -572,7 +572,7 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f, int opt)
 		float	val;
 
 		val = cob_decimal_get_double (d);
-		own_memcpy (f->data, (char *)&val, sizeof (float));
+		own_memcpy (f->data, (ucharptr)&val, sizeof (float));
 /*
 		*(float *)f->data = val;
 */
@@ -583,7 +583,7 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f, int opt)
 		double	val;
 
 		val = cob_decimal_get_double (d);
-		own_memcpy (f->data, (char *)&val, sizeof (double));
+		own_memcpy (f->data, (ucharptr)&val, sizeof (double));
 /*
 		*(double *)f->data = val;
 */

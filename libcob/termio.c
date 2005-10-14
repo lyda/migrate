@@ -73,16 +73,16 @@ pretty_display_numeric (cob_field *f, FILE *fp)
 	cob_field_attr	attr = { COB_TYPE_NUMERIC_EDITED, digits, scale };
 	cob_field	temp = { size, data, &attr };
 
-	attr.pic = pic;
+	attr.pic = (char *)pic;
 	if (COB_FIELD_HAVE_SIGN (f)) {
-		p += sprintf (p, "+\001");
+		p += sprintf ((char *)p, "+\001");
 	}
 	if (scale > 0) {
-		p += sprintf (p, "9%c", digits - scale);
-		p += sprintf (p, "%c%c", cob_current_module->decimal_point, 1);
-		p += sprintf (p, "9%c", scale);
+		p += sprintf ((char *)p, "9%c", digits - scale);
+		p += sprintf ((char *)p, "%c%c", cob_current_module->decimal_point, 1);
+		p += sprintf ((char *)p, "9%c", scale);
 	} else {
-		p += sprintf (p, "9%c", digits);
+		p += sprintf ((char *)p, "9%c", digits);
 	}
 
 	cob_move (f, &temp);
@@ -206,8 +206,8 @@ cob_accept (cob_field *f)
 		cob_field	temp = { 0, buff, &attr };
 
 		/* read a line */
-		fgets (buff, BUFSIZ, stdin);
-		temp.size = strlen (buff) - 1;
+		fgets ((char *)buff, BUFSIZ, stdin);
+		temp.size = strlen ((char *)buff) - 1;
 
 		/* move it to the field */
 		cob_move (&temp, f);
@@ -215,8 +215,8 @@ cob_accept (cob_field *f)
 		/* non-terminal input */
 		size_t	size;
 
-		fgets (buff, BUFSIZ, stdin);
-		size = strlen (buff) - 1;
+		fgets ((char *)buff, BUFSIZ, stdin);
+		size = strlen ((char *)buff) - 1;
 		if (size > f->size)
 			size = f->size;
 		memcpy (f->data, buff, size);
@@ -231,7 +231,7 @@ cob_accept_date (cob_field *f)
 	char	s[7];
 
 	strftime (s, 7, "%y%m%d", localtime (&t));
-	cob_memcpy (f, s, 6);
+	cob_memcpy (f, (ucharptr)s, 6);
 }
 
 void
@@ -241,7 +241,7 @@ cob_accept_date_yyyymmdd (cob_field *f)
 	char	s[9];
 
 	strftime (s, 9, "%Y%m%d", localtime (&t));
-	cob_memcpy (f, s, 8);
+	cob_memcpy (f, (ucharptr)s, 8);
 }
 
 void
@@ -251,7 +251,7 @@ cob_accept_day (cob_field *f)
 	char	s[6];
 
 	strftime (s, 6, "%y%j", localtime (&t));
-	cob_memcpy (f, s, 5);
+	cob_memcpy (f, (ucharptr)s, 5);
 }
 
 void
@@ -261,7 +261,7 @@ cob_accept_day_yyyyddd (cob_field *f)
 	char	s[8];
 
 	strftime (s, 8, "%Y%j", localtime (&t));
-	cob_memcpy (f, s, 7);
+	cob_memcpy (f, (ucharptr)s, 7);
 }
 
 void
@@ -271,7 +271,7 @@ cob_accept_day_of_week (cob_field *f)
 	char	s[2];
 
 	strftime (s, 2, "%u", localtime (&t));
-	cob_memcpy (f, s, 1);
+	cob_memcpy (f, (ucharptr)s, 1);
 }
 
 void
@@ -281,7 +281,7 @@ cob_accept_time (cob_field *f)
 	char	s[9];
 
 	strftime (s, 9, "%H%M%S00", localtime (&t));
-	cob_memcpy (f, s, 8);
+	cob_memcpy (f, (ucharptr)s, 8);
 }
 
 void
@@ -301,7 +301,7 @@ cob_accept_command_line (cob_field *f)
 		buff[size++] = ' ';
 	}
 
-	cob_memcpy (f, buff, size);
+	cob_memcpy (f, (ucharptr)buff, size);
 }
 
 /*
@@ -340,7 +340,7 @@ cob_accept_arg_value (cob_field *f)
 	if (current_arg >= cob_argc) {
 		return;
 	}
-	cob_memcpy (f, cob_argv[current_arg], strlen (cob_argv[current_arg]));
+	cob_memcpy (f, (ucharptr)cob_argv[current_arg], strlen (cob_argv[current_arg]));
 	current_arg++;
 }
 
@@ -401,7 +401,7 @@ cob_accept_environment (cob_field *f)
 	if (!p) {
 		p = "";
 	}
-	cob_memcpy (f, p, strlen (p));
+	cob_memcpy (f, (ucharptr)p, strlen (p));
 }
 
 void

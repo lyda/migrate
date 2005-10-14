@@ -57,11 +57,11 @@ int			cob_call_params = 0;
 
 static cob_field_attr	all_attr = { COB_TYPE_ALPHANUMERIC_ALL, 0, 0, 0, NULL };
 
-cob_field		cob_zero = { 1, "0", &all_attr };
-cob_field		cob_space = { 1, " ", &all_attr };
-cob_field		cob_high = { 1, "\xff", &all_attr };
-cob_field		cob_low = { 1, "\0", &all_attr };
-cob_field		cob_quote = { 1, "\"", &all_attr };
+cob_field		cob_zero = { 1, (ucharptr)"0", &all_attr };
+cob_field		cob_space = { 1, (ucharptr)" ", &all_attr };
+cob_field		cob_high = { 1, (ucharptr)"\xff", &all_attr };
+cob_field		cob_low = { 1, (ucharptr)"\0", &all_attr };
+cob_field		cob_quote = { 1, (ucharptr)"\"", &all_attr };
 
 const int		cob_exp10[10] = {
 	1,
@@ -852,7 +852,7 @@ cob_external_addr (char *exname, int exlength)
 						   exname, exlength);
 				cob_stop_run (1);
 			}
-			return eptr->ext_alloc;
+			return (ucharptr)eptr->ext_alloc;
 		}
 	}
 	eptr = (cob_external *) cob_malloc (sizeof (cob_external));
@@ -862,7 +862,7 @@ cob_external_addr (char *exname, int exlength)
 	strcpy (eptr->ename, exname);
 	eptr->ext_alloc = cob_malloc (exlength);
 	basext = eptr;
-	return eptr->ext_alloc;
+	return (ucharptr)eptr->ext_alloc;
 }
 
 void *

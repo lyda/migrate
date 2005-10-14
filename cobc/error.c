@@ -82,7 +82,7 @@ cb_warning_x (cb_tree x, const char *fmt, ...)
 {
 	va_list ap;
 	va_start (ap, fmt);
-	print_error (x->source_file, x->source_line, "Warning: ", fmt, ap);
+	print_error ((char *)(x->source_file), x->source_line, "Warning: ", fmt, ap);
 	va_end (ap);
 
 	warningcount++;
@@ -93,7 +93,7 @@ cb_error_x (cb_tree x, const char *fmt, ...)
 {
 	va_list ap;
 	va_start (ap, fmt);
-	print_error (x->source_file, x->source_line, "Error: ", fmt, ap);
+	print_error ((char *)(x->source_file), x->source_line, "Error: ", fmt, ap);
 	va_end (ap);
 
 	errorcount++;
