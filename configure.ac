@@ -271,7 +271,7 @@ then
 	then
 		cob_temp_flags="`gcc ${srcdir}/cpucheck.c -o cpucheck 1>/dev/null 2>&1 && ./cpucheck 2>/dev/null`"
 		rm -f cpucheck
-		CFLAGS="$CFLAGS $cob_temp_flags -finline-functions -finline-limit=1200 -fomit-frame-pointer"
+		CFLAGS="$CFLAGS $cob_temp_flags -DSUPER_OPTIMIZE -finline-functions -fomit-frame-pointer"
 		COB_CFLAGS="$COB_CFLAGS $cob_temp_flags"
 	fi
 fi

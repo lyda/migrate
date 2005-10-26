@@ -1,3 +1,7 @@
+2005-10-25  Roger While <simrw@sim-basis.de>
+
+	* cobc.c, typeck.c : Add in optimizations (memset/memcpy)
+
 2005-10-14  Roger While <simrw@sim-basis.de>
 
 	* All : More GCC 4 fixes

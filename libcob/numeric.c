@@ -40,63 +40,6 @@ static cob_decimal	cob_d2;
 static cob_decimal	cob_d3;
 static cob_decimal	cob_d4;
 
-static inline void
-own_memcpy (unsigned char *x, const unsigned char *y, size_t count)
-{
-#ifdef __i386__
-/* Word move - No win here
-	int d0, d1, d2;
-	__asm__ __volatile__(
-	"cld\n\t"
-        "rep\n\t"
-	"movsl\n\t"
-        "testb $2,%b4\n\t"
-        "je 1f\n\t"
-        "movsw\n"
-        "1:\ttestb $1,%b4\n\t"
-        "je 2f\n\t"
-        "movsb\n"
-        "2:"
-        : "=&c" (d0), "=&D" (d1), "=&S" (d2)
-        :"0" (count/4), "q" (count),"1" ((long) x),"2" ((long) y)
-        : "memory");
-*/
-	int d0, d1, d2;
-	__asm__ __volatile__ (
-	"cld\n\t"
-	"rep\n\t"
-	"movsb"
-	:"=&c" (d0), "=&D" (d1), "=&S" (d2)
-	:"0" (count), "1" (x), "2" (y)
-	:"memory");
-#else
-	while (count--) {
-		*x++ = *y++;
-	}
-	return;
-#endif
-}
-
-static inline void
-own_memset (unsigned char *x, const unsigned int y, size_t count)
-{
-#ifdef __i386__
-	int d0, d1;
-	__asm__ __volatile__(
-	"cld\n\t"
-	"rep\n\t"
-	"stosb"
-	:"=&c" (d0), "=&D" (d1)
-	:"a" (y), "0" (count), "1" (x)
-	:"memory");
-#else
-	while (count--) {
-		*x++ = y;
-	}
-	return;
-#endif
-}
-
 /*
  * Decimal number
  */
@@ -229,18 +172,23 @@ cob_decimal_set_display (cob_decimal *d, cob_field *f)
 
 	/* set value */
 	if (size < 10) {
+		unsigned int	n = 0;
+
+		while ( size-- ) {
+			n = n * 10 + cob_d2i (*data++);
+		}
+/*
 		unsigned char	*endp = data + size;
-		int		n = cob_d2i (*data++);
+		unsigned int	n = cob_d2i (*data++);
 
 		while (data < endp) {
 			n = n * 10 + cob_d2i (*data++);
 		}
-		mpz_set_si (d->value, n);
-	} else {
-/*
-		unsigned char buff[size + 1];
 */
+		mpz_set_ui (d->value, n);
+	} else {
 		unsigned char buff[64];
+
 		own_memcpy (buff, data, size);
 		buff[size] = 0;
 		mpz_set_str (d->value, (char *)buff, 10);
@@ -259,9 +207,9 @@ cob_decimal_get_display (cob_decimal *d, cob_field *f, int opt)
 {
 	int		diff;
 	int		sign = mpz_sgn (d->value);
-	size_t		size = mpz_sizeinbase (d->value, 10);
-	unsigned char	buff[size + 1];
+	size_t		size;
 	unsigned char	*data = COB_FIELD_DATA (f);
+	unsigned char	buff[64];
 
 	/* build string */
 	mpz_abs (d->value, d->value);

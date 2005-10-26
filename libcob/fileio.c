@@ -278,7 +278,7 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 	/* lock the file */
 	{
 		struct flock lock;
-		memset (&lock, 0, sizeof (struct flock));
+		own_memset (&lock, 0, sizeof (struct flock));
 		lock.l_type = (opt || mode == COB_OPEN_OUTPUT) ? F_WRLCK : F_RDLCK;
 		lock.l_whence = SEEK_SET;
 		lock.l_start = 0;
@@ -320,7 +320,7 @@ file_close (cob_file *f, int opt)
 		/* unlock the file */
 		{
 			struct flock lock;
-			memset (&lock, 0, sizeof (struct flock));
+			own_memset (&lock, 0, sizeof (struct flock));
 			lock.l_type = F_UNLCK;
 			lock.l_whence = SEEK_SET;
 			lock.l_start = 0;
@@ -508,7 +508,7 @@ lineseq_read (cob_file *f)
 			break;
 	if (i < f->record->size) {
 		/* fill the record by spaces */
-		memset (buff + i, ' ', f->record->size - i);
+		own_memset (buff + i, ' ', f->record->size - i);
 	} else {
 		/* discard input until the newline */
 		char buff[BUFSIZ];
@@ -517,7 +517,7 @@ lineseq_read (cob_file *f)
 				break;
 	}
 
-	memcpy (f->record->data, buff, f->record->size);
+	own_memcpy (f->record->data, buff, f->record->size);
 
 	return COB_STATUS_00_SUCCESS;
 }
@@ -806,7 +806,7 @@ indexed_open (cob_file *f, char *filename, int mode, int flag)
 		}
 
 		/* btree info */
-		memset (&info, 0, sizeof (info));
+		own_memset (&info, 0, sizeof (info));
 		if (f->keys[i].flag) {
 			info.flags = R_DUP;
 		}
@@ -827,8 +827,8 @@ indexed_open (cob_file *f, char *filename, int mode, int flag)
 	p->key_index = 0;
 	p->last_key = NULL;
 
-	memset (&p->key, 0, sizeof (DBT));
-	memset (&p->data, 0, sizeof (DBT));
+	own_memset (&p->key, 0, sizeof (DBT));
+	own_memset (&p->data, 0, sizeof (DBT));
 	DB_SEQ (p->db[p->key_index], R_FIRST);
 
 	return 0;
@@ -920,7 +920,7 @@ indexed_read (cob_file *f, cob_field *key)
 	}
 
 	f->record->size = p->data.size;
-	memcpy (f->record->data, p->data.data, p->data.size);
+	own_memcpy (f->record->data, p->data.data, p->data.size);
 
 	return COB_STATUS_00_SUCCESS;
 }
@@ -948,7 +948,7 @@ indexed_read_next (cob_file *f)
 	}
 
 	f->record->size = p->data.size;
-	memcpy (f->record->data, p->data.data, p->data.size);
+	own_memcpy (f->record->data, p->data.data, p->data.size);
 
 	return COB_STATUS_00_SUCCESS;
 }
@@ -992,7 +992,7 @@ indexed_write (cob_file *f, int opt)
 		 && memcmp (p->last_key, p->key.data, p->key.size) > 0) {
 		return COB_STATUS_21_KEY_INVALID;
 	}
-	memcpy (p->last_key, p->key.data, p->key.size);
+	own_memcpy (p->last_key, p->key.data, p->key.size);
 
 	return indexed_write_internal (f);
 }
@@ -1120,7 +1120,7 @@ sort_open (cob_file *f, char *filename, int mode, int flag)
 	}
 
 	/* open db */
-	memset (&info, 0, sizeof (info));
+	own_memset (&info, 0, sizeof (info));
 	info.flags = R_DUP;
 	info.compare = sort_compare;
 	p->db = dbopen (filename, flags, COB_FILE_MODE, DB_BTREE, &info);
@@ -1128,8 +1128,8 @@ sort_open (cob_file *f, char *filename, int mode, int flag)
 		return errno;
 	}
 
-	memset (&p->key, 0, sizeof (DBT));
-	memset (&p->data, 0, sizeof (DBT));
+	own_memset (&p->key, 0, sizeof (DBT));
+	own_memset (&p->data, 0, sizeof (DBT));
 	return 0;
 }
 
@@ -1151,8 +1151,8 @@ sort_read (cob_file *f)
 	}
 
 	f->record->size = p->key.size;
-	memcpy (f->record->data, p->key.data, p->key.size);
-	memset (f->record->data + p->key.size, ' ', f->record_max - p->key.size);
+	own_memcpy (f->record->data, p->key.data, p->key.size);
+	own_memset (f->record->data + p->key.size, ' ', f->record_max - p->key.size);
 	return COB_STATUS_00_SUCCESS;
 }
 
@@ -1616,7 +1616,7 @@ cob_sort_using (cob_file *sort_file, cob_file *data_file)
 		if (data_file->file_status[0] != '0') {
 			break;
 		}
-		memcpy (sort_file->record->data, data_file->record->data,
+		own_memcpy (sort_file->record->data, data_file->record->data,
 			sort_file->record->size);
 		cob_write (sort_file, sort_file->record, 0);
 	}
@@ -1632,7 +1632,7 @@ cob_sort_giving (cob_file *sort_file, cob_file *data_file)
 		if (sort_file->file_status[0] != '0') {
 			break;
 		}
-		memcpy (data_file->record->data,
+		own_memcpy (data_file->record->data,
 			sort_file->record->data, data_file->record->size);
 		cob_write (data_file, data_file->record, 0);
 	}

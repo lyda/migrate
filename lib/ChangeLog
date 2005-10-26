@@ -1,3 +1,8 @@
+2005-10-25  Roger While <simrw@sim-basis.de>
+
+	* New element dummymac.c - Needed while some versions of
+	  "ar" are not capable of generating empty archives.
+
 2003-07-28  Keisuke Nishida  <knishida@netlab.jp>
 
 	* malloc.c, memcmp.c, realloc.c: Removed.

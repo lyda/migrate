@@ -1,3 +1,9 @@
+2005-10-25  Roger While <simrw@sim-basis.de>
+
+	* move.h, move.c, numeric.c, fileio.c, strings.c
+	  memcpy/memset optimizations
+	  move.c : Fix a mpz_ call (optimization)
+
 2005-10-14  Roger While <simrw@sim-basis.de>
 
 	* All : More GCC 4 fixes

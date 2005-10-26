@@ -368,14 +368,14 @@ process_command_line (int argc, char *argv[])
 		case '2':	/* -O2 */
 			cb_flag_runtime_inlining = 1;
 			strip_output = 1;
-			strcat (cob_cflags, " -O2");
+			strcat (cob_cflags, " -O2 -DSUPER_OPTIMIZE");
 			strcat (cob_cflags, fcopts);
 			break;
 
 		case 's':	/* -Os */
 			cb_flag_runtime_inlining = 1;
 			strip_output = 1;
-			strcat (cob_cflags, " -Os");
+			strcat (cob_cflags, " -Os -DSUPER_OPTIMIZE");
 			strcat (cob_cflags, fcopts);
 			break;
 

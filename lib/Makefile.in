@@ -57,12 +57,13 @@ ARFLAGS = cru
 LIBRARIES = $(noinst_LIBRARIES)
 libsupport_a_AR = $(AR) $(ARFLAGS)
 libsupport_a_DEPENDENCIES = @LIBOBJS@
-am_libsupport_a_OBJECTS =
+am_libsupport_a_OBJECTS = dummymac.$(OBJEXT)
 libsupport_a_OBJECTS = $(am_libsupport_a_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/getopt.Po $(DEPDIR)/getopt1.Po
+@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/getopt.Po $(DEPDIR)/getopt1.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/dummymac.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) \
@@ -208,7 +209,7 @@ target_alias = @target_alias@
 noinst_HEADERS = gettext.h
 AM_CFLAGS = -fsigned-char
 noinst_LIBRARIES = libsupport.a
-libsupport_a_SOURCES = 
+libsupport_a_SOURCES = dummymac.c
 libsupport_a_LIBADD = @LIBOBJS@
 all: all-am
 
@@ -259,6 +260,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/getopt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/getopt1.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dummymac.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -401,7 +403,7 @@ clean-am: clean-generic clean-libtool clean-noinstLIBRARIES \
 	mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf $(DEPDIR)
+	-rm -rf $(DEPDIR) ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-libtool distclean-tags
@@ -427,7 +429,7 @@ install-man:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf $(DEPDIR)
+	-rm -rf $(DEPDIR) ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

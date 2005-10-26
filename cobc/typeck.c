@@ -2269,7 +2269,7 @@ cb_build_memset (cb_tree x, char c)
 	if (size == 1)
 		return cb_build_funcall_2 ("$E", x, cb_int (c));
 	else
-		return cb_build_funcall_3 ("memset",
+		return cb_build_funcall_3 ("own_memset",
 					   cb_build_cast_address (x),
 					   cb_int (c), cb_build_cast_length (x));
 }
@@ -2282,7 +2282,7 @@ cb_build_move_copy (cb_tree src, cb_tree dst)
 	if (size == 1)
 		return cb_build_funcall_2 ("$F", dst, src);
 	else
-		return cb_build_funcall_3 ("memcpy",
+		return cb_build_funcall_3 ("own_memcpy",
 					   cb_build_cast_address (dst),
 					   cb_build_cast_address (src), cb_build_cast_length (dst));
 }
@@ -2394,7 +2394,7 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 
 		for (i = 0; i < f->size; i++)
 			buff[i] = l->data[i % l->size];
-		return cb_build_funcall_3 ("memcpy",
+		return cb_build_funcall_3 ("own_memcpy",
 					   cb_build_cast_address (dst),
 					   cb_build_string (buff, f->size), cb_build_cast_length (dst));
 	} else if ((cat == CB_CATEGORY_NUMERIC
@@ -2443,7 +2443,7 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 				}
 			}
 		}
-		return cb_build_funcall_3 ("memcpy",
+		return cb_build_funcall_3 ("own_memcpy",
 					   cb_build_cast_address (dst),
 					   cb_build_string (buff, f->size), cb_build_cast_length (dst));
 	} else if (cb_fits_int (src) &&

@@ -32,63 +32,6 @@
 #define MIN(x,y) ({int _x = (x), _y = (y); (_x < _y) ? _x : _y; })
 #define MAX(x,y) ({int _x = (x), _y = (y); (_x > _y) ? _x : _y; })
 
-static inline void
-own_memcpy (unsigned char *x, const unsigned char *y, size_t count)
-{
-#ifdef __i386__
-/* Word move - No win here
-	int d0, d1, d2;
-	__asm__ __volatile__(
-	"cld\n\t"
-        "rep\n\t"
-	"movsl\n\t"
-        "testb $2,%b4\n\t"
-        "je 1f\n\t"
-        "movsw\n"
-        "1:\ttestb $1,%b4\n\t"
-        "je 2f\n\t"
-        "movsb\n"
-        "2:"
-        : "=&c" (d0), "=&D" (d1), "=&S" (d2)
-        :"0" (count/4), "q" (count),"1" ((long) x),"2" ((long) y)
-        : "memory");
-*/
-	int d0, d1, d2;
-	__asm__ __volatile__ (
-	"cld\n\t"
-	"rep\n\t"
-	"movsb"
-	:"=&c" (d0), "=&D" (d1), "=&S" (d2)
-	:"0" (count), "1" (x), "2" (y)
-	:"memory");
-#else
-	while (count--) {
-		*x++ = *y++;
-	}
-	return;
-#endif
-}
-
-static inline void
-own_memset (unsigned char *x, const int y, size_t count)
-{
-#ifdef __i386__
-	int d0, d1;
-	__asm__ __volatile__ (
-	"cld\n\t"
-	"rep\n\t"
-	"stosb"
-	:"=&c" (d0), "=&D" (d1)
-	:"a" (y), "0" (count), "1" (x)
-	:"memory");
-#else
-	while (count--) {
-		*x++ = y;
-	}
-	return;
-#endif
-}
-
 static void
 store_common_region (cob_field *f, unsigned char *data, size_t size, int scale)
 {
@@ -763,8 +706,16 @@ cob_move_all (cob_field *src, cob_field *dst)
 	temp.size = dst->size;
 	temp.data = data;
 	temp.attr = &attr;
-	for (i = 0; i < dst->size; i++) {
-		data[i] = src->data[i % src->size];
+#ifdef	__GNUC__
+	if ( __builtin_expect ((src->size == 1), 1) ) {
+#else
+	if ( src->size == 1 ) {
+#endif
+		own_memset (data, src->data[0], dst->size);
+	} else {
+		for (i = 0; i < dst->size; i++) {
+			data[i] = src->data[i % src->size];
+		}
 	}
 
 	cob_move (&temp, dst);
@@ -934,7 +885,7 @@ cob_binary_get_int64 (cob_field *f)
 	} else {
 		s = (unsigned char *)&n;
 	}
-	own_memcpy (s, f->data, f->size);
+	own_byte_memcpy (s, f->data, f->size);
 	if (COB_FIELD_BINARY_SWAP (f)) {
 		n = COB_BSWAP_64 (n);
 	}
@@ -945,27 +896,27 @@ cob_binary_get_int64 (cob_field *f)
 #ifndef WORDS_BIGENDIAN
 	if (COB_FIELD_BINARY_SWAP (f)) {
 		if (COB_FIELD_HAVE_SIGN (f)) {
-			own_memcpy ((unsigned char *)&n, f->data, f->size);
+			own_byte_memcpy ((unsigned char *)&n, f->data, f->size);
 			n = COB_BSWAP_64 (n);
 			n >>= 8 * fsiz;	/* shift with sign */
 		} else {
-			own_memcpy (((unsigned char *)&n) + fsiz, f->data, f->size);
+			own_byte_memcpy (((unsigned char *)&n) + fsiz, f->data, f->size);
 			n = COB_BSWAP_64 (n);
 		}
 	} else {
 		if (COB_FIELD_HAVE_SIGN (f)) {
-			own_memcpy (((unsigned char *)&n) + fsiz, f->data, f->size);
+			own_byte_memcpy (((unsigned char *)&n) + fsiz, f->data, f->size);
 			n >>= 8 * fsiz;	/* shift with sign */
 		} else {
-			own_memcpy ((unsigned char *)&n, f->data, f->size);
+			own_byte_memcpy ((unsigned char *)&n, f->data, f->size);
 		}
 	}
 #else				/* WORDS_BIGENDIAN */
 	if (COB_FIELD_HAVE_SIGN (f)) {
-		own_memcpy (&n, f->data, f->size);
+		own_byte_memcpy (&n, f->data, f->size);
 		n >>= 8 * (8 - f->size);	/* shift with sign */
 	} else {
-		own_memcpy (((unsigned char *)&n) + 8 - f->size, f->data, f->size);
+		own_byte_memcpy (((unsigned char *)&n) + 8 - f->size, f->data, f->size);
 	}
 #endif				/* WORDS_BIGENDIAN */
 	return n;
@@ -983,12 +934,12 @@ cob_binary_set_int64 (cob_field *f, long long n)
 #ifndef WORDS_BIGENDIAN
 	if (COB_FIELD_BINARY_SWAP (f)) {
 		n = COB_BSWAP_64 (n);
-		own_memcpy (f->data, ((unsigned char *)&n) + 8 - f->size, f->size);
+		own_byte_memcpy (f->data, ((unsigned char *)&n) + 8 - f->size, f->size);
 	} else {
-		own_memcpy (f->data, (unsigned char *)&n, f->size);
+		own_byte_memcpy (f->data, (unsigned char *)&n, f->size);
 	}
 #else				/* WORDS_BIGENDIAN */
-	own_memcpy (f->data, ((unsigned char *)&n) + 8 - f->size, f->size);
+	own_byte_memcpy (f->data, ((unsigned char *)&n) + 8 - f->size, f->size);
 #endif				/* WORDS_BIGENDIAN */
 }
 
