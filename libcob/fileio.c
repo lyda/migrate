@@ -193,7 +193,7 @@ file_linage_check (cob_file *f)
 	return 0;
 }
 
-#if defined(HAVE_DBOPEN) || defined(WITH_DB)
+#ifdef	WITH_DB
 #else
 static int
 dummy_open (cob_file *f, char *filename, int mode, int opt)
@@ -278,7 +278,7 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 	/* lock the file */
 	{
 		struct flock lock;
-		own_memset (&lock, 0, sizeof (struct flock));
+		own_memset ((unsigned char *)&lock, 0, sizeof (struct flock));
 		lock.l_type = (opt || mode == COB_OPEN_OUTPUT) ? F_WRLCK : F_RDLCK;
 		lock.l_whence = SEEK_SET;
 		lock.l_start = 0;
@@ -320,7 +320,7 @@ file_close (cob_file *f, int opt)
 		/* unlock the file */
 		{
 			struct flock lock;
-			own_memset (&lock, 0, sizeof (struct flock));
+			own_memset ((unsigned char *)&lock, 0, sizeof (struct flock));
 			lock.l_type = F_UNLCK;
 			lock.l_whence = SEEK_SET;
 			lock.l_start = 0;
@@ -508,7 +508,7 @@ lineseq_read (cob_file *f)
 			break;
 	if (i < f->record->size) {
 		/* fill the record by spaces */
-		own_memset (buff + i, ' ', f->record->size - i);
+		own_memset ((unsigned char *)buff + i, ' ', f->record->size - i);
 	} else {
 		/* discard input until the newline */
 		char buff[BUFSIZ];
@@ -517,7 +517,7 @@ lineseq_read (cob_file *f)
 				break;
 	}
 
-	own_memcpy (f->record->data, buff, f->record->size);
+	own_memcpy (f->record->data, (unsigned char *)buff, f->record->size);
 
 	return COB_STATUS_00_SUCCESS;
 }
@@ -753,7 +753,7 @@ static cob_fileio_funcs relative_funcs = {
  * INDEXED
  */
 
-#if defined(HAVE_DBOPEN) || defined(WITH_DB)
+#ifdef	WITH_DB
 
 #define DB_PUT(db,flags)	db->put (db, &p->key, &p->data, flags)
 #define DB_GET(db,flags)	db->get (db, &p->key, &p->data, flags)
@@ -1204,7 +1204,7 @@ static cob_fileio_funcs sort_funcs = {
 	dummy_rn_rew_del
 };
 
-#endif	/* defined(HAVE_DBOPEN) || defined(WITH_DB) */
+#endif	/* WITH_DB */
 
 /*
  * Public interface
@@ -1545,7 +1545,7 @@ cob_delete (cob_file *f)
 	RETURN_STATUS (ret);
 }
 
-#if defined(HAVE_DBOPEN) || defined(WITH_DB)
+#ifdef	WITH_DB
 
 static const unsigned char *old_sequence;
 
@@ -1639,7 +1639,7 @@ cob_sort_giving (cob_file *sort_file, cob_file *data_file)
 	cob_close (data_file, COB_CLOSE_NORMAL);
 }
 
-#endif	/* defined(HAVE_DBOPEN) || defined(WITH_DB) */
+#endif	/* WITH_DB */
 
 void
 cob_default_error_handle (void)

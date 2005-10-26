@@ -2891,7 +2891,7 @@ cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree dup, cb_tree col)
 	}
 
 	if (CB_FILE_P (cb_ref (name))) {
-#if defined(HAVE_DBOPEN) || defined(WITH_DB)
+#ifdef	WITH_DB
 		cb_emit (cb_build_funcall_3 ("cob_sort_init", cb_ref (name),
 					     cb_int (cb_list_length (keys)), col));
 		for (l = keys; l; l = CB_CHAIN (l))

@@ -55,6 +55,9 @@ AC_DEFINE(COB_DEBUG)
 LIBCOB_LIBS="-lm"
 LIBCOB_CFLAGS="$lt_prog_compiler_pic"
 
+AC_PROG_CC
+AC_PROG_CPP
+
 # Configure options.
 COB_CC=""
 AC_ARG_WITH(cc,
@@ -132,25 +135,23 @@ AC_CHECK_LIB([regex], [regcomp], [LIBCOB_LIBS="$LIBCOB_LIBS -lregex"])
 
 # Checks for db.
 USE_DB="no"
-AC_CHECK_FUNCS([dbopen],
-  [USE_DB="yes" AC_DEFINE(HAVE_DBOPEN)],
-  [case $LIBDB in
-    1) AC_CHECK_HEADERS([db1/db.h],
+if test "$LIBDB" = "1"
+then
+       AC_CHECK_HEADERS([db1/db.h],
          [AC_DEFINE(HAVE_DB1_DB_H)],
          [AC_MSG_ERROR([db1/db.h is required])])
        AC_CHECK_LIB([db1], [dbopen],
          [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb1"],
          [AC_MSG_ERROR(libdb1 is required)])
-       ;;
-    3) AC_CHECK_HEADERS([db.h db_185.h db3/db_185.h db4/db_185.h db4.1/db_185.h db4.2/db_185.h db4.3/db_185.h])
+elif test "$LIBDB" = "3"
+then
+       AC_CHECK_HEADERS([db.h db_185.h db3/db_185.h db4/db_185.h db4.1/db_185.h db4.2/db_185.h db4.3/db_185.h])
        AC_CHECK_LIB([db], [__db_open],
          [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
-#         [AC_MSG_ERROR(libdb is required)])
           [AC_CHECK_LIB([db], [dbopen],
             [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
             [AC_MSG_ERROR(libdb is required)])])
-       ;;
-   esac])
+fi
 
 # Checks for gmp.
 AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp.h is required))
@@ -181,7 +182,6 @@ else
 fi
 
 # Checks for programs.
-AC_PROG_CC
 AC_PROG_LN_S
 AC_PROG_INSTALL
 AC_LIBTOOL_DLOPEN
@@ -271,7 +271,7 @@ then
 	then
 		cob_temp_flags="`gcc ${srcdir}/cpucheck.c -o cpucheck 1>/dev/null 2>&1 && ./cpucheck 2>/dev/null`"
 		rm -f cpucheck
-		CFLAGS="$CFLAGS $cob_temp_flags -DSUPER_OPTIMIZE -finline-functions -fomit-frame-pointer"
+		CFLAGS="$CFLAGS $cob_temp_flags -finline-functions -fomit-frame-pointer"
 		COB_CFLAGS="$COB_CFLAGS $cob_temp_flags"
 	fi
 fi

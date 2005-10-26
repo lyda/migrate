@@ -278,9 +278,9 @@ cob_move_display_to_fp (cob_field *f1, cob_field *f2)
 		data1 = buff2;
 	}
 	if (f1->attr->scale <= 0) {
-		sprintf (data1, "%*.*s.0", size, size, f1->data);
+		sprintf (data1, "%*.*s.0", (int)size, (int)size, f1->data);
 	} else {
-		sprintf (data1, "%*.*s.%*.*s", size, size, f1->data,
+		sprintf (data1, "%*.*s.%*.*s", (int)size, (int)size, f1->data,
 			 f1->attr->scale, f1->attr->scale, f1->data + size);
 	}
 	sscanf (buff2, "%lf", &val);
@@ -913,7 +913,7 @@ cob_binary_get_int64 (cob_field *f)
 	}
 #else				/* WORDS_BIGENDIAN */
 	if (COB_FIELD_HAVE_SIGN (f)) {
-		own_byte_memcpy (&n, f->data, f->size);
+		own_byte_memcpy ((unsigned char *)&n, f->data, f->size);
 		n >>= 8 * (8 - f->size);	/* shift with sign */
 	} else {
 		own_byte_memcpy (((unsigned char *)&n) + 8 - f->size, f->data, f->size);

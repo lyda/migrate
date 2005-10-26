@@ -1,3 +1,8 @@
+2005-10-26  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : Remove HAVE_DB ifdef, fix warnings
+	* move.c : Fix warnings
+
 2005-10-25  Roger While <simrw@sim-basis.de>
 
 	* move.h, move.c, numeric.c, fileio.c, strings.c
