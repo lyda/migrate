@@ -35,7 +35,7 @@ int dump (unsigned char *data)
 }
 ])
 
-AT_CHECK([${CC} -shared -o dump.${SHREXT} dump.c])
+AT_CHECK([${CC} ${SHROPT} -o dump.${SHREXT} dump.c])
 
 sed -e 's/@USAGE@/PACKED-DECIMAL/' ${TEMPLATE}/numeric-dump.cob > prog.cob
 

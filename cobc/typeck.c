@@ -557,7 +557,7 @@ cb_build_length (cb_tree x)
 	if (CB_LITERAL_P (x)) {
 		struct cb_literal *l = CB_LITERAL (x);
 
-		sprintf (buff, "%d", l->size);
+		sprintf (buff, "%d", (int)l->size);
 		return cb_build_numeric_literal (0, (ucharptr)buff, 0);
 	}
 	if (CB_FIELD_P (x) || CB_REFERENCE_P (x)) {

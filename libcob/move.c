@@ -914,9 +914,9 @@ cob_binary_get_int64 (cob_field *f)
 #else				/* WORDS_BIGENDIAN */
 	if (COB_FIELD_HAVE_SIGN (f)) {
 		own_byte_memcpy ((unsigned char *)&n, f->data, f->size);
-		n >>= 8 * (8 - f->size);	/* shift with sign */
+		n >>= 8 * fsiz;	/* shift with sign */
 	} else {
-		own_byte_memcpy (((unsigned char *)&n) + 8 - f->size, f->data, f->size);
+		own_byte_memcpy (((unsigned char *)&n) + fsiz, f->data, f->size);
 	}
 #endif				/* WORDS_BIGENDIAN */
 	return n;

@@ -351,7 +351,7 @@ output_size (cb_tree x)
     case CB_TAG_LITERAL:
       {
 	struct cb_literal *l = CB_LITERAL (x);
-	output ("%d", l->size + ((l->sign != 0) ? 1 : 0));
+	output ("%d", (int)(l->size + ((l->sign != 0) ? 1 : 0)));
 	break;
       }
     case CB_TAG_REFERENCE:

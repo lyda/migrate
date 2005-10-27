@@ -806,7 +806,7 @@ indexed_open (cob_file *f, char *filename, int mode, int flag)
 		}
 
 		/* btree info */
-		own_memset (&info, 0, sizeof (info));
+		own_memset ((unsigned char *)&info, 0, sizeof (info));
 		if (f->keys[i].flag) {
 			info.flags = R_DUP;
 		}
@@ -827,8 +827,8 @@ indexed_open (cob_file *f, char *filename, int mode, int flag)
 	p->key_index = 0;
 	p->last_key = NULL;
 
-	own_memset (&p->key, 0, sizeof (DBT));
-	own_memset (&p->data, 0, sizeof (DBT));
+	own_memset ((unsigned char *)&p->key, 0, sizeof (DBT));
+	own_memset ((unsigned char *)&p->data, 0, sizeof (DBT));
 	DB_SEQ (p->db[p->key_index], R_FIRST);
 
 	return 0;
@@ -1120,7 +1120,7 @@ sort_open (cob_file *f, char *filename, int mode, int flag)
 	}
 
 	/* open db */
-	own_memset (&info, 0, sizeof (info));
+	own_memset ((unsigned char *)&info, 0, sizeof (info));
 	info.flags = R_DUP;
 	info.compare = sort_compare;
 	p->db = dbopen (filename, flags, COB_FILE_MODE, DB_BTREE, &info);
@@ -1128,8 +1128,8 @@ sort_open (cob_file *f, char *filename, int mode, int flag)
 		return errno;
 	}
 
-	own_memset (&p->key, 0, sizeof (DBT));
-	own_memset (&p->data, 0, sizeof (DBT));
+	own_memset ((unsigned char *)&p->key, 0, sizeof (DBT));
+	own_memset ((unsigned char *)&p->data, 0, sizeof (DBT));
 	return 0;
 }
 

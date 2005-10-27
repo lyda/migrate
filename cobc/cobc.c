@@ -130,7 +130,7 @@ cob_malloc (const size_t size)
 
 	mptr = malloc (size);
 	if (!mptr) {
-		fprintf (stderr, "Cannot acquire %d bytes of memory - Aborting\n", size);
+		fprintf (stderr, "Cannot acquire %d bytes of memory - Aborting\n", (int)size);
 		fflush (stderr);
 		(void)longjmp (cob_jmpbuf, 1);
 	}

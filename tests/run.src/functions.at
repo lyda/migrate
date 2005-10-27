@@ -47,14 +47,21 @@ AT_DATA([prog.cob], [
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
        01  X   PIC   S9(4)V9(4) VALUE -0.2345.
+       01  Z   PIC   S9V9(17)   COMP.
        PROCEDURE        DIVISION.
-           DISPLAY FUNCTION ACOS ( X ).
+           MOVE FUNCTION ACOS ( X ) TO Z.
+           IF Z >= 1.80750052110824325 AND
+              Z <= 1.80750052110824345
+                   DISPLAY "OK"
+           ELSE
+                   DISPLAY "NOT OK"
+           END-IF.
            STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0],
-[1.80750052110824332
+[OK
 ])
 
 AT_CLEANUP
@@ -95,14 +102,21 @@ AT_DATA([prog.cob], [
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
        01  X   PIC   S9(4)V9(4) VALUE -0.2345.
+       01  Y   PIC   S9V9(17)   COMP.
        PROCEDURE        DIVISION.
-           DISPLAY FUNCTION ASIN ( X ).
+           MOVE FUNCTION ASIN ( X ) TO Y.
+           IF Y >= -0.23670419431334685 AND
+              Y <= -0.23670419431334675
+                   DISPLAY "OK"
+           ELSE
+                   DISPLAY "NOT OK"
+           END-IF.
            STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0],
-[-0.23670419431334679
+[OK
 ])
 
 AT_CLEANUP
@@ -810,7 +824,7 @@ AT_DATA([prog.cob], [
               Y <= 7.35934779718963935
                    DISPLAY "OK"
            ELSE
-                   DISPLAY "NOT OK"
+                   DISPLAY Y
            END-IF.
            STOP RUN.
 ])

@@ -1,3 +1,9 @@
+2005-10-27  Roger While <simrw@sim-basis.de>
+
+	* configure.ac : MAC (Darwin) has different options when creating a
+	  shared library as opposed to creating a loadable module.
+	  Pick this up and export it to the Makefile's.
+
 2005-10-26  Roger While <simrw@sim-basis.de>
 
 	* configure.ac : Fix DB checking again

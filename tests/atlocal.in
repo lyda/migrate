@@ -1,5 +1,6 @@
 CC="@CC@"
 SHREXT="@COB_MODULE_EXT@"
+SHROPT="@COB_SHARED_OPT@"
 PATH="${abs_top_builddir}/cobc:${abs_top_builddir}/bin:${PATH}"
 COBC="${abs_top_builddir}/cobc/cobc"
 COBCRUN="${abs_top_builddir}/bin/cobcrun"
@@ -15,6 +16,7 @@ export COB_CFLAGS="-I${abs_top_srcdir}"
 export COB_LIBS="-L${abs_top_builddir}/libcob/.libs -lcob @LIBCOB_LIBS@"
 export COB_CONFIG_DIR="${abs_top_srcdir}/config"
 export LD_LIBRARY_PATH="${abs_top_builddir}/libcob/.libs"
+export DYLD_LIBRARY_PATH="${abs_top_builddir}/libcob/.libs"
 
 export COB_SWITCH_1=ON
 export COB_SWITCH_2=OFF

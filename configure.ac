@@ -283,7 +283,7 @@ case $host_os in
 	;;
   darwin* | rhapsody*)
 	cobcruns=false
-	COB_SHARED_OPT="-dynamiclib"
+	COB_SHARED_OPT="-bundle -flat_namespace -undefined suppress"
 	;;
   *)
 	cobcruns=false
@@ -310,7 +310,7 @@ AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBS)
 AC_SUBST(COB_EXPORT_DYN)
 # AC_SUBST(COB_PIC_FLAGS)
-# AC_SUBST(COB_SHARED_OPT)
+AC_SUBST(COB_SHARED_OPT)
 
 AC_CONFIG_FILES([cob-config
 		Makefile lib/Makefile libcob/Makefile

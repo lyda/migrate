@@ -1,3 +1,9 @@
+2005-10-27  Roger While <simrw@sim-basis.de>
+
+	* Fixes all over for MAC (Darwin)
+	  We had "-shared" hard-coded in several places.
+	  Pick up the real value from the configure.
+
 2005-10-14  Roger While <simrw@sim-basis.de>
 
 	* Fix a typo

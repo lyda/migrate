@@ -465,7 +465,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP COB_CC LIBOBJS EGREP MKINSTALLDIRS USE_NLS MSGFMT GMSGFMT XGETTEXT MSGMERGE build build_cpu build_vendor build_os host host_cpu host_vendor host_os LIBICONV LTLIBICONV INTLLIBS LIBINTL LTLIBINTL POSUB LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB DLLTOOL ac_ct_DLLTOOL AS ac_ct_AS OBJDUMP ac_ct_OBJDUMP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL ALLOCA COBCRUN_SHARED_TRUE COBCRUN_SHARED_FALSE COB_CFLAGS COB_LIBS COB_CONFIG_DIR COB_LIBRARY_PATH COB_MODULE_EXT COBC_LIBS LIBCOB_CFLAGS LIBCOB_LIBS COB_EXPORT_DYN LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP COB_CC LIBOBJS EGREP MKINSTALLDIRS USE_NLS MSGFMT GMSGFMT XGETTEXT MSGMERGE build build_cpu build_vendor build_os host host_cpu host_vendor host_os LIBICONV LTLIBICONV INTLLIBS LIBINTL LTLIBINTL POSUB LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB DLLTOOL ac_ct_DLLTOOL AS ac_ct_AS OBJDUMP ac_ct_OBJDUMP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL ALLOCA COBCRUN_SHARED_TRUE COBCRUN_SHARED_FALSE COB_CFLAGS COB_LIBS COB_CONFIG_DIR COB_LIBRARY_PATH COB_MODULE_EXT COBC_LIBS LIBCOB_CFLAGS LIBCOB_LIBS COB_EXPORT_DYN COB_SHARED_OPT LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -25204,7 +25204,7 @@ case $host_os in
 	;;
   darwin* | rhapsody*)
 	cobcruns=false
-	COB_SHARED_OPT="-dynamiclib"
+	COB_SHARED_OPT="-bundle -flat_namespace -undefined suppress"
 	;;
   *)
 	cobcruns=false
@@ -25252,7 +25252,7 @@ fi
 
 
 # AC_SUBST(COB_PIC_FLAGS)
-# AC_SUBST(COB_SHARED_OPT)
+
 
                                                                                                                         ac_config_files="$ac_config_files cob-config Makefile lib/Makefile libcob/Makefile cobc/Makefile bin/Makefile po/Makefile.in texi/Makefile config/Makefile tests/atlocal tests/Makefile tests/cobol85/Makefile"
 
@@ -26032,6 +26032,7 @@ s,@COBC_LIBS@,$COBC_LIBS,;t t
 s,@LIBCOB_CFLAGS@,$LIBCOB_CFLAGS,;t t
 s,@LIBCOB_LIBS@,$LIBCOB_LIBS,;t t
 s,@COB_EXPORT_DYN@,$COB_EXPORT_DYN,;t t
+s,@COB_SHARED_OPT@,$COB_SHARED_OPT,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF
 
