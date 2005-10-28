@@ -311,11 +311,11 @@ at_format='..'
 # Description of all the test groups.
 at_help_all='1;binary.at:23;BINARY: 2-4-8 big-endian;;
 2;binary.at:206;BINARY: 2-4-8 native;;
-3;binary.at:389;BINARY: 1-2-4-8 big-endian;;
-4;binary.at:572;BINARY: 1-2-4-8 native;;
-5;binary.at:755;BINARY: 1--8 big-endian;;
-6;binary.at:938;BINARY: 1--8 native;;
-7;binary.at:1121;BINARY: full-print;;
+3;binary.at:394;BINARY: 1-2-4-8 big-endian;;
+4;binary.at:577;BINARY: 1-2-4-8 native;;
+5;binary.at:766;BINARY: 1--8 big-endian;;
+6;binary.at:949;BINARY: 1--8 native;;
+7;binary.at:1138;BINARY: full-print;;
 8;display.at:21;DISPLAY: Sign ascii;;
 9;display.at:112;DISPLAY: Sign ascii10;;
 10;packed.at:24;PACKED-DECIMAL dump;;
@@ -1112,6 +1112,34 @@ $at_traceon
       $at_traceon
 
 
+if test "x$COB_BIGENDIAN" == "xyes"; then
+$at_traceoff
+echo "binary.at:209: true"
+echo binary.at:209 >$at_check_line_file
+( $at_traceon; true ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "binary.at:209: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+else
+
 cat >test.conf <<'_ATEOF'
 
 include "cobol2002.conf"
@@ -1135,37 +1163,9 @@ _ATEOF
 
 
 $at_traceoff
-echo "binary.at:226: \${CC} \${SHROPT} -o dump.\${SHREXT} dump.c"
-echo binary.at:226 >$at_check_line_file
-( $at_traceon; ${CC} ${SHROPT} -o dump.${SHREXT} dump.c ) >$at_stdout 2>$at_stder1
-at_status=$?
-grep '^ *+' $at_stder1 >&2
-grep -v '^ *+' $at_stder1 >$at_stderr
-at_failed=false
-$at_diff $at_devnull $at_stderr || at_failed=:
-$at_diff $at_devnull $at_stdout || at_failed=:
-case $at_status in
-   77) echo 77 > $at_status_file
-            exit 77;;
-   0) ;;
-   *) echo "binary.at:226: exit code was $at_status, expected 0"
-      at_failed=:;;
-esac
-if $at_failed; then
-
-  echo 1 > $at_status_file
-  exit 1
-fi
-
-$at_traceon
-
-
-sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-dump.cob > prog.cob
-
-$at_traceoff
-echo "binary.at:230: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo "binary.at:230: \${CC} \${SHROPT} -o dump.\${SHREXT} dump.c"
 echo binary.at:230 >$at_check_line_file
-( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${CC} ${SHROPT} -o dump.${SHREXT} dump.c ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -1187,9 +1187,37 @@ fi
 
 $at_traceon
 
+
+sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-dump.cob > prog.cob
+
 $at_traceoff
-echo "binary.at:340: ./prog"
-echo binary.at:340 >$at_check_line_file
+echo "binary.at:234: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:234 >$at_check_line_file
+( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "binary.at:234: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "binary.at:344: ./prog"
+echo binary.at:344 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1309,7 +1337,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:340: exit code was $at_status, expected 0"
+   *) echo "binary.at:344: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1324,8 +1352,8 @@ $at_traceon
 sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-display.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:344: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:344 >$at_check_line_file
+echo "binary.at:348: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:348 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1337,7 +1365,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:344: exit code was $at_status, expected 0"
+   *) echo "binary.at:348: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1349,8 +1377,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:382: ./prog"
-echo binary.at:382 >$at_check_line_file
+echo "binary.at:386: ./prog"
+echo binary.at:386 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1398,7 +1426,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:382: exit code was $at_status, expected 0"
+   *) echo "binary.at:386: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1409,6 +1437,7 @@ fi
 
 $at_traceon
 
+fi
 
       $at_traceoff
       $at_times_p && times >$at_times_file
@@ -1416,13 +1445,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  3 ) # 3. binary.at:389: BINARY: 1-2-4-8 big-endian
-    at_setup_line='binary.at:389'
+  3 ) # 3. binary.at:394: BINARY: 1-2-4-8 big-endian
+    at_setup_line='binary.at:394'
     at_desc='BINARY: 1-2-4-8 big-endian'
     $at_quiet $ECHO_N "  3: BINARY: 1-2-4-8 big-endian                   $ECHO_C"
     at_xfail=no
     (
-      echo "3. binary.at:389: testing ..."
+      echo "3. binary.at:394: testing ..."
       $at_traceon
 
 
@@ -1449,8 +1478,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "binary.at:409: \${CC} \${SHROPT} -o dump.\${SHREXT} dump.c"
-echo binary.at:409 >$at_check_line_file
+echo "binary.at:414: \${CC} \${SHROPT} -o dump.\${SHREXT} dump.c"
+echo binary.at:414 >$at_check_line_file
 ( $at_traceon; ${CC} ${SHROPT} -o dump.${SHREXT} dump.c ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1462,7 +1491,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:409: exit code was $at_status, expected 0"
+   *) echo "binary.at:414: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1477,8 +1506,8 @@ $at_traceon
 sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-dump.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:413: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:413 >$at_check_line_file
+echo "binary.at:418: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:418 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1490,7 +1519,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:413: exit code was $at_status, expected 0"
+   *) echo "binary.at:418: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1502,8 +1531,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:523: ./prog"
-echo binary.at:523 >$at_check_line_file
+echo "binary.at:528: ./prog"
+echo binary.at:528 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1623,7 +1652,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:523: exit code was $at_status, expected 0"
+   *) echo "binary.at:528: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1638,8 +1667,8 @@ $at_traceon
 sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-display.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:527: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:527 >$at_check_line_file
+echo "binary.at:532: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:532 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1651,7 +1680,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:527: exit code was $at_status, expected 0"
+   *) echo "binary.at:532: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1663,8 +1692,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:565: ./prog"
-echo binary.at:565 >$at_check_line_file
+echo "binary.at:570: ./prog"
+echo binary.at:570 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1712,7 +1741,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:565: exit code was $at_status, expected 0"
+   *) echo "binary.at:570: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1730,15 +1759,43 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  4 ) # 4. binary.at:572: BINARY: 1-2-4-8 native
-    at_setup_line='binary.at:572'
+  4 ) # 4. binary.at:577: BINARY: 1-2-4-8 native
+    at_setup_line='binary.at:577'
     at_desc='BINARY: 1-2-4-8 native'
     $at_quiet $ECHO_N "  4: BINARY: 1-2-4-8 native                       $ECHO_C"
     at_xfail=no
     (
-      echo "4. binary.at:572: testing ..."
+      echo "4. binary.at:577: testing ..."
       $at_traceon
 
+
+if test "x$COB_BIGENDIAN" == "xyes"; then
+$at_traceoff
+echo "binary.at:580: true"
+echo binary.at:580 >$at_check_line_file
+( $at_traceon; true ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "binary.at:580: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+else
 
 cat >test.conf <<'_ATEOF'
 
@@ -1763,8 +1820,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "binary.at:592: \${CC} \${SHROPT} -o dump.\${SHREXT} dump.c"
-echo binary.at:592 >$at_check_line_file
+echo "binary.at:601: \${CC} \${SHROPT} -o dump.\${SHREXT} dump.c"
+echo binary.at:601 >$at_check_line_file
 ( $at_traceon; ${CC} ${SHROPT} -o dump.${SHREXT} dump.c ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1776,7 +1833,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:592: exit code was $at_status, expected 0"
+   *) echo "binary.at:601: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1791,8 +1848,8 @@ $at_traceon
 sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-dump.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:596: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:596 >$at_check_line_file
+echo "binary.at:605: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:605 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1804,7 +1861,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:596: exit code was $at_status, expected 0"
+   *) echo "binary.at:605: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1816,8 +1873,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:706: ./prog"
-echo binary.at:706 >$at_check_line_file
+echo "binary.at:715: ./prog"
+echo binary.at:715 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1937,7 +1994,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:706: exit code was $at_status, expected 0"
+   *) echo "binary.at:715: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1952,8 +2009,8 @@ $at_traceon
 sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-display.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:710: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:710 >$at_check_line_file
+echo "binary.at:719: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:719 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1965,7 +2022,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:710: exit code was $at_status, expected 0"
+   *) echo "binary.at:719: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1977,8 +2034,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:748: ./prog"
-echo binary.at:748 >$at_check_line_file
+echo "binary.at:757: ./prog"
+echo binary.at:757 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2026,7 +2083,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:748: exit code was $at_status, expected 0"
+   *) echo "binary.at:757: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2038,19 +2095,21 @@ fi
 $at_traceon
 
 
+fi
+
       $at_traceoff
       $at_times_p && times >$at_times_file
     ) 5>&1 2>&1 | eval $at_tee_pipe
     at_status=`cat $at_status_file`
     ;;
 
-  5 ) # 5. binary.at:755: BINARY: 1--8 big-endian
-    at_setup_line='binary.at:755'
+  5 ) # 5. binary.at:766: BINARY: 1--8 big-endian
+    at_setup_line='binary.at:766'
     at_desc='BINARY: 1--8 big-endian'
     $at_quiet $ECHO_N "  5: BINARY: 1--8 big-endian                      $ECHO_C"
     at_xfail=no
     (
-      echo "5. binary.at:755: testing ..."
+      echo "5. binary.at:766: testing ..."
       $at_traceon
 
 
@@ -2077,8 +2136,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "binary.at:775: \${CC} \${SHROPT} -o dump.\${SHREXT} dump.c"
-echo binary.at:775 >$at_check_line_file
+echo "binary.at:786: \${CC} \${SHROPT} -o dump.\${SHREXT} dump.c"
+echo binary.at:786 >$at_check_line_file
 ( $at_traceon; ${CC} ${SHROPT} -o dump.${SHREXT} dump.c ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2090,7 +2149,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:775: exit code was $at_status, expected 0"
+   *) echo "binary.at:786: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2105,8 +2164,8 @@ $at_traceon
 sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-dump.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:779: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:779 >$at_check_line_file
+echo "binary.at:790: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:790 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2118,7 +2177,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:779: exit code was $at_status, expected 0"
+   *) echo "binary.at:790: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2130,8 +2189,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:889: ./prog"
-echo binary.at:889 >$at_check_line_file
+echo "binary.at:900: ./prog"
+echo binary.at:900 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2251,7 +2310,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:889: exit code was $at_status, expected 0"
+   *) echo "binary.at:900: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2266,8 +2325,8 @@ $at_traceon
 sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-display.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:893: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:893 >$at_check_line_file
+echo "binary.at:904: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:904 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2279,7 +2338,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:893: exit code was $at_status, expected 0"
+   *) echo "binary.at:904: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2291,8 +2350,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:931: ./prog"
-echo binary.at:931 >$at_check_line_file
+echo "binary.at:942: ./prog"
+echo binary.at:942 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2340,7 +2399,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:931: exit code was $at_status, expected 0"
+   *) echo "binary.at:942: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2358,15 +2417,43 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  6 ) # 6. binary.at:938: BINARY: 1--8 native
-    at_setup_line='binary.at:938'
+  6 ) # 6. binary.at:949: BINARY: 1--8 native
+    at_setup_line='binary.at:949'
     at_desc='BINARY: 1--8 native'
     $at_quiet $ECHO_N "  6: BINARY: 1--8 native                          $ECHO_C"
     at_xfail=no
     (
-      echo "6. binary.at:938: testing ..."
+      echo "6. binary.at:949: testing ..."
       $at_traceon
 
+
+if test "x$COB_BIGENDIAN" == "xyes"; then
+$at_traceoff
+echo "binary.at:952: true"
+echo binary.at:952 >$at_check_line_file
+( $at_traceon; true ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "binary.at:952: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+else
 
 cat >test.conf <<'_ATEOF'
 
@@ -2391,8 +2478,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "binary.at:958: \${CC} \${SHROPT} -o dump.\${SHREXT} dump.c"
-echo binary.at:958 >$at_check_line_file
+echo "binary.at:973: \${CC} \${SHROPT} -o dump.\${SHREXT} dump.c"
+echo binary.at:973 >$at_check_line_file
 ( $at_traceon; ${CC} ${SHROPT} -o dump.${SHREXT} dump.c ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2404,7 +2491,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:958: exit code was $at_status, expected 0"
+   *) echo "binary.at:973: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2419,8 +2506,8 @@ $at_traceon
 sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-dump.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:962: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:962 >$at_check_line_file
+echo "binary.at:977: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:977 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2432,7 +2519,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:962: exit code was $at_status, expected 0"
+   *) echo "binary.at:977: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2444,8 +2531,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:1072: ./prog"
-echo binary.at:1072 >$at_check_line_file
+echo "binary.at:1087: ./prog"
+echo binary.at:1087 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2565,7 +2652,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:1072: exit code was $at_status, expected 0"
+   *) echo "binary.at:1087: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2580,8 +2667,8 @@ $at_traceon
 sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-display.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:1076: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:1076 >$at_check_line_file
+echo "binary.at:1091: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:1091 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2593,7 +2680,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:1076: exit code was $at_status, expected 0"
+   *) echo "binary.at:1091: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2605,8 +2692,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:1114: ./prog"
-echo binary.at:1114 >$at_check_line_file
+echo "binary.at:1129: ./prog"
+echo binary.at:1129 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2654,7 +2741,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:1114: exit code was $at_status, expected 0"
+   *) echo "binary.at:1129: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2666,19 +2753,21 @@ fi
 $at_traceon
 
 
+fi
+
       $at_traceoff
       $at_times_p && times >$at_times_file
     ) 5>&1 2>&1 | eval $at_tee_pipe
     at_status=`cat $at_status_file`
     ;;
 
-  7 ) # 7. binary.at:1121: BINARY: full-print
-    at_setup_line='binary.at:1121'
+  7 ) # 7. binary.at:1138: BINARY: full-print
+    at_setup_line='binary.at:1138'
     at_desc='BINARY: full-print'
     $at_quiet $ECHO_N "  7: BINARY: full-print                           $ECHO_C"
     at_xfail=no
     (
-      echo "7. binary.at:1121: testing ..."
+      echo "7. binary.at:1138: testing ..."
       $at_traceon
 
 
@@ -2693,8 +2782,8 @@ _ATEOF
 sed -e 's/@USAGE@/BINARY/' ${TEMPLATE}/numeric-display.cob > prog.cob
 
 $at_traceoff
-echo "binary.at:1131: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo binary.at:1131 >$at_check_line_file
+echo "binary.at:1148: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo binary.at:1148 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2706,7 +2795,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:1131: exit code was $at_status, expected 0"
+   *) echo "binary.at:1148: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2718,8 +2807,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "binary.at:1169: ./prog"
-echo binary.at:1169 >$at_check_line_file
+echo "binary.at:1186: ./prog"
+echo binary.at:1186 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2767,7 +2856,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "binary.at:1169: exit code was $at_status, expected 0"
+   *) echo "binary.at:1186: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then

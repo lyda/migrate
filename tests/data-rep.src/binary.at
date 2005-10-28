@@ -205,6 +205,10 @@ AT_CLEANUP
 
 AT_SETUP([BINARY: 2-4-8 native])
 
+if test "x$COB_BIGENDIAN" == "xyes"; then
+AT_CHECK([true])
+else
+
 AT_DATA([test.conf], [
 include "cobol2002.conf"
 binary-size: 2-4-8
@@ -380,6 +384,7 @@ AT_CHECK([./prog], [0],
 -12345678901234567
 -123456789012345678
 ])
+fi
 
 AT_CLEANUP
 
@@ -571,6 +576,10 @@ AT_CLEANUP
 
 AT_SETUP([BINARY: 1-2-4-8 native])
 
+if test "x$COB_BIGENDIAN" == "xyes"; then
+AT_CHECK([true])
+else
+
 AT_DATA([test.conf], [
 include "cobol2002.conf"
 binary-size: 1-2-4-8
@@ -746,6 +755,8 @@ AT_CHECK([./prog], [0],
 -12345678901234567
 -123456789012345678
 ])
+
+fi
 
 AT_CLEANUP
 
@@ -937,6 +948,10 @@ AT_CLEANUP
 
 AT_SETUP([BINARY: 1--8 native])
 
+if test "x$COB_BIGENDIAN" == "xyes"; then
+AT_CHECK([true])
+else
+
 AT_DATA([test.conf], [
 include "cobol2002.conf"
 binary-size: 1--8
@@ -1112,6 +1127,8 @@ AT_CHECK([./prog], [0],
 -12345678901234567
 -123456789012345678
 ])
+
+fi
 
 AT_CLEANUP
 

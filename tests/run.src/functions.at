@@ -821,7 +821,7 @@ AT_DATA([prog.cob], [
        PROCEDURE        DIVISION.
            MOVE FUNCTION STANDARD-DEVIATION ( 3 -14 0 8 -3 ) TO Y.
            IF Y >= 7.35934779718963925 AND
-              Y <= 7.35934779718963935
+              Y <= 7.35934779718964025
                    DISPLAY "OK"
            ELSE
                    DISPLAY Y

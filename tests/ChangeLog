@@ -1,3 +1,8 @@
+2005-10-28  Roger While <simrw@sim-basis.de>
+
+	* Relax the range check for STANDARD-DEVIATION
+	  Don't do native binary tests when native = big-endian
+
 2005-10-27  Roger While <simrw@sim-basis.de>
 
 	* Fixes all over for MAC (Darwin)
