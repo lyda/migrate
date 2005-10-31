@@ -42,6 +42,8 @@ AH_TEMPLATE([COB_SHARED_OPT], [Compile/link option for shared code])
 AH_TEMPLATE([COB_STRIP_CMD], [Strip command])
 AH_TEMPLATE([USE_LIBDL],   [Use system dynamic loader])
 AH_TEMPLATE([PATCH_LEVEL],   [Define a patch level])
+AH_TEMPLATE([DLLHIDDEN],   [Has visibility attribute])
+AH_TEMPLATE([HAVE_PSIGN_OPT],   [Has -Wno-pointer-sign])
 
 if test "x$CFLAGS" = "x"
 then
@@ -206,6 +208,10 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([memmove memset regcomp pow setlocale fcntl strerror \
 		strcasecmp strchr strrchr strdup strstr strtol])
 
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[int testint __attribute__ ((visibility ("hidden")));]])],
+	[AC_DEFINE(DLLHIDDEN, __attribute__ ((visibility ("hidden"))))],
+	[AC_DEFINE(DLLHIDDEN, ,Has visibility attribute)])
+
 # OpenCOBOL Configuration
 
 # Checks for dl/ltdl.
@@ -275,6 +281,13 @@ then
 		COB_CFLAGS="$COB_CFLAGS $cob_temp_flags"
 	fi
 fi
+
+MYOLDCFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -Wno-pointer-sign"
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[int testint;]])],
+	[AC_DEFINE(HAVE_PSIGN_OPT, 1)],
+	[])
+CFLAGS="$MYOLDCFLAGS"
 
 case $host_os in
   cygwin* | mingw*)

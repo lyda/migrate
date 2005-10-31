@@ -23,6 +23,9 @@
 /* Define to 1 if using `alloca.c'. */
 #undef C_ALLOCA
 
+/* Has visibility attribute */
+#undef DLLHIDDEN
+
 /* Define to 1 if translation of program messages to the user's native
    language is requested. */
 #undef ENABLE_NLS
@@ -133,6 +136,9 @@
 
 /* Define to 1 if you have the `pow' function. */
 #undef HAVE_POW
+
+/* Has -Wno-pointer-sign */
+#undef HAVE_PSIGN_OPT
 
 /* Define to 1 if you have the `regcomp' function. */
 #undef HAVE_REGCOMP

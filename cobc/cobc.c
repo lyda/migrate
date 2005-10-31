@@ -477,7 +477,7 @@ process_command_line (int argc, char *argv[])
 
 	strcat (cob_cflags, " -fsigned-char");
 
-#if defined (__GNUC__) && (__GNUC__ >= 4)
+#ifdef	HAVE_PSIGN_OPT
 	strcat (cob_cflags, " -Wno-pointer-sign");
 #endif
 
