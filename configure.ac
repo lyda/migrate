@@ -59,6 +59,7 @@ LIBCOB_CFLAGS="$lt_prog_compiler_pic"
 
 AC_PROG_CC
 AC_PROG_CPP
+AC_PROG_EGREP
 
 # Configure options.
 COB_CC=""
@@ -147,12 +148,41 @@ then
          [AC_MSG_ERROR(libdb1 is required)])
 elif test "$LIBDB" = "3"
 then
-       AC_CHECK_HEADERS([db.h db_185.h db3/db_185.h db4/db_185.h db4.1/db_185.h db4.2/db_185.h db4.3/db_185.h])
-       AC_CHECK_LIB([db], [__db_open],
-         [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
-          [AC_CHECK_LIB([db], [dbopen],
-            [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
-            [AC_MSG_ERROR(libdb is required)])])
+	AC_CHECK_HEADERS([db.h db_185.h db3/db_185.h db4/db_185.h db4.1/db_185.h db4.2/db_185.h db4.3/db_185.h])
+	AC_CHECK_LIB([db-4.3], [__db_open],
+	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.3"],
+	  [AC_CHECK_LIB([db-4.3], [dbopen],
+	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"-4.3], [])])
+	if test "$USE_DB" != "yes"
+	then
+	AC_CHECK_LIB([db-4.2], [__db_open],
+	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.2"],
+	  [AC_CHECK_LIB([db-4.2], [dbopen],
+	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"-4.2], [])])
+	fi
+	if test "$USE_DB" != "yes"
+	then
+	AC_CHECK_LIB([db-4.1], [__db_open],
+	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.1"],
+	  [AC_CHECK_LIB([db-4.1], [dbopen],
+	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"-4.1], [])])
+	fi
+	if test "$USE_DB" != "yes"
+	then
+	AC_CHECK_LIB([db-4], [__db_open],
+	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4"],
+	  [AC_CHECK_LIB([db-4], [dbopen],
+	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"-4], [])])
+	fi
+	
+	if test "$USE_DB" != "yes"
+	then
+	AC_CHECK_LIB([db], [__db_open],
+	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
+	  [AC_CHECK_LIB([db], [dbopen],
+	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
+		[AC_MSG_ERROR(libdb is required)])])
+	fi
 fi
 
 # Checks for gmp.
@@ -170,7 +200,7 @@ fi
 
 # Checks for ncurses.
 USE_NCURSES="no"
-AC_CHECK_HEADERS([ncurses.h pdcurses.h curses.h])
+AC_CHECK_HEADERS([ncurses.h pdcurses.h ncurses/ncurses.h curses.h])
 AC_CHECK_LIB([ncurses], [initscr])
 if test "x$ac_cv_lib_ncurses_initscr" = "xyes"; then
   USE_NCURSES="yes"

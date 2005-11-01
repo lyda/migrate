@@ -421,7 +421,7 @@ sequential_read (cob_file *f)
 	/* read the record size */
 	if (f->record_min != f->record_max) {
 		if (fread (&f->record->size, sizeof (f->record->size), 1, f->file) != 1) {
-			if (ferror (f->file)) {
+			if (ferror ((FILE *)f->file)) {
 				return COB_STATUS_30_PERMANENT_ERROR;
 			} else {
 				return COB_STATUS_10_END_OF_FILE;
@@ -431,7 +431,7 @@ sequential_read (cob_file *f)
 
 	/* read the record */
 	if (fread (f->record->data, f->record->size, 1, f->file) != 1) {
-		if (ferror (f->file)) {
+		if (ferror ((FILE *)f->file)) {
 			return COB_STATUS_30_PERMANENT_ERROR;
 		} else {
 			return COB_STATUS_10_END_OF_FILE;
@@ -495,26 +495,34 @@ static cob_fileio_funcs sequential_funcs = {
 static int
 lineseq_read (cob_file *f)
 {
-	size_t i;
-	char buff[f->record->size + 1];
+	size_t	i;
+	int	n;
+	char	buff[f->record->size + 1];
 
-	/* read the file */
-	if (fgets (buff, f->record->size + 1, f->file) == NULL)
-		return COB_STATUS_10_END_OF_FILE;
-
-	/* remove the newline */
-	for (i = 0; i < f->record->size; i++)
-		if (buff[i] == '\r' || buff[i] == '\n')
+	for ( i= 0 ; i < f->record->size ; ) {
+		if ( (n = fgetc(f->file)) == EOF ) {
+			return COB_STATUS_10_END_OF_FILE;
+		}
+		if ( n == '\r' ) {
+			continue;
+		}
+		if ( n == '\n' ) {
 			break;
+		}
+		buff[i] = n;
+		i++;
+	}
 	if (i < f->record->size) {
-		/* fill the record by spaces */
+		/* fill the record with spaces */
 		own_memset ((unsigned char *)buff + i, ' ', f->record->size - i);
 	} else {
 		/* discard input until the newline */
-		char buff[BUFSIZ];
-		while (fgets (buff, BUFSIZ, f->file) != NULL)
-			if (strchr (buff, '\n') != NULL)
+		int	c;
+		while ( (c = fgetc(f->file)) != EOF ) {
+			if ( c == '\n' ) {
 				break;
+			}
+		}
 	}
 
 	own_memcpy (f->record->data, (unsigned char *)buff, f->record->size);
@@ -643,7 +651,7 @@ relative_read_next (cob_file *f)
 
 	while (1) {
 		if (fread (&f->record->size, sizeof (f->record->size), 1, f->file) != 1) {
-			if (ferror (f->file)) {
+			if (ferror ((FILE *)f->file)) {
 				return COB_STATUS_30_PERMANENT_ERROR;
 			} else {
 				return COB_STATUS_10_END_OF_FILE;

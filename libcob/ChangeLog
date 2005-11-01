@@ -1,3 +1,10 @@
+2005-11-01  Roger While <simrw@sim-basis.de>
+
+	* screenio.c : Cater for include in ncurses/ncurses.h
+	* fileio.c : ferror under Cygwin doesn't like a
+	  void * parameter - Cast it.
+	  Fix line-sequential reads when input has carriage-returns.
+
 2005-10-26  Roger While <simrw@sim-basis.de>
 
 	* fileio.c : Remove HAVE_DB ifdef, fix warnings

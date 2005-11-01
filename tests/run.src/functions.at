@@ -848,7 +848,7 @@ AT_DATA([prog.cob], [
        PROCEDURE        DIVISION.
            MOVE FUNCTION TAN ( X ) TO Y.
            IF Y >= 14.1014199471717185 AND
-              Y <= 14.1014199471717195
+              Y <= 14.1014199471717205
                    DISPLAY "OK"
            ELSE
                    DISPLAY "NOT OK"

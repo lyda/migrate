@@ -1,3 +1,8 @@
+2005-11-01  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Take out attribute aligned. It borks 
+	  under Cygwin latest.
+
 2005-10-31  Roger While <simrw@sim-basis.de>
 
 	* cobc.c : Cater for -Wno-pointer-check correctly

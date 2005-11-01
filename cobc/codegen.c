@@ -242,18 +242,8 @@ output_base (struct cb_field *f)
 	if ( !f01->flag_external ) {
 		if (!f01->flag_local)
 			output_storage ("static ");
-#if defined (__GNUC__) && defined (__i386__)
-		if ( f01->memory_size > 63 ) {
-			output_storage ("unsigned char %s%s[%d]\t__attribute__ ((__aligned__(64)));",
-				CB_PREFIX_BASE, name, f01->memory_size);
-		} else {
-			output_storage ("unsigned char %s%s[%d];",
-				CB_PREFIX_BASE, name, f01->memory_size);
-		}
-#else
 		output_storage ("unsigned char %s%s[%d];",
 				CB_PREFIX_BASE, name, f01->memory_size);
-#endif
 		output_storage ("  /* %s */\n", f01->name);
 	}
 	f01->flag_base = 1;

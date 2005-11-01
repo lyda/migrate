@@ -24,11 +24,15 @@
 #if HAVE_NCURSES_H
 #include <ncurses.h>
 #else
+#if HAVE_NCURSES_NCURSES_H
+#include <ncurses/ncurses.h>
+#else
 #if HAVE_PDCURSES_H
 #include <pdcurses.h>
 #else
 #if HAVE_CURSES_H
 #include <curses.h>
+#endif
 #endif
 #endif
 #endif
