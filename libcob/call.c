@@ -45,12 +45,13 @@
 #include "common.h"
 #include "lib/gettext.h"
 
-static int	dynamic_reloading = 0;
+static int		dynamic_reloading = 0;
 
-static int	resolve_size = 0;
-static char	**resolve_path = NULL;
-static char	*resolve_error = NULL;
-static char	*resolve_error_buff = NULL;
+static int		resolve_size = 0;
+static char		**resolve_path = NULL;
+static char		*resolve_error = NULL;
+static char		*resolve_error_buff = NULL;
+static lt_dlhandle	mainhandle = NULL;
 
 /*
  * Call table
@@ -125,6 +126,8 @@ cob_init_call (void)
 		s = COB_LIBRARY_PATH;
 	}
 	cob_set_library_path (s);
+
+	mainhandle = lt_dlopen (NULL);
 
 	s = getenv ("COB_DYNAMIC_RELOADING");
 	if (s != NULL && strcmp (s, "yes") == 0) {
@@ -269,7 +272,7 @@ cob_resolve (const char *name)
 	*p = 0;
 
 	/* search the main program */
-	if ((handle = lt_dlopen (NULL)) != NULL && (func = lt_dlsym (handle, buff)) != NULL) {
+	if (mainhandle != NULL && (func = lt_dlsym (mainhandle, buff)) != NULL) {
 		insert (name, NULL, handle, func, 0);
 		resolve_error = NULL;
 		return func;

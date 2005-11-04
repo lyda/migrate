@@ -65,13 +65,14 @@ AC_PROG_EGREP
 COB_CC=""
 AC_ARG_WITH(cc,
   [  --with-cc=<cc>          specify the C compiler used by cobc],
-  [ COB_CC=$withval ])
-if test "x${COB_CC}" = "x"; then
-  AC_CHECK_PROG([COB_CC], [gcc], [gcc])
-fi
-if test "x${COB_CC}" = "x"; then
-  AC_CHECK_PROG([COB_CC], [cc], [cc], AC_MSG_ERROR(cc is required))
-fi
+  [ COB_CC=$withval ], [ COB_CC=$CC] )
+
+#if test "x${COB_CC}" = "x"; then
+#  AC_CHECK_PROG([COB_CC], [gcc], [gcc])
+#fi
+#if test "x${COB_CC}" = "x"; then
+#  AC_CHECK_PROG([COB_CC], [cc], [cc], AC_MSG_ERROR(cc is required))
+#fi
 
 LIBDB=""
 AC_ARG_WITH(db1,
@@ -366,6 +367,7 @@ AC_OUTPUT
 echo ""
 echo "OpenCOBOL Configuration:"
 echo ""
+echo "  CC                   ${CC}"
 echo "  COB_CC               ${COB_CC}"
 echo "  CFLAGS               ${CFLAGS}"
 echo "  COB_CFLAGS           ${COB_CFLAGS}"

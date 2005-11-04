@@ -30,6 +30,7 @@
 #include "tree.h"
 #include "call.def"
 
+#define	COB_USE_SETJMP	0
 #define NUM_I_COUNTERS	8
 
 static int param_id = 0;
@@ -758,7 +759,7 @@ output_param (cb_tree x, int id)
 {
   char fname[8];
 
-  sprintf (fname, "f[%d]", id);
+  sprintf (fname, "f%d", id);
   param_id = id;
 
   if (x == NULL)
@@ -888,7 +889,7 @@ output_param (cb_tree x, int id)
 	    if ( stack_id >= num_cob_fields ) {
 		num_cob_fields = stack_id + 1;
 	    }
-	    sprintf (fname, "f[%d]", stack_id++);
+	    sprintf (fname, "f%d", stack_id++);
 	    output ("(%s.size = ", fname);
 	    output_size (x);
 	    output (", %s.data = ", fname);
@@ -1846,10 +1847,15 @@ output_perform_call (struct cb_label *lb, struct cb_label *le)
   output_line ("frame_index++;");
   output_line ("frame_stack[frame_index].perform_through = %d;",
 	       le->id);
+#if	COB_USE_SETJMP
+  output_line ("if (setjmp(frame_stack[frame_index].return_address) == 0)");
+  output_line ("  goto %s%d;", CB_PREFIX_LABEL, lb->id);
+#else
   output_line ("frame_stack[frame_index].return_address = &&%s%d;",
 	       CB_PREFIX_LABEL, cb_id);
   output_line ("goto %s%d;", CB_PREFIX_LABEL, lb->id);
   output_line ("%s%d:", CB_PREFIX_LABEL, cb_id);
+#endif
   cb_id++;
   output_line ("frame_index--;");
 }
@@ -1858,7 +1864,11 @@ static void
 output_perform_exit (struct cb_label *l)
 {
   output_line ("if (frame_stack[frame_index].perform_through == %d)", l->id);
+#if	COB_USE_SETJMP
+  output_line ("  longjmp(frame_stack[frame_index].return_address, 1);");
+#else
   output_line ("  goto *frame_stack[frame_index].return_address;");
+#endif
 }
 
 static void
@@ -1929,9 +1939,9 @@ output_perform (struct cb_perform *p)
       break;
     case CB_PERFORM_TIMES:
       output_prefix ();
-      output ("for (n[%d] = ", loop_counter);
+      output ("for (n%d = ", loop_counter);
       output_param (cb_build_cast_integer (p->data), 0);
-      output ("; n[%d] > 0; n[%d]--)\n", loop_counter, loop_counter);
+      output ("; n%d > 0; n%d--)\n", loop_counter, loop_counter);
       loop_counter++;
       output_indent ("  {");
       output_perform_once (p);
@@ -2502,8 +2512,11 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
       output_newline ();
     }
 
-  if ( prog->loop_counter )
-	output_line ("int n[%d];", prog->loop_counter);
+  if ( prog->loop_counter ) {
+	for ( i = 0; i < prog->loop_counter; i++ ) {
+		output_line ("int n%d;", i);
+	}
+  }
 
 /*
   if ( num_cob_fields ) {
@@ -2534,7 +2547,11 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 
   output_line ("/* perform frame stack */");
   output_line ("int frame_index;");
+#if	COB_USE_SETJMP
+  output_line ("struct frame { int perform_through; jmp_buf return_address; } "
+#else
   output_line ("struct frame { int perform_through; void *return_address; } "
+#endif
 	       "frame_stack[254];");
   output_newline ();
 
@@ -2824,6 +2841,9 @@ codegen (struct cb_program *prog)
   output ("#include <stdlib.h>\n");
   output ("#include <string.h>\n");
   output ("#include <math.h>\n");
+#if	COB_USE_SETJMP
+  output ("#include <setjmp.h>\n");
+#endif
   output ("#include <libcob.h>\n\n");
 
   output ("#define COB_SOURCE_FILE		\"%s\"\n", cb_source_file);
@@ -2914,7 +2934,7 @@ codegen (struct cb_program *prog)
 	      output_storage ("\"");
 	    }
 	else
-		output_storage ("0");
+		output_storage ("NULL");
 	output_storage ("};\n");
   }
 
@@ -2960,7 +2980,9 @@ codegen (struct cb_program *prog)
   }
 
   if ( num_cob_fields ) {
-	output ("cob_field f[%d];\n", num_cob_fields);
+	for ( i = 0; i < num_cob_fields; i++ ) {
+		output ("cob_field f%d;\n", i);
+	}
   }
 
   output_target = yyout;

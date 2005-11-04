@@ -1,3 +1,7 @@
+2005-11-04  Roger While <simrw@sim-basis.de>
+
+	* configure.ac : Fix COB_CC not equal CC
+
 2005-11-01  Roger While <simrw@sim-basis.de>
 
 	* configure.ac : Fix missing EGREP

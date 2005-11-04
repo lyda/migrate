@@ -1,3 +1,8 @@
+2005-11-04  Roger While <simrw@sim-basis.de>
+
+	* call.c : Don't repeatedly call (lt_)dlopen on 
+	  NULL (main program); Do it once at startup.
+
 2005-11-01  Roger While <simrw@sim-basis.de>
 
 	* screenio.c : Cater for include in ncurses/ncurses.h
