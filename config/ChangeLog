@@ -1,3 +1,7 @@
+2005-11-05  Roger While <simrw@sim-basis.de>
+
+	* New variable - perform-osvs
+
 2005-05-15  Roger While <simrw@sim-basis.de>
 
 	* Do not nest includes. All config files include

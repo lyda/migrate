@@ -1869,6 +1869,16 @@ output_perform_exit (struct cb_label *l)
 #else
   output_line ("  goto *frame_stack[frame_index].return_address;");
 #endif
+  if ( cb_perform_osvs ) {
+	output_line ("if (frame_index > 0) {");
+	output_line ("  frame_index--;");
+#if	COB_USE_SETJMP
+	output_line ("  longjmp(frame_stack[frame_index].return_address, 1);");
+#else
+	output_line ("  goto *frame_stack[frame_index].return_address;");
+#endif
+	output_line ("}");
+  }
 }
 
 static void

@@ -1,3 +1,7 @@
+2005-11-05  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Preliminary code for perform OSVS
+
 2005-11-04  Roger While <simrw@sim-basis.de>
 
 	* cobc.c : Take out option -no-gcse
