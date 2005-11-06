@@ -457,6 +457,7 @@ struct cb_tree_common common;
 	unsigned int flag_local         : 1;	/* has local scope */
 	unsigned int flag_base          : 1;
 	unsigned int flag_field         : 1;
+	unsigned int flag_item_external : 1;
 	unsigned int flag_spare		: 20;
 	};
 

@@ -80,7 +80,7 @@ AC_ARG_WITH(db1,
   [ LIBDB="1"
     AC_DEFINE(WITH_DB, 1) ],
 	[ AC_ARG_WITH(db,
-		[  --with-db               use Berkeley DB 3.0 or later (libdb)],
+		[  --with-db               use Berkeley DB 3.0 or later (libdb)(default)],
 		[ if test "$with_db" = "yes"
 		  then
 		  LIBDB="3"
@@ -95,7 +95,7 @@ AC_ARG_WITH(db1,
 #    AC_DEFINE(WITH_DB, 3) ])
 
 AC_ARG_WITH(lfs64,
-  [  --with-lfs64            use large file system for file I/O],
+  [  --with-lfs64            use large file system for file I/O (default)],
   [ if test "$with_lfs64" = "yes"
     then
 	AC_DEFINE(WITH_LFS64)
@@ -105,7 +105,7 @@ AC_ARG_WITH(lfs64,
 DEFINEDL="no"
 
 AC_ARG_WITH(dl,
-  [  --with-dl            use system dynamic loader],
+  [  --with-dl               use system dynamic loader],
   [ DEFINEDL="yes" ])
 
 AC_ARG_ENABLE(debug,
@@ -113,7 +113,7 @@ AC_ARG_ENABLE(debug,
   [ AC_DEFINE(COB_DEBUG) ])
 
 PATCH_LEVEL=0
-AC_ARG_WITH(patch-level, [  --with-patch-level     Define a patch level (default 0)],
+AC_ARG_WITH(patch-level, [  --with-patch-level      define a patch level (default 0)],
 [case $with_patch_level in  
     yes)	AC_MSG_ERROR(["You must give --with-patch-level an argument."])
 		;;

@@ -45,6 +45,7 @@ static int need_double = 0;
 static int i_counters[NUM_I_COUNTERS];
 
 int entry_number = 0;
+int has_external = 0;
 
 static void output (const char *fmt, ...)
      __attribute__ ((__format__ (__printf__, 1, 2)));
@@ -846,10 +847,16 @@ output_param (cb_tree x, int id)
 	for ( pechk = f->parent; pechk; pechk = pechk->parent ) {
 		if ( pechk->flag_external ) {
 			extrefs = 1;
+			f->flag_item_external = 1;
 		}
 	}
+	if ( f->flag_external ) {
+		f->flag_item_external = 1;
+	}
 	if (!r->subs && !r->offset && f->count > 0
+/* RXW
 	    && !f->flag_external && !extrefs
+*/
 	    && !cb_field_variable_size (f) && !cb_field_variable_address (f))
 	  {
 	    if (!f->flag_field)
@@ -997,9 +1004,19 @@ output_funcall (cb_tree x)
 		/* Test of one character */
 		output ("(int)(*(");
 		output_data (p->argv[0]);
-		output (") - *(");
-		output_data (p->argv[1]);
-		output ("))");
+		if ( p->argv[1] == cb_space ) {
+			output (") - ' ')");
+		} else if ( p->argv[1] == cb_zero ) {
+			output (") - '0')");
+		} else if ( p->argv[1] == cb_low ) {
+			output ("))");
+		} else if ( p->argv[1] == cb_high ) {
+			output (") - 255)");
+		} else {
+			output (") - *(");
+			output_data (p->argv[1]);
+			output ("))");
+		}
 		break;
 	default:
 		ABORT();
@@ -1242,8 +1259,8 @@ output_initialize_fp (cb_tree x, struct cb_field *f)
 static void
 output_initialize_external (cb_tree x, struct cb_field *f)
 {
-  char	*p;
-  char	name[CB_MAX_CNAME];
+  char			*p;
+  char			name[CB_MAX_CNAME];
 
   output_prefix ();
   output_data (x);
@@ -2460,10 +2477,11 @@ output_initial_values (struct cb_field *p)
 static void
 output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 {
-  int i;
-  cb_tree l;
-  struct cb_field *f;
+  int			i;
+  cb_tree		l;
+  struct cb_field	*f;
   struct call_list	*clp;
+  struct field_list	*k;
 
   /* program function */
   output ("static int\n%s_ (int entry", prog->program_id);
@@ -2569,6 +2587,9 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   if ( cb_flag_static_call == 2 ) {
 	output_line("auto void init$%s(void);", prog->program_id);
   }
+  if ( has_external ) {
+	output_line("auto void init$external(void);");
+  }
   output_newline ();
   output_line ("module.next = cob_current_module;");
   output_line ("cob_current_module = &module;");
@@ -2602,14 +2623,21 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_newline ();
   }
   if (!prog->flag_initial) {
-    output_initial_values (prog->working_storage);
-    output_newline ();
+	output_initial_values (prog->working_storage);
+	if ( has_external ) {
+		output_line("init$external();");
+	}
+	output_newline ();
   }
 
   output_line ("initialized = 1;");
   output_indent ("  }");
-  if (prog->flag_initial)
-    output_initial_values (prog->working_storage);
+  if (prog->flag_initial) {
+	output_initial_values (prog->working_storage);
+	if ( has_external ) {
+		output_line("init$external();");
+	}
+  }
   output_initial_values (prog->local_storage);
   output_newline ();
 
@@ -2691,6 +2719,20 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	for ( clp = call_cache; clp; clp = clp->next ) {
 	output_line("	call_%s = cob_resolve(\"%s\");",
 			clp->callname, clp->callorig);
+	}
+	output_line("}");
+  }
+
+  if ( has_external ) {
+	output_line("void init$external(void)");
+	output_line("{");
+	for (k = field_cache; k; k = k->next) {
+		if ( k->f->flag_item_external) {
+			output_prefix ();
+			output ("%s%d.data = ", CB_PREFIX_FIELD, k->f->id);
+			output_data (k->x);
+			output (";\n");
+		}
 	}
 	output_line("}");
   }
@@ -2950,7 +2992,7 @@ codegen (struct cb_program *prog)
 
   output_storage ("\n");
   for (k = field_cache; k; k = k->next) {
-	if ( !k->f->flag_local ) {
+	if (!k->f->flag_local && !k->f->flag_item_external) {
 		output ("static cob_field %s%d\t= ", CB_PREFIX_FIELD, k->f->id);
 		output_field (k->x);
 		output (";\t/* %s */\n", k->f->name);
@@ -2966,7 +3008,7 @@ codegen (struct cb_program *prog)
 
   output_storage ("\n");
   for (k = field_cache; k; k = k->next) {
-	if ( k->f->flag_local ) {
+	if ( k->f->flag_local || k->f->flag_item_external) {
 		output ("static cob_field %s%d\t= ", CB_PREFIX_FIELD, k->f->id);
 		output ("{");
 		output_size (k->x);

@@ -1,3 +1,8 @@
+2005-11-06  Roger While <simrw@sim-basis.de>
+
+	* parser.y, cobc.h, typeck.c, codegen.c : EXTERNAL changes
+	* typeck.c, codegen.c : character test optimization
+
 2005-11-05  Roger While <simrw@sim-basis.de>
 
 	* codegen.c : Preliminary code for perform OSVS

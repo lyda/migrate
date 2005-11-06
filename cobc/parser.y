@@ -1077,7 +1077,7 @@ redefines_clause:
 /* EXTERNAL clause */
 
 external_clause:
-  _is EXTERNAL as_extname			{ current_field->flag_external = 1; }
+  _is EXTERNAL as_extname	{ current_field->flag_external = 1; has_external = 1; }
 ;
 
 as_extname:

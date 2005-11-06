@@ -86,6 +86,7 @@ extern int			cb_id;
 extern int			errorcount;
 extern int			warningcount;
 extern int			entry_number;
+extern int			has_external;
 
 extern char			*cb_source_file;
 extern int			cb_source_line;

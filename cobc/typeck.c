@@ -1332,9 +1332,20 @@ cb_build_cond (cb_tree x)
 				}
 
 				/* field comparison */
+				if ((CB_REFERENCE_P (p->x) || CB_FIELD_P (p->x))
+				   && (CB_TREE_CATEGORY (p->x) == CB_CATEGORY_ALPHANUMERIC ||
+				       CB_TREE_CATEGORY (p->x) == CB_CATEGORY_ALPHABETIC)
+				   && (cb_field_size (p->x) == 1)
+				   && (!current_program->alphabet_name_list)
+				   && (p->y == cb_space || p->y == cb_low ||
+				       p->y == cb_high || p->y == cb_zero) ) {
+					x = cb_build_funcall_2 ("$G", p->x, p->y);
+					return cb_build_binary_op (x, p->op, p->y);
+				}
 				if ((CB_LITERAL_P (p->x) || CB_FIELD_P (p->x) ||
 				     CB_REFERENCE_P (p->x)) &&
-				    (CB_LITERAL_P (p->y) || CB_FIELD_P (p->y) || CB_REFERENCE_P (p->y))) {
+				    (CB_LITERAL_P (p->y) || CB_FIELD_P (p->y) ||
+				     CB_REFERENCE_P (p->y))) {
 					size1 = cb_field_size (p->x);
 					size2 = cb_field_size (p->y);
 				} else {

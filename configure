@@ -1047,10 +1047,10 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-cc=<cc>          specify the C compiler used by cobc
   --with-db1              use Berkeley DB 1.85 (libdb-1.85)
-  --with-db               use Berkeley DB 3.0 or later (libdb)
-  --with-lfs64            use large file system for file I/O
-  --with-dl            use system dynamic loader
-  --with-patch-level     Define a patch level (default 0)
+  --with-db               use Berkeley DB 3.0 or later (libdb)(default)
+  --with-lfs64            use large file system for file I/O (default)
+  --with-dl               use system dynamic loader
+  --with-patch-level      define a patch level (default 0)
   --with-gnu-ld           assume the C compiler uses GNU ld default=no
   --with-libiconv-prefix[=DIR]  search for libiconv in DIR/include and DIR/lib
   --without-libiconv-prefix     don't search for libiconv in includedir and libdir

@@ -249,6 +249,16 @@ validate_field_1 (struct cb_field *f)
   char *name = cb_name (x);
   struct cb_field *p;
 
+  if ( f->flag_external ) {
+	if ( f->level != 01 ) {
+		cb_error_x (x, _("'%s' EXTERNAL must be specified at 01 level"), name);
+		return -1;
+	}
+	if (f->storage == CB_STORAGE_LOCAL || f->storage == CB_STORAGE_LINKAGE) {
+		cb_error_x (x, _("'%s' EXTERNAL can only be specified in WORKING-STORAGE section"), name);
+		return -1;
+	}
+  }
   if (f->level == 66)
     {
       if (!f->redefines)
