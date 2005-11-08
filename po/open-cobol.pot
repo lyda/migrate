@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2005-11-06 18:08+0100\n"
+"POT-Creation-Date: 2005-11-08 16:01+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -708,74 +708,74 @@ msgstr ""
 msgid "Cannot acquire %d bytes of memory - Aborting"
 msgstr ""
 
-#: libcob/fileio.c:1661
+#: libcob/fileio.c:1660
 msgid "End of file"
 msgstr ""
 
-#: libcob/fileio.c:1664
+#: libcob/fileio.c:1663
 msgid "Key out of range"
 msgstr ""
 
-#: libcob/fileio.c:1667
+#: libcob/fileio.c:1666
 msgid "Key order not ascending"
 msgstr ""
 
-#: libcob/fileio.c:1670
+#: libcob/fileio.c:1669
 msgid "Record key already exists"
 msgstr ""
 
-#: libcob/fileio.c:1673
+#: libcob/fileio.c:1672
 msgid "Record key does not exist"
 msgstr ""
 
-#: libcob/fileio.c:1676
+#: libcob/fileio.c:1675
 msgid "Permanent file error"
 msgstr ""
 
-#: libcob/fileio.c:1679
+#: libcob/fileio.c:1678
 msgid "File does not exist"
 msgstr ""
 
-#: libcob/fileio.c:1682
+#: libcob/fileio.c:1681
 msgid "Permission denied"
 msgstr ""
 
-#: libcob/fileio.c:1685
+#: libcob/fileio.c:1684
 msgid "File already open"
 msgstr ""
 
-#: libcob/fileio.c:1688
+#: libcob/fileio.c:1687
 msgid "File not open"
 msgstr ""
 
-#: libcob/fileio.c:1691
+#: libcob/fileio.c:1690
 msgid "READ must be executed first"
 msgstr ""
 
-#: libcob/fileio.c:1694
+#: libcob/fileio.c:1693
 msgid "Record overflow"
 msgstr ""
 
-#: libcob/fileio.c:1697
+#: libcob/fileio.c:1696
 msgid "Failed to read"
 msgstr ""
 
-#: libcob/fileio.c:1700
+#: libcob/fileio.c:1699
 msgid "READ/START not allowed"
 msgstr ""
 
-#: libcob/fileio.c:1703
+#: libcob/fileio.c:1702
 msgid "WRITE not allowed"
 msgstr ""
 
-#: libcob/fileio.c:1706
+#: libcob/fileio.c:1705
 msgid "DELETE/REWRITE not allowed"
 msgstr ""
 
-#: libcob/fileio.c:1713
+#: libcob/fileio.c:1712
 msgid "LINAGE values invalid"
 msgstr ""
 
-#: libcob/fileio.c:1716
+#: libcob/fileio.c:1715
 msgid "Unknown file error"
 msgstr ""

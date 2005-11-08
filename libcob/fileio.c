@@ -495,12 +495,13 @@ static cob_fileio_funcs sequential_funcs = {
 static int
 lineseq_read (cob_file *f)
 {
-	size_t	i;
-	int	n;
-	char	buff[f->record->size + 1];
+	size_t		i;
+	int		n;
+	unsigned char	*dataptr;
 
-	for ( i= 0 ; i < f->record->size ; ) {
-		if ( (n = fgetc(f->file)) == EOF ) {
+	dataptr = f->record->data;
+	for ( i= 0 ; ; i++ ) {
+		if ( (n = getc(f->file)) == EOF ) {
 			return COB_STATUS_10_END_OF_FILE;
 		}
 		if ( n == '\r' ) {
@@ -509,23 +510,14 @@ lineseq_read (cob_file *f)
 		if ( n == '\n' ) {
 			break;
 		}
-		buff[i] = n;
-		i++;
+		if ( i < f->record->size ) {
+			*dataptr++ = n;
+		}
 	}
 	if (i < f->record->size) {
 		/* fill the record with spaces */
-		own_memset ((unsigned char *)buff + i, ' ', f->record->size - i);
-	} else {
-		/* discard input until the newline */
-		int	c;
-		while ( (c = fgetc(f->file)) != EOF ) {
-			if ( c == '\n' ) {
-				break;
-			}
-		}
+		own_memset ((unsigned char *)f->record->data + i, ' ', f->record->size - i);
 	}
-
-	own_memcpy (f->record->data, (unsigned char *)buff, f->record->size);
 
 	return COB_STATUS_00_SUCCESS;
 }
@@ -553,8 +545,15 @@ lineseq_write (cob_file *f, int opt)
 	FILE_WRITE_AFTER (f, opt);
 
 	/* write to the file */
+	if (size) {
+		if (fwrite (f->record->data, size, 1, f->file) != 1) {
+			return COB_STATUS_30_PERMANENT_ERROR;
+		}
+	}
+/* RXW
 	for (i = 0; i < size; i++)
 		putc (f->record->data[i], f->file);
+*/
 
 	if (f->linage) {
 		putc ('\n', f->file);

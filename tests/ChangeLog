@@ -1,3 +1,8 @@
+2005-11-07  Roger While <simrw@sim-basis.de>
+
+	* New test for PERFORM type OSVS.
+	* Get the FUNCTION tests in alphabetical order.
+
 2005-11-01  Roger While <simrw@sim-basis.de>
 
 	* Relax TAN test.
