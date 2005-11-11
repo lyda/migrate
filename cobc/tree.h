@@ -407,7 +407,7 @@ extern cb_tree cb_build_picture (const char *str);
  */
 
 struct cb_field {
-struct cb_tree_common common;
+	struct cb_tree_common common;
 	int		id;		/* field id */
 	const char	*name;		/* the original name */
 	const char	*ename;		/* the externalized name */
@@ -418,7 +418,7 @@ struct cb_tree_common common;
 	int		occurs_min;	/* OCCURS <max> */
 	int		occurs_max;	/* or OCCURS <min> TO <max> */
 	int		indexes;	/* number of parents who have OCCURS */
-	int		count;			/* reference count */
+	int		count;		/* reference count */
 	cb_tree		occurs_depending;	/* OCCURS ... DEPENDING ON */
 	enum cb_storage storage;
 	enum cb_usage	usage;		/* USAGE */
@@ -496,6 +496,8 @@ struct cb_file {
 	int			optional;		/* OPTIONAL */
 	int			organization;		/* ORGANIZATION */
 	int			access_mode;		/* ACCESS MODE */
+	int			same_clause;		/* SAME clause */
+	int			finalized;		/* is finalized */
 	cb_tree			file_status;		/* FILE STATUS */
 	cb_tree			sharing;		/* SHARING */
 	cb_tree			key;			/* RELATIVE/RECORD KEY */
@@ -994,6 +996,7 @@ struct cb_word {
 struct cb_program {
 	/* program variables */
 	const char		*program_id;
+	struct cb_program	*next_program;		/* Nested */
 	unsigned char		decimal_point;		/* '.' or ',' */
 	unsigned char		currency_symbol;	/* '$'/user-specified */
 	unsigned char		numeric_separator;	/* ',' or '.' */

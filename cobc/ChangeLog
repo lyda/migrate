@@ -1,3 +1,7 @@
+2005-11-09  Roger While <simrw@sim-basis.de>
+
+	* parser.y, tree.h, tree.c : Implement SAME RECORD
+
 2005-11-06  Roger While <simrw@sim-basis.de>
 
 	* parser.y, cobc.h, typeck.c, codegen.c : EXTERNAL changes

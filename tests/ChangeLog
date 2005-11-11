@@ -1,3 +1,7 @@
+2005-11-09  Roger While <simrw@sim-basis.de>
+
+	* Adjust Cobol85 test results for SAME RECORD implementation.
+
 2005-11-07  Roger While <simrw@sim-basis.de>
 
 	* New test for PERFORM type OSVS.

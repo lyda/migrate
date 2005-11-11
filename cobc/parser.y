@@ -66,6 +66,7 @@ static cb_tree perform_stack = NULL;
 static int next_label_id = 0;
 static int current_linage = 0;
 static int eval_level = 0;
+static int samearea = 1;
 static int eval_check[64] = { 0 };
 static struct cb_file *linage_file;
 static cb_tree next_label_list = NULL;
@@ -136,6 +137,7 @@ start:
     next_label_id = 0;
     current_linage = 0;
     eval_level = 0;
+    samearea = 1;
     memset((char *)eval_check, 0, sizeof(eval_check));
     entry_number = 0;
     linage_file = NULL;
@@ -689,6 +691,7 @@ i_o_control_clause:
 same_clause:
   SAME same_option _area _for file_name_list
   {
+    cb_tree l;
     switch (CB_INTEGER ($2)->val)
       {
       case 0:
@@ -696,6 +699,12 @@ same_clause:
 	break;
       case 1:
 	/* SAME RECORD */
+	for (l = $5; l; l = CB_CHAIN (l))
+	{
+	if (CB_VALUE (l) != cb_error_node)
+		CB_FILE (cb_ref (CB_VALUE (l)))->same_clause = samearea;
+	}
+	samearea++;
 	break;
       case 2:
 	/* SAME SORT-MERGE */

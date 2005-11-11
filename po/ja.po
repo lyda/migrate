@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2005-11-08 16:01+0100\n"
+"POT-Creation-Date: 2005-11-11 15:49+0100\n"
 "PO-Revision-Date: 2004-08-01 23:55+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: cobc/cobc.c:263
+#: cobc/cobc.c:269
 #, fuzzy
 msgid ""
 "Options:\n"
@@ -83,12 +83,12 @@ msgstr ""
 "\n"
 "  -Wall                 全てのワーニングを有効にする"
 
-#: cobc/cobc.c:390
+#: cobc/cobc.c:396
 #, c-format
 msgid "Invalid option -std=%s\n"
 msgstr "不当なオプションです -std=%s\n"
 
-#: cobc/cobc.c:687
+#: cobc/cobc.c:693
 msgid "-MT must be given to specify target file\n"
 msgstr "ターゲットファイルを -MT で指定して下さい\n"
 
@@ -105,22 +105,22 @@ msgstr "不当な PICTURE 定義です"
 msgid "%s clause is required for file '%s'"
 msgstr "%s 句がファイル `%s' に必要です"
 
-#: cobc/tree.c:1068
+#: cobc/tree.c:1069
 #, fuzzy, c-format
 msgid "record size too small '%s'"
 msgstr "レコード長が短か過ぎます `%s'"
 
-#: cobc/tree.c:1071
+#: cobc/tree.c:1072
 #, fuzzy, c-format
 msgid "record size too large '%s'"
 msgstr "レコード長が長過ぎます `%s'"
 
-#: cobc/tree.c:1716
+#: cobc/tree.c:1742
 #, fuzzy, c-format
 msgid "FUNCTION %s has wrong number of arguments"
 msgstr "WHEN 句の引数の数が不当です"
 
-#: cobc/tree.c:1800
+#: cobc/tree.c:1826
 #, fuzzy, c-format
 msgid "FUNCTION %s not implemented"
 msgstr "`%s' は実装されていません"
@@ -549,68 +549,68 @@ msgstr "不当な行連結です"
 msgid "'%s' not implemented"
 msgstr "`%s' は実装されていません"
 
-#: cobc/parser.y:303
+#: cobc/parser.y:305
 #, fuzzy, c-format
 msgid "unknown system-name '%s'"
 msgstr "不当なシステム名です `%s'"
 
-#: cobc/parser.y:426
+#: cobc/parser.y:428
 #, fuzzy, c-format
 msgid "invalid currency sign '%s'"
 msgstr "不当な通貨記号です `%s'"
 
-#: cobc/parser.y:971
+#: cobc/parser.y:980
 #, fuzzy, c-format
 msgid "alphabet-name is expected '%s'"
 msgstr "アルファベット名が必要です `%s'"
 
-#: cobc/parser.y:1068
+#: cobc/parser.y:1077
 msgid "REDEFINES clause must follow entry-name"
 msgstr "REDEFINES 句は項目名の直後になければなりません"
 
-#: cobc/parser.y:1408 cobc/parser.y:1425
+#: cobc/parser.y:1417 cobc/parser.y:1434
 #, fuzzy, c-format
 msgid "invalid color '%d'"
 msgstr "不当な色です `%d'"
 
-#: cobc/parser.y:1582
+#: cobc/parser.y:1591
 #, fuzzy, c-format
 msgid "unknown statement '%s'"
 msgstr "そのような文はありません `%s'"
 
-#: cobc/parser.y:2045
+#: cobc/parser.y:2054
 msgid "88 level invalid here"
 msgstr ""
 
-#: cobc/parser.y:2052
+#: cobc/parser.y:2061
 msgid "FIXME: failed to compile \"WHEN NOT ... AND/OR ...\""
 msgstr ""
 
-#: cobc/parser.y:2053
+#: cobc/parser.y:2062
 msgid "FIXME: change it into \"WHEN (NOT ... AND/OR ...)\" for now"
 msgstr ""
 
-#: cobc/parser.y:2716 cobc/parser.y:3222 cobc/parser.y:3278
+#: cobc/parser.y:2725 cobc/parser.y:3231 cobc/parser.y:3287
 #, fuzzy, c-format
 msgid "'%s' not file name"
 msgstr "`%s' はファイル名ではありません"
 
-#: cobc/parser.y:3256
+#: cobc/parser.y:3265
 #, fuzzy, c-format
 msgid "'%s' not indexed"
 msgstr "`%s' には INDEXED BY が必要です"
 
-#: cobc/parser.y:3257
+#: cobc/parser.y:3266
 #, fuzzy, c-format
 msgid "'%s' defined here"
 msgstr "`%s' はここで定義されました"
 
-#: cobc/parser.y:3594
+#: cobc/parser.y:3603
 #, fuzzy, c-format
 msgid "'%s' not level 01 or 77"
 msgstr "`%s' はレベル 01 か 77 でなければなりません"
 
-#: cobc/parser.y:3609 cobc/parser.y:3617
+#: cobc/parser.y:3618 cobc/parser.y:3626
 #, c-format
 msgid "%s statement not terminated by END-%s"
 msgstr "%s 文が END-%s で終わっていません"

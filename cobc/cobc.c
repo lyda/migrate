@@ -46,11 +46,11 @@ enum cb_source_format cb_source_format = CB_FORMAT_FIXED;
 int cb_source_format = CB_FORMAT_FIXED;
 
 struct cb_exception cb_exception_table[] = {
-	{0, 0, 0},		/* CB_EC_ZERO */
+	{0, NULL, 0},		/* CB_EC_ZERO */
 #undef COB_EXCEPTION
 #define COB_EXCEPTION(code,tag,name,critical) {0x##code, name, 0},
 #include <libcob/exception.def>
-	{0, 0, 0}		/* CB_EC_MAX */
+	{0, NULL, 0}		/* CB_EC_MAX */
 };
 
 #undef CB_FLAG
@@ -98,10 +98,10 @@ static int		gflag_set = 0;
 static char		*program_name;
 static char		*output_name;
 
-static char		tmpdir[FILENAME_MAX];	/* /tmp */
-static char		cob_cc[FILENAME_MAX];	/* gcc */
+static char		*tmpdir;			/* /tmp */
+static char		cob_cc[FILENAME_MAX];		/* gcc */
 static char		cob_cflags[FILENAME_MAX];	/* -I... */
-static char		cob_libs[FILENAME_MAX];	/* -L... -lcob */
+static char		cob_libs[FILENAME_MAX];		/* -L... -lcob */
 static char		cob_ldflags[FILENAME_MAX];
 char			cob_config_dir[FILENAME_MAX];
 
@@ -185,7 +185,13 @@ init_environment (int argc, char *argv[])
 
 	output_name = NULL;
 
-	init_var (tmpdir, "TMPDIR", "/tmp");
+	if ( (p = getenv ("TMPDIR")) != NULL ) {
+		tmpdir = p;
+	} else if ( (p = getenv ("TMP")) != NULL ) {
+		tmpdir = p;
+	} else {
+		tmpdir = (char *)"/tmp";
+	}
 	init_var (cob_cc, "COB_CC", COB_CC);
 #if defined (__GNUC__) && (__GNUC__ >= 3)
 	strcat (cob_cc, " -pipe");

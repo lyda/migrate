@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2005-11-08 16:01+0100\n"
+"POT-Creation-Date: 2005-11-11 15:49+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: cobc/cobc.c:263
+#: cobc/cobc.c:269
 msgid ""
 "Options:\n"
 "  --help                Display this message\n"
@@ -56,12 +56,12 @@ msgid ""
 "  -Wall                 Enable all warnings"
 msgstr ""
 
-#: cobc/cobc.c:390
+#: cobc/cobc.c:396
 #, c-format
 msgid "Invalid option -std=%s\n"
 msgstr ""
 
-#: cobc/cobc.c:687
+#: cobc/cobc.c:693
 msgid "-MT must be given to specify target file\n"
 msgstr ""
 
@@ -78,22 +78,22 @@ msgstr ""
 msgid "%s clause is required for file '%s'"
 msgstr ""
 
-#: cobc/tree.c:1068
+#: cobc/tree.c:1069
 #, c-format
 msgid "record size too small '%s'"
 msgstr ""
 
-#: cobc/tree.c:1071
+#: cobc/tree.c:1072
 #, c-format
 msgid "record size too large '%s'"
 msgstr ""
 
-#: cobc/tree.c:1716
+#: cobc/tree.c:1742
 #, c-format
 msgid "FUNCTION %s has wrong number of arguments"
 msgstr ""
 
-#: cobc/tree.c:1800
+#: cobc/tree.c:1826
 #, c-format
 msgid "FUNCTION %s not implemented"
 msgstr ""
@@ -521,68 +521,68 @@ msgstr ""
 msgid "'%s' not implemented"
 msgstr ""
 
-#: cobc/parser.y:303
+#: cobc/parser.y:305
 #, c-format
 msgid "unknown system-name '%s'"
 msgstr ""
 
-#: cobc/parser.y:426
+#: cobc/parser.y:428
 #, c-format
 msgid "invalid currency sign '%s'"
 msgstr ""
 
-#: cobc/parser.y:971
+#: cobc/parser.y:980
 #, c-format
 msgid "alphabet-name is expected '%s'"
 msgstr ""
 
-#: cobc/parser.y:1068
+#: cobc/parser.y:1077
 msgid "REDEFINES clause must follow entry-name"
 msgstr ""
 
-#: cobc/parser.y:1408 cobc/parser.y:1425
+#: cobc/parser.y:1417 cobc/parser.y:1434
 #, c-format
 msgid "invalid color '%d'"
 msgstr ""
 
-#: cobc/parser.y:1582
+#: cobc/parser.y:1591
 #, c-format
 msgid "unknown statement '%s'"
 msgstr ""
 
-#: cobc/parser.y:2045
+#: cobc/parser.y:2054
 msgid "88 level invalid here"
 msgstr ""
 
-#: cobc/parser.y:2052
+#: cobc/parser.y:2061
 msgid "FIXME: failed to compile \"WHEN NOT ... AND/OR ...\""
 msgstr ""
 
-#: cobc/parser.y:2053
+#: cobc/parser.y:2062
 msgid "FIXME: change it into \"WHEN (NOT ... AND/OR ...)\" for now"
 msgstr ""
 
-#: cobc/parser.y:2716 cobc/parser.y:3222 cobc/parser.y:3278
+#: cobc/parser.y:2725 cobc/parser.y:3231 cobc/parser.y:3287
 #, c-format
 msgid "'%s' not file name"
 msgstr ""
 
-#: cobc/parser.y:3256
+#: cobc/parser.y:3265
 #, c-format
 msgid "'%s' not indexed"
 msgstr ""
 
-#: cobc/parser.y:3257
+#: cobc/parser.y:3266
 #, c-format
 msgid "'%s' defined here"
 msgstr ""
 
-#: cobc/parser.y:3594
+#: cobc/parser.y:3603
 #, c-format
 msgid "'%s' not level 01 or 77"
 msgstr ""
 
-#: cobc/parser.y:3609 cobc/parser.y:3617
+#: cobc/parser.y:3618 cobc/parser.y:3626
 #, c-format
 msgid "%s statement not terminated by END-%s"
 msgstr ""

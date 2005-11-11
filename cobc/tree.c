@@ -1057,8 +1057,9 @@ validate_file (struct cb_file *f, cb_tree name)
 void
 finalize_file (struct cb_file *f, struct cb_field *records)
 {
-  char buff[CB_MAX_CNAME];
-  struct cb_field *p;
+  char			buff[CB_MAX_CNAME];
+  struct cb_field	*p;
+  cb_tree		l;
 
   /* check the record size if it is limited */
   for (p = records; p; p = p->sister)
@@ -1085,10 +1086,43 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 	f->record_max = p->size;
     }
 
+  if (f->same_clause) {
+	for (l = current_program->file_list; l; l = CB_CHAIN (l)) {
+		if (CB_FILE (CB_VALUE (l))->same_clause == f->same_clause) {
+			if (CB_FILE (CB_VALUE (l))->finalized) {
+				if (f->record_max > CB_FILE (CB_VALUE (l))->record->memory_size) {
+					CB_FILE (CB_VALUE (l))->record->memory_size = f->record_max;
+				}
+				f->record = CB_FILE (CB_VALUE (l))->record;
+				for (p = records; p; p = p->sister) {
+					p->file = f;
+					p->redefines = f->record;
+				}
+				for (p = f->record->sister; p; p = p->sister) {
+					if (!p->sister) {
+						p->sister = records;
+						break;
+					}
+				}
+				f->finalized = 1;
+				return;
+			}
+		}
+	}
+  }
   /* create record */
   sprintf (buff, "%s$record", f->name);
   f->record = CB_FIELD (cb_build_implicit_field (cb_build_reference (buff),
 						 f->record_max));
+  f->record->sister = records;
+  f->record->count++;
+
+  for (p = records; p; p = p->sister)
+    {
+      p->file = f;
+      p->redefines = f->record;
+    }
+  f->finalized = 1;
   if ( f->linage ) {
 	cb_tree x;
 
@@ -1103,14 +1137,6 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 	current_program->working_storage =
 		cb_field_add (current_program->working_storage, CB_FIELD (x));
   }
-  f->record->sister = records;
-  f->record->count++;
-
-  for (p = records; p; p = p->sister)
-    {
-      p->file = f;
-      p->redefines = f->record;
-    }
 }
 
 
