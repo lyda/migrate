@@ -102,6 +102,13 @@ static cob_fileio_funcs	*fileio_funcs[COB_ORG_MAX];
 static int		eop_status = 0;
 int			cob_check_eop = 0;
 
+static int		cob_do_sync = 0;
+
+static struct file_list {
+	struct file_list	*next;
+	cob_file		*file;
+} *file_cache = NULL;
+
 /* Need some value that does not conflict with errno for OPEN/LINAGE */
 #define	COB_LINAGE_INVALID	16384
 /* Need value that does not conflict with errno 30 (EROFS) for OPEN */
@@ -121,6 +128,64 @@ static const int	status_exception[] = {
 	COB_EC_I_O,			/* unused */
 	COB_EC_I_O_IMP			/* 9x */
 };
+
+
+#ifdef	WITH_DB
+
+#define DB_PUT(db,flags)	db->put (db, &p->key, &p->data, flags)
+#define DB_GET(db,flags)	db->get (db, &p->key, &p->data, flags)
+#define DB_SEQ(db,flags)	db->seq (db, &p->key, &p->data, flags)
+#define DB_DEL(db,key,flags)	db->del (db, key, flags)
+#define DB_CLOSE(db)		db->close (db)
+#define DB_SYNC(db)		db->sync (db, 0)
+
+#define DBT_SET(key,fld)			\
+  key.data = fld->data;				\
+  key.size = fld->size;
+
+struct indexed_file {
+	int key_index;
+	unsigned char *last_key;	/* the last key written */
+	DB **db;		/* database handlers */
+	DBT key, data;
+};
+
+#endif
+
+static void
+cob_sync (cob_file *f)
+{
+	if ( f->organization == COB_ORG_INDEXED ) {
+#ifdef	WITH_DB
+		int			i;
+		struct indexed_file	*p = f->file;
+
+		for (i = 0; i < f->nkeys; i++) {
+			DB_SYNC (p->db[i]);
+		}
+#endif
+		return;
+	}
+	if ( f->organization != COB_ORG_SORT ) {
+		fflush (f->file);
+	}
+}
+
+static void
+cob_cache_file (cob_file *f)
+{
+	struct file_list	*l;
+
+	for ( l = file_cache; l; l = l->next ) {
+		if ( f == l->file ) {
+			return;
+		}
+	}
+	l = cob_malloc (sizeof (struct file_list));
+	l->file = f;
+	l->next = file_cache;
+	file_cache = l;
+}
 
 static void
 save_status (cob_file *f, int status)
@@ -278,6 +343,7 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 	/* lock the file */
 	{
 		struct flock lock;
+
 		own_memset ((unsigned char *)&lock, 0, sizeof (struct flock));
 		lock.l_type = (opt || mode == COB_OPEN_OUTPUT) ? F_WRLCK : F_RDLCK;
 		lock.l_whence = SEEK_SET;
@@ -305,11 +371,10 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 static int
 file_close (cob_file *f, int opt)
 {
-	FILE *fp = f->file;
-
 	switch (opt) {
 	case COB_CLOSE_NORMAL:
 	case COB_CLOSE_LOCK:
+	case COB_CLOSE_NO_REWIND:
 		if (f->organization == COB_ORG_LINE_SEQUENTIAL) {
 			if (f->flag_needs_nl && !f->linage) {
 				f->flag_needs_nl = 0;
@@ -320,18 +385,24 @@ file_close (cob_file *f, int opt)
 		/* unlock the file */
 		{
 			struct flock lock;
+
 			own_memset ((unsigned char *)&lock, 0, sizeof (struct flock));
 			lock.l_type = F_UNLCK;
 			lock.l_whence = SEEK_SET;
 			lock.l_start = 0;
 			lock.l_len = 0;
-			fcntl (fileno (fp), F_SETLK, &lock);
+			fcntl (fileno (f->file), F_SETLK, &lock);
 		}
 #endif
 		/* close the file */
-		fclose (fp);
+		fclose (f->file);
+		if ( opt == COB_CLOSE_NO_REWIND ) {
+			f->open_mode = COB_OPEN_CLOSED;
+			return COB_STATUS_07_SUCCESS_NO_UNIT;
+		}
 		return COB_STATUS_00_SUCCESS;
 	default:
+		fflush (f->file);
 		return COB_STATUS_07_SUCCESS_NO_UNIT;
 	}
 }
@@ -762,23 +833,6 @@ static cob_fileio_funcs relative_funcs = {
 
 #ifdef	WITH_DB
 
-#define DB_PUT(db,flags)	db->put (db, &p->key, &p->data, flags)
-#define DB_GET(db,flags)	db->get (db, &p->key, &p->data, flags)
-#define DB_SEQ(db,flags)	db->seq (db, &p->key, &p->data, flags)
-#define DB_DEL(db,key,flags)	db->del (db, key, flags)
-#define DB_CLOSE(db)		db->close (db)
-
-#define DBT_SET(key,fld)			\
-  key.data = fld->data;				\
-  key.size = fld->size;
-
-struct indexed_file {
-	int key_index;
-	unsigned char *last_key;	/* the last key written */
-	DB **db;		/* database handlers */
-	DBT key, data;
-};
-
 static int
 indexed_open (cob_file *f, char *filename, int mode, int flag)
 {
@@ -1057,6 +1111,7 @@ indexed_rewrite (cob_file *f)
 
 	/* delete the current record */
 	int ret = indexed_delete (f);
+
 	if (ret != COB_STATUS_00_SUCCESS) {
 		return ret;
 	}
@@ -1299,6 +1354,8 @@ cob_open (cob_file *f, int mode, int opt)
 		}
 	}
 
+	cob_cache_file (f);
+
 	/* open the file */
 	switch (fileio_funcs[(int)f->organization]->open (f, filename, mode, opt)) {
 	case 0:
@@ -1495,6 +1552,10 @@ cob_write (cob_file *f, cob_field *rec, int opt)
 
 	ret = fileio_funcs[(int)f->organization]->write (f, opt);
 
+	if ( cob_do_sync && ret == 0 ) {
+		cob_sync (f);
+	}
+
 	RETURN_STATUS (ret);
 }
 
@@ -1528,6 +1589,10 @@ cob_rewrite (cob_file *f, cob_field *rec)
 
 	ret = fileio_funcs[(int)f->organization]->rewrite (f);
 
+	if ( cob_do_sync && ret == 0 ) {
+		cob_sync (f);
+	}
+
 	RETURN_STATUS (ret);
 }
 
@@ -1548,6 +1613,10 @@ cob_delete (cob_file *f)
 	}
 
 	ret = fileio_funcs[(int)f->organization]->delete (f);
+
+	if ( cob_do_sync && ret == 0 ) {
+		cob_sync (f);
+	}
 
 	RETURN_STATUS (ret);
 }
@@ -1724,9 +1793,34 @@ cob_default_error_handle (void)
 void
 cob_init_fileio (void)
 {
+	char	*s;
+
 	fileio_funcs[COB_ORG_SEQUENTIAL] = &sequential_funcs;
 	fileio_funcs[COB_ORG_LINE_SEQUENTIAL] = &lineseq_funcs;
 	fileio_funcs[COB_ORG_RELATIVE] = &relative_funcs;
 	fileio_funcs[COB_ORG_INDEXED] = &indexed_funcs;
 	fileio_funcs[COB_ORG_SORT] = &sort_funcs;
+
+	if ((s = getenv ("COB_SYNC")) != NULL) {
+		if ( *s == 'Y' || *s == 'y' ) {
+			cob_do_sync = 1;
+		}
+	}
+}
+
+void
+cob_exit_fileio (void)
+{
+	struct file_list	*l;
+	char			filename[FILENAME_MAX];
+
+	for ( l = file_cache; l; l = l->next ) {
+		if ( l->file->open_mode != COB_OPEN_CLOSED &&
+		     l->file->open_mode != COB_OPEN_LOCKED ) {
+			cob_field_to_string (l->file->assign, filename);
+			cob_close (l->file, 0);
+			fprintf (stderr, "WARNING - Implicit CLOSE of %s\n", filename);
+			fflush (stderr);
+		}
+	}
 }

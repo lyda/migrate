@@ -166,6 +166,7 @@ extern cob_file	*cob_error_file;
 extern int	cob_check_eop;
 
 extern void cob_init_fileio (void);
+extern void cob_exit_fileio (void);
 extern void cob_default_error_handle (void);
 extern void cob_open (cob_file *f, int mode, int opt);
 extern void cob_close (cob_file *f, int opt);

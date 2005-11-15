@@ -249,6 +249,7 @@ void
 cob_stop_run (const int status)
 {
 	cob_screen_terminate ();
+	cob_exit_fileio ();
 	exit (status);
 }
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2005-11-11 15:49+0100\n"
+"POT-Creation-Date: 2005-11-15 16:16+0100\n"
 "PO-Revision-Date: 2004-08-01 23:55+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -372,17 +372,17 @@ msgstr "`%s' は 1 つの添字を必要とします"
 msgid "'%s' requires %d subscripts"
 msgstr "`%s' は %d つの添字を必要とします"
 
-#: cobc/typeck.c:436 libcob/common.c:818
+#: cobc/typeck.c:436 libcob/common.c:819
 #, fuzzy, c-format
 msgid "subscript of '%s' out of bounds: %d"
 msgstr "'%s' の添字が範囲を超えています: %d"
 
-#: cobc/typeck.c:488 libcob/common.c:829
+#: cobc/typeck.c:488 libcob/common.c:830
 #, fuzzy, c-format
 msgid "offset of '%s' out of bounds: %d"
 msgstr "'%s' の開始位置が範囲を超えています: %d"
 
-#: cobc/typeck.c:493 libcob/common.c:836
+#: cobc/typeck.c:493 libcob/common.c:837
 #, fuzzy, c-format
 msgid "length of '%s' out of bounds: %d"
 msgstr "'%s' の長さが範囲を超えています: %d"
@@ -703,123 +703,123 @@ msgstr "モジュールが見付かりません `%s'"
 msgid "warning: cob_init expected in the main program\n"
 msgstr "warning: メインプログラムで cob_init 呼ばれていません\n"
 
-#: libcob/common.c:259
+#: libcob/common.c:260
 msgid "Error - Version mismatch"
 msgstr ""
 
-#: libcob/common.c:260
+#: libcob/common.c:261
 #, c-format
 msgid "%s has version/patch level %s/%d"
 msgstr ""
 
-#: libcob/common.c:262
+#: libcob/common.c:263
 #, c-format
 msgid "Library has version/patch level %s/%d"
 msgstr ""
 
-#: libcob/common.c:796
+#: libcob/common.c:797
 #, fuzzy, c-format
 msgid "'%s' not numeric: '%s'"
 msgstr "`%s' は数字ではありません: `%s'"
 
-#: libcob/common.c:807
+#: libcob/common.c:808
 #, fuzzy, c-format
 msgid "OCCURS DEPENDING ON '%s' out of bounds: %d"
 msgstr "OCCURS DEPENDING ON `%s' が範囲を越えています: %d"
 
-#: libcob/common.c:851
+#: libcob/common.c:852
 #, c-format
 msgid "EXTERNAL item '%s' has size > %d"
 msgstr ""
 
-#: libcob/common.c:875
+#: libcob/common.c:876
 #, c-format
 msgid "Cannot acquire %d bytes of memory - Aborting"
 msgstr ""
 
-#: libcob/fileio.c:1660
+#: libcob/fileio.c:1729
 #, fuzzy
 msgid "End of file"
 msgstr "ファイルの終わりです"
 
-#: libcob/fileio.c:1663
+#: libcob/fileio.c:1732
 #, fuzzy
 msgid "Key out of range"
 msgstr "キーの範囲が不当です"
 
-#: libcob/fileio.c:1666
+#: libcob/fileio.c:1735
 #, fuzzy
 msgid "Key order not ascending"
 msgstr "キーが昇順ではありません"
 
-#: libcob/fileio.c:1669
+#: libcob/fileio.c:1738
 #, fuzzy
 msgid "Record key already exists"
 msgstr "レコードキーが既に存在します"
 
-#: libcob/fileio.c:1672
+#: libcob/fileio.c:1741
 #, fuzzy
 msgid "Record key does not exist"
 msgstr "レコードキーが存在しません"
 
-#: libcob/fileio.c:1675
+#: libcob/fileio.c:1744
 #, fuzzy
 msgid "Permanent file error"
 msgstr "永続ファイルエラーです"
 
-#: libcob/fileio.c:1678
+#: libcob/fileio.c:1747
 #, fuzzy
 msgid "File does not exist"
 msgstr "ファイルが存在しません"
 
-#: libcob/fileio.c:1681
+#: libcob/fileio.c:1750
 #, fuzzy
 msgid "Permission denied"
 msgstr "利用許可がありません"
 
-#: libcob/fileio.c:1684
+#: libcob/fileio.c:1753
 #, fuzzy
 msgid "File already open"
 msgstr "ファイルは既に開いています"
 
-#: libcob/fileio.c:1687
+#: libcob/fileio.c:1756
 #, fuzzy
 msgid "File not open"
 msgstr "ファイルが開いていません"
 
-#: libcob/fileio.c:1690
+#: libcob/fileio.c:1759
 msgid "READ must be executed first"
 msgstr "READ を先に実行しなければなりません"
 
-#: libcob/fileio.c:1693
+#: libcob/fileio.c:1762
 #, fuzzy
 msgid "Record overflow"
 msgstr "レコードの領域を超えています"
 
-#: libcob/fileio.c:1696
+#: libcob/fileio.c:1765
 #, fuzzy
 msgid "Failed to read"
 msgstr "読み込みに失敗しました"
 
-#: libcob/fileio.c:1699
+#: libcob/fileio.c:1768
 #, fuzzy
 msgid "READ/START not allowed"
 msgstr "READ、START は許可されません"
 
-#: libcob/fileio.c:1702
+#: libcob/fileio.c:1771
 msgid "WRITE not allowed"
 msgstr "WRITE は許可されません"
 
-#: libcob/fileio.c:1705
+#: libcob/fileio.c:1774
 #, fuzzy
 msgid "DELETE/REWRITE not allowed"
 msgstr "DELETE、REWRITE は許可されません"
 
-#: libcob/fileio.c:1712
+#: libcob/fileio.c:1781
 msgid "LINAGE values invalid"
 msgstr ""
 
-#: libcob/fileio.c:1715
+#: libcob/fileio.c:1784
 #, fuzzy
 msgid "Unknown file error"
 msgstr "原因不明のファイルエラーです"
