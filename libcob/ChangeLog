@@ -3,6 +3,7 @@
 	* common.c, fileio.h, fileio.c : Check open files
 	  at run-unit termination. Implement sync'ing 
 	  with enviroment variable COB_SYNC=Y.
+	  Catch signals QUIT, INT and HUP.
 
 2005-11-08  Roger While <simrw@sim-basis.de>
 

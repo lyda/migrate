@@ -30,6 +30,10 @@
 #include <fcntl.h>
 #endif
 
+#ifdef	HAVE_SIGNAL_H
+#include <signal.h>
+#endif
+
 #include "common.h"
 #include "move.h"
 #include "numeric.h"
@@ -183,6 +187,28 @@ static int		cob_switch[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 /*
  * General functions
  */
+
+#ifdef	HAVE_SIGNAL_H
+/* static sighandler_t	oldsig; */
+#endif
+
+static void
+cob_sig_handler (int sig)
+{
+	fprintf (stderr, "Abnormal termination - File contents may not be correct\n");
+	fflush (stderr);
+	cob_stop_run (sig);
+}
+
+void
+cob_set_signal ()
+{
+#ifdef	HAVE_SIGNAL_H
+	(void)signal(SIGINT, cob_sig_handler);
+	(void)signal(SIGHUP, cob_sig_handler);
+	(void)signal(SIGQUIT, cob_sig_handler);
+#endif
+}
 
 void
 cob_init (int argc, char **argv)

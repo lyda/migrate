@@ -201,6 +201,7 @@ extern const unsigned char	cob_e2a[];	/* EBCDIC -> ASCII */
 /* General functions */
 
 extern void cob_init (int argc, char **argv);
+extern void cob_set_signal (void);
 extern void cob_module_enter (cob_module *module);
 extern void cob_module_leave (cob_module *module);
 #ifdef __GNUC__

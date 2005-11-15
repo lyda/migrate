@@ -224,7 +224,7 @@ AC_PROG_MAKE_SET
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([fcntl.h malloc.h locale.h stddef.h wchar.h])
+AC_CHECK_HEADERS([signal.h fcntl.h malloc.h locale.h stddef.h wchar.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST

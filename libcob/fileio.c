@@ -103,6 +103,7 @@ static int		eop_status = 0;
 int			cob_check_eop = 0;
 
 static int		cob_do_sync = 0;
+static int		cob_first_in = 0;
 
 static struct file_list {
 	struct file_list	*next;
@@ -1355,6 +1356,11 @@ cob_open (cob_file *f, int mode, int opt)
 	}
 
 	cob_cache_file (f);
+
+	if ( !cob_first_in ) {
+		cob_first_in = 1;
+		cob_set_signal ();
+	}
 
 	/* open the file */
 	switch (fileio_funcs[(int)f->organization]->open (f, filename, mode, opt)) {
