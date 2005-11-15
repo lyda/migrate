@@ -154,7 +154,7 @@ struct indexed_file {
 #endif
 
 static void
-cob_sync (cob_file *f)
+cob_sync (cob_file *f, int mode)
 {
 	if ( f->organization == COB_ORG_INDEXED ) {
 #ifdef	WITH_DB
@@ -164,11 +164,19 @@ cob_sync (cob_file *f)
 		for (i = 0; i < f->nkeys; i++) {
 			DB_SYNC (p->db[i]);
 		}
+		if ( mode == 2 ) {
+			for (i = 0; i < f->nkeys; i++) {
+				fsync (p->db[i]->fd (p->db[i]));
+			}
+		}
 #endif
 		return;
 	}
 	if ( f->organization != COB_ORG_SORT ) {
 		fflush (f->file);
+		if ( mode == 2 ) {
+			fsync (fileno (f->file));
+		}
 	}
 }
 
@@ -343,7 +351,8 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 #if HAVE_FCNTL
 	/* lock the file */
 	{
-		struct flock lock;
+		int		ret;
+		struct flock	lock;
 
 		own_memset ((unsigned char *)&lock, 0, sizeof (struct flock));
 		lock.l_type = (opt || mode == COB_OPEN_OUTPUT) ? F_WRLCK : F_RDLCK;
@@ -351,8 +360,9 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 		lock.l_start = 0;
 		lock.l_len = 0;
 		if (fcntl (fileno (fp), F_SETLK, &lock) < 0) {
+			ret = errno;
 			fclose (fp);
-			return errno;
+			return ret;
 		}
 	}
 #endif
@@ -876,12 +886,15 @@ indexed_open (cob_file *f, char *filename, int mode, int flag)
 		/* open db */
 		p->db[i] = dbopen (name, flags, COB_FILE_MODE, DB_BTREE, &info);
 		if (p->db[i] == 0) {
+			int	ret;
+
+			ret = errno;
 			for (j = 0; j < i; j++) {
 				DB_CLOSE (p->db[j]);
 			}
 			free (p->db);
 			free (p);
-			return errno;
+			return ret;
 		}
 	}
 
@@ -1559,7 +1572,7 @@ cob_write (cob_file *f, cob_field *rec, int opt)
 	ret = fileio_funcs[(int)f->organization]->write (f, opt);
 
 	if ( cob_do_sync && ret == 0 ) {
-		cob_sync (f);
+		cob_sync (f, cob_do_sync);
 	}
 
 	RETURN_STATUS (ret);
@@ -1596,7 +1609,7 @@ cob_rewrite (cob_file *f, cob_field *rec)
 	ret = fileio_funcs[(int)f->organization]->rewrite (f);
 
 	if ( cob_do_sync && ret == 0 ) {
-		cob_sync (f);
+		cob_sync (f, cob_do_sync);
 	}
 
 	RETURN_STATUS (ret);
@@ -1621,7 +1634,7 @@ cob_delete (cob_file *f)
 	ret = fileio_funcs[(int)f->organization]->delete (f);
 
 	if ( cob_do_sync && ret == 0 ) {
-		cob_sync (f);
+		cob_sync (f, cob_do_sync);
 	}
 
 	RETURN_STATUS (ret);
@@ -1810,6 +1823,9 @@ cob_init_fileio (void)
 	if ((s = getenv ("COB_SYNC")) != NULL) {
 		if ( *s == 'Y' || *s == 'y' ) {
 			cob_do_sync = 1;
+		}
+		if ( *s == 'P' || *s == 'p' ) {
+			cob_do_sync = 2;
 		}
 	}
 }
