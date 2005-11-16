@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2005-11-15 19:49+0100\n"
+"POT-Creation-Date: 2005-11-16 14:49+0100\n"
 "PO-Revision-Date: 2004-08-01 23:55+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -737,89 +737,89 @@ msgstr ""
 msgid "Cannot acquire %d bytes of memory - Aborting"
 msgstr ""
 
-#: libcob/fileio.c:1748
+#: libcob/fileio.c:1749
 #, fuzzy
 msgid "End of file"
 msgstr "ファイルの終わりです"
 
-#: libcob/fileio.c:1751
+#: libcob/fileio.c:1752
 #, fuzzy
 msgid "Key out of range"
 msgstr "キーの範囲が不当です"
 
-#: libcob/fileio.c:1754
+#: libcob/fileio.c:1755
 #, fuzzy
 msgid "Key order not ascending"
 msgstr "キーが昇順ではありません"
 
-#: libcob/fileio.c:1757
+#: libcob/fileio.c:1758
 #, fuzzy
 msgid "Record key already exists"
 msgstr "レコードキーが既に存在します"
 
-#: libcob/fileio.c:1760
+#: libcob/fileio.c:1761
 #, fuzzy
 msgid "Record key does not exist"
 msgstr "レコードキーが存在しません"
 
-#: libcob/fileio.c:1763
+#: libcob/fileio.c:1764
 #, fuzzy
 msgid "Permanent file error"
 msgstr "永続ファイルエラーです"
 
-#: libcob/fileio.c:1766
+#: libcob/fileio.c:1767
 #, fuzzy
 msgid "File does not exist"
 msgstr "ファイルが存在しません"
 
-#: libcob/fileio.c:1769
+#: libcob/fileio.c:1770
 #, fuzzy
 msgid "Permission denied"
 msgstr "利用許可がありません"
 
-#: libcob/fileio.c:1772
+#: libcob/fileio.c:1773
 #, fuzzy
 msgid "File already open"
 msgstr "ファイルは既に開いています"
 
-#: libcob/fileio.c:1775
+#: libcob/fileio.c:1776
 #, fuzzy
 msgid "File not open"
 msgstr "ファイルが開いていません"
 
-#: libcob/fileio.c:1778
+#: libcob/fileio.c:1779
 msgid "READ must be executed first"
 msgstr "READ を先に実行しなければなりません"
 
-#: libcob/fileio.c:1781
+#: libcob/fileio.c:1782
 #, fuzzy
 msgid "Record overflow"
 msgstr "レコードの領域を超えています"
 
-#: libcob/fileio.c:1784
+#: libcob/fileio.c:1785
 #, fuzzy
 msgid "Failed to read"
 msgstr "読み込みに失敗しました"
 
-#: libcob/fileio.c:1787
+#: libcob/fileio.c:1788
 #, fuzzy
 msgid "READ/START not allowed"
 msgstr "READ、START は許可されません"
 
-#: libcob/fileio.c:1790
+#: libcob/fileio.c:1791
 msgid "WRITE not allowed"
 msgstr "WRITE は許可されません"
 
-#: libcob/fileio.c:1793
+#: libcob/fileio.c:1794
 #, fuzzy
 msgid "DELETE/REWRITE not allowed"
 msgstr "DELETE、REWRITE は許可されません"
 
-#: libcob/fileio.c:1800
+#: libcob/fileio.c:1801
 msgid "LINAGE values invalid"
 msgstr ""
 
-#: libcob/fileio.c:1803
+#: libcob/fileio.c:1804
 #, fuzzy
 msgid "Unknown file error"
 msgstr "原因不明のファイルエラーです"

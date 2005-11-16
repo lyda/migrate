@@ -1,3 +1,8 @@
+2005-11-16  Roger While <simrw@sim-basis.de>
+
+	* call.c : Fix wrong cached handle
+	  fileio.c : Fix spacing in LS read
+
 2005-11-15  Roger While <simrw@sim-basis.de>
 
 	* fileio.c : Allow COB_SYNC=P (Paranoid)

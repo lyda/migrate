@@ -577,12 +577,12 @@ static cob_fileio_funcs sequential_funcs = {
 static int
 lineseq_read (cob_file *f)
 {
-	size_t		i;
+	size_t		i = 0;
 	int		n;
 	unsigned char	*dataptr;
 
 	dataptr = f->record->data;
-	for ( i= 0 ; ; i++ ) {
+	for ( ; ; ) {
 		if ( (n = getc(f->file)) == EOF ) {
 			return COB_STATUS_10_END_OF_FILE;
 		}
@@ -594,6 +594,7 @@ lineseq_read (cob_file *f)
 		}
 		if ( i < f->record->size ) {
 			*dataptr++ = n;
+			i++;
 		}
 	}
 	if (i < f->record->size) {
