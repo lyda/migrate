@@ -6,6 +6,7 @@
 		   Add in bs2000 to help text
 		   getopt includes
 	  codegen.c : Preliminary sticky-linkage code
+		      Further mods for perform-osvs
 
 2005-11-09  Roger While <simrw@sim-basis.de>
 

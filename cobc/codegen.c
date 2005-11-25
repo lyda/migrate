@@ -1887,6 +1887,17 @@ output_perform_exit (struct cb_label *l)
   output_line ("  goto *frame_stack[frame_index].return_address;");
 #endif
   if ( cb_perform_osvs ) {
+	output_line ("for (temp_index = frame_index - 1; temp_index >= 0; temp_index--) {");
+	output_line ("  if (frame_stack[temp_index].perform_through == %d) {", l->id);
+	output_line ("    frame_index = temp_index;");
+#if	COB_USE_SETJMP
+	output_line ("    longjmp(frame_stack[frame_index].return_address, 1);");
+#else
+	output_line ("    goto *frame_stack[frame_index].return_address;");
+#endif
+	output_line ("  }");
+	output_line ("}");
+/*
 	output_line ("if (frame_index > 0) {");
 	output_line ("  frame_index--;");
 #if	COB_USE_SETJMP
@@ -1895,6 +1906,7 @@ output_perform_exit (struct cb_label *l)
 	output_line ("  goto *frame_stack[frame_index].return_address;");
 #endif
 	output_line ("}");
+*/
   }
 }
 
@@ -2582,6 +2594,9 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
     }
 
   output_line ("/* perform frame stack */");
+  if ( cb_perform_osvs ) {
+	output_line ("int temp_index;");
+  }
   output_line ("int frame_index;");
 #if	COB_USE_SETJMP
   output_line ("struct frame { int perform_through; jmp_buf return_address; } "
