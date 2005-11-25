@@ -1,3 +1,8 @@
+2005-11-25  Roger While <simrw@sim-basis.de>
+
+	* common.c : Extended signal handling
+	  fileio.c : Don't use mkstemp on non-Win
+
 2005-11-16  Roger While <simrw@sim-basis.de>
 
 	* call.c : Fix wrong cached handle

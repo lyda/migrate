@@ -149,31 +149,45 @@ then
          [AC_MSG_ERROR(libdb1 is required)])
 elif test "$LIBDB" = "3"
 then
-	AC_CHECK_HEADERS([db.h db_185.h db3/db_185.h db4/db_185.h db4.1/db_185.h db4.2/db_185.h db4.3/db_185.h])
+	AC_CHECK_HEADERS([db.h db_185.h db3/db_185.h db4/db_185.h db4.1/db_185.h db4.2/db_185.h db4.3/db_185.h db4.4/db_185.h db4.5/db_185.h])
+	AC_CHECK_LIB([db-4.5], [__db_open],
+	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.5"],
+	  [AC_CHECK_LIB([db-4.5], [dbopen],
+	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.5"], [])])
+	if test "$USE_DB" != "yes"
+	then
+	AC_CHECK_LIB([db-4.4], [__db_open],
+	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.4"],
+	  [AC_CHECK_LIB([db-4.4], [dbopen],
+	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.4"], [])])
+	fi
+	if test "$USE_DB" != "yes"
+	then
 	AC_CHECK_LIB([db-4.3], [__db_open],
 	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.3"],
 	  [AC_CHECK_LIB([db-4.3], [dbopen],
-	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"-4.3], [])])
+	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.3"], [])])
+	fi
 	if test "$USE_DB" != "yes"
 	then
 	AC_CHECK_LIB([db-4.2], [__db_open],
 	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.2"],
 	  [AC_CHECK_LIB([db-4.2], [dbopen],
-	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"-4.2], [])])
+	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.2"], [])])
 	fi
 	if test "$USE_DB" != "yes"
 	then
 	AC_CHECK_LIB([db-4.1], [__db_open],
 	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.1"],
 	  [AC_CHECK_LIB([db-4.1], [dbopen],
-	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"-4.1], [])])
+	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.1"], [])])
 	fi
 	if test "$USE_DB" != "yes"
 	then
 	AC_CHECK_LIB([db-4], [__db_open],
 	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4"],
 	  [AC_CHECK_LIB([db-4], [dbopen],
-	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"-4], [])])
+	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4"], [])])
 	fi
 	
 	if test "$USE_DB" != "yes"
@@ -224,7 +238,7 @@ AC_PROG_MAKE_SET
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([signal.h fcntl.h malloc.h locale.h stddef.h wchar.h])
+AC_CHECK_HEADERS([sys/types.h signal.h fcntl.h malloc.h locale.h stddef.h wchar.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST

@@ -59,6 +59,13 @@ const char		*cob_source_statement = NULL;
 int			cob_linage_counter = 0;
 int			cob_call_params = 0;
 
+#ifdef	HAVE_SIGNAL_H
+typedef void (*cob_sighandler_t) (int);
+static cob_sighandler_t	hupsig = NULL;
+static cob_sighandler_t	intsig = NULL;
+static cob_sighandler_t	qutsig = NULL;
+#endif
+
 static cob_field_attr	all_attr = { COB_TYPE_ALPHANUMERIC_ALL, 0, 0, 0, NULL };
 
 cob_field		cob_zero = { 1, (ucharptr)"0", &all_attr };
@@ -188,25 +195,50 @@ static int		cob_switch[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
  * General functions
  */
 
-#ifdef	HAVE_SIGNAL_H
 /* static sighandler_t	oldsig; */
-#endif
 
+#ifdef	HAVE_SIGNAL_H
 static void
 cob_sig_handler (int sig)
 {
 	fprintf (stderr, "Abnormal termination - File contents may not be correct\n");
 	fflush (stderr);
-	cob_stop_run (sig);
+	cob_screen_terminate ();
+	cob_exit_fileio ();
+	switch ( sig ) {
+	case SIGHUP:
+		if ( (hupsig != SIG_IGN) && (hupsig != SIG_DFL) ) {
+			(*hupsig)(SIGHUP);
+		}
+		break;
+	case SIGINT:
+		if ( (intsig != SIG_IGN) && (intsig != SIG_DFL) ) {
+			(*intsig)(SIGINT);
+		}
+		break;
+	case SIGQUIT:
+		if ( (qutsig != SIG_IGN) && (qutsig != SIG_DFL) ) {
+			(*qutsig)(SIGQUIT);
+		}
+		break;
+	}
+	exit (sig);
 }
+#endif
 
 void
 cob_set_signal ()
 {
 #ifdef	HAVE_SIGNAL_H
-	(void)signal(SIGINT, cob_sig_handler);
-	(void)signal(SIGHUP, cob_sig_handler);
-	(void)signal(SIGQUIT, cob_sig_handler);
+	if ((intsig = signal(SIGINT, cob_sig_handler)) == SIG_IGN) {
+		(void)signal(SIGINT, SIG_IGN);
+	}
+	if ((hupsig = signal(SIGHUP, cob_sig_handler)) == SIG_IGN) {
+		(void)signal(SIGHUP, SIG_IGN);
+	}
+	if ((qutsig = signal(SIGQUIT, cob_sig_handler)) == SIG_IGN) {
+		(void)signal(SIGQUIT, SIG_IGN);
+	}
 #endif
 }
 

@@ -24,12 +24,19 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#ifdef	HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
 #include <unistd.h>
-#include <libcob.h>
+#ifdef  HAVE_SIGNAL_H
+#include <signal.h>
+#endif
 
 #ifdef _WIN32
 #include <windows.h>		/* for GetTempPath, GetTempFileName */
 #endif
+
+#include <libcob.h>
 
 #include "cobc.h"
 #include "tree.h"
@@ -91,6 +98,10 @@ jmp_buf			cob_jmpbuf;
 
 static int		save_temps = 0;
 static int		verbose_output = 0;
+static int		cob_iteration = 0;
+#ifndef _WIN32
+static pid_t		cob_process_id = 0;
+#endif
 
 static int		strip_output = 0;
 static int		gflag_set = 0;
@@ -122,6 +133,50 @@ static const char fcopts[] = " -finline-functions -freorder-blocks";
 #else
 static const char fcopts[] = " ";
 #endif
+
+static char short_options[] = "hVvECScmOgwo:t:I:L:l:";
+
+static struct option long_options[] = {
+	{"help", no_argument, NULL, 'h'},
+	{"version", no_argument, NULL, 'V'},
+	{"verbose", no_argument, NULL, 'v'},
+	{"list-reserved", no_argument, NULL, 'R'},
+	{"save-temps", no_argument, &save_temps, 1},
+	{"std", required_argument, NULL, '$'},
+	{"conf", required_argument, NULL, '&'},
+	{"debug", no_argument, NULL, 'd'},
+	{"ext", required_argument, NULL, 'e'},
+	{"free", no_argument, &cb_source_format, CB_FORMAT_FREE},
+	{"fixed", no_argument, &cb_source_format, CB_FORMAT_FIXED},
+	{"static", no_argument, &cb_flag_static_call, 1},
+	{"dynamic", no_argument, &cb_flag_static_call, 0},
+	{"dynopt", no_argument, &cb_flag_static_call, 2},
+	{"O2", no_argument, NULL, '2'},
+	{"Os", no_argument, NULL, 's'},
+	{"MT", required_argument, NULL, '%'},
+	{"MF", required_argument, NULL, '@'},
+#undef CB_FLAG
+#define CB_FLAG(var,name,doc)			\
+	{"f"name, no_argument, &var, 1},	\
+	{"fno-"name, no_argument, &var, 0},
+#include "flag.def"
+	{"Wall", no_argument, NULL, 'W'},
+#undef CB_WARNING
+#define CB_WARNING(sig,var,name,doc)		\
+	{"W"name, no_argument, &var, 1},	\
+	{"Wno-"name, no_argument, &var, 0},
+#include "warning.def"
+	{NULL, 0, NULL, 0}
+};
+
+static void cob_clean_up (int status);
+
+
+/* cobc functions */
+
+/*
+ * Global functions
+ */
 
 void *
 cob_malloc (const size_t size)
@@ -209,51 +264,41 @@ init_environment (int argc, char *argv[])
 }
 
 static void
+cob_clean_up (int status)
+{
+	struct filename	*fn;
+
+	if (!save_temps) {
+		for (fn = file_list; fn; fn = fn->next) {
+			if (fn->need_preprocess
+			    && (status == 1 || cb_compile_level > CB_LEVEL_PREPROCESS)) {
+				unlink (fn->preprocess);
+			}
+			if (fn->need_translate
+			    && (status == 1 || cb_compile_level > CB_LEVEL_TRANSLATE)) {
+				unlink (fn->translate);
+				unlink (fn->trstorage);
+			}
+			if (fn->need_assemble
+			    && (status == 1 || cb_compile_level > CB_LEVEL_ASSEMBLE)) {
+				unlink (fn->object);
+			}
+		}
+	}
+}
+
+static void
 terminate (const char *str)
 {
 	fprintf (stderr, "%s: ", program_name);
 	perror (str);
+	cob_clean_up (1);
 	exit (1);
 }
 
 /*
  * Command line
  */
-
-static char short_options[] = "hVvECScmOgwo:t:I:L:l:";
-
-static struct option long_options[] = {
-	{"help", no_argument, 0, 'h'},
-	{"version", no_argument, 0, 'V'},
-	{"verbose", no_argument, 0, 'v'},
-	{"list-reserved", no_argument, 0, 'R'},
-	{"save-temps", no_argument, &save_temps, 1},
-	{"std", required_argument, 0, '$'},
-	{"conf", required_argument, 0, '&'},
-	{"debug", no_argument, 0, 'd'},
-	{"ext", required_argument, 0, 'e'},
-	{"free", no_argument, &cb_source_format, CB_FORMAT_FREE},
-	{"fixed", no_argument, &cb_source_format, CB_FORMAT_FIXED},
-	{"static", no_argument, &cb_flag_static_call, 1},
-	{"dynamic", no_argument, &cb_flag_static_call, 0},
-	{"dynopt", no_argument, &cb_flag_static_call, 2},
-	{"O2", no_argument, 0, '2'},
-	{"Os", no_argument, 0, 's'},
-	{"MT", required_argument, 0, '%'},
-	{"MF", required_argument, 0, '@'},
-#undef CB_FLAG
-#define CB_FLAG(var,name,doc)			\
-	{"f"name, no_argument, &var, 1},	\
-	{"fno-"name, no_argument, &var, 0},
-#include "flag.def"
-	{"Wall", no_argument, 0, 'W'},
-#undef CB_WARNING
-#define CB_WARNING(sig,var,name,doc)		\
-	{"W"name, no_argument, &var, 1},	\
-	{"Wno-"name, no_argument, &var, 0},
-#include "warning.def"
-	{0, 0, 0, 0}
-};
 
 static void
 print_version (void)
@@ -553,10 +598,7 @@ temp_name (char *buff, const char *ext)
 	DeleteFile (buff);
 	strcpy (buff + strlen (buff) - 4, ext);	/* replace ".tmp" by EXT */
 #else
-	sprintf (buff, "%s/cobXXXXXX", tmpdir);
-	close (mkstemp (buff));
-	unlink (buff);
-	strcat (buff, ext);
+	sprintf (buff, "%s/cob%d_%d%s", tmpdir, cob_process_id, cob_iteration, ext);
 #endif
 }
 
@@ -564,9 +606,10 @@ static struct filename *
 process_filename (const char *filename)
 {
 	const char	*extension;
-	struct filename	*fn = cob_malloc (sizeof (struct filename));
+	struct filename	*fn;
 	char		basename[FILENAME_MAX];
 
+	fn = cob_malloc (sizeof (struct filename));
 	fn->need_preprocess = 1;
 	fn->need_translate = 1;
 	fn->need_assemble = 1;
@@ -880,6 +923,10 @@ main (int argc, char *argv[])
 	textdomain (PACKAGE);
 #endif
 
+#ifndef _WIN32
+	cob_process_id = getpid();
+#endif
+
 	/* Initialize the global variables */
 	init_environment (argc, argv);
 
@@ -893,6 +940,7 @@ main (int argc, char *argv[])
 	}
 
 	file_list = NULL;
+
 	if (setjmp (cob_jmpbuf) != 0) {
 		fprintf (stderr, "Aborting compile of %s at line %d\n", cb_source_file,
 			 cb_source_line);
@@ -903,12 +951,14 @@ main (int argc, char *argv[])
 		if (cb_storage_file) {
 			fflush (cb_storage_file);
 		}
-		status = 99;
-		goto cleanup;
+		status = 1;
+		cob_clean_up (status);
+		return status;
 	}
 	while (i < argc) {
-		struct filename *fn = process_filename (argv[i++]);
+		struct filename *fn;
 
+		fn = process_filename (argv[i++]);
 		fn->next = file_list;
 		file_list = fn;
 		cb_id = 1;
@@ -922,14 +972,16 @@ main (int argc, char *argv[])
 		/* Preprocess */
 		if (cb_compile_level >= CB_LEVEL_PREPROCESS && fn->need_preprocess) {
 			if (preprocess (fn) != 0) {
-				goto cleanup;
+				cob_clean_up (status);
+				return status;
 			}
 		}
 
 		/* Translate */
 		if (cb_compile_level >= CB_LEVEL_TRANSLATE && fn->need_translate) {
 			if (process_translate (fn) != 0) {
-				goto cleanup;
+				cob_clean_up (status);
+				return status;
 			}
 		}
 		if (cb_flag_syntax_only) {
@@ -939,23 +991,27 @@ main (int argc, char *argv[])
 		/* Compile */
 		if (cb_compile_level == CB_LEVEL_COMPILE) {
 			if (process_compile (fn) != 0) {
-				goto cleanup;
+				cob_clean_up (status);
+				return status;
 			}
 		}
 
 		/* Assemble */
 		if (cb_compile_level >= CB_LEVEL_ASSEMBLE && fn->need_assemble) {
 			if (process_assemble (fn) != 0) {
-				goto cleanup;
+				cob_clean_up (status);
+				return status;
 			}
 		}
 
 		/* Build module */
 		if (cb_compile_level == CB_LEVEL_MODULE) {
 			if (process_module (fn) != 0) {
-				goto cleanup;
+				cob_clean_up (status);
+				return status;
 			}
 		}
+		cob_iteration++;
 	}
 
 	/* Link */
@@ -965,34 +1021,14 @@ main (int argc, char *argv[])
 	}
 	if (!cb_flag_syntax_only && cb_compile_level == CB_LEVEL_EXECUTABLE) {
 		if (process_link (file_list) > 0) {
-			goto cleanup;
+			cob_clean_up (status);
+			return status;
 		}
 	}
 
 	/* We have successfully completed */
 	status = 0;
-
-	/* Remove unnecessary files */
-      cleanup:
-	if (!save_temps) {
-		struct filename	*fn;
-
-		for (fn = file_list; fn; fn = fn->next) {
-			if (fn->need_preprocess
-			    && (status == 1 || cb_compile_level > CB_LEVEL_PREPROCESS)) {
-				remove (fn->preprocess);
-			}
-			if (fn->need_translate
-			    && (status == 1 || cb_compile_level > CB_LEVEL_TRANSLATE)) {
-				remove (fn->translate);
-				remove (fn->trstorage);
-			}
-			if (fn->need_assemble
-			    && (status == 1 || cb_compile_level > CB_LEVEL_ASSEMBLE)) {
-				remove (fn->object);
-			}
-		}
-	}
+	cob_clean_up (status);
 
 	return status;
 }

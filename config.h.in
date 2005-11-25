@@ -55,6 +55,12 @@
 /* Define to 1 if you have the <db4.3/db_185.h> header file. */
 #undef HAVE_DB4_3_DB_185_H
 
+/* Define to 1 if you have the <db4.4/db_185.h> header file. */
+#undef HAVE_DB4_4_DB_185_H
+
+/* Define to 1 if you have the <db4.5/db_185.h> header file. */
+#undef HAVE_DB4_5_DB_185_H
+
 /* Define to 1 if you have the <db4/db_185.h> header file. */
 #undef HAVE_DB4_DB_185_H
 

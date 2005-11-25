@@ -208,101 +208,96 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
 void
 pp_set_replace_list (struct cb_replace_list *list)
 {
-  current_replace_list = list;
+	current_replace_list = list;
 }
 
 static void
 switch_to_buffer (int line, char *file, YY_BUFFER_STATE buffer)
 {
-  cb_source_line = line;
-  cb_source_file = strdup (file);
-  yy_switch_to_buffer (buffer);
-  fprintf (yyout, "# %d \"%s\"\n", line, file);
+	cb_source_line = line;
+	cb_source_file = strdup (file);
+	yy_switch_to_buffer (buffer);
+	fprintf (yyout, "# %d \"%s\"\n", line, file);
 }
 
 int
 ppopen (char *name, struct cb_replace_list *replace_list)
 {
-  for (; newline_count > 0; newline_count--)
-    ungetc ('\n', ppin);
+	struct copy_info *p;
 
-  /* Open the copy file */
-  ppin = fopen (name, "rb");
-  if (!ppin)
-    {
-      if (cb_source_file)
-	cb_error ("%s: %s", name, strerror (errno));
-      else
-	perror (name);
-      return -1;
-    }
+	for (; newline_count > 0; newline_count--) {
+		ungetc ('\n', ppin);
+	}
 
-  /* Add to dependency list */
-  if (cb_depend_file)
-    cb_depend_list = cb_text_list_add (cb_depend_list, name);
+	/* Open the copy file */
+	ppin = fopen (name, "rb");
+	if (!ppin) {
+		if (cb_source_file) {
+			cb_error ("%s: %s", name, strerror (errno));
+		} else {
+			perror (name);
+		}
+		return -1;
+	}
 
-  /* Preserve the current buffer */
-  {
-    struct copy_info *p = cob_malloc (sizeof (struct copy_info));
-    p->line      = cb_source_line;
-    p->file      = cb_source_file;
-    p->replacing = replace_list ? 1 : 0;
-    p->buffer    = YY_CURRENT_BUFFER;
-    p->next      = copy_stack;
-    copy_stack = p;
-  }
+	/* Add to dependency list */
+	if (cb_depend_file) {
+		cb_depend_list = cb_text_list_add (cb_depend_list, name);
+	}
 
-  /* Switch to new buffer */
-  if (replace_list)
-    pp_set_replace_list (replace_list);
-  switch_to_buffer (1, name, yy_create_buffer (ppin, YY_BUF_SIZE));
-  return 0;
+	/* Preserve the current buffer */
+	p = cob_malloc (sizeof (struct copy_info));
+	p->line = cb_source_line;
+	p->file = cb_source_file;
+	p->replacing = replace_list ? 1 : 0;
+	p->buffer = YY_CURRENT_BUFFER;
+	p->next = copy_stack;
+	copy_stack = p;
+
+	/* Switch to new buffer */
+	if (replace_list) {
+		pp_set_replace_list (replace_list);
+	}
+	switch_to_buffer (1, name, yy_create_buffer (ppin, YY_BUF_SIZE));
+	return 0;
 }
 
 int
 ppcopy (char *name, const char *lib, struct cb_replace_list *replace_list)
 {
-  struct stat st;
-  char buff1[FILENAME_MAX];
-  char buff2[FILENAME_MAX];
+	struct stat	st;
+	char		buff1[FILENAME_MAX];
+	char		buff2[FILENAME_MAX];
 
-  if (lib)
-    {
-      sprintf (buff1, "%s/%s", lib, name);
-      name = buff1;
-    }
-
-  /* Find the file */
-  if (name[0] != '/' && stat (name, &st) == -1)
-    {
-      struct cb_text_list *il, *el;
-      for (el = cb_extension_list; el; el = el->next)
-	{
-	  sprintf (buff2, "%s%s", name, el->text);
-	  if (stat (buff2, &st) == 0)
-	    {
-	      name = buff2;
-	      goto found;
-	    }
+	if (lib) {
+		sprintf (buff1, "%s/%s", lib, name);
+		name = buff1;
 	}
-      for (il = cb_include_list; il; il = il->next)
-	for (el = cb_extension_list; el; el = el->next)
-	  {
-	    sprintf (buff2, "%s/%s%s", il->text, name, el->text);
-	    if (stat (buff2, &st) == 0)
-	      {
-		name = buff2;
-		goto found;
-	      }
-	  }
-      cb_error ("%s: %s", name, strerror (errno));
-      return -1;
-    }
 
- found:
-  return ppopen (name, replace_list);
+	/* Find the file */
+	if (name[0] != '/' && stat (name, &st) == -1) {
+		struct cb_text_list *il, *el;
+		for (el = cb_extension_list; el; el = el->next) {
+			sprintf (buff2, "%s%s", name, el->text);
+			if (stat (buff2, &st) == 0) {
+				name = buff2;
+				return ppopen (name, replace_list);
+			}
+		}
+		for (il = cb_include_list; il; il = il->next)
+			for (el = cb_extension_list; el; el = el->next) {
+				sprintf (buff2, "%s/%s%s", il->text, name, el->text);
+				if (stat (buff2, &st) == 0) {
+					name = buff2;
+					return ppopen (name, replace_list);
+				}
+			}
+		cb_error ("%s: %s", name, strerror (errno));
+		return -1;
+	}
+
+	return ppopen (name, replace_list);
 }
-
 
 /*
  * Read line
@@ -312,278 +307,271 @@ static int
 ppinput (char *buff, int max_size)
 {
 
-  int i, n;
-  int continuation = 0;
-  char *bp;
-  char line[BUFSIZ];
+	int	i, n;
+	int	continuation = 0;
+	char	*bp;
+	char	line[BUFSIZ];
 
- start:
-  /* read a line */
-  memset (line, 0, sizeof (line));
-  if (fgets (line, BUFSIZ, ppin) == NULL)
-    {
-      if (newline_count == 0)
-	return 0;
-      memset (buff, '\n', newline_count);
-      buff[newline_count] = 0;
-      newline_count = 0;
-      return strlen (buff);
-    }
+      start:
+	/* read a line */
+	memset (line, 0, sizeof (line));
+	if (fgets (line, BUFSIZ, ppin) == NULL) {
+		if (newline_count == 0) {
+			return 0;
+		}
+		memset (buff, '\n', newline_count);
+		buff[newline_count] = 0;
+		newline_count = 0;
+		return strlen (buff);
+	}
 
-  /* output listing */
-  if (cb_listing_file)
-    fputs (line, cb_listing_file);
+	/* output listing */
+	if (cb_listing_file) {
+		fputs (line, cb_listing_file);
+	}
 
-  /* normalize and copy the line into the buffer */
-  n = 0;
-  for (i = 0; line[i]; i++)
-    switch (line[i])
-      {
-      case '\t':
-	/* tab expansion */
-	buff[n++] = ' ';
-	while (n % cb_tab_width != 0)
-	  buff[n++] = ' ';
-	break;
+	/* normalize and copy the line into the buffer */
+	n = 0;
+	for (i = 0; line[i]; i++) {
+		switch (line[i]) {
+		case '\t':
+			/* tab expansion */
+			buff[n++] = ' ';
+			while (n % cb_tab_width != 0) {
+				buff[n++] = ' ';
+			}
+			break;
 
-      case '\r':
-	/* end-of-line if followed by new-line */
-	if (line[i + 1] == '\n')
-	  i++;
-	else
-	  break;
-	/* fall through */
-      case '\n':
-	buff[n++] = '\n';
-	break;
+		case '\r':
+			/* end-of-line if followed by new-line */
+			if (line[i + 1] == '\n') {
+				i++;
+			} else {
+				break;
+			}
+			/* fall through */
+		case '\n':
+			buff[n++] = '\n';
+			break;
 
-      default:
-	buff[n++] = line[i];
-	break;
-      }
-  if (i < BUFSIZ - 1 && buff[n - 1] != '\n')
-    {
-      cb_warning (_("file unterminated by a newline"));
-      buff[n++] = '\n';
-    }
-  buff[n] = '\0';
+		default:
+			buff[n++] = line[i];
+			break;
+		}
+	}
+	if (i < BUFSIZ - 1 && buff[n - 1] != '\n') {
+		cb_warning (_("file unterminated by a newline"));
+		buff[n++] = '\n';
+	}
+	buff[n] = '\0';
 
-  /* nothing to do anymore with free format */
-  if (cb_source_format != CB_FORMAT_FIXED)
-    return n;
+	/* nothing to do anymore with free format */
+	if (cb_source_format != CB_FORMAT_FIXED) {
+		return n;
+	}
 
-  /* line too short */
-  if (n < 8)
-    {
-    skip:
-      newline_count++;
-      goto start;
-    }
+	/* line too short */
+	if (n < 8) {
+		newline_count++;
+		goto start;
+	}
 
-  /* check the indicator (column 7) */
-  switch (buff[6])
-    {
-    case ' ':
-      bp = buff + 7;
-      break;
-    case '-':
-      continuation = 1;
-      bp = buff + 7;
-      break;
-    case 'd':
-    case 'D':
-      /* debugging line */
-      goto skip;
+	/* check the indicator (column 7) */
+	switch (buff[6]) {
+	case ' ':
+		bp = buff + 7;
+		break;
+	case '-':
+		continuation = 1;
+		bp = buff + 7;
+		break;
+	case 'd':
+	case 'D':
+		/* debugging line */
+		newline_count++;
+		goto start;
 #if 0
-      bp = buff + 3;
-      memcpy (bp, ">>D ", 4);
-      break;
+		bp = buff + 3;
+		memcpy (bp, ">>D ", 4);
+		break;
 #endif
-    case '*':
-    case '/':
-      /* comment line */
-      goto skip;
-    default:
-      {
-	/* invalid indicator */
-	if (last_line_1 < cb_source_line - 1)
-	  cb_warning (_("invalid indicator '%c' at column 7"), buff[6]);
-	last_line_1 = cb_source_line;
-	bp = buff + 6;
-	break;
-      }
-    }
-
-  /* skip comments that follow after AUTHORS, etc. */
-  if (within_comment)
-    {
-      if (buff[7] == ' ')
-	goto skip;
-      within_comment = 0;
-    }
-
-  /* check the text that is longer than cb_text_column */
-  if (n > cb_text_column + 1)
-    {
-      int i;
-
-      /* show warning if it is not whitespaces */
-      if (cb_warn_column_overflow && last_line_2 < cb_source_line - 1)
-	for (i = cb_text_column; i < n; i++)
-	  if (buff[i] != ' ' && buff[i] != '\n')
-	    {
-	      cb_warning (_("source text after column %d"), cb_text_column);
-	      break;
-	    }
-
-      /* remove it */
-      strcpy (buff + cb_text_column, "\n");
-      last_line_2 = cb_source_line;
-      n = cb_text_column + 1;
-    }
-
-  /* skip blank lines */
-  for (i = 7; buff[i] == ' '; i++);
-  if (buff[i] == '\n')
-    goto skip;
-
-  if (continuation)
-    {
-      /* line continuation */
-      for (; *bp == ' '; bp++);
-
-      /* validate concatenation */
-      if (consecutive_quotation)
-	{
-	  if (bp[0] == quotation_mark && bp[1] == quotation_mark)
-	    bp++;
-	  else
-	    {
-	    invalid:
-	      cb_error (_("invalid line continuation"));
-	      return YY_NULL;
-	    }
-	  quotation_mark = 0;
-	  consecutive_quotation = 0;
+	case '*':
+	case '/':
+		/* comment line */
+		newline_count++;
+		goto start;
+	default:
+		/* invalid indicator */
+		if (last_line_1 < cb_source_line - 1) {
+			cb_warning (_("invalid indicator '%c' at column 7"), buff[6]);
+		}
+		last_line_1 = cb_source_line;
+		bp = buff + 6;
+		break;
 	}
-      else if (quotation_mark)
-	{
-	  /* literal concatenation */
-	  if (*bp == quotation_mark)
-	    bp++;
-	  else
-	    goto invalid;
+
+	/* skip comments that follow after AUTHORS, etc. */
+	if (within_comment) {
+		if (buff[7] == ' ') {
+			newline_count++;
+			goto start;
+		}
+		within_comment = 0;
 	}
-    }
-  else
-    {
-      /* normal line */
-      quotation_mark = 0;
-      consecutive_quotation = 0;
-    }
 
-  /* check if string literal is to be continued */
-  for (i = bp - buff; buff[i] != '\n'; i++)
-    if (buff[i] == '\'' || buff[i] == '\"')
-      {
-	if (quotation_mark == 0)
-	  {
-	    /* literal start */
-	    quotation_mark = buff[i];
-	  }
-	else if (quotation_mark == buff[i])
-	  {
-	    if (i == cb_text_column - 1)
-	      /* consecutive quotation */
-	      consecutive_quotation = 1;
-	    else
-	      /* litaral end */
-	      quotation_mark = 0;
-	  }
-      }
+	/* check the text that is longer than cb_text_column */
+	if (n > cb_text_column + 1) {
+		int i;
 
-  /* truncate trailing spaces, including the newline */
-  if (quotation_mark)
-    buff[i] = 0;
-  else
-    {
-      for (i--; buff[i] == ' '; i--);
-      if (buff[i] == '\'' || buff[i] == '\"')
-	buff[++i] = ' ';
-      buff[i + 1] = 0;
-    }
+		/* show warning if it is not whitespaces */
+		if (cb_warn_column_overflow && last_line_2 < cb_source_line - 1) {
+			for (i = cb_text_column; i < n; i++) {
+				if (buff[i] != ' ' && buff[i] != '\n') {
+					cb_warning (_("source text after column %d"),
+						    cb_text_column);
+					break;
+				}
+			}
+		}
 
-  if (continuation)
-    {
-      strcpy (buff, bp);
-      newline_count++;
-    }
-  else
-    {
-      /* insert newlines at the start of the buffer */
-      memmove (buff + newline_count, bp, strlen (bp) + 1);
-      memset (buff, '\n', newline_count);
-      newline_count = 1;
-    }
+		/* remove it */
+		strcpy (buff + cb_text_column, "\n");
+		last_line_2 = cb_source_line;
+		n = cb_text_column + 1;
+	}
 
-  return strlen (buff);
+	/* skip blank lines */
+	for (i = 7; buff[i] == ' '; i++) ;
+	if (buff[i] == '\n') {
+		newline_count++;
+		goto start;
+	}
+
+	if (continuation) {
+		/* line continuation */
+		for (; *bp == ' '; bp++) ;
+
+		/* validate concatenation */
+		if (consecutive_quotation) {
+			if (bp[0] == quotation_mark && bp[1] == quotation_mark) {
+				bp++;
+			} else {
+				cb_error (_("invalid line continuation"));
+				return YY_NULL;
+			}
+			quotation_mark = 0;
+			consecutive_quotation = 0;
+		} else if (quotation_mark) {
+			/* literal concatenation */
+			if (*bp == quotation_mark) {
+				bp++;
+			} else {
+				cb_error (_("invalid line continuation"));
+				return YY_NULL;
+			}
+		}
+	} else {
+		/* normal line */
+		quotation_mark = 0;
+		consecutive_quotation = 0;
+	}
+
+	/* check if string literal is to be continued */
+	for (i = bp - buff; buff[i] != '\n'; i++) {
+		if (buff[i] == '\'' || buff[i] == '\"') {
+			if (quotation_mark == 0) {
+				/* literal start */
+				quotation_mark = buff[i];
+			} else if (quotation_mark == buff[i]) {
+				if (i == cb_text_column - 1) {
+					/* consecutive quotation */
+					consecutive_quotation = 1;
+				} else {
+					/* litaral end */
+					quotation_mark = 0;
+				}
+			}
+		}
+	}
+
+	/* truncate trailing spaces, including the newline */
+	if (quotation_mark) {
+		buff[i] = 0;
+	} else {
+		for (i--; buff[i] == ' '; i--) ;
+		if (buff[i] == '\'' || buff[i] == '\"') {
+			buff[++i] = ' ';
+		}
+		buff[i + 1] = 0;
+	}
+
+	if (continuation) {
+		strcpy (buff, bp);
+		newline_count++;
+	} else {
+		/* insert newlines at the start of the buffer */
+		memmove (buff + newline_count, bp, strlen (bp) + 1);
+		memset (buff, '\n', newline_count);
+		newline_count = 1;
+	}
+
+	return strlen (buff);
 }
-
 
 static void
 ppecho (const char *text)
 {
-  if (text_queue == NULL && (text[0] == ' ' || text[0] == '\n'))
-    {
-      fputs (text, ppout);
-    }
-  else if (!current_replace_list)
-    {
-      for (; text_queue; text_queue = text_queue->next)
-	fputs (text_queue->text, ppout);
-      fputs (text, ppout);
-    }
-  else
-    {
-      /* Do replacement */
-      struct cb_replace_list *r;
-      struct cb_text_list *l, *queue;
+	if (text_queue == NULL && (text[0] == ' ' || text[0] == '\n')) {
+		fputs (text, ppout);
+	} else if (!current_replace_list) {
+		for (; text_queue; text_queue = text_queue->next) {
+			fputs (text_queue->text, ppout);
+		}
+		fputs (text, ppout);
+	} else {
+		/* Do replacement */
+		struct cb_replace_list	*r;
+		struct cb_text_list	*l, *queue;
 
-      text_queue = cb_text_list_add (text_queue, text);
+		text_queue = cb_text_list_add (text_queue, text);
 
-      for (r = current_replace_list; r; r = r->next)
-	{
-	  queue = text_queue;
-	  for (l = r->old_text; l; l = l->next)
-	    {
-	      while (l && (l->text[0] == ' ' || l->text[0] == '\n'))
-		l = l->next;
-	      if (l == NULL)
-		break;
-	      while (queue
-		     && (queue->text[0] == ' ' || queue->text[0] == '\n'))
-		queue = queue->next;
-	      if (queue == NULL)
-		return; /* partial match */
-	      if (strcasecmp (l->text, queue->text) != 0)
-		break;
-	      queue = queue->next;
-	    }
-	  if (l == NULL)
-	    {
-	      /* match */
-	      for (l = r->new_text; l; l = l->next)
-		fputs (l->text, ppout);
+		for (r = current_replace_list; r; r = r->next) {
+			queue = text_queue;
+			for (l = r->old_text; l; l = l->next) {
+				while (l && (l->text[0] == ' ' || l->text[0] == '\n')) {
+					l = l->next;
+				}
+				if (l == NULL) {
+					break;
+				}
+				while (queue
+				       && (queue->text[0] == ' ' || queue->text[0] == '\n')) {
+					queue = queue->next;
+				}
+				if (queue == NULL) {
+					return;	/* partial match */
+				}
+				if (strcasecmp (l->text, queue->text) != 0) {
+					break;
+				}
+				queue = queue->next;
+			}
+			if (l == NULL) {
+				/* match */
+				for (l = r->new_text; l; l = l->next) {
+					fputs (l->text, ppout);
+				}
 /*
-	      text_queue = queue ? queue->next : NULL;
+				text_queue = queue ? queue->next : NULL;
 */
-	      text_queue = queue;
-	      continue;
-	    }
-	}
+				text_queue = queue;
+				continue;
+			}
+		}
 
-      /* no match */
-      for (; text_queue; text_queue = text_queue->next)
-	fputs (text_queue->text, ppout);
-    }
+		/* no match */
+		for (; text_queue; text_queue = text_queue->next) {
+			fputs (text_queue->text, ppout);
+		}
+	}
 }

@@ -271,160 +271,161 @@ H\"[^\"\n]*\" {
 static int
 read_literal (char mark)
 {
-  static size_t size = 192;
-  static char *buff = NULL;
+	static size_t	size = 192;
+	static char	*buff = NULL;
+	int		c;
+	int		i = 0;
 
-  int c;
-  int i = 0;
-
-  if (!buff)
-    buff = cob_malloc (size);
-
-  while ((c = input ()) != EOF)
-    {
-      buff[i++] = c;
-      if (c == mark && (c = input ()) != mark)
-	{
-	  i--;
-	  unput (c);
-	  break;
+	if (!buff) {
+		buff = cob_malloc (size);
 	}
-      if (i >= size)
-	{
-	  size *= 2;
-	  buff = realloc (buff, size);
-	  if ( !buff ) {
-		fprintf (stderr, "Memory realloc failed - Aborting\n");
-		fflush (stderr);
-		(void)longjmp (cob_jmpbuf, 1);
-	  }
+
+	while ((c = input ()) != EOF) {
+		buff[i++] = c;
+		if (c == mark && (c = input ()) != mark) {
+			i--;
+			unput (c);
+			break;
+		}
+		if (i >= size) {
+			size *= 2;
+			buff = realloc (buff, size);
+			if (!buff) {
+				fprintf (stderr, "Memory realloc failed - Aborting\n");
+				fflush (stderr);
+				(void)longjmp (cob_jmpbuf, 1);
+			}
+		}
 	}
-    }
-  buff[i] = 0;
-  yylval = cb_build_alphanumeric_literal ((unsigned char *)buff, i);
-  SET_LOCATION (yylval);
-  return LITERAL;
+	buff[i] = 0;
+	yylval = cb_build_alphanumeric_literal ((unsigned char *)buff, i);
+	SET_LOCATION (yylval);
+	return LITERAL;
 }
 
 static int
 scan_x (char *text)
 {
-  int high = 1;
-  char *src = text;
-  char buff[strlen (text)];
-  char *dst = buff;
-  while (isalnum (*src))
-    {
-      int c = toupper (*src);
-      if ('0' <= c && c <= '9')
-	c = c - '0';
-      else if ('A' <= c && c <= 'F')
-	c = c - 'A' + 10;
-      else
-	goto error;
+	int	high = 1;
+	char	*src = text;
+	char	buff[strlen (text)];
+	char	*dst = buff;
 
-      if (high)
-	*dst = c << 4;
-      else
-	*dst++ += c;
+	while (isalnum (*src)) {
+		int c = toupper (*src);
 
-      src++;
-      high = 1 - high;
-    }
+		if ('0' <= c && c <= '9') {
+			c = c - '0';
+		} else if ('A' <= c && c <= 'F') {
+			c = c - 'A' + 10;
+		} else {
+			goto error;
+		}
 
-  if (high)
-    {
-      yylval = cb_build_alphanumeric_literal ((unsigned char *)buff, dst - buff);
-      SET_LOCATION (yylval);
-      return LITERAL;
-    }
+		if (high) {
+			*dst = c << 4;
+		} else {
+			*dst++ += c;
+		}
 
- error:
-  cb_error (_("invalid X literal: %s"), text);
-  yylval = cb_error_node;
-  return LITERAL;
+		src++;
+		high = 1 - high;
+	}
+
+	if (high) {
+		yylval = cb_build_alphanumeric_literal ((unsigned char *)buff, dst - buff);
+		SET_LOCATION (yylval);
+		return LITERAL;
+	}
+
+      error:
+	cb_error (_("invalid X literal: %s"), text);
+	yylval = cb_error_node;
+	return LITERAL;
 }
 
 static int
 scan_h (char *text)
 {
-  char *p;
-  char buff[19];
-  long long val = 0;
+	char *p;
+	char buff[19];
+	long long val = 0;
 
-  for (p = text; *p != '\'' && *p != '\"'; p++)
-    {
-      int c = toupper (*p);
-      if ('0' <= c && c <= '9')
-	c = c - '0';
-      else if ('A' <= c && c <= 'F')
-	c = c - 'A' + 10;
-      else
-	goto error;
+	for (p = text; *p != '\'' && *p != '\"'; p++) {
+		int c = toupper (*p);
 
-      val = (val << 4) + c;
-    }
+		if ('0' <= c && c <= '9') {
+			c = c - '0';
+		} else if ('A' <= c && c <= 'F') {
+			c = c - 'A' + 10;
+		} else {
+			goto error;
+		}
+
+		val = (val << 4) + c;
+	}
 
 #ifdef __MINGW32__
-  sprintf (buff, "%I64d", val);
+	sprintf (buff, "%I64d", val);
 #else
-  sprintf (buff, "%lld", val);
+	sprintf (buff, "%lld", val);
 #endif
-  yylval = cb_build_numeric_literal (0, (unsigned char *)buff, 0);
-  SET_LOCATION (yylval);
-  return LITERAL;
+	yylval = cb_build_numeric_literal (0, (unsigned char *)buff, 0);
+	SET_LOCATION (yylval);
+	return LITERAL;
 
- error:
-  cb_error (_("invalid H literal: %s"), text);
-  yylval = cb_error_node;
-  return LITERAL;
+      error:
+	cb_error (_("invalid H literal: %s"), text);
+	yylval = cb_error_node;
+	return LITERAL;
 }
 
 static int
 scan_numeric (char *text)
 {
-  int sign, scale = 0;
-  unsigned char *s;
-  /* get sign */
-  sign = (*text == '+') ? 1 : (*text == '-') ? -1 : 0;
-  if (sign)
-    text++;
+	int		sign, scale = 0;
+	unsigned char	*s;
 
-  /* get decimal point */
-  s = (unsigned char *)strchr (text, current_program->decimal_point);
-  if (s) {
-    scale = strlen ((char *)s) - 1;
-    memmove (s, s + 1, scale + 1);
-  }
-  if (strchr (text, (current_program->decimal_point == ',') ? '.' : ','))
-    cb_error (_("invalid numeric literal"));
+	/* get sign */
+	sign = (*text == '+') ? 1 : (*text == '-') ? -1 : 0;
+	if (sign) {
+		text++;
+	}
 
-  yylval = cb_build_numeric_literal (sign, (unsigned char *)text, scale);
-  SET_LOCATION (yylval);
-  return LITERAL;
+	/* get decimal point */
+	s = (unsigned char *)strchr (text, current_program->decimal_point);
+	if (s) {
+		scale = strlen ((char *)s) - 1;
+		memmove (s, s + 1, scale + 1);
+	}
+	if (strchr (text, (current_program->decimal_point == ',') ? '.' : ',')) {
+		cb_error (_("invalid numeric literal"));
+	}
+
+	yylval = cb_build_numeric_literal (sign, (unsigned char *)text, scale);
+	SET_LOCATION (yylval);
+	return LITERAL;
 }
 
 static int
 scan_picture (char *text)
 {
-  char *p;
+	char *p;
 
-  /* normalize the input */
-  for (p = text; *p; p++)
-    {
-      /* unput trailing '.' or ',' */
-      if (p[1] == 0 && (*p == '.' || *p == ','))
-	{
-	  unput (*p);
-	  *p = 0;
-	  break;
+	/* normalize the input */
+	for (p = text; *p; p++) {
+		/* unput trailing '.' or ',' */
+		if (p[1] == 0 && (*p == '.' || *p == ',')) {
+			unput (*p);
+			*p = 0;
+			break;
+		}
+		/* upcase */
+		*p = toupper (*p);
 	}
-      /* upcase */
-      *p = toupper (*p);
-    }
 
-  yylval = cb_build_picture (text);
-  return PICTURE;
+	yylval = cb_build_picture (text);
+	return PICTURE;
 }
 
 static void
@@ -432,8 +433,8 @@ count_lines (char *text)
 {
 	char *p;
 
-	for ( p = text; *p; p++ ) {
-		if ( *p == '\n' ) {
+	for (p = text; *p; p++) {
+		if (*p == '\n') {
 			cb_source_line++;
 		}
 	}

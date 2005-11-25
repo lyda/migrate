@@ -35,6 +35,9 @@
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
+#ifdef	HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
 #include <unistd.h>
 #include <sys/stat.h>
 
@@ -67,8 +70,16 @@
 #if HAVE_DB4_3_DB_185_H
 #include <db4.3/db_185.h>
 #else
+#if HAVE_DB4_4_DB_185_H
+#include <db4.4/db_185.h>
+#else
+#if HAVE_DB4_5_DB_185_H
+#include <db4.5/db_185.h>
+#else
 #if HAVE_DB_H
 #include <db.h>
+#endif
+#endif
 #endif
 #endif
 #endif
@@ -96,8 +107,6 @@
 #endif
 
 cob_file		*cob_error_file;
-
-static cob_fileio_funcs	*fileio_funcs[COB_ORG_MAX];
 
 static int		eop_status = 0;
 int			cob_check_eop = 0;
@@ -131,6 +140,24 @@ static const int	status_exception[] = {
 };
 
 
+static int dummy_rn_rew_del (cob_file *f);
+static int dummy_read (cob_file *f, cob_field *key);
+static int dummy_start (cob_file *f, int cond, cob_field *key);
+static int file_open (cob_file *f, char *filename, int mode, int opt);
+static int file_close (cob_file *f, int opt);
+static int file_write_opt (cob_file *f, int opt);
+static int sequential_read (cob_file *f);
+static int sequential_write (cob_file *f, int opt);
+static int sequential_rewrite (cob_file *f);
+static int lineseq_read (cob_file *f);
+static int lineseq_write (cob_file *f, int opt);
+static int relative_start (cob_file *f, int cond, cob_field *k);
+static int relative_read (cob_file *f, cob_field *k);
+static int relative_read_next (cob_file *f);
+static int relative_write (cob_file *f, int opt);
+static int relative_rewrite (cob_file *f);
+static int relative_delete (cob_file *f);
+
 #ifdef	WITH_DB
 
 #define DB_PUT(db,flags)	db->put (db, &p->key, &p->data, flags)
@@ -150,8 +177,123 @@ struct indexed_file {
 	DB **db;		/* database handlers */
 	DBT key, data;
 };
+static int indexed_open (cob_file *f, char *filename, int mode, int flag);
+static int indexed_close (cob_file *f, int opt);
+static int indexed_start (cob_file *f, int cond, cob_field *key);
+static int indexed_read (cob_file *f, cob_field *key);
+static int indexed_read_next (cob_file *f);
+static int indexed_write_internal (cob_file *f);
+static int indexed_write (cob_file *f, int opt);
+static int indexed_delete (cob_file *f);
+static int indexed_rewrite (cob_file *f);
+static int sort_open (cob_file *f, char *filename, int mode, int flag);
+static int sort_close (cob_file *f, int opt);
+static int sort_read (cob_file *f);
+static int sort_write (cob_file *f, int opt);
 
-#endif
+
+static const cob_fileio_funcs indexed_funcs = {
+	indexed_open,
+	indexed_close,
+	indexed_start,
+	indexed_read,
+	indexed_read_next,
+	indexed_write,
+	indexed_rewrite,
+	indexed_delete
+};
+
+
+static const cob_fileio_funcs sort_funcs = {
+	sort_open,
+	sort_close,
+	dummy_start,
+	dummy_read,
+	sort_read,
+	sort_write,
+	dummy_rn_rew_del,
+	dummy_rn_rew_del
+};
+
+#else	/* WITH_DB */
+
+static int
+dummy_open (cob_file *f, char *filename, int mode, int opt)
+{
+	return COB_NOT_CONFIGURED;
+}
+
+static int
+dummy_write_close (cob_file *f, int opt)
+{
+	return COB_NOT_CONFIGURED;
+}
+
+
+static cob_fileio_funcs indexed_funcs = {
+	dummy_open,
+	dummy_write_close,
+	dummy_start,
+	dummy_read,
+	dummy_rn_rew_del,
+	dummy_write_close,
+	dummy_rn_rew_del,
+	dummy_rn_rew_del
+};
+static cob_fileio_funcs sort_funcs = {
+	dummy_open,
+	dummy_write_close,
+	dummy_start,
+	dummy_read,
+	dummy_rn_rew_del,
+	dummy_write_close,
+	dummy_rn_rew_del,
+	dummy_rn_rew_del
+};
+
+#endif	/* WITH_DB */
+
+
+static const cob_fileio_funcs sequential_funcs = {
+	file_open,
+	file_close,
+	dummy_start,
+	dummy_read,
+	sequential_read,
+	sequential_write,
+	sequential_rewrite,
+	dummy_rn_rew_del
+};
+
+static const cob_fileio_funcs lineseq_funcs = {
+	file_open,
+	file_close,
+	dummy_start,
+	dummy_read,
+	lineseq_read,
+	lineseq_write,
+	dummy_rn_rew_del,
+	dummy_rn_rew_del
+};
+
+static const cob_fileio_funcs relative_funcs = {
+	file_open,
+	file_close,
+	relative_start,
+	relative_read,
+	relative_read_next,
+	relative_write,
+	relative_rewrite,
+	relative_delete
+};
+
+static const cob_fileio_funcs	*fileio_funcs[COB_ORG_MAX] = {
+	&sequential_funcs,
+	&lineseq_funcs,
+	&relative_funcs,
+	&indexed_funcs,
+	&sort_funcs
+};
 
 static void
 cob_sync (cob_file *f, int mode)
@@ -169,7 +311,7 @@ cob_sync (cob_file *f, int mode)
 				fsync (p->db[i]->fd (p->db[i]));
 			}
 		}
-#endif
+#endif	/* WITH_DB */
 		return;
 	}
 	if ( f->organization != COB_ORG_SORT ) {
@@ -266,21 +408,6 @@ file_linage_check (cob_file *f)
 	}
 	return 0;
 }
-
-#ifdef	WITH_DB
-#else
-static int
-dummy_open (cob_file *f, char *filename, int mode, int opt)
-{
-	return COB_NOT_CONFIGURED;
-}
-
-static int
-dummy_write_close (cob_file *f, int opt)
-{
-	return COB_NOT_CONFIGURED;
-}
-#endif
 
 static int
 dummy_rn_rew_del (cob_file *f)
@@ -559,17 +686,6 @@ sequential_rewrite (cob_file *f)
 	return COB_STATUS_00_SUCCESS;
 }
 
-static cob_fileio_funcs sequential_funcs = {
-	file_open,
-	file_close,
-	dummy_start,
-	dummy_read,
-	sequential_read,
-	sequential_write,
-	sequential_rewrite,
-	dummy_rn_rew_del
-};
-
 /*
  * LINE SEQUENTIAL
  */
@@ -651,17 +767,6 @@ lineseq_write (cob_file *f, int opt)
 	}
 	return COB_STATUS_00_SUCCESS;
 }
-
-static cob_fileio_funcs lineseq_funcs = {
-	file_open,
-	file_close,
-	dummy_start,
-	dummy_read,
-	lineseq_read,
-	lineseq_write,
-	dummy_rn_rew_del,
-	dummy_rn_rew_del
-};
 
 /*
  * RELATIVE
@@ -827,17 +932,6 @@ relative_delete (cob_file *f)
 	fseek (f->file, (off_t) f->record_max, SEEK_CUR);
 	return COB_STATUS_00_SUCCESS;
 }
-
-static cob_fileio_funcs relative_funcs = {
-	file_open,
-	file_close,
-	relative_start,
-	relative_read,
-	relative_read_next,
-	relative_write,
-	relative_rewrite,
-	relative_delete
-};
 
 /*
  * INDEXED
@@ -1138,17 +1232,6 @@ indexed_rewrite (cob_file *f)
 	return ret;
 }
 
-static cob_fileio_funcs indexed_funcs = {
-	indexed_open,
-	indexed_close,
-	indexed_start,
-	indexed_read,
-	indexed_read_next,
-	indexed_write,
-	indexed_rewrite,
-	indexed_delete
-};
-
 /*
  * SORT
  */
@@ -1246,40 +1329,6 @@ sort_write (cob_file *f, int opt)
 	}
 	return COB_STATUS_00_SUCCESS;
 }
-
-static cob_fileio_funcs sort_funcs = {
-	sort_open,
-	sort_close,
-	dummy_start,
-	dummy_read,
-	sort_read,
-	sort_write,
-	dummy_rn_rew_del,
-	dummy_rn_rew_del
-};
-
-#else
-
-static cob_fileio_funcs indexed_funcs = {
-	dummy_open,
-	dummy_write_close,
-	dummy_start,
-	dummy_read,
-	dummy_rn_rew_del,
-	dummy_write_close,
-	dummy_rn_rew_del,
-	dummy_rn_rew_del
-};
-static cob_fileio_funcs sort_funcs = {
-	dummy_open,
-	dummy_write_close,
-	dummy_start,
-	dummy_read,
-	dummy_rn_rew_del,
-	dummy_write_close,
-	dummy_rn_rew_del,
-	dummy_rn_rew_del
-};
 
 #endif	/* WITH_DB */
 
@@ -1645,32 +1694,39 @@ cob_delete (cob_file *f)
 
 static const unsigned char *old_sequence;
 
+#ifndef _WIN32
+static int	cob_iteration = 0;
+static pid_t	cob_process_id = 0;
+#endif
+
 void
 cob_sort_init (cob_file *f, int nkeys, const unsigned char *collating_sequence)
 {
 	char	*s;
-	char	tmpdir[FILENAME_MAX];
 	char	filename[FILENAME_MAX];
+
+
+#ifdef _WIN32
+	char	tmpdir[FILENAME_MAX];
 
 	/* get temporary directory */
 	if ((s = getenv ("TMPDIR")) != NULL || (s = getenv ("TMP")) != NULL) {
 		strcpy (tmpdir, s);
 	} else {
-#ifdef _WIN32
 		GetTempPath (FILENAME_MAX, tmpdir);
-#else
-		strcpy (tmpdir, "/tmp");
-#endif
 	}
-
 	/* get temporary file name */
-#ifdef _WIN32
 	GetTempFileName (tmpdir, "cob", 0, filename);
 	DeleteFile (filename);
 #else
-	sprintf (filename, "%s/cobXXXXXX", tmpdir);
-	close (mkstemp (filename));
-	unlink (filename);
+	if ((s = getenv ("TMPDIR")) == NULL && (s = getenv ("TMP")) == NULL) {
+		s = "/tmp";
+	}
+	if ( cob_process_id == 0 ) {
+		cob_process_id = getpid();
+	}
+	sprintf (filename, "%s/cobsort%d_%d", s, cob_process_id, cob_iteration);
+	cob_iteration++;
 #endif
 
 	f->assign->size = strlen (filename);
@@ -1814,12 +1870,6 @@ void
 cob_init_fileio (void)
 {
 	char	*s;
-
-	fileio_funcs[COB_ORG_SEQUENTIAL] = &sequential_funcs;
-	fileio_funcs[COB_ORG_LINE_SEQUENTIAL] = &lineseq_funcs;
-	fileio_funcs[COB_ORG_RELATIVE] = &relative_funcs;
-	fileio_funcs[COB_ORG_INDEXED] = &indexed_funcs;
-	fileio_funcs[COB_ORG_SORT] = &sort_funcs;
 
 	if ((s = getenv ("COB_SYNC")) != NULL) {
 		if ( *s == 'Y' || *s == 'y' ) {
