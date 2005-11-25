@@ -129,7 +129,11 @@ AC_DEFINE_UNQUOTED(PATCH_LEVEL, $PATCH_LEVEL)
 save_libs="$LIBS"
 
 # Checks for getopt_long.
-AC_CHECK_FUNC([getopt_long_only], ,
+# Cygwin has getopt_long_only prototype in kpathsea/getopt.h
+# FreeBSD has gnugetopt library - needs checking
+
+AC_CHECK_FUNC([getopt_long_only],
+  [AC_CHECK_HEADERS([kpathsea/getopt.h getopt.h], [], [])],
   [AC_LIBOBJ(getopt)
    AC_LIBOBJ(getopt1)
    AC_LIBSOURCE(getopt.h)])

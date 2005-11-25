@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2005-11-25 10:55+0100\n"
+"POT-Creation-Date: 2005-11-25 17:29+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: cobc/cobc.c:314
+#: cobc/cobc.c:323
 msgid ""
 "Options:\n"
 "  --help                Display this message\n"
@@ -34,6 +34,7 @@ msgid ""
 "                          cobol85     Cobol 85\n"
 "                          ibm         IBM Compatible\n"
 "                          mvs         MVS Compatible\n"
+"                          bs2000      BS2000 Compatible\n"
 "                          mf          Micro Focus Compatible\n"
 "                          v023        Open Cobol V23 Compatible "
 "(deprecated)\n"
@@ -56,12 +57,12 @@ msgid ""
 "  -Wall                 Enable all warnings"
 msgstr ""
 
-#: cobc/cobc.c:441
+#: cobc/cobc.c:451
 #, c-format
 msgid "Invalid option -std=%s\n"
 msgstr ""
 
-#: cobc/cobc.c:736
+#: cobc/cobc.c:746
 msgid "-MT must be given to specify target file\n"
 msgstr ""
 

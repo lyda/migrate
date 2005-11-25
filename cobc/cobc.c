@@ -36,11 +36,20 @@
 #include <windows.h>		/* for GetTempPath, GetTempFileName */
 #endif
 
+#ifdef	HAVE_KPATHSEA_GETOPT_H
+#include <kpathsea/getopt.h>
+#else
+#ifdef	HAVE_GETOPT_H
+#include <getopt.h>
+#else
+#include "lib/getopt.h"
+#endif
+#endif
+
 #include <libcob.h>
 
 #include "cobc.h"
 #include "tree.h"
-#include "lib/getopt.h"
 
 /*
  * Global variables
@@ -327,6 +336,7 @@ print_usage (void)
 		"                          cobol85     Cobol 85\n"
 		"                          ibm         IBM Compatible\n"
 		"                          mvs         MVS Compatible\n"
+		"                          bs2000      BS2000 Compatible\n"
 		"                          mf          Micro Focus Compatible\n"
 		"                          v023        Open Cobol V23 Compatible (deprecated)\n"
 		"                          default     When not specified\n"

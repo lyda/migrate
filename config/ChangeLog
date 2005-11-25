@@ -1,3 +1,8 @@
+2005-11-25  Roger While <simrw@sim-basis.de>
+
+	* New variable - sticky-linkage
+	  New config file - bs2000.conf
+
 2005-11-05  Roger While <simrw@sim-basis.de>
 
 	* New variable - perform-osvs

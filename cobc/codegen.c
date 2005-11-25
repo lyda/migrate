@@ -2554,14 +2554,22 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   output_newline ();
 
   /* linkage section */
-  for (f = prog->linkage_storage; f; f = f->sister)
-    {
-      for (l = parameter_list; l; l = CB_CHAIN (l))
-	if (f == cb_field (CB_VALUE (l)))
+  for (f = prog->linkage_storage; f; f = f->sister) {
+      for (l = parameter_list; l; l = CB_CHAIN (l)) {
+	if (f == cb_field (CB_VALUE (l))) {
 	  break;
-      if (l == NULL)
-	output_line ("unsigned char *%s%d = NULL;", CB_PREFIX_BASE, f->id);
-    }
+	}
+      }
+      if (l == NULL) {
+	if (cb_sticky_linkage) {
+		output_line ("static unsigned char *%s%d = NULL;",
+				CB_PREFIX_BASE, f->id);
+	} else {
+		output_line ("unsigned char *%s%d = NULL;",
+				CB_PREFIX_BASE, f->id);
+	}
+      }
+  }
   output_newline ();
 
   /* screens */

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2005-11-25 10:55+0100\n"
+"POT-Creation-Date: 2005-11-25 17:29+0100\n"
 "PO-Revision-Date: 2004-08-01 23:55+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: cobc/cobc.c:314
+#: cobc/cobc.c:323
 #, fuzzy
 msgid ""
 "Options:\n"
@@ -35,6 +35,7 @@ msgid ""
 "                          cobol85     Cobol 85\n"
 "                          ibm         IBM Compatible\n"
 "                          mvs         MVS Compatible\n"
+"                          bs2000      BS2000 Compatible\n"
 "                          mf          Micro Focus Compatible\n"
 "                          v023        Open Cobol V23 Compatible "
 "(deprecated)\n"
@@ -83,12 +84,12 @@ msgstr ""
 "\n"
 "  -Wall                 全てのワーニングを有効にする"
 
-#: cobc/cobc.c:441
+#: cobc/cobc.c:451
 #, c-format
 msgid "Invalid option -std=%s\n"
 msgstr "不当なオプションです -std=%s\n"
 
-#: cobc/cobc.c:736
+#: cobc/cobc.c:746
 msgid "-MT must be given to specify target file\n"
 msgstr "ターゲットファイルを -MT で指定して下さい\n"
 

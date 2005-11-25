@@ -1,7 +1,8 @@
 2005-11-25  Roger While <simrw@sim-basis.de>
 
 	* configure.ac : Fix typos, cater for DB 4.4 and 4.5
-			 Check for signal.h and systypes.h
+			 Check for signal.h and sys/types.h
+			 Clean up getopt
 
 2005-11-06  Roger While <simrw@sim-basis.de>
 
