@@ -175,8 +175,8 @@ cb_check_integer_value (cb_tree x)
 void
 cb_build_registers (void)
 {
-	time_t t;
-	char buff[24];
+	time_t	t;
+	char	buff[24];
 
 	/* RETURN-CODE */
 	cb_return_code = cb_build_index (cb_build_reference ("RETURN-CODE"));
@@ -230,9 +230,9 @@ cb_build_registers (void)
 char *
 cb_encode_program_id (const char *name)
 {
-	char buff[FILENAME_MAX];
-	char *p = buff;
-	const char *s = name;
+	char		buff[FILENAME_MAX];
+	char		*p = buff;
+	const char	*s = name;
 
 	/* encode the initial digit */
 	if (isdigit (*s))
@@ -370,10 +370,10 @@ cb_build_index (cb_tree x)
 cb_tree
 cb_build_identifier (cb_tree x)
 {
-	struct cb_reference *r;
-	struct cb_field *f;
-	const char *name;
-	cb_tree v;
+	struct cb_reference	*r;
+	struct cb_field		*f;
+	const char		*name;
+	cb_tree			v;
 
 	if (x == cb_error_node)
 		return cb_error_node;
@@ -544,9 +544,9 @@ cb_build_length_1 (cb_tree x)
 cb_tree
 cb_build_length (cb_tree x)
 {
-	cb_tree temp;
+	cb_tree		temp;
 	struct cb_field *f;
-	char buff[64];
+	char		buff[64];
 
 	if (x == cb_error_node)
 		return cb_error_node;

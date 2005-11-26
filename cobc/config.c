@@ -57,20 +57,20 @@ static struct {
 	void			*var;
 	char			*val;
 } config_table[] = {
-	{STRING, "include", 0, 0},
-	{STRING, "not-reserved", 0, 0},
+	{STRING, "include", NULL, NULL},
+	{STRING, "not-reserved", NULL, NULL},
 #undef CB_CONFIG_ANY
 #undef CB_CONFIG_INT
 #undef CB_CONFIG_STRING
 #undef CB_CONFIG_BOOLEAN
 #undef CB_CONFIG_SUPPORT
-#define CB_CONFIG_ANY(type,var,name)	{ANY, name, &var, 0},
-#define CB_CONFIG_INT(var,name)		{INT, name, &var, 0},
-#define CB_CONFIG_STRING(var,name)	{STRING, name, &var, 0},
-#define CB_CONFIG_BOOLEAN(var,name)	{BOOLEAN, name, &var, 0},
-#define CB_CONFIG_SUPPORT(var,name)	{SUPPORT, name, &var, 0},
+#define CB_CONFIG_ANY(type,var,name)	{ANY, name, &var, NULL},
+#define CB_CONFIG_INT(var,name)		{INT, name, &var, NULL},
+#define CB_CONFIG_STRING(var,name)	{STRING, name, &var, NULL},
+#define CB_CONFIG_BOOLEAN(var,name)	{BOOLEAN, name, &var, NULL},
+#define CB_CONFIG_SUPPORT(var,name)	{SUPPORT, name, &var, NULL},
 #include "config.def"
-	{0, 0, 0}
+	{0, NULL, NULL, NULL}
 };
 
 static char *

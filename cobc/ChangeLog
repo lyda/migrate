@@ -5,6 +5,7 @@
 		   Tidy cleanup code
 		   Add in bs2000 to help text
 		   getopt includes
+		   Put back in -fno-gcse
 	  codegen.c : Preliminary sticky-linkage code
 		      Further mods for perform-osvs
 

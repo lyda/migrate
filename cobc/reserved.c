@@ -795,6 +795,7 @@ static int
 hash (const char *s)
 {
 	int	val = 0;
+
 	for (; *s; s++) {
 		val += toupper (*s);
 	}
@@ -841,7 +842,7 @@ lookup_reserved_word (const char *name)
 struct cb_intrinsic_table *
 lookup_intrinsic (const char *name)
 {
-	int i;
+	int				i;
 	struct cb_intrinsic_table	*cbp;
 
 	i = 0;
@@ -862,6 +863,7 @@ void
 cb_list_reserved (void)
 {
 	int	i;
+
 	for (i = 0; reserved_words[i].name; i++) {
 		puts (reserved_words[i].name);
 	}
