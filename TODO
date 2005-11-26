@@ -2,77 +2,28 @@ OpenCOBOL TODO						-*- outline -*-
 
 1 Pending requests
 
-1.1 Check /usr/local for library and header files in configure
+1.1 Handling of EBCDIC files
 
-1.2 Set COB_CONFIG_DIR properly under MINGW.
-
-1.3 PROCEDURE DIVISION USING BY CONTENT etc.
-
-1.4 Parameter passing to the main program
-
-If a main program has a USING clause, how should we pass parameters
-to it?  Command line arguments or environment variables?  What other
-compilers do?
-
-1.5 Handling of EBCDIC files
-
-1.6 The default action of file exception
-
-If a file does not have FILE STATUS, and if there is no USE AFTER
-ERROR in the program, then the program should stop on exception.
-
-On the other hand, if a file does have FILE STATUS, maybe we should
-not report error on exception.
-
-1.7 Check the record size
-
-READ statement should check the record size.
-
-1.8 Better ACCEPT
-(2003-11-15: possibly bug: accept into numeric field)
-
-Accepting numeric data item should be more user friendly.
-
-1.9 COBOL run program
-(2003-11-17: Open Cobol Optimization)
-
-Instead of building an executable from a COBOL source file, we
-could always build modules (*.so files) and run them through
-a boot program.  Roger While posted a sample program and some
-observation about it to the list.
-
-1.10 Partial word replacement
-(2004-02-03 minor preprocessor bug)
-
-Partial word replacement by the COPY statement.  I have heard about
-another compiler having a form COPY REPLACING //..// BY //..//,
-which does partial word replacement?
-
-1.11 Listing file
+1.2 Listing file
 (2004-02-13: BUG: "COPY REPLACING ..."  and  REQUEST for "mini-listing")
 
-1.12 Partial expression in the EVALUATE statement
+1.3 Partial expression in the EVALUATE statement
 (2004-02-19: feature request:  EVALUATE: partial-expression)
 
-1.13 READ ... PREVIOUS
+1.4 READ ... PREVIOUS
 
-1.14 And many bugs reported recently
+1.5 many bugs reported recently
 
 2 Other features to be implemented
 
-2.1 Intrinsic functions
-
-Before implementing intrinsic functions, we need to implement
-"Intermediate data storage" described below.
-
 2.2 Nested subprograms
 
-Before implementing nested subprograms, I would like to review
-the way of generating C variables.  See "Single file output" below.
+On the way.
 
 2.3 SCREEN SECTION
 
-Too many things to do.  TinyCOBOL has better support of this.
+COBOL 2002 has defined extended ACCEPT/DISPLAY.
+We can do this eventually.
 
 2.4 Embedded SQL
 
@@ -84,10 +35,7 @@ for their database.
 
 2.5 New backends for INDEXED files
 
- - Any alternative to BerkeleyDB?
- - Use DB (PostgreSQM, MySQL, etc.) as backends
-
-2.6 Floating points (USAGE COMP-1, COMP-2, FLOAT-SHORT, etc.)
+ - Look at C-ISAM replacements
 
 3 Improvement of compiler internals
 
@@ -134,159 +82,13 @@ into the following internal code:
   cob_move (t1, t2)
   cob_move (t1, t3)
 
-3.3 Single file output
-
-Currently, cobc generates two C files.  I want to integrate them
-into a single file.
-
-3.4 Better exception handling of file I/O
-
-Currently, all file I/O statements (OPEN, CLOSE, READ, WRITE, etc.)
-produces implicit PERFORM statements in order to run USE EXCEPTION.
-This produces lots of redundant code and should be improved.
-
-3.5 Reimplement CALL statement
-
-3.6 Build RETURN-CODE as a binary item, not an index
-
-3.7 Using fcntl instead of flock for file locking
-
-3.8 Move reserved word table into the config file
-
 4 Optimization
 
 4.1 More inlining of run-time functions
+See own_memcpy, own_memcmp
+Needs more investigation
 
-Especially, cob_move, cob_get_int, and cob_cmp should be inlined for
-each data type.  A good way of doing this would be to define macros
-for each type and use them in both the run time and the generated code.
-For example, cob_get_int might be defined as follows:
-
-#define cob_get_int_display_u1(b) ((int) (b[0] - '0'))
-#define cob_get_int_display_u2(b) ((int) (b[0] - '0') * 10 + (b[1] - '0'))
-...
-
-#define cob_get_int_binary_u1(b) ((int) *(unsigned char *)b)
-#define cob_get_int_binary_u2(b) ((int) *(unsigned short *)b)
-...
-
-int cob_get_int (cob_field *f)
-{
-  switch (f->type)
-    {
-    case COB_TYPE_NUMERIC_DISPLAY:
-      if (!COB_FIELD_HAVE_SIGN (f))
-        switch (f->size)
-          {
-	  case 1:
-	    return cob_get_int_display_u1 (f->data);
-	  case 2:
-	    return cob_get_int_display_u2 (f->data);
-	  ...
-	  }
-      else
-        ...
-    case COB_TYPE_NUMERIC_BINARY:
-      if (!COB_FIELD_HAVE_SIGN (f))
-        switch (f->size)
-          {
-	  case 1:
-	    return cob_get_int_binary_u1 (f->data);
-	  case 2:
-	    return cob_get_int_binary_u2 (f->data);
-	  ...
-	  }
-      else
-        ...
-    }
-}
-
-After doing this, the compiler may directly generate one of the
-macro instead of the general purpose function.
-
-4.2 Constant field allocation
-
-When a run-time function is called, a field information is packed
-into a C structure and passed to the function.  For example, the
-following COBOL code
-
-  01 X PIC X.
-
-  DISPLAY X.
-
-produces something like this:
-
-  unsigned char b_X[1];
-  cob_field_attr a_X = {COB_TYPE_ALPHANUMERIC, ...};
-  cob_field f_X;
-
-  f_X = (cob_field) {1, b_X, &a_X};
-  cob_display (&f_X);
-
-Now, there are four ways of doing this:
-
- 1. Temporary assignment
-
-      cob_field f_temp;
-      f_temp = (cob_field) {1, b_X, &a_X};
-      cob_display (&f_temp);
-
-    Set a field when necessary.
-
- 2. Compound literals
-
-      cob_display (&(cob_field){1, b_X, &a_X});
-
-    In this case, the variable f_X is unnecessary, and
-    the C compiler seems to produce better code than 1.
-
-    This syntax is supported by recent GCC and C99, but
-    not all C compilers support this.  We should use this
-    instead of 1 when possible.
-
- 3. Local variable
-
-      int func ()
-      {
-        const cob_field f_X = {1, b_X, &a_X};
-
-        ...
-
-        cob_display (&f_X);
-
-        ...
-      }
-
-    If X is used several times, it might be better to
-    allocate a variable once at the beginning and use it
-    where necessary.  This way you can save the time of
-    assignment and reduce the code size.
-
- 4. Static variable
-
-      static const cob_field f_X = {1, b_X, &a_X};
-
-      int func ()
-      {
-        ...
-
-        cob_display (&f_X);
-
-        ...
-      }
-
-    Similar to 3 but allocate it as a static variable.
-    If the data address of the field (`b_X' in this case)
-    is static, you can also allocate the field statically.
-
-If an identifier contains subscripts and reference modification,
-or if the data item is variable length, then you have to use 1 or 2.
-Otherwise, if the data item is defined in working-storage section,
-you can use 4.  Otherwise, you can use 3.
-
-Currently, cobc use 1 and 4.  We should also implement 2 and 3.
-
-4.3 Flow analysis and function separation
+4.2
 
 Currently, cobc translates a COBOL program into a single huge
 C function.  There are two problems with doing this:
@@ -363,6 +165,10 @@ executed.  We could instead produce the following code:
 
 In this case, you'll get all three function calls executed at once.
 
+NOTE - (Roger While) - Considering an alternate call.
+NOTE - See typeck.c (not activated code) - This will work
+
+
 5.2 Data access method
 
 We should generate all data hierarchy defined in a COBOL program
@@ -372,15 +178,6 @@ that receive a data name and displays its value, using the generated
 data hierarchy.  By calling the function from gdb, we can easily
 access to the COBOL data at debugging time.
 
-6 IDE
+6 Better user manual
 
-6.1 Can we use Eclipse?
-
-7 Documentation
-
-7.1 Better web page
-
-We should at least states the goal of open-cobol, what open-cobol
-can and cannot do now, and what is going on now.
-
-7.2 Better user manual
+Yes, we should
