@@ -839,9 +839,14 @@ output_param (cb_tree x, int id)
 	if (r->check)
 	  {
 	    cb_tree l;
+	    int sav_stack_id;
+
 	    output_indent (" ({");
-	    for (l = r->check; l; l = CB_CHAIN (l))
-	      output_stmt (CB_VALUE (l));
+	    for (l = r->check; l; l = CB_CHAIN (l)) {
+		sav_stack_id = stack_id;
+		output_stmt (CB_VALUE (l));
+		stack_id = sav_stack_id;
+	    }
 	  }
 
 	for ( pechk = f->parent; pechk; pechk = pechk->parent ) {

@@ -1584,9 +1584,11 @@ cb_emit_cancel (cb_tree prog)
 void
 cb_emit_close (cb_tree file, cb_tree opt)
 {
-	file = cb_ref (file);
-	current_statement->file = file;
-	cb_emit (cb_build_funcall_2 ("cob_close", file, opt));
+	if ( file != cb_error_node ) {
+		file = cb_ref (file);
+		current_statement->file = file;
+		cb_emit (cb_build_funcall_2 ("cob_close", file, opt));
+	}
 }
 
 /*
@@ -1596,9 +1598,11 @@ cb_emit_close (cb_tree file, cb_tree opt)
 void
 cb_emit_delete (cb_tree file)
 {
-	file = cb_ref (file);
-	current_statement->file = file;
-	cb_emit (cb_build_funcall_1 ("cob_delete", file));
+	if ( file != cb_error_node ) {
+		file = cb_ref (file);
+		current_statement->file = file;
+		cb_emit (cb_build_funcall_1 ("cob_delete", file));
+	}
 }
 
 /*
@@ -2599,17 +2603,19 @@ cb_emit_move (cb_tree src, cb_tree dsts)
 void
 cb_emit_open (cb_tree file, cb_tree mode, cb_tree sharing)
 {
-	file = cb_ref (file);
-	current_statement->file = file;
+	if (file != cb_error_node) {
+		file = cb_ref (file);
+		current_statement->file = file;
 
-	if (sharing == NULL)
-		sharing = CB_FILE (file)->sharing ? CB_FILE (file)->sharing : cb_int0;
+		if (sharing == NULL)
+			sharing = CB_FILE (file)->sharing ? CB_FILE (file)->sharing : cb_int0;
 
-	if (sharing == cb_int0	/* READ ONLY */
-	    && CB_INTEGER (mode)->val != COB_OPEN_INPUT)
-		sharing = cb_int1;
+		if (sharing == cb_int0	/* READ ONLY */
+		    && CB_INTEGER (mode)->val != COB_OPEN_INPUT)
+			sharing = cb_int1;
 
-	cb_emit (cb_build_funcall_3 ("cob_open", file, mode, sharing));
+		cb_emit (cb_build_funcall_3 ("cob_open", file, mode, sharing));
+	}
 }
 
 /*
@@ -2671,21 +2677,23 @@ cb_build_perform_exit (struct cb_label * label)
 void
 cb_emit_read (cb_tree ref, cb_tree next, cb_tree into, cb_tree key)
 {
-	cb_tree file = cb_ref (ref);
-	cb_tree rec = cb_build_field_reference (CB_FILE (file)->record, ref);
+	if (ref != cb_error_node) {
+		cb_tree file = cb_ref (ref);
+		cb_tree rec = cb_build_field_reference (CB_FILE (file)->record, ref);
 
-	if (next == cb_int1 || CB_FILE (file)->access_mode == COB_ACCESS_SEQUENTIAL) {
-		/* READ NEXT */
-		if (key)
-			cb_warning (_("KEY ignored with sequential READ"));
-		cb_emit (cb_build_funcall_2 ("cob_read", file, cb_int0));
-	} else {
-		/* READ */
-		cb_emit (cb_build_funcall_2 ("cob_read", file, key ? key : CB_FILE (file)->key));
+		if (next == cb_int1 || CB_FILE (file)->access_mode == COB_ACCESS_SEQUENTIAL) {
+			/* READ NEXT */
+			if (key)
+				cb_warning (_("KEY ignored with sequential READ"));
+			cb_emit (cb_build_funcall_2 ("cob_read", file, cb_int0));
+		} else {
+			/* READ */
+			cb_emit (cb_build_funcall_2 ("cob_read", file, key ? key : CB_FILE (file)->key));
+		}
+		if (into)
+			cb_emit (cb_build_move (rec, into));
+		current_statement->file = file;
 	}
-	if (into)
-		cb_emit (cb_build_move (rec, into));
-	current_statement->file = file;
 }
 
 /*
@@ -2695,12 +2703,14 @@ cb_emit_read (cb_tree ref, cb_tree next, cb_tree into, cb_tree key)
 void
 cb_emit_rewrite (cb_tree record, cb_tree from)
 {
-	cb_tree file = CB_TREE (CB_FIELD (cb_ref (record))->file);
+	if (record != cb_error_node) {
+		cb_tree file = CB_TREE (CB_FIELD (cb_ref (record))->file);
 
-	current_statement->file = file;
-	if (from)
-		cb_emit (cb_build_move (from, record));
-	cb_emit (cb_build_funcall_2 ("cob_rewrite", file, record));
+		current_statement->file = file;
+		if (from)
+			cb_emit (cb_build_move (from, record));
+		cb_emit (cb_build_funcall_2 ("cob_rewrite", file, record));
+	}
 }
 
 /*
@@ -2977,9 +2987,11 @@ cb_emit_sort_finish (cb_tree file)
 void
 cb_emit_start (cb_tree file, cb_tree op, cb_tree key)
 {
-	current_statement->file = cb_ref (file);
-	cb_emit (cb_build_funcall_3 ("cob_start", cb_ref (file), op,
-				     key ? key : CB_FILE (cb_ref (file))->key));
+	if ( file != cb_error_node ) {
+		current_statement->file = cb_ref (file);
+		cb_emit (cb_build_funcall_3 ("cob_start", cb_ref (file), op,
+					     key ? key : CB_FILE (cb_ref (file))->key));
+	}
 }
 
 /*

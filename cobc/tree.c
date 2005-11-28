@@ -1133,7 +1133,10 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 	CB_FIELD (x)->values = cb_list (cb_zero);
 	CB_FIELD (x)->count++;
 	cb_validate_field (CB_FIELD (x));
+/*
 	f->linage_ctr = x;
+*/
+	f->linage_ctr = cb_build_field_reference (CB_FIELD (x), 0);
 	current_program->working_storage =
 		cb_field_add (current_program->working_storage, CB_FIELD (x));
   }

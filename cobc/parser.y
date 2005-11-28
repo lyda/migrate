@@ -1851,8 +1851,8 @@ close_list:
 | close_list
   file_name close_option
   {
-    BEGIN_IMPLICIT_STATEMENT ();
-    cb_emit_close ($2, $3);
+	BEGIN_IMPLICIT_STATEMENT ();
+	cb_emit_close ($2, $3);
   }
 ;
 close_option:
@@ -2350,8 +2350,10 @@ open_list:
     cb_tree l;
     for (l = $4; l; l = CB_CHAIN (l))
       {
-	BEGIN_IMPLICIT_STATEMENT ();
-	cb_emit_open (CB_VALUE (l), $2, $3);
+	if ( CB_VALUE (l) != cb_error_node ) {
+		BEGIN_IMPLICIT_STATEMENT ();
+		cb_emit_open (CB_VALUE (l), $2, $3);
+	}
       }
   }
 ;
@@ -3218,6 +3220,9 @@ linage_counter:
   {
 	if ( current_linage > 1 ) {
 		cb_error ("LINAGE-COUNTER must be qualified here");
+		$$ = cb_error_node;
+	} else if ( current_linage == 0 ) {
+		cb_error ("Invalid LINAGE-COUNTER usage");
 		$$ = cb_error_node;
 	} else {
 		$$ = linage_file->linage_ctr;
