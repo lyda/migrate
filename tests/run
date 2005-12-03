@@ -10942,7 +10942,7 @@ cat >prog.cob <<'_ATEOF'
        01  Y   PIC   S99V9(16)   COMP.
        PROCEDURE        DIVISION.
            MOVE FUNCTION EXP ( 3 ) TO Y.
-           IF Y >= 20.0855369231876643 AND
+           IF Y >= 20.0855369231876636 AND
               Y <= 20.0855369231876644
                    DISPLAY "OK"
            ELSE

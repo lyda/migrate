@@ -28,6 +28,7 @@
 #ifdef	__MINGW32__
 #include <io.h>
 #include <fcntl.h>
+#undef	HAVE_SIGNAL_H
 #endif
 
 #ifdef	HAVE_SIGNAL_H

@@ -43,6 +43,7 @@
 
 #ifdef _WIN32
 #include <windows.h>		/* for GetTempPath, GetTempFileName */
+#define	fsync	_commit
 #endif
 
 #if HAVE_FCNTL_H
@@ -95,7 +96,7 @@
 #include "lib/gettext.h"
 
 #ifdef _WIN32
-#define SEEK_INIT(f)	fseek (f->file, 0, SEEK_CUR)
+#define SEEK_INIT(f)	fseek (f->file, (off_t)0, SEEK_CUR)
 #else
 #define SEEK_INIT(f)
 #endif
@@ -317,7 +318,7 @@ cob_sync (cob_file *f, int mode)
 	if ( f->organization != COB_ORG_SORT ) {
 		fflush (f->file);
 		if ( mode == 2 ) {
-			fsync (fileno (f->file));
+			fsync (fileno ((FILE *)f->file));
 		}
 	}
 }
@@ -448,8 +449,8 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 #ifndef	__MINGW32__
 		else if (f->organization == COB_ORG_LINE_SEQUENTIAL)
 			fp = fopen (filename, "w");
-		else
 #endif
+		else
 			fp = fopen (filename, "wb");
 		break;
 	case COB_OPEN_I_O:
@@ -529,7 +530,7 @@ file_close (cob_file *f, int opt)
 			lock.l_whence = SEEK_SET;
 			lock.l_start = 0;
 			lock.l_len = 0;
-			fcntl (fileno (f->file), F_SETLK, &lock);
+			fcntl (fileno ((FILE *)f->file), F_SETLK, &lock);
 		}
 #endif
 		/* close the file */

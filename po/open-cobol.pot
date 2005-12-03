@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2005-11-28 17:29+0100\n"
+"POT-Creation-Date: 2005-12-03 13:49+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -346,17 +346,17 @@ msgstr ""
 msgid "'%s' requires %d subscripts"
 msgstr ""
 
-#: cobc/typeck.c:436 libcob/common.c:877
+#: cobc/typeck.c:436 libcob/common.c:878
 #, c-format
 msgid "subscript of '%s' out of bounds: %d"
 msgstr ""
 
-#: cobc/typeck.c:488 libcob/common.c:888
+#: cobc/typeck.c:488 libcob/common.c:889
 #, c-format
 msgid "offset of '%s' out of bounds: %d"
 msgstr ""
 
-#: cobc/typeck.c:493 libcob/common.c:895
+#: cobc/typeck.c:493 libcob/common.c:896
 #, c-format
 msgid "length of '%s' out of bounds: %d"
 msgstr ""
@@ -671,112 +671,112 @@ msgstr ""
 msgid "cannot find module '%s'"
 msgstr ""
 
-#: libcob/common.c:292
+#: libcob/common.c:293
 msgid "warning: cob_init expected in the main program\n"
 msgstr ""
 
-#: libcob/common.c:318
+#: libcob/common.c:319
 msgid "Error - Version mismatch"
 msgstr ""
 
-#: libcob/common.c:319
+#: libcob/common.c:320
 #, c-format
 msgid "%s has version/patch level %s/%d"
 msgstr ""
 
-#: libcob/common.c:321
+#: libcob/common.c:322
 #, c-format
 msgid "Library has version/patch level %s/%d"
 msgstr ""
 
-#: libcob/common.c:855
+#: libcob/common.c:856
 #, c-format
 msgid "'%s' not numeric: '%s'"
 msgstr ""
 
-#: libcob/common.c:866
+#: libcob/common.c:867
 #, c-format
 msgid "OCCURS DEPENDING ON '%s' out of bounds: %d"
 msgstr ""
 
-#: libcob/common.c:910
+#: libcob/common.c:911
 #, c-format
 msgid "EXTERNAL item '%s' has size > %d"
 msgstr ""
 
-#: libcob/common.c:934
+#: libcob/common.c:935
 #, c-format
 msgid "Cannot acquire %d bytes of memory - Aborting"
 msgstr ""
 
-#: libcob/fileio.c:1805
+#: libcob/fileio.c:1806
 msgid "End of file"
 msgstr ""
 
-#: libcob/fileio.c:1808
+#: libcob/fileio.c:1809
 msgid "Key out of range"
 msgstr ""
 
-#: libcob/fileio.c:1811
+#: libcob/fileio.c:1812
 msgid "Key order not ascending"
 msgstr ""
 
-#: libcob/fileio.c:1814
+#: libcob/fileio.c:1815
 msgid "Record key already exists"
 msgstr ""
 
-#: libcob/fileio.c:1817
+#: libcob/fileio.c:1818
 msgid "Record key does not exist"
 msgstr ""
 
-#: libcob/fileio.c:1820
+#: libcob/fileio.c:1821
 msgid "Permanent file error"
 msgstr ""
 
-#: libcob/fileio.c:1823
+#: libcob/fileio.c:1824
 msgid "File does not exist"
 msgstr ""
 
-#: libcob/fileio.c:1826
+#: libcob/fileio.c:1827
 msgid "Permission denied"
 msgstr ""
 
-#: libcob/fileio.c:1829
+#: libcob/fileio.c:1830
 msgid "File already open"
 msgstr ""
 
-#: libcob/fileio.c:1832
+#: libcob/fileio.c:1833
 msgid "File not open"
 msgstr ""
 
-#: libcob/fileio.c:1835
+#: libcob/fileio.c:1836
 msgid "READ must be executed first"
 msgstr ""
 
-#: libcob/fileio.c:1838
+#: libcob/fileio.c:1839
 msgid "Record overflow"
 msgstr ""
 
-#: libcob/fileio.c:1841
+#: libcob/fileio.c:1842
 msgid "Failed to read"
 msgstr ""
 
-#: libcob/fileio.c:1844
+#: libcob/fileio.c:1845
 msgid "READ/START not allowed"
 msgstr ""
 
-#: libcob/fileio.c:1847
+#: libcob/fileio.c:1848
 msgid "WRITE not allowed"
 msgstr ""
 
-#: libcob/fileio.c:1850
+#: libcob/fileio.c:1851
 msgid "DELETE/REWRITE not allowed"
 msgstr ""
 
-#: libcob/fileio.c:1857
+#: libcob/fileio.c:1858
 msgid "LINAGE values invalid"
 msgstr ""
 
-#: libcob/fileio.c:1860
+#: libcob/fileio.c:1861
 msgid "Unknown file error"
 msgstr ""
