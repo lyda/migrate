@@ -1,3 +1,8 @@
+2005-12-04  Roger While <simrw@sim-basis.de>
+
+	* byteswap.h : Take out typedefs. They are likely to
+	  clash with standard includes.
+
 2005-12-03  Roger While <simrw@sim-basis.de>
 
 	* common.c : Do not gen signals for Ming
