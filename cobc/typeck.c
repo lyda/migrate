@@ -212,7 +212,11 @@ cb_build_registers (void)
 
 	/* FUNCTION WHEN-COMPILED */
 	memset (buff, 0, sizeof (buff));
+#ifdef __MINGW32__
+	strftime (buff, 22, "%Y%m%d%H%M%S0000000", localtime (&t));
+#else
 	strftime (buff, 22, "%Y%m%d%H%M%S00%z", localtime (&t));
+#endif
 	cb_intr_whencomp = cb_build_alphanumeric_literal ((ucharptr)buff, 21);
 
 	/* FUNCTION PI */

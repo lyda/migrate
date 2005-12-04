@@ -642,9 +642,9 @@ cb_build_picture (const char *str)
   int scale = 0;
   int s_count = 0;
   int v_count = 0;
-  int buff_size = 12;
-  unsigned char *buff = cob_malloc (buff_size);
+  unsigned char	buff[16384];
 
+  memset (buff, 0, sizeof (buff));
   for (p = str; *p; p++)
     {
       int n = 1;
@@ -794,19 +794,6 @@ cb_build_picture (const char *str)
       if (c == 'C' || c == 'D' || c == 'N')
 	size += n;
 
-      /* allocate enough pic buffer */
-      if (idx + n / 64 + 1 > buff_size) {
-	while (idx + n / 64 + 1 > buff_size) {
-		buff_size *= 2;
-	}
-	buff = realloc (buff, buff_size);
-	if ( !buff ) {
-		fprintf (stderr, "Memory realloc failed - Aborting\n");
-		fflush (stderr);
-		(void)longjmp (cob_jmpbuf, 1);
-	}
-      }
-
       /* store in the buffer */
       while (n > 0)
 	{
@@ -840,14 +827,16 @@ cb_build_picture (const char *str)
       pic->category = CB_CATEGORY_ALPHANUMERIC;
       break;
     case PIC_NUMERIC_EDITED:
-      pic->str = (char *)buff;
+      pic->str = cob_malloc (idx + 1);
+      memcpy (pic->str, buff, idx);
       pic->category = CB_CATEGORY_NUMERIC_EDITED;
       break;
     case PIC_EDITED:
     case PIC_ALPHABETIC_EDITED:
     case PIC_ALPHANUMERIC_EDITED:
     case PIC_NATIONAL_EDITED:
-      pic->str = (char *)buff;
+      pic->str = cob_malloc (idx + 1);
+      memcpy (pic->str, buff, idx);
       pic->category = CB_CATEGORY_ALPHANUMERIC_EDITED;
       break;
     default:
@@ -859,8 +848,6 @@ cb_build_picture (const char *str)
   cb_error (_("invalid picture string"));
 
  end:
-  if (!pic->str)
-    free (buff);
   return CB_TREE (pic);
 }
 

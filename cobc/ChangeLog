@@ -1,5 +1,10 @@
 2005-12-04  Roger While <simrw@sim-basis.de>
 
+	* tree.c : Fix buffer usage
+	  typeck.c : Fix strftime for MingW
+
+2005-12-04  Roger While <simrw@sim-basis.de>
+
 	* codegen.c : Fix INITIALIZE
 
 2005-11-28  Roger While <simrw@sim-basis.de>

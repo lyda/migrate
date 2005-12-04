@@ -380,7 +380,11 @@ cob_intr_current_date ()
 	make_field_entry (&field);
 
 	curtime = time (NULL);
+#ifdef __MINGW32__
+	strftime (buff, 22, "%Y%m%d%H%M%S0000000", localtime (&curtime));
+#else
 	strftime (buff, 22, "%Y%m%d%H%M%S00%z", localtime (&curtime));
+#endif
 	memcpy (curr_field->data, buff, 21);
 	return curr_field;
 }
