@@ -1,3 +1,7 @@
+2005-12-04  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Fix INITIALIZE
+
 2005-11-28  Roger While <simrw@sim-basis.de>
 
 	* parser.y, tree.c, typeck.c : Improve error checking

@@ -1177,7 +1177,7 @@ initialize_type (struct cb_initialize *p, struct cb_field *f, int topfield)
   if (p->val && f->values)
     return INITIALIZE_ONE;
 
-  if ( *f->name == '$' && p->flag_statement && !f->children )
+  if ( f->name[4] == '$' && p->flag_statement && !f->children )
     return INITIALIZE_NONE;
 
   if (f->children)

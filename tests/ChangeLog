@@ -1,3 +1,7 @@
+2005-12-04  Roger While <simrw@sim-basis.de>
+
+	* Relax EXP test for MingW
+
 2005-11-25  Roger While <simrw@sim-basis.de>
 
 	* New OC test for sticky-linkage
