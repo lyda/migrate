@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2005-12-04 20:14+0100\n"
+"POT-Creation-Date: 2005-12-05 16:45+0100\n"
 "PO-Revision-Date: 2004-08-01 23:55+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -93,35 +93,35 @@ msgstr "不当なオプションです -std=%s\n"
 msgid "-MT must be given to specify target file\n"
 msgstr "ターゲットファイルを -MT で指定して下さい\n"
 
-#: cobc/tree.c:823
+#: cobc/tree.c:822
 msgid "numeric entry cannot be larger than 18 digits"
 msgstr "18 桁を越える数字項目は許されません"
 
-#: cobc/tree.c:848
+#: cobc/tree.c:847
 msgid "invalid picture string"
 msgstr "不当な PICTURE 定義です"
 
-#: cobc/tree.c:1023
+#: cobc/tree.c:1022
 #, fuzzy, c-format
 msgid "%s clause is required for file '%s'"
 msgstr "%s 句がファイル `%s' に必要です"
 
-#: cobc/tree.c:1056
+#: cobc/tree.c:1055
 #, fuzzy, c-format
 msgid "record size too small '%s'"
 msgstr "レコード長が短か過ぎます `%s'"
 
-#: cobc/tree.c:1059
+#: cobc/tree.c:1058
 #, fuzzy, c-format
 msgid "record size too large '%s'"
 msgstr "レコード長が長過ぎます `%s'"
 
-#: cobc/tree.c:1732
+#: cobc/tree.c:1729
 #, fuzzy, c-format
 msgid "FUNCTION %s has wrong number of arguments"
 msgstr "WHEN 句の引数の数が不当です"
 
-#: cobc/tree.c:1816
+#: cobc/tree.c:1813
 #, fuzzy, c-format
 msgid "FUNCTION %s not implemented"
 msgstr "`%s' は実装されていません"

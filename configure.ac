@@ -44,6 +44,7 @@ AH_TEMPLATE([USE_LIBDL],   [Use system dynamic loader])
 AH_TEMPLATE([PATCH_LEVEL],   [Define a patch level])
 AH_TEMPLATE([DLLHIDDEN],   [Has visibility attribute])
 AH_TEMPLATE([HAVE_PSIGN_OPT],   [Has -Wno-pointer-sign])
+AH_TEMPLATE([COB_EXEEXT], [Executable extension])
 
 if test "x$CFLAGS" = "x"
 then
@@ -318,6 +319,7 @@ LIBS="$save_libs"
 COB_EXPORT_DYN="`eval echo $export_dynamic_flag_spec`"
 COB_PIC_FLAGS="$lt_prog_compiler_pic"
 COB_SHARED_OPT="-shared"
+COB_EXEEXT="$EXEEXT"
 
 if test "$COB_HAS_CFLAGS" = "no"
 then
@@ -325,7 +327,7 @@ then
 	if test "`basename $COB_CC`" = "gcc"
 	then
 		cob_temp_flags="`gcc ${srcdir}/cpucheck.c -o cpucheck 1>/dev/null 2>&1 && ./cpucheck 2>/dev/null`"
-		rm -f cpucheck
+		rm -f cpucheck${EXEEXT}
 		CFLAGS="$CFLAGS $cob_temp_flags -finline-functions -fomit-frame-pointer"
 		COB_CFLAGS="$COB_CFLAGS $cob_temp_flags"
 	fi
@@ -355,6 +357,7 @@ AM_CONDITIONAL(COBCRUN_SHARED, test x$cobcruns = xtrue)
 AC_DEFINE_UNQUOTED(COB_EXPORT_DYN, "$COB_EXPORT_DYN")
 AC_DEFINE_UNQUOTED(COB_PIC_FLAGS, "$COB_PIC_FLAGS")
 AC_DEFINE_UNQUOTED(COB_SHARED_OPT, "$COB_SHARED_OPT")
+AC_DEFINE_UNQUOTED(COB_EXEEXT, "$COB_EXEEXT")
 if test "x$striplib" != "x"
 then
   AC_DEFINE_UNQUOTED(COB_STRIP_CMD, "$striplib")

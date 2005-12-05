@@ -1,3 +1,9 @@
+2005-12-05  Roger While <simrw@sim-basis.de>
+
+	* tree.c : Take out unnecessary zero clears
+		   (Done by cob_malloc)
+	  cobc.c : Use the executable extension when stripping
+
 2005-12-04  Roger While <simrw@sim-basis.de>
 
 	* tree.c : Fix buffer usage

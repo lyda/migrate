@@ -1,3 +1,7 @@
+2005-12-05  Roger While <simrw@sim-basis.de>
+
+	* configure.ac : Pass down EXEEXT
+
 2005-11-25  Roger While <simrw@sim-basis.de>
 
 	* configure.ac : Fix typos, cater for DB 4.4 and 4.5

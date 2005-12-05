@@ -78,7 +78,6 @@ static void *
 make_tree (int tag, enum cb_category category, int size)
 {
   cb_tree x = cob_malloc (size);
-  memset (x, 0, size);
   x->tag = tag;
   x->category = category;
   return x;
@@ -451,7 +450,7 @@ cb_init_constants (void)
   cb_int4        = cb_int (4);
   for (i = 1; i < 8; i++)
     {
-      char *s = cob_malloc (3);
+      char *s = cob_malloc (4);
       sprintf (s, "i%d", i);
       cb_i[i] = make_constant (CB_CATEGORY_NUMERIC, s);
     }
@@ -1657,7 +1656,6 @@ lookup_word (const char *name)
 
   /* create new word */
   p = cob_malloc (sizeof (struct cb_word));
-  memset (p, 0, sizeof (struct cb_word));
   p->name = strdup (name);
 
   /* insert it into the table */
@@ -1674,7 +1672,6 @@ struct cb_program *
 cb_build_program (void)
 {
   struct cb_program *p = cob_malloc (sizeof (struct cb_program));
-  memset (p, 0, sizeof (struct cb_program));
   p->decimal_point = '.';
   p->currency_symbol = '$';
   p->numeric_separator = ',';

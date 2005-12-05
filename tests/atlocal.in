@@ -2,7 +2,7 @@ CC="@CC@"
 SHREXT="@COB_MODULE_EXT@"
 SHROPT="@COB_SHARED_OPT@"
 COB_BIGENDIAN="@COB_BIGENDIAN@"
-PATH="${abs_top_builddir}/cobc:${abs_top_builddir}/bin:${PATH}"
+PATH="${abs_top_builddir}/cobc:${abs_top_builddir}/bin:${abs_top_builddir}/libcob/.libs:${PATH}"
 COBC="${abs_top_builddir}/cobc/cobc"
 COBCRUN="${abs_top_builddir}/bin/cobcrun"
 

@@ -39,7 +39,7 @@ $(MODULES): newcob.val EXEC85 EXEC85.conf.in
 	@echo "test:"               > $@/Makefile
 	@echo "	. ../../atconfig; . ../../atlocal; export PATH; perl ../report.pl" >> $@/Makefile
 	@echo "	diff ../$@.txt report.txt" >> $@/Makefile
-	@echo "	. ../../atconfig; . ../../atlocal; export PATH; perl ../report.pl -- -O" >> $@/Makefile
+	@echo "	. ../../atconfig; . ../../atlocal; export PATH; perl ../report.pl -O" >> $@/Makefile
 	@echo "	diff ../$@.txt report.txt" >> $@/Makefile
 	@echo "done"
 

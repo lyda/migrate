@@ -1,3 +1,9 @@
+2005-12-05  Roger While <simrw@sim-basis.de>
+
+	* atlocal.in : Include libcob/.libs in PATH
+		       Needed for Win
+	* cobol85/report.pl, cobol85/Makefile.am : Fix perl usage
+
 2005-12-04  Roger While <simrw@sim-basis.de>
 
 	* Relax EXP test for MingW

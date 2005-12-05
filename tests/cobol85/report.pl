@@ -1,4 +1,4 @@
-#!/usr/bin/perl -s
+##!/usr/bin/perl -s
 #
 # Copyright (C) 2001-2005 Keisuke Nishida
 #

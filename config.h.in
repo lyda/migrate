@@ -3,6 +3,9 @@
 /* Enable debugging features in the compiler */
 #undef COB_DEBUG
 
+/* Executable extension */
+#undef COB_EXEEXT
+
 /* Compile/link option for exporting symbols */
 #undef COB_EXPORT_DYN
 

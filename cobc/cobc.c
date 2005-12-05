@@ -910,7 +910,7 @@ process_link (struct filename *l)
 #ifdef	COB_STRIP_CMD
 	ret = process (buff);
 	if (strip_output && ret == 0) {
-		sprintf (buff, "%s %s", COB_STRIP_CMD, name);
+		sprintf (buff, "%s %s%s", COB_STRIP_CMD, name, COB_EXEEXT);
 		ret = process (buff);
 	}
 	return ret;
