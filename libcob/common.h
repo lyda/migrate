@@ -22,6 +22,10 @@
 
 typedef unsigned char *	ucharptr;
 
+#define	COB_SMALL_BUFF		1024
+#define	COB_MEDIUM_BUFF		8192
+#define	COB_LARGE_BUFF		16384
+
 /*
  * External
  */

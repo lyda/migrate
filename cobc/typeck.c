@@ -234,7 +234,7 @@ cb_build_registers (void)
 char *
 cb_encode_program_id (const char *name)
 {
-	char		buff[FILENAME_MAX];
+	char		buff[COB_SMALL_BUFF];
 	char		*p = buff;
 	const char	*s = name;
 
@@ -630,7 +630,7 @@ cb_validate_program_data (struct cb_program *prog)
 		for (l = current_program->file_list; l; l = CB_CHAIN (l)) {
 			cb_tree assign = CB_FILE (CB_VALUE (l))->assign;
 			if (CB_REFERENCE_P (assign) && CB_REFERENCE (assign)->word->count == 0) {
-				cb_tree x = cb_build_implicit_field (assign, FILENAME_MAX);
+				cb_tree x = cb_build_implicit_field (assign, COB_SMALL_BUFF);
 				struct cb_field *p = current_program->working_storage;
 
 				CB_FIELD (x)->count++;

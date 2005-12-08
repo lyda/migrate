@@ -266,8 +266,8 @@ int
 ppcopy (char *name, const char *lib, struct cb_replace_list *replace_list)
 {
 	struct stat	st;
-	char		buff1[FILENAME_MAX];
-	char		buff2[FILENAME_MAX];
+	char		buff1[COB_MEDIUM_BUFF];
+	char		buff2[COB_MEDIUM_BUFF];
 
 	if (lib) {
 		sprintf (buff1, "%s/%s", lib, name);
@@ -310,12 +310,12 @@ ppinput (char *buff, int max_size)
 	int	i, n;
 	int	continuation = 0;
 	char	*bp;
-	char	line[BUFSIZ];
+	char	line[COB_MEDIUM_BUFF];
 
       start:
 	/* read a line */
 	memset (line, 0, sizeof (line));
-	if (fgets (line, BUFSIZ, ppin) == NULL) {
+	if (fgets (line, COB_MEDIUM_BUFF, ppin) == NULL) {
 		if (newline_count == 0) {
 			return 0;
 		}
@@ -359,7 +359,7 @@ ppinput (char *buff, int max_size)
 			break;
 		}
 	}
-	if (i < BUFSIZ - 1 && buff[n - 1] != '\n') {
+	if (i < COB_MEDIUM_BUFF - 1 && buff[n - 1] != '\n') {
 		cb_warning (_("file unterminated by a newline"));
 		buff[n++] = '\n';
 	}

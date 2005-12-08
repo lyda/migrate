@@ -119,22 +119,22 @@ static char		*program_name;
 static char		*output_name;
 
 static char		*tmpdir;			/* /tmp */
-static char		cob_cc[FILENAME_MAX];		/* gcc */
-static char		cob_cflags[FILENAME_MAX];	/* -I... */
-static char		cob_libs[FILENAME_MAX];		/* -L... -lcob */
-static char		cob_ldflags[FILENAME_MAX];
-char			cob_config_dir[FILENAME_MAX];
+static char		cob_cc[COB_MEDIUM_BUFF];	/* gcc */
+static char		cob_cflags[COB_MEDIUM_BUFF];	/* -I... */
+static char		cob_libs[COB_MEDIUM_BUFF];	/* -L... -lcob */
+static char		cob_ldflags[COB_MEDIUM_BUFF];
+char			cob_config_dir[COB_MEDIUM_BUFF];
 
 static struct filename {
+	struct filename *next;
 	int		need_preprocess;
 	int		need_translate;
 	int		need_assemble;
-	char		source[FILENAME_MAX];		/* foo.cob */
-	char		preprocess[FILENAME_MAX];	/* foo.i */
-	char		translate[FILENAME_MAX];	/* foo.c */
-	char		trstorage[FILENAME_MAX];	/* foo.c.h */
-	char		object[FILENAME_MAX];		/* foo.o */
-	struct filename *next;
+	char		*source;			/* foo.cob */
+	char		*preprocess;			/* foo.i */
+	char		*translate;			/* foo.c */
+	char		*trstorage;			/* foo.c.h */
+	char		*object;			/* foo.o */
 } *file_list;
 
 #if defined (__GNUC__) && (__GNUC__ >= 3)
@@ -424,6 +424,7 @@ process_command_line (int argc, char *argv[])
 			cb_flag_runtime_inlining = 1;
 			strcat (cob_cflags, " -O");
 			strcat (cob_cflags, fcopts);
+			strcat (cob_cflags, COB_EXTRA_FLAGS);
 			break;
 
 		case '2':	/* -O2 */
@@ -431,6 +432,7 @@ process_command_line (int argc, char *argv[])
 			strip_output = 1;
 			strcat (cob_cflags, " -O2 -DSUPER_OPTIMIZE");
 			strcat (cob_cflags, fcopts);
+			strcat (cob_cflags, COB_EXTRA_FLAGS);
 			break;
 
 		case 's':	/* -Os */
@@ -438,6 +440,7 @@ process_command_line (int argc, char *argv[])
 			strip_output = 1;
 			strcat (cob_cflags, " -Os -DSUPER_OPTIMIZE");
 			strcat (cob_cflags, fcopts);
+			strcat (cob_cflags, COB_EXTRA_FLAGS);
 			break;
 
 		case 'g':
@@ -597,9 +600,10 @@ file_extension (const char *filename)
 	}
 }
 
-static void
-temp_name (char *buff, const char *ext)
+static char *
+temp_name (const char *ext)
 {
+	char	buff[COB_MEDIUM_BUFF];
 #ifdef _WIN32
 	char	temp[MAX_PATH];
 
@@ -610,6 +614,7 @@ temp_name (char *buff, const char *ext)
 #else
 	sprintf (buff, "%s/cob%d_%d%s", tmpdir, cob_process_id, cob_iteration, ext);
 #endif
+	return strdup (buff);
 }
 
 static struct filename *
@@ -617,7 +622,7 @@ process_filename (const char *filename)
 {
 	const char	*extension;
 	struct filename	*fn;
-	char		basename[FILENAME_MAX];
+	char		basename[COB_MEDIUM_BUFF];
 
 	fn = cob_malloc (sizeof (struct filename));
 	fn->need_preprocess = 1;
@@ -644,39 +649,52 @@ process_filename (const char *filename)
 	}
 
 	/* Set source filename */
+	fn->source = cob_malloc (strlen (filename) + 3);
 	strcpy (fn->source, filename);
 
 	/* Set preprocess filename */
 	if (!fn->need_preprocess) {
-		strcpy (fn->preprocess, fn->source);
+		fn->preprocess = strdup (fn->source);
 	} else if (output_name && cb_compile_level == CB_LEVEL_PREPROCESS) {
-		strcpy (fn->preprocess, output_name);
+		fn->preprocess = strdup (output_name);
 	} else if (save_temps) {
+		fn->preprocess = cob_malloc (strlen (basename) + 5);
 		sprintf (fn->preprocess, "%s.i", basename);
 	} else {
+		fn->preprocess = temp_name (".cob");
+/*
 		temp_name (fn->preprocess, ".cob");
+*/
 	}
 
 	/* Set translate filename */
 	if (!fn->need_translate) {
-		strcpy (fn->translate, fn->source);
+		fn->translate = strdup (fn->source);
 	} else if (output_name && cb_compile_level == CB_LEVEL_TRANSLATE) {
-		strcpy (fn->translate, output_name);
+		fn->translate = strdup (output_name);
 	} else if (save_temps || cb_compile_level == CB_LEVEL_TRANSLATE) {
+		fn->translate = cob_malloc (strlen (basename) + 5);
 		sprintf (fn->translate, "%s.c", basename);
 	} else {
+		fn->translate = temp_name (".c");
+/*
 		temp_name (fn->translate, ".c");
+*/
 	}
 
 	/* Set object filename */
 	if (!fn->need_assemble) {
-		strcpy (fn->object, fn->source);
+		fn->object = strdup (fn->source);
 	} else if (output_name && cb_compile_level == CB_LEVEL_ASSEMBLE) {
-		strcpy (fn->object, output_name);
+		fn->object = strdup (output_name);
 	} else if (save_temps || cb_compile_level == CB_LEVEL_ASSEMBLE) {
+		fn->object = cob_malloc (strlen (basename) + 5);
 		sprintf (fn->object, "%s.o", basename);
 	} else {
+		fn->object = temp_name (".o");
+/*
 		temp_name (fn->object, ".o");
+*/
 	}
 
 	return fn;
@@ -685,10 +703,24 @@ process_filename (const char *filename)
 static int
 process (const char *cmd)
 {
-	char *p;
-	char buff[BUFSIZ];
+	char	*p;
+	char	*buffptr;
+	int	clen;
+	char	buff[COB_MEDIUM_BUFF];
 
-	p = buff;
+	if (strchr (cmd, '$') == NULL) {
+		if (verbose_output) {
+			fprintf (stderr, "%s\n", (char *)cmd);
+		}
+		return system (cmd);
+	}
+	clen = strlen (cmd) + 32;
+	if ( clen > COB_MEDIUM_BUFF ) {
+		buffptr = cob_malloc (clen);
+	} else {
+		buffptr = buff;
+	}
+	p = buffptr;
 	/* quote '$' */
 	for (; *cmd; cmd++) {
 		if (*cmd == '$') {
@@ -700,9 +732,13 @@ process (const char *cmd)
 	*p = 0;
 
 	if (verbose_output) {
-		fprintf (stderr, "%s\n", buff);
+		fprintf (stderr, "%s\n", buffptr);
 	}
-	return system (buff);
+	clen = system (buffptr);
+	if (buffptr != buff) {
+		free (buffptr);
+	}
+	return clen;
 }
 
 static int
@@ -800,7 +836,7 @@ process_translate (struct filename *fn)
 	/* open the storage file */
 	cb_storage_file_name = cob_malloc (strlen (fn->translate) + 3);
 	sprintf (cb_storage_file_name, "%s.h", fn->translate);
-	strcpy (fn->trstorage, cb_storage_file_name);
+	fn->trstorage = cb_storage_file_name;
 	cb_storage_file = fopen (cb_storage_file_name, "w");
 	if (!cb_storage_file) {
 		terminate (cb_storage_file_name);
@@ -818,8 +854,8 @@ process_translate (struct filename *fn)
 static int
 process_compile (struct filename *fn)
 {
-	char buff[FILENAME_MAX];
-	char name[FILENAME_MAX];
+	char buff[COB_MEDIUM_BUFF];
+	char name[COB_MEDIUM_BUFF];
 
 	if (output_name) {
 		strcpy (name, output_name);
@@ -834,7 +870,7 @@ process_compile (struct filename *fn)
 static int
 process_assemble (struct filename *fn)
 {
-	char buff[FILENAME_MAX];
+	char buff[COB_MEDIUM_BUFF];
 
 	if (cb_compile_level == CB_LEVEL_MODULE) {
 		sprintf (buff, "%s -c %s %s -o %s %s",
@@ -847,13 +883,51 @@ process_assemble (struct filename *fn)
 }
 
 static int
+process_module_direct (struct filename *fn)
+{
+#ifdef	COB_STRIP_CMD
+	int ret;
+#endif
+	char buff[COB_MEDIUM_BUFF];
+	char name[COB_MEDIUM_BUFF];
+
+	if (output_name) {
+		strcpy (name, output_name);
+	} else {
+		file_basename (fn->source, name);
+		strcat (name, ".");
+		strcat (name, COB_MODULE_EXT);
+	}
+#if (defined __CYGWIN__ || defined __MINGW32__)
+	sprintf (buff, "%s %s %s %s %s %s -o %s %s %s",
+		 cob_cc, cob_cflags, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
+		 COB_EXPORT_DYN, name, fn->translate, cob_libs);
+#else
+	sprintf (buff, "%s %s %s %s %s %s -o %s %s",
+		 cob_cc, cob_cflags, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
+		 COB_EXPORT_DYN, name, fn->translate);
+#endif
+
+#ifdef	COB_STRIP_CMD
+	ret = process (buff);
+	if (strip_output && ret == 0) {
+		sprintf (buff, "%s %s", COB_STRIP_CMD, name);
+		ret = process (buff);
+	}
+	return ret;
+#else
+	return process (buff);
+#endif
+}
+
+static int
 process_module (struct filename *fn)
 {
 #ifdef	COB_STRIP_CMD
 	int ret;
 #endif
-	char buff[FILENAME_MAX];
-	char name[FILENAME_MAX];
+	char buff[COB_MEDIUM_BUFF];
+	char name[COB_MEDIUM_BUFF];
 
 	if (output_name) {
 		strcpy (name, output_name);
@@ -890,8 +964,8 @@ process_link (struct filename *l)
 #ifdef	COB_STRIP_CMD
 	int ret;
 #endif
-	char buff[FILENAME_MAX], objs[FILENAME_MAX] = "";
-	char name[FILENAME_MAX];
+	char buff[COB_MEDIUM_BUFF], objs[COB_MEDIUM_BUFF] = "";
+	char name[COB_MEDIUM_BUFF];
 
 	for (; l; l = l->next) {
 		strcat (objs, l->object);
@@ -906,6 +980,36 @@ process_link (struct filename *l)
 
 	sprintf (buff, "%s %s %s -o %s %s %s",
 		 cob_cc, cob_ldflags, COB_EXPORT_DYN, name, objs, cob_libs);
+
+#ifdef	COB_STRIP_CMD
+	ret = process (buff);
+	if (strip_output && ret == 0) {
+		sprintf (buff, "%s %s%s", COB_STRIP_CMD, name, COB_EXEEXT);
+		ret = process (buff);
+	}
+	return ret;
+#else
+	return process (buff);
+#endif
+}
+
+static int
+process_link_direct (struct filename *l)
+{
+#ifdef	COB_STRIP_CMD
+	int ret;
+#endif
+	char buff[COB_MEDIUM_BUFF];
+	char name[COB_MEDIUM_BUFF];
+
+	if (output_name) {
+		strcpy (name, output_name);
+	} else {
+		file_basename (l->source, name);
+	}
+
+	sprintf (buff, "%s %s %s %s -o %s %s %s",
+		 cob_cc, cob_cflags, cob_ldflags, COB_EXPORT_DYN, name, l->translate, cob_libs);
 
 #ifdef	COB_STRIP_CMD
 	ret = process (buff);
@@ -965,6 +1069,37 @@ main (int argc, char *argv[])
 		cob_clean_up (status);
 		return status;
 	}
+	if (i + 1 == argc && cb_compile_level == CB_LEVEL_EXECUTABLE &&
+	    !cb_flag_syntax_only && !save_temps) {
+		struct filename *fn;
+
+		fn = process_filename (argv[i++]);
+		fn->next = file_list;
+		file_list = fn;
+		cb_id = 1;
+		/* Preprocess */
+		if (fn->need_preprocess) {
+			if (preprocess (fn) != 0) {
+				cob_clean_up (status);
+				return status;
+			}
+		}
+		/* Translate */
+		if (fn->need_translate) {
+			if (process_translate (fn) != 0) {
+				cob_clean_up (status);
+				return status;
+			}
+		}
+		if (process_link_direct (file_list) > 0) {
+			cob_clean_up (status);
+			return status;
+		}
+		status = 0;
+		cob_clean_up (status);
+
+		return status;
+	}
 	while (i < argc) {
 		struct filename *fn;
 
@@ -1006,19 +1141,27 @@ main (int argc, char *argv[])
 			}
 		}
 
-		/* Assemble */
-		if (cb_compile_level >= CB_LEVEL_ASSEMBLE && fn->need_assemble) {
-			if (process_assemble (fn) != 0) {
+		/* Build module */
+		if (cb_compile_level == CB_LEVEL_MODULE && !save_temps) {
+			if (process_module_direct (fn) != 0) {
 				cob_clean_up (status);
 				return status;
 			}
-		}
+		} else {
+			/* Assemble */
+			if (cb_compile_level >= CB_LEVEL_ASSEMBLE && fn->need_assemble) {
+				if (process_assemble (fn) != 0) {
+					cob_clean_up (status);
+					return status;
+				}
+			}
 
-		/* Build module */
-		if (cb_compile_level == CB_LEVEL_MODULE) {
-			if (process_module (fn) != 0) {
-				cob_clean_up (status);
-				return status;
+			/* Build module */
+			if (cb_compile_level == CB_LEVEL_MODULE) {
+				if (process_module (fn) != 0) {
+					cob_clean_up (status);
+					return status;
+				}
 			}
 		}
 		cob_iteration++;

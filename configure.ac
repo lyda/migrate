@@ -33,18 +33,19 @@ AM_INIT_AUTOMAKE([gnu no-texinfo.tex])
 AM_MAINTAINER_MODE
 
 # Autoheader templates
-AH_TEMPLATE([WITH_DB],   [Compile with the Berkeley DB library])
+AH_TEMPLATE([WITH_DB], [Compile with the Berkeley DB library])
 AH_TEMPLATE([WITH_LFS64], [Compile with large file system 64])
 AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
 AH_TEMPLATE([COB_EXPORT_DYN], [Compile/link option for exporting symbols])
 AH_TEMPLATE([COB_PIC_FLAGS], [Compile/link option for PIC code])
 AH_TEMPLATE([COB_SHARED_OPT], [Compile/link option for shared code])
 AH_TEMPLATE([COB_STRIP_CMD], [Strip command])
-AH_TEMPLATE([USE_LIBDL],   [Use system dynamic loader])
-AH_TEMPLATE([PATCH_LEVEL],   [Define a patch level])
-AH_TEMPLATE([DLLHIDDEN],   [Has visibility attribute])
-AH_TEMPLATE([HAVE_PSIGN_OPT],   [Has -Wno-pointer-sign])
+AH_TEMPLATE([USE_LIBDL], [Use system dynamic loader])
+AH_TEMPLATE([PATCH_LEVEL], [Define a patch level])
+AH_TEMPLATE([DLLHIDDEN], [Has visibility attribute])
+AH_TEMPLATE([HAVE_PSIGN_OPT], [Has -Wno-pointer-sign])
 AH_TEMPLATE([COB_EXEEXT], [Executable extension])
+AH_TEMPLATE([COB_EXTRA_FLAGS], [Extra Compiler Flags])
 
 if test "x$CFLAGS" = "x"
 then
@@ -320,16 +321,17 @@ COB_EXPORT_DYN="`eval echo $export_dynamic_flag_spec`"
 COB_PIC_FLAGS="$lt_prog_compiler_pic"
 COB_SHARED_OPT="-shared"
 COB_EXEEXT="$EXEEXT"
+COB_EXTRA_FLAGS=""
 
 if test "$COB_HAS_CFLAGS" = "no"
 then
 	CFLAGS=`echo $CFLAGS | sed -e 's/-g //'`
 	if test "`basename $COB_CC`" = "gcc"
 	then
-		cob_temp_flags="`gcc ${srcdir}/cpucheck.c -o cpucheck 1>/dev/null 2>&1 && ./cpucheck 2>/dev/null`"
+		cob_temp_flags="`${COB_CC} ${srcdir}/cpucheck.c -o cpucheck 1>/dev/null 2>&1 && ./cpucheck 2>/dev/null`"
 		rm -f cpucheck${EXEEXT}
 		CFLAGS="$CFLAGS $cob_temp_flags -finline-functions -fomit-frame-pointer"
-		COB_CFLAGS="$COB_CFLAGS $cob_temp_flags"
+		COB_EXTRA_FLAGS=" $cob_temp_flags"
 	fi
 fi
 
@@ -358,6 +360,7 @@ AC_DEFINE_UNQUOTED(COB_EXPORT_DYN, "$COB_EXPORT_DYN")
 AC_DEFINE_UNQUOTED(COB_PIC_FLAGS, "$COB_PIC_FLAGS")
 AC_DEFINE_UNQUOTED(COB_SHARED_OPT, "$COB_SHARED_OPT")
 AC_DEFINE_UNQUOTED(COB_EXEEXT, "$COB_EXEEXT")
+AC_DEFINE_UNQUOTED(COB_EXTRA_FLAGS, "$COB_EXTRA_FLAGS")
 if test "x$striplib" != "x"
 then
   AC_DEFINE_UNQUOTED(COB_STRIP_CMD, "$striplib")
@@ -369,7 +372,6 @@ AC_SUBST(COB_LIBS)
 AC_SUBST(COB_CONFIG_DIR)
 AC_SUBST(COB_LIBRARY_PATH)
 AC_SUBST(COB_MODULE_EXT)
-AC_SUBST(COB_CFLAGS)
 AC_SUBST(COBC_LIBS)
 AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBS)
@@ -392,6 +394,7 @@ echo "  CC                   ${CC}"
 echo "  COB_CC               ${COB_CC}"
 echo "  CFLAGS               ${CFLAGS}"
 echo "  COB_CFLAGS           ${COB_CFLAGS}"
+echo "  COB_EXTRA_FLAGS      ${COB_EXTRA_FLAGS}"
 if test "x$COBC_LIBS" != "x"
 then
   echo "  COBC_LIBS            ${COBC_LIBS}"

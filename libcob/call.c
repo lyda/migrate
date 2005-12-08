@@ -240,8 +240,8 @@ cob_resolve (const char *name)
 	lt_ptr_t	func;
 	lt_dlhandle	handle;
 	struct stat	st;
-	char		buff[FILENAME_MAX];
-	char		filename[FILENAME_MAX];
+	char		buff[COB_SMALL_BUFF];
+	char		filename[COB_MEDIUM_BUFF];
 
 /* Checked in generated code
 	if (!cob_initialized) {

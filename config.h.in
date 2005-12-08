@@ -9,6 +9,9 @@
 /* Compile/link option for exporting symbols */
 #undef COB_EXPORT_DYN
 
+/* Extra Compiler Flags */
+#undef COB_EXTRA_FLAGS
+
 /* Compile/link option for PIC code */
 #undef COB_PIC_FLAGS
 

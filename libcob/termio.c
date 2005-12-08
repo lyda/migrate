@@ -198,7 +198,7 @@ cob_field_print (cob_field *f)
 void
 cob_accept (cob_field *f)
 {
-	unsigned char	buff[BUFSIZ];
+	unsigned char	buff[COB_MEDIUM_BUFF];
 
 	if (isatty (fileno (stdin))) {
 		/* terminal input */
@@ -206,7 +206,7 @@ cob_accept (cob_field *f)
 		cob_field	temp = { 0, buff, &attr };
 
 		/* read a line */
-		fgets ((char *)buff, BUFSIZ, stdin);
+		fgets ((char *)buff, COB_MEDIUM_BUFF, stdin);
 		temp.size = strlen ((char *)buff) - 1;
 
 		/* move it to the field */
@@ -215,7 +215,7 @@ cob_accept (cob_field *f)
 		/* non-terminal input */
 		size_t	size;
 
-		fgets ((char *)buff, BUFSIZ, stdin);
+		fgets ((char *)buff, COB_MEDIUM_BUFF, stdin);
 		size = strlen ((char *)buff) - 1;
 		if (size > f->size)
 			size = f->size;
@@ -288,11 +288,11 @@ void
 cob_accept_command_line (cob_field *f)
 {
 	int	i, size = 0;
-	char	buff[FILENAME_MAX] = "";
+	char	buff[COB_LARGE_BUFF] = "";
 
 	for (i = 1; i < cob_argc; i++) {
 		int len = strlen (cob_argv[i]);
-		if (size + len >= FILENAME_MAX) {
+		if (size + len >= COB_LARGE_BUFF) {
 			/* overflow */
 			break;
 		}
@@ -354,13 +354,10 @@ void
 cob_display_environment (cob_field *f)
 {
 	if (!env) {
-		env = cob_malloc (FILENAME_MAX);
-		if (!env) {
-			return;
-		}
+		env = cob_malloc (COB_SMALL_BUFF);
 	}
-	memset (env, 0, FILENAME_MAX);
-	if (f->size > FILENAME_MAX - 1) {
+	memset (env, 0, COB_SMALL_BUFF);
+	if (f->size > COB_SMALL_BUFF - 1) {
 		return;
 	}
 	cob_field_to_string (f, env);
@@ -370,8 +367,8 @@ void
 cob_display_env_value (cob_field *f)
 {
 	char *p;
-	char env1[FILENAME_MAX];
-	char env2[FILENAME_MAX];
+	char env1[COB_SMALL_BUFF];
+	char env2[COB_SMALL_BUFF];
 
 	if (!env) {
 		return;
@@ -380,7 +377,7 @@ cob_display_env_value (cob_field *f)
 		return;
 	}
 	cob_field_to_string (f, env2);
-	if (strlen (env) + strlen (env2) + 2 > FILENAME_MAX) {
+	if (strlen (env) + strlen (env2) + 2 > COB_SMALL_BUFF) {
 		return;
 	}
 	strcpy (env1, env);

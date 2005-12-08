@@ -817,7 +817,7 @@ output_param (cb_tree x, int id)
 	break;
       }
     case CB_TAG_DECIMAL:
-      output ("&d[%d]", CB_DECIMAL (x)->id);
+      output ("&d%d", CB_DECIMAL (x)->id);
       break;
     case CB_TAG_FILE:
       output ("&%s%s", CB_PREFIX_FILE, CB_FILE (x)->cname);
@@ -2510,8 +2510,11 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 
   /* local variables */
   output_line ("static int initialized = 0;");
-  if (prog->decimal_index_max)
-	output_line ("static cob_decimal d[%d];", prog->decimal_index_max);
+  if (prog->decimal_index_max) {
+	for ( i = 0; i < prog->decimal_index_max; i++ ) {
+		output_line ("static cob_decimal d%d;", i);
+	}
+  }
 
   output_prefix ();
   output ("static cob_module module = { NULL, ");
@@ -2644,10 +2647,9 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   }
   if (prog->decimal_index_max) {
 	output_line ("/* initialize decimal numbers */");
-	output_line ("{ int i;");
-	output_line ("for (i = 0; i < %d; i++)", prog->decimal_index_max);
-	output_line ("  cob_decimal_init (&d[i]);");
-	output_line ("}");
+	for ( i = 0; i < prog->decimal_index_max; i++ ) {
+		output_line ("cob_decimal_init (&d%d);", i);
+	}
 	output_newline ();
   }
   if (!prog->flag_initial) {

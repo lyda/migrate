@@ -28,6 +28,9 @@
 #include "lib/gettext.h"
 
 #define CB_MAX_CNAME		8096
+#define	COB_SMALL_BUFF		1024
+#define	COB_MEDIUM_BUFF		8192
+#define	COB_LARGE_BUFF		16384
 
 #define ABORT()								      \
 do {									      \

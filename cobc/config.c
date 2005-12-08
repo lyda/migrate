@@ -93,7 +93,7 @@ read_string (const char *text)
 int
 cb_load_std (const char *name)
 {
-	char	fname[FILENAME_MAX];
+	char	fname[COB_MEDIUM_BUFF];
 
 	sprintf (fname, "%s/%s.conf", cob_config_dir, name);
 	return cb_load_conf (fname, 1);
@@ -107,7 +107,7 @@ cb_load_conf (const char *fname, int check_nodef)
 	const char	*name, *val;
 	void		*var;
 	FILE		*fp;
-	char		buff[BUFSIZ];
+	char		buff[COB_MEDIUM_BUFF];
 
 	/* initialize the config table */
 	if (check_nodef) {
@@ -126,7 +126,7 @@ cb_load_conf (const char *fname, int check_nodef)
 	/* read the config file */
 	ret = 0;
 	line = 0;
-	while (fgets (buff, BUFSIZ, fp)) {
+	while (fgets (buff, COB_MEDIUM_BUFF, fp)) {
 		line++;
 
 		/* skip comments */
@@ -249,7 +249,7 @@ cb_load_conf (const char *fname, int check_nodef)
 
 			if (strcmp (name, "include") == 0) {
 				/* include another conf file */
-				char	fname[FILENAME_MAX];
+				char	fname[COB_MEDIUM_BUFF];
 
 				sprintf (fname, "%s/%s", cob_config_dir, val);
 				if (cb_load_conf (fname, 0) != 0)

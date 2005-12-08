@@ -964,7 +964,7 @@ indexed_open (cob_file *f, char *filename, int mode, int flag)
 	p->db = cob_malloc (sizeof (DB *) * f->nkeys);
 	for (i = 0; i < f->nkeys; i++) {
 		BTREEINFO	info;
-		char		name[FILENAME_MAX];
+		char		name[COB_SMALL_BUFF];
 
 		/* file name */
 		if (i == 0) {
@@ -1342,7 +1342,7 @@ cob_open (cob_file *f, int mode, int opt)
 {
 	int	was_not_exist = 0;
 	struct	stat st;
-	char	filename[FILENAME_MAX];
+	char	filename[COB_MEDIUM_BUFF];
 
 	f->flag_read_done = 0;
 
@@ -1364,7 +1364,7 @@ cob_open (cob_file *f, int mode, int opt)
 	/* obtain the file name */
 	cob_field_to_string (f->assign, filename);
 	if (cob_current_module->flag_filename_mapping && f->organization != COB_ORG_SORT) {
-		char	buff[FILENAME_MAX];
+		char	buff[COB_MEDIUM_BUFF];
 		char	*p;
 		char	*src = filename;
 		char	*dst = buff;
@@ -1378,7 +1378,7 @@ cob_open (cob_file *f, int mode, int opt)
 			}
 			if (*src == '$') {
 				int	i = 0;
-				char	env[FILENAME_MAX];
+				char	env[COB_SMALL_BUFF];
 
 				while (isalnum (src[++i])) ;
 				memcpy (env, src + 1, i - 1);
@@ -1704,17 +1704,17 @@ void
 cob_sort_init (cob_file *f, int nkeys, const unsigned char *collating_sequence)
 {
 	char	*s;
-	char	filename[FILENAME_MAX];
+	char	filename[COB_MEDIUM_BUFF];
 
 
 #ifdef _WIN32
-	char	tmpdir[FILENAME_MAX];
+	char	tmpdir[COB_MEDIUM_BUFF];
 
 	/* get temporary directory */
 	if ((s = getenv ("TMPDIR")) != NULL || (s = getenv ("TMP")) != NULL) {
 		strcpy (tmpdir, s);
 	} else {
-		GetTempPath (FILENAME_MAX, tmpdir);
+		GetTempPath (COB_MEDIUM_BUFF, tmpdir);
 	}
 	/* get temporary file name */
 	GetTempFileName (tmpdir, "cob", 0, filename);
@@ -1886,7 +1886,7 @@ void
 cob_exit_fileio (void)
 {
 	struct file_list	*l;
-	char			filename[FILENAME_MAX];
+	char			filename[COB_MEDIUM_BUFF];
 
 	for ( l = file_cache; l; l = l->next ) {
 		if ( l->file->open_mode != COB_OPEN_CLOSED &&

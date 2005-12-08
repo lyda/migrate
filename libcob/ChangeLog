@@ -1,3 +1,9 @@
+2005-12-08  Roger While <simrw@sim-basis.de>
+
+	* common.h : New defines - COB_SMALL_BUFF, COB_MEDIUM_BUFF,
+	  COB_LARGE_BUFF.
+	  Replace all occurrences of FILENAME_MAX/BUFSIZ.
+
 2005-12-04  Roger While <simrw@sim-basis.de>
 
 	* intrinsic.c : Fix strftime for MingW
