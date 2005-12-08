@@ -51,14 +51,21 @@
 #include "cobc.h"
 #include "tree.h"
 
+/* Compile level */
+enum cb_compile_level {
+	CB_LEVEL_PREPROCESS,
+	CB_LEVEL_PARSE,
+	CB_LEVEL_TRANSLATE,
+	CB_LEVEL_COMPILE,
+	CB_LEVEL_ASSEMBLE,
+	CB_LEVEL_MODULE,
+	CB_LEVEL_EXECUTABLE
+};
+
 /*
  * Global variables
  */
 
-enum cb_compile_level cb_compile_level = CB_LEVEL_EXECUTABLE;
-/*
-enum cb_source_format cb_source_format = CB_FORMAT_FIXED;
-*/
 int cb_source_format = CB_FORMAT_FIXED;
 
 struct cb_exception cb_exception_table[] = {
@@ -77,7 +84,7 @@ struct cb_exception cb_exception_table[] = {
 #define CB_WARNING(sig,var,name,doc) int var = 0;
 #include "warning.def"
 
-int cb_id = 1;
+int			cb_id = 1;
 
 int			errorcount = 0;
 int			warningcount = 0;
@@ -105,6 +112,10 @@ jmp_buf			cob_jmpbuf;
  * Local variables
  */
 
+static enum cb_compile_level cb_compile_level = CB_LEVEL_EXECUTABLE;
+
+static int		wants_nonfinal = 0;
+static int		cb_flag_module = 0;
 static int		save_temps = 0;
 static int		verbose_output = 0;
 static int		cob_iteration = 0;
@@ -143,7 +154,7 @@ static const char fcopts[] = " -finline-functions -fno-gcse -freorder-blocks";
 static const char fcopts[] = " ";
 #endif
 
-static char short_options[] = "hVvECScmOgwo:t:I:L:l:";
+static char short_options[] = "hVvECScmxOgwo:t:I:L:l:";
 
 static struct option long_options[] = {
 	{"help", no_argument, NULL, 'h'},
@@ -324,13 +335,8 @@ print_usage (void)
 		"  --help                Display this message\n"
 		"  --version             Display compiler version\n"
 		"  --verbose, -v         Display the programs invoked by the compiler\n"
-		"  --list-reserved       Display all reserved words\n"
-		"  -save-temps           Do not delete intermediate files\n"
-		"  -E                    Preprocess only; do not compile, assemble or link\n"
-		"  -C                    Translation only; convert COBOL to C\n"
-		"  -S                    Compile only; output assembly file\n"
-		"  -c                    Compile and assemble, but do not link\n"
-		"  -m                    Build a dynamic-linking module\n"
+		"  -x                    Build an executable program\n"
+		"  -m                    Build a dynamically loaded module\n"
 		"  -std=<dialect>        Compile for a specific dialect :\n"
 		"                          cobol2002   Cobol 2002\n"
 		"                          cobol85     Cobol 85\n"
@@ -341,18 +347,24 @@ print_usage (void)
 		"                          v023        Open Cobol V23 Compatible (deprecated)\n"
 		"                          default     When not specified\n"
 		"                        See config/default.conf and config/*.conf\n"
+		"  -free                 Use free source format\n"
+		"  -fixed                Use fixed source format (default)\n"
 		"  -O, -O2, -Os          Enable optimization\n"
 		"  -g                    Produce debugging information in the output\n"
 		"  -debug                Enable all run-time error checking\n"
 		"  -o <file>             Place the output into <file>\n"
+		"  --list-reserved       Display all reserved words\n"
+		"  -save-temps           Do not delete intermediate files\n"
+		"  -E                    Preprocess only; do not compile, assemble or link\n"
+		"  -C                    Translation only; convert COBOL to C\n"
+		"  -S                    Compile only; output assembly file\n"
+		"  -c                    Compile and assemble, but do not link\n"
 		"  -t <file>             Place the listing into <file>\n"
 		"  -I <directory>        Add <directory> to copybook search path\n"
 		"  -L <directory>        Add <directory> to library search path\n"
 		"  -l <lib>              Link the library <lib>\n"
 		"  -MT <target>          Set target file used in dependency list\n"
 		"  -MF <file>            Place dependency list into <file>\n"
-		"  -free                 Use free source format\n"
-		"  -fixed                Use fixed source format\n"
 		"  -ext <extension>      Add default file extension\n"
 		"\n" "  -Wall                 Enable all warnings"));
 #undef CB_WARNING
@@ -365,6 +377,13 @@ print_usage (void)
 	printf ("  -f%-19s %s\n", name, gettext (doc));
 #include "flag.def"
 	puts ("");
+}
+
+static void
+options_error ()
+{
+	fprintf (stderr, "Only one of options 'E', 'S', 'C' 'c' may be specified\n");
+	exit (1);
 }
 
 static int
@@ -399,19 +418,52 @@ process_command_line (int argc, char *argv[])
 			exit (0);
 
 		case 'E':
+			if (wants_nonfinal) {
+				options_error ();
+			}
+			wants_nonfinal = 1;
 			cb_compile_level = CB_LEVEL_PREPROCESS;
 			break;
 		case 'C':
+			if (wants_nonfinal) {
+				options_error ();
+			}
+			wants_nonfinal = 1;
 			cb_compile_level = CB_LEVEL_TRANSLATE;
 			break;
 		case 'S':
+			if (wants_nonfinal) {
+				options_error ();
+			}
+			wants_nonfinal = 1;
 			cb_compile_level = CB_LEVEL_COMPILE;
 			break;
 		case 'c':
+			if (wants_nonfinal) {
+				options_error ();
+			}
+			wants_nonfinal = 1;
 			cb_compile_level = CB_LEVEL_ASSEMBLE;
 			break;
 		case 'm':
-			cb_compile_level = CB_LEVEL_MODULE;
+			if (cb_flag_main) {
+				fprintf (stderr, "Only one of options 'm', 'x' may be specified\n");
+				exit (1);
+			}
+			if (!wants_nonfinal) {
+				cb_compile_level = CB_LEVEL_MODULE;
+			}
+			cb_flag_module = 1;
+			break;
+		case 'x':
+			if (cb_flag_module) {
+				fprintf (stderr, "Only one of options 'm', 'x' may be specified\n");
+				exit (1);
+			}
+			if (!wants_nonfinal) {
+				cb_compile_level = CB_LEVEL_EXECUTABLE;
+			}
+			cb_flag_main = 1;
 			break;
 		case 'v':
 			verbose_output = 1;
@@ -964,32 +1016,54 @@ process_link (struct filename *l)
 #ifdef	COB_STRIP_CMD
 	int ret;
 #endif
-	char buff[COB_MEDIUM_BUFF], objs[COB_MEDIUM_BUFF] = "";
-	char name[COB_MEDIUM_BUFF];
+	int		bufflen;
+	char		*buffptr;
+	char		*objsptr;
+	struct filename	*f;
+	char		buff[COB_MEDIUM_BUFF];
+	char		name[COB_MEDIUM_BUFF];
+	char		objs[COB_MEDIUM_BUFF] = "\0";
 
-	for (; l; l = l->next) {
-		strcat (objs, l->object);
-		strcat (objs, " ");
-		if (!l->next) {
-			file_basename (l->source, name);
+	bufflen = 0;
+	for (f = l; f; f = f->next) {
+		bufflen += strlen (f->object) + 2;
+	}
+	if (bufflen >= COB_MEDIUM_BUFF) {
+		objsptr = cob_malloc (bufflen);
+	} else {
+		objsptr = objs;
+	}
+	for (f = l; f; f = f->next) {
+		strcat (objsptr, f->object);
+		strcat (objsptr, " ");
+		if (!f->next) {
+			file_basename (f->source, name);
 		}
 	}
 	if (output_name) {
 		strcpy (name, output_name);
 	}
 
-	sprintf (buff, "%s %s %s -o %s %s %s",
-		 cob_cc, cob_ldflags, COB_EXPORT_DYN, name, objs, cob_libs);
+	bufflen = strlen (cob_cc) + strlen (cob_ldflags) + strlen (COB_EXPORT_DYN)
+			+ strlen (name) + strlen (objsptr) + strlen (cob_libs)
+			+ 16;
+	if (bufflen >= COB_MEDIUM_BUFF) {
+		buffptr = cob_malloc (bufflen);
+	} else {
+		buffptr = buff;
+	}
+	sprintf (buffptr, "%s %s %s -o %s %s %s",
+		 cob_cc, cob_ldflags, COB_EXPORT_DYN, name, objsptr, cob_libs);
 
 #ifdef	COB_STRIP_CMD
-	ret = process (buff);
+	ret = process (buffptr);
 	if (strip_output && ret == 0) {
 		sprintf (buff, "%s %s%s", COB_STRIP_CMD, name, COB_EXEEXT);
 		ret = process (buff);
 	}
 	return ret;
 #else
-	return process (buff);
+	return process (buffptr);
 #endif
 }
 
@@ -1142,7 +1216,7 @@ main (int argc, char *argv[])
 		}
 
 		/* Build module */
-		if (cb_compile_level == CB_LEVEL_MODULE && !save_temps) {
+		if (cb_compile_level == CB_LEVEL_MODULE && fn->need_assemble) {
 			if (process_module_direct (fn) != 0) {
 				cob_clean_up (status);
 				return status;

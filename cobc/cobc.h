@@ -39,17 +39,6 @@ do {									      \
 	(void)longjmp (cob_jmpbuf, 1);					\
 } while (0)
 
-/* Compile level */
-extern enum cb_compile_level {
-	CB_LEVEL_PREPROCESS,
-	CB_LEVEL_PARSE,
-	CB_LEVEL_TRANSLATE,
-	CB_LEVEL_COMPILE,
-	CB_LEVEL_ASSEMBLE,
-	CB_LEVEL_MODULE,
-	CB_LEVEL_EXECUTABLE
-} cb_compile_level;
-
 #define CB_FORMAT_AUTO	0
 #define CB_FORMAT_FREE	1
 #define CB_FORMAT_FIXED	2

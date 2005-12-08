@@ -227,8 +227,9 @@ Compile and assemble.  This is equivalent to @code{cc -c}.
 The output is saved in file @file{*.o}.
 
 @item -m
-Compile, assemble, and build a dynamic-linking module (i.e.,
+Compile, assemble, and build a dynamically loadable module (i.e.,
 a shared library).  The output is saved in file @file{*.so}.
+@footnote{The extension varies depending on your host.}.
 @end table
 
 Without any options above, the compiler tries to build an executable.
@@ -478,16 +479,20 @@ Call @code{cob_init} before using any COBOL module:
 #include <libcob.h>
 
 int
-main(int argc, char **argv)
+main (int argc, char **argv)
 @{
   /* initialize your program */
   ...
 
   /* initialize the COBOL run-time library */
-  cob_init(argc, argv);
+  cob_init (argc, argv);
 
   /* rest of your program */
   ...
+
+  /* Clean up and terminate - This does not return */
+  cob_stop_run (return_status);
+
 @}
 @end example
 
@@ -547,8 +552,8 @@ int
 main()
 @{
   int ret;
-  char hello[6] = "Hello ";
-  char world[6] = "World!";
+  char hello[7] = "Hello ";
+  char world[7] = "World!";
 
   cob_init(0, NULL);
 
@@ -591,8 +596,8 @@ int
 main()
 @{
   int ret;
-  char hello[6] = "Hello ";
-  char world[6] = "World!";
+  char hello[7] = "Hello ";
+  char world[7] = "World!";
 
   cob_init(0, NULL);
 
@@ -750,9 +755,7 @@ and @code{-O2}.  These options enable optimization at both translation
 (from COBOL to C) and compilation (C to assembly) levels.
 
 Currently, there is no difference between these optimization options at
-the translation level.  The only thing which is done is inlining some
-run-time functions, by enabling the option @code{-fruntime-inlining}
-(@pxref{Compiler Options}).
+the translation level.
 
 The option @code{-O}, @code{-Os} or @code{-O2} is passed to the
 C compiler as it is and used for C level optimization.

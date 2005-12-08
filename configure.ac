@@ -20,14 +20,14 @@
 
 AC_PREREQ(2.59)
 
-CXX=no
-F77=no
-
 AC_INIT([OpenCOBOL],[0.33],[open-cobol-list@lists.sourceforge.net],[open-cobol])
 AC_CONFIG_SRCDIR([libcob.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_TESTDIR([tests])
 AC_CONFIG_MACRO_DIR([m4])
+
+# Hack to stop CXX/F77 checks - Any better way ?
+tagnames=
 
 AM_INIT_AUTOMAKE([gnu no-texinfo.tex])
 AM_MAINTAINER_MODE

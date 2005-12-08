@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2005-12-08 08:41+0100\n"
+"POT-Creation-Date: 2005-12-08 18:19+0100\n"
 "PO-Revision-Date: 2004-08-01 23:55+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -16,20 +16,15 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: cobc/cobc.c:323
+#: cobc/cobc.c:334
 #, fuzzy
 msgid ""
 "Options:\n"
 "  --help                Display this message\n"
 "  --version             Display compiler version\n"
 "  --verbose, -v         Display the programs invoked by the compiler\n"
-"  --list-reserved       Display all reserved words\n"
-"  -save-temps           Do not delete intermediate files\n"
-"  -E                    Preprocess only; do not compile, assemble or link\n"
-"  -C                    Translation only; convert COBOL to C\n"
-"  -S                    Compile only; output assembly file\n"
-"  -c                    Compile and assemble, but do not link\n"
-"  -m                    Build a dynamic-linking module\n"
+"  -x                    Build an executable program\n"
+"  -m                    Build a dynamically loaded module\n"
 "  -std=<dialect>        Compile for a specific dialect :\n"
 "                          cobol2002   Cobol 2002\n"
 "                          cobol85     Cobol 85\n"
@@ -41,18 +36,24 @@ msgid ""
 "(deprecated)\n"
 "                          default     When not specified\n"
 "                        See config/default.conf and config/*.conf\n"
+"  -free                 Use free source format\n"
+"  -fixed                Use fixed source format (default)\n"
 "  -O, -O2, -Os          Enable optimization\n"
 "  -g                    Produce debugging information in the output\n"
 "  -debug                Enable all run-time error checking\n"
 "  -o <file>             Place the output into <file>\n"
+"  --list-reserved       Display all reserved words\n"
+"  -save-temps           Do not delete intermediate files\n"
+"  -E                    Preprocess only; do not compile, assemble or link\n"
+"  -C                    Translation only; convert COBOL to C\n"
+"  -S                    Compile only; output assembly file\n"
+"  -c                    Compile and assemble, but do not link\n"
 "  -t <file>             Place the listing into <file>\n"
 "  -I <directory>        Add <directory> to copybook search path\n"
 "  -L <directory>        Add <directory> to library search path\n"
 "  -l <lib>              Link the library <lib>\n"
 "  -MT <target>          Set target file used in dependency list\n"
 "  -MF <file>            Place dependency list into <file>\n"
-"  -free                 Use free source format\n"
-"  -fixed                Use fixed source format\n"
 "  -ext <extension>      Add default file extension\n"
 "\n"
 "  -Wall                 Enable all warnings"
@@ -84,12 +85,12 @@ msgstr ""
 "\n"
 "  -Wall                 全てのワーニングを有効にする"
 
-#: cobc/cobc.c:454
+#: cobc/cobc.c:506
 #, c-format
 msgid "Invalid option -std=%s\n"
 msgstr "不当なオプションです -std=%s\n"
 
-#: cobc/cobc.c:782
+#: cobc/cobc.c:834
 msgid "-MT must be given to specify target file\n"
 msgstr "ターゲットファイルを -MT で指定して下さい\n"
 
@@ -631,7 +632,8 @@ msgid "invalid numeric literal"
 msgstr "不当な数字定数です"
 
 #: cobc/flag.def:25
-msgid "Include the main function in the output"
+#, fuzzy
+msgid "Include the main function in the output (deprecated, use -x)"
 msgstr "main 関数を出力に含める"
 
 #: cobc/flag.def:28

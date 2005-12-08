@@ -22,7 +22,7 @@
 /* CB_FLAG (var, name, doc) */
 
 CB_FLAG (cb_flag_main, "main",
-	 N_("Include the main function in the output"))
+	 N_("Include the main function in the output (deprecated, use -x)"))
 
 CB_FLAG (cb_flag_trace, "trace",
 	 N_("Include trace code in the output"))
