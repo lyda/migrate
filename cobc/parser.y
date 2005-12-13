@@ -1086,7 +1086,19 @@ redefines_clause:
 /* EXTERNAL clause */
 
 external_clause:
-  _is EXTERNAL as_extname	{ current_field->flag_external = 1; has_external = 1; }
+  _is EXTERNAL as_extname
+	{
+	if (current_storage != CB_STORAGE_WORKING) {
+		cb_error ("EXTERNAL not allowed here");
+		$$ = cb_error_node;
+	} else if (current_field->level != 1 && current_field->level != 77) {
+		cb_error ("EXTERNAL only allowed at 01 and 77 level");
+		$$ = cb_error_node;
+	} else {
+		current_field->flag_external = 1;
+		has_external = 1;
+	}
+	}
 ;
 
 as_extname:

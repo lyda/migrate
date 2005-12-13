@@ -6,6 +6,11 @@ main ()
 {
 #ifdef __i386__
 #if ( __GNUC__ == 3 && __GNUC_MINOR__ > 0 ) || __GNUC__ > 3
+#if __GNUC__ > 3 || __GNUC_MINOR__ > 3
+	char *ctune = "-mtune=";
+#else
+	char *ctune = "-mcpu=";
+#endif
 	char vendor_string[16];
 	int eax, ebx, edx, ecx;
 	int i, hv;
@@ -34,22 +39,22 @@ main ()
 
 	if (strcmp (vendor_string, "GenuineIntel") == 0) {
 		if (family == 5) {
-			printf ("-march=pentium");
+			printf ("-march=i686 %spentium", ctune);
 		} else if (family == 6) {
 			if (model <= 2) {
-				printf ("-march=pentiumpro");
+				printf ("-march=i686 %spentiumpro",ctune);
 			} else if (model >= 3 && model <= 6) {
-				printf ("-march=pentium2 -mno-sse");
+				printf ("-march=i686 %spentium2",ctune);
 			} else {
-				printf ("-march=pentium3 -mno-sse");
+				printf ("-march=i686 %spentium3", ctune);
 			}
 		}
 		else if (family == 15) {
-			printf ("-march=pentium4 -mno-sse");
+			printf ("-march=i686 %spentium4", ctune);
 		}
 	} else if (strcmp (vendor_string, "AuthenticAMD") == 0) {
 		if (family == 6) {
-			printf ("-march=athlon -mno-sse");
+			printf ("-march=i686 %sathlon", ctune);
 		}
 	}
 #endif

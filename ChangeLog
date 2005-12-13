@@ -1,3 +1,7 @@
+2005-12-13  Roger While <simrw@sim-basis.de>
+
+	* cpucheck.c : Revert to i686 with -mcpu/tune=
+
 2005-12-08  Roger While <simrw@sim-basis.de>
 
 	* configure.ac : Compile cpucheck with COB_CC.
