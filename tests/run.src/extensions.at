@@ -597,7 +597,7 @@ AT_DATA([caller.cob], [
 ])
 
 AT_CHECK([${COMPILE} caller.cob])
-AT_CHECK([${COMPILE} -m callee.cob])
+AT_CHECK([${COMPILE_MODULE} callee.cob])
 AT_CHECK([./caller], [0],
 [+000000000
 +000000001
@@ -648,7 +648,7 @@ AT_DATA([caller.cob], [
 ])
 
 AT_CHECK([${COMPILE} caller.cob])
-AT_CHECK([${COMPILE} -m callee.cob])
+AT_CHECK([${COMPILE_MODULE} callee.cob])
 AT_CHECK([./caller], [0],
 [X = X Y = 12 Z = 34
 X = X Y = 56 Z = 34
@@ -704,8 +704,8 @@ AT_DATA([callee.cob], [
            EXIT PROGRAM.
 ])
 
-AT_CHECK([${COMPILE} -std=mvs -c -fstatic-call -fmain caller.cob])
-AT_CHECK([${COMPILE} -std=mvs -c -fstatic-call callee.cob])
+AT_CHECK([${COMPILE} -std=mvs -c -fstatic-call caller.cob])
+AT_CHECK([${COMPILE_MODULE} -std=mvs -c -fstatic-call callee.cob])
 AT_CHECK([${COMPILE} -o prog caller.o callee.o])
 AT_CHECK([./prog], [0],
 [Hello, COBOL!

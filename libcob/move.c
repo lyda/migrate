@@ -378,16 +378,23 @@ cob_move_display_to_binary (cob_field *f1, cob_field *f2)
 static void
 cob_move_binary_to_display (cob_field *f1, cob_field *f2)
 {
-	int		i, sign;
-	long long	val = 0;
-	char		buff[32];	/* long long is at most 20 digits */
+	int			i, sign;
+	unsigned long long	val;
+	long long		val2;
+	char			buff[64];	/* long long is at most 20 digits */
 
-	/* get value */
-	val = cob_binary_get_int64 (f1);
 	sign = 1;
-	if (val < 0) {
-		sign = -1;
-		val = -val;
+	/* get value */
+	if (COB_FIELD_HAVE_SIGN (f1)) {
+		val2 = cob_binary_get_int64 (f1);
+		if (val2 < 0) {
+			sign = -1;
+			val = -val2;
+		} else {
+			val = val2;
+		}
+	} else {
+		val = cob_binary_get_int64 (f1);
 	}
 
 	/* convert to string */

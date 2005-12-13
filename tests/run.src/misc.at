@@ -435,8 +435,8 @@ AT_DATA([caller.cob], [
            CALL "callee".
 ])
 
-AT_CHECK([${COMPILE} -c callee.cob])
-AT_CHECK([${COMPILE} -c -fmain caller.cob])
+AT_CHECK([${COMPILE_MODULE} -c callee.cob])
+AT_CHECK([${COMPILE} -c caller.cob])
 AT_CHECK([${COMPILE} -o prog caller.o callee.o])
 AT_CHECK([./prog], [0], [OK])
 

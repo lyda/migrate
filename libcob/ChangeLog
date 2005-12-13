@@ -1,3 +1,8 @@
+2005-12-09  Roger While <simrw@sim-basis.de>
+
+	* move.c : Fix display of large unsigned numbers.
+	  termio.c : Change number of displayed digits.
+
 2005-12-08  Roger While <simrw@sim-basis.de>
 
 	* common.h : New defines - COB_SMALL_BUFF, COB_MEDIUM_BUFF,

@@ -53,7 +53,7 @@
 
 /* Compile level */
 enum cb_compile_level {
-	CB_LEVEL_PREPROCESS,
+	CB_LEVEL_PREPROCESS = 1,
 	CB_LEVEL_PARSE,
 	CB_LEVEL_TRANSLATE,
 	CB_LEVEL_COMPILE,
@@ -112,7 +112,7 @@ jmp_buf			cob_jmpbuf;
  * Local variables
  */
 
-static enum cb_compile_level cb_compile_level = CB_LEVEL_EXECUTABLE;
+static enum cb_compile_level cb_compile_level = 0;
 
 static int		wants_nonfinal = 0;
 static int		cb_flag_module = 0;
@@ -1143,6 +1143,25 @@ main (int argc, char *argv[])
 		cob_clean_up (status);
 		return status;
 	}
+
+	/* RXW - Defaults are set here */
+	if (!cb_flag_syntax_only) {
+		if (cb_compile_level == 0 && !wants_nonfinal) {
+			fprintf (stderr, "Warning - Use '-x' to create an executable\n");
+			fflush (stderr);
+			cb_compile_level = CB_LEVEL_EXECUTABLE;
+			cb_flag_main = 1;
+		}
+		if (wants_nonfinal && !cb_flag_main && !cb_flag_module) {
+			fprintf (stderr, "Warning - Use '-x' to generate 'main' code\n");
+			fprintf (stderr, "          Use '-m' to generate module code\n");
+			fflush (stderr);
+			cb_flag_main = 1;
+		}
+	} else {
+			cb_compile_level = CB_LEVEL_TRANSLATE;
+	}
+
 	if (i + 1 == argc && cb_compile_level == CB_LEVEL_EXECUTABLE &&
 	    !cb_flag_syntax_only && !save_temps) {
 		struct filename *fn;

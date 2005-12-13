@@ -19,7 +19,7 @@
 
 my $opt = shift;
 
-my $compile = "cobc -std=cobol85 $opt";
+my $compile = "cobc -std=cobol85 -x $opt";
 my $compile_module = "cobc -std=cobol85 -m $opt";
 
 my $num_progs = 0;

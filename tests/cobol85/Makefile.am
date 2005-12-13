@@ -52,5 +52,5 @@ EXEC85: newcob.val
 	      -e 's/XXXXX058.*/"EXEC85.conf" ORGANIZATION LINE SEQUENTIAL./' \
 	      -e 's/ORGANIZATION SEQUENTIAL.*//'			     \
 	    > EXEC85.cob
-	. ../atconfig; . ../atlocal; export PATH; $(COBOL) EXEC85.cob
+	. ../atconfig; . ../atlocal; export PATH; $(COBOL) -x EXEC85.cob
 	@rm -f EXEC85.cob

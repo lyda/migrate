@@ -29,7 +29,7 @@
 #include "move.h"
 #include "termio.h"
 
-static const int	bin_digits[] = { 1, 3, 5, 7, 10, 12, 15, 17, 19 };
+static const int	bin_digits[] = { 1, 3, 5, 8, 10, 13, 15, 17, 20 };
 
 /*
  * DISPLAY
@@ -42,7 +42,7 @@ display_numeric (cob_field *f, FILE *fp)
 	int		digits = COB_FIELD_DIGITS (f);
 	int		scale = COB_FIELD_SCALE (f);
 	int		size = digits + (COB_FIELD_HAVE_SIGN (f) ? 1 : 0);
-	unsigned char	data[size];
+	unsigned char	data[128];
 	cob_field_attr	attr = { COB_TYPE_NUMERIC_DISPLAY, digits, scale };
 	cob_field	temp = { size, data, &attr };
 

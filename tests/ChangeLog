@@ -1,3 +1,8 @@
+2005-12-09  Roger While <simrw@sim-basis.de>
+
+	* atlocal.in, run.src/*, cobol85/report.pl, cobol85/Makefile.am :
+	  Changes for '-x' option
+
 2005-12-05  Roger While <simrw@sim-basis.de>
 
 	* atlocal.in : Include libcob/.libs in PATH

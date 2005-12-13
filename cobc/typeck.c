@@ -1656,27 +1656,26 @@ cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
 	} else {
 		/* DISPLAY x ... [UPON device-name] */
 
-		/* Possible implementation using varargs */
-/* Start comment out
-	cb_tree	p, outorerr, newline;
+		/* Implementation using varargs */
+		cb_tree	p, outorerr, newline;
 
-	if ( upon == cb_int1 ) {
-		outorerr = cb_int0;
-	} else {
-		outorerr = cb_int1;
-	}
-	if ( no_adv == cb_int0 ) {
-		newline = cb_int1;
-	} else {
-		newline = cb_int0;
-	}
-	p = cb_build_funcall_3 ("cob_new_display", outorerr, newline, values);
-	CB_FUNCALL(p)->varcnt = cb_list_length (values);
-	cb_emit(p);
-End comment out */
-		/* End possible implementation */
+		if ( upon == cb_int1 ) {
+			outorerr = cb_int0;
+		} else {
+			outorerr = cb_int1;
+		}
+		if ( no_adv == cb_int0 ) {
+			newline = cb_int1;
+		} else {
+			newline = cb_int0;
+		}
+		p = cb_build_funcall_3 ("cob_new_display", outorerr, newline, values);
+		CB_FUNCALL(p)->varcnt = cb_list_length (values);
+		cb_emit(p);
+		/* End implementation using varargs */
 
 		/* Original multiple call implementation */
+/* RXW Start comment out
 		int is_stdout = (upon == cb_int1);
 		const char *display = is_stdout ? "cob_display" : "cob_display_error";
 		const char *newline = is_stdout ? "cob_newline" : "cob_newline_error";
@@ -1689,6 +1688,7 @@ End comment out */
 		}
 		if (no_adv == cb_int0)
 			cb_emit (cb_build_funcall_0 (newline));
+RXW End comment out */
 		/* End Original multiple call implementation */
 	}
 }

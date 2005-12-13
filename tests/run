@@ -4760,9 +4760,9 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:438: \${COMPILE} -c callee.cob"
+echo "misc.at:438: \${COMPILE_MODULE} -c callee.cob"
 echo misc.at:438 >$at_check_line_file
-( $at_traceon; ${COMPILE} -c callee.cob ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${COMPILE_MODULE} -c callee.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -4785,9 +4785,9 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:439: \${COMPILE} -c -fmain caller.cob"
+echo "misc.at:439: \${COMPILE} -c caller.cob"
 echo misc.at:439 >$at_check_line_file
-( $at_traceon; ${COMPILE} -c -fmain caller.cob ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${COMPILE} -c caller.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -9019,9 +9019,9 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "extensions.at:600: \${COMPILE} -m callee.cob"
+echo "extensions.at:600: \${COMPILE_MODULE} callee.cob"
 echo extensions.at:600 >$at_check_line_file
-( $at_traceon; ${COMPILE} -m callee.cob ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${COMPILE_MODULE} callee.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -9154,9 +9154,9 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "extensions.at:651: \${COMPILE} -m callee.cob"
+echo "extensions.at:651: \${COMPILE_MODULE} callee.cob"
 echo extensions.at:651 >$at_check_line_file
-( $at_traceon; ${COMPILE} -m callee.cob ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${COMPILE_MODULE} callee.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -9331,9 +9331,9 @@ _ATEOF
 
 
 $at_traceoff
-echo "extensions.at:707: \${COMPILE} -std=mvs -c -fstatic-call -fmain caller.cob"
+echo "extensions.at:707: \${COMPILE} -std=mvs -c -fstatic-call caller.cob"
 echo extensions.at:707 >$at_check_line_file
-( $at_traceon; ${COMPILE} -std=mvs -c -fstatic-call -fmain caller.cob ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${COMPILE} -std=mvs -c -fstatic-call caller.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -9356,9 +9356,9 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "extensions.at:708: \${COMPILE} -std=mvs -c -fstatic-call callee.cob"
+echo "extensions.at:708: \${COMPILE_MODULE} -std=mvs -c -fstatic-call callee.cob"
 echo extensions.at:708 >$at_check_line_file
-( $at_traceon; ${COMPILE} -std=mvs -c -fstatic-call callee.cob ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${COMPILE_MODULE} -std=mvs -c -fstatic-call callee.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr

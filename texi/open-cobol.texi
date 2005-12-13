@@ -163,7 +163,7 @@ This is a sample program that displays ``Hello World'':
 The compiler is @code{cobc}, which is executed as follows:
 
 @example
-$ cobc hello.cob
+$ cobc -x hello.cob
 $ ./hello
 Hello World!
 @end example
@@ -175,7 +175,7 @@ You can specify the executable file name by specifying the compiler
 option @code{-o} as follows:
 
 @example
-$ cobc -o hello-world hello.cob 
+$ cobc -x -o hello-world hello.cob 
 $ ./hello-world
 Hello World!
 @end example
@@ -308,7 +308,7 @@ single executable.
 One way is to specify all files on the command line:
 
 @example
-$ cobc -o prog main.cob subr1.cob subr2.cob
+$ cobc -x -o prog main.cob subr1.cob subr2.cob
 @end example
 
 Another way is to compile each file with the option @code{-c},
@@ -319,7 +319,7 @@ The top-level program must be compiled with the option @code{-fmain}:
 $ cobc -c subr1.cob
 $ cobc -c subr2.cob
 $ cobc -c -fmain main.cob
-$ cobc -o prog main.o subr1.o subr2.o
+$ cobc -x -o prog main.o subr1.o subr2.o
 @end example
 
 You can link C routines as well using either method:
@@ -333,7 +333,7 @@ Method 2:
 @example
 $ cc -c subrs.c
 $ cobc -c -fmain main.cob
-$ cobc -o prog main.o subrs.o
+$ cobc -x -o prog main.o subrs.o
 @end example
 
 Any number of functions can be contained in a single C file.
@@ -400,7 +400,7 @@ The main program and subprograms can be compiled separately.
 
 The main program is compiled as usual:
 @example
-$ cobc -o main main.cob
+$ cobc -x -o main main.cob
 @end example
 
 Subprograms are compiled with the option @code{-m}:
@@ -453,7 +453,7 @@ $ export LD_LIBRARY_PATH=/your/cobol/lib
 
 Then, compile the main program, linking the library as follows:
 @example
-$ cobc main.cob -L/your/cobol/lib -lsubrs
+$ cobc -x main.cob -L/your/cobol/lib -lsubrs
 @end example
 
 @node C Interface,  , Multiple Sources, Compile
@@ -569,7 +569,7 @@ Compile these programs as follows:
 @example
 $ cc -c `cob-config --cflags` hello.c
 $ cobc -c -static say.cob
-$ cobc -o hello hello.o say.o
+$ cobc -x -o hello hello.o say.o
 $ ./hello
 Hello World!
 @end example
@@ -622,7 +622,7 @@ Compile these programs as follows:
 
 @example
 $ cc -c `cob-config --cflags` hello-dynamic.c 
-$ cobc -o hello hello-dynamic.o
+$ cobc -x -o hello hello-dynamic.o
 $ cobc -m say.cob
 $ export COB_LIBRARY_PATH=.
 $ ./hello
@@ -677,7 +677,7 @@ Compile these programs as follows:
 @example
 $ cc -c say.c
 $ cobc -c -static -fmain hello.cob
-$ cobc -o hello hello.o say.o
+$ cobc -x -o hello hello.o say.o
 $ ./hello
 Hello World!
 @end example
@@ -690,7 +690,7 @@ option @code{-shared} to the C compiler:
 
 @example
 $ cc -shared -o say.so say.c
-$ cobc hello.cob
+$ cobc -x hello.cob
 $ export COB_LIBRARY_PATH=.
 $ ./hello
 Hello World!

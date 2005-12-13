@@ -9,7 +9,7 @@ COBCRUN="${abs_top_builddir}/bin/cobcrun"
 TEMPLATE="${abs_srcdir}/data-rep.src"
 
 FLAGS="-std=cobol2002 -debug -Wall ${COBOL_FLAGS}"
-COMPILE="${COBC} ${FLAGS}"
+COMPILE="${COBC} -x ${FLAGS}"
 COMPILE_ONLY="${COBC} -fsyntax-only ${FLAGS}"
 COMPILE_MODULE="${COBC} -m ${FLAGS}"
 
