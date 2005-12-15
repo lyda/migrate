@@ -1636,6 +1636,7 @@ static void
 output_call (struct cb_call *p)
 {
   int n;
+  int parmnum;
   char	*callp;
   int dynamic_link = 1;
   cb_tree l;
@@ -1711,6 +1712,7 @@ output_call (struct cb_call *p)
     {
 	n++;
     }
+  parmnum = n;
   output ("cob_call_params = %d;\n", n);
   output_prefix ();
   if (!dynamic_link)
@@ -1808,6 +1810,14 @@ output_call (struct cb_call *p)
       if (CB_CHAIN (l))
 	output (", ");
     }
+  if (parmnum < 16) {
+	for (n = parmnum; n < 16; n++) {
+		if (n != 0) {
+			output (", ");
+		}
+		output ("NULL");
+	}
+  }
   output (");\n");
   if (p->stmt2)
     output_stmt (p->stmt2);
@@ -2550,6 +2560,7 @@ static void
 output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 {
   int			i;
+  int			parmnum = 0;
   cb_tree		l;
   struct cb_field	*f;
   struct call_list	*clp;
@@ -2557,9 +2568,11 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 
   /* program function */
   output ("static int\n%s_ (int entry", prog->program_id);
-  for (l = parameter_list; l; l = CB_CHAIN (l))
+  for (l = parameter_list; l; l = CB_CHAIN (l)) {
 	output (", unsigned char *%s%d",
 		CB_PREFIX_BASE, cb_field (CB_VALUE (l))->id);
+	parmnum++;
+  }
   output (")\n");
   output_indent ("{");
 
@@ -2602,6 +2615,13 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	}
   }
   output_newline ();
+  if (cb_sticky_linkage && parmnum) {
+	output_line ("/* Sticky linkage save pointers */");
+	for (i = 0; i < parmnum; i++) {
+		output ("  static unsigned char *cob_parm_%d = NULL;\n", i);
+	}
+	output_newline ();
+  }
 
   output ("#include \"%s\"\n\n", cb_storage_file_name);
   output_newline ();
@@ -2677,6 +2697,22 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_line("auto void init$external(void);");
   }
   output_newline ();
+  if (cb_sticky_linkage && parmnum) {
+	output_line("if (cob_call_params < %d) {", parmnum);
+	output_line("  switch (cob_call_params) {");
+	for (i = 0, l = parameter_list; l; l = CB_CHAIN (l), i++) {
+		output_line("  case %d:", i);
+		output_line ("   %s%d = cob_parm_%d;",
+			CB_PREFIX_BASE, cb_field (CB_VALUE (l))->id, i);
+	}
+	output_line("  }");
+	output_line("}");
+	for (i = 0, l = parameter_list; l; l = CB_CHAIN (l), i++) {
+		output_line ("cob_parm_%d = %s%d;", i,
+			CB_PREFIX_BASE, cb_field (CB_VALUE (l))->id);
+	}
+	output_newline ();
+  }
   output_line ("module.next = cob_current_module;");
   output_line ("cob_current_module = &module;");
   output_newline ();
@@ -2843,6 +2879,7 @@ output_entry_function (struct cb_program *prog,
   const char *entry_name = CB_LABEL (CB_PURPOSE (entry))->name;
   cb_tree using_list = CB_VALUE (entry);
   cb_tree l, l1, l2;
+  int parmnum;
 
   output ("int");
   if ( gencode ) {
@@ -2898,14 +2935,20 @@ output_entry_function (struct cb_program *prog,
     if (CB_PURPOSE_INT (l) == CB_CALL_BY_CONTENT)
       {
 	struct cb_field *f = cb_field (CB_VALUE (l));
-	output ("unsigned char copy_%d[%d];\n", f->id, f->size);
+	if (cb_sticky_linkage) {
+		output ("  static unsigned char copy_%d[%d];\n", f->id, f->size);
+	} else {
+		output ("  unsigned char copy_%d[%d];\n", f->id, f->size);
+	}
       }
-  for (l = using_list; l; l = CB_CHAIN (l))
+  parmnum = 1;
+  for (l = using_list; l; l = CB_CHAIN (l), parmnum++)
     if (CB_PURPOSE_INT (l) == CB_CALL_BY_CONTENT)
       {
 	struct cb_field *f = cb_field (CB_VALUE (l));
-	output ("memcpy (copy_%d, %s%d, %d);\n",
-		     f->id, CB_PREFIX_BASE, f->id, f->size);
+	output ("  if (cob_call_params >= %d)\n", parmnum);
+	output ("      memcpy (copy_%d, %s%d, %d);\n",
+			f->id, CB_PREFIX_BASE, f->id, f->size);
       }
 
   output ("  return %s_ (%d", prog->program_id, progid++);

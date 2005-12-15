@@ -158,7 +158,7 @@ static char short_options[] = "hVvECScmxOgwo:t:I:L:l:";
 
 static struct option long_options[] = {
 	{"help", no_argument, NULL, 'h'},
-	{"version", no_argument, NULL, 'V'},
+	{"Version", no_argument, NULL, 'V'},
 	{"verbose", no_argument, NULL, 'v'},
 	{"list-reserved", no_argument, NULL, 'R'},
 	{"save-temps", no_argument, &save_temps, 1},

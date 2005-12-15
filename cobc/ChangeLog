@@ -1,5 +1,9 @@
 2005-12-13  Roger While <simrw@sim-basis.de>
 
+	* codegen.c : sticky-linkage changes
+
+2005-12-13  Roger While <simrw@sim-basis.de>
+
 	* codegen.c : Do not statically initialize the file structure
 	  cobc.c : Change long_opt "version" to "Version"
 	  parser.y : Extra EXTERNAL checking
