@@ -52,10 +52,10 @@ enum cb_config_type {
 struct noreserve	*norestab = NULL;
 
 static struct {
-	enum cb_config_type	type;
-	const char		*name;
-	void			*var;
-	char			*val;
+	const enum cb_config_type	type;
+	const char			*name;
+	void				*var;
+	char				*val;
 } config_table[] = {
 	{STRING, "include", NULL, NULL},
 	{STRING, "not-reserved", NULL, NULL},
@@ -249,20 +249,20 @@ cb_load_conf (const char *fname, int check_nodef)
 
 			if (strcmp (name, "include") == 0) {
 				/* include another conf file */
-				char	fname[COB_MEDIUM_BUFF];
+				char	f2name[COB_MEDIUM_BUFF];
 
-				sprintf (fname, "%s/%s", cob_config_dir, val);
-				if (cb_load_conf (fname, 0) != 0)
+				sprintf (f2name, "%s/%s", cob_config_dir, val);
+				if (cb_load_conf (f2name, 0) != 0)
 					return -1;
 			} else if (strcmp (name, "not-reserved") == 0) {
-				char			*s;
+				char			*nores;
 				struct noreserve	*noresptr;
 
-				s = read_string (val);
+				nores = read_string (val);
 				noresptr =
 				    (struct noreserve *)cob_malloc (sizeof (struct noreserve));
-				noresptr->noresword = cob_malloc (strlen (s) + 1);
-				strcpy (noresptr->noresword, s);
+				noresptr->noresword = cob_malloc (strlen (nores) + 1);
+				strcpy (noresptr->noresword, nores);
 				noresptr->next = norestab;
 				norestab = noresptr;
 			} else {

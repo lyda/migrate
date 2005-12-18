@@ -1,3 +1,7 @@
+2005-12-18  Roger While <simrw@sim-basis.de>
+
+	* Add perform-osvs, sticky-linkage to ibm.conf, mvs.conf
+
 2005-11-25  Roger While <simrw@sim-basis.de>
 
 	* New variable - sticky-linkage

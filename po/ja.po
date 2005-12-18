@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2005-12-13 18:12+0100\n"
+"POT-Creation-Date: 2005-12-18 16:32+0100\n"
 "PO-Revision-Date: 2004-08-01 23:55+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: cobc/cobc.c:334
+#: cobc/cobc.c:344
 #, fuzzy
 msgid ""
 "Options:\n"
@@ -85,44 +85,44 @@ msgstr ""
 "\n"
 "  -Wall                 全てのワーニングを有効にする"
 
-#: cobc/cobc.c:506
+#: cobc/cobc.c:516
 #, c-format
 msgid "Invalid option -std=%s\n"
 msgstr "不当なオプションです -std=%s\n"
 
-#: cobc/cobc.c:834
+#: cobc/cobc.c:844
 msgid "-MT must be given to specify target file\n"
 msgstr "ターゲットファイルを -MT で指定して下さい\n"
 
-#: cobc/tree.c:822
+#: cobc/tree.c:816
 msgid "numeric entry cannot be larger than 18 digits"
 msgstr "18 桁を越える数字項目は許されません"
 
-#: cobc/tree.c:847
+#: cobc/tree.c:841
 msgid "invalid picture string"
 msgstr "不当な PICTURE 定義です"
 
-#: cobc/tree.c:1022
+#: cobc/tree.c:1013
 #, fuzzy, c-format
 msgid "%s clause is required for file '%s'"
 msgstr "%s 句がファイル `%s' に必要です"
 
-#: cobc/tree.c:1055
+#: cobc/tree.c:1043
 #, fuzzy, c-format
 msgid "record size too small '%s'"
 msgstr "レコード長が短か過ぎます `%s'"
 
-#: cobc/tree.c:1058
+#: cobc/tree.c:1046
 #, fuzzy, c-format
 msgid "record size too large '%s'"
 msgstr "レコード長が長過ぎます `%s'"
 
-#: cobc/tree.c:1729
+#: cobc/tree.c:1704
 #, fuzzy, c-format
 msgid "FUNCTION %s has wrong number of arguments"
 msgstr "WHEN 句の引数の数が不当です"
 
-#: cobc/tree.c:1813
+#: cobc/tree.c:1788
 #, fuzzy, c-format
 msgid "FUNCTION %s not implemented"
 msgstr "`%s' は実装されていません"
@@ -374,17 +374,17 @@ msgstr "`%s' は 1 つの添字を必要とします"
 msgid "'%s' requires %d subscripts"
 msgstr "`%s' は %d つの添字を必要とします"
 
-#: cobc/typeck.c:440 libcob/common.c:878
+#: cobc/typeck.c:440 libcob/common.c:893
 #, fuzzy, c-format
 msgid "subscript of '%s' out of bounds: %d"
 msgstr "'%s' の添字が範囲を超えています: %d"
 
-#: cobc/typeck.c:492 libcob/common.c:889
+#: cobc/typeck.c:492 libcob/common.c:904
 #, fuzzy, c-format
 msgid "offset of '%s' out of bounds: %d"
 msgstr "'%s' の開始位置が範囲を超えています: %d"
 
-#: cobc/typeck.c:497 libcob/common.c:896
+#: cobc/typeck.c:497 libcob/common.c:911
 #, fuzzy, c-format
 msgid "length of '%s' out of bounds: %d"
 msgstr "'%s' の長さが範囲を超えています: %d"
@@ -702,127 +702,127 @@ msgstr "タイプの不適合を厳密に警告する"
 msgid "cannot find module '%s'"
 msgstr "モジュールが見付かりません `%s'"
 
-#: libcob/common.c:293
+#: libcob/common.c:308
 msgid "warning: cob_init expected in the main program\n"
 msgstr "warning: メインプログラムで cob_init 呼ばれていません\n"
 
-#: libcob/common.c:319
+#: libcob/common.c:334
 msgid "Error - Version mismatch"
 msgstr ""
 
-#: libcob/common.c:320
+#: libcob/common.c:335
 #, c-format
 msgid "%s has version/patch level %s/%d"
 msgstr ""
 
-#: libcob/common.c:322
+#: libcob/common.c:337
 #, c-format
 msgid "Library has version/patch level %s/%d"
 msgstr ""
 
-#: libcob/common.c:856
+#: libcob/common.c:871
 #, fuzzy, c-format
 msgid "'%s' not numeric: '%s'"
 msgstr "`%s' は数字ではありません: `%s'"
 
-#: libcob/common.c:867
+#: libcob/common.c:882
 #, fuzzy, c-format
 msgid "OCCURS DEPENDING ON '%s' out of bounds: %d"
 msgstr "OCCURS DEPENDING ON `%s' が範囲を越えています: %d"
 
-#: libcob/common.c:911
+#: libcob/common.c:926
 #, c-format
 msgid "EXTERNAL item '%s' has size > %d"
 msgstr ""
 
-#: libcob/common.c:935
+#: libcob/common.c:950
 #, c-format
 msgid "Cannot acquire %d bytes of memory - Aborting"
 msgstr ""
 
-#: libcob/fileio.c:1806
+#: libcob/fileio.c:1807
 #, fuzzy
 msgid "End of file"
 msgstr "ファイルの終わりです"
 
-#: libcob/fileio.c:1809
+#: libcob/fileio.c:1810
 #, fuzzy
 msgid "Key out of range"
 msgstr "キーの範囲が不当です"
 
-#: libcob/fileio.c:1812
+#: libcob/fileio.c:1813
 #, fuzzy
 msgid "Key order not ascending"
 msgstr "キーが昇順ではありません"
 
-#: libcob/fileio.c:1815
+#: libcob/fileio.c:1816
 #, fuzzy
 msgid "Record key already exists"
 msgstr "レコードキーが既に存在します"
 
-#: libcob/fileio.c:1818
+#: libcob/fileio.c:1819
 #, fuzzy
 msgid "Record key does not exist"
 msgstr "レコードキーが存在しません"
 
-#: libcob/fileio.c:1821
+#: libcob/fileio.c:1822
 #, fuzzy
 msgid "Permanent file error"
 msgstr "永続ファイルエラーです"
 
-#: libcob/fileio.c:1824
+#: libcob/fileio.c:1825
 #, fuzzy
 msgid "File does not exist"
 msgstr "ファイルが存在しません"
 
-#: libcob/fileio.c:1827
+#: libcob/fileio.c:1828
 #, fuzzy
 msgid "Permission denied"
 msgstr "利用許可がありません"
 
-#: libcob/fileio.c:1830
+#: libcob/fileio.c:1831
 #, fuzzy
 msgid "File already open"
 msgstr "ファイルは既に開いています"
 
-#: libcob/fileio.c:1833
+#: libcob/fileio.c:1834
 #, fuzzy
 msgid "File not open"
 msgstr "ファイルが開いていません"
 
-#: libcob/fileio.c:1836
+#: libcob/fileio.c:1837
 msgid "READ must be executed first"
 msgstr "READ を先に実行しなければなりません"
 
-#: libcob/fileio.c:1839
+#: libcob/fileio.c:1840
 #, fuzzy
 msgid "Record overflow"
 msgstr "レコードの領域を超えています"
 
-#: libcob/fileio.c:1842
+#: libcob/fileio.c:1843
 #, fuzzy
 msgid "Failed to read"
 msgstr "読み込みに失敗しました"
 
-#: libcob/fileio.c:1845
+#: libcob/fileio.c:1846
 #, fuzzy
 msgid "READ/START not allowed"
 msgstr "READ、START は許可されません"
 
-#: libcob/fileio.c:1848
+#: libcob/fileio.c:1849
 msgid "WRITE not allowed"
 msgstr "WRITE は許可されません"
 
-#: libcob/fileio.c:1851
+#: libcob/fileio.c:1852
 #, fuzzy
 msgid "DELETE/REWRITE not allowed"
 msgstr "DELETE、REWRITE は許可されません"
 
-#: libcob/fileio.c:1858
+#: libcob/fileio.c:1859
 msgid "LINAGE values invalid"
 msgstr ""
 
-#: libcob/fileio.c:1861
+#: libcob/fileio.c:1862
 #, fuzzy
 msgid "Unknown file error"
 msgstr "原因不明のファイルエラーです"

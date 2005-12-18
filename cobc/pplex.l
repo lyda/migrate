@@ -421,12 +421,12 @@ ppinput (char *buff, int max_size)
 
 	/* check the text that is longer than cb_text_column */
 	if (n > cb_text_column + 1) {
-		int i;
 
 		/* show warning if it is not whitespaces */
 		if (cb_warn_column_overflow && last_line_2 < cb_source_line - 1) {
-			for (i = cb_text_column; i < n; i++) {
-				if (buff[i] != ' ' && buff[i] != '\n') {
+			int coln;
+			for (coln = cb_text_column; coln < n; coln++) {
+				if (buff[coln] != ' ' && buff[coln] != '\n') {
 					cb_warning (_("source text after column %d"),
 						    cb_text_column);
 					break;

@@ -33,23 +33,6 @@ extern void		cob_binary_set_int64 (cob_field *f, long long n);
 
 /* memcpy/memset optimizations */
 
-static inline void
-own_memset_generic (unsigned char *x, const int y, size_t count)
-{
-	while (count--) {
-		*x++ = y;
-	}
-}
-
-static inline void
-own_memcpy_generic (unsigned char *x, const unsigned char *y, size_t count)
-{
-	while (count--) {
-		*x++ = *y++;
-	}
-	return;
-}
-
 #if defined (__GNUC__) && defined (__i386__)
 static inline void
 own_byte_memcpy (unsigned char *x, const unsigned char *y, size_t count)
@@ -63,6 +46,7 @@ own_byte_memcpy (unsigned char *x, const unsigned char *y, size_t count)
 	:"memory");
 }
 
+/*
 static inline void
 own_word_memcpy(void * to, const void * from, size_t n)
 {
@@ -77,6 +61,7 @@ __asm__ __volatile__(
 	: "0" (n/4), "g" (n), "1" ((long) to), "2" ((long) from)
 	: "memory");
 }
+*/
 
 static inline void 
 own_memset_gg (void *s, int c, size_t n)
@@ -223,7 +208,10 @@ own_memset_cg (void *s, unsigned long c, size_t n)
 #define own_memcpy(t, f, n) \
 	(__builtin_constant_p(n) ? \
 	own_constant_memcpy((t),(f),(n)) : \
+	memcpy((t),(f),(n)))
+/*
 	own_word_memcpy((t),(f),(n)))
+*/
 
 #define own_memset(s, c, n) \
 	(__extension__ (__builtin_constant_p (c)	\
@@ -234,15 +222,35 @@ own_memset_cg (void *s, unsigned long c, size_t n)
 
 #else	/* SUPER_OPTIMIZE */
 
+/*
 #define own_memcpy(x, y, z)		own_word_memcpy(x, y, z)
+*/
+#define own_memcpy(x, y, z)		memcpy(x, y, z)
 #define own_memset(x, y, z)		own_memset_gg(x, y, z)
 
 #endif	/* SUPER_OPTIMIZE */
 
 #else	/*  __i386__ */
 
+static inline void
+own_memcpy_generic (unsigned char *x, const unsigned char *y, size_t count)
+{
+	while (count--) {
+		*x++ = *y++;
+	}
+	return;
+}
+
+static inline void
+own_memset_generic (unsigned char *x, const int y, size_t count)
+{
+	while (count--) {
+		*x++ = y;
+	}
+}
+
 #define own_byte_memcpy(x, y, z)	own_memcpy_generic(x, y, z)
-#define own_memcpy(x, y, z)		own_memcpy_generic(x, y, z)
+#define own_memcpy(x, y, z)		memcpy(x, y, z)
 #define own_memset(x, y, z)		own_memset_generic(x, y, z)
 
 #endif	/* __i386__ */

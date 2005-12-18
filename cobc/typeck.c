@@ -1020,11 +1020,11 @@ static cb_tree decimal_stack = NULL;
 #define dpush(x) decimal_stack = cb_cons (x, decimal_stack)
 
 static cb_tree
-build_store_option (cb_tree x, cb_tree round)
+build_store_option (cb_tree x, cb_tree round_opt)
 {
 	int opt = 0;
 
-	if (round == cb_int1)
+	if (round_opt == cb_int1)
 		opt |= COB_STORE_ROUND;
 
 	switch (CB_FIELD (cb_ref (x))->usage) {
@@ -1160,13 +1160,13 @@ decimal_expand (cb_tree d, cb_tree x)
 }
 
 static void
-decimal_assign (cb_tree x, cb_tree d, cb_tree round)
+decimal_assign (cb_tree x, cb_tree d, cb_tree round_opt)
 {
-	dpush (cb_build_funcall_3 ("cob_decimal_get_field", d, x, build_store_option (x, round)));
+	dpush (cb_build_funcall_3 ("cob_decimal_get_field", d, x, build_store_option (x, round_opt)));
 }
 
 static cb_tree
-build_decimal_assign (cb_tree vars, char op, cb_tree val)
+build_decimal_assign (cb_tree vars, int op, cb_tree val)
 {
 	cb_tree l;
 	cb_tree s1 = NULL;
@@ -1204,7 +1204,7 @@ build_decimal_assign (cb_tree vars, char op, cb_tree val)
 }
 
 void
-cb_emit_arithmetic (cb_tree vars, char op, cb_tree val)
+cb_emit_arithmetic (cb_tree vars, int op, cb_tree val)
 {
 	cb_tree l;
 
@@ -1381,28 +1381,28 @@ cb_build_cond (cb_tree x)
  */
 
 cb_tree
-cb_build_add (cb_tree v, cb_tree n, cb_tree round)
+cb_build_add (cb_tree v, cb_tree n, cb_tree round_opt)
 {
 	cb_tree opt;
 
 	if (CB_INDEX_P (v) || CB_TREE_CLASS (v) == CB_CLASS_POINTER)
 		return cb_build_move (cb_build_binary_op (v, '+', n), v);
 
-	opt = build_store_option (v, round);
+	opt = build_store_option (v, round_opt);
 	if (opt == cb_int0 && cb_fits_int (n))
 		return cb_build_funcall_2 ("cob_add_int", v, cb_build_cast_integer (n));
 	return cb_build_funcall_3 ("cob_add", v, n, opt);
 }
 
 cb_tree
-cb_build_sub (cb_tree v, cb_tree n, cb_tree round)
+cb_build_sub (cb_tree v, cb_tree n, cb_tree round_opt)
 {
 	cb_tree opt;
 
 	if (CB_INDEX_P (v) || CB_TREE_CLASS (v) == CB_CLASS_POINTER)
 		return cb_build_move (cb_build_binary_op (v, '-', n), v);
 
-	opt = build_store_option (v, round);
+	opt = build_store_option (v, round_opt);
 	if (opt == cb_int0 && cb_fits_int (n))
 		return cb_build_funcall_2 ("cob_sub_int", v, cb_build_cast_integer (n));
 	return cb_build_funcall_3 ("cob_sub", v, n, opt);
@@ -2905,7 +2905,7 @@ cb_emit_set_true (cb_tree l)
  */
 
 void
-cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree dup, cb_tree col)
+cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree dup_allow, cb_tree col)
 {
 	cb_tree l;
 

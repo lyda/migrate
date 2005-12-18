@@ -120,7 +120,7 @@ enum cob_display_sign {
 };
 
 typedef struct __cob_module {
-struct __cob_module *next;
+	struct __cob_module	*next;
 	const unsigned char	*collating_sequence;
 	enum cob_display_sign	display_sign;
 	unsigned char		decimal_point;
@@ -149,16 +149,8 @@ enum cob_exception_id {
 	COB_EC_MAX
 };
 
-/* Exception data table */
-extern struct cob_exception {
-	int		code;
-	const char	*name;
-	int		critical;
-} cob_exception_table[];
-
 /* Set cob_exception_code from an exception id */
-#define COB_SET_EXCEPTION(id) \
-	cob_exception_code = cob_exception_table[id].code
+#define COB_SET_EXCEPTION(id) cob_set_exception(id)
 
 extern int	cob_exception_code;
 
@@ -187,8 +179,6 @@ extern cob_field		cob_quote;		/* QUOTE */
 
 extern const int		cob_exp10[];
 extern const long long		cob_exp10LL[];
-extern const unsigned char	cob_a2e[];	/* ASCII -> EBCDIC */
-extern const unsigned char	cob_e2a[];	/* EBCDIC -> ASCII */
 
 
 /* convert a digit (e.g., '0') into an integer (e.g., 0) */
@@ -214,6 +204,7 @@ extern void cob_stop_run (const int status) __attribute__ ((noreturn));
 extern void cob_stop_run (const int status);
 #endif
 extern void *cob_malloc (const size_t size);
+extern void cob_set_exception (const int id);
 extern void cob_check_version (const char *prog, const char *packver, const int patchlev);
 
 /* Utilities */

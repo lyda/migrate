@@ -90,6 +90,7 @@
 #endif
 #endif
 
+#include "common.h"
 #include "move.h"
 #include "numeric.h"
 #include "fileio.h"
@@ -785,19 +786,19 @@ static int
 relative_start (cob_file *f, int cond, cob_field *k)
 {
 	/* get the index */
-	int index = cob_get_int (k) - 1;
+	int kindex = cob_get_int (k) - 1;
 	if (cond == COB_LT)
-		index--;
+		kindex--;
 	else if (cond == COB_GT)
-		index++;
+		kindex++;
 
 	/* seek the index */
 	while (1) {
-		RELATIVE_SEEK (f, index);
+		RELATIVE_SEEK (f, kindex);
 
 		/* check if a valid record */
 		if (f->record->size > 0) {
-			cob_set_int (k, index + 1);
+			cob_set_int (k, kindex + 1);
 			return COB_STATUS_00_SUCCESS;
 		}
 
@@ -807,11 +808,11 @@ relative_start (cob_file *f, int cond, cob_field *k)
 			return COB_STATUS_23_KEY_NOT_EXISTS;
 		case COB_LT:
 		case COB_LE:
-			index--;
+			kindex--;
 			break;
 		case COB_GT:
 		case COB_GE:
-			index++;
+			kindex++;
 			break;
 		}
 	}
@@ -878,9 +879,9 @@ relative_write (cob_file *f, int opt)
 	SEEK_INIT (f);
 
 	if (f->access_mode != COB_ACCESS_SEQUENTIAL) {
-		int index = cob_get_int (f->keys[0].field) - 1;
-		if (index < 0
-		    || fseek (f->file, (off_t) (RELATIVE_SIZE (f) * index), SEEK_SET) < 0)
+		int kindex = cob_get_int (f->keys[0].field) - 1;
+		if (kindex < 0
+		    || fseek (f->file, (off_t) (RELATIVE_SIZE (f) * kindex), SEEK_SET) < 0)
 			return COB_STATUS_21_KEY_INVALID;
 	}
 

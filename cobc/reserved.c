@@ -30,10 +30,10 @@
 #define HASH_SIZE 133
 
 static struct {
-	const char			*name;
-	enum cb_system_name_category	category;
-	int				token;
-	cb_tree				node;
+	const char				*name;
+	const enum cb_system_name_category	category;
+	const int				token;
+	cb_tree					node;
 } system_table[] = {
   {"SYSIN",		CB_DEVICE_NAME,  CB_DEVICE_SYSIN, 0},
   {"SYSIPT",		CB_DEVICE_NAME,  CB_DEVICE_SYSIN, 0},
@@ -52,7 +52,7 @@ static struct {
   {"SWITCH-6",		CB_SWITCH_NAME,  CB_SWITCH_6, 0},
   {"SWITCH-7",		CB_SWITCH_NAME,  CB_SWITCH_7, 0},
   {"SWITCH-8",		CB_SWITCH_NAME,  CB_SWITCH_8, 0},
-  {0, 0, 0}
+  {NULL, 0, 0, 0}
 };
 
 static struct reserved {
@@ -559,7 +559,7 @@ static struct reserved reserved_words[] = {
 
 /* FUNCTION List */
 /* Name, Arguments, Implemented, Enum intrinsic, Routine, Field, Category */
-static struct cb_intrinsic_table function_list[] = {
+static const struct cb_intrinsic_table function_list[] = {
   { "ABS",			 1, 1, CB_INTR_ABS,
 				 "cob_intr_abs",
 				 CB_CATEGORY_NUMERIC },
@@ -846,7 +846,7 @@ lookup_intrinsic (const char *name)
 	struct cb_intrinsic_table	*cbp;
 
 	i = 0;
-	cbp = &function_list[0];
+	cbp = (struct cb_intrinsic_table *)&function_list[0];
 	for ( ; i < NUM_INTRINSICS; i++, cbp++ ) {
 		if ( strcasecmp(name, cbp->name) == 0 ) {
 			if ( cbp->implemented ) {

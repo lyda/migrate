@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2005-12-13 18:12+0100\n"
+"POT-Creation-Date: 2005-12-18 16:32+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: cobc/cobc.c:334
+#: cobc/cobc.c:344
 msgid ""
 "Options:\n"
 "  --help                Display this message\n"
@@ -58,44 +58,44 @@ msgid ""
 "  -Wall                 Enable all warnings"
 msgstr ""
 
-#: cobc/cobc.c:506
+#: cobc/cobc.c:516
 #, c-format
 msgid "Invalid option -std=%s\n"
 msgstr ""
 
-#: cobc/cobc.c:834
+#: cobc/cobc.c:844
 msgid "-MT must be given to specify target file\n"
 msgstr ""
 
-#: cobc/tree.c:822
+#: cobc/tree.c:816
 msgid "numeric entry cannot be larger than 18 digits"
 msgstr ""
 
-#: cobc/tree.c:847
+#: cobc/tree.c:841
 msgid "invalid picture string"
 msgstr ""
 
-#: cobc/tree.c:1022
+#: cobc/tree.c:1013
 #, c-format
 msgid "%s clause is required for file '%s'"
 msgstr ""
 
-#: cobc/tree.c:1055
+#: cobc/tree.c:1043
 #, c-format
 msgid "record size too small '%s'"
 msgstr ""
 
-#: cobc/tree.c:1058
+#: cobc/tree.c:1046
 #, c-format
 msgid "record size too large '%s'"
 msgstr ""
 
-#: cobc/tree.c:1729
+#: cobc/tree.c:1704
 #, c-format
 msgid "FUNCTION %s has wrong number of arguments"
 msgstr ""
 
-#: cobc/tree.c:1813
+#: cobc/tree.c:1788
 #, c-format
 msgid "FUNCTION %s not implemented"
 msgstr ""
@@ -347,17 +347,17 @@ msgstr ""
 msgid "'%s' requires %d subscripts"
 msgstr ""
 
-#: cobc/typeck.c:440 libcob/common.c:878
+#: cobc/typeck.c:440 libcob/common.c:893
 #, c-format
 msgid "subscript of '%s' out of bounds: %d"
 msgstr ""
 
-#: cobc/typeck.c:492 libcob/common.c:889
+#: cobc/typeck.c:492 libcob/common.c:904
 #, c-format
 msgid "offset of '%s' out of bounds: %d"
 msgstr ""
 
-#: cobc/typeck.c:497 libcob/common.c:896
+#: cobc/typeck.c:497 libcob/common.c:911
 #, c-format
 msgid "length of '%s' out of bounds: %d"
 msgstr ""
@@ -672,112 +672,112 @@ msgstr ""
 msgid "cannot find module '%s'"
 msgstr ""
 
-#: libcob/common.c:293
+#: libcob/common.c:308
 msgid "warning: cob_init expected in the main program\n"
 msgstr ""
 
-#: libcob/common.c:319
+#: libcob/common.c:334
 msgid "Error - Version mismatch"
 msgstr ""
 
-#: libcob/common.c:320
+#: libcob/common.c:335
 #, c-format
 msgid "%s has version/patch level %s/%d"
 msgstr ""
 
-#: libcob/common.c:322
+#: libcob/common.c:337
 #, c-format
 msgid "Library has version/patch level %s/%d"
 msgstr ""
 
-#: libcob/common.c:856
+#: libcob/common.c:871
 #, c-format
 msgid "'%s' not numeric: '%s'"
 msgstr ""
 
-#: libcob/common.c:867
+#: libcob/common.c:882
 #, c-format
 msgid "OCCURS DEPENDING ON '%s' out of bounds: %d"
 msgstr ""
 
-#: libcob/common.c:911
+#: libcob/common.c:926
 #, c-format
 msgid "EXTERNAL item '%s' has size > %d"
 msgstr ""
 
-#: libcob/common.c:935
+#: libcob/common.c:950
 #, c-format
 msgid "Cannot acquire %d bytes of memory - Aborting"
 msgstr ""
 
-#: libcob/fileio.c:1806
+#: libcob/fileio.c:1807
 msgid "End of file"
 msgstr ""
 
-#: libcob/fileio.c:1809
+#: libcob/fileio.c:1810
 msgid "Key out of range"
 msgstr ""
 
-#: libcob/fileio.c:1812
+#: libcob/fileio.c:1813
 msgid "Key order not ascending"
 msgstr ""
 
-#: libcob/fileio.c:1815
+#: libcob/fileio.c:1816
 msgid "Record key already exists"
 msgstr ""
 
-#: libcob/fileio.c:1818
+#: libcob/fileio.c:1819
 msgid "Record key does not exist"
 msgstr ""
 
-#: libcob/fileio.c:1821
+#: libcob/fileio.c:1822
 msgid "Permanent file error"
 msgstr ""
 
-#: libcob/fileio.c:1824
+#: libcob/fileio.c:1825
 msgid "File does not exist"
 msgstr ""
 
-#: libcob/fileio.c:1827
+#: libcob/fileio.c:1828
 msgid "Permission denied"
 msgstr ""
 
-#: libcob/fileio.c:1830
+#: libcob/fileio.c:1831
 msgid "File already open"
 msgstr ""
 
-#: libcob/fileio.c:1833
+#: libcob/fileio.c:1834
 msgid "File not open"
 msgstr ""
 
-#: libcob/fileio.c:1836
+#: libcob/fileio.c:1837
 msgid "READ must be executed first"
 msgstr ""
 
-#: libcob/fileio.c:1839
+#: libcob/fileio.c:1840
 msgid "Record overflow"
 msgstr ""
 
-#: libcob/fileio.c:1842
+#: libcob/fileio.c:1843
 msgid "Failed to read"
 msgstr ""
 
-#: libcob/fileio.c:1845
+#: libcob/fileio.c:1846
 msgid "READ/START not allowed"
 msgstr ""
 
-#: libcob/fileio.c:1848
+#: libcob/fileio.c:1849
 msgid "WRITE not allowed"
 msgstr ""
 
-#: libcob/fileio.c:1851
+#: libcob/fileio.c:1852
 msgid "DELETE/REWRITE not allowed"
 msgstr ""
 
-#: libcob/fileio.c:1858
+#: libcob/fileio.c:1859
 msgid "LINAGE values invalid"
 msgstr ""
 
-#: libcob/fileio.c:1861
+#: libcob/fileio.c:1862
 msgid "Unknown file error"
 msgstr ""

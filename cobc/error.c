@@ -186,14 +186,14 @@ ambiguous_error (cb_tree x)
 
 		/* display all fields with the same name */
 		for (l = w->items; l; l = CB_CHAIN (l)) {
-			cb_tree	x = CB_VALUE (l);
+			cb_tree	y = CB_VALUE (l);
 
 			sprintf (buff, "'%s' ", w->name);
-			switch (CB_TREE_TAG (x)) {
+			switch (CB_TREE_TAG (y)) {
 			case CB_TAG_FIELD:
 			{
 				struct cb_field *p;
-				for (p = CB_FIELD (x)->parent; p; p = p->parent) {
+				for (p = CB_FIELD (y)->parent; p; p = p->parent) {
 					strcat (buff, "in '");
 					strcat (buff, p->name);
 					strcat (buff, "' ");
@@ -202,10 +202,10 @@ ambiguous_error (cb_tree x)
 			}
 			case CB_TAG_LABEL:
 			{
-				struct cb_label *l = CB_LABEL (x);
-				if (l->section) {
+				struct cb_label *l2 = CB_LABEL (y);
+				if (l2->section) {
 					strcat (buff, "in '");
-					strcat (buff, l->section->name);
+					strcat (buff, l2->section->name);
 					strcat (buff, "' ");
 				}
 				break;
@@ -214,7 +214,7 @@ ambiguous_error (cb_tree x)
 				break;
 			}
 			strcat (buff, _("defined here"));
-			cb_error_x (x, buff);
+			cb_error_x (y, buff);
 		}
 	}
 }

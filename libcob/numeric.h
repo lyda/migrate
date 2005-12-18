@@ -34,13 +34,10 @@
  */
 typedef struct {
 	mpz_t	value;
-	char	scale;
+	int	scale;
 } cob_decimal;
 
 extern void cob_decimal_init (cob_decimal *d);
-extern void cob_decimal_print (cob_decimal *d);
-extern void cob_decimal_set (cob_decimal *dst, cob_decimal *src);
-extern void cob_decimal_set_int (cob_decimal *d, int n);
 extern int cob_decimal_get_int (cob_decimal *d);
 extern void cob_decimal_set_double (cob_decimal *d, double v);
 extern double cob_decimal_get_double (cob_decimal *d);
@@ -58,10 +55,17 @@ extern int cob_sub (cob_field *f1, cob_field *f2, int opt);
 extern int cob_add_int (cob_field *f, int n);
 extern int cob_sub_int (cob_field *f, int n);
 extern int cob_div_quotient (cob_field *dividend, cob_field *divisor, cob_field *quotient, int opt);
-extern int cob_div_remainder (cob_field *remainder, int opt);
+extern int cob_div_remainder (cob_field *fld_remainder, int opt);
 
 extern int cob_numeric_cmp (cob_field *f1, cob_field *f2);
 
 extern void cob_init_numeric (void);
+
+static inline void
+cob_decimal_set_int (cob_decimal *d, int n)
+{
+	mpz_set_si (d->value, n);
+	d->scale = 0;
+}
 
 #endif /* COB_NUMERIC_H_ */

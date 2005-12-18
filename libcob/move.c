@@ -918,14 +918,14 @@ cob_binary_get_int64 (cob_field *f)
 			own_byte_memcpy ((unsigned char *)&n, f->data, f->size);
 		}
 	}
-#else				/* WORDS_BIGENDIAN */
+#else	/* WORDS_BIGENDIAN */
 	if (COB_FIELD_HAVE_SIGN (f)) {
 		own_byte_memcpy ((unsigned char *)&n, f->data, f->size);
 		n >>= 8 * fsiz;	/* shift with sign */
 	} else {
 		own_byte_memcpy (((unsigned char *)&n) + fsiz, f->data, f->size);
 	}
-#endif				/* WORDS_BIGENDIAN */
+#endif	/* WORDS_BIGENDIAN */
 	return n;
 }
 
@@ -945,9 +945,9 @@ cob_binary_set_int64 (cob_field *f, long long n)
 	} else {
 		own_byte_memcpy (f->data, (unsigned char *)&n, f->size);
 	}
-#else				/* WORDS_BIGENDIAN */
+#else	/* WORDS_BIGENDIAN */
 	own_byte_memcpy (f->data, ((unsigned char *)&n) + 8 - f->size, f->size);
-#endif				/* WORDS_BIGENDIAN */
+#endif	/* WORDS_BIGENDIAN */
 }
 
 void

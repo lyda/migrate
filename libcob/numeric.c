@@ -25,6 +25,7 @@
 #include <ctype.h>
 #include <math.h>
 
+#include "common.h"
 #include "move.h"
 #include "numeric.h"
 
@@ -39,6 +40,7 @@ static cob_decimal	cob_d1;
 static cob_decimal	cob_d2;
 static cob_decimal	cob_d3;
 static cob_decimal	cob_d4;
+static mpz_t		cob_mexp;
 
 /*
  * Decimal number
@@ -51,6 +53,7 @@ cob_decimal_init (cob_decimal *d)
 	d->scale = 0;
 }
 
+/* Not used - comment out
 void
 cob_decimal_print (cob_decimal *d)
 {
@@ -60,35 +63,18 @@ cob_decimal_print (cob_decimal *d)
 	}
 	fputs ("\n", stdout);
 }
+end comment out */
 
 /* d->value *= 10^n, d->scale += n */
 static void
 shift_decimal (cob_decimal *d, int n)
 {
 	if (n > 0) {
-		if (n < 10) {
-			/* 0 < n < 10 */
-			mpz_mul_ui (d->value, d->value, cob_exp10[n]);
-		} else {
-			/* n >= 10 */
-			mpz_t m;
-			mpz_init (m);
-			mpz_ui_pow_ui (m, 10, n);
-			mpz_mul (d->value, d->value, m);
-			mpz_clear (m);
-		}
+		mpz_ui_pow_ui (cob_mexp, 10, n);
+		mpz_mul (d->value, d->value, cob_mexp);
 	} else if (n < 0) {
-		if (n > -10) {
-			/* -10 < n < 0 */
-			mpz_tdiv_q_ui (d->value, d->value, cob_exp10[-n]);
-		} else {
-			/* n <= -10 */
-			mpz_t m;
-			mpz_init (m);
-			mpz_ui_pow_ui (m, 10, -n);
-			mpz_tdiv_q (d->value, d->value, m);
-			mpz_clear (m);
-		}
+		mpz_ui_pow_ui (cob_mexp, 10, -n);
+		mpz_tdiv_q (d->value, d->value, cob_mexp);
 	}
 	d->scale += n;
 }
@@ -107,7 +93,7 @@ align_decimal (cob_decimal *d1, cob_decimal *d2)
  * Decimal set/get
  */
 
-void
+static void
 cob_decimal_set (cob_decimal *dst, cob_decimal *src)
 {
 	mpz_set (dst->value, src->value);
@@ -116,12 +102,14 @@ cob_decimal_set (cob_decimal *dst, cob_decimal *src)
 
 /* int */
 
+/*
 void
 cob_decimal_set_int (cob_decimal *d, int n)
 {
 	mpz_set_si (d->value, n);
 	d->scale = 0;
 }
+*/
 
 int
 cob_decimal_get_int (cob_decimal *d)
@@ -743,10 +731,13 @@ cob_display_add_int (cob_field *f, int n)
 	} else {
 		/* PIC 9(n)V9(m) */
 		size -= scale;
+		/* Following can never be true as size is unsigned ?? */
+		/* Comment out
 		if (size < 0) {
 			cob_put_sign (f, sign);
 			goto overflow;
 		}
+		*/
 	}
 
 	if (n > 0) {
@@ -852,9 +843,9 @@ cob_div_quotient (cob_field *dividend, cob_field *divisor, cob_field *quotient, 
 }
 
 int
-cob_div_remainder (cob_field *remainder, int opt)
+cob_div_remainder (cob_field *fld_remainder, int opt)
 {
-	return cob_decimal_get_field (&cob_d3, remainder, opt);
+	return cob_decimal_get_field (&cob_d3, fld_remainder, opt);
 }
 
 int
@@ -872,4 +863,5 @@ cob_init_numeric (void)
 	cob_decimal_init (&cob_d2);
 	cob_decimal_init (&cob_d3);
 	cob_decimal_init (&cob_d4);
+	mpz_init2 (cob_mexp, 512);
 }

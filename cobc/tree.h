@@ -196,12 +196,7 @@ typedef struct cb_tree_common	*cb_tree;
     cb_tree _x = (x);							\
     if (!_x || CB_TREE_TAG (_x) != tg)					\
       {									\
-	fprintf(stderr, "Tag 1 %d Tag 2 %d\n", CB_TREE_TAG(_x), tg);	\
-	fprintf (stderr,						\
-		 "%s:%d: invalid type cast from '%s' at %s:%d\n",	\
-		 __FILE__, __LINE__, _x ? cb_name (_x) : "null",	\
-		 cb_source_file, cb_source_line);			\
-	abort ();							\
+	cob_tree_cast_error (_x, __FILE__, __LINE__, tg);		\
       }									\
     ((ty *) (_x));							\
   })
@@ -458,7 +453,7 @@ struct cb_field {
 	unsigned int flag_base          : 1;
 	unsigned int flag_field         : 1;
 	unsigned int flag_item_external : 1;
-	unsigned int flag_spare		: 20;
+	unsigned int flag_spare		: 19;
 	};
 
 #define CB_FIELD(x)		(CB_TREE_CAST (CB_TAG_FIELD, struct cb_field, x))
@@ -592,8 +587,8 @@ struct cb_binary_op {
 #define cb_build_parenthesis(x) cb_build_binary_op (x, '@', 0)
 #define cb_build_negation(x)	cb_build_binary_op (x, '!', 0)
 
-extern cb_tree cb_build_binary_op (cb_tree x, char op, cb_tree y);
-extern cb_tree cb_build_binary_list (cb_tree l, char op);
+extern cb_tree cb_build_binary_op (cb_tree x, int op, cb_tree y);
+extern cb_tree cb_build_binary_list (cb_tree l, int op);
 
 
 /*
@@ -767,11 +762,11 @@ enum cb_intr_enum {
 
 struct cb_intrinsic_table {
 	const char		*name;		/* FUNCTION NAME */
-	int			args;		/* 0-n, negative = variable */
-	int			implemented;	/* Have we implemented it? */
-	enum cb_intr_enum	intr_enum;	/* Enum intrinsic */
+	const int		args;		/* 0-n, negative = variable */
+	const int		implemented;	/* Have we implemented it? */
+	const enum cb_intr_enum	intr_enum;	/* Enum intrinsic */
 	const char		*intr_routine;	/* Routine name */
-	enum cb_category	category;	/* Category */
+	const enum cb_category	category;	/* Category */
 };
 
 struct cb_intrinsic {
@@ -1085,9 +1080,9 @@ extern void cb_expr_shift_sign (char op);
 extern cb_tree cb_expr_finish (void);
 extern cb_tree cb_build_cond (cb_tree x);
 
-extern void cb_emit_arithmetic (cb_tree vars, char op, cb_tree val);
-extern cb_tree cb_build_add (cb_tree v, cb_tree n, cb_tree round);
-extern cb_tree cb_build_sub (cb_tree v, cb_tree n, cb_tree round);
+extern void cb_emit_arithmetic (cb_tree vars, int op, cb_tree val);
+extern cb_tree cb_build_add (cb_tree v, cb_tree n, cb_tree round_opt);
+extern cb_tree cb_build_sub (cb_tree v, cb_tree n, cb_tree round_opt);
 extern void cb_emit_corresponding (cb_tree (*func) (), cb_tree x1, cb_tree x2, cb_tree opt);
 
 extern void cb_emit_accept (cb_tree var, cb_tree pos);
@@ -1168,7 +1163,7 @@ extern void cb_emit_set_up_down (cb_tree l, cb_tree flag, cb_tree x);
 extern void cb_emit_set_on_off (cb_tree l, cb_tree flag);
 extern void cb_emit_set_true (cb_tree l);
 
-extern void cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree dup, cb_tree col);
+extern void cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree dup_allow, cb_tree col);
 extern void cb_emit_sort_using (cb_tree file, cb_tree l);
 extern void cb_emit_sort_input (cb_tree file, cb_tree proc);
 extern void cb_emit_sort_giving (cb_tree file, cb_tree l);
@@ -1189,6 +1184,7 @@ extern void cb_emit_write (cb_tree record, cb_tree from, cb_tree opt);
 extern cb_tree cb_build_write_advancing_lines (cb_tree pos, cb_tree lines);
 extern cb_tree cb_build_write_advancing_mnemonic (cb_tree pos, cb_tree mnemonic);
 extern cb_tree cb_build_write_advancing_page (cb_tree pos);
+extern void	cob_tree_cast_error (cb_tree x, const char * filen, int linenum, int tagnum);
 
 /* bytegen.c */
 /* extern void bytegen (struct cb_program *prog); */

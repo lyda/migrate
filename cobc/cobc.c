@@ -198,6 +198,16 @@ static void cob_clean_up (int status);
  * Global functions
  */
 
+void
+cob_tree_cast_error (cb_tree x, const char * filen, int linenum, int tagnum)
+{
+	fprintf (stderr, "%s:%d: Invalid type cast from '%s'\n",
+		filen, linenum, x ? cb_name (x) : "null");
+	fprintf (stderr, "Tag 1 %d Tag 2 %d\n", x ? CB_TREE_TAG(x) : 0,
+		tagnum);
+	(void)longjmp (cob_jmpbuf, 1);
+}
+
 void *
 cob_malloc (const size_t size)
 {
