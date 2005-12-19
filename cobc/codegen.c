@@ -2707,13 +2707,16 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_line("  switch (cob_call_params) {");
 	for (i = 0, l = parameter_list; l; l = CB_CHAIN (l), i++) {
 		output_line("  case %d:", i);
-		output_line ("   %s%d = cob_parm_%d;",
+		output_line ("   if (cob_parm_%d != NULL)", i);
+		output_line ("       %s%d = cob_parm_%d;",
 			CB_PREFIX_BASE, cb_field (CB_VALUE (l))->id, i);
 	}
 	output_line("  }");
 	output_line("}");
 	for (i = 0, l = parameter_list; l; l = CB_CHAIN (l), i++) {
-		output_line ("cob_parm_%d = %s%d;", i,
+		output_line ("if (%s%d != NULL)",
+			CB_PREFIX_BASE, cb_field (CB_VALUE (l))->id);
+		output_line ("  cob_parm_%d = %s%d;", i,
 			CB_PREFIX_BASE, cb_field (CB_VALUE (l))->id);
 	}
 	output_newline ();

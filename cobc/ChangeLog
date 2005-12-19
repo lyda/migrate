@@ -1,3 +1,7 @@
+2005-12-19  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Fix sticky-linkage with ENTRY
+
 2005-12-18  Roger While <simrw@sim-basis.de>
 
 	* All : cleanup of "shadowed" variables
