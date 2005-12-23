@@ -271,6 +271,9 @@
 /* Compile with large file system 64 */
 #undef WITH_LFS64
 
+/* Define variable sequential file format */
+#undef WITH_VARSEQ
+
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
 #undef WORDS_BIGENDIAN

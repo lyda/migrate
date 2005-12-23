@@ -35,7 +35,6 @@
 #define ABORT()								      \
 do {									      \
 	fprintf (stderr, "%s:%d: internal compiler error\n", __FILE__, __LINE__); \
-	fflush (stderr);							\
 	(void)longjmp (cob_jmpbuf, 1);					\
 } while (0)
 
@@ -45,7 +44,7 @@ do {									      \
 extern int	cb_source_format;
 
 extern struct cb_exception {
-	int		code;			/* exception code */
+	const int	code;			/* exception code */
 	const char	*name;			/* exception name */
 	int		enable;			/* if turn on */
 } cb_exception_table[];

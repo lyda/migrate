@@ -46,12 +46,15 @@ OpenCOBOL requires the following external libraries to be installed:
 
     GNU Libtool is distributed under GNU Lesser General Public License.
 
-The following libraries are optional:
+The following libraries are required when :
 
-  o Berkeley DB (libdb) 1.85 or later
+Indexed-Sequential file I/O is used or SORT/MERGE is used
+
+  o Berkeley DB (libdb) 1.85 or later (runtime and development)
     http://www.sleepycat.com/
+    Recommended is version 4.x as 1.85 is known to have problems.
 
-    libdb can be used to implement indexed file I/O and SORT/MERGE.
+    libdb is used to implement indexed file I/O and SORT/MERGE.
 
     Berkeley DB is distributed under the original BSD License (1.85)
     or their own open-source license (2.x or later).  Note that, as
@@ -59,10 +62,12 @@ The following libraries are optional:
     distribute the source code of your software along with your
     software, or you have to pay royalty to Sleepycat Software, Inc.
 
+SCREEN I/O is used or extended ACCEPT/DISPLAY is used
   o Ncurses (libncurses) 5.2 or later
     http://www.gnu.org/software/ncurses/ncurses.html
 
-    libncurses can be used to implement SCREEN SECTION.
+    libncurses is used to implement SCREEN SECTION and extended
+    ACCEPT/DISPLAY.
 
     Ncurses is distributed under a BSD style license.
 
@@ -74,7 +79,13 @@ this is done by the following commands:
 
     ./configure
     make
+
+Here you may run
+    make check
+to run a series of OpenCOBOL test programs
+
     make install
+
 
 There are the following configure options:
 
@@ -97,7 +108,24 @@ There are the following configure options:
   --with-dl			use the system dynamic linker instead of ltdl
 				This is the default on Linux/Cygwin
 
-  --with-patch-level=<n>	Set internal patch level to n
+  --with-patch-level=<n>	Set internal patch level to n (default 0)
+
+  --with-varseq=<n>		Define the format for variable length sequential
+				files. For these files, 4 bytes are written
+				preceeding each record. The format of these 4
+				bytes for values of <n> is as follows :
+				n = 0 (default)
+					The first 2 bytes are the record length
+					in big-endian order. This is compatible
+					with mainframe. Bytes 3 and 4 are set
+					to binary 0.
+				n = 1
+					The 4 bytes are the record length in
+					big-endian order.
+				n = 2
+					The 4 bytes are the record length in
+					native machine order (int).
+					(This was previously the default)
 
 Development
 ===========

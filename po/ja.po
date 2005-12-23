@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2005-12-18 16:32+0100\n"
+"POT-Creation-Date: 2005-12-23 15:17+0100\n"
 "PO-Revision-Date: 2004-08-01 23:55+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -374,17 +374,17 @@ msgstr "`%s' は 1 つの添字を必要とします"
 msgid "'%s' requires %d subscripts"
 msgstr "`%s' は %d つの添字を必要とします"
 
-#: cobc/typeck.c:440 libcob/common.c:893
+#: cobc/typeck.c:440 libcob/common.c:894
 #, fuzzy, c-format
 msgid "subscript of '%s' out of bounds: %d"
 msgstr "'%s' の添字が範囲を超えています: %d"
 
-#: cobc/typeck.c:492 libcob/common.c:904
+#: cobc/typeck.c:492 libcob/common.c:905
 #, fuzzy, c-format
 msgid "offset of '%s' out of bounds: %d"
 msgstr "'%s' の開始位置が範囲を超えています: %d"
 
-#: cobc/typeck.c:497 libcob/common.c:911
+#: cobc/typeck.c:497 libcob/common.c:912
 #, fuzzy, c-format
 msgid "length of '%s' out of bounds: %d"
 msgstr "'%s' の長さが範囲を超えています: %d"
@@ -702,127 +702,127 @@ msgstr "タイプの不適合を厳密に警告する"
 msgid "cannot find module '%s'"
 msgstr "モジュールが見付かりません `%s'"
 
-#: libcob/common.c:308
+#: libcob/common.c:309
 msgid "warning: cob_init expected in the main program\n"
 msgstr "warning: メインプログラムで cob_init 呼ばれていません\n"
 
-#: libcob/common.c:334
+#: libcob/common.c:335
 msgid "Error - Version mismatch"
 msgstr ""
 
-#: libcob/common.c:335
+#: libcob/common.c:336
 #, c-format
 msgid "%s has version/patch level %s/%d"
 msgstr ""
 
-#: libcob/common.c:337
+#: libcob/common.c:338
 #, c-format
 msgid "Library has version/patch level %s/%d"
 msgstr ""
 
-#: libcob/common.c:871
+#: libcob/common.c:872
 #, fuzzy, c-format
 msgid "'%s' not numeric: '%s'"
 msgstr "`%s' は数字ではありません: `%s'"
 
-#: libcob/common.c:882
+#: libcob/common.c:883
 #, fuzzy, c-format
 msgid "OCCURS DEPENDING ON '%s' out of bounds: %d"
 msgstr "OCCURS DEPENDING ON `%s' が範囲を越えています: %d"
 
-#: libcob/common.c:926
+#: libcob/common.c:927
 #, c-format
 msgid "EXTERNAL item '%s' has size > %d"
 msgstr ""
 
-#: libcob/common.c:950
+#: libcob/common.c:951
 #, c-format
 msgid "Cannot acquire %d bytes of memory - Aborting"
 msgstr ""
 
-#: libcob/fileio.c:1807
+#: libcob/fileio.c:1861
 #, fuzzy
 msgid "End of file"
 msgstr "ファイルの終わりです"
 
-#: libcob/fileio.c:1810
+#: libcob/fileio.c:1864
 #, fuzzy
 msgid "Key out of range"
 msgstr "キーの範囲が不当です"
 
-#: libcob/fileio.c:1813
+#: libcob/fileio.c:1867
 #, fuzzy
 msgid "Key order not ascending"
 msgstr "キーが昇順ではありません"
 
-#: libcob/fileio.c:1816
+#: libcob/fileio.c:1870
 #, fuzzy
 msgid "Record key already exists"
 msgstr "レコードキーが既に存在します"
 
-#: libcob/fileio.c:1819
+#: libcob/fileio.c:1873
 #, fuzzy
 msgid "Record key does not exist"
 msgstr "レコードキーが存在しません"
 
-#: libcob/fileio.c:1822
+#: libcob/fileio.c:1876
 #, fuzzy
 msgid "Permanent file error"
 msgstr "永続ファイルエラーです"
 
-#: libcob/fileio.c:1825
+#: libcob/fileio.c:1879
 #, fuzzy
 msgid "File does not exist"
 msgstr "ファイルが存在しません"
 
-#: libcob/fileio.c:1828
+#: libcob/fileio.c:1882
 #, fuzzy
 msgid "Permission denied"
 msgstr "利用許可がありません"
 
-#: libcob/fileio.c:1831
+#: libcob/fileio.c:1885
 #, fuzzy
 msgid "File already open"
 msgstr "ファイルは既に開いています"
 
-#: libcob/fileio.c:1834
+#: libcob/fileio.c:1888
 #, fuzzy
 msgid "File not open"
 msgstr "ファイルが開いていません"
 
-#: libcob/fileio.c:1837
+#: libcob/fileio.c:1891
 msgid "READ must be executed first"
 msgstr "READ を先に実行しなければなりません"
 
-#: libcob/fileio.c:1840
+#: libcob/fileio.c:1894
 #, fuzzy
 msgid "Record overflow"
 msgstr "レコードの領域を超えています"
 
-#: libcob/fileio.c:1843
+#: libcob/fileio.c:1897
 #, fuzzy
 msgid "Failed to read"
 msgstr "読み込みに失敗しました"
 
-#: libcob/fileio.c:1846
+#: libcob/fileio.c:1900
 #, fuzzy
 msgid "READ/START not allowed"
 msgstr "READ、START は許可されません"
 
-#: libcob/fileio.c:1849
+#: libcob/fileio.c:1903
 msgid "WRITE not allowed"
 msgstr "WRITE は許可されません"
 
-#: libcob/fileio.c:1852
+#: libcob/fileio.c:1906
 #, fuzzy
 msgid "DELETE/REWRITE not allowed"
 msgstr "DELETE、REWRITE は許可されません"
 
-#: libcob/fileio.c:1859
+#: libcob/fileio.c:1913
 msgid "LINAGE values invalid"
 msgstr ""
 
-#: libcob/fileio.c:1862
+#: libcob/fileio.c:1916
 #, fuzzy
 msgid "Unknown file error"
 msgstr "原因不明のファイルエラーです"

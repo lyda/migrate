@@ -22,27 +22,11 @@
 
 #include <libcob/common.h>
 
-extern void cob_display (cob_field *f);
 extern void cob_new_display (int outorerr, int newline, int varcnt, ...);
-extern void cob_display_error (cob_field *f);
-extern void cob_newline (void);
-extern void cob_newline_error (void);
-extern void cob_field_print (cob_field *f);
 extern void cob_accept (cob_field *f);
-extern void cob_accept_date (cob_field *f);
-extern void cob_accept_date_yyyymmdd (cob_field *f);
-extern void cob_accept_day (cob_field *f);
-extern void cob_accept_day_yyyyddd (cob_field *f);
-extern void cob_accept_day_of_week (cob_field *f);
-extern void cob_accept_time (cob_field *f);
-extern void cob_accept_command_line (cob_field *f);
-extern void cob_display_environment (cob_field *f);
-extern void cob_accept_environment (cob_field *f);
-extern void cob_display_env_value (cob_field *f);
-extern void cob_display_arg_number (cob_field *f);
-extern void cob_accept_arg_number (cob_field *f);
-extern void cob_accept_arg_value (cob_field *f);
 
+#if 0
 extern void cob_init_termio (void);
+#endif
 
 #endif /* COB_TERMIO_H_ */

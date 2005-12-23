@@ -166,9 +166,7 @@ extern char			**cob_argv;
 
 extern const char		*cob_source_file;
 extern unsigned int		cob_source_line;
-extern const char		*cob_source_statement;
 
-extern int			cob_linage_counter;
 extern int			cob_call_params;
 
 extern cob_field		cob_zero;		/* ZERO */
@@ -206,6 +204,19 @@ extern void cob_stop_run (const int status);
 extern void *cob_malloc (const size_t size);
 extern void cob_set_exception (const int id);
 extern void cob_check_version (const char *prog, const char *packver, const int patchlev);
+extern void cob_accept_date (cob_field *f);
+extern void cob_accept_date_yyyymmdd (cob_field *f);
+extern void cob_accept_day (cob_field *f);
+extern void cob_accept_day_yyyyddd (cob_field *f);
+extern void cob_accept_day_of_week (cob_field *f);
+extern void cob_accept_time (cob_field *f);
+extern void cob_accept_command_line (cob_field *f);
+extern void cob_display_environment (cob_field *f);
+extern void cob_accept_environment (cob_field *f);
+extern void cob_display_env_value (cob_field *f);
+extern void cob_display_arg_number (cob_field *f);
+extern void cob_accept_arg_number (cob_field *f);
+extern void cob_accept_arg_value (cob_field *f);
 
 /* Utilities */
 

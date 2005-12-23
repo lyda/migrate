@@ -25,6 +25,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
 #ifdef	__MINGW32__
 #include <io.h>
 #include <fcntl.h>
@@ -51,8 +52,8 @@ struct cob_exception {
 	const int	critical;
 };
 
-int			cob_argc = 0;
-char			**cob_argv = NULL;
+static int		cob_argc = 0;
+static char		**cob_argv = NULL;
 
 int			cob_initialized = 0;
 int			cob_exception_code = 0;
@@ -61,9 +62,7 @@ cob_module		*cob_current_module = NULL;
 
 const char		*cob_source_file = NULL;
 unsigned int		cob_source_line = 0;
-const char		*cob_source_statement = NULL;
 
-int			cob_linage_counter = 0;
 int			cob_call_params = 0;
 
 #ifdef	HAVE_SIGNAL_H
@@ -191,11 +190,11 @@ const unsigned char	cob_e2a[256] = {
 end of comment out */
 
 static const struct cob_exception	cob_exception_table[] = {
-	{0, 0, 0},		/* COB_EC_ZERO */
+	{0, NULL, 0},		/* COB_EC_ZERO */
 #undef COB_EXCEPTION
 #define COB_EXCEPTION(CODE,TAG,NAME,CRITICAL) { 0x##CODE, NAME, CRITICAL },
 #include "exception.def"
-	{0, 0, 0}		/* COB_EC_MAX */
+	{0, NULL, 0}		/* COB_EC_MAX */
 };
 
 static int		cob_switch[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -283,7 +282,9 @@ cob_init (int argc, char **argv)
 #endif
 
 		cob_init_numeric ();
+#if 0
 		cob_init_termio ();
+#endif
 		cob_init_fileio ();
 		cob_init_call ();
 		cob_init_intrinsic ();
@@ -953,3 +954,183 @@ cob_malloc (const size_t size)
 	memset (mptr, 0, size);
 	return mptr;
 }
+
+/* Extended ACCEPT/DISPLAY */
+
+void
+cob_accept_date (cob_field *f)
+{
+	time_t	t = time (NULL);
+	char	s[7];
+
+	strftime (s, 7, "%y%m%d", localtime (&t));
+	cob_memcpy (f, (ucharptr)s, 6);
+}
+
+void
+cob_accept_date_yyyymmdd (cob_field *f)
+{
+	time_t	t = time (NULL);
+	char	s[9];
+
+	strftime (s, 9, "%Y%m%d", localtime (&t));
+	cob_memcpy (f, (ucharptr)s, 8);
+}
+
+void
+cob_accept_day (cob_field *f)
+{
+	time_t	t = time (NULL);
+	char	s[6];
+
+	strftime (s, 6, "%y%j", localtime (&t));
+	cob_memcpy (f, (ucharptr)s, 5);
+}
+
+void
+cob_accept_day_yyyyddd (cob_field *f)
+{
+	time_t	t = time (NULL);
+	char	s[8];
+
+	strftime (s, 8, "%Y%j", localtime (&t));
+	cob_memcpy (f, (ucharptr)s, 7);
+}
+
+void
+cob_accept_day_of_week (cob_field *f)
+{
+	time_t	t = time (NULL);
+	char	s[2];
+
+	strftime (s, 2, "%u", localtime (&t));
+	cob_memcpy (f, (ucharptr)s, 1);
+}
+
+void
+cob_accept_time (cob_field *f)
+{
+	time_t	t = time (NULL);
+	char	s[9];
+
+	strftime (s, 9, "%H%M%S00", localtime (&t));
+	cob_memcpy (f, (ucharptr)s, 8);
+}
+
+void
+cob_accept_command_line (cob_field *f)
+{
+	int	i, size = 0;
+	char	buff[COB_LARGE_BUFF] = "";
+
+	for (i = 1; i < cob_argc; i++) {
+		int len = strlen (cob_argv[i]);
+		if (size + len >= COB_LARGE_BUFF) {
+			/* overflow */
+			break;
+		}
+		memcpy (buff + size, cob_argv[i], len);
+		size += len;
+		buff[size++] = ' ';
+	}
+
+	cob_memcpy (f, (ucharptr)buff, size);
+}
+
+/*
+ * Argument number
+ */
+
+static int current_arg = 1;
+
+void
+cob_display_arg_number (cob_field *f)
+{
+	int		n;
+	cob_field_attr	attr = { COB_TYPE_NUMERIC_BINARY, 9, 0, 0, 0 };
+	cob_field	temp = { 4, (unsigned char *)&n, &attr };
+
+	cob_move (f, &temp);
+	if (n < 0 || n >= cob_argc) {
+		return;
+	}
+	current_arg = n;
+}
+
+void
+cob_accept_arg_number (cob_field *f)
+{
+	int		n = cob_argc - 1;
+	cob_field_attr	attr = { COB_TYPE_NUMERIC_BINARY, 9, 0, 0, 0 };
+	cob_field	temp = { 4, (unsigned char *)&n, &attr };
+
+	cob_move (&temp, f);
+}
+
+void
+cob_accept_arg_value (cob_field *f)
+{
+	if (current_arg >= cob_argc) {
+		return;
+	}
+	cob_memcpy (f, (ucharptr)cob_argv[current_arg], strlen (cob_argv[current_arg]));
+	current_arg++;
+}
+
+/*
+ * Environment variable
+ */
+
+static char *env = NULL;
+
+void
+cob_display_environment (cob_field *f)
+{
+	if (!env) {
+		env = cob_malloc (COB_SMALL_BUFF);
+	}
+	memset (env, 0, COB_SMALL_BUFF);
+	if (f->size > COB_SMALL_BUFF - 1) {
+		return;
+	}
+	cob_field_to_string (f, env);
+}
+
+void
+cob_display_env_value (cob_field *f)
+{
+	char *p;
+	char env1[COB_SMALL_BUFF];
+	char env2[COB_SMALL_BUFF];
+
+	if (!env) {
+		return;
+	}
+	if (!*env) {
+		return;
+	}
+	cob_field_to_string (f, env2);
+	if (strlen (env) + strlen (env2) + 2 > COB_SMALL_BUFF) {
+		return;
+	}
+	strcpy (env1, env);
+	strcat (env1, "=");
+	strcat (env1, env2);
+	p = strdup (env1);
+	putenv (p);
+}
+
+void
+cob_accept_environment (cob_field *f)
+{
+	char *p = NULL;
+
+	if (env) {
+		p = getenv (env);
+	}
+	if (!p) {
+		p = "";
+	}
+	cob_memcpy (f, (ucharptr)p, strlen (p));
+}
+

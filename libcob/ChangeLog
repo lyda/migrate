@@ -1,3 +1,14 @@
+2005-12-23  Roger While <simrw@sim-basis.de>
+
+	* termio.c, common.c : Move extended accept/display from
+	  termio to common. Define cobc_argc/argv as static.
+
+2005-12-21  Roger While <simrw@sim-basis.de>
+
+	* fileio.c - Cater for various format of the record
+	  length field in variable length sequential files
+	  (WITH_VARSEQ)
+
 2005-12-18  Roger While <simrw@sim-basis.de>
 
 	* All : Cleanup "shadowed" variables

@@ -42,6 +42,7 @@ AH_TEMPLATE([COB_SHARED_OPT], [Compile/link option for shared code])
 AH_TEMPLATE([COB_STRIP_CMD], [Strip command])
 AH_TEMPLATE([USE_LIBDL], [Use system dynamic loader])
 AH_TEMPLATE([PATCH_LEVEL], [Define a patch level])
+AH_TEMPLATE([WITH_VARSEQ], [Define variable sequential file format])
 AH_TEMPLATE([DLLHIDDEN], [Has visibility attribute])
 AH_TEMPLATE([HAVE_PSIGN_OPT], [Has -Wno-pointer-sign])
 AH_TEMPLATE([COB_EXEEXT], [Executable extension])
@@ -127,6 +128,20 @@ AC_ARG_WITH(patch-level, [  --with-patch-level      define a patch level (defaul
 		;;
 esac])
 AC_DEFINE_UNQUOTED(PATCH_LEVEL, $PATCH_LEVEL)
+
+WITH_VARSEQ=0
+AC_ARG_WITH(varseq, [  --with-varseq           define variable sequential format (default 0)],
+[case $with_varseq in  
+    yes)	AC_MSG_ERROR(["You must give --with-varseq an argument."])
+		;;
+    no)		AC_MSG_ERROR(["--without-varseq not supported."])
+		;;
+    [[0-2]])	WITH_VARSEQ=$with_varseq
+		;;
+    *)		AC_MSG_ERROR(["Invalid --with-varseq argument"])
+		;;
+esac])
+AC_DEFINE(WITH_VARSEQ)
 
 save_libs="$LIBS"
 

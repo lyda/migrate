@@ -1,3 +1,7 @@
+2005-12-23  Roger While <simrw@sim-basis.de>
+
+	* reserved.c : Use bsearch
+
 2005-12-19  Roger While <simrw@sim-basis.de>
 
 	* codegen.c : Fix sticky-linkage with ENTRY

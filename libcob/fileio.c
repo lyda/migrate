@@ -94,6 +94,7 @@
 #include "move.h"
 #include "numeric.h"
 #include "fileio.h"
+#include "byteswap.h"
 #include "lib/gettext.h"
 
 #ifdef _WIN32
@@ -627,17 +628,44 @@ file_write_opt (cob_file *f, int opt)
 static int
 sequential_read (cob_file *f)
 {
+#if	WITH_VARSEQ == 0 || WITH_VARSEQ == 1
+	union {
+		unsigned char	sbuff[4];
+		unsigned short	sshort[2];
+		unsigned int	sint;
+	} recsize;
+#endif
+
 	SEEK_INIT (f);
 
 	/* read the record size */
 	if (f->record_min != f->record_max) {
+#if	WITH_VARSEQ == 2
 		if (fread (&f->record->size, sizeof (f->record->size), 1, f->file) != 1) {
+#else
+		if (fread (recsize.sbuff, 4, 1, f->file) != 1) {
+#endif
 			if (ferror ((FILE *)f->file)) {
 				return COB_STATUS_30_PERMANENT_ERROR;
 			} else {
 				return COB_STATUS_10_END_OF_FILE;
 			}
 		}
+#if	WITH_VARSEQ == 0
+#ifdef WORDS_BIGENDIAN
+		f->record->size = recsize.sshort[0];
+#else
+		f->record->size = COB_BSWAP_16 (recsize.sshort[0]);
+#endif
+#else
+#if	WITH_VARSEQ == 1
+#ifdef WORDS_BIGENDIAN
+		f->record->size = recsize.sint;
+#else
+		f->record->size = COB_BSWAP_32 (recsize.sint);
+#endif
+#endif
+#endif
 	}
 
 	/* read the record */
@@ -655,13 +683,39 @@ sequential_read (cob_file *f)
 static int
 sequential_write (cob_file *f, int opt)
 {
+#if	WITH_VARSEQ == 0 || WITH_VARSEQ == 1
+	union {
+		unsigned char	sbuff[4];
+		unsigned short	sshort[2];
+		unsigned int	sint;
+	} recsize;
+#endif
+
 	SEEK_INIT (f);
 
 	FILE_WRITE_AFTER (f, opt);
 
 	/* write the record size */
 	if (f->record_min != f->record_max) {
+#if	WITH_VARSEQ == 2
 		if (fwrite (&f->record->size, sizeof (f->record->size), 1, f->file) != 1) {
+#else
+#if	WITH_VARSEQ == 1
+#ifdef WORDS_BIGENDIAN
+		recsize.sint = f->record->size;
+#else
+		recsize.sint = COB_BSWAP_32 ((unsigned int)f->record->size);
+#endif
+#else
+		recsize.sint = 0;
+#ifdef WORDS_BIGENDIAN
+		recsize.sshort[0] = f->record->size;
+#else
+		recsize.sshort[0] = COB_BSWAP_16 ((unsigned short)f->record->size);
+#endif
+#endif
+		if (fwrite (recsize.sbuff, 4, 1, f->file) != 1) {
+#endif
 			return COB_STATUS_30_PERMANENT_ERROR;
 		}
 	}

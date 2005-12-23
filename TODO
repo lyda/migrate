@@ -165,8 +165,11 @@ executed.  We could instead produce the following code:
 
 In this case, you'll get all three function calls executed at once.
 
-NOTE - (Roger While) - Considering an alternate call.
-NOTE - See typeck.c (not activated code) - This will work
+NOTE - (Roger While) - We now use an alternate call.
+NOTE - See typeck.c/termio.c (cob_new_display) - This uses
+       varargs to pass a variable number of parameters.
+NOTE - However, there are other (non-DISPLAY) constructs that
+       produce multiple statements.
 
 
 5.2 Data access method
