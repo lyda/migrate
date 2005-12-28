@@ -36,6 +36,30 @@
 #define lt_dlerror()	dlerror()
 #define lt_ptr_t	void *
 #define lt_dlhandle	void *
+#elif	defined(_WIN32)
+#include <windows.h>
+/* Prototype */
+static char *	lt_dlerror (void);
+
+static HMODULE
+lt_dlopen (const char * x)
+{
+	if(x == NULL)
+		return GetModuleHandle(NULL);
+	return LoadLibrary(x);
+}
+#define lt_dlsym(x, y)	GetProcAddress(x, y)
+#define lt_dlclose(x)	FreeLibrary(x)
+static char errbuf[64];
+static char *
+lt_dlerror()
+{
+	sprintf(errbuf, "LoadLibrary/GetProcAddress error %d", (int)GetLastError());
+	return errbuf;
+}
+#define lt_ptr_t	void *
+#define	lt_dlinit()
+#define lt_dlhandle	HMODULE
 #else
 #define LT_NON_POSIX_NAMESPACE 1
 #include <ltdl.h>
@@ -59,16 +83,6 @@ static lt_dlhandle	mainhandle = NULL;
 
 #define HASH_SIZE	131
 
-/*
-static struct call_hash {
-	const char		*name;
-	const char		*path;
-	lt_ptr_t		func;
-	lt_dlhandle		handle;
-	time_t			mtime;
-	struct call_hash	*next;
-} *call_table[HASH_SIZE];
-*/
 struct call_hash {
 	const char		*name;
 	const char		*path;
@@ -312,11 +326,36 @@ cob_resolve_error (void)
  * COBOL interface
  */
 
+static void *
+cob_get_buff (size_t buffsize)
+{
+	static int	lastsize = 0;
+	static void	*buffer = NULL;
+
+	if (!buffer) {
+		if (buffsize <= COB_SMALL_BUFF) {
+			buffer = cob_malloc (COB_SMALL_BUFF);
+			lastsize = COB_SMALL_BUFF;
+		} else {
+			buffer = cob_malloc (buffsize);
+			lastsize = buffsize;
+		}
+	} else {
+		if (buffsize > lastsize) {
+			free (buffer);
+			buffer = cob_malloc (buffsize);
+			lastsize = buffsize;
+		}
+	}
+	return buffer;
+}
+
 void *
 cob_call_resolve (cob_field * f)
 {
-	char	buff[f->size + 1];
+	char	*buff;
 
+	buff = cob_get_buff (f->size + 1);
 	return cob_resolve (cob_field_to_string (f, buff));
 }
 
@@ -337,7 +376,8 @@ cob_call_error (void)
 void
 cob_cancel (cob_field * f)
 {
-	char	buff[f->size + 1];
+	char	*buff;
 
-	return drop (cob_field_to_string (f, buff));
+	buff = cob_get_buff (f->size + 1);
+	drop (cob_field_to_string (f, buff));
 }

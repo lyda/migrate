@@ -536,10 +536,6 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f, int opt)
 			NULL
 		};
 		unsigned char	data[64];
-/* Worse code
-		unsigned char data[f->attr->digits];
-		cob_field temp = {f->attr->digits, data, &attr};
-*/
 
 		temp.size = f->attr->digits;
 		temp.data = data;

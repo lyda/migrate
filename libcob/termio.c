@@ -68,8 +68,8 @@ pretty_display_numeric (cob_field *f, FILE *fp)
 	int		scale = COB_FIELD_SCALE (f);
 	int		size = (digits + (COB_FIELD_HAVE_SIGN (f) ? 1 : 0)
 				+ (scale > 0 ? 1 : 0));
-	unsigned char	pic[9], *p = pic;
-	unsigned char	data[size];
+	unsigned char	pic[16], *p = pic;
+	unsigned char	data[128];
 	cob_field_attr	attr = { COB_TYPE_NUMERIC_EDITED, digits, scale };
 	cob_field	temp = { size, data, &attr };
 

@@ -29,8 +29,23 @@
 #include "byteswap.h"
 #include "lib/gettext.h"
 
-#define MIN(x,y) ({int _x = (x), _y = (y); (_x < _y) ? _x : _y; })
-#define MAX(x,y) ({int _x = (x), _y = (y); (_x > _y) ? _x : _y; })
+static inline int
+cob_min_int (const int x, const int y)
+{
+	if (x < y) {
+		return x;
+	}
+	return y;
+}
+
+static inline int
+cob_max_int (const int x, const int y)
+{
+	if (x > y) {
+		return x;
+	}
+	return y;
+}
 
 static void
 store_common_region (cob_field *f, unsigned char *data, size_t size, int scale)
@@ -39,9 +54,11 @@ store_common_region (cob_field *f, unsigned char *data, size_t size, int scale)
 	int	lf2 = -COB_FIELD_SCALE (f);
 	int	hf1 = size + lf1;
 	int	hf2 = COB_FIELD_SIZE (f) + lf2;
-	int	lcf = MAX (lf1, lf2);
-	int	gcf = MIN (hf1, hf2);
+	int	lcf;
+	int	gcf;
 
+	lcf = cob_max_int (lf1, lf2);
+	gcf = cob_min_int (hf1, hf2);
 	if (gcf > lcf) {
 		own_memset (COB_FIELD_DATA (f), '0', hf2 - gcf);
 		own_memcpy (COB_FIELD_DATA (f) + hf2 - gcf, data + hf1 - gcf, gcf - lcf);
@@ -154,7 +171,7 @@ cob_move_display_to_alphanum (cob_field * f1, cob_field * f2)
 		own_memcpy (data2, data1, size1);
 		/* implied 0 ('P's) */
 		if (f1->attr->scale < 0) {
-			zero_size = MIN (-f1->attr->scale, diff);
+			zero_size = cob_min_int ((int)-f1->attr->scale, diff);
 			own_memset (data2 + size1, '0', zero_size);
 		}
 		/* padding */
@@ -414,6 +431,7 @@ cob_move_binary_to_display (cob_field *f1, cob_field *f2)
  * Edited
  */
 
+/* Can not use for non-gcc
 #define get()								\
   ({									\
     char _x = ((min <= src && src < max) ? *src++ : (src++, '0'));	\
@@ -421,6 +439,7 @@ cob_move_binary_to_display (cob_field *f1, cob_field *f2)
       is_zero = suppress_zero = 0;					\
     _x;									\
   })
+*/
 
 static void
 cob_move_display_to_edited (cob_field *f1, cob_field *f2)
@@ -474,7 +493,9 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 				break;
 
 			case '9':
-				*dst = get ();
+				*dst = (min <= src && src < max) ? *src++ : (src++, '0');
+				if (*dst != '0')
+					is_zero = suppress_zero = 0;
 				suppress_zero = 0;
 				trailing_sign = 1;
 				break;
@@ -507,8 +528,9 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 			case 'Z':
 			case '*':
 			{
-				char	x = get ();
-
+				char x = (min <= src && src < max) ? *src++ : (src++, '0');
+				if (x != '0')
+					is_zero = suppress_zero = 0;
 				pad = (c == '*') ? '*' : ' ';
 				*dst = suppress_zero ? pad : x;
 				trailing_sign = 1;
@@ -518,7 +540,9 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 			case '+':
 			case '-':
 			{
-				char	x = get ();
+				char x = (min <= src && src < max) ? *src++ : (src++, '0');
+				if (x != '0')
+					is_zero = suppress_zero = 0;
 				if (trailing_sign) {
 					*dst = neg ? '-' : (c == '+') ? '+' : ' ';
 					end--;
@@ -533,7 +557,9 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 
 			default:
 				if (c == cob_current_module->currency_symbol) {
-					char	x = get ();
+					char x = (min <= src && src < max) ? *src++ : (src++, '0');
+					if (x != '0')
+						is_zero = suppress_zero = 0;
 					if (dst == f2->data || suppress_zero) {
 						*dst = pad, sign_symbol =
 						    cob_current_module->currency_symbol;
@@ -706,11 +732,42 @@ static void
 cob_move_all (cob_field *src, cob_field *dst)
 {
 	int		i;
+	int		digcount;
 	cob_field	temp;
 	cob_field_attr	attr = { COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL };
-	unsigned char	data[dst->size];
+	static int	lastsize = 0;
+	static char	*data = NULL;
 
-	temp.size = dst->size;
+	if (COB_FIELD_IS_NUMERIC(dst)) {
+		digcount = 18;
+		attr.type = COB_TYPE_NUMERIC_DISPLAY;
+		attr.digits = 18;
+/*
+		if (dst->attr->type & COB_TYPE_NUMERIC_EDITED) {
+			digcount = dst->size;
+		} else {
+			digcount = dst->attr->digits;
+		}
+*/
+	} else {
+		digcount = dst->size;
+	}
+	if (!data) {
+		if (digcount <= COB_SMALL_BUFF) {
+			data = cob_malloc (COB_SMALL_BUFF);
+			lastsize = COB_SMALL_BUFF;
+		} else {
+			data = cob_malloc (digcount);
+			lastsize = digcount;
+		}
+	} else {
+		if (digcount > lastsize) {
+			free (data);
+			data = cob_malloc (digcount);
+			lastsize = digcount;
+		}
+	}
+	temp.size = digcount;
 	temp.data = data;
 	temp.attr = &attr;
 #ifdef	__GNUC__
@@ -718,9 +775,9 @@ cob_move_all (cob_field *src, cob_field *dst)
 #else
 	if ( src->size == 1 ) {
 #endif
-		own_memset (data, src->data[0], dst->size);
+		own_memset (data, src->data[0], digcount);
 	} else {
-		for (i = 0; i < dst->size; i++) {
+		for (i = 0; i < digcount; i++) {
 			data[i] = src->data[i % src->size];
 		}
 	}
@@ -762,8 +819,8 @@ cob_move (cob_field *src, cob_field *dst)
 			if (src->attr->scale < 0 || src->attr->scale > src->attr->digits) {
 				/* expand P's */
 				return indirect_move (cob_move_display_to_display, src, dst,
-						      MAX (src->attr->digits, src->attr->scale),
-						      MAX (0, src->attr->scale));
+						      cob_max_int ((int)src->attr->digits, (int)src->attr->scale),
+						      cob_max_int (0, (int)src->attr->scale));
 			} else {
 				return cob_move_alphanum_to_edited (src, dst);
 			}

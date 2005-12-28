@@ -190,7 +190,7 @@ typedef struct cb_tree_common	*cb_tree;
 #define CB_TREE_CLASS(x)	cb_tree_class (CB_TREE (x))
 #define CB_TREE_CATEGORY(x)	cb_tree_category (CB_TREE (x))
 
-#ifdef COB_DEBUG
+#if defined(COB_DEBUG) && !defined(__GNUC__)
 #define CB_TREE_CAST(tg,ty,x)						\
   ({									\
     cb_tree _x = (x);							\

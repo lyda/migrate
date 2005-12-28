@@ -2409,8 +2409,13 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 
 	if (l->all) {
 		int i;
-		unsigned char *buff = cob_malloc (f->size);
+		unsigned char *buff;
 
+		if (f->size >128 || cat == CB_CATEGORY_NUMERIC ||
+		    cat == CB_CATEGORY_NUMERIC_EDITED) {
+			return cb_build_move_call (src, dst);
+		}
+		buff = cob_malloc (f->size);
 		for (i = 0; i < f->size; i++)
 			buff[i] = l->data[i % l->size];
 		return cb_build_funcall_3 ("own_memcpy",
@@ -2561,6 +2566,9 @@ cb_build_move (cb_tree src, cb_tree dst)
 
 	f = cb_field (dst);
 
+/* Hack for systems that require pointer alignment */
+#if defined(__i386__) || defined(__x86_64__) || defined(__powerpc__) || defined(__powerpc64__) ||defined(__ppc__) || defined(__amd64__)
+
 	/* no optimization for binary swap and packed decimal for now */
 	if (f->flag_binary_swap
 	    || f->usage == CB_USAGE_PACKED
@@ -2586,6 +2594,9 @@ cb_build_move (cb_tree src, cb_tree dst)
 		return cb_build_move_literal (src, dst);
 
 	return cb_build_move_field (src, dst);
+#else
+	return cb_build_move_call (src, dst);
+#endif
 }
 
 void

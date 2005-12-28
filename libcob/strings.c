@@ -30,11 +30,17 @@
 #include "numeric.h"
 #include "strings.h"
 
-#define MIN(x,y) ({int _x = (x), _y = (y); (_x < _y) ? _x : _y; })
-
 #define INSPECT_ALL		0
 #define INSPECT_LEADING		1
 #define INSPECT_FIRST	      	2
+
+static inline int
+cob_min_int (const int x, const int y)
+{
+	if (x < y)
+		return x;
+	return y;
+}
 
 /*
  * INSPECT
@@ -376,11 +382,12 @@ cob_unstring_delimited (cob_field *dlm, int all)
 void
 cob_unstring_into (cob_field *dst, cob_field *dlm, cob_field *cnt)
 {
-	int		match_size = 0;
-	size_t		dlm_size = 0;
-	unsigned char	*dlm_data = NULL;
-	unsigned char	*start = unstring_src->data + unstring_offset;
-	regmatch_t	match[unstring_ndlms + 1];
+	int			match_size = 0;
+	size_t			dlm_size = 0;
+	unsigned char		*dlm_data = NULL;
+	unsigned char		*start = unstring_src->data + unstring_offset;
+	static regmatch_t	*match = NULL;
+	static int		ndlmslast = 0;
 
 	if (cob_exception_code) {
 		return;
@@ -391,10 +398,23 @@ cob_unstring_into (cob_field *dst, cob_field *dlm, cob_field *cnt)
 	}
 
 	if (unstring_ndlms == 0) {
-		match_size = MIN (COB_FIELD_SIZE (dst), unstring_src->size - unstring_offset);
+		match_size = cob_min_int ((int)COB_FIELD_SIZE (dst), (int)unstring_src->size - unstring_offset);
 		cob_memcpy (dst, start, match_size);
 		unstring_offset += match_size;
 	} else {
+		int	i;
+
+		i = unstring_ndlms + 1;
+		if (!match) {
+			match = cob_malloc (i * sizeof(regmatch_t));
+			ndlmslast = i;
+		} else {
+			if (i > ndlmslast) {
+				free (match);
+				match = cob_malloc (i * sizeof(regmatch_t));
+				ndlmslast = i;
+			}
+		}
 		/* delimit using regexec */
 		if (!unstring_reg_inited) {
 			regcomp (&unstring_reg, (char *)unstring_regexp, REG_EXTENDED);
@@ -403,7 +423,6 @@ cob_unstring_into (cob_field *dst, cob_field *dlm, cob_field *cnt)
 		if (regexec (&unstring_reg, (char *)start, unstring_ndlms + 1, match, 0) == 0
 		    && match[0].rm_so <= unstring_src->size - unstring_offset) {
 			/* match */
-			int	i;
 
 			match_size = match[0].rm_so;
 			cob_memcpy (dst, start, match_size);

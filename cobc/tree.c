@@ -590,11 +590,15 @@ cb_concat_literals (cb_tree x1, cb_tree x2)
 {
 	struct cb_literal	*l1 = CB_LITERAL (x1);
 	struct cb_literal	*l2 = CB_LITERAL (x2);
-	unsigned char		buff[l1->size + l2->size];
+	unsigned char		*buff;
+	cb_tree			x;
 
+	buff = cob_malloc (l1->size + l2->size + 3);
 	memcpy (buff, l1->data, l1->size);
 	memcpy (buff + l1->size, l2->data, l2->size);
-	return cb_build_alphanumeric_literal (buff, l1->size + l2->size);
+	x = cb_build_alphanumeric_literal (buff, l1->size + l2->size);
+	free (buff);
+	return x;
 }
 
 /*

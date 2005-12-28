@@ -569,7 +569,8 @@ process_command_line (int argc, char *argv[])
 
 		case 'e':
 		{
-			char ext[strlen (optarg) + 2];
+			char ext[COB_SMALL_BUFF];
+
 			sprintf (ext, ".%s", optarg);
 			cb_extension_list = cb_text_list_add (cb_extension_list, ext);
 			break;

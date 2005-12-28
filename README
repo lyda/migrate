@@ -40,7 +40,7 @@ OpenCOBOL requires the following external libraries to be installed:
     http://www.gnu.org/software/libtool/libtool.html
 
     *** Note - libltdl is NOT needed when installing on Linux
-        or Cygwin ***
+        or Windows (including Cygwin and MingW) ***
 
     libltdl is used to implement dynamic CALL statements.
 

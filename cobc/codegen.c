@@ -48,25 +48,14 @@ static int i_counters[NUM_I_COUNTERS];
 int entry_number = 0;
 int has_external = 0;
 
-static void output (const char *fmt, ...)
-     __attribute__ ((__format__ (__printf__, 1, 2)));
-static void output_line (const char *fmt, ...)
-     __attribute__ ((__format__ (__printf__, 1, 2)));
-static void output_storage (const char *fmt, ...)
-     __attribute__ ((__format__ (__printf__, 1, 2)));
-
-static void output_stmt (cb_tree x);
-static void output_integer (cb_tree x);
-static void output_index (cb_tree x);
-static void output_func_1 (const char *name, cb_tree x);
-
-
-/*
- * Output routines
- */
-
 static int output_indent_level = 0;
 static FILE *output_target;
+
+static struct label_list {
+	struct label_list	*next;
+	int			id;
+	int			call_num;
+} *label_cache = NULL;
 
 static struct attr_list {
 	struct attr_list	*next;
@@ -97,6 +86,19 @@ static struct call_list {
 	const char		*callorig;
 } *call_cache = NULL;
 
+static void output (const char *fmt, ...)
+     __attribute__ ((__format__ (__printf__, 1, 2)));
+static void output_line (const char *fmt, ...)
+     __attribute__ ((__format__ (__printf__, 1, 2)));
+static void output_storage (const char *fmt, ...)
+     __attribute__ ((__format__ (__printf__, 1, 2)));
+
+static void output_stmt (cb_tree x);
+static void output_integer (cb_tree x);
+static void output_index (cb_tree x);
+static void output_func_1 (const char *name, cb_tree x);
+
+
 static void
 lookup_call (const char *p, const char *q)
 {
@@ -113,6 +115,10 @@ lookup_call (const char *p, const char *q)
 	clp->next = call_cache;
 	call_cache = clp;
 }
+
+/*
+ * Output routines
+ */
 
 static void
 output (const char *fmt, ...)
@@ -1341,9 +1347,25 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
 	  /* alphanumeric literal */
 	  /* We do not use output_move here because
 	     we do not want to have the value be edited. */
-	  struct cb_literal *l = CB_LITERAL (value);
-	  char buff[f->size];
+	  struct cb_literal	*l = CB_LITERAL (value);
+	  static char		*buff = NULL;
+	  static int		lastsize = 0;
 
+	  if (!buff) {
+		if (f->size <= COB_SMALL_BUFF) {
+			buff = cob_malloc (COB_SMALL_BUFF);
+			lastsize = COB_SMALL_BUFF;
+		} else {
+			buff = cob_malloc (f->size);
+			lastsize = f->size;
+		}
+	  } else {
+		if (f->size > lastsize) {
+			free (buff);
+			buff = cob_malloc (f->size);
+			lastsize = f->size;
+		}
+	  }
 	  l = CB_LITERAL (value);
 	  if (l->size >= f->size)
 	    {
@@ -1880,11 +1902,28 @@ output_goto (struct cb_goto *p)
 static void
 output_perform_call (struct cb_label *lb, struct cb_label *le)
 {
+#if	!defined(__GNUC__)
+  struct label_list	*l;
+#endif
+
   output_line ("/* PERFORM %s THRU %s */", lb->name, le->name);
   output_line ("frame_index++;");
   output_line ("frame_stack[frame_index].perform_through = %d;",
 	       le->id);
-#if	COB_USE_SETJMP
+#if	!defined(__GNUC__)
+  l = cob_malloc (sizeof (struct label_list));
+  l->next = label_cache;
+  l->id = cb_id;
+  if (label_cache == NULL) {
+	l->call_num = 0;
+  } else {
+	l->call_num = label_cache->call_num + 1;
+  }
+  label_cache = l;
+  output_line ("frame_stack[frame_index].return_address = %d;", l->call_num);
+  output_line ("goto %s%d;", CB_PREFIX_LABEL, lb->id);
+  output_line ("%s%d:", CB_PREFIX_LABEL, cb_id);
+#elif	COB_USE_SETJMP
   output_line ("if (setjmp(frame_stack[frame_index].return_address) == 0)");
   output_line ("  goto %s%d;", CB_PREFIX_LABEL, lb->id);
 #else
@@ -1901,7 +1940,9 @@ static void
 output_perform_exit (struct cb_label *l)
 {
   output_line ("if (frame_stack[frame_index].perform_through == %d)", l->id);
-#if	COB_USE_SETJMP
+#if	!defined(__GNUC__)
+  output_line ("  goto PSWITCH;");
+#elif	COB_USE_SETJMP
   output_line ("  longjmp(frame_stack[frame_index].return_address, 1);");
 #else
   output_line ("  goto *frame_stack[frame_index].return_address;");
@@ -1910,23 +1951,15 @@ output_perform_exit (struct cb_label *l)
 	output_line ("for (temp_index = frame_index - 1; temp_index >= 0; temp_index--) {");
 	output_line ("  if (frame_stack[temp_index].perform_through == %d) {", l->id);
 	output_line ("    frame_index = temp_index;");
-#if	COB_USE_SETJMP
+#if	!defined(__GNUC__)
+	output_line ("    goto PSWITCH;");
+#elif	COB_USE_SETJMP
 	output_line ("    longjmp(frame_stack[frame_index].return_address, 1);");
 #else
 	output_line ("    goto *frame_stack[frame_index].return_address;");
 #endif
 	output_line ("  }");
 	output_line ("}");
-/*
-	output_line ("if (frame_index > 0) {");
-	output_line ("  frame_index--;");
-#if	COB_USE_SETJMP
-	output_line ("  longjmp(frame_stack[frame_index].return_address, 1);");
-#else
-	output_line ("  goto *frame_stack[frame_index].return_address;");
-#endif
-	output_line ("}");
-*/
   }
 }
 
@@ -2570,6 +2603,9 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   struct cb_field	*f;
   struct call_list	*clp;
   struct field_list	*k;
+#if	!defined(__GNUC__)
+  struct label_list	*pl;
+#endif
 
   /* program function */
   output ("static int\n%s_ (int entry", prog->program_id);
@@ -2686,7 +2722,9 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_line ("int temp_index;");
   }
   output_line ("int frame_index;");
-#if	COB_USE_SETJMP
+#if	!defined(__GNUC__)
+  output_line ("struct frame { int perform_through; int return_address; } "
+#elif	COB_USE_SETJMP
   output_line ("struct frame { int perform_through; jmp_buf return_address; } "
 #else
   output_line ("struct frame { int perform_through; void *return_address; } "
@@ -2696,10 +2734,10 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 
   output_line ("/* Start of function code */");
   if ( cb_flag_static_call == 2 ) {
-	output_line("auto void init$%s(void);", prog->program_id);
+	output_line("auto void init_%s(void);", prog->program_id);
   }
   if ( has_external ) {
-	output_line("auto void init$external(void);");
+	output_line("auto void init_external(void);");
   }
   output_newline ();
   if (cb_sticky_linkage && parmnum) {
@@ -2742,7 +2780,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_line ("cob_screen_init ();");
   }
   if ( cb_flag_static_call == 2 ) {
-	output_line("init$%s();", prog->program_id);
+	output_line("init_%s();", prog->program_id);
   }
   if (prog->decimal_index_max) {
 	output_line ("/* initialize decimal numbers */");
@@ -2754,7 +2792,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   if (!prog->flag_initial) {
 	output_initial_values (prog->working_storage);
 	if ( has_external ) {
-		output_line("init$external();");
+		output_line("init_external();");
 	}
 	output_newline ();
 	for (l = prog->file_list; l; l = CB_CHAIN (l))
@@ -2767,7 +2805,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   if (prog->flag_initial) {
 	output_initial_values (prog->working_storage);
 	if ( has_external ) {
-		output_line("init$external();");
+		output_line("init_external();");
 	}
 	output_newline ();
 	for (l = prog->file_list; l; l = CB_CHAIN (l))
@@ -2821,7 +2859,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   output ("return ");
   output_integer (cb_return_code);
   output (";\n\n");
-
+ 
   /* error handlers */
   if (prog->file_list) {
 	output_line ("/* error handlers */");
@@ -2849,8 +2887,23 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_newline ();
   }
 
+#if	!defined(__GNUC__)
+  output_line ("PSWITCH:");
+  if (label_cache) {
+	output_line (" switch (frame_stack[frame_index].return_address) {");
+	for (pl = label_cache; pl; pl = pl->next) {
+		output_line (" case %d:", pl->call_num);
+		output_line ("   goto %s%d;", CB_PREFIX_LABEL, pl->id);
+	}
+	output_line (" }");
+	output_line (" fprintf(stderr, \"Codegen error\\n\");");
+	output_line (" cob_stop_run (1);");
+	output_newline ();
+  }
+#endif
+
   if ( cb_flag_static_call == 2 ) {
-	output_line("void init$%s(void)", prog->program_id);
+	output_line("void init_%s(void)", prog->program_id);
 	output_line("{");
 	for ( clp = call_cache; clp; clp = clp->next ) {
 	output_line("	call_%s = cob_resolve(\"%s\");",
@@ -2860,7 +2913,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   }
 
   if ( has_external ) {
-	output_line("void init$external(void)");
+	output_line("void init_external(void)");
 	output_line("{");
 	for (k = field_cache; k; k = k->next) {
 		if ( k->f->flag_item_external) {
@@ -3023,6 +3076,7 @@ codegen (struct cb_program *prog)
   attr_cache = NULL;
   literal_cache = NULL;
   call_cache = NULL;
+  label_cache = NULL;
   parameter_list = NULL;
   memset ((char *)i_counters, 0, sizeof (i_counters));
 

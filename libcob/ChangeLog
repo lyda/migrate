@@ -1,3 +1,13 @@
+2005-12-28  Roger While <simrw@sim-basis.de>
+
+	* General : Further fixes for non-gcc
+
+2005-12-27  Roger While <simrw@sim-basis.de>
+
+	* General : Change occurrences of "char[variable]"
+	  move.c : Change code for "MOVE ALL '98' TO binary/packed/edited"
+		   This is still not completely correct
+
 2005-12-23  Roger While <simrw@sim-basis.de>
 
 	* termio.c, common.c : Move extended accept/display from

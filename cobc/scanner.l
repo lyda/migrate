@@ -306,11 +306,31 @@ read_literal (char mark)
 static int
 scan_x (char *text)
 {
-	int	high = 1;
-	char	*src = text;
-	char	buff[strlen (text)];
-	char	*dst = buff;
+	static int	lastlen = 0;
+	static char	*buff = NULL;
 
+	int		high = 1;
+	char		*src = text;
+	char		*dst;
+	int		currlen;
+
+	currlen = strlen (text);
+	if (!buff) {
+		if (currlen <= COB_SMALL_BUFF) {
+			buff = cob_malloc (COB_SMALL_BUFF);
+			lastlen = COB_SMALL_BUFF;
+		} else {
+			buff = cob_malloc (currlen);
+			lastlen = currlen;
+		}
+	} else {
+		if (currlen > lastlen) {
+			free (buff);
+			buff = cob_malloc (currlen);
+			lastlen = currlen;
+		}
+	}
+	dst = buff;
 	while (isalnum (*src)) {
 		int c = toupper (*src);
 

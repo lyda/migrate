@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2005-12-23 15:17+0100\n"
+"POT-Creation-Date: 2005-12-28 12:12+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -63,39 +63,39 @@ msgstr ""
 msgid "Invalid option -std=%s\n"
 msgstr ""
 
-#: cobc/cobc.c:844
+#: cobc/cobc.c:845
 msgid "-MT must be given to specify target file\n"
 msgstr ""
 
-#: cobc/tree.c:816
+#: cobc/tree.c:820
 msgid "numeric entry cannot be larger than 18 digits"
 msgstr ""
 
-#: cobc/tree.c:841
+#: cobc/tree.c:845
 msgid "invalid picture string"
 msgstr ""
 
-#: cobc/tree.c:1013
+#: cobc/tree.c:1017
 #, c-format
 msgid "%s clause is required for file '%s'"
 msgstr ""
 
-#: cobc/tree.c:1043
+#: cobc/tree.c:1047
 #, c-format
 msgid "record size too small '%s'"
 msgstr ""
 
-#: cobc/tree.c:1046
+#: cobc/tree.c:1050
 #, c-format
 msgid "record size too large '%s'"
 msgstr ""
 
-#: cobc/tree.c:1704
+#: cobc/tree.c:1708
 #, c-format
 msgid "FUNCTION %s has wrong number of arguments"
 msgstr ""
 
-#: cobc/tree.c:1788
+#: cobc/tree.c:1792
 #, c-format
 msgid "FUNCTION %s not implemented"
 msgstr ""
@@ -450,7 +450,7 @@ msgstr ""
 msgid "invalid VALUE clause"
 msgstr ""
 
-#: cobc/typeck.c:2265 cobc/typeck.c:2538 cobc/typeck.c:2541
+#: cobc/typeck.c:2265 cobc/typeck.c:2543 cobc/typeck.c:2546
 msgid "invalid MOVE statement"
 msgstr ""
 
@@ -470,29 +470,29 @@ msgstr ""
 msgid "value size exceeds data size"
 msgstr ""
 
-#: cobc/typeck.c:2691
+#: cobc/typeck.c:2702
 msgid "KEY ignored with sequential READ"
 msgstr ""
 
-#: cobc/typeck.c:2765
+#: cobc/typeck.c:2776
 #, c-format
 msgid "undeclared key '%s'"
 msgstr ""
 
-#: cobc/typeck.c:2769
+#: cobc/typeck.c:2780
 msgid "invalid SEARCH ALL condition"
 msgstr ""
 
-#: cobc/typeck.c:2843
+#: cobc/typeck.c:2854
 msgid "the targets of SET must be either indexes or pointers"
 msgstr ""
 
-#: cobc/typeck.c:2857
+#: cobc/typeck.c:2868
 #, c-format
 msgid "the address of '%s' cannot be changed"
 msgstr ""
 
-#: cobc/typeck.c:3113
+#: cobc/typeck.c:3124
 msgid "invalid mnemonic name"
 msgstr ""
 
@@ -589,17 +589,17 @@ msgstr ""
 msgid "%s statement not terminated by END-%s"
 msgstr ""
 
-#: cobc/scanner.l:342
+#: cobc/scanner.l:362
 #, c-format
 msgid "invalid X literal: %s"
 msgstr ""
 
-#: cobc/scanner.l:378
+#: cobc/scanner.l:398
 #, c-format
 msgid "invalid H literal: %s"
 msgstr ""
 
-#: cobc/scanner.l:402
+#: cobc/scanner.l:422
 msgid "invalid numeric literal"
 msgstr ""
 
@@ -667,7 +667,7 @@ msgstr ""
 msgid "Warn type mismatch strictly"
 msgstr ""
 
-#: libcob/call.c:297
+#: libcob/call.c:311
 #, c-format
 msgid "cannot find module '%s'"
 msgstr ""

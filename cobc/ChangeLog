@@ -1,3 +1,14 @@
+2005-12-28  Roger While <simrw@sim-basis.de>
+
+	* General : Further fixes for non-gcc
+	  codegen.c : Don't use computed goto's for non-gcc
+
+2005-12-27  Roger While <simrw@sim-basis.de>
+
+	* General : Change all occurrences of "char[variable]"
+	  typeck.c : Fix huge literal generation
+		     Hack for systems that need pointer alignment
+
 2005-12-23  Roger While <simrw@sim-basis.de>
 
 	* reserved.c : Use bsearch

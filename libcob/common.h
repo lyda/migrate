@@ -161,9 +161,6 @@ extern int	cob_exception_code;
 
 extern int			cob_initialized;
 
-extern int			cob_argc;
-extern char			**cob_argv;
-
 extern const char		*cob_source_file;
 extern unsigned int		cob_source_line;
 

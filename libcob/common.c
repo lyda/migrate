@@ -858,7 +858,7 @@ cob_check_numeric (cob_field *f, const char *name)
 	if (!cob_is_numeric (f)) {
 		size_t		i;
 		unsigned char	*data = f->data;
-		char		buff[f->size * 4 + 1];
+		char		buff[COB_SMALL_BUFF];
 		char		*p = buff;
 
 		for (i = 0; i < f->size; i++) {

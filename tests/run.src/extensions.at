@@ -385,13 +385,6 @@ AT_DATA([A#B.cob], [
            EXIT PROGRAM.
 ])
 
-AT_DATA([A\$B.cob], [
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      "A$B".
-       PROCEDURE        DIVISION.
-           EXIT PROGRAM.
-])
-
 AT_DATA([A-B.cob], [
        IDENTIFICATION   DIVISION.
        PROGRAM-ID.      "A-B".
@@ -412,7 +405,6 @@ AT_DATA([caller.cob], [
        PROCEDURE        DIVISION.
            CALL "A@B".
            CALL "A#B".
-           CALL "A$B".
            CALL "A-B".
            CALL "A_B".
            STOP RUN.
@@ -420,7 +412,6 @@ AT_DATA([caller.cob], [
 
 AT_CHECK([${COMPILE_MODULE} A@B.cob])
 AT_CHECK([${COMPILE_MODULE} A#B.cob])
-AT_CHECK([${COMPILE_MODULE} A\$B.cob])
 AT_CHECK([${COMPILE_MODULE} A-B.cob])
 AT_CHECK([${COMPILE_MODULE} A_B.cob])
 AT_CHECK([${COMPILE} -o caller caller.cob])

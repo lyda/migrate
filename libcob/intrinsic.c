@@ -243,6 +243,7 @@ cob_intr_integer (cob_field *srcfield)
 {
 	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL};
 	cob_field	field = {8, NULL, &attr};
+	int		i, scale;
 
 	make_field_entry (&field);
 /*
@@ -253,7 +254,6 @@ cob_intr_integer (cob_field *srcfield)
 		}
 	}
 */
-	int		i, scale;
 
 	cob_decimal_set_field (&d1, srcfield);
 	if ( mpz_sgn (d1.value) >= 0 ) {
