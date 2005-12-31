@@ -1,3 +1,9 @@
+2005-12-30  Roger While <simrw@sim-basis.de>
+
+	* Change ifdef's on MINGW to WIN32 (Also defined on 64-bit Win)
+	  intrinsic.c : ifdef's for strftime (CURRENT-DATE)
+	  fileio.c : Basic platform changes
+
 2005-12-28  Roger While <simrw@sim-basis.de>
 
 	* General : Further fixes for non-gcc

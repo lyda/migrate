@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2005 Keisuke Nishida
+ * Copyright (C) 2001-2006 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -334,7 +334,7 @@ static void
 print_version (void)
 {
 	printf ("cobc (%s) %s.%d\n", PACKAGE_NAME, PACKAGE_VERSION, PATCH_LEVEL);
-	puts ("Copyright (C) 2001-2005 Keisuke Nishida");
+	puts ("Copyright (C) 2001-2006 Keisuke Nishida");
 }
 
 static void
@@ -961,7 +961,7 @@ process_module_direct (struct filename *fn)
 		strcat (name, ".");
 		strcat (name, COB_MODULE_EXT);
 	}
-#if (defined __CYGWIN__ || defined __MINGW32__)
+#if (defined __CYGWIN__ || defined _WIN32)
 	sprintf (buff, "%s %s %s %s %s %s -o %s %s %s",
 		 cob_cc, cob_cflags, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
 		 COB_EXPORT_DYN, name, fn->translate, cob_libs);
@@ -999,7 +999,7 @@ process_module (struct filename *fn)
 		strcat (name, ".");
 		strcat (name, COB_MODULE_EXT);
 	}
-#if (defined __CYGWIN__ || defined __MINGW32__)
+#if (defined __CYGWIN__ || defined _WIN32)
 	sprintf (buff, "%s %s %s %s %s -o %s %s %s",
 		 cob_cc, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
 		 COB_EXPORT_DYN, name, fn->object, cob_libs);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2005 Keisuke Nishida
+ * Copyright (C) 2001-2006 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -190,7 +190,7 @@ typedef struct cb_tree_common	*cb_tree;
 #define CB_TREE_CLASS(x)	cb_tree_class (CB_TREE (x))
 #define CB_TREE_CATEGORY(x)	cb_tree_category (CB_TREE (x))
 
-#if defined(COB_DEBUG) && !defined(__GNUC__)
+#if defined(COB_DEBUG) && defined(__GNUC__)
 #define CB_TREE_CAST(tg,ty,x)						\
   ({									\
     cb_tree _x = (x);							\

@@ -1,5 +1,5 @@
 /*							-*- c -*-
- * Copyright (C) 2001-2005 Keisuke Nishida
+ * Copyright (C) 2001-2006 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -385,7 +385,7 @@ scan_h (char *text)
 		val = (val << 4) + c;
 	}
 
-#ifdef __MINGW32__
+#ifdef _WIN32
 	sprintf (buff, "%I64d", val);
 #else
 	sprintf (buff, "%lld", val);

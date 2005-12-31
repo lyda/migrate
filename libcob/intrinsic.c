@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 Roger While
+ * Copyright (C) 2005-2006 Roger While
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -372,6 +372,9 @@ cob_intr_reverse (cob_field *sizefield, cob_field *srcfield)
 cob_field *
 cob_intr_current_date ()
 {
+#if !defined(__linux__) && !defined(__CYGWIN__) && defined(HAVE_TIMEZONE)
+	long    contz;
+#endif
 	time_t 		curtime;
 	cob_field_attr	attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
 	cob_field	field = {21, NULL, &attr};
@@ -380,10 +383,20 @@ cob_intr_current_date ()
 	make_field_entry (&field);
 
 	curtime = time (NULL);
-#ifdef __MINGW32__
-	strftime (buff, 22, "%Y%m%d%H%M%S0000000", localtime (&curtime));
-#else
+#if defined(__linux__) || defined(__CYGWIN__)
 	strftime (buff, 22, "%Y%m%d%H%M%S00%z", localtime (&curtime));
+#elif defined(HAVE_TIMEZONE)
+	strftime (buff, 17, "%Y%m%d%H%M%S00", localtime (&curtime));
+	if (timezone <= 0) {
+		contz = -timezone;
+		buff[16] = '+';
+	} else {
+		contz = timezone;
+		buff[16] = '-';
+	}
+	sprintf(&buff[17], "%2.2ld%2.2ld", contz / 3600, contz % 60);
+#else
+	strftime (buff, 22, "%Y%m%d%H%M%S0000000", localtime (&curtime));
 #endif
 	memcpy (curr_field->data, buff, 21);
 	return curr_field;

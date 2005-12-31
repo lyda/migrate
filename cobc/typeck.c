@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2005 Keisuke Nishida
+ * Copyright (C) 2001-2006 Keisuke Nishida
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -66,7 +66,7 @@ static char		expr_prio[128];
 	cb_tree _l;					\
 	for (_l = l; _l; _l = CB_CHAIN (_l))		\
 		if (CB_VALUE (_l) == cb_error_node)	\
-return;							\
+			return;				\
 }
 
 cb_tree
@@ -175,6 +175,9 @@ cb_check_integer_value (cb_tree x)
 void
 cb_build_registers (void)
 {
+#if !defined(__linux__) && !defined(__CYGWIN__) && defined(HAVE_TIMEZONE)
+	long	contz;
+#endif
 	time_t	t;
 	char	buff[24];
 
@@ -212,10 +215,20 @@ cb_build_registers (void)
 
 	/* FUNCTION WHEN-COMPILED */
 	memset (buff, 0, sizeof (buff));
-#ifdef __MINGW32__
-	strftime (buff, 22, "%Y%m%d%H%M%S0000000", localtime (&t));
-#else
+#if defined(__linux__) || defined(__CYGWIN__)
 	strftime (buff, 22, "%Y%m%d%H%M%S00%z", localtime (&t));
+#elif defined(HAVE_TIMEZONE)
+	strftime (buff, 17, "%Y%m%d%H%M%S00", localtime (&t));
+	if (timezone <= 0) {
+		contz = -timezone;
+		buff[16] = '+';
+	} else {
+		contz = timezone;
+		buff[16] = '-';
+	}
+	sprintf(&buff[17], "%2.2ld%2.2ld", contz / 3600, contz % 60);
+#else
+	strftime (buff, 22, "%Y%m%d%H%M%S0000000", localtime (&t));
 #endif
 	cb_intr_whencomp = cb_build_alphanumeric_literal ((ucharptr)buff, 21);
 

@@ -1,3 +1,11 @@
+2005-12-31  Roger While <simrw@sim-basis.de>
+
+	* Remove COBCRUN SHARE variable
+
+2005-12-30  Roger While <simrw@sim-basis.de>
+
+	* configure.ac : Check timezone/gettimeofday
+
 2005-12-21  Roger While <simrw@sim-basis.de>
 
 	* configure.ac : WITH_VARSEQ - Define the format of

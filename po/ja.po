@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2005-12-28 12:12+0100\n"
+"POT-Creation-Date: 2005-12-30 11:57+0100\n"
 "PO-Revision-Date: 2004-08-01 23:55+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -349,178 +349,178 @@ msgstr "`%s' は数値ではありません"
 msgid "'%s' is not integer value"
 msgstr "`%s' は整数ではありません"
 
-#: cobc/typeck.c:272
+#: cobc/typeck.c:285
 #, fuzzy, c-format
 msgid "switch-name is expected '%s'"
 msgstr "スイッチ名が必要です `%s'"
 
-#: cobc/typeck.c:396 cobc/typeck.c:411
+#: cobc/typeck.c:409 cobc/typeck.c:424
 #, fuzzy, c-format
 msgid "'%s' cannot be subscripted"
 msgstr "`%s' は添字付け出来ません"
 
-#: cobc/typeck.c:400
+#: cobc/typeck.c:413
 #, fuzzy, c-format
 msgid "'%s' cannot be reference modified"
 msgstr "`%s' は部分参照できません"
 
-#: cobc/typeck.c:414
+#: cobc/typeck.c:427
 #, fuzzy, c-format
 msgid "'%s' requires 1 subscript"
 msgstr "`%s' は 1 つの添字を必要とします"
 
-#: cobc/typeck.c:417
+#: cobc/typeck.c:430
 #, fuzzy, c-format
 msgid "'%s' requires %d subscripts"
 msgstr "`%s' は %d つの添字を必要とします"
 
-#: cobc/typeck.c:440 libcob/common.c:894
+#: cobc/typeck.c:453 libcob/common.c:894
 #, fuzzy, c-format
 msgid "subscript of '%s' out of bounds: %d"
 msgstr "'%s' の添字が範囲を超えています: %d"
 
-#: cobc/typeck.c:492 libcob/common.c:905
+#: cobc/typeck.c:505 libcob/common.c:905
 #, fuzzy, c-format
 msgid "offset of '%s' out of bounds: %d"
 msgstr "'%s' の開始位置が範囲を超えています: %d"
 
-#: cobc/typeck.c:497 libcob/common.c:912
+#: cobc/typeck.c:510 libcob/common.c:912
 #, fuzzy, c-format
 msgid "length of '%s' out of bounds: %d"
 msgstr "'%s' の長さが範囲を超えています: %d"
 
-#: cobc/typeck.c:605
+#: cobc/typeck.c:618
 #, fuzzy, c-format
 msgid "'%s' not alphabet name"
 msgstr "`%s' はアルファベット名ではありません"
 
-#: cobc/typeck.c:665
+#: cobc/typeck.c:678
 #, fuzzy, c-format
 msgid "'%s' not procedure name"
 msgstr "`%s' は手続き名ではありません"
 
-#: cobc/typeck.c:775
+#: cobc/typeck.c:788
 msgid "suggest parentheses around AND within OR"
 msgstr "OR に隣接する AND には括弧が推奨されます"
 
-#: cobc/typeck.c:1006
+#: cobc/typeck.c:1019
 msgid "invalid expression"
 msgstr "不当な式です"
 
-#: cobc/typeck.c:1531
+#: cobc/typeck.c:1544
 #, fuzzy, c-format
 msgid "invalid input stream '%s'"
 msgstr "`%s' は不当な入力ストリームです"
 
-#: cobc/typeck.c:1546 cobc/typeck.c:1555 cobc/typeck.c:1726 cobc/typeck.c:1729
-#: cobc/typeck.c:1737
+#: cobc/typeck.c:1559 cobc/typeck.c:1568 cobc/typeck.c:1739 cobc/typeck.c:1742
+#: cobc/typeck.c:1750
 #, fuzzy, c-format
 msgid "'%s' undefined in SPECIAL-NAMES"
 msgstr "`%s' は SPECIAL-NAMES で定義されていません"
 
-#: cobc/typeck.c:1624 cobc/typeck.c:1631 cobc/typeck.c:1638
+#: cobc/typeck.c:1637 cobc/typeck.c:1644 cobc/typeck.c:1651
 msgid "wrong number of data items"
 msgstr "データ項目の数が不当です"
 
-#: cobc/typeck.c:1709
+#: cobc/typeck.c:1722
 msgid "invalid output stream"
 msgstr "不当な入力ストリームです"
 
-#: cobc/typeck.c:1836
+#: cobc/typeck.c:1849
 msgid "wrong number of WHEN parameters"
 msgstr "WHEN 句の引数の数が不当です"
 
-#: cobc/typeck.c:1872
+#: cobc/typeck.c:1885
 #, fuzzy
 msgid "GO TO with multiple procedure-names"
 msgstr "GO TO に複数の手続き名が指定されています"
 
-#: cobc/typeck.c:1945
+#: cobc/typeck.c:1958
 msgid "data name expected before CHARACTERS"
 msgstr "CHARACTERS の前にデータ名が必要です"
 
-#: cobc/typeck.c:1954
+#: cobc/typeck.c:1967
 msgid "data name expected before ALL"
 msgstr "ALL の前にデータ名が必要です<"
 
-#: cobc/typeck.c:1963
+#: cobc/typeck.c:1976
 msgid "data name expected before LEADING"
 msgstr "LEADING の前にデータ名が必要です<"
 
-#: cobc/typeck.c:1972
+#: cobc/typeck.c:1985
 #, fuzzy, c-format
 msgid "ALL or LEADING expected before '%s'"
 msgstr "`%s' の前に ALL または LEADINGが必要です"
 
-#: cobc/typeck.c:2036
+#: cobc/typeck.c:2049
 #, fuzzy, c-format
 msgid "'%s' defined here as PIC %s"
 msgstr "`%s' はここで PIC %s として定義されました"
 
-#: cobc/typeck.c:2038
+#: cobc/typeck.c:2051
 #, fuzzy, c-format
 msgid "'%s' defined here as a group of length %d"
 msgstr "`%s' はここで大きさ %d のグループとして定義されています"
 
-#: cobc/typeck.c:2156
+#: cobc/typeck.c:2169
 msgid "data item not signed"
 msgstr "データ項目に符号がありません"
 
-#: cobc/typeck.c:2160
+#: cobc/typeck.c:2173
 msgid "ignoring negative sign"
 msgstr "マイナス符号は無視されます"
 
-#: cobc/typeck.c:2237
+#: cobc/typeck.c:2250
 msgid "move non-integer to alphanumeric"
 msgstr "非整数から英数字項目への MOVE は出来ません"
 
-#: cobc/typeck.c:2263
+#: cobc/typeck.c:2276
 msgid "invalid VALUE clause"
 msgstr "不当な VALUE 句です"
 
-#: cobc/typeck.c:2265 cobc/typeck.c:2543 cobc/typeck.c:2546
+#: cobc/typeck.c:2278 cobc/typeck.c:2556 cobc/typeck.c:2559
 msgid "invalid MOVE statement"
 msgstr "不当な MOVE 文です"
 
-#: cobc/typeck.c:2269
+#: cobc/typeck.c:2282
 msgid "numeric value is expected"
 msgstr "数値が必要です"
 
-#: cobc/typeck.c:2273
+#: cobc/typeck.c:2286
 msgid "alphanumeric value is expected"
 msgstr "文字列が必要です"
 
-#: cobc/typeck.c:2277
+#: cobc/typeck.c:2290
 msgid "value does not fit the picture string"
 msgstr "値が PICTURE に合致しません"
 
-#: cobc/typeck.c:2280
+#: cobc/typeck.c:2293
 msgid "value size exceeds data size"
 msgstr "値の大きさが項目の大きさを越えています"
 
-#: cobc/typeck.c:2702
+#: cobc/typeck.c:2715
 msgid "KEY ignored with sequential READ"
 msgstr "順読み込みの READ であるため KEY は無視されます"
 
-#: cobc/typeck.c:2776
+#: cobc/typeck.c:2789
 #, fuzzy, c-format
 msgid "undeclared key '%s'"
 msgstr "`%s' はキー宣言されていません"
 
-#: cobc/typeck.c:2780
+#: cobc/typeck.c:2793
 msgid "invalid SEARCH ALL condition"
 msgstr "SEARCH ALL の条件式が不当です"
 
-#: cobc/typeck.c:2854
+#: cobc/typeck.c:2867
 msgid "the targets of SET must be either indexes or pointers"
 msgstr "SET 出来るのは INDEXED か POINTER だけです"
 
-#: cobc/typeck.c:2868
+#: cobc/typeck.c:2881
 #, fuzzy, c-format
 msgid "the address of '%s' cannot be changed"
 msgstr "`%s' のアドレスは変更できません"
 
-#: cobc/typeck.c:3124
+#: cobc/typeck.c:3137
 msgid "invalid mnemonic name"
 msgstr "不当なニーモニックです"
 
@@ -740,89 +740,89 @@ msgstr ""
 msgid "Cannot acquire %d bytes of memory - Aborting"
 msgstr ""
 
-#: libcob/fileio.c:1861
+#: libcob/fileio.c:1913
 #, fuzzy
 msgid "End of file"
 msgstr "ファイルの終わりです"
 
-#: libcob/fileio.c:1864
+#: libcob/fileio.c:1916
 #, fuzzy
 msgid "Key out of range"
 msgstr "キーの範囲が不当です"
 
-#: libcob/fileio.c:1867
+#: libcob/fileio.c:1919
 #, fuzzy
 msgid "Key order not ascending"
 msgstr "キーが昇順ではありません"
 
-#: libcob/fileio.c:1870
+#: libcob/fileio.c:1922
 #, fuzzy
 msgid "Record key already exists"
 msgstr "レコードキーが既に存在します"
 
-#: libcob/fileio.c:1873
+#: libcob/fileio.c:1925
 #, fuzzy
 msgid "Record key does not exist"
 msgstr "レコードキーが存在しません"
 
-#: libcob/fileio.c:1876
+#: libcob/fileio.c:1928
 #, fuzzy
 msgid "Permanent file error"
 msgstr "永続ファイルエラーです"
 
-#: libcob/fileio.c:1879
+#: libcob/fileio.c:1931
 #, fuzzy
 msgid "File does not exist"
 msgstr "ファイルが存在しません"
 
-#: libcob/fileio.c:1882
+#: libcob/fileio.c:1934
 #, fuzzy
 msgid "Permission denied"
 msgstr "利用許可がありません"
 
-#: libcob/fileio.c:1885
+#: libcob/fileio.c:1937
 #, fuzzy
 msgid "File already open"
 msgstr "ファイルは既に開いています"
 
-#: libcob/fileio.c:1888
+#: libcob/fileio.c:1940
 #, fuzzy
 msgid "File not open"
 msgstr "ファイルが開いていません"
 
-#: libcob/fileio.c:1891
+#: libcob/fileio.c:1943
 msgid "READ must be executed first"
 msgstr "READ を先に実行しなければなりません"
 
-#: libcob/fileio.c:1894
+#: libcob/fileio.c:1946
 #, fuzzy
 msgid "Record overflow"
 msgstr "レコードの領域を超えています"
 
-#: libcob/fileio.c:1897
+#: libcob/fileio.c:1949
 #, fuzzy
 msgid "Failed to read"
 msgstr "読み込みに失敗しました"
 
-#: libcob/fileio.c:1900
+#: libcob/fileio.c:1952
 #, fuzzy
 msgid "READ/START not allowed"
 msgstr "READ、START は許可されません"
 
-#: libcob/fileio.c:1903
+#: libcob/fileio.c:1955
 msgid "WRITE not allowed"
 msgstr "WRITE は許可されません"
 
-#: libcob/fileio.c:1906
+#: libcob/fileio.c:1958
 #, fuzzy
 msgid "DELETE/REWRITE not allowed"
 msgstr "DELETE、REWRITE は許可されません"
 
-#: libcob/fileio.c:1913
+#: libcob/fileio.c:1965
 msgid "LINAGE values invalid"
 msgstr ""
 
-#: libcob/fileio.c:1916
+#: libcob/fileio.c:1968
 #, fuzzy
 msgid "Unknown file error"
 msgstr "原因不明のファイルエラーです"

@@ -1,3 +1,9 @@
+2005-12-30  Roger While <simrw@sim-basis.de>
+
+	* Relax LOG10 test
+	  Fix big endian shell test
+	  atlocal.in : Insert SHLIB_PATH/LIBPATH for AIX/HP-UX
+
 2005-12-28  Roger While <simrw@sim-basis.de>
 
 	* run.src/extensions.at : Remove A\$B (MingW)

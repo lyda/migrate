@@ -1112,7 +1112,7 @@ $at_traceon
       $at_traceon
 
 
-if test "x$COB_BIGENDIAN" == "xyes"; then
+if test "x$COB_BIGENDIAN" = "xyes"; then
 $at_traceoff
 echo "binary.at:209: true"
 echo binary.at:209 >$at_check_line_file
@@ -1769,7 +1769,7 @@ $at_traceon
       $at_traceon
 
 
-if test "x$COB_BIGENDIAN" == "xyes"; then
+if test "x$COB_BIGENDIAN" = "xyes"; then
 $at_traceoff
 echo "binary.at:580: true"
 echo binary.at:580 >$at_check_line_file
@@ -2427,7 +2427,7 @@ $at_traceon
       $at_traceon
 
 
-if test "x$COB_BIGENDIAN" == "xyes"; then
+if test "x$COB_BIGENDIAN" = "xyes"; then
 $at_traceoff
 echo "binary.at:952: true"
 echo binary.at:952 >$at_check_line_file

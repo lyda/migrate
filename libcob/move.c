@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2005 Keisuke Nishida
+ * Copyright (C) 2002-2006 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -731,12 +731,12 @@ indirect_move (void (*func) (cob_field *src, cob_field *dst),
 static void
 cob_move_all (cob_field *src, cob_field *dst)
 {
-	int		i;
-	int		digcount;
-	cob_field	temp;
-	cob_field_attr	attr = { COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL };
-	static int	lastsize = 0;
-	static char	*data = NULL;
+	int			i;
+	int			digcount;
+	cob_field		temp;
+	cob_field_attr		attr = { COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL };
+	static int		lastsize = 0;
+	static unsigned char	*data = NULL;
 
 	if (COB_FIELD_IS_NUMERIC(dst)) {
 		digcount = 18;

@@ -11649,7 +11649,7 @@ cat >prog.cob <<'_ATEOF'
        PROCEDURE        DIVISION.
            MOVE FUNCTION LOG10 ( X ) TO Y.
            IF Y >= 0.17609125905568120 AND
-              Y <= 0.17609125905568125
+              Y <= 0.17609125905568128
                    DISPLAY "OK"
            ELSE
                    DISPLAY "NOT OK"

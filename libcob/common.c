@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2005 Keisuke Nishida
+ * Copyright (C) 2001-2006 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -26,7 +26,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
-#ifdef	__MINGW32__
+#ifdef	_WIN32
 #include <io.h>
 #include <fcntl.h>
 #undef	HAVE_SIGNAL_H
@@ -275,7 +275,7 @@ cob_init (int argc, char **argv)
 #endif
 
 /* Dirty hack until we implement something better */
-#ifdef	__MINGW32__
+#ifdef	_WIN32
 		_setmode (_fileno (stdin), _O_BINARY);
 		_setmode (_fileno (stdout), _O_BINARY);
 		_setmode (_fileno (stderr), _O_BINARY);

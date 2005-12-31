@@ -1,6 +1,6 @@
 ### OpenCOBOL Test Suite				-*- m4 -*-
 
-## Copyright (C) 2005 Roger While
+## Copyright (C) 2005-2006 Roger While
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -474,7 +474,7 @@ AT_DATA([prog.cob], [
        PROCEDURE        DIVISION.
            MOVE FUNCTION LOG10 ( X ) TO Y.
            IF Y >= 0.17609125905568120 AND
-              Y <= 0.17609125905568125
+              Y <= 0.17609125905568128
                    DISPLAY "OK"
            ELSE
                    DISPLAY "NOT OK"

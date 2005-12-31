@@ -15,8 +15,12 @@ We hope that everybody will continue to provide
 feedback. This is invaluable to the continuing
 development process.
 
-A special mention here of two people who have provided
+A special mention here of three people who have provided
 exceptional support in terms of time and resources on
 hardware that was not available to the developers :
 Oleg Philon - For his work on the Powerpc
 David Wilson - For his work on the MAC (Darwin)
+Sergey Kashyrin - For his work on :
+		SUN Solaris
+		IBM AIX
+		HP-UX

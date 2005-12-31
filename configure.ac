@@ -1,7 +1,7 @@
 #                                                       -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-# Copyright (C) 2001-2005 Keisuke Nishida
+# Copyright (C) 2001-2006 Keisuke Nishida
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@ AH_TEMPLATE([PATCH_LEVEL], [Define a patch level])
 AH_TEMPLATE([WITH_VARSEQ], [Define variable sequential file format])
 AH_TEMPLATE([DLLHIDDEN], [Has visibility attribute])
 AH_TEMPLATE([HAVE_PSIGN_OPT], [Has -Wno-pointer-sign])
+AH_TEMPLATE([HAVE_TIMEZONE], [Has timezone variable])
 AH_TEMPLATE([COB_EXEEXT], [Executable extension])
 AH_TEMPLATE([COB_EXTRA_FLAGS], [Extra Compiler Flags])
 
@@ -272,7 +273,7 @@ AX_C___ATTRIBUTE__
 AC_FUNC_ALLOCA
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([memmove memset regcomp pow setlocale fcntl strerror \
-		strcasecmp strchr strrchr strdup strstr strtol])
+		strcasecmp strchr strrchr strdup strstr strtol gettimeofday])
 
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[int testint __attribute__ ((visibility ("hidden")));]])],
 	[AC_DEFINE(DLLHIDDEN, __attribute__ ((visibility ("hidden"))))],
@@ -357,20 +358,18 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[int testint;]])],
 	[])
 CFLAGS="$MYOLDCFLAGS"
 
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <time.h>]], [[return (int) timezone;]])],
+	[AC_DEFINE(HAVE_TIMEZONE, 1)],
+	[])
+
 case $host_os in
   cygwin* | mingw*)
-	cobcruns=true
 	COB_EXPORT_DYN="-Wl,--export-all-symbols -Wl,--enable-auto-import"
 	;;
   darwin* | rhapsody*)
-	cobcruns=false
 	COB_SHARED_OPT="-bundle -flat_namespace -undefined suppress"
 	;;
-  *)
-	cobcruns=false
-	;;
 esac
-AM_CONDITIONAL(COBCRUN_SHARED, test x$cobcruns = xtrue)
 AC_DEFINE_UNQUOTED(COB_EXPORT_DYN, "$COB_EXPORT_DYN")
 AC_DEFINE_UNQUOTED(COB_PIC_FLAGS, "$COB_PIC_FLAGS")
 AC_DEFINE_UNQUOTED(COB_SHARED_OPT, "$COB_SHARED_OPT")
@@ -391,7 +390,7 @@ AC_SUBST(COBC_LIBS)
 AC_SUBST(LIBCOB_CFLAGS)
 AC_SUBST(LIBCOB_LIBS)
 AC_SUBST(COB_EXPORT_DYN)
-# AC_SUBST(COB_PIC_FLAGS)
+AC_SUBST(COB_PIC_FLAGS)
 AC_SUBST(COB_SHARED_OPT)
 COB_BIGENDIAN="$ac_cv_c_bigendian"
 AC_SUBST(COB_BIGENDIAN)

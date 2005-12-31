@@ -89,6 +89,7 @@ HEADERS = $(pkginclude_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+# endif
 pkgincludedir = $(includedir)/libcob
 ACLOCAL = @ACLOCAL@
 ALLOCA = @ALLOCA@
@@ -104,8 +105,6 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
-COBCRUN_SHARED_FALSE = @COBCRUN_SHARED_FALSE@
-COBCRUN_SHARED_TRUE = @COBCRUN_SHARED_TRUE@
 COBC_LIBS = @COBC_LIBS@
 COB_BIGENDIAN = @COB_BIGENDIAN@
 COB_CC = @COB_CC@
@@ -115,6 +114,7 @@ COB_EXPORT_DYN = @COB_EXPORT_DYN@
 COB_LIBRARY_PATH = @COB_LIBRARY_PATH@
 COB_LIBS = @COB_LIBS@
 COB_MODULE_EXT = @COB_MODULE_EXT@
+COB_PIC_FLAGS = @COB_PIC_FLAGS@
 COB_SHARED_OPT = @COB_SHARED_OPT@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
@@ -228,7 +228,8 @@ AM_CFLAGS = -fsigned-char -Wall -Wstrict-prototypes -Wmissing-prototypes -Wno-fo
 libcob_la_CFLAGS = $(AM_CFLAGS) $(LIBCOB_CFLAGS) -I$(top_srcdir)
 libcob_la_LIBADD = $(LIBCOB_LIBS)
 libcob_la_LDFLAGS = -version-info 1:0:0 -no-undefined
-@COBCRUN_SHARED_TRUE@AM_LDFLAGS = -Wl,--export-all-symbols -Wl,--enable-auto-import
+# if COBCRUN_SHARED
+AM_LDFLAGS = $(COB_EXPORT_DYN)
 pkginclude_HEADERS = byteswap.h common.h move.h numeric.h exception.def \
 	termio.h fileio.h screenio.h strings.h call.h intrinsic.h
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2005 Keisuke Nishida
+ * Copyright (C) 2002-2006 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -52,42 +52,24 @@
 
 #if HAVE_DB1_DB_H
 #include <db1/db.h>
-#else
-#if HAVE_DB_185_H
+#elif HAVE_DB_185_H
 #include <db_185.h>
-#else
-#if HAVE_DB3_DB_185_H
+#elif HAVE_DB3_DB_185_H
 #include <db3/db_185.h>
-#else
-#if HAVE_DB4_DB_185_H
+#elif HAVE_DB4_DB_185_H
 #include <db4/db_185.h>
-#else
-#if HAVE_DB4_1_DB_185_H
+#elif HAVE_DB4_1_DB_185_H
 #include <db4.1/db_185.h>
-#else
-#if HAVE_DB4_2_DB_185_H
+#elif HAVE_DB4_2_DB_185_H
 #include <db4.2/db_185.h>
-#else
-#if HAVE_DB4_3_DB_185_H
+#elif HAVE_DB4_3_DB_185_H
 #include <db4.3/db_185.h>
-#else
-#if HAVE_DB4_4_DB_185_H
+#elif HAVE_DB4_4_DB_185_H
 #include <db4.4/db_185.h>
-#else
-#if HAVE_DB4_5_DB_185_H
+#elif HAVE_DB4_5_DB_185_H
 #include <db4.5/db_185.h>
-#else
-#if HAVE_DB_H
+#elif HAVE_DB_H
 #include <db.h>
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
 #endif
 
 #include "common.h"
@@ -97,7 +79,10 @@
 #include "byteswap.h"
 #include "lib/gettext.h"
 
+/*
 #ifdef _WIN32
+*/
+#if !defined(__linux__)
 #define SEEK_INIT(f)	fseek ((FILE *)f->file, (off_t)0, SEEK_CUR)
 #else
 #define SEEK_INIT(f)
@@ -345,7 +330,7 @@ static void
 save_status (cob_file *f, int status)
 {
 
-	if (f->file_status == 0)
+	if (f->file_status == NULL)
 		f->file_status = cob_malloc (2);
 
 	if (status == COB_NOT_CONFIGURED) {
@@ -354,8 +339,9 @@ save_status (cob_file *f, int status)
 	f->file_status[0] = cob_i2d (status / 10);
 	f->file_status[1] = cob_i2d (status % 10);
 	cob_error_file = f;
-	if (status != COB_STATUS_52_EOP)
+	if (status != COB_STATUS_52_EOP) {
 		COB_SET_EXCEPTION (status_exception[status / 10]);
+	}
 }
 
 /*
@@ -438,7 +424,7 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 	/* open the file */
 	switch (mode) {
 	case COB_OPEN_INPUT:
-#ifndef	__MINGW32__
+#ifndef	_WIN32
 		if (f->organization == COB_ORG_LINE_SEQUENTIAL)
 			fp = fopen (filename, "r");
 		else
@@ -448,7 +434,7 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 	case COB_OPEN_OUTPUT:
 		if (f->organization == COB_ORG_RELATIVE)
 			fp = fopen (filename, "wb+");
-#ifndef	__MINGW32__
+#ifndef	_WIN32
 		else if (f->organization == COB_ORG_LINE_SEQUENTIAL)
 			fp = fopen (filename, "w");
 #endif
@@ -456,7 +442,7 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 			fp = fopen (filename, "wb");
 		break;
 	case COB_OPEN_I_O:
-#ifndef	__MINGW32__
+#ifndef	_WIN32
 		if (f->organization == COB_ORG_LINE_SEQUENTIAL)
 			fp = fopen (filename, "r+");
 		else
@@ -464,7 +450,7 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 			fp = fopen (filename, "rb+");
 		break;
 	case COB_OPEN_EXTEND:
-#ifndef	__MINGW32__
+#ifndef	_WIN32
 		if (f->organization == COB_ORG_LINE_SEQUENTIAL)
 			fp = fopen (filename, "a+");
 		else
@@ -828,19 +814,16 @@ lineseq_write (cob_file *f, int opt)
  * RELATIVE
  */
 
-#define RELATIVE_SIZE(f) ((off_t)(f->record_max + sizeof (f->record->size)))
-
-#define RELATIVE_SEEK(f,i)						      \
-  if (fseek ((FILE *)f->file, (off_t)(RELATIVE_SIZE (f) * (i)), SEEK_SET) == -1		      \
-      || fread (&f->record->size, sizeof (f->record->size), 1, (FILE *)f->file) != 1) \
-    return COB_STATUS_23_KEY_NOT_EXISTS;				      \
-  fseek ((FILE *)f->file, - (off_t)sizeof (f->record->size), SEEK_CUR);
-
 static int
 relative_start (cob_file *f, int cond, cob_field *k)
 {
+	int	kindex;
+	int	relsize;
+	off_t	off;
+
 	/* get the index */
-	int kindex = cob_get_int (k) - 1;
+	kindex = cob_get_int (k) - 1;
+	relsize = f->record_max + sizeof (f->record->size);
 	if (cond == COB_LT)
 		kindex--;
 	else if (cond == COB_GT)
@@ -848,11 +831,17 @@ relative_start (cob_file *f, int cond, cob_field *k)
 
 	/* seek the index */
 	while (1) {
-		RELATIVE_SEEK (f, kindex);
+		off = kindex * relsize;
+		if (fseek ((FILE *)f->file, off, SEEK_SET) != 0 ||
+		    fread (&f->record->size, sizeof (f->record->size),
+			   1, (FILE *)f->file) != 1) {
+				return COB_STATUS_23_KEY_NOT_EXISTS;
+		}
 
 		/* check if a valid record */
 		if (f->record->size > 0) {
 			cob_set_int (k, kindex + 1);
+			fseek ((FILE *)f->file, - (off_t) sizeof (f->record->size), SEEK_CUR);
 			return COB_STATUS_00_SUCCESS;
 		}
 
@@ -875,12 +864,26 @@ relative_start (cob_file *f, int cond, cob_field *k)
 static int
 relative_read (cob_file *f, cob_field *k)
 {
-	RELATIVE_SEEK (f, cob_get_int (k) - 1);
+	int	relnum;
+	int	relsize;
+	off_t	off;
 
-	if (f->record->size == 0)
+	SEEK_INIT (f);
+
+	relnum = cob_get_int (k) - 1;
+	relsize = f->record_max + sizeof (f->record->size);
+	off = relnum * relsize;
+	if (fseek ((FILE *)f->file, off, SEEK_SET) != 0 ||
+	    fread (&f->record->size, sizeof (f->record->size),
+		   1, (FILE *)f->file) != 1) {
+			return COB_STATUS_23_KEY_NOT_EXISTS;
+	}
+
+	if (f->record->size == 0) {
+		fseek ((FILE *)f->file, - (off_t) sizeof (f->record->size), SEEK_CUR);
 		return COB_STATUS_23_KEY_NOT_EXISTS;
+	}
 
-	fseek ((FILE *)f->file, (off_t) sizeof (f->record->size), SEEK_CUR);
 	if (fread (f->record->data, f->record_max, 1, (FILE *)f->file) != 1) {
 		return COB_STATUS_30_PERMANENT_ERROR;
 	}
@@ -890,8 +893,13 @@ relative_read (cob_file *f, cob_field *k)
 static int
 relative_read_next (cob_file *f)
 {
+	off_t	off;
+	int	relsize;
+	int	relnum;
+
 	SEEK_INIT (f);
 
+	relsize = f->record_max + sizeof (f->record->size);
 	while (1) {
 		if (fread (&f->record->size, sizeof (f->record->size), 1, (FILE *)f->file) != 1) {
 			if (ferror ((FILE *)f->file)) {
@@ -906,7 +914,10 @@ relative_read_next (cob_file *f)
 				cob_set_int (f->keys[0].field, 1);
 				f->flag_first_read = 0;
 			} else {
-				if (cob_add_int (f->keys[0].field, 1) != 0) {
+				off = ftell ((FILE *)f->file);
+				relnum = (off / relsize) + 1;
+				cob_set_int (f->keys[0].field, 0);
+				if (cob_add_int (f->keys[0].field, relnum) != 0) {
 					fseek ((FILE *)f->file, -(off_t) sizeof (f->record->size),
 					       SEEK_CUR);
 					return COB_STATUS_14_OUT_OF_KEY_RANGE;
@@ -928,21 +939,32 @@ relative_read_next (cob_file *f)
 static int
 relative_write (cob_file *f, int opt)
 {
-	size_t size;
+	size_t	size;
+	int	relsize;
+	int	i;
+	off_t	off;
 
 	SEEK_INIT (f);
 
+	relsize = f->record_max + sizeof (f->record->size);
 	if (f->access_mode != COB_ACCESS_SEQUENTIAL) {
 		int kindex = cob_get_int (f->keys[0].field) - 1;
-		if (kindex < 0
-		    || fseek ((FILE *)f->file, (off_t) (RELATIVE_SIZE (f) * kindex), SEEK_SET) < 0)
+
+		if (kindex < 0)
 			return COB_STATUS_21_KEY_INVALID;
+		off = (off_t) (relsize * kindex);
+		if (fseek ((FILE *)f->file, off, SEEK_SET) != 0)
+			return COB_STATUS_21_KEY_INVALID;
+	} else {
+		off = ftell((FILE *)f->file);
 	}
 
 	if (fread (&size, sizeof (size), 1, (FILE *)f->file) > 0) {
 		fseek ((FILE *)f->file, -(off_t) sizeof (size), SEEK_CUR);
 		if (size > 0)
 			return COB_STATUS_22_KEY_EXISTS;
+	} else {
+		fseek ((FILE *)f->file, off, SEEK_SET);
 	}
 
 	if (fwrite (&f->record->size, sizeof (f->record->size), 1, (FILE *)f->file) != 1) {
@@ -953,9 +975,16 @@ relative_write (cob_file *f, int opt)
 	}
 
 	/* update RELATIVE KEY */
-	if (f->access_mode == COB_ACCESS_SEQUENTIAL)
-		if (f->keys[0].field)
-			cob_set_int (f->keys[0].field, ftell ((FILE *)f->file) / RELATIVE_SIZE (f));
+	if (f->access_mode == COB_ACCESS_SEQUENTIAL) {
+		if (f->keys[0].field) {
+/*
+			off = ftell ((FILE *)f->file);
+*/
+			off += relsize;
+			i = off / relsize;
+			cob_set_int (f->keys[0].field, i);
+		}
+	}
 
 	return COB_STATUS_00_SUCCESS;
 }
@@ -963,11 +992,22 @@ relative_write (cob_file *f, int opt)
 static int
 relative_rewrite (cob_file *f)
 {
+	int	relsize;
+	int	relnum;
+	off_t	off;
+
 	if (f->access_mode == COB_ACCESS_SEQUENTIAL) {
 		fseek ((FILE *)f->file, -(off_t) f->record_max, SEEK_CUR);
 	} else {
-		RELATIVE_SEEK (f, cob_get_int (f->keys[0].field) - 1);
-		fseek ((FILE *)f->file, (off_t) sizeof (f->record->size), SEEK_CUR);
+		relsize = f->record_max + sizeof (f->record->size);
+		relnum = cob_get_int (f->keys[0].field) - 1;
+		off = relnum * relsize;
+		if (fseek ((FILE *)f->file, off, SEEK_SET) != 0 ||
+		    fread (&f->record->size, sizeof (f->record->size),
+			   1, (FILE *)f->file) != 1) {
+				return COB_STATUS_23_KEY_NOT_EXISTS;
+		}
+		SEEK_INIT (f);
 	}
 
 	if (fwrite (f->record->data, f->record_max, 1, (FILE *)f->file) != 1) {
@@ -979,7 +1019,19 @@ relative_rewrite (cob_file *f)
 static int
 relative_delete (cob_file *f)
 {
-	RELATIVE_SEEK (f, cob_get_int (f->keys[0].field) - 1);
+	int	relsize;
+	int	relnum;
+	off_t	off;
+
+	relnum = cob_get_int (f->keys[0].field) - 1;
+	relsize = f->record_max + sizeof (f->record->size);
+	off = relnum * relsize;
+	if (fseek ((FILE *)f->file, off, SEEK_SET) != 0 ||
+	    fread (&f->record->size, sizeof (f->record->size),
+		   1, (FILE *)f->file) != 1) {
+			return COB_STATUS_23_KEY_NOT_EXISTS;
+	}
+	fseek ((FILE *)f->file, - (off_t) sizeof (f->record->size), SEEK_CUR);
 
 	f->record->size = 0;
 	if (fwrite (&f->record->size, sizeof (f->record->size), 1, (FILE *)f->file) != 1) {
