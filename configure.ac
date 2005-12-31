@@ -290,6 +290,9 @@ case $host_os in
 	AC_DEFINE(USE_LIBDL)
 	DEFINEDL="yes"
 	;;
+  mingw*)
+	DEFINEDL="yes"
+	;;
   linux*)
 	AC_CHECK_HEADERS([dlfcn.h], , AC_MSG_ERROR(dlfcn.h is required))
 	AC_CHECK_LIB([dl], [dlopen], , AC_MSG_ERROR(libdl is required))

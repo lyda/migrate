@@ -25471,6 +25471,9 @@ _ACEOF
 
 	DEFINEDL="yes"
 	;;
+  mingw*)
+	DEFINEDL="yes"
+	;;
   linux*)
 
 for ac_header in dlfcn.h
