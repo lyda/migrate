@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2005-12-30 11:57+0100\n"
+"POT-Creation-Date: 2006-01-05 19:30+0100\n"
 "PO-Revision-Date: 2004-08-01 23:55+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -21,7 +21,7 @@ msgstr ""
 msgid ""
 "Options:\n"
 "  --help                Display this message\n"
-"  --version             Display compiler version\n"
+"  --Version, -V         Display compiler version\n"
 "  --verbose, -v         Display the programs invoked by the compiler\n"
 "  -x                    Build an executable program\n"
 "  -m                    Build a dynamically loaded module\n"
@@ -90,39 +90,39 @@ msgstr ""
 msgid "Invalid option -std=%s\n"
 msgstr "不当なオプションです -std=%s\n"
 
-#: cobc/cobc.c:845
+#: cobc/cobc.c:856
 msgid "-MT must be given to specify target file\n"
 msgstr "ターゲットファイルを -MT で指定して下さい\n"
 
-#: cobc/tree.c:820
+#: cobc/tree.c:823
 msgid "numeric entry cannot be larger than 18 digits"
 msgstr "18 桁を越える数字項目は許されません"
 
-#: cobc/tree.c:845
+#: cobc/tree.c:848
 msgid "invalid picture string"
 msgstr "不当な PICTURE 定義です"
 
-#: cobc/tree.c:1017
+#: cobc/tree.c:1020
 #, fuzzy, c-format
 msgid "%s clause is required for file '%s'"
 msgstr "%s 句がファイル `%s' に必要です"
 
-#: cobc/tree.c:1047
+#: cobc/tree.c:1050
 #, fuzzy, c-format
 msgid "record size too small '%s'"
 msgstr "レコード長が短か過ぎます `%s'"
 
-#: cobc/tree.c:1050
+#: cobc/tree.c:1053
 #, fuzzy, c-format
 msgid "record size too large '%s'"
 msgstr "レコード長が長過ぎます `%s'"
 
-#: cobc/tree.c:1708
+#: cobc/tree.c:1711
 #, fuzzy, c-format
 msgid "FUNCTION %s has wrong number of arguments"
 msgstr "WHEN 句の引数の数が不当です"
 
-#: cobc/tree.c:1792
+#: cobc/tree.c:1795
 #, fuzzy, c-format
 msgid "FUNCTION %s not implemented"
 msgstr "`%s' は実装されていません"
@@ -627,7 +627,7 @@ msgstr "不当な X 定数です: %s"
 msgid "invalid H literal: %s"
 msgstr "不当な H 定数です: %s"
 
-#: cobc/scanner.l:422
+#: cobc/scanner.l:427 cobc/scanner.l:430
 msgid "invalid numeric literal"
 msgstr "不当な数字定数です"
 

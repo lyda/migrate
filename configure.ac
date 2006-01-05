@@ -29,6 +29,22 @@ AC_CONFIG_MACRO_DIR([m4])
 # Hack to stop CXX/F77 checks - Any better way ?
 tagnames=
 
+# Note for SUN Solaris (gcc)
+# export/setenv CFLAGS "-m64 -mptr64"
+# export/setenv LDFLAGS "-m64 -mptr64 -L/usr/local/lib/sparcv9"
+# ./configure --libdir=/usr/local/lib/sparcv9
+#
+# Hack for AIX 64 bit (gcc)
+# Required -
+# export/setenv CFLAGS=-maix64
+# export/setenv LDFLAGS=-maix64
+
+if echo $CFLAGS | grep 'aix64' 1>/dev/null 2>&1
+then
+	NM="nm -X64"
+	AR="/usr/ccs/bin/nm -X64 -B"
+fi
+
 AM_INIT_AUTOMAKE([gnu no-texinfo.tex])
 AM_MAINTAINER_MODE
 
@@ -43,18 +59,12 @@ AH_TEMPLATE([COB_STRIP_CMD], [Strip command])
 AH_TEMPLATE([USE_LIBDL], [Use system dynamic loader])
 AH_TEMPLATE([PATCH_LEVEL], [Define a patch level])
 AH_TEMPLATE([WITH_VARSEQ], [Define variable sequential file format])
-AH_TEMPLATE([DLLHIDDEN], [Has visibility attribute])
+# AH_TEMPLATE([DLLHIDDEN], [Has visibility attribute])
 AH_TEMPLATE([HAVE_PSIGN_OPT], [Has -Wno-pointer-sign])
 AH_TEMPLATE([HAVE_TIMEZONE], [Has timezone variable])
 AH_TEMPLATE([COB_EXEEXT], [Executable extension])
 AH_TEMPLATE([COB_EXTRA_FLAGS], [Extra Compiler Flags])
 
-if test "x$CFLAGS" = "x"
-then
-	COB_HAS_CFLAGS=no
-else
-	COB_HAS_CFLAGS=yes
-fi
 # enable debug mode by default for now
 AC_DEFINE(COB_DEBUG)
 
@@ -106,15 +116,25 @@ AC_ARG_WITH(lfs64,
     fi ],
   [ AC_DEFINE(WITH_LFS64) ])
 
-DEFINEDL="no"
+DEFINE_DL="no"
+COB_TRY_DL="yes"
 
 AC_ARG_WITH(dl,
   [  --with-dl               use system dynamic loader],
-  [ DEFINEDL="yes" ])
+  [case $with_dl in  
+    yes)	COB_TRY_DL="yes"
+		;;
+    no)		COB_TRY_DL="no"
+		;;
+    *)		AC_MSG_ERROR(["--with/without-dl can not have a value"])
+		;;
+  esac])
+
+GEN_DEBUG_OPT="no"
 
 AC_ARG_ENABLE(debug,
   [  --enable-debug          enable debugging options],
-  [ AC_DEFINE(COB_DEBUG) ])
+  [ AC_DEFINE(COB_DEBUG) GEN_DEBUG_OPT="yes"])
 
 PATCH_LEVEL=0
 AC_ARG_WITH(patch-level, [  --with-patch-level      define a patch level (default 0)],
@@ -260,7 +280,8 @@ AC_PROG_MAKE_SET
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([stdint.h sys/types.h signal.h fcntl.h malloc.h locale.h stddef.h wchar.h])
+AC_CHECK_HEADERS([stdint.h sys/types.h signal.h fcntl.h malloc.h locale.h \
+	stddef.h wchar.h dlfcn.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -275,45 +296,51 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([memmove memset regcomp pow setlocale fcntl strerror \
 		strcasecmp strchr strrchr strdup strstr strtol gettimeofday])
 
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[int testint __attribute__ ((visibility ("hidden")));]])],
-	[AC_DEFINE(DLLHIDDEN, __attribute__ ((visibility ("hidden"))))],
-	[AC_DEFINE(DLLHIDDEN, ,Has visibility attribute)])
+# AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[int testint __attribute__ ((visibility ("hidden")));]])],
+# 	[AC_DEFINE(DLLHIDDEN, __attribute__ ((visibility ("hidden"))))],
+# 	[AC_DEFINE(DLLHIDDEN, ,Has visibility attribute)])
 
-# OpenCOBOL Configuration
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <time.h>]], [[return (int) timezone;]])],
+	[AC_DEFINE(HAVE_TIMEZONE, 1)],
+	[])
 
 # Checks for dl/ltdl.
-case $host_os in
-  cygwin*)
-	AC_CHECK_HEADERS([dlfcn.h], , AC_MSG_ERROR(dlfcn.h is required))
-	AC_CHECK_LIB([c], [dlopen], , AC_MSG_ERROR(libdl is required))
-#	AC_CHECK_LIB([intl], [bindtextdomain], [LIBCOB_LIBS="$LIBCOB_LIBS -lintl" COBC_LIBS="$COBC_LIBS -lintl"], AC_MSG_ERROR(libintl is required))
-	AC_DEFINE(USE_LIBDL)
-	DEFINEDL="yes"
-	;;
-  mingw*)
-	DEFINEDL="yes"
-	;;
-  linux*)
-	AC_CHECK_HEADERS([dlfcn.h], , AC_MSG_ERROR(dlfcn.h is required))
-	AC_CHECK_LIB([dl], [dlopen], , AC_MSG_ERROR(libdl is required))
+AC_RUN_IFELSE([AC_LANG_PROGRAM([[]], [[
+  #ifdef _WIN32
+   return 0;
+  #else
+   return 1;
+  #endif]])],
+  [DEFINE_DL="yes"],
+  [],
+  [])
+
+if test "$DEFINE_DL" = "no" -a "$COB_TRY_DL" = "yes"
+then
+  if test "x$ac_cv_header_dlfcn_h" = "xyes"
+  then
+    AC_CHECK_LIB([c], [dlopen], [DEFINE_DL="yes"], [])
+    if test "$DEFINE_DL" = "no"
+    then
+      AC_CHECK_LIB([dl], [dlopen], [DEFINE_DL="yes"], [])
+      if test "$DEFINE_DL" = "yes"
+      then
 	AC_DEFINE(USE_LIBDL)
 	LIBCOB_LIBS="$LIBCOB_LIBS -ldl"
-	DEFINEDL="yes"
-	;;
-  *)
-	if test "${DEFINEDL}" = "yes"
-	then
-	  AC_CHECK_HEADERS([dlfcn.h], , AC_MSG_ERROR(dlfcn.h is required))
-	  AC_CHECK_LIB([dl], [dlopen], , AC_MSG_ERROR(libdl is required))
-	  AC_DEFINE(USE_LIBDL)
-	  LIBCOB_LIBS="$LIBCOB_LIBS -ldl"
-	else
-	  AC_CHECK_HEADERS([ltdl.h], , AC_MSG_ERROR(ltdl.h is required))
-	  AC_CHECK_LIB([ltdl], [lt_dlopen], , AC_MSG_ERROR(libltdl is required))
-	  LIBCOB_LIBS="$LIBCOB_LIBS -lltdl"
-	fi
-	;;
-esac
+      fi
+    else
+	AC_DEFINE(USE_LIBDL)
+    fi
+  fi
+fi
+if test "$DEFINE_DL" = "no"
+then
+  AC_CHECK_HEADERS([ltdl.h], , AC_MSG_ERROR(ltdl.h is required))
+  AC_CHECK_LIB([ltdl], [lt_dlopen], , AC_MSG_ERROR(libltdl is required))
+  LIBCOB_LIBS="$LIBCOB_LIBS -lltdl"
+fi
+
+# OpenCOBOL Configuration
 
 if test "x$prefix" = "x/usr" \
      -a "x$includedir" = "x\${prefix}/include"; then
@@ -327,9 +354,11 @@ then
 fi
 
 COB_LIBS="-L$libdir -lcob ${LIBCOB_LIBS}"
+COB_LDFLAGS=""
 if test "x$LDFLAGS" != "x"
 then
   COB_LIBS="$LDFLAGS $COB_LIBS"
+  COB_LDFLAGS="$LDFLAGS"
 fi
 
 COB_CONFIG_DIR="$datadir/$PACKAGE_TARNAME/config"
@@ -342,15 +371,28 @@ COB_SHARED_OPT="-shared"
 COB_EXEEXT="$EXEEXT"
 COB_EXTRA_FLAGS=""
 
-if test "$COB_HAS_CFLAGS" = "no"
+if test "$GEN_DEBUG_OPT" = "no"
 then
-	CFLAGS=`echo $CFLAGS | sed -e 's/-g //'`
+	CFLAGS=`echo "$CFLAGS " | sed -e 's/-g //'`
+fi
+
+# Include CFLAGS in COB_CFLAGS without optimization/debug options
+cob_temp_flags=`echo "$CFLAGS " | sed -e 's/-O2 //' | sed -e 's/-O //' | sed -e 's/-g //'`
+COB_CFLAGS="$COB_CFLAGS $cob_temp_flags"
+
+if test "$GEN_DEBUG_OPT" = "no"
+then
 	if test "`basename $COB_CC`" = "gcc"
 	then
 		cob_temp_flags="`${COB_CC} ${srcdir}/cpucheck.c -o cpucheck 1>/dev/null 2>&1 && ./cpucheck 2>/dev/null`"
 		rm -f cpucheck${EXEEXT}
-		CFLAGS="$CFLAGS $cob_temp_flags -finline-functions -fomit-frame-pointer"
-		COB_EXTRA_FLAGS=" $cob_temp_flags"
+		if test "x$cob_temp_flags" != "x"
+		then
+			CFLAGS="$CFLAGS $cob_temp_flags -finline-functions -fomit-frame-pointer"
+			COB_EXTRA_FLAGS=" $cob_temp_flags"
+		else
+			CFLAGS="$CFLAGS -finline-functions -fomit-frame-pointer"
+		fi
 	fi
 fi
 
@@ -361,9 +403,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[int testint;]])],
 	[])
 CFLAGS="$MYOLDCFLAGS"
 
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <time.h>]], [[return (int) timezone;]])],
-	[AC_DEFINE(HAVE_TIMEZONE, 1)],
-	[])
+# Special stuff
 
 case $host_os in
   cygwin* | mingw*)
@@ -373,6 +413,9 @@ case $host_os in
 	COB_SHARED_OPT="-bundle -flat_namespace -undefined suppress"
 	;;
 esac
+
+# Generate the output
+
 AC_DEFINE_UNQUOTED(COB_EXPORT_DYN, "$COB_EXPORT_DYN")
 AC_DEFINE_UNQUOTED(COB_PIC_FLAGS, "$COB_PIC_FLAGS")
 AC_DEFINE_UNQUOTED(COB_SHARED_OPT, "$COB_SHARED_OPT")
@@ -385,6 +428,7 @@ then
 fi
 AC_SUBST(COB_CC)
 AC_SUBST(COB_CFLAGS)
+AC_SUBST(COB_LDFLAGS)
 AC_SUBST(COB_LIBS)
 AC_SUBST(COB_CONFIG_DIR)
 AC_SUBST(COB_LIBRARY_PATH)
@@ -412,6 +456,8 @@ echo "  COB_CC               ${COB_CC}"
 echo "  CFLAGS               ${CFLAGS}"
 echo "  COB_CFLAGS           ${COB_CFLAGS}"
 echo "  COB_EXTRA_FLAGS      ${COB_EXTRA_FLAGS}"
+echo "  LDFLAGS              ${LDFLAGS}"
+echo "  COB_LDFLAGS          ${COB_LDFLAGS}"
 if test "x$COBC_LIBS" != "x"
 then
   echo "  COBC_LIBS            ${COBC_LIBS}"
@@ -426,7 +472,7 @@ echo "  COB_EXPORT_DYN       ${COB_EXPORT_DYN}"
 if test "x$striplib" != "x"; then
   echo "  COB_STRIP_CMD        ${striplib}"
 fi
-if test "${DEFINEDL}" = "yes" 
+if test "${DEFINE_DL}" = "yes" 
 then
   echo "  Dynamic loading      System"
 else

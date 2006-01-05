@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2005-12-30 11:57+0100\n"
+"POT-Creation-Date: 2006-01-05 19:30+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,7 +20,7 @@ msgstr ""
 msgid ""
 "Options:\n"
 "  --help                Display this message\n"
-"  --version             Display compiler version\n"
+"  --Version, -V         Display compiler version\n"
 "  --verbose, -v         Display the programs invoked by the compiler\n"
 "  -x                    Build an executable program\n"
 "  -m                    Build a dynamically loaded module\n"
@@ -63,39 +63,39 @@ msgstr ""
 msgid "Invalid option -std=%s\n"
 msgstr ""
 
-#: cobc/cobc.c:845
+#: cobc/cobc.c:856
 msgid "-MT must be given to specify target file\n"
 msgstr ""
 
-#: cobc/tree.c:820
+#: cobc/tree.c:823
 msgid "numeric entry cannot be larger than 18 digits"
 msgstr ""
 
-#: cobc/tree.c:845
+#: cobc/tree.c:848
 msgid "invalid picture string"
 msgstr ""
 
-#: cobc/tree.c:1017
+#: cobc/tree.c:1020
 #, c-format
 msgid "%s clause is required for file '%s'"
 msgstr ""
 
-#: cobc/tree.c:1047
+#: cobc/tree.c:1050
 #, c-format
 msgid "record size too small '%s'"
 msgstr ""
 
-#: cobc/tree.c:1050
+#: cobc/tree.c:1053
 #, c-format
 msgid "record size too large '%s'"
 msgstr ""
 
-#: cobc/tree.c:1708
+#: cobc/tree.c:1711
 #, c-format
 msgid "FUNCTION %s has wrong number of arguments"
 msgstr ""
 
-#: cobc/tree.c:1792
+#: cobc/tree.c:1795
 #, c-format
 msgid "FUNCTION %s not implemented"
 msgstr ""
@@ -599,7 +599,7 @@ msgstr ""
 msgid "invalid H literal: %s"
 msgstr ""
 
-#: cobc/scanner.l:422
+#: cobc/scanner.l:427 cobc/scanner.l:430
 msgid "invalid numeric literal"
 msgstr ""
 

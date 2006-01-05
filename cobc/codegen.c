@@ -33,6 +33,9 @@
 #define	COB_USE_SETJMP	0
 #define NUM_I_COUNTERS	8
 
+#ifndef __GNUC__
+static int inside_check = 0;
+#endif
 static int param_id = 0;
 static int stack_id = 0;
 static int num_cob_fields = 0;
@@ -86,12 +89,18 @@ static struct call_list {
 	const char		*callorig;
 } *call_cache = NULL;
 
+#ifdef __GNUC__
 static void output (const char *fmt, ...)
      __attribute__ ((__format__ (__printf__, 1, 2)));
 static void output_line (const char *fmt, ...)
      __attribute__ ((__format__ (__printf__, 1, 2)));
 static void output_storage (const char *fmt, ...)
      __attribute__ ((__format__ (__printf__, 1, 2)));
+#else
+static void output (const char *fmt, ...);
+static void output_line (const char *fmt, ...);
+static void output_storage (const char *fmt, ...);
+#endif
 
 static void output_stmt (cb_tree x);
 static void output_integer (cb_tree x);
@@ -849,7 +858,12 @@ output_param (cb_tree x, int id)
 	    cb_tree l;
 	    int sav_stack_id;
 
+#ifdef __GNUC__
 	    output_indent (" ({");
+#else
+		inside_check = 1;
+	    output(" (\n");
+#endif
 	    for (l = r->check; l; l = CB_CHAIN (l)) {
 		sav_stack_id = stack_id;
 		output_stmt (CB_VALUE (l));
@@ -919,8 +933,14 @@ output_param (cb_tree x, int id)
 	    output (", &%s)", fname);
 	  }
 
-	if (r->check)
-	  output ("; })");
+	if (r->check) {
+#ifdef __GNUC__
+		output ("; })");
+#else
+		inside_check = 0;
+		output (" )");
+#endif
+	}
 	break;
       }
 /* RXW */
@@ -1138,10 +1158,20 @@ output_cond (cb_tree x, int save_flag)
       {
 	if (save_flag)
 	  output ("(ret = ");
+#ifdef __GNUC__
 	output_indent ("({");
+#else
+	inside_check = 1;
+	output("(\n");
+#endif
 	for (; x; x = CB_CHAIN (x))
 	  output_stmt (CB_VALUE (x));
+#ifdef __GNUC__
 	output_indent ("})");
+#else
+	inside_check = 0;
+	output(")");
+#endif
 	if (save_flag)
 	  output (")");
 	break;
@@ -2067,6 +2097,15 @@ output_stmt (cb_tree x)
       output_line (";");
       return;
     }
+#ifndef __GNUC__
+	if(inside_check != 0) {
+		if(inside_check == 1) {
+			inside_check = 2;
+		} else {
+			output (",\n");
+		}
+	}
+#endif
 
   switch (CB_TREE_TAG (x))
     {
@@ -2169,7 +2208,13 @@ output_stmt (cb_tree x)
       {
 	output_prefix ();
 	output_funcall (x);
+#ifdef __GNUC__
 	output (";\n");
+#else
+	if(inside_check == 0) {
+		output (";\n");
+	}
+#endif
 	break;
       }
     case CB_TAG_ASSIGN:
@@ -2899,6 +2944,8 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_line (" fprintf(stderr, \"Codegen error\\n\");");
 	output_line (" cob_stop_run (1);");
 	output_newline ();
+  } else {
+	output_line (" ;");
   }
 #endif
 
@@ -2942,6 +2989,11 @@ output_entry_function (struct cb_program *prog,
   cb_tree l, l1, l2;
   int parmnum;
 
+#if defined(_MSC_VER)
+  if(!gencode ) {
+	output ("__declspec(dllexport) ");
+  }
+#endif
   output ("int");
   if ( gencode ) {
 	output ("\n");

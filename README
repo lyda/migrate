@@ -89,24 +89,27 @@ to run a series of OpenCOBOL test programs
 
 There are the following configure options:
 
-  --with-cc=<cc>		specify C compiler command used by cobc
+  --with-cc=<cc>		Specify C compiler command used by cobc
 
-  --with-db1			use Berkeley DB 1.85 (libdb1/libdb-1.85)
+  --with-db1			Use Berkeley DB 1.85 (libdb1/libdb-1.85)
 				This overrides --with-db/--without-db
 
-  --with-db			use Berkeley DB 3.0 or later (libdb)
+  --with-db			Use Berkeley DB 3.0 or later (libdb)
 				This is the default
 
   --without-db			Do not use Berkeley DB
 				You will not be able to use SORT/indexed I/O
 
-  --with-lfs64			use large file system for file I/O
+  --with-lfs64			Use large file system for file I/O
 				This is the default
 
   --without-lfs64		Do not use large file system I/O
 
-  --with-dl			use the system dynamic linker instead of ltdl
-				This is the default on Linux/Cygwin
+  --with-dl			Use the system dynamic linker instead of ltdl
+				This is the default
+				(Note on Windows, native loading is used)
+
+  --without-dl			Use ltdl for dynamic program loading
 
   --with-patch-level=<n>	Set internal patch level to n (default 0)
 
@@ -127,6 +130,9 @@ There are the following configure options:
 					native machine order (int).
 					(This was previously the default)
 
+  --enable-debug		Add '-g' debug option to make
+
+
 Development
 ===========
 
@@ -136,12 +142,15 @@ from the CVS repository.
 You need to install the following extra packages with specified
 minimum version before building OpenCOBOL:
 
-  o Autoconf 2.59
-  o Automake 1.8
-  o Libtool 1.5.2
-  o Gettext 0.14.1
+For compiling :
   o Bison 1.875
   o Flex 2.5.4
+
+If you reconfigure and/or prepare a distribution
+  o Autoconf 2.59
+  o Automake 1.9.6
+  o Libtool 1.5.22
+  o Gettext 0.14.1
   o Texinfo 4.6 (For makeinfo)
 
 After checking out the latest source from the repository, you

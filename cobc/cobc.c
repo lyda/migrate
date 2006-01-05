@@ -283,7 +283,7 @@ init_environment (int argc, char *argv[])
 #endif
 	init_var (cob_cflags, "COB_CFLAGS", COB_CFLAGS);
 	init_var (cob_libs, "COB_LIBS", COB_LIBS);
-	init_var (cob_ldflags, "COB_LDFLAGS", "");
+	init_var (cob_ldflags, "COB_LDFLAGS", COB_LDFLAGS);
 	init_var (cob_config_dir, "COB_CONFIG_DIR", COB_CONFIG_DIR);
 
 	p = getenv ("COB_LDADD");
@@ -343,7 +343,7 @@ print_usage (void)
 	printf ("Usage: %s [options] file...\n\n", program_name);
 	puts (_("Options:\n"
 		"  --help                Display this message\n"
-		"  --version             Display compiler version\n"
+		"  --Version, -V         Display compiler version\n"
 		"  --verbose, -v         Display the programs invoked by the compiler\n"
 		"  -x                    Build an executable program\n"
 		"  -m                    Build a dynamically loaded module\n"
@@ -602,7 +602,9 @@ process_command_line (int argc, char *argv[])
 		}
 	}
 
+#if defined (__GNUC__)
 	strcat (cob_cflags, " -fsigned-char");
+#endif
 
 #ifdef	HAVE_PSIGN_OPT
 	strcat (cob_cflags, " -Wno-pointer-sign");
@@ -752,9 +754,18 @@ process_filename (const char *filename)
 		fn->object = strdup (output_name);
 	} else if (save_temps || cb_compile_level == CB_LEVEL_ASSEMBLE) {
 		fn->object = cob_malloc (strlen (basename) + 5);
+#if defined(_MSC_VER)
+		sprintf (fn->object, "%s.obj", basename);
+#else
 		sprintf (fn->object, "%s.o", basename);
+#endif
 	} else {
+#if defined(_MSC_VER)
+		fn->object = cob_malloc (strlen (basename) + 5);
+		sprintf (fn->object, "%s.obj", basename);
+#else
 		fn->object = temp_name (".o");
+#endif
 /*
 		temp_name (fn->object, ".o");
 */
@@ -926,7 +937,11 @@ process_compile (struct filename *fn)
 		file_basename (fn->source, name);
 		strcat (name, ".s");
 	}
+#ifdef _MSC_VER
+	sprintf (buff, "%s -S /Fe%s %s %s", cob_cc, name, cob_cflags, fn->translate);
+#else
 	sprintf (buff, "%s -S -o %s %s %s", cob_cc, name, cob_cflags, fn->translate);
+#endif
 	return process (buff);
 }
 
@@ -961,7 +976,11 @@ process_module_direct (struct filename *fn)
 		strcat (name, ".");
 		strcat (name, COB_MODULE_EXT);
 	}
-#if (defined __CYGWIN__ || defined _WIN32)
+#ifdef _MSC_VER
+	sprintf (buff, "%s %s %s %s %s %s /Fe%s %s %s",
+		 cob_cc, cob_cflags, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
+		 COB_EXPORT_DYN, name, fn->translate, cob_libs);
+#elif (defined __CYGWIN__ || defined _WIN32)
 	sprintf (buff, "%s %s %s %s %s %s -o %s %s %s",
 		 cob_cc, cob_cflags, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
 		 COB_EXPORT_DYN, name, fn->translate, cob_libs);
@@ -999,7 +1018,11 @@ process_module (struct filename *fn)
 		strcat (name, ".");
 		strcat (name, COB_MODULE_EXT);
 	}
-#if (defined __CYGWIN__ || defined _WIN32)
+#ifdef _MSC_VER
+	sprintf (buff, "%s %s %s %s %s /Fe%s %s %s",
+		 cob_cc, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
+		 COB_EXPORT_DYN, name, fn->object, cob_libs);
+#elif (defined __CYGWIN__ || defined _WIN32)
 	sprintf (buff, "%s %s %s %s %s -o %s %s %s",
 		 cob_cc, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
 		 COB_EXPORT_DYN, name, fn->object, cob_libs);
@@ -1063,8 +1086,13 @@ process_link (struct filename *l)
 	} else {
 		buffptr = buff;
 	}
+#ifdef _MSC_VER
+	sprintf (buffptr, "%s %s %s /Fe%s %s %s",
+		 cob_cc, cob_ldflags, COB_EXPORT_DYN, name, objsptr, cob_libs);
+#else
 	sprintf (buffptr, "%s %s %s -o %s %s %s",
 		 cob_cc, cob_ldflags, COB_EXPORT_DYN, name, objsptr, cob_libs);
+#endif
 
 #ifdef	COB_STRIP_CMD
 	ret = process (buffptr);
@@ -1093,8 +1121,13 @@ process_link_direct (struct filename *l)
 		file_basename (l->source, name);
 	}
 
+#ifdef _MSC_VER
+	sprintf (buff, "%s %s %s %s /Fe%s %s %s",
+		 cob_cc, cob_cflags, cob_ldflags, COB_EXPORT_DYN, name, l->translate, cob_libs);
+#else
 	sprintf (buff, "%s %s %s %s -o %s %s %s",
 		 cob_cc, cob_cflags, cob_ldflags, COB_EXPORT_DYN, name, l->translate, cob_libs);
+#endif
 
 #ifdef	COB_STRIP_CMD
 	ret = process (buff);

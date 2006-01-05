@@ -1,3 +1,15 @@
+2006-01-05  Roger While <simrw@sim-basis.de>
+
+	* General : Bootstrap to new libtool/automake
+	  cobc.c : MS VS/VC changes
+		   Get COB_LDFLAGS from config
+	  tree.c : Fix invalid picture
+	  codegen.c : Non-gcc and MS VS/VC fixes
+
+2006-01-03  Roger While <simrw@sim-basis.de>
+
+	* scanner.l : Fix wrong numeric scan
+
 2005-12-30  Roger While <simrw@sim-basis.de>
 
 	* Change ifdef's on MINGW to WIN32 (Also defined on 64-bit Win)

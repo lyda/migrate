@@ -424,7 +424,7 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 	/* open the file */
 	switch (mode) {
 	case COB_OPEN_INPUT:
-#ifndef	_WIN32
+#if !defined(_WIN32) || defined(_MSC_VER)
 		if (f->organization == COB_ORG_LINE_SEQUENTIAL)
 			fp = fopen (filename, "r");
 		else
@@ -434,7 +434,7 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 	case COB_OPEN_OUTPUT:
 		if (f->organization == COB_ORG_RELATIVE)
 			fp = fopen (filename, "wb+");
-#ifndef	_WIN32
+#if !defined(_WIN32) || defined(_MSC_VER)
 		else if (f->organization == COB_ORG_LINE_SEQUENTIAL)
 			fp = fopen (filename, "w");
 #endif
@@ -442,7 +442,7 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 			fp = fopen (filename, "wb");
 		break;
 	case COB_OPEN_I_O:
-#ifndef	_WIN32
+#if !defined(_WIN32) || defined(_MSC_VER)
 		if (f->organization == COB_ORG_LINE_SEQUENTIAL)
 			fp = fopen (filename, "r+");
 		else
@@ -450,7 +450,7 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 			fp = fopen (filename, "rb+");
 		break;
 	case COB_OPEN_EXTEND:
-#ifndef	_WIN32
+#if !defined(_WIN32) || defined(_MSC_VER)
 		if (f->organization == COB_ORG_LINE_SEQUENTIAL)
 			fp = fopen (filename, "a+");
 		else
@@ -1292,10 +1292,10 @@ indexed_delete (cob_file *f)
 	prim_key = p->key;
 
 	/* delete the secondary keys */
-	offset = p->data.data - (void *)f->record->data;
+	offset = (char *) p->data.data - (char *) f->record->data;
 	for (i = 1; i < f->nkeys; i++) {
 		DBT_SET (p->key, f->keys[i].field);
-		p->key.data += offset;
+		p->key.data = (char *)p->key.data + offset;
 		if (!f->keys[i].flag) {
 			DB_DEL (p->db[i], &p->key, 0);
 		} else {

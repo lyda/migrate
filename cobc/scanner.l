@@ -418,7 +418,15 @@ scan_numeric (char *text)
 		scale = strlen ((char *)s) - 1;
 		memmove (s, s + 1, scale + 1);
 	}
+/*
 	if (strchr (text, (current_program->decimal_point == ',') ? '.' : ',')) {
+		cb_error (_("invalid numeric literal"));
+	}
+*/
+	if (strchr (text, '.')) {
+		cb_error (_("invalid numeric literal"));
+	}
+	if (strchr (text, ',')) {
 		cb_error (_("invalid numeric literal"));
 	}
 

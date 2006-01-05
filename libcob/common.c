@@ -275,7 +275,7 @@ cob_init (int argc, char **argv)
 #endif
 
 /* Dirty hack until we implement something better */
-#ifdef	_WIN32
+#if defined(_WIN32) && !defined(_MSC_VER)
 		_setmode (_fileno (stdin), _O_BINARY);
 		_setmode (_fileno (stdout), _O_BINARY);
 		_setmode (_fileno (stderr), _O_BINARY);
@@ -1003,7 +1003,11 @@ cob_accept_day_of_week (cob_field *f)
 	time_t	t = time (NULL);
 	char	s[2];
 
+#if defined(_MSC_VER)
+	sprintf(s, "%d", localtime(&t)->tm_wday + 1);
+#else
 	strftime (s, 2, "%u", localtime (&t));
+#endif
 	cob_memcpy (f, (ucharptr)s, 1);
 }
 

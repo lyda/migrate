@@ -11,5 +11,6 @@ s/^055200.*IF1294.*/rogerw     COMPUTE WS-INT = FUNCTION ORD-MIN (4 0 5 3 7)\./
 s/^049800.*IF1324.*/rogerw     COMPUTE WS-NUM = FUNCTION RANGE (4 0 5 3 7)\./
 s/^053100.*IF1374.*/rogerw     COMPUTE WS-NUM = FUNCTION STANDARD-DEVIATION (4 0 5 3 7)\./
 s/^049800.*IF1384.*/rogerw     COMPUTE WS-NUM = FUNCTION SUM (4 0 5 3 7)\./
+s/^012250.*IX1104.*/rogerw 01  STATUS-TEST-10          PIC 9 VALUE ZERO\./
 s/^052500.*IF1414.*/rogerw     COMPUTE WS-NUM = FUNCTION VARIANCE (4 0 5 3 7)\./' <newcob.tmp2 >newcob.tmp
 rm -f newcob.tmp2

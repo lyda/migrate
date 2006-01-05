@@ -20,6 +20,31 @@
 #ifndef COB_COMMON_H
 #define COB_COMMON_H
 
+#ifdef _MSC_VER
+
+#define _CRT_SECURE_NO_DEPRECATE 1
+#define inline _inline
+#include <malloc.h>
+#include <io.h>
+#include <fcntl.h>
+#pragma warning(disable: 4996)
+#define strncasecmp _strnicmp
+#define strcasecmp _stricmp
+#define __attribute__(x)
+#define __i386__
+
+#ifdef LIBCOB_EXPORTS
+#define DLL_EXPIMP __declspec(dllexport)
+#else /* LIBCOB_EXPORTS */
+#define DLL_EXPIMP __declspec(dllimport)
+#endif /* LIBCOB_EXPORTS */
+
+#else /* _MSC_VER */
+
+#define DLL_EXPIMP
+
+#endif /* _MSC_VER */
+
 typedef unsigned char *	ucharptr;
 
 #define	COB_SMALL_BUFF		1024
@@ -133,7 +158,7 @@ typedef struct __cob_module {
 	unsigned char		spare8;
 } cob_module;
 
-extern cob_module	*cob_current_module;
+DLL_EXPIMP extern cob_module	*cob_current_module;
 
 
 /*
@@ -152,28 +177,28 @@ enum cob_exception_id {
 /* Set cob_exception_code from an exception id */
 #define COB_SET_EXCEPTION(id) cob_set_exception(id)
 
-extern int	cob_exception_code;
+DLL_EXPIMP extern int	cob_exception_code;
 
 
 /*
  * Global variables
  */
 
-extern int			cob_initialized;
+DLL_EXPIMP extern int			cob_initialized;
 
-extern const char		*cob_source_file;
-extern unsigned int		cob_source_line;
+DLL_EXPIMP extern const char		*cob_source_file;
+DLL_EXPIMP extern unsigned int		cob_source_line;
 
-extern int			cob_call_params;
+DLL_EXPIMP extern int			cob_call_params;
 
-extern cob_field		cob_zero;		/* ZERO */
-extern cob_field		cob_space;		/* SPACE */
-extern cob_field		cob_high;		/* HIGH-VALUE */
-extern cob_field		cob_low;		/* LOW-VALUE */
-extern cob_field		cob_quote;		/* QUOTE */
+DLL_EXPIMP extern cob_field		cob_zero;		/* ZERO */
+DLL_EXPIMP extern cob_field		cob_space;		/* SPACE */
+DLL_EXPIMP extern cob_field		cob_high;		/* HIGH-VALUE */
+DLL_EXPIMP extern cob_field		cob_low;		/* LOW-VALUE */
+DLL_EXPIMP extern cob_field		cob_quote;		/* QUOTE */
 
-extern const int		cob_exp10[];
-extern const long long		cob_exp10LL[];
+DLL_EXPIMP extern const int		cob_exp10[];
+DLL_EXPIMP extern const long long		cob_exp10LL[];
 
 
 /* convert a digit (e.g., '0') into an integer (e.g., 0) */

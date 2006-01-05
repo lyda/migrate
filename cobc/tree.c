@@ -802,6 +802,9 @@ cb_build_picture (const char *str)
 	}
 	buff[idx] = 0;
 
+	if (size == 0 && v_count) {
+		goto error;
+	}
 	/* set picture */
 	pic->orig = strdup (str);
 	pic->size = size;

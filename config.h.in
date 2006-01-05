@@ -29,9 +29,6 @@
 /* Define to 1 if using `alloca.c'. */
 #undef C_ALLOCA
 
-/* Has visibility attribute */
-#undef DLLHIDDEN
-
 /* Define to 1 if translation of program messages to the user's native
    language is requested. */
 #undef ENABLE_NLS
@@ -112,12 +109,6 @@
 
 /* Define to 1 if you have the <kpathsea/getopt.h> header file. */
 #undef HAVE_KPATHSEA_GETOPT_H
-
-/* Define to 1 if you have the `c' library (-lc). */
-#undef HAVE_LIBC
-
-/* Define to 1 if you have the `dl' library (-ldl). */
-#undef HAVE_LIBDL
 
 /* Define to 1 if you have the `gmp' library (-lgmp). */
 #undef HAVE_LIBGMP
