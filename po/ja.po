@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2006-01-05 19:30+0100\n"
+"POT-Creation-Date: 2006-01-08 14:02+0100\n"
 "PO-Revision-Date: 2004-08-01 23:55+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -16,15 +16,15 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: cobc/cobc.c:344
+#: cobc/cobc.c:346
 #, fuzzy
 msgid ""
 "Options:\n"
 "  --help                Display this message\n"
-"  --Version, -V         Display compiler version\n"
-"  --verbose, -v         Display the programs invoked by the compiler\n"
+"  --version, -V         Display compiler version\n"
+"  -v                    Display the programs invoked by the compiler\n"
 "  -x                    Build an executable program\n"
-"  -m                    Build a dynamically loaded module\n"
+"  -m                    Build a dynamically loadable module\n"
 "  -std=<dialect>        Compile for a specific dialect :\n"
 "                          cobol2002   Cobol 2002\n"
 "                          cobol85     Cobol 85\n"
@@ -85,17 +85,18 @@ msgstr ""
 "\n"
 "  -Wall                 全てのワーニングを有効にする"
 
-#: cobc/cobc.c:516
+#: cobc/cobc.c:518
 #, c-format
 msgid "Invalid option -std=%s\n"
 msgstr "不当なオプションです -std=%s\n"
 
-#: cobc/cobc.c:856
+#: cobc/cobc.c:853
 msgid "-MT must be given to specify target file\n"
 msgstr "ターゲットファイルを -MT で指定して下さい\n"
 
 #: cobc/tree.c:823
-msgid "numeric entry cannot be larger than 18 digits"
+#, fuzzy
+msgid "numeric field cannot be larger than 36 digits"
 msgstr "18 桁を越える数字項目は許されません"
 
 #: cobc/tree.c:848
@@ -319,10 +320,15 @@ msgstr "REDEFINES に含まれる項目は VALUE 句を持つことが出来ません"
 msgid "VALUE clause ignored for EXTERNAL items"
 msgstr ""
 
-#: cobc/field.c:549 cobc/field.c:553 cobc/field.c:687 cobc/field.c:690
+#: cobc/field.c:553 cobc/field.c:557 cobc/field.c:693 cobc/field.c:696
 #, fuzzy, c-format
 msgid "size of '%s' larger than size of '%s'"
 msgstr "`%s' のサイズが `%s' のサイズを越えています"
+
+#: cobc/field.c:738
+#, fuzzy, c-format
+msgid "'%s' binary field cannot be larger than 18 digits"
+msgstr "18 桁を越える数字項目は許されません"
 
 #: cobc/typeck.c:83
 #, fuzzy, c-format
@@ -498,29 +504,29 @@ msgstr "値が PICTURE に合致しません"
 msgid "value size exceeds data size"
 msgstr "値の大きさが項目の大きさを越えています"
 
-#: cobc/typeck.c:2715
+#: cobc/typeck.c:2716
 msgid "KEY ignored with sequential READ"
 msgstr "順読み込みの READ であるため KEY は無視されます"
 
-#: cobc/typeck.c:2789
+#: cobc/typeck.c:2790
 #, fuzzy, c-format
 msgid "undeclared key '%s'"
 msgstr "`%s' はキー宣言されていません"
 
-#: cobc/typeck.c:2793
+#: cobc/typeck.c:2794
 msgid "invalid SEARCH ALL condition"
 msgstr "SEARCH ALL の条件式が不当です"
 
-#: cobc/typeck.c:2867
+#: cobc/typeck.c:2868
 msgid "the targets of SET must be either indexes or pointers"
 msgstr "SET 出来るのは INDEXED か POINTER だけです"
 
-#: cobc/typeck.c:2881
+#: cobc/typeck.c:2882
 #, fuzzy, c-format
 msgid "the address of '%s' cannot be changed"
 msgstr "`%s' のアドレスは変更できません"
 
-#: cobc/typeck.c:3137
+#: cobc/typeck.c:3138
 msgid "invalid mnemonic name"
 msgstr "不当なニーモニックです"
 
@@ -740,89 +746,89 @@ msgstr ""
 msgid "Cannot acquire %d bytes of memory - Aborting"
 msgstr ""
 
-#: libcob/fileio.c:1913
+#: libcob/fileio.c:1932
 #, fuzzy
 msgid "End of file"
 msgstr "ファイルの終わりです"
 
-#: libcob/fileio.c:1916
+#: libcob/fileio.c:1935
 #, fuzzy
 msgid "Key out of range"
 msgstr "キーの範囲が不当です"
 
-#: libcob/fileio.c:1919
+#: libcob/fileio.c:1938
 #, fuzzy
 msgid "Key order not ascending"
 msgstr "キーが昇順ではありません"
 
-#: libcob/fileio.c:1922
+#: libcob/fileio.c:1941
 #, fuzzy
 msgid "Record key already exists"
 msgstr "レコードキーが既に存在します"
 
-#: libcob/fileio.c:1925
+#: libcob/fileio.c:1944
 #, fuzzy
 msgid "Record key does not exist"
 msgstr "レコードキーが存在しません"
 
-#: libcob/fileio.c:1928
+#: libcob/fileio.c:1947
 #, fuzzy
 msgid "Permanent file error"
 msgstr "永続ファイルエラーです"
 
-#: libcob/fileio.c:1931
+#: libcob/fileio.c:1950
 #, fuzzy
 msgid "File does not exist"
 msgstr "ファイルが存在しません"
 
-#: libcob/fileio.c:1934
+#: libcob/fileio.c:1953
 #, fuzzy
 msgid "Permission denied"
 msgstr "利用許可がありません"
 
-#: libcob/fileio.c:1937
+#: libcob/fileio.c:1956
 #, fuzzy
 msgid "File already open"
 msgstr "ファイルは既に開いています"
 
-#: libcob/fileio.c:1940
+#: libcob/fileio.c:1959
 #, fuzzy
 msgid "File not open"
 msgstr "ファイルが開いていません"
 
-#: libcob/fileio.c:1943
+#: libcob/fileio.c:1962
 msgid "READ must be executed first"
 msgstr "READ を先に実行しなければなりません"
 
-#: libcob/fileio.c:1946
+#: libcob/fileio.c:1965
 #, fuzzy
 msgid "Record overflow"
 msgstr "レコードの領域を超えています"
 
-#: libcob/fileio.c:1949
+#: libcob/fileio.c:1968
 #, fuzzy
 msgid "Failed to read"
 msgstr "読み込みに失敗しました"
 
-#: libcob/fileio.c:1952
+#: libcob/fileio.c:1971
 #, fuzzy
 msgid "READ/START not allowed"
 msgstr "READ、START は許可されません"
 
-#: libcob/fileio.c:1955
+#: libcob/fileio.c:1974
 msgid "WRITE not allowed"
 msgstr "WRITE は許可されません"
 
-#: libcob/fileio.c:1958
+#: libcob/fileio.c:1977
 #, fuzzy
 msgid "DELETE/REWRITE not allowed"
 msgstr "DELETE、REWRITE は許可されません"
 
-#: libcob/fileio.c:1965
+#: libcob/fileio.c:1984
 msgid "LINAGE values invalid"
 msgstr ""
 
-#: libcob/fileio.c:1968
+#: libcob/fileio.c:1987
 #, fuzzy
 msgid "Unknown file error"
 msgstr "原因不明のファイルエラーです"

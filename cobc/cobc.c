@@ -158,8 +158,10 @@ static char short_options[] = "hVvECScmxOgwo:t:I:L:l:";
 
 static struct option long_options[] = {
 	{"help", no_argument, NULL, 'h'},
-	{"Version", no_argument, NULL, 'V'},
+	{"version", no_argument, NULL, 'V'},
+/* getopt_long_only has a problem with eg. -xv - remove
 	{"verbose", no_argument, NULL, 'v'},
+*/
 	{"list-reserved", no_argument, NULL, 'R'},
 	{"save-temps", no_argument, &save_temps, 1},
 	{"std", required_argument, NULL, '$'},
@@ -343,10 +345,10 @@ print_usage (void)
 	printf ("Usage: %s [options] file...\n\n", program_name);
 	puts (_("Options:\n"
 		"  --help                Display this message\n"
-		"  --Version, -V         Display compiler version\n"
-		"  --verbose, -v         Display the programs invoked by the compiler\n"
+		"  --version, -V         Display compiler version\n"
+		"  -v                    Display the programs invoked by the compiler\n"
 		"  -x                    Build an executable program\n"
-		"  -m                    Build a dynamically loaded module\n"
+		"  -m                    Build a dynamically loadable module\n"
 		"  -std=<dialect>        Compile for a specific dialect :\n"
 		"                          cobol2002   Cobol 2002\n"
 		"                          cobol85     Cobol 85\n"
@@ -706,7 +708,11 @@ process_filename (const char *filename)
 		/* already compiled */
 		fn->need_preprocess = 0;
 		fn->need_translate = 0;
+#ifdef _MSC_VER
+	} else if (strcmp (extension, "obj") == 0) {
+#else
 	} else if (strcmp (extension, "o") == 0) {
+#endif
 		/* already assembled */
 		fn->need_preprocess = 0;
 		fn->need_translate = 0;
@@ -727,9 +733,6 @@ process_filename (const char *filename)
 		sprintf (fn->preprocess, "%s.i", basename);
 	} else {
 		fn->preprocess = temp_name (".cob");
-/*
-		temp_name (fn->preprocess, ".cob");
-*/
 	}
 
 	/* Set translate filename */
@@ -742,9 +745,6 @@ process_filename (const char *filename)
 		sprintf (fn->translate, "%s.c", basename);
 	} else {
 		fn->translate = temp_name (".c");
-/*
-		temp_name (fn->translate, ".c");
-*/
 	}
 
 	/* Set object filename */
@@ -766,9 +766,6 @@ process_filename (const char *filename)
 #else
 		fn->object = temp_name (".o");
 #endif
-/*
-		temp_name (fn->object, ".o");
-*/
 	}
 
 	return fn;
@@ -935,10 +932,12 @@ process_compile (struct filename *fn)
 		strcpy (name, output_name);
 	} else {
 		file_basename (fn->source, name);
+#ifndef _MSC_VER
 		strcat (name, ".s");
+#endif
 	}
 #ifdef _MSC_VER
-	sprintf (buff, "%s -S /Fe%s %s %s", cob_cc, name, cob_cflags, fn->translate);
+	sprintf (buff, "%s /Fa%s /c /Fo%s %s %s", cob_cc, name, name, cob_cflags, fn->translate);
 #else
 	sprintf (buff, "%s -S -o %s %s %s", cob_cc, name, cob_cflags, fn->translate);
 #endif
@@ -950,6 +949,10 @@ process_assemble (struct filename *fn)
 {
 	char buff[COB_MEDIUM_BUFF];
 
+#ifdef _MSC_VER
+	sprintf (buff, "%s -c %s /Fo%s %s",
+		cob_cc, cob_cflags, fn->object, fn->translate);
+#else
 	if (cb_compile_level == CB_LEVEL_MODULE) {
 		sprintf (buff, "%s -c %s %s -o %s %s",
 			 cob_cc, cob_cflags, COB_PIC_FLAGS, fn->object, fn->translate);
@@ -957,6 +960,7 @@ process_assemble (struct filename *fn)
 		sprintf (buff, "%s -c %s -o %s %s",
 			 cob_cc, cob_cflags, fn->object, fn->translate);
 	}
+#endif
 	return process (buff);
 }
 
@@ -973,13 +977,15 @@ process_module_direct (struct filename *fn)
 		strcpy (name, output_name);
 	} else {
 		file_basename (fn->source, name);
+#ifndef _MSC_VER
 		strcat (name, ".");
 		strcat (name, COB_MODULE_EXT);
+#endif
 	}
 #ifdef _MSC_VER
-	sprintf (buff, "%s %s %s %s %s %s /Fe%s %s %s",
+	sprintf (buff, "%s %s %s %s %s %s /Fe%s /Fo%s %s %s",
 		 cob_cc, cob_cflags, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
-		 COB_EXPORT_DYN, name, fn->translate, cob_libs);
+		 COB_EXPORT_DYN, name, name, fn->translate, cob_libs);
 #elif (defined __CYGWIN__ || defined _WIN32)
 	sprintf (buff, "%s %s %s %s %s %s -o %s %s %s",
 		 cob_cc, cob_cflags, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
@@ -1122,8 +1128,8 @@ process_link_direct (struct filename *l)
 	}
 
 #ifdef _MSC_VER
-	sprintf (buff, "%s %s %s %s /Fe%s %s %s",
-		 cob_cc, cob_cflags, cob_ldflags, COB_EXPORT_DYN, name, l->translate, cob_libs);
+	sprintf (buff, "%s %s %s %s /Fe%s /Fo%s %s %s",
+		 cob_cc, cob_cflags, cob_ldflags, COB_EXPORT_DYN, name, name, l->translate, cob_libs);
 #else
 	sprintf (buff, "%s %s %s %s -o %s %s %s",
 		 cob_cc, cob_cflags, cob_ldflags, COB_EXPORT_DYN, name, l->translate, cob_libs);

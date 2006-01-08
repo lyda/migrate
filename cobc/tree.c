@@ -819,8 +819,8 @@ cb_build_picture (const char *str)
 		break;
 	case PIC_NUMERIC:
 		pic->category = CB_CATEGORY_NUMERIC;
-		if (digits > 18)
-			cb_error (_("numeric entry cannot be larger than 18 digits"));
+		if (digits > 36)
+			cb_error (_("numeric field cannot be larger than 36 digits"));
 		break;
 	case PIC_ALPHANUMERIC:
 	case PIC_NATIONAL:

@@ -2483,7 +2483,7 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 		return cb_build_funcall_3 ("own_memcpy",
 					   cb_build_cast_address (dst),
 					   cb_build_string (buff, f->size), cb_build_cast_length (dst));
-	} else if (cb_fits_int (src) &&
+	} else if (cb_fits_int (src) && f->size <= 8 &&
 		   (f->usage == CB_USAGE_BINARY || f->usage == CB_USAGE_COMP_5 ||
 		    f->usage == CB_USAGE_COMP_X)) {
 		int val = cb_get_int (src);
@@ -2589,7 +2589,8 @@ cb_build_move (cb_tree src, cb_tree dst)
 	    || f->usage == CB_USAGE_DOUBLE
 	    || ((f->usage == CB_USAGE_BINARY ||
 		 f->usage == CB_USAGE_COMP_5 || f->usage == CB_USAGE_COMP_X)
-		&& (f->size == 3 || f->size == 5 || f->size == 6 || f->size == 7)))
+		&& (f->size == 3 || f->size == 5 || f->size == 6 ||
+		f->size == 7 || f->size > 8)))
 		return cb_build_move_call (src, dst);
 
 	/* output optimal code */

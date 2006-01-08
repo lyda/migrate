@@ -1,5 +1,45 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Changes in OpenCOBOL 0.33
+
+** New compile option '-x'. This causes the compiler to produce an
+   executable program. '-fmain' is deprecated.
+
+** Remove long option --verbose. Use '-v' for verbosity. Problem is
+   with getopt_long_only which does not like eg. -mv 
+
+** New conformity option -std=bs2000
+
+** FUNCTION is implemented. See cobc/reserved.c for a list for what is
+   implemented.
+
+** LINAGE is implemented.
+
+** SAME RECORD AREA is implemented.
+
+** New config variables - perform-osvs, sticky-linkage. These are
+   activated for -std=ibm and -std=mvs.
+
+** Support for non-gcc compilers
+
+** Large file support, system dynamic loading and Berkeley DB inclusion
+   are default for the configure.
+   ie. ./configure assumes --with-db --with-lfs64 --with-dl
+
+** New configure option --with-patch-level=<n>
+   Default is 0. 
+
+** At run time, version checking is done. ie. When executing/loading
+   Cobol programs, the version (eg. 0.33) and the patch level (eg. 0)
+   are checked against the OC library version/patch level.
+
+** Libtool is not required for systems that support native dynamic
+   loading. This includes Linux, Cygwin and MingW amongst others.
+
+** Note to developers : See README for required software versions.
+
+-----------------------------------------------------------------------
+
 * Changes in OpenCOBOL 0.32
 
 ** Stability update - See individual ChangeLogs

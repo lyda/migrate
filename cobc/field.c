@@ -500,7 +500,11 @@ setup_parameters (struct cb_field *f)
 	    {
 	      char pic[8];
 
-	      sprintf (pic, "9(%d)", pic_digits[f->pic->size - 1]);
+	      if (f->pic->size > 8) {
+		sprintf (pic, "9(36)");
+	      } else {
+		sprintf (pic, "9(%d)", pic_digits[f->pic->size - 1]);
+	      }
 	      f->pic = CB_PICTURE (cb_build_picture (pic));
 	    }
 	  
@@ -612,24 +616,26 @@ compute_size (struct cb_field *f)
 	      {
 	      case CB_BINARY_SIZE_2_4_8:
 		f->size = ((size <= 4) ? 2 :
-			   (size <= 9) ? 4 : 8);
+			   (size <= 9) ? 4 :
+			   (size <= 18) ? 8 : 16);
 		break;
 	      case CB_BINARY_SIZE_1_2_4_8:
 		f->size = ((size <= 2) ? 1 :
 			   (size <= 4) ? 2 :
-			   (size <= 9) ? 4 : 8);
+			   (size <= 9) ? 4 :
+			   (size <= 18) ? 8 : 16);
 		break;
 	      case CB_BINARY_SIZE_1__8:
 		if (f->pic->have_sign)
 		  f->size = ((size <= 2)  ? 1 : (size <= 4)  ? 2 :
 			     (size <= 6)  ? 3 : (size <= 9)  ? 4 :
 			     (size <= 11) ? 5 : (size <= 14) ? 6 :
-			     (size <= 16) ? 7 : 8);
+			     (size <= 16) ? 7 : (size <= 18) ? 8 : 16);
 		else
 		  f->size = ((size <= 2)  ? 1 : (size <= 4)  ? 2 :
 			     (size <= 7)  ? 3 : (size <= 9)  ? 4 :
 			     (size <= 12) ? 5 : (size <= 14) ? 6 :
-			     (size <= 16) ? 7 : 8);
+			     (size <= 16) ? 7 : (size <= 18) ? 8 : 16);
 		break;
 	      }
 	    break;
@@ -727,6 +733,11 @@ cb_validate_field (struct cb_field *f)
 
   /* compute size */
   compute_size (f);
+  if ((f->usage == CB_USAGE_BINARY || f->usage == CB_USAGE_COMP_5 ||
+       f->usage == CB_USAGE_COMP_X) && f->size > 8) {
+	cb_error_x (CB_TREE (f), _("'%s' binary field cannot be larger than 18 digits"),
+		f->name);
+  }
   if (!f->redefines)
     f->memory_size = f->size;
   else if (f->redefines->memory_size < f->size)

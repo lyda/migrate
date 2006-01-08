@@ -1,3 +1,14 @@
+2006-01-08  Roger While <simrw@sim-basis.de>
+
+	* tree.c, field.c, typeck.c : Preliminary support for numeric
+	  fields with up to 36 digits
+
+2006-01-07  Roger While <simrw@sim-basis.de>
+
+	* cobc.c : Remove --verbose long option. getopt_long_only
+	  has a problem with eg. -mv
+	  Change 'Version' back to 'version'.
+
 2006-01-05  Roger While <simrw@sim-basis.de>
 
 	* General : Bootstrap to new libtool/automake

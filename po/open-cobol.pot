@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2006-01-05 19:30+0100\n"
+"POT-Creation-Date: 2006-01-08 14:02+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,14 +16,14 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: cobc/cobc.c:344
+#: cobc/cobc.c:346
 msgid ""
 "Options:\n"
 "  --help                Display this message\n"
-"  --Version, -V         Display compiler version\n"
-"  --verbose, -v         Display the programs invoked by the compiler\n"
+"  --version, -V         Display compiler version\n"
+"  -v                    Display the programs invoked by the compiler\n"
 "  -x                    Build an executable program\n"
-"  -m                    Build a dynamically loaded module\n"
+"  -m                    Build a dynamically loadable module\n"
 "  -std=<dialect>        Compile for a specific dialect :\n"
 "                          cobol2002   Cobol 2002\n"
 "                          cobol85     Cobol 85\n"
@@ -58,17 +58,17 @@ msgid ""
 "  -Wall                 Enable all warnings"
 msgstr ""
 
-#: cobc/cobc.c:516
+#: cobc/cobc.c:518
 #, c-format
 msgid "Invalid option -std=%s\n"
 msgstr ""
 
-#: cobc/cobc.c:856
+#: cobc/cobc.c:853
 msgid "-MT must be given to specify target file\n"
 msgstr ""
 
 #: cobc/tree.c:823
-msgid "numeric entry cannot be larger than 18 digits"
+msgid "numeric field cannot be larger than 36 digits"
 msgstr ""
 
 #: cobc/tree.c:848
@@ -292,9 +292,14 @@ msgstr ""
 msgid "VALUE clause ignored for EXTERNAL items"
 msgstr ""
 
-#: cobc/field.c:549 cobc/field.c:553 cobc/field.c:687 cobc/field.c:690
+#: cobc/field.c:553 cobc/field.c:557 cobc/field.c:693 cobc/field.c:696
 #, c-format
 msgid "size of '%s' larger than size of '%s'"
+msgstr ""
+
+#: cobc/field.c:738
+#, c-format
+msgid "'%s' binary field cannot be larger than 18 digits"
 msgstr ""
 
 #: cobc/typeck.c:83
@@ -470,29 +475,29 @@ msgstr ""
 msgid "value size exceeds data size"
 msgstr ""
 
-#: cobc/typeck.c:2715
+#: cobc/typeck.c:2716
 msgid "KEY ignored with sequential READ"
 msgstr ""
 
-#: cobc/typeck.c:2789
+#: cobc/typeck.c:2790
 #, c-format
 msgid "undeclared key '%s'"
 msgstr ""
 
-#: cobc/typeck.c:2793
+#: cobc/typeck.c:2794
 msgid "invalid SEARCH ALL condition"
 msgstr ""
 
-#: cobc/typeck.c:2867
+#: cobc/typeck.c:2868
 msgid "the targets of SET must be either indexes or pointers"
 msgstr ""
 
-#: cobc/typeck.c:2881
+#: cobc/typeck.c:2882
 #, c-format
 msgid "the address of '%s' cannot be changed"
 msgstr ""
 
-#: cobc/typeck.c:3137
+#: cobc/typeck.c:3138
 msgid "invalid mnemonic name"
 msgstr ""
 
@@ -710,74 +715,74 @@ msgstr ""
 msgid "Cannot acquire %d bytes of memory - Aborting"
 msgstr ""
 
-#: libcob/fileio.c:1913
+#: libcob/fileio.c:1932
 msgid "End of file"
 msgstr ""
 
-#: libcob/fileio.c:1916
+#: libcob/fileio.c:1935
 msgid "Key out of range"
 msgstr ""
 
-#: libcob/fileio.c:1919
+#: libcob/fileio.c:1938
 msgid "Key order not ascending"
 msgstr ""
 
-#: libcob/fileio.c:1922
+#: libcob/fileio.c:1941
 msgid "Record key already exists"
 msgstr ""
 
-#: libcob/fileio.c:1925
+#: libcob/fileio.c:1944
 msgid "Record key does not exist"
 msgstr ""
 
-#: libcob/fileio.c:1928
+#: libcob/fileio.c:1947
 msgid "Permanent file error"
 msgstr ""
 
-#: libcob/fileio.c:1931
+#: libcob/fileio.c:1950
 msgid "File does not exist"
 msgstr ""
 
-#: libcob/fileio.c:1934
+#: libcob/fileio.c:1953
 msgid "Permission denied"
 msgstr ""
 
-#: libcob/fileio.c:1937
+#: libcob/fileio.c:1956
 msgid "File already open"
 msgstr ""
 
-#: libcob/fileio.c:1940
+#: libcob/fileio.c:1959
 msgid "File not open"
 msgstr ""
 
-#: libcob/fileio.c:1943
+#: libcob/fileio.c:1962
 msgid "READ must be executed first"
 msgstr ""
 
-#: libcob/fileio.c:1946
+#: libcob/fileio.c:1965
 msgid "Record overflow"
 msgstr ""
 
-#: libcob/fileio.c:1949
+#: libcob/fileio.c:1968
 msgid "Failed to read"
 msgstr ""
 
-#: libcob/fileio.c:1952
+#: libcob/fileio.c:1971
 msgid "READ/START not allowed"
 msgstr ""
 
-#: libcob/fileio.c:1955
+#: libcob/fileio.c:1974
 msgid "WRITE not allowed"
 msgstr ""
 
-#: libcob/fileio.c:1958
+#: libcob/fileio.c:1977
 msgid "DELETE/REWRITE not allowed"
 msgstr ""
 
-#: libcob/fileio.c:1965
+#: libcob/fileio.c:1984
 msgid "LINAGE values invalid"
 msgstr ""
 
-#: libcob/fileio.c:1968
+#: libcob/fileio.c:1987
 msgid "Unknown file error"
 msgstr ""

@@ -20,15 +20,21 @@
 #include "config.h"
 
 #if WITH_LFS64
-#define _LFS64_LARGEFILE     	1
-#define _LFS64_STDIO         	1
-#define _FILE_OFFSET_BITS	64
-#define _LARGEFILE64_SOURCE     1
+#define _LFS64_LARGEFILE		1
+#define _LFS64_STDIO			1
+#define _FILE_OFFSET_BITS		64
+#define _LARGEFILE64_SOURCE		1
+#ifdef _AIX
+#define _LARGE_FILES			1
+#endif /* _AIX */
+#if defined(__hpux__) && !defined(__LP64__)
+#define _APP32_64BIT_OFF_T		1
 #endif
+#endif /* WITH_LFS64 */
 
 #ifdef __MINGW32__
 #define __USE_MINGW_FSEEK	1
-#endif
+#endif /* __MINGW32__ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -70,6 +76,19 @@
 #include <db4.5/db_185.h>
 #elif HAVE_DB_H
 #include <db.h>
+#endif
+
+#if defined(__hpux__) || defined(_AIX) || defined(__sparc)
+#define fseek fseeko
+#define ftell ftello
+#endif
+
+#if WITH_LFS64
+#if defined(_MSC_VER)
+#define fseek _fseeki64
+#define ftell _ftelli64
+#define off_t __int64
+#endif
 #endif
 
 #include "common.h"

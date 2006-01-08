@@ -2778,12 +2778,14 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   output_newline ();
 
   output_line ("/* Start of function code */");
+#ifdef __GNUC__
   if ( cb_flag_static_call == 2 ) {
 	output_line("auto void init_%s(void);", prog->program_id);
   }
   if ( has_external ) {
 	output_line("auto void init_external(void);");
   }
+#endif
   output_newline ();
   if (cb_sticky_linkage && parmnum) {
 	output_line("if (cob_call_params < %d) {", parmnum);
@@ -2825,7 +2827,12 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_line ("cob_screen_init ();");
   }
   if ( cb_flag_static_call == 2 ) {
+#ifdef __GNUC__
 	output_line("init_%s();", prog->program_id);
+#else
+	output_line("goto L_init_%s;", prog->program_id);
+	output_line("LRET_init_%s: ;", prog->program_id);
+#endif
   }
   if (prog->decimal_index_max) {
 	output_line ("/* initialize decimal numbers */");
@@ -2837,7 +2844,12 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   if (!prog->flag_initial) {
 	output_initial_values (prog->working_storage);
 	if ( has_external ) {
+#ifdef __GNUC__
 		output_line("init_external();");
+#else
+		output_line("goto L_init_external;");
+		output_line("LRET_init_external: ;");
+#endif
 	}
 	output_newline ();
 	for (l = prog->file_list; l; l = CB_CHAIN (l))
@@ -2850,7 +2862,12 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   if (prog->flag_initial) {
 	output_initial_values (prog->working_storage);
 	if ( has_external ) {
+#ifdef __GNUC__
 		output_line("init_external();");
+#else
+		output_line("goto L_init_external;");
+		output_line("LRET_init_external: ;");
+#endif
 	}
 	output_newline ();
 	for (l = prog->file_list; l; l = CB_CHAIN (l))
@@ -2941,27 +2958,37 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 		output_line ("   goto %s%d;", CB_PREFIX_LABEL, pl->id);
 	}
 	output_line (" }");
-	output_line (" fprintf(stderr, \"Codegen error\\n\");");
-	output_line (" cob_stop_run (1);");
-	output_newline ();
-  } else {
-	output_line (" ;");
   }
+  output_line (" fprintf(stderr, \"Codegen error\\n\");");
+  output_line (" cob_stop_run (1);");
+  output_newline ();
 #endif
 
   if ( cb_flag_static_call == 2 ) {
+#ifdef __GNUC__
 	output_line("void init_%s(void)", prog->program_id);
 	output_line("{");
+#else
+    output_line("L_init_%s: ;", prog->program_id);
+#endif
 	for ( clp = call_cache; clp; clp = clp->next ) {
 	output_line("	call_%s = cob_resolve(\"%s\");",
 			clp->callname, clp->callorig);
 	}
+#ifdef __GNUC__
 	output_line("}");
+#else
+    output_line("goto LRET_init_%s;", prog->program_id);
+#endif
   }
 
   if ( has_external ) {
+#ifdef __GNUC__
 	output_line("void init_external(void)");
 	output_line("{");
+#else
+	output_line("L_init_external:");
+#endif
 	for (k = field_cache; k; k = k->next) {
 		if ( k->f->flag_item_external) {
 			output_prefix ();
@@ -2970,7 +2997,11 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 			output (";\n");
 		}
 	}
+#ifdef __GNUC__
 	output_line("}");
+#else
+	output_line("goto LRET_init_external;");
+#endif
   }
 	
   output_indent ("}");
