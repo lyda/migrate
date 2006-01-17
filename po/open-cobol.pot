@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2006-01-08 14:02+0100\n"
+"POT-Creation-Date: 2006-01-17 17:40+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -292,12 +292,12 @@ msgstr ""
 msgid "VALUE clause ignored for EXTERNAL items"
 msgstr ""
 
-#: cobc/field.c:553 cobc/field.c:557 cobc/field.c:693 cobc/field.c:696
+#: cobc/field.c:553 cobc/field.c:557 cobc/field.c:699 cobc/field.c:702
 #, c-format
 msgid "size of '%s' larger than size of '%s'"
 msgstr ""
 
-#: cobc/field.c:738
+#: cobc/field.c:618
 #, c-format
 msgid "'%s' binary field cannot be larger than 18 digits"
 msgstr ""
@@ -715,74 +715,74 @@ msgstr ""
 msgid "Cannot acquire %d bytes of memory - Aborting"
 msgstr ""
 
-#: libcob/fileio.c:1932
+#: libcob/fileio.c:1933
 msgid "End of file"
 msgstr ""
 
-#: libcob/fileio.c:1935
+#: libcob/fileio.c:1936
 msgid "Key out of range"
 msgstr ""
 
-#: libcob/fileio.c:1938
+#: libcob/fileio.c:1939
 msgid "Key order not ascending"
 msgstr ""
 
-#: libcob/fileio.c:1941
+#: libcob/fileio.c:1942
 msgid "Record key already exists"
 msgstr ""
 
-#: libcob/fileio.c:1944
+#: libcob/fileio.c:1945
 msgid "Record key does not exist"
 msgstr ""
 
-#: libcob/fileio.c:1947
+#: libcob/fileio.c:1948
 msgid "Permanent file error"
 msgstr ""
 
-#: libcob/fileio.c:1950
+#: libcob/fileio.c:1951
 msgid "File does not exist"
 msgstr ""
 
-#: libcob/fileio.c:1953
+#: libcob/fileio.c:1954
 msgid "Permission denied"
 msgstr ""
 
-#: libcob/fileio.c:1956
+#: libcob/fileio.c:1957
 msgid "File already open"
 msgstr ""
 
-#: libcob/fileio.c:1959
+#: libcob/fileio.c:1960
 msgid "File not open"
 msgstr ""
 
-#: libcob/fileio.c:1962
+#: libcob/fileio.c:1963
 msgid "READ must be executed first"
 msgstr ""
 
-#: libcob/fileio.c:1965
+#: libcob/fileio.c:1966
 msgid "Record overflow"
 msgstr ""
 
-#: libcob/fileio.c:1968
+#: libcob/fileio.c:1969
 msgid "Failed to read"
 msgstr ""
 
-#: libcob/fileio.c:1971
+#: libcob/fileio.c:1972
 msgid "READ/START not allowed"
 msgstr ""
 
-#: libcob/fileio.c:1974
+#: libcob/fileio.c:1975
 msgid "WRITE not allowed"
 msgstr ""
 
-#: libcob/fileio.c:1977
+#: libcob/fileio.c:1978
 msgid "DELETE/REWRITE not allowed"
 msgstr ""
 
-#: libcob/fileio.c:1984
+#: libcob/fileio.c:1985
 msgid "LINAGE values invalid"
 msgstr ""
 
-#: libcob/fileio.c:1987
+#: libcob/fileio.c:1988
 msgid "Unknown file error"
 msgstr ""

@@ -1926,6 +1926,7 @@ cob_default_error_handle (void)
 	const char	*msg = NULL;
 	char		*file_status = cob_error_file->file_status;
 	int		status = cob_d2i (file_status[0]) * 10 + cob_d2i (file_status[1]);
+	char		filename[COB_MEDIUM_BUFF];
 
 	switch (status) {
 	case COB_STATUS_10_END_OF_FILE:
@@ -1988,9 +1989,9 @@ cob_default_error_handle (void)
 		break;
 	}
 
-	if (msg) {
-		cob_runtime_error ("%s (STATUS=%02d)", gettext (msg), status);
-	}
+	cob_field_to_string (cob_error_file->assign, filename);
+	cob_runtime_error ("%s (STATUS=%02d) File : '%s'", gettext (msg),
+				status, filename);
 }
 
 void

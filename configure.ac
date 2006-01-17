@@ -120,7 +120,7 @@ DEFINE_DL="no"
 COB_TRY_DL="yes"
 
 AC_ARG_WITH(dl,
-  [  --with-dl               use system dynamic loader],
+  [  --with-dl               use system dynamic loader (default)],
   [case $with_dl in  
     yes)	COB_TRY_DL="yes"
 		;;
@@ -300,7 +300,7 @@ AC_CHECK_FUNCS([memmove memset regcomp pow setlocale fcntl strerror \
 # 	[AC_DEFINE(DLLHIDDEN, __attribute__ ((visibility ("hidden"))))],
 # 	[AC_DEFINE(DLLHIDDEN, ,Has visibility attribute)])
 
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <time.h>]], [[return (int) timezone;]])],
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <time.h>]], [[timezone = 3600;]])],
 	[AC_DEFINE(HAVE_TIMEZONE, 1)],
 	[])
 

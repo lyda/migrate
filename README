@@ -74,6 +74,12 @@ SCREEN I/O is used or extended ACCEPT/DISPLAY is used
 Installation
 ============
 
+** NOTE **
+Due to deficiencies in the tools used to prepare
+OpenCOBOL (autoconf/automake/libtool), it is
+NOT generally possible to use path names with
+spaces embedded within them (Mainly Cygwin/MingW).
+ 
 See INSTALL for general installation instruction.  Typically,
 this is done by the following commands:
 

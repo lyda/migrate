@@ -1,3 +1,7 @@
+2006-01-17  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : Print assign name when erroring
+
 2006-01-07  Roger While <simrw@sim-basis.de>
 
 	* fileio.c : 64-bit fixes

@@ -1049,7 +1049,7 @@ Optional Packages:
   --with-db1              use Berkeley DB 1.85 (libdb-1.85)
   --with-db               use Berkeley DB 3.0 or later (libdb)(default)
   --with-lfs64            use large file system for file I/O (default)
-  --with-dl               use system dynamic loader
+  --with-dl               use system dynamic loader (default)
   --with-patch-level      define a patch level (default 0)
   --with-varseq           define variable sequential format (default 0)
   --with-gnu-ld           assume the C compiler uses GNU ld default=no
@@ -24694,7 +24694,7 @@ cat >>conftest.$ac_ext <<_ACEOF
 int
 main ()
 {
-return (int) timezone;
+timezone = 3600;
   ;
   return 0;
 }

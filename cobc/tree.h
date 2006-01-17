@@ -536,7 +536,7 @@ struct cb_reference {
 	cb_tree			length;		/* 2nd operand of reference modification */
 	cb_tree			check;
 	cb_tree			chain;		/* next qualified name */
-	int all;
+	int 			all;
 };
 
 #define CB_REFERENCE(x)		(CB_TREE_CAST (CB_TAG_REFERENCE, struct cb_reference, x))

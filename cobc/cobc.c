@@ -1202,7 +1202,8 @@ main (int argc, char *argv[])
 			cb_compile_level = CB_LEVEL_EXECUTABLE;
 			cb_flag_main = 1;
 		}
-		if (wants_nonfinal && !cb_flag_main && !cb_flag_module) {
+		if (wants_nonfinal && cb_compile_level != CB_LEVEL_PREPROCESS &&
+		    !cb_flag_main && !cb_flag_module) {
 			fprintf (stderr, "Warning - Use '-x' to generate 'main' code\n");
 			fprintf (stderr, "          Use '-m' to generate module code\n");
 			fflush (stderr);
