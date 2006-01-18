@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2006-01-17 17:40+0100\n"
+"POT-Creation-Date: 2006-01-18 21:51+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -528,68 +528,68 @@ msgstr ""
 msgid "'%s' not implemented"
 msgstr ""
 
-#: cobc/parser.y:305
+#: cobc/parser.y:314
 #, c-format
 msgid "unknown system-name '%s'"
 msgstr ""
 
-#: cobc/parser.y:428
+#: cobc/parser.y:437
 #, c-format
 msgid "invalid currency sign '%s'"
 msgstr ""
 
-#: cobc/parser.y:980
+#: cobc/parser.y:989
 #, c-format
 msgid "alphabet-name is expected '%s'"
 msgstr ""
 
-#: cobc/parser.y:1077
+#: cobc/parser.y:1086
 msgid "REDEFINES clause must follow entry-name"
 msgstr ""
 
-#: cobc/parser.y:1429 cobc/parser.y:1446
+#: cobc/parser.y:1438 cobc/parser.y:1455
 #, c-format
 msgid "invalid color '%d'"
 msgstr ""
 
-#: cobc/parser.y:1603
+#: cobc/parser.y:1612
 #, c-format
 msgid "unknown statement '%s'"
 msgstr ""
 
-#: cobc/parser.y:2066
+#: cobc/parser.y:2076
 msgid "88 level invalid here"
 msgstr ""
 
-#: cobc/parser.y:2073
+#: cobc/parser.y:2083
 msgid "FIXME: failed to compile \"WHEN NOT ... AND/OR ...\""
 msgstr ""
 
-#: cobc/parser.y:2074
+#: cobc/parser.y:2084
 msgid "FIXME: change it into \"WHEN (NOT ... AND/OR ...)\" for now"
 msgstr ""
 
-#: cobc/parser.y:2739 cobc/parser.y:3248 cobc/parser.y:3304
+#: cobc/parser.y:2749 cobc/parser.y:3258 cobc/parser.y:3314
 #, c-format
 msgid "'%s' not file name"
 msgstr ""
 
-#: cobc/parser.y:3282
+#: cobc/parser.y:3292
 #, c-format
 msgid "'%s' not indexed"
 msgstr ""
 
-#: cobc/parser.y:3283
+#: cobc/parser.y:3293
 #, c-format
 msgid "'%s' defined here"
 msgstr ""
 
-#: cobc/parser.y:3620
+#: cobc/parser.y:3630
 #, c-format
 msgid "'%s' not level 01 or 77"
 msgstr ""
 
-#: cobc/parser.y:3635 cobc/parser.y:3643
+#: cobc/parser.y:3645 cobc/parser.y:3653
 #, c-format
 msgid "%s statement not terminated by END-%s"
 msgstr ""

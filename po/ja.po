@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2006-01-17 17:40+0100\n"
+"POT-Creation-Date: 2006-01-18 21:51+0100\n"
 "PO-Revision-Date: 2004-08-01 23:55+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -557,68 +557,68 @@ msgstr "不当な行連結です"
 msgid "'%s' not implemented"
 msgstr "`%s' は実装されていません"
 
-#: cobc/parser.y:305
+#: cobc/parser.y:314
 #, fuzzy, c-format
 msgid "unknown system-name '%s'"
 msgstr "不当なシステム名です `%s'"
 
-#: cobc/parser.y:428
+#: cobc/parser.y:437
 #, fuzzy, c-format
 msgid "invalid currency sign '%s'"
 msgstr "不当な通貨記号です `%s'"
 
-#: cobc/parser.y:980
+#: cobc/parser.y:989
 #, fuzzy, c-format
 msgid "alphabet-name is expected '%s'"
 msgstr "アルファベット名が必要です `%s'"
 
-#: cobc/parser.y:1077
+#: cobc/parser.y:1086
 msgid "REDEFINES clause must follow entry-name"
 msgstr "REDEFINES 句は項目名の直後になければなりません"
 
-#: cobc/parser.y:1429 cobc/parser.y:1446
+#: cobc/parser.y:1438 cobc/parser.y:1455
 #, fuzzy, c-format
 msgid "invalid color '%d'"
 msgstr "不当な色です `%d'"
 
-#: cobc/parser.y:1603
+#: cobc/parser.y:1612
 #, fuzzy, c-format
 msgid "unknown statement '%s'"
 msgstr "そのような文はありません `%s'"
 
-#: cobc/parser.y:2066
+#: cobc/parser.y:2076
 msgid "88 level invalid here"
 msgstr ""
 
-#: cobc/parser.y:2073
+#: cobc/parser.y:2083
 msgid "FIXME: failed to compile \"WHEN NOT ... AND/OR ...\""
 msgstr ""
 
-#: cobc/parser.y:2074
+#: cobc/parser.y:2084
 msgid "FIXME: change it into \"WHEN (NOT ... AND/OR ...)\" for now"
 msgstr ""
 
-#: cobc/parser.y:2739 cobc/parser.y:3248 cobc/parser.y:3304
+#: cobc/parser.y:2749 cobc/parser.y:3258 cobc/parser.y:3314
 #, fuzzy, c-format
 msgid "'%s' not file name"
 msgstr "`%s' はファイル名ではありません"
 
-#: cobc/parser.y:3282
+#: cobc/parser.y:3292
 #, fuzzy, c-format
 msgid "'%s' not indexed"
 msgstr "`%s' には INDEXED BY が必要です"
 
-#: cobc/parser.y:3283
+#: cobc/parser.y:3293
 #, fuzzy, c-format
 msgid "'%s' defined here"
 msgstr "`%s' はここで定義されました"
 
-#: cobc/parser.y:3620
+#: cobc/parser.y:3630
 #, fuzzy, c-format
 msgid "'%s' not level 01 or 77"
 msgstr "`%s' はレベル 01 か 77 でなければなりません"
 
-#: cobc/parser.y:3635 cobc/parser.y:3643
+#: cobc/parser.y:3645 cobc/parser.y:3653
 #, c-format
 msgid "%s statement not terminated by END-%s"
 msgstr "%s 文が END-%s で終わっていません"

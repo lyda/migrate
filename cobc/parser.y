@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 92
+%expect 94
 
 %defines
 %verbose
@@ -252,11 +252,20 @@ computer_name:
  */
 
 object_computer_paragraph:
-  OBJECT_COMPUTER '.' computer_name object_computer_phrase_sequence '.'
+  OBJECT_COMPUTER '.' object_computer_entry
 ;
+
+object_computer_entry:
+| '.'
+| computer_name '.'
+| computer_name object_computer_phrase_sequence '.'
+| object_computer_phrase_sequence '.'
+;
+
 object_computer_phrase_sequence:
 | object_computer_phrase_sequence object_computer_phrase
 ;
+
 object_computer_phrase:
   _program _collating SEQUENCE _is reference
   {
@@ -1887,7 +1896,7 @@ compute_statement:
   end_compute
 ;
 compute_body:
-  arithmetic_x_list '=' expr on_size_error
+  arithmetic_x_list comp_equal expr on_size_error
   {
     cb_emit_arithmetic ($1, 0, $3);
   }
@@ -1897,6 +1906,7 @@ end_compute:
 | END_COMPUTE
 ;
 
+comp_equal: '=' | EQUAL;
 
 /*
  * CONTINUE statement
