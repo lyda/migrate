@@ -304,12 +304,18 @@ cb_build_section_name (cb_tree name, int sect_or_para)
 
 		/* used as a non-label name or used as a section name or
 		   used as the same paragraph name in the same section */
+/*
 		if (!CB_LABEL_P (x) ||
 		   (!sect_or_para && (CB_LABEL (x)->section == NULL
 		    || CB_LABEL (x)->section == current_section)) ||
 		   (sect_or_para && CB_LABEL (x)->is_section)) {
+*/
+		if (!CB_LABEL_P (x) || CB_LABEL (x)->section == NULL
+		    || CB_LABEL (x)->section == current_section) {
 			redefinition_error (name);
 			return cb_error_node;
+		}
+		if (sect_or_para) {
 		}
 	}
 

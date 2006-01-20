@@ -1,7 +1,12 @@
 2006-01-20  Roger While <simrw@sim-basis.de>
 
-	* parser.y, field.c : Allow duplicate paragraph names
+	* parser.y, field.c : Prepare for duplicate paragraph names
 	  scanner.l : Fix incorrect parsing
+	  field.c : Allow mismatched level numbers based on config
+		    parameter relax-level-hierarchy
+	  codegen.c : Generate memset instead of memcpy for literals
+		      when literal is a repeated character
+	  pplex.l : Fix fixed format literal continuation
 
 2006-01-18  Roger While <simrw@sim-basis.de>
 

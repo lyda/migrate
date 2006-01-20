@@ -152,16 +152,38 @@ cb_build_field_tree (cb_tree level, cb_tree name,
     }
   else
     {
-      /* upper level */
-      struct cb_field *p;
-      for (p = last_field->parent; p; p = p->parent)
-	if (p->level == f->level)
-	  {
-	    last_field = p;
-	    goto same_level;
-	  }
-      cb_error_x (name, _("no previous data item of level %02d"), f->level);
-      return cb_error_node;
+	/* upper level */
+	struct cb_field *p;
+	for (p = last_field->parent; p; p = p->parent) {
+		if (p->level == f->level) {
+			last_field = p;
+			goto same_level;
+		}
+		if (cb_relax_level_hierarchy && p->level < f->level) {
+			break;
+		}
+	}
+	if (cb_relax_level_hierarchy) {
+		cb_tree			dummy_fill = cb_build_filler ();
+		struct cb_field		*field_fill =
+					 CB_FIELD (cb_build_field (dummy_fill));
+
+		cb_warning_x (name, _("no previous data item of level %02d"), f->level);
+		field_fill->level = f->level;
+		field_fill->storage = storage;
+		field_fill->children = p->children;
+		field_fill->parent = p;
+		for(p = p->children; p != NULL; p = p->sister) {
+			p->parent = field_fill;
+		}
+		field_fill->parent->children = field_fill;
+		field_fill->sister = f;
+		f->parent = field_fill->parent;
+		last_field = field_fill;
+	} else {
+		cb_error_x (name, _("no previous data item of level %02d"), f->level);
+		return cb_error_node;
+	}
     }
 
   /* inherit parent's properties */

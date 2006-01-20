@@ -1380,6 +1380,8 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
 	  struct cb_literal	*l = CB_LITERAL (value);
 	  static char		*buff = NULL;
 	  static int		lastsize = 0;
+	  int			i;
+	  int			buffchar;
 
 	  if (!buff) {
 		if (f->size <= COB_SMALL_BUFF) {
@@ -1415,11 +1417,23 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
 	    }
 	  else
 	    {
-		output ("memcpy (");
-		output_data (x);
-		output (", ");
-		output_string ((ucharptr)buff, f->size);
-		output (", %d);\n", f->size);
+		buffchar = *buff;
+		for (i = 0; i < f->size; i++) {
+			if (*(buff + i) != buffchar) {
+				break;
+			}
+		}
+		if (i == f->size) {
+			output ("memset (");
+			output_data (x);
+			output (", %d, %d);\n", buffchar, f->size);
+		} else {
+			output ("memcpy (");
+			output_data (x);
+			output (", ");
+			output_string ((ucharptr)buff, f->size);
+			output (", %d);\n", f->size);
+		}
 	    }
 	}
       return;

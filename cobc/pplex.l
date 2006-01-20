@@ -487,7 +487,7 @@ ppinput (char *buff, int max_size)
 					/* consecutive quotation */
 					consecutive_quotation = 1;
 				} else {
-					/* litaral end */
+					/* literal end */
 					quotation_mark = 0;
 				}
 			}
@@ -496,6 +496,9 @@ ppinput (char *buff, int max_size)
 
 	/* truncate trailing spaces, including the newline */
 	if (quotation_mark) {
+		for (; i < 72;) {
+			buff[i++] = ' ';
+		}
 		buff[i] = 0;
 	} else {
 		for (i--; buff[i] == ' '; i--) ;

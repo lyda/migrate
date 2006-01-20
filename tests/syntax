@@ -334,7 +334,7 @@ at_help_all='1;copy.at:21;COPY: file not found;copy;
 23;definition.at:386;Redefinition of section names;;
 24;definition.at:405;Redefinition of section and paragraph names;;
 25;definition.at:424;Redefinition of paragraph names;;
-26;definition.at:440;Ambiguous reference to paragraph name;;
+26;definition.at:447;Ambiguous reference to paragraph name;;
 27;expression.at:20;Ambiguous AND/OR;;
 28;expression.at:42;START on SEQUENTIAL file;;
 29;subscripts.at:30;Subscripted item requires OCCURS clause;;
@@ -2362,21 +2362,28 @@ cat >prog.cob <<'_ATEOF'
 _ATEOF
 
 
+## Change when we allow this
+## AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+## [])
+
 $at_traceoff
-echo "definition.at:436: \${COMPILE_ONLY} prog.cob"
-echo definition.at:436 >$at_check_line_file
+echo "definition.at:443: \${COMPILE_ONLY} prog.cob"
+echo definition.at:443 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stderr; echo "prog.cob: In paragraph 'L':
+prog.cob:6: Error: redefinition of 'L'
+prog.cob:5: Error: 'L' previously defined here
+" | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
-   0) ;;
-   *) echo "definition.at:436: exit code was $at_status, expected 0"
+   1) ;;
+   *) echo "definition.at:443: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2394,13 +2401,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  26 ) # 26. definition.at:440: Ambiguous reference to paragraph name
-    at_setup_line='definition.at:440'
+  26 ) # 26. definition.at:447: Ambiguous reference to paragraph name
+    at_setup_line='definition.at:447'
     at_desc='Ambiguous reference to paragraph name'
     $at_quiet $ECHO_N " 26: Ambiguous reference to paragraph name        $ECHO_C"
     at_xfail=no
     (
-      echo "26. definition.at:440: testing ..."
+      echo "26. definition.at:447: testing ..."
       $at_traceon
 
 
@@ -2420,8 +2427,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:460: \${COMPILE_ONLY} prog.cob"
-echo definition.at:460 >$at_check_line_file
+echo "definition.at:467: \${COMPILE_ONLY} prog.cob"
+echo definition.at:467 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2437,7 +2444,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "definition.at:460: exit code was $at_status, expected 1"
+   *) echo "definition.at:467: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
