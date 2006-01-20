@@ -294,7 +294,7 @@ cb_define_switch_name (cb_tree name, cb_tree sname, cb_tree flag, cb_tree ref)
 }
 
 cb_tree
-cb_build_section_name (cb_tree name)
+cb_build_section_name (cb_tree name, int sect_or_para)
 {
 	if (name == cb_error_node)
 		return cb_error_node;
@@ -304,8 +304,10 @@ cb_build_section_name (cb_tree name)
 
 		/* used as a non-label name or used as a section name or
 		   used as the same paragraph name in the same section */
-		if (!CB_LABEL_P (x) || CB_LABEL (x)->section == NULL
-		    || CB_LABEL (x)->section == current_section) {
+		if (!CB_LABEL_P (x) ||
+		   (!sect_or_para && (CB_LABEL (x)->section == NULL
+		    || CB_LABEL (x)->section == current_section)) ||
+		   (sect_or_para && CB_LABEL (x)->is_section)) {
 			redefinition_error (name);
 			return cb_error_node;
 		}

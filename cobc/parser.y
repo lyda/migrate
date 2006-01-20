@@ -1581,15 +1581,18 @@ section_header:
 
     /* Begin a new section */
     current_section = CB_LABEL (cb_build_label ($1, NULL));
+    current_section->is_section = 1;
     current_paragraph = NULL;
     emit_statement (CB_TREE (current_section));
   }
 ;
 
 paragraph_header:
-  section_name '.'
+  WORD '.'
   {
-    if ($1 == cb_error_node)
+    $$ = cb_build_section_name ($1, 1);
+    /* if ($1 == cb_error_node) */
+    if ($$ == cb_error_node)
       YYERROR;
 
     /* Exit the last paragraph */
@@ -1615,7 +1618,7 @@ invalid_statement:
 ;
 
 section_name:
-  WORD				{ $$ = cb_build_section_name ($1); }
+  WORD				{ $$ = cb_build_section_name ($1, 0); }
 ;
 
 opt_segment:

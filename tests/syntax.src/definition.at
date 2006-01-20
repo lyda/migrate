@@ -432,11 +432,8 @@ AT_DATA([prog.cob], [
            STOP RUN.
 ])
 
-AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob: In paragraph 'L':
-prog.cob:6: Error: redefinition of 'L'
-prog.cob:5: Error: 'L' previously defined here
-])
+AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
+[])
 
 AT_CLEANUP
 

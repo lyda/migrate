@@ -651,6 +651,7 @@ struct cb_label {
 	const char		*name;
 	struct cb_label		*section;
 	cb_tree			children;
+	int			is_section;
 	int			need_begin;
 	int			need_return;
 };
@@ -1067,7 +1068,7 @@ extern void cb_build_registers (void);
 extern char *cb_encode_program_id (const char *name);
 extern const char *cb_build_program_id (cb_tree name, cb_tree alt_name);
 extern void cb_define_switch_name (cb_tree name, cb_tree sname, cb_tree flag, cb_tree ref);
-extern cb_tree cb_build_section_name (cb_tree name);
+extern cb_tree cb_build_section_name (cb_tree name, int sect_or_para);
 extern cb_tree cb_build_assignment_name (cb_tree name);
 extern cb_tree cb_build_index (cb_tree name);
 extern cb_tree cb_build_identifier (cb_tree x);
