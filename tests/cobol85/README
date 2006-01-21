@@ -1,19 +1,40 @@
 Hot To Run NIST CCVS85 Test Suite
 =================================
 
+*NOTE* It is expected that warnings and errors appear
+when running the test.
+The final command of the the test is a diff between
+expected results and actual results.
+ie. diff summary.txt summary.log
+If there is any output from this command, please
+tar and compress the complete cobol85 directory
+and report this to the OC list. You will receive
+further instructions where to send this.
+
+*NOTE* This test can take a long time depending
+on your hardware.
+
 1. Download the test archive `newcob.val.Z' from
 
   http://www.itl.nist.gov/div897/ctg/cobol_form.htm
 
 2. Uncompress it:
 
-  % uncompress newcob.val.Z
+  uncompress newcob.val.Z
 
-3. Run the test suite:
+3. Move the file newcob.val to the tests/cobol85 directory
 
-  % make test
+4. Run the test suite:
 
-4. Test report summary will be put in summary.log.
+  cd tests/cobol85
+  make test
+
+5. Test report summary will be put in summary.log.
+
+6. When rerunning test as a result of a change, always
+   do a "make clean" before "make test"
+
+7. The default OC configuration tests NC SM IC SQ RL IX ST IF
 
 Make Options
 ------------

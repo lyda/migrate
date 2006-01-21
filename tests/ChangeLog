@@ -1,10 +1,14 @@
+2006-01-21  Roger While <simrw@sim-basis.de>
+
+	* tests/syntax.src/definition.at : Test mismatched levels
+
 2006-01-05  Roger While <simrw@sim-basis.de>
 
 	* General : Bootstrap up to new libtool / automake
 	  atlocal.in : More fixes for HP/IBM/Sun
 	  cobol85/ifedit.sh : Fix up test IX110A -
 	  This has an incorrect PIC clause in the
-	  compressed tarball newcob.val.Z.
+	  compressed file newcob.val.Z.
 
 2005-12-30  Roger While <simrw@sim-basis.de>
 

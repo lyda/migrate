@@ -1600,7 +1600,7 @@ paragraph_header:
       emit_statement (cb_build_perform_exit (current_paragraph));
 
     /* Begin a new paragraph */
-    current_paragraph = CB_LABEL (cb_build_label ($1, current_section));
+    current_paragraph = CB_LABEL (cb_build_label ($$, current_section));
     if (current_section)
       current_section->children =
 	cb_cons (CB_TREE (current_paragraph), current_section->children);

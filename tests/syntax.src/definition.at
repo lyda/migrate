@@ -468,6 +468,32 @@ prog.cob:8: Error: 'L' in 'S-2' defined here
 
 AT_CLEANUP
 
+AT_SETUP([Non-matching level numbers (extension)])
+
+AT_DATA([test.conf], [
+include "default.conf"
+relax-level-hierarchy: yes
+])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  A.
+            05 B.
+                10 C PIC X.
+           04 D.
+            05 E PIC X.
+       PROCEDURE        DIVISION.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} -conf=test.conf prog.cob], [0], ,
+[prog.cob:9: Warning: no previous data item of level 04
+])
+
+AT_CLEANUP
 
 ###
 ### Special name
