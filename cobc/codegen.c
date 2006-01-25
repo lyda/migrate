@@ -1890,6 +1890,9 @@ output_call (struct cb_call *p)
 	}
   }
   output (");\n");
+  if (p->returning) {
+	output_stmt (cb_build_move (cb_return_code, p->returning));
+  }
   if (p->stmt2)
     output_stmt (p->stmt2);
   if (dynamic_link && p->stmt1)

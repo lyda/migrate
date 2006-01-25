@@ -1,3 +1,7 @@
+2006-01-25  Roger While <simrw@sim-basis.de>
+
+	* fileio.h, fileio.c : signed to unsigned for file_status
+
 2006-01-17  Roger While <simrw@sim-basis.de>
 
 	* fileio.c : Print assign name when erroring

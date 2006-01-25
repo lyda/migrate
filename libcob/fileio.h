@@ -120,7 +120,7 @@ typedef struct {
 	char		access_mode;		/* ACCESS MODE */
 	char		open_mode;		/* OPEN MODE */
 	char		flag_optional;		/* OPTIONAL */
-	char		*file_status;		/* FILE STATUS */
+	unsigned char	*file_status;		/* FILE STATUS */
 	cob_field	*assign;		/* ASSIGN TO */
 	cob_field	*record;		/* record area */
 	cob_field	*record_size;		/* record size depending on */

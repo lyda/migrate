@@ -1463,7 +1463,7 @@ cb_build_search (int flag_all, cb_tree table, cb_tree var, cb_tree end_stmt, cb_
  */
 
 cb_tree
-cb_build_call (cb_tree name, cb_tree args, cb_tree stmt1, cb_tree stmt2)
+cb_build_call (cb_tree name, cb_tree args, cb_tree stmt1, cb_tree stmt2, cb_tree returning)
 {
 	struct cb_call *p = make_tree (CB_TAG_CALL, CB_CATEGORY_UNKNOWN, sizeof (struct cb_call));
 
@@ -1471,6 +1471,7 @@ cb_build_call (cb_tree name, cb_tree args, cb_tree stmt1, cb_tree stmt2)
 	p->args = args;
 	p->stmt1 = stmt1;
 	p->stmt2 = stmt2;
+	p->returning = returning;
 	return CB_TREE (p);
 }
 

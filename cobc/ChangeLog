@@ -1,3 +1,9 @@
+2006-01-25  Roger While <simrw@sim-basis.de>
+
+	* tree.h, tree.c, typeck.c, codegen.c : When using
+	  CALL .. RETURNING .. with an OVERFLOW clause, do
+	  not overwrite the returning field
+
 2006-01-20  Roger While <simrw@sim-basis.de>
 
 	* parser.y, field.c : Prepare for duplicate paragraph names

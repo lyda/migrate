@@ -1584,9 +1584,11 @@ void
 cb_emit_call (cb_tree prog, cb_tree using, cb_tree returning,
 	      cb_tree on_exception, cb_tree not_on_exception)
 {
-	cb_emit (cb_build_call (prog, using, on_exception, not_on_exception));
+	cb_emit (cb_build_call (prog, using, on_exception, not_on_exception, returning));
+/*
 	if (returning)
 		cb_emit (cb_build_move (cb_return_code, returning));
+*/
 }
 
 /*

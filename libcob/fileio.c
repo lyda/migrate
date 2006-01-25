@@ -1924,7 +1924,7 @@ void
 cob_default_error_handle (void)
 {
 	const char	*msg = NULL;
-	char		*file_status = cob_error_file->file_status;
+	unsigned char	*file_status = cob_error_file->file_status;
 	int		status = cob_d2i (file_status[0]) * 10 + cob_d2i (file_status[1]);
 	char		filename[COB_MEDIUM_BUFF];
 
