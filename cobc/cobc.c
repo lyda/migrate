@@ -90,6 +90,7 @@ int			errorcount = 0;
 int			warningcount = 0;
 
 char			*cb_source_file = NULL;
+char			*source_name;
 int			cb_source_line = 0;
 
 FILE			*cb_storage_file;
@@ -689,7 +690,7 @@ process_filename (const char *filename)
 {
 	const char	*extension;
 	struct filename	*fn;
-	char		basename[COB_MEDIUM_BUFF];
+	char		basename[COB_SMALL_BUFF];
 
 	fn = cob_malloc (sizeof (struct filename));
 	fn->need_preprocess = 1;
@@ -698,6 +699,7 @@ process_filename (const char *filename)
 	fn->next = NULL;
 
 	file_basename (filename, basename);
+	strcpy (source_name, basename);
 	extension = file_extension (filename);
 
 	/* Check input file type */
@@ -1178,6 +1180,7 @@ main (int argc, char *argv[])
 	}
 
 	file_list = NULL;
+	source_name = cob_malloc (COB_SMALL_BUFF);
 
 	if (setjmp (cob_jmpbuf) != 0) {
 		fprintf (stderr, "Aborting compile of %s at line %d\n", cb_source_file,

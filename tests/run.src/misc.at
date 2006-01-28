@@ -837,6 +837,36 @@ AT_CHECK([./prog], [0], [abc])
 AT_CLEANUP
 
 
+AT_SETUP([UNSTRING DELIMITED ALL LOW-VALUE])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  G.
+           03 FILLER    PIC XXX VALUE "ABC".
+           03 FILLER    PIC XX  VALUE LOW-VALUES.
+           03 FILLER    PIC XXX VALUE "DEF".
+       01  A            PIC XXX.
+       01  B            PIC XXX.
+       PROCEDURE        DIVISION.
+           UNSTRING G DELIMITED BY ALL LOW-VALUES
+                      INTO A B.
+           DISPLAY A.
+           DISPLAY B.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[ABC
+DEF
+])
+
+AT_CLEANUP
+
+
 AT_SETUP([READ INTO AT-END sequence])
 
 AT_DATA([prog.cob], [

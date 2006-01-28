@@ -368,7 +368,7 @@ static int
 scan_h (char *text)
 {
 	char *p;
-	char buff[19];
+	char buff[24];
 	long long val = 0;
 
 	for (p = text; *p != '\'' && *p != '\"'; p++) {

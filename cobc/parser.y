@@ -142,6 +142,8 @@ start:
     entry_number = 0;
     linage_file = NULL;
     next_label_list = NULL;
+    current_program = cb_build_program ();
+    cb_build_registers ();
   }
   program_definition
   {
@@ -157,6 +159,7 @@ program_definition:
   procedure_division
   end_program		{ cb_validate_program_body (current_program); }
 ;
+
 end_program:
 | END PROGRAM program_name '.'
 ;
@@ -167,29 +170,37 @@ end_program:
  *****************************************************************************/
 
 identification_division:
-  IDENTIFICATION DIVISION '.'
-  {
-    current_program = cb_build_program ();
-    cb_build_registers ();
-  }
+  id_div_spec
+  prog_id_spec
+;
+
+id_div_spec:
+| IDENTIFICATION DIVISION '.'	{ /* Nothing */ }
+;
+
+prog_id_spec:
   PROGRAM_ID '.' program_name as_literal program_type dot
   {
-    current_program->program_id = cb_build_program_id ($7, $8);
+    current_program->program_id = cb_build_program_id ($3, $4);
   }
 ;
+
 program_name:
   WORD
 | LITERAL
 ;
+
 as_literal:
   /* empty */			{ $$ = NULL; }
 | AS LITERAL			{ $$ = $2; }
 ;
+
 program_type:
 | _is COMMON _program		{ current_program->flag_common = 1; }
 | _is TOK_INITIAL _program	{ current_program->flag_initial = 1; }
 | _is RECURSIVE _program	{ current_program->flag_recursive = 1; }
 ;
+
 dot: | '.' ;
 
 
@@ -1515,6 +1526,9 @@ procedure_division:
   procedure_declaratives
   {
     emit_entry (current_program->program_id, $3); /* main entry point */
+    if (current_program->source_name) {
+	emit_entry (current_program->source_name, $3);
+    }
   }
   procedure_list
   {

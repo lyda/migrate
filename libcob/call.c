@@ -29,6 +29,7 @@
 #include <sys/stat.h>
 
 #ifdef	USE_LIBDL
+
 #include <dlfcn.h>
 #define lt_dlopen(x)	dlopen(x, RTLD_LAZY | RTLD_GLOBAL)
 #define lt_dlsym(x, y)	dlsym(x, y)
@@ -36,7 +37,9 @@
 #define lt_dlerror()	dlerror()
 #define lt_ptr_t	void *
 #define lt_dlhandle	void *
+
 #elif	defined(_WIN32)
+
 #include <windows.h>
 /* Prototype */
 static char *	lt_dlerror (void);
@@ -60,14 +63,25 @@ lt_dlerror()
 #define lt_ptr_t	void *
 #define	lt_dlinit()
 #define lt_dlhandle	HMODULE
+
 #else
+
 #define LT_NON_POSIX_NAMESPACE 1
 #include <ltdl.h>
+
 #endif
 
 #include "call.h"
 #include "common.h"
 #include "lib/gettext.h"
+
+#ifdef	_MSC_VER
+#define PATHSEPC ';'
+#define PATHSEPS ";"
+#else
+#define PATHSEPC ':'
+#define PATHSEPS ":"
+#endif
 
 static int		dynamic_reloading = 0;
 
@@ -108,16 +122,16 @@ cob_set_library_path (const char *path)
 
 	/* count the number of ':'s */
 	resolve_size = 1;
-	for (p = strchr (path, ':'); p; p = strchr (p + 1, ':')) {
+	for (p = strchr (path, PATHSEPC); p; p = strchr (p + 1, PATHSEPC)) {
 		resolve_size++;
 	}
 
 	/* build path array */
 	p = strdup (path);
 	resolve_path = cob_malloc (sizeof (char *) * resolve_size);
-	resolve_path[0] = strtok (p, ":");
+	resolve_path[0] = strtok (p, PATHSEPS);
 	for (i = 1; i < resolve_size; i++) {
-		resolve_path[i] = strtok (NULL, ":");
+		resolve_path[i] = strtok (NULL, PATHSEPS);
 	}
 }
 

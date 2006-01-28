@@ -78,7 +78,7 @@ AC_PROG_EGREP
 # Configure options.
 COB_CC=""
 AC_ARG_WITH(cc,
-  [  --with-cc=<cc>          specify the C compiler used by cobc],
+  [  --with-cc=<cc>          (OpenCOBOL) specify the C compiler used by cobc],
   [ COB_CC=$withval ], [ COB_CC=$CC] )
 
 #if test "x${COB_CC}" = "x"; then
@@ -90,11 +90,11 @@ AC_ARG_WITH(cc,
 
 LIBDB=""
 AC_ARG_WITH(db1,
-  [  --with-db1              use Berkeley DB 1.85 (libdb-1.85)],
+  [  --with-db1              (OpenCOBOL) use Berkeley DB 1.85 (libdb-1.85)],
   [ LIBDB="1"
     AC_DEFINE(WITH_DB, 1) ],
 	[ AC_ARG_WITH(db,
-		[  --with-db               use Berkeley DB 3.0 or later (libdb)(default)],
+		[  --with-db               (OpenCOBOL) use Berkeley DB 3.0 or later (libdb)(default)],
 		[ if test "$with_db" = "yes"
 		  then
 		  LIBDB="3"
@@ -104,12 +104,12 @@ AC_ARG_WITH(db1,
 		  AC_DEFINE(WITH_DB, 3) ]) ])
 
 #AC_ARG_WITH(db,
-#  [  --with-db               use Berkeley DB 3.0 or later (libdb)],
+#  [  --with-db               (OpenCOBOL) use Berkeley DB 3.0 or later (libdb)],
 #  [ LIBDB="3"
 #    AC_DEFINE(WITH_DB, 3) ])
 
 AC_ARG_WITH(lfs64,
-  [  --with-lfs64            use large file system for file I/O (default)],
+  [  --with-lfs64            (OpenCOBOL) use large file system for file I/O (default)],
   [ if test "$with_lfs64" = "yes"
     then
 	AC_DEFINE(WITH_LFS64)
@@ -120,7 +120,7 @@ DEFINE_DL="no"
 COB_TRY_DL="yes"
 
 AC_ARG_WITH(dl,
-  [  --with-dl               use system dynamic loader (default)],
+  [  --with-dl               (OpenCOBOL) use system dynamic loader (default)],
   [case $with_dl in  
     yes)	COB_TRY_DL="yes"
 		;;
@@ -133,11 +133,11 @@ AC_ARG_WITH(dl,
 GEN_DEBUG_OPT="no"
 
 AC_ARG_ENABLE(debug,
-  [  --enable-debug          enable debugging options],
+  [  --enable-debug          (OpenCOBOL) enable debugging options],
   [ AC_DEFINE(COB_DEBUG) GEN_DEBUG_OPT="yes"])
 
 PATCH_LEVEL=0
-AC_ARG_WITH(patch-level, [  --with-patch-level      define a patch level (default 0)],
+AC_ARG_WITH(patch-level, [  --with-patch-level      (OpenCOBOL) define a patch level (default 0)],
 [case $with_patch_level in  
     yes)	AC_MSG_ERROR(["You must give --with-patch-level an argument."])
 		;;
@@ -151,7 +151,7 @@ esac])
 AC_DEFINE_UNQUOTED(PATCH_LEVEL, $PATCH_LEVEL)
 
 WITH_VARSEQ=0
-AC_ARG_WITH(varseq, [  --with-varseq           define variable sequential format (default 0)],
+AC_ARG_WITH(varseq, [  --with-varseq           (OpenCOBOL) define variable sequential format (default 0)],
 [case $with_varseq in  
     yes)	AC_MSG_ERROR(["You must give --with-varseq an argument."])
 		;;
@@ -176,8 +176,8 @@ AC_CHECK_FUNC([getopt_long_only],
    AC_LIBOBJ(getopt1)
    AC_LIBSOURCE(getopt.h)])
 
-# Checks for regex.
-AC_CHECK_LIB([regex], [regcomp], [LIBCOB_LIBS="$LIBCOB_LIBS -lregex"])
+# Checks for regex. (Not used anymore)
+# AC_CHECK_LIB([regex], [regcomp], [LIBCOB_LIBS="$LIBCOB_LIBS -lregex"])
 
 # Checks for db.
 USE_DB="no"

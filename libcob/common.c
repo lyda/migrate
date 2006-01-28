@@ -827,6 +827,44 @@ cob_table_sort (cob_field *f, int n)
 	qsort (f->data, (size_t) n, f->size, sort_compare);
 }
 
+/* Runtime error handling */
+static struct handlerlist {
+	struct handlerlist	*next;
+	int			(*proc)(char *s);
+} *hdlrs = NULL;
+
+int CBL_ERROR_PROC(char *x, int (*p)(char *s))
+{
+	struct handlerlist *hp = NULL;
+	struct handlerlist *h = hdlrs;
+
+	if (!p) {
+		return -1;
+	}
+	/* remove handler anyway */
+	while (h != NULL) {
+		if (h->proc == p) {
+			if (hp != NULL) {
+				hp->next = h->next;
+			} else {
+				hdlrs = h->next;
+			}
+			free (hp);
+			break;
+		}
+		hp = h;
+		h = h->next;
+	}
+	if (*x != 0) {	/* remove handler */
+		return 0;
+	}
+	h = cob_malloc (sizeof(struct handlerlist));
+	h->next = hdlrs;
+	h->proc = p;
+	hdlrs = h;
+	return 0;
+}
+
 /*
  * Run-time error checking
  */
@@ -836,6 +874,24 @@ cob_runtime_error (const char *fmt, ...)
 {
 	va_list ap;
 
+	if(hdlrs != NULL) {
+		struct handlerlist	*h = hdlrs;
+		char			*p;
+		char			str[COB_MEDIUM_BUFF];
+
+		p = str;
+		if (cob_source_file) {
+			sprintf (str, "%s:%d: ", cob_source_file, cob_source_line);
+			p = str + strlen(str);
+		}
+		va_start (ap, fmt);
+		vsprintf (p, fmt, ap);
+		va_end (ap);
+		while (h != NULL) {
+			h->proc(str);
+			h = h->next;
+		}
+	}
 	/* prefix */
 	if (cob_source_file) {
 		fprintf (stderr, "%s:%d: ", cob_source_file, cob_source_line);

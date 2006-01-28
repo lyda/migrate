@@ -24,7 +24,6 @@
 #include <stdarg.h>
 #include <string.h>
 #include <sys/types.h>
-#include <regex.h>
 
 #include "move.h"
 #include "numeric.h"
@@ -321,9 +320,10 @@ static cob_field	*unstring_ptr, unstring_ptr_copy;
 static int		unstring_offset;
 static int		unstring_count;
 static int		unstring_ndlms;
-static regex_t		unstring_reg;
-static int		unstring_reg_inited;
-static unsigned char	unstring_regexp[256];	/* FIXME: should be dynamic */
+static struct {
+	cob_field	*uns_dlm;
+	int		uns_all;
+} dlm_list[256];	/* FIXME - Needs to be dynamic */
 
 void
 cob_unstring_init (cob_field *src, cob_field *ptr)
@@ -339,8 +339,6 @@ cob_unstring_init (cob_field *src, cob_field *ptr)
 	unstring_offset = 0;
 	unstring_count = 0;
 	unstring_ndlms = 0;
-	unstring_reg_inited = 0;
-	unstring_regexp[0] = 0;
 	cob_exception_code = 0;
 
 	if (unstring_ptr) {
@@ -354,28 +352,8 @@ cob_unstring_init (cob_field *src, cob_field *ptr)
 void
 cob_unstring_delimited (cob_field *dlm, int all)
 {
-	int		i;
-	unsigned char	*p;
-
-	/* build regexp, quoting the delimiter */
-	p = unstring_regexp + strlen ((char *)unstring_regexp);
-	if (unstring_ndlms > 0) {
-		*p++ = '|';
-	}
-	*p++ = '(';
-	for (i = 0; i < dlm->size; i++) {
-		int c = dlm->data[i];
-
-		if (strchr ("+*?{}[]()\\^$|.", c)) {
-			*p++ = '\\';
-		}
-		*p++ = c;
-	}
-	*p++ = ')';
-	if (all) {
-		*p++ = '+';
-	}
-	*p = 0;
+	dlm_list[unstring_ndlms].uns_dlm = dlm;
+	dlm_list[unstring_ndlms].uns_all = all;
 	unstring_ndlms++;
 }
 
@@ -383,11 +361,10 @@ void
 cob_unstring_into (cob_field *dst, cob_field *dlm, cob_field *cnt)
 {
 	int			match_size = 0;
+	int			brkpt = 0;
 	size_t			dlm_size = 0;
 	unsigned char		*dlm_data = NULL;
 	unsigned char		*start = unstring_src->data + unstring_offset;
-	static regmatch_t	*match = NULL;
-	static int		ndlmslast = 0;
 
 	if (cob_exception_code) {
 		return;
@@ -402,41 +379,49 @@ cob_unstring_into (cob_field *dst, cob_field *dlm, cob_field *cnt)
 		cob_memcpy (dst, start, match_size);
 		unstring_offset += match_size;
 	} else {
-		int	i;
+		int		i;
+		unsigned char	*p;
+		unsigned char	*dp;
+		unsigned char	*s;
+		int		srsize;
+		int		dlsize;
 
-		i = unstring_ndlms + 1;
-		if (!match) {
-			match = cob_malloc (i * sizeof(regmatch_t));
-			ndlmslast = i;
-		} else {
-			if (i > ndlmslast) {
-				free (match);
-				match = cob_malloc (i * sizeof(regmatch_t));
-				ndlmslast = i;
-			}
-		}
-		/* delimit using regexec */
-		if (!unstring_reg_inited) {
-			regcomp (&unstring_reg, (char *)unstring_regexp, REG_EXTENDED);
-			unstring_reg_inited = 1;
-		}
-		if (regexec (&unstring_reg, (char *)start, unstring_ndlms + 1, match, 0) == 0
-		    && match[0].rm_so <= unstring_src->size - unstring_offset) {
-			/* match */
-
-			match_size = match[0].rm_so;
-			cob_memcpy (dst, start, match_size);
-			unstring_offset += match[0].rm_eo;
-
-			for (i = 1; i <= unstring_ndlms; i++) {
-				if (match[i].rm_so >= 0) {
-					dlm_data = start + match[i].rm_so;
-					dlm_size = match[i].rm_eo - match[i].rm_so;
+		srsize = unstring_src->size;
+		s = unstring_src->data + srsize;
+		for (p = start; p < s; p++) {
+			for (i = 0; i < unstring_ndlms; i++) {
+				dlsize = dlm_list[i].uns_dlm->size;
+				dp = dlm_list[i].uns_dlm->data;
+				if (p + dlsize > s) {
+					break;
+				}
+				if (!memcmp (p, dp, dlsize)) {
+					match_size = p - start;
+					cob_memcpy (dst, start, match_size);
+					unstring_offset += match_size + dlsize;
+					dlm_data = dp;
+					dlm_size = dlsize;
+					if (dlm_list[i].uns_all) {
+						for (p++ ; p < s; p++) {
+							if (p + dlsize > s) {
+								break;
+							}
+							if (memcmp (p, dp, dlsize)) {
+								break;
+							}
+							unstring_offset += dlsize;
+						}
+					}
+					brkpt = 1;
 					break;
 				}
 			}
-		} else {
-			/* not match */
+			if (brkpt) {
+				break;
+			}
+		}
+		if (!brkpt) {
+			/* no match */
 			match_size = unstring_src->size - unstring_offset;
 			cob_memcpy (dst, start, match_size);
 			unstring_offset = unstring_src->size;
@@ -471,10 +456,6 @@ cob_unstring_finish (void)
 {
 	if (unstring_offset < unstring_src->size) {
 		COB_SET_EXCEPTION (COB_EC_OVERFLOW_UNSTRING);
-	}
-
-	if (unstring_reg_inited) {
-		regfree (&unstring_reg);
 	}
 
 	if (unstring_ptr) {

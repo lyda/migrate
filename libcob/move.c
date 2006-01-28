@@ -232,7 +232,7 @@ cob_move_display_to_packed (cob_field *f1, cob_field *f2)
 	own_memset (f2->data, 0, f2->size);
 	offset = 1 - (digits2 % 2);
 	for (i = offset; i < digits2 + offset; i++, p++) {
-		char n = (data1 <= p && p < data1 + digits1) ? cob_d2i (*p) : 0;
+		unsigned char n = (data1 <= p && p < data1 + digits1) ? cob_d2i (*p) : 0;
 		if (i % 2 == 0) {
 			data2[i / 2] = n << 4;
 		} else {
@@ -241,9 +241,10 @@ cob_move_display_to_packed (cob_field *f1, cob_field *f2)
 	}
 
 	cob_put_sign (f1, sign);
-	cob_put_sign (f2, sign);
 	if (!COB_FIELD_HAVE_SIGN (f2)) {
 		data2[digits2 / 2] |= 0x0f;
+	} else {
+		cob_real_put_sign (f2, sign);
 	}
 }
 
@@ -799,9 +800,6 @@ cob_move (cob_field *src, cob_field *dst)
 
 	/* elementary move */
 	switch (COB_FIELD_TYPE (src)) {
-	case COB_TYPE_NUMERIC_FLOAT:
-	case COB_TYPE_NUMERIC_DOUBLE:
-		return indirect_move (cob_move_fp_to_display, src, dst, 40, 20);
 	case COB_TYPE_NUMERIC_DISPLAY:
 		switch (COB_FIELD_TYPE (dst)) {
 		case COB_TYPE_NUMERIC_FLOAT:
@@ -868,6 +866,10 @@ cob_move (cob_field *src, cob_field *dst)
 		default:
 			return cob_move_alphanum_to_alphanum (src, dst);
 		}
+
+	case COB_TYPE_NUMERIC_FLOAT:
+	case COB_TYPE_NUMERIC_DOUBLE:
+		return indirect_move (cob_move_fp_to_display, src, dst, 40, 20);
 
 	default:
 		switch (COB_FIELD_TYPE (dst)) {

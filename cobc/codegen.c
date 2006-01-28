@@ -1045,6 +1045,8 @@ output_funcall (cb_tree x)
 			output ("))");
 		} else if ( p->argv[1] == cb_high ) {
 			output (") - 255)");
+		} else if (CB_LITERAL_P (p->argv[1])) {
+			output (") - %d)", *(CB_LITERAL (p->argv[1])->data));
 		} else {
 			output (") - *(");
 			output_data (p->argv[1]);

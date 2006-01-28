@@ -1,3 +1,14 @@
+2006-01-27  Roger While <simrw@sim-basis.de>
+
+	* Tweak COMP-3
+
+2006-01-26  Roger While <simrw@sim-basis.de>
+
+	* strings.c : Rip out regex use. It cannot handle
+	  a low-value (null byte) in RE.
+	  call.c : Native WIN MSC needs path seperator of ';'
+	  common.h, common.c : Implement CBL_ERROR_PROC
+
 2006-01-25  Roger While <simrw@sim-basis.de>
 
 	* fileio.h, fileio.c : signed to unsigned for file_status

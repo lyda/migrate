@@ -267,6 +267,24 @@ cb_encode_program_id (const char *name)
 const char *
 cb_build_program_id (cb_tree name, cb_tree alt_name)
 {
+/* This needs some more thought, should we generate an entry
+	point per program source name ?
+	char	*s;
+
+	if (alt_name)
+		s = (char *)CB_LITERAL (alt_name)->data;
+	else if (CB_LITERAL_P (name))
+		s = (char *)CB_LITERAL (name)->data;
+	else
+		s = (char *)CB_NAME (name);
+
+	if (!cb_flag_main && strcmp (s, source_name)) {
+		cb_warning (_("Source name '%s' differs from PROGRAM-ID '%s'"),
+				source_name, s);
+		current_program->source_name = strdup (source_name);
+	}
+ End comment out */
+
 	if (alt_name)
 		return (char *)CB_LITERAL (alt_name)->data;
 	else if (CB_LITERAL_P (name))
@@ -1384,7 +1402,12 @@ cb_build_cond (cb_tree x)
 				     CB_TREE_CATEGORY (p->y) == CB_CATEGORY_ALPHABETIC)) {
 					x = cb_build_funcall_2 ("$G", p->x, p->y);
 				} else {
-					x = cb_build_funcall_2 ("cob_cmp", p->x, p->y);
+					/* RXWRXW */
+					if (CB_TREE_CLASS (p->x) == CB_CLASS_NUMERIC && p->y == cb_zero) {
+						x = cb_build_funcall_2 ("cob_cmp_int", p->x, cb_int0);
+					} else {
+						x = cb_build_funcall_2 ("cob_cmp", p->x, p->y);
+					}
 				}
 			}
 		}
@@ -2431,8 +2454,9 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 	enum cb_category cat = CB_TREE_CATEGORY (dst);
 
 	if (l->all) {
-		int i;
-		unsigned char *buff;
+		int		i;
+		unsigned char	*buff;
+		unsigned char	bbyte;
 
 		if (f->size >128 || cat == CB_CATEGORY_NUMERIC ||
 		    cat == CB_CATEGORY_NUMERIC_EDITED) {
@@ -2441,6 +2465,17 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 		buff = cob_malloc (f->size);
 		for (i = 0; i < f->size; i++)
 			buff[i] = l->data[i % l->size];
+		bbyte = *buff;
+		for (i = 0; i < f->size; i++) {
+			if (bbyte != buff[i]) {
+				break;
+			}
+		}
+		if (i == f->size) {
+			return cb_build_funcall_3 ("own_memset",
+					   cb_build_cast_address (dst),
+					   cb_int (bbyte), cb_build_cast_length (dst));
+		}
 		return cb_build_funcall_3 ("own_memcpy",
 					   cb_build_cast_address (dst),
 					   cb_build_string (buff, f->size), cb_build_cast_length (dst));
@@ -2449,8 +2484,10 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 		    && f->pic->scale == l->scale && !f->flag_sign_leading && !f->flag_sign_separate)
 		   || ((cat == CB_CATEGORY_ALPHABETIC || cat == CB_CATEGORY_ALPHANUMERIC)
 		       && f->size < l->size + 16 && !cb_field_variable_size (f))) {
-		unsigned char *buff = cob_malloc (f->size);
-		int diff = f->size - l->size;
+		unsigned char	*buff = cob_malloc (f->size);
+		int		diff = f->size - l->size;
+		int		i;
+		unsigned char	bbyte;
 
 		if (cat == CB_CATEGORY_NUMERIC) {
 			if (diff <= 0) {
@@ -2489,6 +2526,20 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 					memset (buff + l->size, ' ', diff);
 				}
 			}
+		}
+		if (f->size == 1) {
+			return cb_build_funcall_2 ("$E", dst, cb_int (*buff));
+		}
+		bbyte = *buff;
+		for (i = 0; i < f->size; i++) {
+			if (bbyte != buff[i]) {
+				break;
+			}
+		}
+		if (i == f->size) {
+			return cb_build_funcall_3 ("own_memset",
+					   cb_build_cast_address (dst),
+					   cb_int (bbyte), cb_build_cast_length (dst));
 		}
 		return cb_build_funcall_3 ("own_memcpy",
 					   cb_build_cast_address (dst),

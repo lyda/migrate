@@ -84,6 +84,7 @@ extern int			cb_source_line;
 
 extern char			cob_config_dir[];
 
+extern char			*source_name;
 extern FILE			*cb_storage_file;
 extern char			*cb_storage_file_name;
 

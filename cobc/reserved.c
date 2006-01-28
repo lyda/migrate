@@ -825,12 +825,12 @@ lookup_reserved_word (const char *name)
 	if (!p) {
 		return 0;
 	}
-	if (p->token != -1) {
-		for ( noresptr = norestab; noresptr; noresptr = noresptr->next) {
-			if (strcasecmp (name, noresptr->noresword) == 0) {
-				return 0;
-			}
+	for ( noresptr = norestab; noresptr; noresptr = noresptr->next) {
+		if (strcasecmp (name, noresptr->noresword) == 0) {
+			return 0;
 		}
+	}
+	if (p->token != -1) {
 		return p->token;
 	}
 	cb_error (_("'%s' reserved word, but not supported yet"), name);

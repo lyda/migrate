@@ -994,10 +994,7 @@ struct cb_program {
 	/* program variables */
 	const char		*program_id;
 	struct cb_program	*next_program;		/* Nested */
-	unsigned char		decimal_point;		/* '.' or ',' */
-	unsigned char		currency_symbol;	/* '$'/user-specified */
-	unsigned char		numeric_separator;	/* ',' or '.' */
-	unsigned char		spare;			/* spare */
+	char			*source_name;
 	cb_tree			entry_list;
 	cb_tree			file_list;
 	cb_tree			exec_list;
@@ -1011,14 +1008,19 @@ struct cb_program {
 	struct cb_field		*screen_storage;
 	struct cb_label		*file_handler[5];
 	cb_tree			collating_sequence;
-	char			flag_common;	/* COMMON PROGRAM */
-	char			flag_initial;	/* INITIAL PROGRAM */
-	char			flag_recursive;	/* RECURSIVE PROGRAM */
-	char			flag_screen;	/* have SCREEN SECTION */
+	char			flag_common;		/* COMMON PROGRAM */
+	char			flag_initial;		/* INITIAL PROGRAM */
+	char			flag_recursive;		/* RECURSIVE PROGRAM */
+	char			flag_screen;		/* have SCREEN SECTION */
+	unsigned char		decimal_point;		/* '.' or ',' */
+	unsigned char		currency_symbol;	/* '$'/user-specified */
+	unsigned char		numeric_separator;	/* ',' or '.' */
+	unsigned char		spare;			/* spare */
 	/* internal variables */
 	int			loop_counter;
 	int			decimal_index;
 	int			decimal_index_max;
+	int			dummy_int;		/* spare */
 	struct cb_word		*word_table[CB_WORD_HASH_SIZE];
 };
 

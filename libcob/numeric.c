@@ -69,6 +69,9 @@ end comment out */
 static void
 shift_decimal (cob_decimal *d, int n)
 {
+	if (n == 0) {
+		return;
+	}
 	if (n > 0) {
 		mpz_ui_pow_ui (cob_mexp, 10, n);
 		mpz_mul (d->value, d->value, cob_mexp);
@@ -197,7 +200,7 @@ cob_decimal_get_display (cob_decimal *d, cob_field *f, int opt)
 	int		sign = mpz_sgn (d->value);
 	size_t		size;
 	unsigned char	*data = COB_FIELD_DATA (f);
-	unsigned char	buff[64];
+	unsigned char	buff[256];
 
 	/* build string */
 	mpz_abs (d->value, d->value);
@@ -441,6 +444,69 @@ cob_decimal_set_packed (cob_decimal *d, cob_field *f)
 	d->scale = f->attr->scale;
 }
 
+static int
+cob_decimal_get_packed (cob_decimal *d, cob_field *f, int opt)
+{
+	int		diff;
+	int		sign = mpz_sgn (d->value);
+	size_t		size;
+	size_t		n;
+	size_t		i;
+	int		digits = f->attr->digits;
+	unsigned char	*data = f->data;
+	unsigned char	*p;
+	unsigned char	*q;
+	unsigned char	buff[COB_MEDIUM_BUFF];
+
+	/* build string */
+	mpz_abs (d->value, d->value);
+	mpz_get_str ((char *)buff, 10, d->value);
+	size = strlen ((char *)buff);
+
+	/* store number */
+	q = buff;
+	diff = digits - size;
+	if (diff < 0) {
+		/* overflow */
+		COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
+
+		/* if the statement has ON SIZE ERROR or NOT ON SIZE ERROR,
+		   then throw an exception */
+		if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
+			return cob_exception_code;
+		}
+		q += size - digits;
+		size = digits;
+	}
+	own_memset (data, 0, f->size);
+	p = data + (digits / 2) - (size / 2);
+	diff = 1 - (size % 2);
+	for (i = diff, n = 0; i < size + diff; i++, n++) {
+		unsigned char	x = cob_d2i (q[n]);
+
+		if (i % 2 == 0) {
+			*p = x << 4;
+		} else {
+			*p++ |= x;
+		}
+/*
+		if (i % 2 == 0) {
+			p[i / 2] = x << 4;
+		} else {
+			p[i / 2] |= x;
+		}
+*/
+	}
+
+	if (!COB_FIELD_HAVE_SIGN (f)) {
+                data[digits / 2] |= 0x0f;
+        } else {
+		cob_real_put_sign (f, sign);
+	}
+
+	return 0;
+}
+
 /* General field */
 
 void
@@ -480,7 +546,7 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f, int opt)
 	}
 
 	/* rounding */
-	if (opt & COB_STORE_ROUND)
+	if (opt & COB_STORE_ROUND) {
 		if (f->attr->scale < d->scale) {
 			int	sign = mpz_sgn (d->value);
 
@@ -493,16 +559,19 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f, int opt)
 				}
 			}
 		}
+	}
 
 	/* append or truncate decimal digits */
 	shift_decimal (d, f->attr->scale - d->scale);
 
 	/* store number */
 	switch (COB_FIELD_TYPE (f)) {
-	case COB_TYPE_NUMERIC_DISPLAY:
-		return cob_decimal_get_display (d, f, opt);
 	case COB_TYPE_NUMERIC_BINARY:
 		return cob_decimal_get_binary (d, f, opt);
+	case COB_TYPE_NUMERIC_PACKED:
+		return cob_decimal_get_packed (d, f, opt);
+	case COB_TYPE_NUMERIC_DISPLAY:
+		return cob_decimal_get_display (d, f, opt);
 	case COB_TYPE_NUMERIC_FLOAT:
 	{
 		float	val;

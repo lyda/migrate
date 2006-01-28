@@ -1,3 +1,15 @@
+2006-01-28  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : Optimize move literals, check PROG-ID not =
+		     source name
+	  parser.y : ID DIV is optional, don't abort on rubbish
+		     input, generate "source name" entry point when
+		     != PROG-ID
+
+2006-01-26  Roger While <simrw@sim-basis.de>
+
+	* reserved.c : Allow not-reserved for not implemented words
+
 2006-01-25  Roger While <simrw@sim-basis.de>
 
 	* tree.h, tree.c, typeck.c, codegen.c : When using
