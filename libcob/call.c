@@ -139,6 +139,10 @@ void
 cob_init_call (void)
 {
 	char		*s;
+	char		*p;
+	int		i;
+	struct stat	st;
+	char		filename[COB_MEDIUM_BUFF];
 
 #ifndef	USE_LIBDL
 	lt_dlinit ();
@@ -160,6 +164,22 @@ cob_init_call (void)
 	s = getenv ("COB_DYNAMIC_RELOADING");
 	if (s != NULL && strcmp (s, "yes") == 0) {
 		dynamic_reloading = 1;
+	}
+
+	s = getenv ("COB_PRE_LOAD");
+	if (s != NULL) {
+		p = strdup (s);
+		s = strtok (p, ":");
+		for ( ; s; s = strtok (NULL, ":")) {
+			for (i = 0; i < resolve_size; i++) {
+				sprintf (filename, "%s/%s.%s", resolve_path[i], s, COB_MODULE_EXT);
+				if (stat (filename, &st) == 0) {
+					if (lt_dlopen (filename) != NULL) {
+						break;
+					}
+				}
+			}
+		}
 	}
 }
 

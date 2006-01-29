@@ -1,3 +1,7 @@
+2006-01-29  Roger While <simrw@sim-basis.de>
+
+	* call.c : Implement COB_PRE_LOAD
+
 2006-01-27  Roger While <simrw@sim-basis.de>
 
 	* Tweak COMP-3
