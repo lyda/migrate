@@ -1,3 +1,8 @@
+2006-02-08  Roger While <simrw@sim-basis.de>
+
+	* Adjust results for cobol85 suite. We now pass
+	  some nested program tests.
+
 2006-01-29  Roger While <simrw@sim-basis.de>
 
 	* OC test for COB_PRE_LOAD

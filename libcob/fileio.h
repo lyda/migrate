@@ -168,13 +168,14 @@ DLL_EXPIMP extern int	cob_check_eop;
 extern void cob_init_fileio (void);
 extern void cob_exit_fileio (void);
 extern void cob_default_error_handle (void);
-extern void cob_open (cob_file *f, int mode, int opt);
-extern void cob_close (cob_file *f, int opt);
-extern void cob_read (cob_file *f, cob_field *key);
-extern void cob_write (cob_file *f, cob_field *rec, int opt);
-extern void cob_rewrite (cob_file *f, cob_field *rec);
-extern void cob_delete (cob_file *f);
-extern void cob_start (cob_file *f, int cond, cob_field *key);
+
+extern void cob_open (cob_file *f, int mode, int opt, cob_field *fnstatus);
+extern void cob_close (cob_file *f, int opt, cob_field *fnstatus);
+extern void cob_read (cob_file *f, cob_field *key, cob_field *fnstatus);
+extern void cob_write (cob_file *f, cob_field *rec, int opt, cob_field *fnstatus);
+extern void cob_rewrite (cob_file *f, cob_field *rec, cob_field *fnstatus);
+extern void cob_delete (cob_file *f, cob_field *fnstatus);
+extern void cob_start (cob_file *f, int cond, cob_field *key, cob_field *fnstatus);
 
 extern void cob_sort_init (cob_file *f, int nkeys, const unsigned char *collating_sequence);
 extern void cob_sort_finish (cob_file *f);

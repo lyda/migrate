@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002 Keisuke Nishida
+ * Copyright (C) 2002-2006 Keisuke Nishida
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -30,5 +30,6 @@
 #include <libcob/strings.h>
 #include <libcob/termio.h>
 #include <libcob/intrinsic.h>
+#include <libcob/codegen.h>
 
 #endif /* COB_LIBCOB_H_ */

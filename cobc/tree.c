@@ -1041,6 +1041,7 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 {
 	struct cb_field	*p;
 	cb_tree		l;
+	cb_tree		x;
 	char		buff[CB_MAX_CNAME];
 
 	/* check the record size if it is limited */
@@ -1094,9 +1095,14 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 	}
 	/* create record */
 	sprintf (buff, "%s$record", f->name);
-	f->record = CB_FIELD (cb_build_implicit_field (cb_build_reference (buff), f->record_max));
+	f->record = CB_FIELD (cb_build_implicit_field (cb_build_reference (buff),
+				f->record_max));
 	f->record->sister = records;
 	f->record->count++;
+	if (f->external) {
+		has_external = 1;
+		f->record->flag_external = 1;
+	}
 
 	for (p = records; p; p = p->sister) {
 		p->file = f;
@@ -1104,8 +1110,6 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 	}
 	f->finalized = 1;
 	if (f->linage) {
-		cb_tree x;
-
 		sprintf (buff, "LC$%s", f->name);
 		x = cb_build_field (cb_build_reference (buff));
 		CB_FIELD (x)->pic = CB_PICTURE (cb_build_picture ("9(9)"));
@@ -1113,9 +1117,6 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 		CB_FIELD (x)->values = cb_list (cb_zero);
 		CB_FIELD (x)->count++;
 		cb_validate_field (CB_FIELD (x));
-/*
-	f->linage_ctr = x;
-*/
 		f->linage_ctr = cb_build_field_reference (CB_FIELD (x), 0);
 		current_program->working_storage =
 		    cb_field_add (current_program->working_storage, CB_FIELD (x));
@@ -1364,7 +1365,7 @@ cb_build_binary_list (cb_tree l, int op)
  */
 
 cb_tree
-cb_build_funcall (const char *name, int argc, cb_tree a1, cb_tree a2, cb_tree a3, cb_tree a4)
+cb_build_funcall (const char *name, int argc, cb_tree a1, cb_tree a2, cb_tree a3, cb_tree a4, cb_tree a5)
 {
 	struct cb_funcall *p =
 	    make_tree (CB_TAG_FUNCALL, CB_CATEGORY_BOOLEAN, sizeof (struct cb_funcall));
@@ -1376,6 +1377,7 @@ cb_build_funcall (const char *name, int argc, cb_tree a1, cb_tree a2, cb_tree a3
 	p->argv[1] = a2;
 	p->argv[2] = a3;
 	p->argv[3] = a4;
+	p->argv[4] = a5;
 	return CB_TREE (p);
 }
 

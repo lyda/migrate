@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 94
+%expect 97
 
 %defines
 %verbose
@@ -66,10 +66,14 @@ static cb_tree perform_stack = NULL;
 static int next_label_id = 0;
 static int current_linage = 0;
 static int eval_level = 0;
+static int eval_inc = 0;
+static int eval_inc2 = 0;
+static int prog_end = 0;
+static int depth = 0;
 static int samearea = 1;
-static int eval_check[64] = { 0 };
 static struct cb_file *linage_file;
 static cb_tree next_label_list = NULL;
+static int eval_check[64][64];
 
 static void emit_entry (const char *name, cb_tree using_list);
 static void terminator_warning (void);
@@ -136,7 +140,12 @@ start:
     perform_stack = NULL;
     next_label_id = 0;
     current_linage = 0;
+    current_storage = 0;
     eval_level = 0;
+    eval_inc = 0;
+    eval_inc2 = 0;
+    prog_end = 0;
+    depth = 0;
     samearea = 1;
     memset((char *)eval_check, 0, sizeof(eval_check));
     entry_number = 0;
@@ -144,12 +153,23 @@ start:
     next_label_list = NULL;
     current_program = cb_build_program ();
     cb_build_registers ();
+    current_program->gen_main = cb_flag_main;
   }
-  program_definition
+  /* program_definition */
+  nested_list
   {
-    if (errorcount > 0)
-      YYABORT;
+	if (!current_program->validated) {
+		current_program->validated = 1;
+		cb_validate_program_body (current_program);
+	}
+	if (errorcount > 0)
+		YYABORT;
   }
+;
+
+nested_list:
+  program_definition
+| nested_list program_definition
 ;
 
 program_definition:
@@ -157,31 +177,65 @@ program_definition:
   environment_division	{ cb_validate_program_environment (current_program); }
   data_division		{ cb_validate_program_data (current_program); }
   procedure_division
-  end_program		{ cb_validate_program_body (current_program); }
+  nested_prog
+  end_program
+;
+
+nested_prog:
+| program_definition
+| nested_prog program_definition
 ;
 
 end_program:
 | END PROGRAM program_name '.'
+  {
+	if (depth) {
+		depth--;
+	}
+	if (!current_program->validated) {
+		current_program->validated = 1;
+		cb_validate_program_body (current_program);
+	}
+  }
 ;
 
 
 /*****************************************************************************
- * Environment division
+ * Identification division
  *****************************************************************************/
 
 identification_division:
-  id_div_spec
-  prog_id_spec
-;
-
-id_div_spec:
-| IDENTIFICATION DIVISION '.'	{ /* Nothing */ }
-;
-
-prog_id_spec:
   PROGRAM_ID '.' program_name as_literal program_type dot
   {
-    current_program->program_id = cb_build_program_id ($3, $4);
+	if (prog_end) {
+		struct cb_program	*newx;
+
+		if (!current_program->validated) {
+			current_program->validated = 1;
+			cb_validate_program_body (current_program);
+		}
+		perform_stack = NULL;
+		next_label_id = 0;
+		current_linage = 0;
+		current_storage = 0;
+		eval_level = 0;
+		eval_inc = 0;
+		eval_inc2 = 0;
+		samearea = 1;
+		memset((char *)eval_check, 0, sizeof(eval_check));
+		entry_number = 0;
+		linage_file = NULL;
+		next_label_list = NULL;
+		newx = current_program;
+		current_program = cb_build_program ();
+		current_program->next_program = newx;
+		cb_build_registers ();
+		current_program->static_func = depth;
+	} else {
+		prog_end = 1;
+	}
+	depth++;
+	current_program->program_id = cb_build_program_id ($3, $4);
   }
 ;
 
@@ -837,7 +891,7 @@ file_description_clause_sequence:
 | file_description_clause_sequence file_description_clause
 ;
 file_description_clause:
-  _is EXTERNAL			{ PENDING ("EXTERNAL"); }
+  _is EXTERNAL			{ current_file->external = 1; }
 | _is GLOBAL			{ PENDING ("GLOBAL"); }
 | block_contains_clause
 | record_clause
@@ -1043,7 +1097,7 @@ record_description_list_2:
 data_description:
   level_number entry_name
   {
-    cb_tree x = cb_build_field_tree ($1, $2, current_field, current_storage);
+    cb_tree x = cb_build_field_tree ($1, $2, current_field, current_storage, current_file);
     if (x == cb_error_node)
       YYERROR;
     else
@@ -1375,7 +1429,7 @@ screen_description_list:
 screen_description:
   level_number entry_name
   {
-    cb_tree x = cb_build_field_tree ($1, $2, current_field, current_storage);
+    cb_tree x = cb_build_field_tree ($1, $2, current_field, current_storage, current_file);
     if (x == cb_error_node)
       YYERROR;
 
@@ -2037,12 +2091,17 @@ entry_statement:
  */
 
 evaluate_statement:
-  EVALUATE			{ BEGIN_STATEMENT ("EVALUATE"); }
+  EVALUATE
+  {
+	BEGIN_STATEMENT ("EVALUATE");
+	eval_level++;
+	eval_inc = 0;
+	eval_inc2 = 0;
+  }
   evaluate_subject_list evaluate_case_list
   end_evaluate
   {
     cb_emit_evaluate ($3, $4);
-    eval_check[eval_level] = 0;
     eval_level--;
   }
 ;
@@ -2056,13 +2115,13 @@ evaluate_subject:
   {
 	$$ = $1;
 	if ( CB_REFERENCE_P($1) ) {
-		eval_check[eval_level++] = 1;
+		eval_check[eval_level][eval_inc++] = 1;
 	} else {
-		eval_check[eval_level++] = 0;
+		eval_check[eval_level][eval_inc++] = 0;
 	}
   }
-| TOK_TRUE			{ $$ = cb_true; eval_check[eval_level++] = 0; }
-| TOK_FALSE			{ $$ = cb_false; eval_check[eval_level++] = 0; }
+| TOK_TRUE			{ $$ = cb_true; eval_check[eval_level][eval_inc++] = 0; }
+| TOK_FALSE			{ $$ = cb_false; eval_check[eval_level][eval_inc++] = 0; }
 ;
 evaluate_case_list:
   /* empty */			{ $$ = NULL; }
@@ -2071,9 +2130,9 @@ evaluate_case_list:
 ;
 evaluate_case:
   evaluate_when_list
-  statement_list		{ $$ = cb_cons ($2, $1); }
+  statement_list		{ $$ = cb_cons ($2, $1); eval_inc2 = 0; }
 | WHEN OTHER
-  statement_list		{ $$ = cb_cons ($3, NULL); }
+  statement_list		{ $$ = cb_cons ($3, NULL); eval_inc2 = 0; }
 ;
 evaluate_when_list:
   WHEN evaluate_object_list	{ $$ = cb_list ($2); }
@@ -2088,11 +2147,13 @@ evaluate_object_list:
 evaluate_object:
   flag_not expr
   {
-    if ( eval_check[eval_level - 1] && CB_REFERENCE_P($2) && CB_FIELD_P(CB_REFERENCE($2)->value) ) {
+    if ( eval_check[eval_level][eval_inc2] && CB_REFERENCE_P($2) &&
+	 CB_FIELD_P(CB_REFERENCE($2)->value) ) {
 	if ( CB_FIELD(CB_REFERENCE($2)->value)->level == 88 ) {
 		cb_error_x ($2, _("88 level invalid here"));
 	}
     }
+    eval_inc2++;
     if ($1 == cb_int1
 	&& CB_BINARY_OP_P ($2)
 	&& (CB_BINARY_OP ($2)->op == '&' || CB_BINARY_OP ($2)->op == '|'))
@@ -2105,10 +2166,11 @@ evaluate_object:
 | flag_not expr THRU expr
   {
     $$ = cb_build_pair ($1, cb_build_pair ($2, $4));
+    eval_inc2++;
   }
-| ANY				{ $$ = cb_any; }
-| TOK_TRUE			{ $$ = cb_true; }
-| TOK_FALSE			{ $$ = cb_false; }
+| ANY				{ $$ = cb_any; eval_inc2++; }
+| TOK_TRUE			{ $$ = cb_true; eval_inc2++; }
+| TOK_FALSE			{ $$ = cb_false; eval_inc2++; }
 ;
 end_evaluate:
   /* empty */			{ terminator_warning (); }
@@ -2342,9 +2404,9 @@ move_body:
   {
     cb_emit_move ($1, $3);
   }
-| CORRESPONDING x TO x
+| CORRESPONDING x TO x_list
   {
-    cb_emit_corresponding (cb_build_move, $2, $4, cb_int0);
+    cb_emit_move_corresponding ($2, $4);
   }
 ;
 
@@ -3637,6 +3699,9 @@ emit_entry (const char *name, cb_tree using_list)
   CB_LABEL (label)->need_begin = 1;
   emit_statement (label);
 
+  if (current_program->gen_main && using_list) {
+	cb_error ("Executable program requested but PROCEDURE/ENTRY has USING clause");
+  }
   for (l = using_list; l; l = CB_CHAIN (l))
     {
       cb_tree x = CB_VALUE (l);
@@ -3645,8 +3710,19 @@ emit_entry (const char *name, cb_tree using_list)
 	  struct cb_field *f = CB_FIELD (cb_ref (x));
 	  if (f->level != 01 && f->level != 77)
 	    cb_error_x (x, _("'%s' not level 01 or 77"), cb_name (x));
+	  if (f->storage != CB_STORAGE_LINKAGE)
+	    cb_error_x (x, _("'%s' is not in LINKAGE SECTION"), cb_name (x));
 	}
     }
+  for (l = current_program->entry_list; l; l = CB_CHAIN (l))
+    {
+	cb_tree x = CB_VALUE (l);
+
+	if (strcmp(name, CB_LABEL(CB_PURPOSE(l))->name) == 0) {
+		cb_error_x (x, _("ENTRY '%s' duplicated"), name);
+	}
+    }
+
   entry_number++;
 
   current_program->entry_list =

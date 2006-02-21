@@ -64,9 +64,11 @@ AH_TEMPLATE([HAVE_PSIGN_OPT], [Has -Wno-pointer-sign])
 AH_TEMPLATE([HAVE_TIMEZONE], [Has timezone variable])
 AH_TEMPLATE([COB_EXEEXT], [Executable extension])
 AH_TEMPLATE([COB_EXTRA_FLAGS], [Extra Compiler Flags])
+AH_TEMPLATE([__USE_STRING_INLINES], [Compiler optimization])
 
 # enable debug mode by default for now
 AC_DEFINE(COB_DEBUG)
+AC_DEFINE(__USE_STRING_INLINES)
 
 LIBCOB_LIBS="-lm"
 LIBCOB_CFLAGS="$lt_prog_compiler_pic"

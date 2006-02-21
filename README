@@ -24,10 +24,12 @@ General Public License.  See COPYING.LIB for details.
 
 See AUTHORS for the author of each file.
 
-Requirement
-===========
+Requirements
+============
 
 OpenCOBOL requires the following external libraries to be installed:
+(Note - all the following packages are normally part of a Linux
+ distribution. Cygwin also has these as installable packages)
 
   o GNU MP (libgmp) 4.1.2 or later
     http://swox.com/gmp/
@@ -92,10 +94,16 @@ to run a series of OpenCOBOL test programs
 
     make install
 
+The "make install" will default to "/usr/local" as
+the install path. You may override this by specifying
+"--prefix=<your install path>" on the "./configure"
+command.
 
 There are the following configure options:
 
   --with-cc=<cc>		Specify C compiler command used by cobc
+				Do not specify this unless you know what
+				you are doing!
 
   --with-db1			Use Berkeley DB 1.85 (libdb1/libdb-1.85)
 				This overrides --with-db/--without-db

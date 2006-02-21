@@ -42,6 +42,7 @@ static int within_comment = 0;
 static int newline_count = 0;
 static int quotation_mark = 0;
 static int consecutive_quotation = 0;
+static int got_progid = 0;
 static int last_line_1 = -1;
 static int last_line_2 = -1;
 
@@ -72,6 +73,10 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
 %x PROCESS_STATE DIRECTIVE_STATE COPY_STATE PSEUDO_STATE
 
 %%
+
+%{
+	got_progid = 0;
+%}
 
 <*>^"*".* |
 <*>^"/".* |
@@ -149,6 +154,14 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
     }
 }
 
+"PROGRAM-ID" {
+	ECHO;
+	if (got_progid) {
+		possible_nested = 1;
+	}
+	got_progid = 1;
+}
+
 "EJECT"\.? |
 "SKIP1"\.? |
 "SKIP2"\.? |
@@ -201,6 +214,7 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
 
   copy_stack = p->next;
   free (p);
+  got_progid = 0;
 }
 
 %%

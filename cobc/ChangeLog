@@ -1,3 +1,35 @@
+2006-02-21  Roger While <simrw@sim-basis.de>
+
+	* tyepck.c, codegen.c : Implement new inlines in
+	  libcob/codegen.h
+
+2006-02-15  Roger While <simrw@sim-basis.de>
+
+	* parser.y : Check that PROCEDURE/ENTRY USING params
+	  are in the LINKAGE SECTION
+	  Check for executable program ("-x") and PROCEDURE/ENTRY
+	  with USING params
+
+2006-02-12  Roger While <simrw@sim-basis.de>
+
+	* parser.y : Check duplicate ENTRY
+
+2006-02-08  Roger While <simrw@sim-basis.de>
+
+	* parser.y : Fix EVALUATE/88 again
+	  parser.y, typeck.c, tree.h : Allow multiple destinations
+		on MOVE CORRESPONDING
+	  typeck.c, codegen.c : Optimize COMP/COMP-3
+
+2006-02-02  Roger While <simrw@sim-basis.de>
+
+	* parser.y : Fix EVALUATE and 88 level checking
+
+2006-02-01  Roger While <simrw@sim-basis.de>
+
+	* All : Changes for nested programs
+		Changes for EXTERNAL FD
+
 2006-01-28  Roger While <simrw@sim-basis.de>
 
 	* typeck.c : Optimize move literals, check PROG-ID not =

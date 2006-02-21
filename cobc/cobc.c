@@ -88,6 +88,7 @@ int			cb_id = 1;
 
 int			errorcount = 0;
 int			warningcount = 0;
+int			possible_nested = 0;
 
 char			*cb_source_file = NULL;
 char			*source_name;
@@ -130,24 +131,14 @@ static int		gflag_set = 0;
 static char		*program_name;
 static char		*output_name;
 
-static char		*tmpdir;			/* /tmp */
+static char		*cob_tmpdir;			/* /tmp */
 static char		cob_cc[COB_MEDIUM_BUFF];	/* gcc */
 static char		cob_cflags[COB_MEDIUM_BUFF];	/* -I... */
 static char		cob_libs[COB_MEDIUM_BUFF];	/* -L... -lcob */
 static char		cob_ldflags[COB_MEDIUM_BUFF];
 char			cob_config_dir[COB_MEDIUM_BUFF];
 
-static struct filename {
-	struct filename *next;
-	int		need_preprocess;
-	int		need_translate;
-	int		need_assemble;
-	char		*source;			/* foo.cob */
-	char		*preprocess;			/* foo.i */
-	char		*translate;			/* foo.c */
-	char		*trstorage;			/* foo.c.h */
-	char		*object;			/* foo.o */
-} *file_list;
+static struct filename	*file_list;
 
 #if defined (__GNUC__) && (__GNUC__ >= 3)
 static const char fcopts[] = " -finline-functions -fno-gcse -freorder-blocks";
@@ -193,7 +184,6 @@ static struct option long_options[] = {
 };
 
 static void cob_clean_up (int status);
-
 
 /* cobc functions */
 
@@ -274,11 +264,11 @@ init_environment (int argc, char *argv[])
 	output_name = NULL;
 
 	if ( (p = getenv ("TMPDIR")) != NULL ) {
-		tmpdir = p;
+		cob_tmpdir = p;
 	} else if ( (p = getenv ("TMP")) != NULL ) {
-		tmpdir = p;
+		cob_tmpdir = p;
 	} else {
-		tmpdir = (char *)"/tmp";
+		cob_tmpdir = (char *)"/tmp";
 	}
 	init_var (cob_cc, "COB_CC", COB_CC);
 #if defined (__GNUC__) && (__GNUC__ >= 3)
@@ -680,7 +670,7 @@ temp_name (const char *ext)
 	DeleteFile (buff);
 	strcpy (buff + strlen (buff) - 4, ext);	/* replace ".tmp" by EXT */
 #else
-	sprintf (buff, "%s/cob%d_%d%s", tmpdir, cob_process_id, cob_iteration, ext);
+	sprintf (buff, "%s/cob%d_%d%s", cob_tmpdir, cob_process_id, cob_iteration, ext);
 #endif
 	return strdup (buff);
 }
@@ -690,6 +680,7 @@ process_filename (const char *filename)
 {
 	const char	*extension;
 	struct filename	*fn;
+	struct filename	*ffn;
 	char		basename[COB_SMALL_BUFF];
 
 	fn = cob_malloc (sizeof (struct filename));
@@ -697,6 +688,14 @@ process_filename (const char *filename)
 	fn->need_translate = 1;
 	fn->need_assemble = 1;
 	fn->next = NULL;
+
+	if (!file_list) {
+		file_list = fn;
+	} else {
+		for (ffn = file_list; ffn->next; ffn = ffn->next)
+			;
+		ffn->next = fn;
+	}
 
 	file_basename (filename, basename);
 	strcpy (source_name, basename);
@@ -770,6 +769,8 @@ process_filename (const char *filename)
 #endif
 	}
 
+	cob_iteration++;
+
 	return fn;
 }
 
@@ -819,12 +820,13 @@ preprocess (struct filename *fn)
 {
 	errorcount = 0;
 
-	ppout = stdout;
 	if (output_name || cb_compile_level > CB_LEVEL_PREPROCESS) {
 		ppout = fopen (fn->preprocess, "w");
 		if (!ppout) {
 			terminate (fn->preprocess);
 		}
+	} else {
+		ppout = stdout;
 	}
 
 	if (ppopen (fn->source, NULL) != 0) {
@@ -838,9 +840,13 @@ preprocess (struct filename *fn)
 	if (verbose_output) {
 		fprintf (stderr, "preprocessing %s into %s\n", fn->source, fn->preprocess);
 	}
+
+	possible_nested = 0;
 	ppparse ();
 
-	fclose (ppout);
+	if (ppout != stdout) {
+		fclose (ppout);
+	}
 	fclose (ppin);
 
 	if (errorcount > 0) {
@@ -916,7 +922,7 @@ process_translate (struct filename *fn)
 	}
 
 	/* translate to C */
-	codegen (current_program);
+	codegen (current_program, 0);
 
 	/* close the files */
 	fclose (cb_storage_file);
@@ -1078,10 +1084,13 @@ process_link (struct filename *l)
 	for (f = l; f; f = f->next) {
 		strcat (objsptr, f->object);
 		strcat (objsptr, " ");
+/*
 		if (!f->next) {
 			file_basename (f->source, name);
 		}
+*/
 	}
+	file_basename (l->source, name);
 	if (output_name) {
 		strcpy (name, output_name);
 	}
@@ -1114,6 +1123,7 @@ process_link (struct filename *l)
 #endif
 }
 
+/*
 static int
 process_link_direct (struct filename *l)
 {
@@ -1148,6 +1158,7 @@ process_link_direct (struct filename *l)
 	return process (buff);
 #endif
 }
+*/
 
 int
 main (int argc, char *argv[])
@@ -1156,6 +1167,7 @@ main (int argc, char *argv[])
 	int			iparams = 0;
 	enum cb_compile_level	local_level = 0;
 	int			status = 1;
+	struct filename		*fn;
 
 #if ENABLE_NLS
 	setlocale (LC_ALL, "");
@@ -1216,22 +1228,19 @@ main (int argc, char *argv[])
 			cb_compile_level = CB_LEVEL_TRANSLATE;
 	}
 
+/* RXW
 	if (i + 1 == argc && cb_compile_level == CB_LEVEL_EXECUTABLE &&
 	    !cb_flag_syntax_only && !save_temps) {
 		struct filename *fn;
 
 		fn = process_filename (argv[i++]);
-		fn->next = file_list;
-		file_list = fn;
 		cb_id = 1;
-		/* Preprocess */
 		if (fn->need_preprocess) {
 			if (preprocess (fn) != 0) {
 				cob_clean_up (status);
 				return status;
 			}
 		}
-		/* Translate */
 		if (fn->need_translate) {
 			if (process_translate (fn) != 0) {
 				cob_clean_up (status);
@@ -1247,12 +1256,18 @@ main (int argc, char *argv[])
 
 		return status;
 	}
+RXW */
 	while (i < argc) {
-		struct filename *fn;
-
 		fn = process_filename (argv[i++]);
-		fn->next = file_list;
-		file_list = fn;
+		/* Preprocess */
+		if (cb_compile_level >= CB_LEVEL_PREPROCESS && fn->need_preprocess) {
+			if (preprocess (fn) != 0) {
+				cob_clean_up (status);
+				return status;
+			}
+		}
+	}
+	for (fn = file_list; fn; fn = fn->next) {
 		cb_id = 1;
 		iparams++;
 		if (iparams > 1 && cb_compile_level == CB_LEVEL_EXECUTABLE &&
@@ -1261,14 +1276,6 @@ main (int argc, char *argv[])
 			cb_flag_main = 0;
 			cb_compile_level = CB_LEVEL_ASSEMBLE;
 		}
-		/* Preprocess */
-		if (cb_compile_level >= CB_LEVEL_PREPROCESS && fn->need_preprocess) {
-			if (preprocess (fn) != 0) {
-				cob_clean_up (status);
-				return status;
-			}
-		}
-
 		/* Translate */
 		if (cb_compile_level >= CB_LEVEL_TRANSLATE && fn->need_translate) {
 			if (process_translate (fn) != 0) {
@@ -1311,7 +1318,6 @@ main (int argc, char *argv[])
 				}
 			}
 		}
-		cob_iteration++;
 	}
 
 	/* Link */

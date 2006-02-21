@@ -13,23 +13,23 @@ IC207A.CBL     11   11    0       0       0 OK
 IC209A.CBL      4    4    0       0       0 OK
 IC213A.CBL      3    3    0       0       0 OK
 IC216A.CBL      2    2    0       0       0 OK
-IC222A.CBL    ===== compile error =====
-IC223A.CBL    ===== compile error =====
-IC224A.CBL    ===== compile error =====
-IC225A.CBL    ===== compile error =====
-IC226A.CBL    ===== compile error =====
-IC227A.CBL    ===== compile error =====
+IC222A.CBL     16   16    0       0       0 OK
+IC223A.CBL     11   11    0       0       0 OK
+IC224A.CBL     44   44    0       0       0 OK
+IC225A.CBL     36   36    0       0       0 OK
+IC226A.CBL      4    4    0       0       0 OK
+IC227A.CBL     23   19    0       4       0 OK
 IC228A.CBL    ===== compile error =====
 IC233A.CBL    ===== compile error =====
 IC234A.CBL    ===== compile error =====
-IC235A.CBL    ===== compile error =====
-IC237A.CBL    ===== compile error =====
+IC235A.CBL     12   12    0       0       0 OK
+IC237A.CBL      1    1    0       0       0 OK
 IC401M.CBL    ----- test skipped -----
 --------    ----- ---- ---- ------- -------
-Total          97   97    0       0       0
-%           100.0 100.0  0.0     0.0     0.0
+Total         244  240    0       4       0
+%           100.0 98.4  0.0     1.6     0.0
 
 Number of programs:    24
-Successfully executed: 13 (54.17%)
-Compile error:         11 (45.83%)
+Successfully executed: 21 (87.50%)
+Compile error:          3 (12.50%)
 Execute error:          0 ( 0.00%)

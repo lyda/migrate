@@ -95,6 +95,7 @@ typedef struct __cob_external {
 #define COB_FLAG_BLANK_ZERO		0x08
 #define COB_FLAG_JUSTIFIED		0x10
 #define COB_FLAG_BINARY_SWAP		0x20
+#define COB_FLAG_REAL_SIGN		0x40
 
 #define COB_FIELD_HAVE_SIGN(f)	    ((f)->attr->flags & COB_FLAG_HAVE_SIGN)
 #define COB_FIELD_SIGN_SEPARATE(f)  ((f)->attr->flags & COB_FLAG_SIGN_SEPARATE)
@@ -102,6 +103,7 @@ typedef struct __cob_external {
 #define COB_FIELD_BLANK_ZERO(f)	    ((f)->attr->flags & COB_FLAG_BLANK_ZERO)
 #define COB_FIELD_JUSTIFIED(f)      ((f)->attr->flags & COB_FLAG_JUSTIFIED)
 #define COB_FIELD_BINARY_SWAP(f)    ((f)->attr->flags & COB_FLAG_BINARY_SWAP)
+#define COB_FIELD_REAL_SIGN(f)	    ((f)->attr->flags & COB_FLAG_REAL_SIGN)
 
 /* field attributes */
 
@@ -190,6 +192,7 @@ DLL_EXPIMP extern const char		*cob_source_file;
 DLL_EXPIMP extern unsigned int		cob_source_line;
 
 DLL_EXPIMP extern int			cob_call_params;
+DLL_EXPIMP extern int			cob_initial_external;
 
 DLL_EXPIMP extern cob_field		cob_zero;		/* ZERO */
 DLL_EXPIMP extern cob_field		cob_space;		/* SPACE */
@@ -198,7 +201,7 @@ DLL_EXPIMP extern cob_field		cob_low;		/* LOW-VALUE */
 DLL_EXPIMP extern cob_field		cob_quote;		/* QUOTE */
 
 DLL_EXPIMP extern const int		cob_exp10[];
-DLL_EXPIMP extern const long long		cob_exp10LL[];
+DLL_EXPIMP extern const long long	cob_exp10LL[];
 
 
 /* convert a digit (e.g., '0') into an integer (e.g., 0) */
@@ -260,7 +263,9 @@ extern void cob_set_switch (int n, int flag);
 /* Comparison */
 
 extern int cob_cmp (cob_field *f1, cob_field *f2);
+/*
 extern int cob_cmp_int (cob_field *f1, int n);
+*/
 
 /* Class check */
 
@@ -282,5 +287,17 @@ extern void cob_check_numeric (cob_field *f, const char *name);
 extern void cob_check_odo (int i, int min, int max, const char *name);
 extern void cob_check_subscript (int i, int min, int max, const char *name);
 extern void cob_check_ref_mod (int offset, int length, int size, const char *name);
+
+/* Inline functions */
+extern int cob_numeric_cmp (cob_field *f1, cob_field *f2);
+
+static inline int
+cob_cmp_int (cob_field *f1, int n)
+{
+	cob_field_attr	attr = { COB_TYPE_NUMERIC_BINARY, 9, 0, COB_FLAG_HAVE_SIGN, NULL };
+	cob_field	temp = { sizeof (int), (unsigned char *)&n, &attr };
+
+	return cob_numeric_cmp (f1, &temp);
+}
 
 #endif /* COB_COMMON_H_ */

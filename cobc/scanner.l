@@ -206,6 +206,9 @@ H\"[^\"\n]*\" {
 	return INVALID_KEY;
 	}
 
+"ID"[ ]+"DIVISION"[ ]*"." |
+"IDENTIFICATION"[ ]+"DIVISION"[ ]*"." { /* Ignore */ }
+
 [A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)? {
   int token;
   struct cb_word *word;
@@ -328,6 +331,8 @@ scan_x (char *text)
 			free (buff);
 			buff = cob_malloc (currlen);
 			lastlen = currlen;
+		} else {
+			memset (buff, 0, lastlen);
 		}
 	}
 	dst = buff;

@@ -131,7 +131,7 @@ static struct file_list {
 /* Need value that does not conflict with errno 30 (EROFS) for OPEN */
 #define	COB_NOT_CONFIGURED	32768
 
-#define RETURN_STATUS(x)	do { save_status (f, x); return; } while (0)
+#define RETURN_STATUS(x)	do { save_status (f, x, fnstatus); return; } while (0)
 
 static const int	status_exception[] = {
 	0,				/* 0x */
@@ -346,17 +346,22 @@ cob_cache_file (cob_file *f)
 }
 
 static void
-save_status (cob_file *f, int status)
+save_status (cob_file *f, int status, cob_field *fnstatus)
 {
 
+/*
 	if (f->file_status == NULL)
 		f->file_status = cob_malloc (2);
+*/
 
 	if (status == COB_NOT_CONFIGURED) {
 		status = COB_STATUS_30_PERMANENT_ERROR;
 	}
 	f->file_status[0] = cob_i2d (status / 10);
 	f->file_status[1] = cob_i2d (status % 10);
+	if (fnstatus) {
+		own_memcpy (fnstatus->data, f->file_status, 2);
+	}
 	cob_error_file = f;
 	if (status != COB_STATUS_52_EOP) {
 		COB_SET_EXCEPTION (status_exception[status / 10]);
@@ -1464,7 +1469,7 @@ sort_write (cob_file *f, int opt)
  */
 
 void
-cob_open (cob_file *f, int mode, int opt)
+cob_open (cob_file *f, int mode, int opt, cob_field *fnstatus)
 {
 	int	was_not_exist = 0;
 	struct	stat st;
@@ -1587,7 +1592,7 @@ cob_open (cob_file *f, int mode, int opt)
 }
 
 void
-cob_close (cob_file *f, int opt)
+cob_close (cob_file *f, int opt, cob_field *fnstatus)
 {
 	int	ret;
 
@@ -1640,7 +1645,7 @@ cob_unlock (cob_file *f)
 #endif
 
 void
-cob_start (cob_file *f, int cond, cob_field *key)
+cob_start (cob_file *f, int cond, cob_field *key, cob_field *fnstatus)
 {
 	int	ret;
 
@@ -1668,7 +1673,7 @@ cob_start (cob_file *f, int cond, cob_field *key)
 }
 
 void
-cob_read (cob_file *f, cob_field *key)
+cob_read (cob_file *f, cob_field *key, cob_field *fnstatus)
 {
 	int	ret;
 
@@ -1716,7 +1721,7 @@ cob_read (cob_file *f, cob_field *key)
 }
 
 void
-cob_write (cob_file *f, cob_field *rec, int opt)
+cob_write (cob_file *f, cob_field *rec, int opt, cob_field *fnstatus)
 {
 	int	ret;
 
@@ -1756,7 +1761,7 @@ cob_write (cob_file *f, cob_field *rec, int opt)
 }
 
 void
-cob_rewrite (cob_file *f, cob_field *rec)
+cob_rewrite (cob_file *f, cob_field *rec, cob_field *fnstatus)
 {
 	int	ret;
 	int	read_done = f->flag_read_done;
@@ -1793,7 +1798,7 @@ cob_rewrite (cob_file *f, cob_field *rec)
 }
 
 void
-cob_delete (cob_file *f)
+cob_delete (cob_file *f, cob_field *fnstatus)
 {
 	int	ret;
 	int	read_done = f->flag_read_done;
@@ -1889,33 +1894,33 @@ cob_sort_init_key (cob_file *f, int flag, cob_field *field)
 void
 cob_sort_using (cob_file *sort_file, cob_file *data_file)
 {
-	cob_open (data_file, COB_OPEN_INPUT, 0);
+	cob_open (data_file, COB_OPEN_INPUT, 0, NULL);
 	while (1) {
-		cob_read (data_file, 0);
+		cob_read (data_file, 0, NULL);
 		if (data_file->file_status[0] != '0') {
 			break;
 		}
 		own_memcpy (sort_file->record->data, data_file->record->data,
 			sort_file->record->size);
-		cob_write (sort_file, sort_file->record, 0);
+		cob_write (sort_file, sort_file->record, 0, NULL);
 	}
-	cob_close (data_file, COB_CLOSE_NORMAL);
+	cob_close (data_file, COB_CLOSE_NORMAL, NULL);
 }
 
 void
 cob_sort_giving (cob_file *sort_file, cob_file *data_file)
 {
-	cob_open (data_file, COB_OPEN_OUTPUT, 0);
+	cob_open (data_file, COB_OPEN_OUTPUT, 0, NULL);
 	while (1) {
-		cob_read (sort_file, 0);
+		cob_read (sort_file, 0, NULL);
 		if (sort_file->file_status[0] != '0') {
 			break;
 		}
 		own_memcpy (data_file->record->data,
 			sort_file->record->data, data_file->record->size);
-		cob_write (data_file, data_file->record, 0);
+		cob_write (data_file, data_file->record, 0, NULL);
 	}
-	cob_close (data_file, COB_CLOSE_NORMAL);
+	cob_close (data_file, COB_CLOSE_NORMAL, NULL);
 }
 
 #endif	/* WITH_DB */
@@ -2019,7 +2024,7 @@ cob_exit_fileio (void)
 		if ( l->file->open_mode != COB_OPEN_CLOSED &&
 		     l->file->open_mode != COB_OPEN_LOCKED ) {
 			cob_field_to_string (l->file->assign, filename);
-			cob_close (l->file, 0);
+			cob_close (l->file, 0, NULL);
 			fprintf (stderr, "WARNING - Implicit CLOSE of %s\n", filename);
 			fflush (stderr);
 		}

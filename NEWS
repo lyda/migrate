@@ -8,19 +8,27 @@ NEWS - user visible changes				-*- outline -*-
 ** Remove long option --verbose. Use '-v' for verbosity. Problem is
    with getopt_long_only which does not like eg. -mv 
 
-** New conformity option -std=bs2000
+** New conformity option -std=bs2000.
 
-** FUNCTION is implemented. See cobc/reserved.c for a list for what is
+** FUNCTION is implemented. See cobc/reserved.c for a list of what is
    implemented.
+
+** Nested programs are partially supported.
 
 ** LINAGE is implemented.
 
+** EXTERNAL on FD is implemented.
+
 ** SAME RECORD AREA is implemented.
 
-** New config variables - perform-osvs, sticky-linkage. These are
+** New config variables - 
+   "perform-osvs", "sticky-linkage". These are
    activated for -std=ibm and -std=mvs.
+   "relax-level-hierarchy". Allows mismatched data
+   description level numbers. Activated for
+   -std=mf, ibm, mvs and bs2000.
 
-** Support for non-gcc compilers
+** Support for non-gcc compilers.
 
 ** Large file support, system dynamic loading and Berkeley DB inclusion
    are default for the configure.

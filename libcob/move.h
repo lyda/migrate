@@ -34,34 +34,7 @@ extern void		cob_binary_set_int64 (cob_field *f, long long n);
 /* memcpy/memset optimizations */
 
 #if defined (__GNUC__) && defined (__i386__)
-static inline void
-own_byte_memcpy (unsigned char *x, const unsigned char *y, size_t count)
-{
-	int d0, d1, d2;
-	__asm__ __volatile__ (
-	"cld\n\t"
-	"rep; movsb"
-	:"=&c" (d0), "=&D" (d1), "=&S" (d2)
-	:"0" (count), "1" (x), "2" (y)
-	:"memory");
-}
-
-/*
-static inline void
-own_word_memcpy(void * to, const void * from, size_t n)
-{
-int d0, d1, d2;
-__asm__ __volatile__(
-	"cld\n\t"
-	"rep ; movsl\n\t"
-	"movl %4,%%ecx\n\t"
-	"andl $3,%%ecx\n\t"
-	"rep ; movsb\n\t"
-	: "=&c" (d0), "=&D" (d1), "=&S" (d2)
-	: "0" (n/4), "g" (n), "1" ((long) to), "2" ((long) from)
-	: "memory");
-}
-*/
+#define own_byte_memcpy(x, y, z)	memcpy(x, y, z)
 
 static inline void 
 own_memset_gg (void *s, int c, size_t n)
@@ -77,56 +50,6 @@ own_memset_gg (void *s, int c, size_t n)
 }
 
 #ifdef	SUPER_OPTIMIZE
-
-static inline void
-own_constant_memcpy(void * to, const void * from, size_t n)
-{
-	long esi, edi;
-	if (!n)
-		return;
-	esi = (long) from;
-	edi = (long) to;
-	if (n >= 5*4) {
-		/* large block: use rep prefix */
-		int ecx;
-		__asm__ __volatile__(
-			"cld\n\t"
-			"rep ; movsl"
-			: "=&c" (ecx), "=&D" (edi), "=&S" (esi)
-			: "0" (n/4), "1" (edi),"2" (esi)
-			: "memory");
-	} else {
-		/* small block: don't clobber ecx + smaller code */
-		if (n >= 4*4)
-			__asm__ __volatile__("movsl"
-			:"=&D"(edi),"=&S"(esi):"0"(edi),"1"(esi):"memory");
-		if (n >= 3*4)
-			__asm__ __volatile__("movsl"
-			:"=&D"(edi),"=&S"(esi):"0"(edi),"1"(esi):"memory");
-		if (n >= 2*4)
-			__asm__ __volatile__("movsl"
-			:"=&D"(edi),"=&S"(esi):"0"(edi),"1"(esi):"memory");
-		if (n >= 1*4)
-			__asm__ __volatile__("movsl"
-			:"=&D"(edi),"=&S"(esi):"0"(edi),"1"(esi):"memory");
-	}
-	switch (n % 4) {
-	case 0:
-		return;
-	case 1:
-		__asm__ __volatile__("movsb"
-		:"=&D"(edi),"=&S"(esi):"0"(edi),"1"(esi):"memory");
-		return;
-	case 2:
-		__asm__ __volatile__("movsw"
-		:"=&D"(edi),"=&S"(esi):"0"(edi),"1"(esi):"memory");
-		return;
-	default:
-		__asm__ __volatile__("movsw\n\tmovsb"
-		:"=&D"(edi),"=&S"(esi):"0"(edi),"1"(esi):"memory");
-		return;
-	}
-}
 
 static inline void 
 own_memset_cc (void *s, unsigned long int pattern, size_t n)
@@ -205,13 +128,7 @@ own_memset_cg (void *s, unsigned long c, size_t n)
 }
 
 
-#define own_memcpy(t, f, n) \
-	(__builtin_constant_p(n) ? \
-	own_constant_memcpy((t),(f),(n)) : \
-	memcpy((t),(f),(n)))
-/*
-	own_word_memcpy((t),(f),(n)))
-*/
+#define own_memcpy(x, y, z)		memcpy(x, y, z)
 
 #define own_memset(s, c, n) \
 	(__extension__ (__builtin_constant_p (c)	\
@@ -219,12 +136,12 @@ own_memset_cg (void *s, unsigned long c, size_t n)
 	   ? own_memset_cc (s, 0x01010101UL * (unsigned char) (c), n) \
 		: own_memset_cg (s, 0x01010101UL * (unsigned char) (c), n)) \
 		: own_memset_gg (s, c, n)))
+/* RXW
+#define own_memset(x, y, z)		memset(x, y, z)
+*/
 
 #else	/* SUPER_OPTIMIZE */
 
-/*
-#define own_memcpy(x, y, z)		own_word_memcpy(x, y, z)
-*/
 #define own_memcpy(x, y, z)		memcpy(x, y, z)
 #define own_memset(x, y, z)		own_memset_gg(x, y, z)
 

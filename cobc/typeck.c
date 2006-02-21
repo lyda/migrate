@@ -1367,6 +1367,68 @@ cb_build_cond (cb_tree x)
 					if (CB_TREE_CLASS (p->x) == CB_CLASS_NUMERIC
 					    && CB_TREE_CLASS (p->y) == CB_CLASS_NUMERIC
 					    && cb_fits_int (p->y)) {
+						if (CB_REFERENCE_P (p->x) || CB_FIELD_P (p->x)) {
+							struct cb_field	*f = cb_field(p->x);
+
+							if (!f->pic->scale && f->usage == CB_USAGE_PACKED) {
+								x = cb_build_funcall_2 ("cob_cmp_packed",
+									p->x,
+									cb_build_cast_integer (p->y));
+								break;
+							}
+							if (!f->pic->scale && (f->usage == CB_USAGE_BINARY ||
+							    f->usage == CB_USAGE_COMP_5 ||
+							    f->usage == CB_USAGE_COMP_X)) {
+								if (f->size == 1 && !f->pic->have_sign) {
+									x = cb_build_funcall_2 ("cob_cmp_u8_binary",
+										p->x,
+										cb_build_cast_integer (p->y));
+									break;
+								}
+								if (f->size == 1) {
+									x = cb_build_funcall_2 ("cob_cmp_s8_binary",
+										p->x,
+										cb_build_cast_integer (p->y));
+									break;
+								}
+								if (f->size == 2 && !f->pic->have_sign) {
+									x = cb_build_funcall_2 ("cob_cmp_u16_binary",
+										p->x,
+										cb_build_cast_integer (p->y));
+									break;
+								}
+								if (f->size == 2) {
+									x = cb_build_funcall_2 ("cob_cmp_s16_binary",
+										p->x,
+										cb_build_cast_integer (p->y));
+									break;
+								}
+								if (f->size == 4 && !f->pic->have_sign) {
+									x = cb_build_funcall_2 ("cob_cmp_u32_binary",
+										p->x,
+										cb_build_cast_integer (p->y));
+									break;
+								}
+								if (f->size == 4) {
+									x = cb_build_funcall_2 ("cob_cmp_s32_binary",
+										p->x,
+										cb_build_cast_integer (p->y));
+									break;
+								}
+								if (f->size == 8 && !f->pic->have_sign) {
+									x = cb_build_funcall_2 ("cob_cmp_u64_binary",
+										p->x,
+										cb_build_cast_integer (p->y));
+									break;
+								}
+								if (f->size == 8) {
+									x = cb_build_funcall_2 ("cob_cmp_s64_binary",
+										p->x,
+										cb_build_cast_integer (p->y));
+									break;
+								}
+							}
+						}
 						x = cb_build_funcall_2 ("cob_cmp_int",
 							p->x,
 							cb_build_cast_integer (p->y));
@@ -1404,6 +1466,68 @@ cb_build_cond (cb_tree x)
 				} else {
 					/* RXWRXW */
 					if (CB_TREE_CLASS (p->x) == CB_CLASS_NUMERIC && p->y == cb_zero) {
+						if (CB_REFERENCE_P (p->x) || CB_FIELD_P (p->x)) {
+							struct cb_field	*f = cb_field(p->x);
+
+							if (!f->pic->scale && f->usage == CB_USAGE_PACKED) {
+								x = cb_build_funcall_2 ("cob_cmp_packed",
+									p->x,
+									cb_build_cast_integer (p->y));
+								break;
+							}
+							if (!f->pic->scale && (f->usage == CB_USAGE_BINARY ||
+							    f->usage == CB_USAGE_COMP_5 ||
+							    f->usage == CB_USAGE_COMP_X)) {
+								if (f->size == 1 && !f->pic->have_sign) {
+									x = cb_build_funcall_2 ("cob_cmp_u8_binary",
+										p->x,
+										cb_build_cast_integer (p->y));
+									break;
+								}
+								if (f->size == 1) {
+									x = cb_build_funcall_2 ("cob_cmp_s8_binary",
+										p->x,
+										cb_build_cast_integer (p->y));
+									break;
+								}
+								if (f->size == 2 && !f->pic->have_sign) {
+									x = cb_build_funcall_2 ("cob_cmp_u16_binary",
+										p->x,
+										cb_build_cast_integer (p->y));
+									break;
+								}
+								if (f->size == 2) {
+									x = cb_build_funcall_2 ("cob_cmp_s16_binary",
+										p->x,
+										cb_build_cast_integer (p->y));
+									break;
+								}
+								if (f->size == 4 && !f->pic->have_sign) {
+									x = cb_build_funcall_2 ("cob_cmp_u32_binary",
+										p->x,
+										cb_build_cast_integer (p->y));
+									break;
+								}
+								if (f->size == 4) {
+									x = cb_build_funcall_2 ("cob_cmp_s32_binary",
+										p->x,
+										cb_build_cast_integer (p->y));
+									break;
+								}
+								if (f->size == 8 && !f->pic->have_sign) {
+									x = cb_build_funcall_2 ("cob_cmp_u64_binary",
+										p->x,
+										cb_build_cast_integer (p->y));
+									break;
+								}
+								if (f->size == 8) {
+									x = cb_build_funcall_2 ("cob_cmp_s64_binary",
+										p->x,
+										cb_build_cast_integer (p->y));
+									break;
+								}
+							}
+						}
 						x = cb_build_funcall_2 ("cob_cmp_int", p->x, cb_int0);
 					} else {
 						x = cb_build_funcall_2 ("cob_cmp", p->x, p->y);
@@ -1429,12 +1553,63 @@ cb_build_add (cb_tree v, cb_tree n, cb_tree round_opt)
 {
 	cb_tree opt;
 
-	if (CB_INDEX_P (v) || CB_TREE_CLASS (v) == CB_CLASS_POINTER)
+	if (CB_INDEX_P (v) || CB_TREE_CLASS (v) == CB_CLASS_POINTER) {
 		return cb_build_move (cb_build_binary_op (v, '+', n), v);
+	}
 
 	opt = build_store_option (v, round_opt);
-	if (opt == cb_int0 && cb_fits_int (n))
+	if (opt == cb_int0 && cb_fits_int (n)) {
+		if (CB_REFERENCE_P (v) || CB_FIELD_P (v)) {
+			struct cb_field	*f = cb_field(v);
+
+			if (!f->pic->scale && (f->usage == CB_USAGE_BINARY ||
+			    f->usage == CB_USAGE_COMP_5 ||
+			    f->usage == CB_USAGE_COMP_X)) {
+				if (f->size == 1 && !f->pic->have_sign) {
+					return cb_build_funcall_3 ("cob_addsub_u8_binary",
+						v, cb_int0,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 1) {
+					return cb_build_funcall_3 ("cob_addsub_s8_binary",
+						v, cb_int0,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 2 && !f->pic->have_sign) {
+					return cb_build_funcall_3 ("cob_addsub_u16_binary",
+						v, cb_int0,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 2) {
+					return cb_build_funcall_3 ("cob_addsub_s16_binary",
+						v, cb_int0,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 4 && !f->pic->have_sign) {
+					return cb_build_funcall_3 ("cob_addsub_u32_binary",
+						v, cb_int0,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 4) {
+					return cb_build_funcall_3 ("cob_addsub_s32_binary",
+						v, cb_int0,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 8 && !f->pic->have_sign) {
+					return cb_build_funcall_3 ("cob_addsub_u64_binary",
+						v, cb_int0,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 8) {
+					return cb_build_funcall_3 ("cob_addsub_s64_binary",
+						v, cb_int0,
+						cb_build_cast_integer (n));
+				}
+			}
+
+		}
 		return cb_build_funcall_2 ("cob_add_int", v, cb_build_cast_integer (n));
+	}
 	return cb_build_funcall_3 ("cob_add", v, n, opt);
 }
 
@@ -1443,12 +1618,63 @@ cb_build_sub (cb_tree v, cb_tree n, cb_tree round_opt)
 {
 	cb_tree opt;
 
-	if (CB_INDEX_P (v) || CB_TREE_CLASS (v) == CB_CLASS_POINTER)
+	if (CB_INDEX_P (v) || CB_TREE_CLASS (v) == CB_CLASS_POINTER) {
 		return cb_build_move (cb_build_binary_op (v, '-', n), v);
+	}
 
 	opt = build_store_option (v, round_opt);
-	if (opt == cb_int0 && cb_fits_int (n))
+	if (opt == cb_int0 && cb_fits_int (n)) {
+		if (CB_REFERENCE_P (v) || CB_FIELD_P (v)) {
+			struct cb_field	*f = cb_field(v);
+
+			if (!f->pic->scale && (f->usage == CB_USAGE_BINARY ||
+			    f->usage == CB_USAGE_COMP_5 ||
+			    f->usage == CB_USAGE_COMP_X)) {
+				if (f->size == 1 && !f->pic->have_sign) {
+					return cb_build_funcall_3 ("cob_addsub_u8_binary",
+						v, cb_int1,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 1) {
+					return cb_build_funcall_3 ("cob_addsub_s8_binary",
+						v, cb_int1,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 2 && !f->pic->have_sign) {
+					return cb_build_funcall_3 ("cob_addsub_u16_binary",
+						v, cb_int1,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 2) {
+					return cb_build_funcall_3 ("cob_addsub_s16_binary",
+						v, cb_int1,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 4 && !f->pic->have_sign) {
+					return cb_build_funcall_3 ("cob_addsub_u32_binary",
+						v, cb_int1,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 4) {
+					return cb_build_funcall_3 ("cob_addsub_s32_binary",
+						v, cb_int1,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 8 && !f->pic->have_sign) {
+					return cb_build_funcall_3 ("cob_addsub_u64_binary",
+						v, cb_int1,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 8) {
+					return cb_build_funcall_3 ("cob_addsub_s64_binary",
+						v, cb_int1,
+						cb_build_cast_integer (n));
+				}
+			}
+
+		}
 		return cb_build_funcall_2 ("cob_sub_int", v, cb_build_cast_integer (n));
+	}
 	return cb_build_funcall_3 ("cob_sub", v, n, opt);
 }
 
@@ -1457,19 +1683,24 @@ emit_corresponding (cb_tree (*func) (), cb_tree x1, cb_tree x2, cb_tree opt)
 {
 	struct cb_field *f1, *f2;
 
-	for (f1 = cb_field (x1)->children; f1; f1 = f1->sister)
-		if (!f1->redefines && !f1->flag_occurs)
-			for (f2 = cb_field (x2)->children; f2; f2 = f2->sister)
-				if (!f2->redefines && !f2->flag_occurs)
+	for (f1 = cb_field (x1)->children; f1; f1 = f1->sister) {
+		if (!f1->redefines && !f1->flag_occurs) {
+			for (f2 = cb_field (x2)->children; f2; f2 = f2->sister) {
+				if (!f2->redefines && !f2->flag_occurs) {
 					if (strcmp (f1->name, f2->name) == 0) {
 						cb_tree t1 = cb_build_field_reference (f1, x1);
 						cb_tree t2 = cb_build_field_reference (f2, x2);
 
-						if (f1->children && f2->children)
+						if (f1->children && f2->children) {
 							emit_corresponding (func, t1, t2, opt);
-						else
+						} else {
 							cb_emit (func (t1, t2, opt));
+						}
 					}
+				}
+			}
+		}
+	}
 }
 
 void
@@ -1483,6 +1714,49 @@ cb_emit_corresponding (cb_tree (*func) (), cb_tree x1, cb_tree x2, cb_tree opt)
 
 	emit_corresponding (func, x1, x2, opt);
 }
+
+static void
+emit_move_corresponding (cb_tree x1, cb_tree x2)
+{
+	struct cb_field *f1, *f2;
+
+	for (f1 = cb_field (x1)->children; f1; f1 = f1->sister) {
+		if (!f1->redefines && !f1->flag_occurs) {
+			for (f2 = cb_field (x2)->children; f2; f2 = f2->sister) {
+				if (!f2->redefines && !f2->flag_occurs) {
+					if (strcmp (f1->name, f2->name) == 0) {
+						cb_tree t1 = cb_build_field_reference (f1, x1);
+						cb_tree t2 = cb_build_field_reference (f2, x2);
+
+						if (f1->children && f2->children) {
+							emit_move_corresponding (t1, t2);
+						} else {
+							cb_emit (cb_build_move (t1, t2));
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+void
+cb_emit_move_corresponding (cb_tree x1, cb_tree x2)
+{
+	cb_tree		l;
+	cb_tree		v;
+
+	x1 = cb_check_group_name (x1);
+	VALIDATE (x1);
+	VALIDATE_LIST (x2);
+	for (l = x2; l; l = CB_CHAIN(l)) {
+		v = CB_VALUE(l);
+		v = cb_check_group_name (v);
+		VALIDATE (v);
+		emit_move_corresponding (x1, v);
+	}
+}
+
 
 /*
  * ACCEPT statement
@@ -1637,7 +1911,7 @@ cb_emit_close (cb_tree file, cb_tree opt)
 	if ( file != cb_error_node ) {
 		file = cb_ref (file);
 		current_statement->file = file;
-		cb_emit (cb_build_funcall_2 ("cob_close", file, opt));
+		cb_emit (cb_build_funcall_3 ("cob_close", file, opt, CB_FILE(file)->file_status));
 	}
 }
 
@@ -1651,7 +1925,7 @@ cb_emit_delete (cb_tree file)
 	if ( file != cb_error_node ) {
 		file = cb_ref (file);
 		current_statement->file = file;
-		cb_emit (cb_build_funcall_1 ("cob_delete", file));
+		cb_emit (cb_build_funcall_2 ("cob_delete", file, CB_FILE(file)->file_status));
 	}
 }
 
@@ -2704,7 +2978,7 @@ cb_emit_open (cb_tree file, cb_tree mode, cb_tree sharing)
 		    && CB_INTEGER (mode)->val != COB_OPEN_INPUT)
 			sharing = cb_int1;
 
-		cb_emit (cb_build_funcall_3 ("cob_open", file, mode, sharing));
+		cb_emit (cb_build_funcall_4 ("cob_open", file, mode, sharing, CB_FILE(file)->file_status));
 	}
 }
 
@@ -2775,10 +3049,12 @@ cb_emit_read (cb_tree ref, cb_tree next, cb_tree into, cb_tree key)
 			/* READ NEXT */
 			if (key)
 				cb_warning (_("KEY ignored with sequential READ"));
-			cb_emit (cb_build_funcall_2 ("cob_read", file, cb_int0));
+			cb_emit (cb_build_funcall_3 ("cob_read", file, cb_int0,
+				 CB_FILE(file)->file_status));
 		} else {
 			/* READ */
-			cb_emit (cb_build_funcall_2 ("cob_read", file, key ? key : CB_FILE (file)->key));
+			cb_emit (cb_build_funcall_3 ("cob_read",
+				 file, key ? key : CB_FILE (file)->key, CB_FILE(file)->file_status));
 		}
 		if (into)
 			cb_emit (cb_build_move (rec, into));
@@ -2799,7 +3075,8 @@ cb_emit_rewrite (cb_tree record, cb_tree from)
 		current_statement->file = file;
 		if (from)
 			cb_emit (cb_build_move (from, record));
-		cb_emit (cb_build_funcall_2 ("cob_rewrite", file, record));
+		cb_emit (cb_build_funcall_3 ("cob_rewrite", file, record,
+				CB_FILE(file)->file_status));
 	}
 }
 
@@ -2813,7 +3090,7 @@ cb_emit_return (cb_tree ref, cb_tree into)
 	cb_tree file = cb_ref (ref);
 	cb_tree rec = cb_build_field_reference (CB_FILE (file)->record, ref);
 
-	cb_emit (cb_build_funcall_2 ("cob_read", file, cb_int0));
+	cb_emit (cb_build_funcall_3 ("cob_read", file, cb_int0, NULL));
 	if (into)
 		cb_emit (cb_build_move (rec, into));
 	current_statement->file = file;
@@ -3030,37 +3307,37 @@ cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree dup_allow, cb_tree col)
 void
 cb_emit_sort_using (cb_tree file, cb_tree l)
 {
-	cb_emit (cb_build_funcall_3 ("cob_open", cb_ref (file), cb_int (COB_OPEN_OUTPUT), cb_int0));
+	cb_emit (cb_build_funcall_4 ("cob_open", cb_ref (file), cb_int (COB_OPEN_OUTPUT), cb_int0, NULL));
 	for (; l; l = CB_CHAIN (l))
 		cb_emit (cb_build_funcall_2 ("cob_sort_using", cb_ref (file), cb_ref (CB_VALUE (l))));
-	cb_emit (cb_build_funcall_2 ("cob_close", cb_ref (file), cb_int (COB_CLOSE_NORMAL)));
+	cb_emit (cb_build_funcall_3 ("cob_close", cb_ref (file), cb_int (COB_CLOSE_NORMAL), NULL));
 }
 
 void
 cb_emit_sort_input (cb_tree file, cb_tree proc)
 {
-	cb_emit (cb_build_funcall_3 ("cob_open", cb_ref (file), cb_int (COB_OPEN_OUTPUT), cb_int0));
+	cb_emit (cb_build_funcall_4 ("cob_open", cb_ref (file), cb_int (COB_OPEN_OUTPUT), cb_int0, NULL));
 	cb_emit (cb_build_perform_once (proc));
-	cb_emit (cb_build_funcall_2 ("cob_close", cb_ref (file), cb_int (COB_CLOSE_NORMAL)));
+	cb_emit (cb_build_funcall_3 ("cob_close", cb_ref (file), cb_int (COB_CLOSE_NORMAL), NULL));
 }
 
 void
 cb_emit_sort_giving (cb_tree file, cb_tree l)
 {
 	for (; l; l = CB_CHAIN (l)) {
-		cb_emit (cb_build_funcall_3 ("cob_open", cb_ref (file),
-					     cb_int (COB_OPEN_INPUT), cb_int0));
+		cb_emit (cb_build_funcall_4 ("cob_open", cb_ref (file),
+					     cb_int (COB_OPEN_INPUT), cb_int0, NULL));
 		cb_emit (cb_build_funcall_2 ("cob_sort_giving", cb_ref (file), cb_ref (CB_VALUE (l))));
-		cb_emit (cb_build_funcall_2 ("cob_close", cb_ref (file), cb_int (COB_CLOSE_NORMAL)));
+		cb_emit (cb_build_funcall_3 ("cob_close", cb_ref (file), cb_int (COB_CLOSE_NORMAL), NULL));
 	}
 }
 
 void
 cb_emit_sort_output (cb_tree file, cb_tree proc)
 {
-	cb_emit (cb_build_funcall_3 ("cob_open", cb_ref (file), cb_int (COB_OPEN_INPUT), cb_int0));
+	cb_emit (cb_build_funcall_4 ("cob_open", cb_ref (file), cb_int (COB_OPEN_INPUT), cb_int0, NULL));
 	cb_emit (cb_build_perform_once (proc));
-	cb_emit (cb_build_funcall_2 ("cob_close", cb_ref (file), cb_int (COB_CLOSE_NORMAL)));
+	cb_emit (cb_build_funcall_3 ("cob_close", cb_ref (file), cb_int (COB_CLOSE_NORMAL), NULL));
 }
 
 void
@@ -3079,8 +3356,9 @@ cb_emit_start (cb_tree file, cb_tree op, cb_tree key)
 {
 	if ( file != cb_error_node ) {
 		current_statement->file = cb_ref (file);
-		cb_emit (cb_build_funcall_3 ("cob_start", cb_ref (file), op,
-					     key ? key : CB_FILE (cb_ref (file))->key));
+		cb_emit (cb_build_funcall_4 ("cob_start", cb_ref (file), op,
+					     key ? key : CB_FILE (cb_ref (file))->key,
+						CB_FILE(cb_ref(file))->file_status));
 	}
 }
 
@@ -3172,7 +3450,8 @@ cb_emit_write (cb_tree record, cb_tree from, cb_tree opt)
 	current_statement->file = file;
 	if (from)
 		cb_emit (cb_build_move (from, record));
-	cb_emit (cb_build_funcall_3 ("cob_write", file, record, opt));
+	cb_emit (cb_build_funcall_4 ("cob_write", file, record, opt,
+				CB_FILE(file)->file_status));
 }
 
 cb_tree

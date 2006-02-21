@@ -64,6 +64,7 @@ const char		*cob_source_file = NULL;
 unsigned int		cob_source_line = 0;
 
 int			cob_call_params = 0;
+int			cob_initial_external = 0;
 
 #ifdef	HAVE_SIGNAL_H
 typedef void (*cob_sighandler_t) (int);
@@ -664,15 +665,6 @@ cob_cmp (cob_field *f1, cob_field *f2)
 	}
 }
 
-int
-cob_cmp_int (cob_field *f1, int n)
-{
-	cob_field_attr	attr = { COB_TYPE_NUMERIC_BINARY, 9, 0, COB_FLAG_HAVE_SIGN, NULL };
-	cob_field	temp = { sizeof (int), (unsigned char *)&n, &attr };
-
-	return cob_numeric_cmp (f1, &temp);
-}
-
 /*
  * Class check
  */
@@ -984,6 +976,7 @@ cob_external_addr (char *exname, int exlength)
 						   exname, exlength);
 				cob_stop_run (1);
 			}
+			cob_initial_external = 0;
 			return (ucharptr)eptr->ext_alloc;
 		}
 	}
@@ -994,6 +987,7 @@ cob_external_addr (char *exname, int exlength)
 	strcpy (eptr->ename, exname);
 	eptr->ext_alloc = cob_malloc ((unsigned int)exlength);
 	basext = eptr;
+	cob_initial_external = 1;
 	return (ucharptr)eptr->ext_alloc;
 }
 

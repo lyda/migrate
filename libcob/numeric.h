@@ -57,7 +57,7 @@ extern int cob_sub_int (cob_field *f, int n);
 extern int cob_div_quotient (cob_field *dividend, cob_field *divisor, cob_field *quotient, int opt);
 extern int cob_div_remainder (cob_field *fld_remainder, int opt);
 
-extern int cob_numeric_cmp (cob_field *f1, cob_field *f2);
+extern int cob_cmp_packed (cob_field *f, int n);
 
 extern void cob_init_numeric (void);
 

@@ -275,6 +275,9 @@
    first (like Motorola and SPARC, unlike Intel and VAX). */
 #undef WORDS_BIGENDIAN
 
+/* Compiler optimization */
+#undef __USE_STRING_INLINES
+
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
 

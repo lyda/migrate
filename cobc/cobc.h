@@ -72,12 +72,25 @@ struct cb_replace_list {
 	struct cb_replace_list	*next;
 };
 
+struct filename {
+	struct filename *next;
+	char		*source;			/* foo.cob */
+	char		*preprocess;			/* foo.i */
+	char		*translate;			/* foo.c */
+	char		*trstorage;			/* foo.c.h */
+	char		*object;			/* foo.o */
+	int		need_preprocess;
+	int		need_translate;
+	int		need_assemble;
+};
+
 extern int			cb_id;
 
 extern int			errorcount;
 extern int			warningcount;
 extern int			entry_number;
 extern int			has_external;
+extern int			possible_nested;
 
 extern char			*cb_source_file;
 extern int			cb_source_line;

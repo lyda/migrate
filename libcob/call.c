@@ -342,6 +342,13 @@ cob_resolve (const char *name)
 			return NULL;
 		}
 	}
+#if	defined(USE_LIBDL) && defined (RTLD_DEFAULT)
+	if ((func = lt_dlsym (RTLD_DEFAULT, buff)) != NULL) {
+		insert (name, NULL, NULL, func, 0);
+		resolve_error = NULL;
+		return func;
+	}
+#endif
 	sprintf (resolve_error_buff, _("cannot find module '%s'"), name);
 	resolve_error = resolve_error_buff;
 	return NULL;

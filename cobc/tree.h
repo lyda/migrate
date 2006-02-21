@@ -493,6 +493,7 @@ struct cb_file {
 	int			access_mode;		/* ACCESS MODE */
 	int			same_clause;		/* SAME clause */
 	int			finalized;		/* is finalized */
+	int			external;		/* is EXTERNAL */
 	cb_tree			file_status;		/* FILE STATUS */
 	cb_tree			sharing;		/* SHARING */
 	cb_tree			key;			/* RELATIVE/RECORD KEY */
@@ -600,19 +601,21 @@ struct cb_funcall {
 	const char		*name;
 	int			argc;
 	int			varcnt;
-	cb_tree			argv[4];
+	cb_tree			argv[5];
 };
 
 #define CB_FUNCALL(x)		(CB_TREE_CAST (CB_TAG_FUNCALL, struct cb_funcall, x))
 #define CB_FUNCALL_P(x)		(CB_TREE_TAG (x) == CB_TAG_FUNCALL)
 
-extern cb_tree cb_build_funcall (const char *name, int argc, cb_tree a1, cb_tree a2, cb_tree a3, cb_tree a4);
+extern cb_tree cb_build_funcall (const char *name, int argc, cb_tree a1,
+				 cb_tree a2, cb_tree a3, cb_tree a4, cb_tree a5);
 
-#define cb_build_funcall_0(f)		cb_build_funcall (f, 0, 0, 0, 0, 0)
-#define cb_build_funcall_1(f,a1)	cb_build_funcall (f, 1, a1, 0, 0, 0)
-#define cb_build_funcall_2(f,a1,a2)	cb_build_funcall (f, 2, a1, a2, 0, 0)
-#define cb_build_funcall_3(f,a1,a2,a3)	cb_build_funcall (f, 3, a1, a2, a3, 0)
-#define cb_build_funcall_4(f,a1,a2,a3,a4) cb_build_funcall (f, 4, a1, a2, a3, a4)
+#define cb_build_funcall_0(f)			cb_build_funcall (f, 0, 0, 0, 0, 0, 0)
+#define cb_build_funcall_1(f,a1)		cb_build_funcall (f, 1, a1, 0, 0, 0, 0)
+#define cb_build_funcall_2(f,a1,a2)		cb_build_funcall (f, 2, a1, a2, 0, 0, 0)
+#define cb_build_funcall_3(f,a1,a2,a3)		cb_build_funcall (f, 3, a1, a2, a3, 0, 0)
+#define cb_build_funcall_4(f,a1,a2,a3,a4)	cb_build_funcall (f, 4, a1, a2, a3, a4, 0)
+#define cb_build_funcall_5(f,a1,a2,a3,a4,a5)	cb_build_funcall (f, 5, a1, a2, a3, a4, a5)
 
 
 /*
@@ -1015,12 +1018,14 @@ struct cb_program {
 	unsigned char		decimal_point;		/* '.' or ',' */
 	unsigned char		currency_symbol;	/* '$'/user-specified */
 	unsigned char		numeric_separator;	/* ',' or '.' */
-	unsigned char		spare;			/* spare */
+	unsigned char		static_func;		/* static function */
 	/* internal variables */
 	int			loop_counter;
 	int			decimal_index;
 	int			decimal_index_max;
-	int			dummy_int;		/* spare */
+	int			gen_main;		/* Generate main function */
+	int			validated;		/* End program validate */
+	int			spare_int;		/* Spare */
 	struct cb_word		*word_table[CB_WORD_HASH_SIZE];
 };
 
@@ -1055,7 +1060,8 @@ extern void level_require_error (cb_tree x, const char *clause);
 extern void level_except_error (cb_tree x, const char *clause);
 
 /* field.c */
-extern cb_tree cb_build_field_tree (cb_tree level, cb_tree name, struct cb_field *last_field, enum cb_storage storage);
+extern cb_tree cb_build_field_tree (cb_tree level, cb_tree name, struct cb_field *last_field,
+				enum cb_storage storage, struct cb_file *fn);
 extern struct cb_field *cb_resolve_redefines (struct cb_field *field, cb_tree redefines);
 extern void cb_validate_field (struct cb_field *p);
 extern void cb_validate_88_item (struct cb_field *p);
@@ -1093,6 +1099,7 @@ extern void cb_emit_arithmetic (cb_tree vars, int op, cb_tree val);
 extern cb_tree cb_build_add (cb_tree v, cb_tree n, cb_tree round_opt);
 extern cb_tree cb_build_sub (cb_tree v, cb_tree n, cb_tree round_opt);
 extern void cb_emit_corresponding (cb_tree (*func) (), cb_tree x1, cb_tree x2, cb_tree opt);
+extern void cb_emit_move_corresponding (cb_tree x1, cb_tree x2);
 
 extern void cb_emit_accept (cb_tree var, cb_tree pos);
 extern void cb_emit_accept_date (cb_tree var);
@@ -1199,6 +1206,6 @@ extern void	cob_tree_cast_error (cb_tree x, const char * filen, int linenum, int
 /* extern void bytegen (struct cb_program *prog); */
 
 /* codegen.c */
-extern void codegen (struct cb_program *prog);
+extern void codegen (struct cb_program *prog, int nested);
 
 #endif /* CB_TREE_H */

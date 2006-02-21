@@ -1,3 +1,26 @@
+2006-02-21  Roger While <simrw@sim-basis.de>
+
+	* new include : codegen.h
+	  This contains inlines that only relate to code
+	  generation
+	  Implemented are cob_cmp_xxx_binary and cob_addsub_xxx_binary
+	  where xxx is u8, s8, u16, s16 etc.
+	* call.c : Fix a preload problem under Cygwin
+
+2006-02-18  Roger While <simrw@sim-basis.de>
+
+	* move.h : Take out x86 memcpy optimization
+
+2006-02-08  Roger While <simrw@sim-basis.de>
+
+	* common.c/h, numeric.c/h : Optimize COMP/COMP-3
+
+2006-02-01  Roger While <simrw@sim-basis.de>
+
+	* fileio.h, fileio.c : Changes for FILE STATUS
+	  We have to pass the FILE STATUS as a parameter
+	  to the I/O call. This is required for EXTERNAL FD's.
+
 2006-01-29  Roger While <simrw@sim-basis.de>
 
 	* call.c : Implement COB_PRE_LOAD

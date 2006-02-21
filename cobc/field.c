@@ -60,7 +60,8 @@ get_level (cb_tree x)
 cb_tree
 cb_build_field_tree (cb_tree level, cb_tree name,
 		     struct cb_field *last_field,
-		     enum cb_storage storage)
+		     enum cb_storage storage,
+		     struct cb_file *fn)
 {
   struct cb_reference *r;
   struct cb_field *f;
@@ -78,6 +79,11 @@ cb_build_field_tree (cb_tree level, cb_tree name,
   f = CB_FIELD (cb_build_field (name));
   f->level = lv;
   f->storage = storage;
+  if (f->level == 1 && storage == CB_STORAGE_FILE &&
+	fn->external) {
+		f->flag_external = 1;
+		has_external = 1;
+  }
 
   /* checks for redefinition */
   if (cb_warn_redefinition)

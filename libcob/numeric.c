@@ -28,6 +28,7 @@
 #include "common.h"
 #include "move.h"
 #include "numeric.h"
+#include "byteswap.h"
 
 #define DECIMAL_NAN	-128
 #define DECIMAL_CHECK(d1,d2) \
@@ -41,6 +42,7 @@ static cob_decimal	cob_d2;
 static cob_decimal	cob_d3;
 static cob_decimal	cob_d4;
 static mpz_t		cob_mexp;
+static unsigned char	packed_value[20];
 
 /*
  * Decimal number
@@ -414,29 +416,282 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, int opt)
 	return cob_exception_code;
 }
 
+static void
+cob_add_binary (cob_field *f, int val)
+{
+	unsigned char	*p = f->data;
+
+	switch (f->size) {
+	case 1:
+		if (COB_FIELD_HAVE_SIGN (f)) {
+			*(char *)p += val;
+		} else {
+			*(unsigned char *)p += val;
+		}
+		return;
+	case 2:
+		if (COB_FIELD_HAVE_SIGN (f)) {
+			short	n;
+
+#ifndef WORDS_BIGENDIAN
+			if (COB_FIELD_BINARY_SWAP (f)) {
+				n = COB_BSWAP_16 (*(short *)p);
+				n += val;
+				*(short *)p = COB_BSWAP_16(n);
+			} else {
+				*(short *)p += val;
+			}
+#else
+			memcpy ((unsigned char *)&n, p, sizeof(short));
+			n += val;
+			memcpy (p, (unsigned char *)&n, sizeof(short));
+#endif
+		} else {
+			unsigned short	n;
+
+#ifndef WORDS_BIGENDIAN
+			if (COB_FIELD_BINARY_SWAP (f)) {
+				n = COB_BSWAP_16 (*(unsigned short *)p);
+				n += val;
+				*(unsigned short *)p = COB_BSWAP_16(n);
+			} else {
+				*(unsigned short *)p += val;
+			}
+#else
+			memcpy ((unsigned char *)&n, p, sizeof(short));
+			n += val;
+			memcpy (p, (unsigned char *)&n, sizeof(short));
+#endif
+		}
+		return;
+	case 4:
+		if (COB_FIELD_HAVE_SIGN (f)) {
+			int	n;
+
+#ifndef WORDS_BIGENDIAN
+			if (COB_FIELD_BINARY_SWAP (f)) {
+				n = COB_BSWAP_32 (*(int *)p);
+				n += val;
+				*(int *)p = COB_BSWAP_32(n);
+			} else {
+				*(int *)p += val;
+			}
+#else
+			memcpy ((unsigned char *)&n, p, sizeof(int));
+			n += val;
+			memcpy (p, (unsigned char *)&n, sizeof(int));
+#endif
+		} else {
+			unsigned int	n;
+
+#ifndef WORDS_BIGENDIAN
+			if (COB_FIELD_BINARY_SWAP (f)) {
+				n = COB_BSWAP_32 (*(unsigned int *)p);
+				n += val;
+				*(unsigned int *)p = COB_BSWAP_32(n);
+			} else {
+				*(unsigned int *)p += val;
+			}
+#else
+			memcpy ((unsigned char *)&n, p, sizeof(int));
+			n += val;
+			memcpy (p, (unsigned char *)&n, sizeof(int));
+#endif
+		}
+		return;
+	case 8:
+		if (COB_FIELD_HAVE_SIGN (f)) {
+			long long	n;
+
+#ifndef WORDS_BIGENDIAN
+			if (COB_FIELD_BINARY_SWAP (f)) {
+				n = COB_BSWAP_64 (*(long long *)p);
+				n += val;
+				*(long long *)p = COB_BSWAP_64(n);
+			} else {
+				*(long long *)p += val;
+			}
+#else
+			memcpy ((unsigned char *)&n, p, sizeof(long long));
+			n += val;
+			memcpy (p, (unsigned char *)&n, sizeof(long long));
+#endif
+		} else {
+			unsigned long long	n;
+
+#ifndef WORDS_BIGENDIAN
+			if (COB_FIELD_BINARY_SWAP (f)) {
+				n = COB_BSWAP_64 (*(unsigned long long *)p);
+				n += val;
+				*(unsigned long long *)p = COB_BSWAP_64(n);
+			} else {
+				*(unsigned long long *)p += val;
+			}
+#else
+			memcpy ((unsigned char *)&n, p, sizeof(long long));
+			n += val;
+			memcpy (p, (unsigned char *)&n, sizeof(long long));
+#endif
+		}
+		return;
+	}
+	return;
+}
+
+
 /* PACKED-DECIMAL */
+
+static int
+cob_packed_get_sign (cob_field *f)
+{
+	unsigned char *p;
+
+	p = f->data + (f->attr->digits / 2);
+	return ((*p & 0x0f) == 0x0d) ? -1 : 1;
+}
+
+static void
+cob_add_packed (cob_field *f, int val)
+{
+	int		sign;
+	unsigned char	*p;
+	int		ndigs;
+	unsigned int	msn;
+	int		tval;
+	int		carry = 0;
+	unsigned int	subtr = 0;
+	unsigned int	zeroes = 0;
+	unsigned int	origdigs;
+
+	ndigs = f->attr->digits - f->attr->scale;
+	if (ndigs <= 0) {
+		return;
+	}
+	sign = COB_FIELD_HAVE_SIGN (f) ? cob_packed_get_sign (f) : 0;
+	msn = 1 - (f->attr->scale % 2);
+
+	/* -x +v = -(x - v), -x -v = -(x + v) */
+	if (sign < 0) {
+		val = -val;
+	}
+	if (val < 0) {
+		val = -val;
+		subtr = 1;
+	}
+	p = f->data + (ndigs / 2) - (1 - msn);
+	origdigs = ndigs;
+	while (ndigs--) {
+		if (!msn) {
+			tval = *p & 0x0f;
+		} else {
+			tval = (*p & 0xf0) >> 4;
+		}
+		if (val) {
+			carry += (val % 10);
+			val /= 10;
+		}
+		if (subtr) {
+			tval -= carry;
+			if (tval < 0) {
+				tval += 10;
+				carry = 1;
+			} else {
+				carry = 0;
+			}
+		} else {
+			tval += carry;
+			if (tval > 9) {
+				tval %= 10;
+				carry = 1;
+			} else {
+				carry = 0;
+			}
+		}
+		if (tval == 0) {
+			zeroes++;
+		}
+		if (!msn) {
+			*p = (*p & 0xf0) | tval;
+			msn = 1;
+		} else {
+			*p = (*p & 0x0f) | (tval << 4);
+			msn = 0;
+			p--;
+		}
+	}
+	if (sign) {
+		p = f->data + f->size - 1;
+		if (origdigs == zeroes) {
+			*p = (*p & 0xf0) | 0x0c;
+		} else if (subtr && carry) {
+			sign = -sign;
+			if (sign < 0) {
+				*p = (*p & 0xf0) | 0x0d;
+			} else {
+				*p = (*p & 0xf0) | 0x0c;
+			}
+		}
+	}
+}
 
 static void
 cob_decimal_set_packed (cob_decimal *d, cob_field *f)
 {
-	int		sign = cob_get_sign (f);
-	int		digits = f->attr->digits;
+	int		sign;
+	unsigned int	val;
 	unsigned char	*p = f->data;
+	int		digits = f->attr->digits;
 
-	mpz_set_ui (d->value, 0);
+	sign = COB_FIELD_HAVE_SIGN (f) ? cob_packed_get_sign (f) : 0;
+
 	if (digits % 2 == 0) {
-		mpz_add_ui (d->value, d->value, (*p & 0x0f));
+		val = *p & 0x0f;
 		digits--;
 		p++;
+	} else {
+		val = 0;
 	}
-	while (digits > 1) {
-		mpz_mul_ui (d->value, d->value, 100);
-		mpz_add_ui (d->value, d->value, (*p >> 4) * 10 + (*p & 0x0f));
-		digits -= 2;
-		p++;
+
+	if (f->attr->digits < 10) {
+		while (digits > 1) {
+			if (val) {
+				val *= 100;
+			}
+			if (*p) {
+				val += ((*p >> 4) * 10) + (*p & 0x0f);
+			}
+			digits -= 2;
+			p++;
+		}
+		if (val) {
+			val *= 10;
+		}
+		val += *p >> 4;
+		mpz_set_ui (d->value, val);
+	} else {
+		unsigned int	valseen = 0;
+
+		mpz_set_ui (d->value, val);
+		if (val) {
+			valseen = 1;
+		}
+		while (digits > 1) {
+			if (valseen) {
+				mpz_mul_ui (d->value, d->value, 100);
+			}
+			if (*p) {
+				mpz_add_ui (d->value, d->value,
+					(*p >> 4) * 10 + (*p & 0x0f));
+				valseen = 1;
+			}
+			digits -= 2;
+			p++;
+		}
+		if (valseen) {
+			mpz_mul_ui (d->value, d->value, 10);
+		}
+		mpz_add_ui (d->value, d->value, (*p >> 4));
 	}
-	mpz_mul_ui (d->value, d->value, 10);
-	mpz_add_ui (d->value, d->value, (*p >> 4));
 
 	if (sign < 0) {
 		mpz_neg (d->value, d->value);
@@ -489,19 +744,17 @@ cob_decimal_get_packed (cob_decimal *d, cob_field *f, int opt)
 		} else {
 			*p++ |= x;
 		}
-/*
-		if (i % 2 == 0) {
-			p[i / 2] = x << 4;
-		} else {
-			p[i / 2] |= x;
-		}
-*/
 	}
 
+	p = data + (digits / 2);
 	if (!COB_FIELD_HAVE_SIGN (f)) {
-                data[digits / 2] |= 0x0f;
+                *p |= 0x0f;
         } else {
-		cob_real_put_sign (f, sign);
+		if (sign < 0) {
+			*p |= 0x0d;
+		} else {
+			*p |= 0x0c;
+		}
 	}
 
 	return 0;
@@ -577,7 +830,7 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f, int opt)
 		float	val;
 
 		val = cob_decimal_get_double (d);
-		own_memcpy (f->data, (ucharptr)&val, sizeof (float));
+		memcpy (f->data, (ucharptr)&val, sizeof (float));
 /*
 		*(float *)f->data = val;
 */
@@ -588,7 +841,7 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f, int opt)
 		double	val;
 
 		val = cob_decimal_get_double (d);
-		own_memcpy (f->data, (ucharptr)&val, sizeof (double));
+		memcpy (f->data, (ucharptr)&val, sizeof (double));
 /*
 		*(double *)f->data = val;
 */
@@ -859,14 +1112,29 @@ cob_sub (cob_field *f1, cob_field *f2, int opt)
 int
 cob_add_int (cob_field *f, int n)
 {
+	if (n == 0) {
+		return 0;
+	}
 	switch (COB_FIELD_TYPE (f)) {
 	case COB_TYPE_NUMERIC_DISPLAY:
 		return cob_display_add_int (f, n);
+	case COB_TYPE_NUMERIC_PACKED:
+		cob_add_packed (f, n);
+		return 0;
 	default:
 		/* not optimized */
 		cob_decimal_set_field (&cob_d1, f);
 		cob_decimal_set_int (&cob_d2, n);
+		if (cob_d1.scale) {
+			mpz_ui_pow_ui (cob_mexp, 10, cob_d1.scale);
+			mpz_mul (cob_d2.value, cob_d2.value, cob_mexp);
+			cob_d2.scale = cob_d1.scale;
+		}
+		mpz_add (cob_d1.value, cob_d1.value, cob_d2.value);
+/*
+		cob_decimal_set_int (&cob_d2, n);
 		cob_decimal_add (&cob_d1, &cob_d2);
+*/
 		return cob_decimal_get_field (&cob_d1, f, 0);
 	}
 }
@@ -874,6 +1142,9 @@ cob_add_int (cob_field *f, int n)
 int
 cob_sub_int (cob_field *f, int n)
 {
+	if (n == 0) {
+		return 0;
+	}
 	return cob_add_int (f, -n);
 }
 
@@ -921,6 +1192,75 @@ cob_numeric_cmp (cob_field *f1, cob_field *f2)
 	return cob_decimal_cmp (&cob_d1, &cob_d2);
 }
 
+int
+cob_cmp_packed (cob_field *f, int n)
+{
+	int			sign;
+	size_t			size;
+	size_t			inc = 0;
+	static int		lastval = 0;
+	unsigned char		*p;
+	unsigned char		val1[20];
+
+	sign = COB_FIELD_HAVE_SIGN (f) ? cob_packed_get_sign (f) : 0;
+	/* Field positive, value negative */
+	if (sign >= 0 && n < 0) {
+		return 1;
+	}
+	/* Field negative, value positive */
+	if (sign < 0 && n >= 0) {
+		return -1;
+	}
+	/* Both positive or both negative */
+	p = f->data;
+	for (size = 0; size < 20; size++) {
+		if (size < 20 - f->size) {
+			val1[size] = 0;
+		} else {
+			val1[size] = p[inc++];
+		}
+	}
+	val1[19] &= 0xf0;
+	if ((f->attr->digits % 2) == 0) {
+		val1[size] &= 0x0f;
+	}
+	if (n != lastval) {
+		lastval = n;
+		if (n < 0) {
+			n = -n;
+		}
+		own_memset (&packed_value[14], 0, 6);
+		if (n) {
+			p = &packed_value[19];
+			*p =  (n % 10) << 4;
+			p--;
+			n /= 10;
+			for ( ; n; ) {
+				size = n % 100;
+				*p = (size % 10) | ((size / 10) << 4);
+				n /= 100;
+/*
+				*p = (n % 10);
+				n /= 10;
+				*p |= ((n % 10) << 4);
+				n /= 10;
+*/
+				p--;
+			}
+		}
+	}
+	for (size = 0; size < 20; size++) {
+		if (val1[size] != packed_value[size]) {
+			if (sign < 0) {
+				return packed_value[size] - val1[size];
+			} else {
+				return val1[size] - packed_value[size];
+			}
+		}
+	}
+	return 0;
+}
+
 void
 cob_init_numeric (void)
 {
@@ -929,4 +1269,5 @@ cob_init_numeric (void)
 	cob_decimal_init (&cob_d3);
 	cob_decimal_init (&cob_d4);
 	mpz_init2 (cob_mexp, 512);
+	own_memset (packed_value, 0, sizeof(packed_value));
 }

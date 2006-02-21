@@ -837,7 +837,7 @@ output_param (cb_tree x, int id)
       output ("&d%d", CB_DECIMAL (x)->id);
       break;
     case CB_TAG_FILE:
-      output ("&%s%s", CB_PREFIX_FILE, CB_FILE (x)->cname);
+      output ("%s%s", CB_PREFIX_FILE, CB_FILE (x)->cname);
       break;
     case CB_TAG_LITERAL:
       output ("&%s%d", CB_PREFIX_CONST, lookup_literal (x));
@@ -2316,22 +2316,14 @@ output_stmt (cb_tree x)
 static void
 output_file_allocation (struct cb_file *f)
 {
-	int nkeys = 1;
 
 	/* output RELATIVE/RECORD KEY's */
 	if (f->organization == COB_ORG_RELATIVE
 	    || f->organization == COB_ORG_INDEXED) {
-		struct cb_alt_key *l;
-		for (l = f->alt_key_list; l; l = l->next) {
-			nkeys++;
-		}
-		if (nkeys == 1) {
-			output ("  static cob_file_key %s%s;\n", CB_PREFIX_KEYS, f->cname);
-		} else {
-			output ("  static cob_file_key %s%s[%d];\n", CB_PREFIX_KEYS, f->cname, nkeys);
-		}
+		output ("  static cob_file_key *%s%s;\n", CB_PREFIX_KEYS, f->cname);
 	}
-	output ("  static cob_file %s%s;", CB_PREFIX_FILE, f->cname);
+	output ("  static cob_file *%s%s;\n", CB_PREFIX_FILE, f->cname);
+	output ("  static char %s%s_status[4];\n", CB_PREFIX_FILE, f->cname);
 }
 
 static void
@@ -2340,125 +2332,138 @@ output_file_initialization (struct cb_file *f)
 	int			nkeys = 1;
 	struct cb_alt_key	*l;
 
+	if (f->external) {
+		output_line ("%s%s = (cob_file *)cob_external_addr (\"%s\", sizeof(cob_file));",
+				 CB_PREFIX_FILE, f->cname, f->cname);
+		output_line ("if (cob_initial_external)");
+		output_indent ("{");
+	} else {
+		output_line ("%s%s = cob_malloc (sizeof(cob_file));", CB_PREFIX_FILE, f->cname);
+	}
 	/* output RELATIVE/RECORD KEY's */
 	if (f->organization == COB_ORG_RELATIVE
 	    || f->organization == COB_ORG_INDEXED) {
+		for (l = f->alt_key_list; l; l = l->next) {
+			nkeys++;
+		}
+		output_line ("%s%s = cob_malloc(sizeof (cob_file_key) * %d);",
+				CB_PREFIX_KEYS, f->cname, nkeys);
+		nkeys = 1;
 		if (f->alt_key_list) {
 			output_prefix ();
-			output ("%s%s[0].field = ", CB_PREFIX_KEYS, f->cname);
+			output ("%s%s->field = ", CB_PREFIX_KEYS, f->cname);
 			output_param (f->key, -1);
 			output (";\n");
 			output_prefix ();
-			output ("%s%s[0].flag = 0;\n", CB_PREFIX_KEYS, f->cname);
+			output ("%s%s->flag = 0;\n", CB_PREFIX_KEYS, f->cname);
 			for (l = f->alt_key_list; l; l = l->next) {
 				output_prefix ();
-				output ("%s%s[%d].field = ", CB_PREFIX_KEYS, f->cname, nkeys);
+				output ("(%s%s + %d)->field = ", CB_PREFIX_KEYS, f->cname, nkeys);
 				output_param (l->key, -1);
 				output (";\n");
 				output_prefix ();
-				output ("%s%s[%d].flag = %d;\n", CB_PREFIX_KEYS, f->cname, nkeys, l->duplicates);
+				output ("(%s%s + %d)->flag = %d;\n", CB_PREFIX_KEYS, f->cname, nkeys, l->duplicates);
 				nkeys++;
 			}
 		} else {
 			output_prefix ();
-			output ("%s%s.field = ", CB_PREFIX_KEYS, f->cname);
+			output ("%s%s->field = ", CB_PREFIX_KEYS, f->cname);
 			output_param (f->key, -1);
 			output (";\n");
 			output_prefix ();
-			output ("%s%s.flag = 0;\n", CB_PREFIX_KEYS, f->cname);
+			output ("%s%s->flag = 0;\n", CB_PREFIX_KEYS, f->cname);
 		}
 	}
 
-	output_line ("%s%s.organization = %d;", CB_PREFIX_FILE, f->cname, f->organization);
-	output_line ("%s%s.access_mode = %d;", CB_PREFIX_FILE, f->cname, f->access_mode);
-	output_line ("%s%s.open_mode = 0;", CB_PREFIX_FILE, f->cname);
-	output_line ("%s%s.flag_optional = %d;", CB_PREFIX_FILE, f->cname, f->optional);
-	if (f->file_status) {
-		output_prefix ();
-		output ("%s%s.file_status = ", CB_PREFIX_FILE, f->cname);
-		output_data (f->file_status);
-		output (";\n");
+	output_line ("%s%s->organization = %d;", CB_PREFIX_FILE, f->cname, f->organization);
+	output_line ("%s%s->access_mode = %d;", CB_PREFIX_FILE, f->cname, f->access_mode);
+	output_line ("%s%s->open_mode = 0;", CB_PREFIX_FILE, f->cname);
+	output_line ("%s%s->flag_optional = %d;", CB_PREFIX_FILE, f->cname, f->optional);
+	if (f->external && !f->file_status) {
+		output_line ("%s%s->file_status = cob_external_addr (\"%s%s_status\", 4);",
+							CB_PREFIX_FILE, f->cname,
+							CB_PREFIX_FILE, f->cname);
 	} else {
-		output_line ("%s%s.file_status = NULL;", CB_PREFIX_FILE, f->cname);
+		output_line ("%s%s->file_status = %s%s_status;", CB_PREFIX_FILE, f->cname,
+							CB_PREFIX_FILE, f->cname);
 	}
 	output_prefix ();
-	output ("%s%s.assign = ", CB_PREFIX_FILE, f->cname);
+	output ("%s%s->assign = ", CB_PREFIX_FILE, f->cname);
 	output_param (f->assign, -1);
 	output (";\n");
 	output_prefix ();
-	output ("%s%s.record = ", CB_PREFIX_FILE, f->cname);
+	output ("%s%s->record = ", CB_PREFIX_FILE, f->cname);
 	output_param (CB_TREE(f->record), -1);
 	output (";\n");
 	output_prefix ();
-	output ("%s%s.record_size = ", CB_PREFIX_FILE, f->cname);
+	output ("%s%s->record_size = ", CB_PREFIX_FILE, f->cname);
 	output_param (f->record_depending, -1);
 	output (";\n");
-	output_line ("%s%s.record_min = %d;", CB_PREFIX_FILE, f->cname, f->record_min);
-	output_line ("%s%s.record_max = %d;", CB_PREFIX_FILE, f->cname, f->record_max);
+	output_line ("%s%s->record_min = %d;", CB_PREFIX_FILE, f->cname, f->record_min);
+	output_line ("%s%s->record_max = %d;", CB_PREFIX_FILE, f->cname, f->record_max);
 	if (f->organization == COB_ORG_RELATIVE
 	    || f->organization == COB_ORG_INDEXED) {
-		output_line ("%s%s.nkeys = %d;", CB_PREFIX_FILE, f->cname, nkeys);
-		if (nkeys > 1) {
-			output_line ("%s%s.keys = %s%s;", CB_PREFIX_FILE, f->cname, CB_PREFIX_KEYS, f->cname);
-		} else {
-			output_line ("%s%s.keys = &%s%s;", CB_PREFIX_FILE, f->cname, CB_PREFIX_KEYS, f->cname);
-		}
+		output_line ("%s%s->nkeys = %d;", CB_PREFIX_FILE, f->cname, nkeys);
+			output_line ("%s%s->keys = %s%s;", CB_PREFIX_FILE, f->cname, CB_PREFIX_KEYS, f->cname);
 	} else {
-		output_line ("%s%s.nkeys = 0;", CB_PREFIX_FILE, f->cname);
-		output_line ("%s%s.keys = NULL;", CB_PREFIX_FILE, f->cname);
+		output_line ("%s%s->nkeys = 0;", CB_PREFIX_FILE, f->cname);
+		output_line ("%s%s->keys = NULL;", CB_PREFIX_FILE, f->cname);
 	}
-	output_line ("%s%s.file = NULL;", CB_PREFIX_FILE, f->cname);
+	output_line ("%s%s->file = NULL;", CB_PREFIX_FILE, f->cname);
 	if (f->linage) {
 		output_prefix ();
-		output ("%s%s.linage = ", CB_PREFIX_FILE, f->cname);
+		output ("%s%s->linage = ", CB_PREFIX_FILE, f->cname);
 		output_param (f->linage, -1);
 		output (";\n");
 		output_prefix ();
-		output ("%s%s.linage_ctr = ", CB_PREFIX_FILE, f->cname);
+		output ("%s%s->linage_ctr = ", CB_PREFIX_FILE, f->cname);
 		output_param (f->linage_ctr, -1);
 		output (";\n");
 		if (f->latfoot) {
 			output_prefix ();
-			output ("%s%s.latfoot = ", CB_PREFIX_FILE, f->cname);
+			output ("%s%s->latfoot = ", CB_PREFIX_FILE, f->cname);
 			output_param (f->latfoot, -1);
 			output (";\n");
 		} else {
-			output_line ("%s%s.latfoot = NULL;", CB_PREFIX_FILE, f->cname);
+			output_line ("%s%s->latfoot = NULL;", CB_PREFIX_FILE, f->cname);
 		}
 		if (f->lattop) {
 			output_prefix ();
-			output ("%s%s.lattop = ", CB_PREFIX_FILE, f->cname);
+			output ("%s%s->lattop = ", CB_PREFIX_FILE, f->cname);
 			output_param (f->lattop, -1);
 			output (";\n");
 		} else {
-			output_line ("%s%s.lattop = NULL;", CB_PREFIX_FILE, f->cname);
+			output_line ("%s%s->lattop = NULL;", CB_PREFIX_FILE, f->cname);
 		}
 		if (f->latbot) {
 			output_prefix ();
-			output ("%s%s.latbot = ", CB_PREFIX_FILE, f->cname);
+			output ("%s%s->latbot = ", CB_PREFIX_FILE, f->cname);
 			output_param (f->latbot, -1);
 			output (";\n");
 		} else {
-			output_line ("%s%s.latbot = NULL;", CB_PREFIX_FILE, f->cname);
+			output_line ("%s%s->latbot = NULL;", CB_PREFIX_FILE, f->cname);
 		}
 	} else {
-		output_line ("%s%s.linage = NULL;", CB_PREFIX_FILE, f->cname);
-		output_line ("%s%s.linage_ctr = NULL;", CB_PREFIX_FILE, f->cname);
-		output_line ("%s%s.latfoot = NULL;", CB_PREFIX_FILE, f->cname);
-		output_line ("%s%s.lattop = NULL;", CB_PREFIX_FILE, f->cname);
-		output_line ("%s%s.latbot = NULL;", CB_PREFIX_FILE, f->cname);
+		output_line ("%s%s->linage = NULL;", CB_PREFIX_FILE, f->cname);
+		output_line ("%s%s->linage_ctr = NULL;", CB_PREFIX_FILE, f->cname);
+		output_line ("%s%s->latfoot = NULL;", CB_PREFIX_FILE, f->cname);
+		output_line ("%s%s->lattop = NULL;", CB_PREFIX_FILE, f->cname);
+		output_line ("%s%s->latbot = NULL;", CB_PREFIX_FILE, f->cname);
 	}
-	output_line ("%s%s.lin_lines = 0;", CB_PREFIX_FILE, f->cname);
-	output_line ("%s%s.lin_foot = 0;", CB_PREFIX_FILE, f->cname);
-	output_line ("%s%s.lin_top = 0;", CB_PREFIX_FILE, f->cname);
-	output_line ("%s%s.lin_bot = 0;", CB_PREFIX_FILE, f->cname);
-	output_line ("%s%s.last_open_mode = 0;", CB_PREFIX_FILE, f->cname);
-	output_line ("%s%s.flag_nonexistent = 0;", CB_PREFIX_FILE, f->cname);
-	output_line ("%s%s.flag_end_of_file = 0;", CB_PREFIX_FILE, f->cname);
-	output_line ("%s%s.flag_first_read = 0;", CB_PREFIX_FILE, f->cname);
-	output_line ("%s%s.flag_has_status = %d;", CB_PREFIX_FILE, f->cname, f->file_status ? 1 : 0);
-	output_line ("%s%s.flag_needs_nl = 0;", CB_PREFIX_FILE, f->cname);
-	output_line ("%s%s.flag_needs_top = 0;", CB_PREFIX_FILE, f->cname);
+	output_line ("%s%s->lin_lines = 0;", CB_PREFIX_FILE, f->cname);
+	output_line ("%s%s->lin_foot = 0;", CB_PREFIX_FILE, f->cname);
+	output_line ("%s%s->lin_top = 0;", CB_PREFIX_FILE, f->cname);
+	output_line ("%s%s->lin_bot = 0;", CB_PREFIX_FILE, f->cname);
+	output_line ("%s%s->last_open_mode = 0;", CB_PREFIX_FILE, f->cname);
+	output_line ("%s%s->flag_nonexistent = 0;", CB_PREFIX_FILE, f->cname);
+	output_line ("%s%s->flag_end_of_file = 0;", CB_PREFIX_FILE, f->cname);
+	output_line ("%s%s->flag_first_read = 0;", CB_PREFIX_FILE, f->cname);
+	output_line ("%s%s->flag_has_status = %d;", CB_PREFIX_FILE, f->cname, f->file_status ? 1 : 0);
+	output_line ("%s%s->flag_needs_nl = 0;", CB_PREFIX_FILE, f->cname);
+	output_line ("%s%s->flag_needs_top = 0;", CB_PREFIX_FILE, f->cname);
+	if (f->external) {
+		output_indent ("}");
+	}
 }
 
 
@@ -2706,8 +2711,24 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   /* External items */
   for (f = prog->working_storage; f; f = f->sister) {
 	if ( f->flag_external ) {
-		char name[CB_MAX_CNAME];
 		char *p;
+		char name[CB_MAX_CNAME];
+
+		strcpy (name, f->name);
+		for (p = name; *p; p++) {
+			if (*p == '-')
+				*p = '_';
+		}
+		output ("  static unsigned char *%s%s = NULL;",
+			CB_PREFIX_BASE, name);
+		output ("  /* %s */\n", f->name);
+	}
+  }
+  for (l = prog->file_list; l; l = CB_CHAIN (l)) {
+	f = CB_FILE (CB_VALUE (l))->record;
+	if ( f->flag_external ) {
+		char *p;
+		char name[CB_MAX_CNAME];
 
 		strcpy (name, f->name);
 		for (p = name; *p; p++) {
@@ -2861,6 +2882,22 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_newline ();
   }
   if (!prog->flag_initial) {
+	for (l = prog->file_list; l; l = CB_CHAIN (l)) {
+		f = CB_FILE (CB_VALUE (l))->record;
+		if ( f->flag_external ) {
+			char *p;
+			char name[CB_MAX_CNAME];
+
+			strcpy (name, f->name);
+			for (p = name; *p; p++) {
+				if (*p == '-')
+					*p = '_';
+			}
+			output_line ("%s%s = cob_external_addr (\"%s\", %d);",
+				CB_PREFIX_BASE, name, name,
+				CB_FILE(CB_VALUE(l))->record_max);
+		}
+	}
 	output_initial_values (prog->working_storage);
 	if ( has_external ) {
 #ifdef __GNUC__
@@ -2879,6 +2916,22 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
   output_line ("initialized = 1;");
   output_indent ("  }");
   if (prog->flag_initial) {
+	for (l = prog->file_list; l; l = CB_CHAIN (l)) {
+		f = CB_FILE (CB_VALUE (l))->record;
+		if ( f->flag_external ) {
+			char *p;
+			char name[CB_MAX_CNAME];
+
+			strcpy (name, f->name);
+			for (p = name; *p; p++) {
+				if (*p == '-')
+					*p = '_';
+			}
+			output_line ("%s%s = cob_external_addr (\"%s\", %d);",
+				CB_PREFIX_BASE, name, name,
+				CB_FILE(CB_VALUE(l))->record_max);
+		}
+	}
 	output_initial_values (prog->working_storage);
 	if ( has_external ) {
 #ifdef __GNUC__
@@ -3155,7 +3208,7 @@ output_main_function (struct cb_program *prog)
 }
 
 void
-codegen (struct cb_program *prog)
+codegen (struct cb_program *prog, int nested)
 {
   int	i;
   cb_tree l;
@@ -3182,31 +3235,34 @@ codegen (struct cb_program *prog)
   parameter_list = NULL;
   memset ((char *)i_counters, 0, sizeof (i_counters));
 
-  if (cb_flag_main)
+  if (prog->gen_main)
     prog->flag_initial = 1;
 
   output_target = yyout;
 
-  output ("/* Generated from %s by cobc version %s patch level %d */\n\n",
-	  cb_source_file, PACKAGE_VERSION, PATCH_LEVEL);
-  output ("#include <stdio.h>\n");
-  output ("#include <stdlib.h>\n");
-  output ("#include <string.h>\n");
-  output ("#include <math.h>\n");
+  if (!nested) {
+	output ("/* Generated from %s by cobc version %s patch level %d */\n\n",
+		cb_source_file, PACKAGE_VERSION, PATCH_LEVEL);
+	output ("#define  __USE_STRING_INLINES 1\n");
+	output ("#include <stdio.h>\n");
+	output ("#include <stdlib.h>\n");
+	output ("#include <string.h>\n");
+	output ("#include <math.h>\n");
 #if	COB_USE_SETJMP
-  output ("#include <setjmp.h>\n");
+	output ("#include <setjmp.h>\n");
 #endif
-  output ("#include <libcob.h>\n\n");
+#ifdef	WORDS_BIGENDIAN
+	output ("#define WORDS_BIGENDIAN 1\n");
+#endif
+	output ("#include <libcob.h>\n\n");
 
-  output ("#define COB_SOURCE_FILE		\"%s\"\n", cb_source_file);
-  output ("#define COB_PACKAGE_VERSION	\"%s\"\n", PACKAGE_VERSION);
-  output ("#define COB_PATCH_LEVEL		%d\n\n", PATCH_LEVEL);
+	output ("#define COB_SOURCE_FILE		\"%s\"\n", cb_source_file);
+	output ("#define COB_PACKAGE_VERSION	\"%s\"\n", PACKAGE_VERSION);
+	output ("#define COB_PATCH_LEVEL		%d\n\n", PATCH_LEVEL);
 
-  output_storage ("/* Generated from %s by cobc version %s patch level %d */\n\n",
-	  cb_source_file, PACKAGE_VERSION, PATCH_LEVEL);
-/*
-  output ("#include \"%s\"\n\n", cb_storage_file_name);
-*/
+	output_storage ("/* Generated from %s by cobc version %s patch level %d */\n\n",
+			cb_source_file, PACKAGE_VERSION, PATCH_LEVEL);
+  }
 
   /* alphabet-names */
   for (l = prog->alphabet_name_list; l; l = CB_CHAIN (l))
@@ -3234,28 +3290,13 @@ codegen (struct cb_program *prog)
 
   /* prototype */
   output ("/* function prototypes */\n");
-  output ("static int cob_get_numdisp (unsigned char *data, int size);\n");
   output ("static int %s_ (int", prog->program_id);
   for (l = parameter_list; l; l = CB_CHAIN (l))
 	output (", unsigned char *");
   output (");\n\n");
 
-  output ("static int\n");
-  output ("cob_get_numdisp (unsigned char *data, int size)\n");
-  output ("{\n");
-  output ("	int	retval = 0;\n");
-  output ("\n");
-  output ("	if ( size > 0 ) {\n");
-  output ("		while ( size-- ) {\n");
-  output ("			retval *= 10;\n");
-  output ("			retval += (*data - '0');\n");
-  output ("			data++;;\n");
-  output ("		}\n");
-  output ("	}\n");
-  output ("	return retval;\n");
-  output ("}\n\n");
   /* main function */
-  if (cb_flag_main) {
+  if (prog->gen_main) {
 	output ("int %s (void);\n\n", prog->program_id);
 	output_main_function (prog);
   } else {
@@ -3376,5 +3417,8 @@ codegen (struct cb_program *prog)
   }
 
   output_target = yyout;
+  if (prog->next_program) {
+	codegen (prog->next_program, 1);
+  }
 
 }
