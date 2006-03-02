@@ -853,7 +853,7 @@ lookup_intrinsic (const char *name)
 void
 cb_list_reserved (void)
 {
-	int	i;
+	size_t	i;
 
 	for (i = 0; i < NUM_RESERVED_WORDS; i++) {
 		puts (reserved_words[i].name);

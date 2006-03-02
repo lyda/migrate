@@ -1916,6 +1916,16 @@ cb_emit_close (cb_tree file, cb_tree opt)
 }
 
 /*
+ * CONTINUE statement
+ */
+
+void
+cb_emit_continue ()
+{
+	cb_emit (cb_build_continue ());
+}
+
+/*
  * DELETE statement
  */
 
@@ -2412,7 +2422,7 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
 
 		if (CB_TREE_CLASS (src) == CB_CLASS_NUMERIC) {
 			/* Numeric literal */
-			int i;
+			size_t i;
 			int most_significant = -999;
 			int least_significant = 999;
 
@@ -2493,7 +2503,7 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
 			switch (CB_TREE_CATEGORY (dst)) {
 			case CB_CATEGORY_ALPHABETIC:
 			{
-				int i;
+				size_t i;
 
 				for (i = 0; i < l->size; i++)
 					if (!isalpha (l->data[i]) && !isspace (l->data[i]))
@@ -2601,7 +2611,7 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
 }
 
 static cb_tree
-cb_build_memset (cb_tree x, char c)
+cb_build_memset (cb_tree x, int c)
 {
 	int size = cb_field_size (x);
 
@@ -2925,8 +2935,9 @@ cb_build_move (cb_tree src, cb_tree dst)
 	    || ((f->usage == CB_USAGE_BINARY ||
 		 f->usage == CB_USAGE_COMP_5 || f->usage == CB_USAGE_COMP_X)
 		&& (f->size == 3 || f->size == 5 || f->size == 6 ||
-		f->size == 7 || f->size > 8)))
+		f->size == 7 || f->size > 8))) {
 		return cb_build_move_call (src, dst);
+	}
 
 	/* output optimal code */
 	if (src == cb_zero)

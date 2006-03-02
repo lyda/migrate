@@ -98,12 +98,12 @@ static lt_dlhandle	mainhandle = NULL;
 #define HASH_SIZE	131
 
 struct call_hash {
+	struct call_hash	*next;
 	const char		*name;
 	const char		*path;
 	lt_ptr_t		func;
 	lt_dlhandle		handle;
 	time_t			mtime;
-	struct call_hash	*next;
 };
 
 static struct call_hash **call_table;
@@ -370,7 +370,7 @@ cob_resolve_error (void)
 static void *
 cob_get_buff (size_t buffsize)
 {
-	static int	lastsize = 0;
+	static size_t	lastsize = 0;
 	static void	*buffer = NULL;
 
 	if (!buffer) {

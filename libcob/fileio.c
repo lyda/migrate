@@ -179,10 +179,10 @@ static int relative_delete (cob_file *f);
   key.size = fld->size;
 
 struct indexed_file {
-	int key_index;
-	unsigned char *last_key;	/* the last key written */
-	DB **db;		/* database handlers */
-	DBT key, data;
+	size_t		key_index;
+	unsigned char	*last_key;	/* the last key written */
+	DB		**db;		/* database handlers */
+	DBT		key, data;
 };
 static int indexed_open (cob_file *f, char *filename, int mode, int flag);
 static int indexed_close (cob_file *f, int opt);
@@ -307,7 +307,7 @@ cob_sync (cob_file *f, int mode)
 {
 	if ( f->organization == COB_ORG_INDEXED ) {
 #ifdef	WITH_DB
-		int			i;
+		size_t			i;
 		struct indexed_file	*p = f->file;
 
 		for (i = 0; i < f->nkeys; i++) {
@@ -1074,7 +1074,7 @@ relative_delete (cob_file *f)
 static int
 indexed_open (cob_file *f, char *filename, int mode, int flag)
 {
-	int			i, j;
+	size_t			i, j;
 	int			flags = INITIAL_FLAGS;
 	struct indexed_file	*p;
 
@@ -1139,7 +1139,7 @@ indexed_open (cob_file *f, char *filename, int mode, int flag)
 static int
 indexed_close (cob_file *f, int opt)
 {
-	int			i;
+	size_t			i;
 	struct indexed_file	*p = f->file;
 
 	/* close DB's */
@@ -1258,7 +1258,7 @@ indexed_read_next (cob_file *f)
 static int
 indexed_write_internal (cob_file *f)
 {
-	int			i;
+	size_t			i;
 	struct indexed_file	*p = f->file;
 
 	/* write data */
@@ -1302,7 +1302,8 @@ indexed_write (cob_file *f, int opt)
 static int
 indexed_delete (cob_file *f)
 {
-	int			i, offset;
+	size_t			i;
+	int			offset;
 	struct indexed_file	*p = f->file;
 	DBT			prim_key;
 
@@ -1379,7 +1380,7 @@ static int
 sort_compare (const DBT * k1, const DBT * k2)
 {
 	int		cmp;
-	unsigned int	i;
+	size_t		i;
 	cob_file	*f = current_sort_file;
 
 	for (i = 0; i < f->nkeys; i++) {

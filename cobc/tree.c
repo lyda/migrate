@@ -44,13 +44,11 @@ static const enum cb_class category_to_class_table[] = {
 	CB_CLASS_POINTER,	/* CB_CATEGORY_PROGRAM_POINTER */
 };
 
-#define INT_NODE_TABLE_SIZE	13
-
 static struct int_node {
-	int		n;
-	cb_tree		node;
 	struct int_node *next;
-} *int_node_table[INT_NODE_TABLE_SIZE];
+	cb_tree		node;
+	int		n;
+} *int_node_table = NULL;
 
 /*
  * Constants
@@ -474,7 +472,7 @@ cb_int (int n)
 	struct cb_integer	*x;
 	struct int_node		*p;
 
-	for (p = int_node_table[n % INT_NODE_TABLE_SIZE]; p; p = p->next)
+	for (p = int_node_table; p; p = p->next)
 		if (p->n == n)
 			return p->node;
 
@@ -484,8 +482,8 @@ cb_int (int n)
 	p = cob_malloc (sizeof (struct int_node));
 	p->n = n;
 	p->node = CB_TREE (x);
-	p->next = int_node_table[n % INT_NODE_TABLE_SIZE];
-	int_node_table[n % INT_NODE_TABLE_SIZE] = p;
+	p->next = int_node_table;
+	int_node_table = p;
 	return p->node;
 }
 
@@ -1545,6 +1543,18 @@ cb_build_statement (const char *name)
 
 	p->name = name;
 	return p;
+}
+
+/*
+ * CONTINUE
+ */
+
+cb_tree
+cb_build_continue ()
+{
+	struct cb_continue *p = make_tree (CB_TAG_CONTINUE, CB_CATEGORY_UNKNOWN, sizeof (struct cb_continue));
+
+	return CB_TREE (p);
 }
 
 /*

@@ -679,7 +679,7 @@ cob_is_numeric (cob_field *f)
 		return 1;
 	case COB_TYPE_NUMERIC_PACKED:
 	{
-		int	i;
+		size_t	i;
 		int	sign;
 
 		/* check digits */

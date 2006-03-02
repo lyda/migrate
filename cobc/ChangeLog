@@ -1,3 +1,13 @@
+2006-03-02  Roger While <simrw@sim-basis.de>
+
+	* tree.c : cb_int cannot use hash table as value may
+		   be negative
+	  typeck.c : Param to cb_build_memset should be int
+
+2006-02-28  Roger While <simrw@sim-basis.de>
+
+	* parser.y, tree.h, tree.c, typeck.c, codegen.c : Handle CONTINUE
+
 2006-02-21  Roger While <simrw@sim-basis.de>
 
 	* tyepck.c, codegen.c : Implement new inlines in

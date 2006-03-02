@@ -981,7 +981,7 @@ cob_intr_tan (cob_field *srcfield)
 cob_field *
 cob_intr_numval (cob_field *srcfield)
 {
-	int		i;
+	size_t		i;
 	int		integer_digits = 0;
 	int		decimal_digits = 0;
 	int		sign = 0;
@@ -1056,7 +1056,7 @@ cob_intr_numval (cob_field *srcfield)
 cob_field *
 cob_intr_numval_c (cob_field *srcfield)
 {
-	int		i;
+	size_t		i;
 	int		integer_digits = 0;
 	int		decimal_digits = 0;
 	int		sign = 0;

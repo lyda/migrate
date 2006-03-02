@@ -63,10 +63,11 @@ enum cb_tag {
 	CB_TAG_IF,		/* 21 IF statement */
 	CB_TAG_PERFORM,		/* 22 PERFORM statement */
 	CB_TAG_STATEMENT,	/* 23 general statement */
+	CB_TAG_CONTINUE,	/* 24 CONTINUE statement */
 	/* miscellaneous */
-	CB_TAG_PERFORM_VARYING,	/* 24 PERFORM VARYING parameter */
-	CB_TAG_PICTURE,		/* 25 PICTURE clause */
-	CB_TAG_LIST		/* 26 list */
+	CB_TAG_PERFORM_VARYING,	/* 25 PERFORM VARYING parameter */
+	CB_TAG_PICTURE,		/* 26 PICTURE clause */
+	CB_TAG_LIST		/* 27 list */
 };
 
 enum cb_alphabet_name_type {
@@ -942,6 +943,20 @@ extern struct cb_statement *cb_build_statement (const char *name);
 
 
 /*
+ * CONTINUE
+ */
+
+struct cb_continue {
+	struct cb_tree_common	common;
+};
+
+#define CB_CONTINUE(x)		(CB_TREE_CAST (CB_TAG_CONTINUE, struct cb_continue, x))
+#define CB_CONTINUE_P(x)	(CB_TREE_TAG (x) == CB_TAG_CONTINUE)
+
+extern cb_tree cb_build_continue (void);
+
+
+/*
  * List
  */
 
@@ -1120,6 +1135,8 @@ extern void cb_emit_call (cb_tree prog, cb_tree using, cb_tree returning, cb_tre
 extern void cb_emit_cancel (cb_tree prog);
 
 extern void cb_emit_close (cb_tree file, cb_tree opt);
+
+extern void cb_emit_continue (void);
 
 extern void cb_emit_delete (cb_tree file);
 

@@ -57,7 +57,7 @@ static int		*inspect_mark;
 void
 cob_inspect_init (cob_field *var, int replacing)
 {
-	int	i;
+	size_t	i;
 
 	inspect_var_copy = *var;
 	inspect_var = &inspect_var_copy;
@@ -141,7 +141,7 @@ cob_inspect_characters (cob_field *f1)
 static void
 inspect_common (cob_field *f1, cob_field *f2, int type)
 {
-	int	i, n = 0;
+	size_t	i, n = 0;
 	int	len = inspect_end - inspect_start;
 	int	*mark = &inspect_mark[inspect_start - inspect_data];
 
@@ -153,7 +153,7 @@ inspect_common (cob_field *f1, cob_field *f2, int type)
 	for (i = 0; i < len - f2->size + 1; i++) {
 		/* find matching substring */
 		if (memcmp (inspect_start + i, f2->data, f2->size) == 0) {
-			int j;
+			size_t j;
 			/* check if it is already marked */
 			for (j = 0; j < f2->size; j++) {
 				if (mark[i + j] != -1) {
@@ -202,7 +202,7 @@ cob_inspect_first (cob_field *f1, cob_field *f2)
 void
 cob_inspect_converting (cob_field *f1, cob_field *f2)
 {
-	int	i, j;
+	size_t	i, j;
 	int	len = inspect_end - inspect_start;
 
 	for (j = 0; j < f1->size; j++) {
@@ -219,7 +219,7 @@ void
 cob_inspect_finish (void)
 {
 	if (inspect_replacing) {
-		int	i;
+		size_t	i;
 		for (i = 0; i < inspect_size; i++) {
 			if (inspect_mark[i] != -1) {
 				inspect_data[i] = inspect_mark[i];

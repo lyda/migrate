@@ -10,7 +10,7 @@
 2006-01-17  Roger While <simrw@sim-basis.de>
 
 	* configure.ac : Minor fixes
-	  README : Put in a comment regrding spaces in path names
+	  README : Put in a comment regarding spaces in path names
 
 2006-01-05  Roger While <simrw@sim-basis.de>
 

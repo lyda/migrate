@@ -38,7 +38,7 @@ cob_get_numdisp (unsigned char *data, int size)
 }
 
 static inline int
-cob_cmp_u8_binary (cob_field *f, const int n)
+cob_cmp_u8_binary (const cob_field *f, const int n)
 {
 	if (n < 0) {
 		return 1;
@@ -52,7 +52,7 @@ cob_cmp_u8_binary (cob_field *f, const int n)
 }
 
 static inline int
-cob_cmp_s8_binary (cob_field *f, const int n)
+cob_cmp_s8_binary (const cob_field *f, const int n)
 {
 	if (*(char *)(f->data) < n) {
 		return -1;
@@ -63,7 +63,7 @@ cob_cmp_s8_binary (cob_field *f, const int n)
 }
 
 static inline int
-cob_cmp_u16_binary (cob_field *f, const int n)
+cob_cmp_u16_binary (const cob_field *f, const int n)
 {
 	unsigned short	val;
 
@@ -83,7 +83,7 @@ cob_cmp_u16_binary (cob_field *f, const int n)
 }
 
 static inline int
-cob_cmp_s16_binary (cob_field *f, const int n)
+cob_cmp_s16_binary (const cob_field *f, const int n)
 {
 	short	val;
 
@@ -100,7 +100,7 @@ cob_cmp_s16_binary (cob_field *f, const int n)
 }
 
 static inline int
-cob_cmp_u32_binary (cob_field *f, const int n)
+cob_cmp_u32_binary (const cob_field *f, const int n)
 {
 	unsigned int	val;
 
@@ -120,7 +120,7 @@ cob_cmp_u32_binary (cob_field *f, const int n)
 }
 
 static inline int
-cob_cmp_s32_binary (cob_field *f, const int n)
+cob_cmp_s32_binary (const cob_field *f, const int n)
 {
 	int	val;
 
@@ -137,7 +137,7 @@ cob_cmp_s32_binary (cob_field *f, const int n)
 }
 
 static inline int
-cob_cmp_u64_binary (cob_field *f, const int n)
+cob_cmp_u64_binary (const cob_field *f, const int n)
 {
 	unsigned long long	val;
 
@@ -157,7 +157,7 @@ cob_cmp_u64_binary (cob_field *f, const int n)
 }
 
 static inline int
-cob_cmp_s64_binary (cob_field *f, const int n)
+cob_cmp_s64_binary (const cob_field *f, const int n)
 {
 	long long	val;
 

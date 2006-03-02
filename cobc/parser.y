@@ -1762,8 +1762,10 @@ statement:
   {
     if (cb_verify (cb_next_sentence_phrase, "NEXT SENTENCE"))
       {
-	char name[16];
 	cb_tree label;
+	char	name[16];
+
+	BEGIN_STATEMENT ("NEXT SENTENCE");
 	sprintf (name, "L$%d", next_label_id);
 	label = cb_build_reference (name);
 	next_label_list = cb_list_add (next_label_list, label);
@@ -1985,6 +1987,10 @@ comp_equal: '=' | EQUAL;
 
 continue_statement:
   CONTINUE
+	{
+		BEGIN_STATEMENT ("CONTINUE");
+		cb_emit_continue ();
+	}
 ;
 
 

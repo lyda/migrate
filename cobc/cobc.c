@@ -698,7 +698,7 @@ process_filename (const char *filename)
 	}
 
 	file_basename (filename, basename);
-	strcpy (source_name, basename);
+	source_name = strdup (basename);
 	extension = file_extension (filename);
 
 	/* Check input file type */
@@ -1192,7 +1192,6 @@ main (int argc, char *argv[])
 	}
 
 	file_list = NULL;
-	source_name = cob_malloc (COB_SMALL_BUFF);
 
 	if (setjmp (cob_jmpbuf) != 0) {
 		fprintf (stderr, "Aborting compile of %s at line %d\n", cb_source_file,

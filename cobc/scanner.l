@@ -277,7 +277,7 @@ read_literal (char mark)
 	static size_t	size = 192;
 	static char	*buff = NULL;
 	int		c;
-	int		i = 0;
+	size_t		i = 0;
 
 	if (!buff) {
 		buff = cob_malloc (size);

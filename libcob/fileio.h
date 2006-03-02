@@ -126,7 +126,7 @@ typedef struct {
 	cob_field	*record_size;		/* record size depending on */
 	size_t		record_min;		/* record min size */
 	size_t		record_max;		/* record max size */
-	int		nkeys;			/* the number of keys */
+	size_t		nkeys;			/* the number of keys */
 	cob_file_key	*keys;			/* RELATIVE/RECORD/SORT keys */
 	void		*file;			/* file type specific data pointer */
 	cob_field	*linage;		/* LINAGE */

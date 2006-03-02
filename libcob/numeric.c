@@ -416,129 +416,6 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, int opt)
 	return cob_exception_code;
 }
 
-static void
-cob_add_binary (cob_field *f, int val)
-{
-	unsigned char	*p = f->data;
-
-	switch (f->size) {
-	case 1:
-		if (COB_FIELD_HAVE_SIGN (f)) {
-			*(char *)p += val;
-		} else {
-			*(unsigned char *)p += val;
-		}
-		return;
-	case 2:
-		if (COB_FIELD_HAVE_SIGN (f)) {
-			short	n;
-
-#ifndef WORDS_BIGENDIAN
-			if (COB_FIELD_BINARY_SWAP (f)) {
-				n = COB_BSWAP_16 (*(short *)p);
-				n += val;
-				*(short *)p = COB_BSWAP_16(n);
-			} else {
-				*(short *)p += val;
-			}
-#else
-			memcpy ((unsigned char *)&n, p, sizeof(short));
-			n += val;
-			memcpy (p, (unsigned char *)&n, sizeof(short));
-#endif
-		} else {
-			unsigned short	n;
-
-#ifndef WORDS_BIGENDIAN
-			if (COB_FIELD_BINARY_SWAP (f)) {
-				n = COB_BSWAP_16 (*(unsigned short *)p);
-				n += val;
-				*(unsigned short *)p = COB_BSWAP_16(n);
-			} else {
-				*(unsigned short *)p += val;
-			}
-#else
-			memcpy ((unsigned char *)&n, p, sizeof(short));
-			n += val;
-			memcpy (p, (unsigned char *)&n, sizeof(short));
-#endif
-		}
-		return;
-	case 4:
-		if (COB_FIELD_HAVE_SIGN (f)) {
-			int	n;
-
-#ifndef WORDS_BIGENDIAN
-			if (COB_FIELD_BINARY_SWAP (f)) {
-				n = COB_BSWAP_32 (*(int *)p);
-				n += val;
-				*(int *)p = COB_BSWAP_32(n);
-			} else {
-				*(int *)p += val;
-			}
-#else
-			memcpy ((unsigned char *)&n, p, sizeof(int));
-			n += val;
-			memcpy (p, (unsigned char *)&n, sizeof(int));
-#endif
-		} else {
-			unsigned int	n;
-
-#ifndef WORDS_BIGENDIAN
-			if (COB_FIELD_BINARY_SWAP (f)) {
-				n = COB_BSWAP_32 (*(unsigned int *)p);
-				n += val;
-				*(unsigned int *)p = COB_BSWAP_32(n);
-			} else {
-				*(unsigned int *)p += val;
-			}
-#else
-			memcpy ((unsigned char *)&n, p, sizeof(int));
-			n += val;
-			memcpy (p, (unsigned char *)&n, sizeof(int));
-#endif
-		}
-		return;
-	case 8:
-		if (COB_FIELD_HAVE_SIGN (f)) {
-			long long	n;
-
-#ifndef WORDS_BIGENDIAN
-			if (COB_FIELD_BINARY_SWAP (f)) {
-				n = COB_BSWAP_64 (*(long long *)p);
-				n += val;
-				*(long long *)p = COB_BSWAP_64(n);
-			} else {
-				*(long long *)p += val;
-			}
-#else
-			memcpy ((unsigned char *)&n, p, sizeof(long long));
-			n += val;
-			memcpy (p, (unsigned char *)&n, sizeof(long long));
-#endif
-		} else {
-			unsigned long long	n;
-
-#ifndef WORDS_BIGENDIAN
-			if (COB_FIELD_BINARY_SWAP (f)) {
-				n = COB_BSWAP_64 (*(unsigned long long *)p);
-				n += val;
-				*(unsigned long long *)p = COB_BSWAP_64(n);
-			} else {
-				*(unsigned long long *)p += val;
-			}
-#else
-			memcpy ((unsigned char *)&n, p, sizeof(long long));
-			n += val;
-			memcpy (p, (unsigned char *)&n, sizeof(long long));
-#endif
-		}
-		return;
-	}
-	return;
-}
-
-
 /* PACKED-DECIMAL */
 
 static int
@@ -1068,7 +945,7 @@ cob_display_add_int (cob_field *f, int n)
 	} else if (n < 0) {
 		/* subtract n from the field */
 		if (display_sub_int (data, size, -n) != 0) {
-			int	i;
+			size_t	i;
 
 			for (i = 0; i < size; i++) {
 				data[i] = cob_i2d (9 - cob_d2i (data[i]));

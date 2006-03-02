@@ -218,10 +218,10 @@ static void
 cob_move_display_to_packed (cob_field *f1, cob_field *f2)
 {
 	size_t		i;
-	int		offset;
+	size_t		offset;
 	int		sign = cob_get_sign (f1);
-	int		digits1 = COB_FIELD_DIGITS (f1);
-	int		digits2 = COB_FIELD_DIGITS (f2);
+	size_t		digits1 = COB_FIELD_DIGITS (f1);
+	size_t		digits2 = COB_FIELD_DIGITS (f2);
 	int		scale1 = COB_FIELD_SCALE (f1);
 	int		scale2 = COB_FIELD_SCALE (f2);
 	unsigned char	*data1 = COB_FIELD_DATA (f1);
@@ -252,7 +252,7 @@ static void
 cob_move_packed_to_display (cob_field *f1, cob_field *f2)
 {
 	size_t		i;
-	int		offset;
+	size_t		offset;
 	int		sign = cob_get_sign (f1);
 	unsigned char	*data = f1->data;
 	unsigned char	buff[64];
@@ -627,7 +627,7 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 static void
 cob_move_edited_to_display (cob_field *f1, cob_field *f2)
 {
-	int		i;
+	size_t		i;
 	int		sign = 0;
 	int		scale = 0;
 	int		have_point = 0;

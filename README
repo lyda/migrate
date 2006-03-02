@@ -85,18 +85,37 @@ spaces embedded within them (Mainly Cygwin/MingW).
 See INSTALL for general installation instruction.  Typically,
 this is done by the following commands:
 
+**************************************
+
     ./configure
     make
 
 Here you may run
     make check
-to run a series of OpenCOBOL test programs
+to run a series of OpenCOBOL test programs (recommended)
 
     make install
 
+Note - On Linux systems, if you are installing for the
+-first- time, you may need to run "ldconfig" (as root).
+
+**************************************
+
+If you think you have a problem or just want to
+record the make output, just redirect the output thus :
+    make 1>mymake.log 2>&1
+    make install 1>myinstall.log 2>&1
+
+**************************************
+
+You can get back to a clean installation status by running :
+    make clean
+
+**************************************
+
 The "make install" will default to "/usr/local" as
 the install path. You may override this by specifying
-"--prefix=<your install path>" on the "./configure"
+"--prefix=<your install path>" to the "./configure"
 command.
 
 There are the following configure options:

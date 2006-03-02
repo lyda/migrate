@@ -1383,6 +1383,7 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
 	  static char		*buff = NULL;
 	  static int		lastsize = 0;
 	  int			i;
+	  int			n;
 	  int			buffchar;
 
 	  if (!buff) {
@@ -1430,6 +1431,27 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
 			output_data (x);
 			output (", %d, %d);\n", buffchar, f->size);
 		} else {
+			if (f->size >= 8) {
+				buffchar = *(buff + f->size - 1);
+				n = 0;
+				for (i = f->size - 1; i >= 0; i--, n++) {
+					if (*(buff + i) != buffchar) {
+						break;
+					}
+				}
+				if (n > 2) {
+					output ("memcpy (");
+					output_data (x);
+					output (", ");
+					output_string ((ucharptr)buff, f->size - n);
+					output (", %d);\n", f->size - n);
+					output_prefix ();
+					output ("memset (");
+					output_data (x);
+					output (" + %d, %d, %d);\n", f->size - n, buffchar, n);
+					return;
+				}
+			}
 			output ("memcpy (");
 			output_data (x);
 			output (", ");
@@ -1708,8 +1730,8 @@ output_search (struct cb_search *p)
 static void
 output_call (struct cb_call *p)
 {
-  int n;
-  int parmnum;
+  size_t n;
+  size_t parmnum;
   char	*callp;
   int dynamic_link = 1;
   cb_tree l;
@@ -2295,6 +2317,12 @@ output_stmt (cb_tree x)
 	output_perform (CB_PERFORM (x));
 	break;
       }
+    case CB_TAG_CONTINUE:
+      {
+	output_prefix ();
+	output (";\n");
+	break;
+      }
     case CB_TAG_LIST:
       {
 	output_indent ("{");
@@ -2541,7 +2569,7 @@ literal_value (cb_tree x)
 static void
 output_alphabet_name_definition (struct cb_alphabet_name *p)
 {
-  int i, n = 0;
+  size_t i, n = 0;
   int table[256];
   cb_tree l;
 
@@ -2555,8 +2583,8 @@ output_alphabet_name_definition (struct cb_alphabet_name *p)
       if (CB_PAIR_P (x))
 	{
 	  /* X THRU Y */
-	  int lower = literal_value (CB_PAIR_X (x));
-	  int upper = literal_value (CB_PAIR_Y (x));
+	  size_t lower = literal_value (CB_PAIR_X (x));
+	  size_t upper = literal_value (CB_PAIR_Y (x));
 	  for (i = lower; i <= upper; i++)
 	    table[i] = n++;
 	}
@@ -2628,7 +2656,7 @@ output_class_name_definition (struct cb_class_name *p)
 	}
       else
 	{
-	  int i;
+	  size_t i;
 	  size_t size = CB_LITERAL (x)->size;
 	  unsigned char *data = CB_LITERAL (x)->data;
 	  for (i = 0; i < size; i++)
@@ -2999,22 +3027,25 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_line ("/* error handlers */");
 	output_stmt (cb_standard_error_handler);
 	output_line ("switch (cob_error_file->last_open_mode)");
-	output_line ("  {");
+	output_indent ("{");
 	for (i = COB_OPEN_INPUT; i <= COB_OPEN_EXTEND; i++) {
 		if (prog->file_handler[i]) {
-			output_line ("  case %d:", i);
-			output ("    ");
+			output_line ("case %d:", i);
+			output_indent ("{");
 			output_perform_call (prog->file_handler[i], prog->file_handler[i]);
-			output_line ("    break;");
+			output_line ("break;");
+			output_indent ("}");
 		}
 	}
-	output_line ("  default:");
-	output_line ("    if ( !cob_error_file->flag_has_status ) {");
-	output_line ("        cob_default_error_handle ();");
-	output_line ("        cob_stop_run (1);");
-	output_line ("    }");
-	output_line ("    break;");
-	output_line ("  }");
+	output_line ("default:");
+	output_indent ("{");
+	output_line ("if ( !cob_error_file->flag_has_status ) {");
+	output_line ("	cob_default_error_handle ();");
+	output_line ("	cob_stop_run (1);");
+	output_line ("}");
+	output_line ("break;");
+	output_indent ("}");
+	output_indent ("}");
 	output_perform_exit (CB_LABEL (cb_standard_error_handler));
 	output_line ("fprintf(stderr, \"Codegen error\\n\");");
 	output_line ("cob_stop_run (1);");
