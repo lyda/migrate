@@ -1336,7 +1336,7 @@ blank_clause:
 /* VALUE clause */
 
 value_clause:
-  VALUE _is_are value_item_list	{ current_field->values = $3; }
+  VALUE _is_are value_item_list	false_is { current_field->values = $3; }
 ;
 value_item_list:
   value_item			{ $$ = cb_list ($1); }
@@ -1345,6 +1345,18 @@ value_item_list:
 value_item:
   literal			{ $$ = $1; }
 | literal THRU literal		{ $$ = cb_build_pair ($1, $3); }
+;
+false_is:
+| _when_set_to TOK_FALSE _is literal
+	{
+		if (current_field->level != 88) {
+			cb_error ("FALSE clause only allowed for 88 level");
+		}
+		current_field->false_88 = cb_list($4);
+	}
+;
+_when_set_to:
+| WHEN SET TO
 ;
 
 
@@ -1794,6 +1806,11 @@ accept_body:
 | x FROM TIME			{ cb_emit_accept_time ($1); }
 | x FROM COMMAND_LINE		{ cb_emit_accept_command_line ($1); }
 | x FROM ENVIRONMENT_VALUE	{ cb_emit_accept_environment ($1); }
+| x FROM ENVIRONMENT simple_value
+	{ 
+	  cb_emit_display (cb_list ($4), cb_true, NULL, NULL);
+	  cb_emit_accept_environment ($1);
+	}
 | x FROM ARGUMENT_NUMBER	{ cb_emit_accept_arg_number ($1); }
 | x FROM ARGUMENT_VALUE		{ cb_emit_accept_arg_value ($1); }
 | x FROM mnemonic_name		{ cb_emit_accept_mnemonic ($1, $3); }
@@ -2741,6 +2758,10 @@ set_to_true_false:
   x_list TO TOK_TRUE
   {
     cb_emit_set_true ($1);
+  }
+| x_list TO TOK_FALSE
+  {
+    cb_emit_set_false ($1);
   }
 ;
 
@@ -3718,6 +3739,8 @@ emit_entry (const char *name, cb_tree using_list)
 	    cb_error_x (x, _("'%s' not level 01 or 77"), cb_name (x));
 	  if (f->storage != CB_STORAGE_LINKAGE)
 	    cb_error_x (x, _("'%s' is not in LINKAGE SECTION"), cb_name (x));
+	  if (f->redefines)
+	    cb_error_x (x, _("'%s' REDEFINES field not allowed here"), cb_name (x));
 	}
     }
   for (l = current_program->entry_list; l; l = CB_CHAIN (l))

@@ -328,8 +328,11 @@ cob_resolve (const char *name)
 
 	/* search external modules */
 	for (i = 0; i < resolve_size; i++) {
-
-		sprintf (filename, "%s/%s.%s", resolve_path[i], name, COB_MODULE_EXT);
+		if(resolve_path[i] == NULL) {
+			sprintf (filename, "%s.%s", name, COB_MODULE_EXT);
+		} else {
+			sprintf (filename, "%s/%s.%s", resolve_path[i], name, COB_MODULE_EXT);
+		}
 		if (stat (filename, &st) == 0) {
 			if ((handle = lt_dlopen (filename)) != NULL
 			    && (func = lt_dlsym (handle, buff)) != NULL) {

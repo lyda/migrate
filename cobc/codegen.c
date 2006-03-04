@@ -1905,7 +1905,7 @@ output_call (struct cb_call *p)
       if (CB_CHAIN (l))
 	output (", ");
     }
-  if (parmnum < 16) {
+  if (cb_sticky_linkage && parmnum < 16) {
 	for (n = parmnum; n < 16; n++) {
 		if (n != 0) {
 			output (", ");

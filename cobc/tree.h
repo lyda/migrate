@@ -419,6 +419,7 @@ struct cb_field {
 	enum cb_storage storage;
 	enum cb_usage	usage;		/* USAGE */
 	cb_tree		values;		/* VALUE */
+	cb_tree		false_88;	/* 88 FALSE clause */
 	cb_tree		index_list;	/* INDEXED BY */
 	struct cb_field *parent;	/* upper level field (NULL for 01 fields) */
 	struct cb_field *children;	/* top of lower level fields */
@@ -1195,6 +1196,7 @@ extern void cb_emit_set_to (cb_tree l, cb_tree x);
 extern void cb_emit_set_up_down (cb_tree l, cb_tree flag, cb_tree x);
 extern void cb_emit_set_on_off (cb_tree l, cb_tree flag);
 extern void cb_emit_set_true (cb_tree l);
+extern void cb_emit_set_false (cb_tree l);
 
 extern void cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree dup_allow, cb_tree col);
 extern void cb_emit_sort_using (cb_tree file, cb_tree l);

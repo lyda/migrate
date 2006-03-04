@@ -1,3 +1,8 @@
+2006-03-04  Roger While <simrw@sim-basis.de>
+
+	* common.c : Don't do cob_put_sign for PACKED fields
+		     in the cob_cmp_xxx routines
+
 2006-02-21  Roger While <simrw@sim-basis.de>
 
 	* new include : codegen.h

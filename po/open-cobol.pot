@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2006-03-02 08:38+0100\n"
+"POT-Creation-Date: 2006-03-04 19:30+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -352,17 +352,17 @@ msgstr ""
 msgid "'%s' requires %d subscripts"
 msgstr ""
 
-#: cobc/typeck.c:479 libcob/common.c:942
+#: cobc/typeck.c:479 libcob/common.c:950
 #, c-format
 msgid "subscript of '%s' out of bounds: %d"
 msgstr ""
 
-#: cobc/typeck.c:531 libcob/common.c:953
+#: cobc/typeck.c:531 libcob/common.c:961
 #, c-format
 msgid "offset of '%s' out of bounds: %d"
 msgstr ""
 
-#: cobc/typeck.c:536 libcob/common.c:960
+#: cobc/typeck.c:536 libcob/common.c:968
 #, c-format
 msgid "length of '%s' out of bounds: %d"
 msgstr ""
@@ -497,7 +497,7 @@ msgstr ""
 msgid "the address of '%s' cannot be changed"
 msgstr ""
 
-#: cobc/typeck.c:3489
+#: cobc/typeck.c:3524
 msgid "invalid mnemonic name"
 msgstr ""
 
@@ -547,59 +547,64 @@ msgstr ""
 msgid "REDEFINES clause must follow entry-name"
 msgstr ""
 
-#: cobc/parser.y:1503 cobc/parser.y:1520
+#: cobc/parser.y:1515 cobc/parser.y:1532
 #, c-format
 msgid "invalid color '%d'"
 msgstr ""
 
-#: cobc/parser.y:1683
+#: cobc/parser.y:1695
 #, c-format
 msgid "unknown statement '%s'"
 msgstr ""
 
-#: cobc/parser.y:2159
+#: cobc/parser.y:2176
 msgid "88 level invalid here"
 msgstr ""
 
-#: cobc/parser.y:2167
+#: cobc/parser.y:2184
 msgid "FIXME: failed to compile \"WHEN NOT ... AND/OR ...\""
 msgstr ""
 
-#: cobc/parser.y:2168
+#: cobc/parser.y:2185
 msgid "FIXME: change it into \"WHEN (NOT ... AND/OR ...)\" for now"
 msgstr ""
 
-#: cobc/parser.y:2834 cobc/parser.y:3343 cobc/parser.y:3399
+#: cobc/parser.y:2855 cobc/parser.y:3364 cobc/parser.y:3420
 #, c-format
 msgid "'%s' not file name"
 msgstr ""
 
-#: cobc/parser.y:3377
+#: cobc/parser.y:3398
 #, c-format
 msgid "'%s' not indexed"
 msgstr ""
 
-#: cobc/parser.y:3378
+#: cobc/parser.y:3399
 #, c-format
 msgid "'%s' defined here"
 msgstr ""
 
-#: cobc/parser.y:3718
+#: cobc/parser.y:3739
 #, c-format
 msgid "'%s' not level 01 or 77"
 msgstr ""
 
-#: cobc/parser.y:3720
+#: cobc/parser.y:3741
 #, c-format
 msgid "'%s' is not in LINKAGE SECTION"
 msgstr ""
 
-#: cobc/parser.y:3728
+#: cobc/parser.y:3743
+#, c-format
+msgid "'%s' REDEFINES field not allowed here"
+msgstr ""
+
+#: cobc/parser.y:3751
 #, c-format
 msgid "ENTRY '%s' duplicated"
 msgstr ""
 
-#: cobc/parser.y:3744 cobc/parser.y:3752
+#: cobc/parser.y:3767 cobc/parser.y:3775
 #, c-format
 msgid "%s statement not terminated by END-%s"
 msgstr ""
@@ -682,7 +687,7 @@ msgstr ""
 msgid "Warn type mismatch strictly"
 msgstr ""
 
-#: libcob/call.c:352
+#: libcob/call.c:355
 #, c-format
 msgid "cannot find module '%s'"
 msgstr ""
@@ -705,22 +710,22 @@ msgstr ""
 msgid "Library has version/patch level %s/%d"
 msgstr ""
 
-#: libcob/common.c:920
+#: libcob/common.c:928
 #, c-format
 msgid "'%s' not numeric: '%s'"
 msgstr ""
 
-#: libcob/common.c:931
+#: libcob/common.c:939
 #, c-format
 msgid "OCCURS DEPENDING ON '%s' out of bounds: %d"
 msgstr ""
 
-#: libcob/common.c:975
+#: libcob/common.c:983
 #, c-format
 msgid "EXTERNAL item '%s' has size > %d"
 msgstr ""
 
-#: libcob/common.c:1001
+#: libcob/common.c:1009
 #, c-format
 msgid "Cannot acquire %d bytes of memory - Aborting"
 msgstr ""

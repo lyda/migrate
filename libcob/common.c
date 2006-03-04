@@ -548,7 +548,9 @@ cob_cmp_char (cob_field *f, unsigned char c)
 	int	sign = cob_get_sign (f);
 	int	ret = cmpc (f->data, c, f->size);
 
-	cob_put_sign (f, sign);
+	if (COB_FIELD_TYPE (f) != COB_TYPE_NUMERIC_PACKED) {
+		cob_put_sign (f, sign);
+	}
 	return ret;
 }
 
@@ -572,7 +574,9 @@ cob_cmp_all (cob_field *f1, cob_field *f2)
 	}
 
       end:
-	cob_put_sign (f1, sign);
+	if (COB_FIELD_TYPE (f1) != COB_TYPE_NUMERIC_PACKED) {
+		cob_put_sign (f1, sign);
+	}
 	return ret;
 }
 
@@ -601,8 +605,12 @@ cob_cmp_alnum (cob_field *f1, cob_field *f2)
 	}
 
       end:
-	cob_put_sign (f1, sign1);
-	cob_put_sign (f2, sign2);
+	if (COB_FIELD_TYPE (f1) != COB_TYPE_NUMERIC_PACKED) {
+		cob_put_sign (f1, sign1);
+	}
+	if (COB_FIELD_TYPE (f2) != COB_TYPE_NUMERIC_PACKED) {
+		cob_put_sign (f2, sign2);
+	}
 	return ret;
 }
 

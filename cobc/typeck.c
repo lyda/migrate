@@ -3263,11 +3263,46 @@ void
 cb_emit_set_true (cb_tree l)
 {
 	for (; l; l = CB_CHAIN (l)) {
-		cb_tree x = CB_VALUE (l);
-		struct cb_field *f = cb_field (x);
-		cb_tree ref = cb_build_field_reference (f->parent, x);
-		cb_tree val = CB_VALUE (f->values);
+		cb_tree		x;
+		struct cb_field *f;
+		cb_tree		ref;
+		cb_tree		val;
 
+		x = CB_VALUE (l);
+		f = cb_field (x);
+		if (f->level != 88) {
+			cb_error_x (x, "Invalid SET clause");
+			return;
+		}
+		ref = cb_build_field_reference (f->parent, x);
+		val = CB_VALUE (f->values);
+		if (CB_PAIR_P (val))
+			val = CB_PAIR_X (val);
+		cb_emit (cb_build_move (val, ref));
+	}
+}
+
+void
+cb_emit_set_false (cb_tree l)
+{
+	for (; l; l = CB_CHAIN (l)) {
+		cb_tree		x;
+		struct cb_field *f;
+		cb_tree		ref;
+		cb_tree		val;
+
+		x = CB_VALUE (l);
+		f = cb_field (x);
+		if (f->level != 88) {
+			cb_error_x (x, "Invalid SET clause");
+			return;
+		}
+		if (!f->false_88) {
+			cb_error_x (x, "Field does not have FALSE clause");
+			return;
+		}
+		ref = cb_build_field_reference (f->parent, x);
+		val = CB_VALUE (f->false_88);
 		if (CB_PAIR_P (val))
 			val = CB_PAIR_X (val);
 		cb_emit (cb_build_move (val, ref));
