@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 97
+%expect 98
 
 %defines
 %verbose
@@ -920,7 +920,7 @@ record_clause:
   {
     current_file->record_max = cb_get_int ($3);
   }
-| RECORD _contains integer _to integer _characters
+| RECORD _contains integer TO integer _characters
   {
     current_file->record_min = cb_get_int ($3);
     current_file->record_max = cb_get_int ($5);
@@ -1336,7 +1336,8 @@ blank_clause:
 /* VALUE clause */
 
 value_clause:
-  VALUE _is_are value_item_list	false_is { current_field->values = $3; }
+  VALUE _is_are value_item_list	{ current_field->values = $3; }
+  _when _set _to false_is
 ;
 value_item_list:
   value_item			{ $$ = cb_list ($1); }
@@ -1347,16 +1348,13 @@ value_item:
 | literal THRU literal		{ $$ = cb_build_pair ($1, $3); }
 ;
 false_is:
-| _when_set_to TOK_FALSE _is literal
+| TOK_FALSE _is literal
 	{
 		if (current_field->level != 88) {
 			cb_error ("FALSE clause only allowed for 88 level");
 		}
-		current_field->false_88 = cb_list($4);
+		current_field->false_88 = cb_list($3);
 	}
-;
-_when_set_to:
-| WHEN SET TO
 ;
 
 
@@ -1797,24 +1795,24 @@ accept_statement:
   end_accept
 ;
 accept_body:
-  x opt_at_line_column		{ cb_emit_accept ($1, $2); }
-| x FROM DATE			{ cb_emit_accept_date ($1); }
-| x FROM DATE YYYYMMDD		{ cb_emit_accept_date_yyyymmdd ($1); }
-| x FROM DAY			{ cb_emit_accept_day ($1); }
-| x FROM DAY YYYYDDD		{ cb_emit_accept_day_yyyyddd ($1); }
-| x FROM DAY_OF_WEEK		{ cb_emit_accept_day_of_week ($1); }
-| x FROM TIME			{ cb_emit_accept_time ($1); }
-| x FROM COMMAND_LINE		{ cb_emit_accept_command_line ($1); }
-| x FROM ENVIRONMENT_VALUE	{ cb_emit_accept_environment ($1); }
-| x FROM ENVIRONMENT simple_value
+  identifier opt_at_line_column		{ cb_emit_accept ($1, $2); }
+| identifier FROM DATE			{ cb_emit_accept_date ($1); }
+| identifier FROM DATE YYYYMMDD		{ cb_emit_accept_date_yyyymmdd ($1); }
+| identifier FROM DAY			{ cb_emit_accept_day ($1); }
+| identifier FROM DAY YYYYDDD		{ cb_emit_accept_day_yyyyddd ($1); }
+| identifier FROM DAY_OF_WEEK		{ cb_emit_accept_day_of_week ($1); }
+| identifier FROM TIME			{ cb_emit_accept_time ($1); }
+| identifier FROM COMMAND_LINE		{ cb_emit_accept_command_line ($1); }
+| identifier FROM ENVIRONMENT_VALUE	{ cb_emit_accept_environment ($1); }
+| identifier FROM ENVIRONMENT simple_value
 	{ 
 	  cb_emit_display (cb_list ($4), cb_true, NULL, NULL);
 	  cb_emit_accept_environment ($1);
 	}
-| x FROM ARGUMENT_NUMBER	{ cb_emit_accept_arg_number ($1); }
-| x FROM ARGUMENT_VALUE		{ cb_emit_accept_arg_value ($1); }
-| x FROM mnemonic_name		{ cb_emit_accept_mnemonic ($1, $3); }
-| x FROM WORD			{ cb_emit_accept_name ($1, $3); }
+| identifier FROM ARGUMENT_NUMBER	{ cb_emit_accept_arg_number ($1); }
+| identifier FROM ARGUMENT_VALUE	{ cb_emit_accept_arg_value ($1); }
+| identifier FROM mnemonic_name		{ cb_emit_accept_mnemonic ($1, $3); }
+| identifier FROM WORD			{ cb_emit_accept_name ($1, $3); }
 ;
 opt_at_line_column:
   /* empty */			{ $$ = NULL; }
@@ -1850,7 +1848,7 @@ add_body:
   {
     cb_emit_arithmetic ($4, 0, cb_build_binary_list ($1, '+'));
   }
-| CORRESPONDING x _to x flag_rounded on_size_error
+| CORRESPONDING identifier TO identifier flag_rounded on_size_error
   {
     cb_emit_corresponding (cb_build_add, $4, $2, $5);
   }
@@ -1887,7 +1885,7 @@ _proceed_to: | PROCEED TO ;
 
 call_statement:
   CALL	 			{ BEGIN_STATEMENT ("CALL"); }
-  x call_using call_returning
+  id_or_lit call_using call_returning
   call_on_exception call_not_on_exception
   end_call
   {
@@ -2343,7 +2341,7 @@ initialize_default:
 
 inspect_statement:
   INSPECT			{ BEGIN_STATEMENT ("INSPECT"); }
-  x inspect_list
+  identifier inspect_list
 ;
 inspect_list:
 | inspect_list inspect_item
@@ -2572,7 +2570,7 @@ perform_varying_list:
   perform_varying		{ $$ = cb_list_add ($1, $3); }
 ;
 perform_varying:
-  x FROM x BY x UNTIL condition
+  identifier FROM x BY x UNTIL condition
   {
     $$ = cb_build_perform_varying ($1, $3, $5, $7);
   }
@@ -2902,7 +2900,7 @@ stop_returning:
 
 string_statement:
   STRING			{ BEGIN_STATEMENT ("STRING"); }
-  string_item_list INTO x opt_with_pointer on_overflow
+  string_item_list INTO identifier opt_with_pointer on_overflow
   end_string
   {
     cb_emit_string ($3, $5, $6);
@@ -2962,7 +2960,7 @@ end_subtract:
 
 unstring_statement:
   UNSTRING			{ BEGIN_STATEMENT ("UNSTRING"); }
-  x unstring_delimited unstring_into
+  identifier unstring_delimited unstring_into
   opt_with_pointer unstring_tallying on_overflow
   end_unstring
   {
@@ -2993,23 +2991,23 @@ unstring_into:
   unstring_into_item		{ $$ = cb_list_add ($1, $2); }
 ;
 unstring_into_item:
-  x unstring_into_delimiter unstring_into_count
+  identifier unstring_into_delimiter unstring_into_count
   {
     $$ = cb_build_unstring_into ($1, $2, $3);
   }
 ;
 unstring_into_delimiter:
   /* empty */			{ $$ = NULL; }
-| DELIMITER _in x		{ $$ = $3; }
+| DELIMITER _in identifier	{ $$ = $3; }
 ;
 unstring_into_count:
   /* empty */			{ $$ = NULL; }
-| COUNT _in x			{ $$ = $3; }
+| COUNT _in identifier		{ $$ = $3; }
 ;
 
 unstring_tallying:
   /* empty */			{ $$ = NULL; }
-| TALLYING _in x		{ $$ = $3; }
+| TALLYING _in identifier	{ $$ = $3; }
 ;
 
 end_unstring:
@@ -3534,6 +3532,18 @@ simple_value:
 ;
 
 /*
+numeric_value:
+  identifier
+| integer
+;
+*/
+
+id_or_lit:
+  identifier
+| LITERAL
+;
+
+/*
  * Identifier
  */
 
@@ -3698,6 +3708,7 @@ _other:		| OTHER ;
 _program:	| PROGRAM ;
 _record:	| RECORD ;
 _right:		| RIGHT ;
+_set:		| SET ;
 _sign:		| SIGN ;
 _sign_is:	| SIGN _is ;
 _size:		| SIZE ;

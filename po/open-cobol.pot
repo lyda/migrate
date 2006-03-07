@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2006-03-04 19:30+0100\n"
+"POT-Creation-Date: 2006-03-05 16:20+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -547,64 +547,64 @@ msgstr ""
 msgid "REDEFINES clause must follow entry-name"
 msgstr ""
 
-#: cobc/parser.y:1515 cobc/parser.y:1532
+#: cobc/parser.y:1513 cobc/parser.y:1530
 #, c-format
 msgid "invalid color '%d'"
 msgstr ""
 
-#: cobc/parser.y:1695
+#: cobc/parser.y:1693
 #, c-format
 msgid "unknown statement '%s'"
 msgstr ""
 
-#: cobc/parser.y:2176
+#: cobc/parser.y:2174
 msgid "88 level invalid here"
 msgstr ""
 
-#: cobc/parser.y:2184
+#: cobc/parser.y:2182
 msgid "FIXME: failed to compile \"WHEN NOT ... AND/OR ...\""
 msgstr ""
 
-#: cobc/parser.y:2185
+#: cobc/parser.y:2183
 msgid "FIXME: change it into \"WHEN (NOT ... AND/OR ...)\" for now"
 msgstr ""
 
-#: cobc/parser.y:2855 cobc/parser.y:3364 cobc/parser.y:3420
+#: cobc/parser.y:2853 cobc/parser.y:3362 cobc/parser.y:3418
 #, c-format
 msgid "'%s' not file name"
 msgstr ""
 
-#: cobc/parser.y:3398
+#: cobc/parser.y:3396
 #, c-format
 msgid "'%s' not indexed"
 msgstr ""
 
-#: cobc/parser.y:3399
+#: cobc/parser.y:3397
 #, c-format
 msgid "'%s' defined here"
 msgstr ""
 
-#: cobc/parser.y:3739
+#: cobc/parser.y:3750
 #, c-format
 msgid "'%s' not level 01 or 77"
 msgstr ""
 
-#: cobc/parser.y:3741
+#: cobc/parser.y:3752
 #, c-format
 msgid "'%s' is not in LINKAGE SECTION"
 msgstr ""
 
-#: cobc/parser.y:3743
+#: cobc/parser.y:3754
 #, c-format
 msgid "'%s' REDEFINES field not allowed here"
 msgstr ""
 
-#: cobc/parser.y:3751
+#: cobc/parser.y:3762
 #, c-format
 msgid "ENTRY '%s' duplicated"
 msgstr ""
 
-#: cobc/parser.y:3767 cobc/parser.y:3775
+#: cobc/parser.y:3778 cobc/parser.y:3786
 #, c-format
 msgid "%s statement not terminated by END-%s"
 msgstr ""
