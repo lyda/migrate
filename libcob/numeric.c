@@ -42,6 +42,7 @@ static cob_decimal	cob_d2;
 static cob_decimal	cob_d3;
 static cob_decimal	cob_d4;
 static mpz_t		cob_mexp;
+static mpz_t		cob_mpzt;
 static unsigned char	packed_value[20];
 
 /*
@@ -342,9 +343,9 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, int opt)
 	} else {
 		unsigned int	lo;
 
-		mpz_fdiv_r_2exp (cob_d2.value, d->value, 32);
+		mpz_fdiv_r_2exp (cob_mpzt, d->value, 32);
 		mpz_fdiv_q_2exp (d->value, d->value, 32);
-		lo = mpz_get_ui (cob_d2.value);
+		lo = mpz_get_ui (cob_mpzt);
 
 		if (COB_FIELD_HAVE_SIGN (f)) {
 			long long	val;
@@ -1145,6 +1146,7 @@ cob_init_numeric (void)
 	cob_decimal_init (&cob_d2);
 	cob_decimal_init (&cob_d3);
 	cob_decimal_init (&cob_d4);
+	mpz_init2 (cob_mpzt, 256);
 	mpz_init2 (cob_mexp, 512);
 	own_memset (packed_value, 0, sizeof(packed_value));
 }
