@@ -790,7 +790,7 @@ lineseq_read (cob_file *f)
 static int
 lineseq_write (cob_file *f, int opt)
 {
-	int i, size;
+	size_t i, size;
 
 	if (opt == 0)
 		opt = COB_WRITE_BEFORE | COB_WRITE_LINES | 1;
@@ -842,7 +842,7 @@ static int
 relative_start (cob_file *f, int cond, cob_field *k)
 {
 	int	kindex;
-	int	relsize;
+	size_t	relsize;
 	off_t	off;
 
 	/* get the index */
@@ -889,7 +889,7 @@ static int
 relative_read (cob_file *f, cob_field *k)
 {
 	int	relnum;
-	int	relsize;
+	size_t	relsize;
 	off_t	off;
 
 	SEEK_INIT (f);
@@ -918,7 +918,7 @@ static int
 relative_read_next (cob_file *f)
 {
 	off_t	off;
-	int	relsize;
+	size_t	relsize;
 	int	relnum;
 
 	SEEK_INIT (f);
@@ -939,7 +939,7 @@ relative_read_next (cob_file *f)
 				f->flag_first_read = 0;
 			} else {
 				off = ftell ((FILE *)f->file);
-				relnum = (off / relsize) + 1;
+				relnum = (int)((off / relsize) + 1);
 				cob_set_int (f->keys[0].field, 0);
 				if (cob_add_int (f->keys[0].field, relnum) != 0) {
 					fseek ((FILE *)f->file, -(off_t) sizeof (f->record->size),
@@ -964,7 +964,7 @@ static int
 relative_write (cob_file *f, int opt)
 {
 	size_t	size;
-	int	relsize;
+	size_t	relsize;
 	int	i;
 	off_t	off;
 
@@ -1005,7 +1005,7 @@ relative_write (cob_file *f, int opt)
 			off = ftell ((FILE *)f->file);
 */
 			off += relsize;
-			i = off / relsize;
+			i = (int)(off / relsize);
 			cob_set_int (f->keys[0].field, i);
 		}
 	}
@@ -1016,7 +1016,7 @@ relative_write (cob_file *f, int opt)
 static int
 relative_rewrite (cob_file *f)
 {
-	int	relsize;
+	size_t	relsize;
 	int	relnum;
 	off_t	off;
 
@@ -1043,7 +1043,7 @@ relative_rewrite (cob_file *f)
 static int
 relative_delete (cob_file *f)
 {
-	int	relsize;
+	size_t	relsize;
 	int	relnum;
 	off_t	off;
 
@@ -1317,7 +1317,7 @@ indexed_delete (cob_file *f)
 	prim_key = p->key;
 
 	/* delete the secondary keys */
-	offset = (char *) p->data.data - (char *) f->record->data;
+	offset = (int)((char *) p->data.data - (char *) f->record->data);
 	for (i = 1; i < f->nkeys; i++) {
 		DBT_SET (p->key, f->keys[i].field);
 		p->key.data = (char *)p->key.data + offset;
@@ -1710,7 +1710,7 @@ cob_read (cob_file *f, cob_field *key, cob_field *fnstatus)
 		f->flag_first_read = 0;
 		f->flag_read_done = 1;
 		if (f->record_size) {
-			cob_set_int (f->record_size, f->record->size);
+			cob_set_int (f->record_size, (int) f->record->size);
 		}
 		break;
 	case COB_STATUS_10_END_OF_FILE:

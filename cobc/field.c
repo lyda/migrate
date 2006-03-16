@@ -385,6 +385,7 @@ validate_field_1 (struct cb_field *f)
 	    || f->usage == CB_USAGE_LENGTH
 	    || f->usage == CB_USAGE_OBJECT
 	    || f->usage == CB_USAGE_POINTER
+	    || f->usage == CB_USAGE_PROGRAM_POINTER
 	    || f->usage == CB_USAGE_FLOAT
 	    || f->usage == CB_USAGE_DOUBLE
 	    || f->usage == CB_USAGE_PROGRAM)
@@ -513,6 +514,7 @@ setup_parameters (struct cb_field *f)
 	  break;
 
 	case CB_USAGE_POINTER:
+	case CB_USAGE_PROGRAM_POINTER:
 	  f->pic = CB_PICTURE (cb_build_picture ("9(10)"));
 	  break;
 	case CB_USAGE_FLOAT:
@@ -613,6 +615,7 @@ compute_size (struct cb_field *f)
 		      break;
 		    case CB_USAGE_OBJECT:
 		    case CB_USAGE_POINTER:
+		    case CB_USAGE_PROGRAM_POINTER:
 		    case CB_USAGE_PROGRAM:
 		      align_size = sizeof (void *);
 		      break;
@@ -706,6 +709,7 @@ compute_size (struct cb_field *f)
 	  }
 	case CB_USAGE_OBJECT:
 	case CB_USAGE_POINTER:
+	case CB_USAGE_PROGRAM_POINTER:
 	case CB_USAGE_PROGRAM:
 	  {
 	    f->size = sizeof (void *);

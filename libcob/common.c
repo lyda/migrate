@@ -36,6 +36,10 @@
 #include <signal.h>
 #endif
 
+#ifdef	HAVE_LOCALE_H
+#include <locale.h>
+#endif
+
 #include "common.h"
 #include "move.h"
 #include "numeric.h"
@@ -269,8 +273,11 @@ cob_init (int argc, char **argv)
 		cob_argc = argc;
 		cob_argv = argv;
 
-#if ENABLE_NLS
+#ifdef	HAVE_SETLOCALE
 		setlocale (LC_ALL, "");
+		setlocale (LC_NUMERIC, "C");
+#endif
+#ifdef	ENABLE_NLS
 		bindtextdomain (PACKAGE, LOCALEDIR);
 		textdomain (PACKAGE);
 #endif
@@ -467,7 +474,7 @@ cob_field_to_string (cob_field *f, char *s)
 	int	i;
 
 	memcpy (s, f->data, f->size);
-	for (i = f->size - 1; i >= 0; i--) {
+	for (i = (int) f->size - 1; i >= 0; i--) {
 		if (s[i] != ' ') {
 			break;
 		}
@@ -715,7 +722,7 @@ cob_is_numeric (cob_field *f)
 	{
 		int		i;
 		int		sign = cob_get_sign (f);
-		int		size = COB_FIELD_SIZE (f);
+		int		size = (int) COB_FIELD_SIZE (f);
 		unsigned char	*data = COB_FIELD_DATA (f);
 
 		for (i = 0; i < size; i++) {
@@ -833,17 +840,17 @@ static struct handlerlist {
 	int			(*proc)(char *s);
 } *hdlrs = NULL;
 
-int CBL_ERROR_PROC(char *x, int (*p)(char *s))
+int CBL_ERROR_PROC(char *x, int (**p)(char *s))
 {
 	struct handlerlist *hp = NULL;
 	struct handlerlist *h = hdlrs;
 
-	if (!p) {
+	if (!p || !*p) {
 		return -1;
 	}
 	/* remove handler anyway */
 	while (h != NULL) {
-		if (h->proc == p) {
+		if (h->proc == *p) {
 			if (hp != NULL) {
 				hp->next = h->next;
 			} else {
@@ -860,7 +867,7 @@ int CBL_ERROR_PROC(char *x, int (*p)(char *s))
 	}
 	h = cob_malloc (sizeof(struct handlerlist));
 	h->next = hdlrs;
-	h->proc = p;
+	h->proc = *p;
 	hdlrs = h;
 	return 0;
 }
@@ -1086,7 +1093,7 @@ cob_accept_command_line (cob_field *f)
 	char	buff[COB_LARGE_BUFF] = "";
 
 	for (i = 1; i < cob_argc; i++) {
-		int len = strlen (cob_argv[i]);
+		int len = (int) strlen (cob_argv[i]);
 		if (size + len >= COB_LARGE_BUFF) {
 			/* overflow */
 			break;
@@ -1135,7 +1142,7 @@ cob_accept_arg_value (cob_field *f)
 	if (current_arg >= cob_argc) {
 		return;
 	}
-	cob_memcpy (f, (ucharptr)cob_argv[current_arg], strlen (cob_argv[current_arg]));
+	cob_memcpy (f, (ucharptr)cob_argv[current_arg], (int) strlen (cob_argv[current_arg]));
 	current_arg++;
 }
 
@@ -1193,6 +1200,6 @@ cob_accept_environment (cob_field *f)
 	if (!p) {
 		p = "";
 	}
-	cob_memcpy (f, (ucharptr)p, strlen (p));
+	cob_memcpy (f, (ucharptr)p, (int) strlen (p));
 }
 

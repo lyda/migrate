@@ -120,7 +120,7 @@ static void terminator_error (void);
 %token UNDERLINE UNIT UNTIL UP UPON USAGE USE USING VALUE VARYING WHEN WITH
 %token MANUAL AUTOMATIC EXCLUSIVE ROLLBACK
 %token COMP COMP_1 COMP_2 COMP_3 COMP_4 COMP_5 COMP_X
-%token LINAGE_COUNTER
+%token LINAGE_COUNTER PROGRAM_POINTER
 %token NOT_EXCEPTION SIZE_ERROR NOT_SIZE_ERROR NOT_OVERFLOW NOT_EOP
 %token INVALID_KEY NOT_INVALID_KEY
 
@@ -593,10 +593,14 @@ select_clause:
 /* ASSIGN clause */
 
 assign_clause:
-  ASSIGN _to assignment_name
+  ASSIGN _to _ext_clause assignment_name
   {
-    current_file->assign = cb_build_assignment_name ($3);
+    current_file->assign = cb_build_assignment_name ($4);
   }
+;
+_ext_clause:
+| EXTERNAL
+| DYNAMIC
 ;
 assignment_name:
   alnum_literal
@@ -1217,6 +1221,7 @@ usage:
 | INDEX				{ current_field->usage = CB_USAGE_INDEX; }
 | PACKED_DECIMAL		{ current_field->usage = CB_USAGE_PACKED; }
 | POINTER			{ current_field->usage = CB_USAGE_POINTER; }
+| PROGRAM_POINTER		{ current_field->usage = CB_USAGE_PROGRAM_POINTER; }
 ;
 
 
@@ -1589,6 +1594,9 @@ procedure_division:
   }
   procedure_declaratives
   {
+    if (current_program->gen_main && $3) {
+	cb_error ("Executable program requested but PROCEDURE/ENTRY has USING clause");
+    }
     emit_entry (current_program->program_id, $3); /* main entry point */
     if (current_program->source_name) {
 	emit_entry (current_program->source_name, $3);
@@ -3737,9 +3745,11 @@ emit_entry (const char *name, cb_tree using_list)
   CB_LABEL (label)->need_begin = 1;
   emit_statement (label);
 
+  /*
   if (current_program->gen_main && using_list) {
 	cb_error ("Executable program requested but PROCEDURE/ENTRY has USING clause");
   }
+  */
   for (l = using_list; l; l = CB_CHAIN (l))
     {
       cb_tree x = CB_VALUE (l);

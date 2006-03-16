@@ -52,8 +52,8 @@ store_common_region (cob_field *f, unsigned char *data, size_t size, int scale)
 {
 	int	lf1 = -scale;
 	int	lf2 = -COB_FIELD_SCALE (f);
-	int	hf1 = size + lf1;
-	int	hf2 = COB_FIELD_SIZE (f) + lf2;
+	int	hf1 = (int) size + lf1;
+	int	hf2 = (int) COB_FIELD_SIZE (f) + lf2;
 	int	lcf;
 	int	gcf;
 
@@ -107,7 +107,7 @@ cob_move_alphanum_to_display (cob_field *f1, cob_field *f2)
 	}
 
 	/* find the start position */
-	size = COB_FIELD_SIZE (f2) - f2->attr->scale;
+	size = (int) COB_FIELD_SIZE (f2) - f2->attr->scale;
 	if (count < size) {
 		s2 += size - count;
 	} else {
@@ -164,7 +164,7 @@ cob_move_display_to_alphanum (cob_field * f1, cob_field * f2)
 	if (size1 >= size2) {
 		own_memcpy (data2, data1, size2);
 	} else {
-		int	diff = size2 - size1;
+		int	diff = (int)(size2 - size1);
 		int	zero_size = 0;
 
 		/* move */
@@ -303,7 +303,7 @@ cob_move_display_to_fp (cob_field *f1, cob_field *f2)
 	}
 	sscanf (buff2, "%lf", &val);
 	if (COB_FIELD_TYPE (f2) == COB_TYPE_NUMERIC_FLOAT) {
-		float	flval = val;
+		float	flval = (float) val;
 
 		*(float *)f2->data = flval;
 	} else {
@@ -337,7 +337,7 @@ cob_move_fp_to_display (cob_field *f1, cob_field *f2)
 		val = -val;
 	}
 	frac = modf (val, &intgr);
-	res = intgr;
+	res = (long long) intgr;
 	decs = 0;
 	for (; res; res /= 10) {
 		decs++;
@@ -418,7 +418,7 @@ cob_move_binary_to_display (cob_field *f1, cob_field *f2)
 	/* convert to string */
 	i = 20;
 	while (val > 0) {
-		buff[--i] = cob_i2d (val % 10);
+		buff[--i] = (char) cob_i2d (val % 10);
 		val /= 10;
 	}
 
@@ -452,19 +452,30 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 	unsigned char	pad = ' ';
 	int		count = 0;
 	int		count_sign = 1;
+	int		count_curr = 1;
 	int		trailing_sign = 0;
+	int		trailing_curr = 0;
 	int		is_zero = 1;
 	int		suppress_zero = 1;
-	unsigned char	sign_symbol = 0;
+	int		sign_first = 0;
 	unsigned char	*decimal_point = NULL;
+	unsigned char	sign_symbol = 0;
+	unsigned char	curr_symbol = 0;
 
 	/* count the number of digit places before decimal point */
 	for (p = f2->attr->pic; *p; p += 2) {
 		unsigned char	c = p[0];
 
+/*
 		if (c == '9' || c == 'P' || c == 'Z' || c == '*' ||
 		    c == cob_current_module->currency_symbol) {
-			count += p[1], count_sign = 0;
+*/
+		if (c == '9' || c == 'P' || c == 'Z' || c == '*') {
+			count += p[1];
+			count_sign = 0;
+			count_curr = 0;
+		} else if (count_curr && c == cob_current_module->currency_symbol) {
+			count += p[1];
 		} else if (count_sign && (c == '+' || c == '-')) {
 			count += p[1];
 		} else if (p[0] == 'V' || p[0] == cob_current_module->decimal_point) {
@@ -499,6 +510,7 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 					is_zero = suppress_zero = 0;
 				suppress_zero = 0;
 				trailing_sign = 1;
+				trailing_curr = 1;
 				break;
 
 			case 'V':
@@ -535,6 +547,7 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 				pad = (c == '*') ? '*' : ' ';
 				*dst = suppress_zero ? pad : x;
 				trailing_sign = 1;
+				trailing_curr = 1;
 				break;
 			}
 
@@ -550,6 +563,9 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 				} else if (dst == f2->data || suppress_zero) {
 					*dst = pad;
 					sign_symbol = neg ? '-' : (c == '+') ? '+' : ' ';
+					if (!curr_symbol) {
+						sign_first++;
+					}
 				} else {
 					*dst = x;
 				}
@@ -561,9 +577,12 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 					char x = (min <= src && src < max) ? *src++ : (src++, '0');
 					if (x != '0')
 						is_zero = suppress_zero = 0;
-					if (dst == f2->data || suppress_zero) {
-						*dst = pad, sign_symbol =
-						    cob_current_module->currency_symbol;
+					if (trailing_curr) {
+						*dst = cob_current_module->currency_symbol;
+						end--;
+					} else if (dst == f2->data || suppress_zero) {
+						*dst = pad;
+						curr_symbol = cob_current_module->currency_symbol;
 					} else {
 						*dst = x;
 					}
@@ -597,13 +616,31 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 		}
 
 		/* put sign or currency symbol at the beginning */
-		if (sign_symbol) {
+		if (sign_symbol || curr_symbol) {
 			for (dst = end - 1; dst > f2->data; dst--) {
 				if (*dst == ' ') {
 					break;
 				}
 			}
-			*dst = sign_symbol;
+			if (sign_symbol && curr_symbol) {
+				if (sign_first) {
+					*dst = curr_symbol;
+					dst--;
+					if (dst >= f2->data) {
+						*dst = sign_symbol;
+					}
+				} else {
+					*dst = sign_symbol;
+					dst--;
+					if (dst >= f2->data) {
+						*dst = curr_symbol;
+					}
+				}
+			} else if (sign_symbol) {
+				*dst = sign_symbol;
+			} else {
+				*dst = curr_symbol;
+			}
 		}
 
 		/* replace all 'B's by pad */
@@ -751,7 +788,7 @@ cob_move_all (cob_field *src, cob_field *dst)
 		}
 */
 	} else {
-		digcount = dst->size;
+		digcount = (int) dst->size;
 	}
 	if (!data) {
 		if (digcount <= COB_SMALL_BUFF) {
@@ -956,14 +993,14 @@ cob_display_get_int (cob_field *f)
 int
 cob_binary_get_int (cob_field *f)
 {
-	return cob_binary_get_int64 (f);
+	return (int) cob_binary_get_int64 (f);
 }
 
 long long
 cob_binary_get_int64 (cob_field *f)
 {
 	long long	n = 0;
-	int		fsiz = 8 - f->size;
+	int		fsiz = 8 - (int) f->size;
 
 /* Experimental code - not activated */
 #if 0

@@ -398,11 +398,12 @@ static const struct reserved reserved_words[] = {
   {"PREVIOUS",		-1},			/* 2002 (C/S) */
   {"PRINTING",		-1},			/* 2002 */
   {"PROCEDURE",		PROCEDURE},		/* 2002 */
-  {"PROCEDURE-POINTER",	-1},			/* extension */
+  {"PROCEDURE-POINTER",	PROGRAM_POINTER},	/* extension */
   {"PROCEDURES",	PROCEDURES},		/* extension */
   {"PROCEED",		PROCEED},		/* 85 */
   {"PROGRAM",		PROGRAM},		/* 2002 */
   {"PROGRAM-ID",	PROGRAM_ID},		/* 2002 */
+  {"PROGRAM-POINTER",	PROGRAM_POINTER},	/* 2002 */
   {"PROPERTY",		-1},			/* 2002 */
   {"PROTOTYPE",		-1},			/* 2002 */
   {"PURGE",		-1},			/* 2002 */

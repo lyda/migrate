@@ -64,16 +64,23 @@ static void
 pretty_display_numeric (cob_field *f, FILE *fp)
 {
 	int		i;
+	unsigned char	*p;
 	int		digits = COB_FIELD_DIGITS (f);
 	int		scale = COB_FIELD_SCALE (f);
 	int		size = (digits + (COB_FIELD_HAVE_SIGN (f) ? 1 : 0)
 				+ (scale > 0 ? 1 : 0));
-	unsigned char	pic[16], *p = pic;
-	unsigned char	data[128];
 	cob_field_attr	attr = { COB_TYPE_NUMERIC_EDITED, digits, scale, 0, NULL };
-	cob_field	temp = { size, data, &attr };
+	cob_field	temp;
+	unsigned char	pic[16];
+	unsigned char	data[128];
 
+	p = pic;
+	temp.size = size;
+	temp.data = data;
+	temp.attr = &attr;
 	attr.pic = (char *)pic;
+	memset (pic, 0, sizeof (pic));
+	memset (data, 0, sizeof (data));
 	if (COB_FIELD_HAVE_SIGN (f)) {
 		p += sprintf ((char *)p, "+\001");
 	}

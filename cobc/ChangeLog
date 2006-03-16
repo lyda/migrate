@@ -1,3 +1,15 @@
+2006-03-16  Roger While <simrw@sim-basis.de>
+
+	* parser.y : Fix param check for PROCEDUE/ENTRY
+		     Allow EXTERNAL/DYNAMIC in SELECT
+	  typeck.c : Force ref count for display items
+
+2006-03-10  Roger While <simrw@sim-basis.de>
+
+	* parser.y, tree.h, tree.c, typeck.c reserved.c :
+		Prepare support for PROGRAM-POINTER and
+		PROCEDURE-POINTER
+
 2006-03-05  Roger While <simrw@sim-basis.de>
 
 	* parser.y : Make syntax more correct

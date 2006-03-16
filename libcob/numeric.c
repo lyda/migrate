@@ -211,7 +211,7 @@ cob_decimal_get_display (cob_decimal *d, cob_field *f, int opt)
 	size = strlen ((char *)buff);
 
 	/* store number */
-	diff = COB_FIELD_SIZE (f) - size;
+	diff = (int)(COB_FIELD_SIZE (f) - size);
 	if (diff < 0) {
 		/* overflow */
 		COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
@@ -248,9 +248,9 @@ cob_decimal_set_binary (cob_decimal *d, cob_field *f)
 	} else {
 		long long	val = cob_binary_get_int64 (f);
 
-		mpz_set_si (d->value, val >> 32);
+		mpz_set_si (d->value, (int)(val >> 32));
 		mpz_mul_2exp (d->value, d->value, 32);
-		mpz_add_ui (d->value, d->value, val & 0xffffffff);
+		mpz_add_ui (d->value, d->value, (unsigned int)(val & 0xffffffff));
 	}
 	d->scale = f->attr->scale;
 }
@@ -327,7 +327,7 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, int opt)
 			}
 			val = mpz_get_ui (d->value);
 			if (cob_current_module->flag_binary_truncate) {
-				if (val >= cob_exp10[digits]) {
+				if (val >= (unsigned int) cob_exp10[digits]) {
 					/* overflow */
 					overflow = 1;
 					if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
@@ -394,7 +394,7 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, int opt)
 			val = mpz_get_ui (d->value);
 			val = (val << 32) | lo;
 			if (cob_current_module->flag_binary_truncate) {
-				if (val >= cob_exp10LL[digits]) {
+				if (val >= (unsigned int) cob_exp10LL[digits]) {
 					/* overflow */
 					overflow = 1;
 					if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
@@ -598,7 +598,7 @@ cob_decimal_get_packed (cob_decimal *d, cob_field *f, int opt)
 
 	/* store number */
 	q = buff;
-	diff = digits - size;
+	diff = (int)(digits - size);
 	if (diff < 0) {
 		/* overflow */
 		COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
@@ -613,7 +613,7 @@ cob_decimal_get_packed (cob_decimal *d, cob_field *f, int opt)
 	}
 	own_memset (data, 0, f->size);
 	p = data + (digits / 2) - (size / 2);
-	diff = 1 - (size % 2);
+	diff = 1 - (int)(size % 2);
 	for (i = diff, n = 0; i < size + diff; i++, n++) {
 		unsigned char	x = cob_d2i (q[n]);
 
@@ -707,7 +707,7 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f, int opt)
 	{
 		float	val;
 
-		val = cob_decimal_get_double (d);
+		val = (float) cob_decimal_get_double (d);
 		memcpy (f->data, (ucharptr)&val, sizeof (float));
 /*
 		*(float *)f->data = val;
@@ -1115,7 +1115,7 @@ cob_cmp_packed (cob_field *f, int n)
 			n /= 10;
 			for ( ; n; ) {
 				size = n % 100;
-				*p = (size % 10) | ((size / 10) << 4);
+				*p = (unsigned char)((size % 10) | ((size / 10) << 4));
 				n /= 100;
 /*
 				*p = (n % 10);

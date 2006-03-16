@@ -649,6 +649,7 @@ output_integer (cb_tree x)
 	    return;
 
 	  case CB_USAGE_POINTER:
+	  case CB_USAGE_PROGRAM_POINTER:
 	    output ("(*(unsigned char **) (");
 	    output_data (x);
 	    output ("))");

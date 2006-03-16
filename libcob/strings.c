@@ -112,7 +112,7 @@ void
 cob_inspect_characters (cob_field *f1)
 {
 	int	i;
-	int	len = inspect_end - inspect_start;
+	int	len = (int)(inspect_end - inspect_start);
 	int	*mark = &inspect_mark[inspect_start - inspect_data];
 
 	if (inspect_replacing) {
@@ -142,7 +142,7 @@ static void
 inspect_common (cob_field *f1, cob_field *f2, int type)
 {
 	size_t	i, n = 0;
-	int	len = inspect_end - inspect_start;
+	int	len = (int)(inspect_end - inspect_start);
 	int	*mark = &inspect_mark[inspect_start - inspect_data];
 
 	if (inspect_replacing && f1->size != f2->size) {
@@ -177,7 +177,7 @@ inspect_common (cob_field *f1, cob_field *f2, int type)
 	}
 
 	if (n > 0 && !inspect_replacing) {
-		cob_add_int (f1, n);
+		cob_add_int (f1, (int) n);
 	}
 }
 
@@ -203,7 +203,7 @@ void
 cob_inspect_converting (cob_field *f1, cob_field *f2)
 {
 	size_t	i, j;
-	int	len = inspect_end - inspect_start;
+	int	len = (int)(inspect_end - inspect_start);
 
 	for (j = 0; j < f1->size; j++) {
 		for (i = 0; i < len; i++) {
@@ -282,7 +282,7 @@ cob_string_append (cob_field *src)
 
 	if (string_dlm) {
 		int	i;
-		int	size = src_size - string_dlm->size + 1;
+		int	size = (int)(src_size - string_dlm->size + 1);
 
 		for (i = 0; i < size; i++) {
 			if (memcmp (src->data + i, string_dlm->data, string_dlm->size) == 0) {
@@ -294,9 +294,9 @@ cob_string_append (cob_field *src)
 
 	if (src_size <= string_dst->size - string_offset) {
 		own_memcpy (string_dst->data + string_offset, src->data, src_size);
-		string_offset += src_size;
+		string_offset += (int) src_size;
 	} else {
-		int size = string_dst->size - string_offset;
+		int size = (int)(string_dst->size - string_offset);
 		own_memcpy (string_dst->data + string_offset, src->data, size);
 		string_offset += size;
 		COB_SET_EXCEPTION (COB_EC_OVERFLOW_STRING);
@@ -386,17 +386,17 @@ cob_unstring_into (cob_field *dst, cob_field *dlm, cob_field *cnt)
 		int		srsize;
 		int		dlsize;
 
-		srsize = unstring_src->size;
+		srsize = (int) unstring_src->size;
 		s = unstring_src->data + srsize;
 		for (p = start; p < s; p++) {
 			for (i = 0; i < unstring_ndlms; i++) {
-				dlsize = dlm_list[i].uns_dlm->size;
+				dlsize = (int) dlm_list[i].uns_dlm->size;
 				dp = dlm_list[i].uns_dlm->data;
 				if (p + dlsize > s) {
 					break;
 				}
 				if (!memcmp (p, dp, dlsize)) {
-					match_size = p - start;
+					match_size = (int)(p - start);
 					cob_memcpy (dst, start, match_size);
 					unstring_offset += match_size + dlsize;
 					dlm_data = dp;
@@ -422,9 +422,9 @@ cob_unstring_into (cob_field *dst, cob_field *dlm, cob_field *cnt)
 		}
 		if (!brkpt) {
 			/* no match */
-			match_size = unstring_src->size - unstring_offset;
+			match_size = (int)(unstring_src->size - unstring_offset);
 			cob_memcpy (dst, start, match_size);
-			unstring_offset = unstring_src->size;
+			unstring_offset = (int) unstring_src->size;
 			dlm_data = NULL;
 		}
 	}
@@ -432,7 +432,7 @@ cob_unstring_into (cob_field *dst, cob_field *dlm, cob_field *cnt)
 
 	if (dlm) {
 		if (dlm_data) {
-			cob_memcpy (dlm, dlm_data, dlm_size);
+			cob_memcpy (dlm, dlm_data, (int) dlm_size);
 		} else if (COB_FIELD_IS_NUMERIC (dlm)) {
 			cob_move (&cob_zero, dlm);
 		} else {

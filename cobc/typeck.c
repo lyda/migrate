@@ -2002,6 +2002,12 @@ cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
 		p = cb_build_funcall_3 ("cob_new_display", outorerr, newline, values);
 		CB_FUNCALL(p)->varcnt = cb_list_length (values);
 		cb_emit(p);
+		for (l = values; l; l = CB_CHAIN (l)) {
+			cb_tree x = CB_VALUE (l);
+			if (CB_FIELD_P (x)) {
+				CB_FIELD (cb_ref (x))->count++;
+			}
+		}
 		/* End implementation using varargs */
 
 		/* Original multiple call implementation */

@@ -1,6 +1,6 @@
 mv newcob.tmp newcob.tmp2
-sed -e 's/^061200.*IF1194.*/           COMPUTE WS-NUM = FUNCTION MAX (4 0 5 3 7)\./
-s/^065100.*IF1194.*/065100     COMPUTE WS-NUM = FUNCTION MAX((A * B) ((C + 1) \/ 2) (3 + 4))\./
+sed -e 's/^061200.*IF1194.*/rogerw     COMPUTE WS-NUM = FUNCTION MAX (4 0 5 3 7)\./
+s/^065100.*IF1194.*/rogerw     COMPUTE WS-NUM = FUNCTION MAX((A * B) ((C + 1) \/ 2) (3 + 4))\./
 s/^050300.*IF1204.*/rogerw     COMPUTE WS-NUM = FUNCTION MEAN (4 0 5 3 7)\./
 s/^050000.*IF1214.*/rogerw     COMPUTE WS-NUM = FUNCTION MEDIAN (4 0 5 3 7)\./
 s/^052200.*IF1224.*/rogerw     COMPUTE WS-NUM = FUNCTION MIDRANGE (4 0 5 3 7)\./

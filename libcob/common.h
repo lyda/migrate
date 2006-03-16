@@ -242,7 +242,7 @@ extern void cob_display_env_value (cob_field *f);
 extern void cob_display_arg_number (cob_field *f);
 extern void cob_accept_arg_number (cob_field *f);
 extern void cob_accept_arg_value (cob_field *f);
-extern int CBL_ERROR_PROC(char *x, int (*p)(char *s));
+extern int CBL_ERROR_PROC(char *x, int (**p)(char *s));
 
 /* Utilities */
 

@@ -325,7 +325,7 @@ cob_intr_upper_case (cob_field *sizefield, cob_field *srcfield)
 		size = cob_get_int (sizefield);
 		curr_field->size = size;
 	} else {
-		size = srcfield->size;
+		size = (int) srcfield->size;
 	}
 	for ( i = 0; i < size; i++ ) {
 		curr_field->data[i] = toupper (srcfield->data[i]);
@@ -343,7 +343,7 @@ cob_intr_lower_case (cob_field *sizefield, cob_field *srcfield)
 		size = cob_get_int (sizefield);
 		curr_field->size = size;
 	} else {
-		size = srcfield->size;
+		size = (int) srcfield->size;
 	}
 	for ( i = 0; i < size; i++ ) {
 		curr_field->data[i] = tolower (srcfield->data[i]);
@@ -361,7 +361,7 @@ cob_intr_reverse (cob_field *sizefield, cob_field *srcfield)
 		size = cob_get_int (sizefield);
 		curr_field->size = size;
 	} else {
-		size = srcfield->size;
+		size = (int) srcfield->size;
 	}
 	for ( i = 0; i < size; i++ ) {
 		curr_field->data[i] = srcfield->data[size - i - 1];
@@ -769,11 +769,11 @@ cob_intr_acos (cob_field *srcfield)
 		return curr_field;
 	}
 
-	result = mathd2;
+	result = (unsigned long long) mathd2;
 	mathd2 -= result;
 	for ( i = 0; i < 17; i++ ) {
 		mathd2 *= 10;
-		tempres = mathd2;
+		tempres = (int) mathd2;
 		result *= 10;
 		result += tempres;
 		mathd2 -= tempres;
@@ -800,11 +800,11 @@ cob_intr_asin (cob_field *srcfield)
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
-	result = mathd2;
+	result = (long long) mathd2;
 	mathd2 -= result;
 	for ( i = 0; i < 17; i++ ) {
 		mathd2 *= 10;
-		tempres = mathd2;
+		tempres = (int) mathd2;
 		result *= 10;
 		result += tempres;
 		mathd2 -= tempres;
@@ -831,11 +831,11 @@ cob_intr_atan (cob_field *srcfield)
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
-	result = mathd2;
+	result = (long long) mathd2;
 	mathd2 -= result;
 	for ( i = 0; i < 17; i++ ) {
 		mathd2 *= 10;
-		tempres = mathd2;
+		tempres = (int) mathd2;
 		result *= 10;
 		result += tempres;
 		mathd2 -= tempres;
@@ -862,11 +862,11 @@ cob_intr_cos (cob_field *srcfield)
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
-	result = mathd2;
+	result = (long long) mathd2;
 	mathd2 -= result;
 	for ( i = 0; i < 17; i++ ) {
 		mathd2 *= 10;
-		tempres = mathd2;
+		tempres = (int) mathd2;
 		result *= 10;
 		result += tempres;
 		mathd2 -= tempres;
@@ -929,11 +929,11 @@ cob_intr_sin (cob_field *srcfield)
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
-	result = mathd2;
+	result = (long long) mathd2;
 	mathd2 -= result;
 	for ( i = 0; i < 17; i++ ) {
 		mathd2 *= 10;
-		tempres = mathd2;
+		tempres = (int) mathd2;
 		result *= 10;
 		result += tempres;
 		mathd2 -= tempres;

@@ -279,6 +279,8 @@ cb_tree_category (cb_tree x)
 			x->category = CB_CATEGORY_ALPHANUMERIC;
 		else if (f->usage == CB_USAGE_POINTER && f->level != 88)
 			x->category = CB_CATEGORY_DATA_POINTER;
+		else if (f->usage == CB_USAGE_PROGRAM_POINTER && f->level != 88)
+			x->category = CB_CATEGORY_PROGRAM_POINTER;
 		else
 			switch (f->level) {
 			case 66:
@@ -944,6 +946,7 @@ cb_field_size (cb_tree x)
 		}
 	}
 	default:
+		fprintf (stderr, "Unexpected tree tag %d\n", CB_TREE_TAG (x));
 		ABORT ();
 	}
 /* NOT REACHED */
