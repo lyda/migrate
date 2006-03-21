@@ -450,6 +450,7 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 	int		neg = (sign < 0) ? 1 : 0;
 	unsigned char	*min, *max, *src, *dst, *end;
 	unsigned char	pad = ' ';
+	unsigned char	x;
 	int		count = 0;
 	int		count_sign = 1;
 	int		count_curr = 1;
@@ -458,6 +459,7 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 	int		is_zero = 1;
 	int		suppress_zero = 1;
 	int		sign_first = 0;
+	int		p_is_left = 0;
 	unsigned char	*decimal_point = NULL;
 	unsigned char	sign_symbol = 0;
 	unsigned char	curr_symbol = 0;
@@ -466,11 +468,7 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 	for (p = f2->attr->pic; *p; p += 2) {
 		unsigned char	c = p[0];
 
-/*
-		if (c == '9' || c == 'P' || c == 'Z' || c == '*' ||
-		    c == cob_current_module->currency_symbol) {
-*/
-		if (c == '9' || c == 'P' || c == 'Z' || c == '*') {
+		if (c == '9' || c == 'Z' || c == '*') {
 			count += p[1];
 			count_sign = 0;
 			count_curr = 0;
@@ -478,7 +476,16 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 			count += p[1];
 		} else if (count_sign && (c == '+' || c == '-')) {
 			count += p[1];
-		} else if (p[0] == 'V' || p[0] == cob_current_module->decimal_point) {
+		} else if (c == 'P') {
+			if (count == 0) {
+				p_is_left = 1;
+				break;
+			} else {
+				count += p[1];
+				count_sign = 0;
+				count_curr = 0;
+			}
+		} else if (c == 'V' || c == cob_current_module->decimal_point) {
 			break;
 		}
 	}
@@ -498,10 +505,16 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 			case '/':
 				*dst = c;
 				break;
+
 			case 'B':
 				*dst = suppress_zero ? pad : 'B';
 				break;
+
 			case 'P':
+				if (p_is_left) {
+					src++;
+					dst--;
+				}
 				break;
 
 			case '9':
@@ -514,23 +527,19 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 				break;
 
 			case 'V':
+				dst--;
+				decimal_point = dst;
+				break;
+
 			case '.':
 			case ',':
-				if (c == 'V' || c == cob_current_module->decimal_point) {
-					if (c == 'V' && (*p == '.' || *p == ',')) {
-						/* When "V," or "V." is specified,
-						   enforce to use it as decimal point */
-						*dst = *p;
-						p += 2;
-					} else {
-						*dst = cob_current_module->decimal_point;
-					}
+				if (c == cob_current_module->decimal_point) {
+					*dst = cob_current_module->decimal_point;
 					decimal_point = dst;
-					break;
 				} else {
 					*dst = suppress_zero ? pad : c;
-					break;
 				}
+				break;
 
 			case 'C':
 			case 'D':
@@ -540,8 +549,7 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 
 			case 'Z':
 			case '*':
-			{
-				char x = (min <= src && src < max) ? *src++ : (src++, '0');
+				x = (min <= src && src < max) ? *src++ : (src++, '0');
 				if (x != '0')
 					is_zero = suppress_zero = 0;
 				pad = (c == '*') ? '*' : ' ';
@@ -549,12 +557,10 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 				trailing_sign = 1;
 				trailing_curr = 1;
 				break;
-			}
 
 			case '+':
 			case '-':
-			{
-				char x = (min <= src && src < max) ? *src++ : (src++, '0');
+				x = (min <= src && src < max) ? *src++ : (src++, '0');
 				if (x != '0')
 					is_zero = suppress_zero = 0;
 				if (trailing_sign) {
@@ -570,11 +576,10 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 					*dst = x;
 				}
 				break;
-			}
 
 			default:
 				if (c == cob_current_module->currency_symbol) {
-					char x = (min <= src && src < max) ? *src++ : (src++, '0');
+					x = (min <= src && src < max) ? *src++ : (src++, '0');
 					if (x != '0')
 						is_zero = suppress_zero = 0;
 					if (trailing_curr) {
@@ -667,10 +672,13 @@ cob_move_edited_to_display (cob_field *f1, cob_field *f2)
 	size_t		i;
 	int		sign = 0;
 	int		scale = 0;
+	int		count = 0;
 	int		have_point = 0;
+	unsigned char	*p;
+	const char	*p1;
 	unsigned char	buff[64];
-	unsigned char	*p = buff;
 
+	p = buff;
 	/* de-edit */
 	for (i = 0; i < f1->size; i++) {
 		int	c = f1->data[i];
@@ -701,6 +709,29 @@ cob_move_edited_to_display (cob_field *f1, cob_field *f2)
 		case 'C':
 			sign = -1;
 			break;
+		}
+	}
+	/* count the number of digit places after decimal point in case of 'V', 'P' */
+	if (scale == 0) {
+		for (p1 = f1->attr->pic; *p1; p1 += 2) {
+			unsigned char c = p1[0];
+
+			if (c == '9'  || c == '0' || c == 'Z' || c == '*') {
+				if (have_point) {
+					scale += p1[1];
+				} else {
+					count += p1[1];
+				}
+			} else if (c == 'P') {
+				if (count == 0) {
+					have_point = 1;
+					scale += p1[1];
+				} else {
+					scale -= p1[1];
+				}
+			} else if (c == 'V') {
+				have_point = 1;
+			}
 		}
 	}
 
@@ -808,7 +839,7 @@ cob_move_all (cob_field *src, cob_field *dst)
 	temp.size = digcount;
 	temp.data = data;
 	temp.attr = &attr;
-#ifdef	__GNUC__
+#if	defined(__GNUC__) && (__GNUC__ >= 3)
 	if ( __builtin_expect ((src->size == 1), 1) ) {
 #else
 	if ( src->size == 1 ) {

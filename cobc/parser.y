@@ -75,7 +75,7 @@ static struct cb_file *linage_file;
 static cb_tree next_label_list = NULL;
 static int eval_check[64][64];
 
-static void emit_entry (const char *name, cb_tree using_list);
+static void emit_entry (const char *name, const int encode, cb_tree using_list);
 static void terminator_warning (void);
 static void terminator_error (void);
 %}
@@ -122,7 +122,7 @@ static void terminator_error (void);
 %token COMP COMP_1 COMP_2 COMP_3 COMP_4 COMP_5 COMP_X
 %token LINAGE_COUNTER PROGRAM_POINTER
 %token NOT_EXCEPTION SIZE_ERROR NOT_SIZE_ERROR NOT_OVERFLOW NOT_EOP
-%token INVALID_KEY NOT_INVALID_KEY
+%token INVALID_KEY NOT_INVALID_KEY COMMA_DELIM
 
 %left '+' '-'
 %left '*' '/'
@@ -500,6 +500,58 @@ currency_sign_clause:
     unsigned char *s = CB_LITERAL ($4)->data;
     if (CB_LITERAL ($4)->size != 1)
       cb_error_x ($4, _("invalid currency sign '%s'"), s);
+    switch (*s) {
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
+    case 'a':
+    case 'A':
+    case 'b':
+    case 'B':
+    case 'c':
+    case 'C':
+    case 'd':
+    case 'D':
+    case 'e':
+    case 'E':
+    case 'n':
+    case 'N':
+    case 'p':
+    case 'P':
+    case 'r':
+    case 'R':
+    case 's':
+    case 'S':
+    case 'v':
+    case 'V':
+    case 'x':
+    case 'X':
+    case 'z':
+    case 'Z':
+    case '+':
+    case '-':
+    case ',':
+    case '.':
+    case '*':
+    case '/':
+    case ';':
+    case '(':
+    case ')':
+    case '=':
+    case '"':
+    case ' ':
+	cb_error_x ($4, _("invalid currency sign '%s'"), s);
+	break;
+    default:
+	break;
+    }
     current_program->currency_symbol = s[0];
   }
 ;
@@ -1597,9 +1649,9 @@ procedure_division:
     if (current_program->gen_main && $3) {
 	cb_error ("Executable program requested but PROCEDURE/ENTRY has USING clause");
     }
-    emit_entry (current_program->program_id, $3); /* main entry point */
+    emit_entry (current_program->program_id, 0, $3); /* main entry point */
     if (current_program->source_name) {
-	emit_entry (current_program->source_name, $3);
+	emit_entry (current_program->source_name, 1, $3);
     }
   }
   procedure_list
@@ -2110,7 +2162,7 @@ entry_statement:
   literal call_using
   {
     if (cb_verify (cb_entry_statement, "ENTRY"))
-      emit_entry ((char *)(CB_LITERAL ($3)->data), $4);
+      emit_entry ((char *)(CB_LITERAL ($3)->data), 1, $4);
   }
 ;
 
@@ -3328,8 +3380,13 @@ le: LE | LESS _than OR EQUAL _to ;
 
 e_list:
   e				{ $$ = cb_list ($1); }
-| e_list e			{ $$ = cb_list_add ($1, $2); }
+| e_list e_sep e		{ $$ = cb_list_add ($1, $3); }
 ;
+
+e_sep:
+| COMMA_DELIM
+;
+
 e:
   x				{ $$ = $1; }
 | '(' e ')'			{ $$ = $2; }
@@ -3526,12 +3583,24 @@ x_list:
 ;
 x:
   identifier
-| LENGTH _of identifier_1	{ $$ = cb_build_length ($3); }
-| LENGTH _of literal		{ $$ = cb_build_length ($3); }
-| ADDRESS _of identifier_1	{ $$ = cb_build_address ($3); }
+| LENGTH _of identifier_1			{ $$ = cb_build_length ($3); }
+| LENGTH _of literal				{ $$ = cb_build_length ($3); }
+| ADDRESS _of prog_or_entry alnum_or_id		{ $$ = cb_build_ppointer ($4); }
+| ADDRESS _of identifier_1			{ $$ = cb_build_address ($3); }
 | literal
 | function
 | linage_counter
+;
+
+prog_or_entry:
+  PROGRAM
+| ENTRY
+;
+
+alnum_or_id:
+  identifier_1		{ $$ = $1; }
+| alnum_literal		{ $$ = $1; }
+| TOK_NULL		{ $$ = cb_null; }
 ;
 
 simple_value:
@@ -3734,14 +3803,18 @@ _with:		| WITH ;
 %%
 
 static void
-emit_entry (const char *name, cb_tree using_list)
+emit_entry (const char *name, const int encode, cb_tree using_list)
 {
   char buff[256];
   cb_tree l, label;
 
   sprintf (buff, "E$%s", name);
   label = cb_build_label (cb_build_reference (buff), NULL);
-  CB_LABEL (label)->name = name;
+  if (encode) {
+	CB_LABEL (label)->name = cb_encode_program_id (name);
+  } else {
+	CB_LABEL (label)->name = name;
+  }
   CB_LABEL (label)->need_begin = 1;
   emit_statement (label);
 

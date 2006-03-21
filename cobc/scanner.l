@@ -41,7 +41,7 @@
 
 static int last_token_is_dot = 0;
 static int integer_is_label = 0;
-static int inside_function = 0;
+static int inside_bracket = 0;
 
 static int read_literal (char mark);
 static int scan_x (char *text);
@@ -76,7 +76,11 @@ static void count_lines (char *text);
 %}
 
 
-<*>[ \t,;]+	{ /* ignore */ }
+<*>[ \t,;]+	{
+	if (yytext[0] == ',' && yytext[1] == ' ' && inside_bracket) {
+		return COMMA_DELIM;
+	}
+}
 
 <*>\n		{ cb_source_line++; }
 
@@ -102,6 +106,10 @@ X\"[^\"\n]*\" {
   /* X string literal */
   return scan_x (yytext + 2);
 }
+
+"("	{ inside_bracket++; return '('; }
+
+")"	{ inside_bracket--; return ')'; }
 
 [0-9]+ {
   if (integer_is_label)
@@ -265,7 +273,7 @@ H\"[^\"\n]*\" {
 <<EOF>> {
 	last_token_is_dot = 0;
 	integer_is_label = 0;
-	inside_function = 0;
+	inside_bracket = 0;
 	yyterminate ();
 }
 

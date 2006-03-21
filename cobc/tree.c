@@ -256,6 +256,9 @@ cb_tree_category (cb_tree x)
 		case CB_CAST_ADDRESS:
 			x->category = CB_CATEGORY_DATA_POINTER;
 			break;
+		case CB_CAST_PROGRAM_POINTER:
+			x->category = CB_CATEGORY_PROGRAM_POINTER;
+			break;
 		default:
 			ABORT ();
 		}

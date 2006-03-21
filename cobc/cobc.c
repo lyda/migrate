@@ -88,7 +88,6 @@ int			cb_id = 1;
 
 int			errorcount = 0;
 int			warningcount = 0;
-int			possible_nested = 0;
 
 char			*cb_source_file = NULL;
 char			*source_name;
@@ -841,7 +840,6 @@ preprocess (struct filename *fn)
 		fprintf (stderr, "preprocessing %s into %s\n", fn->source, fn->preprocess);
 	}
 
-	possible_nested = 0;
 	ppparse ();
 
 	if (ppout != stdout) {

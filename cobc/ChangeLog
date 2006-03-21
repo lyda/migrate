@@ -1,3 +1,15 @@
+2006-03-21  Roger While <simrw@sim-basis.de>
+
+	* pplex.l : Fix regression in comma processing
+
+2006-03-20  Roger While <simrw@sim-basis.de>
+
+	* parser.y : Restrict values for CURRENCY SIGN
+	  parser.y, typeck.c, tree.h, tree.c, codegen.c :
+		Support for PROGRAM-POINTER and PROCEDURE-POINTER.
+		Allow CALL PROGRAM-POINTER.
+	  pplex.l, scanner.l, parser.y : Process comma in expressions
+
 2006-03-16  Roger While <simrw@sim-basis.de>
 
 	* parser.y : Fix param check for PROCEDUE/ENTRY

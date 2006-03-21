@@ -620,10 +620,24 @@ cb_build_length (cb_tree x)
 cb_tree
 cb_build_address (cb_tree x)
 {
-	if (x == cb_error_node || cb_ref (x) == cb_error_node)
+	if (x == cb_error_node || (CB_REFERENCE_P (x) && cb_ref (x) == cb_error_node))
 		return cb_error_node;
 
 	return cb_build_cast_address (x);
+}
+
+cb_tree
+cb_build_ppointer (cb_tree x)
+{
+	if (x == cb_error_node || (CB_REFERENCE_P (x) && cb_ref (x) == cb_error_node))
+		return cb_error_node;
+
+	if (CB_REFERENCE_P (x)) {
+		struct cb_field	*f = cb_field(cb_ref(x));
+
+		f->count++;
+	}
+	return cb_build_cast_ppointer (x);
 }
 
 /* validate program */
@@ -1557,6 +1571,16 @@ cb_build_add (cb_tree v, cb_tree n, cb_tree round_opt)
 		return cb_build_move (cb_build_binary_op (v, '+', n), v);
 	}
 
+	if (CB_REFERENCE_P (v) || CB_FIELD_P (v)) {
+		struct cb_field	*f = cb_field(v);
+
+		f->count++;
+	}
+	if (CB_REFERENCE_P (n) || CB_FIELD_P (n)) {
+		struct cb_field	*f = cb_field(n);
+
+		f->count++;
+	}
 	opt = build_store_option (v, round_opt);
 	if (opt == cb_int0 && cb_fits_int (n)) {
 		if (CB_REFERENCE_P (v) || CB_FIELD_P (v)) {
@@ -1622,6 +1646,16 @@ cb_build_sub (cb_tree v, cb_tree n, cb_tree round_opt)
 		return cb_build_move (cb_build_binary_op (v, '-', n), v);
 	}
 
+	if (CB_REFERENCE_P (v) || CB_FIELD_P (v)) {
+		struct cb_field	*f = cb_field(v);
+
+		f->count++;
+	}
+	if (CB_REFERENCE_P (n) || CB_FIELD_P (n)) {
+		struct cb_field	*f = cb_field(n);
+
+		f->count++;
+	}
 	opt = build_store_option (v, round_opt);
 	if (opt == cb_int0 && cb_fits_int (n)) {
 		if (CB_REFERENCE_P (v) || CB_FIELD_P (v)) {
@@ -1986,7 +2020,6 @@ cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
 	} else {
 		/* DISPLAY x ... [UPON device-name] */
 
-		/* Implementation using varargs */
 		cb_tree	p, outorerr, newline;
 
 		if ( upon == cb_int1 ) {
@@ -2008,24 +2041,6 @@ cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
 				CB_FIELD (cb_ref (x))->count++;
 			}
 		}
-		/* End implementation using varargs */
-
-		/* Original multiple call implementation */
-/* RXW Start comment out
-		int is_stdout = (upon == cb_int1);
-		const char *display = is_stdout ? "cob_display" : "cob_display_error";
-		const char *newline = is_stdout ? "cob_newline" : "cob_newline_error";
-
-		for (l = values; l; l = CB_CHAIN (l)) {
-			cb_emit (cb_build_funcall_1 (display, CB_VALUE (l)));
-			if (CB_FIELD_P (l)) {
-				CB_FIELD (l)->count++;
-			}
-		}
-		if (no_adv == cb_int0)
-			cb_emit (cb_build_funcall_0 (newline));
-RXW End comment out */
-		/* End Original multiple call implementation */
 	}
 }
 
@@ -2400,10 +2415,11 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
 	cb_tree loc = src->source_line ? src : dst;
 
 	if (CB_TREE_CLASS (dst) == CB_CLASS_POINTER) {
-		if (CB_TREE_CLASS (src) == CB_CLASS_POINTER)
+		if (CB_TREE_CLASS (src) == CB_CLASS_POINTER) {
 			return 0;
-		else
+		} else {
 			goto invalid;
+		}
 	}
 
 	f = cb_field (dst);
@@ -2597,8 +2613,9 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
       invalid:
 	if (is_value)
 		cb_error_x (loc, _("invalid VALUE clause"));
-	else
+	else {
 		cb_error_x (loc, _("invalid MOVE statement"));
+	}
 	return -1;
 
       expect_numeric:
@@ -2916,8 +2933,9 @@ cb_build_move (cb_tree src, cb_tree dst)
 	if (CB_REFERENCE_P (dst))
 		CB_REFERENCE (dst)->type = CB_RECEIVING_OPERAND;
 
-	if (CB_TREE_CLASS (dst) == CB_CLASS_POINTER)
+	if (CB_TREE_CLASS (dst) == CB_CLASS_POINTER) {
 		return cb_build_assign (dst, src);
+	}
 
 	if (CB_INDEX_P (dst))
 		return cb_build_assign (dst, src);
@@ -3225,6 +3243,25 @@ cb_emit_set_to (cb_tree vars, cb_tree x)
 	}
 #endif
 
+	if (CB_CAST_P (x)) {
+		struct cb_cast *p = CB_CAST (x);
+
+		if (p->type == CB_CAST_PROGRAM_POINTER) {
+			for (l = vars; l; l = CB_CHAIN (l)) {
+				cb_tree v = CB_VALUE (l);
+
+				if (!CB_REFERENCE_P (v)) {
+					cb_error_x (CB_TREE (current_statement),
+					_("SET targets must be PROGRAM-POINTER"));
+					CB_VALUE (l) = cb_error_node;
+				} else if (CB_FIELD(cb_ref(v))->usage != CB_USAGE_PROGRAM_POINTER) {
+					cb_error_x (CB_TREE (current_statement),
+					_("SET targets must be PROGRAM-POINTER"));
+					CB_VALUE (l) = cb_error_node;
+				}
+			}
+		}
+	}
 	/* validate the targets */
 	for (l = vars; l; l = CB_CHAIN (l)) {
 		cb_tree v = CB_VALUE (l);

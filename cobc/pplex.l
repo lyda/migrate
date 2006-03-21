@@ -40,9 +40,9 @@
 
 static int within_comment = 0;
 static int newline_count = 0;
+static int inside_bracket = 0;
 static int quotation_mark = 0;
 static int consecutive_quotation = 0;
-static int got_progid = 0;
 static int last_line_1 = -1;
 static int last_line_2 = -1;
 
@@ -75,7 +75,6 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
 %%
 
 %{
-	got_progid = 0;
 %}
 
 <*>^"*".* |
@@ -154,14 +153,6 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
     }
 }
 
-"PROGRAM-ID" {
-	ECHO;
-	if (got_progid) {
-		possible_nested = 1;
-	}
-	got_progid = 1;
-}
-
 "EJECT"\.? |
 "SKIP1"\.? |
 "SKIP2"\.? |
@@ -178,8 +169,17 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
 }
 
 [,;]?\n			{ ppecho ("\n"); cb_source_line++; }
-[,;]?[ ]+		{ ppecho (" "); }
+[;]?[ ]+		{ ppecho (" "); }
+[,]?[ ]+ {
+  if (inside_bracket) {
+	ppecho (", ");
+  } else {
+	ppecho (" ");
+  }
+}
 
+"("			{ inside_bracket++; ppecho ("("); }
+")"			{ inside_bracket--; ppecho (")"); }
 {WORD} |
 {NUMRIC_LITERAL} |
 {ALNUM_LITERAL} |
@@ -194,6 +194,7 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
   if (p->next == NULL) {
 	within_comment = 0;
 	newline_count = 0;
+	inside_bracket = 0;
 	current_replace_list = NULL;
 	text_queue = NULL;
 	copy_stack = NULL;
@@ -214,7 +215,6 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
 
   copy_stack = p->next;
   free (p);
-  got_progid = 0;
 }
 
 %%

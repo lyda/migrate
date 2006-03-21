@@ -347,6 +347,8 @@ output_data (cb_tree x)
       }
 */
     default:
+	fprintf(stderr, "Unexpected tree tag %d\n", CB_TREE_TAG(x));
+	fflush(stderr);
       ABORT ();
     }
 }
@@ -631,6 +633,9 @@ output_integer (cb_tree x)
 	    output_data (p->val);
 	    output (")");
 	    break;
+	  case CB_CAST_PROGRAM_POINTER:
+	    output_func_1 ("cob_call_resolve", x);
+	    break;
 	  default:
 	    ABORT ();
 	  }
@@ -649,8 +654,13 @@ output_integer (cb_tree x)
 	    return;
 
 	  case CB_USAGE_POINTER:
-	  case CB_USAGE_PROGRAM_POINTER:
 	    output ("(*(unsigned char **) (");
+	    output_data (x);
+	    output ("))");
+	    return;
+
+	  case CB_USAGE_PROGRAM_POINTER:
+	    output ("(*(void **) (");
 	    output_data (x);
 	    output ("))");
 	    return;
@@ -830,6 +840,9 @@ output_param (cb_tree x, int id)
 	    break;
 	  case CB_CAST_LENGTH:
 	    output_size (p->val);
+	    break;
+	  case CB_CAST_PROGRAM_POINTER:
+	    output_param (p->val, id);
 	    break;
 	  }
 	break;
@@ -1758,6 +1771,11 @@ output_call (struct cb_call *p)
   if (dynamic_link)
     output_line ("int (*func)();");
 
+  if (CB_REFERENCE_P (p->name) && CB_FIELD_P (CB_REFERENCE(p->name)->value) &&
+	CB_FIELD(CB_REFERENCE(p->name)->value)->usage == CB_USAGE_PROGRAM_POINTER) {
+		dynamic_link = 0;
+  }
+
   /* setup arguments */
   for (l = p->args, n = 1; l; l = CB_CHAIN (l), n++)
     {
@@ -1814,8 +1832,18 @@ output_call (struct cb_call *p)
   if (!dynamic_link)
     {
       /* static link */
-      output_integer (cb_return_code);
-      output (" = %s", cb_encode_program_id ((char *)(CB_LITERAL (p->name)->data)));
+      if (CB_REFERENCE_P (p->name) && CB_FIELD_P (CB_REFERENCE(p->name)->value) &&
+	  CB_FIELD(CB_REFERENCE(p->name)->value)->usage == CB_USAGE_PROGRAM_POINTER) {
+		output ("func = ");
+		output_integer (p->name);
+		output (";\n");
+		output_prefix ();
+		output_integer (cb_return_code);
+		output (" = func");
+      } else {
+		output_integer (cb_return_code);
+		output (" = %s", cb_encode_program_id ((char *)(CB_LITERAL (p->name)->data)));
+      }
     }
   else
     {
@@ -3267,8 +3295,10 @@ codegen (struct cb_program *prog, int nested)
   parameter_list = NULL;
   memset ((char *)i_counters, 0, sizeof (i_counters));
 
+/* RXW - This can't be right, we can have an ENTRY clause
   if (prog->gen_main)
     prog->flag_initial = 1;
+*/
 
   output_target = yyout;
 

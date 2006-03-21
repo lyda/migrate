@@ -90,7 +90,6 @@ extern int			errorcount;
 extern int			warningcount;
 extern int			entry_number;
 extern int			has_external;
-extern int			possible_nested;
 
 extern char			*cb_source_file;
 extern int			cb_source_line;

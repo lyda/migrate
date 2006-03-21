@@ -1,3 +1,7 @@
+2006-03-21  Roger While <simrw@sim-basis.de>
+
+	* move.c : More edited field fixes from Hans Martin Rasch
+
 2006-03-16  Roger While <simrw@sim-basis.de>
 
 	* move.c : Fix edited field with +/- and currency

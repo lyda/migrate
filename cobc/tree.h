@@ -628,7 +628,8 @@ extern cb_tree cb_build_funcall (const char *name, int argc, cb_tree a1,
 enum cb_cast_type {
 	CB_CAST_INTEGER,
 	CB_CAST_ADDRESS,
-	CB_CAST_LENGTH
+	CB_CAST_LENGTH,
+	CB_CAST_PROGRAM_POINTER
 };
 
 struct cb_cast {
@@ -645,6 +646,7 @@ extern cb_tree cb_build_cast (enum cb_cast_type type, cb_tree val);
 #define cb_build_cast_integer(x)	cb_build_cast (CB_CAST_INTEGER, x)
 #define cb_build_cast_address(x)	cb_build_cast (CB_CAST_ADDRESS, x)
 #define cb_build_cast_length(x)		cb_build_cast (CB_CAST_LENGTH, x)
+#define cb_build_cast_ppointer(x)	cb_build_cast (CB_CAST_PROGRAM_POINTER, x)
 
 
 /*
@@ -1100,6 +1102,7 @@ extern cb_tree cb_build_index (cb_tree name);
 extern cb_tree cb_build_identifier (cb_tree x);
 extern cb_tree cb_build_length (cb_tree x);
 extern cb_tree cb_build_address (cb_tree x);
+extern cb_tree cb_build_ppointer (cb_tree x);
 
 extern void cb_validate_program_environment (struct cb_program *prog);
 extern void cb_validate_program_data (struct cb_program *prog);
