@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2006-03-21 17:09+0100\n"
+"POT-Creation-Date: 2006-03-22 18:53+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -352,17 +352,17 @@ msgstr ""
 msgid "'%s' requires %d subscripts"
 msgstr ""
 
-#: cobc/typeck.c:479 libcob/common.c:957
+#: cobc/typeck.c:479 libcob/common.c:963
 #, c-format
 msgid "subscript of '%s' out of bounds: %d"
 msgstr ""
 
-#: cobc/typeck.c:531 libcob/common.c:968
+#: cobc/typeck.c:531 libcob/common.c:974
 #, c-format
 msgid "offset of '%s' out of bounds: %d"
 msgstr ""
 
-#: cobc/typeck.c:536 libcob/common.c:975
+#: cobc/typeck.c:536 libcob/common.c:981
 #, c-format
 msgid "length of '%s' out of bounds: %d"
 msgstr ""
@@ -696,40 +696,40 @@ msgstr ""
 msgid "cannot find module '%s'"
 msgstr ""
 
-#: libcob/common.c:317
+#: libcob/common.c:318
 msgid "warning: cob_init expected in the main program\n"
 msgstr ""
 
-#: libcob/common.c:343
+#: libcob/common.c:344
 msgid "Error - Version mismatch"
 msgstr ""
 
-#: libcob/common.c:344
+#: libcob/common.c:345
 #, c-format
 msgid "%s has version/patch level %s/%d"
 msgstr ""
 
-#: libcob/common.c:346
+#: libcob/common.c:347
 #, c-format
 msgid "Library has version/patch level %s/%d"
 msgstr ""
 
-#: libcob/common.c:935
+#: libcob/common.c:941
 #, c-format
 msgid "'%s' not numeric: '%s'"
 msgstr ""
 
-#: libcob/common.c:946
+#: libcob/common.c:952
 #, c-format
 msgid "OCCURS DEPENDING ON '%s' out of bounds: %d"
 msgstr ""
 
-#: libcob/common.c:990
+#: libcob/common.c:996
 #, c-format
 msgid "EXTERNAL item '%s' has size > %d"
 msgstr ""
 
-#: libcob/common.c:1016
+#: libcob/common.c:1022
 #, c-format
 msgid "Cannot acquire %d bytes of memory - Aborting"
 msgstr ""

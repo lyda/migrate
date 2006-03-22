@@ -276,7 +276,7 @@ extern int cob_is_lower (cob_field *f);
 
 /* Table sort */
 
-extern void cob_table_sort_init (int nkeys);
+extern void cob_table_sort_init (int nkeys, const unsigned char *collating_sequence);
 extern void cob_table_sort_init_key (int flag, cob_field *field);
 extern void cob_table_sort (cob_field *f, int n);
 

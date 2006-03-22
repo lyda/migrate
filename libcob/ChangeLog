@@ -1,3 +1,7 @@
+2006-03-22  Roger While <simrw@sim-basis.de>
+
+	* common.[hc] : Implement COLLATING SEQUENCE for table SORT
+
 2006-03-21  Roger While <simrw@sim-basis.de>
 
 	* move.c : More edited field fixes from Hans Martin Rasch

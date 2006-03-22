@@ -58,6 +58,7 @@ struct cob_exception {
 
 static int		cob_argc = 0;
 static char		**cob_argv = NULL;
+static const unsigned char *old_sequence;
 
 int			cob_initialized = 0;
 int			cob_exception_code = 0;
@@ -813,10 +814,14 @@ sort_compare (const void *data1, const void *data2)
 }
 
 void
-cob_table_sort_init (int nkeys)
+cob_table_sort_init (int nkeys, const unsigned char *collating_sequence)
 {
 	sort_nkeys = 0;
 	sort_keys = cob_malloc (nkeys * sizeof (cob_file_key));
+	old_sequence = cob_current_module->collating_sequence;
+	if (collating_sequence) {
+		cob_current_module->collating_sequence = collating_sequence;
+	}
 }
 
 void
@@ -832,6 +837,7 @@ cob_table_sort (cob_field *f, int n)
 {
 	sort_base = f;
 	qsort (f->data, (size_t) n, f->size, sort_compare);
+	cob_current_module->collating_sequence = old_sequence;
 }
 
 /* Runtime error handling */

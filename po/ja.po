@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2006-03-21 17:09+0100\n"
+"POT-Creation-Date: 2006-03-22 18:53+0100\n"
 "PO-Revision-Date: 2004-08-01 23:55+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -380,17 +380,17 @@ msgstr "`%s' は 1 つの添字を必要とします"
 msgid "'%s' requires %d subscripts"
 msgstr "`%s' は %d つの添字を必要とします"
 
-#: cobc/typeck.c:479 libcob/common.c:957
+#: cobc/typeck.c:479 libcob/common.c:963
 #, fuzzy, c-format
 msgid "subscript of '%s' out of bounds: %d"
 msgstr "'%s' の添字が範囲を超えています: %d"
 
-#: cobc/typeck.c:531 libcob/common.c:968
+#: cobc/typeck.c:531 libcob/common.c:974
 #, fuzzy, c-format
 msgid "offset of '%s' out of bounds: %d"
 msgstr "'%s' の開始位置が範囲を超えています: %d"
 
-#: cobc/typeck.c:536 libcob/common.c:975
+#: cobc/typeck.c:536 libcob/common.c:981
 #, fuzzy, c-format
 msgid "length of '%s' out of bounds: %d"
 msgstr "'%s' の長さが範囲を超えています: %d"
@@ -727,40 +727,40 @@ msgstr "タイプの不適合を厳密に警告する"
 msgid "cannot find module '%s'"
 msgstr "モジュールが見付かりません `%s'"
 
-#: libcob/common.c:317
+#: libcob/common.c:318
 msgid "warning: cob_init expected in the main program\n"
 msgstr "warning: メインプログラムで cob_init 呼ばれていません\n"
 
-#: libcob/common.c:343
+#: libcob/common.c:344
 msgid "Error - Version mismatch"
 msgstr ""
 
-#: libcob/common.c:344
+#: libcob/common.c:345
 #, c-format
 msgid "%s has version/patch level %s/%d"
 msgstr ""
 
-#: libcob/common.c:346
+#: libcob/common.c:347
 #, c-format
 msgid "Library has version/patch level %s/%d"
 msgstr ""
 
-#: libcob/common.c:935
+#: libcob/common.c:941
 #, fuzzy, c-format
 msgid "'%s' not numeric: '%s'"
 msgstr "`%s' は数字ではありません: `%s'"
 
-#: libcob/common.c:946
+#: libcob/common.c:952
 #, fuzzy, c-format
 msgid "OCCURS DEPENDING ON '%s' out of bounds: %d"
 msgstr "OCCURS DEPENDING ON `%s' が範囲を越えています: %d"
 
-#: libcob/common.c:990
+#: libcob/common.c:996
 #, c-format
 msgid "EXTERNAL item '%s' has size > %d"
 msgstr ""
 
-#: libcob/common.c:1016
+#: libcob/common.c:1022
 #, c-format
 msgid "Cannot acquire %d bytes of memory - Aborting"
 msgstr ""

@@ -1,3 +1,8 @@
+2006-03-22  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : Implement COLLATING on table SORT
+	  codegen.c : Update ASCII/EBCDIC table
+
 2006-03-21  Roger While <simrw@sim-basis.de>
 
 	* pplex.l : Fix regression in comma processing

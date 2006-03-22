@@ -3382,7 +3382,7 @@ cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree dup_allow, cb_tree col)
 
 		if (keys == NULL)
 			cb_error_x (name, "table sort without keys not implemented yet");
-		cb_emit (cb_build_funcall_1 ("cob_table_sort_init", cb_int (cb_list_length (keys))));
+		cb_emit (cb_build_funcall_2 ("cob_table_sort_init", cb_int (cb_list_length (keys)), col));
 		for (l = keys; l; l = CB_CHAIN (l))
 			cb_emit (cb_build_funcall_2 ("cob_table_sort_init_key",
 						     CB_PURPOSE (l), CB_VALUE (l)));
