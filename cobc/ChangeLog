@@ -1,5 +1,9 @@
 2006-03-22  Roger While <simrw@sim-basis.de>
 
+	* reserved.c : Fix reserved table sequence (INTO)
+
+2006-03-22  Roger While <simrw@sim-basis.de>
+
 	* typeck.c : Implement COLLATING on table SORT
 	  codegen.c : Update ASCII/EBCDIC table
 

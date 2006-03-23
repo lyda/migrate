@@ -299,8 +299,8 @@ static const struct reserved reserved_words[] = {
   {"INSPECT",		INSPECT},		/* 2002 */
   {"INTERFACE",		-1},			/* 2002 */
   {"INTERFACE-ID",	-1},			/* 2002 */
-  {"INTRINSIC",		-1},			/* 2002 (C/S) */
   {"INTO",		INTO},			/* 2002 */
+  {"INTRINSIC",		-1},			/* 2002 (C/S) */
   {"INVALID",		INVALID},		/* 2002 */
   {"INVOKE",		-1},			/* 2002 */
   {"IS",		IS},			/* 2002 */
