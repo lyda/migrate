@@ -88,6 +88,7 @@ extern int			cb_id;
 
 extern int			errorcount;
 extern int			warningcount;
+extern int			alt_ebcdic;
 extern int			entry_number;
 extern int			has_external;
 

@@ -88,6 +88,7 @@ int			cb_id = 1;
 
 int			errorcount = 0;
 int			warningcount = 0;
+int			alt_ebcdic = 0;
 
 char			*cb_source_file = NULL;
 char			*source_name;
@@ -282,6 +283,10 @@ init_environment (int argc, char *argv[])
 	if (p) {
 		strcat (cob_libs, " ");
 		strcat (cob_libs, p);
+	}
+	p = getenv ("COB_EBCDIC");
+	if (p && (*p == 'F' || *p == 'f')) {
+		alt_ebcdic = 1;
 	}
 }
 

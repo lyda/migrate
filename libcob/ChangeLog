@@ -1,3 +1,12 @@
+2006-03-25  Roger While <simrw@sim-basis.de>
+
+	* common.c : Although not currently used, update the
+	  ASCII/EBCDIC tables
+
+2006-03-23  Roger While <simrw@sim-basis.de>
+
+	* numeric.c : Fix a stack corruption in the fast C-3 compare
+
 2006-03-22  Roger While <simrw@sim-basis.de>
 
 	* common.[hc] : Implement COLLATING SEQUENCE for table SORT

@@ -1,6 +1,16 @@
+2006-03-25  Roger While <simrw@sim-basis.de>
+
+	* cobc.[hc], codegen.c : Allow alternate ASCII/EBCDIC
+	  SORT sequence. Exporting environment variable
+	  COB_EBCDIC=FULL will activate *at compile time*
+	  the full ASCII-EBDIC (256 character) sequence.
+	  Otherwise, we use, as it was upto now, the MF
+	  sequence.
+
 2006-03-22  Roger While <simrw@sim-basis.de>
 
 	* reserved.c : Fix reserved table sequence (INTO)
+	  codegen.c : Fix ASCII/EBCDIC table again
 
 2006-03-22  Roger While <simrw@sim-basis.de>
 

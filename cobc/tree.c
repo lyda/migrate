@@ -301,6 +301,11 @@ cb_tree_category (cb_tree x)
 			}
 		break;
 	}
+	case CB_TAG_ALPHABET_NAME:
+	{
+		x->category = CB_CATEGORY_ALPHANUMERIC;
+		break;
+	}
 	default:
 		fprintf (stderr, "Unknown tree tag %d Category %d\n", CB_TREE_TAG (x), x->category);
 		fflush (stderr);
@@ -876,7 +881,7 @@ cb_tree
 cb_build_implicit_field (cb_tree name, int len)
 {
 	cb_tree	x = cb_build_field (name);
-	char	pic[256];
+	char	pic[48];
 
 	sprintf (pic, "X(%d)", len);
 	CB_FIELD (x)->pic = CB_PICTURE (cb_build_picture (pic));

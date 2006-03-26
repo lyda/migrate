@@ -1100,7 +1100,7 @@ cob_cmp_packed (cob_field *f, int n)
 	}
 	val1[19] &= 0xf0;
 	if ((f->attr->digits % 2) == 0) {
-		val1[size] &= 0x0f;
+		val1[20 - f->size] &= 0x0f;
 	}
 	if (n != lastval) {
 		lastval = n;

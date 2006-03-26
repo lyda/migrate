@@ -51,6 +51,7 @@ static struct expr_node *expr_stack;			/* expr node stack */
 
 static char		expr_prio[128];
 
+#define START_STACK_SIZE	16
 #define TOKEN(offset)	(expr_stack[expr_index + offset].token)
 #define VALUE(offset)	(expr_stack[expr_index + offset].value)
 
@@ -752,8 +753,8 @@ cb_expr_init (void)
 		expr_prio['('] = 9;
 		expr_prio[0] = 10;
 		/* init stack */
-		expr_stack_size = 8;
-		expr_stack = cob_malloc (sizeof (struct expr_node) * expr_stack_size);
+		expr_stack_size = START_STACK_SIZE;
+		expr_stack = cob_malloc (sizeof (struct expr_node) * START_STACK_SIZE);
 		expr_stack[0].token = 0;	/* dummy */
 		expr_stack[1].token = 0;	/* dummy */
 		expr_stack[2].token = 0;	/* dummy */
