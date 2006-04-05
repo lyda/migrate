@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2006-04-05 20:12+0200\n"
+"POT-Creation-Date: 2006-04-05 21:44+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -292,12 +292,12 @@ msgstr ""
 msgid "VALUE clause ignored for EXTERNAL items"
 msgstr ""
 
-#: cobc/field.c:559 cobc/field.c:567 cobc/field.c:689 cobc/field.c:692
+#: cobc/field.c:559 cobc/field.c:567 cobc/field.c:685 cobc/field.c:688
 #, c-format
 msgid "size of '%s' larger than size of '%s'"
 msgstr ""
 
-#: cobc/field.c:625
+#: cobc/field.c:621
 #, c-format
 msgid "'%s' binary field cannot be larger than 18 digits"
 msgstr ""

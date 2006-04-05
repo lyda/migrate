@@ -607,11 +607,7 @@ compute_size (struct cb_field *f)
 				}
 			}
 		}
-		if (f->level == 1 && f->occurs_max) {
-			f->size = size * f->occurs_max;
-		} else {
-			f->size = size;
-		}
+		f->size = size;
 	} else {
 		/* elementary item */
 		switch (f->usage) {
@@ -733,9 +729,9 @@ cb_validate_field (struct cb_field *f)
 	/* compute size */
 	compute_size (f);
 	if (!f->redefines) {
-		f->memory_size = f->size;
-	} else if (f->redefines->memory_size < f->size) {
-		f->redefines->memory_size = f->size;
+		f->memory_size = f->size * f->occurs_max;
+	} else if (f->redefines->memory_size < f->size * f->occurs_max) {
+		f->redefines->memory_size = f->size * f->occurs_max;
 	}
 
 	validate_field_value (f);

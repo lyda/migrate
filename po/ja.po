@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2006-04-05 20:12+0200\n"
+"POT-Creation-Date: 2006-04-05 21:44+0200\n"
 "PO-Revision-Date: 2004-08-01 23:55+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -320,12 +320,12 @@ msgstr "REDEFINES に含まれる項目は VALUE 句を持つことが出来ません"
 msgid "VALUE clause ignored for EXTERNAL items"
 msgstr ""
 
-#: cobc/field.c:559 cobc/field.c:567 cobc/field.c:689 cobc/field.c:692
+#: cobc/field.c:559 cobc/field.c:567 cobc/field.c:685 cobc/field.c:688
 #, fuzzy, c-format
 msgid "size of '%s' larger than size of '%s'"
 msgstr "`%s' のサイズが `%s' のサイズを越えています"
 
-#: cobc/field.c:625
+#: cobc/field.c:621
 #, fuzzy, c-format
 msgid "'%s' binary field cannot be larger than 18 digits"
 msgstr "18 桁を越える数字項目は許されません"
