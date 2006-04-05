@@ -34,7 +34,7 @@
 
 #define ABORT()								      \
 do {									      \
-	fprintf (stderr, "%s:%d: internal compiler error\n", __FILE__, __LINE__); \
+	fprintf (stderr, "%s:%d: Internal compiler error\n", __FILE__, __LINE__); \
 	(void)longjmp (cob_jmpbuf, 1);					\
 } while (0)
 

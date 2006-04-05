@@ -188,6 +188,7 @@ static const struct reserved reserved_words[] = {
   {"DESTINATION",	-1},			/* 2002 */
   {"DETAIL",		-1},			/* 2002 */
   {"DISABLE",		-1},			/* 2002 */
+  {"DISK",		DISK},			/* extension */
   {"DISPLAY",		DISPLAY},		/* 2002 */
   {"DIVIDE",		DIVIDE},		/* 2002 */
   {"DIVISION",		DIVISION},		/* 2002 */
@@ -334,7 +335,7 @@ static const struct reserved reserved_words[] = {
   {"LOW-VALUE",		LOW_VALUE},		/* 2002 */
   {"LOW-VALUES",	LOW_VALUE},		/* 2002 */
   {"LOWLIGHT",		LOWLIGHT},		/* 2002 (C/S) */
-  {"MANUAL",		MANUAL},		/* extension */
+  {"MANUAL",		MANUAL},		/* 2002 (C/S) */
   {"MEMORY",		MEMORY},		/* 85 */
   {"MERGE",		MERGE},			/* 2002 */
   {"MESSAGE",		-1},			/* 2002 */
@@ -343,7 +344,7 @@ static const struct reserved reserved_words[] = {
   {"MINUS",		MINUS},			/* 2002 */
   {"MODE",		MODE},			/* 2002 */
   {"MOVE",		MOVE},			/* 2002 */
-  {"MULTIPLE",		MULTIPLE},		/* 85 */
+  {"MULTIPLE",		MULTIPLE},		/* 2002 (C/S) */
   {"MULTIPLY",		MULTIPLY},		/* 2002 */
   {"NATIONAL",		NATIONAL},		/* 2002 */
   {"NATIONAL-EDITED",	NATIONAL_EDITED},	/* 2002 */

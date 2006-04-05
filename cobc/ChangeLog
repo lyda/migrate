@@ -1,3 +1,24 @@
+2006-04-05  Roger While <simrw@sim-basis.de>
+
+	* field.c : Fix memory allocation when OCCURS at 01 level
+	  parser.y, codegen.c : Fix CLASS clause in SPECIAL-NAMES
+
+2006-04-04  Roger While <simrw@sim-basis.de>
+
+	* parser.y : Correctly produce minimal one-line
+		     program > PROGRAM-ID. MYPROG.
+	* codegen.c, field.c : Run lindent
+
+2006-03-31  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : Fix abort on invalid SET
+	  typeck.c, codegen.c, tree.c : Tidy abort reporting
+	  Allow usage of ALPHABET names as identifiers
+
+2006-03-30  Roger While <simrw@sim-basis.de>
+
+	* reserved.c, parser.y : Allow DISK in SELECT
+
 2006-03-25  Roger While <simrw@sim-basis.de>
 
 	* cobc.[hc], codegen.c : Allow alternate ASCII/EBCDIC

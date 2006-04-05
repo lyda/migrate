@@ -260,6 +260,7 @@ cb_tree_category (cb_tree x)
 			x->category = CB_CATEGORY_PROGRAM_POINTER;
 			break;
 		default:
+			fprintf (stderr, "Unexpected cast type -> %d\n", p->type);
 			ABORT ();
 		}
 		break;
@@ -308,7 +309,6 @@ cb_tree_category (cb_tree x)
 	}
 	default:
 		fprintf (stderr, "Unknown tree tag %d Category %d\n", CB_TREE_TAG (x), x->category);
-		fflush (stderr);
 		ABORT ();
 	}
 
@@ -346,6 +346,7 @@ cb_tree_type (cb_tree x)
 		case CB_USAGE_PACKED:
 			return COB_TYPE_NUMERIC_PACKED;
 		default:
+			fprintf (stderr, "Unexpected numeric usage -> %d\n", f->usage);
 			ABORT ();
 		}
 	case CB_CATEGORY_NUMERIC_EDITED:
@@ -355,6 +356,7 @@ cb_tree_type (cb_tree x)
 	case CB_CATEGORY_PROGRAM_POINTER:
 		return COB_TYPE_NUMERIC_BINARY;
 	default:
+		fprintf (stderr, "Unexpected category -> %d\n", CB_TREE_CATEGORY (x));
 		ABORT ();
 	}
 /* NOT REACHED */
@@ -415,8 +417,9 @@ cb_get_int (cb_tree x)
 		if (l->data[i] != '0')
 			break;
 
-	if (l->size - i >= 10)
+	if (l->size - i >= 10) {
 		ABORT ();
+	}
 
 	for (; i < l->size; i++)
 		val = val * 10 + l->data[i] - '0';
@@ -1338,8 +1341,9 @@ cb_build_binary_op (cb_tree x, int op, cb_tree y)
 	case '&':
 	case '|':
 		/* logical operators */
-		if (CB_TREE_CLASS (x) != CB_CLASS_BOOLEAN || (y && CB_TREE_CLASS (y) != CB_CLASS_BOOLEAN))
-			ABORT ();
+		if (CB_TREE_CLASS (x) != CB_CLASS_BOOLEAN || (y && CB_TREE_CLASS (y) != CB_CLASS_BOOLEAN)) {
+			return cb_error_node;
+		}
 		category = CB_CATEGORY_BOOLEAN;
 		break;
 
@@ -1349,6 +1353,7 @@ cb_build_binary_op (cb_tree x, int op, cb_tree y)
 		break;
 
 	default:
+		fprintf (stderr, "Unexpected operator -> %d\n", op);
 		ABORT ();
 	}
 

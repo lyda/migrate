@@ -41,8 +41,13 @@ tagnames=
 
 if echo $CFLAGS | grep 'aix64' 1>/dev/null 2>&1
 then
-	NM="nm -X64"
-	AR="/usr/ccs/bin/nm -X64 -B"
+	if test -f /usr/ccs/bin/ar
+	then
+		AR="/usr/ccs/bin/ar -X64"
+	else
+		AR="ar -X64"
+	fi
+	NM="/usr/ccs/bin/nm -X64 -B"
 fi
 
 AM_INIT_AUTOMAKE([gnu no-texinfo.tex])

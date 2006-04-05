@@ -78,6 +78,7 @@ static int eval_check[64][64];
 static void emit_entry (const char *name, const int encode, cb_tree using_list);
 static void terminator_warning (void);
 static void terminator_error (void);
+static int literal_value (cb_tree x);
 %}
 
 %token WORD LITERAL PICTURE MNEMONIC_NAME FUNCTION_NAME
@@ -122,7 +123,7 @@ static void terminator_error (void);
 %token COMP COMP_1 COMP_2 COMP_3 COMP_4 COMP_5 COMP_X
 %token LINAGE_COUNTER PROGRAM_POINTER
 %token NOT_EXCEPTION SIZE_ERROR NOT_SIZE_ERROR NOT_OVERFLOW NOT_EOP
-%token INVALID_KEY NOT_INVALID_KEY COMMA_DELIM
+%token INVALID_KEY NOT_INVALID_KEY COMMA_DELIM DISK
 
 %left '+' '-'
 %left '*' '/'
@@ -164,6 +165,9 @@ start:
 	}
 	if (errorcount > 0)
 		YYABORT;
+	if (!current_program->entry_list) {
+		emit_entry (current_program->program_id, 0, NULL);
+	}
   }
 ;
 
@@ -484,7 +488,8 @@ class_item:
   literal			{ $$ = $1; }
 | literal THRU literal
   {
-    if (CB_LITERAL ($1)->data[0] < CB_LITERAL ($3)->data[0])
+    /* if (CB_LITERAL ($1)->data[0] < CB_LITERAL ($3)->data[0]) */
+    if (literal_value ($1) < literal_value ($3))
       $$ = cb_build_pair ($1, $3);
     else
       $$ = cb_build_pair ($3, $1);
@@ -645,9 +650,9 @@ select_clause:
 /* ASSIGN clause */
 
 assign_clause:
-  ASSIGN _to _ext_clause assignment_name
+  ASSIGN _to _ext_clause _disk assignment_name
   {
-    current_file->assign = cb_build_assignment_name ($4);
+    current_file->assign = cb_build_assignment_name ($5);
   }
 ;
 _ext_clause:
@@ -3766,6 +3771,7 @@ _characters:	| CHARACTERS ;
 _collating:	| COLLATING ;
 _contains:	| CONTAINS ;
 _data:		| DATA ;
+_disk:		| DISK ;
 _file:		| TOK_FILE ;
 _for:		| FOR ;
 _from:		| FROM ;
@@ -3805,67 +3811,69 @@ _with:		| WITH ;
 static void
 emit_entry (const char *name, const int encode, cb_tree using_list)
 {
-  char buff[256];
-  cb_tree l, label;
+	cb_tree	l, label;
+	char	buff[256];
 
-  sprintf (buff, "E$%s", name);
-  label = cb_build_label (cb_build_reference (buff), NULL);
-  if (encode) {
-	CB_LABEL (label)->name = cb_encode_program_id (name);
-  } else {
-	CB_LABEL (label)->name = name;
-  }
-  CB_LABEL (label)->need_begin = 1;
-  emit_statement (label);
-
-  /*
-  if (current_program->gen_main && using_list) {
-	cb_error ("Executable program requested but PROCEDURE/ENTRY has USING clause");
-  }
-  */
-  for (l = using_list; l; l = CB_CHAIN (l))
-    {
-      cb_tree x = CB_VALUE (l);
-      if (x != cb_error_node && cb_ref (x) != cb_error_node)
-	{
-	  struct cb_field *f = CB_FIELD (cb_ref (x));
-	  if (f->level != 01 && f->level != 77)
-	    cb_error_x (x, _("'%s' not level 01 or 77"), cb_name (x));
-	  if (f->storage != CB_STORAGE_LINKAGE)
-	    cb_error_x (x, _("'%s' is not in LINKAGE SECTION"), cb_name (x));
-	  if (f->redefines)
-	    cb_error_x (x, _("'%s' REDEFINES field not allowed here"), cb_name (x));
+	sprintf (buff, "E$%s", name);
+	label = cb_build_label (cb_build_reference (buff), NULL);
+	if (encode) {
+		CB_LABEL (label)->name = cb_encode_program_id (name);
+	} else {
+		CB_LABEL (label)->name = name;
 	}
-    }
-  for (l = current_program->entry_list; l; l = CB_CHAIN (l))
-    {
-	cb_tree x = CB_VALUE (l);
+	CB_LABEL (label)->need_begin = 1;
+	emit_statement (label);
 
-	if (strcmp(name, CB_LABEL(CB_PURPOSE(l))->name) == 0) {
-		cb_error_x (x, _("ENTRY '%s' duplicated"), name);
+	for (l = using_list; l; l = CB_CHAIN (l)) {
+		cb_tree x = CB_VALUE (l);
+		if (x != cb_error_node && cb_ref (x) != cb_error_node) {
+			struct cb_field *f = CB_FIELD (cb_ref (x));
+			if (f->level != 01 && f->level != 77)
+				cb_error_x (x, _("'%s' not level 01 or 77"), cb_name (x));
+			if (f->storage != CB_STORAGE_LINKAGE)
+				cb_error_x (x, _("'%s' is not in LINKAGE SECTION"), cb_name (x));
+			if (f->redefines)
+				cb_error_x (x, _("'%s' REDEFINES field not allowed here"), cb_name (x));
+		}
 	}
-    }
+	for (l = current_program->entry_list; l; l = CB_CHAIN (l)) {
+		cb_tree x = CB_VALUE (l);
 
-  entry_number++;
+		if (strcmp(name, CB_LABEL(CB_PURPOSE(l))->name) == 0) {
+			cb_error_x (x, _("ENTRY '%s' duplicated"), name);
+		}
+	}
 
-  current_program->entry_list =
-    cb_list_append (current_program->entry_list,
-		    cb_build_pair (label, using_list));
+	entry_number++;
+
+	current_program->entry_list = cb_list_append (current_program->entry_list,
+							cb_build_pair (label, using_list));
 }
 
 static void
 terminator_warning (void)
 {
-  if (cb_warn_terminator && current_statement->need_terminator)
-    cb_warning_x (CB_TREE (current_statement),
-		  _("%s statement not terminated by END-%s"),
-		  current_statement->name, current_statement->name);
+	if (cb_warn_terminator && current_statement->need_terminator) {
+		cb_warning_x (CB_TREE (current_statement),
+			_("%s statement not terminated by END-%s"),
+			current_statement->name, current_statement->name);
+	}
 }
 
 static void
 terminator_error (void)
 {
-  cb_error_x (CB_TREE (current_statement),
-	      _("%s statement not terminated by END-%s"),
-	      current_statement->name, current_statement->name);
+	cb_error_x (CB_TREE (current_statement),
+			_("%s statement not terminated by END-%s"),
+			current_statement->name, current_statement->name);
+}
+
+static int
+literal_value (cb_tree x)
+{
+	if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC) {
+		return cb_get_int (x);
+	} else {
+		return CB_LITERAL (x)->data[0];
+	}
 }

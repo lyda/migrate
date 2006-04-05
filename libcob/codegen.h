@@ -213,7 +213,11 @@ cob_addsub_u16_binary (cob_field *f, const int addsub, const int val)
 		}
 		*(unsigned short *)p = COB_BSWAP_16(n);
 	} else {
-		*(unsigned short *)p += val;
+		if (!addsub) {
+			*(unsigned short *)p += val;
+		} else {
+			*(unsigned short *)p -= val;
+		}
 	}
 #else
 	memcpy ((unsigned char *)&n, p, sizeof(short));
@@ -242,7 +246,11 @@ cob_addsub_s16_binary (cob_field *f, const int addsub, const int val)
 		}
 		*(short *)p = COB_BSWAP_16(n);
 	} else {
-		*(short *)p += val;
+		if (!addsub) {
+			*(short *)p += val;
+		} else {
+			*(short *)p -= val;
+		}
 	}
 #else
 	memcpy ((unsigned char *)&n, p, sizeof(short));
@@ -271,7 +279,11 @@ cob_addsub_u32_binary (cob_field *f, const int addsub, const int val)
 		}
 		*(unsigned int *)p = COB_BSWAP_32(n);
 	} else {
-		*(unsigned int *)p += val;
+		if (!addsub) {
+			*(unsigned int *)p += val;
+		} else {
+			*(unsigned int *)p -= val;
+		}
 	}
 #else
 	memcpy ((unsigned char *)&n, p, sizeof(int));
@@ -300,7 +312,11 @@ cob_addsub_s32_binary (cob_field *f, const int addsub, const int val)
 		}
 		*(int *)p = COB_BSWAP_32(n);
 	} else {
-		*(int *)p += val;
+		if (!addsub) {
+			*(int *)p += val;
+		} else {
+			*(int *)p -= val;
+		}
 	}
 #else
 	memcpy ((unsigned char *)&n, p, sizeof(int));
@@ -329,7 +345,11 @@ cob_addsub_u64_binary (cob_field *f, const int addsub, const int val)
 		}
 		*(unsigned long long *)p = COB_BSWAP_64(n);
 	} else {
-		*(unsigned long long *)p += val;
+		if (!addsub) {
+			*(unsigned long long *)p += val;
+		} else {
+			*(unsigned long long *)p -= val;
+		}
 	}
 #else
 	memcpy ((unsigned char *)&n, p, sizeof(long long));
@@ -358,7 +378,11 @@ cob_addsub_s64_binary (cob_field *f, const int addsub, const int val)
 		}
 		*(long long *)p = COB_BSWAP_64(n);
 	} else {
-		*(long long *)p += val;
+		if (!addsub) {
+			*(long long *)p += val;
+		} else {
+			*(long long *)p -= val;
+		}
 	}
 #else
 	memcpy ((unsigned char *)&n, p, sizeof(long long));

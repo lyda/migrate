@@ -385,7 +385,7 @@ cb_build_assignment_name (cb_tree name)
 		}
 
 	default:
-		ABORT ();
+		return cb_error_node;
 	}
 }
 
@@ -988,7 +988,6 @@ cb_expr_shift (int token, cb_tree value)
 		expr_stack = realloc (expr_stack, sizeof (struct expr_node) * expr_stack_size);
 		if (!expr_stack) {
 			fprintf (stderr, "Memory realloc failed - Aborting\n");
-			fflush (stderr);
 			(void)longjmp (cob_jmpbuf, 1);
 		}
 	}
@@ -1143,6 +1142,7 @@ decimal_compute (char op, cb_tree x, cb_tree y)
 		func = "cob_decimal_pow";
 		break;
 	default:
+		fprintf(stderr, "Unexpected operation %d\n", op);
 		ABORT ();
 	}
 	dpush (cb_build_funcall_2 (func, x, y));
@@ -1154,10 +1154,12 @@ decimal_expand (cb_tree d, cb_tree x)
 	switch (CB_TREE_TAG (x)) {
 	case CB_TAG_CONST:
 	{
-		if (x == cb_zero)
+		if (x == cb_zero) {
 			dpush (cb_build_funcall_2 ("cob_decimal_set_int", d, cb_int0));
-		else
+		} else {
+			fprintf (stderr, "Unexpected constant expansion\n");
 			ABORT ();
+		}
 		break;
 	}
 	case CB_TAG_LITERAL:
@@ -1208,7 +1210,6 @@ decimal_expand (cb_tree d, cb_tree x)
 		break;
 	default:
 		fprintf (stderr, "Unexpected tree tag %d\n", CB_TREE_TAG (x));
-		fflush (stderr);
 		ABORT ();
 	}
 }
@@ -1348,6 +1349,7 @@ cb_build_cond (cb_tree x)
 			return cb_build_cond (build_cond_88 (x));
 		}
 
+		fprintf (stderr, "Unexpected condition error\n");
 		ABORT ();
 	}
 	case CB_TAG_BINARY_OP:
@@ -1553,6 +1555,7 @@ cb_build_cond (cb_tree x)
 		return cb_build_binary_op (x, p->op, p->y);
 	}
 	default:
+		fprintf (stderr, "Unexpected condition error\n");
 		ABORT ();
 	}
 /* NOT REACHED */
@@ -2423,6 +2426,9 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
 		}
 	}
 
+	if (CB_REFERENCE_P(dst) && CB_ALPHABET_NAME_P(CB_REFERENCE(dst)->value)) {
+		goto invalid;
+	}
 	f = cb_field (dst);
 	switch (CB_TREE_TAG (src)) {
 	case CB_TAG_CONST:
@@ -2558,6 +2564,9 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
 	case CB_TAG_FIELD:
 	case CB_TAG_REFERENCE:
 	{
+		if (CB_REFERENCE_P(src) && CB_ALPHABET_NAME_P(CB_REFERENCE(src)->value)) {
+			break;
+		}
 		/* non-elementary move */
 		if (cb_field (src)->children || cb_field (dst)->children)
 			break;
@@ -2595,7 +2604,8 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
 			}
 			break;
 		default:
-			ABORT ();
+			cb_error_x (loc, _("Invalid statement"));
+			return -1;
 		}
 		break;
 	}
@@ -2606,7 +2616,6 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
 		break;
 	default:
 		fprintf (stderr, "Invalid tree tag %d\n", CB_TREE_TAG (src));
-		fflush (stdout);
 		ABORT ();
 	}
 	return 0;
@@ -2679,6 +2688,7 @@ cb_build_move_num_zero (cb_tree x)
 	case CB_USAGE_PACKED:
 		return cb_build_memset (x, 0x00);
 	default:
+		fprintf (stderr, "Unexpected usage %d\n", cb_field (x)->usage);
 		ABORT ();
 	}
 /* NOT REACHED */
@@ -2815,6 +2825,7 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 					*p += 0x10;
 					break;
 				default:
+					fprintf (stderr, "Unexpected display sign %d\n", cb_display_sign);
 					ABORT ();
 				}
 			}
@@ -2938,6 +2949,9 @@ cb_build_move (cb_tree src, cb_tree dst)
 		return cb_build_assign (dst, src);
 	}
 
+	if (CB_REFERENCE_P (src) && CB_ALPHABET_NAME_P(CB_REFERENCE(src)->value)) {
+		return cb_build_move_call (src, dst);
+	}
 	if (CB_INDEX_P (dst))
 		return cb_build_assign (dst, src);
 
