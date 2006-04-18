@@ -85,6 +85,7 @@ struct filename {
 };
 
 extern int			cb_id;
+extern int			cb_flag_main;
 
 extern int			errorcount;
 extern int			warningcount;

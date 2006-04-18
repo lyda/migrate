@@ -346,7 +346,7 @@ at_help_all='1;fundamental.at:22;DISPLAY literals;;
 35;misc.at:165;cobcrun validation;;
 36;misc.at:206;MOVE to itself;;
 37;misc.at:225;MOVE with refmod;;
-38;misc.at:244;MOVE with refmod;;
+38;misc.at:244;MOVE with refmod (variable);;
 39;misc.at:265;MOVE with group refmod;;
 40;misc.at:285;MOVE indexes;;
 41;misc.at:306;MOVE X'00';;
@@ -4093,10 +4093,10 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  38 ) # 38. misc.at:244: MOVE with refmod
+  38 ) # 38. misc.at:244: MOVE with refmod (variable)
     at_setup_line='misc.at:244'
-    at_desc='MOVE with refmod'
-    $at_quiet $ECHO_N " 38: MOVE with refmod                             $ECHO_C"
+    at_desc='MOVE with refmod (variable)'
+    $at_quiet $ECHO_N " 38: MOVE with refmod (variable)                  $ECHO_C"
     at_xfail=no
     (
       echo "38. misc.at:244: testing ..."

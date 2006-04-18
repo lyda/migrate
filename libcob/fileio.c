@@ -790,15 +790,19 @@ lineseq_read (cob_file *f)
 static int
 lineseq_write (cob_file *f, int opt)
 {
-	size_t i, size;
+	int	i;
+	size_t	size;
 
-	if (opt == 0)
+	if (opt == 0) {
 		opt = COB_WRITE_BEFORE | COB_WRITE_LINES | 1;
+	}
 
 	/* determine the size to be written */
-	for (i = f->record->size - 1; i >= 0; i--)
-		if (f->record->data[i] != ' ')
+	for (i = (int)f->record->size - 1; i >= 0; i--) {
+		if (f->record->data[i] != ' ') {
 			break;
+		}
+	}
 	size = i + 1;
 
 	if (f->linage && f->flag_needs_top) {
@@ -815,10 +819,6 @@ lineseq_write (cob_file *f, int opt)
 			return COB_STATUS_30_PERMANENT_ERROR;
 		}
 	}
-/* RXW
-	for (i = 0; i < size; i++)
-		putc (f->record->data[i], (FILE *)f->file);
-*/
 
 	if (f->linage) {
 		putc ('\n', (FILE *)f->file);
@@ -1863,7 +1863,7 @@ cob_sort_init (cob_file *f, int nkeys, const unsigned char *collating_sequence)
 #endif
 
 	f->assign->size = strlen (filename);
-	f->assign->data = (ucharptr)strdup (filename);
+	f->assign->data = (ucharptr)cob_strdup (filename);
 	f->file = cob_malloc (sizeof (struct sort_file));
 	f->keys = cob_malloc (sizeof (cob_file_key) * nkeys);
 	f->nkeys = 0;

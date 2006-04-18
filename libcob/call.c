@@ -127,7 +127,7 @@ cob_set_library_path (const char *path)
 	}
 
 	/* build path array */
-	p = strdup (path);
+	p = cob_strdup (path);
 	resolve_path = cob_malloc (sizeof (char *) * resolve_size);
 	resolve_path[0] = strtok (p, PATHSEPS);
 	for (i = 1; i < resolve_size; i++) {
@@ -168,7 +168,7 @@ cob_init_call (void)
 
 	s = getenv ("COB_PRE_LOAD");
 	if (s != NULL) {
-		p = strdup (s);
+		p = cob_strdup (s);
 		s = strtok (p, ":");
 		for ( ; s; s = strtok (NULL, ":")) {
 			for (i = 0; i < resolve_size; i++) {
@@ -200,8 +200,8 @@ insert (const char *name, const char *path, lt_dlhandle handle, lt_ptr_t func, t
 	int			val = hash (name);
 	struct call_hash	*p = cob_malloc (sizeof (struct call_hash));
 
-	p->name = strdup (name);
-	p->path = path ? strdup (path) : NULL;
+	p->name = cob_strdup (name);
+	p->path = path ? cob_strdup (path) : NULL;
 	p->func = func;
 	p->handle = handle;
 	p->mtime = mtime;

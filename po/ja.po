@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2006-04-05 21:44+0200\n"
+"POT-Creation-Date: 2006-04-18 21:30+0200\n"
 "PO-Revision-Date: 2004-08-01 23:55+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: cobc/cobc.c:341
+#: cobc/cobc.c:342
 #, fuzzy
 msgid ""
 "Options:\n"
@@ -85,12 +85,12 @@ msgstr ""
 "\n"
 "  -Wall                 全てのワーニングを有効にする"
 
-#: cobc/cobc.c:513
+#: cobc/cobc.c:507
 #, c-format
 msgid "Invalid option -std=%s\n"
 msgstr "不当なオプションです -std=%s\n"
 
-#: cobc/cobc.c:864
+#: cobc/cobc.c:854
 msgid "-MT must be given to specify target file\n"
 msgstr "ターゲットファイルを -MT で指定して下さい\n"
 
@@ -413,129 +413,129 @@ msgstr "OR に隣接する AND には括弧が推奨されます"
 msgid "invalid expression"
 msgstr "不当な式です"
 
-#: cobc/typeck.c:1887
+#: cobc/typeck.c:1930
 #, fuzzy, c-format
 msgid "invalid input stream '%s'"
 msgstr "`%s' は不当な入力ストリームです"
 
-#: cobc/typeck.c:1902 cobc/typeck.c:1911 cobc/typeck.c:2081 cobc/typeck.c:2084
-#: cobc/typeck.c:2092
+#: cobc/typeck.c:1945 cobc/typeck.c:1954 cobc/typeck.c:2124 cobc/typeck.c:2127
+#: cobc/typeck.c:2135
 #, fuzzy, c-format
 msgid "'%s' undefined in SPECIAL-NAMES"
 msgstr "`%s' は SPECIAL-NAMES で定義されていません"
 
-#: cobc/typeck.c:1992 cobc/typeck.c:1999 cobc/typeck.c:2006
+#: cobc/typeck.c:2035 cobc/typeck.c:2042 cobc/typeck.c:2049
 msgid "wrong number of data items"
 msgstr "データ項目の数が不当です"
 
-#: cobc/typeck.c:2064
+#: cobc/typeck.c:2107
 msgid "invalid output stream"
 msgstr "不当な入力ストリームです"
 
-#: cobc/typeck.c:2191
+#: cobc/typeck.c:2234
 msgid "wrong number of WHEN parameters"
 msgstr "WHEN 句の引数の数が不当です"
 
-#: cobc/typeck.c:2227
+#: cobc/typeck.c:2270
 #, fuzzy
 msgid "GO TO with multiple procedure-names"
 msgstr "GO TO に複数の手続き名が指定されています"
 
-#: cobc/typeck.c:2300
+#: cobc/typeck.c:2343
 msgid "data name expected before CHARACTERS"
 msgstr "CHARACTERS の前にデータ名が必要です"
 
-#: cobc/typeck.c:2309
+#: cobc/typeck.c:2352
 msgid "data name expected before ALL"
 msgstr "ALL の前にデータ名が必要です<"
 
-#: cobc/typeck.c:2318
+#: cobc/typeck.c:2361
 msgid "data name expected before LEADING"
 msgstr "LEADING の前にデータ名が必要です<"
 
-#: cobc/typeck.c:2327
+#: cobc/typeck.c:2370
 #, fuzzy, c-format
 msgid "ALL or LEADING expected before '%s'"
 msgstr "`%s' の前に ALL または LEADINGが必要です"
 
-#: cobc/typeck.c:2391
+#: cobc/typeck.c:2434
 #, fuzzy, c-format
 msgid "'%s' defined here as PIC %s"
 msgstr "`%s' はここで PIC %s として定義されました"
 
-#: cobc/typeck.c:2393
+#: cobc/typeck.c:2436
 #, fuzzy, c-format
 msgid "'%s' defined here as a group of length %d"
 msgstr "`%s' はここで大きさ %d のグループとして定義されています"
 
-#: cobc/typeck.c:2515
+#: cobc/typeck.c:2558
 msgid "data item not signed"
 msgstr "データ項目に符号がありません"
 
-#: cobc/typeck.c:2519
+#: cobc/typeck.c:2562
 msgid "ignoring negative sign"
 msgstr "マイナス符号は無視されます"
 
-#: cobc/typeck.c:2599
+#: cobc/typeck.c:2642
 msgid "move non-integer to alphanumeric"
 msgstr "非整数から英数字項目への MOVE は出来ません"
 
-#: cobc/typeck.c:2607
+#: cobc/typeck.c:2650
 #, fuzzy
 msgid "Invalid statement"
 msgstr "不当な MOVE 文です"
 
-#: cobc/typeck.c:2625
+#: cobc/typeck.c:2668
 msgid "invalid VALUE clause"
 msgstr "不当な VALUE 句です"
 
-#: cobc/typeck.c:2627 cobc/typeck.c:2936 cobc/typeck.c:2939
+#: cobc/typeck.c:2670 cobc/typeck.c:2979 cobc/typeck.c:2982
 msgid "invalid MOVE statement"
 msgstr "不当な MOVE 文です"
 
-#: cobc/typeck.c:2632
+#: cobc/typeck.c:2675
 msgid "numeric value is expected"
 msgstr "数値が必要です"
 
-#: cobc/typeck.c:2636
+#: cobc/typeck.c:2679
 msgid "alphanumeric value is expected"
 msgstr "文字列が必要です"
 
-#: cobc/typeck.c:2640
+#: cobc/typeck.c:2683
 msgid "value does not fit the picture string"
 msgstr "値が PICTURE に合致しません"
 
-#: cobc/typeck.c:2643
+#: cobc/typeck.c:2686
 msgid "value size exceeds data size"
 msgstr "値の大きさが項目の大きさを越えています"
 
-#: cobc/typeck.c:3101
+#: cobc/typeck.c:3144
 msgid "KEY ignored with sequential READ"
 msgstr "順読み込みの READ であるため KEY は無視されます"
 
-#: cobc/typeck.c:3178
+#: cobc/typeck.c:3221
 #, fuzzy, c-format
 msgid "undeclared key '%s'"
 msgstr "`%s' はキー宣言されていません"
 
-#: cobc/typeck.c:3182
+#: cobc/typeck.c:3225
 msgid "invalid SEARCH ALL condition"
 msgstr "SEARCH ALL の条件式が不当です"
 
-#: cobc/typeck.c:3256
+#: cobc/typeck.c:3299
 msgid "the targets of SET must be either indexes or pointers"
 msgstr "SET 出来るのは INDEXED か POINTER だけです"
 
-#: cobc/typeck.c:3270 cobc/typeck.c:3274
+#: cobc/typeck.c:3313 cobc/typeck.c:3317
 msgid "SET targets must be PROGRAM-POINTER"
 msgstr ""
 
-#: cobc/typeck.c:3289
+#: cobc/typeck.c:3332
 #, fuzzy, c-format
 msgid "the address of '%s' cannot be changed"
 msgstr "`%s' のアドレスは変更できません"
 
-#: cobc/typeck.c:3582
+#: cobc/typeck.c:3625
 msgid "invalid mnemonic name"
 msgstr "不当なニーモニックです"
 
@@ -662,38 +662,28 @@ msgid "invalid numeric literal"
 msgstr "不当な数字定数です"
 
 #: cobc/flag.def:25
-#, fuzzy
-msgid "Include the main function in the output (deprecated, use -x)"
-msgstr "main 関数を出力に含める"
-
-#: cobc/flag.def:28
 msgid "Include trace code in the output"
 msgstr "トレースを出力に含める"
 
-#: cobc/flag.def:31
+#: cobc/flag.def:28
 msgid "Syntax error checking only; don't emit any output"
 msgstr "文法チェックのみ。何も出力しない"
 
-#: cobc/flag.def:34
+#: cobc/flag.def:31
 msgid "Output static function calls for the CALL statement"
 msgstr "CALL 文で静的関数呼び出しを行なう"
 
-#: cobc/flag.def:37
+#: cobc/flag.def:34
 msgid "Enable debugging lines"
 msgstr "デバッグ行を有効にする"
 
-#: cobc/flag.def:40
+#: cobc/flag.def:37
 msgid "Include source location in the output"
 msgstr "ソースの位置を出力に含める"
 
-#: cobc/flag.def:43
+#: cobc/flag.def:40
 msgid "Include line directive in the output"
 msgstr "行情報を出力に含める"
-
-#: cobc/flag.def:46
-#, fuzzy
-msgid "Inline runtime functions (deprecated)"
-msgstr "一般的な処理で関数のインライン化を行なう"
 
 #: cobc/warning.def:25
 msgid "Warn if obsolete features are used"
@@ -768,6 +758,14 @@ msgstr ""
 #: libcob/common.c:1096
 #, c-format
 msgid "Cannot acquire %d bytes of memory - Aborting"
+msgstr ""
+
+#: libcob/common.c:1110
+msgid "cob_strdup called with NULL pointer"
+msgstr ""
+
+#: libcob/common.c:1115
+msgid "cob_strdup called with invalid string"
 msgstr ""
 
 #: libcob/fileio.c:1939
@@ -856,6 +854,14 @@ msgstr ""
 #, fuzzy
 msgid "Unknown file error"
 msgstr "原因不明のファイルエラーです"
+
+#, fuzzy
+#~ msgid "Include the main function in the output (deprecated, use -x)"
+#~ msgstr "main 関数を出力に含める"
+
+#, fuzzy
+#~ msgid "Inline runtime functions (deprecated)"
+#~ msgstr "一般的な処理で関数のインライン化を行なう"
 
 #~ msgid "cob_init() must be called before cob_resolve()"
 #~ msgstr "cob_resolve() の前に cob_init() を呼ばなければなりません"

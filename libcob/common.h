@@ -227,6 +227,7 @@ extern void cob_stop_run (const int status) __attribute__ ((noreturn));
 extern void cob_stop_run (const int status);
 #endif
 extern void *cob_malloc (const size_t size);
+extern void *cob_strdup (const void *stptr);
 extern void cob_set_exception (const int id);
 extern void cob_check_version (const char *prog, const char *packver, const int patchlev);
 extern void cob_accept_date (cob_field *f);

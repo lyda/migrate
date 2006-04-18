@@ -3871,7 +3871,11 @@ terminator_error (void)
 static int
 literal_value (cb_tree x)
 {
-	if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC) {
+	if (x == cb_space) {
+		return ' ';
+	} else if (x == cb_zero) {
+		return '0';
+	} else if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC) {
 		return cb_get_int (x);
 	} else {
 		return CB_LITERAL (x)->data[0];

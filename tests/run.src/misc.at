@@ -241,7 +241,7 @@ AT_CHECK([./prog], [0], [1000])
 
 AT_CLEANUP
 
-AT_SETUP([MOVE with refmod])
+AT_SETUP([MOVE with refmod (variable)])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.

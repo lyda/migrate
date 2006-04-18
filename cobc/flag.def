@@ -21,9 +21,6 @@
 
 /* CB_FLAG (var, name, doc) */
 
-CB_FLAG (cb_flag_main, "main",
-	 N_("Include the main function in the output (deprecated, use -x)"))
-
 CB_FLAG (cb_flag_trace, "trace",
 	 N_("Include trace code in the output"))
 
@@ -41,6 +38,3 @@ CB_FLAG (cb_flag_source_location, "source-location",
 
 CB_FLAG (cb_flag_line_directive, "line-directive",
 	 N_("Include line directive in the output"))
-
-CB_FLAG (cb_flag_runtime_inlining, "runtime-inlining",
-	 N_("Inline runtime functions (deprecated)"))

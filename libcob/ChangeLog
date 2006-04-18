@@ -1,3 +1,14 @@
+2006-04-17  Roger While <simrw@sim-basis.de>
+
+	* codegen.h, numeric.c : Optimized cob_cmp_xxx, cob_add_xxx,
+	  cob_sub_xxx
+
+2006-04-06  Roger While <simrw@sim-basis.de>
+
+	* common.h, common.c : Define new function cob_strdup
+	  common.c, call.c, fileio.c : Use cob_strdup
+	  fileio.c : Fix size_t mistake
+
 2006-04-02  Roger While <simrw@sim-basis.de>
 
 	* codegen.h : Fix up a bunch of mistakes

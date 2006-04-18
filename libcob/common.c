@@ -1100,6 +1100,27 @@ cob_malloc (const size_t size)
 	return mptr;
 }
 
+void *
+cob_strdup (const void *stptr)
+{
+	void	*mptr;
+	size_t	len;
+
+	if (!stptr) {
+		cob_runtime_error (_("cob_strdup called with NULL pointer"));
+		cob_stop_run (1);
+	}
+	len = strlen (stptr);
+	if (len < 1 || len > 2147483647) {
+		cob_runtime_error (_("cob_strdup called with invalid string"));
+		cob_stop_run (1);
+	}
+	len++;
+	mptr = cob_malloc (len);
+	memcpy (mptr, stptr, len);
+	return mptr;
+}
+
 /* Extended ACCEPT/DISPLAY */
 
 void
@@ -1265,7 +1286,7 @@ cob_display_env_value (cob_field *f)
 	strcpy (env1, env);
 	strcat (env1, "=");
 	strcat (env1, env2);
-	p = strdup (env1);
+	p = cob_strdup (env1);
 	putenv (p);
 }
 

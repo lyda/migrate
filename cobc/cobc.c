@@ -85,6 +85,7 @@ struct cb_exception cb_exception_table[] = {
 #include "warning.def"
 
 int			cb_id = 1;
+int			cb_flag_main = 0;
 
 int			errorcount = 0;
 int			warningcount = 0;
@@ -457,18 +458,12 @@ process_command_line (int argc, char *argv[])
 				fprintf (stderr, "Only one of options 'm', 'x' may be specified\n");
 				exit (1);
 			}
-			if (!wants_nonfinal) {
-				cb_compile_level = CB_LEVEL_MODULE;
-			}
 			cb_flag_module = 1;
 			break;
 		case 'x':
 			if (cb_flag_module) {
 				fprintf (stderr, "Only one of options 'm', 'x' may be specified\n");
 				exit (1);
-			}
-			if (!wants_nonfinal) {
-				cb_compile_level = CB_LEVEL_EXECUTABLE;
 			}
 			cb_flag_main = 1;
 			break;
@@ -480,24 +475,21 @@ process_command_line (int argc, char *argv[])
 			break;
 
 		case 'O':
-			cb_flag_runtime_inlining = 1;
-			strcat (cob_cflags, " -O");
+			strcat (cob_cflags, " -O -DCOB_LOCAL_INLINE");
 			strcat (cob_cflags, fcopts);
 			strcat (cob_cflags, COB_EXTRA_FLAGS);
 			break;
 
 		case '2':	/* -O2 */
-			cb_flag_runtime_inlining = 1;
 			strip_output = 1;
-			strcat (cob_cflags, " -O2 -DSUPER_OPTIMIZE");
+			strcat (cob_cflags, " -O2 -DSUPER_OPTIMIZE -DCOB_LOCAL_INLINE");
 			strcat (cob_cflags, fcopts);
 			strcat (cob_cflags, COB_EXTRA_FLAGS);
 			break;
 
 		case 's':	/* -Os */
-			cb_flag_runtime_inlining = 1;
 			strip_output = 1;
-			strcat (cob_cflags, " -Os -DSUPER_OPTIMIZE");
+			strcat (cob_cflags, " -Os -DSUPER_OPTIMIZE -DCOB_LOCAL_INLINE");
 			strcat (cob_cflags, fcopts);
 			strcat (cob_cflags, COB_EXTRA_FLAGS);
 			break;
@@ -505,7 +497,9 @@ process_command_line (int argc, char *argv[])
 		case 'g':
 			cb_flag_line_directive = 1;
 			gflag_set = 1;
+#ifndef _MSC_VER
 			strcat (cob_cflags, " -g");
+#endif
 			break;
 
 		case '$':	/* -std */
@@ -606,10 +600,6 @@ process_command_line (int argc, char *argv[])
 #ifdef	HAVE_PSIGN_OPT
 	strcat (cob_cflags, " -Wno-pointer-sign");
 #endif
-
-	if (cb_compile_level == CB_LEVEL_EXECUTABLE) {
-		cb_flag_main = 1;
-	}
 
 	if (gflag_set) {
 		strip_output = 0;
@@ -948,7 +938,10 @@ process_compile (struct filename *fn)
 #endif
 	}
 #ifdef _MSC_VER
-	sprintf (buff, "%s /Fa%s /c /Fo%s %s %s", cob_cc, name, name, cob_cflags, fn->translate);
+	sprintf (buff, gflag_set ? 
+		"%s /c %s /Od /MDd /Zi /FR /c /Fa%s /Fo%s %s" :
+		"%s /c %s /MD /c /Fa%s /Fo%s %s",
+			cob_cc, cob_cflags, name, name, fn->translate);
 #else
 	sprintf (buff, "%s -S -o %s %s %s", cob_cc, name, cob_cflags, fn->translate);
 #endif
@@ -961,8 +954,10 @@ process_assemble (struct filename *fn)
 	char buff[COB_MEDIUM_BUFF];
 
 #ifdef _MSC_VER
-	sprintf (buff, "%s -c %s /Fo%s %s",
-		cob_cc, cob_cflags, fn->object, fn->translate);
+	sprintf (buff, gflag_set ? 
+		"%s /c %s /Od /MDd /Zi /FR /Fo%s %s" :
+		"%s /c %s /MD /Fo%s %s",
+			cob_cc, cob_cflags, fn->object, fn->translate);
 #else
 	if (cb_compile_level == CB_LEVEL_MODULE) {
 		sprintf (buff, "%s -c %s %s -o %s %s",
@@ -978,11 +973,9 @@ process_assemble (struct filename *fn)
 static int
 process_module_direct (struct filename *fn)
 {
-#ifdef	COB_STRIP_CMD
-	int ret;
-#endif
-	char buff[COB_MEDIUM_BUFF];
-	char name[COB_MEDIUM_BUFF];
+	int	ret;
+	char	buff[COB_MEDIUM_BUFF];
+	char	name[COB_MEDIUM_BUFF];
 
 	if (output_name) {
 		strcpy (name, output_name);
@@ -994,10 +987,20 @@ process_module_direct (struct filename *fn)
 #endif
 	}
 #ifdef _MSC_VER
-	sprintf (buff, "%s %s %s %s %s %s /Fe%s /Fo%s %s %s",
-		 cob_cc, cob_cflags, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
-		 COB_EXPORT_DYN, name, name, fn->translate, cob_libs);
-#elif (defined __CYGWIN__ || defined _WIN32)
+	sprintf (buff, gflag_set ? 
+		"%s %s /Od /MDd /LDd /Zi /FR /Fe%s /Fo%s %s %s %s" :
+		"%s %s /MD /LD /Fe%s /Fo%s %s %s %s",
+			cob_cc, cob_cflags, name, name, cob_ldflags, fn->translate, cob_libs);
+	ret = process (buff);
+#if _MSC_VER >= 1400
+	/* Embedding manifest */
+	if(ret == 0) {
+		sprintf (buff, "mt /manifest %s.dll.manifest /outputresource:%s.dll;#2", name, name);
+		ret = process (buff);
+	}
+#endif
+#else	/* _MSC_VER */
+#if (defined __CYGWIN__ || defined _WIN32)
 	sprintf (buff, "%s %s %s %s %s %s -o %s %s %s",
 		 cob_cc, cob_cflags, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
 		 COB_EXPORT_DYN, name, fn->translate, cob_libs);
@@ -1007,26 +1010,23 @@ process_module_direct (struct filename *fn)
 		 COB_EXPORT_DYN, name, fn->translate);
 #endif
 
-#ifdef	COB_STRIP_CMD
 	ret = process (buff);
+#ifdef	COB_STRIP_CMD
 	if (strip_output && ret == 0) {
 		sprintf (buff, "%s %s", COB_STRIP_CMD, name);
 		ret = process (buff);
 	}
-	return ret;
-#else
-	return process (buff);
 #endif
+#endif	/* _MSC_VER */
+	return ret;
 }
 
 static int
 process_module (struct filename *fn)
 {
-#ifdef	COB_STRIP_CMD
-	int ret;
-#endif
-	char buff[COB_MEDIUM_BUFF];
-	char name[COB_MEDIUM_BUFF];
+	int	ret;
+	char	buff[COB_MEDIUM_BUFF];
+	char	name[COB_MEDIUM_BUFF];
 
 	if (output_name) {
 		strcpy (name, output_name);
@@ -1036,10 +1036,20 @@ process_module (struct filename *fn)
 		strcat (name, COB_MODULE_EXT);
 	}
 #ifdef _MSC_VER
-	sprintf (buff, "%s %s %s %s %s /Fe%s %s %s",
-		 cob_cc, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
-		 COB_EXPORT_DYN, name, fn->object, cob_libs);
-#elif (defined __CYGWIN__ || defined _WIN32)
+	sprintf (buff, gflag_set ? 
+		"%s /Od /MDd /LDd /Zi /FR /Fe%s %s %s %s" :
+		"%s /MD /LD /Fe%s %s %s %s",
+			cob_cc, name, cob_ldflags, fn->object, cob_libs);
+	ret = process (buff);
+#if _MSC_VER >= 1400
+	/* Embedding manifest */
+	if(ret == 0) {
+		sprintf (buff, "mt /manifest %s.dll.manifest /outputresource:%s.dll;#2", name, name);
+		ret = process (buff);
+	}
+#endif
+#else	/* _MSC_VER */
+#if (defined __CYGWIN__ || defined _WIN32)
 	sprintf (buff, "%s %s %s %s %s -o %s %s %s",
 		 cob_cc, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
 		 COB_EXPORT_DYN, name, fn->object, cob_libs);
@@ -1049,24 +1059,21 @@ process_module (struct filename *fn)
 		 COB_EXPORT_DYN, name, fn->object);
 #endif
 
-#ifdef	COB_STRIP_CMD
 	ret = process (buff);
+#ifdef	COB_STRIP_CMD
 	if (strip_output && ret == 0) {
 		sprintf (buff, "%s %s", COB_STRIP_CMD, name);
 		ret = process (buff);
 	}
-	return ret;
-#else
-	return process (buff);
 #endif
+#endif	/* _MSC_VER */
+	return ret;
 }
 
 static int
 process_link (struct filename *l)
 {
-#ifdef	COB_STRIP_CMD
-	int ret;
-#endif
+	int		ret;
 	int		bufflen;
 	char		*buffptr;
 	char		*objsptr;
@@ -1107,12 +1114,22 @@ process_link (struct filename *l)
 		buffptr = buff;
 	}
 #ifdef _MSC_VER
-	sprintf (buffptr, "%s %s %s /Fe%s %s %s",
-		 cob_cc, cob_ldflags, COB_EXPORT_DYN, name, objsptr, cob_libs);
+	sprintf (buff, gflag_set ? 
+		"%s /Od /MDd /Zi /FR /Fe%s %s %s %s" :
+		"%s /MD /Fe%s %s %s %s",
+			cob_cc, name, cob_ldflags, objsptr, cob_libs);
+	ret = process (buff);
+#if _MSC_VER >= 1400
+	/* Embedding manifest */
+	if(ret == 0) {
+		sprintf (buff, "mt /manifest %s.exe.manifest /outputresource:%s.exe;#2", name, name);
+		ret = process (buff);
+	}
+#endif
+	return ret;
 #else
 	sprintf (buffptr, "%s %s %s -o %s %s %s",
 		 cob_cc, cob_ldflags, COB_EXPORT_DYN, name, objsptr, cob_libs);
-#endif
 
 #ifdef	COB_STRIP_CMD
 	ret = process (buffptr);
@@ -1123,6 +1140,7 @@ process_link (struct filename *l)
 	return ret;
 #else
 	return process (buffptr);
+#endif
 #endif
 }
 
@@ -1213,18 +1231,27 @@ main (int argc, char *argv[])
 
 	/* RXW - Defaults are set here */
 	if (!cb_flag_syntax_only) {
+		if (!wants_nonfinal) {
+			if (cb_flag_main) {
+				cb_compile_level = CB_LEVEL_EXECUTABLE;
+			}
+			if (cb_flag_module) {
+				cb_compile_level = CB_LEVEL_MODULE;
+			}
+		}
 		if (cb_compile_level == 0 && !wants_nonfinal) {
 			fprintf (stderr, "Warning - Use '-x' to create an executable\n");
+			fprintf (stderr, "          Generating module\n");
 			fflush (stderr);
-			cb_compile_level = CB_LEVEL_EXECUTABLE;
-			cb_flag_main = 1;
+			cb_compile_level = CB_LEVEL_MODULE;
+			cb_flag_module = 1;
 		}
 		if (wants_nonfinal && cb_compile_level != CB_LEVEL_PREPROCESS &&
 		    !cb_flag_main && !cb_flag_module) {
 			fprintf (stderr, "Warning - Use '-x' to generate 'main' code\n");
-			fprintf (stderr, "          Use '-m' to generate module code\n");
+			fprintf (stderr, "          Generating module code\n");
 			fflush (stderr);
-			cb_flag_main = 1;
+			cb_flag_module = 1;
 		}
 	} else {
 			cb_compile_level = CB_LEVEL_TRANSLATE;

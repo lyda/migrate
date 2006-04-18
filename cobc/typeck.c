@@ -1204,7 +1204,6 @@ decimal_expand (cb_tree d, cb_tree x)
 		decimal_free ();
 		break;
 	}
-/* RXW */
 	case CB_TAG_INTRINSIC:
 		dpush (cb_build_funcall_2 ("cob_decimal_set_field", d, x));
 		break;
@@ -1323,6 +1322,99 @@ build_cond_88 (cb_tree x)
 	return c1;
 }
 
+static cb_tree
+cb_build_optim_cond (struct cb_binary_op *p)
+{
+	struct cb_field	*f;
+
+	if (CB_REFERENCE_P (p->x) || CB_FIELD_P (p->x)) {
+		f = cb_field(p->x);
+		if (!f->pic->scale && f->usage == CB_USAGE_PACKED) {
+			return cb_build_funcall_2 ("cob_cmp_packed",
+				p->x,
+				cb_build_cast_integer (p->y));
+		}
+		if (!f->pic->scale && (f->usage == CB_USAGE_BINARY ||
+		    f->usage == CB_USAGE_COMP_5 ||
+		    f->usage == CB_USAGE_COMP_X)) {
+			if (f->size == 1 && !f->pic->have_sign) {
+				return cb_build_funcall_2 ("cob_cmp_u8_binary",
+					p->x,
+					cb_build_cast_integer (p->y));
+			}
+			if (f->size == 1) {
+				return cb_build_funcall_2 ("cob_cmp_s8_binary",
+					p->x,
+					cb_build_cast_integer (p->y));
+			}
+			if (f->flag_binary_swap) {
+				if (f->size == 2 && !f->pic->have_sign) {
+					return cb_build_funcall_2 ("cob_cmpswp_u16_binary",
+						p->x,
+						cb_build_cast_integer (p->y));
+				}
+				if (f->size == 2) {
+					return cb_build_funcall_2 ("cob_cmpswp_s16_binary",
+						p->x,
+						cb_build_cast_integer (p->y));
+				}
+				if (f->size == 4 && !f->pic->have_sign) {
+					return cb_build_funcall_2 ("cob_cmpswp_u32_binary",
+						p->x,
+						cb_build_cast_integer (p->y));
+				}
+				if (f->size == 4) {
+					return cb_build_funcall_2 ("cob_cmpswp_s32_binary",
+						p->x,
+						cb_build_cast_integer (p->y));
+				}
+				if (f->size == 8 && !f->pic->have_sign) {
+					return cb_build_funcall_2 ("cob_cmpswp_u64_binary",
+						p->x,
+						cb_build_cast_integer (p->y));
+				}
+				if (f->size == 8) {
+					return cb_build_funcall_2 ("cob_cmpswp_s64_binary",
+						p->x,
+						cb_build_cast_integer (p->y));
+				}
+			} else {
+				if (f->size == 2 && !f->pic->have_sign) {
+					return cb_build_funcall_2 ("cob_cmp_u16_binary",
+						p->x,
+						cb_build_cast_integer (p->y));
+				}
+				if (f->size == 2) {
+					return cb_build_funcall_2 ("cob_cmp_s16_binary",
+						p->x,
+						cb_build_cast_integer (p->y));
+				}
+				if (f->size == 4 && !f->pic->have_sign) {
+					return cb_build_funcall_2 ("cob_cmp_u32_binary",
+						p->x,
+						cb_build_cast_integer (p->y));
+				}
+				if (f->size == 4) {
+					return cb_build_funcall_2 ("cob_cmp_s32_binary",
+						p->x,
+						cb_build_cast_integer (p->y));
+				}
+				if (f->size == 8 && !f->pic->have_sign) {
+					return cb_build_funcall_2 ("cob_cmp_u64_binary",
+						p->x,
+						cb_build_cast_integer (p->y));
+				}
+				if (f->size == 8) {
+					return cb_build_funcall_2 ("cob_cmp_s64_binary",
+						p->x,
+						cb_build_cast_integer (p->y));
+				}
+			}
+		}
+	}
+	return cb_build_funcall_2 ("cob_cmp_int", p->x, cb_build_cast_integer (p->y));
+}
+
 cb_tree
 cb_build_cond (cb_tree x)
 {
@@ -1384,71 +1476,7 @@ cb_build_cond (cb_tree x)
 					if (CB_TREE_CLASS (p->x) == CB_CLASS_NUMERIC
 					    && CB_TREE_CLASS (p->y) == CB_CLASS_NUMERIC
 					    && cb_fits_int (p->y)) {
-						if (CB_REFERENCE_P (p->x) || CB_FIELD_P (p->x)) {
-							struct cb_field	*f = cb_field(p->x);
-
-							if (!f->pic->scale && f->usage == CB_USAGE_PACKED) {
-								x = cb_build_funcall_2 ("cob_cmp_packed",
-									p->x,
-									cb_build_cast_integer (p->y));
-								break;
-							}
-							if (!f->pic->scale && (f->usage == CB_USAGE_BINARY ||
-							    f->usage == CB_USAGE_COMP_5 ||
-							    f->usage == CB_USAGE_COMP_X)) {
-								if (f->size == 1 && !f->pic->have_sign) {
-									x = cb_build_funcall_2 ("cob_cmp_u8_binary",
-										p->x,
-										cb_build_cast_integer (p->y));
-									break;
-								}
-								if (f->size == 1) {
-									x = cb_build_funcall_2 ("cob_cmp_s8_binary",
-										p->x,
-										cb_build_cast_integer (p->y));
-									break;
-								}
-								if (f->size == 2 && !f->pic->have_sign) {
-									x = cb_build_funcall_2 ("cob_cmp_u16_binary",
-										p->x,
-										cb_build_cast_integer (p->y));
-									break;
-								}
-								if (f->size == 2) {
-									x = cb_build_funcall_2 ("cob_cmp_s16_binary",
-										p->x,
-										cb_build_cast_integer (p->y));
-									break;
-								}
-								if (f->size == 4 && !f->pic->have_sign) {
-									x = cb_build_funcall_2 ("cob_cmp_u32_binary",
-										p->x,
-										cb_build_cast_integer (p->y));
-									break;
-								}
-								if (f->size == 4) {
-									x = cb_build_funcall_2 ("cob_cmp_s32_binary",
-										p->x,
-										cb_build_cast_integer (p->y));
-									break;
-								}
-								if (f->size == 8 && !f->pic->have_sign) {
-									x = cb_build_funcall_2 ("cob_cmp_u64_binary",
-										p->x,
-										cb_build_cast_integer (p->y));
-									break;
-								}
-								if (f->size == 8) {
-									x = cb_build_funcall_2 ("cob_cmp_s64_binary",
-										p->x,
-										cb_build_cast_integer (p->y));
-									break;
-								}
-							}
-						}
-						x = cb_build_funcall_2 ("cob_cmp_int",
-							p->x,
-							cb_build_cast_integer (p->y));
+						x = cb_build_optim_cond (p);
 						break;
 					}
 				}
@@ -1462,7 +1490,7 @@ cb_build_cond (cb_tree x)
 				   && (p->y == cb_space || p->y == cb_low ||
 				       p->y == cb_high || p->y == cb_zero) ) {
 					x = cb_build_funcall_2 ("$G", p->x, p->y);
-					return cb_build_binary_op (x, p->op, p->y);
+					break;
 				}
 				if ((CB_LITERAL_P (p->x) || CB_FIELD_P (p->x) ||
 				     CB_REFERENCE_P (p->x)) &&
@@ -1481,71 +1509,8 @@ cb_build_cond (cb_tree x)
 				     CB_TREE_CATEGORY (p->y) == CB_CATEGORY_ALPHABETIC)) {
 					x = cb_build_funcall_2 ("$G", p->x, p->y);
 				} else {
-					/* RXWRXW */
 					if (CB_TREE_CLASS (p->x) == CB_CLASS_NUMERIC && p->y == cb_zero) {
-						if (CB_REFERENCE_P (p->x) || CB_FIELD_P (p->x)) {
-							struct cb_field	*f = cb_field(p->x);
-
-							if (!f->pic->scale && f->usage == CB_USAGE_PACKED) {
-								x = cb_build_funcall_2 ("cob_cmp_packed",
-									p->x,
-									cb_build_cast_integer (p->y));
-								break;
-							}
-							if (!f->pic->scale && (f->usage == CB_USAGE_BINARY ||
-							    f->usage == CB_USAGE_COMP_5 ||
-							    f->usage == CB_USAGE_COMP_X)) {
-								if (f->size == 1 && !f->pic->have_sign) {
-									x = cb_build_funcall_2 ("cob_cmp_u8_binary",
-										p->x,
-										cb_build_cast_integer (p->y));
-									break;
-								}
-								if (f->size == 1) {
-									x = cb_build_funcall_2 ("cob_cmp_s8_binary",
-										p->x,
-										cb_build_cast_integer (p->y));
-									break;
-								}
-								if (f->size == 2 && !f->pic->have_sign) {
-									x = cb_build_funcall_2 ("cob_cmp_u16_binary",
-										p->x,
-										cb_build_cast_integer (p->y));
-									break;
-								}
-								if (f->size == 2) {
-									x = cb_build_funcall_2 ("cob_cmp_s16_binary",
-										p->x,
-										cb_build_cast_integer (p->y));
-									break;
-								}
-								if (f->size == 4 && !f->pic->have_sign) {
-									x = cb_build_funcall_2 ("cob_cmp_u32_binary",
-										p->x,
-										cb_build_cast_integer (p->y));
-									break;
-								}
-								if (f->size == 4) {
-									x = cb_build_funcall_2 ("cob_cmp_s32_binary",
-										p->x,
-										cb_build_cast_integer (p->y));
-									break;
-								}
-								if (f->size == 8 && !f->pic->have_sign) {
-									x = cb_build_funcall_2 ("cob_cmp_u64_binary",
-										p->x,
-										cb_build_cast_integer (p->y));
-									break;
-								}
-								if (f->size == 8) {
-									x = cb_build_funcall_2 ("cob_cmp_s64_binary",
-										p->x,
-										cb_build_cast_integer (p->y));
-									break;
-								}
-							}
-						}
-						x = cb_build_funcall_2 ("cob_cmp_int", p->x, cb_int0);
+						x = cb_build_optim_cond (p);
 					} else {
 						x = cb_build_funcall_2 ("cob_cmp", p->x, p->y);
 					}
@@ -1565,6 +1530,182 @@ cb_build_cond (cb_tree x)
 /*
  * ADD/SUBTRACT CORRESPONDING
  */
+
+static cb_tree
+cb_build_optim_add (cb_tree v, cb_tree n)
+{
+	if (CB_REFERENCE_P (v) || CB_FIELD_P (v)) {
+		struct cb_field	*f = cb_field(v);
+
+		if (!f->pic->scale && (f->usage == CB_USAGE_BINARY ||
+		    f->usage == CB_USAGE_COMP_5 ||
+		    f->usage == CB_USAGE_COMP_X)) {
+			if (f->size == 1 && !f->pic->have_sign) {
+				return cb_build_funcall_2 ("cob_add_u8_binary",
+					v,
+					cb_build_cast_integer (n));
+			}
+			if (f->size == 1) {
+				return cb_build_funcall_2 ("cob_add_s8_binary",
+					v,
+					cb_build_cast_integer (n));
+			}
+			if (f->flag_binary_swap) {
+				if (f->size == 2 && !f->pic->have_sign) {
+					return cb_build_funcall_2 ("cob_addswp_u16_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 2) {
+					return cb_build_funcall_2 ("cob_addswp_s16_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 4 && !f->pic->have_sign) {
+					return cb_build_funcall_2 ("cob_addswp_u32_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 4) {
+					return cb_build_funcall_2 ("cob_addswp_s32_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 8 && !f->pic->have_sign) {
+					return cb_build_funcall_2 ("cob_addswp_u64_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 8) {
+					return cb_build_funcall_2 ("cob_addswp_s64_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+			} else {
+				if (f->size == 2 && !f->pic->have_sign) {
+					return cb_build_funcall_2 ("cob_add_u16_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 2) {
+					return cb_build_funcall_2 ("cob_add_s16_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 4 && !f->pic->have_sign) {
+					return cb_build_funcall_2 ("cob_add_u32_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 4) {
+					return cb_build_funcall_2 ("cob_add_s32_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 8 && !f->pic->have_sign) {
+					return cb_build_funcall_2 ("cob_add_u64_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 8) {
+					return cb_build_funcall_2 ("cob_add_s64_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+			}
+		}
+
+	}
+	return cb_build_funcall_2 ("cob_add_int", v, cb_build_cast_integer (n));
+}
+
+static cb_tree
+cb_build_optim_sub (cb_tree v, cb_tree n)
+{
+	if (CB_REFERENCE_P (v) || CB_FIELD_P (v)) {
+		struct cb_field	*f = cb_field(v);
+
+		if (!f->pic->scale && (f->usage == CB_USAGE_BINARY ||
+		    f->usage == CB_USAGE_COMP_5 ||
+		    f->usage == CB_USAGE_COMP_X)) {
+			if (f->size == 1 && !f->pic->have_sign) {
+				return cb_build_funcall_2 ("cob_sub_u8_binary",
+					v,
+					cb_build_cast_integer (n));
+			}
+			if (f->size == 1) {
+				return cb_build_funcall_2 ("cob_sub_s8_binary",
+					v,
+					cb_build_cast_integer (n));
+			}
+			if (f->flag_binary_swap) {
+				if (f->size == 2 && !f->pic->have_sign) {
+					return cb_build_funcall_2 ("cob_subswp_u16_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 2) {
+					return cb_build_funcall_2 ("cob_subswp_s16_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 4 && !f->pic->have_sign) {
+					return cb_build_funcall_2 ("cob_subswp_u32_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 4) {
+					return cb_build_funcall_2 ("cob_subswp_s32_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 8 && !f->pic->have_sign) {
+					return cb_build_funcall_2 ("cob_subswp_u64_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 8) {
+					return cb_build_funcall_2 ("cob_subswp_s64_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+			} else {
+				if (f->size == 2 && !f->pic->have_sign) {
+					return cb_build_funcall_2 ("cob_sub_u16_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 2) {
+					return cb_build_funcall_2 ("cob_sub_s16_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 4 && !f->pic->have_sign) {
+					return cb_build_funcall_2 ("cob_sub_u32_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 4) {
+					return cb_build_funcall_2 ("cob_sub_s32_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 8 && !f->pic->have_sign) {
+					return cb_build_funcall_2 ("cob_sub_u64_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+				if (f->size == 8) {
+					return cb_build_funcall_2 ("cob_sub_s64_binary",
+						v,
+						cb_build_cast_integer (n));
+				}
+			}
+		}
+
+	}
+	return cb_build_funcall_2 ("cob_sub_int", v, cb_build_cast_integer (n));
+}
 
 cb_tree
 cb_build_add (cb_tree v, cb_tree n, cb_tree round_opt)
@@ -1587,56 +1728,7 @@ cb_build_add (cb_tree v, cb_tree n, cb_tree round_opt)
 	}
 	opt = build_store_option (v, round_opt);
 	if (opt == cb_int0 && cb_fits_int (n)) {
-		if (CB_REFERENCE_P (v) || CB_FIELD_P (v)) {
-			struct cb_field	*f = cb_field(v);
-
-			if (!f->pic->scale && (f->usage == CB_USAGE_BINARY ||
-			    f->usage == CB_USAGE_COMP_5 ||
-			    f->usage == CB_USAGE_COMP_X)) {
-				if (f->size == 1 && !f->pic->have_sign) {
-					return cb_build_funcall_3 ("cob_addsub_u8_binary",
-						v, cb_int0,
-						cb_build_cast_integer (n));
-				}
-				if (f->size == 1) {
-					return cb_build_funcall_3 ("cob_addsub_s8_binary",
-						v, cb_int0,
-						cb_build_cast_integer (n));
-				}
-				if (f->size == 2 && !f->pic->have_sign) {
-					return cb_build_funcall_3 ("cob_addsub_u16_binary",
-						v, cb_int0,
-						cb_build_cast_integer (n));
-				}
-				if (f->size == 2) {
-					return cb_build_funcall_3 ("cob_addsub_s16_binary",
-						v, cb_int0,
-						cb_build_cast_integer (n));
-				}
-				if (f->size == 4 && !f->pic->have_sign) {
-					return cb_build_funcall_3 ("cob_addsub_u32_binary",
-						v, cb_int0,
-						cb_build_cast_integer (n));
-				}
-				if (f->size == 4) {
-					return cb_build_funcall_3 ("cob_addsub_s32_binary",
-						v, cb_int0,
-						cb_build_cast_integer (n));
-				}
-				if (f->size == 8 && !f->pic->have_sign) {
-					return cb_build_funcall_3 ("cob_addsub_u64_binary",
-						v, cb_int0,
-						cb_build_cast_integer (n));
-				}
-				if (f->size == 8) {
-					return cb_build_funcall_3 ("cob_addsub_s64_binary",
-						v, cb_int0,
-						cb_build_cast_integer (n));
-				}
-			}
-
-		}
-		return cb_build_funcall_2 ("cob_add_int", v, cb_build_cast_integer (n));
+		return cb_build_optim_add (v, n);
 	}
 	return cb_build_funcall_3 ("cob_add", v, n, opt);
 }
@@ -1662,56 +1754,7 @@ cb_build_sub (cb_tree v, cb_tree n, cb_tree round_opt)
 	}
 	opt = build_store_option (v, round_opt);
 	if (opt == cb_int0 && cb_fits_int (n)) {
-		if (CB_REFERENCE_P (v) || CB_FIELD_P (v)) {
-			struct cb_field	*f = cb_field(v);
-
-			if (!f->pic->scale && (f->usage == CB_USAGE_BINARY ||
-			    f->usage == CB_USAGE_COMP_5 ||
-			    f->usage == CB_USAGE_COMP_X)) {
-				if (f->size == 1 && !f->pic->have_sign) {
-					return cb_build_funcall_3 ("cob_addsub_u8_binary",
-						v, cb_int1,
-						cb_build_cast_integer (n));
-				}
-				if (f->size == 1) {
-					return cb_build_funcall_3 ("cob_addsub_s8_binary",
-						v, cb_int1,
-						cb_build_cast_integer (n));
-				}
-				if (f->size == 2 && !f->pic->have_sign) {
-					return cb_build_funcall_3 ("cob_addsub_u16_binary",
-						v, cb_int1,
-						cb_build_cast_integer (n));
-				}
-				if (f->size == 2) {
-					return cb_build_funcall_3 ("cob_addsub_s16_binary",
-						v, cb_int1,
-						cb_build_cast_integer (n));
-				}
-				if (f->size == 4 && !f->pic->have_sign) {
-					return cb_build_funcall_3 ("cob_addsub_u32_binary",
-						v, cb_int1,
-						cb_build_cast_integer (n));
-				}
-				if (f->size == 4) {
-					return cb_build_funcall_3 ("cob_addsub_s32_binary",
-						v, cb_int1,
-						cb_build_cast_integer (n));
-				}
-				if (f->size == 8 && !f->pic->have_sign) {
-					return cb_build_funcall_3 ("cob_addsub_u64_binary",
-						v, cb_int1,
-						cb_build_cast_integer (n));
-				}
-				if (f->size == 8) {
-					return cb_build_funcall_3 ("cob_addsub_s64_binary",
-						v, cb_int1,
-						cb_build_cast_integer (n));
-				}
-			}
-
-		}
-		return cb_build_funcall_2 ("cob_sub_int", v, cb_build_cast_integer (n));
+		return cb_build_optim_sub (v, n);
 	}
 	return cb_build_funcall_3 ("cob_sub", v, n, opt);
 }
