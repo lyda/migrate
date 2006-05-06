@@ -346,10 +346,10 @@ struct cb_literal {
 	struct cb_tree_common	common;
 	size_t			size;
 	unsigned char		*data;
-	char			all;
-	char			sign;	/* unsigned: 0 negative: -1 positive: 1 */
-	char			scale;
-	char			spare;	/* spare */
+	signed char		all;
+	signed char		sign;	/* unsigned: 0 negative: -1 positive: 1 */
+	signed char		scale;
+	signed char		spare;	/* spare */
 };
 
 #define CB_LITERAL(x)	(CB_TREE_CAST (CB_TAG_LITERAL, struct cb_literal, x))
@@ -387,10 +387,10 @@ struct cb_picture {
 	char			*orig;		/* original picture string */
 	char			*str;		/* packed picture string */
 	enum cb_category	category;	/* field category */
-	char			digits;		/* the number of digit places */
-	char			scale;		/* 1/10^scale */
-	char			have_sign;	/* have 'S' */
-	char			spare;		/* spare */
+	unsigned char		digits;		/* the number of digit places */
+	signed char		scale;		/* 1/10^scale */
+	unsigned char		have_sign;	/* have 'S' */
+	unsigned char		spare;		/* spare */
 };
 
 #define CB_PICTURE(x)	(CB_TREE_CAST (CB_TAG_PICTURE, struct cb_picture, x))
@@ -1030,10 +1030,10 @@ struct cb_program {
 	struct cb_field		*screen_storage;
 	struct cb_label		*file_handler[5];
 	cb_tree			collating_sequence;
-	char			flag_common;		/* COMMON PROGRAM */
-	char			flag_initial;		/* INITIAL PROGRAM */
-	char			flag_recursive;		/* RECURSIVE PROGRAM */
-	char			flag_screen;		/* have SCREEN SECTION */
+	unsigned char		flag_common;		/* COMMON PROGRAM */
+	unsigned char		flag_initial;		/* INITIAL PROGRAM */
+	unsigned char		flag_recursive;		/* RECURSIVE PROGRAM */
+	unsigned char		flag_screen;		/* have SCREEN SECTION */
 	unsigned char		decimal_point;		/* '.' or ',' */
 	unsigned char		currency_symbol;	/* '$'/user-specified */
 	unsigned char		numeric_separator;	/* ',' or '.' */
@@ -1042,14 +1042,15 @@ struct cb_program {
 	int			loop_counter;
 	int			decimal_index;
 	int			decimal_index_max;
-	int			gen_main;		/* Generate main function */
+	int			gen_main;		/* Gen main function */
 	int			validated;		/* End program validate */
-	int			spare_int;		/* Spare */
+	int			is_chained;		/* PROCEDURE CHAINING */
 	struct cb_word		*word_table[CB_WORD_HASH_SIZE];
 };
 
 extern struct cb_program *cb_build_program (void);
 
+extern enum cb_storage current_storage;
 
 /* reserved.c */
 extern cb_tree lookup_system_name (const char *name);
@@ -1108,11 +1109,7 @@ extern void cb_validate_program_environment (struct cb_program *prog);
 extern void cb_validate_program_data (struct cb_program *prog);
 extern void cb_validate_program_body (struct cb_program *prog);
 
-extern void cb_expr_init (void);
-extern void cb_expr_shift (int token, cb_tree value);
-extern void cb_expr_shift_class (const char *name);
-extern void cb_expr_shift_sign (char op);
-extern cb_tree cb_expr_finish (void);
+extern cb_tree cb_build_expr (cb_tree list);
 extern cb_tree cb_build_cond (cb_tree x);
 
 extern void cb_emit_arithmetic (cb_tree vars, int op, cb_tree val);
@@ -1196,6 +1193,7 @@ extern void cb_emit_return (cb_tree ref, cb_tree into);
 extern void cb_emit_search (cb_tree table, cb_tree varying, cb_tree at_end, cb_tree whens);
 extern void cb_emit_search_all (cb_tree table, cb_tree at_end, cb_tree when, cb_tree stmts);
 
+extern void cb_emit_setenv (cb_tree x, cb_tree y);
 extern void cb_emit_set_to (cb_tree l, cb_tree x);
 extern void cb_emit_set_up_down (cb_tree l, cb_tree flag, cb_tree x);
 extern void cb_emit_set_on_off (cb_tree l, cb_tree flag);

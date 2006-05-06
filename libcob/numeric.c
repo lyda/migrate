@@ -33,7 +33,7 @@
 
 #define DECIMAL_NAN	-128
 #define DECIMAL_CHECK(d1,d2) \
-  if (d1->scale == DECIMAL_NAN || d2->scale == DECIMAL_NAN) { \
+  if (unlikely(d1->scale == DECIMAL_NAN || d2->scale == DECIMAL_NAN)) { \
       d1->scale = DECIMAL_NAN; \
       return; \
     }
@@ -204,7 +204,7 @@ cob_decimal_get_display (cob_decimal *d, cob_field *f, int opt)
 	int		sign = mpz_sgn (d->value);
 	size_t		size;
 	unsigned char	*data = COB_FIELD_DATA (f);
-	unsigned char	buff[256];
+	unsigned char	buff[COB_SMALL_BUFF];
 
 	/* build string */
 	mpz_abs (d->value, d->value);
@@ -213,7 +213,7 @@ cob_decimal_get_display (cob_decimal *d, cob_field *f, int opt)
 
 	/* store number */
 	diff = (int)(COB_FIELD_SIZE (f) - size);
-	if (diff < 0) {
+	if (unlikely(diff < 0)) {
 		/* overflow */
 		COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
 
@@ -644,6 +644,9 @@ cob_decimal_get_packed (cob_decimal *d, cob_field *f, int opt)
 void
 cob_decimal_set_field (cob_decimal *d, cob_field *f)
 {
+	float	fval;
+	double	dval;
+
 	switch (COB_FIELD_TYPE (f)) {
 	case COB_TYPE_NUMERIC_BINARY:
 		cob_decimal_set_binary (d, f);
@@ -652,10 +655,12 @@ cob_decimal_set_field (cob_decimal *d, cob_field *f)
 		cob_decimal_set_packed (d, f);
 		break;
 	case COB_TYPE_NUMERIC_FLOAT:
-		cob_decimal_set_double (d, (double)*(float *)f->data);
+		memcpy ((ucharptr)&fval, f->data, sizeof(float));
+		cob_decimal_set_double (d, (double)fval);
 		break;
 	case COB_TYPE_NUMERIC_DOUBLE:
-		cob_decimal_set_double (d, (double)*(double *)f->data);
+		memcpy ((ucharptr)&dval, f->data, sizeof(double));
+		cob_decimal_set_double (d, dval);
 		break;
 	default:
 		cob_decimal_set_display (d, f);
@@ -666,7 +671,7 @@ cob_decimal_set_field (cob_decimal *d, cob_field *f)
 int
 cob_decimal_get_field (cob_decimal *d, cob_field *f, int opt)
 {
-	if (d->scale == DECIMAL_NAN) {
+	if (unlikely(d->scale == DECIMAL_NAN)) {
 		COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
 		return cob_exception_code;
 	}
@@ -710,9 +715,6 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f, int opt)
 
 		val = (float) cob_decimal_get_double (d);
 		memcpy (f->data, (ucharptr)&val, sizeof (float));
-/*
-		*(float *)f->data = val;
-*/
 		return 0;
 	}
 	case COB_TYPE_NUMERIC_DOUBLE:
@@ -721,9 +723,6 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f, int opt)
 
 		val = cob_decimal_get_double (d);
 		memcpy (f->data, (ucharptr)&val, sizeof (double));
-/*
-		*(double *)f->data = val;
-*/
 		return 0;
 	}
 	default:
@@ -783,7 +782,7 @@ cob_decimal_div (cob_decimal *d1, cob_decimal *d2)
 	DECIMAL_CHECK (d1, d2);
 
 	/* check for division by zero */
-	if (mpz_sgn (d2->value) == 0) {
+	if (unlikely(mpz_sgn (d2->value) == 0)) {
 		d1->scale = DECIMAL_NAN;
 		COB_SET_EXCEPTION (COB_EC_SIZE_ZERO_DIVIDE);
 		return;
@@ -832,7 +831,7 @@ display_add_int (unsigned char *data, size_t size, unsigned int n)
 		n = n / 10;
 
 		/* check for overflow */
-		if (--sp < data) {
+		if (unlikely(--sp < data)) {
 			if (!cob_current_module->flag_binary_truncate) {
 				return 0;
 			}
@@ -875,7 +874,7 @@ display_sub_int (unsigned char *data, size_t size, unsigned int n)
 		n = n / 10;
 
 		/* check for overflow */
-		if (--sp < data) {
+		if (unlikely(--sp < data)) {
 			return 1;
 		}
 
@@ -991,7 +990,7 @@ cob_sub (cob_field *f1, cob_field *f2, int opt)
 int
 cob_add_int (cob_field *f, int n)
 {
-	if (n == 0) {
+	if (unlikely(n == 0)) {
 		return 0;
 	}
 	switch (COB_FIELD_TYPE (f)) {
@@ -1021,7 +1020,7 @@ cob_add_int (cob_field *f, int n)
 int
 cob_sub_int (cob_field *f, int n)
 {
-	if (n == 0) {
+	if (unlikely(n == 0)) {
 		return 0;
 	}
 	return cob_add_int (f, -n);
@@ -1061,6 +1060,14 @@ int
 cob_div_remainder (cob_field *fld_remainder, int opt)
 {
 	return cob_decimal_get_field (&cob_d3, fld_remainder, opt);
+}
+
+int
+cob_cmp_int (cob_field *f1, int n)
+{
+	cob_decimal_set_field (&cob_d1, f1);
+	cob_decimal_set_int (&cob_d2, n);
+	return cob_decimal_cmp (&cob_d1, &cob_d2);
 }
 
 int
@@ -1157,52 +1164,183 @@ cob_get_numdisp (unsigned char *data, int size)
 {
 	int     retval = 0;
 
-	if ( size > 0 ) {
-		while ( size-- ) {
-			retval *= 10;
-			retval += (*data - '0');
-			data++;;
-		}
+	while ( size-- ) {
+		retval *= 10;
+		retval += (*data - (unsigned char)'0');
+		data++;;
 	}
 	return retval;
+}
+
+/* Numeric Display compares */
+
+int
+cob_cmp_numdisp (const unsigned char *data, const size_t size, const int n)
+{
+	int		val = 0;
+	size_t		inc;
+	unsigned char	*p;
+
+	p = (unsigned char *)data;
+	for (inc = 0; inc < size; inc++, p++) {
+		val = (val * 10) + (*p - (unsigned char)'0');
+	}
+	if (val < n) {
+		return -1;
+	} else if (val > n) {
+		return 1;
+	}
+	return 0;
+}
+
+static int
+cob_get_ebcdic_sign (unsigned char *p, int *val)
+{
+	switch (*p) {
+	case '{':
+		return 0;
+	case 'A':
+		*val += 1;
+		return 0;
+	case 'B':
+		*val += 2;
+		return 0;
+	case 'C':
+		*val += 3;
+		return 0;
+	case 'D':
+		*val += 4;
+		return 0;
+	case 'E':
+		*val += 5;
+		return 0;
+	case 'F':
+		*val += 6;
+		return 0;
+	case 'G':
+		*val += 7;
+		return 0;
+	case 'H':
+		*val += 8;
+		return 0;
+	case 'I':
+		*val += 9;
+		return 0;
+	case '}':
+		return 1;
+	case 'J':
+		*val += 1;
+		return 1;
+	case 'K':
+		*val += 2;
+		return 1;
+	case 'L':
+		*val += 3;
+		return 1;
+	case 'M':
+		*val += 4;
+		return 1;
+	case 'N':
+		*val += 5;
+		return 1;
+	case 'O':
+		*val += 6;
+		return 1;
+	case 'P':
+		*val += 7;
+		return 1;
+	case 'Q':
+		*val += 8;
+		return 1;
+	case 'R':
+		*val += 9;
+		return 1;
+	}
+	return 0;
+}
+
+int
+cob_cmp_sign_numdisp (const unsigned char *data, const size_t size, const int n)
+{
+	int		val = 0;
+	size_t		inc;
+	unsigned char	*p;
+
+	p = (unsigned char *)data;
+	for (inc = 0; inc < size - 1; inc++, p++) {
+		val = (val * 10) + (*p - (unsigned char)'0');
+	}
+	val *= 10;
+	if (*p >= '0' && *p <= '9') {
+		val += (*p - (unsigned char)'0');
+	} else {
+		switch (cob_current_module->display_sign) {
+		case COB_DISPLAY_SIGN_ASCII:
+			val += (*p - (unsigned char)'p');
+			val = -val;
+			break;
+		case COB_DISPLAY_SIGN_EBCDIC:
+			if (cob_get_ebcdic_sign (p, &val)) {
+				val = -val;
+			}
+			break;
+		case COB_DISPLAY_SIGN_ASCII10:
+			val += (*p - (unsigned char)'@');
+			val = -val;
+			break;
+		case COB_DISPLAY_SIGN_ASCII20:
+			val += (*p - (unsigned char)'P');
+			val = -val;
+			break;
+		default:
+			val = -val;
+			break;
+		}
+	}
+	if (val < n) {
+		return -1;
+	} else if (val > n) {
+		return 1;
+	}
+	return 0;
 }
 
 /* Binary compare inlines */
 
 int
-cob_cmp_u8_binary (const cob_field *f, const int n)
+cob_cmp_u8_binary (const unsigned char *p, const int n)
 {
 	if (n < 0) {
 		return 1;
 	}
-	if (*(f->data) < n) {
+	if (*p < n) {
 		return -1;
-	} else if (*(f->data) > n) {
+	} else if (*p > n) {
 		return 1;
 	}
 	return 0;
 }
 
 int
-cob_cmp_s8_binary (const cob_field *f, const int n)
+cob_cmp_s8_binary (const unsigned char *p, const int n)
 {
-	if (*(signed char *)(f->data) < n) {
+	if (*(signed char *)(p) < n) {
 		return -1;
-	} else if (*(signed char *)(f->data) > n) {
+	} else if (*(signed char *)(p) > n) {
 		return 1;
 	}
 	return 0;
 }
 
 int
-cob_cmp_u16_binary (const cob_field *f, const int n)
+cob_cmp_u16_binary (const unsigned char *p, const int n)
 {
 	unsigned short	val;
 
 	if (n < 0) {
 		return 1;
 	}
-	memcpy ((unsigned char *)&val, f->data, sizeof(short));
+	memcpy ((unsigned char *)&val, p, sizeof(short));
 	if (val < n) {
 		return -1;
 	} else if (val > n) {
@@ -1212,11 +1350,11 @@ cob_cmp_u16_binary (const cob_field *f, const int n)
 }
 
 int
-cob_cmp_s16_binary (const cob_field *f, const int n)
+cob_cmp_s16_binary (const unsigned char *p, const int n)
 {
 	short	val;
 
-	memcpy ((unsigned char *)&val, f->data, sizeof(short));
+	memcpy ((unsigned char *)&val, p, sizeof(short));
 	if (val < n) {
 		return -1;
 	} else if (val > n) {
@@ -1226,14 +1364,14 @@ cob_cmp_s16_binary (const cob_field *f, const int n)
 }
 
 int
-cob_cmp_u32_binary (const cob_field *f, const int n)
+cob_cmp_u32_binary (const unsigned char *p, const int n)
 {
 	unsigned int	val;
 
 	if (n < 0) {
 		return 1;
 	}
-	memcpy ((unsigned char *)&val, f->data, sizeof(int));
+	memcpy ((unsigned char *)&val, p, sizeof(int));
 	if (val < n) {
 		return -1;
 	} else if (val > n) {
@@ -1243,11 +1381,11 @@ cob_cmp_u32_binary (const cob_field *f, const int n)
 }
 
 int
-cob_cmp_s32_binary (const cob_field *f, const int n)
+cob_cmp_s32_binary (const unsigned char *p, const int n)
 {
 	int	val;
 
-	memcpy ((unsigned char *)&val, f->data, sizeof(int));
+	memcpy ((unsigned char *)&val, p, sizeof(int));
 	if (val < n) {
 		return -1;
 	} else if (val > n) {
@@ -1257,14 +1395,14 @@ cob_cmp_s32_binary (const cob_field *f, const int n)
 }
 
 int
-cob_cmp_u64_binary (const cob_field *f, const int n)
+cob_cmp_u64_binary (const unsigned char *p, const int n)
 {
 	unsigned long long	val;
 
 	if (n < 0) {
 		return 1;
 	}
-	memcpy ((unsigned char *)&val, f->data, sizeof(long long));
+	memcpy ((unsigned char *)&val, p, sizeof(long long));
 	if (val < n) {
 		return -1;
 	} else if (val > n) {
@@ -1274,11 +1412,11 @@ cob_cmp_u64_binary (const cob_field *f, const int n)
 }
 
 int
-cob_cmp_s64_binary (const cob_field *f, const int n)
+cob_cmp_s64_binary (const unsigned char *p, const int n)
 {
 	long long	val;
 
-	memcpy ((unsigned char *)&val, f->data, sizeof(long long));
+	memcpy ((unsigned char *)&val, p, sizeof(long long));
 	if (val < n) {
 		return -1;
 	} else if (val > n) {
@@ -1288,14 +1426,14 @@ cob_cmp_s64_binary (const cob_field *f, const int n)
 }
 
 int
-cob_cmpswp_u16_binary (const cob_field *f, const int n)
+cob_cmpswp_u16_binary (const unsigned char *p, const int n)
 {
 	unsigned short	val;
 
 	if (n < 0) {
 		return 1;
 	}
-	memcpy ((unsigned char *)&val, f->data, sizeof(short));
+	memcpy ((unsigned char *)&val, p, sizeof(short));
 	val = COB_BSWAP_16 (val);
 	if (val < n) {
 		return -1;
@@ -1306,11 +1444,11 @@ cob_cmpswp_u16_binary (const cob_field *f, const int n)
 }
 
 int
-cob_cmpswp_s16_binary (const cob_field *f, const int n)
+cob_cmpswp_s16_binary (const unsigned char *p, const int n)
 {
 	short	val;
 
-	memcpy ((unsigned char *)&val, f->data, sizeof(short));
+	memcpy ((unsigned char *)&val, p, sizeof(short));
 	val = COB_BSWAP_16 (val);
 	if (val < n) {
 		return -1;
@@ -1321,14 +1459,14 @@ cob_cmpswp_s16_binary (const cob_field *f, const int n)
 }
 
 int
-cob_cmpswp_u32_binary (const cob_field *f, const int n)
+cob_cmpswp_u32_binary (const unsigned char *p, const int n)
 {
 	unsigned int	val;
 
 	if (n < 0) {
 		return 1;
 	}
-	memcpy ((unsigned char *)&val, f->data, sizeof(int));
+	memcpy ((unsigned char *)&val, p, sizeof(int));
 	val = COB_BSWAP_32 (val);
 	if (val < n) {
 		return -1;
@@ -1339,11 +1477,11 @@ cob_cmpswp_u32_binary (const cob_field *f, const int n)
 }
 
 int
-cob_cmpswp_s32_binary (const cob_field *f, const int n)
+cob_cmpswp_s32_binary (const unsigned char *p, const int n)
 {
 	int	val;
 
-	memcpy ((unsigned char *)&val, f->data, sizeof(int));
+	memcpy ((unsigned char *)&val, p, sizeof(int));
 	val = COB_BSWAP_32 (val);
 	if (val < n) {
 		return -1;
@@ -1354,14 +1492,14 @@ cob_cmpswp_s32_binary (const cob_field *f, const int n)
 }
 
 int
-cob_cmpswp_u64_binary (const cob_field *f, const int n)
+cob_cmpswp_u64_binary (const unsigned char *p, const int n)
 {
 	unsigned long long	val;
 
 	if (n < 0) {
 		return 1;
 	}
-	memcpy ((unsigned char *)&val, f->data, sizeof(long long));
+	memcpy ((unsigned char *)&val, p, sizeof(long long));
 	val = COB_BSWAP_64 (val);
 	if (val < n) {
 		return -1;
@@ -1372,11 +1510,11 @@ cob_cmpswp_u64_binary (const cob_field *f, const int n)
 }
 
 int
-cob_cmpswp_s64_binary (const cob_field *f, const int n)
+cob_cmpswp_s64_binary (const unsigned char *p, const int n)
 {
 	long long	val;
 
-	memcpy ((unsigned char *)&val, f->data, sizeof(long long));
+	memcpy ((unsigned char *)&val, p, sizeof(long long));
 	val = COB_BSWAP_64 (val);
 	if (val < n) {
 		return -1;
@@ -1389,26 +1527,20 @@ cob_cmpswp_s64_binary (const cob_field *f, const int n)
 /* Add/Subtract inlines */
 
 void
-cob_add_u8_binary (cob_field *f, const int val)
+cob_add_u8_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
-
 	*p += val;
 }
 
 void
-cob_add_s8_binary (cob_field *f, const int val)
+cob_add_s8_binary (unsigned char *p, const int val)
 {
-	signed char	*p = (signed char *)f->data;
-
-	*p += val;
+	*(signed char *)p += val;
 }
 
 void
-cob_add_u16_binary (cob_field *f, const int val)
+cob_add_u16_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
-
 #ifndef WORDS_BIGENDIAN
 	*(unsigned short *)p += val;
 #else
@@ -1420,10 +1552,8 @@ cob_add_u16_binary (cob_field *f, const int val)
 }
 
 void
-cob_add_s16_binary (cob_field *f, const int val)
+cob_add_s16_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
-
 #ifndef WORDS_BIGENDIAN
 	*(short *)p += val;
 #else
@@ -1435,10 +1565,8 @@ cob_add_s16_binary (cob_field *f, const int val)
 }
 
 void
-cob_add_u32_binary (cob_field *f, const int val)
+cob_add_u32_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
-
 #ifndef WORDS_BIGENDIAN
 	*(unsigned int *)p += val;
 #else
@@ -1450,10 +1578,8 @@ cob_add_u32_binary (cob_field *f, const int val)
 }
 
 void
-cob_add_s32_binary (cob_field *f, const int val)
+cob_add_s32_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
-
 #ifndef WORDS_BIGENDIAN
 	*(int *)p += val;
 #else
@@ -1465,10 +1591,8 @@ cob_add_s32_binary (cob_field *f, const int val)
 }
 
 void
-cob_add_u64_binary (cob_field *f, const int val)
+cob_add_u64_binary (unsigned char *p, const int val)
 {
-	unsigned char		*p = f->data;
-
 #ifndef WORDS_BIGENDIAN
 	*(unsigned long long *)p += val;
 #else
@@ -1480,10 +1604,8 @@ cob_add_u64_binary (cob_field *f, const int val)
 }
 
 void
-cob_add_s64_binary (cob_field *f, const int val)
+cob_add_s64_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
-
 #ifndef WORDS_BIGENDIAN
 	*(long long *)p += val;
 #else
@@ -1496,9 +1618,8 @@ cob_add_s64_binary (cob_field *f, const int val)
 
 #ifndef WORDS_BIGENDIAN
 void
-cob_addswp_u16_binary (cob_field *f, const int val)
+cob_addswp_u16_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
 	unsigned short	n;
 
 	n = COB_BSWAP_16 (*(unsigned short *)p);
@@ -1507,9 +1628,8 @@ cob_addswp_u16_binary (cob_field *f, const int val)
 }
 
 void
-cob_addswp_s16_binary (cob_field *f, const int val)
+cob_addswp_s16_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
 	short		n;
 
 	n = COB_BSWAP_16 (*(short *)p);
@@ -1518,9 +1638,8 @@ cob_addswp_s16_binary (cob_field *f, const int val)
 }
 
 void
-cob_addswp_u32_binary (cob_field *f, const int val)
+cob_addswp_u32_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
 	unsigned int	n;
 
 	n = COB_BSWAP_32 (*(unsigned int *)p);
@@ -1529,9 +1648,8 @@ cob_addswp_u32_binary (cob_field *f, const int val)
 }
 
 void
-cob_addswp_s32_binary (cob_field *f, const int val)
+cob_addswp_s32_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
 	int		n;
 
 	n = COB_BSWAP_32 (*(int *)p);
@@ -1540,9 +1658,8 @@ cob_addswp_s32_binary (cob_field *f, const int val)
 }
 
 void
-cob_addswp_u64_binary (cob_field *f, const int val)
+cob_addswp_u64_binary (unsigned char *p, const int val)
 {
-	unsigned char		*p = f->data;
 	unsigned long long	n;
 
 	n = COB_BSWAP_64 (*(unsigned long long *)p);
@@ -1551,9 +1668,8 @@ cob_addswp_u64_binary (cob_field *f, const int val)
 }
 
 void
-cob_addswp_s64_binary (cob_field *f, const int val)
+cob_addswp_s64_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
 	long long	n;
 
 	n = COB_BSWAP_64 (*(long long *)p);
@@ -1563,26 +1679,20 @@ cob_addswp_s64_binary (cob_field *f, const int val)
 #endif
 
 void
-cob_sub_u8_binary (cob_field *f, const int val)
+cob_sub_u8_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
-
 	*p -= val;
 }
 
 void
-cob_sub_s8_binary (cob_field *f, const int val)
+cob_sub_s8_binary (unsigned char *p, const int val)
 {
-	signed char	*p = (signed char *)f->data;
-
-	*p -= val;
+	*(signed char *)p -= val;
 }
 
 void
-cob_sub_u16_binary (cob_field *f, const int val)
+cob_sub_u16_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
-
 #ifndef WORDS_BIGENDIAN
 	*(unsigned short *)p -= val;
 #else
@@ -1594,10 +1704,8 @@ cob_sub_u16_binary (cob_field *f, const int val)
 }
 
 void
-cob_sub_s16_binary (cob_field *f, const int val)
+cob_sub_s16_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
-
 #ifndef WORDS_BIGENDIAN
 	*(short *)p -= val;
 #else
@@ -1609,10 +1717,8 @@ cob_sub_s16_binary (cob_field *f, const int val)
 }
 
 void
-cob_sub_u32_binary (cob_field *f, const int val)
+cob_sub_u32_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
-
 #ifndef WORDS_BIGENDIAN
 	*(unsigned int *)p -= val;
 #else
@@ -1624,10 +1730,8 @@ cob_sub_u32_binary (cob_field *f, const int val)
 }
 
 void
-cob_sub_s32_binary (cob_field *f, const int val)
+cob_sub_s32_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
-
 #ifndef WORDS_BIGENDIAN
 	*(int *)p -= val;
 #else
@@ -1639,10 +1743,8 @@ cob_sub_s32_binary (cob_field *f, const int val)
 }
 
 void
-cob_sub_u64_binary (cob_field *f, const int val)
+cob_sub_u64_binary (unsigned char *p, const int val)
 {
-	unsigned char		*p = f->data;
-
 #ifndef WORDS_BIGENDIAN
 	*(unsigned long long *)p -= val;
 #else
@@ -1654,10 +1756,8 @@ cob_sub_u64_binary (cob_field *f, const int val)
 }
 
 void
-cob_sub_s64_binary (cob_field *f, const int val)
+cob_sub_s64_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
-
 #ifndef WORDS_BIGENDIAN
 	*(long long *)p -= val;
 #else
@@ -1670,9 +1770,8 @@ cob_sub_s64_binary (cob_field *f, const int val)
 
 #ifndef WORDS_BIGENDIAN
 void
-cob_subswp_u16_binary (cob_field *f, const int val)
+cob_subswp_u16_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
 	unsigned short	n;
 
 	n = COB_BSWAP_16 (*(unsigned short *)p);
@@ -1681,9 +1780,8 @@ cob_subswp_u16_binary (cob_field *f, const int val)
 }
 
 void
-cob_subswp_s16_binary (cob_field *f, const int val)
+cob_subswp_s16_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
 	short		n;
 
 	n = COB_BSWAP_16 (*(short *)p);
@@ -1692,9 +1790,8 @@ cob_subswp_s16_binary (cob_field *f, const int val)
 }
 
 void
-cob_subswp_u32_binary (cob_field *f, const int val)
+cob_subswp_u32_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
 	unsigned int	n;
 
 	n = COB_BSWAP_32 (*(unsigned int *)p);
@@ -1703,9 +1800,8 @@ cob_subswp_u32_binary (cob_field *f, const int val)
 }
 
 void
-cob_subswp_s32_binary (cob_field *f, const int val)
+cob_subswp_s32_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
 	int		n;
 
 	n = COB_BSWAP_32 (*(int *)p);
@@ -1714,9 +1810,8 @@ cob_subswp_s32_binary (cob_field *f, const int val)
 }
 
 void
-cob_subswp_u64_binary (cob_field *f, const int val)
+cob_subswp_u64_binary (unsigned char *p, const int val)
 {
-	unsigned char		*p = f->data;
 	unsigned long long	n;
 
 	n = COB_BSWAP_64 (*(unsigned long long *)p);
@@ -1725,9 +1820,8 @@ cob_subswp_u64_binary (cob_field *f, const int val)
 }
 
 void
-cob_subswp_s64_binary (cob_field *f, const int val)
+cob_subswp_s64_binary (unsigned char *p, const int val)
 {
-	unsigned char	*p = f->data;
 	long long	n;
 
 	n = COB_BSWAP_64 (*(long long *)p);

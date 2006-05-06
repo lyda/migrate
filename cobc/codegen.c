@@ -81,6 +81,7 @@ static struct field_list {
 	struct field_list	*next;
 	struct cb_field		*f;
 	cb_tree			x;
+	int			nulldata;
 } *field_cache = NULL;
 
 static struct call_list {
@@ -541,6 +542,7 @@ lookup_literal (cb_tree x)
 
 	struct cb_literal	*literal = CB_LITERAL (x);
 	struct literal_list	*l;
+	FILE			*savetarget;
 
 	/* search literal cache */
 	for (l = literal_cache; l; l = l->next) {
@@ -555,10 +557,11 @@ lookup_literal (cb_tree x)
 	}
 
 	/* output new literal */
-	output_target = 0;
+	savetarget = output_target;
+	output_target = NULL;
 	output_field (x);
 
-	output_target = yyout;
+	output_target = savetarget;
 
 	/* cache it */
 	l = cob_malloc (sizeof (struct literal_list));
@@ -660,7 +663,9 @@ output_integer (cb_tree x)
 
 		case CB_USAGE_DISPLAY:
 			if (f->pic->scale >= 0
-			    && f->size - f->pic->scale <= 9 && f->pic->have_sign == 0) {
+			    && f->size - f->pic->scale > 0
+			    && f->size - f->pic->scale <= 9
+			    && f->pic->have_sign == 0) {
 				output ("cob_get_numdisp (");
 				output_data (x);
 				output (", %d)", f->size - f->pic->scale);
@@ -776,7 +781,7 @@ output_index (cb_tree x)
 static void
 output_param (cb_tree x, int id)
 {
-	char fname[8];
+	char fname[12];
 
 	sprintf (fname, "f%d", id);
 	param_id = id;
@@ -916,30 +921,38 @@ output_param (cb_tree x, int id)
 		}
 		if (!r->subs && !r->offset && f->count > 0
 /* RXW
+		if (!r->offset && f->count > 0
 		    && !f->flag_external && !extrefs
 */
 		    && !cb_field_variable_size (f) && !cb_field_variable_address (f)) {
 			if (!f->flag_field) {
-				struct field_list *l;
+				struct field_list	*l;
+				FILE			*savetarget;
 
-				output_target = 0;
+				savetarget = output_target;
+				output_target = NULL;
 				output_field (x);
 
 				l = cob_malloc (sizeof (struct field_list));
 				l->x = x;
 				l->f = f;
+				l->nulldata = (r->subs != NULL);
 				l->next = field_cache;
 				field_cache = l;
 
 				f->flag_field = 1;
-				output_target = yyout;
+				output_target = savetarget;
 			}
 			if (f->flag_local) {
 				output ("(%s%d.data = ", CB_PREFIX_FIELD, f->id);
 				output_data (x);
 				output (", &%s%d)", CB_PREFIX_FIELD, f->id);
 			} else {
-				output ("&%s%d", CB_PREFIX_FIELD, f->id);
+				if (f->storage == CB_STORAGE_SCREEN && id != -1) {
+					output ("&s_%d", f->id);
+				} else {
+					output ("&%s%d", CB_PREFIX_FIELD, f->id);
+				}
 			}
 		} else {
 			if (id >= num_cob_fields) {
@@ -1868,11 +1881,7 @@ output_call (struct cb_call *p)
 				output_funcall (cb_build_funcall_1 ("cob_call_resolve", p->name));
 			}
 			output (";\n");
-#if defined (__GNUC__) && (__GNUC__ >= 3)
-			output_line ("if ( __builtin_expect((func == NULL), 0) )");
-#else
-			output_line ("if (func == NULL)");
-#endif
+			output_line ("if (unlikely(func == NULL))");
 			output_indent_level += 2;
 			output_stmt (p->stmt1);
 			output_indent_level -= 2;
@@ -2213,29 +2222,16 @@ output_stmt (cb_tree x)
 
 			if (p->handler1) {
 				if ((code & 0x00ff) == 0)
-#if defined (__GNUC__) && (__GNUC__ >= 3)
-					output_line ("if ( __builtin_expect(((cob_exception_code & 0xff00) == 0x%04x), 0) )",
-#else
-					output_line ("if ((cob_exception_code & 0xff00) == 0x%04x)",
-#endif
+					output_line ("if (unlikely((cob_exception_code & 0xff00) == 0x%04x))",
 					     code);
 				else
-#if defined (__GNUC__) && (__GNUC__ >= 3)
-					output_line ("if ( __builtin_expect((cob_exception_code == 0x%04x), 0) )",
-					     code);
-#else
-					output_line ("if (cob_exception_code == 0x%04x)", code);
-#endif
+					output_line ("if (unlikely(cob_exception_code == 0x%04x))", code);
 				output_stmt (p->handler1);
 				if (p->handler2 || p->file)
 					output_line ("else");
 			}
 			if (p->file) {
-#if defined (__GNUC__) && (__GNUC__ >= 3)
-				output_line ("if ( __builtin_expect(cob_exception_code, 0) )");
-#else
-				output_line ("if (cob_exception_code)");
-#endif
+				output_line ("if (unlikely(cob_exception_code != 0))");
 				output_indent ("  {");
 				output_perform_call (CB_FILE (p->file)->handler,
 						     CB_FILE (p->file)->handler);
@@ -2258,7 +2254,11 @@ output_stmt (cb_tree x)
 		struct cb_label *p = CB_LABEL (x);
 
 		output_newline ();
-		output_line ("/* %s: */", p->name);
+		if (p->is_section) {
+			output_line ("/* %s SECTION: */", p->name);
+		} else {
+			output_line ("/* %s: */", p->name);
+		}
 		if (p->need_begin) {
 			output_line ("%s%d:;", CB_PREFIX_LABEL, p->id);
 		}
@@ -2525,9 +2525,7 @@ output_file_initialization (struct cb_file *f)
 static void
 output_screen_definition (struct cb_field *p)
 {
-	int type = (p->children ? COB_SCREEN_TYPE_GROUP :
-		    p->values ? COB_SCREEN_TYPE_VALUE :
-		    (p->size > 0) ? COB_SCREEN_TYPE_FIELD : COB_SCREEN_TYPE_ATTRIBUTE);
+	int type;
 
 	if (p->sister) {
 		output_screen_definition (p->sister);
@@ -2536,45 +2534,56 @@ output_screen_definition (struct cb_field *p)
 		output_screen_definition (p->children);
 	}
 
-	output ("struct cob_screen s_%d = {%d, ", p->id, type);
+	type = (p->children ? COB_SCREEN_TYPE_GROUP :
+		p->values ? COB_SCREEN_TYPE_VALUE :
+		(p->size > 0) ? COB_SCREEN_TYPE_FIELD : COB_SCREEN_TYPE_ATTRIBUTE);
+	output ("cob_screen s_%d = {%d, ", p->id, type);
 
-	output ("(union cob_screen_data) ");
-	switch (type) {
-	case COB_SCREEN_TYPE_GROUP:
-		output ("&s_%d", p->children->id);
-		break;
-	case COB_SCREEN_TYPE_VALUE:
-		output_string (CB_LITERAL (CB_VALUE (p->values))->data,
-			       CB_LITERAL (CB_VALUE (p->values))->size);
-		break;
-		break;
-	case COB_SCREEN_TYPE_FIELD:
-		output ("&f_%d", p->id);
-		break;
-	case COB_SCREEN_TYPE_ATTRIBUTE:
-		output ("0");
-		break;
+	if (type == COB_SCREEN_TYPE_GROUP) {
+		output ("&s_%d, ", p->children->id);
+	} else {
+		output ("NULL, ");
 	}
-	output (", ");
+	if (type == COB_SCREEN_TYPE_FIELD) {
+		p->count++;
+		output_param (cb_build_field_reference (p, NULL), -1);
+		output (", ");
+	} else {
+		output ("NULL, ");
+	}
+	if (type == COB_SCREEN_TYPE_VALUE) {
+		output_param (CB_VALUE(p->values), p->id);
+		output (", ");
+	} else {
+		output ("NULL, ");
+	}
 
 	if (p->sister) {
 		output ("&s_%d, ", p->sister->id);
 	} else {
-		output ("0, ");
+		output ("NULL, ");
 	}
 	if (p->screen_from) {
-		output ("&f_%d, ", cb_field (p->screen_from)->id);
+		if (CB_FIELD_P(p->screen_from) || CB_REFERENCE_P(p->screen_from)) {
+			cb_field (p->screen_from)->count++;
+			output_param (cb_build_field_reference (cb_field (p->screen_from), NULL), cb_field (p->screen_from)->id);
+		} else {
+			output_param (p->screen_from, 0);
+		}
+		output (", ");
 	} else {
-		output ("0, ");
+		output ("NULL, ");
 	}
 	if (p->screen_to) {
-		output ("&f_%d, ", cb_field (p->screen_to)->id);
+		cb_field (p->screen_to)->count++;
+		output_param (cb_build_field_reference (cb_field(p->screen_to), NULL), cb_field (p->screen_to)->id);
+		output (", ");
 	} else {
-		output ("0, ");
+		output ("NULL, ");
 	}
-	output_integer (p->screen_line);
+	output_param (p->screen_line, 0);
 	output (", ");
-	output_integer (p->screen_column);
+	output_param (p->screen_column, 0);
 	output (", %ld};\n", p->screen_flag);
 }
 
@@ -2589,6 +2598,10 @@ literal_value (cb_tree x)
 		return ' ';
 	} else if (x == cb_zero) {
 		return '0';
+	} else if (x == cb_quote) {
+		return '"';
+	} else if (x == cb_null) {
+		return 0;
 	} else if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC) {
 		return cb_get_int (x) - 1;
 	} else {
@@ -2764,7 +2777,8 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 */
 
 	/* local variables */
-	output ("#include \"%s\"\n\n", cb_storage_file_name);
+	output_newline ();
+	output ("#include \"%s\"\n", cb_storage_file_name);
 	output_newline ();
 
 	output_line ("static int initialized = 0;");
@@ -2873,9 +2887,12 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	/* screens */
 	if (prog->screen_storage) {
 		output ("/* Screens */\n\n");
+/*
 		for (f = prog->screen_storage; f; f = f->sister) {
 			output_screen_definition (f);
 		}
+*/
+		output_screen_definition (prog->screen_storage);
 		output_newline ();
 	}
 
@@ -2895,7 +2912,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_newline ();
 
 	output_line ("/* Start of function code */");
-#ifdef __GNUC__
+#if defined (__GNUC__) && (__GNUC__ >= 3)
 	if (cb_flag_static_call == 2) {
 		output_line ("auto void init_%s(void);", prog->program_id);
 	}
@@ -2928,11 +2945,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_newline ();
 
 	/* initialization */
-#if defined (__GNUC__) && (__GNUC__ >= 3)
-	output_line ("if ( __builtin_expect(!initialized, 0) )");
-#else
-	output_line ("if (!initialized)");
-#endif
+	output_line ("if (unlikely(initialized == 0))");
 	output_indent ("  {");
 	/* output_stmt (cb_build_assign (cb_return_code, cb_int0)); */
 	output_line ("if (!cob_initialized) {");
@@ -2945,7 +2958,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 		output_line ("cob_screen_init ();");
 	}
 	if (cb_flag_static_call == 2) {
-#ifdef __GNUC__
+#if defined (__GNUC__) && (__GNUC__ >= 3)
 		output_line ("init_%s();", prog->program_id);
 #else
 		output_line ("goto L_init_%s;", prog->program_id);
@@ -2979,7 +2992,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 		}
 		output_initial_values (prog->working_storage);
 		if (has_external) {
-#ifdef __GNUC__
+#if defined (__GNUC__) && (__GNUC__ >= 3)
 			output_line ("init_external();");
 #else
 			output_line ("goto L_init_external;");
@@ -3015,7 +3028,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 		}
 		output_initial_values (prog->working_storage);
 		if (has_external) {
-#ifdef __GNUC__
+#if defined (__GNUC__) && (__GNUC__ >= 3)
 			output_line ("init_external();");
 #else
 			output_line ("goto L_init_external;");
@@ -3121,7 +3134,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 #endif
 
 	if (cb_flag_static_call == 2) {
-#ifdef __GNUC__
+#if defined (__GNUC__) && (__GNUC__ >= 3)
 		output_line ("void init_%s(void)", prog->program_id);
 		output_line ("{");
 #else
@@ -3131,7 +3144,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 			output_line ("	call_%s = cob_resolve(\"%s\");",
 				     clp->callname, clp->callorig);
 		}
-#ifdef __GNUC__
+#if defined (__GNUC__) && (__GNUC__ >= 3)
 		output_line ("}");
 #else
 		output_line ("goto LRET_init_%s;", prog->program_id);
@@ -3139,7 +3152,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	}
 
 	if (has_external) {
-#ifdef __GNUC__
+#if defined (__GNUC__) && (__GNUC__ >= 3)
 		output_line ("void init_external(void)");
 		output_line ("{");
 #else
@@ -3153,7 +3166,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 				output (";\n");
 			}
 		}
-#ifdef __GNUC__
+#if defined (__GNUC__) && (__GNUC__ >= 3)
 		output_line ("}");
 #else
 		output_line ("goto LRET_init_external;");

@@ -217,7 +217,55 @@ H\"[^\"\n]*\" {
 "ID"[ ]+"DIVISION"[ ]*"." |
 "IDENTIFICATION"[ ]+"DIVISION"[ ]*"." { /* Ignore */ }
 
-[A-Z0-9]([A-Z0-9-]*[A-Z0-9]+)? {
+"SWITCH"[ ]+"1" {
+  yylval = cb_build_reference ("SWITCH-1");
+  SET_LOCATION (yylval);
+  return WORD;
+}
+
+"SWITCH"[ ]+"2" {
+  yylval = cb_build_reference ("SWITCH-2");
+  SET_LOCATION (yylval);
+  return WORD;
+}
+
+"SWITCH"[ ]+"3" {
+  yylval = cb_build_reference ("SWITCH-3");
+  SET_LOCATION (yylval);
+  return WORD;
+}
+
+"SWITCH"[ ]+"4" {
+  yylval = cb_build_reference ("SWITCH-4");
+  SET_LOCATION (yylval);
+  return WORD;
+}
+
+"SWITCH"[ ]+"5" {
+  yylval = cb_build_reference ("SWITCH-5");
+  SET_LOCATION (yylval);
+  return WORD;
+}
+
+"SWITCH"[ ]+"6" {
+  yylval = cb_build_reference ("SWITCH-6");
+  SET_LOCATION (yylval);
+  return WORD;
+}
+
+"SWITCH"[ ]+"7" {
+  yylval = cb_build_reference ("SWITCH-7");
+  SET_LOCATION (yylval);
+  return WORD;
+}
+
+"SWITCH"[ ]+"8" {
+  yylval = cb_build_reference ("SWITCH-8");
+  SET_LOCATION (yylval);
+  return WORD;
+}
+
+[A-Z0-9]([_A-Z0-9-]*[A-Z0-9]+)? {
   int token;
   struct cb_word *word;
 

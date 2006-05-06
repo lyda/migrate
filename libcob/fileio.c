@@ -184,6 +184,7 @@ struct indexed_file {
 	DB		**db;		/* database handlers */
 	DBT		key, data;
 };
+
 static int indexed_open (cob_file *f, char *filename, int mode, int flag);
 static int indexed_close (cob_file *f, int opt);
 static int indexed_start (cob_file *f, int cond, cob_field *key);
@@ -651,9 +652,9 @@ sequential_read (cob_file *f)
 	/* read the record size */
 	if (f->record_min != f->record_max) {
 #if	WITH_VARSEQ == 2
-		if (fread (&f->record->size, sizeof (f->record->size), 1, (FILE *)f->file) != 1) {
+		if (unlikely(fread (&f->record->size, sizeof (f->record->size), 1, (FILE *)f->file) != 1)) {
 #else
-		if (fread (recsize.sbuff, 4, 1, (FILE *)f->file) != 1) {
+		if (unlikely(fread (recsize.sbuff, 4, 1, (FILE *)f->file) != 1)) {
 #endif
 			if (ferror ((FILE *)f->file)) {
 				return COB_STATUS_30_PERMANENT_ERROR;
@@ -679,7 +680,7 @@ sequential_read (cob_file *f)
 	}
 
 	/* read the record */
-	if (fread (f->record->data, f->record->size, 1, (FILE *)f->file) != 1) {
+	if (unlikely(fread (f->record->data, f->record->size, 1, (FILE *)f->file) != 1)) {
 		if (ferror ((FILE *)f->file)) {
 			return COB_STATUS_30_PERMANENT_ERROR;
 		} else {
@@ -708,7 +709,7 @@ sequential_write (cob_file *f, int opt)
 	/* write the record size */
 	if (f->record_min != f->record_max) {
 #if	WITH_VARSEQ == 2
-		if (fwrite (&f->record->size, sizeof (f->record->size), 1, (FILE *)f->file) != 1) {
+		if (unlikely(fwrite (&f->record->size, sizeof (f->record->size), 1, (FILE *)f->file) != 1)) {
 #else
 #if	WITH_VARSEQ == 1
 #ifdef WORDS_BIGENDIAN
@@ -724,14 +725,14 @@ sequential_write (cob_file *f, int opt)
 		recsize.sshort[0] = COB_BSWAP_16 ((unsigned short)f->record->size);
 #endif
 #endif
-		if (fwrite (recsize.sbuff, 4, 1, (FILE *)f->file) != 1) {
+		if (unlikely(fwrite (recsize.sbuff, 4, 1, (FILE *)f->file) != 1)) {
 #endif
 			return COB_STATUS_30_PERMANENT_ERROR;
 		}
 	}
 
 	/* write the record */
-	if (fwrite (f->record->data, f->record->size, 1, (FILE *)f->file) != 1) {
+	if (unlikely(fwrite (f->record->data, f->record->size, 1, (FILE *)f->file) != 1)) {
 		return COB_STATUS_30_PERMANENT_ERROR;
 	}
 
@@ -765,16 +766,16 @@ lineseq_read (cob_file *f)
 
 	dataptr = f->record->data;
 	for ( ; ; ) {
-		if ( (n = getc((FILE *)f->file)) == EOF ) {
+		if ((n = getc((FILE *)f->file)) == EOF) {
 			return COB_STATUS_10_END_OF_FILE;
 		}
-		if ( n == '\r' ) {
+		if (n == '\r') {
 			continue;
 		}
-		if ( n == '\n' ) {
+		if (n == '\n') {
 			break;
 		}
-		if ( i < f->record->size ) {
+		if (likely(i < f->record->size)) {
 			*dataptr++ = n;
 			i++;
 		}
@@ -815,7 +816,7 @@ lineseq_write (cob_file *f, int opt)
 
 	/* write to the file */
 	if (size) {
-		if (fwrite (f->record->data, size, 1, (FILE *)f->file) != 1) {
+		if (unlikely(fwrite (f->record->data, size, 1, (FILE *)f->file) != 1)) {
 			return COB_STATUS_30_PERMANENT_ERROR;
 		}
 	}

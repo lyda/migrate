@@ -39,14 +39,15 @@ get_level (cb_tree x)
 
 	/* get level */
 	for (p = name; *p; p++) {
-		if (!isdigit (*p))
+		if (!isdigit (*p)) {
 			goto level_error;
+		}
 		level = level * 10 + (*p - '0');
 	}
 
 	/* check level */
 	if (!((01 <= level && level <= 49)
-	      || (level == 66 || level == 77 || level == 88))) {
+	      || (level == 66 || level == 77 || level == 88 || level == 78))) {
 		goto level_error;
 	}
 
@@ -59,18 +60,21 @@ level_error:
 
 cb_tree
 cb_build_field_tree (cb_tree level, cb_tree name,
-		     struct cb_field * last_field, enum cb_storage storage, struct cb_file * fn)
+		     struct cb_field * last_field,
+		     enum cb_storage storage, struct cb_file * fn)
 {
 	struct cb_reference	*r;
 	struct cb_field		*f;
-	int lv;
+	int			lv;
 
-	if (level == cb_error_node || name == cb_error_node)
+	if (level == cb_error_node || name == cb_error_node) {
 		return cb_error_node;
+	}
 
 	/* check the level number */
-	if ((lv = get_level (level)) == -1)
+	if ((lv = get_level (level)) == -1) {
 		return cb_error_node;
+	}
 
 	/* build the field */
 	r = CB_REFERENCE (name);
@@ -111,7 +115,7 @@ cb_build_field_tree (cb_tree level, cb_tree name,
 	}
 
 	/* link the field into the tree */
-	if (f->level == 01 || f->level == 77) {
+	if (f->level == 01 || f->level == 77 || f->level == 78) {
 		/* top level */
 		if (last_field) {
 			cb_field_founder (last_field)->sister = f;
@@ -362,6 +366,10 @@ validate_field_1 (struct cb_field *f)
 		/* elementary item */
 
 		/* validate PICTURE */
+		if (f->level == 78 && f->pic != NULL) {
+			cb_error_x (x, _("78 level can not have a PICTURE clause - '%s'"), name);
+			return -1;
+		}
 		need_picture = 1;
 		if (f->usage == CB_USAGE_INDEX
 		    || f->usage == CB_USAGE_LENGTH
@@ -374,8 +382,44 @@ validate_field_1 (struct cb_field *f)
 			need_picture = 0;
 		}
 		if (f->pic == NULL && need_picture != 0) {
-			cb_error_x (x, _("PICTURE clause required for '%s'"), name);
-			return -1;	/* cannot continue */
+			char	*p;
+			int	vorint;
+			char	pic[16];
+
+			if (current_storage == CB_STORAGE_SCREEN) {
+				if (f->values) {
+					sprintf(pic, "X(%d)", CB_LITERAL(CB_VALUE(f->values))->size);
+				} else {
+					sprintf(pic, "X(0)");
+				}
+				f->pic = CB_PICTURE (cb_build_picture (pic));
+			} else if (f->level == 78 && f->values) {
+				if (CB_NUMERIC_LITERAL_P(CB_VALUE(f->values))) {
+					memset (pic, 0, sizeof (pic));
+					p = pic;
+					if (CB_LITERAL(CB_VALUE(f->values))->sign) {
+						*p++ = 'S';
+					}
+					vorint = CB_LITERAL(CB_VALUE(f->values))->size -
+						 CB_LITERAL(CB_VALUE(f->values))->scale;
+					if (vorint) {
+						p += sprintf (p, "9(%d)", vorint);
+					}
+					if (CB_LITERAL(CB_VALUE(f->values))->scale) {
+						sprintf (p, "V9(%d)",
+						 CB_LITERAL(CB_VALUE(f->values))->scale);
+					}
+					if (CB_LITERAL(CB_VALUE(f->values))->size < 10) {
+						f->usage = CB_USAGE_COMP_5;
+					}
+				} else {
+					sprintf(pic, "X(%d)", CB_LITERAL(CB_VALUE(f->values))->size);
+				}
+				f->pic = CB_PICTURE (cb_build_picture (pic));
+			} else {
+				cb_error_x (x, _("PICTURE clause required for '%s'"), name);
+				return -1;
+			}
 		}
 		if (f->pic != NULL && need_picture == 0) {
 			cb_error_x (x, _("'%s' cannot have PICTURE clause"), name);
@@ -514,7 +558,9 @@ setup_parameters (struct cb_field *f)
 			}
 #ifndef WORDS_BIGENDIAN
 			if (f->usage == CB_USAGE_COMP_X) {
-				f->flag_binary_swap = 1;
+				if (cb_binary_byteorder == CB_BYTEORDER_BIG_ENDIAN) {
+					f->flag_binary_swap = 1;
+				}
 			}
 #endif
 			break;

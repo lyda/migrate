@@ -79,9 +79,6 @@ cob_init_intrinsic ()
 	memset ((char *)&calc_attr[0], 0, sizeof (calc_attr));
 	for ( i = 0; i < DEPTH_LEVEL; i++ ) {
 		calc_field[i].data = cob_malloc (1024);
-/* Done by cob_malloc
-		memset (calc_field[i].data, 0, 1024);
-*/
 		calc_field[i].size = 1024;
 	}
 	return;

@@ -45,6 +45,18 @@
 
 #endif /* _MSC_VER */
 
+#ifdef	__370__
+#define inline __inline
+#endif
+
+#if defined(__GNUC__) && (__GNUC__ >= 3)
+#define likely(x)	__builtin_expect(!!(x), 1)
+#define unlikely(x)	__builtin_expect(!!(x), 0)
+#else
+#define likely(x)	(x)
+#define unlikely(x)	(x)
+#endif
+
 typedef unsigned char *	ucharptr;
 
 #define	COB_SMALL_BUFF		1024
@@ -108,10 +120,10 @@ typedef struct __cob_external {
 /* field attributes */
 
 typedef struct {
-	char		type;
-	char		digits;
-	char		scale;
-	char		flags;
+	unsigned char	type;
+	unsigned char	digits;
+	signed char	scale;
+	unsigned char	flags;
 	const char	*pic;
 } cob_field_attr;
 
@@ -135,9 +147,28 @@ typedef struct {
 #define COB_FIELD_IS_NUMERIC(f)	(COB_FIELD_TYPE (f) & COB_TYPE_NUMERIC)
 
 
+/* SIGN */
+
 /*
- * Module
+ * positive: 0123456789
+ * negative: pqrstuvwxy
  */
+#define GET_SIGN_ASCII(x) x -= 0x40
+#define PUT_SIGN_ASCII(x) x += 0x40
+
+/*
+ * positive: 0123456789
+ * negative: @ABCDEFGHI
+ */
+#define GET_SIGN_ASCII10(x) x -= 0x10
+#define PUT_SIGN_ASCII10(x) x += 0x10
+
+/*
+ * positive: 0123456789
+ * negative: PQRSTUVWXY
+ */
+#define GET_SIGN_ASCII20(x) x -= 0x20
+#define PUT_SIGN_ASCII20(x) x += 0x20
 
 enum cob_display_sign {
 	COB_DISPLAY_SIGN_ASCII,
@@ -145,6 +176,10 @@ enum cob_display_sign {
 	COB_DISPLAY_SIGN_ASCII10,
 	COB_DISPLAY_SIGN_ASCII20
 };
+
+/*
+ * Module
+ */
 
 typedef struct __cob_module {
 	struct __cob_module	*next;
@@ -237,6 +272,7 @@ extern void cob_accept_day_yyyyddd (cob_field *f);
 extern void cob_accept_day_of_week (cob_field *f);
 extern void cob_accept_time (cob_field *f);
 extern void cob_accept_command_line (cob_field *f);
+extern void cob_set_environment (cob_field *f1, cob_field *f2);
 extern void cob_display_environment (cob_field *f);
 extern void cob_accept_environment (cob_field *f);
 extern void cob_display_env_value (cob_field *f);
@@ -251,10 +287,10 @@ extern int CBL_ERROR_PROC(char *x, int (**p)(char *s));
 #define cob_put_sign(f,s) if (COB_FIELD_HAVE_SIGN (f)) cob_real_put_sign (f, s)
 
 extern int cob_real_get_sign (cob_field *f);
-extern void cob_real_put_sign (cob_field *f, int sign);
+extern void cob_real_put_sign (cob_field *f, const int sign);
 extern char *cob_field_to_string (cob_field *f, char *s);
 
-extern unsigned char *cob_external_addr (char *, int);
+extern unsigned char *cob_external_addr (char *exname, int exlength);
 
 /* Switch */
 
@@ -264,9 +300,6 @@ extern void cob_set_switch (int n, int flag);
 /* Comparison */
 
 extern int cob_cmp (cob_field *f1, cob_field *f2);
-/*
-extern int cob_cmp_int (cob_field *f1, int n);
-*/
 
 /* Class check */
 
@@ -291,14 +324,6 @@ extern void cob_check_ref_mod (int offset, int length, int size, const char *nam
 
 /* Inline functions */
 extern int cob_numeric_cmp (cob_field *f1, cob_field *f2);
-
-static inline int
-cob_cmp_int (cob_field *f1, int n)
-{
-	cob_field_attr	attr = { COB_TYPE_NUMERIC_BINARY, 9, 0, COB_FLAG_HAVE_SIGN, NULL };
-	cob_field	temp = { sizeof (int), (unsigned char *)&n, &attr };
-
-	return cob_numeric_cmp (f1, &temp);
-}
+extern int cob_cmp_int (cob_field *f1, int n);
 
 #endif /* COB_COMMON_H_ */

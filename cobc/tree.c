@@ -87,8 +87,9 @@ to_cname (const char *s)
 	char *copy = strdup (s);
 	char *p;
 
-	for (p = copy; *p; p++)
+	for (p = copy; *p; p++) {
 		*p = (*p == '-') ? '_' : toupper (*p);
+	}
 	return copy;
 }
 
@@ -113,33 +114,35 @@ cb_name_1 (char *s, cb_tree x)
 
 	switch (CB_TREE_TAG (x)) {
 	case CB_TAG_CONST:
-		if (x == cb_any)
+		if (x == cb_any) {
 			strcpy (s, "ANY");
-		else if (x == cb_true)
+		} else if (x == cb_true) {
 			strcpy (s, "TRUE");
-		else if (x == cb_false)
+		} else if (x == cb_false) {
 			strcpy (s, "FALSE");
-		else if (x == cb_null)
+		} else if (x == cb_null) {
 			strcpy (s, "NULL");
-		else if (x == cb_zero)
+		} else if (x == cb_zero) {
 			strcpy (s, "ZERO");
-		else if (x == cb_space)
+		} else if (x == cb_space) {
 			strcpy (s, "SPACE");
-		else if (x == cb_low)
+		} else if (x == cb_low) {
 			strcpy (s, "LOW-VALUE");
-		else if (x == cb_high)
+		} else if (x == cb_high) {
 			strcpy (s, "HIGH-VALUE");
-		else if (x == cb_quote)
+		} else if (x == cb_quote) {
 			strcpy (s, "QUOTE");
-		else
+		} else {
 			strcpy (s, "#<unknown constant>");
+		}
 		break;
 
 	case CB_TAG_LITERAL:
-		if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC)
+		if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC) {
 			strcpy (s, (char *)CB_LITERAL (x)->data);
-		else
+		} else {
 			sprintf (s, "\"%s\"", CB_LITERAL (x)->data);
+		}
 		break;
 
 	case CB_TAG_FIELD:
@@ -154,7 +157,7 @@ cb_name_1 (char *s, cb_tree x)
 		if (p->subs) {
 			cb_tree l = p->subs = cb_list_reverse (p->subs);
 
-			s += sprintf (s, "(");
+			s += sprintf (s, " (");
 			for (; l; l = CB_CHAIN (l)) {
 				s += cb_name_1 (s, CB_VALUE (l));
 				s += sprintf (s, CB_CHAIN (l) ? ", " : ")");
@@ -162,11 +165,12 @@ cb_name_1 (char *s, cb_tree x)
 			p->subs = cb_list_reverse (p->subs);
 		}
 		if (p->offset) {
-			s += sprintf (s, "(");
+			s += sprintf (s, " (");
 			s += cb_name_1 (s, p->offset);
 			s += sprintf (s, ":");
-			if (p->length)
+			if (p->length) {
 				s += cb_name_1 (s, p->length);
+			}
 			strcpy (s, ")");
 		}
 		if (p->chain) {
@@ -244,8 +248,9 @@ cb_tree_category (cb_tree x)
 	if (x == cb_error_node) {
 		return 0;
 	}
-	if (x->category != CB_CATEGORY_UNKNOWN)
+	if (x->category != CB_CATEGORY_UNKNOWN) {
 		return x->category;
+	}
 
 	switch (CB_TREE_TAG (x)) {
 	case CB_TAG_CAST:
@@ -269,29 +274,31 @@ cb_tree_category (cb_tree x)
 	{
 		struct cb_reference *r = CB_REFERENCE (x);
 
-		if (r->offset)
+		if (r->offset) {
 			x->category = CB_CATEGORY_ALPHANUMERIC;
-		else
+		} else {
 			x->category = cb_tree_category (r->value);
+		}
 		break;
 	}
 	case CB_TAG_FIELD:
 	{
 		struct cb_field *f = CB_FIELD (x);
 
-		if (f->children)
+		if (f->children) {
 			x->category = CB_CATEGORY_ALPHANUMERIC;
-		else if (f->usage == CB_USAGE_POINTER && f->level != 88)
+		} else if (f->usage == CB_USAGE_POINTER && f->level != 88) {
 			x->category = CB_CATEGORY_DATA_POINTER;
-		else if (f->usage == CB_USAGE_PROGRAM_POINTER && f->level != 88)
+		} else if (f->usage == CB_USAGE_PROGRAM_POINTER && f->level != 88) {
 			x->category = CB_CATEGORY_PROGRAM_POINTER;
-		else
+		} else {
 			switch (f->level) {
 			case 66:
-				if (f->rename_thru)
+				if (f->rename_thru) {
 					x->category = CB_CATEGORY_ALPHANUMERIC;
-				else
+				} else {
 					x->category = cb_tree_category (CB_TREE (f->redefines));
+				}
 				break;
 			case 88:
 				x->category = CB_CATEGORY_BOOLEAN;
@@ -300,6 +307,7 @@ cb_tree_category (cb_tree x)
 				x->category = f->pic->category;
 				break;
 			}
+		}
 		break;
 	}
 	case CB_TAG_ALPHABET_NAME:
@@ -320,8 +328,9 @@ cb_tree_type (cb_tree x)
 {
 	struct cb_field *f = cb_field (x);
 
-	if (f->children)
+	if (f->children) {
 		return COB_TYPE_GROUP;
+	}
 
 	switch (CB_TREE_CATEGORY (x)) {
 	case CB_CATEGORY_ALPHABETIC:
@@ -371,8 +380,9 @@ cb_fits_int (cb_tree x)
 	{
 		struct cb_literal *l = CB_LITERAL (x);
 
-		if (l->scale <= 0 && l->size < 10)
+		if (l->scale <= 0 && l->size < 10) {
 			return 1;
+		}
 		return 0;
 	}
 	case CB_TAG_FIELD:
@@ -386,12 +396,14 @@ cb_fits_int (cb_tree x)
 		case CB_USAGE_BINARY:
 		case CB_USAGE_COMP_5:
 		case CB_USAGE_COMP_X:
-			if (f->pic->scale <= 0 && f->size <= sizeof (int))
+			if (f->pic->scale <= 0 && f->size <= sizeof (int)) {
 				return 1;
+			}
 			return 0;
 		case CB_USAGE_DISPLAY:
-			if (f->pic->scale <= 0 && f->size < 10)
+			if (f->pic->scale <= 0 && f->size < 10) {
 				return 1;
+			}
 			return 0;
 		default:
 			return 0;
@@ -413,18 +425,22 @@ cb_get_int (cb_tree x)
 	int			val = 0;
 	struct cb_literal	*l = CB_LITERAL (x);
 
-	for (i = 0; i < l->size; i++)
-		if (l->data[i] != '0')
+	for (i = 0; i < l->size; i++) {
+		if (l->data[i] != '0') {
 			break;
+		}
+	}
 
 	if (l->size - i >= 10) {
 		ABORT ();
 	}
 
-	for (; i < l->size; i++)
+	for (; i < l->size; i++) {
 		val = val * 10 + l->data[i] - '0';
-	if (l->sign < 0)
+	}
+	if (l->sign < 0) {
 		val = -val;
+	}
 	return val;
 }
 
@@ -451,8 +467,8 @@ cb_init_constants (void)
 {
 	int i;
 
-	cb_error_node = make_constant (CB_CATEGORY_UNKNOWN, 0);
-	cb_any = make_constant (CB_CATEGORY_UNKNOWN, 0);
+	cb_error_node = make_constant (CB_CATEGORY_UNKNOWN, NULL);
+	cb_any = make_constant (CB_CATEGORY_UNKNOWN, NULL);
 	cb_true = make_constant (CB_CATEGORY_BOOLEAN, "1");
 	cb_false = make_constant (CB_CATEGORY_BOOLEAN, "0");
 	cb_null = make_constant (CB_CATEGORY_DATA_POINTER, "0");
@@ -485,9 +501,11 @@ cb_int (int n)
 	struct cb_integer	*x;
 	struct int_node		*p;
 
-	for (p = int_node_table; p; p = p->next)
-		if (p->n == n)
+	for (p = int_node_table; p; p = p->next) {
+		if (p->n == n) {
 			return p->node;
+		}
+	}
 
 	x = make_tree (CB_TAG_INTEGER, CB_CATEGORY_NUMERIC, sizeof (struct cb_integer));
 	x->val = n;
@@ -653,6 +671,8 @@ cb_build_picture (const char *str)
 	int		scale = 0;
 	int		s_count = 0;
 	int		v_count = 0;
+	int		at_beginning;
+	int		at_end;
 	unsigned char	buff[16384];
 
 	memset (buff, 0, sizeof (buff));
@@ -662,18 +682,21 @@ cb_build_picture (const char *str)
 
 	      repeat:
 		/* count the number of repeated chars */
-		while (p[1] == c)
+		while (p[1] == c) {
 			p++, n++;
+		}
 
 		/* add parenthesized numbers */
 		if (p[1] == '(') {
 			int i = 0;
 
-			for (p += 2; *p != ')'; p++)
-				if (!isdigit (*p))
+			for (p += 2; *p != ')'; p++) {
+				if (!isdigit (*p)) {
 					goto error;
-				else
+				} else {
 					i = i * 10 + (*p - '0');
+				}
+			}
 			n += i - 1;
 			goto repeat;
 		}
@@ -702,45 +725,53 @@ cb_build_picture (const char *str)
 
 		case 'S':
 			category |= PIC_NUMERIC;
-			if (category & PIC_ALPHABETIC)
+			if (category & PIC_ALPHABETIC) {
 				goto error;
+			}
 			s_count += n;
-			if (s_count > 1 || idx != 0)
+			if (s_count > 1 || idx != 0) {
 				goto error;
+			}
 			continue;
 
 		case ',':
 		case '.':
 			category |= PIC_NUMERIC_EDITED;
-			if (c != current_program->decimal_point)
+			if (c != current_program->decimal_point) {
 				break;
+			}
 			/* fall through */
 		case 'V':
 			category |= PIC_NUMERIC;
-			if (category & PIC_ALPHABETIC)
+			if (category & PIC_ALPHABETIC) {
 				goto error;
+			}
 			v_count += n;
-			if (v_count > 1)
+			if (v_count > 1) {
 				goto error;
+			}
 			break;
 
 		case 'P':
 			category |= PIC_NUMERIC;
-			if (category & PIC_ALPHABETIC)
+			if (category & PIC_ALPHABETIC) {
 				goto error;
-			{
-			int at_beginning = (idx == 0)		/* P... */
+			}
+			at_beginning = (idx == 0)		/* P... */
 			    ||(idx == 2 && buff[0] == 'V');	/* VP... */
-			int at_end = (p[1] == 0)		/* ...P */
+			at_end = (p[1] == 0)		/* ...P */
 			    ||(p[1] == 'V' && p[2] == 0);	/* ...PV */
-			if (!at_beginning && !at_end)
+
+			if (!at_beginning && !at_end) {
 				goto error;
-			if (at_beginning)
+			}
+			if (at_beginning) {
 				v_count++;	/* implicit V */
+			}
 			digits += n;
-			if (v_count)
+			if (v_count) {
 				scale += n;
-			else
+			} else {
 				scale -= n;
 			}
 			break;
@@ -754,18 +785,21 @@ cb_build_picture (const char *str)
 		case '*':
 		case 'Z':
 			category |= PIC_NUMERIC_EDITED;
-			if (category & PIC_ALPHABETIC)
+			if (category & PIC_ALPHABETIC) {
 				goto error;
+			}
 			digits += n;
-			if (v_count)
+			if (v_count) {
 				scale += n;
+			}
 			break;
 
 		case '+':
 		case '-':
 			category |= PIC_NUMERIC_EDITED;
-			if (category & PIC_ALPHABETIC)
+			if (category & PIC_ALPHABETIC) {
 				goto error;
+			}
 			digits += n - 1;
 			s_count++;
 			/* FIXME: need more check */
@@ -773,16 +807,18 @@ cb_build_picture (const char *str)
 
 		case 'C':
 			category |= PIC_NUMERIC_EDITED;
-			if (!(p[1] == 'R' && p[2] == 0))
+			if (!(p[1] == 'R' && p[2] == 0)) {
 				goto error;
+			}
 			p++;
 			s_count++;
 			break;
 
 		case 'D':
 			category |= PIC_NUMERIC_EDITED;
-			if (!(p[1] == 'B' && p[2] == 0))
+			if (!(p[1] == 'B' && p[2] == 0)) {
 				goto error;
+			}
 			p++;
 			s_count++;
 			break;
@@ -799,10 +835,12 @@ cb_build_picture (const char *str)
 		}
 
 		/* calculate size */
-		if (c != 'V' && c != 'P')
+		if (c != 'V' && c != 'P') {
 			size += n;
-		if (c == 'C' || c == 'D' || c == 'N')
+		}
+		if (c == 'C' || c == 'D' || c == 'N') {
 			size += n;
+		}
 
 		/* store in the buffer */
 		while (n > 0) {
@@ -830,8 +868,9 @@ cb_build_picture (const char *str)
 		break;
 	case PIC_NUMERIC:
 		pic->category = CB_CATEGORY_NUMERIC;
-		if (digits > 36)
+		if (digits > 36) {
 			cb_error (_("numeric field cannot be larger than 36 digits"));
+		}
 		break;
 	case PIC_ALPHANUMERIC:
 	case PIC_NATIONAL:
@@ -906,10 +945,11 @@ cb_build_constant (cb_tree name, cb_tree value)
 struct cb_field *
 cb_field (cb_tree x)
 {
-	if (CB_REFERENCE_P (x))
+	if (CB_REFERENCE_P (x)) {
 		return CB_FIELD (cb_ref (x));
-	else
+	} else {
 		return CB_FIELD (x);
+	}
 }
 
 struct cb_field *
@@ -917,8 +957,9 @@ cb_field_add (struct cb_field *f, struct cb_field *p)
 {
 	struct cb_field *t;
 
-	if (f == NULL)
+	if (f == NULL) {
 		return p;
+	}
 
 	for (t = f; t->sister; t = t->sister) ;
 	t->sister = p;
@@ -928,34 +969,33 @@ cb_field_add (struct cb_field *f, struct cb_field *p)
 int
 cb_field_size (cb_tree x)
 {
+	struct cb_reference	*r;
+	struct cb_field		*f;
+
 	switch (CB_TREE_TAG (x)) {
 	case CB_TAG_LITERAL:
-	{
 		return CB_LITERAL (x)->size;
-	}
 	case CB_TAG_FIELD:
-	{
 		return CB_FIELD (x)->size;
-	}
 	case CB_TAG_REFERENCE:
-	{
-		struct cb_reference *r = CB_REFERENCE (x);
-		struct cb_field *f = CB_FIELD (r->value);
+		r = CB_REFERENCE (x);
+		f = CB_FIELD (r->value);
 
 		if (r->length) {
-			if (CB_LITERAL_P (r->length))
+			if (CB_LITERAL_P (r->length)) {
 				return cb_get_int (r->length);
-			else
+			} else {
 				return -1;
+			}
 		} else if (r->offset) {
-			if (CB_LITERAL_P (r->offset))
+			if (CB_LITERAL_P (r->offset)) {
 				return f->size - cb_get_int (r->offset) + 1;
-			else
+			} else {
 				return -1;
+			}
 		} else {
 			return f->size;
 		}
-	}
 	default:
 		fprintf (stderr, "Unexpected tree tag %d\n", CB_TREE_TAG (x));
 		ABORT ();
@@ -967,8 +1007,9 @@ cb_field_size (cb_tree x)
 struct cb_field *
 cb_field_founder (struct cb_field *f)
 {
-	while (f->parent)
+	while (f->parent) {
 		f = f->parent;
+	}
 	return f;
 }
 
@@ -977,11 +1018,13 @@ cb_field_variable_size (struct cb_field *f)
 {
 	struct cb_field *p;
 
-	for (f = f->children; f; f = f->sister)
-		if (f->occurs_depending)
+	for (f = f->children; f; f = f->sister) {
+		if (f->occurs_depending) {
 			return f;
-		else if ((p = cb_field_variable_size (f)) != NULL)
+		} else if ((p = cb_field_variable_size (f)) != NULL) {
 			return p;
+		}
+	}
 	return NULL;
 }
 
@@ -990,10 +1033,13 @@ cb_field_variable_address (struct cb_field *f)
 {
 	struct cb_field *p;
 
-	for (p = f->parent; p; f = f->parent, p = f->parent)
-		for (p = p->children; p != f; p = p->sister)
-			if (p->occurs_depending || cb_field_variable_size (p))
+	for (p = f->parent; p; f = f->parent, p = f->parent) {
+		for (p = p->children; p != f; p = p->sister) {
+			if (p->occurs_depending || cb_field_variable_size (p)) {
 				return p;
+			}
+		}
+	}
 	return NULL;
 }
 
@@ -1002,9 +1048,11 @@ cb_field_variable_address (struct cb_field *f)
 int
 cb_field_subordinate (struct cb_field *p, struct cb_field *f)
 {
-	for (p = p->parent; p; p = p->parent)
-		if (p == f)
+	for (p = p->parent; p; p = p->parent) {
+		if (p == f) {
 			return 1;
+		}
+	}
 	return 0;
 }
 
@@ -1038,12 +1086,14 @@ validate_file (struct cb_file *f, cb_tree name)
 	/* check RECORD/RELATIVE KEY clause */
 	switch (f->organization) {
 	case COB_ORG_INDEXED:
-		if (f->key == NULL)
+		if (f->key == NULL) {
 			file_error (name, "RECORD KEY");
+		}
 		break;
 	case COB_ORG_RELATIVE:
-		if (f->key == NULL && f->access_mode != COB_ACCESS_SEQUENTIAL)
+		if (f->key == NULL && f->access_mode != COB_ACCESS_SEQUENTIAL) {
 			file_error (name, "RELATIVE KEY");
+		}
 		break;
 	}
 }
@@ -1058,26 +1108,34 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 
 	/* check the record size if it is limited */
 	for (p = records; p; p = p->sister) {
-		if (f->record_min > 0)
-			if (p->size < f->record_min)
+		if (f->record_min > 0) {
+			if (p->size < f->record_min) {
 				cb_error (_("record size too small '%s'"), p->name);
-		if (f->record_max > 0)
-			if (p->size > f->record_max)
+			}
+		}
+		if (f->record_max > 0) {
+			if (p->size > f->record_max) {
 				cb_error (_("record size too large '%s'"), p->name);
+			}
+		}
 	}
 
 	/* compute the record size */
-	if (f->record_min == 0)
+	if (f->record_min == 0) {
 		f->record_min = records->size;
+	}
 	for (p = records; p; p = p->sister) {
 		struct cb_field *v = cb_field_variable_size (p);
 
-		if (v && v->offset + v->size * v->occurs_min < f->record_min)
+		if (v && v->offset + v->size * v->occurs_min < f->record_min) {
 			f->record_min = v->offset + v->size * v->occurs_min;
-		if (p->size < f->record_min)
+		}
+		if (p->size < f->record_min) {
 			f->record_min = p->size;
-		if (p->size > f->record_max)
+		}
+		if (p->size > f->record_max) {
 			f->record_max = p->size;
+		}
 	}
 
 	if (f->same_clause) {
@@ -1106,7 +1164,7 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 		}
 	}
 	/* create record */
-	sprintf (buff, "%s$record", f->name);
+	sprintf (buff, "%s_record", f->name);
 	f->record = CB_FIELD (cb_build_implicit_field (cb_build_reference (buff),
 				f->record_max));
 	f->record->sister = records;
@@ -1122,7 +1180,7 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 	}
 	f->finalized = 1;
 	if (f->linage) {
-		sprintf (buff, "LC$%s", f->name);
+		sprintf (buff, "LC_%s", f->name);
 		x = cb_build_field (cb_build_reference (buff));
 		CB_FIELD (x)->pic = CB_PICTURE (cb_build_picture ("9(9)"));
 		CB_FIELD (x)->usage = CB_USAGE_COMP_5;
@@ -1165,8 +1223,9 @@ cb_build_field_reference (struct cb_field * f, cb_tree ref)
 	cb_tree		x = cb_build_reference (f->name);
 	struct cb_word	*word = CB_REFERENCE (x)->word;
 
-	if (ref)
+	if (ref) {
 		memcpy (x, ref, sizeof (struct cb_reference));
+	}
 	x->category = CB_CATEGORY_UNKNOWN;
 	CB_REFERENCE (x)->word = word;
 	CB_REFERENCE (x)->value = CB_TREE (f);
@@ -1191,8 +1250,9 @@ cb_define_system_name (const char *name)
 {
 	cb_tree x = cb_build_reference (name);
 
-	if (CB_REFERENCE (x)->word->count == 0)
+	if (CB_REFERENCE (x)->word->count == 0) {
 		cb_define (x, lookup_system_name (name));
+	}
 }
 
 cb_tree
@@ -1205,8 +1265,9 @@ cb_ref (cb_tree x)
 
 	/* if this reference has already been resolved (and the value
 	   has been cached), then just return the value */
-	if (r->value)
+	if (r->value) {
 		return r->value;
+	}
 
 	/* resolve the value */
 	for (items = r->word->items; items; items = CB_CHAIN (items)) {
@@ -1222,15 +1283,19 @@ cb_ref (cb_tree x)
 			struct cb_field *p = CB_FIELD (v)->parent;
 
 			/* resolve by parents */
-			for (; p; p = p->parent)
-				if (c && strcasecmp (CB_NAME (c), p->name) == 0)
+			for (; p; p = p->parent) {
+				if (c && strcasecmp (CB_NAME (c), p->name) == 0) {
 					c = CB_REFERENCE (c)->chain;
+				}
+			}
 
 			/* resolve by file */
-			if (c && CB_REFERENCE (c)->chain == 0)
+			if (c && CB_REFERENCE (c)->chain == 0) {
 				if (CB_REFERENCE (c)->word->count == 1 && CB_FILE_P (cb_ref (c))
-				    && (CB_FILE (cb_ref (c)) == cb_field_founder (CB_FIELD (v))->file))
+				    && (CB_FILE (cb_ref (c)) == cb_field_founder (CB_FIELD (v))->file)) {
 					c = CB_REFERENCE (c)->chain;
+				}
+			}
 
 			break;
 		}
@@ -1239,17 +1304,27 @@ cb_ref (cb_tree x)
 			/* in case the value is a label, it might be qualified
 			   by its section name */
 			struct cb_label *s = CB_LABEL (v)->section;
+			cb_tree		cb1;
+			cb_tree		cb2;
 
 			/* unqualified paragraph name referenced within the section
-			   is resolved without ambiguity check */
+			   is resolved without ambiguity check if not duplicated */
 			if (c == NULL && r->offset && s == CB_LABEL (r->offset)) {
+				for (cb1 = CB_CHAIN (items); cb1; cb1 = CB_CHAIN (cb1)) {
+					cb2 = CB_VALUE (cb1);
+					if (s == CB_LABEL (cb2)->section) {
+						ambiguous_error (x);
+						goto error;
+					}
+				}
 				candidate = v;
 				goto end;
 			}
 
 			/* resolve by section name */
-			if (c && strcasecmp (CB_NAME (c), s->name) == 0)
+			if (c && s && strcasecmp (CB_NAME (c), s->name) == 0) {
 				c = CB_REFERENCE (c)->chain;
+			}
 
 			break;
 		}
@@ -1287,8 +1362,9 @@ cb_ref (cb_tree x)
       end:
 	if (CB_FIELD_P (candidate)) {
 		CB_FIELD (candidate)->count++;
-		if (CB_FIELD (candidate)->flag_invalid)
+		if (CB_FIELD (candidate)->flag_invalid) {
 			goto error;
+		}
 	}
 
 	r->value = candidate;
@@ -1316,14 +1392,16 @@ cb_build_binary_op (cb_tree x, int op, cb_tree y)
 	case '/':
 	case '^':
 		/* arithmetic operators */
-		if (CB_TREE_CLASS (x) == CB_CLASS_POINTER || CB_TREE_CLASS (y) == CB_CLASS_POINTER) {
+		if (CB_TREE_CLASS (x) == CB_CLASS_POINTER ||
+		    CB_TREE_CLASS (y) == CB_CLASS_POINTER) {
 			category = CB_CATEGORY_DATA_POINTER;
 			break;
 		}
 		x = cb_check_numeric_value (x);
 		y = cb_check_numeric_value (y);
-		if (x == cb_error_node || y == cb_error_node)
+		if (x == cb_error_node || y == cb_error_node) {
 			return cb_error_node;
+		}
 		category = CB_CATEGORY_NUMERIC;
 		break;
 
@@ -1341,7 +1419,8 @@ cb_build_binary_op (cb_tree x, int op, cb_tree y)
 	case '&':
 	case '|':
 		/* logical operators */
-		if (CB_TREE_CLASS (x) != CB_CLASS_BOOLEAN || (y && CB_TREE_CLASS (y) != CB_CLASS_BOOLEAN)) {
+		if (CB_TREE_CLASS (x) != CB_CLASS_BOOLEAN ||
+		    (y && CB_TREE_CLASS (y) != CB_CLASS_BOOLEAN)) {
 			return cb_error_node;
 		}
 		category = CB_CATEGORY_BOOLEAN;
@@ -1369,8 +1448,9 @@ cb_build_binary_list (cb_tree l, int op)
 {
 	cb_tree e = CB_VALUE (l);
 
-	for (l = CB_CHAIN (l); l; l = CB_CHAIN (l))
+	for (l = CB_CHAIN (l); l; l = CB_CHAIN (l)) {
 		e = cb_build_binary_op (e, op, CB_VALUE (l));
+	}
 	return e;
 }
 
@@ -1602,8 +1682,9 @@ cb_list_append (cb_tree l1, cb_tree l2)
 	} else {
 		cb_tree l = l1;
 
-		while (CB_CHAIN (l))
+		while (CB_CHAIN (l)) {
 			l = CB_CHAIN (l);
+		}
 		CB_CHAIN (l) = l2;
 		return l1;
 	}
@@ -1627,16 +1708,18 @@ cb_list_length (cb_tree l)
 {
 	int n = 0;
 
-	for (; l; l = CB_CHAIN (l))
+	for (; l; l = CB_CHAIN (l)) {
 		n++;
+	}
 	return n;
 }
 
 void
 cb_list_map (cb_tree (*func) (cb_tree x), cb_tree l)
 {
-	for (; l; l = CB_CHAIN (l))
+	for (; l; l = CB_CHAIN (l)) {
 		CB_VALUE (l) = func (CB_VALUE (l));
+	}
 }
 
 /*
@@ -1648,8 +1731,9 @@ hash (const char *s)
 {
 	int val = 0;
 
-	for (; *s; s++)
+	for (; *s; s++) {
 		val += toupper (*s);
+	}
 	return val % CB_WORD_HASH_SIZE;
 }
 
@@ -1660,10 +1744,13 @@ lookup_word (const char *name)
 	int		val = hash (name);
 
 	/* find the existing word */
-	if (current_program)
-		for (p = current_program->word_table[val]; p; p = p->next)
-			if (strcasecmp (p->name, name) == 0)
+	if (current_program) {
+		for (p = current_program->word_table[val]; p; p = p->next) {
+			if (strcasecmp (p->name, name) == 0) {
 				return p;
+			}
+		}
+	}
 
 	/* create new word */
 	p = cob_malloc (sizeof (struct cb_word));

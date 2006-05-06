@@ -2363,28 +2363,21 @@ cat >prog.cob <<'_ATEOF'
 _ATEOF
 
 
-## Change when we allow this
-## AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-## [])
-
 $at_traceoff
-echo "definition.at:443: \${COMPILE_ONLY} prog.cob"
-echo definition.at:443 >$at_check_line_file
+echo "definition.at:436: \${COMPILE_ONLY} prog.cob"
+echo definition.at:436 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob: In paragraph 'L':
-prog.cob:6: Error: redefinition of 'L'
-prog.cob:5: Error: 'L' previously defined here
-" | $at_diff - $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
-   1) ;;
-   *) echo "definition.at:443: exit code was $at_status, expected 1"
+   0) ;;
+   *) echo "definition.at:436: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2395,6 +2388,13 @@ fi
 
 $at_traceon
 
+
+## Change when we DON'T allow this
+## AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+## [prog.cob: In paragraph 'L':
+## prog.cob:6: Error: redefinition of 'L'
+## prog.cob:5: Error: 'L' previously defined here
+## ])
 
       $at_traceoff
       $at_times_p && times >$at_times_file
@@ -5044,8 +5044,8 @@ grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
 echo >>$at_stderr; echo "prog.cob:11: Error: 'X' is not group name
 prog.cob:12: Error: 'X' is not group name
-prog.cob:13: Error: 'G-1(1:1)' is not group name
-prog.cob:14: Error: 'G-2(1:1)' is not group name
+prog.cob:13: Error: 'G-1 (1:1)' is not group name
+prog.cob:14: Error: 'G-2 (1:1)' is not group name
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in

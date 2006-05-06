@@ -305,9 +305,9 @@ cob_move_display_to_fp (cob_field *f1, cob_field *f2)
 	if (COB_FIELD_TYPE (f2) == COB_TYPE_NUMERIC_FLOAT) {
 		float	flval = (float) val;
 
-		*(float *)f2->data = flval;
+		memcpy (f2->data, (ucharptr)&flval, sizeof(float));
 	} else {
-		*(double *)f2->data = val;
+		memcpy (f2->data, (ucharptr)&val, sizeof(double));
 	}
 }
 
@@ -327,9 +327,12 @@ cob_move_fp_to_display (cob_field *f1, cob_field *f2)
 	own_memset ((ucharptr)buff, 0, sizeof (buff));
 	own_memset ((ucharptr)buff2, 0, sizeof (buff2));
 	if (COB_FIELD_TYPE (f1) == COB_TYPE_NUMERIC_FLOAT) {
-		val = (double)(*(float *)f1->data);
+		float	flval;
+
+		memcpy ((ucharptr)&flval, f1->data, sizeof (float));
+		val = flval;
 	} else {
-		val = *(double *)f1->data;
+		memcpy ((ucharptr)&val, f1->data, sizeof (double));
 	}
 	sign = 1;
 	if (val < 0) {
@@ -839,11 +842,7 @@ cob_move_all (cob_field *src, cob_field *dst)
 	temp.size = digcount;
 	temp.data = data;
 	temp.attr = &attr;
-#if	defined(__GNUC__) && (__GNUC__ >= 3)
-	if ( __builtin_expect ((src->size == 1), 1) ) {
-#else
-	if ( src->size == 1 ) {
-#endif
+	if (likely(src->size == 1)) {
 		own_memset (data, src->data[0], digcount);
 	} else {
 		for (i = 0; i < digcount; i++) {

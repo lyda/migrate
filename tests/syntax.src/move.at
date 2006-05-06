@@ -281,8 +281,8 @@ AT_DATA([prog.cob], [
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:11: Error: 'X' is not group name
 prog.cob:12: Error: 'X' is not group name
-prog.cob:13: Error: 'G-1(1:1)' is not group name
-prog.cob:14: Error: 'G-2(1:1)' is not group name
+prog.cob:13: Error: 'G-1 (1:1)' is not group name
+prog.cob:14: Error: 'G-2 (1:1)' is not group name
 ])
 
 AT_CLEANUP

@@ -38,6 +38,7 @@ static struct {
   {"SYSOUT",		CB_DEVICE_NAME,  CB_DEVICE_SYSOUT, 0},
   {"SYSLIST",		CB_DEVICE_NAME,  CB_DEVICE_SYSOUT, 0},
   {"SYSLST",		CB_DEVICE_NAME,  CB_DEVICE_SYSOUT, 0},
+  {"PRINTER",		CB_DEVICE_NAME,  CB_DEVICE_SYSOUT, 0},
   {"SYSERR",		CB_DEVICE_NAME,  CB_DEVICE_SYSERR, 0},
   {"CONSOLE",		CB_DEVICE_NAME,  CB_DEVICE_CONSOLE, 0},
   {"C01",		CB_FEATURE_NAME, CB_FEATURE_FORMFEED, 0},
@@ -121,6 +122,8 @@ static const struct reserved reserved_words[] = {
   {"CENTER",		-1},			/* 2002 (C/S) */
   {"CF",		-1},			/* 2002 */
   {"CH",		-1},			/* 2002 */
+  {"CHAIN",		-1},			/* extension */
+  {"CHAINING",		CHAINING},		/* extension */
   {"CHARACTER",		CHARACTER},		/* 2002 */
   {"CHARACTERS",	CHARACTERS},		/* 2002 */
   {"CLASS",		CLASS},			/* 2002 */
@@ -139,19 +142,29 @@ static const struct reserved reserved_words[] = {
   {"COMMON",		COMMON},		/* 2002 */
   {"COMMUNICATION",	-1},			/* 2002 */
   {"COMP",		COMP},			/* 2002 */
+#ifdef	__MVS__	/* EBCDIC! */
+  {"COMP-X",		COMP_X},		/* extension */
+#endif
   {"COMP-1",		COMP_1},		/* extension */
   {"COMP-2",		COMP_2},		/* extension */
   {"COMP-3",		COMP_3},		/* extension */
   {"COMP-4",		COMP_4},		/* extension */
   {"COMP-5",		COMP_5},		/* extension */
+#ifndef	__MVS__
   {"COMP-X",		COMP_X},		/* extension */
+#endif
   {"COMPUTATIONAL",	COMP},			/* 2002 */
+#ifdef	__MVS__	/* EBCDIC! */
+  {"COMPUTATIONAL-X",	COMP_X},		/* extension */
+#endif
   {"COMPUTATIONAL-1",	COMP_1},		/* extension */
   {"COMPUTATIONAL-2",	COMP_2},		/* extension */
   {"COMPUTATIONAL-3",	COMP_3},		/* extension */
   {"COMPUTATIONAL-4",	COMP_4},		/* extension */
   {"COMPUTATIONAL-5",	COMP_5},		/* extension */
+#ifndef	__MVS__
   {"COMPUTATIONAL-X",	COMP_X},		/* extension */
+#endif
   {"COMPUTE",		COMPUTE},		/* 2002 */
   {"CONDITION",		-1},			/* 2002 */
   {"CONFIGURATION",	CONFIGURATION},		/* 2002 */
@@ -380,6 +393,7 @@ static const struct reserved reserved_words[] = {
   {"OTHER",		OTHER},			/* 2002 */
   {"OUTPUT",		OUTPUT},		/* 2002 */
   {"OVERFLOW",		OVERFLOW},		/* 2002 */
+  {"OVERLINE",		OVERLINE},		/* extension */
   {"OVERRIDE",		-1},			/* 2002 */
   {"PACKED-DECIMAL",	PACKED_DECIMAL},	/* 2002 */
   {"PADDING",		PADDING},		/* 2002 */

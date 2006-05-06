@@ -1,3 +1,32 @@
+2006-05-06  Roger While <simrw@sim-basis.de>
+
+	* reserved.c, parser.y : CHAINING
+
+2006-05-04  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Use likely/unlikely macros
+
+2006-05-03  Roger While <simrw@sim-basis.de>
+
+	* parser.y, typeck.c, codegen.c : Preliminary changes for screen
+		and extended accept/display
+	* scanner.l : Allow MF extension from SPECIAL-NAMES SWITCH syntax
+
+2006-05-01  Roger While <simrw@sim-basis.de>
+
+	* All : General clean up
+		Changes for native EBCDIC machines
+		Optimization - See libcob/ChangeLog
+	* parser.y, typeck.c : Allow ACU's SET ENVIRONMENT
+	* parser.y, typeck.c : Start changes for WHEN partial expression
+	* parser.y : Allow CONSOLE [IS] CRT (MF, ACU)
+	* cobc.c : Add CPY and cpy to automatically detected COPY extensions
+	* codegen.c : Detect gcc < 3 (Doesn't like nested functions)
+	* config.c : Fix an enum
+		     Allow sign-ebcdic and sign-ascii20
+	* pplex.l, scanner.l : Allow underscore '_' in user names (2002 standard)
+	* field.c : Implement support for 78 level (MF, ACU)
+
 2006-04-17  Roger While <simrw@sim-basis.de>
 
 	* typeck.c : Optimize cob_add_xxx, cob_cmp_xxx

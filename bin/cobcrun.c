@@ -18,6 +18,7 @@
  */
 
 #include	<stdio.h>
+#include	<string.h>
 #include	<libcob.h>
 
 int
@@ -26,7 +27,11 @@ main (int argc, char **argv)
 	int (*func)();
 
 	if ( argc <= 1 ) {
-		fprintf(stderr, "Number of parameters incorrect\n");
+		fprintf(stderr, "Usage: cobcrun PROGRAM [param ...]\n");
+		return 1;
+	}
+	if (strlen (argv[1]) > 32) {
+		fprintf(stderr, "Invalid PROGRAM name\n");
 		return 1;
 	}
 	cob_init (argc - 1, &argv[1]);

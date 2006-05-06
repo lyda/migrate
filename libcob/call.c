@@ -261,7 +261,7 @@ cob_resolve_1 (const char *name)
 	void	*p;
 
 	p = cob_resolve (name);
-	if (!p) {
+	if (unlikely(!p)) {
 		cob_call_error ();
 	}
 	return p;
@@ -273,7 +273,7 @@ cob_call_resolve_1 (cob_field * f)
 	void	*p;
 
 	p = cob_call_resolve (f);
-	if (!p) {
+	if (unlikely(!p)) {
 		cob_call_error ();
 	}
 	return p;
@@ -307,14 +307,14 @@ cob_resolve (const char *name)
 	/* encode program name */
 	p = buff;
 	s = name;
-	if (isdigit (*s)) {
-		p += sprintf (p, "$%02X", *s++);
+	if (unlikely(isdigit (*s))) {
+		p += sprintf (p, "_%02X", *s++);
 	}
 	for (; *s; s++) {
-		if (isalnum (*s) || *s == '_') {
+		if (likely(isalnum (*s) || *s == '_')) {
 			*p++ = *s;
 		} else {
-			p += sprintf (p, "$%02X", *s);
+			p += sprintf (p, "_%02X", *s);
 		}
 	}
 	*p = 0;

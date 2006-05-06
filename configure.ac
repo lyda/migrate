@@ -349,12 +349,28 @@ fi
 
 # OpenCOBOL Configuration
 
-if test "x$prefix" = "x/usr" \
-     -a "x$includedir" = "x\${prefix}/include"; then
-  COB_CFLAGS=""
+if test "x$prefix" = "xNONE"
+then
+  if test "x$includedir" = "x\${prefix}/include"
+  then
+    COB_CFLAGS="-I${ac_default_prefix}/include"
+  else
+    COB_CFLAGS="-I${includedir}"
+  fi
 else
-  COB_CFLAGS="-I$includedir"
+  if test "x$includedir" = "x\${prefix}/include"
+  then
+    if test "x$prefix" = "x/usr"
+    then
+      COB_CFLAGS=""
+    else
+      COB_CFLAGS="-I${prefix}/include"
+    fi
+  else
+    COB_CFLAGS="-I${includedir}"
+  fi
 fi
+
 if test "x$CPPFLAGS" != "x"
 then
   COB_CFLAGS="$CPPFLAGS $COB_CFLAGS"

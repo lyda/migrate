@@ -1,3 +1,25 @@
+2006-05-05  Roger While <simrw@sim-basis.de>
+
+	* strings.c : Avoid memory bloat with INSPECT
+
+2006-05-04  Roger While <simrw@sim-basis.de>
+
+	* common.h : Define likely/unlikely macros
+	* call.c, move.c : Use above macros
+
+2006-05-03  Roger While <simrw@sim-basis.de>
+
+	* screenio.[ch] : Change strucrures
+
+2006-05-01  Roger While <simrw@sim-basis.de>
+
+	* General : Changes for native EBCDIC machines
+	* codegen.h, numeric.c : Further optimization for cob_cmp_xxx,
+		cob_add_xxx, cob_sub_xxx
+	* common.[ch]: Support for sign-ebcdic and sign-ascii20
+			(Note ascii20 is not correct)
+		       Implement SET ENVIRONMENT (ACU)
+
 2006-04-17  Roger While <simrw@sim-basis.de>
 
 	* codegen.h, numeric.c : Optimized cob_cmp_xxx, cob_add_xxx,

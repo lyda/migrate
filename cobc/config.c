@@ -45,7 +45,7 @@ enum cb_config_type {
 	INT,			/* integer */
 	STRING,			/* "..." */
 	BOOLEAN,		/* 'yes', 'no' */
-	SUPPORT,		/* 'ok', 'archaic', 'obsolete',
+	SUPPORT			/* 'ok', 'archaic', 'obsolete',
 				   'skip', 'ignore', 'unconformable' */
 };
 
@@ -202,11 +202,11 @@ cb_load_conf (const char *fname, int check_nodef)
 				if (strcmp (val, "ascii") == 0) {
 					cb_display_sign = COB_DISPLAY_SIGN_ASCII;
 				} else if (strcmp (val, "ebcdic") == 0) {
-					goto unsupported_value;
+					cb_display_sign = COB_DISPLAY_SIGN_EBCDIC;
 				} else if (strcmp (val, "ascii10") == 0) {
 					cb_display_sign = COB_DISPLAY_SIGN_ASCII10;
 				} else if (strcmp (val, "ascii20") == 0) {
-					goto unsupported_value;
+					cb_display_sign = COB_DISPLAY_SIGN_ASCII20;
 				} else {
 					goto invalid_value;
 				}

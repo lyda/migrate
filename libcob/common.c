@@ -429,21 +429,158 @@ cob_check_version (const char *prog, const char *packver, const int patchlev)
  * Sign
  */
 
-/* SIGN */
+static int
+cob_get_sign_ebcdic (unsigned char *p)
+{
+	switch (*p) {
+	case '{':
+		*p = (unsigned char)'0';
+		return 1;
+	case 'A':
+		*p = (unsigned char)'1';
+		return 1;
+	case 'B':
+		*p = (unsigned char)'2';
+		return 1;
+	case 'C':
+		*p = (unsigned char)'3';
+		return 1;
+	case 'D':
+		*p = (unsigned char)'4';
+		return 1;
+	case 'E':
+		*p = (unsigned char)'5';
+		return 1;
+	case 'F':
+		*p = (unsigned char)'6';
+		return 1;
+	case 'G':
+		*p = (unsigned char)'7';
+		return 1;
+	case 'H':
+		*p = (unsigned char)'8';
+		return 1;
+	case 'I':
+		*p = (unsigned char)'9';
+		return 1;
+	case '}':
+		*p = (unsigned char)'0';
+		return -1;
+	case 'J':
+		*p = (unsigned char)'1';
+		return -1;
+	case 'K':
+		*p = (unsigned char)'2';
+		return -1;
+	case 'L':
+		*p = (unsigned char)'3';
+		return -1;
+	case 'M':
+		*p = (unsigned char)'4';
+		return -1;
+	case 'N':
+		*p = (unsigned char)'5';
+		return -1;
+	case 'O':
+		*p = (unsigned char)'6';
+		return -1;
+	case 'P':
+		*p = (unsigned char)'7';
+		return -1;
+	case 'Q':
+		*p = (unsigned char)'8';
+		return -1;
+	case 'R':
+		*p = (unsigned char)'9';
+		return -1;
+	default:
+		/* What to do here */
+		*p = (unsigned char)'0';
+		return 1;
+	}
+/* NOT REACHED */
+	return 1;
+}
 
-/*
- * positive: 0123456789
- * negative: pqrstuvwxy
- */
-#define GET_SIGN_ASCII(x) x -= 0x40
-#define PUT_SIGN_ASCII(x) x += 0x40
-
-/*
- * positive: 0123456789
- * negative: @ABCDEFGHI
- */
-#define GET_SIGN_ASCII10(x) x -= 0x10
-#define PUT_SIGN_ASCII10(x) x += 0x10
+static void
+cob_put_sign_ebcdic (unsigned char *p, const int sign)
+{
+	if (sign < 0) {
+		switch (*p) {
+		case '0':
+			*p = (unsigned char)'}';
+			return;
+		case '1':
+			*p = (unsigned char)'J';
+			return;
+		case '2':
+			*p = (unsigned char)'K';
+			return;
+		case '3':
+			*p = (unsigned char)'L';
+			return;
+		case '4':
+			*p = (unsigned char)'M';
+			return;
+		case '5':
+			*p = (unsigned char)'N';
+			return;
+		case '6':
+			*p = (unsigned char)'O';
+			return;
+		case '7':
+			*p = (unsigned char)'P';
+			return;
+		case '8':
+			*p = (unsigned char)'Q';
+			return;
+		case '9':
+			*p = (unsigned char)'R';
+			return;
+		default:
+			/* What to do here */
+			*p = (unsigned char)'}';
+			return;
+		}
+	}
+	switch (*p) {
+	case '0':
+		*p = (unsigned char)'{';
+		return;
+	case '1':
+		*p = (unsigned char)'A';
+		return;
+	case '2':
+		*p = (unsigned char)'B';
+		return;
+	case '3':
+		*p = (unsigned char)'C';
+		return;
+	case '4':
+		*p = (unsigned char)'D';
+		return;
+	case '5':
+		*p = (unsigned char)'E';
+		return;
+	case '6':
+		*p = (unsigned char)'F';
+		return;
+	case '7':
+		*p = (unsigned char)'G';
+		return;
+	case '8':
+		*p = (unsigned char)'H';
+		return;
+	case '9':
+		*p = (unsigned char)'I';
+		return;
+	default:
+		/* What to do here */
+		*p = (unsigned char)'{';
+		return;
+	}
+/* NOT REACHED */
+}
 
 int
 cob_real_get_sign (cob_field *f)
@@ -454,17 +591,17 @@ cob_real_get_sign (cob_field *f)
 		unsigned char *p;
 
 		/* locate sign */
-		if (COB_FIELD_SIGN_LEADING (f)) {
+		if (unlikely(COB_FIELD_SIGN_LEADING (f))) {
 			p = f->data;
 		} else {
 			p = f->data + f->size - 1;
 		}
 
 		/* get sign */
-		if (COB_FIELD_SIGN_SEPARATE (f)) {
+		if (unlikely(COB_FIELD_SIGN_SEPARATE (f))) {
 			return (*p == '+') ? 1 : -1;
 		} else {
-			if (*p <= '9') {
+			if (*p >= '0' && *p <= '9') {
 				return 1;
 			}
 			switch (cob_current_module->display_sign) {
@@ -474,8 +611,15 @@ cob_real_get_sign (cob_field *f)
 			case COB_DISPLAY_SIGN_ASCII10:
 				GET_SIGN_ASCII10 (*p);
 				break;
+			case COB_DISPLAY_SIGN_ASCII20:
+				GET_SIGN_ASCII20 (*p);
+				break;
+			case COB_DISPLAY_SIGN_EBCDIC:
+				return cob_get_sign_ebcdic (p);
 			default:
-				abort ();
+				cob_runtime_error (_("Invalid display sign '%d'"),
+						cob_current_module->display_sign);
+				cob_stop_run (1);
 			}
 			return -1;
 		}
@@ -492,7 +636,7 @@ cob_real_get_sign (cob_field *f)
 }
 
 void
-cob_real_put_sign (cob_field * f, int sign)
+cob_real_put_sign (cob_field * f, const int sign)
 {
 	switch (COB_FIELD_TYPE (f)) {
 	case COB_TYPE_NUMERIC_DISPLAY:
@@ -500,19 +644,21 @@ cob_real_put_sign (cob_field * f, int sign)
 		unsigned char *p;
 
 		/* locate sign */
-		if (COB_FIELD_SIGN_LEADING (f)) {
+		if (unlikely(COB_FIELD_SIGN_LEADING (f))) {
 			p = f->data;
 		} else {
 			p = f->data + f->size - 1;
 		}
 
 		/* put sign */
-		if (COB_FIELD_SIGN_SEPARATE (f)) {
+		if (unlikely(COB_FIELD_SIGN_SEPARATE (f))) {
 			int c = (sign < 0) ? '-' : '+';
 
 			if (*p != c) {
 				*p = c;
 			}
+		} else if (unlikely(cob_current_module->display_sign == COB_DISPLAY_SIGN_EBCDIC)) {
+			cob_put_sign_ebcdic (p, sign);
 		} else if (sign < 0) {
 			switch (cob_current_module->display_sign) {
 			case COB_DISPLAY_SIGN_ASCII:
@@ -521,8 +667,13 @@ cob_real_put_sign (cob_field * f, int sign)
 			case COB_DISPLAY_SIGN_ASCII10:
 				PUT_SIGN_ASCII10 (*p);
 				break;
+			case COB_DISPLAY_SIGN_ASCII20:
+				PUT_SIGN_ASCII20 (*p);
+				break;
 			default:
-				abort ();
+				cob_runtime_error (_("Invalid display sign '%d'"),
+						cob_current_module->display_sign);
+				cob_stop_run (1);
 			}
 		}
 		return;
@@ -1092,7 +1243,7 @@ cob_malloc (const size_t size)
 	void *mptr;
 
 	mptr = malloc (size);
-	if (!mptr) {
+	if (unlikely(!mptr)) {
 		cob_runtime_error (_("Cannot acquire %d bytes of memory - Aborting"), size);
 		cob_stop_run (1);
 	}
@@ -1106,12 +1257,12 @@ cob_strdup (const void *stptr)
 	void	*mptr;
 	size_t	len;
 
-	if (!stptr) {
+	if (unlikely(!stptr)) {
 		cob_runtime_error (_("cob_strdup called with NULL pointer"));
 		cob_stop_run (1);
 	}
 	len = strlen (stptr);
-	if (len < 1 || len > 2147483647) {
+	if (unlikely(len < 1 || len > 2147483647)) {
 		cob_runtime_error (_("cob_strdup called with invalid string"));
 		cob_stop_run (1);
 	}
@@ -1252,6 +1403,13 @@ cob_accept_arg_value (cob_field *f)
  */
 
 static char *env = NULL;
+
+void
+cob_set_environment (cob_field *f1, cob_field *f2)
+{
+	cob_display_environment (f1);
+	cob_display_env_value (f2);
+}
 
 void
 cob_display_environment (cob_field *f)

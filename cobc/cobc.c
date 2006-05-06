@@ -403,8 +403,10 @@ process_command_line (int argc, char *argv[])
 	cb_extension_list = cb_text_list_add (cb_extension_list, "");
 	cb_extension_list = cb_text_list_add (cb_extension_list, ".CBL");
 	cb_extension_list = cb_text_list_add (cb_extension_list, ".COB");
+	cb_extension_list = cb_text_list_add (cb_extension_list, ".CPY");
 	cb_extension_list = cb_text_list_add (cb_extension_list, ".cbl");
 	cb_extension_list = cb_text_list_add (cb_extension_list, ".cob");
+	cb_extension_list = cb_text_list_add (cb_extension_list, ".cpy");
 
 	/* Enable default I/O exceptions */
 	CB_EXCEPTION_ENABLE (COB_EC_I_O) = 1;
@@ -1000,7 +1002,7 @@ process_module_direct (struct filename *fn)
 	}
 #endif
 #else	/* _MSC_VER */
-#if (defined __CYGWIN__ || defined _WIN32)
+#if (defined __CYGWIN__ || defined _WIN32 || defined __370__)
 	sprintf (buff, "%s %s %s %s %s %s -o %s %s %s",
 		 cob_cc, cob_cflags, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
 		 COB_EXPORT_DYN, name, fn->translate, cob_libs);

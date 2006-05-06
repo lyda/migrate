@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 98
+%expect 95
 
 %defines
 %verbose
@@ -41,6 +41,9 @@
 #define emit_statement(x) \
   current_program->exec_list = cb_cons (x, current_program->exec_list)
 
+#define push_expr(type, node) \
+  current_expr = cb_build_list (cb_int (type), node, current_expr)
+
 #define BEGIN_STATEMENT(name)					\
   current_statement = cb_build_statement ((char *)name);		\
   CB_TREE (current_statement)->source_file = (unsigned char *)cb_source_file;	\
@@ -53,27 +56,29 @@
   main_statement->body = cb_list_add (main_statement->body,		\
 				      CB_TREE (current_statement))
 
-static struct cb_statement *main_statement;
+static struct cb_statement	*main_statement;
 
-static struct cb_field *current_field;
-static struct cb_file *current_file;
-static enum cb_storage current_storage;
+static cb_tree			current_expr;
+static struct cb_field		*current_field;
+static struct cb_file		*current_file;
 
-static cb_tree call_mode;
+enum cb_storage			current_storage;
 
-static cb_tree perform_stack = NULL;
+static cb_tree			call_mode;
 
-static int next_label_id = 0;
-static int current_linage = 0;
-static int eval_level = 0;
-static int eval_inc = 0;
-static int eval_inc2 = 0;
-static int prog_end = 0;
-static int depth = 0;
-static int samearea = 1;
-static struct cb_file *linage_file;
-static cb_tree next_label_list = NULL;
-static int eval_check[64][64];
+static cb_tree			perform_stack = NULL;
+
+static int			next_label_id = 0;
+static int			current_linage = 0;
+static int			eval_level = 0;
+static int			eval_inc = 0;
+static int			eval_inc2 = 0;
+static int			prog_end = 0;
+static int			depth = 0;
+static int			samearea = 1;
+static struct cb_file		*linage_file;
+static cb_tree			next_label_list = NULL;
+static int			eval_check[64][64];
 
 static void emit_entry (const char *name, const int encode, cb_tree using_list);
 static void terminator_warning (void);
@@ -119,9 +124,9 @@ static int literal_value (cb_tree x);
 %token STATUS STOP SYMBOLIC SYNCHRONIZED TALLYING TAPE TEST THAN THEN THRU
 %token TIME TIMES TO TOK_FILE TOK_INITIAL TOK_TRUE TOK_FALSE TOK_NULL TRAILING
 %token UNDERLINE UNIT UNTIL UP UPON USAGE USE USING VALUE VARYING WHEN WITH
-%token MANUAL AUTOMATIC EXCLUSIVE ROLLBACK
+%token MANUAL AUTOMATIC EXCLUSIVE ROLLBACK OVERLINE
 %token COMP COMP_1 COMP_2 COMP_3 COMP_4 COMP_5 COMP_X
-%token LINAGE_COUNTER PROGRAM_POINTER
+%token LINAGE_COUNTER PROGRAM_POINTER CHAINING
 %token NOT_EXCEPTION SIZE_ERROR NOT_SIZE_ERROR NOT_OVERFLOW NOT_EOP
 %token INVALID_KEY NOT_INVALID_KEY COMMA_DELIM DISK
 
@@ -138,23 +143,23 @@ static int literal_value (cb_tree x);
 
 start:
   {
-    perform_stack = NULL;
-    next_label_id = 0;
-    current_linage = 0;
-    current_storage = 0;
-    eval_level = 0;
-    eval_inc = 0;
-    eval_inc2 = 0;
-    prog_end = 0;
-    depth = 0;
-    samearea = 1;
-    memset((char *)eval_check, 0, sizeof(eval_check));
-    entry_number = 0;
-    linage_file = NULL;
-    next_label_list = NULL;
-    current_program = cb_build_program ();
-    cb_build_registers ();
-    current_program->gen_main = cb_flag_main;
+	perform_stack = NULL;
+	next_label_id = 0;
+	current_linage = 0;
+	current_storage = 0;
+	eval_level = 0;
+	eval_inc = 0;
+	eval_inc2 = 0;
+	prog_end = 0;
+	depth = 0;
+	samearea = 1;
+	memset((char *)eval_check, 0, sizeof(eval_check));
+	entry_number = 0;
+	linage_file = NULL;
+	next_label_list = NULL;
+	current_program = cb_build_program ();
+	cb_build_registers ();
+	current_program->gen_main = cb_flag_main;
   }
   /* program_definition */
   nested_list
@@ -281,9 +286,11 @@ configuration_section:
 | CONFIGURATION SECTION '.'
   configuration_list
 ;
+
 configuration_list:
 | configuration_list configuration_paragraph
 ;
+
 configuration_paragraph:
   source_computer_paragraph
 | object_computer_paragraph
@@ -298,12 +305,14 @@ configuration_paragraph:
 source_computer_paragraph:
   SOURCE_COMPUTER '.' source_computer_entry
 ;
+
 source_computer_entry:
 | '.'
 | computer_name '.'
 | computer_name with_debugging_mode '.'
 | with_debugging_mode '.'
 ;
+
 with_debugging_mode:
   _with DEBUGGING MODE
   {
@@ -354,13 +363,16 @@ object_computer_phrase:
 special_names_paragraph:
   SPECIAL_NAMES '.' opt_special_names
 ;
+
 opt_special_names:
 | special_name_list '.'
 ;
+
 special_name_list:
   special_name
 | special_name_list special_name
 ;
+
 special_name:
   mnemonic_name_clause
 | alphabet_name_clause
@@ -385,9 +397,18 @@ mnemonic_name_clause:
   special_name_mnemonic_define
   special_name_mnemonic_on_off
 ;
+
 special_name_mnemonic_define:
+| IS CRT
+  {
+	if (CB_SYSTEM_NAME($0)->token != CB_DEVICE_CONSOLE) {
+		cb_error_x ($0, _("Invalid CRT clause"));
+	}
+	/* current_program->flag_screen = 1; */
+  }
 | IS undefined_word		{ cb_define ($2, $0); }
 ;
+
 special_name_mnemonic_on_off:
 | special_name_mnemonic_on_off
   on_or_off _status _is undefined_word
@@ -395,6 +416,7 @@ special_name_mnemonic_on_off:
     cb_define_switch_name ($5, $-1, $2, $-2);
   }
 ;
+
 on_or_off:
   ON				{ $$ = cb_int1; }
 | OFF				{ $$ = cb_int0; }
@@ -406,6 +428,7 @@ on_or_off:
 alphabet_name_clause:
   ALPHABET undefined_word _is alphabet_definition
 ;
+
 alphabet_definition:
   NATIVE	{ cb_build_alphabet_name ($-1, CB_ALPHABET_NATIVE); }
 | STANDARD_1	{ cb_build_alphabet_name ($-1, CB_ALPHABET_STANDARD_1); }
@@ -419,22 +442,26 @@ alphabet_definition:
       cb_list_add (current_program->alphabet_name_list, x);
   }
 ;
+
 alphabet_literal_list:
   alphabet_literal		{ $$ = cb_list ($1); }
 | alphabet_literal_list
   alphabet_literal		{ $$ = cb_list_add ($1, $2); }
 ;
+
 alphabet_literal:
   LITERAL			{ $$ = $1; }
 | LITERAL THRU LITERAL		{ $$ = cb_build_pair ($1, $3); }
 | LITERAL ALSO			{ $$ = cb_list ($1); }
   alphabet_also_sequence	{ $$ = $3; }
 ;
+
 alphabet_also_sequence:
   alphabet_also_literal
 | alphabet_also_sequence ALSO	{ $$ = $0; }
   alphabet_also_literal
 ;
+
 alphabet_also_literal:
   LITERAL			{ cb_list_add ($0, $1); }
 | SPACE				{ /* ignore */ }
@@ -453,17 +480,21 @@ symbolic_characters_clause:
     PENDING ("SYMBOLIC CHARACTERS");
   }
 ;
+
 symbolic_characters_list:
   symbolic_characters
 | symbolic_characters_list symbolic_characters
 ;
+
 symbolic_characters:
   char_list is_are integer_list
 ;
+
 char_list:
   WORD { }
 | char_list WORD { }
 ;
+
 integer_list:
   integer { }
 | integer_list integer { }
@@ -480,10 +511,12 @@ class_name_clause:
 		   cb_build_class_name ($2, $4));
   }
 ;
+
 class_item_list:
   class_item			{ $$ = cb_list ($1); }
 | class_item_list class_item	{ $$ = cb_list_add ($1, $2); }
 ;
+
 class_item:
   literal			{ $$ = $1; }
 | literal THRU literal
@@ -605,9 +638,11 @@ input_output_section:
 file_control_paragraph:
 | FILE_CONTROL '.' file_control_sequence
 ;
+
 file_control_sequence:
 | file_control_sequence file_control_entry
 ;
+
 file_control_entry:
   SELECT flag_optional undefined_word
   {
@@ -627,9 +662,11 @@ file_control_entry:
     validate_file (current_file, $3);
   }
 ;
+
 select_clause_sequence:
 | select_clause_sequence select_clause
 ;
+
 select_clause:
   assign_clause
 | access_mode_clause
@@ -655,10 +692,12 @@ assign_clause:
     current_file->assign = cb_build_assignment_name ($5);
   }
 ;
+
 _ext_clause:
 | EXTERNAL
 | DYNAMIC
 ;
+
 assignment_name:
   alnum_literal
 | qualified_word
@@ -670,6 +709,7 @@ assignment_name:
 access_mode_clause:
   ACCESS _mode _is access_mode
 ;
+
 access_mode:
   SEQUENTIAL		{ current_file->access_mode = COB_ACCESS_SEQUENTIAL; }
 | DYNAMIC		{ current_file->access_mode = COB_ACCESS_DYNAMIC; }
@@ -727,11 +767,13 @@ file_status_clause:
 lock_mode_clause:
   LOCK _mode _is lock_mode	{ PENDING ("LOCK MODE"); }
 ;
+
 lock_mode:
   MANUAL lock_with
 | AUTOMATIC lock_with
 | EXCLUSIVE
 ;
+
 lock_with:
 | WITH LOCK ON _multiple records
 | WITH ROLLBACK
@@ -744,6 +786,7 @@ organization_clause:
   ORGANIZATION _is organization
 | organization
 ;
+
 organization:
   INDEXED		{ current_file->organization = COB_ORG_INDEXED; }
 | SEQUENTIAL		{ current_file->organization = COB_ORG_SEQUENTIAL; }
@@ -795,6 +838,7 @@ reserve_clause:
 sharing_clause:
   SHARING _with sharing_option	{ current_file->sharing = $3; }
 ;
+
 sharing_option:
   ALL _other			{ $$ = NULL; PENDING ("SHARING ALL OTHER"); }
 | NO _other			{ $$ = cb_int1; }
@@ -809,13 +853,16 @@ sharing_option:
 i_o_control_paragraph:
 | I_O_CONTROL '.' opt_i_o_control
 ;
+
 opt_i_o_control:
 | i_o_control_list '.'
 ;
+
 i_o_control_list:
   i_o_control_clause
 | i_o_control_list i_o_control_clause
 ;
+
 i_o_control_clause:
   same_clause
 | multiple_file_tape_clause
@@ -847,6 +894,7 @@ same_clause:
       }
   }
 ;
+
 same_option:
   /* empty */			{ $$ = cb_int0; }
 | RECORD			{ $$ = cb_int1; }
@@ -863,13 +911,16 @@ multiple_file_tape_clause:
   }
   _contains multiple_file_list
 ;
+
 multiple_file_list:
   multiple_file
 | multiple_file_list multiple_file
 ;
+
 multiple_file:
   file_name multiple_file_position { }
 ;
+
 multiple_file_position:
 | POSITION integer
 ;
@@ -908,9 +959,11 @@ file_section:
   }
   file_description_sequence_without_type
 ;
+
 file_description_sequence:
 | file_description_sequence file_description
 ;
+
 file_description:
   file_type file_description_entry
   record_description_list
@@ -918,6 +971,7 @@ file_description:
     finalize_file (current_file, CB_FIELD ($3));
   }
 ;
+
 file_description_sequence_without_type:
   file_description_entry
   record_description_list
@@ -926,6 +980,7 @@ file_description_sequence_without_type:
   }
 | file_description_sequence_without_type file_description
 ;
+
 file_type:
   FD                           { $$ = cb_int0; }
 | SD                           { $$ = cb_int1; }
@@ -948,9 +1003,11 @@ file_description_entry:
   }
   file_description_clause_sequence '.'
 ;
+
 file_description_clause_sequence:
 | file_description_clause_sequence file_description_clause
 ;
+
 file_description_clause:
   _is EXTERNAL			{ current_file->external = 1; }
 | _is GLOBAL			{ PENDING ("GLOBAL"); }
@@ -993,16 +1050,19 @@ record_clause:
     current_file->record_max = $7 ? cb_get_int ($7) : 0;
   }
 ;
+
 record_depending:
 | DEPENDING _on reference
   {
     current_file->record_depending = $3;
   }
 ;
+
 opt_from_integer:
   /* empty */			{ $$ = NULL; }
 | _from integer			{ $$ = $2; }
 ;
+
 opt_to_integer:
   /* empty */			{ $$ = NULL; }
 | TO integer			{ $$ = $2; }
@@ -1017,6 +1077,7 @@ label_records_clause:
     cb_verify (cb_label_records_clause, "LABEL RECORDS");
   }
 ;
+
 label_option:
   STANDARD
 | OMITTED
@@ -1133,10 +1194,12 @@ working_storage_section:
 	cb_field_add (current_program->working_storage, CB_FIELD ($5));
   }
 ;
+
 record_description_list:
   /* empty */			{ $$ = NULL; }
 | record_description_list_1	{ $$ = $1; }
 ;
+
 record_description_list_1:
   {
     current_field = NULL;
@@ -1149,12 +1212,14 @@ record_description_list_1:
     $$ = $2;
   }
 ;
+
 record_description_list_2:
   data_description '.'		{ $$ = $1; }
 | record_description_list_2
   data_description '.'		{ $$ = $1; }
 | record_description_list_2 '.' { $$ = $1; }
 ;
+
 data_description:
   level_number entry_name
   {
@@ -1187,6 +1252,7 @@ data_description_clause_sequence:
 | data_description_clause_sequence
   data_description_clause	{ $$ = cb_true; }
 ;
+
 data_description_clause:
   redefines_clause
 | external_clause
@@ -1265,6 +1331,7 @@ usage_clause:
   usage
 | USAGE _is usage
 ;
+
 usage:
   BINARY			{ current_field->usage = CB_USAGE_BINARY; }
 | COMP				{ current_field->usage = CB_USAGE_BINARY; }
@@ -1310,6 +1377,7 @@ occurs_clause:
     current_field->flag_occurs = 1;
   }
 ;
+
 occurs_to_integer:
   /* empty */			{ $$ = NULL; }
 | TO integer			{ $$ = $2; }
@@ -1341,6 +1409,7 @@ occurs_keys:
       }
   }
 ;
+
 occurs_key_list:
   /* empty */			{ $$ = NULL; }
 | occurs_key_list
@@ -1352,6 +1421,7 @@ occurs_key_list:
     $$ = cb_list_append ($1, $5);
   }
 ;
+
 ascending_or_descending:
   ASCENDING			{ $$ = cb_int (COB_ASCENDING); }
 | DESCENDING			{ $$ = cb_int (COB_DESCENDING); }
@@ -1360,11 +1430,13 @@ ascending_or_descending:
 occurs_indexed:
 | INDEXED _by occurs_index_list	{ current_field->index_list = $3; }
 ;
+
 occurs_index_list:
   occurs_index			{ $$ = cb_list ($1); }
 | occurs_index_list
   occurs_index			{ $$ = cb_list_add ($1, $2); }
 ;
+
 occurs_index:
   WORD				{ $$ = cb_build_index ($1); }
 ;
@@ -1382,6 +1454,7 @@ justified_clause:
 synchronized_clause:
   SYNCHRONIZED left_or_right	{ current_field->flag_synchronized = 1; }
 ;
+
 left_or_right:
 | LEFT
 | RIGHT
@@ -1401,14 +1474,17 @@ value_clause:
   VALUE _is_are value_item_list	{ current_field->values = $3; }
   _when _set _to false_is
 ;
+
 value_item_list:
   value_item			{ $$ = cb_list ($1); }
 | value_item_list value_item	{ $$ = cb_list_add ($1, $2); }
 ;
+
 value_item:
   literal			{ $$ = $1; }
 | literal THRU literal		{ $$ = cb_build_pair ($1, $3); }
 ;
+
 false_is:
 | TOK_FALSE _is literal
 	{
@@ -1477,15 +1553,17 @@ linkage_section:
 screen_section:
 | SCREEN SECTION '.'		{ current_storage = CB_STORAGE_SCREEN; }
   {
-    current_field = NULL;
+	current_field = NULL;
   }
   opt_screen_description_list
   {
-    struct cb_field *p;
-    for (p = CB_FIELD ($6); p; p = p->sister)
-      cb_validate_field (p);
-    current_program->screen_storage = CB_FIELD ($6);
-    current_program->flag_screen = 1;
+	if ($6) {
+		struct cb_field *p;
+		for (p = CB_FIELD ($6); p; p = p->sister)
+			cb_validate_field (p);
+		current_program->screen_storage = CB_FIELD ($6);
+		current_program->flag_screen = 1;
+	}
   }
 ;
 
@@ -1493,11 +1571,13 @@ opt_screen_description_list:
   /* empty */			{ $$ = NULL; }
 | screen_description_list	{ $$ = $1; }
 ;
+
 screen_description_list:
   screen_description		{ $$ = $1; }
 | screen_description_list
   screen_description		{ $$ = $1; }
 ;
+
 screen_description:
   level_number entry_name
   {
@@ -1513,24 +1593,24 @@ screen_description:
   }
   screen_options '.'
   {
-    if (current_field->pic == NULL)
-      current_field->pic = CB_PICTURE (cb_build_picture ("X(0)"));
     if (!current_field->screen_line)
       {
-	current_field->screen_line = cb_int1;
+	current_field->screen_line = cb_zero;
 	current_field->screen_flag |= COB_SCREEN_LINE_CONST;
       }
     if (!current_field->screen_column)
       {
-	current_field->screen_column = cb_int1;
+	current_field->screen_column = cb_zero;
 	current_field->screen_flag |= COB_SCREEN_COLUMN_CONST;
       }
     $$ = CB_TREE (current_field);
   }
 ;
+
 screen_options:
 | screen_options screen_option
 ;
+
 screen_option:
   BLANK LINE	{ current_field->screen_flag |= COB_SCREEN_BLANK_LINE; }
 | BLANK SCREEN	{ current_field->screen_flag |= COB_SCREEN_BLANK_SCREEN; }
@@ -1542,6 +1622,7 @@ screen_option:
 | LOWLIGHT	{ current_field->screen_flag |= COB_SCREEN_LOWLIGHT; }
 | REVERSE_VIDEO	{ current_field->screen_flag |= COB_SCREEN_REVERSE; }
 | UNDERLINE	{ current_field->screen_flag |= COB_SCREEN_UNDERLINE; }
+| OVERLINE	{ current_field->screen_flag |= COB_SCREEN_OVERLINE; }
 | AUTO		{ current_field->screen_flag |= COB_SCREEN_AUTO; }
 | SECURE	{ current_field->screen_flag |= COB_SCREEN_SECURE; }
 | REQUIRED	{ current_field->screen_flag |= COB_SCREEN_REQUIRED; }
@@ -1566,9 +1647,9 @@ screen_option:
       case 0: current_field->screen_flag |= COB_SCREEN_FG_BLACK; break;
       case 1: current_field->screen_flag |= COB_SCREEN_FG_BLUE; break;
       case 2: current_field->screen_flag |= COB_SCREEN_FG_GREEN; break;
-      case 3: current_field->screen_flag |= COB_SCREEN_FG_SKYBLUE; break;
+      case 3: current_field->screen_flag |= COB_SCREEN_FG_CYAN; break;
       case 4: current_field->screen_flag |= COB_SCREEN_FG_RED; break;
-      case 5: current_field->screen_flag |= COB_SCREEN_FG_PURPLE; break;
+      case 5: current_field->screen_flag |= COB_SCREEN_FG_MAGENTA; break;
       case 6: current_field->screen_flag |= COB_SCREEN_FG_YELLOW; break;
       case 7: current_field->screen_flag |= COB_SCREEN_FG_WHITE; break;
       default:
@@ -1583,9 +1664,9 @@ screen_option:
       case 0: current_field->screen_flag |= COB_SCREEN_BG_BLACK; break;
       case 1: current_field->screen_flag |= COB_SCREEN_BG_BLUE; break;
       case 2: current_field->screen_flag |= COB_SCREEN_BG_GREEN; break;
-      case 3: current_field->screen_flag |= COB_SCREEN_BG_SKYBLUE; break;
+      case 3: current_field->screen_flag |= COB_SCREEN_BG_CYAN; break;
       case 4: current_field->screen_flag |= COB_SCREEN_BG_RED; break;
-      case 5: current_field->screen_flag |= COB_SCREEN_BG_PURPLE; break;
+      case 5: current_field->screen_flag |= COB_SCREEN_BG_MAGENTA; break;
       case 6: current_field->screen_flag |= COB_SCREEN_BG_YELLOW; break;
       case 7: current_field->screen_flag |= COB_SCREEN_BG_WHITE; break;
       default:
@@ -1598,20 +1679,21 @@ screen_option:
 | sign_clause
 | value_clause
 | picture_clause
-| USING x
+| USING identifier
   {
     current_field->screen_from = $2;
     current_field->screen_to = $2;
   }
-| FROM x
+| FROM id_or_lit
   {
     current_field->screen_from = $2;
   }
-| TO x
+| TO identifier
   {
     current_field->screen_to = $2;
   }
 ;
+
 screen_plus_minus:
   /* empty */
   {
@@ -1636,7 +1718,7 @@ screen_plus_minus:
  *****************************************************************************/
 
 procedure_division:
-| PROCEDURE DIVISION call_using '.'
+| PROCEDURE DIVISION using_chaining '.'
   {
     current_section = NULL;
     current_paragraph = NULL;
@@ -1682,6 +1764,7 @@ procedure_declaratives:
 procedure_list:
 | procedure_list procedure
 ;
+
 procedure:
   section_header
 | paragraph_header
@@ -1790,10 +1873,12 @@ statement_list:
     current_statement = CB_STATEMENT ($2);
   }
 ;
+
 statements:
   statement
 | statements statement
 ;
+
 statement:
   accept_statement
 | add_statement
@@ -1859,37 +1944,65 @@ accept_statement:
   accept_body
   end_accept
 ;
+
 accept_body:
-  identifier opt_at_line_column		{ cb_emit_accept ($1, $2); }
-| identifier FROM DATE			{ cb_emit_accept_date ($1); }
-| identifier FROM DATE YYYYMMDD		{ cb_emit_accept_date_yyyymmdd ($1); }
-| identifier FROM DAY			{ cb_emit_accept_day ($1); }
-| identifier FROM DAY YYYYDDD		{ cb_emit_accept_day_yyyyddd ($1); }
-| identifier FROM DAY_OF_WEEK		{ cb_emit_accept_day_of_week ($1); }
-| identifier FROM TIME			{ cb_emit_accept_time ($1); }
-| identifier FROM COMMAND_LINE		{ cb_emit_accept_command_line ($1); }
-| identifier FROM ENVIRONMENT_VALUE	{ cb_emit_accept_environment ($1); }
+  identifier opt_at_line_column opt_accp_attr		{ cb_emit_accept ($1, $2); }
+| identifier FROM DATE					{ cb_emit_accept_date ($1); }
+| identifier FROM DATE YYYYMMDD				{ cb_emit_accept_date_yyyymmdd ($1); }
+| identifier FROM DAY					{ cb_emit_accept_day ($1); }
+| identifier FROM DAY YYYYDDD				{ cb_emit_accept_day_yyyyddd ($1); }
+| identifier FROM DAY_OF_WEEK				{ cb_emit_accept_day_of_week ($1); }
+| identifier FROM TIME					{ cb_emit_accept_time ($1); }
+| identifier FROM COMMAND_LINE				{ cb_emit_accept_command_line ($1); }
+| identifier FROM ENVIRONMENT_VALUE			{ cb_emit_accept_environment ($1); }
 | identifier FROM ENVIRONMENT simple_value
 	{ 
 	  cb_emit_display (cb_list ($4), cb_true, NULL, NULL);
 	  cb_emit_accept_environment ($1);
 	}
-| identifier FROM ARGUMENT_NUMBER	{ cb_emit_accept_arg_number ($1); }
-| identifier FROM ARGUMENT_VALUE	{ cb_emit_accept_arg_value ($1); }
-| identifier FROM mnemonic_name		{ cb_emit_accept_mnemonic ($1, $3); }
-| identifier FROM WORD			{ cb_emit_accept_name ($1, $3); }
+| identifier FROM ARGUMENT_NUMBER			{ cb_emit_accept_arg_number ($1); }
+| identifier FROM ARGUMENT_VALUE			{ cb_emit_accept_arg_value ($1); }
+| identifier FROM mnemonic_name				{ cb_emit_accept_mnemonic ($1, $3); }
+| identifier FROM WORD					{ cb_emit_accept_name ($1, $3); }
 ;
+
 opt_at_line_column:
   /* empty */			{ $$ = NULL; }
 | _at line_number column_number { $$ = cb_build_pair ($2, $3); }
 | _at column_number line_number { $$ = cb_build_pair ($3, $2); }
+| AT simple_value		{ $$ = $2; }
 ;
+
 line_number:
-  LINE _number x		{ $$ = cb_build_cast_integer ($3); }
+  LINE _number id_or_lit	{ $$ = $3; }
 ;
+
 column_number:
-  COLUMN _number x		{ $$ = cb_build_cast_integer ($3); }
+  COLUMN _number id_or_lit	{ $$ = $3; }
 ;
+
+opt_accp_attr:
+| WITH accp_attrs
+;
+
+accp_attrs:
+  accp_attr
+| accp_attrs accp_attr
+;
+
+accp_attr:
+  AUTO
+| BELL
+| BLINK
+| HIGHLIGHT
+| LOWLIGHT
+| REVERSE_VIDEO
+| SECURE
+| UNDERLINE
+| FOREGROUND_COLOR _is integer
+| BACKGROUND_COLOR _is integer
+;
+
 end_accept:
 | END_ACCEPT
 ;
@@ -1904,6 +2017,7 @@ add_statement:
   add_body
   end_add
 ;
+
 add_body:
   x_list TO arithmetic_x_list on_size_error
   {
@@ -1918,9 +2032,11 @@ add_body:
     cb_emit_corresponding (cb_build_add, $4, $2, $5);
   }
 ;
+
 add_to:
 | TO x				{ cb_list_add ($0, $2); }
 ;
+
 end_add:
   /* empty */			{ terminator_warning (); }
 | END_ADD
@@ -1937,10 +2053,12 @@ alter_statement:
     cb_verify (cb_alter_statement, "ALTER");
   }
 ;
+
 alter_options:
 | alter_options
   procedure_name TO _proceed_to procedure_name
 ;
+
 _proceed_to: | PROCEED TO ;
 
 
@@ -1957,40 +2075,60 @@ call_statement:
     cb_emit_call ($3, $4, $5, $6, $7);
   }
 ;
+
+using_chaining:
+  /* empty */			{ $$ = NULL; }
+| USING				{ call_mode = cb_int (CB_CALL_BY_REFERENCE); }
+  call_param_list		{ $$ = $3; }
+| CHAINING
+	{
+		call_mode = cb_int (CB_CALL_BY_REFERENCE);
+		current_program->is_chained = 1;
+	}
+  call_param_list		{ $$ = $3; }
+;
+
 call_using:
   /* empty */			{ $$ = NULL; }
 | USING				{ call_mode = cb_int (CB_CALL_BY_REFERENCE); }
   call_param_list		{ $$ = $3; }
 ;
+
 call_param_list:
   call_param			{ $$ = $1; }
 | call_param_list
   call_param			{ $$ = cb_list_append ($1, $2); }
 ;
+
 call_param:
   x				{ $$ = cb_build_pair (call_mode, $1); }
 | _by call_mode x		{ $$ = cb_build_pair (call_mode, $3); }
 ;
+
 call_mode:
   REFERENCE			{ call_mode = cb_int (CB_CALL_BY_REFERENCE); }
 | CONTENT			{ call_mode = cb_int (CB_CALL_BY_CONTENT); }
 | VALUE				{ call_mode = cb_int (CB_CALL_BY_VALUE); }
 ;
+
 call_returning:
   /* empty */			{ $$ = NULL; }
 | RETURNING x			{ $$ = $2; }
 | GIVING x			{ $$ = $2; }
 ;
+
 call_on_exception:
   /* empty */			{ $$ = NULL; }
 | OVERFLOW statement_list	{ $$ = $2; }
 | EXCEPTION statement_list	{ $$ = $2; }
 ;
+
 call_not_on_exception:
   /* empty */			{ $$ = NULL; }
 | NOT_EXCEPTION
   statement_list		{ $$ = $2; }
 ;
+
 end_call:
   /* empty */			{ terminator_warning (); }
 | END_CALL
@@ -2005,6 +2143,7 @@ cancel_statement:
   CANCEL			{ BEGIN_STATEMENT ("CANCEL"); }
   cancel_list
 ;
+
 cancel_list:
 | cancel_list x
   {
@@ -2021,6 +2160,7 @@ close_statement:
   CLOSE				{ BEGIN_STATEMENT ("CLOSE"); }
   close_list
 ;
+
 close_list:
 | close_list
   file_name close_option
@@ -2029,6 +2169,7 @@ close_list:
 	cb_emit_close ($2, $3);
   }
 ;
+
 close_option:
   /* empty */			{ $$ = cb_int (COB_CLOSE_NORMAL); }
 | reel_or_unit			{ $$ = cb_int (COB_CLOSE_UNIT); }
@@ -2036,6 +2177,7 @@ close_option:
 | _with NO REWIND		{ $$ = cb_int (COB_CLOSE_NO_REWIND); }
 | _with LOCK			{ $$ = cb_int (COB_CLOSE_LOCK); }
 ;
+
 reel_or_unit: REEL | UNIT ;
 
 
@@ -2048,12 +2190,14 @@ compute_statement:
   compute_body
   end_compute
 ;
+
 compute_body:
   arithmetic_x_list comp_equal expr on_size_error
   {
     cb_emit_arithmetic ($1, 0, $3);
   }
 ;
+
 end_compute:
   /* empty */			{ terminator_warning (); }
 | END_COMPUTE
@@ -2086,6 +2230,7 @@ delete_statement:
     cb_emit_delete ($3);
   }
 ;
+
 end_delete:
   /* empty */			{ terminator_warning (); }
 | END_DELETE
@@ -2098,24 +2243,52 @@ end_delete:
 
 display_statement:
   DISPLAY			{ BEGIN_STATEMENT ("DISPLAY"); }
-  opt_x_list display_upon display_no_advancing opt_at_line_column
+  x_list display_upon display_no_advancing opt_at_line_column opt_disp_attr
   end_display
   {
     cb_emit_display ($3, $4, $5, $6);
   }
-  ;
+;
+
 display_upon:
   /* empty */			{ $$ = cb_int1; }
-| _upon mnemonic_name		{ $$ = cb_build_display_upon ($2); }
+| UPON mnemonic_name		{ $$ = cb_build_display_upon ($2); }
 | UPON WORD			{ $$ = cb_build_display_upon_direct ($2); }
-| _upon ENVIRONMENT_NAME	{ $$ = cb_true; }
-| _upon ENVIRONMENT_VALUE	{ $$ = cb_int3; }
-| _upon ARGUMENT_NUMBER		{ $$ = cb_int4; }
+| UPON CRT			{ $$ = cb_int1; }
+| UPON ENVIRONMENT_NAME		{ $$ = cb_true; }
+| UPON ENVIRONMENT_VALUE	{ $$ = cb_int3; }
+| UPON ARGUMENT_NUMBER		{ $$ = cb_int4; }
 ;
+
 display_no_advancing:
   /* empty */			{ $$ = cb_int0; }
 | _with NO ADVANCING		{ $$ = cb_int1; }
 ;
+
+opt_disp_attr:
+| WITH disp_attrs
+;
+
+disp_attrs:
+  disp_attr
+| disp_attrs disp_attr
+;
+
+disp_attr:
+  BELL
+| BLINK
+| ERASE EOL
+| ERASE EOS
+| HIGHLIGHT
+| LOWLIGHT
+| REVERSE_VIDEO
+| UNDERLINE
+| FOREGROUND_COLOR _is integer
+| BACKGROUND_COLOR _is integer
+| BLANK LINE
+| BLANK SCREEN
+;
+
 end_display:
 | END_DISPLAY
 ;
@@ -2130,6 +2303,7 @@ divide_statement:
   divide_body
   end_divide
 ;
+
 divide_body:
   x INTO arithmetic_x_list on_size_error
   {
@@ -2152,6 +2326,7 @@ divide_body:
     cb_emit_divide ($1, $3, $5, $7);
   }
 ;
+
 end_divide:
   /* empty */			{ terminator_warning (); }
 | END_DIVIDE
@@ -2191,11 +2366,13 @@ evaluate_statement:
     eval_level--;
   }
 ;
+
 evaluate_subject_list:
   evaluate_subject		{ $$ = cb_list ($1); }
 | evaluate_subject_list ALSO
   evaluate_subject		{ $$ = cb_list_add ($1, $3); }
 ;
+
 evaluate_subject:
   expr
   {
@@ -2209,55 +2386,84 @@ evaluate_subject:
 | TOK_TRUE			{ $$ = cb_true; eval_check[eval_level][eval_inc++] = 0; }
 | TOK_FALSE			{ $$ = cb_false; eval_check[eval_level][eval_inc++] = 0; }
 ;
+
 evaluate_case_list:
   /* empty */			{ $$ = NULL; }
 | evaluate_case_list
   evaluate_case			{ $$ = cb_list_add ($1, $2); }
 ;
+
 evaluate_case:
   evaluate_when_list
   statement_list		{ $$ = cb_cons ($2, $1); eval_inc2 = 0; }
 | WHEN OTHER
   statement_list		{ $$ = cb_cons ($3, NULL); eval_inc2 = 0; }
 ;
+
 evaluate_when_list:
   WHEN evaluate_object_list	{ $$ = cb_list ($2); }
 | evaluate_when_list
   WHEN evaluate_object_list	{ $$ = cb_list_add ($1, $3); }
 ;
+
 evaluate_object_list:
   evaluate_object		{ $$ = cb_list ($1); }
 | evaluate_object_list ALSO
   evaluate_object		{ $$ = cb_list_add ($1, $3); }
 ;
+
 evaluate_object:
-  flag_not expr
+  partial_expr opt_evaluate_thru_expr
   {
-    if ( eval_check[eval_level][eval_inc2] && CB_REFERENCE_P($2) &&
-	 CB_FIELD_P(CB_REFERENCE($2)->value) ) {
-	if ( CB_FIELD(CB_REFERENCE($2)->value)->level == 88 ) {
-		cb_error_x ($2, _("88 level invalid here"));
-	}
+    cb_tree not = cb_int0;
+    cb_tree e1;
+    cb_tree e2 = $2;
+
+    /* in case the first token is NOT */
+    if (CB_PURPOSE_INT ($1) == '!') {
+      not = cb_int1;
+      $1 = CB_CHAIN ($1);
     }
-    eval_inc2++;
-    if ($1 == cb_int1
-	&& CB_BINARY_OP_P ($2)
-	&& (CB_BINARY_OP ($2)->op == '&' || CB_BINARY_OP ($2)->op == '|'))
-      {
-	cb_error_x ($2, _("FIXME: failed to compile \"WHEN NOT ... AND/OR ...\""));
-	cb_error_x ($2, _("FIXME: change it into \"WHEN (NOT ... AND/OR ...)\" for now"));
+
+    /* build expr now */
+    e1 = cb_build_expr ($1);
+
+    if (e2 == NULL) {
+      /*
+       * WHEN expr
+       */
+      if ( eval_check[eval_level][eval_inc2] && CB_REFERENCE_P(e1) &&
+	   CB_FIELD_P(CB_REFERENCE(e1)->value) ) {
+	if ( CB_FIELD(CB_REFERENCE(e1)->value)->level == 88 ) {
+	  cb_error_x (e1, _("88 level invalid here"));
+	}
       }
-    $$ = cb_build_pair ($1, cb_build_pair ($2, 0));
-  }
-| flag_not expr THRU expr
-  {
-    $$ = cb_build_pair ($1, cb_build_pair ($2, $4));
-    eval_inc2++;
+      eval_inc2++;
+      if (not == cb_int1
+	  && CB_BINARY_OP_P (e1)
+	  && (CB_BINARY_OP (e1)->op == '&' || CB_BINARY_OP (e1)->op == '|'))
+	{
+	  cb_error_x (e1, _("FIXME: failed to compile \"WHEN NOT ... AND/OR ...\""));
+	  cb_error_x (e1, _("FIXME: change it into \"WHEN (NOT ... AND/OR ...)\" for now"));
+	}
+      $$ = cb_build_pair (not, cb_build_pair (e1, 0));
+    } else {
+      /*
+       * WHEN expr THRU expr
+       */
+      $$ = cb_build_pair (not, cb_build_pair (e1, e2));
+      eval_inc2++;
+    }
   }
 | ANY				{ $$ = cb_any; eval_inc2++; }
 | TOK_TRUE			{ $$ = cb_true; eval_inc2++; }
 | TOK_FALSE			{ $$ = cb_false; eval_inc2++; }
 ;
+opt_evaluate_thru_expr:
+  /* empty */			{ $$ = NULL; }
+| THRU expr			{ $$ = $2; }
+;
+
 end_evaluate:
   /* empty */			{ terminator_warning (); }
 | END_EVALUATE
@@ -2272,6 +2478,7 @@ exit_statement:
   EXIT				{ BEGIN_STATEMENT ("EXIT"); }
   exit_body
 ;
+
 exit_body:
   /* empty */			{ /* nothing */ }
 | PROGRAM			{ cb_emit_exit (); }
@@ -2307,6 +2514,7 @@ goto_statement:
     cb_emit_goto ($4, $5);
   }
 ;
+
 goto_depending:
   /* empty */			{ $$ = NULL; }
 | DEPENDING _on x		{ $$ = $3; }
@@ -2338,10 +2546,12 @@ if_statement:
   }
 | IF error END_IF
 ;
+
 if_else_sentence:
   /* empty */			{ $$ = NULL; }
 | ELSE statement_list		{ $$ = $2; }
 ;
+
 end_if:
   /* empty */			{ terminator_warning (); }
 | END_IF
@@ -2354,7 +2564,7 @@ end_if:
 
 initialize_statement:
   INITIALIZE			{ BEGIN_STATEMENT ("INITIALIZE"); }
-  x_list initialize_filler initialize_value initialize_replacing initialize_default
+  target_x_list initialize_filler initialize_value initialize_replacing initialize_default
   {
     cb_emit_initialize ($3, $4, $5, $6, $7);
   }
@@ -2376,14 +2586,17 @@ initialize_replacing:
 | REPLACING
   initialize_replacing_list	{ $$ = $2; }
 ;
+
 initialize_replacing_list:
   initialize_replacing_item	{ $$ = $1; }
 | initialize_replacing_list
   initialize_replacing_item	{ $$ = cb_list_append ($1, $2); }
 ;
+
 initialize_replacing_item:
   initialize_category _data BY x { $$ = cb_build_pair ($1, $4); }
 ;
+
 initialize_category:
   ALPHABETIC		{ $$ = cb_int (CB_CATEGORY_ALPHABETIC); }
 | ALPHANUMERIC		{ $$ = cb_int (CB_CATEGORY_ALPHANUMERIC); }
@@ -2408,9 +2621,11 @@ inspect_statement:
   INSPECT			{ BEGIN_STATEMENT ("INSPECT"); }
   identifier inspect_list
 ;
+
 inspect_list:
 | inspect_list inspect_item
 ;
+
 inspect_item:
   inspect_tallying		{ cb_emit_inspect ($-1, $1, cb_int0); }
 | inspect_replacing		{ cb_emit_inspect ($-1, $1, cb_int1); }
@@ -2423,10 +2638,12 @@ inspect_tallying:
   TALLYING			{ cb_init_tarrying (); }
   tallying_list			{ $$ = $3; }
 ;
+
 tallying_list:
   tallying_item			{ $$ = $1; }
 | tallying_list tallying_item	{ $$ = cb_list_append ($1, $2); }
 ;
+
 tallying_item:
   simple_value FOR		{ $$ = cb_build_tarrying_data ($1); }
 | CHARACTERS inspect_region	{ $$ = cb_build_tarrying_characters ($2); }
@@ -2440,10 +2657,12 @@ tallying_item:
 inspect_replacing:
   REPLACING replacing_list	{ $$ = $2; }
 ;
+
 replacing_list:
   replacing_item		{ $$ = $1; }
 | replacing_list replacing_item	{ $$ = cb_list_append ($1, $2); }
 ;
+
 replacing_item:
   CHARACTERS BY x inspect_region { $$ = cb_build_replacing_characters ($3, $4); }
 | ALL x BY x inspect_region	{ $$ = cb_build_replacing_all ($2, $4, $5); }
@@ -2464,6 +2683,7 @@ inspect_region:
 | inspect_region
   before_or_after _initial x	{ $$ = cb_build_inspect_region ($1, $2, $4); }
 ;
+
 _initial: | TOK_INITIAL ;
 
 
@@ -2485,12 +2705,13 @@ move_statement:
   MOVE				{ BEGIN_STATEMENT ("MOVE"); }
   move_body
 ;
+
 move_body:
-  x TO x_list
+  x TO target_x_list
   {
     cb_emit_move ($1, $3);
   }
-| CORRESPONDING x TO x_list
+| CORRESPONDING x TO target_x_list
   {
     cb_emit_move_corresponding ($2, $4);
   }
@@ -2506,6 +2727,7 @@ multiply_statement:
   multiply_body
   end_multiply
 ;
+
 multiply_body:
   x BY arithmetic_x_list on_size_error
   {
@@ -2516,6 +2738,7 @@ multiply_body:
     cb_emit_arithmetic ($5, 0, cb_build_binary_op ($1, '*', $3));
   }
 ;
+
 end_multiply:
   /* empty */			{ terminator_warning (); }
 | END_MULTIPLY
@@ -2530,6 +2753,7 @@ open_statement:
   OPEN				{ BEGIN_STATEMENT ("OPEN"); }
   open_list
 ;
+
 open_list:
 | open_list
   open_mode open_sharing file_name_list open_option
@@ -2544,16 +2768,19 @@ open_list:
       }
   }
 ;
+
 open_mode:
   INPUT				{ $$ = cb_int (COB_OPEN_INPUT); }
 | OUTPUT			{ $$ = cb_int (COB_OPEN_OUTPUT); }
 | I_O				{ $$ = cb_int (COB_OPEN_I_O); }
 | EXTEND			{ $$ = cb_int (COB_OPEN_EXTEND); }
 ;
+
 open_sharing:
   /* empty */			{ $$ = NULL; }
 | SHARING _with sharing_option	{ $$ = $3; }
 ;
+
 open_option:
 | _with NO REWIND		{ /* ignored */ }
 | _with LOCK			{ PENDING ("OPEN ... WITH LOCK"); }
@@ -2568,6 +2795,7 @@ perform_statement:
   PERFORM			{ BEGIN_STATEMENT ("PERFORM"); }
   perform_body
 ;
+
 perform_body:
   perform_procedure perform_option
   {
@@ -2587,6 +2815,7 @@ perform_body:
     cb_emit_perform ($1, NULL);
   }
 ;
+
 end_perform:
   /* empty */			{ terminator_error (); }
 | END_PERFORM
@@ -2625,15 +2854,18 @@ perform_option:
     $$ = cb_build_perform_until ($1, $3);
   }
 ;
+
 perform_test:
   /* empty */			{ $$ = CB_BEFORE; }
 | _with TEST before_or_after	{ $$ = $3; }
 ;
+
 perform_varying_list:
   perform_varying		{ $$ = cb_list ($1); }
 | perform_varying_list AFTER
   perform_varying		{ $$ = cb_list_add ($1, $3); }
 ;
+
 perform_varying:
   identifier FROM x BY x UNTIL condition
   {
@@ -2654,18 +2886,22 @@ read_statement:
     cb_emit_read ($3, $4, $6, $7);
   }
 ;
+
 read_into:
   /* empty */			{ $$ = NULL; }
 | INTO x			{ $$ = $2; }
 ;
+
 read_key:
   /* empty */			{ $$ = NULL; }
 | KEY _is x			{ $$ = $3; }
 ;
+
 read_handler:
 | at_end
 | invalid_key
 ;
+
 end_read:
   /* empty */			{ terminator_warning (); }
 | END_READ
@@ -2697,6 +2933,7 @@ return_statement:
     cb_emit_return ($3, $5);
   }
 ;
+
 end_return:
   /* empty */			{ terminator_warning (); }
 | END_RETURN
@@ -2715,6 +2952,7 @@ rewrite_statement:
     cb_emit_rewrite ($3, $4);
   }
 ;
+
 end_rewrite:
   /* empty */			{ terminator_warning (); }
 | END_REWRITE
@@ -2730,6 +2968,7 @@ search_statement:
   search_body
   end_search
 ;
+
 search_body:
   table_name search_varying search_at_end search_whens
   {
@@ -2740,21 +2979,26 @@ search_body:
     cb_emit_search_all ($2, $3, $5, $6);
   }
 ;
+
 search_varying:
   /* empty */			{ $$ = NULL; }
 | VARYING x			{ $$ = $2; }
 ;
+
 search_at_end:
   /* empty */			{ $$ = NULL; }
 | _at END statement_list	{ $$ = $3; }
 ;
+
 search_whens:
   search_when			{ $$ = $1; }
 | search_when search_whens	{ $$ = $1; CB_IF ($1)->stmt2 = $2; }
 ;
+
 search_when:
   WHEN condition statement_list	{ $$ = cb_build_if ($2, $3, 0); }
 ;
+
 end_search:
   /* empty */			{ terminator_warning (); }
 | END_SEARCH
@@ -2769,17 +3013,28 @@ set_statement:
   SET				{ BEGIN_STATEMENT ("SET"); }
   set_body
 ;
+
 set_body:
-  set_to
+  set_environment
+| set_to
 | set_up_down
 | set_to_on_off_sequence
 | set_to_true_false_sequence
 ;
 
+/* SET ENVIRONMENT ... TO ... */
+
+set_environment:
+  ENVIRONMENT simple_value TO simple_value
+  {
+	cb_emit_setenv ($2, $4);
+  }
+;
+
 /* SET name ... TO expr */
 
 set_to:
-  x_list TO x
+  target_x_list TO x
   {
     cb_emit_set_to ($1, $3);
   }
@@ -2788,11 +3043,12 @@ set_to:
 /* SET name ... UP/DOWN BY expr */
 
 set_up_down:
-  x_list up_or_down BY x
+  target_x_list up_or_down BY x
   {
     cb_emit_set_up_down ($1, $2, $4);
   }
 ;
+
 up_or_down:
   UP				{ $$ = cb_int0; }
 | DOWN				{ $$ = cb_int1; }
@@ -2804,6 +3060,7 @@ set_to_on_off_sequence:
   set_to_on_off
 | set_to_on_off_sequence set_to_on_off
 ;
+
 set_to_on_off:
   mnemonic_name_list TO on_or_off
   {
@@ -2817,12 +3074,13 @@ set_to_true_false_sequence:
   set_to_true_false
 | set_to_true_false_sequence set_to_true_false
 ;
+
 set_to_true_false:
-  x_list TO TOK_TRUE
+  target_x_list TO TOK_TRUE
   {
     cb_emit_set_true ($1);
   }
-| x_list TO TOK_FALSE
+| target_x_list TO TOK_FALSE
   {
     cb_emit_set_false ($1);
   }
@@ -2837,6 +3095,7 @@ sort_statement:
   SORT				{ BEGIN_STATEMENT ("SORT"); }
   sort_body
 ;
+
 sort_body:
   qualified_word sort_key_list sort_duplicates sort_collating
   {
@@ -2848,6 +3107,7 @@ sort_body:
     cb_emit_sort_finish ($1);
   }
 ;
+
 sort_key_list:
   /* empty */			{ $$ = NULL; }
 | sort_key_list
@@ -2861,13 +3121,16 @@ sort_key_list:
     $$ = cb_list_append ($1, $5);
   }
 ;
+
 opt_key_list:
   /* empty */			{ $$ = NULL; }
 | opt_key_list qualified_word	{ $$ = cb_list_add ($1, $2); }
 ;
+
 sort_duplicates:
 | _with DUPLICATES _in _order		{ /* nothing */ }
 ;
+
 sort_collating:
   /* empty */				{ $$ = cb_int0; }
 | _collating SEQUENCE _is reference	{ $$ = cb_ref ($4); }
@@ -2920,10 +3183,12 @@ start_statement:
 	}
   }
 ;
+
 start_key:
   /* empty */			{ $$ = NULL; }
 | KEY _is start_op x		{ $0 = $3; $$ = $4; }
 ;
+
 start_op:
   flag_not eq		{ $$ = cb_int (($1 == cb_int1) ? COB_NE : COB_EQ); }
 | flag_not gt		{ $$ = cb_int (($1 == cb_int1) ? COB_LE : COB_GT); }
@@ -2931,6 +3196,7 @@ start_op:
 | flag_not ge		{ $$ = cb_int (($1 == cb_int1) ? COB_LT : COB_GE); }
 | flag_not le		{ $$ = cb_int (($1 == cb_int1) ? COB_GT : COB_LE); }
 ;
+
 end_start:
   /* empty */			{ terminator_warning (); }
 | END_START
@@ -2952,6 +3218,7 @@ stop_statement:
     cb_verify (cb_stop_literal_statement, "STOP literal");
   }
 ;
+
 stop_returning:
   /* empty */		{ $$ = cb_return_code; }
 | RETURNING x		{ $$ = $2; }
@@ -2971,19 +3238,23 @@ string_statement:
     cb_emit_string ($3, $5, $6);
   }
 ;
+
 string_item_list:
   string_item			{ $$ = cb_list ($1); }
 | string_item_list string_item	{ $$ = cb_list_add ($1, $2); }
 ;
+
 string_item:
   x				{ $$ = $1; }
 | DELIMITED _by SIZE		{ $$ = cb_build_pair (cb_int0, 0); }
 | DELIMITED _by x		{ $$ = cb_build_pair ($3, 0); }
 ;
+
 opt_with_pointer:
   /* empty */			{ $$ = cb_int0; }
 | _with POINTER x		{ $$ = $3; }
 ;
+
 end_string:
   /* empty */			{ terminator_warning (); }
 | END_STRING
@@ -2999,6 +3270,7 @@ subtract_statement:
   subtract_body
   end_subtract
 ;
+
 subtract_body:
   x_list FROM arithmetic_x_list on_size_error
   {
@@ -3013,6 +3285,7 @@ subtract_body:
     cb_emit_corresponding (cb_build_sub, $4, $2, $5);
   }
 ;
+
 end_subtract:
   /* empty */			{ terminator_warning (); }
 | END_SUBTRACT
@@ -3038,11 +3311,13 @@ unstring_delimited:
 | DELIMITED _by
   unstring_delimited_list	{ $$ = $3; }
 ;
+
 unstring_delimited_list:
   unstring_delimited_item	{ $$ = cb_list ($1); }
 | unstring_delimited_list OR
   unstring_delimited_item	{ $$ = cb_list_add ($1, $3); }
 ;
+
 unstring_delimited_item:
   flag_all simple_value
   {
@@ -3055,16 +3330,19 @@ unstring_into:
 | unstring_into
   unstring_into_item		{ $$ = cb_list_add ($1, $2); }
 ;
+
 unstring_into_item:
   identifier unstring_into_delimiter unstring_into_count
   {
     $$ = cb_build_unstring_into ($1, $2, $3);
   }
 ;
+
 unstring_into_delimiter:
   /* empty */			{ $$ = NULL; }
 | DELIMITER _in identifier	{ $$ = $3; }
 ;
+
 unstring_into_count:
   /* empty */			{ $$ = NULL; }
 | COUNT _in identifier		{ $$ = $3; }
@@ -3099,6 +3377,7 @@ use_exception:
     CB_EXCEPTION_ENABLE (COB_EC_I_O) = 1;
   }
 ;
+
 use_exception_target:
   file_name_list
   {
@@ -3112,6 +3391,7 @@ use_exception_target:
 | I_O	 { current_program->file_handler[COB_OPEN_I_O]    = current_section; }
 | EXTEND { current_program->file_handler[COB_OPEN_EXTEND] = current_section; }
 ;
+
 _standard: | STANDARD ;
 exception_or_error: EXCEPTION | ERROR ;
 
@@ -3121,6 +3401,7 @@ use_debugging:
     PENDING ("USE FOR DEBUGGING");
   }
 ;
+
 use_debugging_target:
   procedure_name
 | ALL PROCEDURES
@@ -3139,10 +3420,12 @@ write_statement:
     cb_emit_write ($3, $4, $5);
   }
 ;
+
 write_from:
   /* empty */			{ $$ = NULL; }
 | FROM x			{ $$ = $2; }
 ;
+
 write_option:
   /* empty */
   {
@@ -3161,14 +3444,17 @@ write_option:
     $$ = cb_build_write_advancing_page ($1);
   }
 ;
+
 before_or_after:
   BEFORE			{ $$ = CB_BEFORE; }
 | AFTER				{ $$ = CB_AFTER; }
 ;
+
 write_handler:
 | at_eop
 | invalid_key
 ;
+
 end_write:
   /* empty */			{ terminator_warning (); }
 | END_WRITE
@@ -3190,9 +3476,11 @@ on_size_error:
     current_statement->handler_id = COB_EC_SIZE;
   }
 ;
+
 opt_on_size_error:
 | SIZE_ERROR statement_list		{ current_statement->handler1 = $2; }
 ;
+
 opt_not_on_size_error:
 | NOT_SIZE_ERROR statement_list		{ current_statement->handler2 = $2; }
 ;
@@ -3209,9 +3497,11 @@ on_overflow:
     current_statement->handler_id = COB_EC_OVERFLOW;
   }
 ;
+
 opt_on_overflow:
 | OVERFLOW statement_list		{ current_statement->handler1 = $2; }
 ;
+
 opt_not_on_overflow:
 | NOT_OVERFLOW statement_list		{ current_statement->handler2 = $2; }
 ;
@@ -3239,10 +3529,12 @@ at_end:
     current_statement->handler2 = $2;
   }
 ;
+
 at_end_sentence:
   END statement_list		{ $$ = $2; }
 | AT END statement_list		{ $$ = $3; }
 ;
+
 not_at_end_sentence:
   NOT _at END statement_list	{ $$ = $4; }
 ;
@@ -3270,9 +3562,11 @@ at_eop:
     current_statement->handler2 = $2;
   }
 ;
+
 at_eop_sentence:
   EOP statement_list		{ $$ = $2; }
 ;
+
 not_at_eop_sentence:
   NOT_EOP statement_list	{ $$ = $2; }
 ;
@@ -3285,6 +3579,7 @@ not_at_eop_sentence:
 opt_invalid_key:
 | invalid_key
 ;
+
 invalid_key:
   invalid_key_sentence
   {
@@ -3304,9 +3599,11 @@ invalid_key:
     current_statement->handler2 = $2;
   }
 ;
+
 invalid_key_sentence:
   INVALID_KEY statement_list		{ $$ = $2; }
 ;
+
 not_invalid_key_sentence:
   NOT_INVALID_KEY statement_list	{ $$ = $2; }
 ;
@@ -3329,50 +3626,59 @@ condition:
 ;
 
 expr:
+  partial_expr
   {
-    cb_expr_init ();
+    $$ = cb_build_expr ($1);
+  }
+;
+
+partial_expr:
+  {
+    current_expr = NULL;
   }
   expr_tokens
   {
-    $$ = cb_expr_finish ();
+    $$ = cb_list_reverse (current_expr);
   }
-;
+
+
 expr_tokens:
   expr_token
 | expr_tokens IS
 | expr_tokens expr_token
 ;
+
 expr_token:
-  x				{ cb_expr_shift ('x', $1); }
+  x				{ push_expr ('x', $1); }
 /* parenthesis */
-| '('				{ cb_expr_shift ('(', 0); }
-| ')'				{ cb_expr_shift (')', 0); }
+| '('				{ push_expr ('(', 0); }
+| ')'				{ push_expr (')', 0); }
 /* arithmetic operators */
-| '+'				{ cb_expr_shift ('+', 0); }
-| '-'				{ cb_expr_shift ('-', 0); }
-| '*'				{ cb_expr_shift ('*', 0); }
-| '/'				{ cb_expr_shift ('/', 0); }
-| '^'				{ cb_expr_shift ('^', 0); }
+| '+'				{ push_expr ('+', 0); }
+| '-'				{ push_expr ('-', 0); }
+| '*'				{ push_expr ('*', 0); }
+| '/'				{ push_expr ('/', 0); }
+| '^'				{ push_expr ('^', 0); }
 /* conditional operators */
-| eq				{ cb_expr_shift ('=', 0); }
-| gt				{ cb_expr_shift ('>', 0); }
-| lt				{ cb_expr_shift ('<', 0); }
-| GE				{ cb_expr_shift (']', 0); }
-| LE				{ cb_expr_shift ('[', 0); }
-| NE				{ cb_expr_shift ('~', 0); }
+| eq				{ push_expr ('=', 0); }
+| gt				{ push_expr ('>', 0); }
+| lt				{ push_expr ('<', 0); }
+| GE				{ push_expr (']', 0); }
+| LE				{ push_expr ('[', 0); }
+| NE				{ push_expr ('~', 0); }
 /* logical operators */
-| NOT				{ cb_expr_shift ('!', 0); }
-| AND				{ cb_expr_shift ('&', 0); }
-| OR				{ cb_expr_shift ('|', 0); }
+| NOT				{ push_expr ('!', 0); }
+| AND				{ push_expr ('&', 0); }
+| OR				{ push_expr ('|', 0); }
 /* class condition */
-| NUMERIC			{ cb_expr_shift_class ("cob_is_numeric"); }
-| ALPHABETIC			{ cb_expr_shift_class ("cob_is_alpha"); }
-| ALPHABETIC_LOWER		{ cb_expr_shift_class ("cob_is_lower"); }
-| ALPHABETIC_UPPER		{ cb_expr_shift_class ("cob_is_upper"); }
+| NUMERIC			{ push_expr ('9', 0); }
+| ALPHABETIC			{ push_expr ('A', 0); }
+| ALPHABETIC_LOWER		{ push_expr ('L', 0); }
+| ALPHABETIC_UPPER		{ push_expr ('U', 0); }
 /* sign condition */
   /* ZERO is defined in 'x' */
-| POSITIVE			{ cb_expr_shift_sign ('>'); }
-| NEGATIVE			{ cb_expr_shift_sign ('<'); }
+| POSITIVE			{ push_expr ('P', 0); }
+| NEGATIVE			{ push_expr ('N', 0); }
 ;
 
 eq: '=' | EQUAL _to ;
@@ -3443,6 +3749,7 @@ arithmetic_x_list:
 | arithmetic_x_list
   arithmetic_x			{ $$ = cb_list_append ($1, $2); }
 ;
+
 arithmetic_x:
   x flag_rounded		{ $$ = cb_build_pair ($2, $1); }
 ;
@@ -3478,6 +3785,7 @@ file_name_list:
   file_name			{ $$ = cb_list ($1); }
 | file_name_list file_name	{ $$ = cb_list_add ($1, $2); }
 ;
+
 file_name:
   qualified_word
   {
@@ -3498,6 +3806,7 @@ mnemonic_name_list:
 | mnemonic_name_list
   mnemonic_name			{ $$ = cb_list_add ($1, $2); }
 ;
+
 mnemonic_name:
   MNEMONIC_NAME			{ $$ = $1; }
 ;
@@ -3509,6 +3818,7 @@ procedure_name_list:
 | procedure_name_list 
   procedure_name		{ $$ = cb_list_add ($1, $2); }
 ;
+
 procedure_name:
   label
   {
@@ -3517,11 +3827,13 @@ procedure_name:
     current_program->label_list = cb_cons ($$, current_program->label_list);
   }
 ;
+
 label:
   qualified_word
 | integer_label
 | integer_label in_of integer_label
 ;
+
 integer_label:
   LITERAL
   {
@@ -3537,6 +3849,7 @@ reference_list:
   reference			{ $$ = cb_list ($1); }
 | reference_list reference	{ $$ = cb_list_add ($1, $2); }
 ;
+
 reference:
   qualified_word
   {
@@ -3578,14 +3891,23 @@ undefined_word:
  * Primitive value
  */
 
-opt_x_list:
-  /* empty */			{ $$ = NULL; }
-| x_list			{ $$ = $1; }
+target_x_list:
+  target_x			{ $$ = cb_list ($1); }
+| target_x_list target_x	{ $$ = cb_list_add ($1, $2); }
 ;
+
+target_x:
+  identifier
+| ADDRESS _of prog_or_entry alnum_or_id		{ $$ = cb_build_ppointer ($4); }
+| ADDRESS _of identifier_1			{ $$ = cb_build_address ($3); }
+| linage_counter
+;
+
 x_list:
   x				{ $$ = cb_list ($1); }
 | x_list x			{ $$ = cb_list_add ($1, $2); }
 ;
+
 x:
   identifier
 | LENGTH _of identifier_1			{ $$ = cb_build_length ($3); }
@@ -3632,16 +3954,19 @@ id_or_lit:
 identifier:
   identifier_1			{ $$ = cb_build_identifier ($1); }
 ;
+
 identifier_1:
   qualified_word		{ $$ = $1; }
 | qualified_word subref		{ $$ = $1; }
 | qualified_word refmod		{ $$ = $1; }
 | qualified_word subref refmod	{ $$ = $1; }
 ;
+
 qualified_word:
   WORD				{ $$ = $1; }
 | WORD in_of qualified_word	{ $$ = $1; CB_REFERENCE ($1)->chain = $3; }
 ;
+
 subref:
   '(' e_list ')'
   {
@@ -3649,6 +3974,7 @@ subref:
     CB_REFERENCE ($0)->subs = cb_list_reverse ($2);
   }
 ;
+
 refmod:
   '(' e ':' ')'
   {
@@ -3678,6 +4004,7 @@ literal:
       CB_LITERAL ($2)->all = 1;
   }
 ;
+
 basic_literal:
   alnum_literal			{ $$ = $1; }
 | SPACE				{ $$ = cb_space; }
@@ -3687,6 +4014,7 @@ basic_literal:
 | LOW_VALUE			{ $$ = cb_low; }
 | TOK_NULL			{ $$ = cb_null; }
 ;
+
 alnum_literal:
   LITERAL			{ $$ = $1; }
 | alnum_literal '&' LITERAL	{ $$ = cb_concat_literals ($1, $3); }
@@ -3702,10 +4030,12 @@ function:
     $$ = cb_build_intrinsic ($1, $2);
   }
 ;
+
 func_args:
   /* empty */			{ $$ = NULL; }
 | '(' list_func_args ')'	{ $$ = $2;   }
 ;
+
 list_func_args:
   /* empty */			{ $$ = NULL; }
 | e_list			{ $$ = $1;   }
@@ -3724,30 +4054,37 @@ flag_all:
   /* empty */			{ $$ = cb_int0; }
 | ALL				{ $$ = cb_int1; }
 ;
+
 flag_duplicates:
   /* empty */			{ $$ = cb_int0; }
 | _with DUPLICATES		{ $$ = cb_int1; }
 ;
+
 flag_global:
   /* empty */			{ $$ = cb_int0; }
 | GLOBAL			{ $$ = cb_int1; }
 ;
+
 flag_next:
   /* empty */			{ $$ = cb_int0; }
 | NEXT				{ $$ = cb_int1; }
 ;
+
 flag_not:
   /* empty */			{ $$ = cb_int0; }
 | NOT				{ $$ = cb_int1; }
 ;
+
 flag_optional:
   /* empty */			{ $$ = cb_int0; }
 | OPTIONAL			{ $$ = cb_int1; }
 ;
+
 flag_rounded:
   /* empty */			{ $$ = cb_int0; }
 | ROUNDED			{ $$ = cb_int1; }
 ;
+
 flag_separate:
   /* empty */			{ $$ = cb_int0; }
 | SEPARATE _character		{ $$ = cb_int1; }
@@ -3801,7 +4138,7 @@ _than:		| THAN ;
 _then:		| THEN ;
 _times:		| TIMES ;
 _to:		| TO ;
-_upon:		| UPON ;
+/* _upon:		| UPON ; */
 _when:		| WHEN ;
 _with:		| WITH ;
 
@@ -3875,6 +4212,10 @@ literal_value (cb_tree x)
 		return ' ';
 	} else if (x == cb_zero) {
 		return '0';
+	} else if (x == cb_quote) {
+		return '"';
+	} else if (x == cb_null) {
+		return 0;
 	} else if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC) {
 		return cb_get_int (x);
 	} else {

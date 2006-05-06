@@ -52,12 +52,14 @@ static size_t		inspect_size;
 static unsigned char	*inspect_data;
 static unsigned char	*inspect_start;
 static unsigned char	*inspect_end;
-static int		*inspect_mark;
+static int		*inspect_mark = NULL;
 
 void
 cob_inspect_init (cob_field *var, int replacing)
 {
-	size_t	i;
+	size_t		i;
+	size_t		digcount;
+	static size_t	lastsize = 0;
 
 	inspect_var_copy = *var;
 	inspect_var = &inspect_var_copy;
@@ -67,7 +69,25 @@ cob_inspect_init (cob_field *var, int replacing)
 	inspect_data = COB_FIELD_DATA (var);
 	inspect_start = NULL;
 	inspect_end = NULL;
+	digcount = inspect_size * sizeof (int);
+	if (!inspect_mark) {
+		if (digcount <= COB_LARGE_BUFF) {
+			inspect_mark = cob_malloc (COB_LARGE_BUFF);
+			lastsize = COB_LARGE_BUFF;
+		} else {
+			inspect_mark = cob_malloc (digcount);
+			lastsize = digcount;
+		}
+	} else {
+		if (digcount > lastsize) {
+			free (inspect_mark);
+			inspect_mark = cob_malloc (digcount);
+			lastsize = digcount;
+		}
+	}
+/*
 	inspect_mark = cob_malloc (inspect_size * sizeof (int));
+*/
 	for (i = 0; i < inspect_size; i++) {
 		inspect_mark[i] = -1;
 	}
@@ -228,7 +248,9 @@ cob_inspect_finish (void)
 	}
 
 	cob_put_sign (inspect_var, inspect_sign);
+/*
 	free (inspect_mark);
+*/
 }
 
 /*

@@ -66,7 +66,7 @@ static void switch_to_buffer (int lineno, char *filename, YY_BUFFER_STATE buffer
 
 %}
 
-WORD		[0-9A-Z-]+
+WORD		[_0-9A-Z-]+
 NUMRIC_LITERAL	[+-]?[0-9,.]*[0-9]
 ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
 

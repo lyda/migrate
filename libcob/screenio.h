@@ -25,9 +25,9 @@
 #define COB_SCREEN_BG_BLACK	0x00000000
 #define COB_SCREEN_BG_BLUE	0x00000001
 #define COB_SCREEN_BG_GREEN	0x00000002
-#define COB_SCREEN_BG_SKYBLUE	0x00000003
+#define COB_SCREEN_BG_CYAN	0x00000003
 #define COB_SCREEN_BG_RED	0x00000004
-#define COB_SCREEN_BG_PURPLE	0x00000005
+#define COB_SCREEN_BG_MAGENTA	0x00000005
 #define COB_SCREEN_BG_YELLOW	0x00000006
 #define COB_SCREEN_BG_WHITE	0x00000007
 #define COB_SCREEN_BG_NONE	0x00000008
@@ -36,9 +36,9 @@
 #define COB_SCREEN_FG_BLACK	0x00000000
 #define COB_SCREEN_FG_BLUE	0x00000010
 #define COB_SCREEN_FG_GREEN	0x00000020
-#define COB_SCREEN_FG_SKYBLUE	0x00000030
+#define COB_SCREEN_FG_CYAN	0x00000030
 #define COB_SCREEN_FG_RED	0x00000040
-#define COB_SCREEN_FG_PURPLE	0x00000050
+#define COB_SCREEN_FG_MAGENTA	0x00000050
 #define COB_SCREEN_FG_YELLOW	0x00000060
 #define COB_SCREEN_FG_WHITE	0x00000070
 #define COB_SCREEN_FG_NONE	0x00000080
@@ -70,6 +70,7 @@
 #define COB_SCREEN_REVERSE	0x08000000
 #define COB_SCREEN_SECURE	0x10000000
 #define COB_SCREEN_UNDERLINE	0x20000000
+#define COB_SCREEN_OVERLINE	0x40000000
 
 typedef struct __cob_screen cob_screen;
 
@@ -80,35 +81,31 @@ typedef enum {
 	COB_SCREEN_TYPE_ATTRIBUTE
 } cob_screen_type;
 
-typedef union {
-	cob_screen	*child;		/* for COB_SCREEN_TYPE_GROUP */
-	cob_field	*field;		/* for COB_SCREEN_TYPE_FIELD */
-	char		*value;		/* for COB_SCREEN_TYPE_VALUE */
-	int		dummy;		/* for COB_SCREEN_TYPE_ATTRIBUTE */
-} cob_screen_data;
-
-typedef union {
-	int		val;
-	cob_field	*ptr;
-} cob_screen_position;
-
 struct __cob_screen {
 	cob_screen_type		type;
-	cob_screen_data		data;
+	cob_screen		*child;		/* for COB_SCREEN_TYPE_GROUP */
+	cob_field		*field;		/* for COB_SCREEN_TYPE_FIELD */
+	cob_field		*value;		/* for COB_SCREEN_TYPE_VALUE */
 	cob_screen		*next;
 	cob_field		*from;
 	cob_field		*to;
-	cob_screen_position	line;
-	cob_screen_position	column;
-	long			attr;
+	cob_field		*line;
+	cob_field		*column;
+	long			attr;		/* for COB_SCREEN_TYPE_ATTRIBUTE */
 };
+
+DLL_EXPIMP extern int	cob_screen_mode;
+DLL_EXPIMP extern int	cob_current_x;
+DLL_EXPIMP extern int	cob_current_y;
 
 extern void cob_screen_init (void);
 extern void cob_screen_terminate (void);
 extern void cob_screen_attr (int line, int column, long attr);
 extern void cob_screen_puts (const char *data, size_t size, int line, int column, long attr);
 extern void cob_screen_gets (char *data, size_t size, int line, int column, long attr);
-extern void cob_screen_display (cob_screen *s, int line, int column);
-extern void cob_screen_accept (cob_screen *s, int line, int column);
+extern void cob_screen_display (cob_screen *s, cob_field *line, cob_field *column);
+extern void cob_screen_accept (cob_screen *s, cob_field *line, cob_field *column);
+extern void cob_field_display (cob_field *f, cob_field *line, cob_field *column);
+extern void cob_field_accept (cob_field *f, cob_field *line, cob_field *column);
 
 #endif /* COB_SCREENIO_H_ */
