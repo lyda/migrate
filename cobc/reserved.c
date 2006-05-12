@@ -104,10 +104,10 @@ static const struct reserved reserved_words[] = {
   {"BEFORE",		BEFORE},		/* 2002 */
   {"BELL",		BELL},			/* 2002 (C/S) */
   {"BINARY",		BINARY},		/* 2002 */
-  {"BINARY-CHAR",	-1},			/* 2002 */
-  {"BINARY-DOUBLE",	-1},			/* 2002 */
-  {"BINARY-LONG",	-1},			/* 2002 */
-  {"BINARY-SHORT",	-1},			/* 2002 */
+  {"BINARY-CHAR",	BINARY_CHAR},		/* 2002 */
+  {"BINARY-DOUBLE",	BINARY_DOUBLE},		/* 2002 */
+  {"BINARY-LONG",	BINARY_LONG},		/* 2002 */
+  {"BINARY-SHORT",	BINARY_SHORT},		/* 2002 */
   {"BIT",		-1},			/* 2002 */
   {"BLANK",		BLANK},			/* 2002 */
   {"BLINK",		BLINK},			/* 2002 (C/S) */
@@ -249,6 +249,7 @@ static const struct reserved reserved_words[] = {
   {"EQUAL",		EQUAL},			/* 2002 */
   {"ERASE",		ERASE},			/* 2002 (C/S) */
   {"ERROR",		ERROR},			/* 2002 */
+  {"ESCAPE",		ESCAPE},		/* extension */
   {"ESI",		-1},			/* 2002 */
   {"EVALUATE",		EVALUATE},		/* 2002 */
   {"EXCEPTION",		EXCEPTION},		/* 2002 */
@@ -419,6 +420,7 @@ static const struct reserved reserved_words[] = {
   {"PROGRAM",		PROGRAM},		/* 2002 */
   {"PROGRAM-ID",	PROGRAM_ID},		/* 2002 */
   {"PROGRAM-POINTER",	PROGRAM_POINTER},	/* 2002 */
+  {"PROMPT",		PROMPT},		/* extension */
   {"PROPERTY",		-1},			/* 2002 */
   {"PROTOTYPE",		-1},			/* 2002 */
   {"PURGE",		-1},			/* 2002 */
@@ -484,7 +486,10 @@ static const struct reserved reserved_words[] = {
   {"SET",		SET},			/* 2002 */
   {"SHARING",		SHARING},		/* 2002 */
   {"SIGN",		SIGN},			/* 2002 */
-  {"SIGNED",		-1},			/* 2002 (C/S) */
+  {"SIGNED",		SIGNED},		/* 2002 (C/S) */
+  {"SIGNED-INT",	SIGNED_INT},		/* extension */
+  {"SIGNED-LONG",	SIGNED_LONG},		/* extension */
+  {"SIGNED-SHORT",	SIGNED_SHORT},		/* extension */
   {"SIZE",		SIZE},			/* 2002 */
   {"SORT",		SORT},			/* 2002 */
   {"SORT-MERGE",	SORT_MERGE},		/* 2002 */
@@ -540,10 +545,14 @@ static const struct reserved reserved_words[] = {
   {"UNIT",		UNIT},			/* 2002 */
   {"UNIVERSAL",		-1},			/* 2002 */
   {"UNLOCK",		-1},			/* 2002 */
-  {"UNSIGNED",		-1},			/* 2002 (C/S) */
+  {"UNSIGNED",		UNSIGNED},		/* 2002 (C/S) */
+  {"UNSIGNED-INT",	UNSIGNED_INT},		/* extension */
+  {"UNSIGNED-LONG",	UNSIGNED_LONG},		/* extension */
+  {"UNSIGNED-SHORT",	UNSIGNED_SHORT},	/* extension */
   {"UNSTRING",		UNSTRING},		/* 2002 */
   {"UNTIL",		UNTIL},			/* 2002 */
   {"UP",		UP},			/* 2002 */
+  {"UPDATE",		UPDATE},		/* extension */
   {"UPON",		UPON},			/* 2002 */
   {"USAGE",		USAGE},			/* 2002 */
   {"USE",		USE},			/* 2002 */
@@ -768,6 +777,9 @@ static const struct cb_intrinsic_table function_list[] = {
 				 CB_CATEGORY_ALPHANUMERIC },
   { "STANDARD-DEVIATION",	-1, 1, CB_INTR_STANDARD_DEVIATION,
 				 "cob_intr_standard_deviation",
+				 CB_CATEGORY_NUMERIC },
+  { "STORED-CHAR-LENGTH",	 1, 1, CB_INTR_STORED_CHAR_LENGTH,
+				 "cob_intr_stored_char_length",
 				 CB_CATEGORY_NUMERIC },
   { "SUM",			-1, 1, CB_INTR_SUM,
 				 "cob_intr_sum",

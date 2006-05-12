@@ -32,6 +32,7 @@
 #define INSPECT_ALL		0
 #define INSPECT_LEADING		1
 #define INSPECT_FIRST	      	2
+#define INSPECT_TRAILING      	3
 
 static inline int
 cob_min_int (const int x, const int y)
@@ -161,7 +162,8 @@ cob_inspect_characters (cob_field *f1)
 static void
 inspect_common (cob_field *f1, cob_field *f2, int type)
 {
-	size_t	i, n = 0;
+	size_t	n = 0;
+	int	i;
 	int	len = (int)(inspect_end - inspect_start);
 	int	*mark = &inspect_mark[inspect_start - inspect_data];
 
@@ -170,29 +172,54 @@ inspect_common (cob_field *f1, cob_field *f2, int type)
 		return;
 	}
 
-	for (i = 0; i < len - f2->size + 1; i++) {
-		/* find matching substring */
-		if (memcmp (inspect_start + i, f2->data, f2->size) == 0) {
-			size_t j;
-			/* check if it is already marked */
-			for (j = 0; j < f2->size; j++) {
-				if (mark[i + j] != -1) {
-					break;
-				}
-			}
-			/* if not, mark and count it */
-			if (j == f2->size) {
+	if (type == INSPECT_TRAILING) {
+		for (i = len - f2->size; i >= 0; i--) {
+			/* find matching substring */
+			if (memcmp (inspect_start + i, f2->data, f2->size) == 0) {
+				size_t j;
+				/* check if it is already marked */
 				for (j = 0; j < f2->size; j++) {
-					mark[i + j] = inspect_replacing ? f1->data[j] : 1;
+					if (mark[i + j] != -1) {
+						break;
+					}
 				}
-				i += f2->size - 1;
-				n++;
-				if (type == INSPECT_FIRST) {
-					break;
+				/* if not, mark and count it */
+				if (j == f2->size) {
+					for (j = 0; j < f2->size; j++) {
+						mark[i + j] = inspect_replacing ? f1->data[j] : 1;
+					}
+					i -= f2->size - 1;
+					n++;
 				}
+			} else {
+				break;
 			}
-		} else if (type == INSPECT_LEADING) {
-			break;
+		}
+	} else {
+		for (i = 0; i < len - f2->size + 1; i++) {
+			/* find matching substring */
+			if (memcmp (inspect_start + i, f2->data, f2->size) == 0) {
+				size_t j;
+				/* check if it is already marked */
+				for (j = 0; j < f2->size; j++) {
+					if (mark[i + j] != -1) {
+						break;
+					}
+				}
+				/* if not, mark and count it */
+				if (j == f2->size) {
+					for (j = 0; j < f2->size; j++) {
+						mark[i + j] = inspect_replacing ? f1->data[j] : 1;
+					}
+					i += f2->size - 1;
+					n++;
+					if (type == INSPECT_FIRST) {
+						break;
+					}
+				}
+			} else if (type == INSPECT_LEADING) {
+				break;
+			}
 		}
 	}
 
@@ -217,6 +244,12 @@ void
 cob_inspect_first (cob_field *f1, cob_field *f2)
 {
 	inspect_common (f1, f2, INSPECT_FIRST);
+}
+
+void
+cob_inspect_trailing (cob_field *f1, cob_field *f2)
+{
+	inspect_common (f1, f2, INSPECT_TRAILING);
 }
 
 void

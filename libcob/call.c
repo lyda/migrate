@@ -282,14 +282,14 @@ cob_call_resolve_1 (cob_field * f)
 void *
 cob_resolve (const char *name)
 {
-	int		i;
-	char		*p;
-	const char	*s;
-	lt_ptr_t	func;
-	lt_dlhandle	handle;
-	struct stat	st;
-	char		buff[COB_SMALL_BUFF];
-	char		filename[COB_MEDIUM_BUFF];
+	int			i;
+	unsigned char		*p;
+	const unsigned char	*s;
+	lt_ptr_t		func;
+	lt_dlhandle		handle;
+	struct stat		st;
+	unsigned char		buff[COB_SMALL_BUFF];
+	char			filename[COB_MEDIUM_BUFF];
 
 /* Checked in generated code
 	if (!cob_initialized) {

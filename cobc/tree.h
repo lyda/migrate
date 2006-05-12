@@ -165,7 +165,15 @@ enum cb_usage {
 	CB_USAGE_POINTER,		/* 11 */
 	CB_USAGE_PROGRAM,		/* 12 */
 	CB_USAGE_LENGTH,		/* 13 */
-	CB_USAGE_PROGRAM_POINTER	/* 14 */
+	CB_USAGE_PROGRAM_POINTER,	/* 14 */
+	CB_USAGE_UNSIGNED_CHAR,		/* 15 */
+	CB_USAGE_SIGNED_CHAR,		/* 16 */
+	CB_USAGE_UNSIGNED_SHORT,	/* 17 */
+	CB_USAGE_SIGNED_SHORT,		/* 18 */
+	CB_USAGE_UNSIGNED_INT,		/* 19 */
+	CB_USAGE_SIGNED_INT,		/* 20 */
+	CB_USAGE_UNSIGNED_LONG,		/* 21 */
+	CB_USAGE_SIGNED_LONG		/* 22 */
 };
 
 enum cb_operand_type {
@@ -435,6 +443,7 @@ struct cb_field {
 		cb_tree val;		/* value to be compared in SEARCH ALL */
 	} *keys;
 	int			nkeys;	/* the number of keys */
+	int			param_num;	/* CHAINING param number */
 	struct cb_picture	*pic;	/* PICTURE */
 	/* screen parameters */
 	cb_tree			screen_line;
@@ -453,10 +462,12 @@ struct cb_field {
 	unsigned int flag_invalid       : 1;	/* is broken */
 	unsigned int flag_binary_swap   : 1;	/* binary byteswap */
 	unsigned int flag_local         : 1;	/* has local scope */
-	unsigned int flag_base          : 1;
-	unsigned int flag_field         : 1;
-	unsigned int flag_item_external : 1;
-	unsigned int flag_spare		: 19;
+	unsigned int flag_base          : 1;	/* has memory allocation */
+	unsigned int flag_field         : 1;	/* has been internally cached */
+	unsigned int flag_item_external : 1;	/* is EXTERNAL */
+	unsigned int flag_chained	: 1;	/* CHAINING item */
+	unsigned int flag_real_binary	: 1;	/* is BINARY-CHAR/SHORT/LONG/DOUBLE */
+	unsigned int flag_spare		: 17;
 	};
 
 #define CB_FIELD(x)		(CB_TREE_CAST (CB_TAG_FIELD, struct cb_field, x))
@@ -656,7 +667,7 @@ extern cb_tree cb_build_cast (enum cb_cast_type type, cb_tree val);
 struct cb_label {
 	struct cb_tree_common	common;
 	int			id;
-	const char		*name;
+	const unsigned char	*name;
 	struct cb_label		*section;
 	cb_tree			children;
 	int			is_section;
@@ -756,6 +767,7 @@ enum cb_intr_enum {
 	CB_INTR_SQRT,
 	CB_INTR_STANDARD_COMPARE,
 	CB_INTR_STANDARD_DEVIATION,
+	CB_INTR_STORED_CHAR_LENGTH,
 	CB_INTR_SUM,
 	CB_INTR_TAN,
 	CB_INTR_TEST_DATE_YYYYMMDD,
@@ -1030,6 +1042,8 @@ struct cb_program {
 	struct cb_field		*screen_storage;
 	struct cb_label		*file_handler[5];
 	cb_tree			collating_sequence;
+	cb_tree			cursor_pos;
+	cb_tree			crt_status;
 	unsigned char		flag_common;		/* COMMON PROGRAM */
 	unsigned char		flag_initial;		/* INITIAL PROGRAM */
 	unsigned char		flag_recursive;		/* RECURSIVE PROGRAM */
@@ -1163,11 +1177,13 @@ extern cb_tree cb_build_tarrying_data (cb_tree x);
 extern cb_tree cb_build_tarrying_characters (cb_tree l);
 extern cb_tree cb_build_tarrying_all (void);
 extern cb_tree cb_build_tarrying_leading (void);
+extern cb_tree cb_build_tarrying_trailing (void);
 extern cb_tree cb_build_tarrying_value (cb_tree x, cb_tree l);
 extern cb_tree cb_build_replacing_characters (cb_tree x, cb_tree l);
 extern cb_tree cb_build_replacing_all (cb_tree x, cb_tree y, cb_tree l);
 extern cb_tree cb_build_replacing_leading (cb_tree x, cb_tree y, cb_tree l);
 extern cb_tree cb_build_replacing_first (cb_tree x, cb_tree y, cb_tree l);
+extern cb_tree cb_build_replacing_trailing (cb_tree x, cb_tree y, cb_tree l);
 extern cb_tree cb_build_converting (cb_tree x, cb_tree y, cb_tree l);
 extern cb_tree cb_build_inspect_region_start (void);
 extern cb_tree cb_build_inspect_region (cb_tree l, cb_tree pos, cb_tree x);

@@ -95,6 +95,10 @@ COB_EXCEPTION (050A, COB_EC_I_O_RECORD_OPERATION, "EC-I-O-RECORD-OPERATION", 0)
 
 /* Implementation-defined exception condition */
 COB_EXCEPTION (0600, COB_EC_IMP, "EC-IMP", 0)
+/* Implementation-defined accept condition */
+COB_EXCEPTION (0601, COB_EC_IMP_ACCEPT, "EC-IMP-ACCEPT", 0)
+/* Implementation-defined display condition */
+COB_EXCEPTION (0602, COB_EC_IMP_DISPLAY, "EC-IMP-DISPLAY", 0)
 
 /* Any locale related exception */
 COB_EXCEPTION (0700, COB_EC_LOCATE, "EC-LOCATE", 0)

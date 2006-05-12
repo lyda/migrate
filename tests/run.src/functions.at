@@ -54,7 +54,7 @@ AT_DATA([prog.cob], [
               Z <= 1.80750052110824345
                    DISPLAY "OK"
            ELSE
-                   DISPLAY "NOT OK"
+                   DISPLAY Z
            END-IF.
            STOP RUN.
 ])
@@ -82,7 +82,7 @@ AT_DATA([prog.cob], [
               Z <= 3.002932551319648110
                    DISPLAY "OK"
            ELSE
-                   DISPLAY "NOT OK"
+                   DISPLAY Z
            END-IF.
            STOP RUN.
 ])
@@ -109,7 +109,7 @@ AT_DATA([prog.cob], [
               Y <= -0.23670419431334675
                    DISPLAY "OK"
            ELSE
-                   DISPLAY "NOT OK"
+                   DISPLAY Y
            END-IF.
            STOP RUN.
 ])
@@ -136,7 +136,7 @@ AT_DATA([prog.cob], [
               Y <= 0.78539816339744835
                    DISPLAY "OK"
            ELSE
-                   DISPLAY "NOT OK"
+                   DISPLAY Y
            END-IF.
            STOP RUN.
 ])
@@ -183,7 +183,7 @@ AT_DATA([prog.cob], [
               Y <= 0.97263064125625825
                    DISPLAY "OK"
            ELSE
-                   DISPLAY "NOT OK"
+                   DISPLAY Y
            END-IF.
            STOP RUN.
 ])
@@ -285,7 +285,7 @@ AT_DATA([prog.cob], [
               Y <= 20.0855369231876644
                    DISPLAY "OK"
            ELSE
-                   DISPLAY "NOT OK"
+                   DISPLAY Y
            END-IF.
            STOP RUN.
 ])
@@ -450,7 +450,7 @@ AT_DATA([prog.cob], [
               Y <= 0.40546510810816445
                    DISPLAY "OK"
            ELSE
-                   DISPLAY "NOT OK"
+                   DISPLAY Y
            END-IF.
            STOP RUN.
 ])
@@ -477,7 +477,7 @@ AT_DATA([prog.cob], [
               Y <= 0.17609125905568128
                    DISPLAY "OK"
            ELSE
-                   DISPLAY "NOT OK"
+                   DISPLAY Y
            END-IF.
            STOP RUN.
 ])
@@ -817,7 +817,7 @@ AT_DATA([prog.cob], [
               Y <= 0.99749498660405450
                    DISPLAY "OK"
            ELSE
-                   DISPLAY "NOT OK"
+                   DISPLAY Y
            END-IF.
            STOP RUN.
 ])
@@ -844,7 +844,7 @@ AT_DATA([prog.cob], [
               Y <= 1.22474487139158899
                    DISPLAY "OK"
            ELSE
-                   DISPLAY "NOT OK"
+                   DISPLAY Y
            END-IF.
            STOP RUN.
 ])
@@ -882,6 +882,27 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
+AT_SETUP([FUNCTION STORED-CHAR-LENGTH])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  Y   PIC   X(24).
+       PROCEDURE        DIVISION.
+           MOVE "123456789012" TO Y.
+           DISPLAY FUNCTION STORED-CHAR-LENGTH ( Y ).
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[00000012
+])
+
+AT_CLEANUP
+
 AT_SETUP([FUNCTION TAN])
 
 AT_DATA([prog.cob], [
@@ -897,7 +918,7 @@ AT_DATA([prog.cob], [
               Y <= 14.1014199471717205
                    DISPLAY "OK"
            ELSE
-                   DISPLAY "NOT OK"
+                   DISPLAY Y
            END-IF.
            STOP RUN.
 ])

@@ -30,6 +30,7 @@ extern void cob_inspect_characters (cob_field *f1);
 extern void cob_inspect_all (cob_field *f1, cob_field *f2);
 extern void cob_inspect_leading (cob_field *f1, cob_field *f2);
 extern void cob_inspect_first (cob_field *f1, cob_field *f2);
+extern void cob_inspect_trailing (cob_field *f1, cob_field *f2);
 extern void cob_inspect_converting (cob_field *f1, cob_field *f2);
 extern void cob_inspect_finish (void);
 

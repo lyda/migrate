@@ -426,7 +426,7 @@ cob_move_binary_to_display (cob_field *f1, cob_field *f2)
 	}
 
 	/* store */
-	store_common_region (f2, (ucharptr)buff + i, 20 - i, f1->attr->scale);
+	store_common_region (f2, (ucharptr)buff + i, (size_t)(20 - i), f1->attr->scale);
 
 	cob_put_sign (f2, sign);
 }
@@ -739,7 +739,7 @@ cob_move_edited_to_display (cob_field *f1, cob_field *f2)
 	}
 
 	/* store */
-	store_common_region (f2, buff, p - buff, scale);
+	store_common_region (f2, buff, (size_t)(p - buff), scale);
 
 	cob_put_sign (f2, sign);
 }
@@ -786,7 +786,7 @@ cob_move_alphanum_to_edited (cob_field *f1, cob_field *f2)
 
 static void
 indirect_move (void (*func) (cob_field *src, cob_field *dst),
-	       cob_field *src, cob_field *dst, unsigned int size, char scale)
+	       cob_field *src, cob_field *dst, size_t size, int scale)
 {
 	cob_field	temp;
 	cob_field_attr	attr =
@@ -891,7 +891,7 @@ cob_move (cob_field *src, cob_field *dst)
 			if (src->attr->scale < 0 || src->attr->scale > src->attr->digits) {
 				/* expand P's */
 				indirect_move (cob_move_display_to_display, src, dst,
-					      cob_max_int ((int)src->attr->digits, (int)src->attr->scale),
+					      (size_t)cob_max_int ((int)src->attr->digits, (int)src->attr->scale),
 					      cob_max_int (0, (int)src->attr->scale));
 				return;
 			} else {

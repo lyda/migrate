@@ -25,8 +25,9 @@
 extern void		cob_init_intrinsic (void);
 extern cob_field	*cob_intr_binop (cob_field *f1, int op, cob_field *f2);
 extern cob_field	*cob_intr_current_date (void);
-extern cob_field	*cob_intr_char (cob_field *srcfld);
-extern cob_field	*cob_intr_ord (cob_field *srcfld);
+extern cob_field	*cob_intr_char (cob_field *srcfield);
+extern cob_field	*cob_intr_ord (cob_field *srcfield);
+extern cob_field	*cob_intr_stored_char_length (cob_field *srcfield);
 extern cob_field	*cob_intr_date_of_integer (cob_field *srcdays);
 extern cob_field	*cob_intr_day_of_integer (cob_field *srcdays);
 extern cob_field	*cob_intr_integer_of_date (cob_field *srcfield);

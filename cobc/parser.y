@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 95
+%expect 99
 
 %defines
 %verbose
@@ -124,11 +124,13 @@ static int literal_value (cb_tree x);
 %token STATUS STOP SYMBOLIC SYNCHRONIZED TALLYING TAPE TEST THAN THEN THRU
 %token TIME TIMES TO TOK_FILE TOK_INITIAL TOK_TRUE TOK_FALSE TOK_NULL TRAILING
 %token UNDERLINE UNIT UNTIL UP UPON USAGE USE USING VALUE VARYING WHEN WITH
-%token MANUAL AUTOMATIC EXCLUSIVE ROLLBACK OVERLINE
+%token MANUAL AUTOMATIC EXCLUSIVE ROLLBACK OVERLINE PROMPT UPDATE ESCAPE
 %token COMP COMP_1 COMP_2 COMP_3 COMP_4 COMP_5 COMP_X
-%token LINAGE_COUNTER PROGRAM_POINTER CHAINING
+%token SIGNED_SHORT SIGNED_INT SIGNED_LONG UNSIGNED_SHORT UNSIGNED_INT UNSIGNED_LONG
+%token BINARY_CHAR BINARY_SHORT BINARY_LONG BINARY_DOUBLE SIGNED UNSIGNED
+%token LINAGE_COUNTER PROGRAM_POINTER CHAINING BLANK_SCREEN BLANK_LINE
 %token NOT_EXCEPTION SIZE_ERROR NOT_SIZE_ERROR NOT_OVERFLOW NOT_EOP
-%token INVALID_KEY NOT_INVALID_KEY COMMA_DELIM DISK
+%token INVALID_KEY NOT_INVALID_KEY COMMA_DELIM DISK NO_ADVANCING
 
 %left '+' '-'
 %left '*' '/'
@@ -609,14 +611,14 @@ decimal_point_clause:
 /* CURSOR clause */
 
 cursor_clause:
-  CURSOR _is reference		{ PENDING ("CURSOR"); }
+  CURSOR _is reference		{ current_program->cursor_pos = $3; }
 ;
 
 
 /* CRT STATUS clause */
 
 crt_status_clause:
-  CRT STATUS _is reference	{ PENDING ("CRT STATUS"); }
+  CRT STATUS _is reference	{ current_program->crt_status = $4; }
 ;
 
 
@@ -1346,6 +1348,24 @@ usage:
 | PACKED_DECIMAL		{ current_field->usage = CB_USAGE_PACKED; }
 | POINTER			{ current_field->usage = CB_USAGE_POINTER; }
 | PROGRAM_POINTER		{ current_field->usage = CB_USAGE_PROGRAM_POINTER; }
+| SIGNED_SHORT			{ current_field->usage = CB_USAGE_SIGNED_SHORT; }
+| SIGNED_INT			{ current_field->usage = CB_USAGE_SIGNED_INT; }
+| SIGNED_LONG			{ current_field->usage = CB_USAGE_SIGNED_LONG; }
+| UNSIGNED_SHORT		{ current_field->usage = CB_USAGE_UNSIGNED_SHORT; }
+| UNSIGNED_INT			{ current_field->usage = CB_USAGE_UNSIGNED_INT; }
+| UNSIGNED_LONG			{ current_field->usage = CB_USAGE_UNSIGNED_LONG; }
+| BINARY_CHAR SIGNED		{ current_field->usage = CB_USAGE_SIGNED_CHAR; }
+| BINARY_CHAR UNSIGNED		{ current_field->usage = CB_USAGE_UNSIGNED_CHAR; }
+| BINARY_CHAR			{ current_field->usage = CB_USAGE_SIGNED_CHAR; }
+| BINARY_SHORT SIGNED		{ current_field->usage = CB_USAGE_SIGNED_SHORT; }
+| BINARY_SHORT UNSIGNED		{ current_field->usage = CB_USAGE_UNSIGNED_SHORT; }
+| BINARY_SHORT			{ current_field->usage = CB_USAGE_SIGNED_SHORT; }
+| BINARY_LONG SIGNED		{ current_field->usage = CB_USAGE_SIGNED_INT; }
+| BINARY_LONG UNSIGNED		{ current_field->usage = CB_USAGE_UNSIGNED_INT; }
+| BINARY_LONG			{ current_field->usage = CB_USAGE_SIGNED_INT; }
+| BINARY_DOUBLE SIGNED		{ current_field->usage = CB_USAGE_SIGNED_LONG; }
+| BINARY_DOUBLE UNSIGNED	{ current_field->usage = CB_USAGE_UNSIGNED_LONG; }
+| BINARY_DOUBLE			{ current_field->usage = CB_USAGE_SIGNED_LONG; }
 ;
 
 
@@ -1612,8 +1632,8 @@ screen_options:
 ;
 
 screen_option:
-  BLANK LINE	{ current_field->screen_flag |= COB_SCREEN_BLANK_LINE; }
-| BLANK SCREEN	{ current_field->screen_flag |= COB_SCREEN_BLANK_SCREEN; }
+  BLANK_LINE	{ current_field->screen_flag |= COB_SCREEN_BLANK_LINE; }
+| BLANK_SCREEN	{ current_field->screen_flag |= COB_SCREEN_BLANK_SCREEN; }
 | BELL		{ current_field->screen_flag |= COB_SCREEN_BELL; }
 | BLINK		{ current_field->screen_flag |= COB_SCREEN_BLINK; }
 | ERASE EOL	{ current_field->screen_flag |= COB_SCREEN_ERASE_EOL; }
@@ -1627,6 +1647,10 @@ screen_option:
 | SECURE	{ current_field->screen_flag |= COB_SCREEN_SECURE; }
 | REQUIRED	{ current_field->screen_flag |= COB_SCREEN_REQUIRED; }
 | FULL		{ current_field->screen_flag |= COB_SCREEN_FULL; }
+| PROMPT CHARACTER _is literal
+  {
+	/* Nothing yet */
+  }
 | LINE _number _is screen_plus_minus x
   {
     current_field->screen_line = $5;
@@ -1733,7 +1757,7 @@ procedure_division:
   }
   procedure_declaratives
   {
-    if (current_program->gen_main && $3) {
+    if (current_program->gen_main && !current_program->is_chained && $3) {
 	cb_error ("Executable program requested but PROCEDURE/ENTRY has USING clause");
     }
     emit_entry (current_program->program_id, 0, $3); /* main entry point */
@@ -1947,6 +1971,7 @@ accept_statement:
 
 accept_body:
   identifier opt_at_line_column opt_accp_attr		{ cb_emit_accept ($1, $2); }
+| identifier FROM ESCAPE KEY				{ /* Nothing yet */ }
 | identifier FROM DATE					{ cb_emit_accept_date ($1); }
 | identifier FROM DATE YYYYMMDD				{ cb_emit_accept_date_yyyymmdd ($1); }
 | identifier FROM DAY					{ cb_emit_accept_day ($1); }
@@ -1954,14 +1979,14 @@ accept_body:
 | identifier FROM DAY_OF_WEEK				{ cb_emit_accept_day_of_week ($1); }
 | identifier FROM TIME					{ cb_emit_accept_time ($1); }
 | identifier FROM COMMAND_LINE				{ cb_emit_accept_command_line ($1); }
-| identifier FROM ENVIRONMENT_VALUE			{ cb_emit_accept_environment ($1); }
-| identifier FROM ENVIRONMENT simple_value
+| identifier FROM ENVIRONMENT_VALUE on_accp_exception	{ cb_emit_accept_environment ($1); }
+| identifier FROM ENVIRONMENT simple_value on_accp_exception
 	{ 
 	  cb_emit_display (cb_list ($4), cb_true, NULL, NULL);
 	  cb_emit_accept_environment ($1);
 	}
 | identifier FROM ARGUMENT_NUMBER			{ cb_emit_accept_arg_number ($1); }
-| identifier FROM ARGUMENT_VALUE			{ cb_emit_accept_arg_value ($1); }
+| identifier FROM ARGUMENT_VALUE on_accp_exception	{ cb_emit_accept_arg_value ($1); }
 | identifier FROM mnemonic_name				{ cb_emit_accept_mnemonic ($1, $3); }
 | identifier FROM WORD					{ cb_emit_accept_name ($1, $3); }
 ;
@@ -1999,6 +2024,7 @@ accp_attr:
 | REVERSE_VIDEO
 | SECURE
 | UNDERLINE
+| UPDATE
 | FOREGROUND_COLOR _is integer
 | BACKGROUND_COLOR _is integer
 ;
@@ -2106,9 +2132,26 @@ call_param:
 ;
 
 call_mode:
-  REFERENCE			{ call_mode = cb_int (CB_CALL_BY_REFERENCE); }
-| CONTENT			{ call_mode = cb_int (CB_CALL_BY_CONTENT); }
-| VALUE				{ call_mode = cb_int (CB_CALL_BY_VALUE); }
+  REFERENCE
+	{
+		call_mode = cb_int (CB_CALL_BY_REFERENCE);
+	}
+| CONTENT
+	{
+		if (current_program->is_chained) {
+			cb_error ("BY CONTENT not allowed in CHAINED program");
+		} else {
+			call_mode = cb_int (CB_CALL_BY_CONTENT);
+		}
+	}
+| VALUE
+	{
+		if (current_program->is_chained) {
+			cb_error ("BY VALUE not allowed in CHAINED program");
+		} else {
+			call_mode = cb_int (CB_CALL_BY_VALUE);
+		}
+	}
 ;
 
 call_returning:
@@ -2244,6 +2287,7 @@ end_delete:
 display_statement:
   DISPLAY			{ BEGIN_STATEMENT ("DISPLAY"); }
   x_list display_upon display_no_advancing opt_at_line_column opt_disp_attr
+  on_disp_exception
   end_display
   {
     cb_emit_display ($3, $4, $5, $6);
@@ -2262,7 +2306,7 @@ display_upon:
 
 display_no_advancing:
   /* empty */			{ $$ = cb_int0; }
-| _with NO ADVANCING		{ $$ = cb_int1; }
+| _with NO_ADVANCING		{ $$ = cb_int1; }
 ;
 
 opt_disp_attr:
@@ -2285,8 +2329,8 @@ disp_attr:
 | UNDERLINE
 | FOREGROUND_COLOR _is integer
 | BACKGROUND_COLOR _is integer
-| BLANK LINE
-| BLANK SCREEN
+| BLANK_LINE
+| BLANK_SCREEN
 ;
 
 end_display:
@@ -2649,6 +2693,7 @@ tallying_item:
 | CHARACTERS inspect_region	{ $$ = cb_build_tarrying_characters ($2); }
 | ALL				{ $$ = cb_build_tarrying_all (); }
 | LEADING			{ $$ = cb_build_tarrying_leading (); }
+| TRAILING			{ $$ = cb_build_tarrying_trailing (); }
 | simple_value inspect_region	{ $$ = cb_build_tarrying_value ($1, $2); }
 ;
 
@@ -2664,10 +2709,11 @@ replacing_list:
 ;
 
 replacing_item:
-  CHARACTERS BY x inspect_region { $$ = cb_build_replacing_characters ($3, $4); }
-| ALL x BY x inspect_region	{ $$ = cb_build_replacing_all ($2, $4, $5); }
-| LEADING x BY x inspect_region	{ $$ = cb_build_replacing_leading ($2, $4, $5); }
-| FIRST x BY x inspect_region	{ $$ = cb_build_replacing_first ($2, $4, $5); }
+  CHARACTERS BY x inspect_region	{ $$ = cb_build_replacing_characters ($3, $4); }
+| ALL x BY x inspect_region		{ $$ = cb_build_replacing_all ($2, $4, $5); }
+| LEADING x BY x inspect_region		{ $$ = cb_build_replacing_leading ($2, $4, $5); }
+| FIRST x BY x inspect_region		{ $$ = cb_build_replacing_first ($2, $4, $5); }
+| TRAILING x BY x inspect_region	{ $$ = cb_build_replacing_trailing ($2, $4, $5); }
 ;
 
 /* INSPECT CONVERTING */
@@ -3466,6 +3512,34 @@ end_write:
  *******************/
 
 /*
+ * ON EXCEPTION
+ */
+
+on_accp_exception:
+  opt_on_exception
+  opt_not_on_exception
+  {
+    current_statement->handler_id = COB_EC_IMP_ACCEPT;
+  }
+;
+
+on_disp_exception:
+  opt_on_exception
+  opt_not_on_exception
+  {
+    current_statement->handler_id = COB_EC_IMP_DISPLAY;
+  }
+;
+
+opt_on_exception:
+| EXCEPTION statement_list		{ current_statement->handler1 = $2; }
+;
+
+opt_not_on_exception:
+| NOT_EXCEPTION statement_list		{ current_statement->handler2 = $2; }
+;
+
+/*
  * ON SIZE ERROR
  */
 
@@ -4149,6 +4223,7 @@ static void
 emit_entry (const char *name, const int encode, cb_tree using_list)
 {
 	cb_tree	l, label;
+	int	parmnum;
 	char	buff[256];
 
 	sprintf (buff, "E$%s", name);
@@ -4161,16 +4236,29 @@ emit_entry (const char *name, const int encode, cb_tree using_list)
 	CB_LABEL (label)->need_begin = 1;
 	emit_statement (label);
 
+	parmnum = 1;
 	for (l = using_list; l; l = CB_CHAIN (l)) {
 		cb_tree x = CB_VALUE (l);
 		if (x != cb_error_node && cb_ref (x) != cb_error_node) {
 			struct cb_field *f = CB_FIELD (cb_ref (x));
-			if (f->level != 01 && f->level != 77)
+			if (f->level != 01 && f->level != 77) {
 				cb_error_x (x, _("'%s' not level 01 or 77"), cb_name (x));
-			if (f->storage != CB_STORAGE_LINKAGE)
-				cb_error_x (x, _("'%s' is not in LINKAGE SECTION"), cb_name (x));
-			if (f->redefines)
+			}
+			if (!current_program->is_chained) {
+				if (f->storage != CB_STORAGE_LINKAGE) {
+					cb_error_x (x, _("'%s' is not in LINKAGE SECTION"), cb_name (x));
+				}
+			} else {
+				if (f->storage != CB_STORAGE_WORKING) {
+					cb_error_x (x, _("'%s' is not in WORKING-STORAGE SECTION"), cb_name (x));
+				}
+				f->flag_chained = 1;
+				f->param_num = parmnum;
+				parmnum++;
+			}
+			if (f->redefines) {
 				cb_error_x (x, _("'%s' REDEFINES field not allowed here"), cb_name (x));
+			}
 		}
 	}
 	for (l = current_program->entry_list; l; l = CB_CHAIN (l)) {

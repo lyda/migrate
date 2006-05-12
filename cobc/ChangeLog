@@ -1,6 +1,26 @@
+2006-05-12  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : Do not accept 66, 88 levels as USING params
+	* parser.y, typeck.c : [NOT] EXCEPTION on ACCEPT/DISPLAY
+
+2006-05-10  Roger While <simrw@sim-basis.de>
+
+	* parser.y, typeck.c, codegen.c : Prelimary syntax support for
+		CURSOR IS and CRT STATUS IS
+	* reserved.c, tree.c, codegen.c : Implement STORED-CHAR-LENGTH (Fujitsu)
+
+2006-05-09  Roger While <simrw@sim-basis.de>
+
+	* parser.y, reserved.c, field.c : Implement BINARY-(CHAR/SHORT/LONG/DOUBLE)
+		and the ACU synonyms (UN)SIGNED-(SHORT/INT/LONG)
+
+2006-05-08  Roger While <simrw@sim-basis.de>
+
+	* parser.y, tree.h, typeck.c : Implement TRAILING in INSPECT clause (ACU)
+
 2006-05-06  Roger While <simrw@sim-basis.de>
 
-	* reserved.c, parser.y : CHAINING
+	* reserved.c, parser.y,codegen.c : PROCEDURE DIVISION CHAINING
 
 2006-05-04  Roger While <simrw@sim-basis.de>
 

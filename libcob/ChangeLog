@@ -1,3 +1,17 @@
+2006-05-12  Roger While <simrw@sim-basis.de>
+
+	* common.c, exception.def : Exceptions for ACCEPT/DISPLAY
+
+2006-05-10  Roger While <simrw@sim-basis.de>
+
+	* common.h : Preliminary support for CURSOR IS and CRT STATUS IS
+	* intrinsic.[ch] : Implement STORED-CHAR-LENGTH (Fujitsu)
+
+2006-05-08  Roger While <simrw@sim-basis.de>
+
+	* common.[ch] : cob_chain_setup - Setp CHAINING params from command line
+	* string.[ch] : Implement TRAILING syntax in INSPECT clause
+
 2006-05-05  Roger While <simrw@sim-basis.de>
 
 	* strings.c : Avoid memory bloat with INSPECT

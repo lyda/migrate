@@ -647,6 +647,31 @@ X = X Y = 56 Z = 34
 
 AT_CLEANUP
 
+AT_SETUP([PROCEDURE DIVISION CHAINING ...])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X            PIC X.
+       01  ABCD         PIC X(4).
+       PROCEDURE        DIVISION
+                        CHAINING X ABCD.
+           DISPLAY X.
+           DISPLAY ABCD.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+
+AT_CHECK([./prog X ABCD], [0],
+[X
+ABCD
+])
+
+AT_CLEANUP
+
 
 AT_SETUP([STOP RUN RETURNING])
 

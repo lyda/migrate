@@ -98,7 +98,7 @@ to_cname (const char *s)
  */
 
 static void *
-make_tree (int tag, enum cb_category category, int size)
+make_tree (int tag, enum cb_category category, size_t size)
 {
 	cb_tree x = cob_malloc (size);
 
@@ -421,7 +421,7 @@ cb_fits_int (cb_tree x)
 int
 cb_get_int (cb_tree x)
 {
-	int			i;
+	size_t			i;
 	int			val = 0;
 	struct cb_literal	*l = CB_LITERAL (x);
 
@@ -1881,6 +1881,7 @@ cb_build_intrinsic (cb_tree name, cb_tree args)
 		case CB_INTR_SIGN:
 		case CB_INTR_SIN:
 		case CB_INTR_SQRT:
+		case CB_INTR_STORED_CHAR_LENGTH:
 		case CB_INTR_TAN:
 		case CB_INTR_TEST_DATE_YYYYMMDD:
 		case CB_INTR_TEST_DAY_YYYYDDD:

@@ -430,6 +430,27 @@ cob_intr_ord (cob_field *srcfield)
 }
 
 cob_field *
+cob_intr_stored_char_length (cob_field *srcfield)
+{
+	int		count;
+	unsigned char	*p;
+	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL};
+	cob_field	field = {4, NULL, &attr};
+
+	make_field_entry (&field);
+	
+	count = srcfield->size;
+	p = srcfield->data + srcfield->size - 1;
+	for (; count > 0; count--, p--) {
+		if (*p != ' ') {
+			break;
+		}
+	}
+	cob_set_int (curr_field, count);
+	return curr_field;
+}
+
+cob_field *
 cob_intr_date_of_integer (cob_field *srcdays)
 {
 	int		i;

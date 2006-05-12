@@ -216,12 +216,12 @@ cob_screen_gets (char *data, size_t size, int line, int column, long attr)
 }
 
 void
-cob_field_display (cob_field *f, int line, int column)
+cob_field_display (cob_field *f, cob_field *line, cob_field column)
 {
 }
 
 void
-cob_field_accept (cob_field *f, int line, int column)
+cob_field_accept (cob_field *f, cob_field *line, cob_field *column)
 {
 }
 

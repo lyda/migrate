@@ -52,7 +52,7 @@ static struct expr_node *expr_stack;			/* expr node stack */
 static char		expr_prio[256];
 
 static void cb_expr_shift_class (const char *name);
-static void cb_expr_shift_sign (char op);
+static void cb_expr_shift_sign (int op);
 
 #define START_STACK_SIZE	16
 #define TOKEN(offset)	(expr_stack[expr_index + offset].token)
@@ -267,10 +267,12 @@ cb_build_registers (void)
 char *
 cb_encode_program_id (const char *name)
 {
-	char		buff[COB_SMALL_BUFF];
-	char		*p = buff;
-	const char	*s = name;
+	unsigned char		*p;
+	const unsigned char	*s;
+	unsigned char		buff[COB_SMALL_BUFF];
 
+	p = buff;
+	s = (const unsigned char *)name;
 	/* encode the initial digit */
 	if (isdigit (*s)) {
 		p += sprintf (p, "_%02X", *s++);
@@ -695,17 +697,11 @@ cb_validate_program_environment (struct cb_program *prog)
 
 		if (x == cb_error_node) {
 			prog->collating_sequence = NULL;
-			return;
-		}
-
-		if (!CB_ALPHABET_NAME_P (x)) {
+		} else if (!CB_ALPHABET_NAME_P (x)) {
 			cb_error_x (prog->collating_sequence, _("'%s' not alphabet name"),
 				    cb_name (prog->collating_sequence));
 			prog->collating_sequence = NULL;
-			return;
-		}
-
-		if (CB_ALPHABET_NAME (x)->type == CB_ALPHABET_CUSTOM) {
+		} else if (CB_ALPHABET_NAME (x)->type == CB_ALPHABET_CUSTOM) {
 			x = CB_VALUE (CB_ALPHABET_NAME (x)->custom_list);
 			if (CB_PAIR_P (x) && CB_PAIR_X (x)) {
 				cb_low = CB_PAIR_X (x);
@@ -741,6 +737,29 @@ cb_validate_program_data (struct cb_program *prog)
 					current_program->working_storage = CB_FIELD (x);
 				}
 			}
+		}
+	}
+
+	if (prog->cursor_pos) {
+		cb_tree x = cb_ref (prog->cursor_pos);
+
+		if (x == cb_error_node) {
+			prog->cursor_pos = NULL;
+		} else if (CB_FIELD(x)->size != 6 && CB_FIELD(x)->size != 4) {
+			cb_error_x (prog->cursor_pos, _("'%s' CURSOR is not 4 or 6 characters long"),
+				    cb_name (prog->cursor_pos));
+			prog->cursor_pos = NULL;
+		}
+	}
+	if (prog->crt_status) {
+		cb_tree x = cb_ref (prog->crt_status);
+
+		if (x == cb_error_node) {
+			prog->crt_status = NULL;
+		} else if (CB_FIELD(x)->size != 4) {
+			cb_error_x (prog->crt_status, _("'%s' CRT STATUS is not 4 characters long"),
+				    cb_name (prog->crt_status));
+			prog->cursor_pos = NULL;
 		}
 	}
 
@@ -1082,7 +1101,7 @@ cb_expr_shift_class (const char *name)
 }
 
 static void
-cb_expr_shift_sign (char op)
+cb_expr_shift_sign (int op)
 {
 	int have_not = 0;
 
@@ -1231,7 +1250,7 @@ decimal_free (void)
 }
 
 static void
-decimal_compute (char op, cb_tree x, cb_tree y)
+decimal_compute (int op, cb_tree x, cb_tree y)
 {
 	const char *func;
 
@@ -2139,6 +2158,20 @@ void
 cb_emit_call (cb_tree prog, cb_tree using, cb_tree returning,
 	      cb_tree on_exception, cb_tree not_on_exception)
 {
+	cb_tree	l;
+	cb_tree	x;
+
+	for (l = using; l; l = CB_CHAIN (l)) {
+		x = CB_VALUE (l);
+		if ((CB_REFERENCE_P (x) && CB_FIELD_P(CB_REFERENCE(x)->value))
+		     || CB_FIELD_P (x)) {
+			if (cb_field(x)->level == 66 ||
+			    cb_field(x)->level == 88) {
+				cb_error_x (x, _("'%s' Not a data name"), CB_NAME (x));
+				return;
+			}
+		}
+	}
 	cb_emit (cb_build_call (prog, using, on_exception, not_on_exception, returning));
 /*
 	if (returning)
@@ -2245,6 +2278,7 @@ cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
 				if (CB_PAIR_P (pos)) {
 					cb_tree line = CB_PAIR_X (pos);
 					cb_tree column = CB_PAIR_Y (pos);
+
 					cb_emit (cb_build_funcall_3 ("cob_field_display", x, line, column));
 				} else {
 					cb_emit (cb_build_funcall_3 ("cob_field_display", x, pos, NULL));
@@ -2252,9 +2286,14 @@ cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
 			}
 		}
 	} else if (pos) {
-		cb_tree line = CB_PAIR_X (pos);
-		cb_tree column = CB_PAIR_Y (pos);
-		cb_emit (cb_build_funcall_3 ("cob_field_display", CB_VALUE (values), line, column));
+		if (CB_PAIR_P (pos)) {
+			cb_tree line = CB_PAIR_X (pos);
+			cb_tree column = CB_PAIR_Y (pos);
+
+			cb_emit (cb_build_funcall_3 ("cob_field_display", CB_VALUE (values), line, column));
+		} else {
+			cb_emit (cb_build_funcall_3 ("cob_field_display", CB_VALUE (values), pos, NULL));
+		}
 	} else {
 		/* DISPLAY x ... [UPON device-name] */
 
@@ -2576,6 +2615,16 @@ cb_build_tarrying_leading (void)
 }
 
 cb_tree
+cb_build_tarrying_trailing (void)
+{
+	if (inspect_data == NULL) {
+		cb_error (_("data name expected before TRAILING"));
+	}
+	inspect_func = "cob_inspect_trailing";
+	return NULL;
+}
+
+cb_tree
 cb_build_tarrying_value (cb_tree x, cb_tree l)
 {
 	if (inspect_func == NULL) {
@@ -2606,6 +2655,12 @@ cb_tree
 cb_build_replacing_first (cb_tree x, cb_tree y, cb_tree l)
 {
 	return cb_list_add (l, cb_build_funcall_2 ("cob_inspect_first", y, x));
+}
+
+cb_tree
+cb_build_replacing_trailing (cb_tree x, cb_tree y, cb_tree l)
+{
+	return cb_list_add (l, cb_build_funcall_2 ("cob_inspect_trailing", y, x));
 }
 
 cb_tree

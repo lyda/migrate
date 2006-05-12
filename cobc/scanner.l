@@ -142,6 +142,21 @@ H\"[^\"\n]*\" {
   return scan_h (yytext + 2);
 }
 
+"BLANK"[ \t\n]+"SCREEN" {
+	count_lines(yytext);
+	return BLANK_SCREEN;
+}
+
+"BLANK"[ \t\n]+"LINE" {
+	count_lines(yytext);
+	return BLANK_LINE;
+}
+
+"NO"[ \t\n]+"ADVANCING" {
+	count_lines(yytext);
+	return NO_ADVANCING;
+}
+
 "NOT"[ \t\n]+"ON"[ \t\n]+"SIZE"[ \t\n]+"ERROR"[ \t\n] |
 "NOT"[ \t\n]+"SIZE"[ \t\n]+"ERROR"[ \t\n] {	
 	count_lines(yytext);

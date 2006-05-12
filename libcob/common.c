@@ -1373,6 +1373,7 @@ cob_display_arg_number (cob_field *f)
 
 	cob_move (f, &temp);
 	if (n < 0 || n >= cob_argc) {
+		COB_SET_EXCEPTION (COB_EC_IMP_DISPLAY);
 		return;
 	}
 	current_arg = n;
@@ -1392,6 +1393,7 @@ void
 cob_accept_arg_value (cob_field *f)
 {
 	if (current_arg >= cob_argc) {
+		COB_SET_EXCEPTION (COB_EC_IMP_ACCEPT);
 		return;
 	}
 	cob_memcpy (f, (ucharptr)cob_argv[current_arg], (int) strlen (cob_argv[current_arg]));
@@ -1417,8 +1419,8 @@ cob_display_environment (cob_field *f)
 	if (!env) {
 		env = cob_malloc (COB_SMALL_BUFF);
 	}
-	memset (env, 0, COB_SMALL_BUFF);
 	if (f->size > COB_SMALL_BUFF - 1) {
+		COB_SET_EXCEPTION (COB_EC_IMP_DISPLAY);
 		return;
 	}
 	cob_field_to_string (f, env);
@@ -1432,20 +1434,25 @@ cob_display_env_value (cob_field *f)
 	char env2[COB_SMALL_BUFF];
 
 	if (!env) {
+		COB_SET_EXCEPTION (COB_EC_IMP_DISPLAY);
 		return;
 	}
 	if (!*env) {
+		COB_SET_EXCEPTION (COB_EC_IMP_DISPLAY);
 		return;
 	}
 	cob_field_to_string (f, env2);
 	if (strlen (env) + strlen (env2) + 2 > COB_SMALL_BUFF) {
+		COB_SET_EXCEPTION (COB_EC_IMP_DISPLAY);
 		return;
 	}
 	strcpy (env1, env);
 	strcat (env1, "=");
 	strcat (env1, env2);
 	p = cob_strdup (env1);
-	putenv (p);
+	if (putenv (p) != 0) {
+		COB_SET_EXCEPTION (COB_EC_IMP_DISPLAY);
+	}
 }
 
 void
@@ -1457,8 +1464,24 @@ cob_accept_environment (cob_field *f)
 		p = getenv (env);
 	}
 	if (!p) {
+		COB_SET_EXCEPTION (COB_EC_IMP_ACCEPT);
 		p = "";
 	}
 	cob_memcpy (f, (ucharptr)p, (int) strlen (p));
 }
 
+void
+cob_chain_setup (void *data, const int parm, const int size)
+{
+	int	len;
+
+	memset (data, ' ', size);
+	if (parm <= cob_argc - 1) {
+		len = strlen (cob_argv[parm]);
+		if (len <= size) {
+			memcpy (data, cob_argv[parm], len);
+		} else {
+			memcpy (data, cob_argv[parm], size);
+		}
+	}
+}

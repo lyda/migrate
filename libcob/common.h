@@ -107,7 +107,7 @@ typedef struct __cob_external {
 #define COB_FLAG_BLANK_ZERO		0x08
 #define COB_FLAG_JUSTIFIED		0x10
 #define COB_FLAG_BINARY_SWAP		0x20
-#define COB_FLAG_REAL_SIGN		0x40
+#define COB_FLAG_REAL_BINARY		0x40
 
 #define COB_FIELD_HAVE_SIGN(f)	    ((f)->attr->flags & COB_FLAG_HAVE_SIGN)
 #define COB_FIELD_SIGN_SEPARATE(f)  ((f)->attr->flags & COB_FLAG_SIGN_SEPARATE)
@@ -115,7 +115,7 @@ typedef struct __cob_external {
 #define COB_FIELD_BLANK_ZERO(f)	    ((f)->attr->flags & COB_FLAG_BLANK_ZERO)
 #define COB_FIELD_JUSTIFIED(f)      ((f)->attr->flags & COB_FLAG_JUSTIFIED)
 #define COB_FIELD_BINARY_SWAP(f)    ((f)->attr->flags & COB_FLAG_BINARY_SWAP)
-#define COB_FIELD_REAL_SIGN(f)	    ((f)->attr->flags & COB_FLAG_REAL_SIGN)
+#define COB_FIELD_REAL_BINARY(f)    ((f)->attr->flags & COB_FLAG_REAL_BINARY)
 
 /* field attributes */
 
@@ -184,6 +184,8 @@ enum cob_display_sign {
 typedef struct __cob_module {
 	struct __cob_module	*next;
 	const unsigned char	*collating_sequence;
+	cob_field		*crt_status;
+	cob_field		*cursor_pos;
 	enum cob_display_sign	display_sign;
 	unsigned char		decimal_point;
 	unsigned char		currency_symbol;
@@ -280,6 +282,7 @@ extern void cob_display_arg_number (cob_field *f);
 extern void cob_accept_arg_number (cob_field *f);
 extern void cob_accept_arg_value (cob_field *f);
 extern int CBL_ERROR_PROC(char *x, int (**p)(char *s));
+extern void cob_chain_setup (void *data, const int parm, const int size);
 
 /* Utilities */
 

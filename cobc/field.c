@@ -378,6 +378,14 @@ validate_field_1 (struct cb_field *f)
 		    || f->usage == CB_USAGE_PROGRAM_POINTER
 		    || f->usage == CB_USAGE_FLOAT
 		    || f->usage == CB_USAGE_DOUBLE
+		    || f->usage == CB_USAGE_SIGNED_CHAR
+		    || f->usage == CB_USAGE_SIGNED_SHORT
+		    || f->usage == CB_USAGE_SIGNED_INT
+		    || f->usage == CB_USAGE_SIGNED_LONG
+		    || f->usage == CB_USAGE_UNSIGNED_CHAR
+		    || f->usage == CB_USAGE_UNSIGNED_SHORT
+		    || f->usage == CB_USAGE_UNSIGNED_INT
+		    || f->usage == CB_USAGE_UNSIGNED_LONG
 		    || f->usage == CB_USAGE_PROGRAM) {
 			need_picture = 0;
 		}
@@ -394,6 +402,7 @@ validate_field_1 (struct cb_field *f)
 				}
 				f->pic = CB_PICTURE (cb_build_picture (pic));
 			} else if (f->level == 78 && f->values) {
+				f->count++;
 				if (CB_NUMERIC_LITERAL_P(CB_VALUE(f->values))) {
 					memset (pic, 0, sizeof (pic));
 					p = pic;
@@ -411,11 +420,17 @@ validate_field_1 (struct cb_field *f)
 					}
 					if (CB_LITERAL(CB_VALUE(f->values))->size < 10) {
 						f->usage = CB_USAGE_COMP_5;
+					} else {
+						f->usage = CB_USAGE_DISPLAY;
 					}
+					f->pic = CB_PICTURE (cb_build_picture (pic));
+					f->pic->category = CB_CATEGORY_NUMERIC;
 				} else {
 					sprintf(pic, "X(%d)", CB_LITERAL(CB_VALUE(f->values))->size);
+					f->pic = CB_PICTURE (cb_build_picture (pic));
+					f->pic->category = CB_CATEGORY_ALPHANUMERIC;
+					f->usage = CB_USAGE_DISPLAY;
 				}
-				f->pic = CB_PICTURE (cb_build_picture (pic));
 			} else {
 				cb_error_x (x, _("PICTURE clause required for '%s'"), name);
 				return -1;
@@ -427,6 +442,46 @@ validate_field_1 (struct cb_field *f)
 
 		/* validate USAGE */
 		switch (f->usage) {
+		case CB_USAGE_SIGNED_CHAR:
+			f->usage = CB_USAGE_COMP_5;
+			f->pic = CB_PICTURE (cb_build_picture ("S99"));
+			f->flag_real_binary = 1;
+			break;
+		case CB_USAGE_SIGNED_SHORT:
+			f->usage = CB_USAGE_COMP_5;
+			f->pic = CB_PICTURE (cb_build_picture ("S9(4)"));
+			f->flag_real_binary = 1;
+			break;
+		case CB_USAGE_SIGNED_INT:
+			f->usage = CB_USAGE_COMP_5;
+			f->pic = CB_PICTURE (cb_build_picture ("S9(9)"));
+			f->flag_real_binary = 1;
+			break;
+		case CB_USAGE_SIGNED_LONG:
+			f->usage = CB_USAGE_COMP_5;
+			f->pic = CB_PICTURE (cb_build_picture ("S9(18)"));
+			f->flag_real_binary = 1;
+			break;
+		case CB_USAGE_UNSIGNED_CHAR:
+			f->usage = CB_USAGE_COMP_5;
+			f->pic = CB_PICTURE (cb_build_picture ("99"));
+			f->flag_real_binary = 1;
+			break;
+		case CB_USAGE_UNSIGNED_SHORT:
+			f->usage = CB_USAGE_COMP_5;
+			f->pic = CB_PICTURE (cb_build_picture ("9(4)"));
+			f->flag_real_binary = 1;
+			break;
+		case CB_USAGE_UNSIGNED_INT:
+			f->usage = CB_USAGE_COMP_5;
+			f->pic = CB_PICTURE (cb_build_picture ("9(9)"));
+			f->flag_real_binary = 1;
+			break;
+		case CB_USAGE_UNSIGNED_LONG:
+			f->usage = CB_USAGE_COMP_5;
+			f->pic = CB_PICTURE (cb_build_picture ("9(18)"));
+			f->flag_real_binary = 1;
+			break;
 		case CB_USAGE_BINARY:
 		case CB_USAGE_PACKED:
 			if (f->pic->category != CB_CATEGORY_NUMERIC) {
