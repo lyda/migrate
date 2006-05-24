@@ -25,6 +25,10 @@
 extern void		cob_init_intrinsic (void);
 extern cob_field	*cob_intr_binop (cob_field *f1, int op, cob_field *f2);
 extern cob_field	*cob_intr_current_date (void);
+extern cob_field	*cob_intr_exception_file (void);
+extern cob_field	*cob_intr_exception_location (void);
+extern cob_field	*cob_intr_exception_status (void);
+extern cob_field	*cob_intr_exception_statement (void);
 extern cob_field	*cob_intr_char (cob_field *srcfield);
 extern cob_field	*cob_intr_ord (cob_field *srcfield);
 extern cob_field	*cob_intr_stored_char_length (cob_field *srcfield);

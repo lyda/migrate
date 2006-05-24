@@ -56,6 +56,9 @@ Indexed-Sequential file I/O is used or SORT/MERGE is used
     http://www.sleepycat.com/
     Recommended is version 4.x as 1.85 is known to have problems.
 
+    *NOTE * If you are generating BDB yourself, you need to specify
+	    --enable-compat185 as a minimum to the BDB configure.
+
     libdb is used to implement indexed file I/O and SORT/MERGE.
 
     Berkeley DB is distributed under the original BSD License (1.85)

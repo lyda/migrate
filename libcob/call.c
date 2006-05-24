@@ -45,10 +45,11 @@
 static char *	lt_dlerror (void);
 
 static HMODULE
-lt_dlopen (const char * x)
+lt_dlopen (const char *x)
 {
-	if(x == NULL)
+	if (x == NULL) {
 		return GetModuleHandle(NULL);
+	}
 	return LoadLibrary(x);
 }
 #define lt_dlsym(x, y)	GetProcAddress(x, y)
@@ -268,7 +269,7 @@ cob_resolve_1 (const char *name)
 }
 
 void *
-cob_call_resolve_1 (cob_field * f)
+cob_call_resolve_1 (cob_field *f)
 {
 	void	*p;
 
@@ -328,7 +329,7 @@ cob_resolve (const char *name)
 
 	/* search external modules */
 	for (i = 0; i < resolve_size; i++) {
-		if(resolve_path[i] == NULL) {
+		if (resolve_path[i] == NULL) {
 			sprintf (filename, "%s.%s", name, COB_MODULE_EXT);
 		} else {
 			sprintf (filename, "%s/%s.%s", resolve_path[i], name, COB_MODULE_EXT);
@@ -395,7 +396,7 @@ cob_get_buff (size_t buffsize)
 }
 
 void *
-cob_call_resolve (cob_field * f)
+cob_call_resolve (cob_field *f)
 {
 	char	*buff;
 
@@ -418,7 +419,7 @@ cob_call_error (void)
 }
 
 void
-cob_cancel (cob_field * f)
+cob_cancel (cob_field *f)
 {
 	char	*buff;
 

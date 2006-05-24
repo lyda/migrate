@@ -32,6 +32,7 @@
 #include "common.h"
 #include "move.h"
 #include "numeric.h"
+#include "fileio.h"
 #include "intrinsic.h"
 #include "lib/gettext.h"
 
@@ -362,6 +363,100 @@ cob_intr_reverse (cob_field *sizefield, cob_field *srcfield)
 	}
 	for ( i = 0; i < size; i++ ) {
 		curr_field->data[i] = srcfield->data[size - i - 1];
+	}
+	return curr_field;
+}
+
+cob_field *
+cob_intr_exception_file ()
+{
+	int		flen;
+	cob_field_attr	attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
+	cob_field	field = {0, NULL, &attr};
+
+	if (cob_exception_code == 0 || !cob_error_file ||
+	    (cob_exception_code & 0x0500) != 0x0500) {
+		field.size = 2;
+		make_field_entry (&field);
+		memcpy (curr_field->data, "00", 2);
+	} else {
+		flen = strlen (cob_error_file->select_name);
+		field.size = flen + 2;
+		make_field_entry (&field);
+		memcpy (curr_field->data, cob_error_file->file_status, 2);
+		memcpy (&(curr_field->data[2]), cob_error_file->select_name, flen);
+	}
+	return curr_field;
+}
+
+cob_field *
+cob_intr_exception_location ()
+{
+	cob_field_attr	attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
+	cob_field	field = {0, NULL, &attr};
+	char		tempfld[COB_SMALL_BUFF];
+
+	if (!cob_got_exception || !cob_orig_program_id) {
+		field.size = 1;
+		make_field_entry (&field);
+		*(curr_field->data) = ' ';
+		return curr_field;
+	}
+	memset (tempfld, 0, sizeof (tempfld));
+	if (cob_orig_section && cob_orig_paragraph) {
+		sprintf (tempfld, "%s; %s OF %s; %d", cob_orig_program_id,
+			 cob_orig_paragraph, cob_orig_section, cob_orig_line);
+	} else if (cob_orig_section) {
+		sprintf (tempfld, "%s; %s; %d", cob_orig_program_id,
+			 cob_orig_section, cob_orig_line);
+	} else if (cob_orig_paragraph) {
+		sprintf (tempfld, "%s; %s; %d", cob_orig_program_id,
+			 cob_orig_paragraph, cob_orig_line);
+	} else {
+		sprintf (tempfld, "%s; ; %d", cob_orig_program_id,
+			 cob_orig_line);
+	}
+	field.size = strlen (tempfld);
+	make_field_entry (&field);
+	memcpy (curr_field->data, tempfld, field.size);
+	return curr_field;
+}
+
+cob_field *
+cob_intr_exception_status ()
+{
+	char		*except_name;
+	cob_field_attr	attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
+	cob_field	field = {31, NULL, &attr};
+
+	make_field_entry (&field);
+	memset (curr_field->data, ' ', 31);
+	if (cob_exception_code) {
+		except_name = cob_get_exception_name (cob_exception_code);
+		if (except_name == NULL) {
+			except_name = "EXCEPTION-OBJECT";
+		}
+		memcpy (curr_field->data, except_name, strlen (except_name));
+	}
+	return curr_field;
+}
+
+cob_field *
+cob_intr_exception_statement ()
+{
+	int		flen;
+	cob_field_attr	attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
+	cob_field	field = {31, NULL, &attr};
+
+	make_field_entry (&field);
+	memset (curr_field->data, ' ', 31);
+	if (cob_exception_code && cob_orig_statement) {
+		flen = strlen (cob_orig_statement);
+		if (flen > 31) {
+			memcpy (curr_field->data, cob_orig_statement, 31);
+		} else {
+			memcpy (curr_field->data, cob_orig_statement, flen);
+		}
 	}
 	return curr_field;
 }

@@ -37,8 +37,9 @@
 static inline int
 cob_min_int (const int x, const int y)
 {
-	if (x < y)
+	if (x < y) {
 		return x;
+	}
 	return y;
 }
 
@@ -430,7 +431,8 @@ cob_unstring_into (cob_field *dst, cob_field *dlm, cob_field *cnt)
 	}
 
 	if (unstring_ndlms == 0) {
-		match_size = cob_min_int ((int)COB_FIELD_SIZE (dst), (int)unstring_src->size - unstring_offset);
+		match_size = cob_min_int ((int)COB_FIELD_SIZE (dst),
+					  (int)unstring_src->size - unstring_offset);
 		cob_memcpy (dst, start, match_size);
 		unstring_offset += match_size;
 	} else {

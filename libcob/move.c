@@ -135,7 +135,7 @@ cob_move_alphanum_to_display (cob_field *f1, cob_field *f2)
 	cob_put_sign (f2, sign);
 	return;
 
-      error:
+error:
 	own_memset (f2->data, '0', f2->size);
 	cob_put_sign (f2, 0);
 }
@@ -522,8 +522,9 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 
 			case '9':
 				*dst = (min <= src && src < max) ? *src++ : (src++, '0');
-				if (*dst != '0')
+				if (*dst != '0') {
 					is_zero = suppress_zero = 0;
+				}
 				suppress_zero = 0;
 				trailing_sign = 1;
 				trailing_curr = 1;
@@ -553,8 +554,9 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 			case 'Z':
 			case '*':
 				x = (min <= src && src < max) ? *src++ : (src++, '0');
-				if (x != '0')
+				if (x != '0') {
 					is_zero = suppress_zero = 0;
+				}
 				pad = (c == '*') ? '*' : ' ';
 				*dst = suppress_zero ? pad : x;
 				trailing_sign = 1;
@@ -564,8 +566,9 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 			case '+':
 			case '-':
 				x = (min <= src && src < max) ? *src++ : (src++, '0');
-				if (x != '0')
+				if (x != '0') {
 					is_zero = suppress_zero = 0;
+				}
 				if (trailing_sign) {
 					*dst = neg ? '-' : (c == '+') ? '+' : ' ';
 					end--;
@@ -583,8 +586,9 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 			default:
 				if (c == cob_current_module->currency_symbol) {
 					x = (min <= src && src < max) ? *src++ : (src++, '0');
-					if (x != '0')
+					if (x != '0') {
 						is_zero = suppress_zero = 0;
+					}
 					if (trailing_curr) {
 						*dst = cob_current_module->currency_symbol;
 						end--;

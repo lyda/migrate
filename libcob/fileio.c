@@ -56,6 +56,7 @@
 #include <fcntl.h>
 #endif
 
+#ifdef	WITH_DB
 #if HAVE_DB1_DB_H
 #include <db1/db.h>
 #elif HAVE_DB_185_H
@@ -76,6 +77,15 @@
 #include <db4.5/db_185.h>
 #elif HAVE_DB_H
 #include <db.h>
+#endif
+#endif	/* WITH_DB */
+
+#ifdef	WITH_CISAM
+#include <isam.h>
+#endif
+
+#ifdef	WITH_VBISAM
+#include <vbisam.h>
 #endif
 
 #if defined(__hpux__) || defined(_AIX) || defined(__sparc)
@@ -165,8 +175,9 @@ static int relative_write (cob_file *f, int opt);
 static int relative_rewrite (cob_file *f);
 static int relative_delete (cob_file *f);
 
-#ifdef	WITH_DB
+#if	defined(WITH_DB) || defined(WITH_CISAM) || defined(WITH_VBISAM)
 
+#ifdef	WITH_DB
 #define DB_PUT(db,flags)	db->put (db, &p->key, &p->data, flags)
 #define DB_GET(db,flags)	db->get (db, &p->key, &p->data, flags)
 #define DB_SEQ(db,flags)	db->seq (db, &p->key, &p->data, flags)
@@ -184,6 +195,7 @@ struct indexed_file {
 	DB		**db;		/* database handlers */
 	DBT		key, data;
 };
+#endif	/* WITH_DB */
 
 static int indexed_open (cob_file *f, char *filename, int mode, int flag);
 static int indexed_close (cob_file *f, int opt);
@@ -223,7 +235,7 @@ static const cob_fileio_funcs sort_funcs = {
 	dummy_rn_rew_del
 };
 
-#else	/* WITH_DB */
+#else	/* WITH_DB  || WITH_CISAM || WITH_VBISAM */
 
 static int
 dummy_open (cob_file *f, char *filename, int mode, int opt)
@@ -259,7 +271,7 @@ static cob_fileio_funcs sort_funcs = {
 	dummy_rn_rew_del
 };
 
-#endif	/* WITH_DB */
+#endif	/* WITH_DB  || WITH_CISAM || WITH_VBISAM */
 
 
 static const cob_fileio_funcs sequential_funcs = {
@@ -350,7 +362,8 @@ static void
 save_status (cob_file *f, int status, cob_field *fnstatus)
 {
 
-/*
+/* File status is an attribute of the program,
+   not an attribute of the file structure
 	if (f->file_status == NULL)
 		f->file_status = cob_malloc (2);
 */
@@ -376,16 +389,18 @@ save_status (cob_file *f, int status, cob_field *fnstatus)
 #define FILE_WRITE_AFTER(f,opt)			\
   if (opt & COB_WRITE_AFTER) {			\
     int ret = file_write_opt (f, opt);		\
-    if ( ret )					\
+    if (ret) {					\
        return ret;				\
+    }						\
     f->flag_needs_nl = 1;			\
   }
 
 #define FILE_WRITE_BEFORE(f,opt)		\
   if (opt & COB_WRITE_BEFORE) {			\
     int ret = file_write_opt (f, opt);		\
-    if ( ret )					\
+    if (ret) {					\
        return ret;				\
+    }						\
     f->flag_needs_nl = 0;			\
   }
 
@@ -483,11 +498,13 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 			fp = fopen (filename, "ab+");
 		break;
 	}
-	if (fp == NULL)
+	if (fp == NULL) {
 		return errno;
+	}
 
-	if (mode == COB_OPEN_EXTEND)
+	if (mode == COB_OPEN_EXTEND) {
 		fseek (fp, (off_t) 0, SEEK_END);
+	}
 
 #if HAVE_FCNTL
 	/* lock the file */
@@ -849,10 +866,11 @@ relative_start (cob_file *f, int cond, cob_field *k)
 	/* get the index */
 	kindex = cob_get_int (k) - 1;
 	relsize = f->record_max + sizeof (f->record->size);
-	if (cond == COB_LT)
+	if (cond == COB_LT) {
 		kindex--;
-	else if (cond == COB_GT)
+	} else if (cond == COB_GT) {
 		kindex++;
+	}
 
 	/* seek the index */
 	while (1) {
@@ -975,19 +993,22 @@ relative_write (cob_file *f, int opt)
 	if (f->access_mode != COB_ACCESS_SEQUENTIAL) {
 		int kindex = cob_get_int (f->keys[0].field) - 1;
 
-		if (kindex < 0)
+		if (kindex < 0) {
 			return COB_STATUS_21_KEY_INVALID;
+		}
 		off = (off_t) (relsize * kindex);
-		if (fseek ((FILE *)f->file, off, SEEK_SET) != 0)
+		if (fseek ((FILE *)f->file, off, SEEK_SET) != 0) {
 			return COB_STATUS_21_KEY_INVALID;
+		}
 	} else {
 		off = ftell((FILE *)f->file);
 	}
 
 	if (fread (&size, sizeof (size), 1, (FILE *)f->file) > 0) {
 		fseek ((FILE *)f->file, -(off_t) sizeof (size), SEEK_CUR);
-		if (size > 0)
+		if (size > 0) {
 			return COB_STATUS_22_KEY_EXISTS;
+		}
 	} else {
 		fseek ((FILE *)f->file, off, SEEK_SET);
 	}
@@ -1378,7 +1399,7 @@ struct sort_file {
 static cob_file	*current_sort_file;
 
 static int
-sort_compare (const DBT * k1, const DBT * k2)
+sort_compare (const DBT *k1, const DBT *k2)
 {
 	int		cmp;
 	size_t		i;
@@ -2027,7 +2048,8 @@ cob_exit_fileio (void)
 		     l->file->open_mode != COB_OPEN_LOCKED ) {
 			cob_field_to_string (l->file->assign, filename);
 			cob_close (l->file, 0, NULL);
-			fprintf (stderr, "WARNING - Implicit CLOSE of %s\n", filename);
+			fprintf (stderr, "WARNING - Implicit CLOSE of %s (\"%s\")\n",
+				l->file->select_name, filename);
 			fflush (stderr);
 		}
 	}

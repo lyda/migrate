@@ -1,3 +1,31 @@
+2006-05-23  Roger While <simrw@sim-basis.de>
+
+	* parser.y, scanner.l, field.c : Change 78 level processing
+
+2006-05-20  Roger While <simrw@sim-basis.de>
+
+	* warning.def, cobc.[ch] : Change CB_WARNING to CB_WARNDEF
+		Just to simplify as we have an enumerator with this name
+	* warning.def, cobc.c, typeck.c : Implement -Wtruncate
+		Thanks to Hans-Martin Rasch for providing the meat of this code.
+		This warns when a MOVE might cause truncation.
+		The option is NOT turned on by -Wall
+	* typeck.c : Fixes for extended ACCEPT/DISPLAY
+
+2006-05-18  Roger While <simrw@sim-basis.de>
+
+	* reserved.c, tree.c, codegen.c : Implement FUNCTION's EXCEPTION-FILE,
+		EXCEPTION-STATEMENT, EXCEPTION-LOCATION and EXCEPTION-STATUS
+	* codegen.c : Fixes for HP IA64 port
+
+2006-05-13  Roger While <simrw@sim-basis.de>
+
+	* parser.y : Allow slightly different DISPLAY syntax
+	* warning.def, typeck.c : Warning option "call-params" to check
+		that CALL parameters are 01 or 77
+	* codegen.c : Fix a possible out-of-bounds reference discovered
+		with valgrind
+
 2006-05-12  Roger While <simrw@sim-basis.de>
 
 	* typeck.c : Do not accept 66, 88 levels as USING params
@@ -501,7 +529,7 @@
 2005-05-03  Roger While <simrw@sim-basis.de>
 
 	* tree.h :     bit fields are unsigned. Round to boundaries.
-	  typeck.c :   Internal register NUMBER-OF-CALL-PARAMETERSa.
+	  typeck.c :   Internal register NUMBER-OF-CALL-PARAMETERS.
 	  tree.c :     Fix ambiguous paragraph errors.
 	  scanner.l :  Move some syntax from the parser to here in the lexxer.
 	  pplex.l :    Initialize variables.

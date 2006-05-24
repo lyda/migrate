@@ -53,6 +53,44 @@ int	cob_current_y = 0;
 int	cob_current_x = 0;
 
 #if HAVE_LIBNCURSES || HAVE_LIBPDCURSES
+
+static int
+get_line_column (cob_field *fline, cob_field *fcol, int *line, int *col)
+{
+	int	l = 0;
+	int	c = 0;
+	int	p = 0;
+
+	if (fline == NULL) {
+		return -1;
+	}
+
+	p = cob_get_int (fline);
+
+	if (fcol == NULL) {
+		p = cob_get_int (fline);
+		if (fline->size == 4) {
+			l = p / 100;
+			c = p % 100;
+		} else {
+			l = p / 1000;
+			c = p % 1000;
+		}
+	} else {
+		l = p;
+		c = cob_get_int (fcol);
+	}
+	if (l > 0) {
+		l--;
+	}
+	if (c > 0) {
+		c--;
+	}
+	*line = l;
+	*col = c;
+	return 0;
+}
+
 void
 cob_screen_init (void)
 {
@@ -95,6 +133,7 @@ cob_screen_gets (char *data, size_t size, int line, int column, long attr)
 	mvgetnstr (line, column, data, size);
 }
 
+
 void
 cob_field_display (cob_field *f, cob_field *line, cob_field *column)
 {
@@ -104,9 +143,10 @@ cob_field_display (cob_field *f, cob_field *line, cob_field *column)
 	if (!screen_initialized) {
 		cob_screen_init ();
 	}
-	sline = cob_get_int (line);
-	scolumn = cob_get_int (column);
+
+	get_line_column (line, column, &sline, &scolumn);
 	mvaddnstr (sline, scolumn, f->data, f->size);
+
 	refresh ();
 }
 
@@ -119,8 +159,8 @@ cob_field_accept (cob_field *f, cob_field *line, cob_field *column)
 	if (!screen_initialized) {
 		cob_screen_init ();
 	}
-	sline = cob_get_int (line);
-	scolumn = cob_get_int (column);
+
+	get_line_column (line, column, &sline, &scolumn);
 	mvgetnstr (sline, scolumn, f->data, f->size);
 	refresh ();
 }
@@ -216,7 +256,7 @@ cob_screen_gets (char *data, size_t size, int line, int column, long attr)
 }
 
 void
-cob_field_display (cob_field *f, cob_field *line, cob_field column)
+cob_field_display (cob_field *f, cob_field *line, cob_field *column)
 {
 }
 

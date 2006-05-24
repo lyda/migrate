@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 99
+%expect 98
 
 %defines
 %verbose
@@ -126,6 +126,7 @@ static int literal_value (cb_tree x);
 %token UNDERLINE UNIT UNTIL UP UPON USAGE USE USING VALUE VARYING WHEN WITH
 %token MANUAL AUTOMATIC EXCLUSIVE ROLLBACK OVERLINE PROMPT UPDATE ESCAPE
 %token COMP COMP_1 COMP_2 COMP_3 COMP_4 COMP_5 COMP_X
+%token SOURCE SCREEN_CONTROL EVENT_STATUS
 %token SIGNED_SHORT SIGNED_INT SIGNED_LONG UNSIGNED_SHORT UNSIGNED_INT UNSIGNED_LONG
 %token BINARY_CHAR BINARY_SHORT BINARY_LONG BINARY_DOUBLE SIGNED UNSIGNED
 %token LINAGE_COUNTER PROGRAM_POINTER CHAINING BLANK_SCREEN BLANK_LINE
@@ -155,7 +156,7 @@ start:
 	prog_end = 0;
 	depth = 0;
 	samearea = 1;
-	memset((char *)eval_check, 0, sizeof(eval_check));
+	memset ((char *)eval_check, 0, sizeof(eval_check));
 	entry_number = 0;
 	linage_file = NULL;
 	next_label_list = NULL;
@@ -233,7 +234,7 @@ identification_division:
 		eval_inc = 0;
 		eval_inc2 = 0;
 		samearea = 1;
-		memset((char *)eval_check, 0, sizeof(eval_check));
+		memset ((char *)eval_check, 0, sizeof(eval_check));
 		entry_number = 0;
 		linage_file = NULL;
 		next_label_list = NULL;
@@ -384,6 +385,8 @@ special_name:
 | decimal_point_clause
 | cursor_clause
 | crt_status_clause
+| screen_control
+| event_status
 ;
 
 
@@ -622,6 +625,18 @@ crt_status_clause:
 ;
 
 
+/* SCREEN CONTROL */
+
+screen_control:
+  SCREEN_CONTROL _is reference	{  PENDING ("SCREEN CONTROL"); }
+;
+
+/* EVENT STATUS */
+
+event_status:
+  EVENT_STATUS _is reference	{  PENDING ("EVENT STATUS"); }
+;
+
 /*******************
  * INPUT-OUTPUT SECTION
  *******************/
@@ -722,11 +737,11 @@ access_mode:
 /* ALTERNATIVE RECORD KEY clause */
 
 alternative_record_key_clause:
-  ALTERNATE RECORD _key _is reference flag_duplicates
+  ALTERNATE RECORD _key _is reference opt_splitk flag_duplicates
   {
     struct cb_alt_key *p = cob_malloc (sizeof (struct cb_alt_key));
     p->key = $5;
-    p->duplicates = CB_INTEGER ($6)->val;
+    p->duplicates = CB_INTEGER ($7)->val;
     p->next = NULL;
 
     /* add to the end of list */
@@ -817,9 +832,13 @@ record_delimiter_clause:
 /* RECORD KEY clause */
 
 record_key_clause:
-  RECORD _key _is reference	{ current_file->key = $4; }
+  RECORD _key _is reference opt_splitk	{ current_file->key = $4; }
 ;
 
+opt_splitk:
+| '=' reference_list			{ PENDING ("SPLIT KEYS"); }
+| SOURCE _is reference_list		{ PENDING ("SPLIT KEYS"); }
+;
 
 /* RELATIVE KEY clause */
 
@@ -1191,9 +1210,10 @@ working_storage_section:
 | WORKING_STORAGE SECTION '.'	{ current_storage = CB_STORAGE_WORKING; }
   record_description_list
   {
-    if ($5)
-      current_program->working_storage =
-	cb_field_add (current_program->working_storage, CB_FIELD ($5));
+	if ($5) {
+		current_program->working_storage =
+			cb_field_add (current_program->working_storage, CB_FIELD ($5));
+	}
   }
 ;
 
@@ -1233,9 +1253,13 @@ data_description:
   }
   data_description_clause_sequence
   {
-    if (current_field->level == 88)
-      cb_validate_88_item (current_field);
-    $$ = CB_TREE (current_field);
+	if (current_field->level == 88) {
+		cb_validate_88_item (current_field);
+	}
+	if (current_field->level == 78) {
+		cb_validate_78_item (current_field);
+	}
+	$$ = CB_TREE (current_field);
   }
 ;
 
@@ -2286,11 +2310,10 @@ end_delete:
 
 display_statement:
   DISPLAY			{ BEGIN_STATEMENT ("DISPLAY"); }
-  x_list display_upon display_no_advancing opt_at_line_column opt_disp_attr
-  on_disp_exception
+  x_list opt_at_line_column display_upon with_clause on_disp_exception
   end_display
   {
-    cb_emit_display ($3, $4, $5, $6);
+    cb_emit_display ($3, $5, $6, $4);
   }
 ;
 
@@ -2304,13 +2327,10 @@ display_upon:
 | UPON ARGUMENT_NUMBER		{ $$ = cb_int4; }
 ;
 
-display_no_advancing:
+with_clause:
   /* empty */			{ $$ = cb_int0; }
 | _with NO_ADVANCING		{ $$ = cb_int1; }
-;
-
-opt_disp_attr:
-| WITH disp_attrs
+| _with disp_attrs		{ $$ = cb_int0; }
 ;
 
 disp_attrs:
@@ -4264,7 +4284,7 @@ emit_entry (const char *name, const int encode, cb_tree using_list)
 	for (l = current_program->entry_list; l; l = CB_CHAIN (l)) {
 		cb_tree x = CB_VALUE (l);
 
-		if (strcmp(name, CB_LABEL(CB_PURPOSE(l))->name) == 0) {
+		if (strcmp (name, CB_LABEL(CB_PURPOSE(l))->name) == 0) {
 			cb_error_x (x, _("ENTRY '%s' duplicated"), name);
 		}
 	}

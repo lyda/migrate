@@ -39,6 +39,12 @@
   (x)->source_file = (unsigned char *)cb_source_file;		\
   (x)->source_line = cb_source_line
 
+struct cb_level_78 {
+	struct cb_level_78	*next;
+	struct cb_field		*fld78;
+};
+
+static struct cb_level_78	*lev78ptr = NULL;
 static int last_token_is_dot = 0;
 static int integer_is_label = 0;
 static int inside_bracket = 0;
@@ -138,58 +144,68 @@ X\"[^\"\n]*\" {
 
 H\'[^\'\n]*\' |
 H\"[^\"\n]*\" {
-  /* H numric literal */
+  /* H numeric literal */
   return scan_h (yytext + 2);
 }
 
+"SCREEN"[ \t\n]+"CONTROL" {
+	count_lines (yytext);
+	return SCREEN_CONTROL;
+}
+
+"EVENT"[ \t\n]+"STATUS" {
+	count_lines (yytext);
+	return EVENT_STATUS;
+}
+
 "BLANK"[ \t\n]+"SCREEN" {
-	count_lines(yytext);
+	count_lines (yytext);
 	return BLANK_SCREEN;
 }
 
 "BLANK"[ \t\n]+"LINE" {
-	count_lines(yytext);
+	count_lines (yytext);
 	return BLANK_LINE;
 }
 
 "NO"[ \t\n]+"ADVANCING" {
-	count_lines(yytext);
+	count_lines (yytext);
 	return NO_ADVANCING;
 }
 
 "NOT"[ \t\n]+"ON"[ \t\n]+"SIZE"[ \t\n]+"ERROR"[ \t\n] |
 "NOT"[ \t\n]+"SIZE"[ \t\n]+"ERROR"[ \t\n] {	
-	count_lines(yytext);
+	count_lines (yytext);
 	return NOT_SIZE_ERROR;
 	}
 
 "ON"[ \t\n]+"SIZE"[ \t\n]+"ERROR"[ \t\n] |
 "SIZE"[ \t\n]+"ERROR"[ \t\n] {	
-	count_lines(yytext);
+	count_lines (yytext);
 	return SIZE_ERROR;
 	}
 
 "NOT"[ \t\n]+"ON"[ \t\n]+"EXCEPTION"[ \t\n] |
 "NOT"[ \t\n]+"EXCEPTION"[ \t\n] {	
-	count_lines(yytext);
+	count_lines (yytext);
 	return NOT_EXCEPTION;
 	}
 
 "ON"[ \t\n]+"EXCEPTION"[ \t\n] |
 "EXCEPTION"[ \t\n] {	
-	count_lines(yytext);
+	count_lines (yytext);
 	return EXCEPTION;
 	}
 
 "NOT"[ \t\n]+"ON"[ \t\n]+"OVERFLOW"[ \t\n] |
 "NOT"[ \t\n]+"OVERFLOW"[ \t\n] {	
-	count_lines(yytext);
+	count_lines (yytext);
 	return NOT_OVERFLOW;
 	}
 
 "ON"[ \t\n]+"OVERFLOW"[ \t\n] |
 "OVERFLOW"[ \t\n] {	
-	count_lines(yytext);
+	count_lines (yytext);
 	return OVERFLOW;
 	}
 
@@ -197,7 +213,7 @@ H\"[^\"\n]*\" {
 "NOT"[ \t\n]+"AT"[ \t\n]+"EOP"[ \t\n] |
 "NOT"[ \t\n]+"END-OF-PAGE"[ \t\n] |
 "NOT"[ \t\n]+"EOP"[ \t\n] {	
-	count_lines(yytext);
+	count_lines (yytext);
 	return NOT_EOP;
 	}
 
@@ -205,27 +221,27 @@ H\"[^\"\n]*\" {
 "AT"[ \t\n]+"EOP"[ \t\n] |
 "END-OF-PAGE"[ \t\n] |
 "EOP"[ \t\n] {	
-	count_lines(yytext);
+	count_lines (yytext);
 	return EOP;
 	}
 
 "NOT"[ \t\n]+"INVALID"[ \t\n]+"KEY"[ \t\n] {
-	count_lines(yytext);
+	count_lines (yytext);
 	return NOT_INVALID_KEY;
 	}
 
 "NOT"[ \t\n]+"INVALID"[ \t\n] {
-	count_lines(yytext);
+	count_lines (yytext);
 	return NOT_INVALID_KEY;
 	}
 
 "INVALID"[ \t\n]+"KEY"[ \t\n] {
-	count_lines(yytext);
+	count_lines (yytext);
 	return INVALID_KEY;
 	}
 
 "INVALID"[ \t\n] {
-	count_lines(yytext);
+	count_lines (yytext);
 	return INVALID_KEY;
 	}
 
@@ -281,8 +297,9 @@ H\"[^\"\n]*\" {
 }
 
 [A-Z0-9]([_A-Z0-9-]*[A-Z0-9]+)? {
-  int token;
-  struct cb_word *word;
+  int			token;
+  struct cb_word	*word;
+  struct cb_level_78	*p78;
 
   /* reserved word */
   token = lookup_reserved_word (yytext);
@@ -292,6 +309,12 @@ H\"[^\"\n]*\" {
       return token;
     }
 
+  for (p78 = lev78ptr; p78; p78 = p78->next) {
+	if (strcasecmp (yytext, p78->fld78->name) == 0) {
+		yylval = CB_VALUE (p78->fld78->values);
+		return LITERAL;
+	}
+  }
   /* user word */
   yylval = cb_build_reference (yytext);
   SET_LOCATION (yylval);
@@ -337,6 +360,7 @@ H\"[^\"\n]*\" {
 	last_token_is_dot = 0;
 	integer_is_label = 0;
 	inside_bracket = 0;
+	lev78ptr = NULL;
 	yyterminate ();
 }
 
@@ -542,4 +566,15 @@ count_lines (char *text)
 			cb_source_line++;
 		}
 	}
+}
+
+void
+cb_add_78 (struct cb_field *f)
+{
+	struct cb_level_78	*p78;
+
+	p78 = cob_malloc (sizeof(struct cb_level_78));
+	p78->fld78 = f;
+	p78->next = lev78ptr;
+	lev78ptr = p78;
 }

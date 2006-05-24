@@ -80,8 +80,8 @@ struct cb_exception cb_exception_table[] = {
 #define CB_FLAG(var,name,doc) int var = 0;
 #include "flag.def"
 
-#undef CB_WARNING
-#define CB_WARNING(sig,var,name,doc) int var = 0;
+#undef CB_WARNDEF
+#define CB_WARNDEF(sig,var,name,wall,doc) int var = 0;
 #include "warning.def"
 
 int			cb_id = 1;
@@ -176,8 +176,8 @@ static struct option long_options[] = {
 	{"fno-"name, no_argument, &var, 0},
 #include "flag.def"
 	{"Wall", no_argument, NULL, 'W'},
-#undef CB_WARNING
-#define CB_WARNING(sig,var,name,doc)		\
+#undef CB_WARNDEF
+#define CB_WARNDEF(sig,var,name,wall,doc)		\
 	{"W"name, no_argument, &var, 1},	\
 	{"Wno-"name, no_argument, &var, 0},
 #include "warning.def"
@@ -300,16 +300,24 @@ cob_clean_up (int status)
 		for (fn = file_list; fn; fn = fn->next) {
 			if (fn->need_preprocess
 			    && (status == 1 || cb_compile_level > CB_LEVEL_PREPROCESS)) {
-				unlink (fn->preprocess);
+				if (fn->preprocess) {
+					unlink (fn->preprocess);
+				}
 			}
 			if (fn->need_translate
 			    && (status == 1 || cb_compile_level > CB_LEVEL_TRANSLATE)) {
-				unlink (fn->translate);
-				unlink (fn->trstorage);
+				if (fn->translate) {
+					unlink (fn->translate);
+				}
+				if (fn->trstorage) {
+					unlink (fn->trstorage);
+				}
 			}
 			if (fn->need_assemble
 			    && (status == 1 || cb_compile_level > CB_LEVEL_ASSEMBLE)) {
-				unlink (fn->object);
+				if (fn->object) {
+					unlink (fn->object);
+				}
 			}
 		}
 	}
@@ -375,8 +383,8 @@ print_usage (void)
 		"  -MF <file>            Place dependency list into <file>\n"
 		"  -ext <extension>      Add default file extension\n"
 		"\n" "  -Wall                 Enable all warnings"));
-#undef CB_WARNING
-#define CB_WARNING(sig,var,name,doc)		\
+#undef CB_WARNDEF
+#define CB_WARNDEF(sig,var,name,wall,doc)		\
 	printf ("  -W%-19s %s\n", name, gettext (doc));
 #include "warning.def"
 	puts ("");
@@ -570,16 +578,16 @@ process_command_line (int argc, char *argv[])
 		}
 
 		case 'w':
-#undef CB_WARNING
-#define CB_WARNING(sig,var,name,doc)		\
+#undef CB_WARNDEF
+#define CB_WARNDEF(sig,var,name,wall,doc)		\
           var = 0;
 #include "warning.def"
 			break;
 
 		case 'W':
-#undef CB_WARNING
-#define CB_WARNING(sig,var,name,doc)		\
-          var = 1;
+#undef CB_WARNDEF
+#define CB_WARNDEF(sig,var,name,wall,doc)		\
+          if (wall) var = 1;
 #include "warning.def"
 			break;
 
@@ -828,7 +836,9 @@ preprocess (struct filename *fn)
 	if (ppopen (fn->source, NULL) != 0) {
 		if (ppout != stdout) {
 			fclose (ppout);
-			unlink (fn->preprocess);
+			if (fn->preprocess) {
+				unlink (fn->preprocess);
+			}
 		}
 		exit (1);
 	}
@@ -996,7 +1006,7 @@ process_module_direct (struct filename *fn)
 	ret = process (buff);
 #if _MSC_VER >= 1400
 	/* Embedding manifest */
-	if(ret == 0) {
+	if (ret == 0) {
 		sprintf (buff, "mt /manifest %s.dll.manifest /outputresource:%s.dll;#2", name, name);
 		ret = process (buff);
 	}
@@ -1045,7 +1055,7 @@ process_module (struct filename *fn)
 	ret = process (buff);
 #if _MSC_VER >= 1400
 	/* Embedding manifest */
-	if(ret == 0) {
+	if (ret == 0) {
 		sprintf (buff, "mt /manifest %s.dll.manifest /outputresource:%s.dll;#2", name, name);
 		ret = process (buff);
 	}
@@ -1123,7 +1133,7 @@ process_link (struct filename *l)
 	ret = process (buff);
 #if _MSC_VER >= 1400
 	/* Embedding manifest */
-	if(ret == 0) {
+	if (ret == 0) {
 		sprintf (buff, "mt /manifest %s.exe.manifest /outputresource:%s.exe;#2", name, name);
 		ret = process (buff);
 	}

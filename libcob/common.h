@@ -226,6 +226,10 @@ DLL_EXPIMP extern int	cob_exception_code;
 DLL_EXPIMP extern int			cob_initialized;
 
 DLL_EXPIMP extern const char		*cob_source_file;
+DLL_EXPIMP extern const char		*cob_source_statement;
+DLL_EXPIMP extern const char		*cob_current_program_id;
+DLL_EXPIMP extern const char		*cob_current_section;
+DLL_EXPIMP extern const char		*cob_current_paragraph;
 DLL_EXPIMP extern unsigned int		cob_source_line;
 
 DLL_EXPIMP extern int			cob_call_params;
@@ -237,9 +241,15 @@ DLL_EXPIMP extern cob_field		cob_high;		/* HIGH-VALUE */
 DLL_EXPIMP extern cob_field		cob_low;		/* LOW-VALUE */
 DLL_EXPIMP extern cob_field		cob_quote;		/* QUOTE */
 
-DLL_EXPIMP extern const int		cob_exp10[];
-DLL_EXPIMP extern const long long	cob_exp10LL[];
+extern const int			cob_exp10[];
+extern const long long			cob_exp10LL[];
 
+extern int				cob_got_exception;
+extern unsigned int			cob_orig_line;
+extern const char			*cob_orig_statement;
+extern const char			*cob_orig_program_id;
+extern const char			*cob_orig_section;
+extern const char			*cob_orig_paragraph;
 
 /* convert a digit (e.g., '0') into an integer (e.g., 0) */
 #define cob_d2i(x)		((x) - '0')
@@ -263,6 +273,7 @@ extern void cob_stop_run (const int status) __attribute__ ((noreturn));
 #else
 extern void cob_stop_run (const int status);
 #endif
+extern char *cob_get_exception_name (const int exception_code);
 extern void *cob_malloc (const size_t size);
 extern void *cob_strdup (const void *stptr);
 extern void cob_set_exception (const int id);
@@ -293,7 +304,7 @@ extern int cob_real_get_sign (cob_field *f);
 extern void cob_real_put_sign (cob_field *f, const int sign);
 extern char *cob_field_to_string (cob_field *f, char *s);
 
-extern unsigned char *cob_external_addr (char *exname, int exlength);
+extern unsigned char *cob_external_addr (const char *exname, int exlength);
 
 /* Switch */
 

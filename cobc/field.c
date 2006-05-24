@@ -140,7 +140,7 @@ cb_build_field_tree (cb_tree level, cb_tree name,
 		f->parent = last_field;
 	} else if (f->level == last_field->level) {
 		/* same level */
-	      same_level:
+same_level:
 		last_field->sister = f;
 		f->parent = last_field->parent;
 	} else {
@@ -366,10 +366,12 @@ validate_field_1 (struct cb_field *f)
 		/* elementary item */
 
 		/* validate PICTURE */
+/* RXW remove
 		if (f->level == 78 && f->pic != NULL) {
 			cb_error_x (x, _("78 level can not have a PICTURE clause - '%s'"), name);
 			return -1;
 		}
+*/
 		need_picture = 1;
 		if (f->usage == CB_USAGE_INDEX
 		    || f->usage == CB_USAGE_LENGTH
@@ -684,8 +686,9 @@ compute_size (struct cb_field *f)
 					case CB_USAGE_FLOAT:
 					case CB_USAGE_DOUBLE:
 						if (c->size == 2 || c->size == 4
-						    || c->size == 8)
+						    || c->size == 8) {
 							align_size = c->size;
+						}
 						break;
 					case CB_USAGE_INDEX:
 					case CB_USAGE_LENGTH:
@@ -733,16 +736,17 @@ compute_size (struct cb_field *f)
 					   (size <= 9) ? 4 : (size <= 18) ? 8 : 16);
 				break;
 			case CB_BINARY_SIZE_1__8:
-				if (f->pic->have_sign)
+				if (f->pic->have_sign) {
 					f->size = ((size <= 2) ? 1 : (size <= 4) ? 2 :
 						   (size <= 6) ? 3 : (size <= 9) ? 4 :
 						   (size <= 11) ? 5 : (size <= 14) ? 6 :
 						   (size <= 16) ? 7 : (size <= 18) ? 8 : 16);
-				else
+				} else {
 					f->size = ((size <= 2) ? 1 : (size <= 4) ? 2 :
 						   (size <= 7) ? 3 : (size <= 9) ? 4 :
 						   (size <= 12) ? 5 : (size <= 14) ? 6 :
 						   (size <= 16) ? 7 : (size <= 18) ? 8 : 16);
+				}
 				break;
 			}
 			break;
@@ -850,4 +854,25 @@ cb_validate_88_item (struct cb_field *f)
 	if (f->pic || f->flag_occurs) {
 		level_except_error (x, "VALUE");
 	}
+}
+
+void
+cb_validate_78_item (struct cb_field *f)
+{
+	cb_tree x = CB_TREE (f);
+
+	if (!f->values) {
+		level_require_error (x, "VALUE");
+	}
+
+	if (f->pic || f->flag_occurs) {
+		level_except_error (x, "VALUE");
+	}
+	cb_add_78 (f);
+/*
+	if (cb_list_length (f->values) != 1) {
+		cb_error_x (x, _("level 78 item '%s' cannot have multiple values"),
+				cb_name (x));
+	}
+*/
 }

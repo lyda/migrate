@@ -677,10 +677,10 @@ cb_build_picture (const char *str)
 
 	memset (buff, 0, sizeof (buff));
 	for (p = str; *p; p++) {
-		int n = 1;
-		unsigned char c = *p;
+		int		n = 1;
+		unsigned char	c = *p;
 
-	      repeat:
+repeat:
 		/* count the number of repeated chars */
 		while (p[1] == c) {
 			p++, n++;
@@ -894,10 +894,10 @@ cb_build_picture (const char *str)
 	}
 	goto end;
 
-      error:
+error:
 	cb_error (_("invalid picture string"));
 
-      end:
+end:
 	return CB_TREE (pic);
 }
 
@@ -961,6 +961,9 @@ cb_field_add (struct cb_field *f, struct cb_field *p)
 		return p;
 	}
 
+	if (f->level == 78) {
+		return p;
+	}
 	for (t = f; t->sister; t = t->sister) ;
 	t->sister = p;
 	return f;
@@ -1218,7 +1221,7 @@ cb_build_reference (const char *name)
 }
 
 cb_tree
-cb_build_field_reference (struct cb_field * f, cb_tree ref)
+cb_build_field_reference (struct cb_field *f, cb_tree ref)
 {
 	cb_tree		x = cb_build_reference (f->name);
 	struct cb_word	*word = CB_REFERENCE (x)->word;
@@ -1359,7 +1362,7 @@ cb_ref (cb_tree x)
 		goto error;
 	}
 
-      end:
+end:
 	if (CB_FIELD_P (candidate)) {
 		CB_FIELD (candidate)->count++;
 		if (CB_FIELD (candidate)->flag_invalid) {
@@ -1370,7 +1373,7 @@ cb_ref (cb_tree x)
 	r->value = candidate;
 	return r->value;
 
-      error:
+error:
 	r->value = cb_error_node;
 	return cb_error_node;
 }
@@ -1863,6 +1866,10 @@ cb_build_intrinsic (cb_tree name, cb_tree args)
 		case CB_INTR_CURRENT_DATE:
 		case CB_INTR_DATE_OF_INTEGER:
 		case CB_INTR_DAY_OF_INTEGER:
+		case CB_INTR_EXCEPTION_FILE:
+		case CB_INTR_EXCEPTION_LOCATION:
+		case CB_INTR_EXCEPTION_STATUS:
+		case CB_INTR_EXCEPTION_STATEMENT:
 		case CB_INTR_EXP:
 		case CB_INTR_EXP10:
 		case CB_INTR_FACTORIAL:

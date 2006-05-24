@@ -271,6 +271,126 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
+AT_SETUP([FUNCTION EXCEPTION-FILE])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       ENVIRONMENT      DIVISION.
+       INPUT-OUTPUT     SECTION.
+       FILE-CONTROL.
+           SELECT TEST-FILE ASSIGN "NOTEXIST"
+           FILE STATUS IS TEST-STATUS.
+       DATA             DIVISION.
+       FILE             SECTION.
+       FD  TEST-FILE.
+       01  TEST-REC      PIC X(4).
+       WORKING-STORAGE SECTION.
+       01  TEST-STATUS  PIC XX.
+       PROCEDURE        DIVISION.
+           OPEN INPUT TEST-FILE.
+           DISPLAY FUNCTION EXCEPTION-FILE.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[35TEST-FILE
+])
+
+AT_CLEANUP
+
+AT_SETUP([FUNCTION EXCEPTION-LOCATION])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       ENVIRONMENT      DIVISION.
+       INPUT-OUTPUT     SECTION.
+       FILE-CONTROL.
+           SELECT TEST-FILE ASSIGN "NOTEXIST"
+           FILE STATUS IS TEST-STATUS.
+       DATA             DIVISION.
+       FILE             SECTION.
+       FD  TEST-FILE.
+       01  TEST-REC      PIC X(4).
+       WORKING-STORAGE SECTION.
+       01  TEST-STATUS  PIC XX.
+       PROCEDURE        DIVISION.
+       A00-MAIN SECTION.
+       A00.
+           OPEN INPUT TEST-FILE.
+       B00-MAIN SECTION.
+       B00.
+           DISPLAY FUNCTION EXCEPTION-LOCATION
+                   NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -debug -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[prog; A00 OF A00-MAIN; 18])
+
+AT_CLEANUP
+
+AT_SETUP([FUNCTION EXCEPTION-STATEMENT])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       ENVIRONMENT      DIVISION.
+       INPUT-OUTPUT     SECTION.
+       FILE-CONTROL.
+           SELECT TEST-FILE ASSIGN "NOTEXIST"
+           FILE STATUS IS TEST-STATUS.
+       DATA             DIVISION.
+       FILE             SECTION.
+       FD  TEST-FILE.
+       01  TEST-REC      PIC X(4).
+       WORKING-STORAGE SECTION.
+       01  TEST-STATUS  PIC XX.
+       PROCEDURE        DIVISION.
+           OPEN INPUT TEST-FILE.
+           DISPLAY FUNCTION EXCEPTION-STATEMENT
+                   NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -debug -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[OPEN                           ])
+
+AT_CLEANUP
+
+AT_SETUP([FUNCTION EXCEPTION-STATUS])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       ENVIRONMENT      DIVISION.
+       INPUT-OUTPUT     SECTION.
+       FILE-CONTROL.
+           SELECT TEST-FILE ASSIGN "NOTEXIST"
+           FILE STATUS IS TEST-STATUS.
+       DATA             DIVISION.
+       FILE             SECTION.
+       FD  TEST-FILE.
+       01  TEST-REC      PIC X(4).
+       WORKING-STORAGE SECTION.
+       01  TEST-STATUS  PIC XX.
+       PROCEDURE        DIVISION.
+           OPEN INPUT TEST-FILE.
+           DISPLAY FUNCTION EXCEPTION-STATUS
+                   NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[EC-I-O-PERMANENT-ERROR         ])
+
+AT_CLEANUP
+
 AT_SETUP([FUNCTION EXP])
 
 AT_DATA([prog.cob], [

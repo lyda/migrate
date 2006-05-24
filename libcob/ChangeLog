@@ -1,3 +1,12 @@
+2006-05-20  Roger While <simrw@sim-basis.de>
+
+	* Fixes for extended ACCEPT/DISPLAY
+
+2006-05-18  Roger While <simrw@sim-basis.de>
+
+	* common.[ch], intrinsic.[ch] : Implement FUNCTION's EXCEPTION-FILE,
+		EXCEPTION-STATEMENT, EXCEPTION-LOCATION and EXCEPTION-STATUS
+
 2006-05-12  Roger While <simrw@sim-basis.de>
 
 	* common.c, exception.def : Exceptions for ACCEPT/DISPLAY

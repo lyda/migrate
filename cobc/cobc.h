@@ -57,8 +57,8 @@ extern struct cb_exception {
 #define CB_FLAG(var,name,doc) extern int var;
 #include "flag.def"
 
-#undef CB_WARNING
-#define CB_WARNING(sig,var,name,doc) extern int var;
+#undef CB_WARNDEF
+#define CB_WARNDEF(sig,var,name,wall,doc) extern int var;
 #include "warning.def"
 
 struct cb_text_list {

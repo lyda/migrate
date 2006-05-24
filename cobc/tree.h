@@ -482,7 +482,7 @@ extern struct cb_field *cb_field_add (struct cb_field *f, struct cb_field *p);
 extern int cb_field_size (cb_tree x);
 extern struct cb_field *cb_field_founder (struct cb_field *f);
 extern struct cb_field *cb_field_variable_size (struct cb_field *f);
-extern struct cb_field * cb_field_variable_address (struct cb_field *f);
+extern struct cb_field *cb_field_variable_address (struct cb_field *f);
 extern int cb_field_subordinate (struct cb_field *p, struct cb_field *f);
 
 /* Index */
@@ -1099,6 +1099,7 @@ extern cb_tree cb_build_field_tree (cb_tree level, cb_tree name, struct cb_field
 extern struct cb_field *cb_resolve_redefines (struct cb_field *field, cb_tree redefines);
 extern void cb_validate_field (struct cb_field *p);
 extern void cb_validate_88_item (struct cb_field *p);
+extern void cb_validate_78_item (struct cb_field *p);
 
 /* typeck.c */
 extern cb_tree cb_check_group_name (cb_tree x);
@@ -1244,5 +1245,8 @@ extern void	cob_tree_cast_error (cb_tree x, const char * filen, int linenum, int
 
 /* codegen.c */
 extern void codegen (struct cb_program *prog, int nested);
+
+/* scanner.l */
+extern void cb_add_78 (struct cb_field *f);
 
 #endif /* CB_TREE_H */

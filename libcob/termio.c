@@ -191,8 +191,9 @@ cob_accept (cob_field *f)
 
 		fgets ((char *)buff, COB_MEDIUM_BUFF, stdin);
 		size = strlen ((char *)buff) - 1;
-		if (size > f->size)
+		if (size > f->size) {
 			size = f->size;
+		}
 		memcpy (f->data, buff, size);
 		memset (f->data + size, ' ', f->size - size);
 	}

@@ -66,10 +66,20 @@ int			cob_exception_code = 0;
 cob_module		*cob_current_module = NULL;
 
 const char		*cob_source_file = NULL;
+const char		*cob_source_statement = NULL;
+const char		*cob_orig_statement = NULL;
+const char		*cob_current_program_id = NULL;
+const char		*cob_current_section = NULL;
+const char		*cob_current_paragraph = NULL;
+const char		*cob_orig_program_id = NULL;
+const char		*cob_orig_section = NULL;
+const char		*cob_orig_paragraph = NULL;
 unsigned int		cob_source_line = 0;
+unsigned int		cob_orig_line = 0;
 
 int			cob_call_params = 0;
 int			cob_initial_external = 0;
+int			cob_got_exception = 0;
 
 #ifdef	HAVE_SIGNAL_H
 typedef void (*cob_sighandler_t) (int);
@@ -277,16 +287,39 @@ static const struct cob_exception	cob_exception_table[] = {
 	{0, NULL, 0}		/* COB_EC_MAX */
 };
 
+#define EXCEPTION_TAB_SIZE	sizeof(cob_exception_table) / sizeof(struct cob_exception)
+
 static int		cob_switch[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /*
  * General functions
  */
 
+char *
+cob_get_exception_name (const int exception_code)
+{
+	size_t	n;
+
+	for (n = 0; n < EXCEPTION_TAB_SIZE; n++) {
+		if (exception_code == cob_exception_table[n].code) {
+			return (char *)cob_exception_table[n].name;
+		}
+	}
+	return NULL;
+}
+
 void
 cob_set_exception (const int id)
 {
 	cob_exception_code = cob_exception_table[id].code;
+	if (cob_exception_code) {
+		cob_got_exception = 1;
+		cob_orig_statement = cob_source_statement;
+		cob_orig_line = cob_source_line;
+		cob_orig_program_id = cob_current_program_id;
+		cob_orig_section = cob_current_section;
+		cob_orig_paragraph = cob_current_paragraph;
+	}
 }
 
 
@@ -636,7 +669,7 @@ cob_real_get_sign (cob_field *f)
 }
 
 void
-cob_real_put_sign (cob_field * f, const int sign)
+cob_real_put_sign (cob_field *f, const int sign)
 {
 	switch (COB_FIELD_TYPE (f)) {
 	case COB_TYPE_NUMERIC_DISPLAY:
@@ -806,7 +839,7 @@ cob_cmp_all (cob_field *f1, cob_field *f2)
 		ret = cmps (data, f2->data, size);
 	}
 
-      end:
+end:
 	if (COB_FIELD_TYPE (f1) != COB_TYPE_NUMERIC_PACKED) {
 		cob_put_sign (f1, sign);
 	}
@@ -837,7 +870,7 @@ cob_cmp_alnum (cob_field *f1, cob_field *f2)
 		}
 	}
 
-      end:
+end:
 	if (COB_FIELD_TYPE (f1) != COB_TYPE_NUMERIC_PACKED) {
 		cob_put_sign (f1, sign1);
 	}
@@ -1112,7 +1145,7 @@ cob_runtime_error (const char *fmt, ...)
 {
 	va_list ap;
 
-	if(hdlrs != NULL) {
+	if (hdlrs != NULL) {
 		struct handlerlist	*h = hdlrs;
 		char			*p;
 		char			str[COB_MEDIUM_BUFF];
@@ -1209,7 +1242,7 @@ cob_check_ref_mod (int offset, int length, int size, const char *name)
 }
 
 unsigned char *
-cob_external_addr (char *exname, int exlength)
+cob_external_addr (const char *exname, int exlength)
 {
 	static cob_external *basext = NULL;
 
@@ -1231,7 +1264,7 @@ cob_external_addr (char *exname, int exlength)
 	eptr->esize = exlength;
 	eptr->ename = cob_malloc (strlen (exname) + 1);
 	strcpy (eptr->ename, exname);
-	eptr->ext_alloc = cob_malloc ((unsigned int)exlength);
+	eptr->ext_alloc = cob_malloc ((size_t)exlength);
 	basext = eptr;
 	cob_initial_external = 1;
 	return (ucharptr)eptr->ext_alloc;

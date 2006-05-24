@@ -413,7 +413,7 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, int opt)
 		return 0;
 	}
 
-      overflow:
+overflow:
 	COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
 	return cob_exception_code;
 }

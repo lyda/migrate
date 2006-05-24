@@ -493,7 +493,7 @@ static const struct reserved reserved_words[] = {
   {"SIZE",		SIZE},			/* 2002 */
   {"SORT",		SORT},			/* 2002 */
   {"SORT-MERGE",	SORT_MERGE},		/* 2002 */
-  {"SOURCE",		-1},			/* 2002 */
+  {"SOURCE",		SOURCE},		/* 2002 */
   {"SOURCE-COMPUTER",	SOURCE_COMPUTER},	/* 2002 */
   {"SOURCES",		-1},			/* 2002 */
   {"SPACE",		SPACE},			/* 2002 */
@@ -634,23 +634,23 @@ static const struct cb_intrinsic_table function_list[] = {
   { "E",			 0, 1, CB_INTR_E,
 				 NULL,
 				 CB_CATEGORY_NUMERIC },
-  { "EXCEPTION-FILE",		 0, 0, CB_INTR_EXCEPTION_FILE,
-				 NULL,
+  { "EXCEPTION-FILE",		 0, 1, CB_INTR_EXCEPTION_FILE,
+				 "cob_intr_exception_file",
 				 CB_CATEGORY_ALPHANUMERIC },
   { "EXCEPTION-FILE-N",		 0, 0, CB_INTR_EXCEPTION_FILE_N,
 				 NULL,
 				 CB_CATEGORY_ALPHANUMERIC },
-  { "EXCEPTION-LOCATION",	 0, 0, CB_INTR_EXCEPTION_LOCATION,
-				 NULL,
+  { "EXCEPTION-LOCATION",	 0, 1, CB_INTR_EXCEPTION_LOCATION,
+				 "cob_intr_exception_location",
 				 CB_CATEGORY_ALPHANUMERIC },
   { "EXCEPTION-LOCATION-N",	 0, 0, CB_INTR_EXCEPTION_LOCATION_N,
 				 NULL,
 				 CB_CATEGORY_ALPHANUMERIC },
-  { "EXCEPTION-STATEMENT",	 0, 0, CB_INTR_EXCEPTION_STATEMENT,
-				 NULL,
+  { "EXCEPTION-STATEMENT",	 0, 1, CB_INTR_EXCEPTION_STATEMENT,
+				 "cob_intr_exception_statement",
 				 CB_CATEGORY_ALPHANUMERIC },
-  { "EXCEPTION-STATUS",		 0, 0, CB_INTR_EXCEPTION_STATUS,
-				 NULL,
+  { "EXCEPTION-STATUS",		 0, 1, CB_INTR_EXCEPTION_STATUS,
+				 "cob_intr_exception_status",
 				 CB_CATEGORY_ALPHANUMERIC },
   { "EXP",			 1, 1, CB_INTR_EXP,
 				 "cob_intr_exp",
