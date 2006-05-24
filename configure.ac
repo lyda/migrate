@@ -251,17 +251,17 @@ fi
 
 # Checks for gmp.
 AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp.h is required))
-MYOLDLDFLAGS="$LDFLAGS"
-LDFLAGS="$LDFLAGS -lgmp"
-AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <gmp.h>]], [[
-    mpz_t  myvar;
-    mpz_init (myvar);
-  ]])],
-  [],
-  [AC_MSG_ERROR(GMP 3 or later is required)],
-  [])
-LDFLAGS="$MYOLDLDFLAGS"
-# AC_CHECK_LIB([gmp], [__gmp_rand], , AC_MSG_ERROR(GMP 3 or later is required))
+# MYOLDLDFLAGS="$LDFLAGS"
+# LDFLAGS="$LDFLAGS -lgmp"
+# AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <gmp.h>]], [[
+#     mpz_t  myvar;
+#     mpz_init (myvar);
+#   ]])],
+#   [],
+#   [AC_MSG_ERROR(GMP 3 or later is required)],
+#   [])
+# LDFLAGS="$MYOLDLDFLAGS"
+AC_CHECK_LIB([gmp], [__gmp_randinit], , AC_MSG_ERROR(GMP 3 or later is required))
 LIBCOB_LIBS="$LIBCOB_LIBS -lgmp"
 
 # Checks for gettext.
