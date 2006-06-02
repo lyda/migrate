@@ -1,3 +1,7 @@
+2006-05-27  Roger While <simrw@sim-basis.de>
+
+	* common.[ch] : Implement cob_fatal_error
+
 2006-05-20  Roger While <simrw@sim-basis.de>
 
 	* Fixes for extended ACCEPT/DISPLAY

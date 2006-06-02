@@ -2120,7 +2120,12 @@ output_perform_call (struct cb_label *lb, struct cb_label *le)
 #endif
 
 	output_line ("/* PERFORM %s THRU %s */", lb->name, le->name);
-	output_line ("frame_index++;");
+	if (optimize_flag) {
+		output_line ("frame_index++;");
+	} else {
+		output_line ("if (unlikely(++frame_index >= COB_STACK_SIZE))");
+		output_line ("    cob_fatal_error (COB_FERROR_STACK);");
+	}
 	output_line ("frame_stack[frame_index].perform_through = %d;", le->id);
 #if	!defined(__GNUC__)
 	l = cob_malloc (sizeof (struct label_list));
@@ -2312,8 +2317,16 @@ output_stmt (cb_tree x)
 				output_line ("cob_current_program_id = \"%s\";", excp_current_program_id);
 				output_line ("cob_source_file = \"%s\";", x->source_file);
 				output_line ("cob_source_line = %d;", x->source_line);
-				output_line ("cob_current_section = \"%s\";", excp_current_section);
-				output_line ("cob_current_paragraph = \"%s\";", excp_current_paragraph);
+				if (excp_current_section) {
+					output_line ("cob_current_section = \"%s\";", excp_current_section);
+				} else {
+					output_line ("cob_current_section = NULL;");
+				}
+				if (excp_current_paragraph) {
+					output_line ("cob_current_paragraph = \"%s\";", excp_current_paragraph);
+				} else {
+					output_line ("cob_current_paragraph = NULL;");
+				}
 				if (p->name) {
 					output_line ("cob_source_statement = \"%s\";", p->name);
 				}
@@ -3028,7 +3041,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 #else
 	output_line ("struct frame { int perform_through; void *return_address; } "
 #endif
-		     "frame_stack[254];");
+		     "frame_stack[%d];", COB_STACK_SIZE);
 	output_newline ();
 
 	output_line ("/* Start of function code */");
@@ -3069,8 +3082,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_indent ("  {");
 	/* output_stmt (cb_build_assign (cb_return_code, cb_int0)); */
 	output_line ("if (!cob_initialized) {");
-	output_line ("  fputs (\"cob_init() has not been called\\n\", stderr);");
-	output_line ("  cob_stop_run (1);");
+	output_line ("  cob_fatal_error (COB_FERROR_INITIALIZED);");
 	output_line ("}");
 	output_line
 	    ("cob_check_version (COB_SOURCE_FILE, COB_PACKAGE_VERSION, COB_PATCH_LEVEL);");
@@ -3129,8 +3141,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_line ("initialized = 1;");
 	if (prog->is_chained) {
 		output ("    } else {\n");
-		output_line ("  fputs (\"ERROR - Recursive call of chained program\\n\", stderr);");
-		output_line ("  cob_stop_run (1);");
+		output_line ("  cob_fatal_error (COB_FERROR_CHAINING);");
 		output_indent ("  }");
 	} else {
 		output_indent ("  }");
@@ -3241,8 +3252,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 		output_indent ("}");
 		output_indent ("}");
 		output_perform_exit (CB_LABEL (cb_standard_error_handler));
-		output_line ("fprintf (stderr, \"Codegen error\\n\");");
-		output_line ("cob_stop_run (1);");
+		output_line ("cob_fatal_error (COB_FERROR_CODEGEN);");
 		output_newline ();
 	}
 #if	!defined(__GNUC__)
@@ -3255,8 +3265,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 		}
 		output_line (" }");
 	}
-	output_line (" fprintf (stderr, \"Codegen error\\n\");");
-	output_line (" cob_stop_run (1);");
+	output_line (" cob_fatal_error (COB_FERROR_CODEGEN);");
 	output_newline ();
 #endif
 

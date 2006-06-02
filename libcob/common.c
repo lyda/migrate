@@ -437,6 +437,30 @@ cob_module_leave (cob_module *module)
 }
 
 void
+cob_fatal_error (const enum cob_enum_error fatal_error)
+{
+	fputs ("ERROR - ", stderr);
+	switch (fatal_error) {
+	case COB_FERROR_INITIALIZED:
+		fputs ("cob_init() has not been called\n", stderr);
+		break;
+	case COB_FERROR_CODEGEN:
+		fputs ("Codegen error - Please report this\n", stderr);
+		break;
+	case COB_FERROR_CHAINING:
+		fputs ("ERROR - Recursive call of chained program\n", stderr);
+		break;
+	case COB_FERROR_STACK:
+		fputs ("Stack overflow, possible PERFORM depth exceeded\n", stderr);
+		break;
+	default:
+		fputs ("Unknown failure\n", stderr);
+		break;
+	}
+	cob_stop_run (1);
+}
+
+void
 cob_stop_run (const int status)
 {
 	cob_screen_terminate ();

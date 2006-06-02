@@ -63,6 +63,8 @@ typedef unsigned char *	ucharptr;
 #define	COB_MEDIUM_BUFF		8192
 #define	COB_LARGE_BUFF		16384
 
+#define	COB_STACK_SIZE		255
+
 /*
  * External
  */
@@ -218,6 +220,16 @@ enum cob_exception_id {
 
 DLL_EXPIMP extern int	cob_exception_code;
 
+/*
+ * Fatal error
+ */
+
+enum cob_enum_error {
+	COB_FERROR_INITIALIZED,
+	COB_FERROR_CODEGEN,
+	COB_FERROR_CHAINING,
+	COB_FERROR_STACK
+};
 
 /*
  * Global variables
@@ -270,8 +282,10 @@ extern void cob_module_enter (cob_module *module);
 extern void cob_module_leave (cob_module *module);
 #ifdef __GNUC__
 extern void cob_stop_run (const int status) __attribute__ ((noreturn));
+extern void cob_fatal_error (const enum cob_enum_error fatal_error) __attribute__ ((noreturn));
 #else
 extern void cob_stop_run (const int status);
+extern void cob_fatal_error (const enum cob_enum_error fatal_error);
 #endif
 extern char *cob_get_exception_name (const int exception_code);
 extern void *cob_malloc (const size_t size);

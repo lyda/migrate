@@ -3198,7 +3198,7 @@ sort_duplicates:
 ;
 
 sort_collating:
-  /* empty */				{ $$ = cb_int0; }
+  /* empty */				{ $$ = cb_null; }
 | _collating SEQUENCE _is reference	{ $$ = cb_ref ($4); }
 ;
 

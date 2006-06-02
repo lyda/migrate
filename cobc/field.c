@@ -869,10 +869,4 @@ cb_validate_78_item (struct cb_field *f)
 		level_except_error (x, "VALUE");
 	}
 	cb_add_78 (f);
-/*
-	if (cb_list_length (f->values) != 1) {
-		cb_error_x (x, _("level 78 item '%s' cannot have multiple values"),
-				cb_name (x));
-	}
-*/
 }

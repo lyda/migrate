@@ -1574,6 +1574,9 @@ cb_chk_alpha_cond (cb_tree x)
 	if (cb_field_variable_size (cb_field (x))) {
 		return 0;
 	}
+	if (cb_field_size (x) < 0) {
+		return 0;
+	}
 	return 1;
 }
 
@@ -3576,7 +3579,8 @@ cb_emit_open (cb_tree file, cb_tree mode, cb_tree sharing)
 			sharing = cb_int1;
 		}
 
-		cb_emit (cb_build_funcall_4 ("cob_open", file, mode, sharing, CB_FILE(file)->file_status));
+		cb_emit (cb_build_funcall_4 ("cob_open", file, mode,
+			 sharing, CB_FILE(file)->file_status));
 	}
 }
 
@@ -3956,7 +3960,7 @@ cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree dup_allow, cb_tree col)
 	}
 
 	if (CB_FILE_P (cb_ref (name))) {
-#ifdef	WITH_DB
+#if	defined(WITH_DB) || defined(WITH_CISAM) || defined(WITH_VBISAM)
 		cb_emit (cb_build_funcall_3 ("cob_sort_init", cb_ref (name),
 					     cb_int (cb_list_length (keys)), col));
 		for (l = keys; l; l = CB_CHAIN (l)) {

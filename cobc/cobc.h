@@ -90,6 +90,7 @@ extern int			cb_flag_main;
 extern int			errorcount;
 extern int			warningcount;
 extern int			alt_ebcdic;
+extern int			optimize_flag;
 extern int			entry_number;
 extern int			has_external;
 

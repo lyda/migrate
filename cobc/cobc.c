@@ -90,6 +90,7 @@ int			cb_flag_main = 0;
 int			errorcount = 0;
 int			warningcount = 0;
 int			alt_ebcdic = 0;
+int			optimize_flag = 0;
 
 char			*cb_source_file = NULL;
 char			*source_name;
@@ -352,7 +353,7 @@ print_usage (void)
 		"  --version, -V         Display compiler version\n"
 		"  -v                    Display the programs invoked by the compiler\n"
 		"  -x                    Build an executable program\n"
-		"  -m                    Build a dynamically loadable module\n"
+		"  -m                    Build a dynamically loadable module (default)\n"
 		"  -std=<dialect>        Compile for a specific dialect :\n"
 		"                          cobol2002   Cobol 2002\n"
 		"                          cobol85     Cobol 85\n"
@@ -488,6 +489,7 @@ process_command_line (int argc, char *argv[])
 			strcat (cob_cflags, " -O -DCOB_LOCAL_INLINE");
 			strcat (cob_cflags, fcopts);
 			strcat (cob_cflags, COB_EXTRA_FLAGS);
+			optimize_flag = 1;
 			break;
 
 		case '2':	/* -O2 */
@@ -495,6 +497,7 @@ process_command_line (int argc, char *argv[])
 			strcat (cob_cflags, " -O2 -DSUPER_OPTIMIZE -DCOB_LOCAL_INLINE");
 			strcat (cob_cflags, fcopts);
 			strcat (cob_cflags, COB_EXTRA_FLAGS);
+			optimize_flag = 1;
 			break;
 
 		case 's':	/* -Os */
@@ -502,6 +505,7 @@ process_command_line (int argc, char *argv[])
 			strcat (cob_cflags, " -Os -DSUPER_OPTIMIZE -DCOB_LOCAL_INLINE");
 			strcat (cob_cflags, fcopts);
 			strcat (cob_cflags, COB_EXTRA_FLAGS);
+			optimize_flag = 1;
 			break;
 
 		case 'g':
@@ -613,6 +617,10 @@ process_command_line (int argc, char *argv[])
 
 	if (gflag_set) {
 		strip_output = 0;
+		optimize_flag = 0;
+	}
+	if (cb_flag_source_location) {
+		optimize_flag = 0;
 	}
 #if defined (__GNUC__) && (__GNUC__ >= 3)
 	if (strip_output) {

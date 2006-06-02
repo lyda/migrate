@@ -1,3 +1,12 @@
+2006-06-02  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : Fix wrongly optimized partial reference
+
+2006-05-27  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Stack overflow check, implement new cob_fatal_error,
+		      fix null ref on cob_current_section/paragraph
+
 2006-05-23  Roger While <simrw@sim-basis.de>
 
 	* parser.y, scanner.l, field.c : Change 78 level processing
