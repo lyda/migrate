@@ -1,7 +1,6 @@
 Alain Lucari <eurlix@libertysurf.fr>
 David Korn <dgk@research.att.com>
 Keiichi Takahashi <bitwalk@jcom.home.ne.jp>
-Margit Schubert-While <margitsw@t-online.de>
 Peg <peg@coboler.com>
 Richard Smith <rich@theforest.plus.com>
 Roger While <RogerWhile@sim-basis.de>
@@ -15,7 +14,7 @@ We hope that everybody will continue to provide
 feedback. This is invaluable to the continuing
 development process.
 
-A special mention here of three people who have provided
+A special mention here of people who have provided
 exceptional support in terms of time and resources on
 hardware that was not available to the developers :
 Oleg Philon - For his work on the Powerpc
@@ -24,3 +23,8 @@ Sergey Kashyrin - For his work on :
 		SUN Solaris
 		IBM AIX
 		HP-UX
+And continuing this amazing support :
+Hans-Martin Rasch - Work on compiler syntax
+Michel Gouget - Work on syntax - IS
+Bill Klein - The mainstay for Cobol questions
+

@@ -64,6 +64,7 @@ directive:
 source_format:
   SOURCE _format _is format
 ;
+
 format:
   FIXED				{ cb_source_format = CB_FORMAT_FIXED; }
 | FREE				{ cb_source_format = CB_FORMAT_FREE; }
@@ -79,38 +80,47 @@ copy_statement:
     ppcopy ($2, $3, $5);
   }
 ;
+
 copy_in:
   /* nothing */			{ $$ = NULL; }
 | IN TOKEN			{ $$ = $2; }
 | OF TOKEN			{ $$ = $2; }
 ;
+
 copy_suppress:
 | SUPPRESS _printing
 ;
+
 copy_replacing:
   /* nothing */			{ $$ = NULL; }
 | REPLACING replacing_list	{ $$ = $2; }
 ;
+
 replace_statement:
   REPLACE replacing_list '.'	{ pp_set_replace_list ($2); }
 | REPLACE OFF '.'		{ pp_set_replace_list (NULL); }
 ;
+
 replacing_list:
   text BY text			{ $$ = cb_replace_list_add (NULL, $1, $3); }
 | replacing_list text BY text	{ $$ = cb_replace_list_add ($1, $2, $4); }
 ;
+
 text:
   pseudo_text			{ $$ = $1; }
 | identifier			{ $$ = $1; }
 ;
+
 pseudo_text:
   EQEQ EQEQ			{ $$ = NULL; }
 | EQEQ token_list EQEQ		{ $$ = $2; }
 ;
+
 token_list:
   TOKEN				{ $$ = cb_text_list_add (NULL, $1); }
 | token_list TOKEN		{ $$ = cb_text_list_add ($1, $2); }
 ;
+
 identifier:
   TOKEN				{ $$ = cb_text_list_add (NULL, $1); }
 | identifier IN TOKEN
@@ -137,6 +147,7 @@ identifier:
     l->next = $3;
   }
 ;
+
 subscripts:
   TOKEN				{ $$ = cb_text_list_add (NULL, $1); }
 | subscripts TOKEN
@@ -144,6 +155,7 @@ subscripts:
     $$ = cb_text_list_add ($1, " ");
     $$ = cb_text_list_add ($$, $2);
   }
+;
 
 _format:   | FORMAT ;
 _is:       | IS ;
@@ -153,13 +165,12 @@ _printing: | PRINTING ;
 static char *
 fix_filename (char *name)
 {
-  /* remove quotation form alphanumeric literals */
-  if (name[0] == '\'' || name[0] == '\"')
-    {
-      name++;
-      name[strlen (name) - 1] = 0;
-    }
-  return name;
+	/* remove quotation form alphanumeric literals */
+	if (name[0] == '\'' || name[0] == '\"') {
+		name++;
+		name[strlen (name) - 1] = 0;
+	}
+	return name;
 }
 
 static struct cb_replace_list *
@@ -167,17 +178,18 @@ cb_replace_list_add (struct cb_replace_list *list,
 		     struct cb_text_list *old_text,
 		     struct cb_text_list *new_text)
 {
-  struct cb_replace_list *p = cob_malloc (sizeof (struct cb_replace_list));
-  p->old_text = old_text;
-  p->new_text = new_text;
-  p->next = NULL;
-  if (!list)
-    return p;
-  else
-    {
-      struct cb_replace_list *l;
-      for (l = list; l->next; l = l->next);
-      l->next = p;
-      return list;
-    }
+	struct cb_replace_list *p = cob_malloc (sizeof (struct cb_replace_list));
+
+	p->old_text = old_text;
+	p->new_text = new_text;
+	p->next = NULL;
+	if (!list) {
+		return p;
+	} else {
+		struct cb_replace_list *l;
+
+		for (l = list; l->next; l = l->next) ;
+		l->next = p;
+		return list;
+	}
 }

@@ -136,9 +136,6 @@ own_memset_cg (void *s, unsigned long c, size_t n)
 	   ? own_memset_cc (s, 0x01010101UL * (unsigned char) (c), n) \
 		: own_memset_cg (s, 0x01010101UL * (unsigned char) (c), n)) \
 		: own_memset_gg (s, c, n)))
-/* RXW
-#define own_memset(x, y, z)		memset(x, y, z)
-*/
 
 #else	/* SUPER_OPTIMIZE */
 
@@ -147,29 +144,12 @@ own_memset_cg (void *s, unsigned long c, size_t n)
 
 #endif	/* SUPER_OPTIMIZE */
 
-#else	/*  __i386__ */
+#else	/*  __GNUC__ && __i386__ */
 
-static inline void
-own_memcpy_generic (unsigned char *x, const unsigned char *y, size_t count)
-{
-	while (count--) {
-		*x++ = *y++;
-	}
-	return;
-}
-
-static inline void
-own_memset_generic (unsigned char *x, const int y, size_t count)
-{
-	while (count--) {
-		*x++ = y;
-	}
-}
-
-#define own_byte_memcpy(x, y, z)	own_memcpy_generic(x, y, z)
+#define own_byte_memcpy(x, y, z)	memcpy(x, y, z)
 #define own_memcpy(x, y, z)		memcpy(x, y, z)
-#define own_memset(x, y, z)		own_memset_generic(x, y, z)
+#define own_memset(x, y, z)		memset(x, y, z)
 
-#endif	/* __i386__ */
+#endif	/* __GNUC__ && __i386__ */
 
 #endif /* COB_MOVE_H_ */

@@ -830,6 +830,8 @@ process (const char *cmd)
 static int
 preprocess (struct filename *fn)
 {
+	char    line[COB_MEDIUM_BUFF];
+
 	errorcount = 0;
 
 	if (output_name || cb_compile_level > CB_LEVEL_PREPROCESS) {
@@ -859,6 +861,39 @@ preprocess (struct filename *fn)
 
 	if (ppout != stdout) {
 		fclose (ppout);
+		if (cb_listing_file) {
+			ppout = fopen (fn->preprocess, "r");
+			if (ppout) {
+				memset (line, 0, sizeof (line));
+				while (fgets (line, COB_MEDIUM_BUFF, ppout) != NULL) {
+					if (cb_source_format != CB_FORMAT_FIXED) {
+						fprintf (cb_listing_file,
+							"%s", line);
+					} else {
+						if (line[0] == '\n') {
+							fprintf (cb_listing_file,
+								"%s", line);
+						} else if (line[0] == ' ' &&
+							   line[1] == '\n') {
+							fprintf (cb_listing_file,
+								"\n");
+						} else if (line[0] == ' ') {
+							fprintf (cb_listing_file,
+								"          %s", line);
+						} else if (line[0] == 0 ||
+							   line[0] == '#') {
+							fprintf (cb_listing_file,
+								"%s", line);
+						} else {
+							fprintf (cb_listing_file,
+								"       %s", line);
+						}
+					}
+					memset (line, 0, sizeof (line));
+				}
+				fclose (ppout);
+			}
+		}
 	}
 	fclose (ppin);
 

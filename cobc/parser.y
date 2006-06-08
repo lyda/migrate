@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 98
+%expect 99
 
 %defines
 %verbose
@@ -132,6 +132,7 @@ static int literal_value (cb_tree x);
 %token LINAGE_COUNTER PROGRAM_POINTER CHAINING BLANK_SCREEN BLANK_LINE
 %token NOT_EXCEPTION SIZE_ERROR NOT_SIZE_ERROR NOT_OVERFLOW NOT_EOP
 %token INVALID_KEY NOT_INVALID_KEY COMMA_DELIM DISK NO_ADVANCING
+%token PREVIOUS UNLOCK
 
 %left '+' '-'
 %left '*' '/'
@@ -1482,7 +1483,13 @@ occurs_index_list:
 ;
 
 occurs_index:
-  WORD				{ $$ = cb_build_index ($1); }
+  WORD
+	{
+		$$ = cb_build_index ($1);
+		if ($$ != cb_error_node) {
+			CB_FIELD (cb_ref ($$))->values = cb_list (cb_int1);
+		}
+	}
 ;
 
 
@@ -1963,6 +1970,7 @@ statement:
 | stop_statement
 | string_statement
 | subtract_statement
+| unlock_statement
 | unstring_statement
 | use_statement
 | write_statement
@@ -1995,7 +2003,10 @@ accept_statement:
 
 accept_body:
   identifier opt_at_line_column opt_accp_attr		{ cb_emit_accept ($1, $2); }
-| identifier FROM ESCAPE KEY				{ /* Nothing yet */ }
+| identifier FROM ESCAPE KEY
+	{
+		PENDING ("ACCEPT .. FROM ESCAPE KEY");
+	}
 | identifier FROM DATE					{ cb_emit_accept_date ($1); }
 | identifier FROM DATE YYYYMMDD				{ cb_emit_accept_date_yyyymmdd ($1); }
 | identifier FROM DAY					{ cb_emit_accept_day ($1); }
@@ -2006,8 +2017,8 @@ accept_body:
 | identifier FROM ENVIRONMENT_VALUE on_accp_exception	{ cb_emit_accept_environment ($1); }
 | identifier FROM ENVIRONMENT simple_value on_accp_exception
 	{ 
-	  cb_emit_display (cb_list ($4), cb_true, NULL, NULL);
-	  cb_emit_accept_environment ($1);
+		cb_emit_display (cb_list ($4), cb_true, NULL, NULL);
+		cb_emit_accept_environment ($1);
 	}
 | identifier FROM ARGUMENT_NUMBER			{ cb_emit_accept_arg_number ($1); }
 | identifier FROM ARGUMENT_VALUE on_accp_exception	{ cb_emit_accept_arg_value ($1); }
@@ -2946,16 +2957,30 @@ perform_varying:
 
 read_statement:
   READ				{ BEGIN_STATEMENT ("READ"); }
-  file_name flag_next _record read_into read_key read_handler
+  file_name flag_next _record read_into with_lock read_key read_handler
   end_read
   {
-    cb_emit_read ($3, $4, $6, $7);
+    cb_emit_read ($3, $4, $6, $8, $7);
   }
 ;
 
 read_into:
   /* empty */			{ $$ = NULL; }
 | INTO x			{ $$ = $2; }
+;
+
+with_lock:
+  /* empty */			{ $$ = NULL; }
+| _with LOCK
+	{
+		$$ = cb_int1;
+		PENDING ("READ ... WITH LOCK");
+	}
+| _with NO LOCK
+	{
+		$$ = cb_int2;
+		PENDING ("READ ... WITH NO LOCK");
+	}
 ;
 
 read_key:
@@ -3359,6 +3384,22 @@ end_subtract:
 
 
 /*
+ * UNLOCK statement
+ */
+
+unlock_statement:
+  UNLOCK			{ BEGIN_STATEMENT ("UNLOCK"); }
+  file_name opt_record		{ PENDING ("UNLOCK"); }
+;
+
+opt_record:
+  /* empty */
+| RECORD
+| RECORDS
+;
+
+
+/*
  * UNSTRING statement
  */
 
@@ -3734,7 +3775,7 @@ partial_expr:
   {
     $$ = cb_list_reverse (current_expr);
   }
-
+;
 
 expr_tokens:
   expr_token
@@ -4162,6 +4203,7 @@ flag_global:
 flag_next:
   /* empty */			{ $$ = cb_int0; }
 | NEXT				{ $$ = cb_int1; }
+| PREVIOUS			{ $$ = cb_int2; }
 ;
 
 flag_not:

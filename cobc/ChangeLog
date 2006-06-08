@@ -1,3 +1,20 @@
+2006-06-08  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : With --debug, we should be generating subscript checking
+	* pplex.l, cobc.c : Change listing output
+
+2006-06-06  Roger While <simrw@sim-basis.de>
+
+	* parser.y : Initialize INDEXED BY fields to 1
+	* codegen.c, typeck.c : Optimization for machines that are not alignment tolerant
+
+2006-06-05  Roger While <simrw@sim-basis.de>
+
+	* codegen.c, typeck.c, reserved.c, parser.y :
+		Accept [WITH] [NO] LOCK on READ
+		Accept UNLOCK filename [RECORD[S]]
+		Implement PREVIOUS for IS files
+
 2006-06-02  Roger While <simrw@sim-basis.de>
 
 	* typeck.c : Fix wrongly optimized partial reference

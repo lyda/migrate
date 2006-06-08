@@ -158,19 +158,19 @@ static const int	status_exception[] = {
 
 
 static int dummy_rn_rew_del (cob_file *f);
-static int dummy_read (cob_file *f, cob_field *key);
+static int dummy_read (cob_file *f, cob_field *key, int read_opts);
 static int dummy_start (cob_file *f, int cond, cob_field *key);
 static int file_open (cob_file *f, char *filename, int mode, int opt);
 static int file_close (cob_file *f, int opt);
-static int file_write_opt (cob_file *f, int opt);
-static int sequential_read (cob_file *f);
+static int file_write_opt (cob_file *f, const int opt);
+static int sequential_read (cob_file *f, int read_opts);
 static int sequential_write (cob_file *f, int opt);
 static int sequential_rewrite (cob_file *f);
-static int lineseq_read (cob_file *f);
+static int lineseq_read (cob_file *f, int read_opts);
 static int lineseq_write (cob_file *f, int opt);
 static int relative_start (cob_file *f, int cond, cob_field *k);
-static int relative_read (cob_file *f, cob_field *k);
-static int relative_read_next (cob_file *f);
+static int relative_read (cob_file *f, cob_field *k, int read_opts);
+static int relative_read_next (cob_file *f, int read_opts);
 static int relative_write (cob_file *f, int opt);
 static int relative_rewrite (cob_file *f);
 static int relative_delete (cob_file *f);
@@ -200,15 +200,15 @@ struct indexed_file {
 static int indexed_open (cob_file *f, char *filename, int mode, int flag);
 static int indexed_close (cob_file *f, int opt);
 static int indexed_start (cob_file *f, int cond, cob_field *key);
-static int indexed_read (cob_file *f, cob_field *key);
-static int indexed_read_next (cob_file *f);
+static int indexed_read (cob_file *f, cob_field *key, int read_opts);
+static int indexed_read_next (cob_file *f, int read_opts);
 static int indexed_write_internal (cob_file *f);
 static int indexed_write (cob_file *f, int opt);
 static int indexed_delete (cob_file *f);
 static int indexed_rewrite (cob_file *f);
 static int sort_open (cob_file *f, char *filename, int mode, int flag);
 static int sort_close (cob_file *f, int opt);
-static int sort_read (cob_file *f);
+static int sort_read (cob_file *f, int read_opts);
 static int sort_write (cob_file *f, int opt);
 
 
@@ -445,7 +445,7 @@ dummy_rn_rew_del (cob_file *f)
 }
 
 static int
-dummy_read (cob_file *f, cob_field *key)
+dummy_read (cob_file *f, cob_field *key, int read_opts)
 {
 	return COB_NOT_CONFIGURED;
 }
@@ -577,10 +577,10 @@ file_close (cob_file *f, int opt)
 }
 
 static int
-file_write_opt (cob_file *f, int opt)
+file_write_opt (cob_file *f, const int opt)
 {
-	if (opt & COB_WRITE_PAGE) {
-		if (f->linage) {
+	if (unlikely(opt & COB_WRITE_PAGE)) {
+		if (unlikely(f->linage)) {
 			int i, n;
 			i = cob_get_int (f->linage_ctr);
 			if (i == 0) {
@@ -606,7 +606,7 @@ file_write_opt (cob_file *f, int opt)
 		}
 	} else if (opt & COB_WRITE_LINES) {
 		int i, n;
-		if (f->linage) {
+		if (unlikely(f->linage)) {
 			n = cob_get_int (f->linage_ctr);
 			if (n == 0) {
 				return COB_STATUS_57_I_O_LINAGE;
@@ -654,7 +654,7 @@ file_write_opt (cob_file *f, int opt)
  */
 
 static int
-sequential_read (cob_file *f)
+sequential_read (cob_file *f, int read_opts)
 {
 #if	WITH_VARSEQ == 0 || WITH_VARSEQ == 1
 	union {
@@ -775,7 +775,7 @@ sequential_rewrite (cob_file *f)
  */
 
 static int
-lineseq_read (cob_file *f)
+lineseq_read (cob_file *f, int read_opts)
 {
 	size_t		i = 0;
 	int		n;
@@ -838,13 +838,13 @@ lineseq_write (cob_file *f, int opt)
 		}
 	}
 
-	if (f->linage) {
+	if (unlikely(f->linage)) {
 		putc ('\n', (FILE *)f->file);
 	}
 
 	FILE_WRITE_BEFORE (f, opt);
 
-	if (eop_status) {
+	if (unlikely(eop_status)) {
 		eop_status = 0;
 		cob_exception_code = 0x0502;
 		return COB_STATUS_52_EOP;
@@ -905,7 +905,7 @@ relative_start (cob_file *f, int cond, cob_field *k)
 }
 
 static int
-relative_read (cob_file *f, cob_field *k)
+relative_read (cob_file *f, cob_field *k, int read_opts)
 {
 	int	relnum;
 	size_t	relsize;
@@ -934,7 +934,7 @@ relative_read (cob_file *f, cob_field *k)
 }
 
 static int
-relative_read_next (cob_file *f)
+relative_read_next (cob_file *f, int read_opts)
 {
 	off_t	off;
 	size_t	relsize;
@@ -1191,7 +1191,7 @@ indexed_start (cob_file *f, int cond, cob_field *key)
 		}
 	}
 #if COB_DEBUG
-	if (p->key_index == f->nkeys) {
+	if (unlikely(p->key_index == f->nkeys)) {
 		cob_runtime_error ("cob_start_indexed: key not found "
 				   "(should have been detected by cobc)");
 		return 99;
@@ -1234,7 +1234,7 @@ indexed_start (cob_file *f, int cond, cob_field *key)
 }
 
 static int
-indexed_read (cob_file *f, cob_field *key)
+indexed_read (cob_file *f, cob_field *key, int read_opts)
 {
 	struct indexed_file	*p = f->file;
 	int			ret = indexed_start (f, COB_EQ, key);
@@ -1250,17 +1250,27 @@ indexed_read (cob_file *f, cob_field *key)
 }
 
 static int
-indexed_read_next (cob_file *f)
+indexed_read_next (cob_file *f, int read_opts)
 {
 	struct indexed_file	*p = f->file;
+	int			nextprev = R_NEXT;
 
+	if (unlikely(read_opts & COB_READ_PREVIOUS)) {
+		if (f->flag_end_of_file) {
+			nextprev = R_LAST;
+		} else {
+			nextprev = R_PREV;
+		}
+	} else if (f->flag_begin_of_file) {
+		nextprev = R_FIRST;
+	}
 	if (f->flag_first_read) {
 		/* data is read in indexed_open or indexed_start */
-		if (p->data.data == 0) {
+		if (p->data.data == 0 || nextprev == R_PREV) {
 			return COB_STATUS_10_END_OF_FILE;
 		}
 	} else {
-		if (DB_SEQ (p->db[p->key_index], R_NEXT) != 0) {
+		if (DB_SEQ (p->db[p->key_index], nextprev) != 0) {
 			return COB_STATUS_10_END_OF_FILE;
 		}
 		if (p->key_index > 0) {
@@ -1392,8 +1402,9 @@ indexed_rewrite (cob_file *f)
  */
 
 struct sort_file {
-	DB *db;
-	DBT key, data;
+	DB	*db;
+	DBT	key;
+	DBT	data;
 };
 
 static cob_file	*current_sort_file;
@@ -1457,7 +1468,7 @@ sort_close (cob_file *f, int opt)
 }
 
 static int
-sort_read (cob_file *f)
+sort_read (cob_file *f, int read_opts)
 {
 	struct sort_file	*p = f->file;
 
@@ -1513,6 +1524,7 @@ cob_open (cob_file *f, int mode, int opt, cob_field *fnstatus)
 	f->last_open_mode = mode;
 	f->flag_nonexistent = 0;
 	f->flag_end_of_file = 0;
+	f->flag_begin_of_file = 0;
 	f->flag_first_read = 1;
 
 	/* obtain the file name */
@@ -1597,6 +1609,7 @@ cob_open (cob_file *f, int mode, int opt, cob_field *fnstatus)
 			f->open_mode = mode;
 			f->flag_nonexistent = 1;
 			f->flag_end_of_file = 1;
+			f->flag_begin_of_file = 1;
 			RETURN_STATUS (COB_STATUS_05_SUCCESS_OPTIONAL);
 		} else {
 			RETURN_STATUS (COB_STATUS_35_NOT_EXISTS);
@@ -1689,6 +1702,7 @@ cob_start (cob_file *f, int cond, cob_field *key, cob_field *fnstatus)
 	ret = fileio_funcs[(int)f->organization]->start (f, cond, key);
 	if (ret == COB_STATUS_00_SUCCESS) {
 		f->flag_end_of_file = 0;
+		f->flag_begin_of_file = 0;
 		f->flag_first_read = 1;
 	}
 
@@ -1696,7 +1710,7 @@ cob_start (cob_file *f, int cond, cob_field *key, cob_field *fnstatus)
 }
 
 void
-cob_read (cob_file *f, cob_field *key, cob_field *fnstatus)
+cob_read (cob_file *f, cob_field *key, cob_field *fnstatus, const int read_opts)
 {
 	int	ret;
 
@@ -1711,7 +1725,12 @@ cob_read (cob_file *f, cob_field *key, cob_field *fnstatus)
 	}
 
 	/* sequential read at the end of file is an error */
-	if (key == NULL && f->flag_end_of_file) {
+	if (f->flag_end_of_file && key == NULL &&
+	    !(read_opts & COB_READ_PREVIOUS)) {
+		RETURN_STATUS (COB_STATUS_46_READ_ERROR);
+	}
+	if (f->flag_begin_of_file && key == NULL &&
+	    (read_opts & COB_READ_PREVIOUS)) {
 		RETURN_STATUS (COB_STATUS_46_READ_ERROR);
 	}
 
@@ -1722,21 +1741,27 @@ cob_read (cob_file *f, cob_field *key, cob_field *fnstatus)
 	}
 
 	if (key) {
-		ret = fileio_funcs[(int)f->organization]->read (f, key);
+		ret = fileio_funcs[(int)f->organization]->read (f, key, read_opts);
 	} else {
-		ret = fileio_funcs[(int)f->organization]->read_next (f);
+		ret = fileio_funcs[(int)f->organization]->read_next (f, read_opts);
 	}
 
 	switch (ret) {
 	case COB_STATUS_00_SUCCESS:
 		f->flag_first_read = 0;
 		f->flag_read_done = 1;
+		f->flag_end_of_file = 0;
+		f->flag_begin_of_file = 0;
 		if (f->record_size) {
 			cob_set_int (f->record_size, (int) f->record->size);
 		}
 		break;
 	case COB_STATUS_10_END_OF_FILE:
-		f->flag_end_of_file = 1;
+		if (read_opts & COB_READ_PREVIOUS) {
+			f->flag_begin_of_file = 1;
+		} else {
+			f->flag_end_of_file = 1;
+		}
 		break;
 	}
 
@@ -1776,7 +1801,7 @@ cob_write (cob_file *f, cob_field *rec, int opt, cob_field *fnstatus)
 
 	ret = fileio_funcs[(int)f->organization]->write (f, opt);
 
-	if ( cob_do_sync && ret == 0 ) {
+	if (unlikely(cob_do_sync && ret == 0)) {
 		cob_sync (f, cob_do_sync);
 	}
 
@@ -1813,7 +1838,7 @@ cob_rewrite (cob_file *f, cob_field *rec, cob_field *fnstatus)
 
 	ret = fileio_funcs[(int)f->organization]->rewrite (f);
 
-	if ( cob_do_sync && ret == 0 ) {
+	if (unlikely(cob_do_sync && ret == 0)) {
 		cob_sync (f, cob_do_sync);
 	}
 
@@ -1838,7 +1863,7 @@ cob_delete (cob_file *f, cob_field *fnstatus)
 
 	ret = fileio_funcs[(int)f->organization]->delete (f);
 
-	if ( cob_do_sync && ret == 0 ) {
+	if (unlikely(cob_do_sync && ret == 0)) {
 		cob_sync (f, cob_do_sync);
 	}
 
@@ -1919,7 +1944,7 @@ cob_sort_using (cob_file *sort_file, cob_file *data_file)
 {
 	cob_open (data_file, COB_OPEN_INPUT, 0, NULL);
 	while (1) {
-		cob_read (data_file, 0, NULL);
+		cob_read (data_file, 0, NULL, COB_READ_NEXT);
 		if (data_file->file_status[0] != '0') {
 			break;
 		}
@@ -1935,7 +1960,7 @@ cob_sort_giving (cob_file *sort_file, cob_file *data_file)
 {
 	cob_open (data_file, COB_OPEN_OUTPUT, 0, NULL);
 	while (1) {
-		cob_read (sort_file, 0, NULL);
+		cob_read (sort_file, 0, NULL, COB_READ_NEXT);
 		if (sort_file->file_status[0] != '0') {
 			break;
 		}

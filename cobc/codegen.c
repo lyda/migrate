@@ -713,8 +713,14 @@ output_integer (cb_tree x)
 				output ("))");
 				return;
 			}
-#if defined(__i386__) || defined(__x86_64__) || defined(__powerpc__) || defined(__powerpc64__) ||defined(__ppc__) || defined(__amd64__)
+#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+			if (f->indexes == 0 && (
+				(f->size == 2 && (f->offset % 2 == 0)) ||
+				(f->size == 4 && (f->offset % 4 == 0)) ||
+				(f->size == 8 && (f->offset % 8 == 0)))) {
+#else
 			if (f->size == 2 || f->size == 4 || f->size == 8) {
+#endif
 				if (f->flag_binary_swap) {
 					output ("((");
 					if (!f->pic->have_sign) {
@@ -767,7 +773,6 @@ output_integer (cb_tree x)
 					return;
 				}
 			}
-#endif
 			break;
 
 		default:
@@ -2637,6 +2642,7 @@ output_file_initialization (struct cb_file *f)
 	output_line ("%s%s->last_open_mode = 0;", CB_PREFIX_FILE, f->cname);
 	output_line ("%s%s->flag_nonexistent = 0;", CB_PREFIX_FILE, f->cname);
 	output_line ("%s%s->flag_end_of_file = 0;", CB_PREFIX_FILE, f->cname);
+	output_line ("%s%s->flag_begin_of_file = 0;", CB_PREFIX_FILE, f->cname);
 	output_line ("%s%s->flag_first_read = 0;", CB_PREFIX_FILE, f->cname);
 	output_line ("%s%s->flag_has_status = %d;", CB_PREFIX_FILE, f->cname,
 		     f->file_status ? 1 : 0);

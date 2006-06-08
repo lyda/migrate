@@ -3490,28 +3490,50 @@ cb_build_move (cb_tree src, cb_tree dst)
 
 	f = cb_field (dst);
 
-	if (f->usage == CB_USAGE_BINARY || f->usage == CB_USAGE_COMP_5
-	    || f->usage == CB_USAGE_COMP_X) {
-#if defined(__i386__) || defined(__x86_64__) || defined(__powerpc__) || defined(__powerpc64__) ||defined(__ppc__) || defined(__amd64__)
-		if (f->flag_binary_swap) {
-#endif
-			if (src == cb_zero) {
-				return cb_build_memset (dst, 0);
+	if (CB_EXCEPTION_ENABLE (COB_EC_BOUND_SUBSCRIPT)) {
+		struct cb_field	*p;
+
+		for (p = f; p; p = p->parent) {
+			if (p->flag_occurs) {
+				return cb_build_move_call (src, dst);
 			}
-			if (CB_LITERAL_P (src)) {
-				if (CB_LITERAL(src)->scale == 0 && CB_LITERAL(src)->size < 10) {
-					if (cb_get_int (src) == 0) {
-						return cb_build_memset (dst, 0);
-					}
+		}
+		if (CB_REFERENCE_P (src) || CB_FIELD_P (src)) {
+			for (p = cb_field (src); p; p = p->parent) {
+				if (p->flag_occurs) {
+					return cb_build_move_call (src, dst);
 				}
 			}
-#if defined(__i386__) || defined(__x86_64__) || defined(__powerpc__) || defined(__powerpc64__) ||defined(__ppc__) || defined(__amd64__)
 		}
-#endif
 	}
 
-/* Hack for systems that require pointer alignment */
-#if defined(__i386__) || defined(__x86_64__) || defined(__powerpc__) || defined(__powerpc64__) ||defined(__ppc__) || defined(__amd64__)
+	if (f->usage == CB_USAGE_BINARY || f->usage == CB_USAGE_COMP_5
+	    || f->usage == CB_USAGE_COMP_X) {
+		if (src == cb_zero ||
+		    (CB_LITERAL_P (src) && CB_LITERAL(src)->scale == 0 &&
+		     CB_LITERAL(src)->size < 10 && cb_get_int (src) == 0)) {
+			if (f->flag_binary_swap) {
+				return cb_build_memset (dst, 0);
+			}
+			if (f->size == 1
+				|| (f->size == 2
+#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+				&& (f->offset % 2 == 0) && f->indexes == 0
+#endif
+				) || (f->size == 4
+#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+				&& (f->offset % 4 == 0) && f->indexes == 0
+#endif
+				) || (f->size == 8
+#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+				&& (f->offset % 8 == 0) && f->indexes == 0
+#endif
+				)) {
+				return cb_build_move_zero (dst);
+			}
+			return cb_build_memset (dst, 0);
+		}
+	}
 
 	/* no optimization for binary swap and packed decimal for now */
 	if (f->flag_binary_swap
@@ -3525,24 +3547,32 @@ cb_build_move (cb_tree src, cb_tree dst)
 		return cb_build_move_call (src, dst);
 	}
 
-	/* output optimal code */
-	if (src == cb_zero) {
-		return cb_build_move_zero (dst);
-	} else if (src == cb_space) {
-		return cb_build_move_space (dst);
-	} else if (src == cb_high) {
-		return cb_build_move_high (dst);
-	} else if (src == cb_low) {
-		return cb_build_move_low (dst);
-	} else if (src == cb_quote) {
-		return cb_build_move_quote (dst);
-	} else if (CB_LITERAL_P (src)) {
-		return cb_build_move_literal (src, dst);
+	/* Hack for systems that don't require data alignment */
+#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+	if (f->indexes == 0 && 
+		(f->size == 1 || (f->size == 2 && (f->offset % 2 == 0)) ||
+		(f->size == 4 && (f->offset % 4 == 0)) ||
+		(f->size == 8 && (f->offset % 8 == 0)))) {
+#endif
+		/* output optimal code */
+		if (src == cb_zero) {
+			return cb_build_move_zero (dst);
+		} else if (src == cb_space) {
+			return cb_build_move_space (dst);
+		} else if (src == cb_high) {
+			return cb_build_move_high (dst);
+		} else if (src == cb_low) {
+			return cb_build_move_low (dst);
+		} else if (src == cb_quote) {
+			return cb_build_move_quote (dst);
+		} else if (CB_LITERAL_P (src)) {
+			return cb_build_move_literal (src, dst);
+		}
+#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
 	}
-
-	return cb_build_move_field (src, dst);
-#else
 	return cb_build_move_call (src, dst);
+#else
+	return cb_build_move_field (src, dst);
 #endif
 }
 
@@ -3642,23 +3672,42 @@ cb_build_perform_exit (struct cb_label * label)
  */
 
 void
-cb_emit_read (cb_tree ref, cb_tree next, cb_tree into, cb_tree key)
+cb_emit_read (cb_tree ref, cb_tree next, cb_tree into, cb_tree key, cb_tree lock_opts)
 {
+	int	read_opts = 0;
+
+	if (lock_opts == cb_int1) {
+		read_opts = COB_READ_LOCK;
+	} else if (lock_opts == cb_int2) {
+		read_opts = COB_READ_NO_LOCK;
+	}
 	if (ref != cb_error_node) {
 		cb_tree file = cb_ref (ref);
 		cb_tree rec = cb_build_field_reference (CB_FILE (file)->record, ref);
 
-		if (next == cb_int1 || CB_FILE (file)->access_mode == COB_ACCESS_SEQUENTIAL) {
-			/* READ NEXT */
+		if (next == cb_int1 || next == cb_int2 ||
+		    CB_FILE (file)->access_mode == COB_ACCESS_SEQUENTIAL) {
+			/* READ NEXT/PREVIOUS */
+			if (next == cb_int2) {
+				if (CB_FILE (file)->organization != COB_ORG_INDEXED) {
+					cb_error_x (CB_TREE (current_statement),
+					"READ PREVIOUS only allowed for INDEXED SEQUENTIAL files");
+				}
+				read_opts |= COB_READ_PREVIOUS;
+			} else {
+				read_opts |= COB_READ_NEXT;
+			}
 			if (key) {
 				cb_warning (_("KEY ignored with sequential READ"));
 			}
-			cb_emit (cb_build_funcall_3 ("cob_read", file, cb_int0,
-				 CB_FILE(file)->file_status));
+			cb_emit (cb_build_funcall_4 ("cob_read", file, cb_int0,
+				 CB_FILE(file)->file_status,
+				 cb_int (read_opts)));
 		} else {
 			/* READ */
-			cb_emit (cb_build_funcall_3 ("cob_read",
-				 file, key ? key : CB_FILE (file)->key, CB_FILE(file)->file_status));
+			cb_emit (cb_build_funcall_4 ("cob_read",
+				 file, key ? key : CB_FILE (file)->key,
+				 CB_FILE(file)->file_status, cb_int (read_opts)));
 		}
 		if (into) {
 			cb_emit (cb_build_move (rec, into));
@@ -3696,7 +3745,8 @@ cb_emit_return (cb_tree ref, cb_tree into)
 	cb_tree file = cb_ref (ref);
 	cb_tree rec = cb_build_field_reference (CB_FILE (file)->record, ref);
 
-	cb_emit (cb_build_funcall_3 ("cob_read", file, cb_int0, NULL));
+	cb_emit (cb_build_funcall_4 ("cob_read", file, cb_int0, NULL,
+		 cb_int (COB_READ_NEXT)));
 	if (into) {
 		cb_emit (cb_build_move (rec, into));
 	}

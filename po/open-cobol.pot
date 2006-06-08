@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2006-06-02 09:27+0200\n"
+"POT-Creation-Date: 2006-06-08 15:42+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -63,7 +63,7 @@ msgstr ""
 msgid "Invalid option -std=%s\n"
 msgstr ""
 
-#: cobc/cobc.c:874
+#: cobc/cobc.c:909
 msgid "-MT must be given to specify target file\n"
 msgstr ""
 
@@ -511,33 +511,33 @@ msgstr ""
 msgid "some digits may be truncated"
 msgstr ""
 
-#: cobc/typeck.c:3654
+#: cobc/typeck.c:3701
 msgid "KEY ignored with sequential READ"
 msgstr ""
 
-#: cobc/typeck.c:3737
+#: cobc/typeck.c:3787
 #, c-format
 msgid "undeclared key '%s'"
 msgstr ""
 
-#: cobc/typeck.c:3742
+#: cobc/typeck.c:3792
 msgid "invalid SEARCH ALL condition"
 msgstr ""
 
-#: cobc/typeck.c:3827
+#: cobc/typeck.c:3877
 msgid "the targets of SET must be either indexes or pointers"
 msgstr ""
 
-#: cobc/typeck.c:3841 cobc/typeck.c:3845
+#: cobc/typeck.c:3891 cobc/typeck.c:3895
 msgid "SET targets must be PROGRAM-POINTER"
 msgstr ""
 
-#: cobc/typeck.c:3860
+#: cobc/typeck.c:3910
 #, c-format
 msgid "the address of '%s' cannot be changed"
 msgstr ""
 
-#: cobc/typeck.c:4169
+#: cobc/typeck.c:4219
 msgid "invalid mnemonic name"
 msgstr ""
 
@@ -545,21 +545,21 @@ msgstr ""
 msgid "PROCESS statement is ignored"
 msgstr ""
 
-#: cobc/pplex.l:377
+#: cobc/pplex.l:381
 msgid "file unterminated by a newline"
 msgstr ""
 
-#: cobc/pplex.l:420
+#: cobc/pplex.l:424
 #, c-format
 msgid "invalid indicator '%c' at column 7"
 msgstr ""
 
-#: cobc/pplex.l:444
+#: cobc/pplex.l:448
 #, c-format
 msgid "source text after column %d"
 msgstr ""
 
-#: cobc/pplex.l:473 cobc/pplex.l:483
+#: cobc/pplex.l:477 cobc/pplex.l:487
 msgid "invalid line continuation"
 msgstr ""
 
@@ -568,92 +568,92 @@ msgstr ""
 msgid "'%s' not implemented"
 msgstr ""
 
-#: cobc/parser.y:400
+#: cobc/parser.y:401
 #, c-format
 msgid "unknown system-name '%s'"
 msgstr ""
 
-#: cobc/parser.y:410
+#: cobc/parser.y:411
 msgid "Invalid CRT clause"
 msgstr ""
 
-#: cobc/parser.y:545 cobc/parser.y:593
+#: cobc/parser.y:546 cobc/parser.y:594
 #, c-format
 msgid "invalid currency sign '%s'"
 msgstr ""
 
-#: cobc/parser.y:1197
+#: cobc/parser.y:1198
 #, c-format
 msgid "alphabet-name is expected '%s'"
 msgstr ""
 
-#: cobc/parser.y:1304
+#: cobc/parser.y:1305
 msgid "REDEFINES clause must follow entry-name"
 msgstr ""
 
-#: cobc/parser.y:1704 cobc/parser.y:1721
+#: cobc/parser.y:1711 cobc/parser.y:1728
 #, c-format
 msgid "invalid color '%d'"
 msgstr ""
 
-#: cobc/parser.y:1889
+#: cobc/parser.y:1896
 #, c-format
 msgid "unknown statement '%s'"
 msgstr ""
 
-#: cobc/parser.y:2502
+#: cobc/parser.y:2513
 msgid "88 level invalid here"
 msgstr ""
 
-#: cobc/parser.y:2510
+#: cobc/parser.y:2521
 msgid "FIXME: failed to compile \"WHEN NOT ... AND/OR ...\""
 msgstr ""
 
-#: cobc/parser.y:2511
+#: cobc/parser.y:2522
 msgid "FIXME: change it into \"WHEN (NOT ... AND/OR ...)\" for now"
 msgstr ""
 
-#: cobc/parser.y:3247 cobc/parser.y:3832 cobc/parser.y:3890
+#: cobc/parser.y:3272 cobc/parser.y:3873 cobc/parser.y:3931
 #, c-format
 msgid "'%s' not file name"
 msgstr ""
 
-#: cobc/parser.y:3867
+#: cobc/parser.y:3908
 #, c-format
 msgid "'%s' not indexed"
 msgstr ""
 
-#: cobc/parser.y:3868
+#: cobc/parser.y:3909
 #, c-format
 msgid "'%s' defined here"
 msgstr ""
 
-#: cobc/parser.y:4265
+#: cobc/parser.y:4307
 #, c-format
 msgid "'%s' not level 01 or 77"
 msgstr ""
 
-#: cobc/parser.y:4269
+#: cobc/parser.y:4311
 #, c-format
 msgid "'%s' is not in LINKAGE SECTION"
 msgstr ""
 
-#: cobc/parser.y:4273
+#: cobc/parser.y:4315
 #, c-format
 msgid "'%s' is not in WORKING-STORAGE SECTION"
 msgstr ""
 
-#: cobc/parser.y:4280
+#: cobc/parser.y:4322
 #, c-format
 msgid "'%s' REDEFINES field not allowed here"
 msgstr ""
 
-#: cobc/parser.y:4288
+#: cobc/parser.y:4330
 #, c-format
 msgid "ENTRY '%s' duplicated"
 msgstr ""
 
-#: cobc/parser.y:4303 cobc/parser.y:4312
+#: cobc/parser.y:4345 cobc/parser.y:4354
 #, c-format
 msgid "%s statement not terminated by END-%s"
 msgstr ""
@@ -792,74 +792,74 @@ msgstr ""
 msgid "cob_strdup called with invalid string"
 msgstr ""
 
-#: libcob/fileio.c:1961
+#: libcob/fileio.c:1986
 msgid "End of file"
 msgstr ""
 
-#: libcob/fileio.c:1964
+#: libcob/fileio.c:1989
 msgid "Key out of range"
 msgstr ""
 
-#: libcob/fileio.c:1967
+#: libcob/fileio.c:1992
 msgid "Key order not ascending"
 msgstr ""
 
-#: libcob/fileio.c:1970
+#: libcob/fileio.c:1995
 msgid "Record key already exists"
 msgstr ""
 
-#: libcob/fileio.c:1973
+#: libcob/fileio.c:1998
 msgid "Record key does not exist"
 msgstr ""
 
-#: libcob/fileio.c:1976
+#: libcob/fileio.c:2001
 msgid "Permanent file error"
 msgstr ""
 
-#: libcob/fileio.c:1979
+#: libcob/fileio.c:2004
 msgid "File does not exist"
 msgstr ""
 
-#: libcob/fileio.c:1982
+#: libcob/fileio.c:2007
 msgid "Permission denied"
 msgstr ""
 
-#: libcob/fileio.c:1985
+#: libcob/fileio.c:2010
 msgid "File already open"
 msgstr ""
 
-#: libcob/fileio.c:1988
+#: libcob/fileio.c:2013
 msgid "File not open"
 msgstr ""
 
-#: libcob/fileio.c:1991
+#: libcob/fileio.c:2016
 msgid "READ must be executed first"
 msgstr ""
 
-#: libcob/fileio.c:1994
+#: libcob/fileio.c:2019
 msgid "Record overflow"
 msgstr ""
 
-#: libcob/fileio.c:1997
+#: libcob/fileio.c:2022
 msgid "Failed to read"
 msgstr ""
 
-#: libcob/fileio.c:2000
+#: libcob/fileio.c:2025
 msgid "READ/START not allowed"
 msgstr ""
 
-#: libcob/fileio.c:2003
+#: libcob/fileio.c:2028
 msgid "WRITE not allowed"
 msgstr ""
 
-#: libcob/fileio.c:2006
+#: libcob/fileio.c:2031
 msgid "DELETE/REWRITE not allowed"
 msgstr ""
 
-#: libcob/fileio.c:2013
+#: libcob/fileio.c:2038
 msgid "LINAGE values invalid"
 msgstr ""
 
-#: libcob/fileio.c:2016
+#: libcob/fileio.c:2041
 msgid "Unknown file error"
 msgstr ""

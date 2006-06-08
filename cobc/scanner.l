@@ -458,7 +458,7 @@ scan_x (char *text)
 		return LITERAL;
 	}
 
-      error:
+error:
 	cb_error (_("invalid X literal: %s"), text);
 	yylval = cb_error_node;
 	return LITERAL;
@@ -494,7 +494,7 @@ scan_h (char *text)
 	SET_LOCATION (yylval);
 	return LITERAL;
 
-      error:
+error:
 	cb_error (_("invalid H literal: %s"), text);
 	yylval = cb_error_node;
 	return LITERAL;

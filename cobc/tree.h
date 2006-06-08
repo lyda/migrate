@@ -468,7 +468,7 @@ struct cb_field {
 	unsigned int flag_chained	: 1;	/* CHAINING item */
 	unsigned int flag_real_binary	: 1;	/* is BINARY-CHAR/SHORT/LONG/DOUBLE */
 	unsigned int flag_spare		: 17;
-	};
+};
 
 #define CB_FIELD(x)		(CB_TREE_CAST (CB_TAG_FIELD, struct cb_field, x))
 #define CB_FIELD_P(x)		(CB_TREE_TAG (x) == CB_TAG_FIELD)
@@ -1201,7 +1201,7 @@ extern cb_tree cb_build_perform_times (cb_tree count);
 extern cb_tree cb_build_perform_until (cb_tree condition, cb_tree varying);
 extern cb_tree cb_build_perform_exit (struct cb_label *label);
 
-extern void cb_emit_read (cb_tree ref, cb_tree next, cb_tree into, cb_tree key);
+extern void cb_emit_read (cb_tree ref, cb_tree next, cb_tree into, cb_tree key, cb_tree lock_opts);
 
 extern void cb_emit_rewrite (cb_tree record, cb_tree from);
 

@@ -75,6 +75,16 @@
 #define COB_WRITE_BEFORE	0x00200000
 #define COB_WRITE_EOP		0x00400000
 
+/* Read options */
+#define COB_READ_NEXT		0x01
+#define COB_READ_PREVIOUS	0x02
+#define COB_READ_FIRST		0x04
+#define COB_READ_LAST		0x08
+#define COB_READ_LOCK		0x10
+#define COB_READ_NO_LOCK	0x20
+#define COB_READ_KEPT_LOCK	0x40
+#define COB_READ_WAIT_LOCK	0x80
+
 /* I-O status */
 
 #define COB_STATUS_00_SUCCESS			00
@@ -116,20 +126,13 @@ typedef struct {
 } cob_file_key;
 
 typedef struct {
-	char		organization;		/* ORGANIZATION */
-	char		access_mode;		/* ACCESS MODE */
-	char		open_mode;		/* OPEN MODE */
-	char		flag_optional;		/* OPTIONAL */
 	const char	*select_name;		/* Name in SELECT */
 	unsigned char	*file_status;		/* FILE STATUS */
 	cob_field	*assign;		/* ASSIGN TO */
 	cob_field	*record;		/* record area */
 	cob_field	*record_size;		/* record size depending on */
-	size_t		record_min;		/* record min size */
-	size_t		record_max;		/* record max size */
-	size_t		nkeys;			/* the number of keys */
 	cob_file_key	*keys;			/* RELATIVE/RECORD/SORT keys */
-	void		*file;			/* file type specific data pointer */
+	void		*file;			/* file specific data pointer */
 	cob_field	*linage;		/* LINAGE */
 	cob_field	*linage_ctr;		/* LINAGE-COUNTER */
 	cob_field	*latfoot;		/* LINAGE FOOTING */
@@ -139,14 +142,23 @@ typedef struct {
 	int		lin_foot;		/* Current Footage */
 	int		lin_top;		/* Current Top */
 	int		lin_bot;		/* Current Bottom */
+	size_t		record_min;		/* record min size */
+	size_t		record_max;		/* record max size */
+	size_t		nkeys;			/* the number of keys */
+	char		organization;		/* ORGANIZATION */
+	char		access_mode;		/* ACCESS MODE */
+	char		open_mode;		/* OPEN MODE */
+	char		flag_optional;		/* OPTIONAL */
 	char		last_open_mode;		/* open mode given by OPEN */
-	char		flag_nonexistent;	/* nonexistent file */
-	char		flag_end_of_file;	/* reached the end of file */
-	char		flag_first_read;	/* first READ after OPEN or START */
-	char		flag_read_done;		/* last READ successfully done */
-	char		flag_has_status;	/* has FILE STATUS clause */
-	char		flag_needs_nl;		/* LS file needs NL at close */
-	char		flag_needs_top;		/* Linage needs top */
+	char		spare[2];		/* Spare */
+	unsigned int	flag_nonexistent:1;	/* nonexistent file */
+	unsigned int	flag_end_of_file:1;	/* reached the end of file */
+	unsigned int	flag_begin_of_file:1;	/* reached beginning of file */
+	unsigned int	flag_first_read:1;	/* first READ after OPEN/START */
+	unsigned int	flag_read_done:1;	/* last READ successfully done */
+	unsigned int	flag_has_status:1;	/* has FILE STATUS clause */
+	unsigned int	flag_needs_nl:1;	/* LS file needs NL at close */
+	unsigned int	flag_needs_top:1;	/* Linage needs top */
 } cob_file;
 
 /* File I-O functions */
@@ -155,8 +167,8 @@ typedef struct {
 	int	(*open) (cob_file *f, char *filename, int mode, int opt);
 	int	(*close) (cob_file *f, int opt);
 	int	(*start) (cob_file *f, int cond, cob_field *key);
-	int	(*read) (cob_file *f, cob_field *key);
-	int	(*read_next) (cob_file *f);
+	int	(*read) (cob_file *f, cob_field *key, int read_opts);
+	int	(*read_next) (cob_file *f, int read_opts);
 	int	(*write) (cob_file *f, int opt);
 	int	(*rewrite) (cob_file *f);
 	int	(*delete) (cob_file *f);
@@ -172,13 +184,15 @@ extern void cob_default_error_handle (void);
 
 extern void cob_open (cob_file *f, int mode, int opt, cob_field *fnstatus);
 extern void cob_close (cob_file *f, int opt, cob_field *fnstatus);
-extern void cob_read (cob_file *f, cob_field *key, cob_field *fnstatus);
+extern void cob_read (cob_file *f, cob_field *key, cob_field *fnstatus,
+		      const int read_opts);
 extern void cob_write (cob_file *f, cob_field *rec, int opt, cob_field *fnstatus);
 extern void cob_rewrite (cob_file *f, cob_field *rec, cob_field *fnstatus);
 extern void cob_delete (cob_file *f, cob_field *fnstatus);
 extern void cob_start (cob_file *f, int cond, cob_field *key, cob_field *fnstatus);
 
-extern void cob_sort_init (cob_file *f, int nkeys, const unsigned char *collating_sequence);
+extern void cob_sort_init (cob_file *f, int nkeys,
+			   const unsigned char *collating_sequence);
 extern void cob_sort_finish (cob_file *f);
 extern void cob_sort_init_key (cob_file *f, int flag, cob_field *field);
 extern void cob_sort_using (cob_file *sort_file, cob_file *data_file);

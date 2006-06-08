@@ -51,11 +51,11 @@ static struct cb_replace_list *current_replace_list = NULL;
 static struct cb_text_list *text_queue = NULL;
 
 static struct copy_info {
-  int line;
-  char *file;
-  int replacing;
-  YY_BUFFER_STATE buffer;
-  struct copy_info *next;
+	struct copy_info	*next;
+	char			*file;
+	int			line;
+	int			replacing;
+	YY_BUFFER_STATE		buffer;
 } *copy_stack = NULL;
 
 #define YY_INPUT(buf,result,max_size) result = ppinput (buf, max_size);
@@ -186,35 +186,36 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
 .			{ ppecho (yytext); }
 
 <<EOF>> {
-  struct copy_info *p = copy_stack;
+	struct copy_info *p = copy_stack;
 
-  yy_delete_buffer (YY_CURRENT_BUFFER);
+	yy_delete_buffer (YY_CURRENT_BUFFER);
 
-  /* Terminate at the end of all input */
-  if (p->next == NULL) {
-	within_comment = 0;
-	newline_count = 0;
-	inside_bracket = 0;
-	current_replace_list = NULL;
-	text_queue = NULL;
-	copy_stack = NULL;
-	quotation_mark = 0;
-	consecutive_quotation = 0;
-	last_line_1 = -1;
-	last_line_2 = -1;
-	yyterminate ();
-  }
+	/* Terminate at the end of all input */
+	if (p->next == NULL) {
+		within_comment = 0;
+		newline_count = 0;
+		inside_bracket = 0;
+		current_replace_list = NULL;
+		text_queue = NULL;
+		copy_stack = NULL;
+		quotation_mark = 0;
+		consecutive_quotation = 0;
+		last_line_1 = -1;
+		last_line_2 = -1;
+		yyterminate ();
+	}
 
-  /* Close the current file */
-  fclose (ppin);
+	/* Close the current file */
+	fclose (ppin);
 
-  /* Switch to the last buffer */
-  if (p->replacing)
-    pp_set_replace_list (NULL);
-  switch_to_buffer (p->line, p->file, p->buffer);
+	/* Switch to the last buffer */
+	if (p->replacing) {
+		pp_set_replace_list (NULL);
+	}
+	switch_to_buffer (p->line, p->file, p->buffer);
 
-  copy_stack = p->next;
-  free (p);
+	copy_stack = p->next;
+	free (p);
 }
 
 %%
@@ -291,6 +292,7 @@ ppcopy (char *name, const char *lib, struct cb_replace_list *replace_list)
 	/* Find the file */
 	if (name[0] != '/' && stat (name, &st) == -1) {
 		struct cb_text_list *il, *el;
+
 		for (el = cb_extension_list; el; el = el->next) {
 			sprintf (buff2, "%s%s", name, el->text);
 			if (stat (buff2, &st) == 0) {
@@ -326,7 +328,7 @@ ppinput (char *buff, int max_size)
 	char	*bp;
 	char	line[COB_MEDIUM_BUFF];
 
-      start:
+start:
 	/* read a line */
 	memset (line, 0, sizeof (line));
 	if (fgets (line, COB_MEDIUM_BUFF, ppin) == NULL) {
@@ -340,9 +342,11 @@ ppinput (char *buff, int max_size)
 	}
 
 	/* output listing */
+/*
 	if (cb_listing_file) {
 		fputs (line, cb_listing_file);
 	}
+*/
 
 	/* normalize and copy the line into the buffer */
 	n = 0;
@@ -561,8 +565,8 @@ ppecho (const char *text)
 				if (l == NULL) {
 					break;
 				}
-				while (queue
-				       && (queue->text[0] == ' ' || queue->text[0] == '\n')) {
+				while (queue && (queue->text[0] == ' ' ||
+				       queue->text[0] == '\n')) {
 					queue = queue->next;
 				}
 				if (queue == NULL) {

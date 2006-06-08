@@ -411,7 +411,7 @@ static const struct reserved reserved_words[] = {
   {"POSITION",		POSITION},		/* 85 */
   {"POSITIVE",		POSITIVE},		/* 2002 */
   {"PRESENT",		-1},			/* 2002 */
-  {"PREVIOUS",		-1},			/* 2002 (C/S) */
+  {"PREVIOUS",		PREVIOUS},		/* 2002 (C/S) */
   {"PRINTING",		-1},			/* 2002 */
   {"PROCEDURE",		PROCEDURE},		/* 2002 */
   {"PROCEDURE-POINTER",	PROGRAM_POINTER},	/* extension */
@@ -544,7 +544,7 @@ static const struct reserved reserved_words[] = {
   {"UNDERLINE",		UNDERLINE},		/* 2002 (C/S) */
   {"UNIT",		UNIT},			/* 2002 */
   {"UNIVERSAL",		-1},			/* 2002 */
-  {"UNLOCK",		-1},			/* 2002 */
+  {"UNLOCK",		UNLOCK},		/* 2002 */
   {"UNSIGNED",		UNSIGNED},		/* 2002 (C/S) */
   {"UNSIGNED-INT",	UNSIGNED_INT},		/* extension */
   {"UNSIGNED-LONG",	UNSIGNED_LONG},		/* extension */
