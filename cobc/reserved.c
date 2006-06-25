@@ -872,7 +872,7 @@ lookup_intrinsic (const char *name)
 
 	cbp = bsearch (name, function_list, NUM_INTRINSICS,
 			sizeof (struct cb_intrinsic_table), intrinsic_comp);
-	if ( cbp && cbp->implemented ) {
+	if (cbp && cbp->implemented) {
 		return cbp;
 	}
 	return NULL;

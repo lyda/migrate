@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2006-06-08 15:42+0200\n"
+"POT-Creation-Date: 2006-06-23 13:56+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -736,7 +736,7 @@ msgstr ""
 msgid "Warn possible field truncation (NOT set with -Wall)"
 msgstr ""
 
-#: libcob/call.c:356
+#: libcob/call.c:358
 #, c-format
 msgid "cannot find module '%s'"
 msgstr ""
@@ -792,74 +792,74 @@ msgstr ""
 msgid "cob_strdup called with invalid string"
 msgstr ""
 
-#: libcob/fileio.c:1986
+#: libcob/fileio.c:2196
 msgid "End of file"
 msgstr ""
 
-#: libcob/fileio.c:1989
+#: libcob/fileio.c:2199
 msgid "Key out of range"
 msgstr ""
 
-#: libcob/fileio.c:1992
+#: libcob/fileio.c:2202
 msgid "Key order not ascending"
 msgstr ""
 
-#: libcob/fileio.c:1995
+#: libcob/fileio.c:2205
 msgid "Record key already exists"
 msgstr ""
 
-#: libcob/fileio.c:1998
+#: libcob/fileio.c:2208
 msgid "Record key does not exist"
 msgstr ""
 
-#: libcob/fileio.c:2001
+#: libcob/fileio.c:2211
 msgid "Permanent file error"
 msgstr ""
 
-#: libcob/fileio.c:2004
+#: libcob/fileio.c:2214
 msgid "File does not exist"
 msgstr ""
 
-#: libcob/fileio.c:2007
+#: libcob/fileio.c:2217
 msgid "Permission denied"
 msgstr ""
 
-#: libcob/fileio.c:2010
+#: libcob/fileio.c:2220
 msgid "File already open"
 msgstr ""
 
-#: libcob/fileio.c:2013
+#: libcob/fileio.c:2223
 msgid "File not open"
 msgstr ""
 
-#: libcob/fileio.c:2016
+#: libcob/fileio.c:2226
 msgid "READ must be executed first"
 msgstr ""
 
-#: libcob/fileio.c:2019
+#: libcob/fileio.c:2229
 msgid "Record overflow"
 msgstr ""
 
-#: libcob/fileio.c:2022
+#: libcob/fileio.c:2232
 msgid "Failed to read"
 msgstr ""
 
-#: libcob/fileio.c:2025
+#: libcob/fileio.c:2235
 msgid "READ/START not allowed"
 msgstr ""
 
-#: libcob/fileio.c:2028
+#: libcob/fileio.c:2238
 msgid "WRITE not allowed"
 msgstr ""
 
-#: libcob/fileio.c:2031
+#: libcob/fileio.c:2241
 msgid "DELETE/REWRITE not allowed"
 msgstr ""
 
-#: libcob/fileio.c:2038
+#: libcob/fileio.c:2248
 msgid "LINAGE values invalid"
 msgstr ""
 
-#: libcob/fileio.c:2041
+#: libcob/fileio.c:2251
 msgid "Unknown file error"
 msgstr ""

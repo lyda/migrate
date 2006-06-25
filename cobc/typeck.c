@@ -2205,7 +2205,7 @@ cb_emit_cancel (cb_tree prog)
 void
 cb_emit_close (cb_tree file, cb_tree opt)
 {
-	if ( file != cb_error_node ) {
+	if (file != cb_error_node) {
 		file = cb_ref (file);
 		current_statement->file = file;
 		cb_emit (cb_build_funcall_3 ("cob_close", file, opt, CB_FILE(file)->file_status));
@@ -2229,7 +2229,7 @@ cb_emit_continue ()
 void
 cb_emit_delete (cb_tree file)
 {
-	if ( file != cb_error_node ) {
+	if (file != cb_error_node) {
 		file = cb_ref (file);
 		current_statement->file = file;
 		cb_emit (cb_build_funcall_2 ("cob_delete", file, CB_FILE(file)->file_status));
@@ -2305,12 +2305,12 @@ cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
 
 		cb_tree	p, outorerr, newline;
 
-		if ( upon == cb_int1 ) {
+		if (upon == cb_int1) {
 			outorerr = cb_int0;
 		} else {
 			outorerr = cb_int1;
 		}
-		if ( no_adv == cb_int0 ) {
+		if (no_adv == cb_int0) {
 			newline = cb_int1;
 		} else {
 			newline = cb_int0;
@@ -4090,7 +4090,7 @@ cb_emit_sort_finish (cb_tree file)
 void
 cb_emit_start (cb_tree file, cb_tree op, cb_tree key)
 {
-	if ( file != cb_error_node ) {
+	if (file != cb_error_node) {
 		current_statement->file = cb_ref (file);
 		cb_emit (cb_build_funcall_4 ("cob_start", cb_ref (file), op,
 					     key ? key : CB_FILE (cb_ref (file))->key,

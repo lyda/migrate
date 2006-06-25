@@ -1167,7 +1167,7 @@ cob_get_numdisp (unsigned char *data, int size)
 	while ( size-- ) {
 		retval *= 10;
 		retval += (*data - (unsigned char)'0');
-		data++;;
+		data++;
 	}
 	return retval;
 }

@@ -1,3 +1,8 @@
+2006-06-25  Roger While <simrw@sim-basis.de>
+
+	* configure.ac : Check for BDB version major/minor in db.h,
+		if >= 4.1 set extended BDB mode
+
 2006-05-24  Roger While <simrw@sim-basis.de>
 
 	* configure.ac : Fix check for GMP

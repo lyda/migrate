@@ -256,6 +256,9 @@
 /* Define to 1 if your <sys/time.h> declares `struct tm'. */
 #undef TM_IN_SYS_TIME
 
+/* Use Berkeley DB library new features */
+#undef USE_DB41
+
 /* Use system dynamic loader */
 #undef USE_LIBDL
 

@@ -300,6 +300,7 @@ cob_resolve (const char *name)
 */
 
 	/* search the cache */
+	cob_exception_code = 0;
 	func = lookup (name);
 	if (func) {
 		return func;
@@ -343,6 +344,7 @@ cob_resolve (const char *name)
 			}
 			strcpy (resolve_error_buff, lt_dlerror ());
 			resolve_error = resolve_error_buff;
+			COB_SET_EXCEPTION (COB_EC_PROGRAM_NOT_FOUND);
 			return NULL;
 		}
 	}
@@ -355,6 +357,7 @@ cob_resolve (const char *name)
 #endif
 	sprintf (resolve_error_buff, _("cannot find module '%s'"), name);
 	resolve_error = resolve_error_buff;
+	COB_SET_EXCEPTION (COB_EC_PROGRAM_NOT_FOUND);
 	return NULL;
 }
 

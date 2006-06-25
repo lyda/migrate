@@ -972,7 +972,7 @@ file_section:
 | file_type
   {
     /* hack for MF compatibility */
-    if ( cb_relaxed_syntax_check ) {
+    if (cb_relaxed_syntax_check) {
        cb_warning ("FILE SECTION header missing - assumed");
     } else {
        cb_error ("FILE SECTION header missing");
@@ -1132,14 +1132,14 @@ linage_clause:
   LINAGE _is reference_or_literal _lines
   linage_sequence
   {
-    if ( current_file->organization != COB_ORG_LINE_SEQUENTIAL
-	&& current_file->organization != COB_ORG_SEQUENTIAL ) {
+    if (current_file->organization != COB_ORG_LINE_SEQUENTIAL
+	&& current_file->organization != COB_ORG_SEQUENTIAL) {
 		cb_error ("LINAGE clause with wrong file type");
 		$$ = cb_error_node;
     } else {
 	current_file->linage = $3;
 	current_file->organization = COB_ORG_LINE_SEQUENTIAL;
-	if ( current_linage == 0 ) {
+	if (current_linage == 0) {
 		linage_file = current_file;
 	}
 	current_linage++;
@@ -2452,7 +2452,7 @@ evaluate_subject:
   expr
   {
 	$$ = $1;
-	if ( CB_REFERENCE_P($1) ) {
+	if (CB_REFERENCE_P($1)) {
 		eval_check[eval_level][eval_inc++] = 1;
 	} else {
 		eval_check[eval_level][eval_inc++] = 0;
@@ -2507,9 +2507,9 @@ evaluate_object:
       /*
        * WHEN expr
        */
-      if ( eval_check[eval_level][eval_inc2] && CB_REFERENCE_P(e1) &&
-	   CB_FIELD_P(CB_REFERENCE(e1)->value) ) {
-	if ( CB_FIELD(CB_REFERENCE(e1)->value)->level == 88 ) {
+      if (eval_check[eval_level][eval_inc2] && CB_REFERENCE_P(e1) &&
+	   CB_FIELD_P(CB_REFERENCE(e1)->value)) {
+	if (CB_FIELD(CB_REFERENCE(e1)->value)->level == 88) {
 	  cb_error_x (e1, _("88 level invalid here"));
 	}
       }
@@ -2838,7 +2838,7 @@ open_list:
     cb_tree l;
     for (l = $4; l; l = CB_CHAIN (l))
       {
-	if ( CB_VALUE (l) != cb_error_node ) {
+	if (CB_VALUE (l) != cb_error_node) {
 		BEGIN_IMPLICIT_STATEMENT ();
 		cb_emit_open (CB_VALUE (l), $2, $3);
 	}
@@ -3261,8 +3261,8 @@ start_statement:
   end_start
   {
 	if (CB_FILE_P (cb_ref ($3))) {
-		if ( CB_FILE (cb_ref ($3))->organization != COB_ORG_INDEXED &&
-		     CB_FILE (cb_ref ($3))->organization != COB_ORG_RELATIVE ) {
+		if (CB_FILE (cb_ref ($3))->organization != COB_ORG_INDEXED &&
+		     CB_FILE (cb_ref ($3))->organization != COB_ORG_RELATIVE) {
 			cb_error ("START not allowed on SEQUENTIAL files");
 			$$ = cb_error_node;
 		} else {
@@ -3855,10 +3855,10 @@ e:
 linage_counter:
   LINAGE_COUNTER
   {
-	if ( current_linage > 1 ) {
+	if (current_linage > 1) {
 		cb_error ("LINAGE-COUNTER must be qualified here");
 		$$ = cb_error_node;
-	} else if ( current_linage == 0 ) {
+	} else if (current_linage == 0) {
 		cb_error ("Invalid LINAGE-COUNTER usage");
 		$$ = cb_error_node;
 	} else {

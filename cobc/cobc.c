@@ -265,9 +265,9 @@ init_environment (int argc, char *argv[])
 
 	output_name = NULL;
 
-	if ( (p = getenv ("TMPDIR")) != NULL ) {
+	if ((p = getenv ("TMPDIR")) != NULL) {
 		cob_tmpdir = p;
-	} else if ( (p = getenv ("TMP")) != NULL ) {
+	} else if ((p = getenv ("TMP")) != NULL) {
 		cob_tmpdir = p;
 	} else {
 		cob_tmpdir = (char *)"/tmp";
@@ -801,7 +801,7 @@ process (const char *cmd)
 		return system (cmd);
 	}
 	clen = strlen (cmd) + 32;
-	if ( clen > COB_MEDIUM_BUFF ) {
+	if (clen > COB_MEDIUM_BUFF) {
 		buffptr = cob_malloc (clen);
 	} else {
 		buffptr = buff;

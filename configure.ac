@@ -55,6 +55,7 @@ AM_MAINTAINER_MODE
 
 # Autoheader templates
 AH_TEMPLATE([WITH_DB], [Compile with the Berkeley DB library])
+AH_TEMPLATE([USE_DB41], [Use Berkeley DB library new features])
 AH_TEMPLATE([WITH_LFS64], [Compile with large file system 64])
 AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
 AH_TEMPLATE([COB_EXPORT_DYN], [Compile/link option for exporting symbols])
@@ -186,69 +187,6 @@ AC_CHECK_FUNC([getopt_long_only],
 # Checks for regex. (Not used anymore)
 # AC_CHECK_LIB([regex], [regcomp], [LIBCOB_LIBS="$LIBCOB_LIBS -lregex"])
 
-# Checks for db.
-USE_DB="no"
-if test "$LIBDB" = "1"
-then
-       AC_CHECK_HEADERS([db1/db.h],
-         [AC_DEFINE(HAVE_DB1_DB_H)],
-         [AC_MSG_ERROR([db1/db.h is required])])
-       AC_CHECK_LIB([db1], [dbopen],
-         [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb1"],
-         [AC_MSG_ERROR(libdb1 is required)])
-elif test "$LIBDB" = "3"
-then
-	AC_CHECK_HEADERS([db.h db_185.h db3/db_185.h db4/db_185.h db4.1/db_185.h db4.2/db_185.h db4.3/db_185.h db4.4/db_185.h db4.5/db_185.h])
-	AC_CHECK_LIB([db-4.5], [__db_open],
-	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.5"],
-	  [AC_CHECK_LIB([db-4.5], [dbopen],
-	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.5"], [])])
-	if test "$USE_DB" != "yes"
-	then
-	AC_CHECK_LIB([db-4.4], [__db_open],
-	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.4"],
-	  [AC_CHECK_LIB([db-4.4], [dbopen],
-	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.4"], [])])
-	fi
-	if test "$USE_DB" != "yes"
-	then
-	AC_CHECK_LIB([db-4.3], [__db_open],
-	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.3"],
-	  [AC_CHECK_LIB([db-4.3], [dbopen],
-	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.3"], [])])
-	fi
-	if test "$USE_DB" != "yes"
-	then
-	AC_CHECK_LIB([db-4.2], [__db_open],
-	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.2"],
-	  [AC_CHECK_LIB([db-4.2], [dbopen],
-	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.2"], [])])
-	fi
-	if test "$USE_DB" != "yes"
-	then
-	AC_CHECK_LIB([db-4.1], [__db_open],
-	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.1"],
-	  [AC_CHECK_LIB([db-4.1], [dbopen],
-	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.1"], [])])
-	fi
-	if test "$USE_DB" != "yes"
-	then
-	AC_CHECK_LIB([db-4], [__db_open],
-	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4"],
-	  [AC_CHECK_LIB([db-4], [dbopen],
-	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4"], [])])
-	fi
-	
-	if test "$USE_DB" != "yes"
-	then
-	AC_CHECK_LIB([db], [__db_open],
-	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
-	  [AC_CHECK_LIB([db], [dbopen],
-	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
-		[AC_MSG_ERROR(libdb is required)])])
-	fi
-fi
-
 # Checks for gmp.
 AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp.h is required))
 # MYOLDLDFLAGS="$LDFLAGS"
@@ -320,6 +258,87 @@ AC_CHECK_FUNCS([memmove memset regcomp pow setlocale fcntl strerror \
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <time.h>]], [[timezone = 3600;]])],
 	[AC_DEFINE(HAVE_TIMEZONE, 1)],
 	[])
+
+# Checks for db.
+USE_DB="no"
+HAS_DB41="no"
+if test "$LIBDB" = "1"
+then
+       AC_CHECK_HEADERS([db1/db.h],
+         [AC_DEFINE(HAVE_DB1_DB_H)],
+         [AC_MSG_ERROR([db1/db.h is required])])
+       AC_CHECK_LIB([db1], [dbopen],
+         [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb1"],
+         [AC_MSG_ERROR(libdb1 is required)])
+elif test "$LIBDB" = "3"
+then
+	AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <db.h>]], [[
+		#if (DB_VERSION_MAJOR > 4) || ((DB_VERSION_MAJOR == 4) && (DB_VERSION_MINOR > 0))
+		return 0;
+		#else
+		return 1;
+		#endif]])],
+		[HAS_DB41="yes"],
+		[],
+		[])
+	if test "$HAS_DB41" = "yes"
+	then
+		AC_DEFINE(USE_DB41)
+	fi
+	AC_CHECK_HEADERS([db.h db_185.h db3/db_185.h db4/db_185.h db4.1/db_185.h db4.2/db_185.h db4.3/db_185.h db4.4/db_185.h db4.5/db_185.h])
+	AC_CHECK_LIB([db-4.5], [__db_open],
+	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.5"],
+	  [AC_CHECK_LIB([db-4.5], [dbopen],
+	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.5"], [])])
+	if test "$USE_DB" != "yes"
+	then
+	AC_CHECK_LIB([db-4.4], [__db_open],
+	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.4"],
+	  [AC_CHECK_LIB([db-4.4], [dbopen],
+	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.4"], [])])
+	fi
+	if test "$USE_DB" != "yes"
+	then
+	AC_CHECK_LIB([db-4.3], [__db_open],
+	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.3"],
+	  [AC_CHECK_LIB([db-4.3], [dbopen],
+	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.3"], [])])
+	fi
+	if test "$USE_DB" != "yes"
+	then
+	AC_CHECK_LIB([db-4.2], [__db_open],
+	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.2"],
+	  [AC_CHECK_LIB([db-4.2], [dbopen],
+	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.2"], [])])
+	fi
+	if test "$USE_DB" != "yes"
+	then
+	AC_CHECK_LIB([db-4.1], [__db_open],
+	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.1"],
+	  [AC_CHECK_LIB([db-4.1], [dbopen],
+	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.1"], [])])
+	fi
+	if test "$USE_DB" != "yes"
+	then
+		if test "$HAS_DB41" != "no"
+		then
+			AC_MSG_ERROR(Include file db.h implies version >=4.1 but no library found)
+		fi
+	AC_CHECK_LIB([db-4], [__db_open],
+	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4"],
+	  [AC_CHECK_LIB([db-4], [dbopen],
+	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4"], [])])
+	fi
+	
+	if test "$USE_DB" != "yes"
+	then
+	AC_CHECK_LIB([db], [__db_open],
+	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
+	  [AC_CHECK_LIB([db], [dbopen],
+	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
+		[AC_MSG_ERROR(libdb is required)])])
+	fi
+fi
 
 # Checks for dl/ltdl.
 AC_RUN_IFELSE([AC_LANG_PROGRAM([[]], [[
@@ -514,6 +533,7 @@ fi
 echo ""
 echo "  Use gettext for international messages:      ${USE_NLS}"
 echo "  Use Berkeley DB for file I/O:                ${USE_DB}"
+echo "  Use enhanced Berkeley DB (>= 4.1)            ${HAS_DB41}"
 echo "  Use fcntl for file locking:                  ${ac_cv_func_fcntl}"
 echo "  Use ncurses/pdcurses for screen I/O:         ${USE_NCURSES}"
 echo ""

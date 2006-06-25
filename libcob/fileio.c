@@ -57,6 +57,9 @@
 #endif
 
 #ifdef	WITH_DB
+#ifdef	USE_DB41
+#include <db.h>
+#else
 #if HAVE_DB1_DB_H
 #include <db1/db.h>
 #elif HAVE_DB_185_H
@@ -78,6 +81,7 @@
 #elif HAVE_DB_H
 #include <db.h>
 #endif
+#endif	/* USE_DB41 */
 #endif	/* WITH_DB */
 
 #ifdef	WITH_CISAM
@@ -130,6 +134,8 @@ int			cob_check_eop = 0;
 
 static int		cob_do_sync = 0;
 static int		cob_first_in = 0;
+static int		cob_sort_input_cache = 8*1024*1024;
+static int		cob_sort_output_cache = 32*1024*1024;
 
 static struct file_list {
 	struct file_list	*next;
@@ -178,22 +184,35 @@ static int relative_delete (cob_file *f);
 #if	defined(WITH_DB) || defined(WITH_CISAM) || defined(WITH_VBISAM)
 
 #ifdef	WITH_DB
+#ifdef	USE_DB41
+#define DB_PUT(db,flags)	db->put (db, NULL, &p->key, &p->data, flags)
+#define DB_GET(db,flags)	db->get (db, NULL, &p->key, &p->data, flags)
+#define DB_SEQ(db,flags)	db->c_get (db, &p->key, &p->data, flags)
+#define DB_DEL(db,key,flags)	db->del (db, NULL, key, flags)
+#define DB_CLOSE(db)		db->close (db, 0)
+#define DB_SYNC(db)		db->sync (db, 0)
+#else
 #define DB_PUT(db,flags)	db->put (db, &p->key, &p->data, flags)
 #define DB_GET(db,flags)	db->get (db, &p->key, &p->data, flags)
 #define DB_SEQ(db,flags)	db->seq (db, &p->key, &p->data, flags)
 #define DB_DEL(db,key,flags)	db->del (db, key, flags)
 #define DB_CLOSE(db)		db->close (db)
 #define DB_SYNC(db)		db->sync (db, 0)
+#endif
 
 #define DBT_SET(key,fld)			\
   key.data = fld->data;				\
-  key.size = fld->size;
+  key.size = fld->size
 
 struct indexed_file {
 	size_t		key_index;
 	unsigned char	*last_key;	/* the last key written */
 	DB		**db;		/* database handlers */
-	DBT		key, data;
+	DBT		key;
+	DBT		data;
+#ifdef	USE_DB41
+	DBC		**cursor;
+#endif
 };
 #endif	/* WITH_DB */
 
@@ -318,7 +337,7 @@ static const cob_fileio_funcs	*fileio_funcs[COB_ORG_MAX] = {
 static void
 cob_sync (cob_file *f, int mode)
 {
-	if ( f->organization == COB_ORG_INDEXED ) {
+	if (f->organization == COB_ORG_INDEXED) {
 #ifdef	WITH_DB
 		size_t			i;
 		struct indexed_file	*p = f->file;
@@ -326,17 +345,23 @@ cob_sync (cob_file *f, int mode)
 		for (i = 0; i < f->nkeys; i++) {
 			DB_SYNC (p->db[i]);
 		}
-		if ( mode == 2 ) {
+		if (mode == 2) {
 			for (i = 0; i < f->nkeys; i++) {
+#ifdef	USE_DB41
+				int	n;
+
+				fsync (p->db[i]->fd (p->db[i], &n));
+#else
 				fsync (p->db[i]->fd (p->db[i]));
+#endif
 			}
 		}
 #endif	/* WITH_DB */
 		return;
 	}
-	if ( f->organization != COB_ORG_SORT ) {
+	if (f->organization != COB_ORG_SORT) {
 		fflush ((FILE *)f->file);
-		if ( mode == 2 ) {
+		if (mode == 2) {
 			fsync (fileno ((FILE *)f->file));
 		}
 	}
@@ -348,7 +373,7 @@ cob_cache_file (cob_file *f)
 	struct file_list	*l;
 
 	for ( l = file_cache; l; l = l->next ) {
-		if ( f == l->file ) {
+		if (f == l->file) {
 			return;
 		}
 	}
@@ -565,7 +590,7 @@ file_close (cob_file *f, int opt)
 #endif
 		/* close the file */
 		fclose ((FILE *)f->file);
-		if ( opt == COB_CLOSE_NO_REWIND ) {
+		if (opt == COB_CLOSE_NO_REWIND) {
 			f->open_mode = COB_OPEN_CLOSED;
 			return COB_STATUS_07_SUCCESS_NO_UNIT;
 		}
@@ -1093,30 +1118,72 @@ relative_delete (cob_file *f)
 
 #ifdef	WITH_DB
 
+#ifdef	USE_DB41
+static DB_ENV *
+join_environment( void )
+{
+	return NULL;
+
+	/* Set up possible environment stuff - commneted out
+	static DB_ENV	*env = NULL;
+	int		flags, mode, ret;
+	char		*home;
+
+	if( env != NULL ) {
+		return(env);
+	}
+
+	ret = db_env_create (&env, 0);
+set DB home directory
+set flags: memory pool, logging, concurrent data store.....
+	ret = db_env_open (&env, home, flags, mode);
+	return(env);
+	End comment out */
+}
+#endif
+
 static int
 indexed_open (cob_file *f, char *filename, int mode, int flag)
 {
 	size_t			i, j;
 	int			flags = INITIAL_FLAGS;
+	int			ret = 0;
 	struct indexed_file	*p;
 
 	switch (mode) {
 	case COB_OPEN_INPUT:
+#ifdef	USE_DB41
+		flags |= DB_RDONLY;
+#else
 		flags |= O_RDONLY;
+#endif
 		break;
 	case COB_OPEN_OUTPUT:
+#ifdef	USE_DB41
+		flags |= DB_CREATE | DB_TRUNCATE;
+#else
 		flags |= O_RDWR | O_CREAT | O_TRUNC;
+#endif
 		break;
 	case COB_OPEN_I_O:
 	case COB_OPEN_EXTEND:
+#ifdef	USE_DB41
+		flags |= DB_CREATE;
+#else
 		flags |= O_RDWR | O_CREAT;
+#endif
 		break;
 	}
 
 	p = cob_malloc (sizeof (struct indexed_file));
 	p->db = cob_malloc (sizeof (DB *) * f->nkeys);
+#ifdef	USE_DB41
+	p->cursor = cob_malloc (sizeof (DBC *) * f->nkeys);
+#endif
 	for (i = 0; i < f->nkeys; i++) {
+#ifndef	USE_DB41
 		BTREEINFO	info;
+#endif
 		char		name[COB_SMALL_BUFF];
 
 		/* file name */
@@ -1127,21 +1194,42 @@ indexed_open (cob_file *f, char *filename, int mode, int flag)
 		}
 
 		/* btree info */
+#ifdef	USE_DB41
+		db_create (&p->db[i], join_environment(), 0);
+		if (f->keys[i].flag) {
+			p->db[i]->set_flags (p->db[i], DB_DUP);
+		}
+#else
 		own_memset ((unsigned char *)&info, 0, sizeof (info));
 		if (f->keys[i].flag) {
 			info.flags = R_DUP;
 		}
+#endif
 
 		/* open db */
+#ifdef	USE_DB41
+		ret = p->db[i]->open (p->db[i], NULL, name, NULL,
+					DB_BTREE, flags, COB_FILE_MODE);
+		if( ret == ENOENT ) {
+			p->db[i]->cursor =  NULL;
+			ret = 0;
+		} else if (!ret) {
+			ret = p->db[i]->cursor(p->db[i], NULL, &p->cursor[i], 0);
+		}
+#else
 		p->db[i] = dbopen (name, flags, COB_FILE_MODE, DB_BTREE, &info);
 		if (p->db[i] == 0) {
-			int	ret;
-
 			ret = errno;
+		}
+#endif
+		if (ret) {
 			for (j = 0; j < i; j++) {
 				DB_CLOSE (p->db[j]);
 			}
 			free (p->db);
+#ifdef	USE_DB41
+			free (p->cursor);
+#endif
 			free (p);
 			return ret;
 		}
@@ -1153,7 +1241,15 @@ indexed_open (cob_file *f, char *filename, int mode, int flag)
 
 	own_memset ((unsigned char *)&p->key, 0, sizeof (DBT));
 	own_memset ((unsigned char *)&p->data, 0, sizeof (DBT));
+#ifdef	USE_DB41
+	if (p->db[p->key_index]->cursor == NULL) {
+		p->data.data = 0;
+	} else {
+		DB_SEQ (p->cursor[p->key_index], DB_FIRST);
+	}
+#else
 	DB_SEQ (p->db[p->key_index], R_FIRST);
+#endif
 
 	return 0;
 }
@@ -1173,6 +1269,9 @@ indexed_close (cob_file *f, int opt)
 		free (p->last_key);
 	}
 	free (p->db);
+#ifdef	USE_DB41
+	free (p->cursor);
+#endif
 	free (p);
 
 	return COB_STATUS_00_SUCCESS;
@@ -1183,6 +1282,12 @@ indexed_start (cob_file *f, int cond, cob_field *key)
 {
 	int			ret;
 	struct indexed_file	*p = f->file;
+
+#ifdef	USE_DB41
+	if (p->db[p->key_index]->cursor == 0) {
+		return (COB_STATUS_23_KEY_NOT_EXISTS);
+	}
+#endif
 
 	/* look up for the key */
 	for (p->key_index = 0; p->key_index < f->nkeys; p->key_index++) {
@@ -1200,7 +1305,11 @@ indexed_start (cob_file *f, int cond, cob_field *key)
 
 	/* search */
 	DBT_SET (p->key, key);
+#ifdef	USE_DB41
+	ret = DB_SEQ (p->cursor[p->key_index], DB_SET_RANGE);
+#else
 	ret = DB_SEQ (p->db[p->key_index], R_CURSOR);
+#endif
 	switch (cond) {
 	case COB_EQ:
 		if (ret == 0) {
@@ -1210,15 +1319,27 @@ indexed_start (cob_file *f, int cond, cob_field *key)
 	case COB_LT:
 	case COB_LE:
 		if (ret != 0) {
+#ifdef	USE_DB41
+			ret = DB_SEQ (p->cursor[p->key_index], DB_LAST);
+#else
 			ret = DB_SEQ (p->db[p->key_index], R_LAST);
+#endif
 		} else if (cond == COB_LT
 			   || memcmp (p->key.data, key->data, key->size) != 0) {
+#ifdef	USE_DB41
+			ret = DB_SEQ (p->cursor[p->key_index], DB_PREV);
+#else
 			ret = DB_SEQ (p->db[p->key_index], R_PREV);
+#endif
 		}
 		break;
 	case COB_GT:
 		while (ret == 0 && memcmp (p->key.data, key->data, key->size) == 0) {
+#ifdef	USE_DB41
+			ret = DB_SEQ (p->cursor[p->key_index], DB_NEXT);
+#else
 			ret = DB_SEQ (p->db[p->key_index], R_NEXT);
+#endif
 		}
 		break;
 	case COB_GE:
@@ -1253,24 +1374,48 @@ static int
 indexed_read_next (cob_file *f, int read_opts)
 {
 	struct indexed_file	*p = f->file;
+#ifdef	USE_DB41
+	int			nextprev = DB_NEXT;
+#else
 	int			nextprev = R_NEXT;
+#endif
 
 	if (unlikely(read_opts & COB_READ_PREVIOUS)) {
 		if (f->flag_end_of_file) {
+#ifdef	USE_DB41
+			nextprev = DB_LAST;
+#else
 			nextprev = R_LAST;
+#endif
 		} else {
+#ifdef	USE_DB41
+			nextprev = DB_PREV;
+#else
 			nextprev = R_PREV;
+#endif
 		}
 	} else if (f->flag_begin_of_file) {
+#ifdef	USE_DB41
+		nextprev = DB_FIRST;
+#else
 		nextprev = R_FIRST;
+#endif
 	}
 	if (f->flag_first_read) {
 		/* data is read in indexed_open or indexed_start */
+#ifdef	USE_DB41
+		if (p->data.data == 0 || nextprev == DB_PREV) {
+#else
 		if (p->data.data == 0 || nextprev == R_PREV) {
+#endif
 			return COB_STATUS_10_END_OF_FILE;
 		}
 	} else {
+#ifdef	USE_DB41
+		if (DB_SEQ (p->cursor[p->key_index], nextprev) != 0) {
+#else
 		if (DB_SEQ (p->db[p->key_index], nextprev) != 0) {
+#endif
 			return COB_STATUS_10_END_OF_FILE;
 		}
 		if (p->key_index > 0) {
@@ -1296,14 +1441,23 @@ indexed_write_internal (cob_file *f)
 	/* write data */
 	p->data.data = f->record->data;
 	p->data.size = f->record->size;
+#ifdef	USE_DB41
+	if (DB_PUT (p->db[0], DB_NOOVERWRITE) != 0) {
+#else
 	if (DB_PUT (p->db[0], R_NOOVERWRITE) != 0) {
+#endif
 		return COB_STATUS_22_KEY_EXISTS;
 	}
 
 	/* write secondary keys */
 	p->data = p->key;
 	for (i = 1; i < f->nkeys; i++) {
+#ifdef	USE_DB41
+		int flags = f->keys[i].flag ? 0 : DB_NOOVERWRITE;
+#else
 		int flags = f->keys[i].flag ? 0 : R_NOOVERWRITE;
+#endif
+
 		DBT_SET (p->key, f->keys[i].field);
 		if (DB_PUT (p->db[i], flags) != 0) {
 			return COB_STATUS_22_KEY_EXISTS;
@@ -1357,14 +1511,28 @@ indexed_delete (cob_file *f)
 			DB_DEL (p->db[i], &p->key, 0);
 		} else {
 			DBT	sec_key = p->key;
+
+#ifdef	USE_DB41
+			if (DB_SEQ (p->cursor[i], DB_SET_RANGE) == 0) {
+#else
 			if (DB_SEQ (p->db[i], R_CURSOR) == 0) {
+#endif
 				while (sec_key.size == p->key.size
-				       && memcmp (p->key.data, sec_key.data, sec_key.size) == 0)
-				{
-					if (memcmp (p->data.data, prim_key.data, prim_key.size) == 0) {
+				       && memcmp (p->key.data, sec_key.data,
+				       sec_key.size) == 0) {
+					if (memcmp (p->data.data, prim_key.data,
+					    prim_key.size) == 0) {
+#ifdef	USE_DB41
+						p->cursor[i]->c_del (p->cursor[i], 0);
+#else
 						DB_DEL (p->db[i], &p->key, R_CURSOR);
+#endif
 					}
+#ifdef	USE_DB41
+					if (DB_SEQ (p->cursor[i], DB_NEXT) != 0) {
+#else
 					if (DB_SEQ (p->db[i], R_NEXT) != 0) {
+#endif
 						break;
 					}
 				}
@@ -1405,12 +1573,19 @@ struct sort_file {
 	DB	*db;
 	DBT	key;
 	DBT	data;
+#ifdef	USE_DB41
+	DBC	*cursor;
+#endif
 };
 
 static cob_file	*current_sort_file;
 
 static int
+#ifdef	USE_DB41
+sort_compare (DB *db, const DBT *k1, const DBT *k2)
+#else
 sort_compare (const DBT *k1, const DBT *k2)
+#endif
 {
 	int		cmp;
 	size_t		i;
@@ -1432,27 +1607,58 @@ sort_compare (const DBT *k1, const DBT *k2)
 static int
 sort_open (cob_file *f, char *filename, int mode, int flag)
 {
+#ifdef	USE_DB41
+	int			ret;
+#else
 	BTREEINFO		info;
+#endif
 	struct sort_file	*p = f->file;
 	int			flags = INITIAL_FLAGS;
 
 	switch (mode) {
 	case COB_OPEN_INPUT:
+#ifdef	USE_DB41
+		flags |= DB_RDONLY;
+#else
 		flags |= O_RDONLY;
+#endif
 		break;
 	case COB_OPEN_OUTPUT:
+#ifdef	USE_DB41
+		flags |= DB_CREATE | DB_TRUNCATE;
+#else
 		flags |= O_RDWR | O_CREAT | O_TRUNC;
+#endif
 		break;
 	}
 
 	/* open db */
+#ifdef	USE_DB41
+	ret = db_create (&p->db, NULL, 0);
+	p->db->set_errfile (p->db, stderr);
+	ret = p->db->set_bt_compare (p->db, sort_compare);
+	if (mode == COB_OPEN_INPUT) {
+		ret = p->db->set_cachesize (p->db, 0, cob_sort_input_cache, 1);
+	} else {
+		ret = p->db->set_cachesize (p->db, 0, cob_sort_output_cache, 1);
+	}
+	ret = p->db->set_pagesize (p->db, 64*1024);
+	ret = p->db->set_flags (p->db, DB_DUP);
+	ret = p->db->open (p->db, NULL, filename, NULL, DB_BTREE,
+			   flags, COB_FILE_MODE);
+#else
 	own_memset ((unsigned char *)&info, 0, sizeof (info));
 	info.flags = R_DUP;
 	info.compare = sort_compare;
 	p->db = dbopen (filename, flags, COB_FILE_MODE, DB_BTREE, &info);
+#endif
 	if (p->db == NULL) {
 		return errno;
 	}
+
+#ifdef	USE_DB41
+	p->db->cursor (p->db, NULL, &p->cursor, 0);
+#endif
 
 	own_memset ((unsigned char *)&p->key, 0, sizeof (DBT));
 	own_memset ((unsigned char *)&p->data, 0, sizeof (DBT));
@@ -1472,7 +1678,11 @@ sort_read (cob_file *f, int read_opts)
 {
 	struct sort_file	*p = f->file;
 
+#ifdef	USE_DB41
+	if (DB_SEQ (p->cursor, f->flag_first_read ? DB_FIRST : DB_NEXT) != 0) {
+#else
 	if (DB_SEQ (p->db, f->flag_first_read ? R_FIRST : R_NEXT) != 0) {
+#endif
 		return COB_STATUS_10_END_OF_FILE;
 	}
 
@@ -1587,7 +1797,7 @@ cob_open (cob_file *f, int mode, int opt, cob_field *fnstatus)
 
 	cob_cache_file (f);
 
-	if ( !cob_first_in ) {
+	if (!cob_first_in) {
 		cob_first_in = 1;
 		cob_set_signal ();
 	}
@@ -1902,7 +2112,7 @@ cob_sort_init (cob_file *f, int nkeys, const unsigned char *collating_sequence)
 	if ((s = getenv ("TMPDIR")) == NULL && (s = getenv ("TMP")) == NULL) {
 		s = "/tmp";
 	}
-	if ( cob_process_id == 0 ) {
+	if (cob_process_id == 0) {
 		cob_process_id = getpid();
 	}
 	sprintf (filename, "%s/cobsort%d_%d", s, cob_process_id, cob_iteration);
@@ -2051,13 +2261,26 @@ void
 cob_init_fileio (void)
 {
 	char	*s;
+	int	n;
 
 	if ((s = getenv ("COB_SYNC")) != NULL) {
-		if ( *s == 'Y' || *s == 'y' ) {
+		if (*s == 'Y' || *s == 'y') {
 			cob_do_sync = 1;
 		}
-		if ( *s == 'P' || *s == 'p' ) {
+		if (*s == 'P' || *s == 'p') {
 			cob_do_sync = 2;
+		}
+	}
+	if ((s = getenv ("COB_SORT_INPUT_CACHE")) != NULL) {
+		n = atoi(s);
+		if (n >= 1024*1024 && n <= 1024*1024*1024) {
+			cob_sort_input_cache = n;
+		}
+	}
+	if ((s = getenv ("COB_SORT_OUTPUT_CACHE")) != NULL) {
+		n = atoi(s);
+		if (n >= 1024*1024 && n <= 1024*1024*1024) {
+			cob_sort_output_cache = n;
 		}
 	}
 }
@@ -2069,8 +2292,8 @@ cob_exit_fileio (void)
 	char			filename[COB_MEDIUM_BUFF];
 
 	for ( l = file_cache; l; l = l->next ) {
-		if ( l->file->open_mode != COB_OPEN_CLOSED &&
-		     l->file->open_mode != COB_OPEN_LOCKED ) {
+		if (l->file->open_mode != COB_OPEN_CLOSED &&
+		     l->file->open_mode != COB_OPEN_LOCKED) {
 			cob_field_to_string (l->file->assign, filename);
 			cob_close (l->file, 0, NULL);
 			fprintf (stderr, "WARNING - Implicit CLOSE of %s (\"%s\")\n",

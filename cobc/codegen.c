@@ -3250,7 +3250,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 		}
 		output_line ("default:");
 		output_indent ("{");
-		output_line ("if ( !cob_error_file->flag_has_status ) {");
+		output_line ("if (!cob_error_file->flag_has_status) {");
 		output_line ("	cob_default_error_handle ();");
 		output_line ("	cob_stop_run (1);");
 		output_line ("}");

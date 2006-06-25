@@ -335,17 +335,17 @@ cob_sig_handler (int sig)
 	cob_exit_fileio ();
 	switch ( sig ) {
 	case SIGHUP:
-		if ( (hupsig != SIG_IGN) && (hupsig != SIG_DFL) ) {
+		if ((hupsig != SIG_IGN) && (hupsig != SIG_DFL)) {
 			(*hupsig)(SIGHUP);
 		}
 		break;
 	case SIGINT:
-		if ( (intsig != SIG_IGN) && (intsig != SIG_DFL) ) {
+		if ((intsig != SIG_IGN) && (intsig != SIG_DFL)) {
 			(*intsig)(SIGINT);
 		}
 		break;
 	case SIGQUIT:
-		if ( (qutsig != SIG_IGN) && (qutsig != SIG_DFL) ) {
+		if ((qutsig != SIG_IGN) && (qutsig != SIG_DFL)) {
 			(*qutsig)(SIGQUIT);
 		}
 		break;

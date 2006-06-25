@@ -78,7 +78,7 @@ cob_init_intrinsic ()
 	/* mpz_init2 (mp, 256); */
 	memset ((char *)&calc_field[0], 0, sizeof (calc_field));
 	memset ((char *)&calc_attr[0], 0, sizeof (calc_attr));
-	for ( i = 0; i < DEPTH_LEVEL; i++ ) {
+	for (i = 0; i < DEPTH_LEVEL; i++) {
 		calc_field[i].data = cob_malloc (1024);
 		calc_field[i].size = 1024;
 	}
@@ -95,8 +95,8 @@ make_double_entry ()
 
 	curr_field = &calc_field[curr_entry];
 	curr_attr = &calc_attr[curr_entry];
-	if ( curr_field->size < sizeof (double) ) {
-		if ( curr_field->size == 0 ) {
+	if (curr_field->size < sizeof (double)) {
+		if (curr_field->size == 0) {
 			s = cob_malloc (sizeof (double) + 3);
 		} else {
 			s = realloc (curr_field->data, sizeof (double) + 3);
@@ -117,7 +117,7 @@ make_double_entry ()
 	curr_field->data = s;
 	curr_field->attr = curr_attr;
 		
-	if ( ++curr_entry >= DEPTH_LEVEL ) {
+	if (++curr_entry >= DEPTH_LEVEL) {
 		curr_entry = 0;
 	}
 	return;
@@ -130,12 +130,12 @@ make_field_entry (cob_field *f)
 
 	curr_field = &calc_field[curr_entry];
 	curr_attr = &calc_attr[curr_entry];
-	if ( f->size > curr_field->size ) {
-		if ( curr_field->size == 0 ) {
+	if (f->size > curr_field->size) {
+		if (curr_field->size == 0) {
 			s = cob_malloc (f->size + 3);
 		} else {
 			s = realloc (curr_field->data, f->size + 3);
-			if ( !s ) {
+			if (!s) {
 				cob_runtime_error (_("Cannot acquire %d bytes of memory - Aborting"), f->size + 3);
 				cob_stop_run (1);
 			}
@@ -150,7 +150,7 @@ make_field_entry (cob_field *f)
 	curr_field->data = s;
 	curr_field->attr = curr_attr;
 		
-	if ( ++curr_entry >= DEPTH_LEVEL ) {
+	if (++curr_entry >= DEPTH_LEVEL) {
 		curr_entry = 0;
 	}
 	return;
@@ -246,23 +246,23 @@ cob_intr_integer (cob_field *srcfield)
 	make_field_entry (&field);
 /*
 	cob_move (srcfield, curr_field);
-	if ( *(long long *)curr_field->data < 0 ) {
-		if ( cob_cmp (srcfield, curr_field) ) {
+	if (*(long long *)curr_field->data < 0) {
+		if (cob_cmp (srcfield, curr_field)) {
 			*(long long *)curr_field->data -= 1;
 		}
 	}
 */
 
 	cob_decimal_set_field (&d1, srcfield);
-	if ( mpz_sgn (d1.value) >= 0 ) {
+	if (mpz_sgn (d1.value) >= 0) {
 		cob_decimal_get_field (&d1, curr_field, 0);
 		return curr_field;
 	}
 	scale = 1;
-	for ( i = 0; i < d1.scale; i++ ) {
+	for (i = 0; i < d1.scale; i++) {
 		scale *= 10;
 	}
-	if ( mpz_fdiv_ui (d1.value, scale) ) {
+	if (mpz_fdiv_ui (d1.value, scale)) {
 		mpz_sub_ui (d1.value, d1.value, scale);
 	}
 	cob_decimal_get_field (&d1, curr_field, 0);
@@ -304,9 +304,9 @@ cob_intr_sign (cob_field *srcfield)
 
 	cob_set_int (curr_field, 0);
 	n = cob_cmp (srcfield, curr_field);
-	if ( n < 0 ) {
+	if (n < 0) {
 		cob_set_int (curr_field, -1);
-	} else if ( n > 0 ) {
+	} else if (n > 0) {
 		cob_set_int (curr_field, 1);
 	}
 
@@ -319,13 +319,13 @@ cob_intr_upper_case (cob_field *sizefield, cob_field *srcfield)
 	int		i, size;
 
 	make_field_entry (srcfield);
-	if ( sizefield ) {
+	if (sizefield) {
 		size = cob_get_int (sizefield);
 		curr_field->size = size;
 	} else {
 		size = (int) srcfield->size;
 	}
-	for ( i = 0; i < size; i++ ) {
+	for (i = 0; i < size; i++) {
 		curr_field->data[i] = toupper (srcfield->data[i]);
 	}
 	return curr_field;
@@ -337,13 +337,13 @@ cob_intr_lower_case (cob_field *sizefield, cob_field *srcfield)
 	int		i, size;
 
 	make_field_entry (srcfield);
-	if ( sizefield ) {
+	if (sizefield) {
 		size = cob_get_int (sizefield);
 		curr_field->size = size;
 	} else {
 		size = (int) srcfield->size;
 	}
-	for ( i = 0; i < size; i++ ) {
+	for (i = 0; i < size; i++) {
 		curr_field->data[i] = tolower (srcfield->data[i]);
 	}
 	return curr_field;
@@ -355,13 +355,13 @@ cob_intr_reverse (cob_field *sizefield, cob_field *srcfield)
 	int		i, size;
 
 	make_field_entry (srcfield);
-	if ( sizefield ) {
+	if (sizefield) {
 		size = cob_get_int (sizefield);
 		curr_field->size = size;
 	} else {
 		size = (int) srcfield->size;
 	}
-	for ( i = 0; i < size; i++ ) {
+	for (i = 0; i < size; i++) {
 		curr_field->data[i] = srcfield->data[size - i - 1];
 	}
 	return curr_field;
@@ -504,7 +504,7 @@ cob_intr_char (cob_field *srcfield)
 	make_field_entry (&field);
 
 	i = cob_get_int (srcfield);
-	if ( i < 1 || i > 256 ) {
+	if (i < 1 || i > 256) {
 		*curr_field->data = 0;
 	} else {
 		*curr_field->data = i - 1;
@@ -560,27 +560,27 @@ cob_intr_date_of_integer (cob_field *srcdays)
 
 	/* Base 1601-01-01 */
 	days = cob_get_int (srcdays);
-	if ( days < 1 || days > 3067671 ) {
+	if (days < 1 || days > 3067671) {
 		memset (curr_field->data, '0', 8);
 		return curr_field;
 	}
 	while ( days > leapyear ) {
 		days -= leapyear;
 		baseyear++;
-		if ( leap_year (baseyear) ) {
+		if (leap_year (baseyear)) {
 			leapyear = 366;
 		} else {
 			leapyear = 365;
 		}
 	}
-	for ( i = 0; i < 13; i++ ) {
-		if ( leap_year (baseyear) ) {
-			if ( days <= leap_days[i] ) {
+	for (i = 0; i < 13; i++) {
+		if (leap_year (baseyear)) {
+			if (days <= leap_days[i]) {
 				days -= leap_days[i-1];
 				break;
 			}
 		} else {
-			if ( days <= normal_days[i] ) {
+			if (days <= normal_days[i]) {
 				days -= normal_days[i-1];
 				break;
 			}
@@ -605,14 +605,14 @@ cob_intr_day_of_integer (cob_field *srcdays)
 
 	/* Base 1601-01-01 */
 	days = cob_get_int (srcdays);
-	if ( days < 1 || days > 3067671 ) {
+	if (days < 1 || days > 3067671) {
 		memset (curr_field->data, '0', 7);
 		return curr_field;
 	}
 	while ( days > leapyear ) {
 		days -= leapyear;
 		baseyear++;
-		if ( leap_year (baseyear) ) {
+		if (leap_year (baseyear)) {
 			leapyear = 366;
 		} else {
 			leapyear = 365;
@@ -640,42 +640,42 @@ cob_intr_integer_of_date (cob_field *srcfield)
 	/* Base 1601-01-01 */
 	indate = cob_get_int (srcfield);
 	year = indate / 10000;
-	if ( year < 1601 || year > 9999 ) {
+	if (year < 1601 || year > 9999) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 	indate %= 10000;
 	month = indate / 100;
-	if ( month < 1 || month > 12 ) {
+	if (month < 1 || month > 12) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 	days = indate % 100;
-	if ( days < 1 || days > 31 ) {
+	if (days < 1 || days > 31) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
-	if ( leap_year (year) ) {
-		if ( days > leap_month_days[month] ) {
+	if (leap_year (year)) {
+		if (days > leap_month_days[month]) {
 			cob_set_int (curr_field, 0);
 			return curr_field;
 		}
 	} else {
-		if ( days > normal_month_days[month] ) {
+		if (days > normal_month_days[month]) {
 			cob_set_int (curr_field, 0);
 			return curr_field;
 		}
 	}
 	totaldays = 0;
 	while ( baseyear != year ) {
-		if ( leap_year (baseyear) ) {
+		if (leap_year (baseyear)) {
 			totaldays += 366;
 		} else {
 			totaldays += 365;
 		}
 		baseyear++;
 	}
-	if ( leap_year (baseyear) ) {
+	if (leap_year (baseyear)) {
 		totaldays += leap_days[month - 1];
 	} else {
 		totaldays += normal_days[month - 1];
@@ -701,18 +701,18 @@ cob_intr_integer_of_day (cob_field *srcfield)
 	/* Base 1601-01-01 */
 	indate = cob_get_int (srcfield);
 	year = indate / 1000;
-	if ( year < 1601 || year > 9999 ) {
+	if (year < 1601 || year > 9999) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 	days = indate % 1000;
-	if ( days < 1 || days > 365 + leap_year (year) ) {
+	if (days < 1 || days > 365 + leap_year (year)) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 	totaldays = 0;
 	while ( baseyear != year ) {
-		if ( leap_year (baseyear) ) {
+		if (leap_year (baseyear)) {
 			totaldays += 366;
 		} else {
 			totaldays += 365;
@@ -739,28 +739,28 @@ cob_intr_test_date_yyyymmdd (cob_field *srcfield)
 	/* Base 1601-01-01 */
 	indate = cob_get_int (srcfield);
 	year = indate / 10000;
-	if ( year < 1601 || year > 9999 ) {
+	if (year < 1601 || year > 9999) {
 		cob_set_int (curr_field, 1);
 		return curr_field;
 	}
 	indate %= 10000;
 	month = indate / 100;
-	if ( month < 1 || month > 12 ) {
+	if (month < 1 || month > 12) {
 		cob_set_int (curr_field, 2);
 		return curr_field;
 	}
 	days = indate % 100;
-	if ( days < 1 || days > 31 ) {
+	if (days < 1 || days > 31) {
 		cob_set_int (curr_field, 3);
 		return curr_field;
 	}
-	if ( leap_year (year) ) {
-		if ( days > leap_month_days[month] ) {
+	if (leap_year (year)) {
+		if (days > leap_month_days[month]) {
 			cob_set_int (curr_field, 3);
 			return curr_field;
 		}
 	} else {
-		if ( days > normal_month_days[month] ) {
+		if (days > normal_month_days[month]) {
 			cob_set_int (curr_field, 3);
 			return curr_field;
 		}
@@ -783,12 +783,12 @@ cob_intr_test_day_yyyyddd (cob_field *srcfield)
 	/* Base 1601-01-01 */
 	indate = cob_get_int (srcfield);
 	year = indate / 1000;
-	if ( year < 1601 || year > 9999 ) {
+	if (year < 1601 || year > 9999) {
 		cob_set_int (curr_field, 1);
 		return curr_field;
 	}
 	days = indate % 1000;
-	if ( days < 1 || days > 365 + leap_year (year) ) {
+	if (days < 1 || days > 365 + leap_year (year)) {
 		cob_set_int (curr_field, 2);
 		return curr_field;
 	}
@@ -806,7 +806,7 @@ cob_intr_factorial (cob_field *srcfield)
 	make_field_entry (&field);
 
 	srcval = cob_get_int (srcfield);
-	if ( srcval < 0 ) {
+	if (srcval < 0) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
@@ -826,7 +826,7 @@ cob_intr_exp (cob_field *srcfield)
 
 	errno = 0;
 	mathd2 = pow (2.7182818284590452354, intr_get_double (&d1));
-	if ( errno ) {
+	if (errno) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
@@ -844,7 +844,7 @@ cob_intr_exp10 (cob_field *srcfield)
 
 	errno = 0;
 	mathd2 = pow (10.0, intr_get_double (&d1));
-	if ( errno ) {
+	if (errno) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
@@ -877,14 +877,14 @@ cob_intr_acos (cob_field *srcfield)
 	
 	errno = 0;
 	mathd2 = acos (intr_get_double (&d1));
-	if ( errno ) {
+	if (errno) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 
 	result = (unsigned long long) mathd2;
 	mathd2 -= result;
-	for ( i = 0; i < 17; i++ ) {
+	for (i = 0; i < 17; i++) {
 		mathd2 *= 10;
 		tempres = (int) mathd2;
 		result *= 10;
@@ -909,13 +909,13 @@ cob_intr_asin (cob_field *srcfield)
 
 	errno = 0;
 	mathd2 = asin (intr_get_double (&d1));
-	if ( errno ) {
+	if (errno) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 	result = (long long) mathd2;
 	mathd2 -= result;
-	for ( i = 0; i < 17; i++ ) {
+	for (i = 0; i < 17; i++) {
 		mathd2 *= 10;
 		tempres = (int) mathd2;
 		result *= 10;
@@ -940,13 +940,13 @@ cob_intr_atan (cob_field *srcfield)
 
 	errno = 0;
 	mathd2 = atan (intr_get_double (&d1));
-	if ( errno ) {
+	if (errno) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 	result = (long long) mathd2;
 	mathd2 -= result;
-	for ( i = 0; i < 17; i++ ) {
+	for (i = 0; i < 17; i++) {
 		mathd2 *= 10;
 		tempres = (int) mathd2;
 		result *= 10;
@@ -971,13 +971,13 @@ cob_intr_cos (cob_field *srcfield)
 
 	errno = 0;
 	mathd2 = cos (intr_get_double (&d1));
-	if ( errno ) {
+	if (errno) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 	result = (long long) mathd2;
 	mathd2 -= result;
-	for ( i = 0; i < 17; i++ ) {
+	for (i = 0; i < 17; i++) {
 		mathd2 *= 10;
 		tempres = (int) mathd2;
 		result *= 10;
@@ -998,7 +998,7 @@ cob_intr_log (cob_field *srcfield)
 
 	errno = 0;
 	mathd2 = log (intr_get_double (&d1));
-	if ( errno ) {
+	if (errno) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
@@ -1016,7 +1016,7 @@ cob_intr_log10 (cob_field *srcfield)
 
 	errno = 0;
 	mathd2 = log10(intr_get_double (&d1));
-	if ( errno ) {
+	if (errno) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
@@ -1038,13 +1038,13 @@ cob_intr_sin (cob_field *srcfield)
 
 	errno = 0;
 	mathd2 = sin (intr_get_double (&d1));
-	if ( errno ) {
+	if (errno) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 	result = (long long) mathd2;
 	mathd2 -= result;
-	for ( i = 0; i < 17; i++ ) {
+	for (i = 0; i < 17; i++) {
 		mathd2 *= 10;
 		tempres = (int) mathd2;
 		result *= 10;
@@ -1065,7 +1065,7 @@ cob_intr_sqrt (cob_field *srcfield)
 
 	errno = 0;
 	mathd2 = sqrt (intr_get_double (&d1));
-	if ( errno ) {
+	if (errno) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
@@ -1083,7 +1083,7 @@ cob_intr_tan (cob_field *srcfield)
 
 	errno = 0;
 	mathd2 = tan (intr_get_double (&d1));
-	if ( errno ) {
+	if (errno) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
@@ -1114,46 +1114,46 @@ cob_intr_numval (cob_field *srcfield)
 	memset (final_buff, 0, sizeof (final_buff));
 
 	memcpy (rec_buff, srcfield->data, srcfield->size);
-	for ( i = 0; i < srcfield->size; i++ ) {
-		if ( strcasecmp ((char *)&rec_buff[i], "CR") == 0
-		     || strcasecmp ((char *)&rec_buff[i], "DB") == 0 ) {
+	for (i = 0; i < srcfield->size; i++) {
+		if (strcasecmp ((char *)&rec_buff[i], "CR") == 0
+		     || strcasecmp ((char *)&rec_buff[i], "DB") == 0) {
 			sign = 1;
 			break;
 		}
-		if ( rec_buff[i] == ' ' ) {
+		if (rec_buff[i] == ' ') {
 			continue;
 		}
-		if ( rec_buff[i] == '+' ) {
+		if (rec_buff[i] == '+') {
 			continue;
 		}
-		if ( rec_buff[i] == '-' ) {
+		if (rec_buff[i] == '-') {
 			sign = 1;
 			continue;
 		}
-		if ( rec_buff[i] == cob_current_module->decimal_point ) {
+		if (rec_buff[i] == cob_current_module->decimal_point) {
 			decimal_seen = 1;
 			continue;
 		}
-		if ( rec_buff[i] >= '0' && rec_buff[i] <= '9' ) {
+		if (rec_buff[i] >= '0' && rec_buff[i] <= '9') {
 			llval *= 10;
 			llval += rec_buff[i] - '0';
-			if ( decimal_seen ) {
+			if (decimal_seen) {
 				decimal_buff[decimal_digits++] = rec_buff[i];
 			} else {
 				integer_buff[integer_digits++] = rec_buff[i];
 			}
 		}
 	}
-	if ( !integer_digits ) {
+	if (!integer_digits) {
 		integer_buff[0] = '0';
 	}
-	if ( !decimal_digits ) {
+	if (!decimal_digits) {
 		decimal_buff[0] = '0';
 	}
-	if ( sign ) {
+	if (sign) {
 		llval = -llval;
 	}
-	if ( (integer_digits + decimal_digits) <= 18 ) {
+	if ((integer_digits + decimal_digits) <= 18) {
 		attr.scale = decimal_digits;
 		make_field_entry (&field);
 		memcpy (curr_field->data, (char *)&llval, 8);
@@ -1189,46 +1189,46 @@ cob_intr_numval_c (cob_field *srcfield)
 	memset (final_buff, 0, sizeof (final_buff));
 
 	memcpy (rec_buff, srcfield->data, srcfield->size);
-	for ( i = 0; i < srcfield->size; i++ ) {
-		if ( strcasecmp ((char *)&rec_buff[i], "CR") == 0
-		     || strcasecmp ((char *)&rec_buff[i], "DB") == 0 ) {
+	for (i = 0; i < srcfield->size; i++) {
+		if (strcasecmp ((char *)&rec_buff[i], "CR") == 0
+		     || strcasecmp ((char *)&rec_buff[i], "DB") == 0) {
 			sign = 1;
 			break;
 		}
-		if ( rec_buff[i] == ' ' ) {
+		if (rec_buff[i] == ' ') {
 			continue;
 		}
-		if ( rec_buff[i] == '+' ) {
+		if (rec_buff[i] == '+') {
 			continue;
 		}
-		if ( rec_buff[i] == '-' ) {
+		if (rec_buff[i] == '-') {
 			sign = 1;
 			continue;
 		}
-		if ( rec_buff[i] == cob_current_module->decimal_point ) {
+		if (rec_buff[i] == cob_current_module->decimal_point) {
 			decimal_seen = 1;
 			continue;
 		}
-		if ( rec_buff[i] >= '0' && rec_buff[i] <= '9' ) {
+		if (rec_buff[i] >= '0' && rec_buff[i] <= '9') {
 			llval *= 10;
 			llval += rec_buff[i] - '0';
-			if ( decimal_seen ) {
+			if (decimal_seen) {
 				decimal_buff[decimal_digits++] = rec_buff[i];
 			} else {
 				integer_buff[integer_digits++] = rec_buff[i];
 			}
 		}
 	}
-	if ( !integer_digits ) {
+	if (!integer_digits) {
 		integer_buff[0] = '0';
 	}
-	if ( !decimal_digits ) {
+	if (!decimal_digits) {
 		decimal_buff[0] = '0';
 	}
-	if ( sign ) {
+	if (sign) {
 		llval = -llval;
 	}
-	if ( (integer_digits + decimal_digits) <= 18 ) {
+	if ((integer_digits + decimal_digits) <= 18) {
 		attr.scale = decimal_digits;
 		make_field_entry (&field);
 		memcpy (curr_field->data, (char *)&llval, 8);
@@ -1253,7 +1253,7 @@ cob_intr_annuity (cob_field *srcfield1, cob_field *srcfield2)
 	
 	mathd1 = intr_get_double (&d1);
 	mathd2 = intr_get_double (&d2);
-	if ( mathd1 == 0 ) {
+	if (mathd1 == 0) {
 		mathd1 = 1.0 / mathd2;
 		memcpy (curr_field->data, (char *)&mathd1, sizeof (double));
 		return curr_field;
@@ -1280,12 +1280,12 @@ cob_intr_sum (int params, ...)
 	mpz_set_ui (d1.value, 0);
 	d1.scale = 0;
 
-	for ( i = 0; i < params; i++ ) {
+	for (i = 0; i < params; i++) {
 		f = va_arg (args, cob_field *);
-		if ( (f->attr->digits - f->attr->scale) > digits ) {
+		if ((f->attr->digits - f->attr->scale) > digits) {
 			digits = f->attr->digits - f->attr->scale;
 		}
-		if ( f->attr->scale > scale ) {
+		if (f->attr->scale > scale) {
 			scale = f->attr->scale;
 		}
 		cob_decimal_set_field (&d2, f);
@@ -1311,7 +1311,7 @@ cob_intr_ord_min (int params, ...)
 
 	make_field_entry (&field);
 
-	if ( params <= 1 ) {
+	if (params <= 1) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
@@ -1319,9 +1319,9 @@ cob_intr_ord_min (int params, ...)
 	va_start (args, params);
 
 	basef = va_arg (args, cob_field *);
-	for ( i = 1; i < params; i++ ) {
+	for (i = 1; i < params; i++) {
 		f = va_arg (args, cob_field *);
-		if ( cob_cmp (f, basef) < 0 ) {
+		if (cob_cmp (f, basef) < 0) {
 			basef = f;
 			ordmin = i;
 		}
@@ -1344,7 +1344,7 @@ cob_intr_ord_max (int params, ...)
 
 	make_field_entry (&field);
 
-	if ( params <= 1 ) {
+	if (params <= 1) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
@@ -1352,9 +1352,9 @@ cob_intr_ord_max (int params, ...)
 	va_start (args, params);
 
 	basef = va_arg (args, cob_field *);
-	for ( i = 1; i < params; i++ ) {
+	for (i = 1; i < params; i++) {
 		f = va_arg (args, cob_field *);
-		if ( cob_cmp (f, basef) > 0 ) {
+		if (cob_cmp (f, basef) > 0) {
 			basef = f;
 			ordmin = i;
 		}
@@ -1375,9 +1375,9 @@ cob_intr_min (int params, ...)
 	va_start (args, params);
 
 	basef = va_arg (args, cob_field *);
-	for ( i = 1; i < params; i++ ) {
+	for (i = 1; i < params; i++) {
 		f = va_arg (args, cob_field *);
-		if ( cob_cmp (f, basef) < 0 ) {
+		if (cob_cmp (f, basef) < 0) {
 			basef = f;
 		}
 	}
@@ -1396,9 +1396,9 @@ cob_intr_max (int params, ...)
 	va_start (args, params);
 
 	basef = va_arg (args, cob_field *);
-	for ( i = 1; i < params; i++ ) {
+	for (i = 1; i < params; i++) {
 		f = va_arg (args, cob_field *);
-		if ( cob_cmp (f, basef) > 0 ) {
+		if (cob_cmp (f, basef) > 0) {
 			basef = f;
 		}
 	}
@@ -1419,12 +1419,12 @@ cob_intr_midrange (int params, ...)
 
 	basemin = va_arg (args, cob_field *);
 	basemax = basemin;
-	for ( i = 1; i < params; i++ ) {
+	for (i = 1; i < params; i++) {
 		f = va_arg (args, cob_field *);
-		if ( cob_cmp (f, basemin) < 0 ) {
+		if (cob_cmp (f, basemin) < 0) {
 			basemin = f;
 		}
-		if ( cob_cmp (f, basemax) > 0 ) {
+		if (cob_cmp (f, basemax) > 0) {
 			basemax = f;
 		}
 	}
@@ -1451,14 +1451,14 @@ cob_intr_median (int params, ...)
 	va_start (args, params);
 
 	f = va_arg (args, cob_field *);
-	if ( params == 1 ) {
+	if (params == 1) {
 		return f;
 	}
 
 	field_alloc = cob_malloc (params * sizeof (cob_field *));
 	field_alloc[0] = f;
 
-	for ( i = 1; i < params; i++ ) {
+	for (i = 1; i < params; i++) {
 		field_alloc[i] = va_arg (args, cob_field *);
 	}
 	va_end (args);
@@ -1466,7 +1466,7 @@ cob_intr_median (int params, ...)
 	qsort (field_alloc, (size_t)params, (size_t)sizeof (cob_field *), comp_field);
 
 	i = params / 2;
-	if ( params % 2 ) {
+	if (params % 2) {
 		f = field_alloc[i];
 	} else {
 		make_double_entry ();
@@ -1500,7 +1500,7 @@ cob_intr_mean (int params, ...)
 	mpz_set_ui (d1.value, 0);
 	d1.scale = 0;
 
-	for ( i = 0; i < params; i++ ) {
+	for (i = 0; i < params; i++) {
 		f = va_arg (args, cob_field *);
 		cob_decimal_set_field (&d2, f);
 		cob_decimal_add (&d1, &d2);
@@ -1514,9 +1514,9 @@ cob_intr_mean (int params, ...)
 	cob_decimal_get_field (&d1, &field, 0);
 	n = *(long long *)data;
 	i = 0;
-	for ( ; n; n /= 10, i++ ) ;
+	for (; n; n /= 10, i++) ;
 	field.data = NULL;
-	if ( i <= 18 ) {
+	if (i <= 18) {
 		attr.scale = 18 - i;
 	}
 	make_field_entry (&field);
@@ -1556,19 +1556,19 @@ cob_intr_range (int params, ...)
 
 	basemin = va_arg (args, cob_field *);
 	basemax = basemin;
-	for ( i = 1; i < params; i++ ) {
+	for (i = 1; i < params; i++) {
 		f = va_arg (args, cob_field *);
-		if ( cob_cmp (f, basemin) < 0 ) {
+		if (cob_cmp (f, basemin) < 0) {
 			basemin = f;
 		}
-		if ( cob_cmp (f, basemax) > 0 ) {
+		if (cob_cmp (f, basemax) > 0) {
 			basemax = f;
 		}
 	}
 	va_end (args);
 
 	attr.scale = basemin->attr->scale;
-	if ( basemax->attr->scale > attr.scale ) {
+	if (basemax->attr->scale > attr.scale) {
 		attr.scale = basemax->attr->scale;
 	}
 	make_field_entry (&field);
@@ -1594,7 +1594,7 @@ cob_intr_rem (cob_field *srcfield1, cob_field *srcfield2)
 	cob_decimal_sub (&d1, &d2);
 
 	attr.scale = srcfield1->attr->scale;
-	if ( srcfield2->attr->scale > attr.scale ) {
+	if (srcfield2->attr->scale > attr.scale) {
 		attr.scale = srcfield2->attr->scale;
 	}
 	make_field_entry (&field);
@@ -1614,10 +1614,10 @@ cob_intr_random (int params, ...)
 
 	va_start (args, params);
 
-	if ( params ) {
+	if (params) {
 		f = va_arg (args, cob_field *);
 		seed = cob_get_int (f);
-		if ( seed < 0 ) {
+		if (seed < 0) {
 			seed = 0;
 		}
 		srand ((unsigned int)seed);
@@ -1625,12 +1625,12 @@ cob_intr_random (int params, ...)
 	va_end (args);
 
 	randnum = rand ();
-	for ( i = 0; i < 10; i++ ) {
-		if ( (randnum / cob_exp10[i]) == 0 ) {
+	for (i = 0; i < 10; i++) {
+		if ((randnum / cob_exp10[i]) == 0) {
 			break;
 		}
 	}
-	if ( i == 0 ) {
+	if (i == 0) {
 		i = 1;
 	}
 	attr.scale = i;
@@ -1650,7 +1650,7 @@ cob_intr_variance (int params, ...)
 	unsigned char	data[16];
 	va_list		args;
 
-	if ( params == 1 ) {
+	if (params == 1) {
 		make_field_entry (&field);
 		cob_set_int (curr_field, 0);
 		return curr_field;
@@ -1662,7 +1662,7 @@ cob_intr_variance (int params, ...)
 	mpz_set_ui (d1.value, 0);
 	d1.scale = 0;
 
-	for ( i = 0; i < params; i++ ) {
+	for (i = 0; i < params; i++) {
 		f = va_arg (args, cob_field *);
 		cob_decimal_set_field (&d2, f);
 		cob_decimal_add (&d1, &d2);
@@ -1679,7 +1679,7 @@ cob_intr_variance (int params, ...)
 
 	va_start (args, params);
 
-	for ( i = 0; i < params; i++ ) {
+	for (i = 0; i < params; i++) {
 		f = va_arg (args, cob_field *);
 		cob_decimal_set_field (&d2, f);
 		cob_decimal_sub (&d2, &d1);
@@ -1695,9 +1695,9 @@ cob_intr_variance (int params, ...)
 	cob_decimal_get_field (&d4, &field, 0);
 	n = *(long long *)data;
 	i = 0;
-	for ( ; n; n /= 10, i++ ) ;
+	for (; n; n /= 10, i++) ;
 	field.data = NULL;
-	if ( i <= 18 ) {
+	if (i <= 18) {
 		attr.scale = 18 - i;
 	}
 	make_field_entry (&field);
@@ -1715,7 +1715,7 @@ cob_intr_standard_deviation (int params, ...)
 	va_start (args, params);
 	make_double_entry ();
 
-	if ( params == 1 ) {
+	if (params == 1) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
@@ -1724,7 +1724,7 @@ cob_intr_standard_deviation (int params, ...)
 	mpz_set_ui (d1.value, 0);
 	d1.scale = 0;
 
-	for ( i = 0; i < params; i++ ) {
+	for (i = 0; i < params; i++) {
 		f = va_arg (args, cob_field *);
 		cob_decimal_set_field (&d2, f);
 		cob_decimal_add (&d1, &d2);
@@ -1741,7 +1741,7 @@ cob_intr_standard_deviation (int params, ...)
 
 	va_start (args, params);
 
-	for ( i = 0; i < params; i++ ) {
+	for (i = 0; i < params; i++) {
 		f = va_arg (args, cob_field *);
 		cob_decimal_set_field (&d2, f);
 		cob_decimal_sub (&d2, &d1);
@@ -1780,7 +1780,7 @@ cob_intr_present_value (int params, ...)
 	va_start (args, params);
 	make_double_entry ();
 
-	if ( params < 2 ) {
+	if (params < 2) {
 		fprintf (stderr, "Wrong number of parameters for FUNCTION PRESENT-VALUE\n");
 		fflush (stderr);
 		cob_set_int (curr_field, 0);
@@ -1795,12 +1795,12 @@ cob_intr_present_value (int params, ...)
 	mpz_set_ui (d4.value, 0);
 	d4.scale = 0;
 
-	for ( i = 1; i < params; i++ ) {
+	for (i = 1; i < params; i++) {
 		f = va_arg (args, cob_field *);
 		cob_decimal_set_field (&d2, f);
 		mpz_set (d3.value, d1.value);
 		d3.scale = d1.scale;
-		if ( i > 1 ) {
+		if (i > 1) {
 			mpz_set_ui (d5.value, i);
 			d5.scale = 0;
 			cob_decimal_pow (&d3, &d5);
@@ -1833,13 +1833,13 @@ cob_intr_year_to_yyyy (int params, ...)
 	va_start (args, params);
 	f = va_arg (args, cob_field *);
 	year = cob_get_int (f);
-	if ( params > 1 ) {
+	if (params > 1) {
 		f = va_arg (args, cob_field *);
 		interval = cob_get_int (f);
 	} else {
 		interval = 50;
 	}
-	if ( params > 2 ) {
+	if (params > 2) {
 		f = va_arg (args, cob_field *);
 		xqtyear = cob_get_int (f);
 	} else {
@@ -1849,20 +1849,20 @@ cob_intr_year_to_yyyy (int params, ...)
 	}
 	va_end (args);
 
-	if ( year < 0 || year > 99 ) {
+	if (year < 0 || year > 99) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
-	if ( xqtyear < 1601 || xqtyear > 9999 ) {
+	if (xqtyear < 1601 || xqtyear > 9999) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 	maxyear = xqtyear + interval;
-	if ( maxyear < 1700 || maxyear > 9999 ) {
+	if (maxyear < 1700 || maxyear > 9999) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
-	if ( maxyear % 100 >= year ) {
+	if (maxyear % 100 >= year) {
 		year += 100 * ( maxyear / 100 );
 	} else {
 		year += 100 * ( (maxyear / 100) - 1 );
@@ -1893,13 +1893,13 @@ cob_intr_date_to_yyyymmdd (int params, ...)
 	year = cob_get_int (f);
 	mmdd = year % 10000;
 	year /= 10000;
-	if ( params > 1 ) {
+	if (params > 1) {
 		f = va_arg (args, cob_field *);
 		interval = cob_get_int (f);
 	} else {
 		interval = 50;
 	}
-	if ( params > 2 ) {
+	if (params > 2) {
 		f = va_arg (args, cob_field *);
 		xqtyear = cob_get_int (f);
 	} else {
@@ -1909,20 +1909,20 @@ cob_intr_date_to_yyyymmdd (int params, ...)
 	}
 	va_end (args);
 
-	if ( year < 0 || year > 999999 ) {
+	if (year < 0 || year > 999999) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
-	if ( xqtyear < 1601 || xqtyear > 9999 ) {
+	if (xqtyear < 1601 || xqtyear > 9999) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 	maxyear = xqtyear + interval;
-	if ( maxyear < 1700 || maxyear > 9999 ) {
+	if (maxyear < 1700 || maxyear > 9999) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
-	if ( maxyear % 100 >= year ) {
+	if (maxyear % 100 >= year) {
 		year += 100 * ( maxyear / 100 );
 	} else {
 		year += 100 * ( (maxyear / 100) - 1 );
@@ -1955,13 +1955,13 @@ cob_intr_day_to_yyyyddd (int params, ...)
 	year = cob_get_int (f);
 	days = year % 1000;
 	year /= 1000;
-	if ( params > 1 ) {
+	if (params > 1) {
 		f = va_arg (args, cob_field *);
 		interval = cob_get_int (f);
 	} else {
 		interval = 50;
 	}
-	if ( params > 2 ) {
+	if (params > 2) {
 		f = va_arg (args, cob_field *);
 		xqtyear = cob_get_int (f);
 	} else {
@@ -1971,20 +1971,20 @@ cob_intr_day_to_yyyyddd (int params, ...)
 	}
 	va_end (args);
 
-	if ( year < 0 || year > 999999 ) {
+	if (year < 0 || year > 999999) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
-	if ( xqtyear < 1601 || xqtyear > 9999 ) {
+	if (xqtyear < 1601 || xqtyear > 9999) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 	maxyear = xqtyear + interval;
-	if ( maxyear < 1700 || maxyear > 9999 ) {
+	if (maxyear < 1700 || maxyear > 9999) {
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
-	if ( maxyear % 100 >= year ) {
+	if (maxyear % 100 >= year) {
 		year += 100 * ( maxyear / 100 );
 	} else {
 		year += 100 * ( (maxyear / 100) - 1 );

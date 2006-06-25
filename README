@@ -176,7 +176,7 @@ If you are a developer, consider building the latest OpenCOBOL
 from the CVS repository.
 
 You need to install the following extra packages with specified
-minimum version before building OpenCOBOL:
+minimum version before changing/building OpenCOBOL:
 
 For compiling :
   o Bison 1.875

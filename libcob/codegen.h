@@ -32,7 +32,7 @@ cob_get_numdisp (unsigned char *data, int size)
 	while ( size-- ) {
 		retval *= 10;
 		retval += (*data - (unsigned char)'0');
-		data++;;
+		data++;
 	}
 	return retval;
 }
@@ -416,7 +416,7 @@ cob_sub_u8_binary (unsigned char *p, const int val)
 	*p -= val;
 }
 
-static inline void
+static void
 cob_sub_s8_binary (unsigned char *p, const int val)
 {
 	*(signed char *)p -= val;

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2006-06-08 15:42+0200\n"
+"POT-Creation-Date: 2006-06-23 13:56+0200\n"
 "PO-Revision-Date: 2004-08-01 23:55+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -768,7 +768,7 @@ msgstr ""
 msgid "Warn possible field truncation (NOT set with -Wall)"
 msgstr ""
 
-#: libcob/call.c:356
+#: libcob/call.c:358
 #, fuzzy, c-format
 msgid "cannot find module '%s'"
 msgstr "モジュールが見付かりません `%s'"
@@ -824,89 +824,89 @@ msgstr ""
 msgid "cob_strdup called with invalid string"
 msgstr ""
 
-#: libcob/fileio.c:1986
+#: libcob/fileio.c:2196
 #, fuzzy
 msgid "End of file"
 msgstr "ファイルの終わりです"
 
-#: libcob/fileio.c:1989
+#: libcob/fileio.c:2199
 #, fuzzy
 msgid "Key out of range"
 msgstr "キーの範囲が不当です"
 
-#: libcob/fileio.c:1992
+#: libcob/fileio.c:2202
 #, fuzzy
 msgid "Key order not ascending"
 msgstr "キーが昇順ではありません"
 
-#: libcob/fileio.c:1995
+#: libcob/fileio.c:2205
 #, fuzzy
 msgid "Record key already exists"
 msgstr "レコードキーが既に存在します"
 
-#: libcob/fileio.c:1998
+#: libcob/fileio.c:2208
 #, fuzzy
 msgid "Record key does not exist"
 msgstr "レコードキーが存在しません"
 
-#: libcob/fileio.c:2001
+#: libcob/fileio.c:2211
 #, fuzzy
 msgid "Permanent file error"
 msgstr "永続ファイルエラーです"
 
-#: libcob/fileio.c:2004
+#: libcob/fileio.c:2214
 #, fuzzy
 msgid "File does not exist"
 msgstr "ファイルが存在しません"
 
-#: libcob/fileio.c:2007
+#: libcob/fileio.c:2217
 #, fuzzy
 msgid "Permission denied"
 msgstr "利用許可がありません"
 
-#: libcob/fileio.c:2010
+#: libcob/fileio.c:2220
 #, fuzzy
 msgid "File already open"
 msgstr "ファイルは既に開いています"
 
-#: libcob/fileio.c:2013
+#: libcob/fileio.c:2223
 #, fuzzy
 msgid "File not open"
 msgstr "ファイルが開いていません"
 
-#: libcob/fileio.c:2016
+#: libcob/fileio.c:2226
 msgid "READ must be executed first"
 msgstr "READ を先に実行しなければなりません"
 
-#: libcob/fileio.c:2019
+#: libcob/fileio.c:2229
 #, fuzzy
 msgid "Record overflow"
 msgstr "レコードの領域を超えています"
 
-#: libcob/fileio.c:2022
+#: libcob/fileio.c:2232
 #, fuzzy
 msgid "Failed to read"
 msgstr "読み込みに失敗しました"
 
-#: libcob/fileio.c:2025
+#: libcob/fileio.c:2235
 #, fuzzy
 msgid "READ/START not allowed"
 msgstr "READ、START は許可されません"
 
-#: libcob/fileio.c:2028
+#: libcob/fileio.c:2238
 msgid "WRITE not allowed"
 msgstr "WRITE は許可されません"
 
-#: libcob/fileio.c:2031
+#: libcob/fileio.c:2241
 #, fuzzy
 msgid "DELETE/REWRITE not allowed"
 msgstr "DELETE、REWRITE は許可されません"
 
-#: libcob/fileio.c:2038
+#: libcob/fileio.c:2248
 msgid "LINAGE values invalid"
 msgstr ""
 
-#: libcob/fileio.c:2041
+#: libcob/fileio.c:2251
 #, fuzzy
 msgid "Unknown file error"
 msgstr "原因不明のファイルエラーです"
