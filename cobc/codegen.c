@@ -126,7 +126,7 @@ lookup_call (const char *p, const char *q)
 			return;
 		}
 	}
-	clp = cob_malloc (sizeof (struct call_list));
+	clp = cobc_malloc (sizeof (struct call_list));
 	clp->callname = p;
 	clp->callorig = q;
 	clp->next = call_cache;
@@ -443,7 +443,7 @@ lookup_attr (char type, char digits, char scale, char flags, unsigned char *pic)
 	/* output new attribute */
 
 	/* cache it */
-	l = cob_malloc (sizeof (struct attr_list));
+	l = cobc_malloc (sizeof (struct attr_list));
 	l->id = cb_id;
 	l->type = type;
 	l->digits = digits;
@@ -587,7 +587,7 @@ lookup_literal (cb_tree x)
 	output_target = savetarget;
 
 	/* cache it */
-	l = cob_malloc (sizeof (struct literal_list));
+	l = cobc_malloc (sizeof (struct literal_list));
 	l->id = cb_id;
 	l->literal = literal;
 	l->x = x;
@@ -966,7 +966,7 @@ output_param (cb_tree x, int id)
 				output_target = NULL;
 				output_field (x);
 
-				l = cob_malloc (sizeof (struct field_list));
+				l = cobc_malloc (sizeof (struct field_list));
 				l->x = x;
 				l->f = f;
 				l->nulldata = (r->subs != NULL);
@@ -1504,16 +1504,16 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
 
 			if (!buff) {
 				if (f->size <= COB_SMALL_BUFF) {
-					buff = cob_malloc (COB_SMALL_BUFF);
+					buff = cobc_malloc (COB_SMALL_BUFF);
 					lastsize = COB_SMALL_BUFF;
 				} else {
-					buff = cob_malloc (f->size);
+					buff = cobc_malloc (f->size);
 					lastsize = f->size;
 				}
 			} else {
 				if (f->size > lastsize) {
 					free (buff);
-					buff = cob_malloc (f->size);
+					buff = cobc_malloc (f->size);
 					lastsize = f->size;
 				}
 			}
@@ -2133,7 +2133,7 @@ output_perform_call (struct cb_label *lb, struct cb_label *le)
 	}
 	output_line ("frame_stack[frame_index].perform_through = %d;", le->id);
 #if	!defined(__GNUC__)
-	l = cob_malloc (sizeof (struct label_list));
+	l = cobc_malloc (sizeof (struct label_list));
 	l->next = label_cache;
 	l->id = cb_id;
 	if (label_cache == NULL) {

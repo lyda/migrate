@@ -117,7 +117,7 @@ extern struct cb_label		*current_section, *current_paragraph;
 extern jmp_buf			cob_jmpbuf;
 
 extern struct cb_text_list	*cb_text_list_add (struct cb_text_list *list, const char *name);
-extern void			*cob_malloc (const size_t size);
+extern void			*cobc_malloc (const size_t size);
 
 
 /* config.c */

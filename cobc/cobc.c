@@ -204,7 +204,7 @@ cob_tree_cast_error (cb_tree x, const char * filen, int linenum, int tagnum)
 }
 
 void *
-cob_malloc (const size_t size)
+cobc_malloc (const size_t size)
 {
 	void *mptr;
 
@@ -221,7 +221,7 @@ cob_malloc (const size_t size)
 struct cb_text_list *
 cb_text_list_add (struct cb_text_list *list, const char *text)
 {
-	struct cb_text_list *p = cob_malloc (sizeof (struct cb_text_list));
+	struct cb_text_list *p = cobc_malloc (sizeof (struct cb_text_list));
 	p->text = strdup (text);
 	p->next = NULL;
 	if (!list) {
@@ -695,7 +695,7 @@ process_filename (const char *filename)
 	struct filename	*ffn;
 	char		basename[COB_SMALL_BUFF];
 
-	fn = cob_malloc (sizeof (struct filename));
+	fn = cobc_malloc (sizeof (struct filename));
 	fn->need_preprocess = 1;
 	fn->need_translate = 1;
 	fn->need_assemble = 1;
@@ -733,7 +733,7 @@ process_filename (const char *filename)
 	}
 
 	/* Set source filename */
-	fn->source = cob_malloc (strlen (filename) + 3);
+	fn->source = cobc_malloc (strlen (filename) + 3);
 	strcpy (fn->source, filename);
 
 	/* Set preprocess filename */
@@ -742,7 +742,7 @@ process_filename (const char *filename)
 	} else if (output_name && cb_compile_level == CB_LEVEL_PREPROCESS) {
 		fn->preprocess = strdup (output_name);
 	} else if (save_temps) {
-		fn->preprocess = cob_malloc (strlen (basename) + 5);
+		fn->preprocess = cobc_malloc (strlen (basename) + 5);
 		sprintf (fn->preprocess, "%s.i", basename);
 	} else {
 		fn->preprocess = temp_name (".cob");
@@ -754,7 +754,7 @@ process_filename (const char *filename)
 	} else if (output_name && cb_compile_level == CB_LEVEL_TRANSLATE) {
 		fn->translate = strdup (output_name);
 	} else if (save_temps || cb_compile_level == CB_LEVEL_TRANSLATE) {
-		fn->translate = cob_malloc (strlen (basename) + 5);
+		fn->translate = cobc_malloc (strlen (basename) + 5);
 		sprintf (fn->translate, "%s.c", basename);
 	} else {
 		fn->translate = temp_name (".c");
@@ -766,7 +766,7 @@ process_filename (const char *filename)
 	} else if (output_name && cb_compile_level == CB_LEVEL_ASSEMBLE) {
 		fn->object = strdup (output_name);
 	} else if (save_temps || cb_compile_level == CB_LEVEL_ASSEMBLE) {
-		fn->object = cob_malloc (strlen (basename) + 5);
+		fn->object = cobc_malloc (strlen (basename) + 5);
 #if defined(_MSC_VER)
 		sprintf (fn->object, "%s.obj", basename);
 #else
@@ -774,7 +774,7 @@ process_filename (const char *filename)
 #endif
 	} else {
 #if defined(_MSC_VER)
-		fn->object = cob_malloc (strlen (basename) + 5);
+		fn->object = cobc_malloc (strlen (basename) + 5);
 		sprintf (fn->object, "%s.obj", basename);
 #else
 		fn->object = temp_name (".o");
@@ -802,7 +802,7 @@ process (const char *cmd)
 	}
 	clen = strlen (cmd) + 32;
 	if (clen > COB_MEDIUM_BUFF) {
-		buffptr = cob_malloc (clen);
+		buffptr = cobc_malloc (clen);
 	} else {
 		buffptr = buff;
 	}
@@ -961,7 +961,7 @@ process_translate (struct filename *fn)
 	}
 
 	/* open the storage file */
-	cb_storage_file_name = cob_malloc (strlen (fn->translate) + 3);
+	cb_storage_file_name = cobc_malloc (strlen (fn->translate) + 3);
 	sprintf (cb_storage_file_name, "%s.h", fn->translate);
 	fn->trstorage = cb_storage_file_name;
 	cb_storage_file = fopen (cb_storage_file_name, "w");
@@ -1142,7 +1142,7 @@ process_link (struct filename *l)
 		bufflen += strlen (f->object) + 2;
 	}
 	if (bufflen >= COB_MEDIUM_BUFF) {
-		objsptr = cob_malloc (bufflen);
+		objsptr = cobc_malloc (bufflen);
 	} else {
 		objsptr = objs;
 	}
@@ -1164,7 +1164,7 @@ process_link (struct filename *l)
 			+ strlen (name) + strlen (objsptr) + strlen (cob_libs)
 			+ 16;
 	if (bufflen >= COB_MEDIUM_BUFF) {
-		buffptr = cob_malloc (bufflen);
+		buffptr = cobc_malloc (bufflen);
 	} else {
 		buffptr = buff;
 	}

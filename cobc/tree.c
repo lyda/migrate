@@ -100,7 +100,7 @@ to_cname (const char *s)
 static void *
 make_tree (int tag, enum cb_category category, size_t size)
 {
-	cb_tree x = cob_malloc (size);
+	cb_tree x = cobc_malloc (size);
 
 	x->tag = tag;
 	x->category = category;
@@ -483,7 +483,7 @@ cb_init_constants (void)
 	cb_int3 = cb_int (3);
 	cb_int4 = cb_int (4);
 	for (i = 1; i < 8; i++) {
-		char *s = cob_malloc (4);
+		char *s = cobc_malloc (4);
 
 		sprintf (s, "i%d", i);
 		cb_i[i] = make_constant (CB_CATEGORY_NUMERIC, s);
@@ -510,7 +510,7 @@ cb_int (int n)
 	x = make_tree (CB_TAG_INTEGER, CB_CATEGORY_NUMERIC, sizeof (struct cb_integer));
 	x->val = n;
 
-	p = cob_malloc (sizeof (struct int_node));
+	p = cobc_malloc (sizeof (struct int_node));
 	p->n = n;
 	p->node = CB_TREE (x);
 	p->next = int_node_table;
@@ -591,7 +591,7 @@ build_literal (enum cb_category category, const unsigned char *data, size_t size
 {
 	struct cb_literal *p = make_tree (CB_TAG_LITERAL, category, sizeof (struct cb_literal));
 
-	p->data = cob_malloc ((size_t) (size + 1));
+	p->data = cobc_malloc ((size_t) (size + 1));
 	p->size = size;
 	memcpy (p->data, data, (size_t) size);
 	p->data[size] = 0;
@@ -622,7 +622,7 @@ cb_concat_literals (cb_tree x1, cb_tree x2)
 	unsigned char		*buff;
 	cb_tree			x;
 
-	buff = cob_malloc (l1->size + l2->size + 3);
+	buff = cobc_malloc (l1->size + l2->size + 3);
 	memcpy (buff, l1->data, l1->size);
 	memcpy (buff + l1->size, l2->data, l2->size);
 	x = cb_build_alphanumeric_literal (buff, l1->size + l2->size);
@@ -877,7 +877,7 @@ repeat:
 		pic->category = CB_CATEGORY_ALPHANUMERIC;
 		break;
 	case PIC_NUMERIC_EDITED:
-		pic->str = cob_malloc (idx + 1);
+		pic->str = cobc_malloc (idx + 1);
 		memcpy (pic->str, buff, idx);
 		pic->category = CB_CATEGORY_NUMERIC_EDITED;
 		break;
@@ -885,7 +885,7 @@ repeat:
 	case PIC_ALPHABETIC_EDITED:
 	case PIC_ALPHANUMERIC_EDITED:
 	case PIC_NATIONAL_EDITED:
-		pic->str = cob_malloc (idx + 1);
+		pic->str = cobc_malloc (idx + 1);
 		memcpy (pic->str, buff, idx);
 		pic->category = CB_CATEGORY_ALPHANUMERIC_EDITED;
 		break;
@@ -1125,7 +1125,11 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 
 	/* compute the record size */
 	if (f->record_min == 0) {
-		f->record_min = records->size;
+		if (records) {
+			f->record_min = records->size;
+		} else {
+			f->record_min = 0;
+		}
 	}
 	for (p = records; p; p = p->sister) {
 		struct cb_field *v = cb_field_variable_size (p);
@@ -1756,7 +1760,7 @@ lookup_word (const char *name)
 	}
 
 	/* create new word */
-	p = cob_malloc (sizeof (struct cb_word));
+	p = cobc_malloc (sizeof (struct cb_word));
 	p->name = strdup (name);
 
 	/* insert it into the table */
@@ -1771,7 +1775,7 @@ lookup_word (const char *name)
 struct cb_program *
 cb_build_program (void)
 {
-	struct cb_program *p = cob_malloc (sizeof (struct cb_program));
+	struct cb_program *p = cobc_malloc (sizeof (struct cb_program));
 
 	p->decimal_point = '.';
 	p->currency_symbol = '$';

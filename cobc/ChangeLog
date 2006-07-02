@@ -1,3 +1,11 @@
+2006-07-02  Roger While <simrw@sim-basis.de>
+
+	* tree.c, typeck.c : Check not referenced SELECT
+
+2006-06-28  Roger While <simrw@sim-basis.de>
+
+	* All : Change cob_malloc to cobc_malloc
+
 2006-06-08  Roger While <simrw@sim-basis.de>
 
 	* typeck.c : With --debug, we should be generating subscript checking

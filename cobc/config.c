@@ -260,8 +260,8 @@ cb_load_conf (const char *fname, int check_nodef)
 
 				nores = read_string (val);
 				noresptr =
-				    (struct noreserve *)cob_malloc (sizeof (struct noreserve));
-				noresptr->noresword = cob_malloc (strlen (nores) + 1);
+				    (struct noreserve *)cobc_malloc (sizeof (struct noreserve));
+				noresptr->noresword = cobc_malloc (strlen (nores) + 1);
 				strcpy (noresptr->noresword, nores);
 				noresptr->next = norestab;
 				norestab = noresptr;

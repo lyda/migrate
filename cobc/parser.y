@@ -740,7 +740,7 @@ access_mode:
 alternative_record_key_clause:
   ALTERNATE RECORD _key _is reference opt_splitk flag_duplicates
   {
-    struct cb_alt_key *p = cob_malloc (sizeof (struct cb_alt_key));
+    struct cb_alt_key *p = cobc_malloc (sizeof (struct cb_alt_key));
     p->key = $5;
     p->duplicates = CB_INTEGER ($7)->val;
     p->next = NULL;
@@ -1441,7 +1441,7 @@ occurs_keys:
     if ($1)
       {
 	int i, nkeys = cb_list_length ($1);
-	struct cb_key *keys = cob_malloc (sizeof (struct cb_key) * nkeys);
+	struct cb_key *keys = cobc_malloc (sizeof (struct cb_key) * nkeys);
 	cb_tree l = $1;
 	for (i = 0; i < nkeys; i++)
 	  {

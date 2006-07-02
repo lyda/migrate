@@ -375,7 +375,7 @@ read_literal (char mark)
 	size_t		i = 0;
 
 	if (!buff) {
-		buff = cob_malloc (size);
+		buff = cobc_malloc (size);
 	}
 
 	while ((c = input ()) != EOF) {
@@ -415,16 +415,16 @@ scan_x (char *text)
 	currlen = strlen (text);
 	if (!buff) {
 		if (currlen <= COB_SMALL_BUFF) {
-			buff = cob_malloc (COB_SMALL_BUFF);
+			buff = cobc_malloc (COB_SMALL_BUFF);
 			lastlen = COB_SMALL_BUFF;
 		} else {
-			buff = cob_malloc (currlen);
+			buff = cobc_malloc (currlen);
 			lastlen = currlen;
 		}
 	} else {
 		if (currlen > lastlen) {
 			free (buff);
-			buff = cob_malloc (currlen);
+			buff = cobc_malloc (currlen);
 			lastlen = currlen;
 		} else {
 			memset (buff, 0, lastlen);
@@ -573,7 +573,7 @@ cb_add_78 (struct cb_field *f)
 {
 	struct cb_level_78	*p78;
 
-	p78 = cob_malloc (sizeof(struct cb_level_78));
+	p78 = cobc_malloc (sizeof(struct cb_level_78));
 	p78->fld78 = f;
 	p78->next = lev78ptr;
 	lev78ptr = p78;

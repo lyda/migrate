@@ -178,7 +178,7 @@ cb_replace_list_add (struct cb_replace_list *list,
 		     struct cb_text_list *old_text,
 		     struct cb_text_list *new_text)
 {
-	struct cb_replace_list *p = cob_malloc (sizeof (struct cb_replace_list));
+	struct cb_replace_list *p = cobc_malloc (sizeof (struct cb_replace_list));
 
 	p->old_text = old_text;
 	p->new_text = new_text;

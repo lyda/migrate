@@ -261,7 +261,7 @@ ppopen (char *name, struct cb_replace_list *replace_list)
 	}
 
 	/* Preserve the current buffer */
-	p = cob_malloc (sizeof (struct copy_info));
+	p = cobc_malloc (sizeof (struct copy_info));
 	p->line = cb_source_line;
 	p->file = cb_source_file;
 	p->replacing = replace_list ? 1 : 0;

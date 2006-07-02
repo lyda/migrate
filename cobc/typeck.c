@@ -707,6 +707,11 @@ cb_validate_program_data (struct cb_program *prog)
 {
 	cb_tree l;
 
+	for (l = current_program->file_list; l; l = CB_CHAIN (l)) {
+		if (!CB_FILE (CB_VALUE (l))->finalized) {
+			finalize_file (CB_FILE (CB_VALUE (l)), NULL);
+		}
+	}
 	/* build undeclared assignment name now */
 	if (cb_assign_clause == CB_ASSIGN_MF) {
 		for (l = current_program->file_list; l; l = CB_CHAIN (l)) {
@@ -812,7 +817,7 @@ cb_expr_init (void)
 		expr_prio[0] = 10;
 		/* init stack */
 		expr_stack_size = START_STACK_SIZE;
-		expr_stack = cob_malloc (sizeof (struct expr_node) * START_STACK_SIZE);
+		expr_stack = cobc_malloc (sizeof (struct expr_node) * START_STACK_SIZE);
 		expr_stack[0].token = 0;	/* dummy */
 		expr_stack[1].token = 0;	/* dummy */
 		expr_stack[2].token = 0;	/* dummy */
@@ -3285,7 +3290,7 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 		    cat == CB_CATEGORY_NUMERIC_EDITED) {
 			return cb_build_move_call (src, dst);
 		}
-		buff = cob_malloc (f->size);
+		buff = cobc_malloc (f->size);
 		for (i = 0; i < f->size; i++) {
 			buff[i] = l->data[i % l->size];
 		}
@@ -3308,7 +3313,7 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 		    && f->pic->scale == l->scale && !f->flag_sign_leading && !f->flag_sign_separate)
 		   || ((cat == CB_CATEGORY_ALPHABETIC || cat == CB_CATEGORY_ALPHANUMERIC)
 		       && f->size < l->size + 16 && !cb_field_variable_size (f))) {
-		unsigned char	*buff = cob_malloc (f->size);
+		unsigned char	*buff = cobc_malloc (f->size);
 		int		diff = f->size - l->size;
 		int		i;
 		unsigned char	bbyte;

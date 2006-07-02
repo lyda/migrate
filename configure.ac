@@ -284,59 +284,88 @@ then
 	if test "$HAS_DB41" = "yes"
 	then
 		AC_DEFINE(USE_DB41)
-	fi
-	AC_CHECK_HEADERS([db.h db_185.h db3/db_185.h db4/db_185.h db4.1/db_185.h db4.2/db_185.h db4.3/db_185.h db4.4/db_185.h db4.5/db_185.h])
-	AC_CHECK_LIB([db-4.5], [__db_open],
-	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.5"],
-	  [AC_CHECK_LIB([db-4.5], [dbopen],
-	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.5"], [])])
-	if test "$USE_DB" != "yes"
-	then
-	AC_CHECK_LIB([db-4.4], [__db_open],
-	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.4"],
-	  [AC_CHECK_LIB([db-4.4], [dbopen],
-	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.4"], [])])
-	fi
-	if test "$USE_DB" != "yes"
-	then
-	AC_CHECK_LIB([db-4.3], [__db_open],
-	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.3"],
-	  [AC_CHECK_LIB([db-4.3], [dbopen],
-	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.3"], [])])
-	fi
-	if test "$USE_DB" != "yes"
-	then
-	AC_CHECK_LIB([db-4.2], [__db_open],
-	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.2"],
-	  [AC_CHECK_LIB([db-4.2], [dbopen],
-	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.2"], [])])
-	fi
-	if test "$USE_DB" != "yes"
-	then
-	AC_CHECK_LIB([db-4.1], [__db_open],
-	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.1"],
-	  [AC_CHECK_LIB([db-4.1], [dbopen],
-	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.1"], [])])
-	fi
-	if test "$USE_DB" != "yes"
-	then
-		if test "$HAS_DB41" != "no"
+		MYOLDLIBS="$LIBS"
+		for MYOCLIBS in db db-4.5 db-4.4 db-4.3 db-4.2 db-4.1
+		do
+			LIBS="$MYOLDLIBS -l$MYOCLIBS"
+			AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <db.h>]], [[
+			int major, minor, patch;
+			db_version (&major, &minor, &patch);
+			if (major == 4 && minor > 0) {
+				return 0;
+			}
+			if (major > 4) {
+				return 0;
+			}
+			return 1;]])],
+			[USE_DB="yes"],
+			[],
+			[])
+			if test "$USE_DB" != "no"
+			then
+				LIBCOB_LIBS="$LIBCOB_LIBS -l$MYOCLIBS"
+				break
+			fi
+		done
+		LIBS="$MYOLDLIBS"
+		if test "$USE_DB" != "yes"
 		then
 			AC_MSG_ERROR(Include file db.h implies version >=4.1 but no library found)
 		fi
-	AC_CHECK_LIB([db-4], [__db_open],
-	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4"],
-	  [AC_CHECK_LIB([db-4], [dbopen],
-	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4"], [])])
-	fi
-	
-	if test "$USE_DB" != "yes"
-	then
-	AC_CHECK_LIB([db], [__db_open],
-	[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
-	  [AC_CHECK_LIB([db], [dbopen],
-	    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
-		[AC_MSG_ERROR(libdb is required)])])
+	else
+		AC_CHECK_HEADERS([db.h db_185.h db3/db_185.h db4/db_185.h db4.1/db_185.h db4.2/db_185.h db4.3/db_185.h db4.4/db_185.h db4.5/db_185.h])
+		AC_CHECK_LIB([db-4.5], [__db_open],
+		[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.5"],
+		  [AC_CHECK_LIB([db-4.5], [dbopen],
+		    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.5"], [])])
+		if test "$USE_DB" != "yes"
+		then
+		AC_CHECK_LIB([db-4.4], [__db_open],
+		[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.4"],
+		  [AC_CHECK_LIB([db-4.4], [dbopen],
+		    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.4"], [])])
+		fi
+		if test "$USE_DB" != "yes"
+		then
+		AC_CHECK_LIB([db-4.3], [__db_open],
+		[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.3"],
+		  [AC_CHECK_LIB([db-4.3], [dbopen],
+		    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.3"], [])])
+		fi
+		if test "$USE_DB" != "yes"
+		then
+		AC_CHECK_LIB([db-4.2], [__db_open],
+		[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.2"],
+		  [AC_CHECK_LIB([db-4.2], [dbopen],
+		    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.2"], [])])
+		fi
+		if test "$USE_DB" != "yes"
+		then
+		AC_CHECK_LIB([db-4.1], [__db_open],
+		[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.1"],
+		  [AC_CHECK_LIB([db-4.1], [dbopen],
+		    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4.1"], [])])
+		fi
+		if test "$USE_DB" != "yes"
+		then
+#			if test "$HAS_DB41" != "no"
+#			then
+#				AC_MSG_ERROR(Include file db.h implies version >=4.1 but no library found)
+#			fi
+		AC_CHECK_LIB([db-4], [__db_open],
+		[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4"],
+		  [AC_CHECK_LIB([db-4], [dbopen],
+		    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb-4"], [])])
+		fi
+		
+		if test "$USE_DB" != "yes"
+		then
+		AC_CHECK_LIB([db], [__db_open],
+		[USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
+		  [AC_CHECK_LIB([db], [dbopen],
+		    [USE_DB="yes" LIBCOB_LIBS="$LIBCOB_LIBS -ldb"],
+			[AC_MSG_ERROR(libdb is required)])])
+		fi
 	fi
 fi
 

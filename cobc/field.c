@@ -519,13 +519,13 @@ validate_field_1 (struct cb_field *f)
 			case CB_CATEGORY_NUMERIC:
 				/* reconstruct the picture string */
 				if (f->pic->scale > 0) {
-					f->pic->str = cob_malloc (8);
+					f->pic->str = cobc_malloc (8);
 					sprintf (f->pic->str, "9%cV%c9%c",
 						 f->pic->digits - f->pic->scale, 1,
 						 f->pic->scale);
 					f->pic->size++;
 				} else {
-					f->pic->str = cob_malloc (4);
+					f->pic->str = cobc_malloc (4);
 					sprintf (f->pic->str, "9%c", f->pic->digits);
 				}
 				f->pic->category = CB_CATEGORY_NUMERIC_EDITED;
