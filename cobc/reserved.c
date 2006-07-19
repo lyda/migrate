@@ -69,7 +69,7 @@ static const struct reserved reserved_words[] = {
   {"AFTER",		AFTER},			/* 2002 */
   {"ALIGNED",		-1},			/* 2002 */
   {"ALL",		ALL},			/* 2002 */
-  {"ALLOCATE",		-1},			/* 2002 */
+  {"ALLOCATE",		ALLOCATE},		/* 2002 */
   {"ALPHABET",		ALPHABET},		/* 2002 */
   {"ALPHABETIC",	ALPHABETIC},		/* 2002 */
   {"ALPHABETIC-LOWER",	ALPHABETIC_LOWER},	/* 2002 */
@@ -100,7 +100,7 @@ static const struct reserved reserved_words[] = {
   {"B-OR",		-1},			/* 2002 */
   {"B-XOR",		-1},			/* 2002 */
   {"BACKGROUND-COLOR",	BACKGROUND_COLOR},	/* 2002 (C/S) */
-  {"BASED",		-1},			/* 2002 */
+  {"BASED",		BASED},			/* 2002 */
   {"BEFORE",		BEFORE},		/* 2002 */
   {"BELL",		BELL},			/* 2002 (C/S) */
   {"BINARY",		BINARY},		/* 2002 */
@@ -275,7 +275,7 @@ static const struct reserved reserved_words[] = {
   {"FOREGROUND-COLOR",	FOREGROUND_COLOR},	/* 2002 (C/S) */
   {"FOREVER",		-1},			/* 2002 (C/S) */
   {"FORMAT",		-1},			/* 2002 */
-  {"FREE",		-1},			/* 2002 */
+  {"FREE",		FREE},			/* 2002 */
   {"FROM",		FROM},			/* 2002 */
   {"FULL",		FULL},			/* 2002 (C/S) */
   {"FUNCTION",		0},			/* 2002 */
@@ -307,7 +307,7 @@ static const struct reserved reserved_words[] = {
   {"INHERITS",		-1},			/* 2002 */
   {"INITIAL",		TOK_INITIAL},		/* 2002 */
   {"INITIALIZE",	INITIALIZE},		/* 2002 */
-  {"INITIALIZED",	-1},			/* 2002 (C/S) */
+  {"INITIALIZED",	INITIALIZED},		/* 2002 */
   {"INITIATE",		-1},			/* 2002 */
   {"INPUT",		INPUT},			/* 2002 */
   {"INPUT-OUTPUT",	INPUT_OUTPUT},		/* 2002 */

@@ -459,7 +459,7 @@ scan_x (char *text)
 	}
 
 error:
-	cb_error (_("invalid X literal: %s"), text);
+	cb_error (_("Invalid X literal: %s"), text);
 	yylval = cb_error_node;
 	return LITERAL;
 }
@@ -495,7 +495,7 @@ scan_h (char *text)
 	return LITERAL;
 
 error:
-	cb_error (_("invalid H literal: %s"), text);
+	cb_error (_("Invalid H literal: %s"), text);
 	yylval = cb_error_node;
 	return LITERAL;
 }
@@ -520,14 +520,14 @@ scan_numeric (char *text)
 	}
 /*
 	if (strchr (text, (current_program->decimal_point == ',') ? '.' : ',')) {
-		cb_error (_("invalid numeric literal"));
+		cb_error (_("Invalid numeric literal"));
 	}
 */
 	if (strchr (text, '.')) {
-		cb_error (_("invalid numeric literal"));
+		cb_error (_("Invalid numeric literal"));
 	}
 	if (strchr (text, ',')) {
-		cb_error (_("invalid numeric literal"));
+		cb_error (_("Invalid numeric literal"));
 	}
 
 	yylval = cb_build_numeric_literal (sign, (unsigned char *)text, scale);

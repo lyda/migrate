@@ -308,6 +308,8 @@ extern void cob_accept_arg_number (cob_field *f);
 extern void cob_accept_arg_value (cob_field *f);
 extern int CBL_ERROR_PROC(char *x, int (**p)(char *s));
 extern void cob_chain_setup (void *data, const int parm, const int size);
+extern void cob_allocate (unsigned char **dataptr, cob_field *retptr, cob_field *sizefld);
+extern void cob_free_alloc (unsigned char **ptr1, unsigned char *ptr2);
 
 /* Utilities */
 

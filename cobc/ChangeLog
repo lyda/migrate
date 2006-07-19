@@ -1,3 +1,17 @@
+2006-07-19  Roger While <simrw@sim-basis.de>
+
+	* parser.y, typeck.c : Tighten up field checking
+	* All : General clean up
+
+2006-07-14  Roger While <simrw@sim-basis.de>
+
+	* parser.y, field.c : Change EXTERNAL checking
+
+2006-07-12  Roger While <simrw@sim-basis.de>
+
+	* parse.y, reserved.c, tree.h, tree.c typeck.c, codegen.c :
+		Implement ALLOCATE/FREE
+
 2006-07-02  Roger While <simrw@sim-basis.de>
 
 	* tree.c, typeck.c : Check not referenced SELECT

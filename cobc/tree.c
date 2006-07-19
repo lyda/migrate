@@ -758,9 +758,9 @@ repeat:
 				goto error;
 			}
 			at_beginning = (idx == 0)		/* P... */
-			    ||(idx == 2 && buff[0] == 'V');	/* VP... */
+			    || (idx == 2 && buff[0] == 'V');	/* VP... */
 			at_end = (p[1] == 0)		/* ...P */
-			    ||(p[1] == 'V' && p[2] == 0);	/* ...PV */
+			    || (p[1] == 'V' && p[2] == 0);	/* ...PV */
 
 			if (!at_beginning && !at_end) {
 				goto error;
@@ -1794,8 +1794,8 @@ make_intrinsic (cb_tree name, struct cb_intrinsic_table *cbp, cb_tree args, cb_t
 
 /* Leave in, we may need this
 	cb_tree			l;
-	for ( l = args; l; l = CB_CHAIN(l) ) {
-		switch (CB_TREE_TAG (CB_VALUE(l)) ) {
+	for (l = args; l; l = CB_CHAIN(l)) {
+		switch (CB_TREE_TAG (CB_VALUE(l))) {
 		case CB_TAG_CONST:
 		case CB_TAG_INTEGER:
 		case CB_TAG_LITERAL:

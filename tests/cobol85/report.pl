@@ -67,7 +67,7 @@ foreach $in (sort (glob("*.{CBL,SUB}"))) {
       print LOG "  ===== compile error =====\n";
     } else {
       if ($in =~ /\.CBL/) {
-	system ("rm -f XXXXX*");
+	system ("rm -f XXXXX*; test -n \"$ENV{DB_HOME}\" && rm -f $ENV{DB_HOME}/XXXXX*");
       }
       if (system ("$cmd > $exe.out") != 0) {
 	$execute_error++;

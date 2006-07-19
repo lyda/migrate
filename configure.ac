@@ -273,9 +273,12 @@ then
 elif test "$LIBDB" = "3"
 then
 	AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <db.h>]], [[
+		printf("checking for BDB db.h version >= 4.1 ... ");
 		#if (DB_VERSION_MAJOR > 4) || ((DB_VERSION_MAJOR == 4) && (DB_VERSION_MINOR > 0))
+		printf("yes (%d.%d)\n", DB_VERSION_MAJOR, DB_VERSION_MINOR);
 		return 0;
 		#else
+		printf("no (%d.%d)\n", DB_VERSION_MAJOR, DB_VERSION_MINOR);
 		return 1;
 		#endif]])],
 		[HAS_DB41="yes"],
@@ -285,18 +288,19 @@ then
 	then
 		AC_DEFINE(USE_DB41)
 		MYOLDLIBS="$LIBS"
-		for MYOCLIBS in db db-4.5 db-4.4 db-4.3 db-4.2 db-4.1
+		export MYOCLIBS
+		for MYOCLIBS in db-4.5 db-4.4 db-4.3 db-4.2 db-4.1 db
 		do
 			LIBS="$MYOLDLIBS -l$MYOCLIBS"
 			AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <db.h>]], [[
 			int major, minor, patch;
+			printf("checking for BDB 4.1 compatibility in %s ... ", getenv("MYOCLIBS"));
 			db_version (&major, &minor, &patch);
-			if (major == 4 && minor > 0) {
+			if (major == DB_VERSION_MAJOR && minor == DB_VERSION_MINOR) {
+				printf("yes\n");
 				return 0;
 			}
-			if (major > 4) {
-				return 0;
-			}
+			printf("no\n");
 			return 1;]])],
 			[USE_DB="yes"],
 			[],

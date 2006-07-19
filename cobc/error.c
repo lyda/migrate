@@ -136,7 +136,7 @@ redefinition_error (cb_tree x)
 {
 	struct cb_word	*w = CB_REFERENCE (x)->word;
 
-	cb_error_x (x, _("redefinition of '%s'"), w->name);
+	cb_error_x (x, _("Redefinition of '%s'"), w->name);
 	cb_error_x (CB_VALUE (w->items), _("'%s' previously defined here"), w->name);
 }
 
@@ -145,7 +145,7 @@ redefinition_warning (cb_tree x)
 {
 	struct cb_word	*w = CB_REFERENCE (x)->word;
 
-	cb_warning_x (x, _("redefinition of '%s'"), w->name);
+	cb_warning_x (x, _("Redefinition of '%s'"), w->name);
 	cb_warning_x (CB_VALUE (w->items), _("'%s' previously defined here"), w->name);
 }
 
@@ -222,26 +222,26 @@ ambiguous_error (cb_tree x)
 void
 group_error (cb_tree x, const char *clause)
 {
-	cb_error_x (x, _("group item '%s' cannot have %s clause"), cb_name (x), clause);
+	cb_error_x (x, _("Group item '%s' cannot have %s clause"), cb_name (x), clause);
 }
 
 void
 level_redundant_error (cb_tree x, const char *clause)
 {
-	cb_error_x (x, _("level %02d item '%s' cannot have %s clause"),
+	cb_error_x (x, _("Level %02d item '%s' cannot have %s clause"),
 		    cb_field (x)->level, cb_name (x), clause);
 }
 
 void
 level_require_error (cb_tree x, const char *clause)
 {
-	cb_error_x (x, _("level %02d item '%s' requires %s clause"),
+	cb_error_x (x, _("Level %02d item '%s' requires %s clause"),
 		    cb_field (x)->level, cb_name (x), clause);
 }
 
 void
 level_except_error (cb_tree x, const char *clause)
 {
-	cb_error_x (x, _("level %02d item '%s' cannot have other than %s clause"),
+	cb_error_x (x, _("Level %02d item '%s' cannot have other than %s clause"),
 		    cb_field (x)->level, cb_name (x), clause);
 }

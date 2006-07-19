@@ -171,7 +171,7 @@ cob_init_call (void)
 	if (s != NULL) {
 		p = cob_strdup (s);
 		s = strtok (p, ":");
-		for ( ; s; s = strtok (NULL, ":")) {
+		for (; s; s = strtok (NULL, ":")) {
 			for (i = 0; i < resolve_size; i++) {
 				sprintf (filename, "%s/%s.%s", resolve_path[i], s, COB_MODULE_EXT);
 				if (stat (filename, &st) == 0) {
@@ -355,7 +355,7 @@ cob_resolve (const char *name)
 		return func;
 	}
 #endif
-	sprintf (resolve_error_buff, _("cannot find module '%s'"), name);
+	sprintf (resolve_error_buff, _("Cannot find module '%s'"), name);
 	resolve_error = resolve_error_buff;
 	COB_SET_EXCEPTION (COB_EC_PROGRAM_NOT_FOUND);
 	return NULL;
@@ -413,7 +413,7 @@ cob_call_error (void)
 	const char	*s;
 
 	s = cob_resolve_error ();
-	if ( s ) {
+	if (s) {
 		cob_runtime_error ("%s", s);
 	} else {
 		cob_runtime_error ("%s", "Unknown error");

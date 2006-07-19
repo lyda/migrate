@@ -59,7 +59,7 @@ static const int leap_month_days[] =   {0,31,29,31,30,31,30,31,31,30,31,30,31};
 /* Static function prototypes */
 static void	make_double_entry (void);
 static void	make_field_entry (cob_field *f);
-static int	leap_year ( int year );
+static int	leap_year (int year);
 static double	intr_get_double (cob_decimal *d);
 static int	comp_field (const void *m1, const void *m2);
 
@@ -157,7 +157,7 @@ make_field_entry (cob_field *f)
 }
 
 static int
-leap_year ( int year )
+leap_year (int year)
 {
 	return ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) ? 1 : 0;
 }
@@ -564,7 +564,7 @@ cob_intr_date_of_integer (cob_field *srcdays)
 		memset (curr_field->data, '0', 8);
 		return curr_field;
 	}
-	while ( days > leapyear ) {
+	while (days > leapyear) {
 		days -= leapyear;
 		baseyear++;
 		if (leap_year (baseyear)) {
@@ -609,7 +609,7 @@ cob_intr_day_of_integer (cob_field *srcdays)
 		memset (curr_field->data, '0', 7);
 		return curr_field;
 	}
-	while ( days > leapyear ) {
+	while (days > leapyear) {
 		days -= leapyear;
 		baseyear++;
 		if (leap_year (baseyear)) {
@@ -667,7 +667,7 @@ cob_intr_integer_of_date (cob_field *srcfield)
 		}
 	}
 	totaldays = 0;
-	while ( baseyear != year ) {
+	while (baseyear != year) {
 		if (leap_year (baseyear)) {
 			totaldays += 366;
 		} else {
@@ -711,7 +711,7 @@ cob_intr_integer_of_day (cob_field *srcfield)
 		return curr_field;
 	}
 	totaldays = 0;
-	while ( baseyear != year ) {
+	while (baseyear != year) {
 		if (leap_year (baseyear)) {
 			totaldays += 366;
 		} else {
@@ -1103,45 +1103,47 @@ cob_intr_numval (cob_field *srcfield)
 	double		val;
 	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL};
 	cob_field	field = {8, NULL, &attr};
-	unsigned char	rec_buff[64];
 	unsigned char	integer_buff[64];
 	unsigned char	decimal_buff[64];
 	unsigned char	final_buff[64];
 
-	memset (rec_buff, 0, sizeof (rec_buff));
 	memset (integer_buff, 0, sizeof (integer_buff));
 	memset (decimal_buff, 0, sizeof (decimal_buff));
 	memset (final_buff, 0, sizeof (final_buff));
 
-	memcpy (rec_buff, srcfield->data, srcfield->size);
 	for (i = 0; i < srcfield->size; i++) {
-		if (strcasecmp ((char *)&rec_buff[i], "CR") == 0
-		     || strcasecmp ((char *)&rec_buff[i], "DB") == 0) {
+		if (i < (srcfield->size - 2)) {
+			if (strcasecmp ((char *)&srcfield->data[i], "CR") == 0
+			     || strcasecmp ((char *)&srcfield->data[i], "DB") == 0) {
+				sign = 1;
+				break;
+			}
+		}
+		if (srcfield->data[i] == ' ') {
+			continue;
+		}
+		if (srcfield->data[i] == '+') {
+			continue;
+		}
+		if (srcfield->data[i] == '-') {
 			sign = 1;
-			break;
-		}
-		if (rec_buff[i] == ' ') {
 			continue;
 		}
-		if (rec_buff[i] == '+') {
-			continue;
-		}
-		if (rec_buff[i] == '-') {
-			sign = 1;
-			continue;
-		}
-		if (rec_buff[i] == cob_current_module->decimal_point) {
+		if (srcfield->data[i] == cob_current_module->decimal_point) {
 			decimal_seen = 1;
 			continue;
 		}
-		if (rec_buff[i] >= '0' && rec_buff[i] <= '9') {
+		if (srcfield->data[i] >= '0' && srcfield->data[i] <= '9') {
 			llval *= 10;
-			llval += rec_buff[i] - '0';
+			llval += srcfield->data[i] - '0';
 			if (decimal_seen) {
-				decimal_buff[decimal_digits++] = rec_buff[i];
+				decimal_buff[decimal_digits++] = srcfield->data[i];
 			} else {
-				integer_buff[integer_digits++] = rec_buff[i];
+				integer_buff[integer_digits++] = srcfield->data[i];
 			}
+		}
+		if ((integer_digits + decimal_digits) > 30) {
+			break;
 		}
 	}
 	if (!integer_digits) {
@@ -1178,45 +1180,50 @@ cob_intr_numval_c (cob_field *srcfield)
 	double		val;
 	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL};
 	cob_field	field = {8, NULL, &attr};
-	unsigned char	rec_buff[64];
 	unsigned char	integer_buff[64];
 	unsigned char	decimal_buff[64];
 	unsigned char	final_buff[64];
 
-	memset (rec_buff, 0, sizeof (rec_buff));
 	memset (integer_buff, 0, sizeof (integer_buff));
 	memset (decimal_buff, 0, sizeof (decimal_buff));
 	memset (final_buff, 0, sizeof (final_buff));
 
-	memcpy (rec_buff, srcfield->data, srcfield->size);
 	for (i = 0; i < srcfield->size; i++) {
-		if (strcasecmp ((char *)&rec_buff[i], "CR") == 0
-		     || strcasecmp ((char *)&rec_buff[i], "DB") == 0) {
+		if (i < (srcfield->size - 2)) {
+			if (strcasecmp ((char *)&srcfield->data[i], "CR") == 0
+			     || strcasecmp ((char *)&srcfield->data[i], "DB") == 0) {
+				sign = 1;
+				break;
+			}
+		}
+		if (srcfield->data[i] == ' ') {
+			continue;
+		}
+		if (srcfield->data[i] == '+') {
+			continue;
+		}
+		if (srcfield->data[i] == '-') {
 			sign = 1;
-			break;
-		}
-		if (rec_buff[i] == ' ') {
 			continue;
 		}
-		if (rec_buff[i] == '+') {
-			continue;
-		}
-		if (rec_buff[i] == '-') {
-			sign = 1;
-			continue;
-		}
-		if (rec_buff[i] == cob_current_module->decimal_point) {
+		if (srcfield->data[i] == cob_current_module->decimal_point) {
 			decimal_seen = 1;
 			continue;
 		}
-		if (rec_buff[i] >= '0' && rec_buff[i] <= '9') {
+		if (srcfield->data[i] == cob_current_module->currency_symbol) {
+			continue;
+		}
+		if (srcfield->data[i] >= '0' && srcfield->data[i] <= '9') {
 			llval *= 10;
-			llval += rec_buff[i] - '0';
+			llval += srcfield->data[i] - '0';
 			if (decimal_seen) {
-				decimal_buff[decimal_digits++] = rec_buff[i];
+				decimal_buff[decimal_digits++] = srcfield->data[i];
 			} else {
-				integer_buff[integer_digits++] = rec_buff[i];
+				integer_buff[integer_digits++] = srcfield->data[i];
 			}
+		}
+		if ((integer_digits + decimal_digits) > 30) {
+			break;
 		}
 	}
 	if (!integer_digits) {
@@ -1863,9 +1870,9 @@ cob_intr_year_to_yyyy (int params, ...)
 		return curr_field;
 	}
 	if (maxyear % 100 >= year) {
-		year += 100 * ( maxyear / 100 );
+		year += 100 * (maxyear / 100);
 	} else {
-		year += 100 * ( (maxyear / 100) - 1 );
+		year += 100 * ((maxyear / 100) - 1);
 	}
 	cob_set_int (curr_field, year);
 	return curr_field;
@@ -1923,9 +1930,9 @@ cob_intr_date_to_yyyymmdd (int params, ...)
 		return curr_field;
 	}
 	if (maxyear % 100 >= year) {
-		year += 100 * ( maxyear / 100 );
+		year += 100 * (maxyear / 100);
 	} else {
-		year += 100 * ( (maxyear / 100) - 1 );
+		year += 100 * ((maxyear / 100) - 1);
 	}
 	year *= 10000;
 	year += mmdd;
@@ -1985,9 +1992,9 @@ cob_intr_day_to_yyyyddd (int params, ...)
 		return curr_field;
 	}
 	if (maxyear % 100 >= year) {
-		year += 100 * ( maxyear / 100 );
+		year += 100 * (maxyear / 100);
 	} else {
-		year += 100 * ( (maxyear / 100) - 1 );
+		year += 100 * ((maxyear / 100) - 1);
 	}
 	year *= 1000;
 	year += days;

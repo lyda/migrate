@@ -1,3 +1,30 @@
+2006-07-19  Roger While <simrw@sim-basis.de>
+
+	* All : General clean up
+
+2006-07-14  Roger While <simrw@sim-basis.de>
+
+	* codegen.h, numeric.c : Fix optimization for HP compiler
+	* intrinsic.c : Fix bug in NUMVAL routines
+
+2006-07-12  Roger While <simrw@sim-basis.de>
+
+	* common.[ch] : Implement ALLOCATE/FREE
+	* strings.c : Clean up
+
+2006-07-07  Roger While <simrw@sim-basis.de>
+
+	* codegen.h, numeric.c : More optimizations
+	* fileio.c : Further BDB fixes
+
+2006-07-06  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : BDB >= 4.1 fixes
+
+2006-07-04  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : BDB >= 4.1 fixes
+
 2006-06-22  Roger While <simrw@sim-basis.de>
 
 	* call.c : Set cob_exception_code for not found calls

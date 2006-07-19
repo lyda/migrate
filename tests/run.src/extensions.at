@@ -309,17 +309,17 @@ AT_DATA([prog.cob], [
 
 AT_CHECK([${COMPILE} -std=mf -o prog prog.cob], [0], ,
 [prog.cob: In paragraph 'S-03':
-prog.cob:35: Warning: move non-integer to alphanumeric
+prog.cob:35: Warning: Move non-integer to alphanumeric
 prog.cob: In paragraph 'S-10':
-prog.cob:39: Warning: move non-integer to alphanumeric
+prog.cob:39: Warning: Move non-integer to alphanumeric
 prog.cob: In paragraph 'S-20':
-prog.cob:43: Warning: move non-integer to alphanumeric
+prog.cob:43: Warning: Move non-integer to alphanumeric
 prog.cob: In paragraph 'S-30':
-prog.cob:47: Warning: move non-integer to alphanumeric
+prog.cob:47: Warning: Move non-integer to alphanumeric
 prog.cob: In paragraph 'S-40':
-prog.cob:51: Warning: move non-integer to alphanumeric
+prog.cob:51: Warning: Move non-integer to alphanumeric
 prog.cob: In paragraph 'S-50':
-prog.cob:55: Warning: move non-integer to alphanumeric
+prog.cob:55: Warning: Move non-integer to alphanumeric
 ])
 AT_CHECK([./prog], [0], [12891289128912891289128912891289])
 

@@ -153,7 +153,7 @@ cob_move_display_to_display (cob_field *f1, cob_field *f2)
 }
 
 static void
-cob_move_display_to_alphanum (cob_field * f1, cob_field * f2)
+cob_move_display_to_alphanum (cob_field *f1, cob_field *f2)
 {
 	int		sign = cob_get_sign (f1);
 	size_t		size1 = COB_FIELD_SIZE (f1);
@@ -184,7 +184,7 @@ cob_move_display_to_alphanum (cob_field * f1, cob_field * f2)
 }
 
 static void
-cob_move_alphanum_to_alphanum (cob_field * f1, cob_field * f2)
+cob_move_alphanum_to_alphanum (cob_field *f1, cob_field *f2)
 {
 	size_t		size1 = f1->size;
 	size_t		size2 = f2->size;

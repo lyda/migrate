@@ -54,14 +54,14 @@ get_level (cb_tree x)
 	return level;
 
 level_error:
-	cb_error_x (x, _("invalid level number '%s'"), name);
+	cb_error_x (x, _("Invalid level number '%s'"), name);
 	return -1;
 }
 
 cb_tree
 cb_build_field_tree (cb_tree level, cb_tree name,
-		     struct cb_field * last_field,
-		     enum cb_storage storage, struct cb_file * fn)
+		     struct cb_field *last_field,
+		     enum cb_storage storage, struct cb_file *fn)
 {
 	struct cb_reference	*r;
 	struct cb_field		*f;
@@ -81,7 +81,7 @@ cb_build_field_tree (cb_tree level, cb_tree name,
 	f = CB_FIELD (cb_build_field (name));
 	f->level = lv;
 	f->storage = storage;
-	if (f->level == 1 && storage == CB_STORAGE_FILE && fn->external) {
+	if (f->level == 01 && storage == CB_STORAGE_FILE && fn->external) {
 		f->flag_external = 1;
 		has_external = 1;
 	}
@@ -122,15 +122,17 @@ cb_build_field_tree (cb_tree level, cb_tree name,
 		}
 	} else if (!last_field) {
 		/* invalid top level */
-		cb_error_x (name, _("level number must begin with 01 or 77"));
+		cb_error_x (name, _("Level number must begin with 01 or 77"));
 		return cb_error_node;
 	} else if (f->level == 66) {
 		/* level 66 */
 		struct cb_field *p;
 
 		f->parent = cb_field_founder (last_field);
-		for (p = f->parent->children; p->sister; p = p->sister) ;
-		p->sister = f;
+		for (p = f->parent->children; p && p->sister; p = p->sister) ;
+		if (p) {
+			p->sister = f;
+		}
 	} else if (f->level == 88) {
 		/* level 88 */
 		f->parent = last_field;
@@ -160,7 +162,7 @@ same_level:
 			cb_tree		dummy_fill = cb_build_filler ();
 			struct cb_field *field_fill = CB_FIELD (cb_build_field (dummy_fill));
 
-			cb_warning_x (name, _("no previous data item of level %02d"), f->level);
+			cb_warning_x (name, _("No previous data item of level %02d"), f->level);
 			field_fill->level = f->level;
 			field_fill->storage = storage;
 			field_fill->children = p->children;
@@ -173,7 +175,7 @@ same_level:
 			f->parent = field_fill->parent;
 			last_field = field_fill;
 		} else {
-			cb_error_x (name, _("no previous data item of level %02d"), f->level);
+			cb_error_x (name, _("No previous data item of level %02d"), f->level);
 			return cb_error_node;
 		}
 	}
@@ -229,11 +231,11 @@ cb_resolve_redefines (struct cb_field *field, cb_tree redefines)
 
 	/* check level number */
 	if (f->level != field->level) {
-		cb_error_x (x, _("level number of REDEFINES entries must be identical"));
+		cb_error_x (x, _("Level number of REDEFINES entries must be identical"));
 		return NULL;
 	}
 	if (f->level == 66 || f->level == 88) {
-		cb_error_x (x, _("level number of REDEFINES entry cannot be 66 or 88"));
+		cb_error_x (x, _("Level number of REDEFINES entry cannot be 66 or 88"));
 		return NULL;
 	}
 
@@ -257,15 +259,40 @@ validate_field_1 (struct cb_field *f)
 	struct cb_field *p;
 	int		need_picture;
 
-	if (f->flag_external) {
-		if (f->level != 01) {
-			cb_error_x (x, _("'%s' EXTERNAL must be specified at 01 level"), name);
-			return -1;
+	if (f->level == 77) {
+		if (f->storage != CB_STORAGE_WORKING &&
+		    f->storage != CB_STORAGE_LOCAL &&
+		    f->storage != CB_STORAGE_LINKAGE) {
+			cb_error_x (x, _("'%s' 77 level not allowed here"), name);
 		}
-		if (f->storage == CB_STORAGE_LOCAL || f->storage == CB_STORAGE_LINKAGE) {
+	}
+	if (f->flag_external) {
+		if (f->level != 01 && f->level != 77) {
+			cb_error_x (x, _("'%s' EXTERNAL must be specified at 01/77 level"), name);
+		}
+		if (f->storage != CB_STORAGE_WORKING &&
+		    f->storage != CB_STORAGE_FILE) {
 			cb_error_x (x, _("'%s' EXTERNAL can only be specified in WORKING-STORAGE section"),
 				    name);
-			return -1;
+		}
+		if (f->flag_item_based) {
+			cb_error_x (x, _("'%s' EXTERNAL and BASED are mutually exclusive"), name);
+		}
+		if (f->redefines) {
+			cb_error_x (x, _("'%s' EXTERNAL not allowed with REDEFINES"), name);
+		}
+	}
+	if (f->flag_item_based) {
+		if (f->storage != CB_STORAGE_WORKING &&
+		    f->storage != CB_STORAGE_LOCAL &&
+		    f->storage != CB_STORAGE_LINKAGE) {
+			cb_error_x (x, _("'%s' BASED not allowed here"), name);
+		}
+		if (f->redefines) {
+			cb_error_x (x, _("'%s' BASED not allowed with REDEFINES"), name);
+		}
+		if (f->level != 01 && f->level != 77) {
+			cb_error_x (x, _("'%s' BASED only allowed at the 01 and 77 levels"), name);
 		}
 	}
 	if (f->level == 66) {
@@ -321,7 +348,7 @@ validate_field_1 (struct cb_field *f)
 	if (f->redefines) {
 		/* check OCCURS */
 		if (f->redefines->flag_occurs) {
-			cb_warning_x (x, _("the original definition '%s' should not have OCCURS"),
+			cb_warning_x (x, _("The original definition '%s' should not have OCCURS"),
 				      f->redefines->name);
 		}
 
@@ -339,7 +366,7 @@ validate_field_1 (struct cb_field *f)
 		}
 		if (cb_field_variable_size (f->redefines)) {
 			cb_error_x (x,
-				    _("the original definition '%s' cannot be variable length"),
+				    _("The original definition '%s' cannot be variable length"),
 				    f->redefines->name);
 		}
 	}
@@ -366,12 +393,6 @@ validate_field_1 (struct cb_field *f)
 		/* elementary item */
 
 		/* validate PICTURE */
-/* RXW remove
-		if (f->level == 78 && f->pic != NULL) {
-			cb_error_x (x, _("78 level can not have a PICTURE clause - '%s'"), name);
-			return -1;
-		}
-*/
 		need_picture = 1;
 		if (f->usage == CB_USAGE_INDEX
 		    || f->usage == CB_USAGE_LENGTH
@@ -396,7 +417,7 @@ validate_field_1 (struct cb_field *f)
 			int	vorint;
 			char	pic[16];
 
-			if (current_storage == CB_STORAGE_SCREEN) {
+			if (f->storage == CB_STORAGE_SCREEN) {
 				if (f->values) {
 					sprintf(pic, "X(%d)", CB_LITERAL(CB_VALUE(f->values))->size);
 				} else {
@@ -541,13 +562,13 @@ validate_field_1 (struct cb_field *f)
 		/* validate VALUE */
 		if (f->values) {
 			if (CB_PAIR_P (CB_VALUE (f->values)) || CB_CHAIN (f->values)) {
-				cb_error_x (x, _("only level 88 item may have multiple values"));
+				cb_error_x (x, _("Only level 88 item may have multiple values"));
 			}
 
 			/* ISO+IEC+1989-2002: 13.16.42.2-10 */
 			for (p = f; p; p = p->parent) {
 				if (p->redefines) {
-					cb_error_x (x, _("entries under REDEFINES cannot have VALUE clause"));
+					cb_error_x (x, _("Entries under REDEFINES cannot have VALUE clause"));
 				}
 				if (p->flag_external) {
 					cb_warning_x (x, _("VALUE clause ignored for EXTERNAL items"));
@@ -659,7 +680,7 @@ compute_size (struct cb_field *f)
 				    c->redefines->size * c->redefines->occurs_max) {
 					if (cb_larger_redefines_ok) {
 						cb_warning_x (CB_TREE (c),
-							      _("size of '%s' larger than size of '%s'"),
+							      _("Size of '%s' larger than size of '%s'"),
 							      c->name, c->redefines->name);
 						size +=
 						    (c->size * c->occurs_max) -
@@ -667,7 +688,7 @@ compute_size (struct cb_field *f)
 						     c->redefines->occurs_max);
 					} else {
 						cb_error_x (CB_TREE (c),
-							    _("size of '%s' larger than size of '%s'"),
+							    _("Size of '%s' larger than size of '%s'"),
 							    c->name, c->redefines->name);
 					}
 				}
@@ -787,10 +808,10 @@ compute_size (struct cb_field *f)
 	if (f->redefines && f->redefines->flag_external
 	    && (f->size * f->occurs_max > f->redefines->size * f->redefines->occurs_max)) {
 		if (cb_larger_redefines_ok) {
-			cb_warning_x (CB_TREE (f), _("size of '%s' larger than size of '%s'"),
+			cb_warning_x (CB_TREE (f), _("Size of '%s' larger than size of '%s'"),
 				      f->name, f->redefines->name);
 		} else {
-			cb_error_x (CB_TREE (f), _("size of '%s' larger than size of '%s'"),
+			cb_error_x (CB_TREE (f), _("Size of '%s' larger than size of '%s'"),
 				    f->name, f->redefines->name);
 		}
 	}
@@ -823,10 +844,12 @@ cb_validate_field (struct cb_field *f)
 	}
 
 	/* setup parameters */
-	if (f->storage == CB_STORAGE_LOCAL || f->storage == CB_STORAGE_LINKAGE) {
+	if (f->storage == CB_STORAGE_LOCAL ||
+	    f->storage == CB_STORAGE_LINKAGE ||
+	    f->flag_item_based) {
 		f->flag_local = 1;
 	}
-	if (f->storage == CB_STORAGE_LINKAGE) {
+	if (f->storage == CB_STORAGE_LINKAGE || f->flag_item_based) {
 		f->flag_base = 1;
 	}
 	setup_parameters (f);

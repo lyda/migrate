@@ -157,7 +157,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: Warning: redefinition of 'X'
+[prog.cob:7: Warning: Redefinition of 'X'
 prog.cob:6: Warning: 'X' previously defined here
 ])
 
@@ -175,7 +175,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: Warning: redefinition of 'X'
+[prog.cob:7: Warning: Redefinition of 'X'
 prog.cob:6: Warning: 'X' previously defined here
 ])
 
@@ -194,7 +194,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:8: Warning: redefinition of 'X'
+[prog.cob:8: Warning: Redefinition of 'X'
 prog.cob:7: Warning: 'X' previously defined here
 ])
 
@@ -212,7 +212,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: Warning: redefinition of 'X'
+[prog.cob:7: Warning: Redefinition of 'X'
 prog.cob:6: Warning: 'X' previously defined here
 ])
 
@@ -230,7 +230,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:7: Warning: redefinition of 'X'
+[prog.cob:7: Warning: Redefinition of 'X'
 prog.cob:6: Warning: 'X' previously defined here
 ])
 
@@ -249,7 +249,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:8: Warning: redefinition of 'A'
+[prog.cob:8: Warning: Redefinition of 'A'
 prog.cob:7: Warning: 'A' previously defined here
 ])
 
@@ -396,7 +396,7 @@ AT_DATA([prog.cob], [
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob: In section 'L':
-prog.cob:6: Error: redefinition of 'L'
+prog.cob:6: Error: Redefinition of 'L'
 prog.cob:5: Error: 'L' previously defined here
 ])
 
@@ -415,7 +415,7 @@ AT_DATA([prog.cob], [
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob: In section 'L':
-prog.cob:6: Error: redefinition of 'L'
+prog.cob:6: Error: Redefinition of 'L'
 prog.cob:5: Error: 'L' previously defined here
 ])
 
@@ -490,7 +490,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} -conf=test.conf prog.cob], [0], ,
-[prog.cob:9: Warning: no previous data item of level 04
+[prog.cob:9: Warning: No previous data item of level 04
 ])
 
 AT_CLEANUP

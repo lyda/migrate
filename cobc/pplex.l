@@ -378,7 +378,7 @@ start:
 		}
 	}
 	if (i < COB_MEDIUM_BUFF - 1 && buff[n - 1] != '\n') {
-		cb_warning (_("file unterminated by a newline"));
+		cb_warning (_("File not terminated by a newline"));
 		buff[n++] = '\n';
 	}
 	buff[n] = '\0';
@@ -421,7 +421,7 @@ start:
 	default:
 		/* invalid indicator */
 		if (last_line_1 < cb_source_line - 1) {
-			cb_warning (_("invalid indicator '%c' at column 7"), buff[6]);
+			cb_warning (_("Invalid indicator '%c' at column 7"), buff[6]);
 		}
 		last_line_1 = cb_source_line;
 		bp = buff + 6;
@@ -445,7 +445,7 @@ start:
 			int coln;
 			for (coln = cb_text_column; coln < n; coln++) {
 				if (buff[coln] != ' ' && buff[coln] != '\n') {
-					cb_warning (_("source text after column %d"),
+					cb_warning (_("Source text after column %d"),
 						    cb_text_column);
 					break;
 				}
@@ -474,7 +474,7 @@ start:
 			if (bp[0] == quotation_mark && bp[1] == quotation_mark) {
 				bp++;
 			} else {
-				cb_error (_("invalid line continuation"));
+				cb_error (_("Invalid line continuation"));
 				return YY_NULL;
 			}
 			quotation_mark = 0;
@@ -484,7 +484,7 @@ start:
 			if (*bp == quotation_mark) {
 				bp++;
 			} else {
-				cb_error (_("invalid line continuation"));
+				cb_error (_("Invalid line continuation"));
 				return YY_NULL;
 			}
 		}

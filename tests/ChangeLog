@@ -1,3 +1,12 @@
+2006-07-19  Roger While <simrw@sim-basis.de>
+
+	* syntax.src, run.src : Change tests to accomodate revised
+		messages
+
+2006-07-06  Roger While <simrw@sim-basis.de>
+
+	cobol85/report.pl : Cater for DB_HOME (BDB >= 4.1)
+
 2006-05-18  Roger While <simrw@sim-basis.de>
 
 	* OC tests for FUNCTION's EXCEPTION-FILE,

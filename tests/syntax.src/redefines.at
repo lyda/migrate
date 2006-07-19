@@ -61,7 +61,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: Error: level number of REDEFINES entries must be identical
+[prog.cob:8: Error: Level number of REDEFINES entries must be identical
 ])
 
 AT_CLEANUP
@@ -105,7 +105,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:9: Error: level number of REDEFINES entry cannot be 66 or 88
+[prog.cob:9: Error: Level number of REDEFINES entry cannot be 66 or 88
 ])
 
 AT_CLEANUP
@@ -126,7 +126,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: Error: level number of REDEFINES entry cannot be 66 or 88
+[prog.cob:8: Error: Level number of REDEFINES entry cannot be 66 or 88
 ])
 
 AT_CLEANUP
@@ -181,7 +181,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
-[prog.cob:8: Warning: the original definition 'X' should not have OCCURS
+[prog.cob:8: Warning: The original definition 'X' should not have OCCURS
 ])
 
 AT_CLEANUP
@@ -235,7 +235,7 @@ AT_DATA([prog.cob], [
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
 [prog.cob:8: Error: 'Y' cannot be variable length
 prog.cob:11: Error: 'Y' cannot be variable length
-prog.cob:16: Error: the original definition 'X' cannot be variable length
+prog.cob:16: Error: The original definition 'X' cannot be variable length
 ])
 
 AT_CLEANUP
@@ -320,9 +320,9 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: Error: size of 'A' larger than size of 'X'
-prog.cob:11: Error: size of 'A' larger than size of 'X'
-prog.cob:15: Error: size of 'EXT-X-REDEF' larger than size of 'EXT-X'
+[prog.cob:8: Error: Size of 'A' larger than size of 'X'
+prog.cob:11: Error: Size of 'A' larger than size of 'X'
+prog.cob:15: Error: Size of 'EXT-X-REDEF' larger than size of 'EXT-X'
 ])
 
 AT_CLEANUP
@@ -349,8 +349,8 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:7: Error: entries under REDEFINES cannot have VALUE clause
-prog.cob:9: Error: entries under REDEFINES cannot have VALUE clause
+[prog.cob:7: Error: Entries under REDEFINES cannot have VALUE clause
+prog.cob:9: Error: Entries under REDEFINES cannot have VALUE clause
 ])
 
 AT_CLEANUP

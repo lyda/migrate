@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-%expect 99
+%expect 114
 
 %defines
 %verbose
@@ -132,7 +132,7 @@ static int literal_value (cb_tree x);
 %token LINAGE_COUNTER PROGRAM_POINTER CHAINING BLANK_SCREEN BLANK_LINE
 %token NOT_EXCEPTION SIZE_ERROR NOT_SIZE_ERROR NOT_OVERFLOW NOT_EOP
 %token INVALID_KEY NOT_INVALID_KEY COMMA_DELIM DISK NO_ADVANCING
-%token PREVIOUS UNLOCK
+%token PREVIOUS UNLOCK ALLOCATE INITIALIZED FREE BASED
 
 %left '+' '-'
 %left '*' '/'
@@ -398,7 +398,7 @@ mnemonic_name_clause:
   {
     $$ = lookup_system_name (CB_NAME ($1));
     if ($$ == cb_error_node)
-      cb_error_x ($1, _("unknown system-name '%s'"), CB_NAME ($1));
+      cb_error_x ($1, _("Unknown system-name '%s'"), CB_NAME ($1));
   }
   special_name_mnemonic_define
   special_name_mnemonic_on_off
@@ -543,7 +543,7 @@ currency_sign_clause:
   {
     unsigned char *s = CB_LITERAL ($4)->data;
     if (CB_LITERAL ($4)->size != 1)
-      cb_error_x ($4, _("invalid currency sign '%s'"), s);
+      cb_error_x ($4, _("Invalid currency sign '%s'"), s);
     switch (*s) {
     case '0':
     case '1':
@@ -591,7 +591,7 @@ currency_sign_clause:
     case '=':
     case '"':
     case ' ':
-	cb_error_x ($4, _("invalid currency sign '%s'"), s);
+	cb_error_x ($4, _("Invalid currency sign '%s'"), s);
 	break;
     default:
 	break;
@@ -1195,7 +1195,7 @@ code_set_clause:
       {
 	cb_tree x = cb_ref ($3);
 	if (!CB_ALPHABET_NAME_P (x))
-	  cb_error_x ($3, _("alphabet-name is expected '%s'"), cb_name ($3));
+	  cb_error_x ($3, _("Alphabet-name is expected '%s'"), cb_name ($3));
 	else if (CB_ALPHABET_NAME (x)->custom_list)
 	  PENDING ("CODE-SET");
       }
@@ -1291,6 +1291,7 @@ data_description_clause:
 | justified_clause
 | synchronized_clause
 | blank_clause
+| based_clause
 | value_clause
 | renames_clause
 ;
@@ -1315,18 +1316,18 @@ redefines_clause:
 
 external_clause:
   _is EXTERNAL as_extname
-	{
+  {
 	if (current_storage != CB_STORAGE_WORKING) {
 		cb_error ("EXTERNAL not allowed here");
 		$$ = cb_error_node;
 	} else if (current_field->level != 1 && current_field->level != 77) {
-		cb_error ("EXTERNAL only allowed at 01 and 77 level");
+		cb_error ("EXTERNAL only allowed at 01/77 level");
 		$$ = cb_error_node;
 	} else {
 		current_field->flag_external = 1;
 		has_external = 1;
 	}
-	}
+  }
 ;
 
 as_extname:
@@ -1519,6 +1520,12 @@ blank_clause:
 ;
 
 
+/* BASED clause */
+
+based_clause:
+  BASED					{ current_field->flag_item_based = 1; }
+;
+
 /* VALUE clause */
 
 value_clause:
@@ -1552,19 +1559,30 @@ false_is:
 renames_clause:
   RENAMES qualified_word
   {
-    if (cb_ref ($2) != cb_error_node)
-      {
-	current_field->redefines = CB_FIELD (cb_ref ($2));
-	current_field->pic = current_field->redefines->pic;
-      }
+	if (cb_ref ($2) != cb_error_node) {
+		if (CB_FIELD (cb_ref ($2))->level == 01 ||
+		    CB_FIELD (cb_ref ($2))->level > 50) {
+			cb_error ("RENAMES may not reference a level 01 or > 50");
+		} else {
+			current_field->redefines = CB_FIELD (cb_ref ($2));
+			current_field->pic = current_field->redefines->pic;
+		}
+	}
   }
 | RENAMES qualified_word THRU qualified_word
   {
-    if (cb_ref ($2) != cb_error_node && cb_ref ($4) != cb_error_node)
-      {
-	current_field->redefines = CB_FIELD (cb_ref ($2));
-	current_field->rename_thru = CB_FIELD (cb_ref ($4));
-      }
+	if (cb_ref ($2) != cb_error_node && cb_ref ($4) != cb_error_node) {
+		if (CB_FIELD (cb_ref ($2))->level == 01 ||
+		    CB_FIELD (cb_ref ($2))->level > 50) {
+			cb_error ("RENAMES may not reference a level 01 or > 50");
+		} else if (CB_FIELD (cb_ref ($4))->level == 01 ||
+		    CB_FIELD (cb_ref ($4))->level > 50) {
+			cb_error ("RENAMES may not reference a level 01 or > 50");
+		} else {
+			current_field->redefines = CB_FIELD (cb_ref ($2));
+			current_field->rename_thru = CB_FIELD (cb_ref ($4));
+		}
+	}
   }
 ;
 
@@ -1708,7 +1726,7 @@ screen_option:
       case 6: current_field->screen_flag |= COB_SCREEN_FG_YELLOW; break;
       case 7: current_field->screen_flag |= COB_SCREEN_FG_WHITE; break;
       default:
-	cb_error (_("invalid color '%d'"), cb_get_int ($3));
+	cb_error (_("Invalid color '%d'"), cb_get_int ($3));
       }
   }
 | BACKGROUND_COLOR _is integer
@@ -1725,7 +1743,7 @@ screen_option:
       case 6: current_field->screen_flag |= COB_SCREEN_BG_YELLOW; break;
       case 7: current_field->screen_flag |= COB_SCREEN_BG_WHITE; break;
       default:
-	cb_error (_("invalid color '%d'"), cb_get_int ($3));
+	cb_error (_("Invalid color '%d'"), cb_get_int ($3));
       }
   }
 | usage_clause
@@ -1893,7 +1911,7 @@ invalid_statement:
   section_name
   {
     if ($1 != cb_error_node)
-      cb_error_x ($1, _("unknown statement '%s'"), CB_NAME ($1));
+      cb_error_x ($1, _("Unknown statement '%s'"), CB_NAME ($1));
     YYERROR;
   }
 ;
@@ -1937,6 +1955,7 @@ statements:
 statement:
   accept_statement
 | add_statement
+| allocate_statement
 | alter_statement
 | call_statement
 | cancel_statement
@@ -1949,6 +1968,7 @@ statement:
 | entry_statement
 | evaluate_statement
 | exit_statement
+| free_statement
 | goto_statement
 | goback_statement
 | if_statement
@@ -2101,6 +2121,36 @@ add_to:
 end_add:
   /* empty */			{ terminator_warning (); }
 | END_ADD
+;
+
+
+/*
+ * ALLOCATE statement
+ */
+
+allocate_statement:
+  ALLOCATE			{ BEGIN_STATEMENT ("ALLOCATE"); }
+  allocate_body
+;
+
+allocate_body:
+  allocate_expr_or_x CHARACTERS flag_initialized RETURNING target_x
+  {
+    cb_emit_allocate (NULL, $5, $1, $3);
+  }
+| target_x flag_initialized allocate_returning
+  {
+    cb_emit_allocate ($1, $3, NULL, $2);
+  }
+;
+
+allocate_expr_or_x:
+  expr					{ $$ = $1; }
+| x						{ $$ = $1; }
+
+allocate_returning:
+  /* empty */			{ $$ = NULL; }
+| RETURNING target_x	{ $$ = $2; }
 ;
 
 
@@ -2574,6 +2624,19 @@ exit_body:
     p->cycle_label = cb_build_reference (name);
     CB_LABEL (cb_build_label (p->cycle_label, 0))->need_begin = 1;
     cb_emit_goto (cb_list (p->cycle_label), 0);
+  }
+;
+
+
+/*
+ * FREE statement
+ */
+
+free_statement:
+  FREE			{ BEGIN_STATEMENT ("FREE"); }
+  target_x_list
+  {
+    cb_emit_free ($3)
   }
 ;
 
@@ -4200,6 +4263,11 @@ flag_global:
 | GLOBAL			{ $$ = cb_int1; }
 ;
 
+flag_initialized:
+  /* empty */			{ $$ = NULL; }
+| INITIALIZED			{ $$ = cb_int1; }
+;
+
 flag_next:
   /* empty */			{ $$ = cb_int0; }
 | NEXT				{ $$ = cb_int1; }
@@ -4309,6 +4377,9 @@ emit_entry (const char *name, const int encode, cb_tree using_list)
 			if (!current_program->is_chained) {
 				if (f->storage != CB_STORAGE_LINKAGE) {
 					cb_error_x (x, _("'%s' is not in LINKAGE SECTION"), cb_name (x));
+				}
+				if (f->flag_item_based || f->flag_external) {
+					cb_error_x (x, _("'%s' can not be BASED/EXTERNAL"), cb_name (x));
 				}
 			} else {
 				if (f->storage != CB_STORAGE_WORKING) {

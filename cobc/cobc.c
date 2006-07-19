@@ -194,7 +194,7 @@ static void cob_clean_up (int status);
  */
 
 void
-cob_tree_cast_error (cb_tree x, const char * filen, int linenum, int tagnum)
+cob_tree_cast_error (cb_tree x, const char *filen, int linenum, int tagnum)
 {
 	fprintf (stderr, "%s:%d: Invalid type cast from '%s'\n",
 		filen, linenum, x ? cb_name (x) : "null");
@@ -607,7 +607,7 @@ process_command_line (int argc, char *argv[])
 		}
 	}
 
-#if defined (__GNUC__)
+#ifdef	__GNUC__
 	strcat (cob_cflags, " -fsigned-char");
 #endif
 
@@ -767,13 +767,13 @@ process_filename (const char *filename)
 		fn->object = strdup (output_name);
 	} else if (save_temps || cb_compile_level == CB_LEVEL_ASSEMBLE) {
 		fn->object = cobc_malloc (strlen (basename) + 5);
-#if defined(_MSC_VER)
+#ifdef	_MSC_VER
 		sprintf (fn->object, "%s.obj", basename);
 #else
 		sprintf (fn->object, "%s.o", basename);
 #endif
 	} else {
-#if defined(_MSC_VER)
+#ifdef	_MSC_VER
 		fn->object = cobc_malloc (strlen (basename) + 5);
 		sprintf (fn->object, "%s.obj", basename);
 #else
@@ -1295,17 +1295,21 @@ main (int argc, char *argv[])
 			}
 		}
 		if (cb_compile_level == 0 && !wants_nonfinal) {
+/* RXW Comment out warning
 			fprintf (stderr, "Warning - Use '-x' to create an executable\n");
 			fprintf (stderr, "          Generating module\n");
 			fflush (stderr);
+*/
 			cb_compile_level = CB_LEVEL_MODULE;
 			cb_flag_module = 1;
 		}
 		if (wants_nonfinal && cb_compile_level != CB_LEVEL_PREPROCESS &&
 		    !cb_flag_main && !cb_flag_module) {
+/* RXW Comment out warning
 			fprintf (stderr, "Warning - Use '-x' to generate 'main' code\n");
 			fprintf (stderr, "          Generating module code\n");
 			fflush (stderr);
+*/
 			cb_flag_module = 1;
 		}
 	} else {

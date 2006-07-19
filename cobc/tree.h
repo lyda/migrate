@@ -267,8 +267,8 @@ extern void cb_init_constants (void);
  */
 
 struct cb_integer {
-  struct cb_tree_common common;
-  int val;
+	struct cb_tree_common	common;
+	int			val;
 };
 
 #define CB_INTEGER(x)	(CB_TREE_CAST (CB_TAG_INTEGER, struct cb_integer, x))
@@ -452,22 +452,23 @@ struct cb_field {
 	cb_tree			screen_to;
 	long			screen_flag; /* flags used in SCREEN SECTION */
 	/* flags */
-	unsigned int flag_external      : 1;	/* EXTERNAL */
-	unsigned int flag_blank_zero    : 1;	/* BLANK WHEN ZERO */
-	unsigned int flag_justified     : 1;	/* JUSTIFIED RIGHT */
-	unsigned int flag_sign_leading  : 1;	/* SIGN IS LEADING */
-	unsigned int flag_sign_separate : 1;	/* SIGN IS SEPARATE */
-	unsigned int flag_synchronized  : 1;	/* SYNCHRONIZED */
-	unsigned int flag_occurs        : 1;	/* OCCURS */
-	unsigned int flag_invalid       : 1;	/* is broken */
-	unsigned int flag_binary_swap   : 1;	/* binary byteswap */
-	unsigned int flag_local         : 1;	/* has local scope */
-	unsigned int flag_base          : 1;	/* has memory allocation */
-	unsigned int flag_field         : 1;	/* has been internally cached */
-	unsigned int flag_item_external : 1;	/* is EXTERNAL */
+	unsigned int flag_external	: 1;	/* EXTERNAL */
+	unsigned int flag_blank_zero	: 1;	/* BLANK WHEN ZERO */
+	unsigned int flag_justified	: 1;	/* JUSTIFIED RIGHT */
+	unsigned int flag_sign_leading	: 1;	/* SIGN IS LEADING */
+	unsigned int flag_sign_separate	: 1;	/* SIGN IS SEPARATE */
+	unsigned int flag_synchronized	: 1;	/* SYNCHRONIZED */
+	unsigned int flag_occurs	: 1;	/* OCCURS */
+	unsigned int flag_invalid	: 1;	/* is broken */
+	unsigned int flag_binary_swap	: 1;	/* binary byteswap */
+	unsigned int flag_local		: 1;	/* has local scope */
+	unsigned int flag_base		: 1;	/* has memory allocation */
+	unsigned int flag_field		: 1;	/* has been internally cached */
+	unsigned int flag_item_external	: 1;	/* is EXTERNAL */
 	unsigned int flag_chained	: 1;	/* CHAINING item */
 	unsigned int flag_real_binary	: 1;	/* is BINARY-CHAR/SHORT/LONG/DOUBLE */
-	unsigned int flag_spare		: 17;
+	unsigned int flag_item_based	: 1;	/* is BASED */
+	unsigned int flag_spare		: 16;
 };
 
 #define CB_FIELD(x)		(CB_TREE_CAST (CB_TAG_FIELD, struct cb_field, x))
@@ -639,6 +640,7 @@ extern cb_tree cb_build_funcall (const char *name, int argc, cb_tree a1,
 enum cb_cast_type {
 	CB_CAST_INTEGER,
 	CB_CAST_ADDRESS,
+	CB_CAST_ADDR_OF_ADDR,
 	CB_CAST_LENGTH,
 	CB_CAST_PROGRAM_POINTER
 };
@@ -656,6 +658,7 @@ extern cb_tree cb_build_cast (enum cb_cast_type type, cb_tree val);
 
 #define cb_build_cast_integer(x)	cb_build_cast (CB_CAST_INTEGER, x)
 #define cb_build_cast_address(x)	cb_build_cast (CB_CAST_ADDRESS, x)
+#define cb_build_cast_addr_of_addr(x)	cb_build_cast (CB_CAST_ADDR_OF_ADDR, x)
 #define cb_build_cast_length(x)		cb_build_cast (CB_CAST_LENGTH, x)
 #define cb_build_cast_ppointer(x)	cb_build_cast (CB_CAST_PROGRAM_POINTER, x)
 
@@ -1147,6 +1150,9 @@ extern void cb_emit_accept_name (cb_tree var, cb_tree name);
 extern void cb_emit_accept_arg_number (cb_tree var);
 extern void cb_emit_accept_arg_value (cb_tree var);
 
+extern void cb_emit_allocate (cb_tree target1, cb_tree target2, cb_tree size, cb_tree initialize);
+extern void cb_emit_free (cb_tree vars);
+
 extern void cb_emit_call (cb_tree prog, cb_tree using, cb_tree returning, cb_tree on_exception, cb_tree not_on_exception);
 
 extern void cb_emit_cancel (cb_tree prog);
@@ -1238,7 +1244,7 @@ extern void cb_emit_write (cb_tree record, cb_tree from, cb_tree opt);
 extern cb_tree cb_build_write_advancing_lines (cb_tree pos, cb_tree lines);
 extern cb_tree cb_build_write_advancing_mnemonic (cb_tree pos, cb_tree mnemonic);
 extern cb_tree cb_build_write_advancing_page (cb_tree pos);
-extern void	cob_tree_cast_error (cb_tree x, const char * filen, int linenum, int tagnum);
+extern void	cob_tree_cast_error (cb_tree x, const char *filen, int linenum, int tagnum);
 
 /* bytegen.c */
 /* extern void bytegen (struct cb_program *prog); */

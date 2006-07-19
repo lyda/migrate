@@ -56,9 +56,15 @@ struct cob_exception {
 	const int	critical;
 };
 
-static int		cob_argc = 0;
-static char		**cob_argv = NULL;
-static const unsigned char *old_sequence;
+struct cob_alloc_cache {
+	struct cob_alloc_cache	*next;
+	void			*cob_pointer;
+};
+
+static int			cob_argc = 0;
+static char			**cob_argv = NULL;
+static const unsigned char	*old_sequence;
+static struct cob_alloc_cache	*cob_alloc_base = NULL;
 
 int			cob_initialized = 0;
 int			cob_exception_code = 0;
@@ -333,20 +339,20 @@ cob_sig_handler (int sig)
 	fflush (stderr);
 	cob_screen_terminate ();
 	cob_exit_fileio ();
-	switch ( sig ) {
+	switch (sig) {
 	case SIGHUP:
 		if ((hupsig != SIG_IGN) && (hupsig != SIG_DFL)) {
-			(*hupsig)(SIGHUP);
+			(*hupsig) (SIGHUP);
 		}
 		break;
 	case SIGINT:
 		if ((intsig != SIG_IGN) && (intsig != SIG_DFL)) {
-			(*intsig)(SIGINT);
+			(*intsig) (SIGINT);
 		}
 		break;
 	case SIGQUIT:
 		if ((qutsig != SIG_IGN) && (qutsig != SIG_DFL)) {
-			(*qutsig)(SIGQUIT);
+			(*qutsig) (SIGQUIT);
 		}
 		break;
 	}
@@ -358,14 +364,14 @@ void
 cob_set_signal ()
 {
 #ifdef	HAVE_SIGNAL_H
-	if ((intsig = signal(SIGINT, cob_sig_handler)) == SIG_IGN) {
-		(void)signal(SIGINT, SIG_IGN);
+	if ((intsig = signal (SIGINT, cob_sig_handler)) == SIG_IGN) {
+		(void)signal (SIGINT, SIG_IGN);
 	}
-	if ((hupsig = signal(SIGHUP, cob_sig_handler)) == SIG_IGN) {
-		(void)signal(SIGHUP, SIG_IGN);
+	if ((hupsig = signal (SIGHUP, cob_sig_handler)) == SIG_IGN) {
+		(void)signal (SIGHUP, SIG_IGN);
 	}
-	if ((qutsig = signal(SIGQUIT, cob_sig_handler)) == SIG_IGN) {
-		(void)signal(SIGQUIT, SIG_IGN);
+	if ((qutsig = signal (SIGQUIT, cob_sig_handler)) == SIG_IGN) {
+		(void)signal (SIGQUIT, SIG_IGN);
 	}
 #endif
 }
@@ -422,7 +428,7 @@ void
 cob_module_enter (cob_module *module)
 {
 	if (!cob_initialized) {
-		fputs (_("warning: cob_init expected in the main program\n"), stderr);
+		fputs (_("Warning: cob_init expected in the main program\n"), stderr);
 		cob_init (0, NULL);
 	}
 
@@ -1120,6 +1126,7 @@ cob_table_sort (cob_field *f, int n)
 	sort_base = f;
 	qsort (f->data, (size_t) n, f->size, sort_compare);
 	cob_current_module->collating_sequence = old_sequence;
+	free (sort_keys);
 }
 
 /* Runtime error handling */
@@ -1177,13 +1184,13 @@ cob_runtime_error (const char *fmt, ...)
 		p = str;
 		if (cob_source_file) {
 			sprintf (str, "%s:%d: ", cob_source_file, cob_source_line);
-			p = str + strlen(str);
+			p = str + strlen (str);
 		}
 		va_start (ap, fmt);
 		vsprintf (p, fmt, ap);
 		va_end (ap);
 		while (h != NULL) {
-			h->proc(str);
+			h->proc (str);
 			h = h->next;
 		}
 	}
@@ -1242,7 +1249,7 @@ cob_check_subscript (int i, int min, int max, const char *name)
 	/* check the subscript */
 	if (i < min || max < i) {
 		COB_SET_EXCEPTION (COB_EC_BOUND_SUBSCRIPT);
-		cob_runtime_error (_("subscript of '%s' out of bounds: %d"), name, i);
+		cob_runtime_error (_("Subscript of '%s' out of bounds: %d"), name, i);
 		cob_stop_run (1);
 	}
 }
@@ -1253,14 +1260,14 @@ cob_check_ref_mod (int offset, int length, int size, const char *name)
 	/* check the offset */
 	if (offset < 1 || offset > size) {
 		COB_SET_EXCEPTION (COB_EC_BOUND_REF_MOD);
-		cob_runtime_error (_("offset of '%s' out of bounds: %d"), name, offset);
+		cob_runtime_error (_("Offset of '%s' out of bounds: %d"), name, offset);
 		cob_stop_run (1);
 	}
 
 	/* check the length */
 	if (length < 1 || offset + length - 1 > size) {
 		COB_SET_EXCEPTION (COB_EC_BOUND_REF_MOD);
-		cob_runtime_error (_("length of '%s' out of bounds: %d"), name, length);
+		cob_runtime_error (_("Length of '%s' out of bounds: %d"), name, length);
 		cob_stop_run (1);
 	}
 }
@@ -1540,5 +1547,67 @@ cob_chain_setup (void *data, const int parm, const int size)
 		} else {
 			memcpy (data, cob_argv[parm], size);
 		}
+	}
+}
+
+void
+cob_allocate (unsigned char **dataptr, cob_field *retptr, cob_field *sizefld)
+{
+	void			*mptr = NULL;
+	struct cob_alloc_cache	*cache_ptr;
+	int			fsize;
+
+	cob_exception_code = 0;
+	fsize = cob_get_int (sizefld);
+	if (fsize > 0) {
+		cache_ptr = cob_malloc (sizeof (struct cob_alloc_cache));
+		mptr = malloc ((size_t)fsize);
+		if (!mptr) {
+			COB_SET_EXCEPTION (COB_EC_STORAGE_NOT_AVAIL);
+			free (cache_ptr);
+		} else {
+			memset (mptr, 0, (size_t)fsize);
+			cache_ptr->cob_pointer = mptr;
+			cache_ptr->next = cob_alloc_base;
+			cob_alloc_base = cache_ptr;
+		}
+	}
+	if (dataptr) {
+		*dataptr = (unsigned char *)mptr;
+	}
+	if (retptr) {
+		*(void **)(retptr->data) = mptr;
+	}
+}
+
+void
+cob_free_alloc (unsigned char **ptr1, unsigned char *ptr2)
+{
+	struct cob_alloc_cache	*cache_ptr;
+
+	cob_exception_code = 0;
+	if (ptr1 && *ptr1) {
+		for (cache_ptr = cob_alloc_base; cache_ptr; cache_ptr= cache_ptr->next) {
+			if (*(void **)ptr1 == cache_ptr->cob_pointer) {
+				cache_ptr->cob_pointer = NULL;
+				free (*ptr1);
+				*ptr1 = NULL;
+				return;
+			}
+		}
+		COB_SET_EXCEPTION (COB_EC_STORAGE_NOT_ALLOC);
+		return;
+	}
+	if (ptr2 && *(void **)ptr2) {
+		for (cache_ptr = cob_alloc_base; cache_ptr; cache_ptr= cache_ptr->next) {
+			if (*(void **)ptr2 == cache_ptr->cob_pointer) {
+				cache_ptr->cob_pointer = NULL;
+				free (*(void **)ptr2);
+				*(void **)ptr2 = NULL;
+				return;
+			}
+		}
+		COB_SET_EXCEPTION (COB_EC_STORAGE_NOT_ALLOC);
+		return;
 	}
 }

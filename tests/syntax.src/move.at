@@ -49,8 +49,8 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:9: Error: invalid MOVE statement
-prog.cob:10: Error: invalid MOVE statement
+[prog.cob:9: Error: Invalid MOVE statement
+prog.cob:10: Error: Invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -72,7 +72,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:8: Error: invalid MOVE statement
+[prog.cob:8: Error: Invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -106,8 +106,8 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:16: Error: invalid MOVE statement
-prog.cob:17: Error: invalid MOVE statement
+[prog.cob:16: Error: Invalid MOVE statement
+prog.cob:17: Error: Invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -161,8 +161,8 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:16: Error: invalid MOVE statement
-prog.cob:17: Error: invalid MOVE statement
+[prog.cob:16: Error: Invalid MOVE statement
+prog.cob:17: Error: Invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -190,7 +190,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:13: Error: invalid MOVE statement
+[prog.cob:13: Error: Invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -218,9 +218,9 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:13: Error: invalid MOVE statement
-prog.cob:14: Error: invalid MOVE statement
-prog.cob:15: Error: invalid MOVE statement
+[prog.cob:13: Error: Invalid MOVE statement
+prog.cob:14: Error: Invalid MOVE statement
+prog.cob:15: Error: Invalid MOVE statement
 ])
 
 AT_CLEANUP
@@ -248,7 +248,7 @@ AT_DATA([prog.cob], [
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:13: Error: invalid MOVE statement
+[prog.cob:13: Error: Invalid MOVE statement
 ])
 
 AT_CLEANUP
