@@ -17,7 +17,6 @@
 ## the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
 ## Boston, MA 02111-1307 USA
 
-
 AT_SETUP([Source file not found])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
@@ -1306,3 +1305,25 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
+AT_SETUP([ALLOCATE/FREE with BASED item])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       LINKAGE          SECTION.
+       01  MYFLD        PIC X(6) BASED VALUE "ABCDEF".
+       PROCEDURE        DIVISION.
+       ASTART SECTION.
+       A01.
+           ALLOCATE MYFLD INITIALIZED.
+           DISPLAY MYFLD.
+           FREE ADDRESS OF MYFLD.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0],
+[ABCDEF
+])
+
+AT_CLEANUP
