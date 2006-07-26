@@ -139,7 +139,7 @@ static int		cob_sort_output_cache = 32*1024*1024;
 #ifdef	USE_DB41
 static int		cob_isam_cache = 8*1024*1024;
 static DB_ENV		*bdb_env = NULL;
-static int		bdb_lock_id;
+static unsigned int	bdb_lock_id;
 static const char	**bdb_data_dir = NULL;
 static void		*record_lock_object;
 static int		rlo_size = 0;
@@ -229,7 +229,7 @@ struct indexed_file {
 	char		*filename;	/*needed for record locks*/
 	DB_LOCK		bdb_record_lock;
 	int		write_cursor_open;
-	int		bdb_lock_id;
+	unsigned int	bdb_lock_id;
 	int		record_locked;
 	int		filenamelen;
 #endif
@@ -1185,8 +1185,8 @@ lock_record (cob_file *f, char *key, int keylen)
 		record_lock_object = cob_malloc (len);
 		rlo_size = len;
 	}
-	own_memcpy(record_lock_object, p->filename, p->filenamelen + 1);
-	own_memcpy(record_lock_object + p->filenamelen + 1, key, keylen);
+	own_memcpy ((char *)record_lock_object, p->filename, p->filenamelen + 1);
+	own_memcpy ((char *)record_lock_object + p->filenamelen + 1, key, keylen);
 	dbt.size = len;
 	dbt.data = record_lock_object;
 	ret = bdb_env->lock_get (bdb_env, p->bdb_lock_id, DB_LOCK_NOWAIT, 
@@ -1211,8 +1211,8 @@ test_record_lock (cob_file *f, char *key, int keylen)
 		record_lock_object = cob_malloc (len);
 		rlo_size = len;
 	}
-	own_memcpy(record_lock_object, p->filename, p->filenamelen + 1);
-	own_memcpy(record_lock_object + p->filenamelen + 1, key, keylen);
+	own_memcpy ((char *)record_lock_object, p->filename, p->filenamelen + 1);
+	own_memcpy ((char *)record_lock_object + p->filenamelen + 1, key, keylen);
 	dbt.size = len;
 	dbt.data = record_lock_object;
 	ret = bdb_env->lock_get (bdb_env, p->bdb_lock_id, DB_LOCK_NOWAIT, 
@@ -1437,7 +1437,9 @@ indexed_close (cob_file *f, int opt)
 	for (i = 0; i < f->nkeys; i++) {
 		free (p->last_readkey[i]);
 		free (p->last_readkey[f->nkeys + i]);
-		DB_CLOSE (p->db[i]);
+		if (p->db[i]) {
+			DB_CLOSE (p->db[i]);
+		}
 	}
 
 	if (p->last_key) {
@@ -1584,7 +1586,7 @@ indexed_start_internal (cob_file *f, int cond, cob_field *key, int read_opts, in
 static int
 indexed_start (cob_file *f, int cond, cob_field *key)
 {
-    return (indexed_start_internal (f, cond, key, 0, 0));
+	return (indexed_start_internal (f, cond, key, 0, 0));
 }
 
 static int
@@ -1688,7 +1690,7 @@ indexed_read_next (cob_file *f, int read_opts)
 			read_nextprev = 1;
 		} else {
 			p->key.size = f->keys[p->key_index].field->size;
-			own_memcpy (p->key.data, p->last_readkey[p->key_index], p->key.size);
+			p->key.data = p->last_readkey[p->key_index];
 #ifdef	USE_DB41
 			ret = DB_SEQ (p->cursor[p->key_index], DB_SET_RANGE); 
 #else

@@ -55,6 +55,7 @@ static int gen_ebcdic = 0;
 static int gen_full_ebcdic = 0;
 static int gen_native = 0;
 static int gen_custom = 0;
+static int field_iteration = 0;
 
 static int i_counters[NUM_I_COUNTERS];
 
@@ -99,6 +100,19 @@ static struct call_list {
 	const char		*callname;
 	const char		*callorig;
 } *call_cache = NULL;
+
+struct system_table {
+	const char		*syst_name;
+	const int		syst_params;
+	const char		*syst_call;
+};
+
+static const struct system_table	system_tab[] = {
+#undef	COB_SYSTEM_GEN
+#define	COB_SYSTEM_GEN(x, y, z)	{ x, y, #z },
+#include "libcob/system.def"
+	{ NULL, 0, NULL }
+};
 
 /* Globals */
 int entry_number = 0;
@@ -366,9 +380,14 @@ output_data (cb_tree x)
 		output_param (x, 0);
 		break;
 	}
+	case CB_TAG_INTRINSIC:
+	{
+		output ("module.cob_procedure_parameters[%d]->data", field_iteration);
+		break;
+	}
 	default:
 		fprintf (stderr, "Unexpected tree tag %d\n", CB_TREE_TAG (x));
-		fflush(stderr);
+		fflush (stderr);
 		ABORT ();
 	}
 }
@@ -1853,12 +1872,13 @@ output_search (struct cb_search *p)
 static void
 output_call (struct cb_call *p)
 {
-	size_t	n;
-	size_t	parmnum;
-	char	*callp;
-	int	dynamic_link = 1;
-	int	mf_compat = 0;
-	cb_tree l;
+	size_t			n;
+	size_t			parmnum;
+	char			*callp;
+	int			dynamic_link = 1;
+	char			*system_call = NULL;
+	cb_tree			l;
+	struct system_table	*psyst;
 
 	/* User defined entry points */
 	if (CB_LITERAL_P (p->name)) {
@@ -1873,14 +1893,25 @@ output_call (struct cb_call *p)
 		     || *(lp->data) == 0xE5 || *(lp->data) == 0xF4
 		     || *(lp->data) == 0xF5)) {
 			dynamic_link = 0;
-			mf_compat = 1;
+			system_call = 1;
 		}
 #endif
 */
-		for (n = 0; n < CALLTABSIZE && calltab[n]; n++) {
-			if (strcmp ((char *)(lp->data), calltab[n]) == 0) {
-				dynamic_link = 0;
-				break;
+		if (p->is_system) {
+			psyst = (struct system_table *)&system_tab[0];
+			for (; psyst->syst_name; psyst++) {
+				if (!strcmp((char *)lp->data, (char *)psyst->syst_name)) {
+					system_call = (char *)psyst->syst_call;
+					dynamic_link = 0;
+					break;
+				}
+			}
+		} else {
+			for (n = 0; n < CALLTABSIZE && calltab[n]; n++) {
+				if (strcmp ((char *)(lp->data), calltab[n]) == 0) {
+					dynamic_link = 0;
+					break;
+				}
 			}
 		}
 	}
@@ -1941,12 +1972,40 @@ output_call (struct cb_call *p)
 	}
 
 	/* function name */
-	output_prefix ();
 	n = 0;
-	for (l = p->args; l; l = CB_CHAIN (l)) {
-		n++;
+	for (l = p->args; l; l = CB_CHAIN (l), n++) {
+		/* RXWRXW */
+		cb_tree x = CB_VALUE (l);
+
+		field_iteration = n;
+		output_prefix ();
+		output ("module.cob_procedure_parameters[%d] = ", n);
+		switch (CB_TREE_TAG (x)) {
+		case CB_TAG_LITERAL:
+		case CB_TAG_FIELD:
+		case CB_TAG_INTRINSIC:
+			output_param (x, -1);
+			break;
+		case CB_TAG_REFERENCE:
+			switch (CB_TREE_TAG (CB_REFERENCE(x)->value)) {
+			case CB_TAG_LITERAL:
+			case CB_TAG_FIELD:
+			case CB_TAG_INTRINSIC:
+				output_param (x, -1);
+				break;
+			default:
+				output ("NULL");
+				break;
+			}
+			break;
+		default:
+			output ("NULL");
+			break;
+		}
+		output (";\n");
 	}
 	parmnum = n;
+	output_prefix ();
 	output ("cob_call_params = %d;\n", n);
 	output_prefix ();
 	if (!dynamic_link) {
@@ -1962,9 +2021,8 @@ output_call (struct cb_call *p)
 		} else {
 			/* static link */
 			output_integer (cb_return_code);
-			if (mf_compat) {
-				output (" = cob_mfcompat_%02x",
-					*(CB_LITERAL (p->name)->data));
+			if (system_call) {
+				output (" = %s", system_call);
 			} else {
 				output (" = %s",
 					cb_encode_program_id ((char *)(CB_LITERAL (p->name)->data)));
@@ -2904,9 +2962,8 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output ("static int\n%s_ (int entry", prog->program_id);
 	if (!prog->is_chained) {
 		for (l = parameter_list; l; l = CB_CHAIN (l)) {
-			output (", unsigned char *%s%d  /* %s */",
-				CB_PREFIX_BASE, cb_field (CB_VALUE (l))->id,
-				cb_field (CB_VALUE (l))->name);
+			output (", unsigned char *%s%d",
+				CB_PREFIX_BASE, cb_field (CB_VALUE (l))->id);
 			parmnum++;
 		}
 	}
@@ -2926,6 +2983,8 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	}
 
 	output_prefix ();
+	output ("static cob_field *cob_user_parameters[COB_MAX_FIELD_PARAMS];\n");
+	output_prefix ();
 	output ("static cob_module module = { NULL, ");
 	if (prog->collating_sequence) {
 		output_param (cb_ref (prog->collating_sequence), -1);
@@ -2944,6 +3003,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	} else {
 		output ("NULL");
 	}
+	output (", cob_user_parameters");
 
 	/* Note 2 spare bytes at end */
 	output (", %d, '%c', '%c', '%c', %d, %d, %d, 0, 0};\n",
@@ -3230,7 +3290,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_newline ();
 
 	output_line ("/* initialize frame stack */");
-	output_line ("frame_index = -1;");
+	output_line ("frame_index = 0;");
 	output_line ("frame_stack[0].perform_through = -1;");
 	output_newline ();
 
@@ -3238,6 +3298,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output ("  ");
 	output_integer (cb_call_params);
 	output_line (" = cob_call_params;");
+	output_line ("cob_save_call_params = cob_call_params;");
 	output_newline ();
 
 	/* entry dispatch */
@@ -3640,13 +3701,13 @@ codegen (struct cb_program *prog, int nested)
 		output_storage ("};\n");
 	}
 
-	if (field_cache) {
-		output_storage ("\n/* fields */\n");
-	} else {
-		output_storage ("\n");
-	}
+	i = 0;
 	for (k = field_cache; k; k = k->next) {
 		if (!k->f->flag_local && !k->f->flag_item_external) {
+			if (!i) {
+				i = 1;
+				output_storage ("\n/* fields */\n");
+			}
 			output ("static cob_field %s%d\t= ", CB_PREFIX_FIELD, k->f->id);
 			output_field (k->x);
 			output (";\t/* %s */\n", k->f->name);
@@ -3664,13 +3725,13 @@ codegen (struct cb_program *prog, int nested)
 		output (";\n");
 	}
 
-	if (field_cache) {
-		output_storage ("\n/* local/external fields */\n");
-	} else {
-		output_storage ("\n");
-	}
+	i = 0;
 	for (k = field_cache; k; k = k->next) {
 		if (k->f->flag_local || k->f->flag_item_external) {
+			if (!i) {
+				i = 1;
+				output_storage ("\n/* local/external fields */\n");
+			}
 			output ("static cob_field %s%d\t= ", CB_PREFIX_FIELD, k->f->id);
 			output ("{");
 			output_size (k->x);
@@ -3683,8 +3744,6 @@ codegen (struct cb_program *prog, int nested)
 
 	if (call_cache) {
 		output_storage ("\n/* call parameters */\n");
-	} else {
-		output_storage ("\n");
 	}
 	for (clp = call_cache; clp; clp = clp->next) {
 		output ("static int (*call_%s)();\n", clp->callname);
@@ -3703,7 +3762,6 @@ codegen (struct cb_program *prog, int nested)
 			output ("cob_field f%d;\n", i);
 		}
 	}
-	output_storage ("\n");
 	i = lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, 0);
 	if (gen_ebcdic) {
 		output_storage ("/* EBCDIC translate table */\n");

@@ -419,9 +419,9 @@ validate_field_1 (struct cb_field *f)
 
 			if (f->storage == CB_STORAGE_SCREEN) {
 				if (f->values) {
-					sprintf(pic, "X(%d)", CB_LITERAL(CB_VALUE(f->values))->size);
+					sprintf (pic, "X(%d)", CB_LITERAL(CB_VALUE(f->values))->size);
 				} else {
-					sprintf(pic, "X(0)");
+					sprintf (pic, "X(0)");
 				}
 				f->pic = CB_PICTURE (cb_build_picture (pic));
 			} else if (f->level == 78 && f->values) {
@@ -449,7 +449,7 @@ validate_field_1 (struct cb_field *f)
 					f->pic = CB_PICTURE (cb_build_picture (pic));
 					f->pic->category = CB_CATEGORY_NUMERIC;
 				} else {
-					sprintf(pic, "X(%d)", CB_LITERAL(CB_VALUE(f->values))->size);
+					sprintf (pic, "X(%d)", CB_LITERAL(CB_VALUE(f->values))->size);
 					f->pic = CB_PICTURE (cb_build_picture (pic));
 					f->pic->category = CB_CATEGORY_ALPHANUMERIC;
 					f->usage = CB_USAGE_DISPLAY;

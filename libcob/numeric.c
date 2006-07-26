@@ -627,8 +627,8 @@ cob_decimal_get_packed (cob_decimal *d, cob_field *f, int opt)
 
 	p = data + (digits / 2);
 	if (!COB_FIELD_HAVE_SIGN (f)) {
-                *p |= 0x0f;
-        } else {
+		*p |= 0x0f;
+	} else {
 		if (sign < 0) {
 			*p |= 0x0d;
 		} else {

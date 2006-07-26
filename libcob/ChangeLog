@@ -1,3 +1,9 @@
+2006-07-26  Roger While <simrw@sim-basis.de>
+
+	* All : General clean up and fix gcc 4 warnings
+	* New file system.def
+	* call.c, common.[ch] : System routines
+
 2006-07-19  Roger While <simrw@sim-basis.de>
 
 	* All : General clean up

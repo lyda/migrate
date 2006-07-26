@@ -65,6 +65,8 @@ typedef unsigned char *	ucharptr;
 
 #define	COB_STACK_SIZE		255
 
+#define	COB_MAX_FIELD_PARAMS	64
+
 /*
  * External
  */
@@ -188,6 +190,7 @@ typedef struct __cob_module {
 	const unsigned char	*collating_sequence;
 	cob_field		*crt_status;
 	cob_field		*cursor_pos;
+	cob_field		**cob_procedure_parameters;
 	enum cob_display_sign	display_sign;
 	unsigned char		decimal_point;
 	unsigned char		currency_symbol;
@@ -245,6 +248,7 @@ DLL_EXPIMP extern const char		*cob_current_paragraph;
 DLL_EXPIMP extern unsigned int		cob_source_line;
 
 DLL_EXPIMP extern int			cob_call_params;
+DLL_EXPIMP extern int			cob_save_call_params;
 DLL_EXPIMP extern int			cob_initial_external;
 
 DLL_EXPIMP extern cob_field		cob_zero;		/* ZERO */
@@ -306,10 +310,15 @@ extern void cob_display_env_value (cob_field *f);
 extern void cob_display_arg_number (cob_field *f);
 extern void cob_accept_arg_number (cob_field *f);
 extern void cob_accept_arg_value (cob_field *f);
-extern int CBL_ERROR_PROC(char *x, int (**p)(char *s));
 extern void cob_chain_setup (void *data, const int parm, const int size);
 extern void cob_allocate (unsigned char **dataptr, cob_field *retptr, cob_field *sizefld);
 extern void cob_free_alloc (unsigned char **ptr1, unsigned char *ptr2);
+
+/* System routines */
+extern int CBL_ERROR_PROC (char *x, int (**p)(char *s));
+extern int SYSTEM (unsigned char *cmd);
+extern int cob_return_args (unsigned char *data);
+extern int cob_parameter_size (unsigned char *data);
 
 /* Utilities */
 

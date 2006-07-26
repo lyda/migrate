@@ -4359,9 +4359,9 @@ emit_entry (const char *name, const int encode, cb_tree using_list)
 	sprintf (buff, "E$%s", name);
 	label = cb_build_label (cb_build_reference (buff), NULL);
 	if (encode) {
-		CB_LABEL (label)->name = cb_encode_program_id (name);
+		CB_LABEL (label)->name = (unsigned char *)(cb_encode_program_id (name));
 	} else {
-		CB_LABEL (label)->name = name;
+		CB_LABEL (label)->name = (unsigned char *)name;
 	}
 	CB_LABEL (label)->need_begin = 1;
 	emit_statement (label);
@@ -4397,7 +4397,7 @@ emit_entry (const char *name, const int encode, cb_tree using_list)
 	for (l = current_program->entry_list; l; l = CB_CHAIN (l)) {
 		cb_tree x = CB_VALUE (l);
 
-		if (strcmp (name, CB_LABEL(CB_PURPOSE(l))->name) == 0) {
+		if (strcmp ((char *)name, (char *)(CB_LABEL(CB_PURPOSE(l))->name)) == 0) {
 			cb_error_x (x, _("ENTRY '%s' duplicated"), name);
 		}
 	}

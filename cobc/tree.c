@@ -1329,7 +1329,7 @@ cb_ref (cb_tree x)
 			}
 
 			/* resolve by section name */
-			if (c && s && strcasecmp (CB_NAME (c), s->name) == 0) {
+			if (c && s && strcasecmp (CB_NAME (c), (char *)s->name) == 0) {
 				c = CB_REFERENCE (c)->chain;
 			}
 
@@ -1507,7 +1507,7 @@ cb_build_label (cb_tree name, struct cb_label * section)
 	struct cb_label *p = make_tree (CB_TAG_LABEL, CB_CATEGORY_UNKNOWN, sizeof (struct cb_label));
 
 	p->id = cb_id++;
-	p->name = cb_define (name, CB_TREE (p));
+	p->name = (unsigned char *)cb_define (name, CB_TREE (p));
 	p->section = section;
 	return CB_TREE (p);
 }
@@ -1566,7 +1566,7 @@ cb_build_search (int flag_all, cb_tree table, cb_tree var, cb_tree end_stmt, cb_
  */
 
 cb_tree
-cb_build_call (cb_tree name, cb_tree args, cb_tree stmt1, cb_tree stmt2, cb_tree returning)
+cb_build_call (cb_tree name, cb_tree args, cb_tree stmt1, cb_tree stmt2, cb_tree returning, int is_system_call)
 {
 	struct cb_call *p = make_tree (CB_TAG_CALL, CB_CATEGORY_UNKNOWN, sizeof (struct cb_call));
 
@@ -1575,6 +1575,7 @@ cb_build_call (cb_tree name, cb_tree args, cb_tree stmt1, cb_tree stmt2, cb_tree
 	p->stmt1 = stmt1;
 	p->stmt2 = stmt2;
 	p->returning = returning;
+	p->is_system = is_system_call;
 	return CB_TREE (p);
 }
 

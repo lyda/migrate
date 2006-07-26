@@ -29,6 +29,19 @@
 #include "cobc.h"
 #include "tree.h"
 
+struct system_table {
+	const char		*syst_name;
+	const int		syst_params;
+	const char		*syst_call;
+};
+
+static const struct system_table	system_tab[] = {
+#undef	COB_SYSTEM_GEN
+#define	COB_SYSTEM_GEN(x, y, z)	{ x, y, #z },
+#include "libcob/system.def"
+	{ NULL, 0, NULL }
+};
+
 struct expr_node {
 	/* The token of this node.
 	 *  'x'                          - values (cb_tree)
@@ -268,18 +281,18 @@ cb_encode_program_id (const char *name)
 	s = (const unsigned char *)name;
 	/* encode the initial digit */
 	if (isdigit (*s)) {
-		p += sprintf (p, "_%02X", *s++);
+		p += sprintf ((char *)p, "_%02X", *s++);
 	}
 	/* encode invalid letters */
 	for (; *s; s++) {
 		if (isalnum (*s) || *s == '_') {
 			*p++ = *s;
 		} else {
-			p += sprintf (p, "_%02X", *s);
+			p += sprintf ((char *)p, "_%02X", *s);
 		}
 	}
 	*p = 0;
-	return strdup (buff);
+	return strdup ((char *)buff);
 }
 
 const char *
@@ -1611,6 +1624,7 @@ cb_build_cond (cb_tree x)
 			   may be subscripted (i.e., it is not a constant tree). */
 			return cb_build_cond (build_cond_88 (x));
 		}
+
 		cb_error_x (x, _("Invalid expression"));
 		return cb_error_node;
 	}
@@ -2210,8 +2224,10 @@ void
 cb_emit_call (cb_tree prog, cb_tree using, cb_tree returning,
 	      cb_tree on_exception, cb_tree not_on_exception)
 {
-	cb_tree	l;
-	cb_tree	x;
+	cb_tree			l;
+	cb_tree			x;
+	struct system_table	*psyst;
+	int			is_sys_call = 0;
 
 	for (l = using; l; l = CB_CHAIN (l)) {
 		x = CB_VALUE (l);
@@ -2231,7 +2247,22 @@ cb_emit_call (cb_tree prog, cb_tree using, cb_tree returning,
 			}
 		}
 	}
-	cb_emit (cb_build_call (prog, using, on_exception, not_on_exception, returning));
+
+	if (CB_LITERAL_P(prog)) {
+		for (psyst = (struct system_table *)&system_tab[0]; psyst->syst_name; psyst++) {
+			if (!strcmp((char *)CB_LITERAL(prog)->data, (char *)psyst->syst_name)) {
+				if (psyst->syst_params > cb_list_length (using)) {
+					cb_error (_("Wrong number of CALL parameters"));
+					return;
+				}
+				is_sys_call = 1;
+				break;
+			}
+		}
+	}
+
+	cb_emit (cb_build_call (prog, using, on_exception, not_on_exception,
+		 returning, is_sys_call));
 /*
 	if (returning)
 		cb_emit (cb_build_move (cb_return_code, returning));
@@ -2307,8 +2338,8 @@ cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
 		switch (CB_TREE_TAG (x)) {
 		case CB_TAG_LITERAL:
 		case CB_TAG_INTRINSIC:
-		case CB_TAG_STRING:
 		case CB_TAG_CONST:
+		case CB_TAG_STRING:
 		case CB_TAG_INTEGER:
 			break;
 		case CB_TAG_REFERENCE:
@@ -2853,7 +2884,7 @@ count_pic_alphanumeric_edited (struct cb_field *field)
 	unsigned char	*p;
 
 	count = 0;
-	for (p = field->pic->str; *p; p += 2) {
+	for (p = (unsigned char *)(field->pic->str); *p; p += 2) {
 		if (*p == '9' || *p == 'A' || *p == 'X') {
 			count += p[1];
 		}

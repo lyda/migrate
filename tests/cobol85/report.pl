@@ -34,6 +34,9 @@ my $total_deleted = 0;
 my $total_inspect = 0;
 my $total_ok = 0;
 
+$ENV{"COB_SWITCH_1"} = "ON";
+$ENV{"COB_SWITCH_2"} = "OFF";
+
 $skip{SQ207M} = 1;
 
 open (LOG, "> report.txt") or die;

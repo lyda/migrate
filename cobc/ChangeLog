@@ -1,3 +1,8 @@
+2006-07-26  Roger While <simrw@sim-basis.de>
+
+	* All : clean up for gcc 4
+	* tyepck.c, tree.[ch], codegen.c : System routines
+
 2006-07-19  Roger While <simrw@sim-basis.de>
 
 	* parser.y, typeck.c : Tighten up field checking

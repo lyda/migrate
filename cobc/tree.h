@@ -861,12 +861,14 @@ struct cb_call {
 	cb_tree			stmt1;
 	cb_tree			stmt2;
 	cb_tree			returning;
+	int			is_system;
 };
 
 #define CB_CALL(x)		(CB_TREE_CAST (CB_TAG_CALL, struct cb_call, x))
 #define CB_CALL_P(x)		(CB_TREE_TAG (x) == CB_TAG_CALL)
 
-extern cb_tree cb_build_call (cb_tree name, cb_tree args, cb_tree stmt1, cb_tree stmt2, cb_tree returning);
+extern cb_tree cb_build_call (cb_tree name, cb_tree args, cb_tree stmt1, cb_tree stmt2,
+			      cb_tree returning, int is_system_call);
 
 
 /*

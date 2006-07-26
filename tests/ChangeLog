@@ -1,3 +1,8 @@
+2006-07-23  Roger While <simrw@sim-basis.de>
+
+	* run.src, atlocal.in, cobol85/report.pl : Remove SWITCH settings from
+		atlocal and insert directly into the tests
+
 2006-07-19  Roger While <simrw@sim-basis.de>
 
 	* syntax.src, run.src : Change tests to accomodate revised

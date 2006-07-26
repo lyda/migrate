@@ -1015,7 +1015,7 @@ cob_intr_log10 (cob_field *srcfield)
 	make_double_entry ();
 
 	errno = 0;
-	mathd2 = log10(intr_get_double (&d1));
+	mathd2 = log10 (intr_get_double (&d1));
 	if (errno) {
 		cob_set_int (curr_field, 0);
 		return curr_field;

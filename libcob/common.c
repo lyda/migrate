@@ -84,6 +84,7 @@ unsigned int		cob_source_line = 0;
 unsigned int		cob_orig_line = 0;
 
 int			cob_call_params = 0;
+int			cob_save_call_params = 0;
 int			cob_initial_external = 0;
 int			cob_got_exception = 0;
 
@@ -296,6 +297,12 @@ static const struct cob_exception	cob_exception_table[] = {
 #define EXCEPTION_TAB_SIZE	sizeof(cob_exception_table) / sizeof(struct cob_exception)
 
 static int		cob_switch[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+
+/* Runtime error handling */
+static struct handlerlist {
+	struct handlerlist	*next;
+	int			(*proc)(char *s);
+} *hdlrs = NULL;
 
 /*
  * General functions
@@ -764,7 +771,7 @@ cob_field_to_string (cob_field *f, char *s)
 
 	memcpy (s, f->data, f->size);
 	for (i = (int) f->size - 1; i >= 0; i--) {
-		if (s[i] != ' ') {
+		if (s[i] != ' ' && s[i] != 0) {
 			break;
 		}
 	}
@@ -1127,44 +1134,6 @@ cob_table_sort (cob_field *f, int n)
 	qsort (f->data, (size_t) n, f->size, sort_compare);
 	cob_current_module->collating_sequence = old_sequence;
 	free (sort_keys);
-}
-
-/* Runtime error handling */
-static struct handlerlist {
-	struct handlerlist	*next;
-	int			(*proc)(char *s);
-} *hdlrs = NULL;
-
-int CBL_ERROR_PROC(char *x, int (**p)(char *s))
-{
-	struct handlerlist *hp = NULL;
-	struct handlerlist *h = hdlrs;
-
-	if (!p || !*p) {
-		return -1;
-	}
-	/* remove handler anyway */
-	while (h != NULL) {
-		if (h->proc == *p) {
-			if (hp != NULL) {
-				hp->next = h->next;
-			} else {
-				hdlrs = h->next;
-			}
-			free (hp);
-			break;
-		}
-		hp = h;
-		h = h->next;
-	}
-	if (*x != 0) {	/* remove handler */
-		return 0;
-	}
-	h = cob_malloc (sizeof(struct handlerlist));
-	h->next = hdlrs;
-	h->proc = *p;
-	hdlrs = h;
-	return 0;
 }
 
 /*
@@ -1610,4 +1579,107 @@ cob_free_alloc (unsigned char **ptr1, unsigned char *ptr2)
 		COB_SET_EXCEPTION (COB_EC_STORAGE_NOT_ALLOC);
 		return;
 	}
+}
+
+/* System routines */
+
+int CBL_ERROR_PROC (char *x, int (**p)(char *s))
+{
+	struct handlerlist *hp = NULL;
+	struct handlerlist *h = hdlrs;
+
+	if (cob_call_params < 2) {
+		cob_runtime_error (_("CALL to \"CBL_ERROR_PROC\" requires 2 parameters"));
+		cob_stop_run (1);
+	}
+	if (!p || !*p) {
+		return -1;
+	}
+	/* remove handler anyway */
+	while (h != NULL) {
+		if (h->proc == *p) {
+			if (hp != NULL) {
+				hp->next = h->next;
+			} else {
+				hdlrs = h->next;
+			}
+			if (hp) {
+				free (hp);
+			}
+			break;
+		}
+		hp = h;
+		h = h->next;
+	}
+	if (*x != 0) {	/* remove handler */
+		return 0;
+	}
+	h = cob_malloc (sizeof(struct handlerlist));
+	h->next = hdlrs;
+	h->proc = *p;
+	hdlrs = h;
+	return 0;
+}
+
+int SYSTEM (unsigned char *cmd)
+{
+	int	i;
+	char	buff[COB_MEDIUM_BUFF];
+
+	if (cob_call_params < 1) {
+		cob_runtime_error (_("CALL to \"SYSTEM\" requires parameter"));
+		cob_stop_run (1);
+	}
+	if (cob_current_module->cob_procedure_parameters[0]) {
+		i = (int)cob_current_module->cob_procedure_parameters[0]->size;
+		if (i > COB_MEDIUM_BUFF - 1) {
+			cob_runtime_error (_("Parameter to SYSTEM call is larger than 8192 characters"));
+			cob_stop_run (1);
+		}
+		i--;
+		for (; i >= 0; i--) {
+			if (cmd[i] != ' ' && cmd[i] != 0) {
+				break;
+			}
+		}
+		if (i >= 0) {
+			memset (buff, 0, sizeof (buff));
+			memcpy (buff, cmd, i + 1);
+			return (system (buff));
+		}
+	}
+	return 1;
+}
+
+int cob_return_args (unsigned char *data)
+{
+	if (cob_call_params < 1) {
+		cob_runtime_error (_("CALL to \"C$NARG\" requires parameter"));
+		cob_stop_run (1);
+	}
+	if (cob_current_module->cob_procedure_parameters[0]) {
+		cob_set_int (cob_current_module->cob_procedure_parameters[0], cob_save_call_params);
+	}
+	return 0;
+}
+
+int cob_parameter_size (unsigned char *data)
+{
+	int	n;
+
+	if (cob_call_params < 1) {
+		cob_runtime_error (_("CALL to \"C$PARAMSIZE\" requires parameter"));
+		cob_stop_run (1);
+	}
+	if (cob_current_module->cob_procedure_parameters[0]) {
+		n = cob_get_int (cob_current_module->cob_procedure_parameters[0]);
+		if (n > 0 && n <= cob_save_call_params) {
+			n--;
+			if (cob_current_module->next &&
+			    cob_current_module->next->cob_procedure_parameters[n]) {
+				return cob_current_module->next->cob_procedure_parameters[n]->size;
+			}
+		}
+	}
+	return 0;
 }

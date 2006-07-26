@@ -145,7 +145,7 @@ cob_field_display (cob_field *f, cob_field *line, cob_field *column)
 	}
 
 	get_line_column (line, column, &sline, &scolumn);
-	mvaddnstr (sline, scolumn, f->data, f->size);
+	mvaddnstr (sline, scolumn, (char *)f->data, f->size);
 
 	refresh ();
 }
@@ -161,7 +161,7 @@ cob_field_accept (cob_field *f, cob_field *line, cob_field *column)
 	}
 
 	get_line_column (line, column, &sline, &scolumn);
-	mvgetnstr (sline, scolumn, f->data, f->size);
+	mvgetnstr (sline, scolumn, (char *)f->data, f->size);
 	refresh ();
 }
 
@@ -189,7 +189,7 @@ cob_screen_display (cob_screen *s, cob_field *line, cob_field *column)
 	case COB_SCREEN_TYPE_VALUE:
 		sline = SCREEN_LINE_POS (s);
 		scolumn = SCREEN_COLUMN_POS (s);
-		cob_screen_puts (s->value->data, strlen (s->value->data), sline, scolumn, s->attr);
+		cob_screen_puts ((char *)(s->value->data), strlen ((char *)(s->value->data)), sline, scolumn, s->attr);
 		break;
 	case COB_SCREEN_TYPE_ATTRIBUTE:
 		sline = SCREEN_LINE_POS (s);

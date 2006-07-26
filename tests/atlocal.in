@@ -21,5 +21,3 @@ export DYLD_LIBRARY_PATH="${abs_top_builddir}/libcob/.libs:$DYLD_LIBRARY_PATH"
 export SHLIB_PATH="${abs_top_builddir}/libcob/.libs:$SHLIB_PATH"
 export LIBPATH="${abs_top_builddir}/libcob/.libs:$LIBPATH"
 
-export COB_SWITCH_1=ON
-export COB_SWITCH_2=OFF

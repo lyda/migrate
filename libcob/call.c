@@ -48,7 +48,7 @@ static HMODULE
 lt_dlopen (const char *x)
 {
 	if (x == NULL) {
-		return GetModuleHandle(NULL);
+		return GetModuleHandle (NULL);
 	}
 	return LoadLibrary(x);
 }
@@ -109,6 +109,19 @@ struct call_hash {
 
 static struct call_hash **call_table;
 
+struct system_table {
+	const char		*syst_name;
+	const int		syst_params;
+	lt_ptr_t		syst_call;
+};
+
+static const struct system_table	system_tab[] = {
+#undef	COB_SYSTEM_GEN
+#define	COB_SYSTEM_GEN(x, y, z)	{ x, y, z },
+#include "system.def"
+	{ NULL, 0, NULL }
+};
+
 static void
 cob_set_library_path (const char *path)
 {
@@ -133,54 +146,6 @@ cob_set_library_path (const char *path)
 	resolve_path[0] = strtok (p, PATHSEPS);
 	for (i = 1; i < resolve_size; i++) {
 		resolve_path[i] = strtok (NULL, PATHSEPS);
-	}
-}
-
-void
-cob_init_call (void)
-{
-	char		*s;
-	char		*p;
-	int		i;
-	struct stat	st;
-	char		filename[COB_MEDIUM_BUFF];
-
-#ifndef	USE_LIBDL
-	lt_dlinit ();
-#endif
-
-	/* big enough for anything from libdl/libltdl */
-	resolve_error_buff = cob_malloc (256);
-
-	call_table = (struct call_hash **)cob_malloc (sizeof (struct call_hash *) * HASH_SIZE);
-
-	s = getenv ("COB_LIBRARY_PATH");
-	if (s == NULL) {
-		s = COB_LIBRARY_PATH;
-	}
-	cob_set_library_path (s);
-
-	mainhandle = lt_dlopen (NULL);
-
-	s = getenv ("COB_DYNAMIC_RELOADING");
-	if (s != NULL && strcmp (s, "yes") == 0) {
-		dynamic_reloading = 1;
-	}
-
-	s = getenv ("COB_PRE_LOAD");
-	if (s != NULL) {
-		p = cob_strdup (s);
-		s = strtok (p, ":");
-		for (; s; s = strtok (NULL, ":")) {
-			for (i = 0; i < resolve_size; i++) {
-				sprintf (filename, "%s/%s.%s", resolve_path[i], s, COB_MODULE_EXT);
-				if (stat (filename, &st) == 0) {
-					if (lt_dlopen (filename) != NULL) {
-						break;
-					}
-				}
-			}
-		}
 	}
 }
 
@@ -308,21 +273,21 @@ cob_resolve (const char *name)
 
 	/* encode program name */
 	p = buff;
-	s = name;
+	s = (unsigned char *)name;
 	if (unlikely(isdigit (*s))) {
-		p += sprintf (p, "_%02X", *s++);
+		p += sprintf ((char *)p, "_%02X", *s++);
 	}
 	for (; *s; s++) {
 		if (likely(isalnum (*s) || *s == '_')) {
 			*p++ = *s;
 		} else {
-			p += sprintf (p, "_%02X", *s);
+			p += sprintf ((char *)p, "_%02X", *s);
 		}
 	}
 	*p = 0;
 
 	/* search the main program */
-	if (mainhandle != NULL && (func = lt_dlsym (mainhandle, buff)) != NULL) {
+	if (mainhandle != NULL && (func = lt_dlsym (mainhandle, (char *)buff)) != NULL) {
 		insert (name, NULL, mainhandle, func, 0);
 		resolve_error = NULL;
 		return func;
@@ -337,7 +302,7 @@ cob_resolve (const char *name)
 		}
 		if (stat (filename, &st) == 0) {
 			if ((handle = lt_dlopen (filename)) != NULL
-			    && (func = lt_dlsym (handle, buff)) != NULL) {
+			    && (func = lt_dlsym (handle, (char *)buff)) != NULL) {
 				insert (name, filename, handle, func, st.st_mtime);
 				resolve_error = NULL;
 				return func;
@@ -428,4 +393,56 @@ cob_cancel (cob_field *f)
 
 	buff = cob_get_buff (f->size + 1);
 	drop (cob_field_to_string (f, buff));
+}
+
+void
+cob_init_call (void)
+{
+	char			*s;
+	char			*p;
+	int			i;
+	struct stat		st;
+	struct system_table	*psyst;
+	char			filename[COB_MEDIUM_BUFF];
+
+#ifndef	USE_LIBDL
+	lt_dlinit ();
+#endif
+
+	/* big enough for anything from libdl/libltdl */
+	resolve_error_buff = cob_malloc (256);
+
+	call_table = (struct call_hash **)cob_malloc (sizeof (struct call_hash *) * HASH_SIZE);
+
+	s = getenv ("COB_LIBRARY_PATH");
+	if (s == NULL) {
+		s = COB_LIBRARY_PATH;
+	}
+	cob_set_library_path (s);
+
+	mainhandle = lt_dlopen (NULL);
+
+	s = getenv ("COB_DYNAMIC_RELOADING");
+	if (s != NULL && strcmp (s, "yes") == 0) {
+		dynamic_reloading = 1;
+	}
+
+	s = getenv ("COB_PRE_LOAD");
+	if (s != NULL) {
+		p = cob_strdup (s);
+		s = strtok (p, ":");
+		for (; s; s = strtok (NULL, ":")) {
+			for (i = 0; i < resolve_size; i++) {
+				sprintf (filename, "%s/%s.%s", resolve_path[i], s, COB_MODULE_EXT);
+				if (stat (filename, &st) == 0) {
+					if (lt_dlopen (filename) != NULL) {
+						break;
+					}
+				}
+			}
+		}
+	}
+	for (psyst = (struct system_table *)&system_tab[0]; psyst->syst_name; psyst++) {
+		insert (psyst->syst_name, NULL, NULL, psyst->syst_call, 0);
+	}
 }

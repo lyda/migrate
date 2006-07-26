@@ -5721,9 +5721,9 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:699: ./prog"
+echo "misc.at:699: COB_SWITCH_1=ON COB_SWITCH_2=OFF ./prog"
 echo misc.at:699 >$at_check_line_file
-( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+( $at_traceon; COB_SWITCH_1=ON COB_SWITCH_2=OFF ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr

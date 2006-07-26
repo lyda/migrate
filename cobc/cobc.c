@@ -143,7 +143,7 @@ char			cob_config_dir[COB_MEDIUM_BUFF];
 static struct filename	*file_list;
 
 #if defined (__GNUC__) && (__GNUC__ >= 3)
-static const char fcopts[] = " -finline-functions -fno-gcse -freorder-blocks";
+static const char fcopts[] = " -finline-functions -fno-gcse -freorder-blocks ";
 #else
 static const char fcopts[] = " ";
 #endif

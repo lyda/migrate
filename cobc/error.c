@@ -205,7 +205,7 @@ ambiguous_error (cb_tree x)
 				struct cb_label *l2 = CB_LABEL (y);
 				if (l2->section) {
 					strcat (buff, "in '");
-					strcat (buff, l2->section->name);
+					strcat (buff, (char *)(l2->section->name));
 					strcat (buff, "' ");
 				}
 				break;
