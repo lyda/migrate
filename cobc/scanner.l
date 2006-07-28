@@ -538,7 +538,12 @@ scan_numeric (char *text)
 static int
 scan_picture (char *text)
 {
-	char *p;
+	char			*p;
+	struct cb_level_78	*p78;
+	int			n;
+	int			i;
+	char			buff[COB_SMALL_BUFF];
+	char			buff2[COB_SMALL_BUFF];
 
 	/* normalize the input */
 	for (p = text; *p; p++) {
@@ -552,7 +557,28 @@ scan_picture (char *text)
 		*p = toupper (*p);
 	}
 
-	yylval = cb_build_picture (text);
+	if (lev78ptr) {
+		memset (buff, 0, sizeof (buff));
+		memset (buff2, 0, sizeof (buff2));
+		strcpy (buff, text);
+		i = 0;
+		for (p78 = lev78ptr; p78; p78 = p78->next) {
+			p = (char *)CB_LITERAL(CB_VALUE(p78->fld78->values))->data;
+			for (n = 0; n < strlen (buff); n++) {
+				if (strncasecmp (&buff[n], p78->fld78->name,
+				    strlen (p78->fld78->name)) == 0) {
+					memcpy (&buff2[i], p, strlen (p));
+					n += strlen (p78->fld78->name) - 1;
+					i += strlen (p);
+				} else {
+					buff2[i++] = buff[n];
+				}
+			}
+		}
+		yylval = cb_build_picture (buff2);
+	} else {
+		yylval = cb_build_picture (text);
+	}
 	return PICTURE;
 }
 

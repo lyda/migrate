@@ -180,6 +180,7 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
 
 "("			{ inside_bracket++; ppecho ("("); }
 ")"			{ inside_bracket--; ppecho (")"); }
+
 {WORD} |
 {NUMRIC_LITERAL} |
 {ALNUM_LITERAL} |

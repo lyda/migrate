@@ -2233,8 +2233,7 @@ cb_emit_call (cb_tree prog, cb_tree using, cb_tree returning,
 		x = CB_VALUE (l);
 		if ((CB_REFERENCE_P (x) && CB_FIELD_P(CB_REFERENCE(x)->value))
 		     || CB_FIELD_P (x)) {
-			if (cb_field(x)->level == 66 ||
-			    cb_field(x)->level == 88) {
+			if (cb_field(x)->level == 88) {
 				cb_error_x (x, _("'%s' Not a data name"), CB_NAME (x));
 				return;
 			}

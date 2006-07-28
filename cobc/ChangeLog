@@ -1,3 +1,8 @@
+2006-07-28  Roger While <simrw@sim-basis.de>
+
+	* scanner.l : Usage of 78 is allowed in PIC clauses
+	* typeck.c : Allow 66 as CALL parameter
+
 2006-07-26  Roger While <simrw@sim-basis.de>
 
 	* All : clean up for gcc 4

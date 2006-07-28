@@ -1327,7 +1327,7 @@ indexed_open (cob_file *f, char *filename, int mode, int flag)
 		if (i == 0) {
 			strcpy (name, filename);
 		} else {
-			sprintf (name, "%s.%d", filename, i);
+			sprintf (name, "%s.%d", filename, (int)i);
 		}
 
 		/* btree info */
