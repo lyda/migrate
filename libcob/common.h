@@ -317,8 +317,17 @@ extern void cob_free_alloc (unsigned char **ptr1, unsigned char *ptr2);
 /* System routines */
 extern int CBL_ERROR_PROC (char *x, int (**p)(char *s));
 extern int SYSTEM (unsigned char *cmd);
+extern int CBL_AND (unsigned char *data_1, unsigned char *data_2, int length);
+extern int CBL_OR (unsigned char *data_1, unsigned char *data_2, int length);
+extern int CBL_XOR (unsigned char *data_1, unsigned char *data_2, int length);
+extern int CBL_IMP (unsigned char *data_1, unsigned char *data_2, int length);
+extern int CBL_EQ (unsigned char *data_1, unsigned char *data_2, int length);
+extern int CBL_NOT (unsigned char *data_1, int length);
+extern int CBL_XF4 (unsigned char *data_1, unsigned char *data_2);
+extern int CBL_XF5 (unsigned char *data_1, unsigned char *data_2);
 extern int cob_return_args (unsigned char *data);
 extern int cob_parameter_size (unsigned char *data);
+extern int cob_acuw_sleep (unsigned char *data);
 
 /* Utilities */
 
@@ -327,7 +336,7 @@ extern int cob_parameter_size (unsigned char *data);
 
 extern int cob_real_get_sign (cob_field *f);
 extern void cob_real_put_sign (cob_field *f, const int sign);
-extern char *cob_field_to_string (cob_field *f, char *s);
+extern void cob_field_to_string (cob_field *f, char *s);
 
 extern unsigned char *cob_external_addr (const char *exname, int exlength);
 

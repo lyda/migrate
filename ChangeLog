@@ -1,3 +1,7 @@
+2006-08-03  Roger While <simrw@sim-basis.de>
+
+	* README update
+
 2006-07-06  Roger While <simrw@sim-basis.de>
 
 	* configure.ac : Revise BDB >= 4.1 checking

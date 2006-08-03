@@ -199,4 +199,29 @@ extern void cob_sort_init_key (cob_file *f, int flag, cob_field *field);
 extern void cob_sort_using (cob_file *sort_file, cob_file *data_file);
 extern void cob_sort_giving (cob_file *sort_file, cob_file *data_file);
 
+/* System routines */
+extern int CBL_OPEN_FILE (char *file_name, char *file_access, char *file_lock,
+			  char *file_dev, char *file_handle);
+extern int CBL_CREATE_FILE (char *file_name, char *file_access, char *file_lock,
+			    char *file_dev, char *file_handle);
+extern int CBL_READ_FILE (char *file_handle, char *file_offset, char *file_len,
+			  unsigned char *flags, char *buf);
+extern int CBL_WRITE_FILE (char *file_handle, char *file_offset, char *file_len,
+			   char *flags, char *buf);
+extern int CBL_CLOSE_FILE (char *file_handle);
+extern int CBL_FLUSH_FILE (char *file_handle);
+extern int CBL_DELETE_FILE (char *file_name);
+extern int CBL_COPY_FILE (char *fname1, char *fname2);
+extern int CBL_CHECK_FILE_EXIST (char *file_name, char *file_info);
+extern int CBL_RENAME_FILE (char *fname1, char *fname2);
+extern int CBL_GET_CURRENT_DIR (int flags, int dir_length, unsigned char *dir);
+extern int CBL_CHANGE_DIR (unsigned char *dir);
+extern int CBL_CREATE_DIR (unsigned char *dir);
+extern int CBL_DELETE_DIR (unsigned char *dir);
+extern int cob_acuw_chdir (unsigned char *dir, unsigned char *status);
+extern int cob_acuw_mkdir (unsigned char *dir);
+extern int cob_acuw_copyfile (char *fname1, char *fname2, unsigned char *file_type);
+extern int cob_acuw_file_info (char *file_name, char *file_info);
+extern int cob_acuw_file_delete (char *file_name, char *file_type);
+
 #endif /* COB_FILEIO_H_ */

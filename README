@@ -83,7 +83,7 @@ Installation
 Due to deficiencies in the tools used to prepare
 OpenCOBOL (autoconf/automake/libtool), it is
 NOT generally possible to use path names with
-spaces embedded within them (Mainly Cygwin/MingW).
+spaces embedded within them (Mainly Cygwin/MingW/Windows ports).
  
 See INSTALL for general installation instruction.  Typically,
 this is done by the following commands:
@@ -96,11 +96,16 @@ this is done by the following commands:
 Here you may run
     make check
 to run a series of OpenCOBOL test programs (recommended)
+This MUST succeed - If not, please report.
 
     make install
 
 Note - On Linux systems, if you are installing for the
 -first- time, you may need to run "ldconfig" (as root).
+In fact, it does not hurt if you always do this.
+
+You may optionally perform a series of COBOL85 tests.
+See tests/cobol85/README
 
 **************************************
 

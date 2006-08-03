@@ -3189,7 +3189,11 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_indent ("  {");
 	/* output_stmt (cb_build_assign (cb_return_code, cb_int0)); */
 	output_line ("if (!cob_initialized) {");
-	output_line ("  cob_fatal_error (COB_FERROR_INITIALIZED);");
+	if (cb_implicit_init) {
+		output_line ("  cob_init (0,NULL);");
+	} else {
+		output_line ("  cob_fatal_error (COB_FERROR_INITIALIZED);");
+	}
 	output_line ("}");
 	output_line
 	    ("cob_check_version (COB_SOURCE_FILE, COB_PACKAGE_VERSION, COB_PATCH_LEVEL);");

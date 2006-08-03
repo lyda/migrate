@@ -736,9 +736,18 @@ compute_size (struct cb_field *f)
 	} else {
 		/* elementary item */
 		switch (f->usage) {
+		case CB_USAGE_COMP_X:
+			if (f->pic->category == CB_CATEGORY_ALPHANUMERIC) {
+				break;
+			}
+			size = f->pic->size;
+			f->size = ((size <= 2) ? 1 : (size <= 4) ? 2 :
+				   (size <= 7) ? 3 : (size <= 9) ? 4 :
+				   (size <= 12) ? 5 : (size <= 14) ? 6 :
+				   (size <= 16) ? 7 : (size <= 18) ? 8 : 16);
+			break;
 		case CB_USAGE_BINARY:
 		case CB_USAGE_COMP_5:
-		case CB_USAGE_COMP_X:
 			size = f->pic->size;
 			if (size > 18) {
 				f->flag_binary_swap = 0;

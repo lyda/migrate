@@ -1,3 +1,12 @@
+2006-08-03  Roger While <simrw@sim-basis.de>
+
+	* flags.def, codegen.c : -fimplicit-init, allow libraries
+	  to be built.
+
+2006-07-31  Roger While <simrw@sim-basis.de>
+
+	* field.c : Fix COMP-X allocation
+
 2006-07-28  Roger While <simrw@sim-basis.de>
 
 	* scanner.l : Usage of 78 is allowed in PIC clauses

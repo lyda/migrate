@@ -2251,7 +2251,8 @@ cb_emit_call (cb_tree prog, cb_tree using, cb_tree returning,
 		for (psyst = (struct system_table *)&system_tab[0]; psyst->syst_name; psyst++) {
 			if (!strcmp((char *)CB_LITERAL(prog)->data, (char *)psyst->syst_name)) {
 				if (psyst->syst_params > cb_list_length (using)) {
-					cb_error (_("Wrong number of CALL parameters"));
+					cb_error (_("Wrong number of CALL parameters for '%s'"),
+						    (char *)psyst->syst_name);
 					return;
 				}
 				is_sys_call = 1;

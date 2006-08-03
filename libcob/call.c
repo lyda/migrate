@@ -56,7 +56,7 @@ lt_dlopen (const char *x)
 #define lt_dlclose(x)	FreeLibrary(x)
 static char errbuf[64];
 static char *
-lt_dlerror()
+lt_dlerror ()
 {
 	sprintf(errbuf, "LoadLibrary/GetProcAddress error %d", (int)GetLastError());
 	return errbuf;
@@ -74,6 +74,7 @@ lt_dlerror()
 
 #include "call.h"
 #include "common.h"
+#include "fileio.h"
 #include "lib/gettext.h"
 
 #ifdef	_MSC_VER
@@ -91,6 +92,15 @@ static char		**resolve_path = NULL;
 static char		*resolve_error = NULL;
 static char		*resolve_error_buff = NULL;
 static lt_dlhandle	mainhandle = NULL;
+
+#ifdef	_WIN32
+struct struct_handle {
+	struct struct_handle	*next;
+	lt_dlhandle		preload_handle;
+};
+
+static struct struct_handle	*pre_handle = NULL;
+#endif
 
 /*
  * Call table
@@ -150,7 +160,7 @@ cob_set_library_path (const char *path)
 }
 
 static inline int
-hash (const char *s)
+hash (const unsigned char *s)
 {
 	int		val = 0;
 
@@ -163,7 +173,7 @@ hash (const char *s)
 static void
 insert (const char *name, const char *path, lt_dlhandle handle, lt_ptr_t func, time_t mtime)
 {
-	int			val = hash (name);
+	int			val = hash ((unsigned char *)name);
 	struct call_hash	*p = cob_malloc (sizeof (struct call_hash));
 
 	p->name = cob_strdup (name);
@@ -180,7 +190,7 @@ drop (const char *name)
 {
 	struct call_hash	**pp;
 
-	for (pp = &call_table[hash (name)]; *pp; pp = &(*pp)->next) {
+	for (pp = &call_table[hash ((unsigned char *)name)]; *pp; pp = &(*pp)->next) {
 		if (strcmp (name, (*pp)->name) == 0) {
 			struct call_hash *p = *pp;
 
@@ -202,7 +212,7 @@ lookup (const char *name)
 	struct stat		st;
 	struct call_hash	*p;
 
-	for (p = call_table[hash (name)]; p; p = p->next) {
+	for (p = call_table[hash ((unsigned char *)name)]; p; p = p->next) {
 		if (strcmp (name, p->name) == 0) {
 			if (dynamic_reloading == 0 || !p->path) {
 				return p->func;
@@ -254,6 +264,9 @@ cob_resolve (const char *name)
 	lt_ptr_t		func;
 	lt_dlhandle		handle;
 	struct stat		st;
+#ifdef	_WIN32
+	struct struct_handle	*chkhandle;
+#endif
 	unsigned char		buff[COB_SMALL_BUFF];
 	char			filename[COB_MEDIUM_BUFF];
 
@@ -292,6 +305,17 @@ cob_resolve (const char *name)
 		resolve_error = NULL;
 		return func;
 	}
+
+#ifdef	_WIN32
+	/* Search preloaded modules */
+	for (chkhandle = pre_handle; chkhandle; chkhandle = chkhandle->next) {
+		if ((func = lt_dlsym (chkhandle->preload_handle, (char *)buff)) != NULL) {
+			insert (name, NULL, chkhandle->preload_handle, func, 0);
+			resolve_error = NULL;
+			return func;
+		}
+	}
+#endif
 
 	/* search external modules */
 	for (i = 0; i < resolve_size; i++) {
@@ -369,7 +393,8 @@ cob_call_resolve (cob_field *f)
 	char	*buff;
 
 	buff = cob_get_buff (f->size + 1);
-	return cob_resolve (cob_field_to_string (f, buff));
+	cob_field_to_string (f, buff);
+	return cob_resolve (buff);
 }
 
 void
@@ -392,7 +417,8 @@ cob_cancel (cob_field *f)
 	char	*buff;
 
 	buff = cob_get_buff (f->size + 1);
-	drop (cob_field_to_string (f, buff));
+	cob_field_to_string (f, buff);
+	drop (buff);
 }
 
 void
@@ -403,6 +429,9 @@ cob_init_call (void)
 	int			i;
 	struct stat		st;
 	struct system_table	*psyst;
+#ifdef	_WIN32
+	lt_dlhandle		libhandle;
+#endif
 	char			filename[COB_MEDIUM_BUFF];
 
 #ifndef	USE_LIBDL
@@ -435,7 +464,17 @@ cob_init_call (void)
 			for (i = 0; i < resolve_size; i++) {
 				sprintf (filename, "%s/%s.%s", resolve_path[i], s, COB_MODULE_EXT);
 				if (stat (filename, &st) == 0) {
+#ifdef	_WIN32
+					if ((libhandle = lt_dlopen (filename)) != NULL) {
+						struct struct_handle *newhandle;
+
+						newhandle = cob_malloc (sizeof (struct struct_handle));
+						newhandle->preload_handle = libhandle;
+						newhandle->next = pre_handle;
+						pre_handle = newhandle;
+#else
 					if (lt_dlopen (filename) != NULL) {
+#endif
 						break;
 					}
 				}

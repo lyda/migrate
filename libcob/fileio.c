@@ -41,6 +41,7 @@
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
+#include <time.h>
 #ifdef	HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
@@ -49,7 +50,12 @@
 
 #ifdef _WIN32
 #include <windows.h>		/* for GetTempPath, GetTempFileName */
+#include <direct.h>
 #define	fsync	_commit
+#define	getcwd	_getcwd
+#define	chdir	_chdir
+#define	mkdir	_mkdir
+#define	rmdir	_rmdir
 #endif
 
 #if HAVE_FCNTL_H
@@ -101,6 +107,7 @@
 #if defined(_MSC_VER)
 #define fseek _fseeki64
 #define ftell _ftelli64
+#define lseek _lseeki64
 #define off_t __int64
 #endif
 #endif
@@ -199,6 +206,7 @@ static int relative_delete (cob_file *f);
 #define DB_DEL(db,key,flags)	db->del (db, NULL, key, flags)
 #define DB_CLOSE(db)		db->close (db, 0)
 #define DB_SYNC(db)		db->sync (db, 0)
+#define	cob_dbtsize_t		u_int32_t
 #else
 #define DB_PUT(db,flags)	db->put (db, &p->key, &p->data, flags)
 #define DB_GET(db,flags)	db->get (db, &p->key, &p->data, flags)
@@ -210,11 +218,12 @@ static int relative_delete (cob_file *f);
 #define DB_LAST			R_LAST
 #define DB_NEXT			R_NEXT
 #define DB_PREV			R_PREV
+#define	cob_dbtsize_t		size_t
 #endif
 
 #define DBT_SET(key,fld)			\
   key.data = fld->data;				\
-  key.size = fld->size
+  key.size = (cob_dbtsize_t) fld->size
 
 struct indexed_file {
 	size_t		key_index;
@@ -1187,7 +1196,7 @@ lock_record (cob_file *f, char *key, int keylen)
 	}
 	own_memcpy ((char *)record_lock_object, p->filename, p->filenamelen + 1);
 	own_memcpy ((char *)record_lock_object + p->filenamelen + 1, key, keylen);
-	dbt.size = len;
+	dbt.size = (cob_dbtsize_t) len;
 	dbt.data = record_lock_object;
 	ret = bdb_env->lock_get (bdb_env, p->bdb_lock_id, DB_LOCK_NOWAIT, 
 				&dbt, DB_LOCK_WRITE, &p->bdb_record_lock);
@@ -1213,7 +1222,7 @@ test_record_lock (cob_file *f, char *key, int keylen)
 	}
 	own_memcpy ((char *)record_lock_object, p->filename, p->filenamelen + 1);
 	own_memcpy ((char *)record_lock_object + p->filenamelen + 1, key, keylen);
-	dbt.size = len;
+	dbt.size = (cob_dbtsize_t) len;
 	dbt.data = record_lock_object;
 	ret = bdb_env->lock_get (bdb_env, p->bdb_lock_id, DB_LOCK_NOWAIT, 
 				&dbt, DB_LOCK_WRITE, &test_lock);
@@ -1266,7 +1275,7 @@ indexed_open (cob_file *f, char *filename, int mode, int flag)
 		} else {
 			lock_mode = DB_LOCK_READ;
 		}
-		p->key.size = strlen (filename);
+		p->key.size = (cob_dbtsize_t) strlen (filename);
 		p->key.data = filename;
 		ret = bdb_env->lock_get (bdb_env, bdb_lock_id, DB_LOCK_NOWAIT, 
 					&p->key, lock_mode, &p->bdb_file_lock);
@@ -1308,13 +1317,13 @@ indexed_open (cob_file *f, char *filename, int mode, int flag)
 	p->db = cob_malloc (sizeof (DB *) * f->nkeys);
 #ifdef	USE_DB41
 	p->cursor = cob_malloc (sizeof (DBC *) * f->nkeys);
-	p->filenamelen = strlen (filename);
+	p->filenamelen = (int) strlen (filename);
 #endif
 	p->last_readkey = cob_malloc (sizeof (unsigned char *) * 2 * f->nkeys);
 	maxsize = 0;
 	for (i = 0; i < f->nkeys; i++) {
 		if (f->keys[i].field->size > maxsize) {
-			maxsize = f->keys[i].field->size;
+			maxsize = (int) f->keys[i].field->size;
 		}
 	}
 	for (i = 0; i < f->nkeys; i++) {
@@ -1434,12 +1443,19 @@ indexed_close (cob_file *f, int opt)
 	struct indexed_file	*p = f->file;
 
 	/* close DB's */
+#ifdef	USE_DB41
 	for (i = 0; i < f->nkeys; i++) {
-		free (p->last_readkey[i]);
-		free (p->last_readkey[f->nkeys + i]);
+		if (p->cursor[i]) {
+			p->cursor[i]->c_close (p->cursor[i]);
+		}
+	}
+#endif
+	for (i = 0; i < f->nkeys; i++) {
 		if (p->db[i]) {
 			DB_CLOSE (p->db[i]);
 		}
+		free (p->last_readkey[i]);
+		free (p->last_readkey[f->nkeys + i]);
 	}
 
 	if (p->last_key) {
@@ -1689,7 +1705,7 @@ indexed_read_next (cob_file *f, int read_opts)
 		if (nextprev == DB_FIRST || nextprev == DB_LAST) {
 			read_nextprev = 1;
 		} else {
-			p->key.size = f->keys[p->key_index].field->size;
+			p->key.size = (cob_dbtsize_t) f->keys[p->key_index].field->size;
 			p->key.data = p->last_readkey[p->key_index];
 #ifdef	USE_DB41
 			ret = DB_SEQ (p->cursor[p->key_index], DB_SET_RANGE); 
@@ -1868,11 +1884,11 @@ indexed_write_internal (cob_file *f)
 		return COB_STATUS_22_KEY_EXISTS;
 	}
 	p->data.data = f->record->data;
-	p->data.size = f->record->size;
+	p->data.size = (cob_dbtsize_t) f->record->size;
 	p->cursor[0]->c_put (p->cursor[0], &p->key, &p->data, DB_KEYFIRST);
 #else
 	p->data.data = f->record->data;
-	p->data.size = f->record->size;
+	p->data.size = (cob_dbtsize_t) f->record->size;
 	if (DB_PUT (p->db[0], R_NOOVERWRITE) != 0) {
 		return COB_STATUS_22_KEY_EXISTS;
 	}
@@ -2228,7 +2244,7 @@ sort_write (cob_file *f, int opt)
 
 	current_sort_file = f;
 	p->key.data = f->record->data;
-	p->key.size = f->record->size;
+	p->key.size = (cob_dbtsize_t) f->record->size;
 	if (DB_PUT (p->db, 0)) {
 		return COB_STATUS_30_PERMANENT_ERROR;
 	}
@@ -2946,4 +2962,436 @@ cob_exit_fileio (void)
 		bdb_env->close (bdb_env, 0);
 	}
 #endif
+}
+
+/* System routines */
+
+static void
+rationalize_name (char *dest, char *source, const size_t length)
+{
+	size_t		i;
+	int		quote_switch = 0;
+
+	memset (dest, 0, length);
+	for (i = 0; i < length; ++i) {
+		if (source[i] == '"') {
+			quote_switch = !quote_switch;
+			continue;
+		}
+		dest[i] = source[i];
+		if (quote_switch) {
+			continue;
+		}
+		if (dest[i] == ' ' || dest[i] == 0) {
+			dest[i] = 0;
+			break;
+		}
+	}
+}
+
+static int
+open_cbl_file (char *file_name, char *file_access, char *file_handle, int file_flags)
+{
+#ifdef	O_BINARY
+	int	flag = O_BINARY;
+#else
+	int	flag = 0;
+#endif
+	int	fd;
+	char	fn[COB_MEDIUM_BUFF];
+
+	flag |= file_flags;
+	rationalize_name (fn, file_name, sizeof (fn));
+	switch (*file_access) {
+		case 1:
+			flag |= O_RDONLY;
+			break;
+		case 2:
+			flag |= O_CREAT | O_TRUNC | O_WRONLY;
+			break;
+		case 3:
+			flag |= O_RDWR;
+			break;
+		default:
+			memset (file_handle, -1, 4);
+			return -1;
+	}
+	fd = open (fn, flag, 0660);
+	if (fd < 0) {
+		memset (file_handle, -1, 4);
+		return 35;
+	}
+	memcpy (file_handle, &fd, 4);
+	return 0;
+}
+
+int
+CBL_OPEN_FILE (char *file_name, char *file_access, char *file_lock, char *file_dev, char *file_handle)
+{
+	return open_cbl_file (file_name, file_access, file_handle, 0);
+}
+
+int
+CBL_CREATE_FILE (char *file_name, char *file_access, char *file_lock, char *file_dev, char *file_handle)
+{
+	return open_cbl_file (file_name, file_access, file_handle, O_CREAT | O_TRUNC);
+}
+
+int
+CBL_READ_FILE (char *file_handle, char *file_offset, char *file_len, unsigned char *flags, char *buf)
+{
+	int		fd;
+	long long	off;
+	int		len;
+	int		rc;
+
+	memcpy (&fd, file_handle, 4);
+	memcpy (&off, file_offset, 8);
+	memcpy (&len, file_len, 4);
+#ifndef	WORDS_BIGENDIAN
+	off = COB_BSWAP_64 (off);
+	len = COB_BSWAP_32 (len);
+#endif
+	if (lseek (fd, (off_t)off, SEEK_SET) < 0) {
+		return -1;
+	}
+	rc = read (fd, buf, len);
+	if (rc < 0) {
+		return -1;
+	}
+	if (rc == 0) {
+		return 10;
+	}
+	if ((*flags & 0x80) != 0) {
+		struct stat st;
+
+		if (fstat (fd, &st) < 0) {
+			return -1;
+		}
+		off = st.st_size;
+#ifndef	WORDS_BIGENDIAN
+		off = COB_BSWAP_64 (off);
+#endif
+		memcpy (file_offset, &off, 8);
+	}
+	return 0;
+}
+
+int
+CBL_WRITE_FILE (char *file_handle, char *file_offset, char *file_len, char *flags, char *buf)
+{
+	int		fd;
+	long long	off;
+	int		len;
+	int		rc;
+
+	memcpy (&fd, file_handle, 4);
+	memcpy (&off, file_offset, 8);
+	memcpy (&len, file_len, 4);
+#ifndef WORDS_BIGENDIAN
+	off = COB_BSWAP_64 (off);
+	len = COB_BSWAP_32 (len);
+#endif
+	if (lseek(fd, (off_t)off, SEEK_SET) < 0) {
+		return -1;
+	}
+	rc = write (fd, buf, len);
+	if (rc < 0) {
+		return 30;
+	}
+	return 0;
+}
+
+int
+CBL_CLOSE_FILE (char *file_handle)
+{
+	int	fd;
+
+	memcpy (&fd, file_handle, 4);
+	return close (fd);
+}
+
+int
+CBL_FLUSH_FILE (char *file_handle)
+{
+	return 0;
+}
+
+int
+CBL_DELETE_FILE (char *file_name)
+{
+	char	fn[COB_MEDIUM_BUFF];
+
+	rationalize_name (fn, file_name, sizeof (fn));
+	return unlink (fn);
+}
+
+int
+CBL_COPY_FILE (char *fname1, char *fname2)
+{
+#ifdef	O_BINARY
+	int	flag = O_BINARY;
+#else
+	int	flag = 0;
+#endif
+	int	ret;
+	int	i;
+	int	fd1, fd2;
+	char	fn1[COB_MEDIUM_BUFF];
+	char	fn2[COB_MEDIUM_BUFF];
+
+	rationalize_name (fn1, fname1, sizeof (fn1));
+	rationalize_name (fn2, fname2, sizeof (fn2));
+	flag |= O_RDONLY;
+	fd1 = open (fn1, flag, 0);
+	if (fd1 < 0) {
+		return -1;
+	}
+	flag &= ~O_RDONLY;
+	flag |= O_CREAT | O_TRUNC | O_WRONLY;
+	fd2 = open (fn2, flag, 0660);
+	if (fd2 < 0) {
+		close(fd1);
+		return -1;
+	}
+	ret = 0;
+	while ((i = read (fd1, fn1, sizeof(fn1))) > 0) {
+		if (write (fd2, fn1, i) < 0) {
+			ret = -1;
+			break;
+		}
+	}
+	close (fd1);
+	close (fd2);
+	return ret;
+}
+
+int
+CBL_CHECK_FILE_EXIST (char *file_name, char *file_info)
+{
+	long long	sz;
+	struct stat	st;
+	struct tm	*tm;
+	short		y;
+	char		d, m, hh, mm, ss;
+	char		fn[COB_MEDIUM_BUFF];
+
+	rationalize_name (fn, file_name, sizeof (fn));
+	if (stat (fn, &st) < 0) {
+		return 35;
+	}
+	sz = st.st_size;
+	tm = localtime(&st.st_mtime);
+	d = (char) tm->tm_mday;
+	m = (char) tm->tm_mon + 1;
+	y = tm->tm_year + 1900;
+	hh = (char) tm->tm_hour;
+	mm = (char) tm->tm_min;
+	ss = (char) tm->tm_sec;
+
+#ifndef WORDS_BIGENDIAN
+	sz = COB_BSWAP_64 (sz);
+	y = COB_BSWAP_16 (y);
+#endif
+	memcpy (file_info, &sz, 8);
+	file_info[8] = d;
+	file_info[9] = m;
+	memcpy (file_info+10, &y, 2);
+	file_info[12] = hh;
+	file_info[13] = mm;
+	file_info[14] = ss;
+	file_info[15] = 0;
+	return 0;
+}
+
+int
+CBL_RENAME_FILE (char *fname1, char *fname2)
+{
+	char	fn1[COB_MEDIUM_BUFF];
+	char	fn2[COB_MEDIUM_BUFF];
+
+	rationalize_name (fn1, fname1, sizeof (fn1));
+	rationalize_name (fn2, fname2, sizeof (fn2));
+	return rename (fn1, fn2);
+}
+
+int
+CBL_GET_CURRENT_DIR (int flags, int dir_length, unsigned char *dir)
+{
+	int	dir_size;
+	int	has_space = 0;
+	char	dirname[COB_MEDIUM_BUFF];
+
+	if (dir_length < 1) {
+		return 128;
+	}
+	memset (dir, ' ', dir_length);
+	if (getcwd (dirname, sizeof (dirname)) == NULL) {
+		return 128;
+	}
+	dir_size = (int) strlen (dirname);
+	if (strchr (dirname, ' ')) {
+		has_space = 2;
+	}
+	if (dir_size + has_space > dir_length) {
+		return 128;
+	}
+	if (has_space) {
+		*dir = '"';
+		memcpy (&dir[1], dirname, dir_size);
+		dir[dir_size + 1] = '"';
+	} else {
+		memcpy (dir, dirname, dir_size);
+	}
+	return 0;
+}
+
+int
+CBL_CREATE_DIR (unsigned char *dir)
+{
+	char	fn[COB_MEDIUM_BUFF];
+
+	rationalize_name (fn, dir, sizeof (fn));
+#ifdef	_WIN32
+	return mkdir (fn) == 0 ? 0 : 128;
+#else
+	return mkdir (fn, 0770) == 0 ? 0 : 128;
+#endif
+}
+
+int
+CBL_CHANGE_DIR (unsigned char *dir)
+{
+	char	fn[COB_MEDIUM_BUFF];
+
+	rationalize_name (fn, dir, sizeof (fn));
+	return chdir (fn) == 0 ? 0 : 128;
+}
+
+int
+CBL_DELETE_DIR (unsigned char *dir)
+{
+	char	fn[COB_MEDIUM_BUFF];
+
+	rationalize_name (fn, dir, sizeof (fn));
+	return rmdir (fn) == 0 ? 0 : 128;
+}
+
+int
+cob_acuw_mkdir (unsigned char *dir)
+{
+	char	fn[COB_MEDIUM_BUFF];
+
+	if (cob_call_params < 1) {
+		cob_runtime_error (_("CALL to \"C$MAKEDIR\" requires parameter"));
+		cob_stop_run (1);
+	}
+	if (cob_current_module->cob_procedure_parameters[0]) {
+		cob_field_to_string (cob_current_module->cob_procedure_parameters[0], fn);
+		return CBL_CREATE_DIR (fn);
+	}
+	return 128;
+}
+
+int
+cob_acuw_chdir (unsigned char *dir, unsigned char *status)
+{
+	int	ret = 128;
+	char	fn[COB_MEDIUM_BUFF];
+
+	if (cob_call_params < 2) {
+		cob_runtime_error (_("CALL to \"C$CHDIR\" requires 2 parameters"));
+		cob_stop_run (1);
+	}
+	if (cob_current_module->cob_procedure_parameters[0]) {
+		cob_field_to_string (cob_current_module->cob_procedure_parameters[0], fn);
+		ret = CBL_CHANGE_DIR (fn);
+		cob_set_int (cob_current_module->cob_procedure_parameters[1], ret);
+	}
+	return ret;
+}
+
+int
+cob_acuw_copyfile (char *fname1, char *fname2, unsigned char *file_type)
+{
+	int	ret = 128;
+	char	fn1[COB_MEDIUM_BUFF];
+	char	fn2[COB_MEDIUM_BUFF];
+
+	/* RXW - Type is not yet evaluated */
+
+	if (cob_call_params < 3) {
+		cob_runtime_error (_("CALL to \"C$COPY\" requires 3 parameters"));
+		cob_stop_run (1);
+	}
+	if (cob_current_module->cob_procedure_parameters[0]) {
+		cob_field_to_string (cob_current_module->cob_procedure_parameters[0], fn1);
+		cob_field_to_string (cob_current_module->cob_procedure_parameters[1], fn2);
+		ret = CBL_COPY_FILE (fn1, fn2);
+		if (ret < 0) {
+			ret = 128;
+		}
+	}
+	return ret;
+}
+
+int
+cob_acuw_file_info (char *file_name, char *file_info)
+{
+	unsigned long long	sz;
+	unsigned int		dt;
+	struct stat		st;
+	struct tm		*tm;
+	short			y;
+	short			d, m, hh, mm, ss;
+	char			fn[COB_MEDIUM_BUFF];
+	char			fn2[COB_MEDIUM_BUFF];
+
+	if (cob_call_params < 2) {
+		cob_runtime_error (_("CALL to \"C$FILEINFO\" requires 2 parameters"));
+		cob_stop_run (1);
+	}
+	cob_field_to_string (cob_current_module->cob_procedure_parameters[0], fn);
+	rationalize_name (fn2, fn, sizeof (fn2));
+	if (stat (fn2, &st) < 0) {
+		return 35;
+	}
+	sz = st.st_size;
+	tm = localtime(&st.st_mtime);
+	d = tm->tm_mday;
+	m = tm->tm_mon + 1;
+	y = tm->tm_year + 1900;
+	hh = tm->tm_hour;
+	mm = tm->tm_min;
+	ss = tm->tm_sec;
+
+#ifndef WORDS_BIGENDIAN
+	sz = COB_BSWAP_64 (sz);
+#endif
+	memcpy (file_info, &sz, 8);
+	dt = (y * 10000) + (m * 100) + d;
+#ifndef WORDS_BIGENDIAN
+	dt = COB_BSWAP_32 (dt);
+#endif
+	memcpy (file_info + 8, &dt, 4);
+	dt = (hh * 1000000) + (mm * 10000) + (ss * 100);
+#ifndef WORDS_BIGENDIAN
+	dt = COB_BSWAP_32 (dt);
+#endif
+	memcpy (file_info + 12, &dt, 4);
+	return 0;
+}
+
+int
+cob_acuw_file_delete (char *file_name, char *file_type)
+{
+	char			fn[COB_MEDIUM_BUFF];
+
+	/* RXW Type not yet evaluated */
+	if (cob_call_params < 2) {
+		cob_runtime_error (_("CALL to \"C$DELETE\" requires 2 parameters"));
+		cob_stop_run (1);
+	}
+	cob_field_to_string (cob_current_module->cob_procedure_parameters[0], fn);
+	return CBL_DELETE_FILE (fn);
 }

@@ -1,3 +1,12 @@
+2006-08-01  Roger While <simrw@sim-basis.de>
+
+	* common.[ch], call.c : Change cob_field_to_string to type void
+
+2006-07-31  Roger While <simrw@sim-basis.de>
+
+	* system.def, fileio.[ch], call.c, common.[ch] : New MF system routines -
+	  see system.def
+
 2006-07-26  Roger While <simrw@sim-basis.de>
 
 	* All : General clean up and fix gcc 4 warnings

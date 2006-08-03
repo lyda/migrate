@@ -25,8 +25,10 @@
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
+#include <unistd.h>
 #include <time.h>
 #ifdef	_WIN32
+#include <windows.h>
 #include <io.h>
 #include <fcntl.h>
 #undef	HAVE_SIGNAL_H
@@ -764,7 +766,7 @@ cob_real_put_sign (cob_field *f, const int sign)
 	}
 }
 
-char *
+void
 cob_field_to_string (cob_field *f, char *s)
 {
 	int	i;
@@ -776,7 +778,6 @@ cob_field_to_string (cob_field *f, char *s)
 		}
 	}
 	s[i + 1] = '\0';
-	return s;
 }
 
 /*
@@ -1583,7 +1584,8 @@ cob_free_alloc (unsigned char **ptr1, unsigned char *ptr2)
 
 /* System routines */
 
-int CBL_ERROR_PROC (char *x, int (**p)(char *s))
+int
+CBL_ERROR_PROC (char *x, int (**p)(char *s))
 {
 	struct handlerlist *hp = NULL;
 	struct handlerlist *h = hdlrs;
@@ -1621,7 +1623,8 @@ int CBL_ERROR_PROC (char *x, int (**p)(char *s))
 	return 0;
 }
 
-int SYSTEM (unsigned char *cmd)
+int
+SYSTEM (unsigned char *cmd)
 {
 	int	i;
 	char	buff[COB_MEDIUM_BUFF];
@@ -1651,7 +1654,115 @@ int SYSTEM (unsigned char *cmd)
 	return 1;
 }
 
-int cob_return_args (unsigned char *data)
+int
+CBL_AND (unsigned char *data_1, unsigned char *data_2, int length)
+{
+	size_t	n;
+
+	if (length <= 0 || length > 1024*1024*64) {
+		return 0;
+	}
+	for (n = 0; n < (size_t)length; n++) {
+		data_2[n] &= data_1[n];
+	}
+	return 0;
+}
+
+int
+CBL_OR (unsigned char *data_1, unsigned char *data_2, int length)
+{
+	size_t	n;
+
+	if (length <= 0 || length > 1024*1024*64) {
+		return 0;
+	}
+	for (n = 0; n < (size_t)length; n++) {
+		data_2[n] |= data_1[n];
+	}
+	return 0;
+}
+
+int
+CBL_XOR (unsigned char *data_1, unsigned char *data_2, int length)
+{
+	size_t	n;
+
+	if (length <= 0 || length > 1024*1024*64) {
+		return 0;
+	}
+	for (n = 0; n < (size_t)length; n++) {
+		data_2[n] ^= data_1[n];
+	}
+	return 0;
+}
+
+int
+CBL_IMP (unsigned char *data_1, unsigned char *data_2, int length)
+{
+	size_t	n;
+
+	if (length <= 0 || length > 1024*1024*64) {
+		return 0;
+	}
+	for (n = 0; n < (size_t)length; n++) {
+		data_2[n] = (~data_1[n]) | data_2[n];
+	}
+	return 0;
+}
+
+int
+CBL_EQ (unsigned char *data_1, unsigned char *data_2, int length)
+{
+	size_t	n;
+
+	if (length <= 0 || length > 1024*1024*64) {
+		return 0;
+	}
+	for (n = 0; n < (size_t)length; n++) {
+		data_2[n] = ~(data_1[n] ^ data_2[n]);
+	}
+	return 0;
+}
+
+int
+CBL_NOT (unsigned char *data_1, int length)
+{
+	size_t	n;
+
+	if (length <= 0 || length > 1024*1024*64) {
+		return 0;
+	}
+	for (n = 0; n < (size_t)length; n++) {
+		data_1[n] = ~data_1[n];
+	}
+	return 0;
+}
+
+int
+CBL_XF4 (unsigned char *data_1, unsigned char *data_2)
+{
+	size_t	n;
+
+	*data_1 = 0;
+	for (n = 0; n < 8; n++) {
+		*data_1 |= (data_2[n] & 1) << (7 - n);
+	}
+	return 0;
+}
+
+int
+CBL_XF5 (unsigned char *data_1, unsigned char *data_2)
+{
+	size_t	n;
+
+	for (n = 0; n < 8; n++) {
+		data_2[n] = (*data_1 & (1 << (7 - n))) ? 1 : 0;
+	}
+	return 0;
+}
+
+int
+cob_return_args (unsigned char *data)
 {
 	if (cob_call_params < 1) {
 		cob_runtime_error (_("CALL to \"C$NARG\" requires parameter"));
@@ -1663,7 +1774,8 @@ int cob_return_args (unsigned char *data)
 	return 0;
 }
 
-int cob_parameter_size (unsigned char *data)
+int
+cob_parameter_size (unsigned char *data)
 {
 	int	n;
 
@@ -1683,3 +1795,26 @@ int cob_parameter_size (unsigned char *data)
 	}
 	return 0;
 }
+
+int
+cob_acuw_sleep (unsigned char *data)
+{
+	int	n;
+
+	if (cob_call_params < 1) {
+		cob_runtime_error (_("CALL to \"C$SLEEP\" requires parameter"));
+		cob_stop_run (1);
+	}
+	if (cob_current_module->cob_procedure_parameters[0]) {
+		n = cob_get_int (cob_current_module->cob_procedure_parameters[0]);
+		if (n > 0 && n < 3600*24*7) {
+#ifdef	_WIN32
+			Sleep (n*1000);
+#else
+			sleep ((unsigned int)n);
+#endif
+		}
+	}
+	return 0;
+}
+

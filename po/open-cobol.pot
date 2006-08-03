@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2006-07-28 14:47+0200\n"
+"POT-Creation-Date: 2006-08-03 11:00+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -322,12 +322,12 @@ msgstr ""
 msgid "VALUE clause ignored for EXTERNAL items"
 msgstr ""
 
-#: cobc/field.c:683 cobc/field.c:691 cobc/field.c:811 cobc/field.c:814
+#: cobc/field.c:683 cobc/field.c:691 cobc/field.c:820 cobc/field.c:823
 #, c-format
 msgid "Size of '%s' larger than size of '%s'"
 msgstr ""
 
-#: cobc/field.c:746
+#: cobc/field.c:755
 #, c-format
 msgid "'%s' binary field cannot be larger than 18 digits"
 msgstr ""
@@ -382,17 +382,17 @@ msgstr ""
 msgid "'%s' requires %d subscripts"
 msgstr ""
 
-#: cobc/typeck.c:515 libcob/common.c:1221
+#: cobc/typeck.c:515 libcob/common.c:1222
 #, c-format
 msgid "Subscript of '%s' out of bounds: %d"
 msgstr ""
 
-#: cobc/typeck.c:569 libcob/common.c:1232
+#: cobc/typeck.c:569 libcob/common.c:1233
 #, c-format
 msgid "Offset of '%s' out of bounds: %d"
 msgstr ""
 
-#: cobc/typeck.c:574 libcob/common.c:1239
+#: cobc/typeck.c:574 libcob/common.c:1240
 #, c-format
 msgid "Length of '%s' out of bounds: %d"
 msgstr ""
@@ -430,8 +430,8 @@ msgstr ""
 msgid "Invalid input stream '%s'"
 msgstr ""
 
-#: cobc/typeck.c:2158 cobc/typeck.c:2167 cobc/typeck.c:2466 cobc/typeck.c:2469
-#: cobc/typeck.c:2477
+#: cobc/typeck.c:2158 cobc/typeck.c:2167 cobc/typeck.c:2467 cobc/typeck.c:2470
+#: cobc/typeck.c:2478
 #, c-format
 msgid "'%s' undefined in SPECIAL-NAMES"
 msgstr ""
@@ -459,175 +459,176 @@ msgid "'%s' is not 01 or 77 level item"
 msgstr ""
 
 #: cobc/typeck.c:2254
-msgid "Wrong number of CALL parameters"
+#, c-format
+msgid "Wrong number of CALL parameters for '%s'"
 msgstr ""
 
-#: cobc/typeck.c:2346
+#: cobc/typeck.c:2347
 #, c-format
 msgid "'%s' is an invalid type for DISPLAY operand"
 msgstr ""
 
-#: cobc/typeck.c:2350
+#: cobc/typeck.c:2351
 msgid "Invalid type for DISPLAY operand"
 msgstr ""
 
-#: cobc/typeck.c:2357 cobc/typeck.c:2364 cobc/typeck.c:2371
+#: cobc/typeck.c:2358 cobc/typeck.c:2365 cobc/typeck.c:2372
 msgid "Wrong number of data items"
 msgstr ""
 
-#: cobc/typeck.c:2449
+#: cobc/typeck.c:2450
 msgid "Invalid output stream"
 msgstr ""
 
-#: cobc/typeck.c:2584
+#: cobc/typeck.c:2585
 msgid "Wrong number of WHEN parameters"
 msgstr ""
 
-#: cobc/typeck.c:2626
+#: cobc/typeck.c:2627
 #, c-format
 msgid ""
 "Target %d of FREE, a data address identifier, must address a BASED data item"
 msgstr ""
 
-#: cobc/typeck.c:2636
+#: cobc/typeck.c:2637
 #, c-format
 msgid "Target %d of FREE must be a data pointer"
 msgstr ""
 
-#: cobc/typeck.c:2659
+#: cobc/typeck.c:2660
 msgid "GO TO with multiple procedure-names"
 msgstr ""
 
-#: cobc/typeck.c:2736
+#: cobc/typeck.c:2737
 msgid "Data name expected before CHARACTERS"
 msgstr ""
 
-#: cobc/typeck.c:2746
+#: cobc/typeck.c:2747
 msgid "Data name expected before ALL"
 msgstr ""
 
-#: cobc/typeck.c:2756
+#: cobc/typeck.c:2757
 msgid "Data name expected before LEADING"
 msgstr ""
 
-#: cobc/typeck.c:2766
+#: cobc/typeck.c:2767
 msgid "Data name expected before TRAILING"
 msgstr ""
 
-#: cobc/typeck.c:2776
+#: cobc/typeck.c:2777
 #, c-format
 msgid "ALL or LEADING expected before '%s'"
 msgstr ""
 
-#: cobc/typeck.c:2849
+#: cobc/typeck.c:2850
 #, c-format
 msgid "'%s' defined here as PIC %s"
 msgstr ""
 
-#: cobc/typeck.c:2851
+#: cobc/typeck.c:2852
 #, c-format
 msgid "'%s' defined here as a group of length %d"
 msgstr ""
 
-#: cobc/typeck.c:2903
+#: cobc/typeck.c:2904
 msgid "Invalid destination for MOVE"
 msgstr ""
 
-#: cobc/typeck.c:3007
+#: cobc/typeck.c:3008
 msgid "Data item not signed"
 msgstr ""
 
-#: cobc/typeck.c:3011
+#: cobc/typeck.c:3012
 msgid "Ignoring negative sign"
 msgstr ""
 
-#: cobc/typeck.c:3137
+#: cobc/typeck.c:3138
 msgid "Move non-integer to alphanumeric"
 msgstr ""
 
-#: cobc/typeck.c:3163
+#: cobc/typeck.c:3164
 msgid "Invalid source for MOVE"
 msgstr ""
 
-#: cobc/typeck.c:3181
+#: cobc/typeck.c:3182
 msgid "Invalid VALUE clause"
 msgstr ""
 
-#: cobc/typeck.c:3183
+#: cobc/typeck.c:3184
 msgid "Invalid MOVE statement"
 msgstr ""
 
-#: cobc/typeck.c:3189
+#: cobc/typeck.c:3190
 msgid "Numeric value is expected"
 msgstr ""
 
-#: cobc/typeck.c:3193
+#: cobc/typeck.c:3194
 msgid "Alphanumeric value is expected"
 msgstr ""
 
-#: cobc/typeck.c:3197
+#: cobc/typeck.c:3198
 msgid "Value does not fit the picture string"
 msgstr ""
 
-#: cobc/typeck.c:3201
+#: cobc/typeck.c:3202
 msgid "Value size exceeds data size"
 msgstr ""
 
-#: cobc/typeck.c:3205
+#: cobc/typeck.c:3206
 msgid "Sending field larger than receiving field"
 msgstr ""
 
-#: cobc/typeck.c:3209
+#: cobc/typeck.c:3210
 msgid "Some digits may be truncated"
 msgstr ""
 
-#: cobc/typeck.c:3831
+#: cobc/typeck.c:3832
 msgid "READ PREVIOUS only allowed for INDEXED SEQUENTIAL files"
 msgstr ""
 
-#: cobc/typeck.c:3838
+#: cobc/typeck.c:3839
 msgid "KEY ignored with sequential READ"
 msgstr ""
 
-#: cobc/typeck.c:3924
+#: cobc/typeck.c:3925
 #, c-format
 msgid "Undeclared key '%s'"
 msgstr ""
 
-#: cobc/typeck.c:3929
+#: cobc/typeck.c:3930
 msgid "Invalid SEARCH ALL condition"
 msgstr ""
 
-#: cobc/typeck.c:4014
+#: cobc/typeck.c:4015
 msgid "The targets of SET must be either indexes or pointers"
 msgstr ""
 
-#: cobc/typeck.c:4028 cobc/typeck.c:4032
+#: cobc/typeck.c:4029 cobc/typeck.c:4033
 msgid "SET targets must be PROGRAM-POINTER"
 msgstr ""
 
-#: cobc/typeck.c:4048
+#: cobc/typeck.c:4049
 #, c-format
 msgid "The address of '%s' cannot be changed"
 msgstr ""
 
-#: cobc/typeck.c:4094 cobc/typeck.c:4099 cobc/typeck.c:4123 cobc/typeck.c:4128
+#: cobc/typeck.c:4095 cobc/typeck.c:4100 cobc/typeck.c:4124 cobc/typeck.c:4129
 msgid "Invalid SET statement"
 msgstr ""
 
-#: cobc/typeck.c:4132
+#: cobc/typeck.c:4133
 msgid "Field does not have FALSE clause"
 msgstr ""
 
-#: cobc/typeck.c:4169
+#: cobc/typeck.c:4170
 msgid "SORT invalid - DB not configured"
 msgstr ""
 
-#: cobc/typeck.c:4175
+#: cobc/typeck.c:4176
 msgid "Table sort without keys not implemented yet"
 msgstr ""
 
-#: cobc/typeck.c:4367
+#: cobc/typeck.c:4368
 msgid "Invalid mnemonic name"
 msgstr ""
 
@@ -788,6 +789,10 @@ msgid "Include source location in the output"
 msgstr ""
 
 #: cobc/flag.def:40
+msgid "Do an automatic initialization of the Cobol runtime system"
+msgstr ""
+
+#: cobc/flag.def:43
 msgid "Include line directive in the output"
 msgstr ""
 
@@ -831,158 +836,182 @@ msgstr ""
 msgid "Warn possible field truncation (NOT set with -Wall)"
 msgstr ""
 
-#: libcob/call.c:323
+#: libcob/call.c:347
 #, c-format
 msgid "Cannot find module '%s'"
 msgstr ""
 
-#: libcob/common.c:438
+#: libcob/common.c:440
 msgid "Warning: cob_init expected in the main program\n"
 msgstr ""
 
-#: libcob/common.c:488
+#: libcob/common.c:490
 msgid "Error - Version mismatch"
-msgstr ""
-
-#: libcob/common.c:489
-#, c-format
-msgid "%s has version/patch level %s/%d"
 msgstr ""
 
 #: libcob/common.c:491
 #, c-format
+msgid "%s has version/patch level %s/%d"
+msgstr ""
+
+#: libcob/common.c:493
+#, c-format
 msgid "Library has version/patch level %s/%d"
 msgstr ""
 
-#: libcob/common.c:690 libcob/common.c:744
+#: libcob/common.c:692 libcob/common.c:746
 #, c-format
 msgid "Invalid display sign '%d'"
 msgstr ""
 
-#: libcob/common.c:1199
+#: libcob/common.c:1200
 #, c-format
 msgid "'%s' not numeric: '%s'"
 msgstr ""
 
-#: libcob/common.c:1210
+#: libcob/common.c:1211
 #, c-format
 msgid "OCCURS DEPENDING ON '%s' out of bounds: %d"
 msgstr ""
 
-#: libcob/common.c:1254
+#: libcob/common.c:1255
 #, c-format
 msgid "EXTERNAL item '%s' has size > %d"
 msgstr ""
 
-#: libcob/common.c:1280
+#: libcob/common.c:1281
 #, c-format
 msgid "Cannot acquire %d bytes of memory - Aborting"
 msgstr ""
 
-#: libcob/common.c:1294
+#: libcob/common.c:1295
 msgid "cob_strdup called with NULL pointer"
 msgstr ""
 
-#: libcob/common.c:1299
+#: libcob/common.c:1300
 msgid "cob_strdup called with invalid string"
 msgstr ""
 
-#: libcob/common.c:1592
+#: libcob/common.c:1594
 msgid "CALL to \"CBL_ERROR_PROC\" requires 2 parameters"
 msgstr ""
 
-#: libcob/common.c:1630
+#: libcob/common.c:1633
 msgid "CALL to \"SYSTEM\" requires parameter"
 msgstr ""
 
-#: libcob/common.c:1636
+#: libcob/common.c:1639
 msgid "Parameter to SYSTEM call is larger than 8192 characters"
 msgstr ""
 
-#: libcob/common.c:1657
+#: libcob/common.c:1768
 msgid "CALL to \"C$NARG\" requires parameter"
 msgstr ""
 
-#: libcob/common.c:1671
+#: libcob/common.c:1783
 msgid "CALL to \"C$PARAMSIZE\" requires parameter"
 msgstr ""
 
-#: libcob/fileio.c:2823
+#: libcob/common.c:1805
+msgid "CALL to \"C$SLEEP\" requires parameter"
+msgstr ""
+
+#: libcob/fileio.c:2839
 msgid "End of file"
 msgstr ""
 
-#: libcob/fileio.c:2826
+#: libcob/fileio.c:2842
 msgid "Key out of range"
 msgstr ""
 
-#: libcob/fileio.c:2829
+#: libcob/fileio.c:2845
 msgid "Key order not ascending"
 msgstr ""
 
-#: libcob/fileio.c:2832
+#: libcob/fileio.c:2848
 msgid "Record key already exists"
 msgstr ""
 
-#: libcob/fileio.c:2835
+#: libcob/fileio.c:2851
 msgid "Record key does not exist"
 msgstr ""
 
-#: libcob/fileio.c:2838
+#: libcob/fileio.c:2854
 msgid "Permanent file error"
 msgstr ""
 
-#: libcob/fileio.c:2841
+#: libcob/fileio.c:2857
 msgid "File does not exist"
 msgstr ""
 
-#: libcob/fileio.c:2844
+#: libcob/fileio.c:2860
 msgid "Permission denied"
 msgstr ""
 
-#: libcob/fileio.c:2847
+#: libcob/fileio.c:2863
 msgid "File already open"
 msgstr ""
 
-#: libcob/fileio.c:2850
+#: libcob/fileio.c:2866
 msgid "File not open"
 msgstr ""
 
-#: libcob/fileio.c:2853
+#: libcob/fileio.c:2869
 msgid "READ must be executed first"
 msgstr ""
 
-#: libcob/fileio.c:2856
+#: libcob/fileio.c:2872
 msgid "Record overflow"
 msgstr ""
 
-#: libcob/fileio.c:2859
+#: libcob/fileio.c:2875
 msgid "Failed to read"
 msgstr ""
 
-#: libcob/fileio.c:2862
+#: libcob/fileio.c:2878
 msgid "READ/START not allowed"
 msgstr ""
 
-#: libcob/fileio.c:2865
+#: libcob/fileio.c:2881
 msgid "WRITE not allowed"
 msgstr ""
 
-#: libcob/fileio.c:2868
+#: libcob/fileio.c:2884
 msgid "DELETE/REWRITE not allowed"
 msgstr ""
 
-#: libcob/fileio.c:2871
+#: libcob/fileio.c:2887
 msgid "Record locked by another file connector"
 msgstr ""
 
-#: libcob/fileio.c:2878
+#: libcob/fileio.c:2894
 msgid "LINAGE values invalid"
 msgstr ""
 
-#: libcob/fileio.c:2881
+#: libcob/fileio.c:2897
 msgid "File sharing conflict"
 msgstr ""
 
-#: libcob/fileio.c:2884
+#: libcob/fileio.c:2900
 msgid "Unknown file error"
+msgstr ""
+
+#: libcob/fileio.c:3286
+msgid "CALL to \"C$MAKEDIR\" requires parameter"
+msgstr ""
+
+#: libcob/fileio.c:3303
+msgid "CALL to \"C$CHDIR\" requires 2 parameters"
+msgstr ""
+
+#: libcob/fileio.c:3324
+msgid "CALL to \"C$COPY\" requires 3 parameters"
+msgstr ""
+
+#: libcob/fileio.c:3351
+msgid "CALL to \"C$FILEINFO\" requires 2 parameters"
+msgstr ""
+
+#: libcob/fileio.c:3392
+msgid "CALL to \"C$DELETE\" requires 2 parameters"
 msgstr ""
