@@ -273,7 +273,10 @@ output_base (struct cb_field *f)
 	char		*nmp;
 	char		name[CB_MAX_CNAME];
 
+/* RXW
 	if (f->level == 78) {
+*/
+	if (f->flag_item_78) {
 		return;
 	}
 
@@ -1324,7 +1327,10 @@ output_move (cb_tree src, cb_tree dst)
 static int
 initialize_type (struct cb_initialize *p, struct cb_field *f, int topfield)
 {
+/* RXW
 	if (f->level == 78) {
+*/
+	if (f->flag_item_78) {
 		return INITIALIZE_NONE;
 	}
 

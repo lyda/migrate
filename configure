@@ -23560,7 +23560,9 @@ _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-#include <db.h>
+#include <stdio.h>
+		#include <stdlib.h>
+		#include <db.h>
 int
 main ()
 {
@@ -23621,7 +23623,9 @@ _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-#include <db.h>
+#include <stdio.h>
+			#include <stdlib.h>
+			#include <db.h>
 int
 main ()
 {

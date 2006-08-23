@@ -1,3 +1,7 @@
+2006-08-09  Roger While <simrw@sim-basis.de>
+
+	* system.def, common.[ch] : More MF/ACU system routines
+
 2006-08-01  Roger While <simrw@sim-basis.de>
 
 	* common.[ch], call.c : Change cob_field_to_string to type void

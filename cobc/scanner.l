@@ -561,9 +561,9 @@ scan_picture (char *text)
 		memset (buff, 0, sizeof (buff));
 		memset (buff2, 0, sizeof (buff2));
 		strcpy (buff, text);
-		i = 0;
 		for (p78 = lev78ptr; p78; p78 = p78->next) {
 			p = (char *)CB_LITERAL(CB_VALUE(p78->fld78->values))->data;
+			i = 0;
 			for (n = 0; n < strlen (buff); n++) {
 				if (strncasecmp (&buff[n], p78->fld78->name,
 				    strlen (p78->fld78->name)) == 0) {
@@ -574,6 +574,8 @@ scan_picture (char *text)
 					buff2[i++] = buff[n];
 				}
 			}
+			buff2[i] = 0;
+			strcpy (buff, buff2);
 		}
 		yylval = cb_build_picture (buff2);
 	} else {

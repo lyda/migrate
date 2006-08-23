@@ -19,7 +19,7 @@
 
 #include "config.h"
 
-#if WITH_LFS64
+#ifdef	WITH_LFS64
 #define _LFS64_LARGEFILE		1
 #define _LFS64_STDIO			1
 #define _FILE_OFFSET_BITS		64
@@ -3387,7 +3387,7 @@ cob_acuw_file_delete (char *file_name, char *file_type)
 {
 	char			fn[COB_MEDIUM_BUFF];
 
-	/* RXW Type not yet evaluated */
+	/* RXW - Type is not yet evaluated */
 	if (cob_call_params < 2) {
 		cob_runtime_error (_("CALL to \"C$DELETE\" requires 2 parameters"));
 		cob_stop_run (1);

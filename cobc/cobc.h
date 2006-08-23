@@ -193,6 +193,8 @@ extern FILE	*yyout;
 extern int	yylex (void);
 extern int	yyparse (void);
 
+extern int	sending_id;
+
 /* error.c */
 #ifdef __GNUC__
 extern void	cb_warning (const char *fmt, ...)

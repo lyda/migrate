@@ -961,8 +961,11 @@ cb_field_add (struct cb_field *f, struct cb_field *p)
 		return p;
 	}
 
+/* RXW
 	if (f->level == 78) {
-		return p;
+*/
+	if (p && p->level == 78) {
+		return f;
 	}
 	for (t = f; t->sister; t = t->sister) ;
 	t->sister = p;

@@ -1257,7 +1257,8 @@ data_description:
 	if (current_field->level == 88) {
 		cb_validate_88_item (current_field);
 	}
-	if (current_field->level == 78) {
+	/* RXW if (current_field->level == 78) { */
+	if (current_field->flag_item_78) {
 		cb_validate_78_item (current_field);
 	}
 	$$ = CB_TREE (current_field);
@@ -2756,8 +2757,14 @@ initialize_default:
  */
 
 inspect_statement:
-  INSPECT			{ BEGIN_STATEMENT ("INSPECT"); }
-  identifier inspect_list
+  INSPECT			{ BEGIN_STATEMENT ("INSPECT"); sending_id = 0;}
+  send_identifier inspect_list
+;
+
+send_identifier:
+  identifier			{ $$ = $1; sending_id = 0; }
+| literal			{ $$ = $1; sending_id = 1; }
+| function			{ $$ = $1; sending_id = 1; }
 ;
 
 inspect_list:
@@ -2765,9 +2772,9 @@ inspect_list:
 ;
 
 inspect_item:
-  inspect_tallying		{ cb_emit_inspect ($-1, $1, cb_int0); }
-| inspect_replacing		{ cb_emit_inspect ($-1, $1, cb_int1); }
-| inspect_converting		{ cb_emit_inspect ($-1, $1, cb_int0); }
+  inspect_tallying		{ cb_emit_inspect ($-1, $1, cb_int0, 0); }
+| inspect_replacing		{ cb_emit_inspect ($-1, $1, cb_int1, 1); }
+| inspect_converting		{ cb_emit_inspect ($-1, $1, cb_int0, 2); }
 ;
 
 /* INSPECT TALLYING */

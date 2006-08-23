@@ -272,7 +272,9 @@ then
          [AC_MSG_ERROR(libdb1 is required)])
 elif test "$LIBDB" = "3"
 then
-	AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <db.h>]], [[
+	AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>
+		#include <stdlib.h>
+		#include <db.h>]], [[
 		printf("checking for BDB db.h version >= 4.1 ... ");
 		#if (DB_VERSION_MAJOR > 4) || ((DB_VERSION_MAJOR == 4) && (DB_VERSION_MINOR > 0))
 		printf("yes (%d.%d)\n", DB_VERSION_MAJOR, DB_VERSION_MINOR);
@@ -292,7 +294,9 @@ then
 		for MYOCLIBS in db-4.5 db-4.4 db-4.3 db-4.2 db-4.1 db
 		do
 			LIBS="$MYOLDLIBS -l$MYOCLIBS"
-			AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <db.h>]], [[
+			AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>
+			#include <stdlib.h>
+			#include <db.h>]], [[
 			int major, minor, patch;
 			printf("checking for BDB 4.1 compatibility in %s ... ", getenv("MYOCLIBS"));
 			db_version (&major, &minor, &patch);

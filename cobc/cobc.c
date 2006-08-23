@@ -1199,43 +1199,6 @@ process_link (struct filename *l)
 #endif
 }
 
-/*
-static int
-process_link_direct (struct filename *l)
-{
-#ifdef	COB_STRIP_CMD
-	int ret;
-#endif
-	char buff[COB_MEDIUM_BUFF];
-	char name[COB_MEDIUM_BUFF];
-
-	if (output_name) {
-		strcpy (name, output_name);
-	} else {
-		file_basename (l->source, name);
-	}
-
-#ifdef _MSC_VER
-	sprintf (buff, "%s %s %s %s /Fe%s /Fo%s %s %s",
-		 cob_cc, cob_cflags, cob_ldflags, COB_EXPORT_DYN, name, name, l->translate, cob_libs);
-#else
-	sprintf (buff, "%s %s %s %s -o %s %s %s",
-		 cob_cc, cob_cflags, cob_ldflags, COB_EXPORT_DYN, name, l->translate, cob_libs);
-#endif
-
-#ifdef	COB_STRIP_CMD
-	ret = process (buff);
-	if (strip_output && ret == 0) {
-		sprintf (buff, "%s %s%s", COB_STRIP_CMD, name, COB_EXEEXT);
-		ret = process (buff);
-	}
-	return ret;
-#else
-	return process (buff);
-#endif
-}
-*/
-
 int
 main (int argc, char *argv[])
 {
@@ -1245,7 +1208,7 @@ main (int argc, char *argv[])
 	int			status = 1;
 	struct filename		*fn;
 
-#if ENABLE_NLS
+#ifdef	ENABLE_NLS
 	setlocale (LC_ALL, "");
 	bindtextdomain (PACKAGE, LOCALEDIR);
 	textdomain (PACKAGE);
@@ -1295,56 +1258,17 @@ main (int argc, char *argv[])
 			}
 		}
 		if (cb_compile_level == 0 && !wants_nonfinal) {
-/* RXW Comment out warning
-			fprintf (stderr, "Warning - Use '-x' to create an executable\n");
-			fprintf (stderr, "          Generating module\n");
-			fflush (stderr);
-*/
 			cb_compile_level = CB_LEVEL_MODULE;
 			cb_flag_module = 1;
 		}
 		if (wants_nonfinal && cb_compile_level != CB_LEVEL_PREPROCESS &&
 		    !cb_flag_main && !cb_flag_module) {
-/* RXW Comment out warning
-			fprintf (stderr, "Warning - Use '-x' to generate 'main' code\n");
-			fprintf (stderr, "          Generating module code\n");
-			fflush (stderr);
-*/
 			cb_flag_module = 1;
 		}
 	} else {
 			cb_compile_level = CB_LEVEL_TRANSLATE;
 	}
 
-/* RXW
-	if (i + 1 == argc && cb_compile_level == CB_LEVEL_EXECUTABLE &&
-	    !cb_flag_syntax_only && !save_temps) {
-		struct filename *fn;
-
-		fn = process_filename (argv[i++]);
-		cb_id = 1;
-		if (fn->need_preprocess) {
-			if (preprocess (fn) != 0) {
-				cob_clean_up (status);
-				return status;
-			}
-		}
-		if (fn->need_translate) {
-			if (process_translate (fn) != 0) {
-				cob_clean_up (status);
-				return status;
-			}
-		}
-		if (process_link_direct (file_list) > 0) {
-			cob_clean_up (status);
-			return status;
-		}
-		status = 0;
-		cob_clean_up (status);
-
-		return status;
-	}
-RXW */
 	while (i < argc) {
 		fn = process_filename (argv[i++]);
 		/* Preprocess */

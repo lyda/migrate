@@ -468,7 +468,8 @@ struct cb_field {
 	unsigned int flag_chained	: 1;	/* CHAINING item */
 	unsigned int flag_real_binary	: 1;	/* is BINARY-CHAR/SHORT/LONG/DOUBLE */
 	unsigned int flag_item_based	: 1;	/* is BASED */
-	unsigned int flag_spare		: 16;
+	unsigned int flag_item_78	: 1;	/* is 78 level */
+	unsigned int flag_spare		: 15;
 };
 
 #define CB_FIELD(x)		(CB_TREE_CAST (CB_TAG_FIELD, struct cb_field, x))
@@ -1180,7 +1181,7 @@ extern void cb_emit_if (cb_tree cond, cb_tree stmt1, cb_tree stmt2);
 
 extern void cb_emit_initialize (cb_tree vars, cb_tree fillinit, cb_tree value, cb_tree replacing, cb_tree def);
 
-extern void cb_emit_inspect (cb_tree var, cb_tree body, cb_tree replacing);
+extern void cb_emit_inspect (cb_tree var, cb_tree body, cb_tree replacing, int replconv);
 extern void cb_init_tarrying (void);
 extern cb_tree cb_build_tarrying_data (cb_tree x);
 extern cb_tree cb_build_tarrying_characters (cb_tree l);

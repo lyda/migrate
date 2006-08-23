@@ -80,6 +80,10 @@ cb_build_field_tree (cb_tree level, cb_tree name,
 	r = CB_REFERENCE (name);
 	f = CB_FIELD (cb_build_field (name));
 	f->level = lv;
+	if (lv == 78) {
+		f->level = 01;
+		f->flag_item_78 = 1;
+	}
 	f->storage = storage;
 	if (f->level == 01 && storage == CB_STORAGE_FILE && fn->external) {
 		f->flag_external = 1;
@@ -424,7 +428,10 @@ validate_field_1 (struct cb_field *f)
 					sprintf (pic, "X(0)");
 				}
 				f->pic = CB_PICTURE (cb_build_picture (pic));
+/* RXW
 			} else if (f->level == 78 && f->values) {
+*/
+			} else if (f->flag_item_78 && f->values) {
 				f->count++;
 				if (CB_NUMERIC_LITERAL_P(CB_VALUE(f->values))) {
 					memset (pic, 0, sizeof (pic));

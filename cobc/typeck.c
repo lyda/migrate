@@ -64,6 +64,8 @@ static struct expr_node *expr_stack;			/* expr node stack */
 
 static char		expr_prio[256];
 
+int			sending_id = 0;
+
 static void cb_expr_shift_class (const char *name);
 static void cb_expr_shift_sign (int op);
 
@@ -2709,8 +2711,31 @@ static const char *inspect_func;
 static cb_tree inspect_data;
 
 void
-cb_emit_inspect (cb_tree var, cb_tree body, cb_tree replacing)
+cb_emit_inspect (cb_tree var, cb_tree body, cb_tree replacing, int replconv)
 {
+	switch (CB_TREE_TAG(var)) {
+	case CB_TAG_REFERENCE:
+		break;
+	case CB_TAG_INTRINSIC:
+		switch (CB_TREE_CATEGORY(var)) {
+		case CB_CATEGORY_ALPHABETIC:
+		case CB_CATEGORY_ALPHANUMERIC:
+		case CB_CATEGORY_NATIONAL:
+			break;
+		default:
+			cb_error (_("Invalid target for INSPECT"));
+			return;
+		}
+		break;
+	case CB_TAG_LITERAL:
+		break;
+	default:
+		cb_error (_("Invalid target for REPLACING/CONVERTING"));
+		return;
+	}
+	if (replconv && sending_id) {
+		cb_error (_("Invalid target for REPLACING/CONVERTING"));
+	}
 	cb_emit (cb_build_funcall_2 ("cob_inspect_init", var, replacing));
 	cb_emit_list (body);
 	cb_emit (cb_build_funcall_0 ("cob_inspect_finish"));

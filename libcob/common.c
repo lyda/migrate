@@ -61,6 +61,7 @@ struct cob_exception {
 struct cob_alloc_cache {
 	struct cob_alloc_cache	*next;
 	void			*cob_pointer;
+	size_t			size;
 };
 
 static int			cob_argc = 0;
@@ -1538,6 +1539,7 @@ cob_allocate (unsigned char **dataptr, cob_field *retptr, cob_field *sizefld)
 		} else {
 			memset (mptr, 0, (size_t)fsize);
 			cache_ptr->cob_pointer = mptr;
+			cache_ptr->size = (size_t)fsize;
 			cache_ptr->next = cob_alloc_base;
 			cob_alloc_base = cache_ptr;
 		}
@@ -1585,7 +1587,7 @@ cob_free_alloc (unsigned char **ptr1, unsigned char *ptr2)
 /* System routines */
 
 int
-CBL_ERROR_PROC (char *x, int (**p)(char *s))
+CBL_ERROR_PROC (unsigned char *x, int (**p)(char *s))
 {
 	struct handlerlist *hp = NULL;
 	struct handlerlist *h = hdlrs;
@@ -1683,6 +1685,20 @@ CBL_OR (unsigned char *data_1, unsigned char *data_2, int length)
 }
 
 int
+CBL_NOR (unsigned char *data_1, unsigned char *data_2, int length)
+{
+	size_t	n;
+
+	if (length <= 0 || length > 1024*1024*64) {
+		return 0;
+	}
+	for (n = 0; n < (size_t)length; n++) {
+		data_2[n] = ~(data_1[n] | data_2[n]);
+	}
+	return 0;
+}
+
+int
 CBL_XOR (unsigned char *data_1, unsigned char *data_2, int length)
 {
 	size_t	n;
@@ -1706,6 +1722,20 @@ CBL_IMP (unsigned char *data_1, unsigned char *data_2, int length)
 	}
 	for (n = 0; n < (size_t)length; n++) {
 		data_2[n] = (~data_1[n]) | data_2[n];
+	}
+	return 0;
+}
+
+int
+CBL_NIMP (unsigned char *data_1, unsigned char *data_2, int length)
+{
+	size_t	n;
+
+	if (length <= 0 || length > 1024*1024*64) {
+		return 0;
+	}
+	for (n = 0; n < (size_t)length; n++) {
+		data_2[n] = data_1[n] & (~data_2[n]);
 	}
 	return 0;
 }
@@ -1757,6 +1787,44 @@ CBL_XF5 (unsigned char *data_1, unsigned char *data_2)
 
 	for (n = 0; n < 8; n++) {
 		data_2[n] = (*data_1 & (1 << (7 - n))) ? 1 : 0;
+	}
+	return 0;
+}
+
+int
+CBL_TOUPPER (unsigned char *data, int length)
+{
+	size_t	n;
+
+	if (cob_call_params < 2) {
+		cob_runtime_error (_("CALL to \"CBL_TOUPPER\" requires 2 parameters"));
+		cob_stop_run (1);
+	}
+	if (length > 0) {
+		for (n = 0; n < (size_t)length; n++) {
+			if (islower (data[n])) {
+				data[n] = toupper (data[n]);
+			}
+		}
+	}
+	return 0;
+}
+
+int
+CBL_TOLOWER (unsigned char *data, int length)
+{
+	size_t	n;
+
+	if (cob_call_params < 2) {
+		cob_runtime_error (_("CALL to \"CBL_TOLOWER\" requires 2 parameters"));
+		cob_stop_run (1);
+	}
+	if (length > 0) {
+		for (n = 0; n < (size_t)length; n++) {
+			if (isupper (data[n])) {
+				data[n] = tolower (data[n]);
+			}
+		}
 	}
 	return 0;
 }
@@ -1818,3 +1886,74 @@ cob_acuw_sleep (unsigned char *data)
 	return 0;
 }
 
+int
+cob_acuw_justify (unsigned char *data, ...)
+{
+	unsigned char	*direction;
+	size_t		datalen;
+	int		n;
+	int		shifting = 0;
+	size_t		left = 0;
+	size_t		right = 0;
+	size_t		movelen;
+	size_t		centrelen;
+	va_list		args;
+
+	if (cob_call_params < 1) {
+		cob_runtime_error (_("CALL to \"C$JUSTIFY\" requires at least 1 parameter"));
+		cob_stop_run (1);
+	}
+	datalen = cob_current_module->cob_procedure_parameters[0]->size;
+	if (datalen < 2) {
+		return 0;
+	}
+	if (data[0] != ' ' && data[datalen - 1] != ' ') {
+		return 0;
+	}
+	for (n = 0; n < (int)datalen; n++, left++) {
+		if (data[n] != ' ') {
+			break;
+		}
+	}
+	if (n == (int)datalen) {
+		return 0;
+	}
+	left = n;
+	for (n = (int)datalen - 1; n >= 0; n--, right++) {
+		if (data[n] != ' ') {
+			break;
+		}
+	}
+	movelen = datalen - left - right;
+	if (cob_call_params > 1) {
+		va_start (args, data);
+		direction = va_arg (args, unsigned char *);
+		va_end (args);
+		if (*direction == 'L') {
+			shifting = 1;
+		} else if (*direction == 'C') {
+			shifting = 2;
+		}
+	}
+	switch (shifting) {
+	case 1:
+		memmove (data, &data[left], movelen);
+		memset (&data[movelen], ' ', datalen - movelen);
+		break;
+	case 2:
+		centrelen = (left + right) / 2;
+		memmove (&data[centrelen], &data[left], movelen);
+		memset (data, ' ', centrelen);
+		if ((left + right) % 2) {
+			memset (&data[centrelen + movelen], ' ', centrelen + 1);
+		} else {
+			memset (&data[centrelen + movelen], ' ', centrelen);
+		}
+		break;
+	default:
+		memmove (&data[left + right], &data[left], movelen);
+		memset (data, ' ', datalen - movelen);
+		break;
+	}
+	return 0;
+}
