@@ -119,9 +119,9 @@ cob_cmp_u32_binary (const unsigned char *p, const int n)
 #else
 	memcpy ((unsigned char *)&val, p, sizeof(int));
 #endif
-	if (val < (unsigned int) n) {
+	if (val < n) {
 		return -1;
-	} else if (val > (unsigned int) n) {
+	} else if (val > n) {
 		return 1;
 	}
 	return 0;
@@ -230,9 +230,9 @@ cob_cmpswp_u32_binary (const unsigned char *p, const int n)
 	memcpy ((unsigned char *)&val, p, sizeof(int));
 	val = COB_BSWAP_32 (val);
 #endif
-	if (val < (unsigned int) n) {
+	if (val < n) {
 		return -1;
-	} else if (val > (unsigned int) n) {
+	} else if (val > n) {
 		return 1;
 	}
 	return 0;

@@ -1261,7 +1261,7 @@ indexed_open (cob_file *f, char *filename, int mode, int flag)
 #endif
 	int			ret = 0;
 	struct indexed_file	*p;
-	int			maxsize;
+	size_t			maxsize;
 
 	p = cob_malloc (sizeof (struct indexed_file));
 #ifdef	USE_DB41
@@ -1323,7 +1323,7 @@ indexed_open (cob_file *f, char *filename, int mode, int flag)
 	maxsize = 0;
 	for (i = 0; i < f->nkeys; i++) {
 		if (f->keys[i].field->size > maxsize) {
-			maxsize = (int) f->keys[i].field->size;
+			maxsize = f->keys[i].field->size;
 		}
 	}
 	for (i = 0; i < f->nkeys; i++) {
@@ -2683,7 +2683,7 @@ cob_rewrite (cob_file *f, cob_field *rec, cob_field *fnstatus)
 		}
 
 		if (f->record_size) {
-			if (f->record->size != cob_get_int (f->record_size)) {
+			if (f->record->size != (size_t)cob_get_int (f->record_size)) {
 				RETURN_STATUS (COB_STATUS_44_RECORD_OVERFLOW);
 			}
 		}

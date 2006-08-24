@@ -110,7 +110,7 @@ inspect_common (cob_field *f1, cob_field *f2, int type)
 			}
 		}
 	} else {
-		for (i = 0; i < len - f2->size + 1; i++) {
+		for (i = 0; i < (int)(len - f2->size + 1); i++) {
 			/* find matching substring */
 			if (memcmp (inspect_start + i, f2->data, f2->size) == 0) {
 				size_t j;
@@ -321,7 +321,7 @@ cob_string_init (cob_field *dst, cob_field *ptr)
 
 	if (string_ptr) {
 		string_offset = cob_get_int (string_ptr) - 1;
-		if (string_offset < 0 || string_offset >= string_dst->size) {
+		if (string_offset < 0 || string_offset >= (int)string_dst->size) {
 			COB_SET_EXCEPTION (COB_EC_OVERFLOW_STRING);
 		}
 	}
@@ -399,7 +399,7 @@ cob_unstring_init (cob_field *src, cob_field *ptr)
 
 	if (unstring_ptr) {
 		unstring_offset = cob_get_int (unstring_ptr) - 1;
-		if (unstring_offset < 0 || unstring_offset >= unstring_src->size) {
+		if (unstring_offset < 0 || unstring_offset >= (int)unstring_src->size) {
 			COB_SET_EXCEPTION (COB_EC_OVERFLOW_UNSTRING);
 		}
 	}
@@ -426,7 +426,7 @@ cob_unstring_into (cob_field *dst, cob_field *dlm, cob_field *cnt)
 		return;
 	}
 
-	if (unstring_offset >= unstring_src->size) {
+	if (unstring_offset >= (int)unstring_src->size) {
 		return;
 	}
 
@@ -511,7 +511,7 @@ cob_unstring_tallying (cob_field *f)
 void
 cob_unstring_finish (void)
 {
-	if (unstring_offset < unstring_src->size) {
+	if (unstring_offset < (int)unstring_src->size) {
 		COB_SET_EXCEPTION (COB_EC_OVERFLOW_UNSTRING);
 	}
 

@@ -3078,7 +3078,7 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
 			{
 				int size = cb_field_size (dst);
 
-				if (size >= 0 && l->size > size) {
+				if (size >= 0 && (int)l->size > size) {
 					goto size_overflow;
 				}
 			}

@@ -1372,7 +1372,7 @@ initialize_type (struct cb_initialize *p, struct cb_field *f, int topfield)
 		cb_tree l;
 
 		for (l = p->rep; l; l = CB_CHAIN (l)) {
-			if (CB_PURPOSE_INT (l) == CB_TREE_CATEGORY (f)) {
+			if ((int)CB_PURPOSE_INT (l) == (int)CB_TREE_CATEGORY (f)) {
 				return INITIALIZE_ONE;
 			}
 		}
@@ -1541,7 +1541,7 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
 				}
 			}
 			l = CB_LITERAL (value);
-			if (l->size >= f->size) {
+			if ((int)l->size >= (int)f->size) {
 				memcpy (buff, l->data, f->size);
 			} else {
 				memcpy (buff, l->data, l->size);
@@ -1602,7 +1602,7 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
 	if (!f->children) {
 		cb_tree		l;
 		for (l = p->rep; l; l = CB_CHAIN (l)) {
-			if (CB_PURPOSE_INT (l) == CB_TREE_CATEGORY (x)) {
+			if ((int)CB_PURPOSE_INT (l) == (int)CB_TREE_CATEGORY (x)) {
 				output_move (CB_VALUE (l), x);
 				return;
 			}
