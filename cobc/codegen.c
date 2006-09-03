@@ -13,8 +13,8 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
- * Boston, MA 02111-1307 USA
+ * the Free Software Foundation, 51 Franklin Street, Fifth Floor
+ * Boston, MA 02110-1301 USA
  */
 
 #include "config.h"
@@ -103,15 +103,14 @@ static struct call_list {
 
 struct system_table {
 	const char		*syst_name;
-	const int		syst_params;
 	const char		*syst_call;
 };
 
 static const struct system_table	system_tab[] = {
 #undef	COB_SYSTEM_GEN
-#define	COB_SYSTEM_GEN(x, y, z)	{ x, y, #z },
+#define	COB_SYSTEM_GEN(x, y, z)	{ x, #z },
 #include "libcob/system.def"
-	{ NULL, 0, NULL }
+	{ NULL, NULL }
 };
 
 /* Globals */
@@ -2965,7 +2964,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 #endif
 
 	/* program function */
-	output ("static int\n%s_ (int entry", prog->program_id);
+	output ("static int\n%s_ (const int entry", prog->program_id);
 	if (!prog->is_chained) {
 		for (l = parameter_list; l; l = CB_CHAIN (l)) {
 			output (", unsigned char *%s%d",
@@ -3657,7 +3656,7 @@ codegen (struct cb_program *prog, int nested)
 
 	/* prototype */
 	output ("/* function prototypes */\n");
-	output ("static int %s_ (int", prog->program_id);
+	output ("static int %s_ (const int", prog->program_id);
 	if (!prog->is_chained) {
 		for (l = parameter_list; l; l = CB_CHAIN (l)) {
 			output (", unsigned char *");

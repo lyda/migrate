@@ -13,8 +13,8 @@
  * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; see the file COPYING.LIB.  If
- * not, write to the Free Software Foundation, Inc., 59 Temple Place,
- * Suite 330, Boston, MA 02111-1307 USA
+ * not, write to the Free Software Foundation, 51 Franklin Street, Fifth Floor
+ * Boston, MA 02110-1301 USA
  */
 
 #include "config.h"
@@ -45,6 +45,103 @@ static cob_decimal	cob_d4;
 static mpz_t		cob_mexp;
 static mpz_t		cob_mpzt;
 static unsigned char	packed_value[20];
+
+#ifdef	COB_EXPERIMENTAL
+
+#if GMP_NAIL_BITS != 0
+#error NAILS not supported
+#endif
+
+#define COB_MAX_LL	9223372036854775807LL
+
+static int
+cob_bit_overflow (const mpz_ptr src, const size_t bytesize, const size_t issigned)
+{
+	size_t			bitnum;
+
+	bitnum = (bytesize * 8) - issigned;
+	return mpz_sizeinbase (src, 2) > bitnum;
+}
+
+static void
+mpz_set_ull (mpz_ptr dest, const unsigned long long val)
+{
+	mp_size_t		size;
+
+	size = (val != 0);
+	dest->_mp_d[0] = val & GMP_NUMB_MASK;
+#if	GMP_LIMB_BITS < 64
+	if (val > GMP_NUMB_MAX) {
+		dest->_mp_d[1] = val >> GMP_NUMB_BITS;
+		size = 2;
+	}
+#endif
+	dest->_mp_size = size;
+}
+
+static void
+mpz_set_sll (mpz_ptr dest, const signed long long val)
+{
+	mp_size_t		size;
+	unsigned long long	vtmp;
+
+	vtmp = (unsigned long long)(val >= 0 ? val : -val);
+	size = (vtmp != 0);
+	dest->_mp_d[0] = vtmp & GMP_NUMB_MASK;
+#if	GMP_LIMB_BITS < 64
+	if (vtmp > GMP_NUMB_MAX) {
+		dest->_mp_d[1] = vtmp >> GMP_NUMB_BITS;
+		size = 2;
+	}
+#endif
+	dest->_mp_size = (val >= 0) ? size : -size;
+}
+
+static unsigned long long
+mpz_get_ull (const mpz_ptr src)
+{
+	mp_size_t		size;
+
+	size = __GMP_ABS (src->_mp_size);
+	if (!size) {
+		return 0;
+	}
+#if	GMP_LIMB_BITS > 32
+	return (unsigned long long)src->_mp_d[0];
+#else
+	if (size < 2) {
+		return (unsigned long long)src->_mp_d[0];
+	}
+	return (unsigned long long)src->_mp_d[0] |
+		((unsigned long long)src->_mp_d[1] << GMP_NUMB_BITS);
+#endif
+}
+
+static signed long long
+mpz_get_sll (const mpz_ptr src)
+{
+	mp_size_t		size;
+	mp_size_t		sizeabs;
+	unsigned long long	vtmp;
+
+	size = src->_mp_size;
+	if (!size) {
+		return 0;
+	}
+	sizeabs = __GMP_ABS (src->_mp_size);
+	vtmp = (unsigned long long)src->_mp_d[0];
+#if	GMP_LIMB_BITS < 64
+	if (sizeabs > 1) {
+		vtmp |= (unsigned long long)src->_mp_d[1] << GMP_NUMB_BITS;
+	}
+#endif
+	if (size > 0) {
+		return (signed long long) vtmp & COB_MAX_LL;
+	}
+	return ~(((signed long long) vtmp - 1LL) & COB_MAX_LL);
+}
+
+#endif
 
 /*
  * Decimal number
@@ -109,15 +206,6 @@ cob_decimal_set (cob_decimal *dst, cob_decimal *src)
 
 /* int */
 
-/*
-void
-cob_decimal_set_int (cob_decimal *d, int n)
-{
-	mpz_set_si (d->value, n);
-	d->scale = 0;
-}
-*/
-
 int
 cob_decimal_get_int (cob_decimal *d)
 {
@@ -172,14 +260,6 @@ cob_decimal_set_display (cob_decimal *d, cob_field *f)
 		while (size--) {
 			n = n * 10 + cob_d2i (*data++);
 		}
-/*
-		unsigned char	*endp = data + size;
-		unsigned int	n = cob_d2i (*data++);
-
-		while (data < endp) {
-			n = n * 10 + cob_d2i (*data++);
-		}
-*/
 		mpz_set_ui (d->value, n);
 	} else {
 		unsigned char buff[64];
@@ -198,7 +278,7 @@ cob_decimal_set_display (cob_decimal *d, cob_field *f)
 }
 
 static int
-cob_decimal_get_display (cob_decimal *d, cob_field *f, int opt)
+cob_decimal_get_display (cob_decimal *d, cob_field *f, const int opt)
 {
 	int		diff;
 	int		sign = mpz_sgn (d->value);
@@ -240,6 +320,13 @@ cob_decimal_get_display (cob_decimal *d, cob_field *f, int opt)
 static void
 cob_decimal_set_binary (cob_decimal *d, cob_field *f)
 {
+#ifdef	COB_EXPERIMENTAL
+	if (COB_FIELD_HAVE_SIGN (f)) {
+		mpz_set_sll (d->value, cob_binary_get_int64 (f));
+	} else {
+		mpz_set_ull (d->value, cob_binary_get_int64 (f));
+	}
+#else
 	if (f->size <= 4) {
 		if (COB_FIELD_HAVE_SIGN (f)) {
 			mpz_set_si (d->value, cob_binary_get_int (f));
@@ -253,12 +340,82 @@ cob_decimal_set_binary (cob_decimal *d, cob_field *f)
 		mpz_mul_2exp (d->value, d->value, 32);
 		mpz_add_ui (d->value, d->value, (unsigned int)(val & 0xffffffff));
 	}
+#endif
 	d->scale = f->attr->scale;
 }
 
 static int
-cob_decimal_get_binary (cob_decimal *d, cob_field *f, int opt)
+cob_decimal_get_binary (cob_decimal *d, cob_field *f, const int opt)
 {
+#ifdef	COB_EXPERIMENTAL
+	int	overflow;
+	int	digits;
+	size_t	sign;
+
+	if (unlikely(d->value->_mp_size == 0)) {
+		own_memset (f->data, 0, f->size);
+		return 0;
+	}
+	sign = COB_FIELD_HAVE_SIGN (f) ? 1 : 0;
+	overflow = 0;
+	digits = f->attr->digits;
+	if (unlikely(cob_bit_overflow (d->value, f->size, sign))) {
+		if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
+			goto overflow;
+		}
+		if (cob_current_module->flag_binary_truncate) {
+			if (opt & COB_STORE_TRUNC_ON_OVERFLOW) {
+				mpz_set_ull (cob_mpzt, (unsigned long long)cob_exp10LL[digits]);
+				mpz_tdiv_r (d->value, d->value, cob_mpzt);
+			}
+		}
+		overflow = 1;
+	}
+	if (sign) {
+		long long		val;
+
+		if (unlikely(overflow)) {
+			if (cob_current_module->flag_binary_truncate) {
+				val = mpz_get_sll (d->value);
+			} else {
+				val = mpz_get_ull (d->value);
+			}
+		} else {
+			val = mpz_get_sll (d->value);
+		}
+		if (cob_current_module->flag_binary_truncate) {
+			if (val <= -cob_exp10LL[digits] || val >= cob_exp10LL[digits]) {
+				if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
+					goto overflow;
+				}
+				overflow = 1;
+				if (opt & COB_STORE_TRUNC_ON_OVERFLOW) {
+					val %= cob_exp10LL[digits];
+				}
+			}
+		}
+		cob_binary_set_int64 (f, val);
+	} else {
+		unsigned long long	val;
+
+		if (unlikely(d->value->_mp_size < 0)) {
+			d->value->_mp_size = -d->value->_mp_size;
+		}
+		val = mpz_get_ull (d->value);
+		if (cob_current_module->flag_binary_truncate) {
+			if (val >= (unsigned int) cob_exp10LL[digits]) {
+				if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
+					goto overflow;
+				}
+				overflow = 1;
+				if (opt & COB_STORE_TRUNC_ON_OVERFLOW) {
+					val %= cob_exp10LL[digits];
+				}
+			}
+		}
+		cob_binary_set_int64 (f, val);
+	}
+#else
 	int	overflow = 0;
 	int	digits = f->attr->digits;
 
@@ -395,7 +552,7 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, int opt)
 			val = mpz_get_ui (d->value);
 			val = (val << 32) | lo;
 			if (cob_current_module->flag_binary_truncate) {
-				if (val >= (unsigned int) cob_exp10LL[digits]) {
+				if (val >= (unsigned long long) cob_exp10LL[digits]) {
 					/* overflow */
 					overflow = 1;
 					if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
@@ -409,6 +566,7 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, int opt)
 			cob_binary_set_int64 (f, val);
 		}
 	}
+#endif
 	if (!overflow) {
 		return 0;
 	}
@@ -579,7 +737,7 @@ cob_decimal_set_packed (cob_decimal *d, cob_field *f)
 }
 
 static int
-cob_decimal_get_packed (cob_decimal *d, cob_field *f, int opt)
+cob_decimal_get_packed (cob_decimal *d, cob_field *f, const int opt)
 {
 	int		diff;
 	int		sign = mpz_sgn (d->value);
@@ -669,7 +827,7 @@ cob_decimal_set_field (cob_decimal *d, cob_field *f)
 }
 
 int
-cob_decimal_get_field (cob_decimal *d, cob_field *f, int opt)
+cob_decimal_get_field (cob_decimal *d, cob_field *f, const int opt)
 {
 	if (unlikely(d->scale == DECIMAL_NAN)) {
 		COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
@@ -970,7 +1128,7 @@ cob_display_add_int (cob_field *f, int n)
  */
 
 int
-cob_add (cob_field *f1, cob_field *f2, int opt)
+cob_add (cob_field *f1, cob_field *f2, const int opt)
 {
 	cob_decimal_set_field (&cob_d1, f1);
 	cob_decimal_set_field (&cob_d2, f2);
@@ -979,7 +1137,7 @@ cob_add (cob_field *f1, cob_field *f2, int opt)
 }
 
 int
-cob_sub (cob_field *f1, cob_field *f2, int opt)
+cob_sub (cob_field *f1, cob_field *f2, const int opt)
 {
 	cob_decimal_set_field (&cob_d1, f1);
 	cob_decimal_set_field (&cob_d2, f2);
@@ -1027,7 +1185,7 @@ cob_sub_int (cob_field *f, int n)
 }
 
 int
-cob_div_quotient (cob_field *dividend, cob_field *divisor, cob_field *quotient, int opt)
+cob_div_quotient (cob_field *dividend, cob_field *divisor, cob_field *quotient, const int opt)
 {
 	int ret;
 
@@ -1057,7 +1215,7 @@ cob_div_quotient (cob_field *dividend, cob_field *divisor, cob_field *quotient, 
 }
 
 int
-cob_div_remainder (cob_field *fld_remainder, int opt)
+cob_div_remainder (cob_field *fld_remainder, const int opt)
 {
 	return cob_decimal_get_field (&cob_d3, fld_remainder, opt);
 }

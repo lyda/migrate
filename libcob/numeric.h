@@ -13,8 +13,8 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; see the file COPYING.LIB.  If
- * not, write to the Free Software Foundation, Inc., 59 Temple Place,
- * Suite 330, Boston, MA 02111-1307 USA
+ * not, write to the Free Software Foundation, 51 Franklin Street, Fifth Floor
+ * Boston, MA 02110-1301 USA
  */
 
 #ifndef COB_NUMERIC_H
@@ -42,7 +42,7 @@ extern int cob_decimal_get_int (cob_decimal *d);
 extern void cob_decimal_set_double (cob_decimal *d, double v);
 extern double cob_decimal_get_double (cob_decimal *d);
 extern void cob_decimal_set_field (cob_decimal *d, cob_field *f);
-extern int cob_decimal_get_field (cob_decimal *d, cob_field *f, int opt);
+extern int cob_decimal_get_field (cob_decimal *d, cob_field *f, const int opt);
 extern void cob_decimal_add (cob_decimal *d1, cob_decimal *d2);
 extern void cob_decimal_sub (cob_decimal *d1, cob_decimal *d2);
 extern void cob_decimal_mul (cob_decimal *d1, cob_decimal *d2);
@@ -50,12 +50,12 @@ extern void cob_decimal_div (cob_decimal *d1, cob_decimal *d2);
 extern void cob_decimal_pow (cob_decimal *d1, cob_decimal *d2);
 extern int cob_decimal_cmp (cob_decimal *d1, cob_decimal *d2);
 
-extern int cob_add (cob_field *f1, cob_field *f2, int opt);
-extern int cob_sub (cob_field *f1, cob_field *f2, int opt);
+extern int cob_add (cob_field *f1, cob_field *f2, const int opt);
+extern int cob_sub (cob_field *f1, cob_field *f2, const int opt);
 extern int cob_add_int (cob_field *f, int n);
 extern int cob_sub_int (cob_field *f, int n);
-extern int cob_div_quotient (cob_field *dividend, cob_field *divisor, cob_field *quotient, int opt);
-extern int cob_div_remainder (cob_field *fld_remainder, int opt);
+extern int cob_div_quotient (cob_field *dividend, cob_field *divisor, cob_field *quotient, const int opt);
+extern int cob_div_remainder (cob_field *fld_remainder, const int opt);
 
 extern int cob_cmp_packed (cob_field *f, int n);
 extern int cob_cmp_numdisp (const unsigned char *data, const size_t size, const int n);

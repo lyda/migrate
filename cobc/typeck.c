@@ -13,8 +13,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
- * Boston, MA 02111-1307 USA
+ * the Free Software Foundation, 51 Franklin Street, Fifth Floor
+ * Boston, MA 02110-1301 USA
  */
 
 #include "config.h"
@@ -32,14 +32,13 @@
 struct system_table {
 	const char		*syst_name;
 	const int		syst_params;
-	const char		*syst_call;
 };
 
 static const struct system_table	system_tab[] = {
 #undef	COB_SYSTEM_GEN
-#define	COB_SYSTEM_GEN(x, y, z)	{ x, y, #z },
+#define	COB_SYSTEM_GEN(x, y, z)	{ x, y },
 #include "libcob/system.def"
-	{ NULL, 0, NULL }
+	{ NULL, 0 }
 };
 
 struct expr_node {

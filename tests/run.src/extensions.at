@@ -14,8 +14,8 @@
 ## 
 ## You should have received a copy of the GNU General Public License
 ## along with this software; see the file COPYING.  If not, write to
-## the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
-## Boston, MA 02111-1307 USA
+## the Free Software Foundation, 51 Franklin Street, Fifth Floor
+## Boston, MA 02110-1301 USA
 
 ### Non-standard extensions
 
@@ -546,6 +546,36 @@ AT_DATA([prog.cob], [
 AT_CHECK([${COMPILE} -conf=test.conf -o prog prog.cob])
 AT_CHECK([DIR="." ./prog], [0])
 AT_CHECK([test -f "./FILENAME" && rm -f "./FILENAME"], [0])
+
+AT_CLEANUP
+
+AT_SETUP([ASSIGN with COB_FILE_PATH])
+
+AT_DATA([test.conf], [
+include "cobol2002.conf"
+filename-mapping: yes
+])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       ENVIRONMENT      DIVISION.
+       INPUT-OUTPUT     SECTION.
+       FILE-CONTROL.
+       SELECT TEST-FILE ASSIGN "FILENAMEX".
+       DATA             DIVISION.
+       FILE             SECTION.
+       FD TEST-FILE.
+       01 TEST-REC      PIC X(4).
+       PROCEDURE        DIVISION.
+           OPEN OUTPUT TEST-FILE.
+           CLOSE TEST-FILE.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -conf=test.conf -o prog prog.cob])
+AT_CHECK([COB_FILE_PATH=".." ./prog], [0])
+AT_CHECK([test -f "../FILENAMEX" && rm -f "../FILENAMEX"], [0])
 
 AT_CLEANUP
 

@@ -13,8 +13,8 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; see the file COPYING.LIB.  If
- * not, write to the Free Software Foundation, Inc., 59 Temple Place,
- * Suite 330, Boston, MA 02111-1307 USA
+ * not, write to the Free Software Foundation, 51 Franklin Street, Fifth Floor
+ * Boston, MA 02110-1301 USA
  */
 
 #ifndef COB_COMMON_H
@@ -52,9 +52,15 @@
 #if defined(__GNUC__) && (__GNUC__ >= 3)
 #define likely(x)	__builtin_expect(!!(x), 1)
 #define unlikely(x)	__builtin_expect(!!(x), 0)
+#if __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1)
+#define	COB_NOINLINE	__attribute__((noinline))
+#else
+#define	COB_NOINLINE
+#endif
 #else
 #define likely(x)	(x)
 #define unlikely(x)	(x)
+#define	COB_NOINLINE
 #endif
 
 typedef unsigned char *	ucharptr;
@@ -66,6 +72,18 @@ typedef unsigned char *	ucharptr;
 #define	COB_STACK_SIZE		255
 
 #define	COB_MAX_FIELD_PARAMS	64
+
+#ifdef	COB_PARAM_CHECK
+#define	COB_CHK_PARMS(x, z)	\
+	do { \
+		if (cob_call_params < z) { \
+			cob_runtime_error (parm_msg, #x, z); \
+			cob_stop_run (1); \
+		} \
+	} while (0)
+#else
+#define	COB_CHK_PARMS(x, z)
+#endif
 
 /*
  * External
@@ -291,6 +309,7 @@ extern void cob_fatal_error (const enum cob_enum_error fatal_error) __attribute_
 extern void cob_stop_run (const int status);
 extern void cob_fatal_error (const enum cob_enum_error fatal_error);
 #endif
+extern void cob_runtime_error (const char *fmt, ...);
 extern char *cob_get_exception_name (const int exception_code);
 extern void *cob_malloc (const size_t size);
 extern void *cob_strdup (const void *stptr);
@@ -369,7 +388,6 @@ extern void cob_table_sort (cob_field *f, int n);
 
 /* Run-time error checking */
 
-extern void cob_runtime_error (const char *fmt, ...);
 extern void cob_check_numeric (cob_field *f, const char *name);
 extern void cob_check_odo (int i, int min, int max, const char *name);
 extern void cob_check_subscript (int i, int min, int max, const char *name);

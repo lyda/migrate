@@ -14,9 +14,9 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
+# along with this program; if not, write to
+# the Free Software Foundation, 51 Franklin Street, Fifth Floor
+# Boston, MA 02110-1301 USA
 
 AC_PREREQ(2.59)
 
@@ -58,6 +58,8 @@ AH_TEMPLATE([WITH_DB], [Compile with the Berkeley DB library])
 AH_TEMPLATE([USE_DB41], [Use Berkeley DB library new features])
 AH_TEMPLATE([WITH_LFS64], [Compile with large file system 64])
 AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
+AH_TEMPLATE([COB_EXPERIMENTAL], [Enable experimemental code (Developers only!)])
+AH_TEMPLATE([COB_PARAM_CHECK], [Enable CALL parameter checking])
 AH_TEMPLATE([COB_EXPORT_DYN], [Compile/link option for exporting symbols])
 AH_TEMPLATE([COB_PIC_FLAGS], [Compile/link option for PIC code])
 AH_TEMPLATE([COB_SHARED_OPT], [Compile/link option for shared code])
@@ -143,6 +145,14 @@ GEN_DEBUG_OPT="no"
 AC_ARG_ENABLE(debug,
   [  --enable-debug          (OpenCOBOL) enable debugging options],
   [ AC_DEFINE(COB_DEBUG) GEN_DEBUG_OPT="yes"])
+
+AC_ARG_ENABLE(experimental,
+  [  --enable-experimental   (OpenCOBOL) enable experimental code (Developers only!)],
+  [ AC_DEFINE(COB_EXPERIMENTAL)])
+
+AC_ARG_ENABLE(param-check,
+  [  --disable-param-check   (OpenCOBOL) disable CALL parameter checking],,
+  [ AC_DEFINE(COB_PARAM_CHECK)])
 
 PATCH_LEVEL=0
 AC_ARG_WITH(patch-level, [  --with-patch-level      (OpenCOBOL) define a patch level (default 0)],

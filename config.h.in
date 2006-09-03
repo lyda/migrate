@@ -6,11 +6,17 @@
 /* Executable extension */
 #undef COB_EXEEXT
 
+/* Enable experimemental code (Developers only!) */
+#undef COB_EXPERIMENTAL
+
 /* Compile/link option for exporting symbols */
 #undef COB_EXPORT_DYN
 
 /* Extra Compiler Flags */
 #undef COB_EXTRA_FLAGS
+
+/* Enable CALL parameter checking */
+#undef COB_PARAM_CHECK
 
 /* Compile/link option for PIC code */
 #undef COB_PIC_FLAGS

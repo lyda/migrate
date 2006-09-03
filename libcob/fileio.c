@@ -13,8 +13,8 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; see the file COPYING.LIB.  If
- * not, write to the Free Software Foundation, Inc., 59 Temple Place,
- * Suite 330, Boston, MA 02111-1307 USA
+ * not, write to the Free Software Foundation, 51 Franklin Street, Fifth Floor
+ * Boston, MA 02110-1301 USA
  */
 
 #include "config.h"
@@ -117,11 +117,10 @@
 #include "numeric.h"
 #include "fileio.h"
 #include "byteswap.h"
-#include "lib/gettext.h"
-
 /*
-#ifdef _WIN32
+#include "lib/gettext.h"
 */
+
 #if !defined(__linux__)
 #define SEEK_INIT(f)	fseek ((FILE *)f->file, (off_t)0, SEEK_CUR)
 #else
@@ -157,6 +156,8 @@ static struct file_list {
 	cob_file		*file;
 } *file_cache = NULL;
 
+static char		*cob_file_path;
+
 /* Need some value that does not conflict with errno for OPEN/LINAGE */
 #define	COB_LINAGE_INVALID	16384
 /* Need value that does not conflict with errno 30 (EROFS) for OPEN */
@@ -177,6 +178,10 @@ static const int	status_exception[] = {
 	COB_EC_I_O_IMP			/* 9x */
 };
 
+static const char	*prefix[] = { "DD_", "dd_", "" };
+#define NUM_PREFIX	sizeof(prefix) / sizeof(char *)
+
+static const char	parm_msg[] = "CALL to %s requires %d parameters";
 
 static int dummy_rn_rew_del (cob_file *f);
 static int dummy_read (cob_file *f, cob_field *key, int read_opts);
@@ -2383,15 +2388,18 @@ cob_open (cob_file *f, int mode, int opt, cob_field *fnstatus)
 		/* resolve by environment variables */
 		/* ex. "TMPFILE" -> DD_TMPFILE, dd_TMPFILE, or TMPFILE */
 		if (simple) {
-			int	i;
-			char	*prefix[] = { "DD_", "dd_", "", 0 };
+			size_t	i;
 
-			for (i = 0; prefix[i]; i++) {
+			for (i = 0; i < NUM_PREFIX; i++) {
 				sprintf (buff, "%s%s", prefix[i], filename);
 				if ((p = getenv (buff)) != NULL) {
 					strcpy (filename, p);
 					break;
 				}
+			}
+			if (i == NUM_PREFIX && cob_file_path) {
+				sprintf (buff, "%s/%s", cob_file_path, filename);
+				strcpy (filename, buff);
 			}
 		}
 	}
@@ -2836,73 +2844,73 @@ cob_default_error_handle (void)
 
 	switch (status) {
 	case COB_STATUS_10_END_OF_FILE:
-		msg = N_("End of file");
+		msg = "End of file";
 		break;
 	case COB_STATUS_14_OUT_OF_KEY_RANGE:
-		msg = N_("Key out of range");
+		msg = "Key out of range";
 		break;
 	case COB_STATUS_21_KEY_INVALID:
-		msg = N_("Key order not ascending");
+		msg = "Key order not ascending";
 		break;
 	case COB_STATUS_22_KEY_EXISTS:
-		msg = N_("Record key already exists");
+		msg = "Record key already exists";
 		break;
 	case COB_STATUS_23_KEY_NOT_EXISTS:
-		msg = N_("Record key does not exist");
+		msg = "Record key does not exist";
 		break;
 	case COB_STATUS_30_PERMANENT_ERROR:
-		msg = N_("Permanent file error");
+		msg = "Permanent file error";
 		break;
 	case COB_STATUS_35_NOT_EXISTS:
-		msg = N_("File does not exist");
+		msg = "File does not exist";
 		break;
 	case COB_STATUS_37_PERMISSION_DENIED:
-		msg = N_("Permission denied");
+		msg = "Permission denied";
 		break;
 	case COB_STATUS_41_ALREADY_OPEN:
-		msg = N_("File already open");
+		msg = "File already open";
 		break;
 	case COB_STATUS_42_NOT_OPEN:
-		msg = N_("File not open");
+		msg = "File not open";
 		break;
 	case COB_STATUS_43_READ_NOT_DONE:
-		msg = N_("READ must be executed first");
+		msg = "READ must be executed first";
 		break;
 	case COB_STATUS_44_RECORD_OVERFLOW:
-		msg = N_("Record overflow");
+		msg = "Record overflow";
 		break;
 	case COB_STATUS_46_READ_ERROR:
-		msg = N_("Failed to read");
+		msg = "Failed to read";
 		break;
 	case COB_STATUS_47_INPUT_DENIED:
-		msg = N_("READ/START not allowed");
+		msg = "READ/START not allowed";
 		break;
 	case COB_STATUS_48_OUTPUT_DENIED:
-		msg = N_("WRITE not allowed");
+		msg = "WRITE not allowed";
 		break;
 	case COB_STATUS_49_I_O_DENIED:
-		msg = N_("DELETE/REWRITE not allowed");
+		msg = "DELETE/REWRITE not allowed";
 		break;
 	case COB_STATUS_51_RECORD_LOCKED:
-		msg = N_("Record locked by another file connector");
+		msg = "Record locked by another file connector";
 		break;
 /*
 	case COB_STATUS_52_EOP:
 		break;
 */
 	case COB_STATUS_57_I_O_LINAGE:
-		msg = N_("LINAGE values invalid");
+		msg = "LINAGE values invalid";
 		break;
 	case COB_STATUS_61_FILE_SHARING:
-		msg = N_("File sharing conflict");
+		msg = "File sharing conflict";
 		break;
 	default:
-		msg = N_("Unknown file error");
+		msg = "Unknown file error";
 		break;
 	}
 
 	cob_field_to_string (cob_error_file->assign, filename);
-	cob_runtime_error ("%s (STATUS=%02d) File : '%s'", gettext (msg),
+	cob_runtime_error ("%s (STATUS=%02d) File : '%s'", msg,
 				status, filename);
 }
 
@@ -2932,6 +2940,13 @@ cob_init_fileio (void)
 			cob_sort_output_cache = n;
 		}
 	}
+	cob_file_path = getenv ("COB_FILE_PATH");
+	if (cob_file_path) {
+		if (!*cob_file_path || *cob_file_path == ' ') {
+			cob_file_path = NULL;
+		}
+	}
+
 #ifdef	USE_DB41
 	join_environment ();
 	record_lock_object = cob_malloc (1000);
@@ -3251,7 +3266,7 @@ CBL_CREATE_DIR (unsigned char *dir)
 {
 	char	fn[COB_MEDIUM_BUFF];
 
-	rationalize_name (fn, dir, sizeof (fn));
+	rationalize_name (fn, (char *)dir, sizeof (fn));
 #ifdef	_WIN32
 	return mkdir (fn) == 0 ? 0 : 128;
 #else
@@ -3264,7 +3279,7 @@ CBL_CHANGE_DIR (unsigned char *dir)
 {
 	char	fn[COB_MEDIUM_BUFF];
 
-	rationalize_name (fn, dir, sizeof (fn));
+	rationalize_name (fn, (char *)dir, sizeof (fn));
 	return chdir (fn) == 0 ? 0 : 128;
 }
 
@@ -3273,7 +3288,7 @@ CBL_DELETE_DIR (unsigned char *dir)
 {
 	char	fn[COB_MEDIUM_BUFF];
 
-	rationalize_name (fn, dir, sizeof (fn));
+	rationalize_name (fn, (char *)dir, sizeof (fn));
 	return rmdir (fn) == 0 ? 0 : 128;
 }
 
@@ -3282,13 +3297,10 @@ cob_acuw_mkdir (unsigned char *dir)
 {
 	char	fn[COB_MEDIUM_BUFF];
 
-	if (cob_call_params < 1) {
-		cob_runtime_error (_("CALL to \"C$MAKEDIR\" requires parameter"));
-		cob_stop_run (1);
-	}
+	COB_CHK_PARMS (C$MAKEDIR, 1);
 	if (cob_current_module->cob_procedure_parameters[0]) {
 		cob_field_to_string (cob_current_module->cob_procedure_parameters[0], fn);
-		return CBL_CREATE_DIR (fn);
+		return CBL_CREATE_DIR ((unsigned char *)fn);
 	}
 	return 128;
 }
@@ -3299,13 +3311,10 @@ cob_acuw_chdir (unsigned char *dir, unsigned char *status)
 	int	ret = 128;
 	char	fn[COB_MEDIUM_BUFF];
 
-	if (cob_call_params < 2) {
-		cob_runtime_error (_("CALL to \"C$CHDIR\" requires 2 parameters"));
-		cob_stop_run (1);
-	}
+	COB_CHK_PARMS (C$CHDIR, 2);
 	if (cob_current_module->cob_procedure_parameters[0]) {
 		cob_field_to_string (cob_current_module->cob_procedure_parameters[0], fn);
-		ret = CBL_CHANGE_DIR (fn);
+		ret = CBL_CHANGE_DIR ((unsigned char *)fn);
 		cob_set_int (cob_current_module->cob_procedure_parameters[1], ret);
 	}
 	return ret;
@@ -3320,10 +3329,7 @@ cob_acuw_copyfile (char *fname1, char *fname2, unsigned char *file_type)
 
 	/* RXW - Type is not yet evaluated */
 
-	if (cob_call_params < 3) {
-		cob_runtime_error (_("CALL to \"C$COPY\" requires 3 parameters"));
-		cob_stop_run (1);
-	}
+	COB_CHK_PARMS (C$COPY, 3);
 	if (cob_current_module->cob_procedure_parameters[0]) {
 		cob_field_to_string (cob_current_module->cob_procedure_parameters[0], fn1);
 		cob_field_to_string (cob_current_module->cob_procedure_parameters[1], fn2);
@@ -3347,10 +3353,7 @@ cob_acuw_file_info (char *file_name, char *file_info)
 	char			fn[COB_MEDIUM_BUFF];
 	char			fn2[COB_MEDIUM_BUFF];
 
-	if (cob_call_params < 2) {
-		cob_runtime_error (_("CALL to \"C$FILEINFO\" requires 2 parameters"));
-		cob_stop_run (1);
-	}
+	COB_CHK_PARMS (C$FILEINFO, 2);
 	cob_field_to_string (cob_current_module->cob_procedure_parameters[0], fn);
 	rationalize_name (fn2, fn, sizeof (fn2));
 	if (stat (fn2, &st) < 0) {
@@ -3388,10 +3391,7 @@ cob_acuw_file_delete (char *file_name, char *file_type)
 	char			fn[COB_MEDIUM_BUFF];
 
 	/* RXW - Type is not yet evaluated */
-	if (cob_call_params < 2) {
-		cob_runtime_error (_("CALL to \"C$DELETE\" requires 2 parameters"));
-		cob_stop_run (1);
-	}
+	COB_CHK_PARMS (C$DELETE, 2);
 	cob_field_to_string (cob_current_module->cob_procedure_parameters[0], fn);
 	return CBL_DELETE_FILE (fn);
 }

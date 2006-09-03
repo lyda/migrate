@@ -13,8 +13,8 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
- * Boston, MA 02111-1307 USA
+ * the Free Software Foundation, 51 Franklin Street, Fifth Floor
+ * Boston, MA 02110-1301 USA
  */
 
 #include "config.h"
@@ -59,6 +59,7 @@ void
 cb_warning (const char *fmt, ...)
 {
 	va_list ap;
+
 	va_start (ap, fmt);
 	print_error (0, 0, "Warning: ", fmt, ap);
 	va_end (ap);
@@ -70,6 +71,7 @@ void
 cb_error (const char *fmt, ...)
 {
 	va_list ap;
+
 	va_start (ap, fmt);
 	print_error (0, 0, "Error: ", fmt, ap);
 	va_end (ap);
@@ -81,6 +83,7 @@ void
 cb_warning_x (cb_tree x, const char *fmt, ...)
 {
 	va_list ap;
+
 	va_start (ap, fmt);
 	print_error ((char *)(x->source_file), x->source_line, "Warning: ", fmt, ap);
 	va_end (ap);
@@ -92,6 +95,7 @@ void
 cb_error_x (cb_tree x, const char *fmt, ...)
 {
 	va_list ap;
+
 	va_start (ap, fmt);
 	print_error ((char *)(x->source_file), x->source_line, "Error: ", fmt, ap);
 	va_end (ap);

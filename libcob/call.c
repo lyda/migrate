@@ -13,8 +13,8 @@
  * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; see the file COPYING.LIB.  If
- * not, write to the Free Software Foundation, Inc., 59 Temple Place,
- * Suite 330, Boston, MA 02111-1307 USA
+ * the Free Software Foundation, 51 Franklin Street, Fifth Floor
+ * Boston, MA 02110-1301 USA
  */
 
 #include "config.h"
@@ -96,6 +96,7 @@ static lt_dlhandle	mainhandle = NULL;
 #ifdef	_WIN32
 struct struct_handle {
 	struct struct_handle	*next;
+	struct struct_handle	*prev;
 	lt_dlhandle		preload_handle;
 };
 
@@ -110,6 +111,7 @@ static struct struct_handle	*pre_handle = NULL;
 
 struct call_hash {
 	struct call_hash	*next;
+	struct call_hash	*prev;
 	const char		*name;
 	const char		*path;
 	lt_ptr_t		func;
@@ -117,19 +119,22 @@ struct call_hash {
 	time_t			mtime;
 };
 
+#ifdef	COB_ALT_HASH
+static struct call_hash *call_table = NULL;
+#else
 static struct call_hash **call_table;
+#endif
 
 struct system_table {
 	const char		*syst_name;
-	const int		syst_params;
-	lt_ptr_t		syst_call;
+	const lt_ptr_t		syst_call;
 };
 
 static const struct system_table	system_tab[] = {
 #undef	COB_SYSTEM_GEN
-#define	COB_SYSTEM_GEN(x, y, z)	{ x, y, z },
+#define	COB_SYSTEM_GEN(x, y, z)	{ x, z },
 #include "system.def"
-	{ NULL, 0, NULL }
+	{ NULL, NULL }
 };
 
 static void
@@ -159,6 +164,7 @@ cob_set_library_path (const char *path)
 	}
 }
 
+#ifndef	COB_ALT_HASH
 static inline int
 hash (const unsigned char *s)
 {
@@ -169,11 +175,14 @@ hash (const unsigned char *s)
 	}
 	return val % HASH_SIZE;
 }
+#endif
 
 static void
 insert (const char *name, const char *path, lt_dlhandle handle, lt_ptr_t func, time_t mtime)
 {
+#ifndef	COB_ALT_HASH
 	int			val = hash ((unsigned char *)name);
+#endif
 	struct call_hash	*p = cob_malloc (sizeof (struct call_hash));
 
 	p->name = cob_strdup (name);
@@ -181,13 +190,41 @@ insert (const char *name, const char *path, lt_dlhandle handle, lt_ptr_t func, t
 	p->func = func;
 	p->handle = handle;
 	p->mtime = mtime;
+#ifdef	COB_ALT_HASH
+	p->next = call_table;
+	if (call_table) {
+		call_table->prev = p;
+	}
+	call_table = p;
+#else
 	p->next = call_table[val];
 	call_table[val] = p;
+#endif
 }
 
 static void
 drop (const char *name)
 {
+#ifdef	COB_ALT_HASH
+	struct call_hash	*p;
+
+	for (p = call_table; p; p = p->next) {
+		if (strcmp (name, p->name) == 0) {
+			lt_dlclose (p->handle);
+			if (p->prev) {
+				p->prev->next = p->next;
+			} else {
+				call_table = p->next;
+			}
+			free ((char *)p->name);
+			if (p->path) {
+				free ((char *)p->path);
+			}
+			free (p);
+			return;
+		}
+	}
+#else
 	struct call_hash	**pp;
 
 	for (pp = &call_table[hash ((unsigned char *)name)]; *pp; pp = &(*pp)->next) {
@@ -204,6 +241,7 @@ drop (const char *name)
 			return;
 		}
 	}
+#endif
 }
 
 static void *
@@ -212,7 +250,11 @@ lookup (const char *name)
 	struct stat		st;
 	struct call_hash	*p;
 
+#ifdef	COB_ALT_HASH
+	for (p = call_table; p; p = p->next) {
+#else
 	for (p = call_table[hash ((unsigned char *)name)]; p; p = p->next) {
+#endif
 		if (strcmp (name, p->name) == 0) {
 			if (dynamic_reloading == 0 || !p->path) {
 				return p->func;
@@ -272,7 +314,7 @@ cob_resolve (const char *name)
 
 /* Checked in generated code
 	if (!cob_initialized) {
-		fputs (_("cob_init() must be called before cob_resolve()"), stderr);
+		fputs ("cob_init() must be called before cob_resolve()", stderr);
 		cob_stop_run (1);
 	}
 */
@@ -306,14 +348,21 @@ cob_resolve (const char *name)
 		return func;
 	}
 
-#ifdef	_WIN32
 	/* Search preloaded modules */
+#ifdef	_WIN32
 	for (chkhandle = pre_handle; chkhandle; chkhandle = chkhandle->next) {
 		if ((func = lt_dlsym (chkhandle->preload_handle, (char *)buff)) != NULL) {
 			insert (name, NULL, chkhandle->preload_handle, func, 0);
 			resolve_error = NULL;
 			return func;
 		}
+	}
+#endif
+#if	defined(USE_LIBDL) && defined (RTLD_DEFAULT)
+	if ((func = lt_dlsym (RTLD_DEFAULT, buff)) != NULL) {
+		insert (name, NULL, NULL, func, 0);
+		resolve_error = NULL;
+		return func;
 	}
 #endif
 
@@ -337,14 +386,7 @@ cob_resolve (const char *name)
 			return NULL;
 		}
 	}
-#if	defined(USE_LIBDL) && defined (RTLD_DEFAULT)
-	if ((func = lt_dlsym (RTLD_DEFAULT, buff)) != NULL) {
-		insert (name, NULL, NULL, func, 0);
-		resolve_error = NULL;
-		return func;
-	}
-#endif
-	sprintf (resolve_error_buff, _("Cannot find module '%s'"), name);
+	sprintf (resolve_error_buff, "Cannot find module '%s'", name);
 	resolve_error = resolve_error_buff;
 	COB_SET_EXCEPTION (COB_EC_PROGRAM_NOT_FOUND);
 	return NULL;
@@ -403,11 +445,10 @@ cob_call_error (void)
 	const char	*s;
 
 	s = cob_resolve_error ();
-	if (s) {
-		cob_runtime_error ("%s", s);
-	} else {
-		cob_runtime_error ("%s", "Unknown error");
+	if (!s) {
+		s = "Unknown error";
 	}
+	cob_runtime_error ("%s", s);
 	cob_stop_run (1);
 }
 
@@ -441,7 +482,9 @@ cob_init_call (void)
 	/* big enough for anything from libdl/libltdl */
 	resolve_error_buff = cob_malloc (256);
 
+#ifndef	COB_ALT_HASH
 	call_table = (struct call_hash **)cob_malloc (sizeof (struct call_hash *) * HASH_SIZE);
+#endif
 
 	s = getenv ("COB_LIBRARY_PATH");
 	if (s == NULL) {
@@ -471,6 +514,9 @@ cob_init_call (void)
 						newhandle = cob_malloc (sizeof (struct struct_handle));
 						newhandle->preload_handle = libhandle;
 						newhandle->next = pre_handle;
+						if (pre_handle) {
+							pre_handle->prev = newhandle;
+						}
 						pre_handle = newhandle;
 #else
 					if (lt_dlopen (filename) != NULL) {
@@ -482,6 +528,6 @@ cob_init_call (void)
 		}
 	}
 	for (psyst = (struct system_table *)&system_tab[0]; psyst->syst_name; psyst++) {
-		insert (psyst->syst_name, NULL, NULL, psyst->syst_call, 0);
+		insert (psyst->syst_name, NULL, NULL, (lt_ptr_t)psyst->syst_call, 0);
 	}
 }

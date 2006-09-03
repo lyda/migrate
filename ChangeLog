@@ -1,3 +1,13 @@
+2006-08-29  Roger While <simrw@sim-basis.de>
+
+	* General : FSF address change
+	* COPYING.DOC : New file, GNU Free Dcoumentation license
+
+2006-08-28  Roger While <simrw@sim-basis.de>
+
+	* configure.ac : Implement --disable-param-check
+	  and --enable-experimental
+
 2006-08-22  Roger While <simrw@sim-basis.de>
 
 	* configure.ac : BDB neeeds stdlib.h for 64-bit build

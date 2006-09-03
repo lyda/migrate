@@ -13,8 +13,8 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; see the file COPYING.LIB.  If
- * not, write to the Free Software Foundation, Inc., 59 Temple Place,
- * Suite 330, Boston, MA 02111-1307 USA
+ * not, write to the Free Software Foundation, 51 Franklin Street, Fifth Floor
+ * Boston, MA 02110-1301 USA
  */
 
 #include "config.h"
@@ -289,6 +289,8 @@ const unsigned char	cob_e2a[256] = {
 };
 end comment */
 
+static const char	parm_msg[] = "CALL to %s requires %d parameters";
+
 static const struct cob_exception	cob_exception_table[] = {
 	{0, NULL, 0},		/* COB_EC_ZERO */
 #undef COB_EXCEPTION
@@ -437,8 +439,8 @@ cob_init (int argc, char **argv)
 void
 cob_module_enter (cob_module *module)
 {
-	if (!cob_initialized) {
-		fputs (_("Warning: cob_init expected in the main program\n"), stderr);
+	if (unlikely(!cob_initialized)) {
+		fputs ("Warning: cob_init expected in the main program\n", stderr);
 		cob_init (0, NULL);
 	}
 
@@ -450,6 +452,14 @@ void
 cob_module_leave (cob_module *module)
 {
 	cob_current_module = cob_current_module->next;
+}
+
+void
+cob_stop_run (const int status)
+{
+	cob_screen_terminate ();
+	cob_exit_fileio ();
+	exit (status);
 }
 
 void
@@ -477,21 +487,13 @@ cob_fatal_error (const enum cob_enum_error fatal_error)
 }
 
 void
-cob_stop_run (const int status)
-{
-	cob_screen_terminate ();
-	cob_exit_fileio ();
-	exit (status);
-}
-
-void
 cob_check_version (const char *prog, const char *packver, const int patchlev)
 {
 	if (strcmp (packver, PACKAGE_VERSION) || patchlev != PATCH_LEVEL) {
-		cob_runtime_error (_("Error - Version mismatch"));
-		cob_runtime_error (_("%s has version/patch level %s/%d"), prog, packver,
+		cob_runtime_error ("Error - Version mismatch");
+		cob_runtime_error ("%s has version/patch level %s/%d", prog, packver,
 				   patchlev);
-		cob_runtime_error (_("Library has version/patch level %s/%d"), PACKAGE_VERSION,
+		cob_runtime_error ("Library has version/patch level %s/%d", PACKAGE_VERSION,
 				   PATCH_LEVEL);
 		cob_stop_run (1);
 	}
@@ -690,7 +692,7 @@ cob_real_get_sign (cob_field *f)
 			case COB_DISPLAY_SIGN_EBCDIC:
 				return cob_get_sign_ebcdic (p);
 			default:
-				cob_runtime_error (_("Invalid display sign '%d'"),
+				cob_runtime_error ("Invalid display sign '%d'",
 						cob_current_module->display_sign);
 				cob_stop_run (1);
 			}
@@ -744,7 +746,7 @@ cob_real_put_sign (cob_field *f, const int sign)
 				PUT_SIGN_ASCII20 (*p);
 				break;
 			default:
-				cob_runtime_error (_("Invalid display sign '%d'"),
+				cob_runtime_error ("Invalid display sign '%d'",
 						cob_current_module->display_sign);
 				cob_stop_run (1);
 			}
@@ -1142,7 +1144,7 @@ cob_table_sort (cob_field *f, int n)
  * Run-time error checking
  */
 
-void
+void COB_NOINLINE
 cob_runtime_error (const char *fmt, ...)
 {
 	va_list ap;
@@ -1198,7 +1200,7 @@ cob_check_numeric (cob_field *f, const char *name)
 			}
 		}
 		*p = '\0';
-		cob_runtime_error (_("'%s' not numeric: '%s'"), name, buff);
+		cob_runtime_error ("'%s' not numeric: '%s'", name, buff);
 		cob_stop_run (1);
 	}
 }
@@ -1209,7 +1211,7 @@ cob_check_odo (int i, int min, int max, const char *name)
 	/* check the OCCURS DEPENDING ON item */
 	if (i < min || max < i) {
 		COB_SET_EXCEPTION (COB_EC_BOUND_ODO);
-		cob_runtime_error (_("OCCURS DEPENDING ON '%s' out of bounds: %d"), name, i);
+		cob_runtime_error ("OCCURS DEPENDING ON '%s' out of bounds: %d", name, i);
 		cob_stop_run (1);
 	}
 }
@@ -1220,7 +1222,7 @@ cob_check_subscript (int i, int min, int max, const char *name)
 	/* check the subscript */
 	if (i < min || max < i) {
 		COB_SET_EXCEPTION (COB_EC_BOUND_SUBSCRIPT);
-		cob_runtime_error (_("Subscript of '%s' out of bounds: %d"), name, i);
+		cob_runtime_error ("Subscript of '%s' out of bounds: %d", name, i);
 		cob_stop_run (1);
 	}
 }
@@ -1231,14 +1233,14 @@ cob_check_ref_mod (int offset, int length, int size, const char *name)
 	/* check the offset */
 	if (offset < 1 || offset > size) {
 		COB_SET_EXCEPTION (COB_EC_BOUND_REF_MOD);
-		cob_runtime_error (_("Offset of '%s' out of bounds: %d"), name, offset);
+		cob_runtime_error ("Offset of '%s' out of bounds: %d", name, offset);
 		cob_stop_run (1);
 	}
 
 	/* check the length */
 	if (length < 1 || offset + length - 1 > size) {
 		COB_SET_EXCEPTION (COB_EC_BOUND_REF_MOD);
-		cob_runtime_error (_("Length of '%s' out of bounds: %d"), name, length);
+		cob_runtime_error ("Length of '%s' out of bounds: %d", name, length);
 		cob_stop_run (1);
 	}
 }
@@ -1253,7 +1255,7 @@ cob_external_addr (const char *exname, int exlength)
 	for (eptr = basext; eptr; eptr = eptr->next) {
 		if (!strcmp (exname, eptr->ename)) {
 			if (exlength > eptr->esize) {
-				cob_runtime_error (_("EXTERNAL item '%s' has size > %d"),
+				cob_runtime_error ("EXTERNAL item '%s' has size > %d",
 						   exname, exlength);
 				cob_stop_run (1);
 			}
@@ -1279,7 +1281,7 @@ cob_malloc (const size_t size)
 
 	mptr = malloc (size);
 	if (unlikely(!mptr)) {
-		cob_runtime_error (_("Cannot acquire %d bytes of memory - Aborting"), size);
+		cob_runtime_error ("Cannot acquire %d bytes of memory - Aborting", size);
 		cob_stop_run (1);
 	}
 	memset (mptr, 0, size);
@@ -1293,12 +1295,12 @@ cob_strdup (const void *stptr)
 	size_t	len;
 
 	if (unlikely(!stptr)) {
-		cob_runtime_error (_("cob_strdup called with NULL pointer"));
+		cob_runtime_error ("cob_strdup called with NULL pointer");
 		cob_stop_run (1);
 	}
 	len = strlen (stptr);
 	if (unlikely(len < 1 || len > 2147483647)) {
-		cob_runtime_error (_("cob_strdup called with invalid string"));
+		cob_runtime_error ("cob_strdup called with invalid string");
 		cob_stop_run (1);
 	}
 	len++;
@@ -1592,10 +1594,8 @@ CBL_ERROR_PROC (unsigned char *x, int (**p)(char *s))
 	struct handlerlist *hp = NULL;
 	struct handlerlist *h = hdlrs;
 
-	if (cob_call_params < 2) {
-		cob_runtime_error (_("CALL to \"CBL_ERROR_PROC\" requires 2 parameters"));
-		cob_stop_run (1);
-	}
+	COB_CHK_PARMS (CBL_ERROR_PROC, 2);
+
 	if (!p || !*p) {
 		return -1;
 	}
@@ -1631,14 +1631,11 @@ SYSTEM (unsigned char *cmd)
 	int	i;
 	char	buff[COB_MEDIUM_BUFF];
 
-	if (cob_call_params < 1) {
-		cob_runtime_error (_("CALL to \"SYSTEM\" requires parameter"));
-		cob_stop_run (1);
-	}
+	COB_CHK_PARMS (SYSTEM, 1);
 	if (cob_current_module->cob_procedure_parameters[0]) {
 		i = (int)cob_current_module->cob_procedure_parameters[0]->size;
 		if (i > COB_MEDIUM_BUFF - 1) {
-			cob_runtime_error (_("Parameter to SYSTEM call is larger than 8192 characters"));
+			cob_runtime_error ("Parameter to SYSTEM call is larger than 8192 characters");
 			cob_stop_run (1);
 		}
 		i--;
@@ -1796,10 +1793,7 @@ CBL_TOUPPER (unsigned char *data, int length)
 {
 	size_t	n;
 
-	if (cob_call_params < 2) {
-		cob_runtime_error (_("CALL to \"CBL_TOUPPER\" requires 2 parameters"));
-		cob_stop_run (1);
-	}
+	COB_CHK_PARMS (CBL_TOUPPER, 2);
 	if (length > 0) {
 		for (n = 0; n < (size_t)length; n++) {
 			if (islower (data[n])) {
@@ -1815,10 +1809,7 @@ CBL_TOLOWER (unsigned char *data, int length)
 {
 	size_t	n;
 
-	if (cob_call_params < 2) {
-		cob_runtime_error (_("CALL to \"CBL_TOLOWER\" requires 2 parameters"));
-		cob_stop_run (1);
-	}
+	COB_CHK_PARMS (CBL_TOLOWER, 2);
 	if (length > 0) {
 		for (n = 0; n < (size_t)length; n++) {
 			if (isupper (data[n])) {
@@ -1832,10 +1823,7 @@ CBL_TOLOWER (unsigned char *data, int length)
 int
 cob_return_args (unsigned char *data)
 {
-	if (cob_call_params < 1) {
-		cob_runtime_error (_("CALL to \"C$NARG\" requires parameter"));
-		cob_stop_run (1);
-	}
+	COB_CHK_PARMS (C$NARG, 1);
 	if (cob_current_module->cob_procedure_parameters[0]) {
 		cob_set_int (cob_current_module->cob_procedure_parameters[0], cob_save_call_params);
 	}
@@ -1847,10 +1835,7 @@ cob_parameter_size (unsigned char *data)
 {
 	int	n;
 
-	if (cob_call_params < 1) {
-		cob_runtime_error (_("CALL to \"C$PARAMSIZE\" requires parameter"));
-		cob_stop_run (1);
-	}
+	COB_CHK_PARMS (C$PARAMSIZE, 1);
 	if (cob_current_module->cob_procedure_parameters[0]) {
 		n = cob_get_int (cob_current_module->cob_procedure_parameters[0]);
 		if (n > 0 && n <= cob_save_call_params) {
@@ -1869,10 +1854,7 @@ cob_acuw_sleep (unsigned char *data)
 {
 	int	n;
 
-	if (cob_call_params < 1) {
-		cob_runtime_error (_("CALL to \"C$SLEEP\" requires parameter"));
-		cob_stop_run (1);
-	}
+	COB_CHK_PARMS (C$SLEEP, 1);
 	if (cob_current_module->cob_procedure_parameters[0]) {
 		n = cob_get_int (cob_current_module->cob_procedure_parameters[0]);
 		if (n > 0 && n < 3600*24*7) {
@@ -1899,10 +1881,7 @@ cob_acuw_justify (unsigned char *data, ...)
 	size_t		centrelen;
 	va_list		args;
 
-	if (cob_call_params < 1) {
-		cob_runtime_error (_("CALL to \"C$JUSTIFY\" requires at least 1 parameter"));
-		cob_stop_run (1);
-	}
+	COB_CHK_PARMS (C$JUSTIFY, 1);
 	datalen = cob_current_module->cob_procedure_parameters[0]->size;
 	if (datalen < 2) {
 		return 0;

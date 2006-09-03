@@ -13,8 +13,8 @@
  * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; see the file COPYING.LIB.  If
- * not, write to the Free Software Foundation, Inc., 59 Temple Place,
- * Suite 330, Boston, MA 02111-1307 USA
+ * not, write to the Free Software Foundation, 51 Franklin Street, Fifth Floor
+ * Boston, MA 02110-1301 USA
  */
 
 #include "config.h"
@@ -34,7 +34,9 @@
 #include "numeric.h"
 #include "fileio.h"
 #include "intrinsic.h"
+/*
 #include "lib/gettext.h"
+*/
 
 /* Stacked field level */
 #define DEPTH_LEVEL	8
@@ -136,7 +138,7 @@ make_field_entry (cob_field *f)
 		} else {
 			s = realloc (curr_field->data, f->size + 3);
 			if (!s) {
-				cob_runtime_error (_("Cannot acquire %d bytes of memory - Aborting"), f->size + 3);
+				cob_runtime_error ("Cannot acquire %d bytes of memory - Aborting", f->size + 3);
 				cob_stop_run (1);
 			}
 		}

@@ -7,7 +7,7 @@ SUBDIRS = lib libcob cobc bin po texi config tests
 ACLOCAL_AMFLAGS = -I m4
 BUILT_SOURCES = defaults.h
 DISTCLEANFILES = $(BUILT_SOURCES) cpucheck
-EXTRA_DIST = cpucheck.c
+EXTRA_DIST = cpucheck.c COPYING.DOC
 
 defaults.h: Makefile.am $(top_builddir)/config.status
 	@echo "Creating defaults.h..."
