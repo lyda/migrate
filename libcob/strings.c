@@ -74,7 +74,7 @@ cob_min_int (const int x, const int y)
 }
 
 static void
-inspect_common (cob_field *f1, cob_field *f2, int type)
+inspect_common (cob_field *f1, cob_field *f2, const int type)
 {
 	size_t	n = 0;
 	int	i;
@@ -147,7 +147,7 @@ inspect_common (cob_field *f1, cob_field *f2, int type)
  */
 
 void
-cob_inspect_init (cob_field *var, int replacing)
+cob_inspect_init (cob_field *var, const int replacing)
 {
 	size_t		i;
 	size_t		digcount;
@@ -406,7 +406,7 @@ cob_unstring_init (cob_field *src, cob_field *ptr)
 }
 
 void
-cob_unstring_delimited (cob_field *dlm, int all)
+cob_unstring_delimited (cob_field *dlm, const int all)
 {
 	dlm_list[unstring_ndlms].uns_dlm = dlm;
 	dlm_list[unstring_ndlms].uns_all = all;

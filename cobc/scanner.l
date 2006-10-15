@@ -404,13 +404,13 @@ read_literal (char mark)
 static int
 scan_x (char *text)
 {
-	static int	lastlen = 0;
-	static char	*buff = NULL;
+	static int		lastlen = 0;
+	static unsigned char	*buff = NULL;
 
-	int		high = 1;
-	char		*src = text;
-	char		*dst;
-	int		currlen;
+	unsigned char		*src = (unsigned char *)text;
+	unsigned char		*dst;
+	int			currlen;
+	int			high = 1;
 
 	currlen = strlen (text);
 	if (!buff) {
@@ -467,11 +467,11 @@ error:
 static int
 scan_h (char *text)
 {
-	char *p;
-	char buff[24];
-	long long val = 0;
+	unsigned char	*p;
+	long long	val = 0;
+	char		buff[48];
 
-	for (p = text; *p != '\'' && *p != '\"'; p++) {
+	for (p = (unsigned char *)text; *p != '\'' && *p != '\"'; p++) {
 		int c = toupper (*p);
 
 		if ('0' <= c && c <= '9') {
@@ -536,17 +536,41 @@ scan_numeric (char *text)
 }
 
 static int
+can_replace (const char *src1, const char *src2, const size_t size,
+	     const size_t iteration)
+{
+	const unsigned char	*p;
+
+	if (strncasecmp (src1, src2, size)) {
+		return 0;
+	}
+	p = (unsigned char *)src1 + size;
+	if (isalnum (*p) || *p == '-' || *p == '_') {
+		return 0;
+	}
+	if (iteration) {
+		p = (unsigned char *)src1 - 1;
+		if (isalnum (*p) || *p == '-' || *p == '_') {
+			return 0;
+		}
+	}
+	return 1;
+}
+
+static int
 scan_picture (char *text)
 {
-	char			*p;
+	unsigned char		*p;
 	struct cb_level_78	*p78;
-	int			n;
-	int			i;
+	size_t			n;
+	size_t			i;
+	size_t			size;
+	size_t			sizep;
 	char			buff[COB_SMALL_BUFF];
 	char			buff2[COB_SMALL_BUFF];
 
 	/* normalize the input */
-	for (p = text; *p; p++) {
+	for (p = (unsigned char *)text; *p; p++) {
 		/* unput trailing '.' or ',' */
 		if (p[1] == 0 && (*p == '.' || *p == ',')) {
 			unput (*p);
@@ -562,14 +586,15 @@ scan_picture (char *text)
 		memset (buff2, 0, sizeof (buff2));
 		strcpy (buff, text);
 		for (p78 = lev78ptr; p78; p78 = p78->next) {
-			p = (char *)CB_LITERAL(CB_VALUE(p78->fld78->values))->data;
+			p = (unsigned char *)CB_LITERAL(CB_VALUE(p78->fld78->values))->data;
+			size = strlen (p78->fld78->name);
+			sizep = strlen ((char *)p);
 			i = 0;
 			for (n = 0; n < strlen (buff); n++) {
-				if (strncasecmp (&buff[n], p78->fld78->name,
-				    strlen (p78->fld78->name)) == 0) {
-					memcpy (&buff2[i], p, strlen (p));
-					n += strlen (p78->fld78->name) - 1;
-					i += strlen (p);
+				if (can_replace (&buff[n], p78->fld78->name, size, n)) {
+					memcpy (&buff2[i], p, sizep);
+					n += size - 1;
+					i += sizep;
 				} else {
 					buff2[i++] = buff[n];
 				}

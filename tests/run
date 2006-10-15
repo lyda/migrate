@@ -335,8 +335,8 @@ at_help_all='1;fundamental.at:22;DISPLAY literals;;
 24;accept.at:22;ACCEPT;;
 25;initialize.at:26;INITIALIZE group entry with OCCURS;;
 26;initialize.at:50;INITIALIZE OCCURS with numeric edited;;
-27;initialize.at:72;INITIALIZE complex group;;
-28;initialize.at:95;INITIALIZE complex group;;
+27;initialize.at:72;INITIALIZE complex group (1);;
+28;initialize.at:95;INITIALIZE complex group (2);;
 29;initialize.at:118;INITIALIZE with REDEFINES;;
 30;misc.at:20;Source file not found;;
 31;misc.at:29;Comma separator without space;;
@@ -3064,10 +3064,10 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  27 ) # 27. initialize.at:72: INITIALIZE complex group
+  27 ) # 27. initialize.at:72: INITIALIZE complex group (1)
     at_setup_line='initialize.at:72'
-    at_desc='INITIALIZE complex group'
-    $at_quiet $ECHO_N " 27: INITIALIZE complex group                     $ECHO_C"
+    at_desc='INITIALIZE complex group (1)'
+    $at_quiet $ECHO_N " 27: INITIALIZE complex group (1)                 $ECHO_C"
     at_xfail=no
     (
       echo "27. initialize.at:72: testing ..."
@@ -3149,10 +3149,10 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  28 ) # 28. initialize.at:95: INITIALIZE complex group
+  28 ) # 28. initialize.at:95: INITIALIZE complex group (2)
     at_setup_line='initialize.at:95'
-    at_desc='INITIALIZE complex group'
-    $at_quiet $ECHO_N " 28: INITIALIZE complex group                     $ECHO_C"
+    at_desc='INITIALIZE complex group (2)'
+    $at_quiet $ECHO_N " 28: INITIALIZE complex group (2)                 $ECHO_C"
     at_xfail=no
     (
       echo "28. initialize.at:95: testing ..."

@@ -84,10 +84,10 @@ static struct cb_word *lookup_word (const char *name);
 static char *
 to_cname (const char *s)
 {
-	char *copy = strdup (s);
-	char *p;
+	char		*copy = strdup (s);
+	unsigned char	*p;
 
-	for (p = copy; *p; p++) {
+	for (p = (unsigned char *)copy; *p; p++) {
 		*p = (*p == '-') ? '_' : toupper (*p);
 	}
 	return copy;
@@ -245,6 +245,10 @@ cb_tree_class (cb_tree x)
 enum cb_category
 cb_tree_category (cb_tree x)
 {
+	struct cb_cast		*p;
+	struct cb_reference	*r;
+	struct cb_field		*f;
+
 	if (x == cb_error_node) {
 		return 0;
 	}
@@ -254,9 +258,7 @@ cb_tree_category (cb_tree x)
 
 	switch (CB_TREE_TAG (x)) {
 	case CB_TAG_CAST:
-	{
-		struct cb_cast *p = CB_CAST (x);
-
+		p = CB_CAST (x);
 		switch (p->type) {
 		case CB_CAST_ADDRESS:
 			x->category = CB_CATEGORY_DATA_POINTER;
@@ -269,22 +271,16 @@ cb_tree_category (cb_tree x)
 			ABORT ();
 		}
 		break;
-	}
 	case CB_TAG_REFERENCE:
-	{
-		struct cb_reference *r = CB_REFERENCE (x);
-
+		r = CB_REFERENCE (x);
 		if (r->offset) {
 			x->category = CB_CATEGORY_ALPHANUMERIC;
 		} else {
 			x->category = cb_tree_category (r->value);
 		}
 		break;
-	}
 	case CB_TAG_FIELD:
-	{
-		struct cb_field *f = CB_FIELD (x);
-
+		f = CB_FIELD (x);
 		if (f->children) {
 			x->category = CB_CATEGORY_ALPHANUMERIC;
 		} else if (f->usage == CB_USAGE_POINTER && f->level != 88) {
@@ -309,12 +305,9 @@ cb_tree_category (cb_tree x)
 			}
 		}
 		break;
-	}
 	case CB_TAG_ALPHABET_NAME:
-	{
 		x->category = CB_CATEGORY_ALPHANUMERIC;
 		break;
-	}
 	default:
 		fprintf (stderr, "Unknown tree tag %d Category %d\n", CB_TREE_TAG (x), x->category);
 		ABORT ();
@@ -375,20 +368,18 @@ cb_tree_type (cb_tree x)
 int
 cb_fits_int (cb_tree x)
 {
+	struct cb_literal	*l;
+	struct cb_field		*f;
+
 	switch (CB_TREE_TAG (x)) {
 	case CB_TAG_LITERAL:
-	{
-		struct cb_literal *l = CB_LITERAL (x);
-
+		l = CB_LITERAL (x);
 		if (l->scale <= 0 && l->size < 10) {
 			return 1;
 		}
 		return 0;
-	}
 	case CB_TAG_FIELD:
-	{
-		struct cb_field *f = CB_FIELD (x);
-
+		f = CB_FIELD (x);
 		switch (f->usage) {
 		case CB_USAGE_INDEX:
 		case CB_USAGE_LENGTH:
@@ -408,11 +399,49 @@ cb_fits_int (cb_tree x)
 		default:
 			return 0;
 		}
-	}
 	case CB_TAG_REFERENCE:
-	{
 		return cb_fits_int (CB_REFERENCE (x)->value);
+	default:
+		return 0;
 	}
+}
+
+int
+cb_fits_long_long (cb_tree x)
+{
+	struct cb_literal	*l;
+	struct cb_field		*f;
+
+	switch (CB_TREE_TAG (x)) {
+	case CB_TAG_LITERAL:
+		l = CB_LITERAL (x);
+		if (l->scale <= 0 && l->size < 19) {
+			return 1;
+		}
+		return 0;
+	case CB_TAG_FIELD:
+		f = CB_FIELD (x);
+		switch (f->usage) {
+		case CB_USAGE_INDEX:
+		case CB_USAGE_LENGTH:
+			return 1;
+		case CB_USAGE_BINARY:
+		case CB_USAGE_COMP_5:
+		case CB_USAGE_COMP_X:
+			if (f->pic->scale <= 0 && f->size <= sizeof (long long)) {
+				return 1;
+			}
+			return 0;
+		case CB_USAGE_DISPLAY:
+			if (f->pic->scale <= 0 && f->size < 19) {
+				return 1;
+			}
+			return 0;
+		default:
+			return 0;
+		}
+	case CB_TAG_REFERENCE:
+		return cb_fits_long_long (CB_REFERENCE (x)->value);
 	default:
 		return 0;
 	}
@@ -617,11 +646,16 @@ cb_build_alphanumeric_literal (const unsigned char *data, size_t size)
 cb_tree
 cb_concat_literals (cb_tree x1, cb_tree x2)
 {
-	struct cb_literal	*l1 = CB_LITERAL (x1);
-	struct cb_literal	*l2 = CB_LITERAL (x2);
+	struct cb_literal	*l1;
+	struct cb_literal	*l2;
 	unsigned char		*buff;
 	cb_tree			x;
 
+	if (x1 == cb_error_node || x2 == cb_error_node) {
+		return cb_error_node;
+	}
+	l1 = CB_LITERAL (x1);
+	l2 = CB_LITERAL (x2);
 	buff = cobc_malloc (l1->size + l2->size + 3);
 	memcpy (buff, l1->data, l1->size);
 	memcpy (buff + l1->size, l2->data, l2->size);
@@ -960,10 +994,6 @@ cb_field_add (struct cb_field *f, struct cb_field *p)
 	if (f == NULL) {
 		return p;
 	}
-
-/* RXW
-	if (f->level == 78) {
-*/
 	if (p && p->level == 78) {
 		return f;
 	}
@@ -1737,10 +1767,10 @@ cb_list_map (cb_tree (*func) (cb_tree x), cb_tree l)
  * Program
  */
 
-static int
-hash (const char *s)
+static size_t
+hash (const unsigned char *s)
 {
-	int val = 0;
+	size_t val = 0;
 
 	for (; *s; s++) {
 		val += toupper (*s);
@@ -1752,7 +1782,7 @@ static struct cb_word *
 lookup_word (const char *name)
 {
 	struct cb_word	*p;
-	int		val = hash (name);
+	size_t		val = hash ((unsigned char *)name);
 
 	/* find the existing word */
 	if (current_program) {

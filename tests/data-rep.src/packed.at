@@ -235,7 +235,7 @@ AT_CLEANUP
 
 
 # initialize
-AT_SETUP([PACKED-DECIMAL arithmetic])
+AT_SETUP([PACKED-DECIMAL arithmetic (1)])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -266,7 +266,7 @@ AT_CLEANUP
 
 
 # arithmetic
-AT_SETUP([PACKED-DECIMAL arithmetic])
+AT_SETUP([PACKED-DECIMAL arithmetic (2)])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.

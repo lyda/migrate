@@ -303,6 +303,12 @@ static const struct cob_exception	cob_exception_table[] = {
 
 static int		cob_switch[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
+/* Runtime exit handling */
+static struct exit_handlerlist {
+	struct exit_handlerlist	*next;
+	int			(*proc)(void);
+} *exit_hdlrs = NULL;
+
 /* Runtime error handling */
 static struct handlerlist {
 	struct handlerlist	*next;
@@ -459,6 +465,14 @@ cob_stop_run (const int status)
 {
 	cob_screen_terminate ();
 	cob_exit_fileio ();
+	if (exit_hdlrs != NULL) {
+		struct exit_handlerlist	*h = exit_hdlrs;
+
+		while (h != NULL) {
+			h->proc ();
+			h = h->next;
+		}
+	}
 	exit (status);
 }
 
@@ -770,7 +784,7 @@ cob_real_put_sign (cob_field *f, const int sign)
 }
 
 void
-cob_field_to_string (cob_field *f, char *s)
+cob_field_to_string (const cob_field *f, char *s)
 {
 	int	i;
 
@@ -804,7 +818,7 @@ cob_set_switch (int n, int flag)
  */
 
 static int
-cmpc (unsigned char *s1, unsigned char c, size_t size)
+cmpc (const unsigned char *s1, const unsigned char c, const size_t size)
 {
 	size_t			i;
 	int			ret = 0;
@@ -827,7 +841,7 @@ cmpc (unsigned char *s1, unsigned char c, size_t size)
 }
 
 static int
-cmps (unsigned char *s1, unsigned char *s2, size_t size)
+cmps (const unsigned char *s1, const unsigned char *s2, const size_t size)
 {
 	size_t			i;
 	int			ret = 0;
@@ -850,7 +864,7 @@ cmps (unsigned char *s1, unsigned char *s2, size_t size)
 }
 
 static int
-cob_cmp_char (cob_field *f, unsigned char c)
+cob_cmp_char (cob_field *f, const unsigned char c)
 {
 	int	sign = cob_get_sign (f);
 	int	ret = cmpc (f->data, c, f->size);
@@ -924,6 +938,9 @@ end:
 int
 cob_cmp (cob_field *f1, cob_field *f2)
 {
+	if (COB_FIELD_IS_NUMERIC (f1) && COB_FIELD_IS_NUMERIC (f2)) {
+		return cob_numeric_cmp (f1, f2);
+	}
 	if (COB_FIELD_TYPE (f2) == COB_TYPE_ALPHANUMERIC_ALL) {
 		if (f2 == &cob_zero && COB_FIELD_IS_NUMERIC (f1)) {
 			return cob_cmp_int (f1, 0);
@@ -945,9 +962,6 @@ cob_cmp (cob_field *f1, cob_field *f2)
 		cob_field_attr	attr;
 		unsigned char	buff[48];
 
-		if (COB_FIELD_IS_NUMERIC (f1) && COB_FIELD_IS_NUMERIC (f2)) {
-			return cob_numeric_cmp (f1, f2);
-		}
 		if (COB_FIELD_IS_NUMERIC (f1)
 		    && COB_FIELD_TYPE (f1) != COB_TYPE_NUMERIC_DISPLAY) {
 /* Seems like struct inits generate worse code
@@ -1049,7 +1063,7 @@ cob_is_numeric (cob_field *f)
 }
 
 int
-cob_is_alpha (cob_field *f)
+cob_is_alpha (const cob_field *f)
 {
 	size_t	i;
 
@@ -1062,7 +1076,7 @@ cob_is_alpha (cob_field *f)
 }
 
 int
-cob_is_upper (cob_field *f)
+cob_is_upper (const cob_field *f)
 {
 	size_t	i;
 
@@ -1075,7 +1089,7 @@ cob_is_upper (cob_field *f)
 }
 
 int
-cob_is_lower (cob_field *f)
+cob_is_lower (const cob_field *f)
 {
 	size_t	i;
 	for (i = 0; i < f->size; i++) {
@@ -1166,7 +1180,9 @@ cob_runtime_error (const char *fmt, ...)
 			h->proc (str);
 			h = h->next;
 		}
+		hdlrs = NULL;
 	}
+
 	/* prefix */
 	if (cob_source_file) {
 		fprintf (stderr, "%s:%d: ", cob_source_file, cob_source_line);
@@ -1206,7 +1222,7 @@ cob_check_numeric (cob_field *f, const char *name)
 }
 
 void
-cob_check_odo (int i, int min, int max, const char *name)
+cob_check_odo (const int i, const int min, const int max, const char *name)
 {
 	/* check the OCCURS DEPENDING ON item */
 	if (i < min || max < i) {
@@ -1217,7 +1233,7 @@ cob_check_odo (int i, int min, int max, const char *name)
 }
 
 void
-cob_check_subscript (int i, int min, int max, const char *name)
+cob_check_subscript (const int i, const int min, const int max, const char *name)
 {
 	/* check the subscript */
 	if (i < min || max < i) {
@@ -1228,7 +1244,7 @@ cob_check_subscript (int i, int min, int max, const char *name)
 }
 
 void
-cob_check_ref_mod (int offset, int length, int size, const char *name)
+cob_check_ref_mod (const int offset, const int length, const int size, const char *name)
 {
 	/* check the offset */
 	if (offset < 1 || offset > size) {
@@ -1246,7 +1262,7 @@ cob_check_ref_mod (int offset, int length, int size, const char *name)
 }
 
 unsigned char *
-cob_external_addr (const char *exname, int exlength)
+cob_external_addr (const char *exname, const int exlength)
 {
 	static cob_external *basext = NULL;
 
@@ -1589,6 +1605,43 @@ cob_free_alloc (unsigned char **ptr1, unsigned char *ptr2)
 /* System routines */
 
 int
+CBL_EXIT_PROC (unsigned char *x, int (**p)(void))
+{
+	struct exit_handlerlist *hp = NULL;
+	struct exit_handlerlist *h = exit_hdlrs;
+
+	COB_CHK_PARMS (CBL_ERROR_PROC, 2);
+
+	if (!p || !*p) {
+		return -1;
+	}
+	/* remove handler anyway */
+	while (h != NULL) {
+		if (h->proc == *p) {
+			if (hp != NULL) {
+				hp->next = h->next;
+			} else {
+				exit_hdlrs = h->next;
+			}
+			if (hp) {
+				free (hp);
+			}
+			break;
+		}
+		hp = h;
+		h = h->next;
+	}
+	if   (*x != 0 && *x != 2 && *x != 3) {	/* remove handler */
+		return 0;
+	}
+	h = cob_malloc (sizeof(struct exit_handlerlist));
+	h->next = exit_hdlrs;
+	h->proc = *p;
+	exit_hdlrs = h;
+	return 0;
+}
+
+int
 CBL_ERROR_PROC (unsigned char *x, int (**p)(char *s))
 {
 	struct handlerlist *hp = NULL;
@@ -1654,11 +1707,11 @@ SYSTEM (unsigned char *cmd)
 }
 
 int
-CBL_AND (unsigned char *data_1, unsigned char *data_2, int length)
+CBL_AND (unsigned char *data_1, unsigned char *data_2, const int length)
 {
 	size_t	n;
 
-	if (length <= 0 || length > 1024*1024*64) {
+	if (length <= 0) {
 		return 0;
 	}
 	for (n = 0; n < (size_t)length; n++) {
@@ -1668,11 +1721,11 @@ CBL_AND (unsigned char *data_1, unsigned char *data_2, int length)
 }
 
 int
-CBL_OR (unsigned char *data_1, unsigned char *data_2, int length)
+CBL_OR (unsigned char *data_1, unsigned char *data_2, const int length)
 {
 	size_t	n;
 
-	if (length <= 0 || length > 1024*1024*64) {
+	if (length <= 0) {
 		return 0;
 	}
 	for (n = 0; n < (size_t)length; n++) {
@@ -1682,11 +1735,11 @@ CBL_OR (unsigned char *data_1, unsigned char *data_2, int length)
 }
 
 int
-CBL_NOR (unsigned char *data_1, unsigned char *data_2, int length)
+CBL_NOR (unsigned char *data_1, unsigned char *data_2, const int length)
 {
 	size_t	n;
 
-	if (length <= 0 || length > 1024*1024*64) {
+	if (length <= 0) {
 		return 0;
 	}
 	for (n = 0; n < (size_t)length; n++) {
@@ -1696,11 +1749,11 @@ CBL_NOR (unsigned char *data_1, unsigned char *data_2, int length)
 }
 
 int
-CBL_XOR (unsigned char *data_1, unsigned char *data_2, int length)
+CBL_XOR (unsigned char *data_1, unsigned char *data_2, const int length)
 {
 	size_t	n;
 
-	if (length <= 0 || length > 1024*1024*64) {
+	if (length <= 0) {
 		return 0;
 	}
 	for (n = 0; n < (size_t)length; n++) {
@@ -1710,11 +1763,11 @@ CBL_XOR (unsigned char *data_1, unsigned char *data_2, int length)
 }
 
 int
-CBL_IMP (unsigned char *data_1, unsigned char *data_2, int length)
+CBL_IMP (unsigned char *data_1, unsigned char *data_2, const int length)
 {
 	size_t	n;
 
-	if (length <= 0 || length > 1024*1024*64) {
+	if (length <= 0) {
 		return 0;
 	}
 	for (n = 0; n < (size_t)length; n++) {
@@ -1724,11 +1777,11 @@ CBL_IMP (unsigned char *data_1, unsigned char *data_2, int length)
 }
 
 int
-CBL_NIMP (unsigned char *data_1, unsigned char *data_2, int length)
+CBL_NIMP (unsigned char *data_1, unsigned char *data_2, const int length)
 {
 	size_t	n;
 
-	if (length <= 0 || length > 1024*1024*64) {
+	if (length <= 0) {
 		return 0;
 	}
 	for (n = 0; n < (size_t)length; n++) {
@@ -1738,11 +1791,11 @@ CBL_NIMP (unsigned char *data_1, unsigned char *data_2, int length)
 }
 
 int
-CBL_EQ (unsigned char *data_1, unsigned char *data_2, int length)
+CBL_EQ (unsigned char *data_1, unsigned char *data_2, const int length)
 {
 	size_t	n;
 
-	if (length <= 0 || length > 1024*1024*64) {
+	if (length <= 0) {
 		return 0;
 	}
 	for (n = 0; n < (size_t)length; n++) {
@@ -1752,11 +1805,11 @@ CBL_EQ (unsigned char *data_1, unsigned char *data_2, int length)
 }
 
 int
-CBL_NOT (unsigned char *data_1, int length)
+CBL_NOT (unsigned char *data_1, const int length)
 {
 	size_t	n;
 
-	if (length <= 0 || length > 1024*1024*64) {
+	if (length <= 0) {
 		return 0;
 	}
 	for (n = 0; n < (size_t)length; n++) {
@@ -1789,7 +1842,7 @@ CBL_XF5 (unsigned char *data_1, unsigned char *data_2)
 }
 
 int
-CBL_TOUPPER (unsigned char *data, int length)
+CBL_TOUPPER (unsigned char *data, const int length)
 {
 	size_t	n;
 
@@ -1805,7 +1858,7 @@ CBL_TOUPPER (unsigned char *data, int length)
 }
 
 int
-CBL_TOLOWER (unsigned char *data, int length)
+CBL_TOLOWER (unsigned char *data, const int length)
 {
 	size_t	n;
 

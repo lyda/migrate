@@ -219,6 +219,7 @@ extern enum cb_class	cb_tree_class (cb_tree x);
 extern enum cb_category cb_tree_category (cb_tree x);
 extern int		cb_tree_type (cb_tree x);
 extern int		cb_fits_int (cb_tree x);
+extern int		cb_fits_long_long (cb_tree x);
 extern int		cb_get_int (cb_tree x);
 
 
@@ -674,6 +675,7 @@ struct cb_label {
 	const unsigned char	*name;
 	struct cb_label		*section;
 	cb_tree			children;
+	const unsigned char	*orig_name;
 	int			is_section;
 	int			need_begin;
 	int			need_return;
@@ -1035,6 +1037,7 @@ struct cb_program {
 	const char		*program_id;
 	struct cb_program	*next_program;		/* Nested */
 	char			*source_name;
+	char			*orig_source_name;
 	cb_tree			entry_list;
 	cb_tree			file_list;
 	cb_tree			exec_list;
@@ -1042,6 +1045,7 @@ struct cb_program {
 	cb_tree			reference_list;
 	cb_tree			alphabet_name_list;
 	cb_tree			class_name_list;
+	cb_tree			parameter_list;
 	struct cb_field		*working_storage;
 	struct cb_field		*local_storage;
 	struct cb_field		*linkage_storage;

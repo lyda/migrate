@@ -335,19 +335,20 @@ extern void cob_free_alloc (unsigned char **ptr1, unsigned char *ptr2);
 
 /* System routines */
 extern int CBL_ERROR_PROC (unsigned char *x, int (**p)(char *s));
+extern int CBL_EXIT_PROC (unsigned char *x, int (**p)(void));
 extern int SYSTEM (unsigned char *cmd);
-extern int CBL_AND (unsigned char *data_1, unsigned char *data_2, int length);
-extern int CBL_OR (unsigned char *data_1, unsigned char *data_2, int length);
-extern int CBL_NOR (unsigned char *data_1, unsigned char *data_2, int length);
-extern int CBL_XOR (unsigned char *data_1, unsigned char *data_2, int length);
-extern int CBL_IMP (unsigned char *data_1, unsigned char *data_2, int length);
-extern int CBL_NIMP (unsigned char *data_1, unsigned char *data_2, int length);
-extern int CBL_EQ (unsigned char *data_1, unsigned char *data_2, int length);
-extern int CBL_NOT (unsigned char *data_1, int length);
+extern int CBL_AND (unsigned char *data_1, unsigned char *data_2, const int length);
+extern int CBL_OR (unsigned char *data_1, unsigned char *data_2, const int length);
+extern int CBL_NOR (unsigned char *data_1, unsigned char *data_2, const int length);
+extern int CBL_XOR (unsigned char *data_1, unsigned char *data_2, const int length);
+extern int CBL_IMP (unsigned char *data_1, unsigned char *data_2, const int length);
+extern int CBL_NIMP (unsigned char *data_1, unsigned char *data_2, const int length);
+extern int CBL_EQ (unsigned char *data_1, unsigned char *data_2, const int length);
+extern int CBL_NOT (unsigned char *data_1, const int length);
 extern int CBL_XF4 (unsigned char *data_1, unsigned char *data_2);
 extern int CBL_XF5 (unsigned char *data_1, unsigned char *data_2);
-extern int CBL_TOUPPER (unsigned char *data, int length);
-extern int CBL_TOLOWER (unsigned char *data, int length);
+extern int CBL_TOUPPER (unsigned char *data, const int length);
+extern int CBL_TOLOWER (unsigned char *data, const int length);
 extern int cob_return_args (unsigned char *data);
 extern int cob_parameter_size (unsigned char *data);
 extern int cob_acuw_sleep (unsigned char *data);
@@ -360,9 +361,9 @@ extern int cob_acuw_justify (unsigned char *data, ...);
 
 extern int cob_real_get_sign (cob_field *f);
 extern void cob_real_put_sign (cob_field *f, const int sign);
-extern void cob_field_to_string (cob_field *f, char *s);
+extern void cob_field_to_string (const cob_field *f, char *s);
 
-extern unsigned char *cob_external_addr (const char *exname, int exlength);
+extern unsigned char *cob_external_addr (const char *exname, const int exlength);
 
 /* Switch */
 
@@ -376,9 +377,9 @@ extern int cob_cmp (cob_field *f1, cob_field *f2);
 /* Class check */
 
 extern int cob_is_numeric (cob_field *f);
-extern int cob_is_alpha (cob_field *f);
-extern int cob_is_upper (cob_field *f);
-extern int cob_is_lower (cob_field *f);
+extern int cob_is_alpha (const cob_field *f);
+extern int cob_is_upper (const cob_field *f);
+extern int cob_is_lower (const cob_field *f);
 
 /* Table sort */
 
@@ -389,12 +390,11 @@ extern void cob_table_sort (cob_field *f, int n);
 /* Run-time error checking */
 
 extern void cob_check_numeric (cob_field *f, const char *name);
-extern void cob_check_odo (int i, int min, int max, const char *name);
-extern void cob_check_subscript (int i, int min, int max, const char *name);
-extern void cob_check_ref_mod (int offset, int length, int size, const char *name);
+extern void cob_check_odo (const int i, const int min, const int max, const char *name);
+extern void cob_check_subscript (const int i, const int min, const int max, const char *name);
+extern void cob_check_ref_mod (const int offset, const int length, const int size, const char *name);
 
-/* Inline functions */
+/* Comparison functions */
 extern int cob_numeric_cmp (cob_field *f1, cob_field *f2);
-extern int cob_cmp_int (cob_field *f1, int n);
 
 #endif /* COB_COMMON_H_ */

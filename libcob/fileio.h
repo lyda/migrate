@@ -177,7 +177,7 @@ typedef struct {
 
 DLL_EXPIMP extern cob_file	*cob_error_file;
 
-DLL_EXPIMP extern int	cob_check_eop;
+DLL_EXPIMP extern int		cob_check_eop;
 
 extern void cob_init_fileio (void);
 extern void cob_exit_fileio (void);

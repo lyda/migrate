@@ -57,6 +57,7 @@ extern int cob_sub_int (cob_field *f, int n);
 extern int cob_div_quotient (cob_field *dividend, cob_field *divisor, cob_field *quotient, const int opt);
 extern int cob_div_remainder (cob_field *fld_remainder, const int opt);
 
+extern int cob_cmp_int (cob_field *f1, const int n);
 extern int cob_cmp_packed (cob_field *f, int n);
 extern int cob_cmp_numdisp (const unsigned char *data, const size_t size, const int n);
 extern int cob_cmp_sign_numdisp (const unsigned char *data, const size_t size, const int n);
@@ -64,7 +65,7 @@ extern int cob_cmp_sign_numdisp (const unsigned char *data, const size_t size, c
 extern void cob_init_numeric (void);
 
 static inline void
-cob_decimal_set_int (cob_decimal *d, int n)
+cob_decimal_set_int (cob_decimal *d, const int n)
 {
 	mpz_set_si (d->value, n);
 	d->scale = 0;

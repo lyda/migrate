@@ -85,8 +85,6 @@ lt_dlerror ()
 #define PATHSEPS ":"
 #endif
 
-static int		dynamic_reloading = 0;
-
 static int		resolve_size = 0;
 static char		**resolve_path = NULL;
 static char		*resolve_error = NULL;
@@ -113,10 +111,8 @@ struct call_hash {
 	struct call_hash	*next;
 	struct call_hash	*prev;
 	const char		*name;
-	const char		*path;
 	lt_ptr_t		func;
 	lt_dlhandle		handle;
-	time_t			mtime;
 };
 
 #ifdef	COB_ALT_HASH
@@ -165,10 +161,10 @@ cob_set_library_path (const char *path)
 }
 
 #ifndef	COB_ALT_HASH
-static inline int
+static inline size_t
 hash (const unsigned char *s)
 {
-	int		val = 0;
+	size_t		val = 0;
 
 	while (*s) {
 		val += *s++;
@@ -178,7 +174,7 @@ hash (const unsigned char *s)
 #endif
 
 static void
-insert (const char *name, const char *path, lt_dlhandle handle, lt_ptr_t func, time_t mtime)
+insert (const char *name, lt_dlhandle handle, lt_ptr_t func)
 {
 #ifndef	COB_ALT_HASH
 	int			val = hash ((unsigned char *)name);
@@ -186,10 +182,8 @@ insert (const char *name, const char *path, lt_dlhandle handle, lt_ptr_t func, t
 	struct call_hash	*p = cob_malloc (sizeof (struct call_hash));
 
 	p->name = cob_strdup (name);
-	p->path = path ? cob_strdup (path) : NULL;
 	p->func = func;
 	p->handle = handle;
-	p->mtime = mtime;
 #ifdef	COB_ALT_HASH
 	p->next = call_table;
 	if (call_table) {
@@ -217,9 +211,6 @@ drop (const char *name)
 				call_table = p->next;
 			}
 			free ((char *)p->name);
-			if (p->path) {
-				free ((char *)p->path);
-			}
 			free (p);
 			return;
 		}
@@ -234,9 +225,6 @@ drop (const char *name)
 			lt_dlclose (p->handle);
 			*pp = p->next;
 			free ((char *)p->name);
-			if (p->path) {
-				free ((char *)p->path);
-			}
 			free (p);
 			return;
 		}
@@ -247,7 +235,6 @@ drop (const char *name)
 static void *
 lookup (const char *name)
 {
-	struct stat		st;
 	struct call_hash	*p;
 
 #ifdef	COB_ALT_HASH
@@ -256,14 +243,7 @@ lookup (const char *name)
 	for (p = call_table[hash ((unsigned char *)name)]; p; p = p->next) {
 #endif
 		if (strcmp (name, p->name) == 0) {
-			if (dynamic_reloading == 0 || !p->path) {
-				return p->func;
-			}
-			if (stat (p->path, &st) == 0 && p->mtime == st.st_mtime) {
-				return p->func;
-			}
-			drop (name);
-			break;
+			return p->func;
 		}
 	}
 	return NULL;
@@ -343,7 +323,7 @@ cob_resolve (const char *name)
 
 	/* search the main program */
 	if (mainhandle != NULL && (func = lt_dlsym (mainhandle, (char *)buff)) != NULL) {
-		insert (name, NULL, mainhandle, func, 0);
+		insert (name, mainhandle, func);
 		resolve_error = NULL;
 		return func;
 	}
@@ -352,7 +332,7 @@ cob_resolve (const char *name)
 #ifdef	_WIN32
 	for (chkhandle = pre_handle; chkhandle; chkhandle = chkhandle->next) {
 		if ((func = lt_dlsym (chkhandle->preload_handle, (char *)buff)) != NULL) {
-			insert (name, NULL, chkhandle->preload_handle, func, 0);
+			insert (name, chkhandle->preload_handle, func);
 			resolve_error = NULL;
 			return func;
 		}
@@ -360,7 +340,7 @@ cob_resolve (const char *name)
 #endif
 #if	defined(USE_LIBDL) && defined (RTLD_DEFAULT)
 	if ((func = lt_dlsym (RTLD_DEFAULT, buff)) != NULL) {
-		insert (name, NULL, NULL, func, 0);
+		insert (name, NULL, func);
 		resolve_error = NULL;
 		return func;
 	}
@@ -376,7 +356,7 @@ cob_resolve (const char *name)
 		if (stat (filename, &st) == 0) {
 			if ((handle = lt_dlopen (filename)) != NULL
 			    && (func = lt_dlsym (handle, (char *)buff)) != NULL) {
-				insert (name, filename, handle, func, st.st_mtime);
+				insert (name, handle, func);
 				resolve_error = NULL;
 				return func;
 			}
@@ -494,11 +474,6 @@ cob_init_call (void)
 
 	mainhandle = lt_dlopen (NULL);
 
-	s = getenv ("COB_DYNAMIC_RELOADING");
-	if (s != NULL && strcmp (s, "yes") == 0) {
-		dynamic_reloading = 1;
-	}
-
 	s = getenv ("COB_PRE_LOAD");
 	if (s != NULL) {
 		p = cob_strdup (s);
@@ -528,6 +503,6 @@ cob_init_call (void)
 		}
 	}
 	for (psyst = (struct system_table *)&system_tab[0]; psyst->syst_name; psyst++) {
-		insert (psyst->syst_name, NULL, NULL, (lt_ptr_t)psyst->syst_call, 0);
+		insert (psyst->syst_name, NULL, (lt_ptr_t)psyst->syst_call);
 	}
 }

@@ -1,3 +1,7 @@
+2006-09-30  Roger While <simrw@sim-basis.de>
+
+	* All conf's : Make filename-mapping default
+
 2006-02-02  Roger While <simrw@sim-basis.de>
 
 	* Add relax-level-hierarchy to ibm.conf, mvs.conf,

@@ -26,15 +26,17 @@ extern void		cob_move (cob_field *src, cob_field *dst);
 extern void		cob_memcpy (cob_field *dst, unsigned char *src, int size);
 extern void		cob_set_int (cob_field *f, int n);
 extern int		cob_get_int (cob_field *f);
-extern int		cob_binary_get_int (cob_field *f);
-extern long long	cob_binary_get_int64 (cob_field *f);
+extern int		cob_binary_get_int (const cob_field * const f);
+extern long long	cob_binary_get_int64 (const cob_field * const f);
 extern void		cob_binary_set_int (cob_field *f, int n);
 extern void		cob_binary_set_int64 (cob_field *f, long long n);
 
 /* memcpy/memset optimizations */
 
-#if defined (__GNUC__) && defined (__i386__)
 #define own_byte_memcpy(x, y, z)	memcpy(x, y, z)
+#define own_memcpy(x, y, z)		memcpy(x, y, z)
+
+#if defined (__GNUC__) && defined (__i386__)
 
 static inline void 
 own_memset_gg (void *s, int c, size_t n)
@@ -127,9 +129,6 @@ own_memset_cg (void *s, unsigned long c, size_t n)
 	: "memory");
 }
 
-
-#define own_memcpy(x, y, z)		memcpy(x, y, z)
-
 #define own_memset(s, c, n) \
 	(__extension__ (__builtin_constant_p (c)	\
 	? (__builtin_constant_p (n)	\
@@ -139,15 +138,12 @@ own_memset_cg (void *s, unsigned long c, size_t n)
 
 #else	/* SUPER_OPTIMIZE */
 
-#define own_memcpy(x, y, z)		memcpy(x, y, z)
 #define own_memset(x, y, z)		own_memset_gg(x, y, z)
 
 #endif	/* SUPER_OPTIMIZE */
 
 #else	/*  __GNUC__ && __i386__ */
 
-#define own_byte_memcpy(x, y, z)	memcpy(x, y, z)
-#define own_memcpy(x, y, z)		memcpy(x, y, z)
 #define own_memset(x, y, z)		memset(x, y, z)
 
 #endif	/* __GNUC__ && __i386__ */

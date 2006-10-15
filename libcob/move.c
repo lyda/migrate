@@ -50,7 +50,8 @@ cob_max_int (const int x, const int y)
 }
 
 static void
-store_common_region (cob_field *f, unsigned char *data, size_t size, int scale)
+store_common_region (cob_field *f, const unsigned char *data,
+		     const size_t size, const int scale)
 {
 	int	lf1 = -scale;
 	int	lf2 = -COB_FIELD_SCALE (f);
@@ -1027,16 +1028,16 @@ cob_display_get_int (cob_field *f)
 }
 
 int
-cob_binary_get_int (cob_field *f)
+cob_binary_get_int (const cob_field * const f)
 {
 	return (int) cob_binary_get_int64 (f);
 }
 
 long long
-cob_binary_get_int64 (cob_field *f)
+cob_binary_get_int64 (const cob_field * const f)
 {
 	long long	n = 0;
-	int		fsiz = 8 - (int) f->size;
+	size_t		fsiz = 8 - f->size;
 
 /* Experimental code - not activated */
 #if 0
@@ -1044,7 +1045,7 @@ cob_binary_get_int64 (cob_field *f)
 
 	if ((COB_FIELD_BINARY_SWAP (f) && !COB_FIELD_HAVE_SIGN (f)) ||
 	    (!COB_FIELD_BINARY_SWAP (f) && COB_FIELD_HAVE_SIGN (f))) {
-		s = (unsigned char *)&n + 8 - f->size;
+		s = (unsigned char *)&n + fsiz;
 	} else {
 		s = (unsigned char *)&n;
 	}
@@ -1053,7 +1054,7 @@ cob_binary_get_int64 (cob_field *f)
 		n = COB_BSWAP_64 (n);
 	}
 	if (COB_FIELD_HAVE_SIGN (f)) {
-		n >>= 8 * (8 - f->size);	/* shift with sign */
+		n >>= 8 * fsiz;	/* shift with sign */
 	}
 #endif
 #ifndef WORDS_BIGENDIAN

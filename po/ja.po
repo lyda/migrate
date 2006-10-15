@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2006-08-31 17:58+0200\n"
+"POT-Creation-Date: 2006-10-15 11:06+0200\n"
 "PO-Revision-Date: 2004-08-01 23:55+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: cobc/cobc.c:351
+#: cobc/cobc.c:352
 #, fuzzy
 msgid ""
 "Options:\n"
@@ -85,45 +85,45 @@ msgstr ""
 "\n"
 "  -Wall                 全てのワーニングを有効にする"
 
-#: cobc/cobc.c:521
+#: cobc/cobc.c:522
 #, c-format
 msgid "Invalid option -std=%s\n"
 msgstr "不当なオプションです -std=%s\n"
 
-#: cobc/cobc.c:909
+#: cobc/cobc.c:910
 msgid "-MT must be given to specify target file\n"
 msgstr "ターゲットファイルを -MT で指定して下さい\n"
 
-#: cobc/tree.c:872
+#: cobc/tree.c:906
 #, fuzzy
 msgid "numeric field cannot be larger than 36 digits"
 msgstr "18 桁を越える数字項目は許されません"
 
-#: cobc/tree.c:898
+#: cobc/tree.c:932
 msgid "invalid picture string"
 msgstr "不当な PICTURE 定義です"
 
-#: cobc/tree.c:1086
+#: cobc/tree.c:1116
 #, fuzzy, c-format
 msgid "%s clause is required for file '%s'"
 msgstr "%s 句がファイル `%s' に必要です"
 
-#: cobc/tree.c:1119
+#: cobc/tree.c:1149
 #, fuzzy, c-format
 msgid "record size too small '%s'"
 msgstr "レコード長が短か過ぎます `%s'"
 
-#: cobc/tree.c:1124
+#: cobc/tree.c:1154
 #, fuzzy, c-format
 msgid "record size too large '%s'"
 msgstr "レコード長が長過ぎます `%s'"
 
-#: cobc/tree.c:1838
+#: cobc/tree.c:1868
 #, fuzzy, c-format
 msgid "FUNCTION %s has wrong number of arguments"
 msgstr "WHEN 句の引数の数が不当です"
 
-#: cobc/tree.c:1927
+#: cobc/tree.c:1957
 #, fuzzy, c-format
 msgid "FUNCTION %s not implemented"
 msgstr "`%s' は実装されていません"
@@ -207,494 +207,494 @@ msgstr "レベル %02d 項目 `%s' は %s 句以外を持つことが出来ません"
 msgid "Invalid level number '%s'"
 msgstr "不当なレベル番号です `%s'"
 
-#: cobc/field.c:129
+#: cobc/field.c:130
 #, fuzzy
 msgid "Level number must begin with 01 or 77"
 msgstr "レベル番号は 01 か 77 で始まらなければなりません"
 
-#: cobc/field.c:169 cobc/field.c:182
+#: cobc/field.c:170 cobc/field.c:183
 #, fuzzy, c-format
 msgid "No previous data item of level %02d"
 msgstr "レベル %02d のデータ項目が前にありません"
 
-#: cobc/field.c:208
+#: cobc/field.c:209
 #, fuzzy, c-format
 msgid "'%s' cannot be qualified here"
 msgstr "`%s' は修飾出来ません"
 
-#: cobc/field.c:214
+#: cobc/field.c:215
 #, fuzzy, c-format
 msgid "'%s' cannot be subscripted here"
 msgstr "`%s' は添字付け出来ません"
 
-#: cobc/field.c:226
+#: cobc/field.c:227
 #, fuzzy, c-format
 msgid "'%s' undefined in '%s'"
 msgstr "`%s' は `%s' の中で定義されていません"
 
-#: cobc/field.c:238
+#: cobc/field.c:239
 #, fuzzy
 msgid "Level number of REDEFINES entries must be identical"
 msgstr "REDEFINES 句の項目は同じレベル番号でなければなりません"
 
-#: cobc/field.c:242
+#: cobc/field.c:243
 #, fuzzy
 msgid "Level number of REDEFINES entry cannot be 66 or 88"
 msgstr "REDEFINES 句の項目はレベル番号 66 または 88 であってはなりません"
 
-#: cobc/field.c:247
+#: cobc/field.c:248
 #, fuzzy, c-format
 msgid "'%s' not the original definition"
 msgstr "`%s' は最初の定義ではありません"
 
-#: cobc/field.c:270
+#: cobc/field.c:271
 #, fuzzy, c-format
 msgid "'%s' 77 level not allowed here"
 msgstr "`%s' は修飾出来ません"
 
-#: cobc/field.c:275
+#: cobc/field.c:276
 #, c-format
 msgid "'%s' EXTERNAL must be specified at 01/77 level"
 msgstr ""
 
-#: cobc/field.c:279
+#: cobc/field.c:280
 #, c-format
 msgid "'%s' EXTERNAL can only be specified in WORKING-STORAGE section"
 msgstr ""
 
-#: cobc/field.c:283
+#: cobc/field.c:284
 #, c-format
 msgid "'%s' EXTERNAL and BASED are mutually exclusive"
 msgstr ""
 
-#: cobc/field.c:286
+#: cobc/field.c:287
 #, c-format
 msgid "'%s' EXTERNAL not allowed with REDEFINES"
 msgstr ""
 
-#: cobc/field.c:293
+#: cobc/field.c:294
 #, fuzzy, c-format
 msgid "'%s' BASED not allowed here"
 msgstr "`%s' は修飾出来ません"
 
-#: cobc/field.c:296
+#: cobc/field.c:297
 #, c-format
 msgid "'%s' BASED not allowed with REDEFINES"
 msgstr ""
 
-#: cobc/field.c:299
+#: cobc/field.c:300
 #, fuzzy, c-format
 msgid "'%s' BASED only allowed at the 01 and 77 levels"
 msgstr "`%s' は修飾出来ません"
 
-#: cobc/field.c:329
+#: cobc/field.c:330
 #, fuzzy, c-format
 msgid "'%s' cannot have the OCCURS clause due to '%s'"
 msgstr "`%s' は `%s' のため OCCURS 句を持つことが出来ません"
 
-#: cobc/field.c:342
+#: cobc/field.c:343
 #, fuzzy, c-format
 msgid "'%s' cannot have OCCURS DEPENDING"
 msgstr "`%s' は OCCURS DEPENDING を持つことが出来ません"
 
-#: cobc/field.c:355
+#: cobc/field.c:356
 #, fuzzy, c-format
 msgid "The original definition '%s' should not have OCCURS"
 msgstr "`%s' の元の定義には OCCURS を付けてはなりません"
 
-#: cobc/field.c:362
+#: cobc/field.c:363
 msgid "REDEFINES must follow the original definition"
 msgstr "REDEFINES 句は参照元の項目の直後になければなりません"
 
-#: cobc/field.c:369
+#: cobc/field.c:370
 #, fuzzy, c-format
 msgid "'%s' cannot be variable length"
 msgstr "`%s' は可変長に出来ません"
 
-#: cobc/field.c:373
+#: cobc/field.c:374
 #, fuzzy, c-format
 msgid "The original definition '%s' cannot be variable length"
 msgstr "`%s' の元の定義は可変長であってはなりません"
 
-#: cobc/field.c:465
+#: cobc/field.c:463
 #, fuzzy, c-format
 msgid "PICTURE clause required for '%s'"
 msgstr "`%s' には PICTURE 句が必要です"
 
-#: cobc/field.c:470
+#: cobc/field.c:468
 #, fuzzy, c-format
 msgid "'%s' cannot have PICTURE clause"
 msgstr "`%s' は PICTURE 句を持つことが出来ません"
 
-#: cobc/field.c:518
+#: cobc/field.c:516
 #, fuzzy, c-format
 msgid "'%s' not numeric item"
 msgstr "`%s' は数字項目ではありません"
 
-#: cobc/field.c:537
+#: cobc/field.c:535
 #, fuzzy, c-format
 msgid "'%s' cannot have JUSTIFIED RIGHT"
 msgstr "`%s' は JUSTIFIED RIGHT を持つことが出来ません"
 
-#: cobc/field.c:564
+#: cobc/field.c:562
 #, fuzzy, c-format
 msgid "'%s' cannot have BLANK WHEN ZERO"
 msgstr "`%s' は BLANK WHEN ZERO を持つことが出来ません"
 
-#: cobc/field.c:572
+#: cobc/field.c:570
 #, fuzzy
 msgid "Only level 88 item may have multiple values"
 msgstr "複数の値はレベル 88 項目のみに許されます"
 
-#: cobc/field.c:578
+#: cobc/field.c:576
 #, fuzzy
 msgid "Entries under REDEFINES cannot have VALUE clause"
 msgstr "REDEFINES に含まれる項目は VALUE 句を持つことが出来ません"
 
-#: cobc/field.c:581
+#: cobc/field.c:579
 msgid "VALUE clause ignored for EXTERNAL items"
 msgstr ""
 
-#: cobc/field.c:690 cobc/field.c:698 cobc/field.c:827 cobc/field.c:830
+#: cobc/field.c:688 cobc/field.c:696 cobc/field.c:825 cobc/field.c:828
 #, fuzzy, c-format
 msgid "Size of '%s' larger than size of '%s'"
 msgstr "`%s' のサイズが `%s' のサイズを越えています"
 
-#: cobc/field.c:762
+#: cobc/field.c:760
 #, fuzzy, c-format
 msgid "'%s' binary field cannot be larger than 18 digits"
 msgstr "18 桁を越える数字項目は許されません"
 
-#: cobc/typeck.c:106
+#: cobc/typeck.c:211
 #, fuzzy, c-format
 msgid "'%s' is not group name"
 msgstr "`%s' は集団項目ではありません"
 
-#: cobc/typeck.c:123
+#: cobc/typeck.c:228
 #, fuzzy, c-format
 msgid "'%s' is not numeric name"
 msgstr "`%s' は数字項目ではありません"
 
-#: cobc/typeck.c:141
+#: cobc/typeck.c:246
 #, fuzzy, c-format
 msgid "'%s' is not numeric or numeric-edited name"
 msgstr "`%s' は数字項目、もしくは数字編集項目ではありません"
 
-#: cobc/typeck.c:156
+#: cobc/typeck.c:261
 #, fuzzy, c-format
 msgid "'%s' is not numeric value"
 msgstr "`%s' は数値ではありません"
 
-#: cobc/typeck.c:197
+#: cobc/typeck.c:302
 #, fuzzy, c-format
 msgid "'%s' is not integer value"
 msgstr "`%s' は整数ではありません"
 
-#: cobc/typeck.c:337
+#: cobc/typeck.c:445
 #, fuzzy, c-format
 msgid "Switch-name is expected '%s'"
 msgstr "スイッチ名が必要です `%s'"
 
-#: cobc/typeck.c:470 cobc/typeck.c:485
+#: cobc/typeck.c:578 cobc/typeck.c:593
 #, fuzzy, c-format
 msgid "'%s' cannot be subscripted"
 msgstr "`%s' は添字付け出来ません"
 
-#: cobc/typeck.c:474
+#: cobc/typeck.c:582
 #, fuzzy, c-format
 msgid "'%s' cannot be reference modified"
 msgstr "`%s' は部分参照できません"
 
-#: cobc/typeck.c:488
+#: cobc/typeck.c:596
 #, fuzzy, c-format
 msgid "'%s' requires 1 subscript"
 msgstr "`%s' は 1 つの添字を必要とします"
 
-#: cobc/typeck.c:491
+#: cobc/typeck.c:599
 #, fuzzy, c-format
 msgid "'%s' requires %d subscripts"
 msgstr "`%s' は %d つの添字を必要とします"
 
-#: cobc/typeck.c:516
+#: cobc/typeck.c:624
 #, fuzzy, c-format
 msgid "Subscript of '%s' out of bounds: %d"
 msgstr "'%s' の添字が範囲を超えています: %d"
 
-#: cobc/typeck.c:570
+#: cobc/typeck.c:678
 #, fuzzy, c-format
 msgid "Offset of '%s' out of bounds: %d"
 msgstr "'%s' の開始位置が範囲を超えています: %d"
 
-#: cobc/typeck.c:575
+#: cobc/typeck.c:683
 #, fuzzy, c-format
 msgid "Length of '%s' out of bounds: %d"
 msgstr "'%s' の長さが範囲を超えています: %d"
 
-#: cobc/typeck.c:703
+#: cobc/typeck.c:811
 #, fuzzy, c-format
 msgid "'%s' not alphabet name"
 msgstr "`%s' はアルファベット名ではありません"
 
-#: cobc/typeck.c:756
+#: cobc/typeck.c:864
 #, c-format
 msgid "'%s' CURSOR is not 4 or 6 characters long"
 msgstr ""
 
-#: cobc/typeck.c:767
+#: cobc/typeck.c:875
 #, c-format
 msgid "'%s' CRT STATUS is not 4 characters long"
 msgstr ""
 
-#: cobc/typeck.c:795
+#: cobc/typeck.c:903
 #, fuzzy, c-format
 msgid "'%s' not procedure name"
 msgstr "`%s' は手続き名ではありません"
 
-#: cobc/typeck.c:912
+#: cobc/typeck.c:1020
 #, fuzzy
 msgid "Suggest parentheses around AND within OR"
 msgstr "OR に隣接する AND には括弧が推奨されます"
 
-#: cobc/typeck.c:1153 cobc/typeck.c:1629 cobc/typeck.c:1706
+#: cobc/typeck.c:1261 cobc/typeck.c:1674 cobc/typeck.c:1751
 #, fuzzy
 msgid "Invalid expression"
 msgstr "不当な式です"
 
-#: cobc/typeck.c:2144
+#: cobc/typeck.c:2065
 #, fuzzy, c-format
 msgid "Invalid input stream '%s'"
 msgstr "`%s' は不当な入力ストリームです"
 
-#: cobc/typeck.c:2159 cobc/typeck.c:2168 cobc/typeck.c:2468 cobc/typeck.c:2471
-#: cobc/typeck.c:2479
+#: cobc/typeck.c:2080 cobc/typeck.c:2089 cobc/typeck.c:2389 cobc/typeck.c:2392
+#: cobc/typeck.c:2400
 #, fuzzy, c-format
 msgid "'%s' undefined in SPECIAL-NAMES"
 msgstr "`%s' は SPECIAL-NAMES で定義されていません"
 
-#: cobc/typeck.c:2188
+#: cobc/typeck.c:2109
 msgid "Target of ALLOCATE is not a BASED item"
 msgstr ""
 
-#: cobc/typeck.c:2195
+#: cobc/typeck.c:2116
 msgid "Target of RETURNING is not a data pointer"
 msgstr ""
 
-#: cobc/typeck.c:2201
+#: cobc/typeck.c:2122
 msgid "The CHARACTERS field of ALLOCATE must be numeric"
 msgstr ""
 
-#: cobc/typeck.c:2238
+#: cobc/typeck.c:2159
 #, fuzzy, c-format
 msgid "'%s' Not a data name"
 msgstr "`%s' はアルファベット名ではありません"
 
-#: cobc/typeck.c:2245
+#: cobc/typeck.c:2166
 #, fuzzy, c-format
 msgid "'%s' is not 01 or 77 level item"
 msgstr "`%s' はレベル 01 か 77 でなければなりません"
 
-#: cobc/typeck.c:2255
+#: cobc/typeck.c:2176
 #, fuzzy, c-format
 msgid "Wrong number of CALL parameters for '%s'"
 msgstr "WHEN 句の引数の数が不当です"
 
-#: cobc/typeck.c:2348
+#: cobc/typeck.c:2269
 #, c-format
 msgid "'%s' is an invalid type for DISPLAY operand"
 msgstr ""
 
-#: cobc/typeck.c:2352
+#: cobc/typeck.c:2273
 msgid "Invalid type for DISPLAY operand"
 msgstr ""
 
-#: cobc/typeck.c:2359 cobc/typeck.c:2366 cobc/typeck.c:2373
+#: cobc/typeck.c:2280 cobc/typeck.c:2287 cobc/typeck.c:2294
 #, fuzzy
 msgid "Wrong number of data items"
 msgstr "データ項目の数が不当です"
 
-#: cobc/typeck.c:2451
+#: cobc/typeck.c:2372
 #, fuzzy
 msgid "Invalid output stream"
 msgstr "不当な入力ストリームです"
 
-#: cobc/typeck.c:2586
+#: cobc/typeck.c:2507
 #, fuzzy
 msgid "Wrong number of WHEN parameters"
 msgstr "WHEN 句の引数の数が不当です"
 
-#: cobc/typeck.c:2628
+#: cobc/typeck.c:2549
 #, c-format
 msgid ""
 "Target %d of FREE, a data address identifier, must address a BASED data item"
 msgstr ""
 
-#: cobc/typeck.c:2638
+#: cobc/typeck.c:2559
 #, fuzzy, c-format
 msgid "Target %d of FREE must be a data pointer"
 msgstr "SET 出来るのは INDEXED か POINTER だけです"
 
-#: cobc/typeck.c:2661
+#: cobc/typeck.c:2582
 #, fuzzy
 msgid "GO TO with multiple procedure-names"
 msgstr "GO TO に複数の手続き名が指定されています"
 
-#: cobc/typeck.c:2725
+#: cobc/typeck.c:2646
 #, fuzzy
 msgid "Invalid target for INSPECT"
 msgstr "不当な行連結です"
 
-#: cobc/typeck.c:2732 cobc/typeck.c:2736
+#: cobc/typeck.c:2653 cobc/typeck.c:2657
 msgid "Invalid target for REPLACING/CONVERTING"
 msgstr ""
 
-#: cobc/typeck.c:2761
+#: cobc/typeck.c:2682
 #, fuzzy
 msgid "Data name expected before CHARACTERS"
 msgstr "CHARACTERS の前にデータ名が必要です"
 
-#: cobc/typeck.c:2771
+#: cobc/typeck.c:2692
 #, fuzzy
 msgid "Data name expected before ALL"
 msgstr "ALL の前にデータ名が必要です<"
 
-#: cobc/typeck.c:2781
+#: cobc/typeck.c:2702
 #, fuzzy
 msgid "Data name expected before LEADING"
 msgstr "LEADING の前にデータ名が必要です<"
 
-#: cobc/typeck.c:2791
+#: cobc/typeck.c:2712
 #, fuzzy
 msgid "Data name expected before TRAILING"
 msgstr "LEADING の前にデータ名が必要です<"
 
-#: cobc/typeck.c:2801
+#: cobc/typeck.c:2722
 #, fuzzy, c-format
 msgid "ALL or LEADING expected before '%s'"
 msgstr "`%s' の前に ALL または LEADINGが必要です"
 
-#: cobc/typeck.c:2874
+#: cobc/typeck.c:2795
 #, fuzzy, c-format
 msgid "'%s' defined here as PIC %s"
 msgstr "`%s' はここで PIC %s として定義されました"
 
-#: cobc/typeck.c:2876
+#: cobc/typeck.c:2797
 #, fuzzy, c-format
 msgid "'%s' defined here as a group of length %d"
 msgstr "`%s' はここで大きさ %d のグループとして定義されています"
 
-#: cobc/typeck.c:2928
+#: cobc/typeck.c:2849
 #, fuzzy
 msgid "Invalid destination for MOVE"
 msgstr "不当な行連結です"
 
-#: cobc/typeck.c:3032
+#: cobc/typeck.c:2953
 #, fuzzy
 msgid "Data item not signed"
 msgstr "データ項目に符号がありません"
 
-#: cobc/typeck.c:3036
+#: cobc/typeck.c:2957
 #, fuzzy
 msgid "Ignoring negative sign"
 msgstr "マイナス符号は無視されます"
 
-#: cobc/typeck.c:3162
+#: cobc/typeck.c:3083
 #, fuzzy
 msgid "Move non-integer to alphanumeric"
 msgstr "非整数から英数字項目への MOVE は出来ません"
 
-#: cobc/typeck.c:3188
+#: cobc/typeck.c:3109
 msgid "Invalid source for MOVE"
 msgstr ""
 
-#: cobc/typeck.c:3206
+#: cobc/typeck.c:3127
 #, fuzzy
 msgid "Invalid VALUE clause"
 msgstr "不当な VALUE 句です"
 
-#: cobc/typeck.c:3208
+#: cobc/typeck.c:3129
 #, fuzzy
 msgid "Invalid MOVE statement"
 msgstr "不当な MOVE 文です"
 
-#: cobc/typeck.c:3214
+#: cobc/typeck.c:3135
 #, fuzzy
 msgid "Numeric value is expected"
 msgstr "数値が必要です"
 
-#: cobc/typeck.c:3218
+#: cobc/typeck.c:3139
 #, fuzzy
 msgid "Alphanumeric value is expected"
 msgstr "文字列が必要です"
 
-#: cobc/typeck.c:3222
+#: cobc/typeck.c:3143
 #, fuzzy
 msgid "Value does not fit the picture string"
 msgstr "値が PICTURE に合致しません"
 
-#: cobc/typeck.c:3226
+#: cobc/typeck.c:3147
 #, fuzzy
 msgid "Value size exceeds data size"
 msgstr "値の大きさが項目の大きさを越えています"
 
-#: cobc/typeck.c:3230
+#: cobc/typeck.c:3151
 msgid "Sending field larger than receiving field"
 msgstr ""
 
-#: cobc/typeck.c:3234
+#: cobc/typeck.c:3155
 msgid "Some digits may be truncated"
 msgstr ""
 
-#: cobc/typeck.c:3856
+#: cobc/typeck.c:3780
 msgid "READ PREVIOUS only allowed for INDEXED SEQUENTIAL files"
 msgstr ""
 
-#: cobc/typeck.c:3863
+#: cobc/typeck.c:3787
 msgid "KEY ignored with sequential READ"
 msgstr "順読み込みの READ であるため KEY は無視されます"
 
-#: cobc/typeck.c:3949
+#: cobc/typeck.c:3873
 #, fuzzy, c-format
 msgid "Undeclared key '%s'"
 msgstr "`%s' はキー宣言されていません"
 
-#: cobc/typeck.c:3954
+#: cobc/typeck.c:3878
 #, fuzzy
 msgid "Invalid SEARCH ALL condition"
 msgstr "SEARCH ALL の条件式が不当です"
 
-#: cobc/typeck.c:4039
+#: cobc/typeck.c:3963
 #, fuzzy
 msgid "The targets of SET must be either indexes or pointers"
 msgstr "SET 出来るのは INDEXED か POINTER だけです"
 
-#: cobc/typeck.c:4053 cobc/typeck.c:4057
+#: cobc/typeck.c:3977 cobc/typeck.c:3981
 msgid "SET targets must be PROGRAM-POINTER"
 msgstr ""
 
-#: cobc/typeck.c:4073
+#: cobc/typeck.c:3997
 #, fuzzy, c-format
 msgid "The address of '%s' cannot be changed"
 msgstr "`%s' のアドレスは変更できません"
 
-#: cobc/typeck.c:4119 cobc/typeck.c:4124 cobc/typeck.c:4148 cobc/typeck.c:4153
+#: cobc/typeck.c:4043 cobc/typeck.c:4048 cobc/typeck.c:4072 cobc/typeck.c:4077
 #, fuzzy
 msgid "Invalid SET statement"
 msgstr "不当な MOVE 文です"
 
-#: cobc/typeck.c:4157
+#: cobc/typeck.c:4081
 #, fuzzy
 msgid "Field does not have FALSE clause"
 msgstr "REDEFINES に含まれる項目は VALUE 句を持つことが出来ません"
 
-#: cobc/typeck.c:4194
+#: cobc/typeck.c:4118
 msgid "SORT invalid - DB not configured"
 msgstr ""
 
-#: cobc/typeck.c:4200
+#: cobc/typeck.c:4124
 msgid "Table sort without keys not implemented yet"
 msgstr ""
 
-#: cobc/typeck.c:4392
+#: cobc/typeck.c:4316
 #, fuzzy
 msgid "Invalid mnemonic name"
 msgstr "不当なニーモニックです"
@@ -703,22 +703,22 @@ msgstr "不当なニーモニックです"
 msgid "PROCESS statement is ignored"
 msgstr "PROCESS 文は無視されます"
 
-#: cobc/pplex.l:382
+#: cobc/pplex.l:389
 #, fuzzy
 msgid "File not terminated by a newline"
 msgstr "ファイルが改行で終わっていません"
 
-#: cobc/pplex.l:425
+#: cobc/pplex.l:432
 #, fuzzy, c-format
 msgid "Invalid indicator '%c' at column 7"
 msgstr "7 桁目が不当な指示子です `%c'"
 
-#: cobc/pplex.l:449
+#: cobc/pplex.l:456
 #, fuzzy, c-format
 msgid "Source text after column %d"
 msgstr "ソース行が %d 桁を越えています"
 
-#: cobc/pplex.l:478 cobc/pplex.l:488
+#: cobc/pplex.l:485 cobc/pplex.l:495
 #, fuzzy
 msgid "Invalid line continuation"
 msgstr "不当な行連結です"
@@ -748,43 +748,43 @@ msgstr "不当な通貨記号です `%s'"
 msgid "Alphabet-name is expected '%s'"
 msgstr "アルファベット名が必要です `%s'"
 
-#: cobc/parser.y:1307
+#: cobc/parser.y:1306
 msgid "REDEFINES clause must follow entry-name"
 msgstr "REDEFINES 句は項目名の直後になければなりません"
 
-#: cobc/parser.y:1730 cobc/parser.y:1747
+#: cobc/parser.y:1729 cobc/parser.y:1746
 #, fuzzy, c-format
 msgid "Invalid color '%d'"
 msgstr "不当な色です `%d'"
 
-#: cobc/parser.y:1915
+#: cobc/parser.y:1914
 #, fuzzy, c-format
 msgid "Unknown statement '%s'"
 msgstr "そのような文はありません `%s'"
 
-#: cobc/parser.y:2564
+#: cobc/parser.y:2563
 msgid "88 level invalid here"
 msgstr ""
 
-#: cobc/parser.y:2572
+#: cobc/parser.y:2571
 msgid "FIXME: failed to compile \"WHEN NOT ... AND/OR ...\""
 msgstr ""
 
-#: cobc/parser.y:2573
+#: cobc/parser.y:2572
 msgid "FIXME: change it into \"WHEN (NOT ... AND/OR ...)\" for now"
 msgstr ""
 
-#: cobc/parser.y:3342 cobc/parser.y:3943 cobc/parser.y:4001
+#: cobc/parser.y:3341 cobc/parser.y:3942 cobc/parser.y:4000
 #, fuzzy, c-format
 msgid "'%s' not file name"
 msgstr "`%s' はファイル名ではありません"
 
-#: cobc/parser.y:3978
+#: cobc/parser.y:3977
 #, fuzzy, c-format
 msgid "'%s' not indexed"
 msgstr "`%s' には INDEXED BY が必要です"
 
-#: cobc/parser.y:3979
+#: cobc/parser.y:3978
 #, fuzzy, c-format
 msgid "'%s' defined here"
 msgstr "`%s' はここで定義されました"
@@ -814,12 +814,12 @@ msgstr ""
 msgid "'%s' REDEFINES field not allowed here"
 msgstr ""
 
-#: cobc/parser.y:4408
+#: cobc/parser.y:4406
 #, c-format
 msgid "ENTRY '%s' duplicated"
 msgstr ""
 
-#: cobc/parser.y:4423 cobc/parser.y:4432
+#: cobc/parser.y:4421 cobc/parser.y:4430
 #, c-format
 msgid "%s statement not terminated by END-%s"
 msgstr "%s 文が END-%s で終わっていません"

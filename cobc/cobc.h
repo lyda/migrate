@@ -79,6 +79,7 @@ struct filename {
 	char		*translate;			/* foo.c */
 	char		*trstorage;			/* foo.c.h */
 	char		*object;			/* foo.o */
+	char		*demangle_source;		/* foo */
 	int		need_preprocess;
 	int		need_translate;
 	int		need_assemble;
@@ -100,6 +101,7 @@ extern int			cb_source_line;
 extern char			cob_config_dir[];
 
 extern char			*source_name;
+extern char			*demangle_name;
 extern FILE			*cb_storage_file;
 extern char			*cb_storage_file_name;
 

@@ -230,10 +230,17 @@ pp_set_replace_list (struct cb_replace_list *list)
 static void
 switch_to_buffer (int line, char *file, YY_BUFFER_STATE buffer)
 {
+	char	*p;
+
 	cb_source_line = line;
 	cb_source_file = strdup (file);
+	for (p = cb_source_file; *p; p++) {
+		if (*p == '\\') {
+			*p = '/';
+		}
+	}
 	yy_switch_to_buffer (buffer);
-	fprintf (yyout, "# %d \"%s\"\n", line, file);
+	fprintf (yyout, "# %d \"%s\"\n", line, cb_source_file);
 }
 
 int

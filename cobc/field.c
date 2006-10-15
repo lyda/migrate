@@ -72,7 +72,8 @@ cb_build_field_tree (cb_tree level, cb_tree name,
 	}
 
 	/* check the level number */
-	if ((lv = get_level (level)) == -1) {
+	lv = get_level (level);
+	if (lv == -1) {
 		return cb_error_node;
 	}
 
@@ -428,9 +429,6 @@ validate_field_1 (struct cb_field *f)
 					sprintf (pic, "X(0)");
 				}
 				f->pic = CB_PICTURE (cb_build_picture (pic));
-/* RXW
-			} else if (f->level == 78 && f->values) {
-*/
 			} else if (f->flag_item_78 && f->values) {
 				f->count++;
 				if (CB_NUMERIC_LITERAL_P(CB_VALUE(f->values))) {

@@ -1257,7 +1257,6 @@ data_description:
 	if (current_field->level == 88) {
 		cb_validate_88_item (current_field);
 	}
-	/* RXW if (current_field->level == 78) { */
 	if (current_field->flag_item_78) {
 		cb_validate_78_item (current_field);
 	}
@@ -4370,6 +4369,7 @@ emit_entry (const char *name, const int encode, cb_tree using_list)
 	} else {
 		CB_LABEL (label)->name = (unsigned char *)name;
 	}
+	CB_LABEL (label)->orig_name = (unsigned char *)name;
 	CB_LABEL (label)->need_begin = 1;
 	emit_statement (label);
 
@@ -4402,10 +4402,8 @@ emit_entry (const char *name, const int encode, cb_tree using_list)
 		}
 	}
 	for (l = current_program->entry_list; l; l = CB_CHAIN (l)) {
-		cb_tree x = CB_VALUE (l);
-
 		if (strcmp ((char *)name, (char *)(CB_LABEL(CB_PURPOSE(l))->name)) == 0) {
-			cb_error_x (x, _("ENTRY '%s' duplicated"), name);
+			cb_error_x (CB_TREE (current_statement), _("ENTRY '%s' duplicated"), name);
 		}
 	}
 

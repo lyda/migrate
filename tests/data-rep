@@ -321,8 +321,8 @@ at_help_all='1;binary.at:22;BINARY: 2-4-8 big-endian;;
 10;packed.at:24;PACKED-DECIMAL dump;;
 11;packed.at:158;PACKED-DECIMAL display;;
 12;packed.at:197;PACKED-DECIMAL move;;
-13;packed.at:238;PACKED-DECIMAL arithmetic;;
-14;packed.at:269;PACKED-DECIMAL arithmetic;;
+13;packed.at:238;PACKED-DECIMAL arithmetic (1);;
+14;packed.at:269;PACKED-DECIMAL arithmetic (2);;
 15;packed.at:296;PACKED-DECIMAL numeric test;;
 16;pointer.at:21;POINTER: display;;
 '
@@ -3603,10 +3603,10 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  13 ) # 13. packed.at:238: PACKED-DECIMAL arithmetic
+  13 ) # 13. packed.at:238: PACKED-DECIMAL arithmetic (1)
     at_setup_line='packed.at:238'
-    at_desc='PACKED-DECIMAL arithmetic'
-    $at_quiet $ECHO_N " 13: PACKED-DECIMAL arithmetic                    $ECHO_C"
+    at_desc='PACKED-DECIMAL arithmetic (1)'
+    $at_quiet $ECHO_N " 13: PACKED-DECIMAL arithmetic (1)                $ECHO_C"
     at_xfail=no
     (
       echo "13. packed.at:238: testing ..."
@@ -3693,10 +3693,10 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  14 ) # 14. packed.at:269: PACKED-DECIMAL arithmetic
+  14 ) # 14. packed.at:269: PACKED-DECIMAL arithmetic (2)
     at_setup_line='packed.at:269'
-    at_desc='PACKED-DECIMAL arithmetic'
-    $at_quiet $ECHO_N " 14: PACKED-DECIMAL arithmetic                    $ECHO_C"
+    at_desc='PACKED-DECIMAL arithmetic (2)'
+    $at_quiet $ECHO_N " 14: PACKED-DECIMAL arithmetic (2)                $ECHO_C"
     at_xfail=no
     (
       echo "14. packed.at:269: testing ..."

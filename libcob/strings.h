@@ -22,7 +22,7 @@
 
 #include <libcob/common.h>
 
-extern void cob_inspect_init (cob_field *var, int replacing);
+extern void cob_inspect_init (cob_field *var, const int replacing);
 extern void cob_inspect_start (void);
 extern void cob_inspect_before (cob_field *str);
 extern void cob_inspect_after (cob_field *str);
@@ -40,7 +40,7 @@ extern void cob_string_append (cob_field *src);
 extern void cob_string_finish (void);
 
 extern void cob_unstring_init (cob_field *src, cob_field *ptr);
-extern void cob_unstring_delimited (cob_field *dlm, int all);
+extern void cob_unstring_delimited (cob_field *dlm, const int all);
 extern void cob_unstring_into (cob_field *dst, cob_field *dlm, cob_field *cnt);
 extern void cob_unstring_tallying (cob_field *f);
 extern void cob_unstring_finish (void);

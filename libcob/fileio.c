@@ -178,7 +178,7 @@ static const int	status_exception[] = {
 	COB_EC_I_O_IMP			/* 9x */
 };
 
-static const char	*prefix[] = { "DD_", "dd_", "" };
+static const char	* const prefix[] = { "DD_", "dd_", "" };
 #define NUM_PREFIX	sizeof(prefix) / sizeof(char *)
 
 static const char	parm_msg[] = "CALL to %s requires %d parameters";
@@ -842,7 +842,8 @@ lineseq_read (cob_file *f, int read_opts)
 
 	dataptr = f->record->data;
 	for (; ;) {
-		if ((n = getc ((FILE *)f->file)) == EOF) {
+		n = getc ((FILE *)f->file);
+		if (n == EOF) {
 			return COB_STATUS_10_END_OF_FILE;
 		}
 		if (n == '\r') {

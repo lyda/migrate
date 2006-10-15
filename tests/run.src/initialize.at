@@ -69,7 +69,7 @@ AT_CHECK([./prog], [0], [ 0 0 0 0 0])
 AT_CLEANUP
 
 
-AT_SETUP([INITIALIZE complex group])
+AT_SETUP([INITIALIZE complex group (1)])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -92,7 +92,7 @@ AT_CHECK([./prog], [0], [ 000])
 
 AT_CLEANUP
 
-AT_SETUP([INITIALIZE complex group])
+AT_SETUP([INITIALIZE complex group (2)])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.

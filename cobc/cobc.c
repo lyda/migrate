@@ -94,6 +94,7 @@ int			optimize_flag = 0;
 
 char			*cb_source_file = NULL;
 char			*source_name;
+char			*demangle_name;
 int			cb_source_line = 0;
 
 FILE			*cb_storage_file;
@@ -486,7 +487,7 @@ process_command_line (int argc, char *argv[])
 			break;
 
 		case 'O':
-			strcat (cob_cflags, " -O -DCOB_LOCAL_INLINE");
+			strcat (cob_cflags, " -O");
 			strcat (cob_cflags, fcopts);
 			strcat (cob_cflags, COB_EXTRA_FLAGS);
 			optimize_flag = 1;
@@ -494,18 +495,18 @@ process_command_line (int argc, char *argv[])
 
 		case '2':	/* -O2 */
 			strip_output = 1;
-			strcat (cob_cflags, " -O2 -DSUPER_OPTIMIZE -DCOB_LOCAL_INLINE");
+			strcat (cob_cflags, " -O2");
 			strcat (cob_cflags, fcopts);
 			strcat (cob_cflags, COB_EXTRA_FLAGS);
-			optimize_flag = 1;
+			optimize_flag = 2;
 			break;
 
 		case 's':	/* -Os */
 			strip_output = 1;
-			strcat (cob_cflags, " -Os -DSUPER_OPTIMIZE -DCOB_LOCAL_INLINE");
+			strcat (cob_cflags, " -Os");
 			strcat (cob_cflags, fcopts);
 			strcat (cob_cflags, COB_EXTRA_FLAGS);
-			optimize_flag = 1;
+			optimize_flag = 2;
 			break;
 
 		case 'g':
@@ -710,7 +711,7 @@ process_filename (const char *filename)
 	}
 
 	file_basename (filename, basename);
-	source_name = strdup (basename);
+	fn->demangle_source =  cb_encode_program_id (basename);
 	extension = file_extension (filename);
 
 	/* Check input file type */
@@ -922,10 +923,25 @@ preprocess (struct filename *fn)
 	return 0;
 }
 
+static struct cb_program *
+program_list_reverse (struct cb_program *p)
+{
+	struct cb_program	*next;
+	struct cb_program	*last = NULL;
+
+	for (; p; p = next) {
+		next = p->next_program;
+		p->next_program = last;
+		last = p;
+	}
+	return last;
+}
+
 static int
 process_translate (struct filename *fn)
 {
-	int ret;
+	int			ret;
+	struct cb_program	*p;
 
 	/* initialize */
 	cb_source_file = NULL;
@@ -970,7 +986,8 @@ process_translate (struct filename *fn)
 	}
 
 	/* translate to C */
-	codegen (current_program, 0);
+	p = program_list_reverse (current_program);
+	codegen (p, 0);
 
 	/* close the files */
 	fclose (cb_storage_file);
@@ -1247,7 +1264,7 @@ main (int argc, char *argv[])
 		return status;
 	}
 
-	/* RXW - Defaults are set here */
+	/* Defaults are set here */
 	if (!cb_flag_syntax_only) {
 		if (!wants_nonfinal) {
 			if (cb_flag_main) {
@@ -1282,6 +1299,7 @@ main (int argc, char *argv[])
 	for (fn = file_list; fn; fn = fn->next) {
 		cb_id = 1;
 		iparams++;
+		demangle_name = fn->demangle_source;
 		if (iparams > 1 && cb_compile_level == CB_LEVEL_EXECUTABLE &&
 		    !cb_flag_syntax_only) {
 			local_level = cb_compile_level;

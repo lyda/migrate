@@ -29,6 +29,8 @@
 #include "move.h"
 #include "numeric.h"
 #include "byteswap.h"
+
+#define	COB_LIB_INCLUDE
 #include "codegen.h"
 
 #define DECIMAL_NAN	-128
@@ -168,7 +170,7 @@ end comment out */
 
 /* d->value *= 10^n, d->scale += n */
 static void
-shift_decimal (cob_decimal *d, int n)
+shift_decimal (cob_decimal *d, const int n)
 {
 	if (n == 0) {
 		return;
@@ -226,8 +228,8 @@ cob_decimal_set_double (cob_decimal *d, double v)
 double
 cob_decimal_get_double (cob_decimal *d)
 {
-	int n = d->scale;
-	double v = mpz_get_d (d->value);
+	int	n = d->scale;
+	double	v = mpz_get_d (d->value);
 
 	for (; n > 0; n--) {
 		v /= 10;
@@ -579,7 +581,7 @@ overflow:
 /* PACKED-DECIMAL */
 
 static int
-cob_packed_get_sign (cob_field *f)
+cob_packed_get_sign (const cob_field *f)
 {
 	unsigned char *p;
 
@@ -978,9 +980,9 @@ cob_decimal_cmp (cob_decimal *d1, cob_decimal *d2)
  */
 
 static int
-display_add_int (unsigned char *data, size_t size, unsigned int n)
+display_add_int (unsigned char *data, const size_t size, unsigned int n)
 {
-	int		carry = 0;
+	size_t		carry = 0;
 	unsigned char	*sp = data + size;
 
 	while (n > 0) {
@@ -998,7 +1000,8 @@ display_add_int (unsigned char *data, size_t size, unsigned int n)
 
 		/* perform addition */
 		if ((*sp += i + carry) > '9') {
-			carry = 1, *sp -= 10;
+			carry = 1;
+			*sp -= 10;
 		} else {
 			carry = 0;
 		}
@@ -1021,9 +1024,9 @@ display_add_int (unsigned char *data, size_t size, unsigned int n)
 }
 
 static int
-display_sub_int (unsigned char *data, size_t size, unsigned int n)
+display_sub_int (unsigned char *data, const size_t size, unsigned int n)
 {
-	int		carry = 0;
+	size_t		carry = 0;
 	unsigned char	*sp = data + size;
 
 	while (n > 0) {
@@ -1038,7 +1041,8 @@ display_sub_int (unsigned char *data, size_t size, unsigned int n)
 
 		/* perform subtraction */
 		if ((*sp -= i + carry) < '0') {
-			carry = 1, *sp += 10;
+			carry = 1;
+			*sp += 10;
 		} else {
 			carry = 0;
 		}
@@ -1117,7 +1121,7 @@ cob_display_add_int (cob_field *f, int n)
 	cob_put_sign (f, sign);
 	return 0;
 
-      overflow:
+overflow:
 	cob_put_sign (f, sign);
 	COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
 	return cob_exception_code;
@@ -1221,7 +1225,7 @@ cob_div_remainder (cob_field *fld_remainder, const int opt)
 }
 
 int
-cob_cmp_int (cob_field *f1, int n)
+cob_cmp_int (cob_field *f1, const int n)
 {
 	cob_decimal_set_field (&cob_d1, f1);
 	cob_decimal_set_int (&cob_d2, n);
@@ -1314,20 +1318,7 @@ cob_init_numeric (void)
 	cob_decimal_init (&cob_d4);
 	mpz_init2 (cob_mpzt, 256);
 	mpz_init2 (cob_mexp, 512);
-	own_memset (packed_value, 0, sizeof(packed_value));
-}
-
-int
-cob_get_numdisp (unsigned char *data, int size)
-{
-	int     retval = 0;
-
-	while (size--) {
-		retval *= 10;
-		retval += (*data - (unsigned char)'0');
-		data++;
-	}
-	return retval;
+	memset (packed_value, 0, sizeof(packed_value));
 }
 
 /* Numeric Display compares */
@@ -1335,11 +1326,11 @@ cob_get_numdisp (unsigned char *data, int size)
 int
 cob_cmp_numdisp (const unsigned char *data, const size_t size, const int n)
 {
-	int		val = 0;
-	size_t		inc;
-	unsigned char	*p;
+	int			val = 0;
+	size_t			inc;
+	const unsigned char	*p;
 
-	p = (unsigned char *)data;
+	p = data;
 	for (inc = 0; inc < size; inc++, p++) {
 		val = (val * 10) + (*p - (unsigned char)'0');
 	}
@@ -1352,7 +1343,7 @@ cob_cmp_numdisp (const unsigned char *data, const size_t size, const int n)
 }
 
 static int
-cob_get_ebcdic_sign (unsigned char *p, int *val)
+cob_get_ebcdic_sign (const unsigned char *p, int *val)
 {
 	switch (*p) {
 	case '{':
@@ -1420,11 +1411,11 @@ cob_get_ebcdic_sign (unsigned char *p, int *val)
 int
 cob_cmp_sign_numdisp (const unsigned char *data, const size_t size, const int n)
 {
-	int		val = 0;
-	size_t		inc;
-	unsigned char	*p;
+	int			val = 0;
+	size_t			inc;
+	const unsigned char	*p;
 
-	p = (unsigned char *)data;
+	p = data;
 	for (inc = 0; inc < size - 1; inc++, p++) {
 		val = (val * 10) + (*p - (unsigned char)'0');
 	}
@@ -1463,722 +1454,3 @@ cob_cmp_sign_numdisp (const unsigned char *data, const size_t size, const int n)
 	return 0;
 }
 
-/* Binary compare inlines */
-
-int
-cob_cmp_u8_binary (const unsigned char *p, const int n)
-{
-	if (*p < n) {
-		return -1;
-	} else if (*p > n) {
-		return 1;
-	}
-	return 0;
-}
-
-int
-cob_cmp_s8_binary (const unsigned char *p, const int n)
-{
-	if (*(signed char *)(p) < n) {
-		return -1;
-	} else if (*(signed char *)(p) > n) {
-		return 1;
-	}
-	return 0;
-}
-
-int
-cob_cmp_u16_binary (const unsigned char *p, const int n)
-{
-	unsigned short	val;
-
-#ifdef ALLOW_MISALIGNED
-	val = *(unsigned short MISALIGNED *)p;
-#else
-	memcpy ((unsigned char *)&val, p, sizeof(short));
-#endif
-	if (val < n) {
-		return -1;
-	} else if (val > n) {
-		return 1;
-	}
-	return 0;
-}
-
-int
-cob_cmp_s16_binary (const unsigned char *p, const int n)
-{
-	short	val;
-
-#ifdef ALLOW_MISALIGNED
-	val = *(short MISALIGNED *)p;
-#else
-	memcpy ((unsigned char *)&val, p, sizeof(short));
-#endif
-	if (val < n) {
-		return -1;
-	} else if (val > n) {
-		return 1;
-	}
-	return 0;
-}
-
-int
-cob_cmp_u32_binary (const unsigned char *p, const int n)
-{
-	unsigned int	val;
-
-#ifdef ALLOW_MISALIGNED
-	val = *(unsigned int MISALIGNED *)p;
-#else
-	memcpy ((unsigned char *)&val, p, sizeof(int));
-#endif
-	if (val < n) {
-		return -1;
-	} else if (val > n) {
-		return 1;
-	}
-	return 0;
-}
-
-int
-cob_cmp_s32_binary (const unsigned char *p, const int n)
-{
-	int	val;
-
-#ifdef ALLOW_MISALIGNED
-	val = *(int MISALIGNED *)p;
-#else
-	memcpy ((unsigned char *)&val, p, sizeof(int));
-#endif
-	if (val < n) {
-		return -1;
-	} else if (val > n) {
-		return 1;
-	}
-	return 0;
-}
-
-int
-cob_cmp_u64_binary (const unsigned char *p, const int n)
-{
-	unsigned long long	val;
-
-#ifdef ALLOW_MISALIGNED
-	val = *(unsigned long long MISALIGNED *)p;
-#else
-	memcpy ((unsigned char *)&val, p, sizeof(long long));
-#endif
-	if (val < n) {
-		return -1;
-	} else if (val > n) {
-		return 1;
-	}
-	return 0;
-}
-
-int
-cob_cmp_s64_binary (const unsigned char *p, const int n)
-{
-	long long	val;
-
-#ifdef ALLOW_MISALIGNED
-	val = *(long long MISALIGNED *)p;
-#else
-	memcpy ((unsigned char *)&val, p, sizeof(long long));
-#endif
-	if (val < n) {
-		return -1;
-	} else if (val > n) {
-		return 1;
-	}
-	return 0;
-}
-
-int
-cob_cmpswp_u16_binary (const unsigned char *p, const int n)
-{
-	unsigned short	val;
-
-#ifdef ALLOW_MISALIGNED
-	val = COB_BSWAP_16 (*(unsigned short MISALIGNED *)p);
-#else
-	memcpy ((unsigned char *)&val, p, sizeof(short));
-	val = COB_BSWAP_16 (val);
-#endif
-	if (val < n) {
-		return -1;
-	} else if (val > n) {
-		return 1;
-	}
-	return 0;
-}
-
-int
-cob_cmpswp_s16_binary (const unsigned char *p, const int n)
-{
-	short	val;
-
-#ifdef ALLOW_MISALIGNED
-	val = COB_BSWAP_16 (*(short MISALIGNED *)p);
-#else
-	memcpy ((unsigned char *)&val, p, sizeof(short));
-	val = COB_BSWAP_16 (val);
-#endif
-	if (val < n) {
-		return -1;
-	} else if (val > n) {
-		return 1;
-	}
-	return 0;
-}
-
-int
-cob_cmpswp_u32_binary (const unsigned char *p, const int n)
-{
-	unsigned int	val;
-
-#ifdef ALLOW_MISALIGNED
-	val = COB_BSWAP_32 (*(unsigned int MISALIGNED *)p);
-#else
-	memcpy ((unsigned char *)&val, p, sizeof(int));
-	val = COB_BSWAP_32 (val);
-#endif
-	if (val < n) {
-		return -1;
-	} else if (val > n) {
-		return 1;
-	}
-	return 0;
-}
-
-int
-cob_cmpswp_s32_binary (const unsigned char *p, const int n)
-{
-	int	val;
-
-#ifdef ALLOW_MISALIGNED
-	val = COB_BSWAP_32 (*(int MISALIGNED *)p);
-#else
-	memcpy ((unsigned char *)&val, p, sizeof(int));
-	val = COB_BSWAP_32 (val);
-#endif
-	if (val < n) {
-		return -1;
-	} else if (val > n) {
-		return 1;
-	}
-	return 0;
-}
-
-int
-cob_cmpswp_u64_binary (const unsigned char *p, const int n)
-{
-	unsigned long long	val;
-
-#ifdef ALLOW_MISALIGNED
-	val = COB_BSWAP_64 (*(unsigned long long MISALIGNED *)p);
-#else
-	memcpy ((unsigned char *)&val, p, sizeof(long long));
-	val = COB_BSWAP_64 (val);
-#endif
-	if (val < n) {
-		return -1;
-	} else if (val > n) {
-		return 1;
-	}
-	return 0;
-}
-
-int
-cob_cmpswp_s64_binary (const unsigned char *p, const int n)
-{
-	long long	val;
-
-#ifdef ALLOW_MISALIGNED
-	val = COB_BSWAP_64 (*(long long MISALIGNED *)p);
-#else
-	memcpy ((unsigned char *)&val, p, sizeof(long long));
-	val = COB_BSWAP_64 (val);
-#endif
-	if (val < n) {
-		return -1;
-	} else if (val > n) {
-		return 1;
-	}
-	return 0;
-}
-
-/* Add/Subtract inlines */
-
-void
-cob_add_u8_binary (unsigned char *p, const int val)
-{
-	*p += val;
-}
-
-void
-cob_add_s8_binary (unsigned char *p, const int val)
-{
-	*(signed char *)p += val;
-}
-
-void
-cob_add_u16_binary (unsigned char *p, const int val)
-{
-#ifdef ALLOW_MISALIGNED
-	*(unsigned short MISALIGNED *)p += val;
-#else
-	unsigned short	n;
-	if ((((int)p) & 1) == 0) {
-		*(unsigned short *)p += val;
-		return;
-	}
-	memcpy ((unsigned char *)&n, p, sizeof(short));
-	n += val;
-	memcpy (p, (unsigned char *)&n, sizeof(short));
-#endif
-}
-
-void
-cob_add_s16_binary (unsigned char *p, const int val)
-{
-#ifdef ALLOW_MISALIGNED
-	*(short MISALIGNED *)p += val;
-#else
-	short		n;
-	if ((((int)p) & 1) == 0) {
-		*(short *)p += val;
-		return;
-	}
-	memcpy ((unsigned char *)&n, p, sizeof(short));
-	n += val;
-	memcpy (p, (unsigned char *)&n, sizeof(short));
-#endif
-}
-
-void
-cob_add_u32_binary (unsigned char *p, const int val)
-{
-#ifdef ALLOW_MISALIGNED
-	*(unsigned int MISALIGNED *)p += val;
-#else
-	unsigned int	n;
-	if ((((int)p) & 3) == 0) {
-		*(unsigned int *)p += val;
-		return;
-	}
-	memcpy ((unsigned char *)&n, p, sizeof(int));
-	n += val;
-	memcpy (p, (unsigned char *)&n, sizeof(int));
-#endif
-}
-
-void
-cob_add_s32_binary (unsigned char *p, const int val)
-{
-#ifdef ALLOW_MISALIGNED
-	*(int MISALIGNED *)p += val;
-#else
-	int		n;
-	if ((((int)p) & 3) == 0) {
-		*(int *)p += val;
-		return;
-	}
-	memcpy ((unsigned char *)&n, p, sizeof(int));
-	n += val;
-	memcpy (p, (unsigned char *)&n, sizeof(int));
-#endif
-}
-
-void
-cob_add_u64_binary (unsigned char *p, const int val)
-{
-#ifdef ALLOW_MISALIGNED
-	*(unsigned long long MISALIGNED *)p += val;
-#else
-	unsigned long long	n;
-	if ((((int)p) & 7) == 0) {
-		*(unsigned long long *)p += val;
-		return;
-	}
-	memcpy ((unsigned char *)&n, p, sizeof(long long));
-	n += val;
-	memcpy (p, (unsigned char *)&n, sizeof(long long));
-#endif
-}
-
-void
-cob_add_s64_binary (unsigned char *p, const int val)
-{
-#ifdef ALLOW_MISALIGNED
-	*(long long MISALIGNED *)p += val;
-#else
-	long long	n;
-	if ((((int)p) & 7) == 0) {
-		*(long long *)p += val;
-		return;
-	}
-	memcpy ((unsigned char *)&n, p, sizeof(long long));
-	n += val;
-	memcpy (p, (unsigned char *)&n, sizeof(long long));
-#endif
-}
-
-#ifndef WORDS_BIGENDIAN
-void
-cob_addswp_u16_binary (unsigned char *p, const int val)
-{
-	unsigned short	n;
-
-#ifdef ALLOW_MISALIGNED
-	n = COB_BSWAP_16 (*(unsigned short MISALIGNED *)p);
-	n += val;
-	*(unsigned short MISALIGNED *)p = COB_BSWAP_16(n);
-#else
-	n = (unsigned short)((p[0] << 8) | p[1]);
-	n += val;
-	p[0] = (unsigned char)(n >> 8);
-	p[1] = (unsigned char)n;
-#endif
-}
-
-void
-cob_addswp_s16_binary (unsigned char *p, const int val)
-{
-	short		n;
-
-#ifdef ALLOW_MISALIGNED
-	n = COB_BSWAP_16 (*(short MISALIGNED *)p);
-	n += val;
-	*(short MISALIGNED *)p = COB_BSWAP_16(n);
-#else
-	n = (short)((p[0] << 8) | p[1]);
-	n += val;
-	p[0] = (unsigned char)(n >> 8);
-	p[1] = (unsigned char)n;
-#endif
-}
-
-void
-cob_addswp_u32_binary (unsigned char *p, const int val)
-{
-	unsigned int	n;
-
-#ifdef ALLOW_MISALIGNED
-	n = COB_BSWAP_32 (*(unsigned int MISALIGNED *)p);
-	n += val;
-	*(unsigned int MISALIGNED *)p = COB_BSWAP_32(n);
-#else
-	n = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
-	n += val;
-	*p++ = (unsigned char)(n >> 24);
-	*p++ = (unsigned char)(n >> 16);
-	*p++ = (unsigned char)(n >> 8);
-	*p = (unsigned char)n;
-#endif
-}
-
-void
-cob_addswp_s32_binary (unsigned char *p, const int val)
-{
-	int		n;
-
-#ifdef ALLOW_MISALIGNED
-	n = COB_BSWAP_32 (*(int MISALIGNED *)p);
-	n += val;
-	*(int MISALIGNED *)p = COB_BSWAP_32(n);
-#else
-	n = (int)((p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]);
-	n += val;
-	*p++ = (unsigned char)(n >> 24);
-	*p++ = (unsigned char)(n >> 16);
-	*p++ = (unsigned char)(n >> 8);
-	*p = (unsigned char)n;
-#endif
-}
-
-void
-cob_addswp_u64_binary (unsigned char *p, const int val)
-{
-	union {
-		unsigned long long	n;
-		unsigned char		c[8];
-	} u;
-
-#ifdef ALLOW_MISALIGNED
-	u.n = COB_BSWAP_64 (*(unsigned long long MISALIGNED *)p);
-	u.n += val;
-	*(unsigned long long MISALIGNED *)p = COB_BSWAP_64(u.n);
-#else
-	int i;
-	for (i = 0; i < 8; ++i) {
-		u.c[7-i] = p[i];
-	}
-	u.n += val;
-	for (i = 0; i < 8; ++i) {
-		p[i] = u.c[7-i];
-	}
-#endif
-}
-
-void
-cob_addswp_s64_binary (unsigned char *p, const int val)
-{
-	union {
-		long long	n;
-		unsigned char	c[8];
-	} u;
-
-#ifdef ALLOW_MISALIGNED
-	u.n = COB_BSWAP_64 (*(long long MISALIGNED *)p);
-	u.n += val;
-	*(long long MISALIGNED *)p = COB_BSWAP_64(u.n);
-#else
-	int i;
-	for (i = 0; i < 8; ++i) {
-		u.c[7-i] = p[i];
-	}
-	u.n += val;
-	for (i = 0; i < 8; ++i) {
-		p[i] = u.c[7-i];
-	}
-#endif
-}
-#endif
-
-void
-cob_sub_u8_binary (unsigned char *p, const int val)
-{
-	*p -= val;
-}
-
-void
-cob_sub_s8_binary (unsigned char *p, const int val)
-{
-	*(signed char *)p -= val;
-}
-
-void
-cob_sub_u16_binary (unsigned char *p, const int val)
-{
-#ifdef ALLOW_MISALIGNED
-	*(unsigned short MISALIGNED *)p -= val;
-#else
-	unsigned short	n;
-	if ((((int)p) & 1) == 0) {
-		*(unsigned short *)p -= val;
-		return;
-	}
-	memcpy ((unsigned char *)&n, p, sizeof(short));
-	n -= val;
-	memcpy (p, (unsigned char *)&n, sizeof(short));
-#endif
-}
-
-void
-cob_sub_s16_binary (unsigned char *p, const int val)
-{
-#ifdef ALLOW_MISALIGNED
-	*(short MISALIGNED *)p -= val;
-#else
-	short		n;
-	if ((((int)p) & 1) == 0) {
-		*(short *)p -= val;
-		return;
-	}
-	memcpy ((unsigned char *)&n, p, sizeof(short));
-	n -= val;
-	memcpy (p, (unsigned char *)&n, sizeof(short));
-#endif
-}
-
-void
-cob_sub_u32_binary (unsigned char *p, const int val)
-{
-#ifdef ALLOW_MISALIGNED
-	*(unsigned int MISALIGNED *)p -= val;
-#else
-	unsigned int	n;
-	if ((((int)p) & 3) == 0) {
-		*(unsigned int *)p -= val;
-		return;
-	}
-	memcpy ((unsigned char *)&n, p, sizeof(int));
-	n -= val;
-	memcpy (p, (unsigned char *)&n, sizeof(int));
-#endif
-}
-
-void
-cob_sub_s32_binary (unsigned char *p, const int val)
-{
-#ifdef ALLOW_MISALIGNED
-	*(int MISALIGNED *)p -= val;
-#else
-	int		n;
-	if ((((int)p) & 3) == 0) {
-		*(int *)p -= val;
-		return;
-	}
-	memcpy ((unsigned char *)&n, p, sizeof(int));
-	n -= val;
-	memcpy (p, (unsigned char *)&n, sizeof(int));
-#endif
-}
-
-void
-cob_sub_u64_binary (unsigned char *p, const int val)
-{
-#ifdef ALLOW_MISALIGNED
-	*(unsigned long long MISALIGNED *)p -= val;
-#else
-	unsigned long long	n;
-	if ((((int)p) & 7) == 0) {
-		*(unsigned long long *)p -= val;
-		return;
-	}
-	memcpy ((unsigned char *)&n, p, sizeof(long long));
-	n -= val;
-	memcpy (p, (unsigned char *)&n, sizeof(long long));
-#endif
-}
-
-void
-cob_sub_s64_binary (unsigned char *p, const int val)
-{
-#ifdef ALLOW_MISALIGNED
-	*(long long MISALIGNED *)p -= val;
-#else
-	long long	n;
-	if ((((int)p) & 7) == 0) {
-		*(long long *)p -= val;
-		return;
-	}
-	memcpy ((unsigned char *)&n, p, sizeof(long long));
-	n -= val;
-	memcpy (p, (unsigned char *)&n, sizeof(long long));
-#endif
-}
-
-#ifndef WORDS_BIGENDIAN
-void
-cob_subswp_u16_binary (unsigned char *p, const int val)
-{
-	unsigned short	n;
-
-#ifdef ALLOW_MISALIGNED
-	n = COB_BSWAP_16 (*(unsigned short MISALIGNED *)p);
-	n -= val;
-	*(unsigned short MISALIGNED *)p = COB_BSWAP_16(n);
-#else
-	n = (unsigned short)((p[0] << 8) | p[1]);
-	n -= val;
-	p[0] = (unsigned char)(n >> 8);
-	p[1] = (unsigned char)n;
-#endif
-}
-
-void
-cob_subswp_s16_binary (unsigned char *p, const int val)
-{
-	short		n;
-
-#ifdef ALLOW_MISALIGNED
-	n = COB_BSWAP_16 (*(short MISALIGNED *)p);
-	n -= val;
-	*(short MISALIGNED *)p = COB_BSWAP_16(n);
-#else
-	n = (short)((p[0] << 8) | p[1]);
-	n -= val;
-	p[0] = (unsigned char)(n >> 8);
-	p[1] = (unsigned char)n;
-#endif
-}
-
-void
-cob_subswp_u32_binary (unsigned char *p, const int val)
-{
-	unsigned int	n;
-
-#ifdef ALLOW_MISALIGNED
-	n = COB_BSWAP_32 (*(unsigned int MISALIGNED *)p);
-	n -= val;
-	*(unsigned int MISALIGNED *)p = COB_BSWAP_32(n);
-#else
-	n = (unsigned int)((p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]);
-	n -= val;
-	*p++ = (unsigned char)(n >> 24);
-	*p++ = (unsigned char)(n >> 16);
-	*p++ = (unsigned char)(n >> 8);
-	*p = (unsigned char)n;
-#endif
-}
-
-void
-cob_subswp_s32_binary (unsigned char *p, const int val)
-{
-	int		n;
-
-#ifdef ALLOW_MISALIGNED
-	n = COB_BSWAP_32 (*(int MISALIGNED *)p);
-	n -= val;
-	*(int MISALIGNED *)p = COB_BSWAP_32(n);
-#else
-	n = (int)((p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]);
-	n -= val;
-	*p++ = (unsigned char)(n >> 24);
-	*p++ = (unsigned char)(n >> 16);
-	*p++ = (unsigned char)(n >> 8);
-	*p = (unsigned char)n;
-#endif
-}
-
-void
-cob_subswp_u64_binary (unsigned char *p, const int val)
-{
-	union {
-		unsigned long long	n;
-		unsigned char		c[8];
-	} u;
-
-#ifdef ALLOW_MISALIGNED
-	u.n = COB_BSWAP_64 (*(unsigned long long MISALIGNED *)p);
-	u.n -= val;
-	*(unsigned long long MISALIGNED *)p = COB_BSWAP_64(u.n);
-#else
-	int i;
-	for (i = 0; i < 8; ++i) {
-		u.c[7-i] = p[i];
-	}
-	u.n -= val;
-	for (i = 0; i < 8; ++i) {
-		p[i] = u.c[7-i];
-	}
-#endif
-}
-
-void
-cob_subswp_s64_binary (unsigned char *p, const int val)
-{
-	union {
-		long long	n;
-		unsigned char	c[8];
-	} u;
-
-#ifdef ALLOW_MISALIGNED
-	u.n = COB_BSWAP_64 (*(long long MISALIGNED *)p);
-	u.n -= val;
-	*(long long MISALIGNED *)p = COB_BSWAP_64(u.n);
-#else
-	int i;
-	for (i = 0; i < 8; ++i) {
-		u.c[7-i] = p[i];
-	}
-	u.n -= val;
-	for (i = 0; i < 8; ++i) {
-		p[i] = u.c[7-i];
-	}
-#endif
-}
-#endif

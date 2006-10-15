@@ -1,3 +1,21 @@
+2006-10-15  Roger While <simrw@sim-basis.de>
+
+	* codegen.h : This is now the place for optimization
+		Duplication in numeric.c is not necessary
+		Add in optimization for 3/5/6/7 byte compares
+		Add in 3 byte add optimization
+	* numeric.c : Delete duplicated code from codegen.h
+		Constify
+
+2006-10-14  Roger While <simrw@sim-basis.de>
+
+	* common.c, fileio.[ch], move.[ch] : const defintions
+
+2006-09-30  Roger While <simrw@sim-basis.de>
+
+	* common.[ch] : Implement CBL_EXIT_PROC
+	* General : tidy up
+
 2006-08-31  Roger While <simrw@sim-basis.de>
 
 	* call.c : Alternate ifdef'd algo for call list

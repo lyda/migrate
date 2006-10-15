@@ -272,9 +272,6 @@ output_base (struct cb_field *f)
 	char		*nmp;
 	char		name[CB_MAX_CNAME];
 
-/* RXW
-	if (f->level == 78) {
-*/
 	if (f->flag_item_78) {
 		return;
 	}
@@ -1025,9 +1022,8 @@ output_param (cb_tree x, int id)
 			sprintf (fname, "f%d", stack_id++);
 #ifndef __GNUC__
 			if (inside_check != 0) {
-				if (inside_stack[inside_check-1] == 0) {
-					inside_stack[inside_check-1] = 1;
-				} else {
+				if (inside_stack[inside_check-1] != 0) {
+					inside_stack[inside_check-1] = 0;
 					output (",\n");
 				}
 			}
@@ -1326,9 +1322,6 @@ output_move (cb_tree src, cb_tree dst)
 static int
 initialize_type (struct cb_initialize *p, struct cb_field *f, int topfield)
 {
-/* RXW
-	if (f->level == 78) {
-*/
 	if (f->flag_item_78) {
 		return INITIALIZE_NONE;
 	}
@@ -1443,8 +1436,8 @@ output_initialize_fp (cb_tree x, struct cb_field *f)
 static void
 output_initialize_external (cb_tree x, struct cb_field *f)
 {
-	char *p;
-	char name[CB_MAX_CNAME];
+	unsigned char	*p;
+	char		name[CB_MAX_CNAME];
 
 	output_prefix ();
 	output_data (x);
@@ -1452,7 +1445,7 @@ output_initialize_external (cb_tree x, struct cb_field *f)
 		output (" = cob_external_addr (\"%s\", %d);\n", f->ename, f->size);
 	} else {
 		strcpy (name, f->name);
-		for (p = name; *p; p++) {
+		for (p = (unsigned char *)name; *p; p++) {
 			if (islower (*p)) {
 				*p = toupper (*p);
 			}
@@ -1979,7 +1972,6 @@ output_call (struct cb_call *p)
 	/* function name */
 	n = 0;
 	for (l = p->args; l; l = CB_CHAIN (l), n++) {
-		/* RXWRXW */
 		cb_tree x = CB_VALUE (l);
 
 		field_iteration = n;
@@ -2357,9 +2349,8 @@ output_stmt (cb_tree x)
 	}
 #ifndef __GNUC__
 	if (inside_check != 0) {
-		if (inside_stack[inside_check - 1] == 0) {
-			inside_stack[inside_check -1] = 1;
-		} else {
+		if (inside_stack[inside_check - 1] != 0) {
+			inside_stack[inside_check -1] = 0;
 			output (",\n");
 		}
 	}
@@ -2483,6 +2474,8 @@ output_stmt (cb_tree x)
 #else
 		if (inside_check == 0) {
 			output (";\n");
+		} else {
+			inside_stack[inside_check -1] = 1;
 		}
 #endif
 		break;
@@ -2495,7 +2488,15 @@ output_stmt (cb_tree x)
 		output_integer (p->var);
 		output (" = ");
 		output_integer (p->val);
+#ifdef __GNUC__
 		output (";\n");
+#else
+		if (inside_check == 0) {
+			output (";\n");
+		} else {
+			inside_stack[inside_check -1] = 1;
+		}
+#endif
 		break;
 	}
 	case CB_TAG_INITIALIZE:
@@ -3166,6 +3167,11 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	}
 #endif
 	output_newline ();
+	output_line ("if (unlikely(entry < 0)) {");
+	output_line ("	initialized = 0;");
+	output_line ("	return 0;");
+	output_line ("}");
+	output_newline ();
 	if (cb_sticky_linkage && parmnum) {
 		output_line ("if (cob_call_params < %d) {", parmnum);
 		output_line ("  switch (cob_call_params) {");
@@ -3597,11 +3603,6 @@ codegen (struct cb_program *prog, int nested)
 	excp_current_paragraph = NULL;
 	memset ((char *)i_counters, 0, sizeof (i_counters));
 
-/* RXW - This can't be right, we can have an ENTRY clause
-	if (prog->gen_main)
-		prog->flag_initial = 1;
-*/
-
 	output_target = yyout;
 
 	if (!nested) {
@@ -3618,6 +3619,12 @@ codegen (struct cb_program *prog, int nested)
 #ifdef	WORDS_BIGENDIAN
 		output ("#define WORDS_BIGENDIAN 1\n");
 #endif
+		if (optimize_flag) {
+			output ("#define COB_LOCAL_INLINE\n");
+			if (optimize_flag > 1) {
+				output ("#define SUPER_OPTIMIZE\n");
+			}
+		}
 		output ("#include <libcob.h>\n\n");
 
 		output ("#define COB_SOURCE_FILE		\"%s\"\n", cb_source_file);
