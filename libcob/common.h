@@ -204,24 +204,21 @@ enum cob_display_sign {
  */
 
 typedef struct __cob_module {
-	struct __cob_module	*next;
-	const unsigned char	*collating_sequence;
-	cob_field		*crt_status;
-	cob_field		*cursor_pos;
-	cob_field		**cob_procedure_parameters;
-	enum cob_display_sign	display_sign;
-	unsigned char		decimal_point;
-	unsigned char		currency_symbol;
-	unsigned char		numeric_separator;
-	unsigned char		flag_filename_mapping;
-	unsigned char		flag_binary_truncate;
-	unsigned char		flag_pretty_display;
-	unsigned char		spare7;
-	unsigned char		spare8;
+	struct __cob_module		*next;
+	const unsigned char		*collating_sequence;
+	cob_field			*crt_status;
+	cob_field			*cursor_pos;
+	cob_field			**cob_procedure_parameters;
+	const enum cob_display_sign	display_sign;
+	const unsigned char		decimal_point;
+	const unsigned char		currency_symbol;
+	const unsigned char		numeric_separator;
+	const unsigned char		flag_filename_mapping;
+	const unsigned char		flag_binary_truncate;
+	const unsigned char		flag_pretty_display;
+	const unsigned char		spare7;
+	const unsigned char		spare8;
 } cob_module;
-
-DLL_EXPIMP extern cob_module	*cob_current_module;
-
 
 /*
  * Exception
@@ -239,8 +236,6 @@ enum cob_exception_id {
 /* Set cob_exception_code from an exception id */
 #define COB_SET_EXCEPTION(id) cob_set_exception(id)
 
-DLL_EXPIMP extern int	cob_exception_code;
-
 /*
  * Fatal error
  */
@@ -257,6 +252,9 @@ enum cob_enum_error {
  */
 
 DLL_EXPIMP extern int			cob_initialized;
+DLL_EXPIMP extern int			cob_exception_code;
+
+DLL_EXPIMP extern cob_module		*cob_current_module;
 
 DLL_EXPIMP extern const char		*cob_source_file;
 DLL_EXPIMP extern const char		*cob_source_statement;

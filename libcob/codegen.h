@@ -211,8 +211,6 @@ cob_cmp_s24_binary (const unsigned char *p, const int n)
 	} u;
 
 	u.val = 0;
-	int	val = 0;
-
 #ifdef	WORDS_BIGENDIAN
 	u.c[0] = *p;
 	u.c[1] = *(p + 1);
@@ -222,10 +220,10 @@ cob_cmp_s24_binary (const unsigned char *p, const int n)
 	u.c[2] = *(p + 1);
 	u.c[3] = *(p + 2);
 #endif
-	val >>= 8;	/* shift with sign */
-	if (val < n) {
+	u.val >>= 8;	/* shift with sign */
+	if (u.val < n) {
 		return -1;
-	} else if (val > n) {
+	} else if (u.val > n) {
 		return 1;
 	}
 	return 0;
