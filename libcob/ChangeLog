@@ -1,3 +1,8 @@
+2006-10-23  Roger While <simrw@sim-basis.de>
+
+	* Makefile.am : Remove gcc options
+	  General : Constify some stuff
+
 2006-10-16  Roger While <simrw@sim-basis.de>
 
 	* codegen.h : Fix 3 byte compare

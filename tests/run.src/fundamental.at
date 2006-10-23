@@ -78,6 +78,7 @@ AT_SETUP([Hexadecimal literal])
 
 AT_DATA([dump.c], [
 #include <stdio.h>
+int dump (unsigned char *data);
 int dump (unsigned char *data)
 {
   int i;

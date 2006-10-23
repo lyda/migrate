@@ -24,6 +24,7 @@ AT_SETUP([COMP-5])
 
 AT_DATA([dump.c], [
 #include <stdio.h>
+int dump (unsigned char *data, int *p);
 int dump (unsigned char *data, int *p)
 {
   int i;

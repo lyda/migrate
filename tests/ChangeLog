@@ -1,3 +1,7 @@
+2006-10-23  Roger While <simrw@sim-basis.de>
+
+	* Change C code in the tests to prototype functions
+
 2006-07-23  Roger While <simrw@sim-basis.de>
 
 	* run.src, atlocal.in, cobol85/report.pl : Remove SWITCH settings from

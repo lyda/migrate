@@ -303,13 +303,15 @@ extern void cob_module_leave (cob_module *module);
 #ifdef __GNUC__
 extern void cob_stop_run (const int status) __attribute__ ((noreturn));
 extern void cob_fatal_error (const enum cob_enum_error fatal_error) __attribute__ ((noreturn));
+extern void cob_runtime_error (const char *fmt, ...) __attribute__ ((format (printf, 1, 0)));
+extern void *cob_malloc (const size_t size) __attribute__ ((malloc));
 #else
 extern void cob_stop_run (const int status);
 extern void cob_fatal_error (const enum cob_enum_error fatal_error);
-#endif
 extern void cob_runtime_error (const char *fmt, ...);
-extern char *cob_get_exception_name (const int exception_code);
 extern void *cob_malloc (const size_t size);
+#endif
+extern const char *cob_get_exception_name (const int exception_code);
 extern void *cob_strdup (const void *stptr);
 extern void cob_set_exception (const int id);
 extern void cob_check_version (const char *prog, const char *packver, const int patchlev);

@@ -723,7 +723,8 @@ process_filename (const char *filename)
 		fn->need_preprocess = 0;
 		fn->need_translate = 0;
 #ifdef _MSC_VER
-	} else if (strcmp (extension, "obj") == 0) {
+	} else if (strcmp (extension, "obj") == 0 ||
+		   strcmp (extension, "lib") == 0) {
 #else
 	} else if (strcmp (extension, "o") == 0) {
 #endif

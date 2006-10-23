@@ -427,7 +427,7 @@ cob_intr_exception_location ()
 cob_field *
 cob_intr_exception_status ()
 {
-	char		*except_name;
+	const char		*except_name;
 	cob_field_attr	attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
 	cob_field	field = {31, NULL, &attr};
 

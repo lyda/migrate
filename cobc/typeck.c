@@ -620,7 +620,7 @@ cb_build_identifier (cb_tree x)
 				if (CB_LITERAL_P (sub)) {
 					int n = cb_get_int (sub);
 
-					if (n < p->occurs_min || n > p->occurs_max) {
+					if (n < 1 || n > p->occurs_max) {
 						cb_error_x (x, _("Subscript of '%s' out of bounds: %d"),
 							    name, n);
 					}
@@ -629,37 +629,30 @@ cb_build_identifier (cb_tree x)
 				/* run-time check */
 				if (CB_EXCEPTION_ENABLE (COB_EC_BOUND_SUBSCRIPT)) {
 					if (p->occurs_depending) {
-						int n = p->occurs_max;
+						cb_tree e1, e2;
 
-						if (CB_LITERAL_P (sub)) {
-							n = cb_get_int (sub);
-						}
-						if (p->occurs_min <= n && n <= p->occurs_max) {
-							cb_tree e1, e2;
-
-							e1 = cb_build_funcall_4 ("cob_check_odo",
-								 cb_build_cast_integer (p->occurs_depending),
-								 cb_int (p->occurs_min),
-								 cb_int (p->occurs_max),
-								 cb_build_string0
-								 ((ucharptr)(cb_field (p->occurs_depending)->name)));
-							e2 = cb_build_funcall_4 ("cob_check_subscript",
-								 cb_build_cast_integer (sub),
-								 cb_int (p->occurs_min),
-								 cb_build_cast_integer (p->occurs_depending),
-								 cb_build_string0 ((ucharptr)p->name));
-							r->check = cb_list_add (r->check, e1);
-							r->check = cb_list_add (r->check, e2);
-						}
+						e1 = cb_build_funcall_4 ("cob_check_odo",
+							 cb_build_cast_integer (p->occurs_depending),
+							 cb_int (p->occurs_min),
+							 cb_int (p->occurs_max),
+							 cb_build_string0
+							 ((ucharptr)(cb_field (p->occurs_depending)->name)));
+						e2 = cb_build_funcall_4 ("cob_check_subscript",
+							 cb_build_cast_integer (sub),
+							 cb_int1,
+							 cb_build_cast_integer (p->occurs_depending),
+							 cb_build_string0 ((ucharptr)p->name));
+						r->check = cb_list_add (r->check, e1);
+						r->check = cb_list_add (r->check, e2);
 					} else {
 						if (!CB_LITERAL_P (sub)) {
 							cb_tree e1;
 
 							e1 = cb_build_funcall_4 ("cob_check_subscript",
-									 cb_build_cast_integer
-									 (sub), cb_int1,
-									 cb_int (p->occurs_max),
-									 cb_build_string0 ((ucharptr)p->name));
+								cb_build_cast_integer (sub),
+								cb_int1,
+								cb_int (p->occurs_max),
+								cb_build_string0 ((ucharptr)p->name));
 							r->check = cb_list_add (r->check, e1);
 						}
 					}

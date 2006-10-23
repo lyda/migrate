@@ -2744,8 +2744,8 @@ static pid_t	cob_process_id = 0;
 void
 cob_sort_init (cob_file *f, int nkeys, const unsigned char *collating_sequence)
 {
-	char	*s;
-	char	filename[COB_MEDIUM_BUFF];
+	const char	*s;
+	char		filename[COB_MEDIUM_BUFF];
 
 
 #ifdef _WIN32

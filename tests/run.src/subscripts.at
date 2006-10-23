@@ -185,12 +185,12 @@ AT_DATA([prog.cob], [
          02 X           PIC X OCCURS 4 TO 6 DEPENDING ON N.
        01 N             PIC 9 VALUE 4.
        PROCEDURE        DIVISION.
-           DISPLAY X(3).
+           DISPLAY X(0).
            STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob], [1], ,
-[prog.cob:10: Error: Subscript of 'X' out of bounds: 3
+[prog.cob:10: Error: Subscript of 'X' out of bounds: 0
 ])
 
 AT_CLEANUP

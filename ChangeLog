@@ -1,7 +1,13 @@
+2006-10-23  Roger While <simrw@sim-basis.de>
+
+	* configure.ac : Remove gcc specific options from the
+	  Makefile templates and pull it back into configure.
+	  This should make building on non-gcc systems somewhat easier.
+
 2006-08-29  Roger While <simrw@sim-basis.de>
 
 	* General : FSF address change
-	* COPYING.DOC : New file, GNU Free Dcoumentation license
+	* COPYING.DOC : New file, GNU Free Documentation license
 
 2006-08-28  Roger While <simrw@sim-basis.de>
 

@@ -472,11 +472,11 @@ COB_EXTRA_FLAGS=""
 
 if test "$GEN_DEBUG_OPT" = "no"
 then
-	CFLAGS=`echo "$CFLAGS " | sed -e 's/-g //'`
+	CFLAGS=`echo "$CFLAGS " | sed -e 's/-g / /'`
 fi
 
 # Include CFLAGS in COB_CFLAGS without optimization/debug options
-cob_temp_flags=`echo "$CFLAGS " | sed -e 's/-O2 //' | sed -e 's/-O //' | sed -e 's/-g //'`
+cob_temp_flags=`echo "$CFLAGS " | sed -e 's/-O2 / /' | sed -e 's/-O / /' | sed -e 's/-g / /'`
 COB_CFLAGS="$COB_CFLAGS $cob_temp_flags"
 
 if test "$GEN_DEBUG_OPT" = "no"
@@ -513,6 +513,10 @@ case $host_os in
 	;;
 esac
 
+if test "`basename $CC`" = "gcc"
+then
+	CFLAGS="$CFLAGS -fsigned-char -Wall -Wwrite-strings -Wmissing-prototypes -Wno-format-y2k"
+fi
 # Generate the output
 
 AC_DEFINE_UNQUOTED(COB_EXPORT_DYN, "$COB_EXPORT_DYN")

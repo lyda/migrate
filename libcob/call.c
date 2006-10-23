@@ -468,7 +468,7 @@ cob_init_call (void)
 
 	s = getenv ("COB_LIBRARY_PATH");
 	if (s == NULL) {
-		s = COB_LIBRARY_PATH;
+		s = (char *)COB_LIBRARY_PATH;
 	}
 	cob_set_library_path (s);
 

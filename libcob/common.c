@@ -319,14 +319,14 @@ static struct handlerlist {
  * General functions
  */
 
-char *
+const char *
 cob_get_exception_name (const int exception_code)
 {
 	size_t	n;
 
 	for (n = 0; n < EXCEPTION_TAB_SIZE; n++) {
 		if (exception_code == cob_exception_table[n].code) {
-			return (char *)cob_exception_table[n].name;
+			return cob_exception_table[n].name;
 		}
 	}
 	return NULL;
@@ -1511,7 +1511,7 @@ cob_display_env_value (cob_field *f)
 void
 cob_accept_environment (cob_field *f)
 {
-	char *p = NULL;
+	const char *p = NULL;
 
 	if (env) {
 		p = getenv (env);

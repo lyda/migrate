@@ -1,3 +1,7 @@
+2006-10-23  Roger While <simrw@sim-basis.de>
+
+	* Prototype in dummymac.c
+
 2005-10-25  Roger While <simrw@sim-basis.de>
 
 	* New element dummymac.c - Needed while some versions of

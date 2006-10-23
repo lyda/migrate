@@ -52,12 +52,19 @@ The following libraries are required when :
 
 Indexed-Sequential file I/O is used or SORT/MERGE is used
 
-  o Berkeley DB (libdb) 1.85 or later (runtime and development)
+  o Berkeley DB (libdb) 1.85 or later (runtime AND development)
     http://www.sleepycat.com/
+
     Recommended is version 4.x as 1.85 is known to have problems.
+    Linux distros usually carry the runtime and development 
+    rpm/deb package versions of 4.x. It is recommended to use these
+    where available.
 
     *NOTE * If you are generating BDB yourself, you need to specify
 	    --enable-compat185 as a minimum to the BDB configure.
+	    BDB does NOT have the usual install path of either
+	    /usr or /usr/local. Therefore, it is recommended to
+	    specify --prefix=/usr/local to the configure.
 
     libdb is used to implement indexed file I/O and SORT/MERGE.
 
