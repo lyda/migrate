@@ -107,9 +107,14 @@ This MUST succeed - If not, please report.
 
     make install
 
-Note - On Linux systems, if you are installing for the
--first- time, you may need to run "ldconfig" (as root).
+** Note ** - On Linux systems, if you are installing for the
+   -first- time, you may need to run "ldconfig" (as root).
 In fact, it does not hurt if you always do this.
+
+** Note ** - On some Red Hat (Fedora) installations, /usr/local/lib
+   is NOT automatically searched at runtime. 
+   Edit /etc/ls.so.conf and add /usr/local/lib to the file.
+   Rerun "ldconfig".
 
 You may optionally perform a series of COBOL85 tests.
 See tests/cobol85/README

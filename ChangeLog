@@ -1,3 +1,7 @@
+2006-10-25  Roger While <simrw@sim-basis.de>
+
+	* README : Update
+
 2006-10-23  Roger While <simrw@sim-basis.de>
 
 	* configure.ac : Remove gcc specific options from the

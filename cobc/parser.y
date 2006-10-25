@@ -17,7 +17,7 @@
  * Boston, MA 02110-1301 USA
  */
 
-%expect 114
+%expect 116
 
 %defines
 %verbose
@@ -75,6 +75,7 @@ static int			eval_inc = 0;
 static int			eval_inc2 = 0;
 static int			prog_end = 0;
 static int			depth = 0;
+static int			inspect_keyword = 0;
 static int			samearea = 1;
 static struct cb_file		*linage_file;
 static cb_tree			next_label_list = NULL;
@@ -156,6 +157,7 @@ start:
 	eval_inc2 = 0;
 	prog_end = 0;
 	depth = 0;
+	inspect_keyword = 0;
 	samearea = 1;
 	memset ((char *)eval_check, 0, sizeof(eval_check));
 	entry_number = 0;
@@ -232,6 +234,7 @@ identification_division:
 		current_linage = 0;
 		current_storage = 0;
 		eval_level = 0;
+		inspect_keyword = 0;
 		eval_inc = 0;
 		eval_inc2 = 0;
 		samearea = 1;
@@ -2756,7 +2759,11 @@ initialize_default:
  */
 
 inspect_statement:
-  INSPECT			{ BEGIN_STATEMENT ("INSPECT"); sending_id = 0;}
+  INSPECT
+	{ BEGIN_STATEMENT ("INSPECT");
+	  sending_id = 0;
+	  inspect_keyword = 0;
+	}
   send_identifier inspect_list
 ;
 
@@ -2800,7 +2807,7 @@ tallying_item:
 /* INSPECT REPLACING */
 
 inspect_replacing:
-  REPLACING replacing_list	{ $$ = $2; }
+  REPLACING replacing_list	{ $$ = $2; inspect_keyword = 0; }
 ;
 
 replacing_list:
@@ -2809,11 +2816,43 @@ replacing_list:
 ;
 
 replacing_item:
-  CHARACTERS BY x inspect_region	{ $$ = cb_build_replacing_characters ($3, $4); }
-| ALL x BY x inspect_region		{ $$ = cb_build_replacing_all ($2, $4, $5); }
-| LEADING x BY x inspect_region		{ $$ = cb_build_replacing_leading ($2, $4, $5); }
-| FIRST x BY x inspect_region		{ $$ = cb_build_replacing_first ($2, $4, $5); }
-| TRAILING x BY x inspect_region	{ $$ = cb_build_replacing_trailing ($2, $4, $5); }
+  CHARACTERS BY x inspect_region
+  {
+	$$ = cb_build_replacing_characters ($3, $4);
+	inspect_keyword = 0;
+  }
+| rep_keyword replacing_region		{ $$ = $2; }
+;
+
+rep_keyword:
+  /* empty */			{ /* Nothing */ }
+| ALL				{ inspect_keyword = 1; }
+| LEADING			{ inspect_keyword = 2; }
+| FIRST				{ inspect_keyword = 3; }
+| TRAILING			{ inspect_keyword = 4; }
+;
+
+replacing_region:
+  x BY x inspect_region {
+	switch (inspect_keyword) {
+		case 1:
+			$$ = cb_build_replacing_all ($1, $3, $4);
+			break;
+		case 2:
+			$$ = cb_build_replacing_leading ($1, $3, $4);
+			break;
+		case 3:
+			$$ = cb_build_replacing_first ($1, $3, $4);
+			break;
+		case 4:
+			$$ = cb_build_replacing_trailing ($1, $3, $4);
+			break;
+		default:
+			cb_error ("INSPECT missing a keyword");
+			$$ = cb_error_node;
+			break;
+	}
+  }
 ;
 
 /* INSPECT CONVERTING */

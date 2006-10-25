@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2006-10-23 12:01+0200\n"
+"POT-Creation-Date: 2006-10-25 19:36+0200\n"
 "PO-Revision-Date: 2004-08-01 23:55+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -728,98 +728,98 @@ msgstr "不当な行連結です"
 msgid "'%s' not implemented"
 msgstr "`%s' は実装されていません"
 
-#: cobc/parser.y:401
+#: cobc/parser.y:404
 #, fuzzy, c-format
 msgid "Unknown system-name '%s'"
 msgstr "不当なシステム名です `%s'"
 
-#: cobc/parser.y:411
+#: cobc/parser.y:414
 #, fuzzy
 msgid "Invalid CRT clause"
 msgstr "不当な VALUE 句です"
 
-#: cobc/parser.y:546 cobc/parser.y:594
+#: cobc/parser.y:549 cobc/parser.y:597
 #, fuzzy, c-format
 msgid "Invalid currency sign '%s'"
 msgstr "不当な通貨記号です `%s'"
 
-#: cobc/parser.y:1198
+#: cobc/parser.y:1201
 #, fuzzy, c-format
 msgid "Alphabet-name is expected '%s'"
 msgstr "アルファベット名が必要です `%s'"
 
-#: cobc/parser.y:1306
+#: cobc/parser.y:1309
 msgid "REDEFINES clause must follow entry-name"
 msgstr "REDEFINES 句は項目名の直後になければなりません"
 
-#: cobc/parser.y:1729 cobc/parser.y:1746
+#: cobc/parser.y:1732 cobc/parser.y:1749
 #, fuzzy, c-format
 msgid "Invalid color '%d'"
 msgstr "不当な色です `%d'"
 
-#: cobc/parser.y:1914
+#: cobc/parser.y:1917
 #, fuzzy, c-format
 msgid "Unknown statement '%s'"
 msgstr "そのような文はありません `%s'"
 
-#: cobc/parser.y:2563
+#: cobc/parser.y:2566
 msgid "88 level invalid here"
 msgstr ""
 
-#: cobc/parser.y:2571
+#: cobc/parser.y:2574
 msgid "FIXME: failed to compile \"WHEN NOT ... AND/OR ...\""
 msgstr ""
 
-#: cobc/parser.y:2572
+#: cobc/parser.y:2575
 msgid "FIXME: change it into \"WHEN (NOT ... AND/OR ...)\" for now"
 msgstr ""
 
-#: cobc/parser.y:3341 cobc/parser.y:3942 cobc/parser.y:4000
+#: cobc/parser.y:3380 cobc/parser.y:3981 cobc/parser.y:4039
 #, fuzzy, c-format
 msgid "'%s' not file name"
 msgstr "`%s' はファイル名ではありません"
 
-#: cobc/parser.y:3977
+#: cobc/parser.y:4016
 #, fuzzy, c-format
 msgid "'%s' not indexed"
 msgstr "`%s' には INDEXED BY が必要です"
 
-#: cobc/parser.y:3978
+#: cobc/parser.y:4017
 #, fuzzy, c-format
 msgid "'%s' defined here"
 msgstr "`%s' はここで定義されました"
 
-#: cobc/parser.y:4382
+#: cobc/parser.y:4421
 #, fuzzy, c-format
 msgid "'%s' not level 01 or 77"
 msgstr "`%s' はレベル 01 か 77 でなければなりません"
 
-#: cobc/parser.y:4386
+#: cobc/parser.y:4425
 #, c-format
 msgid "'%s' is not in LINKAGE SECTION"
 msgstr ""
 
-#: cobc/parser.y:4389
+#: cobc/parser.y:4428
 #, fuzzy, c-format
 msgid "'%s' can not be BASED/EXTERNAL"
 msgstr "`%s' は BLANK WHEN ZERO を持つことが出来ません"
 
-#: cobc/parser.y:4393
+#: cobc/parser.y:4432
 #, c-format
 msgid "'%s' is not in WORKING-STORAGE SECTION"
 msgstr ""
 
-#: cobc/parser.y:4400
+#: cobc/parser.y:4439
 #, c-format
 msgid "'%s' REDEFINES field not allowed here"
 msgstr ""
 
-#: cobc/parser.y:4406
+#: cobc/parser.y:4445
 #, c-format
 msgid "ENTRY '%s' duplicated"
 msgstr ""
 
-#: cobc/parser.y:4421 cobc/parser.y:4430
+#: cobc/parser.y:4460 cobc/parser.y:4469
 #, c-format
 msgid "%s statement not terminated by END-%s"
 msgstr "%s 文が END-%s で終わっていません"

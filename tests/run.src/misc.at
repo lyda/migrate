@@ -653,6 +653,26 @@ AT_CHECK([./prog], [0], [1   ])
 
 AT_CLEANUP
 
+AT_SETUP([INSPECT REPLACING complex])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X(12) VALUE "AAABBCDCCCCC".
+       PROCEDURE        DIVISION.
+           INSPECT X REPLACING 
+             ALL      "A" BY "Z"
+                      "B" BY "Y"
+             TRAILING "C" BY "X".
+           DISPLAY X NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0], [ZZZYYCDXXXXX])
+AT_CLEANUP
 
 AT_SETUP([SWITCHES])
 
