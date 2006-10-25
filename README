@@ -56,15 +56,26 @@ Indexed-Sequential file I/O is used or SORT/MERGE is used
     http://www.sleepycat.com/
 
     Recommended is version 4.x as 1.85 is known to have problems.
-    Linux distros usually carry the runtime and development 
+    ** NOTE **
+    Linux distros usually carry the runtime AND development 
     rpm/deb package versions of 4.x. It is recommended to use these
     where available.
 
-    *NOTE * If you are generating BDB yourself, you need to specify
-	    --enable-compat185 as a minimum to the BDB configure.
-	    BDB does NOT have the usual install path of either
-	    /usr or /usr/local. Therefore, it is recommended to
-	    specify --prefix=/usr/local to the configure.
+    * NOTE *
+	     Use the distro rpm's where available (4.x - runtime + devel)
+	     The following NOTE(S) ONLY apply to DB < =4.1
+
+    * NOTE *
+	     The BDB version 4.0 was never officially supported from
+	     sleepycat but, unfortunately, found it's way into Linux
+	     releases. Install a newer version.
+
+    * NOTE * If you are generating BDB yourself and the BDB 
+	     version is <= 4 (and version < 1), you need to specify
+	     --enable-compat185 as a minimum to the BDB configure.
+	     BDB does NOT have the usual install path of either
+	     /usr or /usr/local. Therefore, it is recommended to
+	     specify --prefix=/usr/local to the configure.
 
     libdb is used to implement indexed file I/O and SORT/MERGE.
 
@@ -109,7 +120,7 @@ This MUST succeed - If not, please report.
 
 ** Note ** - On Linux systems, if you are installing for the
    -first- time, you may need to run "ldconfig" (as root).
-In fact, it does not hurt if you always do this.
+   In fact, it does not hurt if you always do this.
 
 ** Note ** - On some Red Hat (Fedora) installations, /usr/local/lib
    is NOT automatically searched at runtime. 
