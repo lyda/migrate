@@ -480,8 +480,8 @@ cb_build_section_name (cb_tree name, int sect_or_para)
 cb_tree
 cb_build_assignment_name (cb_tree name)
 {
-	const char *s;
-	const char *p;
+	const char	*s;
+	const char	*p;
 
 	if (name == cb_error_node) {
 		return cb_error_node;
@@ -820,7 +820,10 @@ cb_validate_program_environment (struct cb_program *prog)
 void
 cb_validate_program_data (struct cb_program *prog)
 {
-	cb_tree l;
+	cb_tree		l;
+	cb_tree		x;
+	cb_tree		assign;
+	struct cb_field	*p;
 
 	for (l = current_program->file_list; l; l = CB_CHAIN (l)) {
 		if (!CB_FILE (CB_VALUE (l))->finalized) {
@@ -830,11 +833,18 @@ cb_validate_program_data (struct cb_program *prog)
 	/* build undeclared assignment name now */
 	if (cb_assign_clause == CB_ASSIGN_MF) {
 		for (l = current_program->file_list; l; l = CB_CHAIN (l)) {
-			cb_tree assign = CB_FILE (CB_VALUE (l))->assign;
+			assign = CB_FILE (CB_VALUE (l))->assign;
+			if (CB_REFERENCE_P (assign)) {
+				for (x = current_program->file_list; x; x = CB_CHAIN (x)) {
+					if (!strcmp (CB_FILE (CB_VALUE (x))->name,
+					     CB_REFERENCE (assign)->word->name)) {
+						redefinition_error (assign);
+					}
+				}
+			}
 			if (CB_REFERENCE_P (assign) && CB_REFERENCE (assign)->word->count == 0) {
-				cb_tree x = cb_build_implicit_field (assign, COB_SMALL_BUFF);
-				struct cb_field *p = current_program->working_storage;
-
+				x = cb_build_implicit_field (assign, COB_SMALL_BUFF);
+				p = current_program->working_storage;
 				CB_FIELD (x)->count++;
 				if (p) {
 					while (p->sister) {
@@ -849,8 +859,7 @@ cb_validate_program_data (struct cb_program *prog)
 	}
 
 	if (prog->cursor_pos) {
-		cb_tree x = cb_ref (prog->cursor_pos);
-
+		x = cb_ref (prog->cursor_pos);
 		if (x == cb_error_node) {
 			prog->cursor_pos = NULL;
 		} else if (CB_FIELD(x)->size != 6 && CB_FIELD(x)->size != 4) {
@@ -860,8 +869,7 @@ cb_validate_program_data (struct cb_program *prog)
 		}
 	}
 	if (prog->crt_status) {
-		cb_tree x = cb_ref (prog->crt_status);
-
+		x = cb_ref (prog->crt_status);
 		if (x == cb_error_node) {
 			prog->crt_status = NULL;
 		} else if (CB_FIELD(x)->size != 4) {
@@ -2712,7 +2720,7 @@ cb_tree
 cb_build_tarrying_value (cb_tree x, cb_tree l)
 {
 	if (inspect_func == NULL) {
-		cb_error_x (x, _("ALL or LEADING expected before '%s'"), cb_name (x));
+		cb_error_x (x, _("ALL, LEADING or TRAILING expected before '%s'"), cb_name (x));
 	}
 	return cb_list_add (l, cb_build_funcall_2 (inspect_func, inspect_data, x));
 }

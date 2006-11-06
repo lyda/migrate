@@ -95,7 +95,7 @@ cb_build_field_tree (cb_tree level, cb_tree name,
 	if (cb_warn_redefinition) {
 		if (r->word->count > 1) {
 			if (f->level == 01 || f->level == 77) {
-				redefinition_warning (name);
+				redefinition_warning (name, NULL);
 			} else {
 				cb_tree l;
 
@@ -107,7 +107,7 @@ cb_build_field_tree (cb_tree level, cb_tree name,
 					    || CB_FIELD (x)->level == 77
 					    || (f->level == last_field->level
 						&& CB_FIELD (x)->parent == last_field->parent)) {
-						redefinition_warning (name);
+						redefinition_warning (name, x);
 						break;
 					}
 				}

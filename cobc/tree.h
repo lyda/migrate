@@ -1095,7 +1095,7 @@ extern void cb_error_x (cb_tree x, const char *fmt, ...);
 #endif
 
 extern void redefinition_error (cb_tree x);
-extern void redefinition_warning (cb_tree x);
+extern void redefinition_warning (cb_tree x, cb_tree y);
 extern void undefined_error (cb_tree x);
 extern void ambiguous_error (cb_tree x);
 extern void group_error (cb_tree x, const char *clause);
