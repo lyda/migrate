@@ -55,6 +55,7 @@ static struct copy_info {
 	char			*file;
 	int			line;
 	int			replacing;
+	int			quotation_mark;
 	YY_BUFFER_STATE		buffer;
 } *copy_stack = NULL;
 
@@ -214,6 +215,7 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
 		pp_set_replace_list (NULL);
 	}
 	switch_to_buffer (p->line, p->file, p->buffer);
+	quotation_mark = p->quotation_mark;
 
 	copy_stack = p->next;
 	free (p);
@@ -274,6 +276,7 @@ ppopen (char *name, struct cb_replace_list *replace_list)
 	p->file = cb_source_file;
 	p->replacing = replace_list ? 1 : 0;
 	p->buffer = YY_CURRENT_BUFFER;
+	p->quotation_mark = quotation_mark;
 	p->next = copy_stack;
 	copy_stack = p;
 
@@ -298,7 +301,7 @@ ppcopy (char *name, const char *lib, struct cb_replace_list *replace_list)
 	}
 
 	/* Find the file */
-	if (name[0] != '/' && stat (name, &st) == -1) {
+	if (stat (name, &st) == -1) {
 		struct cb_text_list *il, *el;
 
 		for (el = cb_extension_list; el; el = el->next) {
@@ -308,14 +311,17 @@ ppcopy (char *name, const char *lib, struct cb_replace_list *replace_list)
 				return ppopen (name, replace_list);
 			}
 		}
-		for (il = cb_include_list; il; il = il->next)
-			for (el = cb_extension_list; el; el = el->next) {
-				sprintf (buff2, "%s/%s%s", il->text, name, el->text);
-				if (stat (buff2, &st) == 0) {
-					name = buff2;
-					return ppopen (name, replace_list);
+		if (name[0] != '/') {
+			for (il = cb_include_list; il; il = il->next) {
+				for (el = cb_extension_list; el; el = el->next) {
+					sprintf (buff2, "%s/%s%s", il->text, name, el->text);
+					if (stat (buff2, &st) == 0) {
+						name = buff2;
+						return ppopen (name, replace_list);
+					}
 				}
 			}
+		}
 		cb_error ("%s: %s", name, strerror (errno));
 		return -1;
 	}

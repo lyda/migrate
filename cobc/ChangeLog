@@ -1,3 +1,17 @@
+2006-11-18  Roger While <simrw@sim-basis.de>
+
+	* parser.y : Initialize EVALUATE check stack at current level
+		     at statement start
+
+2006-11-12  Roger While <simrw@sim-basis.de>
+
+	* pplex.l : Check source suffixes also when a COPY refers to
+		    an absolute path name
+		    Fix an obscure problem whereby a 2 line data definition
+		    following a COPY and the second line was a literal
+		    continuation would not compile
+	  typeck.c : Remaining cmp/add/sub optimizations
+
 2006-11-06  Roger While <simrw@sim-basis.de>
 
 	* tree.h, typeck.c, error.c, field.c :

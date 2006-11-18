@@ -121,7 +121,7 @@ display (cob_field *f, FILE *fp)
 
 		memcpy ((char *)&f1float, f->data, sizeof (float));
 		fprintf (fp, "%-.18lf", (double)f1float);
-	} else if (f->attr->type == COB_TYPE_NUMERIC_BINARY
+	} else if (COB_FIELD_TYPE(f) == COB_TYPE_NUMERIC_BINARY
 		   && !cob_current_module->flag_pretty_display) {
 		cob_field_attr	attr = *f->attr;
 		cob_field	temp = *f;

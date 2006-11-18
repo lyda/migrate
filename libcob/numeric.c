@@ -1287,12 +1287,6 @@ cob_cmp_packed (cob_field *f, int n)
 				size = n % 100;
 				*p = (unsigned char)((size % 10) | ((size / 10) << 4));
 				n /= 100;
-/*
-				*p = (n % 10);
-				n /= 10;
-				*p |= ((n % 10) << 4);
-				n /= 10;
-*/
 				p--;
 			}
 		}

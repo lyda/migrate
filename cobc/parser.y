@@ -2484,6 +2484,9 @@ evaluate_statement:
   {
 	BEGIN_STATEMENT ("EVALUATE");
 	eval_level++;
+	for (eval_inc = 0; eval_inc < 64; eval_inc++) {
+		eval_check[eval_level][eval_inc] = 0;
+	}
 	eval_inc = 0;
 	eval_inc2 = 0;
   }

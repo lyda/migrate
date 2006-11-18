@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2006-11-06 16:13+0100\n"
+"POT-Creation-Date: 2006-11-18 14:49+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -640,25 +640,25 @@ msgstr ""
 msgid "Invalid mnemonic name"
 msgstr ""
 
-#: cobc/pplex.l:88
+#: cobc/pplex.l:89
 msgid "PROCESS statement is ignored"
 msgstr ""
 
-#: cobc/pplex.l:389
+#: cobc/pplex.l:395
 msgid "File not terminated by a newline"
 msgstr ""
 
-#: cobc/pplex.l:432
+#: cobc/pplex.l:438
 #, c-format
 msgid "Invalid indicator '%c' at column 7"
 msgstr ""
 
-#: cobc/pplex.l:456
+#: cobc/pplex.l:462
 #, c-format
 msgid "Source text after column %d"
 msgstr ""
 
-#: cobc/pplex.l:485 cobc/pplex.l:495
+#: cobc/pplex.l:491 cobc/pplex.l:501
 msgid "Invalid line continuation"
 msgstr ""
 
@@ -700,64 +700,64 @@ msgstr ""
 msgid "Unknown statement '%s'"
 msgstr ""
 
-#: cobc/parser.y:2566
+#: cobc/parser.y:2569
 msgid "88 level invalid here"
 msgstr ""
 
-#: cobc/parser.y:2574
+#: cobc/parser.y:2577
 msgid "FIXME: failed to compile \"WHEN NOT ... AND/OR ...\""
 msgstr ""
 
-#: cobc/parser.y:2575
+#: cobc/parser.y:2578
 msgid "FIXME: change it into \"WHEN (NOT ... AND/OR ...)\" for now"
 msgstr ""
 
-#: cobc/parser.y:3380 cobc/parser.y:3981 cobc/parser.y:4039
+#: cobc/parser.y:3383 cobc/parser.y:3984 cobc/parser.y:4042
 #, c-format
 msgid "'%s' not file name"
 msgstr ""
 
-#: cobc/parser.y:4016
+#: cobc/parser.y:4019
 #, c-format
 msgid "'%s' not indexed"
 msgstr ""
 
-#: cobc/parser.y:4017
+#: cobc/parser.y:4020
 #, c-format
 msgid "'%s' defined here"
 msgstr ""
 
-#: cobc/parser.y:4421
+#: cobc/parser.y:4424
 #, c-format
 msgid "'%s' not level 01 or 77"
 msgstr ""
 
-#: cobc/parser.y:4425
+#: cobc/parser.y:4428
 #, c-format
 msgid "'%s' is not in LINKAGE SECTION"
 msgstr ""
 
-#: cobc/parser.y:4428
+#: cobc/parser.y:4431
 #, c-format
 msgid "'%s' can not be BASED/EXTERNAL"
 msgstr ""
 
-#: cobc/parser.y:4432
+#: cobc/parser.y:4435
 #, c-format
 msgid "'%s' is not in WORKING-STORAGE SECTION"
 msgstr ""
 
-#: cobc/parser.y:4439
+#: cobc/parser.y:4442
 #, c-format
 msgid "'%s' REDEFINES field not allowed here"
 msgstr ""
 
-#: cobc/parser.y:4445
+#: cobc/parser.y:4448
 #, c-format
 msgid "ENTRY '%s' duplicated"
 msgstr ""
 
-#: cobc/parser.y:4460 cobc/parser.y:4469
+#: cobc/parser.y:4463 cobc/parser.y:4472
 #, c-format
 msgid "%s statement not terminated by END-%s"
 msgstr ""
