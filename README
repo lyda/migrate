@@ -28,11 +28,14 @@ Requirements
 ============
 
 OpenCOBOL requires the following external libraries to be installed:
-(Note - all the following packages are normally part of a Linux
+
+(NOTE - all the following packages are normally part of a Linux
  distribution. Cygwin also has these as installable packages)
 
   o GNU MP (libgmp) 4.1.2 or later
     http://swox.com/gmp/
+    *** Note - Recent Linux distributions have runtime
+	AND development packages; BOTH are required ***
 
     libgmp is used to implement decimal arithmetic.
 
@@ -222,7 +225,3 @@ are ready to run configure.
 If you modify top-level configure.ac or Makefile.am in any directory,
 then you will need to run "autoreconf -I m4" to regenerate the
 necessary files.
-
-You might want to run your configure script with option
---enable-maintainer-mode during development so that make
-will automatically regenerate configure script and so on.

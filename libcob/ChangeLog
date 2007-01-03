@@ -1,3 +1,20 @@
+2006-12-17  Roger While <simrw@sim-basis.de>
+
+	* intrinsic.[ch] : Correct the NUMVAL-C function
+
+2006-12-12  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : Fix secondary key access
+
+2006-12-07  Roger While <simrw@sim-basis.de>
+
+	* intrinsic.[ch] : Implement TRIM function
+
+2006-11-28  Roger While <simrw@sim-basis.de>
+
+	* move.c : Small optimization
+	* numeric.c : New routines cob_cmp_long_numdisp cob_cmp_long_signed_numdisp
+
 2006-11-12  Roger While <simrw@sim-basis.de>
 
 	* codegen.h : Remaining integer cmp/add/sub optimizations

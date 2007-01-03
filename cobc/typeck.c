@@ -1590,18 +1590,31 @@ cb_build_optim_cond (struct cb_binary_op *p)
 				cb_build_cast_integer (p->y));
 		}
 		if (!f->pic->scale && f->usage == CB_USAGE_DISPLAY &&
-		    cb_fits_int (p->x) && !f->flag_sign_leading &&
-		    !f->flag_sign_separate) {
-			if (!f->pic->have_sign) {
-				return cb_build_funcall_3 ("cob_cmp_numdisp",
-					cb_build_cast_address (p->x),
-					cb_int (f->size),
-					cb_build_cast_integer (p->y));
-			} else {
-				return cb_build_funcall_3 ("cob_cmp_sign_numdisp",
-					cb_build_cast_address (p->x),
-					cb_int (f->size),
-					cb_build_cast_integer (p->y));
+		    !f->flag_sign_leading && !f->flag_sign_separate) {
+			if (cb_fits_int (p->x)) {
+				if (!f->pic->have_sign) {
+					return cb_build_funcall_3 ("cob_cmp_numdisp",
+						cb_build_cast_address (p->x),
+						cb_int (f->size),
+						cb_build_cast_integer (p->y));
+				} else {
+					return cb_build_funcall_3 ("cob_cmp_sign_numdisp",
+						cb_build_cast_address (p->x),
+						cb_int (f->size),
+						cb_build_cast_integer (p->y));
+				}
+			} else if (cb_fits_long_long (p->x)) {
+				if (!f->pic->have_sign) {
+					return cb_build_funcall_3 ("cob_cmp_long_numdisp",
+						cb_build_cast_address (p->x),
+						cb_int (f->size),
+						cb_build_cast_integer (p->y));
+				} else {
+					return cb_build_funcall_3 ("cob_cmp_long_sign_numdisp",
+						cb_build_cast_address (p->x),
+						cb_int (f->size),
+						cb_build_cast_integer (p->y));
+				}
 			}
 		}
 		if (!f->pic->scale && (f->usage == CB_USAGE_BINARY ||
@@ -1703,13 +1716,11 @@ cb_build_cond (cb_tree x)
 				x = cb_list_reverse (decimal_stack);
 				decimal_stack = NULL;
 			} else {
-				if (CB_LITERAL_P (p->y)) {
-					if (CB_TREE_CLASS (p->x) == CB_CLASS_NUMERIC
-					    && CB_TREE_CLASS (p->y) == CB_CLASS_NUMERIC
-					    && cb_fits_int (p->y)) {
-						x = cb_build_optim_cond (p);
-						break;
-					}
+				if (CB_TREE_CLASS (p->x) == CB_CLASS_NUMERIC
+				    && CB_TREE_CLASS (p->y) == CB_CLASS_NUMERIC
+				    && cb_fits_int (p->y)) {
+					x = cb_build_optim_cond (p);
+					break;
 				}
 
 				/* field comparison */
@@ -3014,9 +3025,9 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
 		}
 		/* non-elementary move */
 		if (cb_field (src)->children || cb_field (dst)->children) {
-                   	if (cb_field(src)->size > cb_field(dst)->size) { 
+			if (cb_field(src)->size > cb_field(dst)->size) { 
 				goto size_overflow_1;
-                   	}
+			}
 			break;
 		}
 
@@ -3407,10 +3418,10 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 
 		if (cat == CB_CATEGORY_NUMERIC) {
 			if (diff <= 0) {
-				memcpy (buff, l->data - diff, f->size);
+				memcpy (buff, l->data - diff, (size_t)f->size);
 			} else {
-				memset (buff, '0', diff);
-				memcpy (buff + diff, l->data, l->size);
+				memset (buff, '0', (size_t)diff);
+				memcpy (buff + diff, l->data, (size_t)l->size);
 			}
 			if (cb_display_sign == COB_DISPLAY_SIGN_EBCDIC) {
 				unsigned char *p = &buff[f->size - 1];
@@ -3436,17 +3447,17 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 		} else {
 			if (f->flag_justified) {
 				if (diff <= 0) {
-					memcpy (buff, l->data - diff, f->size);
+					memcpy (buff, l->data - diff, (size_t)f->size);
 				} else {
-					memset (buff, ' ', diff);
-					memcpy (buff + diff, l->data, l->size);
+					memset (buff, ' ', (size_t)diff);
+					memcpy (buff + diff, l->data, (size_t)l->size);
 				}
 			} else {
 				if (diff <= 0) {
-					memcpy (buff, l->data, f->size);
+					memcpy (buff, l->data, (size_t)f->size);
 				} else {
-					memcpy (buff, l->data, l->size);
-					memset (buff + l->size, ' ', diff);
+					memcpy (buff, l->data, (size_t)l->size);
+					memset (buff + l->size, ' ', (size_t)diff);
 				}
 			}
 		}

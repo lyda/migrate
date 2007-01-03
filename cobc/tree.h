@@ -781,6 +781,7 @@ enum cb_intr_enum {
 	CB_INTR_TEST_NUMVAL,
 	CB_INTR_TEST_NUMVAL_C,
 	CB_INTR_TEST_NUMVAL_F,
+	CB_INTR_TRIM,
 	CB_INTR_UPPER_CASE,
 	CB_INTR_VARIANCE,
 	CB_INTR_WHEN_COMPILED,
@@ -1094,6 +1095,7 @@ extern void cb_warning_x (cb_tree x, const char *fmt, ...);
 extern void cb_error_x (cb_tree x, const char *fmt, ...);
 #endif
 
+extern char *check_filler_name (char *name);
 extern void redefinition_error (cb_tree x);
 extern void redefinition_warning (cb_tree x, cb_tree y);
 extern void undefined_error (cb_tree x);

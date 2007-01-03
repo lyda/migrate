@@ -61,6 +61,8 @@ extern int cob_cmp_int (cob_field *f1, const int n);
 extern int cob_cmp_packed (cob_field *f, int n);
 extern int cob_cmp_numdisp (const unsigned char *data, const size_t size, const int n);
 extern int cob_cmp_sign_numdisp (const unsigned char *data, const size_t size, const int n);
+extern int cob_cmp_long_numdisp (const unsigned char *data, const size_t size, const int n);
+extern int cob_cmp_long_sign_numdisp (const unsigned char *data, const size_t size, const int n);
 
 extern void cob_init_numeric (void);
 

@@ -635,7 +635,7 @@ process_command_line (int argc, char *argv[])
 static void
 file_basename (const char *filename, char *buff)
 {
-	int		len;
+	size_t		len;
 	const char	*startp, *endp;
 
 	/* Remove directory name */

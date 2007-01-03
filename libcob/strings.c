@@ -363,7 +363,7 @@ cob_string_append (cob_field *src)
 		string_offset += (int) src_size;
 	} else {
 		int size = (int)(string_dst->size - string_offset);
-		own_memcpy (string_dst->data + string_offset, src->data, size);
+		own_memcpy (string_dst->data + string_offset, src->data, (size_t)size);
 		string_offset += size;
 		COB_SET_EXCEPTION (COB_EC_OVERFLOW_STRING);
 	}
@@ -452,7 +452,7 @@ cob_unstring_into (cob_field *dst, cob_field *dlm, cob_field *cnt)
 				if (p + dlsize > s) {
 					break;
 				}
-				if (!memcmp (p, dp, dlsize)) {
+				if (!memcmp (p, dp, (size_t)dlsize)) {
 					match_size = (int)(p - start);
 					cob_memcpy (dst, start, match_size);
 					unstring_offset += match_size + dlsize;
@@ -463,7 +463,7 @@ cob_unstring_into (cob_field *dst, cob_field *dlm, cob_field *cnt)
 							if (p + dlsize > s) {
 								break;
 							}
-							if (memcmp (p, dp, dlsize)) {
+							if (memcmp (p, dp, (size_t)dlsize)) {
 								break;
 							}
 							unstring_offset += dlsize;

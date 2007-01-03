@@ -40,9 +40,9 @@ static struct cb_replace_list *cb_replace_list_add (struct cb_replace_list *repl
 %}
 
 %union {
-  char *s;
-  struct cb_text_list *l;
-  struct cb_replace_list *r;
+	char			*s;
+	struct cb_text_list	*l;
+	struct cb_replace_list	*r;
 }
 
 %token DIRECTIVE SOURCE FORMAT IS FIXED FREE
@@ -73,11 +73,12 @@ format:
 copy_statement:
   COPY TOKEN copy_in copy_suppress copy_replacing '.'
   {
-    fputc ('\n', ppout);
-    $2 = fix_filename ($2);
-    if ($3)
-      $3 = fix_filename ($3);
-    ppcopy ($2, $3, $5);
+	fputc ('\n', ppout);
+	$2 = fix_filename ($2);
+	if ($3) {
+		$3 = fix_filename ($3);
+	}
+	ppcopy ($2, $3, $5);
   }
 ;
 
@@ -125,26 +126,27 @@ identifier:
   TOKEN				{ $$ = cb_text_list_add (NULL, $1); }
 | identifier IN TOKEN
   {
-    $$ = cb_text_list_add ($1, " ");
-    $$ = cb_text_list_add ($$, "IN");
-    $$ = cb_text_list_add ($$, " ");
-    $$ = cb_text_list_add ($$, $3);
+	$$ = cb_text_list_add ($1, " ");
+	$$ = cb_text_list_add ($$, "IN");
+	$$ = cb_text_list_add ($$, " ");
+	$$ = cb_text_list_add ($$, $3);
   }
 | identifier OF TOKEN
   {
-    $$ = cb_text_list_add ($1, " ");
-    $$ = cb_text_list_add ($$, "OF");
-    $$ = cb_text_list_add ($$, " ");
-    $$ = cb_text_list_add ($$, $3);
+	$$ = cb_text_list_add ($1, " ");
+	$$ = cb_text_list_add ($$, "OF");
+	$$ = cb_text_list_add ($$, " ");
+	$$ = cb_text_list_add ($$, $3);
   }
 | identifier '(' subscripts ')'
   {
-    struct cb_text_list *l;
-    $$ = cb_text_list_add ($1, " ");
-    $$ = cb_text_list_add ($$, "(");
-    $3 = cb_text_list_add ($3, ")");
-    for (l = $$; l->next; l = l->next);
-    l->next = $3;
+	struct cb_text_list *l;
+
+	$$ = cb_text_list_add ($1, " ");
+	$$ = cb_text_list_add ($$, "(");
+	$3 = cb_text_list_add ($3, ")");
+	for (l = $$; l->next; l = l->next);
+	l->next = $3;
   }
 ;
 
@@ -152,8 +154,8 @@ subscripts:
   TOKEN				{ $$ = cb_text_list_add (NULL, $1); }
 | subscripts TOKEN
   {
-    $$ = cb_text_list_add ($1, " ");
-    $$ = cb_text_list_add ($$, $2);
+	$$ = cb_text_list_add ($1, " ");
+	$$ = cb_text_list_add ($$, $2);
   }
 ;
 

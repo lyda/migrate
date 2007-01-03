@@ -329,7 +329,7 @@ extern void cob_display_env_value (cob_field *f);
 extern void cob_display_arg_number (cob_field *f);
 extern void cob_accept_arg_number (cob_field *f);
 extern void cob_accept_arg_value (cob_field *f);
-extern void cob_chain_setup (void *data, const int parm, const int size);
+extern void cob_chain_setup (void *data, const size_t parm, const size_t size);
 extern void cob_allocate (unsigned char **dataptr, cob_field *retptr, cob_field *sizefld);
 extern void cob_free_alloc (unsigned char **ptr1, unsigned char *ptr2);
 

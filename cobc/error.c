@@ -55,6 +55,15 @@ print_error (char *file, int line, const char *prefix, const char *fmt, va_list 
 	fputs ("\n", stderr);
 }
 
+char *
+check_filler_name (char *name)
+{
+	if (!memcmp (name, "WORK$", 5)) {
+		name = (char *)"FILLER";
+	}
+	return name;
+}
+
 void
 cb_warning (const char *fmt, ...)
 {
@@ -230,26 +239,26 @@ ambiguous_error (cb_tree x)
 void
 group_error (cb_tree x, const char *clause)
 {
-	cb_error_x (x, _("Group item '%s' cannot have %s clause"), cb_name (x), clause);
+	cb_error_x (x, _("Group item '%s' cannot have %s clause"), check_filler_name (cb_name (x)), clause);
 }
 
 void
 level_redundant_error (cb_tree x, const char *clause)
 {
 	cb_error_x (x, _("Level %02d item '%s' cannot have %s clause"),
-		    cb_field (x)->level, cb_name (x), clause);
+		    cb_field (x)->level, check_filler_name (cb_name (x)), clause);
 }
 
 void
 level_require_error (cb_tree x, const char *clause)
 {
 	cb_error_x (x, _("Level %02d item '%s' requires %s clause"),
-		    cb_field (x)->level, cb_name (x), clause);
+		    cb_field (x)->level, check_filler_name (cb_name (x)), clause);
 }
 
 void
 level_except_error (cb_tree x, const char *clause)
 {
 	cb_error_x (x, _("Level %02d item '%s' cannot have other than %s clause"),
-		    cb_field (x)->level, cb_name (x), clause);
+		    cb_field (x)->level, check_filler_name (cb_name (x)), clause);
 }

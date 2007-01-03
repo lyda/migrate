@@ -63,9 +63,10 @@ store_common_region (cob_field *f, const unsigned char *data,
 	lcf = cob_max_int (lf1, lf2);
 	gcf = cob_min_int (hf1, hf2);
 	if (gcf > lcf) {
-		own_memset (COB_FIELD_DATA (f), '0', hf2 - gcf);
-		own_memcpy (COB_FIELD_DATA (f) + hf2 - gcf, data + hf1 - gcf, gcf - lcf);
-		own_memset (COB_FIELD_DATA (f) + hf2 - lcf, '0', lcf - lf2);
+		own_memset (COB_FIELD_DATA (f), '0', (size_t)(hf2 - gcf));
+		own_memcpy (COB_FIELD_DATA (f) + hf2 - gcf, data + hf1 - gcf,
+				(size_t)(gcf - lcf));
+		own_memset (COB_FIELD_DATA (f) + hf2 - lcf, '0', (size_t)(lcf - lf2));
 	} else {
 		own_memset (f->data, '0', f->size);
 	}
@@ -437,16 +438,6 @@ cob_move_binary_to_display (cob_field *f1, cob_field *f2)
 /*
  * Edited
  */
-
-/* Can not use for non-gcc
-#define get()								\
-  ({									\
-    char _x = ((min <= src && src < max) ? *src++ : (src++, '0'));	\
-    if (_x != '0')							\
-      is_zero = suppress_zero = 0;					\
-    _x;									\
-  })
-*/
 
 static void
 cob_move_display_to_edited (cob_field *f1, cob_field *f2)
@@ -850,7 +841,7 @@ cob_move_all (cob_field *src, cob_field *dst)
 	temp.data = data;
 	temp.attr = &attr;
 	if (likely(src->size == 1)) {
-		own_memset (data, src->data[0], digcount);
+		own_memset (data, src->data[0], (size_t)digcount);
 	} else {
 		for (i = 0; i < digcount; i++) {
 			data[i] = src->data[i % src->size];
@@ -992,6 +983,30 @@ cob_move (cob_field *src, cob_field *dst)
  */
 
 static int
+cob_packed_get_int (cob_field *f1)
+{
+	size_t		i;
+	size_t		offset;
+	int		val = 0;
+	int		sign = cob_get_sign (f1);
+	unsigned char	*data = f1->data;
+
+	offset = 1 - (f1->attr->digits % 2);
+	for (i = offset; i < f1->attr->digits + offset; i++) {
+		val *= 10;
+		if (i % 2 == 0) {
+			val += data[i / 2] >> 4;
+		} else {
+			val += data[i / 2] & 0x0f;
+		}
+	}
+	if (sign < 0) {
+		val = -val;
+	}
+	return val;
+}
+
+static int
 cob_display_get_int (cob_field *f)
 {
 	size_t		i;
@@ -1096,12 +1111,15 @@ void
 cob_binary_set_int64 (cob_field *f, long long n)
 {
 #ifndef WORDS_BIGENDIAN
+	unsigned char	*s;
+
 	if (COB_FIELD_BINARY_SWAP (f)) {
 		n = COB_BSWAP_64 (n);
-		own_byte_memcpy (f->data, ((unsigned char *)&n) + 8 - f->size, f->size);
+		s = ((unsigned char *)&n) + 8 - f->size;
 	} else {
-		own_byte_memcpy (f->data, (unsigned char *)&n, f->size);
+		s = (unsigned char *)&n;
 	}
+	own_byte_memcpy (f->data, s, f->size);
 #else	/* WORDS_BIGENDIAN */
 	own_byte_memcpy (f->data, ((unsigned char *)&n) + 8 - f->size, f->size);
 #endif	/* WORDS_BIGENDIAN */
@@ -1127,6 +1145,8 @@ cob_get_int (cob_field *f)
 		return cob_display_get_int (f);
 	case COB_TYPE_NUMERIC_BINARY:
 		return cob_binary_get_int (f);
+	case COB_TYPE_NUMERIC_PACKED:
+		return cob_packed_get_int (f);
 	default:
 	{
 		int		n;

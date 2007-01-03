@@ -396,6 +396,11 @@ cb_fits_int (cb_tree x)
 				return 1;
 			}
 			return 0;
+		case CB_USAGE_PACKED:
+			if (f->pic->scale <= 0 && f->pic->digits < 10) {
+				return 1;
+			}
+			return 0;
 		default:
 			return 0;
 		}
@@ -699,7 +704,7 @@ cb_build_picture (const char *str)
 	    make_tree (CB_TAG_PICTURE, CB_CATEGORY_UNKNOWN, sizeof (struct cb_picture));
 	const char	*p;
 	char		category = 0;
-	int		idx = 0;
+	size_t		idx = 0;
 	int		size = 0;
 	int		digits = 0;
 	int		scale = 0;
@@ -1241,10 +1246,13 @@ cb_tree
 cb_build_filler (void)
 {
 	static int	id = 1;
+	cb_tree		x;
 	char		name[32];
 
 	sprintf (name, "WORK$%d", id++);
-	return cb_build_reference (name);
+	x = cb_build_reference (name);
+	x->source_line = cb_source_line;
+	return x;
 }
 
 cb_tree
@@ -1887,12 +1895,14 @@ cb_build_intrinsic (cb_tree name, cb_tree args)
 		case CB_INTR_LOWER_CASE:
 		case CB_INTR_UPPER_CASE:
 		case CB_INTR_REVERSE:
+/* RXW Why did I do this ?
 			if (CB_INTRINSIC_P (CB_VALUE (args))) {
 				return make_intrinsic (name, cbp, args, cb_int0);
 			} else {
 				return make_intrinsic (name, cbp, args,
 						       cb_build_length (CB_VALUE (args)));
 			}
+RXW */
 
 		case CB_INTR_ABS:
 		case CB_INTR_ACOS:
@@ -1930,6 +1940,7 @@ cb_build_intrinsic (cb_tree name, cb_tree args)
 		case CB_INTR_TAN:
 		case CB_INTR_TEST_DATE_YYYYMMDD:
 		case CB_INTR_TEST_DAY_YYYYDDD:
+		case CB_INTR_TRIM:
 			return make_intrinsic (name, cbp, args, NULL);
 
 		case CB_INTR_DATE_TO_YYYYMMDD:

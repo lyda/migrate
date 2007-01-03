@@ -763,6 +763,26 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
+AT_SETUP([FUNCTION NUMVAL-C])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC   X(14) VALUE " % -9876.1234 ".
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION NUMVAL-C ( X , "%" ).
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[-00000000009876.1234
+])
+
+AT_CLEANUP
+
 AT_SETUP([FUNCTION ORD])
 
 AT_DATA([prog.cob], [
@@ -1046,6 +1066,48 @@ AT_DATA([prog.cob], [
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0],
 [OK
+])
+
+AT_CLEANUP
+
+AT_SETUP([FUNCTION TRIM])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC   X(12) VALUE " a#b.c%d+e$ ".
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION TRIM ( X ).
+           DISPLAY FUNCTION TRIM ( X TRAILING ).
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[a#b.c%d+e$
+ a#b.c%d+e$
+])
+
+AT_CLEANUP
+
+AT_SETUP([FUNCTION UPPER-CASE])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC   X(10) VALUE "a#b.c%d+e$".
+       PROCEDURE        DIVISION.
+           DISPLAY FUNCTION UPPER-CASE ( X ).
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[A#B.C%D+E$
 ])
 
 AT_CLEANUP

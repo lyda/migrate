@@ -45,9 +45,9 @@ struct cb_level_78 {
 };
 
 static struct cb_level_78	*lev78ptr = NULL;
-static int last_token_is_dot = 0;
-static int integer_is_label = 0;
-static int inside_bracket = 0;
+static int			last_token_is_dot = 0;
+static int			integer_is_label = 0;
+static int			inside_bracket = 0;
 
 static int read_literal (char mark);
 static int scan_x (char *text);
@@ -63,22 +63,21 @@ static void count_lines (char *text);
 
 %%
 %{
-  if (current_program)
-    {
-      if (current_program->decimal_point == '.')
-	BEGIN DECIMAL_IS_PERIOD;
-      else
-	BEGIN DECIMAL_IS_COMMA;
-    }
+	if (current_program) {
+		if (current_program->decimal_point == '.') {
+			BEGIN DECIMAL_IS_PERIOD;
+		} else {
+			BEGIN DECIMAL_IS_COMMA;
+		}
+	}
 
-  /* We treat integer literals immediately after '.' as labels;
-     that is, they must be level numbers or section names. */
-  integer_is_label = 0;
-  if (last_token_is_dot)
-    {
-      integer_is_label = 1;
-      last_token_is_dot = 0;
-    }
+	/* We treat integer literals immediately after '.' as labels;
+	   that is, they must be level numbers or section names. */
+	integer_is_label = 0;
+	if (last_token_is_dot) {
+		integer_is_label = 1;
+		last_token_is_dot = 0;
+	}
 %}
 
 
@@ -91,11 +90,12 @@ static void count_lines (char *text);
 <*>\n		{ cb_source_line++; }
 
 ^"#".* {
-  /* line directive */
-  char *endp;
-  cb_source_line = strtol (yytext + 2, &endp, 10) - 1;
-  cb_source_file = strdup (strchr (endp, '"') + 1);
-  strrchr (cb_source_file, '"')[0] = '\0';
+	/* line directive */
+	char *endp;
+
+	cb_source_line = strtol (yytext + 2, &endp, 10) - 1;
+	cb_source_file = strdup (strchr (endp, '"') + 1);
+	strrchr (cb_source_file, '"')[0] = '\0';
 }
 
 "PIC" |
@@ -103,14 +103,14 @@ static void count_lines (char *text);
 "FUNCTION"	{ BEGIN FUNCTION_STATE; }
 
 [\'\"] {
-  /* string literal */
-  return read_literal (yytext[0]);
+	/* string literal */
+	return read_literal (yytext[0]);
 }
 
 X\'[^\'\n]*\' |
 X\"[^\"\n]*\" {
-  /* X string literal */
-  return scan_x (yytext + 2);
+	/* X string literal */
+	return scan_x (yytext + 2);
 }
 
 "("	{ inside_bracket++; return '('; }
@@ -118,34 +118,31 @@ X\"[^\"\n]*\" {
 ")"	{ inside_bracket--; return ')'; }
 
 [0-9]+ {
-  if (integer_is_label)
-    {
-      /* integer label */
-      yylval = cb_build_reference (yytext);
-      SET_LOCATION (yylval);
-      return WORD;
-    }
-  else
-    {
-      /* numeric literal */
-      return scan_numeric (yytext);
-    }
+	if (integer_is_label) {
+		/* integer label */
+		yylval = cb_build_reference (yytext);
+		SET_LOCATION (yylval);
+		return WORD;
+	} else {
+		/* numeric literal */
+		return scan_numeric (yytext);
+	}
 }
 
 <DECIMAL_IS_PERIOD>[+-]?[0-9.]*[0-9]+ {
-  /* numeric literal */
-  return scan_numeric (yytext);
+	/* numeric literal */
+	return scan_numeric (yytext);
 }
 
 <DECIMAL_IS_COMMA>[+-]?[0-9,]*[0-9]+ {
-  /* numeric literal */
-  return scan_numeric (yytext);
+	/* numeric literal */
+	return scan_numeric (yytext);
 }
 
 H\'[^\'\n]*\' |
 H\"[^\"\n]*\" {
-  /* H numeric literal */
-  return scan_h (yytext + 2);
+	/* H numeric literal */
+	return scan_h (yytext + 2);
 }
 
 "SCREEN"[ \t\n]+"CONTROL" {
@@ -249,86 +246,86 @@ H\"[^\"\n]*\" {
 "IDENTIFICATION"[ ]+"DIVISION"[ ]*"." { /* Ignore */ }
 
 "SWITCH"[ ]+"1" {
-  yylval = cb_build_reference ("SWITCH-1");
-  SET_LOCATION (yylval);
-  return WORD;
+	yylval = cb_build_reference ("SWITCH-1");
+	SET_LOCATION (yylval);
+	return WORD;
 }
 
 "SWITCH"[ ]+"2" {
-  yylval = cb_build_reference ("SWITCH-2");
-  SET_LOCATION (yylval);
-  return WORD;
+	yylval = cb_build_reference ("SWITCH-2");
+	SET_LOCATION (yylval);
+	return WORD;
 }
 
 "SWITCH"[ ]+"3" {
-  yylval = cb_build_reference ("SWITCH-3");
-  SET_LOCATION (yylval);
-  return WORD;
+	yylval = cb_build_reference ("SWITCH-3");
+	SET_LOCATION (yylval);
+	return WORD;
 }
 
 "SWITCH"[ ]+"4" {
-  yylval = cb_build_reference ("SWITCH-4");
-  SET_LOCATION (yylval);
-  return WORD;
+	yylval = cb_build_reference ("SWITCH-4");
+	SET_LOCATION (yylval);
+	return WORD;
 }
 
 "SWITCH"[ ]+"5" {
-  yylval = cb_build_reference ("SWITCH-5");
-  SET_LOCATION (yylval);
-  return WORD;
+	yylval = cb_build_reference ("SWITCH-5");
+	SET_LOCATION (yylval);
+	return WORD;
 }
 
 "SWITCH"[ ]+"6" {
-  yylval = cb_build_reference ("SWITCH-6");
-  SET_LOCATION (yylval);
-  return WORD;
+	yylval = cb_build_reference ("SWITCH-6");
+	SET_LOCATION (yylval);
+	return WORD;
 }
 
 "SWITCH"[ ]+"7" {
-  yylval = cb_build_reference ("SWITCH-7");
-  SET_LOCATION (yylval);
-  return WORD;
+	yylval = cb_build_reference ("SWITCH-7");
+	SET_LOCATION (yylval);
+	return WORD;
 }
 
 "SWITCH"[ ]+"8" {
-  yylval = cb_build_reference ("SWITCH-8");
-  SET_LOCATION (yylval);
-  return WORD;
+	yylval = cb_build_reference ("SWITCH-8");
+	SET_LOCATION (yylval);
+	return WORD;
 }
 
 [A-Z0-9]([_A-Z0-9-]*[A-Z0-9]+)? {
-  int			token;
-  struct cb_word	*word;
-  struct cb_level_78	*p78;
+	int			token;
+	struct cb_word		*word;
+	struct cb_level_78	*p78;
 
-  /* reserved word */
-  token = lookup_reserved_word (yytext);
-  if (token != 0)
-    {
-      yylval = 0;
-      return token;
-    }
-
-  for (p78 = lev78ptr; p78; p78 = p78->next) {
-	if (strcasecmp (yytext, p78->fld78->name) == 0) {
-		yylval = CB_VALUE (p78->fld78->values);
-		return LITERAL;
+	/* reserved word */
+	token = lookup_reserved_word (yytext);
+	if (token != 0) {
+		yylval = 0;
+		return token;
 	}
-  }
-  /* user word */
-  yylval = cb_build_reference (yytext);
-  SET_LOCATION (yylval);
 
-  /* special name handling */
-  word = CB_REFERENCE (yylval)->word;
-  if (word->count > 0)
-    {
-      cb_tree x = CB_VALUE (word->items);
-      if (CB_SYSTEM_NAME_P (x))
-	return MNEMONIC_NAME;
-    }
+	for (p78 = lev78ptr; p78; p78 = p78->next) {
+		if (strcasecmp (yytext, p78->fld78->name) == 0) {
+			yylval = CB_VALUE (p78->fld78->values);
+			return LITERAL;
+		}
+	}
+	/* user word */
+	yylval = cb_build_reference (yytext);
+	SET_LOCATION (yylval);
 
-  return WORD;
+	/* special name handling */
+	word = CB_REFERENCE (yylval)->word;
+	if (word->count > 0) {
+		cb_tree x = CB_VALUE (word->items);
+
+		if (CB_SYSTEM_NAME_P (x)) {
+			return MNEMONIC_NAME;
+		}
+	}
+
+	return WORD;
 }
 
 "<="		{ yylval = 0; return LE; }
@@ -341,17 +338,23 @@ H\"[^\"\n]*\" {
 <PICTURE_STATE>{
   "IS"		{ /* ignore */ }
   [^ \t\n;]+	{
-    BEGIN INITIAL;
-    return scan_picture (yytext);
+	BEGIN INITIAL;
+	return scan_picture (yytext);
   }
 }
 
 <FUNCTION_STATE>{
   [a-z0-9-]+	{
-    BEGIN INITIAL;
-    yylval = cb_build_reference (yytext);
-    SET_LOCATION (yylval);
-    return FUNCTION_NAME;
+	BEGIN INITIAL;
+	yylval = cb_build_reference (yytext);
+	SET_LOCATION (yylval);
+	if (strcasecmp (yytext, "TRIM") == 0) {
+		return TRIM_FUNCTION;
+	}
+	if (strcasecmp (yytext, "NUMVAL-C") == 0) {
+		return NUMVALC_FUNC;
+	}
+	return FUNCTION_NAME;
   }
   .		{ yylval = 0; return yytext[0]; }
 }
@@ -404,12 +407,12 @@ read_literal (char mark)
 static int
 scan_x (char *text)
 {
-	static int		lastlen = 0;
+	static size_t		lastlen = 0;
 	static unsigned char	*buff = NULL;
 
 	unsigned char		*src = (unsigned char *)text;
 	unsigned char		*dst;
-	int			currlen;
+	size_t			currlen;
 	int			high = 1;
 
 	currlen = strlen (text);

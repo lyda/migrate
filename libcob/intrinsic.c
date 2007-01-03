@@ -176,8 +176,8 @@ intr_set_double (cob_decimal *d, double v)
 static double
 intr_get_double (cob_decimal *d)
 {
-	int n = d->scale;
-	double v = mpz_get_d (d->value);
+	int	n = d->scale;
+	double	v = mpz_get_d (d->value);
 
 	for (; n > 0; n--) v /= 10;
 	for (; n < 0; n++) v *= 10;
@@ -316,17 +316,12 @@ cob_intr_sign (cob_field *srcfield)
 }
 
 cob_field *
-cob_intr_upper_case (cob_field *sizefield, cob_field *srcfield)
+cob_intr_upper_case (cob_field *srcfield)
 {
-	int		i, size;
+	size_t		i, size;
 
 	make_field_entry (srcfield);
-	if (sizefield) {
-		size = cob_get_int (sizefield);
-		curr_field->size = size;
-	} else {
-		size = (int) srcfield->size;
-	}
+	size = srcfield->size;
 	for (i = 0; i < size; i++) {
 		curr_field->data[i] = toupper (srcfield->data[i]);
 	}
@@ -334,17 +329,12 @@ cob_intr_upper_case (cob_field *sizefield, cob_field *srcfield)
 }
 
 cob_field *
-cob_intr_lower_case (cob_field *sizefield, cob_field *srcfield)
+cob_intr_lower_case (cob_field *srcfield)
 {
-	int		i, size;
+	size_t		i, size;
 
 	make_field_entry (srcfield);
-	if (sizefield) {
-		size = cob_get_int (sizefield);
-		curr_field->size = size;
-	} else {
-		size = (int) srcfield->size;
-	}
+	size = srcfield->size;
 	for (i = 0; i < size; i++) {
 		curr_field->data[i] = tolower (srcfield->data[i]);
 	}
@@ -352,17 +342,12 @@ cob_intr_lower_case (cob_field *sizefield, cob_field *srcfield)
 }
 
 cob_field *
-cob_intr_reverse (cob_field *sizefield, cob_field *srcfield)
+cob_intr_reverse (cob_field *srcfield)
 {
-	int		i, size;
+	size_t		i, size;
 
 	make_field_entry (srcfield);
-	if (sizefield) {
-		size = cob_get_int (sizefield);
-		curr_field->size = size;
-	} else {
-		size = (int) srcfield->size;
-	}
+	size = srcfield->size;
 	for (i = 0; i < size; i++) {
 		curr_field->data[i] = srcfield->data[size - i - 1];
 	}
@@ -370,9 +355,44 @@ cob_intr_reverse (cob_field *sizefield, cob_field *srcfield)
 }
 
 cob_field *
+cob_intr_trim (cob_field *srcfield, const int direction)
+{
+	int		i;
+	size_t		size = 0;
+	unsigned char	*begin;
+	unsigned char	*end;
+
+	make_field_entry (srcfield);
+	for (i = 0; i < (int)srcfield->size; i++) {
+		if (srcfield->data[i] != ' ') {
+			break;
+		}
+	}
+	if (i == srcfield->size) {
+		curr_field->size = 1;
+		curr_field->data[0] = ' ';
+		return curr_field;
+	}
+	begin = srcfield->data;
+	if (direction != 2) {
+		for (; *begin == ' '; begin++) ;
+	}
+	end = srcfield->data + srcfield->size - 1;
+	if (direction != 1) {
+		for (; *end == ' '; end--) ;
+	}
+	for (i = 0; begin <= end; begin++, i++) {
+		curr_field->data[i] = *begin;
+		size++;
+	}
+	curr_field->size = size;
+	return curr_field;
+}
+
+cob_field *
 cob_intr_exception_file ()
 {
-	int		flen;
+	size_t		flen;
 	cob_field_attr	attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
 	cob_field	field = {0, NULL, &attr};
 
@@ -446,7 +466,7 @@ cob_intr_exception_status ()
 cob_field *
 cob_intr_exception_statement ()
 {
-	int		flen;
+	size_t		flen;
 	cob_field_attr	attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
 	cob_field	field = {31, NULL, &attr};
 
@@ -1171,13 +1191,14 @@ cob_intr_numval (cob_field *srcfield)
 }
 
 cob_field *
-cob_intr_numval_c (cob_field *srcfield)
+cob_intr_numval_c (cob_field *srcfield, cob_field *currency)
 {
 	size_t		i;
 	int		integer_digits = 0;
 	int		decimal_digits = 0;
 	int		sign = 0;
 	int		decimal_seen = 0;
+	unsigned char	*currency_data;
 	long long	llval = 0;
 	double		val;
 	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL};
@@ -1190,12 +1211,27 @@ cob_intr_numval_c (cob_field *srcfield)
 	memset (decimal_buff, 0, sizeof (decimal_buff));
 	memset (final_buff, 0, sizeof (final_buff));
 
+	currency_data = NULL;
+	if (currency) {
+		if (currency->size < srcfield->size) {
+			currency_data = currency->data;
+		}
+	}
 	for (i = 0; i < srcfield->size; i++) {
 		if (i < (srcfield->size - 2)) {
 			if (strcasecmp ((char *)&srcfield->data[i], "CR") == 0
 			     || strcasecmp ((char *)&srcfield->data[i], "DB") == 0) {
 				sign = 1;
 				break;
+			}
+		}
+		if (currency_data) {
+			if (i < (srcfield->size - currency->size)) {
+				if (memcmp ((char *)&srcfield->data[i], currency_data,
+					     currency->size) == 0) {
+					i += (currency->size - 1);
+					continue;
+				}
 			}
 		}
 		if (srcfield->data[i] == ' ') {

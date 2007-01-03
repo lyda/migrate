@@ -39,7 +39,7 @@
 #include "ppparse.h"
 
 static int within_comment = 0;
-static int newline_count = 0;
+static size_t newline_count = 0;
 static int inside_bracket = 0;
 static int quotation_mark = 0;
 static int consecutive_quotation = 0;
@@ -141,42 +141,41 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
 "DATE-COMPILED" |
 "INSTALLATION" |
 "SECURITY" {
-  /* these words are treated as comments */
-  if (cb_verify (cb_author_paragraph, yytext))
-    {
-      /* skip comments until the end of line */
-      int c;
-      within_comment = 1;
-      while ((c = input ()) != EOF)
-	if (c == '\n')
-	  break;
-      unput (c);
-    }
+	/* these words are treated as comments */
+	if (cb_verify (cb_author_paragraph, yytext)) {
+		/* skip comments until the end of line */
+		int c;
+
+		within_comment = 1;
+		while ((c = input ()) != EOF) {
+			if (c == '\n') {
+				break;
+			}
+		}
+		unput (c);
+	}
 }
 
 "EJECT"\.? |
 "SKIP1"\.? |
 "SKIP2"\.? |
 "SKIP3"\.? {
-  /* these words are comments in IBM COBOL */
-  if (cb_verify (cb_eject_statement, yytext))
-    {
-      /* do nothing for now */
-    }
-  else
-    {
-      ECHO;
-    }
+	/* these words are comments in IBM COBOL */
+	if (cb_verify (cb_eject_statement, yytext)) {
+		/* do nothing for now */
+	} else {
+		ECHO;
+	}
 }
 
 [,;]?\n			{ ppecho ("\n"); cb_source_line++; }
 [;]?[ ]+		{ ppecho (" "); }
 [,]?[ ]+ {
-  if (inside_bracket) {
-	ppecho (", ");
-  } else {
-	ppecho (" ");
-  }
+	if (inside_bracket) {
+		ppecho (", ");
+	} else {
+		ppecho (" ");
+	}
 }
 
 "("			{ inside_bracket++; ppecho ("("); }

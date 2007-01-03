@@ -1394,11 +1394,12 @@ cob_accept_time (cob_field *f)
 void
 cob_accept_command_line (cob_field *f)
 {
-	int	i, size = 0;
+	size_t	i, size = 0;
+	size_t	len;
 	char	buff[COB_LARGE_BUFF] = "";
 
 	for (i = 1; i < cob_argc; i++) {
-		int len = (int) strlen (cob_argv[i]);
+		len = strlen (cob_argv[i]);
 		if (size + len >= COB_LARGE_BUFF) {
 			/* overflow */
 			break;
@@ -1524,9 +1525,9 @@ cob_accept_environment (cob_field *f)
 }
 
 void
-cob_chain_setup (void *data, const int parm, const int size)
+cob_chain_setup (void *data, const size_t parm, const size_t size)
 {
-	int	len;
+	size_t	len;
 
 	memset (data, ' ', size);
 	if (parm <= cob_argc - 1) {
@@ -1699,7 +1700,7 @@ SYSTEM (unsigned char *cmd)
 		}
 		if (i >= 0) {
 			memset (buff, 0, sizeof (buff));
-			memcpy (buff, cmd, i + 1);
+			memcpy (buff, cmd, (size_t)(i + 1));
 			return (system (buff));
 		}
 	}

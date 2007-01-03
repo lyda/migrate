@@ -309,7 +309,7 @@ cob_decimal_get_display (cob_decimal *d, cob_field *f, const int opt)
 		own_memcpy (data, buff - diff, COB_FIELD_SIZE (f));
 	} else {
 		/* no overflow */
-		own_memset (data, '0', diff);
+		own_memset (data, '0', (size_t)diff);
 		own_memcpy (data + diff, buff, size);
 	}
 
@@ -1336,8 +1336,93 @@ cob_cmp_numdisp (const unsigned char *data, const size_t size, const int n)
 	return 0;
 }
 
+int
+cob_cmp_long_numdisp (const unsigned char *data, const size_t size, const int n)
+{
+	long long		val = 0;
+	size_t			inc;
+	const unsigned char	*p;
+
+	p = data;
+	for (inc = 0; inc < size; inc++, p++) {
+		val = (val * 10) + (*p - (unsigned char)'0');
+	}
+	if (val < n) {
+		return -1;
+	} else if (val > n) {
+		return 1;
+	}
+	return 0;
+}
+
 static int
 cob_get_ebcdic_sign (const unsigned char *p, int *val)
+{
+	switch (*p) {
+	case '{':
+		return 0;
+	case 'A':
+		*val += 1;
+		return 0;
+	case 'B':
+		*val += 2;
+		return 0;
+	case 'C':
+		*val += 3;
+		return 0;
+	case 'D':
+		*val += 4;
+		return 0;
+	case 'E':
+		*val += 5;
+		return 0;
+	case 'F':
+		*val += 6;
+		return 0;
+	case 'G':
+		*val += 7;
+		return 0;
+	case 'H':
+		*val += 8;
+		return 0;
+	case 'I':
+		*val += 9;
+		return 0;
+	case '}':
+		return 1;
+	case 'J':
+		*val += 1;
+		return 1;
+	case 'K':
+		*val += 2;
+		return 1;
+	case 'L':
+		*val += 3;
+		return 1;
+	case 'M':
+		*val += 4;
+		return 1;
+	case 'N':
+		*val += 5;
+		return 1;
+	case 'O':
+		*val += 6;
+		return 1;
+	case 'P':
+		*val += 7;
+		return 1;
+	case 'Q':
+		*val += 8;
+		return 1;
+	case 'R':
+		*val += 9;
+		return 1;
+	}
+	return 0;
+}
+
+static int
+cob_get_long_ebcdic_sign (const unsigned char *p, long long *val)
 {
 	switch (*p) {
 	case '{':
@@ -1424,6 +1509,52 @@ cob_cmp_sign_numdisp (const unsigned char *data, const size_t size, const int n)
 			break;
 		case COB_DISPLAY_SIGN_EBCDIC:
 			if (cob_get_ebcdic_sign (p, &val)) {
+				val = -val;
+			}
+			break;
+		case COB_DISPLAY_SIGN_ASCII10:
+			val += (*p - (unsigned char)'@');
+			val = -val;
+			break;
+		case COB_DISPLAY_SIGN_ASCII20:
+			val += (*p - (unsigned char)'P');
+			val = -val;
+			break;
+		default:
+			val = -val;
+			break;
+		}
+	}
+	if (val < n) {
+		return -1;
+	} else if (val > n) {
+		return 1;
+	}
+	return 0;
+}
+
+int
+cob_cmp_long_sign_numdisp (const unsigned char *data, const size_t size, const int n)
+{
+	long long		val = 0;
+	size_t			inc;
+	const unsigned char	*p;
+
+	p = data;
+	for (inc = 0; inc < size - 1; inc++, p++) {
+		val = (val * 10) + (*p - (unsigned char)'0');
+	}
+	val *= 10;
+	if (*p >= '0' && *p <= '9') {
+		val += (*p - (unsigned char)'0');
+	} else {
+		switch (cob_current_module->display_sign) {
+		case COB_DISPLAY_SIGN_ASCII:
+			val += (*p - (unsigned char)'p');
+			val = -val;
+			break;
+		case COB_DISPLAY_SIGN_EBCDIC:
+			if (cob_get_long_ebcdic_sign (p, &val)) {
 				val = -val;
 			}
 			break;

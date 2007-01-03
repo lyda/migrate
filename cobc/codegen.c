@@ -74,10 +74,10 @@ static struct label_list {
 static struct attr_list {
 	struct attr_list	*next;
 	int			id;
-	char			type;
-	char			digits;
-	char			scale;
-	char			flags;
+	int			type;
+	int			digits;
+	int			scale;
+	int			flags;
 	unsigned char		*pic;
 } *attr_cache = NULL;
 
@@ -449,7 +449,7 @@ again:
 }
 
 static int
-lookup_attr (char type, char digits, char scale, char flags, unsigned char *pic)
+lookup_attr (int type, int digits, int scale, int flags, unsigned char *pic)
 {
 	struct attr_list *l;
 
@@ -497,12 +497,12 @@ output_attr (cb_tree x)
 				flags = COB_FLAG_HAVE_SIGN | COB_FLAG_SIGN_SEPARATE;
 			}
 			id = lookup_attr (COB_TYPE_NUMERIC_DISPLAY,
-					  l->size, l->scale, flags, 0);
+					  l->size, l->scale, flags, NULL);
 		} else {
 			if (l->all) {
-				id = lookup_attr (COB_TYPE_ALPHANUMERIC_ALL, 0, 0, 0, 0);
+				id = lookup_attr (COB_TYPE_ALPHANUMERIC_ALL, 0, 0, 0, NULL);
 			} else {
-				id = lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, 0);
+				id = lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
 			}
 		}
 		break;
@@ -515,15 +515,15 @@ output_attr (cb_tree x)
 		char			flags = 0;
 
 		if (r->offset) {
-			id = lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, 0);
+			id = lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
 		} else {
 			switch (type) {
 			case COB_TYPE_GROUP:
 			case COB_TYPE_ALPHANUMERIC:
 				if (f->flag_justified) {
-					id = lookup_attr (type, 0, 0, COB_FLAG_JUSTIFIED, 0);
+					id = lookup_attr (type, 0, 0, COB_FLAG_JUSTIFIED, NULL);
 				} else {
-					id = lookup_attr (type, 0, 0, 0, 0);
+					id = lookup_attr (type, 0, 0, 0, NULL);
 				}
 				break;
 			default:
@@ -556,7 +556,7 @@ output_attr (cb_tree x)
 		}
 		break;
 	case CB_TAG_ALPHABET_NAME:
-		id = lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, 0);
+		id = lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
 		break;
 	}
 	default:
@@ -1086,10 +1086,6 @@ output_param (cb_tree x, int id)
 			output_param (CB_VALUE (l), id);
 			id++;
 			param_id++;
-			/* Hack until sorted out */
-			if (i->intr_tab->intr_enum == CB_INTR_NUMVAL_C) {
-				break;
-			}
 			if (CB_CHAIN (l)) {
 				output (", ");
 			}
@@ -1534,7 +1530,7 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
 			}
 			l = CB_LITERAL (value);
 			if ((int)l->size >= (int)f->size) {
-				memcpy (buff, l->data, f->size);
+				memcpy (buff, l->data, (size_t)f->size);
 			} else {
 				memcpy (buff, l->data, l->size);
 				memset (buff + l->size, ' ', f->size - l->size);
@@ -3693,7 +3689,7 @@ codegen (struct cb_program *prog, int nested)
 	output ("/* end function stuff */\n\n");
 
 	if (gen_native || gen_full_ebcdic || prog->alphabet_name_list) {
-		(void)lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, 0);
+		(void)lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
 	}
 	output_target = cb_storage_file;
 	if (attr_cache) {
@@ -3778,7 +3774,7 @@ codegen (struct cb_program *prog, int nested)
 			output ("cob_field f%d;\n", i);
 		}
 	}
-	i = lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, 0);
+	i = lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
 	if (gen_ebcdic) {
 		output_storage ("/* EBCDIC translate table */\n");
 		output ("static const unsigned char\tcob_a2e[256] = {\n");

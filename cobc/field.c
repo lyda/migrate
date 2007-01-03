@@ -328,7 +328,8 @@ validate_field_1 (struct cb_field *f)
 			if (p->flag_occurs) {
 				cb_error_x (CB_TREE (p),
 					    _("'%s' cannot have the OCCURS clause due to '%s'"),
-					    p->name, name);
+					    check_filler_name ((char *)p->name),
+					    check_filler_name (name));
 				break;
 			}
 		}
@@ -341,7 +342,7 @@ validate_field_1 (struct cb_field *f)
 					if (!p->sister->redefines) {
 						cb_error_x (x,
 							    _("'%s' cannot have OCCURS DEPENDING"),
-							    name);
+							    check_filler_name (name));
 						break;
 					}
 				}
