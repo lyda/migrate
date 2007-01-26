@@ -16,7 +16,8 @@
 
 This file documents OpenCOBOL, a COBOL compiler
 
-Copyright @copyright{} 2002, 2003, 2004, 2005, 2006 Keisuke Nishida
+Copyright @copyright{} 2002-2007 Keisuke Nishida
+Copyright @copyright{} 2007 Roger While
 
 Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -51,7 +52,8 @@ Edition @value{EDITION} @*
 Updated for OpenCOBOL @value{VERSION} @*
 @value{UPDATED} @*
 
-Copyright @copyright{} 2002, 2003, 2004, 2005, 2006 Keisuke Nishida
+Copyright @copyright{} 2002-2007 Keisuke Nishida
+Copyright @copyright{} 2007 Roger While
 
 Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -230,21 +232,18 @@ The output is saved in file @file{*.o}.
 Compile, assemble, and build a dynamically loadable module (i.e.,
 a shared library).  The output is saved in file @file{*.so}.
 @footnote{The extension varies depending on your host.}.
-@end table
 
-Without any options above, the compiler tries to build an executable.
-
-When you build an executable, the compiler implicitly gives the option
-`-fmain', which includes a main function in the output file.
-
-@table @code
-@item -fmain
+@item -x
 Include the main function in the output.
 
 This option takes effect at the translation stage.
 If you give this option with @code{-C}, you will see the main
 function at the end of the generated C file.
+
 @end table
+
+Without any options above, the compiler tries to build a
+dynamically loadable module.
 
 @node Source Format, Warning Options, Built Target, Compiler Options
 @subsection Source Format
@@ -313,12 +312,12 @@ $ cobc -x -o prog main.cob subr1.cob subr2.cob
 
 Another way is to compile each file with the option @code{-c},
 and link them at the end.
-The top-level program must be compiled with the option @code{-fmain}:
+The top-level program must be compiled with the option @code{-x}:
 
 @example
 $ cobc -c subr1.cob
 $ cobc -c subr2.cob
-$ cobc -c -fmain main.cob
+$ cobc -c -x main.cob
 $ cobc -x -o prog main.o subr1.o subr2.o
 @end example
 
@@ -332,7 +331,7 @@ $ cobc -o prog main.cob subrs.c
 Method 2:
 @example
 $ cc -c subrs.c
-$ cobc -c -fmain main.cob
+$ cobc -c -x main.cob
 $ cobc -x -o prog main.o subrs.o
 @end example
 
@@ -676,7 +675,7 @@ Compile these programs as follows:
 
 @example
 $ cc -c say.c
-$ cobc -c -static -fmain hello.cob
+$ cobc -c -static -x hello.cob
 $ cobc -x -o hello hello.o say.o
 $ ./hello
 Hello World!

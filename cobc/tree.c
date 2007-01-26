@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2001-2006 Keisuke Nishida
+ * Copyright (C) 2001-2007 Keisuke Nishida
+ * Copyright (C) 2007 Roger While
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1147,6 +1148,10 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 	cb_tree		x;
 	char		buff[CB_MAX_CNAME];
 
+	if (f->special) {
+		f->organization = COB_ORG_LINE_SEQUENTIAL;
+	}
+
 	/* check the record size if it is limited */
 	for (p = records; p; p = p->sister) {
 		if (f->record_min > 0) {
@@ -1879,6 +1884,7 @@ cb_build_intrinsic (cb_tree name, cb_tree args)
 		/* cb_tree      x; */
 		switch (cbp->intr_enum) {
 		case CB_INTR_LENGTH:
+		case CB_INTR_BYTE_LENGTH:
 			if (CB_INTRINSIC_P (CB_VALUE (args))) {
 				return make_intrinsic (name, cbp, args, NULL);
 			} else {
@@ -1933,6 +1939,8 @@ RXW */
 		case CB_INTR_NUMVAL_C:
 		case CB_INTR_ORD:
 		case CB_INTR_REM:
+		case CB_INTR_SECONDS_FROM_FORMATTED_TIME:
+		case CB_INTR_SECONDS_PAST_MIDNIGHT:
 		case CB_INTR_SIGN:
 		case CB_INTR_SIN:
 		case CB_INTR_SQRT:

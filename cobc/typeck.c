@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2001-2006 Keisuke Nishida
+ * Copyright (C) 2001-2007 Keisuke Nishida
+ * Copyright (C) 2007 Roger While
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -478,7 +479,7 @@ cb_build_section_name (cb_tree name, int sect_or_para)
 }
 
 cb_tree
-cb_build_assignment_name (cb_tree name)
+cb_build_assignment_name (struct cb_file *cfile, cb_tree name)
 {
 	const char	*s;
 	const char	*p;
@@ -489,9 +490,18 @@ cb_build_assignment_name (cb_tree name)
 
 	switch (CB_TREE_TAG (name)) {
 	case CB_TAG_LITERAL:
+		if (strcmp ((char *)(CB_LITERAL(name)->data), "$#@DUMMY@#$") == 0) {
+			cfile->special = 2;
+		}
 		return name;
 
 	case CB_TAG_REFERENCE:
+		s = CB_REFERENCE (name)->word->name;
+		if (strcasecmp (s, "KEYBOARD") == 0) {
+			s = "#DUMMY#";
+			cfile->special = 1;
+			return cb_build_alphanumeric_literal ((ucharptr)s, strlen (s));
+		}
 		switch (cb_assign_clause) {
 		case CB_ASSIGN_COBOL2002:
 			/* TODO */
@@ -503,7 +513,6 @@ cb_build_assignment_name (cb_tree name)
 			return name;
 
 		case CB_ASSIGN_IBM:
-			s = CB_REFERENCE (name)->word->name;
 			/* check organization */
 			if (strncmp (s, "S-", 2) == 0 ||
 			    strncmp (s, "AS-", 3) == 0) {
@@ -834,6 +843,9 @@ cb_validate_program_data (struct cb_program *prog)
 	if (cb_assign_clause == CB_ASSIGN_MF) {
 		for (l = current_program->file_list; l; l = CB_CHAIN (l)) {
 			assign = CB_FILE (CB_VALUE (l))->assign;
+			if (!assign) {
+				continue;
+			}
 			if (CB_REFERENCE_P (assign)) {
 				for (x = current_program->file_list; x; x = CB_CHAIN (x)) {
 					if (!strcmp (CB_FILE (CB_VALUE (x))->name,
@@ -1295,6 +1307,9 @@ cb_build_expr (cb_tree list)
 			break;
 		case 'N': /* NEGATIVE */
 			cb_expr_shift_sign ('<');
+			break;
+		case 'O': /* OMITTED */
+			cb_expr_shift_class ("cob_is_omitted");
 			break;
 		default:
 			cb_expr_shift (op, CB_VALUE (l));
@@ -2226,6 +2241,10 @@ cb_emit_close (cb_tree file, cb_tree opt)
 	if (file != cb_error_node) {
 		file = cb_ref (file);
 		current_statement->file = file;
+		if (CB_FILE (file)->organization == COB_ORG_SORT) {
+			cb_error_x (CB_TREE (current_statement),
+			_("Operation not allowed on SORT files"));
+		}
 		cb_emit (cb_build_funcall_3 ("cob_close", file, opt, CB_FILE(file)->file_status));
 	}
 }
@@ -2250,6 +2269,10 @@ cb_emit_delete (cb_tree file)
 	if (file != cb_error_node) {
 		file = cb_ref (file);
 		current_statement->file = file;
+		if (CB_FILE (file)->organization == COB_ORG_SORT) {
+			cb_error_x (CB_TREE (current_statement),
+			_("Operation not allowed on SORT files"));
+		}
 		cb_emit (cb_build_funcall_2 ("cob_delete", file, CB_FILE(file)->file_status));
 	}
 }
@@ -3698,6 +3721,10 @@ cb_emit_open (cb_tree file, cb_tree mode, cb_tree sharing)
 		file = cb_ref (file);
 		current_statement->file = file;
 
+		if (CB_FILE (file)->organization == COB_ORG_SORT) {
+			cb_error_x (CB_TREE (current_statement),
+			_("Operation not allowed on SORT files"));
+		}
 		if (sharing == NULL) {
 			sharing = CB_FILE (file)->sharing ? CB_FILE (file)->sharing : cb_int0;
 		}
@@ -3783,6 +3810,10 @@ cb_emit_read (cb_tree ref, cb_tree next, cb_tree into, cb_tree key, cb_tree lock
 		cb_tree file = cb_ref (ref);
 		cb_tree rec = cb_build_field_reference (CB_FILE (file)->record, ref);
 
+		if (CB_FILE (file)->organization == COB_ORG_SORT) {
+			cb_error_x (CB_TREE (current_statement),
+			_("Operation not allowed on SORT files"));
+		}
 		if (next == cb_int1 || next == cb_int2 ||
 		    CB_FILE (file)->access_mode == COB_ACCESS_SEQUENTIAL) {
 			/* READ NEXT/PREVIOUS */
@@ -3825,12 +3856,35 @@ cb_emit_rewrite (cb_tree record, cb_tree from)
 		cb_tree file = CB_TREE (CB_FIELD (cb_ref (record))->file);
 
 		current_statement->file = file;
+		if (CB_FILE (file)->organization == COB_ORG_SORT) {
+			cb_error_x (CB_TREE (current_statement),
+			_("Operation not allowed on SORT files"));
+		}
 		if (from) {
 			cb_emit (cb_build_move (from, record));
 		}
 		cb_emit (cb_build_funcall_3 ("cob_rewrite", file, record,
 				CB_FILE(file)->file_status));
 	}
+}
+
+/*
+ * RELEASE statement
+ */
+
+void
+cb_emit_release (cb_tree record, cb_tree from)
+{
+	struct cb_field	*f;
+	cb_tree		file;
+
+	f = CB_FIELD (cb_ref (record));
+	file = CB_TREE (f->file);
+	current_statement->file = file;
+	if (from) {
+		cb_emit (cb_build_move (from, record));
+	}
+	cb_emit (cb_build_funcall_1 ("cob_file_release", file));
 }
 
 /*
@@ -3843,8 +3897,7 @@ cb_emit_return (cb_tree ref, cb_tree into)
 	cb_tree file = cb_ref (ref);
 	cb_tree rec = cb_build_field_reference (CB_FILE (file)->record, ref);
 
-	cb_emit (cb_build_funcall_4 ("cob_read", file, cb_int0, NULL,
-		 cb_int (COB_READ_NEXT)));
+	cb_emit (cb_build_funcall_1 ("cob_file_return", file));
 	if (into) {
 		cb_emit (cb_build_move (rec, into));
 	}
@@ -4119,16 +4172,17 @@ cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree dup_allow, cb_tree col)
 	}
 
 	if (CB_FILE_P (cb_ref (name))) {
-#if	defined(WITH_DB) || defined(WITH_CISAM) || defined(WITH_VBISAM)
-		cb_emit (cb_build_funcall_3 ("cob_sort_init", cb_ref (name),
+		if (CB_FILE (cb_ref (name))->organization != COB_ORG_SORT) {
+			cb_error_x (name, _("Illegal SORT filename"));
+		}
+		cb_emit (cb_build_funcall_3 ("cob_file_sort_init", cb_ref (name),
 					     cb_int (cb_list_length (keys)), col));
 		for (l = keys; l; l = CB_CHAIN (l)) {
-			cb_emit (cb_build_funcall_3 ("cob_sort_init_key", cb_ref (name),
-						     CB_PURPOSE (l), CB_VALUE (l)));
+			cb_emit (cb_build_funcall_4 ("cob_file_sort_init_key", cb_ref (name),
+					CB_PURPOSE (l),
+					CB_VALUE (l),
+					cb_int(cb_field(CB_VALUE(l))->offset)));
 		}
-#else
-		cb_error_x (name, _("SORT invalid - DB not configured"));
-#endif
 	} else {
 		struct cb_field *f = CB_FIELD (cb_ref (name));
 
@@ -4137,8 +4191,10 @@ cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree dup_allow, cb_tree col)
 		}
 		cb_emit (cb_build_funcall_2 ("cob_table_sort_init", cb_int (cb_list_length (keys)), col));
 		for (l = keys; l; l = CB_CHAIN (l)) {
-			cb_emit (cb_build_funcall_2 ("cob_table_sort_init_key",
-						     CB_PURPOSE (l), CB_VALUE (l)));
+			cb_emit (cb_build_funcall_3 ("cob_table_sort_init_key",
+					CB_PURPOSE (l),
+					CB_VALUE (l),
+					cb_int(cb_field(CB_VALUE(l))->offset)));
 		}
 		cb_emit (cb_build_funcall_2 ("cob_table_sort", name,
 					     (f->occurs_depending
@@ -4150,45 +4206,49 @@ cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree dup_allow, cb_tree col)
 void
 cb_emit_sort_using (cb_tree file, cb_tree l)
 {
-	cb_emit (cb_build_funcall_4 ("cob_open", cb_ref (file), cb_int (COB_OPEN_OUTPUT), cb_int0, NULL));
 	for (; l; l = CB_CHAIN (l)) {
-		cb_emit (cb_build_funcall_2 ("cob_sort_using", cb_ref (file), cb_ref (CB_VALUE (l))));
+		if (CB_FILE (cb_ref(CB_VALUE(l)))->organization == COB_ORG_SORT) {
+			cb_error (_("Invalid SORT USING parameter"));
+		}
+		cb_emit (cb_build_funcall_2 ("cob_file_sort_using",
+			cb_ref (file), cb_ref (CB_VALUE (l))));
 	}
-	cb_emit (cb_build_funcall_3 ("cob_close", cb_ref (file), cb_int (COB_CLOSE_NORMAL), NULL));
 }
 
 void
 cb_emit_sort_input (cb_tree file, cb_tree proc)
 {
-	cb_emit (cb_build_funcall_4 ("cob_open", cb_ref (file), cb_int (COB_OPEN_OUTPUT), cb_int0, NULL));
 	cb_emit (cb_build_perform_once (proc));
-	cb_emit (cb_build_funcall_3 ("cob_close", cb_ref (file), cb_int (COB_CLOSE_NORMAL), NULL));
 }
 
 void
 cb_emit_sort_giving (cb_tree file, cb_tree l)
 {
-	for (; l; l = CB_CHAIN (l)) {
-		cb_emit (cb_build_funcall_4 ("cob_open", cb_ref (file),
-					     cb_int (COB_OPEN_INPUT), cb_int0, NULL));
-		cb_emit (cb_build_funcall_2 ("cob_sort_giving", cb_ref (file), cb_ref (CB_VALUE (l))));
-		cb_emit (cb_build_funcall_3 ("cob_close", cb_ref (file), cb_int (COB_CLOSE_NORMAL), NULL));
+	cb_tree		p;
+	int		listlen;
+
+	for (p = l; p; p = CB_CHAIN (p)) {
+		if (CB_FILE (cb_ref(CB_VALUE(p)))->organization == COB_ORG_SORT) {
+			cb_error (_("Invalid SORT GIVING parameter"));
+		}
 	}
+	listlen = cb_list_length (l);
+	p = cb_build_funcall_2 ("cob_file_sort_giving", cb_ref (file), l);
+	CB_FUNCALL(p)->varcnt = listlen;
+	cb_emit (p);
 }
 
 void
 cb_emit_sort_output (cb_tree file, cb_tree proc)
 {
-	cb_emit (cb_build_funcall_4 ("cob_open", cb_ref (file), cb_int (COB_OPEN_INPUT), cb_int0, NULL));
 	cb_emit (cb_build_perform_once (proc));
-	cb_emit (cb_build_funcall_3 ("cob_close", cb_ref (file), cb_int (COB_CLOSE_NORMAL), NULL));
 }
 
 void
 cb_emit_sort_finish (cb_tree file)
 {
 	if (CB_FILE_P (cb_ref (file))) {
-		cb_emit (cb_build_funcall_1 ("cob_sort_finish", cb_ref (file)));
+		cb_emit (cb_build_funcall_1 ("cob_file_sort_close", cb_ref (file)));
 	}
 }
 
@@ -4295,10 +4355,14 @@ cb_build_unstring_into (cb_tree name, cb_tree delimiter, cb_tree count)
 void
 cb_emit_write (cb_tree record, cb_tree from, cb_tree opt)
 {
-	struct cb_field *f = CB_FIELD (cb_ref (record));
-	cb_tree file = CB_TREE (f->file);
+	struct cb_field	*f = CB_FIELD (cb_ref (record));
+	cb_tree		file = CB_TREE (f->file);
 
 	current_statement->file = file;
+	if (CB_FILE (file)->organization == COB_ORG_SORT) {
+		cb_error_x (CB_TREE (current_statement),
+		_("Operation not allowed on SORT files"));
+	}
 	if (from) {
 		cb_emit (cb_build_move (from, record));
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2006 Roger While
+ * Copyright (C) 2005-2007 Roger While
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -234,6 +234,7 @@ cob_intr_length (cob_field *srcfield)
 	cob_field	field = {4, NULL, &attr};
 
 	make_field_entry (&field);
+
 	cob_set_int (curr_field, (int)srcfield->size);
 	return curr_field;
 }
@@ -246,14 +247,6 @@ cob_intr_integer (cob_field *srcfield)
 	int		i, scale;
 
 	make_field_entry (&field);
-/*
-	cob_move (srcfield, curr_field);
-	if (*(long long *)curr_field->data < 0) {
-		if (cob_cmp (srcfield, curr_field)) {
-			*(long long *)curr_field->data -= 1;
-		}
-	}
-*/
 
 	cob_decimal_set_field (&d1, srcfield);
 	if (mpz_sgn (d1.value) >= 0) {
@@ -334,6 +327,7 @@ cob_intr_lower_case (cob_field *srcfield)
 	size_t		i, size;
 
 	make_field_entry (srcfield);
+
 	size = srcfield->size;
 	for (i = 0; i < size; i++) {
 		curr_field->data[i] = tolower (srcfield->data[i]);
@@ -347,6 +341,7 @@ cob_intr_reverse (cob_field *srcfield)
 	size_t		i, size;
 
 	make_field_entry (srcfield);
+
 	size = srcfield->size;
 	for (i = 0; i < size; i++) {
 		curr_field->data[i] = srcfield->data[size - i - 1];
@@ -363,6 +358,7 @@ cob_intr_trim (cob_field *srcfield, const int direction)
 	unsigned char	*end;
 
 	make_field_entry (srcfield);
+
 	for (i = 0; i < (int)srcfield->size; i++) {
 		if (srcfield->data[i] != ' ') {
 			break;
@@ -452,6 +448,7 @@ cob_intr_exception_status ()
 	cob_field	field = {31, NULL, &attr};
 
 	make_field_entry (&field);
+
 	memset (curr_field->data, ' ', 31);
 	if (cob_exception_code) {
 		except_name = cob_get_exception_name (cob_exception_code);
@@ -471,6 +468,7 @@ cob_intr_exception_statement ()
 	cob_field	field = {31, NULL, &attr};
 
 	make_field_entry (&field);
+
 	memset (curr_field->data, ' ', 31);
 	if (cob_exception_code && cob_orig_statement) {
 		flen = strlen (cob_orig_statement);
@@ -580,9 +578,11 @@ cob_intr_date_of_integer (cob_field *srcdays)
 
 	make_field_entry (&field);
 
+	cob_exception_code = 0;
 	/* Base 1601-01-01 */
 	days = cob_get_int (srcdays);
 	if (days < 1 || days > 3067671) {
+		cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
 		memset (curr_field->data, '0', 8);
 		return curr_field;
 	}
@@ -625,9 +625,11 @@ cob_intr_day_of_integer (cob_field *srcdays)
 
 	make_field_entry (&field);
 
+	cob_exception_code = 0;
 	/* Base 1601-01-01 */
 	days = cob_get_int (srcdays);
 	if (days < 1 || days > 3067671) {
+		cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
 		memset (curr_field->data, '0', 7);
 		return curr_field;
 	}
@@ -659,31 +661,37 @@ cob_intr_integer_of_date (cob_field *srcfield)
 
 	make_field_entry (&field);
 
+	cob_exception_code = 0;
 	/* Base 1601-01-01 */
 	indate = cob_get_int (srcfield);
 	year = indate / 10000;
 	if (year < 1601 || year > 9999) {
+		cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 	indate %= 10000;
 	month = indate / 100;
 	if (month < 1 || month > 12) {
+		cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 	days = indate % 100;
 	if (days < 1 || days > 31) {
+		cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 	if (leap_year (year)) {
 		if (days > leap_month_days[month]) {
+			cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
 			cob_set_int (curr_field, 0);
 			return curr_field;
 		}
 	} else {
 		if (days > normal_month_days[month]) {
+			cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
 			cob_set_int (curr_field, 0);
 			return curr_field;
 		}
@@ -720,15 +728,18 @@ cob_intr_integer_of_day (cob_field *srcfield)
 
 	make_field_entry (&field);
 
+	cob_exception_code = 0;
 	/* Base 1601-01-01 */
 	indate = cob_get_int (srcfield);
 	year = indate / 1000;
 	if (year < 1601 || year > 9999) {
+		cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 	days = indate % 1000;
 	if (days < 1 || days > 365 + leap_year (year)) {
+		cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
@@ -827,8 +838,10 @@ cob_intr_factorial (cob_field *srcfield)
 
 	make_field_entry (&field);
 
+	cob_exception_code = 0;
 	srcval = cob_get_int (srcfield);
 	if (srcval < 0) {
+		cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
@@ -879,6 +892,7 @@ cob_intr_abs (cob_field *srcfield)
 {
 
 	make_field_entry (srcfield);
+
 	cob_decimal_set_field (&d1, srcfield);
 	mpz_abs (d1.value, d1.value);
 	cob_decimal_get_field (&d1, curr_field, 0);
@@ -1875,6 +1889,7 @@ cob_intr_year_to_yyyy (int params, ...)
 
 	make_field_entry (&field);
 
+	cob_exception_code = 0;
 	va_start (args, params);
 	f = va_arg (args, cob_field *);
 	year = cob_get_int (f);
@@ -1895,15 +1910,18 @@ cob_intr_year_to_yyyy (int params, ...)
 	va_end (args);
 
 	if (year < 0 || year > 99) {
+		cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 	if (xqtyear < 1601 || xqtyear > 9999) {
+		cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 	maxyear = xqtyear + interval;
 	if (maxyear < 1700 || maxyear > 9999) {
+		cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
@@ -1933,6 +1951,7 @@ cob_intr_date_to_yyyymmdd (int params, ...)
 
 	make_field_entry (&field);
 
+	cob_exception_code = 0;
 	va_start (args, params);
 	f = va_arg (args, cob_field *);
 	year = cob_get_int (f);
@@ -1955,15 +1974,18 @@ cob_intr_date_to_yyyymmdd (int params, ...)
 	va_end (args);
 
 	if (year < 0 || year > 999999) {
+		cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 	if (xqtyear < 1601 || xqtyear > 9999) {
+		cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 	maxyear = xqtyear + interval;
 	if (maxyear < 1700 || maxyear > 9999) {
+		cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
@@ -1995,6 +2017,7 @@ cob_intr_day_to_yyyyddd (int params, ...)
 
 	make_field_entry (&field);
 
+	cob_exception_code = 0;
 	va_start (args, params);
 	f = va_arg (args, cob_field *);
 	year = cob_get_int (f);
@@ -2017,15 +2040,18 @@ cob_intr_day_to_yyyyddd (int params, ...)
 	va_end (args);
 
 	if (year < 0 || year > 999999) {
+		cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 	if (xqtyear < 1601 || xqtyear > 9999) {
+		cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
 	maxyear = xqtyear + interval;
 	if (maxyear < 1700 || maxyear > 9999) {
+		cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
 		cob_set_int (curr_field, 0);
 		return curr_field;
 	}
@@ -2037,5 +2063,85 @@ cob_intr_day_to_yyyyddd (int params, ...)
 	year *= 1000;
 	year += days;
 	cob_set_int (curr_field, year);
+	return curr_field;
+}
+
+cob_field *
+cob_intr_seconds_past_midnight ()
+{
+	int		seconds;
+	time_t		t;
+	struct tm	*timeptr;
+	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL};
+	cob_field	field = {4, NULL, &attr};
+
+	make_field_entry (&field);
+
+	t = time (NULL);
+	timeptr = localtime (&t);
+	seconds = (timeptr->tm_hour * 3600) + (timeptr->tm_min * 60) +
+			timeptr->tm_sec;
+	cob_set_int (curr_field, seconds);
+	return curr_field;
+}
+
+cob_field *
+cob_intr_seconds_from_formatted_time (cob_field *format, cob_field *value)
+{
+	int		seconds = 0;
+	int		minutes = 0;
+	int		hours = 0;
+	int		seconds_seen = 0;
+	int		minutes_seen = 0;
+	int		hours_seen = 0;
+	unsigned char	*p1;
+	unsigned char	*p2;
+	size_t		n;
+	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL};
+	cob_field	field = {4, NULL, &attr};
+
+	make_field_entry (&field);
+
+	cob_exception_code = 0;
+	if (value->size < format->size) {
+		cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
+		cob_set_int (curr_field, 0);
+		return curr_field;
+	}
+	p1 = format->data;
+	p2 = value->data;
+	for (n = 0; n < format->size - 1; n++, p1++, p2++) {
+		if (!memcmp (p1, "hh", 2) && !hours_seen) {
+			if (*p2 >= '0' && *p2 <= '9' &&
+			    *(p2 + 1) >= '0' && *(p2 + 1) <= '9') {
+				hours = ((*p2 - '0') * 10) + (*(p2 + 1) - '0');
+				hours_seen = 1;
+				continue;
+			}
+		}
+		if (!memcmp (p1, "mm", 2) && !minutes_seen) {
+			if (*p2 >= '0' && *p2 <= '9' &&
+			    *(p2 + 1) >= '0' && *(p2 + 1) <= '9') {
+				minutes = ((*p2 - '0') * 10) + (*(p2 + 1) - '0');
+				minutes_seen = 1;
+				continue;
+			}
+		}
+		if (!memcmp (p1, "ss", 2) && !seconds_seen) {
+			if (*p2 >= '0' && *p2 <= '9' &&
+			    *(p2 + 1) >= '0' && *(p2 + 1) <= '9') {
+				seconds = ((*p2 - '0') * 10) + (*(p2 + 1) - '0');
+				seconds_seen = 1;
+				continue;
+			}
+		}
+	}
+	if (hours_seen && minutes_seen && seconds_seen) {
+		seconds += (hours * 3600) + (minutes * 60);
+	} else {
+		cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
+		seconds = 0;
+	}
+	cob_set_int (curr_field, seconds);
 	return curr_field;
 }

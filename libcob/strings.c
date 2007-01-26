@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2002-2006 Keisuke Nishida
+ * Copyright (C) 2002-2007 Keisuke Nishida
+ * Copyright (C) 2007 Roger While
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -82,7 +83,7 @@ inspect_common (cob_field *f1, cob_field *f2, const int type)
 	int	*mark = &inspect_mark[inspect_start - inspect_data];
 
 	if (inspect_replacing && f1->size != f2->size) {
-		COB_SET_EXCEPTION (COB_EC_RANGE_INSPECT_SIZE);
+		cob_set_exception (COB_EC_RANGE_INSPECT_SIZE);
 		return;
 	}
 
@@ -322,7 +323,7 @@ cob_string_init (cob_field *dst, cob_field *ptr)
 	if (string_ptr) {
 		string_offset = cob_get_int (string_ptr) - 1;
 		if (string_offset < 0 || string_offset >= (int)string_dst->size) {
-			COB_SET_EXCEPTION (COB_EC_OVERFLOW_STRING);
+			cob_set_exception (COB_EC_OVERFLOW_STRING);
 		}
 	}
 }
@@ -341,15 +342,15 @@ void
 cob_string_append (cob_field *src)
 {
 	size_t	src_size = src->size;
+	int	i;
+	int	size;
 
 	if (cob_exception_code) {
 		return;
 	}
 
 	if (string_dlm) {
-		int	i;
-		int	size = (int)(src_size - string_dlm->size + 1);
-
+		size = (int)(src_size - string_dlm->size + 1);
 		for (i = 0; i < size; i++) {
 			if (memcmp (src->data + i, string_dlm->data, string_dlm->size) == 0) {
 				src_size = i;
@@ -365,7 +366,7 @@ cob_string_append (cob_field *src)
 		int size = (int)(string_dst->size - string_offset);
 		own_memcpy (string_dst->data + string_offset, src->data, (size_t)size);
 		string_offset += size;
-		COB_SET_EXCEPTION (COB_EC_OVERFLOW_STRING);
+		cob_set_exception (COB_EC_OVERFLOW_STRING);
 	}
 }
 
@@ -400,7 +401,7 @@ cob_unstring_init (cob_field *src, cob_field *ptr)
 	if (unstring_ptr) {
 		unstring_offset = cob_get_int (unstring_ptr) - 1;
 		if (unstring_offset < 0 || unstring_offset >= (int)unstring_src->size) {
-			COB_SET_EXCEPTION (COB_EC_OVERFLOW_UNSTRING);
+			cob_set_exception (COB_EC_OVERFLOW_UNSTRING);
 		}
 	}
 }
@@ -416,11 +417,17 @@ cob_unstring_delimited (cob_field *dlm, const int all)
 void
 cob_unstring_into (cob_field *dst, cob_field *dlm, cob_field *cnt)
 {
-	int			match_size = 0;
-	int			brkpt = 0;
-	size_t			dlm_size = 0;
-	unsigned char		*dlm_data = NULL;
-	unsigned char		*start = unstring_src->data + unstring_offset;
+	int		i;
+	int		srsize;
+	int		dlsize;
+	int		match_size = 0;
+	int		brkpt = 0;
+	size_t		dlm_size = 0;
+	unsigned char	*p;
+	unsigned char	*dp;
+	unsigned char	*s;
+	unsigned char	*dlm_data = NULL;
+	unsigned char	*start = unstring_src->data + unstring_offset;
 
 	if (cob_exception_code) {
 		return;
@@ -436,12 +443,6 @@ cob_unstring_into (cob_field *dst, cob_field *dlm, cob_field *cnt)
 		cob_memcpy (dst, start, match_size);
 		unstring_offset += match_size;
 	} else {
-		int		i;
-		unsigned char	*p;
-		unsigned char	*dp;
-		unsigned char	*s;
-		int		srsize;
-		int		dlsize;
 
 		srsize = (int) unstring_src->size;
 		s = unstring_src->data + srsize;
@@ -512,7 +513,7 @@ void
 cob_unstring_finish (void)
 {
 	if (unstring_offset < (int)unstring_src->size) {
-		COB_SET_EXCEPTION (COB_EC_OVERFLOW_UNSTRING);
+		cob_set_exception (COB_EC_OVERFLOW_UNSTRING);
 	}
 
 	if (unstring_ptr) {

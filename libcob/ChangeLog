@@ -1,3 +1,42 @@
+2007-01-24  Roger While <simrw@sim-basis.de>
+
+	* fileio.[ch] : Implement new SORT routines
+			Note these do not need the ISAM handler
+
+2007-01-17  Roger While <simrw@sim-basis.de>
+
+	* common.[ch] : Add cob_is_omitted, check for null parameter
+
+2007-01-16  Roger While <simrw@sim-basis.de>
+
+	* intrinsic.[ch] : Implement FUNCTION's
+		SECONDS-PAST-MIDNIGHT, SECONDS-FROM-FORMATTED-TIME
+	* All : Remove COB_SET_EXCEPTION define
+	* intrinsic.c : Set COB_EC_ARGUMENT_FUNCTION exception code where
+			appropiate
+
+2007-01-15  Roger While <simrw@sim-basis.de>
+
+	* common.[ch], fileio.[ch] : Change sort comparison routines to not
+		overwrite collating sequence. Also optimize.
+		Note, this fixes a problem with a (file) SORT with COLLATING and
+		INPUT and/or OUPUT procedures. Previously, this would
+		incorrectly change alphanumeric tests in the
+		INPUT/OUTPUT procedures.
+	* fileio.[ch] : Allow special ASSIGN [TO] DISPLAY processing
+
+2007-01-12  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : Fix miscompile on WIN64
+
+2007-01-10  Roger While <simrw@sim-basis.de>
+
+	* fileio.[ch] : Allow special ASSIGN [TO] KEYBOARD processing
+
+2007-01-08  Roger While <simrw@sim-basis.de>
+
+	* call.[ch] : Implement new CANCEL processing
+
 2006-12-17  Roger While <simrw@sim-basis.de>
 
 	* intrinsic.[ch] : Correct the NUMVAL-C function
@@ -13,7 +52,8 @@
 2006-11-28  Roger While <simrw@sim-basis.de>
 
 	* move.c : Small optimization
-	* numeric.c : New routines cob_cmp_long_numdisp cob_cmp_long_signed_numdisp
+	* numeric.c : New routines cob_cmp_long_numdisp,
+			cob_cmp_long_signed_numdisp
 
 2006-11-12  Roger While <simrw@sim-basis.de>
 

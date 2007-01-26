@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2001-2006 Keisuke Nishida
+ * Copyright (C) 2001-2007 Keisuke Nishida
+ * Copyright (C) 2007 Roger While
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -515,13 +516,15 @@ struct cb_file {
 	cb_tree			sharing;		/* SHARING */
 	cb_tree			key;			/* RELATIVE/RECORD KEY */
 	struct cb_alt_key {
+		struct cb_alt_key	*next;
 		cb_tree			key;
 		int			duplicates;
-		struct cb_alt_key	*next;
+		int			offset;
 	}			*alt_key_list;		/* ALTERNATE RECORD KEY */
 	/* FD/SD */
 	struct cb_field		*record;		/* record descriptor */
-	int			record_min, record_max;	/* RECORD CONTAINS */
+	int			record_min;		/* RECORD CONTAINS */
+	int			record_max;		/* RECORD CONTAINS */
 	cb_tree			record_depending;	/* RECORD DEPENDING */
 	cb_tree			linage_ctr;
 	cb_tree			linage;
@@ -529,7 +532,9 @@ struct cb_file {
 	cb_tree			lattop;
 	cb_tree			latbot;
 	/* STANDARD ERROR PROCEDURE */
-	struct cb_label		*handler;	/* error handler */
+	struct cb_label		*handler;		/* error handler */
+	int			special;		/* Special file */
+	int			spare;			/* Spare */
 };
 
 #define CB_FILE(x)	(CB_TREE_CAST (CB_TAG_FILE, struct cb_file, x))
@@ -768,6 +773,8 @@ enum cb_intr_enum {
 	CB_INTR_RANGE,
 	CB_INTR_REM,
 	CB_INTR_REVERSE,
+	CB_INTR_SECONDS_FROM_FORMATTED_TIME,
+	CB_INTR_SECONDS_PAST_MIDNIGHT,
 	CB_INTR_SIGN,
 	CB_INTR_SIN,
 	CB_INTR_SQRT,
@@ -1125,7 +1132,7 @@ extern char *cb_encode_program_id (const char *name);
 extern const char *cb_build_program_id (cb_tree name, cb_tree alt_name);
 extern void cb_define_switch_name (cb_tree name, cb_tree sname, cb_tree flag, cb_tree ref);
 extern cb_tree cb_build_section_name (cb_tree name, int sect_or_para);
-extern cb_tree cb_build_assignment_name (cb_tree name);
+extern cb_tree cb_build_assignment_name (struct cb_file *curfile, cb_tree name);
 extern cb_tree cb_build_index (cb_tree name);
 extern cb_tree cb_build_identifier (cb_tree x);
 extern cb_tree cb_build_length (cb_tree x);
@@ -1220,6 +1227,7 @@ extern void cb_emit_read (cb_tree ref, cb_tree next, cb_tree into, cb_tree key, 
 
 extern void cb_emit_rewrite (cb_tree record, cb_tree from);
 
+extern void cb_emit_release (cb_tree ref, cb_tree from);
 extern void cb_emit_return (cb_tree ref, cb_tree into);
 
 extern void cb_emit_search (cb_tree table, cb_tree varying, cb_tree at_end, cb_tree whens);

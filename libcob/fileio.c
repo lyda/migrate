@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2002-2006 Keisuke Nishida
+ * Copyright (C) 2002-2007 Keisuke Nishida
+ * Copyright (C) 2007 Roger While
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -38,6 +39,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
@@ -127,21 +129,77 @@
 #define SEEK_INIT(f)
 #endif
 
+#ifndef	O_BINARY
+#define	O_BINARY	0
+#endif
+
+#ifndef	O_LARGEFILE
+#define	O_LARGEFILE	0
+#endif
+
 #ifdef _WIN32
 #define INITIAL_FLAGS	O_BINARY
 #else
 #define INITIAL_FLAGS	0
 #endif
 
+/* SORT definitions */
+
+#define COBSORTEND        1
+#define COBSORTABORT      2
+#define COBSORTFILEERR    3
+#define COBSORTNOTOPEN    4
+
+struct cobitem {
+	struct cobitem		*next;
+	size_t			end_of_block;
+	unsigned char		block_byte;
+	unsigned char		unique[sizeof(size_t)];
+	unsigned char		item[1];
+};
+
+struct memory_struct {
+	struct cobitem	*first;
+	struct cobitem	*last;
+	size_t		count;
+};
+
+struct file_struct {
+	FILE		*fp;
+	size_t		count;	/* count of items in temporary files */
+};
+
+struct cobsort {
+	void			*pointer;
+	struct cobitem		*empty;
+	size_t			unique;
+	size_t			retrieving;
+	size_t			files_used;
+	size_t			size;
+	size_t			r_size;
+	size_t			w_size;
+	size_t			memory;
+	int			destination_file;
+	int			retrieval_queue;
+	struct memory_struct	queue[4];
+	struct file_struct	file[4];
+};
+
+/* End SORT definitions */
+
 cob_file		*cob_error_file;
+
+#ifndef _WIN32
+static int		cob_iteration = 0;
+static pid_t		cob_process_id = 0;
+#endif
 
 static int		eop_status = 0;
 int			cob_check_eop = 0;
 
 static int		cob_do_sync = 0;
 static int		cob_first_in = 0;
-static int		cob_sort_input_cache = 8*1024*1024;
-static int		cob_sort_output_cache = 32*1024*1024;
+static int		cob_sort_memory = 128*1024*1024;
 #ifdef	USE_DB41
 static int		cob_isam_cache = 8*1024*1024;
 static DB_ENV		*bdb_env = NULL;
@@ -261,11 +319,6 @@ static int indexed_write_internal (cob_file *f);
 static int indexed_write (cob_file *f, int opt);
 static int indexed_delete (cob_file *f);
 static int indexed_rewrite (cob_file *f);
-static int sort_open (cob_file *f, char *filename, int mode, int flag);
-static int sort_close (cob_file *f, int opt);
-static int sort_read (cob_file *f, int read_opts);
-static int sort_write (cob_file *f, int opt);
-
 
 static const cob_fileio_funcs indexed_funcs = {
 	indexed_open,
@@ -276,18 +329,6 @@ static const cob_fileio_funcs indexed_funcs = {
 	indexed_write,
 	indexed_rewrite,
 	indexed_delete
-};
-
-
-static const cob_fileio_funcs sort_funcs = {
-	sort_open,
-	sort_close,
-	dummy_start,
-	dummy_read,
-	sort_read,
-	sort_write,
-	dummy_rn_rew_del,
-	dummy_rn_rew_del
 };
 
 #else	/* WITH_DB || WITH_CISAM || WITH_VBISAM */
@@ -306,16 +347,6 @@ dummy_write_close (cob_file *f, int opt)
 
 
 static cob_fileio_funcs indexed_funcs = {
-	dummy_open,
-	dummy_write_close,
-	dummy_start,
-	dummy_read,
-	dummy_rn_rew_del,
-	dummy_write_close,
-	dummy_rn_rew_del,
-	dummy_rn_rew_del
-};
-static cob_fileio_funcs sort_funcs = {
 	dummy_open,
 	dummy_write_close,
 	dummy_start,
@@ -367,7 +398,7 @@ static const cob_fileio_funcs	*fileio_funcs[COB_ORG_MAX] = {
 	&lineseq_funcs,
 	&relative_funcs,
 	&indexed_funcs,
-	&sort_funcs
+	NULL
 };
 
 static void
@@ -439,7 +470,7 @@ save_status (cob_file *f, int status, cob_field *fnstatus)
 	}
 	cob_error_file = f;
 	if (status != COB_STATUS_52_EOP) {
-		COB_SET_EXCEPTION (status_exception[status / 10]);
+		cob_set_exception (status_exception[status / 10]);
 	}
 }
 
@@ -1180,6 +1211,7 @@ join_environment (void)
 	bdb_env->set_msgfile (bdb_env, stderr);
 #endif
 	bdb_env->set_cachesize (bdb_env, 0, cob_isam_cache, 0);
+	bdb_env->set_alloc (bdb_env, cob_malloc, realloc, free);
 	flags = DB_CREATE | DB_INIT_MPOOL | DB_INIT_CDB;
 	ret = bdb_env->open (bdb_env, home, flags, 0);
 	if (ret) {
@@ -2065,7 +2097,7 @@ static int
 indexed_delete (cob_file *f)
 {
 	size_t			i;
-	int			offset;
+	size_t			offset;
 	struct indexed_file	*p = f->file;
 	DBT			prim_key;
 #ifdef	USE_DB41
@@ -2123,7 +2155,7 @@ indexed_delete (cob_file *f)
 	prim_key = p->key;
 
 /* delete the secondary keys */
-	offset = (int)((char *) p->data.data - (char *) f->record->data);
+	offset = (char *) p->data.data - (char *) f->record->data;
 	for (i = 1; i < f->nkeys; i++) {
 		DBT_SET (p->key, f->keys[i].field);
 		p->key.data = (char *)p->key.data + offset;
@@ -2226,150 +2258,6 @@ indexed_rewrite (cob_file *f)
 	return ret;
 }
 
-/*
- * SORT
- */
-
-struct sort_file {
-	DB	*db;
-	DBT	key;
-	DBT	data;
-#ifdef	USE_DB41
-	DBC	*cursor;
-#endif
-};
-
-static cob_file	*current_sort_file;
-
-static int
-#ifdef	USE_DB41
-sort_compare (DB *db, const DBT *k1, const DBT *k2)
-#else
-sort_compare (const DBT *k1, const DBT *k2)
-#endif
-{
-	int		cmp;
-	size_t		i;
-	cob_file	*f = current_sort_file;
-
-	for (i = 0; i < f->nkeys; i++) {
-		cob_field f1 = *(f->keys[i].field);
-		cob_field f2 = *(f->keys[i].field);
-		f1.data += ((unsigned char *)k1->data) - f->record->data;
-		f2.data += ((unsigned char *)k2->data) - f->record->data;
-		cmp = cob_cmp (&f1, &f2);
-		if (cmp != 0) {
-			return (f->keys[i].flag == COB_ASCENDING) ? cmp : -cmp;
-		}
-	}
-	return 1;
-}
-
-static int
-sort_open (cob_file *f, char *filename, int mode, int flag)
-{
-#ifdef	USE_DB41
-	int			ret;
-#else
-	BTREEINFO		info;
-#endif
-	struct sort_file	*p = f->file;
-	int			flags = INITIAL_FLAGS;
-
-	switch (mode) {
-	case COB_OPEN_INPUT:
-#ifdef	USE_DB41
-		flags |= DB_RDONLY;
-#else
-		flags |= O_RDONLY;
-#endif
-		break;
-	case COB_OPEN_OUTPUT:
-#ifdef	USE_DB41
-		flags |= DB_CREATE | DB_TRUNCATE;
-#else
-		flags |= O_RDWR | O_CREAT | O_TRUNC;
-#endif
-		break;
-	}
-
-	/* open db */
-#ifdef	USE_DB41
-	ret = db_create (&p->db, NULL, 0);
-	if (ret) {
-		return ret;
-	}
-	p->db->set_errfile (p->db, stderr);
-	ret = p->db->set_bt_compare (p->db, sort_compare);
-	if (mode == COB_OPEN_INPUT) {
-		ret = p->db->set_cachesize (p->db, 0, cob_sort_input_cache, 1);
-	} else {
-		ret = p->db->set_cachesize (p->db, 0, cob_sort_output_cache, 1);
-	}
-	ret = p->db->set_pagesize (p->db, 64*1024);
-	ret = p->db->set_flags (p->db, DB_DUP);
-	ret = p->db->open (p->db, NULL, filename, NULL, DB_BTREE,
-			   flags, COB_FILE_MODE);
-#else
-	own_memset ((unsigned char *)&info, 0, sizeof (info));
-	info.flags = R_DUP;
-	info.compare = sort_compare;
-	p->db = dbopen (filename, flags, COB_FILE_MODE, DB_BTREE, &info);
-#endif
-	if (p->db == NULL) {
-		return errno;
-	}
-
-#ifdef	USE_DB41
-	p->db->cursor (p->db, NULL, &p->cursor, 0);
-#endif
-
-	own_memset ((unsigned char *)&p->key, 0, sizeof (DBT));
-	own_memset ((unsigned char *)&p->data, 0, sizeof (DBT));
-	return 0;
-}
-
-static int
-sort_close (cob_file *f, int opt)
-{
-	struct sort_file *p = f->file;
-	DB_CLOSE (p->db);
-	return COB_STATUS_00_SUCCESS;
-}
-
-static int
-sort_read (cob_file *f, int read_opts)
-{
-	struct sort_file	*p = f->file;
-
-#ifdef	USE_DB41
-	if (DB_SEQ (p->cursor, f->flag_first_read ? DB_FIRST : DB_NEXT) != 0) {
-#else
-	if (DB_SEQ (p->db, f->flag_first_read ? R_FIRST : R_NEXT) != 0) {
-#endif
-		return COB_STATUS_10_END_OF_FILE;
-	}
-
-	f->record->size = p->key.size;
-	own_memcpy (f->record->data, p->key.data, p->key.size);
-	own_memset (f->record->data + p->key.size, ' ', f->record_max - p->key.size);
-	return COB_STATUS_00_SUCCESS;
-}
-
-static int
-sort_write (cob_file *f, int opt)
-{
-	struct sort_file	*p = f->file;
-
-	current_sort_file = f;
-	p->key.data = f->record->data;
-	p->key.size = (cob_dbtsize_t) f->record->size;
-	if (DB_PUT (p->db, 0)) {
-		return COB_STATUS_30_PERMANENT_ERROR;
-	}
-	return COB_STATUS_00_SUCCESS;
-}
-
 #ifdef	USE_DB41
 /* 
  * check if a file exists in bdb data dirs
@@ -2465,9 +2353,27 @@ cob_open (cob_file *f, int mode, int opt, cob_field *fnstatus)
 	f->flag_begin_of_file = 0;
 	f->flag_first_read = 1;
 
+	if (f->special) {
+		if (f->special == 1) {
+			if (mode != COB_OPEN_INPUT) {
+				RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
+			}
+			f->file = stdin;
+			f->open_mode = mode;
+			RETURN_STATUS (COB_STATUS_00_SUCCESS);
+		} else {
+			if (mode != COB_OPEN_OUTPUT) {
+				RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
+			}
+			f->file = stdout;
+			f->open_mode = mode;
+			RETURN_STATUS (COB_STATUS_00_SUCCESS);
+		}
+	}
+
 	/* obtain the file name */
 	cob_field_to_string (f->assign, filename);
-	if (cob_current_module->flag_filename_mapping && f->organization != COB_ORG_SORT) {
+	if (cob_current_module->flag_filename_mapping) {
 		char	buff[COB_MEDIUM_BUFF];
 		char	*p;
 		char	*src = filename;
@@ -2588,6 +2494,10 @@ cob_close (cob_file *f, int opt, cob_field *fnstatus)
 
 	f->flag_read_done = 0;
 
+	if (f->special) {
+		f->open_mode = COB_OPEN_CLOSED;
+		RETURN_STATUS (COB_STATUS_00_SUCCESS);
+	}
 	if (f->open_mode == COB_OPEN_CLOSED) {
 		RETURN_STATUS (COB_STATUS_42_NOT_OPEN);
 	}
@@ -2845,109 +2755,6 @@ cob_delete (cob_file *f, cob_field *fnstatus)
 	RETURN_STATUS (ret);
 }
 
-#ifdef	WITH_DB
-
-static const unsigned char *old_sequence;
-
-#ifndef _WIN32
-static int	cob_iteration = 0;
-static pid_t	cob_process_id = 0;
-#endif
-
-void
-cob_sort_init (cob_file *f, int nkeys, const unsigned char *collating_sequence)
-{
-	const char	*s;
-	char		filename[COB_MEDIUM_BUFF];
-
-
-#ifdef _WIN32
-	char	tmpdir[COB_MEDIUM_BUFF];
-
-	/* get temporary directory */
-	if ((s = getenv ("TMPDIR")) != NULL || (s = getenv ("TMP")) != NULL) {
-		strcpy (tmpdir, s);
-	} else {
-		GetTempPath (COB_MEDIUM_BUFF, tmpdir);
-	}
-	/* get temporary file name */
-	GetTempFileName (tmpdir, "cob", 0, filename);
-	DeleteFile (filename);
-#else
-	if ((s = getenv ("TMPDIR")) == NULL && (s = getenv ("TMP")) == NULL) {
-		s = "/tmp";
-	}
-	if (cob_process_id == 0) {
-		cob_process_id = getpid ();
-	}
-	sprintf (filename, "%s/cobsort%d_%d", s, cob_process_id, cob_iteration);
-	cob_iteration++;
-#endif
-
-	f->assign->size = strlen (filename);
-	f->assign->data = (ucharptr)cob_strdup (filename);
-	f->file = cob_malloc (sizeof (struct sort_file));
-	f->keys = cob_malloc (sizeof (cob_file_key) * nkeys);
-	f->nkeys = 0;
-
-	old_sequence = cob_current_module->collating_sequence;
-	if (collating_sequence) {
-		cob_current_module->collating_sequence = collating_sequence;
-	}
-}
-
-void
-cob_sort_finish (cob_file *f)
-{
-	unlink ((char *)f->assign->data);
-	free (f->assign->data);
-	free (f->file);
-	free (f->keys);
-	cob_current_module->collating_sequence = old_sequence;
-}
-
-void
-cob_sort_init_key (cob_file *f, int flag, cob_field *field)
-{
-	f->keys[f->nkeys].flag = flag;
-	f->keys[f->nkeys].field = field;
-	f->nkeys++;
-}
-
-void
-cob_sort_using (cob_file *sort_file, cob_file *data_file)
-{
-	cob_open (data_file, COB_OPEN_INPUT, 0, NULL);
-	while (1) {
-		cob_read (data_file, 0, NULL, COB_READ_NEXT);
-		if (data_file->file_status[0] != '0') {
-			break;
-		}
-		own_memcpy (sort_file->record->data, data_file->record->data,
-			sort_file->record->size);
-		cob_write (sort_file, sort_file->record, 0, NULL);
-	}
-	cob_close (data_file, COB_CLOSE_NORMAL, NULL);
-}
-
-void
-cob_sort_giving (cob_file *sort_file, cob_file *data_file)
-{
-	cob_open (data_file, COB_OPEN_OUTPUT, 0, NULL);
-	while (1) {
-		cob_read (sort_file, 0, NULL, COB_READ_NEXT);
-		if (sort_file->file_status[0] != '0') {
-			break;
-		}
-		own_memcpy (data_file->record->data,
-			sort_file->record->data, data_file->record->size);
-		cob_write (data_file, data_file->record, 0, NULL);
-	}
-	cob_close (data_file, COB_CLOSE_NORMAL, NULL);
-}
-
-#endif	/* WITH_DB */
-
 void
 cob_default_error_handle (void)
 {
@@ -3042,16 +2849,10 @@ cob_init_fileio (void)
 			cob_do_sync = 2;
 		}
 	}
-	if ((s = getenv ("COB_SORT_INPUT_CACHE")) != NULL) {
+	if ((s = getenv ("COB_SORT_MEMORY")) != NULL) {
 		n = atoi (s);
-		if (n >= 1024*1024 && n <= 1024*1024*1024) {
-			cob_sort_input_cache = n;
-		}
-	}
-	if ((s = getenv ("COB_SORT_OUTPUT_CACHE")) != NULL) {
-		n = atoi (s);
-		if (n >= 1024*1024 && n <= 1024*1024*1024) {
-			cob_sort_output_cache = n;
+		if (n >= 1024*1024) {
+			cob_sort_memory = n;
 		}
 	}
 	cob_file_path = getenv ("COB_FILE_PATH");
@@ -3508,4 +3309,645 @@ cob_acuw_file_delete (char *file_name, char *file_type)
 	COB_CHK_PARMS (C$DELETE, 2);
 	cob_field_to_string (cob_current_module->cob_procedure_parameters[0], fn);
 	return CBL_DELETE_FILE (fn);
+}
+
+/* SORT */
+
+static int
+sort_cmps (const unsigned char *s1, const unsigned char *s2, const size_t size,
+		const unsigned char *col)
+{
+	size_t			i;
+	int			ret;
+
+	if (col) {
+		for (i = 0; i < size; i++) {
+			if ((ret = col[s1[i]] - col[s2[i]]) != 0) {
+				return ret;
+			}
+		}
+	} else {
+		for (i = 0; i < size; i++) {
+			if ((ret = s1[i] - s2[i]) != 0) {
+				return ret;
+			}
+		}
+	}
+	return 0;
+}
+
+static int
+cob_file_sort_compare (struct cobitem *k1, struct cobitem *k2, void *pointer)
+{
+	int		cmp;
+	size_t		i;
+	cob_file	*f;
+	cob_field	f1;
+	cob_field	f2;
+	size_t		u1;
+	size_t		u2;
+
+	f = pointer;
+	for (i = 0; i < f->nkeys; i++) {
+		f1 = f2 = *(f->keys[i].field);
+		f1.data = k1->item + f->keys[i].offset;
+		f2.data = k2->item + f->keys[i].offset;
+		if (COB_FIELD_IS_NUMERIC(&f1)) {
+			cmp = cob_numeric_cmp (&f1, &f2);
+		} else {
+			cmp = sort_cmps (f1.data, f2.data, f1.size, f->sort_collating);
+		}
+		if (cmp != 0) {
+			return (f->keys[i].flag == COB_ASCENDING) ? cmp : -cmp;
+		}
+	}
+	own_memcpy ((void *)&u1, k1->unique, sizeof(size_t));
+	own_memcpy ((void *)&u2, k2->unique, sizeof(size_t));
+	if (u1 < u2) {
+		return -1;
+	}
+	return 1;
+}
+
+static void
+cob_free_list (struct cobitem *q)
+{
+	struct cobitem	*next;
+
+	while (q != NULL) {
+		next = q->next;
+		free (q);
+		q = next;
+	}
+}
+
+static struct cobitem *
+cob_new_item (struct cobsort *hp, size_t size)
+{
+	struct cobitem *q;
+
+	if (hp->empty != NULL) {
+		q = hp->empty;
+		hp->empty = q->next;
+	} else {
+		q = cob_malloc (size);
+	}
+	return q;
+}
+
+static FILE *
+cob_tmpfile ()
+{
+	int		fd;
+	FILE		*fp;
+	const char	*s;
+	char		filename[COB_MEDIUM_BUFF];
+
+
+#ifdef _WIN32
+	char	tmpdir[COB_MEDIUM_BUFF];
+
+	/* get temporary directory */
+	if ((s = getenv ("TMPDIR")) != NULL || (s = getenv ("TMP")) != NULL) {
+		strcpy (tmpdir, s);
+	} else {
+		GetTempPath (COB_MEDIUM_BUFF, tmpdir);
+	}
+	/* get temporary file name */
+	GetTempFileName (tmpdir, "cob", 0, filename);
+	DeleteFile (filename);
+	fd = _open (filename, _O_CREAT | _O_TRUNC | _O_RDWR | _O_BINARY, 0660);
+#else
+	if ((s = getenv ("TMPDIR")) == NULL && (s = getenv ("TMP")) == NULL) {
+		s = "/tmp";
+	}
+	if (cob_process_id == 0) {
+		cob_process_id = getpid ();
+	}
+	sprintf (filename, "%s/cobsort%d_%d", s, cob_process_id, cob_iteration);
+	cob_iteration++;
+	fd = open (filename, O_CREAT | O_TRUNC | O_RDWR | O_BINARY | O_LARGEFILE, 0660);
+#endif
+	if (fd < 0) {
+		return NULL;
+	}
+#ifdef _WIN32
+	_unlink (filename);
+	fp = _fdopen (fd, "w+b");
+	if (!fp) {
+		_close (fd);
+	}
+#else
+	unlink (filename);
+	fp = fdopen (fd, "w+b");
+	if (!fp) {
+		close (fd);
+	}
+#endif
+	return fp;
+}
+
+static int
+cob_get_temp_file (struct cobsort *hp, int n)
+{
+	if (hp->file[n].fp == NULL) {
+		hp->file[n].fp = cob_tmpfile ();
+	} else {
+		rewind (hp->file[n].fp);
+	}
+	hp->file[n].count = 0;
+	return hp->file[n].fp == NULL;
+}
+
+static int
+cob_sort_queues (struct cobsort *hp)
+{
+	int		source = 0;
+	int		destination;
+	int		move;
+	int		n;
+	struct cobitem	*q;
+	int		end_of_block[2];
+
+	while (hp->queue[source + 1].count != 0) {
+		destination = source ^ 2;
+		hp->queue[destination].count = hp->queue[destination + 1].count = 0;
+		hp->queue[destination].first = hp->queue[destination + 1].first = NULL;
+		while (1) {
+			end_of_block[0] = hp->queue[source].count == 0;
+			end_of_block[1] = hp->queue[source + 1].count == 0;
+			if (end_of_block[0] && end_of_block[1]) {
+				break;
+			}
+			while (!end_of_block[0] || !end_of_block[1]) {
+				if (end_of_block[0]) {
+					move = 1;
+				} else if (end_of_block[1]) {
+					move = 0;
+				} else {
+					n = cob_file_sort_compare
+						(hp->queue[source].first,
+						hp->queue[source + 1].first,
+						hp->pointer);
+					move = n < 0 ? 0 : 1;
+				}
+				q = hp->queue[source + move].first;
+				if (q->end_of_block) {
+					end_of_block[move] = 1;
+				}
+				hp->queue[source + move].first = q->next;
+				if (hp->queue[destination].first == NULL) {
+					hp->queue[destination].first = q;
+				} else {
+					hp->queue[destination].last->next = q;
+				}
+				hp->queue[destination].last = q;
+				hp->queue[source + move].count--;
+				hp->queue[destination].count++;
+				q->next = NULL;
+				q->end_of_block = 0;
+			}
+			hp->queue[destination].last->end_of_block = 1;
+			destination ^= 1;
+		}
+		source = destination & 2;
+	}
+	return source;
+}
+
+static int
+cob_read_item (struct cobsort *hp, int n)
+{
+	FILE	*fp = hp->file[n].fp;
+
+	if (getc (fp) != 0) {
+		hp->queue[n].first->end_of_block = 1;
+	} else {
+		hp->queue[n].first->end_of_block = 0;
+		if (unlikely(fread (hp->queue[n].first->unique, hp->r_size, 1, fp) != 1)) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static int
+cob_write_block (struct cobsort *hp, int n)
+{
+	struct cobitem	*q;
+	FILE		*fp = hp->file[hp->destination_file].fp;
+
+	while (1) {
+		q = hp->queue[n].first;
+		if (q == NULL) {
+			break;
+		}
+		if (unlikely(fwrite (&(q->block_byte), hp->w_size, 1, fp) != 1)) {
+			return 1;
+		}
+		hp->queue[n].first = q->next;
+		q->next = hp->empty;
+		hp->empty = q;
+	}
+	hp->queue[n].count = 0;
+	hp->file[hp->destination_file].count++;
+	if (putc (1, fp) != 1) {
+		return 1;
+	}
+	return 0;
+/* RXW
+	return putc (1, fp) == 1;
+*/
+}
+
+static void
+cob_copy_check (cob_file *to, cob_file *from)
+{
+	size_t		tosize;
+	size_t		fromsize;
+	unsigned char	*toptr;
+	unsigned char	*fromptr;
+
+	tosize = to->record->size;
+	fromsize = from->record->size;
+	toptr = to->record->data;
+	fromptr = from->record->data;
+	if (unlikely(tosize > fromsize)) {
+		memcpy (toptr, fromptr, fromsize);
+		own_memset (toptr + fromsize, ' ', tosize - fromsize);
+	} else {
+		memcpy (toptr, fromptr, tosize);
+	}
+}
+
+static int
+cob_file_sort_process (struct cobsort *hp)
+{
+	int	i;
+	int	source;
+	int	destination;
+	int	n;
+	int	move;
+	int	res;
+
+	hp->retrieving = 1;
+	n = cob_sort_queues (hp);
+/* RXW - Cannot be true
+	if (unlikely(n < 0)) {
+		return COBSORTABORT;
+	}
+*/
+	if (likely(!hp->files_used)) {
+		hp->retrieval_queue = n;
+		return 0;
+	}
+	if (unlikely(cob_write_block (hp, n))) {
+		return COBSORTFILEERR;
+	}
+	for (i = 0; i < 4; i++) {
+		hp->queue[i].first = hp->empty;
+		hp->empty = hp->empty->next;
+		hp->queue[i].first->next = NULL;
+	}
+	rewind (hp->file[0].fp);
+	rewind (hp->file[1].fp);
+	if (unlikely(cob_get_temp_file (hp, 2))) {
+		return COBSORTFILEERR;
+	}
+	if (unlikely(cob_get_temp_file (hp, 3))) {
+		return COBSORTFILEERR;
+	}
+	source = 0;
+	while (hp->file[source].count > 1) {
+		destination = source ^ 2;
+		hp->file[destination].count = 0;
+		hp->file[destination + 1].count = 0;
+		while (hp->file[source].count > 0) {
+			if (unlikely(cob_read_item (hp, source))) {
+				return COBSORTFILEERR;
+			}
+			if (hp->file[source + 1].count > 0) {
+				if (unlikely(cob_read_item (hp, source + 1))) {
+					return COBSORTFILEERR;
+				}
+			} else {
+				hp->queue[source + 1].first->end_of_block = 1;
+			}
+			while (!hp->queue[source].first->end_of_block
+			       || !hp->queue[source + 1].first->end_of_block) {
+				if (hp->queue[source].first->end_of_block) {
+					move = 1;
+				} else if (hp->queue[source + 1].first->end_of_block) {
+					move = 0;
+				} else {
+					res = cob_file_sort_compare
+						(hp->queue[source].first,
+						hp->queue[source + 1].first,
+						hp->pointer);
+					move = res < 0 ? 0 : 1;
+				}
+				if (unlikely(fwrite (
+				    &(hp->queue[source + move].first->block_byte),
+				    hp->w_size, 1,
+				    hp->file[destination].fp) != 1)) {
+					return COBSORTFILEERR;
+				}
+				if (unlikely(cob_read_item (hp, source + move))) {
+					return COBSORTFILEERR;
+				}
+			}
+			hp->file[destination].count++;
+			if (unlikely(putc (1, hp->file[destination].fp) != 1)) {
+				return COBSORTFILEERR;
+			}
+			hp->file[source].count--;
+			hp->file[source + 1].count--;
+			destination ^= 1;
+		}
+		source = destination & 2;
+		rewind (hp->file[0].fp);
+		rewind (hp->file[1].fp);
+		rewind (hp->file[2].fp);
+		rewind (hp->file[3].fp);
+	}
+	hp->retrieval_queue = source;
+	if (unlikely(cob_read_item (hp, source))) {
+		return COBSORTFILEERR;
+	}
+	if (unlikely(cob_read_item (hp, source + 1))) {
+		return COBSORTFILEERR;
+	}
+	return 0;
+}
+
+static int
+cob_file_sort_submit (cob_file *f, const unsigned char *p)
+{
+	struct cobsort		*hp;
+/* RXW - See comment lines below
+	size_t			i;
+*/
+	int			n;
+	struct cobitem		*q;
+	struct memory_struct	*z;
+
+	hp = f->file;
+	if (unlikely(!hp)) {
+		return COBSORTNOTOPEN;
+	}
+	if (unlikely(hp->retrieving)) {
+		return COBSORTABORT;
+		/* put existing items into the empty list */
+/* RXW - This was a facility to submit new items after retrieval ahd begun
+		for (i = 0; i < 4; i++) {
+			if (hp->queue[i].first != NULL) {
+				hp->queue[i].last->next = hp->empty;
+				hp->empty = hp->queue[i].first;
+				hp->queue[i].first = NULL;
+			}
+		}
+		hp->queue[0].count = hp->queue[1].count = 0;
+		hp->destination_file = -1;
+		hp->retrieving = 0;
+		hp->files_used = 0;
+*/
+	}
+	if (hp->queue[0].count + hp->queue[1].count >= hp->memory) {
+		if (!hp->files_used) {
+			if (unlikely(cob_get_temp_file (hp, 0))) {
+				return COBSORTFILEERR;
+			}
+			if (unlikely(cob_get_temp_file (hp, 1))) {
+				return COBSORTFILEERR;
+			}
+			hp->files_used = 1;
+			hp->destination_file = 0;
+		}
+		n = cob_sort_queues (hp);
+/* RXW - Cannot be true
+		if (unlikely(n < 0)) {
+			return COBSORTABORT;
+		}
+*/
+		if (unlikely(cob_write_block (hp, n))) {
+			return COBSORTFILEERR;
+		}
+		hp->destination_file ^= 1;
+	}
+	q = cob_new_item (hp, sizeof (struct cobitem) + hp->size);
+	q->end_of_block = 1;
+	own_memcpy (q->unique, (void *)&(hp->unique), sizeof(size_t));
+	hp->unique++;
+	memcpy (q->item, p, hp->size);
+	if (hp->queue[0].count <= hp->queue[1].count) {
+		z = &hp->queue[0];
+	} else {
+		z = &hp->queue[1];
+	}
+	q->next = z->first;
+	z->first = q;
+	z->count++;
+	return 0;
+}
+
+static int
+cob_file_sort_retrieve (cob_file *f, unsigned char *p)
+{
+	struct cobsort		*hp;
+	struct cobitem		*next;
+	struct memory_struct	*z;
+	int			move;
+	int			source;
+	int			res;
+
+	hp = f->file;
+	if (unlikely(!hp)) {
+		return COBSORTNOTOPEN;
+	}
+	if (unlikely(!hp->retrieving)) {
+		res = cob_file_sort_process (hp);
+		if (res) {
+			return res;
+		}
+	}
+	if (unlikely(hp->files_used)) {
+		source = hp->retrieval_queue;
+		if (hp->queue[source].first->end_of_block) {
+			if (hp->queue[source + 1].first->end_of_block) {
+				return COBSORTEND;
+			}
+			move = 1;
+		} else if (hp->queue[source + 1].first->end_of_block) {
+			move = 0;
+		} else {
+			res = cob_file_sort_compare (hp->queue[source].first,
+						hp->queue[source + 1].first,
+						hp->pointer);
+			move = res < 0 ? 0 : 1;
+		}
+		memcpy (p, hp->queue[source + move].first->item, hp->size);
+		if (unlikely(cob_read_item (hp, source + move))) {
+			return COBSORTFILEERR;
+		}
+	} else {
+		z = &hp->queue[hp->retrieval_queue];
+		if (z->first == NULL) {
+			return COBSORTEND;
+		}
+		memcpy (p, z->first->item, hp->size);
+		next = z->first->next;
+		z->first->next = hp->empty;
+		hp->empty = z->first;
+		z->first = next;
+	}
+	return 0;
+}
+
+void
+cob_file_sort_using (cob_file *sort_file, cob_file *data_file)
+{
+	int		ret;
+
+	cob_open (data_file, COB_OPEN_INPUT, 0, NULL);
+	while (1) {
+		cob_read (data_file, 0, NULL, COB_READ_NEXT);
+		if (data_file->file_status[0] != '0') {
+			break;
+		}
+		cob_copy_check (sort_file, data_file);
+		ret = cob_file_sort_submit (sort_file, sort_file->record->data);
+		if (ret) {
+			break;
+		}
+	}
+	cob_close (data_file, COB_CLOSE_NORMAL, NULL);
+}
+
+void
+cob_file_sort_giving (cob_file *sort_file, size_t varcnt, ...)
+{
+	size_t		i;
+	int		ret;
+	va_list		args;
+	cob_file	**fbase;
+
+	fbase = cob_malloc (varcnt * sizeof(cob_file *));
+	va_start (args, varcnt);
+	for (i = 0; i < varcnt; i++) {
+		fbase[i] = va_arg (args, cob_file *);
+		cob_open (fbase[i], COB_OPEN_OUTPUT, 0, NULL);
+	}
+	va_end (args);
+	while (1) {
+		ret = cob_file_sort_retrieve (sort_file, sort_file->record->data);
+		if (ret) {
+			if (ret == COBSORTEND) {
+				sort_file->file_status[0] = '1';
+				sort_file->file_status[1] = '0';
+			} else {
+				sort_file->file_status[0] = '3';
+				sort_file->file_status[1] = '0';
+			}
+			break;
+		}
+		for (i = 0; i < varcnt; i++) {
+			cob_copy_check (fbase[i], sort_file);
+			cob_write (fbase[i], fbase[i]->record, 0, NULL);
+		}
+	}
+	for (i = 0; i < varcnt; i++) {
+		cob_close (fbase[i], COB_CLOSE_NORMAL, NULL);
+	}
+	free (fbase);
+}
+
+void
+cob_file_sort_init (cob_file *f, int nkeys, const unsigned char *collating_sequence)
+{
+	struct cobsort	*p;
+	cob_field	*fnstatus = NULL;
+
+	p = cob_malloc (sizeof (struct cobsort));
+	p->size = f->record_max;
+	p->r_size = f->record_max + sizeof(size_t);
+	p->w_size = f->record_max + sizeof(size_t) + 1;
+	p->pointer = f;
+	p->memory = (size_t)cob_sort_memory / (p->size + sizeof(struct cobitem));
+	f->file = p;
+	f->keys = cob_malloc (sizeof (cob_file_key) * nkeys);
+	f->nkeys = 0;
+	if (collating_sequence) {
+		f->sort_collating = collating_sequence;
+	} else {
+		f->sort_collating = cob_current_module->collating_sequence;
+	}
+	RETURN_STATUS (COB_STATUS_00_SUCCESS);
+}
+
+void
+cob_file_sort_init_key (cob_file *f, int flag, cob_field *field, size_t offset)
+{
+	f->keys[f->nkeys].flag = flag;
+	f->keys[f->nkeys].field = field;
+	f->keys[f->nkeys].offset = offset;
+	f->nkeys++;
+}
+
+void
+cob_file_sort_close (cob_file *f)
+{
+	size_t		i;
+	struct cobsort	*hp;
+	cob_field	*fnstatus = NULL;
+
+	hp = f->file;
+	if (likely(hp)) {
+		cob_free_list (hp->empty);
+		for (i = 0; i < 4; i++) {
+			cob_free_list (hp->queue[i].first);
+			if (hp->file[i].fp != NULL) {
+				fclose (hp->file[i].fp);
+			}
+		}
+		free (hp);
+	}
+	f->file = NULL;
+	RETURN_STATUS (COB_STATUS_00_SUCCESS);
+}
+
+void
+cob_file_release (cob_file *f)
+{
+	int		ret;
+	cob_field	*fnstatus = NULL;
+
+	ret = cob_file_sort_submit (f, f->record->data);
+	switch (ret) {
+	case 0:
+		RETURN_STATUS (COB_STATUS_00_SUCCESS);
+		break;
+	default:
+		RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
+		break;
+	}
+}
+
+void
+cob_file_return (cob_file *f)
+{
+	int		ret;
+	cob_field	*fnstatus = NULL;
+
+	ret = cob_file_sort_retrieve (f, f->record->data);
+	switch (ret) {
+	case 0:
+		RETURN_STATUS (COB_STATUS_00_SUCCESS);
+		break;
+	case COBSORTEND:
+		RETURN_STATUS (COB_STATUS_10_END_OF_FILE);
+		break;
+	default:
+		RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
+		break;
+	}
 }

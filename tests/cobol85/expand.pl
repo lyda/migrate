@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 # 
-# Copyright (C) 2001-2006 Keisuke Nishida
+# Copyright (C) 2001-2007 Keisuke Nishida
+# Copyright (C) 2007 Roger While
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

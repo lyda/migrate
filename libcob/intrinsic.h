@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2006 Roger While
+ * Copyright (C) 2005-2007 Roger While
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -81,5 +81,7 @@ extern cob_field	*cob_intr_present_value (int params, ...);
 extern cob_field	*cob_intr_year_to_yyyy (int params, ...);
 extern cob_field	*cob_intr_date_to_yyyymmdd (int params, ...);
 extern cob_field	*cob_intr_day_to_yyyyddd (int params, ...);
+extern cob_field	*cob_intr_seconds_past_midnight (void);
+extern cob_field	*cob_intr_seconds_from_formatted_time (cob_field *format, cob_field *value);
 
 #endif /* COB_INTRINSIC_H */

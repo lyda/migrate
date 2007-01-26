@@ -45,8 +45,10 @@ main ()
 				printf ("-march=i686 %spentiumpro",ctune);
 			} else if (model >= 3 && model <= 6) {
 				printf ("-march=i686 %spentium2",ctune);
-			} else {
+			} else if (model <= 11) {
 				printf ("-march=i686 %spentium3", ctune);
+			} else {
+				printf ("-march=i686 %spentium4", ctune);
 			}
 		}
 		else if (family == 15) {

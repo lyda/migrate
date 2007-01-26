@@ -53,7 +53,7 @@ OpenCOBOL requires the following external libraries to be installed:
 
 The following libraries are required when :
 
-Indexed-Sequential file I/O is used or SORT/MERGE is used
+Indexed-Sequential file I/O is used
 
   o Berkeley DB (libdb) 1.85 or later (runtime AND development)
     http://www.sleepycat.com/
@@ -127,7 +127,7 @@ This MUST succeed - If not, please report.
 
 ** Note ** - On some Red Hat (Fedora) installations, /usr/local/lib
    is NOT automatically searched at runtime. 
-   Edit /etc/ls.so.conf and add /usr/local/lib to the file.
+   Edit /etc/ld.so.conf and add /usr/local/lib to the file.
    Rerun "ldconfig".
 
 You may optionally perform a series of COBOL85 tests.

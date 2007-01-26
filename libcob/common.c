@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2001-2006 Keisuke Nishida
+ * Copyright (C) 2001-2007 Keisuke Nishida
+ * Copyright (C) 2007 Roger While
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -66,8 +67,15 @@ struct cob_alloc_cache {
 
 static int			cob_argc = 0;
 static char			**cob_argv = NULL;
-static const unsigned char	*old_sequence;
 static struct cob_alloc_cache	*cob_alloc_base = NULL;
+
+static char			*env = NULL;
+static int			current_arg = 1;
+
+static int			sort_nkeys;
+static cob_file_key		*sort_keys;
+static const unsigned char	*sort_collate;
+
 
 int			cob_initialized = 0;
 int			cob_exception_code = 0;
@@ -674,11 +682,10 @@ cob_put_sign_ebcdic (unsigned char *p, const int sign)
 int
 cob_real_get_sign (cob_field *f)
 {
+	unsigned char	*p;
+
 	switch (COB_FIELD_TYPE (f)) {
 	case COB_TYPE_NUMERIC_DISPLAY:
-	{
-		unsigned char *p;
-
 		/* locate sign */
 		if (unlikely(COB_FIELD_SIGN_LEADING (f))) {
 			p = f->data;
@@ -712,13 +719,9 @@ cob_real_get_sign (cob_field *f)
 			}
 			return -1;
 		}
-	}
 	case COB_TYPE_NUMERIC_PACKED:
-	{
-		unsigned char *p = f->data + f->attr->digits / 2;
-
+		p = f->data + f->attr->digits / 2;
 		return ((*p & 0x0f) == 0x0d) ? -1 : 1;
-	}
 	default:
 		return 0;
 	}
@@ -727,11 +730,11 @@ cob_real_get_sign (cob_field *f)
 void
 cob_real_put_sign (cob_field *f, const int sign)
 {
+	unsigned char 	*p;
+	int		c;
+
 	switch (COB_FIELD_TYPE (f)) {
 	case COB_TYPE_NUMERIC_DISPLAY:
-	{
-		unsigned char *p;
-
 		/* locate sign */
 		if (unlikely(COB_FIELD_SIGN_LEADING (f))) {
 			p = f->data;
@@ -741,8 +744,7 @@ cob_real_put_sign (cob_field *f, const int sign)
 
 		/* put sign */
 		if (unlikely(COB_FIELD_SIGN_SEPARATE (f))) {
-			int c = (sign < 0) ? '-' : '+';
-
+			c = (sign < 0) ? '-' : '+';
 			if (*p != c) {
 				*p = c;
 			}
@@ -766,18 +768,14 @@ cob_real_put_sign (cob_field *f, const int sign)
 			}
 		}
 		return;
-	}
 	case COB_TYPE_NUMERIC_PACKED:
-	{
-		unsigned char *p = f->data + f->attr->digits / 2;
-
+		p = f->data + f->attr->digits / 2;
 		if (sign < 0) {
 			*p = (*p & 0xf0) | 0x0d;
 		} else {
 			*p = (*p & 0xf0) | 0x0c;
 		}
 		return;
-	}
 	default:
 		return;
 	}
@@ -904,7 +902,7 @@ end:
 static int
 cob_cmp_alnum (cob_field *f1, cob_field *f2)
 {
-	int		ret = 0;
+	int		ret;
 	int		sign1 = cob_get_sign (f1);
 	int		sign2 = cob_get_sign (f2);
 	size_t		min = (f1->size < f2->size) ? f1->size : f2->size;
@@ -916,13 +914,9 @@ cob_cmp_alnum (cob_field *f1, cob_field *f2)
 
 	/* compare the rest (if any) with spaces */
 	if (f1->size > f2->size) {
-		if ((ret = cmpc (f1->data + min, ' ', f1->size - min)) != 0) {
-			goto end;
-		}
-	} else {
-		if ((ret = -cmpc (f2->data + min, ' ', f2->size - min)) != 0) {
-			goto end;
-		}
+		ret = cmpc (f1->data + min, ' ', f1->size - min);
+	} else if (f1->size < f2->size) {
+		ret = -cmpc (f2->data + min, ' ', f2->size - min);
 	}
 
 end:
@@ -999,18 +993,25 @@ cob_cmp (cob_field *f1, cob_field *f2)
  */
 
 int
+cob_is_omitted (cob_field *f)
+{
+	return f->data == NULL;
+}
+
+int
 cob_is_numeric (cob_field *f)
 {
+	size_t		i;
+	int		sign;
+	int		size;
+	unsigned char	*data;
+
 	switch (COB_FIELD_TYPE (f)) {
 	case COB_TYPE_NUMERIC_BINARY:
 	case COB_TYPE_NUMERIC_FLOAT:
 	case COB_TYPE_NUMERIC_DOUBLE:
 		return 1;
 	case COB_TYPE_NUMERIC_PACKED:
-	{
-		size_t	i;
-		int	sign;
-
 		/* check digits */
 		for (i = 0; i < f->size - 1; i++) {
 			if ((f->data[i] & 0xf0) > 0x90 || (f->data[i] & 0x0f) > 0x09) {
@@ -1031,14 +1032,10 @@ cob_is_numeric (cob_field *f)
 			}
 		}
 		return 0;
-	}
 	case COB_TYPE_NUMERIC_DISPLAY:
-	{
-		int		i;
-		int		sign = cob_get_sign (f);
-		int		size = (int) COB_FIELD_SIZE (f);
-		unsigned char	*data = COB_FIELD_DATA (f);
-
+		size = (int) COB_FIELD_SIZE (f);
+		data = COB_FIELD_DATA (f);
+		sign = cob_get_sign (f);
 		for (i = 0; i < size; i++) {
 			if (!isdigit (data[i])) {
 				cob_put_sign (f, sign);
@@ -1047,18 +1044,13 @@ cob_is_numeric (cob_field *f)
 		}
 		cob_put_sign (f, sign);
 		return 1;
-	}
 	default:
-	{
-		size_t	i;
-
 		for (i = 0; i < f->size; i++) {
 			if (!isdigit (f->data[i])) {
 				return 0;
 			}
 		}
 		return 1;
-	}
 	}
 }
 
@@ -1092,6 +1084,7 @@ int
 cob_is_lower (const cob_field *f)
 {
 	size_t	i;
+
 	for (i = 0; i < f->size; i++) {
 		if (!isspace (f->data[i]) && !islower (f->data[i])) {
 			return 0;
@@ -1104,21 +1097,46 @@ cob_is_lower (const cob_field *f)
  * Table sort
  */
 
-static int		sort_nkeys;
-static cob_file_key	*sort_keys;
-static cob_field	*sort_base;
+static int
+sort_cmps (const unsigned char *s1, const unsigned char *s2, const size_t size,
+		const unsigned char *col)
+{
+	size_t			i;
+	int			ret;
+
+	if (col) {
+		for (i = 0; i < size; i++) {
+			if ((ret = col[s1[i]] - col[s2[i]]) != 0) {
+				return ret;
+			}
+		}
+	} else {
+		for (i = 0; i < size; i++) {
+			if ((ret = s1[i] - s2[i]) != 0) {
+				return ret;
+			}
+		}
+	}
+	return 0;
+}
 
 static int
 sort_compare (const void *data1, const void *data2)
 {
-	int	i, cmp;
+	size_t		i;
+	int		cmp;
+	cob_field	f1;
+	cob_field	f2;
 
 	for (i = 0; i < sort_nkeys; i++) {
-		cob_field f1 = *sort_keys[i].field;
-		cob_field f2 = *sort_keys[i].field;
-		f1.data += ((unsigned char *)data1) - sort_base->data;
-		f2.data += ((unsigned char *)data2) - sort_base->data;
-		cmp = cob_cmp (&f1, &f2);
+		f1 = f2 = *sort_keys[i].field;
+		f1.data = (unsigned char *)data1 + sort_keys[i].offset;
+		f2.data = (unsigned char *)data2 + sort_keys[i].offset;
+		if (COB_FIELD_IS_NUMERIC(&f1)) {
+			cmp = cob_numeric_cmp (&f1, &f2);
+		} else {
+			cmp = sort_cmps (f1.data, f2.data, f1.size, sort_collate);
+		}
 		if (cmp != 0) {
 			return (sort_keys[i].flag == COB_ASCENDING) ? cmp : -cmp;
 		}
@@ -1131,26 +1149,26 @@ cob_table_sort_init (int nkeys, const unsigned char *collating_sequence)
 {
 	sort_nkeys = 0;
 	sort_keys = cob_malloc (nkeys * sizeof (cob_file_key));
-	old_sequence = cob_current_module->collating_sequence;
 	if (collating_sequence) {
-		cob_current_module->collating_sequence = collating_sequence;
+		sort_collate = collating_sequence;
+	} else {
+		sort_collate = cob_current_module->collating_sequence;
 	}
 }
 
 void
-cob_table_sort_init_key (int flag, cob_field *field)
+cob_table_sort_init_key (int flag, cob_field *field, size_t offset)
 {
 	sort_keys[sort_nkeys].flag = flag;
 	sort_keys[sort_nkeys].field = field;
+	sort_keys[sort_nkeys].offset = offset;
 	sort_nkeys++;
 }
 
 void
 cob_table_sort (cob_field *f, int n)
 {
-	sort_base = f;
 	qsort (f->data, (size_t) n, f->size, sort_compare);
-	cob_current_module->collating_sequence = old_sequence;
 	free (sort_keys);
 }
 
@@ -1202,12 +1220,14 @@ cob_runtime_error (const char *fmt, ...)
 void
 cob_check_numeric (cob_field *f, const char *name)
 {
-	if (!cob_is_numeric (f)) {
-		size_t		i;
-		unsigned char	*data = f->data;
-		char		buff[COB_SMALL_BUFF];
-		char		*p = buff;
+	size_t		i;
+	unsigned char	*data;
+	char		*p;
+	char		buff[COB_SMALL_BUFF];
 
+	if (!cob_is_numeric (f)) {
+		p = buff;
+		data = f->data;
 		for (i = 0; i < f->size; i++) {
 			if (isprint (data[i])) {
 				*p++ = data[i];
@@ -1226,7 +1246,7 @@ cob_check_odo (const int i, const int min, const int max, const char *name)
 {
 	/* check the OCCURS DEPENDING ON item */
 	if (i < min || max < i) {
-		COB_SET_EXCEPTION (COB_EC_BOUND_ODO);
+		cob_set_exception (COB_EC_BOUND_ODO);
 		cob_runtime_error ("OCCURS DEPENDING ON '%s' out of bounds: %d", name, i);
 		cob_stop_run (1);
 	}
@@ -1237,7 +1257,7 @@ cob_check_subscript (const int i, const int min, const int max, const char *name
 {
 	/* check the subscript */
 	if (i < min || max < i) {
-		COB_SET_EXCEPTION (COB_EC_BOUND_SUBSCRIPT);
+		cob_set_exception (COB_EC_BOUND_SUBSCRIPT);
 		cob_runtime_error ("Subscript of '%s' out of bounds: %d", name, i);
 		cob_stop_run (1);
 	}
@@ -1248,14 +1268,14 @@ cob_check_ref_mod (const int offset, const int length, const int size, const cha
 {
 	/* check the offset */
 	if (offset < 1 || offset > size) {
-		COB_SET_EXCEPTION (COB_EC_BOUND_REF_MOD);
+		cob_set_exception (COB_EC_BOUND_REF_MOD);
 		cob_runtime_error ("Offset of '%s' out of bounds: %d", name, offset);
 		cob_stop_run (1);
 	}
 
 	/* check the length */
 	if (length < 1 || offset + length - 1 > size) {
-		COB_SET_EXCEPTION (COB_EC_BOUND_REF_MOD);
+		cob_set_exception (COB_EC_BOUND_REF_MOD);
 		cob_runtime_error ("Length of '%s' out of bounds: %d", name, length);
 		cob_stop_run (1);
 	}
@@ -1416,8 +1436,6 @@ cob_accept_command_line (cob_field *f)
  * Argument number
  */
 
-static int current_arg = 1;
-
 void
 cob_display_arg_number (cob_field *f)
 {
@@ -1427,7 +1445,7 @@ cob_display_arg_number (cob_field *f)
 
 	cob_move (f, &temp);
 	if (n < 0 || n >= cob_argc) {
-		COB_SET_EXCEPTION (COB_EC_IMP_DISPLAY);
+		cob_set_exception (COB_EC_IMP_DISPLAY);
 		return;
 	}
 	current_arg = n;
@@ -1447,7 +1465,7 @@ void
 cob_accept_arg_value (cob_field *f)
 {
 	if (current_arg >= cob_argc) {
-		COB_SET_EXCEPTION (COB_EC_IMP_ACCEPT);
+		cob_set_exception (COB_EC_IMP_ACCEPT);
 		return;
 	}
 	cob_memcpy (f, (ucharptr)cob_argv[current_arg], (int) strlen (cob_argv[current_arg]));
@@ -1457,8 +1475,6 @@ cob_accept_arg_value (cob_field *f)
 /*
  * Environment variable
  */
-
-static char *env = NULL;
 
 void
 cob_set_environment (cob_field *f1, cob_field *f2)
@@ -1474,7 +1490,7 @@ cob_display_environment (cob_field *f)
 		env = cob_malloc (COB_SMALL_BUFF);
 	}
 	if (f->size > COB_SMALL_BUFF - 1) {
-		COB_SET_EXCEPTION (COB_EC_IMP_DISPLAY);
+		cob_set_exception (COB_EC_IMP_DISPLAY);
 		return;
 	}
 	cob_field_to_string (f, env);
@@ -1488,16 +1504,16 @@ cob_display_env_value (cob_field *f)
 	char env2[COB_SMALL_BUFF];
 
 	if (!env) {
-		COB_SET_EXCEPTION (COB_EC_IMP_DISPLAY);
+		cob_set_exception (COB_EC_IMP_DISPLAY);
 		return;
 	}
 	if (!*env) {
-		COB_SET_EXCEPTION (COB_EC_IMP_DISPLAY);
+		cob_set_exception (COB_EC_IMP_DISPLAY);
 		return;
 	}
 	cob_field_to_string (f, env2);
 	if (strlen (env) + strlen (env2) + 2 > COB_SMALL_BUFF) {
-		COB_SET_EXCEPTION (COB_EC_IMP_DISPLAY);
+		cob_set_exception (COB_EC_IMP_DISPLAY);
 		return;
 	}
 	strcpy (env1, env);
@@ -1505,7 +1521,7 @@ cob_display_env_value (cob_field *f)
 	strcat (env1, env2);
 	p = cob_strdup (env1);
 	if (putenv (p) != 0) {
-		COB_SET_EXCEPTION (COB_EC_IMP_DISPLAY);
+		cob_set_exception (COB_EC_IMP_DISPLAY);
 	}
 }
 
@@ -1518,7 +1534,7 @@ cob_accept_environment (cob_field *f)
 		p = getenv (env);
 	}
 	if (!p) {
-		COB_SET_EXCEPTION (COB_EC_IMP_ACCEPT);
+		cob_set_exception (COB_EC_IMP_ACCEPT);
 		p = "";
 	}
 	cob_memcpy (f, (ucharptr)p, (int) strlen (p));
@@ -1553,7 +1569,7 @@ cob_allocate (unsigned char **dataptr, cob_field *retptr, cob_field *sizefld)
 		cache_ptr = cob_malloc (sizeof (struct cob_alloc_cache));
 		mptr = malloc ((size_t)fsize);
 		if (!mptr) {
-			COB_SET_EXCEPTION (COB_EC_STORAGE_NOT_AVAIL);
+			cob_set_exception (COB_EC_STORAGE_NOT_AVAIL);
 			free (cache_ptr);
 		} else {
 			memset (mptr, 0, (size_t)fsize);
@@ -1586,7 +1602,7 @@ cob_free_alloc (unsigned char **ptr1, unsigned char *ptr2)
 				return;
 			}
 		}
-		COB_SET_EXCEPTION (COB_EC_STORAGE_NOT_ALLOC);
+		cob_set_exception (COB_EC_STORAGE_NOT_ALLOC);
 		return;
 	}
 	if (ptr2 && *(void **)ptr2) {
@@ -1598,7 +1614,7 @@ cob_free_alloc (unsigned char **ptr1, unsigned char *ptr2)
 				return;
 			}
 		}
-		COB_SET_EXCEPTION (COB_EC_STORAGE_NOT_ALLOC);
+		cob_set_exception (COB_EC_STORAGE_NOT_ALLOC);
 		return;
 	}
 }

@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2002-2006 Keisuke Nishida
+ * Copyright (C) 2002-2007 Keisuke Nishida
+ * Copyright (C) 2007 Roger While
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -29,8 +30,8 @@
 #define COB_GE			5 	/* x >= y */
 #define COB_NE			6 	/* x != y */
 
-#define COB_ASCENDING		1
-#define COB_DESCENDING		2
+#define COB_ASCENDING		0
+#define COB_DESCENDING		1
 
 #define COB_FILE_MODE		0644
 
@@ -124,42 +125,45 @@ typedef struct {
 	cob_field	*field;	/* key field */
 	int		flag;	/* WITH DUPLICATES (for RELATIVE/INDEXED) */
 				/* ASCENDING/DESCENDING (for SORT) */
+	size_t		offset;	/* Offset of field */
 } cob_file_key;
 
 typedef struct {
-	const char	*select_name;		/* Name in SELECT */
-	unsigned char	*file_status;		/* FILE STATUS */
-	cob_field	*assign;		/* ASSIGN TO */
-	cob_field	*record;		/* record area */
-	cob_field	*record_size;		/* record size depending on */
-	cob_file_key	*keys;			/* RELATIVE/RECORD/SORT keys */
-	void		*file;			/* file specific data pointer */
-	cob_field	*linage;		/* LINAGE */
-	cob_field	*linage_ctr;		/* LINAGE-COUNTER */
-	cob_field	*latfoot;		/* LINAGE FOOTING */
-	cob_field	*lattop;		/* LINAGE AT TOP */
-	cob_field	*latbot;		/* LINAGE AT BOTTOM */
-	int		lin_lines;		/* Current Linage */
-	int		lin_foot;		/* Current Footage */
-	int		lin_top;		/* Current Top */
-	int		lin_bot;		/* Current Bottom */
-	size_t		record_min;		/* record min size */
-	size_t		record_max;		/* record max size */
-	size_t		nkeys;			/* the number of keys */
-	char		organization;		/* ORGANIZATION */
-	char		access_mode;		/* ACCESS MODE */
-	char		open_mode;		/* OPEN MODE */
-	char		flag_optional;		/* OPTIONAL */
-	char		last_open_mode;		/* open mode given by OPEN */
-	char		spare[2];		/* Spare */
-	unsigned int	flag_nonexistent:1;	/* nonexistent file */
-	unsigned int	flag_end_of_file:1;	/* reached the end of file */
-	unsigned int	flag_begin_of_file:1;	/* reached beginning of file */
-	unsigned int	flag_first_read:1;	/* first READ after OPEN/START */
-	unsigned int	flag_read_done:1;	/* last READ successfully done */
-	unsigned int	flag_has_status:1;	/* has FILE STATUS clause */
-	unsigned int	flag_needs_nl:1;	/* LS file needs NL at close */
-	unsigned int	flag_needs_top:1;	/* Linage needs top */
+	const char		*select_name;		/* Name in SELECT */
+	unsigned char		*file_status;		/* FILE STATUS */
+	cob_field		*assign;		/* ASSIGN TO */
+	cob_field		*record;		/* record area */
+	cob_field		*record_size;		/* record size depending on */
+	cob_file_key		*keys;			/* RELATIVE/RECORD/SORT keys */
+	void			*file;			/* file specific data pointer */
+	cob_field		*linage;		/* LINAGE */
+	cob_field		*linage_ctr;		/* LINAGE-COUNTER */
+	cob_field		*latfoot;		/* LINAGE FOOTING */
+	cob_field		*lattop;		/* LINAGE AT TOP */
+	cob_field		*latbot;		/* LINAGE AT BOTTOM */
+	const unsigned char	*sort_collating;	/* SORT collating */
+	int			lin_lines;		/* Current Linage */
+	int			lin_foot;		/* Current Footage */
+	int			lin_top;		/* Current Top */
+	int			lin_bot;		/* Current Bottom */
+	size_t			record_min;		/* record min size */
+	size_t			record_max;		/* record max size */
+	size_t			nkeys;			/* the number of keys */
+	char			organization;		/* ORGANIZATION */
+	char			access_mode;		/* ACCESS MODE */
+	char			open_mode;		/* OPEN MODE */
+	char			flag_optional;		/* OPTIONAL */
+	char			last_open_mode;		/* open mode given by OPEN */
+	char			special;		/* Special file */
+	char			spare;			/* Spare */
+	unsigned int		flag_nonexistent:1;	/* nonexistent file */
+	unsigned int		flag_end_of_file:1;	/* reached the end of file */
+	unsigned int		flag_begin_of_file:1;	/* reached beginning of file */
+	unsigned int		flag_first_read:1;	/* first READ after OPEN/START */
+	unsigned int		flag_read_done:1;	/* last READ successfully done */
+	unsigned int		flag_has_status:1;	/* has FILE STATUS clause */
+	unsigned int		flag_needs_nl:1;	/* LS file needs NL at close */
+	unsigned int		flag_needs_top:1;	/* Linage needs top */
 } cob_file;
 
 /* File I-O functions */
@@ -192,13 +196,6 @@ extern void cob_rewrite (cob_file *f, cob_field *rec, cob_field *fnstatus);
 extern void cob_delete (cob_file *f, cob_field *fnstatus);
 extern void cob_start (cob_file *f, int cond, cob_field *key, cob_field *fnstatus);
 
-extern void cob_sort_init (cob_file *f, int nkeys,
-			   const unsigned char *collating_sequence);
-extern void cob_sort_finish (cob_file *f);
-extern void cob_sort_init_key (cob_file *f, int flag, cob_field *field);
-extern void cob_sort_using (cob_file *sort_file, cob_file *data_file);
-extern void cob_sort_giving (cob_file *sort_file, cob_file *data_file);
-
 /* System routines */
 extern int CBL_OPEN_FILE (char *file_name, char *file_access, char *file_lock,
 			  char *file_dev, char *file_handle);
@@ -223,5 +220,16 @@ extern int cob_acuw_mkdir (unsigned char *dir);
 extern int cob_acuw_copyfile (char *fname1, char *fname2, unsigned char *file_type);
 extern int cob_acuw_file_info (char *file_name, char *file_info);
 extern int cob_acuw_file_delete (char *file_name, char *file_type);
+
+/* SORT */
+extern void	cob_file_sort_init (cob_file *f, int nkeys,
+			const unsigned char *collating_sequence);
+extern void	cob_file_sort_init_key (cob_file *f, int flag,
+			cob_field *field, size_t offset);
+extern void	cob_file_sort_close (cob_file *f);
+extern void	cob_file_sort_using (cob_file *sort_file, cob_file *data_file);
+extern void	cob_file_sort_giving (cob_file *sort_file, size_t varcnt, ...);
+extern void	cob_file_release (cob_file *f);
+extern void	cob_file_return (cob_file *f);
 
 #endif /* COB_FILEIO_H_ */

@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2001-2006 Keisuke Nishida
+ * Copyright (C) 2001-2007 Keisuke Nishida
+ * Copyright (C) 2007 Roger While
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -342,7 +343,8 @@ static void
 print_version (void)
 {
 	printf ("cobc (%s) %s.%d\n", PACKAGE_NAME, PACKAGE_VERSION, PATCH_LEVEL);
-	puts ("Copyright (C) 2001-2006 Keisuke Nishida");
+	puts ("Copyright (C) 2001-2007 Keisuke Nishida");
+	puts ("Copyright (C) 2007 Roger While");
 }
 
 static void

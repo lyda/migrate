@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2002-2006 Keisuke Nishida
+ * Copyright (C) 2002-2007 Keisuke Nishida
+ * Copyright (C) 2007 Roger While
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -328,11 +329,13 @@ output_base (struct cb_field *f)
 static void
 output_data (cb_tree x)
 {
+	struct cb_literal	*l;
+	struct cb_reference	*r;
+	struct cb_field		*f;
+
 	switch (CB_TREE_TAG (x)) {
 	case CB_TAG_LITERAL:
-	{
-		struct cb_literal *l = CB_LITERAL (x);
-
+		l = CB_LITERAL (x);
 		if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC) {
 			output ("(unsigned char *)\"%s%s\"", l->data,
 				(l->sign < 0) ? "-" : (l->sign > 0) ? "+" : "");
@@ -341,11 +344,9 @@ output_data (cb_tree x)
 			output_string (l->data, l->size);
 		}
 		break;
-	}
 	case CB_TAG_REFERENCE:
-	{
-		struct cb_reference *r = CB_REFERENCE (x);
-		struct cb_field *f = CB_FIELD (r->value);
+		r = CB_REFERENCE (x);
+		f = CB_FIELD (r->value);
 
 		/* base address */
 		output_base (f);
@@ -372,18 +373,19 @@ output_data (cb_tree x)
 			output_index (r->offset);
 		}
 		break;
-	}
 	case CB_TAG_CAST:
-	{
 		output ("&");
 		output_param (x, 0);
 		break;
-	}
 	case CB_TAG_INTRINSIC:
-	{
 		output ("module.cob_procedure_parameters[%d]->data", field_iteration);
 		break;
-	}
+	case CB_TAG_CONST:
+		if (x == cb_null) {
+			output ("NULL");
+			return;
+		}
+		/* Fall through */
 	default:
 		fprintf (stderr, "Unexpected tree tag %d\n", CB_TREE_TAG (x));
 		fflush (stderr);
@@ -941,6 +943,18 @@ output_param (cb_tree x, int id)
 			}
 		}
 
+		if (CB_FILE_P (r->value)) {
+			output ("%s%s", CB_PREFIX_FILE, CB_FILE (r->value)->cname);
+			if (r->check) {
+#ifdef __GNUC__
+				output ("; })");
+#else
+				--inside_check;
+				output (" )");
+#endif
+			}
+			break;
+		}
 		if (CB_ALPHABET_NAME_P (r->value)) {
 			struct cb_alphabet_name *p = CB_ALPHABET_NAME (r->value);
 
@@ -2574,9 +2588,9 @@ output_file_allocation (struct cb_file *f)
 
 	/* output RELATIVE/RECORD KEY's */
 	if (f->organization == COB_ORG_RELATIVE || f->organization == COB_ORG_INDEXED) {
-		output ("  static cob_file_key *%s%s;\n", CB_PREFIX_KEYS, f->cname);
+		output ("  static cob_file_key *%s%s = NULL;\n", CB_PREFIX_KEYS, f->cname);
 	}
-	output ("  static cob_file *%s%s;\n", CB_PREFIX_FILE, f->cname);
+	output ("  static cob_file *%s%s = NULL;\n", CB_PREFIX_FILE, f->cname);
 	output ("  static char %s%s_status[4];\n", CB_PREFIX_FILE, f->cname);
 }
 
@@ -2592,7 +2606,10 @@ output_file_initialization (struct cb_file *f)
 		output_line ("if (cob_initial_external)");
 		output_indent ("{");
 	} else {
+		output_line ("if (!%s%s)", CB_PREFIX_FILE, f->cname);
+		output_indent ("{");
 		output_line ("%s%s = cob_malloc (sizeof(cob_file));", CB_PREFIX_FILE, f->cname);
+		output_indent ("}");
 	}
 	/* output RELATIVE/RECORD KEY's */
 	if (f->organization == COB_ORG_RELATIVE
@@ -2600,8 +2617,11 @@ output_file_initialization (struct cb_file *f)
 		for (l = f->alt_key_list; l; l = l->next) {
 			nkeys++;
 		}
+		output_line ("if (!%s%s)", CB_PREFIX_KEYS, f->cname);
+		output_indent ("{");
 		output_line ("%s%s = cob_malloc (sizeof (cob_file_key) * %d);",
 			     CB_PREFIX_KEYS, f->cname, nkeys);
+		output_indent ("}");
 		nkeys = 1;
 		output_prefix ();
 		output ("%s%s->field = ", CB_PREFIX_KEYS, f->cname);
@@ -2609,6 +2629,13 @@ output_file_initialization (struct cb_file *f)
 		output (";\n");
 		output_prefix ();
 		output ("%s%s->flag = 0;\n", CB_PREFIX_KEYS, f->cname);
+		output_prefix ();
+		if (f->key) {
+			output ("%s%s->offset = %d;\n", CB_PREFIX_KEYS, f->cname,
+				cb_field(f->key)->offset);
+		} else {
+			output ("%s%s->offset = 0;\n", CB_PREFIX_KEYS, f->cname);
+		}
 		for (l = f->alt_key_list; l; l = l->next) {
 			output_prefix ();
 			output ("(%s%s + %d)->field = ", CB_PREFIX_KEYS, f->cname,
@@ -2618,6 +2645,9 @@ output_file_initialization (struct cb_file *f)
 			output_prefix ();
 			output ("(%s%s + %d)->flag = %d;\n", CB_PREFIX_KEYS, f->cname,
 				nkeys, l->duplicates);
+			output_prefix ();
+			output ("(%s%s + %d)->offset = %d;\n", CB_PREFIX_KEYS, f->cname,
+				nkeys, cb_field(l->key)->offset);
 			nkeys++;
 		}
 	}
@@ -2633,10 +2663,15 @@ output_file_initialization (struct cb_file *f)
 	} else {
 		output_line ("%s%s->file_status = %s%s_status;", CB_PREFIX_FILE, f->cname,
 			     CB_PREFIX_FILE, f->cname);
+		output_line ("memset (%s%s_status, '0', 2);", CB_PREFIX_FILE, f->cname);
 	}
 	output_prefix ();
 	output ("%s%s->assign = ", CB_PREFIX_FILE, f->cname);
-	output_param (f->assign, -1);
+	if (f->special) {
+		output ("NULL");
+	} else {
+		output_param (f->assign, -1);
+	}
 	output (";\n");
 	output_prefix ();
 	output ("%s%s->record = ", CB_PREFIX_FILE, f->cname);
@@ -2657,6 +2692,7 @@ output_file_initialization (struct cb_file *f)
 		output_line ("%s%s->nkeys = 0;", CB_PREFIX_FILE, f->cname);
 		output_line ("%s%s->keys = NULL;", CB_PREFIX_FILE, f->cname);
 	}
+	output_line ("%s%s->special = %d;", CB_PREFIX_FILE, f->cname, f->special);
 	output_line ("%s%s->file = NULL;", CB_PREFIX_FILE, f->cname);
 	if (f->linage) {
 		output_prefix ();
@@ -3145,12 +3181,16 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_line ("int frame_index;");
 #ifndef	__GNUC__
 	output_line ("struct frame { int perform_through; int return_address; } "
+		     "frame_stack[%d];", COB_STACK_SIZE);
 #elif	COB_USE_SETJMP
 	output_line ("struct frame { int perform_through; jmp_buf return_address; } "
-#else
-	output_line ("struct frame { int perform_through; void *return_address; } "
-#endif
 		     "frame_stack[%d];", COB_STACK_SIZE);
+#else
+	output_line ("struct frame {");
+	output_line ("	int perform_through;");
+	output_line ("	void *return_address;");
+	output_line ("} frame_stack[%d];", COB_STACK_SIZE);
+#endif
 	output_newline ();
 
 	output_line ("/* Start of function code */");
@@ -3164,6 +3204,18 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 #endif
 	output_newline ();
 	output_line ("if (unlikely(entry < 0)) {");
+	output_line ("	if (!initialized) {");
+	output_line ("		return 0;");
+	output_line ("	}");
+	for (l = prog->file_list; l; l = CB_CHAIN (l)) {
+		struct cb_file *fl;
+
+		fl = CB_FILE (CB_VALUE (l));
+		if (fl->organization != COB_ORG_SORT) {
+			output_line ("	cob_close (%s%s, 0, NULL);",
+					CB_PREFIX_FILE, fl->cname);
+		}
+	}
 	output_line ("	initialized = 0;");
 	output_line ("	return 0;");
 	output_line ("}");
@@ -3204,6 +3256,10 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_line ("}");
 	output_line
 	    ("cob_check_version (COB_SOURCE_FILE, COB_PACKAGE_VERSION, COB_PATCH_LEVEL);");
+	if (!prog->gen_main) {
+		output_line ("cob_set_cancel (\"%s\", %s, %s_);", prog->orig_source_name,
+			prog->program_id, prog->program_id);
+	}
 	if (prog->flag_screen) {
 		output_line ("cob_screen_init ();");
 	}

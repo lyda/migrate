@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2002-2006 Keisuke Nishida
+ * Copyright (C) 2002-2007 Keisuke Nishida
+ * Copyright (C) 2007 Roger While
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -233,9 +234,6 @@ enum cob_exception_id {
 	COB_EC_MAX
 };
 
-/* Set cob_exception_code from an exception id */
-#define COB_SET_EXCEPTION(id) cob_set_exception(id)
-
 /*
  * Fatal error
  */
@@ -376,6 +374,7 @@ extern int cob_cmp (cob_field *f1, cob_field *f2);
 
 /* Class check */
 
+extern int cob_is_omitted (cob_field *f);
 extern int cob_is_numeric (cob_field *f);
 extern int cob_is_alpha (const cob_field *f);
 extern int cob_is_upper (const cob_field *f);
@@ -384,7 +383,7 @@ extern int cob_is_lower (const cob_field *f);
 /* Table sort */
 
 extern void cob_table_sort_init (int nkeys, const unsigned char *collating_sequence);
-extern void cob_table_sort_init_key (int flag, cob_field *field);
+extern void cob_table_sort_init_key (int flag, cob_field *field, size_t offset);
 extern void cob_table_sort (cob_field *f, int n);
 
 /* Run-time error checking */

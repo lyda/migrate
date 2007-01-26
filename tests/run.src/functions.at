@@ -1,6 +1,6 @@
 ### OpenCOBOL Test Suite				-*- m4 -*-
 
-## Copyright (C) 2005-2006 Roger While
+## Copyright (C) 2005-2007 Roger While
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -913,6 +913,58 @@ AT_DATA([prog.cob], [
 AT_CHECK([${COMPILE} -o prog prog.cob])
 AT_CHECK([./prog], [0],
 [$E+D%C.B#A
+])
+
+AT_CLEANUP
+
+AT_SETUP([FUNCTION SECONDS-FROM-FORMATTED-TIME])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  X   PIC      X(6)   VALUE "hhmmss".
+       01  Y   PIC      9(8)   COMP-5.
+       01  Z   PIC      X(6)   VALUE "010203".
+       PROCEDURE        DIVISION.
+           MOVE FUNCTION SECONDS-FROM-FORMATTED-TIME (X, Z) TO Y.
+           IF Y = 3723
+                   DISPLAY "OK"
+           ELSE
+                   DISPLAY Y
+           END-IF.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[OK
+])
+
+AT_CLEANUP
+
+AT_SETUP([FUNCTION SECONDS-PAST-MIDNIGHT])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  Y   PIC      9(8)   COMP-5.
+       PROCEDURE        DIVISION.
+           MOVE FUNCTION SECONDS-PAST-MIDNIGHT TO Y.
+           IF Y < 86402
+                   DISPLAY "OK"
+           ELSE
+                   DISPLAY Y
+           END-IF.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} -o prog prog.cob])
+AT_CHECK([./prog], [0],
+[OK
 ])
 
 AT_CLEANUP

@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2001-2006 Keisuke Nishida
+ * Copyright (C) 2001-2007 Keisuke Nishida
+ * Copyright (C) 2007 Roger While
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -297,7 +298,7 @@ cob_decimal_get_display (cob_decimal *d, cob_field *f, const int opt)
 	diff = (int)(COB_FIELD_SIZE (f) - size);
 	if (unlikely(diff < 0)) {
 		/* overflow */
-		COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
+		cob_set_exception (COB_EC_SIZE_OVERFLOW);
 
 		/* if the statement has ON SIZE ERROR or NOT ON SIZE ERROR,
 		   then throw an exception */
@@ -574,7 +575,7 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, const int opt)
 	}
 
 overflow:
-	COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
+	cob_set_exception (COB_EC_SIZE_OVERFLOW);
 	return cob_exception_code;
 }
 
@@ -762,7 +763,7 @@ cob_decimal_get_packed (cob_decimal *d, cob_field *f, const int opt)
 	diff = (int)(digits - size);
 	if (diff < 0) {
 		/* overflow */
-		COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
+		cob_set_exception (COB_EC_SIZE_OVERFLOW);
 
 		/* if the statement has ON SIZE ERROR or NOT ON SIZE ERROR,
 		   then throw an exception */
@@ -832,7 +833,7 @@ int
 cob_decimal_get_field (cob_decimal *d, cob_field *f, const int opt)
 {
 	if (unlikely(d->scale == DECIMAL_NAN)) {
-		COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
+		cob_set_exception (COB_EC_SIZE_OVERFLOW);
 		return cob_exception_code;
 	}
 
@@ -944,7 +945,7 @@ cob_decimal_div (cob_decimal *d1, cob_decimal *d2)
 	/* check for division by zero */
 	if (unlikely(mpz_sgn (d2->value) == 0)) {
 		d1->scale = DECIMAL_NAN;
-		COB_SET_EXCEPTION (COB_EC_SIZE_ZERO_DIVIDE);
+		cob_set_exception (COB_EC_SIZE_ZERO_DIVIDE);
 		return;
 	}
 
@@ -1123,7 +1124,7 @@ cob_display_add_int (cob_field *f, int n)
 
 overflow:
 	cob_put_sign (f, sign);
-	COB_SET_EXCEPTION (COB_EC_SIZE_OVERFLOW);
+	cob_set_exception (COB_EC_SIZE_OVERFLOW);
 	return cob_exception_code;
 }
 

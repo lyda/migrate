@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2002-2006 Keisuke Nishida
+ * Copyright (C) 2002-2007 Keisuke Nishida
+ * Copyright (C) 2007 Roger While
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -159,6 +160,8 @@ cob_move_display_to_display (cob_field *f1, cob_field *f2)
 static void
 cob_move_display_to_alphanum (cob_field *f1, cob_field *f2)
 {
+	int		diff;
+	int		zero_size;
 	int		sign = cob_get_sign (f1);
 	size_t		size1 = COB_FIELD_SIZE (f1);
 	size_t		size2 = f2->size;
@@ -168,9 +171,8 @@ cob_move_display_to_alphanum (cob_field *f1, cob_field *f2)
 	if (size1 >= size2) {
 		own_memcpy (data2, data1, size2);
 	} else {
-		int	diff = (int)(size2 - size1);
-		int	zero_size = 0;
-
+		diff = (int)(size2 - size1);
+		zero_size = 0;
 		/* move */
 		own_memcpy (data2, data1, size1);
 		/* implied 0 ('P's) */
@@ -390,7 +392,8 @@ cob_move_display_to_binary (cob_field *f1, cob_field *f2)
 	if (sign < 0 && COB_FIELD_HAVE_SIGN (f2)) {
 		val = -val;
 	}
-	if (cob_current_module->flag_binary_truncate) {
+	if (cob_current_module->flag_binary_truncate &&
+	    !COB_FIELD_REAL_BINARY(f2)) {
 		val %= cob_exp10LL[(int)f2->attr->digits];
 	}
 

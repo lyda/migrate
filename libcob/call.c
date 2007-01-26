@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2001-2006 Keisuke Nishida
+ * Copyright (C) 2001-2007 Keisuke Nishida
+ * Copyright (C) 2007 Roger While
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -109,10 +110,9 @@ static struct struct_handle	*pre_handle = NULL;
 
 struct call_hash {
 	struct call_hash	*next;
-	struct call_hash	*prev;
 	const char		*name;
 	lt_ptr_t		func;
-	lt_dlhandle		handle;
+	void			*cancel;
 };
 
 #ifdef	COB_ALT_HASH
@@ -174,7 +174,7 @@ hash (const unsigned char *s)
 #endif
 
 static void
-insert (const char *name, lt_dlhandle handle, lt_ptr_t func)
+insert (const char *name, lt_ptr_t func, void *cancel)
 {
 #ifndef	COB_ALT_HASH
 	int			val = hash ((unsigned char *)name);
@@ -183,52 +183,13 @@ insert (const char *name, lt_dlhandle handle, lt_ptr_t func)
 
 	p->name = cob_strdup (name);
 	p->func = func;
-	p->handle = handle;
+	p->cancel = cancel;
 #ifdef	COB_ALT_HASH
 	p->next = call_table;
-	if (call_table) {
-		call_table->prev = p;
-	}
 	call_table = p;
 #else
 	p->next = call_table[val];
 	call_table[val] = p;
-#endif
-}
-
-static void
-drop (const char *name)
-{
-#ifdef	COB_ALT_HASH
-	struct call_hash	*p;
-
-	for (p = call_table; p; p = p->next) {
-		if (strcmp (name, p->name) == 0) {
-			lt_dlclose (p->handle);
-			if (p->prev) {
-				p->prev->next = p->next;
-			} else {
-				call_table = p->next;
-			}
-			free ((char *)p->name);
-			free (p);
-			return;
-		}
-	}
-#else
-	struct call_hash	**pp;
-
-	for (pp = &call_table[hash ((unsigned char *)name)]; *pp; pp = &(*pp)->next) {
-		if (strcmp (name, (*pp)->name) == 0) {
-			struct call_hash *p = *pp;
-
-			lt_dlclose (p->handle);
-			*pp = p->next;
-			free ((char *)p->name);
-			free (p);
-			return;
-		}
-	}
 #endif
 }
 
@@ -252,6 +213,24 @@ lookup (const char *name)
 /*
  * C interface
  */
+
+void
+cob_set_cancel (const char *name, void *entry, void *cancel)
+{
+	struct call_hash	*p;
+
+#ifdef	COB_ALT_HASH
+	for (p = call_table; p; p = p->next) {
+#else
+	for (p = call_table[hash ((unsigned char *)name)]; p; p = p->next) {
+#endif
+		if (strcmp (name, p->name) == 0) {
+			p->cancel = cancel;
+			return;
+		}
+	}
+	insert (name, entry, cancel);
+}
 
 void *
 cob_resolve_1 (const char *name)
@@ -323,7 +302,7 @@ cob_resolve (const char *name)
 
 	/* search the main program */
 	if (mainhandle != NULL && (func = lt_dlsym (mainhandle, (char *)buff)) != NULL) {
-		insert (name, mainhandle, func);
+		insert (name, func, NULL);
 		resolve_error = NULL;
 		return func;
 	}
@@ -332,7 +311,7 @@ cob_resolve (const char *name)
 #ifdef	_WIN32
 	for (chkhandle = pre_handle; chkhandle; chkhandle = chkhandle->next) {
 		if ((func = lt_dlsym (chkhandle->preload_handle, (char *)buff)) != NULL) {
-			insert (name, chkhandle->preload_handle, func);
+			insert (name, func, NULL);
 			resolve_error = NULL;
 			return func;
 		}
@@ -340,7 +319,7 @@ cob_resolve (const char *name)
 #endif
 #if	defined(USE_LIBDL) && defined (RTLD_DEFAULT)
 	if ((func = lt_dlsym (RTLD_DEFAULT, buff)) != NULL) {
-		insert (name, NULL, func);
+		insert (name, func, NULL);
 		resolve_error = NULL;
 		return func;
 	}
@@ -356,19 +335,19 @@ cob_resolve (const char *name)
 		if (stat (filename, &st) == 0) {
 			if ((handle = lt_dlopen (filename)) != NULL
 			    && (func = lt_dlsym (handle, (char *)buff)) != NULL) {
-				insert (name, handle, func);
+				insert (name, func, NULL);
 				resolve_error = NULL;
 				return func;
 			}
 			strcpy (resolve_error_buff, lt_dlerror ());
 			resolve_error = resolve_error_buff;
-			COB_SET_EXCEPTION (COB_EC_PROGRAM_NOT_FOUND);
+			cob_set_exception (COB_EC_PROGRAM_NOT_FOUND);
 			return NULL;
 		}
 	}
 	sprintf (resolve_error_buff, "Cannot find module '%s'", name);
 	resolve_error = resolve_error_buff;
-	COB_SET_EXCEPTION (COB_EC_PROGRAM_NOT_FOUND);
+	cob_set_exception (COB_EC_PROGRAM_NOT_FOUND);
 	return NULL;
 }
 
@@ -435,11 +414,26 @@ cob_call_error (void)
 void
 cob_cancel (cob_field *f)
 {
-	char	*buff;
+	struct call_hash	*p;
+	char			*name;
+	int			(*cancel_func)(int, ...);
 
-	buff = cob_get_buff (f->size + 1);
-	cob_field_to_string (f, buff);
-	drop (buff);
+	name = cob_get_buff (f->size + 1);
+	cob_field_to_string (f, name);
+
+#ifdef	COB_ALT_HASH
+	for (p = call_table; p; p = p->next) {
+#else
+	for (p = call_table[hash ((unsigned char *)name)]; p; p = p->next) {
+#endif
+		if (strcmp (name, p->name) == 0) {
+			if (p->cancel) {
+				cancel_func = p->cancel;
+				cancel_func (-1, NULL, NULL, NULL, NULL, NULL,
+						NULL, NULL, NULL);
+			}
+		}
+	}
 }
 
 void
@@ -501,8 +495,9 @@ cob_init_call (void)
 				}
 			}
 		}
+		free (p);
 	}
 	for (psyst = (struct system_table *)&system_tab[0]; psyst->syst_name; psyst++) {
-		insert (psyst->syst_name, NULL, (lt_ptr_t)psyst->syst_call);
+		insert (psyst->syst_name, (lt_ptr_t)psyst->syst_call, NULL);
 	}
 }

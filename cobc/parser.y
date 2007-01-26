@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2001-2006 Keisuke Nishida
+ * Copyright (C) 2001-2007 Keisuke Nishida
+ * Copyright (C) 2007 - Roger While
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -718,7 +719,7 @@ select_clause:
 assign_clause:
   ASSIGN _to _ext_clause _disk assignment_name
   {
-	current_file->assign = cb_build_assignment_name ($5);
+	current_file->assign = cb_build_assignment_name (current_file, $5);
   }
 ;
 
@@ -729,6 +730,13 @@ _ext_clause:
 
 assignment_name:
   alnum_literal
+| DISPLAY
+  {
+	const char	*s;
+
+	s = "$#@DUMMY@#$";
+	$$ = cb_build_alphanumeric_literal ((unsigned char *)s, strlen(s));
+  }
 | qualified_word
 ;
 
@@ -2290,7 +2298,21 @@ call_param_list:
 ;
 
 call_param:
-  x				{ $$ = cb_build_pair (call_mode, $1); }
+  OMITTED
+  {
+	if (call_mode != cb_int (CB_CALL_BY_REFERENCE)) {
+		cb_error ("OMITTED only allowed with BY REFERENCE");
+	}
+	$$ = cb_build_pair (call_mode, cb_null);
+  }
+| _by call_mode OMITTED
+  {
+	if (call_mode != cb_int (CB_CALL_BY_REFERENCE)) {
+		cb_error ("OMITTED only allowed with BY REFERENCE");
+	}
+	$$ = cb_build_pair (call_mode, cb_null);
+  }
+| x				{ $$ = cb_build_pair (call_mode, $1); }
 | _by call_mode x		{ $$ = cb_build_pair (call_mode, $3); }
 ;
 
@@ -3020,7 +3042,7 @@ open_list:
 | open_list
   open_mode open_sharing file_name_list open_option
   {
-cb_tree l;
+	cb_tree l;
 	for (l = $4; l; l = CB_CHAIN (l)) {
 		if (CB_VALUE (l) != cb_error_node) {
 			BEGIN_IMPLICIT_STATEMENT ();
@@ -3191,7 +3213,7 @@ release_statement:
   RELEASE			{ BEGIN_STATEMENT ("RELEASE"); }
   record_name write_from
   {
-	cb_emit_write ($3, $4, cb_int0);
+	cb_emit_release ($3, $4);
   }
 ;
 
@@ -3375,6 +3397,9 @@ sort_body:
   qualified_word sort_key_list sort_duplicates sort_collating
   {
 	cb_emit_sort_init ($1, $2, $3, $4);
+	if (CB_FILE_P (cb_ref ($1)) && $2 == NULL) {
+		cb_error ("File sort requires KEY phrase");
+	}
 	$$ = $1; /* used in sort_input/sort_output */
   }
   sort_input sort_output
@@ -3384,7 +3409,10 @@ sort_body:
 ;
 
 sort_key_list:
-  /* empty */			{ $$ = NULL; }
+  /* empty */
+  {
+	$$ = NULL;
+  }
 | sort_key_list
   _on ascending_or_descending _key opt_key_list
   {
@@ -3415,24 +3443,52 @@ sort_collating:
 ;
 
 sort_input:
+  /* empty */
+  {
+	if (CB_FILE_P (cb_ref ($0))) {
+		cb_error ("File sort requires USING or INPUT PROCEDURE");
+	}
+  }
 | USING file_name_list
   {
-	cb_emit_sort_using ($0, $2);
+	if (!CB_FILE_P (cb_ref ($0))) {
+		cb_error ("USING illegal with table SORT");
+	} else {
+		cb_emit_sort_using ($0, $2);
+	}
   }
 | INPUT PROCEDURE _is perform_procedure
   {
-	cb_emit_sort_input ($0, $4);
+	if (!CB_FILE_P (cb_ref ($0))) {
+		cb_error ("INPUT PROCEDURE illegal with table SORT");
+	} else {
+		cb_emit_sort_input ($0, $4);
+	}
   }
 ;
 
 sort_output:
+  /* empty */
+  {
+	if (CB_FILE_P (cb_ref ($-1))) {
+		cb_error ("File sort requires GIVING or OUTPUT PROCEDURE");
+	}
+  }
 | GIVING file_name_list
   {
-	cb_emit_sort_giving ($-1, $2);
+	if (!CB_FILE_P (cb_ref ($-1))) {
+		cb_error ("GIVING illegal with table SORT");
+	} else {
+		cb_emit_sort_giving ($-1, $2);
+	}
   }
 | OUTPUT PROCEDURE _is perform_procedure
   {
-	cb_emit_sort_output ($-1, $4);
+	if (!CB_FILE_P (cb_ref ($-1))) {
+		cb_error ("OUTPUT PROCEDURE illegal with table SORT");
+	} else {
+		cb_emit_sort_output ($-1, $4);
+	}
   }
 ;
 
@@ -4002,6 +4058,7 @@ expr_token:
 | AND				{ push_expr ('&', 0); }
 | OR				{ push_expr ('|', 0); }
 /* class condition */
+| OMITTED			{ push_expr ('O', 0); }
 | NUMERIC			{ push_expr ('9', 0); }
 | ALPHABETIC			{ push_expr ('A', 0); }
 | ALPHABETIC_LOWER		{ push_expr ('L', 0); }

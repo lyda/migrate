@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2002-2006 Keisuke Nishida
+ * Copyright (C) 2002-2007 Keisuke Nishida
+ * Copyright (C) 2007 Roger While
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -23,6 +24,7 @@
 #include <libcob/common.h>
 
 extern void cob_init_call (void);
+extern void cob_set_cancel (const char *name, void *entry, void *cancel);
 extern void *cob_resolve (const char *name);
 extern void *cob_resolve_1 (const char *name);
 extern const char *cob_resolve_error (void);
