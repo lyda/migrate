@@ -123,7 +123,7 @@ static struct call_hash **call_table;
 
 struct system_table {
 	const char		*syst_name;
-	const lt_ptr_t		syst_call;
+	lt_ptr_t		syst_call;
 };
 
 static const struct system_table	system_tab[] = {
@@ -498,6 +498,6 @@ cob_init_call (void)
 		free (p);
 	}
 	for (psyst = (struct system_table *)&system_tab[0]; psyst->syst_name; psyst++) {
-		insert (psyst->syst_name, (lt_ptr_t)psyst->syst_call, NULL);
+		insert (psyst->syst_name, psyst->syst_call, NULL);
 	}
 }

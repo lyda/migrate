@@ -254,21 +254,22 @@ AC_C_CONST
 AC_C_BIGENDIAN
 AC_TYPE_SIZE_T
 AC_STRUCT_TM
-AX_C___ATTRIBUTE__
+# AX_C___ATTRIBUTE__
 
 # Checks for library functions.
 AC_FUNC_ALLOCA
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([memmove memset regcomp pow setlocale fcntl strerror \
+AC_CHECK_FUNCS([memmove memset regcomp setlocale fcntl strerror \
 		strcasecmp strchr strrchr strdup strstr strtol gettimeofday])
 
-# AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[int testint __attribute__ ((visibility ("hidden")));]])],
-# 	[AC_DEFINE(DLLHIDDEN, __attribute__ ((visibility ("hidden"))))],
-# 	[AC_DEFINE(DLLHIDDEN, ,Has visibility attribute)])
-
+# Check for timezone
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <time.h>]], [[timezone = 3600;]])],
 	[AC_DEFINE(HAVE_TIMEZONE, 1)],
 	[])
+
+# Checks for internationalization stuff
+AM_ICONV
+AM_LANGINFO_CODESET
 
 # Checks for db.
 USE_DB="no"
@@ -302,7 +303,7 @@ then
 		AC_DEFINE(USE_DB41)
 		MYOLDLIBS="$LIBS"
 		export MYOCLIBS
-		for MYOCLIBS in db-4.5 db-4.4 db-4.3 db-4.2 db-4.1 db
+		for MYOCLIBS in db db-4.5 db-4.4 db-4.3 db-4.2 db-4.1
 		do
 			LIBS="$MYOLDLIBS -l$MYOCLIBS"
 			AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>

@@ -1,3 +1,9 @@
+2007-01-29  Roger While <simrw@sim-basis.de>
+
+	* parser.y, tree.[hc] : Preliminary stuff for LOCALE
+	* parser.y, config.def : Implement odo-without-to; For
+		85/2002, an ODO without a TO clause is not allowed
+
 2007-01-26  Roger While <simrw@sim-basis.de>
 
 	* typeck.c : Harden validity tests

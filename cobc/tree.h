@@ -43,32 +43,33 @@ enum cb_tag {
 	CB_TAG_STRING,		/* 2 string constant */
 	CB_TAG_ALPHABET_NAME,	/* 3 alphabet-name */
 	CB_TAG_CLASS_NAME,	/* 4 class-name */
-	CB_TAG_SYSTEM_NAME,	/* 5 system-name */
-	CB_TAG_LITERAL,		/* 6 numeric/alphanumeric literal */
-	CB_TAG_DECIMAL,		/* 7 decimal number */
-	CB_TAG_FIELD,		/* 8 user-defined variable */
-	CB_TAG_FILE,		/* 9 file description */
+	CB_TAG_LOCALE_NAME,	/* 5 locale-name */
+	CB_TAG_SYSTEM_NAME,	/* 6 system-name */
+	CB_TAG_LITERAL,		/* 7 numeric/alphanumeric literal */
+	CB_TAG_DECIMAL,		/* 8 decimal number */
+	CB_TAG_FIELD,		/* 9 user-defined variable */
+	CB_TAG_FILE,		/* 10 file description */
 	/* expressions */
-	CB_TAG_REFERENCE,	/* 10 reference to a field, file, or label */
-	CB_TAG_BINARY_OP,	/* 11 binary operation */
-	CB_TAG_FUNCALL,		/* 12 run-time function call */
-	CB_TAG_CAST,		/* 13 type cast */
-	CB_TAG_INTRINSIC,	/* 14 intrinsic function */
+	CB_TAG_REFERENCE,	/* 11 reference to a field, file, or label */
+	CB_TAG_BINARY_OP,	/* 12 binary operation */
+	CB_TAG_FUNCALL,		/* 13 run-time function call */
+	CB_TAG_CAST,		/* 14 type cast */
+	CB_TAG_INTRINSIC,	/* 15 intrinsic function */
 	/* statements */
-	CB_TAG_LABEL,		/* 15 label statement */
-	CB_TAG_ASSIGN,		/* 16 assignment statement */
-	CB_TAG_INITIALIZE,	/* 17 INITIALIZE statement */
-	CB_TAG_SEARCH,		/* 18 SEARCH statement */
-	CB_TAG_CALL,		/* 19 CALL statement */
-	CB_TAG_GOTO,		/* 20 GO TO statement */
-	CB_TAG_IF,		/* 21 IF statement */
-	CB_TAG_PERFORM,		/* 22 PERFORM statement */
-	CB_TAG_STATEMENT,	/* 23 general statement */
-	CB_TAG_CONTINUE,	/* 24 CONTINUE statement */
+	CB_TAG_LABEL,		/* 16 label statement */
+	CB_TAG_ASSIGN,		/* 17 assignment statement */
+	CB_TAG_INITIALIZE,	/* 18 INITIALIZE statement */
+	CB_TAG_SEARCH,		/* 19 SEARCH statement */
+	CB_TAG_CALL,		/* 20 CALL statement */
+	CB_TAG_GOTO,		/* 21 GO TO statement */
+	CB_TAG_IF,		/* 22 IF statement */
+	CB_TAG_PERFORM,		/* 23 PERFORM statement */
+	CB_TAG_STATEMENT,	/* 24 general statement */
+	CB_TAG_CONTINUE,	/* 25 CONTINUE statement */
 	/* miscellaneous */
-	CB_TAG_PERFORM_VARYING,	/* 25 PERFORM VARYING parameter */
-	CB_TAG_PICTURE,		/* 26 PICTURE clause */
-	CB_TAG_LIST		/* 27 list */
+	CB_TAG_PERFORM_VARYING,	/* 26 PERFORM VARYING parameter */
+	CB_TAG_PICTURE,		/* 27 PICTURE clause */
+	CB_TAG_LIST		/* 28 list */
 };
 
 enum cb_alphabet_name_type {
@@ -331,6 +332,22 @@ struct cb_class_name {
 
 extern cb_tree cb_build_class_name (cb_tree name, cb_tree list);
 
+
+/*
+ * Locale name
+ */
+
+struct cb_locale_name {
+	struct cb_tree_common	common;
+	const char		*name;
+	char			*cname;
+	cb_tree			list;
+};
+
+#define CB_LOCALE_NAME(x)	(CB_TREE_CAST (CB_TAG_LOCALE_NAME, struct cb_locale_name, x))
+#define CB_LOCALE_NAME_P(x)	(CB_TREE_TAG (x) == CB_TAG_LOCALE_NAME)
+
+extern cb_tree cb_build_locale_name (cb_tree name, cb_tree list);
 
 /*
  * System-name
@@ -1054,6 +1071,7 @@ struct cb_program {
 	cb_tree			alphabet_name_list;
 	cb_tree			class_name_list;
 	cb_tree			parameter_list;
+	cb_tree			locale_list;
 	struct cb_field		*working_storage;
 	struct cb_field		*local_storage;
 	struct cb_field		*linkage_storage;
@@ -1240,11 +1258,11 @@ extern void cb_emit_set_on_off (cb_tree l, cb_tree flag);
 extern void cb_emit_set_true (cb_tree l);
 extern void cb_emit_set_false (cb_tree l);
 
-extern void cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree dup_allow, cb_tree col);
+extern void cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree col);
 extern void cb_emit_sort_using (cb_tree file, cb_tree l);
-extern void cb_emit_sort_input (cb_tree file, cb_tree proc);
+extern void cb_emit_sort_input (cb_tree proc);
 extern void cb_emit_sort_giving (cb_tree file, cb_tree l);
-extern void cb_emit_sort_output (cb_tree file, cb_tree proc);
+extern void cb_emit_sort_output (cb_tree proc);
 extern void cb_emit_sort_finish (cb_tree file);
 
 extern void cb_emit_start (cb_tree file, cb_tree op, cb_tree key);

@@ -25,6 +25,11 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
+
+#ifdef	HAVE_LOCALE_H
+#include <locale.h>
+#endif 
+
 #include <libcob.h>
 
 #include "cobc.h"
@@ -334,7 +339,7 @@ cb_build_registers (void)
 	   CB_FIELD (x)->values = cb_list (cb_zero);
 	   cb_validate_field (CB_FIELD (x));
 	   current_program->working_storage =
-	   cb_field_add (current_program->working_storage, CB_FIELD (x));
+	   	cb_field_add (current_program->working_storage, CB_FIELD (x));
 	   }
 	 */
 
@@ -4160,7 +4165,7 @@ cb_emit_set_false (cb_tree l)
  */
 
 void
-cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree dup_allow, cb_tree col)
+cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree col)
 {
 	cb_tree l;
 
@@ -4216,7 +4221,7 @@ cb_emit_sort_using (cb_tree file, cb_tree l)
 }
 
 void
-cb_emit_sort_input (cb_tree file, cb_tree proc)
+cb_emit_sort_input (cb_tree proc)
 {
 	cb_emit (cb_build_perform_once (proc));
 }
@@ -4239,7 +4244,7 @@ cb_emit_sort_giving (cb_tree file, cb_tree l)
 }
 
 void
-cb_emit_sort_output (cb_tree file, cb_tree proc)
+cb_emit_sort_output (cb_tree proc)
 {
 	cb_emit (cb_build_perform_once (proc));
 }

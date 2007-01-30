@@ -47,6 +47,10 @@
 #endif
 #endif
 
+#ifdef	HAVE_LOCALE_H
+#include <locale.h>
+#endif
+
 #include <libcob.h>
 
 #include "cobc.h"
@@ -249,48 +253,6 @@ init_var (char *var, const char *env, const char *def)
 		strcpy (var, p);
 	} else {
 		strcpy (var, def);
-	}
-}
-
-static void
-init_environment (int argc, char *argv[])
-{
-	char *p;
-
-	/* Initialize program_name */
-	program_name = strrchr (argv[0], '/');
-	if (program_name) {
-		program_name++;
-	} else {
-		program_name = argv[0];
-	}
-
-	output_name = NULL;
-
-	if ((p = getenv ("TMPDIR")) != NULL) {
-		cob_tmpdir = p;
-	} else if ((p = getenv ("TMP")) != NULL) {
-		cob_tmpdir = p;
-	} else {
-		cob_tmpdir = (char *)"/tmp";
-	}
-	init_var (cob_cc, "COB_CC", COB_CC);
-#if defined (__GNUC__) && (__GNUC__ >= 3)
-	strcat (cob_cc, " -pipe");
-#endif
-	init_var (cob_cflags, "COB_CFLAGS", COB_CFLAGS);
-	init_var (cob_libs, "COB_LIBS", COB_LIBS);
-	init_var (cob_ldflags, "COB_LDFLAGS", COB_LDFLAGS);
-	init_var (cob_config_dir, "COB_CONFIG_DIR", COB_CONFIG_DIR);
-
-	p = getenv ("COB_LDADD");
-	if (p) {
-		strcat (cob_libs, " ");
-		strcat (cob_libs, p);
-	}
-	p = getenv ("COB_EBCDIC");
-	if (p && (*p == 'F' || *p == 'f')) {
-		alt_ebcdic = 1;
 	}
 }
 
@@ -1227,6 +1189,7 @@ main (int argc, char *argv[])
 	enum cb_compile_level	local_level = 0;
 	int			status = 1;
 	struct filename		*fn;
+	char			*p;
 
 #ifdef	ENABLE_NLS
 	setlocale (LC_ALL, "");
@@ -1239,7 +1202,42 @@ main (int argc, char *argv[])
 #endif
 
 	/* Initialize the global variables */
-	init_environment (argc, argv);
+
+	/* Initialize program_name */
+	program_name = strrchr (argv[0], '/');
+	if (program_name) {
+		program_name++;
+	} else {
+		program_name = argv[0];
+	}
+
+	output_name = NULL;
+
+	if ((p = getenv ("TMPDIR")) != NULL) {
+		cob_tmpdir = p;
+	} else if ((p = getenv ("TMP")) != NULL) {
+		cob_tmpdir = p;
+	} else {
+		cob_tmpdir = (char *)"/tmp";
+	}
+	init_var (cob_cc, "COB_CC", COB_CC);
+#if defined (__GNUC__) && (__GNUC__ >= 3)
+	strcat (cob_cc, " -pipe");
+#endif
+	init_var (cob_cflags, "COB_CFLAGS", COB_CFLAGS);
+	init_var (cob_libs, "COB_LIBS", COB_LIBS);
+	init_var (cob_ldflags, "COB_LDFLAGS", COB_LDFLAGS);
+	init_var (cob_config_dir, "COB_CONFIG_DIR", COB_CONFIG_DIR);
+
+	p = getenv ("COB_LDADD");
+	if (p) {
+		strcat (cob_libs, " ");
+		strcat (cob_libs, p);
+	}
+	p = getenv ("COB_EBCDIC");
+	if (p && (*p == 'F' || *p == 'f')) {
+		alt_ebcdic = 1;
+	}
 
 	/* Process command line arguments */
 	i = process_command_line (argc, argv);

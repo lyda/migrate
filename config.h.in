@@ -116,6 +116,9 @@
 /* Define to 1 if you have the <kpathsea/getopt.h> header file. */
 #undef HAVE_KPATHSEA_GETOPT_H
 
+/* Define if you have <langinfo.h> and nl_langinfo(CODESET). */
+#undef HAVE_LANGINFO_CODESET
+
 /* Define to 1 if you have the `gmp' library (-lgmp). */
 #undef HAVE_LIBGMP
 
@@ -154,9 +157,6 @@
 
 /* Define to 1 if you have the <pdcurses.h> header file. */
 #undef HAVE_PDCURSES_H
-
-/* Define to 1 if you have the `pow' function. */
-#undef HAVE_POW
 
 /* Has -Wno-pointer-sign */
 #undef HAVE_PSIGN_OPT
@@ -224,8 +224,8 @@
 /* Define to 1 if you have the <wchar.h> header file. */
 #undef HAVE_WCHAR_H
 
-/* define if your compiler has __attribute__ */
-#undef HAVE___ATTRIBUTE__
+/* Define as const if the declaration of iconv() needs const. */
+#undef ICONV_CONST
 
 /* Name of package */
 #undef PACKAGE

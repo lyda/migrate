@@ -345,7 +345,7 @@ static const struct reserved reserved_words[] = {
   {"LINES",		LINES},			/* 2002 */
   {"LINKAGE",		LINKAGE},		/* 2002 */
   {"LOCAL-STORAGE",	LOCAL_STORAGE},		/* 2002 */
-  {"LOCALE",		-1},			/* 2002 */
+  {"LOCALE",		LOCALE},		/* 2002 */
   {"LOCK",		LOCK},			/* 2002 */
   {"LOW-VALUE",		LOW_VALUE},		/* 2002 */
   {"LOW-VALUES",	LOW_VALUE},		/* 2002 */

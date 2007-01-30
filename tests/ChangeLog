@@ -1,3 +1,7 @@
+2007-01-29  Roger While <simrw@sim-basis.de>
+
+	* OC test for ODO without TO clause
+
 2007-01-16  Roger While <simrw@sim-basis.de>
 
 	* OC test for ASSIGN [TO] KEYBOARD/DISPLAY

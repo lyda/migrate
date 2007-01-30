@@ -139,7 +139,7 @@ cb_verify (enum cb_support tag, const char *feature)
 	case CB_ERROR:
 		return 0;
 	case CB_UNCONFORMABLE:
-		cb_error (_("%s not conform to %s"), feature, cb_config_name);
+		cb_error (_("%s does not conform to %s"), feature, cb_config_name);
 		return 0;
 	}
 	return 0;

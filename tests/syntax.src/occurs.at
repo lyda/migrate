@@ -170,3 +170,22 @@ AT_CLEANUP
 # 23) TODO
 
 # 24) TODO
+
+AT_SETUP([OCCURS DEPENDING without TO clause])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 Y             PIC 9.
+       01 XX.
+          03 X  PIC X OCCURS 10 DEPENDING ON Y.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:8: Error: ODO without TO clause does not conform to COBOL 2002
+])
+
+AT_CLEANUP
+

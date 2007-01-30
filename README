@@ -29,8 +29,10 @@ Requirements
 
 OpenCOBOL requires the following external libraries to be installed:
 
-(NOTE - all the following packages are normally part of a Linux
- distribution. Cygwin also has these as installable packages)
+ ** NOTE - all the following packages are normally part of a Linux
+    distribution. Cygwin also has these as installable packages
+    ALWAYS install the distro packages when available !!
+ **
 
   o GNU MP (libgmp) 4.1.2 or later
     http://swox.com/gmp/
@@ -41,11 +43,13 @@ OpenCOBOL requires the following external libraries to be installed:
 
     GNU MP is distributed under GNU Lesser General Public License.
 
+
+  *** Note for following - libltdl is NOT needed when installing on Linux
+      or Windows (including Cygwin and MingW)
+  ***
   o GNU Libtool (libltdl)
     http://www.gnu.org/software/libtool/libtool.html
 
-    *** Note - libltdl is NOT needed when installing on Linux
-        or Windows (including Cygwin and MingW) ***
 
     libltdl is used to implement dynamic CALL statements.
 
@@ -55,6 +59,10 @@ The following libraries are required when :
 
 Indexed-Sequential file I/O is used
 
+  ** NOTE - all the following packages are normally part of a Linux
+     distribution. Cygwin also has these as installable packages
+     ALWAYS install the distro packages when available !!
+  **
   o Berkeley DB (libdb) 1.85 or later (runtime AND development)
     http://www.sleepycat.com/
 
@@ -89,6 +97,12 @@ Indexed-Sequential file I/O is used
     software, or you have to pay royalty to Sleepycat Software, Inc.
 
 SCREEN I/O is used or extended ACCEPT/DISPLAY is used
+  ** NOTE - all the following packages are normally part of a Linux/Unix
+     distribution. Cygwin also has these as installable packages
+     ALWAYS install the distro packages when available !!
+  **
+  o Unix curses (Not Linux/Cygwin/MingW)
+  or
   o Ncurses (libncurses) 5.2 or later
     http://www.gnu.org/software/ncurses/ncurses.html
 
@@ -106,8 +120,7 @@ OpenCOBOL (autoconf/automake/libtool), it is
 NOT generally possible to use path names with
 spaces embedded within them (Mainly Cygwin/MingW/Windows ports).
  
-See INSTALL for general installation instruction.  Typically,
-this is done by the following commands:
+To generate/install OpenCOBOL :
 
 **************************************
 
@@ -116,7 +129,7 @@ this is done by the following commands:
 
 Here you may run
     make check
-to run a series of OpenCOBOL test programs (recommended)
+to run a series of OpenCOBOL test programs (must do!)
 This MUST succeed - If not, please report.
 
     make install
@@ -132,6 +145,7 @@ This MUST succeed - If not, please report.
 
 You may optionally perform a series of COBOL85 tests.
 See tests/cobol85/README
+It is recommended that you perform this test.
 
 **************************************
 
@@ -151,6 +165,12 @@ The "make install" will default to "/usr/local" as
 the install path. You may override this by specifying
 "--prefix=<your install path>" to the "./configure"
 command.
+
+***********************************************************
+
+The following is only interseting for advanced use,
+A normal user should not have recourse to use these
+options.
 
 There are the following configure options:
 

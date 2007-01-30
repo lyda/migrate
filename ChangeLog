@@ -1,3 +1,8 @@
+2007-01-30  Roger While <simrw@sim-basis.de>
+
+	* configure.ac : Check for langinfo/iconv
+	* README : Update
+
 2007-01-25  Roger While <simrw@sim-basis.de>
 
 	* All : Update Coypright info on all files

@@ -129,7 +129,7 @@ static int literal_value (cb_tree x);
 %token UNDERLINE UNIT UNTIL UP UPON USAGE USE USING VALUE VARYING WHEN WITH
 %token MANUAL AUTOMATIC EXCLUSIVE ROLLBACK OVERLINE PROMPT UPDATE ESCAPE
 %token COMP COMP_1 COMP_2 COMP_3 COMP_4 COMP_5 COMP_X
-%token SOURCE SCREEN_CONTROL EVENT_STATUS
+%token SOURCE SCREEN_CONTROL EVENT_STATUS LOCALE
 %token SIGNED_SHORT SIGNED_INT SIGNED_LONG UNSIGNED_SHORT UNSIGNED_INT UNSIGNED_LONG
 %token BINARY_CHAR BINARY_SHORT BINARY_LONG BINARY_DOUBLE SIGNED UNSIGNED
 %token LINAGE_COUNTER PROGRAM_POINTER CHAINING BLANK_SCREEN BLANK_LINE
@@ -390,6 +390,7 @@ special_name:
 | class_name_clause
 | currency_sign_clause
 | decimal_point_clause
+| locale_clause
 | cursor_clause
 | crt_status_clause
 | screen_control
@@ -544,6 +545,19 @@ class_item:
   }
 ;
 
+/* LOCALE clause */
+
+locale_clause:
+  LOCALE undefined_word _is LITERAL
+  {
+	PENDING ("LOCALE");
+	/*
+	current_program->locale_list =
+			cb_list_add (current_program->locale_list,
+			cb_build_locale_name ($2, $4));
+	*/
+  }
+;
 
 /* CURRENCY SIGN clause */
 
@@ -1447,6 +1461,9 @@ occurs_clause:
   OCCURS integer occurs_to_integer _times
   occurs_depending occurs_keys occurs_indexed
   {
+	if (current_field->occurs_depending && !($3)) {
+		cb_verify (cb_odo_without_to, "ODO without TO clause");
+	}
 	current_field->occurs_min = $3 ? cb_get_int ($2) : 1;
 	current_field->occurs_max = $3 ? cb_get_int ($3) : cb_get_int ($2);
 	current_field->indexes++;
@@ -3396,7 +3413,7 @@ sort_statement:
 sort_body:
   qualified_word sort_key_list sort_duplicates sort_collating
   {
-	cb_emit_sort_init ($1, $2, $3, $4);
+	cb_emit_sort_init ($1, $2, $4);
 	if (CB_FILE_P (cb_ref ($1)) && $2 == NULL) {
 		cb_error ("File sort requires KEY phrase");
 	}
@@ -3462,7 +3479,7 @@ sort_input:
 	if (!CB_FILE_P (cb_ref ($0))) {
 		cb_error ("INPUT PROCEDURE illegal with table SORT");
 	} else {
-		cb_emit_sort_input ($0, $4);
+		cb_emit_sort_input ($4);
 	}
   }
 ;
@@ -3487,7 +3504,7 @@ sort_output:
 	if (!CB_FILE_P (cb_ref ($-1))) {
 		cb_error ("OUTPUT PROCEDURE illegal with table SORT");
 	} else {
-		cb_emit_sort_output ($-1, $4);
+		cb_emit_sort_output ($4);
 	}
   }
 ;

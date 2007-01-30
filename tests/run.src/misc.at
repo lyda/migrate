@@ -1349,3 +1349,40 @@ AT_CHECK([./prog], [0],
 ])
 
 AT_CLEANUP
+
+AT_SETUP([CALL with OMITTED parameter])
+
+AT_DATA([callee.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      callee.
+       DATA             DIVISION.
+       LINKAGE          SECTION.
+       01 P1            PIC X.
+       01 P2            PIC X(6).
+       PROCEDURE        DIVISION USING P1 P2.
+           IF P2 OMITTED
+              DISPLAY "OKOKOK"
+           END-IF.
+           EXIT PROGRAM.
+])
+
+AT_DATA([caller.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      caller.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 P1            PIC X    VALUE "A".
+       01 P2            PIC X(6) VALUE "NOT OK".
+       PROCEDURE        DIVISION.
+           CALL "callee" USING P1 OMITTED.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE_MODULE} callee.cob])
+AT_CHECK([${COMPILE} -o caller caller.cob])
+AT_CHECK([./caller], [0],
+[OKOKOK
+])
+
+AT_CLEANUP
+

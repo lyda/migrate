@@ -72,7 +72,9 @@ static struct cob_alloc_cache	*cob_alloc_base = NULL;
 static char			*env = NULL;
 static int			current_arg = 1;
 
-static int			sort_nkeys;
+static char			*locale_save = NULL;
+
+static size_t			sort_nkeys;
 static cob_file_key		*sort_keys;
 static const unsigned char	*sort_collate;
 
@@ -406,7 +408,7 @@ void
 cob_init (int argc, char **argv)
 {
 	char	*s;
-	int	i;
+	size_t	i;
 	char	buff[32];
 
 	if (!cob_initialized) {
@@ -416,6 +418,10 @@ cob_init (int argc, char **argv)
 #ifdef	HAVE_SETLOCALE
 		setlocale (LC_ALL, "");
 		setlocale (LC_NUMERIC, "C");
+		s = setlocale (LC_ALL, NULL);
+		if (s) {
+			locale_save = strdup (s);
+		}
 #endif
 #ifdef	ENABLE_NLS
 		bindtextdomain (PACKAGE, LOCALEDIR);
@@ -1003,7 +1009,7 @@ cob_is_numeric (cob_field *f)
 {
 	size_t		i;
 	int		sign;
-	int		size;
+	size_t		size;
 	unsigned char	*data;
 
 	switch (COB_FIELD_TYPE (f)) {
@@ -1033,7 +1039,7 @@ cob_is_numeric (cob_field *f)
 		}
 		return 0;
 	case COB_TYPE_NUMERIC_DISPLAY:
-		size = (int) COB_FIELD_SIZE (f);
+		size = COB_FIELD_SIZE (f);
 		data = COB_FIELD_DATA (f);
 		sign = cob_get_sign (f);
 		for (i = 0; i < size; i++) {
@@ -1418,7 +1424,7 @@ cob_accept_command_line (cob_field *f)
 	size_t	len;
 	char	buff[COB_LARGE_BUFF] = "";
 
-	for (i = 1; i < cob_argc; i++) {
+	for (i = 1; i < (size_t)cob_argc; i++) {
 		len = strlen (cob_argv[i]);
 		if (size + len >= COB_LARGE_BUFF) {
 			/* overflow */
