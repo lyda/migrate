@@ -18,7 +18,7 @@
  * Boston, MA 02110-1301 USA
  */
 
-%expect 120
+%expect 121
 
 %defines
 %verbose
@@ -89,7 +89,8 @@ static void terminator_error (void);
 static int literal_value (cb_tree x);
 %}
 
-%token WORD LITERAL PICTURE MNEMONIC_NAME FUNCTION_NAME TRIM_FUNCTION NUMVALC_FUNC
+%token WORD LITERAL PICTURE MNEMONIC_NAME
+%token FUNCTION_NAME TRIM_FUNCTION NUMVALC_FUNC LOCALE_DT_FUNC
 
 %token ACCEPT ADD ADDRESS CALL CANCEL CLOSE COMPUTE DELETE DISPLAY DIVIDE ENTRY
 %token EVALUATE IF INITIALIZE INSPECT MERGE MOVE MULTIPLY OPEN PERFORM
@@ -550,12 +551,13 @@ class_item:
 locale_clause:
   LOCALE undefined_word _is LITERAL
   {
-	PENDING ("LOCALE");
-	/*
-	current_program->locale_list =
-			cb_list_add (current_program->locale_list,
-			cb_build_locale_name ($2, $4));
-	*/
+	cb_tree	l;
+
+	l = cb_build_locale_name ($2, $4);
+	if (l != cb_error_node) {
+		current_program->locale_list =
+			cb_list_add (current_program->locale_list, l);
+	}
   }
 ;
 
@@ -4441,6 +4443,10 @@ function:
   {
 	$$ = cb_build_intrinsic ($1, $3);
   }
+| LOCALE_DT_FUNC '(' locale_dt_args ')'
+  {
+	$$ = cb_build_intrinsic ($1, $3);
+  }
 ;
 
 func_args:
@@ -4492,6 +4498,23 @@ numvalc_args:
 
 	x = cb_list ($1);
 	$$ = cb_list_add (x, $3);
+  }
+;
+
+locale_dt_args:
+  e
+  {
+	cb_tree	x;
+
+	x = cb_list ($1);
+	$$ = cb_list_add (x, cb_null);
+  }
+| e e_sep reference
+  {
+	cb_tree	x;
+
+	x = cb_list ($1);
+	$$ = cb_list_add (x, cb_ref($3));
   }
 ;
 

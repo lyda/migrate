@@ -859,6 +859,9 @@ output_param (cb_tree x, int id)
 	case CB_TAG_STRING:
 		output_string (CB_STRING (x)->data, CB_STRING (x)->size);
 		break;
+	case CB_TAG_LOCALE_NAME:
+		output ("\"%s\"", CB_LITERAL(CB_LOCALE_NAME(x)->list)->data);
+		break;
 	case CB_TAG_ALPHABET_NAME:
 	{
 		struct cb_alphabet_name *p = CB_ALPHABET_NAME (x);
@@ -2438,7 +2441,7 @@ output_stmt (cb_tree x)
 				output_perform_call (CB_FILE (p->file)->handler,
 						     CB_FILE (p->file)->handler);
 				output_indent ("  }");
-				if (p->handler2) {
+				if (p->handler2 || p->handler3) {
 					output_line ("else");
 				}
 			}
@@ -2447,8 +2450,13 @@ output_stmt (cb_tree x)
 					output_line ("if (!cob_exception_code)");
 				}
 				output_indent ("  {");
+				if (p->handler3) {
+					output_stmt (p->handler3);
+				}
 				output_stmt (p->handler2);
 				output_indent ("  }");
+			} else if (p->handler3) {
+				output_stmt (p->handler3);
 			}
 		}
 		break;

@@ -1,3 +1,8 @@
+2007-02-07  Roger While <simrw@sim-basis.de>
+
+	* intrinsic.[ch] : Implement LOCALE-DATE, LOCALE-TIME
+	* fileio.[hc] : Fix a READ PREVIOUS problem
+
 2007-01-24  Roger While <simrw@sim-basis.de>
 
 	* fileio.[ch] : Implement new SORT routines

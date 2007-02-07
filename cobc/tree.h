@@ -982,6 +982,7 @@ struct cb_statement {
 	int			handler_id;
 	cb_tree			handler1;
 	cb_tree			handler2;
+	cb_tree			handler3;
 	int			need_terminator;
 };
 

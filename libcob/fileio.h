@@ -159,7 +159,7 @@ typedef struct {
 	unsigned int		flag_nonexistent:1;	/* nonexistent file */
 	unsigned int		flag_end_of_file:1;	/* reached the end of file */
 	unsigned int		flag_begin_of_file:1;	/* reached beginning of file */
-	unsigned int		flag_first_read:1;	/* first READ after OPEN/START */
+	unsigned int		flag_first_read:2;	/* first READ after OPEN/START */
 	unsigned int		flag_read_done:1;	/* last READ successfully done */
 	unsigned int		flag_has_status:1;	/* has FILE STATUS clause */
 	unsigned int		flag_needs_nl:1;	/* LS file needs NL at close */

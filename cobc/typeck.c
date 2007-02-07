@@ -190,14 +190,16 @@ static void cb_expr_shift_sign (int op);
 
 #define VALIDATE(x) \
 	if (x == cb_error_node) return;
-#define VALIDATE_LIST(l)			\
-{							\
-	cb_tree _l;					\
-	for (_l = l; _l; _l = CB_CHAIN (_l)) {		\
-		if (CB_VALUE (_l) == cb_error_node) {	\
-			return;				\
-		}					\
-	}						\
+
+static int
+cb_validate_list (cb_tree l)
+{
+	for ( ; l; l = CB_CHAIN (l)) {
+		if (CB_VALUE (l) == cb_error_node) {
+			return 1;
+		}
+	}
+	return 0;
 }
 
 cb_tree
@@ -1539,7 +1541,9 @@ cb_emit_arithmetic (cb_tree vars, int op, cb_tree val)
 	}
 
 	VALIDATE (val);
-	VALIDATE_LIST (vars);
+	if (cb_validate_list (vars)) {
+		return;
+	}
 
 	if (!CB_BINARY_OP_P (val)) {
 		if (op == '+' || op == '-') {
@@ -1965,7 +1969,9 @@ cb_emit_move_corresponding (cb_tree x1, cb_tree x2)
 
 	x1 = cb_check_group_name (x1);
 	VALIDATE (x1);
-	VALIDATE_LIST (x2);
+	if (cb_validate_list (x2)) {
+		return;
+	}
 	for (l = x2; l; l = CB_CHAIN(l)) {
 		v = CB_VALUE(l);
 		v = cb_check_group_name (v);
@@ -2578,7 +2584,9 @@ cb_emit_free (cb_tree vars)
 	cb_tree		l;
 	int		i;
 
-	VALIDATE_LIST (vars);
+	if (cb_validate_list (vars)) {
+		return;
+	}
 	for (l = vars, i = 1; l; l = CB_CHAIN (l), i++) {
 		if (CB_TREE_CLASS (CB_VALUE (l)) == CB_CLASS_POINTER) {
 			if (CB_CAST_P (CB_VALUE (l))) {
@@ -3708,7 +3716,9 @@ cb_emit_move (cb_tree src, cb_tree dsts)
 	cb_tree l;
 
 	VALIDATE (src);
-	VALIDATE_LIST (dsts);
+	if (cb_validate_list (dsts)) {
+		return;
+	}
 
 	for (l = dsts; l; l = CB_CHAIN (l)) {
 		cb_emit (cb_build_move (src, CB_VALUE (l)));
@@ -3844,7 +3854,10 @@ cb_emit_read (cb_tree ref, cb_tree next, cb_tree into, cb_tree key, cb_tree lock
 				 CB_FILE(file)->file_status, cb_int (read_opts)));
 		}
 		if (into) {
+			current_statement->handler3 = cb_build_move (rec, into);
+/* RXW
 			cb_emit (cb_build_move (rec, into));
+*/
 		}
 		current_statement->file = file;
 	}
@@ -3904,7 +3917,10 @@ cb_emit_return (cb_tree ref, cb_tree into)
 
 	cb_emit (cb_build_funcall_1 ("cob_file_return", file));
 	if (into) {
+		current_statement->handler3 = cb_build_move (rec, into);
+/* RXW
 		cb_emit (cb_build_move (rec, into));
+*/
 	}
 	current_statement->file = file;
 }
@@ -4015,7 +4031,9 @@ cb_emit_set_to (cb_tree vars, cb_tree x)
 #endif
 
 	VALIDATE (x);
-	VALIDATE_LIST (vars);
+	if (cb_validate_list (vars)) {
+		return;
+	}
 
 #if 0
 	/* determine the class of targets */
@@ -4070,7 +4088,9 @@ cb_emit_set_to (cb_tree vars, cb_tree x)
 			}
 		}
 	}
-	VALIDATE_LIST (vars);
+	if (cb_validate_list (vars)) {
+		return;
+	}
 
 	for (l = vars; l; l = CB_CHAIN (l)) {
 		cb_emit (cb_build_move (x, CB_VALUE (l)));

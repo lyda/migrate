@@ -27,6 +27,12 @@
 #include <time.h>
 #include <errno.h>
 #include <math.h>
+#ifdef	HAVE_LANGINFO_CODESET
+#include <langinfo.h>
+#endif
+#ifdef	HAVE_LOCALE_H
+#include <locale.h>
+#endif
 
 #include "byteswap.h"
 #include "common.h"
@@ -2143,5 +2149,191 @@ cob_intr_seconds_from_formatted_time (cob_field *format, cob_field *value)
 		seconds = 0;
 	}
 	cob_set_int (curr_field, seconds);
+	return curr_field;
+}
+
+cob_field *
+cob_intr_locale_date (cob_field *srcfield, const char *deflocale)
+{
+#ifdef	HAVE_LANGINFO_CODESET
+	size_t		len;
+	int		indate;
+	int		days;
+	int		month;
+	int		year;
+	unsigned char	*p;
+	char		*localep = NULL;
+	char		*localep2;
+	struct tm	tstruct;
+#endif
+	cob_field_attr	attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
+	cob_field	field = {0, NULL, &attr};
+#ifdef	HAVE_LANGINFO_CODESET
+	char		buff[128];
+	char		buff2[128];
+#endif
+
+	cob_exception_code = 0;
+	if (COB_FIELD_IS_NUMERIC (srcfield)) {
+		indate = cob_get_int (srcfield);
+	} else {
+		if (srcfield->size < 8) {
+			goto derror;
+		}
+		p = srcfield->data;
+		indate = 0;
+		for (len = 0; len < 8; len++, p++) {
+			if (isdigit (*p)) {
+				indate *= 10;
+				indate += (*p - '0');
+			} else {
+				goto derror;
+			}
+		}
+	}
+	year = indate / 10000;
+	if (year < 1601 || year > 9999) {
+		goto derror;
+	}
+	indate %= 10000;
+	month = indate / 100;
+	if (month < 1 || month > 12) {
+		goto derror;
+	}
+	days = indate % 100;
+	if (days < 1 || days > 31) {
+		goto derror;
+	}
+	if (leap_year (year)) {
+		if (days > leap_month_days[month]) {
+			goto derror;
+		}
+	} else {
+		if (days > normal_month_days[month]) {
+			goto derror;
+		}
+	}
+	month--;
+
+#ifdef	HAVE_LANGINFO_CODESET
+	memset ((void *)&tstruct, 0, sizeof(struct tm));
+	tstruct.tm_year = year - 1900;
+	tstruct.tm_mon = month;
+	tstruct.tm_mday = days;
+	if (deflocale) {
+		localep2 = setlocale (LC_TIME, NULL);
+		if (localep2) {
+			localep = strdup (localep2);
+		}
+		(void) setlocale (LC_TIME, deflocale);
+	}
+	sprintf(buff2, "%s", nl_langinfo(D_FMT));
+	if (deflocale) {
+		if (localep) {
+			(void) setlocale (LC_TIME, localep);
+		}
+	}
+	strftime (buff, sizeof(buff), buff2, &tstruct);
+	len = strlen (buff);
+	field.size = len;
+	make_field_entry (&field);
+	memcpy (curr_field->data, buff, len);
+#else
+	goto derror;
+#endif
+	return curr_field;
+derror:
+	field.size = 10;
+	make_field_entry (&field);
+	memset (curr_field->data, ' ', 10);
+	cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
+	return curr_field;
+}
+
+cob_field *
+cob_intr_locale_time (cob_field *srcfield, const char *deflocale)
+{
+#ifdef	HAVE_LANGINFO_CODESET
+	size_t		len;
+	int		indate;
+	int		hours;
+	int		minutes;
+	int		seconds;
+	unsigned char	*p;
+	char		*localep = NULL;
+	char		*localep2;
+	struct tm	tstruct;
+#endif
+	cob_field_attr	attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
+	cob_field	field = {0, NULL, &attr};
+#ifdef	HAVE_LANGINFO_CODESET
+	char		buff[128];
+	char		buff2[128];
+#endif
+
+	cob_exception_code = 0;
+	if (COB_FIELD_IS_NUMERIC (srcfield)) {
+		indate = cob_get_int (srcfield);
+	} else {
+		if (srcfield->size < 6) {
+			goto derror;
+		}
+		p = srcfield->data;
+		indate = 0;
+		for (len = 0; len < 6; len++, p++) {
+			if (isdigit (*p)) {
+				indate *= 10;
+				indate += (*p - '0');
+			} else {
+				goto derror;
+			}
+		}
+	}
+	hours = indate / 10000;
+	if (hours < 0 || hours > 24) {
+		goto derror;
+	}
+	indate %= 10000;
+	minutes = indate / 100;
+	if (minutes < 0 || minutes > 59) {
+		goto derror;
+	}
+	seconds = indate % 100;
+	if (seconds < 0 || seconds > 59) {
+		goto derror;
+	}
+
+#ifdef	HAVE_LANGINFO_CODESET
+	memset ((void *)&tstruct, 0, sizeof(struct tm));
+	tstruct.tm_hour = hours;
+	tstruct.tm_min = minutes;
+	tstruct.tm_sec = seconds;
+	if (deflocale) {
+		localep2 = setlocale (LC_TIME, NULL);
+		if (localep2) {
+			localep = strdup (localep2);
+		}
+		(void) setlocale (LC_TIME, deflocale);
+	}
+	sprintf(buff2, "%s", nl_langinfo(T_FMT));
+	if (deflocale) {
+		if (localep) {
+			(void) setlocale (LC_TIME, localep);
+		}
+	}
+	strftime (buff, sizeof(buff), buff2, &tstruct);
+	len = strlen (buff);
+	field.size = len;
+	make_field_entry (&field);
+	memcpy (curr_field->data, buff, len);
+#else
+	goto derror;
+#endif
+	return curr_field;
+derror:
+	field.size = 8;
+	make_field_entry (&field);
+	memset (curr_field->data, ' ', 10);
+	cob_set_exception (COB_EC_ARGUMENT_FUNCTION);
 	return curr_field;
 }

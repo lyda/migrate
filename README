@@ -237,6 +237,7 @@ If you reconfigure and/or prepare a distribution
   o Autoconf 2.59
   o Automake 1.9.6
   o Libtool 1.5.22
+  o m4 1.4.2
   o Gettext 0.14.1
   o Texinfo 4.6 (For makeinfo)
 

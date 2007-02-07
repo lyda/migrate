@@ -1726,7 +1726,8 @@ indexed_read_next (cob_file *f, int read_opts)
 
 	if (f->flag_first_read) {
 		/* data is read in indexed_open or indexed_start */
-		if (p->data.data == 0 || nextprev == DB_PREV) {
+		if (p->data.data == 0 || (f->flag_first_read == 2 &&
+		    nextprev == DB_PREV)) {
 #ifdef	USE_DB41
 			p->cursor[p->key_index]->c_close (p->cursor[p->key_index]);
 			p->cursor[p->key_index] = NULL;
@@ -2351,7 +2352,7 @@ cob_open (cob_file *f, int mode, int opt, cob_field *fnstatus)
 	f->flag_nonexistent = 0;
 	f->flag_end_of_file = 0;
 	f->flag_begin_of_file = 0;
-	f->flag_first_read = 1;
+	f->flag_first_read = 2;
 
 	if (f->special) {
 		if (f->special == 1) {

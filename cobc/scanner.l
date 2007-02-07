@@ -355,6 +355,12 @@ H\"[^\"\n]*\" {
 	if (strcasecmp (yytext, "NUMVAL-C") == 0) {
 		return NUMVALC_FUNC;
 	}
+	if (strcasecmp (yytext, "LOCALE-DATE") == 0) {
+		return LOCALE_DT_FUNC;
+	}
+	if (strcasecmp (yytext, "LOCALE-TIME") == 0) {
+		return LOCALE_DT_FUNC;
+	}
 	return FUNCTION_NAME;
   }
   .		{ yylval = 0; return yytext[0]; }

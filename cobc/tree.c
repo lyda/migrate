@@ -307,6 +307,7 @@ cb_tree_category (cb_tree x)
 		}
 		break;
 	case CB_TAG_ALPHABET_NAME:
+	case CB_TAG_LOCALE_NAME:
 		x->category = CB_CATEGORY_ALPHANUMERIC;
 		break;
 	default:
@@ -612,11 +613,9 @@ cb_build_locale_name (cb_tree name, cb_tree list)
 #ifdef	HAVE_SETLOCALE
 	struct cb_class_name	*p =
 	    make_tree (CB_TAG_LOCALE_NAME, CB_CATEGORY_UNKNOWN, sizeof (struct cb_locale_name));
-	char			buff[CB_MAX_CNAME];
 
 	p->name = cb_define (name, CB_TREE (p));
-	sprintf (buff, "ls_%s", to_cname (p->name));
-	p->cname = strdup (buff);
+	p->cname = to_cname (p->name);
 	p->list = list;
 	return CB_TREE (p);
 #else
@@ -1955,6 +1954,8 @@ RXW */
 		case CB_INTR_INTEGER_OF_DATE:
 		case CB_INTR_INTEGER_OF_DAY:
 		case CB_INTR_INTEGER_PART:
+		case CB_INTR_LOCALE_DATE:
+		case CB_INTR_LOCALE_TIME:
 		case CB_INTR_LOG:
 		case CB_INTR_LOG10:
 		case CB_INTR_MOD:

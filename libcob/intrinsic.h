@@ -83,5 +83,7 @@ extern cob_field	*cob_intr_date_to_yyyymmdd (int params, ...);
 extern cob_field	*cob_intr_day_to_yyyyddd (int params, ...);
 extern cob_field	*cob_intr_seconds_past_midnight (void);
 extern cob_field	*cob_intr_seconds_from_formatted_time (cob_field *format, cob_field *value);
+extern cob_field	*cob_intr_locale_date (cob_field *srcfield, const char *deflocale);
+extern cob_field	*cob_intr_locale_time (cob_field *srcfield, const char *deflocale);
 
 #endif /* COB_INTRINSIC_H */
