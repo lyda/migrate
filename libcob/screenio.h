@@ -109,4 +109,4 @@ extern void cob_screen_accept (cob_screen *s, cob_field *line, cob_field *column
 extern void cob_field_display (cob_field *f, cob_field *line, cob_field *column);
 extern void cob_field_accept (cob_field *f, cob_field *line, cob_field *column);
 
-#endif /* COB_SCREENIO_H_ */
+#endif /* COB_SCREENIO_H */

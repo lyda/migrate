@@ -325,6 +325,10 @@ cb_build_registers (void)
 	cb_return_code = cb_build_index (cb_build_reference ("RETURN-CODE"));
 	CB_FIELD (cb_ref (cb_return_code))->values = cb_list (cb_zero);
 
+	/* SORT-RETURN */
+	cb_sort_return = cb_build_index (cb_build_reference ("SORT-RETURN"));
+	CB_FIELD (cb_ref (cb_sort_return))->values = cb_list (cb_zero);
+
 	/* NUMBER-OF-CALL-PARAMETERS */
 	cb_call_params = cb_build_index (cb_build_reference ("NUMBER-OF-CALL-PARAMETERS"));
 	CB_FIELD (cb_ref (cb_call_params))->values = cb_list (cb_zero);
@@ -1423,6 +1427,7 @@ decimal_expand (cb_tree d, cb_tree x)
 	{
 		if (x == cb_zero) {
 			dpush (cb_build_funcall_2 ("cob_decimal_set_int", d, cb_int0));
+			current_program->gen_decset = 1;
 		} else {
 			fprintf (stderr, "Unexpected constant expansion\n");
 			ABORT ();
@@ -1436,6 +1441,7 @@ decimal_expand (cb_tree d, cb_tree x)
 
 		if (l->size < 10 && l->scale == 0) {
 			dpush (cb_build_funcall_2 ("cob_decimal_set_int", d, cb_build_cast_integer (x)));
+			current_program->gen_decset = 1;
 		} else {
 			dpush (cb_build_funcall_2 ("cob_decimal_set_field", d, x));
 		}
@@ -1456,6 +1462,7 @@ decimal_expand (cb_tree d, cb_tree x)
 
 		if (cb_fits_int (x)) {
 			dpush (cb_build_funcall_2 ("cob_decimal_set_int", d, cb_build_cast_integer (x)));
+			current_program->gen_decset = 1;
 		} else {
 			dpush (cb_build_funcall_2 ("cob_decimal_set_field", d, x));
 		}
@@ -3604,7 +3611,28 @@ cb_build_move (cb_tree src, cb_tree dst)
 	}
 
 	if (CB_TREE_CLASS (dst) == CB_CLASS_POINTER) {
+/* RXW - Fix this for nonaligned
+#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+		if (src == cb_null || src == cb_zero) {
+			return cb_build_memset (dst, 0);
+		} else {
+			f = cb_field (dst);
+			if ((f->offset % f->size) || f->indexes) {
+				return cb_build_funcall_3 ("own_memcpy",
+						   cb_build_cast_address (dst),
+						   cb_build_cast_address (src),
+						   cb_build_cast_length (dst));
+			} else {
+				return cb_build_assign (dst, src);
+			}
+
+		}
+#else
+*/
 		return cb_build_assign (dst, src);
+/* RXW See above
+#endif
+*/
 	}
 
 	if (CB_REFERENCE_P (src) && CB_ALPHABET_NAME_P(CB_REFERENCE(src)->value)) {
@@ -4200,8 +4228,13 @@ cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree col)
 		if (CB_FILE (cb_ref (name))->organization != COB_ORG_SORT) {
 			cb_error_x (name, _("Illegal SORT filename"));
 		}
+		cb_emit (cb_build_funcall_4 ("cob_file_sort_init", cb_ref (name),
+					     cb_int (cb_list_length (keys)), col,
+					     cb_build_cast_address(cb_sort_return)));
+/* RXW
 		cb_emit (cb_build_funcall_3 ("cob_file_sort_init", cb_ref (name),
 					     cb_int (cb_list_length (keys)), col));
+*/
 		for (l = keys; l; l = CB_CHAIN (l)) {
 			cb_emit (cb_build_funcall_4 ("cob_file_sort_init_key", cb_ref (name),
 					CB_PURPOSE (l),

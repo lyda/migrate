@@ -138,7 +138,8 @@ This MUST succeed - If not, please report.
    -first- time, you may need to run "ldconfig" (as root).
    In fact, it does not hurt if you always do this.
 
-** Note ** - On some Red Hat (Fedora) installations, /usr/local/lib
+** Note ** - On some Red Hat (Fedora) installations and
+   possibly other Linux distros, /usr/local/lib
    is NOT automatically searched at runtime. 
    Edit /etc/ld.so.conf and add /usr/local/lib to the file.
    Rerun "ldconfig".

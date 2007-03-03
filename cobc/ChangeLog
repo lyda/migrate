@@ -1,3 +1,29 @@
+2007-03-01  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Fix LOCALE reference, general code cleanup
+	* parser.y : Allow LOCALE field reference
+
+2007-02-23  Roger While <simrw@sim-basis.de>
+
+	* parser.y : Fix multiple EXIT PERFORM
+	* cobc.[ch], tree.c, codegen.c : Use seperate id fields for attributes,
+		literals and fields
+
+2007-02-13  Roger While <simrw@sim-basis.de>
+
+	* tree.h, typeck.c, codegen.c : Gen cob_decimal_set_int if required
+	* cobc.c : Test -Wno-pointer-sign only with _GNUC_
+
+2007-02-11  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Change char to int for flags
+	* warning.def : Check for non 01/77 levels on CALL params
+		should/is not activated per default (standards)
+
+2007-02-09  Roger While <simrw@sim-basis.de>
+
+	* tree.[ch], typeck.c : Implement SORT-RETURN
+
 2007-02-07  Roger While <simrw@sim-basis.de>
 
 	* parser.y, tree.[ch], reserved.c, scanner.l, codegen.c :

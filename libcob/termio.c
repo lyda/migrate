@@ -28,6 +28,7 @@
 #include <time.h>
 
 #include "move.h"
+#include "coblocal.h"
 #include "termio.h"
 
 static const int	bin_digits[] = { 1, 3, 5, 8, 10, 13, 15, 17, 20 };
@@ -40,13 +41,20 @@ static void
 display_numeric (cob_field *f, FILE *fp)
 {
 	int		i;
-	int		digits = COB_FIELD_DIGITS (f);
-	int		scale = COB_FIELD_SCALE (f);
-	int		size = digits + (COB_FIELD_HAVE_SIGN (f) ? 1 : 0);
+	int		digits;
+	int		scale;
+	int		size;
+	cob_field_attr	attr;
+	cob_field	temp;
 	unsigned char	data[128];
-	cob_field_attr	attr = { COB_TYPE_NUMERIC_DISPLAY, digits, scale, 0, NULL };
-	cob_field	temp = { size, data, &attr };
 
+	digits = COB_FIELD_DIGITS (f);
+	scale = COB_FIELD_SCALE (f);
+	size = digits + (COB_FIELD_HAVE_SIGN (f) ? 1 : 0);
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_DISPLAY, digits, scale, 0, NULL);
+	temp.size = size;
+	temp.data = data;
+	temp.attr = &attr;
 	if (COB_FIELD_HAVE_SIGN (f)) {
 		attr.flags = COB_FLAG_HAVE_SIGN | COB_FLAG_SIGN_SEPARATE;
 		if (COB_FIELD_SIGN_LEADING (f)
@@ -66,20 +74,23 @@ pretty_display_numeric (cob_field *f, FILE *fp)
 {
 	int		i;
 	unsigned char	*p;
-	int		digits = COB_FIELD_DIGITS (f);
-	int		scale = COB_FIELD_SCALE (f);
-	int		size = (digits + (COB_FIELD_HAVE_SIGN (f) ? 1 : 0)
-				+ (scale > 0 ? 1 : 0));
-	cob_field_attr	attr = { COB_TYPE_NUMERIC_EDITED, digits, scale, 0, NULL };
+	int		digits;
+	int		scale;
+	int		size;
+	cob_field_attr	attr;
 	cob_field	temp;
 	unsigned char	pic[16];
 	unsigned char	data[128];
 
+	digits = COB_FIELD_DIGITS (f);
+	scale = COB_FIELD_SCALE (f);
+	size = (digits + (COB_FIELD_HAVE_SIGN (f) ? 1 : 0)
+		+ (scale > 0 ? 1 : 0));
 	p = pic;
 	temp.size = size;
 	temp.data = data;
 	temp.attr = &attr;
-	attr.pic = (char *)pic;
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_EDITED, digits, scale, 0, (char *)pic);
 	memset (pic, 0, sizeof (pic));
 	memset (data, 0, sizeof (data));
 	if (COB_FIELD_HAVE_SIGN (f)) {
@@ -173,13 +184,16 @@ cob_new_display (const int outorerr, const int newline, const int varcnt, ...)
 void
 cob_accept (cob_field *f)
 {
+	size_t		size;
+	cob_field_attr	attr;
+	cob_field	temp;
 	unsigned char	buff[COB_MEDIUM_BUFF];
 
 	if (isatty (fileno (stdin))) {
 		/* terminal input */
-		cob_field_attr	attr = { COB_TYPE_ALPHANUMERIC, 0, 0, 0, 0 };
-		cob_field	temp = { 0, buff, &attr };
-
+		temp.data = buff;
+		temp.attr = &attr;
+		COB_ATTR_INIT (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
 		/* read a line */
 		fgets ((char *)buff, COB_MEDIUM_BUFF, stdin);
 		temp.size = strlen ((char *)buff) - 1;
@@ -188,8 +202,6 @@ cob_accept (cob_field *f)
 		cob_move (&temp, f);
 	} else {
 		/* non-terminal input */
-		size_t	size;
-
 		fgets ((char *)buff, COB_MEDIUM_BUFF, stdin);
 		size = strlen ((char *)buff) - 1;
 		if (size > f->size) {

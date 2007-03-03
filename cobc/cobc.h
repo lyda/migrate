@@ -87,6 +87,10 @@ struct filename {
 };
 
 extern int			cb_id;
+extern int			cb_attr_id;
+extern int			cb_literal_id;
+extern int			cb_field_id;
+extern int			cb_storage_id;
 extern int			cb_flag_main;
 
 extern int			errorcount;

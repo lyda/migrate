@@ -73,6 +73,7 @@ cb_tree cb_i[8];
 cb_tree cb_error_node;
 cb_tree cb_return_code;
 cb_tree cb_call_params;
+cb_tree cb_sort_return;
 
 cb_tree cb_intr_whencomp;
 cb_tree cb_intr_pi;
@@ -919,9 +920,9 @@ repeat:
 	/* set picture */
 	pic->orig = strdup (str);
 	pic->size = size;
-	pic->digits = (char)digits;
-	pic->scale = (char)scale;
-	pic->have_sign = (char)s_count;
+	pic->digits = (unsigned char)digits;
+	pic->scale = (signed char)scale;
+	pic->have_sign = (unsigned char)s_count;
 
 	/* set picture category */
 	switch (category) {
@@ -972,7 +973,7 @@ cb_build_field (cb_tree name)
 {
 	struct cb_field *p = make_tree (CB_TAG_FIELD, CB_CATEGORY_UNKNOWN, sizeof (struct cb_field));
 
-	p->id = cb_id++;
+	p->id = cb_field_id++;
 	p->name = cb_define (name, CB_TREE (p));
 	p->ename = NULL;
 	p->usage = CB_USAGE_DISPLAY;

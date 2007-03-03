@@ -25,6 +25,7 @@
 
 #define _CRT_SECURE_NO_DEPRECATE 1
 #define inline _inline
+#define COB_INLINE _inline
 #include <malloc.h>
 #include <io.h>
 #include <fcntl.h>
@@ -44,11 +45,16 @@
 
 #define DLL_EXPIMP
 
-#endif /* _MSC_VER */
-
 #ifdef	__370__
 #define inline __inline
+#define COB_INLINE __inline
+#elif defined(COB_HAS_INLINE)
+#define COB_INLINE inline
+#else
+#define COB_INLINE
 #endif
+
+#endif /* _MSC_VER */
 
 #if defined(__GNUC__) && (__GNUC__ >= 3)
 #define likely(x)	__builtin_expect(!!(x), 1)
@@ -161,6 +167,8 @@ typedef struct {
 #define COB_FIELD_TYPE(f)	((f)->attr->type)
 #define COB_FIELD_DIGITS(f)	((f)->attr->digits)
 #define COB_FIELD_SCALE(f)	((f)->attr->scale)
+#define COB_FIELD_FLAGS(f)	((f)->attr->flags)
+#define COB_FIELD_PIC(f)	((f)->attr->pic)
 #define COB_FIELD_DATA(f)						  \
   ((f)->data +								  \
    ((COB_FIELD_SIGN_SEPARATE (f) && COB_FIELD_SIGN_LEADING (f)) ? 1 : 0))
@@ -271,16 +279,6 @@ DLL_EXPIMP extern cob_field		cob_high;		/* HIGH-VALUE */
 DLL_EXPIMP extern cob_field		cob_low;		/* LOW-VALUE */
 DLL_EXPIMP extern cob_field		cob_quote;		/* QUOTE */
 
-extern const int			cob_exp10[];
-extern const long long			cob_exp10LL[];
-
-extern int				cob_got_exception;
-extern unsigned int			cob_orig_line;
-extern const char			*cob_orig_statement;
-extern const char			*cob_orig_program_id;
-extern const char			*cob_orig_section;
-extern const char			*cob_orig_paragraph;
-
 /* convert a digit (e.g., '0') into an integer (e.g., 0) */
 #define cob_d2i(x)		((x) - '0')
 
@@ -295,7 +293,6 @@ extern const char			*cob_orig_paragraph;
 /* General functions */
 
 extern void cob_init (int argc, char **argv);
-extern void cob_set_signal (void);
 extern void cob_module_enter (cob_module *module);
 extern void cob_module_leave (cob_module *module);
 #ifdef __GNUC__
@@ -310,7 +307,6 @@ extern void cob_runtime_error (const char *fmt, ...);
 extern void *cob_malloc (const size_t size);
 #endif
 extern const char *cob_get_exception_name (const int exception_code);
-extern void *cob_strdup (const void *stptr);
 extern void cob_set_exception (const int id);
 extern void cob_check_version (const char *prog, const char *packver, const int patchlev);
 extern void cob_accept_date (cob_field *f);
@@ -357,10 +353,6 @@ extern int cob_acuw_justify (unsigned char *data, ...);
 #define cob_get_sign(f) (COB_FIELD_HAVE_SIGN (f) ? cob_real_get_sign (f) : 0)
 #define cob_put_sign(f,s) if (COB_FIELD_HAVE_SIGN (f)) cob_real_put_sign (f, s)
 
-extern int cob_real_get_sign (cob_field *f);
-extern void cob_real_put_sign (cob_field *f, const int sign);
-extern void cob_field_to_string (const cob_field *f, char *s);
-
 extern unsigned char *cob_external_addr (const char *exname, const int exlength);
 
 /* Switch */
@@ -396,4 +388,4 @@ extern void cob_check_ref_mod (const int offset, const int length, const int siz
 /* Comparison functions */
 extern int cob_numeric_cmp (cob_field *f1, cob_field *f2);
 
-#endif /* COB_COMMON_H_ */
+#endif /* COB_COMMON_H */

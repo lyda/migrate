@@ -549,7 +549,7 @@ class_item:
 /* LOCALE clause */
 
 locale_clause:
-  LOCALE undefined_word _is LITERAL
+  LOCALE undefined_word _is reference
   {
 	cb_tree	l;
 
@@ -2726,23 +2726,37 @@ exit_body:
 | PROGRAM			{ cb_emit_exit (); }
 | PERFORM
   {
-	struct cb_perform *p = CB_PERFORM (CB_VALUE (perform_stack));
+	struct cb_perform *p;
 	char name[256];
 
-	sprintf (name, "PERFORML-EXIT%d", cb_id++);
-	p->exit_label = cb_build_reference (name);
-	CB_LABEL (cb_build_label (p->exit_label, 0))->need_begin = 1;
-	cb_emit_goto (cb_list (p->exit_label), 0);
+	if (!perform_stack) {
+		cb_error ("EXIT PERFORM is only valid with inline PERFORM");
+	} else {
+		p = CB_PERFORM (CB_VALUE (perform_stack));
+		if (!p->exit_label) {
+			sprintf (name, "PERFORML-EXIT%d", cb_id);
+			p->exit_label = cb_build_reference (name);
+			CB_LABEL (cb_build_label (p->exit_label, 0))->need_begin = 1;
+		}
+		cb_emit_goto (cb_list (p->exit_label), 0);
+	}
   }
 | PERFORM CYCLE
   {
-	struct cb_perform *p = CB_PERFORM (CB_VALUE (perform_stack));
+	struct cb_perform *p;
 	char name[256];
 
-	sprintf (name, "PERFORML-CYCLE%d", cb_id++);
-	p->cycle_label = cb_build_reference (name);
-	CB_LABEL (cb_build_label (p->cycle_label, 0))->need_begin = 1;
-	cb_emit_goto (cb_list (p->cycle_label), 0);
+	if (!perform_stack) {
+		cb_error ("EXIT PERFORM is only valid with inline PERFORM");
+	} else {
+		p = CB_PERFORM (CB_VALUE (perform_stack));
+		if (!p->exit_label) {
+			sprintf (name, "PERFORML-CYCLE%d", cb_id);
+			p->cycle_label = cb_build_reference (name);
+			CB_LABEL (cb_build_label (p->cycle_label, 0))->need_begin = 1;
+		}
+		cb_emit_goto (cb_list (p->cycle_label), 0);
+	}
   }
 ;
 

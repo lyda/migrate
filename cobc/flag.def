@@ -38,7 +38,7 @@ CB_FLAG (cb_flag_source_location, "source-location",
 	 N_("Include source location in the output"))
 
 CB_FLAG (cb_implicit_init, "implicit-init",
-	 N_("Do an automatic initialization of the Cobol runtime system"))
+	 N_("Do automatic initialization of the Cobol runtime system"))
 
 CB_FLAG (cb_flag_line_directive, "line-directive",
 	 N_("Include line directive in the output"))

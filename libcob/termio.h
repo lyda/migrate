@@ -26,8 +26,4 @@
 extern void cob_new_display (const int outorerr, const int newline, const int varcnt, ...);
 extern void cob_accept (cob_field *f);
 
-#if 0
-extern void cob_init_termio (void);
-#endif
-
-#endif /* COB_TERMIO_H_ */
+#endif /* COB_TERMIO_H */

@@ -24,17 +24,11 @@
 #include <libcob/common.h>
 
 extern void		cob_move (cob_field *src, cob_field *dst);
-extern void		cob_memcpy (cob_field *dst, unsigned char *src, int size);
 extern void		cob_set_int (cob_field *f, int n);
 extern int		cob_get_int (cob_field *f);
-extern int		cob_binary_get_int (const cob_field * const f);
-extern long long	cob_binary_get_int64 (const cob_field * const f);
-extern void		cob_binary_set_int (cob_field *f, int n);
-extern void		cob_binary_set_int64 (cob_field *f, long long n);
 
 /* memcpy/memset optimizations */
 
-#define own_byte_memcpy(x, y, z)	memcpy(x, y, z)
 #define own_memcpy(x, y, z)		memcpy(x, y, z)
 
 #if defined (__GNUC__) && defined (__i386__)
@@ -149,4 +143,4 @@ own_memset_cg (void *s, unsigned long c, size_t n)
 
 #endif	/* __GNUC__ && __i386__ */
 
-#endif /* COB_MOVE_H_ */
+#endif /* COB_MOVE_H */

@@ -75,6 +75,7 @@ lt_dlerror ()
 
 #include "call.h"
 #include "common.h"
+#include "coblocal.h"
 #include "fileio.h"
 #include "lib/gettext.h"
 
@@ -128,10 +129,32 @@ struct system_table {
 
 static const struct system_table	system_tab[] = {
 #undef	COB_SYSTEM_GEN
-#define	COB_SYSTEM_GEN(x, y, z)	{ x, z },
+#define	COB_SYSTEM_GEN(x, y, z)	{ x, (lt_ptr_t)z },
 #include "system.def"
 	{ NULL, NULL }
 };
+
+
+static void * COB_NOINLINE
+cob_strdup (const void *stptr)
+{
+	void	*mptr;
+	size_t	len;
+
+	if (unlikely(!stptr)) {
+		cob_runtime_error ("cob_strdup called with NULL pointer");
+		cob_stop_run (1);
+	}
+	len = strlen (stptr);
+	if (unlikely(len < 1 || len > 2147483647)) {
+		cob_runtime_error ("cob_strdup called with invalid string");
+		cob_stop_run (1);
+	}
+	len++;
+	mptr = cob_malloc (len);
+	memcpy (mptr, stptr, len);
+	return mptr;
+}
 
 static void
 cob_set_library_path (const char *path)
@@ -161,7 +184,7 @@ cob_set_library_path (const char *path)
 }
 
 #ifndef	COB_ALT_HASH
-static inline size_t
+static COB_INLINE size_t
 hash (const unsigned char *s)
 {
 	size_t		val = 0;
@@ -318,7 +341,7 @@ cob_resolve (const char *name)
 	}
 #endif
 #if	defined(USE_LIBDL) && defined (RTLD_DEFAULT)
-	if ((func = lt_dlsym (RTLD_DEFAULT, buff)) != NULL) {
+	if ((func = lt_dlsym (RTLD_DEFAULT, (const char *)buff)) != NULL) {
 		insert (name, func, NULL);
 		resolve_error = NULL;
 		return func;
@@ -466,7 +489,9 @@ cob_init_call (void)
 	}
 	cob_set_library_path (s);
 
+#ifndef	COB_NO_SELFOPEN
 	mainhandle = lt_dlopen (NULL);
+#endif
 
 	s = getenv ("COB_PRE_LOAD");
 	if (s != NULL) {

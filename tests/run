@@ -356,7 +356,7 @@ at_help_all='1;fundamental.at:23;DISPLAY literals;;
 45;misc.at:400;Alphanumeric and binary numeric;;
 46;misc.at:423;Dynamic call with static linking;;
 47;misc.at:446;CALL m1. CALL m2. CALL m1.;;
-48;misc.at:492;CALL: binary literal parameter/LENGTH OF;;
+48;misc.at:492;CALL binary literal parameter/LENGTH OF;;
 49;misc.at:544;INSPECT REPLACING LEADING ZEROS BY SPACES;;
 50;misc.at:563;INSPECT: no repeat conversion check;;
 51;misc.at:583;INSPECT: TALLYING BEFORE;;
@@ -368,7 +368,7 @@ at_help_all='1;fundamental.at:23;DISPLAY literals;;
 57;misc.at:752;EXIT PERFORM;;
 58;misc.at:774;EXIT PERFORM CYCLE;;
 59;misc.at:794;88 with FILLER;;
-60;misc.at:819;non-overflow after overflow;;
+60;misc.at:819;Non-overflow after overflow;;
 61;misc.at:843;PERFORM ... CONTINUE;;
 62;misc.at:859;STRING with subscript reference;;
 63;misc.at:880;UNSTRING DELIMITED ALL LOW-VALUE;;
@@ -5048,10 +5048,10 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  48 ) # 48. misc.at:492: CALL: binary literal parameter/LENGTH OF
+  48 ) # 48. misc.at:492: CALL binary literal parameter/LENGTH OF
     at_setup_line='misc.at:492'
-    at_desc='CALL: binary literal parameter/LENGTH OF'
-    $at_quiet $ECHO_N " 48: CALL: binary literal parameter/LENGTH OF     $ECHO_C"
+    at_desc='CALL binary literal parameter/LENGTH OF'
+    $at_quiet $ECHO_N " 48: CALL binary literal parameter/LENGTH OF      $ECHO_C"
     at_xfail=no
     (
       echo "48. misc.at:492: testing ..."
@@ -6177,10 +6177,10 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  60 ) # 60. misc.at:819: non-overflow after overflow
+  60 ) # 60. misc.at:819: Non-overflow after overflow
     at_setup_line='misc.at:819'
-    at_desc='non-overflow after overflow'
-    $at_quiet $ECHO_N " 60: non-overflow after overflow                  $ECHO_C"
+    at_desc='Non-overflow after overflow'
+    $at_quiet $ECHO_N " 60: Non-overflow after overflow                  $ECHO_C"
     at_xfail=no
     (
       echo "60. misc.at:819: testing ..."
@@ -8741,7 +8741,7 @@ cat >setfilename.c <<'_ATEOF'
 #include <libcob.h>
 int setfilename (cob_file *f, unsigned char *name)
 {
-  cob_memcpy (f->assign, name, strlen ((char *)name));
+  memcpy (f->assign->data, name, strlen ((char *)name));
   return 0;
 }
 _ATEOF

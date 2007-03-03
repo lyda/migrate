@@ -46,4 +46,4 @@ extern void cob_unstring_into (cob_field *dst, cob_field *dlm, cob_field *cnt);
 extern void cob_unstring_tallying (cob_field *f);
 extern void cob_unstring_finish (void);
 
-#endif /* COB_STRINGS_H_ */
+#endif /* COB_STRINGS_H */

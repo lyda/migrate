@@ -65,13 +65,4 @@ extern int cob_cmp_sign_numdisp (const unsigned char *data, const size_t size, c
 extern int cob_cmp_long_numdisp (const unsigned char *data, const size_t size, const int n);
 extern int cob_cmp_long_sign_numdisp (const unsigned char *data, const size_t size, const int n);
 
-extern void cob_init_numeric (void);
-
-static inline void
-cob_decimal_set_int (cob_decimal *d, const int n)
-{
-	mpz_set_si (d->value, n);
-	d->scale = 0;
-}
-
-#endif /* COB_NUMERIC_H_ */
+#endif /* COB_NUMERIC_H */

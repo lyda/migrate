@@ -23,7 +23,6 @@
 
 #include <libcob/common.h>
 
-extern void cob_init_call (void);
 extern void cob_set_cancel (const char *name, void *entry, void *cancel);
 extern void *cob_resolve (const char *name);
 extern void *cob_resolve_1 (const char *name);
@@ -38,4 +37,4 @@ extern void cob_call_error (void);
 #endif
 extern void cob_cancel (cob_field *f);
 
-#endif /* COB_CALL_H_ */
+#endif /* COB_CALL_H */

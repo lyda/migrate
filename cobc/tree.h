@@ -247,6 +247,7 @@ extern cb_tree cb_i[8];
 extern cb_tree cb_error_node;
 extern cb_tree cb_return_code;
 extern cb_tree cb_call_params;
+extern cb_tree cb_sort_return;
 
 extern cb_tree cb_intr_whencomp;
 extern cb_tree cb_intr_pi;
@@ -433,6 +434,7 @@ extern cb_tree cb_build_picture (const char *str);
 struct cb_field {
 	struct cb_tree_common common;
 	int		id;		/* field id */
+	int		storage_id;	/* storage id */
 	const char	*name;		/* the original name */
 	const char	*ename;		/* the externalized name */
 	int		size;		/* field size */
@@ -1096,6 +1098,7 @@ struct cb_program {
 	int			gen_main;		/* Gen main function */
 	int			validated;		/* End program validate */
 	int			is_chained;		/* PROCEDURE CHAINING */
+	int			gen_decset;		/* Gen decimal_set_int */
 	struct cb_word		*word_table[CB_WORD_HASH_SIZE];
 };
 

@@ -46,8 +46,8 @@ CB_WARNDEF (3, cb_warn_terminator, "terminator", 1,
 CB_WARNDEF (3, cb_warn_strict_typing, "strict-typing", 1,
 	    N_("Warn type mismatch strictly"))
 
-CB_WARNDEF (3, cb_warn_call_params, "call-params", 1,
-	    N_("Warn if CALL parameters are neither 01 nor 77 items"))
+CB_WARNDEF (3, cb_warn_call_params, "call-params", 0,
+	    N_("Warn non 01/77 items for CALL params (NOT set with -Wall)"))
 
 CB_WARNDEF (3, cb_warn_truncate, "truncate", 0,
 	    N_("Warn possible field truncation (NOT set with -Wall)"))

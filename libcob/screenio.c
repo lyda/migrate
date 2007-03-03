@@ -34,6 +34,7 @@
 #endif
 
 #include "move.h"
+#include "coblocal.h"
 #include "screenio.h"
 
 /*

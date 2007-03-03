@@ -94,6 +94,7 @@ COB_CC = @COB_CC@
 COB_CFLAGS = @COB_CFLAGS@
 COB_CONFIG_DIR = @COB_CONFIG_DIR@
 COB_EXPORT_DYN = @COB_EXPORT_DYN@
+COB_HAS_INLINE = @COB_HAS_INLINE@
 COB_LDFLAGS = @COB_LDFLAGS@
 COB_LIBRARY_PATH = @COB_LIBRARY_PATH@
 COB_LIBS = @COB_LIBS@
@@ -211,7 +212,8 @@ cobcrun_SOURCES = cobcrun.c
 # AM_CFLAGS = -fsigned-char -Wall -Wwrite-strings -Wmissing-prototypes -Wno-format-y2k
 AM_LDFLAGS = $(COB_EXPORT_DYN)
 cobcrun_CFLAGS = $(AM_CFLAGS) -I$(top_srcdir)
-cobcrun_LDADD = $(LIBCOB_LIBS) -L$(top_builddir)/libcob -lcob
+# cobcrun_LDADD = $(LIBCOB_LIBS) -L$(top_builddir)/libcob -lcob
+cobcrun_LDADD = -L$(top_builddir)/libcob -lcob $(LIBCOB_LIBS)
 all: all-am
 
 .SUFFIXES:

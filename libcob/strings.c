@@ -27,6 +27,7 @@
 #include <sys/types.h>
 
 #include "move.h"
+#include "coblocal.h"
 #include "numeric.h"
 #include "strings.h"
 
@@ -65,7 +66,7 @@ static struct {
 	int		uns_all;
 } dlm_list[256];	/* FIXME - Needs to be dynamic */
 
-static inline int
+static COB_INLINE int
 cob_min_int (const int x, const int y)
 {
 	if (x < y) {
@@ -276,7 +277,7 @@ void
 cob_inspect_converting (cob_field *f1, cob_field *f2)
 {
 	size_t	i, j;
-	int	len = (int)(inspect_end - inspect_start);
+	size_t	len = (size_t)(inspect_end - inspect_start);
 
 	for (j = 0; j < f1->size; j++) {
 		for (i = 0; i < len; i++) {

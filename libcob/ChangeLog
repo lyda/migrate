@@ -1,3 +1,33 @@
+2007-03-03  Roger While <simrw@sim-basis.de>
+
+	* General : Use COB_FIELD_xxx macros
+
+2007-03-01  Roger While <simrw@sim-basis.de>
+
+	* intrinsic.[ch] : Change params for LOCALE-DATE/TIME
+
+2007-02-26  Roger While <simrw@sim-basis.de>
+
+	* intrinsic.c : Fix for not defined LANGINFO
+
+2007-02-25  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : Fix Indexed-Sequential rewrite
+
+2007-02-13  Roger While <simrw@sim-basis.de>
+
+	* All : Change initialization of fields/attributes
+
+2007-02-11  Roger While <simrw@sim-basis.de>
+
+	* coblocal.h : New file, contains prototypes that should only
+		be known to the library
+	* All : Implement above header file
+
+2007-02-09  Roger While <simrw@sim-basis.de>
+
+	* fileio.[ch] : Implement SORT-RETURN
+
 2007-02-07  Roger While <simrw@sim-basis.de>
 
 	* intrinsic.[ch] : Implement LOCALE-DATE, LOCALE-TIME

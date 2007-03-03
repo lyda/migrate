@@ -115,6 +115,7 @@
 #endif
 
 #include "common.h"
+#include "coblocal.h"
 #include "move.h"
 #include "numeric.h"
 #include "fileio.h"
@@ -172,6 +173,7 @@ struct file_struct {
 struct cobsort {
 	void			*pointer;
 	struct cobitem		*empty;
+	void			*sort_return;
 	size_t			unique;
 	size_t			retrieving;
 	size_t			files_used;
@@ -297,6 +299,7 @@ struct indexed_file {
 	DBT		data;
 	unsigned char	**last_readkey;	/* the last key read */
 	unsigned int 	*last_dupno;	/* the last mumber of duplicates read */
+	int		*rewrite_sec_key;
 #ifdef	USE_DB41
 	DBC		**cursor;
 	DB_LOCK		bdb_file_lock;
@@ -315,8 +318,9 @@ static int indexed_close (cob_file *f, int opt);
 static int indexed_start (cob_file *f, int cond, cob_field *key);
 static int indexed_read (cob_file *f, cob_field *key, int read_opts);
 static int indexed_read_next (cob_file *f, int read_opts);
-static int indexed_write_internal (cob_file *f);
+static int indexed_write_internal (cob_file *f, int rewrite);
 static int indexed_write (cob_file *f, int opt);
+static int indexed_delete_internal (cob_file *f, int rewrite);
 static int indexed_delete (cob_file *f);
 static int indexed_rewrite (cob_file *f);
 
@@ -1365,6 +1369,7 @@ indexed_open (cob_file *f, char *filename, int mode, int flag)
 #endif
 	p->last_readkey = cob_malloc (sizeof (unsigned char *) * 2 * f->nkeys);
 	p->last_dupno = cob_malloc (sizeof (unsigned int) * f->nkeys);
+	p->rewrite_sec_key = cob_malloc (sizeof (int) * f->nkeys);
 	maxsize = 0;
 	for (i = 0; i < f->nkeys; i++) {
 		if (f->keys[i].field->size > maxsize) {
@@ -1601,7 +1606,7 @@ indexed_start_internal (cob_file *f, int cond, cob_field *key, int read_opts, in
 		/* temporarily save alternate key */
 		own_memcpy (p->temp_key, p->key.data, f->keys[p->key_index].field->size);
 		if (f->keys[p->key_index].flag) {
-			own_memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int) );
+			own_memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int));
 		}
 		p->key.data = p->data.data;
 		p->key.size = f->keys[0].field->size;
@@ -1745,7 +1750,7 @@ indexed_read_next (cob_file *f, int read_opts)
 		if (!ret && p->key_index > 0) {
 			ret = memcmp (p->last_readkey[p->key_index + f->nkeys], p->data.data, f->keys[0].field->size);
 			if (!ret && f->keys[p->key_index].flag) {
-				ret = memcmp (&p->last_dupno[p->key_index], (ucharptr)p->data.data +  f->keys[0].field->size, sizeof(unsigned int) );
+				ret = memcmp (&p->last_dupno[p->key_index], (ucharptr)p->data.data +  f->keys[0].field->size, sizeof(unsigned int));
 			}
 			if (!ret) {
 				p->key.size = (cob_dbtsize_t) f->keys[0].field->size;
@@ -1811,7 +1816,7 @@ indexed_read_next (cob_file *f, int read_opts)
 			} else {
 				if (memcmp (p->key.data, p->last_readkey[p->key_index], p->key.size) == 0) {
 					if (p->key_index > 0 && f->keys[p->key_index].flag) {
-						own_memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int) );
+						own_memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int));
 						while (ret == 0 &&
 						memcmp (p->key.data, p->last_readkey[p->key_index], p->key.size) == 0 &&
 						dupno < p->last_dupno[p->key_index]) {
@@ -1820,7 +1825,7 @@ indexed_read_next (cob_file *f, int read_opts)
 #else
 							ret = DB_SEQ (p->db[p->key_index], R_NEXT); 
 #endif
-							own_memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int) );
+							own_memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int));
 						}
 						if (ret != 0) {
 							if (nextprev == DB_PREV) {
@@ -1884,7 +1889,7 @@ indexed_read_next (cob_file *f, int read_opts)
 			/* temporarily save alternate key */
 			own_memcpy (p->temp_key, p->key.data, p->key.size);
 			if (f->keys[p->key_index].flag) {
-				own_memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int) );
+				own_memcpy (&dupno,(ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int));
 			}
 			p->key.data = p->data.data;
 			p->key.size = f->keys[0].field->size;
@@ -1983,7 +1988,7 @@ get_dupno(cob_file *f, int i)
 }
 
 static int
-indexed_write_internal (cob_file *f)
+indexed_write_internal (cob_file *f, int rewrite)
 {
 	size_t			i;
 	struct indexed_file	*p = f->file;
@@ -2030,6 +2035,9 @@ indexed_write_internal (cob_file *f)
 	/* write secondary keys */
 	p->data = p->key;
 	for (i = 1; i < f->nkeys; i++) {
+		if (rewrite && ! p->rewrite_sec_key[i]) {
+			continue;
+		}
 		if (f->keys[i].flag) {
 			flags =  0;
 			dupno = get_dupno(f,i);
@@ -2091,11 +2099,11 @@ indexed_write (cob_file *f, int opt)
 	}
 	own_memcpy (p->last_key, p->key.data, p->key.size);
 
-	return indexed_write_internal (f);
+	return indexed_write_internal (f, 0);
 }
 
 static int
-indexed_delete (cob_file *f)
+indexed_delete_internal (cob_file *f, int rewrite)
 {
 	size_t			i;
 	size_t			offset;
@@ -2155,11 +2163,18 @@ indexed_delete (cob_file *f)
 #endif
 	prim_key = p->key;
 
-/* delete the secondary keys */
+	/* delete the secondary keys */
 	offset = (char *) p->data.data - (char *) f->record->data;
 	for (i = 1; i < f->nkeys; i++) {
 		DBT_SET (p->key, f->keys[i].field);
 		p->key.data = (char *)p->key.data + offset;
+		/* rewrite: no delete if secondary key is unchanged */
+		if (rewrite) {
+			p->rewrite_sec_key[i] = memcmp(p->key.data, f->keys[i].field->data, p->key.size);
+			if (!p->rewrite_sec_key[i]) {
+				continue;
+			}
+		}
 		if (!f->keys[i].flag) {
 			DB_DEL (p->db[i], &p->key, 0);
 		} else {
@@ -2216,6 +2231,12 @@ indexed_delete (cob_file *f)
 }
 
 static int
+indexed_delete (cob_file *f)
+{
+	return indexed_delete_internal(f, 0);
+}
+
+static int
 indexed_rewrite (cob_file *f)
 {
 	struct indexed_file *p = f->file;
@@ -2236,7 +2257,7 @@ indexed_rewrite (cob_file *f)
 #endif
 
 	/* delete the current record */
-	ret = indexed_delete (f);
+	ret = indexed_delete_internal (f, 1);
 
 	if (ret != COB_STATUS_00_SUCCESS) {
 #ifdef	USE_DB41
@@ -2249,7 +2270,7 @@ indexed_rewrite (cob_file *f)
 
 	/* write data */
 	DBT_SET (p->key, f->keys[0].field);
-	ret = indexed_write_internal (f);
+	ret = indexed_write_internal (f, 1);
 
 #ifdef	USE_DB41
 	p->cursor[0]->c_close (p->cursor[0]);
@@ -2618,7 +2639,7 @@ cob_read (cob_file *f, cob_field *key, cob_field *fnstatus, const int read_opts)
 		     _read_opts &= ~COB_READ_LOCK;
 		} 
 /* HMR
-	else if (f->lock_mode == COB_LOCK_AUTOMATIC ) {
+	else if (f->lock_mode == COB_LOCK_AUTOMATIC) {
 	_read_opts |= COB_READ_LOCK; 
 	}
 */
@@ -3321,13 +3342,16 @@ sort_cmps (const unsigned char *s1, const unsigned char *s2, const size_t size,
 	size_t			i;
 	int			ret;
 
-	if (col) {
+	if (unlikely(col)) {
 		for (i = 0; i < size; i++) {
 			if ((ret = col[s1[i]] - col[s2[i]]) != 0) {
 				return ret;
 			}
 		}
 	} else {
+/* RXW
+		return memcmp (s1, s2, size);
+*/
 		for (i = 0; i < size; i++) {
 			if ((ret = s1[i] - s2[i]) != 0) {
 				return ret;
@@ -3335,6 +3359,16 @@ sort_cmps (const unsigned char *s1, const unsigned char *s2, const size_t size,
 		}
 	}
 	return 0;
+}
+
+static COB_INLINE void
+unique_copy (unsigned char *s1, unsigned char *s2)
+{
+	size_t	size = sizeof(size_t);
+
+	do {
+		*s1++ = *s2++;
+	} while (--size);
 }
 
 static int
@@ -3362,8 +3396,8 @@ cob_file_sort_compare (struct cobitem *k1, struct cobitem *k2, void *pointer)
 			return (f->keys[i].flag == COB_ASCENDING) ? cmp : -cmp;
 		}
 	}
-	own_memcpy ((void *)&u1, k1->unique, sizeof(size_t));
-	own_memcpy ((void *)&u2, k2->unique, sizeof(size_t));
+	unique_copy ((unsigned char *)&u1, k1->unique);
+	unique_copy ((unsigned char *)&u2, k2->unique);
 	if (u1 < u2) {
 		return -1;
 	}
@@ -3556,9 +3590,6 @@ cob_write_block (struct cobsort *hp, int n)
 		return 1;
 	}
 	return 0;
-/* RXW
-	return putc (1, fp) == 1;
-*/
 }
 
 static void
@@ -3699,7 +3730,7 @@ cob_file_sort_submit (cob_file *f, const unsigned char *p)
 	if (unlikely(hp->retrieving)) {
 		return COBSORTABORT;
 		/* put existing items into the empty list */
-/* RXW - This was a facility to submit new items after retrieval ahd begun
+/* RXW - This was a facility to submit new items after retrieval had begun
 		for (i = 0; i < 4; i++) {
 			if (hp->queue[i].first != NULL) {
 				hp->queue[i].last->next = hp->empty;
@@ -3737,7 +3768,7 @@ cob_file_sort_submit (cob_file *f, const unsigned char *p)
 	}
 	q = cob_new_item (hp, sizeof (struct cobitem) + hp->size);
 	q->end_of_block = 1;
-	own_memcpy (q->unique, (void *)&(hp->unique), sizeof(size_t));
+	unique_copy (q->unique, (unsigned char *)&(hp->unique));
 	hp->unique++;
 	memcpy (q->item, p, hp->size);
 	if (hp->queue[0].count <= hp->queue[1].count) {
@@ -3829,6 +3860,7 @@ cob_file_sort_giving (cob_file *sort_file, size_t varcnt, ...)
 {
 	size_t		i;
 	int		ret;
+	struct cobsort	*hp;
 	va_list		args;
 	cob_file	**fbase;
 
@@ -3846,6 +3878,8 @@ cob_file_sort_giving (cob_file *sort_file, size_t varcnt, ...)
 				sort_file->file_status[0] = '1';
 				sort_file->file_status[1] = '0';
 			} else {
+				hp = sort_file->file;
+				*(int *)(hp->sort_return) = 16;
 				sort_file->file_status[0] = '3';
 				sort_file->file_status[1] = '0';
 			}
@@ -3863,7 +3897,8 @@ cob_file_sort_giving (cob_file *sort_file, size_t varcnt, ...)
 }
 
 void
-cob_file_sort_init (cob_file *f, int nkeys, const unsigned char *collating_sequence)
+cob_file_sort_init (cob_file *f, int nkeys, const unsigned char *collating_sequence,
+			void *sort_return)
 {
 	struct cobsort	*p;
 	cob_field	*fnstatus = NULL;
@@ -3873,6 +3908,8 @@ cob_file_sort_init (cob_file *f, int nkeys, const unsigned char *collating_seque
 	p->r_size = f->record_max + sizeof(size_t);
 	p->w_size = f->record_max + sizeof(size_t) + 1;
 	p->pointer = f;
+	p->sort_return = sort_return;
+	*(int *)sort_return = 0;
 	p->memory = (size_t)cob_sort_memory / (p->size + sizeof(struct cobitem));
 	f->file = p;
 	f->keys = cob_malloc (sizeof (cob_file_key) * nkeys);
@@ -3920,6 +3957,7 @@ void
 cob_file_release (cob_file *f)
 {
 	int		ret;
+	struct cobsort	*hp;
 	cob_field	*fnstatus = NULL;
 
 	ret = cob_file_sort_submit (f, f->record->data);
@@ -3928,6 +3966,8 @@ cob_file_release (cob_file *f)
 		RETURN_STATUS (COB_STATUS_00_SUCCESS);
 		break;
 	default:
+		hp = f->file;
+		*(int *)(hp->sort_return) = 16;
 		RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
 		break;
 	}
@@ -3937,6 +3977,7 @@ void
 cob_file_return (cob_file *f)
 {
 	int		ret;
+	struct cobsort	*hp;
 	cob_field	*fnstatus = NULL;
 
 	ret = cob_file_sort_retrieve (f, f->record->data);
@@ -3948,6 +3989,8 @@ cob_file_return (cob_file *f)
 		RETURN_STATUS (COB_STATUS_10_END_OF_FILE);
 		break;
 	default:
+		hp = f->file;
+		*(int *)(hp->sort_return) = 16;
 		RETURN_STATUS (COB_STATUS_30_PERMANENT_ERROR);
 		break;
 	}

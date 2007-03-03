@@ -15,6 +15,12 @@
 /* Extra Compiler Flags */
 #undef COB_EXTRA_FLAGS
 
+/* Can use inline keyword */
+#undef COB_HAS_INLINE
+
+/* Can not dlopen self */
+#undef COB_NO_SELFOPEN
+
 /* Enable CALL parameter checking */
 #undef COB_PARAM_CHECK
 
@@ -284,11 +290,22 @@
    first (like Motorola and SPARC, unlike Intel and VAX). */
 #undef WORDS_BIGENDIAN
 
+/* Define to 1 if on HPUX.  */
+#ifndef _XOPEN_SOURCE_EXTENDED
+# undef _XOPEN_SOURCE_EXTENDED
+#endif
+
 /* Compiler optimization */
 #undef __USE_STRING_INLINES
 
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
+
+/* Define to `__inline__' or `__inline' if that's what the C compiler
+   calls it, or to nothing if 'inline' is not supported under any name.  */
+#ifndef __cplusplus
+#undef inline
+#endif
 
 /* Define to `unsigned' if <sys/types.h> does not define. */
 #undef size_t

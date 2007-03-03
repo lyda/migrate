@@ -183,8 +183,6 @@ DLL_EXPIMP extern cob_file	*cob_error_file;
 
 DLL_EXPIMP extern int		cob_check_eop;
 
-extern void cob_init_fileio (void);
-extern void cob_exit_fileio (void);
 extern void cob_default_error_handle (void);
 
 extern void cob_open (cob_file *f, int mode, int opt, cob_field *fnstatus);
@@ -223,7 +221,7 @@ extern int cob_acuw_file_delete (char *file_name, char *file_type);
 
 /* SORT */
 extern void	cob_file_sort_init (cob_file *f, int nkeys,
-			const unsigned char *collating_sequence);
+			const unsigned char *collating_sequence, void *sort_return);
 extern void	cob_file_sort_init_key (cob_file *f, int flag,
 			cob_field *field, size_t offset);
 extern void	cob_file_sort_close (cob_file *f);
@@ -232,4 +230,4 @@ extern void	cob_file_sort_giving (cob_file *sort_file, size_t varcnt, ...);
 extern void	cob_file_release (cob_file *f);
 extern void	cob_file_return (cob_file *f);
 
-#endif /* COB_FILEIO_H_ */
+#endif /* COB_FILEIO_H */

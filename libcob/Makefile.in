@@ -85,7 +85,6 @@ HEADERS = $(pkginclude_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
-# endif
 pkgincludedir = $(includedir)/libcob
 ACLOCAL = @ACLOCAL@
 ALLOCA = @ALLOCA@
@@ -107,6 +106,7 @@ COB_CC = @COB_CC@
 COB_CFLAGS = @COB_CFLAGS@
 COB_CONFIG_DIR = @COB_CONFIG_DIR@
 COB_EXPORT_DYN = @COB_EXPORT_DYN@
+COB_HAS_INLINE = @COB_HAS_INLINE@
 COB_LDFLAGS = @COB_LDFLAGS@
 COB_LIBRARY_PATH = @COB_LIBRARY_PATH@
 COB_LIBS = @COB_LIBS@
@@ -223,15 +223,14 @@ lib_LTLIBRARIES = libcob.la
 libcob_la_SOURCES = common.c move.c numeric.c intrinsic.c \
 	termio.c fileio.c screenio.c strings.c call.c
 
-
-# AM_CFLAGS = -fsigned-char -Wall -Wstrict-prototypes -Wmissing-prototypes -Wno-format-y2k -DSUPER_OPTIMIZE
-# libcob_la_CFLAGS = $(AM_CFLAGS) $(LIBCOB_CFLAGS) -I$(top_srcdir)
 AM_CFLAGS = -DSUPER_OPTIMIZE
 libcob_la_CFLAGS = $(AM_CFLAGS) $(LIBCOB_CFLAGS) -I$(top_srcdir)
 libcob_la_LIBADD = $(LIBCOB_LIBS)
 libcob_la_LDFLAGS = -version-info 1:0:0 -no-undefined
 # if COBCRUN_SHARED
 AM_LDFLAGS = $(COB_EXPORT_DYN)
+# endif
+EXTRA_DIST = coblocal.h
 pkginclude_HEADERS = byteswap.h common.h move.h numeric.h exception.def \
 	termio.h fileio.h screenio.h strings.h call.h intrinsic.h \
 	codegen.h system.def

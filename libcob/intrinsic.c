@@ -36,6 +36,7 @@
 
 #include "byteswap.h"
 #include "common.h"
+#include "coblocal.h"
 #include "move.h"
 #include "numeric.h"
 #include "fileio.h"
@@ -46,6 +47,12 @@
 
 /* Stacked field level */
 #define DEPTH_LEVEL	8
+
+#define COB_FIELD_INIT(x,y,z)	do { \
+	field.size = x; \
+	field.data = y; \
+	field.attr = z; \
+	} while (0)
 
 /* Working fields */
 static cob_decimal	d1, d2, d3, d4, d5;
@@ -236,9 +243,11 @@ cob_intr_binop (cob_field *f1, int op, cob_field *f2)
 cob_field *
 cob_intr_length (cob_field *srcfield)
 {
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL};
-	cob_field	field = {4, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL);
+	COB_FIELD_INIT (4, NULL, &attr);
 	make_field_entry (&field);
 
 	cob_set_int (curr_field, (int)srcfield->size);
@@ -248,10 +257,12 @@ cob_intr_length (cob_field *srcfield)
 cob_field *
 cob_intr_integer (cob_field *srcfield)
 {
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL};
-	cob_field	field = {8, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 	int		i, scale;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL);
+	COB_FIELD_INIT (8, NULL, &attr);
 	make_field_entry (&field);
 
 	cob_decimal_set_field (&d1, srcfield);
@@ -273,9 +284,11 @@ cob_intr_integer (cob_field *srcfield)
 cob_field *
 cob_intr_integer_part (cob_field *srcfield)
 {
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL};
-	cob_field	field = {8, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL);
+	COB_FIELD_INIT (8, NULL, &attr);
 	make_field_entry (&field);
 
 	cob_move (srcfield, curr_field);
@@ -285,9 +298,11 @@ cob_intr_integer_part (cob_field *srcfield)
 cob_field *
 cob_intr_fraction_part (cob_field *srcfield)
 {
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 18, COB_FLAG_HAVE_SIGN, NULL};
-	cob_field	field = {8, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 18, COB_FLAG_HAVE_SIGN, NULL);
+	COB_FIELD_INIT (8, NULL, &attr);
 	make_field_entry (&field);
 
 	cob_move (srcfield, curr_field);
@@ -297,10 +312,12 @@ cob_intr_fraction_part (cob_field *srcfield)
 cob_field *
 cob_intr_sign (cob_field *srcfield)
 {
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, COB_FLAG_HAVE_SIGN, NULL};
-	cob_field	field = {4, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 	int		n;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 8, 0, COB_FLAG_HAVE_SIGN, NULL);
+	COB_FIELD_INIT (4, NULL, &attr);
 	make_field_entry (&field);
 
 	cob_set_int (curr_field, 0);
@@ -358,14 +375,14 @@ cob_intr_reverse (cob_field *srcfield)
 cob_field *
 cob_intr_trim (cob_field *srcfield, const int direction)
 {
-	int		i;
+	size_t		i;
 	size_t		size = 0;
 	unsigned char	*begin;
 	unsigned char	*end;
 
 	make_field_entry (srcfield);
 
-	for (i = 0; i < (int)srcfield->size; i++) {
+	for (i = 0; i < srcfield->size; i++) {
 		if (srcfield->data[i] != ' ') {
 			break;
 		}
@@ -395,9 +412,11 @@ cob_field *
 cob_intr_exception_file ()
 {
 	size_t		flen;
-	cob_field_attr	attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
-	cob_field	field = {0, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
+	COB_FIELD_INIT (0, NULL, &attr);
 	if (cob_exception_code == 0 || !cob_error_file ||
 	    (cob_exception_code & 0x0500) != 0x0500) {
 		field.size = 2;
@@ -416,10 +435,12 @@ cob_intr_exception_file ()
 cob_field *
 cob_intr_exception_location ()
 {
-	cob_field_attr	attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
-	cob_field	field = {0, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 	char		tempfld[COB_SMALL_BUFF];
 
+	COB_ATTR_INIT (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
+	COB_FIELD_INIT (0, NULL, &attr);
 	if (!cob_got_exception || !cob_orig_program_id) {
 		field.size = 1;
 		make_field_entry (&field);
@@ -449,10 +470,12 @@ cob_intr_exception_location ()
 cob_field *
 cob_intr_exception_status ()
 {
-	const char		*except_name;
-	cob_field_attr	attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
-	cob_field	field = {31, NULL, &attr};
+	const char	*except_name;
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
+	COB_FIELD_INIT (31, NULL, &attr);
 	make_field_entry (&field);
 
 	memset (curr_field->data, ' ', 31);
@@ -470,9 +493,11 @@ cob_field *
 cob_intr_exception_statement ()
 {
 	size_t		flen;
-	cob_field_attr	attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
-	cob_field	field = {31, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
+	COB_FIELD_INIT (31, NULL, &attr);
 	make_field_entry (&field);
 
 	memset (curr_field->data, ' ', 31);
@@ -494,10 +519,12 @@ cob_intr_current_date ()
 	long    contz;
 #endif
 	time_t 		curtime;
-	cob_field_attr	attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
-	cob_field	field = {21, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 	char		buff[24];
 
+	COB_ATTR_INIT (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
+	COB_FIELD_INIT (21, NULL, &attr);
 	make_field_entry (&field);
 
 	curtime = time (NULL);
@@ -524,9 +551,11 @@ cob_field *
 cob_intr_char (cob_field *srcfield)
 {
 	int		i;
-	cob_field_attr	attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
-	cob_field	field = {1, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
+	COB_FIELD_INIT (1, NULL, &attr);
 	make_field_entry (&field);
 
 	i = cob_get_int (srcfield);
@@ -541,9 +570,11 @@ cob_intr_char (cob_field *srcfield)
 cob_field *
 cob_intr_ord (cob_field *srcfield)
 {
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL};
-	cob_field	field = {4, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL);
+	COB_FIELD_INIT (4, NULL, &attr);
 	make_field_entry (&field);
 	
 	cob_set_int (curr_field, (int)(*srcfield->data + 1));
@@ -555,9 +586,11 @@ cob_intr_stored_char_length (cob_field *srcfield)
 {
 	int		count;
 	unsigned char	*p;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL};
-	cob_field	field = {4, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL);
+	COB_FIELD_INIT (4, NULL, &attr);
 	make_field_entry (&field);
 	
 	count = srcfield->size;
@@ -578,10 +611,12 @@ cob_intr_date_of_integer (cob_field *srcdays)
 	int		days;
 	int		baseyear = 1601;
 	int		leapyear = 365;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_DISPLAY, 8, 0, 0, NULL};
-	cob_field	field = {8, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 	char		buff[16];
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_DISPLAY, 8, 0, 0, NULL);
+	COB_FIELD_INIT (8, NULL, &attr);
 	make_field_entry (&field);
 
 	cob_exception_code = 0;
@@ -625,10 +660,12 @@ cob_intr_day_of_integer (cob_field *srcdays)
 	int		days;
 	int		baseyear = 1601;
 	int		leapyear = 365;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_DISPLAY, 7, 0, 0, NULL};
-	cob_field	field = {7, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 	char		buff[16];
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_DISPLAY, 7, 0, 0, NULL);
+	COB_FIELD_INIT (7, NULL, &attr);
 	make_field_entry (&field);
 
 	cob_exception_code = 0;
@@ -662,9 +699,11 @@ cob_intr_integer_of_date (cob_field *srcfield)
 	int		month;
 	int		year;
 	int		baseyear = 1601;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL};
-	cob_field	field = {4, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL);
+	COB_FIELD_INIT (4, NULL, &attr);
 	make_field_entry (&field);
 
 	cob_exception_code = 0;
@@ -729,9 +768,11 @@ cob_intr_integer_of_day (cob_field *srcfield)
 	int		totaldays;
 	int		year;
 	int		baseyear = 1601;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL};
-	cob_field	field = {4, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL);
+	COB_FIELD_INIT (4, NULL, &attr);
 	make_field_entry (&field);
 
 	cob_exception_code = 0;
@@ -770,9 +811,11 @@ cob_intr_test_date_yyyymmdd (cob_field *srcfield)
 	int		days;
 	int		month;
 	int		year;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL};
-	cob_field	field = {4, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL);
+	COB_FIELD_INIT (4, NULL, &attr);
 	make_field_entry (&field);
 
 	/* Base 1601-01-01 */
@@ -814,9 +857,11 @@ cob_intr_test_day_yyyyddd (cob_field *srcfield)
 	int		indate;
 	int		days;
 	int		year;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL};
-	cob_field	field = {4, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL);
+	COB_FIELD_INIT (4, NULL, &attr);
 	make_field_entry (&field);
 
 	/* Base 1601-01-01 */
@@ -839,9 +884,11 @@ cob_field *
 cob_intr_factorial (cob_field *srcfield)
 {
 	int		srcval;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 0, 0, NULL};
-	cob_field	field = {8, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 0, 0, NULL);
+	COB_FIELD_INIT (8, NULL, &attr);
 	make_field_entry (&field);
 
 	cob_exception_code = 0;
@@ -911,9 +958,11 @@ cob_intr_acos (cob_field *srcfield)
 	int			i, tempres;
 	unsigned long long	result;
 	double			mathd2;
-	cob_field_attr		attr = {COB_TYPE_NUMERIC_BINARY, 18, 17, 0, NULL};
-	cob_field		field = {8, NULL, &attr};
+	cob_field_attr		attr;
+	cob_field		field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 17, 0, NULL);
+	COB_FIELD_INIT (8, NULL, &attr);
 	cob_decimal_set_field (&d1, srcfield);
 	make_field_entry (&field);
 	
@@ -943,9 +992,11 @@ cob_intr_asin (cob_field *srcfield)
 	int			i, tempres;
 	long long		result;
 	double			mathd2;
-	cob_field_attr		attr = {COB_TYPE_NUMERIC_BINARY, 18, 17, COB_FLAG_HAVE_SIGN, NULL};
-	cob_field		field = {8, NULL, &attr};
+	cob_field_attr		attr;
+	cob_field		field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 17, COB_FLAG_HAVE_SIGN, NULL);
+	COB_FIELD_INIT (8, NULL, &attr);
 	cob_decimal_set_field (&d1, srcfield);
 	make_field_entry (&field);
 
@@ -974,9 +1025,11 @@ cob_intr_atan (cob_field *srcfield)
 	int			i, tempres;
 	long long		result;
 	double			mathd2;
-	cob_field_attr		attr = {COB_TYPE_NUMERIC_BINARY, 18, 17, COB_FLAG_HAVE_SIGN, NULL};
-	cob_field		field = {8, NULL, &attr};
+	cob_field_attr		attr;
+	cob_field		field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 17, COB_FLAG_HAVE_SIGN, NULL);
+	COB_FIELD_INIT (8, NULL, &attr);
 	cob_decimal_set_field (&d1, srcfield);
 	make_field_entry (&field);
 
@@ -1005,9 +1058,11 @@ cob_intr_cos (cob_field *srcfield)
 	int			i, tempres;
 	long long		result;
 	double			mathd2;
-	cob_field_attr		attr = {COB_TYPE_NUMERIC_BINARY, 18, 17, COB_FLAG_HAVE_SIGN, NULL};
-	cob_field		field = {8, NULL, &attr};
+	cob_field_attr		attr;
+	cob_field		field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 17, COB_FLAG_HAVE_SIGN, NULL);
+	COB_FIELD_INIT (8, NULL, &attr);
 	cob_decimal_set_field (&d1, srcfield);
 	make_field_entry (&field);
 
@@ -1072,9 +1127,11 @@ cob_intr_sin (cob_field *srcfield)
 	int			i, tempres;
 	long long		result;
 	double			mathd2;
-	cob_field_attr		attr = {COB_TYPE_NUMERIC_BINARY, 18, 17, COB_FLAG_HAVE_SIGN, NULL};
-	cob_field		field = {8, NULL, &attr};
+	cob_field_attr		attr;
+	cob_field		field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 17, COB_FLAG_HAVE_SIGN, NULL);
+	COB_FIELD_INIT (8, NULL, &attr);
 	cob_decimal_set_field (&d1, srcfield);
 	make_field_entry (&field);
 
@@ -1143,12 +1200,14 @@ cob_intr_numval (cob_field *srcfield)
 	int		decimal_seen = 0;
 	long long	llval = 0;
 	double		val;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL};
-	cob_field	field = {8, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 	unsigned char	integer_buff[64];
 	unsigned char	decimal_buff[64];
 	unsigned char	final_buff[64];
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL);
+	COB_FIELD_INIT (8, NULL, &attr);
 	memset (integer_buff, 0, sizeof (integer_buff));
 	memset (decimal_buff, 0, sizeof (decimal_buff));
 	memset (final_buff, 0, sizeof (final_buff));
@@ -1221,12 +1280,14 @@ cob_intr_numval_c (cob_field *srcfield, cob_field *currency)
 	unsigned char	*currency_data;
 	long long	llval = 0;
 	double		val;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL};
-	cob_field	field = {8, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 	unsigned char	integer_buff[64];
 	unsigned char	decimal_buff[64];
 	unsigned char	final_buff[64];
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL);
+	COB_FIELD_INIT (8, NULL, &attr);
 	memset (integer_buff, 0, sizeof (integer_buff));
 	memset (decimal_buff, 0, sizeof (decimal_buff));
 	memset (final_buff, 0, sizeof (final_buff));
@@ -1336,10 +1397,12 @@ cob_intr_sum (int params, ...)
 	int		scale = 0;
 	cob_field	*f;
 	va_list		args;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL};
-	cob_field	field = {8, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL);
+	COB_FIELD_INIT (8, NULL, &attr);
 	va_start (args, params);
 
 	mpz_set_ui (d1.value, 0);
@@ -1347,11 +1410,11 @@ cob_intr_sum (int params, ...)
 
 	for (i = 0; i < params; i++) {
 		f = va_arg (args, cob_field *);
-		if ((f->attr->digits - f->attr->scale) > digits) {
-			digits = f->attr->digits - f->attr->scale;
+		if ((COB_FIELD_DIGITS(f) - COB_FIELD_SCALE(f)) > digits) {
+			digits = COB_FIELD_DIGITS(f) - COB_FIELD_SCALE(f);
 		}
-		if (f->attr->scale > scale) {
-			scale = f->attr->scale;
+		if (COB_FIELD_SCALE(f) > scale) {
+			scale = COB_FIELD_SCALE(f);
 		}
 		cob_decimal_set_field (&d2, f);
 		cob_decimal_add (&d1, &d2);
@@ -1371,9 +1434,11 @@ cob_intr_ord_min (int params, ...)
 	cob_field	*f, *basef;
 	int		ordmin = 0;
 	va_list		args;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL};
-	cob_field	field = {4, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL);
+	COB_FIELD_INIT (4, NULL, &attr);
 	make_field_entry (&field);
 
 	if (params <= 1) {
@@ -1404,9 +1469,11 @@ cob_intr_ord_max (int params, ...)
 	cob_field	*f, *basef;
 	int		ordmin = 0;
 	va_list		args;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL};
-	cob_field	field = {4, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL);
+	COB_FIELD_INIT (4, NULL, &attr);
 	make_field_entry (&field);
 
 	if (params <= 1) {
@@ -1554,13 +1621,15 @@ cob_intr_mean (int params, ...)
 {
 	int		i;
 	cob_field	*f;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL};
-	cob_field	field = {8, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 	unsigned char	data[16];
 	long long	n;
 	va_list		args;
 
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL);
+	COB_FIELD_INIT (8, NULL, &attr);
 	va_start (args, params);
 	mpz_set_ui (d1.value, 0);
 	d1.scale = 0;
@@ -1593,9 +1662,11 @@ cob_field *
 cob_intr_mod (cob_field *srcfield1, cob_field *srcfield2)
 {
 	cob_field	*f1;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL};
-	cob_field	field = {8, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL);
+	COB_FIELD_INIT (8, NULL, &attr);
 	make_field_entry (&field);
 
 	f1 = cob_intr_integer (cob_intr_binop (srcfield1, '/', srcfield2));
@@ -1614,9 +1685,11 @@ cob_intr_range (int params, ...)
 	int		i;
 	cob_field	*f, *basemin, *basemax;
 	va_list		args;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL};
-	cob_field	field = {8, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL);
+	COB_FIELD_INIT (8, NULL, &attr);
 	va_start (args, params);
 
 	basemin = va_arg (args, cob_field *);
@@ -1632,9 +1705,9 @@ cob_intr_range (int params, ...)
 	}
 	va_end (args);
 
-	attr.scale = basemin->attr->scale;
-	if (basemax->attr->scale > attr.scale) {
-		attr.scale = basemax->attr->scale;
+	attr.scale = COB_FIELD_SCALE(basemin);
+	if (COB_FIELD_SCALE(basemax) > attr.scale) {
+		attr.scale = COB_FIELD_SCALE(basemax);
 	}
 	make_field_entry (&field);
 	cob_decimal_set_field (&d1, basemax);
@@ -1648,9 +1721,11 @@ cob_field *
 cob_intr_rem (cob_field *srcfield1, cob_field *srcfield2)
 {
 	cob_field	*f1;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL};
-	cob_field	field = {8, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL);
+	COB_FIELD_INIT (8, NULL, &attr);
 	f1 = cob_intr_integer_part (cob_intr_binop (srcfield1, '/', srcfield2));
 	cob_decimal_set_field (&d1, srcfield2);
 	cob_decimal_set_field (&d2, f1);
@@ -1658,9 +1733,9 @@ cob_intr_rem (cob_field *srcfield1, cob_field *srcfield2)
 	cob_decimal_set_field (&d1, srcfield1);
 	cob_decimal_sub (&d1, &d2);
 
-	attr.scale = srcfield1->attr->scale;
-	if (srcfield2->attr->scale > attr.scale) {
-		attr.scale = srcfield2->attr->scale;
+	attr.scale = COB_FIELD_SCALE(srcfield1);
+	if (COB_FIELD_SCALE(srcfield2) > attr.scale) {
+		attr.scale = COB_FIELD_SCALE(srcfield2);
 	}
 	make_field_entry (&field);
 	cob_decimal_get_field (&d1, curr_field, 0);
@@ -1674,9 +1749,11 @@ cob_intr_random (int params, ...)
 	int		randnum, i;
 	cob_field	*f;
 	va_list		args;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 9, COB_FLAG_HAVE_SIGN, NULL};
-	cob_field	field = {8, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 9, COB_FLAG_HAVE_SIGN, NULL);
+	COB_FIELD_INIT (8, NULL, &attr);
 	va_start (args, params);
 
 	if (params) {
@@ -1709,12 +1786,14 @@ cob_intr_variance (int params, ...)
 {
 	int		i;
 	cob_field	*f;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL};
-	cob_field	field = {8, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 	long long	n;
 	unsigned char	data[16];
 	va_list		args;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL);
+	COB_FIELD_INIT (8, NULL, &attr);
 	if (params == 1) {
 		make_field_entry (&field);
 		cob_set_int (curr_field, 0);
@@ -1890,9 +1969,11 @@ cob_intr_year_to_yyyy (int params, ...)
 	va_list		args;
 	time_t		t;
 	struct tm	*timeptr;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL};
-	cob_field	field = {4, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL);
+	COB_FIELD_INIT (4, NULL, &attr);
 	make_field_entry (&field);
 
 	cob_exception_code = 0;
@@ -1952,9 +2033,11 @@ cob_intr_date_to_yyyymmdd (int params, ...)
 	va_list		args;
 	time_t		t;
 	struct tm	*timeptr;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL};
-	cob_field	field = {4, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL);
+	COB_FIELD_INIT (4, NULL, &attr);
 	make_field_entry (&field);
 
 	cob_exception_code = 0;
@@ -2018,9 +2101,11 @@ cob_intr_day_to_yyyyddd (int params, ...)
 	va_list		args;
 	time_t		t;
 	struct tm	*timeptr;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL};
-	cob_field	field = {4, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL);
+	COB_FIELD_INIT (4, NULL, &attr);
 	make_field_entry (&field);
 
 	cob_exception_code = 0;
@@ -2078,9 +2163,11 @@ cob_intr_seconds_past_midnight ()
 	int		seconds;
 	time_t		t;
 	struct tm	*timeptr;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL};
-	cob_field	field = {4, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL);
+	COB_FIELD_INIT (4, NULL, &attr);
 	make_field_entry (&field);
 
 	t = time (NULL);
@@ -2103,9 +2190,11 @@ cob_intr_seconds_from_formatted_time (cob_field *format, cob_field *value)
 	unsigned char	*p1;
 	unsigned char	*p2;
 	size_t		n;
-	cob_field_attr	attr = {COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL};
-	cob_field	field = {4, NULL, &attr};
+	cob_field_attr	attr;
+	cob_field	field;
 
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 8, 0, 0, NULL);
+	COB_FIELD_INIT (4, NULL, &attr);
 	make_field_entry (&field);
 
 	cob_exception_code = 0;
@@ -2153,8 +2242,10 @@ cob_intr_seconds_from_formatted_time (cob_field *format, cob_field *value)
 }
 
 cob_field *
-cob_intr_locale_date (cob_field *srcfield, const char *deflocale)
+cob_intr_locale_date (cob_field *srcfield, cob_field *locale_field)
 {
+	cob_field_attr	attr;
+	cob_field	field;
 #ifdef	HAVE_LANGINFO_CODESET
 	size_t		len;
 	int		indate;
@@ -2162,18 +2253,20 @@ cob_intr_locale_date (cob_field *srcfield, const char *deflocale)
 	int		month;
 	int		year;
 	unsigned char	*p;
+	char		*deflocale = NULL;
 	char		*localep = NULL;
 	char		*localep2;
 	struct tm	tstruct;
-#endif
-	cob_field_attr	attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
-	cob_field	field = {0, NULL, &attr};
-#ifdef	HAVE_LANGINFO_CODESET
 	char		buff[128];
 	char		buff2[128];
+	char		locale_buff[COB_SMALL_BUFF];
 #endif
 
+	COB_ATTR_INIT (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
+	COB_FIELD_INIT (0, NULL, &attr);
 	cob_exception_code = 0;
+
+#ifdef	HAVE_LANGINFO_CODESET
 	if (COB_FIELD_IS_NUMERIC (srcfield)) {
 		indate = cob_get_int (srcfield);
 	} else {
@@ -2215,12 +2308,16 @@ cob_intr_locale_date (cob_field *srcfield, const char *deflocale)
 	}
 	month--;
 
-#ifdef	HAVE_LANGINFO_CODESET
 	memset ((void *)&tstruct, 0, sizeof(struct tm));
 	tstruct.tm_year = year - 1900;
 	tstruct.tm_mon = month;
 	tstruct.tm_mday = days;
-	if (deflocale) {
+	if (locale_field) {
+		if (locale_field->size >= COB_SMALL_BUFF) {
+			goto derror;
+		}
+		cob_field_to_string (locale_field, locale_buff);
+		deflocale = locale_buff;
 		localep2 = setlocale (LC_TIME, NULL);
 		if (localep2) {
 			localep = strdup (localep2);
@@ -2238,11 +2335,9 @@ cob_intr_locale_date (cob_field *srcfield, const char *deflocale)
 	field.size = len;
 	make_field_entry (&field);
 	memcpy (curr_field->data, buff, len);
-#else
-	goto derror;
-#endif
 	return curr_field;
 derror:
+#endif
 	field.size = 10;
 	make_field_entry (&field);
 	memset (curr_field->data, ' ', 10);
@@ -2251,8 +2346,10 @@ derror:
 }
 
 cob_field *
-cob_intr_locale_time (cob_field *srcfield, const char *deflocale)
+cob_intr_locale_time (cob_field *srcfield, cob_field *locale_field)
 {
+	cob_field_attr	attr;
+	cob_field	field;
 #ifdef	HAVE_LANGINFO_CODESET
 	size_t		len;
 	int		indate;
@@ -2260,18 +2357,20 @@ cob_intr_locale_time (cob_field *srcfield, const char *deflocale)
 	int		minutes;
 	int		seconds;
 	unsigned char	*p;
+	char		*deflocale = NULL;
 	char		*localep = NULL;
 	char		*localep2;
 	struct tm	tstruct;
-#endif
-	cob_field_attr	attr = {COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL};
-	cob_field	field = {0, NULL, &attr};
-#ifdef	HAVE_LANGINFO_CODESET
 	char		buff[128];
 	char		buff2[128];
+	char		locale_buff[COB_SMALL_BUFF];
 #endif
 
+	COB_ATTR_INIT (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
+	COB_FIELD_INIT (0, NULL, &attr);
 	cob_exception_code = 0;
+
+#ifdef	HAVE_LANGINFO_CODESET
 	if (COB_FIELD_IS_NUMERIC (srcfield)) {
 		indate = cob_get_int (srcfield);
 	} else {
@@ -2303,12 +2402,16 @@ cob_intr_locale_time (cob_field *srcfield, const char *deflocale)
 		goto derror;
 	}
 
-#ifdef	HAVE_LANGINFO_CODESET
 	memset ((void *)&tstruct, 0, sizeof(struct tm));
 	tstruct.tm_hour = hours;
 	tstruct.tm_min = minutes;
 	tstruct.tm_sec = seconds;
-	if (deflocale) {
+	if (locale_field) {
+		if (locale_field->size >= COB_SMALL_BUFF) {
+			goto derror;
+		}
+		cob_field_to_string (locale_field, locale_buff);
+		deflocale = locale_buff;
 		localep2 = setlocale (LC_TIME, NULL);
 		if (localep2) {
 			localep = strdup (localep2);
@@ -2326,11 +2429,9 @@ cob_intr_locale_time (cob_field *srcfield, const char *deflocale)
 	field.size = len;
 	make_field_entry (&field);
 	memcpy (curr_field->data, buff, len);
-#else
-	goto derror;
-#endif
 	return curr_field;
 derror:
+#endif
 	field.size = 8;
 	make_field_entry (&field);
 	memset (curr_field->data, ' ', 10);

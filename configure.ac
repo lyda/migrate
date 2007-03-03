@@ -74,6 +74,8 @@ AH_TEMPLATE([HAVE_TIMEZONE], [Has timezone variable])
 AH_TEMPLATE([COB_EXEEXT], [Executable extension])
 AH_TEMPLATE([COB_EXTRA_FLAGS], [Extra Compiler Flags])
 AH_TEMPLATE([__USE_STRING_INLINES], [Compiler optimization])
+AH_TEMPLATE([COB_HAS_INLINE], [Can use inline keyword])
+AH_TEMPLATE([COB_NO_SELFOPEN], [Can not dlopen self])
 
 # enable debug mode by default for now
 AC_DEFINE(COB_DEBUG)
@@ -255,6 +257,11 @@ AC_C_BIGENDIAN
 AC_TYPE_SIZE_T
 AC_STRUCT_TM
 # AX_C___ATTRIBUTE__
+AC_C_INLINE
+if test "$ac_cv_c_inline" != no ; then
+	AC_DEFINE(COB_HAS_INLINE,1)
+fi
+
 
 # Checks for library functions.
 AC_FUNC_ALLOCA
@@ -451,7 +458,7 @@ fi
 
 if test "x$CPPFLAGS" != "x"
 then
-  COB_CFLAGS="$CPPFLAGS $COB_CFLAGS"
+  COB_CFLAGS="$COB_CFLAGS $CPPFLAGS"
 fi
 
 COB_LIBS="-L$libdir -lcob ${LIBCOB_LIBS}"
@@ -506,6 +513,12 @@ CFLAGS="$MYOLDCFLAGS"
 
 # Special stuff
 
+AH_VERBATIM([_XOPEN_SOURCE_EXTENDED],
+[/* Define to 1 if on HPUX.  */
+#ifndef _XOPEN_SOURCE_EXTENDED
+# undef _XOPEN_SOURCE_EXTENDED
+#endif])dnl
+
 case $host_os in
   cygwin* | mingw*)
 	COB_EXPORT_DYN="-Wl,--export-all-symbols -Wl,--enable-auto-import"
@@ -513,12 +526,26 @@ case $host_os in
   darwin* | rhapsody*)
 	COB_SHARED_OPT="-bundle -flat_namespace -undefined suppress"
 	;;
+  hpux*)
+	if test "`basename $CC`" != "gcc"
+	then
+		COB_SHARED_OPT="-b"
+		AC_DEFINE([_XOPEN_SOURCE_EXTENDED],1)
+		CFLAGS="$CFLAGS +ESlit -O"
+		COB_CFLAGS="$COB_CFLAGS +ESlit -w"
+	fi
+	;;
 esac
 
 if test "`basename $CC`" = "gcc"
 then
 	CFLAGS="$CFLAGS -fsigned-char -Wall -Wwrite-strings -Wmissing-prototypes -Wno-format-y2k"
 fi
+
+if test "x$lt_cv_dlopen_self" != "xyes"; then
+	AC_DEFINE(COB_NO_SELFOPEN,1)
+fi
+
 # Generate the output
 
 AC_DEFINE_UNQUOTED(COB_EXPORT_DYN, "$COB_EXPORT_DYN")
@@ -546,6 +573,7 @@ AC_SUBST(COB_PIC_FLAGS)
 AC_SUBST(COB_SHARED_OPT)
 COB_BIGENDIAN="$ac_cv_c_bigendian"
 AC_SUBST(COB_BIGENDIAN)
+AC_SUBST(COB_HAS_INLINE)
 
 AC_CONFIG_FILES([cob-config
 		Makefile lib/Makefile libcob/Makefile

@@ -90,6 +90,10 @@ struct cb_exception cb_exception_table[] = {
 #include "warning.def"
 
 int			cb_id = 1;
+int			cb_attr_id = 1;
+int			cb_literal_id = 1;
+int			cb_field_id = 1;
+int			cb_storage_id = 1;
 int			cb_flag_main = 0;
 
 int			errorcount = 0;
@@ -190,8 +194,6 @@ static struct option long_options[] = {
 #include "warning.def"
 	{NULL, 0, NULL, 0}
 };
-
-static void cob_clean_up (int status);
 
 /* cobc functions */
 
@@ -459,7 +461,11 @@ process_command_line (int argc, char *argv[])
 
 		case '2':	/* -O2 */
 			strip_output = 1;
+#if defined(__hpux) && !defined(__GNUC__)
+			strcat (cob_cflags, " -O");
+#else
 			strcat (cob_cflags, " -O2");
+#endif
 			strcat (cob_cflags, fcopts);
 			strcat (cob_cflags, COB_EXTRA_FLAGS);
 			optimize_flag = 2;
@@ -467,7 +473,11 @@ process_command_line (int argc, char *argv[])
 
 		case 's':	/* -Os */
 			strip_output = 1;
+#if defined(__hpux) && !defined(__GNUC__)
+			strcat (cob_cflags, " -O");
+#else
 			strcat (cob_cflags, " -Os");
+#endif
 			strcat (cob_cflags, fcopts);
 			strcat (cob_cflags, COB_EXTRA_FLAGS);
 			optimize_flag = 2;
@@ -574,10 +584,9 @@ process_command_line (int argc, char *argv[])
 
 #ifdef	__GNUC__
 	strcat (cob_cflags, " -fsigned-char");
-#endif
-
 #ifdef	HAVE_PSIGN_OPT
 	strcat (cob_cflags, " -Wno-pointer-sign");
+#endif
 #endif
 
 	if (gflag_set) {
@@ -1299,6 +1308,10 @@ main (int argc, char *argv[])
 	}
 	for (fn = file_list; fn; fn = fn->next) {
 		cb_id = 1;
+		cb_attr_id = 1;
+		cb_literal_id = 1;
+		cb_field_id = 1;
+		cb_storage_id = 1;
 		iparams++;
 		demangle_name = fn->demangle_source;
 		if (iparams > 1 && cb_compile_level == CB_LEVEL_EXECUTABLE &&
