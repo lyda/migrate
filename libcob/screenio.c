@@ -20,6 +20,8 @@
 
 #include "config.h"
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #if HAVE_NCURSES_H

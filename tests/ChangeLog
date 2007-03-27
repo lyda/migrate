@@ -1,3 +1,7 @@
+2007-03-05  Roger While <simrw@sim-basis.de>
+
+	* OC tests for LOCALE-DATE, LOCALE-TIME
+
 2007-01-29  Roger While <simrw@sim-basis.de>
 
 	* OC test for ODO without TO clause

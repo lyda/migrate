@@ -249,7 +249,7 @@ AC_PROG_MAKE_SET
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([stdint.h sys/types.h signal.h fcntl.h malloc.h locale.h \
-	stddef.h wchar.h dlfcn.h])
+	stddef.h wchar.h dlfcn.h sys/time.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -520,7 +520,14 @@ AH_VERBATIM([_XOPEN_SOURCE_EXTENDED],
 #endif])dnl
 
 case $host_os in
-  cygwin* | mingw*)
+  mingw*)
+	if test "$prefix" = "NONE"
+	then
+	COB_CONFIG_DIR="`cd /usr && pwd -W`/local/share/$PACKAGE_TARNAME/config"
+	fi
+	COB_EXPORT_DYN="-Wl,--export-all-symbols -Wl,--enable-auto-import"
+	;;
+  cygwin*)
 	COB_EXPORT_DYN="-Wl,--export-all-symbols -Wl,--enable-auto-import"
 	;;
   darwin* | rhapsody*)

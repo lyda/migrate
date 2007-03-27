@@ -1970,7 +1970,7 @@ output_call (struct cb_call *p)
 		switch (CB_PURPOSE_INT (l)) {
 		case CB_CALL_BY_CONTENT:
 			output_prefix ();
-			output ("unsigned char content_%d[", n);
+			output ("unsigned char content_%d[", (int)n);
 			if (CB_NUMERIC_LITERAL_P (x) || CB_BINARY_OP_P (x) || x == cb_null) {
 				output ("4");
 			} else {
@@ -1988,11 +1988,11 @@ output_call (struct cb_call *p)
 			if (CB_NUMERIC_LITERAL_P (x) || x == cb_null
 			    || (CB_TREE_CATEGORY (x) == CB_CATEGORY_NUMERIC
 				&& cb_field (x)->usage == CB_USAGE_LENGTH)) {
-				output ("*(int *)content_%d = ", n);
+				output ("*(int *)content_%d = ", (int)n);
 				output_integer (x);
 				output (";\n");
 			} else {
-				output ("memcpy (content_%d, ", n);
+				output ("memcpy (content_%d, ", (int)n);
 				output_data (x);
 				output (", ");
 				output_size (x);
@@ -2007,7 +2007,7 @@ output_call (struct cb_call *p)
 		x = CB_VALUE (l);
 		field_iteration = n;
 		output_prefix ();
-		output ("module.cob_procedure_parameters[%d] = ", n);
+		output ("module.cob_procedure_parameters[%d] = ", (int)n);
 		switch (CB_TREE_TAG (x)) {
 		case CB_TAG_LITERAL:
 		case CB_TAG_FIELD:
@@ -2034,7 +2034,7 @@ output_call (struct cb_call *p)
 	}
 	parmnum = n;
 	output_prefix ();
-	output ("cob_call_params = %d;\n", n);
+	output ("cob_call_params = %d;\n", (int)n);
 	output_prefix ();
 	if (!dynamic_link) {
 		if (CB_REFERENCE_P (p->name) && CB_FIELD_P (CB_REFERENCE (p->name)->value) &&
@@ -2104,7 +2104,7 @@ output_call (struct cb_call *p)
 			}
 			break;
 		case CB_CALL_BY_CONTENT:
-			output ("content_%d", n);
+			output ("content_%d", (int)n);
 			break;
 		case CB_CALL_BY_VALUE:
 			switch (CB_TREE_TAG (x)) {
@@ -2495,7 +2495,7 @@ output_stmt (cb_tree x)
 			output_line ("%s%d:;", CB_PREFIX_LABEL, lp->id);
 		}
 		if (cb_flag_trace) {
-			output_line ("puts (\"%s\");", lp->name);
+			output_line ("puts (\"%s:%s\");", excp_current_program_id, lp->name);
 			output_line ("fflush (stdout);");
 		}
 		break;
@@ -2745,6 +2745,7 @@ output_file_initialization (struct cb_file *f)
 	output_line ("%s%s->flag_end_of_file = 0;", CB_PREFIX_FILE, f->cname);
 	output_line ("%s%s->flag_begin_of_file = 0;", CB_PREFIX_FILE, f->cname);
 	output_line ("%s%s->flag_first_read = 0;", CB_PREFIX_FILE, f->cname);
+	output_line ("%s%s->flag_read_done = 0;", CB_PREFIX_FILE, f->cname);
 	output_line ("%s%s->flag_has_status = %d;", CB_PREFIX_FILE, f->cname,
 		     f->file_status ? 1 : 0);
 	output_line ("%s%s->flag_needs_nl = 0;", CB_PREFIX_FILE, f->cname);

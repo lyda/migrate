@@ -1,3 +1,24 @@
+2007-03-27  Roger While <simrw@sim-basis.de>
+
+	* common.c : Fix 64-bit warning
+
+2007-03-16  Roger While <simrw@sim-basis.de>
+
+	* common.c, intrinsic.c : Provide fractional seconds on Win platform
+
+2007-03-13  Roger While <simrw@sim-basis.de>
+
+	* intrinsic.c : Provide fractional seconds for CURRENT-DATE if
+	  supported on the platform
+	* common.c : Provide fractional seconds for ACCEPT .. FROM TIME
+	  if supported on the platform
+	* fileio.h : Align file structure
+	* fileio.c : When filename mapping, allow underline in varibale name
+
+2007-03-05  Roger While <simrw@sim-basis.de>
+
+	* intrinsic.c : Windows/Cygwin implementation of LOCALE-DATE/TIME
+
 2007-03-03  Roger While <simrw@sim-basis.de>
 
 	* General : Use COB_FIELD_xxx macros

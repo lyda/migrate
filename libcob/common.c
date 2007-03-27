@@ -28,7 +28,11 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <time.h>
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
 #ifdef	_WIN32
+#define WINDOWS_LEAN_AND_MEAN
 #include <windows.h>
 #include <io.h>
 #include <fcntl.h>
@@ -424,7 +428,7 @@ cob_init (int argc, char **argv)
 
 		for (i = 0; i < 8; i++) {
 			memset (buff, 0, sizeof (buff));
-			sprintf (buff, "COB_SWITCH_%d", i + 1);
+			sprintf (buff, "COB_SWITCH_%d", (int)(i + 1));
 			s = getenv (buff);
 			if (s && strcasecmp (s, "ON") == 0) {
 				cob_switch[i] = 1;
@@ -1309,7 +1313,7 @@ void
 cob_accept_date (cob_field *f)
 {
 	time_t	t = time (NULL);
-	char	s[7];
+	char	s[8];
 
 	strftime (s, 7, "%y%m%d", localtime (&t));
 	cob_memcpy (f, (ucharptr)s, 6);
@@ -1319,7 +1323,7 @@ void
 cob_accept_date_yyyymmdd (cob_field *f)
 {
 	time_t	t = time (NULL);
-	char	s[9];
+	char	s[12];
 
 	strftime (s, 9, "%Y%m%d", localtime (&t));
 	cob_memcpy (f, (ucharptr)s, 8);
@@ -1329,7 +1333,7 @@ void
 cob_accept_day (cob_field *f)
 {
 	time_t	t = time (NULL);
-	char	s[6];
+	char	s[8];
 
 	strftime (s, 6, "%y%j", localtime (&t));
 	cob_memcpy (f, (ucharptr)s, 5);
@@ -1339,7 +1343,7 @@ void
 cob_accept_day_yyyyddd (cob_field *f)
 {
 	time_t	t = time (NULL);
-	char	s[8];
+	char	s[12];
 
 	strftime (s, 8, "%Y%j", localtime (&t));
 	cob_memcpy (f, (ucharptr)s, 7);
@@ -1349,7 +1353,7 @@ void
 cob_accept_day_of_week (cob_field *f)
 {
 	time_t	t = time (NULL);
-	char	s[2];
+	char	s[4];
 
 #if defined(_MSC_VER)
 	sprintf(s, "%d", localtime(&t)->tm_wday + 1);
@@ -1362,10 +1366,34 @@ cob_accept_day_of_week (cob_field *f)
 void
 cob_accept_time (cob_field *f)
 {
-	time_t	t = time (NULL);
-	char	s[9];
+#ifdef _WIN32
+	SYSTEMTIME	syst;
+#else
+	time_t		t;
+#if defined(HAVE_SYS_TIME_H) && defined(HAVE_GETTIMEOFDAY)
+	struct timeval	tmv;
+	char		buff2[8];
+#endif
+#endif
+	char		s[12];
 
+#ifdef _WIN32
+	GetLocalTime (&syst);
+	sprintf (s, "%2.2d%2.2d%2.2d%2.2d", syst.wHour, syst.wMinute,
+		syst.wSecond, syst.wMilliseconds / 10);
+#else
+#if defined(HAVE_SYS_TIME_H) && defined(HAVE_GETTIMEOFDAY)
+	gettimeofday (&tmv, NULL);
+	t = tmv.tv_sec;
+#else
+	t = time (NULL);
+#endif
 	strftime (s, 9, "%H%M%S00", localtime (&t));
+#if defined(HAVE_SYS_TIME_H) && defined(HAVE_GETTIMEOFDAY)
+	sprintf(buff2, "%2.2ld", tmv.tv_usec / 10000);
+	memcpy (&s[6], buff2, 2);
+#endif
+#endif
 	cob_memcpy (f, (ucharptr)s, 8);
 }
 

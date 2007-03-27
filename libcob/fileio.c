@@ -51,6 +51,7 @@
 #include <sys/stat.h>
 
 #ifdef _WIN32
+#define WINDOWS_LEAN_AND_MEAN
 #include <windows.h>		/* for GetTempPath, GetTempFileName */
 #include <direct.h>
 #define	fsync	_commit
@@ -2353,9 +2354,16 @@ bdb_nofile (char *filename)
 void
 cob_open (cob_file *f, int mode, int opt, cob_field *fnstatus)
 {
-	int	was_not_exist = 0;
-	struct	stat st;
-	char	filename[COB_MEDIUM_BUFF];
+	int		was_not_exist = 0;
+	size_t		i;
+	char		*p;
+	char		*src;
+	char		*dst;
+	size_t		simple;
+	struct stat	st;
+	char		env[COB_SMALL_BUFF];
+	char		filename[COB_MEDIUM_BUFF];
+	char		buff[COB_MEDIUM_BUFF];
 
 	f->flag_read_done = 0;
 
@@ -2396,12 +2404,9 @@ cob_open (cob_file *f, int mode, int opt, cob_field *fnstatus)
 	/* obtain the file name */
 	cob_field_to_string (f->assign, filename);
 	if (cob_current_module->flag_filename_mapping) {
-		char	buff[COB_MEDIUM_BUFF];
-		char	*p;
-		char	*src = filename;
-		char	*dst = buff;
-		int	simple = 1;
-
+		src = filename;
+		dst = buff;
+		simple = 1;
 		/* expand envoronment variables */
 		/* ex. "$TMPDIR/foo" -> "/tmp/foo" */
 		while (*src) {
@@ -2409,10 +2414,15 @@ cob_open (cob_file *f, int mode, int opt, cob_field *fnstatus)
 				simple = 0;
 			}
 			if (*src == '$') {
-				int	i = 0;
-				char	env[COB_SMALL_BUFF];
-
+/* RXW
+				i = 0;
 				while (isalnum (src[++i])) ;
+*/
+				for (i = 1; ;i++) {
+					if (!isalnum (src[i]) && src[i] != '_') {
+						break;
+					}
+				}
 				memcpy (env, src + 1, i - 1);
 				env[i - 1] = 0;
 				if ((p = getenv (env)) != NULL) {
@@ -2430,8 +2440,6 @@ cob_open (cob_file *f, int mode, int opt, cob_field *fnstatus)
 		/* resolve by environment variables */
 		/* ex. "TMPFILE" -> DD_TMPFILE, dd_TMPFILE, or TMPFILE */
 		if (simple) {
-			size_t	i;
-
 			for (i = 0; i < NUM_PREFIX; i++) {
 				sprintf (buff, "%s%s", prefix[i], filename);
 				if ((p = getenv (buff)) != NULL) {

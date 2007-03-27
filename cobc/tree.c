@@ -611,7 +611,6 @@ cb_build_class_name (cb_tree name, cb_tree list)
 cb_tree
 cb_build_locale_name (cb_tree name, cb_tree list)
 {
-#ifdef	HAVE_SETLOCALE
 	struct cb_class_name	*p =
 	    make_tree (CB_TAG_LOCALE_NAME, CB_CATEGORY_UNKNOWN, sizeof (struct cb_locale_name));
 
@@ -619,10 +618,6 @@ cb_build_locale_name (cb_tree name, cb_tree list)
 	p->cname = to_cname (p->name);
 	p->list = list;
 	return CB_TREE (p);
-#else
-        cb_error (_("LOCALE not supported in this configuration"));
-	return cb_error_node;
-#endif
 }
 
 /*

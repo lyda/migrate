@@ -41,6 +41,7 @@
 
 #elif	defined(_WIN32)
 
+#define WINDOWS_LEAN_AND_MEAN
 #include <windows.h>
 /* Prototype */
 static char *	lt_dlerror (void);
@@ -489,7 +490,7 @@ cob_init_call (void)
 	}
 	cob_set_library_path (s);
 
-#ifndef	COB_NO_SELFOPEN
+#if	!defined(COB_NO_SELFOPEN) || defined(_WIN32)
 	mainhandle = lt_dlopen (NULL);
 #endif
 

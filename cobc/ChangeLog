@@ -1,3 +1,11 @@
+2007-03-27  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Fix warning on 64-bit, display prog id with trace
+
+2007-03-16  Roger While <simrw@sim-basis.de>
+
+	* tyepck.c : Do more param checking otherwise we get a cast abort
+
 2007-03-01  Roger While <simrw@sim-basis.de>
 
 	* codegen.c : Fix LOCALE reference, general code cleanup

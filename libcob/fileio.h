@@ -155,15 +155,15 @@ typedef struct {
 	char			flag_optional;		/* OPTIONAL */
 	char			last_open_mode;		/* open mode given by OPEN */
 	char			special;		/* Special file */
-	char			spare;			/* Spare */
-	unsigned int		flag_nonexistent:1;	/* nonexistent file */
-	unsigned int		flag_end_of_file:1;	/* reached the end of file */
-	unsigned int		flag_begin_of_file:1;	/* reached beginning of file */
-	unsigned int		flag_first_read:2;	/* first READ after OPEN/START */
-	unsigned int		flag_read_done:1;	/* last READ successfully done */
-	unsigned int		flag_has_status:1;	/* has FILE STATUS clause */
-	unsigned int		flag_needs_nl:1;	/* LS file needs NL at close */
-	unsigned int		flag_needs_top:1;	/* Linage needs top */
+	char			flag_nonexistent;	/* nonexistent file */
+	char			flag_end_of_file;	/* reached the end of file */
+	char			flag_begin_of_file;	/* reached beginning of file */
+	char			flag_first_read;	/* first READ after OPEN/START */
+	char			flag_read_done;		/* last READ successfully done */
+	char			flag_has_status;	/* has FILE STATUS clause */
+	char			flag_needs_nl;		/* LS file needs NL at close */
+	char			flag_needs_top;		/* Linage needs top */
+	char			spare[2];		/* Spare */
 } cob_file;
 
 /* File I-O functions */

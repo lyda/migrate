@@ -21923,8 +21923,9 @@ fi
 
 
 
+
 for ac_header in stdint.h sys/types.h signal.h fcntl.h malloc.h locale.h \
-	stddef.h wchar.h dlfcn.h
+	stddef.h wchar.h dlfcn.h sys/time.h
 do
 as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
 if eval "test \"\${$as_ac_Header+set}\" = set"; then
@@ -25741,7 +25742,14 @@ CFLAGS="$MYOLDCFLAGS"
 
 
 case $host_os in
-  cygwin* | mingw*)
+  mingw*)
+	if test "$prefix" = "NONE"
+	then
+	COB_CONFIG_DIR="`cd /usr && pwd -W`/local/share/$PACKAGE_TARNAME/config"
+	fi
+	COB_EXPORT_DYN="-Wl,--export-all-symbols -Wl,--enable-auto-import"
+	;;
+  cygwin*)
 	COB_EXPORT_DYN="-Wl,--export-all-symbols -Wl,--enable-auto-import"
 	;;
   darwin* | rhapsody*)

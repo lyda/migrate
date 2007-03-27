@@ -21,6 +21,10 @@
 #ifndef COB_LIBCOB_H
 #define COB_LIBCOB_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <libcob/byteswap.h>
 #include <libcob/call.h>
 #include <libcob/common.h>
@@ -32,5 +36,9 @@
 #include <libcob/termio.h>
 #include <libcob/intrinsic.h>
 #include <libcob/codegen.h>
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* COB_LIBCOB_H_ */

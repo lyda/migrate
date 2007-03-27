@@ -25,13 +25,24 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
 #include <errno.h>
 #include <math.h>
+#if defined(_WIN32) || defined(__CYGWIN__)
+#undef	HAVE_LANGINFO_CODESET
+#define WINDOWS_LEAN_AND_MEAN
+#include <windows.h>
+#endif
 #ifdef	HAVE_LANGINFO_CODESET
 #include <langinfo.h>
 #endif
 #ifdef	HAVE_LOCALE_H
 #include <locale.h>
+#endif
+#ifdef	_WIN32
+#include <sys/timeb.h>
 #endif
 
 #include "byteswap.h"
@@ -70,6 +81,227 @@ static const int normal_days[] = {0,31,59,90,120,151,181,212,243,273,304,334,365
 static const int leap_days[] =	 {0,31,60,91,121,152,182,213,244,274,305,335,366};
 static const int normal_month_days[] = {0,31,28,31,30,31,30,31,31,30,31,30,31};
 static const int leap_month_days[] =   {0,31,29,31,30,31,30,31,31,30,31,30,31};
+
+/* Locale name to Locale ID table */
+#if defined(_WIN32) || defined(__CYGWIN__)
+
+struct winlocale {
+	const char	*winlocalename;
+	const int	winlocaleid;
+};
+
+static const struct winlocale	wintable[] =
+{
+	{ "af_ZA",		0x0436 },
+	{ "am_ET",		0x045e },
+	{ "ar_AE",		0x3801 },
+	{ "ar_BH",		0x3c01 },
+	{ "ar_DZ",		0x1401 },
+	{ "ar_EG",		0x0c01 },
+	{ "ar_IQ",		0x0801 },
+	{ "ar_JO",		0x2c01 },
+	{ "ar_KW",		0x3401 },
+	{ "ar_LB",		0x3001 },
+	{ "ar_LY",		0x1001 },
+	{ "ar_MA",		0x1801 },
+	{ "ar_OM",		0x2001 },
+	{ "ar_QA",		0x4001 },
+	{ "ar_SA",		0x0401 },
+	{ "ar_SY",		0x2801 },
+	{ "ar_TN",		0x1c01 },
+	{ "ar_YE",		0x2401 },
+	{ "arn_CL",		0x047a },
+	{ "as_IN",		0x044d },
+	{ "az_Cyrl_AZ",		0x082c },
+	{ "az_Latn_AZ",		0x042c },
+	{ "ba_RU",		0x046d },
+	{ "be_BY",		0x0423 },
+	{ "bg_BG",		0x0402 },
+	{ "bn_IN",		0x0445 },
+	{ "bo_BT",		0x0851 },
+	{ "bo_CN",		0x0451 },
+	{ "br_FR",		0x047e },
+	{ "bs_Cyrl_BA",		0x201a },
+	{ "bs_Latn_BA",		0x141a },
+	{ "ca_ES",		0x0403 },
+	{ "cs_CZ",		0x0405 },
+	{ "cy_GB",		0x0452 },
+	{ "da_DK",		0x0406 },
+	{ "de_AT",		0x0c07 },
+	{ "de_CH",		0x0807 },
+	{ "de_DE",		0x0407 },
+	{ "de_LI",		0x1407 },
+	{ "de_LU",		0x1007 },
+	{ "dsb_DE",		0x082e },
+	{ "dv_MV",		0x0465 },
+	{ "el_GR",		0x0408 },
+	{ "en_029",		0x2409 },
+	{ "en_AU",		0x0c09 },
+	{ "en_BZ",		0x2809 },
+	{ "en_CA",		0x1009 },
+	{ "en_GB",		0x0809 },
+	{ "en_IE",		0x1809 },
+	{ "en_IN",		0x4009 },
+	{ "en_JM",		0x2009 },
+	{ "en_MY",		0x4409 },
+	{ "en_NZ",		0x1409 },
+	{ "en_PH",		0x3409 },
+	{ "en_SG",		0x4809 },
+	{ "en_TT",		0x2c09 },
+	{ "en_US",		0x0409 },
+	{ "en_ZA",		0x1c09 },
+	{ "en_ZW",		0x3009 },
+	{ "es_AR",		0x2c0a },
+	{ "es_BO",		0x400a },
+	{ "es_CL",		0x340a },
+	{ "es_CO",		0x240a },
+	{ "es_CR",		0x140a },
+	{ "es_DO",		0x1c0a },
+	{ "es_EC",		0x300a },
+	{ "es_ES",		0x0c0a },
+	{ "es_GT",		0x100a },
+	{ "es_HN",		0x480a },
+	{ "es_MX",		0x080a },
+	{ "es_NI",		0x4c0a },
+	{ "es_PA",		0x180a },
+	{ "es_PE",		0x280a },
+	{ "es_PR",		0x500a },
+	{ "es_PY",		0x3c0a },
+	{ "es_SV",		0x440a },
+	{ "es_US",		0x540a },
+	{ "es_UY",		0x380a },
+	{ "es_VE",		0x200a },
+	{ "et_EE",		0x0425 },
+	{ "eu_ES",		0x042d },
+	{ "fa_IR",		0x0429 },
+	{ "fi_FI",		0x040b },
+	{ "fil_PH",		0x0464 },
+	{ "fo_FO",		0x0438 },
+	{ "fr_BE",		0x080c },
+	{ "fr_CA",		0x0c0c },
+	{ "fr_CH",		0x100c },
+	{ "fr_FR",		0x040c },
+	{ "fr_LU",		0x140c },
+	{ "fr_MC",		0x180c },
+	{ "fy_NL",		0x0462 },
+	{ "ga_IE",		0x083c },
+	{ "gbz_AF",		0x048c },
+	{ "gl_ES",		0x0456 },
+	{ "gsw_FR",		0x0484 },
+	{ "gu_IN",		0x0447 },
+	{ "ha_Latn_NG",		0x0468 },
+	{ "he_IL",		0x040d },
+	{ "hi_IN",		0x0439 },
+	{ "hr_BA",		0x101a },
+	{ "hr_HR",		0x041a },
+	{ "hu_HU",		0x040e },
+	{ "hy_AM",		0x042b },
+	{ "id_ID",		0x0421 },
+	{ "ig_NG",		0x0470 },
+	{ "ii_CN",		0x0478 },
+	{ "is_IS",		0x040f },
+	{ "it_CH",		0x0810 },
+	{ "it_IT",		0x0410 },
+	{ "iu_Cans_CA",		0x045d },
+	{ "iu_Latn_CA",		0x085d },
+	{ "ja_JP",		0x0411 },
+	{ "ka_GE",		0x0437 },
+	{ "kh_KH",		0x0453 },
+	{ "kk_KZ",		0x043f },
+	{ "kl_GL",		0x046f },
+	{ "kn_IN",		0x044b },
+	{ "ko_KR",		0x0412 },
+	{ "kok_IN",		0x0457 },
+	{ "ky_KG",		0x0440 },
+	{ "lb_LU",		0x046e },
+	{ "lo_LA",		0x0454 },
+	{ "lt_LT",		0x0427 },
+	{ "lv_LV",		0x0426 },
+	{ "mi_NZ",		0x0481 },
+	{ "mk_MK",		0x042f },
+	{ "ml_IN",		0x044c },
+	{ "mn_Cyrl_MN",		0x0450 },
+	{ "mn_Mong_CN",		0x0850 },
+	{ "moh_CA",		0x047c },
+	{ "mr_IN",		0x044e },
+	{ "ms_BN",		0x083e },
+	{ "ms_MY",		0x043e },
+	{ "mt_MT",		0x043a },
+	{ "nb_NO",		0x0414 },
+	{ "ne_NP",		0x0461 },
+	{ "nl_BE",		0x0813 },
+	{ "nl_NL",		0x0413 },
+	{ "nn_NO",		0x0814 },
+	{ "ns_ZA",		0x046c },
+	{ "oc_FR",		0x0482 },
+	{ "or_IN",		0x0448 },
+	{ "pa_IN",		0x0446 },
+	{ "pl_PL",		0x0415 },
+	{ "ps_AF",		0x0463 },
+	{ "pt_BR",		0x0416 },
+	{ "pt_PT",		0x0816 },
+	{ "qut_GT",		0x0486 },
+	{ "quz_BO",		0x046b },
+	{ "quz_EC",		0x086b },
+	{ "quz_PE",		0x0c6b },
+	{ "rm_CH",		0x0417 },
+	{ "ro_RO",		0x0418 },
+	{ "ru_RU",		0x0419 },
+	{ "rw_RW",		0x0487 },
+	{ "sa_IN",		0x044f },
+	{ "sah_RU",		0x0485 },
+	{ "se_FI",		0x0c3b },
+	{ "se_NO",		0x043b },
+	{ "se_SE",		0x083b },
+	{ "si_LK",		0x045b },
+	{ "sk_SK",		0x041b },
+	{ "sl_SI",		0x0424 },
+	{ "sma_NO",		0x183b },
+	{ "sma_SE",		0x1c3b },
+	{ "smj_NO",		0x103b },
+	{ "smj_SE",		0x143b },
+	{ "smn_FI",		0x243b },
+	{ "sms_FI",		0x203b },
+	{ "sq_AL",		0x041c },
+	{ "sr_Cyrl_BA",		0x1c1a },
+	{ "sr_Cyrl_CS",		0x0c1a },
+	{ "sr_Latn_BA",		0x181a },
+	{ "sr_Latn_CS",		0x081a },
+	{ "sv_FI",		0x081d },
+	{ "sv_SE",		0x041d },
+	{ "sw_KE",		0x0441 },
+	{ "syr_SY",		0x045a },
+	{ "ta_IN",		0x0449 },
+	{ "te_IN",		0x044a },
+	{ "tg_Cyrl_TJ",		0x0428 },
+	{ "th_TH",		0x041e },
+	{ "tk_TM",		0x0442 },
+	{ "tmz_Latn_DZ",	0x085f },
+	{ "tn_ZA",		0x0432 },
+	{ "tr_IN",		0x0820 },
+	{ "tr_TR",		0x041f },
+	{ "tt_RU",		0x0444 },
+	{ "ug_CN",		0x0480 },
+	{ "uk_UA",		0x0422 },
+	{ "ur_PK",		0x0420 },
+	{ "uz_Cyrl_UZ",		0x0843 },
+	{ "uz_Latn_UZ",		0x0443 },
+	{ "vi_VN",		0x042a },
+	{ "wen_DE",		0x042e },
+	{ "wo_SN",		0x0488 },
+	{ "xh_ZA",		0x0434 },
+	{ "yo_NG",		0x046a },
+	{ "zh_CN",		0x0804 },
+	{ "zh_HK",		0x0c04 },
+	{ "zh_MO",		0x1404 },
+	{ "zh_SG",		0x1004 },
+	{ "zh_TW",		0x0404 },
+	{ "zu_ZA",		0x0435 }
+};
+
+#define	WINLOCSIZE	sizeof(wintable) / sizeof(struct winlocale)
+
+#endif
 
 /* Static function prototypes */
 static void	make_double_entry (void);
@@ -515,19 +747,54 @@ cob_intr_exception_statement ()
 cob_field *
 cob_intr_current_date ()
 {
+#ifdef	_WIN32
+	long		contz;
+	struct tm	*tmptr;
+	struct _timeb	tmb;
+	cob_field_attr	attr;
+	cob_field	field;
+#else
 #if !defined(__linux__) && !defined(__CYGWIN__) && defined(HAVE_TIMEZONE)
-	long    contz;
+	long		contz;
 #endif
 	time_t 		curtime;
 	cob_field_attr	attr;
 	cob_field	field;
+#if defined(HAVE_SYS_TIME_H) && defined(HAVE_GETTIMEOFDAY)
+	struct timeval	tmv;
+	char		buff2[8];
+#endif
+#endif	/* _WIN32 */
 	char		buff[24];
 
 	COB_ATTR_INIT (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
 	COB_FIELD_INIT (21, NULL, &attr);
 	make_field_entry (&field);
 
+#ifdef	_WIN32
+	_ftime (&tmb);
+	tmptr = localtime (&(tmb.time));
+	if (tmb.timezone <= 0) {
+		contz = -tmb.timezone;
+		sprintf (buff, "%4.4d%2.2d%2.2d%2.2d%2.2d%2.2d%2.2d+%2.2ld%2.2ld",
+			tmptr->tm_year + 1900, tmptr->tm_mon + 1, tmptr->tm_mday,
+			tmptr->tm_hour, tmptr->tm_min, tmptr->tm_sec,
+			tmb.millitm / 100, contz / 60, contz % 60);
+	} else {
+		contz = tmb.timezone;
+		sprintf (buff, "%4.4d%2.2d%2.2d%2.2d%2.2d%2.2d%2.2d-%2.2ld%2.2ld",
+			tmptr->tm_year + 1900, tmptr->tm_mon + 1, tmptr->tm_mday,
+			tmptr->tm_hour, tmptr->tm_min, tmptr->tm_sec,
+			tmb.millitm / 100, contz / 60, contz % 60);
+	}
+#else
+#if defined(HAVE_SYS_TIME_H) && defined(HAVE_GETTIMEOFDAY)
+	gettimeofday (&tmv, NULL);
+	curtime = tmv.tv_sec;
+#else
 	curtime = time (NULL);
+#endif
+
 #if defined(__linux__) || defined(__CYGWIN__)
 	strftime (buff, 22, "%Y%m%d%H%M%S00%z", localtime (&curtime));
 #elif defined(HAVE_TIMEZONE)
@@ -543,6 +810,13 @@ cob_intr_current_date ()
 #else
 	strftime (buff, 22, "%Y%m%d%H%M%S0000000", localtime (&curtime));
 #endif
+
+#if defined(HAVE_SYS_TIME_H) && defined(HAVE_GETTIMEOFDAY)
+	sprintf(buff2, "%2.2ld", tmv.tv_usec / 10000);
+	memcpy (&buff[14], buff2, 2);
+#endif
+#endif	/* _WIN32 */
+
 	memcpy (curr_field->data, buff, 21);
 	return curr_field;
 }
@@ -2246,19 +2520,25 @@ cob_intr_locale_date (cob_field *srcfield, cob_field *locale_field)
 {
 	cob_field_attr	attr;
 	cob_field	field;
-#ifdef	HAVE_LANGINFO_CODESET
+#if defined(_WIN32) || defined(__CYGWIN__) || defined(HAVE_LANGINFO_CODESET)
 	size_t		len;
 	int		indate;
 	int		days;
 	int		month;
 	int		year;
+#ifdef	HAVE_LANGINFO_CODESET
 	unsigned char	*p;
 	char		*deflocale = NULL;
 	char		*localep = NULL;
 	char		*localep2;
 	struct tm	tstruct;
-	char		buff[128];
 	char		buff2[128];
+#else
+	char		*p;
+	LCID		localeid = LOCALE_USER_DEFAULT;
+	SYSTEMTIME	syst;
+#endif
+	char		buff[128];
 	char		locale_buff[COB_SMALL_BUFF];
 #endif
 
@@ -2266,7 +2546,7 @@ cob_intr_locale_date (cob_field *srcfield, cob_field *locale_field)
 	COB_FIELD_INIT (0, NULL, &attr);
 	cob_exception_code = 0;
 
-#ifdef	HAVE_LANGINFO_CODESET
+#if defined(_WIN32) || defined(__CYGWIN__) || defined(HAVE_LANGINFO_CODESET)
 	if (COB_FIELD_IS_NUMERIC (srcfield)) {
 		indate = cob_get_int (srcfield);
 	} else {
@@ -2306,6 +2586,7 @@ cob_intr_locale_date (cob_field *srcfield, cob_field *locale_field)
 			goto derror;
 		}
 	}
+#ifdef	HAVE_LANGINFO_CODESET
 	month--;
 
 	memset ((void *)&tstruct, 0, sizeof(struct tm));
@@ -2331,6 +2612,37 @@ cob_intr_locale_date (cob_field *srcfield, cob_field *locale_field)
 		}
 	}
 	strftime (buff, sizeof(buff), buff2, &tstruct);
+#else
+	memset ((void *)&syst, 0, sizeof(syst));
+	syst.wYear = year;
+	syst.wMonth = month;
+	syst.wDay = days;
+	if (locale_field) {
+		if (locale_field->size >= COB_SMALL_BUFF) {
+			goto derror;
+		}
+		cob_field_to_string (locale_field, locale_buff);
+		for (p = locale_buff; *p; p++) {
+			if (isalnum(*p) || *p == '_') {
+				continue;
+			}
+			break;
+		}
+		*p = 0;
+		for (len = 0; len < WINLOCSIZE; len++) {
+			if (!strcmp(locale_buff, wintable[len].winlocalename)) {
+				localeid = wintable[len].winlocaleid;
+				break;
+			}
+		}
+		if (len == WINLOCSIZE) {
+			goto derror;
+		}
+	}
+	if (!GetDateFormat (localeid, DATE_SHORTDATE, &syst, NULL, buff, sizeof(buff))) {
+		goto derror;
+	}
+#endif
 	len = strlen (buff);
 	field.size = len;
 	make_field_entry (&field);
@@ -2350,19 +2662,25 @@ cob_intr_locale_time (cob_field *srcfield, cob_field *locale_field)
 {
 	cob_field_attr	attr;
 	cob_field	field;
-#ifdef	HAVE_LANGINFO_CODESET
+#if defined(_WIN32) || defined(__CYGWIN__) || defined(HAVE_LANGINFO_CODESET)
 	size_t		len;
 	int		indate;
 	int		hours;
 	int		minutes;
 	int		seconds;
+#ifdef	HAVE_LANGINFO_CODESET
 	unsigned char	*p;
 	char		*deflocale = NULL;
 	char		*localep = NULL;
 	char		*localep2;
 	struct tm	tstruct;
-	char		buff[128];
 	char		buff2[128];
+#else
+	char		*p;
+	LCID		localeid = LOCALE_USER_DEFAULT;
+	SYSTEMTIME	syst;
+#endif
+	char		buff[128];
 	char		locale_buff[COB_SMALL_BUFF];
 #endif
 
@@ -2370,7 +2688,7 @@ cob_intr_locale_time (cob_field *srcfield, cob_field *locale_field)
 	COB_FIELD_INIT (0, NULL, &attr);
 	cob_exception_code = 0;
 
-#ifdef	HAVE_LANGINFO_CODESET
+#if defined(_WIN32) || defined(__CYGWIN__) || defined(HAVE_LANGINFO_CODESET)
 	if (COB_FIELD_IS_NUMERIC (srcfield)) {
 		indate = cob_get_int (srcfield);
 	} else {
@@ -2402,6 +2720,7 @@ cob_intr_locale_time (cob_field *srcfield, cob_field *locale_field)
 		goto derror;
 	}
 
+#ifdef	HAVE_LANGINFO_CODESET
 	memset ((void *)&tstruct, 0, sizeof(struct tm));
 	tstruct.tm_hour = hours;
 	tstruct.tm_min = minutes;
@@ -2425,6 +2744,38 @@ cob_intr_locale_time (cob_field *srcfield, cob_field *locale_field)
 		}
 	}
 	strftime (buff, sizeof(buff), buff2, &tstruct);
+#else
+	memset ((void *)&syst, 0, sizeof(syst));
+	syst.wHour = hours;
+	syst.wMinute = minutes;
+	syst.wSecond = seconds;
+	if (locale_field) {
+		if (locale_field->size >= COB_SMALL_BUFF) {
+			goto derror;
+		}
+		cob_field_to_string (locale_field, locale_buff);
+		for (p = locale_buff; *p; p++) {
+			if (isalnum(*p) || *p == '_') {
+				continue;
+			}
+			break;
+		}
+		*p = 0;
+		for (len = 0; len < WINLOCSIZE; len++) {
+			if (!strcmp(locale_buff, wintable[len].winlocalename)) {
+				localeid = wintable[len].winlocaleid;
+				break;
+			}
+		}
+		if (len == WINLOCSIZE) {
+			goto derror;
+		}
+	}
+	if (!GetTimeFormat (localeid, LOCALE_NOUSEROVERRIDE, &syst, NULL, buff, sizeof(buff))) {
+
+		goto derror;
+	}
+#endif
 	len = strlen (buff);
 	field.size = len;
 	make_field_entry (&field);
@@ -2432,7 +2783,7 @@ cob_intr_locale_time (cob_field *srcfield, cob_field *locale_field)
 	return curr_field;
 derror:
 #endif
-	field.size = 8;
+	field.size = 10;
 	make_field_entry (&field);
 	memset (curr_field->data, ' ', 10);
 	cob_set_exception (COB_EC_ARGUMENT_FUNCTION);

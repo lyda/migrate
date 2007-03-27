@@ -25,6 +25,13 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+#ifdef	_WIN32
+#define WINDOWS_LEAN_AND_MEAN
+#include <windows.h>
+#endif 
 
 #ifdef	HAVE_LOCALE_H
 #include <locale.h>
@@ -4128,6 +4135,10 @@ cb_emit_set_to (cb_tree vars, cb_tree x)
 void
 cb_emit_set_up_down (cb_tree l, cb_tree flag, cb_tree x)
 {
+	VALIDATE (x);
+	if (cb_validate_list (l)) {
+		return;
+	}
 	for (; l; l = CB_CHAIN (l)) {
 		if (flag == cb_int0) {
 			cb_emit (cb_build_add (CB_VALUE (l), x, cb_int0));
@@ -4140,6 +4151,9 @@ cb_emit_set_up_down (cb_tree l, cb_tree flag, cb_tree x)
 void
 cb_emit_set_on_off (cb_tree l, cb_tree flag)
 {
+	if (cb_validate_list (l)) {
+		return;
+	}
 	for (; l; l = CB_CHAIN (l)) {
 		struct cb_system_name *s = CB_SYSTEM_NAME (cb_ref (CB_VALUE (l)));
 		cb_emit (cb_build_funcall_2 ("cob_set_switch", cb_int (s->token), flag));
@@ -4149,6 +4163,9 @@ cb_emit_set_on_off (cb_tree l, cb_tree flag)
 void
 cb_emit_set_true (cb_tree l)
 {
+	if (cb_validate_list (l)) {
+		return;
+	}
 	for (; l; l = CB_CHAIN (l)) {
 		cb_tree		x;
 		struct cb_field *f;
@@ -4178,6 +4195,9 @@ cb_emit_set_true (cb_tree l)
 void
 cb_emit_set_false (cb_tree l)
 {
+	if (cb_validate_list (l)) {
+		return;
+	}
 	for (; l; l = CB_CHAIN (l)) {
 		cb_tree		x;
 		struct cb_field *f;
@@ -4217,6 +4237,9 @@ cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree col)
 {
 	cb_tree l;
 
+	if (cb_validate_list (keys)) {
+		return;
+	}
 	for (l = keys; l; l = CB_CHAIN (l)) {
 		if (CB_VALUE (l) == NULL) {
 			CB_VALUE (l) = name;
@@ -4264,6 +4287,9 @@ cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree col)
 void
 cb_emit_sort_using (cb_tree file, cb_tree l)
 {
+	if (cb_validate_list (l)) {
+		return;
+	}
 	for (; l; l = CB_CHAIN (l)) {
 		if (CB_FILE (cb_ref(CB_VALUE(l)))->organization == COB_ORG_SORT) {
 			cb_error (_("Invalid SORT USING parameter"));
@@ -4285,6 +4311,9 @@ cb_emit_sort_giving (cb_tree file, cb_tree l)
 	cb_tree		p;
 	int		listlen;
 
+	if (cb_validate_list (l)) {
+		return;
+	}
 	for (p = l; p; p = CB_CHAIN (p)) {
 		if (CB_FILE (cb_ref(CB_VALUE(p)))->organization == COB_ORG_SORT) {
 			cb_error (_("Invalid SORT GIVING parameter"));
