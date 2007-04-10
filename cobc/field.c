@@ -335,12 +335,17 @@ validate_field_1 (struct cb_field *f)
 			}
 		}
 
-		if (!cb_complex_odo) {
-			/* the data item that contains a OCCURS DEPENDING clause must be
-			   the last data item in the group */
-			for (p = f; p->parent; p = p->parent) {
-				for (; p->sister; p = p->sister) {
-					if (!p->sister->redefines) {
+		/* the data item that contains a OCCURS DEPENDING clause must be
+		   the last data item in the group */
+		for (p = f; p->parent; p = p->parent) {
+			for (; p->sister; p = p->sister) {
+				if (p->sister == cb_field (f->occurs_depending)) {
+						cb_error_x (x,
+							    _("'%s' ODO field item illegal here"),
+							    p->sister->name);
+				}
+				if (!p->sister->redefines) {
+					if (!cb_complex_odo) {
 						cb_error_x (x,
 							    _("'%s' cannot have OCCURS DEPENDING"),
 							    check_filler_name (name));

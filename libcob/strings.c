@@ -33,38 +33,42 @@
 
 #define INSPECT_ALL		0
 #define INSPECT_LEADING		1
-#define INSPECT_FIRST	      	2
-#define INSPECT_TRAILING      	3
+#define INSPECT_FIRST		2
+#define INSPECT_TRAILING	3
 
-static cob_field	*inspect_var;
-static cob_field	inspect_var_copy;
-static int		inspect_replacing;
-static int		inspect_sign;
-static size_t		inspect_size;
-static unsigned char	*inspect_data;
-static unsigned char	*inspect_start;
-static unsigned char	*inspect_end;
-static int		*inspect_mark = NULL;
+#define DLM_DEFAULT_NUM		8
 
-static cob_field	*string_dst;
-static cob_field	string_dst_copy;
-static cob_field	*string_ptr;
-static cob_field	string_ptr_copy;
-static cob_field	*string_dlm;
-static cob_field	string_dlm_copy;
-static int		string_offset;
-
-static cob_field	*unstring_src;
-static cob_field	unstring_src_copy;
-static cob_field	*unstring_ptr;
-static cob_field	unstring_ptr_copy;
-static int		unstring_offset;
-static int		unstring_count;
-static int		unstring_ndlms;
-static struct {
+struct dlm_struct {
 	cob_field	*uns_dlm;
 	int		uns_all;
-} dlm_list[256];	/* FIXME - Needs to be dynamic */
+};
+
+static cob_field		*inspect_var;
+static unsigned char		*inspect_data;
+static unsigned char		*inspect_start;
+static unsigned char		*inspect_end;
+static int			*inspect_mark = NULL;
+static cob_field		inspect_var_copy;
+static int			inspect_replacing;
+static int			inspect_sign;
+static size_t			inspect_size;
+
+static cob_field		*string_dst;
+static cob_field		*string_ptr;
+static cob_field		*string_dlm;
+static cob_field		string_dst_copy;
+static cob_field		string_ptr_copy;
+static cob_field		string_dlm_copy;
+static int			string_offset;
+
+static struct dlm_struct	*dlm_list = NULL;
+static cob_field		*unstring_src;
+static cob_field		*unstring_ptr;
+static cob_field		unstring_src_copy;
+static cob_field		unstring_ptr_copy;
+static int			unstring_offset;
+static int			unstring_count;
+static int			unstring_ndlms;
 
 static COB_INLINE int
 cob_min_int (const int x, const int y)
@@ -384,8 +388,11 @@ cob_string_finish (void)
  */
 
 void
-cob_unstring_init (cob_field *src, cob_field *ptr)
+cob_unstring_init (cob_field *src, cob_field *ptr, const int num_dlm)
 {
+	size_t		digcount;
+	static size_t	udlmcount = 0;
+
 	unstring_src_copy = *src;
 	unstring_src = &unstring_src_copy;
 	unstring_ptr = 0;
@@ -398,6 +405,21 @@ cob_unstring_init (cob_field *src, cob_field *ptr)
 	unstring_count = 0;
 	unstring_ndlms = 0;
 	cob_exception_code = 0;
+	if (!dlm_list) {
+		if (num_dlm <= DLM_DEFAULT_NUM) {
+			dlm_list = cob_malloc (DLM_DEFAULT_NUM * sizeof(struct dlm_struct));
+			udlmcount = DLM_DEFAULT_NUM;
+		} else {
+			dlm_list = cob_malloc ((size_t)num_dlm * sizeof(struct dlm_struct));
+			udlmcount = (size_t)num_dlm;
+		}
+	} else {
+		if (num_dlm > udlmcount) {
+			free (dlm_list);
+			dlm_list = cob_malloc ((size_t)num_dlm * sizeof(struct dlm_struct));
+			udlmcount = (size_t)num_dlm;
+		}
+	}
 
 	if (unstring_ptr) {
 		unstring_offset = cob_get_int (unstring_ptr) - 1;

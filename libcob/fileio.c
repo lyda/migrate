@@ -2134,7 +2134,7 @@ indexed_delete_internal (cob_file *f, int rewrite)
 	if (f->access_mode != COB_ACCESS_SEQUENTIAL) {
 		DBT_SET (p->key, f->keys[0].field);
 	}
-	ret = DB_SEQ (p->cursor[0], DB_SET_RANGE);
+	ret = DB_SEQ (p->cursor[0], DB_SET);
 	if (ret != 0 && f->access_mode != COB_ACCESS_SEQUENTIAL) {
 		if (close_cursor) {
 			p->cursor[0]->c_close (p->cursor[0]);

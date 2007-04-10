@@ -1,10 +1,25 @@
+2007-04-10  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : Enable runtime numeric checks for ADD/SUBTRACT in debug mode
+		     Pass number of delimiters for unstring
+	* pplex.l : If -fdebugging-line is specified, treat a "D" in column 7
+			(fixed format) as a space
+
+2007-03-29  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : EXIT PROGRAM should be ignored for main program
+
+2007-03-28  Roger While <simrw@sim-basis.de>
+
+	* field.c : Fix loop caused by ODO field item following ODO clause
+
 2007-03-27  Roger While <simrw@sim-basis.de>
 
 	* codegen.c : Fix warning on 64-bit, display prog id with trace
 
 2007-03-16  Roger While <simrw@sim-basis.de>
 
-	* tyepck.c : Do more param checking otherwise we get a cast abort
+	* typeck.c : Do more param checking otherwise we get a cast abort
 
 2007-03-01  Roger While <simrw@sim-basis.de>
 
@@ -187,7 +202,7 @@
 2006-07-26  Roger While <simrw@sim-basis.de>
 
 	* All : clean up for gcc 4
-	* tyepck.c, tree.[ch], codegen.c : System routines
+	* typeck.c, tree.[ch], codegen.c : System routines
 
 2006-07-19  Roger While <simrw@sim-basis.de>
 
@@ -407,7 +422,7 @@
 
 2006-02-21  Roger While <simrw@sim-basis.de>
 
-	* tyepck.c, codegen.c : Implement new inlines in
+	* typeck.c, codegen.c : Implement new inlines in
 	  libcob/codegen.h
 
 2006-02-15  Roger While <simrw@sim-basis.de>
@@ -776,8 +791,8 @@
 		       Initialize variables.
 		       Allow MF relaxed syntax.
 		       SORT DUPLICATES is default. No need for warning.
-	  field.c :     Allow larger redefines than original field for
-		        -std=cobol2002 and -std=mf.
+	  field.c :    Allow larger redefines than original field for
+		       -std=cobol2002 and -std=mf.
 	  config.def : New variables - larger-redefines-ok and
 		       relaxed-syntax-check.
 	  codegen.c :  Do not generate unnecessary code eg. switch
@@ -833,7 +848,7 @@
 
 2005-02-12  Roger While <simrw@sim-basis.de>
 
-	* tree.h, tree.c, tyepck.c, field.c, codegen.c :
+	* tree.h, tree.c, typeck.c, field.c, codegen.c :
 	  .. BY CONTENT LENGTH OF ..
 
 2005-02-11  Roger While <simrw@sim-basis.de>

@@ -40,7 +40,7 @@ extern void cob_string_delimited (cob_field *dlm);
 extern void cob_string_append (cob_field *src);
 extern void cob_string_finish (void);
 
-extern void cob_unstring_init (cob_field *src, cob_field *ptr);
+extern void cob_unstring_init (cob_field *src, cob_field *ptr, const int num_dlm);
 extern void cob_unstring_delimited (cob_field *dlm, const int all);
 extern void cob_unstring_into (cob_field *dst, cob_field *dlm, cob_field *cnt);
 extern void cob_unstring_tallying (cob_field *f);

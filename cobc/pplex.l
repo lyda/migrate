@@ -421,6 +421,10 @@ start:
 	case 'd':
 	case 'D':
 		/* debugging line */
+		if (cb_flag_debugging_line) {
+			bp = buff + 7;
+			break;
+		}
 		newline_count++;
 		goto start;
 #if 0
