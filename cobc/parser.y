@@ -2155,6 +2155,8 @@ opt_at_line_column:
   /* empty */			{ $$ = NULL; }
 | _at line_number column_number { $$ = cb_build_pair ($2, $3); }
 | _at column_number line_number { $$ = cb_build_pair ($3, $2); }
+| _at line_number		{ $$ = cb_build_pair ($2, NULL); }
+| _at column_number		{ $$ = cb_build_pair (NULL, $2); }
 | AT simple_value		{ $$ = $2; }
 ;
 
@@ -2179,14 +2181,17 @@ accp_attr:
   AUTO
 | BELL
 | BLINK
+| FULL
 | HIGHLIGHT
 | LOWLIGHT
+| REQUIRED
 | REVERSE_VIDEO
 | SECURE
 | UNDERLINE
 | UPDATE
 | FOREGROUND_COLOR _is integer
 | BACKGROUND_COLOR _is integer
+| PROMPT _character _is literal
 ;
 
 end_accept:
@@ -2510,7 +2515,7 @@ display_upon:
 with_clause:
   /* empty */			{ $$ = cb_int0; }
 | _with NO_ADVANCING		{ $$ = cb_int1; }
-| _with disp_attrs		{ $$ = cb_int0; }
+| WITH disp_attrs		{ $$ = cb_int0; }
 ;
 
 disp_attrs:

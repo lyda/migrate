@@ -366,6 +366,7 @@ output_data (cb_tree x)
 	struct cb_literal	*l;
 	struct cb_reference	*r;
 	struct cb_field		*f;
+	cb_tree			lsub;
 
 	switch (CB_TREE_TAG (x)) {
 	case CB_TAG_LITERAL:
@@ -387,16 +388,15 @@ output_data (cb_tree x)
 
 		/* subscripts */
 		if (r->subs) {
-			cb_tree l = r->subs;
-
+			lsub = r->subs;
 			for (; f; f = f->parent) {
 				if (f->flag_occurs) {
 					output (" + ");
 					if (f->size != 1) {
 						output ("%d * ", f->size);
 					}
-					output_index (CB_VALUE (l));
-					l = CB_CHAIN (l);
+					output_index (CB_VALUE (lsub));
+					lsub = CB_CHAIN (lsub);
 				}
 			}
 		}
@@ -433,6 +433,8 @@ output_size (cb_tree x)
 	struct cb_literal	*l;
 	struct cb_reference	*r;
 	struct cb_field		*f;
+	struct cb_field		*p;
+	struct cb_field		*q;
 
 	switch (CB_TREE_TAG (x)) {
 	case CB_TAG_LITERAL:
@@ -448,8 +450,8 @@ output_size (cb_tree x)
 			output ("%d - ", f->size);
 			output_index (r->offset);
 		} else {
-			struct cb_field *p = cb_field_variable_size (f);
-			struct cb_field *q = f;
+			p = cb_field_variable_size (f);
+			q = f;
 
 again:
 			if (p && (r->type == CB_SENDING_OPERAND
@@ -528,8 +530,7 @@ output_attr (cb_tree x)
 	case CB_TAG_LITERAL:
 		l = CB_LITERAL (x);
 		if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC) {
-			int flags = 0;
-
+			flags = 0;
 			if (l->sign != 0) {
 				flags = COB_FLAG_HAVE_SIGN | COB_FLAG_SIGN_SEPARATE;
 			}
@@ -875,9 +876,11 @@ output_param (cb_tree x, int id)
 	FILE			*savetarget;
 	struct cb_intrinsic	*ip;
 	struct cb_alphabet_name	*abp;
+	struct cb_alphabet_name	*rbp;
 	cb_tree			l;
 	int			n;
 	int			extrefs;
+	int			sav_stack_id;
 	char			fname[12];
 
 /* RXWRXW
@@ -964,9 +967,6 @@ output_param (cb_tree x, int id)
 		r = CB_REFERENCE (x);
 		extrefs = 0;
 		if (r->check) {
-			cb_tree	l;
-			int	sav_stack_id;
-
 #ifdef __GNUC__
 			output_indent (" ({");
 #else
@@ -994,8 +994,7 @@ output_param (cb_tree x, int id)
 			break;
 		}
 		if (CB_ALPHABET_NAME_P (r->value)) {
-			struct cb_alphabet_name *rbp = CB_ALPHABET_NAME (r->value);
-
+			rbp = CB_ALPHABET_NAME (r->value);
 			switch (rbp->type) {
 			case CB_ALPHABET_NATIVE:
 			case CB_ALPHABET_STANDARD_1:
@@ -1424,9 +1423,10 @@ initialize_type (struct cb_initialize *p, struct cb_field *f, int topfield)
 static int
 initialize_uniform_char (struct cb_field *f)
 {
-	if (f->children) {
-		int c = initialize_uniform_char (f->children);
+	int	c;
 
+	if (f->children) {
+		c = initialize_uniform_char (f->children);
 		for (f = f->children->sister; f; f = f->sister) {
 			if (!f->redefines) {
 				if (c != initialize_uniform_char (f)) {
@@ -2173,10 +2173,10 @@ output_goto_1 (cb_tree x)
 static void
 output_goto (struct cb_goto *p)
 {
-	if (p->depending) {
-		int	i = 1;
-		cb_tree l;
+	cb_tree l;
+	int	i = 1;
 
+	if (p->depending) {
 		output_prefix ();
 		output ("switch (");
 		output_param (cb_build_cast_integer (p->depending), 0);
@@ -2377,6 +2377,7 @@ output_stmt (cb_tree x)
 	struct cb_label		*lp;
 	struct cb_assign	*ap;
 	struct cb_if		*ip;
+	int			code;
 
 	stack_id = 0;
 	if (x == NULL) {
@@ -2440,8 +2441,7 @@ output_stmt (cb_tree x)
 		}
 
 		if (p->handler1 || p->handler2 || (p->file && CB_EXCEPTION_ENABLE (COB_EC_I_O))) {
-			int code = CB_EXCEPTION_CODE (p->handler_id);
-
+			code = CB_EXCEPTION_CODE (p->handler_id);
 			if (p->handler1) {
 				if ((code & 0x00ff) == 0) {
 					output_line ("if (unlikely((cob_exception_code & 0xff00) == 0x%04x))",
@@ -2977,11 +2977,11 @@ output_class_name_definition (struct cb_class_name *p)
 static void
 output_initial_values (struct cb_field *p)
 {
+	cb_tree x;
 	cb_tree def = cb_auto_initialize ? cb_true : NULL;
 
 	for (; p; p = p->sister) {
-		cb_tree x = cb_build_field_reference (p, 0);
-
+		x = cb_build_field_reference (p, 0);
 		if (p->flag_item_based) {
 			continue;
 		}
@@ -2998,9 +2998,12 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	struct cb_field		*f;
 	struct call_list	*clp;
 	struct field_list	*k;
+	struct cb_file		*fl;
+	char			*p;
 #ifndef	__GNUC__
 	struct label_list	*pl;
 #endif
+	char			name[CB_MAX_CNAME];
 
 	/* program function */
 	output ("static int\n%s_ (const int entry", prog->program_id);
@@ -3059,9 +3062,6 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	/* External items */
 	for (f = prog->working_storage; f; f = f->sister) {
 		if (f->flag_external) {
-			char *p;
-			char name[CB_MAX_CNAME];
-
 			strcpy (name, f->name);
 			for (p = name; *p; p++) {
 				if (*p == '-') {
@@ -3075,9 +3075,6 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	for (l = prog->file_list; l; l = CB_CHAIN (l)) {
 		f = CB_FILE (CB_VALUE (l))->record;
 		if (f->flag_external) {
-			char *p;
-			char name[CB_MAX_CNAME];
-
 			strcpy (name, f->name);
 			for (p = name; *p; p++) {
 				if (*p == '-') {
@@ -3214,8 +3211,6 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_line ("		return 0;");
 	output_line ("	}");
 	for (l = prog->file_list; l; l = CB_CHAIN (l)) {
-		struct cb_file *fl;
-
 		fl = CB_FILE (CB_VALUE (l));
 		if (fl->organization != COB_ORG_SORT) {
 			output_line ("	cob_close (%s%s, 0, NULL);",
@@ -3288,9 +3283,6 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 		for (l = prog->file_list; l; l = CB_CHAIN (l)) {
 			f = CB_FILE (CB_VALUE (l))->record;
 			if (f->flag_external) {
-				char *p;
-				char name[CB_MAX_CNAME];
-
 				strcpy (name, f->name);
 				for (p = name; *p; p++) {
 					if (*p == '-') {
@@ -3330,9 +3322,6 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 		for (l = prog->file_list; l; l = CB_CHAIN (l)) {
 			f = CB_FILE (CB_VALUE (l))->record;
 			if (f->flag_external) {
-				char *p;
-				char name[CB_MAX_CNAME];
-
 				strcpy (name, f->name);
 				for (p = name; *p; p++) {
 					if (*p == '-') {
@@ -3502,6 +3491,7 @@ output_entry_function (struct cb_program *prog,
 	const unsigned char	*entry_name = CB_LABEL (CB_PURPOSE (entry))->name;
 	cb_tree			using_list = CB_VALUE (entry);
 	cb_tree			l, l1, l2;
+	struct cb_field		*f;
 	int			parmnum;
 
 #ifdef	_MSC_VER
@@ -3525,8 +3515,7 @@ output_entry_function (struct cb_program *prog,
 		return;
 	}
 	for (l = using_list; l; l = CB_CHAIN (l)) {
-		struct cb_field *f = cb_field (CB_VALUE (l));
-
+		f = cb_field (CB_VALUE (l));
 		switch (CB_PURPOSE_INT (l)) {
 		case CB_CALL_BY_REFERENCE:
 		case CB_CALL_BY_CONTENT:
@@ -3565,8 +3554,7 @@ output_entry_function (struct cb_program *prog,
 	output ("{\n");
 	for (l = using_list; l; l = CB_CHAIN (l)) {
 		if (CB_PURPOSE_INT (l) == CB_CALL_BY_CONTENT) {
-			struct cb_field *f = cb_field (CB_VALUE (l));
-
+			f = cb_field (CB_VALUE (l));
 			if (cb_sticky_linkage) {
 				output ("  static unsigned char copy_%d[%d];  /* %s */\n",
 					f->id, f->size, f->name);
@@ -3579,8 +3567,7 @@ output_entry_function (struct cb_program *prog,
 	parmnum = 1;
 	for (l = using_list; l; l = CB_CHAIN (l), parmnum++) {
 		if (CB_PURPOSE_INT (l) == CB_CALL_BY_CONTENT) {
-			struct cb_field *f = cb_field (CB_VALUE (l));
-
+			f = cb_field (CB_VALUE (l));
 			output ("  if (cob_call_params >= %d)\n", parmnum);
 			output ("      memcpy (copy_%d, %s%d, %d);\n",
 				f->id, CB_PREFIX_BASE, f->id, f->size);
@@ -3592,8 +3579,7 @@ output_entry_function (struct cb_program *prog,
 		for (l2 = using_list; l2; l2 = CB_CHAIN (l2)) {
 			if (strcasecmp (cb_field (CB_VALUE (l1))->name,
 					cb_field (CB_VALUE (l2))->name) == 0) {
-				struct cb_field *f = cb_field (CB_VALUE (l2));
-
+				f = cb_field (CB_VALUE (l2));
 				switch (CB_PURPOSE_INT (l2)) {
 				case CB_CALL_BY_REFERENCE:
 					output (", %s%d", CB_PREFIX_BASE, f->id);
@@ -3637,6 +3623,10 @@ codegen (struct cb_program *prog, int nested)
 	struct literal_list	*m;
 	struct field_list	*k;
 	struct call_list	*clp;
+	unsigned char		*s;
+	cb_tree			using_list;
+	cb_tree			l1;
+	cb_tree			l2;
 
 	param_id = 0;
 	stack_id = 0;
@@ -3724,9 +3714,7 @@ codegen (struct cb_program *prog, int nested)
 
 	/* build parameter list */
 	for (l = prog->entry_list; l; l = CB_CHAIN (l)) {
-		cb_tree using_list = CB_VALUE (l);
-		cb_tree l1, l2;
-
+		using_list = CB_VALUE (l);
 		for (l1 = using_list; l1; l1 = CB_CHAIN (l1)) {
 			for (l2 = parameter_list; l2; l2 = CB_CHAIN (l2)) {
 				if (strcasecmp (cb_field (CB_VALUE (l1))->name,
@@ -3785,8 +3773,6 @@ codegen (struct cb_program *prog, int nested)
 		output_storage ("static cob_field_attr %s%d\t= ", CB_PREFIX_ATTR, j->id);
 		output_storage ("{%d, %d, %d, %d, ", j->type, j->digits, j->scale, j->flags);
 		if (j->pic) {
-			unsigned char *s;
-
 			output_storage ("\"");
 			for (s = j->pic; *s; s += 2)
 				output_storage ("%c\\%03o", s[0], s[1]);

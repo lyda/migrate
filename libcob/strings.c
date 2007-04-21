@@ -83,6 +83,7 @@ static void
 inspect_common (cob_field *f1, cob_field *f2, const int type)
 {
 	size_t	n = 0;
+	size_t	j;
 	int	i;
 	int	len = (int)(inspect_end - inspect_start);
 	int	*mark = &inspect_mark[inspect_start - inspect_data];
@@ -96,7 +97,6 @@ inspect_common (cob_field *f1, cob_field *f2, const int type)
 		for (i = len - f2->size; i >= 0; i--) {
 			/* find matching substring */
 			if (memcmp (inspect_start + i, f2->data, f2->size) == 0) {
-				size_t j;
 				/* check if it is already marked */
 				for (j = 0; j < f2->size; j++) {
 					if (mark[i + j] != -1) {
@@ -119,7 +119,6 @@ inspect_common (cob_field *f1, cob_field *f2, const int type)
 		for (i = 0; i < (int)(len - f2->size + 1); i++) {
 			/* find matching substring */
 			if (memcmp (inspect_start + i, f2->data, f2->size) == 0) {
-				size_t j;
 				/* check if it is already marked */
 				for (j = 0; j < f2->size; j++) {
 					if (mark[i + j] != -1) {
@@ -227,6 +226,7 @@ void
 cob_inspect_characters (cob_field *f1)
 {
 	int	i;
+	int	n;
 	int	len = (int)(inspect_end - inspect_start);
 	int	*mark = &inspect_mark[inspect_start - inspect_data];
 
@@ -239,8 +239,7 @@ cob_inspect_characters (cob_field *f1)
 		}
 	} else {
 		/* INSPECT TALLYING f1 CHARACTERS */
-		int n = 0;
-
+		n = 0;
 		for (i = 0; i < len; i++) {
 			if (mark[i] == -1) {
 				mark[i] = 1;
@@ -296,8 +295,9 @@ cob_inspect_converting (cob_field *f1, cob_field *f2)
 void
 cob_inspect_finish (void)
 {
+	size_t	i;
+
 	if (inspect_replacing) {
-		size_t	i;
 		for (i = 0; i < inspect_size; i++) {
 			if (inspect_mark[i] != -1) {
 				inspect_data[i] = inspect_mark[i];
@@ -368,7 +368,7 @@ cob_string_append (cob_field *src)
 		own_memcpy (string_dst->data + string_offset, src->data, src_size);
 		string_offset += (int) src_size;
 	} else {
-		int size = (int)(string_dst->size - string_offset);
+		size = (int)(string_dst->size - string_offset);
 		own_memcpy (string_dst->data + string_offset, src->data, (size_t)size);
 		string_offset += size;
 		cob_set_exception (COB_EC_OVERFLOW_STRING);
@@ -388,9 +388,8 @@ cob_string_finish (void)
  */
 
 void
-cob_unstring_init (cob_field *src, cob_field *ptr, const int num_dlm)
+cob_unstring_init (cob_field *src, cob_field *ptr, const size_t num_dlm)
 {
-	size_t		digcount;
 	static size_t	udlmcount = 0;
 
 	unstring_src_copy = *src;
@@ -410,14 +409,14 @@ cob_unstring_init (cob_field *src, cob_field *ptr, const int num_dlm)
 			dlm_list = cob_malloc (DLM_DEFAULT_NUM * sizeof(struct dlm_struct));
 			udlmcount = DLM_DEFAULT_NUM;
 		} else {
-			dlm_list = cob_malloc ((size_t)num_dlm * sizeof(struct dlm_struct));
-			udlmcount = (size_t)num_dlm;
+			dlm_list = cob_malloc (num_dlm * sizeof(struct dlm_struct));
+			udlmcount = num_dlm;
 		}
 	} else {
 		if (num_dlm > udlmcount) {
 			free (dlm_list);
-			dlm_list = cob_malloc ((size_t)num_dlm * sizeof(struct dlm_struct));
-			udlmcount = (size_t)num_dlm;
+			dlm_list = cob_malloc (num_dlm * sizeof(struct dlm_struct));
+			udlmcount = num_dlm;
 		}
 	}
 

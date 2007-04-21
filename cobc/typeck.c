@@ -457,15 +457,17 @@ cb_build_program_id (cb_tree name, cb_tree alt_name)
 void
 cb_define_switch_name (cb_tree name, cb_tree sname, cb_tree flag, cb_tree ref)
 {
+	cb_tree switch_id;
+	cb_tree value;
+
 	VALIDATE (name);
 	VALIDATE (sname);
 
 	if (CB_SYSTEM_NAME (sname)->category != CB_SWITCH_NAME) {
 		cb_error_x (ref, _("Switch-name is expected '%s'"), CB_NAME (ref));
 	} else {
-		cb_tree switch_id = cb_int (CB_SYSTEM_NAME (sname)->token);
-		cb_tree value = cb_build_funcall_1 ("cob_get_switch", switch_id);
-
+		switch_id = cb_int (CB_SYSTEM_NAME (sname)->token);
+		value = cb_build_funcall_1 ("cob_get_switch", switch_id);
 		if (flag == cb_int0) {
 			value = cb_build_negation (value);
 		}
@@ -476,13 +478,14 @@ cb_define_switch_name (cb_tree name, cb_tree sname, cb_tree flag, cb_tree ref)
 cb_tree
 cb_build_section_name (cb_tree name, int sect_or_para)
 {
+	cb_tree x;
+
 	if (name == cb_error_node) {
 		return cb_error_node;
 	}
 
 	if (CB_REFERENCE (name)->word->count > 0) {
-		cb_tree x = CB_VALUE (CB_REFERENCE (name)->word->items);
-
+		x = CB_VALUE (CB_REFERENCE (name)->word->items);
 		/* Used as a non-label name or used as a section name.
 		   Duplicate paragraphs are allowed if not referenced;
 		   Checked in typeck.c */
@@ -731,16 +734,17 @@ static cb_tree
 cb_build_length_1 (cb_tree x)
 {
 	struct cb_field *f = CB_FIELD (cb_ref (x));
+	cb_tree		e;
+	cb_tree		size;
 
 	if (cb_field_variable_size (f) == NULL) {
 		/* constant size */
 		return cb_int (cb_field_size (x));
 	} else {
 		/* variable size */
-		cb_tree e = NULL;
-
+		e = NULL;
 		for (f = f->children; f; f = f->sister) {
-			cb_tree size = cb_build_length_1 (cb_build_field_reference (f, x));
+			size = cb_build_length_1 (cb_build_field_reference (f, x));
 			if (f->occurs_depending) {
 				size = cb_build_binary_op (size, '*', f->occurs_depending);
 			} else if (f->occurs_max > 1) {
@@ -755,9 +759,10 @@ cb_build_length_1 (cb_tree x)
 cb_tree
 cb_build_length (cb_tree x)
 {
-	cb_tree		temp;
-	struct cb_field *f;
-	char		buff[64];
+	struct cb_field		*f;
+	struct cb_literal	*l;
+	cb_tree			temp;
+	char			buff[64];
 
 	if (x == cb_error_node) {
 		return cb_error_node;
@@ -768,8 +773,7 @@ cb_build_length (cb_tree x)
 
 	memset (buff, 0, sizeof (buff));
 	if (CB_LITERAL_P (x)) {
-		struct cb_literal *l = CB_LITERAL (x);
-
+		l = CB_LITERAL (x);
 		sprintf (buff, "%d", (int)l->size);
 		return cb_build_numeric_literal (0, (ucharptr)buff, 0);
 	}
@@ -801,14 +805,15 @@ cb_build_address (cb_tree x)
 cb_tree
 cb_build_ppointer (cb_tree x)
 {
+	struct cb_field	*f;
+
 	if (x == cb_error_node ||
 	    (CB_REFERENCE_P (x) && cb_ref (x) == cb_error_node)) {
 		return cb_error_node;
 	}
 
 	if (CB_REFERENCE_P (x)) {
-		struct cb_field	*f = cb_field(cb_ref(x));
-
+		f = cb_field(cb_ref(x));
 		f->count++;
 	}
 	return cb_build_cast_ppointer (x);
@@ -819,10 +824,11 @@ cb_build_ppointer (cb_tree x)
 void
 cb_validate_program_environment (struct cb_program *prog)
 {
+	cb_tree		x;
+
 	/* resolve the program collating sequence */
 	if (prog->collating_sequence) {
-		cb_tree x = cb_ref (prog->collating_sequence);
-
+		x = cb_ref (prog->collating_sequence);
 		if (x == cb_error_node) {
 			prog->collating_sequence = NULL;
 		} else if (!CB_ALPHABET_NAME_P (x)) {
@@ -989,10 +995,11 @@ expr_reduce (int token)
 	 * token: 'x' '*' 'x' '+' ...
 	 */
 
+	int	op;
+
 	while (expr_prio[TOKEN (-2)] <= expr_prio[token]) {
 		/* Reduce the expression depending on the last operator */
-		int op = TOKEN (-2);
-
+		op = TOKEN (-2);
 		switch (op) {
 		case 'x':
 			return 0;
@@ -1301,12 +1308,12 @@ cb_tree
 cb_build_expr (cb_tree list)
 {
 	cb_tree l;
+	int	op;
 
 	cb_expr_init ();
 
 	for (l = list; l; l = CB_CHAIN (l)) {
-		int op = CB_PURPOSE_INT (l);
-
+		op = CB_PURPOSE_INT (l);
 		switch (op) {
 		case '9': /* NUMERIC */
 			cb_expr_shift_class ("cob_is_numeric");
@@ -1600,7 +1607,9 @@ build_cond_88 (cb_tree x)
 {
 	struct cb_field	*f = cb_field (x);
 	cb_tree		l;
+	cb_tree		t;
 	cb_tree		c1 = NULL;
+	cb_tree		c2;
 
 	/* refer to parent's data storage */
 	x = cb_build_field_reference (f->parent, x);
@@ -1608,9 +1617,7 @@ build_cond_88 (cb_tree x)
 
 	/* build condition */
 	for (l = f->values; l; l = CB_CHAIN (l)) {
-		cb_tree t = CB_VALUE (l);
-		cb_tree c2;
-
+		t = CB_VALUE (l);
 		if (CB_PAIR_P (t)) {
 			/* VALUE THRU VALUE */
 			c2 = cb_build_binary_op (cb_build_binary_op (CB_PAIR_X (t), '[', x),
@@ -1718,6 +1725,8 @@ cb_build_cond (cb_tree x)
 	int			size2;
 	struct cb_field		*f;
 	struct cb_binary_op	*p;
+	cb_tree			d1;
+	cb_tree			d2;
 
 	switch (CB_TREE_TAG (x)) {
 	case CB_TAG_CONST:
@@ -1755,8 +1764,8 @@ cb_build_cond (cb_tree x)
 				x = cb_build_binary_op (p->x, '-', p->y);
 			} else if (CB_BINARY_OP_P (p->x) || CB_BINARY_OP_P (p->y)) {
 				/* decimal comparison */
-				cb_tree d1 = decimal_alloc ();
-				cb_tree d2 = decimal_alloc ();
+				d1 = decimal_alloc ();
+				d2 = decimal_alloc ();
 
 				decimal_expand (d1, p->x);
 				decimal_expand (d2, p->y);
@@ -1926,15 +1935,16 @@ static void
 emit_corresponding (cb_tree (*func) (), cb_tree x1, cb_tree x2, cb_tree opt)
 {
 	struct cb_field *f1, *f2;
+	cb_tree		t1;
+	cb_tree		t2;
 
 	for (f1 = cb_field (x1)->children; f1; f1 = f1->sister) {
 		if (!f1->redefines && !f1->flag_occurs) {
 			for (f2 = cb_field (x2)->children; f2; f2 = f2->sister) {
 				if (!f2->redefines && !f2->flag_occurs) {
 					if (strcmp (f1->name, f2->name) == 0) {
-						cb_tree t1 = cb_build_field_reference (f1, x1);
-						cb_tree t2 = cb_build_field_reference (f2, x2);
-
+						t1 = cb_build_field_reference (f1, x1);
+						t2 = cb_build_field_reference (f2, x2);
 						if (f1->children && f2->children) {
 							emit_corresponding (func, t1, t2, opt);
 						} else {
@@ -1963,15 +1973,16 @@ static void
 emit_move_corresponding (cb_tree x1, cb_tree x2)
 {
 	struct cb_field *f1, *f2;
+	cb_tree		t1;
+	cb_tree		t2;
 
 	for (f1 = cb_field (x1)->children; f1; f1 = f1->sister) {
 		if (!f1->redefines && !f1->flag_occurs) {
 			for (f2 = cb_field (x2)->children; f2; f2 = f2->sister) {
 				if (!f2->redefines && !f2->flag_occurs) {
 					if (strcmp (f1->name, f2->name) == 0) {
-						cb_tree t1 = cb_build_field_reference (f1, x1);
-						cb_tree t2 = cb_build_field_reference (f2, x2);
-
+						t1 = cb_build_field_reference (f1, x1);
+						t2 = cb_build_field_reference (f2, x2);
 						if (f1->children && f2->children) {
 							emit_move_corresponding (t1, t2);
 						} else {
@@ -2011,6 +2022,9 @@ cb_emit_move_corresponding (cb_tree x1, cb_tree x2)
 void
 cb_emit_accept (cb_tree var, cb_tree pos)
 {
+	cb_tree	line;
+	cb_tree	column;
+
 	if (current_program->flag_screen) {
 /* RXW Screen mods required
 		if (CB_FIELD (var)->storage == CB_STORAGE_SCREEN) {
@@ -2018,8 +2032,8 @@ cb_emit_accept (cb_tree var, cb_tree pos)
 			if ((CB_FIELD_P (var) || CB_REFERENCE_P (var))
 			    && CB_FIELD (cb_ref (var))->storage == CB_STORAGE_SCREEN) {
 				if (pos) {
-					cb_tree line = CB_PAIR_X (pos);
-					cb_tree column = CB_PAIR_Y (pos);
+					line = CB_PAIR_X (pos);
+					column = CB_PAIR_Y (pos);
 					cb_emit (cb_build_funcall_3 ("cob_screen_accept", var, line, column));
 				} else {
 					cb_emit (cb_build_funcall_3 ("cob_screen_accept", var, cb_zero, cb_zero));
@@ -2027,8 +2041,8 @@ cb_emit_accept (cb_tree var, cb_tree pos)
 		} else {
 			if (pos) {
 				if (CB_PAIR_P (pos)) {
-					cb_tree line = CB_PAIR_X (pos);
-					cb_tree column = CB_PAIR_Y (pos);
+					line = CB_PAIR_X (pos);
+					column = CB_PAIR_Y (pos);
 					cb_emit (cb_build_funcall_3 ("cob_field_accept", var, line, column));
 				} else {
 					cb_emit (cb_build_funcall_3 ("cob_field_accept", var, pos, NULL));
@@ -2043,8 +2057,8 @@ cb_emit_accept (cb_tree var, cb_tree pos)
 */
 	} else if (pos) {
 		if (CB_PAIR_P (pos)) {
-			cb_tree line = CB_PAIR_X (pos);
-			cb_tree column = CB_PAIR_Y (pos);
+			line = CB_PAIR_X (pos);
+			column = CB_PAIR_Y (pos);
 			cb_emit (cb_build_funcall_3 ("cob_field_accept", var, line, column));
 		} else {
 			cb_emit (cb_build_funcall_3 ("cob_field_accept", var, pos, NULL));
@@ -2131,8 +2145,10 @@ cb_emit_accept_mnemonic (cb_tree var, cb_tree mnemonic)
 void
 cb_emit_accept_name (cb_tree var, cb_tree name)
 {
+	cb_tree sys;
+
 	if (CB_REFERENCE (name)->word->count == 0) {
-		cb_tree sys = lookup_system_name (CB_NAME (name));
+		sys = lookup_system_name (CB_NAME (name));
 
 		if (sys != cb_error_node) {
 			switch (CB_SYSTEM_NAME (sys)->token) {
@@ -2318,7 +2334,13 @@ cb_emit_delete (cb_tree file)
 void
 cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
 {
-	cb_tree l, x;
+	cb_tree	l;
+	cb_tree	x;
+	cb_tree	line;
+	cb_tree	column;
+	cb_tree	p;
+	cb_tree	outorerr;
+	cb_tree	newline;
 
 	for (l = values; l; l = CB_CHAIN (l)) {
 		x = CB_VALUE (l);
@@ -2367,22 +2389,32 @@ cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
 	} else if (current_program->flag_screen) {
 		/* screen mode */
 		for (l = values; l; l = CB_CHAIN (l)) {
-			cb_tree x = CB_VALUE (l);
-
+			x = CB_VALUE (l);
 			if ((CB_FIELD_P (x) || CB_REFERENCE_P (x))
 			    && CB_FIELD (cb_ref (x))->storage == CB_STORAGE_SCREEN) {
 				if (pos) {
-					cb_tree line = CB_PAIR_X (pos);
-					cb_tree column = CB_PAIR_Y (pos);
+					line = CB_PAIR_X (pos);
+					column = CB_PAIR_Y (pos);
+					if (line == NULL) {
+						line = cb_one;
+					}
+					if (column == NULL) {
+						column = cb_one;
+					}
 					cb_emit (cb_build_funcall_3 ("cob_screen_display", x, line, column));
 				} else {
 					cb_emit (cb_build_funcall_3 ("cob_screen_display", x, cb_zero, cb_zero));
 				}
 			} else if (pos) {
 				if (CB_PAIR_P (pos)) {
-					cb_tree line = CB_PAIR_X (pos);
-					cb_tree column = CB_PAIR_Y (pos);
-
+					line = CB_PAIR_X (pos);
+					column = CB_PAIR_Y (pos);
+					if (line == NULL) {
+						line = cb_one;
+					}
+					if (column == NULL) {
+						column = cb_one;
+					}
 					cb_emit (cb_build_funcall_3 ("cob_field_display", x, line, column));
 				} else {
 					cb_emit (cb_build_funcall_3 ("cob_field_display", x, pos, NULL));
@@ -2391,18 +2423,20 @@ cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
 		}
 	} else if (pos) {
 		if (CB_PAIR_P (pos)) {
-			cb_tree line = CB_PAIR_X (pos);
-			cb_tree column = CB_PAIR_Y (pos);
-
+			line = CB_PAIR_X (pos);
+			column = CB_PAIR_Y (pos);
+			if (line == NULL) {
+				line = cb_one;
+			}
+			if (column == NULL) {
+				column = cb_one;
+			}
 			cb_emit (cb_build_funcall_3 ("cob_field_display", CB_VALUE (values), line, column));
 		} else {
 			cb_emit (cb_build_funcall_3 ("cob_field_display", CB_VALUE (values), pos, NULL));
 		}
 	} else {
 		/* DISPLAY x ... [UPON device-name] */
-
-		cb_tree	p, outorerr, newline;
-
 		if (upon == cb_int1) {
 			outorerr = cb_int0;
 		} else {
@@ -2417,7 +2451,7 @@ cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
 		CB_FUNCALL(p)->varcnt = cb_list_length (values);
 		cb_emit (p);
 		for (l = values; l; l = CB_CHAIN (l)) {
-			cb_tree x = CB_VALUE (l);
+			x = CB_VALUE (l);
 			if (CB_FIELD_P (x)) {
 				CB_FIELD (cb_ref (x))->count++;
 			}
@@ -2446,11 +2480,11 @@ cb_build_display_upon (cb_tree x)
 cb_tree
 cb_build_display_upon_direct (cb_tree x)
 {
-	const char *name = CB_NAME (x);
+	const char	*name = CB_NAME (x);
+	cb_tree		sys;
 
 	if (CB_REFERENCE (x)->word->count == 0) {
-		cb_tree sys = lookup_system_name (CB_NAME (x));
-
+		sys = lookup_system_name (CB_NAME (x));
 		if (sys != cb_error_node) {
 			switch (CB_SYSTEM_NAME (sys)->token) {
 			case CB_DEVICE_CONSOLE:
@@ -2499,6 +2533,7 @@ evaluate_test (cb_tree s, cb_tree o)
 {
 	int	flag;
 	cb_tree x, y;
+	cb_tree t;
 
 	/* ANY is always true */
 	if (o == cb_any) {
@@ -2527,7 +2562,7 @@ evaluate_test (cb_tree s, cb_tree o)
 
 	/* x THRU y */
 	if (y) {
-		cb_tree t = cb_build_binary_op (cb_build_binary_op (x, '[', s),
+		t = cb_build_binary_op (cb_build_binary_op (x, '[', s),
 						'&',
 						cb_build_binary_op (s, '[', y));
 
@@ -2547,6 +2582,8 @@ build_evaluate (cb_tree subject_list, cb_tree case_list)
 {
 	cb_tree stmt;
 	cb_tree c1 = NULL;
+	cb_tree c2;
+	cb_tree c3;
 	cb_tree subjs, whens, objs;
 
 	if (case_list == NULL) {
@@ -2559,12 +2596,11 @@ build_evaluate (cb_tree subject_list, cb_tree case_list)
 
 	/* for each WHEN sequence */
 	for (; whens; whens = CB_CHAIN (whens)) {
-		cb_tree c2 = NULL;
-
+		c2 = NULL;
 		/* single WHEN test */
 		for (subjs = subject_list, objs = CB_VALUE (whens);
 		     subjs && objs; subjs = CB_CHAIN (subjs), objs = CB_CHAIN (objs)) {
-			cb_tree c3 = evaluate_test (CB_VALUE (subjs), CB_VALUE (objs));
+			c3 = evaluate_test (CB_VALUE (subjs), CB_VALUE (objs));
 
 			if (c2 == NULL) {
 				c2 = c3;
@@ -2605,6 +2641,7 @@ void
 cb_emit_free (cb_tree vars)
 {
 	cb_tree		l;
+	struct cb_field	*f;
 	int		i;
 
 	if (cb_validate_list (vars)) {
@@ -2613,8 +2650,7 @@ cb_emit_free (cb_tree vars)
 	for (l = vars, i = 1; l; l = CB_CHAIN (l), i++) {
 		if (CB_TREE_CLASS (CB_VALUE (l)) == CB_CLASS_POINTER) {
 			if (CB_CAST_P (CB_VALUE (l))) {
-				struct cb_field *f = cb_field (CB_CAST (CB_VALUE(l))->val);
-
+				f = cb_field (CB_CAST (CB_VALUE(l))->val);
 				if (!f->flag_item_based) {
 					cb_error_x (CB_TREE (current_statement),
 						_("Target %d of FREE, a data address identifier, must address a BASED data item"), i);
@@ -2911,10 +2947,15 @@ count_pic_alphanumeric_edited (struct cb_field *field)
 int
 validate_move (cb_tree src, cb_tree dst, int is_value)
 {
-	struct cb_field	*f;
-	int		src_scale_mod, dst_scale_mod, dst_size_mod;
-	int		is_numeric_edited = 0;
-	cb_tree		loc = src->source_line ? src : dst;
+	struct cb_field		*f;
+	struct cb_literal	*l;
+	cb_tree			loc = src->source_line ? src : dst;
+	size_t			i;
+	int			src_scale_mod, dst_scale_mod, dst_size_mod;
+	int			is_numeric_edited = 0;
+	int			size;
+	int			most_significant;
+	int			least_significant;
 
 	if (CB_TREE_CATEGORY (dst) == CB_CATEGORY_BOOLEAN) {
 		cb_error_x (loc, _("Invalid destination for MOVE"));
@@ -2947,16 +2988,13 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
 		}
 		break;
 	case CB_TAG_LITERAL:
-	{
-		struct cb_literal *l = CB_LITERAL (src);
-
 		/* TODO: ALL literal */
 
+		l = CB_LITERAL (src);
 		if (CB_TREE_CLASS (src) == CB_CLASS_NUMERIC) {
 			/* Numeric literal */
-			size_t i;
-			int most_significant = -999;
-			int least_significant = 999;
+			most_significant = -999;
+			least_significant = 999;
 
 			/* compute the most significant figure place */
 			for (i = 0; i < l->size; i++) {
@@ -3042,16 +3080,12 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
 			/* value check */
 			switch (CB_TREE_CATEGORY (dst)) {
 			case CB_CATEGORY_ALPHABETIC:
-			{
-				size_t i;
-
 				for (i = 0; i < l->size; i++) {
 					if (!isalpha (l->data[i]) && !isspace (l->data[i])) {
 						goto value_mismatch;
 					}
 				}
 				break;
-			}
 			case CB_CATEGORY_NUMERIC:
 				goto expect_numeric;
 			case CB_CATEGORY_NUMERIC_EDITED:
@@ -3066,20 +3100,16 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
 			}
 
 			/* size check */
-			{
-				int size = cb_field_size (dst);
-
-				if (size >= 0 && (int)l->size > size) {
-					goto size_overflow;
-				}
+			size = cb_field_size (dst);
+			if (size >= 0 && (int)l->size > size) {
+				goto size_overflow;
 			}
 		}
 		break;
-	}
 	case CB_TAG_FIELD:
 	case CB_TAG_REFERENCE:
-	{
-		if (CB_REFERENCE_P(src) && CB_ALPHABET_NAME_P(CB_REFERENCE(src)->value)) {
+		if (CB_REFERENCE_P(src) &&
+		    CB_ALPHABET_NAME_P(CB_REFERENCE(src)->value)) {
 			break;
 		}
 		/* non-elementary move */
@@ -3181,7 +3211,6 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
 			return -1;
 		}
 		break;
-	}
 	case CB_TAG_INTEGER:
 	case CB_TAG_BINARY_OP:
 	case CB_TAG_INTRINSIC:
@@ -3435,8 +3464,9 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 {
 	struct cb_literal	*l = CB_LITERAL (src);
 	struct cb_field		*f = cb_field (dst);
-	enum cb_category	cat = CB_TREE_CATEGORY (dst);
 	unsigned char		*buff;
+	unsigned char		*p;
+	enum cb_category	cat = CB_TREE_CATEGORY (dst);
 	int			i;
 	int			diff;
 	int			val;
@@ -3482,11 +3512,10 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 				memcpy (buff + diff, l->data, (size_t)l->size);
 			}
 			if (cb_display_sign == COB_DISPLAY_SIGN_EBCDIC) {
-				unsigned char *p = &buff[f->size - 1];
+				p = &buff[f->size - 1];
 				cob_put_sign_ebcdic (p, l->sign);
 			} else if (l->sign < 0) {
-				unsigned char *p = &buff[f->size - 1];
-
+				p = &buff[f->size - 1];
 				switch (cb_display_sign) {
 				case COB_DISPLAY_SIGN_ASCII:
 					*p += 0x40;
@@ -3608,6 +3637,7 @@ cb_tree
 cb_build_move (cb_tree src, cb_tree dst)
 {
 	struct cb_field *f;
+	struct cb_field *p;
 
 	if (src == cb_error_node || dst == cb_error_node) {
 		return cb_error_node;
@@ -3667,8 +3697,6 @@ cb_build_move (cb_tree src, cb_tree dst)
 	f = cb_field (dst);
 
 	if (CB_EXCEPTION_ENABLE (COB_EC_BOUND_SUBSCRIPT)) {
-		struct cb_field	*p;
-
 		for (p = f; p; p = p->parent) {
 			if (p->flag_occurs) {
 				return cb_build_move_call (src, dst);
@@ -3913,9 +3941,10 @@ cb_emit_read (cb_tree ref, cb_tree next, cb_tree into, cb_tree key, cb_tree lock
 void
 cb_emit_rewrite (cb_tree record, cb_tree from)
 {
-	if (record != cb_error_node) {
-		cb_tree file = CB_TREE (CB_FIELD (cb_ref (record))->file);
+	cb_tree file;
 
+	if (record != cb_error_node) {
+		file = CB_TREE (CB_FIELD (cb_ref (record))->file);
 		current_statement->file = file;
 		if (CB_FILE (file)->organization == COB_ORG_SORT) {
 			cb_error_x (CB_TREE (current_statement),
@@ -4154,11 +4183,13 @@ cb_emit_set_up_down (cb_tree l, cb_tree flag, cb_tree x)
 void
 cb_emit_set_on_off (cb_tree l, cb_tree flag)
 {
+	struct cb_system_name *s;
+
 	if (cb_validate_list (l)) {
 		return;
 	}
 	for (; l; l = CB_CHAIN (l)) {
-		struct cb_system_name *s = CB_SYSTEM_NAME (cb_ref (CB_VALUE (l)));
+		s = CB_SYSTEM_NAME (cb_ref (CB_VALUE (l)));
 		cb_emit (cb_build_funcall_2 ("cob_set_switch", cb_int (s->token), flag));
 	}
 }

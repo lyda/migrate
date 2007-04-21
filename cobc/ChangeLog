@@ -1,3 +1,8 @@
+2007-04-11  Roger While <simrw@sim-basis.de>
+
+	* parser.y, typeck.c, tree.[ch] : Either LINE or COLUMN can be optional
+		on DISPLAY/ACCEPT
+
 2007-04-10  Roger While <simrw@sim-basis.de>
 
 	* typeck.c : Enable runtime numeric checks for ADD/SUBTRACT in debug mode

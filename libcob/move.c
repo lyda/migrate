@@ -121,6 +121,7 @@ cob_move_alphanum_to_display (cob_field *f1, cob_field *f2)
 	unsigned char	*s2 = COB_FIELD_DATA (f2);
 	unsigned char	*e1 = s1 + f1->size;
 	unsigned char	*e2 = s2 + COB_FIELD_SIZE (f2);
+	unsigned char	c;
 
 	/* initialize */
 	own_memset (f2->data, '0', f2->size);
@@ -159,8 +160,7 @@ cob_move_alphanum_to_display (cob_field *f1, cob_field *f2)
 	/* move */
 	count = 0;
 	for (; s1 < e1 && s2 < e2; s1++) {
-		unsigned char	c = *s1;
-
+		c = *s1;
 		if (isdigit (c)) {
 			*s2++ = c;
 		} else if (c == cob_current_module->decimal_point) {
@@ -268,12 +268,13 @@ cob_move_display_to_packed (cob_field *f1, cob_field *f2)
 	unsigned char	*data1 = COB_FIELD_DATA (f1);
 	unsigned char	*data2 = f2->data;
 	unsigned char	*p = data1 + (digits1 - scale1) - (digits2 - scale2);
+	unsigned char	n;
 
 	/* pack string */
 	own_memset (f2->data, 0, f2->size);
 	offset = 1 - (digits2 % 2);
 	for (i = offset; i < digits2 + offset; i++, p++) {
-		unsigned char n = (data1 <= p && p < data1 + digits1) ? cob_d2i (*p) : 0;
+		n = (data1 <= p && p < data1 + digits1) ? cob_d2i (*p) : 0;
 		if (i % 2 == 0) {
 			data2[i / 2] = n << 4;
 		} else {
@@ -482,11 +483,10 @@ static void
 cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 {
 	const char	*p;
+	unsigned char	*min, *max, *src, *dst, *end;
+	unsigned char	*decimal_point = NULL;
 	int		sign = cob_get_sign (f1);
 	int		neg = (sign < 0) ? 1 : 0;
-	unsigned char	*min, *max, *src, *dst, *end;
-	unsigned char	pad = ' ';
-	unsigned char	x;
 	int		count = 0;
 	int		count_sign = 1;
 	int		count_curr = 1;
@@ -496,14 +496,16 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 	int		suppress_zero = 1;
 	int		sign_first = 0;
 	int		p_is_left = 0;
-	unsigned char	*decimal_point = NULL;
+	unsigned char	pad = ' ';
+	unsigned char	x;
+	unsigned char	c;
+	unsigned char	n;
 	unsigned char	sign_symbol = 0;
 	unsigned char	curr_symbol = 0;
 
 	/* count the number of digit places before decimal point */
 	for (p = COB_FIELD_PIC(f2); *p; p += 2) {
-		unsigned char	c = p[0];
-
+		c = p[0];
 		if (c == '9' || c == 'Z' || c == '*') {
 			count += p[1];
 			count_sign = 0;
@@ -532,9 +534,8 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 	dst = f2->data;
 	end = f2->data + f2->size;
 	for (p = COB_FIELD_PIC(f2); *p;) {
-		unsigned char	c = *p++;	/* PIC char */
-		unsigned char	n = *p++;	/* PIC char count */
-
+		c = *p++;	/* PIC char */
+		n = *p++;	/* PIC char count */
 		for (; n > 0; n--, dst++) {
 			switch (c) {
 			case '0':
@@ -714,16 +715,17 @@ cob_move_edited_to_display (cob_field *f1, cob_field *f2)
 	int		scale = 0;
 	int		count = 0;
 	int		have_point = 0;
+	int		cp;
 	unsigned char	*p;
 	const char	*p1;
+	unsigned char	c;
 	unsigned char	buff[64];
 
 	p = buff;
 	/* de-edit */
 	for (i = 0; i < f1->size; i++) {
-		int	c = f1->data[i];
-
-		switch (c) {
+		cp = f1->data[i];
+		switch (cp) {
 		case '0':
 		case '1':
 		case '2':
@@ -734,14 +736,14 @@ cob_move_edited_to_display (cob_field *f1, cob_field *f2)
 		case '7':
 		case '8':
 		case '9':
-			*p++ = c;
+			*p++ = cp;
 			if (have_point) {
 				scale++;
 			}
 			break;
 		case '.':
 		case ',':
-			if (c == cob_current_module->decimal_point) {
+			if (cp == cob_current_module->decimal_point) {
 				have_point = 1;
 			}
 			break;
@@ -754,8 +756,7 @@ cob_move_edited_to_display (cob_field *f1, cob_field *f2)
 	/* count the number of digit places after decimal point in case of 'V', 'P' */
 	if (scale == 0) {
 		for (p1 = COB_FIELD_PIC(f1); *p1; p1 += 2) {
-			unsigned char c = p1[0];
-
+			c = p1[0];
 			if (c == '9'  || c == '0' || c == 'Z' || c == '*') {
 				if (have_point) {
 					scale += p1[1];
@@ -787,14 +788,15 @@ cob_move_alphanum_to_edited (cob_field *f1, cob_field *f2)
 	const char	*p;
 	unsigned char	*max, *src, *dst;
 	int		sign = cob_get_sign (f1);
+	unsigned char	c;
+	unsigned char	n;
 
 	src = COB_FIELD_DATA (f1);
 	max = src + COB_FIELD_SIZE (f1);
 	dst = f2->data;
 	for (p = COB_FIELD_PIC(f2); *p;) {
-		unsigned char	c = *p++;	/* PIC char */
-		unsigned char	n = *p++;	/* PIC char count */
-
+		c = *p++;	/* PIC char */
+		n = *p++;	/* PIC char count */
 		for (; n > 0; n--) {
 			switch (c) {
 			case 'A':

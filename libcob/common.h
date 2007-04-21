@@ -278,6 +278,7 @@ DLL_EXPIMP extern cob_field		cob_space;		/* SPACE */
 DLL_EXPIMP extern cob_field		cob_high;		/* HIGH-VALUE */
 DLL_EXPIMP extern cob_field		cob_low;		/* LOW-VALUE */
 DLL_EXPIMP extern cob_field		cob_quote;		/* QUOTE */
+DLL_EXPIMP extern cob_field		cob_one;		/* Numeric ONE */
 
 /* convert a digit (e.g., '0') into an integer (e.g., 0) */
 #define cob_d2i(x)		((x) - '0')

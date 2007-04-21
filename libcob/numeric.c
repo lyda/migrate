@@ -285,6 +285,8 @@ cob_decimal_set_display (cob_decimal *d, cob_field *f)
 	int		sign = cob_get_sign (f);
 	size_t		size = COB_FIELD_SIZE (f);
 	unsigned char	*data = COB_FIELD_DATA (f);
+	unsigned int	n;
+	unsigned char	buff[64];
 
 	/* skip leading zeros */
 	while (size > 1 && cob_d2i (data[0]) == 0) {
@@ -294,15 +296,12 @@ cob_decimal_set_display (cob_decimal *d, cob_field *f)
 
 	/* set value */
 	if (size < 10) {
-		unsigned int	n = 0;
-
+		n = 0;
 		while (size--) {
 			n = n * 10 + cob_d2i (*data++);
 		}
 		mpz_set_ui (d->value, n);
 	} else {
-		unsigned char buff[64];
-
 		own_memcpy (buff, data, size);
 		buff[size] = 0;
 		mpz_set_str (d->value, (char *)buff, 10);
@@ -717,6 +716,7 @@ cob_decimal_set_packed (cob_decimal *d, cob_field *f)
 	int		digits = COB_FIELD_DIGITS(f);
 	int		sign;
 	unsigned int	val;
+	unsigned int	valseen;
 
 	sign = COB_FIELD_HAVE_SIGN (f) ? cob_packed_get_sign (f) : 0;
 
@@ -745,8 +745,7 @@ cob_decimal_set_packed (cob_decimal *d, cob_field *f)
 		val += *p >> 4;
 		mpz_set_ui (d->value, val);
 	} else {
-		unsigned int	valseen = 0;
-
+		valseen = 0;
 		mpz_set_ui (d->value, val);
 		if (val) {
 			valseen = 1;
@@ -787,6 +786,7 @@ cob_decimal_get_packed (cob_decimal *d, cob_field *f, const int opt)
 	unsigned char	*data = f->data;
 	unsigned char	*p;
 	unsigned char	*q;
+	unsigned char	x;
 	unsigned char	buff[COB_MEDIUM_BUFF];
 
 	/* build string */
@@ -813,8 +813,7 @@ cob_decimal_get_packed (cob_decimal *d, cob_field *f, const int opt)
 	p = data + (digits / 2) - (size / 2);
 	diff = 1 - (int)(size % 2);
 	for (i = diff, n = 0; i < size + diff; i++, n++) {
-		unsigned char	x = cob_d2i (q[n]);
-
+		x = cob_d2i (q[n]);
 		if (i % 2 == 0) {
 			*p = x << 4;
 		} else {
@@ -872,6 +871,7 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f, const int opt)
 	cob_field_attr	attr;
 	double		val;
 	float		fval;
+	int		sign;
 	unsigned char	data[64];
 
 	if (unlikely(d->scale == DECIMAL_NAN)) {
@@ -888,8 +888,7 @@ cob_decimal_get_field (cob_decimal *d, cob_field *f, const int opt)
 	/* rounding */
 	if (opt & COB_STORE_ROUND) {
 		if (COB_FIELD_SCALE(f) < d->scale) {
-			int	sign = mpz_sgn (d->value);
-
+			sign = mpz_sgn (d->value);
 			if (sign != 0) {
 				shift_decimal (d, COB_FIELD_SCALE(f) - d->scale + 1);
 				if (sign > 0) {
@@ -981,10 +980,12 @@ cob_decimal_div (cob_decimal *d1, cob_decimal *d2)
 void
 cob_decimal_pow (cob_decimal *d1, cob_decimal *d2)
 {
+	unsigned int	n;
+
 	DECIMAL_CHECK (d1, d2);
 
 	if (d2->scale == 0 && mpz_fits_ulong_p (d2->value)) {
-		unsigned int n = mpz_get_ui (d2->value);
+		n = mpz_get_ui (d2->value);
 		mpz_pow_ui (d1->value, d1->value, n);
 		d1->scale *= n;
 	} else {
@@ -1007,11 +1008,12 @@ cob_decimal_cmp (cob_decimal *d1, cob_decimal *d2)
 static int
 display_add_int (unsigned char *data, const size_t size, unsigned int n)
 {
-	size_t		carry = 0;
 	unsigned char	*sp = data + size;
+	size_t		carry = 0;
+	int		i;
 
 	while (n > 0) {
-		int	i = n % 10;
+		i = n % 10;
 
 		n = n / 10;
 
@@ -1051,11 +1053,12 @@ display_add_int (unsigned char *data, const size_t size, unsigned int n)
 static int
 display_sub_int (unsigned char *data, const size_t size, unsigned int n)
 {
-	size_t		carry = 0;
 	unsigned char	*sp = data + size;
+	size_t		carry = 0;
+	int		i;
 
 	while (n > 0) {
-		int	i = n % 10;
+		i = n % 10;
 
 		n = n / 10;
 
@@ -1091,6 +1094,7 @@ cob_display_add_int (cob_field *f, int n)
 {
 	int		sign;
 	size_t		osize;
+	size_t		i;
 	unsigned char	*data = COB_FIELD_DATA (f);
 	size_t		size = COB_FIELD_SIZE (f);
 	int		scale = COB_FIELD_SCALE (f);
@@ -1133,8 +1137,6 @@ cob_display_add_int (cob_field *f, int n)
 	} else if (n < 0) {
 		/* subtract n from the field */
 		if (display_sub_int (data, size, -n) != 0) {
-			size_t	i;
-
 			for (i = 0; i < size; i++) {
 				data[i] = cob_i2d (9 - cob_d2i (data[i]));
 			}

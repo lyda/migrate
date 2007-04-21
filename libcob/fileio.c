@@ -409,19 +409,22 @@ static const cob_fileio_funcs	*fileio_funcs[COB_ORG_MAX] = {
 static void
 cob_sync (cob_file *f, int mode)
 {
+#ifdef	WITH_DB
+	size_t			i;
+	struct indexed_file	*p;
+#ifdef	USE_DB41
+	int			n;
+#endif
+#endif
 	if (f->organization == COB_ORG_INDEXED) {
 #ifdef	WITH_DB
-		size_t			i;
-		struct indexed_file	*p = f->file;
-
+		p = f->file;
 		for (i = 0; i < f->nkeys; i++) {
 			DB_SYNC (p->db[i]);
 		}
 		if (mode == 2) {
 			for (i = 0; i < f->nkeys; i++) {
 #ifdef	USE_DB41
-				int	n;
-
 				fsync (p->db[i]->fd (p->db[i], &n));
 #else
 				fsync (p->db[i]->fd (p->db[i]));
@@ -556,7 +559,11 @@ dummy_start (cob_file *f, int cond, cob_field *key)
 static int
 file_open (cob_file *f, char *filename, int mode, int opt)
 {
-	FILE *fp = NULL;
+	FILE		*fp = NULL;
+#ifdef HAVE_FCNTL
+	int		ret;
+	struct flock	lock;
+#endif
 
 	/* open the file */
 	switch (mode) {
@@ -603,22 +610,17 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 		fseek (fp, (off_t) 0, SEEK_END);
 	}
 
-#if HAVE_FCNTL
+#ifdef HAVE_FCNTL
 	/* lock the file */
-	{
-		int		ret;
-		struct flock	lock;
-
-		own_memset ((unsigned char *)&lock, 0, sizeof (struct flock));
-		lock.l_type = (opt || mode == COB_OPEN_OUTPUT) ? F_WRLCK : F_RDLCK;
-		lock.l_whence = SEEK_SET;
-		lock.l_start = 0;
-		lock.l_len = 0;
-		if (fcntl (fileno (fp), F_SETLK, &lock) < 0) {
-			ret = errno;
-			fclose (fp);
-			return ret;
-		}
+	own_memset ((unsigned char *)&lock, 0, sizeof (struct flock));
+	lock.l_type = (opt || mode == COB_OPEN_OUTPUT) ? F_WRLCK : F_RDLCK;
+	lock.l_whence = SEEK_SET;
+	lock.l_start = 0;
+	lock.l_len = 0;
+	if (fcntl (fileno (fp), F_SETLK, &lock) < 0) {
+		ret = errno;
+		fclose (fp);
+		return ret;
 	}
 #endif
 
@@ -637,6 +639,10 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 static int
 file_close (cob_file *f, int opt)
 {
+#ifdef HAVE_FCNTL
+	struct flock lock;
+#endif
+
 	switch (opt) {
 	case COB_CLOSE_NORMAL:
 	case COB_CLOSE_LOCK:
@@ -647,18 +653,14 @@ file_close (cob_file *f, int opt)
 				putc ('\n', (FILE *)f->file);
 			}
 		}
-#if HAVE_FCNTL
+#ifdef HAVE_FCNTL
 		/* unlock the file */
-		{
-			struct flock lock;
-
-			own_memset ((unsigned char *)&lock, 0, sizeof (struct flock));
-			lock.l_type = F_UNLCK;
-			lock.l_whence = SEEK_SET;
-			lock.l_start = 0;
-			lock.l_len = 0;
-			fcntl (fileno ((FILE *)f->file), F_SETLK, &lock);
-		}
+		own_memset ((unsigned char *)&lock, 0, sizeof (struct flock));
+		lock.l_type = F_UNLCK;
+		lock.l_whence = SEEK_SET;
+		lock.l_start = 0;
+		lock.l_len = 0;
+		fcntl (fileno ((FILE *)f->file), F_SETLK, &lock);
 #endif
 		/* close the file */
 		fclose ((FILE *)f->file);
@@ -676,9 +678,10 @@ file_close (cob_file *f, int opt)
 static int
 file_write_opt (cob_file *f, const int opt)
 {
+	int	i, n;
+
 	if (unlikely(opt & COB_WRITE_PAGE)) {
 		if (unlikely(f->linage)) {
-			int i, n;
 			i = cob_get_int (f->linage_ctr);
 			if (i == 0) {
 				return COB_STATUS_57_I_O_LINAGE;
@@ -702,7 +705,6 @@ file_write_opt (cob_file *f, const int opt)
 			putc ('\f', (FILE *)f->file);
 		}
 	} else if (opt & COB_WRITE_LINES) {
-		int i, n;
 		if (unlikely(f->linage)) {
 			n = cob_get_int (f->linage_ctr);
 			if (n == 0) {
@@ -1087,14 +1089,14 @@ relative_write (cob_file *f, int opt)
 	size_t	size;
 	size_t	relsize;
 	int	i;
+	int	kindex;
 	off_t	off;
 
 	SEEK_INIT (f);
 
 	relsize = f->record_max + sizeof (f->record->size);
 	if (f->access_mode != COB_ACCESS_SEQUENTIAL) {
-		int kindex = cob_get_int (f->keys[0].field) - 1;
-
+		kindex = cob_get_int (f->keys[0].field) - 1;
 		if (kindex < 0) {
 			return COB_STATUS_21_KEY_INVALID;
 		}
@@ -3004,6 +3006,7 @@ CBL_READ_FILE (char *file_handle, char *file_offset, char *file_len, unsigned ch
 	long long	off;
 	int		len;
 	int		rc;
+	struct stat	st;
 
 	memcpy (&fd, file_handle, 4);
 	memcpy (&off, file_offset, 8);
@@ -3023,8 +3026,6 @@ CBL_READ_FILE (char *file_handle, char *file_offset, char *file_len, unsigned ch
 		return 10;
 	}
 	if ((*flags & 0x80) != 0) {
-		struct stat st;
-
 		if (fstat (fd, &st) < 0) {
 			return -1;
 		}

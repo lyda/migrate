@@ -230,12 +230,13 @@ struct cb_text_list *
 cb_text_list_add (struct cb_text_list *list, const char *text)
 {
 	struct cb_text_list *p = cobc_malloc (sizeof (struct cb_text_list));
+	struct cb_text_list *l;
+
 	p->text = strdup (text);
 	p->next = NULL;
 	if (!list) {
 		return p;
 	} else {
-		struct cb_text_list *l;
 		for (l = list; l->next; l = l->next) { ; }
 		l->next = p;
 		return list;
@@ -373,7 +374,9 @@ options_error ()
 static int
 process_command_line (int argc, char *argv[])
 {
-	int c, idx;
+	int			c, idx;
+	enum cob_exception_id	i;
+	char			ext[COB_SMALL_BUFF];
 
 	/* default extension list */
 	cb_extension_list = cb_text_list_add (cb_extension_list, "");
@@ -505,15 +508,12 @@ process_command_line (int argc, char *argv[])
 			break;
 
 		case 'd':	/* -debug */
-		{
 			/* Turn on all exception conditions */
-			enum cob_exception_id i;
 			for (i = 1; i < COB_EC_MAX; i++) {
 				CB_EXCEPTION_ENABLE (i) = 1;
 			}
 			cb_flag_source_location = 1;
 			break;
-		}
 
 		case 't':
 			cb_listing_file = fopen (optarg, "w");
@@ -548,13 +548,9 @@ process_command_line (int argc, char *argv[])
 			break;
 
 		case 'e':
-		{
-			char ext[COB_SMALL_BUFF];
-
 			sprintf (ext, ".%s", optarg);
 			cb_extension_list = cb_text_list_add (cb_extension_list, ext);
 			break;
-		}
 
 		case 'w':
 #undef CB_WARNDEF
@@ -805,7 +801,8 @@ process (const char *cmd)
 static int
 preprocess (struct filename *fn)
 {
-	char    line[COB_MEDIUM_BUFF];
+	struct cb_text_list	*l;
+	char			line[COB_MEDIUM_BUFF];
 
 	errorcount = 0;
 
@@ -878,8 +875,6 @@ preprocess (struct filename *fn)
 
 	/* Output dependency list */
 	if (cb_depend_file) {
-		struct cb_text_list *l;
-
 		if (!cb_depend_target) {
 			fputs (_("-MT must be given to specify target file\n"), stderr);
 			exit (1);

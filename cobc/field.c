@@ -66,6 +66,11 @@ cb_build_field_tree (cb_tree level, cb_tree name,
 {
 	struct cb_reference	*r;
 	struct cb_field		*f;
+	struct cb_field		*p;
+	struct cb_field		*field_fill;
+	cb_tree			dummy_fill;
+	cb_tree			l;
+	cb_tree			x;
 	int			lv;
 
 	if (level == cb_error_node || name == cb_error_node) {
@@ -98,11 +103,8 @@ cb_build_field_tree (cb_tree level, cb_tree name,
 			if (f->level == 01 || f->level == 77) {
 				redefinition_warning (name, NULL);
 			} else {
-				cb_tree l;
-
 				for (l = r->word->items; l; l = CB_CHAIN (l)) {
-					cb_tree x = CB_VALUE (l);
-
+					x = CB_VALUE (l);
 					if (!CB_FIELD_P (x)
 					    || CB_FIELD (x)->level == 01
 					    || CB_FIELD (x)->level == 77
@@ -132,8 +134,6 @@ cb_build_field_tree (cb_tree level, cb_tree name,
 		return cb_error_node;
 	} else if (f->level == 66) {
 		/* level 66 */
-		struct cb_field *p;
-
 		f->parent = cb_field_founder (last_field);
 		for (p = f->parent->children; p && p->sister; p = p->sister) ;
 		if (p) {
@@ -153,8 +153,6 @@ same_level:
 		f->parent = last_field->parent;
 	} else {
 		/* upper level */
-		struct cb_field *p;
-
 		for (p = last_field->parent; p; p = p->parent) {
 			if (p->level == f->level) {
 				last_field = p;
@@ -165,9 +163,8 @@ same_level:
 			}
 		}
 		if (cb_relax_level_hierarchy) {
-			cb_tree		dummy_fill = cb_build_filler ();
-			struct cb_field *field_fill = CB_FIELD (cb_build_field (dummy_fill));
-
+			dummy_fill = cb_build_filler ();
+			field_fill = CB_FIELD (cb_build_field (dummy_fill));
 			cb_warning_x (name, _("No previous data item of level %02d"), f->level);
 			field_fill->level = f->level;
 			field_fill->storage = storage;
@@ -263,7 +260,10 @@ validate_field_1 (struct cb_field *f)
 	cb_tree		x = CB_TREE (f);
 	char		*name = cb_name (x);
 	struct cb_field *p;
+	char		*pp;
+	int		vorint;
 	int		need_picture;
+	char		pic[16];
 
 	if (f->level == 77) {
 		if (f->storage != CB_STORAGE_WORKING &&
@@ -425,10 +425,6 @@ validate_field_1 (struct cb_field *f)
 			need_picture = 0;
 		}
 		if (f->pic == NULL && need_picture != 0) {
-			char	*p;
-			int	vorint;
-			char	pic[16];
-
 			if (f->storage == CB_STORAGE_SCREEN) {
 				if (f->values) {
 					sprintf (pic, "X(%d)", (int)CB_LITERAL(CB_VALUE(f->values))->size);
@@ -440,17 +436,17 @@ validate_field_1 (struct cb_field *f)
 				f->count++;
 				if (CB_NUMERIC_LITERAL_P(CB_VALUE(f->values))) {
 					memset (pic, 0, sizeof (pic));
-					p = pic;
+					pp = pic;
 					if (CB_LITERAL(CB_VALUE(f->values))->sign) {
-						*p++ = 'S';
+						*pp++ = 'S';
 					}
 					vorint = CB_LITERAL(CB_VALUE(f->values))->size -
 						 CB_LITERAL(CB_VALUE(f->values))->scale;
 					if (vorint) {
-						p += sprintf (p, "9(%d)", vorint);
+						pp += sprintf (pp, "9(%d)", vorint);
 					}
 					if (CB_LITERAL(CB_VALUE(f->values))->scale) {
-						sprintf (p, "V9(%d)",
+						sprintf (pp, "V9(%d)",
 						 CB_LITERAL(CB_VALUE(f->values))->scale);
 					}
 					if (CB_LITERAL(CB_VALUE(f->values))->size < 10) {
@@ -595,11 +591,13 @@ validate_field_1 (struct cb_field *f)
 static void
 setup_parameters (struct cb_field *f)
 {
+	int	flag_local;
+	char	pic[8];
+
 	/* determine the class */
 	if (f->children) {
 		/* group field */
-		int flag_local = f->flag_local;
-
+		flag_local = f->flag_local;
 		for (f = f->children; f; f = f->sister) {
 			f->flag_local = flag_local;
 			setup_parameters (f);
@@ -637,8 +635,6 @@ setup_parameters (struct cb_field *f)
 		case CB_USAGE_COMP_5:
 		case CB_USAGE_COMP_X:
 			if (f->pic->category == CB_CATEGORY_ALPHANUMERIC) {
-				char pic[8];
-
 				if (f->pic->size > 8) {
 					sprintf (pic, "9(36)");
 				} else {
@@ -664,7 +660,10 @@ setup_parameters (struct cb_field *f)
 static int
 compute_size (struct cb_field *f)
 {
+	struct cb_field	*c;
 	int		size;
+	int		align_size;
+	int		pad;
 
 	if (f->level == 66) {
 		/* rename */
@@ -679,8 +678,6 @@ compute_size (struct cb_field *f)
 
 	if (f->children) {
 		/* groups */
-		struct cb_field *c;
-
 		size = 0;
 		for (c = f->children; c; c = c->sister) {
 			if (c->redefines) {
@@ -711,7 +708,7 @@ compute_size (struct cb_field *f)
 				/* word alignment */
 				if (c->flag_synchronized
 				    && cb_verify (cb_synchronized_clause, 0)) {
-					int align_size = 1;
+					align_size = 1;
 					switch (c->usage) {
 					case CB_USAGE_BINARY:
 					case CB_USAGE_COMP_5:
@@ -737,7 +734,7 @@ compute_size (struct cb_field *f)
 						break;
 					}
 					if (c->offset % align_size != 0) {
-						int pad = align_size - (c->offset % align_size);
+						pad = align_size - (c->offset % align_size);
 						c->offset += pad;
 						size += pad;
 					}

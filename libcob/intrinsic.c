@@ -747,7 +747,7 @@ cob_intr_exception_statement ()
 cob_field *
 cob_intr_current_date ()
 {
-#ifdef	_WIN32
+#if	defined(_WIN32) && !defined(__CYGWIN__)
 	long		contz;
 	struct tm	*tmptr;
 	struct _timeb	tmb;
@@ -771,7 +771,7 @@ cob_intr_current_date ()
 	COB_FIELD_INIT (21, NULL, &attr);
 	make_field_entry (&field);
 
-#ifdef	_WIN32
+#if	defined(_WIN32) && !defined(__CYGWIN__)
 	_ftime (&tmb);
 	tmptr = localtime (&(tmb.time));
 	if (tmb.timezone <= 0) {

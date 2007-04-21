@@ -30,7 +30,7 @@ Requirements
 OpenCOBOL requires the following external libraries to be installed:
 
  ** NOTE - all the following packages are normally part of a Linux
-    distribution. Cygwin also has these as installable packages
+    distribution. Cygwin also has these as installable packages.
     ALWAYS install the distro packages when available !!
  **
 

@@ -1,6 +1,14 @@
+2007-04-17  Roger While <simrw@sim-basis.de>
+
+	* intrinsic.c : Fix a Cygwin compile failure
+
+2007-04-11  Roger While <simrw@sim-basis.de>
+
+	* common.[ch] : Define cob_one for screen display
+
 2007-04-10  Roger While <simrw@sim-basis.de>
 
-	*strings.[ch] : Dynamically allocate for unstring
+	* strings.[ch] : Dynamically allocate for unstring
 
 2007-03-27  Roger While <simrw@sim-basis.de>
 

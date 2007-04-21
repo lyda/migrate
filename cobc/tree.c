@@ -60,6 +60,7 @@ cb_tree cb_true;
 cb_tree cb_false;
 cb_tree cb_null;
 cb_tree cb_zero;
+cb_tree cb_one;
 cb_tree cb_space;
 cb_tree cb_low;
 cb_tree cb_high;
@@ -112,7 +113,9 @@ make_tree (int tag, enum cb_category category, size_t size)
 static int
 cb_name_1 (char *s, cb_tree x)
 {
-	char *orig = s;
+	char		*orig = s;
+	cb_tree		l;
+	int		i;
 
 	switch (CB_TREE_TAG (x)) {
 	case CB_TAG_CONST:
@@ -157,7 +160,7 @@ cb_name_1 (char *s, cb_tree x)
 
 		s += sprintf (s, "%s", p->word->name);
 		if (p->subs) {
-			cb_tree l = p->subs = cb_list_reverse (p->subs);
+			l = p->subs = cb_list_reverse (p->subs);
 
 			s += sprintf (s, " (");
 			for (; l; l = CB_CHAIN (l)) {
@@ -209,7 +212,6 @@ cb_name_1 (char *s, cb_tree x)
 
 	case CB_TAG_FUNCALL:
 	{
-		int			i;
 		struct cb_funcall	*p = CB_FUNCALL (x);
 
 		s += sprintf (s, "%s", p->name);
@@ -502,7 +504,8 @@ make_constant_label (const char *name)
 void
 cb_init_constants (void)
 {
-	int i;
+	char	*s;
+	int	i;
 
 	cb_error_node = make_constant (CB_CATEGORY_UNKNOWN, NULL);
 	cb_any = make_constant (CB_CATEGORY_UNKNOWN, NULL);
@@ -510,6 +513,7 @@ cb_init_constants (void)
 	cb_false = make_constant (CB_CATEGORY_BOOLEAN, "0");
 	cb_null = make_constant (CB_CATEGORY_DATA_POINTER, "0");
 	cb_zero = make_constant (CB_CATEGORY_NUMERIC, "&cob_zero");
+	cb_one = make_constant (CB_CATEGORY_NUMERIC, "&cob_one");
 	cb_space = make_constant (CB_CATEGORY_ALPHANUMERIC, "&cob_space");
 	cb_low = make_constant (CB_CATEGORY_ALPHANUMERIC, "&cob_low");
 	cb_high = make_constant (CB_CATEGORY_ALPHANUMERIC, "&cob_high");
@@ -520,8 +524,7 @@ cb_init_constants (void)
 	cb_int3 = cb_int (3);
 	cb_int4 = cb_int (4);
 	for (i = 1; i < 8; i++) {
-		char *s = cobc_malloc (4);
-
+		s = cobc_malloc (4);
 		sprintf (s, "i%d", i);
 		cb_i[i] = make_constant (CB_CATEGORY_NUMERIC, s);
 	}
@@ -731,13 +734,15 @@ cb_build_picture (const char *str)
 	int		v_count = 0;
 	int		at_beginning;
 	int		at_end;
+	int		i;
+	int		n;
+	unsigned char	c;
 	unsigned char	buff[16384];
 
 	memset (buff, 0, sizeof (buff));
 	for (p = str; *p; p++) {
-		int		n = 1;
-		unsigned char	c = *p;
-
+		n = 1;
+		c = *p;
 repeat:
 		/* count the number of repeated chars */
 		while (p[1] == c) {
@@ -746,8 +751,7 @@ repeat:
 
 		/* add parenthesized numbers */
 		if (p[1] == '(') {
-			int i = 0;
-
+			i = 0;
 			for (p += 2; *p != ')'; p++) {
 				if (!isdigit (*p)) {
 					goto error;
@@ -1162,6 +1166,7 @@ void
 finalize_file (struct cb_file *f, struct cb_field *records)
 {
 	struct cb_field	*p;
+	struct cb_field	*v;
 	cb_tree		l;
 	cb_tree		x;
 	char		buff[CB_MAX_CNAME];
@@ -1193,8 +1198,7 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 		}
 	}
 	for (p = records; p; p = p->sister) {
-		struct cb_field *v = cb_field_variable_size (p);
-
+		v = cb_field_variable_size (p);
 		if (v && v->offset + v->size * v->occurs_min < f->record_min) {
 			f->record_min = v->offset + v->size * v->occurs_min;
 		}
@@ -1330,9 +1334,15 @@ cb_tree
 cb_ref (cb_tree x)
 {
 	struct cb_reference	*r = CB_REFERENCE (x);
+	struct cb_field		*p;
+	struct cb_label		*s;
 	int			ambiguous = 0;
 	cb_tree			candidate = NULL;
 	cb_tree			items;
+	cb_tree			cb1;
+	cb_tree			cb2;
+	cb_tree			v;
+	cb_tree			c;
 
 	/* if this reference has already been resolved (and the value
 	   has been cached), then just return the value */
@@ -1343,16 +1353,14 @@ cb_ref (cb_tree x)
 	/* resolve the value */
 	for (items = r->word->items; items; items = CB_CHAIN (items)) {
 		/* find a candidate value by resolving qualification */
-		cb_tree v = CB_VALUE (items);
-		cb_tree c = r->chain;
+		v = CB_VALUE (items);
+		c = r->chain;
 
 		switch (CB_TREE_TAG (v)) {
 		case CB_TAG_FIELD:
-		{
 			/* in case the value is a field, it might be qualified
 			   by its parent names and a file name */
-			struct cb_field *p = CB_FIELD (v)->parent;
-
+			p = CB_FIELD (v)->parent;
 			/* resolve by parents */
 			for (; p; p = p->parent) {
 				if (c && strcasecmp (CB_NAME (c), p->name) == 0) {
@@ -1369,14 +1377,10 @@ cb_ref (cb_tree x)
 			}
 
 			break;
-		}
 		case CB_TAG_LABEL:
-		{
 			/* in case the value is a label, it might be qualified
 			   by its section name */
-			struct cb_label *s = CB_LABEL (v)->section;
-			cb_tree		cb1;
-			cb_tree		cb2;
+			s = CB_LABEL (v)->section;
 
 			/* unqualified paragraph name referenced within the section
 			   is resolved without ambiguity check if not duplicated */
@@ -1398,7 +1402,6 @@ cb_ref (cb_tree x)
 			}
 
 			break;
-		}
 		default:
 			/* other values cannot be qualified */
 			break;
@@ -1749,11 +1752,12 @@ cb_list_add (cb_tree l, cb_tree x)
 cb_tree
 cb_list_append (cb_tree l1, cb_tree l2)
 {
+	cb_tree	l;
+
 	if (l1 == NULL) {
 		return l2;
 	} else {
-		cb_tree l = l1;
-
+		l = l1;
 		while (CB_CHAIN (l)) {
 			l = CB_CHAIN (l);
 		}

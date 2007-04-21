@@ -469,6 +469,7 @@ cob_init_call (void)
 	struct stat		st;
 	struct system_table	*psyst;
 #ifdef	_WIN32
+	struct struct_handle	*newhandle;
 	lt_dlhandle		libhandle;
 #endif
 	char			filename[COB_MEDIUM_BUFF];
@@ -504,8 +505,6 @@ cob_init_call (void)
 				if (stat (filename, &st) == 0) {
 #ifdef	_WIN32
 					if ((libhandle = lt_dlopen (filename)) != NULL) {
-						struct struct_handle *newhandle;
-
 						newhandle = cob_malloc (sizeof (struct struct_handle));
 						newhandle->preload_handle = libhandle;
 						newhandle->next = pre_handle;

@@ -103,12 +103,15 @@ cb_load_std (const char *name)
 int
 cb_load_conf (const char *fname, int check_nodef)
 {
-	int		i, ret, line;
-	char		*s, *e;
-	const char	*name, *val;
-	void		*var;
-	FILE		*fp;
-	char		buff[COB_MEDIUM_BUFF];
+	int			i, j, ret, line;
+	char			*s, *e;
+	const char		*name, *val;
+	void			*var;
+	FILE			*fp;
+	char			*nores;
+	struct noreserve	*noresptr;
+	char			f2name[COB_MEDIUM_BUFF];
+	char			buff[COB_MEDIUM_BUFF];
 
 	/* initialize the config table */
 	if (check_nodef) {
@@ -234,8 +237,6 @@ cb_load_conf (const char *fname, int check_nodef)
 		}
 		case INT:
 		{
-			int	j;
-
 			for (j = 0; val[j]; j++) {
 				if (!isdigit (val[j])) {
 					goto invalid_value;
@@ -250,15 +251,10 @@ cb_load_conf (const char *fname, int check_nodef)
 
 			if (strcmp (name, "include") == 0) {
 				/* include another conf file */
-				char	f2name[COB_MEDIUM_BUFF];
-
 				sprintf (f2name, "%s/%s", cob_config_dir, val);
 				if (cb_load_conf (f2name, 0) != 0)
 					return -1;
 			} else if (strcmp (name, "not-reserved") == 0) {
-				char			*nores;
-				struct noreserve	*noresptr;
-
 				nores = read_string (val);
 				noresptr =
 				    (struct noreserve *)cobc_malloc (sizeof (struct noreserve));
