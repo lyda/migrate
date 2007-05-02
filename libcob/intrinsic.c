@@ -2020,7 +2020,9 @@ cob_field *
 cob_intr_random (int params, ...)
 {
 	int		seed = 1;
-	int		randnum, i;
+	int		randnum;
+	int		i;
+	int		exp10;
 	cob_field	*f;
 	va_list		args;
 	cob_field_attr	attr;
@@ -2041,10 +2043,12 @@ cob_intr_random (int params, ...)
 	va_end (args);
 
 	randnum = rand ();
+	exp10 = 1;
 	for (i = 0; i < 10; i++) {
-		if ((randnum / cob_exp10[i]) == 0) {
+		if ((randnum / exp10) == 0) {
 			break;
 		}
+		exp10 *= 10;
 	}
 	if (i == 0) {
 		i = 1;

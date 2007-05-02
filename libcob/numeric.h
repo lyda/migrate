@@ -39,9 +39,6 @@ typedef struct {
 } cob_decimal;
 
 extern void cob_decimal_init (cob_decimal *d);
-extern int cob_decimal_get_int (cob_decimal *d);
-extern void cob_decimal_set_double (cob_decimal *d, double v);
-extern double cob_decimal_get_double (cob_decimal *d);
 extern void cob_decimal_set_field (cob_decimal *d, cob_field *f);
 extern int cob_decimal_get_field (cob_decimal *d, cob_field *f, const int opt);
 extern void cob_decimal_add (cob_decimal *d1, cob_decimal *d2);

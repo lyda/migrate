@@ -301,6 +301,24 @@ static struct handlerlist {
  * General functions
  */
 
+unsigned char *
+cob_get_pointer (unsigned char *srcptr)
+{
+	unsigned char	*tmptr;
+
+	memcpy (&tmptr, srcptr, sizeof (void *));
+	return tmptr;
+}
+
+void *
+cob_get_prog_pointer (unsigned char *srcptr)
+{
+	void	*tmptr;
+
+	memcpy (&tmptr, srcptr, sizeof (void *));
+	return tmptr;
+}
+
 void
 cob_memcpy (cob_field *dst, unsigned char *src, int size)
 {
@@ -1520,9 +1538,6 @@ cob_display_env_value (cob_field *f)
 	len = (size_t)strlen (env1) + 1;
 	p = cob_malloc (len);
 	memcpy (p, env1, len);
-/* RXW
-	p = cob_strdup (env1);
-*/
 	if (putenv (p) != 0) {
 		cob_set_exception (COB_EC_IMP_DISPLAY);
 	}

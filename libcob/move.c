@@ -1086,12 +1086,6 @@ cob_display_get_int (cob_field *f)
 	return val;
 }
 
-int
-cob_binary_get_int (const cob_field * const f)
-{
-	return (int) cob_binary_get_int64 (f);
-}
-
 long long
 cob_binary_get_int64 (const cob_field * const f)
 {
@@ -1145,10 +1139,10 @@ cob_binary_get_int64 (const cob_field * const f)
 	return n;
 }
 
-void
-cob_binary_set_int (cob_field *f, int n)
+int
+cob_binary_get_int (const cob_field * const f)
 {
-	cob_binary_set_int64 (f, n);
+	return (int) cob_binary_get_int64 (f);
 }
 
 void
@@ -1167,6 +1161,12 @@ cob_binary_set_int64 (cob_field *f, long long n)
 #else	/* WORDS_BIGENDIAN */
 	own_byte_memcpy (f->data, ((unsigned char *)&n) + 8 - f->size, f->size);
 #endif	/* WORDS_BIGENDIAN */
+}
+
+void
+cob_binary_set_int (cob_field *f, int n)
+{
+	cob_binary_set_int64 (f, n);
 }
 
 void

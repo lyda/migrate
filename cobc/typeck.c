@@ -1887,9 +1887,19 @@ cb_build_add (cb_tree v, cb_tree n, cb_tree round_opt)
 	cb_tree		opt;
 	struct cb_field	*f;
 
+#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+	if (CB_INDEX_P (v)) {
+		return cb_build_move (cb_build_binary_op (v, '+', n), v);
+	}
+	if (CB_TREE_CLASS (v) == CB_CLASS_POINTER) {
+		current_program->gen_ptrmanip = 1;
+		return cb_build_funcall_3 ("cob_pointer_manip", v, n, cb_int0);
+	}
+#else
 	if (CB_INDEX_P (v) || CB_TREE_CLASS (v) == CB_CLASS_POINTER) {
 		return cb_build_move (cb_build_binary_op (v, '+', n), v);
 	}
+#endif
 
 	if (CB_REFERENCE_P (v) || CB_FIELD_P (v)) {
 		f = cb_field (v);
@@ -1912,9 +1922,19 @@ cb_build_sub (cb_tree v, cb_tree n, cb_tree round_opt)
 	cb_tree		opt;
 	struct cb_field	*f;
 
+#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+	if (CB_INDEX_P (v)) {
+		return cb_build_move (cb_build_binary_op (v, '+', n), v);
+	}
+	if (CB_TREE_CLASS (v) == CB_CLASS_POINTER) {
+		current_program->gen_ptrmanip = 1;
+		return cb_build_funcall_3 ("cob_pointer_manip", v, n, cb_int1);
+	}
+#else
 	if (CB_INDEX_P (v) || CB_TREE_CLASS (v) == CB_CLASS_POINTER) {
 		return cb_build_move (cb_build_binary_op (v, '-', n), v);
 	}
+#endif
 
 	if (CB_REFERENCE_P (v) || CB_FIELD_P (v)) {
 		f = cb_field (v);
@@ -3655,28 +3675,7 @@ cb_build_move (cb_tree src, cb_tree dst)
 	}
 
 	if (CB_TREE_CLASS (dst) == CB_CLASS_POINTER) {
-/* RXW - Fix this for nonaligned
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
-		if (src == cb_null || src == cb_zero) {
-			return cb_build_memset (dst, 0);
-		} else {
-			f = cb_field (dst);
-			if ((f->offset % f->size) || f->indexes) {
-				return cb_build_funcall_3 ("own_memcpy",
-						   cb_build_cast_address (dst),
-						   cb_build_cast_address (src),
-						   cb_build_cast_length (dst));
-			} else {
-				return cb_build_assign (dst, src);
-			}
-
-		}
-#else
-*/
 		return cb_build_assign (dst, src);
-/* RXW See above
-#endif
-*/
 	}
 
 	if (CB_REFERENCE_P (src) && CB_ALPHABET_NAME_P(CB_REFERENCE(src)->value)) {
@@ -3926,9 +3925,6 @@ cb_emit_read (cb_tree ref, cb_tree next, cb_tree into, cb_tree key, cb_tree lock
 		}
 		if (into) {
 			current_statement->handler3 = cb_build_move (rec, into);
-/* RXW
-			cb_emit (cb_build_move (rec, into));
-*/
 		}
 		current_statement->file = file;
 	}
@@ -3990,9 +3986,6 @@ cb_emit_return (cb_tree ref, cb_tree into)
 	cb_emit (cb_build_funcall_1 ("cob_file_return", file));
 	if (into) {
 		current_statement->handler3 = cb_build_move (rec, into);
-/* RXW
-		cb_emit (cb_build_move (rec, into));
-*/
 	}
 	current_statement->file = file;
 }
@@ -4289,10 +4282,6 @@ cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree col)
 		cb_emit (cb_build_funcall_4 ("cob_file_sort_init", cb_ref (name),
 					     cb_int (cb_list_length (keys)), col,
 					     cb_build_cast_address(cb_sort_return)));
-/* RXW
-		cb_emit (cb_build_funcall_3 ("cob_file_sort_init", cb_ref (name),
-					     cb_int (cb_list_length (keys)), col));
-*/
 		for (l = keys; l; l = CB_CHAIN (l)) {
 			cb_emit (cb_build_funcall_4 ("cob_file_sort_init_key", cb_ref (name),
 					CB_PURPOSE (l),

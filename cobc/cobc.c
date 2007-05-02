@@ -118,7 +118,8 @@ struct cb_text_list	*cb_extension_list = NULL;
 
 struct cb_program	*current_program = NULL;
 struct cb_statement	*current_statement = NULL;
-struct cb_label		*current_section = NULL, *current_paragraph = NULL;
+struct cb_label		*current_section = NULL;
+struct cb_label		*current_paragraph = NULL;
 
 jmp_buf			cob_jmpbuf;
 

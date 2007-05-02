@@ -355,6 +355,8 @@ extern int cob_acuw_justify (unsigned char *data, ...);
 #define cob_put_sign(f,s) if (COB_FIELD_HAVE_SIGN (f)) cob_real_put_sign (f, s)
 
 extern unsigned char *cob_external_addr (const char *exname, const int exlength);
+extern unsigned char *cob_get_pointer (unsigned char *srcptr);
+extern void *cob_get_prog_pointer (unsigned char *srcptr);
 
 /* Switch */
 

@@ -292,9 +292,11 @@ ppopen (char *name, struct cb_replace_list *replace_list)
 int
 ppcopy (char *name, const char *lib, struct cb_replace_list *replace_list)
 {
-	struct stat	st;
-	char		buff1[COB_MEDIUM_BUFF];
-	char		buff2[COB_MEDIUM_BUFF];
+	struct cb_text_list	*il;
+	struct cb_text_list	*el;
+	struct stat		st;
+	char			buff1[COB_MEDIUM_BUFF];
+	char			buff2[COB_MEDIUM_BUFF];
 
 	if (lib) {
 		sprintf (buff1, "%s/%s", lib, name);
@@ -303,8 +305,6 @@ ppcopy (char *name, const char *lib, struct cb_replace_list *replace_list)
 
 	/* Find the file */
 	if (stat (name, &st) == -1) {
-		struct cb_text_list *il, *el;
-
 		for (el = cb_extension_list; el; el = el->next) {
 			sprintf (buff2, "%s%s", name, el->text);
 			if (stat (buff2, &st) == 0) {
@@ -355,13 +355,6 @@ start:
 		newline_count = 0;
 		return strlen (buff);
 	}
-
-	/* output listing */
-/*
-	if (cb_listing_file) {
-		fputs (line, cb_listing_file);
-	}
-*/
 
 	/* normalize and copy the line into the buffer */
 	n = 0;
@@ -561,6 +554,10 @@ start:
 static void
 ppecho (const char *text)
 {
+	struct cb_replace_list	*r;
+	struct cb_text_list	*l;
+	struct cb_text_list	*queue;
+
 	if (text_queue == NULL && (text[0] == ' ' || text[0] == '\n')) {
 		fputs (text, ppout);
 	} else if (!current_replace_list) {
@@ -570,8 +567,6 @@ ppecho (const char *text)
 		fputs (text, ppout);
 	} else {
 		/* Do replacement */
-		struct cb_replace_list	*r;
-		struct cb_text_list	*l, *queue;
 
 		text_queue = cb_text_list_add (text_queue, text);
 

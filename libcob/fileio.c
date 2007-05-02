@@ -1707,7 +1707,7 @@ indexed_read_next (cob_file *f, int read_opts)
 	int			read_nextprev;
 	int			nextprev = DB_NEXT;
 	int			file_changed = 0;
-	unsigned int dupno;
+	unsigned int		dupno;
 
 #ifdef	USE_DB41
 	if (bdb_env != NULL) {
@@ -2416,10 +2416,6 @@ cob_open (cob_file *f, int mode, int opt, cob_field *fnstatus)
 				simple = 0;
 			}
 			if (*src == '$') {
-/* RXW
-				i = 0;
-				while (isalnum (src[++i])) ;
-*/
 				for (i = 1; ;i++) {
 					if (!isalnum (src[i]) && src[i] != '_') {
 						break;

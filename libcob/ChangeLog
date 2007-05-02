@@ -1,3 +1,14 @@
+2007-04-28  Roger While <simrw@sim-basis.de>
+
+	* numeric.c : Remove duplicated code.
+		Set up variables for binary > 64 bits
+
+2007-04-26  Roger While <simrw@sim-basis.de>
+
+	* numeric.c : Fix incorrect value when signed bit set in an
+		eight byte binary value.
+	* numeric.[ch] : Remove unused routine. Make 2 routines static.
+
 2007-04-17  Roger While <simrw@sim-basis.de>
 
 	* intrinsic.c : Fix a Cygwin compile failure

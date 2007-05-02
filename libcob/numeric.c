@@ -42,12 +42,15 @@
       return; \
     }
 
+#define	COB_MAX_BINARY	36
+
 static cob_decimal	cob_d1;
 static cob_decimal	cob_d2;
 static cob_decimal	cob_d3;
 static cob_decimal	cob_d4;
 static mpz_t		cob_mexp;
 static mpz_t		cob_mpzt;
+static mpz_t		cob_mpze10[COB_MAX_BINARY];
 static unsigned char	packed_value[20];
 
 const int		cob_exp10[10] = {
@@ -243,26 +246,16 @@ cob_decimal_set (cob_decimal *dst, cob_decimal *src)
 	dst->scale = src->scale;
 }
 
-/* int */
-
-int
-cob_decimal_get_int (cob_decimal *d)
-{
-	cob_decimal_set (&cob_d1, d);
-	shift_decimal (&cob_d1, -cob_d1.scale);
-	return mpz_get_si (cob_d1.value);
-}
-
 /* double */
 
-void
+static void
 cob_decimal_set_double (cob_decimal *d, double v)
 {
 	mpz_set_d (d->value, v * 1.0e9);
 	d->scale = 9;
 }
 
-double
+static double
 cob_decimal_get_double (cob_decimal *d)
 {
 	int	n = d->scale;
@@ -385,10 +378,11 @@ cob_decimal_set_binary (cob_decimal *d, cob_field *f)
 static int
 cob_decimal_get_binary (cob_decimal *d, cob_field *f, const int opt)
 {
-#ifdef	COB_EXPERIMENTAL
 	size_t	overflow;
 	size_t	digits;
 	size_t	sign;
+
+#ifdef	COB_EXPERIMENTAL
 
 	if (unlikely(d->value->_mp_size == 0)) {
 		own_memset (f->data, 0, f->size);
@@ -401,13 +395,12 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, const int opt)
 		if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
 			goto overflow;
 		}
+		overflow = 1;
 		if (cob_current_module->flag_binary_truncate) {
 			if (opt & COB_STORE_TRUNC_ON_OVERFLOW) {
-				mpz_set_ull (cob_mpzt, (unsigned long long)cob_exp10LL[digits]);
-				mpz_tdiv_r (d->value, d->value, cob_mpzt);
+				mpz_tdiv_r (d->value, d->value, cob_mpze10[digits]);
 			}
 		}
-		overflow = 1;
 	}
 	if (sign) {
 		long long		val;
@@ -441,7 +434,7 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, const int opt)
 		}
 		val = mpz_get_ull (d->value);
 		if (cob_current_module->flag_binary_truncate) {
-			if (val >= (unsigned int) cob_exp10LL[digits]) {
+			if (val >= (unsigned long long) cob_exp10LL[digits]) {
 				if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
 					goto overflow;
 				}
@@ -454,30 +447,26 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, const int opt)
 		cob_binary_set_int64 (f, val);
 	}
 #else
-	size_t	overflow = 0;
-	size_t	digits = COB_FIELD_DIGITS(f);
-
+	overflow = 0;
+	sign = COB_FIELD_HAVE_SIGN (f) ? 1 : 0;
+	digits = COB_FIELD_DIGITS(f);
 	if (f->size <= 4) {
 		if (COB_FIELD_HAVE_SIGN (f)) {
 			int	val;
 
 			if (!mpz_fits_sint_p (d->value)) {
+				/* overflow */
+				overflow = 1;
+				if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
+					goto overflow;
+				}
 				if (cob_current_module->flag_binary_truncate) {
-					/* overflow */
-					overflow = 1;
-					if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
-						goto overflow;
-					}
 					if (opt & COB_STORE_TRUNC_ON_OVERFLOW) {
 						mpz_tdiv_r_ui (d->value, d->value,
 							       cob_exp10[digits]);
 					}
 					val = mpz_get_si (d->value);
 				} else {
-					overflow = 1;
-					if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
-						goto overflow;
-					}
 					val = mpz_get_ui (d->value);
 				}
 			} else {
@@ -504,20 +493,15 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, const int opt)
 				mpz_abs (d->value, d->value);
 			}
 			if (!mpz_fits_uint_p (d->value)) {
+				/* overflow */
+				overflow = 1;
+				if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
+					goto overflow;
+				}
 				if (cob_current_module->flag_binary_truncate) {
-					/* overflow */
-					overflow = 1;
-					if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
-						goto overflow;
-					}
 					if (opt & COB_STORE_TRUNC_ON_OVERFLOW) {
 						mpz_tdiv_r_ui (d->value, d->value,
 							       cob_exp10[digits]);
-					}
-				} else {
-					overflow = 1;
-					if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
-						goto overflow;
 					}
 				}
 			}
@@ -541,6 +525,9 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, const int opt)
 
 		mpz_fdiv_r_2exp (cob_mpzt, d->value, 32);
 		mpz_fdiv_q_2exp (d->value, d->value, 32);
+/* RXW
+		mpz_tdiv_q_2exp (d->value, d->value, 32);
+*/
 		lo = mpz_get_ui (cob_mpzt);
 
 		if (COB_FIELD_HAVE_SIGN (f)) {
@@ -1108,7 +1095,7 @@ cob_display_add_int (cob_field *f, int n)
 		n = -n;
 	}
 
-	if (scale < 0) {
+	if (unlikely(scale < 0)) {
 		/* PIC 9(n)P(m) */
 		if (-scale < 10) {
 			n /= cob_exp10[-scale];
@@ -1331,12 +1318,18 @@ cob_cmp_packed (cob_field *f, int n)
 void
 cob_init_numeric (void)
 {
+	size_t	i;
+
 	cob_decimal_init (&cob_d1);
 	cob_decimal_init (&cob_d2);
 	cob_decimal_init (&cob_d3);
 	cob_decimal_init (&cob_d4);
 	mpz_init2 (cob_mpzt, 256);
 	mpz_init2 (cob_mexp, 512);
+	for (i = 0; i < COB_MAX_BINARY; i++) {
+		mpz_init (cob_mpze10[i]);
+		mpz_ui_pow_ui (cob_mpze10[i], 10, i);
+	}
 	memset (packed_value, 0, sizeof(packed_value));
 }
 

@@ -1,3 +1,16 @@
+2007-04-30  Roger While <simrw@sim-basis.de>
+
+	* field.c : BINARY-CHAR is always one byte regardless of -std=
+
+2007-04-28  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : If -fimplicit-init is used, we must always
+		honour an EXIT PROGRAM
+
+2007-04-26  Roger While <simrw@sim-basis.de>
+
+	* typeck.c, codegen.c : Fix POINTER on alignment intolerant architecture
+
 2007-04-11  Roger While <simrw@sim-basis.de>
 
 	* parser.y, typeck.c, tree.[ch] : Either LINE or COLUMN can be optional

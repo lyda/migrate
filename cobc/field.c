@@ -766,8 +766,12 @@ compute_size (struct cb_field *f)
 			}
 			switch (cb_binary_size) {
 			case CB_BINARY_SIZE_2_4_8:
-				f->size = ((size <= 4) ? 2 :
-					   (size <= 9) ? 4 : (size <= 18) ? 8 : 16);
+				if (f->flag_real_binary && size <= 2) {
+					f->size = 1;
+				} else {
+					f->size = ((size <= 4) ? 2 :
+						   (size <= 9) ? 4 : (size <= 18) ? 8 : 16);
+				}
 				break;
 			case CB_BINARY_SIZE_1_2_4_8:
 				f->size = ((size <= 2) ? 1 :

@@ -1100,6 +1100,7 @@ struct cb_program {
 	int			validated;		/* End program validate */
 	int			is_chained;		/* PROCEDURE CHAINING */
 	int			gen_decset;		/* Gen decimal_set_int */
+	int			gen_ptrmanip;		/* Gen cob_pointer_manip */
 	struct cb_word		*word_table[CB_WORD_HASH_SIZE];
 };
 

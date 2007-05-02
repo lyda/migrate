@@ -732,15 +732,27 @@ output_integer (cb_tree x)
 			return;
 
 		case CB_USAGE_POINTER:
+#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+			output ("(cob_get_pointer (");
+			output_data (x);
+			output ("))");
+#else
 			output ("(*(unsigned char **) (");
 			output_data (x);
 			output ("))");
+#endif
 			return;
 
 		case CB_USAGE_PROGRAM_POINTER:
+#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+			output ("(cob_get_prog_pointer (");
+			output_data (x);
+			output ("))");
+#else
 			output ("(*(void **) (");
 			output_data (x);
 			output ("))");
+#endif
 			return;
 
 		case CB_USAGE_DISPLAY:
@@ -836,6 +848,11 @@ output_integer (cb_tree x)
 
 		output_func_1 ("cob_get_int", x);
 		break;
+	case CB_TAG_INTRINSIC:
+		output ("cob_get_int (");
+		output_param (x, -1);
+		output (")");
+		break;
 	default:
 		fprintf (stderr, "Unexpected tree tag %d\n", CB_TREE_TAG (x));
 		ABORT ();
@@ -883,10 +900,6 @@ output_param (cb_tree x, int id)
 	int			sav_stack_id;
 	char			fname[12];
 
-/* RXWRXW
-	sprintf (fname, "f%d", id);
-*/
-
 	param_id = id;
 
 	if (x == NULL) {
@@ -906,9 +919,6 @@ output_param (cb_tree x, int id)
 		break;
 	case CB_TAG_LOCALE_NAME:
 		output_param (CB_LOCALE_NAME(x)->list, id);
-/* RXWRXW
-		output ("\"%s\"", CB_LITERAL(CB_LOCALE_NAME(x)->list)->data);
-*/
 		break;
 	case CB_TAG_ALPHABET_NAME:
 		abp = CB_ALPHABET_NAME (x);
@@ -2191,8 +2201,12 @@ output_goto (struct cb_goto *p)
 		output_indent ("  }");
 	} else if (p->target == NULL) {
 		needs_exit_prog = 1;
-		output_line ("if (module.next)");
-		output_line ("  goto exit_program;");
+		if (cb_implicit_init) {
+			output_line ("goto exit_program;");
+		} else {
+			output_line ("if (module.next)");
+			output_line ("  goto exit_program;");
+		}
 	} else {
 		output_goto_1 (p->target);
 	}
@@ -2377,6 +2391,9 @@ output_stmt (cb_tree x)
 	struct cb_label		*lp;
 	struct cb_assign	*ap;
 	struct cb_if		*ip;
+#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+	struct cb_cast		*cp;
+#endif
 	int			code;
 
 	stack_id = 0;
@@ -2515,6 +2532,72 @@ output_stmt (cb_tree x)
 		break;
 	case CB_TAG_ASSIGN:
 		ap = CB_ASSIGN (x);
+#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+		/* Nonaligned */
+		if (CB_TREE_CLASS (ap->var) == CB_CLASS_POINTER
+		    || CB_TREE_CLASS (ap->val) == CB_CLASS_POINTER) {
+			/* pointer assignment */
+			output_indent ("{");
+			output_line ("void *temp_ptr;");
+
+			/* temp_ptr = source address; */
+			output_prefix ();
+			if (ap->val == cb_null || ap->val == cb_zero) {
+				/* MOVE NULL ... */
+				output ("temp_ptr = 0;\n");
+			} else if (CB_TREE_TAG (ap->val) == CB_TAG_CAST) {
+				/* MOVE ADDRESS OF val ... */
+				cp = CB_CAST (ap->val);
+				if (cp->type != CB_CAST_ADDRESS) {
+					fprintf (stderr, "Unexpected tree type %d\n", cp->type);
+					ABORT ();
+				}
+				output ("temp_ptr = ");
+				output_data (cp->val);
+				output (";\n");
+			} else {
+				/* MOVE val ... */
+				output ("memcpy(&temp_ptr, ");
+				output_data (ap->val);
+				output (", sizeof(temp_ptr));\n");
+			}
+
+			/* destination address = temp_ptr; */
+			output_prefix ();
+			if (CB_TREE_TAG (ap->var) == CB_TAG_CAST) {
+				/* SET ADDRESS OF var ... */
+				cp = CB_CAST (ap->var);
+				if (cp->type != CB_CAST_ADDRESS) {
+					fprintf (stderr, "Unexpected tree type %d\n", cp->type);
+					ABORT ();
+				}
+				output_data (cp->val);
+				output (" = temp_ptr;\n");
+			} else {
+				/* MOVE ... TO var */
+				output ("memcpy(");
+				output_data (ap->var);
+				output (", &temp_ptr, sizeof(temp_ptr));\n");
+			}
+
+			output_indent ("}");
+		} else {
+			/* numeric assignment */
+			output_prefix ();
+			output_integer (ap->var);
+			output (" = ");
+			output_integer (ap->val);
+#ifdef __GNUC__
+			output (";\n");
+#else
+			if (inside_check == 0) {
+				output (";\n");
+			} else {
+				inside_stack[inside_check -1] = 1;
+			}
+#endif
+		}
+#else	/* Nonaligned */
 		output_prefix ();
 		output_integer (ap->var);
 		output (" = ");
@@ -2528,6 +2611,7 @@ output_stmt (cb_tree x)
 			inside_stack[inside_check -1] = 1;
 		}
 #endif
+#endif	/* Nonaligned */
 		break;
 	case CB_TAG_INITIALIZE:
 		output_initialize (CB_INITIALIZE (x));
@@ -3258,8 +3342,10 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_line
 	    ("cob_check_version (COB_SOURCE_FILE, COB_PACKAGE_VERSION, COB_PATCH_LEVEL);");
 	if (!prog->gen_main) {
-		output_line ("cob_set_cancel ((const char *)\"%s\", (void *)%s, (void *)%s_);", prog->orig_source_name,
-			prog->program_id, prog->program_id);
+		output_line ("if (module.next)");
+		output_line ("  cob_set_cancel ((const char *)\"%s\", (void *)%s, (void *)%s_);",
+			prog->orig_source_name, prog->program_id,
+			prog->program_id);
 	}
 	if (prog->flag_screen) {
 		output_line ("cob_screen_init ();");
@@ -3700,6 +3786,20 @@ codegen (struct cb_program *prog, int nested)
 			output("{\n");
 			output("	mpz_set_si (d->value, n);\n");
 			output("	d->scale = 0;\n");
+			output("}\n\n");
+		}
+		if (prog->gen_ptrmanip) {
+			output("static void\n");
+			output("cob_pointer_manip (cob_field *f1, cob_field *f2, size_t addsub)\n");
+			output("{\n");
+			output("	unsigned char	*tmptr;\n");
+			output("	memcpy (&tmptr, f1->data, sizeof(void *));\n");
+			output("	if (addsub) {\n");
+			output("		tmptr -= cob_get_int (f2);\n");
+			output("	} else {\n");
+			output("		tmptr += cob_get_int (f2);\n");
+			output("	}\n");
+			output("	memcpy (f1->data, &tmptr, sizeof(void *));\n");
 			output("}\n\n");
 		}
 	}

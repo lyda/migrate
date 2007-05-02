@@ -113,9 +113,12 @@ make_tree (int tag, enum cb_category category, size_t size)
 static int
 cb_name_1 (char *s, cb_tree x)
 {
-	char		*orig = s;
-	cb_tree		l;
-	int		i;
+	char			*orig = s;
+	struct cb_funcall	*cbip;
+	struct cb_binary_op	*cbop;
+	struct cb_reference	*p;
+	cb_tree			l;
+	int			i;
 
 	switch (CB_TREE_TAG (x)) {
 	case CB_TAG_CONST:
@@ -155,13 +158,10 @@ cb_name_1 (char *s, cb_tree x)
 		break;
 
 	case CB_TAG_REFERENCE:
-	{
-		struct cb_reference *p = CB_REFERENCE (x);
-
+		p = CB_REFERENCE (x);
 		s += sprintf (s, "%s", p->word->name);
 		if (p->subs) {
 			l = p->subs = cb_list_reverse (p->subs);
-
 			s += sprintf (s, " (");
 			for (; l; l = CB_CHAIN (l)) {
 				s += cb_name_1 (s, CB_VALUE (l));
@@ -182,7 +182,6 @@ cb_name_1 (char *s, cb_tree x)
 			s += sprintf (s, " in ");
 			s += cb_name_1 (s, p->chain);
 		}
-	}
 		break;
 
 	case CB_TAG_LABEL:
@@ -190,38 +189,32 @@ cb_name_1 (char *s, cb_tree x)
 		break;
 
 	case CB_TAG_BINARY_OP:
-	{
-		struct cb_binary_op *p = CB_BINARY_OP (x);
-
-		if (p->op == '@') {
+		cbop = CB_BINARY_OP (x);
+		if (cbop->op == '@') {
 			s += sprintf (s, "(");
-			s += cb_name_1 (s, p->x);
+			s += cb_name_1 (s, cbop->x);
 			s += sprintf (s, ")");
-		} else if (p->op == '!') {
+		} else if (cbop->op == '!') {
 			s += sprintf (s, "!");
-			s += cb_name_1 (s, p->x);
+			s += cb_name_1 (s, cbop->x);
 		} else {
 			s += sprintf (s, "(");
-			s += cb_name_1 (s, p->x);
-			s += sprintf (s, " %c ", p->op);
-			s += cb_name_1 (s, p->y);
+			s += cb_name_1 (s, cbop->x);
+			s += sprintf (s, " %c ", cbop->op);
+			s += cb_name_1 (s, cbop->y);
 			strcpy (s, ")");
 		}
 		break;
-	}
 
 	case CB_TAG_FUNCALL:
-	{
-		struct cb_funcall	*p = CB_FUNCALL (x);
-
-		s += sprintf (s, "%s", p->name);
-		for (i = 0; i < p->argc; i++) {
+		cbip = CB_FUNCALL (x);
+		s += sprintf (s, "%s", cbip->name);
+		for (i = 0; i < cbip->argc; i++) {
 			s += sprintf (s, (i == 0) ? "(" : ", ");
-			s += cb_name_1 (s, p->argv[i]);
+			s += cb_name_1 (s, cbip->argv[i]);
 		}
 		s += sprintf (s, ")");
 		break;
-	}
 
 	default:
 		sprintf (s, "#<unknown %d %p>", CB_TREE_TAG (x), x);
