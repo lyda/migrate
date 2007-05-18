@@ -329,8 +329,8 @@ extern void cob_allocate (unsigned char **dataptr, cob_field *retptr, cob_field 
 extern void cob_free_alloc (unsigned char **ptr1, unsigned char *ptr2);
 
 /* System routines */
-extern int CBL_ERROR_PROC (unsigned char *x, int (**p)(char *s));
-extern int CBL_EXIT_PROC (unsigned char *x, int (**p)(void));
+extern int CBL_ERROR_PROC (unsigned char *x, unsigned char *pptr);
+extern int CBL_EXIT_PROC (unsigned char *x, unsigned char *pptr);
 extern int SYSTEM (unsigned char *cmd);
 extern int CBL_AND (unsigned char *data_1, unsigned char *data_2, const int length);
 extern int CBL_OR (unsigned char *data_1, unsigned char *data_2, const int length);

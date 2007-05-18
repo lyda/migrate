@@ -35,7 +35,7 @@ OpenCOBOL requires the following external libraries to be installed:
  **
 
   o GNU MP (libgmp) 4.1.2 or later
-    http://swox.com/gmp/
+    http://gmplib.org
     *** Note - Recent Linux distributions have runtime
 	AND development packages; BOTH are required ***
 

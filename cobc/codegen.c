@@ -25,6 +25,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
+
 #include <libcob.h>
 
 #include "cobc.h"
@@ -47,6 +48,7 @@ static int inside_stack[64];
 static int param_id = 0;
 static int stack_id = 0;
 static int num_cob_fields = 0;
+static int num_cob_genned = 0;
 static int loop_counter = 0;
 static int progid = 0;
 static int last_line = 0;
@@ -2513,8 +2515,12 @@ output_stmt (cb_tree x)
 			output_line ("%s%d:;", CB_PREFIX_LABEL, lp->id);
 		}
 		if (cb_flag_trace) {
-			output_line ("puts (\"%s:%s\");", excp_current_program_id, lp->name);
-			output_line ("fflush (stdout);");
+			if (lp->is_section) {
+				output_line ("fputs (\"%s:%s SECTION\\n\", stderr);", excp_current_program_id, lp->orig_name);
+			} else {
+				output_line ("fputs (\"%s:%s\\n\", stderr);", excp_current_program_id, lp->orig_name);
+			}
+			output_line ("fflush (stderr);");
 		}
 		break;
 	case CB_TAG_FUNCALL:
@@ -2548,12 +2554,18 @@ output_stmt (cb_tree x)
 			} else if (CB_TREE_TAG (ap->val) == CB_TAG_CAST) {
 				/* MOVE ADDRESS OF val ... */
 				cp = CB_CAST (ap->val);
-				if (cp->type != CB_CAST_ADDRESS) {
-					fprintf (stderr, "Unexpected tree type %d\n", cp->type);
+				output ("temp_ptr = ");
+				switch (cp->type) {
+				case CB_CAST_ADDRESS:
+					output_data (cp->val);
+					break;
+				case CB_CAST_PROGRAM_POINTER:
+					output_func_1 ("cob_call_resolve", ap->val);
+					break;
+				default:
+					fprintf (stderr, "Unexpected cast type %d\n", cp->type);
 					ABORT ();
 				}
-				output ("temp_ptr = ");
-				output_data (cp->val);
 				output (";\n");
 			} else {
 				/* MOVE val ... */
@@ -2741,6 +2753,7 @@ output_file_initialization (struct cb_file *f)
 
 	output_line ("%s%s->organization = %d;", CB_PREFIX_FILE, f->cname, f->organization);
 	output_line ("%s%s->access_mode = %d;", CB_PREFIX_FILE, f->cname, f->access_mode);
+	output_line ("%s%s->lock_mode = %d;", CB_PREFIX_FILE, f->cname, f->lock_mode);
 	output_line ("%s%s->open_mode = 0;", CB_PREFIX_FILE, f->cname);
 	output_line ("%s%s->flag_optional = %d;", CB_PREFIX_FILE, f->cname, f->optional);
 	output_line ("%s%s->select_name = (const char *)\"%s\";", CB_PREFIX_FILE, f->cname, f->name);
@@ -3710,6 +3723,7 @@ codegen (struct cb_program *prog, int nested)
 	struct field_list	*k;
 	struct call_list	*clp;
 	unsigned char		*s;
+	struct cb_program	*cp;
 	cb_tree			using_list;
 	cb_tree			l1;
 	cb_tree			l2;
@@ -3732,7 +3746,7 @@ codegen (struct cb_program *prog, int nested)
 	call_cache = NULL;
 	label_cache = NULL;
 	parameter_list = NULL;
-	excp_current_program_id = prog->program_id;
+	excp_current_program_id = prog->orig_source_name;
 	excp_current_section = NULL;
 	excp_current_paragraph = NULL;
 	memset ((char *)i_counters, 0, sizeof (i_counters));
@@ -3740,6 +3754,7 @@ codegen (struct cb_program *prog, int nested)
 	output_target = yyout;
 
 	if (!nested) {
+		num_cob_genned = 0;
 		output ("/* Generated from %s by cobc version %s patch level %d */\n\n",
 			cb_source_file, PACKAGE_VERSION, PATCH_LEVEL);
 		output ("#define  __USE_STRING_INLINES 1\n");
@@ -3777,30 +3792,35 @@ codegen (struct cb_program *prog, int nested)
 
 		output_storage ("/* Generated from %s by cobc version %s patch level %d */\n\n",
 				cb_source_file, PACKAGE_VERSION, PATCH_LEVEL);
-		if (prog->gen_decset) {
+		for (cp = prog; cp; cp = cp->next_program) {
+			if (cp->gen_decset) {
 /* Hmm, autoconf redefines inline and we do not have config.h here
-			output("static COB_INLINE void\n");
+				output("static COB_INLINE void\n");
 */
-			output("static void\n");
-			output("cob_decimal_set_int (cob_decimal *d, const int n)\n");
-			output("{\n");
-			output("	mpz_set_si (d->value, n);\n");
-			output("	d->scale = 0;\n");
-			output("}\n\n");
+				output("static void\n");
+				output("cob_decimal_set_int (cob_decimal *d, const int n)\n");
+				output("{\n");
+				output("	mpz_set_si (d->value, n);\n");
+				output("	d->scale = 0;\n");
+				output("}\n\n");
+				break;
+			}
 		}
-		if (prog->gen_ptrmanip) {
-			output("static void\n");
-			output("cob_pointer_manip (cob_field *f1, cob_field *f2, size_t addsub)\n");
-			output("{\n");
-			output("	unsigned char	*tmptr;\n");
-			output("	memcpy (&tmptr, f1->data, sizeof(void *));\n");
-			output("	if (addsub) {\n");
-			output("		tmptr -= cob_get_int (f2);\n");
-			output("	} else {\n");
-			output("		tmptr += cob_get_int (f2);\n");
-			output("	}\n");
-			output("	memcpy (f1->data, &tmptr, sizeof(void *));\n");
-			output("}\n\n");
+		for (cp = prog; cp; cp = cp->next_program) {
+			if (cp->gen_ptrmanip) {
+				output("static void\n");
+				output("cob_pointer_manip (cob_field *f1, cob_field *f2, size_t addsub)\n");
+				output("{\n");
+				output("	unsigned char	*tmptr;\n");
+				output("	memcpy (&tmptr, f1->data, sizeof(void *));\n");
+				output("	if (addsub) {\n");
+				output("		tmptr -= cob_get_int (f2);\n");
+				output("	} else {\n");
+				output("		tmptr += cob_get_int (f2);\n");
+				output("	}\n");
+				output("	memcpy (f1->data, &tmptr, sizeof(void *));\n");
+				output("}\n\n");
+			}
 		}
 	}
 
@@ -3940,11 +3960,14 @@ codegen (struct cb_program *prog, int nested)
 	}
 
 	if (num_cob_fields) {
-		output_storage ("\n/* cob fields */\n");
-		for (i = 0; i < num_cob_fields; i++) {
-			output ("cob_field f%d;\n", i);
+		if (num_cob_fields > num_cob_genned) {
+			output_storage ("\n/* cob fields */\n");
+			for (i = num_cob_genned; i < num_cob_fields; i++) {
+				output ("cob_field f%d;\n", i);
+			}
+			output_storage ("\n");
 		}
-		output_storage ("\n");
+		num_cob_genned = num_cob_fields;
 	}
 	i = lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
 	if (gen_ebcdic) {

@@ -529,6 +529,7 @@ struct cb_file {
 	int			optional;		/* OPTIONAL */
 	int			organization;		/* ORGANIZATION */
 	int			access_mode;		/* ACCESS MODE */
+	int			lock_mode;			/* LOCK MODE */
 	int			same_clause;		/* SAME clause */
 	int			finalized;		/* is finalized */
 	int			external;		/* is EXTERNAL */

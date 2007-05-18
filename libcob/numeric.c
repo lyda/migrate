@@ -53,41 +53,6 @@ static mpz_t		cob_mpzt;
 static mpz_t		cob_mpze10[COB_MAX_BINARY];
 static unsigned char	packed_value[20];
 
-const int		cob_exp10[10] = {
-	1,
-	10,
-	100,
-	1000,
-	10000,
-	100000,
-	1000000,
-	10000000,
-	100000000,
-	1000000000
-};
-
-const long long		cob_exp10LL[19] = {
-	1LL,
-	10LL,
-	100LL,
-	1000LL,
-	10000LL,
-	100000LL,
-	1000000LL,
-	10000000LL,
-	100000000LL,
-	1000000000LL,
-	10000000000LL,
-	100000000000LL,
-	1000000000000LL,
-	10000000000000LL,
-	100000000000000LL,
-	1000000000000000LL,
-	10000000000000000LL,
-	100000000000000000LL,
-	1000000000000000000LL
-};
-
 #ifdef	COB_EXPERIMENTAL
 
 #if GMP_NAIL_BITS != 0
@@ -96,19 +61,10 @@ const long long		cob_exp10LL[19] = {
 
 #define COB_MAX_LL	9223372036854775807LL
 
-static int
-cob_bit_overflow (const mpz_ptr src, const size_t bytesize, const size_t issigned)
-{
-	size_t			bitnum;
-
-	bitnum = (bytesize * 8) - issigned;
-	return mpz_sizeinbase (src, 2) > bitnum;
-}
-
 static void
 mpz_set_ull (mpz_ptr dest, const unsigned long long val)
 {
-	mp_size_t		size;
+	size_t			size;
 
 	size = (val != 0);
 	dest->_mp_d[0] = val & GMP_NUMB_MASK;
@@ -124,7 +80,7 @@ mpz_set_ull (mpz_ptr dest, const unsigned long long val)
 static void
 mpz_set_sll (mpz_ptr dest, const signed long long val)
 {
-	mp_size_t		size;
+	size_t			size;
 	unsigned long long	vtmp;
 
 	vtmp = (unsigned long long)(val >= 0 ? val : -val);
@@ -142,9 +98,9 @@ mpz_set_sll (mpz_ptr dest, const signed long long val)
 static unsigned long long
 mpz_get_ull (const mpz_ptr src)
 {
-	mp_size_t		size;
+	size_t			size;
 
-	size = __GMP_ABS (src->_mp_size);
+	size = mpz_size (src);
 	if (!size) {
 		return 0;
 	}
@@ -162,18 +118,16 @@ mpz_get_ull (const mpz_ptr src)
 static signed long long
 mpz_get_sll (const mpz_ptr src)
 {
-	mp_size_t		size;
-	mp_size_t		sizeabs;
+	int			size;
 	unsigned long long	vtmp;
 
 	size = src->_mp_size;
 	if (!size) {
 		return 0;
 	}
-	sizeabs = __GMP_ABS (src->_mp_size);
 	vtmp = (unsigned long long)src->_mp_d[0];
 #if	GMP_LIMB_BITS < 64
-	if (sizeabs > 1) {
+	if (mpz_size (src) > 1) {
 		vtmp |= (unsigned long long)src->_mp_d[1] << GMP_NUMB_BITS;
 	}
 #endif
@@ -183,7 +137,7 @@ mpz_get_sll (const mpz_ptr src)
 	return ~(((signed long long) vtmp - 1LL) & COB_MAX_LL);
 }
 
-#endif
+#endif	/* COB_EXPERIMENTAL */
 
 /*
  * Decimal number
@@ -218,7 +172,7 @@ shift_decimal (cob_decimal *d, const int n)
 	if (n > 0) {
 		mpz_ui_pow_ui (cob_mexp, 10, n);
 		mpz_mul (d->value, d->value, cob_mexp);
-	} else if (n < 0) {
+	} else {
 		mpz_ui_pow_ui (cob_mexp, 10, -n);
 		mpz_tdiv_q (d->value, d->value, cob_mexp);
 	}
@@ -355,9 +309,13 @@ cob_decimal_set_binary (cob_decimal *d, cob_field *f)
 	if (COB_FIELD_HAVE_SIGN (f)) {
 		mpz_set_sll (d->value, cob_binary_get_int64 (f));
 	} else {
-		mpz_set_ull (d->value, cob_binary_get_int64 (f));
+		mpz_set_ull (d->value, cob_binary_get_uint64 (f));
 	}
 #else
+	size_t			negative = 0;
+	unsigned long long	uval;
+	long long		val;
+
 	if (f->size <= 4) {
 		if (COB_FIELD_HAVE_SIGN (f)) {
 			mpz_set_si (d->value, cob_binary_get_int (f));
@@ -365,11 +323,24 @@ cob_decimal_set_binary (cob_decimal *d, cob_field *f)
 			mpz_set_ui (d->value, cob_binary_get_int (f));
 		}
 	} else {
-		long long	val = cob_binary_get_int64 (f);
-
-		mpz_set_si (d->value, (int)(val >> 32));
-		mpz_mul_2exp (d->value, d->value, 32);
-		mpz_add_ui (d->value, d->value, (unsigned int)(val & 0xffffffff));
+		if (COB_FIELD_HAVE_SIGN (f)) {
+			val = cob_binary_get_int64 (f);
+			if (val < 0) {
+				negative = 1;
+				val = -val;
+			}
+			mpz_set_ui (d->value, (unsigned int)((val & 0x7FFFFFFF00000000LL)>> 32));
+			mpz_mul_2exp (d->value, d->value, 32);
+			mpz_add_ui (d->value, d->value, (unsigned int)(val & 0xffffffff));
+			if (negative) {
+				mpz_neg (d->value, d->value);
+			}
+		} else {
+			uval = cob_binary_get_uint64 (f);
+			mpz_set_ui (d->value, (unsigned int)(uval >> 32));
+			mpz_mul_2exp (d->value, d->value, 32);
+			mpz_add_ui (d->value, d->value, (unsigned int)(uval & 0xffffffff));
+		}
 	}
 #endif
 	d->scale = COB_FIELD_SCALE(f);
@@ -378,217 +349,79 @@ cob_decimal_set_binary (cob_decimal *d, cob_field *f)
 static int
 cob_decimal_get_binary (cob_decimal *d, cob_field *f, const int opt)
 {
-	size_t	overflow;
-	size_t	digits;
-	size_t	sign;
+	size_t			overflow;
+	size_t			digits;
+	size_t			sign;
+	size_t			bitnum;
+#ifndef	COB_EXPERIMENTAL
+	long long		llval;
+	unsigned long long	ullval;
+	unsigned int		lo;
+#endif
 
-#ifdef	COB_EXPERIMENTAL
-
-	if (unlikely(d->value->_mp_size == 0)) {
+	if (unlikely(mpz_size (d->value) == 0)) {
 		own_memset (f->data, 0, f->size);
 		return 0;
 	}
-	sign = COB_FIELD_HAVE_SIGN (f) ? 1 : 0;
 	overflow = 0;
 	digits = COB_FIELD_DIGITS(f);
-	if (unlikely(cob_bit_overflow (d->value, f->size, sign))) {
+	if (COB_FIELD_HAVE_SIGN (f)) {
+		sign = 1;
+	} else {
+		sign = 0;
+		if (mpz_sgn (d->value) < 0) {
+			mpz_abs (d->value, d->value);
+		}
+	}
+	bitnum = (f->size * 8) - sign;
+	if (unlikely(mpz_sizeinbase (d->value, 2) > bitnum)) {
 		if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
 			goto overflow;
 		}
 		overflow = 1;
-		if (cob_current_module->flag_binary_truncate) {
+		/* TRUNC_ON_OVERFLOW is only set for binary_truncate */
+		if (opt & COB_STORE_TRUNC_ON_OVERFLOW) {
+			mpz_tdiv_r (d->value, d->value, cob_mpze10[digits]);
+		}
+	} else if (opt && cob_current_module->flag_binary_truncate) {
+		if (mpz_cmpabs (d->value, cob_mpze10[digits]) >= 0) {
+			/* overflow */
+			if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
+				goto overflow;
+			}
+			overflow = 1;
+			/* TRUNC_ON_OVERFLOW is only set for binary_truncate */
 			if (opt & COB_STORE_TRUNC_ON_OVERFLOW) {
 				mpz_tdiv_r (d->value, d->value, cob_mpze10[digits]);
 			}
 		}
 	}
-	if (sign) {
-		long long		val;
-
-		if (unlikely(overflow)) {
-			if (cob_current_module->flag_binary_truncate) {
-				val = mpz_get_sll (d->value);
-			} else {
-				val = mpz_get_ull (d->value);
-			}
-		} else {
-			val = mpz_get_sll (d->value);
-		}
-		if (cob_current_module->flag_binary_truncate) {
-			if (val <= -cob_exp10LL[digits] || val >= cob_exp10LL[digits]) {
-				if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
-					goto overflow;
-				}
-				overflow = 1;
-				if (opt & COB_STORE_TRUNC_ON_OVERFLOW) {
-					val %= cob_exp10LL[digits];
-				}
-			}
-		}
-		cob_binary_set_int64 (f, val);
+#ifdef	COB_EXPERIMENTAL
+	if (!sign || overflow) {
+		cob_binary_set_uint64 (f, mpz_get_ull (d->value));
 	} else {
-		unsigned long long	val;
-
-		if (unlikely(d->value->_mp_size < 0)) {
-			d->value->_mp_size = -d->value->_mp_size;
-		}
-		val = mpz_get_ull (d->value);
-		if (cob_current_module->flag_binary_truncate) {
-			if (val >= (unsigned long long) cob_exp10LL[digits]) {
-				if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
-					goto overflow;
-				}
-				overflow = 1;
-				if (opt & COB_STORE_TRUNC_ON_OVERFLOW) {
-					val %= cob_exp10LL[digits];
-				}
-			}
-		}
-		cob_binary_set_int64 (f, val);
+		cob_binary_set_int64 (f, mpz_get_sll (d->value));
 	}
 #else
-	overflow = 0;
-	sign = COB_FIELD_HAVE_SIGN (f) ? 1 : 0;
-	digits = COB_FIELD_DIGITS(f);
 	if (f->size <= 4) {
-		if (COB_FIELD_HAVE_SIGN (f)) {
-			int	val;
-
-			if (!mpz_fits_sint_p (d->value)) {
-				/* overflow */
-				overflow = 1;
-				if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
-					goto overflow;
-				}
-				if (cob_current_module->flag_binary_truncate) {
-					if (opt & COB_STORE_TRUNC_ON_OVERFLOW) {
-						mpz_tdiv_r_ui (d->value, d->value,
-							       cob_exp10[digits]);
-					}
-					val = mpz_get_si (d->value);
-				} else {
-					val = mpz_get_ui (d->value);
-				}
-			} else {
-				val = mpz_get_si (d->value);
-			}
-
-			if (cob_current_module->flag_binary_truncate) {
-				if (val <= -cob_exp10[digits] || val >= cob_exp10[digits]) {
-					/* overflow */
-					overflow = 1;
-					if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
-						goto overflow;
-					}
-					if (opt & COB_STORE_TRUNC_ON_OVERFLOW) {
-						val %= cob_exp10[digits];
-					}
-				}
-			}
-			cob_binary_set_int (f, val);
+		if (!sign || overflow) {
+			cob_binary_set_uint64 (f, mpz_get_ui (d->value));
 		} else {
-			unsigned int	val;
-
-			if (mpz_sgn (d->value) < 0) {
-				mpz_abs (d->value, d->value);
-			}
-			if (!mpz_fits_uint_p (d->value)) {
-				/* overflow */
-				overflow = 1;
-				if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
-					goto overflow;
-				}
-				if (cob_current_module->flag_binary_truncate) {
-					if (opt & COB_STORE_TRUNC_ON_OVERFLOW) {
-						mpz_tdiv_r_ui (d->value, d->value,
-							       cob_exp10[digits]);
-					}
-				}
-			}
-			val = mpz_get_ui (d->value);
-			if (cob_current_module->flag_binary_truncate) {
-				if (val >= (unsigned int) cob_exp10[digits]) {
-					/* overflow */
-					overflow = 1;
-					if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
-						goto overflow;
-					}
-					if (opt & COB_STORE_TRUNC_ON_OVERFLOW) {
-						val %= cob_exp10[digits];
-					}
-				}
-			}
-			cob_binary_set_int (f, val);
+			cob_binary_set_int64 (f, mpz_get_si (d->value));
 		}
 	} else {
-		unsigned int	lo;
-
 		mpz_fdiv_r_2exp (cob_mpzt, d->value, 32);
 		mpz_fdiv_q_2exp (d->value, d->value, 32);
-/* RXW
-		mpz_tdiv_q_2exp (d->value, d->value, 32);
-*/
 		lo = mpz_get_ui (cob_mpzt);
 
-		if (COB_FIELD_HAVE_SIGN (f)) {
-			long long	val;
-
-			if (!mpz_fits_sint_p (d->value)) {
-				/* overflow */
-				overflow = 1;
-				if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
-					goto overflow;
-				}
-				if (opt & COB_STORE_TRUNC_ON_OVERFLOW) {
-					/* FIXME: need truncation */ ;
-				}
-			}
-			val = mpz_get_si (d->value);
-			val = (val << 32) | lo;
-			if (cob_current_module->flag_binary_truncate) {
-				if (val <= -cob_exp10LL[digits] || val >= cob_exp10LL[digits]) {
-					/* overflow */
-					overflow = 1;
-					if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
-						goto overflow;
-					}
-					if (opt & COB_STORE_TRUNC_ON_OVERFLOW) {
-						val %= cob_exp10LL[digits];
-					}
-				}
-			}
-			cob_binary_set_int64 (f, val);
+		if (!sign || overflow) {
+			ullval = mpz_get_ui (d->value);
+			ullval = (ullval << 32) | lo;
+			cob_binary_set_uint64 (f, ullval);
 		} else {
-			unsigned long long	val;
-
-			if (mpz_sgn (d->value) < 0) {
-				mpz_abs (d->value, d->value);
-			}
-			if (!mpz_fits_uint_p (d->value)) {
-				/* overflow */
-				overflow = 1;
-				if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
-					goto overflow;
-				}
-				if (opt & COB_STORE_TRUNC_ON_OVERFLOW) {
-					/* FIXME: need truncation */ ;
-				}
-			}
-			val = mpz_get_ui (d->value);
-			val = (val << 32) | lo;
-			if (cob_current_module->flag_binary_truncate) {
-				if (val >= (unsigned long long) cob_exp10LL[digits]) {
-					/* overflow */
-					overflow = 1;
-					if (opt & COB_STORE_KEEP_ON_OVERFLOW) {
-						goto overflow;
-					}
-					if (opt & COB_STORE_TRUNC_ON_OVERFLOW) {
-						val %= cob_exp10LL[digits];
-					}
-				}
-			}
-			cob_binary_set_int64 (f, val);
+			llval = mpz_get_si (d->value);
+			llval = (llval << 32) | lo;
+			cob_binary_set_int64 (f, llval);
 		}
 	}
 #endif
@@ -1098,7 +931,12 @@ cob_display_add_int (cob_field *f, int n)
 	if (unlikely(scale < 0)) {
 		/* PIC 9(n)P(m) */
 		if (-scale < 10) {
+/* RXW
 			n /= cob_exp10[-scale];
+*/
+			while (scale++) {
+				n /= 10;
+			}
 		} else {
 			n = 0;
 		}

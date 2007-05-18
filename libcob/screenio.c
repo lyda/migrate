@@ -28,11 +28,11 @@
 #include <ncurses.h>
 #elif HAVE_NCURSES_NCURSES_H
 #include <ncurses/ncurses.h>
-#elif HAVE_CURSES_H
-#include <curses.h>
 #elif HAVE_PDCURSES_H
 #include <pdcurses.h>
 #define mvgetnstr(w, x, y, z)	mvgetstr(w, x, y)
+#elif HAVE_CURSES_H
+#include <curses.h>
 #endif
 
 #include "move.h"
@@ -48,7 +48,7 @@
 #define SCREEN_LINE_POS(s)	(cob_get_int (s->line) - 1)
 #define SCREEN_COLUMN_POS(s)	(cob_get_int (s->column) - 1)
 
-#if HAVE_LIBNCURSES || HAVE_LIBPDCURSES
+#if HAVE_LIBNCURSES || HAVE_LIBPDCURSES || HAVE_LIBCURSES
 static int	screen_initialized = 0;
 #endif
 
@@ -56,7 +56,7 @@ int	cob_screen_mode = 0;
 int	cob_current_y = 0;
 int	cob_current_x = 0;
 
-#if HAVE_LIBNCURSES || HAVE_LIBPDCURSES
+#if HAVE_LIBNCURSES || HAVE_LIBPDCURSES || HAVE_LIBCURSES
 
 static int
 get_line_column (cob_field *fline, cob_field *fcol, int *line, int *col)

@@ -76,11 +76,14 @@ static int			eval_inc = 0;
 static int			eval_inc2 = 0;
 static int			prog_end = 0;
 static int			depth = 0;
+static int			deplev = 0;
+static int			organized_seen = 0;
 static int			inspect_keyword = 0;
 static int			samearea = 1;
 static int			in_declaratives = 0;
 static struct cb_file		*linage_file;
 static cb_tree			next_label_list = NULL;
+static char			*stack_progid[32];
 static int			eval_check[64][64];
 
 static void emit_entry (const char *name, const int encode, cb_tree using_list);
@@ -152,6 +155,11 @@ static int literal_value (cb_tree x);
 start:
   {
 	perform_stack = NULL;
+	/* RXW */
+	/*
+	current_section = NULL;
+	current_paragraph = NULL;
+	*/
 	next_label_id = 0;
 	current_linage = 0;
 	current_storage = 0;
@@ -160,6 +168,7 @@ start:
 	eval_inc2 = 0;
 	prog_end = 0;
 	depth = 0;
+	deplev = 0;
 	inspect_keyword = 0;
 	samearea = 1;
 	memset ((char *)eval_check, 0, sizeof(eval_check));
@@ -208,6 +217,20 @@ nested_prog:
 end_program:
 | END PROGRAM program_name '.'
   {
+	char			*s;
+
+	if (CB_LITERAL_P ($3)) {
+		s = (char *)(CB_LITERAL ($3)->data);
+	} else {
+		s = (char *)(CB_NAME ($3));
+	}
+	if (deplev) {
+		deplev--;
+	}
+	if (strcmp (stack_progid[deplev], s)) {
+		cb_error ("END PROGRAM '%s' is different to PROGRAM-ID '%s'",
+			s, stack_progid[deplev]);
+	}
 	if (depth) {
 		depth--;
 	}
@@ -226,6 +249,13 @@ end_program:
 identification_division:
   PROGRAM_ID '.' program_name as_literal program_type dot
   {
+	current_section = NULL;
+	current_paragraph = NULL;
+	if (CB_LITERAL_P ($3)) {
+		stack_progid[deplev++] = (char *)(CB_LITERAL ($3)->data);
+	} else {
+		stack_progid[deplev++] = (char *)(CB_NAME ($3));
+	}
 	if (prog_end) {
 		struct cb_program	*newx;
 
@@ -691,6 +721,7 @@ file_control_sequence:
 file_control_entry:
   SELECT flag_optional undefined_word
   {
+	organized_seen = 0;
 	if ($3 == cb_error_node) {
 		YYERROR;
 	}
@@ -819,18 +850,19 @@ file_status_clause:
 /* LOCK MODE clause */
 
 lock_mode_clause:
-  LOCK _mode _is lock_mode	{ PENDING ("LOCK MODE"); }
+  LOCK _mode _is lock_mode
 ;
 
 lock_mode:
-  MANUAL lock_with
-| AUTOMATIC lock_with
-| EXCLUSIVE
+  MANUAL lock_with	{ current_file->lock_mode = COB_LOCK_MANUAL; } 
+| AUTOMATIC lock_with	{ current_file->lock_mode = COB_LOCK_AUTOMATIC; } 
+| EXCLUSIVE		{ current_file->lock_mode = COB_LOCK_EXCLUSIVE; }
 ;
 
 lock_with:
-| WITH LOCK ON _multiple records
-| WITH ROLLBACK
+| WITH LOCK ON records
+| WITH LOCK ON MULTIPLE records	{ PENDING ("WITH LOCK ON MULTIPLE RECORDS"); }
+| WITH ROLLBACK			{ PENDING ("WITH ROLLBACK"); }
 ;
 
 
@@ -842,10 +874,42 @@ organization_clause:
 ;
 
 organization:
-  INDEXED		{ current_file->organization = COB_ORG_INDEXED; }
-| SEQUENTIAL		{ current_file->organization = COB_ORG_SEQUENTIAL; }
-| RELATIVE		{ current_file->organization = COB_ORG_RELATIVE; }
-| LINE SEQUENTIAL	{ current_file->organization = COB_ORG_LINE_SEQUENTIAL; }
+  INDEXED
+  {
+	if (organized_seen) {
+		cb_error ("Illegal or duplicate ORGANIZED clause");
+	} else {
+		current_file->organization = COB_ORG_INDEXED;
+		organized_seen = 1;
+	}
+  }
+| SEQUENTIAL
+  {
+	if (organized_seen) {
+		cb_error ("Illegal or duplicate ORGANIZED clause");
+	} else {
+		current_file->organization = COB_ORG_SEQUENTIAL;
+		organized_seen = 1;
+	}
+  }
+| RELATIVE
+  {
+	if (organized_seen) {
+		cb_error ("Illegal or duplicate ORGANIZED clause");
+	} else {
+		current_file->organization = COB_ORG_RELATIVE;
+		organized_seen = 1;
+	}
+  }
+| LINE SEQUENTIAL
+  {
+	if (organized_seen) {
+		cb_error ("Illegal or duplicate ORGANIZED clause");
+	} else {
+		current_file->organization = COB_ORG_LINE_SEQUENTIAL;
+		organized_seen = 1;
+	}
+  }
 ;
 
 
@@ -3204,7 +3268,21 @@ read_statement:
   file_name flag_next _record read_into with_lock read_key read_handler
   end_read
   {
-	cb_emit_read ($3, $4, $6, $8, $7);
+	if ($3 != cb_error_node) {
+		if ($7 && CB_FILE(cb_ref($3))->lock_mode == COB_LOCK_AUTOMATIC) {
+			cb_error ("LOCK clause illegal with file LOCK AUTOMATIC");
+		} else if ($8 &&
+		      (CB_FILE(cb_ref($3))->organization != COB_ORG_RELATIVE &&
+		       CB_FILE(cb_ref($3))->organization != COB_ORG_INDEXED)) {
+			cb_error ("KEY clause invalid with this file type");
+		} else if (current_statement->handler_id == COB_EC_I_O_INVALID_KEY &&
+		      (CB_FILE(cb_ref($3))->organization != COB_ORG_RELATIVE &&
+		       CB_FILE(cb_ref($3))->organization != COB_ORG_INDEXED)) {
+			cb_error ("INVALID KEY clause invalid with this file type");
+		} else {
+			cb_emit_read ($3, $4, $6, $8, $7);
+		}
+	}
   }
 ;
 
@@ -3284,7 +3362,19 @@ rewrite_statement:
   record_name write_from opt_invalid_key
   end_rewrite
   {
-	cb_emit_rewrite ($3, $4);
+	if ($3 != cb_error_node) {
+/* RXW
+		if (current_statement->handler_id == COB_EC_I_O_INVALID_KEY &&
+		      (CB_FILE(cb_ref($3))->organization != COB_ORG_RELATIVE &&
+		       CB_FILE(cb_ref($3))->organization != COB_ORG_INDEXED)) {
+			cb_error ("INVALID KEY clause invalid with this file type");
+		} else {
+*/
+			cb_emit_rewrite ($3, $4);
+/* RXW
+		}
+*/
+	}
   }
 ;
 
@@ -3814,7 +3904,9 @@ write_statement:
   record_name write_from write_option write_handler
   end_write
   {
-	cb_emit_write ($3, $4, $5);
+	if ($3 != cb_error_node) {
+		cb_emit_write ($3, $4, $5);
+	}
   }
 ;
 
@@ -4620,7 +4712,6 @@ _key:		| KEY ;
 _line_or_lines:	| LINE | LINES ;
 _lines:		| LINES ;
 _mode:		| MODE ;
-_multiple:	| MULTIPLE ;
 _number:	| NUMBER ;
 _of:		| OF ;
 _on:		| ON ;
@@ -4657,10 +4748,11 @@ emit_entry (const char *name, const int encode, cb_tree using_list)
 	label = cb_build_label (cb_build_reference (buff), NULL);
 	if (encode) {
 		CB_LABEL (label)->name = (unsigned char *)(cb_encode_program_id (name));
+		CB_LABEL (label)->orig_name = (unsigned char *)name;
 	} else {
 		CB_LABEL (label)->name = (unsigned char *)name;
+		CB_LABEL (label)->orig_name = current_program->orig_source_name;
 	}
-	CB_LABEL (label)->orig_name = (unsigned char *)name;
 	CB_LABEL (label)->need_begin = 1;
 	emit_statement (label);
 

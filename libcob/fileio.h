@@ -50,6 +50,12 @@
 #define COB_ACCESS_DYNAMIC	2
 #define COB_ACCESS_RANDOM	3
 
+/* Lock mode */
+
+#define COB_LOCK_EXCLUSIVE	1
+#define COB_LOCK_MANUAL		2
+#define COB_LOCK_AUTOMATIC	3
+
 /* Open mode */
 
 #define COB_OPEN_CLOSED		0
@@ -151,6 +157,7 @@ typedef struct {
 	size_t			nkeys;			/* the number of keys */
 	char			organization;		/* ORGANIZATION */
 	char			access_mode;		/* ACCESS MODE */
+	char			lock_mode;		/* LOCKMODE */
 	char			open_mode;		/* OPEN MODE */
 	char			flag_optional;		/* OPTIONAL */
 	char			last_open_mode;		/* open mode given by OPEN */
@@ -163,7 +170,7 @@ typedef struct {
 	char			flag_has_status;	/* has FILE STATUS clause */
 	char			flag_needs_nl;		/* LS file needs NL at close */
 	char			flag_needs_top;		/* Linage needs top */
-	char			spare[2];		/* Spare */
+	char			spare;			/* Spare */
 } cob_file;
 
 /* File I-O functions */

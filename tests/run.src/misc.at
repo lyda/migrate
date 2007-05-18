@@ -21,7 +21,7 @@
 AT_SETUP([Source file not found])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob: No such file or directory
+[cobc: prog.cob: No such file or directory
 ])
 
 AT_CLEANUP

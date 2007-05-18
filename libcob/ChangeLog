@@ -1,3 +1,21 @@
+2007-05-17  Roger While <simrw@sim-basis.de>
+
+	* screenio.c : Use normal curses when available
+
+2007-05-10  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : Fix positioning with START,READ NEXT/PREVIOUS on duplicate
+		records.
+
+2007-05-08  Roger While <simrw@sim-basis.de>
+
+	* common.[ch] : Fix incompatible param definitions on CBL_EXIT_PROC
+		and CBL_ERROR_PROC
+
+2007-05-04  Roger While <simrw@sim-basis.de>
+
+	* fileio.[ch] : Preliminary support for record locking
+
 2007-04-28  Roger While <simrw@sim-basis.de>
 
 	* numeric.c : Remove duplicated code.

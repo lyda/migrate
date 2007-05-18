@@ -72,8 +72,8 @@ display_numeric (cob_field *f, FILE *fp)
 static void
 pretty_display_numeric (cob_field *f, FILE *fp)
 {
-	int		i;
 	unsigned char	*p;
+	int		i;
 	int		digits;
 	int		scale;
 	int		size;
@@ -82,7 +82,15 @@ pretty_display_numeric (cob_field *f, FILE *fp)
 	unsigned char	pic[16];
 	unsigned char	data[128];
 
-	digits = COB_FIELD_DIGITS (f);
+/* RXW
+	if (COB_FIELD_TYPE(f) == COB_TYPE_NUMERIC_BINARY) {
+		digits = bin_digits[f->size];
+	} else {
+*/
+		digits = COB_FIELD_DIGITS (f);
+/* RXW
+	}
+*/
 	scale = COB_FIELD_SCALE (f);
 	size = (digits + (COB_FIELD_HAVE_SIGN (f) ? 1 : 0)
 		+ (scale > 0 ? 1 : 0));

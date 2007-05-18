@@ -223,7 +223,7 @@ if test "x$LTLIBINTL" != "x"; then
   LIBCOB_LIBS="$LIBCOB_LIBS $LTLIBINTL"
 fi
 
-# Checks for ncurses.
+# Checks for ncurses/pdcurses/curses.
 USE_NCURSES="no"
 AC_CHECK_HEADERS([ncurses.h pdcurses.h ncurses/ncurses.h curses.h])
 AC_CHECK_LIB([ncurses], [initscr])
@@ -235,6 +235,12 @@ else
   if test "x$ac_cv_lib_pdcurses_initscr" = "xyes"; then
     USE_NCURSES="yes"
     LIBCOB_LIBS="$LIBCOB_LIBS -lpdcurses"
+  else
+    AC_CHECK_LIB([curses], [initscr])
+    if test "x$ac_cv_lib_curses_initscr" = "xyes"; then
+      USE_NCURSES="yes"
+      LIBCOB_LIBS="$LIBCOB_LIBS -lcurses"
+    fi
   fi
 fi
 
@@ -623,7 +629,7 @@ echo "  Use gettext for international messages:      ${USE_NLS}"
 echo "  Use Berkeley DB for file I/O:                ${USE_DB}"
 echo "  Use enhanced Berkeley DB (>= 4.1)            ${HAS_DB41}"
 echo "  Use fcntl for file locking:                  ${ac_cv_func_fcntl}"
-echo "  Use ncurses/pdcurses for screen I/O:         ${USE_NCURSES}"
+echo "  Use ncurses/pdcurses/curses for screen I/O:  ${USE_NCURSES}"
 echo ""
 
 case $LIBDB in

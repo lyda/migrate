@@ -38,8 +38,10 @@
 	attr.pic = z; \
 	} while (0)
 
+/*
 COB_HIDDEN extern const int		cob_exp10[];
 COB_HIDDEN extern const long long	cob_exp10LL[];
+*/
 COB_HIDDEN extern int			cob_got_exception;
 COB_HIDDEN extern unsigned int		cob_orig_line;
 COB_HIDDEN extern const char		*cob_orig_statement;
@@ -53,8 +55,10 @@ COB_HIDDEN extern void		cob_exit_fileio (void);
 COB_HIDDEN extern void		cob_field_to_string (const cob_field *f, char *s);
 COB_HIDDEN extern int		cob_binary_get_int (const cob_field * const f);
 COB_HIDDEN extern long long	cob_binary_get_int64 (const cob_field * const f);
+COB_HIDDEN extern unsigned long long	cob_binary_get_uint64 (const cob_field * const f);
 COB_HIDDEN extern void		cob_binary_set_int (cob_field *f, int n);
 COB_HIDDEN extern void		cob_binary_set_int64 (cob_field *f, long long n);
+COB_HIDDEN extern void		cob_binary_set_uint64 (cob_field *f, unsigned long long n);
 COB_HIDDEN extern void		cob_init_numeric (void);
 #if 0
 COB_HIDDEN extern void		cob_init_termio (void);

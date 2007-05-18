@@ -1377,6 +1377,9 @@ build_store_option (cb_tree x, cb_tree round_opt)
 			break;
 		}
 
+/* RXW Check
+		if (current_statement->handler1) {
+*/
 		if (current_statement->handler_id) {
 			opt |= COB_STORE_KEEP_ON_OVERFLOW;
 		} else if (cb_binary_truncate) {

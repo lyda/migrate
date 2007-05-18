@@ -1640,13 +1640,15 @@ cob_free_alloc (unsigned char **ptr1, unsigned char *ptr2)
 /* System routines */
 
 int
-CBL_EXIT_PROC (unsigned char *x, int (**p)(void))
+CBL_EXIT_PROC (unsigned char *x, unsigned char *pptr)
 {
 	struct exit_handlerlist *hp = NULL;
 	struct exit_handlerlist *h = exit_hdlrs;
+	int			(**p)(void) = NULL;
 
 	COB_CHK_PARMS (CBL_ERROR_PROC, 2);
 
+	memcpy (&p, &pptr, sizeof (void *));
 	if (!p || !*p) {
 		return -1;
 	}
@@ -1677,13 +1679,15 @@ CBL_EXIT_PROC (unsigned char *x, int (**p)(void))
 }
 
 int
-CBL_ERROR_PROC (unsigned char *x, int (**p)(char *s))
+CBL_ERROR_PROC (unsigned char *x, unsigned char *pptr)
 {
-	struct handlerlist *hp = NULL;
-	struct handlerlist *h = hdlrs;
+	struct handlerlist	*hp = NULL;
+	struct handlerlist	*h = hdlrs;
+	int			(**p)(char *s) = NULL;
 
 	COB_CHK_PARMS (CBL_ERROR_PROC, 2);
 
+	memcpy (&p, &pptr, sizeof (void *));
 	if (!p || !*p) {
 		return -1;
 	}

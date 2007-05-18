@@ -1,3 +1,46 @@
+2007-05-18  Roger While <simrw@sim-basis.de>
+
+	* parser.y : Prevent duplicate ORGANIZATION use;
+		particularly the mistake INDEXED SEQUENTIAL
+
+2007-05-16  Roger While <simrw@sim-basis.de>
+
+	* parser.y : LOCK clause on a READ is illegal when the SELECT
+		clause specifies LOCK AUTOMATIC
+
+2007-05-15  Roger While <simrw@sim-basis.de>
+
+	* parser.y : The END PROGRAM identifier must agree with the
+		PROGRAM-ID
+
+2007-05-14  Roger While <simrw@sim-basis.de>
+
+	* parser.y, codegen.c : Use original names, not the mangled
+		names when tracing
+
+2007-05-11  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Fix miscompilation with nested source programs
+	* cobc.c : Tighten up checking for presence of input files
+
+2007-05-09  Roger While <simrw@sim-basis.de>
+
+	* cobc.c : Implement -D option to specify defines for C compiles
+		and eventuallly for conditional Cobol compilation.
+		Fix up HP-UX machines that per default do not honour
+		SHLIB_PATH.
+		Implement -b option to create a single dynamically loadable
+		object from multiple input files.
+
+2007-05-08  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : More fixes alignment intolerant machines
+
+2007-05-04  Roger While <simrw@sim-basis.de>
+
+	* parser.y, codegen.c, tree.h : Preliminary support for LOCK
+		clause in SELECT
+
 2007-04-30  Roger While <simrw@sim-basis.de>
 
 	* field.c : BINARY-CHAR is always one byte regardless of -std=

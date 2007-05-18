@@ -299,7 +299,7 @@ struct indexed_file {
 	DBT		key;
 	DBT		data;
 	unsigned char	**last_readkey;	/* the last key read */
-	unsigned int 	*last_dupno;	/* the last mumber of duplicates read */
+	unsigned int 	*last_dupno;	/* the last number of duplicates read */
 	int		*rewrite_sec_key;
 #ifdef	USE_DB41
 	DBC		**cursor;
@@ -1317,11 +1317,9 @@ indexed_open (cob_file *f, char *filename, int mode, int flag)
 	p = cob_malloc (sizeof (struct indexed_file));
 #ifdef	USE_DB41
 	if (bdb_env != NULL) {
-/* HMR
 		if (mode == COB_OPEN_OUTPUT || mode == COB_OPEN_EXTEND ||
-		    f->lock_mode == COB_LOCK_EXCLUSIVE) {
-*/
-		if (mode == COB_OPEN_OUTPUT || mode == COB_OPEN_EXTEND) {
+		    f->lock_mode == COB_LOCK_EXCLUSIVE ||
+		    (mode == COB_OPEN_I_O && !f->lock_mode)) {
 			lock_mode = DB_LOCK_WRITE;
 		} else {
 			lock_mode = DB_LOCK_READ;
@@ -1575,6 +1573,20 @@ indexed_start_internal (cob_file *f, int cond, cob_field *key, int read_opts, in
 		}
 		break;
 	case COB_LT:
+		if (ret != 0) {
+#ifdef	USE_DB41
+			ret = DB_SEQ (p->cursor[p->key_index], DB_LAST);
+#else
+			ret = DB_SEQ (p->db[p->key_index], R_LAST);
+#endif
+		} else {
+#ifdef	USE_DB41
+			ret = DB_SEQ (p->cursor[p->key_index], DB_PREV);
+#else
+			ret = DB_SEQ (p->db[p->key_index], R_PREV);
+#endif
+		}
+		break;
 	case COB_LE:
 		if (ret != 0) {
 #ifdef	USE_DB41
@@ -1582,13 +1594,33 @@ indexed_start_internal (cob_file *f, int cond, cob_field *key, int read_opts, in
 #else
 			ret = DB_SEQ (p->db[p->key_index], R_LAST);
 #endif
-		} else if (cond == COB_LT
-			   || memcmp (p->key.data, key->data, key->size) != 0) {
+		} else if (memcmp (p->key.data, key->data, key->size) != 0) {
 #ifdef	USE_DB41
 			ret = DB_SEQ (p->cursor[p->key_index], DB_PREV);
 #else
 			ret = DB_SEQ (p->db[p->key_index], R_PREV);
 #endif
+		} else if (f->keys[p->key_index].flag) {
+#ifdef	USE_DB41
+			ret = DB_SEQ (p->cursor[p->key_index], DB_NEXT_NODUP);
+#else
+			while (!ret && memcmp (p->key.data, key->data, key->size) == 0) {
+				ret = DB_SEQ (p->db[p->key_index], R_NEXT);
+			}
+#endif
+			if (ret != 0) {
+#ifdef	USE_DB41
+				ret = DB_SEQ (p->cursor[p->key_index], DB_LAST);
+#else
+				ret = DB_SEQ (p->db[p->key_index], R_LAST);
+#endif
+			} else {
+#ifdef	USE_DB41
+				ret = DB_SEQ (p->cursor[p->key_index], DB_PREV);
+#else
+				ret = DB_SEQ (p->db[p->key_index], R_PREV);
+#endif
+			}
 		}
 		break;
 	case COB_GT:
@@ -1749,11 +1781,33 @@ indexed_read_next (cob_file *f, int read_opts)
 		/* check if previously read data still exists */
 		p->key.size = (cob_dbtsize_t) f->keys[p->key_index].field->size;
 		p->key.data = p->last_readkey[p->key_index];
+#ifdef	USE_DB41
+		ret = DB_SEQ (p->cursor[p->key_index], DB_SET);
+#else
 		ret = DB_GET (p->db[p->key_index], 0) ;
+#endif
 		if (!ret && p->key_index > 0) {
-			ret = memcmp (p->last_readkey[p->key_index + f->nkeys], p->data.data, f->keys[0].field->size);
-			if (!ret && f->keys[p->key_index].flag) {
-				ret = memcmp (&p->last_dupno[p->key_index], (ucharptr)p->data.data +  f->keys[0].field->size, sizeof(unsigned int));
+			if ( f->keys[p->key_index].flag) {
+				own_memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int));
+				while (ret == 0 &&
+				      memcmp (p->key.data, p->last_readkey[p->key_index], p->key.size) == 0 &&
+				      dupno < p->last_dupno[p->key_index]) {
+#ifdef	USE_DB41
+					ret = DB_SEQ (p->cursor[p->key_index], DB_NEXT);
+#else
+					ret = DB_SEQ (p->db[p->key_index], R_NEXT); 
+#endif
+					own_memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int));
+				}
+				if (ret == 0 &&
+				   memcmp (p->key.data, p->last_readkey[p->key_index], p->key.size) == 0 &&
+				   dupno == p->last_dupno[p->key_index]) {
+					ret = memcmp (p->last_readkey[p->key_index + f->nkeys], p->data.data, f->keys[0].field->size);
+				} else {
+					ret = 1;
+				}
+			} else {
+				ret = memcmp (p->last_readkey[p->key_index + f->nkeys], p->data.data, f->keys[0].field->size);
 			}
 			if (!ret) {
 				p->key.size = (cob_dbtsize_t) f->keys[0].field->size;
@@ -2636,19 +2690,14 @@ cob_read (cob_file *f, cob_field *key, cob_field *fnstatus, const int read_opts)
 	_read_opts = read_opts;
 #ifdef	USE_DB41
 	if (f->organization == COB_ORG_INDEXED && bdb_env != NULL) {
-/* HMR
-	assume LOCK MODE MANUAL WITH LOCK ON RECORD
-	if (f->open_mode != COB_OPEN_I_O)  ||
-	f->lock_mode == COB_LOCK_EXCLUSIVE) {
-*/
-		if (f->open_mode != COB_OPEN_I_O) {
+		if (f->open_mode != COB_OPEN_I_O  ||
+		f->lock_mode == COB_LOCK_EXCLUSIVE) {
 		     _read_opts &= ~COB_READ_LOCK;
 		} 
-/* HMR
-	else if (f->lock_mode == COB_LOCK_AUTOMATIC) {
-	_read_opts |= COB_READ_LOCK; 
-	}
-*/
+		else if (f->lock_mode == COB_LOCK_AUTOMATIC &&
+		!(_read_opts & COB_READ_NO_LOCK)) {
+		_read_opts |= COB_READ_LOCK; 
+		}
 	} else {
 		_read_opts &= ~COB_READ_LOCK;
 	}

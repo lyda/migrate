@@ -1,3 +1,8 @@
+2007-05-11  Roger While <simrw@sim-basis.de>
+
+	* Adjust OC test result to agree with tightened input
+	  file presence check
+
 2007-03-05  Roger While <simrw@sim-basis.de>
 
 	* OC tests for LOCALE-DATE, LOCALE-TIME

@@ -1568,6 +1568,8 @@ cb_build_label (cb_tree name, struct cb_label * section)
 
 	p->id = cb_id++;
 	p->name = (unsigned char *)cb_define (name, CB_TREE (p));
+/* RXW */
+	p->orig_name = p->name;
 	p->section = section;
 	return CB_TREE (p);
 }

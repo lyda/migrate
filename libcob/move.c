@@ -33,6 +33,41 @@
 #include "lib/gettext.h"
 */
 
+static const int	cob_exp10[10] = {
+	1,
+	10,
+	100,
+	1000,
+	10000,
+	100000,
+	1000000,
+	10000000,
+	100000000,
+	1000000000
+};
+
+static const long long	cob_exp10LL[19] = {
+	1LL,
+	10LL,
+	100LL,
+	1000LL,
+	10000LL,
+	100000LL,
+	1000000LL,
+	10000000LL,
+	100000000LL,
+	1000000000LL,
+	10000000000LL,
+	100000000000LL,
+	1000000000000LL,
+	10000000000000LL,
+	100000000000000LL,
+	1000000000000000LL,
+	10000000000000000LL,
+	100000000000000000LL,
+	1000000000000000000LL
+};
+
 static COB_INLINE int
 cob_min_int (const int x, const int y)
 {
@@ -1086,6 +1121,25 @@ cob_display_get_int (cob_field *f)
 	return val;
 }
 
+unsigned long long
+cob_binary_get_uint64 (const cob_field * const f)
+{
+	unsigned long long	n = 0;
+	size_t			fsiz = 8 - f->size;
+
+#ifndef WORDS_BIGENDIAN
+	if (COB_FIELD_BINARY_SWAP (f)) {
+		own_byte_memcpy (((unsigned char *)&n) + fsiz, f->data, f->size);
+		n = COB_BSWAP_64 (n);
+	} else {
+		own_byte_memcpy ((unsigned char *)&n, f->data, f->size);
+	}
+#else	/* WORDS_BIGENDIAN */
+	own_byte_memcpy (((unsigned char *)&n) + fsiz, f->data, f->size);
+#endif	/* WORDS_BIGENDIAN */
+	return n;
+}
+
 long long
 cob_binary_get_int64 (const cob_field * const f)
 {
@@ -1147,6 +1201,24 @@ cob_binary_get_int (const cob_field * const f)
 
 void
 cob_binary_set_int64 (cob_field *f, long long n)
+{
+#ifndef WORDS_BIGENDIAN
+	unsigned char	*s;
+
+	if (COB_FIELD_BINARY_SWAP (f)) {
+		n = COB_BSWAP_64 (n);
+		s = ((unsigned char *)&n) + 8 - f->size;
+	} else {
+		s = (unsigned char *)&n;
+	}
+	own_byte_memcpy (f->data, s, f->size);
+#else	/* WORDS_BIGENDIAN */
+	own_byte_memcpy (f->data, ((unsigned char *)&n) + 8 - f->size, f->size);
+#endif	/* WORDS_BIGENDIAN */
+}
+
+void
+cob_binary_set_uint64 (cob_field *f, unsigned long long n)
 {
 #ifndef WORDS_BIGENDIAN
 	unsigned char	*s;
