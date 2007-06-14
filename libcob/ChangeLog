@@ -1,3 +1,12 @@
+2007-06-06  Roger While <simrw@sim-basis.de>
+
+	* fileio.[ch] : LOCK on WRITE/REWRITE
+
+2007-05-22  Roger While <simrw@sim-basis.de>
+
+	* fileio.[hc] : Implement IGNORING LOCK.
+		Fix a WRITE/REWRITE problem with duplicate keys.
+
 2007-05-17  Roger While <simrw@sim-basis.de>
 
 	* screenio.c : Use normal curses when available

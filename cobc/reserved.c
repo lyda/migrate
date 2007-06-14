@@ -299,7 +299,7 @@ static const struct reserved reserved_words[] = {
   {"ID",		IDENTIFICATION},	/* extension */
   {"IDENTIFICATION",	IDENTIFICATION},	/* 2002 */
   {"IF",		IF},			/* 2002 */
-  {"IGNORING",		-1},			/* 2002 (C/S) */
+  {"IGNORING",		IGNORING},		/* 2002 (C/S) */
   {"IMPLEMENTS",	-1},			/* 2002 (C/S) */
   {"IN",		IN},			/* 2002 */
   {"INDEX",		INDEX},			/* 2002 */

@@ -244,7 +244,8 @@ static const char	* const prefix[] = { "DD_", "dd_", "" };
 
 static const char	parm_msg[] = "CALL to %s requires %d parameters";
 
-static int dummy_rn_rew_del (cob_file *f);
+static int dummy_rnxt_del (cob_file *f);
+static int dummy_rewrite (cob_file *f, int opt);
 static int dummy_read (cob_file *f, cob_field *key, int read_opts);
 static int dummy_start (cob_file *f, int cond, cob_field *key);
 static int file_open (cob_file *f, char *filename, int mode, int opt);
@@ -252,14 +253,14 @@ static int file_close (cob_file *f, int opt);
 static int file_write_opt (cob_file *f, const int opt);
 static int sequential_read (cob_file *f, int read_opts);
 static int sequential_write (cob_file *f, int opt);
-static int sequential_rewrite (cob_file *f);
+static int sequential_rewrite (cob_file *f, int opt);
 static int lineseq_read (cob_file *f, int read_opts);
 static int lineseq_write (cob_file *f, int opt);
 static int relative_start (cob_file *f, int cond, cob_field *k);
 static int relative_read (cob_file *f, cob_field *k, int read_opts);
 static int relative_read_next (cob_file *f, int read_opts);
 static int relative_write (cob_file *f, int opt);
-static int relative_rewrite (cob_file *f);
+static int relative_rewrite (cob_file *f, int opt);
 static int relative_delete (cob_file *f);
 
 #if	defined(WITH_DB) || defined(WITH_CISAM) || defined(WITH_VBISAM)
@@ -299,7 +300,7 @@ struct indexed_file {
 	DBT		key;
 	DBT		data;
 	unsigned char	**last_readkey;	/* the last key read */
-	unsigned int 	*last_dupno;	/* the last number of duplicates read */
+	unsigned int	*last_dupno;	/* the last number of duplicates read */
 	int		*rewrite_sec_key;
 #ifdef	USE_DB41
 	DBC		**cursor;
@@ -319,11 +320,11 @@ static int indexed_close (cob_file *f, int opt);
 static int indexed_start (cob_file *f, int cond, cob_field *key);
 static int indexed_read (cob_file *f, cob_field *key, int read_opts);
 static int indexed_read_next (cob_file *f, int read_opts);
-static int indexed_write_internal (cob_file *f, int rewrite);
+static int indexed_write_internal (cob_file *f, int rewrite, int opt);
 static int indexed_write (cob_file *f, int opt);
 static int indexed_delete_internal (cob_file *f, int rewrite);
 static int indexed_delete (cob_file *f);
-static int indexed_rewrite (cob_file *f);
+static int indexed_rewrite (cob_file *f, int opt);
 
 static const cob_fileio_funcs indexed_funcs = {
 	indexed_open,
@@ -356,10 +357,10 @@ static cob_fileio_funcs indexed_funcs = {
 	dummy_write_close,
 	dummy_start,
 	dummy_read,
-	dummy_rn_rew_del,
+	dummy_rnxt_del,
 	dummy_write_close,
-	dummy_rn_rew_del,
-	dummy_rn_rew_del
+	dummy_rewrite,
+	dummy_rnxt_del
 };
 
 #endif	/* WITH_DB || WITH_CISAM || WITH_VBISAM */
@@ -373,7 +374,7 @@ static const cob_fileio_funcs sequential_funcs = {
 	sequential_read,
 	sequential_write,
 	sequential_rewrite,
-	dummy_rn_rew_del
+	dummy_rnxt_del
 };
 
 static const cob_fileio_funcs lineseq_funcs = {
@@ -383,8 +384,8 @@ static const cob_fileio_funcs lineseq_funcs = {
 	dummy_read,
 	lineseq_read,
 	lineseq_write,
-	dummy_rn_rew_del,
-	dummy_rn_rew_del
+	dummy_rewrite,
+	dummy_rnxt_del
 };
 
 static const cob_fileio_funcs relative_funcs = {
@@ -406,7 +407,7 @@ static const cob_fileio_funcs	*fileio_funcs[COB_ORG_MAX] = {
 	NULL
 };
 
-static void
+static void COB_NOINLINE
 cob_sync (cob_file *f, int mode)
 {
 #ifdef	WITH_DB
@@ -504,7 +505,7 @@ save_status (cob_file *f, int status, cob_field *fnstatus)
     f->flag_needs_nl = 0;			\
   }
 
-static int
+static int COB_NOINLINE
 file_linage_check (cob_file *f)
 {
 	f->lin_lines = cob_get_int (f->linage);
@@ -539,7 +540,13 @@ file_linage_check (cob_file *f)
 }
 
 static int
-dummy_rn_rew_del (cob_file *f)
+dummy_rnxt_del (cob_file *f)
+{
+	return COB_NOT_CONFIGURED;
+}
+
+static int
+dummy_rewrite (cob_file *f, int opt)
 {
 	return COB_NOT_CONFIGURED;
 }
@@ -556,7 +563,7 @@ dummy_start (cob_file *f, int cond, cob_field *key)
 	return COB_NOT_CONFIGURED;
 }
 
-static int
+static int COB_NOINLINE
 file_open (cob_file *f, char *filename, int mode, int opt)
 {
 	FILE		*fp = NULL;
@@ -636,7 +643,7 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 	return 0;
 }
 
-static int
+static int COB_NOINLINE
 file_close (cob_file *f, int opt)
 {
 #ifdef HAVE_FCNTL
@@ -858,7 +865,7 @@ sequential_write (cob_file *f, int opt)
 }
 
 static int
-sequential_rewrite (cob_file *f)
+sequential_rewrite (cob_file *f, int opt)
 {
 	if (fseek ((FILE *)f->file, -(off_t) f->record->size, SEEK_CUR)) {
 		return COB_STATUS_30_PERMANENT_ERROR;
@@ -1140,7 +1147,7 @@ relative_write (cob_file *f, int opt)
 }
 
 static int
-relative_rewrite (cob_file *f)
+relative_rewrite (cob_file *f, int opt)
 {
 	size_t	relsize;
 	int	relnum;
@@ -1650,27 +1657,29 @@ indexed_start_internal (cob_file *f, int cond, cob_field *key, int read_opts, in
 
 #ifdef	USE_DB41
 	if (ret == 0 && test_lock) {
-		ret = test_record_lock (f, p->key.data, p->key.size);
-		if (ret) {
-			p->cursor[p->key_index]->c_close (p->cursor[p->key_index]);
-			p->cursor[p->key_index] = NULL;
-			if (p->key_index != 0) {
-				p->cursor[0]->c_close (p->cursor[0]);
-				p->cursor[0] = NULL;
+		if (!(read_opts & COB_READ_IGNORE_LOCK)) {
+			ret = test_record_lock (f, p->key.data, p->key.size);
+			if (ret) {
+				p->cursor[p->key_index]->c_close (p->cursor[p->key_index]);
+				p->cursor[p->key_index] = NULL;
+				if (p->key_index != 0) {
+					p->cursor[0]->c_close (p->cursor[0]);
+					p->cursor[0] = NULL;
+				}
+				return COB_STATUS_51_RECORD_LOCKED;
 			}
-			return COB_STATUS_51_RECORD_LOCKED;
 		}
-	}
-	if (ret == 0 && (read_opts & COB_READ_LOCK)) {
-		ret = lock_record (f, p->key.data, p->key.size);
-		if (ret) {
-			p->cursor[p->key_index]->c_close (p->cursor[p->key_index]);
-			p->cursor[p->key_index] = NULL;
-			if (p->key_index != 0) {
-				p->cursor[0]->c_close (p->cursor[0]);
-				p->cursor[0] = NULL;
+		if (read_opts & COB_READ_LOCK) {
+			ret = lock_record (f, p->key.data, p->key.size);
+			if (ret) {
+				p->cursor[p->key_index]->c_close (p->cursor[p->key_index]);
+				p->cursor[p->key_index] = NULL;
+				if (p->key_index != 0) {
+					p->cursor[0]->c_close (p->cursor[0]);
+					p->cursor[0] = NULL;
+				}
+				return COB_STATUS_51_RECORD_LOCKED;
 			}
-			return COB_STATUS_51_RECORD_LOCKED;
 		}
 	}
 #endif
@@ -1818,15 +1827,17 @@ indexed_read_next (cob_file *f, int read_opts)
 		file_changed = ret;	
 #ifdef	USE_DB41
 		if (bdb_env != NULL && !file_changed) {
-			ret = test_record_lock (f, p->key.data, p->key.size);
-			if (ret) {
-				p->cursor[p->key_index]->c_close (p->cursor[p->key_index]);
-				p->cursor[p->key_index] = NULL;
-				if (p->key_index != 0) {
-					p->cursor[0]->c_close (p->cursor[0]);
-					p->cursor[0] = NULL;
+			if (!(read_opts & COB_READ_IGNORE_LOCK)) {
+				ret = test_record_lock (f, p->key.data, p->key.size);
+				if (ret) {
+					p->cursor[p->key_index]->c_close (p->cursor[p->key_index]);
+					p->cursor[p->key_index] = NULL;
+					if (p->key_index != 0) {
+						p->cursor[0]->c_close (p->cursor[0]);
+						p->cursor[0] = NULL;
+					}
+					return COB_STATUS_51_RECORD_LOCKED;
 				}
-				return COB_STATUS_51_RECORD_LOCKED;
 			}
 			if (read_opts & COB_READ_LOCK) {
 				ret = lock_record (f, p->key.data, p->key.size);
@@ -1962,15 +1973,17 @@ indexed_read_next (cob_file *f, int read_opts)
 		}
 #ifdef	USE_DB41
 		if (bdb_env != NULL) {
-			ret = test_record_lock (f, p->key.data, p->key.size);
-			if (ret) {
-				p->cursor[p->key_index]->c_close (p->cursor[p->key_index]);
-				p->cursor[p->key_index] = NULL;
-				if (p->key_index != 0) {
-					p->cursor[0]->c_close (p->cursor[0]);
-					p->cursor[0] = NULL;
+			if (!(read_opts & COB_READ_IGNORE_LOCK)) {
+				ret = test_record_lock (f, p->key.data, p->key.size);
+				if (ret) {
+					p->cursor[p->key_index]->c_close (p->cursor[p->key_index]);
+					p->cursor[p->key_index] = NULL;
+					if (p->key_index != 0) {
+						p->cursor[0]->c_close (p->cursor[0]);
+						p->cursor[0] = NULL;
+					}
+					return COB_STATUS_51_RECORD_LOCKED;
 				}
-				return COB_STATUS_51_RECORD_LOCKED;
 			}
 		}
 		if (read_opts & COB_READ_LOCK) {
@@ -2045,7 +2058,33 @@ get_dupno(cob_file *f, int i)
 }
 
 static int
-indexed_write_internal (cob_file *f, int rewrite)
+check_alt_keys (cob_file *f, int rewrite)
+{
+	size_t		i;
+	int			ret;
+	struct indexed_file	*p = f->file;
+
+	for (i = 1; i < f->nkeys; i++) {
+		if (!f->keys[i].flag) {
+			DBT_SET (p->key, f->keys[i].field);
+			ret = DB_GET (p->db[i], 0) ;
+			if (ret == 0) {
+				if (rewrite) {
+					if (memcmp(p->data.data,f->keys[0].field->data,f->keys[0].field->size)) {
+						return(1);
+					}
+				}
+				else {
+					return(1);
+				}
+			}
+		}
+	}
+	return(0);
+}
+
+static int
+indexed_write_internal (cob_file *f, int rewrite, int opt)
 {
 	size_t			i;
 	struct indexed_file	*p = f->file;
@@ -2067,6 +2106,21 @@ indexed_write_internal (cob_file *f, int rewrite)
 		close_cursor = 1;
 	}
 #endif
+
+	/* check duplicate alternate keys */
+	if (f->nkeys > 1 && !rewrite) {
+		if (check_alt_keys (f,0)) {
+#ifdef	USE_DB41
+			if (close_cursor) {
+				p->cursor[0]->c_close (p->cursor[0]);
+				p->cursor[0] = NULL;
+				p->write_cursor_open = 0; 
+			}
+#endif
+			return COB_STATUS_22_KEY_EXISTS;
+		}
+		DBT_SET (p->key, f->keys[0].field);
+	}
 
 	/* write data */
 #ifdef	USE_DB41
@@ -2126,6 +2180,17 @@ indexed_write_internal (cob_file *f, int rewrite)
 	}
 
 #ifdef	USE_DB41
+	if (opt & COB_WRITE_LOCK) {
+		DBT_SET (p->key, f->keys[0].field);
+		if (lock_record (f, p->key.data, p->key.size)) {
+			if (close_cursor) {
+				p->cursor[0]->c_close (p->cursor[0]);
+				p->cursor[0] = NULL;
+				p->write_cursor_open = 0; 
+			}
+			return COB_STATUS_51_RECORD_LOCKED;
+		}
+	}
 	if (close_cursor) {
 		p->cursor[0]->c_close (p->cursor[0]);
 		p->cursor[0] = NULL;
@@ -2156,7 +2221,7 @@ indexed_write (cob_file *f, int opt)
 	}
 	own_memcpy (p->last_key, p->key.data, p->key.size);
 
-	return indexed_write_internal (f, 0);
+	return indexed_write_internal (f, 0, opt);
 }
 
 static int
@@ -2294,7 +2359,7 @@ indexed_delete (cob_file *f)
 }
 
 static int
-indexed_rewrite (cob_file *f)
+indexed_rewrite (cob_file *f, int opt)
 {
 	struct indexed_file *p = f->file;
 	int			ret;
@@ -2313,6 +2378,16 @@ indexed_rewrite (cob_file *f)
 	}
 #endif
 
+	/* check duplicate alternate keys */
+	if (check_alt_keys (f,1)) {
+#ifdef	USE_DB41
+		p->cursor[0]->c_close (p->cursor[0]);
+		p->cursor[0] = NULL;
+		p->write_cursor_open = 0; 
+#endif
+		return COB_STATUS_22_KEY_EXISTS;
+	}
+
 	/* delete the current record */
 	ret = indexed_delete_internal (f, 1);
 
@@ -2327,7 +2402,7 @@ indexed_rewrite (cob_file *f)
 
 	/* write data */
 	DBT_SET (p->key, f->keys[0].field);
-	ret = indexed_write_internal (f, 1);
+	ret = indexed_write_internal (f, 1, opt);
 
 #ifdef	USE_DB41
 	p->cursor[0]->c_close (p->cursor[0]);
@@ -2656,10 +2731,9 @@ cob_start (cob_file *f, int cond, cob_field *key, cob_field *fnstatus)
 }
 
 void
-cob_read (cob_file *f, cob_field *key, cob_field *fnstatus, const int read_opts)
+cob_read (cob_file *f, cob_field *key, cob_field *fnstatus, int read_opts)
 {
 	int	ret;
-	int	_read_opts;
 
 	f->flag_read_done = 0;
 
@@ -2687,25 +2761,23 @@ cob_read (cob_file *f, cob_field *key, cob_field *fnstatus, const int read_opts)
 		RETURN_STATUS (COB_STATUS_47_INPUT_DENIED);
 	}
 
-	_read_opts = read_opts;
 #ifdef	USE_DB41
 	if (f->organization == COB_ORG_INDEXED && bdb_env != NULL) {
 		if (f->open_mode != COB_OPEN_I_O  ||
-		f->lock_mode == COB_LOCK_EXCLUSIVE) {
-		     _read_opts &= ~COB_READ_LOCK;
-		} 
-		else if (f->lock_mode == COB_LOCK_AUTOMATIC &&
-		!(_read_opts & COB_READ_NO_LOCK)) {
-		_read_opts |= COB_READ_LOCK; 
+		    f->lock_mode == COB_LOCK_EXCLUSIVE) {
+			read_opts &= ~COB_READ_LOCK;
+		} else if (f->lock_mode == COB_LOCK_AUTOMATIC &&
+		   !(read_opts & COB_READ_NO_LOCK)) {
+			read_opts |= COB_READ_LOCK; 
 		}
 	} else {
-		_read_opts &= ~COB_READ_LOCK;
+		read_opts &= ~COB_READ_LOCK;
 	}
 #endif
 	if (key) {
-		ret = fileio_funcs[(int)f->organization]->read (f, key, _read_opts);
+		ret = fileio_funcs[(int)f->organization]->read (f, key, read_opts);
 	} else {
-		ret = fileio_funcs[(int)f->organization]->read_next (f, _read_opts);
+		ret = fileio_funcs[(int)f->organization]->read_next (f, read_opts);
 	}
 
 	switch (ret) {
@@ -2761,6 +2833,12 @@ cob_write (cob_file *f, cob_field *rec, int opt, cob_field *fnstatus)
 		RETURN_STATUS (COB_STATUS_44_RECORD_OVERFLOW);
 	}
 
+#ifdef	USE_DB41
+	if (f->organization != COB_ORG_INDEXED || bdb_env == NULL) {
+		opt &= ~COB_WRITE_LOCK;
+	}
+#endif
+
 	ret = fileio_funcs[(int)f->organization]->write (f, opt);
 
 	if (unlikely(cob_do_sync && ret == 0)) {
@@ -2771,7 +2849,7 @@ cob_write (cob_file *f, cob_field *rec, int opt, cob_field *fnstatus)
 }
 
 void
-cob_rewrite (cob_file *f, cob_field *rec, cob_field *fnstatus)
+cob_rewrite (cob_file *f, cob_field *rec, int opt, cob_field *fnstatus)
 {
 	int	ret;
 	int	read_done = f->flag_read_done;
@@ -2798,7 +2876,13 @@ cob_rewrite (cob_file *f, cob_field *rec, cob_field *fnstatus)
 		}
 	}
 
-	ret = fileio_funcs[(int)f->organization]->rewrite (f);
+#ifdef	USE_DB41
+	if (f->organization != COB_ORG_INDEXED || bdb_env == NULL) {
+		opt &= ~COB_WRITE_LOCK;
+	}
+#endif
+
+	ret = fileio_funcs[(int)f->organization]->rewrite (f, opt);
 
 	if (unlikely(cob_do_sync && ret == 0)) {
 		cob_sync (f, cob_do_sync);

@@ -168,7 +168,7 @@ cob_new_display (const int outorerr, const int newline, const int varcnt, ...)
 	int		i;
 	va_list		args;
 
-	if (!outorerr) {
+	if (!outorerr && !screen_initialized) {
 		fp = stdout;
 	} else {
 		fp = stderr;

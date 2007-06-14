@@ -77,10 +77,10 @@ static cob_field_attr	calc_attr[DEPTH_LEVEL];
 	
 
 /* Constants for date/day calculations */
-static const int normal_days[] = {0,31,59,90,120,151,181,212,243,273,304,334,365};
-static const int leap_days[] =	 {0,31,60,91,121,152,182,213,244,274,305,335,366};
-static const int normal_month_days[] = {0,31,28,31,30,31,30,31,31,30,31,30,31};
-static const int leap_month_days[] =   {0,31,29,31,30,31,30,31,31,30,31,30,31};
+static const int normal_days[] =	{0,31,59,90,120,151,181,212,243,273,304,334,365};
+static const int leap_days[] =		{0,31,60,91,121,152,182,213,244,274,305,335,366};
+static const int normal_month_days[] =	{0,31,28,31,30,31,30,31,31,30,31,30,31};
+static const int leap_month_days[] =	{0,31,29,31,30,31,30,31,31,30,31,30,31};
 
 /* Locale name to Locale ID table */
 #if defined(_WIN32) || defined(__CYGWIN__)
@@ -757,7 +757,7 @@ cob_intr_current_date ()
 #if !defined(__linux__) && !defined(__CYGWIN__) && defined(HAVE_TIMEZONE)
 	long		contz;
 #endif
-	time_t 		curtime;
+	time_t		curtime;
 	cob_field_attr	attr;
 	cob_field	field;
 #if defined(HAVE_SYS_TIME_H) && defined(HAVE_GETTIMEOFDAY)

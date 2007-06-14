@@ -81,6 +81,7 @@
 #define COB_WRITE_AFTER		0x00100000
 #define COB_WRITE_BEFORE	0x00200000
 #define COB_WRITE_EOP		0x00400000
+#define COB_WRITE_LOCK		0x00800000
 
 /* Read options */
 #define COB_READ_NEXT		0x01
@@ -91,6 +92,7 @@
 #define COB_READ_NO_LOCK	0x20
 #define COB_READ_KEPT_LOCK	0x40
 #define COB_READ_WAIT_LOCK	0x80
+#define COB_READ_IGNORE_LOCK	0x100
 
 /* I-O status */
 
@@ -182,7 +184,7 @@ typedef struct {
 	int	(*read) (cob_file *f, cob_field *key, int read_opts);
 	int	(*read_next) (cob_file *f, int read_opts);
 	int	(*write) (cob_file *f, int opt);
-	int	(*rewrite) (cob_file *f);
+	int	(*rewrite) (cob_file *f, int opt);
 	int	(*delete) (cob_file *f);
 } cob_fileio_funcs;
 
@@ -195,9 +197,9 @@ extern void cob_default_error_handle (void);
 extern void cob_open (cob_file *f, int mode, int opt, cob_field *fnstatus);
 extern void cob_close (cob_file *f, int opt, cob_field *fnstatus);
 extern void cob_read (cob_file *f, cob_field *key, cob_field *fnstatus,
-		      const int read_opts);
+		      int read_opts);
 extern void cob_write (cob_file *f, cob_field *rec, int opt, cob_field *fnstatus);
-extern void cob_rewrite (cob_file *f, cob_field *rec, cob_field *fnstatus);
+extern void cob_rewrite (cob_file *f, cob_field *rec, int opt, cob_field *fnstatus);
 extern void cob_delete (cob_file *f, cob_field *fnstatus);
 extern void cob_start (cob_file *f, int cond, cob_field *key, cob_field *fnstatus);
 

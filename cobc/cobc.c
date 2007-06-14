@@ -1082,16 +1082,9 @@ process_module_direct (struct filename *fn)
 	}
 #endif
 #else	/* _MSC_VER */
-#if (defined __CYGWIN__ || defined _WIN32 || defined __370__)
 	sprintf (buff, "%s %s %s %s %s %s %s -o %s %s %s",
 		 cob_cc, cob_cflags, cob_define_flags, COB_SHARED_OPT, cob_ldflags,
 		 COB_PIC_FLAGS, COB_EXPORT_DYN, name, fn->translate, cob_libs);
-#else
-	sprintf (buff, "%s %s %s %s %s %s %s -o %s %s",
-		 cob_cc, cob_cflags, cob_define_flags, COB_SHARED_OPT, cob_ldflags,
-		 COB_PIC_FLAGS, COB_EXPORT_DYN, name, fn->translate);
-#endif
-
 	ret = process (buff);
 #ifdef	COB_STRIP_CMD
 	if (strip_output && ret == 0) {
@@ -1137,16 +1130,9 @@ process_module (struct filename *fn)
 	}
 #endif
 #else	/* _MSC_VER */
-#if (defined __CYGWIN__ || defined _WIN32)
 	sprintf (buff, "%s %s %s %s %s -o %s %s %s",
 		 cob_cc, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
 		 COB_EXPORT_DYN, name, fn->object, cob_libs);
-#else
-	sprintf (buff, "%s %s %s %s %s -o %s %s",
-		 cob_cc, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
-		 COB_EXPORT_DYN, name, fn->object);
-#endif
-
 	ret = process (buff);
 #ifdef	COB_STRIP_CMD
 	if (strip_output && ret == 0) {
@@ -1224,16 +1210,9 @@ process_library (struct filename *l)
 	}
 #endif
 #else	/* _MSC_VER */
-#if (defined __CYGWIN__ || defined _WIN32)
 	sprintf (buffptr, "%s %s %s %s %s -o %s %s %s",
 		 cob_cc, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
 		 COB_EXPORT_DYN, name, objsptr, cob_libs);
-#else
-	sprintf (buffptr, "%s %s %s %s %s -o %s %s",
-		 cob_cc, COB_SHARED_OPT, cob_ldflags, COB_PIC_FLAGS,
-		 COB_EXPORT_DYN, name, objsptr);
-#endif
-
 	ret = process (buffptr);
 #ifdef	COB_STRIP_CMD
 	if (strip_output && ret == 0) {

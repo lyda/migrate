@@ -49,9 +49,12 @@
 #define SCREEN_COLUMN_POS(s)	(cob_get_int (s->column) - 1)
 
 #if HAVE_LIBNCURSES || HAVE_LIBPDCURSES || HAVE_LIBCURSES
-static int	screen_initialized = 0;
+static short	fore_color;
+static short	back_color;
+static size_t	cob_has_color = 0;
 #endif
 
+int	screen_initialized = 0;
 int	cob_screen_mode = 0;
 int	cob_current_y = 0;
 int	cob_current_x = 0;
@@ -95,15 +98,149 @@ get_line_column (cob_field *fline, cob_field *fcol, int *line, int *col)
 	return 0;
 }
 
+static void
+cob_screen_attr (long attr)
+{
+	chtype		styles;
+	size_t		i;
+	short		fgcolor;
+	short		bgcolor;
+	short		fgdef;
+	short		bgdef;
+
+	styles = 0;
+	attrset (A_NORMAL);
+	if (attr & COB_SCREEN_BLANK_SCREEN) {
+		clear ();
+	}
+	if (attr & COB_SCREEN_ERASE_EOL) {
+		clrtoeol ();
+	}
+	if (attr & COB_SCREEN_ERASE_EOS) {
+		clrtobot ();
+	}
+	if (attr & COB_SCREEN_BELL) {
+		beep ();
+	}
+	if (attr & COB_SCREEN_REVERSE) {
+		styles |= A_REVERSE;
+	}
+	if (attr & COB_SCREEN_HIGHLIGHT) {
+		styles |= A_BOLD;
+	}
+	if (attr & COB_SCREEN_BLINK) {
+		styles |= A_BLINK;
+	}
+	if (attr & COB_SCREEN_UNDERLINE) {
+		styles |= A_UNDERLINE;
+	}
+	attron (styles);
+	if (cob_has_color) {
+		fgcolor = fore_color;
+		bgcolor = back_color;
+		if (attr & COB_SCREEN_FG_MASK) {
+			switch(attr & COB_SCREEN_FG_MASK) {
+			case COB_SCREEN_FG_BLACK:
+				fgcolor = COLOR_BLACK;
+				break;
+			case COB_SCREEN_FG_BLUE:
+				fgcolor = COLOR_BLUE;
+				break;
+			case COB_SCREEN_FG_GREEN:
+				fgcolor = COLOR_GREEN;
+				break;
+			case COB_SCREEN_FG_CYAN:
+				fgcolor = COLOR_CYAN;
+				break;
+			case COB_SCREEN_FG_RED:
+				fgcolor = COLOR_RED;
+				break;
+			case COB_SCREEN_FG_MAGENTA:
+				fgcolor = COLOR_MAGENTA;
+				break;
+			case COB_SCREEN_FG_YELLOW:
+				fgcolor = COLOR_YELLOW;
+				break;
+			case COB_SCREEN_FG_WHITE:
+				fgcolor = COLOR_WHITE;
+				break;
+			default:
+				break;
+			}
+		}
+		if (attr & COB_SCREEN_BG_MASK) {
+			switch(attr & COB_SCREEN_BG_MASK) {
+			case COB_SCREEN_BG_BLACK:
+				bgcolor = COLOR_BLACK;
+				break;
+			case COB_SCREEN_BG_BLUE:
+				bgcolor = COLOR_BLUE;
+				break;
+			case COB_SCREEN_BG_GREEN:
+				bgcolor = COLOR_GREEN;
+				break;
+			case COB_SCREEN_BG_CYAN:
+				bgcolor = COLOR_CYAN;
+				break;
+			case COB_SCREEN_BG_RED:
+				bgcolor = COLOR_RED;
+				break;
+			case COB_SCREEN_BG_MAGENTA:
+				bgcolor = COLOR_MAGENTA;
+				break;
+			case COB_SCREEN_BG_YELLOW:
+				bgcolor = COLOR_YELLOW;
+				break;
+			case COB_SCREEN_BG_WHITE:
+				bgcolor = COLOR_WHITE;
+				break;
+			default:
+				break;
+			}
+		}
+		for (i = 0; i < COLOR_PAIRS; i++) {
+			pair_content (i, &fgdef, &bgdef);
+			if (fgdef == fgcolor && bgdef == bgcolor) {
+				break;
+			}
+			if (fgdef == 0 && bgdef == 0) {
+				init_pair (i, fgcolor, bgcolor);
+				break;
+			}
+		}
+		if (i != COLOR_PAIRS) {
+			attrset (COLOR_PAIR(i));
+			bkgdset (COLOR_PAIR(i));
+		} else {
+			attrset (A_NORMAL);
+		}
+	}
+}
+
 void
 cob_screen_init (void)
 {
 	if (!screen_initialized) {
-		initscr ();
+		if (!initscr ()) {
+			cob_runtime_error ("Failed to initialize curses");
+			cob_stop_run (1);
+		}
+		cbreak ();
 		keypad (stdscr, TRUE);
 		nonl ();
-		cbreak ();
 		echo ();
+/* RXW
+		noecho ();
+		scrollok (stdscr, TRUE);
+*/
+		if (has_colors ()) {
+			start_color ();
+			pair_content (0, &fore_color, &back_color);
+			if (COLOR_PAIRS) {
+				cob_has_color = 1;
+			}
+		}
+		attrset (A_NORMAL);
 		screen_initialized = 1;
 	}
 }
@@ -112,13 +249,9 @@ void
 cob_screen_terminate (void)
 {
 	if (screen_initialized) {
+		screen_initialized = 0;
 		endwin ();
 	}
-}
-
-void
-cob_screen_attr (int line, int column, long attr)
-{
 }
 
 void
@@ -127,6 +260,7 @@ cob_screen_puts (const char *data, size_t size, int line, int column, long attr)
 	if (!screen_initialized) {
 		cob_screen_init ();
 	}
+	cob_screen_attr (attr);
 	mvaddnstr (line, column, data, size);
 	refresh ();
 }
@@ -134,12 +268,13 @@ cob_screen_puts (const char *data, size_t size, int line, int column, long attr)
 void
 cob_screen_gets (char *data, size_t size, int line, int column, long attr)
 {
+	cob_screen_attr (attr);
 	mvgetnstr (line, column, data, size);
 }
 
 
 void
-cob_field_display (cob_field *f, cob_field *line, cob_field *column)
+cob_field_display (cob_field *f, cob_field *line, cob_field *column, long attr)
 {
 	int sline;
 	int scolumn;
@@ -149,6 +284,7 @@ cob_field_display (cob_field *f, cob_field *line, cob_field *column)
 	}
 
 	get_line_column (line, column, &sline, &scolumn);
+	cob_screen_attr (attr);
 	mvaddnstr (sline, scolumn, (char *)f->data, f->size);
 
 	refresh ();
@@ -198,7 +334,7 @@ cob_screen_display (cob_screen *s, cob_field *line, cob_field *column)
 	case COB_SCREEN_TYPE_ATTRIBUTE:
 		sline = SCREEN_LINE_POS (s);
 		scolumn = SCREEN_COLUMN_POS (s);
-		cob_screen_attr (sline, scolumn, s->attr);
+		cob_screen_attr (s->attr);
 		break;
 	}
 	refresh ();
@@ -260,7 +396,7 @@ cob_screen_gets (char *data, size_t size, int line, int column, long attr)
 }
 
 void
-cob_field_display (cob_field *f, cob_field *line, cob_field *column)
+cob_field_display (cob_field *f, cob_field *line, cob_field *column, long attr)
 {
 }
 

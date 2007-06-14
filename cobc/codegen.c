@@ -1038,6 +1038,21 @@ output_param (cb_tree x, int id)
 			if (pechk->flag_external) {
 				extrefs = 1;
 				f->flag_item_external = 1;
+				break;
+			}
+			if (pechk->redefines && pechk->redefines->flag_external) {
+				extrefs = 1;
+				f->flag_item_external = 1;
+				f->flag_external = 1;
+				break;
+			}
+			if (pechk->flag_item_based) {
+				f->flag_local = 1;
+				break;
+			}
+			if (pechk->redefines && pechk->redefines->flag_item_based) {
+				f->flag_local = 1;
+				break;
 			}
 		}
 		if (f->flag_external) {

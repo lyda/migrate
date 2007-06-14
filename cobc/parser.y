@@ -77,6 +77,7 @@ static int			eval_inc2 = 0;
 static int			prog_end = 0;
 static int			depth = 0;
 static int			deplev = 0;
+static long			dispattrs = 0;
 static int			organized_seen = 0;
 static int			inspect_keyword = 0;
 static int			samearea = 1;
@@ -133,7 +134,7 @@ static int literal_value (cb_tree x);
 %token UNDERLINE UNIT UNTIL UP UPON USAGE USE USING VALUE VARYING WHEN WITH
 %token MANUAL AUTOMATIC EXCLUSIVE ROLLBACK OVERLINE PROMPT UPDATE ESCAPE
 %token COMP COMP_1 COMP_2 COMP_3 COMP_4 COMP_5 COMP_X
-%token SOURCE SCREEN_CONTROL EVENT_STATUS LOCALE
+%token SOURCE SCREEN_CONTROL EVENT_STATUS LOCALE IGNORING
 %token SIGNED_SHORT SIGNED_INT SIGNED_LONG UNSIGNED_SHORT UNSIGNED_INT UNSIGNED_LONG
 %token BINARY_CHAR BINARY_SHORT BINARY_LONG BINARY_DOUBLE SIGNED UNSIGNED
 %token LINAGE_COUNTER PROGRAM_POINTER CHAINING BLANK_SCREEN BLANK_LINE
@@ -1819,14 +1820,14 @@ screen_option:
   {
 	/* Nothing yet */
   }
-| LINE _number _is screen_plus_minus x
+| LINE _number _is screen_line_plus_minus x
   {
 	current_field->screen_line = $5;
 	if (CB_LITERAL_P ($5)) {
 		current_field->screen_flag |= COB_SCREEN_LINE_CONST;
 	}
   }
-| COLUMN _number _is screen_plus_minus x
+| COLUMN _number _is screen_col_plus_minus x
   {
 	current_field->screen_column = $5;
 	if (CB_LITERAL_P ($5)) {
@@ -1918,21 +1919,39 @@ screen_option:
   }
 ;
 
-screen_plus_minus:
+screen_line_plus_minus:
+  /* empty */
+  {
+	current_field->screen_flag &= ~COB_SCREEN_LINE_MASK;
+	current_field->screen_flag |= COB_SCREEN_LINE_ABS;
+  }
+| PLUS
+  {
+	current_field->screen_flag &= ~COB_SCREEN_LINE_MASK;
+	current_field->screen_flag |= COB_SCREEN_LINE_PLUS;
+  }
+| MINUS
+  {
+	current_field->screen_flag &= ~COB_SCREEN_LINE_MASK;
+	current_field->screen_flag |= COB_SCREEN_LINE_MINUS;
+  }
+;
+
+screen_col_plus_minus:
   /* empty */
   {
 	current_field->screen_flag &= ~COB_SCREEN_COLUMN_MASK;
-	current_field->screen_flag |= ~COB_SCREEN_COLUMN_ABS;
+	current_field->screen_flag |= COB_SCREEN_COLUMN_ABS;
   }
 | PLUS
   {
 	current_field->screen_flag &= ~COB_SCREEN_COLUMN_MASK;
-	current_field->screen_flag |= ~COB_SCREEN_COLUMN_PLUS;
+	current_field->screen_flag |= COB_SCREEN_COLUMN_PLUS;
   }
 | MINUS
   {
 	current_field->screen_flag &= ~COB_SCREEN_COLUMN_MASK;
-	current_field->screen_flag |= ~COB_SCREEN_COLUMN_MINUS;
+	current_field->screen_flag |= COB_SCREEN_COLUMN_MINUS;
   }
 ;
 
@@ -2185,7 +2204,7 @@ statement:
  */
 
 accept_statement:
-  ACCEPT			{ BEGIN_STATEMENT ("ACCEPT"); }
+  ACCEPT			{ BEGIN_STATEMENT ("ACCEPT"); dispattrs = 0; }
   accept_body
   end_accept
 ;
@@ -2206,7 +2225,7 @@ accept_body:
 | identifier FROM ENVIRONMENT_VALUE on_accp_exception	{ cb_emit_accept_environment ($1); }
 | identifier FROM ENVIRONMENT simple_value on_accp_exception
   { 
-	cb_emit_display (cb_list ($4), cb_true, NULL, NULL);
+	cb_emit_display (cb_list ($4), cb_true, NULL, NULL, 0L);
 	cb_emit_accept_environment ($1);
   }
 | identifier FROM ARGUMENT_NUMBER			{ cb_emit_accept_arg_number ($1); }
@@ -2558,11 +2577,11 @@ end_delete:
  */
 
 display_statement:
-  DISPLAY			{ BEGIN_STATEMENT ("DISPLAY"); }
+  DISPLAY			{ BEGIN_STATEMENT ("DISPLAY"); dispattrs = 0; }
   x_list opt_at_line_column display_upon with_clause on_disp_exception
   end_display
   {
-	cb_emit_display ($3, $5, $6, $4);
+	cb_emit_display ($3, $5, $6, $4, dispattrs);
   }
 ;
 
@@ -2587,19 +2606,83 @@ disp_attrs:
 | disp_attrs disp_attr
 ;
 
+
 disp_attr:
-  BELL
-| BLINK
-| ERASE EOL
-| ERASE EOS
-| HIGHLIGHT
-| LOWLIGHT
-| REVERSE_VIDEO
-| UNDERLINE
+  BELL		{ dispattrs |= COB_SCREEN_BELL; }
+| BLINK		{ dispattrs |= COB_SCREEN_BLINK; }
+| ERASE EOL	{ dispattrs |= COB_SCREEN_ERASE_EOL; }
+| ERASE EOS	{ dispattrs |= COB_SCREEN_ERASE_EOS; }
+| HIGHLIGHT	{ dispattrs |= COB_SCREEN_HIGHLIGHT; }
+| LOWLIGHT	{ dispattrs |= COB_SCREEN_LOWLIGHT; }
+| REVERSE_VIDEO	{ dispattrs |= COB_SCREEN_REVERSE; }
+| UNDERLINE	{ dispattrs |= COB_SCREEN_UNDERLINE; }
+| OVERLINE	{ dispattrs |= COB_SCREEN_OVERLINE; }
 | FOREGROUND_COLOR _is integer
+  {
+	dispattrs &= ~COB_SCREEN_FG_MASK;
+	switch (cb_get_int ($3)) {
+	case 0:
+		dispattrs |= COB_SCREEN_FG_BLACK;
+		break;
+	case 1:
+		dispattrs |= COB_SCREEN_FG_BLUE;
+		break;
+	case 2:
+		dispattrs |= COB_SCREEN_FG_GREEN;
+		break;
+	case 3:
+		dispattrs |= COB_SCREEN_FG_CYAN;
+		break;
+	case 4:
+		dispattrs |= COB_SCREEN_FG_RED;
+		break;
+	case 5:
+		dispattrs |= COB_SCREEN_FG_MAGENTA;
+		break;
+	case 6:
+		dispattrs |= COB_SCREEN_FG_YELLOW;
+		break;
+	case 7:
+		dispattrs |= COB_SCREEN_FG_WHITE;
+		break;
+	default:
+		cb_error (_("Invalid color '%d'"), cb_get_int ($3));
+	}
+  }
 | BACKGROUND_COLOR _is integer
-| BLANK_LINE
-| BLANK_SCREEN
+  {
+	dispattrs &= ~COB_SCREEN_BG_MASK;
+	switch (cb_get_int ($3)) {
+	case 0:
+		dispattrs |= COB_SCREEN_BG_BLACK;
+		break;
+	case 1:
+		dispattrs |= COB_SCREEN_BG_BLUE;
+		break;
+	case 2:
+		dispattrs |= COB_SCREEN_BG_GREEN;
+		break;
+	case 3:
+		dispattrs |= COB_SCREEN_BG_CYAN;
+		break;
+	case 4:
+		dispattrs |= COB_SCREEN_BG_RED;
+		break;
+	case 5:
+		dispattrs |= COB_SCREEN_BG_MAGENTA;
+		break;
+	case 6:
+		dispattrs |= COB_SCREEN_BG_YELLOW;
+		break;
+	case 7:
+		dispattrs |= COB_SCREEN_BG_WHITE;
+		break;
+	default:
+		cb_error (_("Invalid color '%d'"), cb_get_int ($3));
+	}
+  }
+| BLANK_LINE	{ dispattrs |= COB_SCREEN_BLANK_LINE; }
+| BLANK_SCREEN	{ dispattrs |= COB_SCREEN_BLANK_SCREEN; }
 ;
 
 end_display:
@@ -3293,15 +3376,17 @@ read_into:
 
 with_lock:
   /* empty */			{ $$ = NULL; }
+| IGNORING LOCK
+  {
+	$$ = cb_int3;
+  }
 | _with LOCK
   {
 	$$ = cb_int1;
-	PENDING ("READ ... WITH LOCK");
   }
 | _with NO LOCK
   {
 	$$ = cb_int2;
-	PENDING ("READ ... WITH NO LOCK");
   }
 ;
 
@@ -3359,22 +3444,24 @@ end_return:
 
 rewrite_statement:
   REWRITE			{ BEGIN_STATEMENT ("REWRITE"); }
-  record_name write_from opt_invalid_key
+  record_name write_from write_lock opt_invalid_key
   end_rewrite
   {
 	if ($3 != cb_error_node) {
-/* RXW
-		if (current_statement->handler_id == COB_EC_I_O_INVALID_KEY &&
-		      (CB_FILE(cb_ref($3))->organization != COB_ORG_RELATIVE &&
-		       CB_FILE(cb_ref($3))->organization != COB_ORG_INDEXED)) {
-			cb_error ("INVALID KEY clause invalid with this file type");
-		} else {
-*/
-			cb_emit_rewrite ($3, $4);
-/* RXW
-		}
-*/
+		cb_emit_rewrite ($3, $4, $5);
 	}
+  }
+;
+
+write_lock:
+  /* empty */			{ $$ = NULL; }
+| _with LOCK
+  {
+	$$ = cb_int1;
+  }
+| _with NO LOCK
+  {
+	$$ = cb_int2;
   }
 ;
 
@@ -3901,11 +3988,11 @@ use_debugging_target:
 
 write_statement:
   WRITE				{ BEGIN_STATEMENT ("WRITE"); }
-  record_name write_from write_option write_handler
+  record_name write_from write_lock write_option write_handler
   end_write
   {
 	if ($3 != cb_error_node) {
-		cb_emit_write ($3, $4, $5);
+		cb_emit_write ($3, $4, $6, $5);
 	}
   }
 ;
@@ -4751,7 +4838,7 @@ emit_entry (const char *name, const int encode, cb_tree using_list)
 		CB_LABEL (label)->orig_name = (unsigned char *)name;
 	} else {
 		CB_LABEL (label)->name = (unsigned char *)name;
-		CB_LABEL (label)->orig_name = current_program->orig_source_name;
+		CB_LABEL (label)->orig_name = (unsigned char *)current_program->orig_source_name;
 	}
 	CB_LABEL (label)->need_begin = 1;
 	emit_statement (label);

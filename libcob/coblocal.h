@@ -42,6 +42,7 @@
 COB_HIDDEN extern const int		cob_exp10[];
 COB_HIDDEN extern const long long	cob_exp10LL[];
 */
+COB_HIDDEN extern int			screen_initialized;
 COB_HIDDEN extern int			cob_got_exception;
 COB_HIDDEN extern unsigned int		cob_orig_line;
 COB_HIDDEN extern const char		*cob_orig_statement;

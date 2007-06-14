@@ -1204,7 +1204,7 @@ extern void cb_emit_continue (void);
 
 extern void cb_emit_delete (cb_tree file);
 
-extern void cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos);
+extern void cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos, long dispattrs);
 extern cb_tree cb_build_display_upon (cb_tree x);
 extern cb_tree cb_build_display_upon_direct (cb_tree x);
 
@@ -1250,7 +1250,7 @@ extern cb_tree cb_build_perform_exit (struct cb_label *label);
 
 extern void cb_emit_read (cb_tree ref, cb_tree next, cb_tree into, cb_tree key, cb_tree lock_opts);
 
-extern void cb_emit_rewrite (cb_tree record, cb_tree from);
+extern void cb_emit_rewrite (cb_tree record, cb_tree from, cb_tree lockopt);
 
 extern void cb_emit_release (cb_tree ref, cb_tree from);
 extern void cb_emit_return (cb_tree ref, cb_tree into);
@@ -1282,7 +1282,7 @@ extern void cb_emit_unstring (cb_tree name, cb_tree delimited, cb_tree into, cb_
 extern cb_tree cb_build_unstring_delimited (cb_tree all, cb_tree value);
 extern cb_tree cb_build_unstring_into (cb_tree name, cb_tree delimiter, cb_tree count);
 
-extern void cb_emit_write (cb_tree record, cb_tree from, cb_tree opt);
+extern void cb_emit_write (cb_tree record, cb_tree from, cb_tree opt, cb_tree lockopt);
 extern cb_tree cb_build_write_advancing_lines (cb_tree pos, cb_tree lines);
 extern cb_tree cb_build_write_advancing_mnemonic (cb_tree pos, cb_tree mnemonic);
 extern cb_tree cb_build_write_advancing_page (cb_tree pos);

@@ -101,12 +101,11 @@ DLL_EXPIMP extern int	cob_current_y;
 
 extern void cob_screen_init (void);
 extern void cob_screen_terminate (void);
-extern void cob_screen_attr (int line, int column, long attr);
 extern void cob_screen_puts (const char *data, size_t size, int line, int column, long attr);
 extern void cob_screen_gets (char *data, size_t size, int line, int column, long attr);
 extern void cob_screen_display (cob_screen *s, cob_field *line, cob_field *column);
 extern void cob_screen_accept (cob_screen *s, cob_field *line, cob_field *column);
-extern void cob_field_display (cob_field *f, cob_field *line, cob_field *column);
+extern void cob_field_display (cob_field *f, cob_field *line, cob_field *column, long attr);
 extern void cob_field_accept (cob_field *f, cob_field *line, cob_field *column);
 
 #endif /* COB_SCREENIO_H */

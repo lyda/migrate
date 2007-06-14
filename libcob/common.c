@@ -494,6 +494,47 @@ cob_stop_run (const int status)
 	exit (status);
 }
 
+void COB_NOINLINE
+cob_runtime_error (const char *fmt, ...)
+{
+	struct handlerlist	*h;
+	char			*p;
+	va_list ap;
+	char			str[COB_MEDIUM_BUFF];
+
+	if (hdlrs != NULL) {
+		h = hdlrs;
+		p = str;
+		if (cob_source_file) {
+			sprintf (str, "%s:%d: ", cob_source_file, cob_source_line);
+			p = str + strlen (str);
+		}
+		va_start (ap, fmt);
+		vsprintf (p, fmt, ap);
+		va_end (ap);
+		while (h != NULL) {
+			h->proc (str);
+			h = h->next;
+		}
+		hdlrs = NULL;
+	}
+
+	/* prefix */
+	if (cob_source_file) {
+		fprintf (stderr, "%s:%d: ", cob_source_file, cob_source_line);
+	}
+	fputs ("libcob: ", stderr);
+
+	/* body */
+	va_start (ap, fmt);
+	vfprintf (stderr, fmt, ap);
+	va_end (ap);
+
+	/* postfix */
+	fputs ("\n", stderr);
+	fflush (stderr);
+}
+
 void
 cob_fatal_error (const enum cob_enum_error fatal_error)
 {
@@ -740,7 +781,7 @@ cob_real_get_sign (cob_field *f)
 void
 cob_real_put_sign (cob_field *f, const int sign)
 {
-	unsigned char 	*p;
+	unsigned char	*p;
 	int		c;
 
 	switch (COB_FIELD_TYPE (f)) {
@@ -1179,47 +1220,6 @@ cob_table_sort (cob_field *f, int n)
 /*
  * Run-time error checking
  */
-
-void COB_NOINLINE
-cob_runtime_error (const char *fmt, ...)
-{
-	struct handlerlist	*h;
-	char			*p;
-	va_list ap;
-	char			str[COB_MEDIUM_BUFF];
-
-	if (hdlrs != NULL) {
-		h = hdlrs;
-		p = str;
-		if (cob_source_file) {
-			sprintf (str, "%s:%d: ", cob_source_file, cob_source_line);
-			p = str + strlen (str);
-		}
-		va_start (ap, fmt);
-		vsprintf (p, fmt, ap);
-		va_end (ap);
-		while (h != NULL) {
-			h->proc (str);
-			h = h->next;
-		}
-		hdlrs = NULL;
-	}
-
-	/* prefix */
-	if (cob_source_file) {
-		fprintf (stderr, "%s:%d: ", cob_source_file, cob_source_line);
-	}
-	fputs ("libcob: ", stderr);
-
-	/* body */
-	va_start (ap, fmt);
-	vfprintf (stderr, fmt, ap);
-	va_end (ap);
-
-	/* postfix */
-	fputs ("\n", stderr);
-	fflush (stderr);
-}
 
 void
 cob_check_numeric (cob_field *f, const char *name)

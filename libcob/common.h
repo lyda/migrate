@@ -138,13 +138,13 @@ typedef struct __cob_external {
 #define COB_FLAG_BINARY_SWAP		0x20
 #define COB_FLAG_REAL_BINARY		0x40
 
-#define COB_FIELD_HAVE_SIGN(f)	    ((f)->attr->flags & COB_FLAG_HAVE_SIGN)
-#define COB_FIELD_SIGN_SEPARATE(f)  ((f)->attr->flags & COB_FLAG_SIGN_SEPARATE)
-#define COB_FIELD_SIGN_LEADING(f)   ((f)->attr->flags & COB_FLAG_SIGN_LEADING)
-#define COB_FIELD_BLANK_ZERO(f)	    ((f)->attr->flags & COB_FLAG_BLANK_ZERO)
-#define COB_FIELD_JUSTIFIED(f)      ((f)->attr->flags & COB_FLAG_JUSTIFIED)
-#define COB_FIELD_BINARY_SWAP(f)    ((f)->attr->flags & COB_FLAG_BINARY_SWAP)
-#define COB_FIELD_REAL_BINARY(f)    ((f)->attr->flags & COB_FLAG_REAL_BINARY)
+#define COB_FIELD_HAVE_SIGN(f)		((f)->attr->flags & COB_FLAG_HAVE_SIGN)
+#define COB_FIELD_SIGN_SEPARATE(f)	((f)->attr->flags & COB_FLAG_SIGN_SEPARATE)
+#define COB_FIELD_SIGN_LEADING(f)	((f)->attr->flags & COB_FLAG_SIGN_LEADING)
+#define COB_FIELD_BLANK_ZERO(f)		((f)->attr->flags & COB_FLAG_BLANK_ZERO)
+#define COB_FIELD_JUSTIFIED(f)		((f)->attr->flags & COB_FLAG_JUSTIFIED)
+#define COB_FIELD_BINARY_SWAP(f)	((f)->attr->flags & COB_FLAG_BINARY_SWAP)
+#define COB_FIELD_REAL_BINARY(f)	((f)->attr->flags & COB_FLAG_REAL_BINARY)
 
 /* field attributes */
 

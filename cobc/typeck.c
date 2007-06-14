@@ -2355,7 +2355,7 @@ cb_emit_delete (cb_tree file)
  */
 
 void
-cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
+cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos, long dispattrs)
 {
 	cb_tree	l;
 	cb_tree	x;
@@ -2424,9 +2424,11 @@ cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
 					if (column == NULL) {
 						column = cb_one;
 					}
-					cb_emit (cb_build_funcall_3 ("cob_screen_display", x, line, column));
+					cb_emit (cb_build_funcall_3 ("cob_screen_display", x,
+						line, column));
 				} else {
-					cb_emit (cb_build_funcall_3 ("cob_screen_display", x, cb_zero, cb_zero));
+					cb_emit (cb_build_funcall_3 ("cob_screen_display", x,
+						cb_zero, cb_zero));
 				}
 			} else if (pos) {
 				if (CB_PAIR_P (pos)) {
@@ -2438,9 +2440,11 @@ cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
 					if (column == NULL) {
 						column = cb_one;
 					}
-					cb_emit (cb_build_funcall_3 ("cob_field_display", x, line, column));
+					cb_emit (cb_build_funcall_4 ("cob_field_display", x,
+						line, column, cb_int(dispattrs)));
 				} else {
-					cb_emit (cb_build_funcall_3 ("cob_field_display", x, pos, NULL));
+					cb_emit (cb_build_funcall_4 ("cob_field_display", x,
+						pos, NULL, cb_int(dispattrs)));
 				}
 			}
 		}
@@ -2454,9 +2458,11 @@ cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos)
 			if (column == NULL) {
 				column = cb_one;
 			}
-			cb_emit (cb_build_funcall_3 ("cob_field_display", CB_VALUE (values), line, column));
+			cb_emit (cb_build_funcall_4 ("cob_field_display", CB_VALUE (values),
+				line, column, cb_int(dispattrs)));
 		} else {
-			cb_emit (cb_build_funcall_3 ("cob_field_display", CB_VALUE (values), pos, NULL));
+			cb_emit (cb_build_funcall_4 ("cob_field_display", CB_VALUE (values),
+				pos, NULL, cb_int(dispattrs)));
 		}
 	} else {
 		/* DISPLAY x ... [UPON device-name] */
@@ -3894,6 +3900,8 @@ cb_emit_read (cb_tree ref, cb_tree next, cb_tree into, cb_tree key, cb_tree lock
 		read_opts = COB_READ_LOCK;
 	} else if (lock_opts == cb_int2) {
 		read_opts = COB_READ_NO_LOCK;
+	} else if (lock_opts == cb_int3) {
+		read_opts = COB_READ_IGNORE_LOCK;
 	}
 	if (ref != cb_error_node) {
 		file = cb_ref (ref);
@@ -3938,9 +3946,10 @@ cb_emit_read (cb_tree ref, cb_tree next, cb_tree into, cb_tree key, cb_tree lock
  */
 
 void
-cb_emit_rewrite (cb_tree record, cb_tree from)
+cb_emit_rewrite (cb_tree record, cb_tree from, cb_tree lockopt)
 {
 	cb_tree file;
+	int	opts = 0;
 
 	if (record != cb_error_node) {
 		file = CB_TREE (CB_FIELD (cb_ref (record))->file);
@@ -3948,12 +3957,22 @@ cb_emit_rewrite (cb_tree record, cb_tree from)
 		if (CB_FILE (file)->organization == COB_ORG_SORT) {
 			cb_error_x (CB_TREE (current_statement),
 			_("Operation not allowed on SORT files"));
+		} else if (current_statement->handler_id == COB_EC_I_O_INVALID_KEY &&
+			  (CB_FILE(file)->organization != COB_ORG_RELATIVE &&
+			   CB_FILE(file)->organization != COB_ORG_INDEXED)) {
+				cb_error_x (CB_TREE(current_statement),
+				_("INVALID KEY clause invalid with this file type"));
+		} else if (CB_FILE (file)->lock_mode == COB_LOCK_AUTOMATIC && lockopt) {
+			cb_error_x (CB_TREE (current_statement),
+			_("LOCK clause illegal with file LOCK AUTOMATIC"));
+		} else if (lockopt == cb_int1) {
+			opts = COB_WRITE_LOCK;
 		}
 		if (from) {
 			cb_emit (cb_build_move (from, record));
 		}
-		cb_emit (cb_build_funcall_3 ("cob_rewrite", file, record,
-				CB_FILE(file)->file_status));
+		cb_emit (cb_build_funcall_4 ("cob_rewrite", file, record,
+				cb_int (opts), CB_FILE(file)->file_status));
 	}
 }
 
@@ -4468,21 +4487,38 @@ cb_build_unstring_into (cb_tree name, cb_tree delimiter, cb_tree count)
  */
 
 void
-cb_emit_write (cb_tree record, cb_tree from, cb_tree opt)
+cb_emit_write (cb_tree record, cb_tree from, cb_tree opt, cb_tree lockopt)
 {
-	struct cb_field	*f = CB_FIELD (cb_ref (record));
-	cb_tree		file = CB_TREE (f->file);
+	cb_tree		file;
 
-	current_statement->file = file;
-	if (CB_FILE (file)->organization == COB_ORG_SORT) {
-		cb_error_x (CB_TREE (current_statement),
-		_("Operation not allowed on SORT files"));
+	if (record != cb_error_node) {
+		file = CB_TREE (CB_FIELD (cb_ref (record))->file);
+		current_statement->file = file;
+		if (CB_FILE (file)->organization == COB_ORG_SORT) {
+			cb_error_x (CB_TREE (current_statement),
+			_("Operation not allowed on SORT files"));
+		} else if (current_statement->handler_id == COB_EC_I_O_INVALID_KEY &&
+			  (CB_FILE(file)->organization != COB_ORG_RELATIVE &&
+			   CB_FILE(file)->organization != COB_ORG_INDEXED)) {
+				cb_error_x (CB_TREE(current_statement),
+				_("INVALID KEY clause invalid with this file type"));
+		} else if (lockopt) {
+			if (CB_FILE (file)->lock_mode == COB_LOCK_AUTOMATIC) {
+				cb_error_x (CB_TREE (current_statement),
+				_("LOCK clause illegal with file LOCK AUTOMATIC"));
+			} else if (opt != cb_int0) {
+				cb_error_x (CB_TREE (current_statement),
+				_("LOCK clause illegal here"));
+			} else if (lockopt == cb_int1) {
+				opt = cb_int (COB_WRITE_LOCK);
+			}
+		}
+		if (from) {
+			cb_emit (cb_build_move (from, record));
+		}
+		cb_emit (cb_build_funcall_4 ("cob_write", file, record, opt,
+					CB_FILE(file)->file_status));
 	}
-	if (from) {
-		cb_emit (cb_build_move (from, record));
-	}
-	cb_emit (cb_build_funcall_4 ("cob_write", file, record, opt,
-				CB_FILE(file)->file_status));
 }
 
 cb_tree
