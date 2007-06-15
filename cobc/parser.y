@@ -156,11 +156,6 @@ static int literal_value (cb_tree x);
 start:
   {
 	perform_stack = NULL;
-	/* RXW */
-	/*
-	current_section = NULL;
-	current_paragraph = NULL;
-	*/
 	next_label_id = 0;
 	current_linage = 0;
 	current_storage = 0;

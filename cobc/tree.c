@@ -1568,7 +1568,6 @@ cb_build_label (cb_tree name, struct cb_label * section)
 
 	p->id = cb_id++;
 	p->name = (unsigned char *)cb_define (name, CB_TREE (p));
-/* RXW */
 	p->orig_name = p->name;
 	p->section = section;
 	return CB_TREE (p);
@@ -1918,7 +1917,7 @@ cb_build_intrinsic (cb_tree name, cb_tree args)
 		case CB_INTR_LOWER_CASE:
 		case CB_INTR_UPPER_CASE:
 		case CB_INTR_REVERSE:
-/* RXW Why did I do this ?
+/* RXW Why did I do this ? - still do not know
 			if (CB_INTRINSIC_P (CB_VALUE (args))) {
 				return make_intrinsic (name, cbp, args, cb_int0);
 			} else {

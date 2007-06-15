@@ -320,7 +320,7 @@ output_base (struct cb_field *f)
 			}
 		}
 	} else {
-/* RXW - Needs more thought
+/* RXW - Needs more thought - pity
 		if (!f01->storage_id) {
 			f01->storage_id = cb_storage_id++;
 		}
@@ -1034,6 +1034,14 @@ output_param (cb_tree x, int id)
 			break;
 		}
 		f = CB_FIELD (r->value);
+		if (f->redefines && f->redefines->flag_external) {
+			extrefs = 1;
+			f->flag_item_external = 1;
+			f->flag_external = 1;
+		}
+		if (f->redefines && f->redefines->flag_item_based) {
+			f->flag_local = 1;
+		}
 		for (pechk = f->parent; pechk; pechk = pechk->parent) {
 			if (pechk->flag_external) {
 				extrefs = 1;
@@ -1059,7 +1067,7 @@ output_param (cb_tree x, int id)
 			f->flag_item_external = 1;
 		}
 		if (!r->subs && !r->offset && f->count > 0
-/* RXW possible tweak here
+/* RXW possible tweak here, although unlikely
 		if (!r->offset && f->count > 0
 		    && !f->flag_external && !extrefs
 */

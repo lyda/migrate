@@ -931,9 +931,6 @@ cob_display_add_int (cob_field *f, int n)
 	if (unlikely(scale < 0)) {
 		/* PIC 9(n)P(m) */
 		if (-scale < 10) {
-/* RXW
-			n /= cob_exp10[-scale];
-*/
 			while (scale++) {
 				n /= 10;
 			}

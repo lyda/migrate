@@ -1377,7 +1377,10 @@ build_store_option (cb_tree x, cb_tree round_opt)
 			break;
 		}
 
-/* RXW Check
+/* RXW Check - It seems as though we have NEVER implemented TRUNC,
+   Code has always been wrong. Hmm. The following statement would
+   activate what was intended but ...
+   What should we do here?
 		if (current_statement->handler1) {
 */
 		if (current_statement->handler_id) {
