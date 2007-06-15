@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2007-06-15 07:53+0200\n"
+"POT-Creation-Date: 2007-06-15 11:28+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -737,60 +737,52 @@ msgstr ""
 msgid "88 level invalid here"
 msgstr ""
 
-#: cobc/parser.y:2837
-msgid "FIXME: failed to compile \"WHEN NOT ... AND/OR ...\""
-msgstr ""
-
-#: cobc/parser.y:2838
-msgid "FIXME: change it into \"WHEN (NOT ... AND/OR ...)\" for now"
-msgstr ""
-
-#: cobc/parser.y:3725 cobc/parser.y:4338 cobc/parser.y:4395
+#: cobc/parser.y:3727 cobc/parser.y:4340 cobc/parser.y:4397
 #, c-format
 msgid "'%s' not file name"
 msgstr ""
 
-#: cobc/parser.y:4373
+#: cobc/parser.y:4375
 #, c-format
 msgid "'%s' not indexed"
 msgstr ""
 
-#: cobc/parser.y:4374
+#: cobc/parser.y:4376
 #, c-format
 msgid "'%s' defined here"
 msgstr ""
 
-#: cobc/parser.y:4847
+#: cobc/parser.y:4849
 #, c-format
 msgid "'%s' not level 01 or 77"
 msgstr ""
 
-#: cobc/parser.y:4851
+#: cobc/parser.y:4853
 #, c-format
 msgid "'%s' is not in LINKAGE SECTION"
 msgstr ""
 
-#: cobc/parser.y:4854
+#: cobc/parser.y:4856
 #, c-format
 msgid "'%s' can not be BASED/EXTERNAL"
 msgstr ""
 
-#: cobc/parser.y:4858
+#: cobc/parser.y:4860
 #, c-format
 msgid "'%s' is not in WORKING-STORAGE SECTION"
 msgstr ""
 
-#: cobc/parser.y:4865
+#: cobc/parser.y:4867
 #, c-format
 msgid "'%s' REDEFINES field not allowed here"
 msgstr ""
 
-#: cobc/parser.y:4871
+#: cobc/parser.y:4873
 #, c-format
 msgid "ENTRY '%s' duplicated"
 msgstr ""
 
-#: cobc/parser.y:4886 cobc/parser.y:4895
+#: cobc/parser.y:4888 cobc/parser.y:4897
 #, c-format
 msgid "%s statement not terminated by END-%s"
 msgstr ""

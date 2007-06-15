@@ -2832,11 +2832,13 @@ evaluate_object:
 			}
 		}
 		eval_inc2++;
+ /*
 		if (not == cb_int1 && CB_BINARY_OP_P (e1)
 		    && (CB_BINARY_OP (e1)->op == '&' || CB_BINARY_OP (e1)->op == '|')) {
 			cb_error_x (e1, _("FIXME: failed to compile \"WHEN NOT ... AND/OR ...\""));
 			cb_error_x (e1, _("FIXME: change it into \"WHEN (NOT ... AND/OR ...)\" for now"));
 		}
+ */
 		$$ = cb_build_pair (not, cb_build_pair (e1, 0));
 	} else {
 		/* WHEN expr THRU expr */

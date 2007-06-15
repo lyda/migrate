@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenCOBOL 0.13\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2007-06-15 07:53+0200\n"
+"POT-Creation-Date: 2007-06-15 11:28+0200\n"
 "PO-Revision-Date: 2004-08-01 23:55+0900\n"
 "Last-Translator: Keisuke Nishida <knishida@coboler.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -802,60 +802,52 @@ msgstr "そのような文はありません `%s'"
 msgid "88 level invalid here"
 msgstr ""
 
-#: cobc/parser.y:2837
-msgid "FIXME: failed to compile \"WHEN NOT ... AND/OR ...\""
-msgstr ""
-
-#: cobc/parser.y:2838
-msgid "FIXME: change it into \"WHEN (NOT ... AND/OR ...)\" for now"
-msgstr ""
-
-#: cobc/parser.y:3725 cobc/parser.y:4338 cobc/parser.y:4395
+#: cobc/parser.y:3727 cobc/parser.y:4340 cobc/parser.y:4397
 #, fuzzy, c-format
 msgid "'%s' not file name"
 msgstr "`%s' はファイル名ではありません"
 
-#: cobc/parser.y:4373
+#: cobc/parser.y:4375
 #, fuzzy, c-format
 msgid "'%s' not indexed"
 msgstr "`%s' には INDEXED BY が必要です"
 
-#: cobc/parser.y:4374
+#: cobc/parser.y:4376
 #, fuzzy, c-format
 msgid "'%s' defined here"
 msgstr "`%s' はここで定義されました"
 
-#: cobc/parser.y:4847
+#: cobc/parser.y:4849
 #, fuzzy, c-format
 msgid "'%s' not level 01 or 77"
 msgstr "`%s' はレベル 01 か 77 でなければなりません"
 
-#: cobc/parser.y:4851
+#: cobc/parser.y:4853
 #, c-format
 msgid "'%s' is not in LINKAGE SECTION"
 msgstr ""
 
-#: cobc/parser.y:4854
+#: cobc/parser.y:4856
 #, fuzzy, c-format
 msgid "'%s' can not be BASED/EXTERNAL"
 msgstr "`%s' は BLANK WHEN ZERO を持つことが出来ません"
 
-#: cobc/parser.y:4858
+#: cobc/parser.y:4860
 #, c-format
 msgid "'%s' is not in WORKING-STORAGE SECTION"
 msgstr ""
 
-#: cobc/parser.y:4865
+#: cobc/parser.y:4867
 #, c-format
 msgid "'%s' REDEFINES field not allowed here"
 msgstr ""
 
-#: cobc/parser.y:4871
+#: cobc/parser.y:4873
 #, c-format
 msgid "ENTRY '%s' duplicated"
 msgstr ""
 
-#: cobc/parser.y:4886 cobc/parser.y:4895
+#: cobc/parser.y:4888 cobc/parser.y:4897
 #, c-format
 msgid "%s statement not terminated by END-%s"
 msgstr "%s 文が END-%s で終わっていません"
