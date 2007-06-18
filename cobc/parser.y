@@ -873,7 +873,7 @@ organization:
   INDEXED
   {
 	if (organized_seen) {
-		cb_error ("Illegal or duplicate ORGANIZED clause");
+		cb_error ("Invalid or duplicate ORGANIZED clause");
 	} else {
 		current_file->organization = COB_ORG_INDEXED;
 		organized_seen = 1;
@@ -882,7 +882,7 @@ organization:
 | SEQUENTIAL
   {
 	if (organized_seen) {
-		cb_error ("Illegal or duplicate ORGANIZED clause");
+		cb_error ("Invalid or duplicate ORGANIZED clause");
 	} else {
 		current_file->organization = COB_ORG_SEQUENTIAL;
 		organized_seen = 1;
@@ -891,7 +891,7 @@ organization:
 | RELATIVE
   {
 	if (organized_seen) {
-		cb_error ("Illegal or duplicate ORGANIZED clause");
+		cb_error ("Invalid or duplicate ORGANIZED clause");
 	} else {
 		current_file->organization = COB_ORG_RELATIVE;
 		organized_seen = 1;
@@ -900,7 +900,7 @@ organization:
 | LINE SEQUENTIAL
   {
 	if (organized_seen) {
-		cb_error ("Illegal or duplicate ORGANIZED clause");
+		cb_error ("Invalid or duplicate ORGANIZED clause");
 	} else {
 		current_file->organization = COB_ORG_LINE_SEQUENTIAL;
 		organized_seen = 1;
@@ -2778,8 +2778,16 @@ evaluate_subject:
 		eval_check[eval_level][eval_inc++] = 0;
 	}
   }
-| TOK_TRUE			{ $$ = cb_true; eval_check[eval_level][eval_inc++] = 0; }
-| TOK_FALSE			{ $$ = cb_false; eval_check[eval_level][eval_inc++] = 0; }
+| TOK_TRUE
+  {
+	$$ = cb_true;
+	eval_check[eval_level][eval_inc++] = 0;
+  }
+| TOK_FALSE
+  {
+	$$ = cb_false;
+	eval_check[eval_level][eval_inc++] = 0;
+  }
 ;
 
 evaluate_case_list:
@@ -2872,7 +2880,7 @@ exit_statement:
 
 exit_body:
   /* empty */			{ /* nothing */ }
-| PROGRAM			{ cb_emit_exit (); }
+| PROGRAM			{ cb_emit_exit (0); }
 | PERFORM
   {
 	struct cb_perform *p;
@@ -2948,7 +2956,7 @@ goto_depending:
 goback_statement:
   GOBACK			{ BEGIN_STATEMENT ("GOBACK"); }
   {
-	cb_emit_exit ();
+	cb_emit_exit (1);
   }
 ;
 
@@ -3350,7 +3358,7 @@ read_statement:
   {
 	if ($3 != cb_error_node) {
 		if ($7 && CB_FILE(cb_ref($3))->lock_mode == COB_LOCK_AUTOMATIC) {
-			cb_error ("LOCK clause illegal with file LOCK AUTOMATIC");
+			cb_error ("LOCK clause invalid with file LOCK AUTOMATIC");
 		} else if ($8 &&
 		      (CB_FILE(cb_ref($3))->organization != COB_ORG_RELATIVE &&
 		       CB_FILE(cb_ref($3))->organization != COB_ORG_INDEXED)) {
@@ -3664,7 +3672,7 @@ sort_input:
 | USING file_name_list
   {
 	if (!CB_FILE_P (cb_ref ($0))) {
-		cb_error ("USING illegal with table SORT");
+		cb_error ("USING invalid with table SORT");
 	} else {
 		cb_emit_sort_using ($0, $2);
 	}
@@ -3672,7 +3680,7 @@ sort_input:
 | INPUT PROCEDURE _is perform_procedure
   {
 	if (!CB_FILE_P (cb_ref ($0))) {
-		cb_error ("INPUT PROCEDURE illegal with table SORT");
+		cb_error ("INPUT PROCEDURE invalid with table SORT");
 	} else {
 		cb_emit_sort_input ($4);
 	}
@@ -3689,7 +3697,7 @@ sort_output:
 | GIVING file_name_list
   {
 	if (!CB_FILE_P (cb_ref ($-1))) {
-		cb_error ("GIVING illegal with table SORT");
+		cb_error ("GIVING invalid with table SORT");
 	} else {
 		cb_emit_sort_giving ($-1, $2);
 	}
@@ -3697,7 +3705,7 @@ sort_output:
 | OUTPUT PROCEDURE _is perform_procedure
   {
 	if (!CB_FILE_P (cb_ref ($-1))) {
-		cb_error ("OUTPUT PROCEDURE illegal with table SORT");
+		cb_error ("OUTPUT PROCEDURE invalid with table SORT");
 	} else {
 		cb_emit_sort_output ($4);
 	}

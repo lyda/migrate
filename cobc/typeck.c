@@ -2726,9 +2726,13 @@ cb_emit_goto (cb_tree target, cb_tree depending)
 }
 
 void
-cb_emit_exit (void)
+cb_emit_exit (size_t goback)
 {
-	cb_emit (cb_build_goto (0, 0));
+	if (goback) {
+		cb_emit (cb_build_goto (cb_int1, 0));
+	} else {
+		cb_emit (cb_build_goto (0, 0));
+	}
 }
 
 /*
@@ -3967,7 +3971,7 @@ cb_emit_rewrite (cb_tree record, cb_tree from, cb_tree lockopt)
 				_("INVALID KEY clause invalid with this file type"));
 		} else if (CB_FILE (file)->lock_mode == COB_LOCK_AUTOMATIC && lockopt) {
 			cb_error_x (CB_TREE (current_statement),
-			_("LOCK clause illegal with file LOCK AUTOMATIC"));
+			_("LOCK clause invalid with file LOCK AUTOMATIC"));
 		} else if (lockopt == cb_int1) {
 			opts = COB_WRITE_LOCK;
 		}
@@ -4302,7 +4306,7 @@ cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree col)
 
 	if (CB_FILE_P (cb_ref (name))) {
 		if (CB_FILE (cb_ref (name))->organization != COB_ORG_SORT) {
-			cb_error_x (name, _("Illegal SORT filename"));
+			cb_error_x (name, _("Invalid SORT filename"));
 		}
 		cb_emit (cb_build_funcall_4 ("cob_file_sort_init", cb_ref (name),
 					     cb_int (cb_list_length (keys)), col,
@@ -4508,10 +4512,10 @@ cb_emit_write (cb_tree record, cb_tree from, cb_tree opt, cb_tree lockopt)
 		} else if (lockopt) {
 			if (CB_FILE (file)->lock_mode == COB_LOCK_AUTOMATIC) {
 				cb_error_x (CB_TREE (current_statement),
-				_("LOCK clause illegal with file LOCK AUTOMATIC"));
+				_("LOCK clause invalid with file LOCK AUTOMATIC"));
 			} else if (opt != cb_int0) {
 				cb_error_x (CB_TREE (current_statement),
-				_("LOCK clause illegal here"));
+				_("LOCK clause invalid here"));
 			} else if (lockopt == cb_int1) {
 				opt = cb_int (COB_WRITE_LOCK);
 			}

@@ -2232,6 +2232,9 @@ output_goto (struct cb_goto *p)
 			output_line ("if (module.next)");
 			output_line ("  goto exit_program;");
 		}
+	} else if (p->target == cb_int1) {
+		needs_exit_prog = 1;
+		output_line ("goto exit_program;");
 	} else {
 		output_goto_1 (p->target);
 	}

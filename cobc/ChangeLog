@@ -1,3 +1,12 @@
+2007-06-18  Roger While <simrw@sim-basis.de>
+
+	* Genral : Replace the word illegal with invalid
+
+2007-06-16  Roger While <simrw@sim-basis.de>
+
+	* tree.h, parser.y, typeck.c, codegen.c : Fix subtle difference
+		between GOBACK and EXIT PROGRAM
+
 2007-06-14  Roger While <simrw@sim-basis.de>
 
 	* codegen.c : Fix field access on REDEFINES of BASED/EXTERNAL items

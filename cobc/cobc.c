@@ -1410,7 +1410,7 @@ main (int argc, char *argv[])
 
 	if (output_name && cb_compile_level < CB_LEVEL_LIBRARY &&
 	    (argc - i) > 1) {
-		fprintf (stderr, "%s: -o option illegal in this combination\n", program_name);
+		fprintf (stderr, "%s: -o option invalid in this combination\n", program_name);
 		exit (1);
 	}
 

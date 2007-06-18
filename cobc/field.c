@@ -341,7 +341,7 @@ validate_field_1 (struct cb_field *f)
 			for (; p->sister; p = p->sister) {
 				if (p->sister == cb_field (f->occurs_depending)) {
 						cb_error_x (x,
-							    _("'%s' ODO field item illegal here"),
+							    _("'%s' ODO field item invalid here"),
 							    p->sister->name);
 				}
 				if (!p->sister->redefines) {
