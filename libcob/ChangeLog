@@ -1,3 +1,33 @@
+2007-07-02  Roger While <simrw@sim-basis.de>
+
+	* call.c : Previously we were trying to detect if dlopen(NULL)
+		works in configure and ifdef'ing in call.c
+		This does not work in all circumstances.
+		For borked systems this now has to be changed by hand
+		in call.c. The comments at the top of call.c -
+		/* NOTE - The following variable should be uncommented when
+		it is known that dlopen(NULL) is borked.
+		This is known to be true for some PA-RISC HP-UX 11.11 systems.
+		This is fixed with HP patch PHSS_28871. (There are newer
+		but this fixes dlopen/dlsym problems)
+		*/
+		/* #define COB_BORKED_DLOPEN */
+
+2007-07-01  Roger While <simrw@sim-basis.de>
+
+	* codegen.h : Further optimizations
+
+2007-06-28  Roger While <simrw@sim-basis.de>
+
+	* codegen.h : Tweak for non-alignment-tolerant architectures
+	* intrinsic.c : DST hack for ports that do not have "%z"
+		Note - This needs to be properly fixed
+
+2007-06-26  Roger While <simrw@sim-basis.de>
+
+	* intrinsic.c : For specific ports, fix TZ in CURRENT-DATE
+		Add use of strftime for timezone if configure detected
+
 2007-06-06  Roger While <simrw@sim-basis.de>
 
 	* fileio.[ch] : LOCK on WRITE/REWRITE

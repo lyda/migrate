@@ -61,5 +61,6 @@ extern int cob_cmp_numdisp (const unsigned char *data, const size_t size, const 
 extern int cob_cmp_sign_numdisp (const unsigned char *data, const size_t size, const int n);
 extern int cob_cmp_long_numdisp (const unsigned char *data, const size_t size, const int n);
 extern int cob_cmp_long_sign_numdisp (const unsigned char *data, const size_t size, const int n);
+extern void cob_set_packed_zero (cob_field *f);
 
 #endif /* COB_NUMERIC_H */

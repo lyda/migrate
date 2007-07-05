@@ -259,7 +259,7 @@ ppopen (char *name, struct cb_replace_list *replace_list)
 	ppin = fopen (name, "rb");
 	if (!ppin) {
 		if (cb_source_file) {
-			cb_error ("%s: %s", name, strerror (errno));
+			cb_error (_("%s: %s"), name, strerror (errno));
 		} else {
 			perror (name);
 		}
@@ -323,7 +323,7 @@ ppcopy (char *name, const char *lib, struct cb_replace_list *replace_list)
 				}
 			}
 		}
-		cb_error ("%s: %s", name, strerror (errno));
+		cb_error (_("%s: %s"), name, strerror (errno));
 		return -1;
 	}
 

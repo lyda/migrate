@@ -29,6 +29,16 @@
 #include "cobc.h"
 #include "tree.h"
 
+#define PIC_ALPHABETIC		0x01
+#define PIC_NUMERIC		0x02
+#define PIC_NATIONAL		0x04
+#define PIC_EDITED		0x08
+#define PIC_ALPHANUMERIC	(PIC_ALPHABETIC | PIC_NUMERIC)
+#define PIC_ALPHABETIC_EDITED	(PIC_ALPHABETIC | PIC_EDITED)
+#define PIC_ALPHANUMERIC_EDITED	(PIC_ALPHANUMERIC | PIC_EDITED)
+#define PIC_NUMERIC_EDITED	(PIC_NUMERIC | PIC_EDITED)
+#define PIC_NATIONAL_EDITED	(PIC_NATIONAL | PIC_EDITED)
+
 static const enum cb_class category_to_class_table[] = {
 	CB_CLASS_UNKNOWN,	/* CB_CATEGORY_UNKNOWN */
 	CB_CLASS_ALPHABETIC,	/* CB_CATEGORY_ALPHABETIC */
@@ -82,7 +92,6 @@ cb_tree cb_intr_e;
 
 cb_tree cb_standard_error_handler;
 
-static struct cb_word *lookup_word (const char *name);
 
 static char *
 to_cname (const char *s)
@@ -94,6 +103,51 @@ to_cname (const char *s)
 		*p = (*p == '-') ? '_' : toupper (*p);
 	}
 	return copy;
+}
+
+static size_t
+hash (const unsigned char *s)
+{
+	size_t val = 0;
+
+	for (; *s; s++) {
+		val += toupper (*s);
+	}
+	return val % CB_WORD_HASH_SIZE;
+}
+
+static struct cb_word *
+lookup_word (const char *name)
+{
+	struct cb_word	*p;
+	size_t		val = hash ((unsigned char *)name);
+
+	/* find the existing word */
+	if (current_program) {
+		for (p = current_program->word_table[val]; p; p = p->next) {
+			if (strcasecmp (p->name, name) == 0) {
+				return p;
+			}
+		}
+	}
+
+	/* create new word */
+	p = cobc_malloc (sizeof (struct cb_word));
+	p->name = strdup (name);
+
+	/* insert it into the table */
+	if (current_program) {
+		p->next = current_program->word_table[val];
+		current_program->word_table[val] = p;
+	}
+
+	return p;
+}
+
+static void
+file_error (cb_tree name, const char *clause)
+{
+	cb_error_x (name, _("%s clause is required for file '%s'"), clause, CB_NAME (name));
 }
 
 /*
@@ -108,6 +162,36 @@ make_tree (int tag, enum cb_category category, size_t size)
 	x->tag = tag;
 	x->category = category;
 	return x;
+}
+
+static cb_tree
+make_constant (enum cb_category category, const char *val)
+{
+	struct cb_const *p = make_tree (CB_TAG_CONST, category, sizeof (struct cb_const));
+
+	p->val = val;
+	return CB_TREE (p);
+}
+
+static cb_tree
+make_constant_label (const char *name)
+{
+	struct cb_label *p = CB_LABEL (cb_build_label (cb_build_reference (name), NULL));
+
+	p->need_begin = 1;
+	return CB_TREE (p);
+}
+
+static struct cb_literal *
+build_literal (enum cb_category category, const unsigned char *data, size_t size)
+{
+	struct cb_literal *p = make_tree (CB_TAG_LITERAL, category, sizeof (struct cb_literal));
+
+	p->data = cobc_malloc ((size_t) (size + 1));
+	p->size = size;
+	memcpy (p->data, data, (size_t) size);
+	p->data[size] = 0;
+	return p;
 }
 
 static int
@@ -476,24 +560,6 @@ cb_get_int (cb_tree x)
 	return val;
 }
 
-static cb_tree
-make_constant (enum cb_category category, const char *val)
-{
-	struct cb_const *p = make_tree (CB_TAG_CONST, category, sizeof (struct cb_const));
-
-	p->val = val;
-	return CB_TREE (p);
-}
-
-static cb_tree
-make_constant_label (const char *name)
-{
-	struct cb_label *p = CB_LABEL (cb_build_label (cb_build_reference (name), NULL));
-
-	p->need_begin = 1;
-	return CB_TREE (p);
-}
-
 void
 cb_init_constants (void)
 {
@@ -635,18 +701,6 @@ cb_build_system_name (enum cb_system_name_category category, int token)
  * Literal
  */
 
-static struct cb_literal *
-build_literal (enum cb_category category, const unsigned char *data, size_t size)
-{
-	struct cb_literal *p = make_tree (CB_TAG_LITERAL, category, sizeof (struct cb_literal));
-
-	p->data = cobc_malloc ((size_t) (size + 1));
-	p->size = size;
-	memcpy (p->data, data, (size_t) size);
-	p->data[size] = 0;
-	return p;
-}
-
 cb_tree
 cb_build_numeric_literal (int sign, const unsigned char *data, int scale)
 {
@@ -701,16 +755,6 @@ cb_build_decimal (int id)
 /*
  * Picture
  */
-
-#define PIC_ALPHABETIC		0x01
-#define PIC_NUMERIC		0x02
-#define PIC_NATIONAL		0x04
-#define PIC_EDITED		0x08
-#define PIC_ALPHANUMERIC	(PIC_ALPHABETIC | PIC_NUMERIC)
-#define PIC_ALPHABETIC_EDITED	(PIC_ALPHABETIC | PIC_EDITED)
-#define PIC_ALPHANUMERIC_EDITED	(PIC_ALPHANUMERIC | PIC_EDITED)
-#define PIC_NUMERIC_EDITED	(PIC_NUMERIC | PIC_EDITED)
-#define PIC_NATIONAL_EDITED	(PIC_NATIONAL | PIC_EDITED)
 
 cb_tree
 cb_build_picture (const char *str)
@@ -770,8 +814,9 @@ repeat:
 		case '9':
 			category |= PIC_NUMERIC;
 			digits += n;
-			if (v_count)
+			if (v_count) {
 				scale += n;
+			}
 			break;
 
 		case 'N':
@@ -924,7 +969,7 @@ repeat:
 	case PIC_NUMERIC:
 		pic->category = CB_CATEGORY_NUMERIC;
 		if (digits > 36) {
-			cb_error (_("numeric field cannot be larger than 36 digits"));
+			cb_error (_("Numeric field cannot be larger than 36 digits"));
 		}
 		break;
 	case PIC_ALPHANUMERIC:
@@ -950,7 +995,7 @@ repeat:
 	goto end;
 
 error:
-	cb_error (_("invalid picture string"));
+	cb_error (_("Invalid picture string"));
 
 end:
 	return CB_TREE (pic);
@@ -1131,12 +1176,6 @@ build_file (cb_tree name)
 	return p;
 }
 
-static void
-file_error (cb_tree name, const char *clause)
-{
-	cb_error_x (name, _("%s clause is required for file '%s'"), clause, CB_NAME (name));
-}
-
 void
 validate_file (struct cb_file *f, cb_tree name)
 {
@@ -1172,12 +1211,12 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 	for (p = records; p; p = p->sister) {
 		if (f->record_min > 0) {
 			if (p->size < f->record_min) {
-				cb_error (_("record size too small '%s'"), p->name);
+				cb_error (_("Record size too small '%s'"), p->name);
 			}
 		}
 		if (f->record_max > 0) {
 			if (p->size > f->record_max) {
-				cb_error (_("record size too large '%s'"), p->name);
+				cb_error (_("Record size too large '%s'"), p->name);
 			}
 		}
 	}
@@ -1488,6 +1527,7 @@ cb_build_binary_op (cb_tree x, int op, cb_tree y)
 		/* logical operators */
 		if (CB_TREE_CLASS (x) != CB_CLASS_BOOLEAN ||
 		    (y && CB_TREE_CLASS (y) != CB_CLASS_BOOLEAN)) {
+			cb_error (_("Invalid expression"));
 			return cb_error_node;
 		}
 		category = CB_CATEGORY_BOOLEAN;
@@ -1795,45 +1835,6 @@ cb_list_map (cb_tree (*func) (cb_tree x), cb_tree l)
 /*
  * Program
  */
-
-static size_t
-hash (const unsigned char *s)
-{
-	size_t val = 0;
-
-	for (; *s; s++) {
-		val += toupper (*s);
-	}
-	return val % CB_WORD_HASH_SIZE;
-}
-
-static struct cb_word *
-lookup_word (const char *name)
-{
-	struct cb_word	*p;
-	size_t		val = hash ((unsigned char *)name);
-
-	/* find the existing word */
-	if (current_program) {
-		for (p = current_program->word_table[val]; p; p = p->next) {
-			if (strcasecmp (p->name, name) == 0) {
-				return p;
-			}
-		}
-	}
-
-	/* create new word */
-	p = cobc_malloc (sizeof (struct cb_word));
-	p->name = strdup (name);
-
-	/* insert it into the table */
-	if (current_program) {
-		p->next = current_program->word_table[val];
-		current_program->word_table[val] = p;
-	}
-
-	return p;
-}
 
 struct cb_program *
 cb_build_program (void)

@@ -754,7 +754,8 @@ cob_intr_current_date ()
 	cob_field_attr	attr;
 	cob_field	field;
 #else
-#if !defined(__linux__) && !defined(__CYGWIN__) && defined(HAVE_TIMEZONE)
+#if !defined(__linux__) && !defined(__CYGWIN__) && !defined(COB_STRFTIME) && defined(HAVE_TIMEZONE)
+	struct tm	*tmptr;
 	long		contz;
 #endif
 	time_t		curtime;
@@ -770,6 +771,7 @@ cob_intr_current_date ()
 	COB_ATTR_INIT (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
 	COB_FIELD_INIT (21, NULL, &attr);
 	make_field_entry (&field);
+	memset (buff, 0, sizeof(buff));
 
 #if	defined(_WIN32) && !defined(__CYGWIN__)
 	_ftime (&tmb);
@@ -795,10 +797,15 @@ cob_intr_current_date ()
 	curtime = time (NULL);
 #endif
 
-#if defined(__linux__) || defined(__CYGWIN__)
+#if defined(__linux__) || defined(__CYGWIN__) || defined(COB_STRFTIME)
 	strftime (buff, 22, "%Y%m%d%H%M%S00%z", localtime (&curtime));
 #elif defined(HAVE_TIMEZONE)
-	strftime (buff, 17, "%Y%m%d%H%M%S00", localtime (&curtime));
+	tmptr = localtime (&curtime);
+	strftime (buff, 17, "%Y%m%d%H%M%S00", tmptr);
+	/* RXW - Hack for DST - Need something better */
+	if (tmptr->tm_isdst > 0) {
+		timezone -= 3600;
+	}
 	if (timezone <= 0) {
 		contz = -timezone;
 		buff[16] = '+';
@@ -806,7 +813,7 @@ cob_intr_current_date ()
 		contz = timezone;
 		buff[16] = '-';
 	}
-	sprintf(&buff[17], "%2.2ld%2.2ld", contz / 3600, contz % 60);
+	sprintf(&buff[17], "%2.2ld%2.2ld", contz / 3600, (contz % 3600) / 60);
 #else
 	strftime (buff, 22, "%Y%m%d%H%M%S0000000", localtime (&curtime));
 #endif

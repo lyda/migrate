@@ -30,6 +30,9 @@
 /* Compile/link option for shared code */
 #undef COB_SHARED_OPT
 
+/* Can use strftime for timezone */
+#undef COB_STRFTIME
+
 /* Strip command */
 #undef COB_STRIP_CMD
 

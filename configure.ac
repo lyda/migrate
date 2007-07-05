@@ -76,6 +76,7 @@ AH_TEMPLATE([COB_EXTRA_FLAGS], [Extra Compiler Flags])
 AH_TEMPLATE([__USE_STRING_INLINES], [Compiler optimization])
 AH_TEMPLATE([COB_HAS_INLINE], [Can use inline keyword])
 AH_TEMPLATE([COB_NO_SELFOPEN], [Can not dlopen self])
+AH_TEMPLATE([COB_STRFTIME], [Can use strftime for timezone])
 
 # enable debug mode by default for now
 AC_DEFINE(COB_DEBUG)
@@ -437,6 +438,24 @@ then
   AC_CHECK_LIB([ltdl], [lt_dlopen], , AC_MSG_ERROR(libltdl is required))
   LIBCOB_LIBS="$LIBCOB_LIBS -lltdl"
 fi
+
+AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>
+	#include <time.h>]], [[
+	time_t	ticks;
+	int	ret;
+	char	buff[16];
+	ticks = time(NULL);
+	ret = strftime(buff, 15, "%z", localtime(&ticks));
+	if (ret != 5) {
+		return 1;
+	}
+	if (buff[0] != '+' && buff[0] != '-') {
+		return 1;
+	}
+	return 0;]])],
+	[AC_DEFINE(COB_STRFTIME)],
+	[],
+	[])
 
 # OpenCOBOL Configuration
 

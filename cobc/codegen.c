@@ -1351,8 +1351,9 @@ output_cond (cb_tree x, int save_flag)
 		++inside_check;
 		output ("(\n");
 #endif
-		for (; x; x = CB_CHAIN (x))
+		for (; x; x = CB_CHAIN (x)) {
 			output_stmt (CB_VALUE (x));
+		}
 #ifdef __GNUC__
 		output_indent ("})");
 #else
@@ -2162,8 +2163,9 @@ output_call (struct cb_call *p)
 					output_integer (x);
 					break;
 				default:
-					output ("*");
+					output ("*(");
 					output_data (x);
+					output (")");
 					break;
 				}
 				break;
@@ -2174,7 +2176,7 @@ output_call (struct cb_call *p)
 			output (", ");
 		}
 	}
-	if (cb_sticky_linkage && parmnum < 16) {
+	if (cb_sticky_linkage && parmnum < 16 && !system_call) {
 		for (n = parmnum; n < 16; n++) {
 			if (n != 0) {
 				output (", ");
@@ -3065,11 +3067,11 @@ output_class_name_definition (struct cb_class_name *p)
 		if (CB_PAIR_P (x)) {
 			lower = literal_value (CB_PAIR_X (x));
 			upper = literal_value (CB_PAIR_Y (x));
-/*
-			lower = CB_LITERAL (CB_PAIR_X (x))->data[0];
-			upper = CB_LITERAL (CB_PAIR_Y (x))->data[0];
-*/
-			output ("(%d <= f->data[i] && f->data[i] <= %d)", lower, upper);
+			if (!lower) {
+				output ("f->data[i] <= %d", upper);
+			} else {
+				output ("(%d <= f->data[i] && f->data[i] <= %d)", lower, upper);
+			}
 		} else {
 			if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC) {
 				output ("f->data[i] == %d", literal_value(x));
@@ -3920,8 +3922,9 @@ codegen (struct cb_program *prog, int nested)
 		output_storage ("{%d, %d, %d, %d, ", j->type, j->digits, j->scale, j->flags);
 		if (j->pic) {
 			output_storage ("\"");
-			for (s = j->pic; *s; s += 2)
+			for (s = j->pic; *s; s += 2) {
 				output_storage ("%c\\%03o", s[0], s[1]);
+			}
 			output_storage ("\"");
 		} else {
 			output_storage ("NULL");

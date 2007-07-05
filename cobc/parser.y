@@ -224,7 +224,7 @@ end_program:
 		deplev--;
 	}
 	if (strcmp (stack_progid[deplev], s)) {
-		cb_error ("END PROGRAM '%s' is different to PROGRAM-ID '%s'",
+		cb_error (_("END PROGRAM '%s' is different to PROGRAM-ID '%s'"),
 			s, stack_progid[deplev]);
 	}
 	if (depth) {
@@ -873,7 +873,7 @@ organization:
   INDEXED
   {
 	if (organized_seen) {
-		cb_error ("Invalid or duplicate ORGANIZED clause");
+		cb_error (_("Invalid or duplicate ORGANIZED clause"));
 	} else {
 		current_file->organization = COB_ORG_INDEXED;
 		organized_seen = 1;
@@ -882,7 +882,7 @@ organization:
 | SEQUENTIAL
   {
 	if (organized_seen) {
-		cb_error ("Invalid or duplicate ORGANIZED clause");
+		cb_error (_("Invalid or duplicate ORGANIZED clause"));
 	} else {
 		current_file->organization = COB_ORG_SEQUENTIAL;
 		organized_seen = 1;
@@ -891,7 +891,7 @@ organization:
 | RELATIVE
   {
 	if (organized_seen) {
-		cb_error ("Invalid or duplicate ORGANIZED clause");
+		cb_error (_("Invalid or duplicate ORGANIZED clause"));
 	} else {
 		current_file->organization = COB_ORG_RELATIVE;
 		organized_seen = 1;
@@ -900,7 +900,7 @@ organization:
 | LINE SEQUENTIAL
   {
 	if (organized_seen) {
-		cb_error ("Invalid or duplicate ORGANIZED clause");
+		cb_error (_("Invalid or duplicate ORGANIZED clause"));
 	} else {
 		current_file->organization = COB_ORG_LINE_SEQUENTIAL;
 		organized_seen = 1;
@@ -1071,7 +1071,7 @@ file_section:
 	if (cb_relaxed_syntax_check) {
 		cb_warning ("FILE SECTION header missing - assumed");
 	} else {
-		cb_error ("FILE SECTION header missing");
+		cb_error (_("FILE SECTION header missing"));
 	}
 	current_storage = CB_STORAGE_FILE;
   }
@@ -1232,7 +1232,7 @@ linage_clause:
   {
 	if (current_file->organization != COB_ORG_LINE_SEQUENTIAL
 	    && current_file->organization != COB_ORG_SEQUENTIAL) {
-		cb_error ("LINAGE clause with wrong file type");
+		cb_error (_("LINAGE clause with wrong file type"));
 		$$ = cb_error_node;
 	} else {
 		current_file->linage = $3;
@@ -1423,10 +1423,10 @@ external_clause:
   _is EXTERNAL as_extname
   {
 	if (current_storage != CB_STORAGE_WORKING) {
-		cb_error ("EXTERNAL not allowed here");
+		cb_error (_("EXTERNAL not allowed here"));
 		$$ = cb_error_node;
 	} else if (current_field->level != 1 && current_field->level != 77) {
-		cb_error ("EXTERNAL only allowed at 01/77 level");
+		cb_error (_("EXTERNAL only allowed at 01/77 level"));
 		$$ = cb_error_node;
 	} else {
 		current_field->flag_external = 1;
@@ -1657,7 +1657,7 @@ false_is:
 | TOK_FALSE _is literal
   {
 	if (current_field->level != 88) {
-		cb_error ("FALSE clause only allowed for 88 level");
+		cb_error (_("FALSE clause only allowed for 88 level"));
 	}
 	current_field->false_88 = cb_list($3);
   }
@@ -1672,7 +1672,7 @@ renames_clause:
 	if (cb_ref ($2) != cb_error_node) {
 		if (CB_FIELD (cb_ref ($2))->level == 01 ||
 		    CB_FIELD (cb_ref ($2))->level > 50) {
-			cb_error ("RENAMES may not reference a level 01 or > 50");
+			cb_error (_("RENAMES may not reference a level 01 or > 50"));
 		} else {
 			current_field->redefines = CB_FIELD (cb_ref ($2));
 			current_field->pic = current_field->redefines->pic;
@@ -1684,10 +1684,10 @@ renames_clause:
 	if (cb_ref ($2) != cb_error_node && cb_ref ($4) != cb_error_node) {
 		if (CB_FIELD (cb_ref ($2))->level == 01 ||
 		    CB_FIELD (cb_ref ($2))->level > 50) {
-			cb_error ("RENAMES may not reference a level 01 or > 50");
+			cb_error (_("RENAMES may not reference a level 01 or > 50"));
 		} else if (CB_FIELD (cb_ref ($4))->level == 01 ||
 		    CB_FIELD (cb_ref ($4))->level > 50) {
-			cb_error ("RENAMES may not reference a level 01 or > 50");
+			cb_error (_("RENAMES may not reference a level 01 or > 50"));
 		} else {
 			current_field->redefines = CB_FIELD (cb_ref ($2));
 			current_field->rename_thru = CB_FIELD (cb_ref ($4));
@@ -1971,7 +1971,7 @@ procedure_division:
   procedure_declaratives
   {
 	if (current_program->gen_main && !current_program->is_chained && $3) {
-		cb_error ("Executable program requested but PROCEDURE/ENTRY has USING clause");
+		cb_error (_("Executable program requested but PROCEDURE/ENTRY has USING clause"));
 	}
 	emit_entry (current_program->program_id, 0, $3); /* main entry point */
 	if (current_program->source_name) {
@@ -2403,14 +2403,14 @@ call_param:
   OMITTED
   {
 	if (call_mode != cb_int (CB_CALL_BY_REFERENCE)) {
-		cb_error ("OMITTED only allowed with BY REFERENCE");
+		cb_error (_("OMITTED only allowed with BY REFERENCE"));
 	}
 	$$ = cb_build_pair (call_mode, cb_null);
   }
 | _by call_mode OMITTED
   {
 	if (call_mode != cb_int (CB_CALL_BY_REFERENCE)) {
-		cb_error ("OMITTED only allowed with BY REFERENCE");
+		cb_error (_("OMITTED only allowed with BY REFERENCE"));
 	}
 	$$ = cb_build_pair (call_mode, cb_null);
   }
@@ -2426,7 +2426,7 @@ call_mode:
 | CONTENT
   {
 	if (current_program->is_chained) {
-		cb_error ("BY CONTENT not allowed in CHAINED program");
+		cb_error (_("BY CONTENT not allowed in CHAINED program"));
 	} else {
 		call_mode = cb_int (CB_CALL_BY_CONTENT);
 	}
@@ -2434,7 +2434,7 @@ call_mode:
 | VALUE
   {
 	if (current_program->is_chained) {
-		cb_error ("BY VALUE not allowed in CHAINED program");
+		cb_error (_("BY VALUE not allowed in CHAINED program"));
 	} else {
 		call_mode = cb_int (CB_CALL_BY_VALUE);
 	}
@@ -2773,20 +2773,20 @@ evaluate_subject:
   {
 	$$ = $1;
 	if (CB_REFERENCE_P($1)) {
-		eval_check[eval_level][eval_inc++] = 1;
-	} else {
 		eval_check[eval_level][eval_inc++] = 0;
+	} else {
+		eval_check[eval_level][eval_inc++] = 1;
 	}
   }
 | TOK_TRUE
   {
 	$$ = cb_true;
-	eval_check[eval_level][eval_inc++] = 0;
+	eval_check[eval_level][eval_inc++] = 2;
   }
 | TOK_FALSE
   {
 	$$ = cb_false;
-	eval_check[eval_level][eval_inc++] = 0;
+	eval_check[eval_level][eval_inc++] = 3;
   }
 ;
 
@@ -2824,8 +2824,10 @@ evaluate_object:
 
 	/* in case the first token is NOT */
 	if (CB_PURPOSE_INT ($1) == '!') {
-		not = cb_int1;
-		$1 = CB_CHAIN ($1);
+		if (eval_check[eval_level][eval_inc2] < 2) {
+			not = cb_int1;
+			$1 = CB_CHAIN ($1);
+		}
 	}
 
 	/* build expr now */
@@ -2833,12 +2835,6 @@ evaluate_object:
 
 	if (e2 == NULL) {
 		/* WHEN expr */
-		if (eval_check[eval_level][eval_inc2] && CB_REFERENCE_P(e1) &&
-		    CB_FIELD_P(CB_REFERENCE(e1)->value)) {
-			if (CB_FIELD(CB_REFERENCE(e1)->value)->level == 88) {
-				cb_error_x (e1, _("88 level invalid here"));
-			}
-		}
 		eval_inc2++;
  /*
 		if (not == cb_int1 && CB_BINARY_OP_P (e1)
@@ -2887,7 +2883,7 @@ exit_body:
 	char name[256];
 
 	if (!perform_stack) {
-		cb_error ("EXIT PERFORM is only valid with inline PERFORM");
+		cb_error (_("EXIT PERFORM is only valid with inline PERFORM"));
 	} else {
 		p = CB_PERFORM (CB_VALUE (perform_stack));
 		if (!p->exit_label) {
@@ -2904,7 +2900,7 @@ exit_body:
 	char name[256];
 
 	if (!perform_stack) {
-		cb_error ("EXIT PERFORM is only valid with inline PERFORM");
+		cb_error (_("EXIT PERFORM is only valid with inline PERFORM"));
 	} else {
 		p = CB_PERFORM (CB_VALUE (perform_stack));
 		if (!p->exit_label) {
@@ -3137,7 +3133,7 @@ replacing_region:
 			$$ = cb_build_replacing_trailing ($1, $3, $4);
 			break;
 		default:
-			cb_error ("INSPECT missing a keyword");
+			cb_error (_("INSPECT missing a keyword"));
 			$$ = cb_error_node;
 			break;
 	}
@@ -3358,15 +3354,15 @@ read_statement:
   {
 	if ($3 != cb_error_node) {
 		if ($7 && CB_FILE(cb_ref($3))->lock_mode == COB_LOCK_AUTOMATIC) {
-			cb_error ("LOCK clause invalid with file LOCK AUTOMATIC");
+			cb_error (_("LOCK clause invalid with file LOCK AUTOMATIC"));
 		} else if ($8 &&
 		      (CB_FILE(cb_ref($3))->organization != COB_ORG_RELATIVE &&
 		       CB_FILE(cb_ref($3))->organization != COB_ORG_INDEXED)) {
-			cb_error ("KEY clause invalid with this file type");
+			cb_error (_("KEY clause invalid with this file type"));
 		} else if (current_statement->handler_id == COB_EC_I_O_INVALID_KEY &&
 		      (CB_FILE(cb_ref($3))->organization != COB_ORG_RELATIVE &&
 		       CB_FILE(cb_ref($3))->organization != COB_ORG_INDEXED)) {
-			cb_error ("INVALID KEY clause invalid with this file type");
+			cb_error (_("INVALID KEY clause invalid with this file type"));
 		} else {
 			cb_emit_read ($3, $4, $6, $8, $7);
 		}
@@ -3618,7 +3614,7 @@ sort_body:
   {
 	cb_emit_sort_init ($1, $2, $4);
 	if (CB_FILE_P (cb_ref ($1)) && $2 == NULL) {
-		cb_error ("File sort requires KEY phrase");
+		cb_error (_("File sort requires KEY phrase"));
 	}
 	$$ = $1; /* used in sort_input/sort_output */
   }
@@ -3666,13 +3662,13 @@ sort_input:
   /* empty */
   {
 	if (CB_FILE_P (cb_ref ($0))) {
-		cb_error ("File sort requires USING or INPUT PROCEDURE");
+		cb_error (_("File sort requires USING or INPUT PROCEDURE"));
 	}
   }
 | USING file_name_list
   {
 	if (!CB_FILE_P (cb_ref ($0))) {
-		cb_error ("USING invalid with table SORT");
+		cb_error (_("USING invalid with table SORT"));
 	} else {
 		cb_emit_sort_using ($0, $2);
 	}
@@ -3680,7 +3676,7 @@ sort_input:
 | INPUT PROCEDURE _is perform_procedure
   {
 	if (!CB_FILE_P (cb_ref ($0))) {
-		cb_error ("INPUT PROCEDURE invalid with table SORT");
+		cb_error (_("INPUT PROCEDURE invalid with table SORT"));
 	} else {
 		cb_emit_sort_input ($4);
 	}
@@ -3691,13 +3687,13 @@ sort_output:
   /* empty */
   {
 	if (CB_FILE_P (cb_ref ($-1))) {
-		cb_error ("File sort requires GIVING or OUTPUT PROCEDURE");
+		cb_error (_("File sort requires GIVING or OUTPUT PROCEDURE"));
 	}
   }
 | GIVING file_name_list
   {
 	if (!CB_FILE_P (cb_ref ($-1))) {
-		cb_error ("GIVING invalid with table SORT");
+		cb_error (_("GIVING invalid with table SORT"));
 	} else {
 		cb_emit_sort_giving ($-1, $2);
 	}
@@ -3705,7 +3701,7 @@ sort_output:
 | OUTPUT PROCEDURE _is perform_procedure
   {
 	if (!CB_FILE_P (cb_ref ($-1))) {
-		cb_error ("OUTPUT PROCEDURE invalid with table SORT");
+		cb_error (_("OUTPUT PROCEDURE invalid with table SORT"));
 	} else {
 		cb_emit_sort_output ($4);
 	}
@@ -3726,7 +3722,7 @@ start_statement:
 	if (CB_FILE_P (cb_ref ($3))) {
 		if (CB_FILE (cb_ref ($3))->organization != COB_ORG_INDEXED &&
 		     CB_FILE (cb_ref ($3))->organization != COB_ORG_RELATIVE) {
-			cb_error ("START not allowed on SEQUENTIAL files");
+			cb_error (_("START not allowed on SEQUENTIAL files"));
 			$$ = cb_error_node;
 		} else {
 			cb_emit_start ($3, $4, $5);
@@ -3943,9 +3939,9 @@ use_exception:
   _on use_exception_target
   {
 	if (!in_declaratives) {
-		cb_error ("USE statement must be within DECLARATIVES");
+		cb_error (_("USE statement must be within DECLARATIVES"));
 	} else if (!current_section) {
-		cb_error ("SECTION header missing before USE statement");
+		cb_error (_("SECTION header missing before USE statement"));
 	} else {
 		current_section->need_begin = 1;
 		current_section->need_return = 1;
@@ -4331,10 +4327,10 @@ linage_counter:
   LINAGE_COUNTER
   {
 	if (current_linage > 1) {
-		cb_error ("LINAGE-COUNTER must be qualified here");
+		cb_error (_("LINAGE-COUNTER must be qualified here"));
 		$$ = cb_error_node;
 	} else if (current_linage == 0) {
-		cb_error ("Invalid LINAGE-COUNTER usage");
+		cb_error (_("Invalid LINAGE-COUNTER usage"));
 		$$ = cb_error_node;
 	} else {
 		$$ = linage_file->linage_ctr;

@@ -1,6 +1,36 @@
+2007-07-05  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Fix wrong BY VALUE parameter generation
+
+2007-07-01  Roger While <simrw@sim-basis.de>
+
+	* cobc.c : Always export TMPDIR to the enviroment
+	* typeck.c : Further optimization
+
+2007-06-26  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Fix C warning on CLASS clause
+
+2007-06-25  Roger While <simrw@sim-basis.de>
+
+	* parser.y, typeck.c : Fix up EVALUATE checks yet again
+	* parser.y, pplex.l : Constify string params to cb_error(_x)
+
+2007-06-21  Roger While <simrw@sim-basis.de>
+
+	* tree.c : Produce error for partial expression code on WHEN clause
+	* codegen.c : When calling a "system" function (eg. CBL_OPEN_FILE) with
+		implicit "sticky linkage" (ie. -std=mvs), do not extend
+		the parameter list with NULL's
+	* cobc.c : Help was missing for -conf=
+
+2007-06-19  Roger While <simrw@sim-basis.de>
+
+	* parser.y : Fix up WHEN NOT
+
 2007-06-18  Roger While <simrw@sim-basis.de>
 
-	* Genral : Replace the word illegal with invalid
+	* General : Replace the word illegal with invalid
 
 2007-06-16  Roger While <simrw@sim-basis.de>
 

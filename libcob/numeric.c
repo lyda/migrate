@@ -655,6 +655,17 @@ cob_decimal_get_packed (cob_decimal *d, cob_field *f, const int opt)
 	return 0;
 }
 
+void
+cob_set_packed_zero (cob_field *f)
+{
+	own_memset (f->data, 0, f->size);
+	if (!COB_FIELD_HAVE_SIGN (f)) {
+		*(f->data + f->size - 1) |= 0x0f;
+	} else {
+		*(f->data + f->size - 1) |= 0x0c;
+	}
+}
+
 /* General field */
 
 void

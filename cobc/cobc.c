@@ -354,6 +354,7 @@ print_usage (void)
 		"  -L <directory>        Add <directory> to library search path\n"
 		"  -l <lib>              Link the library <lib>\n"
 		"  -D <define>           Pass <define> to the C compiler\n"
+		"  -conf=<file>          User defined dialect configuration - See -std=\n"
 		"  --list-reserved       Display all reserved words\n"
 		"  -save-temps           Do not delete intermediate files\n"
 		"  -MT <target>          Set target file used in dependency list\n"
@@ -1307,6 +1308,7 @@ main (int argc, char *argv[])
 	int			status = 1;
 	struct filename		*fn;
 	char			*p;
+	char			buff[COB_SMALL_BUFF];
 
 #ifdef	ENABLE_NLS
 	setlocale (LC_ALL, "");
@@ -1334,8 +1336,12 @@ main (int argc, char *argv[])
 		cob_tmpdir = p;
 	} else if ((p = getenv ("TMP")) != NULL) {
 		cob_tmpdir = p;
+		sprintf (buff, "TMPDIR=%s", p);
+		p = strdup (buff);
+		putenv (p);
 	} else {
 		cob_tmpdir = (char *)"/tmp";
+		putenv ((char *)"TMPDIR=/tmp");
 	}
 	init_var (cob_cc, "COB_CC", COB_CC);
 #if defined (__GNUC__) && (__GNUC__ >= 3)

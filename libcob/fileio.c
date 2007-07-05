@@ -934,7 +934,7 @@ lineseq_write (cob_file *f, int opt)
 	}
 	size = i + 1;
 
-	if (f->linage && f->flag_needs_top) {
+	if (unlikely(f->linage && f->flag_needs_top)) {
 		f->flag_needs_top = 0;
 		for (i = 0; i < f->lin_top; i++) {
 			putc ('\n', (FILE *)f->file);

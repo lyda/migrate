@@ -252,8 +252,9 @@ cb_load_conf (const char *fname, int check_nodef)
 			if (strcmp (name, "include") == 0) {
 				/* include another conf file */
 				sprintf (f2name, "%s/%s", cob_config_dir, val);
-				if (cb_load_conf (f2name, 0) != 0)
+				if (cb_load_conf (f2name, 0) != 0) {
 					return -1;
+				}
 			} else if (strcmp (name, "not-reserved") == 0) {
 				nores = read_string (val);
 				noresptr =

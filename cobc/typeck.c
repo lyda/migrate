@@ -183,6 +183,111 @@ static const char	* const bin_sub_funcs[] = {
 	"cob_subswp_s64_binary"
 };
 
+static const char	* const align_bin_compare_funcs[] = {
+	"cob_cmp_u8_binary",
+	"cob_cmp_align_u16_binary",
+	"cob_cmp_u24_binary",
+	"cob_cmp_align_u32_binary",
+	"cob_cmp_u40_binary",
+	"cob_cmp_u48_binary",
+	"cob_cmp_u56_binary",
+	"cob_cmp_u64_binary",
+	"cob_cmp_s8_binary",
+	"cob_cmp_align_s16_binary",
+	"cob_cmp_s24_binary",
+	"cob_cmp_align_s32_binary",
+	"cob_cmp_s40_binary",
+	"cob_cmp_s48_binary",
+	"cob_cmp_s56_binary",
+	"cob_cmp_s64_binary",
+	"cob_cmp_u8_binary",
+	"cob_cmpswp_align_u16_binary",
+	"cob_cmpswp_u24_binary",
+	"cob_cmpswp_align_u32_binary",
+	"cob_cmpswp_u40_binary",
+	"cob_cmpswp_u48_binary",
+	"cob_cmpswp_u56_binary",
+	"cob_cmpswp_u64_binary",
+	"cob_cmp_s8_binary",
+	"cob_cmpswp_align_s16_binary",
+	"cob_cmpswp_s24_binary",
+	"cob_cmpswp_align_s32_binary",
+	"cob_cmpswp_s40_binary",
+	"cob_cmpswp_s48_binary",
+	"cob_cmpswp_s56_binary",
+	"cob_cmpswp_s64_binary"
+};
+
+static const char	* const align_bin_add_funcs[] = {
+	"cob_add_u8_binary",
+	"cob_add_align_u16_binary",
+	"cob_add_u24_binary",
+	"cob_add_align_u32_binary",
+	"cob_add_u40_binary",
+	"cob_add_u48_binary",
+	"cob_add_u56_binary",
+	"cob_add_u64_binary",
+	"cob_add_s8_binary",
+	"cob_add_align_s16_binary",
+	"cob_add_s24_binary",
+	"cob_add_align_s32_binary",
+	"cob_add_s40_binary",
+	"cob_add_s48_binary",
+	"cob_add_s56_binary",
+	"cob_add_s64_binary",
+	"cob_add_u8_binary",
+	"cob_addswp_u16_binary",
+	"cob_addswp_u24_binary",
+	"cob_addswp_u32_binary",
+	"cob_addswp_u40_binary",
+	"cob_addswp_u48_binary",
+	"cob_addswp_u56_binary",
+	"cob_addswp_u64_binary",
+	"cob_add_s8_binary",
+	"cob_addswp_s16_binary",
+	"cob_addswp_s24_binary",
+	"cob_addswp_s32_binary",
+	"cob_addswp_s40_binary",
+	"cob_addswp_s48_binary",
+	"cob_addswp_s56_binary",
+	"cob_addswp_s64_binary"
+};
+
+static const char	* const align_bin_sub_funcs[] = {
+	"cob_sub_u8_binary",
+	"cob_sub_align_u16_binary",
+	"cob_sub_u24_binary",
+	"cob_sub_align_u32_binary",
+	"cob_sub_u40_binary",
+	"cob_sub_u48_binary",
+	"cob_sub_u56_binary",
+	"cob_sub_u64_binary",
+	"cob_sub_s8_binary",
+	"cob_sub_align_s16_binary",
+	"cob_sub_s24_binary",
+	"cob_sub_align_s32_binary",
+	"cob_sub_s40_binary",
+	"cob_sub_s48_binary",
+	"cob_sub_s56_binary",
+	"cob_sub_s64_binary",
+	"cob_sub_u8_binary",
+	"cob_subswp_u16_binary",
+	"cob_subswp_u24_binary",
+	"cob_subswp_u32_binary",
+	"cob_subswp_u40_binary",
+	"cob_subswp_u48_binary",
+	"cob_subswp_u56_binary",
+	"cob_subswp_u64_binary",
+	"cob_sub_s8_binary",
+	"cob_subswp_s16_binary",
+	"cob_subswp_s24_binary",
+	"cob_subswp_s32_binary",
+	"cob_subswp_s40_binary",
+	"cob_subswp_s48_binary",
+	"cob_subswp_s56_binary",
+	"cob_subswp_s64_binary"
+};
+
 static void cb_expr_shift_class (const char *name);
 static void cb_expr_shift_sign (int op);
 
@@ -1096,10 +1201,11 @@ expr_reduce (int token)
 				} else {
 					expr_op = op;
 					TOKEN (-2) = 'x';
-					if (CB_TREE_CLASS (VALUE (-1)) != CB_CLASS_BOOLEAN)
+					if (CB_TREE_CLASS (VALUE (-1)) != CB_CLASS_BOOLEAN) {
 						VALUE (-2) = cb_build_binary_op (expr_lh, op, VALUE (-1));
-					else
+					} else {
 						VALUE (-2) = VALUE (-1);
+					}
 				}
 				expr_index -= 1;
 				break;
@@ -1688,7 +1794,24 @@ cb_build_optim_cond (struct cb_binary_op *p)
 		    f->usage == CB_USAGE_COMP_X)) {
 			n = (f->size - 1) + (8 * (f->pic->have_sign ? 1 : 0)) +
 				(16 * (f->flag_binary_swap ? 1 : 0));
-			s = bin_compare_funcs[n];
+#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+			switch (f->size) {
+			case 2:
+			case 4:
+			case 8:
+				if (f->indexes == 0 && (f->offset % f->size) == 0) {
+					s = align_bin_compare_funcs[n];
+				} else {
+					s = bin_compare_funcs[n];
+				}
+				break;
+			default:
+				s = bin_compare_funcs[n];
+				break;
+			}
+#else
+			s = align_bin_compare_funcs[n];
+#endif
 			if (s) {
 				return cb_build_funcall_2 (s,
 					cb_build_cast_address (p->x),
@@ -1849,7 +1972,24 @@ cb_build_optim_add (cb_tree v, cb_tree n)
 		    f->usage == CB_USAGE_COMP_X)) {
 			z = (f->size - 1) + (8 * (f->pic->have_sign ? 1 : 0)) +
 				(16 * (f->flag_binary_swap ? 1 : 0));
-			s = bin_add_funcs[z];
+#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+			switch (f->size) {
+			case 2:
+			case 4:
+			case 8:
+				if (f->indexes == 0 && (f->offset % f->size) == 0) {
+					s = align_bin_add_funcs[z];
+				} else {
+					s = bin_add_funcs[z];
+				}
+				break;
+			default:
+				s = bin_add_funcs[z];
+				break;
+			}
+#else
+			s = align_bin_add_funcs[z];
+#endif
 			if (s) {
 				return cb_build_funcall_2 (s,
 					cb_build_cast_address (v),
@@ -1875,7 +2015,24 @@ cb_build_optim_sub (cb_tree v, cb_tree n)
 		    f->usage == CB_USAGE_COMP_X)) {
 			z = (f->size - 1) + (8 * (f->pic->have_sign ? 1 : 0)) +
 				(16 * (f->flag_binary_swap ? 1 : 0));
-			s = bin_sub_funcs[z];
+#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+			switch (f->size) {
+			case 2:
+			case 4:
+			case 8:
+				if (f->indexes == 0 && (f->offset % f->size) == 0) {
+					s = align_bin_sub_funcs[z];
+				} else {
+					s = bin_sub_funcs[z];
+				}
+				break;
+			default:
+				s = bin_sub_funcs[z];
+				break;
+			}
+#else
+			s = align_bin_sub_funcs[z];
+#endif
 			if (s) {
 				return cb_build_funcall_2 (s,
 					cb_build_cast_address (v),
@@ -1930,7 +2087,7 @@ cb_build_sub (cb_tree v, cb_tree n, cb_tree round_opt)
 
 #if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
 	if (CB_INDEX_P (v)) {
-		return cb_build_move (cb_build_binary_op (v, '+', n), v);
+		return cb_build_move (cb_build_binary_op (v, '-', n), v);
 	}
 	if (CB_TREE_CLASS (v) == CB_CLASS_POINTER) {
 		current_program->gen_ptrmanip = 1;
@@ -2288,10 +2445,6 @@ cb_emit_call (cb_tree prog, cb_tree using, cb_tree returning,
 
 	cb_emit (cb_build_call (prog, using, on_exception, not_on_exception,
 		 returning, is_sys_call));
-/*
-	if (returning)
-		cb_emit (cb_build_move (cb_return_code, returning));
-*/
 }
 
 /*
@@ -2494,8 +2647,9 @@ cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos, long
 cb_tree
 cb_build_display_upon (cb_tree x)
 {
-	if (x == cb_error_node)
+	if (x == cb_error_node) {
 		return cb_error_node;
+	}
 
 	switch (CB_SYSTEM_NAME (cb_ref (x))->token) {
 	case CB_DEVICE_CONSOLE:
@@ -2601,6 +2755,13 @@ evaluate_test (cb_tree s, cb_tree o)
 		return flag ? cb_build_negation (t) : t;
 	}
 
+	if (CB_REFERENCE_P(x) && CB_FIELD_P(CB_REFERENCE(x)->value) &&
+	    CB_FIELD(CB_REFERENCE(x)->value)->level == 88) {
+		cb_error_x (CB_TREE (current_statement),
+			_("Invalid use of 88 level in WHEN expression"));
+		return NULL;
+	}
+
 	/* regular comparison */
 	if (flag) {
 		return cb_build_binary_op (s, '~', x);
@@ -2633,6 +2794,9 @@ build_evaluate (cb_tree subject_list, cb_tree case_list)
 		for (subjs = subject_list, objs = CB_VALUE (whens);
 		     subjs && objs; subjs = CB_CHAIN (subjs), objs = CB_CHAIN (objs)) {
 			c3 = evaluate_test (CB_VALUE (subjs), CB_VALUE (objs));
+			if (c3 == NULL) {
+				return NULL;
+			}
 
 			if (c2 == NULL) {
 				c2 = c3;
@@ -3328,21 +3492,43 @@ cb_build_move_call (cb_tree src, cb_tree dst)
 static cb_tree
 cb_build_move_num_zero (cb_tree x)
 {
-	switch (cb_field (x)->usage) {
+	struct cb_field	*f;
+
+	f = cb_field (x);
+	switch (f->usage) {
 	case CB_USAGE_BINARY:
 	case CB_USAGE_COMP_5:
 	case CB_USAGE_COMP_X:
-		return cb_build_assign (x, cb_int (0));
+		if (f->flag_binary_swap) {
+			return cb_build_memset (x, 0);
+		}
+		switch (f->size) {
+#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+		case 1:
+			return cb_build_assign (x, cb_int0);
+		case 2:
+		case 4:
+		case 8:
+			if (f->indexes == 0 && (f->offset % f->size == 0)) {
+				return cb_build_assign (x, cb_int0);
+			}
+			break;
+#else
+		case 1:
+		case 2:
+		case 4:
+		case 8:
+			return cb_build_assign (x, cb_int0);
+#endif
+		}
+		return cb_build_memset (x, 0);
 	case CB_USAGE_DISPLAY:
 		return cb_build_memset (x, '0');
 	case CB_USAGE_PACKED:
-		return cb_build_memset (x, 0x00);
+		return cb_build_funcall_1 ("cob_set_packed_zero", x);
 	default:
-		fprintf (stderr, "Unexpected usage %d\n", cb_field (x)->usage);
-		ABORT ();
+		return cb_build_move_call (cb_zero, x);
 	}
-/* NOT REACHED */
-	return x;
 }
 
 static cb_tree
@@ -3602,7 +3788,8 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 		}
 		return cb_build_funcall_3 ("own_memcpy",
 					   cb_build_cast_address (dst),
-					   cb_build_string (buff, f->size), cb_build_cast_length (dst));
+					   cb_build_string (buff, f->size),
+					   cb_build_cast_length (dst));
 	} else if (cb_fits_int (src) && f->size <= 8 &&
 		   (f->usage == CB_USAGE_BINARY || f->usage == CB_USAGE_COMP_5 ||
 		    f->usage == CB_USAGE_COMP_X)) {
@@ -3614,7 +3801,29 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 		for (; n < 0; n++) {
 			val /= 10;
 		}
-		return cb_build_assign (dst, cb_int (val));
+		if (val == 0) {
+			return cb_build_move_num_zero (dst);
+		}
+		if (f->flag_binary_swap) {
+			return cb_build_move_call (src, dst);
+		}
+		if (f->size == 1) {
+			return cb_build_assign (dst, cb_int (val));
+		}
+		switch (f->size) {
+		case 2:
+		case 4:
+		case 8:
+#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+			if (f->indexes == 0 && (f->offset % f->size == 0)) {
+				return cb_build_assign (dst, cb_int (val));
+			}
+			break;
+#else
+			return cb_build_assign (dst, cb_int (val));
+#endif
+		}
+		return cb_build_move_call (src, dst);
 	} else {
 		return cb_build_move_call (src, dst);
 	}
@@ -3629,7 +3838,7 @@ cb_build_move_field (cb_tree src, cb_tree dst)
 	struct cb_field *dst_f = cb_field (dst);
 
 	if ((src_size > 0 && dst_size > 0 && src_size >= dst_size)
-	    && (!cb_field_variable_size (src_f) && !cb_field_variable_size (dst_f)))
+	    && (!cb_field_variable_size (src_f) && !cb_field_variable_size (dst_f))) {
 		switch (CB_TREE_CATEGORY (src)) {
 		case CB_CATEGORY_ALPHABETIC:
 			if (CB_TREE_CATEGORY (dst) == CB_CATEGORY_ALPHABETIC
@@ -3665,6 +3874,7 @@ cb_build_move_field (cb_tree src, cb_tree dst)
 		default:
 			break;
 		}
+	}
 
 	return cb_build_move_call (src, dst);
 }
@@ -3726,6 +3936,7 @@ cb_build_move (cb_tree src, cb_tree dst)
 		}
 	}
 
+/*
 	if (f->usage == CB_USAGE_BINARY || f->usage == CB_USAGE_COMP_5
 	    || f->usage == CB_USAGE_COMP_X) {
 		if (src == cb_zero ||
@@ -3753,8 +3964,10 @@ cb_build_move (cb_tree src, cb_tree dst)
 			return cb_build_memset (dst, 0);
 		}
 	}
+*/
 
 	/* no optimization for binary swap and packed decimal for now */
+/*
 	if (f->flag_binary_swap
 	    || f->usage == CB_USAGE_PACKED
 	    || f->usage == CB_USAGE_FLOAT
@@ -3765,14 +3978,17 @@ cb_build_move (cb_tree src, cb_tree dst)
 		f->size == 7 || f->size > 8))) {
 		return cb_build_move_call (src, dst);
 	}
+*/
 
 	/* Hack for systems that don't require data alignment */
+/*
 #if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
 	if (f->indexes == 0 && 
 		(f->size == 1 || (f->size == 2 && (f->offset % 2 == 0)) ||
 		(f->size == 4 && (f->offset % 4 == 0)) ||
 		(f->size == 8 && (f->offset % 8 == 0)))) {
 #endif
+*/
 		/* output optimal code */
 		if (src == cb_zero) {
 			return cb_build_move_zero (dst);
@@ -3784,15 +4000,21 @@ cb_build_move (cb_tree src, cb_tree dst)
 			return cb_build_move_low (dst);
 		} else if (src == cb_quote) {
 			return cb_build_move_quote (dst);
+		} else if (f->flag_binary_swap) {
+			return cb_build_move_call (src, dst);
 		} else if (CB_LITERAL_P (src)) {
 			return cb_build_move_literal (src, dst);
 		}
+/*
 #if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
 	}
 	return cb_build_move_call (src, dst);
 #else
+*/
 	return cb_build_move_field (src, dst);
+/*
 #endif
+*/
 }
 
 void

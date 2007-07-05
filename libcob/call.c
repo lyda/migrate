@@ -29,6 +29,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+/*	NOTE - The following variable should be uncommented when
+	it is known that dlopen(NULL) is borked.
+	This is known to be true for some PA-RISC HP-UX 11.11 systems.
+	This is fixed with HP patch PHSS_28871. (There are newer but this
+	fixes dlopen/dlsym problems)
+*/
+/* #define COB_BORKED_DLOPEN */
+	
 #ifdef	USE_LIBDL
 
 #include <dlfcn.h>
@@ -491,7 +499,7 @@ cob_init_call (void)
 	}
 	cob_set_library_path (s);
 
-#if	!defined(COB_NO_SELFOPEN) || defined(_WIN32)
+#ifndef	COB_BORKED_DLOPEN
 	mainhandle = lt_dlopen (NULL);
 #endif
 
